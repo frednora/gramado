@@ -773,7 +773,7 @@ __mapping_nic1_device_address(
     return (int) mm_map_2mb_region(pa,va);
 }
 
-void 
+int 
 e1000hw_send(
     struct intel_nic_info_d *dev, 
     size_t len, 
@@ -842,10 +842,10 @@ e1000hw_send(
     };
 
 // done
-    return;
+    return 0;
 fail:
     refresh_screen();
-    return;
+    return (int) -1;
 }
 
 // We receive an interrupt telling us that

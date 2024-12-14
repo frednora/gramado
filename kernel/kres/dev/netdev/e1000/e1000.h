@@ -261,8 +261,7 @@ e1000_ioctl (
     unsigned long request, 
     unsigned long arg );
 
-
-void 
+int
 e1000hw_send(
     struct intel_nic_info_d *dev, 
     size_t len, 

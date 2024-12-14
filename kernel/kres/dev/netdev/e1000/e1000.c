@@ -2,7 +2,6 @@
 // Top layer interface for the e1000 NIC driver.
 // Created by Fred Nora.
 
-
 #include <kernel.h>
 
 
@@ -12,15 +11,22 @@ e1000_send(
     size_t len, 
     const char *data )
 {
-    if ((void*) dev == NULL)
-        goto fail;
+    int Status = -1;
 
-    if (len <0)
+    if ((void*) dev == NULL){
         goto fail;
-
+    }
+    if (len < 0){
+        goto fail;
+    }
+    //if ((void*) data == NULL){
+        //goto fail;
+    //}
 // Send
-    e1000hw_send(dev,len,data);
-
+    Status = (int) e1000hw_send(dev,len,data);
+    if (Status == 0){
+        return 0;
+    }
 fail:
     return (int) -1;
 }
