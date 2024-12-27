@@ -19,7 +19,7 @@ const char *ServerIPString = "192.168.1.6";
 
 #define MAXLINE  1024 
 
-// Driver code 
+
 int main(void) 
 { 
     int sockfd; 

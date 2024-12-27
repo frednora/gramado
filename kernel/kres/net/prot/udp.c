@@ -35,11 +35,19 @@ unsigned char udp_saved_mac[6] = {
 };
 
 
+static void __udp_clear_payload_buffer(void);
 static void __handle_gprotocol(uint16_t s_port, uint16_t d_port);
+
 
 //
 // =========================================================
 //
+
+// Clean the payload local buffer.
+static void __udp_clear_payload_buffer(void)
+{
+    memset( udp_payload, 0, sizeof(udp_payload) );
+}
 
 // #test: 
 // Respond the UDP message receive on port 11888.
@@ -54,7 +62,7 @@ static void __handle_gprotocol(uint16_t s_port, uint16_t d_port)
 {
     uint16_t sport = s_port;
     uint16_t dport = d_port;
-    uint16_t OurPort = 11888;
+    const uint16_t OurPort = 11888;
     size_t MessageSize = 256;
 
     int NoReply = TRUE;
@@ -66,6 +74,7 @@ static void __handle_gprotocol(uint16_t s_port, uint16_t d_port)
         return;
 
 // ----------------
+// g:0
 // packet type: 0 = request
     if ( udp_payload[0] == 'g' && 
          udp_payload[1] == ':' && 
@@ -77,11 +86,12 @@ static void __handle_gprotocol(uint16_t s_port, uint16_t d_port)
         ksprintf(
             (udp_payload + 4),
             "This is a response from Gramado OS\n");
-            NoReply = FALSE;
-            goto done;
+        NoReply = FALSE;
+        goto done;
     }
 
 // -----------------------
+// g:1
 // packet type: 1 = reply
     if ( udp_payload[0] == 'g' && 
          udp_payload[1] == ':' && 
@@ -98,6 +108,7 @@ static void __handle_gprotocol(uint16_t s_port, uint16_t d_port)
     }
 
 // -------------------------
+// g:2
 // packet type: 2 = event
     if ( udp_payload[0] == 'g' && 
          udp_payload[1] == ':' && 
@@ -114,6 +125,7 @@ static void __handle_gprotocol(uint16_t s_port, uint16_t d_port)
     }
 
 // ---------------------------
+// g:3
 // packet type: 3 = error
     if ( udp_payload[0] == 'g' && 
          udp_payload[1] == ':' && 
@@ -135,6 +147,7 @@ static void __handle_gprotocol(uint16_t s_port, uint16_t d_port)
     }
 
 // --------------------------
+// g:4
 // packet type: 4 = disconnect
     if ( udp_payload[0] == 'g' && 
          udp_payload[1] == ':' && 
@@ -149,6 +162,10 @@ static void __handle_gprotocol(uint16_t s_port, uint16_t d_port)
 
     //if (dport == 11888)
         //ksprintf(udp_payload,"This is a response from Gramado OS");
+
+// Fail: 
+// The received message is invalid.
+    NoReply = TRUE;
 
 // ---------------------
 // Response
@@ -659,7 +676,8 @@ network_handle_udp(
 */
 
 // Clean the payload local buffer.
-    memset( udp_payload, 0, sizeof(udp_payload) );
+    //memset( udp_payload, 0, sizeof(udp_payload) );
+    __udp_clear_payload_buffer();
 
 //
 // Create a local copy of the payload.
@@ -711,6 +729,8 @@ network_handle_udp(
         network_handle_dhcp(
             (buffer + UDP_HEADER_LENGHT),
             (udp->uh_ulen - UDP_HEADER_LENGHT) );
+
+        //__udp_clear_payload_buffer();
         return;
     }
 
@@ -757,33 +777,17 @@ network_handle_udp(
         };
 
         // Clear UDP local buffer.
-        memset(udp_payload, 0, sizeof(udp_payload));
+        //memset(udp_payload, 0, sizeof(udp_payload));
         //for (i=0; i<1024; i++){
         //    udp_payload[i]=0;
         //};
-    }
 
-// fail:
-    return;
-
-// Response
-done:
-    if (NoReply == TRUE)
+        __udp_clear_payload_buffer();
         return;
-    if (dport == 11888)
-    {
-        //printk ("kernel: Sending response\n");
-        //refresh_screen();
-
-        network_send_udp(  
-            dhcp_info.your_ipv4,  // scr ip
-            __saved_caller_ipv4,  // dst ip
-            __saved_caller_mac,   // dst mac
-            dport,                // source port: "US"
-            sport,                // target port  "Who sent"
-            udp_payload,          // udp payload
-            256 );                // udp payload size
     }
-}
 
+// Fail
+// Return if something goes wrong.
+    return;
+}
 

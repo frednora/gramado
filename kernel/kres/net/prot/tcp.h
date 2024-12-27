@@ -154,6 +154,7 @@ struct tcp_d
 // HANDLER
 //
 
+// This is called by the IP support when a TCP payload is found.
 void 
 network_handle_tcp( 
     const unsigned char *buffer, 

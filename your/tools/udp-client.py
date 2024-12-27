@@ -14,7 +14,7 @@ while pings < 11:
     #Set a timeout value of n seconds
     clientSocket.settimeout(5)
 
-    addr = ("192.168.1.4", 11888)
+    addr = ("192.168.1.3", 11888)
 
     #Send ping
     start = time.time()

@@ -14,17 +14,21 @@
    
 //#define PORT  8080 
 #define PORT  11888
-#define MAXLINE 1024 
-   
-// Driver code 
-int main(void)
+#define MAXLINE  1024 
+
+
+int main(int argc, char **argv)
 { 
     int sockfd=0;
     char buffer[MAXLINE]; 
     const char *hello = "Hello from server"; 
     struct sockaddr_in servaddr, cliaddr; 
-       
-    // Creating socket file descriptor 
+
+    socklen_t len;
+    int n=0;
+
+
+// Creating socket file descriptor 
     if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) { 
         perror("socket creation failed"); 
         exit(EXIT_FAILURE); 
@@ -33,34 +37,44 @@ int main(void)
     memset(&servaddr, 0, sizeof(servaddr)); 
     memset(&cliaddr, 0, sizeof(cliaddr)); 
        
-    // Filling server information 
+// Filling server information 
     servaddr.sin_family    = AF_INET; // IPv4 
     servaddr.sin_addr.s_addr = INADDR_ANY; 
     servaddr.sin_port = htons(PORT); 
-       
-    // Bind the socket with the server address 
-    if ( bind(sockfd, (const struct sockaddr *)&servaddr,  
-            sizeof(servaddr)) < 0 ) 
-    { 
+
+// Bind the socket with the server address 
+    if ( bind(sockfd, (const struct sockaddr *)&servaddr, sizeof(servaddr)) < 0 ) 
+    {
         perror("bind failed"); 
-        exit(EXIT_FAILURE); 
+        goto fail;
     } 
-       
-    socklen_t len;
-    int n=0;
 
     len = sizeof(cliaddr);  //len is value/result 
-   
-    n = recvfrom(sockfd, (char *)buffer, MAXLINE,  
-                MSG_WAITALL, ( struct sockaddr *) &cliaddr, 
-                &len); 
+
+// Receive
+    n = recvfrom( 
+            sockfd, 
+            (char *)buffer, 
+            MAXLINE,  
+            MSG_WAITALL, 
+            (struct sockaddr *) &cliaddr, 
+            &len );
     buffer[n] = '\0'; 
-    printf("Client : %s\n", buffer); 
-    sendto(sockfd, (const char *)hello, strlen(hello),  
-        MSG_CONFIRM, (const struct sockaddr *) &cliaddr, 
-            len); 
+    printf("Client : %s\n", buffer);
+
+// Send
+    sendto(
+        sockfd, 
+        (const char *)hello, 
+        strlen(hello),  
+        MSG_CONFIRM, 
+        (const struct sockaddr *) &cliaddr, 
+        len ); 
     std::cout<<"Hello message sent."<<std::endl;  
        
-    return 0; 
+    return 0;
+
+fail:
+    return EXIT_FAILURE;
 }
 

@@ -57,6 +57,7 @@ void udp_save_mac( uint8_t mac[6] );
 // HANDLER
 //
 
+// This is called by the IP support when a UDP payload is found.
 void 
 network_handle_udp( 
     const unsigned char *buffer, 
