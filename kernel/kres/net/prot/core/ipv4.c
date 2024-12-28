@@ -4,7 +4,8 @@
 #include <kernel.h>
 
 
-unsigned int ipv4_counter = 0;
+static unsigned int ipv4_counter = 0;
+
 
 // ======================================================
 
@@ -17,26 +18,21 @@ ipv4_send (
     char *data_buffer,     // IPV4 payload
     size_t data_lenght )
 {
-
+    int Status = -1;
     register int i=0;
+// Frame base. (The IPV4 payload)
+    unsigned long addr = (unsigned long) data_buffer;
 
-// Frame base
-    unsigned long addr = (unsigned long) data_buffer;  // IPV4 payload;
+    // #todo
+    //if ( (void*) currentNIC == NULL )
+        //goto fail;
 
 //==============================================
 // # ethernet header #
 
 // Ethernet base
-    //ether_header *eh = (ether_header *) addr;
     struct ether_header  Leh;
-
-// Destination MAC
-    //fillMac(Leh.mac_dst, target_mac);
-// Our MAC
-    //fillMac(Leh.mac_src, currentNIC->mac_address);
-// Type of protocol
-    //Leh.type = (uint16_t) ToNetByteOrder16(ETHERTYPE_IPV4);
-
+// Destination MAC, Our MAC and Type of protocol.
     for (i=0; i<6; i++){
         Leh.mac_src[i] = (uint8_t) currentNIC->mac_address[i];  // source 
         Leh.mac_dst[i] = (uint8_t) target_mac[i];               // dest
@@ -48,10 +44,9 @@ ipv4_send (
 // # ipv4 header #
 
 // IPV4 base
-    //ip_d *hdr = (ip_d*)( addr + sizeof(ether_header) );
     struct ip_d  Lipv4;
 
-    // Ipv4 header
+// The Ipv4 header
     //hdr->ihl = 5;
     //hdr->ver = 4;
     //hdr->tos = 0;
@@ -63,7 +58,6 @@ ipv4_send (
 // - Differentiated Services Code Point (6bits)
 // - Explicit Congestion Notification (2bits)
     Lipv4.ip_tos = 0x00;  // 8 bit (0=Normal)
-
 
 // Lenght
 // IPV4 Length
@@ -80,9 +74,9 @@ ipv4_send (
     uint16_t xxxdata = (uint16_t) (data_lenght & 0xFFFF);
     uint16_t __ipheaderlen = IP_HEADER_LENGHT;
     uint16_t __ippayloadlen = (uint16_t) (UDP_HEADER_LENGHT +  xxxdata);
-    uint16_t __iplen = (uint16_t) (__ipheaderlen + __ippayloadlen); 
+    uint16_t __iplen = (uint16_t) (__ipheaderlen + __ippayloadlen);
+// Len
     Lipv4.ip_len = (uint16_t) ToNetByteOrder16(__iplen);
-
 
 // Identification
 // ... identifying the group of fragments of a single IP datagram. 
@@ -106,13 +100,10 @@ ipv4_send (
     unsigned char *spa = (unsigned char *) &Lipv4.ip_src.s_addr;
     unsigned char *tpa = (unsigned char *) &Lipv4.ip_dst.s_addr;
 
-    register int it=0;
-    for (it=0; it<4; it++)
-    {
-        spa[it] = (uint8_t) source_ip[it]; 
-        tpa[it] = (uint8_t) target_ip[it]; 
+    for (i=0; i<4; i++){
+        spa[i] = (uint8_t) source_ip[i]; 
+        tpa[i] = (uint8_t) target_ip[i]; 
     };
-
 
 //
 // Checksum
@@ -128,7 +119,8 @@ ipv4_send (
     Lipv4.ip_sum =
          (uint16_t) ToNetByteOrder16(Lipv4.ip_sum);
 
-    printk("ip_sum={%x} \n",Lipv4.ip_sum);
+// #debug
+    // printk("ip_sum={%x} \n",Lipv4.ip_sum);
 
     //printk ("size %d\n", sizeof (struct ip_d) );
     //refresh_screen();
@@ -140,11 +132,16 @@ ipv4_send (
                  IP_HEADER_LENGHT +\
                  data_lenght );
 
-    ethernet_send( currentNIC, FRAME_SIZE, addr );
+// Send
+    Status = (int) ethernet_send( currentNIC, FRAME_SIZE, addr );
+    if (Status<0){
+        goto fail;
+    }
 
     return 0;
+fail:
+    return (int) -1;
 }
-
 
 //
 // $
