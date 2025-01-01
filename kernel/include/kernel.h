@@ -67,11 +67,11 @@
 #include "../kctl/clibs/ktypes.h"
 #include "../kctl/clibs/ktypes2.h"
 
-// #todo: Move this one above.
+// #todo: Move this one above?
 #include "../kctl/clibs/ascii.h"
 
-
 // Kernel objects.
+// Can we move this above the clibs? Or after it?
 #include "../kctl/kmain/kobject.h"
 
 // kctl/clibs/
@@ -118,26 +118,24 @@
 #include "../kres/mm/bank.h"      // Bank. database
 
 // ==================================
-// ke/
-
-// hal
+// hal/
 #include "../kctl/ke/hal/x86_64/ports64.h"
 #include "../kctl/ke/hal/x86_64/cpu.h"
 #include "../kctl/ke/hal/x86_64/tss.h"
 #include "../kctl/ke/hal/x86_64/x64gdt.h"
 #include "../kctl/ke/hal/x86_64/x64.h"
 #include "../kctl/ke/hal/detect.h"
-// ==================================
 
+// ==================================
 // virt/
 #include "../kctl/kmain/virt/hv.h"
 
 // ==========================================
-// hal/arm
+// hal/arm/
 // #include "../kctl/ke/hal/arm/archhal.h"
 
 // ==========================================
-// hal/x86_64
+// hal/x86_64/
 #include "../kctl/ke/hal/x86_64/cpuid.h"
 #include "../kctl/ke/hal/x86_64/up/up.h"
 #include "../kctl/ke/hal/x86_64/smp/x64smp.h"
@@ -155,13 +153,15 @@
 #include "../kctl/ke/hal/hal.h"
 
 // ==================================
-// dev/
+// bus/
 // PCI bus.
 #include "../kres/bus/pci/pci.h"
+
 // ==================================
 // dev/
 // io
 #include "../kres/dev/io.h"
+
 // ==================================
 // dev/
 // Devices
@@ -193,6 +193,7 @@
 
 // ==================================
 // ke/
+// Can we move this up?
 #include "../kctl/ke/intake/msgcode.h"
 
 // ==================================
@@ -215,6 +216,7 @@
 // ==================================
 // dev/
 
+// chardev/
 // Serial port. (COM).
 #include "../kres/dev/chardev/serial/serial.h"
 
@@ -229,6 +231,7 @@
 #include "../kres/dev/chardev/i8042/ps2mouse.h"
 #include "../kres/dev/chardev/i8042/i8042.h"
 
+// blkdev/
 // Block devices
 // ata, sata
 #include "../kres/dev/blkdev/ata/ata.h"
@@ -238,6 +241,7 @@
 #include "../kres/dev/blkdev/disk.h"
 #include "../kres/dev/blkdev/storage.h"
 
+// netdev/
 // Network devices
 // primeiro controladoras depois protocolos
 // e1000 - nic intel
@@ -256,6 +260,9 @@
 // Protocols
 //
 
+// =================================
+// prot/
+
 // Core protocols
 #include "../kres/net/prot/core/ethernet.h"
 #include "../kres/net/prot/core/arp.h"
@@ -266,6 +273,8 @@
 #include "../kres/net/prot/dhcp.h" 
 // Extra protocols
 #include "../kres/net/prot/icmp.h" 
+
+// net/
 
 // Network
 #include "../kres/net/nports.h"     //(network) Network Ports  (sw)
@@ -301,7 +310,9 @@
 // ==================================
 // ke/
 // Process structures
-// ps
+
+// ==================================
+// intake/
 #include "../kctl/ke/intake/prio.h"     // Priority
 #include "../kctl/ke/intake/quantum.h"  // Quantum
 #include "../kctl/ke/intake/image.h"
@@ -364,5 +375,4 @@
 
 // Main kernel controller header.
 #include "../kctl/kctl.h"
-
 
