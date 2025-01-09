@@ -153,6 +153,9 @@ static void __handle_gprotocol(uint16_t s_port, uint16_t d_port)
          udp_payload[1] == ':' && 
          udp_payload[2] == '4' )
     {
+        //printk("[g:4] \n");
+        //refresh_screen;
+
         memset(udp_payload, 0, sizeof(udp_payload));
         ksprintf(udp_payload,"g:0 ");          // Request
         ksprintf( (udp_payload + 4), "exit");  // exit command

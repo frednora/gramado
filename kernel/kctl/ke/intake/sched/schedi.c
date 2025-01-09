@@ -229,6 +229,7 @@ void do_thread_waiting(tid_t tid, unsigned long ms)
     }
     t->wake_jiffy = (unsigned long) (jiffies + JiffiesToWait);
 
+// #debug
     printk ("do_thread_waiting: j1=%d | j2=%d |\n", jiffies, t->wake_jiffy);
     printk("do_thread_waiting: done\n");
 }
@@ -347,12 +348,13 @@ int do_waitpid (pid_t pid, int *status, int options)
     return (int) (-1);
 }
 
-// Obtendo o TID da thread atual.
-int get_current_thread (void)
+// Get the TID of the current thread.
+tid_t get_current_thread(void)
 {
-    return (int) current_thread;
+    return (tid_t) current_thread;
 }
 
+// Set the tid for the current_thread global variable.
 void set_current_thread(tid_t tid)
 {
     struct thread_d *t;
@@ -380,6 +382,7 @@ void set_current_thread(tid_t tid)
     current_thread = (tid_t) tid;
 }
 
+// Set the tid for the foreground_thread global variable.
 void set_foreground_thread(tid_t tid)
 {
     struct thread_d *t;
@@ -409,7 +412,7 @@ void set_foreground_thread(tid_t tid)
 
 // wait_for_a_reason:
 //   Faz a thread esperar  por um motivo.
-void wait_for_a_reason ( int tid, int reason )
+void wait_for_a_reason ( tid_t tid, int reason )
 {
     struct thread_d  *t;
 
@@ -465,7 +468,7 @@ void wait_for_a_reason ( int tid, int reason )
 //uma outra função pode fazer um loop acordando 
 //todas as threads que esperam pelo memso motivo.
 
-int wakeup_thread_reason ( int tid, int reason )
+int wakeup_thread_reason ( tid_t tid, int reason )
 {
     panic("wakeup_thread_reason: #todo\n");
 
@@ -605,7 +608,7 @@ fail:
  * se ela estiver com seu contexto salvo e seu estado WAITING.
  *    Estando em READY o scheduler vai escalonar ela quando for possível.
  */
-void wakeup_thread(int tid)
+void wakeup_thread(tid_t tid)
 {
     struct thread_d  *t;
     int Status=0;
@@ -616,7 +619,7 @@ void wakeup_thread(int tid)
 
 // structure
     t = (void *) threadList[tid]; 
-    if ( (void *) t == NULL ){
+    if ((void *) t == NULL){
         return;
     }
     if (t->used != TRUE){
@@ -701,7 +704,7 @@ void sleep_until (tid_t tid, unsigned long ms)
         return;
     }
     if (ms == 0){
-        ms=1;
+        ms = 1;
     }
     do_thread_waiting(tid, ms);
 }

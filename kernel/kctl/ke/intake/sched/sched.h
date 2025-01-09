@@ -34,8 +34,6 @@ struct scheduler_info_d
 extern struct scheduler_info_d  SchedulerInfo;
 
 
-
-
 // ==========================================
 
 //
@@ -61,14 +59,14 @@ int do_waitpid (pid_t pid, int *status, int options);
 void schedi_drop_quantum(struct thread_d *thread);
 void schedi_check_for_standby(void);
 
-int get_current_thread (void);
+tid_t get_current_thread(void);
 void set_current_thread(tid_t tid);
 void set_foreground_thread(tid_t tid);
 
-void wait_for_a_reason ( int tid, int reason );
-int wakeup_thread_reason ( int tid, int reason );
-int wakeup_scan_thread_reason ( int reason );
-void wakeup_thread (int tid);
+void wait_for_a_reason ( tid_t tid, int reason );
+int wakeup_thread_reason ( tid_t tid, int reason );
+int wakeup_scan_thread_reason (int reason);
+void wakeup_thread(tid_t tid);
 
 // yield
 void yield(tid_t tid);
@@ -112,22 +110,4 @@ void sys_yield(tid_t tid);
 int init_scheduler (unsigned long sched_flags);
 
 #endif    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

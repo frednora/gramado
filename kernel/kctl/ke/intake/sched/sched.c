@@ -44,32 +44,36 @@ static void __sched_notify_parent(struct thread_d *thread, int event_number)
     //printk ("__sched_notify_parent: #test\n");
 
 // Parameter:
-    if ( (void*) thread == NULL )
+    if ((void*) thread == NULL)
         return;
     if (thread->magic != 1234)
         return;
 
+    // #todo:
+    //if (event_number<0)
+        //return;
+
 // Owner process
 // The thread belongs to this process
     pid_t owner_pid = thread->owner_pid;
-    if (owner_pid<0)
+    if (owner_pid < 0)
         return;
     if (owner_pid >= PROCESS_COUNT_MAX)
         return;
     p_owner = (struct process_d *) processList[owner_pid];
-    if ( (void*) p_owner == NULL )
+    if ((void*) p_owner == NULL)
         return;
     if (p_owner->magic != 1234)
         return;
 
 // Parent process
     pid_t parent_pid = p_owner->ppid;
-    if (parent_pid<0)
+    if (parent_pid < 0)
         return;
     if (parent_pid >= PROCESS_COUNT_MAX)
         return;
     p_parent = (struct process_d *) processList[parent_pid];
-    if ( (void*) p_parent == NULL )
+    if ((void*) p_parent == NULL)
         return;
     if (p_parent->magic != 1234)
         return;
@@ -529,32 +533,28 @@ tid_t scheduler(void)
         panic("scheduler: system_state\n");
     }
     system_state = SYSTEM_SCHEDULING;
-
-
+// Thread counter
+    if (UPProcessorBlock.threads_counter == 0){
+        panic("scheduler: UPProcessorBlock.threads_counter == 0\n");
+    }
+// Initialized
     if (SchedulerInfo.initialized != TRUE){
         panic("scheduler: SchedulerInfo.initialized\n");
     }
 
-    if (UPProcessorBlock.threads_counter == 0){
-        panic("scheduler: UPProcessorBlock.threads_counter == 0\n");
-    }
-
-    if (Policy != SCHED_POLICY_RR){
-        panic("scheduler: Invalid Policy\n");
-    }
-
+// Policy
 // #todo: 
 // Pegaremos a sched_flags de uma variavel global
 // pois eh configuravel.
 // IN: sched_flags
-
     if (Policy == SCHED_POLICY_RR){
         first_tid = (tid_t) __scheduler_rr(0);
     } else if (Policy == SCHED_POLICY_QUEUES){
         panic("scheduler: Policy not supported\n");
-    }else{
-        panic("scheduler: Policy not supported\n");
+    } else {
+        panic("scheduler: Invalid policy\n");
     };
+
     // ...
 
 // ===================
@@ -571,10 +571,10 @@ tid_t scheduler(void)
         panic("scheduler: first_tid != Idle->tid\n");
     }
 
-// System state
+// Update the system state
     system_state = SYSTEM_RUNNING;
 
-// Return tid.
+// Return tid
     return (tid_t) first_tid;
 }
 
@@ -608,36 +608,36 @@ tid_t psScheduler(void)
 //Porque retornamos 0 ???
 //Scheduler Status. (LOCKED, UNLOCKED).
 
-    if (g_scheduler_status == LOCKED)
-    {
-        debug_print ("psScheduler: Locked $\n");
-        // #bugbug
-        // Why are we returning tid 0?
-        //return 0;
-        return -1;  //error
+    if (g_scheduler_status == LOCKED){
+        debug_print ("psScheduler: Locked\n");
+        goto fail;
     }
 
-// Não existem threads nesse processador.
+// Uniprocessor with no threads in it.
     if (UPProcessorBlock.threads_counter == 0){
-        panic("psScheduler: UPProcessorBlock.threads_counter == 0\n");
+        panic("psScheduler: No threads\n");
     }
 
-// So existe uma thread nesse processador.
-// Então ela precisa ser a idle.
-// Ela será a current_thread.
+// There is only one thread in the uniprocessor.
+// Put it into the currentq queue.
+// It needs to become the current_thread and return it.
     if (UPProcessorBlock.threads_counter == 1)
     {
-        currentq = 
-            (struct thread_d *) UPProcessorBlock.IdleThread;
+        // #debug
+        //debug_print("psScheduler: Idle $\n");
+        
+        currentq = (struct thread_d *) UPProcessorBlock.IdleThread;
         current_thread = (tid_t) currentq->tid;
-        debug_print("psScheduler: Idle $\n");
-        // Return tid.
         return (tid_t) current_thread;
     }
 
-// Scheduler
-// Return tid.
+// We have more than one thread into the processor,
+// let's squedule it using our routine and return the tid.
     return (tid_t) scheduler();
+
+fail:
+    // Returning an invalid tid.
+    return (tid_t) -1;
 }
 
 //
@@ -661,18 +661,19 @@ void sys_broken_vessels(tid_t tid)
     }
 // structure
     t = (void *) threadList[tid];
-    if ( (void *) t == NULL ){
+    if ((void *) t == NULL){
         return;
     }
     if ( t->used != TRUE || t->magic != 1234 ){
         return;
     }
 
-// Grace
+// Increase quatum
     if ( (t->quantum +1) <= t->quantum_limit_max )
     {
         t->quantum = (t->quantum +1);
     }
+// Check limit
     if ( t->quantum > QUANTUM_MAX )
     {
         t->quantum = QUANTUM_MAX;
@@ -683,6 +684,7 @@ void sys_sleep(tid_t tid, unsigned long ms)
 {
     // #debug
     printk("sci2: [266] Sleep until\n");
+
 // tid
     if (tid < 0 || tid >= THREAD_COUNT_MAX){
         return;
