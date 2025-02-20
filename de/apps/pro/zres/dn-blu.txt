@@ -1,0 +1,14 @@
+
+
+	Folders:
+
+	terminal/ - Terminal application.
+	A terminal application running as a client-application.
+	For now this application has an embedded command interpreter,
+	but in the future it will receive data from the clients via tty
+	or stdout.
+	This application makes requests to the window server to
+	print chars into the client area.
+
+
+	

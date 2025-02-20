@@ -1,0 +1,5 @@
+
+
+all:
+	make -C aurora/
+

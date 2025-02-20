@@ -1,0 +1,6 @@
+
+
+  Well, the browser is a very big and complex application.
+  We're gonna start with the ui, creating a simple application window,
+and try to add some network infrastructure.
+  Let's see how far we can get.

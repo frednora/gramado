@@ -1,0 +1,12 @@
+
+	Update:
+		We're gonna use the term 'Update' for redrawing 
+		the graphical elements.
+
+
+	Invalidate:
+		We're gonna use the term invalidate when we're
+		flaging an element to be flushed into the 
+		framebuffer and visible on the screen.
+
+

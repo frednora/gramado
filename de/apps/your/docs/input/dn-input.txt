@@ -1,0 +1,12 @@
+
+
+	talvez seja atribuiçao da biblioteca do cliente 
+	pegar o input lendo os dispositivos de input.
+	para isso a biblioteca do cliente so precisa
+	saber o nome do arquivo.
+
+	no caso do gramado ainda nao lemos arquivos de input
+	e o cliente so pode ler da fila em sua thread ...
+	mas o sistema so esta enviando input para a thread
+	do window server  #bugbug ??
+	

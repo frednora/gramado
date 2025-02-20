@@ -1,0 +1,7 @@
+    model:
+        data model and business logic.
+        it's a thing for developers.
+
+    view:
+        input support and graphical interface presentation.
+        it's a thing for designers.

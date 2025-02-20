@@ -1,0 +1,13 @@
+
+   Design note: Ring3 applications:
+   Gramado is able to run two types of ring3 applications:
+
++ The unix-like commands using the standard libc and 
+  printing in the kernel console, 
+  using the fullscreen raw console.
+  see: core/commands/
++ And the gui applications ... 
+  using the client-side library and the libc.
+  see: userland/ventana/apps/
+  
+

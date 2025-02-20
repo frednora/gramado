@@ -1,6 +1,6 @@
-# kernel - Polar D8 kernel
+# Gramado OS
 
-This project includes basicaly the bootloader, the core kernel and the init process.
+Gramado OS. This project includes basicaly the bootloader, the core kernel and the init process.
 
 > [!IMPORTANT]
 > Polar D8 kernel is in a pre-alpha state, and only suitable for use by developers.
@@ -103,6 +103,8 @@ Contributions are welcome.
 ## Building and running on vm
 
 ```bash
+$ make -C de/
+$ make -C games/
 $ make
 $ ./run
 ```

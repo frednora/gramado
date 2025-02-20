@@ -1,0 +1,7 @@
+
+	We can use this client to create a desktop interface
+	for the system.
+	This interface can have a bar at the top and a simple file manager.
+	
+
+	The system can have more than one user interface.

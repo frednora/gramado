@@ -1,0 +1,15 @@
+
+
+	Folders:
+
+	browser/ - A browser application.
+
+	cmdline/ - A command line application.
+
+	docv/ - A doc viewer application.
+
+	editor/ - Simple text editor.
+
+	fileman/ - The file manager. The 'Graphical Shell'.
+
+

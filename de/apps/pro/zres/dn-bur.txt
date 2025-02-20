@@ -1,0 +1,17 @@
+
+
+	Folders:
+
+	client/ - Main client aplication for the server. GWS.BIN
+	#todo: Use this app as a command to setup the server.
+	$ gws -x -y -z
+
+
+	gdm/ Gramado desktop manager.
+	Logon stuff.
+
+	server/ - Window server. GWSSRV.BIN
+
+	setup/ - System installation.
+
+

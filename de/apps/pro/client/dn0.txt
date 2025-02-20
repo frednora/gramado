@@ -1,0 +1,11 @@
+
+	#todo
+
+	The application gws.bin will be a command to setup 
+ the gwssrv.bin on the fly.
+
+
+	$ gws --shutdown
+	$ gws --start
+	... 
+

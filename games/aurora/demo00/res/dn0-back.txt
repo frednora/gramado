@@ -1,0 +1,9 @@
+
+    #maybe
+    Backend part of the server to interact with the kgws infrastructure,
+and build a gws window inside a kgws window. 
+    Or switch desktops managed by the kgws. So this way, the whole gws can use 
+its own desktop while kgws uses its own.
+
+
+ 

@@ -12,8 +12,11 @@ import the commands and gui applications from other repositories.
 
 ## Build on Linux
 
-```console
+```bash
+$ make -C de/
+$ make -C games/
 $ make
-$ ./run or ./runnokvm
+$ ./run
 ```
+
 

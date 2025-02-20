@@ -1,0 +1,8 @@
+
+
+	We need to draw a tree of objects.
+	All the objects in the tree that belongs to a givwn window
+	and its childs.
+
+	The routine that draw the object will call a helper
+	for each type of object.

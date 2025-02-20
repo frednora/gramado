@@ -1,0 +1,78 @@
+
+  Communication between the display server and the display device driver.
+
+  This communication can be done using 'packets'. Or sending messages 
+via syscall or another method. The driver can export a handle just like a 
+file descriptor or a pathname.
+
+  We gotta send packets to the device driver 
+of the current 'display device' device driver.
+  Remember, this server has full access to the video ram (LFB),
+so it means that the device driver is embedded into the server. But, 
+at the same time, the server can use syscalls and tell to the kernel 
+to draw into the video ram (LFB), in this case it means that the 
+device driver of the display device is embedded into the base kernel. 
+  Inside the base kernel we can have more than one driver for the display device.
+For now we have one that is called 'boot display device', its because it has the 
+properties given to the kernel during the boot process. And a second one will be created 
+called 'qemu display device', it means that we're will be able to change the resolution 
+using this driver.
+  The goal is expose these device drivers usint a handle, just like a file path or file descriptor,
+just like any other device.
+  In the future we can have more 'display device drivers' and all them need to be exported 
+to this server, this way the server can send requests to these drivers to put data into 
+the video ram (LFB) or change resolution.
+
+--------------------------------------------------
+Gemini assistent dialog about this design note:
+
+The communication between the display server and the display device driver can happen in a few ways, 
+depending on the specific system architecture. Here's a breakdown of the possibilities you mentioned:
+
+1. Packets:
+
+This approach uses a pre-defined format for data exchange between the server and the driver. 
+The server creates packets containing commands, data, and any necessary information for the driver.
+ These packets are then sent through a designated communication channel, which could be a 
+dedicated memory location or a message queue. The driver receives and interprets these packets to perform 
+the requested actions on the display.
+
+2. Syscalls:
+
+The display server can leverage the operating system's system calls (syscalls) to interact with the kernel. 
+These syscalls provide a standardized way for user-space programs (like the display server) to access 
+kernel functionalities.  In this case, the display server would use display-related syscalls to send commands to the kernel, 
+which then interacts with the appropriate display driver to manipulate the framebuffer (LFB).
+
+3. File-like Interface:
+
+Here, the display driver exposes itself as a virtual device file. The server can open and interact with this file-like handle 
+just like any other device file. This approach allows the server to send commands and data by writing to the file, and 
+receive responses from the driver by reading from it.
+
+The Scenario:
+
+In your scenario, it seems the display server has access to the LFB directly, indicating a tight integration with the driver. 
+This suggests the driver might be:
+
+Embedded in the server: The driver code resides within the server itself, allowing direct manipulation of 
+the LFB without needing kernel intervention.
+OR
+
+Kernel Module with LFB access: The driver operates as a kernel module with privileged access to the LFB. 
+The server can still leverage syscalls for specific functionalities or to access driver-specific features.
+Multiple Display Drivers:
+
+Having multiple display drivers is a common approach. You mentioned two types:
+
+Boot Display Device: This driver likely handles the initial display setup during the boot process.
+Qemu Display Device: This driver is probably specific to a QEMU emulator environment, allowing for dynamic resolution changes.
+Exposing Drivers as Handles:
+
+Exposing drivers as handles simplifies access for the display server. It provides a consistent interface for 
+interacting with various drivers, regardless of their implementation details. The handle could be either a file descriptor or 
+a pathname, depending on the chosen method (file-like interface or syscalls).
+
+Overall, the most suitable communication method depends on the specific system architecture and desired level of flexibility.
+ The embedded driver approach might offer faster communication but less modularity. On the other hand, syscall-based communication 
+provides better separation of concerns but might involve some overhead.

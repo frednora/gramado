@@ -1,0 +1,14 @@
+
+
+    Graphical Shell 
+
+    This is the user interface.
+    It uses the libgws and the gwssrv.
+
+    Desktop, taskbar, task switcher, launcher, side bar, 
+    start menu, program manager ...
+
+
+    See:
+    https://en.wikipedia.org/wiki/Windows_shell
+    https://pt.wikipedia.org/wiki/Windows_Shell

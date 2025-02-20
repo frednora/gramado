@@ -1,0 +1,27 @@
+
+
+   #bugfix
+   Changing the value in listen(.) from 4 to 8.
+
+--------------
+
+    Quando lança o quinto aplicativo, entao 
+    o primeiro deles para de receber eventos.
+    Mesmo quando as aplicaçoes nao sao todas graficas.
+    5 + init + ws. = 7.
+    Quando lança 5, a primeira lançada nao consegue
+    pegar eventos no servidor.
+
+---------
+
+	When closing the last application window in a lot of 5 windows.
+
+	When we launch 5 windows, we're unable to close the last one.
+	+ The woutine is sending the CLOSE message to the window.
+	but nothing is happening, and the app can't get the message.
+	+ The application's thread is still running, but is unable to
+	get the message.
+
+	Maybe we're sending message to the wrong window. But we're 
+	sending message to a valid overlapped window.
+

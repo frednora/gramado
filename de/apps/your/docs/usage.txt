@@ -1,0 +1,29 @@
+
+  #todo:
+  The goal of this document is explain how to use the 
+Desktop Environment.
+
+=============
+Keyboard:
+  The PS2 keyboard is always initialized during the kernel initialization 
+and we can type commands using the keyboard.
+
+=============
+Mouse:
+  The PS2 mouse is NOT initialized during the kernel initialization 
+and we need initialize it to test the mouse. Normally we initialize the mouse support
+just typing a command the will fully reinitialize the PS2 controller.
+
+ex: 
+- Press [shift+12] after the full GUI initialization.
+- Type 'ps2-qemu' in the kernel mode command line interpreter.
+You can enter into this interpreter just pressing [control+f9] and leave it 
+pressing [control+f10].
+
+
+
+
+
+
+
+

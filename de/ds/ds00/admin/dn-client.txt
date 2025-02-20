@@ -1,0 +1,18 @@
+
+Registrando o cliente, associado com sua janela overlapped principal.
+
+//#test
+// A janela overlapped tambem pode ser uma cliente da janela ativa.
+// Entao somente a janela ativa sera a janela principal do cliente.
+// Quando um aplicativo cria uma janela sem indicar a a parent window
+// ainda nao significa que aquela eh a janela principal do aplicativo
+// pra isso o aplicativo precisa dizer que a janela overlapped eh
+// janela filha da janela root.
+// Mesmo assim podemos ter problemas, pois o aplicativo pode fazer
+// isso mais de uma vez.
+// #todo: Devemos encontrar uma modo para o aplicativo dizer
+// que a janela sendo criada eh a janela principal do aplicativo.
+// Dessa forma ele nao podera fazer isso duas vezes.
+// #bugbug: Por enquanto vamos registrar todas as janelas overlapped
+// como clientes ... e esperar que os aplicativo criem 
+// somente uma overlapped por enquanto.

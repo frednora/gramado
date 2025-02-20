@@ -1,0 +1,6 @@
+// #test
+// #bugbug
+// Se tentarmos pintar fora dos limites da tela,
+// então a janela sofrerá clipping e não teremos problemas.
+// O proble não é a pintura, é sim na hora do refresh.
+// Pois o refresh vai escrever em área não mapeada de memória.

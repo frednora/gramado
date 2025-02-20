@@ -1,0 +1,9 @@
+
+	user/ folder:
+
+	This is the bridge for sharing info with the app
+	at the initialization and beyond.
+
+	The information at your finger tips.
+
+

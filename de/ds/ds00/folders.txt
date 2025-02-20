@@ -1,0 +1,10 @@
+
+ It describes the subfolders in server/
+
+admin/  - Project administrator only.
+bin/    - The place for the final binaries.
+config/ - Configuration files.
+osdep/  - Operating system dependent routines.
+vwc/    - view: Compositor.
+vwlib/  - view: Low level functions used by the view components.
+vwui/   - view: Build the user interface components.

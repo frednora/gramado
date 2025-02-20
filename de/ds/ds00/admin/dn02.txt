@@ -1,0 +1,9 @@
+	prefixes:
+
+	conn_ - Connection support.
+	gr_ - pixel, line, rectangle, char, text, rectangle, window.
+	wm_ - Window manager support. Change position, resize,
+	redraw, refresh, focus ...	
+	io_ - io events. keyboard, mouse ... clicks and holds.
+	service_  Service.
+

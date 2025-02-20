@@ -1,0 +1,18 @@
+
+Create a funcion to draw 3D cubes for us.
+
+We're drawing the cube based on a static model
+given all the dots of this model.
+We need to create a function that will draw 3D cubes.
+The position of the cube depends on the camera position,
+and the position of the cube, normally the position of the cube
+is represented by a dot in the center of the cube. 
+We need to know if the system is right-handed or left-handed for the z axis,
+and we need to know if we are using perspective or not. When we're using perspective,
+we need to have a vanishing point.
+We have 'perspective' and 'orthographic' camera projections, where the 
+perspective has a vanishing point.
+
+Rotations:
+Remember, we can rotate the model, we can rotate the scene and 
+we also can move the camera.

@@ -1,0 +1,12 @@
+	
+	init:
+
+
+MAJOR: landos
+MINOR: init
+
+	The init processes is the first code to run in ring3.
+
+	This is gonna be the place to handle the product type,
+	the compilation type, the logo images et al.
+	It's a place to test different kinds of system's initialization.

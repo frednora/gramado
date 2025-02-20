@@ -1,0 +1,17 @@
+
+Shell -- > Terminal --> Display server
+
+O Shell e' a camada mais alta do Gramado ate agora.
+O shell e' um programa posix assim como 'cat', 'uname' ... 
+ele roda no terminal ... 
+isso significa que ele manda bytes para o terminal 
+e o terminal imprime os chars na sua area de cliente, 
+ou interpreta as 'escape sequencies'. ... 
+Porem, para imprimir os chars na sua area de cliente, 
+o terminal precisa se comunicar com o display server. 
+
+Entao e' isso ... o shell envia dados para o terminal e 
+o terminal faz requests ao display server. 
+Todos rodando em ring 3. 
+
+Nenhuma novidade aqui ... estou seguindo a tradiçao.

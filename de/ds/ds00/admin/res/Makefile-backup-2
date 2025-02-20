@@ -1,0 +1,168 @@
+
+# gws - Gramado Window Server.
+# 2020 - Created by Fred Nora.
+
+# todo:
+# Os aplicativos em /init/core ainda usam PE, assim como o base kernel.
+# É desejável que isso mude.
+
+VERSION = 0
+PATCHLEVEL = 1
+SUBLEVEL = 0
+EXTRAVERSION = 
+#NAME = GWS
+
+# Make variables (CC, etc...)
+AS	= as
+LD	= ld
+CC	= gcc
+AR	= ar
+MAKE	= make
+NASM	= nasm
+OBJCOPY	= objcopy
+OBJDUMP	= objdump
+LEX	= flex
+YACC	= bison
+PERL	= perl
+PYTHON	= python
+PYTHON2	= python2
+PYTHON3	= python3
+RUBY	= ruby
+
+
+# usermode cross compiler flags.
+CFLAGS = -Wall
+#CFLAGS += -O3
+CFLAGS += -Wundef
+CFLAGS += -Wmissing-prototypes
+CFLAGS += -Wno-uninitialized
+CFLAGS += -Wno-format-security
+CFLAGS += -Wno-trigraphs
+CFLAGS += -Werror=strict-prototypes
+CFLAGS += -Werror=implicit-function-declaration
+CFLAGS += -Werror=return-type
+CFLAGS += -std=gnu89
+CFLAGS += -m64
+CFLAGS += -s
+CFLAGS += -static
+CFLAGS += -fcommon
+CFLAGS += -fgnu89-inline
+CFLAGS += -finline-functions
+CFLAGS += -fshort-wchar
+CFLAGS += -ffreestanding
+CFLAGS += -fleading-underscore
+CFLAGS += -fstrict-overflow
+CFLAGS += -nostdlib
+CFLAGS += -nodefaultlibs
+CFLAGS += -nostdinc
+CFLAGS += -fno-builtin
+CFLAGS += -fno-stack-protector
+CFLAGS += -fno-strict-aliasing
+CFLAGS += -fno-PIE
+CFLAGS += -fno-pie
+CFLAGS += -fno-omit-frame-pointer
+CFLAGS += -fno-optimize-sibling-calls    
+
+#todo
+#path longo. vamos mudar  as libs de lugar para gramado/libs.
+LIBC     = ../../libs/rtl/include/
+LIBCOBJ  = ../../libs/rtl/obj
+LIBGD     = ../../libs/libgd/include/
+LIBGDOBJ  = ../../libs/libgd/obj
+
+CINCLUDES  = -I $(LIBC)  
+CINCLUDES += -I $(LIBGD)
+CINCLUDES += -I .    
+
+LDFLAGS = -m elf_x86_64 -T ../../link.ld
+
+
+#
+# Objects
+#
+
+myObjects = crt0.o main.o rtl.o \
+ctype.o stdio.o stdlib.o string.o conio.o socket.o signal.o unistd.o \
+termios.o ioctl.o fcntl.o    
+
+myObjects += globals.o 
+myObjects += libgd.o
+
+myObjects += archive_basics1.o
+myObjects += archive_basics2.o
+myObjects += archive_fx.o    
+myObjects += archive_extra.o    
+myObjects += menu.o   
+myObjects += wm.o   
+
+.PHONY: all all-c gws-link finalize clean
+
+all: main.o all-c gws-link finalize clean
+	@echo "Ok?"
+
+main.o:
+	$(CC)  -c  main.c     $(CFLAGS) $(CINCLUDES) -o main.o
+	$(CC)  -c  globals.c  $(CFLAGS) $(CINCLUDES) -o globals.o
+
+all-c:
+
+#basics1
+	$(CC)  -c  char.c      $(CFLAGS) $(CINCLUDES) -o char.o
+	$(CC)  -c  dtext.c     $(CFLAGS) $(CINCLUDES) -o dtext.o
+	$(LD) -r -o archive_basics1.o char.o dtext.o 
+
+	$(CC)  -c  line.c      $(CFLAGS) $(CINCLUDES) -o line.o
+	$(CC)  -c  rect.c      $(CFLAGS) $(CINCLUDES) -o rect.o
+	$(CC)  -c  window.c    $(CFLAGS) $(CINCLUDES) -o window.o
+	$(CC)  -c  gws.c       $(CFLAGS) $(CINCLUDES) -o gws.o
+	$(CC)  -c  comp.c      $(CFLAGS) $(CINCLUDES) -o comp.o
+	$(CC)  -c  bmp.c       $(CFLAGS) $(CINCLUDES) -o bmp.o
+	$(CC)  -c  connect.c   $(CFLAGS) $(CINCLUDES) -o connect.o
+	$(CC)  -c  button.c    $(CFLAGS) $(CINCLUDES) -o button.o
+	$(LD) -r -o archive_basics2.o \
+line.o rect.o window.o gws.o comp.o bmp.o connect.o button.o
+
+#fx
+	$(CC)  -c  grprim.c    $(CFLAGS) $(CINCLUDES) -o grprim.o
+	$(CC)  -c  sprite.c    $(CFLAGS) $(CINCLUDES) -o sprite.o
+	$(CC)  -c  demos.c     $(CFLAGS) $(CINCLUDES) -o demos.o
+	$(LD) -r -o archive_fx.o  grprim.o sprite.o demos.o 
+
+#extra
+	$(CC)  -c  xxxinput.c  $(CFLAGS) $(CINCLUDES) -o xxxinput.o
+	$(CC)  -c  font.c      $(CFLAGS) $(CINCLUDES) -o font.o
+	$(LD) -r -o archive_extra.o  xxxinput.o font.o 
+
+	$(CC)  -c  menu.c  $(CFLAGS) $(CINCLUDES) -o menu.o
+	$(CC)  -c  wm.c    $(CFLAGS) $(CINCLUDES) -o wm.o
+
+#
+# == imported objects =============================
+#
+
+# rtl/
+	cp $(LIBCOBJ)/crt0.o .
+	cp $(LIBCOBJ)/rtl.o .
+
+	cp $(LIBCOBJ)/ctype.o .
+	cp $(LIBCOBJ)/stdio.o .
+	cp $(LIBCOBJ)/stdlib.o .
+	cp $(LIBCOBJ)/string.o .
+	cp $(LIBCOBJ)/conio.o .
+	cp $(LIBCOBJ)/unistd.o .
+	cp $(LIBCOBJ)/socket.o .
+	cp $(LIBCOBJ)/signal.o .
+	cp $(LIBCOBJ)/termios.o .
+	cp $(LIBCOBJ)/ioctl.o .
+	cp $(LIBCOBJ)/fcntl.o .
+
+	cp $(LIBGDOBJ)/libgd.o .
+
+gws-link:
+	$(LD) $(LDFLAGS) -o GWSSRV.BIN $(myObjects)
+finalize:
+	cp GWSSRV.BIN  ../bin
+clean:
+	-rm *.o
+	-rm GWSSRV.BIN 
+	

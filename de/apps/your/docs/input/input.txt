@@ -1,0 +1,9 @@
+
+	In this folder we're gonna describe all the input infrastructure
+	for Gramado.
+
+--------------------------
+in-kernel input event handler:
+see: input.c
+
+

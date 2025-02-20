@@ -1,0 +1,9 @@
+------------
+pt-br
+Uma aplicaçao gui client-side no Gramado usa duas bibliotecas. 
+Uma eh a 'rtl', que eh a libc tradicional que vai fazer chamadas ao kernel 
+e a outra eh a 'libgws', que vai fazer os requests ao servidor gwssrv.bin 
+que tambem roda em user mode. Esses requests sao feitos usando a 
+infraestrutura de sockets unix-like. 
+O cliente pode fazer requests e esperar por responses e tambem 
+podem fazer requests assincronos, onde nao espera por respostas.

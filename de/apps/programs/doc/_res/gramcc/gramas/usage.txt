@@ -1,0 +1,15 @@
+gramcc usage:
+
+
+
+$gramcc.bin [flag] [filename]
+
+
+flags:
+    -s
+    -c
+    ...
+
+filename:
+    test.c
+    ... 

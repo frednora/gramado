@@ -1,0 +1,10 @@
+
+// init.bin
+// primeiro aplicativo a rodar...
+// todo: podemos construir outros aplicativos aqui nessa mesma pasta
+// que servirão de inicializadores.
+
+
+Construindo o processo idle.
+o objeto da api (api.o) é uma biblioteca e foi apenas incluído aqui
+no programa em tempo de ligação, portanto não se deve deletar os objetos.

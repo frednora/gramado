@@ -1,0 +1,22 @@
+
+	Enabling PS2-Mouse support:
+
+	+ Press [ Shift + F12 ].
+	+ Launch terminal.bin and type "ps2-qemu".
+	It's valid only for Qemu session without kvm support.
+
+----------------
+
+Mouse PS2?
+Agora está mais fácil testar o mouse.
+As opções são as seguintes:
+[ Shift + F12 ] depois de initializar o window server.
+Abrir terminal.bin e digitar: "ps2-qemu".
+Essas opções são válidas apenas se voce estivar rodando o Gramado no qemu e sem habilitar o kvm.
+-------------------------------------------------
+Questões envolvendo PS2:
+A controladora PS2 na máquinal real costuma falhar quando estamos em 64bit, deixando de enviar interrupções. Essa é uma reclamação que eu já vi em outros projetos.
+Minha solução para isso será a mesma implementada pelo Terry no TempleOS. Polling ... ja fiz a rotina de polling de teclado, mas a de mouse é meio complicado.
+Polling é 60 vezes por segundo e não degrada o desempenho do sistema.
+Na máquina real, meu driver de mouse funciona bem com meu mouse Logitech, para meus outros mouses funcionou com falhas na movimentação do cursor.
+Na máquina virtual, meu driver de mouse não funciona bem em todos os hypervisors. Então o sistema identifica o hv bão e só inicializa pra ele.

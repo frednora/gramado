@@ -1,0 +1,7 @@
+
+
+	#todo: gws_refresh_rectangle(...)
+
+	This way an client application will be able
+	to refresh a single char without the need of
+	refreshing all the window that the char belongs to.

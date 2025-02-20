@@ -1,0 +1,11 @@
+
+ #todo:
+ #important:
+ The terminal window is a window that fits into the client are 
+of the main window of the application.
+ What is happening it that when we move the position of the main window 
+the terminal window does not fit into the client area anymore.
+ Probably the terminal needs to receive a event from the server 
+and update the position of the terminal window after probing 
+the information about the client area of the main window.
+

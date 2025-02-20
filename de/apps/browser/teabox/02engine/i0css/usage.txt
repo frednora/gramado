@@ -1,0 +1,18 @@
+
+    Usage
+
+    $ #gramcnf -o test1.cnf  --stats  
+    $ #gramcnf -o theme1.cnf --stats  
+
+----------------------------------
+Lê duas entradas e coloca numa estrutura.
+No fim teremos muitas estruturas.
+
+Podemos usar isso como arquivo de configuração
+no estilo xml / html-meta.
+
+meta meta1(){ name(".."); content(".."); }
+meta meta2(){ name(".."); content(".."); }
+
+
+

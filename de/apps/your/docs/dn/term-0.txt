@@ -1,0 +1,43 @@
+
+    terminal.bin - Virtual terminal.
+
+    This is a ring3 client application for Window system.
+    This application gets keyboard input from stdin and print the char into
+    the client area of the application window.
+    The final goal for this application is getting input from stdout.
+    It's because the child application will send us data via stdout.
+
+------------------------------------------------------------
+Commands:
+See the function compareStrings() in main.c.
+
+You can type commands and provide some parameters into the command line.
+No pipes for now!
+Example: $ cat gramado.txt
+
+Print help information.
+    $ help
+
+Print information about the terminal application.
+    $ about
+
+Exit the application.
+    $ exit 
+
+Minimize the window.
+    $ winmin
+
+Maximize the window.
+    $ winmax
+
+Reboot the system.
+    $ reboot 
+
+Clean the screen
+    $ clear
+    $ cls
+
+
+
+
+

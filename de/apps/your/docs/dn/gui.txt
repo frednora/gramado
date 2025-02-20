@@ -1,0 +1,7 @@
+
+
+	The de/ui/core/server/ directory is the place 
+for the display server. The display server is a ring3 process.
+    The de/ui/shell/ directory is the place 
+for the client-side GUI applications.
+

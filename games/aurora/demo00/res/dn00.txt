@@ -1,0 +1,15 @@
+
+
+	Display adapter support.
+
+	Very low level routines to touch the device's surface.
+	Maybe we will call a device driver at this moment.
+
+	We can select what kind of display adapter we are using to 
+build this bit. Just like vga ...
+
+	We will use bitblt function, to build the bit following 
+	the directions given by some flags, just like rasterizantion, rop,
+rast operations, etc ...
+
+

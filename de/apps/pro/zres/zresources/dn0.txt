@@ -1,0 +1,4 @@
+
+	server/ The window server
+
+	All the other folders are clients.

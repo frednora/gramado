@@ -1,0 +1,6 @@
+
+	gws.bin can be a kind of command to setup the window server.
+	We can use this command to change some configuration on the fly
+	or to simply launch the window server if it is not running at moment.
+
+

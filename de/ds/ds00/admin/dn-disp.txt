@@ -1,0 +1,25 @@
+
+    How the dispatcher works?
+
+    The main() function calls the on_execute() function
+    to do the real job.
+    The function on_execute() stay in a loop accepting connections.
+
+    When it gets a valid connection, so it calls the dispacher() function 
+    to handle the request. The information about the request is found 
+    inside the client's socket that is file read via read() function.
+    After reading this file, the dispacher() function will call the 
+    gwsProcedure() function to handle the information found inside this file.
+    The information inside this file follow a protocol called Gramado Protocol.
+    There is an important information inside this file, that is the Index 
+    of the service. It represents the number of the service that the server
+    needs to execute. So, gwsProcedure() will call this service given this index.
+
+    In some cases the routine needs to send a response to the client,
+    putting some information inside the file and updating the
+    synchronization status in the file. Some of the requests do not need
+    a response.
+
+    After that the function can return and come back to the loop
+    found in on_excute(), looking for the next valid connection.
+    

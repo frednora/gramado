@@ -1,0 +1,8 @@
+
+
+ pt-br, abnt2?
+
+ The system has support for only one keyboard layout for now. 
+ It's the brazilian keyboard. pt-br. 
+ This standard is called 'abnt2'.
+ 

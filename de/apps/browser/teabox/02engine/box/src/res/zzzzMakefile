@@ -1,0 +1,6 @@
+
+# server - Gramado display server.
+
+all:
+	make -C eng/
+

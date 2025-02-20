@@ -1,0 +1,20 @@
+[pt-br]
+
+  No Gramado, quem pinta o retangulo na tela?
+  Bem, no display server tem a opçao de pintar usando um serviço do kernel 
+ou usando uma rotina do display server para isso. 
+  O Gramado tem usado o kernel para pintar os retangulos.
+-----------
+  E' normal ter opçoes de painters para os retangulos ou 
+para os triangulos. E' normal que um display server tenha a opçao 
+de pintar o retangulo ou atribuir essa tarefa a outro serviço do sistema, 
+como o driver da placa de video. Inclusive nos dias de hoje e' bem normal 
+que a propria aplicaçao client-side pinte o retangulo, 
+invocando o driver da placa de video e depois apenas 
+notifique o display server sobre a pintura do retangulo. 
+-----------
+Transparencia costuma envolver alfa e ROP operations ... 
+isso e' conversa pra outra hora. O Gramado ja tem rotinas de ROP,
+ com 'xor', 'and', essas coisas ... tanto no kernel, 
+ quanto no display server, mas ainda nao estao em uso. 
+ Apenas testes.

@@ -1,0 +1,16 @@
+
+
+	gramado/  -  Gramado Window System.
+
+	gramci - Gramado Consistent Interface.
+
+
+
+	These are the main environment in the Gramado Operating system:
+
+
+	Gramado Cmd   - Userland standard commands.
+	Gramado Core  - The window system and beyond.
+	Gramado Edge  - UI for network support.
+	Gramado Setup - The setup environment. Used to install/upgrade the system.
+	Gramado Shell - A graphical shell. The user environment.

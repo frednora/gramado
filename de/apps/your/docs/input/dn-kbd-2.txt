@@ -1,0 +1,41 @@
+
+    Keyboard commands:
+
+-----------------------------------------
+
+F1 - Launch the F1 application.
+F2 - Launch the F2 application.
+F3 - Launch the F3 application.
+F4 - Launch the F4 application.
+
+F5 - Go to tile mode.
+F6 - Go to fullscreen mode.
+F7 - Todo.
+F8 - Todo.
+
+F9  - Minimize control.
+F10 - Maximize control.
+F11 - Close control.
+F12 - Todo.
+
+-----------------------------------------
+
+[Control + F9]  - To enter the kernel console.
+[Control + F10] - To exit the kernel console.
+
+[Shift + F1] - Set the console number 0.
+[Shift + F2] - Set the console number 1.
+[Shift + F3] - Set the console number 2.
+[Shift + F4] - Set the console number 3.
+
+[Shift + F11] - Reboot the system.
+[Shift + F12] - Enable mouse support.
+
+
+
+
+
+
+
+
+

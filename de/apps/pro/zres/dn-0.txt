@@ -1,0 +1,14 @@
+
+--------------
+omega1/
+	Libs, toolkits and APIs.
+--------------
+omega2/
+	Drivers and server.
+--------------
+omega3/
+	Commands.
+--------------
+omega4/
+	Client-side GUI applications.
+

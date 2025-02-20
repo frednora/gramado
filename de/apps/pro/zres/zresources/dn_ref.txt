@@ -1,0 +1,28 @@
+
+	Refresh
+
+
+	There is two types of refresh:
+	+ The device screen refresh and
+	+ the valid screen refresh.
+
+
+	We can setup the device screen and a valid screen.
+	The window server will have two refresh routines, one
+	for device screen refresh and another one for valid screen refresh.
+
+	refresh_device_screen() and refresh_valid_screen().
+
+	The refresh_device_screen() routine needs to be explicit called
+	by the apps. The window server will only refresh the valid screen 
+frequently. The method needs to be used because we can't get fps enough in higher resolutions.
+
+	The window manager will use only few screens, maybe two or three, and only one will be the valid screen.
+
+
+	This is a kind of 'bank switch'.
+
+        We can use the device screen as a fixed valid screen only if we have
+	a very high fps rate.
+
+

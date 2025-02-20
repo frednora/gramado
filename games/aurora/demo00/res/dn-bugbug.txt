@@ -1,0 +1,11 @@
+
+    #bugbug
+    
+    A request assíncrono não está retornando corretamente e 
+    o sistema esta travando quando o cliente faz esse request.
+    Por segurança, essa serviço quase não é usado ainda.
+    Veja a função serviceAsyncCommand() em main.c
+    
+    O request síncrono esta funcionando.
+    
+    

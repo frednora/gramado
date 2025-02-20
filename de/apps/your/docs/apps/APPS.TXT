@@ -1,0 +1,19 @@
+
+	How to create posix commands, client-side GUI applications and servers.
+
+------------------------------
+	How to create posix-like commands to run in the terminal?
+	Create a new commands in de/commands/ and 
+use the library in de/commands/alpha/.
+
+------------------------------
+	How to create a client-side GUI application?
+	Create a new commands in de/ui/shell/ and 
+use the library in de/ui/shell/alpha/
+
+------------------------------
+	How to create a server?
+	Create a server in kernel/userland/servers/
+
+
+

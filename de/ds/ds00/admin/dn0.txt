@@ -1,0 +1,8 @@
+
+
+
+    painter.c
+    Paint the windows
+    
+    comp.c
+    Compose the desktop and refresh the windows.

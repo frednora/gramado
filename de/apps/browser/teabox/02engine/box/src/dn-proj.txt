@@ -1,0 +1,44 @@
+
+    Sobre a projecção.
+
+------------------
+Step 1:
+    >> Engine 'Float'.
+
+------------------
+Step 2:
+    >> Engine 'Int' + 
+    'Origem no centro' + 
+    'Cavalier Oblique Drawings'.
+
+    Nessa engine a projeção é diferente. Pois as rotinas que pintam 
+na tela 2D usando 'integer' são também são 3D e a origem 
+está no centro da tela e não no canto superior esquerdo.
+    Então, quando as rotinas usando ponto flutuante fazem deslocamentos
+de objeto antes de projeta-lo na tela, eles estão fazendo deslocamentos
+em relação a origem no cnetro e não em relação a 
+origem no canto superior esquerdo.
+    Pois a engine faz uma projeção de 3D float para 3D int.
+    Por fim a engine de 3D int faz a projeção para
+    a tela 2D usando uma rotina alternativa que ja possui um
+    pequeno deslocamento inclinando qualquer objeto e 
+    usando o método 'Cavalier Oblique Drawings' para
+    desenhar na tela 2D.
+    Então temos 'Int' + 'Origem no centro' + 'Cavalier Oblique Drawings'.
+    Então se colocarmos vários personagens lado a lado,
+    todos estarão olhando para o mesmo vanishing point,
+    que é o infinito do personagem central. E não todo mundo olhando
+    para o próprio infinito. Que é o 'certo' a se fazer. hahaha.
+    Se o observador estiver logo atras do personagem central, 
+    então ele verá a lateral dos outros personagens e estará alinhado
+    somente com o personagem central.
+    Nessa engina os personagens naturalmente apontam para um vanishing point,
+    e não para o próprio infinito.
+    
+    
+    
+    
+    
+    
+    
+    
