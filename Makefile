@@ -8,11 +8,11 @@
 BASE = your/base
 
 # Display server
-DEP_L1  = de/ds
+DEP_L1  = xde/ds
 # Client-side GUI applications
-DEP_L2  = de/apps
+DEP_L2  = xde/apps
 # 3D demos
-DEP_L3  = games
+DEP_L3  = xgames
 
 
 # Make variables (CC, etc...)

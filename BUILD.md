@@ -13,8 +13,8 @@ import the commands and gui applications from other repositories.
 ## Build on Linux
 
 ```bash
-$ make -C de/
-$ make -C games/
+$ make -C xde/
+$ make -C xgames/
 $ make
 $ ./run
 ```

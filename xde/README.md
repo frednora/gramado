@@ -1,7 +1,7 @@
-# de - GramadoDE
+# xde - GramadoDE
 
 ```
-  Desktop Environment for polard8/kernel.
+  Desktop Environment for the kernel.
 ```
 
 ## This is a screenshot of GramadoDE desktop environment running on top of Polar D8 kernel.

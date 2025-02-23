@@ -103,8 +103,8 @@ Contributions are welcome.
 ## Building and running on vm
 
 ```bash
-$ make -C de/
-$ make -C games/
+$ make -C xde/
+$ make -C xgames/
 $ make
 $ ./run
 ```
