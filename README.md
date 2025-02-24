@@ -70,11 +70,11 @@ not all the features needed by a commercial operating system.
 ```
   You can find the source code on Github on the internet, 
   where you can clone the repository, contribute to the project or
-  download the code. The address is https://github.com/polard8/kernel.
+  download the code. The address is https://github.com/frednora/gramado.
 
   We need to import some dependencies to get the display server and 
   client-side GUI applications. 
-  The address is https://github.com/polard8/de.
+  The address is https://github.com/frednora/gramado/xde.
 ```
 
 ## A description of the directories in the source code.
@@ -204,11 +204,11 @@ Please make some comments on Github or send messages to Fred Nora.
 
 ## How to Build?
 
-> See the [Gramado OS build instructions](https://github.com/polard8/kernel/blob/main/your/docs/build/build.md)
+> See the [Gramado OS build instructions](https://github.com/frednora/gramado/blob/main/your/docs/build/build.md)
 
 # Folders
 
- Stating with code and ending with data and binary images.
+Order: (Boot; Kernel; Userland; Data and tools)
 
 ```
   * boot/    - The bootloader.
@@ -217,6 +217,8 @@ Please make some comments on Github or send messages to Fred Nora.
   * udrivers - Ring3 device drivers.
   * uservers - Ring3 servers.
   * usys/    - Init process and commands.
+  * xde/     - Desktop Environment.
+  * xgames/  - 3D demos and games.
   * your/    - Your stuff.
 ```
 
@@ -229,7 +231,7 @@ You're reaching the boring area of this document!
 The project has a folder for documentation and design notes. 
 The folder is docs/.
 
-> See the [docs](https://github.com/polard8/kernel/tree/main/your/docs).
+> See the [docs](https://github.com/frednora/gramado/tree/main/your/docs).
 
 The project is looking for some people to create a better documentation, for free, 
 as a contribuition to the open source community. To create this new documentation 
@@ -244,5 +246,5 @@ The source code uses the MIT license.
 ## Quotes:
 
 ```
-    "Come Thou fount of every blessing"
+    "Transfiguration"
 ```

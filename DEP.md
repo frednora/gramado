@@ -6,17 +6,5 @@
  * nasm
  * gcc
  * ld
+ * make
 ```
-
-## Repositories
-
-```
- * https://github.com/gramado/de/ - Desktop environment
- * https://github.com/gramado/kernel/ - Kernel
-```
-
-
-
-
-
-

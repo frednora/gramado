@@ -1,4 +1,4 @@
-# xde - GramadoDE
+# xde - Gramado Desktop Environment
 
 ```
   Desktop Environment for the kernel.

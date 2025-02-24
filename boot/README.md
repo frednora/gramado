@@ -1,27 +1,7 @@
-# hv - Baremetal hypervisor.
+# boot - Gramado Boot Loader
 
 ```
- The goal for this folder is building a baremetal hypervisor.
- This is gonna have all the resources of a normal sever and
- will be able to operate just like a normal kernel depending 
- on the configuration.
-
- We're gonna manage the hypervisor via network or via GUI.
- It's because the hypervisor itself is gonna have a full
- desktop interface for installation and configuration process.
- Maybe after the installation, we're gonna be able to use only
- the network to manage the hypervisor.
-
- And in the last case, the hypervisor will be able 
- to initialize just like a normal operating system,
- ignoring the management of the vms.
-
-```
-
-```
-    Here we're gonna build the virtual disc for the hypervisor
-    and inside of it we're gonna have a smaller virtual disc
-    for the first os.
+Gramado Boot Loader.
 ```
 
 ## The boot loader
@@ -34,11 +14,11 @@ The code for the x86 16bit MBR is found in vd/fat/main.asm.
 
 ## Where is the boot manager?
 
-The boot manager is a 16/32 bit Assembly program the run right after the MBR. It is found in x86/bm/ and x86/bm2/.
+The boot manager is a 16/32 bit Assembly program the run right after the MBR. It is found in x86/bsp/bm/ and x86/bsp/bm2/.
 
 ## Where is the boot loader?
 
-The boot laoder program is 32bit C program the load the kernel. It is found in the x86/bl/ folder.
+The boot laoder program is 32bit C program the load the kernel. It is found in the x86/bsp/blgram/ folder.
 
 ## Memory map for the Gramado OS initialization.
 

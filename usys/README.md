@@ -1,4 +1,4 @@
-# userland - Programs running in ring 3.
+# usys - Programs running in ring 3.
 
 > * bin/ - The place for the final binaries.
 
