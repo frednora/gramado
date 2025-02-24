@@ -3,23 +3,23 @@
 Gramado OS. This project includes basicaly the bootloader, the core kernel and the init process.
 
 > [!IMPORTANT]
-> Polar D8 kernel is in a pre-alpha state, and only suitable for use by developers.
+> Gramado OS kernel is in a pre-alpha state, and only suitable for use by developers.
 >
 
 ## This image shows the first process that runs after the kernel initialization.
 ![Screenshot](https://raw.githubusercontent.com/igapo/screenshots/main/kernel-01.png)
 
 You can install a desktop environment on top of the kernel. The default, the desktop environment 
-can be found in the polard8/de/ repository.
+can be found in the xde/ folder.
 
-## What is Polar D8 Kernel?
+## What is Gramado OS Kernel?
 
 This project includes basicaly the bootloader, the core kernel and the init process.
 
 ## What is Gramado Operating System?
 
 GramadoOS is a 64bit graphical operating system. It has a bootloader, a kernel and a desktop environment.
-This is the first ditribution created using the Polar D8 kernel.
+This is the first ditribution created using the Gramado OS kernel.
 
 ## What is the category it belongs to? 
 
@@ -88,10 +88,6 @@ the best way to make money easily. So if you want to earn money easily,
 go to the high demand area, which is probably the top layer of the stack,
 which It is the place where web applications are made,
 it includes front-end and back-end layers.
-```
-
-```
- ... #todo
 ```
 
 ## Who are the developers?
