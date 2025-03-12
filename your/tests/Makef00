@@ -1,0 +1,142 @@
+# This is a test version for the main compilation file,
+# found in the root dir of the project.
+# NOT TESTED YET
+
+# Polar D8 Kernel
+# Codename: Lamb
+
+# License: MIT License
+# Compiling on gcc 11.4.0 (Ubuntu on wsl)
+# Linking on ld 2.38
+
+BASE = your/base
+
+# Directories
+DEP_L1  = xde/ds
+DEP_L2  = xde/apps
+DEP_L3  = xgames
+
+# Tools
+AS      = as
+LD      = ld
+CC      = gcc
+AR      = ar
+MAKE    = make
+NASM    = nasm
+PYTHON  = python
+PYTHON2 = python2
+PYTHON3 = python3
+
+# Config
+ifndef CONFIG_USE_VERBOSE
+	CONFIG_USE_VERBOSE = 1
+endif
+
+ifeq ($(CONFIG_USE_VERBOSE),1)
+	Q =
+else
+	Q = @
+endif
+
+# Targets
+.PHONY: all install image clean clean-all run runnokvm usage danger-install-sda danger-install-sdb qemu-instance
+
+all: build-gramado-os copy-extras /mnt/GRAMVD vhd-mount vhd-copy-files vhd-unmount clean
+	@chmod 755 ./run ./runnokvm ./runt1 ./runt2
+	@echo "Done?"
+
+install: do_install
+do_install: build-gramado-os
+
+image: do_image
+do_image: /mnt/GRAMVD vhd-mount vhd-copy-files vhd-unmount
+
+build-gramado-os:
+	@echo ":: [] Building VHD, bootloaders, and kernel image."
+	$(Q)$(MAKE) -C boot/
+	cp boot/GRAMHV.VHD .
+	cp boot/x86/bsp/bin/BM.BIN boot/x86/bsp/bin/BM2.BIN boot/x86/bsp/bin/BLGRAM.BIN $(BASE)/
+	cp boot/x86/bsp/bin/BM.BIN boot/x86/bsp/bin/BM2.BIN boot/x86/bsp/bin/BLGRAM.BIN boot/MBR0.BIN $(BASE)/GRAMADO
+	$(Q)$(MAKE) -C kernel/
+	cp kernel/KERNEL.BIN $(BASE)/GRAMADO $(BASE)/DE
+	$(Q)$(MAKE) -C mods/
+	cp mods/bin/HVMOD0.BIN $(BASE)/ $(BASE)/GRAMADO
+	$(Q)$(MAKE) -C udrivers/
+	cp udrivers/bin/VGAD.BIN $(BASE)/GRAMADO/
+	$(Q)$(MAKE) -C uservers/
+	cp uservers/bin/NET.BIN uservers/bin/NETD.BIN $(BASE)/GRAMADO/
+	$(Q)$(MAKE) -C usys/
+	$(Q)$(MAKE) -C usys/commands/
+	cp usys/bin/INIT.BIN $(BASE)/
+	cp usys/commands/base/bin/REBOOT.BIN usys/commands/base/bin/SHUTDOWN.BIN usys/commands/sdk/bin/GRAMCNF.BIN $(BASE)/
+	cp usys/bin/PUBSH.BIN usys/bin/SH7.BIN usys/bin/SHELL.BIN usys/bin/TASCII.BIN usys/bin/TPRINTF.BIN usys/commands/base/bin/CAT.BIN usys/commands/base/bin/UNAME.BIN $(BASE)/DE/
+	cp usys/commands/base/bin/FALSE.BIN usys/commands/base/bin/TRUE.BIN usys/commands/extra/bin/CMP.BIN usys/commands/extra/bin/SHOWFUN.BIN usys/commands/extra/bin/SUM.BIN $(BASE)/DE/
+	cp your/assets/themes/theme01/*.BMP $(BASE)/DE
+	@echo "~build-gramado-os end?"
+
+copy-extras:
+	@echo "copy-extras"
+	cp $(DEP_L1)/ds00/bin/DS00.BIN $(BASE)/DE
+	cp $(DEP_L2)/bin/TASKBAR.BIN $(DEP_L2)/bin/XTB.BIN $(DEP_L2)/bin/TERMINAL.BIN $(BASE)/DE
+	cp $(DEP_L2)/bin/PUBTERM.BIN $(DEP_L2)/bin/DOC.BIN $(DEP_L2)/bin/GDM.BIN $(DEP_L2)/bin/EDITOR.BIN $(BASE)/DE/
+	cp $(DEP_L2)/browser/teabox/bin/TEABOX.BIN $(BASE)/DE/
+	cp $(DEP_L3)/aurora/bin/DEMO00.BIN $(DEP_L3)/aurora/bin/DEMO01.BIN $(BASE)/DE/
+	@echo "~ copy-extras"
+
+/mnt/GRAMVD:
+	@echo "========================="
+	@echo "Build: Creating the directory to mount the VHD ..."
+	sudo mkdir /mnt/GRAMVD
+
+vhd-mount:
+	@echo "=========================="
+	@echo "Build: Mounting the VHD ..."
+	-sudo umount /mnt/GRAMVD
+	sudo mount -t vfat -o loop,offset=32256 GRAMHV.VHD /mnt/GRAMVD/
+
+vhd-copy-files:
+	@echo "========================="
+	@echo "Build: Copying files into the mounted VHD ..."
+	sudo cp -r $(BASE)/*  /mnt/GRAMVD
+
+vhd-unmount:
+	@echo "======================"
+	@echo "Build: Unmounting the VHD ..."
+	sudo umount /mnt/GRAMVD
+
+run: do_run
+do_run:
+	sh ./run
+
+runnokvm: do_runnokvm
+do_runnokvm:
+	sh ./runnokvm
+
+clean:
+	-rm -f *.o *.BIN kernel/*.o kernel/*.BIN
+	@echo "~clean"
+
+clean-all: clean
+	-rm -f *.VHD *.ISO boot/*.VHD
+	-rm -rf boot/x86/bin/*.BIN kernel/*.o kernel/*.BIN kernel/KERNEL.BIN mods/*.o mods/*.BIN mods/bin/*.BIN
+	-rm -rf usys/bin/*.BIN usys/init/*.o usys/init/*.BIN uservers/netd/client/*.o uservers/netd/client/*.BIN uservers/netd/server/*.o uservers/netd/server/*.BIN usys/commands/bin/*.BIN usys/commands/init/*.o
+	-rm -rf $(BASE)/*.BIN $(BASE)/*.BMP $(BASE)/EFI/BOOT/*.EFI $(BASE)/GRAMADO/*.BIN $(BASE)/DE/*.BIN $(BASE)/DE/*.BMP
+	@echo "~clean-all"
+
+usage:
+	@echo "Building everything:"
+	@echo "make all"
+	@echo "Clear the mess to restart:"
+	@echo "make clean-all"
+	@echo "Testing on qemu:"
+	@echo "./run"
+	@echo "./runnokvm"
+
+danger-install-sda:
+	sudo dd if=./GRAMHV.VHD of=/dev/sda
+
+danger-install-sdb:
+	sudo dd if=./GRAMHV.VHD of=/dev/sdb
+
+qemu-instance:
+	-cp ./GRAMHV.VHD ./QEMU.VHD 
