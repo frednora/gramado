@@ -76,6 +76,11 @@ libgr_transform_to_screespace(
 
 }
 
+// The function libgr_transform_from_viewspace_to_screespace() 
+// transforms 3D coordinates (x, y, z) 
+// from the view space to 2D screen space coordinates (x, y). 
+// This transformation is done without using a perspective matrix, 
+// utilizing either a left-hand or right-hand coordinate system.
 
 // Transforme from the (x,y,z) coordinates of the 'view space'
 // to the (x,y) coordinates of the 2d screen space.
@@ -96,6 +101,30 @@ libgr_transform_to_screespace(
 // #
 // Trasformation for Cavalier Oblique Drawings.
 // It uses full depth.
+
+/*
+Example Usage
+This function is used in your 3D demos to convert 3D coordinates of objects, 
+such as spinning cubes, into 2D coordinates for rendering on the screen. 
+It helps in visualizing the 3D objects on a 2D display without using complex matrix transformations.
+*/
+
+// The function libgr_transform_from_viewspace_to_screespace() is used in the grPlot0 function 
+// in xgames/aurora/demo00/grprim.c
+
+/*
+Parameters
+int *res_x, int *res_y: 
+    Pointers to store the resulting screen space x and y coordinates.
+int _x, _y, _z: 
+    The input 3D coordinates in the view space.
+int left_hand: 
+    A flag indicating whether to use a left-hand coordinate system (TRUE) or 
+    right-hand coordinate system (FALSE).
+int _hotspotx, _hotspoty: 
+    The x and y coordinates of the hotspot, which is the center of the screen in 2D space.
+*/
+
 int 
 libgr_transform_from_viewspace_to_screespace(
     int *res_x, int *res_y,
