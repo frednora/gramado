@@ -2,7 +2,7 @@
 // This is the first C file, called after the assembly routines.
 // Created by Fred Nora.
 
-// This file contains the kernel_main function,
+// This file contains the I_kmain function,
 // called by START in 
 // entrance/warden/unit0/x86_64/head_64.asm.
 // This file and their folder will be the control panel
