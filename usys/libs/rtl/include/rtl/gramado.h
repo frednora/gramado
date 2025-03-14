@@ -183,7 +183,6 @@ struct rtl_event_d *rtl_next_event(void);
 
 // ===========================================================
 
-
 // Only for a given valid range of keys?
 int rtl_get_key_state(int vk);
 
@@ -206,8 +205,8 @@ int rtl_create_empty_directory(char *dir_name);
 // == process ===============================
 //
 
-void *rtl_create_process( const char *file_name );
-int rtl_start_process( void *process );
+void *rtl_create_process(const char *file_name);
+int rtl_start_process(void *process);
 
 
 //
@@ -219,7 +218,7 @@ void *rtl_create_thread (
     unsigned long init_stack, 
     char *name );
 
-void rtl_start_thread (void *thread);
+void rtl_start_thread(void *thread);
 
 // ===================================================
 
@@ -238,7 +237,7 @@ char *rtl_get_next_token_in_a_string(
     size_t buffer_size,  // The buffer size.
     size_t *size );      // Output to return an int value. The counter.
 
-void rtl_show_backbuffer (void);
+void rtl_show_backbuffer(void);
 
 unsigned long rtl_get_system_message(unsigned long message_buffer);
 unsigned long 
@@ -246,7 +245,11 @@ rtl_post_system_message(
     int dest_tid, 
     unsigned long message_buffer );
 
-unsigned long rtl_get_system_message2(unsigned long message_buffer,int index,int restart);
+unsigned long 
+rtl_get_system_message2(
+    unsigned long message_buffer, 
+    int index, 
+    int restart );
 
 unsigned long rtl_get_system_metrics (int index);
 int rtl_is_qemu(void);
@@ -266,7 +269,6 @@ pthread_t pthread_self(void);
 // usado para calcular o tempo de execuçao de uma funcao.
 unsigned long rtl_get_progress_time(void);
 
-
 // #bugbug
 // Not tested yet.
 int 
@@ -275,7 +277,6 @@ rtl_copy_text (
     unsigned long dest, 
     int width, 
     int height );
-
 
 int rtl_reboot(void);
 
@@ -297,9 +298,9 @@ void rtl_broken_vessels(void);
 
 // Clone and execute a process.
 // #todo: maybe use 'const char*'
-int rtl_clone_and_execute( char *name );
+int rtl_clone_and_execute(char *name);
 
-int rtl_spawn_process( const char *path );
+int rtl_spawn_process(const char *path);
 
 // get current thread
 // set foreground thread.
@@ -316,9 +317,9 @@ void rtl_sleep(unsigned long ms);
 void rtl_invalidate_screen(void);
 
 // Use the kernel allocator for ring 3 shared memory.
-void *shAlloc( size_t size_in_bytes );
+void *shAlloc(size_t size_in_bytes);
 
-int rtl_execute_cmdline( char *cmdline );
+int rtl_execute_cmdline(char *cmdline);
 
 int rtl_swap32(int *x, int *y);
 int rtl_swap64(long *x, long *y);
@@ -333,7 +334,6 @@ rtl_default_procedure(
     int msg_code, 
     unsigned long long1, 
     unsigned long long2 );
-
 
 
 //

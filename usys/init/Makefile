@@ -1,9 +1,6 @@
-
-#history:
-#2019 - Created by Fred Nora.
-#todo:
-#fazer um makefile pra compilar o shell
-#obs: #bugbug tem que arrumas as coisas aqui.
+# Build INIT.BIN
+# This is the first program that runs in ring 3.
+# 2019 - Created by Fred Nora.
 
 VERSION = 0
 PATCHLEVEL = 0
@@ -13,8 +10,6 @@ EXTRAVERSION =
 
 Q = @ 
 
-#todo:
-#We need to simplify these flags
 
 CFLAGS = -m64 \
 	-std=gnu89 \
@@ -40,30 +35,30 @@ myObjects = crt0.o main.o inittask.o rtl.o \
 ctype.o stdio.o fcntl.o stdlib.o string.o unistd.o termios.o ioctl.o \
 socket.o    
 
-.PHONY: all all-c hello-link finalize clean
+.PHONY: all all-c link_app finalize clean
 
-all: main.o all-c hello-link finalize clean
+all: main.o all-c link_app finalize clean
 	@echo "Ok?"
 main.o:
 	gcc  -c main.c  $(CFLAGS) -I $(LIBC) -o main.o
 all-c:
 	gcc  -c inittask/inittask.c  $(CFLAGS) -I $(LIBC) -o inittask.o
 
-	$(Q)cp $(LIBCOBJ)/crt0.o   .
+	$(Q)cp $(LIBCOBJ)/crt0.o  .
 	$(Q)cp $(LIBCOBJ)/rtl.o  .
 
-	$(Q)cp $(LIBCOBJ)/ctype.o   .
-	$(Q)cp $(LIBCOBJ)/stdio.o .
-	$(Q)cp $(LIBCOBJ)/fcntl.o .
-	$(Q)cp $(LIBCOBJ)/stdlib.o .
-	$(Q)cp $(LIBCOBJ)/string.o .
+	$(Q)cp $(LIBCOBJ)/ctype.o  .
+	$(Q)cp $(LIBCOBJ)/stdio.o  .
+	$(Q)cp $(LIBCOBJ)/fcntl.o  .
+	$(Q)cp $(LIBCOBJ)/stdlib.o  .
+	$(Q)cp $(LIBCOBJ)/string.o  .
 	$(Q)cp $(LIBCOBJ)/unistd.o  .
 
 	$(Q)cp $(LIBCOBJ)/termios.o  .
 	$(Q)cp $(LIBCOBJ)/ioctl.o  .
 	$(Q)cp $(LIBCOBJ)/socket.o  .
 
-hello-link:
+link_app:
 	ld -m elf_x86_64 -T ../link.ld -o INIT.BIN $(myObjects)    
 finalize:
 	cp INIT.BIN  ../bin/

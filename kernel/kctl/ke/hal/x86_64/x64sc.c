@@ -2,6 +2,8 @@
 // Syscall handlers.
 // Called by the Assembler.
 // see: sw1.asm
+// The handlers here call the real implementation in sci.c
+//
 
 #include <kernel.h>
 
@@ -56,6 +58,7 @@ void *sc80h (
     }
 // -----------
 
+// See: sci.c
     return (void*) sci0(number,arg2,arg3,arg4);
 }
 
@@ -76,25 +79,26 @@ void *sc81h (
     unsigned long tmp_cpl = (unsigned long) cpl_buffer[0];
     cpl = (int) (tmp_cpl & 3);
 
-    if( cpl != 0 && cpl != 1 && cpl != 2 && cpl != 3 )
+    if ( cpl != 0 && cpl != 1 && cpl != 2 && cpl != 3 )
     {
         panic("sc81h: cpl");
     }
 
-    if(cpl == 0){
+    if (cpl == 0){
         panic("sc81h: cpl 0\n");
     }
-    if(cpl == 1){
+    if (cpl == 1){
         panic("sc81h: cpl 1\n");
     }
-    if(cpl == 2){
+    if (cpl == 2){
         panic("sc81h: cpl 2\n");
     }
-    if(cpl == 3){
+    if (cpl == 3){
         // ok
     }
 //-----------------
 
+// See: sci.c
     return (void*) sci1(number,arg2,arg3,arg4);
 }
 
@@ -134,6 +138,7 @@ void *sc82h (
     }
 // --------------
 
+// See: sci.c
     return (void*) sci2(number,arg2,arg3,arg4);
 }
 
@@ -154,25 +159,26 @@ void *sc83h (
     unsigned long tmp_cpl = (unsigned long) cpl_buffer[0];
     cpl = (int) (tmp_cpl & 3);
 
-    if( cpl != 0 && cpl != 1 && cpl != 2 && cpl != 3 )
+    if ( cpl != 0 && cpl != 1 && cpl != 2 && cpl != 3 )
     {
         panic("sc83h: cpl");
     }
 
-    if(cpl == 0){
+    if (cpl == 0){
         panic("sc83h: cpl 0\n");
     }
-    if(cpl == 1){
+    if (cpl == 1){
         panic("sc83h: cpl 1\n");
     }
-    if(cpl == 2){
+    if (cpl == 2){
         panic("sc83h: cpl 2\n");
     }
-    if(cpl == 3){
+    if (cpl == 3){
         // ok
     }
 //-------
 
+// See: sci.c
     return (void*) sci3(number,arg2,arg3,arg4);
 }
 

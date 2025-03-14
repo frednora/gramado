@@ -201,7 +201,7 @@ static void __invalidate_surface_rectangle(void)
 
 // =====================================================
 
-// This routine was called by the interrupt handler in x64mi.c.
+// This routine was called by the interrupt handler in x64sc.c.
 void *sci0 ( 
     unsigned long number, 
     unsigned long arg2, 
@@ -1816,7 +1816,7 @@ void *sci0 (
 }
 
 
-// This routine was called by the interrupt handler in x64mi.c.
+// This routine was called by the interrupt handler in x64sc.c.
 void *sci1 ( 
     unsigned long number, 
     unsigned long arg2, 
@@ -1933,7 +1933,7 @@ fail:
     return NULL;
 }
 
-// This routine was called by the interrupt handler in x64mi.c.
+// This routine was called by the interrupt handler in x64sc.c.
 void *sci2 ( 
     unsigned long number, 
     unsigned long arg2, 
@@ -2687,7 +2687,7 @@ void *sci2 (
     return NULL;
 }
 
-// This routine was called by the interrupt handler in x64mi.c.
+// This routine was called by the interrupt handler in x64sc.c.
 void *sci3 ( 
     unsigned long number, 
     unsigned long arg2, 
