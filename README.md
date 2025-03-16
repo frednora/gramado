@@ -60,10 +60,17 @@ not all the features needed by a commercial operating system.
 > * Some few clients connected to the display server via unix-sockets.
 > * Ring3 processes can access the i/o ports via syscall. (For ring3 drivers only).
 
-
 ## userland system programs.
 
-> * The network server.
+> * The network server. (Work in progress)
+
+# DE - Desktop Environment
+This is a screenshot of GramadoDE desktop environment running on top of the kernel.
+![Screenshot](https://raw.githubusercontent.com/polard8/screenshots/main/gramado-8.png)
+
+# DE - Desktop Environment
+This is a screenshot of 3D demo running on top of the kernel.
+![Screenshot](https://raw.githubusercontent.com/polard8/screenshots/main/gramado-3.png)
 
 ## The source code.
 

@@ -4,10 +4,10 @@
   Desktop Environment for the kernel.
 ```
 
-## This is a screenshot of GramadoDE desktop environment running on top of Polar D8 kernel.
+## This is a screenshot of GramadoDE desktop environment running on top of the kernel.
 ![Screenshot](https://raw.githubusercontent.com/polard8/screenshots/main/gramado-8.png)
 
-## This is a screenshot of 3D demo running on top of Polar D8 kernel.
+## This is a screenshot of 3D demo running on top of the kernel.
 ![Screenshot](https://raw.githubusercontent.com/polard8/screenshots/main/gramado-3.png)
 
 ```
