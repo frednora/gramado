@@ -51,7 +51,7 @@ PHONY := all
 all:  \
 build-gramado-os \
 copy-extras \
-zbuild/GRAMVD \
+/mnt/GRAMVD \
 vhd-mount \
 vhd-copy-files \
 vhd-unmount \
@@ -83,7 +83,7 @@ build-gramado-os
 PHONY := image
 image: do_image
 do_image: \
-zbuild/GRAMVD    \
+/mnt/GRAMVD    \
 vhd-mount          \
 vhd-copy-files     \
 vhd-unmount        \
@@ -253,11 +253,11 @@ copy-extras:
 
 # --------------------------------------
 #::2
-# Step 2: zbuild/GRAMVD  - Creating the directory to mount the VHD.
-zbuild/GRAMVD:
+# Step 2: /mnt/GRAMVD  - Creating the directory to mount the VHD.
+/mnt/GRAMVD:
 	@echo "========================="
 	@echo "Build: Creating the directory to mount the VHD ..."
-	sudo mkdir zbuild/GRAMVD
+	sudo mkdir /mnt/GRAMVD
 
 # --------------------------------------
 #::3
@@ -265,8 +265,8 @@ zbuild/GRAMVD:
 vhd-mount:
 	@echo "=========================="
 	@echo "Build: Mounting the VHD ..."
-	-sudo umount zbuild/GRAMVD
-	sudo mount -t vfat -o loop,offset=32256 GRAMHV.VHD zbuild/GRAMVD/
+	-sudo umount /mnt/GRAMVD
+	sudo mount -t vfat -o loop,offset=32256 GRAMHV.VHD /mnt/GRAMVD/
 
 # --------------------------------------
 #::4
@@ -277,7 +277,7 @@ vhd-copy-files:
 	@echo "Build: Copying files into the mounted VHD ..."
 	# Copy $(BASE)/
 	# sends everything from disk/ to root.
-	sudo cp -r $(BASE)/*  zbuild/GRAMVD
+	sudo cp -r $(BASE)/*  /mnt/GRAMVD
 
 # --------------------------------------
 #:::5
@@ -285,7 +285,7 @@ vhd-copy-files:
 vhd-unmount:
 	@echo "======================"
 	@echo "Build: Unmounting the VHD ..."
-	sudo umount zbuild/GRAMVD
+	sudo umount /mnt/GRAMVD
 
 # --------------------------------------
 # Run on qemu using kvm.

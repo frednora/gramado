@@ -223,6 +223,7 @@ Order: (Boot; Kernel; Userland; Data and tools)
   * xde/     - Desktop Environment.
   * xgames/  - 3D demos and games.
   * your/    - Your stuff.
+  * zbuild/  - Where the Virtual disk will be mounted.
 ```
 
 # Warning
