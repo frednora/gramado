@@ -355,10 +355,10 @@ static void drawTerrain(struct cube_model_d *cube, float fElapsedTime)
         // estão grandes o bastante para usarmos
         // uma rotina 2D de rasterização.
         // Isso será feito pela rotina de contrução de triangulos.
-        int fill_triangle = TRUE;
+        int fFillTriangle = TRUE;
         if ( (void*) __root_window != NULL )
         {
-            if (cull==FALSE)
+            if (cull == FALSE)
             {
                 // The 'image space'.
                 // Our image space is not 1:1:1
@@ -371,7 +371,7 @@ static void drawTerrain(struct cube_model_d *cube, float fElapsedTime)
                 plotTriangleF(
                     (struct gws_window_d *) __root_window, 
                     (struct gr_triangleF3D_d *) &triRotatedXYZ,
-                    fill_triangle,
+                    fFillTriangle,
                     0 ); 
             }
         }
@@ -467,7 +467,7 @@ static void drawFlyingCube(struct cube_model_d *cube, float vel)
 
 // ?
 // The 'face' has three vector.
-// Now we're selection the indexes for these three vectors. I guess.
+// Now we're selecting the indexes for these three vectors. I guess.
 // 12 triangles. (12*3) = 36 vectors.
 // Order: north, top, south, bottom, east, west.
 // clockwise
@@ -507,7 +507,7 @@ static void drawFlyingCube(struct cube_model_d *cube, float vel)
         tri.p[0].y = (float) cube->vecs[v].y;
         tri.p[0].z = (float) cube->vecs[v].z;
         tri.p[0].color = COLOR_PINK;
-        if(i >= 1 && i <= 12){
+        if (i >= 1 && i <= 12){
             tri.p[0].color = cube->colors[i-1];  // rectangle color
         }
 
@@ -637,7 +637,7 @@ static void drawFlyingCube(struct cube_model_d *cube, float vel)
         // From the center, not from the top/left corner.
         // Because our 3D int engine assumes that.
 
-        if ( (void*)terrain != NULL )
+        if ( (void*) terrain != NULL )
         {
             triRotatedXYZ.p[0].x = 
                 (float) (triRotatedXYZ.p[0].x + terrain->hposition + cube->hposition); 
@@ -653,7 +653,7 @@ static void drawFlyingCube(struct cube_model_d *cube, float vel)
         // From the center, not from the top/left corner.
         // Because our 3D int engine assumes that.
 
-        if ( (void*)terrain != NULL )
+        if ( (void*) terrain != NULL )
         {
             triRotatedXYZ.p[0].y = 
                 (float) (triRotatedXYZ.p[0].y + terrain->vposition + cube->vposition); 
@@ -749,12 +749,12 @@ static void drawFlyingCube(struct cube_model_d *cube, float vel)
         // estão grandes o bastante para usarmos
         // uma rotina 2D de rasterização.
         // Isso será feito pela rotina de contrução de triangulos.
-        int fill_triangle = TRUE;
+        int fFillTriangle = TRUE;
 
         // It means that the vectors are in opposite directions.
         // So, we're gonna paint this surface.
         // Muuuuu!
-        if (cull==FALSE)
+        if (cull == FALSE)
         {
             // The 'image space'.
             // Our image space is not 1:1:1
@@ -771,7 +771,7 @@ static void drawFlyingCube(struct cube_model_d *cube, float vel)
                 plotTriangleF(
                     (struct gws_window_d *) __root_window, 
                     (struct gr_triangleF3D_d *) &triRotatedXYZ,
-                    fill_triangle,
+                    fFillTriangle,
                     0 );
             }
         }
@@ -1287,32 +1287,31 @@ void FlyingCubeMove(int number, int direction, float value)
 {
     struct cube_model_d *cube;
 
-    if(number<0)
+    if (number < 0)
         return;
-    if(number>=CUBE_MAX)
+    if (number >= CUBE_MAX)
         return;
     cube = (struct cube_model_d *) cubes[number];
-    if( (void*) cube == NULL )
+    if ((void*) cube == NULL)
         return;
 
 // Move model
     // left
-    if(direction == 1){
+    if (direction == 1){
         cube->hposition = (float) (cube->hposition - value); 
     }
     // right
-    if(direction == 2){
+    if (direction == 2){
         cube->hposition = (float) (cube->hposition + value); 
     }
     // front
-    if(direction == 3){
+    if (direction == 3){
         cube->model_distance = (float) (cube->model_distance + value); 
     }
     // back
-    if(direction == 4){
+    if (direction == 4){
         cube->model_distance = (float) (cube->model_distance - value); 
     }
-
 
 /*
 // Move camera
@@ -1327,7 +1326,12 @@ void FlyingCubeMove(int number, int direction, float value)
 */
 }
 
-// called by the engine
+// Called by the engine
+// obs: 
+// We have an embedded model into this function
+// it's because we still don't have a function to read floating point data from
+// a file. In the future we will have the model into a file and read it using our new function.
+//
 void demoFlyingCubeSetup(void)
 {
 // first cube
@@ -1357,7 +1361,7 @@ void demoFlyingCubeSetup(void)
     
     for (count=0; count<CUBE_MAX; count++)
     {
-        cube = (void*) malloc( sizeof( struct cube_model_d ) );
+        cube = (void*) malloc( sizeof(struct cube_model_d) );
         if ((void*) cube == NULL){
             printf("cube\n");
             exit(1);

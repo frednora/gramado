@@ -884,6 +884,106 @@ create_start_menu(
     return 0;
 }
 
+
+//==========================================
+// #test: Testing this function
+// Custom fscanf-like function to read a float
+int my_fscanf(FILE *stream, const char *format, void *ptr) {
+    if (stream == NULL || format == NULL || ptr == NULL) {
+        return -1; // Error: invalid arguments
+    }
+
+    // For simplicity, we only handle "%f" format
+    if (format[0] != '%' || format[1] != 'f' || format[2] != '\0') {
+        return -1; // Unsupported format
+    }
+
+    float *result = (float *)ptr; // Cast the void pointer to float pointer
+    float value = 0.0f;
+    int sign = 1;
+    int c;
+
+    // Skip leading whitespace
+    while ((c = fgetc(stream)) != EOF && (c == ' ' || c == '\t' || c == '\n'));
+
+    if (c == EOF) {
+        return 0; // No items read
+    }
+
+    // Handle sign
+    if (c == '-') {
+        sign = -1;
+        c = fgetc(stream);
+    } else if (c == '+') {
+        c = fgetc(stream);
+    }
+
+    // Read integer part
+    int has_digits = 0;
+    while (c >= '0' && c <= '9') {
+        value = value * 10.0f + (c - '0');
+        has_digits = 1;
+        c = fgetc(stream);
+    }
+
+    // Read decimal part if present
+    if (c == '.') {
+        float fraction = 0.1f;
+        c = fgetc(stream);
+        while (c >= '0' && c <= '9') {
+            value += (c - '0') * fraction;
+            fraction *= 0.1f;
+            has_digits = 1;
+            c = fgetc(stream);
+        }
+    }
+
+    // If no valid digits were read, return failure
+    if (!has_digits) {
+        ungetc(c, stream); // Put back the last character
+        return 0;
+    }
+
+    // Apply sign and store the result
+    *result = value * sign;
+
+    // Put back the last non-number character
+    if (c != EOF) {
+        ungetc(c, stream);
+    }
+
+    return 1; // Successfully read one item
+}
+
+
+// Example usage
+int test_fun00(void)
+{
+
+    printf("test_fun00:\n");
+
+    FILE *file = fopen("test.txt", "r");
+    if (!file) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+
+    float value;
+    int result = my_fscanf(file, "%f", &value);
+    if (result == 1) {
+        //printf("ok\n");
+        //printf("Read float: %f\n", value);
+        if (value == 3.14f)
+            printf("It's PI\n");
+    } else {
+        printf("Failed to read float, result: %d\n", result);
+    }
+
+    //fclose(file);
+    return 0;
+}
+
+
 //==========================================
 // Main
 int main(int argc, char *argv[])
@@ -905,7 +1005,6 @@ int main(int argc, char *argv[])
     //printf          ("xtb.bin: Enable interrupts \n");
     //asm ("int $199 \n");
 
-
 // interrupts
 // Unlock the taskswitching support.
 // Unlock the scheduler embedded into the base kernel.
@@ -926,6 +1025,17 @@ int main(int argc, char *argv[])
     //while (1){
     //    sc80(897,0,0,0);
     //}
+
+
+
+
+// ================================================
+// # testing 
+    //printf("xtb:\n");
+    //test_fun00();
+    //while(1){}
+
+// ================================================
 
 /*
 //================================
