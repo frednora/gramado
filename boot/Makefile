@@ -1,5 +1,5 @@
-
 # Build some stuff in boot/
+# Created by Fred Nora.
 
 NASM = nasm 
 

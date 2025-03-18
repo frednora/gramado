@@ -1,3 +1,7 @@
+# Build all in uservers/
+# Servers in ring 3.
+# Created by Fred Nora.
+
 all:
 
 # The libs for ring3

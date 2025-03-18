@@ -1,5 +1,6 @@
 # Compile all the loadable kernel modules.
 # For now these are not dynlinked modules.
+# Created by Fred Nora.
 
 all:
 	make -C hvmod0/
@@ -7,7 +8,9 @@ all:
 
 clean:
 	-rm bin/*.BIN
+
 clean-all:
+
 	-rm bin/*.BIN
 
 	-rm hvmod0/*.o

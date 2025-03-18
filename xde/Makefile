@@ -1,8 +1,6 @@
-# Polar D8 DE
-# Codename: Bride
-
-# It builds the de/ project.
-
+# Build the all in xde/.
+# This is the Desktop Environment.
+# Created by Fred Nora.
 
 all:
 # Client-side GUI applications
