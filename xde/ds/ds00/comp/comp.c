@@ -1,4 +1,3 @@
-
 // comp.c
 // The purpose of these routines is compose the final frame
 // into the backbuffer and display it into the frontbuffer.
@@ -6,21 +5,20 @@
 
 #include "../gwsint.h"
 
-// It manges the compositor behavior.
-struct compositor_d  Compositor;
 
+// It manages the compositor behavior.
+struct compositor_d  Compositor;
 
 // The callback can't use the compose()
 // if the display server is using it at the moment.
 int __compose_lock = FALSE;
 
-extern struct gws_window_d *mouse_hover;
-
-
 // #todo
 // Create some configuration globals here
 // int gUseSomething = TRUE;
 // ...
+
+extern struct gws_window_d *mouse_hover;
 
 //old
 static long __old_mouse_x=0;
@@ -127,9 +125,11 @@ void reactRefreshDirtyWindows(void)
 //   individual buffer for the windows in the compositor.
 
     register int i=0;
-    // The component.
-    // It's a window, but we don't care about its type.
-    // All we need to do is refreshing the window's rectangle.
+
+// The component.
+// It's a window, but we don't care about its type.
+// All we need to do is refreshing the window's rectangle.
+
     struct gws_window_d *w;
 
 // Is the root window a valid window
@@ -164,28 +164,25 @@ void reactRefreshDirtyWindows(void)
     };
 }
 
-// wmReact:
+// wmReactToPaintEvents:
 // Refresh only the components that was changed by the painter.
 // #todo
 // Maybe in the future we can react to 
 // changes in other components than windows.
 void wmReactToPaintEvents(void)
 {
-// Refresh only the components that was changed by the painter.
-// It means that we're reacting to all the paint events.
-
+    // Refresh only the components that was changed by the painter.
+    // It means that we're reacting to all the paint events.
     reactRefreshDirtyWindows();
+
     // ...
 }
 
-/*
- * gws_show_window_rect:
- *     Mostra o retângulo de uma janela que está no backbuffer.
- *     Tem uma janela no backbuffer e desejamos enviar ela 
- * para o frontbuffer.
- *     A rotina de refresh rectangle tem que ter o vsync
- *     #todo: criar um define chamado refresh_window.
- */
+// gws_show_window_rect:
+// Show the rectangle of a window that was painted in the main backbuffer.
+// Copy from backbuffer to frontbuffer.
+// Does it need vsync?
+// #todo: criar um define chamado refresh_window.
 // ??
 // Devemos validar essa janela, para que ela 
 // não seja redesenhada sem antes ter sido suja?
@@ -194,12 +191,11 @@ void wmReactToPaintEvents(void)
 
 int gws_show_window_rect(struct gws_window_d *window)
 {
-    //struct gws_window_d  *p;
+    struct gws_window_d *parent;
 
     //#debug
     //debug_print("gws_show_window_rect:\n");
 
-// Structure validation
     if ((void *) window == NULL){
         goto fail;
     }
@@ -234,9 +230,7 @@ int gws_show_window_rect(struct gws_window_d *window)
     if (window->state == WINDOW_STATE_MINIMIZED)
         goto fail;
 
-// If the parent is an overlapped window,
-// and the parent is minimied, so we can't show it.
-    struct gws_window_d *parent;
+// We can't draw if the parent's type is WT_OVERLAPPED and it's minimized.
     parent = (struct gws_window_d *) window->parent;
     if ((void*) parent != NULL)
     {
@@ -259,7 +253,6 @@ int gws_show_window_rect(struct gws_window_d *window)
         window->height ); 
 
     validate_window(window);
-
     return 0;
 
 fail:
@@ -280,14 +273,40 @@ void DoWeNeedToEraseMousePointer(int value)
     __clear_mousebox = (int) value;
 }
 
-// Onde esta o mouse? em que janela?
-// simple implementation.
-// get the old one in the 32bit version of gramado.
-
+// What is the window where the mouse pointer is inside?
+// Compare the global variables for mouse pointer 
+// against the windows dimensions to find the perfect match.
+// mouse_hover is the pointer for the window with the mouse pointer.
 void mouse_at(void)
 {
     struct gws_window_d *w;
     register int i=0;
+
+    // #todo: Is it necessary?
+    // mouse_hover = NULL;
+
+// #test
+// The mouse pointer is already in mouse_hover.
+    if ((void*) mouse_hover != NULL)
+    {
+        if (mouse_hover->magic == 1234)
+        {
+            if ( __new_mouse_x > mouse_hover->absolute_x &&
+                 __new_mouse_x < mouse_hover->absolute_right &&
+                 __new_mouse_y > mouse_hover->absolute_y &&
+                 __new_mouse_y > mouse_hover->absolute_bottom )
+            {
+                // Not the root
+                if (mouse_hover != __root_window)
+                {
+                    //mouse_hover = (void *) w;
+                    //redraw_window(w,TRUE);
+                    return;
+                }
+            }
+        }
+    }
+
     for (i=0; i<WINDOW_COUNT_MAX; i++)
     {
         w = (void*) windowList[i];
@@ -396,7 +415,7 @@ void __display_mouse_cursor(void)
 // We call it when we receive an 'mouse move' event.
     if (__clear_mousebox == TRUE)
     {
-        gws_refresh_rectangle( 
+        gws_refresh_rectangle(
             __old_mouse_x, __old_mouse_y, rWidth, rHeight );
         DoWeNeedToEraseMousePointer(FALSE);
     }
@@ -469,9 +488,11 @@ wmCompose(
     unsigned long jiffies, 
     unsigned long clocks_per_second )
 {
+
+// Locked?
     if (__compose_lock == TRUE)
         return;
-
+// Lock
     __compose_lock = TRUE;
 
 // Compositor
@@ -484,6 +505,7 @@ wmCompose(
         comp_display_desktop_components();
     };
 
+// Unlock
     __compose_lock = FALSE;
 }
 
@@ -497,7 +519,10 @@ void refresh_subwidnows( struct gws_window_d *w )
 */
 
 
+// Initialize the mouse support.
 // global
+// #temporary:
+// Mouse is using the limit os 0~800.
 void comp_initialize_mouse(void)
 {
     int hotspotx=0;
@@ -510,6 +535,7 @@ void comp_initialize_mouse(void)
     if (h>=0 && h<=800)
         hotspoty = (h >> 1);
 
+// Save it globally.
     __old_mouse_x = hotspotx;
     __old_mouse_y = hotspoty;
     __new_mouse_x = hotspotx;
@@ -528,14 +554,19 @@ void comp_set_mouse_position(long x, long y)
 {
     unsigned long w = gws_get_device_width();
     unsigned long h = gws_get_device_height();
-    if ( x<0 ){ x=0; }
-    if ( y<0 ){ y=0; }
-    if ( x>w ){
+
+// Lower limit
+    if (x < 0){ x=0; }
+    if (y < 0){ y=0; }
+// Upper limit
+// #bugbug: Check if it is '>=' instead.
+    if (x > w){
         x=w;
     }
-    if ( y>h ){
+    if (y > h){
         y=h;
     }
+// Save it globally.
     __new_mouse_x = (long) x;
     __new_mouse_y = (long) y;
 }
@@ -545,15 +576,10 @@ void comp_set_mouse_position(long x, long y)
 // INITIALIZATION
 //
 
+// + InitializeCompositor structure.
+// + Initialize mouse support.
 int compInitializeCompositor(void)
 {
-
-//
-// Initialize the structure.
-//
-
-    Compositor.used = TRUE;
-    Compositor.magic = 1234;
 
 // >> This flag enables composition for the display server.
 // In this case the server will compose a final backbbuffer
@@ -562,10 +588,11 @@ int compInitializeCompositor(void)
 // >> If this flag is not set, all the windows will be painted in the
 // directly in the same backbuffer, and the compositor will just
 // copy the backbuffer to the LFB.
-
     Compositor.__enable_composition = FALSE;
 
 // The structure is initialized.
+    Compositor.used = TRUE;
+    Compositor.magic = 1234;
     Compositor.initialized = TRUE;
 
 // Initialize the mouser support.
@@ -576,5 +603,4 @@ int compInitializeCompositor(void)
 
     return 0;
 }
-
 
