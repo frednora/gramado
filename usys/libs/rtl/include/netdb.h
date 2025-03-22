@@ -1,7 +1,5 @@
-/*
- * netdb.h
- * 
- */
+// netdb.h
+
 
 // Functions for translating protocol names and 
 // host names into numeric addresses. 
@@ -11,13 +9,11 @@
 
 
 #ifndef _NETDB_H_
-#define  _NETDB_H_
-
+#define _NETDB_H_
 
 /*
  * Data types
  */
-
 
 //#ifndef socklen_t
 //typedef __socklen_t	socklen_t;
@@ -29,7 +25,6 @@
 typedef  _BSD_SIZE_T_  size_t;
 #undef  _BSD_SIZE_T_
 #endif
-
 
 
 #if defined(_NETBSD_SOURCE)

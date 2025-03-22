@@ -1,14 +1,17 @@
+// heap.h
+// Heap support for ring3 applications.
+// 2016 - Created by Fred Nora.
+
 /*
- * File: heap.h
  *     O prop�sito desse header � dar suporte ao gerenciamento de
  * do heap que ser� usado para a aloca��o de mem�ria para um programa
  * em user mode. 
  *     Um suporte oferecido pela biblioteca libC99.
  *     Obs: O kernel poder� usar tanto o heap do processo quanto o heap 
  * do desktop ao qual o processo pertence.
- *     2016 - Created by Fred Nora.
  */
 
+ 
 #ifndef __HEAP_H
 #define __HEAP_H  1
 

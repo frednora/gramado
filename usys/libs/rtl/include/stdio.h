@@ -1,13 +1,9 @@
-/*
- * File: stdio.h
- *     Standard IO facilities.
- *     I/O routines support.
- *     c99 - ISO/IEC 9899:1999
- * Environment: ring3.
- * History:
- *     2015 - Created by Fred Nora.
- *     2020 - A lot of new functions.
- */
+// stdio.h
+// Standard I/O routines.
+// ring 3.
+// History:
+// 2015 - Created by Fred Nora.
+// 2020 - A lot of new functions.
 
 #ifndef __STDIO_H__
 #define __STDIO_H__    1
@@ -324,8 +320,6 @@ extern unsigned long g_rows;
 //int g_using_gui; 
 extern int g_using_gui; 
 
-
-
 //===========================================
 
 //
@@ -348,10 +342,7 @@ extern int prompt_pos;
 extern int prompt_max;
 extern int prompt_status;
 
-
-
 // =========================================
-
 
 //
 // == Macros ==================================================
@@ -360,37 +351,35 @@ extern int prompt_status;
 //=======================
 // fileno
 
-#define  __sfileno(_stream)  ((_stream)->_file)
-#define   __fileno(_stream)  ((_stream)->_file)
+#define __sfileno(_stream)  ((_stream)->_file)
+#define  __fileno(_stream)  ((_stream)->_file)
 
-#define  facility_fileno(_stream)  ((_stream)->_file)
-
+#define facility_fileno(_stream)  ((_stream)->_file)
 
 //=======================
 // feof
 
-#define  __sfeof(p)     (((p)->_flags & __SEOF) != 0)
-#define  __bsd_feof(p)  (((p)->_flags & __SEOF) != 0)
+#define __sfeof(p)     (((p)->_flags & __SEOF) != 0)
+#define __bsd_feof(p)  (((p)->_flags & __SEOF) != 0)
 
-#define  bsd_feof(p)       __sfeof(p)
-#define  facility_feof(p)  __sfeof(p)
-
+#define bsd_feof(p)       __sfeof(p)
+#define facility_feof(p)  __sfeof(p)
 
 //=======================
 // ferror
 
-#define  __sferror(p)   (((p)->_flags & __SERR) != 0)
+#define __sferror(p)   (((p)->_flags & __SERR) != 0)
 
-#define  bsd_ferror(p)       __sferror(p)
-#define  facility_ferror(p)  __sferror(p)
+#define bsd_ferror(p)       __sferror(p)
+#define facility_ferror(p)  __sferror(p)
 
 //=======================
 // clearerr
 
-#define  __sclearerr(p)  ((void)((p)->_flags &= ~(__SERR|__SEOF)))
+#define __sclearerr(p)  ((void)((p)->_flags &= ~(__SERR|__SEOF)))
 
-#define  bsd_clearerr(p)       __sclearerr(p)
-#define  facility_clearerr(p)  __sclearerr(p)
+#define bsd_clearerr(p)       __sclearerr(p)
+#define facility_clearerr(p)  __sclearerr(p)
 
 // =========================
 // __fgetchar
@@ -398,10 +387,8 @@ extern int prompt_status;
 // #test
 // #define  __fgetchar  fgetc(stdin)
 
-
 //======================================================
 // facility
-
 
 /*
 #define FACILITY_SETUP_READ   __SRD
@@ -411,7 +398,6 @@ extern int prompt_status;
 #define facility_putchar(__c)   fputc(__c, stdout)
 #define facility_getc(__stream)   fgetc(__stream)
 #define facility_getchar()   fgetc(stdin)
-
 
 #define facility__sfeof(p)      (((p)->_flags & __SEOF) != 0)
 #define facility__sferror(p)    (((p)->_flags & __SERR) != 0)
@@ -475,12 +461,8 @@ int fputs ( const char *s, FILE *stream );
 int getw (FILE *stream);
 int putw (int w, FILE *stream);
 
-
-
 // Serial port debug.
 void debug_print (char *string);
-
-
 
 void clearerr (FILE* stream);
 
@@ -489,16 +471,14 @@ char *ctermid (char *s);
 int fpurge (FILE *stream);
 
 int fsetpos (FILE *stream, const fpos_t *pos);
-
 int fgetpos (FILE *stream, fpos_t *pos);
 
 FILE *fmemopen (void *buf, size_t size, const char *mode);
-
 FILE *open_wmemstream (wchar_t **ptr, size_t *sizeloc);
-
 FILE *open_memstream (char **ptr, size_t *sizeloc);
 
 FILE *stdio_make_file ( int fd, const char *mode );
+
 FILE *fdopen (int fd, const char *mode);
 FILE *freopen (const char *pathname, const char *mode, FILE *stream);
 
@@ -507,35 +487,25 @@ char *tempnam (const char *dir, const char *pfx);
 char *tmpnam_r (char *s);
 char *tmpnam (char *s);
 
-
-
 //int vfscanf (FILE *stream, const char *format, va_list ap);
 //int vsscanf (const char *str, const char *format, va_list ap);
 //int vscanf (const char *format, va_list ap);
 //int vsnprintf (char *str, size_t size, const char *format, va_list ap);
 
-
 //
 //  vsprintf and print
 //
-
 
 // Just for fun :^) 
 //int Wirzenius_Torvalds_vsprintf (char *buf, const char *fmt, va_list args);
 //int Torvalds_printf (const char *fmt, ...);
 
-
-
-
 //int vdprintf (int fd, const char *format, va_list ap); 
-
 //int dprintf (int fd, const char *format, ...);
 
-
-
 unsigned int filesize (FILE * fp);
-char * fileread (FILE * fp);
 
+char *fileread (FILE * fp);
 
 // remove - remove a file or directory 
 // On success, zero is returned. On error, -1 is returned, and 
@@ -543,8 +513,8 @@ char * fileread (FILE * fp);
 // C89, C99, 4.3BSD, POSIX.1-2001. 
 int remove (const char *pathname); 
 
-int fileno ( FILE *stream );
- 
+int fileno (FILE *stream);
+
  
 // 
 // File Operations
@@ -554,11 +524,9 @@ FILE *fopen ( const char *filename, const char *mode );
 FILE *fopen2 ( const char *filename, const char *mode ); 
 int fclose (FILE *stream); 
 
-
 //
 // Normal output.
 //
-
 
 void nputs (char *cp, int len);
 
@@ -599,13 +567,9 @@ void perror (const char *str);
 //int stdout_printf (const char *format, ...);
 //int stderr_printf (const char *format, ...);
 
-
-
-
 //
 // == printf saga ============================================
 //
-
 
 /*
 // #todo
@@ -623,7 +587,6 @@ void perror (const char *str);
 
 // Another implementation. (I don't remember).
 //int printf3 (const char *fmt, ...);
-
 
 // ===================================
 
@@ -664,8 +627,6 @@ void rewind (FILE *stream);
 // Recebem input e colocam em prompt[].
 
 unsigned long input (unsigned long ch);
-
-
 
 //
 // Formatted Input
@@ -789,7 +750,6 @@ int rtl_are_you_sure(void);
 
 int stdio_atoi (char *s);
 void stdio_fntos (char *name);
-
 
 // 
 // Library initialization

@@ -1,3 +1,7 @@
+// ascii.h
+// Created by Fred Nora.
+
+
 #ifndef _ANSI_H
 #define _ANSI_H
 

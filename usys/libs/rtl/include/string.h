@@ -1,8 +1,6 @@
-/*
- * File: string.h
- * Descrição:
- *     Operações com strings. Padrão C.
- */
+// string.h
+// String operations.
+// Created by Fred Nora.
 
 #ifndef __STRING_H__
 #define __STRING_H__    1
@@ -28,12 +26,6 @@ check_bytes8 (
     unsigned int bytes );
 
 int strcoll (const char *s1, const char *s2);
-
-int memcmp (const void *s1, const void *s2, size_t n);
-
-void *memmove(void *dest, const void *src, size_t count);
-void *memscan (void *addr, int c, size_t size);
- 
  
 char *strsep (char **s, const char *ct);
 char *strpbrk (const char * cs,const char * ct); 
@@ -61,17 +53,8 @@ int strcmp(const char *s1, const char *s2);
 // http://man7.org/linux/man-pages/man3/strcmp.3.html
 int strncmp(const char *s1, const char *s2, size_t n);
 
-//#bugbug deletando porque tá errado.
+//#bugbug deletando porque tï¿½ errado.
 //int str_cmp(unsigned char *str1, unsigned char *str2);
-
-void *memsetw (void *dst, int val, size_t count);
-void *memset ( void *ptr, int value, int size );
-void *memoryZeroMemory(void* ptr, size_t cnt);
-void *memcpy (void *v_dst, const void *v_src, unsigned long c);
-//@todo: void *memcpy(void *dst, const void *src, size_t c); 
-
-void *memcpy32 ( void *v_dst, const void *v_src, unsigned long n );
-void *memcpy64 ( void *v_dst, const void *v_src, unsigned long n );
 
 size_t strlcpy (char *dst, const char *src, size_t size);
 char *strcpy(char *to, const char *from);
@@ -110,8 +93,30 @@ int strerror_r (int errnum, char *buf, size_t buflen);
 char *strsignal(int sig);
 
 void strtoupper(char *src);
-void rtl_string_to_upper (char *src);
 
+//
+// memxxxx()
+//
+
+int memcmp (const void *s1, const void *s2, size_t n);
+
+void *memmove(void *dest, const void *src, size_t count);
+void *memscan (void *addr, int c, size_t size);
+
+void *memsetw (void *dst, int val, size_t count);
+void *memset ( void *ptr, int value, int size );
+void *memoryZeroMemory(void* ptr, size_t cnt);
+void *memcpy (void *v_dst, const void *v_src, unsigned long c);
+//@todo: void *memcpy(void *dst, const void *src, size_t c); 
+
+void *memcpy32 ( void *v_dst, const void *v_src, unsigned long n );
+void *memcpy64 ( void *v_dst, const void *v_src, unsigned long n );
+
+//
+// rtl_xxxx()
+//
+
+void rtl_string_to_upper (char *src);
 void rtl_reverse(char s[]);
 
 #endif    

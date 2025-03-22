@@ -1,6 +1,12 @@
-struct	group { /* see getgrent(3) */
-	char	*gr_name;
-	char	*gr_passwd;
+// grp.h
+
+
+/* see getgrent(3) */
+struct group 
+{
+    char *gr_name;
+	char *gr_passwd;
 	int	gr_gid;
-	char	**gr_mem;
+	char **gr_mem;
 };
+

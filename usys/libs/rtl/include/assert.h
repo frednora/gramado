@@ -1,6 +1,6 @@
-
-// credits: serenity os
-
+// assert.h
+// Created by Fred Nora.
+// credits: Serenity OS
 
 
 #ifdef DEBUG
@@ -28,12 +28,11 @@ __attribute__((noreturn)) void __assertion_failed (const char* msg,
     do {                     \
         asm volatile("ud2"); \
     } while (0)
-    
-#define ASSERT assert
-#define RELEASE_ASSERT assert
 
+#define ASSERT          assert
+#define RELEASE_ASSERT  assert
 // #testing: bsd style. 
-#define _DIAGASSERT assert
+#define _DIAGASSERT     assert
 
 // basic
 //#define assert(check) do { if(!(check)) die("assert"); } while(0)

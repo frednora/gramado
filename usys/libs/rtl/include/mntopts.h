@@ -1,3 +1,5 @@
+// mntopts.h
+
 /*	$NetBSD: mntopts.h,v 1.18 2018/01/09 03:31:12 christos Exp $	*/
 
 /*-

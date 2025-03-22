@@ -1,7 +1,7 @@
+// glob.h
 
 #ifndef _GLOB_H_
 #define _GLOB_H_
-
 
 /*
 #ifndef __gl_size_t
@@ -14,19 +14,18 @@
 //#todo: The glob_t struct.
 */
 
+#define	GLOB_APPEND    0x0001  /* Append to output from previous call. */
+#define	GLOB_DOOFFS    0x0002  /* Use gl_offs. */
+#define	GLOB_ERR       0x0004  /* Return on error. */
+#define	GLOB_MARK      0x0008  /* Append / to matching directories. */
+#define	GLOB_NOCHECK   0x0010  /* Return pattern itself if nothing matches. */
+#define	GLOB_NOSORT    0x0020  /* Don't sort. */
+#define	GLOB_NOESCAPE  0x1000  /* Disable backslash escaping. */
 
-#define	GLOB_APPEND	0x0001	/* Append to output from previous call. */
-#define	GLOB_DOOFFS	0x0002	/* Use gl_offs. */
-#define	GLOB_ERR	0x0004	/* Return on error. */
-#define	GLOB_MARK	0x0008	/* Append / to matching directories. */
-#define	GLOB_NOCHECK	0x0010	/* Return pattern itself if nothing matches. */
-#define	GLOB_NOSORT	0x0020	/* Don't sort. */
-#define	GLOB_NOESCAPE	0x1000	/* Disable backslash escaping. */
-
-#define	GLOB_NOSPACE	(-1)	/* Malloc call failed. */
-#define	GLOB_ABORTED	(-2)	/* Unignored error. */
-#define	GLOB_NOMATCH	(-3)	/* No match, and GLOB_NOCHECK was not set. */
-#define	GLOB_NOSYS	(-4)	/* Implementation does not support function. */
+#define	GLOB_NOSPACE    (-1)  /* Malloc call failed. */
+#define	GLOB_ABORTED    (-2)  /* Unignored error. */
+#define	GLOB_NOMATCH    (-3)  /* No match, and GLOB_NOCHECK was not set. */
+#define	GLOB_NOSYS      (-4)  /* Implementation does not support function. */
 
 #if defined(_NETBSD_SOURCE) || defined(HAVE_NBTOOL_CONFIG_H)
 #define	GLOB_ALTDIRFUNC	0x0040	/* Use alternately specified directory funcs. */

@@ -1,10 +1,6 @@
-/*
- * File mm.h 
- *
- * Descrição:
- *     Suporte para libc99 em user mode.
- */
- 
+// mm.h
+// Memory support for libc in ring 3.
+
 //
 // MM BLOCK.
 // 
@@ -24,7 +20,7 @@
 // mm block support.
 //
 
-// Conta os blocos de memória dentro de um heap. 
+// Conta os blocos de memï¿½ria dentro de um heap. 
 // #test: Moved to stdlib.c
 //unsigned long mmblockCount;         
  
@@ -32,57 +28,55 @@
 /*
  * mmblock_d:
  *     Estrutura para memory blocks.
- *     Temos vários blocos de memória espalhados em lugares diferentes 
+ *     Temos vï¿½rios blocos de memï¿½ria espalhados em lugares diferentes 
  *     dentro de um heap.
  * 
  *     @todo: 
- *         Os blocos precisam de alguma organização.
- *         Por enquanto, o total é 256 heaps de tamanhos diferentes.
+ *         Os blocos precisam de alguma organizaï¿½ï¿½o.
+ *         Por enquanto, o total ï¿½ 256 heaps de tamanhos diferentes.
  *
- *         Os blocos formarão uma lista encadeada que será percorrida 
+ *         Os blocos formarï¿½o uma lista encadeada que serï¿½ percorrida 
  *         para se encontrar um bloco vazio ... walk ...
  *
- *         Um heap de processo tem vários blocos dentro.
- */ 
-typedef struct mmblock_d mmblock_descriptor_t;
+ *         Um heap de processo tem vï¿½rios blocos dentro.
+ */
 struct mmblock_d 
 {
     // Identificadores.
-	unsigned long Header;      // Endereço onde começa o header do heap.
+	unsigned long Header;      // Endereï¿½o onde comeï¿½a o header do heap.
 	unsigned long headerSize;  // Tamanho do header em bytes.
 	unsigned long Id;          // Id do header.
 	unsigned long Used;        // Flag 'usado' ou 'livre'.
-	unsigned long Magic;       // Magic number. Ver se não está corrompido.
+	unsigned long Magic;       // Magic number. Ver se nï¿½o estï¿½ corrompido.
 	
-	unsigned long Free;       //se o bloco esta livre ou não
+	unsigned long Free;       //se o bloco esta livre ou nï¿½o
 	
 	
 	// Mensuradores. (sizes) (tamanhos)	
-	unsigned long requestSize;  // Tamanho, em bytes, da área solicitada.
-	unsigned long unusedBytes;  // Quantidade de bytes não usados na área do cliente.	
-	unsigned long userareaSize; // Tamanho da área reservada para o cliente. 
+	unsigned long requestSize;  // Tamanho, em bytes, da ï¿½rea solicitada.
+	unsigned long unusedBytes;  // Quantidade de bytes nï¿½o usados na ï¿½rea do cliente.	
+	unsigned long userareaSize; // Tamanho da ï¿½rea reservada para o cliente. 
 	                            // (request size + unused bytes). 
 	
 	//
-    // User area. (Onde começa a área solicitada).
+    // User area. (Onde comeï¿½a a ï¿½rea solicitada).
 	//
 	
-	unsigned long userArea;  // Início da área alocada.
+	unsigned long userArea;  // Inï¿½cio da ï¿½rea alocada.
 	
 	
 	//
 	// Footer.
 	//
 	
-	unsigned long Footer;  // Endereço do início do footer.
+	unsigned long Footer;  // Endereï¿½o do inï¿½cio do footer.
 	
-	
+    //
+	// Process. 
+	// (Pertence ï¿½ qual processo??)
 	//
-	// Process. (Pertence à qual processo??)
-	//
-	
+
 	int processId;
-	
 	struct process_d *process;
 	
 	struct mmblock_d *Next;
@@ -90,16 +84,13 @@ struct mmblock_d
 };
 
 struct mmblock_d  *current_mmblock;
-
-//mmblock_descriptor_t *current_mmblock;
-//mmblock_descriptor_t *SystemCache_mmblock;
-//mmblock_descriptor_t *ProcessCache_mmblock;
-//...
-
+//struct mmblock_d  *SystemCache_mmblock;
+//struct mmblock_d  *ProcessCache_mmblock;
+// ...
  
-//Lista de blocos. 
-//lista de blocos de memória dentro de um heap.
-//@todo: na verdade temos que usar lista encadeada. 
+// List of blocks
+// lista de blocos de memï¿½ria dentro de um heap.
+// #todo: na verdade temos que usar lista encadeada. 
 unsigned long mmblockList[MMBLOCK_COUNT_MAX]; 
 
 //

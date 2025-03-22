@@ -1,12 +1,6 @@
-/*
- * File: limits.h 
- * 
- * Descrição:
- *     Descreve alguns limites na linguagem C padrão 32bit.
- *     @todo: Essa versão está imcompleta.
- */
- 
- 
+// limits.h  
+
+
 #ifndef _LIMITS_H
 #define _LIMITS_H 
 
@@ -118,14 +112,12 @@ or provides its own editing facilities.
 */
 
 
-#define HOST_NAME_MAX 64
+#define HOST_NAME_MAX  64
 //#define HOST_NAME_MAX _POSIX_HOST_NAME_MAX
 
 //#define PTHREAD_STACK_MIN 65536
 
-
-
-#define PATH_MAX _POSIX_PATH_MAX
+#define PATH_MAX  _POSIX_PATH_MAX
 
 //
 // End.

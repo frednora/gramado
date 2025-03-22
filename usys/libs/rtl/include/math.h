@@ -169,5 +169,3 @@ float neutral_element_of_mul(void);
 
 #endif    
 
-
-

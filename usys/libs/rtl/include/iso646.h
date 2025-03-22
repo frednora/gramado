@@ -1,5 +1,6 @@
-/*	$NetBSD: iso646.h,v 1.2 2013/04/26 10:58:45 joerg Exp $	*/
+// iso646.h
 
+/*	$NetBSD: iso646.h,v 1.2 2013/04/26 10:58:45 joerg Exp $	*/
 /* 
  * Written by J.T. Conklin <jtc@wimsey.com> 02/16/95.
  * Public domain.

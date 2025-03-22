@@ -1,6 +1,8 @@
+// nlist.h
+
 /*	$NetBSD: nlist.h,v 1.14 2009/08/21 08:42:02 he Exp $	*/
 
-/*-
+/*
  * Copyright (c) 1991, 1993
  *	The Regents of the University of California.  All rights reserved.
  * (c) UNIX System Laboratories, Inc.

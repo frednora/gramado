@@ -1,11 +1,12 @@
+// float.h
+// credits:
+// Copyright (C) 2002-2011 Michael Ringgaard.
+// All rights reserved. 
 
-//credits.
-//Copyright (C) 2002-2011 Michael Ringgaard.
- 
-//All rights reserved. 
-	
+
 #ifndef FLOAT_H
-#define FLOAT_H 1
+#define FLOAT_H  1
+
 
 //
 // Limits for float
