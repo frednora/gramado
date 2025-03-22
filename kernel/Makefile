@@ -2,7 +2,7 @@
 # Created by Fred Nora.
 
 # Tools
-include karch/x86_64/makeinc
+include arch/x86_64/makeinc
 
 linkTarget = KERNEL.BIN
 
@@ -16,7 +16,7 @@ linkFlags := -m elf_x86_64 \
 -s \
 -x \
 -static \
--T karch/x86_64/link.ld   
+-T arch/x86_64/link.ld   
 
 #
 # Config
@@ -81,11 +81,11 @@ CFLAGS := \
 # Objects
 
 # ========================
-# :: karch - entrypoint and assembly files.
+# :: arch - entrypoint and assembly files.
 objects-y := head_64.o 
 
 # ========================
-# :: kctl - Resource controllers.
+# :: core - Resource controllers.
 objects-y += i1_clibs.o  
 objects-y += i2_ke.o  
 objects-y += i3_kmain.o  
@@ -109,17 +109,17 @@ clean
 	@echo "Done?"
 
 #----------------
-# Resource controllers.
+# Core kernel components
 k1:
 	@echo "Compiling: Compiling k1"
-# Kernel karch - Startup and entry code.
-	$(Q)$(MAKE) -C karch/x86_64/
+# Kernel arch - Startup and entry code.
+	$(Q)$(MAKE) -C arch/x86_64/
 # kernel libraries
-	$(Q)$(MAKE) -C kctl/clibs/
+	$(Q)$(MAKE) -C core/clibs/
 # main component. (cpu)
-	$(Q)$(MAKE) -C kctl/ke/
+	$(Q)$(MAKE) -C core/ke/
 # Kernel core - Top level routines.
-	$(Q)$(MAKE) -C kctl/kmain/
+	$(Q)$(MAKE) -C core/kmain/
 
 #----------------
 # Kernel resources
@@ -144,13 +144,13 @@ clean-all:
 	rm -rf *.o   
 	rm -rf *.BIN   
 
-	rm -rf kctl/*.o   
+	rm -rf core/*.o   
 	rm -rf kres/*.o   
 
-	rm -rf karch/*.o   
-	rm -rf kctl/clibs/*.o   
-	rm -rf kctl/ke/*.o   
-	rm -rf kctl/kmain/*.o   
+	rm -rf arch/*.o   
+	rm -rf core/clibs/*.o   
+	rm -rf core/ke/*.o   
+	rm -rf core/kmain/*.o   
 
 	rm -rf kres/bus/*.o   
 	rm -rf kres/dev/*.o   

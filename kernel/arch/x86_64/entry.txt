@@ -3,7 +3,7 @@ Here is a summary of the kernel startup flow in the frednora/gramado repository:
 
 Assembly Entry Point:
 
-The entry point of the kernel is defined by the _kernel_begin symbol in kernel/karch/x86_64/head_64.asm.
+The entry point of the kernel is defined by the _kernel_begin symbol in arch/x86_64/head_64.asm.
 _kernel_begin jumps to the START label.
 START Label:
 
@@ -12,6 +12,6 @@ It then calls _I_kmain using the call _I_kmain instruction.
 C Entry Point:
 
 The _I_kmain symbol in the assembly corresponds to the I_kmain() function in the C code 
-located in kernel/kctl/kmain/kmain.c.
+located in core/kmain/kmain.c.
 The I_kmain() function continues the kernel initialization process in C.
 

@@ -19,7 +19,7 @@
  * Entry point: 
  *     0x30001000
  *     Kernel entry point in: 
- *     kctl/main/x86_64/startup/head_64.asm. 
+ *     arch/x86_64/head_64.asm. 
  */
 
 OUTPUT_FORMAT("elf64-x86-64")

@@ -1,14 +1,18 @@
  Main directories in the base kernel.
 
-(1) include/
-  Headers used by the base kernel.
+arch/
+  Kernel initialization and entry point.
 
-(2) kctl/
+core/
+  Core components of the kernel.
   Control routines. 
   These are the routines responsable to control 
   the kernel resources.
 
-(3) kres/
+include/
+  Headers used by the base kernel.
+
+kres/
   The kernel resources.
     dev/   - i/o system.
     fs/    - File system support.
@@ -17,9 +21,5 @@
     ke/    - hal, processes and threads.
     mm/    - Memory management.
     net/   - Network support.
-
-(4) lib/
-  Libraries used by the base kernel.
-  Ring 0 only.
 
   

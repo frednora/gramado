@@ -1,3 +1,31 @@
 {
-    "makefile.configureOnOpen": false
+    "makefile.configureOnOpen": false,
+    "files.associations": {
+        "gdef.h": "c",
+        "gspin.h": "c",
+        "kinit.h": "c",
+        "request.h": "c",
+        "ktypes.h": "c",
+        "kcdefs.h": "c",
+        "kstddef.h": "c",
+        "kstdio.h": "c",
+        "kfcntl.h": "c",
+        "kttydef.h": "c",
+        "kpid.h": "c",
+        "ports64.h": "c",
+        "x64gdt.h": "c",
+        "detect.h": "c",
+        "hv.h": "c",
+        "x64smp.h": "c",
+        "pit.h": "c",
+        "prio.h": "c",
+        "x64cont.h": "c",
+        "intake.h": "c",
+        "ke.h": "c",
+        "reboot.h": "c",
+        "layers.h": "c",
+        "x64sc.h": "c",
+        "cali.h": "c",
+        "cg.h": "c"
+    }
 }

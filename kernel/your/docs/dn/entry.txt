@@ -9,11 +9,11 @@ in the base kernel in ring 0. It happens in three situations:
    just like SYSENTER and FRED.
 
 --------------------------------
-kctl/arch/x86_64/startup/:
+arch/x86_64/startup/:
   Here You can find the entrypoint and the initialization routine.
 
 --------------------------------
-kctl/arch/x86_64/entry/:
+arch/x86_64/entry/:
   Here You can find the moments where the execution re-start in ring0,
   right after an interrupt event. The hw/ folder is for hardware interrupts and 
   the sw/ is for software interrupts.
