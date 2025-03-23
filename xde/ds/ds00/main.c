@@ -3984,7 +3984,6 @@ static int ServerLoop(int launch_tb)
 // Checkpoint
     Initialization.setup_connection_checkpoint = TRUE;
 
-
     Initialization.current_phase = 2;
 
 // Child
@@ -4001,7 +4000,6 @@ static int ServerLoop(int launch_tb)
     //printf ("fd: %d\n", serverClient->fd);
     //while(1){}
 
-
 //
 // Client
 //
@@ -4016,8 +4014,7 @@ static int ServerLoop(int launch_tb)
     int tb_status = -1;
     if (launch_tb == TRUE)
     {
-        if (server_mode == SERVER_MODE_SERVER)
-        {
+        if (server_mode == SERVER_MODE_SERVER){
             tb_status = (int) rtl_clone_and_execute(app_taskbar);
             //#todo: Check
         }
@@ -4131,6 +4128,7 @@ static int ServerLoop(int launch_tb)
         if (IsTimeToQuit == TRUE){ break; };
 
         // Get system messages via thread queue.
+        // See: ui/wm.c
         if (IsAcceptingInput == TRUE){
             xxGetAndProcessSystemEvents();
         }
@@ -4319,13 +4317,11 @@ int main (int argc, char **argv)
    //printf("main.c: Breakpoint\n");
    //while(1){}
 
-//0 = Time to quit.
     Status = (int) ServerInitialization();
     if (Status != 0){
         goto fail;
     }
 
-//0 = Time to quit.
     Status = (int) ServerLoop(fLaunchTB);
     if (Status != 0){
         goto fail;

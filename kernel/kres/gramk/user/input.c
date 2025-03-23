@@ -955,7 +955,9 @@ __ProcessKeyboardInput (
 
         // #??
         // Não enviamos mensagem caso não seja combinação?
-        if ( shift_status != TRUE && ctrl_status != TRUE && alt_status != TRUE )
+        if ( shift_status != TRUE && 
+             ctrl_status != TRUE && 
+             alt_status != TRUE )
         {
             return 0;
         }

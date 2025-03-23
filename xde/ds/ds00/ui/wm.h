@@ -186,7 +186,7 @@ struct gws_windowmanager_d
 // are gonna have a offscreen surface,
 // and then the compositor is gonna
 // copy them all into the backbuffer.
-    struct desktop_composition_d comp;
+    struct desktop_composition_d  comp;
 };
 
 // Global main structure.
