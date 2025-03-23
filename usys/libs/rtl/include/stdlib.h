@@ -71,21 +71,24 @@ typedef struct {
 } ldiv_t;
 
 
+/*
 #if !defined(_ANSI_SOURCE) && \
     (defined(_ISOC99_SOURCE) || (__STDC_VERSION__ - 0) >= 199901L || \
      (__cplusplus - 0) >= 201103L || defined(_NETBSD_SOURCE))
 typedef struct {
-	/* LONGLONG */
-	long long int quot;	/* quotient */
-	/* LONGLONG */
-	long long int rem;	/* remainder */
+	//LONGLONG
+	long long int quot;	// quotient 
+	//LONGLONG 
+	long long int rem;  // remainder 
 } lldiv_t;
 #endif
+*/
+
 
 #if defined(_NETBSD_SOURCE)
 typedef struct {
-	quad_t quot;		/* quotient */
-	quad_t rem;		    /* remainder */
+	quad_t quot;		//quotient 
+	quad_t rem;		    //remainder 
 } qdiv_t;
 #endif
 

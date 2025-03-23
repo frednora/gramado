@@ -1,5 +1,5 @@
 // gwsint.h 
-// Internal definitions for Gramado Window Server.
+// Internal definitions for the Display Server.
 // Created by Fred Nora.
 
 // Version?
@@ -44,6 +44,9 @@ extern int server_mode;  // DEMO ...
 #include "ui/menu.h"
 //#include "zres/grinput.h"   //#test
 #include "ui/metrics.h"
+
+// #test: Create a room for rect support.
+#include "libui/rect.h"
 
 #include "ui/window.h"
 

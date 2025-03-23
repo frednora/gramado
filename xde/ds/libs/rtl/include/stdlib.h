@@ -13,32 +13,32 @@
     strtol	string para long int
     strtoul	string para unsigned long int
 
-	Geração de seqüência pseudo-aleatória
-    rand	gera um número inteiro pseudo aleatório
-    srand	seleciona a semente do gerador pseudo aleatório
+	Geraï¿½ï¿½o de seqï¿½ï¿½ncia pseudo-aleatï¿½ria
+    rand	gera um nï¿½mero inteiro pseudo aleatï¿½rio
+    srand	seleciona a semente do gerador pseudo aleatï¿½rio
     
-	Alocação e liberação de memória
+	Alocaï¿½ï¿½o e liberaï¿½ï¿½o de memï¿½ria
     malloc
     calloc
-    realloc	aloca memória do "heap"
-    free	libera memória de volta para o "heap"
+    realloc	aloca memï¿½ria do "heap"
+    free	libera memï¿½ria de volta para o "heap"
 
 	Controle de processos
-    abort	força o término da execução
-    atexit	registra uma função "callback" para saída do programa
-    exit	termina a execução do programa
-    getenv	obtém uma variável de ambiente
+    abort	forï¿½a o tï¿½rmino da execuï¿½ï¿½o
+    atexit	registra uma funï¿½ï¿½o "callback" para saï¿½da do programa
+    exit	termina a execuï¿½ï¿½o do programa
+    getenv	obtï¿½m uma variï¿½vel de ambiente
     system	executa um comando externo
 
 	Ordenamento e procura
-    bsearch	procura binária em "array"
+    bsearch	procura binï¿½ria em "array"
     qsort	ordena "array" segundo algoritmo Quick Sort
 
-	Matemática
+	Matemï¿½tica
     abs
     labs	valor absoluto
     div
-    ldiv	divisão inteira
+    ldiv	divisï¿½o inteira
 */
 
 #ifndef __RTL_STDLIB_H
@@ -72,21 +72,23 @@ typedef struct {
 } ldiv_t;
 
 
+/*
 #if !defined(_ANSI_SOURCE) && \
     (defined(_ISOC99_SOURCE) || (__STDC_VERSION__ - 0) >= 199901L || \
      (__cplusplus - 0) >= 201103L || defined(_NETBSD_SOURCE))
 typedef struct {
-	/* LONGLONG */
-	long long int quot;	/* quotient */
-	/* LONGLONG */
-	long long int rem;	/* remainder */
+	//LONGLONG
+	long long int quot;	// quotient 
+	//LONGLONG 
+	long long int rem;  // remainder 
 } lldiv_t;
 #endif
+*/
 
 #if defined(_NETBSD_SOURCE)
 typedef struct {
-	quad_t quot;		/* quotient */
-	quad_t rem;		    /* remainder */
+	quad_t quot;		// quotient 
+	quad_t rem;		    // remainder 
 } qdiv_t;
 #endif
 
@@ -242,7 +244,7 @@ int abs( int j);
 
 
 //rt support
-//pegando informações sobre o heap usado pela biblioteca C99 em user mode.
+//pegando informaï¿½ï¿½es sobre o heap usado pela biblioteca C99 em user mode.
 unsigned long rtGetHeapStart(void);
 unsigned long rtGetHeapEnd(void);
 unsigned long rtGetHeapPointer(void);
@@ -252,11 +254,11 @@ unsigned long rtGetAvailableHeap(void);
 
 /*
  * libcInitRT:
- *     Inicializa o gerenciamento em user mode de memória virtual
+ *     Inicializa o gerenciamento em user mode de memï¿½ria virtual
  * para a biblioteca libC99.
  * Obs: *IMPORTANTE: Essa rotina deve ser chamada entes que a biblioteca C 
  * seja usada.
- * Obs: Pode haver uma chamada à ela em crt0.s por exemplo.
+ * Obs: Pode haver uma chamada ï¿½ ela em crt0.s por exemplo.
  */
 int libcInitRT(void);
 

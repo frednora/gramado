@@ -2769,42 +2769,6 @@ void minimize_window(struct gws_window_d *window)
     // ...
 }
 
-struct gws_rect_d *clientrect_from_window(struct gws_window_d *window)
-{
-// Get a pointer for client area's rectangle.
-// #todo: 
-// All the types has a client window?
-// Or is it valid only for overlapped windows?
-
-    struct gws_rect_d *rect_cw;
-
-    if ((void*) window == NULL)
-        return NULL;
-    if (window->used != TRUE)
-        return NULL;
-    if (window->magic != 1234)
-        return NULL;
-    rect_cw = (struct gws_rect_d *) &window->rcClient;
-
-    return (struct gws_rect_d *) rect_cw;
-}
-
-struct gws_rect_d *rect_from_window(struct gws_window_d *window)
-{
-// Get a pointer for a window's rectangle.
-
-    struct gws_rect_d *rc_window;
-
-    if ((void*) window == NULL)
-        return NULL;
-    if (window->used != TRUE)
-        return NULL;
-    if (window->magic != 1234)
-        return NULL;
-    rc_window = (struct gws_rect_d *) &window->rcWindow;
-
-    return (struct gws_rect_d *) rc_window;
-}
 
 int window_initialize(void)
 {

@@ -1,4 +1,6 @@
+# ds00/
 # Display server
+# This is a display server running in ring 3.
 # 2020 - Created by Fred Nora.
 
 linkTarget = DS00.BIN
@@ -11,8 +13,6 @@ linkTarget = DS00.BIN
 # LDFLAGS := -m elf_x86_64 -static
 # LDFLAGS := -m elf_x86_64 -s -x -static  
 
-#linkFlags  = -m elf_x86_64 \
-#-s -x -static -T ../../link.ld
 
 linkFlags  = -m elf_x86_64 \
 -s -x -static -T ../link.ld

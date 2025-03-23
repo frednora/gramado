@@ -1,8 +1,4 @@
-
-# rtl/
-
-# GRAMLAND.BIN
-# GWS - Gramland Window Server.
+# libui/
 # 2020 - Created by Fred Nora.
 
 #linkTarget = GRAMLAND.BIN

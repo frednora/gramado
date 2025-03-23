@@ -1,4 +1,3 @@
-
 // bitblt.c
 // Bit-block Transfer.
 // Created by Fred Nora.

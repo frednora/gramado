@@ -1,8 +1,4 @@
-
 # comp/
-
-# GRAMLAND.BIN
-# GWS - Gramland Window Server.
 # 2020 - Created by Fred Nora.
 
 #linkTarget = GRAMLAND.BIN
