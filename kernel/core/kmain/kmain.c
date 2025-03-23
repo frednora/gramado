@@ -153,6 +153,7 @@ extern void x86_64_initialize_machine(void);
 // Internal
 static void __enter_debug_mode(void);
 static void __print_final_messages(void);
+static void __setup_utsname(void);
 
 // Preinit routines
 static int preinit_SetupBootblock(void);
@@ -207,6 +208,24 @@ static void __print_final_messages(void)
         printk("init: [final message] FAILURE\n");
         refresh_screen();
     }
+}
+
+// utsname
+// #todo
+// Create the methods for the applications
+// to setup this structure and 
+// and read the information from it.
+// see: sys_uname() in sys.c
+static void __setup_utsname(void)
+{
+    memset( &kernel_utsname, 0, sizeof(struct utsname) );
+
+    ksprintf( kernel_utsname.sysname,    UTS_SYSNAME );
+    ksprintf( kernel_utsname.version,    VERSION_NAME );
+    ksprintf( kernel_utsname.release,    RELEASE_NAME );
+    ksprintf( kernel_utsname.machine,    MACHINE_NAME );
+    ksprintf( kernel_utsname.nodename,   UTS_NODENAME );
+    ksprintf( kernel_utsname.domainname, UTS_DOMAINNAME );
 }
 
 // == Idle thread in ring 0  ===============
@@ -646,10 +665,7 @@ void I_kmain(int arch_type)
     // Status Flag and Edition flag.
     gSystemStatus = 1;
     gSystemEdition = 0;
-
     __failing_kernel_subsystem = KERNEL_SUBSYSTEM_INVALID;
-
-
     has_booted = FALSE;
 
 // Setup debug mode.
@@ -893,6 +909,9 @@ void I_kmain(int arch_type)
         __enter_debug_mode();
     }
 
+// Setup utsname structure.
+    __setup_utsname();
+
 StartSystemEnd:
 
 // The initialization failed.
@@ -905,24 +924,6 @@ StartSystemEnd:
             asm ("hlt");
         };
     }
-
-//
-// utsname
-//
-
-// #todo
-// Create the methods for the applications
-// to setup this structure and 
-// and read the information from it.
-// see: sys_uname() in sys.c
-
-    memset( &kernel_utsname, 0, sizeof(struct utsname) );
-    ksprintf( kernel_utsname.sysname, UTS_SYSNAME );
-    ksprintf( kernel_utsname.version, VERSION_NAME );
-    ksprintf( kernel_utsname.release, RELEASE_NAME );
-    ksprintf( kernel_utsname.machine, MACHINE_NAME );
-    ksprintf( kernel_utsname.nodename, UTS_NODENAME );
-    ksprintf( kernel_utsname.domainname, UTS_DOMAINNAME );
 
 // Execute the first ring3 process.
 // ireq to init thread.
