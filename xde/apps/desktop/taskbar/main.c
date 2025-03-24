@@ -122,10 +122,11 @@ static int startmenu_window = -1;
 
 const char *program_name = "Taskbar";
 //const char *start_menu_button_label = "Gramado";
-const char *start_menu_button_label = "|||";
+const char *start_menu_button_label = "Start";
+//const char *start_menu_button_label = "|||";
 
 const char *app1_name = "#terminal.bin";
-const char *app2_name = "#terminal.bin";  //"editor.bin";
+const char *app2_name = "#editor.bin";
 
 //static const char *cmdline1 = "gramland -1 -2 -3 --tb";
 
@@ -470,6 +471,7 @@ static void do_launch_app(int app_number)
 }
 
 
+// Process event that came from the server.
 static int 
 tbProcedure(
     int fd, 
@@ -481,13 +483,14 @@ tbProcedure(
     int f12Status = -1;
 
 // Parameters:
-    if (fd<0)
-        return (int) -1;
-
+    if (fd < 0){
+        goto fail;
+    }
     if (event_type <= 0){
-        return (int) (-1);
+        goto fail;
     }
 
+// Process the event.
     switch (event_type){
 
         //#todo
@@ -503,33 +506,40 @@ tbProcedure(
 
         // One button was clicked
         case GWS_MouseClicked:
-            printf("taskbar: GWS_MouseClicked\n");
+            //#debug
+            //printf("taskbar: GWS_MouseClicked\n");
+
+            // #debug 
+            //if (long1 == main_window)
+                //printf("taskbar: GWS_MouseClicked\n");
+
             //if (event_window == startmenu_window)
             // #ps: Probably the event window is the main window.
             if (long1 == startmenu_window)
                 gws_async_command(fd,30,0,0);
+
             break;
 
         // Add new client. Given the wid.
         // The server created a client.
         case 99440:
-            printf("task.bin: [99440]\n");
+            printf("taskbar: [99440]\n");
             break;
 
         // Remove client. Given the wid.
         // The server removed a client.
         case 99441:
-            printf("task.bin: [99441]\n");
+            printf("taskbar: [99441]\n");
             break;
         
         // Update client info.
         // The server send data about the client.
         case 99443:
-            printf("task.bin: [99443]\n");
+            printf("taskbar: [99443]\n");
             break;
 
         case MSG_CLOSE:
-            printf("task.bin: Closing...\n");
+            printf("taskbar: Closing...\n");
             exit(0);
             break;
         
@@ -592,14 +602,8 @@ tbProcedure(
         case MSG_SYSKEYDOWN:
             //printf("taskbar: MSG_SYSKEYDOWN\n");
             switch (long1){
-                case VK_F1:
-                    //gws_clone_and_execute(app1_name);
-                    do_launch_app(1);
-                    break;
-                case VK_F2:
-                    //gws_clone_and_execute(app2_name);
-                    do_launch_app(2);
-                    break;
+                case VK_F1:  do_launch_app(1);  break;
+                case VK_F2:  do_launch_app(2);  break;
                 default:
                     break;
             };
@@ -660,6 +664,9 @@ tbProcedure(
             };
             */
             break;
+        default:
+            goto fail;
+            break;
     };
 
     // ok
@@ -670,6 +677,8 @@ done:
     //check_victory(fd);
     return 0;
     //return (int) gws_default_procedure(fd,0,msg,long1,long2);
+fail:
+    return (int) (-1);
 }
 
 static void 
@@ -737,9 +746,12 @@ static void __initialize_client_list(void)
     };
 }
 
+// Pump event
+// + Request next event with the server.
+// + Process the event.
 void pump(int fd, int wid)
 {
-    struct gws_event_d lEvent;
+    struct gws_event_d  lEvent;
     lEvent.used = FALSE;
     lEvent.magic = 0;
     lEvent.type = 0;
@@ -753,6 +765,7 @@ void pump(int fd, int wid)
     if (wid<0)
         return;
 
+// Request event with the server.
     e = 
         (struct gws_event_d *) gws_get_next_event(
                                    fd, 
@@ -764,13 +777,17 @@ void pump(int fd, int wid)
     if (e->magic != 1234){
         return;
     }
-    if (e->type <0)
+    if (e->type < 0)
         return;
 
+// Process event.
+    int Status = -1;
+    Status = 
+        tbProcedure( 
+            fd, 
+            e->window, e->type, e->long1, e->long2 );
 
-    tbProcedure( 
-        fd, 
-        e->window, e->type, e->long1, e->long2 );
+    // ...
 }
 
 static int 
@@ -934,9 +951,6 @@ int main(int argc, char *argv[])
     //gws_async_command(client_fd,5,0,0);  // Draw black rectangle.
     //}
 
-
-
-
 // #debug
 // ok
 
@@ -966,12 +980,10 @@ int main(int argc, char *argv[])
                   style, 
                   HONEY_COLOR_TASKBAR, HONEY_COLOR_TASKBAR );
 
-    if (main_window < 0)
-    {
+    if (main_window < 0){
         printf ("taskbar.bin: main_window\n");
         exit(1);
     }
-
     gws_set_active( client_fd, main_window );
 
 // ========================
@@ -989,13 +1001,10 @@ int main(int argc, char *argv[])
         tb_h -4 );
 
 
-
     //printf ("taskbar.bin: main_window created\n");
     //while(1){}
 
-
     //printf("gws.bin: [2] after create simple green window :)\n");
-
     //asm ("int $3");
     
     // #debug
@@ -1003,7 +1012,6 @@ int main(int argc, char *argv[])
 
     //while(1){}
     //asm ("int $3");
-
 
 /*
 // barra azul no topo.
@@ -1016,8 +1024,7 @@ int main(int argc, char *argv[])
                      WT_SIMPLE, 1, 1, "status",
                      0, 0, w, 24,
                      0, 0, COLOR_BLUE, COLOR_BLUE );
-    if (tmp1<0)
-    {
+    if (tmp1<0){
         printf ("taskbar.bin: tmp1\n");
         exit(1);
     }
@@ -1124,8 +1131,10 @@ int main(int argc, char *argv[])
     // The custon status bar?
     // Maybe the custon status bar can be a window.
 
-    gws_debug_print ("taskbar.bin: 4 Testing Plot cube\n");
+    //gws_debug_print ("taskbar.bin: 4 Testing Plot cube\n");
     //printf        ("taskbar.bin: 4 Testing Plot cube\n");
+
+/*
 
 // back
     int backLeft   = (-(w/8)); 
@@ -1144,6 +1153,7 @@ int main(int argc, char *argv[])
     
     int north_color = COLOR_RED;
     int south_color = COLOR_BLUE;
+*/
 
 
     //gws_debug_print("LOOP:\n");
@@ -1216,14 +1226,13 @@ int main(int argc, char *argv[])
 // =================================
 // Focus
 
-
-// set focus
+// Set focus on current thread.
     rtl_focus_on_this_thread();
 
-// set focus
+// Set focus on main window.
     gws_async_command(
          client_fd,
-         9,             // set focus
+         9,             // 9 = set focus
          main_window,
          main_window );
 
@@ -1231,13 +1240,14 @@ int main(int argc, char *argv[])
 // Banner
 //
 
-// Set cursor position.
+// Set cursor position on top of the raw window.
+// #bugbug
+// Sometimes we use printf directly on screen for debug purpose.
     sc80 ( 34, 2, 2, 0 );
-
-    //printf ("taskbar.bin: Gramado OS\n");
 
 /*
 //#tests
+    printf ("taskbar.bin: Gramado OS\n");
     printf ("#test s null: %s\n",NULL);
     printf ("#test S null: %S\n",NULL);
     printf ("#test u:  %u  \n",12345678);         //ok
@@ -1319,14 +1329,13 @@ int main(int argc, char *argv[])
 //
     __initialize_client_list();
 
-
 // =======================
+// Loop
 
     while (1)
     {
         //if (isTimeToQuit == TRUE)
             //break;
-
         pump(client_fd,main_window);
     };
 
