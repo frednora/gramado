@@ -656,7 +656,8 @@ void *doCreateWindow (
 
 // Event queue
     register int e=0;
-    for (e=0; e<32; e++)
+    static int Max=32;
+    for (e=0; e<Max; e++)
     {
         window->ev_wid[e]=0;
         window->ev_msg[e]=0;
@@ -687,8 +688,7 @@ void *doCreateWindow (
 // Given in chars.
     window->ip_x = 0;       // in chars
     window->ip_y = 0;       // in chars
-    window->ip_color = 
-        (unsigned int) get_color(csiSystemFontColor);
+    window->ip_color = (unsigned int) get_color(csiSystemFontColor);
     //window->ip_type = 0;    // #bugbug #todo
     //window->ip_style = 0;
 // For mouse
@@ -2770,6 +2770,7 @@ void minimize_window(struct gws_window_d *window)
 }
 
 
+// Initialize the window support.
 int window_initialize(void)
 {
 // Called by gwsInitGUI() in gws.c.

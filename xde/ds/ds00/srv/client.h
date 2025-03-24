@@ -21,6 +21,8 @@ struct gws_client_profile_d
 
 #define DEFAULT_CLIENT_NAME_SIZE  128
 
+// #define MAX_TAGS  4
+
 // Client info.
 // We get this info with the application.
 struct gws_client_d
@@ -31,8 +33,10 @@ struct gws_client_d
     int id;
     char name[DEFAULT_CLIENT_NAME_SIZE];
 
+// WID
 // The overlapped window for this client.
     int window;
+
 // A area ocupada pela janela
 // pode ser do tamanho da janela ou ainda maior.
     int l;
@@ -47,6 +51,7 @@ struct gws_client_d
 // As 4 tags possivies
 // TRUE = estamos nessa tad
 // FALSE = nao estamos nessa tag.
+// #todo: MAX_TAGS
     int tags[4];
 
 // #todo

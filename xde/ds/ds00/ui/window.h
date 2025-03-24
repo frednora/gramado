@@ -11,11 +11,11 @@ typedef int  __wid_t;
 typedef int  wid_t;
 
 
-extern struct gws_window_d *active_window;  // active
-
-// Owner
+// Owner for keyboard and mouse.
 extern struct gws_window_d *keyboard_owner;
 extern struct gws_window_d *mouse_owner;  // captured
+
+extern struct gws_window_d *active_window;  // active
 
 extern struct gws_window_d *first_window;
 extern struct gws_window_d *last_window;
@@ -34,14 +34,13 @@ extern struct gws_window_d *top_window;     // z-order
 // ...
 #define ICON_ID_DEFAULT  ICON_ID_APP
 
-
 // #test w->view
-#define VIEW_NULL      0
-#define VIEW_FULL      1000
-#define VIEW_MAXIMIZED 1001
-#define VIEW_MINIMIZED 1002
-#define VIEW_NORMAL    1003 //Normal (restaurada)
-//...
+#define VIEW_NULL       0
+#define VIEW_FULL       1000
+#define VIEW_MAXIMIZED  1001
+#define VIEW_MINIMIZED  1002
+#define VIEW_NORMAL     1003 //Normal (restaurada)
+// ...
 
 // -------------------
 // Aliases
@@ -1007,7 +1006,7 @@ wmPostMessage(
     unsigned long long1,
     unsigned long long2 );
 
-struct gws_client_d *wintoclient(int window); //#todo: not teste yet
+struct gws_client_d *wintoclient(int wid); //#todo: not teste yet
 void show_client_list(int tag); //#todo: notworking
 void show_client( struct gws_client_d *c, int tag );
 
@@ -1184,8 +1183,7 @@ gwssrv_change_window_position (
 
 int gwsDefineInitialRootWindow(struct gws_window_d *window);
 
-void wm_reboot(void);
-
+// Initialize the window support.
 int window_initialize(void);
 
 #endif    

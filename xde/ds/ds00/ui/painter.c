@@ -39,26 +39,28 @@ int clear_window_by_id(int wid, unsigned long flags)
 
 // wid
     if (wid<0 || wid>=WINDOW_COUNT_MAX){
-        return -1;
+        goto fail;
     }
 // Structure validation
     w = (void*) windowList[wid];
     if ((void*) w == NULL){
-        return -1;
+        goto fail;
     }
     if (w->magic != 1234){
-        return -1;
+        goto fail;
     }
 
 // #todo
 // Maybe we can clear more types of window.
-    if (w->type != WT_SIMPLE)
-    {
-        return -1;
+    if (w->type != WT_SIMPLE){
+        goto fail;
     }
 
     redraw_window(w,flags);
     return 0;
+
+fail:
+    return (int) -1;
 }
 
 // pinta um retangulo no botao

@@ -1,5 +1,5 @@
-
 // painter.h
+
 
 #ifndef __PAINTER_H
 #define __PAINTER_H    1

@@ -7,14 +7,13 @@
 
 const char *rootwindow_name = "RootWin";
 
-// #test (#bugbgu)
+// #test (#bugbug)
 #define MSG_MOUSE_DOUBLECLICKED   60
 #define MSG_MOUSE_DRAG            61
 #define MSG_MOUSE_DROP            62
 
 // Double click
 struct double_click_d DoubleClick;
-
 
 struct maximization_style_d  MaximizationStyle;
 
@@ -128,7 +127,7 @@ static unsigned long ____new_time=0;
 // private functions: prototypes ==========================
 //
 
-static void animate_window( struct gws_window_d *window );
+static void animate_window(struct gws_window_d *window);
 static void wm_tile(void);
 
 
@@ -200,46 +199,40 @@ struct gws_window_d *get_parent(struct gws_window_d *w)
 {
     struct gws_window_d *p;
 
-    if ( (void*) w == NULL )
-        return NULL;
+    if ((void*) w == NULL)
+        goto fail;
     if (w->magic != 1234){
-        return NULL;
+        goto fail;
     }
 
     p = (struct gws_window_d *) w->parent;
-    if ( (void*) p == NULL )
-        return NULL;
+    if ((void*) p == NULL)
+        goto fail;
     if (p->magic != 1234){
-        return NULL;
+        goto fail;
     }
 
     return (struct gws_window_d *) p;
+fail:
+    return NULL;
 }
 
 static void launch_app_by_id(int id)
 {
+    static int MaxNumberOfApps = 4;
     char name_buffer[64];
 
 // 4 apps only
-    if (id <= 0 || id > 4)
+    if (id <= 0 || id > MaxNumberOfApps)
         goto fail;
 
-// Clear name buffer.
-    memset(name_buffer,0,64-1);
-
+// Copy string
+    memset(name_buffer, 0, 64-1);
     switch (id){
-    case 1:
-        strcpy(name_buffer,app1_string);
-        break;
-    case 2:
-        strcpy(name_buffer,app2_string);
-        break;
-    case 3:
-        strcpy(name_buffer,app3_string);
-        break;
-    case 4:
-        strcpy(name_buffer,app4_string);
-        break;
+    case 1: strcpy(name_buffer,app1_string);  break;
+    case 2: strcpy(name_buffer,app2_string);  break;
+    case 3: strcpy(name_buffer,app3_string);  break;
+    case 4: strcpy(name_buffer,app4_string);  break;
     default:
         goto fail;
         break;
@@ -332,7 +325,6 @@ static void on_enter(void)
     };
     */
 
-
 position:
 
 //--------------
@@ -356,11 +348,8 @@ position:
             return;
         }
 
-        // Next line
-        window->ip_y++;
-
-        // First column
-        window->ip_x = 0;
+        window->ip_y++;      // Next line
+        window->ip_x = 0;    // First column
     }
 }
 
@@ -382,7 +371,7 @@ wmProcessKeyboardEvent(
     //unsigned int bg_color = 
     //    (unsigned int) get_color(csiSystemFontColor);
 
-    if (msg<0){
+    if (msg < 0){
         return 0;
     }
 
@@ -517,9 +506,9 @@ wmProcessKeyboardEvent(
         window = (struct gws_window_d *) get_focus();
         if ((void*) window == NULL)
             return 0;
-        if (window->magic!=1234)
+        if (window->magic != 1234)
             return 0;
-        // Post.
+        // Post
         wmPostMessage(
             (struct gws_window_d *) window,
             (int)msg,
@@ -658,7 +647,7 @@ wmProcessMouseEvent(
 
 // Error. 
 // Nothing to do.
-    if (event_type<0){
+    if (event_type < 0){
         return;
     }
 
@@ -758,7 +747,7 @@ static void on_mouse_pressed(void)
     int ButtonID = -1;
 
 // Validating the window mouse_over.
-    if ( (void*) mouse_hover == NULL ){
+    if ((void*) mouse_hover == NULL){
         return;
     }
     if (mouse_hover->magic != 1234){
@@ -1028,8 +1017,7 @@ static void on_mouse_released(void)
         // #danger: It affects the forgraound thread selection in ring0. 
         // Set the new keyboard owner. (focus)
         // It also changes the foreground input thread.
-        if (mouse_hover != keyboard_owner)
-        {
+        if (mouse_hover != keyboard_owner){
             set_focus(mouse_hover);
         }
 
@@ -1060,14 +1048,13 @@ static void on_mouse_released(void)
 // -------------------------
 // Regular button or quick launch button.
 // Not a control, not the start menu, not the menuitem.
-    struct gws_window_d *p1; // parent.
-
+    struct gws_window_d *p1;  // parent.
 
     if (mouse_hover->type == WT_BUTTON)
     {
         // We're NOT a control.
         // We're a regular button.
-        if ( mouse_hover->isControl != TRUE )
+        if (mouse_hover->isControl != TRUE)
         {
             __button_released(ButtonWID);
             
@@ -1202,7 +1189,6 @@ static void on_mouse_released(void)
         */
     }
 
-
 //
 // Controls - (Titlebar buttons).
 //
@@ -1300,7 +1286,7 @@ static void on_mouse_hover(struct gws_window_d *window)
 // Flag
     window->is_mouse_hover = TRUE;
 
-// visual efect
+// Visual efect
     if (window->type == WT_BUTTON)
     {
         window->status = BS_HOVER;
@@ -1310,7 +1296,7 @@ static void on_mouse_hover(struct gws_window_d *window)
         redraw_window(window,TRUE);
     }
 
-    // visual efect
+// Visual efect
     if ( window->type == WT_EDITBOX_SINGLE_LINE ||
          window->type == WT_EDITBOX_MULTIPLE_LINES )
     {
@@ -1788,10 +1774,10 @@ fail:
 
 void show_client( struct gws_client_d *c, int tag )
 {
-    if ( (void*) c == NULL ){
+    if ((void*) c == NULL){
         return;
     }
-    if (c->magic!=1234){
+    if (c->magic != 1234){
         return;
     }
 
@@ -1830,25 +1816,25 @@ void show_client_list(int tag)
 
     c = (struct gws_client_d *) first_client;
     while (1){
-        if ( (void*) c == NULL ){
+        if ((void*) c == NULL){
             break;
         }
-        if ( (void*) c != NULL ){
+        if ((void*) c != NULL){
             show_client(c,tag);
         }
         c = (struct gws_client_d *) c->next;
     };
 }
 
-//#todo: Not teste yet.
-struct gws_client_d *wintoclient(int window)
+// #todo: Not teste yet.
+struct gws_client_d *wintoclient(int wid)
 {
     struct gws_client_d *c;
 
-    if (window<0){
+    if (wid < 0){
         return NULL;
     }
-    if (window>=WINDOW_COUNT_MAX){
+    if (wid >= WINDOW_COUNT_MAX){
         return NULL;
     }
 
@@ -1857,7 +1843,7 @@ struct gws_client_d *wintoclient(int window)
     {
         if (c->magic == 1234)
         {
-            if (c->window == window){
+            if (c->window == wid){
                 return (struct gws_client_d *) c;
             }
         }
@@ -3059,7 +3045,6 @@ void wm_reboot(void)
     }
 
 // Destroy all the windows, hw reboot and paranoia.
-
     DestroyAllWindows();
     rtl_reboot();
     exit(0);
@@ -3068,6 +3053,7 @@ void wm_reboot(void)
 static void animate_window(struct gws_window_d *window)
 {
     register int i=0;
+    static int Times = 800;
 
     if ((void*) window == __root_window){
         return;
@@ -3075,21 +3061,23 @@ static void animate_window(struct gws_window_d *window)
     if (window->magic != 1234){
         return;
     }
-    
-    for (i=0; i<800; i++)
+
+// #bugbug
+// This routine is wrong!
+    for (i=0; i<Times; ++i)
     {
-         if ( (window->absolute_x - 1) == 0){
-             return;
-         }
-         if ( (window->absolute_y - 1) == 0){
-             return;
-         }
-         gwssrv_change_window_position(
-              window, 
-              window->absolute_x -1, 
-              window->absolute_y  -1);
-              redraw_window(window,FALSE);
-              invalidate_window(window);
+        if ((window->absolute_x - 1) == 0){
+            return;
+        }
+        if ((window->absolute_y - 1) == 0){
+            return;
+        }
+        gwssrv_change_window_position(
+            window, 
+            window->absolute_x -1, 
+            window->absolute_y  -1);
+            redraw_window(window,FALSE);
+            invalidate_window(window);
     };
 }
 
@@ -3291,6 +3279,7 @@ int wmBindWindowToClient(struct gws_window_d *w)
     struct gws_client_d *c;
     struct gws_client_d *tmp;
     register int i=0;
+    static int Max=4;
 
     if ((void*) w == NULL){
         goto fail;
@@ -3316,7 +3305,7 @@ int wmBindWindowToClient(struct gws_window_d *w)
     c->t = w->absolute_y;
     c->w = w->width;
     c->h = w->height;
-    for (i=0; i<4; i++){
+    for (i=0; i<Max; i++){
         c->tags[i] = TRUE;
     };
     c->pid = w->client_pid;

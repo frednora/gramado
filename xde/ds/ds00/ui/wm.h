@@ -214,7 +214,7 @@ int wmBindWindowToClient(struct gws_window_d *w);
 
 // Update desktop.
 void wm_update_desktop(int tile, int show);
-void  wm_update_desktop2(void);
+void wm_update_desktop2(void);
 void wm_update_desktop3(struct gws_window_d *new_active_window);
 
 void restore_desktop_windows(void);
@@ -241,6 +241,8 @@ void wm_rebuild_list(void);
 
 void wm_remove_window_from_list_and_kill(struct gws_window_d *window);
 void wm_remove_window_from_list(struct gws_window_d *window);
+
+void wm_reboot(void);
 
 #endif   
 
