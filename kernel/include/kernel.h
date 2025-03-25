@@ -31,7 +31,6 @@
 #include "../core/kmain/klimits2.h"
 #include "../core/kmain/gdef.h"
 
-
 // ==================================
 // dev/
 #include "../kres/dev/gdevice.h"
@@ -39,12 +38,12 @@
 
 // ==================================
 // ke/
-#include "../core/ke/intake/gspin.h"
+#include "../core/ke/intake/sync.h"
 
 // ===============================
-#include "../core/ke/hal/x86_64/gwd.h"     // whatch dogs.
-#include "../core/ke/hal/pints.h"   // profiler
-
+// hal/
+#include "../core/ke/hal/x86_64/gwd.h"  // whatch dogs.
+#include "../core/ke/hal/pints.h"       // profiler
 
 // ===============================
 #include "../core/ke/kinit.h"   // kernel initialization.

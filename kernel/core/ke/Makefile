@@ -77,6 +77,7 @@ LDFLAGS := -m elf_x86_64 -s -x -static
 OBJS = thread.o tlib.o process.o plib.o \
 ithread.o clone.o \
 ipc.o \
+sync.o \
 detect.o \
 ke.o \
 archhal.o \
@@ -95,9 +96,11 @@ all:
 # intake/  (The MICROKERNEL)
 # process, thread, dispatcher and scheduler.
 
+
+# Thread
 	$(CC) -c intake/thread.c   $(KERNEL_INCLUDE) $(CFLAGS) -o thread.o
 	$(CC) -c intake/tlib.c     $(KERNEL_INCLUDE) $(CFLAGS) -o tlib.o
-
+# Process
 	$(CC) -c intake/process.c  $(KERNEL_INCLUDE) $(CFLAGS) -o process.o
 	$(CC) -c intake/plib.c     $(KERNEL_INCLUDE) $(CFLAGS) -o plib.o
 
@@ -105,7 +108,7 @@ all:
 	$(CC) -c intake/clone.c    $(KERNEL_INCLUDE) $(CFLAGS) -o clone.o
 
 	$(CC) -c intake/ipc.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ipc.o
-
+	$(CC) -c intake/sync.c  $(KERNEL_INCLUDE) $(CFLAGS) -o sync.o
 
 	$(CC) -c intake/disp/ts.c              $(KERNEL_INCLUDE)  $(CFLAGS) -o ts.o  
 	$(CC) -c intake/disp/dispatch.c        $(KERNEL_INCLUDE)  $(CFLAGS) -o dispatch.o  

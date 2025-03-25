@@ -49,17 +49,6 @@ static pid_t __current_pid = (pid_t) (-1);  //fail
 
 static pid_t caller_process_id=0;
 
-
-//
-// IPC
-//
-
-// Global spin lock.
-// The process does not block, it spins in a loop.
-// see: gspin.h
-int __spinlock_ipc=0;
-//...
-
 struct process_d  *KernelProcess;  // Base kernel.
 struct process_d  *InitProcess;    // Init process.
 
@@ -501,19 +490,15 @@ void process_close_gate(int pid)
 
 // #todo: max limit
     if (pid<0){
-        panic ("process_close_gate: pid \n");
+        panic ("process_close_gate: pid\n");
     }
 
 // Process
-
     p = (void *) processList[pid];
-
-    if ( (void *) p == NULL ){
-        panic ("process_close_gate: p \n");
+    if ((void *) p == NULL){
+        panic ("process_close_gate: p\n");
     } else {
-
         // todo: validation
-        
         __spinlock_ipc = __GATE_CLOSED;  //0;
         criticalsection_pid = (pid_t) 0;
         p->_critical = FALSE;  //0;
@@ -532,22 +517,18 @@ void process_open_gate (int pid)
 // max limit
 
     if (pid<0){
-        panic ("process_open_gate: pid \n");
+        panic ("process_open_gate: pid\n");
     }
 
-// Process.
-
+// Process
     p = (void *) processList[pid];
-
-    if ( (void *) p == NULL ){
-        panic ("process_open_gate: p \n");
+    if ((void *) p == NULL){
+        panic ("process_open_gate: p\n");
     } else {
-
         // todo: validation
-        
-        __spinlock_ipc = __GATE_OPEN; //1;
+        __spinlock_ipc = __GATE_OPEN;  //1;
         criticalsection_pid = (pid_t) pid;
-        p->_critical = TRUE; //1;
+        p->_critical = TRUE;  //1;
     };
 }
 
