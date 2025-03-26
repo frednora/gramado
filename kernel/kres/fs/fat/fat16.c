@@ -34,7 +34,12 @@ struct fat16_directory_entry_d *vol_label_directory_entry;
 
 // -------------------------------
 
-//#test
+// #test
+// #bugbug
+// We're using the pointer 'vol_label_directory_entry' for
+// directory entry structure. Maybe we can use a pointer as parameter 
+// for the function.
+//void test_fat16_find_volume_info(struct fat16_directory_entry_d *dir_entry)
 void test_fat16_find_volume_info(void)
 {
 // #test
@@ -132,7 +137,7 @@ fat16_get_entry_info(
     return 0;
 
 fail:
-    return -1;
+    return (int) -1;
 }
 
 // #todo: Describe this routine.
@@ -151,8 +156,8 @@ from_FAT_name (
 // #todo: 
 // debug messages.
  
-    if ( (void *) src == NULL ){ return; }
-    if ( (void *) dst == NULL ){ return; }
+    if ((void *) src == NULL){ return; }
+    if ((void *) dst == NULL){ return; }
 
     if (*src == 0){ return; }
     if (*dst == 0){ return; }
@@ -213,6 +218,7 @@ from_FAT_name (
 }
 
 
+// to_FAT_name:
 // #todo: Describe this routine.
 // credits: hoppy os.
 // to 8.3
@@ -313,8 +319,7 @@ fsGetFileSize (
 // #todo: 
 // Devemos carregar o diretório alvo.
 // VOLUME1_ROOTDIR_ADDRESS;
-    unsigned short *Dir = 
-        (unsigned short *) dir_address;
+    unsigned short *Dir = (unsigned short *) dir_address;
 
 // #todo: Devemos carregar o diretório atual.
 //unsigned long current_dir_address = (unsigned long) Newpage();
@@ -398,7 +403,7 @@ fsGetFileSize (
 // == root filesystem structure ===============================
 //
 
-    if ( (void *) root == NULL ){
+    if ((void *) root == NULL){
         panic ("fsGetFileSize: [FAIL] No root file system!\n");
     }else{
 
@@ -447,8 +452,7 @@ fsGetFileSize (
 
     size_t szFileName = (size_t) strlen(file_name); 
     if (szFileName > 11){
-        printk ("fsGetFileSize: [FIXME] name size fail %d\n",
-            szFileName );   
+        printk ("fsGetFileSize: [FIXME] name size fail %d\n", szFileName );   
         szFileName = 11;
     }
 
@@ -482,7 +486,7 @@ fsGetFileSize (
 
 fail:
 
-    if ( (void*) file_name != NULL ){
+    if ((void*) file_name != NULL){
         printk ("fsGetFileSize: [FAIL] %s not found\n", file_name );
      }
 
@@ -548,7 +552,7 @@ fsFAT16ListFiles (
 // Offset
     int j=0;  
 // Max number of entries.
-    int max = number_of_entries;
+    int Max = number_of_entries;
 // 8.3
     char NameString[12];
 // Buffer
@@ -585,30 +589,30 @@ fsFAT16ListFiles (
         goto fail;
     }
 
-// Show 'max' entries in the directory.
+// Show 'Max' entries in the directory.
 
     i=0; 
     j=0;
-    while (i < max)
+    while (i < Max)
     {
         // Not invalid and not free.
         if ( charBuffer[j] != FAT_DIRECTORY_ENTRY_LAST &&
              charBuffer[j] != FAT_DIRECTORY_ENTRY_FREE )
         {
-             // #bugbug
-             memcpy( 
-                 (char*) NameString, 
-                 (const char *) &charBuffer[j],
-                 11 );
-             NameString[11] = 0;  //finalize string
-             printk ("%s\n", NameString );
+            // #bugbug
+            memcpy( 
+                (char*) NameString, 
+                (const char *) &charBuffer[j],
+                11 );
+            NameString[11] = 0;  //finalize string
+            printk ("%s\n", NameString );
         }
 
         // (32/2) proxima entrada! 
         // (16 words) 512 vezes!
  
         //j += 16;  //short buffer  
-          j += 32;  //char buffer
+        j += 32;  //char buffer
 
         i++;  
     }; 
@@ -633,7 +637,7 @@ void fat16_init_fat_structure(void)
 // The root file system structure.
 // "/"
 
-    if ( (void *) root == NULL ){
+    if ((void *) root == NULL){
         panic ("fs_init_fat: root\n");
     }
 
@@ -643,9 +647,7 @@ void fat16_init_fat_structure(void)
 // Let's create the 'fat' structure.
 // See:
 
-    bootvolume_fat = 
-        (void *) kmalloc( sizeof(struct fat_d) );
-
+    bootvolume_fat = (void *) kmalloc( sizeof(struct fat_d) );
     if ((void *) bootvolume_fat == NULL){
         panic ("fs_init_fat: bootvolume_fat\n");
     }
@@ -653,7 +655,6 @@ void fat16_init_fat_structure(void)
 
 // Populate it with some values found in the root structure.
     bootvolume_fat->initialized = FALSE;
-
 // ??
 // The same type of the root filesystem?
     bootvolume_fat->type = (int) root->type;
@@ -749,7 +750,4 @@ int fat16Init(void)
 
     return 0;
 }
-
-
-
 

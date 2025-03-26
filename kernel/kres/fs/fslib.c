@@ -3674,7 +3674,7 @@ fail:
  */
 // Usada por open().
 // Tem que retornar o fd e colocar o ponteiro na lista de arquivos abertos.
-// Carrega um arquivo do disco para a memoria.
+// Carrega um arquivo do disco para a memória.
 // #bugbug
 // Na minha maquina real, as vezes da problema no tamanho do arquivo.
 // #bugbug
@@ -3783,8 +3783,6 @@ do_read_file_from_disk (
         file_name++;
     }
 // -------------------------------------------
-
-
 
 // Convertendo o formato do nome do arquivo.    
 // >>> "12345678XYZ"
@@ -4074,7 +4072,7 @@ __OK:
 // #paranoia.
 // Checando base novamente.
 
-    if ( (void *) fp->_base == NULL ){
+    if ((void *) fp->_base == NULL){
         printk("do_read_file_from_disk: fp->_base (again)\n");
         goto fail;
     }
@@ -4107,7 +4105,7 @@ __OK:
     //if ( FileSize >= BUFSIZ )
     if (fp->_fsize >= fp->_lbfsize)
     {
-        printk ("do_read_file_from_disk: the file is larger than the buffer\n");
+        printk ("do_read_file_from_disk: File larger than buffer\n");
         //refresh_screen();
         fp->_r = fp->_lbfsize;
         fp->_w = fp->_lbfsize;
@@ -4131,7 +4129,7 @@ __OK:
                   fp->_lbfsize );
 
     if (Status != 0){
-        printk ("do_read_file_from_disk: fsLoadFile fail\n");
+        printk ("do_read_file_from_disk: fsLoadFile failed\n");
         goto fail;
     }
     //printk("Loaded ....\n");
@@ -4173,8 +4171,8 @@ __OK:
 
     //if (mode == 0)
     //{
-          debug_print ("do_read_file_from_disk: default mode\n");
-          fp->_p = fp->_base;
+        //debug_print ("do_read_file_from_disk: default mode\n");
+        //fp->_p = fp->_base;
     //}
 
 // Pointer
@@ -4204,7 +4202,7 @@ __OK:
     }
 
     if (mode & O_ASYNC){
-         debug_print ("do_read_file_from_disk: O_ASYNC\n");
+        debug_print ("do_read_file_from_disk: O_ASYNC\n");
     }
 
 /* 
@@ -4215,7 +4213,7 @@ __OK:
  */
 
     if (mode & O_CREAT){
-         debug_print ("do_read_file_from_disk: O_CREAT\n");
+        debug_print ("do_read_file_from_disk: O_CREAT\n");
     }
 
 // #importante
@@ -4228,7 +4226,7 @@ __OK:
     // ok to write
     //fp->_flags = (fp->_flags | __SWR);
 
-// Salva o ponteiro de estrutura de arquivo.  
+// Salva o ponteiro de estrutura de arquivo.
 // Ja checamos fd.
     p->Objects[__slot] = (unsigned long) fp;
 
@@ -4239,8 +4237,7 @@ __OK:
     //refresh_screen();
 
 done:
-// Vamos retornar o fd.
-// Pois essa rotina eh usada por open();
+// Return fd. Called by open().
     return (int) fp->_file;
 fail:
     //refresh_screen();
@@ -4303,8 +4300,9 @@ do_write_file_to_disk (
     return (int) __ret;
 }
 
-
-
+// #todo:
+// Change parameter name "file". 
+// Maybe we can use "fp" instead.
 void set_global_open_file ( void *file, int Index )
 {
 
@@ -4312,7 +4310,7 @@ void set_global_open_file ( void *file, int Index )
 // Limite maximo da lista.
 
 // Structure
-    if ( (void *) file == NULL )
+    if ((void *) file == NULL)
     {
         // ?? todo: message
         return;
@@ -4324,10 +4322,11 @@ void set_global_open_file ( void *file, int Index )
     }
 
 // Include pointer in the list.
-
-     file_table[Index] = (unsigned long) file;
+    file_table[Index] = (unsigned long) file;
 }
 
+// Get file pointer?
+// Can we use "FILE *" instead?
 void *get_global_open_file (int Index)
 {
 
@@ -4342,13 +4341,12 @@ void *get_global_open_file (int Index)
     return (void *) file_table[Index];
 }
 
-
-
 // Clear the list
 int fs_initialize_dev_dir(void)
 {
     register int i=0;
-    for (i=0; i<32; i++){
+    static int NumberOfSlots = 32;
+    for (i=0; i<NumberOfSlots; i++){
         dev_dir[i].used = FALSE;
         dev_dir[i].magic = FALSE;
         dev_dir[i].initialized = FALSE;
@@ -4696,7 +4694,6 @@ int fsInit (void)
 // Target dir struct
 // Inicializa a estrutura de suporte ao target dir.
     fsInitTargetDir(VOLUME1_ROOTDIR_ADDRESS,"/");
-
 
 // FAT support for the boot partition
     fsbp_initialize_fat();

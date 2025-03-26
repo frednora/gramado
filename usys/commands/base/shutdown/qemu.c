@@ -1,4 +1,3 @@
-
 // qemu.c
 // Shutdown the machine when we're running on qemu hv.
 

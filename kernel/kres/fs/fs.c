@@ -472,6 +472,9 @@ fail:
 // ex: "/DEV/DEV1"
 int sys_get_device_number_by_path(const char *path)
 {
+    if ((void*)path == NULL)
+        return -1;
+// ...
     return (int) -1;
 }
 
@@ -529,6 +532,7 @@ int sys_open_device_by_number(int device_index)
     }
 
 // Probing for a free slot.
+    //static int NumberOfslots = 32;
     for (__slot=0; __slot<32; __slot++)
     {
         if ( p->Objects[__slot] == 0 ){
@@ -661,6 +665,9 @@ fail:
 }
 
 // sys_pwd -  Service 170.
+// #todo
+// When this syscall is useful.
+// Actually we need to create a ring 3 terminal command for this.
 void sys_pwd(void)
 {
     pid_t current_process = -1;
@@ -673,8 +680,8 @@ void sys_pwd(void)
     fs_print_process_cwd (current_process);
 }
 
-
 // Wrapper
+// #todo: Explain it.
 int 
 sys_read_file_from_disk ( 
     const char *file_name, 
@@ -701,7 +708,7 @@ sys_read_file_from_disk (
     // and some extra bytes.
     strncpy(pathname_local_copy,file_name,256);
 
-
+// see: fslib.c
     return (int) do_read_file_from_disk(
                     (char *) pathname_local_copy,
                     (int) flags, 

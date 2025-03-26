@@ -1,0 +1,17 @@
+
+ Posix Subsystem for Gramado.
+
+ The kernel handles the keyboard input using system messages,
+normally sent to the display server's thread. 
+
+#todo:
+ >>> We need to create a Posix Subsystem for Gramado, where
+we will send keyboard input to the applications that are running 
+inside a virtual terminal and reading input via stdin.
+
+#todo:
+  We need a compatibility layer. First the input goes to the gramado input system 
+and then it goes to the compatibility layer to serve some app running inside the terminal.
+It needs to respect the configuration found in the compatibility layer.
+
+

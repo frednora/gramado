@@ -621,10 +621,9 @@ static int input_process_control_char(int ch)
 // STDIN LOOP
 //
 
+// Get input from sdtin.
 static int loopSTDIN(void)
 {
-// Get input from sdtin.
-
     register int C=0;
 
 //================================
@@ -669,10 +668,9 @@ static int loopSTDIN(void)
 }
 
 // Coolmenu
+// Get input from sdtin.
 static int loopMenu(void)
 {
-// Get input from sdtin.
-
     register int C=0;
 
 // Clear the console and set cursor position to 0,0.
@@ -738,10 +736,9 @@ static int loopMenu(void)
 }
 
 // menu: Exit Gramado OS.
+// Get input from sdtin.
 static int loopMenu_ExitGramadoOS(void)
 {
-// Get input from sdtin.
-
     register int C=0;
 
 // Clear the console and set cursor position to 0,0.
@@ -772,13 +769,13 @@ static int loopMenu_ExitGramadoOS(void)
 
         C = (int) fgetc(stdin);
 
-        // c - Cancel the oeration and leave the dialog.
+        // c - Cancel the operation and leave the dialog.
         if (C == 'c' || C == 'C')
         {
             break;
         }
 
-        // Poweroff the system.
+        // s - Poweroff the system.
         if (C =='s' || C =='S')
         {
             printf ("Shutdown the system? (yn)\n");
