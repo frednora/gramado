@@ -5,6 +5,12 @@
 normally sent to the display server's thread. 
 
 #todo:
+Actually the Gramado input system has two 'operation modes'.
+One that sends input system messages to the 'threads' and other one that sends 
+input to 'stdin' files. For now both are working at the same time, and this is wrong,
+ we needs a configuration to select what mode is working at a given time.
+
+#todo:
  >>> We need to create a Posix Subsystem for Gramado, where
 we will send keyboard input to the applications that are running 
 inside a virtual terminal and reading input via stdin.
