@@ -349,6 +349,12 @@ long comp_get_mouse_y_position(void)
 // Associated with the display device driver.
 static void direct_draw_mouse_pointer(void)
 {
+// #todo:
+// + Each window has it's own type of mouse pointer.
+//   so, we need to check on the mouse_hover window's structure
+//   in order to know how to paint the mouse pointer 
+//   for that given window.
+//   See: window->mpp structure.
 
 // The rectangle
     unsigned long rectLeft   = __new_mouse_x;

@@ -344,6 +344,15 @@ struct windowframe_d
 #define TEXT_SIZE_FOR_SINGLE_LINE  128
 #define TEXT_SIZE_FOR_MULTIPLE_LINE  256
 
+// #todo:
+// Mouse properties.
+// Each window can have it's own mouse pointer properties.
+struct mouse_pointer_properties_d 
+{
+    int test_value;
+    // ...
+};
+
 
 /*
  * gws_window_d:
@@ -826,6 +835,12 @@ struct gws_window_d
 
 // The pointer is inside this window.
     int is_mouse_hover;
+
+// Each window has it's own mouse pointer style.
+// #todo:
+// Create a structure to handle the mouse properties
+// for the given window.
+    struct mouse_pointer_properties_d  mpp;
 
 //
 // == Events =========================================

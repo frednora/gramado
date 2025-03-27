@@ -702,6 +702,14 @@ void *doCreateWindow (
 
 // The pointer is inside this window.
     window->is_mouse_hover = FALSE;
+
+// #test
+// #todo
+// The properties for the mouse pointer.
+// Valid only for this window.
+// See: widnow.h
+    window->mpp.test_value = 1000;
+
 // ===================================
 
 // Id
