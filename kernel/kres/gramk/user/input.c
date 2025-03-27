@@ -1782,8 +1782,9 @@ done:
             //if ( alt_status != TRUE && 
             //     ctrl_status != TRUE && 
             //     shift_status != TRUE )
-            if ( alt_status != TRUE &&  
-                 shift_status != TRUE )
+            //if ( alt_status != TRUE &&  
+            //     shift_status != TRUE )
+            if (alt_status != TRUE)
             {
 
                 // stdin::
