@@ -1000,12 +1000,16 @@ fail:
     return;
 }
 
+// Testing libc functionalities.
 static void __libc_test(int fd)
 {
-    int NumberOfFilesToCreate = 8;
+    static int NumberOfFilesToCreate = 8;
     int file_index=0;
     char tmp_file_name[64];
     char index_string_buffer[64];
+
+    if (fd < 0)
+        return;
 
     //close(0); 
     //close(1); 
@@ -1024,7 +1028,11 @@ static void __libc_test(int fd)
 // vai acabar as entradas ou o heap do kernel.
 // # OK. It is working.
 
-    printf ("Creating {%d} files ...\n",NumberOfFilesToCreate);
+    //printf ("Creating {%d} files ...\n",NumberOfFilesToCreate);
+
+    cr();
+    lf();
+    tputstring(fd,"Creating 8 files\n");
 
     for ( file_index = 0; 
           file_index < NumberOfFilesToCreate; 
@@ -1047,6 +1055,8 @@ static void __libc_test(int fd)
         // see: fcntl.c
         creat( tmp_file_name, 0666 );
     };
+
+    // ...
 }
 
 // Compare the string typed into the terminal.
@@ -1121,12 +1131,17 @@ static void compareStrings(int fd)
     if ( strncmp(prompt, "start-shell", 11) == 0 )
     {
         // #todo: Create a worker for that.
-        printf("Quit embedded shell.\n");
-        printf("Start listening to stderr.\n");
-
+        //printf("Quit embedded shell.\n");
+        //printf("Start listening to stderr.\n");
+        cr();
+        lf();
+        tputstring(fd,"Quit embedded shell\n");
+        tputstring(fd,"Start listening to stderr\n");
+        cr();
+        lf();
         isUsingEmbeddedShell = FALSE;
         goto exit_cmp;
-    } 
+    }
 // Start the network server.
 // Maybe we're gonna connect to this server to get information
 // about our network.
@@ -1139,7 +1154,6 @@ static void compareStrings(int fd)
                       "netd.bin" );
         goto exit_cmp;
     }
-
 
 // #libc
 // Testing libc components.
@@ -1322,7 +1336,7 @@ static void compareStrings(int fd)
         goto exit_cmp;
     }
 
-// Testing escape sequence in the kernel console.
+// Testing escape sequence in the 'kernel console'.
 // Test escape sequence do console no kernel.
     if ( strncmp(prompt,"esc-k",5) == 0 )
     {
@@ -3107,12 +3121,15 @@ static int __input_from_connector(int fd)
     int client_fd = fd;
     int window_id = Terminal.client_window_id;
     int C=0;
-    const char *test_app = "shell.bin";
+    const char *test_app = "#shell.bin";
     int fGetSystemEvents = TRUE;  // from kernel.
     int fGetWSEvents = TRUE;  // from display server.
 
 
-    printf ("__input_from_connector: #todo\n");
+    //printf ("__input_from_connector: #todo\n");
+    cr();
+    lf();
+    tputstring(fd,"__input_from_connector:\n");
 
 RelaunchShell:
 
@@ -3270,8 +3287,12 @@ static int __input_STDIN(int fd)
         }
     };
 
-    printf ("__input_STDIN: Stop listening stdin\n");
+    //printf ("__input_STDIN: Stop listening stdin\n");
+    cr();
+    lf();
+    tputstring(fd,"__input_STDIN: Stop listening stdin");
     return 0;
+
 fail:
     return (int) -1;
 }

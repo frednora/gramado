@@ -1064,12 +1064,10 @@ int main(int argc, char *argv[])
 //====================   
 */
 
-
     // #debug
     //gws_refresh_window (client_fd, tmp1);
     //asm ("int $3");
-
-    
+   
     /*
     //
     // == stdin ===================================================
@@ -1096,7 +1094,6 @@ int main(int argc, char *argv[])
     };
     // ============================================================
     */
-    
     
 
     // Create a little window in the top left corner.
@@ -1309,7 +1306,6 @@ int main(int argc, char *argv[])
 //#breakpoint
     //printf("taskbar.bin: Breakpoint :)\n");
     //while(1){}
-
 
 /*
 // #test

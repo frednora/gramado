@@ -1019,7 +1019,7 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
 //
 
 // len
-    ubuf_len = strlen( (const char *) ubuf );
+    ubuf_len = strlen((const char *) ubuf);
 
 // Se a quantidade desejada é maior que o buffer disponível.
     if(count > ubuf_len){
