@@ -274,13 +274,16 @@ static void update_clients(int fd)
 {
     // Terminal window
     int wid = Terminal.client_window_id;
-
     // Local
     struct gws_window_info_d lWi;
 
     if (fd<0){
         return;
     }
+
+    // No
+    // Activate the main window.
+    // gws_set_active(fd,main_window);
 
 // Get info about the main window.
 // IN: fd, wid, window info structure.
@@ -311,7 +314,9 @@ static void update_clients(int fd)
 // #todo: 
 // We need a list o clients. maybe clients[i]
 
-    gws_set_focus(fd,wid);
+    // No
+    //gws_set_focus(fd,wid);
+
     gws_redraw_window(fd, wid, TRUE);
 
 // ------------------------------------------------
@@ -3281,8 +3286,9 @@ static int __input_STDIN(int fd)
         if (fGetSystemEvents == TRUE){
             __get_system_event( client_fd, window_id );
         }
-        // + Get events from the server.
+        // + Get events from the display server.
         if (fGetWSEvents == TRUE){
+            // #todo: Change function name to __get_ds_event.
             __get_ws_event( client_fd, main_window );
         }
     };
@@ -3368,9 +3374,10 @@ static void __get_system_event(int fd, int wid)
     };
 }
 
+// #todo: Change function name to __get_ds_event.
 static void __get_ws_event(int fd, int event_wid)
 {
-// Get only one event from the window server.
+// Get only one event from the display server.
 
     struct gws_event_d lEvent;
     lEvent.used = FALSE;

@@ -366,10 +366,8 @@ wmProcessKeyboardEvent(
     //char name_buffer[64];
 
 // #todo
-    unsigned int fg_color = 
-        (unsigned int) get_color(csiSystemFontColor);
-    //unsigned int bg_color = 
-    //    (unsigned int) get_color(csiSystemFontColor);
+    unsigned int fg_color = (unsigned int) get_color(csiSystemFontColor);
+    //unsigned int bg_color = (unsigned int) get_color(csiSystemFontColor);
 
     if (msg < 0){
         return 0;
@@ -438,9 +436,11 @@ wmProcessKeyboardEvent(
         }
         */
 
+        // The is the window with focus.
         wm_draw_char_into_the_window(
             window, (int) long1, fg_color );
         
+        // The is the window with focus.
         // Enqueue a message into the queue that belongs
         // to the window with focus.
         // The client application is gonna get this message.
@@ -5638,7 +5638,6 @@ int wmInputReader(void)
 NextEvent:
 
     status = (int) rtl_get_event();
-
     if (status != TRUE)
     {
         for (i=0; i<extra_attempts; i++)
@@ -5656,7 +5655,7 @@ ProcessEvent:
     long1 = (unsigned long) RTLEventBuffer[2];
     long2 = (unsigned long) RTLEventBuffer[3];
 // #test
-    long3 = (unsigned long) RTLEventBuffer[4]; //jiffie
+    long3 = (unsigned long) RTLEventBuffer[4];  //jiffie
 
 
 // -----------------------
@@ -5701,8 +5700,7 @@ ProcessEvent:
     if (msg == GWS_Timer)
     {
         // OK, it's working
-        if (long1 == 1234)
-        {
+        if (long1 == 1234){
             //printf("Tick %d\n",long2);
             wmProcessTimerEvent(long1,long2);
         }

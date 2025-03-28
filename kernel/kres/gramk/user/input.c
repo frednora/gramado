@@ -1768,6 +1768,7 @@ done:
 // Not in the embedded shell.
     if (ShellFlag != TRUE)
     {
+        // STDIN
         // Only normal keys. For terminal support.
         if (Event_Message == MSG_KEYDOWN)
         {
@@ -1808,6 +1809,7 @@ done:
             }
         }
 
+        // NOT COMBINATION
         // Send break and make keys to the window server.
         // Not a combination key, so return 
         // without calling the local procedure.
@@ -1820,7 +1822,8 @@ done:
             // only depending on the input mode. 'Cause we don't wanna
             // send data to multiple targets.
 
-            // queue:: regular keys, not combinations.
+            // ds queue:: 
+            // regular keys, not combinations.
             if (InputTargets.target_thread_queue == TRUE)
             {
                 ipc_post_message_to_ds(
@@ -1830,7 +1833,10 @@ done:
             }
             return 0;
         }
-    }
+
+        // ... fall through
+
+    } 
 
 // ------------------------------
 // Process the event using the system's window procedures.
@@ -1849,8 +1855,12 @@ done:
 // sim processar algumas combinações, independente dos aplicativos.
 // Como a chamada aos consoles do kernel ou control+alt+del.
 
-    // ShellFlag == TRUE
 
+    // #todo
+    // When we don't need to process the input?
+
+    // Process keyboard input in both cases,
+    // inside and outside the kernel console.
     // :: keystrokes when we are in ring0 shell mode.
     // queue:: (combinations)
     Status = 
@@ -1860,6 +1870,7 @@ done:
                   (unsigned long) Event_LongRawByte );
 
     return (int) Status;
+
 fail:
     return (int) -1;
 }
