@@ -6,12 +6,6 @@ Gramado OS. This project includes basicaly the bootloader, the core kernel and t
 > Gramado OS kernel is in a pre-alpha state, and only suitable for use by developers.
 >
 
-## This image shows the first process that runs after the kernel initialization.
-![Screenshot](https://raw.githubusercontent.com/igapo/screenshots/main/kernel-01.png)
-
-You can install a desktop environment on top of the kernel. The default, the desktop environment 
-can be found in the xde/ folder.
-
 ## What is Gramado OS Kernel?
 
 This project includes basicaly the bootloader, the core kernel and the init process.
@@ -20,6 +14,13 @@ This project includes basicaly the bootloader, the core kernel and the init proc
 
 GramadoOS is a 64bit graphical operating system. It has a bootloader, a kernel and a desktop environment.
 This is the first ditribution created using the Gramado OS kernel.
+
+This image shows the first process that runs after the kernel initialization.
+![Screenshot](https://raw.githubusercontent.com/polard8/screenshots/main/kernel-01.png)
+
+You can install a desktop environment on top of the kernel. The default, the desktop environment 
+can be found in the xde/ folder.
+
 
 ## What is the category it belongs to? 
 
@@ -65,11 +66,15 @@ not all the features needed by a commercial operating system.
 > * The network server. (Work in progress)
 
 # DE - Desktop Environment
-This is a screenshot of GramadoDE desktop environment running on top of the kernel.
+
+This is a screenshot of the desktop environment running on top of the kernel.
+You can find code in the xde/ folder.
 ![Screenshot](https://raw.githubusercontent.com/polard8/screenshots/main/gramado-8.png)
 
-# DE - Desktop Environment
+# Demos
+
 This is a screenshot of 3D demo running on top of the kernel.
+You can find code in the xgames/ folder.
 ![Screenshot](https://raw.githubusercontent.com/polard8/screenshots/main/gramado-3.png)
 
 ## The source code.
