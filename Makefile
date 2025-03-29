@@ -5,15 +5,15 @@
 # Compiling on gcc 11.4.0 (Ubuntu on wsl)
 # Linking on ld 2.38
 
-BASE = your/base
-
+# --------------------------
 # Display server
-DEP_L1  = xde/ds
-# Client-side GUI applications
-DEP_L2  = xde/apps
-# 3D demos
-DEP_L3  = xgames
+DEP_L1  = windows/ds
 
+# --------------------------
+# zde: Client-side GUI applications
+DEP_L2  = zde/apps
+BASE    = zde/base
+GAMES   = zde/aurora
 
 # Make variables (CC, etc...)
 AS      = as
@@ -51,7 +51,7 @@ PHONY := all
 all:  \
 build-gramado-os \
 copy-extras \
-zbuild/GRAMVD \
+zde/GRAMVD \
 vhd-mount \
 vhd-copy-files \
 vhd-unmount \
@@ -83,7 +83,7 @@ build-gramado-os
 PHONY := image
 image: do_image
 do_image: \
-zbuild/GRAMVD    \
+zde/GRAMVD    \
 vhd-mount          \
 vhd-copy-files     \
 vhd-unmount        \
@@ -105,110 +105,108 @@ build-gramado-os:
 # See: fs/loader.c
 
 #===================================
-# (1) boot/ 
+# (1) os/boot/ 
 
-# ::Build stuuf in boot/
-	$(Q)$(MAKE) -C boot/
+# ::Build stuuf in os/boot/
+	$(Q)$(MAKE) -C os/boot/
 
-# Copy stuff created in boot/
+# Copy stuff created in os/boot/
 
 # Copy the virtual disk into the rootdir.
-	cp boot/GRAMHV.VHD  .
-# Copy bootloader stuff into rootdir.
-	cp boot/x86/bsp/bin/BM.BIN      $(BASE)/
-	cp boot/x86/bsp/bin/BM2.BIN     $(BASE)/
-	cp boot/x86/bsp/bin/BLGRAM.BIN  $(BASE)/
+	cp os/boot/GRAMHV.VHD  .
+# Copy os/bootloader stuff into rootdir.
+	cp os/boot/x86/bsp/bin/BM.BIN      $(BASE)/
+	cp os/boot/x86/bsp/bin/BM2.BIN     $(BASE)/
+	cp os/boot/x86/bsp/bin/BLGRAM.BIN  $(BASE)/
 # Copy bootloader stuff into GRAMADO/ folder.
-	cp boot/x86/bsp/bin/BM.BIN      $(BASE)/GRAMADO
-	cp boot/x86/bsp/bin/BM2.BIN     $(BASE)/GRAMADO
-	cp boot/x86/bsp/bin/BLGRAM.BIN  $(BASE)/GRAMADO
-	cp boot/MBR0.BIN                $(BASE)/GRAMADO
+	cp os/boot/x86/bsp/bin/BM.BIN      $(BASE)/GRAMADO
+	cp os/boot/x86/bsp/bin/BM2.BIN     $(BASE)/GRAMADO
+	cp os/boot/x86/bsp/bin/BLGRAM.BIN  $(BASE)/GRAMADO
+	cp os/boot/MBR0.BIN                $(BASE)/GRAMADO
 
 #===================================
-# (2) kernel/
+# (2) os/kernel/
 
 # ::Build kernel image.
-	$(Q)$(MAKE) -C kernel/
+	$(Q)$(MAKE) -C os/kernel/
 
 # Copy to the target folder.
 # We need a backup
 # The bootloader expect this.
 # todo: We need to rethink this backup.
-	cp kernel/KERNEL.BIN  $(BASE)/GRAMADO
-	cp kernel/KERNEL.BIN  $(BASE)/DE
+	cp os/kernel/KERNEL.BIN  $(BASE)/GRAMADO
+	cp os/kernel/KERNEL.BIN  $(BASE)/DE
 
 #===================================
-# (3) mods/
+# (3) os/mods/
 
 # ::Build the ring0 module image.
-	$(Q)$(MAKE) -C mods/
+	$(Q)$(MAKE) -C os/mods/
 
 # Copy the ring0 module image.
 # Not dynlinked modules.
-	cp mods/bin/HVMOD0.BIN  $(BASE)/
-#	cp mods/bin/HVMOD1.BIN  $(BASE)/
-	cp mods/bin/HVMOD0.BIN  $(BASE)/GRAMADO
-#	cp mods/bin/HVMOD1.BIN  $(BASE)/GRAMADO
+	cp os/mods/bin/HVMOD0.BIN  $(BASE)/
+#	cp os/mods/bin/HVMOD1.BIN  $(BASE)/
+	cp os/mods/bin/HVMOD0.BIN  $(BASE)/GRAMADO
+#	cp os/mods/bin/HVMOD1.BIN  $(BASE)/GRAMADO
 
 # ...
 
 #===================================
-# (4) udrivers/ in kernel project
-
-	$(Q)$(MAKE) -C udrivers/
-
-	-cp udrivers/bin/VGAD.BIN  $(BASE)/GRAMADO/
-
-#===================================
-# (5) uservers/ in kernel project
-# Build the network server and the first client.
-
-	$(Q)$(MAKE) -C uservers/
-
-	-cp uservers/bin/NET.BIN   $(BASE)/GRAMADO/
-	-cp uservers/bin/NETD.BIN  $(BASE)/GRAMADO/
-
-#===================================
-# (6) usys/ in kernel project
+# os/usys/ in kernel project
 # Build the init process.
 # Copy the init process.
 # We can't survive without this one. (Only this one).
-	$(Q)$(MAKE) -C usys/
-	$(Q)$(MAKE) -C usys/commands/
+	$(Q)$(MAKE) -C os/usys/
+	$(Q)$(MAKE) -C os/usys/commands/
 
 # Copy
 
-	cp usys/bin/INIT.BIN      $(BASE)/
-	-cp usys/commands/base/bin/REBOOT.BIN    $(BASE)/
-	-cp usys/commands/base/bin/SHUTDOWN.BIN  $(BASE)/
-	-cp usys/commands/sdk/bin/GRAMCNF.BIN    $(BASE)/
+	cp os/usys/bin/INIT.BIN      $(BASE)/
+	-cp os/usys/commands/base/bin/REBOOT.BIN    $(BASE)/
+	-cp os/usys/commands/base/bin/SHUTDOWN.BIN  $(BASE)/
+	-cp os/usys/commands/sdk/bin/GRAMCNF.BIN    $(BASE)/
 
     # Well consolidated applications
-	-cp usys/bin/PUBSH.BIN                $(BASE)/DE/
-	-cp usys/bin/SH7.BIN                  $(BASE)/DE/
-	-cp usys/bin/SHELL.BIN                $(BASE)/DE/
-#	-cp usys/bin/SHELL00.BIN              $(BASE)/DE/
-	-cp usys/bin/TASCII.BIN               $(BASE)/DE/
-	-cp usys/bin/TPRINTF.BIN              $(BASE)/DE/
-	-cp usys/commands/base/bin/CAT.BIN    $(BASE)/DE/
-	-cp usys/commands/base/bin/UNAME.BIN  $(BASE)/DE/
+	-cp os/usys/bin/PUBSH.BIN                $(BASE)/DE/
+	-cp os/usys/bin/SH7.BIN                  $(BASE)/DE/
+	-cp os/usys/bin/SHELL.BIN                $(BASE)/DE/
+#	-cp os/usys/bin/SHELL00.BIN              $(BASE)/DE/
+	-cp os/usys/bin/TASCII.BIN               $(BASE)/DE/
+	-cp os/usys/bin/TPRINTF.BIN              $(BASE)/DE/
+	-cp os/usys/commands/base/bin/CAT.BIN    $(BASE)/DE/
+	-cp os/usys/commands/base/bin/UNAME.BIN  $(BASE)/DE/
 
     # Experimental applications
-	-cp usys/commands/base/bin/FALSE.BIN      $(BASE)/DE/
-	-cp usys/commands/base/bin/TRUE.BIN       $(BASE)/DE/
-	-cp usys/commands/extra/bin/CMP.BIN       $(BASE)/DE/
-	-cp usys/commands/extra/bin/SHOWFUN.BIN   $(BASE)/DE/
-	-cp usys/commands/extra/bin/SUM.BIN       $(BASE)/DE/
-#-cp usys/commands/sdk/bin/N9.BIN         $(BASE)/DE/
-#-cp usys/commands/sdk/bin/N10.BIN        $(BASE)/DE/
-#-cp usys/commands/sdk/bin/N11.BIN        $(BASE)/DE/
-#-cp usys/commands/extra/bin/UDPTEST.BIN  $(BASE)/DE/
+	-cp os/usys/commands/base/bin/FALSE.BIN      $(BASE)/DE/
+	-cp os/usys/commands/base/bin/TRUE.BIN       $(BASE)/DE/
+	-cp os/usys/commands/extra/bin/CMP.BIN       $(BASE)/DE/
+	-cp os/usys/commands/extra/bin/SHOWFUN.BIN   $(BASE)/DE/
+	-cp os/usys/commands/extra/bin/SUM.BIN       $(BASE)/DE/
+#-cp os/usys/commands/sdk/bin/N9.BIN         $(BASE)/DE/
+#-cp os/usys/commands/sdk/bin/N10.BIN        $(BASE)/DE/
+#-cp os/usys/commands/sdk/bin/N11.BIN        $(BASE)/DE/
+#-cp os/usys/commands/extra/bin/UDPTEST.BIN  $(BASE)/DE/
+
+#===================================
+# os/udrivers/ in kernel project
+
+	$(Q)$(MAKE) -C os/udrivers/
+	-cp os/udrivers/bin/VGAD.BIN  $(BASE)/GRAMADO/
+
+#===================================
+# os/uservers/ in kernel project
+# Build the network server and the first client.
+
+	$(Q)$(MAKE) -C os/uservers/
+	-cp os/uservers/bin/NET.BIN   $(BASE)/GRAMADO/
+	-cp os/uservers/bin/NETD.BIN  $(BASE)/GRAMADO/
 
 # Install BMPs from cali assets.
-# Copy the assets/
+# Copy the zde/assets/
 # We can't survive without this one.
-#	cp your/assets/themes/theme01/*.BMP  $(BASE)/
-	cp your/assets/themes/theme01/*.BMP  $(BASE)/DE
+#	cp zde/assets/themes/theme01/*.BMP  $(BASE)/
+	cp zde/assets/themes/theme01/*.BMP  $(BASE)/DE
 
 	@echo "~build-gramado-os end?"
 
@@ -246,18 +244,18 @@ copy-extras:
 	-cp $(DEP_L2)/browser/teabox/bin/TEABOX.BIN  $(BASE)/DE/
 
 # 3D demos.
-	-cp $(DEP_L3)/aurora/bin/DEMO00.BIN   $(BASE)/DE/
-	-cp $(DEP_L3)/aurora/bin/DEMO01.BIN   $(BASE)/DE/
+	-cp $(GAMES)/bin/DEMO00.BIN   $(BASE)/DE/
+	-cp $(GAMES)/bin/DEMO01.BIN   $(BASE)/DE/
 
 	@echo "~ copy-extras"
 
 # --------------------------------------
 #::2
-# Step 2: zbuild/GRAMVD  - Creating the directory to mount the VHD.
-zbuild/GRAMVD:
+# Step 2: zde/GRAMVD  - Creating the directory to mount the VHD.
+zde/GRAMVD:
 	@echo "========================="
 	@echo "Build: Creating the directory to mount the VHD ..."
-	sudo mkdir zbuild/GRAMVD
+	sudo mkdir zde/GRAMVD
 
 # --------------------------------------
 #::3
@@ -265,8 +263,8 @@ zbuild/GRAMVD:
 vhd-mount:
 	@echo "=========================="
 	@echo "Build: Mounting the VHD ..."
-	-sudo umount zbuild/GRAMVD
-	sudo mount -t vfat -o loop,offset=32256 GRAMHV.VHD zbuild/GRAMVD/
+	-sudo umount zde/GRAMVD
+	sudo mount -t vfat -o loop,offset=32256 GRAMHV.VHD zde/GRAMVD/
 
 # --------------------------------------
 #::4
@@ -277,7 +275,7 @@ vhd-copy-files:
 	@echo "Build: Copying files into the mounted VHD ..."
 	# Copy $(BASE)/
 	# sends everything from disk/ to root.
-	sudo cp -r $(BASE)/*  zbuild/GRAMVD
+	sudo cp -r $(BASE)/*  zde/GRAMVD
 
 # --------------------------------------
 #:::5
@@ -285,7 +283,7 @@ vhd-copy-files:
 vhd-unmount:
 	@echo "======================"
 	@echo "Build: Unmounting the VHD ..."
-	sudo umount zbuild/GRAMVD
+	sudo umount zde/GRAMVD
 
 # --------------------------------------
 # Run on qemu using kvm.
@@ -307,8 +305,8 @@ do_runnokvm:
 clean:
 	-rm *.o
 	-rm *.BIN
-	-rm kernel/*.o
-	-rm kernel/*.BIN
+	-rm os/kernel/*.o
+	-rm os/kernel/*.BIN
 	@echo "~clean"
 
 # --------------------------------------
@@ -320,42 +318,42 @@ clean-all: clean
 	-rm *.VHD
 	-rm *.ISO
 
-	-rm boot/*.VHD 
+	-rm os/boot/*.VHD 
 
 # ==================
-# (1) boot/
+# (1) os/boot/
 # Clear boot images
-#	-rm -rf boot/arm/bin/*.BIN
-	-rm -rf boot/x86/bin/*.BIN
+#	-rm -rf os/boot/arm/bin/*.BIN
+	-rm -rf os/boot/x86/bin/*.BIN
 
 # ==================
-# (2) kernel/
+# (2) os/kernel/
 # Clear kernel image
-	-rm kernel/*.o
-	-rm kernel/*.BIN
-	-rm -rf kernel/KERNEL.BIN
+	-rm os/kernel/*.o
+	-rm os/kernel/*.BIN
+	-rm -rf os/kernel/KERNEL.BIN
 
 # ==================
-# (3) mods/
+# (3) os/mods/
 # Clear the ring0 module images
-	-rm -rf mods/*.o
-	-rm -rf mods/*.BIN
-	-rm -rf mods/bin/*.BIN
+	-rm -rf os/mods/*.o
+	-rm -rf os/mods/*.BIN
+	-rm -rf os/mods/bin/*.BIN
 
 # ==================
-# (4) usys/
+# os/usys/
 # Clear INIT.BIN
-	-rm usys/bin/*.BIN
-	-rm usys/init/*.o
-	-rm usys/init/*.BIN 
+	-rm os/usys/bin/*.BIN
+	-rm os/usys/init/*.o
+	-rm os/usys/init/*.BIN 
 
-	-rm uservers/netd/client/*.o
-	-rm uservers/netd/client/*.BIN
-	-rm uservers/netd/server/*.o
-	-rm uservers/netd/server/*.BIN 
+	-rm os/uservers/netd/client/*.o
+	-rm os/uservers/netd/client/*.BIN
+	-rm os/uservers/netd/server/*.o
+	-rm os/uservers/netd/server/*.BIN 
 
-	-rm usys/commands/bin/*.BIN
-	-rm usys/commands/init/*.o
+	-rm os/usys/commands/bin/*.BIN
+	-rm os/usys/commands/init/*.o
 
 # ==================
 # Clear the disk cache
