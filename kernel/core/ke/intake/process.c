@@ -3,6 +3,10 @@
 
 #include <kernel.h>
 
+// List of all processes.
+unsigned long processList[PROCESS_COUNT_MAX];
+
+
 // See: kpid.h
 pid_t __gpidBoot=0;
 pid_t __gpidInclude=0;
@@ -62,9 +66,9 @@ struct process_d  *InitProcess;    // Init process.
 void close_all_processes(void)
 {
     struct process_d  *p;
-    int i=0;
+    register int i=0;
 
-    if ( (void *) KernelProcess == NULL ){
+    if ((void *) KernelProcess == NULL){
         panic ("close_all_processes: KernelProcess\n");
     }
 
@@ -73,9 +77,9 @@ void close_all_processes(void)
           i++ )
     {
         p = (void *) processList[i];
-        
-        if (p != KernelProcess )
+        if (p != KernelProcess)
         {
+            // #todo: This is not the right state.
             p->state = PROCESS_BLOCKED;
             p->used = FALSE;
             p->magic = 0;
@@ -103,30 +107,33 @@ pid_t get_current_pid(void)
 struct process_d *get_current_process_pointer(void)
 {
     struct process_d *p;
+    pid_t __pid = -1;
 
 // so podemos chamar essa rotina depois que o kernel lançou
 // o primeiro thread.
     if (system_state != SYSTEM_RUNNING){
         //panic("get_current_process_pointer: system_state\n");
-        return NULL;
+        goto fail;
     }
-    
-    pid_t __pid = (pid_t) get_current_process();
+
+    __pid = (pid_t) get_current_process();
     if ( __pid < 0 || __pid >= PROCESS_COUNT_MAX )
     {
-        return NULL;
+        goto fail;
     }
     p = (struct process_d *) processList[__pid];
-    if (p->used!=TRUE){
+    if (p->used != TRUE){
         //panic ("get_current_process_pointer: used\n");
-        return NULL;
+        goto fail;
     }
-    if (p->magic!=1234){
+    if (p->magic != 1234){
         //panic ("get_current_process_pointer: magic\n");
-        return NULL;
+        goto fail;
     }
 
     return (struct process_d *) p;
+fail:
+    return NULL;
 }
 
 
@@ -143,7 +150,7 @@ unsigned long get_process_stats(pid_t pid, int index)
     }
 
     p = (void *) processList[pid];
-    if ( (void *) p == NULL ){
+    if ((void *) p == NULL){
         return 0;
     } 
     if (p->magic!=1234){
@@ -253,19 +260,17 @@ int getprocessname ( pid_t pid, char *buffer )
     struct process_d  *p;
     char *name_buffer = (char *) buffer;
 
-// #todo
-// checar validade dos argumentos.
-
-    if (pid<0 || pid >= PROCESS_COUNT_MAX){
+// Parameters
+    if (pid < 0 || pid >= PROCESS_COUNT_MAX){
         goto fail;
     }
-
-    if ( (void*) buffer == NULL ){
+    if ((void*) buffer == NULL){
         goto fail;
     }
  
+// Process structure
     p = (struct process_d *) processList[pid]; 
-    if ( (void *) p == NULL ){
+    if ((void *) p == NULL){
         goto fail;
     }
     if ( p->used != TRUE || p->magic != 1234 ){
@@ -277,7 +282,7 @@ int getprocessname ( pid_t pid, char *buffer )
 // Check the lenght and use another copy function.
     strcpy ( 
         name_buffer, 
-        (const char *) p->__processname );  
+        (const char *) p->__processname );
 
 // Return the len.
 // #bugbug: 
@@ -322,7 +327,6 @@ pid_t getNewPID (void)
     };
 
     debug_print ("getNewPID: fail\n");
-
     return (pid_t) (-1);
 }
 
@@ -333,18 +337,28 @@ pid_t getNewPID (void)
  *     @todo: repensar os valores de retorno. 
  * system call (servi�o 88.)
  */
-// #todo: Change the type to 'pid_t'.
-int processTesting (int pid)
+int processTesting (pid_t pid)
 {
-    struct process_d  *P;
-    P = (void *) processList[pid];
-    if ( (void *) P == NULL ){
+// #todo
+// Review the return values for all the cases.
+
+    struct process_d  *p;
+
+// Parameter
+    if (pid < 0)
+        return -1;
+    if (pid >= PROCESS_COUNT_MAX)
+        return -1;
+    
+    p = (void *) processList[pid];
+    if ((void *) p == NULL){
         return 0;
-    }else{
-        if ( P->used == TRUE && P->magic == 1234 ){
-            return (int) 1234; 
-        }
-    };
+    }
+    if ( p->used == TRUE && p->magic == 1234 )
+    {
+        return (int) 1234; 
+    }
+
     return 0;
 }
 
@@ -581,18 +595,17 @@ file *process_get_file (int fd)
     return (file *) process_get_file_from_pid (current_process, fd );
 }
 
-
 // Get tty id.
 // Pega o número da tty de um processo, dado o pid.
 // Serviço: 266.
-
-int process_get_tty (int pid)
+int process_get_tty (pid_t pid)
 {
     // Usada para debug.
 
     struct process_d *p;
     struct tty_d *tty;
 
+// Parameter
     if ( pid < 0 || pid >= PROCESS_COUNT_MAX )
     {
         return (int) (-EINVAL);
@@ -601,7 +614,7 @@ int process_get_tty (int pid)
     p = (struct process_d *) processList[pid];
     if ((void *) p == NULL)
     {
-        debug_print ("process_get_tty: p \n");
+        debug_print ("process_get_tty: p\n");
         //printk ("p fail\n");
         //refresh_screen();
         return -1;
@@ -967,13 +980,10 @@ void ps_initialize_process_common_elements(struct process_d *p)
         panic("ps_initialize_process_common_elements: stderr\n");
     }
 
-// ---------------
 // Objects[]
-
     for (i=0; i<NUMBER_OF_FILES; ++i){
         p->Objects[i] = (unsigned long) 0;
     };
-
     p->Objects[0] = (unsigned long) stdin;
     p->Objects[1] = (unsigned long) stdout;
     p->Objects[2] = (unsigned long) stderr;
@@ -992,7 +1002,7 @@ void ps_initialize_process_common_elements(struct process_d *p)
 // IN: type, subtype.
     p->tty = (struct tty_d *) tty_create(
         TTY_TYPE_PTY,
-        TTY_SUBTYPE_UNDEFINED ); 
+        TTY_SUBTYPE_UNDEFINED );
 
     if ((void *) p->tty == NULL){
         panic("ps_initialize_process_common_elements: Couldn't create tty\n");
@@ -1017,6 +1027,7 @@ void ps_initialize_process_common_elements(struct process_d *p)
 struct process_d *processObject(void)
 {
     struct process_d *p;
+
     p = (void *) kmalloc( sizeof(struct process_d) );
     if ((void *) p == NULL){
         return NULL;
@@ -1076,12 +1087,10 @@ struct process_d *create_and_initialize_process_object(void)
 // #todo: Change to generate_new_pid();
 
     NewPID = (pid_t) getNewPID();
-    
-    if ( NewPID < GRAMADO_PID_BASE || 
-         NewPID >= PROCESS_COUNT_MAX )
+    if ( NewPID < GRAMADO_PID_BASE || NewPID >= PROCESS_COUNT_MAX )
     {
-        debug_print("create_and_initialize_process_object: [FAIL] NewPID\n");
-        printk     ("create_and_initialize_process_object: [FAIL] NewPID={%d}\n", 
+        debug_print("create_and_initialize_process_object: NewPID\n");
+        printk     ("create_and_initialize_process_object: NewPID={%d}\n", 
             NewPID );
         goto fail;
     }
@@ -1176,15 +1185,12 @@ struct process_d *create_and_initialize_process_object(void)
 //#todo
 //#debug: print stack info.
 
-
 // #todo: Explain it better.
 // 0x200000
-    new_process->Image = 
-        (unsigned long) CONTROLTHREAD_BASE;
+    new_process->Image = (unsigned long) CONTROLTHREAD_BASE;
 
     new_process->used = TRUE;
     new_process->magic = 1234;
-
 // Save a finalized structure.
     processList[NewPID] = (unsigned long) new_process;
 
@@ -1221,6 +1227,7 @@ struct process_d *create_process (
     unsigned long Priority=0;
     int Personality = personality;
 
+    // #debug
     debug_print ("create_process:\n");
     printk      ("create_process:\n");
 
@@ -1589,7 +1596,6 @@ struct process_d *create_process (
     Process->StackEnd    = (unsigned long) (Process->StackStart - Process->StackSize);  
     Process->StackOffset = (unsigned long) UPROCESS_DEFAULT_STACK_OFFSET;  //??
 
-
 //
 // PPL - (Process Permition Level).(gdef.h)
 //
@@ -1672,27 +1678,19 @@ fail:
 // INITIALIZATION
 //
 
-/*
- * init_processes:
- *    Inicaliza o process manager.
- *    #todo: rever esse nome, pois na verdade estamos 
- * inicializando variaveis usadas no gerenciamento de processo.
- */
+// Initialize the process management.
 // Called by keInitializeIntake() in ke.c
 void init_processes (void)
 {
     register int i=0;
 
+    // #debug
     debug_print("init_processes:\n");
 
 // Globals
 
 // O que fazer com a tarefa atual.
     kernel_request = 0;
-
-// ?? Contagem de tempo de execu��o da tarefa atual.
-// n�o precisa, isso � atualizado pelo request()
-    //kernel_tick = 0;
 
     set_current_process(0);
     //current_process = 0;

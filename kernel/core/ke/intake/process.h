@@ -216,8 +216,6 @@ struct process_d
 
     int exit_in_progress;
 
-
-
 // #todo
 // Usage, in percentage.
 // How much this process is using the shared system resources.
@@ -254,7 +252,6 @@ struct process_d
     // ex: p->fs_access.root_access[1] = FALSE;
 // ---------------------------
 
-
 // Open files.
 // #todo:
 // Check this.
@@ -273,7 +270,6 @@ struct process_d
 // State.
 // flag ?
     process_state_t state; 
-
 
 // Plano de execuçao.
 // Processes:
@@ -362,7 +358,6 @@ struct process_d
 //Lista de acessos � bancos de contas pessoais.
     //struct bank_d *ldbListHead;
 
-
 //
 // CONTAS
 //
@@ -404,7 +399,6 @@ struct process_d
 // mm/x64mm.h
 
     struct frame_pool_d *framepoolListHead;
-
 
 // Memory usage in bytes.
 // Increment when the process call an allocator.
@@ -500,7 +494,6 @@ struct process_d
 // #bugbug: Do not use this!
     //unsigned long DirectoryVA;
     //unsigned long DirectoryPA;
-
 
 //
 // Image support.
@@ -612,7 +605,6 @@ struct process_d
 // IOPL of the task. (ring).
     unsigned int rflags_iopl; 
 
-
 //
 // == Priorities ============
 //
@@ -642,6 +634,15 @@ struct process_d
 // syscalls counter.
     unsigned long syscalls_counter;
 
+// #test
+// #todo
+// Maybe we can use these new terms for these counters:
+// But, in this system the syscalls do NOT causes context switch,
+// it only goes from ring3 to ring 0. In some cases i guess we already have
+// the voluntary context switch, that is the sleep/wait syscalls.
+// unsigned long voluntary_context_switches;     // syscalls
+// unsigned long nonvoluntary_context_switches;  // preemptions
+
 //
 // Timer
 //
@@ -662,7 +663,6 @@ struct process_d
 // execuçao de um processo. Ocorre ent�o uma preemp��o por tempo.
 // 'ProcessingTime' é atribu�do pelo processo. � o quanto
 // ele precisa. o quanto ele deseja.
-
 
 //
 // Working set support.
@@ -897,9 +897,8 @@ extern struct process_d  *InitProcess;    // Init process.
 
 // Max number of processes.
 #define  PROCESS_COUNT_MAX  1024 
-
 // Process table.
-unsigned long processList[PROCESS_COUNT_MAX];
+extern unsigned long processList[PROCESS_COUNT_MAX];
 
 // ----------------------------------------------------------
 
@@ -933,7 +932,7 @@ unsigned long get_process_stats ( pid_t pid, int index );
 int getprocessname ( pid_t pid, char *buffer );
 
 pid_t getNewPID (void);
-int processTesting (int pid);
+int processTesting (pid_t pid);
 int processSendSignal (struct process_d *p, unsigned long signal);
 
 // ===
@@ -963,9 +962,9 @@ void process_close_gate(int pid);   //227 close
 void process_open_gate(int pid);    //228 open
 
 file *process_get_file_from_pid ( pid_t pid, int fd );
-file *process_get_file ( int fd );
+file *process_get_file (int fd);
 
-int process_get_tty (int pid);
+int process_get_tty (pid_t pid);
 
 int alloc_memory_for_image_and_stack(struct process_d *process);
 

@@ -287,7 +287,6 @@ void *sci0 (
 // Counting ...
     p->syscalls_counter++;
 
-
 // What is the number for SCI_EXIT?
 // #todo: Put this in the right spot.
 // exit

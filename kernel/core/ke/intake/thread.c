@@ -52,7 +52,6 @@ __ps_setup_x64_context (
     unsigned long init_stack,
     unsigned long init_rip );
 
-
 //
 // =========================================================
 //
@@ -111,13 +110,12 @@ __ps_initialize_thread_common_elements(struct thread_d *t)
         tmp->msg = 0;
         tmp->long1 = 0;
         tmp->long2 = 0;
-
         tmp->long3 = 0;
         tmp->long4 = 0;
 
         tmp->used = TRUE;
         tmp->magic = 1234;
-        
+
         // Coloca o ponteiro que criamos na lista de ponteiros.
         t->MsgQueue[i] = (unsigned long) tmp;
     };
@@ -128,6 +126,8 @@ __ps_initialize_thread_common_elements(struct thread_d *t)
     t->signal = 0;
     t->umask = 0;
     t->exit_code = 0;
+
+    // More ?
 }
 
 // =======================================
@@ -239,15 +239,15 @@ unsigned long GetThreadStats( int tid, int index )
 {
     struct thread_d *t;
 
-// Invalid index
-    if (index<0){
-        return 0;
-    }
-// Thread
+// Parameters
     if (tid < 0 || tid >= THREAD_COUNT_MAX){
         return 0;
     }
-// structure
+    if (index < 0){
+        return 0;
+    }
+
+// Structure
     t = (void *) threadList[tid];
     if ((void *) t == NULL){
         return 0; 
@@ -373,18 +373,18 @@ unsigned long GetThreadStats( int tid, int index )
 }
 
 // Get thread name.
+// + Copy the name into the given address.
+// + Return the name size in bytes.
 int getthreadname ( int tid, char *buffer )
 {
     struct thread_d  *t;
     char *name_buffer = (char *) buffer;
 
-// Buffer
-    if ((void*) buffer == NULL){
+// Parameters
+    if ( tid < 0 || tid >= THREAD_COUNT_MAX ){
         goto fail;
     }
-
-// tid
-    if ( tid<0 || tid >= THREAD_COUNT_MAX ){
+    if ((void*) buffer == NULL){
         goto fail;
     }
 
@@ -597,7 +597,7 @@ void thread_show_profiler_info (void)
 unsigned long 
 thread_get_profiler_percentage (struct thread_d *thread)
 {
-    if ( (void *) thread == NULL ){
+    if ((void *) thread == NULL){
         panic ("thread_get_profiler_percentage: thread\n");
     }
  
@@ -658,7 +658,7 @@ int thread_profiler(int service)
             {
                 __tmp = (struct thread_d *) threadList[i];
                 
-                if ( (void *) __tmp != NULL )
+                if ((void *) __tmp != NULL)
                 {
                     if ( __tmp->used == TRUE && __tmp->magic == 1234 )
                     {
@@ -746,8 +746,8 @@ void exit_thread (tid_t tid)
         goto fail;
     }
     if (Thread->magic != 1234){
-            printk ("exit_thread: Thread validation \n");
-            goto fail;
+        printk ("exit_thread: Thread validation \n");
+        goto fail;
     }
 
 // Zombie
@@ -768,6 +768,8 @@ fail:
 void exit_current_thread(void)
 {
     if (current_thread < 0)
+        return;
+    if (current_thread >= THREAD_COUNT_MAX)
         return;
     exit_thread(current_thread);
 }
@@ -791,10 +793,10 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
 
     // A thread que vai ser copiada.
     father = thread;
-    if ( (void *) father == NULL ){
+    if ((void *) father == NULL){
         panic ("copy_thread_struct: father\n");
     }
-    if (father->magic!=1234){
+    if (father->magic != 1234){
         debug_print("copy_thread_struct: father validation\n");
               panic("copy_thread_struct: father validation\n");
     }

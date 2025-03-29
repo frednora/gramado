@@ -323,7 +323,6 @@ struct thread_d
     unsigned long base_priority;  // static 
     unsigned long priority;       // dynamic
 
-
 // flag, Estado atual da tarefa. ( RUNNING, DEAD ... ).
     thread_state_t state;    
 
@@ -347,12 +346,10 @@ struct thread_d
 
     int _its_my_party_and_ill_cry_if_i_want_to;
 
-
     int waiting_for_timeout;
 
 // error. @todo:
     //unsigned long error;
-
 
 // Plano de execução.
 // Threads:
@@ -432,11 +429,9 @@ struct thread_d
     unsigned int rflags_initial_iopl;
     unsigned int rflags_current_iopl;
 
-
 // The thread is running in the ring0 phase
 // after the isr request.
 //    int in_syscall;
-
 
 // Is preemptable or not.
     int is_preemptable;
@@ -457,7 +452,6 @@ struct thread_d
 // que a thread pode usar.
     // unsigned long ServiceTable;
 
-
 // ========================================================
 // ORDEM: 
 // Timer stuff
@@ -469,9 +463,8 @@ struct thread_d
 // ?
 // Podemos criar a estrutura 'thread_time_d' t->time.step
 
-
 // Transitions.
-    struct thread_transition_counter_d transition_counter;
+    struct thread_transition_counter_d  transition_counter;
 
 // Quanto tempo passou, 
 // mesmo quando a tarefa não esteve rodando.
@@ -509,7 +502,6 @@ struct thread_d
 
     unsigned long initial_time_ms;
     unsigned long total_time_ms; 
-
 
 // Credits:
 // O acumulo de creditos gera incremento de quantum.
@@ -776,8 +768,7 @@ struct thread_d
 // See: thread.c
 extern struct thread_d  *InitThread;
 extern struct thread_d  *ClonedThread;
-extern struct thread_d *timeout_thread;
-
+extern struct thread_d  *timeout_thread;
 
 // Maximum number of kernel threads in the system.
 // Cada lista poderá usasr uma prioridadr diferente,
@@ -798,7 +789,6 @@ void show_slot(int tid);
 void show_slots(void);
 void show_reg(int tid);
 void show_thread_information (void);
-
 
 // See: main.c
 void keEarlyRing0IdleThread(void);

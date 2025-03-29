@@ -94,9 +94,6 @@ unsigned long profiler_percentage_idle_thread;
 //#define TIMER_PROFILE_TICKS_DEADLINE 1000
 //unsigned long timer_profile_ticks;
 
-//Counting how much ticks the kernel is running.
-//unsigned long kernel_tick;
- 
 // #extra
 // Aciona uma flag para que o ts.c realize atividades extras,
 // como gc, dead thread collector, request.
