@@ -1,7 +1,7 @@
-# xde - Gramado Desktop Environment
+# windows - The windowing system.
 
 ```
-  Desktop Environment for the kernel.
+Display server.
 ```
 
 ## This is a screenshot of GramadoDE desktop environment running on top of the kernel.
@@ -18,6 +18,5 @@ the Taskbar and the Virtual terminal.
 folder ds/ds00/.
 ```
 
-> * apps   - Client-side GUI applications.
 > * ds     - Display servers
 

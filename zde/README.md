@@ -1,4 +1,4 @@
-# xde - Gramado Desktop Environment
+# zde - Desktop Environment
 
 ```
   Desktop Environment for the kernel.
@@ -19,5 +19,6 @@ folder ds/ds00/.
 ```
 
 > * apps   - Client-side GUI applications.
-> * ds     - Display servers
+> * aurora - 3D demos.
+
 
