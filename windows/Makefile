@@ -7,8 +7,10 @@ all:
 
 clean:
 # Display server and libraries
-	-rm ds/server/bin/*.BIN
+	-rm ds/ds00/*.o
+	-rm ds/ds00/bin/*.BIN
 
 clean-all:
 # Display server and libraries
-	-rm ds/server/bin/*.BIN
+	-rm ds/ds00/*.o
+	-rm ds/ds00/bin/*.BIN

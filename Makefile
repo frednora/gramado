@@ -5,15 +5,18 @@
 # Compiling on gcc 11.4.0 (Ubuntu on wsl)
 # Linking on ld 2.38
 
+BASE = base
+DEP_L1 = windows
+DEP_L2 = zde
+
 # --------------------------
-# Display server
-DEP_L1  = windows/ds
+# Display servers
+DISPLAY_SERVERS = $(DEP_L1)/ds
 
 # --------------------------
 # zde: Client-side GUI applications
-DEP_L2  = zde/apps
-BASE    = zde/base
-GAMES   = zde/aurora
+APPLICATIONS = $(DEP_L2)/apps
+GAMES        = $(DEP_L2)/aurora
 
 # Make variables (CC, etc...)
 AS      = as
@@ -218,30 +221,30 @@ copy-extras:
 	@echo "copy-extras"
 
 # ------------------------
-# LEVEL 1: (de/ds) Display servers
-
-	-cp $(DEP_L1)/ds00/bin/DS00.BIN    $(BASE)/DE
-#-cp $(DEP_L1)/ds01/bin/DS01.BIN    $(BASE)/DE
+# LEVEL 1: Display servers
+	make -C windows/
+	-cp $(DISPLAY_SERVERS)/ds00/bin/DS00.BIN    $(BASE)/DE
+#-cp $(DISPLAY_SERVERS)/ds01/bin/DS01.BIN    $(BASE)/DE
 
 # ------------------------
 # LEVEL 2: (de/apps) Client-side GUI applications
-
-	-cp $(DEP_L2)/bin/TASKBAR.BIN    $(BASE)/DE
-	-cp $(DEP_L2)/bin/XTB.BIN        $(BASE)/DE
-	-cp $(DEP_L2)/bin/TERMINAL.BIN   $(BASE)/DE
-#-cp $(DEP_L2)/bin/GWS.BIN       $(BASE)/DE
+	make -C zde/
+	-cp $(APPLICATIONS)/bin/TASKBAR.BIN    $(BASE)/DE
+	-cp $(APPLICATIONS)/bin/XTB.BIN        $(BASE)/DE
+	-cp $(APPLICATIONS)/bin/TERMINAL.BIN   $(BASE)/DE
+#-cp $(APPLICATIONS)/bin/GWS.BIN       $(BASE)/DE
     # Experimental applications
     # These need the '#' prefix.
-	-cp $(DEP_L2)/bin/PUBTERM.BIN  $(BASE)/DE/
-	-cp $(DEP_L2)/bin/DOC.BIN      $(BASE)/DE/
-	-cp $(DEP_L2)/bin/GDM.BIN      $(BASE)/DE/
-	-cp $(DEP_L2)/bin/EDITOR.BIN   $(BASE)/DE/
+	-cp $(APPLICATIONS)/bin/PUBTERM.BIN  $(BASE)/DE/
+	-cp $(APPLICATIONS)/bin/DOC.BIN      $(BASE)/DE/
+	-cp $(APPLICATIONS)/bin/GDM.BIN      $(BASE)/DE/
+	-cp $(APPLICATIONS)/bin/EDITOR.BIN   $(BASE)/DE/
 
 # (browser/) browser.
 # Teabox web browser
     # Experimental applications
     # These need the '@' prefix.
-	-cp $(DEP_L2)/browser/teabox/bin/TEABOX.BIN  $(BASE)/DE/
+	-cp $(APPLICATIONS)/browser/teabox/bin/TEABOX.BIN  $(BASE)/DE/
 
 # 3D demos.
 	-cp $(GAMES)/bin/DEMO00.BIN   $(BASE)/DE/

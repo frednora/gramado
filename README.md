@@ -3,15 +3,23 @@
 Gramado OS. This project includes basicaly the bootloader, the core kernel and the init process.
 
 > [!IMPORTANT]
-> TODO TODO TODO
-> This is a work in progress ...
-> We have a new set of folders with only 3 folders: os/ windows/ and zde/
-> Build instructions:
-> $ make -C zde/
-> $ make -C zde/aurora/
-> $ make
->
+> We're still creating the documentation for this distro.
 
+```
+base/    - The root folder for the final installation.
+docs/    - The documentation.
+os/      - Boot, Kernel, Init process, etc. 
+windows/ - The windowing system.
+zde/     - Client-side GUI applications and more.
+```
+
+> [!IMPORTANT]
+> Build instruction
+
+```
+$ make
+$ ./run
+```
 
 > [!IMPORTANT]
 > Gramado OS kernel is in a pre-alpha state, and only suitable for use by developers.
