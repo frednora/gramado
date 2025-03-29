@@ -1,4 +1,3 @@
-
 // shell.bin
 // Shell application for Gramado OS.
 // This is gonna run on terminal.bin, sending data 

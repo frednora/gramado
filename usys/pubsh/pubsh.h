@@ -1,4 +1,4 @@
-// shell.h
+// pubsh.h
 // Internal routines.
 // Created by Fred Nora.
 

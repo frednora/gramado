@@ -1,12 +1,11 @@
-
-# shell
+# pubsh
 # 2019 - Created by Fred Nora.
 
 VERSION = 0
 PATCHLEVEL = 0
 SUBLEVEL = 0
 EXTRAVERSION =
-#NAME = shell
+#NAME = pubsh
 
 CFLAGS_OLD = -m64 \
 	-std=gnu89 \

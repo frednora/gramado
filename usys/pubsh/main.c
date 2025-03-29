@@ -18,7 +18,7 @@
 #include <rtl/gramado.h>
 
 // Internal routines.
-#include "shell.h"
+#include "pubsh.h"
 
 int isTimeToQuit=FALSE;
 unsigned long device_width=0;
