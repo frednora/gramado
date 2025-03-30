@@ -1,5 +1,6 @@
-
 // fs.h
+// File system operations.
+// Created by Fred Nora.
 
 #ifndef __FS_FS_H
 #define __FS_FS_H    1
@@ -487,7 +488,6 @@ struct inode_d *file_inode(file *f);
 int file_truncate(file *_file, size_t len);
 int fsCheckELFFile(unsigned long address);
 
-int init_directory_facilities(void);
 void fsInitializeWorkingDiretoryString(void);
 
 int fsInitTargetDir(unsigned long dir_address, char *dir_name);

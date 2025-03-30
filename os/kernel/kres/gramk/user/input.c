@@ -2001,6 +2001,10 @@ int wmKeyboardEvent(int event_id, long long1, long long2)
     if (event_id < 0)
         goto fail;
 
+// #todo:
+// What are the valid events?
+// Use switch()
+
     ipc_post_message_to_ds(
             event_id, 
             (unsigned long) long1, 

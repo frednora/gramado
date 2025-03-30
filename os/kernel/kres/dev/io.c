@@ -6,7 +6,6 @@
 // see: io.h
 struct io_control_d  IOControl;
 
-
 //==========================================
 // This is called by ioctl() in ring3.
 

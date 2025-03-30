@@ -2363,46 +2363,13 @@ void __respond (int console_number)
 
 void __local_insert_char(int console_number)
 {
-
     if (console_number < 0)
         return;
     if (console_number >= CONSOLETTYS_COUNT_MAX)
         return;
-
-	//int i=x;
-	//unsigned short tmp,old=0x0720;
-	//unsigned short * p = (unsigned short *) pos;
-
-/*
-	while (i++ < columns) {
-
-		// Salvo o char da posição atual.
-		tmp = *p;
-
-        // coloco o char de controle na posição atual
-        // ou o caractere salvo anteriomente.
-		*p=old;
-
-        // coloco o caractere salvo para uso futuro.
-		old=tmp;
-
-        //avança até o fim da linha.
-		p++;
-	}
-*/
-
-    //int i = CONSOLE[console_number].cursor_x;
-    //int tmp;
-    //int old = 0x20;
-    
-    // #bugbug
-    // Não é possível fazer essa rotina pois não temos um buffer e chars.
-
-    //while (i++ < CONSOLE[console_number].cursor_height ) {};
-    
+  
     console_putchar (0x20, console_number);
 }
-
 
 void __local_delete_char(int console_number)
 {
@@ -2413,25 +2380,7 @@ void __local_delete_char(int console_number)
     if (console_number >= CONSOLETTYS_COUNT_MAX)
         return;
 
-
     console_putchar ( ' ', console_number);
-
-/*
-	int i;
-	unsigned short * p = (unsigned short *) pos;
-
-	if (x >= columns)
-		return;
-
-	i = x;
-	while (++i < columns) 
-	{
-		*p = *(p+1);
-		p++;
-	}
-	*p=0x0720;
-*/
-
 }
 
 // #todo: Explain the parameters.
@@ -2462,8 +2411,12 @@ void csi_P (int nr, int console_number)
 }
 
 // #todo: Explain the parameters.
+// Move the cursor to a given column.
+// Adding spaces.
 void csi_at (int nr, int console_number)
 {
+// #bugbug
+// This code is wrong
 
 // Parameters:
     if (console_number < 0)

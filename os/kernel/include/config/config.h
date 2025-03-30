@@ -212,8 +212,8 @@ sixth..     ide5, usually PCI, probed
 // The quantum multiplier.
 // See: quantum.h
 
-#define __QUANTUM_MULTIPLIER    1
-//#define __QUANTUM_MULTIPLIER    2
+//#define __QUANTUM_MULTIPLIER    1
+#define __QUANTUM_MULTIPLIER    2
 //#define __QUANTUM_MULTIPLIER    3
 // ...
 

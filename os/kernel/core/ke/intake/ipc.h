@@ -97,6 +97,12 @@ sys_post_message_to_tid(
     int tid, 
     unsigned long message_buffer );
 
+
+// Wrapper for different types of input events.
+// Sending these events to the thread, 
+// not processing internally.
+int ipc_send_input_event_to_ds(int event_id, long long1, long long2);
+
 #endif    
 
 

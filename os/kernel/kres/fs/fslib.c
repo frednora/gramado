@@ -36,9 +36,43 @@ unsigned long search_path_dir_entries=0;
 //
 
 static int __initialize_fs_buffers(void);
-
+// ...
 
 //=============================
+
+
+// Local
+// The buffers used to load the directories
+// when loading a path.
+// Buffers
+// Buffers for loading the directories while walking on a pathname
+// when loading a file.
+// 0=ok | <0 = fail.
+static int __initialize_fs_buffers(void)
+{
+    register int i=0;
+// The max number of levels in a path.
+    int max = FS_N_BUFFERS;
+// 512 entries = 16KB.
+// 32*512 = 16KB.
+    const int PagesPerBuffer = 4;
+    unsigned long TmpAddr=0;
+
+// #bugbug
+// 4 pages per level.
+    for (i=0; i<max; i++)
+    {
+        TmpAddr = (unsigned long) allocPages(PagesPerBuffer);
+        if ((void*) TmpAddr == NULL){
+            goto fail;
+        }
+        fs_buffers[i] = (unsigned long) TmpAddr;
+    }
+
+    return 0;
+fail:
+    return (int) -1;
+}
 
 // File read.
 // It's called by sys_read.
@@ -637,6 +671,17 @@ __read_imp (
         if (fp->____object == ObjectTypeFile){
             goto RegularFile;
         }
+        /*
+        // Not tested yet.
+        // If the file is a console.
+        if (fp->____object == ObjectTypeVirtualConsole)
+        {
+            return (int) console_read ( 
+                            (int) fg_console, 
+                            (const void *) ubuf, 
+                            (size_t) count );
+        }
+        */
     }
 
 //==========================================================
@@ -1100,6 +1145,10 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
 // see: console.c
     if (fp->_file == STDOUT_FILENO)
     {
+        // If the file is a regular file.
+        if (fp->____object == ObjectTypeFile){
+            goto RegularFile;
+        }
         // If the file is a console.
         if (fp->____object == ObjectTypeVirtualConsole)
         {
@@ -1108,10 +1157,7 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
                             (const void *) ubuf, 
                             (size_t) count );
         }
-        // If the file is a regular file.
-        if (fp->____object == ObjectTypeFile){
-            goto RegularFile;
-        }
+        // ...
         goto fail;
     }
 
@@ -1477,14 +1523,14 @@ __open_imp (
                   flags, 
                   mode );
 
-    if (value<0){
+    if (value < 0){
         goto fail;
     }
 
 // The limit is 32.
 // Too many open files.
 
-    if (value>31){
+    if (value > 31){
         return (int) (-EMFILE);
     }
 
@@ -1587,8 +1633,7 @@ int __close_imp(int fd)
 
 // ==============================================
 // pipe
-    if (object->____object == ObjectTypePipe)
-    {
+    if (object->____object == ObjectTypePipe){
         debug_print("__close_imp: Trying to close a pipe object\n");
         Done = TRUE;
     }
@@ -1596,16 +1641,14 @@ int __close_imp(int fd)
 // ====================================================
 // virtual console.
 // #todo
-    if (object->____object == ObjectTypeVirtualConsole)
-    {
+    if (object->____object == ObjectTypeVirtualConsole){
         debug_print("__close_imp: Trying to close a virtual console object\n");
         return 0;
     }
 
 // =====================================================
 // tty
-    if (object->____object == ObjectTypeTTY)
-    {
+    if (object->____object == ObjectTypeTTY){
         debug_print("__close_imp: Trying to close a tty object\n");
         Done = TRUE;
     }
@@ -1623,17 +1666,17 @@ int __close_imp(int fd)
     if (object->____object == ObjectTypeFile)
     {
         debug_print("__close_imp: [FIXME] trying to close a regular file\n");
-        debug_print("__close_imp: [FIXME] fsSaveFile\n");
+        //debug_print("__close_imp: [FIXME] fsSaveFile\n");
 
         // #fixme: buffer limit
-        if (object->_lbfsize < 512)
-        {  
+        if (object->_lbfsize < 512){  
             debug_print("__close_imp: [FIXME] Ajusting file size\n");
             object->_lbfsize = 512; 
         }
 
         // Save file in the root dir.
         // #bugbug: Where to save?
+        debug_print("__close_imp: [FIXME] fsSaveFile\n");
 
         fsSaveFile ( 
             VOLUME1_FAT_ADDRESS, 
@@ -1648,12 +1691,15 @@ int __close_imp(int fd)
         Done = TRUE;
     }
 
+    // ...
+
 // Object type not supported.
     if (Done != TRUE){
-        debug_print("__close_imp:[FAIL] Object type not supported yet \n");
+        debug_print("__close_imp:[FAIL] Object type not supported\n");
         goto fail;
     }
 
+// Close it!
 // Everything was done.
 // Let's destroy the object pointer, empty the spot in the list
 // and return 0.
@@ -1677,7 +1723,8 @@ fail:
 // ## Talvez essa rotina ja foi implementada
 // em algum outro lugar.
 // Prototype in rtl/sci/sys.h
-
+// OUT:
+// Return the file pointer.
 file *get_file_from_fd(int fd)
 {
 // File pointer
@@ -1686,6 +1733,12 @@ file *get_file_from_fd(int fd)
     struct process_d *p;
     pid_t current_pid = -1;
 
+// Parameter
+    if (fd < 0 || fd >= 32){
+        goto fail;
+    }
+
+// Current PID and process pointer.
     current_pid = (pid_t) get_current_process();
     if ( current_pid < 0 || current_pid >= PROCESS_COUNT_MAX ){
         return NULL;
@@ -1703,11 +1756,9 @@ file *get_file_from_fd(int fd)
         return NULL;
     }
 
-    if (fd < 0 || fd >= 32){
-        goto fail;
-    }
+// File pointer.
     fp = (file *) p->Objects[fd];
-    if ( (void*) fp == NULL ){
+    if ((void*) fp == NULL){
         //#debug
         //printk("fd{%d} pid{%d}\n",fd,current_pid);
         //printk("entry0: %x\n", p->Objects[0]);
@@ -1717,8 +1768,8 @@ file *get_file_from_fd(int fd)
         //printk("entry4: %x\n", p->Objects[4]);
         goto fail;
     }
-
     return (file *) fp;
+
 fail:
     return NULL;
 }
@@ -1772,24 +1823,23 @@ int get_free_slots_in_the_inode_table(void)
     return (int) -1;
 }
 
-/*
- * get_filesystem_type:
- * Pega o tipo de sistema de arquivos.
- * ?? #bugbug: De qual volume ??  
- */
+// Get file system type.
+// #bugbug: 
+// What is the volume?
+// Is it only for the system volume?
 int get_filesystem_type (void)
 {
     return (int) g_currentvolume_filesystem_type;
 }
 
-/*
- * set_filesystem_type:
- *     Configura o tipo de sistema de arquivo.
- *     ?? #bugbug: De qual volume ?? 
- */
-
+// Set file system type.
+// #bugbug: 
+// What is the volume?
+// Is it only for the system volume?
 void set_filesystem_type (int type)
 {
+    if (type < 0)
+        return;
     g_currentvolume_filesystem_type = (int) type;
 }
 
@@ -1801,7 +1851,7 @@ unsigned long fs_count_path_levels (unsigned char *path)
 {
     unsigned long Counter=0;
     register int i=0;
-    int MaxChars = 2000;  //(80*25), 25 lines.
+    static int MaxChars = 2000;  //(80*25), 25 lines.
 
 // Parameter
     if ((void*) path == NULL){
@@ -1820,11 +1870,7 @@ unsigned long fs_count_path_levels (unsigned char *path)
     return (unsigned long) Counter;
 }
 
-/*
- * get_file:
- *     Get the pointer given the index in file_table[].
- */
-// na lista de arquivos do kernel.
+// Get a file pointer from the global file table.
 void *get_file (int Index)
 {
 //Limits.
@@ -1836,9 +1882,7 @@ void *get_file (int Index)
     return (void *) file_table[Index];
 }
 
-// set_file:
-// Put the pointer in the list, given the index.
-// Na lista de arquivos do kernel.
+// Set a file pointer into the global file table.
 void set_file ( void *file, int Index )
 {
 // #todo:
@@ -1856,45 +1900,6 @@ void set_file ( void *file, int Index )
 
 // Include pointer into the list.
     file_table[Index] = (unsigned long) file;
-}
-
-
-// The buffers used to load the directories
-// when loading a path.
-// Buffers
-// Buffers for loading the directories while walking on a pathname
-// when loading a file.
-// 0=ok | <0 = fail.
-static int __initialize_fs_buffers(void)
-{
-    register int i=0;
-// The max number of levels in a path.
-    int max = FS_N_BUFFERS;
-// 512 entries = 16KB.
-// 32*512 = 16KB.
-    const int PagesPerBuffer = 4;
-    unsigned long TmpAddr=0;
-
-// #bugbug
-// 4 pages per level.
-    for (i=0; i<max; i++)
-    {
-        TmpAddr = (unsigned long) allocPages(PagesPerBuffer);
-        if ((void*) TmpAddr == NULL){
-            goto fail;
-        }
-        fs_buffers[i] = (unsigned long) TmpAddr;
-    }
-
-    return 0;
-fail:
-    return (int) -1;
-}
-
-// #deprecated
-int init_directory_facilities(void)
-{
-    return 0;
 }
 
 // #todo
@@ -2038,9 +2043,11 @@ void file_close (file *_file)
 
     debug_print("file_close: todo\n");
 
-    if ( (void*) _file == NULL ){
+    if ((void*) _file == NULL){
         return;
     }
+
+    // ...
 }
 
 size_t file_get_len(file *_file)
@@ -2049,9 +2056,11 @@ size_t file_get_len(file *_file)
 
     debug_print("file_get_len: todo\n");
 
-    if ( (void*) _file == NULL ){
+    if ((void*) _file == NULL){
         return -1;
     }
+
+    //... 
 
     return (size_t) -1;
 }
@@ -4346,7 +4355,9 @@ int fs_initialize_dev_dir(void)
 {
     register int i=0;
     static int NumberOfSlots = 32;
-    for (i=0; i<NumberOfSlots; i++){
+
+    for (i=0; i<NumberOfSlots; i++)
+    {
         dev_dir[i].used = FALSE;
         dev_dir[i].magic = FALSE;
         dev_dir[i].initialized = FALSE;

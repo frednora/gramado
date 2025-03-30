@@ -761,3 +761,49 @@ sys_post_message_to_tid(
     return 0;
 }
 
+// Wrapper for different types of input events.
+// Sending these events to the thread, 
+// not processing internally.
+int ipc_send_input_event_to_ds(int event_id, long long1, long long2)
+{
+    unsigned long button_number=0;
+
+    if (event_id < 0)
+        goto fail;
+
+    switch (event_id)
+    {
+        // Mouse
+        case MSG_MOUSEPRESSED:
+        case MSG_MOUSERELEASED:
+            button_number = (unsigned long) (long1 & 0xFFFF);
+            ipc_post_message_to_ds( event_id, button_number, button_number );
+            break;
+        case MSG_MOUSEMOVE:
+            ipc_post_message_to_ds( event_id, long1, long2 );
+            break;
+
+        // Keyboard
+        case MSG_KEYDOWN:
+        case MSG_KEYUP:
+        case MSG_SYSKEYDOWN:
+        case MSG_SYSKEYUP:
+            ipc_post_message_to_ds( event_id, long1, long1 );
+            break;
+
+        // Timer
+        case MSG_TIMER:
+            if ( (jiffies % JIFFY_FREQ) == 0 ){
+                ipc_post_message_to_ds( MSG_TIMER, 1234, jiffies );
+            }   
+            break;
+
+        default:
+            goto fail;
+            break;
+    };
+
+fail:
+    return (int) -1;
+}
+
