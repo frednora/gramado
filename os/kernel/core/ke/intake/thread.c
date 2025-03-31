@@ -66,6 +66,9 @@ __ps_initialize_thread_common_elements(struct thread_d *t)
     t->objectType = ObjectTypeThread;
     t->objectClass = ObjectClassKernelObject;
 
+// If this thread is a virtual terminal or not.
+    t->isVirtualTerminal = FALSE;
+
 //
 // == Wait support ==================
 //

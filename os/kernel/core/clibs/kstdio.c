@@ -2042,7 +2042,7 @@ static void __initialize_virtual_consoles(void)
                 bg_colors[i],
                 fg_colors[i] );
 
-            if (i==0)
+            if (i == 0)
             {
                 if ((void*) console0_tty != NULL)
                 {
@@ -2054,7 +2054,7 @@ static void __initialize_virtual_consoles(void)
                 }
             }
 
-            if (i==1)
+            if (i == 1)
             {
                 if ((void*) console1_tty != NULL)
                 {
@@ -2066,7 +2066,7 @@ static void __initialize_virtual_consoles(void)
                 }
             }
 
-            if (i==2)
+            if (i == 2)
             {
                 if ((void*) console2_tty != NULL)
                 {
@@ -2078,7 +2078,7 @@ static void __initialize_virtual_consoles(void)
                 }
             }
 
-            if (i==3)
+            if (i == 3)
             {
                 if ((void*) console3_tty != NULL)
                 {
@@ -2094,6 +2094,8 @@ static void __initialize_virtual_consoles(void)
 
 // The foreground console.
     jobcontrol_switch_console(DEFAULT_CONSOLE);
+// Setup the pointer for the current console.
+    set_up_cursor(0,0);
 
 // #test
     //set_up_cursor(0,1);

@@ -190,6 +190,8 @@ struct tty_d
     //unsigned short tty_mode;
 
 // Ownership
+// In the case of a virtual terminal,
+// this is the thread that is able to read this file.
     tid_t __owner_tid;
 
     int initialized;
@@ -297,7 +299,7 @@ struct tty_d
 // #test
 // The winsize structure used in ioctl().
 // see: kioctl.h
-    struct winsize_d winsize;
+    struct winsize_d  winsize;
 
 //------------------------------
 

@@ -240,10 +240,14 @@ struct thread_d
 
 // type:
 // (SYSTEM, INTERACTIVE, BATCH)
+// #todo: If the thread is not interactive,
+// so it will not receive keyboard input.
     thread_type_t type;
 
 // Thread ID.
     tid_t tid;
+// If this thread is a virtual terminal or not.
+    int isVirtualTerminal;
 
 // flags:
 // TF_BLOCKED_SENDING - Blocked when trying to send.

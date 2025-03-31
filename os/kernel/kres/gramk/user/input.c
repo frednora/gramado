@@ -745,7 +745,6 @@ __ProcessKeyboardInput (
 // Called by wmKeyEvent().
 
     int Status = -1;
-    int UseSTDIN=TRUE;  // Input model
     char ch_buffer[2];  // char string.
     char buffer[128];   // string buffer
     unsigned long tmp_value=0;
@@ -761,12 +760,24 @@ __ProcessKeyboardInput (
 // Shift:
 //     'Shift + ?' belongs to the window server.
 
+    // Who is the current virtual console?
+    struct tty_d *target_tty;
+
+//
+// tty
+//
+
+    if (fg_console < 0 || fg_console > 3)
+        panic("__ProcessKeyboardInput: fg_console");
+    target_tty = (struct tty_d *) &CONSOLE_TTYS[fg_console];
+    if (target_tty->magic != 1234)
+        panic("__ProcessKeyboardInput: target_tty->magic");
 
 //
 // Dispatcher
 //
 
-    if (msg<0){
+    if (msg < 0){
         debug_print("__ProcessKeyboardInput: Invalid msg\n");
         return -1;
     }
@@ -851,6 +862,19 @@ __ProcessKeyboardInput (
             // enquanto o console virtual está imprimindo.
             if (ShellFlag != TRUE)
             {
+
+                // Algumas combinações são enviadas para o display server.
+                // nesse caso precisamos mudar o message code.
+                // -----
+                // Caso nenhuma combinação nos interesse,
+                // então enviaremos teclas de digitação, inclusive 
+                // com shift acionado.
+                // >> Não devemos fazer isso caso algum terminal virtual
+                //    esteja em foreground. Pois nesse caso, enviar 
+                //    as teclas de digitação para stdin ja é o suficiente.
+                // #todo: Podemos criar uma flag que diga se a thread 
+                // é um terminal virtual ou não. t->isVirtualTerminal.
+
                 // ^c
                 if (ctrl_status == TRUE && long1 == ASCII_ETX){
                     ipc_post_message_to_ds( MSG_COPY, long1, long2 );
@@ -895,23 +919,22 @@ __ProcessKeyboardInput (
 
                 // ...
 
+                // [Teclas de digitação] 
+                // (Inclusive com SHIFT)
+                // Enviando teclas de digitação para o display server.
+                // que está imprimindo na janela do tipo editbox 
+                // com foco de entrada.
+                // Mas ao mesmo tempo, a função wmRawkeyEvent pode ja ter
+                // mandado teclas de digitação para stdin antes de chamar
+                // essa rotina.
+
                 // ?? #bugbug
                 // No caso da combinação não ter sido tratada na rotina acima.
                 // Enviamos combinação de [shift + tecla] de digitaçao.
                 // Teclas de digitaçao sao processadas no tratador de keystrokes.
                 ipc_post_message_to_ds( msg, long1, long2 );
-                // return 0;
 
-                // Send it to the window server.
-                //wmSendInputToWindowManager(0,MSG_KEYDOWN,long1,long2);
-                // #test
-                // Write into stdin
-
-                //#bugbug: O tratamento de input de teclado
-                // envia chars para stdin antes de chamar essa rotina.
-                if (UseSTDIN == TRUE){
-                    return 0;
-                }
+                return 0;
             }
 
             //debug_print ("wmProcedure: done\n");
@@ -1259,6 +1282,9 @@ wmRawKeyEvent(
 // Right after the ps2 keyboard interrupt handler.
 // Post keyboard event to the current foreground thread.
 
+    // Who is the current virtual console?
+    struct tty_d *target_tty;
+
 // #bugbug
 // Sometimes we're sending data to multiple targets.
 // Maybe its gonna depend on the input mode.
@@ -1292,6 +1318,16 @@ wmRawKeyEvent(
     //===================
 
     int Status = -1;
+
+//
+// tty
+//
+
+    if (fg_console < 0 || fg_console > 3)
+        panic("wmRawKeyEvent: fg_console");
+    target_tty = (struct tty_d *) &CONSOLE_TTYS[fg_console];
+    if (target_tty->magic != 1234)
+        panic("wmRawKeyEvent: target_tty->magic");
 
 // #test
 // Not working yet.
@@ -1788,8 +1824,18 @@ done:
             if (alt_status != TRUE)
             {
 
+                // Mandaremos teclas de digitação para stdin
+                // somente se um terminal virtual está em foreground.
+
                 // stdin::
-                if (InputTargets.target_stdin == TRUE){
+                if (InputTargets.target_stdin == TRUE)
+                {
+                    // #todo
+                    // Check if the foreground thread is a terminal virtual.
+                    // Do not send bytes to stdin if the foreground thread 
+                    // is not a virtual terminal.
+                    // In the case that we have more then one virtual terminals,
+                    // only one virtual terminal will be able to read from stdin.
                     wbytes = (int) kstdio_feed_stdin((int) __int_ascii_code);
                 }
 
@@ -1837,6 +1883,16 @@ done:
         // ... fall through
 
     } 
+
+/*
+    // #test
+    // Simply write into the fg console
+    if (ShellFlag == TRUE)
+    {
+        consoleInputChar (long1);
+        console_putchar ( (int) long1, fg_console );
+    }
+*/
 
 // ------------------------------
 // Process the event using the system's window procedures.
