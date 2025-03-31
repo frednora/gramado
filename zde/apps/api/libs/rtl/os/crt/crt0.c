@@ -215,6 +215,8 @@ void crt0(unsigned long rdi)
 #endif
 */
 
+    rtl_focus_on_this_thread();
+
 // ===================================================
 // #test
 // Reading command line from a file.

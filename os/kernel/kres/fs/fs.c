@@ -20,6 +20,15 @@ ssize_t sys_read(int fd, const char *ubuf, size_t count)
         //return (ssize_t) -EFAULT;  // bad address
     }
 
+
+    // #test
+    // Only the foreground thread can read the stdin
+    if (fd == 0)
+    {
+        if (current_thread != foreground_thread)
+            return (ssize_t) -EINVAL;
+    }
+
     // #todo: count
     return (ssize_t) __read_imp(fd, ubuf, count);
 }
