@@ -932,7 +932,10 @@ __ProcessKeyboardInput (
                 // No caso da combinação não ter sido tratada na rotina acima.
                 // Enviamos combinação de [shift + tecla] de digitaçao.
                 // Teclas de digitaçao sao processadas no tratador de keystrokes.
-                ipc_post_message_to_ds( msg, long1, long2 );
+
+                // #test
+                // NOT SENDING typing chars to the server for now.
+                // ipc_post_message_to_ds( msg, long1, long2 );
 
                 return 0;
             }
@@ -1870,6 +1873,9 @@ done:
 
             // ds queue:: 
             // regular keys, not combinations.
+            // #test
+            // NOT SENDING typing chars to the server for now.
+            /*
             if (InputTargets.target_thread_queue == TRUE)
             {
                 ipc_post_message_to_ds(
@@ -1877,6 +1883,7 @@ done:
                     Event_LongASCIICode,
                     Event_LongRawByte );
             }
+            */
             return 0;
         }
 
