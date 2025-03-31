@@ -1,0 +1,82 @@
+Here's a draft documentation for the input system:
+Created by Copilot.
+
+---
+
+# Input System Documentation
+
+## Overview
+The input system in this operating system is designed to handle a variety of input sources, including keyboard and mouse, with flexibility, modularity, and scalability. It integrates kernel-level mechanisms with user-space features to ensure efficient input handling for both system-level tasks and user applications.
+
+## Capabilities
+
+### Kernel-Level Input Handling
+1. **Thread Queue:**  
+   - The kernel is capable of sending keyboard and mouse input to a dedicated queue within the structure of each thread.
+   - This allows programs running in ring 3 (user space) to read input directly from the thread's queue, enabling thread-specific input management.
+
+2. **Standard Input (stdin):**  
+   - Keyboard input can be directed to the `stdin` file, providing a familiar and accessible input interface for user-space programs.
+   - This ensures compatibility with applications that rely on standard input handling.
+
+3. **System Messages:**  
+   - The kernel sends system messages directly to the display server, which acts as the compositor and window manager. These messages provide critical input and system-level event data for managing graphical interfaces and system behavior.
+
+---
+
+### Ring 3 Input Handling
+1. **Thread Input Access:**  
+   - Programs in ring 3 can access input events stored in the thread's queue, enabling them to process input independently and efficiently.
+
+2. **Communication with Display Server:**  
+   - Client-side GUI applications in ring 3 can communicate with the display server to retrieve events.
+   - This interaction uses Unix sockets for inter-process communication (IPC), allowing the applications to send requests and receive events from the display server.
+
+---
+
+## Input Flow
+1. **Input Sources:**  
+   - Input (keyboard and mouse) is initially processed by the kernel.
+
+2. **Kernel-to-Thread Routing:**  
+   - The kernel routes input to the thread's queue or sends it to the stdin file.
+
+3. **System Messages to Display Server:**  
+   - The kernel forwards system messages directly to the display server for graphical system-level event handling.
+
+4. **Client-Server Communication:**  
+   - GUI applications communicate with the display server to retrieve events or send requests using Unix sockets.
+
+5. **Proxy Role of Display Server:**  
+   - The display server acts as a proxy for input distribution among client applications, ensuring a central point for managing input events.
+
+---
+
+## Design Considerations
+1. **Security:**  
+   - Proper validation and access control mechanisms are in place to prevent malicious or unauthorized access to input queues and system messages.
+
+2. **Performance:**  
+   - Input handling is designed to minimize latency, especially for graphical interfaces. Optimizations such as non-blocking queues or event-driven processing improve responsiveness.
+
+3. **Scalability:**  
+   - The system is built to scale with the number of threads and applications. Techniques like prioritization of input events and queue management ensure stability and performance.
+
+4. **Robustness:**  
+   - Error handling mechanisms for invalid inputs, malformed requests, and client-server communication failures are in place to maintain system stability.
+
+---
+
+## Future Enhancements
+1. **Input Filtering:**  
+   - Add mechanisms for threads to subscribe to specific types of input events (e.g., keyboard or mouse).
+
+2. **Shared Memory Optimization:**  
+   - Use shared memory for large data transfers between the kernel, display server, and client applications to reduce latency.
+
+3. **Advanced Event Queueing:**  
+   - Introduce event prioritization or categorization to improve handling of critical inputs.
+
+---
+
+Let me know if you'd like to add more details or make adjustments to this documentation!
