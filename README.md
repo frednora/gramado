@@ -6,11 +6,12 @@ Gramado OS. This project includes basicaly the bootloader, the core kernel and t
 > We're still creating the documentation for this distro.
 
 ```
-base/    - The root folder for the final installation.
+base/    - Target directory for the binaies.
 docs/    - The documentation.
-os/      - Boot, Kernel, Init process, etc. 
-windows/ - The windowing system.
-zde/     - Client-side GUI applications and more.
+os/      - Client-side GUI applications.
+windows/ - The display server.
+zbase/   - Init process, ring 3 drivers and ring 3 servers.
+zcore/   - Boot, kernel and ring 0 modules.
 ```
 
 > [!IMPORTANT]
@@ -230,11 +231,12 @@ Please make some comments on Github or send messages to Fred Nora.
 # Folders
 
 ```
-base/    - The root folder for the final installation.
+base/    - Target directory for the binaies.
 docs/    - The documentation.
-os/      - Boot, Kernel, Init process, etc. 
-windows/ - The windowing system.
-zde/     - Client-side GUI applications and more.
+os/      - Client-side GUI applications.
+windows/ - The display server.
+zbase/   - Init process, ring 3 drivers and ring 3 servers.
+zcore/   - Boot, kernel and ring 0 modules.
 ```
 
 # Warning

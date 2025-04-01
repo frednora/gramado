@@ -16,7 +16,7 @@ DEP_L2 = windows
 # Init process, ring 3 drivers and ring 3 servers.
 DEP_L1 = zbase
 
-# boot, kernel and ring 0 modules.
+# Boot, kernel and ring 0 modules.
 DEP_L0 = zcore
 
 # --------------------------
