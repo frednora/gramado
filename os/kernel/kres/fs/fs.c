@@ -20,9 +20,14 @@ ssize_t sys_read(int fd, const char *ubuf, size_t count)
         //return (ssize_t) -EFAULT;  // bad address
     }
 
-
     // #test
     // Only the foreground thread can read the stdin
+    // OK. 
+    // This is working now, and only the foreground thread
+    // was able to read stdin.
+    // I tested it in a lot of applications.
+    // #todo
+    // We can implement a better routine for this.
     if (fd == 0)
     {
         if (current_thread != foreground_thread)

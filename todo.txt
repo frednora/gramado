@@ -1,0 +1,12 @@
+
+ The client-side application getting input via stdin.
+ ex: terminal.
+
+ The client-side application with an overlapped window
+needs to receive input via stdin and send a request to the 
+display server, telling to the server to print the input char
+into the window with focus.
+
+ We need to create a request to send chars ... 
+ maybe we already have something useful.
+
