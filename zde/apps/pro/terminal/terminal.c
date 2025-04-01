@@ -1606,6 +1606,12 @@ static void doPrompt(int fd)
 
     // it works
     //gws_refresh_window(fd,wid);
+
+// #test
+// Setup this thread as foreground thread,
+// this way the app can receive input via stdin.
+    rtl_focus_on_this_thread();
+
 }
 
 // interna
