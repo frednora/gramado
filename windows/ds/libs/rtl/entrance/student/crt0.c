@@ -214,6 +214,11 @@ void crt0(unsigned long rdi)
 #endif
 */
 
+
+// Setup this thread as foreground thread,
+// this way the app can receive input via stdin.
+    rtl_focus_on_this_thread();
+
 // ===================================================
 // #test
 // Reading command line from a file.

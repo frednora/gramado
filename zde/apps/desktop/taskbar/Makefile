@@ -67,7 +67,7 @@ main.o:
 	gcc  -c  main.c  $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -o main.o
 all-c:
 
-	cp $(LIBCOBJ)/crt0.o   .
+	cp $(LIBCOBJ)/crt0.o  .
 	cp $(LIBCOBJ)/rtl.o  .
 
 	cp $(LIBCOBJ)/ctype.o   .

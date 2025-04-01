@@ -1224,14 +1224,18 @@ int main(int argc, char *argv[])
 // Focus
 
 // Set focus on current thread.
-    rtl_focus_on_this_thread();
+    //rtl_focus_on_this_thread();
 
 // Set focus on main window.
+// #bugbug
+// Maybe it can switch the foreground thread.
+/*
     gws_async_command(
          client_fd,
          9,             // 9 = set focus
          main_window,
          main_window );
+*/
 
 //
 // Banner
