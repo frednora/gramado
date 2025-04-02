@@ -3261,7 +3261,7 @@ static int __input_STDIN(int fd)
     // o arquivo.
     // GRAMADO_SEEK_CLEAR
     lseek( fileno(new_stdin), 0, 1000);
-    // atualiza as coisas em ring3 e ring0.
+    // Atualiza as coisas em ring3 e ring0.
     rewind(new_stdin);
 
     while (1){

@@ -385,6 +385,10 @@ editorProcedure(
         return 0;
         break;
 
+    case MSG_KEYDOWN:
+        printf("editor: MSG_KEYDOWN\n");
+        break;
+
     //36
     case MSG_MOUSERELEASED:
         if ( event_window == addressbar_window ||
@@ -649,6 +653,10 @@ int editor_initialize(int argc, char *argv[])
     cursor_y_max = 0;
 
     blink_status=FALSE;
+
+
+    //if (argc < 0)
+        //return 1;
 
 /*
 // #test
@@ -952,6 +960,39 @@ int editor_initialize(int argc, char *argv[])
 // Event loop
 //
 
+// ===========================================
+// #test
+// Get input from stdin
+
+    int C=0;
+
+    rtl_focus_on_this_thread();
+    // GRAMADO_SEEK_CLEAR
+    lseek( fileno(stdin), 0, 1000);
+    // Atualiza as coisas em ring3 e ring0.
+    rewind(stdin);
+
+    while (1){
+        if (isTimeToQuit == TRUE)
+            break;
+
+        // It needs to be the main window for now.
+        pump( client_fd, main_window );
+
+        C = fgetc(stdin);
+        if (C > 0)
+        {
+            editorProcedure ( 
+                client_fd,    // socket
+                client_window,    // window ID
+                MSG_KEYDOWN,  // message code
+                C,            // long1 (ascii)
+                C );          // long2 (ascii)
+        }
+    };
+
+// ===========================================
+
 // loop
 // The server will return an event from the client's event queue.
 // Call the local window procedure if a valid event was found.
@@ -966,6 +1007,8 @@ int editor_initialize(int argc, char *argv[])
 // Getting the asynchronous events 
 // from the window server via socket.
 // Processing this events.
+
+/*
     while (1)
     {
         //if ( Display->running != TRUE )
@@ -976,6 +1019,7 @@ int editor_initialize(int argc, char *argv[])
         // It needs to be the main window for now.
         pump( client_fd, main_window );
     };
+*/
 
 // ok
     if (isTimeToQuit == TRUE){

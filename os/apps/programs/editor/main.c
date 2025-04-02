@@ -26,6 +26,8 @@
 
 int main(int argc, char *argv[])
 {
+    //if (argc < 0)
+        //return 1;
     return (int) editor_initialize(argc,argv);
 }
 
