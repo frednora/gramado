@@ -14,10 +14,10 @@ all:
 # Main system apps.
 
 	# Gramado Desktop Manager
-	make -C desktop/gdm/
+	make -C gdm/
 
 	# Taskbar (The launcher)
-	make -C desktop/taskbar/
+	make -C taskbar/
 
 #
 # Internal shell: The applications.
@@ -27,23 +27,23 @@ all:
 
 	# Virtual terminal connected with the child.
 	# It launches the child shell.
-	make -C pro/pubterm/
+	make -C pubterm/
 
 	# Virtual terminal 
 	# with an embedded command line interpreter.
-	make -C pro/terminal/
+	make -C terminal/
 
 	# First client (GWS.BIN)
-	make -C pro/client/
-	make -C pro/cmdline/
+	make -C client/
+	make -C cmdline/
 
-	# Setup programs to install the o.s.
-	#make -C pro/setup/ 
+	# Setup program to install the o.s.
+	#make -C setup/ 
 
 # Apps for 'regular users'
 
-	make -C programs/doc/
-	make -C programs/editor/
+	make -C doc/
+	make -C editor/
 
 #
 # xapps

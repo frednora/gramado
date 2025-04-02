@@ -1,8 +1,10 @@
 
+#gdm - Gramado Display Manager.
 #2019 - Created by Fred Nora.
 #todo:
 #fazer um makefile pra compilar o shell
 #obs: #bugbug tem que arrumas as coisas aqui.
+
 
 VERSION = 0
 PATCHLEVEL = 0
@@ -11,7 +13,7 @@ EXTRAVERSION =
 #NAME = 
 
 linkFlags  = -m elf_x86_64 \
--s -x -static -T ../../link.ld
+-s -x -static -T ../link.ld
 
 # usermode cross compiler flags.
 CFLAGS = -Wall
@@ -47,27 +49,28 @@ CFLAGS += -fno-omit-frame-pointer
 CFLAGS += -fno-optimize-sibling-calls    
 
 # API
-LIBC      = ../../api/libs/rtl/include/
-LIBCOBJ   = ../../api/libs/rtl/obj
-LIBGWS    = ../../api/libs/libgws/include/
-LIBGWSOBJ = ../../api/libs/libgws/obj
+LIBC      = ../api/libs/rtl/include/
+LIBCOBJ   = ../api/libs/rtl/obj
+LIBGWS    = ../api/libs/libgws/include/
+LIBGWSOBJ = ../api/libs/libgws/obj
 
 # Objects
-myObjects = crt0.o main.o rtl.o \
-ctype.o stdio.o fcntl.o stdlib.o string.o unistd.o termios.o ioctl.o \
-socket.o \
-math.o \
-libgws.o    
+myObjects = crt0.o main.o globals.o rtl.o \
+ctype.o stdio.o fcntl.o stdlib.o string.o unistd.o termios.o \
+ioctl.o socket.o \
+libgws.o   
 
 .PHONY: all all-c hello-link finalize clean
 
 all: main.o all-c hello-link finalize clean
 	@echo "Ok?"
 main.o:
-	gcc  -c  main.c  $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -o main.o
+	gcc -c main.c  $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I include/ -o main.o
 all-c:
 
-	cp $(LIBCOBJ)/crt0.o  .
+	gcc -c globals.c $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I include/ -o globals.o
+
+	cp $(LIBCOBJ)/crt0.o   .
 	cp $(LIBCOBJ)/rtl.o  .
 
 	cp $(LIBCOBJ)/ctype.o   .
@@ -81,17 +84,15 @@ all-c:
 	cp $(LIBCOBJ)/ioctl.o  .
 	cp $(LIBCOBJ)/socket.o  .
 
-#test
-	cp $(LIBCOBJ)/math.o  .
-
 # libgws
 	cp $(LIBGWSOBJ)/libgws.o .
 
 hello-link:
-	ld $(linkFlags) -o TASKBAR.BIN $(myObjects)    
+	ld $(linkFlags) -o GDM.BIN $(myObjects)    
 finalize:
-	cp TASKBAR.BIN  ../../bin
+	cp GDM.BIN  ../bin
 clean:
 	-rm *.o
-	-rm TASKBAR.BIN 
+	-rm GDM.BIN 
 	
+

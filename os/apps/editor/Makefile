@@ -1,5 +1,4 @@
-#history:
-#2019 - Created by Fred Nora.
+
 #todo:
 #fazer um makefile pra compilar o shell
 #obs: #bugbug tem que arrumas as coisas aqui.
@@ -11,7 +10,7 @@ EXTRAVERSION =
 #NAME = 
 
 linkFlags  = -m elf_x86_64 \
--s -x -static -T ../../link.ld
+-s -x -static -T ../link.ld
 
 # usermode cross compiler flags.
 CFLAGS = -Wall
@@ -47,30 +46,27 @@ CFLAGS += -fno-omit-frame-pointer
 CFLAGS += -fno-optimize-sibling-calls    
 
 # API
-LIBC      = ../../api/libs/rtl/include/
-LIBCOBJ   = ../../api/libs/rtl/obj
-LIBGWS    = ../../api/libs/libgws/include/
-LIBGWSOBJ = ../../api/libs/libgws/obj
+LIBC      = ../api/libs/rtl/include/
+LIBCOBJ   = ../api/libs/rtl/obj
+LIBGWS    = ../api/libs/libgws/include/
+LIBGWSOBJ = ../api/libs/libgws/obj
 
 # Objects
-myObjects = crt0.o main.o globals.o terminal.o rtl.o \
-ctype.o stdio.o fcntl.o stdlib.o string.o \
-unistd.o termios.o ioctl.o socket.o \
+myObjects = crt0.o main.o editor.o globals.o rtl.o \
+ctype.o stdio.o fcntl.o stdlib.o string.o unistd.o termios.o \
+ioctl.o socket.o \
 libgws.o   
-
 
 .PHONY: all all-c hello-link finalize clean
 
 all: main.o all-c hello-link finalize clean
 	@echo "Ok?"
+
 main.o:
-	gcc -c main.c $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I include/ -o main.o
+	gcc  -c  main.c     $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I include/ -o main.o
+	gcc  -c  editor.c   $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I include/ -o editor.o
+	gcc  -c  globals.c  $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I include/ -o globals.o
 all-c:
-
-	gcc -c globals.c  $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I include/ -o globals.o
-	gcc -c terminal.c $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I include/ -o terminal.o
-
-# Copy
 
 	cp $(LIBCOBJ)/crt0.o   .
 	cp $(LIBCOBJ)/rtl.o  .
@@ -90,10 +86,11 @@ all-c:
 	cp $(LIBGWSOBJ)/libgws.o .
 
 hello-link:
-	ld $(linkFlags) -o TERMINAL.BIN $(myObjects)    
+	ld $(linkFlags) -o EDITOR.BIN $(myObjects)    
 finalize:
-	cp TERMINAL.BIN  ../../bin
+	cp EDITOR.BIN  ../bin
 clean:
 	-rm *.o
-	-rm TERMINAL.BIN 
+	-rm EDITOR.BIN 
+	
 	
