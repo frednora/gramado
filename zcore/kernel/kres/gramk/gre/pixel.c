@@ -1,4 +1,4 @@
-// xpixel.c
+// pixel.c
 // Presentation: Put a pixel into the backbuffer.
 // Created by Fred Nora.
 
@@ -23,6 +23,8 @@ backbuffer_putpixel (
 {
 // Putpixel at the given buffer address.
 // Return the number of changed pixels.
+// #todo:
+// Maybe here is a good place for blending operations.
 
 // #todo
 // It depends on the current display device device driver.
@@ -44,6 +46,8 @@ frontbuffer_putpixel (
 {
 // Putpixel at the given buffer address.
 // Return the number of changed pixels.
+// #todo:
+// Maybe here is a good place for blending operations.
 
 // #todo
 // It depends on the current display device device driver.

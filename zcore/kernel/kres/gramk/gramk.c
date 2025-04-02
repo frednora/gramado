@@ -114,3 +114,5 @@ void gramk_panic(const char *final_string)
     };
 }
 
+// #bugbug
+// gramkInitialize() was implemented in user.c

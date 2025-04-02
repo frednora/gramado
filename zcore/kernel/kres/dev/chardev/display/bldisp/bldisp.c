@@ -712,7 +712,7 @@ void videoSetMode(unsigned long mode)
          VideoMode < 9000 )
     {
         //g_current_video_mode = (unsigned long) VideoMode;
-        g_video_mode = 
+        g_current_video_mode = 
             (unsigned long) VideoMode;
         VideoBlock.vesaMode = 
             (unsigned long) VideoMode; 

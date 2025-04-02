@@ -42,7 +42,7 @@ static int register_logoff_process(pid_t pid);
 static void __init_cg_list(void)
 {
     register int i=0;
-    while (i<CGROUP_COUNT_MAX){
+    while (i < CGROUP_COUNT_MAX){
         cgroupList[i] = 0;
         i++; 
     };
@@ -81,6 +81,7 @@ int init_first_cgroup(void)
     cgroupList[0] = (unsigned long) cg;
 
     set_current_cgroup(cg);
+
     return 0;
 }
 
@@ -156,10 +157,9 @@ struct cgroup_d *CreateCG(void)
     New = (void *) kmalloc( sizeof(struct cgroup_d) );
     if ((void *) New == NULL){
         panic ("CreateCG: New\n");
-    } else {
-        memset( New, 0, sizeof(struct cgroup_d) );
-        //continua...
-    };
+    }
+    memset( New, 0, sizeof(struct cgroup_d) );
+    //continua...
 
     while (i < CGROUP_COUNT_MAX)
     {
@@ -175,7 +175,6 @@ struct cgroup_d *CreateCG(void)
 
     return NULL;
 }
-
 
 //==================================
 
@@ -205,6 +204,7 @@ struct user_info_d *CurrentUser;    // Current user
 // root user is the user '0'.
 unsigned long userList[USER_COUNT_MAX];
 
+//=============================================
 
 int GetCurrentGroupId (void)
 {
@@ -523,6 +523,7 @@ static int register_logoff_process (pid_t pid)
 }
 
 // Ring0 components for the display server.
+// #todo: Maybe gramk.c is a right place for this routine.
 int gramkInitialize(void)
 {
 // Called by keInitialize() in ke.c

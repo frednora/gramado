@@ -10,11 +10,15 @@ struct bg_info_d
 {
     int initialized;
     unsigned int bg_color;
-    unsigned long paint_cnt;
+    unsigned long paint_cnt;  //?
     //...
 };
 // see: bg.c
 extern struct bg_info_d  background_info;
+
+//
+// Prototypes ===========================
+//
 
 int displayInitializeBackground(unsigned int color,int show);
 

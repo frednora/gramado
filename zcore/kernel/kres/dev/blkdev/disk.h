@@ -1,8 +1,8 @@
-
 // disk.h
+// Created by Fred Nora.
 
-#ifndef  __DISK_H
-#define  __DISK_H    1
+#ifndef __BLKDEV_DISK_H
+#define __BLKDEV_DISK_H  1
 
 /*
 LBA MAP:
@@ -28,8 +28,6 @@ Partition 3:
   ...
 --------------------------------------
 */  
-
-
 
 #define SECTOR_SIZE    512  
 //#define SECTOR_SIZE  4096  
@@ -134,11 +132,6 @@ Partition 3:
 //
 // =========================================
 //
-
-//
-// =========================================
-//
-
 
 //macro
 //#define CYLMAX(c)  ((c) > 1023 ? 1023 : (c))  
@@ -313,7 +306,6 @@ struct disk_d
 // How many bytes in the whole disk.
     unsigned long size_in_bytes;
 
-
 //
 // Storage device structure.
 //
@@ -342,13 +334,12 @@ extern struct disk_d  *____boot____disk;
 // See: storage.c
 extern unsigned long diskList[DISK_COUNT_MAX];
 
-
 //
 // == Prototypes ==================================
 //
 
-int disk_init (void);
-void *disk_get_disk_handle ( int number );
+int disk_init(void);
+void *disk_get_disk_handle(int number);
 
 struct partition_table_d *disk_get_partition_table(int index);
 int disk_initialize_mbr_info(void);

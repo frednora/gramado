@@ -96,17 +96,20 @@ static int __ShowDiskInfo(int index)
     struct disk_d  *d;
     register int n = index;
 
-    //printk("\n");
-    printk("\n");
-
     //#debug
+    printk("\n");
     //printk ("__ShowDiskInfo:\n\n");
 
-    if ( n<0 || n >= DISK_COUNT_MAX )
+// Parameter
+    if ( n < 0 || n >= DISK_COUNT_MAX )
     {
         printk("n fail\n");
         goto fail;
     }
+
+// Get a pre-created disk structure.
+// #bugbug
+// When we created these structures?
     d = (struct disk_d *) diskList[n];
     if ((void *) d == NULL){
         printk("d fail\n");
@@ -147,7 +150,7 @@ static int __create_boot_partition(void)
 
 
     // The main structure.
-    if ( (void *) storage == NULL ){
+    if ((void *) storage == NULL){
         panic ("__create_boot_partition: storage");
     }
 
@@ -188,13 +191,11 @@ static int __create_boot_partition(void)
 // The filesystem used by this volue.
     volume_bootpartition->fs = NULL;
 
-
 // #todo
 // Volume limits.
 
     volume_bootpartition->__first_lba=0;
     volume_bootpartition->__first_lba=0;
-
 
     volume_bootpartition->VBR_lba  = VOLUME1_VBR_LBA;
     volume_bootpartition->FAT1_lba = VOLUME1_FAT_LBA;
@@ -205,31 +206,23 @@ static int __create_boot_partition(void)
 // Name
 
     //volume_bootpartition->name = "VOLUME 1 - BOOT";  
-    ksprintf ( (char *) name_buffer, "VOLUME-%d",volume_bootpartition->id);
-    volume_bootpartition->name = (char *) strdup ( (const char *) name_buffer);  
+    ksprintf ( (char *) name_buffer, "VOLUME-%d",volume_bootpartition->id );
+    volume_bootpartition->name = (char *) strdup ( (const char *) name_buffer );  
 
     //#todo
     volume_bootpartition->cmd = "#TODO";
 
-//
 // Current volume
-//
-
     current_volume = volume_bootpartition->id;
 
 // Finalizing
-
     volume_bootpartition->used = (int) TRUE;
     volume_bootpartition->magic = (int) 1234;
-
     volumeList[BOOTPARTITION_VOLUME_ID] = (unsigned long) volume_bootpartition; 
+    storage->boot_volume = (struct volume_d *) volume_bootpartition;
 
-    storage->boot_volume = (struct volume_d *) volume_bootpartition; 
-
-// done:
     return 0;
 }
-
 
 // local
 // Create system partition.
@@ -238,12 +231,10 @@ static int __create_system_partition(void)
 {
     char name_buffer[32];
 
-
     // The main structure.
-    if ( (void *) storage == NULL ){
+    if ((void *) storage == NULL){
         panic ("__create_system_partition: storage");
     }
-
 
 //
 // Volume 2 - System partition.
@@ -303,17 +294,12 @@ static int __create_system_partition(void)
     //#todo 
     volume_systempartition->cmd = "#TODO";
 
-
 // Finalizing
-
     volume_systempartition->used = (int) TRUE;
     volume_systempartition->magic = (int) 1234;
-
     volumeList[SYSTEMPARTITION_VOLUME_ID] = (unsigned long) volume_systempartition;
-
     storage->system_volume = (struct volume_d *) volume_systempartition; 
 
-// done:
     return 0;
 }
 
@@ -324,13 +310,10 @@ static int __create_vfs_partition(void)
 {
     char name_buffer[32];
 
-
-// The main structure.
-
-    if ( (void *) storage == NULL ){
+    // The main structure.
+    if ((void *) storage == NULL){
         panic ("__create_vfs_partition: storage");
     }
-
 
 //
 // Volume 0 - vfs
@@ -363,7 +346,6 @@ static int __create_vfs_partition(void)
 // The filesystem used by this volue.
     volume_vfs->fs = NULL;
 
-
 // #todo
 // Volume limits.
 
@@ -389,18 +371,13 @@ static int __create_vfs_partition(void)
     volume_vfs->cmd = "#TODO";
 
 // Finalizing
-
     volume_vfs->used = (int) TRUE;
     volume_vfs->magic = (int) 1234;
-
     volumeList[VFS_VOLUME_ID] = (unsigned long) volume_vfs;
-
     storage->vfs_volume = (struct volume_d *) volume_vfs; 
 
-// done:
     return 0;
 }
-
 
 struct partition_table_d *disk_get_partition_table(int index)
 {
@@ -409,6 +386,11 @@ struct partition_table_d *disk_get_partition_table(int index)
 
     struct partition_table_d *pt;
     unsigned char *mbr_base = (unsigned char *) MBR_ADDRESS_VA; 
+
+// #todo
+// Parameter validation
+    //if (index < 0)
+        //panic();
 
     if (g_ata_driver_initialized != TRUE){
         panic("disk_get_partition_table: g_ata_driver_initialized\n");
@@ -478,23 +460,24 @@ int disk_initialize_mbr_info(void)
 //
 
     system_disk_pt0 = (struct partition_table_d *) disk_get_partition_table(0);
-    if ( (void*) system_disk_pt0 == NULL )
+    if ((void*) system_disk_pt0 == NULL)
         return -1;
 
     system_disk_pt1 = (struct partition_table_d *) disk_get_partition_table(1);
-    if ( (void*) system_disk_pt1 == NULL )
+    if ((void*) system_disk_pt1 == NULL)
         return -1;
 
     system_disk_pt2 = (struct partition_table_d *) disk_get_partition_table(2);
-    if ( (void*) system_disk_pt2 == NULL )
+    if ((void*) system_disk_pt2 == NULL)
         return -1;
 
     system_disk_pt3 = (struct partition_table_d *) disk_get_partition_table(3);
-    if ( (void*) system_disk_pt3 == NULL )
+    if ((void*) system_disk_pt3 == NULL)
         return -1;
 
     printk("done\n");
     //while(1){}
+
     return 0;
 }
 
@@ -521,6 +504,9 @@ void disk_show_mbr_info(void)
     // ...
 }
 
+// #todo:
+// What is the disk?
+// What is the LBA limits?
 int
 storage_read_sector( 
     unsigned long buffer, 
@@ -536,9 +522,13 @@ storage_read_sector(
                     (unsigned long) lba, 
                     0, 
                     0 );
+
     return (int) res; 
 }
 
+// #todo:
+// What is the disk?
+// What is the LBA limits?
 int
 storage_write_sector( 
     unsigned long buffer, 
@@ -554,6 +544,7 @@ storage_write_sector(
                     (unsigned long) lba, 
                     0, 
                     0 );
+
     return (int) res; 
 }
 
@@ -607,7 +598,7 @@ int disk_init (void)
     current_disk = d->id;
 // Saving
 // #bugbug? Is it too early for that?
-    diskList[ current_disk ] = (unsigned long) d;
+    diskList[current_disk] = (unsigned long) d;
 
 // Type
     d->diskType = DISK_TYPE_NULL;
@@ -684,19 +675,16 @@ void disk_show_info(void)
 
 void diskShowCurrentDiskInfo(void)
 {
-    if (current_disk<0)
+    if (current_disk < 0)
         return;
     printk("The current disk is {%d}.\n", current_disk );
     __ShowDiskInfo(current_disk);
 }
 
-/*
- * disk_get_disk_handle:
- *     Obtem o ponteiro da estrutura dado o descritor.
- */
- 
-void *disk_get_disk_handle ( int number )
+// Get the pointer for the disk structure given the index.
+void *disk_get_disk_handle(int number)
 {
+// Parameter
     if ( number < 0 || number >= DISK_COUNT_MAX )
     {
         return NULL;
@@ -719,7 +707,7 @@ int volume_init (void)
 
 
     // The main structure.
-    if ( (void *) storage == NULL ){
+    if ((void *) storage == NULL){
         panic ("volume_init: storage");
     }
 
@@ -758,12 +746,12 @@ static int __ShowVolumeInfo(int index)
 {
     struct volume_d *v;
 
+    // #debug
     printk("\n");
     printk("\n");
-
     //printk ("__ShowVolumeInfo:\n");
 
-
+// Parameter
     if ( index < 0 || 
          index >= VOLUME_COUNT_MAX )
     {
@@ -806,12 +794,14 @@ fail:
 
 int volumeShowVolumeInfo (int descriptor)
 {
+    if (descriptor < 0)
+        return -1;
     return (int) __ShowVolumeInfo(descriptor);
 }
 
 void volumeShowCurrentVolumeInfo(void)
 {
-    if (current_volume<0)
+    if (current_volume < 0)
         return;
     printk ("The current volume is %d\n", current_volume );
 
@@ -830,18 +820,16 @@ void volume_show_info (void)
     {
         volume = (struct volume_d *) volumeList[i];
         
-        if ( (void *) volume != NULL )
-        {
+        if ((void *) volume != NULL){
             volumeShowVolumeInfo(i);
         }
     };
 }
 
-
-void *volume_get_volume_handle( int number )
+void *volume_get_volume_handle(int number)
 {
 
-// check limts
+// Parameter
     if ( number < 0 || 
          number >= VOLUME_COUNT_MAX )
     {
@@ -851,13 +839,12 @@ void *volume_get_volume_handle( int number )
     return (void *) volumeList[number];
 }
 
-
 void *volume_get_current_volume_info (void)
 {
     if ( current_volume < 0 || 
          current_volume > VOLUME_COUNT_MAX )
     {
-         return NULL;
+        return NULL;
     }
 
     return (void *) volumeList[VOLUME_COUNT_MAX];
@@ -984,7 +971,7 @@ int storage_set_total_lba_for_boot_disk(void)
 // --------------------------------
 // Get the boot disk
     disk = (struct disk_d *) ____boot____disk;
-    if ( (void*) disk == NULL ){
+    if ((void*) disk == NULL){
         printk("disk\n");
         goto fail;
     }
@@ -1041,12 +1028,12 @@ int init_storage_support(void)
 // When the rest of the structure is initialized?
 
     storage = (void *) kmalloc( sizeof(struct storage_d) );
-    if ((void *) storage == NULL)
-    {
+    if ((void *) storage == NULL){
        printk("init_storage_support: storage\n");
        return FALSE;
     }
     memset( storage, 0, sizeof(struct storage_d) );
+
     // Set up only the main elements of the structure.
     storage->used = TRUE;
     storage->magic = 1234;
@@ -1057,6 +1044,4 @@ int init_storage_support(void)
 
     return TRUE;
 }
-
-
 

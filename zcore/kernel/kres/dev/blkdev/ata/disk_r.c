@@ -102,6 +102,7 @@ fs_load_metafile (
 
     debug_print ("fs_load_metafile:\n");
 
+// parameters
     if (buffer == 0){
         debug_print ("fs_load_metafile: [ERROR] buffer\n");
         return;

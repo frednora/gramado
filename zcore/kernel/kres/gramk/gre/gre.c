@@ -9,12 +9,10 @@
 int DemoFlag=0;
 int UpdateScreenFlag=0;
 
-
 // see: ws.h
 struct color_scheme_d *HumilityColorScheme; // Simples.
 struct color_scheme_d *PrideColorScheme;    // Colorido.
 struct color_scheme_d *CurrentColorScheme;
-
 
 // monitor. (hardware)
 int current_display=0;
@@ -51,7 +49,6 @@ int textcursorStatus=0;
 unsigned long g_mousepointer_x=0;
 unsigned long g_mousepointer_y=0;
 
-
 // Device hotspot.
 static unsigned long HotSpotX=0;
 static unsigned long HotSpotY=0;
@@ -62,13 +59,12 @@ int kgws_status;
 pid_t kgws_ws_PID;
 int kgws_ws_status;
 
-
-//=================================
+// =================================
+// Loacal workers
 
 static int __gre_initialize_globals(void);
 
-//=================================
-
+// =================================
 
 void kgws_enable(void)
 {
@@ -99,7 +95,6 @@ void kgws_disable(void)
     
     EnableKGWS = FALSE;
 }
-
 
 // Fibonacci Series using Recursion 
 int fib (int n)
@@ -180,8 +175,8 @@ grPlot0 (
 // #bugbug
 // Precisa ser 'int', nao podemos enviar 
 // valores negativos para putpixel.
-     int X=0;
-     int Y=0;
+    int X=0;
+    int Y=0;
 
 // #todo
 // If the clipping window is invalid, 
@@ -295,9 +290,7 @@ grPlot0 (
     }
 
     // Fail
-
     Draw = FALSE;
-
     return (-1);
 
 //
@@ -456,38 +449,36 @@ plotCircleZ (
 
     do {
       
-      //setPixel(xm-x, ym+y); /*   I. Quadrant */
-      //setPixel(xm-y, ym-x); /*  II. Quadrant */
-      //setPixel(xm+x, ym-y); /* III. Quadrant */
-      //setPixel(xm+y, ym+x); /*  IV. Quadrant */
+        //setPixel(xm-x, ym+y); /*   I. Quadrant */
+        //setPixel(xm-y, ym-x); /*  II. Quadrant */
+        //setPixel(xm+x, ym-y); /* III. Quadrant */
+        //setPixel(xm+y, ym+x); /*  IV. Quadrant */
       
-      grPlot0 ( z, xm-x, ym+y, color );
-      grPlot0 ( z, xm-y, ym-x, color );
-      grPlot0 ( z, xm+x, ym-y, color );
-      grPlot0 ( z, xm+y, ym+x, color );
+        grPlot0 ( z, xm-x, ym+y, color );
+        grPlot0 ( z, xm-y, ym-x, color );
+        grPlot0 ( z, xm+x, ym-y, color );
+        grPlot0 ( z, xm+y, ym+x, color );
 
-      r = err;
+        r = err;
       
-      // #ugly routine.
+        // #ugly routine.
       
-      /* e_xy+e_y < 0 */
-      if (r <= y) 
-      { 
-           err += ++y * 2 + 1; 
-      }           
+        /* e_xy+e_y < 0 */
+        if (r <= y) 
+        { 
+            err += ++y * 2 + 1; 
+        }      
       
-      /* e_xy+e_x > 0 or no 2nd y-step */
-      if (r > x || err > y) 
-      { 
-          err += ++x * 2+1; 
-      }
-      
+        /* e_xy+e_x > 0 or no 2nd y-step */
+        if (r > x || err > y) 
+        { 
+            err += ++x * 2+1; 
+        }
+
     } while (x < 0);
 }
 
-
 /*
- ********************************************************
  * noraDrawingStuff3: 
  *    Lot of dots in the right place. (prime stuff)
  *    2020 - Created by Fred Nora. 
@@ -514,8 +505,7 @@ void noraDrawingStuff3 (int x, int y, int z)
                 }
             }
         };
-        if (_x >= limitY)
-        { 
+        if (_x >= limitY){
             break;
         }
     };
@@ -578,51 +568,6 @@ void demo0(void)
     //rectangleZ( 10, 10, 10+20,10+20,COLOR_BLUE,0);                  
     //refresh_screen();
 }
-
-// ?? Not used yet ??
-// Registrar um window server.
-// See: register_ws_process
-// #todo: Change name to kgwsRegisterDisplayServer()
-int kgwsRegisterWindowServer (pid_t pid)
-{
-    int Status = 0;
-
-//#todo
-    //if (pid<0 || pid >= PROCESS_COUNT_MAX)
-        //panic();
-
-    // ?? Where ??
-    if (kgws_status != 1){
-        Status = 1;
-        goto fail;
-    }else{
-        kgws_ws_PID = (pid_t) pid;
-        kgws_ws_status = 1;
-        goto done;
-    };
-
-fail:
-    printk("kgwsRegisterWindowServer: fail\n");
-done:
-    return 0;
-}
-
-// Registrando o processo do window server.
-// See: kpid.h
-int register_ws_process(pid_t pid)
-{
-    if ( pid<0 || pid >= PROCESS_COUNT_MAX ){
-        debug_print("register_ws_process: pid\n");
-        return (int) -1;
-    }
-    if (__gpidWindowServer != 0){
-        debug_print("register_ws_process: __gpidWindowServer\n");
-        return (int) -1;
-    }
-    __gpidWindowServer = (pid_t) pid;
-    return 0;
-}
-
 
 static int __gre_initialize_globals(void)
 {

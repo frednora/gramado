@@ -1,4 +1,5 @@
 // line.h
+// Created by Fred Nora.
 
 #ifndef __GRE_LINE_H
 #define __GRE_LINE_H    1

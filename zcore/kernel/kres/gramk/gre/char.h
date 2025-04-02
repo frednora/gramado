@@ -15,7 +15,6 @@ int get_char_width (void);
 void set_char_height (int height);
 int get_char_height (void);
 
-
 void 
 d_draw_char ( 
     unsigned long x, 

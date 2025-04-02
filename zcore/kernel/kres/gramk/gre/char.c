@@ -4,7 +4,7 @@
 #include <kernel.h>
 
 
-void set_char_width ( int width )
+void set_char_width (int width)
 {
     FontInitialization.width = (int) width;
 }

@@ -38,13 +38,13 @@ backbuffer_draw_horizontal_line (
     int n = (int) (x2-x1);
     int n2=0;
 
-// IN: color, x, y, rop flags.
-    while (x1 < x2)
-    {
+// IN: 
+// color, x, y, rop flags.
+    while (x1 < x2){
         n2 += backbuffer_putpixel ( color, x1, y, rop_flags ); 
         x1++;
     };
-    
+
     if (n2 < n)
         n = n2;
 
@@ -71,9 +71,9 @@ frontbuffer_draw_horizontal_line (
     int n = (int) (x2-x1);
     int n2=0;
 
-// IN: color, x, y, rop flags.
-    while (x1 < x2)
-    {
+// IN: 
+// color, x, y, rop flags.
+    while (x1 < x2){
         n2 += frontbuffer_putpixel ( color, x1, y, rop_flags ); 
         x1++;
     };

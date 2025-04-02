@@ -1,7 +1,7 @@
-
 // color.h
 // Small set of colors used by the 
 // raw display device routines inside the kernel.
+// Created by Fred Nora.
 
 #ifndef __COLOR_H
 #define __COLOR_H    1
@@ -16,9 +16,6 @@
 #define COLOR_PINK     0x00FFC0CB
 #define COLOR_ORANGE   0x00FFA500
 #define COLOR_YELLOW   0x00FFFF00
-
-// Cyan
-#define COLOR_CYAN     0x0000FFFF
 
 // Gray scale.
 #define xCOLOR_BLACK  0x000000  //preto
@@ -40,6 +37,9 @@
 // Default fg color
 #define CONSOLE_GRAY   0x00303030
 #define CONSOLE_WHITE  COLOR_WHITE
+
+// Cyan
+#define COLOR_CYAN     0x0000FFFF
 
 #endif   
 

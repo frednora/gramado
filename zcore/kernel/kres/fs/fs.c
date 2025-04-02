@@ -28,10 +28,11 @@ ssize_t sys_read(int fd, const char *ubuf, size_t count)
     // I tested it in a lot of applications.
     // #todo
     // We can implement a better routine for this.
+
     if (fd == 0)
     {
         if (current_thread != foreground_thread)
-            return (ssize_t) -EINVAL;
+            return (ssize_t) -EPERM;
     }
 
     // #todo: count
@@ -79,6 +80,7 @@ int sys_close(int fd)
 }
 
 // sys_fcntl:
+// Manipulate file descriptor.
 // #todo: 
 // Rever esses argumentos.
 // SVr4, 4.3BSD, POSIX.1-2001. and more.
@@ -102,55 +104,66 @@ int sys_fcntl ( int fd, int cmd, unsigned long arg )
 
     switch (cmd){
 
-    //duplicate file descriptor
+    // Duplicating a file descriptor
+    // Return: The new file descriptor.
     case F_DUPFD:
         debug_print ("sys_fcntl: [TODO] F_DUPFD\n");
         goto fail;
         break;
+    
+    // F_DUPFD_CLOEXEC
 
-    //get file descriptor flags
+    // File descriptor flags
+
+    // Return (as the function result) the file descriptor flags.
     case F_GETFD:
         debug_print ("sys_fcntl: [TODO] F_GETFD\n");
         goto fail;
         break;
 
-    //set file descriptor flags
+    // Set the file descriptor flags to the value specified by arg.
     case F_SETFD:
         debug_print ("sys_fcntl: [TODO] F_SETFD\n");
         goto fail;
         break;
 
-    //get file status flags
+    // File status flags
+
+    // Return (as the function result) the file access mode and
+    // the file status flags; arg is ignored.
+    // Return: Value of file status flags.
     case F_GETFL:
         debug_print ("sys_fcntl: [TODO] F_GETFL\n");
         goto fail;
         break;
 
-    //set file status flags
+    // Set the file status flags to the value specified by arg.
     case F_SETFL:
         debug_print ("sys_fcntl: [TODO] F_SETFL\n");
         goto fail;
         break;
 
-    //get record locking information
+    // Advisory record locking
+
+    // Get record locking information
     case F_GETLK:
         debug_print ("sys_fcntl: [TODO] F_GETLK\n");
         goto fail;
         break;
 
-    // set record locking information
+    // Set record locking information
     case F_SETLK:
         debug_print ("sys_fcntl: [TODO] F_SETLK\n");
         goto fail;
         break;
 
-    //set record locking info; wait if blocked
+    // Set record locking info; wait if blocked
     case F_SETLKW:
         debug_print ("sys_fcntl: [TODO] F_SETLKW\n");
         goto fail;
         break;
 
-    //free a section of a regular file
+    // Free a section of a regular file
     case F_FREESP:
         debug_print ("sys_fcntl: [TODO] F_FREESP\n");
         goto fail;
@@ -158,14 +171,15 @@ int sys_fcntl ( int fd, int cmd, unsigned long arg )
 
     // ...
 
+    // Invalid or not supported command value.
     default:
-        debug_print ("sys_fcntl: default command\n");
+        return (int) (-EINVAL);
         break;
     };
 
 fail:
     debug_print ("sys_fcntl: FAIL\n");
-    return (int) -1; //#todo
+    return (int) -1;
 }
 
 // sys_ioctl:
@@ -177,17 +191,19 @@ int sys_ioctl( int fd, unsigned long request, unsigned long arg )
 {
 // ioctl() implementation.
 
-    int status=-1;
+    int status = -1;
 
     debug_print ("sys_ioctl: [FIXME] \n");
     //printk("sys_ioctl: [FIXME] \n");
 
+// Parameters
     if ( fd < 0 || fd >= OPEN_MAX ){
         return (int) (-EBADF);
     }
 
+// Call io_.
     status = (int) io_ioctl(fd,request,arg);
-    if (status<0)
+    if (status < 0)
     {
         //?
     }
@@ -206,11 +222,14 @@ int sys_get_global_sync (int sync_id, int request)
 { 
     struct kstdio_sync_d *s;
 
+// Parameters
     if ( sync_id < 0 || sync_id >= SYNC_COUNT_MAX )
     {
         //message? panic?
         goto fail;
     }
+    //if (request < 0)
+        //goto fail;
 
     s = (struct kstdio_sync_d *) syncList[sync_id];
 
@@ -233,11 +252,14 @@ void sys_set_global_sync(int sync_id, int request, int data)
 {
     struct kstdio_sync_d *s;
 
+// Parameters
     if ( sync_id < 0 || sync_id >= SYNC_COUNT_MAX )
     {
        //message? panic?
        return;
     }
+    //if (request < 0)
+        //return;
 
     s = (struct kstdio_sync_d *) syncList[sync_id];
 
@@ -268,6 +290,7 @@ int sys_create_new_sync(void)
 {
     struct kstdio_sync_d *s;
 
+// Create new structure.
     s = (struct kstdio_sync_d *) kmalloc( sizeof(struct kstdio_sync_d) );
     if ((void*) s == NULL){
         goto fail;
@@ -304,6 +327,14 @@ void sys_set_file_sync(int fd, int request, int data)
     //#bugbug
     // Pensaremos nessa possibilidade.
 
+// Parameters
+    if ( fd < 0 || fd >= OPEN_MAX ){
+        debug_print("sys_set_file_sync: fd\n");
+        return;
+    }
+    //if (request < 0)
+        //return;
+
 /*
     if (fd == 0 || fd == 1 || fd == 2 )
     {
@@ -313,10 +344,6 @@ void sys_set_file_sync(int fd, int request, int data)
     }
  */
 
-    if ( fd < 0 || fd >= OPEN_MAX ){
-        debug_print("sys_set_file_sync: fd\n");
-        return;
-    }
 
 // == Process ================
     current_process = (pid_t) get_current_process();
@@ -417,6 +444,13 @@ int sys_get_file_sync(int fd, int request)
     //#bugbug
     // Pensaremos nessa possibilidade.
 
+// Parameters
+    if ( fd < 0 || fd >= OPEN_MAX ){
+        return (int) (-EBADF);
+    }
+    //if (request < 0)
+        //return -1;
+
 /*
     if (fd == 0 || fd == 1 || fd == 2 )
     {
@@ -425,10 +459,6 @@ int sys_get_file_sync(int fd, int request)
         return (int) (-1);
     }
  */
-
-    if ( fd < 0 || fd >= OPEN_MAX ){
-        return (int) (-EBADF);
-    }
 
 // == Process ================
     current_process = (pid_t) get_current_process();
@@ -481,8 +511,8 @@ fail:
     return (int) -1;
 }
 
-// Get the device number in the dev_dir[] list
-// given the pathname.
+// sys_get_device_number_by_path:
+// Get the device number in the dev_dir[] list given the pathname.
 // ex: "/DEV/DEV1"
 int sys_get_device_number_by_path(const char *path)
 {
@@ -509,9 +539,11 @@ int sys_open_device_by_number(int device_index)
     register int __slot=0;
     int i = device_index;
 
+// Parameters:
     if (i<0 || i>=32){
         return (int) (-EINVAL);
     }
+
     if (dev_dir[i].magic != 1234){
         goto fail;
     }
@@ -558,21 +590,18 @@ int sys_open_device_by_number(int device_index)
     panic ("sys_open_device_by_number: No slots!\n");
 
 // Slot found.
+// Validate index, save the fp and return the index.
 __OK:
-
     if ( __slot < 0 || __slot >= 32 )
     {
         printk ("sys_open_device_by_number: __slot fail\n");
-        //refresh_screen();
         goto fail;
     }
-
-// save
     p->Objects[__slot] = (unsigned long) fp;
-
-// Return fd.
     return (int) __slot;
+
 fail:
+    //refresh_screen();
     return (int) -1;
 }
 

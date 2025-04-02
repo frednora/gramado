@@ -106,15 +106,6 @@ struct display_device_d
     struct display_device_d *next;
 };
 
-
-/*
- * Video mode:
- *     Modo de vídeo usado.
- *     //@todo: se estamos encapsulando no módulo, retirar o G de global.
- */
-unsigned long g_video_mode;    
-
-
 //
 // Graphic mode support.
 //

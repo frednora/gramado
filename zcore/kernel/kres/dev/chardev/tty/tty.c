@@ -224,7 +224,7 @@ __tty_write (
         goto fail;
     }
     if ((char *) buffer == NULL){
-         panic("__tty_write: Invalid buffer\n");
+        panic("__tty_write: Invalid buffer\n");
     }
     if (nr <= 0){
         printk("__tty_write: nr\n");
@@ -957,6 +957,8 @@ tty_ioctl (
     case TIOCCONS:
         printk("tty_ioctl: TIOCCONS (Redirecting output)\n");
         refresh_screen();
+        if ( is_superuser() != TRUE )
+            return -EPERM;
         // Se a tty eh um console.
         if (tty->type == TTY_TYPE_CONSOLE) 
         {
@@ -972,8 +974,6 @@ tty_ioctl (
         // Se ja temos um redirecionador.
         if ((void*)redirect != NULL)
             return -EBUSY;
-        if ( is_superuser() != TRUE )
-            return -EPERM;
         if (tty->subtype == TTY_SUBTYPE_PTY_MASTER){
             if (is_linked == TRUE){
                 redirect = other_tty;

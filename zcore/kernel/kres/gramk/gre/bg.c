@@ -59,8 +59,8 @@ int displayInitializeBackground(unsigned int color,int show)
 {
     __displayPaintBackground((unsigned int) color,show);
     //set_up_cursor(0,0);
-    
     background_info.initialized = TRUE;
+
     return 0;
 }
 
