@@ -337,6 +337,9 @@ typedef enum terminal_api_message_number_d {
 // Main struct
 //
 
+#define TERMINAL_MODE_NORMAL    1000
+#define TERMINAL_MODE_EMBEDDED  2000
+
 struct terminal_d
 {
     int initialized;
@@ -346,6 +349,11 @@ struct terminal_d
     int pid;
     int uid;
     int gid;
+
+// 1000 - normal
+// 2000 - embedded
+    int _mode;
+
     unsigned long left;
     unsigned long top;
 // In pixels.

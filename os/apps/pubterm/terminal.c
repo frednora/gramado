@@ -228,7 +228,101 @@ static void __test_post_async_hello(void);
 static void __winmax(int fd);
 static void __winmin(int fd);
 
+//#test
+static void update_clients(int fd);
+
 //====================================================
+
+//#test
+static void update_clients(int fd)
+{
+    // Terminal window
+    int wid = Terminal.client_window_id;
+    // Local
+    struct gws_window_info_d lWi;
+
+    if (fd<0){
+        return;
+    }
+
+    // No
+    // Activate the main window.
+    // gws_set_active(fd,main_window);
+
+// Get info about the main window.
+// IN: fd, wid, window info structure.
+    gws_get_window_info(
+        fd, 
+        main_window,   // The app window.
+        (struct gws_window_info_d *) &lWi );
+
+    unsigned long l = 0;
+    unsigned long t = 0;
+    unsigned long w = lWi.cr_width;
+    unsigned long h = lWi.cr_height;
+
+    if (wid < 0)
+        return;
+
+    gws_change_window_position( 
+        fd,
+        wid,  // Terminal window
+        l,
+        t );
+    gws_resize_window(
+        fd,
+        wid,  // Terminal window
+        w,
+        h );
+
+// #todo: 
+// We need a list o clients. maybe clients[i]
+
+    // No
+    //gws_set_focus(fd,wid);
+
+    gws_redraw_window(fd, wid, TRUE);
+
+// ------------------------------------------------
+// Update some font info based on our new viewport.
+
+// Update information in Terminal structure
+
+// Font info again
+// Based on our corrent viewport
+// In chars.
+
+// Terminal
+
+    if (Terminal.initialized != TRUE)
+        return;
+    Terminal.width = w;
+    Terminal.height = h;
+
+// Font
+// #todo: We need the font information in the window structure.
+
+/*
+    if (FontInfo.initialized != TRUE)
+        return;
+
+    if ( FontInfo.width > 0 && 
+         FontInfo.width < Terminal.width )
+    {
+        Terminal.width_in_chars = 
+            (unsigned long)((Terminal.width/FontInfo.width) & 0xFFFF);
+    }
+
+    if ( FontInfo.height > 0 && 
+         FontInfo.height < Terminal.height )
+    {
+        Terminal.height_in_chars = 
+            (unsigned long)((Terminal.height/FontInfo.height) & 0xFFFF);
+    }
+ */
+}
+
+
 static void __test_post_async_hello(void)
 {
 // Send async hello. 44888.
@@ -2898,7 +2992,11 @@ terminalProcedure (
     case MSG_PAINT:
         //printf ("terminal.bin: MSG_PAINT\n");
         //clear_terminal_client_window(fd);
-        //doPrompt(fd);
+
+        update_clients(fd);
+        if (Terminal._mode == TERMINAL_MODE_EMBEDDED)
+            doPrompt(fd);
+        return 0;
         break;
 
     case MSG_CLOSE:
@@ -2917,6 +3015,93 @@ terminalProcedure (
     return 0;
 }
 
+// Get events from stdin, kernel and ws.
+// Pegando o input de 'stdin'.
+// #importante:
+// Esse event loop pega dados de um arquivo.
+static int __input_STDIN(int fd)
+{
+    register int C=0;
+    FILE *new_stdin;
+    int client_fd = fd;
+    int window_id = Terminal.client_window_id;
+
+    int fGetSystemEvents = TRUE;  // from kernel.
+    int fGetWSEvents = TRUE;      // from display server.
+
+// Parameter
+   if (fd < 0)
+       goto fail;
+
+// stdin:
+    //new_stdin = (FILE *) fopen("gramado.txt","a+");
+    new_stdin = stdin;
+    if ((void*) new_stdin == NULL){
+        printf ("__input_STDIN: new_stdin\n");
+        goto fail;
+    }
+
+// O kernel seleciona qual será 
+// o arquivo para teclado ps2.
+    sc80(
+        8002,
+        fileno(new_stdin),
+        0,
+        0 );
+
+// Poisiona no início do arquivo.
+// #bugbug: Se fizermos isso, 
+// então leremos novamente o que ja foi colocado.
+
+    // not standard.
+    // volta ao inicio do arquivo em ring0, depois de ter apagado
+    // o arquivo.
+    // GRAMADO_SEEK_CLEAR
+    lseek( fileno(new_stdin), 0, 1000);
+    // atualiza as coisas em ring3 e ring0.
+    rewind(new_stdin);
+
+// --------------------
+// #bubug
+// Logo apos lermos um ENTER, o terminal vai colocar
+// alguma coisa em stdin. Provavelmente estamos lendo
+// alguma coisa da linha de comandos usada pelo processo filho.
+// #bubug
+// Estamos lendo dois ENTER seguidos.
+// Process the char.
+// IN: socket, wid, msg, data1, data2
+
+    while (1){
+        if (isUsingEmbeddedShell == FALSE){
+            break;
+        }
+        C = (int) fgetc(new_stdin);
+        if (C > 0)
+        {
+            terminalProcedure( 
+                client_fd,
+                window_id,
+                MSG_KEYDOWN,
+                C,
+                C );
+        }
+
+        // Get system events
+        if (fGetSystemEvents == TRUE){
+            __get_system_event( client_fd, window_id );
+        }
+        // Get events from the display server
+        if (fGetWSEvents == TRUE){
+            __get_ws_event( client_fd, main_window );
+        }
+    };
+
+    printf ("__input_STDIN: Stop listening stdin\n");
+    return 0;
+fail:
+    return (int) -1;
+}
+
 // local
 // Pegando o input de 'stderr'.
 // It's working
@@ -2929,6 +3114,9 @@ static int __input_from_connector(int fd)
     int client_fd = fd;
     int window_id = Terminal.client_window_id;
     int launch_status = -1;
+
+    int fGetSystemEvents = TRUE;  // from kernel.
+    int fGetWSEvents = TRUE;      // from display server.
 
 // Parameter
     if (fd < 0)
@@ -3001,6 +3189,16 @@ RelaunchShell:
         //if (C == 4){
         //    goto done;
         //}
+
+        // Get system events
+        if (fGetSystemEvents == TRUE){
+            __get_system_event( client_fd, window_id );
+        }
+        // Get events from the display server
+        if (fGetWSEvents == TRUE){
+            __get_ws_event( client_fd, main_window );
+        }
+
     };
 
     goto RelaunchShell;
@@ -3012,95 +3210,11 @@ fail:
     return (int) -1;
 }
 
-// Get events from stdin, kernel and ws.
-// Pegando o input de 'stdin'.
-// #importante:
-// Esse event loop pega dados de um arquivo.
-static int __input_STDIN(int fd)
-{
-    register int C=0;
-    FILE *new_stdin;
-    int client_fd = fd;
-    int window_id = Terminal.client_window_id;
-    int fGetSystemEvents = TRUE;  // from kernel.
-    int fGetWSEvents = TRUE;  // from window server.
-
-// Parameter
-   if (fd < 0)
-       goto fail;
-
-// stdin:
-    //new_stdin = (FILE *) fopen("gramado.txt","a+");
-    new_stdin = stdin;
-    if ((void*) new_stdin == NULL){
-        printf ("__input_STDIN: new_stdin\n");
-        goto fail;
-    }
-
-// O kernel seleciona qual será 
-// o arquivo para teclado ps2.
-    sc80(
-        8002,
-        fileno(new_stdin),
-        0,
-        0 );
-
-// Poisiona no início do arquivo.
-// #bugbug: Se fizermos isso, 
-// então leremos novamente o que ja foi colocado.
-
-    // not standard.
-    // volta ao inicio do arquivo em ring0, depois de ter apagado
-    // o arquivo.
-    // GRAMADO_SEEK_CLEAR
-    lseek( fileno(new_stdin), 0, 1000);
-    // atualiza as coisas em ring3 e ring0.
-    rewind(new_stdin);
-
-// --------------------
-// #bubug
-// Logo apos lermos um ENTER, o terminal vai colocar
-// alguma coisa em stdin. Provavelmente estamos lendo
-// alguma coisa da linha de comandos usada pelo processo filho.
-// #bubug
-// Estamos lendo dois ENTER seguidos.
-// Process the char.
-// IN: socket, wid, msg, data1, data2
-
-    while (1){
-        if (isUsingEmbeddedShell == FALSE){
-            break;
-        }
-        C = (int) fgetc(new_stdin);
-        if (C > 0)
-        {
-            terminalProcedure( 
-                client_fd,
-                window_id,
-                MSG_KEYDOWN,
-                C,
-                C );
-        }
-        // Get events from the window server.
-        
-        // System events.
-        if (fGetSystemEvents == TRUE){
-            __get_system_event( client_fd, window_id );
-        }
-        if (fGetWSEvents == TRUE){
-            __get_ws_event( client_fd, main_window );
-        }
-    };
-
-    printf ("__input_STDIN: Stop listening stdin\n");
-    return 0;
-fail:
-    return (int) -1;
-}
-
+// Embedded mode
 static int embedded_shell_run(int fd)
 {
     isUsingEmbeddedShell = TRUE;
+    Terminal._mode = TERMINAL_MODE_EMBEDDED;
 
 // Parameter
     if (fd < 0){
@@ -3109,6 +3223,7 @@ static int embedded_shell_run(int fd)
 // Loop
     while (1)
     {
+        //if (Terminal._mode != TERMINAL_MODE_EMBEDDED){
         if (isUsingEmbeddedShell != TRUE){
             break;
         }
@@ -3119,11 +3234,13 @@ fail:
     return (int) -1;
 }
 
+// Normal mode
 static int terminal_run(int fd)
 {
     int InputStatus = -1;
 
     isUsingEmbeddedShell = FALSE;
+    Terminal._mode = TERMINAL_MODE_NORMAL;
 
 // Parameter
     if (fd<0){
@@ -3461,20 +3578,18 @@ int terminal_init(unsigned short flags)
 {
 // Called by main() in main.c
 
-// ------------------------------------
-// Socket address.
-    struct sockaddr_in addr_in;
+// Socket address
+    struct sockaddr_in  addr_in;
     addr_in.sin_family = AF_INET;
     addr_in.sin_port = PORTS_WS;
     addr_in.sin_addr.s_addr = IP(127,0,0,1);    //ok
     //addr_in.sin_addr.s_addr = IP(127,0,0,9);  //fail
-// ------------------------------------
 
     int client_fd = -1;
     unsigned long w=0;
     unsigned long h=0;
 
-    debug_print ("pubterm: Initializing\n");
+    debug_print ("pubterm:\n");
 
     __initialize_basics();
 
@@ -3683,6 +3798,9 @@ int terminal_init(unsigned short flags)
     Terminal.client_window_id = terminal_window;
     //#debug
     gws_refresh_window(client_fd, terminal_window);
+
+
+    Terminal._mode = 0;
 
 // #bugbug
 // Something is wrong here.

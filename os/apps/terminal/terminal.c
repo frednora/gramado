@@ -3094,7 +3094,8 @@ terminalProcedure (
             // #test
             // Updating the terminal window.
             update_clients(fd);
-            doPrompt(fd);
+            if (Terminal._mode == TERMINAL_MODE_EMBEDDED)
+                doPrompt(fd);
             return 0;
         }
         break;
@@ -3116,6 +3117,96 @@ terminalProcedure (
 
 // done
     return 0;
+}
+
+// Get events from stdin, kernel and ws.
+// Pegando o input de 'stdin'.
+// #importante:
+// Esse event loop pega dados de um arquivo.
+static int __input_STDIN(int fd)
+{
+// + Get bytes from stdin.
+// + Get system messages from the queue in control thread.
+// + Get events from the server.
+
+    FILE *new_stdin;
+    int client_fd = fd;
+    int window_id = Terminal.client_window_id;
+    int C=0;
+    int fGetSystemEvents = TRUE;  // from kernel.
+    int fGetWSEvents = TRUE;  // from display server.
+
+    //new_stdin = (FILE *) fopen("gramado.txt","a+");
+    new_stdin = stdin;
+
+    if ((void*) new_stdin == NULL){
+        printf ("__input_STDIN: new_stdin\n");
+        goto fail;
+    }
+
+// O kernel seleciona qual será 
+// o arquivo para teclado ps2.
+    sc80(
+        8002,
+        fileno(new_stdin),
+        0,
+        0 );
+
+// Poisiona no início do arquivo.
+// #bugbug: Se fizermos isso, 
+// então leremos novamente o que ja foi colocado.
+
+    // not standard.
+    // volta ao inicio do arquivo em ring0, depois de ter apagado
+    // o arquivo.
+    // GRAMADO_SEEK_CLEAR
+    lseek( fileno(new_stdin), 0, 1000);
+    // Atualiza as coisas em ring3 e ring0.
+    rewind(new_stdin);
+
+    while (1){
+        if (isUsingEmbeddedShell == FALSE){
+            break;
+        }
+
+        // + Get bytes from stdin.
+        // #bubug
+        // Logo apos lermos um ENTER, o terminal vai colocar
+        // alguma coisa em stdin. Provavelmente estamos lendo
+        // alguma coisa da linha de comandos usada pelo processo filho.
+        // #bubug
+        // Estamos lendo dois ENTER seguidos.
+        C = fgetc(new_stdin);
+        if (C > 0)
+        {
+            terminalProcedure( 
+                client_fd,    // socket
+                window_id,    // window ID
+                MSG_KEYDOWN,  // message code
+                C,            // long1 (ascii)
+                C );          // long2 (ascii)
+        }
+      
+        // + Get system messages from the queue in control thread.
+        // System events.
+        if (fGetSystemEvents == TRUE){
+            __get_system_event( client_fd, window_id );
+        }
+        // + Get events from the display server.
+        if (fGetWSEvents == TRUE){
+            // #todo: Change function name to __get_ds_event.
+            __get_ws_event( client_fd, main_window );
+        }
+    };
+
+    //printf ("__input_STDIN: Stop listening stdin\n");
+    cr();
+    lf();
+    tputstring(fd,"__input_STDIN: Stop listening stdin");
+    return 0;
+
+fail:
+    return (int) -1;
 }
 
 // local
@@ -3219,99 +3310,12 @@ fail:
     return -1;
 }
 
-// Get events from stdin, kernel and ws.
-// Pegando o input de 'stdin'.
-// #importante:
-// Esse event loop pega dados de um arquivo.
-static int __input_STDIN(int fd)
-{
-// + Get bytes from stdin.
-// + Get system messages from the queue in control thread.
-// + Get events from the server.
-
-    FILE *new_stdin;
-    int client_fd = fd;
-    int window_id = Terminal.client_window_id;
-    int C=0;
-    int fGetSystemEvents = TRUE;  // from kernel.
-    int fGetWSEvents = TRUE;  // from display server.
-
-    //new_stdin = (FILE *) fopen("gramado.txt","a+");
-    new_stdin = stdin;
-
-    if ((void*) new_stdin == NULL){
-        printf ("__input_STDIN: new_stdin\n");
-        goto fail;
-    }
-
-// O kernel seleciona qual será 
-// o arquivo para teclado ps2.
-    sc80(
-        8002,
-        fileno(new_stdin),
-        0,
-        0 );
-
-// Poisiona no início do arquivo.
-// #bugbug: Se fizermos isso, 
-// então leremos novamente o que ja foi colocado.
-
-    // not standard.
-    // volta ao inicio do arquivo em ring0, depois de ter apagado
-    // o arquivo.
-    // GRAMADO_SEEK_CLEAR
-    lseek( fileno(new_stdin), 0, 1000);
-    // Atualiza as coisas em ring3 e ring0.
-    rewind(new_stdin);
-
-    while (1){
-        if (isUsingEmbeddedShell == FALSE){
-            break;
-        }
-
-        // + Get bytes from stdin.
-        // #bubug
-        // Logo apos lermos um ENTER, o terminal vai colocar
-        // alguma coisa em stdin. Provavelmente estamos lendo
-        // alguma coisa da linha de comandos usada pelo processo filho.
-        // #bubug
-        // Estamos lendo dois ENTER seguidos.
-        C = fgetc(new_stdin);
-        if (C > 0)
-        {
-            terminalProcedure( 
-                client_fd,    // socket
-                window_id,    // window ID
-                MSG_KEYDOWN,  // message code
-                C,            // long1 (ascii)
-                C );          // long2 (ascii)
-        }
-      
-        // + Get system messages from the queue in control thread.
-        // System events.
-        if (fGetSystemEvents == TRUE){
-            __get_system_event( client_fd, window_id );
-        }
-        // + Get events from the display server.
-        if (fGetWSEvents == TRUE){
-            // #todo: Change function name to __get_ds_event.
-            __get_ws_event( client_fd, main_window );
-        }
-    };
-
-    //printf ("__input_STDIN: Stop listening stdin\n");
-    cr();
-    lf();
-    tputstring(fd,"__input_STDIN: Stop listening stdin");
-    return 0;
-
-fail:
-    return (int) -1;
-}
-
+// Embedded mode
 static int embedded_shell_run(int fd)
 {
     isUsingEmbeddedShell = TRUE;
+    Terminal._mode = TERMINAL_MODE_EMBEDDED;
+
     if (fd<0)
         goto fail;
     while (1){
@@ -3324,10 +3328,13 @@ fail:
     return -1;
 }
 
+// Normal mode
 static int terminal_run(int fd)
 {
     int InputStatus= -1;
     isUsingEmbeddedShell = FALSE;
+    Terminal._mode = TERMINAL_MODE_NORMAL;
+
     while (1){
         InputStatus = __input_from_connector(fd);
         if(InputStatus == 0)
@@ -3950,7 +3957,7 @@ int terminal_init(unsigned short flags)
     gws_refresh_window(client_fd, terminal_window);
 
 
-
+    Terminal._mode = 0;
 
 // #bugbug
 // Something is wrong here.
