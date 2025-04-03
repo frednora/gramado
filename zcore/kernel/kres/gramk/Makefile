@@ -78,22 +78,25 @@ gramk.o
 all:
 
 # gre - Graphics Engine
-	$(CC) -c gre/pixel.c   $(KERNEL_INCLUDE) $(CFLAGS) -o pixel.o
-	$(CC) -c gre/line.c    $(KERNEL_INCLUDE) $(CFLAGS) -o line.o
-	$(CC) -c gre/rect.c    $(KERNEL_INCLUDE) $(CFLAGS) -o rect.o
-	$(CC) -c gre/bitblt.c  $(KERNEL_INCLUDE) $(CFLAGS) -o bitblt.o
-	$(CC) -c gre/bg.c      $(KERNEL_INCLUDE) $(CFLAGS) -o bg.o
-	$(CC) -c gre/font.c    $(KERNEL_INCLUDE) $(CFLAGS) -o font.o
-	$(CC) -c gre/char.c    $(KERNEL_INCLUDE) $(CFLAGS) -o char.o
-	$(CC) -c gre/text.c    $(KERNEL_INCLUDE) $(CFLAGS) -o text.o
-	$(CC) -c gre/gre.c     $(KERNEL_INCLUDE) $(CFLAGS) -o gre.o
+	$(CC) -c gdi/gre/pixel.c   $(KERNEL_INCLUDE) $(CFLAGS) -o pixel.o
+	$(CC) -c gdi/gre/line.c    $(KERNEL_INCLUDE) $(CFLAGS) -o line.o
+	$(CC) -c gdi/gre/rect.c    $(KERNEL_INCLUDE) $(CFLAGS) -o rect.o
+	$(CC) -c gdi/gre/bitblt.c  $(KERNEL_INCLUDE) $(CFLAGS) -o bitblt.o
+	$(CC) -c gdi/gre/bg.c      $(KERNEL_INCLUDE) $(CFLAGS) -o bg.o
+	$(CC) -c gdi/gre/font.c    $(KERNEL_INCLUDE) $(CFLAGS) -o font.o
+	$(CC) -c gdi/gre/char.c    $(KERNEL_INCLUDE) $(CFLAGS) -o char.o
+	$(CC) -c gdi/gre/text.c    $(KERNEL_INCLUDE) $(CFLAGS) -o text.o
+	$(CC) -c gdi/gre/gre.c     $(KERNEL_INCLUDE) $(CFLAGS) -o gre.o
 
-#
+# gdi
+	$(CC) -c gdi/dispsrv.c   $(KERNEL_INCLUDE) $(CFLAGS) -o dispsrv.o
+
+# user
 	$(CC) -c user/input.c     $(KERNEL_INCLUDE) $(CFLAGS) -o input.o
-	$(CC) -c user/dispsrv.c   $(KERNEL_INCLUDE) $(CFLAGS) -o dispsrv.o
 	$(CC) -c user/callback.c  $(KERNEL_INCLUDE) $(CFLAGS) -o callback.o
 	$(CC) -c user/user.c      $(KERNEL_INCLUDE) $(CFLAGS) -o user.o
 
+# Wrapper
 	$(CC) -c gramk.c     $(KERNEL_INCLUDE) $(CFLAGS) -o gramk.o
 
 # link

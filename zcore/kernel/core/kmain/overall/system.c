@@ -468,7 +468,8 @@ unsigned long doGetSystemMetrics(int index)
         case 200:
            //printk ("#type: %d\n",WindowServer_type);
            //refresh_screen();
-           return (unsigned long) WindowServer_type;
+           //return (unsigned long) WindowServer_type;
+           return 0;
            break;
 
         // #todo: We need a method for this.
@@ -477,7 +478,8 @@ unsigned long doGetSystemMetrics(int index)
         case 201:
            //printk ("#pid: %d\n",WindowServer_pid);
            //refresh_screen();
-           return (unsigned long) WindowServer_pid; 
+           //return (unsigned long) WindowServer_pid; 
+           return 0;
            break;
 
         // #todo: We need a method for this.
@@ -488,7 +490,8 @@ unsigned long doGetSystemMetrics(int index)
            //refresh_screen();
            // #todo
            // What is this ??
-           return (unsigned long) WindowServer_virtual_console; 
+           //return (unsigned long) WindowServer_virtual_console; 
+           return 0;
            break;
 
         // #todo: We need a method for this.
@@ -497,7 +500,8 @@ unsigned long doGetSystemMetrics(int index)
         case 203:
            //printk ("#initialized: %d\n",WindowServer_initialized);
            //refresh_screen();
-           return (unsigned long) WindowServer_initialized; 
+           //return (unsigned long) WindowServer_initialized; 
+           return 0;
            break;
 
         // Are we running on Qemu hv?

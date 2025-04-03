@@ -31,6 +31,7 @@
         "packet.h": "c",
         "connect.h": "c",
         "comp.h": "c",
-        "client.h": "c"
+        "client.h": "c",
+        "pixel.h": "c"
     }
 }

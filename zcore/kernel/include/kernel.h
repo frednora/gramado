@@ -186,9 +186,9 @@
 // ==================================
 // gramk/
 // sw - Graphics Engine
-#include "../kres/gramk/gre/color.h"
-#include "../kres/gramk/gre/font.h"
-#include "../kres/gramk/gre/bg.h"
+#include "../kres/gramk/gdi/gre/color.h"
+#include "../kres/gramk/gdi/gre/font.h"
+#include "../kres/gramk/gdi/gre/bg.h"
 
 // ==================================
 // ke/
@@ -198,14 +198,16 @@
 // ==================================
 // gramk/
 
-#include "../kres/gramk/gre/pixel.h"
-#include "../kres/gramk/gre/char.h"
-#include "../kres/gramk/gre/text.h"
-#include "../kres/gramk/gre/line.h"
-#include "../kres/gramk/gre/rect.h"
-#include "../kres/gramk/gre/bitblt.h"
-#include "../kres/gramk/gre/gre.h"
-#include "../kres/gramk/user/dispsrv.h"
+#include "../kres/gramk/gdi/gre/pixel.h"
+#include "../kres/gramk/gdi/gre/char.h"
+#include "../kres/gramk/gdi/gre/text.h"
+#include "../kres/gramk/gdi/gre/line.h"
+#include "../kres/gramk/gdi/gre/rect.h"
+#include "../kres/gramk/gdi/gre/bitblt.h"
+#include "../kres/gramk/gdi/gre/gre.h"
+
+#include "../kres/gramk/gdi/dispsrv.h"
+
 #include "../kres/gramk/user/input.h"
 #include "../kres/gramk/user/callback.h"
 

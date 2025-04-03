@@ -10,30 +10,30 @@
 #include <kernel.h>
 
 
-int WindowServer_initialized=0;
+//int WindowServer_initialized=0;
     
-window_server_t WindowServer_type=0;  // tipo de window server.
+//window_server_t WindowServer_type=0;  // tipo de window server.
     
 // the pid for loadable window servers.
 // When the window server is the embedded so this pid needs to be
 // the pid of the kernel process.
    
-pid_t WindowServer_pid=0;
+//pid_t WindowServer_pid=0;
 
 // Limiting the nale to 64.
-char WindowServer_name[64];
+//char WindowServer_name[64];
    
 // the virtual console used by this window server.
-int WindowServer_virtual_console=0;
+//int WindowServer_virtual_console=0;
 
 //see: dispsrv.h
-struct ds_info_d DisplayServerInfo;
+struct ds_info_d  DisplayServerInfo;
 
 
 // ===============================================
 
 
-
+/*
 void ws_show_info(void)
 {
     printk("name %s\n",WindowServer_name);
@@ -43,6 +43,7 @@ void ws_show_info(void)
     printk("virtual console %d\n", WindowServer_virtual_console);
     refresh_screen();
 }
+*/
 
 
 // Let's setup the window server.
@@ -69,6 +70,7 @@ ws_ioctl (
 // the window server struct with the embedded window server info.
 int ws_init(void)
 {
+/*
     //debug_print ("ws_init: \n");
 
 
@@ -91,6 +93,7 @@ int ws_init(void)
     // ...
 
     WindowServer_initialized = TRUE;
+*/
     return 0;
 }
 
