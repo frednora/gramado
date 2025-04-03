@@ -23,11 +23,13 @@ DEP_L0 = zcore
 # --------------------------
 # Display servers
 DISPLAY_SERVERS = $(DEP_L2)/ds
+# windowing system with 3D demos
+GAMES           = $(DEP_L2)/gramadox
 
 # --------------------------
 # Client-side GUI applications
 APPLICATIONS = $(DEP_L3)/apps
-GAMES        = $(DEP_L3)/gramadox
+
 
 # Make variables (CC, etc...)
 AS      = as
@@ -236,6 +238,9 @@ copy-extras:
 	make -C windows/
 	-cp $(DISPLAY_SERVERS)/ds00/bin/DS00.BIN    $(BASE)/DE
 #-cp $(DISPLAY_SERVERS)/ds01/bin/DS01.BIN    $(BASE)/DE
+# 3D demos.
+	-cp $(GAMES)/bin/DEMO00.BIN   $(BASE)/DE/
+	-cp $(GAMES)/bin/DEMO01.BIN   $(BASE)/DE/
 
 # ------------------------
 # LEVEL : (de/apps) Client-side GUI applications
@@ -256,10 +261,6 @@ copy-extras:
     # Experimental applications
     # These need the '@' prefix.
 	-cp $(APPLICATIONS)/browser/teabox/bin/TEABOX.BIN  $(BASE)/DE/
-
-# 3D demos.
-	-cp $(GAMES)/bin/DEMO00.BIN   $(BASE)/DE/
-	-cp $(GAMES)/bin/DEMO01.BIN   $(BASE)/DE/
 
 	@echo "~ copy-extras"
 
