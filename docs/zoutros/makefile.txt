@@ -1,4 +1,0 @@
-
-	This document describes the Gramado make files.
-
-	#todo

@@ -4,18 +4,19 @@
 # Compiling on gcc 11.4.0 (Ubuntu on wsl)
 # Linking on ld 2.38
 
-# Target directory for the binaies.
-BASE = base
+# Building full distributions into this directory.
+DISTROS = distros
+
+# Target directory for the binaries.
+# The binaries compiled here will go to this directory.
+BASE = $(DISTROS)/base00
 
 # Client-side GUI applications.
 DEP_L3 = os
-
 # The display server.
 DEP_L2 = windows
-
 # Init process, ring 3 drivers and ring 3 servers.
 DEP_L1 = zbase
-
 # Boot, kernel and ring 0 modules.
 DEP_L0 = zcore
 

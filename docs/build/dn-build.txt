@@ -1,7 +1,0 @@
-
-	some commands:
-
-	make
-	make clean
-	make clean-all
-

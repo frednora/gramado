@@ -1,12 +1,16 @@
 # docs
 
+The documentation for Gramado OS
+
+## Folders
+
 ```
-This file is gonna be the index for all the documentation found in docs/.
+notes/    - Design notes for future documentation.
+man/      - The manual. The final documentation.
+building/ - How to build the operating system.
+running/  - How to run the operating system.
 ```
 
-> * For now all we have is a collection of design notes. 
-> * We're gonna turn all this notes into a real documentation.
-> * I'm sorry for the mess.
- 
+
 
 

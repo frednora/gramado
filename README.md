@@ -6,7 +6,7 @@ Gramado OS. This project includes basicaly the bootloader, the core kernel and t
 > We're still creating the documentation for this distro.
 
 ```
-base/    - Target directory for the binaies.
+distros/ - Building full distributions into this directory.
 docs/    - The documentation.
 os/      - Client-side GUI applications.
 windows/ - The display server.
@@ -226,12 +226,12 @@ Please make some comments on Github or send messages to Fred Nora.
 
 ## How to Build?
 
-> See the [Gramado OS build instructions](https://github.com/frednora/gramado/blob/main/docs/build/build.md)
+> See the [Gramado OS build instructions](https://github.com/frednora/gramado/blob/main/docs/building/build.md)
 
 # Folders
 
 ```
-base/    - Target directory for the binaies.
+distros/ - Building full distributions into this directory.
 docs/    - The documentation.
 os/      - Client-side GUI applications.
 windows/ - The display server.

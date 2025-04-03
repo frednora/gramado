@@ -1,0 +1,2 @@
+Distro name: base01
+Guest OS

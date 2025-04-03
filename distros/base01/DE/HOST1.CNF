@@ -1,0 +1,5 @@
+
+meta meta1(){ name("host ipv4");        content("192.168.1.5");  }
+meta meta3(){ name("gateway ipv4");     content("192.168.1.1");  }
+meta meta2(){ name("dns server ipv4");  content("8.8.8.8");  }
+

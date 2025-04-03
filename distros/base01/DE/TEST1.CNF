@@ -1,0 +1,7 @@
+
+
+meta meta1(){ name("name");  content("Fred");       }
+meta meta2(){ name("group"); content("Kernel Dev"); }
+meta meta3(){ name("value"); content("1234");       }
+
+
