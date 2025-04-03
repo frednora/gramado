@@ -1,0 +1,14 @@
+The most important thing is the reader/writer synchronization for files just like, sockets, pipes and ttys.
+This is all i need to have my ring 3 window server running again.
+
+The second most important thing is the virtual console support. Including the tty structure as element of the virtual console structure. 
+... just like that. vc_cons[i].tty->something ...
+
+-------------------------
+
+bugbug:
+Something is not good when we are typing fast with more threads running.
+
+bugbug:
+We need some kind of protection when lanching new commands.
+We do not want to affect others processes data.

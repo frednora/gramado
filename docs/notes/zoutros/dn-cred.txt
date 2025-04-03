@@ -1,0 +1,52 @@
+
+  (Design note)
+
+  Sistema de creditos para threads.
+
+  O sistema de credito tem por objetivo valorizar
+  as threads que se comportam como participantes de
+  um 'sistema distribuido'. Tornando operaçoes de rede
+  mais velozes pelo incremento do quantum de threads
+  que interagem com o sistema distribuido.
+
+  
+  * Operaçoes como criaçao de socket, bind, connect,
+  read() from socket, write() from socket.
+  serao motivo para que a thread ganhe creditos.
+
+  Nao havera puniçoes para as threads que nao efetuem
+  operaçoes de rede. Somente a valorizaçao daquelas
+  que participam.
+  Isso tambem valorizara as aplicaçoes com janelas,
+  pois elas interagem com o display server.
+  Isso tambem valoriza as aplicaçoes que
+  estao conectadas ao servidor de network.
+
+  sys_xxx, network_xxxx ...
+  A camada de APIs aumentara o quantum das threads que
+  alcançarem determinado numero de creditos. Em seguida
+  zerara seus creditos. 
+
+------------------------
+ Comentario:
+
+Estou implementando e testando um sistema que atribui creditos 
+as threads que apresentem comportamento tipico de sistemas distribuidos ... 
+como operaçoes envolvendo sockets. 
+Quando a thread atinge um dado numero de creditos, 
+ela ganha um incremento no numero de quantum.
+
+Quem ganha com isso? 
+As aplicaçoes com janela, 
+e no futuro, os servidores de protocolo e o navegador.
+
+Quem perde com isso? 
+Os programas que efetuam operaçoes com arquivos normais, 
+que nao sao sockets.
+
+Por que? 
+Porque nos dias de hoje nao se pode projetar 
+a arquitetura de sistema operacional sem levar em conta a Internet.
+
+
+

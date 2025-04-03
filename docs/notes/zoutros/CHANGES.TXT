@@ -1,0 +1,35 @@
+====================================
+GRAMADO OS - 64bit operating system.
+Copyright (C) 2005 - 2023 Fred Nora.
+====================================
+
+fev 2023
+-------------------------
+#
+Rename the window server to GRAMLAND.BIN
+desktop/gramland/
+
+
+1.5.295 (26 august 2022)
+----------------------
+#
+The system is working on qemu and virtualbox.
+It has a ring3 window server called GWSSRV.BIN and some few ring3 client applications.
+
+
+1.1.241 (20xx)
+----------------------
+#
+It was the last 32bit release.
+
+0.0.0 (2005)
+----------------------
+
+#
+The project was created.
+It was just a 16bit boot loader for x86 machines.
+
+1.1.xxx
+----------------------
+
+

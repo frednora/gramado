@@ -1,0 +1,21 @@
+
+    Máquina real e emulação de tecnologias legadas.
+
+    Provavelmente o maior desafio nesse negócio de 
+fazer sistemas operacionais, seja o suporte a tecnologias legadas 
+na máquina real. Isso porque o suporte oferecido pelo hardware 
+contém falhas ou não é eficaz. Então o sistema operacional não vai 
+conseguir suportar a tecnologia legada, porque o hardware não oferece 
+as condições para o sistema operacional fazer isso.
+    O principal exemplo seria o caso do mouse usb com emulação 
+para funcionar como ps/2.
+    Talvez a melhor estratégia seja rodar na máquina real 
+sem o suporte às tecnologias legadas. Ou seja, temos que rodar 
+no qemu usando as tecnologias legadas até o momento em que 
+nosso sistema consiga funcionar sem elas. Nesse momento então, 
+podemos portar para a máquina real, sem a utilização das 
+tecnologias legadas para evitarmos as falhas.
+    Talvez o momento certo para migrar para a máquina real seja 
+o momento  em que tivermos suporte para input via usb. Antes disso, 
+só qemu.
+

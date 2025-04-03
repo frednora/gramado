@@ -1,0 +1,14 @@
+
+   How to test the network support.
+   
+   + Use Oracle virtualbox.
+   + Set the flag USE_E1000 in include/config/config.h.
+   + Type "net-on" or "net-off" on terminal.bin.
+   + Type "n3" in terminal.bin to do the dhcp dialog.
+ 
+--------------------------------
+Notes for Virtalbox configuration:
+- Use 'bridged adapter'.
+- Use 'Intel PRO/1000 MT Desktop (8254EM)' controller.
+- In promiscuous mode select: "Allow all".
+

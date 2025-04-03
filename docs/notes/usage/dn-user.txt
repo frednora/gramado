@@ -1,0 +1,18 @@
+
+	How can the UI in Gramado 1.0 be improved? 	
+
+	... this question is gonna guide me.
+	For now, all we have is a DOS-like command interpreter and 
+some adventures on an interface with windows.
+	I will work to expand this usability, given to the 
+command interpreter more power and tools. At the same time we can 
+give access to the well consolidated graphical components.
+
+	Core elements:
+	task bar: The anchor.       
+	Program launcher and task switcher.
+	See:
+	http://www.dfpug.de/loseblattsammlung/migration/whitepapers/Win95UI.htm
+
+
+

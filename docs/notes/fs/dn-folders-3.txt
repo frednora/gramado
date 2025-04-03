@@ -1,0 +1,11 @@
+ 
+  Sobre o disco e as partiçoes: (pt-br)
+  
+  A primeira sera a particao de boot, formatada em fat16 e 
+nao seguira a arvore de diretorios unix/linux, sera pequena e 
+  tera poucos diretorios e nao sera acessivel ao usuario comum. 
+  
+  A segunda partiçao sera a partiçao do sistema, 
+sera formatada em ext2 e seguira o padrao unix/linux, sera grande. 
+
+  Nao pretendo fazer partiçao de swap ... talvez o swap seja um arquivo.

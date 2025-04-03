@@ -1,0 +1,89 @@
+
+  AF_GRAMADO
+
+  This is domain used by the system server on 
+  Gramado OS.
+
+--------------------------------------
+AF_UNIX / AF_LOCAL
+    This family is used in the local context.
+    The structure accepts a pathname as an address.
+    It doesn't have and IP:Port socket.
+    It accepts only clients that belongs to this domain.
+
+    This structure is found is sys/socket.h.
+    struct sockaddr 
+    {
+        unsigned short sa_family;
+        char           sa_data[14];
+    };
+
+    This structure is found is sys/socket.h.
+    #define UNIX_PATH_MAX  108
+    struct sockaddr_un
+    {
+        uint16_t sun_family;
+        char sun_path[UNIX_PATH_MAX];
+    };
+
+--------------------------------------
+AF_INET
+    This family is used in the remote context as well as in
+    the local context.
+    The structure accepts a socket, with IP:Port.
+    It accepts only clients that belongs to this domain.
+
+    The structure is found is sys/un.h
+    struct sockaddr_in 
+    {
+        // len + family = 16bit
+        uint8_t           sin_len;      // 8
+        sa_family_t       sin_family;   /* 8 address family: AF_INET */
+        in_port_t         sin_port;     /* port in network byte order */ 
+        struct in_addr    sin_addr;     /* internet address */
+        __int8_t          sin_zero[8];
+    };
+
+--------------------------------------
+AF_GRAMADO
+    This family is mid-term between AF_UNIX and AF_INET,
+    it accepts a string with two chars as server identifier,
+    but the kernel associate a number of port to a pair of char.
+    Each pair of char has a number of port associated with them.
+    The system has a small number of pair of chairs. Only for the
+    basic system server.
+    It uses the same structures of AF_UNIX, or a new one 
+    called sockaddr_gram, and we put the pair of chars 
+    into the data area reserved for pathnames.
+    Ex: 'ws', 'ns', 'xx' ...
+    it accepts clients from different domains, AF_GRAMADO, AF_UNIX and 
+    even AF_INET, because the kernel associates a port with address.
+
+    This structure is found is sys/socket.h.
+    struct sockaddr 
+    {
+        unsigned short sa_family;
+        char           sa_data[14];
+    };
+
+    This structure is found is sys/socket.h.
+    #define UNIX_PATH_MAX  108
+    struct sockaddr_un
+    {
+        uint16_t sun_family;
+        char sun_path[UNIX_PATH_MAX];
+    };
+
+    This structure is found is sys/socket.h.
+    struct sockaddr_gram
+    {
+        unsigned short sa_family;
+        char           sa_data[14];
+    };
+
+
+
+
+
+
+ 

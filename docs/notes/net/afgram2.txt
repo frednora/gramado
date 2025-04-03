@@ -1,0 +1,15 @@
+[pt-br]
+
+AF_GRAMADO 
+Possivelmente eu inventei um novo tipo de dominio.
+Tradicionalmente os dominios mais usados sao o local e o inet.
+O dominio local usa um pathname como identificador e 
+nao possui uma porta associada ao endereço.
+O dominio inet possui um socket como identificador, contendo IP:Port ...
+obs: e' considerado uma violaçao, um cliente tentar 
+acessar um servidor que pertence a outro dominio. Mas ...
+Meu novo dominio usa como identificador um par de chars, 
+'xy' que o kernel associa a um numero de porta ... 
+dessa forma, um cliente que pertença a outros dominios 
+pode se conectar a um servidor AF_GRAMADO ... 
+o cliente pode ser AF_GRAMADO, AF_UNIX ou AF_INET.

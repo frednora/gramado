@@ -1,0 +1,7 @@
+
+	docs/guide/
+
+	This folder will describe how to create documentation on 
+	Gramado source code.
+
+

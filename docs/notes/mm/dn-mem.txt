@@ -1,0 +1,9 @@
+
+	bugbug:
+	A memoria usada pelo processo gwssrv esta ficando maior
+	do que o kernel consegue alocar para novos processo.
+	isso é preto de 250kb ...
+	Isso causara um problema de instabilidade.
+	Check a rotina de clonagem de processo, na parte
+	onde se aloca memoria para a imagem e para a pilha.
+	clone.c

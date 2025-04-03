@@ -1,0 +1,10 @@
+
+    Concepts:
+    New technologies / consistent user interface.
+
+```
+ * New technologies.    (for developers)
+ * Consitent interface. (User point of view)
+```
+
+

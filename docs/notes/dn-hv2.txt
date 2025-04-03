@@ -1,0 +1,33 @@
+kernel: vm e containers.
+Os principios de VMs controladas por hardware e containers 
+baseados no gerenciamento de recursos atraves de cgroups e namespaces, 
+mudaram radicalmente a forma em que um kernel deve se comportar.
+-------------
+Sob o aspecto de VMs, o hypervisor baremetal eh o verdadeiro kernel, 
+os kerneis dentro das VMs sao apenas brinquedos.
+-------------
+Sob o aspecto dos containers, a visao antiga de que o kernel eh um supervisor, 
+responsavel pela gerencia dos recursos disponiveis se tornou mais evidente do que nunca ...
+------------------------------
+Ou seja, as vms matam o principio de supervisor em favor de um hypervisor ... 
+e os containers fortalecem a posiçao do kernel como controlar de recursos ... 
+mas como o hypervisor baremetal eh na verdade quem manda em tudo ... 
+entao o hypervisor baremetal eh o verdadeiro gerenciador de recursos ...
+-------
+extra:
+Tem hypervisor como o hyper-v, que faz questao de dar poderes para a 
+partiçao raiz como controladora dos recursos de hadware atravez de tuneis, 
+que ligam os pedidos das child partitions com os controladores dentro da root partition,
+ Enquanto outros hypervisors gostam de controlar o hardware. 
+ Mas isso eh conversa pra outra hora.
+ 
+---
+ Baseado nessa nova visao sobre o que eh kernel e 
+ acreditando que esse eh um conceito duradouro, entao 
+ estou re-estruturando o kernel para ficar em conformidade 
+ com esses paradigmas ... 
+ O kernel tera duas camadas principais ... 
+ a camada de recursos e a camada de controle de recursos ... 
+ e o kernel vai fugurar como hypervisor baremetal, 
+ dando a oportunidade de controlar a gerencia de VMs via hardware.
+

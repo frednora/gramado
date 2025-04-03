@@ -1,0 +1,7 @@
+
+
+     Na clonagem de processos, estamos alocando apenas 300KB para
+     a imagem do novo processo.
+     Esse é nosso limite. Se a imagem ficar maior que isso,
+     teremos instabilidade no sistema.
+     see: clone.c and process.c

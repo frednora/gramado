@@ -1,0 +1,5 @@
+
+I/O permission level and I/O permission bit map
+x86 processors use an algorithm to validate a port I/O access based on two permission checks ([1]):
+
+Checking the I/O Privilege Level (IOPL) of EFLAGS register Checking I/O permission bit map (IOPM) of a process task state segment (TSS) 

@@ -1,0 +1,10 @@
+
+  #todo:
+
+  - Create a single page documentation with 'usage instructions' to help
+    the user. Maybe we can put this page here in this address: 
+    'gramado.github.io/usage'
+
+  - Ok, that's it, we need to improve the usability to test
+    all the resources that we already have.
+   

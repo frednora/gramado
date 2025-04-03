@@ -1,0 +1,15 @@
+mar-24-2023.
+Gramado OS: Version 1.7 Build 315.
+ata:
+Critical changes on ata driver.
+Now we're support the index for the ata ports
+and the index for the ide ports.
+Each port has its own struct and set of data.
+Some operations uses the port number affecting
+a given device.
+For now the configuration header file gives us the default
+ide port and we can operate only over this one device.
+There is a lot to do yet to handle this port thing.
+But now i decide to give the indexes a chance.
+If something goes wrong use the saved in this date.
+mar-24-2023.

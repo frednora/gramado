@@ -1,0 +1,49 @@
+
+    Guidelines for the user.
+
+Guidelines for system initialization.
+
+-----------------------
+Building the system:
+    Type 'make'
+
+-----------------------
+Clean up the mess:
+    make clean-all
+
+-----------------------
+Launching the vm:
+    Go to kernel/ folder and type './run' or './runnokvm' 
+
+-----------------------
+Boot interface:
+see: 
+You can type: 
+
+    bootjail - for 320x200 resolution. 
+    bootp1   - for 640x480 resolution.
+    boothome - for 800x600 resolution.
+    bootp2   - for higher resolution. probably 1024x768 (not working)
+    bootcali - for higher resolution. (not working)
+
+    'boot' is the same of 'boothome'.
+    'bootcali' is gonna be for higher resolutions. 
+
+-----------------------
+Init process interface:
+see: init/
+You can type:
+
+    boot    - Initialize the Desktop Environment, (GUI).
+    gramado - Initialize the Desktop Environment, (GUI).
+    wsq     - Initialize the Desktop Environment, (GUI).
+    eng     - Start graphics engine.
+    cls   - Clear the screen.
+
+-----------------------
+Launching a program from the terminal.
+Just type?
+    $ name
+    $ name.bin
+    $ name -x
+    $ #name.bin  (This one loads from /PROGRAMS/)

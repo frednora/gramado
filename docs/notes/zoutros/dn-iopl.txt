@@ -1,0 +1,13 @@
+
+    iopl em rflags para threads em ring  3:
+    
+    Os aplicativos que rodam em ring3 estao usando iopl 3 em rflags.
+    Isso permite com que eles possam realizar algumas 
+    instruções privilegiadas, como cli, sti, in, out, mas não hlt.
+    Não queremos isso, por isso precisamos mudar o iopl para 0.
+
+    Vou continuar usando essa proteção fraca nos aplicativos 
+    que eu ja tenho. 
+    Com o tempo eu vou criar um novo modo de operação onde 
+    haja mais proteção ... um tipo de sandbox ... 
+    onde vão rodar os veradeiros aplicativos de usuário.

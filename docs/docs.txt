@@ -1,0 +1,11 @@
+
+ To create a documentation we're gonna be using some design notes 
+that can be found inside the components.
+
+See:
+ + kernel/docs/dn/
+ + your/docs/
+ + your/docs/dn/
+ + ... 
+
+

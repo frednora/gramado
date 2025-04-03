@@ -1,0 +1,11 @@
+
+
+	#todo
+
+	We gotta work on routines to handle the file position
+	for read() and write(). Just like ftell() ltell().
+
+	We need to support to open bigger files.
+	For now open() and fopen() only handle files
+	with 512 bytes.
+	see: BUFSIZ.

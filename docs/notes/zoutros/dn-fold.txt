@@ -1,0 +1,24 @@
+
+folders:
+
+
+```
+ * `aa/` - Ring 0 first loadable module.
+
+ * `ama/` - Low level basic components of the system.  
+   * `boot` - The boot loader.
+   * `kernel` - The Gramado OS kernel.
+
+ * `boring/cancun/` - Running gramado commands on Linux host.
+ * `boring/docs/` - Documentation.
+
+ * `zing/` - Desktop Environment (DE).
+   * `graminit` - The init process
+   * `gramland` - Display server. (GRAMLAND.BIN)
+   * `netd` - The network server.
+
+ * `zz` - 
+   * `omega1` - Libraries, toolkits and apis. 
+   * `omega2` - apps, commands, drivers and servers. 
+   * `omega3` - data 
+```

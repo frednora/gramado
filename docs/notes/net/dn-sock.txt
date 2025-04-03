@@ -1,0 +1,10 @@
+sockets: Tornando a infraestrutura de sockets condizente com o padrao.
+Vou fazer uma mudança que vai e me deixar sem cliente/servidor por algum tempo. O objetivo eh alinhar a infraestrutura de socket com o padrao largamente aceito.
+-----
+explicando:
+O Gramado tem as funçoes comuns, socket(), connect() bind(), etc ... mas enfrenta problemas com accept(). Esse problema com accept(), eh causado principalmente por um hack na funçao write().
+Eu havia modificado a funçao write(), para que quando se escrevesse em um socket o conteudo fosse copiado para o outro que esta conectado a ele. Pois bem, isso estava causando mais problemas do que beneficios, entao desisti disso.
+Vou modificar a funçao write() pra nao mais fazer isso, mas essa mudança vai fazer com que o sistema fique sem conexoes por algum tempo.
+Daqui pra frente vou trabalhar nessa infraestrutura de conexao e em outras funcionalidades unix-like correlacionadas a isso.
+Como resultado final eu terei uma infraestrutura de socket bem condizente com a infraestrutura usada pela maioria dos sistemas unix-like. Esse eh o objetivo.
+-----

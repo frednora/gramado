@@ -1,0 +1,24 @@
+
+   Transformando o gramado em um hv baremetal.
+
+  Estou começando uma jornada nova de aprendizado. 
+  Eh um longo caminho pela frente, mas tem que começar de algum lugar.
+
+  Estou transformando tudo que fiz num hyperevisor baremetal, 
+que eh aquele de nivel mais baixo. Mas como estou testando o sistema 
+em vms como o qemu ou virtualbox, entao eu nao tenho acesso 
+aos recursos do processador que sao necessarios pra o hypervisor 
+configurar e gerenciar as partiçoes onde rodam os guests. Entao tudo 
+o que posso fazer por enquanto eh organizar o sistema para que o 
+boot aconteça no hypervisor.
+
+  Um hypervisor pode ser magrinho e os drivers ficam na partiçao raiz, 
+como acontece com o hyperv da microsoft. Ou o hypervisor pode ser gordinho 
+e conter os drivers que serao acessador pela partiçao raiz e pelos guests, 
+como acontece com o linux com kvm.
+  Bom, esse eh o primeiro passo de muitos. 
+
+  Eu sinceramente nao conseguiria prosseguir se nao fosse desse jeito, 
+porque o meu maior desejo sempre foi fazer codigo pra camada mais baixa 
+do sistema.
+

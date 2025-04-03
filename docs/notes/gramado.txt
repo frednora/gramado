@@ -1,0 +1,27 @@
+
+------------------------------------
+Core components:
+
+Boot loader:
+  + kernel/boot/
+Kernel:
+  + kernel/kernel/
+Init process:
+  + kernel/userland/init/
+Display server:
+  + de/ui/core/server/
+
+------------------------------------
+  Desktop environment:
+
+Commands to run on virtual terminals:
+  + de/commands/
+  This is a set of programs using the libc to run on virtual terminals.
+
+Client-side GUI applications:
+  + de/ui/shell/
+  This is a set of programs using graphical interface, just like 
+  windows and buttons. Each program needs to connect with 
+  the display server to run. The display server will draw the 
+  graphical components.
+

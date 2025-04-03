@@ -1,0 +1,16 @@
+
+    Note about the PS2/Mouse implementation and usage.
+
+For now, I do not fully initialize the ps2 embedded driver 
+at the kernel initialization. I only initialize the ps2 keyboard. 
+
+To test the ps2-mouse, i'm following these steps: 
+>> [control+f9] to enter into a kernel mode embedded shell, 
+and then type the command 'ps2-qemu' to fully initialize 
+the ps2 support for qemu architecture, 
+>> [control+f10] to go out of the shell. ... 
+
+when in the ring3 shell we can type:
+>>'wsq' to initialize the GUI ,,, and after that, 
+>> [shitft+f12] to enable the mouse usage.
+

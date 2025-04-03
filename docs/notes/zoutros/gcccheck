@@ -1,0 +1,52 @@
+# ./gcccheck : Testing gcc version
+# Cretits: LILO.
+
+
+# min. version of GCC, CPP
+gccmin="7.4.0"
+
+ret=0
+rc=0
+
+
+vers_min() {
+	local M m p N n r
+
+	rc=0
+# get our version major, minor, rev
+	M=`echo $1 | cut -d . -f 1`
+	m=`echo $1 | cut -d . -f 2`
+	p=`echo $1 | cut -d . -f 3`
+	if [ -z "$p" ]; then p=0; fi
+#echo vers_min1 $M $m $p
+	N=`echo $2 | cut -d . -f 1`
+	n=`echo $2 | cut -d . -f 2`
+	r=`echo $2 | cut -d . -f 3`
+#echo vers_min2 $N $n $r
+	if [ "$M" -lt "$N" ]; then rc=1
+	elif [ "$M" -gt "$N" ]; then rc=0
+	elif [ "$m" -lt "$n" ]; then rc=1
+	elif [ "$m" -gt "$n" ]; then rc=0
+	elif [ -z "$r" ]; then rc=0
+	elif [ "$p" -lt "$r" ]; then rc=1
+	fi
+#echo vers_min returns $rc
+	return $rc
+}
+
+
+#echo
+echo GCC version $gccmin or later is required
+gcc -v 1>foo1 2>foo2
+V=`cat foo1 foo2 | cut -d' ' -f1-3 | grep -i version | tr '-' ' ' | cut -d' ' -f 3`
+rm -f foo1 foo2
+if [ -z "$V" ]; then
+	echo gcc is not present
+	ret=1
+else
+	vers_min $V $gccmin
+	echo gcc version $V
+	if [ $rc = 0 ]; then echo OKAY; else echo ERROR; ret=1; fi
+fi
+
+

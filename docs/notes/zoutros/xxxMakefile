@@ -1,0 +1,96 @@
+# Makefile in the root folder.
+# Build Gramado OS.
+
+BASE = kernel/base
+
+# This is the default target
+PHONY := all
+all: l3 l2 l1
+# Warning: Respect the order!
+
+# l3 - Applications
+PHONY := l3
+l3:
+	make -C  userland/
+
+# l2 - Core system components
+# display server and network server.
+PHONY := l2
+l2:
+	make -C services/
+
+# l1 - Boot loader, kernel and init process
+PHONY := l1
+l1:
+	make -C kernel/
+
+	@echo "Done"
+	@echo "Go to kernel/ and type ./run or ./runkvm"
+
+# ------------------------
+PHONY := clean
+clean: clean-all
+
+PHONY := clean-all
+clean-all: \
+clean-l1 clean-l2 clean-l3 \
+clean-base  
+
+PHONY := clean-l1
+clean-l1:
+# Clear the base domain.
+
+# ------------
+# kernel/
+	-rm kernel/GRAMADO.VHD
+	-rm kernel/MBR0.BIN
+	-rm kernel/kernel/KERNEL.BIN
+	-rm kernel/kmods/newm0/MOD0.BIN
+
+PHONY := clean-l2
+clean-l2:
+
+# ------------
+# Display server
+# 3D demo
+	-rm -f services/core/server/bin/*.BIN
+	-rm -f services/eng/bin/*.BIN
+# NETCTL
+	-rm -f services/netd/bin/*.BIN
+
+PHONY := clean-l3
+clean-l3:
+#bin
+	-rm userland/commands/bin/*.BIN
+	-rm userland/shell/bin/*.BIN
+#bin
+	-rm userland/shell/alpha/drivers/bin/*.BIN
+	-rm userland/shell/alpha/servers/bin/*.BIN
+#objects
+	-rm -f userland/commands/alpha/libs/libio01/obj/*.o
+	-rm -f userland/commands/alpha/libs/rtl/obj/*.o
+#objects
+	#-rm -f userland/shell/alpha/libs/libcpp/obj/*.o
+	-rm -f userland/shell/alpha/libs/libdisp/obj/*.o
+	-rm -f userland/shell/alpha/libs/libgr/obj/*.o
+	-rm -f userland/shell/alpha/libs/libgr3d/obj/*.o
+	-rm -f userland/shell/alpha/libs/libgws/obj/*.o
+	-rm -f userland/shell/alpha/libs/libio01/obj/*.o
+	-rm -f userland/shell/alpha/libs/rtl/obj/*.o
+
+PHONY := clean-base
+clean-base:
+# Clear the base domain.
+# Clear the disk cache
+	-rm -rf $(BASE)/*.BIN 
+	-rm -rf $(BASE)/*.BMP
+	-rm -rf $(BASE)/EFI/BOOT/*.EFI 
+	-rm -rf $(BASE)/GRAMADO/*.BIN 
+	-rm -rf $(BASE)/PROGRAMS/*.BIN 
+	-rm -rf $(BASE)/USERS/*.BIN 
+
+PHONY := help
+help:
+	@echo "Help stuff"
+
+

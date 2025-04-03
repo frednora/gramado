@@ -1,0 +1,29 @@
+
+i just found a bug.
+My allocator was using pre-allocated pages 
+from a wrong region in the memory.
+The allocator needs to use only 512 pages on a region 
+of pre-allocated ring 3 shared memory.
+but the allocator was using 1024 pages on this region ...
+it means that the allocator was stealing memory 
+from another kernel component.
+the system was not crashing with this bug ... 
+because maybe the allocator was stealing memory from a non-critical region.
+
+-----
+fixed the bug, the allocator is less powerful and 
+now i can launch less applications.
+2 or 3 processes ... only.
+the job now is working in the memory management 
+to get more memory for the processes.
+
+----
+it is because the system only is able to map memory in chuncks of 2mb. 
+this is all we can map with a single page table.
+i need a routine when i can iterate that job and map multiple regions of 2mb. 
+using multiple pagetables.
+
+-----
+so, all i have for now is two allocators .... 
+one heap with 1mb of ring0 memory and 
+a pagepool with 512 pre-allocated ring3 shared memory.

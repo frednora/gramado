@@ -1,0 +1,23 @@
+
+ #test
+ Each layer of the OS is represented by a color.
+
+-----------------------------
+WHITE:
+ + red:   The boot loader
+ + pink:  The kernel
+ + white: The init process
+
+-----------------------------
+BROWN:
+ + brown: 
+   The uni-like commands
+
+-----------------------------
+BLACK:
+ + black: 
+   The display server
+   The client-side GUI applications
+
+
+

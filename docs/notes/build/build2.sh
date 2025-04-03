@@ -1,0 +1,10 @@
+
+	echo "Build:"
+
+	cd ..
+	
+	make
+	
+	
+	
+	

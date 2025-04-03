@@ -1,0 +1,15 @@
+
+
+   Gramado has been developed and tested on this motherboard.
+   
+GA-VM900M (rev. 1.0)
+
+maybe:   
+Northbridge: VIA P4M900 Chipset
+Southbridge: VIA 8237A Chipset
+Realtek 8201CL (10/100 PHY)
+VIA 1708A HD Audio codec
+
+See:
+https://www.gigabyte.com/br/Motherboard/GA-VM900M-rev-10#ov
+https://www.gigabyte.com/br/Motherboard/GA-VM900M-rev-10/sp#sp

@@ -1,0 +1,23 @@
+
+    Memory used by the system.
+
+see:
+    x64gpa.h - Physical addresses.
+    x64gva.h - Virtual addresses.
+    x64mm.h  -
+    ...
+
+------------
+sep 2023:
+
+   Memoria fisica.
+   Ok, no momento os primeiros 256MB da memoria fisica estao
+   sendo bastante usados. Varios chuncks de 2MB e no final
+   um pool de frametables de mais de 100MB.
+   
+   Memoria virtual.
+   No momento estamos usando bastante os primeiros 3MB de
+   memoria virtual. Depois usamos a regiao entre 768MB e 780MB.
+   
+   
+   

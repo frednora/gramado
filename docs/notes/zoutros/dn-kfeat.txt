@@ -1,0 +1,25 @@
+## Kernel features. (see: ama/kernel/)
+
+> * hw - cpu: Intel and AMD. 64bit only.
+> * hw - mm: Paging. Chunck of 2MB, using 4KB pages.
+> * hw - blk device: IDE PATA.
+> * hw - char device: ps/2 keyboard. 
+> * hw - char device: ps/2 mouse works fine only on qemu.
+> * hw - char device: Serial port. (COM). Used for debug. 
+> * hw - network device: e1000 Intel NIC. Works on Oracle virtual box.
+
+> * sw - Processes: Process structure and Thread structure.
+> * sw - Scheduler: Round robin. (Threads only).
+> * sw - Syscalls using software interrups. (Traps).
+> * sw - IPC: sockets.
+> * sw - IPC: System messages using a queue in the thread structure. 
+> * sw - tty: It has 4 ring 0 kernel virtual consoles in fullscreen raw mode. 
+> * sw - tty: General use ttys and ptys for ring3 virtual terminals. 
+> * sw - fs: FAT16 file system for boot partition. No system partition yet.
+> * sw - posix libc: Ring0 implementation of libc functions called by the ring3 libraries.
+> * sw - network: Small support for sockets.
+> * sw - network: Small ring0 implementation of protocol stack. (ETHERNET, ARP, IP, UDP, TCP and DHCP).
+> * sw - display: Bootloader display device. VESA.
+> * sw - user: Very small implementation of user structure.
+> * sw - APIs: See zcall/ folder.
+> * sw - One loadable ring0 module, using static address.

@@ -1,0 +1,13 @@
+
+
+	#todo: Create a simple roadmap for the whole source code.
+
+
+boot:
+    ...
+
+kernel:
+    ...
+
+display server and clients:
+   ...

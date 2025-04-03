@@ -1,0 +1,10 @@
+
+	Two main folders:
+
+	new/ represents the effort of adapting to the
+	new technologies.
+
+
+	gramado/ represents the consistent part of the system.
+	It needs to be mantained to keep the environment 
+	friendly for the final user.

@@ -1,0 +1,12 @@
+
+arctic: 
+    init process.
+azure:  
+    userland unix-like commands.
+indigo1:
+    gns    - gramado network server.
+    client - gns first client.
+    libgns - The client-side lib for gns.
+    lib    - ring3 libc.
+indigo2:
+    some interpreters.

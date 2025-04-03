@@ -1,0 +1,20 @@
+
+	Gramado is a system for thin legacy machines and
+	for storing data.
+
+	There is no user interfce in the gramado project.
+	The official interface is called gws and it is 
+	a separeted project.
+	It means that Gramado can run a thin legacy system
+	just to provide access to the resources inside them.
+	We also can run gramado on thin clients with no rich
+	user interface.
+
+	For rich clients with good graphicas support we can run the
+	full system associating the gramado and gws project.
+	This way gramado can run with a rich graphics window system
+	and use the gui apps inside the gws project.
+	
+	
+
+	

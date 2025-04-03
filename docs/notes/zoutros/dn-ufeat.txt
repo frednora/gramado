@@ -1,0 +1,31 @@
+## Userland features.
+
+> * Display Server. See: userland/services/gramland/
+> * Unix-like commands running in the virtual console.
+> * Some few clients connected to the display server via unix-sockets.
+> * Ring3 processes can access the i/o ports via syscall. (For ring3 drivers only).
+
+
+## userland system programs.
+
+> * zing/graminit/ - The init process.
+> * zing/gramlan0/ - Gramland, the display server.
+> * zing/netd/     - The network server.
+
+## userland libraries, toolkits and apis.
+
+> * posix libc - (rtl)
+> * Client-sie library for GUI applications - (libgws)
+> * see: zz/omega1/libs/ for all the libraries, toolkits and apis.
+
+## userland user programs.
+
+> * see: zz/omega2/apps/ for Client-side GUI application.
+> * see: zz/omega2/commands/ for posix commands.
+> * see: zz/omega2/drivers/ for ring3 drivers.
+> * see: zz/omega2/servers/ for ring3 servers.
+
+## userland system data.
+
+> * zz/omega3/assets - Icons for the User Interface.
+> * zz/omega3/base   - All binaries go here to build the final virtual disk.

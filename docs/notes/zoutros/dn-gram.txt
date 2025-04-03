@@ -1,0 +1,11 @@
+
+    Gramado OS model:
+
+ ========================
+ Flexible interface
+   Boot loader, kernel.
+ 
+ ========================
+  Consistent interface.
+     Display server, client-side GUI applications,
+	 Libraries and APIs.	

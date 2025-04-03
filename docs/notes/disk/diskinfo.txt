@@ -1,0 +1,14 @@
+GRAMADO.VHD: , 
+code offset 0xd4+3, 
+OEM-ID "MSDOS5.0", 
+reserved sectors 62, 
+root entries 512, 
+Media descriptor 0xf8, 
+sectors/FAT 246, 
+sectors/track 17, 
+heads 4, 
+hidden sectors 5, 
+serial number 0x980e63f5, 
+label: "GRAMADODISK", 
+FAT (16 bit)
+

@@ -1,0 +1,20 @@
+
+Connectors.
+
+    p->Connectors[2].
+
+-----
+Normalmente um shell manda dados para um terminal virtual atraves de tty. 
+Outra coisa, normalmente um processo pode criar dois pipes, 
+clonar a si mesmo e o processo pai fica com um pipe e 
+o processo filho fica com outro pipe. Assim eles se comunicam via pipe.
+
+-------
+O Gramado nao tem a funçao fork(), mas ele cria processos filhos 
+atravez de clonagem. Dessa forma, durante a clonagem de um terminal, 
+dois conectores sao criados, na forma de arquivos regulares. 
+Entao o terminal e seu processo filho conseguem se comunicar. 
+No teste eu fiz o shell enviar dados para a tela do terminal 
+usando esse metodo. O desafio agora e' fazer com que os filhos do shell 
+consigam escrever no terminal usando o mesmo descritor 
+que o shell esta usando.

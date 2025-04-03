@@ -1,0 +1,5 @@
+
+	The base kernel. KERNEL.BIN.
+	The kernel directory is the place for building main components of the system.
+	The source code for the base kernel is found kernel/.
+

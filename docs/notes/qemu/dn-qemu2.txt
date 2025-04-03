@@ -1,0 +1,5 @@
+
+ It will not work on qemu if you use the flags:
+ "-s -machine q35"
+ ACHI not supported, i guess.
+ 

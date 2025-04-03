@@ -1,0 +1,22 @@
+
+  Shared resources.
+
+  Talvez o 'compartilhamento de recursos' de hardware seja 
+o fator determinante na historia da evoluçao dos sistemas. 
+O que nos leva a pensar que tudo foi em busca de 'reduçao de custos', 
+atravez da 'economia de escala' e 'economia de escopo'.
+  Se dividissemos em fases, eu diria que tem duas: 
+  + Na primeira as palavras chave seriam: 
+    multiuser, multitasking e multicore. 
+  + Na segunda fase as palavras seriam: 
+    VMs e Containers. ....
+-------------
+  Linguagens, modularizaçao, bibliotecas de ligaçao dinamica e bpf 
+  tambem contribuem para reduçao de custos no contexto 
+  do compartilhamento de recursos, mas dai eh uma questao de software e 
+  nao de hardware.
+-------------
+  Eu estou muito disposto a estudar a questao do compartilhamento 
+  de recursos de hardware ... Talvez eu foque nessa parte do sistema 
+  daqui pra frente.
+

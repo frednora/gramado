@@ -1,0 +1,20 @@
+[pt-br]
+
+PS2 Mouse
+
+---------------------
+Meu mouse da Logitech funciona na qemu com TCG, 
+na qemu com KVM e na virtualbox com KVM. Meus outros mouses 
+funcionam direito somente no qemu com TCG.
+
+---------------------
+Meu mouse funcionava na minha maquina real, 
+mas devido a esses problemas de emulaçao de mouse USB, 
+as vezes o dispositivo nao enviava interrupçoes. ... 
+a soluçao mais barata para esse caso eh pooling ... 
+o Terry Davis fazia isso no Temple OS quando o whatchdog 
+percebesse que nao houve interrupçoes alguma de mouse.  ... 
+mas no meu caso o sistema começava gerando interrupçoes e 
+depois parava. ... meu plano eh implementar pooling para maquina real.
+A segunda soluçao eh fazer um driver de controlador usb e 
+um driver pra cada marca de mouse .... esquece isso.

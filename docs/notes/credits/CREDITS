@@ -1,0 +1,17 @@
+CREDITS:
+
+    Updated - Jan 2020.
+=====================================
+
+all:
+    + Fred Nora.
+    + ...
+
+e1000 kdriver:
+    + Italo Matias
+    + ...
+
+ide kdriver:
+    + Nelson Cole
+    + ...
+

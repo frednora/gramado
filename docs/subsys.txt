@@ -1,0 +1,27 @@
+
+ The subsystems.
+
+---
+
+- The main subsystem for the operating system will be called the **Gramado Subsystem**.  
+- The main display server for the Gramado Subsystem is called **ds00/** and 
+is located in the **windows/** folder.  
+
+We might add some other subsystems in the future, but all other subsystems 
+will depend on the Gramado Subsystem. For example, a **Posix Subsystem** will need 
+to call the Gramado Subsystem to access resources. This design ensures that 
+only the main subsystem interacts directly with kernel resources.  
+
+However, some exceptions may exist. For instance, certain subsystems, 
+like the **network server**, could call the kernel directly when necessary.  
+
+At the moment, all applications are allowed to call the kernel directly.  
+
+---
+
+### Main Objective:
+All inputs must first be routed to the main subsystem (Gramado Subsystem), 
+which will act as a **proxy** for the other subsystems.
+
+---
+

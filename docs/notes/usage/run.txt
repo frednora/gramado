@@ -1,0 +1,10 @@
+Qemu sem kvm.
+No momento, o mouse so' funciona bem no ambiente 'qemu sem kvm'. 
+Mas a partir de agora nao pretendo mais usar esse ambiente. 
+Porque e' o que mais apresenta problemas e possivelmente e' 
+um ambiente que o suporte nao deve ser prioridade para o povo do qemu.
+------------
+Entao vou continuar usando oracle virtual box e qemu com kvm.
+ Na verdade os dois sao kvm.
+As opçoes ainda sao ./run pra rodar no qemu com kvm e 
+./runnokvm pra rodar no qemu sem kvm.

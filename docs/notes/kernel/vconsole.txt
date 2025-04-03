@@ -1,0 +1,62 @@
+
+
+	Using the kernel virtual consoles.
+
+----------------------------------------------------------
+Commands:
+See the function consoleCompareStrings() in console.c.
+
+
+Print help message.
+    $ help
+    
+Print information about the console.
+    $ about
+
+Leave the kernel console.
+Come back to Desktop environment. GUI.
+    $ exit
+
+Clean the screen.
+    $ cls 
+
+Print the list of files in the root dir.
+    $ dir
+
+Print CPU info.
+    $ cpu
+
+Print memory info.
+    $ memory
+
+Print disk info.
+    $ disk
+
+Print volume info.
+    $ volume
+
+Print information about all sort of devices in the system.
+    $ device 
+
+Print info about the PCI devices.
+    $ pci
+
+Print info about the PIT configuration.
+    $ pit
+
+Call a full initialization of the ps2 device driver.
+The earlier initialization only initialize the keyboard support.
+This is because its not working well in real machines.
+Valid only for qemu VMs.
+    $ ps2-qemu
+
+Reboot the system.
+    $ reboot
+
+Show time information.
+    $ time
+
+Show serial device information. COM ports.
+    $ serial
+
+

@@ -1,0 +1,12 @@
+
+
+The boot sequence:
+
+    + MBR
+    + /BM.BIN
+    + /BL.BIN
+    + /GRAMADO/KERNEL.BIN
+    + /INIT.BIN
+
+After that we can use the init.bin to select the next step.
+

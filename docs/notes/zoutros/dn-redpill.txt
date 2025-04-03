@@ -1,0 +1,10 @@
+
+	redpill.
+
+	Sobre recursos ainda não completamente implementados.
+	
+	O usuário default poderia ter acesso somente aos recursos
+	que ja estão bem consolidados.
+	Os recursos em fase de desenvolvimento poderiam ser acionados
+	somente por usuários especiais, administrador ou redpill.
+

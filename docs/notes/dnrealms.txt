@@ -1,0 +1,20 @@
+
+-------------------------------------
+Users
+de/
+(apps/games/frontend ...)
+
+-------------------------------------
+Sales people 
+esales/
+(online presence/ communication)
+
+-------------------------------------
+Business people 
+fbuz/
+(productivity/)
+
+-------------------------------------
+Developers 
+kernel/
+(cloud/servers/backend)
