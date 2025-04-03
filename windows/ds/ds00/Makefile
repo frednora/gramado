@@ -96,16 +96,16 @@ myObjects = crt0.o main.o rtl.o
 
 myObjects += ctype.o stdio.o stdlib.o string.o conio.o socket.o signal.o unistd.o \
 termios.o ioctl.o fcntl.o
+
+myObjects += libos.o
 myObjects += libdisp.o
 myObjects += libgr.o
+myObjects += libui.o
 
-myObjects += n1_osdep.o
+myObjects += ui.o
+myObjects += uicomp.o
 
-myObjects += o1_comp.o
-myObjects += o2_libui.o
-myObjects += o3_ui.o
-
-myObjects += p1_srv.o    
+myObjects += z8server.o    
 
 .PHONY: all all-c gws-link finalize clean
 
@@ -115,16 +115,13 @@ main.o:
 	$(CC) -c main.c $(CFLAGS) $(CINCLUDES) -o main.o
 all-c:
 
-# n (osdep)
-	make -C osdep/
-
-# o (engine)
-	make -C comp/
+	make -C libos/
 	make -C libui/
-	make -C ui/
 
-# p (server)
-	make -C srv/
+	make -C ui/
+	make -C uicomp/
+
+	make -C z8server/
 
 gws-link:
 

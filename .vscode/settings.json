@@ -26,6 +26,11 @@
         "layers.h": "c",
         "x64sc.h": "c",
         "cali.h": "c",
-        "cg.h": "c"
+        "cg.h": "c",
+        "gramado.h": "c",
+        "packet.h": "c",
+        "connect.h": "c",
+        "comp.h": "c",
+        "client.h": "c"
     }
 }

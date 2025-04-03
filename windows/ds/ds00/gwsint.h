@@ -23,13 +23,13 @@ extern int server_mode;  // DEMO ...
 
 // Gramado Window System
 #include "ui/gws.h"
-#include "osdep/gramado/callback.h"
+#include "libos/gramado/callback.h"
 
 // Configuration and debug support.
 #include "config/config.h"
 #include "protocol.h"
 #include "async.h"
-#include "srv/globals.h"
+#include "z8server/globals.h"
 #include "ui/colors.h"
 #include "ui/themes/humility.h"
 #include "ui/themes/honey.h"
@@ -68,18 +68,18 @@ extern int server_mode;  // DEMO ...
 #include "ui/bmp.h"
 
 // h:0.0
-#include "osdep/gramado/screen.h"   // X-like
-#include "osdep/gramado/display.h"  // X-like
-#include "osdep/gramado/host.h"     // X-like h:0.0
+#include "libos/gramado/screen.h"   // X-like
+#include "libos/gramado/display.h"  // X-like
+#include "libos/gramado/host.h"     // X-like h:0.0
 
-#include "osdep/gramado/surface.h"
-#include "osdep/gramado/gramado.h"
+#include "libos/gramado/surface.h"
+#include "libos/gramado/gramado.h"
 
 
 #include "ui/gui.h"
 
 // Compositor
-#include "comp/comp.h"
+#include "uicomp/comp.h"
 
 #include "event.h"    // view inputs
 
@@ -95,23 +95,23 @@ extern int server_mode;  // DEMO ...
 #include "ui/sprite.h"
 #include "ui/demos.h"
 
-#include "osdep/gramado/packet.h"
-#include "osdep/gramado/connect.h"
+#include "libos/gramado/packet.h"
+#include "libos/gramado/connect.h"
 
 #include "ui/font.h"
 
 // Client structure.
 // O proprio servidor poderia ser o cliente 0??
-#include "srv/client.h"
+#include "z8server/client.h"
 
-#include "srv/shutdown.h"
+#include "z8server/shutdown.h"
 
 // Device Context.
 // This is the structure that is gonna be used by the
 // drawing routines.
 // 'dc->something'
 // It needs to be the last one.
-#include "osdep/gramado/dc.h"
+#include "libos/gramado/dc.h"
 
 #include "actions.h"
 

@@ -1,4 +1,4 @@
-# osdep/
+# comp/
 # 2020 - Created by Fred Nora.
 
 #linkTarget = GRAMLAND.BIN
@@ -92,7 +92,7 @@ CINCLUDES += -I .
 CINCLUDES += -I ../
     
 # Objects
-myObjects = connect.o surface.o gramado.o callback.o    
+myObjects = comp.o    
 
 
 .PHONY: all all-c gws-link finalize clean
@@ -103,16 +103,13 @@ main.o:
 #	$(CC)  -c grinput.c  $(CFLAGS) $(CINCLUDES) -o grinput.o
 all-c:
 #	$(CC)  -c grinput.c  $(CFLAGS) $(CINCLUDES) -o grinput.o
-	$(CC) -c gramado/connect.c  $(CFLAGS) $(CINCLUDES) -o connect.o
-	$(CC) -c gramado/surface.c  $(CFLAGS) $(CINCLUDES) -o surface.o
-	$(CC) -c gramado/gramado.c  $(CFLAGS) $(CINCLUDES) -o gramado.o 
-	$(CC) -c gramado/callback.c $(CFLAGS) $(CINCLUDES) -o callback.o 
+	$(CC)  -c comp.c  $(CFLAGS) $(CINCLUDES) -o comp.o   
 
 gws-link:
 #	$(LD) $(linkFlags) -o $(linkTarget) $(myObjects)
 # link
-	$(LD) -r -o n1_osdep.o $(myObjects)
-	cp n1_osdep.o ../
+	$(LD) -r -o uicomp.o $(myObjects)
+	cp uicomp.o ../
 	rm *.o
 
 finalize:

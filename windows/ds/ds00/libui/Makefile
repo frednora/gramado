@@ -115,8 +115,8 @@ all-c:
 gws-link:
 #	$(LD) $(linkFlags) -o $(linkTarget) $(myObjects)
 # link
-	$(LD) -r -o o2_libui.o $(myObjects)
-	cp o2_libui.o ../
+	$(LD) -r -o libui.o $(myObjects)
+	cp libui.o ../
 	rm *.o
 
 finalize:

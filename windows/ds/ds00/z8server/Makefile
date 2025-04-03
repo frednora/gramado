@@ -1,4 +1,4 @@
-# comp/
+# srv/
 # 2020 - Created by Fred Nora.
 
 #linkTarget = GRAMLAND.BIN
@@ -92,8 +92,7 @@ CINCLUDES += -I .
 CINCLUDES += -I ../
     
 # Objects
-myObjects = comp.o    
-
+myObjects = client.o globals.o shutdown.o    
 
 .PHONY: all all-c gws-link finalize clean
 
@@ -102,14 +101,15 @@ all: main.o all-c gws-link finalize clean
 main.o:
 #	$(CC)  -c grinput.c  $(CFLAGS) $(CINCLUDES) -o grinput.o
 all-c:
-#	$(CC)  -c grinput.c  $(CFLAGS) $(CINCLUDES) -o grinput.o
-	$(CC)  -c comp.c  $(CFLAGS) $(CINCLUDES) -o comp.o   
+	$(CC) -c client.c    $(CFLAGS) $(CINCLUDES) -o client.o
+	$(CC) -c globals.c   $(CFLAGS) $(CINCLUDES) -o globals.o
+	$(CC) -c shutdown.c  $(CFLAGS) $(CINCLUDES) -o shutdown.o
 
 gws-link:
 #	$(LD) $(linkFlags) -o $(linkTarget) $(myObjects)
 # link
-	$(LD) -r -o o1_comp.o $(myObjects)
-	cp o1_comp.o ../
+	$(LD) -r -o z8server.o $(myObjects)
+	cp z8server.o ../
 	rm *.o
 
 finalize:

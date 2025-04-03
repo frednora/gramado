@@ -1,4 +1,4 @@
-# srv/
+# osdep/
 # 2020 - Created by Fred Nora.
 
 #linkTarget = GRAMLAND.BIN
@@ -92,7 +92,8 @@ CINCLUDES += -I .
 CINCLUDES += -I ../
     
 # Objects
-myObjects = client.o globals.o shutdown.o    
+myObjects = connect.o surface.o gramado.o callback.o    
+
 
 .PHONY: all all-c gws-link finalize clean
 
@@ -101,15 +102,17 @@ all: main.o all-c gws-link finalize clean
 main.o:
 #	$(CC)  -c grinput.c  $(CFLAGS) $(CINCLUDES) -o grinput.o
 all-c:
-	$(CC) -c client.c    $(CFLAGS) $(CINCLUDES) -o client.o
-	$(CC) -c globals.c   $(CFLAGS) $(CINCLUDES) -o globals.o
-	$(CC) -c shutdown.c  $(CFLAGS) $(CINCLUDES) -o shutdown.o
+#	$(CC)  -c grinput.c  $(CFLAGS) $(CINCLUDES) -o grinput.o
+	$(CC) -c gramado/connect.c  $(CFLAGS) $(CINCLUDES) -o connect.o
+	$(CC) -c gramado/surface.c  $(CFLAGS) $(CINCLUDES) -o surface.o
+	$(CC) -c gramado/gramado.c  $(CFLAGS) $(CINCLUDES) -o gramado.o 
+	$(CC) -c gramado/callback.c $(CFLAGS) $(CINCLUDES) -o callback.o 
 
 gws-link:
 #	$(LD) $(linkFlags) -o $(linkTarget) $(myObjects)
 # link
-	$(LD) -r -o p1_srv.o $(myObjects)
-	cp p1_srv.o ../
+	$(LD) -r -o libos.o $(myObjects)
+	cp libos.o ../
 	rm *.o
 
 finalize:

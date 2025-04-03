@@ -5,7 +5,8 @@ This is the main display server for Gramado OS.
 ```
  * DS00 Display Server.
  * DS00.BIN
- * codename: Gramland
+ * Name: ds00 display server.
+ * codename: z8server
  * Created by Fred Nora.
 ```
 
