@@ -1,3 +1,5 @@
+// tkgram.c
+// Created by Fred Nora.
 
 // rtl
 #include <types.h>
@@ -10,6 +12,7 @@
 
 #include "include/tkgram.h"
 
+// #dummy function.
 void tkgram_hello(void)
 {
     printf("Hello!\n");

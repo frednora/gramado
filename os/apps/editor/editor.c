@@ -891,6 +891,16 @@ int editor_initialize(int argc, char *argv[])
 // == Client window =======================
 //
 
+// #todo
+// Here is the moment where we're gonna 
+// draw the content of the input file into the 
+// client window.
+// >> We're gonna save the file content into a local buffer,
+// large enough for the whole file.
+// >> We're gonna send parts of this file to the display server,
+// and the server will save it into the text buffer 
+// in the window structure.
+
 
 /*
 
@@ -929,10 +939,10 @@ int editor_initialize(int argc, char *argv[])
 
     client_window = 
         (int) gws_create_window ( 
-                  client_fd,
-                  WT_EDITBOX_MULTIPLE_LINES, 1, 1, cw_string,
-                  cw_left, cw_top, cw_width, cw_height,
-                  main_window, 0, COLOR_WHITE, COLOR_WHITE );
+                client_fd,
+                WT_EDITBOX_MULTIPLE_LINES, 1, 1, cw_string,
+                cw_left, cw_top, cw_width, cw_height,
+                main_window, 0, COLOR_WHITE, COLOR_WHITE );
 
     if (client_window < 0){
         printf("editor.bin: client_window failed\n");
@@ -952,7 +962,6 @@ int editor_initialize(int argc, char *argv[])
 
 // Show main window. (Again)
     gws_refresh_window (client_fd, main_window);
-
 
 // ============================================
 

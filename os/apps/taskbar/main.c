@@ -1,3 +1,6 @@
+// main.c
+// Main file for taskbar.bin application.
+
 /*
  * File: main.c
  *    Client side application for Gramado Window Server.

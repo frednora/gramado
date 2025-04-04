@@ -1,3 +1,11 @@
+// main.c
+// Main file for xtb.bin
+// This application uses libx, a library
+// that works as a X11-like wrapper to create 
+// Gramado OS client-side GUI applications.
+// See: api/libs/libx/
+
+
 /*
  * File: main.c
  *    Client side application for Gramado Window Server.

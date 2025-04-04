@@ -1,5 +1,5 @@
-
 // taskbar.h
+// Created by Fred Nora.
 
 #ifndef __TASKBAR_H
 #define __TASKBAR_H    1
