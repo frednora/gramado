@@ -29,6 +29,12 @@ void demoFlyingCubeSetup(void);
 void demoFlyingCubeDrawScene(int draw_desktop, unsigned int bg_color, int flush);
 void demos_refresh_demo_window(void);
 
+int demoUpdateDemoWindow(
+    unsigned long left,
+    unsigned long top,
+    unsigned long width,
+    unsigned long height );
+
 #endif    
 
 

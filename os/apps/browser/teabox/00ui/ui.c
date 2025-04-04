@@ -64,6 +64,8 @@ unsigned long mw_width  = 40;
 unsigned long mw_height = 40;
 
 // The viewport.
+// The client window created by us, 
+// not the application window's client rectangle.
 // DEFAULT VALUES.
 unsigned long cw_left   = 4;
 unsigned long cw_top    = 4;
@@ -229,8 +231,17 @@ static void update_clients(int fd)
         cwClientWindow.h );
 
     gws_redraw_window(fd, __client_window, TRUE);
-}
 
+
+// #test
+// Updating the demo window based on the 
+// new position of the client window.
+    demoUpdateDemoWindow(
+        cwClientWindow.l,
+        cwClientWindow.t,
+        cwClientWindow.w,
+        cwClientWindow.h );
+}
 
 static int 
 browserProcedure(
@@ -455,6 +466,8 @@ fail:
 
 int uiInitialize(void)
 {
+// Called by main().
+
     struct sockaddr_in addr_in;
     addr_in.sin_family = AF_INET;
     addr_in.sin_addr.s_addr = IP(127,0,0,1);
@@ -656,16 +669,12 @@ int uiInitialize(void)
             cw_label );
     }
 
-
 // Refresh main window
     gws_refresh_window( client_fd, main_window );
-
 // Set active window
     gws_set_active( client_fd, main_window );
-
 // Set window with focus
     gws_set_focus( client_fd, client_window );
-
 
 // -----------------------------------------
 // #test
@@ -687,8 +696,12 @@ int uiInitialize(void)
  
         // Initialize
         // client rect: Absolutes
-        //printf ("top: %d\n",LmwWindowInfo.cr_top);
+        // printf ("top: %d\n",LmwWindowInfo.cr_top);
         // OK for root window
+        // See: demo01main.c
+        // #important:
+        // NOT using the event loop in demo01main(),
+        // we're gonna use the event loop here.
         status = 
             (int) demo01main(
                 mw_left + LmwWindowInfo.cr_left, 
@@ -701,11 +714,11 @@ int uiInitialize(void)
             exit(1);
         }
 
-    // #test: Update hotspot
+    // #test: 
+    // Update hotspot
     grprim_update_hotspot(
         mw_left + LmwWindowInfo.cr_left + (LmwWindowInfo.cr_width >> 1),
-        mw_top  + LmwWindowInfo.cr_top  + (LmwWindowInfo.cr_height >> 1)
-    );
+        mw_top  + LmwWindowInfo.cr_top  + (LmwWindowInfo.cr_height >> 1) );
 
 // ------------------------------------------------
 // Call the event loop

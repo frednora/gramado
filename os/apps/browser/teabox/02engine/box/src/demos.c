@@ -1,4 +1,3 @@
-
 // demos.c
 // A place for demos.
 
@@ -823,8 +822,8 @@ struct gws_window_d *__create_demo_window (
 {
     struct gws_window_d *w;
 
-    if ( (void*) __root_window == NULL ){
-        return NULL;
+    if ((void*) __root_window == NULL){
+        goto fail;
     }
 
 // Create window
@@ -841,21 +840,50 @@ struct gws_window_d *__create_demo_window (
                                     COLOR_BLACK, 
                                     COLOR_BLACK );
 
-    if ( (void *) w == NULL ){
-        return NULL;
+    if ((void *) w == NULL){
+        goto fail;
     }
     if ( w->used != TRUE ||  w->magic != 1234 ){
-        return NULL;
+        goto fail;
     }
 
 // Register the window.
     int WindowId= -1;
     WindowId = (int) RegisterWindow(w);
-    if (WindowId<0){
-         return NULL;
+    if (WindowId < 0){
+        goto fail;
     }
 // ok
     return (struct gws_window_d *)  w;
+// fail
+fail:
+    return NULL;
+}
+
+int demoUpdateDemoWindow(
+    unsigned long left,
+    unsigned long top,
+    unsigned long width,
+    unsigned long height )
+{
+
+
+    if ((void*)__demo_window == NULL)
+        return -1;
+    if (__demo_window->magic != 1234)
+        return -1;
+
+    gwssrv_change_window_position( 
+        __demo_window,
+        left,
+        top );
+
+    wm_resize_window(
+        __demo_window,
+        width,
+        height );
+    
+    return 0;
 }
 
 void demoLines(void)
