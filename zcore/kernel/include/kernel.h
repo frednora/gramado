@@ -53,7 +53,7 @@
 #include "../core/kmain/info.h"
 #include "../core/kmain/request.h"
 
-#include "../core/kmain/overall/debug.h"
+#include "../core/kmain/debug.h"
 
 // ==================================
 // ke/
@@ -186,9 +186,9 @@
 // ==================================
 // gramk/
 // sw - Graphics Engine
-#include "../kres/gramk/gdi/gre/color.h"
-#include "../kres/gramk/gdi/gre/font.h"
-#include "../kres/gramk/gdi/gre/bg.h"
+#include "../gramk/gdi/gre/color.h"
+#include "../gramk/gdi/gre/font.h"
+#include "../gramk/gdi/gre/bg.h"
 
 // ==================================
 // ke/
@@ -198,18 +198,18 @@
 // ==================================
 // gramk/
 
-#include "../kres/gramk/gdi/gre/pixel.h"
-#include "../kres/gramk/gdi/gre/char.h"
-#include "../kres/gramk/gdi/gre/text.h"
-#include "../kres/gramk/gdi/gre/line.h"
-#include "../kres/gramk/gdi/gre/rect.h"
-#include "../kres/gramk/gdi/gre/bitblt.h"
-#include "../kres/gramk/gdi/gre/gre.h"
+#include "../gramk/gdi/gre/pixel.h"
+#include "../gramk/gdi/gre/char.h"
+#include "../gramk/gdi/gre/text.h"
+#include "../gramk/gdi/gre/line.h"
+#include "../gramk/gdi/gre/rect.h"
+#include "../gramk/gdi/gre/bitblt.h"
+#include "../gramk/gdi/gre/gre.h"
 
-#include "../kres/gramk/gdi/dispsrv.h"
+#include "../gramk/gdi/dispsrv.h"
 
-#include "../kres/gramk/user/input.h"
-#include "../kres/gramk/user/callback.h"
+#include "../gramk/user/input.h"
+#include "../gramk/user/callback.h"
 
 // ==================================
 // dev/
@@ -335,11 +335,11 @@
 
 // ==================================
 // The user interactions.
-#include "../kres/gramk/user/user.h"
+#include "../gramk/user/user.h"
 
 // Exporting some gramk functions to the other modules
 // inside the base kernel.
-#include "../kres/gramk/gramk.h"
+#include "../gramk/gramk.h"
 
 // Reboot system.
 #include "../core/kmain/reboot.h"
@@ -352,18 +352,14 @@
 // Syscalls: (Called by the interrups 0x80, 0x81, 0x82, 0x83).
 #include "../core/kmain/sci/syscalls.h"
 
-// zero. (Used during the kernel initialization)
-#include "../core/kmain/overall/zero.h"
-
 // ==================================
 // ke/
 // syscall support
 #include "../core/ke/hal/x86_64/x64sc.h"
 
 // ==================================
-// virt/
-// Project California
-#include "../core/kmain/overall/cali.h"
+
+#include "../core/kmain/wrappers.h"
 
 // cgroups and namespaces
 #include "../core/kmain/cont/cg.h"

@@ -91,14 +91,17 @@ objects-y += i2_ke.o
 objects-y += i3_kmain.o  
 
 # ========================
+# Main wrapper for the kernel.
+objects-y += x_gramk.o  
+
+# ========================
 # :: kres - Kernel resources
 # We can create interfaces that belongs to a given cgroup.
 objects-y += j0_bus.o  
 objects-y += j1_dev.o  
 objects-y += j2_fs.o  
-objects-y += j3_gramk.o  
-objects-y += j4_mm.o  
-objects-y += j5_net.o    
+objects-y += j3_mm.o  
+objects-y += j4_net.o    
 
 # ========================
 PHONY := all
@@ -112,14 +115,19 @@ clean
 # Core kernel components
 k1:
 	@echo "Compiling: Compiling k1"
+
 # Kernel arch - Startup and entry code.
 	$(Q)$(MAKE) -C arch/x86_64/
+
 # kernel libraries
 	$(Q)$(MAKE) -C core/clibs/
 # main component. (cpu)
 	$(Q)$(MAKE) -C core/ke/
 # Kernel core - Top level routines.
 	$(Q)$(MAKE) -C core/kmain/
+
+# Top level routines.
+	$(Q)$(MAKE) -C gramk/
 
 #----------------
 # Kernel resources
@@ -128,7 +136,6 @@ k2:
 	$(Q)$(MAKE) -C kres/bus/
 	$(Q)$(MAKE) -C kres/dev/
 	$(Q)$(MAKE) -C kres/fs/
-	$(Q)$(MAKE) -C kres/gramk/
 	$(Q)$(MAKE) -C kres/mm/
 	$(Q)$(MAKE) -C kres/net/
 
@@ -151,11 +158,11 @@ clean-all:
 	rm -rf core/clibs/*.o   
 	rm -rf core/ke/*.o   
 	rm -rf core/kmain/*.o   
+	rm -rf core/gramk/*.o   
 
 	rm -rf kres/bus/*.o   
 	rm -rf kres/dev/*.o   
 	rm -rf kres/fs/*.o   
-	rm -rf kres/gramk/*.o   
 	rm -rf kres/mm/*.o   
 	rm -rf kres/net/*.o   
 

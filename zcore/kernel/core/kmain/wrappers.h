@@ -1,10 +1,10 @@
-// cali.h
-// Project California.
-// Top level wrappers for some base kernel components.
+// wrappers.h
+// Userful wrappers functions.
+// See: gramk/ for overall wrapper functions.
 // Created by Fred Nora.
 
-#ifndef __CALI_CALI_H
-#define __CALI_CALI_H    1
+#ifndef WRAPPERS_H
+#define WRAPPERS_H    1
 
 
 extern unsigned int g_processor_count;
@@ -239,6 +239,13 @@ int cali_get_current_runlevel(void);
 unsigned long cali_get_memory_size_mb(void);
 void *cali_alloc_shared_ring3_pages(pid_t pid, int number_of_bytes);
 void cali_set_cursor( unsigned long x, unsigned long y );
+
+void zero_initialize_virtual_consoles(void);
+void zero_initialize_video(void);
+void zero_initialize_background(void);
+void zero_initialize_default_kernel_font(void);
+void zero_show_banner(void);
+
 
 #endif   
 

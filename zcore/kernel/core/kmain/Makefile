@@ -84,8 +84,7 @@ reboot.o \
 request.o \
 system.o \
 hv.o \
-cali.o \
-zero.o \
+wrappers.o \
 sys.o \
 sci.o \
 mod.o \
@@ -95,19 +94,23 @@ kmain.o
 
 all:
 
+# globals
+	$(CC) -c globals.c $(KERNEL_INCLUDE) $(CFLAGS) -o globals.o
+
+# Overall routines.
+	$(CC) -c debug.c    $(KERNEL_INCLUDE) $(CFLAGS) -o debug.o
+	$(CC) -c info.c     $(KERNEL_INCLUDE) $(CFLAGS) -o info.o
+	$(CC) -c panic.c    $(KERNEL_INCLUDE) $(CFLAGS) -o panic.o  
+	$(CC) -c reboot.c   $(KERNEL_INCLUDE) $(CFLAGS) -o reboot.o
+	$(CC) -c request.c  $(KERNEL_INCLUDE) $(CFLAGS) -o request.o
+	$(CC) -c system.c   $(KERNEL_INCLUDE) $(CFLAGS) -o system.o
+
+# Wrapper functions.
+	$(CC) -c wrappers.c  $(KERNEL_INCLUDE) $(CFLAGS) -o wrappers.o
+
 # Module manager.
 	$(CC) -c mod/mod.c     $(KERNEL_INCLUDE) $(CFLAGS) -o mod.o
 	$(CC) -c mod/public.c  $(KERNEL_INCLUDE) $(CFLAGS) -o public.o
-
-# Overall routines.
-	$(CC) -c overall/debug.c    $(KERNEL_INCLUDE) $(CFLAGS) -o debug.o
-	$(CC) -c overall/info.c     $(KERNEL_INCLUDE) $(CFLAGS) -o info.o
-	$(CC) -c overall/panic.c    $(KERNEL_INCLUDE) $(CFLAGS) -o panic.o  
-	$(CC) -c overall/reboot.c   $(KERNEL_INCLUDE) $(CFLAGS) -o reboot.o
-	$(CC) -c overall/request.c  $(KERNEL_INCLUDE) $(CFLAGS) -o request.o
-	$(CC) -c overall/system.c   $(KERNEL_INCLUDE) $(CFLAGS) -o system.o
-	$(CC) -c overall/zero.c     $(KERNEL_INCLUDE) $(CFLAGS) -o zero.o
-	$(CC) -c overall/cali.c     $(KERNEL_INCLUDE) $(CFLAGS) -o cali.o
 
 # System calls support
 	$(CC) -c sci/sys.c  $(KERNEL_INCLUDE) $(CFLAGS) -o sys.o
@@ -118,7 +121,6 @@ all:
 
 # kmain
 	$(CC) -c kmain.c   $(KERNEL_INCLUDE) $(CFLAGS) -o kmain.o
-	$(CC) -c globals.c $(KERNEL_INCLUDE) $(CFLAGS) -o globals.o
 
 # ----------------------------------------------
 # link

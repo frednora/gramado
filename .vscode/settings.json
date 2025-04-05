@@ -32,6 +32,11 @@
         "connect.h": "c",
         "comp.h": "c",
         "client.h": "c",
-        "pixel.h": "c"
+        "pixel.h": "c",
+        "bg.h": "c",
+        "char.h": "c",
+        "line.h": "c",
+        "input.h": "c",
+        "user.h": "c"
     }
 }

@@ -5,7 +5,7 @@
 # Makefile for the user interaction support.
 # Keyboard, mouse and display.
 
-INCLUDE = ../../include
+INCLUDE = ../include
 
 AS	= as
 LD	= ld
@@ -100,8 +100,8 @@ all:
 	$(CC) -c gramk.c     $(KERNEL_INCLUDE) $(CFLAGS) -o gramk.o
 
 # link
-	$(LD) -r -o j3_gramk.o $(OBJS)
-	cp j3_gramk.o ../../
+	$(LD) -r -o x_gramk.o $(OBJS)
+	cp x_gramk.o ../
 	rm *.o
 
 clean:
