@@ -46,6 +46,9 @@ static unsigned int prompt_color = COLOR_GREEN;
 // cursor
 static int cursor_x=0;
 static int cursor_y=0;
+#define __CHAR_WIDTH  8
+#define __CHAR_HEIGHT  16
+
 // Embedded shell
 // We are using the embedded shell.
 static int isUsingEmbeddedShell=TRUE;
@@ -1540,8 +1543,8 @@ static void doPrompt(int fd)
     gws_draw_char ( 
         fd, 
         wid, 
-        (cursor_x*8), 
-        (cursor_y*8), 
+        (cursor_x*__CHAR_WIDTH), 
+        (cursor_y*__CHAR_HEIGHT), 
         prompt_color, 
         '>' ); 
 
@@ -1554,7 +1557,10 @@ static void doPrompt(int fd)
 
     gws_refresh_retangle(
         fd,
-        (cursor_x*8),(cursor_y*8),8,8);
+        (cursor_x*__CHAR_WIDTH),
+        (cursor_y*__CHAR_HEIGHT),
+        __CHAR_WIDTH,
+        __CHAR_HEIGHT);
 
     // it works
     //gws_refresh_window(fd,wid);
@@ -1787,8 +1793,8 @@ terminal_write_char (
 // Print the char into the window.
 
     static char prev=0;
-    unsigned long x = (cursor_x*8);
-    unsigned long y = (cursor_y*8);
+    unsigned long x = (cursor_x*__CHAR_WIDTH);
+    unsigned long y = (cursor_y*__CHAR_HEIGHT);
 
     if (fd<0)    {return;}
     if (window<0){return;}
@@ -1806,21 +1812,20 @@ terminal_write_char (
     }
 
     //if ( c == '\n' && prev == '\r' ) 
-    if ( c == '\n')
+    if (c == '\n')
     {
-         //printf("NEWLINE\n");
-         cursor_x=0; // começo da linha ...(desnecessário)
-         cursor_y++;  //linha de baixo
-         // #test
-         // #todo: scroll
-         if ( cursor_y >= Terminal.height_in_chars )
-         {
-             clear_terminal_client_window(fd);  //#provisório
-         }
+        //printf("NEWLINE\n");
+        cursor_x=0;  // começo da linha ...(desnecessário)
+        cursor_y++;  // linha de baixo
+        // #test
+        // #todo: scroll
+        if ( cursor_y >= Terminal.height_in_chars ){
+            clear_terminal_client_window(fd);  //#provisório
+        }
 
-         //começo da linha
-         prev = c; 
-         return;
+        // começo da linha
+        prev = c; 
+        return;
     }
 
 // Draw!
@@ -1839,7 +1844,7 @@ terminal_write_char (
         (unsigned long) c );
 
 // Coloca no buffer de linhas e colunas.
-    terminalInsertNextChar((char) c); 
+    terminalInsertNextChar((char) c);
 
 // Circula
 // próxima linha.
@@ -1874,9 +1879,9 @@ void terminalInsertNextChar(char c)
 }
 
 // # terminal stuff
-void terminalInsertNullTerminator (void)
+void terminalInsertNullTerminator(void)
 {
-    terminalInsertNextChar ( (char) '\0' );
+    terminalInsertNextChar((char) '\0');
 }
 
 // # terminal stuff
@@ -1912,7 +1917,6 @@ void cr(void)
     //terminalInsertCR();
     cursor_x = 0;
 }
-
 
 // # terminal stuff
 // ??
@@ -2559,26 +2563,26 @@ tputc (
             // claiming that it is a VT102.
             /* DECID -- Identify Terminal */
             case 'Z':  
-                 Terminal.esc = 0;
-                 terminal_write_char (fd, window, (int) '$'); //debug
-                 //printf (" {DECID} "); //debug
-                 break;
+                Terminal.esc = 0;
+                terminal_write_char (fd, window, (int) '$'); //debug
+                //printf (" {DECID} "); //debug
+                break;
 
             // ESC c - RIS  Reset.
             /* RIS -- Reset to inital state */
             case 'c': 
-                 Terminal.esc = 0;
-                 terminal_write_char ( fd, window, (int) '$'); //debug
-                 //printf (" {reset?} "); //debug
-                 break; 
+                Terminal.esc = 0;
+                terminal_write_char ( fd, window, (int) '$'); //debug
+                //printf (" {reset?} "); //debug
+                break; 
 
             // ESC = - DECPAM   Set application keypad mode
             /* DECPAM -- Application keypad */
             case '=': 
-                 Terminal.esc = 0;
-                 terminal_write_char ( fd, window, (int) '$'); //debug
-                 //printf (" {=} "); //debug
-                 break;
+                Terminal.esc = 0;
+                terminal_write_char ( fd, window, (int) '$'); //debug
+                //printf (" {=} "); //debug
+                break;
 
             // ESC > - DECPNM   Set numeric keypad mode
             /* DECPNM -- Normal keypad */
@@ -3809,13 +3813,22 @@ int terminal_init(unsigned short flags)
     Terminal.top  = 0;
     //Terminal.left = wLeft;  //0;
     //Terminal.top  = wTop;   //0;
+
+//
 // Width and height
+//
+
 // In pixels.
     Terminal.width = wWidth;
     Terminal.height = wHeight;
-// In chars.
-    Terminal.width_in_chars  = (unsigned long)((wWidth/8 ) & 0xFFFF);
-    Terminal.height_in_chars = (unsigned long)((wHeight/8) & 0xFFFF);
+
+    // In chars.
+    Terminal.width_in_chars = 
+        (unsigned long)((wWidth  / __CHAR_WIDTH ) & 0xFFFF);
+    Terminal.height_in_chars = 
+        (unsigned long)((wHeight / __CHAR_HEIGHT) & 0xFFFF);
+
+// Done
     Terminal.initialized = TRUE;
 
 // Set window with focus

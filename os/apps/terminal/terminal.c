@@ -47,6 +47,8 @@ static unsigned int prompt_color = COLOR_GREEN;
 // cursor
 static int cursor_x=0;
 static int cursor_y=0;
+#define __CHAR_WIDTH  8
+#define __CHAR_HEIGHT  8
 // Embedded shell
 // We are using the embedded shell.
 static int isUsingEmbeddedShell=TRUE;
@@ -3449,8 +3451,10 @@ static void terminalInitSystemMetrics(void)
 // Initialize font info based on system metrics,
 // maybe we're gonna change it later,
 // when we get information from the server.
+    // __CHAR_WIDTH __CHAR_HEIGHT 
     FontInfo.width = (unsigned long) smCharWidth;
     FontInfo.height = (unsigned long) smCharHeight;
+
     FontInfo.id = 0;
     FontInfo.initialized = TRUE;
 
