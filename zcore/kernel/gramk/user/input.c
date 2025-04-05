@@ -430,7 +430,7 @@ static int __CompareStrings(void)
 // about:
     if ( kstrncmp( prompt, "about", 5 ) == 0 ){
         // Crear screen and print version string.
-        zero_show_banner();
+        gramk_show_banner();
         printk("About: The kernel console\n");
         goto exit_cmp;
     }

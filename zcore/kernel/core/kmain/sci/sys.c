@@ -457,8 +457,9 @@ int sys_serial_debug_printk(char *s)
 // Not tested yet.
 void sys_shutdown(unsigned long flags)
 {
+    static int How=0;
     debug_print("sys_shutdown: [TODO]\n");
-    cali_shutdown(0);
+    core_shutdown(How);
 }
 
 // Usada por vários serviços de debug.

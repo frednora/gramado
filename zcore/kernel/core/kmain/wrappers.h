@@ -219,33 +219,24 @@ void die(void);
 
 // ------------------------
 
-
 int 
-cali_post( 
+core_post_message( 
     tid_t sender_tid,
     tid_t receiver_tid,
     struct msg_d *message );
 
-void cali_reboot(void);
-void cali_shutdown(int how);
-void cali_die(void);
-void cali_spawn_thread_by_tid(tid_t tid);
-
+void core_spawn_thread_by_tid(tid_t tid);
 
 //--------------------
-unsigned long cali_get_system_metrics(int index);
-int cali_start_thread(struct thread_d *thread);
-int cali_get_current_runlevel(void);
-unsigned long cali_get_memory_size_mb(void);
-void *cali_alloc_shared_ring3_pages(pid_t pid, int number_of_bytes);
-void cali_set_cursor( unsigned long x, unsigned long y );
+unsigned long core_get_system_metrics(int index);
+int core_start_thread(struct thread_d *thread);
+int core_get_current_runlevel(void);
+unsigned long core_get_memory_size_mb(void);
+void *core_alloc_shared_ring3_pages(pid_t pid, int number_of_bytes);
 
-void zero_initialize_virtual_consoles(void);
-void zero_initialize_video(void);
-void zero_initialize_background(void);
-void zero_initialize_default_kernel_font(void);
-void zero_show_banner(void);
-
+void core_reboot(void);
+void core_shutdown(int how);
+void core_die(void);
 
 #endif   
 

@@ -534,7 +534,7 @@ void jobcontrol_switch_console(int n)
     console_clear_imp( bg_color, fg_color, n );
 
 // banner
-    zero_show_banner();
+    gramk_show_banner();
     consolePrompt();
     //printk ("Console number {%d}\n", n);
 }
@@ -3188,7 +3188,7 @@ DDINIT_console(
 // We have 4 preallocated tty structures for virtual consoles.
 int VirtualConsole_early_initialization(void)
 {
-// Called by zero_initialize_virtual_consoles() in zero.c
+// Called by gramk_initialize_virtual_consoles() in zero.c
 
     register int i=0;
 

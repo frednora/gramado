@@ -79,8 +79,9 @@ void tsCallExtraRoutines(void)
 // :(
 static void __tsCry(unsigned long flags)
 {
+    static int How = 0;
     if (flags & 0x8000)
-        cali_shutdown(0);
+        core_shutdown(How);
 }
 
 //

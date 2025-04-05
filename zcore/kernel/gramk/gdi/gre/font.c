@@ -103,7 +103,7 @@ int gwsInstallFont(char *file_name)
 // BIOS 8x8 font.
 int font_initialize(void)
 {
-// Called by zero_initialize_default_kernel_font() in zero.c.
+// Called by gramk_initialize_default_kernel_font() in zero.c.
 
     // Old way (#todo: Delete this)
     fontSetCurrentAddress(BIOSFONT8X8);

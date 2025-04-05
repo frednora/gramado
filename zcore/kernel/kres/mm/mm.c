@@ -1,4 +1,3 @@
-
 // mm.c
 // + Initialize the memory support.
 //   The kernel heap and the kernel stack.
@@ -319,7 +318,7 @@ int mmInitialize(int phase)
     if (phase == 0){
 
         // Video support
-        zero_initialize_video();
+        gramk_initialize_video();
 
         // #todo: 
         // Inicializar algumas variáveis globais.

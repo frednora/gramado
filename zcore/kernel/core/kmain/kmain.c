@@ -566,8 +566,8 @@ static void preinit_OutputSupport(void)
 // precisamos calcular se a quantidade mapeada é suficiente.
     refresh_screen_enabled = FALSE;
 
-    //PROGRESS("preinit_OutputSupport: zero_initialize_virtual_consoles\n");
-    zero_initialize_virtual_consoles();
+    //PROGRESS("preinit_OutputSupport: gramk_initialize_virtual_consoles\n");
+    gramk_initialize_virtual_consoles();
 
     //debug_print("preinit_OutputSupport: preinit_OutputSupport\n");
 

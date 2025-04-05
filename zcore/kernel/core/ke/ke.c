@@ -854,9 +854,9 @@ int keInitialize(int phase)
 
         //PROGRESS("keInitialize: phase 0\n");
         // kernel font.
-        zero_initialize_default_kernel_font();
+        gramk_initialize_default_kernel_font();
         // Initializing background for the very first time.
-        zero_initialize_background();
+        gramk_initialize_background();
         // Setup refresh/flush support.
         // Flush data into the lfb.
         __check_refresh_support();
@@ -865,7 +865,7 @@ int keInitialize(int phase)
 
         // Show banner!
         // See: zero.c
-        zero_show_banner();
+        gramk_show_banner();
 
         // Print resolution info
         __print_resolution_info();
@@ -971,7 +971,7 @@ int keInitialize(int phase)
         //refresh_screen();
         //while(1){}
         // Clear the screen again.
-        zero_initialize_background();
+        gramk_initialize_background();
         // Loading .BMP icon images.
         //PROGRESS("::(2)(?) Icons\n"); 
         windowLoadGramadoIcons();

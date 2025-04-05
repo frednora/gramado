@@ -502,9 +502,8 @@ void *sci0 (
 
 // 34
 // Setup cursor position for the current virtual console.
-    if (number == SCI_CALI_SET_CURSOR)
-    { 
-        cali_set_cursor((unsigned long) arg2, (unsigned long) arg3);
+    if (number == SCI_CALI_SET_CURSOR){
+        gramk_set_cursor((unsigned long) arg2, (unsigned long) arg3);
         return NULL;
     }
 
@@ -719,7 +718,7 @@ void *sci0 (
         debug_print("sci0: SCI_STARTTHREAD\n");
         // #bugbug
         // Why the user has a ponter to the ring0 thread structure?
-        return (void *) cali_start_thread((struct thread_d *) arg2);
+        return (void *) core_start_thread((struct thread_d *) arg2);
     }
 
 // ------------------
@@ -1244,7 +1243,7 @@ void *sci0 (
     
 // Returns the current runlevel.
     if (number == 288){
-        return (void *) cali_get_current_runlevel();
+        return (void *) core_get_current_runlevel();
     }
 
 // Serial debug print string.
@@ -1253,8 +1252,9 @@ void *sci0 (
         return (void *) sys_serial_debug_printk( (char *) arg2 );
     }
 
+// Get memory size.
     if (number == 292){
-        return (void *) cali_get_memory_size_mb();
+        return (void *) core_get_memory_size_mb();
     }
 
 // #bugbug: cuidado.
@@ -1590,7 +1590,9 @@ void *sci0 (
 // 891 - Allocate shared ring3 pages.
     if (number == 891){
         debug_print("sci0: 891, Allocate shared ring3 pages\n");
-        return (void *) cali_alloc_shared_ring3_pages( (pid_t) current_process, (int) arg2 );
+        return (void *) core_alloc_shared_ring3_pages( 
+            (pid_t) current_process, 
+            (int) arg2 );
     }
 
 // 892 - Setup the thread's surface rectangle.
