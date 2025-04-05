@@ -1,6 +1,6 @@
-
 // crt0.c
 // Standard crt0 for Gramado OS ring 3 applications.
+
 
 #include <types.h>
 #include <stddef.h>
@@ -213,6 +213,10 @@ void crt0(unsigned long rdi)
 	printf("Calling main ... \n"); 
 #endif
 */
+
+// Setup this thread as foreground thread,
+// this way the app can receive input via stdin.
+    rtl_focus_on_this_thread();
 
 // ===================================================
 // #test

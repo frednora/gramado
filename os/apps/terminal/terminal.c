@@ -1460,7 +1460,8 @@ static void compareStrings(int fd)
 // to create a child, not the terminal.
 // So, the clone_process function in kernel mode will not
 // create the connectors.
-    gws_clone_and_execute_from_prompt(fd);  // libgws.
+// see: libgws.
+    gws_clone_and_execute_from_prompt(fd);
 
 exit_cmp:
     return;
