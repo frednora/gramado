@@ -456,6 +456,9 @@ void DeviceInterface_PS2Mouse(void)
     int posX = 0;
     int posY = 0;
 
+    unsigned char status;
+    int is_mouse_device;
+
 //#debug
 //#todo: deletar isso.
     //debug_print ("DeviceInterface_PS2Mouse:\n");
@@ -465,6 +468,8 @@ void DeviceInterface_PS2Mouse(void)
         debug_print ("DeviceInterface_PS2Mouse: Not initialized yet\n");
         return;
     }
+
+    while (1){
 
 // Get one byte in the controler.
 // #todo
@@ -494,7 +499,7 @@ void DeviceInterface_PS2Mouse(void)
 // =============================================
 // #test
 // Get status
-    unsigned char status = in8(I8042_STATUS);
+    status = in8(I8042_STATUS);
 // buffer full?
     if (!(status & I8042_BUFFER_FULL)){
         return;
@@ -502,7 +507,7 @@ void DeviceInterface_PS2Mouse(void)
 // which device?
 // Is it a mouse device?
 // Return if it is not a mouse device.
-    int is_mouse_device = 
+    is_mouse_device = 
         ((status & I8042_WHICH_BUFFER) == I8042_MOUSE_BUFFER) 
         ? TRUE 
         : FALSE;
@@ -521,8 +526,7 @@ void DeviceInterface_PS2Mouse(void)
 // Então vamos reinicializar o contador.
 
 /*
-    // O ACK não é enviado se estivermos
-    // no modo streaming.
+    // O ACK não é enviado se estivermos no modo streaming.
     if (_byte == 0xFA){
         //debug_print ("[0xFA]: ACK\n");
         mouse_stage = 0;
@@ -555,6 +559,7 @@ void DeviceInterface_PS2Mouse(void)
         if (!(_byte & MOUSE_FLAGS_ALWAYS_1))
         {
             mouse_stage=0;
+            goto done;
             break;
         }
         mouse_stage++;
@@ -573,22 +578,28 @@ void DeviceInterface_PS2Mouse(void)
         // Commit packet.
         __ps2mouse_parse_data_packet();
         mouse_stage = 0;
+        goto done;
         break;
     case 3:
         __ps2mouse_parse_data_packet();
         mouse_stage = 0;
+        goto done;
         break;
     // Error: drain and clean
     default:
-        in8(0x60);
+        //in8(0x60);
+        //in8(0x60);
+        //in8(0x60);
+        //in8(0x60);
         mouse_stage = 0;
+        goto done;
         break;
     };
 
-// #todo
-// Coloque os pacotes num arquivo,
-// o window server poderá ler depois.
-   //write_packet(mousefp,...)
+    };  // WHELE ends.
+
+done:
+    return;
 }
 
 
