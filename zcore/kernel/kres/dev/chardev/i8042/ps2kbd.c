@@ -270,17 +270,21 @@ void DeviceInterface_PS2Keyboard(void)
     // Usado pra checar se a foreground thread quer raw input.
     struct thread_d *t;
 
-// =============================================
-// #test
+    unsigned char status;
+    int is_mouse_device;
+
+// OK. The buffer is FULL.
+// Get more than one byte
+    while (1){
 
 // Get status.
 // Return if the output buffer is not full.
-    unsigned char status = in8(I8042_STATUS);
+    status = in8(I8042_STATUS);
     if (!(status & I8042_STATUS_OUTPUT_BUFFER_FULL))
         return;
 
 // Which device?
-    int is_mouse_device = 
+    is_mouse_device = 
         ((status & I8042_WHICH_BUFFER) == I8042_MOUSE_BUFFER) 
         ? TRUE 
         : FALSE;
@@ -388,37 +392,36 @@ void DeviceInterface_PS2Keyboard(void)
 CheckByte:
 
 // Check prefix for extended keyboard sequence.
+// Or normal bytes.
 
     if (__raw == 0xE0){
         __prefix = (int) (__raw & 0x000000FF);
         goto done;
-    }
-    if (__raw == 0xE1){
+    } else if (__raw == 0xE1){
         __prefix = (int) (__raw & 0x000000FF);
         goto done;
-    }
+    } else {
 
-// Process the normal byte
-// >>> Posting the message into the windows server queue.
-NormalByte:
+    // Process the normal byte
+    // >>> Posting the message into the windows server queue.
+    //NormalByte:
 
-// #opçao
-// Apenas enfileira os raw bytes e nao processa.
-    //if ( flag ...
-   // put_rawbyte(__raw)
- 
-// The routine bellow is always posting to the display server.
-// see:
-// user/input.c
-// input.c is working as a middle-agent capable of handle
-// abnt2 devices.
-// IN: tid, scancode, prefix.
-    wmRawKeyEvent( 
-        (unsigned char) __raw,
-        (int) (__prefix & 0xFF) );
+    // #opçao
+    // Apenas enfileira os raw bytes e nao processa.
+        //if ( flag ...
+           // put_rawbyte(__raw)
 
-// Clean the mess.
-    __prefix=0;
+    // The routine bellow is always posting to the display server.
+    // see:
+    // user/input.c
+    // input.c is working as a middle-agent capable of handle
+    // abnt2 devices.
+    // IN: tid, scancode, prefix.
+        wmRawKeyEvent( (unsigned char) __raw, (int) (__prefix & 0xFF) );
+        __prefix=0;  // Clean the mess after used it.
+    };
+
+    };  // WHILE ends.
 
 done:
     return;
