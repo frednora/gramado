@@ -378,7 +378,7 @@ gdmProcedure(
 
     case 0:
         //#debug
-        //printf("EDITOR: Null event!\n");
+        //printf("gdm: Null event!\n");
         return 0;
         break;
 

@@ -5620,9 +5620,8 @@ int wmInputReader(void)
     int status=0;
 
     register long i=0;
-    // Too much attempts affects the mouse movement.
-    //long extra_attempts=10;
-    long extra_attempts = 5;
+
+    long extra_attempts = 4;
 
     // --------
     // Msg
@@ -5635,20 +5634,31 @@ int wmInputReader(void)
 
     int IsCombination=FALSE;
 
-NextEvent:
+//NextEvent:
 
-    status = (int) rtl_get_event();
-    if (status != TRUE)
-    {
+    //status = (int) rtl_get_event();
+    //if (status != TRUE)
+    //{
         for (i=0; i<extra_attempts; i++)
         {
             status = (int) rtl_get_event();
             if (status == TRUE)
                 goto ProcessEvent;
         };
-        goto fail;
-    }
 
+// No more attempts.
+    goto fail;
+    //}
+
+// ---------------------
+// Only for mouse move events.
+GetNextEvent:
+    status = (int) rtl_get_event();
+    if (status != TRUE)
+        goto fail;
+
+// ---------------------
+// All types if events.
 ProcessEvent:
 
     msg   = (int) (RTLEventBuffer[1] & 0xFFFFFFFF);
@@ -5675,10 +5685,12 @@ ProcessEvent:
             (unsigned long) long1,
             (unsigned long) long2 ); 
         
+        // LOOP;
         // Processamos um evento de movimento,
         // provavelmente teremos outro subsequente.
-        if (msg == GWS_MouseMove)
-            goto NextEvent;
+        if (msg == GWS_MouseMove){
+            goto GetNextEvent;
+        }
   
         return 0;
     }

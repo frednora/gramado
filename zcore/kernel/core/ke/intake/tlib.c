@@ -329,7 +329,7 @@ void threadi_power(
     if ( t->priority >= PRIORITY_MIN && 
          t->priority <= PRIORITY_MAX )
     {
-         t->priority = priority;
+        t->priority = priority;
     }
 
 // Credits

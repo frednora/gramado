@@ -214,7 +214,7 @@ static int __initialization(void)
 // AF_GRAMADO = 8000
 
     // #debug
-    //printf ("gws: Creating socket\n");
+    //printf ("xtb: Creating socket\n");
 
     client_fd = 
         (int) socket( 
@@ -233,7 +233,7 @@ static int __initialization(void)
 // Tentando nos conectar ao endereço indicado na estrutura
 // Como o domínio é AF_GRAMADO, então o endereço é "w","s".
 
-    //printf ("gws: Trying to connect to the address 'ws' ...\n");      
+    //printf ("xtb: Trying to connect to the address 'ws' ...\n");      
 
     while (TRUE){
         if (connect(client_fd, (void *) &addr_in, sizeof(addr_in)) < 0){ 
@@ -507,7 +507,7 @@ tbProcedure(
         //#todo
         // Update the bar and the list of clients.
         case MSG_PAINT:
-            //printf("task.bin: MSG_PAINT\n");
+            //printf("xtb: MSG_PAINT\n");
             // #todo
             // We need to update all the clients
             // Create update_clients()
@@ -517,7 +517,7 @@ tbProcedure(
 
         // One button was clicked
         case GWS_MouseClicked:
-            printf("taskbar: GWS_MouseClicked\n");
+            printf("xtb: GWS_MouseClicked\n");
             
             // #test: Clear main window when clicking the button.
             XClearWindow(Display,Display->main_wid);
@@ -541,23 +541,23 @@ tbProcedure(
         // Add new client. Given the wid.
         // The server created a client.
         case 99440:
-            printf("task.bin: [99440]\n");
+            printf("xtb: [99440]\n");
             break;
 
         // Remove client. Given the wid.
         // The server removed a client.
         case 99441:
-            printf("task.bin: [99441]\n");
+            printf("xtb: [99441]\n");
             break;
         
         // Update client info.
         // The server send data about the client.
         case 99443:
-            printf("task.bin: [99443]\n");
+            printf("xtb: [99443]\n");
             break;
 
         case MSG_CLOSE:
-            printf("task.bin: Closing...\n");
+            printf("xtb: Closing...\n");
             exit(0);
             break;
         
@@ -618,7 +618,7 @@ tbProcedure(
 
         // 22 = MSG_SYSKEYDOWN
         case MSG_SYSKEYDOWN:
-            //printf("taskbar: MSG_SYSKEYDOWN\n");
+            //printf("xtb: MSG_SYSKEYDOWN\n");
             switch (long1){
                 case VK_F1:
                     //gws_clone_and_execute(app1_name);
@@ -678,7 +678,7 @@ tbProcedure(
                     //gws_async_command(fd,4,11,0); //polygon
                     //gws_async_command(fd,4,12,0); //lines
                     //gws_clone_and_execute("browser.bin"); 
-                    //printf("gws.bin: Shutting down ...\n");
+                    //printf("xtb: Shutting down ...\n");
                     //f12Status = (int) gws_clone_and_execute("shutdown.bin");
                     //if (f12Status<0){ break; } // fail
                     //exit(0);
@@ -1136,12 +1136,10 @@ int main(int argc, char *argv[])
     //}
 
 
-
-
 // #debug
 // ok
 
-    //printf("gws.bin: [1] calling create window\n");
+    //printf("xtb: [1] calling create window\n");
 
     //while(1){}
     //asm ("int $3");
@@ -1191,7 +1189,7 @@ int main(int argc, char *argv[])
     //while(1){}
 
 
-    //printf("gws.bin: [2] after create simple green window :)\n");
+    //printf("xtb: [2] after create simple green window :)\n");
 
     //asm ("int $3");
     
@@ -1224,7 +1222,7 @@ int main(int argc, char *argv[])
     //printf ("xtb.bin: status_window created\n");
     //while(1){}
 
-    //printf("gws.bin: [2] after create simple gray bar window :)\n");
+    //printf("xtb: [2] after create simple gray bar window :)\n");
 
     // #debug
     //gws_refresh_window (client_fd, tmp1);
@@ -1293,8 +1291,8 @@ int main(int argc, char *argv[])
 
 
     /*
-    gws_debug_print ("gws.bin: 3 Testing Plot0 4x\n");
-    printf          ("gws.bin: 3 Testing Plot0 4x\n");
+    gws_debug_print ("xtb: 3 Testing Plot0 4x\n");
+    printf          (": 3 Testing Plot0 4x\n");
 
     //test: plot point;
     //um ponto em cada quadrante.
@@ -1548,14 +1546,14 @@ int main(int argc, char *argv[])
 //=================================
 */
     // Isso eh estranho ... um cliente remoto nao deve poder fazer isso.
-    //gws_debug_print ("gws: Sending command to close the server. \n");
+    //gws_debug_print ("xtb: Sending command to close the server. \n");
     //gws_async_command(client_fd,1,0,0);
     //exit(0);
 
     // Asking to server to send me an notification
     // telling me to close myself
     
-    //gws_debug_print ("gws: Pinging\n");
+    //gws_debug_print ("xtb: Pinging\n");
     //gws_async_command(client_fd,2,0,0);
 
 
@@ -1573,7 +1571,7 @@ int main(int argc, char *argv[])
         //event: Close my self
         //if ( event_buffer[1] == 12344321 )
         //{
-        //    gws_debug_print ("gws: [EVENT] We got the event 12344321\n \n");
+        //    gws_debug_print ("xtb: [EVENT] We got the event 12344321\n \n");
         //    break;
         //}
         

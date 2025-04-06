@@ -721,6 +721,12 @@ struct thread_d
     unsigned long MsgQueue[MSG_QUEUE_MAX];
     int MsgQueueHead;
     int MsgQueueTail;
+
+    // #test
+    // For mouse move optimization
+    // Saving the position for the last input.
+    //int MsgLastMessageIndex;
+
 // ====================================================
 
 // #test

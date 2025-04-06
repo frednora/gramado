@@ -373,10 +373,12 @@ static void __ps2mouse_parse_data_packet(void)
         // Presssed
         if (mbuttons_current_state[0] == TRUE){
             wmMouseEvent( MSG_MOUSEPRESSED, 1, 1 );
+            return;
         }
         // Released
         if (mbuttons_current_state[0] == FALSE){
             wmMouseEvent( MSG_MOUSERELEASED, 1, 1 );
+            return;
         }
         return;
     }
@@ -389,10 +391,12 @@ static void __ps2mouse_parse_data_packet(void)
         // Pressed
         if (mbuttons_current_state[1] == TRUE){
             wmMouseEvent( MSG_MOUSEPRESSED, 2, 2 );
+            return;
         }
         // Relesed
         if (mbuttons_current_state[1] == FALSE){
             wmMouseEvent( MSG_MOUSERELEASED, 2, 2 );
+            return;
         }
         return;
     }
@@ -405,10 +409,12 @@ static void __ps2mouse_parse_data_packet(void)
         // Pressed
         if (mbuttons_current_state[2] == TRUE){
             wmMouseEvent( MSG_MOUSEPRESSED, 3, 3 );
+            return;
         }
         // Released
         if (mbuttons_current_state[2] == FALSE){
             wmMouseEvent( MSG_MOUSERELEASED, 3, 3 );
+            return;
         }
         return;
     }
@@ -434,6 +440,7 @@ static void __ps2mouse_parse_data_packet(void)
 // see: grinput.c
     if (ps2_mouse_moving == TRUE){
         wmMouseEvent( MSG_MOUSEMOVE, mouse_x, mouse_y );
+        return;
     }
 }
 

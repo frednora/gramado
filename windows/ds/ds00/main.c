@@ -1,10 +1,10 @@
 // DS00.BIN
-// Gramland Display Server.
+// ds00 Display Server.
 // This is a ring3 display server and window manager.
 
 /*
  * File: main.c
- *    Main file for the Gramland.
+ *    Main file for the ds00.
  *    History:
  *        2020 - Created by Fred Nora.
  */
@@ -3481,7 +3481,7 @@ static void __initialize_ds_structure(void)
     // #todo: we need to finalize these strings?
 
 // name
-    sprintf( display_server->name, "Gramland" );
+    sprintf( display_server->name, "ds00" );
     strcat(display_server->name,"\0");
 // edition name
     sprintf( display_server->edition_name, "Spirit" );
@@ -3725,13 +3725,13 @@ static int ServerInitialization(void)
 
 // The server is also a client.
     if ((void*) serverClient == NULL){
-        printf("gramland: serverClient\n");
+        printf("ds00: serverClient\n");
         while (1){
         };
         //exit(0);
     }
     if ( serverClient->used != TRUE || serverClient->magic != 1234 ){
-        printf("gramland: serverClient validation\n");
+        printf("ds00: serverClient validation\n");
         while (1){
         };
         //exit(0);
@@ -4150,7 +4150,7 @@ static int ServerLoop(int launch_tb)
 
             // #debug
             if (newconn == ____saved_server_fd){
-                printf("gramland: [debug] Invalid new connnection.\n");
+                printf("ds00: [debug] Invalid new connnection.\n");
                 while (1){
                 };
             }
@@ -4180,7 +4180,7 @@ static int ServerLoop(int launch_tb)
     ServerState.state = SERVER_STATE_SHUTTINGDOWN;
 
     if (IsTimeToQuit != TRUE){
-        printf("gramland: Invalid IsTimeToQuit\n");
+        printf("ds00: Invalid IsTimeToQuit\n");
         goto fail;
     }
 
@@ -4195,7 +4195,7 @@ static int ServerLoop(int launch_tb)
 // Close the server's fd.
     if (server_fd>0){
         // #test
-        printf ("gramland: Close th socket\n");
+        printf ("ds00: Close th socket\n");
         close(server_fd);
     }
 

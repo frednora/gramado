@@ -144,7 +144,7 @@ fail:
 
 
 // ------------------------------------
-// post_message_to_tid:
+// ipc_post_message_to_tid:
 // #bugbug
 // long1 and long2 will mask to single byte.
 // IN: tid, window, message code, ascii code, raw byte.
@@ -399,6 +399,9 @@ ipc_post_message_to_ds (
     if (msg < 0)
         goto fail;
 
+    // More credits to the receiver.
+    do_credits_by_tid(ReceiverTID);
+
     //if(msg == MSG_MOUSEMOVE){
     //    printk ("x:%d y:%d\n",long1, long2);
     //    refresh_screen();
@@ -482,6 +485,18 @@ void *sys_get_message(unsigned long ubuf)
     message_address[1] = (unsigned long) (m->msg & 0xFFFFFFFF);
     message_address[2] = (unsigned long) m->long1;
     message_address[3] = (unsigned long) m->long2;
+
+    /*
+    // #test
+    // If the display server is getting the
+    // mouse move events in it's own thread.
+    if (message_address[1] == MSG_MOUSEMOVE)
+    {
+        do_credits(t);
+        // The scheduler will change it latter.
+        t->quantum = QUANTUM_SYSTEM_TIME_CRITICAL;
+    }
+    */
 
 // ---------------------------------
 // Get the extra payload
@@ -762,9 +777,9 @@ sys_post_message_to_tid(
 }
 
 // Wrapper for different types of input events.
-// Sending these events to the thread, 
+// Posting these events to the thread, 
 // not processing internally.
-int ipc_send_input_event_to_ds(int event_id, long long1, long long2)
+int ipc_post_input_event_to_ds(int event_id, long long1, long long2)
 {
     unsigned long button_number=0;
 
@@ -774,13 +789,14 @@ int ipc_send_input_event_to_ds(int event_id, long long1, long long2)
     switch (event_id)
     {
         // Mouse
+        case MSG_MOUSEMOVE:
+            ipc_post_message_to_ds( event_id, long1, long2 );
+            return 0;
+            break;
         case MSG_MOUSEPRESSED:
         case MSG_MOUSERELEASED:
             button_number = (unsigned long) (long1 & 0xFFFF);
             ipc_post_message_to_ds( event_id, button_number, button_number );
-            break;
-        case MSG_MOUSEMOVE:
-            ipc_post_message_to_ds( event_id, long1, long2 );
             break;
 
         // Keyboard

@@ -1,7 +1,6 @@
-
 // main.c
 // c-like interpreter.
-// Ported from Gramado 32bit.
+// Ported from Gramado 32bit. 
 // 2022 - Fred Nora
 
 #include "gramcnf.h"
@@ -316,7 +315,7 @@ static int doc_viewer ( int argc, char *argv[] )
 
     fp = fopen((char *) argv[2], "rb");
     if ( fp == NULL ){
-        printf("gramcnf: Couldn't open the input file\n");
+        printf("doc: Couldn't open the input file\n");
         usage(argv);
         exit(1);
     }
@@ -534,7 +533,7 @@ docvProcedure(
         break;
 
     case MSG_CLOSE:
-        printf ("docv.bin: MSG_CLOSE\n");
+        printf ("doc.bin: MSG_CLOSE\n");
         gws_destroy_window(fd,__button_window);
         gws_destroy_window(fd,__main_window);
         exit(0);
@@ -615,13 +614,13 @@ int main ( int argc, char *argv[] )
     int client_fd = -1;
 
     //#debug
-    //printf("docv.bin:\n");
+    //printf("doc.bin:\n");
 
 // Device info.
     unsigned long w = gws_get_system_metrics(1);
     unsigned long h = gws_get_system_metrics(2);
     if ( w == 0 || h == 0 ){
-        printf ("docv: w h \n");
+        printf ("doc: w h \n");
         exit(1);
     }
 
@@ -630,7 +629,7 @@ int main ( int argc, char *argv[] )
     client_fd = socket( AF_INET, SOCK_RAW, 0 );
     if (client_fd<0)
     {
-       printf ("docv: Couldn't create socket\n");
+       printf ("doc: Couldn't create socket\n");
        exit(1);
     }
 
@@ -640,8 +639,8 @@ int main ( int argc, char *argv[] )
 
     while (TRUE){
         if (connect(client_fd, (void *) &addr_in, sizeof(addr_in)) < 0){ 
-            debug_print("docv: Connection Failed \n"); 
-            printf     ("docv: Connection Failed \n"); 
+            debug_print("doc: Connection Failed\n"); 
+            printf     ("doc: Connection Failed\n"); 
         }else{ break; }; 
     };
 
@@ -693,7 +692,7 @@ int main ( int argc, char *argv[] )
                   COLOR_GRAY, COLOR_GRAY );
 
     if (main_window < 0){
-        debug_print("docv: main_window fail\n"); 
+        debug_print("doc: main_window fail\n"); 
         exit(1);
     }
 // Save globally
@@ -721,7 +720,7 @@ int main ( int argc, char *argv[] )
                   0, COLOR_WHITE, COLOR_WHITE );
 
     if (addressbar_window < 0){
-        debug_print("docv: addressbar_window fail\n"); 
+        debug_print("doc: addressbar_window fail\n"); 
         exit(1);
     }
     // #debug
@@ -756,9 +755,8 @@ int main ( int argc, char *argv[] )
                   cwButton.l, cwButton.t, cwButton.w, cwButton.h,
                   main_window, 0, COLOR_GRAY, COLOR_GRAY );
 
-    if (button < 0)
-    {
-        debug_print("docv: button fail\n"); 
+    if (button < 0){
+        debug_print("doc: button fail\n"); 
         exit(1);
     }
     // #debug
@@ -786,7 +784,7 @@ int main ( int argc, char *argv[] )
                   main_window, 0, COLOR_WHITE, COLOR_WHITE );
 
     if (client_window < 0){
-        debug_print("docv: client_window fail\n"); 
+        debug_print("doc: client_window fail\n"); 
         exit(1);
     }
     // #debug

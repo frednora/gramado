@@ -1,5 +1,5 @@
 /*
-# ENG.BIN - 3D game for Gramado OS.
+# demo00 - 3D game for Gramado OS.
 # This is also a server.
 # It's called by the init process.
 # 2022 - Created by Fred Nora.
@@ -3373,18 +3373,18 @@ static int on_execute(void)
 // ex: OsInit();
 
     // #debug
-    gwssrv_debug_print("ENG.BIN: Initializing\n");
+    gwssrv_debug_print("demo00: Initializing\n");
 
 // Initialize the client list support.
     initClientSupport();
 
 // The server is also a client.
     if ((void*) serverClient == NULL){
-        printf("eng.bin: serverClient\n");
+        printf("demo00: serverClient\n");
         goto fail;
     }
     if ( serverClient->used != TRUE || serverClient->magic != 1234 ){
-        printf("eng.bin: serverClient validation\n");
+        printf("demo00: serverClient validation\n");
         goto fail;
     } 
 
@@ -3404,7 +3404,7 @@ static int on_execute(void)
 
     _status = (int) registerDS();
     if (_status < 0){
-        printf ("eng.bin: Couldn't register the server\n");
+        printf ("demo00: Couldn't register the server\n");
         goto fail;
     }
     display_server->registration_status = TRUE;
@@ -3439,7 +3439,7 @@ static int on_execute(void)
 // Socket: Creating the socket for the server.
     server_fd = (int) socket(AF_GRAMADO, SOCK_STREAM, 0);
     if (server_fd < 0){
-        printf ("eng.bin: on socket()\n");
+        printf ("demo00: on socket()\n");
         goto fail;
     }
 // Global variable
@@ -3464,7 +3464,7 @@ static int on_execute(void)
                   addrlen );
 
     if (bind_status < 0){
-        printf ("eng.bin: on bind()\n");
+        printf ("demo00: on bind()\n");
         goto fail;
     }
 
@@ -3494,7 +3494,7 @@ static int on_execute(void)
     int graphics_status = -1;
     graphics_status = (int) InitHot();
     if (graphics_status < 0){
-        printf("eng.bin: InitHot failed\n");
+        printf("demo00: InitHot failed\n");
         goto fail;
     }
 
@@ -3506,13 +3506,13 @@ static int on_execute(void)
 
 // No root window.
     if ((void*) WindowManager.root == NULL){
-        printf("eng.bin: WindowManager.root fail\n");
+        printf("demo00: WindowManager.root fail\n");
         goto fail;
     }
 // No taskbar.
     if ((void*) WindowManager.taskbar == NULL)
     {
-        printf("eng.bin: WindowManager.taskbar fail\n");
+        printf("demo00: WindowManager.taskbar fail\n");
         goto fail;
     }
 
@@ -3626,7 +3626,7 @@ static int on_execute(void)
 // Chamamos o accepr soment quando
 // o servidor estiver aceitando conexoes.
 
-    gwssrv_debug_print("eng.bin: Entering main loop\n");
+    gwssrv_debug_print("demo00: Entering main loop\n");
     rtl_focus_on_this_thread();
     running = TRUE;
 
@@ -3675,9 +3675,8 @@ static int on_execute(void)
             //}
 
             //#debug
-            if (newconn == ____saved_server_fd)
-            {
-                printf("eng.bin: Invalid connection\n");
+            if (newconn == ____saved_server_fd){
+                printf(": Invalid connection\n");
                 goto fail;
             }
             //close(newconn);
@@ -3704,9 +3703,9 @@ static int on_execute(void)
 
 // Is it time to quit?
     if (IsTimeToQuit == TRUE){
-        debug_print ("eng.bin: IsTimeToQuit\n");
+        debug_print ("demo00: IsTimeToQuit\n");
     } else {
-        debug_print ("eng.bin: [ERROR] Invalid IsTimeToQuit\n");
+        debug_print ("demo00: [ERROR] Invalid IsTimeToQuit\n");
     };
 
 // #todo

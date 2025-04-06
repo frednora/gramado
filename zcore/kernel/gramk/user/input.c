@@ -1986,26 +1986,8 @@ wmMouseEvent(
     }
 
 // Event id:
-    if (event_id<0){
+    if (event_id < 0){
         goto fail;
-    }
-
-// ====================================
-// Button events:
-// Buttons:
-// Pressionado ou liberado.
-// Post message.
-// #todo
-// Se uma tecla de controle estiver precionada,
-// então podemos enviar o status das teclads de controle
-// atraves do segundo long.
-// IN: window pointer, event id, button number. button number.
-// #todo: Send control keys status.
-    if ( event_id == MSG_MOUSEPRESSED || 
-         event_id == MSG_MOUSERELEASED )
-    {
-        ipc_post_message_to_ds( event_id, button_number, button_number );
-        return 0;
     }
 
 // ====================================
@@ -2030,6 +2012,7 @@ wmMouseEvent(
 
     if (event_id == MSG_MOUSEMOVE)
     {
+        // Limits.
         if (long1 < 1){ long1=1; }
         if (long2 < 1){ long2=1; }
         if (long1 >= deviceWidth) { long1 = (deviceWidth-1);  }
@@ -2047,7 +2030,28 @@ wmMouseEvent(
             (unsigned long) long1, 
             (unsigned long) long2 );
 
+        // #test
+        // Improve the performance of the display server.
+
         return 0;
+    }
+
+// ====================================
+// Button events:
+// Buttons:
+// Pressionado ou liberado.
+// Post message.
+// #todo
+// Se uma tecla de controle estiver precionada,
+// então podemos enviar o status das teclads de controle
+// atraves do segundo long.
+// IN: window pointer, event id, button number. button number.
+// #todo: Send control keys status.
+    if ( event_id == MSG_MOUSEPRESSED || 
+         event_id == MSG_MOUSERELEASED )
+    {
+       ipc_post_message_to_ds( event_id, button_number, button_number );
+       return 0;
     }
 
 done:
