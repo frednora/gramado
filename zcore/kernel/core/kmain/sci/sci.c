@@ -904,15 +904,18 @@ void *sci0 (
 // 157~159: Security
 
 // 157 - get user session id
-    if (number == SCI_GETCURRENTUSERSESSION){
+    if (number == SCI_GETCURRENTUSERSESSION)
+    {
         return (void *) current_usersession; 
     }
 
 // 158 - free
 
 // 159 - get current cgroup id
-    if (number == SCI_GETCURRENTDESKTOP){
-        return (void *) current_cgroup; 
+// #todo: Chnage this name: SCI_GETCURRENTDESKTOP
+    if (number == SCI_GETCURRENTDESKTOP)
+    {
+        return (void *) get_current_cg_id();
     }
 
 // ----------------
@@ -1405,13 +1408,14 @@ void *sci0 (
         return NULL;
     }   
 
-
+// The main cgroup.
+// This is used to register system components.
 // #bugbug
 // This is a ring0 pointer.
 // A ring3 process can't handle this thing.
 // Get current cgroup. (ring0 pointer hahaha)
     if (number == 519){
-        return (void *) CurrentCG;
+        return (void *) system_cg;
     }
 
 // 521 - set ns PID for a given cgroup

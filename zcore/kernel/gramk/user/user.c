@@ -18,12 +18,12 @@ int current_usersession=0;
 // cgroup
 //
 
+// The main cgroup.
 // See: user.h
-struct cgroup_d  *CurrentCG;
-//struct cgroup_d  *cgroup0;
+struct cgroup_d  *system_cg;
+
 // See: user.h
 unsigned long cgroupList[CGROUP_COUNT_MAX];
-int current_cgroup=0;
 int cg_counter=0;
 
 //============================
@@ -85,31 +85,25 @@ int init_first_cgroup(void)
     return 0;
 }
 
+// Set the main cgroup.
 void set_current_cgroup(struct cgroup_d *cg)
 {
     if ((void *) cg == NULL){ 
         return; 
     }
-    current_cgroup = (int) cg->id;
-    CurrentCG = (struct cgroup_d *) cg;
+    system_cg = (struct cgroup_d *) cg;
 }
 
 struct cgroup_d *get_current_cgroup(void)
 {
-    //#todo
-    //return (struct cgroup_d *) CurrentCG;
-
-// Check limits.
-    if ( current_cgroup < 0 || current_cgroup >= CGROUP_COUNT_MAX )
-    {
-        return NULL;
-    }
-    return (struct cgroup_d *) cgroupList[current_cgroup];
+    return (struct cgroup_d *) system_cg;
 }
 
 int get_current_cg_id(void)
 {
-    return (int) current_cgroup;
+    if ((void*) system_cg == NULL)
+        return (int) -1;
+    return (int) system_cg->id;
 }
 
 // Register cgroup given a valid pointer.
@@ -362,8 +356,8 @@ struct user_info_d *CreateUser(char *name, int type)
 // cgroup
 
     New->usessionId = current_usersession;
-    New->cg_id  = current_cgroup;
-    
+    New->cg_id = get_current_cg_id();
+
 // Inicializando a lista de objetos permitidos.
 // Proibindo tudo.
     for (i=0; i<128; i++){
@@ -470,7 +464,6 @@ int User_initialize(void)
 
 // User session and cgroup;
     current_usersession = 0;
-    current_cgroup = 0;
 
 // Initialize user info structure
     printk ("User_initialize: init_user_info\n");

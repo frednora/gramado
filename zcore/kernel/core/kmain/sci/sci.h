@@ -474,7 +474,7 @@
 #define SCI_SHOW_X_SERVER_INFO  516  // show x server info
 #define SCI_SHOW_WM_INFO        517  // show wm info
 
-// 519 - CurrentCG
+// 519 - system_cg
 // #bugbug
 // This is a ring0 pointer.
 // A ring3 process can't handle this thing.

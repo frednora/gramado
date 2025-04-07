@@ -46,9 +46,11 @@ struct cgroup_d
 // Navigation
     struct cgroup_d *next;
 };
+
+// The main cgroup.
 // See: gramk/user/user.c
-extern struct cgroup_d  *CurrentCG;
-extern int current_cgroup; 
+extern struct cgroup_d  *system_cg;
+
 extern int cg_counter;
 // List of cgroups.
 #define CGROUP_COUNT_MAX    16
