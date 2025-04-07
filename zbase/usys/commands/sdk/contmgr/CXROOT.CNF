@@ -1,0 +1,23 @@
+
+/* Example of a configuration file used by the container manager */
+
+container ContainerX
+[
+    meta namespace(){ type("pid");   id("12345"); }
+    meta namespace(){ type("net");   id("67890"); }
+    meta namespace(){ type("mount"); id("11121"); }
+
+    meta resource(){ type("cpu");    limit("2 cores"); }
+    meta resource(){ type("memory"); limit("512MB"); }
+    meta resource(){ type("disk");   limit("10GB"); }
+
+    meta network(){ ip("192.168.1.10");   port("8080:80"); }
+    meta network(){ ip("192.168.1.11");   port("3000:3000"); }
+
+    meta security(){ user_namespace("user_ns_12345");   capabilities("drop CAP_SYS_ADMIN"); }
+    meta security(){ seccomp("seccomp_profile.json");   apparmor("default-profile"); }
+
+    command init(){ path("/usr/bin/start.sh"); }
+    command shutdown(){ path("/usr/bin/stop.sh"); }
+]
+
