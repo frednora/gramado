@@ -1,0 +1,15 @@
+
+I/O on Windows OS:
+
+win32k.sys: 
+The core driver running in ring 0 (kernel mode), 
+responsible for managing low-level graphical and input operations.
+
+ntuser.dll: 
+Handles input, such as keyboard and mouse interactions, 
+and manages user interface components like window focus, 
+Z-order, and message queues.
+
+ntgdi.dll: 
+Manages output, including rendering graphical elements like text, 
+shapes, and images on the screen via the Graphics Device Interface (GDI).

@@ -207,6 +207,7 @@
 #include "../gramk/gdi/gre/gre.h"
 
 #include "../gramk/gdi/dispsrv.h"
+#include "../gramk/gdi/osshell.h"
 
 #include "../gramk/user/input.h"
 #include "../gramk/user/callback.h"

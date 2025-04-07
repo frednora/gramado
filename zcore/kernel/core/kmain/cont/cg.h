@@ -34,9 +34,13 @@ struct cgroup_d
     uid_t uid;
 
 // Main PIDs
+    pid_t __osshell_pid;          // OS Shell (Explorer/taksbar)
     pid_t __display_server_pid;   // display server
     pid_t __network_server_pid;   // network server
-    pid_t __browser_pid;   // network server
+    // ...
+
+// Extra PIDs
+    pid_t __browser_pid;   // main browser?
     // ...
 
 // Navigation

@@ -198,6 +198,17 @@ network_mouse_event(
     long data1, 
     long data2 );
 
+
+int 
+network_register_ring3_osshell(
+    struct cgroup_d *cg,
+    pid_t caller_pid );
+    
+int 
+network_register_ring3_network_server(
+    struct cgroup_d *cg,
+    pid_t caller_pid );
+    
 // Register display servver into a given valid cgroup.
 int 
 network_register_ring3_display_server(

@@ -221,8 +221,24 @@ static void __maximize_ws_priority(pid_t pid)
     t->quantum = QUANTUM_MAX;
 }
 
+int 
+network_register_ring3_osshell(
+    struct cgroup_d *cg,
+    pid_t caller_pid )
+{
+    return -1;
+}
 
-// Register display servver into a given valid cgroup.
+int 
+network_register_ring3_network_server(
+    struct cgroup_d *cg,
+    pid_t caller_pid )
+{
+    return -1;
+}
+
+// Register display server into a given valid cgroup.
+// Called by sci.c
 int 
 network_register_ring3_display_server(
     struct cgroup_d *cg,

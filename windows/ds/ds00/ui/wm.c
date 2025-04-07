@@ -735,15 +735,13 @@ not_valid:
     return;
 }
 
-
-static void on_mouse_pressed(void)
-{
 // Nesse momento a janela mouse_owner eh estabelecida.
 // e as mensagens devem ser enviadas para ela.
 // #todo
 // When the mouse was pressed over en editbox window.
 // So, set the focus?
-
+static void on_mouse_pressed(void)
+{
     int ButtonID = -1;
 
 // Validating the window mouse_over.
@@ -754,17 +752,17 @@ static void on_mouse_pressed(void)
         return;
     }
 
-// Now we have a new mouse_owner.
-// #todo
-// Maybe we can send a message to this window,
-// and the client can make all the changes it wants.
-    mouse_owner = mouse_hover;
-
     //if (mouse_hover == __root_window)
         //return;
 
-    ButtonID = (int) mouse_hover->id;
+// Set the mouse_owner.
+// #todo
+// Maybe we can send a message to this window,
+// and the client can make all the changes it wants.
 
+    mouse_owner = mouse_hover;
+
+    ButtonID = (int) mouse_hover->id;
 
 // -------------------------
 // #test

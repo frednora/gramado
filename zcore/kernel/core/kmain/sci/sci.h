@@ -441,12 +441,12 @@
 
 // ws and wm.
 
-// 512 - SCI_GET_WS_PID
+// 512 - SCI_GET_DS_PID
 // 512 - Get ws PID for a given cgroup.
 // Pega o wm de um dado cgroup.
-#define  SCI_GET_WS_PID  512
+#define  SCI_GET_DS_PID  512
 
-// 513 - SCI_SET_WS_PID
+// 513 - SCI_SET_DS_PID
 // 513
 // Register the ring3 display server.
 // Set ws PID for a given cgroup
@@ -457,7 +457,7 @@
 // arg3 = The window server PID.
 // #todo: 
 // We need a helper function for this.
-#define SCI_SET_WS_PID  513
+#define SCI_SET_DS_PID  513
 
 // 514 - SCI_GET_WM_PID
 // 514 - get wm PID for a given cgroup

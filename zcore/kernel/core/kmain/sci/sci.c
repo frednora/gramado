@@ -1318,19 +1318,21 @@ void *sci0 (
     }
 
 // 512 - Get display server PID for a given cgroup ring0 pointer.
-// IN: arg2 = cgroup structure pointer.
-// OUT: pid
-    if (number == SCI_GET_WS_PID)
+// IN: 
+//   arg2 = ring 0 cgroup structure pointer.
+// OUT: 
+//   pid
+    if (number == SCI_GET_DS_PID)
     {
-        debug_print("sci0: SCI_GET_WS_PID\n");
+        debug_print("sci0: SCI_GET_DS_PID\n");
         cg = (struct cgroup_d *) arg2;
-        if ((void *) cg != NULL)
-        {
-            if ( cg->used  == TRUE && cg->magic == 1234 )
-            {
-                return (void *) cg->__display_server_pid; 
-            }
+        if ((void *) cg == NULL){
+            return NULL;
         }
+        if ( cg->used == TRUE && cg->magic == 1234 )
+        {
+            return (void *) cg->__display_server_pid; 
+        }        
         // It means pid=0.
         return NULL;
     }
@@ -1341,21 +1343,23 @@ void *sci0 (
 // Register a display server.
 // gramado_ports[11] = ws_pid
 // Called by the ring 3 display server.
-// >> arg2 = cgroup structure pointer.
+// >> arg2 = ring 0 cgroup structure pointer.
 // >> arg3 = The display erver PID.
-// IN: cgroup, caller pid.
+// IN: 
+// cgroup, 
+// caller pid.
 // see: network.c
 
-    int display_server_ok=FALSE;
-    if (number == SCI_SET_WS_PID)
+    int __ds_ok = FALSE;
+    if (number == SCI_SET_DS_PID)
     {
-        debug_print("sci0: SCI_SET_WS_PID\n");
-        
-        display_server_ok = 
+        debug_print("sci0: SCI_SET_DS_PID\n");
+
+        __ds_ok = 
             (int) network_register_ring3_display_server(
-                (struct cgroup_d *) arg2, (pid_t) arg3);
+                (struct cgroup_d *) arg2, (pid_t) arg3 );
         
-        if (display_server_ok == TRUE){
+        if (__ds_ok == TRUE){
             return (void*) TRUE;
         }
         return NULL;
@@ -1363,7 +1367,7 @@ void *sci0 (
 
 // #deprecated
 // 514 - get wm PID for a given cgroup
-    if ( number == SCI_GET_WM_PID ){
+    if (number == SCI_GET_WM_PID){
         panic("sci0: SCI_GET_WM_PID\n");
         return NULL;
     }

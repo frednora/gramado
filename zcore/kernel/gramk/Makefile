@@ -72,7 +72,7 @@ LDFLAGS := -m elf_x86_64 -s -x -static
 
 # Everything is a file.
 OBJS = pixel.o line.o rect.o bitblt.o bg.o font.o char.o text.o gre.o \
-input.o dispsrv.o callback.o user.o \
+input.o dispsrv.o osshell.o callback.o user.o \
 gramk.o    
 
 all:
@@ -89,7 +89,8 @@ all:
 	$(CC) -c gdi/gre/gre.c     $(KERNEL_INCLUDE) $(CFLAGS) -o gre.o
 
 # gdi
-	$(CC) -c gdi/dispsrv.c   $(KERNEL_INCLUDE) $(CFLAGS) -o dispsrv.o
+	$(CC) -c gdi/dispsrv.c  $(KERNEL_INCLUDE) $(CFLAGS) -o dispsrv.o
+	$(CC) -c gdi/osshell.c  $(KERNEL_INCLUDE) $(CFLAGS) -o osshell.o
 
 # user
 	$(CC) -c user/input.c     $(KERNEL_INCLUDE) $(CFLAGS) -o input.o

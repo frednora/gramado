@@ -958,9 +958,9 @@ int keInitialize(int phase)
         // Ring0 components for the display server.
         // see: user.c
         gramkInitialize();
-        // ws registration support.
-        // (display server)
-        ws_init();
+        // Display server registration support.
+        // See: dispsrv.c
+        ds_init();
         // ws callback support.
         initialize_ws_callback_info();
 
