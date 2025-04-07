@@ -198,6 +198,10 @@ struct process_d
     gid_t sgid;
 
 // --------------------------
+// #test
+    //struct ns_proxy_d *nsproxy;
+
+// --------------------------
 
 // Personality
 // O sistema pra qual o programa foi feito.
