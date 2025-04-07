@@ -1,0 +1,21 @@
+section .data
+lock_flag dq 0   ; Lock variable (0 = unlocked, 1 = locked) stored as a 64-bit value
+
+section .text
+global acquire_lock, release_lock
+
+; Function to acquire the spinlock
+acquire_lock:
+    mov rax, 1         ; Set RAX to 1 (indicating "locked" state)
+spin:
+    xchg rax, [lock_flag] ; Atomically exchange RAX with the lock_flag
+    test rax, rax       ; Check if the old value of lock_flag was 0 (unlocked)
+    jnz spin            ; If it wasn't 0, the lock is taken, so keep spinning
+    ret                 ; If it was 0, we successfully acquired the lock
+
+; Function to release the spinlock
+release_lock:
+    mov qword [lock_flag], 0 ; Set lock_flag back to 0 (unlocked), using a 64-bit write
+    ret
+	
+	
