@@ -63,7 +63,8 @@
 // ...
 
 // Status
-static int running = FALSE;
+static int isTimeToQuit = FALSE;
+
 // Server fd
 static int ____saved_server_fd = -1;
 // Current client fd
@@ -841,15 +842,13 @@ exit0:
 // Called by main().
 static int ServerLoop(void)
 {
-
-//=======================
+    // Socket address
     struct sockaddr server_address;
     socklen_t addrlen=0;
     server_address.sa_family = AF_GRAMADO;
     server_address.sa_data[0] = 'n';
     server_address.sa_data[1] = 's';
     addrlen = sizeof(server_address);
-//=======================
 
     int server_fd = -1; 
     int bind_status = -1;
@@ -876,11 +875,10 @@ static int ServerLoop(void)
  */
 
 // -------------------
-// Register
 // Register this process as the network server.
 // See: connect.c
     _status = (int) register_ns();
-    if (_status<0){
+    if (_status < 0){
         printf("netd: Couldn't register the server\n");
         goto fail;
     }
@@ -900,9 +898,9 @@ static int ServerLoop(void)
 // bind
     bind_status = 
         (int) bind (
-                  server_fd, 
-                  (struct sockaddr *) &server_address, 
-                  addrlen );
+                server_fd, 
+                (struct sockaddr *) &server_address, 
+                addrlen );
 
     if (bind_status < 0){
         printf("netd: on bind()\n");
@@ -912,9 +910,8 @@ static int ServerLoop(void)
 // Calling child and wait.
 // Just for fun, not for profit.
     if (InitializeFirstClient == TRUE){
-        rtl_clone_and_execute("gns.bin");
+        rtl_clone_and_execute("@net.bin");
     }
-
 // Wait
     for (i=0; i<11; i++){
         ServerYield();
@@ -933,22 +930,25 @@ static int ServerLoop(void)
     register int newconn = -1;
     int curconn = ____saved_server_fd;
 
-// Accept connection from a client. 
-
-    running = TRUE;
-
+// Accept connection from clients and 
+// processing the request.
+    isTimeToQuit = FALSE;
     while (1)
     {
+        // If the server changed the status.
+        if (isTimeToQuit == TRUE)
+            break;
+
         newconn = 
             (int) accept ( 
-                      ____saved_server_fd, 
-                      (struct sockaddr *) &server_address, 
-                      (socklen_t *) addrlen );
+                    ____saved_server_fd, 
+                    (struct sockaddr *) &server_address, 
+                    (socklen_t *) addrlen );
 
         if (newconn < 0){
             debug_print("netd: on accept()\n");
             ServerYield(); 
-        }else{
+        } else {
             // Valid fd.
             if (newconn == 31){
                 ServerDispatch(newconn);
@@ -956,8 +956,13 @@ static int ServerLoop(void)
         };
     };
 
-// =======================================
+// Is it time to quit?
+    if (isTimeToQuit != TRUE)
+        goto fail;
+
+    //close(newconn);
     return 0;
+
 fail:
     return (int) -1;
 }
@@ -973,7 +978,7 @@ static void ServerInitializeGlobals(void)
     register int i=0;
 
 // Global flag for the loop.
-    running = FALSE;
+    isTimeToQuit = FALSE;
     ____saved_server_fd = -1;
     ____saved_current_client_fd = -1;
 
@@ -991,12 +996,13 @@ static void ServerInitializeGlobals(void)
 
 static int ServerInitialization(void)
 {
-// debug
+    // debug
     printf("\n");
     printf("NETD.BIN: Initializing\n");
 
 // Initialize global variables.
     ServerInitializeGlobals();
+    //...
 
     return 0;
 }
