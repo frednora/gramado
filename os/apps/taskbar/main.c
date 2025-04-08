@@ -98,12 +98,46 @@
 #define TASKBAR_HEIGHT  28
 //#define TASKBAR_HEIGHT  100
 
+// Device Info.
 struct device_info_d 
 {
     unsigned long width;
     unsigned long height;
 };
 struct device_info_d  DeviceInfo;
+
+// Desktop info
+struct desktop_info_d
+{
+    int initialized;
+    int inUse;
+    int style;
+    // ...
+};
+struct desktop_info_d  DesktopInfo;
+
+// #todo
+// Taskbar info?
+struct taskbar_info_d
+{
+    int initialized;
+    int inUse;
+    int style;
+    // ...
+};
+struct taskbar_info_d  TaskbarInfo;
+
+// This application is the OS Shell
+struct os_shell_info_d 
+{
+    int initialized;
+    // ...
+    //struct desktop_info_d  DesktopInfo;
+    //struct taskbar_info_d  TaskbarInfo;
+
+};
+struct os_shell_info_d  OSShellInfo;
+
 
 // Clients
 // Creating 32 clients.
@@ -117,6 +151,7 @@ struct tb_client_d clientList[CLIENT_COUNT_MAX];
 //
 
 static int main_window = -1;
+static int desktop_window = -1;
 static int startmenu_window = -1;
 
 //
@@ -176,6 +211,9 @@ create_bar_icon(
     unsigned long top,
     unsigned long width,
     unsigned long height );
+
+static int create_icons_on_desktop(int fd);
+static int create_desktop_area(int fd);
 
 //==================================
 
@@ -837,6 +875,113 @@ fail:
     return (int) -1;
 }
 
+
+static int create_icons_on_desktop(int fd)
+{
+    register int i=0;
+    static int Max = 4;
+
+    unsigned long screen_w = gws_get_system_metrics(1);
+    unsigned long screen_h = gws_get_system_metrics(2);
+
+    if (fd<0)
+        goto fail;
+    if (desktop_window<0)
+        goto fail;
+
+    int ParentWID = desktop_window;
+
+
+    // grid item
+    unsigned long w0 = (screen_w/8);
+    unsigned long h0 = ((screen_h-TASKBAR_HEIGHT)/4);
+    // icon
+    unsigned long l = 10;
+    unsigned long t = 10;
+    unsigned long w = (w0 -4);
+    unsigned long h = (h0 -4);
+
+    // #todo
+    // Create the style WS_DESKTOPICON
+    unsigned long style = WS_TITLEBARICON;
+
+    // #test (Local for now)
+    int iconID = -1;
+
+// #todo
+// We need a routine to create and populate the grid.
+
+    for (i=0; i<Max; i++){
+    t = (h0*i);
+    iconID = 
+        (int) gws_create_window (
+                fd,
+                WT_ICON, 1, 1, "IconXX",
+                l, t, w, h,
+                ParentWID, 
+                style, 
+                COLOR_WHITE, COLOR_WHITE );
+
+    if (iconID < 0){
+        printf ("taskbar.bin: iconID\n");
+        exit(1);
+    } 
+    };
+
+    return 0;
+fail:
+    return (int) -1;
+}
+
+
+static int create_desktop_area(int fd)
+{
+// This window will have the same size of the working area,
+// managed by the display server.
+
+    unsigned long screen_w = gws_get_system_metrics(1);
+    unsigned long screen_h = gws_get_system_metrics(2);
+
+    if (fd<0)
+        goto fail;
+
+//
+// Window
+//
+
+    // The taskbar window.
+    unsigned long l = 0;
+    unsigned long t = 0;
+    unsigned long w = screen_w;
+    unsigned long h = screen_h - TASKBAR_HEIGHT;
+
+    unsigned long style = WS_CHILD;
+
+    unsigned int Color01 = COLOR_DESKTOP;
+    unsigned int Color02 = COLOR_DESKTOP;
+
+    desktop_window = 
+        (int) gws_create_window (
+                fd,
+                WT_SIMPLE, 1, 1, "DesktopWin",
+                l, t, w, h,
+                0, 
+                style, 
+                Color01, Color02 );
+
+    if (desktop_window < 0){
+        printf ("taskbar.bin: desktop_window\n");
+        exit(1);
+    } 
+
+    create_icons_on_desktop(fd);
+    gws_refresh_window(fd, desktop_window);
+    return 0;
+
+fail:
+    return (int) -1;
+}
+
 //==========================================
 // Main
 int main(int argc, char *argv[])
@@ -848,6 +993,7 @@ int main(int argc, char *argv[])
 
     int ShowCube = FALSE;
     int launchChild = TRUE;
+    int useDesktop = FALSE; //TRUE;
     // ...
     int client_fd = -1;
 
@@ -900,6 +1046,14 @@ int main(int argc, char *argv[])
     //printf(":: Entering taskbar.bin pid{%d} fd{%d}\n",
         //getpid(), client_fd);
     //while(1){}
+
+// ==================================================
+// Create the desktop area and one icon for test.
+
+    if (useDesktop == TRUE)
+        create_desktop_area(client_fd);
+
+// ==================================================
 
 
 //========================================
@@ -1015,6 +1169,7 @@ int main(int argc, char *argv[])
 
     //while(1){}
     //asm ("int $3");
+
 
 /*
 // barra azul no topo.
