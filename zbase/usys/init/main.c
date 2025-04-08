@@ -63,6 +63,8 @@ static int input_process_cmdline(void);
 static int input_process_printable_char(int ch);
 static int input_process_control_char(int ch);
 
+static int ProcessCharInput(int c);
+
 // Loops
 static int loopSTDIN(void);
 static int loopMenu(void);
@@ -616,27 +618,54 @@ static int input_process_control_char(int ch)
     return 0;
 }
 
+static int ProcessCharInput(int c)
+{
+    if (c <= 0)
+        goto fail;
+
+    // [Enter]
+    if (c == __VK_RETURN){
+        input_process_cmdline();
+        return 0;
+
+    // Printable chars
+    } else if ( c >= 0x20 && c <= 0x7F ){
+        input_process_printable_char(c);
+        return 0;
+
+    // #test
+    // Control chars. (0~0x1F)
+    } else if (c <= 0x1F){
+        input_process_control_char(c);
+        return 0;
+
+    // Nothing
+    } else {
+        goto fail;
+    };
+
+fail:
+    return (int) -1;
+}
+
 //
 // $
 // STDIN LOOP
 //
 
-// Get input from sdtin.
+// [Command interpreter]
+// Stay in a loop getting input from sdtin and 
+// printing it into the kernel console.
+// The command line interpreter inside the initprocess.
+// There is no display server running yet.
 static int loopSTDIN(void)
 {
     register int C=0;
 
-//================================
-
-// Clear the console and set cursor position to 0,0.
+// Clear the kernel console, set cursor position to 0,0,
+// print the banner string and the prompt symbol. '>'
     do_clear_console();
-
-// ====
-// Small command line interpreter.
-// We need to hang here because 
-// maybe there is no window server installed.
-
-    printf(":: Gramado OS ::\n");
+    printf(":: Gramado OS :) ::\n");
     do_init_prompt();
 
     while (1)
@@ -644,20 +673,10 @@ static int loopSTDIN(void)
         if (isTimeToQuitCmdLine == TRUE){
             break;
         }
+
         C = (int) fgetc(stdin);
-        
-        if (C > 0)
-        {
-            // [Enter]
-            if (C == __VK_RETURN){
-                input_process_cmdline();
-            // Printable
-            } else if ( C >= 0x20 && C <= 0x7F ){
-                input_process_printable_char(C);
-            // #todo: Control chars. (0~0x1F)
-            } else if ( C <= 0x1F ){
-                input_process_control_char(C);
-            }
+        if (C > 0){
+            ProcessCharInput(C);
         }
     };
 
@@ -925,6 +944,7 @@ int main( int argc, char **argv)
 // Loop
 //
 
+CommandInterpreter:
 // =[Loop 1]===============================
 // Get input from stdin.
 // Local function.
@@ -935,6 +955,7 @@ int main( int argc, char **argv)
 
     // Fall through :)
 
+ServerLoop:
 // =[Loop 2]===============================
 // Get input from idle thread.
 // Idle thread loop.
@@ -958,6 +979,13 @@ int main( int argc, char **argv)
 // It depends on the runlevel.
 unexpected_exit:
     printf("init.bin: Unexpected exit()\n");
+
+    // #todo:
+    // Maybe we can reinitialize the init process
+    // or the server Command interpreter.
+    // goto CommandInterpreter;
+    // goto ServerLoop;
+
     while (1){
         asm ("pause"); 
     };

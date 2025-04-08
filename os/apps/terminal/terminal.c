@@ -3,7 +3,7 @@
 
 //#include <ctype.h>
 // #todo:
-// We need to change the name of this document??
+// We need to change the name of this document?
 
 // #test:
 // Testing ioctl()
@@ -217,7 +217,7 @@ terminalProcedure (
 
 // System messages.
 static void __get_system_event(int fd, int wid);
-static void __get_ws_event(int fd, int event_wid);
+static void __get_ds_event(int fd, int event_wid);
 
 static int __input_STDIN(int fd);
 static int __input_from_connector(int fd);
@@ -384,6 +384,14 @@ static void __test_post_async_hello(void)
     rtl_post_system_message( 
         (int) InitProcessControlTID, 
         (unsigned long) message_buffer );
+
+// #todo
+// Actually this test needs to stay into a loop 
+// waiting for the response.
+// #bugbug
+// We put the handler into the terminalProcedure,
+// anyone can send this message to us for now.
+    //while(1){ ... get event }
 }
 
 // Redraw and refresh the client window.
@@ -1202,8 +1210,7 @@ static void compareStrings(int fd)
 // But it will send us a message back.
     if ( strncmp(prompt,"msg1",4) == 0 )
     {
-        //while(1)
-            __test_post_async_hello();
+        __test_post_async_hello();
         goto exit_cmp;
     }
 
@@ -3198,7 +3205,7 @@ static int __input_STDIN(int fd)
         // + Get events from the display server.
         if (fGetWSEvents == TRUE){
             // #todo: Change function name to __get_ds_event.
-            __get_ws_event( client_fd, main_window );
+            __get_ds_event( client_fd, main_window );
         }
     };
 
@@ -3300,7 +3307,7 @@ RelaunchShell:
         }
         // + Get events from the server.
         if (fGetWSEvents == TRUE){
-            __get_ws_event( client_fd, main_window );
+            __get_ds_event( client_fd, main_window );
         }
     };
 
@@ -3348,7 +3355,8 @@ fail:
     return -1;
 }
 
-
+// Get system events.
+// The events came from kernel or other processes.
 static void __get_system_event(int fd, int wid)
 {
     int msg_code = 0;
@@ -3378,12 +3386,18 @@ static void __get_system_event(int fd, int wid)
     // some important event happened with the child.
     // MSG_NOTIFY_PARENT
     case 4000:
-        printf("terminal.bin: #test Notify parent\n");
+        cr();
+        lf();
+        tputstring(fd,"terminal.bin: #test Notify parent");    
         break;
 
-    //#test
+    // #test
+    // In this test, some routine sent a message to the 
+    // init process and then the init process responded it.
     case 44888:
-       printf("terminal.bin: 44888 Received\n");
+       cr();
+       lf();
+       tputstring(fd,"terminal.bin: 44888 Received");   
        break;
     default:
         break;
@@ -3391,7 +3405,7 @@ static void __get_system_event(int fd, int wid)
 }
 
 // #todo: Change function name to __get_ds_event.
-static void __get_ws_event(int fd, int event_wid)
+static void __get_ds_event(int fd, int event_wid)
 {
 // Get only one event from the display server.
 

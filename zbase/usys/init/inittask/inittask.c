@@ -167,6 +167,9 @@ void xxxSendResponse(void)
     NoReply = TRUE;   // No more responses
 }
 
+// Process events.
+// These events come from the kernel or another process.
+// The caller TID for the kernel is 99.
 int 
 xxxProcessEvent ( 
     void *window, 
@@ -176,18 +179,15 @@ xxxProcessEvent (
     int caller_tid )
 {
 // Processing requests.
+    int isKernelMessage = FALSE;
 
 // Invalid message code
-    if (msg < 0){
+    if (msg <= 0){
         goto fail;
     }
-
-// Invalid caller.
-// #todo: 
-// End if the kernel is sending us a system message?
-
-    //if (caller_tid)
-        //goto fail;
+// Is it a message from the kernel.
+    if (caller_tid == 99)
+        isKernelMessage = TRUE;
 
     switch (msg){
 
@@ -291,7 +291,6 @@ xxxProcessEvent (
         do_reboot(caller_tid);
         break;
 
-
 // #warning
 // Who can send us this message?
 
@@ -324,11 +323,14 @@ fail:
 // LOOP (System events)
 //
 
+// [Server loop]
+// Get system messages from Init Thread (idle).
+// Getting requests or events.
+// Process the events.
+// Respont the request of other processes, 
+// using system messages.
 int xxxEventLoopSystemEvents(void)
 {
-// Get input from idlethread.
-// Getting requests or events.
-
     NoReply = TRUE;
 
 // #todo
@@ -342,17 +344,22 @@ int xxxEventLoopSystemEvents(void)
 		if (isTimeToQuitServer == TRUE){
 			break;
 		}
+        // #todo
+        // We gotta put this thread into a wait state if there's no 
+        // more events into the queue.
         if ( rtl_get_event() == TRUE )
         {
             // Get caller's tid.
             Caller.tid = (int) ( RTLEventBuffer[8] & 0xFFFF );
+
             // Dispatch.
             xxxProcessEvent ( 
                 (void*) RTLEventBuffer[0], 
-                RTLEventBuffer[1],  // msg 
+                RTLEventBuffer[1],  // msg code.
                 RTLEventBuffer[2], 
                 RTLEventBuffer[3],
                 Caller.tid );
+
             // #test
             //rtl_yield();
             //Caller.tid = -1;
@@ -366,13 +373,10 @@ int xxxEventLoopSystemEvents(void)
     return 0;
 }
 
-
-
 void libinit_clear_msg_buffer(void)
 {
-    memset(__filename_local_buffer,0,__MSG_BUFFER_SIZE);
+    memset( __filename_local_buffer, 0, __MSG_BUFFER_SIZE );
 }
-
 
 int libinit_initialize_library(void)
 {
@@ -380,7 +384,6 @@ int libinit_initialize_library(void)
     // ...
     return 0;
 }
-
 
 // =============================================================
 
