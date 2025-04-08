@@ -1,0 +1,21 @@
+Thank you for sharing the code snippet from `quantum.h`. It outlines various quantum levels for threads based on their priority and purpose in the system.
+
+Here’s a quick summary of its structure:
+
+1. **Quantum Definitions**:
+   - It uses a multiplier, `CONFIG_QUANTUM_MULTIPLIER`, to define quantum levels ranging from `QUANTUM_Q1` (lowest) to `QUANTUM_Q6` (highest).
+   - Threads are categorized into two classes: **Priority Normal** (lower quantum range: `QUANTUM_Q1` to `QUANTUM_Q3`) and **Priority System** (higher quantum range: `QUANTUM_Q4` to `QUANTUM_Q6`).
+
+2. **Thresholds**:
+   - Threshold values are defined for different levels of criticality:
+     - **Normal Thresholds**: `QUANTUM_NORMAL_THRESHOLD` and `QUANTUM_NORMAL_TIME_CRITICAL`.
+     - **System Thresholds**: `QUANTUM_SYSTEM_THRESHOLD` and `QUANTUM_SYSTEM_TIME_CRITICAL`.
+
+3. **Min/Max Quantum**:
+   - It sets universal minimum (`QUANTUM_MIN = QUANTUM_Q1`) and maximum (`QUANTUM_MAX = QUANTUM_Q6`) limits for all thread classes.
+
+This modular design makes it easy to tune thread scheduling behavior by adjusting the `CONFIG_QUANTUM_MULTIPLIER` or individual quantum levels for different priorities.
+
+If you're considering changes to the quantum ranges when threads receive system messages, your design could dynamically adjust the quantum within the defined min/max bounds, ensuring threads remain within their intended range.
+
+Does this align with your current design approach, or would you like to brainstorm further refinements?

@@ -82,13 +82,13 @@ void do_thread_dead(tid_t tid)
 
 // structure
     t = (void *) threadList[tid];
-    if ( (void*) t == NULL ){
+    if ((void*) t == NULL){
         return;
     }
     if (t->used != TRUE){
         return;
     }
-    if(t->magic != 1234){
+    if (t->magic != 1234){
         return;
     }
 
@@ -105,7 +105,7 @@ void do_thread_initialized(tid_t tid)
     }
 // Structure
     t = (void *) threadList[tid];
-    if ( (void*) t == NULL ){
+    if ((void*) t == NULL){
         return;
     }
     if (t->used != TRUE){
@@ -129,7 +129,7 @@ void do_thread_ready(tid_t tid)
 
 // structure
     t = (void *) threadList[tid];
-    if ( (void*) t == NULL ){
+    if ((void*) t == NULL){
         return;
     }
     if (t->used != TRUE){
@@ -165,7 +165,7 @@ void do_thread_running(tid_t tid)
 
     t = (void *) threadList[tid];
 // Valid?
-    if ( (void *) t != NULL ){
+    if ((void *) t != NULL){
         if ( t->used == TRUE && t->magic == 1234 ){
             t->state = RUNNING;
         }
@@ -183,7 +183,7 @@ void do_thread_standby(tid_t tid)
 
 // structure
     t = (void *) threadList[tid];
-    if ( (void*) t == NULL ){
+    if ((void*) t == NULL){
         return;
     }
     if (t->used != TRUE){
@@ -230,7 +230,7 @@ void do_thread_waiting(tid_t tid, unsigned long ms)
     t->wake_jiffy = (unsigned long) (jiffies + JiffiesToWait);
 
 // #debug
-    printk ("do_thread_waiting: j1=%d | j2=%d |\n", jiffies, t->wake_jiffy);
+    printk("do_thread_waiting: j1=%d | j2=%d |\n", jiffies, t->wake_jiffy);
     printk("do_thread_waiting: done\n");
 }
 
@@ -245,7 +245,7 @@ void do_thread_zombie(tid_t tid)
 
 // structure
     t = (void *) threadList[tid]; 
-    if ( (void*) t == NULL ){
+    if ((void*) t == NULL){
         return;
     }
     if (t->used != TRUE){

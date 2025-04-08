@@ -3,6 +3,14 @@
 // Core scheduler code and related routines.
 // Created by Fred Nora.
 
+// #test
+// #todo
+// In the case of server operating systems,
+// input responsiveness is not a priority,
+// in this case, the scheduler can boost the quantum of 
+// network related tasks, not the display server or
+// foreground thread.
+
 #include <kernel.h>
 
 // Scheduler main structure.
