@@ -727,6 +727,10 @@ struct thread_d
     // Saving the position for the last input.
     //int MsgLastMessageIndex;
 
+    // If this flag is set, this thread is will respond an input event.
+    // So, the scheduler needs to boots the quantum of this thread.
+    int isResponder;
+
 // ====================================================
 
 // #test

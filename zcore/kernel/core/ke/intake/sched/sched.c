@@ -255,7 +255,7 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
     Idle->base_priority = PRIORITY_SYSTEM_THRESHOLD;
     Idle->priority      = PRIORITY_SYSTEM_THRESHOLD;
 // Estabilize the credits.
-    Idle->quantum = QUANTUM_NORMAL_THRESHOLD;
+    Idle->quantum = QUANTUM_NORMAL_THRESHOLD;       
 
     //Idle->affinity_processor = 0;
     //Idle->current_processor = 0;
@@ -446,6 +446,11 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                     if (TmpThread->tid == DisplayServerInfo.tid){
                         TmpThread->quantum = QUANTUM_SYSTEM_TIME_CRITICAL;
                     }
+                }
+                // This thread received an input event.
+                if (TmpThread->isResponder == TRUE){
+                    TmpThread->quantum = QUANTUM_SYSTEM_TIME_CRITICAL;
+                    TmpThread->isResponder = FALSE;
                 }
             }
 
