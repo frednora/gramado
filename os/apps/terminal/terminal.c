@@ -1370,8 +1370,8 @@ static void compareStrings(int fd)
         goto exit_cmp;
     }
 
-// Quit 'ws'.
-    if ( strncmp(prompt,"ws-quit",7) == 0 ){
+// Quit 'ds'.
+    if ( strncmp(prompt,"ds-quit",7) == 0 ){
         //gws_async_command(fd,88,0,0);  //ok
         goto exit_cmp;
     }

@@ -126,14 +126,13 @@ build-gramado-os:
 # ::Build stuuf in $(DEP_L0)/boot/
 	$(Q)$(MAKE) -C $(DEP_L0)/boot/
 
-# Copy stuff created in $(DEP_L0)/boot/
-
 # Copy the virtual disk into the rootdir.
 	cp $(DEP_L0)/boot/GRAMHV.VHD  .
 # Copy $(DEP_L0)/bootloader stuff into rootdir.
 	cp $(DEP_L0)/boot/x86/bsp/bin/BM.BIN      $(BASE)/
 	cp $(DEP_L0)/boot/x86/bsp/bin/BM2.BIN     $(BASE)/
 	cp $(DEP_L0)/boot/x86/bsp/bin/BLGRAM.BIN  $(BASE)/
+	cp $(DEP_L0)/boot/MBR0.BIN                $(BASE)/
 # Copy bootloader stuff into GRAMADO/ folder.
 	cp $(DEP_L0)/boot/x86/bsp/bin/BM.BIN      $(BASE)/GRAMADO
 	cp $(DEP_L0)/boot/x86/bsp/bin/BM2.BIN     $(BASE)/GRAMADO
@@ -146,11 +145,9 @@ build-gramado-os:
 # ::Build kernel image.
 	$(Q)$(MAKE) -C $(DEP_L0)/kernel/
 
-# Copy to the target folder.
-# We need a backup
-# The bootloader expect this.
-# todo: We need to rethink this backup.
+# Copy the kernel to the standard system folder.
 	cp $(DEP_L0)/kernel/KERNEL.BIN  $(BASE)/GRAMADO
+# Create a backup; The bootloder expects this.
 	cp $(DEP_L0)/kernel/KERNEL.BIN  $(BASE)/DE
 
 #===================================
@@ -160,40 +157,47 @@ build-gramado-os:
 	$(Q)$(MAKE) -C $(DEP_L0)/modules/
 
 # Copy the ring0 module image.
-# Not dynlinked modules.
+# It is loadable, but it's not a dynlinked format.
 	cp $(DEP_L0)/modules/bin/HVMOD0.BIN  $(BASE)/
-#	cp $(DEP_L0)/modules/bin/HVMOD1.BIN  $(BASE)/
 	cp $(DEP_L0)/modules/bin/HVMOD0.BIN  $(BASE)/GRAMADO
+
+# Copy the ring0 module image.
+# It is loadable, but it's not a dynlinked format.
+#	cp $(DEP_L0)/modules/bin/HVMOD1.BIN  $(BASE)/
 #	cp $(DEP_L0)/modules/bin/HVMOD1.BIN  $(BASE)/GRAMADO
 
 # ...
 
 #===================================
-# $(DEP_L1)/usys/ in kernel project
-# Build the init process.
-# Copy the init process.
-# We can't survive without this one. (Only this one).
+# $(DEP_L1)/usys/
+# Build and copy init process and some commands.
+
 	$(Q)$(MAKE) -C $(DEP_L1)/usys/
+
+# Copy the init process.
+	cp $(DEP_L1)/usys/bin/INIT.BIN  $(BASE)/
+
+# Well consolidated applications
+	-cp $(DEP_L1)/usys/bin/PUBSH.BIN      $(BASE)/DE/
+	-cp $(DEP_L1)/usys/bin/SH7.BIN        $(BASE)/DE/
+	-cp $(DEP_L1)/usys/bin/SHELL.BIN      $(BASE)/DE/
+#	-cp $(DEP_L1)/usys/bin/SHELL00.BIN    $(BASE)/DE/
+	-cp $(DEP_L1)/usys/bin/TASCII.BIN     $(BASE)/DE/
+	-cp $(DEP_L1)/usys/bin/TPRINTF.BIN    $(BASE)/DE/
+
+#===================================
+# $(DEP_L1)/usys/commands/
+
 	$(Q)$(MAKE) -C $(DEP_L1)/usys/commands/
 
-# Copy
-
-	cp $(DEP_L1)/usys/bin/INIT.BIN      $(BASE)/
+# Copy some basic commands.
+	-cp $(DEP_L1)/usys/commands/base/bin/CAT.BIN       $(BASE)/
+	-cp $(DEP_L1)/usys/commands/base/bin/UNAME.BIN     $(BASE)/
 	-cp $(DEP_L1)/usys/commands/base/bin/REBOOT.BIN    $(BASE)/
 	-cp $(DEP_L1)/usys/commands/base/bin/SHUTDOWN.BIN  $(BASE)/
 	-cp $(DEP_L1)/usys/commands/sdk/bin/GRAMCNF.BIN    $(BASE)/
 
-    # Well consolidated applications
-	-cp $(DEP_L1)/usys/bin/PUBSH.BIN                $(BASE)/DE/
-	-cp $(DEP_L1)/usys/bin/SH7.BIN                  $(BASE)/DE/
-	-cp $(DEP_L1)/usys/bin/SHELL.BIN                $(BASE)/DE/
-#	-cp $(DEP_L1)/usys/bin/SHELL00.BIN              $(BASE)/DE/
-	-cp $(DEP_L1)/usys/bin/TASCII.BIN               $(BASE)/DE/
-	-cp $(DEP_L1)/usys/bin/TPRINTF.BIN              $(BASE)/DE/
-	-cp $(DEP_L1)/usys/commands/base/bin/CAT.BIN    $(BASE)/DE/
-	-cp $(DEP_L1)/usys/commands/base/bin/UNAME.BIN  $(BASE)/DE/
-
-    # Experimental applications
+# Experimental applications
 	-cp $(DEP_L1)/usys/commands/base/bin/FALSE.BIN      $(BASE)/DE/
 	-cp $(DEP_L1)/usys/commands/base/bin/TRUE.BIN       $(BASE)/DE/
 	-cp $(DEP_L1)/usys/commands/extra/bin/CMP.BIN       $(BASE)/DE/
@@ -218,6 +222,7 @@ build-gramado-os:
 	-cp $(DEP_L1)/uservers/bin/NET.BIN   $(BASE)/GRAMADO/
 	-cp $(DEP_L1)/uservers/bin/NETD.BIN  $(BASE)/GRAMADO/
 
+#===================================
 # Install BMPs from cali assets.
 # Copy the $(DEP_L3)/assets/
 # We can't survive without this one.
