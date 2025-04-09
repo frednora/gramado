@@ -1,0 +1,93 @@
+Here's a table summarizing the virtual addresses defined in `x64gva.h`:
+
+| Address Range           | Description                                                                                     | Notes                                                                                     |
+|-------------------------|-------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|
+| 0x600                   | MBR Address                                                                                     | Defined as `MBR_ADDRESS_VA`                                                               |
+| 0x800                   | VBR Address for Volume 1                                                                        | Defined as `VOLUME1_VBR_ADDRESS_VA`                                                       |
+| 0x800                   | VBR Address for Volume 2                                                                        | Defined as `VOLUME2_VBR_ADDRESS_VA`                                                       |
+| 0x00030000              | FAT Address for Volume 1                                                                        | Defined as `VOLUME1_FAT_ADDRESS_VA`                                                       |
+| 0x00030000              | FAT Address for Volume 2                                                                        | Defined as `VOLUME2_FAT_ADDRESS_VA`                                                       |
+| 0x00070000              | Root Directory Address for Volume 1                                                             | Defined as `VOLUME1_ROOTDIR_ADDRESS_VA`                                                   |
+| 0x00070000              | Root Directory Address for Volume 2                                                             | Defined as `VOLUME2_ROOTDIR_ADDRESS_VA`                                                   |
+| 0x000000000009C000      | Kernel PML4 Virtual Address                                                                     | Defined as `KERNEL_PML4_VA`                                                               |
+| 0x00200000              | Control Thread Base Address                                                                     | Defined as `CONTROLTHREAD_BASE`                                                           |
+| 0x00201000              | Control Thread Entry Point                                                                      | Defined as `CONTROLTHREAD_ENTRYPOINT`                                                     |
+| 0x003FFFF0              | Control Thread Stack                                                                            | Defined as `CONTROLTHREAD_STACK`                                                          |
+| 0x0000000000200000      | User Area Base Address                                                                          | Defined as `RING3AREA_VA`                                                                 |
+| 0x0000000030000000      | Kernel Image Base Address                                                                       | Defined as `KERNELIMAGE_VA`, `KERNEL_IMAGE_BASE`, and `KERNBASE`                          |
+| 0x0000000030100000      | Kernel Heap Start                                                                               | Defined as `KERNEL_HEAP_START`                                                            |
+| 0x00000000301D0000      | Kernel Heap End                                                                                 | Defined as `KERNEL_HEAP_END`                                                              |
+| 0x00000000301E0000      | Kernel Stack End                                                                                | Defined as `KERNEL_STACK_END`                                                             |
+| 0x00000000301FFFF0      | Kernel Stack Start                                                                              | Defined as `KERNEL_STACK_START`                                                           |
+| 0x0000000030200000      | Frontbuffer Address                                                                             | Defined as `FRONTBUFFER_VA`, `DEFAULT_LFB_VIRTUALADDRESS`, and `FRONTBUFFER_ADDRESS`      |
+| 0x0000000030400000      | Backbuffer Address                                                                              | Defined as `BACKBUFFER_VA`, `DEFAULT_BACKBUFFER_VIRTUALADDRESS`, and `BACKBUFFER_ADDRESS` |
+| 0x0000000030600000      | Paged Pool                                                                                      | Defined as `PAGEDPOOL_VA`                                                                 |
+| 0x0000000030800000      | Heap Pool                                                                                       | Defined as `HEAPPOOL_VA`                                                                  |
+| 0x0000000030A00000      | Extra Heap 1                                                                                    | Defined as `EXTRAHEAP1_VA`                                                                |
+| 0x0000000030C00000      | Extra Heap 2                                                                                    | Defined as `EXTRAHEAP2_VA`                                                                |
+| 0x0000000030E00000      | Extra Heap 3                                                                                    | Defined as `EXTRAHEAP3_VA`                                                                |
+| 0x0000000030A00000      | Module 0 Image Address                                                                          | Defined as `MOD0_IMAGE_VA`                                                                |
+| 0x0000000030A01000      | Module 0 Entry Point                                                                            | Defined as `MOD0_ENTRYPOINT_VA`                                                           |
+| 0x0000000031000000      | Free Space                                                                                      |                                                                                           |
+| 0x0000000031200000      | NIC Intel E1000                                                                                 | Defined as `NIC_INTEL_E1000_VA`                                                           |
+| 0x0000000031400000      | LAPIC Registers                                                                                 | Defined as `LAPIC_VA`                                                                     |
+| 0x0000000031600000      | IOAPIC Registers                                                                                | Defined as `IOAPIC_VA`                                                                    |
+| 0x0000000031800000      | ACPI RSDT                                                                                       | Defined as `RSDT_VA`                                                                      |
+| 0x100000000             | Windows Pool Start Address                                                                      | Defined as `WINDOWS_POOL_START_VA`                                                        |
+
+### Explanation:
+- **MBR and VBR Addresses (0x600, 0x800)**: Virtual addresses for the Master Boot Record and Volume Boot Records.
+- **FAT and Root Directory Addresses (0x00030000, 0x00070000)**: Virtual addresses for the file allocation table and root directory for storage volumes.
+- **Kernel PML4 Address (0x000000000009C000)**: Virtual address for the kernel's Page Map Level 4 table.
+- **Control Thread Addresses (0x00200000, 0x00201000, 0x003FFFF0)**: Virtual addresses for the base, entry point, and stack of the control thread in ring3.
+- **User Area Base Address (0x0000000000200000)**: Base virtual address for user-space memory.
+- **Kernel Image Base Address (0x0000000030000000)**: Virtual address for the start of the kernel image.
+- **Kernel Heap and Stack Addresses (0x0000000030100000, 0x00000000301D0000, 0x00000000301E0000, 0x00000000301FFFF0)**: Virtual addresses for the kernel heap and stack.
+- **Frontbuffer and Backbuffer Addresses (0x0000000030200000, 0x0000000030400000)**: Virtual addresses for the front buffer (LFB) and back buffer.
+- **Paged Pool and Heap Pool Addresses (0x0000000030600000, 0x0000000030800000)**: Virtual addresses for the paged pool and heap pool.
+- **Extra Heaps (0x0000000030A00000, 0x0000000030C00000, 0x0000000030E00000)**: Virtual addresses for additional heap space.
+- **Module 0 Addresses (0x0000000030A00000, 0x0000000030A01000)**: Virtual addresses for the first ring0 module.
+- **NIC Intel E1000 Address (0x0000000031200000)**: Virtual address for the NIC Intel E1000.
+- **LAPIC and IOAPIC Addresses (0x0000000031400000, 0x0000000031600000)**: Virtual addresses for LAPIC and IOAPIC registers.
+- **ACPI RSDT Address (0x0000000031800000)**: Virtual address for the ACPI Root System Description Table.
+- **Windows Pool Start Address (0x100000000)**: Virtual address for the start of the Windows pool.
+
+==================================================================
+
+The file `zcore/kernel/kres/mm/x86_64/x64gva.h` defines various virtual addresses 
+used by the kernel's memory manager. Here are some considerations based on 
+the defined virtual addresses:
+
+1. **Low Memory Regions (below 1MB):**
+   - **MBR and VBR Addresses (0x600, 0x800)**: Virtual addresses for the Master Boot Record and Volume Boot Records. These addresses are mapped directly to physical addresses and are crucial for the boot process.
+   - **FAT and Root Directory Addresses (0x00030000, 0x00070000)**: Virtual addresses for the file allocation table and root directory for storage volumes.
+
+2. **Kernel Memory Regions:**
+   - **Kernel PML4 Address (0x000000000009C000)**: Virtual address for the kernel's Page Map Level 4 table, which is essential for memory management.
+   - **Kernel Image Base Address (0x0000000030000000)**: Virtual address for the start of the kernel image, which is the main executable code of the kernel.
+   - **Kernel Heap and Stack Addresses (0x0000000030100000 - 0x00000000301FFFF0)**: Virtual addresses for the kernel heap and stack, used for dynamic memory allocation and stack operations within the kernel.
+
+3. **User Space:**
+   - **User Area Base Address (0x0000000000200000)**: Base virtual address for user-space memory. This is where user applications and processes are typically loaded.
+
+4. **Buffer Memory Regions:**
+   - **Frontbuffer and Backbuffer Addresses (0x0000000030200000, 0x0000000030400000)**: Virtual addresses for the front buffer (LFB) and back buffer. These are used for graphical operations and rendering.
+   - **Paged Pool and Heap Pool Addresses (0x0000000030600000, 0x0000000030800000)**: Virtual addresses for the paged pool and heap pool, which are used for memory allocation and management.
+
+5. **Additional Heaps and Modules:**
+   - **Extra Heaps (0x0000000030A00000 - 0x0000000030E00000)**: Virtual addresses for additional heap spaces, which can be used for various kernel operations and extensions.
+   - **Module 0 Addresses (0x0000000030A00000, 0x0000000030A01000)**: Virtual addresses for the first ring0 module and its entry point.
+
+6. **Special Purpose Memory Regions:**
+   - **NIC Intel E1000 Address (0x0000000031200000)**: Virtual address for the NIC Intel E1000, used for network operations.
+   - **LAPIC and IOAPIC Addresses (0x0000000031400000, 0x0000000031600000)**: Virtual addresses for LAPIC and IOAPIC registers, essential for handling interrupts in multiprocessor systems.
+   - **ACPI RSDT Address (0x0000000031800000)**: Virtual address for the ACPI Root System Description Table, used for power management and hardware configuration.
+
+7. **High Memory Regions:**
+   - **Windows Pool Start Address (0x100000000)**: Virtual address for the start of the Windows pool, reserved for managing window-related data and operations.
+
+These virtual addresses are carefully allocated to avoid conflicts and 
+ensure efficient memory management within the kernel and system. 
+They provide a structured layout for various kernel components, user processes, and 
+special-purpose memory regions, ensuring that each has a dedicated space in the 
+virtual memory map.

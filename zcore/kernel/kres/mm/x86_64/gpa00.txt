@@ -1,0 +1,94 @@
+Here's a table summarizing the physical addresses defined in `x64gpa.h`:
+
+| Address Range           | Description                                                                                     | Notes                                                                                     |
+|-------------------------|-------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|
+| 0x00000000 - 0x000003FF | Real Mode Interrupt Vector Table                                                               |                                                                                           |
+| 0x00000400 - 0x000004FF | BIOS Data Area                                                                                 | Defined as `REALMODE_BIOSDATAAREA` and `BDA`                                               |
+| 0x00000500 - 0x00007BFF | Unused                                                                                         |                                                                                           |
+| 0x00007C00 - 0x00007DFF | Our Bootloader                                                                                 |                                                                                           |
+| 0x00007E00 - 0x0009FFFF | Unused                                                                                         |                                                                                           |
+| 0x000A0000 - 0x000BFFFF | Video RAM (VRAM) Memory                                                                        | Defined as `VGA_PA` and `EGA_PA`                                                           |
+| 0x000B0000 - 0x000B7777 | Monochrome Video Memory                                                                        | Defined as `MDA_PA` and `HGC_PA`                                                           |
+| 0x000B8000 - 0x000BFFFF | Color Video Memory                                                                             | Defined as `CGA_PA`                                                                        |
+| 0x000C0000 - 0x000C7FFF | Video ROM BIOS                                                                                 | Defined as `BIOS_STUFF`                                                                    |
+| 0x000C8000 - 0x000EFFFF | BIOS Shadow Area                                                                               |                                                                                           |
+| 0x000F0000 - 0x000FFFFF | System BIOS                                                                                    | Defined as `BIOS_STUFF2` and `BIOS_ROM`                                                    |
+| 0x00100000               | Kernel Base Address                                                                            | Defined as `KERNEL_BASE_PA`                                                                |
+| 0x00200000               | Reserved to extend the area for the kernel image                                               |                                                                                           |
+| 0x00400000               | Reserved to extend the area for the kernel image                                               |                                                                                           |
+| 0x00600000               | Reserved to extend the area for the kernel image                                               |                                                                                           |
+| 0x00800000               | Reserved to extend the area for the kernel image                                               |                                                                                           |
+| 0x00A00000               | Reserved to extend the area for the kernel image                                               |                                                                                           |
+| 0x00C00000               | Reserved to extend the area for the kernel image                                               |                                                                                           |
+| 0x00E00000               | Reserved to extend the area for the kernel image                                               |                                                                                           |
+| 0x01000000               | Heap Pool Start Address (16 MB)                                                                | Defined as `HEAPPOOL_PA`                                                                   |
+| 0x01000000 + 0x200000    | Extra Heap 1 Start Address (18 MB)                                                             | Defined as `EXTRAHEAP1_PA`                                                                 |
+| 0x01000000 + 0x400000    | Extra Heap 2 Start Address (20 MB)                                                             | Defined as `EXTRAHEAP2_PA`                                                                 |
+| 0x01000000 + 0x600000    | Extra Heap 3 Start Address (22 MB)                                                             | Defined as `EXTRAHEAP3_PA`                                                                 |
+| 0x01000000 + 0x800000    | Paged Pool 1 Start Address (24 MB)                                                             | Defined as `PAGEDPOOL1_PA`                                                                 |
+| 0x01000000 + 0xA00000    | Paged Pool 2 Start Address (26 MB)                                                             | Defined as `PAGEDPOOL2_PA`                                                                 |
+| 0x01000000 + 0xC00000    | Paged Pool 3 Start Address (28 MB)                                                             | Defined as `PAGEDPOOL3_PA`                                                                 |
+| 0x01000000 + 0xE00000    | Paged Pool 4 Start Address (30 MB)                                                             | Defined as `PAGEDPOOL4_PA`                                                                 |
+| 0x02000000               | User Base Address (32 MB)                                                                      | Defined as `USER_BASE_PA`                                                                  |
+| 0x04000000               | Backbuffer Address (64 MB)                                                                     | Defined as `BACKBUFFER_PA`                                                                 |
+| 0x08000000               | Frame Table Start Address (128 MB)                                                             | Defined as `FRAMETABLE_START_PA`                                                           |
+| 0x10000000               | Frame Table End Address (256 MB)                                                               | Defined as `FRAMETABLE_END_PA`                                                             |
+| 0x20000000               | 512 MB mark                                                                                    | Defined as `__512MB_MARK_PA`                                                               |
+| 0x40000000               | 1 GB mark                                                                                      | Defined as `__1GB_MARK_PA` and `BACKBUFFER_1GB_MARK_PA`                                    |
+| 0x80000000               | 2 GB mark                                                                                      | Defined as `__2GB_MARK_PA`                                                                 |
+| 0xC0000000               | 3 GB mark                                                                                      | Defined as `__3GB_MARK_PA`                                                                 |
+| 0xFEC00000               | APIC I/O Unit (APIC I/O Physical Address)                                                      | Defined as `__IOAPIC_PA`                                                                   |
+| 0xFEE00000               | APIC Local Unit (Local APIC Physical Address)                                                  | Defined as `__LAPIC_PA`                                                                    |
+
+### Explanation:
+- **Real Mode Interrupt Vector Table (0x00000000 - 0x000003FF)**: Stores pointers to interrupt handlers.
+- **BIOS Data Area (0x00000400 - 0x000004FF)**: Contains system information used by BIOS.
+- **Unused Areas**: Memory regions not used by the system.
+- **Video RAM (VRAM) Memory (0x000A0000 - 0x000BFFFF)**: Memory for video display.
+- **BIOS Shadow Area (0x000C8000 - 0x000EFFFF)**: Memory area used to shadow the BIOS ROM.
+- **System BIOS (0x000F0000 - 0x000FFFFF)**: Contains the BIOS firmware.
+- **Kernel Base Address (0x00100000)**: Base address for the kernel.
+- **Heap Pool Address (0x01000000)**: Start address for the heap pool used by the kernel.
+- **Paged Pool Addresses (0x01000000 + offsets)**: Memory regions for paged pools.
+- **User Base Address (0x02000000)**: Base address for user-space memory.
+- **Backbuffer Address (0x04000000)**: Memory reserved for the backbuffer.
+- **Frame Table Addresses (0x08000000 - 0x10000000)**: Memory regions for frame tables.
+- **APIC Addresses (0xFEC00000, 0xFEE00000)**: Memory regions reserved for APIC units.
+
+These addresses are used by the memory manager in the kernel 
+to manage different memory regions, including system, video, BIOS, and user memory areas.
+
+===================================================================
+
+The file `zcore/kernel/kres/mm/x86_64/x64gpa.h` defines various physical addresses 
+used by the kernel's memory manager. Here are some considerations based on the 
+defined physical addresses:
+
+1. **Low Memory Regions (0x00000000 - 0x00100000):**
+   - **Real Mode Interrupt Vector Table (0x00000000 - 0x000003FF)**: Essential for handling interrupts in real mode.
+   - **BIOS Data Area (0x00000400 - 0x000004FF)**: Stores system information used by the BIOS.
+   - **Video RAM and BIOS Regions (0x000A0000 - 0x000FFFFF)**: Includes video memory, BIOS shadow area, and system BIOS.
+
+2. **Kernel and System Areas:**
+   - **Kernel Base Address (0x00100000)**: The base address for the kernel, mapped to 2MB for the kernel image, heap, and stack.
+   - **Extended Areas for Kernel (0x00200000 - 0x00E00000)**: Reserved to extend the area for the kernel image.
+
+3. **Heap and Paged Pools:**
+   - **Heap Pool (0x01000000)**: 2MB allocated for the heap pool, supporting multiple processes.
+   - **Extra Heaps and Paged Pools (0x01200000 - 0x01E00000)**: Additional heap spaces and paged pools for memory management.
+
+4. **User Space:**
+   - **User Base Address (0x02000000)**: Base address for user-space memory, starting at 32MB.
+
+5. **Buffers and Frame Tables:**
+   - **Backbuffer (0x04000000)**: Memory reserved for the backbuffer, frequently used in graphical applications.
+   - **Frame Table (0x08000000 - 0x10000000)**: Space allocated for frame tables, crucial for memory management.
+
+6. **Special Memory Regions:**
+   - **APIC Addresses (0xFEC00000, 0xFEE00000)**: Memory regions reserved for APIC units, essential for interrupt handling in multiprocessor systems.
+
+These physical addresses are carefully allocated to avoid conflicts and 
+ensure efficient memory management within the kernel and system. 
+The defined addresses ensure that critical components like the interrupt vector table,
+ BIOS data, video memory, and kernel image have dedicated spaces, while also
+  providing room for user space and additional heaps and pools for memory allocation.

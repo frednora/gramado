@@ -1,3 +1,4 @@
+
 Here is a list of the physical addresses initialized by the routines in `pages.c`:
 
 1. **Ring 0 Area** (`__initialize_ring0area`):
@@ -30,11 +31,13 @@ Here is a list of the physical addresses initialized by the routines in `pages.c
 10. **Extra Heap 3** (`__initialize_extraheap3`):
     - `SMALL_extraheap3_pa` = `SMALLSYSTEM_EXTRAHEAP3_START`
 
-These routines set up the respective physical addresses for various memory regions used by the kernel and user processes in the Gramado OS.
+These routines set up the respective physical addresses 
+for various memory regions used by the kernel and user processes in the Gramado OS.
 
 =============================================
 
-Here is a list associating the physical addresses with their corresponding virtual addresses as initialized by the routines in `pages.c`:
+Here is a list associating the physical addresses 
+with their corresponding virtual addresses as initialized by the routines in `pages.c`:
 
 1. **Ring 0 Area**:
    - Physical Address: `SMALL_origin_pa` (0h)
@@ -82,20 +85,22 @@ properly addressed in both physical and virtual memory spaces.
 
 ====================================================
 
-Sure! Here is a table with the correlation between physical and virtual addresses for better visual representation:
+Sure! Here is a table with the correlation between physical and 
+virtual addresses for better visual representation:
 
-| Memory Region       | Physical Address            | Virtual Address    |
-|---------------------|-----------------------------|--------------------|
-| Ring 0 Area         | `SMALL_origin_pa` (0h)      | `RING0AREA_VA` (0h) |
-| Ring 3 Area         | `SMALL_user_pa` (0x02000000) | `RING3AREA_VA` (0x00200000) |
-| Kernel Image Region | `SMALL_kernel_base_pa` (0x100000) | `KERNELIMAGE_VA` (0x30000000) |
-| Front Buffer        | `g_frontbuffer_pa` (set by `gSavedLFB`) | `FRONTBUFFER_VA` (0x30200000) |
-| Back Buffer         | `g_backbuffer_pa` (set by `BACKBUFFER_PA`) | `BACKBUFFER_VA` (0x30400000) |
-| Paged Pool          | `SMALL_pagedpool_pa` (set by `SMALLSYSTEM_PAGEDPOLL_START`) | `PAGEDPOOL_VA` (0x30600000) |
-| Heap Pool           | `SMALL_heappool_pa` (set by `SMALLSYSTEM_HEAPPOLL_START`) | `HEAPPOOL_VA` (0x30800000) |
-| Extra Heap 1        | `SMALL_extraheap1_pa` (set by `SMALLSYSTEM_EXTRAHEAP1_START`) | `EXTRAHEAP1_VA` (0x30A00000) |
-| Extra Heap 2        | `SMALL_extraheap2_pa` (set by `SMALLSYSTEM_EXTRAHEAP2_START`) | `EXTRAHEAP2_VA` (0x30C00000) |
-| Extra Heap 3        | `SMALL_extraheap3_pa` (set by `SMALLSYSTEM_EXTRAHEAP3_START`) | `EXTRAHEAP3_VA` (0x30E00000) |
+| Memory Region       | Physical Address                                              | Virtual Address               |
+|---------------------|-----------------------------                                  |------------------           --|
+| Ring 0 Area         | `SMALL_origin_pa`      (0h)                                   | `RING0AREA_VA`   (0h)         |
+| Ring 3 Area         | `SMALL_user_pa`        (0x02000000)                           | `RING3AREA_VA`   (0x00200000) |
+| Kernel Image Region | `SMALL_kernel_base_pa` (0x100000)                             | `KERNELIMAGE_VA` (0x30000000) |
+| Front Buffer        | `g_frontbuffer_pa`    (set by `gSavedLFB`)                    | `FRONTBUFFER_VA` (0x30200000) |
+| Back Buffer         | `g_backbuffer_pa`     (set by `BACKBUFFER_PA`)                | `BACKBUFFER_VA`  (0x30400000) |
+| Paged Pool          | `SMALL_pagedpool_pa`  (set by `SMALLSYSTEM_PAGEDPOLL_START`)  | `PAGEDPOOL_VA`   (0x30600000) |
+| Heap Pool           | `SMALL_heappool_pa`   (set by `SMALLSYSTEM_HEAPPOLL_START`)   | `HEAPPOOL_VA`    (0x30800000) |
+| Extra Heap 1        | `SMALL_extraheap1_pa` (set by `SMALLSYSTEM_EXTRAHEAP1_START`) | `EXTRAHEAP1_VA`  (0x30A00000) |
+| Extra Heap 2        | `SMALL_extraheap2_pa` (set by `SMALLSYSTEM_EXTRAHEAP2_START`) | `EXTRAHEAP2_VA`  (0x30C00000) |
+| Extra Heap 3        | `SMALL_extraheap3_pa` (set by `SMALLSYSTEM_EXTRAHEAP3_START`) | `EXTRAHEAP3_VA`  (0x30E00000) |
 
-This table provides a clear and concise view of the physical and virtual address mappings initialized by the routines in the `pages.c` file.
+This table provides a clear and concise view of the physical and virtual address 
+mappings initialized by the routines in the `pages.c` file.
 
