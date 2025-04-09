@@ -4160,15 +4160,14 @@ static int ServerLoop(int launch_tb)
 
         // Compose the frame or simply update some windows.        
         if (IsComposing == TRUE)
-        {           
+        {         
+            // Display the desktop components without using the compositor.
+            comp_display_desktop_components();
+
             // #todo: 
             // Use this one, that will have a flag to indicate the
             // presence of the compositor or not.
             //wmCompose();
-
-            // Display the desktop components without using 
-            // the compositor.
-            comp_display_desktop_components();
         }
     };
 

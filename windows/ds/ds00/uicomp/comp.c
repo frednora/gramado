@@ -439,12 +439,11 @@ void __display_mouse_cursor(void)
 }
 
 // Flush
-// The compositor.
-// Called by wmCompose
+// Display the desktop components without using the compositor.
+// Called by ServerLoop() in main.c.
+// Called by wmCompose() and callback_compose().
 void comp_display_desktop_components(void)
 {
-// Called by wmCompose() and callback_compose().
-
     static int Dirty = FALSE;
 
 // fps++
@@ -459,6 +458,12 @@ void comp_display_desktop_components(void)
     if (Dirty == TRUE)
     {
         gws_show_backbuffer();
+        // #bugbug
+        // #todo: 
+        // We miss the cursor here before refreshing the whole screen.
+        if (gUseMouse == TRUE){
+            __display_mouse_cursor();
+        }
         validate();
         return;
     }
@@ -466,15 +471,7 @@ void comp_display_desktop_components(void)
 // Refresh only the components that was changed by the painter.
     wmReactToPaintEvents();
 
-//
-// #suspended
-//
-
-// mouse
-// Show the cursor in the screen.
-// remember: we're using 15 fps refresh,
-// we can change this in the kernel.
-
+// Show the mouse cursor in the screen.
     if (gUseMouse == TRUE){
         __display_mouse_cursor();
     }
@@ -486,6 +483,7 @@ void comp_display_desktop_components(void)
     //__update_fps();
 }
 
+// wmCompose:
 // Called by the main routine for now.
 // Its gonna be called by the timer.
 // See: comp.c

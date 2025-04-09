@@ -203,7 +203,9 @@ int service_drain_input (void)
 // #todo: move to view/
 void gws_show_backbuffer(void)
 {
-    debug_print("gws_show_backbuffer:\n");
+    
+    // #debug
+    // debug_print("gws_show_backbuffer:\n");
 
     // #debug
     // [Deprecated] Using the kernel service.
@@ -213,7 +215,7 @@ void gws_show_backbuffer(void)
     // Create this flag. 
     // if (!paint_ready) return;
 
-    if ( (void*) gui == NULL )
+    if ((void*) gui == NULL)
     {
         debug_print("gws_show_backbuffer: [PANIC] gui fail\n");
         printf     ("gws_show_backbuffer: [PANIC] gui fail\n");
@@ -226,9 +228,10 @@ void gws_show_backbuffer(void)
 //
 
 // See: wm.c
-    debug_print("gws_show_backbuffer: Calling gws_show_window_rect\n");
+    // #debug
+    // debug_print("gws_show_backbuffer: Calling gws_show_window_rect\n");
 
-    if ( (void *) gui->screen_window == NULL )
+    if ((void *) gui->screen_window == NULL)
     {
         debug_print("gws_show_backbuffer: [PANIC] gui->screen_window\n");
         printf     ("gws_show_backbuffer: [PANIC] gui->screen_window\n");
@@ -236,6 +239,7 @@ void gws_show_backbuffer(void)
         //return;
     }
 
+// See: comp.c
     gws_show_window_rect(gui->screen_window);
 
     //debug_print("gws_show_backbuffer: done\n");

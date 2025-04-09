@@ -111,7 +111,12 @@ frontbuffer_draw_rectangle(
     unsigned int color,
     unsigned long rop_flags );
 
-
+void 
+rect_refresh_rectangle_via_kernel(
+    unsigned long x, 
+    unsigned long y, 
+    unsigned long width, 
+    unsigned long height );
 
 void 
 gws_refresh_rectangle ( 

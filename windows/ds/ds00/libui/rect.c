@@ -735,6 +735,15 @@ __kgws_adapter_refresh_rectangle (
     gramado_system_call ( 10, (unsigned long) buffer, 0, 0 );
 }
 
+void 
+rect_refresh_rectangle_via_kernel(
+    unsigned long x, 
+    unsigned long y, 
+    unsigned long width, 
+    unsigned long height )
+{
+    __kgws_adapter_refresh_rectangle(x, y, width, height);
+}
 
 void 
 gws_refresh_rectangle ( 
