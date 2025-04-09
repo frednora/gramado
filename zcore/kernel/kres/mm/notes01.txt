@@ -1,0 +1,101 @@
+Here is a list of the physical addresses initialized by the routines in `pages.c`:
+
+1. **Ring 0 Area** (`__initialize_ring0area`):
+   - `SMALL_origin_pa` = `kernel_address_pa` (0h)
+
+2. **Ring 3 Area** (`__initialize_ring3area`):
+   - `SMALL_user_pa` = `user_address_pa` (0x02000000)
+
+3. **Kernel Image Region** (`__initialize_kernelimage_region`):
+   - `SMALL_kernel_base_pa` = `kernel_base_pa` (0x100000)
+
+4. **Front Buffer** (`__initialize_frontbuffer`):
+   - `g_frontbuffer_pa` = `SMALL_frontbuffer_pa` (set by `gSavedLFB`)
+
+5. **Back Buffer** (`__initialize_backbuffer`):
+   - `g_backbuffer_pa` = `SMALL_backbuffer_pa` (set by `BACKBUFFER_PA`)
+
+6. **Paged Pool Area** (`__initialize_pagedpool`):
+   - `SMALL_pagedpool_pa` = `SMALLSYSTEM_PAGEDPOLL_START`
+
+7. **Heap Pool Area** (`__initialize_heappool`):
+   - `SMALL_heappool_pa` = `SMALLSYSTEM_HEAPPOLL_START`
+
+8. **Extra Heap 1** (`__initialize_extraheap1`):
+   - `SMALL_extraheap1_pa` = `SMALLSYSTEM_EXTRAHEAP1_START`
+
+9. **Extra Heap 2** (`__initialize_extraheap2`):
+   - `SMALL_extraheap2_pa` = `SMALLSYSTEM_EXTRAHEAP2_START`
+
+10. **Extra Heap 3** (`__initialize_extraheap3`):
+    - `SMALL_extraheap3_pa` = `SMALLSYSTEM_EXTRAHEAP3_START`
+
+These routines set up the respective physical addresses for various memory regions used by the kernel and user processes in the Gramado OS.
+
+=============================================
+
+Here is a list associating the physical addresses with their corresponding virtual addresses as initialized by the routines in `pages.c`:
+
+1. **Ring 0 Area**:
+   - Physical Address: `SMALL_origin_pa` (0h)
+   - Virtual Address: `RING0AREA_VA` (0h)
+
+2. **Ring 3 Area**:
+   - Physical Address: `SMALL_user_pa` (0x02000000)
+   - Virtual Address: `RING3AREA_VA` (0x00200000)
+
+3. **Kernel Image Region**:
+   - Physical Address: `SMALL_kernel_base_pa` (0x100000)
+   - Virtual Address: `KERNELIMAGE_VA` (0x30000000)
+
+4. **Front Buffer**:
+   - Physical Address: `g_frontbuffer_pa` (set by `gSavedLFB`)
+   - Virtual Address: `FRONTBUFFER_VA` (0x30200000)
+
+5. **Back Buffer**:
+   - Physical Address: `g_backbuffer_pa` (set by `BACKBUFFER_PA`)
+   - Virtual Address: `BACKBUFFER_VA` (0x30400000)
+
+6. **Paged Pool Area**:
+   - Physical Address: `SMALL_pagedpool_pa` (set by `SMALLSYSTEM_PAGEDPOLL_START`)
+   - Virtual Address: `PAGEDPOOL_VA` (0x30600000)
+
+7. **Heap Pool Area**:
+   - Physical Address: `SMALL_heappool_pa` (set by `SMALLSYSTEM_HEAPPOLL_START`)
+   - Virtual Address: `HEAPPOOL_VA` (0x30800000)
+
+8. **Extra Heap 1**:
+   - Physical Address: `SMALL_extraheap1_pa` (set by `SMALLSYSTEM_EXTRAHEAP1_START`)
+   - Virtual Address: `EXTRAHEAP1_VA` (0x30A00000)
+
+9. **Extra Heap 2**:
+   - Physical Address: `SMALL_extraheap2_pa` (set by `SMALLSYSTEM_EXTRAHEAP2_START`)
+   - Virtual Address: `EXTRAHEAP2_VA` (0x30C00000)
+
+10. **Extra Heap 3**:
+    - Physical Address: `SMALL_extraheap3_pa` (set by `SMALLSYSTEM_EXTRAHEAP3_START`)
+    - Virtual Address: `EXTRAHEAP3_VA` (0x30E00000)
+
+These mappings ensure that the various critical memory regions are 
+properly addressed in both physical and virtual memory spaces.
+
+
+====================================================
+
+Sure! Here is a table with the correlation between physical and virtual addresses for better visual representation:
+
+| Memory Region       | Physical Address            | Virtual Address    |
+|---------------------|-----------------------------|--------------------|
+| Ring 0 Area         | `SMALL_origin_pa` (0h)      | `RING0AREA_VA` (0h) |
+| Ring 3 Area         | `SMALL_user_pa` (0x02000000) | `RING3AREA_VA` (0x00200000) |
+| Kernel Image Region | `SMALL_kernel_base_pa` (0x100000) | `KERNELIMAGE_VA` (0x30000000) |
+| Front Buffer        | `g_frontbuffer_pa` (set by `gSavedLFB`) | `FRONTBUFFER_VA` (0x30200000) |
+| Back Buffer         | `g_backbuffer_pa` (set by `BACKBUFFER_PA`) | `BACKBUFFER_VA` (0x30400000) |
+| Paged Pool          | `SMALL_pagedpool_pa` (set by `SMALLSYSTEM_PAGEDPOLL_START`) | `PAGEDPOOL_VA` (0x30600000) |
+| Heap Pool           | `SMALL_heappool_pa` (set by `SMALLSYSTEM_HEAPPOLL_START`) | `HEAPPOOL_VA` (0x30800000) |
+| Extra Heap 1        | `SMALL_extraheap1_pa` (set by `SMALLSYSTEM_EXTRAHEAP1_START`) | `EXTRAHEAP1_VA` (0x30A00000) |
+| Extra Heap 2        | `SMALL_extraheap2_pa` (set by `SMALLSYSTEM_EXTRAHEAP2_START`) | `EXTRAHEAP2_VA` (0x30C00000) |
+| Extra Heap 3        | `SMALL_extraheap3_pa` (set by `SMALLSYSTEM_EXTRAHEAP3_START`) | `EXTRAHEAP3_VA` (0x30E00000) |
+
+This table provides a clear and concise view of the physical and virtual address mappings initialized by the routines in the `pages.c` file.
+

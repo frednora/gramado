@@ -1,0 +1,24 @@
+The `pages.c` file in your Gramado OS repository handles the initialization of the paging system for memory management. Here's a breakdown of how the kernel initializes the pages:
+
+1. **Global and Static Variables**:
+    - `gKernelPML4Address` is a global variable that holds the virtual address of the kernel's PML4 table.
+    - Several static variables are defined to hold physical addresses for different system configurations (small, medium, large).
+
+2. **Functions for Initialization**:
+    - `__initialize_canonical_physical_regions()` initializes the physical memory regions for different system sizes.
+    - `__initialize_canonical_kernel_pagetables()` sets up the kernel page tables for various memory regions.
+    - `__initialize_ring0area()`, `__initialize_ring3area()`, `__initialize_kernelimage_region()`, and similar functions set up specific memory regions like the kernel image, front buffer, back buffer, paged pool, heap pool, and extra heaps.
+
+3. **Main Function**:
+    - `mmInitializePaging()` is the main function that orchestrates the initialization of the paging system. It calls the helper functions to set up RAM usage variables, physical regions, and kernel page tables. It then loads the PML4 table into the CR3 register to activate the new paging setup.
+
+4. **Page Table Creation**:
+    - `mm_fill_page_table()` is a function that fills a page table with entries to map a given 2MB region of physical memory to virtual memory.
+
+5. **Utility Functions**:
+    - `get_table_pointer_va()` provides a virtual address for creating new page tables.
+    - `virtual_to_physical()` converts a virtual address to its corresponding physical address using the current page tables.
+
+This initialization process ensures that various critical memory regions are properly mapped and accessible, setting up the kernel's memory management subsystem. The code includes detailed comments and debug prints to help with understanding and troubleshooting.
+
+You can view the full source code [here](https://github.com/frednora/gramado/blob/a649a2aa851cb711560ca26fdc6dc232173afd4a/zcore/kernel/kres/mm/pages.c).
