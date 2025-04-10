@@ -1,5 +1,4 @@
-
-// libgd.c 
+// libdisp.c 
 // These are display device routines.
 // #todo
 // The goal here is building a graphics library interface.

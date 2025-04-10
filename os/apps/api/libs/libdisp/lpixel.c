@@ -1,4 +1,3 @@
-
 // lpixel.c
 // long pixel
 // 2023 - Created by Fred Nora

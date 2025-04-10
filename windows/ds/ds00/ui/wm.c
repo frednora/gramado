@@ -5443,7 +5443,7 @@ static int wmProcessCombinationEvent(int msg_code)
     if (msg_code == GWS_Undo)
     {
         yellow_status("Undo");
-        demoCat();
+        //demoCat();
         //demoTriangle();
         return 0;
     }
@@ -5496,15 +5496,13 @@ static int wmProcessCombinationEvent(int msg_code)
 // Select all.
 // #test (ok)
 // Post message to all the overlapped windows.
+// #test:
+// Sending the wrong message.  
+// This is just a test for now.
     if (msg_code == GWS_SelectAll)
     {
-        yellow_status("Control + a");
-        
-        // #test:
-        // Sending the wrong message.  
-        // This is just a test for now.
+        yellow_status("Control + a");       
         gwssrv_broadcast_close();
-
         return 0;
     }
 
@@ -5523,6 +5521,18 @@ static int wmProcessCombinationEvent(int msg_code)
         yellow_status("Control + s");
         return 0;
     }
+
+/*
+// #todo
+// Control + w
+// Close the active window.
+    if (msg_code == GWS_XXXXX)
+    {
+        yellow_status("Control + w");
+        // #todo: Close the active window.
+        return 0;
+    }
+*/
 
 // --------------
 
@@ -5614,6 +5624,12 @@ int wmInputReader(void)
 // + React to the events.
 // Getting input events from the event queue
 // inside the control thread structure.
+
+// #todo
+// We can create a libinput/ to handle the low level
+// routine for this type of function.
+// That function is gonna be used by the compositors/display servers,
+// not by the client-side appications.
 
     int status=0;
 

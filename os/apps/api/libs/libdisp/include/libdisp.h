@@ -1,12 +1,14 @@
-
-// libgd.h
-// graphics device library.
+// libdisp.h
+// Graphics device library.
+// Created by Fred Nora.
 
 #ifndef __LIBDISP_H
 #define __LIBDISP_H  1
 
 #include "vk.h"       // # view input events
 #include "lt8x8.h"
+
+// ==============================================
 
 
 int libgd_initialize(void);

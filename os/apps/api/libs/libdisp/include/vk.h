@@ -1,6 +1,6 @@
-
-// File: vk.h
-
+// vk.h
+// Virtual keys.
+// Created by Fred Nora.
 
 #ifndef GWS_VK_H
 #define GWS_VK_H    1

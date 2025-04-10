@@ -1,8 +1,7 @@
-
+// lt8x8.h
 
 #ifndef __LT8X8_H
 #define __LT8X8_H   1
-
 
 #define CH_CTRLA		0x01
 #define CH_CTRLB		0x02
