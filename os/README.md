@@ -1,7 +1,8 @@
-# zde - Desktop Environment
+# os - Desktop Environment
 
 ```
-  Desktop Environment for the kernel.
+  This is a place for Client-side GUI applications. The applications here was built 
+  using the Gramado API found in apps/api/ and need the ds00 display server found in windows/ds/.
 ```
 
 ## This is a screenshot of GramadoDE desktop environment running on top of the kernel.
@@ -18,7 +19,12 @@ the Taskbar and the Virtual terminal.
 folder ds/ds00/.
 ```
 
-> * apps   - Client-side GUI applications.
-> * aurora - 3D demos.
+> * apps/     - Client-side GUI applications.
+> * apps/api/ - Gramado API.
+
+## Creating Client-side GUI applications.
+
+You can use the Gramado API to create Client-side GUI applications in apps/.
+
 
 

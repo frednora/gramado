@@ -20,3 +20,11 @@ folder ds/ds00/.
 
 > * ds     - Display servers
 
+```
+ds/ folder is the place for the display servers. The default display server is ds00.
+```
+
+## gramadox - a place for 3D demos.
+
+Here you can find some 3D demos that run in the same place of the display server.
+So, instead of initializing the display server you can initialize a demo.

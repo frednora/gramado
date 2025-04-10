@@ -85,13 +85,22 @@ not all the features needed by a commercial operating system.
 
 > * The network server. (Work in progress)
 
-# DE - Desktop Environment
+## userland commands.
+
+You can use the zbase/usys/libs/ or zbase/usys/commands/alpha/libs/ to create Posix-like commands.
+
+## DE - Desktop Environment
 
 This is a screenshot of the desktop environment running on top of the kernel.
 You can find code in the windows/ folder.
 ![Screenshot](https://raw.githubusercontent.com/polard8/screenshots/main/gramado-8.png)
 
-# Demos
+
+## Gramado API 
+
+You can find the API to create client-side GUI application in os/apps/api/.
+
+## Demos
 
 This is a screenshot of 3D demo running on top of the kernel.
 You can find code in the zde/aurora/ folder.
