@@ -28,6 +28,8 @@ static int config_use_transparency=FALSE;
 
 unsigned long windows_count=0;
 
+int show_fps_window = FALSE;
+
 // Habilitando/desabilitando globalmente 
 // alguns componentes da janela.
 // #bugbug: Não confie nessas inicializações.
@@ -78,13 +80,14 @@ static struct gws_window_d *__create_window_object(void)
     // The window can receive input from kbd and mouse.
     window->enabled = TRUE;
     window->style = 0;
-// Validate.
-// This way the compositor can't redraw it.
+    // Validate. This way the compositor can't redraw it.
     window->dirty = FALSE;
     
     return (struct gws_window_d *) window;
 }
 
+// Post message to the window. (broadcast).
+// Return the number of sent messages.
 int 
 window_post_message_broadcast( 
     int wid, 
@@ -92,13 +95,11 @@ window_post_message_broadcast(
     unsigned long long1,
     unsigned long long2 )
 {
-// Post message to the window. (broadcast).
-// Return the number of sent messages.
-
     int return_value=-1;
     register int i=0;
     int Counter=0;
     struct gws_window_d *wReceiver;
+    int target_wid = -1;
 
 // Invalid message code.
     if (event_type < 0)
@@ -115,12 +116,9 @@ window_post_message_broadcast(
             {
                 if (wReceiver->type == WT_OVERLAPPED)
                 {
-                    // wid = The message goes to this window.
+                    target_wid = (int) wReceiver->id;
                     window_post_message( 
-                        wReceiver->id, 
-                        event_type, 
-                        long1, 
-                        long2 );
+                        target_wid, event_type, long1, long2 );
                     Counter++;
                 }
             }
@@ -132,6 +130,7 @@ fail:
     return (int) -1;
 }
 
+// Post message to the window.
 int 
 window_post_message( 
     int wid, 
@@ -139,30 +138,24 @@ window_post_message(
     unsigned long long1,
     unsigned long long2 )
 {
-// Post message to the window.
-
     struct gws_window_d *w;
 
-//
 // Parameters
-//
-
     if (wid < 0)
         goto fail;
     if (wid >= WINDOW_COUNT_MAX)
         goto fail;
-    if (event_type<0)
+    if (event_type < 0){
         goto fail;
+    }
 
-//
 // Window
-//
-
     w = (void*) windowList[wid];
     if ((void*) w == NULL)
         goto fail;
-    if (w->magic != 1234)
+    if (w->magic != 1234){
         goto fail;
+    }
 
 //
 // Event
@@ -183,12 +176,10 @@ window_post_message(
         w->ev_tail=0;
     }
 
-// OK
-   //printf("Message OK\n");
    return 0;
 
 fail:
-    return -1;
+    return (int) -1;
 }
 
 void gws_enable_transparence(void)
@@ -439,8 +430,7 @@ void *doCreateWindow (
         is_solid = FALSE;
     }
 
-// No flags for now.
-// It depends on the window style.
+// No rop flags for now. It depends on the window style.
     unsigned long __rop_flags=0;
 
 //---------------------------------------------------------
@@ -580,8 +570,7 @@ void *doCreateWindow (
         return NULL;
     }
 
-// #test
-// Window class.
+// Window class. #test
     window->window_class.ownerClass = gws_WindowOwnerClassNull;
     window->window_class.kernelClass = gws_KernelWindowClassNull;
     window->window_class.serverClass = gws_ServerWindowClassNull;
@@ -608,10 +597,11 @@ void *doCreateWindow (
     window->state = (int) view;
 
 // Colors
-    window->bg_color = (unsigned int) FrameColor;
-    window->clientarea_bg_color = (unsigned int) ClientAreaColor;
-
-    // Default color for 'when mouse hover'.
+    window->bg_color = 
+        (unsigned int) FrameColor;
+    window->clientarea_bg_color = 
+        (unsigned int) ClientAreaColor;
+// Default color for 'when mouse hover'.
     window->bg_color_when_mousehover = 
         (unsigned int) get_color(csiWhenMouseHover);
 
@@ -636,7 +626,8 @@ void *doCreateWindow (
     //window->dirty  = FALSE;  // Validate
     //window->locked = FALSE;
 
-    // Initializing border stuff
+// Initializing border stuff
+// #todo: use get_color(x)
     window->border_color1 = COLOR_WHITE;
     window->border_color2 = COLOR_WHITE;
     window->border_size = 2;
@@ -646,7 +637,7 @@ void *doCreateWindow (
     if (window->type == WT_OVERLAPPED)
     {
         window->borderUsed = TRUE;
-        window->border_style = 1; // Minimum.
+        window->border_style = 1;  // Minimum
     }
     unsigned long __BorderSize = window->border_size;
 
@@ -1079,7 +1070,6 @@ void *doCreateWindow (
 // serão acionadas mais tarde, na hora da pintuda, 
 // de acordo com o tipo de janela à ser pintada.
 
-
 // Desktop support
     //window->desktop = (void*) Desktop; //configurado anteriormente.
     //window->desktop_id = Desktop->id;  //@todo: verificar elemento.
@@ -1264,7 +1254,8 @@ void *doCreateWindow (
         //break;
 
     // Only the bg for now.
-    // #todo: Button has borders.
+    // #todo: Button has borders?
+    // #todo: BUtton has icon?
     case WT_BUTTON:
         window->ip_device = IP_DEVICE_NULL;
         window->frame.used = TRUE;
@@ -1284,7 +1275,8 @@ void *doCreateWindow (
         break;
 
     // Ícone na área de trabalho.
-    // #todo: icons has borders sometimes.
+    // #todo: Icons has borders sometimes.
+    // #todo: Icon window has an icon in it.
     case WT_ICON:
         window->ip_device = IP_DEVICE_NULL;
         window->frame.used = FALSE;
@@ -1549,10 +1541,12 @@ void *doCreateWindow (
 // caso o botão tenha algum frame, será alguma borda extra.
 // border color:
 
-    unsigned int label_color = COLOR_BLACK; // default
+    unsigned int label_color = COLOR_BLACK;  // default
 
 // #todo
 // Use color scheme in this routine.
+// #todo: Call get_color() to get the standard color 
+// for all this button components.
     if ((unsigned long) type == WT_BUTTON)
     {
         // #ps: ButtonState = window status.
@@ -1640,8 +1634,7 @@ void *doCreateWindow (
             //server_debug_print ("doCreateWindow: [WT_BUTTON] Parent NULL\n"); 
         }
 
-        // Se o botão tem uma parent window.
-        // Paint button
+        // Paint the button only if it has a parent window.
         if ((void*) Parent != NULL)
         {
             // #todo
@@ -1680,6 +1673,14 @@ void *doCreateWindow (
                 (window->absolute_y + t_offset), 
                 (unsigned int) label_color, 
                 window->name );
+
+            // #test
+            // Testing the possibility of painting an icon inside the button.
+            //bmp_decode_system_icon( 
+                //(int) 2,            //ID
+                //(unsigned long) 4,  //left 
+                //(unsigned long) 4,  //top
+                //FALSE );
         }
 
       //todo
@@ -1776,11 +1777,11 @@ void *CreateWindow (
 // Duplicate
     char *_name;
     _name = (void*) malloc(256);
-    if( (void*) _name == NULL){
+    if ((void*) _name == NULL){
         return NULL;
     }
     memset(_name,0,256);
-    if( (void*) title != NULL ){
+    if ((void*) title != NULL){
         strcpy(_name,title);
     }
     if ((void*) title == NULL){
@@ -1992,16 +1993,16 @@ void *CreateWindow (
 
         __w = 
             (void *) doCreateWindow ( 
-                         WT_BUTTON,   // type 
-                         style,           // style
-                         status,      // status (Button state)
-                         state,  // view: min, max ...
-                         (char *) _name, 
-                         x, y, width, height, 
-                         (struct gws_window_d *) pWindow, 
-                         desktop_id, 
-                         FrameColor, ClientAreaColor, 
-                         (unsigned long) __rop_flags );
+                        WT_BUTTON,  // type 
+                        style,      // style
+                        status,     // status (Button state)
+                        state,      // view: min, max ...
+                        (char *) _name, 
+                        x, y, width, height, 
+                        (struct gws_window_d *) pWindow, 
+                        desktop_id, 
+                        FrameColor, ClientAreaColor, 
+                        (unsigned long) __rop_flags );
 
          if ((void *) __w == NULL){
             //server_debug_print ("CreateWindow: doCreateWindow fail\n");
@@ -2201,26 +2202,21 @@ fail:
     return NULL;
 }
 
-/*
- * RegisterWindow: 
- *     Register a window.
- */
- 
+// RegisterWindow: 
+// Register a window.
 // OUT:
 // < 0 = fail.
 // > 0 = Ok. (index)
- 
 int RegisterWindow(struct gws_window_d *window)
 {
     register int Slot=0;
     struct gws_window_d *tmp; 
 
-    if ((void *) window == NULL)
-    {
+// Parameter
+    if ((void *) window == NULL){
         //gws_debug_print ("RegisterWindow: window struct\n");
         goto fail;
     }
-
 // #todo ?
     //if (window->magic != 1234)
         //goto fail;
@@ -2230,21 +2226,19 @@ int RegisterWindow(struct gws_window_d *window)
 // da janela na lista de janelas).
 
     windows_count++;
-    if (windows_count >= WINDOW_COUNT_MAX)
-    {
+    if (windows_count >= WINDOW_COUNT_MAX){
         printf ("RegisterWindow: windows_count\n");
         goto fail;
     }
 
-// Search for empty slot
+// Probe for an empty slot.
+// When found, the slot number becomes the WID.
     for (Slot=0; Slot<WINDOW_COUNT_MAX; ++Slot)
     {
         tmp = (struct gws_window_d *) windowList[Slot];
-        // Found!
         if ((void *) tmp == NULL)
         {
-            windowList[Slot] = (unsigned long) window; 
-            // The slot number is the new wid.
+            windowList[Slot] = (unsigned long) window;
             window->id = (int) Slot;
             return (int) Slot;
         }
@@ -2263,18 +2257,24 @@ int destroy_window_by_wid(int wid)
     int fUpdateDesktop = FALSE;
     register int i=0;
 
-    if (wid<0){
+// Parameter
+    if (wid < 0){
         goto fail;
     }
+    if (wid >= WINDOW_COUNT_MAX){
+        goto fail;
+    }
+
+// Window structure.
     window = (struct gws_window_d *) get_window_from_wid(wid);
     if ((void*) window == NULL)
         goto fail;
     if (window->magic != 1234)
         goto fail;
 
-// No!
-// The client can't destroy the root window.
-// #todo: And in the case we're shutting off the server?
+// We can't destroy the root window.
+// #todo
+// The shutdown routine weill destroy it manually.
     if (window == __root_window){
         goto fail;
     }
@@ -2300,6 +2300,8 @@ int destroy_window_by_wid(int wid)
             if (tmpw == window)
                 windowList[i] = 0;
         };
+        // Why not?!
+        // windowList[window->id] = 0;
 
         /*
         // #test
@@ -2319,8 +2321,7 @@ int destroy_window_by_wid(int wid)
         window->magic = 0;
         window->used = FALSE;
         window = NULL;
-        // OK, done
-        //wm_update_desktop2();
+
         return 0;
     }
 
@@ -2335,12 +2336,12 @@ int destroy_window_by_wid(int wid)
     }
 
 // ---------------
-// titlebar
-// Get the wids for the controls and 
-// destroy the title bar window.
-    int wid_min=-1;
-    int wid_max=-1;
-    int wid_clo=-1;
+// Titlebar
+// Get the WIDs for the controls and 
+// destroy the titlebar window.
+    int wid_min = -1;
+    int wid_max = -1;
+    int wid_clo = -1;
     tmpw = (void *) window->titlebar;
     if ((void*) tmpw != NULL)
     {
@@ -2405,6 +2406,8 @@ int destroy_window_by_wid(int wid)
         if (tmpw == window)
             windowList[i] = 0;
     };
+    // Why not?!
+    // windowList[window->id] = 0;
 
     /*
     // #test
@@ -2542,13 +2545,11 @@ void RestoreAllWindows(void)
     };
 }
 
-
-
 /*
 int this_type_has_a_title(int window_type);
 int this_type_has_a_title(int window_type)
 {
-    if(type==WT_OVERLAPPED){
+    if (type == WT_OVERLAPPED){
         return TRUE;
     }
     return FALSE;
@@ -2559,7 +2560,7 @@ int this_type_has_a_title(int window_type)
 int this_type_can_become_active(int window_type);
 int this_type_can_become_active(int window_type)
 {
-    if(type==WT_OVERLAPPED){
+    if (type == WT_OVERLAPPED){
         return TRUE;
     }
     return FALSE;
@@ -2575,13 +2576,13 @@ struct gws_window_d *get_window_object(int wid)
 }
 */
 
-
 void enable_window(struct gws_window_d *window)
 {
-    if ((void*)window==NULL)
+    if ((void*)window == NULL)
         return;
-    if (window->magic!=1234)
+    if (window->magic != 1234){
         return;
+    }
 
     window->enabled = TRUE;
     if (window->type == WT_BUTTON)
@@ -2590,10 +2591,11 @@ void enable_window(struct gws_window_d *window)
 
 void disable_window(struct gws_window_d *window)
 {
-    if ((void*)window==NULL)
+    if ((void*)window == NULL)
         return;
-    if (window->magic!=1234)
+    if (window->magic != 1234){
         return;
+    }
 
     window->enabled = FALSE;
     if (window->type == WT_BUTTON)
@@ -2603,10 +2605,11 @@ void disable_window(struct gws_window_d *window)
 // Valid states only.
 void change_window_state(struct gws_window_d *window, int state)
 {
-    if ((void*)window==NULL)
+    if ((void*)window == NULL)
         return;
-    if (window->magic!=1234)
+    if (window->magic != 1234){
         return;
+    }
 
 // Is it a valid state?
 // #todo: We can create a worker for this routine.
@@ -2634,8 +2637,9 @@ void maximize_window(struct gws_window_d *window)
 // Parameter:
     if ((void*)window == NULL)
         return;
-    if (window->magic != 1234)
+    if (window->magic != 1234){
         return;
+    }
 
 // We only maximize application windows.
     if (window->type != WT_OVERLAPPED)
@@ -2651,8 +2655,8 @@ void maximize_window(struct gws_window_d *window)
 // Enable input for overlapped window.
     window->enabled = TRUE;
 
-// 
-    change_window_state(window,WINDOW_STATE_MAXIMIZED);
+// Maximize it.
+    change_window_state( window, WINDOW_STATE_MAXIMIZED );
 
 // Initialization: 
 // Using the working area by default.
@@ -2696,7 +2700,8 @@ void maximize_window(struct gws_window_d *window)
     };
 
 // --------------
-    if ( w==0 || h==0 ){
+    if ( w == 0 || h == 0 )
+    {
         return;
     }
     gws_resize_window( window, 
@@ -2706,6 +2711,10 @@ void maximize_window(struct gws_window_d *window)
         (l +2), 
         (t +2) );
 
+//
+// Redraw and display some windows:
+// Root window, taskbar and the maximized window.
+//
 
 // Root
     redraw_window(__root_window,TRUE);
@@ -2718,10 +2727,13 @@ void maximize_window(struct gws_window_d *window)
 // Our window
 // Set focus
 // Redraw and show window
-// Send message to the app to repaint all the childs.
+
     set_focus(window);
     redraw_window(window,TRUE);
-    window_post_message( window->id, GWS_Paint, 0, 0 );
+
+// Send message to the app to repaint all the childs.
+    int target_wid = window->id;
+    window_post_message( target_wid, GWS_Paint, 0, 0 );
 }
 
 // #test
@@ -2733,13 +2745,13 @@ void minimize_window(struct gws_window_d *window)
 // Parameter:
     if ((void*)window == NULL)
         return;
-    if (window->magic != 1234)
+    if (window->magic != 1234){
         return;
+    }
 
 // We only minimize application windows.
     if (window->type != WT_OVERLAPPED)
         return;
-
 
 // The minimized window can't receive input.
 // The iconic window that belongs to the minimized window
@@ -2747,15 +2759,13 @@ void minimize_window(struct gws_window_d *window)
 // To restore this window, we need to do it via the iconic window.
     window->enabled = FALSE;
 
-// Change the state
-    change_window_state(window,WINDOW_STATE_MINIMIZED);
-
+// Minimize it.
+    change_window_state( window, WINDOW_STATE_MINIMIZED );
 
 // Maybe we're still the active window,
 // even minimized.
     //if (window == active_window)
     // ...
-
 
 // Focus?
 // Is the wwf one of our childs?
@@ -2774,20 +2784,17 @@ void minimize_window(struct gws_window_d *window)
 
 // Update the desktop respecting the current zorder.
     wm_update_desktop2();
-    // ...
 }
 
-
+// window_initialize:
 // Initialize the window support.
+// Called by gwsInitGUI() in gws.c.
 int window_initialize(void)
 {
-// Called by gwsInitGUI() in gws.c.
-
     register int i=0;
 
-//window.h
-
-    windows_count     = 0;
+// see: window.h
+    windows_count = 0;
 
 // Basic windows.
 // At this moment we didn't create any window yet.
@@ -2800,7 +2807,7 @@ int window_initialize(void)
 // Stack
     first_window = NULL;
     last_window = NULL;
-    top_window    = NULL;
+    top_window = NULL;
 
     //...
     show_fps_window = FALSE;
@@ -2820,9 +2827,10 @@ int window_initialize(void)
     // ...
 
     return 0;
+
+//fail:
+    //return (int) -1;
 }
-
-
 
 //
 // End

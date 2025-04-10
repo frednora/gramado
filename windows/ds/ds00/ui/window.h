@@ -1,7 +1,6 @@
 // window.h
 // 2020 - Created by Fred Nora.
 
-
 #ifndef ____WINDOW_H
 #define ____WINDOW_H    1
 
@@ -9,7 +8,6 @@
 
 typedef int  __wid_t;
 typedef int  wid_t;
-
 
 // Owner for keyboard and mouse.
 extern struct gws_window_d *keyboard_owner;
@@ -20,7 +18,6 @@ extern struct gws_window_d *active_window;  // active
 extern struct gws_window_d *first_window;
 extern struct gws_window_d *last_window;
 extern struct gws_window_d *top_window;     // z-order
-
 
 // ===============================================================
 
@@ -39,7 +36,7 @@ extern struct gws_window_d *top_window;     // z-order
 #define VIEW_FULL       1000
 #define VIEW_MAXIMIZED  1001
 #define VIEW_MINIMIZED  1002
-#define VIEW_NORMAL     1003 //Normal (restaurada)
+#define VIEW_NORMAL     1003  //Normal (restaurada)
 // ...
 
 // -------------------
@@ -125,14 +122,13 @@ extern unsigned long windows_count;
 
 // ...
 
-int show_fps_window;
+extern int show_fps_window;
 
 /*
- * gws_button_d:
- *     Structure for button object.
- *     Env: gws in ring3.
- */
-
+// #deprecated
+// Structure for button object.
+// #bugbug:
+// A button is a kind of window and use the same structure.
 struct gws_button_d
 {
     //object_type_t   objectType;
@@ -183,6 +179,7 @@ struct gws_button_d
 //...
     struct gws_button_d *next;  
 };
+*/
 
 
 //
@@ -262,23 +259,28 @@ struct gws_window_class_d
 
 // ------------------------------
 
-// Input pointer device type.
+// Type of input pointer device.
 typedef enum {
     IP_DEVICE_NULL,
     IP_DEVICE_KEYBOARD,
-    IP_DEVICE_MOUSE
+    IP_DEVICE_MOUSE,
+    IP_DEVICE_TOUCHSCREEN
     // ... 
 } gws_ip_device_t;
 
 // The controls for a given window.
 // w->Controls.minimize_wid
+// #todo:
+// maybe we can use the element 
+// 'int maximize_or_restore_wid;'
 struct windowcontrols_d
 {
-    int minimize_wid;
-    int maximize_wid;
-    int close_wid;
-    
+// Structure initialization.
     int initialized;
+
+    int minimize_wid;
+    int maximize_wid;  // Restore/maximize ?
+    int close_wid;
 };
 
 //
@@ -328,18 +330,17 @@ struct windowframe_d
 // The address of the expandable image 
 // used for drawing the frame.
     int image_id;
-// main color
+// Main colors
     unsigned int color1;
     unsigned int color2;
     unsigned int color3;
     unsigned int color4;
-// decoration color
+// Decoration colors
     unsigned int ornament_color1;
     unsigned int ornament_color2;
     unsigned int ornament_color3;
     unsigned int ornament_color4;
 };
-
 
 #define TEXT_SIZE_FOR_SINGLE_LINE  128
 #define TEXT_SIZE_FOR_MULTIPLE_LINE  256
@@ -354,25 +355,16 @@ struct mouse_pointer_properties_d
 };
 
 
-/*
- * gws_window_d:
- *     The window structure.
- */
-// #todo
-// Se uma janela tiver o id da thread ao qual ela pertence
-// então podemos colocar ela em foreground quando a janela
-// receber o foco usando o teclado ou mouse.
-// #important:
-// This is a 'server side' window object.
-
+// gws_window_d:
+// Server-side window object.
 struct gws_window_d 
 {
-    int id;
-    //int wid;
-
 // Structure validation
     int used;
     int magic;
+
+    int id;
+    //int wid;
 
 // The input status.
 // If the window is disable, it can't receive input from keyboard or mouse.
@@ -429,6 +421,9 @@ struct gws_window_d
     //unsigned long client_area_width;
     //unsigned long client_area_height;
 
+// #todo
+// Explain this feature.
+// Maybe it's all about dock stuff.
     int gravity;
 
 // tipo? ... (editbox, normal, ...) 
@@ -457,7 +452,6 @@ struct gws_window_d
 // needs to be flushed into the framebuffer.
     int dirty;
 
-
 // Se tem o foco de entrada ou não.
 // Isso faz a janela ser pintada ou repintada 
 // contendo o indicador de foco.
@@ -476,7 +470,8 @@ struct gws_window_d
 // Não é z-order?
 // Criamos a janela sempre um level acima do level da sua parent.
 // Is the index in a list o childs?
-// The top-level windows are exactly the direct subwindows of the root window.
+// The top-level windows are exactly the direct 
+// subwindows of the root window.
     int level;
 
 // #todo: use this when
@@ -503,22 +498,18 @@ struct gws_window_d
 // Estado: (Full,Maximized,Minimized...)
     //int view; 
     int state;
-
 // Active, inactive.
     int status;
 
 // ======================================
 // DOC
-
     char *window_doc;
     size_t docbuffer_size_in_bytes;
     size_t doc_size_in_bytes;
-    int doc_fd;             // file descriptor for the document.
-
+    int doc_fd;  // File descriptor for the document.
 
 // ======================================
 // TEXT
-
 // The text support.
 // Used by input devices or just to show the text
 // when we dont have input support.
@@ -703,7 +694,6 @@ struct gws_window_d
 // #bugbug
 // What if we set as TRUE more than one flat at the same time?
 
-
     int isTitleBar;
     int isIcon;
     int isControl;
@@ -763,12 +753,12 @@ struct gws_window_d
 
 // ==================================================
 // Actions
+// #todo: Explain the actions.
 
     int draw;
     int redraw;
-    int show_when_creating;    // Se precisa ou não mostrar a janela.
+    int show_when_creating;  // Se precisa ou não mostrar a janela.
     // ...
-
 
 //
 // Text Cursor support.
@@ -802,7 +792,7 @@ struct gws_window_d
 
     // Valido apenas para essa janela.
 
-// Qual eh o dispositivo de input.
+// Type of input pointer device.
     gws_ip_device_t ip_device;
 
 // Para input do tipo teclado
@@ -845,7 +835,6 @@ struct gws_window_d
 //
 // == Events =========================================
 //
-
 
 // Single event
     struct gws_event_d  single_event;
@@ -903,7 +892,6 @@ struct gws_window_d
 
 extern struct gws_window_d  *__root_window; 
 extern struct gws_window_d  *active_window;
-
 
 // If the window server has a taskbar.
 // maybe we don't need that.
@@ -1048,7 +1036,6 @@ is_within (
 
 //refaz zorder.
 void reset_zorder(void);
-
 
 //
 // Root window
