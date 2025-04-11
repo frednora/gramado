@@ -2668,7 +2668,8 @@ void maximize_window(struct gws_window_d *window)
     if (MaximizationStyle.initialized != TRUE)
     {
         //MaximizationStyle.style = 1;  // full
-        MaximizationStyle.style = 2;  // partial
+        //MaximizationStyle.style = 2;  // partial 00
+        MaximizationStyle.style = 3;  // partial 01
         MaximizationStyle.initialized = TRUE;
     }
 
@@ -2683,12 +2684,19 @@ void maximize_window(struct gws_window_d *window)
             w = WindowManager.wa.width;
             h = WindowManager.wa.height;
             break;
-        // partial
+        // partial 01
         case 2:
             l = (WindowManager.wa.left + 24);
             t = (WindowManager.wa.top  + 24);
             w = (WindowManager.wa.width  -24 -24);
             h = (WindowManager.wa.height -24 -24);
+            break;
+        // partial 02
+        case 3:
+            l = (WindowManager.wa.left);
+            t = (WindowManager.wa.top);
+            w = (WindowManager.wa.width);
+            h = (WindowManager.wa.height -24);
             break;
         // full
         default:

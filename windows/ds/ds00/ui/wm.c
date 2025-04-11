@@ -6550,10 +6550,11 @@ int dock_window( struct gws_window_d *window, int position )
             }
             gws_resize_window( window, 
               (w -4), 
-              (h -4));
+              (h -4 -24));
             gwssrv_change_window_position( window, 
               (l +2), 
               (t +2) );
+            //#todo: maximize instead.
             break;
 
         // -----------------
@@ -6565,7 +6566,7 @@ int dock_window( struct gws_window_d *window, int position )
             }
             gws_resize_window( window, 
               (w>>1)-4, 
-              h-4 );
+              (h -4 -24) );
             gwssrv_change_window_position( window, 
               ((w>>1) +2), 
               (t+2) );
@@ -6596,7 +6597,7 @@ int dock_window( struct gws_window_d *window, int position )
             }
             gws_resize_window( window, 
               ((w>>1) -4), 
-              (h -4) );
+              (h -4 -24) );
             gwssrv_change_window_position( window, 
               l +2, 
               t +2); 
@@ -7289,7 +7290,10 @@ void wmInitializeGlobals(void)
    DoubleClick.current = 0;
    DoubleClick.speed = DEFAULT_DOUBLE_CLICK_SPEED;
    DoubleClick.delta = 0;
-   DoubleClick.initialized = TRUE;     
+   DoubleClick.initialized = TRUE;
+
+   MaximizationStyle.style = 3; // PARTIAL
+   MaximizationStyle.initialized = TRUE;
 }
 
 //

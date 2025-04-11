@@ -1099,6 +1099,34 @@ int serviceAsyncCommand(void)
             (data4 & 0xFFFFFFFF) );
         break;
 
+    //
+    case 1010:
+        DestroyAllWindows();
+        break;
+
+    //
+    case 1011:
+        MinimizeAllWindows();
+        break;
+
+    //
+    case 1012:
+        MaximizeAllWindows();
+        break;
+
+    //
+    case 1013:
+        RestoreAllWindows();
+        break;
+
+    //
+    case 1014:
+        if ((void*) active_window != NULL)
+            maximize_window(active_window);
+        break;
+
+    // ...
+
     // #todo
     // Maybe we can create a request to put a pixel into the
     // front buffer. It's because this is a display server.

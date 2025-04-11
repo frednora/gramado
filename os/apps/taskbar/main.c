@@ -152,7 +152,32 @@ struct tb_client_d clientList[CLIENT_COUNT_MAX];
 
 static int main_window = -1;
 static int desktop_window = -1;
-static int startmenu_window = -1;
+
+// Main buttons
+// (Navigation bar)
+// #todo: Maybe we can create an structure and 
+// allow customization.
+
+struct navigation_info_d
+{
+    int initialized;
+
+// Buttons
+    int button00_window;
+    int button01_window;
+    int button02_window;
+// Separator
+    int useSeparator;
+
+// Taskbar icons
+// #todo
+// Create and initialize a structure for this.
+    //int icon_counter = 0;
+    //int icon_left_limit = 80; // Limit in pixels.
+    // Icon list
+    //int iconList[32];
+};
+struct navigation_info_d  NavigationInfo;
 
 //
 // Taskbar icons.
@@ -173,8 +198,13 @@ int iconList[32];
 const char *program_name = "Taskbar";
 
 //const char *start_menu_button_label = "Gramado";
-const char *start_menu_button_label = "Start";
+//const char *start_menu_button_label = "Start";
 //const char *start_menu_button_label = "|||";
+
+// Main labels
+const char *buttom00_label = "|||";
+const char *buttom01_label = "0";
+const char *buttom02_label = "<";
 
 const char *app1_name = "#terminal.bin";
 const char *app2_name = "#editor.bin";
@@ -225,6 +255,8 @@ create_bar_icon(
     unsigned long width,
     unsigned long height,
     char *label );
+
+static int draw_separator(int fd);
 
 static int create_icons_on_desktop(int fd);
 static int create_desktop_area(int fd);
@@ -557,7 +589,10 @@ tbProcedure(
             // We need to update all the clients
             // Create update_clients()
             gws_redraw_window(fd, main_window, TRUE);
-            gws_redraw_window(fd, startmenu_window, TRUE);
+            gws_redraw_window(fd, NavigationInfo.button00_window, TRUE);
+            gws_redraw_window(fd, NavigationInfo.button01_window, TRUE);
+            gws_redraw_window(fd, NavigationInfo.button02_window, TRUE);
+            draw_separator(fd);
             //#test
             //#todo
             //gws_redraw_window(fd, iconList[0], TRUE);
@@ -575,11 +610,15 @@ tbProcedure(
             //if (long1 == main_window)
                 //printf("taskbar: GWS_MouseClicked\n");
 
-            //if (event_window == startmenu_window)
+            //if (event_window == NavigationInfo.button00_window)
             // #ps: Probably the event window is the main window.
-            if (long1 == startmenu_window)
+
+            // # Display apps. (recent apps?), maximize.
+            if (long1 == NavigationInfo.button00_window)
             {
-                gws_async_command(fd,30,0,0);
+                gws_async_command(fd,30,0,0);  // TILE (Update desktop)
+                //gws_async_command(fd,15,0,0); //SET ACTIVE WINDOW BY WID
+                //gws_async_command(fd,1014,0,0); //maximize active window
 
                 /*
                 // #todo: It is working. 
@@ -609,6 +648,12 @@ tbProcedure(
                 printf("done %d\n",tmpNewWID);
                 */
             }
+            // #todo: Minimize apps and Show desktop.
+            if (long1 == NavigationInfo.button01_window)
+                gws_async_command(fd,1011,0,0);
+            // #todo: Back
+            if (long1 == NavigationInfo.button02_window)
+                gws_async_command(fd,30,0,0);
             break;
 
         // Add new client. Given the wid.
@@ -936,7 +981,7 @@ create_bar_icon(
     }
 
     //gws_refresh_window(fd, tmp1);
-    //startmenu_window = tmp1;
+    //NavigationInfo.button00_window = tmp1;
     //return 0;
     return (int) tmp1;
 
@@ -944,6 +989,30 @@ fail:
     return (int) -1;
 }
 
+static int draw_separator(int fd)
+{
+// ========================
+// Create separator
+
+    if (fd<0)
+        return -1;
+
+    if (main_window<0)
+        return -1;
+
+    if (NavigationInfo.useSeparator != TRUE)
+        return -1;
+
+    gws_draw_text (
+        (int) fd,
+        (int) main_window,
+        (unsigned long) 2 +84 +84 +84 +2,
+        (unsigned long) 8,
+        (unsigned long) COLOR_GRAY,
+        "|" );
+
+    return 0;
+}
 
 static int create_icons_on_desktop(int fd)
 {
@@ -1065,6 +1134,14 @@ int main(int argc, char *argv[])
     int useDesktop = FALSE; //TRUE;
     // ...
     int client_fd = -1;
+
+
+// Initialize navigation info structure.
+    NavigationInfo.button00_window = -1;
+    NavigationInfo.button01_window = -1;
+    NavigationInfo.button02_window = -1;
+    NavigationInfo.useSeparator = TRUE;
+    NavigationInfo.initialized = TRUE;
 
 // Initialization
     icon_left_limit = 80;
@@ -1220,10 +1297,9 @@ int main(int argc, char *argv[])
     gws_set_active( client_fd, main_window );
 
 // ========================
-// Create th start menu button 
-// based on the taskbar dimensions.
+// Create button based on the taskbar dimensions.
 
-    startmenu_window = 
+    NavigationInfo.button00_window = 
     (int) create_bar_icon (
         client_fd,
         main_window,
@@ -1231,8 +1307,52 @@ int main(int argc, char *argv[])
         2, 
         2, 
         (8*10),   // 8 chars width. 
-        tb_h -4,
-        start_menu_button_label );
+        tb_h -2,
+        buttom00_label );
+
+// ========================
+// Create button based on the taskbar dimensions.
+
+    NavigationInfo.button01_window = 
+    (int) create_bar_icon (
+        client_fd,
+        main_window,
+        0, // Icon ID
+        2 +84, 
+        2, 
+        (8*10),   // 8 chars width. 
+        tb_h -2,
+        buttom01_label );
+
+// ========================
+// Create button based on the taskbar dimensions.
+
+    NavigationInfo.button02_window = 
+    (int) create_bar_icon (
+        client_fd,
+        main_window,
+        0, // Icon ID
+        2 +84 +84, 
+        2, 
+        (8*10),   // 8 chars width. 
+        tb_h -2,
+        buttom02_label );
+
+
+// ========================
+// Create separator
+
+    draw_separator(client_fd);
+
+/*
+    gws_draw_text (
+        (int) client_fd,
+        (int) main_window,
+        (unsigned long) 2 +84 +84 +84 +2,
+        (unsigned long) 2,
+        (unsigned long) COLOR_GRAY,
+        "|" );
+*/
 
 
     //printf ("taskbar.bin: main_window created\n");

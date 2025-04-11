@@ -386,7 +386,7 @@ editorProcedure(
         break;
 
     case MSG_KEYDOWN:
-        printf("editor: MSG_KEYDOWN\n");
+        //printf("editor: MSG_KEYDOWN\n");
         break;
 
     //36
