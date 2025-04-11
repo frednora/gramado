@@ -155,10 +155,23 @@ static int desktop_window = -1;
 static int startmenu_window = -1;
 
 //
+// Taskbar icons.
+// Not the start menu.
+//
+
+// #todo
+// Create and initialize a structure for this.
+static int icon_counter = 0;
+static int icon_left_limit = 80; // Limit in pixels.
+// Icon list
+int iconList[32];
+
+//
 // Strings
 //
 
 const char *program_name = "Taskbar";
+
 //const char *start_menu_button_label = "Gramado";
 const char *start_menu_button_label = "Start";
 //const char *start_menu_button_label = "|||";
@@ -210,7 +223,8 @@ create_bar_icon(
     unsigned long left,
     unsigned long top,
     unsigned long width,
-    unsigned long height );
+    unsigned long height,
+    char *label );
 
 static int create_icons_on_desktop(int fd);
 static int create_desktop_area(int fd);
@@ -522,6 +536,7 @@ tbProcedure(
     unsigned long long2 )
 {
     int f12Status = -1;
+    int tmpNewWID = -1;
 
 // Parameters:
     if (fd < 0){
@@ -543,6 +558,12 @@ tbProcedure(
             // Create update_clients()
             gws_redraw_window(fd, main_window, TRUE);
             gws_redraw_window(fd, startmenu_window, TRUE);
+            //#test
+            //#todo
+            //gws_redraw_window(fd, iconList[0], TRUE);
+            //gws_redraw_window(fd, iconList[1], TRUE);
+            //gws_redraw_window(fd, iconList[2], TRUE);
+            //gws_redraw_window(fd, iconList[3], TRUE);
             break;
 
         // One button was clicked
@@ -557,8 +578,37 @@ tbProcedure(
             //if (event_window == startmenu_window)
             // #ps: Probably the event window is the main window.
             if (long1 == startmenu_window)
+            {
                 gws_async_command(fd,30,0,0);
 
+                /*
+                // #todo: It is working. 
+                // We got to initialize the variables first.
+            
+                //#test: Testing a new worker.
+                tmpNewWID = (int) create_bar_icon(
+                    fd, 
+                    main_window,
+                    0,
+                    (icon_left_limit + icon_counter),  // Left
+                    2,  // Top
+                    32, // Width
+                    28, // Height
+                    "NEW" );
+
+                if (tmpNewWID < 0)
+                    goto fail;
+                gws_refresh_window(fd,tmpNewWID);
+                if (icon_counter<0)
+                    goto fail;
+                if (icon_counter>=32)
+                    goto fail;
+                iconList[icon_counter] = (int) tmpNewWID;
+                icon_counter++;
+
+                printf("done %d\n",tmpNewWID);
+                */
+            }
             break;
 
         // Add new client. Given the wid.
@@ -577,6 +627,20 @@ tbProcedure(
         // The server send data about the client.
         case 99443:
             printf("taskbar: [99443]\n");
+            break;
+
+        // #test:
+        // ds sent us a message to create an iconic window for an app.
+        case 99500:
+            tmpNewWID = (int) create_bar_icon(
+                fd, 
+                main_window,
+                2,  // Icon ID
+                8,8,28,28,
+                "NEW" );
+            if (tmpNewWID < 0)
+                goto fail;
+            gws_refresh_window(fd,tmpNewWID);
             break;
 
         case MSG_CLOSE:
@@ -839,7 +903,8 @@ create_bar_icon(
     unsigned long left,
     unsigned long top,
     unsigned long width,
-    unsigned long height )
+    unsigned long height,
+    char *label )
 {
     int tmp1 = -1;
     unsigned long style = 0;
@@ -848,14 +913,18 @@ create_bar_icon(
         goto fail;
     if (parent<0)
         goto fail;
+    if ((void*) label == NULL)
+        goto fail;
+    if (*label == 0)
+        goto fail;
 
     tmp1 = 
         (int) gws_create_window (
                      fd,
                      WT_BUTTON, 
                      BS_DEFAULT, 
-                     1, 
-                     start_menu_button_label,
+                     1,
+                     label,
                      left, top, width, height,
                      parent, 
                      style, 
@@ -996,6 +1065,13 @@ int main(int argc, char *argv[])
     int useDesktop = FALSE; //TRUE;
     // ...
     int client_fd = -1;
+
+// Initialization
+    icon_left_limit = 80;
+    icon_counter = 0;
+    int ic=0;
+    for (ic=0; ic<32; ic++)
+        iconList[0] = 0;
 
 // hello
     //gws_debug_print ("taskbar.bin: Hello world \n");
@@ -1155,7 +1231,8 @@ int main(int argc, char *argv[])
         2, 
         2, 
         (8*10),   // 8 chars width. 
-        tb_h -4 );
+        tb_h -4,
+        start_menu_button_label );
 
 
     //printf ("taskbar.bin: main_window created\n");
