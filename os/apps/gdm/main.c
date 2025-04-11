@@ -931,10 +931,7 @@ int main( int argc, char *argv[] )
 // Show main window.
     gws_refresh_window(client_fd, main_window);
 
-//
 // Event loop
-//
-
     __event_loop(client_fd);
 
 // Close socket.

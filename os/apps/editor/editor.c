@@ -457,11 +457,12 @@ editorProcedure(
     //...
     
     default:
-        return -1;
+        goto fail;
         break;
     };
 
-    return -1;
+fail:
+    return (int) -1;
 }
 
 
