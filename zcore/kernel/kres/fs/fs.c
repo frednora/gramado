@@ -12,6 +12,19 @@ ssize_t sys_read(int fd, const char *ubuf, size_t count)
     }
 
 // #test
+// Only the foreground thread can read the stdin
+// OK. This is working now, and only the foreground thread
+// was able to read stdin.
+// I tested it in a lot of applications.
+// #todo
+// We can implement a better routine for this.
+
+    if (fd == 0){
+        if (current_thread != foreground_thread)
+            return (ssize_t) -EPERM;
+    }
+
+// #test
 // Usermode buffer validation
 // #todo: Check against more limits.
     if (ubuf < CONTROLTHREAD_BASE)
@@ -20,22 +33,17 @@ ssize_t sys_read(int fd, const char *ubuf, size_t count)
         //return (ssize_t) -EFAULT;  // bad address
     }
 
-    // #test
-    // Only the foreground thread can read the stdin
-    // OK. 
-    // This is working now, and only the foreground thread
-    // was able to read stdin.
-    // I tested it in a lot of applications.
-    // #todo
-    // We can implement a better routine for this.
-
-    if (fd == 0)
-    {
-        if (current_thread != foreground_thread)
-            return (ssize_t) -EPERM;
+// Nothing to read.
+    if (count == 0){
+        return (ssize_t) -EINVAL;
     }
+/*
+// #todo: Create a max limit for this.
+    if (count >= MaxXXX){
+        return (ssize_t) -EINVAL;
+    }
+*/
 
-    // #todo: count
     return (ssize_t) __read_imp(fd, ubuf, count);
 }
 
@@ -54,7 +62,17 @@ ssize_t sys_write(int fd, const char *ubuf, size_t count)
         //return (ssize_t) -EFAULT;  // bad address
     }
 
-// #todo: count
+// Nothing to read.
+    if (count == 0){
+        return (ssize_t) -EINVAL;
+    }
+/*
+// #todo: Create a max limit for this.
+    if (count >= MaxXXX){
+        return (ssize_t) -EINVAL;
+    }
+*/
+
     return (ssize_t) __write_imp(fd, ubuf, count);
 }
 

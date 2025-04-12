@@ -693,6 +693,9 @@ void sys_broken_vessels(tid_t tid)
     }
 }
 
+// #todo: Explain it.
+// IN:
+// tid, ticks to wait.
 void sys_sleep(tid_t tid, unsigned long ms)
 {
     // #debug
@@ -706,6 +709,7 @@ void sys_sleep(tid_t tid, unsigned long ms)
     if (ms == 0){
         return;
     }
+// See: schedi.c
     sleep(tid, ms);
 }
 

@@ -798,6 +798,8 @@ extern unsigned long threadList[THREAD_COUNT_MAX];
 // == prototypes ===========================
 //
 
+struct thread_d *get_init_thread(void);
+
 // From tlib.c
 void show_slot(int tid);
 void show_slots(void);

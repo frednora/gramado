@@ -1,6 +1,6 @@
-
 // state.h
 // System state
+// What is the moment in the kernel's journey.
 
 #ifndef __SYSTEM_STATE_H
 #define __SYSTEM_STATE_H    1

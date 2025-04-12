@@ -236,6 +236,11 @@ __ps_setup_x64_context (
     t->saved = FALSE;
 }
 
+struct thread_d *get_init_thread(void)
+{
+    return (struct thread_d *) InitThread;
+}
+
 // helper
 // Thread stats
 unsigned long GetThreadStats( int tid, int index )

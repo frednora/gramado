@@ -227,6 +227,7 @@ void do_thread_waiting(tid_t tid, unsigned long ms)
     if (JiffiesToWait == 0){
         JiffiesToWait = 1;
     }
+// Time to wake up
     t->wake_jiffy = (unsigned long) (jiffies + JiffiesToWait);
 
 // #debug
@@ -745,8 +746,12 @@ void sleep(tid_t tid, unsigned long ms)
         return;
     }
 
-// __task_switch() in ts.c will sleep the thread
-// at the right moment.
+// __task_switch() will call sleep_until() to put 
+// this thread waiting for ms ticks.
+// After that the thread will wake up.
+// #todo
+// This is the type of feature that can be used 
+// in the sys_select() implementation.
     t->sleep_in_progress = TRUE;
     t->desired_sleep_ms = ms;
 }

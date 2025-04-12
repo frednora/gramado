@@ -172,7 +172,7 @@ static void __gws_clear_msg_buff(void)
     register int i=0;
     for (i=0; i<512; i++){
         __gws_message_buffer[i] = 0;
-    }; 
+    };
 }
 
 // == get window info request ==========================
@@ -189,35 +189,31 @@ static int __gws_get_window_info_request( int fd, int wid )
 
     //gws_debug_print ("__gws_get_window_info_request: wr\n");
 
-// window id.
+// Parameters:
+    if (fd < 0){
+        goto fail;
+    }
+    if (wid < 0){
+        goto fail;
+    }
+
+// Window ID, msg code, libgws signatures.
     message_buffer[0] = wid;
-// Message code.
     message_buffer[1] = GWS_GetWindowInfo;
-// libgws signature.
     message_buffer[2] = (unsigned long) 1234;
     message_buffer[3] = (unsigned long) 5678;
     //...
 
-    if (fd<0){
-        goto fail;
-    }
-    if (wid<0){
-        goto fail;
-    }
-
 // Write
-
     n_writes = 
         (int) send ( 
-                  fd, 
-                  __gws_message_buffer, 
-                  sizeof(__gws_message_buffer), 
-                  0 );
-
+                fd, 
+                __gws_message_buffer, 
+                sizeof(__gws_message_buffer), 
+                0 );
     if (n_writes <= 0){
         goto fail;
     }
-
     return (int) n_writes; 
 fail:
     return (int) -1;
@@ -241,43 +237,34 @@ static struct gws_window_info_d *__gws_get_window_info_response(
     int sig2=0;
     register int i=0;
 
-// #todo:
-// Check fd.
-    //if (fd <0)
-        //return NULL;
-
+// Parameters:
+    if (fd < 0){
+        return NULL;
+    }
     if ((void*) window_info == NULL){
         return NULL;
     }
 
-// fail
+// Fail it. (Invalidate)
     window_info->used = FALSE;
     window_info->magic = 0;
 
-    if (fd<0){
-        return NULL;
-    }
-
-// read
-
-// Clean the local buffer,
-// and then populate with some data.
+// Clear the local buffer and populate it with the incoming data.
     for (i=0; i<512; i++){
         __gws_message_buffer[i] = 0;
     };
-
+// Read
     n_reads = 
         (ssize_t) recv ( 
-                      fd, 
-                      __gws_message_buffer, 
-                      sizeof(__gws_message_buffer), 
-                      0 );
-
+                    fd, 
+                    __gws_message_buffer, 
+                    sizeof(__gws_message_buffer), 
+                    0 );
     if (n_reads <= 0){
         return (struct gws_window_info_d *) window_info;
     }
 
-// The msg packet
+// We are waiting for a reply. Otherwise it fails.
 
     int msg = (int) message_buffer[1];
     msg = (msg & 0xFFFF);
@@ -297,26 +284,23 @@ static struct gws_window_info_d *__gws_get_window_info_response(
 // Put the message info into the structure.
 process_response:
 
-// the header
-    wid      = (int)           message_buffer[0];  // window id
-    msg_code = (int)           message_buffer[1];  // message code: (It is an EVENT)
-    sig1     = (unsigned long) message_buffer[2];  // Signature 1: 1234
-    sig2     = (unsigned long) message_buffer[3];  // Signature 2: 5678
+// Get the header.
+// Window ID, msg code, signature 1234, signature 5678.
+    wid      = (int)           message_buffer[0];
+    msg_code = (int)           message_buffer[1];  // Event: It's a reply.
+    sig1     = (unsigned long) message_buffer[2];
+    sig2     = (unsigned long) message_buffer[3];
 
+// Signature fails.
     if (sig1 != 1234){
-        //debug_print ("__gws_get_window_info_response: sig1 fail\n");
         goto fail;
     }
-
     if (sig2 != 5678){
-        //debug_print ("__gws_get_window_info_response: sig2 fail\n");
         goto fail;
     }
 
-// data field
-
-// OK
-// The data field
+// If it's a reply. 
+// Get the data field and populate the window info structure.
     if (msg_code == SERVER_PACKET_TYPE_REPLY)
     {
         //printf("__gws_get_next_event_response: WE GOT THE DATA\n");
@@ -363,7 +347,7 @@ process_response:
         return (struct gws_window_info_d *) window_info;
     }
 
-// fall to fail field.
+// Fall trough.
 fail:
     return NULL;
 }
@@ -380,6 +364,15 @@ static int __gws_get_next_event_request(int fd,int wid)
     int n_writes = 0;
     register int i=0;
 
+// Parameters?
+    if (fd < 0){
+        goto fail;
+    }
+    // #todo
+    //if (wid < 0){
+    //    goto fail;
+    //}
+
 // Clean the main buffer.
     for (i=0; i<512; i++){
         __gws_message_buffer[i] = 0;
@@ -392,27 +385,19 @@ static int __gws_get_next_event_request(int fd,int wid)
     message_buffer[2] = 0;
     message_buffer[3] = 0;
     //...
-
-    if (fd<0){
-        goto fail;
-    }
-    //if (wid<0){
-    //    goto fail;
-    //}
+    //message_buffer[4] = 0;
+    //message_buffer[5] = 0;
 
 // Write
-
     n_writes = 
         (int) send ( 
-                  fd, 
-                  __gws_message_buffer, 
-                  sizeof(__gws_message_buffer), 
-                  0 );
-
+                fd, 
+                __gws_message_buffer, 
+                sizeof(__gws_message_buffer), 
+                0 );
     if (n_writes <= 0){
         goto fail;
     }
-
     return (int) n_writes;
 fail:
     return (int) -1;
@@ -439,6 +424,7 @@ static struct gws_event_d *__gws_get_next_event_response (
 
     //gws_debug_print ("__gws_get_next_event_response: rd\n"); 
 
+// Parameters:
     if (fd<0){
         return NULL;
     }
@@ -456,14 +442,15 @@ static struct gws_event_d *__gws_get_next_event_response (
 
     n_reads = 
         (ssize_t) recv ( 
-                      fd, 
-                      __gws_message_buffer, 
-                      sizeof(__gws_message_buffer), 
-                      0 );
-
+                    fd, 
+                    __gws_message_buffer, 
+                    sizeof(__gws_message_buffer), 
+                    0 );
     if (n_reads <= 0)
     { 
-        printf ("__gws_get_next_event_response: Read 0 bytes\n"); 
+        // #debug
+        // printf ("__gws_get_next_event_response: Read 0 bytes\n"); 
+
         event->type = 0;
         event->used = FALSE;
         event->magic = 0;
@@ -492,7 +479,10 @@ static struct gws_event_d *__gws_get_next_event_response (
     };
 
 // crazy fail
-    printf ("__gws_get_next_event_response: crazy fail\n"); 
+
+    //#debug
+    //printf ("__gws_get_next_event_response: crazy fail\n"); 
+
     event->type = 0;
     event->used = FALSE;
     event->magic = 0;
@@ -569,6 +559,7 @@ static int __gws_refresh_window_request( int fd, int window )
 
     //gws_debug_print ("__gws_refresh_window_request: wr\n");
 
+// Parameters:
     if (fd<0){
         goto fail;
     }
@@ -576,26 +567,24 @@ static int __gws_refresh_window_request( int fd, int window )
         goto fail;
     }
 
-// Get info.
+// Populate the header of the buffer.
+// WID, msg code, 0, 0. 
     message_buffer[0] = window; 
-    message_buffer[1] = GWS_RefreshWindow;  // Message code
+    message_buffer[1] = GWS_RefreshWindow;
     message_buffer[2] = 0;
     message_buffer[3] = 0;
     //...
 
 // Write
-
     n_writes = 
         (int) send ( 
-                  fd, 
-                  __gws_message_buffer, 
-                  sizeof(__gws_message_buffer), 
-                  0 );
-
+                fd, 
+                __gws_message_buffer, 
+                sizeof(__gws_message_buffer), 
+                0 );
     if (n_writes <= 0){
         goto fail;
     }
-
     return (int) n_writes;
 fail:
     return (int) -1;
@@ -611,32 +600,33 @@ __gws_redraw_window_request (
         (unsigned long *) &__gws_message_buffer[0];
     int n_writes = 0;
 
+// Parameters:
     if (fd<0){
         goto fail;
     }
+    // #todo: Window falidation
+    //if (window<0){
+    //    goto fail;
+    //}
 
-// Window ID
+// Window ID, Message code, Flags, 0
     message_buffer[0] = window;
-// Message code
     message_buffer[1] = GWS_RedrawWindow;
-// Flags
     message_buffer[2] = (unsigned long) flags;
     message_buffer[3] = 0;
     //...
 
 // Write
-
     n_writes = 
         (int) send ( 
-                  fd, 
-                  __gws_message_buffer, 
-                  sizeof(__gws_message_buffer), 
-                  0 );
+                fd, 
+                __gws_message_buffer, 
+                sizeof(__gws_message_buffer), 
+                0 );
 
-    if (n_writes<=0){
+    if (n_writes <= 0){
         goto fail;
     }
-
     return (int) n_writes;
 fail:
     return (int) -1;
@@ -657,32 +647,33 @@ __gws_change_window_position_request (
     if (fd<0){
         goto fail;
     }
+    // #todo: Window falidation
+    //if (window<0){
+    //    goto fail;
+    //}
 
 // Clean the main buffer.
     for (i=0; i<512; i++){
         __gws_message_buffer[i] = 0;
     };
 
+// wid, message code, x, y.
     message_buffer[0] = (unsigned long) (window & 0xFFFFFFFF);
-// Message code
     message_buffer[1] = GWS_ChangeWindowPosition;
     message_buffer[2] = (unsigned long) x;
     message_buffer[3] = (unsigned long) y;
     //...
 
 // Write
-
     n_writes = 
         (int) send ( 
-                  fd,
-                  __gws_message_buffer, 
-                  sizeof(__gws_message_buffer), 
-                  0 );
-
-    if (n_writes<=0){
+                fd,
+                __gws_message_buffer, 
+                sizeof(__gws_message_buffer), 
+                0 );
+    if (n_writes <= 0){
         goto fail;
     }
-
     return (int) n_writes;
 fail:
     return (int) -1;
@@ -695,26 +686,14 @@ static int __gws_change_window_position_reponse(int fd)
     ssize_t n_reads=0;
     register int i=0;
 
+// #test
 // Waiting for response. ==================
-
-// Espera para ler a resposta. 
-// Esperando com yield como teste.
-// Isso demora, pois a resposta só será enviada depois de
-// prestado o servido.
-// obs: Nesse momento deveríamos estar dormindo.
+// #bugbug
+// We can stay in here forever.
 
     //gws_debug_print ("__gws_change_window_position_reponse: Waiting ...\n");      
 
-// #todo
-// Podemos checar antes se o fd 
-// representa um objeto que permite leitura.
-// Pode nem ser possível.
-// Mas como sabemos que é um soquete,
-// então sabemos que é possível ler.
-// #caution
-// Waiting for response.
-// We can stay here for ever.
-
+// Parameter:
     if (fd<0){
         goto fail;
     }
@@ -729,24 +708,22 @@ response_loop:
 
     n_reads = 
         (ssize_t) recv( 
-                      fd, 
-                      __gws_message_buffer, 
-                      sizeof(__gws_message_buffer), 
-                      0 );
+                    fd, 
+                    __gws_message_buffer, 
+                    sizeof(__gws_message_buffer), 
+                    0 );
 
-    //if (n_reads<=0){
-    //    goto response_loop;
-    //}
-    
-    // Se retornou 0, podemos tentar novamente.
+
+    // #danger #bugbug
+    // Let's tray again if we read 0 bytes.
     if (n_reads == 0){
         goto response_loop;
     }
-    
+
     // Se retornou -1 é porque algo está errado com o arquivo.
     if (n_reads < 0){
-        gws_debug_print ("__gws_change_window_position_reponse: recv fail.\n");
-        printf          ("__gws_change_window_position_reponse: recv fail.\n");
+        gws_debug_print ("__gws_change_window_position_reponse: recv fail\n");
+        printf          ("__gws_change_window_position_reponse: recv fail\n");
         printf ("Something is wrong with the socket.\n");
         exit (1);
     }
@@ -807,29 +784,33 @@ __gws_resize_window_request (
     if (fd<0){
         goto fail;
     }
+    // #todo: Window falidation
+    //if (window<0){
+    //    goto fail;
+    //}
 
 // Clean the main buffer.
     for (i=0; i<512; i++){
         __gws_message_buffer[i] = 0;
     };
 
+// wid, message code, w, h.
     message_buffer[0] = window;
-    message_buffer[1] = GWS_ResizeWindow;  // Message code
+    message_buffer[1] = GWS_ResizeWindow;
     message_buffer[2] = w;
     message_buffer[3] = h;
     // ...
 
+// Write
     n_writes = 
         (int) send ( 
-                  fd, 
-                  __gws_message_buffer, 
-                  sizeof(__gws_message_buffer), 
-                  0 );
-
+                fd, 
+                __gws_message_buffer, 
+                sizeof(__gws_message_buffer), 
+                0 );
     if (n_writes <= 0){
         goto fail;
     }
-
     return (int) n_writes;
 fail:
     return (int) -1;
@@ -864,6 +845,7 @@ static int __gws_resize_window_reponse(int fd)
 // Waiting for response.
 // We can stay here for ever.
 
+// Parameter:
     if (fd<0){
         goto fail;
     }
@@ -878,10 +860,10 @@ response_loop:
 
     n_reads = 
         (ssize_t) recv( 
-                      fd, 
-                      __gws_message_buffer, 
-                      sizeof(__gws_message_buffer), 
-                      0 );
+                    fd, 
+                    __gws_message_buffer, 
+                    sizeof(__gws_message_buffer), 
+                    0 );
 
     //if (n_reads<=0){
     //    goto response_loop;
@@ -959,33 +941,31 @@ __gws_refresh_rectangle_request (
         goto fail;
     }
 
+// 0, message code, 0, 0.
     message_buffer[0] = (unsigned long) 0;
-// Message code
     message_buffer[1] = (unsigned long) GWS_RefreshRectangle;
     message_buffer[2] = (unsigned long) 0;
     message_buffer[3] = (unsigned long) 0;
-
+// l, t, w, h.
     message_buffer[4] = (unsigned long) (left   & 0xFFFF); 
     message_buffer[5] = (unsigned long) (top    & 0xFFFF); 
     message_buffer[6] = (unsigned long) (width  & 0xFFFF); 
     message_buffer[7] = (unsigned long) (height & 0xFFFF ); 
-
+// More?
+    //message_buffer[?] = (unsigned long) 0; 
     //message_buffer[?] = (unsigned long) 0; 
     // ...
 
 // Write
-
     n_writes = 
         (int) send ( 
-                  fd, 
-                  __gws_message_buffer, 
-                  sizeof(__gws_message_buffer), 
-                  0 );
-
+                fd, 
+                __gws_message_buffer, 
+                sizeof(__gws_message_buffer), 
+                0 );
     if (n_writes <= 0){
         goto fail;
     }
-
     return (int) n_writes;
 fail:
     return (int) -1;
@@ -1006,21 +986,19 @@ static int __gws_refresh_rectangle_response(int fd)
         goto fail;
     }
 
-// Read
-
 // Clean the local buffer,
 // and then populate with some data.
     for (i=0; i<512; i++){
         __gws_message_buffer[i] = 0;
     };
 
+// Read
     n_reads = 
         (ssize_t) recv( 
-                      fd, 
-                      __gws_message_buffer, 
-                      sizeof(__gws_message_buffer), 
-                      0 );
-
+                    fd, 
+                    __gws_message_buffer, 
+                    sizeof(__gws_message_buffer), 
+                    0 );
     if (n_reads <= 0){
         goto fail;
     }
@@ -1059,38 +1037,37 @@ __gws_drawchar_request (
         (unsigned long *) &__gws_message_buffer[0];
     int n_writes = 0;
 
+// Parameters:
     if (fd<0){
         goto fail;
     }
+    // #todo? wid
 
+// 0, msg code, 0, 0
     message_buffer[0] = (unsigned long) 0;
-// Message code
     message_buffer[1] = (unsigned long) GWS_DrawChar;
     message_buffer[2] = (unsigned long) 0;
     message_buffer[3] = (unsigned long) 0;
-
+// wid, l, t, color.
     message_buffer[4] = (unsigned long) window_id;
-    message_buffer[5] = (unsigned long) (left & 0xFFFF); 
-    message_buffer[6] = (unsigned long) (top  & 0xFFFF); 
+    message_buffer[5] = (unsigned long) (left  & 0xFFFF); 
+    message_buffer[6] = (unsigned long) (top   & 0xFFFF); 
     message_buffer[7] = (unsigned long) (color & 0xFFFFFFFF); 
-
 // The 'char'.
     message_buffer[8] = (unsigned long) (ch & 0xFF);
+    //message_buffer[0] = (unsigned long) 0;
     // ...
 
 // Write
-
     n_writes = 
         (int) send ( 
-                  fd, 
-                  __gws_message_buffer, 
-                  sizeof(__gws_message_buffer), 
-                  0 );
-
+                fd, 
+                __gws_message_buffer, 
+                sizeof(__gws_message_buffer), 
+                0 );
     if (n_writes <= 0){
         goto fail;
     }
-
     return (int) n_writes;
 fail:
     return (int) -1;
@@ -1115,9 +1092,11 @@ __gws_drawtext_request (
     register int i=0;
     char LocalString[256];
 
+// Parameters:
     if (fd<0){
         goto fail;
     }
+    // #todo: wid
 
 // String validation
     if ((void*) string == NULL)
@@ -1141,14 +1120,15 @@ __gws_drawtext_request (
         __gws_message_buffer[i] = 0;
     };
 
+// 0, msg code, 0, 0
     message_buffer[0] = 0;
-    message_buffer[1] = GWS_DrawText;  // Message code
+    message_buffer[1] = GWS_DrawText;
     message_buffer[2] = 0;
     message_buffer[3] = 0;
-
+// wid, l, t, color.
     message_buffer[4] = window_id;
-    message_buffer[5] = left; 
-    message_buffer[6] = top; 
+    message_buffer[5] = left;
+    message_buffer[6] = top;
     message_buffer[7] = (unsigned long) (color & 0xFFFFFFFF);
 
 // String support
@@ -1174,18 +1154,15 @@ __gws_drawtext_request (
     *target_base = 0;
 
 // Write
-
     n_writes = 
         (int) send ( 
-                  fd, 
-                  __gws_message_buffer, 
-                  sizeof(__gws_message_buffer), 
-                  0 );
-
+                fd, 
+                __gws_message_buffer, 
+                sizeof(__gws_message_buffer), 
+                0 );
     if (n_writes <= 0){
         goto fail;
     }
-       
     return (int) n_writes;
 fail:
     return (int) -1;
@@ -1206,20 +1183,22 @@ __gws_settext_request (
     int n_writes = 0;
     register int i=0;
 
+// Parameters:
     if (fd<0){
         goto fail;
     }
-
+    // #todo: wid
     if ((void*) string == NULL)
         goto fail;
     if (*string == 0)
         goto fail;
 
+// 0, msg code, 0, 0.
     message_buffer[0] = 0;
-    message_buffer[1] = GWS_SetText;  // Msg code
+    message_buffer[1] = GWS_SetText;
     message_buffer[2] = 0;
     message_buffer[3] = 0;
-
+// wid, l, t, color.
     message_buffer[4] = window_id;
     message_buffer[5] = left; 
     message_buffer[6] = top; 
@@ -1237,21 +1216,19 @@ __gws_settext_request (
         p++;
         string++; 
     };
-    *p = 0;  // finalize the string
+    // Finalize the string
+    *p = 0;
 
 // Write
-
     n_writes = 
         (int) send ( 
-                  fd, 
-                  __gws_message_buffer, 
-                  sizeof(__gws_message_buffer), 
-                  0 );
-
+                fd, 
+                __gws_message_buffer, 
+                sizeof(__gws_message_buffer), 
+                0 );
     if (n_writes <= 0){
         goto fail;
     }
-
     return (int) n_writes;
 fail:
     return (int) -1;
@@ -1271,19 +1248,22 @@ __gws_gettext_request (
     //unsigned long *string_buffer = (unsigned long *) &__gws_message_buffer[128];
     int n_writes = 0;
 
+// Parameters:
     if (fd<0){
         goto fail;
     }
+    // #todo: wid
     if ((void*) string == NULL)
         goto fail;
     if (*string == 0)
         goto fail;
 
+// 0, msgcode, 0, 0
     message_buffer[0] = 0;
-    message_buffer[1] = GWS_GetText;  // Msg code
+    message_buffer[1] = GWS_GetText;
     message_buffer[2] = 0;
     message_buffer[3] = 0;
-
+// wid, l, t, color
     message_buffer[4] = window_id;
     message_buffer[5] = left; 
     message_buffer[6] = top; 
@@ -1306,18 +1286,15 @@ __gws_gettext_request (
 */
 
 // Write
-
     n_writes = 
         (int) send ( 
-                  fd, 
-                  __gws_message_buffer, 
-                  sizeof(__gws_message_buffer), 
-                  0 );
-
+                fd, 
+                __gws_message_buffer, 
+                sizeof(__gws_message_buffer), 
+                0 );
     if (n_writes <= 0){
         goto fail;
     }
-
     return (int) n_writes;
 fail:
     return (int) -1;
@@ -1358,10 +1335,10 @@ response_loop:
 
     n_reads = 
         (ssize_t) recv(
-                      fd, 
-                      __gws_message_buffer, 
-                      sizeof(__gws_message_buffer), 
-                      0 );
+                    fd, 
+                    __gws_message_buffer, 
+                    sizeof(__gws_message_buffer), 
+                    0 );
 
     //if (n_reads<=0){
     //    goto response_loop;
@@ -1380,7 +1357,6 @@ response_loop:
         printf          ("__gws_gettext_response: recv fail.\n");
         printf ("Something is wrong with the socket.\n");
         return NULL;
-        //exit (1);
     }
 
 // Get the message sent by the server.
@@ -1446,10 +1422,10 @@ __gws_clone_and_execute_request (
     int n_writes = 0;
     register int i=0;
 
+// Parameters:
     if (fd<0){
         goto fail;
     }
-
 // path
     if ((void*) string == NULL)
         goto fail;
@@ -1468,11 +1444,12 @@ __gws_clone_and_execute_request (
         __gws_message_buffer[i] = 0;
     };
 
+// 0, msg code, 0, 0;
     message_buffer[0] = 0;
-    message_buffer[1] = 9099;  // Msg code
+    message_buffer[1] = 9099;
     message_buffer[2] = 0;
     message_buffer[3] = 0;
-
+// 4 arguments.
     message_buffer[4] = (unsigned long) arg1;
     message_buffer[5] = (unsigned long) arg2;
     message_buffer[6] = (unsigned long) arg3;
@@ -1480,7 +1457,7 @@ __gws_clone_and_execute_request (
 
 // String support
 // Fill the string buffer.
-    int string_off=8;
+    static int string_off=8;
     char *p = (char *) &message_buffer[string_off];
     memset(p, 0, 250);
     for (i=0; i<StringSize; i++)
@@ -1499,15 +1476,14 @@ __gws_clone_and_execute_request (
 
     n_writes = 
         (int) send ( 
-                  fd, 
-                  __gws_message_buffer, 
-                  sizeof(__gws_message_buffer), 
-                  0 );
+                fd, 
+                __gws_message_buffer, 
+                sizeof(__gws_message_buffer), 
+                0 );
 
     if (n_writes <= 0){
         goto fail;
     }
-
     return (int) n_writes;
 fail:
     return (int) -1;
@@ -1532,7 +1508,7 @@ static int __gws_clone_and_execute_response(int fd)
         (unsigned long *) &__gws_message_buffer[0];
     ssize_t n_reads=0;
 
-
+// Parameter:
     if (fd<0){
         goto fail;
     }
@@ -1544,13 +1520,12 @@ static int __gws_clone_and_execute_response(int fd)
 response_loop:
 
 // Read
-
     n_reads = 
         (ssize_t) recv(
-                      fd, 
-                      __gws_message_buffer, 
-                      sizeof(__gws_message_buffer), 
-                      0 );
+                    fd, 
+                    __gws_message_buffer, 
+                    sizeof(__gws_message_buffer), 
+                    0 );
 
     //if (n_reads<=0){
     //    goto response_loop;
@@ -1721,20 +1696,17 @@ __gws_createwindow_request (
 // ------
 
 // Write
-    n_writes = -1;
+    //n_writes = -1;
     n_writes = 
         (int) send ( 
-                  fd, 
-                  __gws_message_buffer, 
-                  sizeof(__gws_message_buffer), 
-                  0 );
-
+                fd, 
+                __gws_message_buffer, 
+                sizeof(__gws_message_buffer), 
+                0 );
     if (n_writes <= 0){
         goto fail;
     }
-
     return (int) n_writes;
-
 fail:
     return (int) (-1);
 }
@@ -1765,22 +1737,19 @@ static wid_t __gws_createwindow_response(int fd)
         goto fail;
     }
 
-//
-// Read
-//
-
 // Clean the local buffer,
 // and then populate with some data.
     for (i=0; i<512; i++){
         __gws_message_buffer[i] = 0;
     };
 
+// Read
     n_reads = 
         (ssize_t) recv ( 
-                      fd, 
-                      __gws_message_buffer, 
-                      sizeof(__gws_message_buffer), 
-                      0 );
+                    fd, 
+                    __gws_message_buffer, 
+                    sizeof(__gws_message_buffer), 
+                    0 );
 
 // #bugbug
 // If we do not read the file, so the flag will not switch
@@ -1850,14 +1819,12 @@ void gws_debug_print(const char *string)
 int gws_initialize_library(void)
 {
     pid_t ws_pid = -1;    // PID do window server.
-
     int __ApplicationFD = -1;
 
     __gws_clear_msg_buff();
 
     ws_pid = (pid_t) gws_initialize_connection();
-    if (ws_pid < 0)
-    {
+    if (ws_pid < 0){
         gws_debug_print("gws_initialize_library: [fail] ws_pid\n");
         return (int) -1;
     }

@@ -1,4 +1,3 @@
-
 // heap.h
 // Created by Fred Nora.
 
@@ -12,7 +11,6 @@ extern unsigned long kernel_heap_start;  // Start
 extern unsigned long kernel_heap_end;    // End
 extern unsigned long g_heap_pointer;     // Pointer
 extern unsigned long g_available_heap;   // Available
-
 
 /*
  * heap_d:

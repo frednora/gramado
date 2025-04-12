@@ -539,13 +539,15 @@ void die(void)
     die();
 }
 
+// This is a worker. Called by keReboot or sys_reboot.
 // Implementation of a safe reboot routine.
 // # We need to return when 
 // a non-superuser process call this service.
 int do_reboot(unsigned long flags)
 {
-
     //int value = FALSE;
+
+    system_state = SYSTEM_REBOOT;
 
 // #todo
 // Is it the superuser?

@@ -574,15 +574,14 @@ void DeviceInterface_PS2Mouse(void)
     case 1:
         mouse_stage++;
         break;
+    // If we have wheel, so we got another stage.
+    // If we do not have the wheel.
+    // Commit packet.
     case 2:
-        // If we have wheel, so we got another stage.
-        if (PS2Mouse.has_wheel == TRUE)
-        {
+        if (PS2Mouse.has_wheel == TRUE){
             mouse_stage++;
             break;
         }
-        // If we do not have the wheel.
-        // Commit packet.
         __ps2mouse_parse_data_packet();
         mouse_stage = 0;
         goto done;

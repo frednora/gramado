@@ -394,8 +394,6 @@ int sys_initialize_component (int n)
     return (int) 0;
 }
 
-
-
 /*
  * sys_reboot:
  *     Reboot, Serviço do sistema.
@@ -415,6 +413,8 @@ int sys_initialize_component (int n)
 int sys_reboot(unsigned long flags)
 {
     debug_print("sys_reboot: Rebooting\n");
+
+    system_state = SYSTEM_REBOOT;
 
     //#todo
     // Here is a goot place to check the flags 

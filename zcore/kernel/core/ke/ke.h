@@ -1,5 +1,5 @@
-
 // ke.h
+// Created by Fred Nora.
 
 #ifndef __KE_KE_H
 #define __KE_KE_H    1
@@ -21,7 +21,7 @@ void keSoftDie(void);
 int keIsQemu(void);
 
 int keCloseInitProcess(void);
-void keReboot(void);
+int keReboot(void);
 void ke_x64ExecuteInitialProcess(void);
 int keInitialize(int phase);
 

@@ -763,10 +763,16 @@ fail:
     return (int) -1;
 }
 
-void keReboot(void)
+// Wrapper.
+int keReboot(void)
 {
+    unsigned long Flags = 0;
+    system_state = SYSTEM_REBOOT;
+
+// [Worker]
 // Call a safe implementation of this routine.
-    do_reboot(0);
+// See: system.c
+    return (int) do_reboot(Flags);
 }
 
 void ke_x64ExecuteInitialProcess(void)

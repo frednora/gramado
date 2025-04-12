@@ -58,6 +58,37 @@ struct process_d  *InitProcess;    // Init process.
 
 //==============================================
 
+struct process_d *get_kernel_process(void)
+{
+    return (struct process_d *) KernelProcess;
+}
+
+struct process_d *get_init_process(void)
+{
+    return (struct process_d *) InitProcess;
+}
+
+void close_all_threads_of_this_process(struct process_d *process)
+{
+    // #todo
+    // Thread list for a process is still not implemented.
+
+    struct thread_d *tmp_thread;
+
+    if ((void*) process == NULL)
+        return;
+    if (process->used != TRUE)
+        return;
+    if (process->magic != 1234)
+        return;
+
+// Kill control thread.
+    tmp_thread = (struct thread_d *) process->control;
+
+    // ...
+}
+
+
 // #todo
 // This is a work in progress.
 // + Block all processes in the list but not the KernelProcess.

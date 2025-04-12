@@ -917,6 +917,11 @@ extern unsigned long processList[PROCESS_COUNT_MAX];
 // == Prototypes =====================================================
 //
 
+struct process_d *get_kernel_process(void);
+struct process_d *get_init_process(void);
+
+void close_all_threads_of_this_process(struct process_d *process);
+
 void close_all_processes(void);
 
 void set_current_process(pid_t pid);

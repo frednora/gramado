@@ -2843,7 +2843,13 @@ dsProcedure (
 
     // #debug
     //debug_print ("dsProcedure\n");
-    
+
+    if (client_fd < 0)
+        goto fail;
+    if (msg <= 0){
+        goto fail;
+    }
+
     switch (msg){
 
     // 1000
@@ -3215,7 +3221,6 @@ static void dispacher(int fd)
     }
 
 // Read
-// (Input port)
     n_reads = (ssize_t) read( fd, __buffer, sizeof(__buffer) );
     if (n_reads <= 0){
         //server_debug_print ("dispacher: read fail\n");
