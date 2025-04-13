@@ -479,7 +479,7 @@ int sys_read_pipe( int fd, char *ubuf, int count )
     if ((void*) ubuf == NULL){
         return (int) (-EINVAL);
     }
-    if (count<0)
+    if (count <= 0)
         return -1;
 
 // #todo ...
@@ -499,8 +499,9 @@ int sys_write_pipe( int fd, char *ubuf, int count )
 
     if ((void*) ubuf == NULL)
         return (int) (-EINVAL);
-    if (count<0)
+    if (count <= 0){
         return -1;
+    }
 
 // #todo: ...
 
@@ -518,6 +519,7 @@ int is_packetized(struct file *file)
 }
 */
 
+// #todo: Who calls this worker.
 int 
 pipe_ioctl ( 
     int fd, 
@@ -526,6 +528,7 @@ pipe_ioctl (
 {
     debug_print("pipe_ioctl: #todo\n");
 
+// Parameter:
     if (fd<0 || fd>=OPEN_MAX)
     {
         return (int) (-EBADF);

@@ -195,28 +195,25 @@ from_FAT_name (
     //
     if (j==7) {
     
-        if (k==1){
+        if (k == 1){
            dst[k]=0;
         } else {
 
-            if (dst[0]=='.'){
+            if (dst[0] == '.'){
                 dst[k]=0;
-            }else{
+            } else {
                 dst[k-1]=0;
             };
         };
     
     } else {
-        
         for (i=8; i<=j; i++)
         {
             dst[k++] = src[i];
         };
-        
         dst[k++] = 0;
     };
 }
-
 
 // to_FAT_name:
 // #todo: Describe this routine.

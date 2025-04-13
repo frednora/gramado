@@ -52,7 +52,7 @@ static int __initialize_fs_buffers(void)
 {
     register int i=0;
 // The max number of levels in a path.
-    int max = FS_N_BUFFERS;
+    int Max = FS_N_BUFFERS;
 // 512 entries = 16KB.
 // 32*512 = 16KB.
     const int PagesPerBuffer = 4;
@@ -60,14 +60,13 @@ static int __initialize_fs_buffers(void)
 
 // #bugbug
 // 4 pages per level.
-    for (i=0; i<max; i++)
-    {
+    for (i=0; i<Max; i++){
         TmpAddr = (unsigned long) allocPages(PagesPerBuffer);
         if ((void*) TmpAddr == NULL){
             goto fail;
         }
         fs_buffers[i] = (unsigned long) TmpAddr;
-    }
+    };
 
     return 0;
 fail:
@@ -341,7 +340,6 @@ file_write_buffer (
     char *string, 
     int len )
 {
-
     char *p;
     p = string;
 
@@ -363,7 +361,7 @@ file_write_buffer (
 
 // Tentando escrever mais do que cabe no arquivo.
     if (len >= BUFSIZ){
-        printk ("file_write_buffer: len > BUFSIZ\n");
+        printk ("file_write_buffer: len >= BUFSIZ\n");
         goto fail;
     }
 
@@ -2036,18 +2034,26 @@ void fs_init_structures (void)
     };
 }
 
-// #todo: use int return.
-void file_close (file *_file)
+// Close a file given the structure pointer.
+int file_close (file *_file)
 {
-// Not implemented yet!
+// #todo: Not implemented yet!
 
     debug_print("file_close: todo\n");
 
     if ((void*) _file == NULL){
-        return;
+        return (int) -1;
     }
+// Structure not in use.
+    if (_file->used != TRUE)
+        return (int) -1;
+// Reuse structure.
+    //if (_file->magic == 4321)
+        //something();
 
     // ...
+
+    return (int) -1;
 }
 
 size_t file_get_len(file *_file)
@@ -2815,12 +2821,11 @@ int fs_get_free_fd_from_pid (pid_t pid)
         goto fail;
     }
 
-// Pick a free one.
-// and return the index.
+// Pick a free one and return the index.
+// Each element has a pointer for the file structure?
     for (__slot=0; __slot<32; __slot++)
     {
-        if ( p->Objects[__slot] == 0 )
-        {
+        if (p->Objects[__slot] == 0){
             return (int) __slot;
         }
     };
@@ -2829,7 +2834,6 @@ fail:
     return (int) -1;
 }
 
-
 /*
  * fs_initialize_process_cwd:
  *     Cada processo deve inicialiar seus dados aqui. 
@@ -2837,7 +2841,6 @@ fail:
 // #todo:
 // handle return value ...
 // What functions is calling us?
-
 int fs_initialize_process_cwd ( pid_t pid, char *string )
 {
     struct process_d *p;
@@ -4607,8 +4610,7 @@ int fsInit (void)
     if (storage->magic != 1234)
         panic("fsInit: storage validation\n");
 
-    storage->bootvolume_fp = 
-        (file *) volume1_rootdir_fp; 
+    storage->bootvolume_fp = (file *) volume1_rootdir_fp;
 
 //
 // == volume2_rootdir =========================================== 

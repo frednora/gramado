@@ -2,6 +2,7 @@
 // Definitions and structures used by the fs code.
 // Created by Fred Nora.
 
+// #todo: Change to __FAT_FATLIB_H 
 #ifndef  __FAT_LIB_H
 #define  __FAT_LIB_H    1
 

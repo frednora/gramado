@@ -1,20 +1,16 @@
-
 // inode.h
-// inode support.
-// it's a test yet.
+// Inode support.
 // See: https://en.wikipedia.org/wiki/Inode
 
 #ifndef __INODE_H
 #define __INODE_H    1
 
-
 struct inode_d
 {
     int used;
     int magic;
-
     int id;
-   
+
 // Pathname para o arquivo.
 // Lembrando que na estrutura de fat teremos apenas
 // o nome do arquivo, talvez um lfn.
@@ -63,11 +59,11 @@ struct inode_d
     struct inode_d *next;
 };
 
+// #todo:
+//#define INODE_TABLE_COUNT_MAX  32
+// Remove this from here, put it in inode.c.
+// Here only the external reference. (extern)
 unsigned long inode_table[32];
-
-
-
-
 
 #endif    
 

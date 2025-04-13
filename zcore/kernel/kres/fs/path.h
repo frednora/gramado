@@ -31,7 +31,6 @@
 #define _PATH_TTY      "/dev/tty"
 #define	_PATH_DEVNULL  "/dev/null"
 
-
 #define  FS_ROOT_STRING           "/"
 #define  FS_HOME_STRING           "~"
 #define  FS_VOLUME0_STRING        "/volume0"   //vfs
@@ -60,6 +59,4 @@
 // ...
 
 #endif    
-
-
 

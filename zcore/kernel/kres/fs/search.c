@@ -297,14 +297,13 @@ unsigned short fs_find_n_empty_entries(int n)
             file_cluster_list[l] = (unsigned short) empty;
             l++;
         
-        }else{ 
+        } else { 
             goto fail;
         };
 
     };
 
     // Finaliza a lista com uma assinatura.
-
     file_cluster_list[l] = 0xFFF8; 
 
 // Retorna o primeiro da lista.
@@ -357,11 +356,14 @@ fail:
 int fsSearchFileInRoot(const char *file_name)
 {
     //debug_print ("fsSearchFileInRoot:\n");
+
+// Parameter:
     if ((void *) file_name == NULL){
         goto fail;
     }
     //if (*file_name == 0)
         //goto fail;
+
     return (int) search_in_root(file_name);
 fail:
     return (int) -1;
@@ -380,6 +382,10 @@ unsigned short fs_find_empty_entry_in_fat(char *fat_address)
 {
     debug_print("fs_find_empty_entry_in_fat: [TODO]\n");
     panic("fs_find_empty_entry_in_fat:");
+
+// Parameter:
+// ...
+
     return (unsigned short) 0;
 }
 
@@ -393,7 +399,7 @@ int search_path_in_the_inode_table(const char *path)
     size_t PathSize = 0;
     int Status = -1;
 
-    debug_print("search_path_in_the_inode_table: [FIXME] Not tested yet\n");
+    //debug_print("search_path_in_the_inode_table: [FIXME] Not tested yet\n");
 
 // Parameters
     if ((void*) path == NULL){
@@ -406,6 +412,9 @@ int search_path_in_the_inode_table(const char *path)
     }
  
     PathSize = (size_t) strlen(path);
+    // #todo
+    //if (PathSize <= 0)
+        //goto fail;
     
     for (i=0; i<32; i++)
     {

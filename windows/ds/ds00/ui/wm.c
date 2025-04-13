@@ -5753,7 +5753,7 @@ ProcessEvent:
 
     /*
 // ??
-// Hotkeys
+// Hotkeys 
     if (msg == GWS_HotKey)
     {
         // #todo: Call a worker for that.
@@ -5809,6 +5809,14 @@ ProcessEvent:
 
     //if (msg == GWS_UpdateDesktop)
     //    wm_update_desktop(TRUE,TRUE);
+
+    // #test: Not implemented
+    // Shutdown the server.
+    // This is a message sent by the kernel,
+    // this way we can close all the clients,
+    // sending an event, telling them to close.
+    //if (msg == 800350)
+       //something()
 
 //Unknown:
     return 0;

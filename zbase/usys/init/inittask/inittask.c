@@ -13,6 +13,10 @@ int isTimeToQuitServer = FALSE;
 char __filename_local_buffer[__MSG_BUFFER_SIZE];
 int NoReply = TRUE;
 
+// The display server is running or not.
+// It will send us a message to update this flag.
+static int is_ds_running = FALSE;
+
 // The tid of the caller.
 // Sent us a system message.
 struct endpoint_d  Caller;
@@ -278,6 +282,18 @@ xxxProcessEvent (
 // 'Hello' received. Let's respond it.
     case 44888:
         do_hello(caller_tid);
+        break;
+
+// ds00 display server is telling us that 
+// it was initialized and running.
+    case 44900:
+        is_ds_running = TRUE;
+        break;
+
+// ds00 display server is telling us that 
+// it is shutting down.
+    case 44901:
+        is_ds_running = FALSE;
         break;
 
 // Reboot receive.

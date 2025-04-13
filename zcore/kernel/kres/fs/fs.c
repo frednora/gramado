@@ -8,8 +8,14 @@
 ssize_t sys_read(int fd, const char *ubuf, size_t count)
 {
     if (fd<0){
-        return (ssize_t) -EINVAL;
+        return (ssize_t) -EBADF;
     }
+/*
+// #todo
+    if (fd >= OPEN_MAX){
+        return (ssize_t) -EBADF;
+    }
+*/
 
 // #test
 // Only the foreground thread can read the stdin
@@ -50,8 +56,15 @@ ssize_t sys_read(int fd, const char *ubuf, size_t count)
 ssize_t sys_write(int fd, const char *ubuf, size_t count)
 {
     if (fd<0){
-        return (ssize_t) -EINVAL;
+        return (ssize_t) -EBADF;
     }
+/*
+// #todo
+    if (fd >= OPEN_MAX){
+        return (ssize_t) -EBADF;
+    }
+*/
+
 
 // #test
 // Usermode buffer validation
@@ -89,11 +102,16 @@ sys_open(
     return (int) __open_imp( pathname, flags, mode );
 }
 
-
 int sys_close(int fd)
 {
     if (fd<0)
-        return (int) -EINVAL;
+        return (int) -EBADF;
+/*
+// #todo
+    if (fd >= OPEN_MAX){
+        return (ssize_t) -EBADF;
+    }
+*/
     return (int) __close_imp(fd);
 }
 
@@ -728,7 +746,11 @@ fail:
 // sys_pwd -  Service 170.
 // #todo
 // When this syscall is useful.
-// Actually we need to create a ring 3 terminal command for this.
+// Actually we need to create a ring 3 terminal command 
+// for this.
+// This syscall is valid only when 
+// the plain is print in the raw screen using the 
+// kernel console.
 void sys_pwd(void)
 {
     pid_t current_process = -1;
@@ -832,10 +854,13 @@ int sys_create_empty_file(const char *file_name)
     int NumberOfSectors = 2;
 // How many bytes.
     int FileSizeInBytes = BUFSIZ; //512 * 4;  //1014
+// String inside the new file.
+    int UseStringForDebug = TRUE;
 
     debug_print ("sys_create_empty_file:\n");
     printk      ("sys_create_empty_file:\n");
 
+// Parameters:
     if ((void*) file_name == NULL){
         return (int) (-EINVAL);
     }
@@ -844,26 +869,28 @@ int sys_create_empty_file(const char *file_name)
     }
 
 // Change the string format.
-    fs_fntos( (char *) file_name );
+    fs_fntos((char *) file_name);
 
-// #test
-// Not empty file.
+// Clear the buffer and Create a string for
+// debug purpose.
     memset(buffer,0,BUFSIZ);
-    ksprintf(buffer,"This is a new file.");
+
+    if (UseStringForDebug == TRUE)
+        ksprintf(buffer,"This is a new file.");
 
 // 0x20 = file.
 // See: write.c
     //printk ("0x20 \n");
     __ret = 
         (int) fsSaveFile ( 
-                  VOLUME1_FAT_ADDRESS, 
-                  VOLUME1_ROOTDIR_ADDRESS, 
-                  FAT16_ROOT_ENTRIES,
-                  (char *)         file_name,
-                  (unsigned long)  NumberOfSectors, 
-                  (unsigned long)  FileSizeInBytes,  
-                  (char *)         &buffer[0], 
-                  (char)           0x20 ); 
+                VOLUME1_FAT_ADDRESS, 
+                VOLUME1_ROOTDIR_ADDRESS, 
+                FAT16_ROOT_ENTRIES,
+                (char *)         file_name,
+                (unsigned long)  NumberOfSectors, 
+                (unsigned long)  FileSizeInBytes,  
+                (char *)         &buffer[0], 
+                (char)           0x20 ); 
 
     if (__ret < 0){
         debug_print("sys_create_empty_file: fail\n");
@@ -920,7 +947,7 @@ void sys_cd_command (const char *string)
 
 // Atualiza na estrutura de processo.
 // Atualiza na estrutura global para diretorio alvo.
-    fsUpdateWorkingDiretoryString( (char *) string );
+    fsUpdateWorkingDiretoryString((char *) string);
 // Isso carrega o diretorio que agora 'e o diretorio alvo.
     fsLoadFileFromCurrentTargetDir();
     // ...
@@ -941,7 +968,8 @@ int sys_create_empty_directory(const char *dir_name)
 
     debug_print ("sys_create_empty_directory:\n");
     printk      ("sys_create_empty_directory:\n");
-    
+
+// Parameter:
     if ((void*) dir_name == NULL){
         return (int) (-EINVAL);
     }
@@ -951,6 +979,7 @@ int sys_create_empty_directory(const char *dir_name)
 
     fs_fntos((char *) dir_name);
 
+// Clear the buffer.
     memset(buffer,0,BUFSIZ);
 
 // See: write.c
@@ -958,14 +987,14 @@ int sys_create_empty_directory(const char *dir_name)
     //printk ("0x10 \n");
     __ret = 
         (int) fsSaveFile ( 
-                  VOLUME1_FAT_ADDRESS, 
-                  VOLUME1_ROOTDIR_ADDRESS, 
-                  FAT16_ROOT_ENTRIES,
-                  (char *)         dir_name,
-                  (unsigned long)  number_of_sectors, 
-                  (unsigned long)  size_in_bytes, 
-                  (char *)         &buffer[0], 
-                  (char)           0x10 ); 
+                VOLUME1_FAT_ADDRESS, 
+                VOLUME1_ROOTDIR_ADDRESS, 
+                FAT16_ROOT_ENTRIES,
+                (char *)         dir_name,
+                (unsigned long)  number_of_sectors, 
+                (unsigned long)  size_in_bytes, 
+                (char *)         &buffer[0], 
+                (char)           0x10 ); 
 
     if (__ret < 0){
         debug_print("sys_create_empty_directory: fail\n");

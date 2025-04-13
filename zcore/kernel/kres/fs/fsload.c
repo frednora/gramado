@@ -161,7 +161,6 @@ fsLoadFile (
     */
 // ...
 
-
 // =======================
 
 // How many entries in this directory.
@@ -578,11 +577,15 @@ fsLoadFile2 (
     struct file_context_d *fc, 
     unsigned char *file_name )
 {
+    unsigned long rv=0;
+
+// File context
     if ((void*) fc == NULL){
         debug_print("fsLoadFile2: fc\n"); 
         return 0;
     }
 
+// File name
     if ((void*) file_name == NULL){
         debug_print("fsLoadFile2: file_name\n"); 
         return 0;
@@ -591,16 +594,18 @@ fsLoadFile2 (
         debug_print("fsLoadFile2: *file_name\n"); 
         return 0;
     }
-
     fc->file_name = file_name;
 
-    return (unsigned long) fsLoadFile ( 
-               (unsigned long)   fc->fat_address,
-               (unsigned long)   fc->dir_address,
-               (int)             fc->dir_entries,
-               (unsigned char *) fc->file_name, 
-               (unsigned long)   fc->file_address,
-               (unsigned long)   fc->buffer_limit );
+    rv = 
+        (unsigned long) fsLoadFile ( 
+            (unsigned long)   fc->fat_address,
+            (unsigned long)   fc->dir_address,
+            (int)             fc->dir_entries,
+            (unsigned char *) fc->file_name, 
+            (unsigned long)   fc->file_address,
+            (unsigned long)   fc->buffer_limit );
+
+    return (unsigned long) rv;
 }
 
 // -------------------------------------
@@ -1363,10 +1368,7 @@ fs_load_image(
     // ????????
     unsigned long BUGBUG_OVERFLOW = ( 32*128 );
 
-//
-// Check parameters for image support
-//
-
+// Parameter:
     if ((void*) filename == NULL){
         panic ("fs_load_image: filename\n");
     }

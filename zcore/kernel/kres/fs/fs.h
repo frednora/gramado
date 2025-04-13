@@ -482,7 +482,7 @@ void set_file( void *file, int Index);
 int fsInit (void);
 void fs_init_structures (void);
 
-void file_close(file *_file);
+int file_close (file *_file);
 size_t file_get_len(file *_file);
 struct inode_d *file_inode(file *f);
 int file_truncate(file *_file, size_t len);

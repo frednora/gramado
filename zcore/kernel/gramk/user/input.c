@@ -233,32 +233,37 @@ static int __CompareStrings(void)
     //debug_print("consoleCompareStrings: \n");
     printk("\n");
 
+
+// about:
+// Crear screen and print version string.
+    if ( kstrncmp( prompt, "about", 5 ) == 0 ){
+        gramk_show_banner();
+        printk("About: The kernel console\n");
+        goto exit_cmp;
+    }
+
 // smp
 // #todo
 // Use the structure smp_info 
 // to show the information about the smp initialization.
     if ( kstrncmp(prompt,"smp",3) == 0 )
     {
-        printk("Processor count: {%d}\n",
+        printk("Processor count: {%d}\n", 
             smp_info.number_of_processors );
         goto exit_cmp;
     }
 
-// test mbr
+// mbr:
 // see: storage.c
-    if ( kstrncmp(prompt,"mbr",3) == 0 )
-    {
-        // #test: Testing extended ascii chars. (Not working)
-        //d_draw_char ( 8, 1*8, 176, COLOR_BLUE, COLOR_YELLOW );
-        //d_draw_char ( 8, 2*8, 177, COLOR_BLUE, COLOR_YELLOW );
-        //d_draw_char ( 8, 3*8, 233, COLOR_BLUE, COLOR_WHITE );
-        //d_draw_char ( 8, 4*8, 234, COLOR_BLUE, COLOR_WHITE );
-
+    if ( kstrncmp(prompt,"mbr",3) == 0 ){
         disk_show_mbr_info();
         goto exit_cmp;
     }
 
-// test nic
+//
+// Network stuff
+//
+
     if ( kstrncmp(prompt,"test-nic",8) == 0 ){
         network_test_NIC();
         goto exit_cmp;
@@ -272,8 +277,7 @@ static int __CompareStrings(void)
         goto exit_cmp;
     }
     // Print arp table.
-    if ( kstrncmp(prompt,"arp",3) == 0 )
-    {
+    if ( kstrncmp(prompt,"arp",3) == 0 ){
         arp_show_table();
         goto exit_cmp;
     }
@@ -296,8 +300,8 @@ static int __CompareStrings(void)
         goto exit_cmp;
     }
 
-// Testing string functions.
-    if ( kstrncmp(prompt,"str",3) == 0 )
+// string: Testing string functions.
+    if ( kstrncmp(prompt,"string",6) == 0 )
     {
         console_print_indent(4,fg_console);
         console_write_string(fg_console,"This is a string\n");
@@ -334,8 +338,7 @@ static int __CompareStrings(void)
 // com a resolução antiga e precisa ser atualizados.
 
 /*
-    if ( kstrncmp(prompt,"vga1",4) == 0 )
-    {
+    if ( kstrncmp(prompt,"vga1",4) == 0 ){
         printk ("vga1: This is a work in progress ...\n");
         goto exit_cmp;
     }
@@ -352,7 +355,7 @@ static int __CompareStrings(void)
 
 // mm2: 
 // Show the blocks allocated by the kernel allocator.
-// It is inside the kernel heap.
+// It's inside the kernel heap.
 // #todo: Explain it better.
     if ( kstrncmp(prompt,"mm2",3) == 0 ){
         mmShowMemoryBlocksForTheKernelAllocator(); 
@@ -365,9 +368,8 @@ static int __CompareStrings(void)
         goto exit_cmp;
     }
 
-// disk:
-// Show disk info.
-// storage.c
+// disk: Show disk info.
+// See: storage.c
     if ( kstrncmp( prompt, "disk", 4 ) == 0 )
     {
         //diskShowCurrentDiskInfo();  // Current disk
@@ -375,8 +377,7 @@ static int __CompareStrings(void)
         goto exit_cmp;
     }
 
-// ata:
-// disk: Show some disk information.
+// ata: Show some disk information.
 // See: atainfo.c
     if ( kstrncmp( prompt, "ata", 3 ) == 0 )
     {
@@ -399,8 +400,7 @@ static int __CompareStrings(void)
 // #test
 // Get volume label from the first entry.
 // see: fat16.c
-    if ( kstrncmp(prompt,"vol-label",9) == 0 )
-    {
+    if ( kstrncmp(prompt,"vol-label",9) == 0 ){
         test_fat16_find_volume_info();
         goto exit_cmp;
     }
@@ -421,17 +421,10 @@ static int __CompareStrings(void)
     }
 
 // pci:
+// See: pciinfo.c
     if ( kstrncmp( prompt, "pci", 3 ) == 0 ){
         printk("~pci:\n");
         pciInfo();
-        goto exit_cmp;
-    }
-
-// about:
-    if ( kstrncmp( prompt, "about", 5 ) == 0 ){
-        // Crear screen and print version string.
-        gramk_show_banner();
-        printk("About: The kernel console\n");
         goto exit_cmp;
     }
 
@@ -441,16 +434,17 @@ static int __CompareStrings(void)
         goto exit_cmp;
     }
 
-// display:
-    if ( kstrncmp( prompt, "display", 7 ) == 0 )
-    {
-        bldisp_show_info();  //bl display device.
-        goto exit_cmp;
-    }
-
 // cls:
     if ( kstrncmp( prompt, "cls", 3 ) == 0 ){
         console_clear();
+        goto exit_cmp;
+    }
+
+// console:
+    if ( kstrncmp( prompt, "console", 7 ) == 0 )
+    {
+        printk("Console number: {%d}\n",fg_console);
+        refresh_screen();
         goto exit_cmp;
     }
 
@@ -460,6 +454,13 @@ static int __CompareStrings(void)
         x64_info();
         goto exit_cmp;
     }
+
+// display:
+if ( kstrncmp( prompt, "display", 7 ) == 0 )
+{
+    bldisp_show_info();  //bl display device.
+    goto exit_cmp;
+}
 
 // pit: Display PIT info.
     if ( kstrncmp( prompt, "pit", 3 ) == 0 )
@@ -2094,7 +2095,7 @@ int wmTimerEvent(int signature)
 // #test
 // Master timer.
 // After 1 Sec.
-    if ( (jiffies % JIFFY_FREQ) == 0 ){
+    if ( (jiffies % JIFFY_FREQ) == 0){
         ipc_post_message_to_ds( MSG_TIMER, 1234, jiffies );
     }
 
@@ -2103,7 +2104,7 @@ int wmTimerEvent(int signature)
 /*
 //#test
 // Polling ps2
-    if ( (jiffies % (16) ) == 0 )
+    if ( (jiffies % (16)) == 0 )
     {
         PS2Keyboard.use_polling=TRUE;
         PS2Keyboard.irq_is_working=FALSE;

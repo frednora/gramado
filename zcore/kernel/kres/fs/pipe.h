@@ -1,9 +1,9 @@
-
 // pipe.h
+// Created by Fred Nora.
 
+// #todo: Use __FS_PIPE_H
 #ifndef ____PIPE_H
 #define ____PIPE_H  1
-
 
 int 
 pipe_ioctl ( 
@@ -11,7 +11,7 @@ pipe_ioctl (
     unsigned long request, 
     unsigned long arg );
 
-int sys_dup ( int oldfd );
+int sys_dup (int oldfd);
 int sys_dup2 (int oldfd, int newfd);
 int sys_dup3 (int oldfd, int newfd, int flags);
 
@@ -22,10 +22,4 @@ int sys_pipe ( int *pipefd, int flags );
 int sys_read_pipe ( int fd, char *ubuf, int count );
 int sys_write_pipe ( int fd, char *ubuf, int count );
 
-
 #endif   
-
-
-
-
-

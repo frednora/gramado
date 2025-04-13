@@ -3243,10 +3243,7 @@ int VirtualConsole_early_initialization(void)
     for (i=0; i<CONSOLETTYS_COUNT_MAX; i++)
     {
         // IN: console index, bg color, fg color
-        DDINIT_console(
-            i,
-            bg_colors[i],
-            fg_colors[i] );
+        DDINIT_console( i, bg_colors[i], fg_colors[i] );
 
         // #todo
         // We need to register all the tty devices.

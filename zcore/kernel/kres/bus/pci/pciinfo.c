@@ -48,25 +48,31 @@ static const char* pci_class_strings[] = {
 
 int pciInfo(void)
 {
-    struct pci_device_d *D;
+    struct pci_device_d *d;
     register int i=0;
-    int Max = PCI_DEVICE_LIST_SIZE;
+    const int Max = PCI_DEVICE_LIST_SIZE;
+    char *class_string;
+    int ClassCode=0;
 
     printk ("pciInfo:\n");
 
     for (i=0; i<Max; i++)
     {
-        D = (void *) pcideviceList[i];
-        if ((void *) D != NULL)
+        d = (void *) pcideviceList[i];
+        if ((void *) d != NULL)
         {
-            if ( D->used == TRUE && D->magic == 1234 )
+            if ( d->used == TRUE && d->magic == 1234 )
             {
+                // #bugbug
+                // What is the limit for this index?
+                ClassCode = d->classCode;
+                class_string = (char *) pci_class_strings[ClassCode]; 
                 printk ("\n");
                 printk ("[%d/%d/%d] Vend=%x Dev=%x Class=%s SubClass=%x iLine=%d iPin=%d \n",
-                    D->bus, D->dev , D->func,
-                    D->Vendor, D->Device, 
-                    pci_class_strings[ D->classCode ], D->subclass, 
-                    D->irq_line, D->irq_pin );
+                    d->bus, d->dev , d->func,
+                    d->Vendor, d->Device, 
+                    class_string, d->subclass, 
+                    d->irq_line, d->irq_pin );
             }
         }
     };

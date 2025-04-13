@@ -307,6 +307,21 @@ void server_quit(void)
     IsTimeToQuit = TRUE;
 }
 
+// #todo
+// Sending a Close message to all the clients.
+// void server_close_all_the_clients(void);
+// void server_close_all_the_clients(void){}
+
+// #todo
+// Let's initialize the shutdown of the server,
+// first freeing the memory used by the server.
+// We call this function after sending to the clients 
+// the message to close.
+// void server_initialize_cleanup(void);
+// void server_initialize_cleanup(void){}
+
+
+
 //#ugly
 char *gwssrv_get_version(void)
 {
@@ -4147,6 +4162,14 @@ static int ServerLoop(int launch_tb)
     demoCurve();
     */
 
+// Telling the Init thread that the display server is running.
+    rtl_post_to_tid(
+        0,      // Init process tid.
+        44900,  // message code
+        1234,
+        5678 );
+
+
     if (server_mode == SERVER_MODE_DEMO)
         IsAcceptingConnections = FALSE;
 
@@ -4254,6 +4277,13 @@ static int ServerLoop(int launch_tb)
         printf ("ds00: Close th socket\n");
         close(server_fd);
     }
+
+// Telling the Init thread that the display server is running.
+    rtl_post_to_tid(
+        0,      // Init process tid.
+        44901,  // message code
+        1234,
+        5678 );
 
 // Return to main().
     return 0;
