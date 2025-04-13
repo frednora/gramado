@@ -661,11 +661,20 @@ fail:
 static int loopSTDIN(void)
 {
     register int C=0;
+    char HostNameBuffer[64];
+    int Value = -1;
 
+// Banner
 // Clear the kernel console, set cursor position to 0,0,
 // print the banner string and the prompt symbol. '>'
     do_clear_console();
-    printf(":: Gramado OS :) ::\n");
+    memset(HostNameBuffer,0,sizeof(HostNameBuffer));
+    Value = (int) gethostname(HostNameBuffer,sizeof(HostNameBuffer));
+    if (Value < 0){
+        printf("init: Invalid hostname\n");
+    } else {
+        printf("Gramado OS running on %s computer\n",HostNameBuffer);
+    }
     do_init_prompt();
 
     while (1)

@@ -356,14 +356,24 @@ sys_accept (
         printk("sys_accept: addr\n");
         return (int) (-EINVAL);
     }
-
-// #test
 // Address validation.
 // It needs to be a ring3 address.
 // #todo: Check agains more limits.
     if (addr < CONTROLTHREAD_BASE){
         panic("sys_accept: addr is not ring3\n");
         //return (int) (-EINVAL);
+    }
+
+// Invalid pointer for return value.
+// The 'addrlen' argument is a value-result argument: the caller must
+// initialize it to contain the size (in bytes) of the structure
+// pointed to by addr; on return it will contain the actual size of
+// the peer address.
+// See: https://man7.org/linux/man-pages/man2/accept.2.html
+
+    if ((void*)addrlen == NULL)
+    {
+        return (int) (-EINVAL);
     }
 
 // Current process. (The server)
@@ -698,7 +708,6 @@ sys_bind (
         goto fail;
     }
 
-// #test
 // Address validation.
 // It needs to be a ring3 address.
 // #todo: Check agains more limits.
@@ -707,11 +716,15 @@ sys_bind (
         //return (int) (-EINVAL);
     }
 
+// Invalid lenght for the address.
+    if (addrlen == 0)
+        return (int) (-EINVAL);
+
 // Process
     current_process = (pid_t) get_current_process();
     // #debug
-    if (Verbose==TRUE){
-        printk("sys_bind: PID %d | fd %d | \n",
+    if (Verbose == TRUE){
+        printk("sys_bind: PID %d | fd %d |\n", 
             current_process, sockfd );
     }
     if (current_process < 0 || current_process >= PROCESS_COUNT_MAX){
@@ -1945,8 +1958,6 @@ sys_connect (
         printk ("sys_connect: addr\n");
         return (int) (-EINVAL);
     }
-
-// #test
 // Address validation.
 // It needs to be a ring3 address.
 // #todo: Check agains more limits.
@@ -1955,6 +1966,9 @@ sys_connect (
         //return (int) (-EINVAL);
     }
 
+// Invalid lenght for the address.
+    if (addrlen == 0)
+        return (int) (-EINVAL);
 
 // -----------------------------
 // Testing for local domains.
@@ -2008,8 +2022,19 @@ sys_getsockname (
 
 // Parameter
     if ( sockfd < 0 || sockfd >= OPEN_MAX ){
-        printk ("sys_getsockname: [FAIL ] sockfd\n");
+        printk ("sys_getsockname: sockfd\n");
         goto fail;
+    }
+// addr
+// Usando a estrutura que nos foi passada.
+    if ((void *) addr == NULL){
+        printk ("sys_getsockname: addr\n");
+        goto fail;
+    }
+// Invalid pointer for return value.
+    if ((void*)addrlen == NULL){
+        printk ("sys_getsockname: addrlen\n");
+        return (int) (-EINVAL);
     }
 
 // process
@@ -2031,13 +2056,6 @@ sys_getsockname (
     s = (struct socket_d *) p->priv;
     if ((void *) s == NULL){
         printk ("sys_getsockname: s fail\n");
-        goto fail;
-    }
-
-// addr
-// Usando a estrutura que nos foi passada.
-    if ((void *) addr == NULL){
-        printk ("sys_getsockname: addr fail\n");
         goto fail;
     }
 

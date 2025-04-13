@@ -217,7 +217,7 @@ do_compare:
     if ( strncmp ( prompt, "about", 5 ) == 0 )
     {
         doLF();
-        printf("This is the shell, sending bytes to the terminal.");
+        printf("pubsh: This is a shell, sending bytes to the terminal.");
         //fflush(stdout);
         goto exit_cmp;
     }
@@ -341,9 +341,10 @@ launch_app:
     //rtl_clone_and_execute(prompt);
 
     doLF();
+    printf("SHELL.BIN: Command not found! ");
     //printf ("Command not found\n");
     //printf("\n");
-    printf("SHELL.BIN: Command not found! ");
+
     //fflush(stdout);
 
 // #testando escape sequences.

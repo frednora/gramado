@@ -2901,7 +2901,8 @@ static void __on_return_key_pressed(int fd)
     //printf("speed: %d ms\n",jiffie_delta);
 
 // Clear prompt.
-    doPrompt(fd);
+    if (Terminal._mode == TERMINAL_MODE_EMBEDDED)
+        doPrompt(fd);
 }
 
 static int 
@@ -3910,7 +3911,8 @@ int terminal_init(unsigned short flags)
 */
 
     clear_terminal_client_window(client_fd);
-    doPrompt(client_fd);
+    if (Terminal._mode == TERMINAL_MODE_EMBEDDED)
+        doPrompt(client_fd);
 
     // Set active window
     //gws_async_command( client_fd, 15, main_window, main_window );

@@ -1,4 +1,3 @@
-
 // socket.c
 // Created by Fred Nora.
 
@@ -38,17 +37,19 @@ int socket( int domain, int type, int protocol )
 
     value = 
         (int) gramado_system_call ( 
-                  7000, 
-                  (unsigned long) domain, 
-                  (unsigned long) type, 
-                  (unsigned long) protocol );
-    if (value<0)
-    {
+                7000, 
+                (unsigned long) domain, 
+                (unsigned long) type, 
+                (unsigned long) protocol );
+
+    if (value < 0){
         errno = (-value);
-        return (int) -1;
+        goto fail;
     }
 
     return (int) value;
+fail:
+    return (int) -1;
 }
 
 int socketpair(int domain, int type, int protocol, int sv[2])
@@ -70,11 +71,10 @@ int socketpair(int domain, int type, int protocol, int sv[2])
 
         // Podemos colocar sv diretamente.
         fd = (int) __socket_pipe(pipefd);
-
-        if ( fd  == -1 ) { 
+        if (fd  == -1) { 
             printf("socketpair: fail\n");
             goto fail;
-        }else{
+        } else {
             sv[0] = pipefd[1];
             sv[1] = pipefd[1];
             return 0;
@@ -139,7 +139,7 @@ int listen(int sockfd, int backlog)
     int value = -1;
 
 // fd limits
-    if (sockfd<0){
+    if (sockfd < 0){
         errno = EBADF;
         goto fail;
     }
@@ -198,21 +198,19 @@ int accept2 (int sockfd, struct sockaddr *addr, socklen_t *addrlen)
 {
     int value = -1;
     
-    if(sockfd<0)
-    {
+    if (sockfd < 0){
         errno = EBADF;
         return (int) (-1);
     }
 
     value = 
         (int) gramado_system_call ( 
-                  7010, 
-                  (unsigned long) sockfd, 
-                  (unsigned long) addr, 
-                  (unsigned long) addrlen );
+                7010, 
+                (unsigned long) sockfd, 
+                (unsigned long) addr, 
+                (unsigned long) addrlen );
 
-    if(value<0)
-    {
+    if (value < 0){
         errno = (-value);
         return (int) (-1);
     }
@@ -221,18 +219,23 @@ int accept2 (int sockfd, struct sockaddr *addr, socklen_t *addrlen)
 }
 
 
+// The 'addrlen' argument is a value-result argument: the caller must
+// initialize it to contain the size (in bytes) of the structure
+// pointed to by addr; on return it will contain the actual size of
+// the peer address.
+// See: https://man7.org/linux/man-pages/man2/accept.2.html
 // OUT: fd.
 int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
 {
     int value = -1;
 
-    if (sockfd<0){
+    if (sockfd < 0){
         errno = EBADF;
-        return (int) (-1);
+        goto fail;
     }
-    if ( (void*) addr == NULL ){
+    if ((void*) addr == NULL){
         errno = EINVAL;
-        return -1;
+        goto fail;
     }
 
     value = 
@@ -242,14 +245,15 @@ int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
                   (unsigned long) addr, 
                   (unsigned long) addrlen );
 
-    if (value<0){
+    if (value < 0){
         errno = (-value);
-        return (int) (-1);
+        goto fail;
     }
 
     return (int) value;
+fail:
+    return (int) (-1);
 }
-
 
 int 
 connect ( 
@@ -259,7 +263,7 @@ connect (
 {
     int value = -1;
 
-    if(sockfd<0){
+    if (sockfd < 0){
         errno = EBADF;
         return (int) (-1);
     }
@@ -399,19 +403,19 @@ sendto (
     const struct sockaddr *dest_addr, 
     socklen_t addrlen )
 {
-    if(sockfd<0)
+    if (sockfd < 0)
     {
         errno = EBADF;
         return (ssize_t) -1;
     }
 
-    return (ssize_t) write ( sockfd, (const void *) buf, len );
+    return (ssize_t) write( sockfd, (const void *) buf, len );
 }
 
 
 ssize_t sendmsg (int sockfd, const struct msghdr *msg, int flags)
 {
-    if(sockfd<0)
+    if (sockfd < 0)
     {
         errno = EBADF;
         return (ssize_t) -1;
@@ -567,7 +571,7 @@ setsockopt (
 
 int sendfd(int sockfd, int fd)
 {
-    if(sockfd<0)
+    if (sockfd < 0)
     {
         errno = EBADF;
         return (int) -1;
@@ -578,7 +582,7 @@ int sendfd(int sockfd, int fd)
 
 int recvfd(int sockfd)
 {
-    if(sockfd<0)
+    if (sockfd < 0)
     {
         errno = EBADF;
         return (int) -1;
@@ -587,12 +591,6 @@ int recvfd(int sockfd)
     return -1; 
 }
 
-
 //
 // End
 //
-
-
-
-
-
