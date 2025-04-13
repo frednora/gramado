@@ -313,6 +313,10 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
 // Começa a pegar da thread 1, porque a 0 ja pegamos.
     int Start = (Idle->tid + 1);
 
+// Wake up init thread.
+    if (jiffies >= Idle->wake_jiffy)
+        do_thread_ready(TmpThread->tid);
+
 // The Idle as the head of the p6q queue, 
 // The loop below is gonna build this list.
 // The idle is the TID 0, so the loop starts at 1.
@@ -351,11 +355,11 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                 // Na hora de checar, pode ser que o tempo limite ja passou.
                 if (jiffies >= TmpThread->wake_jiffy)
                 {
-                     // #debug
-                    printk ("sched: j1=%d | j2=%d |\n", 
-                        jiffies, TmpThread->wake_jiffy);
+                    // #debug
+                    //printk ("sched: j1=%d | j2=%d |\n", 
+                        //jiffies, TmpThread->wake_jiffy);
                     //panic ("Wake!\n");
-                    printk("sched: Waking up\n");
+                    //printk("sched: Waking up\n");
                     do_thread_ready(TmpThread->tid);
                     //panic("Wake ok\n");
                 } 
@@ -699,7 +703,7 @@ void sys_broken_vessels(tid_t tid)
 void sys_sleep(tid_t tid, unsigned long ms)
 {
     // #debug
-    printk("sci2: [266] Sleep until\n");
+    // printk("sci2: [266] Sleep until\n");
 
 // tid
     if (tid < 0 || tid >= THREAD_COUNT_MAX){

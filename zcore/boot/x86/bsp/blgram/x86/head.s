@@ -331,6 +331,7 @@ align 8
 ;; See:
 ;; https://wiki.osdev.org/Setting_Up_Long_Mode
 GDT64:                           ; Global Descriptor Table (64-bit).
+; 0x00
 .Null: equ $ - GDT64         ; The null descriptor.
     dw 0xFFFF                    ; Limit (low).
     dw 0                         ; Base (low).
@@ -338,6 +339,7 @@ GDT64:                           ; Global Descriptor Table (64-bit).
     db 0                         ; Access.
     db 1                         ; Granularity.
     db 0                         ; Base (high).
+; 0x08
 .Code: equ $ - GDT64         ; The code descriptor.
     dw 0                         ; Limit (low).
     dw 0                         ; Base (low).
@@ -345,6 +347,7 @@ GDT64:                           ; Global Descriptor Table (64-bit).
     db 10011010b                 ; Access (exec/read).
     db 10101111b                 ; Granularity, 64 bits flag, limit19:16.
     db 0                         ; Base (high).
+; 0x10
 .Data: equ $ - GDT64         ; The data descriptor.
     dw 0                         ; Limit (low).
     dw 0                         ; Base (low).

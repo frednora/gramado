@@ -4156,7 +4156,18 @@ static int ServerLoop(int launch_tb)
 // This is the main loop.
 // Let's optimize it, because we'll spend most of our time here.
 
+    unsigned long start_jiffie;
+    unsigned long end_jiffie;
+    unsigned long delta_jiffie;
+    int UseSleep = TRUE;
+
+    // #ps: We will sleep if a round was less than 16 ms, (60fps).
+    // The thread wait until complete the 16 ms.
+    // #bugbug: Valid only if the timer fires 1000 times a second.
+    // It gives the opportunities for other threads to run a
+    // a bit more.
     while (running == TRUE){
+        start_jiffie = rtl_jiffies();
 
         if (IsTimeToQuit == TRUE){ break; };
 
@@ -4201,6 +4212,19 @@ static int ServerLoop(int launch_tb)
             // Use this one, that will have a flag to indicate the
             // presence of the compositor or not.
             //wmCompose();
+        }
+
+        end_jiffie = rtl_jiffies();
+        if (end_jiffie > start_jiffie)
+        {
+            delta_jiffie = end_jiffie - start_jiffie;
+            if (delta_jiffie < 16)
+            {
+                // #test
+                // This function is still in test phase.
+                if (UseSleep == TRUE)
+                    rtl_sleep(16 - delta_jiffie);
+            }    
         }
     };
 

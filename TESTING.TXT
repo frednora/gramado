@@ -1,0 +1,8 @@
+
+ DANGER!
+
+ We're testing the rtl_sleep() function in the message loop of 
+the following apps: display server (ds00), taskbar, and init process.
+
+ We can have problems with this thing.
+ We can disable this part of the routine settin UseSleep to zero.

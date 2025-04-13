@@ -1,5 +1,5 @@
 ; transfer.inc
-; Transfer the execution to the kernel.
+; Transfer the execution to the 64bit kernel image.
 ; 2023 - Created by Fred Nora.
 
 ;
@@ -54,10 +54,9 @@ _BlTransferToKernel:
 ; Modo compatibilidade 16-bit CS.L = CS.D = 0
 
     xor eax, eax
-    mov ax, 0x10    ;GDT64.Data
+    mov ax, GDT64.Data  ;0x10
     mov ds, ax
     mov es, ax
-
     ;mov fs, ax
     ;mov gs, ax
 
@@ -78,11 +77,13 @@ _BlTransferToKernel:
 ; See: _kernel_begin in head_64.asm.
 ; search for '__HEAD'.
 
+; Parameters
     xor eax, eax
     mov ebx, dword BOOTBLOCK_ADDRESS
     xor ecx, ecx 
     mov edx, dword BOOTBLOCK_SIGNATURE
 
+; Transfer the execution to the 64bit kernel image.
     jmp GDT64.Code:KERNEL_ENTRY_POINT
 
 ; Hang

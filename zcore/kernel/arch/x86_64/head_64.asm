@@ -1,5 +1,5 @@
 ; head_64.asm
-; Kernel entry point.
+; Entry point for a 64bit kernel image.
 ; Created by Fred Nora.
 
 %include "header/header1.asm"
@@ -350,6 +350,7 @@ _x86_64_initialize_machine:
 ;; o dpl são os bits 5 e 6 do access byte.
 align 8
 EARLY_GDT64:            ; Global Descriptor Table (64-bit).
+; 0x00
 .Null: equ $ - EARLY_GDT64    ; The null descriptor.
     dw 0xFFFF           ; Limit (low).
     dw 0                ; Base (low).
@@ -357,6 +358,7 @@ EARLY_GDT64:            ; Global Descriptor Table (64-bit).
     db 0                ; Access.
     db 1                ; Granularity.
     db 0                ; Base (high).
+; 0x08
 .Code: equ $ - EARLY_GDT64    ; The code descriptor.
     dw 0                ; Limit (low).
     dw 0                ; Base (low).
@@ -364,6 +366,7 @@ EARLY_GDT64:            ; Global Descriptor Table (64-bit).
     db 10011010b        ; Access (exec/read).
     db 10101111b        ; Granularity, 64 bits flag, limit19:16.
     db 0                ; Base (high).
+; 0x10
 .Data: equ $ - EARLY_GDT64    ; The data descriptor.
     dw 0                ; Limit (low).
     dw 0                ; Base (low).
@@ -371,6 +374,7 @@ EARLY_GDT64:            ; Global Descriptor Table (64-bit).
     db 10010010b        ; Access (read/write).
     db 00000000b        ; Granularity.
     db 0                ; Base (high).
+;0x18
 .Ring3Code: equ $ - EARLY_GDT64    ; The code descriptor.
     dw 0                     ; Limit (low).
     dw 0                     ; Base (low).
@@ -378,6 +382,7 @@ EARLY_GDT64:            ; Global Descriptor Table (64-bit).
     db 11111010b             ; Access (exec/read).
     db 10101111b             ; Granularity, 64 bits flag, limit19:16.
     db 0                     ; Base (high).
+; 0x20
 .Ring3Data: equ $ - EARLY_GDT64    ; The data descriptor.
     dw 0                     ; Limit (low).
     dw 0                     ; Base (low).
@@ -385,6 +390,7 @@ EARLY_GDT64:            ; Global Descriptor Table (64-bit).
     db 11110010b             ; Access (read/write).
     db 00000000b             ; Granularity.
     db 0                     ; Base (high).
+; 0x28
 ;.tssData: equ $ - EARLY_GDT64     ; The data descriptor.
 ;    dw 0                    ; Limit (low).
 ;    dw 0                    ; Base (low).

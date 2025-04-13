@@ -338,9 +338,21 @@ int xxxEventLoopSystemEvents(void)
 // Get the message code.
 // Who can call us?
 
+    unsigned long start_jiffie;
+    unsigned long end_jiffie;
+    unsigned long delta_jiffie;
+    int UseSleep = TRUE;
+
+// #ps: We will sleep if a round was less than 16 ms, (60fps).
+// The thread wait until complete the 16 ms.
+// #bugbug: Valid only if the timer fires 1000 times a second.
+// It gives the opportunities for other threads to run a
+// a bit more.
+
 // Nessa hora ja não nos preocupamos mais com essa thread.
 // Ele receberá algumas mensagens eventualmente.
     while (TRUE){
+        start_jiffie = rtl_jiffies();
 		if (isTimeToQuitServer == TRUE){
 			break;
 		}
@@ -367,6 +379,19 @@ int xxxEventLoopSystemEvents(void)
 
         if (NoReply == FALSE){
             xxxSendResponse();
+        }
+
+        end_jiffie = rtl_jiffies();
+        if (end_jiffie > start_jiffie)
+        {
+            delta_jiffie = end_jiffie - start_jiffie;
+            if (delta_jiffie < 16)
+            {
+                // #test
+                // This function is still in test phase.
+                if (UseSleep == TRUE)
+                    rtl_sleep(16 - delta_jiffie);
+            }    
         }
     };
 

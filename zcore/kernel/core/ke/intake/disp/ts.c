@@ -416,14 +416,14 @@ static void __task_switch(void)
         if ( CurrentThread->state == RUNNING && 
              CurrentThread->sleep_in_progress == TRUE )
         {
-            printk ("ts: Do sleep until\n");
+            //printk ("ts: Do sleep until\n");
             CurrentThread->runningCount = CurrentThread->quantum;  // Esgoto
             // set waiting
             sleep_until(
                 CurrentThread->tid, 
                 CurrentThread->desired_sleep_ms );
             CurrentThread->sleep_in_progress = FALSE;
-            printk ("ts: Status=%d\n",CurrentThread->state);
+            //printk ("ts: Status=%d\n",CurrentThread->state);
         }
 
         IncrementDispatcherCount (SELECT_CURRENT_COUNT);

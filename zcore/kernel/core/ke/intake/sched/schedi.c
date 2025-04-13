@@ -202,7 +202,7 @@ void do_thread_waiting(tid_t tid, unsigned long ms)
     struct thread_d *t;
     unsigned long JiffiesToWait = ms;
 
-    printk("do_thread_waiting: %dms\n", ms);
+    //printk("do_thread_waiting: %dms\n", ms);
 
     if (tid < 0 || tid >= THREAD_COUNT_MAX){
         return;
@@ -231,8 +231,8 @@ void do_thread_waiting(tid_t tid, unsigned long ms)
     t->wake_jiffy = (unsigned long) (jiffies + JiffiesToWait);
 
 // #debug
-    printk("do_thread_waiting: j1=%d | j2=%d |\n", jiffies, t->wake_jiffy);
-    printk("do_thread_waiting: done\n");
+    //printk("do_thread_waiting: j1=%d | j2=%d |\n", jiffies, t->wake_jiffy);
+    //printk("do_thread_waiting: done\n");
 }
 
 // 9
@@ -699,7 +699,7 @@ void sleep_until (tid_t tid, unsigned long ms)
 // Dormimos e agendamos a hora de acordarmos.
 // Worker. Do not call it in a sci.
 
-    printk("sleep_until:\n");
+    //printk("sleep_until:\n");
 
     if (tid<0 || tid >= THREAD_COUNT_MAX){
         return;
