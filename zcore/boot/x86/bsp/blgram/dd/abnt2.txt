@@ -1,0 +1,55 @@
+Copilot stuff.
+
+The **ABNT2** keyboard standard (short for *Associação Brasileira de Normas Técnicas*, model 2) is the Brazilian keyboard layout specifically designed to accommodate the Portuguese language. It includes unique features and key placements tailored to Brazilian Portuguese, such as diacritical marks and other symbols used in the language.
+
+### Key Features of the ABNT2 Keyboard Layout:
+1. **"Ç" Key:**
+   - A dedicated key for the letter "ç" is located to the right of the "L" key.
+   - This character is essential in Portuguese and one of the defining features of the ABNT2 layout.
+
+2. **Dead Keys for Accents:**
+   - The ABNT2 layout includes "dead keys" for adding diacritical marks to vowels, such as acute (´), grave (`), tilde (~), circumflex (^), and diaeresis (¨).
+   - These keys allow users to type accented characters like "á", "é", "í", "ó", "ú", "ã", "õ", and "ü".
+
+3. **"AltGr" Key:**
+   - The "AltGr" key (to the right of the spacebar) allows access to additional symbols and characters, such as:
+     - "²" (superscript 2)
+     - "³" (superscript 3)
+     - "§" (section symbol)
+     - "ª" (feminine ordinal indicator)
+     - "º" (masculine ordinal indicator)
+
+4. **Special Symbol Positions:**
+   - The "´" (acute accent) key replaces the US layout's "`" (grave accent) key.
+   - The "~" (tilde) key is present on the same key as "`" (grave accent) but requires the "Shift" modifier.
+   - The "\" (backslash) key is located next to the "Enter" key, instead of being on the top-left corner like in the US layout.
+
+5. **Additional Keys:**
+   - The ABNT2 keyboard includes an extra key between the left "Shift" and "Z" key for "<" and ">" symbols.
+   - This is often referred to as the "ISO" key and is absent on US keyboards.
+
+6. **Numeric Keypad Adjustments:**
+   - The numeric keypad features a comma (`,`) instead of a period (`.`) as the decimal separator, which aligns with Brazilian conventions.
+
+---
+
+### Visual Layout Comparison:
+Below is a comparison of key differences between ABNT2 and US layouts:
+
+| Key               | ABNT2 Location                              | US Location       |
+|--------------------|---------------------------------------------|-------------------|
+| Ç                 | Right of "L"                                | Not present       |
+| ´ (acute)         | Left of "Backspace"                         | Replaced by grave |
+| ~ (tilde)         | Same key as acute; requires "Shift"         | Dedicated key     |
+| \ (backslash)     | Left of "Enter"                             | Top-left corner   |
+| < > (less/greater)| Between "Shift" and "Z"                     | Not present       |
+| , (decimal)       | Numeric keypad                              | . (period)        |
+
+---
+
+### Benefits of the ABNT2 Layout:
+- Optimized for Brazilian Portuguese, making it easier to type common characters and symbols.
+- Dedicated keys for frequently used accents and punctuation in the Portuguese language.
+- Preserves layout compatibility for Latin-based alphabets while adding support for unique Portuguese characters.
+
+If you're implementing or debugging software for ABNT2 keyboards (like your OS bootloader), this information can guide you in handling scancodes, mapping characters, and supporting accents and symbols. Let me know if you need any additional details!

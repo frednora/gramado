@@ -38,7 +38,7 @@ unsigned char map_abnt2[ABNT2_CHARMAP_SIZE] = {
  'i',
  'o',
  'p',          //25
- 239, //'$',  //239   //26  VK_ACENTO_AGUDO acento agudo (00b4 @) dead_acute dead_grave
+ 239, // #todo: use [´] //'$',  //239   //26  VK_ACENTO_AGUDO acento agudo (00b4 @) dead_acute dead_grave
  '[',          //27   bracketleft   braceleft
  VK_RETURN,    //28 [Enter].
  VK_LCONTROL,  //29 ms right control. ??
@@ -51,7 +51,7 @@ unsigned char map_abnt2[ABNT2_CHARMAP_SIZE] = {
  'j',
  'k',
  'l',        //38 
- 135,        //39 00e7 VK_CCEDILHA ccedilla
+ 135,        //39 #todo: use 'ç' 00e7 VK_CCEDILHA ccedilla
  '~',        //40 dead_tilde dead_circumflex
  '\'',       //41 (") (espaço) (') dead_acute dead_diaeresis 
  VK_LSHIFT,  //42 Shift.  
@@ -164,7 +164,7 @@ unsigned char shift_abnt2[ABNT2_CHARMAP_SIZE] = {
 '#',   //4
 '$',   //5
 '%',   //6
-168, //VK_ABNT2_TREMA,  //'$',   //VK_ABNT2_TREMA, //168,   //7 (00a8 @) (trema)
+168, // #todo: '¨' VK_ABNT2_TREMA,  //'$',   //VK_ABNT2_TREMA, //168,   //7 (00a8 @) (trema)
 '&',   //8
 '*',   //9
 '(',   //10
