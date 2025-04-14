@@ -1,4 +1,4 @@
-# os - Desktop Environment
+# os - The client-side GUI applications.
 
 ```
   This is a place for Client-side GUI applications. The applications here was built 

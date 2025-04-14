@@ -1,6 +1,6 @@
 # zbase - Non-graphical ring 3 components.
 
-Some non-graphical ring 3 components, just like init process and posix commands.
+Ring 3 stuff: Some non-graphical ring 3 components, just like init process and posix commands.
 
 ## Folders:
 
