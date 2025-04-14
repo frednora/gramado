@@ -7,30 +7,73 @@
 
 #include "../bl.h"  
 
+// --------------------------
+// PAE and PGE
+// In essence, PAE allows for larger physical memory, 
+// while PGE optimizes TLB management by selectively flushing entries
 
-extern void BlTransferToKernel(void);
+// --------------------------
+// PAE (Physical Address Extensions): (Bit 5 in cr4).
+// When PAE is enabled, the page table entries are extended 
+// from 32 bits to 64 bits, allowing for a 36-bit physical address space. 
+// Allows 32-bit operating systems to utilize more physical memory, 
+// a feature commonly found in x86-64 architectures
 
-// local
-// inline?
-void load_pml4_table(void *phy_addr)
+// --------------------------
+// PGE (Paging Global Enable):
+// Determines how the TLB (Translation Lookaside Buffer) is flushed 
+// when CR3 is modified or during a task switch.
+// When PGE is set, moves to CR3 (or task switches) 
+// will only invalidate entries in the TLB that have 
+// the global bit (G-bit) in the corresponding page table entry set to 0. 
+// If PGE is not set, all TLB entries will be invalidated.
+// Reduces TLB flush overhead, especially when dealing 
+// with global page mappings, as global mappings typically 
+// don't need to be flushed. 
+
+// ======================================================
+
+extern void BlTransferTo64bitKernel(void);
+
+// ======================================================
+
+static void load_pml4_table(void *phy_addr);
+static void enable_PAE(void);
+static void enable_paging(void);
+
+// ======================================================
+
+// Set up cr3 register.
+static void load_pml4_table(void *phy_addr)
 {
     asm volatile (" movl %0, %%cr3 " :: "r" (phy_addr) );
 }
 
-// local
-// inline?
-// PAE and PGE
-void enable_pae()
+// --------------------------
+// PAE (Physical Address Extensions): (Bit 5 in cr4).
+// When PAE is enabled, the page table entries are extended 
+// from 32 bits to 64 bits, allowing for a 36-bit physical address space. 
+// Allows 32-bit operating systems to utilize more physical memory, 
+// a feature commonly found in x86-64 architectures
+static void enable_PAE(void)
 {
+// Bit 5 in cr4.
+
     asm volatile ( " movl %%cr4, %%eax; "
                    " orl $0x20, %%eax;  "
                    " movl %%eax, %%cr4  " :: );
 }
 
-// local
-// inline?
-void page_enable()
+// Enable paging.
+// Enabling paging is actually very simple. 
+// All that is needed is to load CR3 with the address of the page directory and 
+// to set the paging (PG) and protection (PE) bits of CR0.
+// # In our case we are already in Protected Mode.
+// Just need to change the (PG) bit.
+static void enable_paging(void)
 {
+// Bit 31 in cr0.
+
     asm volatile ( " movl %%cr0, %%eax;      "
                    " orl $0x80000000, %%eax; "
                    " movl %%eax, %%cr0       " :: );
@@ -78,7 +121,7 @@ void SetUpPaging(void)
 // + Transfer execution to the kernel.
 // This routine does not return.
 
-    unsigned int i=0;
+    register unsigned int i=0;
 
 // 9 9 9 9 12
 // Agora as tabelas possuem 512 entradas,
@@ -101,19 +144,17 @@ void SetUpPaging(void)
 
 //
 // (Phase 2) 
-// Endere�os da mem�ria f�sicas acess�veis em User Mode.
+// Some physical addresses.
 //
 
 // User, 0x00400000.
     unsigned long user_address = USER_BASE;
-// VGA, F�sico=0x000B8000.
+// VGA, Phy=0x000B8000.
     unsigned long vga_address = VM_BASE;   
-// VESA LFB, foi passado pelo Boot Manager.
+// VESA LFB, we get this via boot loader.
     unsigned long lfb_address  = (unsigned long) g_lbf_pa;
-// backbuffer: endere�o f�sico provis�rio para o backbuffer
-// BUFFER, provis�rio. @todo: Mudar. 
-// (para sistemas com pouca mem�ria.)
-// 16mb. (16*1024*1024) = 0x01000000.
+// Backbuffer: Physical address for the backbuffer.
+// 16MB mark. (16*1024*1024) = 0x01000000.
     unsigned long buff_address  = (unsigned long) 0x01000000; 
 
 // DIRECTORY:
@@ -134,7 +175,6 @@ void SetUpPaging(void)
 // diret�rio de p�ginas.
 // @todo: Alertar o kernel sobre esses endere�os de diret�rios.
 
-
 // =====================================
 // PML4, PDPT, PD, PT
 // PML4 - Page Map Level 4
@@ -143,13 +183,13 @@ void SetUpPaging(void)
 // PT   - Page Table
 
     // level 4
-    unsigned long *boot_pml4  = (unsigned long *) (0x01000000 - 0x00700000);
+    unsigned long *boot_pml4 = (unsigned long *) (0x01000000 - 0x00700000);
     // level 3
-    unsigned long *boot_pdpt  = (unsigned long *) (0x01000000 - 0x00800000);
+    unsigned long *boot_pdpt = (unsigned long *) (0x01000000 - 0x00800000);
     // level 2
-    unsigned long *boot_pd0   = (unsigned long *) (0x01000000 - 0x00900000);
+    unsigned long *boot_pd0  = (unsigned long *) (0x01000000 - 0x00900000);
     // level 1
-    // a lot of page tables in the level 1.
+    // A lot of page tables in the level 1.
 
 // TABLES: 
 // Tabelas de p�ginas.
@@ -176,48 +216,36 @@ void SetUpPaging(void)
 
 // Clear levels 4, 3 and 2.
 
-// Clear level 4
+// Clear level 4.
     for ( i=0; i < 512; i++ )
     {
         boot_pml4[i*2   ] = (unsigned long) 0 | 2;
-        boot_pml4[i*2+1 ] = (unsigned long) 0;
+        boot_pml4[i*2 +1] = (unsigned long) 0;
     };
-
-// Clear level 3
+// Clear level 3.
     for ( i=0; i < 512; i++ )
     {
         boot_pdpt[i*2   ] = (unsigned long) 0 | 2;
-        boot_pdpt[i*2+1 ] = (unsigned long) 0;
+        boot_pdpt[i*2 +1] = (unsigned long) 0;
     };
-
-// Clear level 2
+// Clear level 2.
     for ( i=0; i < 512; i++ )
     {
         boot_pd0[i*2   ] = (unsigned long) 0 | 2;
-        boot_pd0[i*2+1 ] = (unsigned long) 0;
+        boot_pd0[i*2 +1] = (unsigned long) 0;
     };
 
-//
 // ============================
-//
-
 // Pointing the 'page directory' address 
 // at the first entry in the 'page directory pointer table'.
-
     boot_pdpt[0*2]   = (unsigned long) &boot_pd0[0];
     boot_pdpt[0*2]   = (unsigned long) boot_pdpt[0*2] | 3;
     boot_pdpt[0*2+1] = 0; 
-
 // Pointing the 'page directory pointer table' address 
 // at the first entry in the 'boot_pml4'.
-
     boot_pml4[0*2]   = (unsigned long) &boot_pdpt[0];
     boot_pml4[0*2]   = (unsigned long) boot_pml4[0*2] | 3; 
     boot_pml4[0*2+1] = 0; 
-
-//
-// ============================
-//
 
 //
 // PAGE TABLES.
@@ -343,9 +371,9 @@ Entry_384:
 
     for ( i=0; i < 512; i++ )
     {
-        ptKM2[i*2]   = kernel_base | 3;    //0011 bin�rio.
+        ptKM2[i*2]   = kernel_base | 3;     // 0011b
         ptKM2[i*2+1] = 0;
-        kernel_base  = kernel_base + 4096;       //4KB.
+        kernel_base  = kernel_base + 4096;  // 4KB
     };
 //Criando a entrada de n�mero 768 do diret�rio.
     boot_pd0[384*2] = (unsigned long) &ptKM2[0];
@@ -357,7 +385,6 @@ Entry_384:
     //   00|000 0|000   0 0000 | 0000    0000 0000 0000
     //   30000000
     // ent�o a entrada 384 aponta para 0x30000000      
-
 
 //===========================================
 // frontbuffer - LFB
@@ -381,15 +408,14 @@ Entry_385:
 
     for ( i=0; i < 512; i++ )
     {
-        ptLFB[i*2]   = lfb_address | 7;    //0111 em bin�rio.
+        ptLFB[i*2]   = lfb_address | 7;     // 0111b
         ptLFB[i*2+1] = 0;
-        lfb_address  = lfb_address + 4096;       //4KB.
+        lfb_address  = lfb_address + 4096;  // 4KB
     };
     //Criando a entrada n�mero 769 do diret�rio.
     boot_pd0[385*2] = (unsigned long) &ptLFB[0];
     boot_pd0[385*2] = boot_pd0[385*2] | 7;    //Configurando atributos.	
     boot_pd0[385*2+1] = 0; 
-
 
 // ===================================================
 // backbuffer
@@ -418,7 +444,6 @@ Entry_386:
     boot_pd0[386*2] = (unsigned long) boot_pd0[386*2] | 7;    //Configurando atributos.
     boot_pd0[386*2+1] = 0;
 
-
 //breakpoint
     //printf ("SetUpPaging: tables done\n");
     //refresh_screen();
@@ -433,11 +458,12 @@ Entry_386:
 //
 
     //#debug
-    //printf ("SetUpPaging: enable_pae\n");
+    //printf ("SetUpPaging: enable_PAE\n");
     //refresh_screen();
 
-    enable_pae();
+    enable_PAE();
 
+    //#debug
     //refresh_screen();
     //while(1){}
 
@@ -480,14 +506,14 @@ Entry_386:
     //while(1){}
 
 // Enable paging.
-    //printf ("SetUpPaging: page_enable\n");
+    //printf ("SetUpPaging: enable_paging\n");
     //refresh_screen();
 
 // #important:
 // Adiamos isso, o assembly vai fazer isso.
 // Pois no momento em que configurarmos isso, o long mode
 // estar� habilitado.
-    // page_enable();
+    // enable_paging();
 
 // #bugbug
 // N�o podemos chamar rotina alguma antes de configurarmos
@@ -509,10 +535,10 @@ Entry_386:
 // Go to kernel
 // See: transfer.inc
 
-    BlTransferToKernel();
+    BlTransferTo64bitKernel();
 
+// Hang:
 // Not reached
-Hang:
     while (1){
         asm ("cli");
         asm ("hlt");

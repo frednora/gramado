@@ -634,27 +634,34 @@ void pump(int fd, int wid)
 // Called by main() in main.c.
 int editor_initialize(int argc, char *argv[])
 {
+    const char *display_name_string = "display:name.0";
     int client_fd = -1;
+    unsigned int client_area_color = COLOR_RED;  // Not implemented 
+    unsigned int frame_color = COLOR_GRAY;
+
+// Main window.
+// w_width, w_height, w_left, w_top
+    unsigned long w_width = 0;
+    unsigned long w_height = 0;
+    unsigned long w_left = 0;
+    unsigned long w_top = 0;
 
     isTimeToQuit = FALSE;
-
+// Screen
     gScreenWidth=0;
     gScreenHeight=0;
-
-// private
+// Initialize WIDs.
     main_window = -1;
     addressbar_window = -1;
     savebutton_window = -1;
     client_window = -1;
-
-// cursor
+// Cursor
     cursor_x = 0;
     cursor_y = 0;
     cursor_x_max = 0;
     cursor_y_max = 0;
-
+// Blink.
     blink_status=FALSE;
-
 
     //if (argc < 0)
         //return 1;
@@ -668,16 +675,10 @@ int editor_initialize(int argc, char *argv[])
             printf("TEST\n");
 */
 
-// global: Cursor
-    cursor_x = 0;
-    cursor_y = 0;
-
 // ============================
 // Open display.
 // IN: 
 // hostname:number.screen_number
-
-    const char *display_name_string = "display:name.0";
 
     Display = (struct gws_display_d *) gws_open_display(display_name_string);
     if ((void*) Display == NULL){
@@ -693,6 +694,8 @@ int editor_initialize(int argc, char *argv[])
 
 // =====================================================
 
+    // editor_init_globals();
+
 // Device info
     unsigned long w = gws_get_system_metrics(1);
     unsigned long h = gws_get_system_metrics(2);
@@ -702,50 +705,44 @@ int editor_initialize(int argc, char *argv[])
         goto fail;
     }
 
+// -----------------------
 // Width
-    unsigned long w_width = (w>>1);
-    // #hack
-    if (w == 800)
-        w_width = 640;
-    // #hack
-    if (w == 640)
-        w_width = 480;
+    w_width = (w>>1);
+    // #hack for 800
+    if (w == 800){ w_width = 640; }
+    // #hack for 640
+    if (w == 640){ w_width = 480; }
+    // #hack for 640
+    if (w == 320){ w_width = w;   }
 
+// -----------------------
 // Height
-    unsigned long w_height = (h - 100);  //(h>>1);
+    w_height = (h - 100);  //(h>>1);
+    if (h == 200){ w_height = h; }
 
-// Original
-/*
-    unsigned long viewwindowx = ( ( w - w_width ) >> 1 );
-    unsigned long viewwindowy = ( ( h - w_height) >> 1 ); 
-*/
+// -----------------------
+// Left
+    //w_left = ( ( w - w_width ) >> 1 );
+    w_left = 10;
+    if (w == 320)
+        w_left = 0;
 
-    unsigned long viewwindowx = 10;
-    unsigned long viewwindowy = 10;
+// -----------------------
+// Top
+    //w_top = ( ( h - w_height) >> 1 ); 
+    w_top = 10;
+    if (w == 320)
+        w_top = 0;
 
-    // test1: Erro de posicionamento.
-    //unsigned long viewwindowx = 580;
-    //unsigned long viewwindowy = ( ( h - w_height) >> 1 ); 
+// -----------------------
+// Position and dimensions for 320x200. (Again)
 
-    // test2: Erro de posicionamento.
-    //unsigned long viewwindowx = ( ( w - w_width ) >> 1 );
-    //unsigned long viewwindowy = 400; 
-
-    // test3: top/left
-    //unsigned long viewwindowx = 0;
-    //unsigned long viewwindowy = 0; 
-
-// #hackhack
-// @media
-// Se a tela for pequena demais para os dias de hoje. hahaha
-
-    // Position and dimensions.
     if (w == 320)
     {
-        viewwindowx = 0;
-        viewwindowy = 0;
-        w_width = w;
-        w_height = h;
+        w_left = 0; 
+        w_top = 0; 
+        w_width = w; 
+        w_height = h -32 -32;  //#todo: Get this offset.
     }
 
 // Cursor limits based on the window size.
@@ -754,9 +751,6 @@ int editor_initialize(int argc, char *argv[])
     cursor_x_max = ((w_width/8)  -1);
     cursor_y_max = ((w_height/8) -1);
 
-    unsigned int client_area_color = COLOR_RED;  // Not implemented 
-    unsigned int frame_color = COLOR_GRAY;
-
     main_window = 
         (int) gws_create_window (
                   client_fd,
@@ -764,7 +758,7 @@ int editor_initialize(int argc, char *argv[])
                   WINDOW_STATUS_ACTIVE,  // status 
                   VIEW_NULL,             // view
                   program_name, 
-                  viewwindowx, viewwindowy, w_width, w_height,
+                  w_left, w_top, w_width, w_height,
                   0, 
                   0x0000, 
                   client_area_color,

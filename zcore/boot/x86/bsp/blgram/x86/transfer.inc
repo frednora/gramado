@@ -16,13 +16,14 @@ BOOTBLOCK_SIGNATURE EQU  1234
 ;KERNEL_BASE        EQU  0x30000000
 KERNEL_ENTRY_POINT EQU  0x30001000
 
-; == Go to kernel ================================
+; ================================
+; Transfer to the 64bit kernel.
 ; A parte em C salta para cá depois da inicializaçao,
 ; para enfim saltarmos para o kernel.
 ; Called by SetUpPaging() in pages.c.
 
-global _BlTransferToKernel
-_BlTransferToKernel:
+global _BlTransferTo64bitKernel
+_BlTransferTo64bitKernel:
 
 ; cr3
 ; Flush

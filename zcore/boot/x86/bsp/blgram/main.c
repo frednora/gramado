@@ -214,31 +214,26 @@ void panic(const char *msg)
     bl_die();
 }
 
-static void __no_x86_64_was_found(void)
-{
+// Fatal error when x86_64 is not supported.
 // We probe the info and detected that the x86)64 instructions
 // are not supported.
 // We can hang, or load some 32bit funny stuff.
-
+// #todo
+// I guess we're still in 32bit. Maybe we can try the 'recovery menu'.
+// In this case we're gonna need at least a ps2 keyboard device driver.
+static void __no_x86_64_was_found(void)
+{
     printf("__no_x86_64_was_found: Sorry!\n");
     printf("It seems that the processor\n");
     printf("does not support x86_64 instructions.\n");
-
-// #todo
-// Maybe, in this case, we can load a 32bit dialog,
-// asking to shutdown the system.
-
     printf("The boot loader will not execute the kernel.\n");
-
-done:
-    //refresh_screen();
+//done:
     bl_die();
     while (1){
         asm ("cli");
         asm ("hlt");
     };
 }
-
 
 //
 // $
