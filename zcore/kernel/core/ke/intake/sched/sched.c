@@ -362,7 +362,7 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                     //printk("sched: Waking up\n");
                     do_thread_ready(TmpThread->tid);
                     //panic("Wake ok\n");
-                } 
+                }
             }
 
             // ---------------------------
@@ -393,6 +393,12 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                 // Notify parent process.
                 // IN: thread struct, event number.
                 // __sched_notify_parent(TmpThread,0);
+
+                // #todo
+                // Find some thread that is waiting for the dead of this thread.
+                // t->wait_reason = WAIT_REASON_WAIT4TID
+                // if (t->wait4tid == TmpThread->tid)
+                //     waike up (t) 
 
                 TmpThread->used = FALSE;
                 TmpThread->magic = 0;

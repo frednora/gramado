@@ -7,7 +7,7 @@
 
 // show_slot:
 // Show info about a thread.
-void show_slot(int tid)
+void show_slot(tid_t tid)
 {
     struct thread_d  *t;
 
@@ -60,7 +60,6 @@ done:
 // Show info about all threads.
 // Loop
 // Mostra as tarefas válidas, mesmo que estejam com problemas.
-
 void show_slots(void)
 {
     struct process_d  *p;
@@ -95,14 +94,14 @@ void show_slots(void)
 /*
  * show_reg:
  *     Show the content of the registers.
- *    rflags
- *    cs:rip
- *    ss:rsp
- *    ds,es,fs,gs
- *    a,b,c,d
+ *     rflags
+ *     cs:rip
+ *     ss:rsp
+ *     ds,es,fs,gs
+ *     a,b,c,d
  */
 
-void show_reg(int tid)
+void show_reg(tid_t tid)
 {
     struct thread_d  *t;
 
@@ -131,8 +130,7 @@ void show_reg(int tid)
 // ...
 }
 
-// threads
-void show_thread_information (void)
+void show_thread_information(void)
 {
     struct thread_d  *Idle;
     struct thread_d  *Current;
@@ -168,27 +166,31 @@ void show_thread_information (void)
     refresh_screen();
 }
 
+// Link two threads.
+// #todo: Explain it better.
 int 
 link_two_threads( 
     struct thread_d *primary,
     struct thread_d *secondary )
 {
-// Link two threads.
 
+// Parameters:
     if ((void*) primary == NULL)
         goto fail;
-    if (primary->magic != 1234)
+    if (primary->magic != 1234){
         goto fail;
-
+    }
     if ((void*) secondary == NULL)
         goto fail;
-    if (secondary->magic != 1234)
+    if (secondary->magic != 1234){
         goto fail;
+    }
 
-// Link
+// Link it
     primary->link = (struct thread_d *) secondary;
     primary->is_linked = TRUE;
-// Link
+
+// Link it
     secondary->link = (struct thread_d *) primary;
     secondary->is_linked = TRUE;
 
@@ -197,27 +199,31 @@ fail:
     return (int) -1;
 }
 
+// Unlink two threads.
+// #todo: Explain it better.
 int 
 unlink_two_threads( 
     struct thread_d *primary,
     struct thread_d *secondary )
 {
-// Link two threads.
 
+// Parameters:
     if ((void*) primary == NULL)
+    goto fail;
+    if (primary->magic != 1234){
         goto fail;
-    if (primary->magic != 1234)
-        goto fail;
-
+    }
     if ((void*) secondary == NULL)
         goto fail;
-    if (secondary->magic != 1234)
+    if (secondary->magic != 1234){
         goto fail;
+    }
 
-// Unlink
+// Unlink it
     primary->link = NULL;
     primary->is_linked = FALSE;
-// Unlink
+
+// Unlink it
     secondary->link = NULL;
     secondary->is_linked = FALSE;
 
@@ -265,7 +271,7 @@ set_thread_priority (
     OldPriority  = t->priority;
     BasePriority = t->base_priority;
 
-// Se aprioridade solicitada for igual da prioridade atual.
+// The new priority is equal the old.
     if (priority == OldPriority){
         return;
     }
@@ -336,21 +342,9 @@ void threadi_power(
     t->quantum = QUANTUM_MAX;
 }
 
-/*
- * release:
- * #importante
- * Isso deve liberar uma thread que estava esperando 
- * ou bloqueada por algum motivo.
- * Obs: Aqui não devemos julgar se ela pode ou não ser
- * liberada, apenas alteramos se estado.
- */
-// #importante:
-// Não estamos selecionando ela para execução,
-// apenas estamos dizendo que ela está pronta para executar.
-
+// Put the thread in the READY state.
 void release(tid_t tid)
 {
-// Put the thread in the READY state.
     if (tid<0 || tid>=THREAD_COUNT_MAX){
         return;
     }
@@ -373,7 +367,6 @@ SetThread_PML4PA (
 // antes de operarmos nela.
     thread->pml4_PA = (unsigned long) pa;
 }
-
 
 void check_for_dead_thread_collector(void)
 {
@@ -404,8 +397,6 @@ void check_for_dead_thread_collector(void)
             break;
     };
 }
-
-
 
 // dead_thread_collector:
 // Procura por uma thread no estado zombie mata ela.

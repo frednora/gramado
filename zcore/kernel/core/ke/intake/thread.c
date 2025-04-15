@@ -236,6 +236,7 @@ __ps_setup_x64_context (
     t->saved = FALSE;
 }
 
+// Get structure pointer of init thread.
 struct thread_d *get_init_thread(void)
 {
     return (struct thread_d *) InitThread;
@@ -243,7 +244,7 @@ struct thread_d *get_init_thread(void)
 
 // helper
 // Thread stats
-unsigned long GetThreadStats( int tid, int index )
+unsigned long GetThreadStats( tid_t tid, int index )
 {
     struct thread_d *t;
 
@@ -383,7 +384,7 @@ unsigned long GetThreadStats( int tid, int index )
 // Get thread name.
 // + Copy the name into the given address.
 // + Return the name size in bytes.
-int getthreadname ( int tid, char *buffer )
+int getthreadname(tid_t tid, char *buffer)
 {
     struct thread_d  *t;
     char *name_buffer = (char *) buffer;
@@ -447,28 +448,44 @@ void *FindReadyThread(void)
     return NULL;
 }
 
-// Get State 
-// (Zero e' tipo NULL?).
-int GetThreadState (struct thread_d *thread)
+// OUT:
+// > Thread state if the function works.
+// > -1 if the function fails.
+thread_state_t GetThreadState(struct thread_d *thread)
 {
+
+// Parameter
     if ((void *) thread == NULL){
-        // Message
-        return 0;   //#bugbug: This is a valid state.
+        goto fail;
     }
-    return (int) thread->state;
+    if (thread->used != TRUE){
+        goto fail;
+    }
+
+    return (thread_state_t) thread->state;
+
+fail:
+    return (thread_state_t) -1;
 }
 
-// Get Type
-// (Zero e' tipo NULL?).
-int GetThreadType (struct thread_d *thread)
+// OUT:
+// > Thread type if the function works.
+// > -1 if the function fails.
+thread_type_t GetThreadType(struct thread_d *thread)
 {
-    if ( (void *) thread == NULL )
-    {
-        //Message
-        return 0;   // #bugbug: This is a valid type.
-        //return -1;
-    }  
-    return (int) thread->type;
+
+// Parameter
+    if ((void *) thread == NULL){
+        goto fail;
+    }
+    if (thread->used != TRUE){
+        goto fail;
+    }
+
+    return (thread_type_t) thread->type;
+
+fail:
+    return (thread_type_t) -1;
 }
 
 // Set the current TID.
@@ -486,6 +503,7 @@ tid_t GetCurrentTID(void)
 void *GetThreadByTID(tid_t tid)
 {
     struct thread_d *t;
+
     if (tid < 0 || tid >= THREAD_COUNT_MAX){
         return NULL;
     }
@@ -494,21 +512,27 @@ void *GetThreadByTID(tid_t tid)
     return (void *) t;
 }
 
-// GetCurrentThread:
-//     Retorna o endereço da estrutura da thread atual.
+// Get the structure pointer.
 void *GetCurrentThread(void)
 {
+    if (current_thread < 0)
+        return NULL;
+    // ...
     return (void*) GetThreadByTID(current_thread);
 }
 
+// Get the structure pointer.
 void *GetForegroundThread(void)
 {
+    if (foreground_thread < 0)
+        return NULL;
+    // ...
     return (void*) GetThreadByTID(foreground_thread);
 }
 
-// Display server
-// #todo: Rename function.
-void *GetWSThread(void)
+// Get the pointer for the control thread 
+// of the current Display server application.
+void *GetDSThread(void)
 {
     tid_t ws_tid = -1;
 
@@ -516,26 +540,21 @@ void *GetWSThread(void)
         return NULL;
     }
     ws_tid = (tid_t) DisplayServerInfo.tid;
+
     return (void*) GetThreadByTID(ws_tid);
 }
 
-/*
- * SelectForExecution:
- * Um thread entra em standby, sinalizando que está pronto 
- * para entrar em execução.
- * Nesse caso, durante a rotina de taskswitch, checar-se-a se 
- * existe um thread em estado standby, caso haja, a thread é colocada 
- * pra executar pelo método spawn. 
- * Esse m�todo de spawn j� foi testado, segundo a contagem, duas thread 
- * come�aram a rodas atrav�s desse m�todo de spawn. 
- * Provavelmente as threads 'shell' e 'taskman', pois a thread 'idle' � 
- * chamada com um spawn exclusivo para ela, o que � desnecess�rio e 
- * poder� ser revisto. @todo
- * MOVIMENTO 1, (Initialized --> Standby).
- */
-
+// SelectForExecution:
+// Change the state to 'Standby'.
+// MOVIMENT 1, (Initialized --> Standby).
+// It means that the thread is waiting to enter in the READY state.
+// Normally a thread is in Standby when it will run for the first time.
+// Taskswitch routine will probe for threads in Standby and will spawn them.
 void SelectForExecution(struct thread_d *Thread)
 {
+// Change the state to 'Standby'.
+// MOVIMENT 1, (Initialized --> Standby).
+
     if ((void *) Thread == NULL){
         debug_print ("SelectForExecution: Thread fail\n");
         return;
@@ -612,8 +631,8 @@ thread_get_profiler_percentage (struct thread_d *thread)
     return (unsigned long) thread->profiler_percentage_running;
 }
 
-// ??
-// Chamada pelo timer.c
+// Called by timer.c.
+// #todo: Explain it better.
 int thread_profiler(int service)
 {
     struct thread_d  *Idle;
@@ -623,7 +642,7 @@ int thread_profiler(int service)
     unsigned long __total = 0; //todas inclusive idle.
 
 // safety
-    if ( service < 0 )
+    if (service < 0)
     {
        // msg?
        return -1;
@@ -777,8 +796,9 @@ void exit_current_thread(void)
 {
     if (current_thread < 0)
         return;
-    if (current_thread >= THREAD_COUNT_MAX)
+    if (current_thread >= THREAD_COUNT_MAX){
         return;
+    }
     exit_thread(current_thread);
 }
 
@@ -879,7 +899,7 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
         debug_print ("copy_thread_struct: clone\n");
         panic       ("copy_thread_struct: clone\n");
     }
-    if (clone->magic!=1234){
+    if (clone->magic != 1234){
         debug_print ("copy_thread_struct: clone validation\n");
         panic       ("copy_thread_struct: clone validation\n");
     }
@@ -1008,11 +1028,18 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
     clone->blockedCount = 0;
     clone->blocked_limit = father->blocked_limit;
 
+    clone->scheduledCount = 0; 
+
+    // Yield
     clone->yield_in_progress = FALSE;
+
+    // Sleep
     clone->sleep_in_progress = FALSE;
     clone->desired_sleep_ms = 0;
 
-    clone->scheduledCount = 0; 
+    // Wait
+    clone->waiting_for_timeout = FALSE;
+    clone->wait_reason = WAIT_REASON_NULL;
 
 // Not used now. But it works fine.
     clone->ticks_remaining = father->ticks_remaining; 
@@ -1333,10 +1360,8 @@ struct thread_d *create_thread (
     }
     memset( Thread, 0, sizeof(struct thread_d) );
 
-// ==============
-// local worker
-// Initializing the common basic elements.
-    __ps_initialize_thread_common_elements( (struct thread_d *) Thread );
+// Initializing the common basic elements. (Local worker)
+    __ps_initialize_thread_common_elements((struct thread_d *) Thread);
 
 // ======================================
 // Loop.
@@ -1455,15 +1480,8 @@ try_next_slot:
 // This thread can be preempted.
     Thread->is_preemptable = PREEMPTABLE;
 
-
     Thread->link = NULL;
     Thread->is_linked = FALSE;
-
-    Thread->exit_in_progress = FALSE;
-
-    // ...
-
-    // Nothing
 
 //
 // == Time support ============
@@ -1501,9 +1519,16 @@ try_next_slot:
     Thread->blockedCount  = 0; 
     Thread->blocked_limit = QUANTUM_MAX;
 
+    // Yield
     Thread->yield_in_progress = FALSE;
+
+    // Sleep
     Thread->sleep_in_progress = FALSE;
     Thread->desired_sleep_ms = 0;
+
+    // Wait
+    Thread->waiting_for_timeout = FALSE;
+    Thread->wait_reason = WAIT_REASON_NULL;
 
 // How many times it was scheduled.
     Thread->scheduledCount=0;

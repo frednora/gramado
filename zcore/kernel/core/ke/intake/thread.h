@@ -328,7 +328,7 @@ struct thread_d
     unsigned long priority;       // dynamic
 
 // flag, Estado atual da tarefa. ( RUNNING, DEAD ... ).
-    thread_state_t state;    
+    thread_state_t state;
 
 // The is the control thread of a new clone process.
     int new_clone;
@@ -345,15 +345,21 @@ struct thread_d
 // e que deve sair quando for seguro fazer isso.
     int yield_in_progress;
 
+// Sleep
     int sleep_in_progress;
     unsigned long desired_sleep_ms;
 
+// Test
     int _its_my_party_and_ill_cry_if_i_want_to;
 
-    int waiting_for_timeout;
+//
+// Wait support.
+//
 
-// error. @todo:
-    //unsigned long error;
+    int waiting_for_timeout;
+// #test
+// The thread is waiting for a reason.
+    thread_wait_reason_t wait_reason;
 
 // Plano de execução.
 // Threads:
@@ -744,6 +750,7 @@ struct thread_d
     int wait4pid;
 // id da thread que a thread está esperando morrer.
     int wait4tid;
+
 // Signal support:
     unsigned long signal;
     unsigned long umask;
@@ -801,23 +808,22 @@ extern unsigned long threadList[THREAD_COUNT_MAX];
 struct thread_d *get_init_thread(void);
 
 // From tlib.c
-void show_slot(int tid);
+void show_slot(tid_t tid);
 void show_slots(void);
-void show_reg(int tid);
-void show_thread_information (void);
+void show_reg(tid_t tid);
+void show_thread_information(void);
 
 // See: main.c
 void keEarlyRing0IdleThread(void);
 
 // From thread.c
 
-// helper
-unsigned long GetThreadStats( int tid, int index );
+unsigned long GetThreadStats( tid_t tid, int index );
 
-int getthreadname ( int tid, char *buffer );
+int getthreadname(tid_t tid, char *buffer);
 void *FindReadyThread (void);
-int GetThreadState (struct thread_d *thread);
-int GetThreadType (struct thread_d *thread);
+thread_state_t GetThreadState(struct thread_d *thread);
+thread_type_t GetThreadType(struct thread_d *thread);
 
 void SetCurrentTID(tid_t tid);
 tid_t GetCurrentTID(void);
@@ -825,7 +831,7 @@ tid_t GetCurrentTID(void);
 void *GetThreadByTID(tid_t tid);
 void *GetCurrentThread(void);
 void *GetForegroundThread(void);
-void *GetWSThread(void);
+void *GetDSThread(void);
 
 void 
 set_thread_priority ( 

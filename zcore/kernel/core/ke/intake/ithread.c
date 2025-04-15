@@ -184,9 +184,17 @@ struct thread_d *create_init_thread(void)
     t->signal = 0;
     t->umask  = 0;
 
-    t->yield_in_progress =  FALSE;
-    t->sleep_in_progress =  FALSE;
+    // Yield
+    t->yield_in_progress = FALSE;
+
+    // Sleep
+    t->sleep_in_progress = FALSE;
     t->desired_sleep_ms = 0;
+
+    // Wait
+    // Wait
+    t->waiting_for_timeout = FALSE;
+    t->wait_reason = WAIT_REASON_NULL;
 
 // ===================================
 
@@ -252,27 +260,26 @@ struct thread_d *create_init_thread(void)
     t->context.r14 = 0;
     t->context.r15 = 0;
 
-// Entry point.
-// O endereço incial, para controle.
+// Entry point. Initial RIP.
     t->initial_rip = (unsigned long) t->context.rip; 
 
     t->saved = FALSE; 
 
 // #bugbug
 // Obs: As estruturas precisam ja estar devidamente inicializadas.
-	//IdleThread->root = (struct _iobuf *) file_root;
-	//IdleThread->pwd  = (struct _iobuf *) file_pwd;
+	//t->root = (struct _iobuf *) file_root;
+	//t->pwd  = (struct _iobuf *) file_pwd;
 
 //CPU configuration.
-	//IdleThread->cpuID = 0;              //Qual processador.
-	//IdleThread->confined = 1;           //Flag, confinado ou nao.
-	//IdleThread->CurrentProcessor = 0;   //Qual processador.
-	//IdleThread->NextProcessor = 0;      //Proximo processador. 
+	//t->cpuID = 0;              //Qual processador.
+	//t->confined = 1;           //Flag, confinado ou nao.
+	//t->CurrentProcessor = 0;   //Qual processador.
+	//t->NextProcessor = 0;      //Proximo processador. 
 
 // Navigation
     t->next = NULL;
     
-// Coloca na lista de estruturas.
+// Save into the list.
     threadList[TID] = (unsigned long) t;
 
 // counter
@@ -299,7 +306,7 @@ struct thread_d *create_init_thread(void)
 
 // The thread counter for this processor.
 // This is the first thread.
-    UPProcessorBlock.threads_counter = (int) 1; // :)
+    UPProcessorBlock.threads_counter = (int) 1;  //:)
 
 //
 // == Queue =====================================
@@ -315,7 +322,6 @@ struct thread_d *create_init_thread(void)
 
 // State
     t->state = INITIALIZED;
-
     t->used = TRUE;
     t->magic = 1234;
 
