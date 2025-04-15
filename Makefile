@@ -176,37 +176,44 @@ build-gramado-os:
 
 # Copy the init process.
 	cp $(DEP_L1)/usys/bin/INIT.BIN  $(BASE)/
+#	cp $(DEP_L1)/usys/bin/INIT.BIN  $(BASE)/GRAMADO/
 
-# Well consolidated applications
-	-cp $(DEP_L1)/usys/bin/PUBSH.BIN      $(BASE)/DE/
-	-cp $(DEP_L1)/usys/bin/SH7.BIN        $(BASE)/DE/
-	-cp $(DEP_L1)/usys/bin/SHELL.BIN      $(BASE)/DE/
-#	-cp $(DEP_L1)/usys/bin/SHELL00.BIN    $(BASE)/DE/
-	-cp $(DEP_L1)/usys/bin/TASCII.BIN     $(BASE)/DE/
-	-cp $(DEP_L1)/usys/bin/TPRINTF.BIN    $(BASE)/DE/
+# Well consolidated programs.
+	-cp $(DEP_L1)/usys/bin/PUBSH.BIN    $(BASE)/GRAMADO/
+	-cp $(DEP_L1)/usys/bin/PUBSH.BIN    $(BASE)/DE/
+	-cp $(DEP_L1)/usys/bin/SHELL.BIN    $(BASE)/GRAMADO/
+	-cp $(DEP_L1)/usys/bin/SHELL.BIN    $(BASE)/DE/
+
+# Experimental programs.
+	-cp $(DEP_L1)/usys/bin/SH7.BIN        $(BASE)/GRAMADO/
+#	-cp $(DEP_L1)/usys/bin/SHELL00.BIN    $(BASE)/GRAMADO/
+	-cp $(DEP_L1)/usys/bin/TASCII.BIN     $(BASE)/GRAMADO/
+	-cp $(DEP_L1)/usys/bin/TPRINTF.BIN    $(BASE)/GRAMADO/
 
 #===================================
 # $(DEP_L1)/usys/commands/
 
 	$(Q)$(MAKE) -C $(DEP_L1)/usys/commands/
 
-# Copy some basic commands.
+# Copy well consolidated commands.
 	-cp $(DEP_L1)/usys/commands/base/bin/CAT.BIN       $(BASE)/
-	-cp $(DEP_L1)/usys/commands/base/bin/UNAME.BIN     $(BASE)/
 	-cp $(DEP_L1)/usys/commands/base/bin/REBOOT.BIN    $(BASE)/
+	-cp $(DEP_L1)/usys/commands/base/bin/REBOOT.BIN    $(BASE)/GRAMADO/
 	-cp $(DEP_L1)/usys/commands/base/bin/SHUTDOWN.BIN  $(BASE)/
-	-cp $(DEP_L1)/usys/commands/sdk/bin/GRAMCNF.BIN    $(BASE)/
+	-cp $(DEP_L1)/usys/commands/base/bin/SHUTDOWN.BIN  $(BASE)/GRAMADO/
+	-cp $(DEP_L1)/usys/commands/base/bin/UNAME.BIN     $(BASE)/
 
-# Experimental applications
-	-cp $(DEP_L1)/usys/commands/base/bin/FALSE.BIN      $(BASE)/DE/
-	-cp $(DEP_L1)/usys/commands/base/bin/TRUE.BIN       $(BASE)/DE/
-	-cp $(DEP_L1)/usys/commands/extra/bin/CMP.BIN       $(BASE)/DE/
-	-cp $(DEP_L1)/usys/commands/extra/bin/SHOWFUN.BIN   $(BASE)/DE/
-	-cp $(DEP_L1)/usys/commands/extra/bin/SUM.BIN       $(BASE)/DE/
-#-cp $(DEP_L1)/usys/commands/sdk/bin/N9.BIN         $(BASE)/DE/
-#-cp $(DEP_L1)/usys/commands/sdk/bin/N10.BIN        $(BASE)/DE/
-#-cp $(DEP_L1)/usys/commands/sdk/bin/N11.BIN        $(BASE)/DE/
-#-cp $(DEP_L1)/usys/commands/extra/bin/UDPTEST.BIN  $(BASE)/DE/
+# Experimental commands.
+	-cp $(DEP_L1)/usys/commands/base/bin/FALSE.BIN      $(BASE)/GRAMADO/
+	-cp $(DEP_L1)/usys/commands/base/bin/TRUE.BIN       $(BASE)/GRAMADO/
+	-cp $(DEP_L1)/usys/commands/extra/bin/CMP.BIN       $(BASE)/GRAMADO/
+	-cp $(DEP_L1)/usys/commands/extra/bin/SHOWFUN.BIN   $(BASE)/GRAMADO/
+	-cp $(DEP_L1)/usys/commands/extra/bin/SUM.BIN       $(BASE)/GRAMADO/
+	-cp $(DEP_L1)/usys/commands/sdk/bin/GRAMCNF.BIN     $(BASE)/
+#-cp $(DEP_L1)/usys/commands/sdk/bin/N9.BIN         $(BASE)/GRAMADO/
+#-cp $(DEP_L1)/usys/commands/sdk/bin/N10.BIN        $(BASE)/GRAMADO/
+#-cp $(DEP_L1)/usys/commands/sdk/bin/N11.BIN        $(BASE)/GRAMADO/
+#-cp $(DEP_L1)/usys/commands/extra/bin/UDPTEST.BIN  $(BASE)/GRAMADO/
 
 #===================================
 # $(DEP_L1)/udrivers/ in kernel project
