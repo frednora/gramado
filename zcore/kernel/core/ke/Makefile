@@ -82,6 +82,7 @@ detect.o \
 ke.o \
 archhal.o \
 hal.o \
+mpfloat.o acpi.o \
 apic.o apictim.o ioapic.o \
 pit.o ports64.o rtc.o \
 x64.o x64info.o x64init.o x64sc.o x64fault.o x64smp.o \
@@ -131,6 +132,8 @@ all:
 	$(CC) -c hal/x86_64/detect.c  $(KERNEL_INCLUDE) $(CFLAGS) -o detect.o
 
 # SMP support
+	$(CC) -c hal/x86_64/smp/mpfloat.c  $(KERNEL_INCLUDE) $(CFLAGS) -o mpfloat.o
+	$(CC) -c hal/x86_64/smp/acpi.c     $(KERNEL_INCLUDE) $(CFLAGS) -o acpi.o
 	$(CC) -c hal/x86_64/smp/apic.c     $(KERNEL_INCLUDE) $(CFLAGS) -o apic.o
 	$(CC) -c hal/x86_64/smp/apictim.c  $(KERNEL_INCLUDE) $(CFLAGS) -o apictim.o
 	$(CC) -c hal/x86_64/smp/ioapic.c   $(KERNEL_INCLUDE) $(CFLAGS) -o ioapic.o

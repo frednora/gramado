@@ -883,8 +883,10 @@ void I_kmain(int arch_type)
 
             // #debug
             // Show cpu info.
+            // see: x64info.c
             //x64_info();
 
+            // #debug
             //printk(">>>> breakpoint\n");
             //while(1){asm ("cli"); asm ("hlt");}
         }

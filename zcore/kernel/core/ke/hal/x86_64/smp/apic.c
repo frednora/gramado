@@ -196,17 +196,28 @@ implemented.
 static inline void imcr_pic_to_apic (void)
 {
 // Select IMCR register.
+// First, write the value `70h` to port `22h`. 
+// This action selects the IMCR for configuration.
     out8 ((unsigned short)0x22, (unsigned char) 0x70);
-// NMI and 8259 INTR go through APIC. 
+
+// NMI and 8259 INTR go through APIC.
+// Next, write the desired data value to port `23h`. 
+// This data defines the configuration.
+// 0x01 - Route to APIC.
     out8 ((unsigned short)0x23, (unsigned char) 0x01);
 }
-
 
 static inline void imcr_apic_to_pic (void)
 {
 // Select IMCR register.
+// First, write the value `70h` to port `22h`. 
+// This action selects the IMCR for configuration.
     out8 ((unsigned short)0x22, (unsigned char) 0x70);
+
 // NMI and 8259 INTR go directly to BSP.
+// Next, write the desired data value to port `23h`. 
+// This data defines the configuration.
+// 0x01 - Do NOT route to APIC.
     out8 ((unsigned short)0x23, (unsigned char) 0x00);
 }
 
@@ -240,7 +251,6 @@ void lapic_initializing(unsigned long lapic_pa)
 // >> Called by I_init in x64init.c
 // >> Called by x64_probe_smp_via_acpi() in x64.c
 // Setup BSP's local APIC.
-
 
     printk("lapic_initializing: \n");
 
@@ -284,10 +294,7 @@ void lapic_initializing(unsigned long lapic_pa)
 // Mapping area for registers.
 
     int map_status = -1;
-    map_status = 
-        (int) mm_map_2mb_region(
-            LAPIC.lapic_pa,
-            LAPIC.lapic_va );
+    map_status = (int) mm_map_2mb_region( LAPIC.lapic_pa, LAPIC.lapic_va );
     if (map_status != 0)
         panic("lapic_initializing: on mm_map_2mb_region()\n");
 
@@ -301,7 +308,6 @@ void lapic_initializing(unsigned long lapic_pa)
     asm ("movq %rax, %cr3");
 
 //=====================================
-
 
 // Let's get some information about the BSP LAPIC.
 
@@ -350,28 +356,28 @@ void lapic_initializing(unsigned long lapic_pa)
 // setting up the APIC:
  
 /* 
- * check_apic:
+ * has_apic:
  *     returns a 'true' value if the CPU supports APIC
  *  and if the local APIC hasn't been disabled in MSRs
  *  note that this requires CPUID to be supported.
  */
 // #todo: Change function name.
 // See: cpuid.h
-
 int has_apic (void)
 {
-   unsigned int eax=0;
-   unsigned int ebx=0;
-   unsigned int ecx=0;
-   unsigned int edx=0;
+    int hasAPIC = FALSE;
+    unsigned int eax=0;
+    unsigned int ebx=0;
+    unsigned int ecx=0;
+    unsigned int edx=0;
 
 // #bugbug
 // Do we have cpuid support?
-   cpuid( 1, eax, ebx, ecx, edx );
+    cpuid( 1, eax, ebx, ecx, edx );
+    hasAPIC = (int) (edx & CPUID_FEAT_EDX_APIC);
 
-   return (int) (edx & CPUID_FEAT_EDX_APIC);
+    return (int) hasAPIC;
 }
-
 
 // Set the physical address for local APIC registers.
 // Is it possible to change the base?
@@ -401,6 +407,7 @@ void cpu_set_apic_base(unsigned long apic)
  */
 unsigned long cpu_get_apic_base(void) 
 {
+    unsigned long APIC_base_address = 0;
     unsigned int eax=0;
     unsigned int edx=0;
 
@@ -417,7 +424,9 @@ unsigned long cpu_get_apic_base(void)
 #endif
 */
 
-    return (unsigned long) (eax & 0xfffff000);
+    APIC_base_address =  (unsigned long) (eax & 0xfffff000);
+
+    return (unsigned long) APIC_base_address;
 }
 
 // #todo: 
@@ -481,43 +490,34 @@ void enable_apic(void)
         (unsigned short) 0x0080, 
         (unsigned int) 0 );
 
-
-
 //---------------------
 //#test
 //#todo
-
-    
 
 // #warning: We already did that above.
 //Task Priority Register (TPR), to inhibit softint delivery
     *(volatile unsigned int*)(LAPIC.lapic_va + LAPIC_TASK_PRIORITY) = 
         0; //0x20;
 
-
 // Timer interrupt vector, 
 // to disable timer interrupts
     *(volatile unsigned int*)(LAPIC.lapic_va + LAPIC_LVT_TIMER) = 
         APIC_CONFIG_DATA_LVT(0,1,0,0,0,APIC_NULL,0x20);
-
 
 // Performance counter interrupt, 
 // to disable performance counter interrupts
     *(volatile unsigned int*)(LAPIC.lapic_va + LAPIC_LVT_PERF) = 
         APIC_CONFIG_DATA_LVT(APIC_NULL,1,0,0,0,0,0x21);
 
-
 // Local interrupt 0, 
 // to enable normal external interrupts, Trigger Mode = Level
     *(volatile unsigned int*)(LAPIC.lapic_va + LAPIC_LVT_LINT0) = 
         APIC_CONFIG_DATA_LVT(APIC_NULL,1,APIC_NULL,APIC_NULL,1,7,0x22);
 
-
 // Local interrupt 1, 
 // to enable normal NMI processing
     *(volatile unsigned int*)(LAPIC.lapic_va + LAPIC_LVT_LINT1) = 
         APIC_CONFIG_DATA_LVT(APIC_NULL,1,APIC_NULL,APIC_NULL,0,4,0x23);
-
 
 // Error interrupt, 
 // to disable error interrupts
@@ -561,14 +561,13 @@ So:
    Interrupt 256 i guess.
 */
 
-    // LAPIC_SVR = 0x00F0
-    // Value = 0x1FF.
-    //Interrupt 256 i guess.
+// LAPIC_SVR = 0x00F0
+// Value = 0x1FF.
+// Interrupt 256 i guess.
+
     local_apic_write_command (
         (unsigned short) 0x00F0,  
         (unsigned int) (  0x100 | 0xFF ) );
-
-
 
 /*
 //

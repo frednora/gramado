@@ -1,6 +1,5 @@
-
 // x64info.c
-// handle x64 cpu informations.
+// Handle x64 cpu informations.
 
 #include <kernel.h>
 
@@ -164,8 +163,10 @@ void x64_info(void)
 {
     printk("\n");
     printk("x64 CPU Info:\n");
-    printk("\n");
     printk("Number of processors: {%d}\n", g_processor_count);
+    printk("smp via acpi failed {%d}\n",smp_info.probe_via_acpi_failed);
+    printk("smp via mp failed {%d}\n",smp_info.probe_via_mp_failed);
+    printk("\n");
     __show_cpu_intel_parameters();
 }
 

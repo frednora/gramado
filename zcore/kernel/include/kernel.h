@@ -137,6 +137,8 @@
 // hal/x86_64/
 #include "../core/ke/hal/x86_64/cpuid.h"
 #include "../core/ke/hal/x86_64/up/up.h"
+#include "../core/ke/hal/x86_64/smp/mpfloat.h"
+#include "../core/ke/hal/x86_64/smp/acpi.h"
 #include "../core/ke/hal/x86_64/smp/x64smp.h"
 #include "../core/ke/hal/x86_64/pic.h"
 #include "../core/ke/hal/x86_64/smp/apic.h"

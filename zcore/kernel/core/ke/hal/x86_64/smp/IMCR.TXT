@@ -1,0 +1,36 @@
+
+Let me break this down for you step by step:
+
+The IMCR, or Interrupt Mode Configuration Register, 
+is a mechanism used in computer systems to control how interrupt signals 
+are routed. Here's a simplified explanation of the text:
+
+1. **Supported I/O Ports:** 
+The IMCR can be accessed through two specific Input/Output (I/O) ports:
+   - Port `22h`: Used for selecting the IMCR.
+   - Port `23h`: Used for writing data to the IMCR.
+
+2. **Accessing the IMCR:** 
+   - First, write the value `70h` to port `22h`. 
+This action selects the IMCR for configuration.
+   - Next, write the desired data value to port `23h`. 
+This data defines the configuration.
+
+3. **Default Behavior:** 
+Upon powering on the system:
+   - The IMCR's value is set to `0`. 
+   - In this default state, the NMI (Non-Maskable Interrupt) and 
+8259 INTR (Interrupt Request) lines are directly connected 
+to the BSP (Bootstrap Processor).
+
+4. **Changing the Configuration:** 
+   - Writing the value `01h` to the IMCR modifies 
+the routing of these signals. 
+   - Instead of being directly connected to the BSP, 
+the NMI and 8259 INTR signals are now passed through 
+the APIC (Advanced Programmable Interrupt Controller).
+
+This functionality is critical for managing how interrupts 
+are handled in systems with multiple processors, 
+enabling more advanced and flexible configurations.
+
