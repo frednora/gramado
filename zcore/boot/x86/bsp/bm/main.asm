@@ -508,6 +508,33 @@ bootmanagerDONE:
     ;Debug breakpoint.
     ;jmp $
 
+;--------------------------
+; Setup the interrupt 0x21
+; IN:
+; DX = OFFSET
+; DS = SEGMENT
+    ;mov dx, int21h_offset
+    ;push ds
+    ;mov ax, cs 
+    ;mov ds, ax 
+    ;xor ax, ax
+    ;mov al, 021h
+    ;CALL SETVECT
+    ;pop ds 
+
+    ;int 0x21
+
+    ;xor ax,ax 
+    ;int 0x16
+    ;int 0x19
+
+    ;Debug breakpoint.
+    ;cli
+    ;hlt
+    ;jmp $
+
+
+
 ; ===================================
 ; Importante:
 ; >> Nesse momento j� conseguimos carregar o BLGRAM.BIN em 0x2000:0. Agora 
@@ -546,6 +573,55 @@ bootmanagerDONE:
     push WORD 0
     push WORD AFTER_DATA 
     retf
+
+; ------------------------------------------------------------
+; Table of handlers.
+DISPATCH:
+    DW  0  ;;      ABORT           ;0
+    DW  0  ;;      CONIN
+    DW  0  ;;      CONOUT
+    DW  0  ;;      READER
+    DW  0  ;;      PUNCH
+    DW  0  ;;      LIST            ;5
+    DW  0  ;;      RAWIO
+    DW  0  ;;      RAWINP
+    DW  0  ;;      IN
+    ;DW      PRTBUF ;print string
+    ; ...
+
+; ------------------------------------------------------------
+int21h_offset:
+    PUSHA 
+
+    mov si, int21h_message00
+    call DisplayMessage   
+
+; #TODO
+; Dispatch a handler.
+    ;CALL CS:[BX+DISPATCH]
+
+    POPA 
+    iret
+int21h_message00:
+    db "finish.inc: Hello from 21h", 13, 10, 0
+
+; ------------------------------------------------------------
+; Set a vector in IVT.
+; IN:
+; AL = int number
+; DX = OFFSET
+; DS = SEGMENT
+SETVECT:
+        XOR     BX,BX
+        MOV     ES,BX
+        MOV     BL,AL
+        SHL     BX,1
+        SHL     BX,1
+        MOV     ES:[BX], DX
+        MOV     ES:[BX+2], DS
+        RET
+; ------------------------------------------------------------
+
 
 ; Fail. 
 ; #todo: Colocar uma mensagem de erro.

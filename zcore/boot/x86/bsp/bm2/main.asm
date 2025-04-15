@@ -353,6 +353,7 @@ load_bootloader_image:
     ;mov ax, word ImageName_GramadoOSBootloader
     ;call diskLoadBL
 
+
 ; Trampoline:
 ; see: features/finish.inc
 Trampoline:

@@ -36,13 +36,40 @@ AFTER_DATA:
     mov ds, ax
     mov es, ax 
 
-; Message: Boot Manager Splash.
+; Message: Boot Manager Splash screen. (banner)
 ; See: s2header.inc
     mov si, msg_bm_splash
     call DisplayMessage
 
     ; #debug
     ; jmp $
+
+;--------------------------
+; Setup the interrupt 0x21
+; IN:
+; DX = OFFSET
+; DS = SEGMENT
+    mov dx, int21h_offset
+    push ds
+    mov ax, cs 
+    mov ds, ax 
+    xor ax, ax
+    mov al, 021h
+    CALL SETVECT
+    pop ds 
+
+    int 0x21
+
+    ;xor ax,ax 
+    ;int 0x16
+    ;int 0x19
+
+    ;Debug breakpoint.
+    ;cli
+    ;hlt
+    ;jmp $
+;--------------------------
+
 
 ;; PE signature for BL.BIN image.
 ;; Check if we have the PE signature at the beginning of the file.
@@ -205,4 +232,55 @@ xxx_Config:
     call set_boot_mode
     JMP do_rm_startgui  ; pm.inc
     jmp $
+
+    ; =====================================
+
+; ------------------------------------------------------------
+; Table of handlers.
+DISPATCH:
+    DW  0  ;;      ABORT           ;0
+    DW  0  ;;      CONIN
+    DW  0  ;;      CONOUT
+    DW  0  ;;      READER
+    DW  0  ;;      PUNCH
+    DW  0  ;;      LIST            ;5
+    DW  0  ;;      RAWIO
+    DW  0  ;;      RAWINP
+    DW  0  ;;      IN
+    ;DW      PRTBUF ;print string
+    ; ...
+
+; ------------------------------------------------------------
+int21h_offset:
+    PUSHA 
+
+    mov si, int21h_message00
+    call DisplayMessage   
+
+; #TODO
+; Dispatch a handler.
+    ;CALL CS:[BX+DISPATCH]
+
+    POPA 
+    IRET 
+int21h_message00:
+    db "finish.inc: Hello from 21h", 13, 10, 0
+
+
+; ------------------------------------------------------------
+; Set a vector in IVT.
+; IN:
+; AL = int number
+; DX = OFFSET
+; DS = SEGMENT
+SETVECT:
+        XOR     BX,BX
+        MOV     ES,BX
+        MOV     BL,AL
+        SHL     BX,1
+        SHL     BX,1
+        MOV     ES:[BX], DX
+        MOV     ES:[BX+2], DS
+        RET
+
 
