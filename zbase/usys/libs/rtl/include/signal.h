@@ -269,19 +269,19 @@ struct	sigcontext {
 
 
 //
-// signal()
+// Signals
 //
-
-
-//POSIX.1-2001, POSIX.1-2008, C89, C99.
-sighandler_t signal (int signum, sighandler_t handler);
-
 
 int 
 sigaction ( 
     int signum, 
     const struct sigaction *act,
     struct sigaction *oldact );
+
+//POSIX.1-2001, POSIX.1-2008, C89, C99.
+sighandler_t signal (int signum, sighandler_t handler);
+
+sighandler_t signal00(int signum, sighandler_t handler);
     
 
 int kill(pid_t pid, int sig);                

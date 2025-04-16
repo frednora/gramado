@@ -93,15 +93,6 @@ static unsigned long __last_tick(void)
 
 //----------------------------------------------
 
-int sys_signal(void)
-{
-// #todo
-// Create the parameters.
-
-// ...
-
-    return (int) -1;
-}
 
 // windowLoadGramadoIcons:
 // Carrega alguns ícones do sistema.

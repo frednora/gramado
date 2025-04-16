@@ -1,7 +1,6 @@
-/*
- * File: signal.c
- *
- */
+// signal.c
+// Ring 3 support for signals.
+// Created by Fred Nora.
 
 #include <types.h>
 #include <sys/types.h>
@@ -51,16 +50,61 @@ const char *sys_siglist[NSIG] = {
 
 
 /*
+ * sigaction:
+ * signum: 
+ *     The signal number to be handled (e.g., SIGINT, SIGTERM).
+ * act: 
+ *     A pointer to a struct sigaction that specifies the new action for the signal.
+ * oldact: 
+ *     A pointer to a struct sigaction where the previous action for the signal is stored. 
+ *     This can be NULL if you don't need the old action.
+ */
+
+ int 
+ sigaction ( 
+     int signum, 
+     const struct sigaction *act,
+     struct sigaction *oldact )
+ {
+    int r=0;
+
+    debug_print ("sigaction: [TODO] \n");
+ 
+    if (signum < 0)
+        goto fail;
+ 
+    // #todo: Service 121
+    r = 
+    (int) sc80 ( 
+        (unsigned long) 122, 
+        (unsigned long) signum,
+        (unsigned long) act, 
+        (unsigned long) oldact ); 
+
+    // Check return.
+    if (r < 0){
+        errno = (-r);
+        return (int) (-1);
+    }
+
+ fail:
+     return (int) -1;
+ }
+
+
+/*
  * signal:
  *     POSIX.1-2001, POSIX.1-2008, C89, C99.
  */
 
-//#todo
-    
+// #todo
+// Lightweight wrapper around sigaction().
 sighandler_t signal (int signum, sighandler_t handler)
 {
     struct sigaction new_act;
     struct sigaction old_act;
+
+    // #todo: Service 122, or call sigaction() beeing a wrapper.
 
     debug_print ("signal: [TODO] \n");
 
@@ -74,25 +118,28 @@ sighandler_t signal (int signum, sighandler_t handler)
         return SIG_ERR;
     }
 
-    // ?? #bugbug: Qual é esse valor ??
-
-    return old_act.sa_handler;
+    return (sighandler_t) old_act.sa_handler;
 }
 
-
-/*
- * sigaction:
- *
- */
-
-int 
-sigaction ( 
-    int signum, 
-    const struct sigaction *act,
-    struct sigaction *oldact )
+// #test
+// Ring 3 implementation of signal()
+sighandler_t signal00(int signum, sighandler_t handler)
 {
-    debug_print ("sigaction: [TODO] \n");
-    return -1; //#todo
+    sighandler_t r=0;
+
+    //if (signum < 0)
+        //return 0;
+
+        r = 
+        (sighandler_t) sc82 ( 
+            (unsigned long) sc80, 
+            (unsigned long) signum,
+            (unsigned long) handler, 
+            (unsigned long) handler ); 
+
+// #todo
+// Fix this.
+    return (sighandler_t) r;
 }
 
 
@@ -102,8 +149,7 @@ int kill (pid_t pid, int sig)
 {
     debug_print ("kill: [TODO] \n");
 
-
-    if(pid<0)
+    if (pid<0)
     {
         errno=EINVAL;
         return (int) -1;

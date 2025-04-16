@@ -786,10 +786,16 @@ void *sci0 (
 // 121, 122, 123
 
 // sys_signal() support.
-    if (number == 121)
-    {
-        // #todo
-        // see: ke.c
+// #todo
+// We need to implement the parameters for this function.
+// see: ksignal.c in clib/
+    if (number == 121){
+        debug_print("sci0: [121] sys_sigaction not implemented\n");
+        //return (void*) sys_sigaction();
+        return NULL;
+    }
+    if (number == 122){
+        debug_print("sci0: [122] sys_signal not implemented\n");
         //return (void*) sys_signal();
         return NULL;
     }

@@ -403,8 +403,17 @@ struct sigcontext
 // == Prototypes ===================================
 //
 
+// #todo
+// Fix the parameters follogin the posix standard.
+int 
+sys_sigaction ( 
+    int signum, 
+    void *act,
+    void *oldact );
 
-
+// #todo
+// Fix the parameters follogin the posix standard.
+int sys_signal(int signum, void *handler);
 
 #endif    
 

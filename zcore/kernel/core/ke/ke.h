@@ -5,7 +5,6 @@
 #define __KE_KE_H    1
 
 
-int sys_signal(void);
 
 void keRefreshScreen(void);
 void 
