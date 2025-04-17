@@ -1,0 +1,45 @@
+
+ Gramado Process Genealogy
+
+ This is the processes during the system's initialization.
+
+ + Each process can launch another process.
+ + Normally some processes can operate as a launcher for other processes, just like:
+   Init process, Display server, Taskbar.
+
+         [ Kernel Process ]
+                |
+                V
+          [ Init Process ]
+                |
+                V
+          [Display Server]
+                |
+                V
+            [Taskbar]
+
+---------------------------------------------------------------------
+
+---
+
+### **Gramado Process Genealogy**
+
+This represents the processes during the system's initialization.
+
+- Each process can launch another process.
+- Normally, certain processes operate as launchers for other processes, such as:
+  - Init Process
+  - Display Server
+  - Taskbar
+
+#### Genealogy Structure:
+1. **Kernel Process**
+   - This is the foundation of the system and starts all other processes.
+2. **Init Process**
+   - This process is launched by the Kernel and can initiate other processes.
+3. **Display Server**
+   - Started by the Init Process, it manages graphical displays and can launch other processes.
+4. **Taskbar**
+   - Launched by the Display Server, this process serves as part of the user interface.
+
+---

@@ -157,12 +157,16 @@ static void __initialize_ws_info(pid_t pid)
     p->env_subsystem = GramadoSubsystem;
 
 // ----------------
-// GID
-// Update the group that this process belongs to.
-    p->gid = (gid_t) GID_DISPLAY_SERVER;
-    p->rgid = (gid_t) GID_DISPLAY_SERVER;  // real
-    p->egid = (gid_t) GID_DISPLAY_SERVER;  // effective
-    p->sgid = (gid_t) GID_DISPLAY_SERVER;  // saved
+// Security Access token
+
+    // users
+    // ...
+
+    // group of users.
+    p->token.gid  = (gid_t) GID_DEFAULT;
+    p->token.rgid = (gid_t) GID_DEFAULT;  // real
+    p->token.egid = (gid_t) GID_DEFAULT;  // effective
+    p->token.sgid = (gid_t) GID_DEFAULT;  // saved
 
     DisplayServerInfo.initialized = TRUE;
 }

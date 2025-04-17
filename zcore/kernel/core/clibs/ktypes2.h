@@ -60,16 +60,6 @@ typedef long     segsz_t;  /* segment size */
 
 
 
-// #bugbug
-// Queremos usar int.
-/*
-#ifdef _BSD_SOURCE
-typedef  u_short    uid_t;    //user id
-typedef  u_short    gid_t;    //group id
-typedef  short      pid_t;    //process id
-#endif
-*/
-
 // old ... 
 // #bugbug: Como no bsd encontramos valores de 32bit
 // vamos mudar isso.

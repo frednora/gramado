@@ -192,8 +192,11 @@ unsigned long get_process_stats(pid_t pid, int index)
 
         case 1:  return (unsigned long) p->pid;  break; 
         case 2:  return (unsigned long) p->ppid;  break; 
-        case 3:  return (unsigned long) p->uid;  break; 
-        case 4:  return (unsigned long) p->gid;  break; 
+
+        // Security Acess Token
+        case 3:  return (unsigned long) p->token.uid;  break; 
+        case 4:  return (unsigned long) p->token.gid;  break; 
+
         case 5:  return (unsigned long) p->state;  break; 
         case 6:  return (unsigned long) p->plane;  break; 
         case 7:  return (unsigned long) p->input_type;  break; 
@@ -935,18 +938,18 @@ void ps_initialize_process_common_elements(struct process_d *p)
     p->umask = 0;
 
 // --------------
-// USER
-    p->uid = (uid_t) GetCurrentUserId(); 
-    p->ruid = (uid_t) p->uid;  // Real
-    p->euid = (uid_t) p->uid;  // Effective
-    p->suid = (uid_t) p->uid;  // Saved
+// Security Access Token
 
-// --------------
-// GROUP OF USERS
-    p->gid = (gid_t) GetCurrentGroupId(); 
-    p->rgid = (gid_t) p->gid; // Real
-    p->egid = (gid_t) p->gid; // Effective
-    p->sgid = (gid_t) p->gid; // Saved
+    // users
+    p->token.uid  = (uid_t) GetCurrentUserId(); 
+    p->token.ruid = (uid_t) p->token.uid;  // Real
+    p->token.euid = (uid_t) p->token.uid;  // Effective
+    p->token.suid = (uid_t) p->token.uid;  // Saved
+    // group of users
+    p->token.gid  = (gid_t) GetCurrentGroupId(); 
+    p->token.rgid = (gid_t) p->token.gid; // Real
+    p->token.egid = (gid_t) p->token.gid; // Effective
+    p->token.sgid = (gid_t) p->token.gid; // Saved
 
     p->syscalls_counter = 0;
 
@@ -1124,17 +1127,18 @@ struct process_d *create_and_initialize_process_object(void)
     new_process->pid = (pid_t) NewPID;
     // new_process->ppid = (pid_t) ?;
 
-// USER IDENTIFIER
-    new_process->uid = (uid_t) current_user;
-    new_process->ruid = (uid_t) current_user;  // real
-    new_process->euid = (uid_t) current_user;  // effective 
-    new_process->suid = (uid_t) current_user;  // saved
+// Security Access Token
 
-// USER GROUP IDENTICIER
-    new_process->gid = (gid_t) current_group;
-    new_process->rgid = (gid_t) current_group;  // real
-    new_process->egid = (gid_t) current_group;  // effective
-    new_process->sgid = (gid_t) current_group;  // saved
+    // users
+    new_process->token.uid  = (uid_t) current_user;
+    new_process->token.ruid = (uid_t) current_user;  // real
+    new_process->token.euid = (uid_t) current_user;  // effective 
+    new_process->token.suid = (uid_t) current_user;  // saved
+    // group of users
+    new_process->token.gid  = (gid_t) current_group;
+    new_process->token.rgid = (gid_t) current_group;  // real
+    new_process->token.egid = (gid_t) current_group;  // effective
+    new_process->token.sgid = (gid_t) current_group;  // saved
 
     new_process->syscalls_counter = 0;
 

@@ -91,7 +91,8 @@ void show_currentprocess_info (void)
 
     //Index.
     printk ("PID={%d} PPID={%d} UID={%d} GID={%d} \n",
-        Current->pid, Current->ppid, Current->uid, Current->gid );
+        Current->pid, Current->ppid, 
+        Current->token.uid, Current->token.gid );
 
     //Name
     //printk ("Name={%s} \n", Current->name_address );

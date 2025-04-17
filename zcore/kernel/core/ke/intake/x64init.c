@@ -340,12 +340,17 @@ static int I_x64CreateInitialProcess(void)
         return FALSE;
     }
 
-// Let's update the GID for this process.
-// It was initialized with 0.
-    InitProcess->gid = (gid_t) GID_INIT;
-    InitProcess->rgid = (gid_t) GID_INIT;  // real 
-    InitProcess->egid = (gid_t) GID_INIT;  // effective
-    InitProcess->sgid = (gid_t) GID_INIT;  // saved
+
+// Security Access Token.
+
+    // users
+    //...
+
+    // Group of users.
+    InitProcess->token.gid  = (gid_t) GID_DEFAULT;
+    InitProcess->token.rgid = (gid_t) GID_DEFAULT;  // real 
+    InitProcess->token.egid = (gid_t) GID_DEFAULT;  // effective
+    InitProcess->token.sgid = (gid_t) GID_DEFAULT;  // saved
 
 // The init process is a system application.
     InitProcess->type = PROCESS_TYPE_SYSTEM;
@@ -921,12 +926,16 @@ static int I_x64CreateKernelProcess(void)
         return FALSE;
     }
 
-// Let's update the GID for this process.
-// It was initialized with 0.
-    KernelProcess->gid = (gid_t) GID_KERNEL;
-    KernelProcess->rgid = (gid_t) GID_KERNEL;  // real 
-    KernelProcess->egid = (gid_t) GID_KERNEL;  // effective
-    KernelProcess->sgid = (gid_t) GID_KERNEL;  // saved
+
+// Security Access Token
+
+    // user
+
+    // group of users
+    KernelProcess->token.gid  = (gid_t) GID_DEFAULT;
+    KernelProcess->token.rgid = (gid_t) GID_DEFAULT;  // real 
+    KernelProcess->token.egid = (gid_t) GID_DEFAULT;  // effective
+    KernelProcess->token.sgid = (gid_t) GID_DEFAULT;  // saved
 
 // The kernel process is a system program.
 // KERNEL.BIN and GWSSRV.BIN

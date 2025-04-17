@@ -112,17 +112,18 @@ copy_process_struct(
     Process2->pid = (pid_t) p2->pid;  // PID.  O pid do clone.
     Process2->ppid = (pid_t) Process1->pid;  // PPID. O parent do clone é o pid do pai. 
 
-// User ID
-    Process2->uid = (uid_t) Process1->uid;  // UID
-    Process2->ruid = (uid_t) Process1->ruid;  // RUID 
-    Process2->euid = (uid_t) Process1->euid;  // EUID 
-    Process2->suid = (uid_t) Process1->suid;  // SUID 
+// Security Access Token
 
-// Group ID
-    Process2->gid = (gid_t) Process1->gid;  // GID
-    Process2->rgid = (gid_t) Process1->rgid;  // RGID 
-    Process2->egid = (gid_t) Process1->egid;  // EGID 
-    Process2->sgid = (gid_t) Process1->sgid;  // SGID 
+    // users
+    Process2->token.uid  = (uid_t) Process1->token.uid;   // UID
+    Process2->token.ruid = (uid_t) Process1->token.ruid;  // RUID 
+    Process2->token.euid = (uid_t) Process1->token.euid;  // EUID 
+    Process2->token.suid = (uid_t) Process1->token.suid;  // SUID 
+    // group of users
+    Process2->token.gid  = (gid_t) Process1->token.gid;   // GID
+    Process2->token.rgid = (gid_t) Process1->token.rgid;  // RGID 
+    Process2->token.egid = (gid_t) Process1->token.egid;  // EGID 
+    Process2->token.sgid = (gid_t) Process1->token.sgid;  // SGID 
 
 // Validation
 // #todo: Copy the validation only at the end of the routine.

@@ -142,15 +142,76 @@ typedef enum {
 
 
 //
-// Group ID
+// Group of users.
 //
 
-// The first group, for system processes.
-// Kernel process and init process.
-#define GID_KERNEL          0
-#define GID_INIT            1 
-#define GID_DISPLAY_SERVER  2
+#define GID_DEFAULT  0
 // ...
+
+// Security Access token.
+struct token_d
+{
+    int used;
+    int magic;
+
+    int token_id;
+    int token_type;
+    // ...
+
+    // pid_t created_by_pid;
+
+    // Capabilities
+
+    // Expiration time.
+
+// ================================================
+// USER
+
+// UID (User ID): 
+// Represents the user identity of the process owner. 
+// It determines what actions a user can perform on the system.
+    uid_t uid;
+
+// RUID (Real User ID): 
+// The actual user ID of the person who started the process. 
+// It remains unchanged to track the original owner.
+    uid_t ruid;
+
+// EUID (Effective User ID):
+// Indicates the user identity under which a process is currently operating. 
+// It can temporarily differ from the UID for privilege escalation.
+// (Run as administrator)
+    uid_t euid;
+
+// SUID (Saved User ID): 
+// Stores the EUID for use when processes need to return to their original privileges 
+// after executing with elevated rights.
+    uid_t suid;
+
+// ================================================
+// GROUP OF USERS
+
+// GID, (Group Identification).
+    gid_t gid;
+
+// RGID (Real Group ID): 
+// Denotes the group ID of the user who initiated the process, 
+// reflecting the user's primary group membership.
+    gid_t rgid;
+
+// EGID (Effective Group ID): 
+// Represents the group identity the process is actively operating under, 
+// which determines group-based permissions.
+    gid_t egid;
+
+// SGID (Saved Group ID): Works like the SUID but for group IDs, 
+// allowing processes to save their effective group identity.
+    gid_t sgid;
+
+// ================================================
+// More ...
+
+};
 
 
 // PCB - Process Control Block
@@ -174,6 +235,12 @@ struct process_d
     pgid_t pgid;
 
 // --------------------------
+// Security Access Token
+
+    struct token_d  token;
+
+/*
+// --------------------------
 // USER
 
 // UID (User ID): 
@@ -195,7 +262,9 @@ struct process_d
 // Stores the EUID for use when processes need to return to their original privileges 
 // after executing with elevated rights.
     uid_t suid;
+*/
 
+/*
 // --------------------------
 // GROUP OF USERS
 
@@ -216,7 +285,7 @@ struct process_d
 // SGID (Saved Group ID): Works like the SUID but for group IDs, 
 // allowing processes to save their effective group identity.
     gid_t sgid;
-
+*/
 
 // --------------------------
 // #test
