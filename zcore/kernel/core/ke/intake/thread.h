@@ -246,6 +246,9 @@ struct thread_d
 
 // Thread ID.
     tid_t tid;
+// Thread Group ID.
+    tgid_t tgid;
+
 // If this thread is a virtual terminal or not.
     int isVirtualTerminal;
 

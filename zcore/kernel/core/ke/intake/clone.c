@@ -14,19 +14,16 @@ int copy_process_in_progress=FALSE;
 unsigned long __copy_process_counter=0;
 
 
-
 /*
  * copy_process_struct
- *     + Copia os elementos da estrutura de processo.
- *     + Cria um diret�rio de p�ginas e salva os endere�os 
- *       virtual e f�sico dele na estrutura de processo.
- *     Isso � chamado por do_fork_process.
+ *   + Copy elements of the process structure.
+ *   + Create a page directory and save the virtual and physical addresses 
+ *     in the process structure.
  */
-// Called by clone_and_execute_process at clone.c
 // Cloning the process structure.
+// It will also copies the control thread.
 // #todo: It depends on the childs personality.
-// #
-// It will also copy the control thread.
+// Called by clone_process at clone.c
 // IN:
 // p1 = atual.
 // p2 = clone. (child)
@@ -128,8 +125,10 @@ copy_process_struct(
     Process2->sgid = (gid_t) Process1->sgid;  // SGID 
 
 // Validation
+// #todo: Copy the validation only at the end of the routine.
     Process2->used = Process1->used;
     Process2->magic = Process1->magic;
+
 // State of process
     Process2->state = Process1->state;
 // Plano de execução.
@@ -1243,7 +1242,7 @@ do_clone:
 // Image base va.
     child_process->Image = (unsigned long) __image_va; 
 
-// Clonando o pdpt0 do kernel.
+// Clonning the kernel's pdpt0.
     child_process->pdpt0_VA = 
         (unsigned long) CloneKernelPDPT0();
     child_process->pdpt0_PA = 
@@ -1314,9 +1313,9 @@ do_clone:
 // The entry point in the start of the image. 0x201000.
 // And the stack ??
 
+// RIP:
 // Entry point 0x201000.
-    child_thread->context.rip = 
-        (unsigned long) __image_entrypoint_va;
+    child_thread->context.rip = (unsigned long) __image_entrypoint_va;
 
 // Process name
     memset(child_process->__processname, 0, 64);
@@ -1433,24 +1432,24 @@ do_clone:
 // Change the state to standby.
 // This thread is gonna run in the next taskswitch.
 
-    SelectForExecution(child_thread);  // :)
+    schediSelectForExecution(child_thread);
 
 // Current thread
 // the parent thread.
 
     current_thread = (tid_t) parent_thread->tid;
-    if ( current_thread < 0 || 
-         current_thread >= THREAD_COUNT_MAX )
+    if ( current_thread < 0 || current_thread >= THREAD_COUNT_MAX )
     {
         panic("copy_process: current_thread limits\n");
     }
 
+// Counter
     __copy_process_counter++;
+
+// Done
     copy_process_in_progress = FALSE;
 
-// Return child's PID.
-// Retornaremos para o pai.
-
+// Return to the father the child's PID.
     return (pid_t) child_pid;
 
 fail:

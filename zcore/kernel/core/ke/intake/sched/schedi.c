@@ -349,6 +349,56 @@ int do_waitpid (pid_t pid, int *status, int options)
     return (int) (-1);
 }
 
+// schediSelectForExecution:
+// Change the state to 'Standby'.
+// MOVIMENT 1, (Initialized --> Standby).
+// It means that the thread is waiting to enter in the READY state.
+// Normally a thread is in Standby when it will run for the first time.
+// Taskswitch routine will probe for threads in Standby and will spawn them.
+void schediSelectForExecution(struct thread_d *Thread)
+{
+// Change the state to 'Standby'.
+// MOVIMENT 1, (Initialized --> Standby).
+
+    if ((void *) Thread == NULL){
+        debug_print ("schediSelectForExecution: Thread fail\n");
+        return;
+    }
+
+    //if ( (void*) Thread->magic != 1234 ){
+    //    debug_print ("schediSelectForExecution: Thread validation\n");
+    //    return;
+    //}
+
+// #todo
+// @todo: if initialized ---> Standby.
+// @todo: if zombie ---> Standby.
+// Talvez aqui seja necess�rio checar o estado da thread.
+// Quem pode entrar no estado standby??
+// >> Uma thread no estado initialized pode entrar no estado standby 
+// >> Uma thread no estado zombie pode entrar no estado standby.
+// >> @todo: se uma thread estiver em qualquer um dos outros estados ela 
+// não pode entrar em standby.
+
+//setState:
+
+//
+// MOVIMENT 1, (Initialized --> Standby).
+//
+    Thread->state = (int) STANDBY;
+    Thread->standbyCount = 0;
+
+//
+// #bugbug      OVERFLOW !!!!!
+//
+
+// This function is wrong .... 
+// Maybe it is putting values outside the vector.
+
+    // debug_print ("schediSelectForExecution: [FIXME] Overflow in queue_insert_data() \n");
+    // queue_insert_data ( queue, (unsigned long) Thread, QUEUE_STANDBY );
+}
+
 // Get the TID of the current thread.
 tid_t get_current_thread(void)
 {

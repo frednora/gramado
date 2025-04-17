@@ -282,7 +282,7 @@ unsigned long get_process_stats(pid_t pid, int index)
     return 0;
 }
 
-
+// getprocessname:
 // Systemcall 882.
 // OUT: string len.
 // type: ssize_t ?
@@ -325,72 +325,63 @@ fail:
     return (int) (-1);
 }
 
-
-/*
- * getNewPID:
- *     Pegar um slot vazio na lista de processos.
- *     +Isso pode ser usado para clonar um processo.
- */
-// Começaremos a busca onde começa o range de IDs 
-// de processos de usuário.
-// Se encontramos um slot vazio, retornaremos o índice.
- 
+// getNewPID:
+// Get an empty slot in a list of processes.
+// We start probing and return the index when we find an empty slot.
+// GRAMADO_PID_BASE = GRAMADO_PID_KERNEL = 0.
+// We can use this in the routine of clonning processes.
+// See: gpid.h
 pid_t getNewPID (void)
 {
-
-// See:
-// gpid.h
-
-    // GRAMADO_PID_BASE = GRAMADO_PID_KERNEL = 0.
-
-    int i = GRAMADO_PID_BASE;
-    //register int i=10;
-
+    register int i = GRAMADO_PID_BASE;
     struct process_d *p;
 
-    while (i < PROCESS_COUNT_MAX){
+    while (i < PROCESS_COUNT_MAX)
+    {
         p = (struct process_d *) processList[i];
-        if ( (void *) p == NULL ){ 
-            // return the new pid.
+        if ((void *) p == NULL)
+        { 
+            // Return the new PID.
             return (pid_t) i; 
         }
         i++;
     };
 
+// Fail
     debug_print ("getNewPID: fail\n");
     return (pid_t) (-1);
 }
 
-
-/*
- * processTesting:
- *     Testando se o processo � v�lido. Se for v�lido retorna 1234.
- *     @todo: repensar os valores de retorno. 
- * system call (servi�o 88.)
- */
+// processTesting:
+// Service 88?
+// Is this a valid process. 
+// Return 1234 for a valid process.
+// #todo: Rethink return values and function name.
 int processTesting (pid_t pid)
 {
-// #todo
-// Review the return values for all the cases.
-
     struct process_d  *p;
 
 // Parameter
     if (pid < 0)
-        return -1;
+        goto fail;
     if (pid >= PROCESS_COUNT_MAX)
-        return -1;
+        goto fail;
     
     p = (void *) processList[pid];
     if ((void *) p == NULL){
         return 0;
     }
+    // OK
     if ( p->used == TRUE && p->magic == 1234 )
     {
         return (int) 1234; 
     }
 
+    // #bugbug
+    // This is also a case where it fails?
     return 0;
+fail:
+    return (int) -1;
 }
 
 /*
@@ -513,15 +504,15 @@ SetProcessPML4_PA (
     }
 }
 
-int get_caller_process_id (void)
+pid_t get_caller_process_id (void)
 {
-    return (int) caller_process_id;
+    return (pid_t) caller_process_id;
 }
 
 //#todo: use 'pid_t'.
-void set_caller_process_id (int pid)
+void set_caller_process_id (pid_t pid)
 {
-    caller_process_id = (int) pid;
+    caller_process_id = (pid_t) pid;
 }
 
 // Service 227
@@ -944,14 +935,14 @@ void ps_initialize_process_common_elements(struct process_d *p)
     p->umask = 0;
 
 // --------------
-// UID
+// USER
     p->uid = (uid_t) GetCurrentUserId(); 
     p->ruid = (uid_t) p->uid;  // Real
     p->euid = (uid_t) p->uid;  // Effective
     p->suid = (uid_t) p->uid;  // Saved
 
 // --------------
-// UID
+// GROUP OF USERS
     p->gid = (gid_t) GetCurrentGroupId(); 
     p->rgid = (gid_t) p->gid; // Real
     p->egid = (gid_t) p->gid; // Effective
@@ -1109,6 +1100,7 @@ struct process_d *create_and_initialize_process_object(void)
 
     // Invalidate.
     new_process->pid = -1;
+    new_process->ppid = -1;
 
     new_process->_is_terminal = FALSE;
     new_process->_is_child_of_terminal = FALSE;
@@ -1126,18 +1118,19 @@ struct process_d *create_and_initialize_process_object(void)
         goto fail;
     }
 
-// PID
+// PROCESS IDENTIFIER
 // Initializing the process structure.
 // Saving the process pointer in the list.
-    new_process->pid = (pid_t) NewPID;  // :)
+    new_process->pid = (pid_t) NewPID;
+    // new_process->ppid = (pid_t) ?;
 
-// UID
+// USER IDENTIFIER
     new_process->uid = (uid_t) current_user;
     new_process->ruid = (uid_t) current_user;  // real
     new_process->euid = (uid_t) current_user;  // effective 
     new_process->suid = (uid_t) current_user;  // saved
 
-// GID
+// USER GROUP IDENTICIER
     new_process->gid = (gid_t) current_group;
     new_process->rgid = (gid_t) current_group;  // real
     new_process->egid = (gid_t) current_group;  // effective
@@ -1150,7 +1143,7 @@ struct process_d *create_and_initialize_process_object(void)
     new_process->tty = 
         (struct tty_d *) tty_create( TTY_TYPE_PTY, TTY_SUBTYPE_UNDEFINED );
     if ((void *) new_process->tty == NULL){
-        panic ("create_and_initialize_process_object: Couldn't create TTY\n");
+        panic ("create_and_initialize_process_object: tty_create\n");
     }
     tty_start(new_process->tty);
 //--
@@ -1344,7 +1337,9 @@ struct process_d *create_process (
             break;
         }
     };
+
 // ====================
+// PROCESS IDENTIFIER
 
     Process->pid = (pid_t) PID; 
     Process->ppid = (pid_t) ppid;

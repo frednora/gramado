@@ -65,17 +65,6 @@ typedef uint32_t  kaddr_t;
 typedef uint32_t  ksize_t;
 
 //
-// System types.
-//
-//typedef int tid_t;   //Thread id type.
-//typedef int pid_t;   //Process id type.
-//typedef int ppid_t;  //Parent process id type.
-//typedef int uid_t;   //User id type.
-//typedef int gid_t;   //Group id type.
-//...
-
-
-//
 // pool
 //
 
@@ -111,11 +100,6 @@ typedef void *HDESKTOP;          // Desktop.
 typedef  unsigned long  vm_offset_t;
 typedef  unsigned long  vm_size_t;
 
-// Parent Process IDentifier 
-typedef int  ppid_t;
-
-// Thread IDentifier. linux,  
-typedef int  tid_t; 
 
 //
 // types used for the ELF support.

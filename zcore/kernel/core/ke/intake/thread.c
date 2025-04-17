@@ -550,48 +550,15 @@ void *GetDSThread(void)
 // It means that the thread is waiting to enter in the READY state.
 // Normally a thread is in Standby when it will run for the first time.
 // Taskswitch routine will probe for threads in Standby and will spawn them.
-void SelectForExecution(struct thread_d *Thread)
-{
 // Change the state to 'Standby'.
 // MOVIMENT 1, (Initialized --> Standby).
-
+void SelectForExecution(struct thread_d *Thread)
+{
     if ((void *) Thread == NULL){
         debug_print ("SelectForExecution: Thread fail\n");
         return;
     }
-
-    //if ( (void*) Thread->magic != 1234 ){
-    //    debug_print ("SelectForExecution: Thread validation\n");
-    //    return;
-    //}
-
-// #todo
-// @todo: if initialized ---> Standby.
-// @todo: if zombie ---> Standby.
-// Talvez aqui seja necess�rio checar o estado da thread.
-// Quem pode entrar no estado standby??
-// >> Uma thread no estado initialized pode entrar no estado standby 
-// >> Uma thread no estado zombie pode entrar no estado standby.
-// >> @todo: se uma thread estiver em qualquer um dos outros estados ela 
-// não pode entrar em standby.
-
-//setState:
-
-//
-// MOVIMENT 1, (Initialized --> Standby).
-//
-    Thread->state = (int) STANDBY;
-    Thread->standbyCount = 0;
-
-//
-// #bugbug      OVERFLOW !!!!!
-//
-
-// This function is wrong .... 
-// Maybe it is putting values outside the vector.
-
-    // debug_print ("SelectForExecution: [FIXME] Overflow in queue_insert_data() \n");
-    // queue_insert_data ( queue, (unsigned long) Thread, QUEUE_STANDBY );
+    schediSelectForExecution(Thread);
 }
 
 void thread_show_profiler_info (void)
@@ -1397,9 +1364,12 @@ try_next_slot:
         goto try_next_slot;
     }
 
+// ======================================
+// THREAD IDENTIFIERS
 // Index Ok.
 // Now we have an index number.
     Thread->tid = (tid_t) i;
+    //Thread->tgid = ?;  // Thread group IDentifier
 // ======================================
 
 // Belongs to this process.
@@ -1455,7 +1425,7 @@ try_next_slot:
 // ==============
 // Surface rectangle.
 
-    r = (struct rect_d *) kmalloc ( sizeof(struct rect_d) );
+    r = (struct rect_d *) kmalloc(sizeof(struct rect_d));
     if ((void*) r == NULL){
         panic("create_thread: r\n");
     }

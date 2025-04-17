@@ -163,39 +163,60 @@ struct process_d
     int magic;
     process_type_t type;
 
-// process
-// PID, (Process Identification), 
-// PPID, (Parent Process Identification),
+// --------------------------
+// PROCESS
+
+// Process IDentifier. (posix)
     pid_t pid;
-    pid_t ppid;
+// Parent Process IDentifier 
+    ppid_t ppid;
+// Process Group IDentifier.
+    pgid_t pgid;
 
 // --------------------------
-// user
-// UID, (User Identification),
+// USER
 
+// UID (User ID): 
+// Represents the user identity of the process owner. 
+// It determines what actions a user can perform on the system.
     uid_t uid;
-// (real user ID)
-// The Real UID (RUID) identifies the user who launched the process.
+
+// RUID (Real User ID): 
+// The actual user ID of the person who started the process. 
+// It remains unchanged to track the original owner.
     uid_t ruid;
-// (effective user ID)
-// Used to determine what resources the process can access.
+
+// EUID (Effective User ID): 
+// Indicates the user identity under which a process is currently operating. 
+// It can temporarily differ from the UID for privilege escalation.
     uid_t euid;
-// (saved user ID) 
+
+// SUID (Saved User ID): 
+// Stores the EUID for use when processes need to return to their original privileges 
+// after executing with elevated rights.
     uid_t suid;
 
 // --------------------------
-// group
-// GID, (Group Identification),
+// GROUP OF USERS
+
+// GID, (Group Identification).
     gid_t gid;
-// (real group ID)
-// The Real GID (RGID) identifies the primary group of the user 
-// that launched the process.
+
+// RGID (Real Group ID): 
+// Denotes the group ID of the user who initiated the process, 
+// reflecting the user's primary group membership.
     gid_t rgid;
-// (effective group ID)
-// Used to determine what resources the process can access.
+
+
+// EGID (Effective Group ID): 
+// Represents the group identity the process is actively operating under, 
+// which determines group-based permissions.
     gid_t egid;
-// (saved group ID) 
+
+// SGID (Saved Group ID): Works like the SUID but for group IDs, 
+// allowing processes to save their effective group identity.
     gid_t sgid;
+
 
 // --------------------------
 // #test
@@ -961,8 +982,8 @@ SetProcessPML4_PA (
     struct process_d *process, 
     unsigned long pa );
 
-int get_caller_process_id (void);
-void set_caller_process_id (int pid);
+pid_t get_caller_process_id (void);
+void set_caller_process_id (pid_t pid);
 
 // Critical section
 #define __GATE_CLOSED    0

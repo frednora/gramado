@@ -17,7 +17,7 @@ struct thread_d *create_init_thread(void)
     struct thread_d *t;
 // This is the first thread.
 // See: thread.h
-    tid_t TID = (tid_t) INIT_TID;
+    const tid_t TID = (tid_t) INIT_TID;
 // Loops
     register int r=0;  // Wait reason
     register int i=0;  // Message queue
@@ -44,8 +44,9 @@ struct thread_d *create_init_thread(void)
     t->objectClass = ObjectClassKernelObject;
     t->type = THREAD_TYPE_SYSTEM;
 
-// TID
-    t->tid = (int) (TID & 0xFFFF);
+// THREAD IDENTIFIERS
+    t->tid = (tid_t) (TID & 0xFFFF);
+    //t->tgid = (tgid_t) ?; // tgid
 
 // The pointer for the process we belong to.
     t->owner_process = (void *) InitProcess;
@@ -330,7 +331,7 @@ struct thread_d *create_init_thread(void)
 // This method really need a prefix.
 // :::: MOVEMENT 1 ( Initialized ---> Standby ).
 
-    SelectForExecution(t);    
+    schediSelectForExecution(t);
 
     //debug_print ("create_init_thread: done\n");
 

@@ -56,6 +56,8 @@ void do_thread_waiting(tid_t tid, unsigned long ms);
 void do_thread_zombie(tid_t tid);
 int do_waitpid (pid_t pid, int *status, int options);
 
+void schediSelectForExecution(struct thread_d *Thread);
+
 void schedi_drop_quantum(struct thread_d *thread);
 void schedi_check_for_standby(void);
 

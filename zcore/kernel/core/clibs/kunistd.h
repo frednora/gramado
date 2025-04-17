@@ -9,8 +9,28 @@
 #define STDOUT_FILENO  1  // Standard output file descriptor
 #define STDERR_FILENO  2  // Standard error file descriptor
 
+//
+// Process
+//
+
 // Process IDentifier. (posix)
 typedef int  pid_t;
+
+// Parent Process IDentifier 
+typedef int  ppid_t;
+
+// Process Group IDentifier.
+typedef int  pgid_t;
+
+//
+// Thread
+//
+
+// Thread IDentifier.
+typedef int  tid_t; 
+
+// Thread IDentifier.
+typedef int  tgid_t; 
 
 //
 // prototypes ======================
