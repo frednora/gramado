@@ -438,7 +438,19 @@ static void __task_switch(void)
 // Preempt: >> MOVEMENT 3 (Running --> Ready).
 
     } else if ( CurrentThread->runningCount >= CurrentThread->quantum ){
+
+        // The context is already saved,
+        // we can process something before planing the next thread.
         __tsOnFinishedExecuting(CurrentThread);
+
+        // # todo: 
+        // Let's do something cool here.
+        // Maybe some IPC stuff.
+        // We need to document this feature,
+        // it can be very useful in the future.
+        // Maybe the kernel can operate as a server.
+        // ...
+
         // Jumping to this label for the first time.
         goto ZeroGravity;
 
@@ -754,15 +766,15 @@ fail:
 
 /*
  * tsTaskSwitch:
- *     Interface para chamar a rotina de Task Switch.
- *     gerencia a rotina de 
- * troca de thread, realizando operações de salvamento e 
+ * Interface para chamar a rotina de Task Switch.
+ * Gerencia a rotina de troca de thread, realizando operações de salvamento e 
  * restauração de contexto utilizado variáveis globais e 
  * extrutura de dados, seleciona a próxima thread através 
  * do scheduler, despacha a thread selecionada através do 
  * dispatcher e retorna para a função _irq0 em hw.inc, 
  * que configurará os registradores e executará a 
  * thread através do método iret.
+ * 
  * #importante:
  * Na verdade, é uma interface pra uma rotina que faz tudo isso.
  */

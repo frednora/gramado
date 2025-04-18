@@ -239,54 +239,6 @@ struct process_d
 
     struct token_d  token;
 
-/*
-// --------------------------
-// USER
-
-// UID (User ID): 
-// Represents the user identity of the process owner. 
-// It determines what actions a user can perform on the system.
-    uid_t uid;
-
-// RUID (Real User ID): 
-// The actual user ID of the person who started the process. 
-// It remains unchanged to track the original owner.
-    uid_t ruid;
-
-// EUID (Effective User ID): 
-// Indicates the user identity under which a process is currently operating. 
-// It can temporarily differ from the UID for privilege escalation.
-    uid_t euid;
-
-// SUID (Saved User ID): 
-// Stores the EUID for use when processes need to return to their original privileges 
-// after executing with elevated rights.
-    uid_t suid;
-*/
-
-/*
-// --------------------------
-// GROUP OF USERS
-
-// GID, (Group Identification).
-    gid_t gid;
-
-// RGID (Real Group ID): 
-// Denotes the group ID of the user who initiated the process, 
-// reflecting the user's primary group membership.
-    gid_t rgid;
-
-
-// EGID (Effective Group ID): 
-// Represents the group identity the process is actively operating under, 
-// which determines group-based permissions.
-    gid_t egid;
-
-// SGID (Saved Group ID): Works like the SUID but for group IDs, 
-// allowing processes to save their effective group identity.
-    gid_t sgid;
-*/
-
 // --------------------------
 // #test
     //struct ns_proxy_d *nsproxy;
@@ -353,13 +305,13 @@ struct process_d
     unsigned long Objects[64];
 
 // Connectors.
-// 2 Indexes to the table above.
-// The connectors are created in copy_process_struct()
+// 2 Indexes to the table above, Objects[i];
+// The connectors are created in copy_process_struct() in clone.c.
 // when the terminal is clonning himself to create a child.
     int Connectors[2];
 // Only the terminals can create connectors.
-    int _is_terminal;
-    int _is_child_of_terminal;
+    int _is_terminal;           // Father process
+    int _is_child_of_terminal;  // Child process.
 
 // State.
 // flag ?

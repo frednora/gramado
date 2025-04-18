@@ -214,12 +214,16 @@ irq0_TIMER (void)
 // In the case of spawning a new thread.
     spawn_set_eoi_state();
 
+// The task swithing
+// For now the context is saved only on global variables.
+// That is the moment when the context will be 
+// saved into the thread structure.
 // See: disp/ts.c
     tsTaskSwitch();
 
 // The spawn routine do not need to make a eoi.
 // Tell the spawn routine that we do not need eoi anymore.
-// The assembly routine will do that for us.
+// The assembly routine will do that for us when returning.
     spawn_reset_eoi_state();
 }
 

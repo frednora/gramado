@@ -305,26 +305,29 @@ copy_process_struct(
 // Create connectors.
 // Only a terminal can create connectors.
 
-    file *connector1;
+    file *connector1;  //fp
     file *connector2;
-    int spot1=0;
+    int spot1=0; //index in Objects[i]
     int spot2=0;
 
     if (Process1->_is_terminal == TRUE){
 
+    // fp
     connector1 = (file *) new_file(ObjectTypeFile);
     if ( (void*) connector1 == NULL )
         panic("copy_process_struct: connector1\n");
 
+    // fp
     connector2 = (file *) new_file(ObjectTypeFile);
     if ( (void*) connector2 == NULL )
         panic("copy_process_struct: connector2\n");
 
-//-----------------
-// Find empy spot in Objects[i] for connector1.
-    spot1=0;
+// =======================================================
+// Find empy spot in Objects[i] for the process 1.
+    spot1=0; // index in Objects[i]
     spot2=0;
-    // 31 is the socket.
+    // Remember: 31 is the socket and is not available.
+    // #bugbug: What happens when the loop fails?
     for (i=3; i<30; i++){
         // Empty spot.
         if (Process1->Objects[i] == 0){
@@ -333,7 +336,8 @@ copy_process_struct(
             break;
         }
     };
-    // 31 is the socket.
+    // Remember: 31 is the socket and is not available.
+    // #bugbug: What happens when the loop fails?
     for (i=3; i<30; i++){
         // Empty spot.
         if (Process1->Objects[i] == 0){
@@ -342,20 +346,24 @@ copy_process_struct(
             break;
         }
     };
+    // #bugbug: What happens when the loop fails? crash!
     if (spot1 == 0)
         panic("copy_process_struct: No spot1 for connector1\n");
     if (spot2 == 0)
         panic("copy_process_struct: No spot2 for connector1\n");
+    // ok
+    // Save them.
+    // What is the terminal and what is the application?
     Process1->Objects[spot1] = (unsigned long) connector1;
     Process1->Connectors[0] = spot1;
     Process1->Objects[spot2] = (unsigned long) connector2;
     Process1->Connectors[1] = spot2;
 
-//-----------------
-// Find empy spot in Objects[i] for connector2.
+// =======================================================
+// Find empy spot in Objects[i] for the process 2.
     spot1=0;
     spot2=0;
-    // 31 is the socket.
+    // Remember: 31 is the socket and is not available.
     for (i=3; i<30; i++){
         // Empty spot.
         if (Process2->Objects[i] == 0){
@@ -382,9 +390,10 @@ copy_process_struct(
     Process2->Objects[spot2] = (unsigned long) connector2;
     Process2->Connectors[1] = spot2;
 
+// =======================================================
     // Set flags.
-    Process1->_is_terminal = TRUE;
-    Process2->_is_child_of_terminal = TRUE;
+    Process1->_is_terminal = TRUE;           // Father
+    Process2->_is_child_of_terminal = TRUE;  // Child (The clone)
 
     //#debug
     //printk("A terminal created two connectors\n");

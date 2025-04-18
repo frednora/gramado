@@ -1,0 +1,71 @@
+
+ Each application is able to run 
+ on only one SUBSYSTEM (environment) and 
+has it's own 'I/O ENTITY'.
+
+Problem:
+At the moment we have multiple subsystems 
+and some applications are able to operate in 
+more than one subsystem at the same time. That is NOT 
+what we want for them. An application needs to run only 
+on it's own subsystem.
+
+'''
+#todo:
+Put applications in folders that represents 
+the subsystem that the application belongs to.
+'''
+
+============================================
+Examples:
+(In Gramado OS at this moment)
+
++ KERNEL CONSOLE SUBSYSTEM:
+  Applications like Init Process or cat.bin are applications 
+  where the input entity is the stdin file and the output entity 
+  is the kernel console. So this sort of applications are 
+  running in the (KERNEL CONSOLE SUBSYSTEM).
+
++ DS00 SUBSYSTEM:
+  The subsystem for Client-side GUI applications.
+  Client-side GUI applications runs in the graphical environment and 
+  the 'I/O Entity' is the display server. 
+  BUT, these applications are also able to get input from stdin and 
+  from system messages, it is also able to send output to the 
+  kernel console.
+  So, these applications are running in MULTIPLE subsystems at the 
+  same time, and that is NOT the ideal.
+  So, the client-side GUI applications are running in the 
+  (DS00 SUBSYSTEM)
+
++ PUBTERM SUBSYSTEM:
+  The subsystem for pubterm.bin/pubsh.bin applications.
+  Pubterm is a client-side GUI application and is using the 
+  display server as output entity.
+  Pubsh is receiving input from stdin and sending data to the connector.
+  So, the output entity for the pubsh is the pubterm application.
+  So, the SUBSYSTEM for pubsh is the (PUBTERM SUBSYSTEM)
+
++ TERMINAL SUBSUSTEM:
+  The terminal application is launching some applications 
+  like cat.bin, but the applications are not able to send 
+  data to the terminal yet. 
+  In the future, some application that sends data to the 
+  terminal will have the terminal as its output entity,
+  and then this application will be running into the 
+  (TERMINAL SUBSUSTEM)
+
++ DEMO00 SUBSYSTEM:
+  The demo00 program is a kind of display server, it runs 
+  in it's own graphical environment. But its able to receive 
+  connections from client-side GUI applications. We're not 
+  testing then now, but we can say that these applications 
+  are running in the (DEMO00 SUBSYSTEM).
+
++ DEMO01 SUBSYSTEM:
+  The demo00 program is a kind of display server, it runs 
+  in it's own graphical environment. But its able to receive 
+  connections from client-side GUI applications. We're not 
+  testing then now, but we can say that these applications 
+  are running in the (DEMO01 SUBSYSTEM).
+

@@ -37,6 +37,7 @@
         "char.h": "c",
         "line.h": "c",
         "input.h": "c",
-        "user.h": "c"
+        "user.h": "c",
+        "terminal.h": "c"
     }
 }

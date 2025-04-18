@@ -3141,6 +3141,7 @@ RelaunchShell:
     launch_status = (int) rtl_clone_and_execute(child_image_name);
     //if (launch_status<0)
         //goto fail;
+    rtl_sleep(1000);
 
 // ------------------------------
 // New stdin.
