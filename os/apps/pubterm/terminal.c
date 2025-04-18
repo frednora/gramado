@@ -203,7 +203,7 @@ terminalProcedure (
 
 // System messages.
 static void __get_system_event(int fd, int wid);
-static void __get_ws_event(int fd, int event_wid);
+static void __get_ds_event(int fd, int event_wid);
 
 static int __input_STDIN(int fd);
 static int __input_from_connector(int fd);
@@ -3077,12 +3077,16 @@ static int __input_STDIN(int fd)
 // IN: socket, wid, msg, data1, data2
 
     while (1){
+
         if (isUsingEmbeddedShell == FALSE){
             break;
         }
+
+        // VT Interactivity
         C = (int) fgetc(new_stdin);
         if (C > 0)
         {
+            // VT Renderer
             terminalProcedure( 
                 client_fd,
                 window_id,
@@ -3095,9 +3099,10 @@ static int __input_STDIN(int fd)
         if (fGetSystemEvents == TRUE){
             __get_system_event( client_fd, window_id );
         }
+
         // Get events from the display server
         if (fGetWSEvents == TRUE){
-            __get_ws_event( client_fd, main_window );
+            __get_ds_event( client_fd, main_window );
         }
     };
 
@@ -3181,9 +3186,11 @@ RelaunchShell:
     const int MessageCode = MSG_KEYDOWN;
 
     while (1){
+        // VT Interactivity
         C = (int) fgetc(__terminal_input_fp);
         if (C > 0)
         {
+            // VT Renderer
             terminalProcedure( 
                 client_fd,
                 window_id,
@@ -3200,9 +3207,10 @@ RelaunchShell:
         if (fGetSystemEvents == TRUE){
             __get_system_event( client_fd, window_id );
         }
+
         // Get events from the display server
         if (fGetWSEvents == TRUE){
-            __get_ws_event( client_fd, main_window );
+            __get_ds_event( client_fd, main_window );
         }
 
     };
@@ -3305,7 +3313,7 @@ static void __get_system_event(int fd, int wid)
 }
 
 // Get only one event from the window server.
-static void __get_ws_event(int fd, int event_wid)
+static void __get_ds_event(int fd, int event_wid)
 {
     int event_type = -1;
 

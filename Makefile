@@ -183,10 +183,12 @@ build-gramado-os:
 	-cp $(DEP_L1)/usys/bin/PUBSH.BIN    $(BASE)/DE/
 	-cp $(DEP_L1)/usys/bin/SHELL.BIN    $(BASE)/GRAMADO/
 	-cp $(DEP_L1)/usys/bin/SHELL.BIN    $(BASE)/DE/
+	-cp $(DEP_L1)/usys/bin/SHELL00.BIN  $(BASE)/GRAMADO/
+	-cp $(DEP_L1)/usys/bin/SHELL00.BIN  $(BASE)/DE/
 
 # Experimental programs.
 	-cp $(DEP_L1)/usys/bin/SH7.BIN        $(BASE)/GRAMADO/
-#	-cp $(DEP_L1)/usys/bin/SHELL00.BIN    $(BASE)/GRAMADO/
+#	-cp $(DEP_L1)/usys/bin/SHELLXXX.BIN   $(BASE)/GRAMADO/
 	-cp $(DEP_L1)/usys/bin/TASCII.BIN     $(BASE)/GRAMADO/
 	-cp $(DEP_L1)/usys/bin/TPRINTF.BIN    $(BASE)/GRAMADO/
 
@@ -197,6 +199,7 @@ build-gramado-os:
 
 # Copy well consolidated commands.
 	-cp $(DEP_L1)/usys/commands/base/bin/CAT.BIN       $(BASE)/
+	-cp $(DEP_L1)/usys/commands/base/bin/CAT00.BIN     $(BASE)/
 	-cp $(DEP_L1)/usys/commands/base/bin/REBOOT.BIN    $(BASE)/
 	-cp $(DEP_L1)/usys/commands/base/bin/REBOOT.BIN    $(BASE)/GRAMADO/
 	-cp $(DEP_L1)/usys/commands/base/bin/SHUTDOWN.BIN  $(BASE)/
@@ -260,6 +263,7 @@ copy-extras:
 	-cp $(APPLICATIONS)/bin/TASKBAR.BIN    $(BASE)/DE
 	-cp $(APPLICATIONS)/bin/XTB.BIN        $(BASE)/DE
 	-cp $(APPLICATIONS)/bin/TERMINAL.BIN   $(BASE)/DE
+	-cp $(APPLICATIONS)/bin/TERM00.BIN     $(BASE)/DE
 #-cp $(APPLICATIONS)/bin/GWS.BIN       $(BASE)/DE
     # Experimental applications
     # These need the '#' prefix.

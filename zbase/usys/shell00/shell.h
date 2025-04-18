@@ -1,52 +1,32 @@
-// shell.h 
-// 2016 - Created by Fred Nora.
 
-/*
- * Header principal do Shell.
- * Para atender os comandos do usuário o Shell chamará vários programas, assim 
- * como terá rotinas internas que atendem os comandos. Para isso, esse 
- * diretório deve ter várias pastas, uma para cada um dos comandos principais, 
- * como shutdown. Cda pasta é um programa que o Shell vai chamar.
- * O kernel que gerencia a estrutura de processo deve criar o fluxo padrão ?
- */
+// shell.h
+// Internal routines.
 
-// ??
-// Setup current compiler 
-#include "compiler.h"
+#ifndef __SHELL_H
+#define __SHELL_H    1
 
-#include <types.h>
-#include <stddef.h>
-#include <stdarg.h>   
-#include <stdio.h>  
-#include <stdlib.h>  
-#include <string.h>
+#define MSG_KEYDOWN       20
+#define MSG_KEYUP         21
+#define MSG_SYSKEYDOWN    22
+#define MSG_SYSKEYUP      23
 
-#include <unistd.h>
+#define VK_F1    0x3B  //59    // No DOS é 0x170.  
+#define VK_F2    0x3C  //60 
+#define VK_F3    0x3D  //61 
+#define VK_F4    0x3E  //62 
+#define VK_RETURN    0x1C
+#define VK_TAB       0x0F
 
-//shell stuff 
-#include "globals.h"
-#include "builtins.h"
+#define COLOR_BLACK    0x000000
+#define COLOR_GRAY     0x808080 
 
-// #deprecated
-//#include <api.h>
+extern unsigned long device_width;
+extern unsigned long device_height;
 
-#include "desktop.h"
+//
+// == Prototypes =================================
+//
 
-//# bash 1.05 stuff #
-#include "variables.h"
-#include "general.h"
-#include "flags.h"
-#include "alias.h"
-#include "ndir.h"
-#include "version.h"
-//...
+#endif    
 
-// #test
-#include "vk.h"
-#include "msgcode.h"
-#include "syscall.h"
-#include "color.h"
-#include <rtl/gramado.h>
-
-#include "shellinc.h"
 

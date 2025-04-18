@@ -181,15 +181,13 @@ unsigned long __bartop=0;
 unsigned long __barwidth=0;
 unsigned long __barheight=0;
 
-
 // Program name
-static const char *program_name = "TERMINAL";
+static const char *program_name = "TERM00";
 // Client window title
 static const char *cw_string = "Client";
 
 // see: font00.h
 struct font_info_d  FontInfo;
-
 
 //
 // == Private functions: Prototypes ==============
@@ -1078,6 +1076,12 @@ static void __libc_test(int fd)
 // Remember, we have an embedded command interpreter.
 static void compareStrings(int fd)
 {
+
+// TRUE: Create a process for the command 
+// not found in the embedded list.
+// FALSE: Send the command line to the application.
+    int CloneAndExecute = FALSE;
+
     if (fd<0){
         return;
     }
@@ -1141,7 +1145,7 @@ static void compareStrings(int fd)
 //
 
 // Quit embedded shell, 
-// launch #shell.bin
+// launch #shell00.bin
 // and start listening to stderr.
     if ( strncmp(prompt, "start-shell", 11) == 0 )
     {
@@ -1470,7 +1474,24 @@ static void compareStrings(int fd)
 // So, the clone_process function in kernel mode will not
 // create the connectors.
 // see: libgws.
-    gws_clone_and_execute_from_prompt(fd);
+
+    //int target_fd = stderr->_file;
+    int target_fd = stdin->_file;
+
+    // Create a processs given the command line 
+    // saved in input[].
+    if (CloneAndExecute == TRUE){
+        gws_clone_and_execute_from_prompt(fd);
+    
+    // Sent the command line to the application
+    // via stderr for now.
+    // Let's test it with a modified version o cat, cat00.bin
+    }else{
+        write(target_fd,input,sizeof(input));
+        // Let's sleep. We don't wanna read this data 
+        // we're sending via stdin to the app.
+        rtl_sleep(4000);
+    };
 
 exit_cmp:
     return;
@@ -1487,7 +1508,7 @@ static void doHelp(int fd)
 
     cr();
     lf();
-    tputstring(fd,"terminal.bin: This is the terminal application\n");
+    tputstring(fd,"term00.bin: This is the terminal application\n");
     tputstring(fd,"You can type some commands\n");
     tputstring(fd,"cls, help ...\n");
     tputstring(fd,"reboot, shutdown, cat, uname ...\n");
@@ -2980,7 +3001,7 @@ static void __on_return_key_pressed(int fd)
 
     //jiffie_start = (unsigned long) rtl_get_system_metrics(118);
 
-    if(fd<0){
+    if (fd<0){
         return;
     }
     compareStrings(fd);
@@ -3202,6 +3223,7 @@ static int __input_STDIN(int fd)
         if (fGetSystemEvents == TRUE){
             __get_system_event( client_fd, window_id );
         }
+
         // + Get events from the display server.
         if (fGetWSEvents == TRUE){
             // #todo: Change function name to __get_ds_event.
@@ -3232,10 +3254,10 @@ static int __input_from_connector(int fd)
     int client_fd = fd;
     int window_id = Terminal.client_window_id;
     int C=0;
-    const char *test_app = "#shell.bin";
+    //const char *test_app = "#shell00.bin";
+    const char *test_app = "cat00.bin";
     int fGetSystemEvents = TRUE;  // from kernel.
     int fGetWSEvents = TRUE;  // from display server.
-
 
     //printf ("__input_from_connector: #todo\n");
     cr();
@@ -3296,6 +3318,18 @@ RelaunchShell:
                 MSG_KEYDOWN,  // message code
                 C,            // long1 (ascii)
                 C );          // long2 (ascii)
+        }
+
+        // Read what the application sent to us.
+        while (1){
+            C = fgetc(stderr);
+            //if (C <= 0)
+                //break;
+            if (C > 0){
+                tputc(fd, Terminal.client_window_id, C, 1);
+            }
+            if (C == '\n')
+               break;
         }
 
         // EOT - End Of Transmission.

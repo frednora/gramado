@@ -33,6 +33,8 @@ all:
 	# with an embedded command line interpreter.
 	make -C terminal/
 
+	make -C term00/
+
 	# First client (GWS.BIN)
 	make -C client/
 	make -C cmdline/

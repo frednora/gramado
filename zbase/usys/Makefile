@@ -16,7 +16,8 @@ all:
 	make -C pubsh/
 	make -C sh7/
 	make -C shell/
-#	make -C shell00/
+	make -C shell00/
+#	make -C shellxxx/
 
 	make -C tascii/
 	make -C tprintf/
