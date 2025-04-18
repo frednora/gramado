@@ -6,15 +6,12 @@
 all:
 # Client-side GUI applications
 	make -C apps/
-	make -C apps/browser/
 
 clean:
 # Client-side GUI applications
 	-rm apps/bin/*.BIN
-	-rm apps/browser/bin/*.BIN
 
 clean-all:
 # Client-side GUI applications
 	-rm apps/bin/*.BIN
-	-rm apps/browser/bin/*.BIN
 

@@ -25,16 +25,6 @@ all:
 
 # Apps for 'pro users'
 
-	# Virtual terminal connected with the child.
-	# It launches the child shell.
-	make -C pubterm/
-
-	# Virtual terminal 
-	# with an embedded command line interpreter.
-	make -C terminal/
-
-	make -C term00/
-
 	# First client (GWS.BIN)
 	make -C client/
 	make -C cmdline/
@@ -46,6 +36,16 @@ all:
 
 	make -C doc/
 	make -C editor/
+
+
+#
+# Output entity for subsystems
+#
+
+	make -C  ss/pubterm/
+	make -C  ss/terminal/
+	make -C  ss/term00/
+	make -C  ss/teabox/
 
 #
 # xapps

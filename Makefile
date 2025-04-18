@@ -258,7 +258,7 @@ copy-extras:
 	-cp $(GAMES)/bin/DEMO01.BIN   $(BASE)/DE/
 
 # ------------------------
-# LEVEL : (de/apps) Client-side GUI applications
+# LEVEL : (os/) Client-side GUI applications
 	make -C $(DEP_L3)/
 	-cp $(APPLICATIONS)/bin/TASKBAR.BIN    $(BASE)/DE
 	-cp $(APPLICATIONS)/bin/XTB.BIN        $(BASE)/DE
@@ -276,7 +276,7 @@ copy-extras:
 # Teabox web browser
     # Experimental applications
     # These need the '@' prefix.
-	-cp $(APPLICATIONS)/browser/teabox/bin/TEABOX.BIN  $(BASE)/DE/
+	-cp $(APPLICATIONS)/ss/teabox/bin/TEABOX.BIN  $(BASE)/DE/
 
 	@echo "~ copy-extras"
 

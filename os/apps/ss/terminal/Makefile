@@ -11,7 +11,7 @@ EXTRAVERSION =
 #NAME = 
 
 linkFlags  = -m elf_x86_64 \
--s -x -static -T ../link.ld
+-s -x -static -T ../../link.ld
 
 # usermode cross compiler flags.
 CFLAGS = -Wall
@@ -47,10 +47,10 @@ CFLAGS += -fno-omit-frame-pointer
 CFLAGS += -fno-optimize-sibling-calls    
 
 # API
-LIBC      = ../api/libs/rtl/include/
-LIBCOBJ   = ../api/libs/rtl/obj
-LIBGWS    = ../api/libs/libgws/include/
-LIBGWSOBJ = ../api/libs/libgws/obj
+LIBC      = ../../api/libs/rtl/include/
+LIBCOBJ   = ../../api/libs/rtl/obj
+LIBGWS    = ../../api/libs/libgws/include/
+LIBGWSOBJ = ../../api/libs/libgws/obj
 
 # Objects
 myObjects = crt0.o main.o globals.o terminal.o rtl.o \
@@ -90,11 +90,10 @@ all-c:
 	cp $(LIBGWSOBJ)/libgws.o .
 
 hello-link:
-	ld $(linkFlags) -o TERM00.BIN $(myObjects)    
+	ld $(linkFlags) -o TERMINAL.BIN $(myObjects)    
 finalize:
-	cp TERM00.BIN  ../bin
+	cp TERMINAL.BIN  ../../bin
 clean:
 	-rm *.o
-	-rm TERM00.BIN
-
+	-rm TERMINAL.BIN 
 	

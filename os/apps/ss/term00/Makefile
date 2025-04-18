@@ -1,6 +1,5 @@
-# It builds PUBTERM.BIN
-# 2019 - Created by Fred Nora.
-
+#history:
+#2019 - Created by Fred Nora.
 #todo:
 #fazer um makefile pra compilar o shell
 #obs: #bugbug tem que arrumas as coisas aqui.
@@ -11,11 +10,8 @@ SUBLEVEL = 0
 EXTRAVERSION =
 #NAME = 
 
-
-linkFlags = -m elf_x86_64 \
--s -x -static -T ../link.ld
-
-linkTarget = PUBTERM.BIN 
+linkFlags  = -m elf_x86_64 \
+-s -x -static -T ../../link.ld
 
 # usermode cross compiler flags.
 CFLAGS = -Wall
@@ -51,16 +47,17 @@ CFLAGS += -fno-omit-frame-pointer
 CFLAGS += -fno-optimize-sibling-calls    
 
 # API
-LIBC      = ../api/libs/rtl/include/
-LIBCOBJ   = ../api/libs/rtl/obj
-LIBGWS    = ../api/libs/libgws/include/
-LIBGWSOBJ = ../api/libs/libgws/obj
+LIBC      = ../../api/libs/rtl/include/
+LIBCOBJ   = ../../api/libs/rtl/obj
+LIBGWS    = ../../api/libs/libgws/include/
+LIBGWSOBJ = ../../api/libs/libgws/obj
 
 # Objects
-myObjects = crt0.o main.o terminal.o rtl.o \
+myObjects = crt0.o main.o globals.o terminal.o rtl.o \
 ctype.o stdio.o fcntl.o stdlib.o string.o \
 unistd.o termios.o ioctl.o socket.o \
 libgws.o   
+
 
 .PHONY: all all-c hello-link finalize clean
 
@@ -69,6 +66,8 @@ all: main.o all-c hello-link finalize clean
 main.o:
 	gcc -c main.c $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I include/ -o main.o
 all-c:
+
+	gcc -c globals.c  $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I include/ -o globals.o
 	gcc -c terminal.c $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I include/ -o terminal.o
 
 # Copy
@@ -91,10 +90,11 @@ all-c:
 	cp $(LIBGWSOBJ)/libgws.o .
 
 hello-link:
-	ld $(linkFlags) -o $(linkTarget) $(myObjects)    
+	ld $(linkFlags) -o TERM00.BIN $(myObjects)    
 finalize:
-	cp $(linkTarget)  ../bin
+	cp TERM00.BIN  ../../bin
 clean:
 	-rm *.o
-	-rm $(linkTarget) 
+	-rm TERM00.BIN
+
 	
