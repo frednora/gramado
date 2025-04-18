@@ -1,0 +1,9 @@
+
+ All the apps here are client-side GUI applications and 
+ run in the DS00 SUBSYSTEM. But there are some special applications,
+ Pubterm and Terminal. It's because these applications represents 
+ the output entity for different subsystems, PUBTERM SUBSYSTEM and 
+ TERMINAL SUBSYSTEM.
+
+ 
+

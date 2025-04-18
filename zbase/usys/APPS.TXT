@@ -1,0 +1,15 @@
+
+-----------------------------------------------------
+ usys/
+ All the apps here runs in KERNEL CONSOLE SUBSYSTEM.
+ > But some applications runs in different subsystem, 
+just like pubsh.bin that runs in PUBTERM SUBSYSTEM.
+ > shell.bin is also able to send data to the terminal.bin 
+when terminal.bin types start-shell. In this case, shell is 
+running in the TERMINAL SUBSYSTEM.
+
+The init process runs in the KERNEL CONSOLE SUBSYSTEM.
+
+All the applications in commands/ runs in the 
+KERNEL CONSOLE SUBSYSTEM.
+

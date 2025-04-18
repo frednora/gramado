@@ -1,0 +1,6 @@
+
+ ds00 is the main component of the DS00 SUBSYSTEM.
+ It operates as the output entity for all the 
+ client-side GUI applications.
+
+ 

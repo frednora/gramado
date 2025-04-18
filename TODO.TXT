@@ -1,0 +1,25 @@
+
+ List of subsystems in Gramado OS based on the output entity:
+
+ We are working in the concept of subsystems. We don't have 
+ a perfect Posix subsystem operating at the moment, but only 
+ some similarities.
+
+ Each application can run on it's own conditions, and we're naming 
+ the 'subsystem' that represents the environment that makes 
+ it possible for the application ro run.
+
+ For now we have the followin list. Che the files APPS.TXT 
+ to know more about each one of them.
+
+ ----------------------------------------------------------------
+ List of subsystems in Gramado OS based on the output entity:
+
+ 1) KERNEL CONSOLE SUBSYSTEM | Examples: Init process and cat.bin
+ 2) DS00 SUBSYSTEM           | Examples: Clients of ds00.bin. 
+ 3) TERMINAL SUBSYSTEM       | Examples: shell.bin
+ 4) PUBTERM SUBSYSTEM        | Examples: pubsh.bin  
+ 5) DEMO00 SUBSYSTEM         | Examples: Clients of demo00.
+ 6) DEMO01 SUBSYSTEM         | Examples: Clients of demo01.
+
+ 

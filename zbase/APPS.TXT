@@ -1,0 +1,21 @@
+
+ What is the subsystem for the apps here in this folder?
+
+-----------------------------------------------------
+ udrivers/
+ All the apps here runs in KERNEL CONSOLE SUBSYSTEM.
+
+-----------------------------------------------------
+ uservers/
+ All the apps here runs in KERNEL CONSOLE SUBSYSTEM.
+
+-----------------------------------------------------
+ usys/
+ All the apps here runs in KERNEL CONSOLE SUBSYSTEM.
+ > But some applications runs in different subsystem, 
+just like pubsh.bin that runs in PUBTERM SUBSYSTEM.
+ > shell.bin is also able to send data to the terminal.bin 
+when terminal.bin types start-shell. In this case, shell is 
+running in the TERMINAL SUBSYSTEM.
+
+
