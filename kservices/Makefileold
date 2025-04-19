@@ -1,0 +1,7 @@
+all:
+	make -C drivers/
+	make -C servers/
+
+clean:
+#todo
+

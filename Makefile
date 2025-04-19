@@ -11,14 +11,23 @@ DISTROS = distros
 # The binaries compiled here will go to this directory.
 BASE = $(DISTROS)/base00
 
-# Client-side GUI applications.
-DEP_L3 = os
-# The display server.
-DEP_L2 = windows
-# Init process, ring 3 drivers and ring 3 servers.
-DEP_L1 = zbase
-# Boot, kernel and ring 0 modules.
-DEP_L0 = zcore
+# Quote:
+# "Do Oiapoque ao Chuí"
+# The kernel lives in a shell.
+
+## =================================
+## BACK-END:
+# Kernel Core: Boot, kernel and ring 0 modules.
+DEP_L0 = kcore
+# Kernel Services: Init process, ring 3 drivers and ring 3 servers.
+DEP_L1 = kservices
+
+## =================================
+## FRONT-END:
+# Shell Pre-UI: The display server.
+DEP_L2 = shpreui
+# Shell UI: Client-side GUI applications.
+DEP_L3 = shui
 
 # --------------------------
 # Display servers
@@ -28,8 +37,7 @@ GAMES           = $(DEP_L2)/gramadox
 
 # --------------------------
 # Client-side GUI applications
-APPLICATIONS = $(DEP_L3)/apps
-
+APPLICATIONS = $(DEP_L3)/osshell
 
 # Make variables (CC, etc...)
 AS      = as
@@ -168,67 +176,71 @@ build-gramado-os:
 
 # ...
 
+# ------------------------
+# LEVEL : kbase
+	$(Q)$(MAKE) -C $(DEP_L1)
+
 #===================================
-# $(DEP_L1)/usys/
+# $(DEP_L1)/
 # Build and copy init process and some other programs.
 
-	$(Q)$(MAKE) -C $(DEP_L1)/usys/
+#	$(Q)$(MAKE) -C $(DEP_L1)/
 
 # Copy the init process.
-	cp $(DEP_L1)/usys/bin/INIT.BIN  $(BASE)/
-#	cp $(DEP_L1)/usys/bin/INIT.BIN  $(BASE)/GRAMADO/
+	cp $(DEP_L1)/bin/INIT.BIN  $(BASE)/
+#	cp $(DEP_L1)/bin/INIT.BIN  $(BASE)/GRAMADO/
 
 # Well consolidated programs.
-	-cp $(DEP_L1)/usys/bin/PUBSH.BIN    $(BASE)/GRAMADO/
-	-cp $(DEP_L1)/usys/bin/PUBSH.BIN    $(BASE)/DE/
-	-cp $(DEP_L1)/usys/bin/SHELL.BIN    $(BASE)/GRAMADO/
-	-cp $(DEP_L1)/usys/bin/SHELL.BIN    $(BASE)/DE/
-	-cp $(DEP_L1)/usys/bin/SHELL00.BIN  $(BASE)/GRAMADO/
-	-cp $(DEP_L1)/usys/bin/SHELL00.BIN  $(BASE)/DE/
+	-cp $(DEP_L1)/bin/PUBSH.BIN    $(BASE)/GRAMADO/
+	-cp $(DEP_L1)/bin/PUBSH.BIN    $(BASE)/DE/
+	-cp $(DEP_L1)/bin/SHELL.BIN    $(BASE)/GRAMADO/
+	-cp $(DEP_L1)/bin/SHELL.BIN    $(BASE)/DE/
+	-cp $(DEP_L1)/bin/SHELL00.BIN  $(BASE)/GRAMADO/
+	-cp $(DEP_L1)/bin/SHELL00.BIN  $(BASE)/DE/
 
 # Experimental programs.
-	-cp $(DEP_L1)/usys/bin/SH7.BIN        $(BASE)/GRAMADO/
-#	-cp $(DEP_L1)/usys/bin/SHELLXXX.BIN   $(BASE)/GRAMADO/
-	-cp $(DEP_L1)/usys/bin/TASCII.BIN     $(BASE)/GRAMADO/
-	-cp $(DEP_L1)/usys/bin/TPRINTF.BIN    $(BASE)/GRAMADO/
+	-cp $(DEP_L1)/bin/SH7.BIN        $(BASE)/GRAMADO/
+#	-cp $(DEP_L1)/bin/SHELLXXX.BIN   $(BASE)/GRAMADO/
+	-cp $(DEP_L1)/bin/TASCII.BIN     $(BASE)/GRAMADO/
+	-cp $(DEP_L1)/bin/TPRINTF.BIN    $(BASE)/GRAMADO/
 
 #===================================
-# $(DEP_L1)/usys/commands/
+# $(DEP_L1)/commands/
 
 # Copy well consolidated commands.
-	-cp $(DEP_L1)/usys/commands/base/bin/CAT.BIN       $(BASE)/
-	-cp $(DEP_L1)/usys/commands/base/bin/CAT00.BIN     $(BASE)/
-	-cp $(DEP_L1)/usys/commands/base/bin/REBOOT.BIN    $(BASE)/
-	-cp $(DEP_L1)/usys/commands/base/bin/REBOOT.BIN    $(BASE)/GRAMADO/
-	-cp $(DEP_L1)/usys/commands/base/bin/SHUTDOWN.BIN  $(BASE)/
-	-cp $(DEP_L1)/usys/commands/base/bin/SHUTDOWN.BIN  $(BASE)/GRAMADO/
-	-cp $(DEP_L1)/usys/commands/base/bin/UNAME.BIN     $(BASE)/
+	-cp $(DEP_L1)/commands/base/bin/CAT.BIN       $(BASE)/
+	-cp $(DEP_L1)/commands/base/bin/CAT00.BIN     $(BASE)/
+	-cp $(DEP_L1)/commands/base/bin/REBOOT.BIN    $(BASE)/
+	-cp $(DEP_L1)/commands/base/bin/REBOOT.BIN    $(BASE)/GRAMADO/
+	-cp $(DEP_L1)/commands/base/bin/SHUTDOWN.BIN  $(BASE)/
+	-cp $(DEP_L1)/commands/base/bin/SHUTDOWN.BIN  $(BASE)/GRAMADO/
+	-cp $(DEP_L1)/commands/base/bin/UNAME.BIN     $(BASE)/
 
 # Experimental commands.
-	-cp $(DEP_L1)/usys/commands/base/bin/FALSE.BIN      $(BASE)/GRAMADO/
-	-cp $(DEP_L1)/usys/commands/base/bin/TRUE.BIN       $(BASE)/GRAMADO/
-	-cp $(DEP_L1)/usys/commands/extra/bin/CMP.BIN       $(BASE)/GRAMADO/
-	-cp $(DEP_L1)/usys/commands/extra/bin/SHOWFUN.BIN   $(BASE)/GRAMADO/
-	-cp $(DEP_L1)/usys/commands/extra/bin/SUM.BIN       $(BASE)/GRAMADO/
-	-cp $(DEP_L1)/usys/commands/sdk/bin/GRAMCNF.BIN     $(BASE)/
-#-cp $(DEP_L1)/usys/commands/sdk/bin/N9.BIN         $(BASE)/GRAMADO/
-#-cp $(DEP_L1)/usys/commands/sdk/bin/N10.BIN        $(BASE)/GRAMADO/
-#-cp $(DEP_L1)/usys/commands/sdk/bin/N11.BIN        $(BASE)/GRAMADO/
-#-cp $(DEP_L1)/usys/commands/extra/bin/UDPTEST.BIN  $(BASE)/GRAMADO/
+	-cp $(DEP_L1)/commands/base/bin/FALSE.BIN      $(BASE)/GRAMADO/
+	-cp $(DEP_L1)/commands/base/bin/TRUE.BIN       $(BASE)/GRAMADO/
+	-cp $(DEP_L1)/commands/extra/bin/CMP.BIN       $(BASE)/GRAMADO/
+	-cp $(DEP_L1)/commands/extra/bin/SHOWFUN.BIN   $(BASE)/GRAMADO/
+	-cp $(DEP_L1)/commands/extra/bin/SUM.BIN       $(BASE)/GRAMADO/
+	-cp $(DEP_L1)/commands/sdk/bin/GRAMCNF.BIN     $(BASE)/
+#-cp $(DEP_L1)/commands/sdk/bin/N9.BIN         $(BASE)/GRAMADO/
+#-cp $(DEP_L1)/commands/sdk/bin/N10.BIN        $(BASE)/GRAMADO/
+#-cp $(DEP_L1)/commands/sdk/bin/N11.BIN        $(BASE)/GRAMADO/
+#-cp $(DEP_L1)/commands/extra/bin/UDPTEST.BIN  $(BASE)/GRAMADO/
 
 #===================================
-# $(DEP_L1)/udrivers/ in kernel project
+# $(DEP_L1)/drivers/ in kernel project
 
-	$(Q)$(MAKE) -C $(DEP_L1)/udrivers/
-	-cp $(DEP_L1)/udrivers/bin/VGAD.BIN  $(BASE)/GRAMADO/
+#	$(Q)$(MAKE) -C $(DEP_L1)/drivers/
+	-cp $(DEP_L1)/drivers/bin/VGAD.BIN  $(BASE)/GRAMADO/
 
 #===================================
-# $(DEP_L1)/uservers/ in kernel project
+# $(DEP_L1)/servers/ in kernel project
 # Build the network server and the first client.
 
-	$(Q)$(MAKE) -C $(DEP_L1)/uservers/
-	-cp $(DEP_L1)/uservers/bin/NET.BIN   $(BASE)/GRAMADO/
-	-cp $(DEP_L1)/uservers/bin/NETD.BIN  $(BASE)/GRAMADO/
+#	$(Q)$(MAKE) -C $(DEP_L1)/servers/
+	-cp $(DEP_L1)/servers/bin/NET.BIN   $(BASE)/GRAMADO/
+	-cp $(DEP_L1)/servers/bin/NETD.BIN  $(BASE)/GRAMADO/
 
 #===================================
 # Install BMPs from cali assets.
@@ -248,7 +260,7 @@ copy-extras:
 
 # ------------------------
 # LEVEL : Display servers
-	make -C windows/
+	make -C $(DEP_L2)/
 	-cp $(DISPLAY_SERVERS)/ds00/bin/DS00.BIN    $(BASE)/DE
 #-cp $(DISPLAY_SERVERS)/ds01/bin/DS01.BIN    $(BASE)/DE
 # 3D demos.
@@ -370,16 +382,16 @@ clean-all: clean
 	-rm -rf $(DEP_L0)/modules/bin/*.BIN
 
 # ==================
-# $(DEP_L1)/usys/
+# $(DEP_L1)/
 # Clear INIT.BIN
-	-rm $(DEP_L1)/usys/bin/*.BIN
-	-rm $(DEP_L1)/usys/init/*.o
-	-rm $(DEP_L1)/usys/init/*.BIN 
+	-rm $(DEP_L1)/bin/*.BIN
+	-rm $(DEP_L1)/init/*.o
+	-rm $(DEP_L1)/init/*.BIN 
 
-	-rm $(DEP_L1)/uservers/netd/client/*.o
-	-rm $(DEP_L1)/uservers/netd/client/*.BIN
-	-rm $(DEP_L1)/uservers/netd/server/*.o
-	-rm $(DEP_L1)/uservers/netd/server/*.BIN 
+	-rm $(DEP_L1)/servers/netd/client/*.o
+	-rm $(DEP_L1)/servers/netd/client/*.BIN
+	-rm $(DEP_L1)/servers/netd/server/*.o
+	-rm $(DEP_L1)/servers/netd/server/*.BIN 
 
 # ==================
 # Clear the disk cache

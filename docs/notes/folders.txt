@@ -2,17 +2,24 @@
  Main folders for Gramado OS.
 
 
------------------
-kernel
- + boot
- + kernel
- + userland
-  + init
+```
+distros/ - Building full distributions into this directory.
+docs/    - The documentation.
 
------------------
-de
- + ui
-  + core
-   + server
-  + shell
+kcore/      - Kernel Core: 
+              Boot, kernel and ring 0 modules.
+
+kservices/  - Kernel Services: 
+           Init process, ring 3 drivers and ring 3 servers.
+           (KERNEL CONSOLE SUBSYSTEM applications)
+           (pubsh.bin runs on PUBTERM SUBSYSTEM)
+           (shell.bin runs on TERMINAL SUBSYSTEM)
+
+shpreui/ - Shell Pre-UI:
+           The display server.
+
+shui/    - Shell UI:
+           Client-side GUI applications.
+           (DS00 SUBSYSTEM applications)
+```
 

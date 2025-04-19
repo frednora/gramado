@@ -9,17 +9,21 @@ Gramado OS. This project includes basicaly the bootloader, the core kernel and t
 distros/ - Building full distributions into this directory.
 docs/    - The documentation.
 
-os/      - Client-side GUI applications.
-           (DS00 SUBSYSTEM applications)
+kcore/      - Kernel Core: 
+              Boot, kernel and ring 0 modules.
 
-windows/ - The display server.
-
-zbase/   - Init process, ring 3 drivers and ring 3 servers.
+kservices/  - Kernel Services: 
+           Init process, ring 3 drivers and ring 3 servers.
            (KERNEL CONSOLE SUBSYSTEM applications)
            (pubsh.bin runs on PUBTERM SUBSYSTEM)
            (shell.bin runs on TERMINAL SUBSYSTEM)
 
-zcore/   - Boot, kernel and ring 0 modules.
+shpreui/ - Shell Pre-UI:
+           The display server.
+
+shui/    - Shell UI:
+           Client-side GUI applications.
+           (DS00 SUBSYSTEM applications)
 ```
 
 # TODO
@@ -253,11 +257,24 @@ Please make some comments on Github or send messages to Fred Nora.
 ```
 distros/ - Building full distributions into this directory.
 docs/    - The documentation.
-os/      - Client-side GUI applications.
-windows/ - The display server.
-zbase/   - Init process, ring 3 drivers and ring 3 servers.
-zcore/   - Boot, kernel and ring 0 modules.
+
+kcore/      - Kernel Core: 
+              Boot, kernel and ring 0 modules.
+
+kservices/  - Kernel Services: 
+           Init process, ring 3 drivers and ring 3 servers.
+           (KERNEL CONSOLE SUBSYSTEM applications)
+           (pubsh.bin runs on PUBTERM SUBSYSTEM)
+           (shell.bin runs on TERMINAL SUBSYSTEM)
+
+shpreui/ - Shell Pre-UI:
+           The display server.
+
+shui/    - Shell UI:
+           Client-side GUI applications.
+           (DS00 SUBSYSTEM applications)
 ```
+
 
 # Warning
 

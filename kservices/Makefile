@@ -24,7 +24,11 @@ all:
 
 # ...
 
+
+# Extra
 	make -C commands/
+	make -C drivers/
+	make -C servers/
 
 
 clean:

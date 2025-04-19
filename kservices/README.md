@@ -5,9 +5,9 @@ Ring 3 stuff: Some non-graphical ring 3 components, just like init process and p
 ## Folders:
 
 ```
-+ udrivers/ - Loadable ring 3 drivers.
-+ uservers/ - Loadable ring 3 servers.
-+ usys/     - Ring 3 Init process and Posix-like commands. 
++ drivers/ - Loadable ring 3 drivers.
++ servers/ - Loadable ring 3 servers.
+Ring 3 Init process and Posix-like commands. 
 ```
 
 ## Initialization
