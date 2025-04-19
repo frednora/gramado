@@ -848,6 +848,13 @@ void I_kmain(int arch_type)
         if ( processor_type == Processor_AMD ||
              processor_type == Processor_INTEL )
         {
+            // #test
+            // Testing the function serial_printf(),
+            // it sends a formated string to the serial port.
+            // #ok, it is working at this part, not in the
+            // beginning of the routine.
+            serial_printf("serial_printf: processor_type {%d}\n",
+                processor_type );
 
             // k2_ke/x86_64/x64smp.c
             // Probe for smp support and initialize lapic.

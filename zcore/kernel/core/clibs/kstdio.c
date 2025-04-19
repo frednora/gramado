@@ -885,7 +885,7 @@ void kinguio_puts(const char* str)
     }
 
     StringLen = (size_t) strlen(str);
-    if (StringLen<=0)
+    if (StringLen <= 0)
         return;
 
 // Print chars. 
@@ -901,7 +901,6 @@ void kinguio_puts(const char* str)
 
 // printk worker.
 // Credits: Nelson Cole. Project Sirius/Kinguio.
-
 int kinguio_printf(const char *fmt, ...)
 {
     static char data_buffer[1024];

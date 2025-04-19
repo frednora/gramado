@@ -187,6 +187,36 @@ void PROGRESS (const char *string)
     debug_print(string);
 }
 
+// Send a formated string to the serial port.
+int serial_printf(const char *fmt, ...)
+{
+    static char data_buffer[1024];
+    int ret=0;
+
+// If the virtual console isn't full initialized yet.
+    if (Initialization.is_console_log_initialized != TRUE){
+        return -1;
+    }
+
+    memset (data_buffer, 0, 1024); 
+
+//----------
+    va_list ap;
+    va_start(ap, fmt);
+    ret = kinguio_vsprintf(data_buffer, fmt, ap);
+    va_end(ap);
+//-----------
+
+// Print the data buffer into the console.
+    // kinguio_puts(data_buffer);
+
+// Send the data buffer to the serial port.
+    PROGRESS(data_buffer);
+    //debug_print(data_buffer);
+
+    return (int) ret;
+}
+
 /*
  * debug:
  *     Checa por falhas depois de cumpridas as 
