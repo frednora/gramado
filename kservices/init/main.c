@@ -146,6 +146,7 @@ static inline void do_int3(void)
     asm ("int $3");
 }
 
+// Main worker to launch the display server.
 static void do_launch_de(void)
 {
     int ret_val=-1;
@@ -155,9 +156,9 @@ static void do_launch_de(void)
     memset(filename,0,16);
 
     do_clear_console();
-    printf ("Launching GUI\n");
+    printf ("Launching Display Server\n");
 
-// Sending cmdline via stdin
+// Sending cmdline via stdin.
     rewind(stdin);
     write( fileno(stdin), cmdline1, strlen(cmdline1) );
 
@@ -172,17 +173,18 @@ static void do_launch_de(void)
         printf("Couldn't clone\n");
         return;
     }
-// Sleep (Good!)
-    //sc82( 266, 8000, 8000, 8000 );
-    //rtl_sleep_until(2000);
 
     //printf("pid=%d\n",ret_val);
 
-// Quit the command line.
 // #warning: 
 // Quit the command line. Not the process.
 // #todo: This name is not good.
     isTimeToQuitCmdLine = TRUE;
+
+// Sleep (Good!)
+    //sc82( 266, 8000, 8000, 8000 );
+    //rtl_sleep_until(2000);
+    rtl_sleep(2000);
 }
 
 static void do_launch_de2(void)

@@ -217,14 +217,11 @@ void crt0(unsigned long rdi)
     char buffer[4096];
     memset(buffer, 0, 4096);
 
-// Copy
+// Read from file to the buffer.
     int n=0;
-    n = read(
-            fileno(stdin),
-            buffer,
-            512 );
-// finzalize
-   buffer[511] = 0;
+    const size_t NumberOfBytes = 512;
+    n = (int) read( fileno(stdin), buffer, NumberOfBytes );
+    buffer[511] = 0;
 
     //if(n<=0){
         //#bugbug: We can't do this
@@ -257,8 +254,8 @@ void crt0(unsigned long rdi)
 // Transferindo os ponteiros do vetor para o ambiente.
 
     //tokenList[0] = strtok ( &shared_info[0], LSH_TOK_DELIM );
-    tokenList[0] = strtok ( buffer, LSH_TOK_DELIM );
-    
+    tokenList[0] = strtok(buffer,LSH_TOK_DELIM);
+
 // Salva a primeira palavra digitada.
     token = (char *) tokenList[0];
     index=0; 
@@ -312,11 +309,11 @@ e o crt0 do driver, não ativa.
     // IN: argc, argv.
     main_ret = (int) main( token_count, tokenList );
     switch (main_ret){
-    case 0:
+    case 0:  // EXIT_SUCCESS
         //printf ("crt0: main returned 0\n");
         exit(0);
         break;
-    case 1:
+    case 1:  // EXIT_FAILURE
         //printf ("crt0: main returned 1\n");
         exit(1);
         break;
