@@ -456,11 +456,10 @@ static int __CompareStrings(void)
     }
 
 // display:
-if ( kstrncmp( prompt, "display", 7 ) == 0 )
-{
-    bldisp_show_info();  //bl display device.
-    goto exit_cmp;
-}
+    if ( kstrncmp( prompt, "display", 7 ) == 0 ){
+        bldisp_show_info();  //bl display device.
+        goto exit_cmp;
+    }
 
 // pit: Display PIT info.
     if ( kstrncmp( prompt, "pit", 3 ) == 0 )
@@ -592,6 +591,31 @@ exit_cmp:
 done:
     consolePrompt();
     return 0;
+}
+
+// Main routine for the embedded shell.
+// It compares two strings and process the service.
+int run_embedded_shell(void)
+{
+
+// #todo
+// We can check some conditions, just like if the 
+// shell was already initialized.
+// We can also have another shells inside the kernel,
+// maybe in a loadable module. mod0.
+
+    if (ShellFlag != TRUE)
+        goto fail;
+
+    __CompareStrings();
+
+// Show any printing.
+    //invalidate_screen();
+    refresh_screen();
+
+    return 0;
+fail: 
+    return (int) -1;
 }
 
 //private
@@ -819,12 +843,12 @@ __ProcessKeyboardInput (
                 //wmSendInputToWindowManager(0,MSG_KEYDOWN,long1,long2);
                 //return 0;
             //}
-            if (ShellFlag == TRUE)
-            {
+
+            // Le's run the embedded shell in order to 
+            // compare the estrings.
+            if (ShellFlag == TRUE){
                 kinput('\0');          // finalize
-                __CompareStrings();    // compare
-                //invalidate_screen();
-                refresh_screen();
+                run_embedded_shell();
                 return 0;
             }
             break;

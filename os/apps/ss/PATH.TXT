@@ -1,0 +1,9 @@
+
+ When you try to launch a process typing a commands in a virtual terminal 
+You need to respect these petters:
+
+ /foo     For root directory.
+ foo      For root directory. (#todo: In the cwd)
+ #foo     For DE/ folder.
+ @foo     For GRAMADO/ folder.
+
