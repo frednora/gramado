@@ -39,10 +39,30 @@
 #ifndef ____PTY_H
 #define ____PTY_H  1
 
+
+// Lets manage all the pty devices.
+// #todo: Maybe the best place for this is in ptmx.
+struct tty_info_d 
+{
+    int initialized;
+
+    // Pointer to the first element of the list.
+    struct tty_d *pty_first;
+    // Number of element in the list.
+    unsigned int number_of_ptys;
+};
+extern struct pty_info_d *TTYInfo;
+
+
+// Exporting
 extern struct tty_d *legacy_pty_master;
 extern struct tty_d *legacy_pty_slave;
 
-void tty_initialize_legacy_pty(void);
+// ====================================================
+struct tty_d *get_legacy_pty_master(void);
+struct tty_d *get_legacy_pty_slave(void);
+
+int tty_initialize_legacy_pty(void);
 
 #endif    
 

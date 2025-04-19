@@ -140,19 +140,12 @@ struct tty_queue
     struct thread_d *thread_list;
 };
 
-/*
-// tty_d:
-// This is tty structure.
-// The tty structure need to have a pointer to
-// a buffer and a pointer to a thread. These is the where
-// we're gonna send the data.
-// uma estrutura de tty deve estar associado a
-// uma janela de terminal virtual.
-*/
 
 #define TTY_NAME_SIZE  64
 #define CHARSET_NAME_SIZE  64
 
+// tty_d:
+// This is famouse TTY structure.
 struct tty_d
 {
     object_type_t objectType;
@@ -281,7 +274,6 @@ struct tty_d
 //#define VC_MODE_USER_PAINTER     3000
 
     int vc_mode;
-
 
 // tty flags.
     unsigned long flags;
@@ -414,8 +406,8 @@ tty_write (
 int tty_reset_termios (struct tty_d *tty);
 
 struct tty_d *file_tty (file *f);
-int tty_delete ( struct tty_d *tty );
-void tty_flush( struct tty_d *tty );
+int tty_delete (struct tty_d *tty);
+void tty_flush(struct tty_d *tty);
 void tty_start (struct tty_d *tty);
 void tty_stop (struct tty_d *tty);
 

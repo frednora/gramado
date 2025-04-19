@@ -126,8 +126,12 @@ unsigned long get_bg_color(void);
 unsigned long get_fg_color(void);
 
 
+// Scroll support
+#define CONSOLE_SCROLL_DIRECTION_DOWN  1000
+#define CONSOLE_SCROLL_DIRECTION_UP    2000
+
 // Scroll
-void console_scroll (int console_number);
+int console_scroll_rect(int console_number, int direction);
 
 //
 // Char

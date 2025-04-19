@@ -253,7 +253,7 @@ void __local_insert_line(int console_number)
         //return;
 
     if (CONSOLE_TTYS[console_number].fullscreen_flag == TRUE){
-        console_scroll(console_number);
+        console_scroll_rect(console_number,1);
     }
 
     CONSOLE_TTYS[console_number].cursor_top = oldtop;
@@ -641,7 +641,7 @@ unsigned long get_fg_color(void)
     return (unsigned long) CONSOLE_TTYS[fg_console].fg_color;
 }
 
-void console_scroll(int console_number)
+int console_scroll_rect(int console_number, int direction)
 {
     register int i=0;
 // Salvar cursor
@@ -654,14 +654,27 @@ void console_scroll(int console_number)
     unsigned long OldBottom=0;
 
     if (VideoBlock.useGui != TRUE){
-        panic ("console_scroll: no GUI\n");
+        panic ("console_scroll_rect: no GUI\n");
     }
 
 // Parameter:
     if (console_number < 0)
-        return;
+        goto fail;
     if (console_number >= CONSOLETTYS_COUNT_MAX)
-        return;
+        goto fail;
+    
+    // #todo
+    // This is a work in progress.
+    switch (direction){
+    case CONSOLE_SCROLL_DIRECTION_DOWN:
+    case CONSOLE_SCROLL_DIRECTION_UP:
+        //OK
+        break;
+    // Fail
+    default:
+        //goto fail;
+        break;
+    };
 
 // Scroll the screen rectangle.
 // See: rect.c
@@ -670,6 +683,7 @@ void console_scroll(int console_number)
 // #bugbug
 // Valid only for full screen
 
+// #todo: Argument 'direction'
     scroll_screen_rect();
 
 
@@ -758,6 +772,9 @@ void console_scroll(int console_number)
     //invalidate_screen();  //#bugbug not working
 
     refresh_screen();
+    return 0;
+fail:
+    return (int) -1;
 }
 
 // worker
@@ -943,7 +960,7 @@ void console_outbyte (int c, int console_number)
         // Melhorar esse limite.
         if (CONSOLE_TTYS[n].cursor_y >= CONSOLE_TTYS[n].cursor_bottom){
             if (CONSOLE_TTYS[n].fullscreen_flag == TRUE ){
-                console_scroll(n);
+                console_scroll_rect(n,CONSOLE_SCROLL_DIRECTION_UP);
             }
             // Última linha.
             CONSOLE_TTYS[n].cursor_y = ( CONSOLE_TTYS[n].cursor_bottom -1 );
@@ -964,7 +981,7 @@ void console_outbyte (int c, int console_number)
         // Se o line feed apareceu quando estamos na ultima linha
         if ( CONSOLE_TTYS[n].cursor_y >= CONSOLE_TTYS[n].cursor_bottom){
             if (CONSOLE_TTYS[n].fullscreen_flag == TRUE ){
-                console_scroll(n);
+                console_scroll_rect(n,CONSOLE_SCROLL_DIRECTION_UP);
             }
             CONSOLE_TTYS[n].cursor_y = (CONSOLE_TTYS[n].cursor_bottom -1);
             prev = Ch;
@@ -1094,7 +1111,7 @@ void console_outbyte (int c, int console_number)
     if ( CONSOLE_TTYS[n].cursor_y >= CONSOLE_TTYS[n].cursor_bottom)  
     {
         if (CONSOLE_TTYS[n].fullscreen_flag == TRUE ){
-            console_scroll(n);
+            console_scroll_rect(n,CONSOLE_SCROLL_DIRECTION_UP);
         }
         CONSOLE_TTYS[n].cursor_x = 0;  //CONSOLE_TTYS[n].cursor_left;
         CONSOLE_TTYS[n].cursor_y = 
@@ -1189,8 +1206,8 @@ void console_outbyte2 (int c, int console_number)
         // Melhorar esse limite.
         
         if (CONSOLE_TTYS[n].cursor_y >= CONSOLE_TTYS[n].cursor_bottom){
-            if (CONSOLE_TTYS[n].fullscreen_flag == TRUE ){
-                console_scroll(n);
+            if (CONSOLE_TTYS[n].fullscreen_flag == TRUE){
+                console_scroll_rect(n,CONSOLE_SCROLL_DIRECTION_UP);
             }
             // Vai para última linha
             CONSOLE_TTYS[n].cursor_y = ( CONSOLE_TTYS[n].cursor_bottom -1 );
@@ -1212,7 +1229,7 @@ void console_outbyte2 (int c, int console_number)
         // Se o line feed apareceu quando estamos na ultima linha
         if ( CONSOLE_TTYS[n].cursor_y >= CONSOLE_TTYS[n].cursor_bottom){
             if (CONSOLE_TTYS[n].fullscreen_flag == TRUE ){
-                console_scroll(n);
+                console_scroll_rect(n,CONSOLE_SCROLL_DIRECTION_UP);
             }
             CONSOLE_TTYS[n].cursor_y = (CONSOLE_TTYS[n].cursor_bottom -1);
             prev = Ch;
@@ -1352,7 +1369,7 @@ void console_outbyte2 (int c, int console_number)
     if ( CONSOLE_TTYS[n].cursor_y >= CONSOLE_TTYS[n].cursor_bottom)  
     {
         if (CONSOLE_TTYS[n].fullscreen_flag == TRUE ){
-            console_scroll(n);
+            console_scroll_rect(n,CONSOLE_SCROLL_DIRECTION_UP);
         }
         CONSOLE_TTYS[n].cursor_x = 0;  //CONSOLE_TTYS[n].cursor_left;
         CONSOLE_TTYS[n].cursor_y = 
@@ -2712,12 +2729,19 @@ console_ioctl (
 
 // ...
 
-    case 999:
-        console_scroll(fg_console);
+    // #todo: Scroll down
+    case 998:
+        console_scroll_rect(fg_console,CONSOLE_SCROLL_DIRECTION_DOWN);
         return 0;
         break;
 
-    //#deprecated.
+    // #todo: Scroll up
+    case 999:
+        console_scroll_rect(fg_console,CONSOLE_SCROLL_DIRECTION_UP);
+        return 0;
+        break;
+
+    //#deprecated
     case 1000:
         return 0;
         break;

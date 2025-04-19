@@ -530,9 +530,10 @@ refresh_rectangle (
  *     Scroll a rectangle. ?
  */
 // Helper function to scroll routine.
-// Called by console_scroll() in tty/console.c
+// Called by console_scroll_rect() in tty/console.c
 // Only for full screen console.
 // See flag.
+// #TODO: implement a argument for direction.
 void scroll_screen_rect (void)
 {
     register unsigned int i=0;
