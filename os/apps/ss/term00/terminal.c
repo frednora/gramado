@@ -57,6 +57,10 @@ static int isUsingEmbeddedShell=TRUE;
 // Fazer estrutura para gerenciar a sequencia.
 static int __sequence_status=0;
 
+//const char *test_app = "#shell00.bin";
+const char *test_app = "cat00.bin";
+
+
 // ---------------------------------------
 
 // CSI - Control Sequence Introducer.
@@ -1077,10 +1081,12 @@ static void __libc_test(int fd)
 static void compareStrings(int fd)
 {
 
+// c
 // TRUE: Create a process for the command 
 // not found in the embedded list.
 // FALSE: Send the command line to the application.
-    int CloneAndExecute = FALSE;
+    //int CloneAndExecuteNethod1 = FALSE;  // #test: Execute a non-embeded command in a different way 
+    int CloneAndExecuteNethod1 = TRUE;  // Execute a non-embeded command.
 
     if (fd<0){
         return;
@@ -1480,17 +1486,22 @@ static void compareStrings(int fd)
 
     // Create a processs given the command line 
     // saved in input[].
-    if (CloneAndExecute == TRUE){
+    if (CloneAndExecuteNethod1 == TRUE){
         gws_clone_and_execute_from_prompt(fd);
     
     // Sent the command line to the application
     // via stderr for now.
     // Let's test it with a modified version o cat, cat00.bin
-    }else{
-        write(target_fd,input,sizeof(input));
-        // Let's sleep. We don't wanna read this data 
-        // we're sending via stdin to the app.
-        rtl_sleep(4000);
+    } else {
+
+        //lseek( fileno(stdin), 0, 1000);
+        //rewind(stdin);
+        //write ( fileno(stdin), prompt, 40 );
+        //rtl_clone_and_execute(test_app);
+
+        //gws_clone_and_execute_from_prompt(fd); 
+
+        rtl_sleep(3000);
     };
 
 exit_cmp:
@@ -3254,8 +3265,6 @@ static int __input_from_connector(int fd)
     int client_fd = fd;
     int window_id = Terminal.client_window_id;
     int C=0;
-    //const char *test_app = "#shell00.bin";
-    const char *test_app = "cat00.bin";
     int fGetSystemEvents = TRUE;  // from kernel.
     int fGetWSEvents = TRUE;  // from display server.
 
@@ -3271,14 +3280,21 @@ RelaunchShell:
 // It can't be rtl_clone_and_execute2(), where the server
 // will clone and launch it.
 
+    memset(prompt,0,sizeof(prompt));
+    sprintf(prompt,"cat00 gramado.txt");
+    lseek( fileno(stdin), 0, 1000);
+    rewind(stdin);
+    write ( fileno(stdin), prompt, 40 );
     rtl_clone_and_execute(test_app);
+
+    //gws_clone_and_execute_from_prompt(fd); 
 
 // ------------------------------
 // New stdin.
 // Reaproveitando a estrutura em ring3 do stderr.
     //new_stdin = (FILE *) fopen("gramado.txt","a+");
     //new_stdin = stderr;
-    __terminal_input_fp = stderr;   //save global.
+    __terminal_input_fp = stdin;   //save global.
     if ((void*) __terminal_input_fp == NULL){
         printf("__input_from_connector: __terminal_input_fp\n");
         return -1;
@@ -3290,14 +3306,14 @@ RelaunchShell:
 // We already told to the kernel that we're a terminal.
 // We did that in main().
 
-    int connector0_fd = -1;
-    connector0_fd = (int) sc82(902,0,0,0);
+    //int connector0_fd = -1;
+    //connector0_fd = (int) sc82(902,0,0,0);
 
-    if (connector0_fd < 0)
-        goto fail;
+    //if (connector0_fd < 0)
+        //goto fail;
 
 // The terminal is reading from connector 0.
-    __terminal_input_fp->_file = (int) connector0_fd;
+    //__terminal_input_fp->_file = (int) connector0_fd;
 
 // -----------------------
 // Loop
@@ -3305,8 +3321,10 @@ RelaunchShell:
 
     while (1){
 
+        isUsingEmbeddedShell = TRUE;
+
         // VT Interactivity
-        // + Get bytes from stderr.
+        // + Get bytes from stdin.
         C = fgetc(__terminal_input_fp);
         if (C > 0)
         {
@@ -3320,17 +3338,10 @@ RelaunchShell:
                 C );          // long2 (ascii)
         }
 
-        // Read what the application sent to us.
-        while (1){
-            C = fgetc(stderr);
-            //if (C <= 0)
-                //break;
-            if (C > 0){
-                tputc(fd, Terminal.client_window_id, C, 1);
-            }
-            if (C == '\n')
-               break;
-        }
+        // #todo
+        // We need to send the data to the application
+        // right after pressing enter.
+        // See the procedure for that.
 
         // EOT - End Of Transmission.
         //if (C == 4){
@@ -3346,6 +3357,22 @@ RelaunchShell:
         if (fGetWSEvents == TRUE){
             __get_ds_event( client_fd, main_window );
         }
+
+        // Read what the application sent to us. stderr
+        while (1){
+            isUsingEmbeddedShell = FALSE;
+            C = fgetc(stderr);
+            //if (C <= 0)
+                //break;
+            if (C > 0){
+                tputc(fd, Terminal.client_window_id, C, 1);
+            }
+            if (C == '\n')
+               break;
+            if (C == EOF)
+               break;
+        }
+
     };
 
     goto RelaunchShell;

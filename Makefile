@@ -170,7 +170,7 @@ build-gramado-os:
 
 #===================================
 # $(DEP_L1)/usys/
-# Build and copy init process and some commands.
+# Build and copy init process and some other programs.
 
 	$(Q)$(MAKE) -C $(DEP_L1)/usys/
 
@@ -194,8 +194,6 @@ build-gramado-os:
 
 #===================================
 # $(DEP_L1)/usys/commands/
-
-	$(Q)$(MAKE) -C $(DEP_L1)/usys/commands/
 
 # Copy well consolidated commands.
 	-cp $(DEP_L1)/usys/commands/base/bin/CAT.BIN       $(BASE)/

@@ -202,12 +202,13 @@ void crt0(unsigned long rdi)
 //
 // #bugbug
 // Command applications do NOT have focus.
+// But init process has a command interpreter.
 //
 
 // #test
 // Setup this thread as foreground thread,
 // this way the app can receive input via stdin.
-    // rtl_focus_on_this_thread();
+    rtl_focus_on_this_thread();
 
 // ===================================================
 // #test

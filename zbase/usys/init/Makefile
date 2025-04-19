@@ -31,7 +31,7 @@ LIBC    = ../libs/rtl/include/
 LIBCOBJ = ../libs/rtl/obj
 
 # Objects
-myObjects = crt0.o main.o inittask.o rtl.o \
+myObjects = initcrt0.o main.o inittask.o rtl.o \
 ctype.o stdio.o fcntl.o stdlib.o string.o unistd.o termios.o ioctl.o \
 socket.o    
 
@@ -40,11 +40,12 @@ socket.o
 all: main.o all-c link_app finalize clean
 	@echo "Ok?"
 main.o:
-	gcc  -c main.c  $(CFLAGS) -I $(LIBC) -o main.o
+	gcc  -c initcrt0.c  $(CFLAGS) -I $(LIBC) -o initcrt0.o
+	gcc  -c main.c      $(CFLAGS) -I $(LIBC) -o main.o
 all-c:
 	gcc  -c inittask/inittask.c  $(CFLAGS) -I $(LIBC) -o inittask.o
 
-	$(Q)cp $(LIBCOBJ)/crt0.o  .
+# suspended	$(Q)cp $(LIBCOBJ)/crt0.o  .
 	$(Q)cp $(LIBCOBJ)/rtl.o  .
 
 	$(Q)cp $(LIBCOBJ)/ctype.o  .

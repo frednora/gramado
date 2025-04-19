@@ -63,7 +63,7 @@ static int process_file(char *file_name, int file_index)
     register int nwrites = 0;
 
 // Parameters
-    if ( (void*) file_name == NULL ){
+    if ((void*) file_name == NULL){
         printf ("process_file: Missing file_name parameter in file {%d}\n", 
             file_index);
         goto fail;
@@ -85,7 +85,7 @@ static int process_file(char *file_name, int file_index)
 // Read from fd.
     nreads = read( fdRead, buffer, 511 );
     if (nreads <= 0){
-        printf ("cat: File {%d} failed on read()\n", 
+        printf ("cat00: File {%d} failed on read()\n", 
             file_index);
         goto fail;
     }
@@ -94,7 +94,7 @@ static int process_file(char *file_name, int file_index)
 // In this case we don't have any modification flag.
     nwrites = write( fdWrite, buffer, sizeof(buffer) );
     if (nwrites <= 0){
-        printf ("cat: File {%d} failed on write()\n", 
+        printf ("cat00: File {%d} failed on write()\n", 
             file_index);
         goto fail;
     }
@@ -123,6 +123,8 @@ int main(int argc, char *argv[])
 // Max number of files.
     Max = 8;
 
+    // #debug
+    printf ("cat00: Reading on stdin and writing on stderr\n");
     stdout = stderr;
 
     /*
@@ -135,12 +137,14 @@ int main(int argc, char *argv[])
     */
 
     if (argc <= 1){
-        printf("Few parameters\n");
-        doHelp();
+        printf("cat00: Few parameters. exit(0)\n");
+        exit(0);
+        //doHelp();
         goto fail;
     }
     if (argc >= Max){
-        printf("Too many files\n");
+        printf("cat00: Too many files. exit(0)\n");
+        exit(0);
         goto fail;
     }
 

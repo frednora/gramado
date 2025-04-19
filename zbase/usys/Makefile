@@ -24,6 +24,9 @@ all:
 
 # ...
 
+	make -C commands/
+
+
 clean:
 	-rm -f *.o
 	-rm -f bin/*.BIN
@@ -38,5 +41,9 @@ clean-all:
 
 	-rm -f init/*.o
 
+	-rm -f commands/base/bin/*.BIN
+	# ...
+
 # ...
+
 

@@ -231,7 +231,8 @@ xxxProcessEvent (
                 //#debug
                 //printf("init.bin: 4001, from {%d}\n",caller_tid);
                 memset(__filename_local_buffer,0,64);
-                sprintf(__filename_local_buffer,"#terminal.bin");
+                //sprintf(__filename_local_buffer,"#terminal.bin");
+                sprintf(__filename_local_buffer,"#term00.bin");
                 rtl_clone_and_execute(__filename_local_buffer);
                 break;
             case 4002:  //app2
@@ -245,7 +246,8 @@ xxxProcessEvent (
                 memset(__filename_local_buffer,0,64);
                 //sprintf(__filename_local_buffer,"terminal.bin");
                 //#suspended: The server is facing issues with editbox windows.
-                sprintf(__filename_local_buffer,"#editor.bin");
+                //sprintf(__filename_local_buffer,"#editor.bin");
+                sprintf(__filename_local_buffer,"#terminal.bin");
                 rtl_clone_and_execute(__filename_local_buffer);
                 break;
             case 4003:  //app3
@@ -258,7 +260,8 @@ xxxProcessEvent (
                 //printf("init.bin: 4003, from {%d}\n",caller_tid);
                 memset(__filename_local_buffer,0,64);
                 //sprintf(__filename_local_buffer,"#doc.bin");
-                sprintf(__filename_local_buffer,"#teabox.bin");
+                //sprintf(__filename_local_buffer,"#teabox.bin");
+                sprintf(__filename_local_buffer,"#pubterm.bin");
                 rtl_clone_and_execute(__filename_local_buffer);
                 break;
             case 4004:  //app4
@@ -270,7 +273,8 @@ xxxProcessEvent (
                 //#debug
                 //printf("init.bin: 4004, from {%d}\n",caller_tid);
                 memset(__filename_local_buffer,0,64);
-                sprintf(__filename_local_buffer,"#pubterm.bin");
+                //sprintf(__filename_local_buffer,"#pubterm.bin");
+                sprintf(__filename_local_buffer,"#editor.bin");
                 rtl_clone_and_execute(__filename_local_buffer);
                 break;
             // ...
