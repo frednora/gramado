@@ -3042,32 +3042,10 @@ int puts2(const char *str)
     return (int) printf("%s",str);
 }
 
-/*
- * getchar2:
- * O kernel pega no stdin que é a fila do teclado.
- * Isso funciona.
- */
 int getchar2(void)
 {
-    int Ret=0;
-
-// #todo: 
-// ? Já temos uma função para essa chamada ? 137.
-
-Loop:
-    Ret = (int) sc80( 137, 0, 0, 0 ); 
-    if (Ret > 0){
-        return (int) Ret;
-    }
-    goto Loop;
-
-    //if ( (void *) stdin == NULL )
-       //return EOF;
-
-    // se glibc
-    //return __getc(stdin);
+    return (int) getchar();
 }
-
 
 /*
 int getchar3(void);

@@ -745,12 +745,10 @@ fail:
 // Isso vale para arquivos criados com fopen cujo buffer ja começa vazio.
 // Vamos ler do buffer da stream, em ring3.
 
+// Get a byte from a ring3 local buffer.
+// If the buffer is empty, so refill the buffer using read().
 int __getc(FILE *stream)
 {
-// Get a byte from a ring3 local buffer.
-// If the buffer is empty, so 
-// refill the buffer using read().
-
     register int ch=0;
     int nreads=0;
 
@@ -761,7 +759,7 @@ int __getc(FILE *stream)
         goto fail;
     }
 
-    // File is not readable.
+// File is not readable.
     // if (!(stream->flags & _IOREAD))
         //return (EOF);
 
@@ -780,10 +778,7 @@ int __getc(FILE *stream)
         return (int) ch;
     }
 
-// Se o ponteiro de leitura for inválido.
-// Não podemos acessar um ponteiro nulo ... 
-// no caso endereço.
-
+// If we have an invalid pointer for writing. (PF).
     if ((void*) stream->_p == NULL)
     {
         debug_print("__getc: Invalid stream->_p\n");
@@ -811,6 +806,8 @@ int __getc(FILE *stream)
         stream->_r++;  // offset
         // Diminui a quantidade de bytes restantes no buffer em ring3.
         stream->_cnt--;
+
+        // Return the char.
         return (int) ch;
     }
 
@@ -847,6 +844,8 @@ int __getc(FILE *stream)
             stream->_p = stream->_base;
             stream->_w = 0;
             stream->_r = 0;
+
+            // Return the char.
             goto fail;
         }
 
@@ -895,20 +894,23 @@ fail:
     return (int) EOF;
 }
 
+// #todo
+// We need to setup how the libc handles the buffer.
+// it will say how to deal with the fflush.
+// We have some options to consider:
+// + Line-buffered Mode, 
+// + Unbuffered Mode, 
+// + Full-buffered Mode and 
+// + Manual Flush.
 int __putc(int ch, FILE *stream)
 {
-
-// Invalid char
-    //if(ch<0){
-    //    goto fail;
-    //}
 
 // Invalid stream
     if ((void *) stream == NULL)
     {
-       debug_print("__putc: stream\n");
-       printf     ("__putc: stream\n");
-       goto fail;
+        debug_print("__putc: stream\n");
+        printf     ("__putc: stream\n");
+        goto fail;
     }
 
 // Se nosso ponteiro de escrita é 
@@ -918,21 +920,21 @@ int __putc(int ch, FILE *stream)
     //if (stream->_w > stream->_lbfsize)
     if (stream->_w >= BUFSIZ)
     {
-       debug_print("__putc: [FAIL] Overflow\n");
-       printf     ("__putc: [FAIL] Overflow\n");
-       stream->_cnt = 0;  // Fim do arquivo.
-       goto fail;
+        debug_print("__putc: [FAIL] Overflow\n");
+        printf     ("__putc: [FAIL] Overflow\n");
+        stream->_cnt = 0;  // Fim do arquivo.
+        goto fail;
     }
 
 // Insert into the buffer and increment the offset.
 // All the chars. '\n' is also include.
     stream->_base[stream->_w] = ch;
     stream->_w++;
-// #test
+    // #test
     //stream->_cnt = ( BUFSIZ - stream->_w ); 
 
 // Overflow
-// Se chegamos ao fim do arquivo.
+// When the buffer becomes full, the libc triggers a flush.
     if (stream->_w >= BUFSIZ)
     {
         debug_print("__putc: Overflow 2\n");
@@ -946,21 +948,24 @@ int __putc(int ch, FILE *stream)
     //    (stream->_flags == _IOLBF && ch == '\n'))
     // {}
 
-// Se o char que colocamos no buffer é um '\n'.
-// Então vamos enviar o buffer para o kernel.
-// Assim o kernel vai exibir o buffer no console atual.
+// This flushing mechanism is part of the standard I/O buffering system (stdio). 
+// By default, stdout (standard output) is line-buffered when directed to a terminal. 
+// This means the buffer is flushed automatically when it encounters a newline ('\n'). 
+// However, if stdout is redirected to a file or another stream, the behavior might 
+// change to fully buffered, and the buffer would only be flushed when it’s full or 
+// explicitly requested.
 
+// When '\n' is found, we send the WHOLE buffer to the kernel.
     if (ch == '\n')
     {
         fflush(stream);
         return (int) ch;
     }
 
-    //if (stream->eof || stream->error)
-        //return EOF;
-
+// Successful Write, return the same char.
     return (int) ch;
 
+// Error, return -1.
 fail:
     return (int) EOF;
 }
@@ -981,7 +986,7 @@ int fgetc(FILE *stream){
 }
 
 // Don't change it.
-int fputc ( int ch, FILE *stream ){
+int fputc (int ch, FILE *stream){
     return (int) putc(ch,stream);
 }
 
@@ -1006,6 +1011,14 @@ int putchar (int ch){
 // #todo
 // Do not use this. Use fgets instead.
 // Using gets we can read more than we need.
+// Issues with gets():
+// Buffer Overflows: The gets() function does not perform 
+// bounds checking on the input, which means it will happily 
+// read more characters than the buffer can hold, 
+// leading to potential memory corruption and security vulnerabilities.
+// Undefined Behavior: If the input is longer than the provided buffer, 
+// the program may crash, overwrite critical data, or create security 
+// flaws that attackers could exploit.
 char *gets(char *s)
 {
     register int c=0;
@@ -3250,89 +3263,95 @@ static __inline__ off_t ftell(FILE *__f)
 }
 */
 
-// Deixaremos o kernel manipular a estrutura.
-// This function returns the current file position of the stream stream. 
 
+// This function returns the current file position 
+// of the stream stream. 
+// Let the kernel manage the file structure.
 long ftell (FILE *stream)
 {
+    long file_pos = 0;
     int fd=-1;    
     int offset=0;
-    long file_pos=0;
     int rCount=0;
 
-    if ( (void *) stream == NULL ){
+// Parameter
+    if ((void *) stream == NULL)
+    {
         debug_print ("ftell: stream\n");
-        return 0;
-    }else{
+        goto fail;
+    }
 
-        fd = fileno(stream);
-        
-        if (fd<0){
-            printf("ftell: [FAIL] fd\n");
-            return 0;
-        }
-        
-        // Corrigir overflow.
-        // local. (ring3)
-        if (stream->_cnt < 0){
-            stream->_cnt = 0;
-        }
-        
-        //fflush (stream);
-        
-        // Pegamos o valor, assim podemos atualizar a estrutura local.
-        
-        file_pos = (long) lseek ( fd, 0, SEEK_CUR); 
-        
-        // offset
-        // offset = stream->_ptr - stream->_base;
-        
-        // ??
-        //if (filepos == 0)
-        //    return((long)offset);
-        
-        // local
-        //if (stream->_cnt == 0)
-        //    offset = 0;
+    fd = fileno(stream);
 
-        // rCount = stream->_cnt + (stream->_ptr - stream->_base);
-        
-        return (long) file_pos;
-    };
+// Invalid fd.
+    if (fd < 0){
+        printf("ftell: [FAIL] fd\n");
+        goto fail;
+    }
 
-    debug_print ("ftell: [ERROR] Something is wrong\n");
-    
+// Underflow condition.
+// Reseting counter.
+    if (stream->_cnt < 0){
+        stream->_cnt = 0;
+    }
+
+    // ??
+    //fflush (stream);
+
+// ??
+// Pegamos o valor, assim podemos atualizar a estrutura local.
+
+// lseek()
+    file_pos = (long) lseek( fd, 0, SEEK_CUR); 
+
+    // offset
+    // offset = stream->_ptr - stream->_base;
+
+    // ??
+    //if (filepos == 0)
+    //    return ((long)offset);
+
+    // local
+    //if (stream->_cnt == 0)
+    //    offset = 0;
+
+    // rCount = stream->_cnt + (stream->_ptr - stream->_base);
+
+// ??
+// Return a position.
+    return (long) file_pos;
+fail:
     return 0;
 }
 
-
-// fileno: 
-// Gets the file id.
-// The kernel gets this value from the local stream struct.
-
+// Get the fd stored into the local structure. (ring3)
 int fileno(FILE *stream)
 {
-    if ( (void *) stream == NULL ){
-       return EOF; 
-    } 
-    return (int) stream->_file;
+    int local_fd = -1;
+
+// Parameter
+    if ((void *) stream == NULL){
+        goto fail; 
+    }
+
+    local_fd = (int) stream->_file;
+    return (int) local_fd;
+
+fail:
+    return (int) EOF;
 }
 
-
-// linux klibc style.
-// Isso vai ler no arquivo que está em ring0.
-// #ugly
+// fgetc using linux-style.
+// Get data from the buffer in ring 0.
 int linux_fgetc (FILE *f)
 {
     unsigned char ch=0;
   
-    if ( (void *) f == NULL ){
+    if ((void *) f == NULL){
        return EOF;
     }
-
-    return ( fread (&ch, 1, 1, f) == 1) ? (int) ch : EOF;
+    return (fread (&ch, 1, 1, f) == 1) ? (int) ch : EOF;
 }
-
 
 /*uClib style*/
 char *fgets2 (char *s, int count, FILE *fp)
@@ -3343,7 +3362,7 @@ char *fgets2 (char *s, int count, FILE *fp)
     p = s;
 
 // Parameter
-    if ( (void *) fp == NULL ){
+    if ((void *) fp == NULL){
        return (char *) 0;
     }
 
@@ -3373,26 +3392,32 @@ char *fgets2 (char *s, int count, FILE *fp)
     return (char *) s;
 }
 
-
 /*
  * fputs2: 
  */
 
 int fputs2 ( const char *str, FILE *stream )
 {
-    if ( (void *) stream == NULL ){ return EOF; }
+    int rc;
+
+    if ((void *) stream == NULL){
+        return EOF;
+    }
+
 // ugly
     for (; *str; ++str) 
     {
-        int rc = putc (*str, stream);
-
-        if (rc == EOF){ return EOF; }
+        rc = putc(*str, stream);
+        if (rc == EOF){
+            return EOF;
+        }
     }
-    return 1;
+
+    return (int) 1;
 }
 
 /*
- * gets:
+ * gets2:
  *     gets() devolve um ponteiro para string
  */
 // #todo
@@ -3454,49 +3479,23 @@ done:
     return (char *) p;
 }
 
-
-/*
- ***********************
- * puts:
- */
+// puts2:
+// Writing into the console/terminal.
 // #bugbug
-// isso deve escrever no arquivo, assim como tudo em libc.
-// ??
-
-int puts2 ( const char *str )
+// Isso deve escrever no arquivo, assim como tudo em libc.
+int puts2 (const char *str)
 {
-    return (int) printf ("%s",str);
+    if ((void*) str == NULL){
+        return (int) -1;
+    }
+
+    return (int) printf("%s",str);
 }
-
-
-/*
- *************************************
- * getchar2:
- * O kernel pega no stdin que é a fila do teclado.
- * Isso funciona.
- */
 
 int getchar2 (void)
 {
-    int Ret=0;
-
-// #todo: 
-// ? Já temos uma função para essa chamada ? 137.
-
-Loop:
-    Ret = (int) gramado_system_call ( 137, 0, 0, 0 ); 
-    if (Ret > 0){
-        return (int) Ret;    
-    }
-    goto Loop;
-
-    //if ( (void *) stdin == NULL )
-       //return EOF;
-
-    // se glibc
-    //return __getc(stdin);
+    return (int) getchar();
 }
-
 
 /*
 int getchar3(void);
@@ -3675,17 +3674,23 @@ int feof(FILE *fp)
 }
 */
 
-
-// feof:
-// #todo: Explain ti better.
+// It returns a non-zero value if the stream is currently at EOF.
 int feof (FILE *stream)
 {
-    if ( (void *) stream == NULL ){
-        return EOF;
-    }
-    return (int) stream->eof;
-}
 
+// Parameter:
+    if ((void *) stream == NULL){
+        goto fail;
+    }
+
+// It returns a non-zero value if the stream is currently at EOF.
+    return (int) stream->eof;
+
+// The function fails.
+// We're returning the error value.
+fail:
+    return EOF;
+}
 
 /*
  //This function clears the end-of-file and error indicators for the stream stream. 
@@ -3699,15 +3704,13 @@ void clearerr(FILE *fp)
 }
 */
 
-
-/*
- *********************************
- * ferror:
- */
-
+// The ferror() function checks the internal error flag 
+// of the given stream and returns a non-zero value if 
+// an error has occurred during a previous operation on the stream. 
+// If no error is present, it returns 0.
 int ferror (FILE *stream)
 {
-    if ( (void *) stream == NULL ){
+    if ((void *) stream == NULL){
        return EOF;
     }
     return (int) stream->error;
@@ -3726,15 +3729,23 @@ static __inline__ int fseek(FILE *__f, off_t __o, int __w)
 }
 */
 	
-	
-/*
- **************************************
- * fseek:
- *     offset argument is the position that you want to seek to,
- *     and whence is what that offset is relative to.
- */
-// The fseek function is used to change the file position of the stream stream. 
- 
+// fseek:
+// The fseek function is used to change the file position 
+// of the stream stream. 
+// IN:
+// -------------------
+// offset: 
+// The number of bytes to move the file position indicator. 
+// This value can be positive (move forward) or negative (move backward), 
+// depending on the whence parameter.
+// -------------------
+// whence: 
+// Determines the reference point for the offset. 
+// It can take one of three predefined constants:
+// SEEK_SET: The offset is calculated from the beginning of the file.
+// SEEK_CUR: The offset is added to the current position of the file position indicator.
+// SEEK_END: The offset is added to the end of the file.
+
 int fseek ( FILE *stream, long offset, int whence )
 {
 // #bugbug:
@@ -3758,16 +3769,16 @@ int fseek ( FILE *stream, long offset, int whence )
     return 0;
     */
     
-    if ( (void*) stream == NULL ){
-        debug_print ("fseek: stream \n");
-        return -1;
+    if ((void*) stream == NULL){
+        debug_print ("fseek: stream\n");
+        return (int) -1;
     }
  
 // lseek
-    off = lseek ( fileno(stream), offset, whence );
+    off = lseek( fileno(stream), offset, whence );
     if (off < 0){
         debug_print ("fseek: lseek fail \n");
-        return off;
+        return (int) off;
     }
 
     // local
@@ -3785,7 +3796,7 @@ int fseek ( FILE *stream, long offset, int whence )
     stream->have_ungotten = FALSE;
     stream->ungotten = 0;
 
-    return off;
+    return (int) off;
 }
 
 
@@ -3795,13 +3806,12 @@ int linux_fputc (int c, FILE *f)
 {
     unsigned char ch = c;
 
-    if ( (void *) f == NULL ){
-       return EOF;
+    if ((void *) f == NULL){
+        return EOF;
     }
 
     return (int) fwrite(&ch, 1, 1, f) == 1 ? ch : EOF;
 }
-
 
 /*
  * #todo: Implementar isso.
@@ -3819,7 +3829,6 @@ int putw (int w, FILE *stream)
 }
 */
 
-
 /*
 ssize_t getline (char **lineptr, size_t *n, FILE *stream); 
 ssize_t getline (char **lineptr, size_t *n, FILE *stream)
@@ -3832,12 +3841,15 @@ ssize_t getline (char **lineptr, size_t *n, FILE *stream)
 */
 
 
-// interna
-// #todo: criar essa rotina na libc.
+// ??
+// Sending bytes to the serial port.
 void debug_print (char *string)
 {
-    if( (void*) string == NULL )
+    if ((void*) string == NULL)
         return;
+
+    // if (*string == 0)
+        // return;
 
     gramado_system_call ( 
         289, 
@@ -3871,7 +3883,6 @@ unsigned long stdioGetCursorX (void)
 {
     return (unsigned long) gramado_system_call ( 240, 0, 0, 0 );
 }
-
 
 /*
  * stdioGetCursorY:
@@ -3926,8 +3937,8 @@ int scanf ( const char *fmt, ... )
 
         if (c == 0){  return 0;  }
 
-		// pulando os espaços
-		if ( isspace (c) ) 
+		// Skiping the spaces.
+		if ( isspace(c) ) 
 		{
 			while ( size > 0 && isspace(*fmt) )
 			{
@@ -4079,19 +4090,18 @@ int sscanf ( const char *str, const char *format, ... )
     return str - start;
 }
 
-
-
 //=============================================================
 // printf (start)
 //=============================================================
 
 static size_t stdio_strlen (const char *s)
 {
-    register size_t l=0;
+    register size_t len=0;
+
     while (*s++){
-        l++;
+        len++;
     };
-    return l;
+    return (size_t) len;
 }
 
 /* Max number conversion buffer length: 
@@ -4137,9 +4147,7 @@ static char *ksprintn (
     return (p);
 }
 
-
 /*
- *******************************************************
  * kvprintf:
  *     Scaled down version of printf(3).
  * Two additional formats:
@@ -4368,8 +4376,7 @@ kvprintf (
             sign = 1;
             goto handle_sign;
 
-
-        // Hexadecimal.
+        // Hexadecimal
         case 'h':
 			if (hflag) 
 			{
@@ -4394,7 +4401,6 @@ kvprintf (
 				lflag = 1;
 			goto reswitch;
 
-
 		case 'n':
 			if (jflag)
 				*(va_arg(ap, intmax_t *)) = retval;
@@ -4412,11 +4418,10 @@ kvprintf (
 				*(va_arg(ap, int *)) = retval;
 			break;
 
-        //octal
+        // Octal
 		case 'o':
 			base = 8;
 			goto handle_nosign;
-
 
 		case 'p':
 			base = 16;
@@ -4457,7 +4462,6 @@ kvprintf (
 					PCHAR(padc);
 			break;
 
-
 		case 't':
 			tflag = 1;
 			goto reswitch;
@@ -4467,7 +4471,6 @@ kvprintf (
 		case 'u':
 			base = 10;
 			goto handle_nosign;
-
 
 		case 'X':
 			upper = 1;
@@ -4566,17 +4569,15 @@ kvprintf (
 			break;
 
         default:
-            while (percent < fmt)
-            {
+            while (percent < fmt){
                 PCHAR (*percent++);
             };
-
 
 			/* Since we ignore an formatting argument it is no
 			 * longer safe to obey the remaining formatting
 			 * arguments as the arguments will no longer match
 			 * the format specs. */
-			 
+
 			stop = 1;
 			break;
 		};
@@ -4586,10 +4587,14 @@ kvprintf (
 
 static void xxxputchar ( int c, void *arg )
 {
-	/* add your putchar here */
+	//
+    // Add your putchar() here
+    //
 
-	//printf("%c",c);
-    putchar ((int) c);
+    putchar((int) c);
+
+    // #test
+    // printf("%c",c);
 }
 
 /*
@@ -4630,7 +4635,6 @@ int printf ( const char *fmt, ... ){
 
 
 /*
- *===========================================
  * printf_draw:
  *     http://www.pagetable.com/?p=298
  */
@@ -4643,30 +4647,39 @@ int printf ( const char *fmt, ... ){
 
 int printf_draw ( const char *fmt, ... )
 {
-//Habilita o modo draw.
-	libc_set_output_mode ( LIBC_DRAW_MODE );
-	
+
+// ??
+// Habilita o modo draw.
+// This is a special condition for old versions of Gramado OS.
+// #todo: Maybe it is deprecated.
+	libc_set_output_mode(LIBC_DRAW_MODE);
+
 // #todo
 // Talvez usar semáforo aqui.
 	
 	va_list ap;
 	va_start(ap, fmt);
-	
-	//int 
-	//kvprintf ( char const *fmt, 
-    //       void (*func)( int, void* ), 
+
+    // Comment ot explain the parameters:
+	// int 
+	// kvprintf ( 
+    //     char const *fmt, 
+    //     void (*func)(int,void*), 
 	//	   void *arg, 
-	//	   int radix, //??10 gives octal; 20 gives hex.
+	//	   int radix,    //??10 gives octal; 20 gives hex.
 	//	   va_list ap );	
-	
+
 	kvprintf ( fmt, xxxputchar, NULL, 10, ap );
-	
+
 	//#todo.
 	va_end (ap);
-	
-//reabilita o modo normal. Onde os caracteres serão colocados 
-//no stdout.
-	libc_set_output_mode ( LIBC_NORMAL_MODE );
+
+// ??
+// Reabilita o modo normal. 
+// Onde os caracteres serão colocados no stdout.
+// This is a special condition for old versions of Gramado OS.
+// #todo: Maybe it is deprecated.
+	libc_set_output_mode(LIBC_NORMAL_MODE);
 
     return 0;
 }
@@ -4686,17 +4699,11 @@ extern __inline int vprintf (const char *__fmt, __gnuc_va_list __arg)
 #endif 
 */
 
-
-
 /*
- **********************
  * vfprintf:
  */
-
 // #bugbug
 // Estamos em ring3, não devemos acessar os elementos da estrutura de stream.
-
-
 /*
 int 
 vfprintf ( 
@@ -4709,7 +4716,6 @@ vfprintf (
 
 	//#suspenso.
 	//return (int) kvprintf ( format, NULL, stream->_ptr, 10, argptr );
-
 
     int size=0;
 
@@ -4750,7 +4756,6 @@ vfprintf (
     return (int) (-1);
 } 
 */
-
 
 
 /* #bsd style */
@@ -4820,7 +4825,7 @@ int stderr_printf (const char *format, ... )
  * perror:
  */
 // #todo:
-// Oh Jees..., this function deserves a little bit of respect.
+// This function deserves a little bit of respect.
 // The perror() function produces a message on standard error describing
 // the last error encountered during a call to a system or library
 // function.
@@ -4846,12 +4851,18 @@ void perror (const char *str)
 // chamamos lseek para o kernel modar o ponteiro
 // la na estrutura de arquivos no kernel.
 
+// It resets the position of the file stream to the beginning of the file.
+// >> Sets the file position indicator (used for reading or writing) 
+//    to the beginning of the file, equivalent to using fseek(stream, 0, SEEK_SET).
+// #todo:
+// >> Clears any error or EOF flags associated with the stream, 
+//    ensuring the stream is in a clean state for subsequent operations.
 void rewind(FILE *stream)
 {
     int fd=-1;
 
-    if ( (void *) stream == NULL ){
-        printf ("rewind: [FAIL] stream\n");
+    if ((void *) stream == NULL){
+        printf ("rewind: stream\n");
         return;
     }
 
@@ -4909,11 +4920,20 @@ void rewind(FILE *stream)
     stream->_cnt = stream->_lbfsize;
 
 // rewind in ring0
+// >> Sets the file position indicator (used for reading or writing) 
+//    to the beginning of the file, equivalent to using fseek(stream, 0, SEEK_SET).
+
     off_t v = lseek(fd,0,SEEK_SET);
     //if(v!=0){
     //    printf("Testing lseek: fail\n");
     //    asm ("int $3");
     //}
+
+// #test:
+// >> Clears any error or EOF flags associated with the stream, 
+//    ensuring the stream is in a clean state for subsequent operations.
+    stream->error = 0;
+    stream->eof = 0;
 }
 
 /*

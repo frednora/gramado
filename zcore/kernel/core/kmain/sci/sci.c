@@ -874,14 +874,7 @@ void *sci0 (
         return NULL;
     }
 
-// 134~136: free
-
-// 137 - #deprecated?
-    if (number == SCI_GETCH)
-    {
-        panic("SCI_GETCH: #deprecated?\n"); 
-        return NULL;
-    }
+// 134~137: free
 
 // 138 - Get key state.
 // IN: vk.
