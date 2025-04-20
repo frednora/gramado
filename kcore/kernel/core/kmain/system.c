@@ -555,13 +555,6 @@ int do_reboot(unsigned long flags)
 
     debug_print("do_reboot:\n");
 
-/*
-    value = (int) is_superuser();
-    if(value != TRUE){
-        return (-EPERM);
-    }
-*/
-
 // #todo
 // Use MAGIC arguments.
 

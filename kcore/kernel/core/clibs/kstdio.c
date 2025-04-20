@@ -809,7 +809,7 @@ kinguio_vsprintf(
     va_list ap )
 {
     char *str_tmp = str;
-    int index=0;
+    register int index=0;
     unsigned char u=0;
     int d=0;
     char c=0; 
@@ -832,6 +832,9 @@ kinguio_vsprintf(
 
             case 's':
                 s = va_arg (ap, char*);
+                if ((void*) s == NULL){
+                    s = "<NULL>";
+                }
                 str_tmp = _vsputs_r(str_tmp,s);
                 break;
 
@@ -868,6 +871,9 @@ kinguio_vsprintf(
         }
         ++index;
     }
+
+    // #todo: Include this.
+    // *str = 0;
 
     return (int) ( (long) str_tmp - (long) str );
 }

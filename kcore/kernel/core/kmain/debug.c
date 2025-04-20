@@ -188,7 +188,7 @@ void PROGRESS (const char *string)
 }
 
 // Send a formated string to the serial port.
-int serial_printf(const char *fmt, ...)
+int serial_printk(const char *fmt, ...)
 {
     static char data_buffer[1024];
     int ret=0;

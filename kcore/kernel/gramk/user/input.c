@@ -229,16 +229,22 @@ static int __CompareStrings(void)
 {
     int status=0;
     int fpu_status = -1;
+    unsigned long LongValue = 0;
 
     //debug_print("consoleCompareStrings: \n");
     printk("\n");
 
-
-// about:
-// Crear screen and print version string.
+// about: Crear screen and print version string.
     if ( kstrncmp( prompt, "about", 5 ) == 0 ){
         gramk_show_banner();
         printk("About: The kernel console\n");
+        goto exit_cmp;
+    }
+
+// active: Count active threads.
+    if ( kstrncmp(prompt,"active",6) == 0){
+        LongValue = (unsigned long) sched_count_active_threads();
+        printk("Active threads: {%d}\n",LongValue);
         goto exit_cmp;
     }
 

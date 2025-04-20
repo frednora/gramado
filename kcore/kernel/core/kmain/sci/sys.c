@@ -118,9 +118,7 @@ void *sys_create_process (
 // Not tested
 //
 
-    debug_print("sys_create_process: [TODO]\n");
-    printk     ("sys_create_process: [TODO]\n");
-    //return NULL;
+    serial_printk("sys_create_process: {%s}\n",name);
 
     // ==============
     
@@ -202,9 +200,9 @@ void *sys_create_process (
         printk("sys_create_process: new\n");
         goto fail;
     }
-    
+
     // #debug
-    printk("sys_create_process: done :)\n");
+    serial_printk("sys_create_process: done\n");
 
 // Switch back
     x64_load_pml4_table(old_pml4);
@@ -238,7 +236,7 @@ void *sys_create_thread (
 {
     struct thread_d  *Thread;
 
-    debug_print ("sys_create_thread:\n");
+    serial_printk("sys_create_thread: {%s}\n",name);
 
 // #todo:
 // Filtros, para ponteiros NULL.
@@ -302,10 +300,11 @@ void *sys_create_thread (
 // Exit thread.
 int sys_exit_thread (tid_t tid)
 {
+    serial_printk("sys_exit_thread: tid={%d}\n",tid);
+
     if (tid < 0 || tid >= THREAD_COUNT_MAX)
     {
-        goto fail;
-        //#todo: return (int) -EINVAL;
+        return (int) -EINVAL;
     }
     exit_thread(tid);
     return 0;
@@ -326,15 +325,13 @@ int sys_fork(void)
     return (int) -1;
 }
 
-// 85 
-// Get PID of the current process.
+// 85: Get PID of the current process.
 pid_t sys_getpid (void)
 {
     return (pid_t) get_current_pid();
 }
 
-// 81
-// Get the PID of the father.
+// 81: Get the PID of the father.
 pid_t sys_getppid(void)
 {
     struct process_d *p;
@@ -364,6 +361,9 @@ fail:
 
 int sys_initialize_component (int n)
 {
+
+    // #todo: Superuser permission
+
     if (n<0)
         return -1;
 
@@ -412,17 +412,46 @@ int sys_initialize_component (int n)
 
 int sys_reboot(unsigned long flags)
 {
-    debug_print("sys_reboot: Rebooting\n");
+    int value = -1;
+    unsigned long last_byte = 0;
 
-    system_state = SYSTEM_REBOOT;
+    serial_printk("sys_reboot: flags {%d}\n",flags);
+
+// Is it a superuser.
+    value = (int) is_superuser();
+    if (value != TRUE){
+        return (int) (-EPERM);
+    }
 
     //#todo
     // Here is a goot place to check the flags 
     // and choose the bast way to do this syscall.
 
-    // Call a safe routine.
-    // see: system.c
-    return (int) do_reboot(flags);
+// Flags
+
+    last_byte = (unsigned long)(flags & 0xFF); // Get last byte
+
+    // Default
+    // Reboot now. See: system.c
+    if (last_byte == 0x00){
+        return (int) do_reboot(flags);
+    
+    // #todo
+    } else if (last_byte == 0x01) {
+        return (int) do_reboot(flags);
+    
+    // #todo
+    } else if (last_byte == 0x02) {
+        return (int) do_reboot(flags);
+    
+    // Error
+    // #todo
+    } else {
+        return (int) do_reboot(flags);
+    };
+
+fail:
+    return (int) -1;
 }
 
 // 289
@@ -447,8 +476,11 @@ int sys_serial_debug_printk(char *s)
 
     if (*s == 0){
         return (int) (-EINVAL);
-    }	
-    debug_print((char *)s);
+    }
+
+// Send
+    //debug_print((char *)s);
+    serial_printk("R3: %s",s);  // Sent from ring3.
     return 0;
 }
 
@@ -458,7 +490,10 @@ int sys_serial_debug_printk(char *s)
 void sys_shutdown(unsigned long flags)
 {
     static int How=0;
-    debug_print("sys_shutdown: [TODO]\n");
+
+    //#todo: Superuser permission.
+
+    serial_printk("sys_shutdown: flags={%d}\n",flags);
     core_shutdown(How);
 }
 
@@ -552,7 +587,7 @@ int sys_uname(struct utsname *ubuf)
 // Sync the vertical retrace of the monitor.
 void sys_vsync(void)
 {
+    // #todo: Superuser permission
     hal_vsync();
 }
-
 

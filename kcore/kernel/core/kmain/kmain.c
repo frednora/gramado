@@ -849,11 +849,11 @@ void I_kmain(int arch_type)
              processor_type == Processor_INTEL )
         {
             // #test
-            // Testing the function serial_printf(),
+            // Testing the function serial_printk(),
             // it sends a formated string to the serial port.
             // #ok, it is working at this part, not in the
             // beginning of the routine.
-            serial_printf("serial_printf: processor_type {%d}\n",
+            serial_printk("serial_printk: processor_type {%d}\n",
                 processor_type );
 
             // k2_ke/x86_64/x64smp.c

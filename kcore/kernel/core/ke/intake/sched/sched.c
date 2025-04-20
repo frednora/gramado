@@ -663,6 +663,31 @@ fail:
     return (tid_t) -1;
 }
 
+// Count the active threads.
+// Active threads states: READY and RUNNING.
+unsigned long sched_count_active_threads(void)
+{
+    register int i=0;
+    unsigned long Counter=0;
+    struct thread_d *t;
+
+    for (i=0; i<THREAD_COUNT_MAX; i++)
+    {
+        t = (struct thread_d *) threadList[i];
+        if ((void*)t != NULL)
+        {
+            if (t->used == TRUE && t->magic == 1234)
+            {
+                if (t->state == READY || t->state == RUNNING){
+                    Counter++;
+                }
+            }
+        }
+    };
+
+    return (unsigned long) Counter;
+}
+
 //
 // $
 // SYSCALL HANDLERS

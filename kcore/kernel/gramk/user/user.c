@@ -223,11 +223,46 @@ void SetCurrentUserId(uid_t user_id)
 int is_superuser(void)
 {
     uid_t uid = -1;
+
     uid = (uid_t) GetCurrentUserId();
     if (uid == 0){
         return TRUE;
     }
     return FALSE;
+}
+
+int setreuid(uid_t ruid, uid_t euid)
+{
+    return -1;
+}
+
+int setregid(gid_t rgid, gid_t egid)
+{
+    return -1;
+}
+
+int sys_setuid(uid_t user_id)
+{
+    int isSuper = FALSE;
+
+    isSuper = is_superuser();
+
+/*
+// #todo
+	if (isSuper == TRUE){
+		current->uid = current->euid = current->suid = uid;
+    } else if ((uid == current->uid) || (uid == current->suid)) {
+		current->euid = uid;
+    } else {
+		return -EPERM;
+    };
+*/
+
+    // #todo: Change the information in the process structure,
+    // and in the threads structure too.
+    // SetCurrentUserId(user_id);
+
+	return(0);
 }
 
 int sys_getusername(char *ubuff)

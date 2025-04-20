@@ -222,8 +222,17 @@ void SetCurrentUserId(uid_t user_id);
 
 int is_superuser(void);
 
+//
+// syscall services.
+//
+
+int setreuid(uid_t ruid, uid_t euid);
+int setregid(gid_t rgid, gid_t egid);
+
+int sys_setuid(uid_t user_id);
 int sys_getusername(char *ubuff);
 int sys_setusername(const char *new_username);
+
 
 struct user_info_d *CreateUser( char *name, int type );
 

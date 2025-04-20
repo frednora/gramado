@@ -17,7 +17,7 @@ void debug_print (const char *data);
 void PROGRESS (const char *string);
 
 // Send a formated string to the serial port.
-int serial_printf(const char *fmt, ...);
+int serial_printk(const char *fmt, ...);
 
 int debug(void);
 void debug_breakpoint (void);

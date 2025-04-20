@@ -99,6 +99,8 @@ tid_t psScheduler(void);
 // SYSCALL HANDLERS
 //
 
+unsigned long sched_count_active_threads(void);
+
 // See: sched.c
 void sys_broken_vessels(tid_t tid);
 void sys_sleep(tid_t tid, unsigned long ms);
