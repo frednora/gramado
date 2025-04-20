@@ -69,7 +69,9 @@ struct gws_window_d *__create_demo_window (
 static void drawTerrain(struct cube_model_d *cube, float fElapsedTime);
 static void drawFlyingCube(struct cube_model_d *cube, float vel);
 
+
 //======================
+
 
 
 static void drawTerrain(struct cube_model_d *cube, float fElapsedTime)
