@@ -55,7 +55,7 @@ __ProcessExtendedKeyboardKeyStroke(
 
 // Process input
 static int 
-__ProcessKeyboardInput ( 
+__consoleProcessKeyboardInput ( 
     int msg, 
     unsigned long long1, 
     unsigned long long2 );
@@ -768,7 +768,7 @@ fail:
 
 
 // -------------------------------
-// __ProcessKeyboardInput:
+// __consoleProcessKeyboardInput:
 // #bugbug: We don't wanna call the window server. Not now.
 // #important:
 // Isso garante que o usuário sempre podera alterar o foco
@@ -790,7 +790,7 @@ fail:
 // It is because each environment uses its own event format.
 
 static int 
-__ProcessKeyboardInput ( 
+__consoleProcessKeyboardInput ( 
     int msg, 
     unsigned long long1, 
     unsigned long long2 )
@@ -821,17 +821,17 @@ __ProcessKeyboardInput (
 //
 
     if (fg_console < 0 || fg_console > 3)
-        panic("__ProcessKeyboardInput: fg_console");
+        panic("__consoleProcessKeyboardInput: fg_console");
     target_tty = (struct tty_d *) &CONSOLE_TTYS[fg_console];
     if (target_tty->magic != 1234)
-        panic("__ProcessKeyboardInput: target_tty->magic");
+        panic("__consoleProcessKeyboardInput: target_tty->magic");
 
 //
 // Dispatcher
 //
 
     if (msg < 0){
-        debug_print("__ProcessKeyboardInput: Invalid msg\n");
+        debug_print("__consoleProcessKeyboardInput: Invalid msg\n");
         return -1;
     }
 
@@ -1268,9 +1268,32 @@ __ProcessKeyboardInput (
     return -1;
 
 fail:
-    debug_print("__ProcessKeyboardInput: fail\n");
+    debug_print("__consoleProcessKeyboardInput: fail\n");
     return -1;
 }
+
+
+// Process input
+unsigned long 
+ksys_console_process_keyboard_input ( 
+    int msg, 
+    unsigned long long1, 
+    unsigned long long2 )
+{
+    unsigned long long_rv = 0;
+    int int_rv=0;
+
+    if (msg<0)
+        goto fail;
+
+    int_rv = (int) __consoleProcessKeyboardInput(msg,long1,long2);
+    long_rv = (unsigned long) (int_rv & 0xFFFFFFFF);
+    return long_rv;
+
+fail:
+    return (unsigned long) long_rv;
+}
+
 
 // ----------------------------------------------
 // wmRawKeyEvent:
@@ -1982,7 +2005,7 @@ done:
     // :: keystrokes when we are in ring0 shell mode.
     // queue:: (combinations)
     Status = 
-        (int) __ProcessKeyboardInput(
+        (int) __consoleProcessKeyboardInput(
                   (int) Event_Message,
                   (unsigned long) Event_LongASCIICode,
                   (unsigned long) Event_LongRawByte );
@@ -2214,5 +2237,31 @@ int wmTimerEvent(int signature)
     return 0;
 fail:
     return (int) -1;
+}
+
+unsigned long ksys_mouse_event(int event_id,long long1, long long2)
+{
+    if (event_id<0)
+        return 0;
+    wmMouseEvent(event_id, long1, long2);
+
+// #todo: return value
+    return 0;
+}
+
+unsigned long ksys_keyboard_event(int event_id,long long1, long long2)
+{
+    if (event_id<0)
+        return 0;
+    wmKeyboardEvent(event_id, long1, long2);
+// #todo: return value
+    return 0;
+}
+
+unsigned long ksys_timer_event(int signature)
+{
+    wmTimerEvent(signature);
+// #todo: return value
+    return 0;
 }
 
