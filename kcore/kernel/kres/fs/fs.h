@@ -1,4 +1,5 @@
 // fs.h
+// Main header for the fs/ kernel module.
 // File system operations.
 // Created by Fred Nora.
 

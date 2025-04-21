@@ -1,4 +1,5 @@
 // gramk.h
+// Main file for the gramk/ kernel module.
 // Exporting some functions from gramk to the 
 // other components of the base kernel.
 // Created by Fred Nora.

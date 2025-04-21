@@ -1,5 +1,5 @@
-
-// mm/mm.h
+// mm.h
+// Main header for the mm/ kernel module.
 // Memory manager
 // Created by Fred Nora.
 

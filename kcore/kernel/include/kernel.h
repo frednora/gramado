@@ -20,6 +20,10 @@
 #include "config/utsname.h"  // System and machine
 #include "config/u.h"        // System, machine and user.
 
+// -------
+
+#include "../arch/arch.h"
+
 //
 // Core control  kmain/
 //
@@ -33,8 +37,7 @@
 
 // ==================================
 // dev/
-#include "../kres/dev/gdevice.h"
-#include "../kres/dev/ginput.h"  // input manager support.
+// #include "../kres/dev/dev.h"
 
 // ==================================
 // ke/
@@ -157,6 +160,7 @@
 // bus/
 // PCI bus.
 #include "../kres/bus/pci/pci.h"
+#include "../kres/bus/bus.h"
 
 // ==================================
 // dev/
@@ -182,8 +186,10 @@
 #include "../kres/dev/chardev/display/bldisp/bldisp.h"
 //#include "../kres/dev/chardev/display/qemudisp/qemudisp.h"
 
-// #todo: Move this one above.
-//#include "../core/clibs/ascii.h"
+// ==================================
+// dev/
+#include "../kres/dev/dev.h"
+
 
 // ==================================
 // gramk/
@@ -210,6 +216,8 @@
 
 #include "../gramk/gdi/dispsrv.h"
 #include "../gramk/gdi/osshell.h"
+#include "../gramk/gdi/gdi.h"
+
 
 #include "../gramk/user/input.h"
 #include "../gramk/user/callback.h"
@@ -287,6 +295,8 @@
 #include "../kres/net/domain.h"
 #include "../kres/net/network.h"     //(network) Gerenciamento de rede.  
 
+#include "../kres/net/net.h"
+
 // ----------------------
 // Last:
 // Device manager.
@@ -307,6 +317,9 @@
 #include "../kres/fs/exec_elf.h"
 #include "../kres/fs/pipe.h"
 #include "../kres/fs/fs.h"
+
+// ==================================
+#include "../kres/kres.h"
 
 // ==================================
 // ke/
@@ -368,6 +381,7 @@
 #include "../core/kmain/cont/cg.h"
 #include "../core/kmain/cont/ns.h"
 
-// Main kernel controller header.
-#include "../core/kctl.h"
+// Core module.
+// It controls the resorces in kres/.
+#include "../core/core.h"
 

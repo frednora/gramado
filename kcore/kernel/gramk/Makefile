@@ -1,4 +1,3 @@
-
 # gramk/
 # Compile all the files and create ar_gramk.o
 

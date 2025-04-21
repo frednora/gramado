@@ -81,7 +81,7 @@ CFLAGS := \
 # Objects
 
 # ========================
-# :: arch - entrypoint and assembly files.
+# :: arch - Entrypoint and assembly files.
 objects-y := head_64.o 
 
 # ========================
@@ -91,7 +91,7 @@ objects-y += i2_ke.o
 objects-y += i3_kmain.o  
 
 # ========================
-# Main wrapper for the kernel.
+# :: gramk - Main wrapper for the kernel.
 objects-y += x_gramk.o  
 
 # ========================
@@ -112,32 +112,21 @@ clean
 	@echo "Done?"
 
 #----------------
-# Core kernel components
+# k1:: Core kernel components
 k1:
 	@echo "Compiling: Compiling k1"
-
 # Kernel arch - Startup and entry code.
-	$(Q)$(MAKE) -C arch/x86_64/
-
-# kernel libraries
-	$(Q)$(MAKE) -C core/clibs/
-# main component. (cpu)
-	$(Q)$(MAKE) -C core/ke/
-# Kernel core - Top level routines.
-	$(Q)$(MAKE) -C core/kmain/
-
+	$(Q)$(MAKE) -C arch/
+# Compile all in core/ folder.
+	$(Q)$(MAKE) -C core/
 # Top level routines.
 	$(Q)$(MAKE) -C gramk/
 
 #----------------
-# Kernel resources
+# k2:: Kernel resources
 k2:
 	@echo "Compiling: Compiling k2"
-	$(Q)$(MAKE) -C kres/bus/
-	$(Q)$(MAKE) -C kres/dev/
-	$(Q)$(MAKE) -C kres/fs/
-	$(Q)$(MAKE) -C kres/mm/
-	$(Q)$(MAKE) -C kres/net/
+	$(Q)$(MAKE) -C kres/
 
 #----------------
 link-kernel:
