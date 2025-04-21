@@ -45,7 +45,7 @@ struct input_event_d
 
 //==========================================================
 
-int run_embedded_shell(void);
+int ksys_shell_parse_cmdline(char *cmdline_address, size_t buffer_size);
 
 // See: input.c
 int gramk_process_cad_combination(unsigned long flags);

@@ -43,7 +43,7 @@ static void do_launch_app_via_initprocess(int index);
 static void do_user(void);
 
 // Compare strings
-static int __CompareStrings(void);
+static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size);
 
 // Process extended keyboard strokes.
 static int 
@@ -225,24 +225,44 @@ static void do_user(void)
 // Local
 // Compare the strings that were
 // typed into the kernel virtual console.
-static int __CompareStrings(void)
+static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 {
     int status=0;
     int fpu_status = -1;
     unsigned long LongValue = 0;
 
+// Pointer for the cmdline.
+    //char *cmdline = (char *) prompt;  // Old
+    char *cmdline = (char *) cmdline_address;
+
     //debug_print("consoleCompareStrings: \n");
     printk("\n");
 
+    if ((void*) cmdline == NULL)
+    {
+        printk("Invalid cmdline\n");
+        //goto fail;
+        goto exit_cmp;
+    }
+    if (buffer_size <= 0)
+    {
+        printk("Invalid buffer_size\n");
+        //goto fail;
+        goto exit_cmp;
+    }
+
+// ==================
+
+
 // about: Crear screen and print version string.
-    if ( kstrncmp( prompt, "about", 5 ) == 0 ){
+    if ( kstrncmp( cmdline, "about", 5 ) == 0 ){
         gramk_show_banner();
         printk("About: The kernel console\n");
         goto exit_cmp;
     }
 
 // active: Count active threads.
-    if ( kstrncmp(prompt,"active",6) == 0){
+    if ( kstrncmp(cmdline,"active",6) == 0){
         LongValue = (unsigned long) sched_count_active_threads();
         printk("Active threads: {%d}\n",LongValue);
         goto exit_cmp;
@@ -252,7 +272,7 @@ static int __CompareStrings(void)
 // #todo
 // Use the structure smp_info 
 // to show the information about the smp initialization.
-    if ( kstrncmp(prompt,"smp",3) == 0 )
+    if ( kstrncmp(cmdline,"smp",3) == 0 )
     {
         printk("Processor count: {%d}\n", 
             smp_info.number_of_processors );
@@ -261,7 +281,7 @@ static int __CompareStrings(void)
 
 // mbr:
 // see: storage.c
-    if ( kstrncmp(prompt,"mbr",3) == 0 ){
+    if ( kstrncmp(cmdline,"mbr",3) == 0 ){
         disk_show_mbr_info();
         goto exit_cmp;
     }
@@ -270,44 +290,44 @@ static int __CompareStrings(void)
 // Network stuff
 //
 
-    if ( kstrncmp(prompt,"test-nic",8) == 0 ){
+    if ( kstrncmp(cmdline,"test-nic",8) == 0 ){
         network_test_NIC();
         goto exit_cmp;
     }
-    if ( kstrncmp(prompt,"test-arp",8) == 0 ){
+    if ( kstrncmp(cmdline,"test-arp",8) == 0 ){
         network_send_arp_request();
         goto exit_cmp;
     }
-    if ( kstrncmp(prompt,"test-arp2",9) == 0 ){
+    if ( kstrncmp(cmdline,"test-arp2",9) == 0 ){
         network_send_arp_request2();
         goto exit_cmp;
     }
     // Print arp table.
-    if ( kstrncmp(prompt,"arp",3) == 0 ){
+    if ( kstrncmp(cmdline,"arp",3) == 0 ){
         arp_show_table();
         goto exit_cmp;
     }
-    if ( kstrncmp(prompt,"test-udp",8) == 0 ){
+    if ( kstrncmp(cmdline,"test-udp",8) == 0 ){
         network_test_udp();
         goto exit_cmp;
     }
-    if ( kstrncmp(prompt,"test-udp2",9) == 0 ){
+    if ( kstrncmp(cmdline,"test-udp2",9) == 0 ){
         network_test_udp2();
         goto exit_cmp;
     }
 
-    if ( kstrncmp(prompt,"test-dhcp",9) == 0 ){
+    if ( kstrncmp(cmdline,"test-dhcp",9) == 0 ){
         network_initialize_dhcp();
         goto exit_cmp;
     }
 
-    if ( kstrncmp(prompt,"dhcp",4) == 0 ){
+    if ( kstrncmp(cmdline,"dhcp",4) == 0 ){
         network_show_dhcp_info();
         goto exit_cmp;
     }
 
 // string: Testing string functions.
-    if ( kstrncmp(prompt,"string",6) == 0 )
+    if ( kstrncmp(cmdline,"string",6) == 0 )
     {
         console_print_indent(4,fg_console);
         console_write_string(fg_console,"This is a string\n");
@@ -319,14 +339,14 @@ static int __CompareStrings(void)
 
 // see: mod.c
 // Vamos testar um modulo que ja foi carregado previamente?
-    if ( kstrncmp(prompt,"mod0",4) == 0 ){
+    if ( kstrncmp(cmdline,"mod0",4) == 0 ){
         test_mod0();
         goto exit_cmp;
     }
 
 // dir:
 // List the files in a given directory.
-    if ( kstrncmp(prompt,"dir",3) == 0 )
+    if ( kstrncmp(cmdline,"dir",3) == 0 )
     {
         fsList("[");  // root dir. Same as '/'.
         //fsList("GRAMADO");
@@ -344,7 +364,7 @@ static int __CompareStrings(void)
 // com a resolução antiga e precisa ser atualizados.
 
 /*
-    if ( kstrncmp(prompt,"vga1",4) == 0 ){
+    if ( kstrncmp(cmdline,"vga1",4) == 0 ){
         printk ("vga1: This is a work in progress ...\n");
         goto exit_cmp;
     }
@@ -354,7 +374,7 @@ static int __CompareStrings(void)
 // Show paged memory list.
 // #todo: Explain it better.
 // IN: max index.
-    if ( kstrncmp(prompt,"mm1",3) == 0 ){
+    if ( kstrncmp(cmdline,"mm1",3) == 0 ){
         mmShowPagedMemoryList(512); 
         goto exit_cmp;
     }
@@ -363,20 +383,20 @@ static int __CompareStrings(void)
 // Show the blocks allocated by the kernel allocator.
 // It's inside the kernel heap.
 // #todo: Explain it better.
-    if ( kstrncmp(prompt,"mm2",3) == 0 ){
+    if ( kstrncmp(cmdline,"mm2",3) == 0 ){
         mmShowMemoryBlocksForTheKernelAllocator(); 
         goto exit_cmp;
     }
 
 // exit: Exit the embedded kernel console.
-    if ( kstrncmp(prompt,"exit",4) == 0 ){
+    if ( kstrncmp(cmdline,"exit",4) == 0 ){
         gramk_exit_kernel_console(); 
         goto exit_cmp;
     }
 
 // disk: Show disk info.
 // See: storage.c
-    if ( kstrncmp( prompt, "disk", 4 ) == 0 )
+    if ( kstrncmp( cmdline, "disk", 4 ) == 0 )
     {
         //diskShowCurrentDiskInfo();  // Current disk
         disk_show_info();  // All disks.
@@ -385,7 +405,7 @@ static int __CompareStrings(void)
 
 // ata: Show some disk information.
 // See: atainfo.c
-    if ( kstrncmp( prompt, "ata", 3 ) == 0 )
+    if ( kstrncmp( cmdline, "ata", 3 ) == 0 )
     {
         //printk("ATA controller information:\n");
         //ata_show_ata_controller_info();
@@ -398,7 +418,7 @@ static int __CompareStrings(void)
     }
 
 // volume: Show some volume information.
-    if ( kstrncmp(prompt,"volume",6) == 0 )
+    if ( kstrncmp(cmdline,"volume",6) == 0 )
     {
         volume_show_info();
         goto exit_cmp;
@@ -406,7 +426,7 @@ static int __CompareStrings(void)
 // #test
 // Get volume label from the first entry.
 // see: fat16.c
-    if ( kstrncmp(prompt,"vol-label",9) == 0 ){
+    if ( kstrncmp(cmdline,"vol-label",9) == 0 ){
         test_fat16_find_volume_info();
         goto exit_cmp;
     }
@@ -414,7 +434,7 @@ static int __CompareStrings(void)
 // device: Device list.
 // Show tty devices, pci devices and devices with regular file.
 // See: devmgr.c
-    if ( kstrncmp(prompt,"device",6) == 0 )
+    if ( kstrncmp(cmdline,"device",6) == 0 )
     {
         printk("tty devices:\n");
         devmgr_show_device_list(ObjectTypeTTY);
@@ -428,26 +448,26 @@ static int __CompareStrings(void)
 
 // pci:
 // See: pciinfo.c
-    if ( kstrncmp( prompt, "pci", 3 ) == 0 ){
+    if ( kstrncmp( cmdline, "pci", 3 ) == 0 ){
         printk("~pci:\n");
         pciInfo();
         goto exit_cmp;
     }
 
 // user:
-    if ( kstrncmp( prompt, "user", 4 ) == 0 ){
+    if ( kstrncmp( cmdline, "user", 4 ) == 0 ){
         do_user();
         goto exit_cmp;
     }
 
 // cls:
-    if ( kstrncmp( prompt, "cls", 3 ) == 0 ){
+    if ( kstrncmp( cmdline, "cls", 3 ) == 0 ){
         console_clear();
         goto exit_cmp;
     }
 
 // console:
-    if ( kstrncmp( prompt, "console", 7 ) == 0 )
+    if ( kstrncmp( cmdline, "console", 7 ) == 0 )
     {
         printk("Console number: {%d}\n",fg_console);
         refresh_screen();
@@ -456,19 +476,19 @@ static int __CompareStrings(void)
 
 // cpu: Display cpu info.
 // see: x64info.c
-    if ( kstrncmp( prompt, "cpu", 3 ) == 0 ){
+    if ( kstrncmp( cmdline, "cpu", 3 ) == 0 ){
         x64_info();
         goto exit_cmp;
     }
 
 // display:
-    if ( kstrncmp( prompt, "display", 7 ) == 0 ){
+    if ( kstrncmp( cmdline, "display", 7 ) == 0 ){
         bldisp_show_info();  //bl display device.
         goto exit_cmp;
     }
 
 // pit: Display PIT info.
-    if ( kstrncmp( prompt, "pit", 3 ) == 0 )
+    if ( kstrncmp( cmdline, "pit", 3 ) == 0 )
     {
         // #todo: Create pitShowInfo() in pit.c.
         printk("Dev freq: %d | Clocks per sec: %d HZ | Period: %d\n",
@@ -479,13 +499,13 @@ static int __CompareStrings(void)
     }
 
 // help:
-    if ( kstrncmp( prompt, "help", 4 ) == 0 ){
+    if ( kstrncmp( cmdline, "help", 4 ) == 0 ){
         printk("Commands: about, help, reboot, cpu, memory, ...\n");
         goto exit_cmp;
     }
 
 // memory:
-    if ( kstrncmp( prompt, "memory", 6 ) == 0 ){
+    if ( kstrncmp( cmdline, "memory", 6 ) == 0 ){
         mmShowMemoryInfo();
         goto exit_cmp;
     }
@@ -494,13 +514,13 @@ static int __CompareStrings(void)
 // Test the use of 'pathnames' with multiple levels.
 // #test: This test will allocate some pages
 // for the buffer where we are gonna load the file.
-    if ( kstrncmp(prompt,"path",4) == 0 ){
+    if ( kstrncmp(cmdline,"path",4) == 0 ){
         //__test_path();
         goto exit_cmp;
     }
 
 // process:
-    if ( kstrncmp( prompt, "process", 7 ) == 0 ){
+    if ( kstrncmp( cmdline, "process", 7 ) == 0 ){
         //__test_process();
         goto exit_cmp;
     }
@@ -509,7 +529,7 @@ static int __CompareStrings(void)
 // Testing the full initialization of ps2 interface.
 // This is a work in progress.
 // See: dev/i8042.c
-    if ( kstrncmp( prompt, "ps2-qemu", 8 ) == 0 )
+    if ( kstrncmp( cmdline, "ps2-qemu", 8 ) == 0 )
     {
         if (HVInfo.initialized == TRUE){
             if (HVInfo.type == HV_TYPE_TCG)
@@ -524,7 +544,7 @@ static int __CompareStrings(void)
 // ps2-kvm: Initializze the ps2 support when running on kvm.
 // #bugbug
 // The initialization is not working on kvm.
-    if ( kstrncmp( prompt, "ps2-kvm", 7 ) == 0 )
+    if ( kstrncmp( cmdline, "ps2-kvm", 7 ) == 0 )
     {
         printk ("#todo: Initialization not working on kvm\n");
         if (HVInfo.initialized == TRUE){
@@ -537,20 +557,20 @@ static int __CompareStrings(void)
     }
 
 // reboot:
-    if ( kstrncmp( prompt, "reboot", 6 ) == 0 )
+    if ( kstrncmp( cmdline, "reboot", 6 ) == 0 )
     {
         keReboot();
         goto exit_cmp;
     }
 
 // beep:
-    if ( kstrncmp( prompt, "beep", 4 ) == 0 ){
+    if ( kstrncmp( cmdline, "beep", 4 ) == 0 ){
         hal_test_speaker();
         goto exit_cmp;
     }
 
 // tty: Read and write from tty device.
-    if ( kstrncmp( prompt, "tty", 3 ) == 0 )
+    if ( kstrncmp( cmdline, "tty", 3 ) == 0 )
     {
         // Esgotando as filas.
         //while (1){
@@ -562,7 +582,7 @@ static int __CompareStrings(void)
 // serial: Display serial support info.
 // #todo: Only com1 for now.
 // But we can get information for all the 4 ports.
-    if ( kstrncmp( prompt, "serial", 6 ) == 0 )
+    if ( kstrncmp( cmdline, "serial", 6 ) == 0 )
     {
         //#todo: Create serialShowInfo in serial.c.
         //#todo: Only com1 for now.
@@ -581,7 +601,7 @@ static int __CompareStrings(void)
 
 // ========
 // close: Sending a MSG_CLOSE messsage to the init thread.
-    if ( kstrncmp(prompt,"close",5) == 0 ){
+    if ( kstrncmp(cmdline,"close",5) == 0 ){
         keCloseInitProcess();
         goto exit_cmp;
     }
@@ -601,7 +621,8 @@ done:
 
 // Main routine for the embedded shell.
 // It compares two strings and process the service.
-int run_embedded_shell(void)
+// The command line is in prompt[] buffer.
+int ksys_shell_parse_cmdline(char *cmdline_address, size_t buffer_size)
 {
 
 // #todo
@@ -613,7 +634,8 @@ int run_embedded_shell(void)
     if (ShellFlag != TRUE)
         goto fail;
 
-    __CompareStrings();
+// prompt[] buffer is where the command line is.
+    __shellParseCommandLine(prompt, sizeof(prompt));
 
 // Show any printing.
     //invalidate_screen();
@@ -852,9 +874,11 @@ __ProcessKeyboardInput (
 
             // Le's run the embedded shell in order to 
             // compare the estrings.
-            if (ShellFlag == TRUE){
-                kinput('\0');          // finalize
-                run_embedded_shell();
+            if (ShellFlag == TRUE)
+            {
+                kinput('\0');  // Finalize
+                // Parse the string in prompt[].
+                ksys_shell_parse_cmdline(prompt,sizeof(prompt));
                 return 0;
             }
             break;
