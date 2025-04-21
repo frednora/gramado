@@ -58,7 +58,6 @@ static int process_file(char *file_name, int file_index)
 {
     int ReturnValue = 0;
     int fdRead = -1;
-    int fdWrite = 1;  //stdout
     register int nreads = 0;
     register int nwrites = 0;
 
@@ -78,24 +77,21 @@ static int process_file(char *file_name, int file_index)
 // Open
     fdRead = (int) open((char *) file_name, 0, "a+");
     if (fdRead < 0){
-        printf ("process_file: File {%d} failed on open()\n", 
-            file_index);
+        printf ("process_file: File {%d} failed on open()\n", file_index);
         goto fail;
     }
 // Read from fd.
     nreads = read( fdRead, buffer, 511 );
     if (nreads <= 0){
-        printf ("cat00: File {%d} failed on read()\n", 
-            file_index);
+        printf ("cat00: File {%d} failed on read()\n", file_index);
         goto fail;
     }
 // Write on stdout. If there's no redirection. 
 // Print the whole file into the screen.
 // In this case we don't have any modification flag.
-    nwrites = write( fdWrite, buffer, sizeof(buffer) );
+    nwrites = write( fileno(stdout), buffer, sizeof(buffer) );
     if (nwrites <= 0){
-        printf ("cat00: File {%d} failed on write()\n", 
-            file_index);
+        printf ("cat00: File {%d} failed on write()\n", file_index);
         goto fail;
     }
     ReturnValue = nwrites;
@@ -127,14 +123,13 @@ int main(int argc, char *argv[])
     printf ("cat00: Reading on stdin and writing on stderr\n");
     stdout = stderr;
 
-    /*
     // #debug
-    printf("CAT.BIN: argc %d | argv[0] %s | argv[1] %s\n", 
+    printf("CAT00.BIN: argc %d | argv[0] %s | argv[1] %s\n", 
         argc,       // quantos argumentos 
         argv[0],    // CAT.BIN
         argv[1] );  // FILE.TXT
     printf("\n");
-    */
+
 
     if (argc <= 1){
         printf("cat00: Few parameters. exit(0)\n");

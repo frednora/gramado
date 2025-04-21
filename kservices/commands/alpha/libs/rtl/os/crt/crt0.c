@@ -230,9 +230,10 @@ void crt0(unsigned long rdi)
     memset(buffer, 0, 512);
 
 // Copy
+// NO focus, we can't read from stdin, let's try stderr.
     int n=0;
     n = read(
-            fileno(stdin),
+            fileno(stderr),  //fileno(stdin),
             buffer,
             512 );
 // finzalize

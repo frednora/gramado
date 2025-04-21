@@ -123,14 +123,13 @@ int main(int argc, char *argv[])
 // Max number of files.
     Max = 8;
 
-    /*
+
     // #debug
     printf("CAT.BIN: argc %d | argv[0] %s | argv[1] %s\n", 
         argc,       // quantos argumentos 
         argv[0],    // CAT.BIN
         argv[1] );  // FILE.TXT
     printf("\n");
-    */
 
     if (argc <= 1){
         printf("Few parameters\n");

@@ -938,7 +938,7 @@ static void __try_execute(int fd)
 
 // cmdline:
 // Only if the name is a valid name.
-    rewind(stdin);
+    rewind(stderr);
     //off_t v=-1;
     //v=lseek( fileno(stdin), 0, SEEK_SET );
     //if (v!=0){
@@ -948,11 +948,11 @@ static void __try_execute(int fd)
 
 // Finalize the command line.
 // Nao pode ser maior que o buffer.
-    if (WriteLimit > PROMPT_MAX_DEFAULT){
-        WriteLimit = PROMPT_MAX_DEFAULT;
-    }
-    int __LastChar = (int) (WriteLimit-1);
-    prompt[__LastChar]=0;
+    //if (WriteLimit > PROMPT_MAX_DEFAULT){
+    //    WriteLimit = PROMPT_MAX_DEFAULT;
+    //}
+    //int __LastChar = (int) (WriteLimit-1);
+    //prompt[__LastChar]=0;
 
     // #debug
     // OK!
@@ -966,12 +966,22 @@ static void __try_execute(int fd)
 // Tambem significa que rewind() não funcionou.
 // #test
 // Nao pode ser maior que o limite atual para operaçoes de escrita.
-    if (WriteLimit > 512){
-        WriteLimit = 512;
-    }
-    write(fileno(stdin), prompt, WriteLimit);
+    //if (WriteLimit > 512){
+    //    WriteLimit = 512;
+    //}
+    //write(fileno(stdin), prompt, WriteLimit);
+    //write(fileno(stdin), prompt, 80);
+// #test: The command program's crt0 will read from stderr
+// because ti doesn't have the focus and cant read from stdin.
+    write(fileno(stderr), prompt, 80);
 
-    //rtl_clone_and_execute(filename_buffer);
+// Execute given the filename and the cmdline goes in stdin.
+    rtl_clone_and_execute(filename_buffer);
+
+    //#debug
+    printf("prompt: {%s}\n",prompt);
+    printf("filename_buffer: {%s}\n",filename_buffer);
+
     //rtl_clone_and_execute(prompt);
     //rtl_clone_and_execute("shutdown.bin");
     // while(1){}
@@ -983,8 +993,8 @@ static void __try_execute(int fd)
 // clone and execute via ws.
 // four arguments and a string pointer.
 
+/*
     int res = -1;
-
     res = 
         (int) gws_clone_and_execute2(
                   fd,
@@ -995,6 +1005,7 @@ static void __try_execute(int fd)
        //#debug #todo: do not use printf.
        //printf("gws_clone_and_execute2: fail\n");
    }
+*/
 
 // #bugbug
 // breakpoint
@@ -1011,6 +1022,9 @@ static void __try_execute(int fd)
     //return;
 
     //printf("Command not found\n");
+
+    rtl_sleep(2000);
+
 done:
     return;
 fail:
@@ -1472,7 +1486,8 @@ static void compareStrings(int fd)
 // The kernel is gonna crash if the file was no found.
 // see: libs/libgws/gws.c
 
-    //__try_execute(fd);  // Local worker
+// Execute the command line found in prompt[]
+    __try_execute(fd);  // Local worker
 
 // It uses gws_clone_and_execute2(),
 // it means that the display server is clonning himself
@@ -1481,6 +1496,7 @@ static void compareStrings(int fd)
 // create the connectors.
 // see: libgws.
 
+/*
     //int target_fd = stderr->_file;
     int target_fd = stdin->_file;
 
@@ -1503,6 +1519,7 @@ static void compareStrings(int fd)
 
         rtl_sleep(3000);
     };
+*/
 
 exit_cmp:
     return;
@@ -1735,10 +1752,9 @@ static void __send_to_child (void)
    
     // There is a '\n' terminated line in prompt[].
     // #bugbug: Não podemos mandar uma linha sem '\n'.
-    fseek(stdin, 0, SEEK_SET); 
-    write ( fileno(stdin), prompt, 80);
+    fseek(stderr, 0, SEEK_SET); 
+    write ( fileno(stderr), prompt, 80);
     
-
     //copy to shared memory
     //send a system message.(maybe)
     //flag?
@@ -3282,9 +3298,9 @@ RelaunchShell:
 
     memset(prompt,0,sizeof(prompt));
     sprintf(prompt,"cat00 gramado.txt");
-    lseek( fileno(stdin), 0, 1000);
-    rewind(stdin);
-    write ( fileno(stdin), prompt, 40 );
+    lseek( fileno(stderr), 0, 1000);
+    rewind(stderr);
+    write ( fileno(stderr), prompt, 40 );
     rtl_clone_and_execute(test_app);
 
     //gws_clone_and_execute_from_prompt(fd); 

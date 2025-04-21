@@ -4342,7 +4342,9 @@ int main (int argc, char **argv)
         };
     }
 
+
 /*
+// #debug
     if (f1 == TRUE)
         printf("F1\n");
     if (f2 == TRUE)
@@ -4353,9 +4355,10 @@ int main (int argc, char **argv)
         printf("F4\n");
     if (fLaunchDM == TRUE)
         printf("fLaunchDM\n");
-*/
 
-    //exit(0);
+    printf("Breakpoint\n");
+    exit(0);
+*/
 
 
 // Callback support.
