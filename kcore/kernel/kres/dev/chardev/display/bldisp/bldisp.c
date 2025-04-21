@@ -624,32 +624,29 @@ void invalidate_screen(void)
 }
 
 /*
- * screenInit:
+ * bldispScreenInit:
  *     Inicializando o gerenciamento de tela.
  */ 
 // #bugbug
 // Screen is a reagion in the display, or in many displays.
 // Display is a monitor, or a set o hid in a given host.
 
-int screenInit(void)
+int bldispScreenInit(void)
 {
-    debug_print ("screenInit:\n");
+    debug_print ("bldispScreenInit:\n");
 
 // Validate the whole screen
 // We don't need to flush the screen yet.
     screen_is_dirty = FALSE;
 
 // Configura globais com base nos valores passados pelo Boot Loader.
-    screenSetSize(
-        (unsigned long) gSavedX, 
-        (unsigned long) gSavedY );
+    screenSetSize( (unsigned long) gSavedX, (unsigned long) gSavedY );
 
     screen_bpp = gSavedBPP;
 // Pitch: bytes per line.
 // Ex: 
 // bytes per pixel = ((32/8)*800)
-    screen_pitch = 
-        (unsigned long) ( (gSavedBPP/8) * gSavedX );
+    screen_pitch = (unsigned long) ( (gSavedBPP/8) * gSavedX );
     //...
     return 0;
 }

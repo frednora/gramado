@@ -21,7 +21,8 @@ int keIsQemu(void);
 
 int keCloseInitProcess(void);
 int keReboot(void);
-void ke_x64ExecuteInitialProcess(void);
+// Called by main to execute the first process.
+int ke_x64ExecuteInitialProcess(void);
 int keInitialize(int phase);
 
 #endif  

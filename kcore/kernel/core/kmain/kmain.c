@@ -330,8 +330,9 @@ void keInitGlobals(void)
 
 // Screen
 // Now we can print strings in the screen.
-// Reinitializing ... we already printed the banner.
-    screenInit();
+// Reinitializing ... 
+// see: bldisp.c
+    bldispScreenInit();
 
     //debug_print("keInitGlobals: [printk] WE HAVE MESSAGES NOW!\n");
     //printk     ("keInitGlobals: [printk] WE HAVE MESSAGES NOW!\n");
@@ -769,7 +770,8 @@ void I_kmain(int arch_type)
 /*
 //++
 //----------
-//#test
+// #test
+// Do we have the file bus.c?
     char *eisa_p;
     int EISA_bus=0;
     eisa_p = 0x000FFFD9;
@@ -935,8 +937,9 @@ StartSystemEnd:
 
 // Execute the first ring3 process.
 // ireq to init thread.
-// See: x64init.c
+// See: ke.c
 
+    int ok = 0;
     if (Status == TRUE)
     {
         PROGRESS(":: INITIAL PROCESS\n");
@@ -950,9 +953,14 @@ StartSystemEnd:
         };
         */
 
-        ke_x64ExecuteInitialProcess();
+        ok = (int) ke_x64ExecuteInitialProcess();
+        if (ok < 0){
+            panic ("kmain.c: Couldn't launch init process\n");
+            // #todo:
+            // Maybe we can call the kernel console for debuging purpose.
+            goto fail;
+        }
     }
-
 
 // Initialization fail
 fail:

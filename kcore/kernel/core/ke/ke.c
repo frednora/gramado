@@ -766,13 +766,18 @@ int keReboot(void)
     return (int) do_reboot(Flags);
 }
 
-void ke_x64ExecuteInitialProcess(void)
+// Called by main to execute the first process.
+int ke_x64ExecuteInitialProcess(void)
 {
+    serial_printk("ke_x64ExecuteInitialProcess:\n");
 
 // See: x64init.c
+// Never returns.
     I_x64ExecuteInitialProcess();
-    panic("keInitialize: phase 3\n");
-    //goto InitializeEnd;
+
+//fail:
+    //panic("ke_x64ExecuteInitialProcess: fail\n");
+    return (int) -1;
 }
 
 // Called by I_initKernelComponents().
@@ -849,7 +854,8 @@ int keInitialize(int phase)
     // >> Debug and display support.
     if (phase == 0){
 
-        //PROGRESS("keInitialize: phase 0\n");
+        // serial_printk("phase %d\n",phase);
+
         // kernel font.
         gramk_initialize_default_kernel_font();
         // Initializing background for the very first time.
@@ -860,8 +866,6 @@ int keInitialize(int phase)
         // Now we have console debug
         Initialization.is_console_log_initialized = TRUE;
 
-        // Show banner!
-        // See: zero.c
         gramk_show_banner();
 
         // Print resolution info
@@ -883,6 +887,8 @@ int keInitialize(int phase)
     // >> Process and thread support.
     } else if (phase == 1) {
 
+        // serial_printk("phase %d\n",phase);
+
         // Starting with some architecture independent stuff.
 
         // Threads counter
@@ -890,7 +896,6 @@ int keInitialize(int phase)
 
         // Architecture dependent stuff.
 
-        //PROGRESS("keInitialize: phase 1\n");
         // Initialize the current architecture.
         // Change name to I_arch_initialize();
         // See: ke/x86_64/x64init.c
@@ -905,6 +910,8 @@ int keInitialize(int phase)
     // Architecture independent. 
     // >> Device drivers and 3d graphics support.
     } else if (phase == 2){
+
+        // serial_printk("phase %d\n",phase);
 
         // ================================
         // Early ps/2 initialization.
@@ -980,9 +987,11 @@ int keInitialize(int phase)
         networkInit();
 
         goto InitializeEnd;
+
+    // Wrong phase number.
     } else {
-        // Wrong phase number.
-        // goto fail;
+        serial_printk("phase %d: Wrong phase number\n",phase);
+        goto fail;
     };
 
 InitializeEnd:

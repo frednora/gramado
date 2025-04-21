@@ -11,6 +11,22 @@ extern void x64_clear_nt_flag (void);
 static int InitialProcessInitialized = FALSE;
 
 
+// The command line for init.bin.
+// These are the cmdline options for the init process.
+// Passed via stdin.
+// --hl = Headless mode. No cmdline interpreter.
+// --cmd = Run the cmdline interpreter.
+// --server = Run embedded server.
+// --reboot = Reboot the machine.
+// --shutdown = Shutdown the machine.
+
+const char *initbin_cmdline1 = "INIT.BIN: --cmd --server";
+//const char *initbin_cmdline2 = "INIT.BIN: --cmd --server";
+const char *initbin_cmdline3 = "INIT.BIN: --hl";
+//const char *initbin_cmdline4 = "INIT.BIN: --reboot";
+//const char *initbin_cmdline5 = "INIT.BIN: --shutdown";
+//...
+
 //Onde ficam os códigos e arquivos de configuração usados na inicialização.
 //A ideia é que se a inicialização precisar de algum arquivo, deve procurá-lo
 //nos diretórios previamente combinados.
@@ -72,21 +88,9 @@ void x64init_load_pml4_table(unsigned long phy_addr)
 // See: kstdio.c
 static int __setup_stdin_cmdline(void)
 {
+
+// #todo: Maybe we need a bigger cmdline.
     char cmdline[64];
-
-// The command line for init.bin.
-// --hl = Headless mode. No cmdline interpreter.
-// --cmd = Run the cmdline interpreter.
-// --server = Run embedded server.
-// --reboot = Reboot the machine.
-// --shutdown = Shutdown the machine.
-
-    const char *initbin_cmdline1 = "INIT.BIN: --cmd --server";
-    //const char *initbin_cmdline2 = "INIT.BIN: --cmd --server";
-    const char *initbin_cmdline3 = "INIT.BIN: --hl";
-    //const char *initbin_cmdline4 = "INIT.BIN: --reboot";
-    //const char *initbin_cmdline5 = "INIT.BIN: --shutdown";
-    //...
 
     memset(cmdline, 0, 64);
 
@@ -122,10 +126,10 @@ static int __setup_stdin_cmdline(void)
 */
 
     if ((void*) stdin == NULL){
-        panic("__setup_stdin_cmdline: stdin\n");
+        goto fail;
     }
     if (stdin->magic != 1234){
-        panic("__setup_stdin_cmdline: stdin validation\n");
+        goto fail;
     }
 
 // Rewind
@@ -134,6 +138,8 @@ static int __setup_stdin_cmdline(void)
     file_write_buffer( stdin, cmdline, 64 );
 
     return 0;
+fail: 
+    return (int) -1;
 }
 
 // Local worker.
@@ -324,8 +330,7 @@ static int I_x64CreateInitialProcess(void)
         printk("I_x64CreateInitialProcess: InitProcess\n");
         return FALSE;
     }
-    if ( InitProcess->used != TRUE || 
-         InitProcess->magic != 1234 )
+    if ( InitProcess->used != TRUE || InitProcess->magic != 1234 )
     {
         printk("I_x64CreateInitialProcess: InitProcess validation\n");
         return FALSE;
@@ -335,11 +340,10 @@ static int I_x64CreateInitialProcess(void)
 // Who gave this pid to this process? create_process did?
 
     InitProcessPID = (pid_t) InitProcess->pid;
-    if ( InitProcessPID != GRAMADO_PID_INIT ){
+    if (InitProcessPID != GRAMADO_PID_INIT){
         printk ("I_x64CreateInitialProcess: InitProcessPID\n");
         return FALSE;
     }
-
 
 // Security Access Token.
 
@@ -416,10 +420,9 @@ static int I_x64CreateInitialProcess(void)
         printk("I_x64CreateInitialProcess: InitThread->tid\n");
         return FALSE;
     }
-// Invalid PID.
-// owner pid
-    if ( InitThread->owner_pid != GRAMADO_PID_INIT ){
-        printk ("I_x64CreateInitialProcess: GRAMADO_PID_INIT\n");
+// Invalid owner PID.
+    if (InitThread->owner_pid != GRAMADO_PID_INIT){
+        printk ("I_x64CreateInitialProcess: InitThread->owner_pid\n");
         return FALSE;
     }
 
@@ -475,11 +478,13 @@ static int I_x64CreateInitialProcess(void)
 // ::(3)
 // Passa o comando para o primeiro processo em user mode.
 // Esse processo ja foi previamente configurado.
-// Called by I_kmain() in kmain.c
+// Called by ke_x64ExecuteInitialProcess in ke.c.
 void I_x64ExecuteInitialProcess(void)
 {
     struct thread_d *t;
     register int i=0;
+    int Status = -1;
+    tid_t TID = -1;
 
     // #debug
     PROGRESS("I_x64ExecuteInitialProcess:\n");
@@ -511,7 +516,10 @@ void I_x64ExecuteInitialProcess(void)
     console_set_current_virtual_console(CONSOLE0);
 
 // Setup command line for the init process.
-    __setup_stdin_cmdline();
+    Status = (int) __setup_stdin_cmdline();
+    if (Status < 0){
+        panic("I_x64ExecuteInitialProcess: cmdline\n");
+    }
 
 // The first thread to run will the control thread 
 // of the init process. It is called InitThread.
@@ -524,8 +532,10 @@ void I_x64ExecuteInitialProcess(void)
     if ( t->used != TRUE || t->magic != 1234 ){
         panic("I_x64ExecuteInitialProcess: t validation\n");
     }
-    if ( t->tid < 0 || t->tid > THREAD_COUNT_MAX ){
-        panic("I_x64ExecuteInitialProcess: tid\n");
+
+    TID = (tid_t) t->tid;
+    if ( TID < 0 || TID > THREAD_COUNT_MAX ){
+        panic("I_x64ExecuteInitialProcess: TID\n");
     }
 
 // It its context is already saved, 
@@ -535,19 +545,20 @@ void I_x64ExecuteInitialProcess(void)
     }
 
 // Set the current and the foreground threads.
-    set_current_thread(t->tid);
-    set_foreground_thread(t->tid);
+    set_current_thread(TID);
+    set_foreground_thread(TID);
 
 // State
 // The thread needs to be in Standby state.
     if (t->state != STANDBY){
-        printk("I_x64ExecuteInitialProcess: state tid={%d}\n", t->tid );
+        printk("I_x64ExecuteInitialProcess: state tid={%d}\n", TID );
         die();
     }
 
 // :: MOVEMENT 2 ( Standby --> Running )
 
-    if (t->state == STANDBY){
+    if (t->state == STANDBY)
+    {
         t->state = RUNNING;
         debug_print("I_x64ExecuteInitialProcess: Now RUNNING!\n");
     }
@@ -600,7 +611,6 @@ void I_x64ExecuteInitialProcess(void)
     
     //taskswitch_lock();
     //scheduler_lock();
-
 
 // Setup cr3.
 // This is a Physical address.
@@ -728,6 +738,7 @@ void I_x64ExecuteInitialProcess(void)
 
 // Here is where the boot routine ends.
     system_state = SYSTEM_RUNNING;
+    serial_printk("system_state = {%s}\n",SYSTEM_RUNNING);
 
 // The kernel has booted.
     has_booted = TRUE;
@@ -768,8 +779,8 @@ void I_x64ExecuteInitialProcess(void)
 // Entry point and ring3 stack.
 // CONTROLTHREAD_ENTRYPOINT
 
-    unsigned long entry = (unsigned long) 0x0000000000201000;
-    unsigned long rsp3  = (unsigned long) 0x00000000002FFFF0;
+    const unsigned long EntryPoint = (unsigned long) 0x0000000000201000;
+    const unsigned long RING3_RSP  = (unsigned long) 0x00000000002FFFF0;
 
 // rflags:
 // 0x3002
@@ -782,19 +793,19 @@ void I_x64ExecuteInitialProcess(void)
         " mov %%ax, %%es  \n" 
         " mov %%ax, %%fs  \n" 
         " mov %%ax, %%gs  \n" 
-        " movq %0, %%rax  \n" 
-        " movq %1, %%rsp  \n" 
+        " movq %0, %%rax  \n"  // entry 
+        " movq %1, %%rsp  \n"  // rsp3
         " movq $0, %%rbp  \n" 
-        " pushq $0x23     \n"  
-        " pushq %%rsp     \n" 
-        " pushq $0x3002   \n" 
-        " pushq $0x1B     \n" 
-        " pushq %%rax     \n" 
-        " iretq           \n" :: "D"(entry), "S"(rsp3) );
+        " pushq $0x23     \n"  // Stack frame: SS  
+        " pushq %%rsp     \n"  // Stack frame: RSP
+        " pushq $0x3002   \n"  // Stack frame: RFLAGS
+        " pushq $0x1B     \n"  // Stack frame: CS
+        " pushq %%rax     \n"  // Stack frame: RIP
+        " iretq           \n" :: "D"(EntryPoint), "S"(RING3_RSP) );
 
 // Paranoia
-    PROGRESS("::(3) I_x64ExecuteInitialProcess: Unexpeted error\n");
-    panic("I_x64ExecuteInitialProcess: Unexpeted error\n");
+    PROGRESS("I_x64ExecuteInitialProcess: Fail\n");
+       panic("I_x64ExecuteInitialProcess: Fail\n");
 }
 
 // Local worker

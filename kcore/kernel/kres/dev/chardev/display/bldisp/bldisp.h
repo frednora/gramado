@@ -131,7 +131,7 @@ unsigned long screenGetHeight (void);
 unsigned long screenGetBPP (void);
 unsigned long screenGetPitch (void);
 unsigned long screen_scanline_va( int scanline );
-int screenInit (void);
+int bldispScreenInit (void);
 
 unsigned long videoGetMode (void);
 void videoSetMode (unsigned long mode);
