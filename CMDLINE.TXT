@@ -1,0 +1,9 @@
+
+ We're passing cmdlines to the child applications via stdin or stderr,
+ depending on the type of the child. crt0.c will read one of these files.
+
+ If a child runs in foreground, like terminal, so it receives the cmdline 
+ via stdin, otherwise, if the child is not in foreground so, it will receive 
+ the cmdline via stderr.
+
+ 

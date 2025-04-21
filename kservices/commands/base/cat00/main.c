@@ -120,11 +120,11 @@ int main(int argc, char *argv[])
     Max = 8;
 
     // #debug
-    printf ("cat00: Reading on stdin and writing on stderr\n");
+    printf ("cat00: Writing on stderr\n");
     stdout = stderr;
 
     // #debug
-    printf("CAT00.BIN: argc %d | argv[0] %s | argv[1] %s\n", 
+    printf("CAT00.BIN: argc %d | argv[0] %s | argv[1] %s", 
         argc,       // quantos argumentos 
         argv[0],    // CAT.BIN
         argv[1] );  // FILE.TXT

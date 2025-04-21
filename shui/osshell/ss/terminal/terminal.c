@@ -936,7 +936,7 @@ static void __try_execute(int fd)
 
 // cmdline:
 // Only if the name is a valid name.
-    rewind(stdin);
+    rewind(stderr);
     //off_t v=-1;
     //v=lseek( fileno(stdin), 0, SEEK_SET );
     //if (v!=0){
@@ -967,7 +967,7 @@ static void __try_execute(int fd)
     if (WriteLimit > 512){
         WriteLimit = 512;
     }
-    write(fileno(stdin), prompt, WriteLimit);
+    write(fileno(stderr), prompt, WriteLimit);
 
     //rtl_clone_and_execute(filename_buffer);
     //rtl_clone_and_execute(prompt);
@@ -1703,8 +1703,8 @@ static void __send_to_child (void)
    
     // There is a '\n' terminated line in prompt[].
     // #bugbug: Não podemos mandar uma linha sem '\n'.
-    fseek(stdin, 0, SEEK_SET); 
-    write ( fileno(stdin), prompt, 80);
+    fseek(stderr, 0, SEEK_SET); 
+    write ( fileno(stderr), prompt, 80);
     
 
     //copy to shared memory

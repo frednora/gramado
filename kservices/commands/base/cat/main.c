@@ -58,7 +58,7 @@ static int process_file(char *file_name, int file_index)
 {
     int ReturnValue = 0;
     int fdRead = -1;
-    int fdWrite = 1;  //stdout
+    //int fdWrite = 1;  //stdout
     register int nreads = 0;
     register int nwrites = 0;
 
@@ -92,7 +92,7 @@ static int process_file(char *file_name, int file_index)
 // Write on stdout. If there's no redirection. 
 // Print the whole file into the screen.
 // In this case we don't have any modification flag.
-    nwrites = write( fdWrite, buffer, sizeof(buffer) );
+    nwrites = write( fileno(stdout), buffer, sizeof(buffer) );
     if (nwrites <= 0){
         printf ("cat: File {%d} failed on write()\n", 
             file_index);
@@ -123,9 +123,12 @@ int main(int argc, char *argv[])
 // Max number of files.
     Max = 8;
 
+    // #debug
+    printf ("cat: Writing on stderr\n");
+    stdout = stderr;
 
     // #debug
-    printf("CAT.BIN: argc %d | argv[0] %s | argv[1] %s\n", 
+    printf("CAT.BIN: argc %d | argv[0] %s | argv[1] %s", 
         argc,       // quantos argumentos 
         argv[0],    // CAT.BIN
         argv[1] );  // FILE.TXT
