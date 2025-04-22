@@ -52,7 +52,7 @@ static int __initialize_fs_buffers(void)
 {
     register int i=0;
 // The max number of levels in a path.
-    int Max = FS_N_BUFFERS;
+    size_t Max = FS_N_BUFFERS;
 // 512 entries = 16KB.
 // 32*512 = 16KB.
     const int PagesPerBuffer = 4;
@@ -545,6 +545,7 @@ __read_imp (
     char *ubuf,       //#todo: use 'void *'
     size_t count )    //#todo: use 'size_t'.
 {
+// #: It needs to be used only as a worker for syscalls.
 // #todo
 // Get the processor pointer
 // and increment the read operation counter for this process.
@@ -1000,6 +1001,7 @@ fail:
 
 ssize_t __write_imp (int fd, char *ubuf, size_t count)
 {
+// #: It needs to be used only as a worker for syscalls.
 // #todo
 // Get the processor pointer
 // and increment the write operation counter for this process.
@@ -1560,6 +1562,8 @@ depend on the disk hardware at this point.)
 
 int __close_imp(int fd)
 {
+// #: It needs to be used only as a worker for syscalls.
+
     file *object;
     struct process_d *p;
     pid_t current_process = -1;
@@ -1849,7 +1853,8 @@ unsigned long fs_count_path_levels (unsigned char *path)
 {
     unsigned long Counter=0;
     register int i=0;
-    static int MaxChars = 2000;  //(80*25), 25 lines.
+// (80*25), 25 lines.
+    size_t MaxChars = 2000;
 
 // Parameter
     if ((void*) path == NULL){
@@ -2027,9 +2032,10 @@ void fs_init_structures (void)
         // ...
         break;
 
+    // #todo: Not implemented yet.
     case FS_TYPE_EXT2:
     default:
-        panic ("fs_init_structures: [todo] default Type\n");
+        panic ("fs_init_structures: Default Type\n");
         break;
     };
 }
@@ -2074,16 +2080,15 @@ size_t file_get_len(file *_file)
 //OUT: inode structure.
 struct inode_d *file_inode (file *f)
 {
-
-    if ( (void *)f==NULL ){
-        return (struct inode_d *) 0;
-        //return NULL;
+    if ((void *) f == NULL){
+        return NULL;
     }
-
+    // #todo: Test MAGIC.
     return (struct inode_d *) f->inode;
 }
 
-//??
+// ??
+// #todo: Explain this.
 int file_truncate (file *_file, size_t len)
 {
 // Not implemented yet!
@@ -2312,7 +2317,9 @@ fsListFiles (
 // Show!
 // Se o diret�rio selecionado � o diret�rio raiz do VFS.
 
-    if ( current_disk == 0 && current_volume == 0 && current_directory == 0 )
+    if ( current_disk == 0 && 
+         current_volume == 0 && 
+         current_directory == 0 )
     {
         debug_print ("fsListFiles: [FIXME] current\n");
         //vfsListFiles ();
@@ -2851,7 +2858,7 @@ int fs_initialize_process_cwd ( pid_t pid, char *string )
         debug_print ("fs_initialize_process_cwd: pid\n");
         return 1;
     }
-    if ( (void *) string == NULL ){
+    if ((void *) string == NULL){
         panic ("fs_initialize_process_cwd: string\n");
         //return 1;
     }
@@ -2867,18 +2874,23 @@ int fs_initialize_process_cwd ( pid_t pid, char *string )
     p = (struct process_d *) processList[pid];
     if ((void *) p == NULL){
         panic ("fs_initialize_process_cwd: p\n");
-    }else{
-        if ( p->used != 1 || p->magic != 1234 ){
-            panic ("fs_initialize_process_cwd: validation\n");
-        }
+    }
+    if ( p->used != 1 || p->magic != 1234 ){
+        panic ("fs_initialize_process_cwd: validation\n");
+    }
 
-        // ?? fixed size.
-        for ( i=0; i<32; i++ )
-        {
-            p->cwd_string[i] = string[i];
-        }
-        p->cwd_string[31] = 0; // finalizing 
+// The buffer has 32 bytes.
+// #bugbug: What is the string size?
+// It needs to be less than 32.
+    //size_t StringSize = (size_t) strlen(string);
+
+    for (i=0; i<32; i++){
+        p->cwd_string[i] = 0;
     };
+    for (i=0; i<32; i++){
+        p->cwd_string[i] = string[i];
+    };
+    p->cwd_string[31] = 0;  // Finalize 
 
     return 0;
 }
@@ -2903,13 +2915,13 @@ void fs_pathname_backup ( pid_t pid, int n )
 
 // CWD
     if (CWD.initialized != TRUE){
-        printk ("fs_pathname_backup: [FAIL] CWD not initialized\n"); 
+        printk ("fs_pathname_backup: CWD not initialized\n"); 
         return;
     } 
 
 // Parameters
     if ( pid<0 || pid >= PROCESS_COUNT_MAX ){
-        printk ("fs_pathname_backup: [FAIL] pid\n"); 
+        printk ("fs_pathname_backup: pid\n"); 
         return;
     }
     if (n <= 0) {
@@ -2920,44 +2932,39 @@ void fs_pathname_backup ( pid_t pid, int n )
     p = (struct process_d *) processList[pid];
     if ((void *) p == NULL){
         panic ("fsUpdateWorkingDiretoryString: p\n");
-    }else{
-        if ( p->used != TRUE || p->magic != 1234 ){
-            panic ("fsUpdateWorkingDiretoryString: validation\n");
-        }
+    }
+    if ( p->used != TRUE || p->magic != 1234 ){
+        panic ("fsUpdateWorkingDiretoryString: validation\n");
+    }
 
-        char *path = (char *) p->cwd_string;
+    char *path = (char *) p->cwd_string;
 
-        register char *s = path + strlen( path );
+    register char *s = path + strlen(path);
  
-        if (*path){ s--; };
+    if (*path){ 
+        s--;
+    };
 
-        while (n--)
-        {
-            while (*s == '/'){ s--; };
-            while (*s != '/'){ s--; };
+    while (n--)
+    {
+        while (*s == '/'){ s--; };
+        while (*s != '/'){ s--; };
 
-            *++s = '\0';
-        };
+        *++s = '\0';
+    };
 
-        // Atualizando a string global.
-        for ( i=0; i<32; i++ ){
-            CWD.path[i] = p->cwd_string[i];
-        };
+// Atualizando a string global.
+    for ( i=0; i<32; i++ ){
+        CWD.path[i] = p->cwd_string[i];
+    };
 
-        // Name.
-        for ( i=0; i< 11; i++ ){
-            current_target_dir.name[i] = '\0';
-        };
+// Name
+    for ( i=0; i< 11; i++ ){
+        current_target_dir.name[i] = '\0';
     };
 }
 
-/*
- * fs_print_process_cwd
- *     Cada processo tem seu proprio pwd.
- *     Essa rotina mostra o pathname usado pelo processo. 
- */
-// this is used by the pwd command. service 170.
-
+// Service 170: Print the cwd string of a given PID.
 int fs_print_process_cwd(pid_t pid)
 {
     struct process_d *p;
@@ -2967,7 +2974,7 @@ int fs_print_process_cwd(pid_t pid)
 
 // Parameter
     if (pid<0 || pid>=PROCESS_COUNT_MAX){
-        debug_print ("fs_print_process_cwd: [FAIL] pid\n");
+        debug_print ("fs_print_process_cwd: pid\n");
         goto fail;
     }
 
@@ -2984,6 +2991,7 @@ int fs_print_process_cwd(pid_t pid)
         // Is this element a pointer or a buffer ?
         // >>> This element is an array.
         
+        // #bugbug: Size of string
         if ((void *) p->cwd_string != NULL)
         {
             //p->cwd_string[31] = 0;
@@ -3012,15 +3020,18 @@ fail:
 
 void fs_show_file_info (file *f)
 {
+    size_t StringSize=0;
 
 // Parameter
-    if ((void*)f==NULL){
+    if ((void*) f == NULL){
         debug_print("fs_show_file_info: fail\n");
         return;
     }
     if (f->used != TRUE)
         return;
 
+    // #bugbug: What is the size?
+    // StringSize = (size_t) strlen(f->_tmpfname);
     if ((void*) f->_tmpfname != NULL){
         printk ("Name={%s}\n",f->_tmpfname);
         //refresh_screen();
@@ -3037,7 +3048,7 @@ void fs_show_file_table(void)
     for (i=0; i<32; i++)
     {
         f = (file*) file_table[i];
-        if ( (void*)f != NULL ){
+        if ((void*)f != NULL){
             fs_show_file_info(f);
         }
     };
@@ -3066,7 +3077,7 @@ void fs_show_inode_table(void)
     struct inode_d *inode;
     register int i=0;
 
-    printk ("inode_table: \n");
+    printk ("inode_table:\n");
     for (i=0; i<32; ++i)
     {
         inode = (struct inode_d *) inode_table[i];
@@ -3171,6 +3182,8 @@ fsSaveFile (
     unsigned short next=0;
     unsigned short sector=0;
 
+    unsigned long MaxFileSizeInSectors = 16;
+
 // #todo: Use the structure.
 // Entry structure.
 // see: fat.h
@@ -3196,10 +3209,10 @@ fsSaveFile (
         panic("fsSaveFile: dir_address\n");
     }
 
-// VOLUME1_FAT_ADDRESS
+// Ex: VOLUME1_FAT_ADDRESS
     unsigned short *fat = 
         (unsigned short *) fat_address;
-// VOLUME1_ROOTDIR_ADDRESS
+// Ex: VOLUME1_ROOTDIR_ADDRESS
     unsigned short *__dir = 
         (unsigned short *) dir_address;
 
@@ -3207,8 +3220,10 @@ fsSaveFile (
 // #todo
 // We only support one address for now.
 
-    if (fat_address != VOLUME1_FAT_ADDRESS){
-        panic("fsSaveFile: [FIXME] We only support ONE fat address for now!\n");
+    if (fat_address != VOLUME1_FAT_ADDRESS)
+    {
+        //panic("fsSaveFile: [FIXME] We only support ONE fat address for now!\n");
+        panic ("fsSaveFile: fat_address\n");
     }
 
 // Filename
@@ -3223,6 +3238,7 @@ fsSaveFile (
         printk     ("fsSaveFile: [ERROR] *file_name\n"); 
         goto fail;
     }
+    // serial_printk ("fsSaveFile: %s\n", file_name);
 
 // #bugbug
 // Esse endereço eh valido?
@@ -3252,7 +3268,7 @@ fsSaveFile (
 // #bugbug
 // Limite provisorio
 // Size in sectors.
-    if (file_size > 16)
+    if (file_size > MaxFileSizeInSectors)
     {
         debug_print("fsSaveFile: [FIXME] Size in sectors\n");
         printk     ("fsSaveFile: [FIXME] Size in sectors = %d \n", 
@@ -3727,9 +3743,7 @@ do_read_file_from_disk (
     unsigned long TargetDirAddress = VOLUME1_ROOTDIR_ADDRESS;
     unsigned long NumberOfEntries = FAT16_ROOT_ENTRIES;
 
-    // debug_print ("do_read_file_from_disk: $\n");
-
-// filename
+// Parameter:
     if ((void*) file_name == NULL){
         return (int) (-EINVAL);
     }
@@ -3737,7 +3751,11 @@ do_read_file_from_disk (
         return (int) (-EINVAL);
     }
 
+    // #debug
+    // serial_printk ("do_read_file_from_disk: {%s}\n", file_name);
 
+
+// -------------------------------------------
 // Root dir?
     if (*file_name == '/')
     {
@@ -3747,6 +3765,12 @@ do_read_file_from_disk (
     }
 
 // -------------------------------------------
+// Reserved shortcut
+    //if (*file_name == '!')
+    //{}
+// -------------------------------------------
+
+// -------------------------------------------
 // Is it inside the GRAMADO/ folder?
 // This is not a new root directory for the whole system,
 // it is only the directory where we're gonna serch
@@ -3754,7 +3778,6 @@ do_read_file_from_disk (
 // Remember: 
 // We can setup the memory address for this directory 
 // in the structure sdGRAMADO.
-
     if (*file_name == '@')
     {
         if (sdGRAMADO.initialized != TRUE){
@@ -3768,6 +3791,7 @@ do_read_file_from_disk (
         TargetDirAddress = sdGRAMADO.address;
         NumberOfEntries = FAT16_ROOT_ENTRIES;
         file_name++;
+        goto EndOfShortcuts;
     }
 // -------------------------------------------
 
@@ -3793,8 +3817,23 @@ do_read_file_from_disk (
         TargetDirAddress = sdDE.address;
         NumberOfEntries = FAT16_ROOT_ENTRIES;
         file_name++;
+        goto EndOfShortcuts;
     }
 // -------------------------------------------
+
+// -------------------------------------------
+// Reserved shortcut
+    //if (*file_name == '$')
+    //{}
+// -------------------------------------------
+
+// -------------------------------------------
+// Reserved shortcut
+    //if (*file_name == '%')
+    //{}
+// -------------------------------------------
+
+EndOfShortcuts:
 
 // Convertendo o formato do nome do arquivo.    
 // >>> "12345678XYZ"
@@ -3824,9 +3863,7 @@ do_read_file_from_disk (
 // Quando não existe, tentamos criar.
 // #bugbug: Então 'cat' não deve chamar essa função.
 
-    Status = 
-        (int) search_in_dir( file_name, TargetDirAddress );
-
+    Status = (int) search_in_dir(file_name,TargetDirAddress);
 // Found.
     if (Status == TRUE){
         goto __go;
@@ -3887,7 +3924,7 @@ __go:
 
 // Process
     p = (struct process_d *) get_current_process_pointer();
-    if ( (void *) p == NULL ){
+    if ((void *) p == NULL){
         printk("do_read_file_from_disk: p\n");
         goto fail;
     }
@@ -3899,7 +3936,7 @@ __go:
 // Procurando um slot livre.
     for (__slot=0; __slot<32; __slot++)
     {
-        if ( p->Objects[__slot] == 0 ){ goto __OK; }
+        if (p->Objects[__slot] == 0){ goto __OK; }
     };
 
 // fail
@@ -3916,7 +3953,7 @@ __OK:
     }
 
 // File struct
-    fp = (file *) kmalloc( sizeof(file) );
+    fp = (file *) kmalloc(sizeof(file));
     if ((void *) fp == NULL){
         printk ("do_read_file_from_disk: fp\n");
         goto fail;
@@ -3950,7 +3987,7 @@ __OK:
     fp->sync.can_write = TRUE;
 
     fp->sync.action = ACTION_NULL;
-        // ==================
+    // ==================
 
 // #todo:
 // We need to get the name in the inode.
@@ -4250,6 +4287,9 @@ __OK:
 
 done:
 // Return fd. Called by open().
+// #todo:
+// Here is a good moment to validate the fp structure,
+// not in the beginning of the routine.
     return (int) fp->_file;
 fail:
     //refresh_screen();
@@ -4280,14 +4320,35 @@ do_write_file_to_disk (
 {
     int __ret = -1;
 
-    debug_print ("do_write_file_to_disk:\n");
+// #todo:
+// We can do the same we did in the Read routine,
+// providing a method to access the DE/ GRAMADO/ folders.
+    unsigned long TargetDirAddress = VOLUME1_ROOTDIR_ADDRESS;
+    unsigned long NumberOfEntries = FAT16_ROOT_ENTRIES;
 
+// Parameter.
     if ((void*) file_name == NULL){
         return (int) (-EINVAL);
     }
-    if ( *file_name == 0 ){
+    if (*file_name == 0){
         return (int) (-EINVAL);
     }
+
+    // #debug
+    // serial_printk ("do_write_file_to_disk: {%s}\n", file_name);
+
+// -------------------------------------------
+// Root dir?
+    if (*file_name == '/')
+    {
+        TargetDirAddress = VOLUME1_ROOTDIR_ADDRESS;
+        NumberOfEntries = FAT16_ROOT_ENTRIES;
+        file_name++;
+    }
+
+    // #todo
+    // toupper
+    // Shortcuts: ! @ # $ %.
 
 //++
 // See: sci/fs/write.c
@@ -4297,8 +4358,8 @@ do_write_file_to_disk (
     __ret = 
         (int) fsSaveFile ( 
                   VOLUME1_FAT_ADDRESS, 
-                  VOLUME1_ROOTDIR_ADDRESS, 
-                  FAT16_ROOT_ENTRIES,
+                  TargetDirAddress, 
+                  NumberOfEntries,
                   (char *) file_name,
                   (unsigned long) file_size,
                   (unsigned long) size_in_bytes,
@@ -4337,6 +4398,7 @@ void set_global_open_file ( void *file, int Index )
     file_table[Index] = (unsigned long) file;
 }
 
+// Get a pointer in file_table[i] given the index.
 // Get file pointer?
 // Can we use "FILE *" instead?
 void *get_global_open_file (int Index)
@@ -4353,7 +4415,7 @@ void *get_global_open_file (int Index)
     return (void *) file_table[Index];
 }
 
-// Clear the list
+// Clear the list 'dev_dir[i]'.
 int fs_initialize_dev_dir(void)
 {
     register int i=0;
@@ -4370,13 +4432,8 @@ int fs_initialize_dev_dir(void)
     return 0;
 }
 
-/*
- * fsInitializeWorkingDiretoryString:
- *     Atualiza a string do diretorio de trabalho.
- * Essa eh a string que sera mostrada antes do prompt.
- * 'pwd'> 
- */
-
+// Update the 'Current Working Directory' string.
+// string:>
 void fsInitializeWorkingDiretoryString (void)
 {
 
@@ -4408,29 +4465,28 @@ void fsInitializeWorkingDiretoryString (void)
     volume_string[6] = (char)( '1' + (char) current_volume - (char) 1 );
     volume_string[7] = '\0';
 
-	//'root:'
-	//  ## volume list ##
-	//primeiro colocamos a string que indica a lista de volumes. 
+// 'root:'
+//  ## volume list ##
+// Primeiro colocamos a string que indica a lista de volumes. 
+    ksprintf(CWD.path,FS_ROOT_STRING); 
 
-    ksprintf ( CWD.path, FS_ROOT_STRING ); 
-
-	//'/'
-	// ## separador ##
-    strcat ( CWD.path, FS_PATHNAME_SEPARATOR );
+// '/'
+// ## separador ##
+    strcat(CWD.path,FS_PATHNAME_SEPARATOR);
 
 //
 // volume root dir 
 //
 
-// #todo
-// Check overflow.
-
-    if ( current_volume < 0 ){
+// #todo: Check overflow.
+    if (current_volume < 0){
         panic ("fsInitializeWorkingDiretoryString: current_volume\n");
     }
+    //if (current_volume >= ?)
+        //something()
 
+// Structure pointer
     v = (struct volume_d *) volumeList[current_volume];
-
     if ((void *) v == NULL){
         panic ("fsInitializeWorkingDiretoryString: v\n");
     }else{
@@ -4489,19 +4545,19 @@ void fsInitializeWorkingDiretoryString (void)
 
 // #bugbug
 // What is the limit for this string ? 32 bytes.
-// See: rtl/fs/path.h and globals.h
+// See: path.h and globals.h
 
 // Separador
     strcat ( CWD.path, FS_PATHNAME_SEPARATOR );
     CWD.path[31] = 0;
 
 // Size
-    int size=0;
-    size = strlen(CWD.path);
-    if (size > 31){
-        size = 31;
+    size_t PathSize=0;
+    PathSize = (size_t) strlen(CWD.path);
+    if (PathSize > 31){
+        PathSize = 31;
     }
-    CWD.size = size;
+    CWD.size = PathSize;
 
 // More ?...
 
@@ -4533,7 +4589,7 @@ int fsInit (void)
         panic("fsInit: buffers");
     }
 
-// Undefined fs!
+// Undefined fs type.
     set_filesystem_type(FS_TYPE_NULL);
 
 // Initialize fat16 support for the system's volume.
@@ -4543,6 +4599,7 @@ int fsInit (void)
     fat16Init();
 
 // Init dev/ dir.
+// Is it a 'virtual folder'?
     fs_initialize_dev_dir();
 
 //
@@ -4605,7 +4662,7 @@ int fsInit (void)
 // #test
 // The file pointer represents the boot volume.
 // see: storage.h
-    if ((void*) storage == NULL )
+    if ((void*) storage == NULL)
         panic("fsInit: storage\n");
     if (storage->magic != 1234)
         panic("fsInit: storage validation\n");
@@ -4665,9 +4722,7 @@ int fsInit (void)
 // #todo: mudar para pipe_gramadocore_init_execve_fp
 // aloca memoria para a estrutura.
     
-    pipe_gramadocore_init_execve = 
-        (file *) kmalloc( sizeof(file) );
-
+    pipe_gramadocore_init_execve = (file *) kmalloc(sizeof(file));
     if ((void *) pipe_gramadocore_init_execve == NULL){
         panic ("fsInit: pipe_gramadocore_init_execve\n");
     }

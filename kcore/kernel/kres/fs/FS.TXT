@@ -1,0 +1,11 @@
+
+ There is some special representation of folder name. It makes
+easy for the file system to find the file in the given pathname.
+
+'#TEST.TXT' is the representation of the pathname '/DE/TEXT.TXT'
+'@TEST.TXT' is the representation of the pathname '/GRAMADO/TEXT.TXT'
+
+Probably this system will have some reserved names for the standard devices.
+Just like, '/NULL' or '/RANDOM' 
+
+
