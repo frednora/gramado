@@ -2613,22 +2613,16 @@ void change_window_state(struct gws_window_d *window, int state)
 
 // Is it a valid state?
 // #todo: We can create a worker for this routine.
-    int is_valid = FALSE;
     switch (state){
         case WINDOW_STATE_FULL:
         case WINDOW_STATE_MAXIMIZED:
         case WINDOW_STATE_MINIMIZED:
         case WINDOW_STATE_NORMAL:
-            is_valid = TRUE;
+            window->state = state;
             break;
         default:
-            is_valid = FALSE;
             break;
     };
-
-    if (is_valid == TRUE){
-        window->state = state;
-    }
 }
 
 void maximize_window(struct gws_window_d *window)

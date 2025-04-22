@@ -1608,16 +1608,16 @@ fail:
     return (int) (-1);
 }
 
-// Draw char.
-// Service 1004.
-int serviceDrawChar(void)
-{
-// Business Logic:
+// Service 1004: Draw a char into a given window.
 // Draw a char into the screen.
 // Is it showing or not?
-
+int serviceDrawChar(void)
+{
     unsigned long *message_address = (unsigned long *) &__buffer[0];
+
     struct gws_window_d *window;
+    struct gws_window_d *parent;
+
     int window_id = -1;
     unsigned long x=0;
     unsigned long y=0;
@@ -1642,21 +1642,55 @@ int serviceDrawChar(void)
    _string[0] = (unsigned char) C;
    _string[1] = (unsigned char) 0;
 
+//
+// Target window.
+//
+
 // Window ID limits
     if ( window_id < 0 || window_id >= WINDOW_COUNT_MAX ){
-        //server_debug_print ("gwssrv: serviceDrawChar window_id\n");
-        return -1;
+        goto fail;
     }
 // Get the window structure given the id.
     window = (struct gws_window_d *) windowList[window_id];
-    if ( (void *) window == NULL ){
-        //server_debug_print ("gwssrv: serviceDrawChar window\n");
-        return -1;
+    if ((void *) window == NULL){
+        goto fail;
     }
     if ( window->used != TRUE || window->magic != 1234 ){
-        //server_debug_print ("gwssrv: serviceDrawChar window validation\n");
-        return -1;
+        goto fail;
     }
+
+// Window state
+    if (window->state == WINDOW_STATE_MINIMIZED){
+        goto fail;
+    }
+// Enabled?
+    if (window->enabled != TRUE)
+        goto fail;
+
+//
+// Parent window.
+//
+
+// If the parent window is minimized, we simply can't
+// paint on our window.
+
+    parent = (struct gws_window_d *) window->parent;
+    if ((void *) parent == NULL){
+        goto fail;
+    }
+    if ( parent->used != TRUE || parent->magic != 1234 ){
+        goto fail;
+    }
+
+// Window state
+    if (parent->state == WINDOW_STATE_MINIMIZED){
+        goto fail;
+    }
+// Enabled?
+    if (parent->enabled != TRUE)
+        goto fail;
+
+// ---------------------------
 
     x = (unsigned long) (x & 0xFFFFFFFF);
     y = (unsigned long) (y & 0xFFFFFFFF);
@@ -1667,8 +1701,7 @@ int serviceDrawChar(void)
 // See: dtext.c
 // If this window is overlapped window,
 // so paint into the client area.
-    if (window->type == WT_OVERLAPPED)
-    {
+    if (window->type == WT_OVERLAPPED){
         // #
         // A chamada indica um deslocamento 
         // dentro da área de cliente da parent,
@@ -1712,6 +1745,9 @@ int serviceDrawChar(void)
 */
 
     return 0;
+
+fail:
+    return (int) -1;
 }
 
 int serviceChangeWindowPosition(void)

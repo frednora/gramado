@@ -1962,6 +1962,35 @@ done:
                     Event_LongRawByte );
             }
             */
+
+            // Let's send only the function keys to the display server,
+            // not the other ones. In order to be used by the window manager.
+            // Make and Break.
+            if (InputTargets.target_thread_queue == TRUE)
+            {
+                if (Event_Message == MSG_SYSKEYDOWN || Event_Message == MSG_SYSKEYUP)
+                {
+                    switch (Event_LongASCIICode){
+                        case VK_F1: 
+                        case VK_F2: 
+                        case VK_F3: 
+                        case VK_F4:
+                        case VK_F5: 
+                        case VK_F6: 
+                        case VK_F7: 
+                        case VK_F8:
+                        case VK_F9: 
+                        case VK_F10: 
+                        case VK_F11: 
+                        case VK_F12:
+                            ipc_post_message_to_ds(
+                                Event_Message, 
+                                Event_LongASCIICode,
+                                Event_LongRawByte );
+                            break;
+                    };
+                }
+            }
             return 0;
         }
 

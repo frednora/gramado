@@ -6582,18 +6582,10 @@ int dock_window( struct gws_window_d *window, int position )
 
         // -----------------
         // :: BOTTOM (minimize)
-        //#todo: restore or put it in the center.
         case 3:
-            //gws_resize_window( window, (w -4), h>>1 );
-            //gwssrv_change_window_position( window, (l +2), h>>2 );
-            
-            // #test
-            // Let's minimize the window.
-            // No iconic window for now.
             if (window->state != WINDOW_STATE_MINIMIZED){
                 minimize_window(window);
             }
-
             break;
 
         // -----------------

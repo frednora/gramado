@@ -1871,19 +1871,22 @@ gws_draw_char (
     int Response=0;
     int Value=0;
     int req_status = -1;
+    unsigned int Color = color;
 
     if (fd<0)    {goto fail;}
     if (window<0){goto fail;}
 
 // Request
-    req_status = __gws_drawchar_request (
-        (int) fd,             // fd
-        (int) window,         // window id
-        (unsigned long) x,    // left
-        (unsigned long) y,    // top
-        (unsigned int) (color & 0xFFFFFFFF),
-        (unsigned int) (ch & 0xFF) );
-    if (req_status<=0){
+// fd, wid, l, t, color, char.
+    req_status = 
+        __gws_drawchar_request (
+            (int) fd,
+            (int) window,
+            (unsigned long) x,
+            (unsigned long) y,
+            (unsigned int) Color,
+            (unsigned int) (ch & 0xFF) );
+    if (req_status <= 0){
         goto fail;
     }
     rtl_set_file_sync( 

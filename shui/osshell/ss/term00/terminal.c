@@ -1640,7 +1640,7 @@ static void doPrompt(int fd)
         CharHeight = FontInfo.height;
     }
 
-// draw prompt symbol.
+// Draw prompt symbol.
     gws_draw_char ( 
         fd, 
         wid, 
