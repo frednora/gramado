@@ -71,7 +71,7 @@ struct system_d  *System;
 //unsigned long gInitializationPhase=0;
 
 // The initialization structure.
-// See: kinit.h
+// See: ke/kinit.h
 struct initialization_d  Initialization;
 
 
@@ -195,10 +195,10 @@ static void __enter_debug_mode(void)
 static void __print_final_messages(void)
 {
 // Final messages
-    if ( Initialization.is_serial_log_initialized == TRUE ){
+    if (Initialization.is_serial_log_initialized == TRUE){
         PROGRESS("::(2)(3): [final message] FAILURE\n");
     }
-    if ( Initialization.is_console_log_initialized == TRUE ){
+    if (Initialization.is_console_log_initialized == TRUE){
         printk("init: [final message] FAILURE\n");
         refresh_screen();
     }

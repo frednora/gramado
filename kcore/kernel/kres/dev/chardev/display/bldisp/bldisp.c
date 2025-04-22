@@ -945,6 +945,9 @@ int DDINIT_bldisp(void)
 // Structure initialization.
     bl_display_device->initialized = TRUE;
 
+
+    Initialization.is_bldisp_initialized = TRUE;
+
     return 0;
 }
 

@@ -41,6 +41,17 @@ struct initialization_d
 // Se ja podemos usar o console virtual para log.
     int is_console_log_initialized;
 
+// Bootloader display device:
+// See: bldisp.c
+    int is_bldisp_initialized;
+
+// #todo
+    //int is_early_ps2_initialized;
+    // int is_blkdev_initialized;
+    // ...
+    // int is_standard_stream_initialized;
+
+
 // The kernel can print string into the screen
 // only when it owns the display driver.
 // When the window server is initialized,

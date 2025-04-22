@@ -6510,9 +6510,9 @@ int dock_window( struct gws_window_d *window, int position )
         goto fail;
     }
 // Can't be the active window
-    //if (window == taskbar_window){
-    //    goto fail;
-    //}
+    if (window == taskbar2_window){
+        goto fail;
+    }
 
 // Window manager:
 
@@ -6663,10 +6663,10 @@ int dock_active_window(int position)
         goto fail;
     }
 // Can't be the taskbar.
-    //if (w == taskbar_window){
-    //    goto fail;
-    //}
-    
+    if (aw == taskbar2_window){
+        goto fail;
+    }
+
 // Dock
     dock_window(aw,position);
     return 0;
