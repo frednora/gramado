@@ -90,8 +90,8 @@ all:
 	$(CC) -c fat/fat16.c  $(KERNEL_INCLUDE) $(CFLAGS) -o fat16.o
 
 # link
-	$(LD) -r -o j2_fs.o $(OBJS)
-	cp j2_fs.o ../../
+	$(LD) -r -o k2_fs.o $(OBJS)
+	cp k2_fs.o ../../
 	rm *.o
 
 clean:

@@ -80,8 +80,8 @@ all:
 	$(CC) -c kunistd.c $(KERNEL_INCLUDE) $(CFLAGS) -o kunistd.o
 
 # link
-	$(LD) -r -o i1_clibs.o $(OBJS)
-	cp i1_clibs.o ../../
+	$(LD) -r -o i0_clibs.o $(OBJS)
+	cp i0_clibs.o ../../
 	rm *.o
 
 clean:

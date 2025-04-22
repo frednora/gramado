@@ -138,12 +138,6 @@ unsigned long saved_bootblock_base=0;
 #define bb_idePortNumber  6  // offset 48.
 // ...
 
-// #test
-// See:
-// head_64.asm
-extern void x86_64_initialize_machine(void);
-
-
 // ================================
 
 //

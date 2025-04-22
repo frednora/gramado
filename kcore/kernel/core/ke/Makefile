@@ -166,8 +166,8 @@ all:
 	$(CC) -c ke.c     $(KERNEL_INCLUDE) $(CFLAGS) -o ke.o
 
 # link
-	$(LD) -r -o i2_ke.o $(OBJS)
-	cp i2_ke.o ../../
+	$(LD) -r -o i1_ke.o $(OBJS)
+	cp i1_ke.o ../../
 	rm *.o
 
 clean:

@@ -90,8 +90,8 @@ all:
 # ...
 
 # link
-	$(LD) -r -o j0_bus.o $(OBJS)
-	cp j0_bus.o ../../
+	$(LD) -r -o k0_bus.o $(OBJS)
+	cp k0_bus.o ../../
 	rm *.o
 
 clean:

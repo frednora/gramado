@@ -78,43 +78,47 @@ CFLAGS := \
 # ...
 
 # ========================
-# Objects
+# Gramado objects: h | iiiii | jjjjj | kkkkk.
 
 # ========================
-# :: arch - Entrypoint and assembly files.
+# :1:h arch/ - Entrypoint and assembly files.
 objects-y := head_64.o 
 
 # ========================
-# :: core - Resource controllers.
-objects-y += i1_clibs.o  
-objects-y += i2_ke.o  
-objects-y += i3_kmain.o  
+# :2:i core/ - Resource controllers.
+objects-y += i0_clibs.o  
+objects-y += i1_ke.o  
+objects-y += i2_kmain.o  
 
 # ========================
-# :: gramk - Main wrapper for the kernel.
-objects-y += x_gramk.o  
+# :3:j gramk/ - Main wrapper for the kernel io system.
+objects-y += j0_gramk.o  
 
 # ========================
-# :: kres - Kernel resources
+# :4:k kres/ - Kernel resources
 # We can create interfaces that belongs to a given cgroup.
-objects-y += j0_bus.o  
-objects-y += j1_dev.o  
-objects-y += j2_fs.o  
-objects-y += j3_mm.o  
-objects-y += j4_net.o    
+objects-y += k0_bus.o  
+objects-y += k1_dev.o  
+objects-y += k2_fs.o  
+objects-y += k3_mm.o  
+objects-y += k4_net.o    
+
+#objects-y += linux.o  
+#objects-y += windows.o  
+#objects-y += your.o  
 
 # ========================
 PHONY := all
-all: k1 k2 \
+all: part01 part02 \
 link-kernel \
 clean    
 
 	@echo "Done?"
 
 #----------------
-# k1:: Core kernel components
-k1:
-	@echo "Compiling: Compiling k1"
+# part01:: Core kernel components
+part01:
+	@echo "Compiling: Compiling part01"
 # Kernel arch - Startup and entry code.
 	$(Q)$(MAKE) -C arch/
 # Compile all in core/ folder.
@@ -123,9 +127,9 @@ k1:
 	$(Q)$(MAKE) -C gramk/
 
 #----------------
-# k2:: Kernel resources
-k2:
-	@echo "Compiling: Compiling k2"
+# part02:: Kernel resources
+part02:
+	@echo "Compiling: Compiling part02"
 	$(Q)$(MAKE) -C kres/
 
 #----------------

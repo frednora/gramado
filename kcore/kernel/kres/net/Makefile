@@ -99,8 +99,8 @@ $(KERNEL_INCLUDE) $(CFLAGS) -o ipv4.o
 	$(CC) -c prot/dhcp.c  $(KERNEL_INCLUDE) $(CFLAGS) -o dhcp.o
 
 # link
-	$(LD) -r -o j4_net.o $(OBJS)
-	cp j4_net.o ../../
+	$(LD) -r -o k4_net.o $(OBJS)
+	cp k4_net.o ../../
 	rm *.o
 
 clean:

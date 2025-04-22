@@ -134,8 +134,8 @@ all:
 	$(CC) -c io.c       $(KERNEL_INCLUDE) $(CFLAGS) -o io.o
 
 # link
-	$(LD) -r -o j1_dev.o $(OBJS)
-	cp j1_dev.o ../../
+	$(LD) -r -o k1_dev.o $(OBJS)
+	cp k1_dev.o ../../
 	rm *.o
 
 clean:

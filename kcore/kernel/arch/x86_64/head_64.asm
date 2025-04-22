@@ -328,7 +328,8 @@ START:
     mov rdi, rax    ; First argument.
     ; ...
 
-; Call kmain() function in kmain.c
+; Call I_kmain() function in kmain.c
+; See: core/kmain/kmain.c
     call _I_kmain
 dieLoop:
     cli
@@ -336,12 +337,6 @@ dieLoop:
     jmp dieLoop
 
 ; =======================================================
-; _x86_64_initialize_machine
-;    Called by kmain() to make the early initialization.
-align 8
-global _x86_64_initialize_machine
-_x86_64_initialize_machine:
-    ret
 
 ;; GDT
 ;; See:
