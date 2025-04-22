@@ -351,9 +351,9 @@ struct windowframe_d
 struct mouse_pointer_properties_d 
 {
     int test_value;
+    unsigned int bg_color;
     // ...
 };
-
 
 // gws_window_d:
 // Server-side window object.

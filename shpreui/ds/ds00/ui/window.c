@@ -700,6 +700,8 @@ void *doCreateWindow (
 // Valid only for this window.
 // See: widnow.h
     window->mpp.test_value = 1000;
+    window->mpp.bg_color = 
+        (unsigned int) (COLOR_BEIGE + rand());
 
 // ===================================
 

@@ -342,7 +342,7 @@ long comp_get_mouse_y_position(void)
 }
 
 // #todo
-// We need to put this routine in another file.
+// We need to put this routine in another file. Maybe painter.c
 // maybe mouse.c
 // #ps: 
 // This is a low level routine. 
@@ -367,6 +367,9 @@ static void direct_draw_mouse_pointer(void)
 
     //int UseBMPImage= TRUE;
 
+    struct gws_window_d *w;
+
+
 // BMP Image
     //if (UseBMPImage == TRUE){
         // #todo
@@ -376,6 +379,14 @@ static void direct_draw_mouse_pointer(void)
 //
 // Rectangle
 //
+
+// Change maouse pointer parameters.
+    w = (struct gws_window_d *) get_mousehover();
+    if ((void*)w != NULL){
+        if (w->magic == 1234){
+            rectColor = (unsigned int) w->mpp.bg_color;
+        }
+    }
 
 // Printing directly into the LFB.
 // #ps: 

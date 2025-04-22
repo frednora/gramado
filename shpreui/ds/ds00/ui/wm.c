@@ -1272,6 +1272,7 @@ static void on_mouse_released(void)
 static void on_mouse_hover(struct gws_window_d *window)
 {
 
+// Parameter:
     if ((void*) window == NULL)
         return;
     if (window->magic != 1234)
