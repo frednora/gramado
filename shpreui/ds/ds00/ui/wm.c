@@ -5805,8 +5805,21 @@ ProcessEvent:
         return 0;
     }
 
-    //if (msg == GWS_Close)
-    //    gwssrv_quit();
+// #test: [Control + w] also generate GWS_Close message.
+// Close with the active window.
+// Actually a combination also can genrate this message.
+    if (msg == GWS_Close)
+    {
+        if ((void*) active_window != NULL)
+        {
+            if (active_window->magic == 1234)
+            {
+                yellow_status("Close window");
+                window_post_message ( active_window->id, GWS_Close, 0, 0 );        
+            }
+        }
+    }
+
 
     //if (msg == GWS_UpdateDesktop)
     //    wm_update_desktop(TRUE,TRUE);

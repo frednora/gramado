@@ -9,10 +9,6 @@
 // It manages the compositor behavior.
 struct compositor_d  Compositor;
 
-// The callback can't use the compose()
-// if the display server is using it at the moment.
-int __compose_lock = FALSE;
-
 // #todo
 // Create some configuration globals here
 // int gUseSomething = TRUE;
@@ -196,6 +192,7 @@ int gws_show_window_rect(struct gws_window_d *window)
     //#debug
     //debug_print("gws_show_window_rect:\n");
 
+// Parameter:
     if ((void *) window == NULL){
         goto fail;
     }
@@ -273,20 +270,23 @@ void DoWeNeedToEraseMousePointer(int value)
     __clear_mousebox = (int) value;
 }
 
+// Find the new mouse_hover window.
 // What is the window where the mouse pointer is inside?
 // Compare the global variables for mouse pointer 
 // against the windows dimensions to find the perfect match.
 // mouse_hover is the pointer for the window with the mouse pointer.
 void mouse_at(void)
 {
-    struct gws_window_d *w;
+// Compare the mouse position (__new_mouse_x and__new_mouse_y)
+// against the windows. 
+
+    struct gws_window_d *new_hover_window;
     register int i=0;
 
-    // #todo: Is it necessary?
-    // mouse_hover = NULL;
+// Check if the mouse pointer is already in mouse_hover.
+// Compare the mouse position (__new_mouse_x and__new_mouse_y)
+// against the mouse_hover window. 
 
-// #test
-// The mouse pointer is already in mouse_hover.
     if ((void*) mouse_hover != NULL)
     {
         if (mouse_hover->magic == 1234)
@@ -307,23 +307,31 @@ void mouse_at(void)
         }
     }
 
+// Find the new mouse_hover window.
+// Compare the mouse position (__new_mouse_x and__new_mouse_y)
+// against all the mouse_hover window. 
+
+// #bugbug
+// We gotta check window inside window.
+
     for (i=0; i<WINDOW_COUNT_MAX; i++)
     {
-        w = (void*) windowList[i];
-        if ((void*) w != NULL)
+        new_hover_window = (void*) windowList[i];
+        if ((void*) new_hover_window != NULL)
         {
-            if (w->magic == 1234)
+            if (new_hover_window->magic == 1234)
             {
-                if ( __new_mouse_x > w->absolute_x &&
-                     __new_mouse_x < w->absolute_right &&
-                     __new_mouse_y > w->absolute_y &&
-                     __new_mouse_y > w->absolute_bottom )
+                if ( __new_mouse_x > new_hover_window->absolute_x &&
+                     __new_mouse_x < new_hover_window->absolute_right &&
+                     __new_mouse_y > new_hover_window->absolute_y &&
+                     __new_mouse_y > new_hover_window->absolute_bottom )
                 {
-                    // Not the root
-                    if (w != __root_window)
+                    // Not the root. So accept this hover window.
+                    if (new_hover_window != __root_window)
                     {
-                        mouse_hover = (void *) w;
+                        mouse_hover = (void *) new_hover_window;
                         //redraw_window(w,TRUE);
+                        return;
                     }
                 }
             }
@@ -504,24 +512,30 @@ wmCompose(
     unsigned long clocks_per_second )
 {
 
-// Locked?
-    if (__compose_lock == TRUE)
+// It's locked. Return.
+    if (Compositor._locked == TRUE)
         return;
-// Lock
-    __compose_lock = TRUE;
 
-// Compositor
-// Every window was painted into private offscreen buffers.
+// Lock.
+// This way this routine can't be called recursively,
+// or for a callback routine or signal.
+    Compositor._locked = TRUE;
+
+    // Compositor
+    // Every window was painted into private offscreen buffers.
     if (Compositor.__enable_composition == TRUE){
         // compose();
 
-// Every window was painted into the backbuffer.
-    }else{
+    // Flush
+    // Every window was painted into the backbuffer.
+    } else {
         comp_display_desktop_components();
     };
 
+    Compositor.counter++;
+
 // Unlock
-    __compose_lock = FALSE;
+    Compositor._locked = FALSE;
 }
 
 /*
@@ -596,6 +610,11 @@ void comp_set_mouse_position(long x, long y)
 int compInitializeCompositor(void)
 {
 
+    Compositor.initialized = FALSE;
+
+    Compositor.counter = 0;
+    Compositor._locked = FALSE;
+
 // >> This flag enables composition for the display server.
 // In this case the server will compose a final backbbuffer
 // using buffers and the zorder for these buffers. In this case 
@@ -603,7 +622,7 @@ int compInitializeCompositor(void)
 // >> If this flag is not set, all the windows will be painted in the
 // directly in the same backbuffer, and the compositor will just
 // copy the backbuffer to the LFB.
-    Compositor.__enable_composition = FALSE;
+    Compositor.__enable_composition = FALSE; 
 
 // The structure is initialized.
     Compositor.used = TRUE;

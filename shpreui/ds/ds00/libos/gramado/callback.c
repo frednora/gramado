@@ -25,12 +25,12 @@ static inline void do_restorer(void)
 
 static void callback_compose(void)
 {
-    if (__compose_lock == TRUE)
+    if (Compositor._locked == TRUE)
         return;
 
-    __compose_lock = TRUE;
+    Compositor._locked = TRUE;
     comp_display_desktop_components();
-    __compose_lock = FALSE;
+    Compositor._locked = FALSE;
 }
 
 //========================================================

@@ -6,7 +6,7 @@
 #ifndef __COMP_H
 #define __COMP_H    1
 
-extern int __compose_lock;
+//extern int __compose_lock;
 
 
 struct compositor_d
@@ -14,6 +14,9 @@ struct compositor_d
     int used;
     int magic;
     int initialized;
+
+    int _locked;
+    unsigned long counter;
 
 // >> This flag enables composition for the display server.
 // In this case the server will compose a final backbbuffer

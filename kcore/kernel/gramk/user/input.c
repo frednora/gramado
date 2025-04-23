@@ -930,45 +930,52 @@ __consoleProcessKeyboardInput (
                 // #todo: Podemos criar uma flag que diga se a thread 
                 // é um terminal virtual ou não. t->isVirtualTerminal.
 
-                // ^c
-                if (ctrl_status == TRUE && long1 == ASCII_ETX){
-                    ipc_post_message_to_ds( MSG_COPY, long1, long2 );
-                    return 0;
-                }
-
-                // ^v
-                if (ctrl_status == TRUE && long1 == ASCII_SYN){
-                    ipc_post_message_to_ds( MSG_PASTE, long1, long2 );
-                    return 0;
-                }
-
-                // ^x
-                if (ctrl_status == TRUE && long1 == ASCII_CAN){
-                    ipc_post_message_to_ds( MSG_CUT, long1, long2 );
-                    return 0;
-                }
-
-                // ^z
-                if (ctrl_status == TRUE && long1 == ASCII_SUB){
-                    ipc_post_message_to_ds( MSG_UNDO, long1, long2 );
-                    return 0;
-                }
-
-                // ^a
+                // ^a = Start OF Header = 1
                 if (ctrl_status == TRUE && long1 == ASCII_SOH){
                     ipc_post_message_to_ds( MSG_SELECT_ALL, long1, long2 );
                     return 0;
                 }
 
-                // ^f
+                // ^c = End Of Text = 3
+                if (ctrl_status == TRUE && long1 == ASCII_ETX){
+                    ipc_post_message_to_ds( MSG_COPY, long1, long2 );
+                    return 0;
+                }
+
+                // ^f = Acknowledgement = 6
                 if (ctrl_status == TRUE && long1 == ASCII_ACK){
                     ipc_post_message_to_ds( MSG_FIND, long1, long2 );
                     return 0;
                 }
 
-                // ^s
+                // ^w = End Of Transition Block = 17
+                // Let's close the active window with [control + w]. 
+                if (ctrl_status == TRUE && long1 == ASCII_ETB){
+                    ipc_post_message_to_ds( MSG_CLOSE, long1, long2 );
+                    return 0;
+                }
+
+                // ^s = Device Control 3 = 19
                 if (ctrl_status == TRUE && long1 == ASCII_DC3){
                     ipc_post_message_to_ds( MSG_SAVE, long1, long2 );
+                    return 0;
+                }
+
+                // ^v = Synchronous Idle = 22
+                if (ctrl_status == TRUE && long1 == ASCII_SYN){
+                    ipc_post_message_to_ds( MSG_PASTE, long1, long2 );
+                    return 0;
+                }
+
+                // ^x = Cancel = 24
+                if (ctrl_status == TRUE && long1 == ASCII_CAN){
+                    ipc_post_message_to_ds( MSG_CUT, long1, long2 );
+                    return 0;
+                }
+
+                // ^z = Substitute - 26
+                if (ctrl_status == TRUE && long1 == ASCII_SUB){
+                    ipc_post_message_to_ds( MSG_UNDO, long1, long2 );
                     return 0;
                 }
 
