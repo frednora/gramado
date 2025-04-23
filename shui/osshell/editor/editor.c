@@ -151,12 +151,10 @@ static void editorShutdown(int fd)
     if (fd<0)
         return;
 
-    gws_destroy_window(fd,addressbar_window);
-    gws_destroy_window(fd,savebutton_window);
     gws_destroy_window(fd,client_window);   // #bugbug: sometimes we can't delete this window.
-
+    gws_destroy_window(fd,savebutton_window);
+    gws_destroy_window(fd,addressbar_window);
     gws_destroy_window(fd,main_window);
-    close(fd);
 }
 
 static void update_clients(int fd)
@@ -423,14 +421,12 @@ editorProcedure(
 
     case MSG_CLOSE:
         printf ("editor.bin: MSG_CLOSE\n");
-        gws_destroy_window(fd,savebutton_window);
-        gws_destroy_window(fd,main_window);
+        editorShutdown(fd);
         //isTimeToQuit = TRUE;
         // #test
-        if ((void*) Display != NULL){
+        //if ((void*) Display != NULL){
             //gws_close_display(Display);
-        }
-        //while(1){}
+        //}
         exit(0);
         break;
     
@@ -751,6 +747,7 @@ int editor_initialize(int argc, char *argv[])
     cursor_x_max = ((w_width/8)  -1);
     cursor_y_max = ((w_height/8) -1);
 
+// Create main window.
     main_window = 
         (int) gws_create_window (
                   client_fd,
@@ -809,6 +806,8 @@ int editor_initialize(int argc, char *argv[])
 // Inside the main window.
 // se a janela mae é overlapped, 
 // então estamos relativos à sua área de cliente.
+
+// Create address bar window.
     addressbar_window = 
         (int) gws_create_window (
                   client_fd,
@@ -855,6 +854,8 @@ int editor_initialize(int argc, char *argv[])
 
     // #test
     // The 'button state' is the same of window status.
+
+// Create save button window.
     savebutton_window = 
         (int) gws_create_window ( 
                   client_fd,
@@ -932,6 +933,7 @@ int editor_initialize(int argc, char *argv[])
 // We gotta get the client window values.
     unsigned long cw_height = (lWi.cr_height - cw_top);
 
+// Create client window.
     client_window = 
         (int) gws_create_window ( 
                 client_fd,
