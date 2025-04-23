@@ -389,45 +389,7 @@ unsigned long get_timeout (void)
     return (unsigned long) time_out;
 }
 
-// set_quantum:
-void set_quantum ( unsigned long q)
-{
-    quantum = (unsigned long) q;
-}
-
-// get_quantum:
-unsigned long get_quantum (void)
-{
-    return (unsigned long ) quantum;
-}
-
-
-// set_current_quantum: 
-void set_current_quantum (unsigned long q)
-{
-    current_quantum = (unsigned long) q;
-}
-
-// get_current_quantum:
-unsigned long get_current_quantum (void)
-{
-    return (unsigned long ) current_quantum;
-}
-
-// set_next_quantum:
-void set_next_quantum (unsigned long q)
-{
-    next_quantum = (unsigned long) q;
-}
-
-// get_next_quantum:
-unsigned long get_next_quantum (void)
-{
-    return (unsigned long ) next_quantum;
-}  
-
-
-void set_systime_hz ( unsigned long hz )
+void set_systime_hz(unsigned long hz)
 {
     sys_time_hz = hz;
 }
@@ -563,10 +525,7 @@ int timerInit(void)
 // ?? Não se se ja foi configurado o timer.
 // ou devemos chamr init_8253() agora. ou depois.
     //timerCountSeconds = 0;
-// Quantum
-    set_current_quantum (QUANTUM_MIN);
-    set_next_quantum (QUANTUM_MIN);
-    set_quantum (QUANTUM_MIN);
+
 // Timeout 
     set_timeout(0);
 // Whatchdogs
@@ -616,14 +575,6 @@ int early_timer_init (void)
 // We can use the default variable. 
 // See: config.h
     timerInit8253(HZ);
-
-// Quantum
-// #bugbug
-// Is this the right place for that configuration?
-// Is it about thread configuration?
-    set_current_quantum(QUANTUM_MIN);
-    set_next_quantum(QUANTUM_MIN);
-    set_quantum(QUANTUM_MIN);
 
 // Timeout
     set_timeout(0);

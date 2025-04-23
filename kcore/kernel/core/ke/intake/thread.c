@@ -1659,9 +1659,6 @@ int init_threads(void)
     //ProcessorBlock.threads_counter = 0;
     UPProcessorBlock.threads_counter = (int) 0;
 
-// #todo: outdated.
-    //forkid = 0;                      //
-    task_count = (unsigned long) 0;  //Zera o contador de tarefas criadas.
    //...
 
 // #todo: 
@@ -1669,13 +1666,6 @@ int init_threads(void)
 // task é sinonimo de process.
 
 // Variáveis usadas na inicialização de uma nova tarefa.
-
-// Se há uma nova tarefa.
-    start_new_task_status  = (unsigned long) 0;
-// Id dá nova tarefa.
-    start_new_task_id = (int) 0;
-//Endereção da nova tarefa.
-    start_new_task_address = (unsigned long) 0;
 
 // #todo: 
 // Há mais variáveis para serem inicializadas??!!

@@ -191,15 +191,6 @@ void timerInit8253(unsigned int freq);
 void set_timeout(unsigned long ticks);
 unsigned long get_timeout(void);
 
-void set_quantum(unsigned long q);
-unsigned long get_quantum(void);
-
-void set_current_quantum(unsigned long q);
-unsigned long get_current_quantum(void);
-
-void set_next_quantum(unsigned long q);
-unsigned long get_next_quantum(void);
-
 void set_systime_hz(unsigned long hz);
 unsigned long get_systime_hz(void);
 

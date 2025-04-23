@@ -190,17 +190,8 @@ int processDeferredKernelRequest(void)
             break;
 
         //5 - start new task.
-        //Uma nova thread passa a ser a current, para rodar pela primeira vez.
-        //Não mexer. Pois temos usado isso assim.	
         case KR_NEW:
-            //debug_print ("processDeferredKernelRequest: Start a new thread\n");
-            //Start a new thread. 
-            if (start_new_task_status == 1)
-            {
-                current_thread = start_new_task_id;
-            }
             break;
-
 
         //6 - torna atual a próxima thread anunciada pela atual.
         case KR_NEXT:

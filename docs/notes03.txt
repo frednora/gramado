@@ -1,0 +1,15 @@
+This week, I focused on improving usability in my project, which already has many features. Here are the enhancements I made:
+
+I worked on determining the type of input each process will receive. Should it come from stdin, the message queue inside the thread’s structure, or an event that the client application retrieves from the display server? The answer depends on the subsystem or environment in which the application runs. Certain input methods are only available in specific environments.
+
+I improved communication between the virtual terminal and command programs. Currently, they exchange data using standard streams, but I am implementing a tty infrastructure and a pipe with two connectors, using regular files.
+
+I refined kernel console support to provide a better infrastructure for programs that can access the entire screen via stdout. These consoles are based on the tty structure.
+
+I worked on direct communication between the kernel and the display server. Instead of using sockets, I implemented system messages for extremely fast input processing, especially for keyboard combinations. The display server’s window manager utilizes these inputs to position windows efficiently. Since the display server has a higher quantum than other threads, it remains highly responsive.
+
+The display server operates in a loop running at 60 cycles per second (~16.6 ms per cycle). If a cycle completes in 6 ms, the thread sleeps for 10 ms, allowing other threads time to execute. This loop handles input events, processes requests from clients, responds to them, and refreshes dirty windows by copying content from the backbuffer to the framebuffer (lfb). I implemented the sleep mechanism to optimize performance.
+
+I enhanced the interaction between windows, the mouse, and keyboard inputs—essentially, window management. Now, the system supports window switching, active window selection, minimizing, maximizing, docking to screen edges, and closing applications by clicking the [X] control or pressing F11.
+
+My favorite improvement was implementing the [Ctrl] + [W] shortcut to close the active window. It’s a small but satisfying usability feature.
