@@ -849,7 +849,7 @@ void I_kmain(int arch_type)
             // it sends a formated string to the serial port.
             // #ok, it is working at this part, not in the
             // beginning of the routine.
-            serial_printk("serial_printk: processor_type {%d}\n",
+            serial_printk("I_kmain: processor_type {%d}\n",
                 processor_type );
 
             // k2_ke/x86_64/x64smp.c
@@ -916,7 +916,18 @@ void I_kmain(int arch_type)
 // Setup utsname structure.
     __setup_utsname();
 
-StartSystemEnd:
+
+// Initialize support for loadable kernel modules.
+// See: mod.c 
+    int mod_status = -1;
+    mod_status = (int) mod_initialize();
+    if (mod_status != TRUE)
+        panic("I_kmain: on mod_initialize()\n");
+
+
+// -------------------------------
+//StartSystemEnd:
+
 
 // The initialization failed.
     if (Status != TRUE)

@@ -40,14 +40,6 @@ const char *initbin_cmdline3 = "INIT.BIN: --hl";
 const char *kernel_process_default_name = "KERNEL-PROCESS";
 
 // -------------------
-// Ring0 Module.
-// The name of the kernel of the root partition.
-// see: gramp/oskernel/
-
-//const char *mod_image_name = "MOD0    BIN";
-const char *mod_image_name = "HVMOD0  BIN";
-
-// -------------------
 // Image name for the init process. INIT.BIN
 const char *init_image_name = "INIT    BIN";
 // The default name for the init process
@@ -64,7 +56,7 @@ static int __setup_stdin_cmdline(void);
 static int I_initKernelComponents(void);
 
 static int I_x64CreateKernelProcess(void);
-static int __load_mod_image(void);
+
 static int I_x64CreateInitialProcess(void);
 static int __load_initbin_image(void);
 
@@ -808,66 +800,6 @@ void I_x64ExecuteInitialProcess(void)
        panic("I_x64ExecuteInitialProcess: Fail\n");
 }
 
-// Local worker
-// #todo
-// Check the information in the elf header.
-// Save some of this information in the process structure. 
-// see: exec_elf.h and process.h
-
-static int __load_mod_image(void)
-{
-// The virtual address for the module image.
-// #warning
-// This is a static address. Why not?
-// Hack me!
-    unsigned long ImageAddress = (unsigned long) 0x30A00000;
-// #bugbug
-// We have a limit for the image size.
-    unsigned long BUGBUG_IMAGE_SIZE_LIMIT = (512 * 4096);
-
-    unsigned long fileret=1;
-
-// Check the validation of the name.
-    if ((void*) mod_image_name == NULL){
-        panic("__load_mod_image: init_image_name\n");
-    }
-
-// ---------------------
-// It loads a file into the memory.
-// IN:
-//     fat_address  = FAT address.
-//     dir_addresss = Directory address.
-//     dir_entries  = Number of entries in the given directory.
-//     file_name    = File name.
-//     buffer = Where to load the file. The pre-allocated buffer.
-//     buffer_size_in_bytes = Maximum buffer size.
-// -----------------
-// OUT: 
-//    1 = fail 
-//    0 = ok
-
-    fileret = 
-        (unsigned long) fsLoadFile( 
-                            VOLUME1_FAT_ADDRESS, 
-                            VOLUME1_ROOTDIR_ADDRESS, 
-                            FAT16_ROOT_ENTRIES,    //#bugbug: number of entries.
-                            mod_image_name, 
-                            (unsigned long) ImageAddress,
-                            BUGBUG_IMAGE_SIZE_LIMIT ); 
-
-    if (fileret != 0){
-        printk("__load_mod_image: on fsLoadFile()\n");
-        goto fail;
-    }
-
-// OUT: 
-//    1 = fail 
-//    0 = ok
-    return 0;
-fail:
-    return -1;
-}
-
 // Create the kernel process.
 // It will create a process for two images:
 // This is a ring0 process.
@@ -999,33 +931,16 @@ static int I_x64CreateKernelProcess(void)
     }
     */
 
-//
-// the first Kernel module
-//
 
-// ====================
-// Initialize the kernel module list.
-    for (i=0; i<KMODULE_MAX; i++){
-        kmList[i] = 0;
-    };
-
-// Load the kernel module image.
-// #todo
-// Check the information in the elf header.
-// Save some of this information in the process structure. 
-// see: exec_elf.h and process.h
-    __load_mod_image();
-
-// ====================
-// Setup the first kernel module.
-// It is not a dynlinked module.
-// This is just a loadable ring0 thread with shared symbols.
-
-    // see: mod.c
+/*
+// # Moved to main().
+// Initialize support for loadable kernel modules.
+// See: mod.c 
     int mod_status = -1;
-    mod_status = (int) mod_initialize_first_module();
+    mod_status = (int) mod_initialize();
     if (mod_status < 0)
-        panic ("mod_status\n");
+        panic("I_x64CreateKernelProcess: mod\n");
+*/
 
 // ...
 

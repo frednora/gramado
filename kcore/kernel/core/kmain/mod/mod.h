@@ -68,7 +68,8 @@ extern unsigned long kmList[KMODULE_MAX];
 
 //----------------------------------------------
 
-int mod_initialize_first_module(void);
+
+
 void test_mod0(void);
 
 void *ring0_module_sci( 
@@ -77,7 +78,12 @@ void *ring0_module_sci(
     unsigned long arg3, 
     unsigned long arg4 );
 
+//
+// #
+// INITIALIZATION
+//
 
+int mod_initialize(void);
 
 #endif   
 
