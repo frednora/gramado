@@ -33,7 +33,7 @@ DEP_L3 = shui
 # Display servers
 DISPLAY_SERVERS = $(DEP_L2)/ds
 # windowing system with 3D demos
-GAMES           = $(DEP_L2)/gramadox
+GAMES           = $(DEP_L2)/gram3d
 
 # --------------------------
 # Client-side GUI applications

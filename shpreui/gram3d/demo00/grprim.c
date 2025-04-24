@@ -1,12 +1,8 @@
-/*
- * File: grprim.c 
- *     Primitives.
- * History:
- *     2020 - Created by Fred Nora.
- */
+// grprim.c 
+// Primitives.
+// 2020 - Created by Fred Nora.
 
 #include "gram3d.h"
-
 
 // The projection structure.
 // see grprim.h
@@ -1808,8 +1804,14 @@ fillTriangle(
 
 
 // -------------------------------------------------
-// IN: projected triangle.
-// float
+// Draw a 3D triangle into the screen. Parameter has a 3D triangle,
+// and the final result is a 2D trinagle that is gonna be projected.
+// IN: 
+// window, 
+// projected triangle (Using float values), 
+// Fill the triangle, 
+// The value for rop operations.
+
 int 
 plotTriangleF(
     struct gws_window_d *window,
@@ -1818,13 +1820,13 @@ plotTriangleF(
     unsigned long rop )
 {
 
+// This is a 2D triangle structure. It used 'int' values. 
+// It's because this is the projected trinagle, the one that 
+// is gonna be pained into a 2D screen.
+    struct gr_triangle_d  triProjected;
+
 // Number of changed pixels.
     int npixels=0;
-// The projected trinagle.
-// Engine triangle structure.
-// Using 'int',
-// because this is what we're gonna paint into a 2D screen.
-    struct gr_triangle_d  triProjected;
 
     if (CurrentProjectionF.initialized != TRUE){
         printf("plotTriangleF: CurrentProjectionF\n");
@@ -1939,6 +1941,18 @@ plotTriangleF(
 // ------------
 // Zoom
 
+// -----------------------
+// Scaling
+// Apply the limit for the scale factor.
+// We can scale, but not too few, but not too much.
+
+    if ( (float) scale_factor < 0.01f ){
+        scale_factor = (float) 0.01f;
+    }
+    if ( (float) scale_factor > 2.00f ){
+        scale_factor = (float) 2.00f;
+    }
+
 // Ficando menor conforme z aumenta.
 // Quanto maior for o z, mais próximo do centro da tela
 // o vetor ficará. Ou seja, quanto mais longe estão os objetos,
@@ -1947,28 +1961,38 @@ plotTriangleF(
 // #test
 // Testing z factor.
 
+//
+// The scale factor.
+//
+
+// #bugbug
+// Why do we have two variables for scale factor in this routine?
+
 // Bigger z, smaller objects, closer from the center,
     //float factor = 2.0f; 
 // Normal
-    float factor = 1.0f;
+    //float factor = 1.0f;
 // Smaller z, bigger objects, less closer from the center.
     //float factor = 0.5f;
 
+    // #test
+    //float factor = (float) scale_factor;
+
     if (t->p[0].z != 0.0f)
     {
-        t->p[0].z = (float) (t->p[0].z * factor);
+        t->p[0].z = (float) (t->p[0].z * scale_factor);
         t->p[0].x = (float) (t->p[0].x/t->p[0].z);
         t->p[0].y = (float) (t->p[0].y/t->p[0].z);
     }
     if (t->p[1].z != 0.0f)
     {
-        t->p[1].z = (float) (t->p[1].z * factor);
+        t->p[1].z = (float) (t->p[1].z * scale_factor);
         t->p[1].x = (float) (t->p[1].x/t->p[1].z);
         t->p[1].y = (float) (t->p[1].y/t->p[1].z);
     }
     if (t->p[2].z != 0.0f)
     {
-        t->p[2].z = (float) (t->p[2].z * factor);
+        t->p[2].z = (float) (t->p[2].z * scale_factor);
         t->p[2].x = (float) (t->p[2].x/t->p[2].z);
         t->p[2].y = (float) (t->p[2].y/t->p[2].z);
     }
@@ -2030,6 +2054,7 @@ plotTriangleF(
     //scale_factor = 0.01f;  // very small.
     //scale_factor = 2.0f;
 
+/*
 // -----------------------
 // Scaling
 // Apply the limit for the scale factor.
@@ -2041,6 +2066,7 @@ plotTriangleF(
     if ( (float) scale_factor > 2.00f ){
         scale_factor = (float) 2.00f;
     }
+*/
 
 // --------------------------------
 // Scale into view.
@@ -2097,7 +2123,7 @@ plotTriangleF(
 
 // #alert
 // Our engine when painting 3D stuff using 'int'
-// has the venter of the screen as a reference,
+// has the center of the screen as a reference,
 // So, if we translated the triangle, we did it
 // from the center, not from the top/left corner.
 

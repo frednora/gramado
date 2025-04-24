@@ -20,6 +20,8 @@ kservices/  - Kernel Services:
 
 shpreui/ - Shell Pre-UI:
            The display server.
+           3D demos. A game engine running on top of the kernel,
+           that works like a display server.
 
 shui/    - Shell UI:
            Client-side GUI applications.
