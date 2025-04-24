@@ -386,29 +386,30 @@ static int input_compare_string(void)
     if ( strncmp(prompt,"ws",2) == 0 ){
         //printf ("~WS\n");
         //rtl_clone_and_execute("#ds00.bin");
+        do_launch_de();
         goto exit_cmp;
     }
 // Initialize the display server and quit the command line.
     if ( strncmp(prompt,"wsq",3) == 0 ){
-        printf ("~WSQ\n");
+        //printf ("~WSQ\n");
         do_launch_de();
         goto exit_cmp;
     }
 // Initialize the display server, the terminal and 
 // quit the command line.
     if ( strncmp(prompt,"wsq2",4) == 0 ){
-        printf ("~WSQ2\n");
+        //printf ("~WSQ2\n");
         do_launch_de2();
         goto exit_cmp;
     }
 
     if ( strncmp(prompt,"boot",4) == 0 ){
-        printf ("~BOOT\n");
+        //printf ("~BOOT\n");
         do_launch_de();
         goto exit_cmp;
     }
     if ( strncmp(prompt,"gramado",7) == 0 ){
-        printf ("~GRAMADO\n");
+        //printf ("~GRAMADO\n");
         do_launch_de();
         goto exit_cmp;
     }
@@ -504,9 +505,14 @@ static int input_compare_string(void)
         isTimeToQuitCmdLine = TRUE;
         goto exit_cmp;
     }
+
+    if (strncmp(prompt,"win",3) == 0){ do_launch_de(); goto exit_cmp; }
+    if (strncmp(prompt,"WIN",3) == 0){ do_launch_de(); goto exit_cmp; }
 // ----------------------------------------
 
-    printf ("Command not found, type 'help' for more commands\n");
+    // printf ("Command not found, type 'help' for more commands\n");
+
+    // Emergency menu.
     loopMenu();
 
 /*
@@ -529,7 +535,7 @@ static int input_compare_string(void)
 */
 
 exit_cmp:
-    if (isTimeToQuitCmdLine==TRUE){
+    if (isTimeToQuitCmdLine == TRUE){
         return 0;
     }
     do_init_prompt();
@@ -791,8 +797,7 @@ static int loopMenu_ExitGramadoOS(void)
 
     static int yn_result = FALSE;
 
-    while (1)
-    {
+    while (1){
         if (isTimeToQuitCmdLine == TRUE){
             break;
         }

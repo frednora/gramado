@@ -462,7 +462,7 @@ int msgloop_RunServer(void)
     }
 */
 
-    printf("init.bin: Running in server mode\n");
+    //printf("init.bin: Running in server mode\n");
 
     Caller.tid = -1;
     Caller.initialized = TRUE;
