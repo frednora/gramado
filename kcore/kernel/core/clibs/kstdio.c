@@ -926,8 +926,19 @@ int kinguio_printf(const char *fmt, ...)
     va_end(ap);
 //-----------
 
-// Print the data buffer.
-    kinguio_puts(data_buffer);
+//
+// Now we already have the formated string.
+// Lets print it or send it to the serial port.
+//
+
+    if (Initialization.headless_mode == TRUE){
+            return (int) debug_print_nbytes( 
+                         (const void *) data_buffer, 
+                         (size_t) sizeof(data_buffer) );
+    }else{
+        // Print the data buffer.
+        kinguio_puts(data_buffer);
+    };
 
     return (int) ret;
 }

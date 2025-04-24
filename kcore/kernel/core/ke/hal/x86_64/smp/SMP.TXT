@@ -1,0 +1,15 @@
+
+#todo
+
+------------------------------------
+ACPI table: (QEMU)
+In this case we found the RSDP table, that has an element containing the 
+physical address of RSDT table. We're mappint this address to virtual address,
+but we cant find the signature in RSDT table present in this virtual address.
+Possibly the mapping routin fails or we need to refresh rs3 or something.
+
+------------------------------------
+Floating MP table: (QEMU)
+The parsing routine is working fine. We found 20 entries,
+one entry is a processor. (BSP)
+

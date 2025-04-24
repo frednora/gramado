@@ -1,0 +1,38 @@
+
+ The drivers/tty/ folder in Linux.
+ By Copilot.
+
+Here's a table summarizing the main files in the **Linux kernel source (`drivers/tty/` directory)**, 
+describing their roles within the **TTY subsystem**.
+
+### **Key Files in `drivers/tty/`**
+| **File**        | **Description** |
+|-----------------|----------------|
+| `tty_io.c`      | Core TTY management—handles opening, closing, reading, and writing to TTY devices. |
+| `tty_buffer.c`  | Manages TTY input buffering—stores incoming characters before processing. |
+| `tty_ldisc.c`   | Implements **line disciplines**, controlling how input is processed (canonical, raw modes). |
+| `tty_driver.c`  | Defines **TTY driver interface**, managing communication between hardware and kernel. |
+| `n_tty.c`       | The default **TTY line discipline** (`N_TTY`), handling **echo**, **editing**, and input processing. |
+| `serial_core.c` | Provides core **serial driver** functionality—used by UART/RS232 devices. |
+| `vt.c`          | Handles **virtual terminals (VTs)** used for system consoles (`/dev/ttyN`). |
+| `pty.c`         | Implements **pseudo-terminals (PTYs)**—used for SSH, tmux, and graphical terminal emulators. |
+| `console.c`     | Manages **kernel console** output (messages from `printk()`). |
+| `sysrq.c`       | Handles **Magic SysRq key** commands for emergency system recovery. |
+| `tty_port.c`    | General **TTY port abstraction**, used for **serial drivers** and other terminal interfaces. |
+
+These files work together to manage **TTY devices**, 
+process user input, and facilitate system communication via 
+**serial ports**, **virtual consoles**, and **remote sessions**.
+
+---------------------------
+Key Differences Between /dev/tty and /dev/console:
+
+/dev/tty	
+    Represents the controlling terminal for the current process. 
+    If a process is attached to a terminal, reading from /dev/tty gets its input, and writing sends output there.
+
+/dev/console	
+    Represents the system console, where kernel messages 
+    (printk()) and emergency output are directed. 
+    This is often mapped to the first virtual terminal (/dev/tty0) or a serial device in headless setups.
+

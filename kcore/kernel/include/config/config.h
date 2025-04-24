@@ -14,6 +14,9 @@
 #define CONFIG_TARGET_MACHINE  __TARGET_MACHINE_BAREMETAL 
 // ...
 
+// Use headless mode.
+#define CONFIG_HEADLESS_MODE  0
+
 // ------------------------------------------------------
 // Device flags:
 

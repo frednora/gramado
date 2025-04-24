@@ -4,19 +4,6 @@
 #ifndef  __CONSOLE_H
 #define __CONSOLE_H    1
 
-//
-// Modes
-//
-
-// There is no text mode in Gramado.
-
-// The kernel can print string into the display device.
-#define VC_MODE_KERNEL_VERBOSER  1000
-// The kernel can print string only when reached the kernel panic.
-#define VC_MODE_KERNEL_KP        2000
-// The GUI application can paint into the display device.
-#define VC_MODE_USER_PAINTER     3000
-
 
 // Main consoles.
 extern struct tty_d  *console0_tty;

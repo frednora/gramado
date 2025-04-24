@@ -17,7 +17,14 @@ struct xsdt_d *xsdt;
 
 // =============================================
 
-
+/*
+In Bochs, the RSDT typically includes pointers to:
+MADT (Multiple APIC Description Table) – Defines CPU cores and APIC configurations for SMP.
+FADT (Fixed ACPI Description Table) – Contains power management and system control details.
+DSDT (Differentiated System Description Table) – Holds ACPI-defined device configurations.
+SSDT (Secondary System Description Table) – Additional ACPI definitions for devices.
+HPET (High Precision Event Timer Table) – Provides high-resolution timing support.
+*/
 
 // =============================================
 
@@ -161,18 +168,21 @@ int __x64_probe_smp_via_acpi(void)
     rsdp = (struct rsdp_d *) __rsdp_Pointer;  // 1.0
     xsdp = (struct xsdp_d *) __rsdp_Pointer;  // 2.0
 
-// #debug ok
+// #debug: Signature OK.
     printk("RSDP signature: \n");
-    printk ("%c %c %c %c\n",
+    printk ("%c %c %c %c \n",
         rsdp->Signature[0],
         rsdp->Signature[1],
         rsdp->Signature[2],
         rsdp->Signature[3] );
-    printk ("%c %c %c %c\n",
+    printk ("%c %c %c %c \n",
         rsdp->Signature[4],
         rsdp->Signature[5],
         rsdp->Signature[6],
         rsdp->Signature[7] );
+
+    printk("RSDP: OEMID {%s}\n", rsdp->OEMID);
+
     // #debug
     // #breakpoint
     //while(1){ asm("hlt"); }
@@ -182,7 +192,7 @@ int __x64_probe_smp_via_acpi(void)
 
     // Use xsdp
     if (rsdp->Revision == 0x02){
-        printk("ACPI version 2.0\n");
+        printk("ACPI: Revision 2.0 {0x02} \n");
         // #maybe 0xFFF00000 ?
         __rsdt_address = 
             (unsigned long) (rsdp->RsdtAddress & 0xFFFFFFFF);
@@ -191,17 +201,18 @@ int __x64_probe_smp_via_acpi(void)
         
         // #breakpoint
         //panic("x64smp.c: Revision 2.0 #todo\n");
-        printk("x64smp.c: Revision 2.0 #todo\n");
+        printk("ACPI: Revision 2.0 #todo\n");
         goto valid_revision;
 
     // Use rsdp
     }else if (rsdp->Revision == 0){
-        printk("ACPI version 1.0\n");
+        printk("ACPI: Revision 1.0 {0x00} \n");
         __rsdt_address = 
             (unsigned long) (rsdp->RsdtAddress & 0xFFFFFFFF);
         __xsdt_address = 0;
-    }else{
-        panic("x64smp.c: acpi revision\n");
+        //printk("ACPI: Revision 1.0 #todo\n");
+    } else {
+        panic("ACPI: Invalid ACPI revision\n");
     };
 
 // Mapping the rsdt address.
@@ -222,41 +233,68 @@ int __x64_probe_smp_via_acpi(void)
 // You only need to sum all the bytes in the table and compare the result to 0 (mod 0x100). 
 // https://wiki.osdev.org/RSDT
 
+    // 2.0: Not supported yet.
     if (rsdp->Revision == 0x02){
         //panic("x64smp.c: #todo 2.0\n");
         printk("x64smp.c: #todo 2.0\n");
         goto valid_revision;
+    
+    // 1.0: This is a work in progress.
     }else if (rsdp->Revision == 0){
+
         // Print the address we have.
         //printk("rsdt address: %x \n", __rsdt_address);
         //while(1){ asm("hlt"); }
 
+        // In RSDP Revision 0 (ACPI 1.0), the pointer to the 
+        // RSDT (Root System Description Table) is stored in the RsdtAddress 
+        // field of the RSDP structure.
+
         // Mapping the rsdt address.
-        address_pa = __rsdt_address;
-        address_va = RSDT_VA;
+        address_pa = (unsigned long) (__rsdt_address & 0xFFFFFFFF);
+        address_va = (unsigned long) (RSDT_VA & 0xFFFFFFFF); // Desired va.
+        // IN: ps | va
         // OUT: 0=ok | -1=fail
         // see: pages.c
         mapStatus = (int) mm_map_2mb_region(address_pa,address_va);
         if (mapStatus != 0){
-            panic("mapStatus\n");
+            panic("acpi.c: mapStatus\n");
         }
-        // Now we have a valid pointer.
-        rsdt = (struct rsdt_d *) RSDT_VA;
+
         // #debug
+        printk("rsdt pa: %x | rsdt va: %x\n",
+            address_pa, address_va );
+
+        // RSDT:
+
+        // Now we have a valid pointer.
+        // #bugbug: Or not. Because the signature is wrong.
+        // RSDT helps the system locate other ACPI tables necessary for 
+        // configuring processors and power management.
+        rsdt = (struct rsdt_d *) RSDT_VA;
+        // #debug: Looking for "RSDT".
+        // #bugbug: >>>>>>> [FAIL]
+        // We cant find a valid signature.
+        // Probably out mapping routine is not working well 
+        // and giving us a wrong va.
+        printk("RSDT signature: #bugbug Wrong signature\n");
         printk("RSDT signature: \n");
-        printk ("%c %c %c %c\n",
+        printk ("%c %c %c %c \n",
             rsdt->Signature[0],
             rsdt->Signature[1],
             rsdt->Signature[2],
             rsdt->Signature[3] );
-        
-        // #todo
-        // Mesmo que a tabela rsdt nao seja satifatoria,
-        // o melhor a fazer eh ignorar e procurar por "FACP"
-        // e tocar o abrco.
-        
-    }else{
-        panic("x64smp.c: ACPI Revision\n");
+
+        // ACPI version indicator (usually 1).
+        printk("RSDT: Revision {%c}\n", rsdt->Revision);
+        // OEMID[6] – Manufacturer identifier (e.g., "Intel" or "AMI").
+        printk("RSDT: OEMID {%s}\n", rsdt->OEMID);
+
+        // #bugbug
+        // We gotta find this table and check the elements.
+
+    } else {
+        panic("ACPI: Invalid ACPI Revision\n");
     };
 
 // ----------------------------------

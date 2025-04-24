@@ -1152,11 +1152,18 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
         // If the file is a console.
         if (fp->____object == ObjectTypeVirtualConsole)
         {
-            return (int) console_write ( 
-                            (int) fg_console, 
-                            (const void *) ubuf, 
-                            (size_t) count );
+            if (Initialization.headless_mode == TRUE){
+                return (int) debug_print_nbytes( 
+                    (const void *) ubuf, 
+                    (size_t) count );
+            } else {
+                return (int) console_write ( 
+                    (int) fg_console, 
+                    (const void *) ubuf, 
+                    (size_t) count );
+            }
         }
+
         // ...
         goto fail;
     }
@@ -1473,6 +1480,36 @@ __open_imp (
     char pathname_local_copy[256];
     memset(pathname_local_copy,0,256);
     strncpy(pathname_local_copy,pathname,256);
+
+// ----------------------------
+// #hackhack
+// Trying to open the current kernel virtual console.
+// But this is the standard stdout for everyone.
+// Wrinting on stdout always send the data to the current console.
+
+// /dev/tty	
+//    Represents the controlling terminal for the current process. 
+//    If a process is attached to a terminal, reading from /dev/tty gets its input, 
+//    and writing sends output there.
+
+    // # All the processes are associated with the current kernel console
+    //   in the open file table.
+    if (kstrncmp(pathname_local_copy,"/dev/tty",8) == 0)
+        return (int) STDOUT_FILENO;
+    if (kstrncmp(pathname_local_copy,"/DEV/TTY",8) == 0)
+        return (int) STDOUT_FILENO;
+
+// /dev/console	
+//     Represents the system console, where kernel messages 
+//     (printk()) and emergency output are directed. 
+//     This is often mapped to the first virtual terminal (/dev/tty0) or 
+//     a serial device in headless setups.
+
+    if (kstrncmp(pathname_local_copy,"/dev/console",12) == 0)
+        return (int) STDOUT_FILENO;
+    if (kstrncmp(pathname_local_copy,"/DEV/CONSOLE",12) == 0)
+        return (int) STDOUT_FILENO;
+
 
 //----------------------------
 

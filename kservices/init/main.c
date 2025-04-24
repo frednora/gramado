@@ -940,6 +940,33 @@ int main( int argc, char **argv)
     Init.scheduler_unlocked = TRUE;
 
     Init.initialized = TRUE;
+// ----------------------------
+
+
+//
+// #test
+//
+
+/*
+//  Ok. hack is working ... hahaha
+// Testing the hack that opens the current tty to write into the console.
+// It's a jack and kernel will open the stdout.
+    const char *tty_name = "/dev/tty";
+    char buf[512];
+    const char *fancy_string = "init.bin: Writing on /dev/tty device\n";
+    int current_tty_fd = (int) open((char *) tty_name, 0, "a+");
+    if (current_tty_fd == 1)
+    {
+        sprintf(buf,fancy_string);
+        write(
+            current_tty_fd,
+            buf,
+            sizeof(buf) );
+    }
+
+    printf("init.bin: Brakpoint\n");
+    while(1){}
+*/
 
 // ----------------------------
 // Headless mode

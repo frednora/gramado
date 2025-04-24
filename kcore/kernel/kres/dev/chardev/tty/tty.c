@@ -1080,8 +1080,10 @@ struct tty_d *tty_create(short type, short subtype)
     __tty->user_session = NULL;  // #todo: Use current user session;
     __tty->cgroup = NULL;        // #todo: Use current cgroup.
 
-// The kernel can print string into the display device.
-    __tty->vc_mode = (int) VC_MODE_KERNEL_VERBOSER;
+// The tty operation mode.
+    __tty->operation_mode = (int) TTY_OPERATION_MODE_USING_FILE;
+// The queue operation mode.
+    __tty->queue_operation_mode = (int) TTYQUEUE_OPERATION_MODE_CHAR;
 
 //#todo: Indice do dispositivo.
     // __tty->device = 0;   // initialized.

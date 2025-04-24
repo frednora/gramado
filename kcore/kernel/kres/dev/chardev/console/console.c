@@ -2322,6 +2322,7 @@ fail:
     return (ssize_t) -1;
 }
 
+
 ssize_t console_write_string(int console_number, const char *string)
 {
 // Write a string into a console.
@@ -2663,11 +2664,9 @@ console_ioctl (
         //return (int) CONSOLE_TTYS[fg_console].gid;
         break;
 
-// ??
-// Qual eh o modo de operacao do console virtual.
-// graphics, text ...
+// Is it using queue or file?
     case 503:
-        return (int) CONSOLE_TTYS[fg_console].vc_mode;
+        return (int) CONSOLE_TTYS[fg_console].operation_mode;
         break;
 
 // tty type
@@ -3121,9 +3120,12 @@ DDINIT_console(
 
     CONSOLE_TTYS[ConsoleIndex].termios.c_lflag = ECHO;
 
-// The kernel can print string into the display device.
-    CONSOLE_TTYS[ConsoleIndex].vc_mode = 
-        (int) VC_MODE_KERNEL_VERBOSER;
+    CONSOLE_TTYS[ConsoleIndex].operation_mode = 
+        (int) TTY_OPERATION_MODE_USING_FILE;
+
+// The queue operation mode.
+        CONSOLE_TTYS[ConsoleIndex].queue_operation_mode = 
+        (int) TTYQUEUE_OPERATION_MODE_CHAR;
 
 //
 // Charset support.

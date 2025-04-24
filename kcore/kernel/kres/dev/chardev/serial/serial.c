@@ -78,9 +78,10 @@ void serial_write_char(unsigned int port, char data)
 
 // Print string
 // IN: port, string pointer.
-void serial_print (unsigned int port, char *data )
+size_t serial_print (unsigned int port, char *data )
 {
     register int i=0;
+    size_t Counter = 0;
 
 // #todo
 // Check the port validation.
@@ -88,19 +89,55 @@ void serial_print (unsigned int port, char *data )
     for ( i=0; data[i] != '\0'; i++ )
     {
         serial_write_char ( port ,data[i] );
+        Counter++;
     };
+
+    return (size_t) Counter;
 }
 
 
 // Only COM1_PORT.
-void debug_print_string(char *data)
+size_t debug_print_string(char *data)
 {
     register int i=0;
+    size_t Counter = 0;
 
     for ( i=0; data[i] != '\0'; i++ )
     {
         serial_write_char( COM1_PORT ,data[i] );
+        Counter++;
     };
+
+    return (size_t) Counter;
+}
+
+
+// Print n bytes from a buffer.
+size_t debug_print_nbytes(char *data, int nbytes)
+{
+    register int i=0;
+    size_t Max = BUFSIZ;
+
+    if ((void*) data == NULL){
+        return (int) -EINVAL;
+    }
+    if (nbytes <= 0){
+        return (int) -EINVAL;
+    }
+    if (nbytes > Max){
+        return (int) -EINVAL;
+    }
+
+// Write on COM1
+    for ( i=0; i<Max; i++ ){
+        serial_write_char( COM1_PORT ,data[i] );
+    };
+
+// Number of written bytes.
+    return (int) nbytes;
+// Fail
+//fail:
+    //return (int) -1;
 }
 
 // #todo

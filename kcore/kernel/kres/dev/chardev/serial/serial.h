@@ -86,9 +86,12 @@ void serial4_handler (void);
 char serial_read_char (unsigned int port);
 void serial_write_char (unsigned int port, char data);
 
-void serial_print (unsigned int port, char *data );
+size_t serial_print (unsigned int port, char *data );
 
-void debug_print_string ( char *data );
+size_t debug_print_string(char *data);
+
+// Print n bytes from a buffer.
+size_t debug_print_nbytes(char *data, int nbytes);
 
 unsigned int serial_in(unsigned int base, int offset);
 void serial_out(unsigned int base, int offset, int value);

@@ -88,6 +88,36 @@
 #define O_LCUC(tty)   _O_FLAG((tty),OLCUC)
 
 
+
+//
+// Modes
+//
+
+// This TTY is using the associated file to transfer data.
+#define TTY_OPERATION_MODE_USING_FILE  1000
+// This TTY is using the associated file to transfer data.
+#define TTY_OPERATION_MODE_USING_QUEUE  2000
+// ..
+
+
+//
+// Queue operation modes
+//
+
+// Canonical Mode (Cooked Mode): 
+//     Line by line.
+#define TTYQUEUE_OPERATION_MODE_CANOCICAL  100
+// Raw Mode: 
+//     the raw byt. scancode.
+#define TTYQUEUE_OPERATION_MODE_RAW  200
+// Cbreak Mode (Character-by-Character Mode): 
+//     Char by char. After processing the scancode.
+#define TTYQUEUE_OPERATION_MODE_CHAR  300
+// Silent Mode:
+//     Do not display the output.
+#define TTYQUEUE_OPERATION_MODE_SILENT  400
+
+
 /*
 struct ttybuffer_d
 {
@@ -157,6 +187,8 @@ struct tty_d
 
 // File pointer:
 // To setup the device.
+// If we're using the raw mode with redirection, 
+// we can send data directly to the file, avoiding the queues.
     file *fp;
 
 // Name support
@@ -265,15 +297,10 @@ struct tty_d
 // ==  properties ========================
 //
 
-// Qual eh o modo de operacao do console virtual.
-// The kernel can print string into the display device.
-//#define VC_MODE_KERNEL_VERBOSER  1000
-// The kernel can print string only when reached the kernel panic.
-//#define VC_MODE_KERNEL_KP        2000
-// The GUI application can paint into the display device.
-//#define VC_MODE_USER_PAINTER     3000
-
-    int vc_mode;
+// TTY's operation mode.
+    int operation_mode;
+// TTY QUEUE's operation mode.
+    int queue_operation_mode;
 
 // tty flags.
     unsigned long flags;

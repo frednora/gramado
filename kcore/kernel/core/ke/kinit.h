@@ -63,6 +63,10 @@ struct initialization_d
 // embedded kernel shell.
     int kernel_owns_display_device;
 
+// The system is operating in headless mode.
+// See: config.h
+    int headless_mode;
+
     // ...
 }; 
 
