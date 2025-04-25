@@ -4,12 +4,10 @@ all:
 
 # API: 
 # Libraries and toolkits.
-
 	make -C api/
 
-#
-# External shell: The desktop. 
-#
+# Apps
+	make -C apps/
 
 # Main system apps.
 
@@ -19,24 +17,8 @@ all:
 	# Taskbar (The launcher)
 	make -C taskbar/
 
-#
-# Internal shell: The applications.
-#
-
-# Apps for 'pro users'
-
-	# First client (GWS.BIN)
-	make -C client/
-	make -C cmdline/
-
 	# Setup program to install the o.s.
 	#make -C setup/ 
-
-# Apps for 'regular users'
-
-	make -C doc/
-	make -C editor/
-
 
 #
 # Output entity for subsystems
