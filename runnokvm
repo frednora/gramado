@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Running Gramado OS on qemu with no kvm accel
 
 # Common

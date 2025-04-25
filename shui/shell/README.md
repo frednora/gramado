@@ -1,6 +1,6 @@
-# OS Shell - Client-side GUI applications. 
+# shell - The Shell for Gramado OS. 
 
-This is the Operating System Shell.
+All the client-side GUI applications are here. This is the Operating System Shell. 
 
 ## Folders
 
@@ -22,7 +22,7 @@ This is the Operating System Shell.
 
 + sysshell/ - Client-side GUI applications for system applications.
 
-+ xapps/
++ xapps/    - X-like programs.
 
 
 ```

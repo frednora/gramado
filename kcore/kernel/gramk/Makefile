@@ -72,11 +72,15 @@ LDFLAGS := -m elf_x86_64 -s -x -static
 # Everything is a file.
 OBJS = pixel.o line.o rect.o bitblt.o bg.o font.o char.o text.o gre.o \
 input.o dispsrv.o osshell.o callback.o user.o \
+con.o \
 gramk.o    
 
 all:
 
-# gre - Graphics Engine
+# con - Console interface.
+	$(CC) -c con/con.c  $(KERNEL_INCLUDE) $(CFLAGS) -o con.o
+
+# gre - Graphics Engine interface.
 	$(CC) -c gdi/gre/pixel.c   $(KERNEL_INCLUDE) $(CFLAGS) -o pixel.o
 	$(CC) -c gdi/gre/line.c    $(KERNEL_INCLUDE) $(CFLAGS) -o line.o
 	$(CC) -c gdi/gre/rect.c    $(KERNEL_INCLUDE) $(CFLAGS) -o rect.o
@@ -87,17 +91,17 @@ all:
 	$(CC) -c gdi/gre/text.c    $(KERNEL_INCLUDE) $(CFLAGS) -o text.o
 	$(CC) -c gdi/gre/gre.c     $(KERNEL_INCLUDE) $(CFLAGS) -o gre.o
 
-# gdi
+# gdi - Graphical device interface.
 	$(CC) -c gdi/dispsrv.c  $(KERNEL_INCLUDE) $(CFLAGS) -o dispsrv.o
 	$(CC) -c gdi/osshell.c  $(KERNEL_INCLUDE) $(CFLAGS) -o osshell.o
 
-# user
+# user - User interaction interface.
 	$(CC) -c user/input.c     $(KERNEL_INCLUDE) $(CFLAGS) -o input.o
 	$(CC) -c user/callback.c  $(KERNEL_INCLUDE) $(CFLAGS) -o callback.o
 	$(CC) -c user/user.c      $(KERNEL_INCLUDE) $(CFLAGS) -o user.o
 
-# Wrapper
-	$(CC) -c gramk.c     $(KERNEL_INCLUDE) $(CFLAGS) -o gramk.o
+# Wrapper  for all the interfaces in this module.
+	$(CC) -c gramk.c  $(KERNEL_INCLUDE) $(CFLAGS) -o gramk.o
 
 # link
 	$(LD) -r -o j0_gramk.o $(OBJS)

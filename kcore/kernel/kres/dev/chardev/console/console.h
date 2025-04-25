@@ -1,4 +1,5 @@
 // console.h
+// Console device.
 // Created by Fred Nora.
 
 #ifndef  __CONSOLE_H

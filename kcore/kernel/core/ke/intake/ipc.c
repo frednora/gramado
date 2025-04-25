@@ -428,6 +428,106 @@ fail:
     return (int) -1;
 }
 
+// Wrapper for different types of input events.
+// Posting these events to the thread, 
+// not processing internally.
+int ipc_post_input_event_to_ds(int event_id, long long1, long long2)
+{
+    unsigned long button_number=0;
+
+    if (event_id < 0)
+        goto fail;
+
+    switch (event_id)
+    {
+        // Mouse
+        case MSG_MOUSEMOVE:
+            ipc_post_message_to_ds( event_id, long1, long2 );
+            return 0;
+            break;
+        case MSG_MOUSEPRESSED:
+        case MSG_MOUSERELEASED:
+            button_number = (unsigned long) (long1 & 0xFFFF);
+            ipc_post_message_to_ds( event_id, button_number, button_number );
+            break;
+
+        // Keyboard
+        case MSG_KEYDOWN:
+        case MSG_KEYUP:
+        case MSG_SYSKEYDOWN:
+        case MSG_SYSKEYUP:
+            ipc_post_message_to_ds( event_id, long1, long1 );
+            break;
+
+        // Timer
+        case MSG_TIMER:
+            if ( (jiffies % JIFFY_FREQ) == 0 ){
+                ipc_post_message_to_ds( MSG_TIMER, 1234, jiffies );
+            }   
+            break;
+
+        default:
+            goto fail;
+            break;
+    };
+
+fail:
+    return (int) -1;
+}
+
+// #todo
+// Broadcast system message to all the threads.
+// IN: Buffer
+unsigned long ipc_broadcast_system_message(
+    tid_t sender_tid,
+    int msg, 
+    unsigned long long1, 
+    unsigned long long2,
+    unsigned long long3,
+    unsigned long long4 )
+{
+    register int i=0;
+    struct thread_d *t;
+    int rv=0;
+    size_t Counter = 0;
+
+    tid_t src_tid = (tid_t) sender_tid;  // caller's tid.
+    tid_t dst_tid = (tid_t) -1;          // targt tid.
+
+// #todo
+
+    for (i=0; i<THREAD_COUNT_MAX; i++)
+    {
+        t = (struct threads_d *) threadList[i];
+        if ((void*) t != NULL)
+        {
+            if (t->magic == 1234)
+            {
+                dst_tid = (tid_t) t->tid;  // Receiver
+
+                // IN:
+                // sender, receiver,msg,l1,l2,l3,l4
+                rv = 
+                (int) ipc_post_message_to_tid2(
+                        src_tid,  // Sender 
+                        dst_tid,  // Receiver
+                        msg,
+                        long1, long2, long3, long4 );
+                
+                if (rv >= 0)
+                    Counter++;
+            }
+        }
+    };
+
+    unsigned long long_rv = (unsigned long) (Counter & 0xFFFFFFFF);
+
+// Return the number of posted messages.
+    return (unsigned long) long_rv;
+}
+
+
+
 /*
  * sys_get_message:
  *     Get a message from the current thread and 
@@ -780,50 +880,38 @@ sys_post_message_to_tid(
     return 0;
 }
 
-// Wrapper for different types of input events.
-// Posting these events to the thread, 
-// not processing internally.
-int ipc_post_input_event_to_ds(int event_id, long long1, long long2)
+// #todo
+// Not implemented i ring 3 yet.
+// Broadcast system message to all the threads.
+// IN: Buffer
+// OUT: The number of posted messages.
+unsigned long sys_broadcast_system_message(unsigned long message_buffer)
 {
-    unsigned long button_number=0;
+    tid_t Sender_TID = (tid_t) current_thread;
+    unsigned long long_rv=0;
 
-    if (event_id < 0)
-        goto fail;
+// #todo
+// Check the validation of this address agaisnt the valid user area,
+// cause this function will be called by the applications.
+// It needs to be abouve the user base area.
+    if (message_buffer == 0)
+        return 0;
 
-    switch (event_id)
-    {
-        // Mouse
-        case MSG_MOUSEMOVE:
-            ipc_post_message_to_ds( event_id, long1, long2 );
-            return 0;
-            break;
-        case MSG_MOUSEPRESSED:
-        case MSG_MOUSERELEASED:
-            button_number = (unsigned long) (long1 & 0xFFFF);
-            ipc_post_message_to_ds( event_id, button_number, button_number );
-            break;
+    unsigned long *ubuf = (unsigned long *) message_buffer;
 
-        // Keyboard
-        case MSG_KEYDOWN:
-        case MSG_KEYUP:
-        case MSG_SYSKEYDOWN:
-        case MSG_SYSKEYUP:
-            ipc_post_message_to_ds( event_id, long1, long1 );
-            break;
+// Message code
+    int MessageCode = (int) ( ubuf[1] & 0xFFFFFFFF );
 
-        // Timer
-        case MSG_TIMER:
-            if ( (jiffies % JIFFY_FREQ) == 0 ){
-                ipc_post_message_to_ds( MSG_TIMER, 1234, jiffies );
-            }   
-            break;
-
-        default:
-            goto fail;
-            break;
-    };
-
-fail:
-    return (int) -1;
+// Call the worker.
+    long_rv = 
+    (unsigned long) ipc_broadcast_system_message(
+        (tid_t) Sender_TID, // The sender is always the current_thread.
+        (int) MessageCode,
+        (unsigned long) ubuf[2],
+        (unsigned long) ubuf[3],
+        (unsigned long) ubuf[4],
+        (unsigned long) ubuf[5] );
+    
+    return (unsigned long) long_rv;
 }
 

@@ -80,6 +80,19 @@ ipc_post_message_to_ds(
     unsigned long long2 );
 
 
+// Wrapper for different types of input events.
+// Sending these events to the thread, 
+// not processing internally.
+int ipc_post_input_event_to_ds(int event_id, long long1, long long2);
+
+unsigned long ipc_broadcast_system_message(
+    tid_t sender_tid,
+    int msg, 
+    unsigned long long1, 
+    unsigned long long2,
+    unsigned long long3,
+    unsigned long long4 );
+
 // ----------
 
 // Service 111.
@@ -97,11 +110,10 @@ sys_post_message_to_tid(
     int tid, 
     unsigned long message_buffer );
 
-
-// Wrapper for different types of input events.
-// Sending these events to the thread, 
-// not processing internally.
-int ipc_post_input_event_to_ds(int event_id, long long1, long long2);
+// #todo
+// Broadcast system message to all the threads.
+// IN: Buffer
+unsigned long sys_broadcast_system_message(unsigned long message_buffer);
 
 #endif    
 
