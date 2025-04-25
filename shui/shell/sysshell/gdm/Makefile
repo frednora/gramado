@@ -13,7 +13,7 @@ EXTRAVERSION =
 #NAME = 
 
 linkFlags  = -m elf_x86_64 \
--s -x -static -T ../link.ld
+-s -x -static -T ../../link.ld
 
 # usermode cross compiler flags.
 CFLAGS = -Wall
@@ -49,10 +49,10 @@ CFLAGS += -fno-omit-frame-pointer
 CFLAGS += -fno-optimize-sibling-calls    
 
 # API
-LIBC      = ../api/libs/rtl/include/
-LIBCOBJ   = ../api/libs/rtl/obj
-LIBGWS    = ../api/libs/libgws/include/
-LIBGWSOBJ = ../api/libs/libgws/obj
+LIBC      = ../../api/libs/rtl/include/
+LIBCOBJ   = ../../api/libs/rtl/obj
+LIBGWS    = ../../api/libs/libgws/include/
+LIBGWSOBJ = ../../api/libs/libgws/obj
 
 # Objects
 myObjects = crt0.o main.o globals.o rtl.o \
@@ -90,7 +90,7 @@ all-c:
 hello-link:
 	ld $(linkFlags) -o GDM.BIN $(myObjects)    
 finalize:
-	cp GDM.BIN  ../bin
+	cp GDM.BIN  ../../bin
 clean:
 	-rm *.o
 	-rm GDM.BIN 

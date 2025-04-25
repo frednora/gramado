@@ -52,19 +52,13 @@ struct gws_window_d *mouse_hover;  // hover
 
 //
 // Taskbar
+// The Overview application. (Explorer)
 //
 
 // --------------------
-// Embedded taskbar.
-// If the display server has a taskbar.
-// maybe we don't need that.
-//struct gws_window_d  *taskbar_window; 
-//struct gws_window_d  *taskbar_startmenu_button_window; 
-
-// --------------------
 // Taskbar created by the user.
-struct gws_window_d  *taskbar2_window;
-
+// >>>> This is the "Overview" application.
+struct gws_window_d  *taskbar_window;
 
 // ...
 // z-order ?
@@ -1074,7 +1068,7 @@ static void on_mouse_released(void)
             // A barra de tarefas nao e' overlapped.
             // teremos que mandar mensagens pra ela tambem
             if ( p1->type == WT_OVERLAPPED || 
-                 p1 == taskbar2_window )
+                 p1 == taskbar_window )
             {
                 // #debug
                 // printf ("server: Sending GWS_MouseClicked\n");
@@ -3574,15 +3568,14 @@ void wm_update_desktop(int tile, int show)
 
 end:
 
-// #test
 //------------------------
 // Show the taskbar created by the user.
-    if ((void*)taskbar2_window != NULL)
+    if ((void*)taskbar_window != NULL)
     {
-        //redraw_window(taskbar2_window,FALSE);
-        redraw_window(taskbar2_window,TRUE);
+        //redraw_window(taskbar_window,FALSE);
+        redraw_window(taskbar_window,TRUE);
         // #todo: Send message to update the client area of tb.
-        on_update_window(taskbar2_window,GWS_Paint);
+        on_update_window(taskbar_window,GWS_Paint);
     }
 
 // #test
@@ -3646,10 +3639,10 @@ done:
 
 // The taskbar created by the user.
 // Redraw it and send message to update the client area.
-    if ((void*)taskbar2_window != NULL)
+    if ((void*)taskbar_window != NULL)
     {
-        redraw_window(taskbar2_window,FALSE);
-        on_update_window(taskbar2_window,GWS_Paint);
+        redraw_window(taskbar_window,FALSE);
+        on_update_window(taskbar_window,GWS_Paint);
     }
 
 // Show root window.
@@ -5782,26 +5775,8 @@ ProcessEvent:
 // Muidas estruturas aindapossuem valores que estão condizentes
 // com a resolução antiga e precisa ser atualizados.
 
-    if (msg == 800300)
-    {
+    if (msg == 800300){
         printf("[800300] w=%d h=%d\n", long1, long2);
-        
-        /*
-        //globals
-        __device_width = long1;
-        __device_height = long2;
-        // globals
-        SavedX=long1;
-        SavedY=long2;
-        // Update taskbar
-        if ( (void*) taskbar_window != NULL )
-        {
-            taskbar_window->left = 0;
-            taskbar_window->top = long2 - 32;
-        }
-        // Update working area.
-        WindowManager.wa.height = (long2 - 40);
-        */
         return 0;
     }
 
@@ -6524,7 +6499,7 @@ int dock_window( struct gws_window_d *window, int position )
         goto fail;
     }
 // Can't be the active window
-    if (window == taskbar2_window){
+    if (window == taskbar_window){
         goto fail;
     }
 
@@ -6669,7 +6644,7 @@ int dock_active_window(int position)
         goto fail;
     }
 // Can't be the taskbar.
-    if (aw == taskbar2_window){
+    if (aw == taskbar_window){
         goto fail;
     }
 

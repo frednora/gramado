@@ -1,38 +1,35 @@
 # Client-side GUI applications.
 
 all:
+# Order of importance
 
+# 1
 # API: 
 # Libraries and toolkits.
 	make -C api/
 
-# Apps
-	make -C apps/
+# 2
+# The explorer
+# desktop, taskbar, launcher, filemanager ...
+	make -C overview/
 
-# Main system apps.
-
-	# Gramado Desktop Manager
-	make -C gdm/
-
-	# Taskbar (The launcher)
-	make -C taskbar/
-
-	# Setup program to install the o.s.
-	#make -C setup/ 
-
-#
+# 3
 # Output entity for subsystems
-#
-
 	make -C  ss/pubterm/
 	make -C  ss/terminal/
 	make -C  ss/term00/
 	make -C  ss/teabox/
 
-#
-# xapps
-#
+# 4
+# Normal programs.
+	make -C sysapps/
 
+# 5
+# System programs.
+	make -C sysshell/
+
+# 6
+# xapps
 	make -C xapps/xtb/
 
 clean:

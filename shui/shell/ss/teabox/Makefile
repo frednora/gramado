@@ -152,7 +152,7 @@ all-c:
 hello-link:
 	ld $(linkFlags) -o $(linkTarget) $(myObjects)    
 finalize:
-	cp $(linkTarget)  bin/
+	cp $(linkTarget)  ../../bin/
 clean:
 	-rm *.o
 	-rm $(linkTarget) 

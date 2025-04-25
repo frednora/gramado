@@ -37,7 +37,7 @@ GAMES           = $(DEP_L2)/gram3d
 
 # --------------------------
 # Client-side GUI applications
-APPLICATIONS = $(DEP_L3)/osshell
+APPLICATIONS = $(DEP_L3)/shell
 
 # Make variables (CC, etc...)
 AS      = as
@@ -286,7 +286,7 @@ copy-extras:
 # Teabox web browser
     # Experimental applications
     # These need the '@' prefix.
-	-cp $(APPLICATIONS)/ss/teabox/bin/TEABOX.BIN  $(BASE)/DE/
+	-cp $(APPLICATIONS)/bin/TEABOX.BIN  $(BASE)/DE/
 
 	@echo "~ copy-extras"
 

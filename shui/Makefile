@@ -5,12 +5,12 @@
 
 all:
 # Client-side GUI applications
-	make -C osshell/
+	make -C shell/
 
 clean:
 # Client-side GUI applications
-	-rm osshell/bin/*.BIN
+	-rm shell/bin/*.BIN
 
 clean-all:
 # Client-side GUI applications
-	-rm osshell/bin/*.BIN
+	-rm shell/bin/*.BIN

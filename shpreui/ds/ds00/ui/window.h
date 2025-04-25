@@ -892,15 +892,8 @@ struct gws_window_d
 
 extern struct gws_window_d  *__root_window; 
 extern struct gws_window_d  *active_window;
-
-// If the window server has a taskbar.
-// maybe we don't need that.
-//extern struct gws_window_d  *taskbar_window; 
-//extern struct gws_window_d  *taskbar_startmenu_button_window; 
-
 // Taskbar created by the user.
-extern struct gws_window_d  *taskbar2_window; 
-
+extern struct gws_window_d  *taskbar_window; 
 // z-order ?
 // But we can use multiple layers.
 // ex-wayland: background, bottom, top, overlay.

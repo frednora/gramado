@@ -1152,10 +1152,9 @@ void invalidate_statusbar(struct gws_window_d *pwindow)
     invalidate_window(pwindow->statusbar);
 }
 
-
 void invalidate_root_window(void)
 {
-    invalidate_window ( (struct gws_window_d *) __root_window );
+    invalidate_window ((struct gws_window_d *) __root_window);
 }
 
 void invalidate_taskbar_window(void)

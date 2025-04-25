@@ -41,11 +41,6 @@ int gUseFrame = TRUE;
 // Windows - (struct)
 extern struct gws_window_d  *__root_window; 
 extern struct gws_window_d *active_window;
-// If the display server has a taskbar.
-// maybe we don't need that.
-//extern struct gws_window_d  *taskbar_window; 
-//extern struct gws_window_d  *taskbar_startmenu_button_window; 
-//char startmenu_string[32];
 
 // z-order ?
 // But we can use multiple layers.
@@ -1176,7 +1171,7 @@ void *doCreateWindow (
             
             // #important
             // Set the taskbar created by the user.
-            taskbar2_window = window;
+            taskbar_window = window;
             // No more access to the embedded taskbar.
             //TaskBar.initialized = FALSE;
             // No more access to the QuickLaunch resources.
@@ -2308,12 +2303,12 @@ int destroy_window_by_wid(int wid)
         /*
         // #test
         if (window == keyboard_owner)
-            keyboard_owner = taskbar2_window;
+            keyboard_owner = taskbar_window;
         if (window == mouse_owner)
-            mouse_owner = taskbar2_window;
+            mouse_owner = taskbar_window;
 
-        set_focus(taskbar2_window);
-        __set_foreground_tid(taskbar2_window->client_tid);
+        set_focus(taskbar_window);
+        __set_foreground_tid(taskbar_window->client_tid);
         */
 
         // #test
@@ -2414,12 +2409,12 @@ int destroy_window_by_wid(int wid)
     /*
     // #test
     if (window == keyboard_owner)
-        keyboard_owner = taskbar2_window;
+        keyboard_owner = taskbar_window;
     if (window == mouse_owner)
-        mouse_owner = taskbar2_window;
+        mouse_owner = taskbar_window;
 
-    set_focus(taskbar2_window);
-    __set_foreground_tid(taskbar2_window->client_tid);
+    set_focus(taskbar_window);
+    __set_foreground_tid(taskbar_window->client_tid);
     */
 
     // #test
@@ -2645,7 +2640,7 @@ void maximize_window(struct gws_window_d *window)
 // They are not overlapped, but anyway.
     if (window == __root_window)
         return;
-    if (window == taskbar2_window)
+    if (window == taskbar_window)
         return;
 
 // Enable input for overlapped window.
@@ -2725,8 +2720,8 @@ void maximize_window(struct gws_window_d *window)
 
 // Taskbar
 // Send message to the app to repaint all the childs.
-    redraw_window(taskbar2_window,TRUE);
-    window_post_message( taskbar2_window->id, GWS_Paint, 0, 0 );
+    redraw_window(taskbar_window,TRUE);
+    window_post_message( taskbar_window->id, GWS_Paint, 0, 0 );
 
 // Our window
 // Set focus
