@@ -21,8 +21,8 @@ the Taskbar and the Virtual terminal.
 folder ds/ds00/.
 ```
 
-> * shell/     - Client-side GUI applications.
-> * shell/api/ - Gramado API.
+> * shell00/ - Posix-like commands to run on virtual terminals.
+> * shell01/ - Client-side GUI applications.
 
 ## Creating Client-side GUI applications.
 

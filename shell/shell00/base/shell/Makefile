@@ -96,11 +96,10 @@ CFLAGS := \
 	
 
 # Libraries
-LIBC     = ../libs/rtl/include/
-LIBCOBJ  = ../libs/rtl/obj
-LIBIO    = ../libs/libio01/include/
-LIBIOOBJ = ../libs/libio01/obj
-
+LIBC     = ../../alpha/libs/rtl/include/
+LIBCOBJ  = ../../alpha/libs/rtl/obj
+LIBIO    = ../../alpha/libs/libio01/include/
+LIBIOOBJ = ../../alpha/libs/libio01/obj
 
 # Objects
 myObjects = crt0.o main.o \

@@ -1,11 +1,11 @@
-# tcryp2 - Working with public and private keys in a very simple way.
-# 2025 - Created by Fred Nora.
+# tascii - Print an ascii table.
+# 2019 - Created by Fred Nora.
 
 VERSION = 0
 PATCHLEVEL = 0
 SUBLEVEL = 0
 EXTRAVERSION =
-#NAME = tprintf
+#NAME = tascii
 
 CFLAGS = -m64 \
 	-std=gnu89 \
@@ -23,17 +23,18 @@ CFLAGS = -m64 \
 	-Werror=strict-prototypes    
 
 # Libraries
-LIBC    = ../libs/rtl/include/
-LIBCOBJ = ../libs/rtl/obj
+LIBC    = ../../alpha/libs/rtl/include/
+LIBCOBJ = ../../alpha/libs/rtl/obj
 
 # Objects
 myObjects = crt0.o main.o \
 ctype.o stdio.o stdlib.o string.o time.o \
-unistd.o termios.o ioctl.o fcntl.o rtl.o    
+unistd.o termios.o ioctl.o fcntl.o rtl.o     
 
-.PHONY: all all-c cat-link finalize clean
 
-all: main.o all-c cat-link finalize clean
+.PHONY: all all-c tascii-link finalize clean
+
+all: main.o all-c tascii-link finalize clean
 	@echo "Ok?"
 main.o:
 	gcc  -c  main.c  $(CFLAGS) -I $(LIBC) -o main.o
@@ -41,7 +42,7 @@ all-c:
 
 	cp $(LIBCOBJ)/crt0.o  .
 	cp $(LIBCOBJ)/rtl.o  .
-
+	
 	cp $(LIBCOBJ)/ctype.o   .
 	cp $(LIBCOBJ)/stdio.o .
 	cp $(LIBCOBJ)/stdlib.o .
@@ -52,11 +53,11 @@ all-c:
 	cp $(LIBCOBJ)/ioctl.o  .
 	cp $(LIBCOBJ)/fcntl.o  .
 
-cat-link:
-	ld -m elf_x86_64 -T ../link.ld -o TCRYP2.BIN $(myObjects)    
+tascii-link:
+	ld -m elf_x86_64 -T ../link.ld -o TASCII.BIN $(myObjects)    
 finalize:
-	cp TCRYP2.BIN  ../bin
+	cp TASCII.BIN  ../bin
 clean:
 	-rm *.o
-	-rm TCRYP2.BIN 
+	-rm TASCII.BIN 
 

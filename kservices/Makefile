@@ -12,21 +12,7 @@ all:
 # The init process
 	make -C init/
 
-# Shells
-	make -C pubsh/
-	make -C sh7/
-	make -C shell/
-	make -C shell00/
-#	make -C shellxxx/
-
-	make -C tascii/
-	make -C tprintf/
-
-# ...
-
-
 # Extra
-	make -C commands/
 	make -C drivers/
 	make -C servers/
 
@@ -41,11 +27,9 @@ clean-all:
 
 	-rm -f libs/libgns/obj/*.o
 	-rm -f libs/rtl/obj/*.o
-#	-rm -f toolkits/*.o
 
 	-rm -f init/*.o
 
-	-rm -f commands/base/bin/*.BIN
 	# ...
 
 # ...

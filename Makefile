@@ -25,9 +25,9 @@ DEP_L1 = kservices
 ## =================================
 ## FRONT-END:
 # Shell Pre-UI: The display server.
-DEP_L2 = shpreui
+DEP_L2 = preshell
 # Shell UI: Client-side GUI applications.
-DEP_L3 = shui
+DEP_L3 = shell
 
 # --------------------------
 # Display servers
@@ -36,8 +36,10 @@ DISPLAY_SERVERS = $(DEP_L2)/ds
 GAMES           = $(DEP_L2)/gram3d
 
 # --------------------------
+# Unix-like commands
+COMMANDS     = $(DEP_L3)/shell00
 # Client-side GUI applications
-APPLICATIONS = $(DEP_L3)/shell
+APPLICATIONS = $(DEP_L3)/shell01
 
 # Make variables (CC, etc...)
 AS      = as
@@ -176,7 +178,7 @@ build-gramado-os:
 
 # ...
 
-# ------------------------
+#===================================
 # LEVEL : kbase
 	$(Q)$(MAKE) -C $(DEP_L1)
 
@@ -189,44 +191,6 @@ build-gramado-os:
 # Copy the init process.
 	cp $(DEP_L1)/bin/INIT.BIN  $(BASE)/
 #	cp $(DEP_L1)/bin/INIT.BIN  $(BASE)/GRAMADO/
-
-# Well consolidated programs.
-	-cp $(DEP_L1)/bin/PUBSH.BIN    $(BASE)/GRAMADO/
-	-cp $(DEP_L1)/bin/PUBSH.BIN    $(BASE)/DE/
-	-cp $(DEP_L1)/bin/SHELL.BIN    $(BASE)/GRAMADO/
-	-cp $(DEP_L1)/bin/SHELL.BIN    $(BASE)/DE/
-	-cp $(DEP_L1)/bin/SHELL00.BIN  $(BASE)/GRAMADO/
-	-cp $(DEP_L1)/bin/SHELL00.BIN  $(BASE)/DE/
-
-# Experimental programs.
-	-cp $(DEP_L1)/bin/SH7.BIN        $(BASE)/GRAMADO/
-#	-cp $(DEP_L1)/bin/SHELLXXX.BIN   $(BASE)/GRAMADO/
-	-cp $(DEP_L1)/bin/TASCII.BIN     $(BASE)/GRAMADO/
-	-cp $(DEP_L1)/bin/TPRINTF.BIN    $(BASE)/GRAMADO/
-
-#===================================
-# $(DEP_L1)/commands/
-
-# Copy well consolidated commands.
-	-cp $(DEP_L1)/commands/base/bin/CAT.BIN       $(BASE)/
-	-cp $(DEP_L1)/commands/base/bin/CAT00.BIN     $(BASE)/
-	-cp $(DEP_L1)/commands/base/bin/REBOOT.BIN    $(BASE)/
-	-cp $(DEP_L1)/commands/base/bin/REBOOT.BIN    $(BASE)/GRAMADO/
-	-cp $(DEP_L1)/commands/base/bin/SHUTDOWN.BIN  $(BASE)/
-	-cp $(DEP_L1)/commands/base/bin/SHUTDOWN.BIN  $(BASE)/GRAMADO/
-	-cp $(DEP_L1)/commands/base/bin/UNAME.BIN     $(BASE)/
-
-# Experimental commands.
-	-cp $(DEP_L1)/commands/base/bin/FALSE.BIN      $(BASE)/GRAMADO/
-	-cp $(DEP_L1)/commands/base/bin/TRUE.BIN       $(BASE)/GRAMADO/
-	-cp $(DEP_L1)/commands/extra/bin/CMP.BIN       $(BASE)/GRAMADO/
-	-cp $(DEP_L1)/commands/extra/bin/SHOWFUN.BIN   $(BASE)/GRAMADO/
-	-cp $(DEP_L1)/commands/extra/bin/SUM.BIN       $(BASE)/GRAMADO/
-	-cp $(DEP_L1)/commands/sdk/bin/GRAMCNF.BIN     $(BASE)/
-#-cp $(DEP_L1)/commands/sdk/bin/N9.BIN         $(BASE)/GRAMADO/
-#-cp $(DEP_L1)/commands/sdk/bin/N10.BIN        $(BASE)/GRAMADO/
-#-cp $(DEP_L1)/commands/sdk/bin/N11.BIN        $(BASE)/GRAMADO/
-#-cp $(DEP_L1)/commands/extra/bin/UDPTEST.BIN  $(BASE)/GRAMADO/
 
 #===================================
 # $(DEP_L1)/drivers/ in kernel project
@@ -242,13 +206,6 @@ build-gramado-os:
 	-cp $(DEP_L1)/servers/bin/NET.BIN   $(BASE)/GRAMADO/
 	-cp $(DEP_L1)/servers/bin/NETD.BIN  $(BASE)/GRAMADO/
 
-#===================================
-# Install BMPs from cali assets.
-# Copy the $(DEP_L3)/assets/
-# We can't survive without this one.
-#	cp $(DEP_L3)/assets/themes/theme01/*.BMP  $(BASE)/
-	cp $(DEP_L3)/assets/themes/theme01/*.BMP  $(BASE)/DE
-
 	@echo "~build-gramado-os end?"
 
 # --------------------------------------
@@ -258,18 +215,64 @@ copy-extras:
 
 	@echo "copy-extras"
 
-# ------------------------
+# ==================================
 # LEVEL : Display servers
 	make -C $(DEP_L2)/
+
 	-cp $(DISPLAY_SERVERS)/ds00/bin/DS00.BIN    $(BASE)/DE
 #-cp $(DISPLAY_SERVERS)/ds01/bin/DS01.BIN    $(BASE)/DE
 # 3D demos.
 	-cp $(GAMES)/bin/DEMO00.BIN   $(BASE)/DE/
 	-cp $(GAMES)/bin/DEMO01.BIN   $(BASE)/DE/
 
-# ------------------------
+# ==================================
 # LEVEL : (os/) Client-side GUI applications
 	make -C $(DEP_L3)/
+
+#===================================
+# Install BMPs from cali assets.
+# Copy the $(DEP_L3)/assets/
+# We can't survive without this one.
+#	cp $(DEP_L3)/assets/themes/theme01/*.BMP  $(BASE)/
+	cp $(DEP_L3)/assets/themes/theme01/*.BMP  $(BASE)/DE
+
+# Well consolidated programs.
+	-cp $(COMMANDS)/base/bin/PUBSH.BIN    $(BASE)/GRAMADO/
+	-cp $(COMMANDS)/base/bin/PUBSH.BIN    $(BASE)/DE/
+	-cp $(COMMANDS)/base/bin/SHELL.BIN    $(BASE)/GRAMADO/
+	-cp $(COMMANDS)/base/bin/SHELL.BIN    $(BASE)/DE/
+	-cp $(COMMANDS)/base/bin/SHELLZZ.BIN  $(BASE)/GRAMADO/
+	-cp $(COMMANDS)/base/bin/SHELLZZ.BIN  $(BASE)/DE/
+
+# Experimental programs.
+	-cp $(COMMANDS)/base/bin/SH7.BIN        $(BASE)/GRAMADO/
+#	-cp $(COMMANDS)/base/bin/SHELLXXX.BIN   $(BASE)/GRAMADO/
+	-cp $(COMMANDS)/extra/bin/TASCII.BIN     $(BASE)/GRAMADO/
+	-cp $(COMMANDS)/extra/bin/TPRINTF.BIN    $(BASE)/GRAMADO/
+
+#===================================
+
+# Copy well consolidated commands.
+	-cp $(COMMANDS)/base/bin/CAT.BIN       $(BASE)/
+	-cp $(COMMANDS)/base/bin/CAT00.BIN     $(BASE)/
+	-cp $(COMMANDS)/base/bin/REBOOT.BIN    $(BASE)/
+	-cp $(COMMANDS)/base/bin/REBOOT.BIN    $(BASE)/GRAMADO/
+	-cp $(COMMANDS)/base/bin/SHUTDOWN.BIN  $(BASE)/
+	-cp $(COMMANDS)/base/bin/SHUTDOWN.BIN  $(BASE)/GRAMADO/
+	-cp $(COMMANDS)/base/bin/UNAME.BIN     $(BASE)/
+
+# Experimental commands.
+	-cp $(COMMANDS)/base/bin/FALSE.BIN      $(BASE)/GRAMADO/
+	-cp $(COMMANDS)/base/bin/TRUE.BIN       $(BASE)/GRAMADO/
+	-cp $(COMMANDS)/extra/bin/CMP.BIN       $(BASE)/GRAMADO/
+	-cp $(COMMANDS)/extra/bin/SHOWFUN.BIN   $(BASE)/GRAMADO/
+	-cp $(COMMANDS)/extra/bin/SUM.BIN       $(BASE)/GRAMADO/
+	-cp $(COMMANDS)/sdk/bin/GRAMCNF.BIN     $(BASE)/
+#-cp $(COMMANDS)/sdk/bin/N9.BIN         $(BASE)/GRAMADO/
+#-cp $(COMMANDS)/sdk/bin/N10.BIN        $(BASE)/GRAMADO/
+#-cp $(COMMANDS)/sdk/bin/N11.BIN        $(BASE)/GRAMADO/
+#-cp $(COMMANDS)/extra/bin/UDPTEST.BIN  $(BASE)/GRAMADO/
+
 	-cp $(APPLICATIONS)/bin/TASKBAR.BIN    $(BASE)/DE
 	-cp $(APPLICATIONS)/bin/XTB.BIN        $(BASE)/DE
 	-cp $(APPLICATIONS)/bin/TERMINAL.BIN   $(BASE)/DE

@@ -1,11 +1,11 @@
-# pubsh
+# shell
 # 2019 - Created by Fred Nora.
 
 VERSION = 0
 PATCHLEVEL = 0
 SUBLEVEL = 0
 EXTRAVERSION =
-#NAME = pubsh
+#NAME = shell
 
 CFLAGS_OLD = -m64 \
 	-std=gnu89 \
@@ -96,10 +96,10 @@ CFLAGS := \
 	
 
 # Libraries
-LIBC     = ../libs/rtl/include/
-LIBCOBJ  = ../libs/rtl/obj
-LIBIO    = ../libs/libio01/include/
-LIBIOOBJ = ../libs/libio01/obj
+LIBC     = ../../alpha/libs/rtl/include/
+LIBCOBJ  = ../../alpha/libs/rtl/obj
+LIBIO    = ../../alpha/libs/libio01/include/
+LIBIOOBJ = ../../alpha/libs/libio01/obj
 
 # Objects
 myObjects = crt0.o main.o \
@@ -130,10 +130,10 @@ all-c:
 	cp $(LIBIOOBJ)/libio.o  .
 	
 cat-link:
-	ld -m elf_x86_64 -T ../link.ld -o PUBSH.BIN $(myObjects)    
+	ld -m elf_x86_64 -T ../link.ld -o SHELLZZ.BIN $(myObjects)    
 finalize:
-	cp PUBSH.BIN  ../bin/
+	cp SHELLZZ.BIN ../bin/
 clean:
 	-rm *.o
-	-rm PUBSH.BIN 
+	-rm SHELLZZ.BIN 
 	
