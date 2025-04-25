@@ -1,4 +1,4 @@
-# zcore - Core ring 0 components.
+# kcore - Core ring 0 components.
 
 Ring 0 stuff: Boot, kernel, init process, and loadable ring 0 kernel modules.
 

@@ -1,4 +1,6 @@
-# os - The client-side GUI applications.
+# shui - Shell UI
+
+The client-side GUI applications.
 
 ```
   This is a place for Client-side GUI applications. The applications here was built 
@@ -19,8 +21,8 @@ the Taskbar and the Virtual terminal.
 folder ds/ds00/.
 ```
 
-> * osshell/     - Client-side GUI applications.
-> * osshell/api/ - Gramado API.
+> * shell/     - Client-side GUI applications.
+> * shell/api/ - Gramado API.
 
 ## Creating Client-side GUI applications.
 

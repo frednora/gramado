@@ -1,7 +1,9 @@
-# windows - The windowing system.
+# shpreui - Shell Pre-UI
+
+The core of windowing system.
 
 ```
-Display server.
+Display server and 3D demos.
 ```
 
 ## This is a screenshot of GramadoDE desktop environment running on top of the kernel.
