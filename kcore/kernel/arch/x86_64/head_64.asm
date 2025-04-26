@@ -2,7 +2,7 @@
 ; Entry point for a 64bit kernel image.
 ; Created by Fred Nora.
 
-%include "header/header1.asm"
+%include "header.asm"
 
 ; segment .head_x86_64
 __HEAD
@@ -70,274 +70,17 @@ _kernel_begin:
 
     cli
     cld 
+	; Jump to the end of this document.
     jmp START
 
-; ----------------------
-; header data area:
-; Exporting ...
-; see: mod.c
-; see: newm0/ in the module.
-; #todo: maybe we can have this table in another place.
-
+; =======================================================
+; Function table.
+; Exported by the kernel.
 align 4
-    nop                ; Nop
-    DB '__GRAMADO__'   ; Signature
-    DQ _xp_die                   ; symbol 0: (no arg)
-    DQ _xp_putchar_test          ; symbol 1: (no arg)
-    DQ _xp_reboot                ; symbol 2: (no arg)
-    DQ _xp_refresh_screen        ; symbol 3: (no arg)
-    DQ _xp_putchar_in_fgconsole  ; symbol 4: (1 arg)
-    ; ...
-; ----------------------
-
-
-align 4
-    %include "header/header2.asm"
-align 4
-
-; START
-; #todo
-; We can save some values just for debug purpose.
-START:
-
-;
-; -----------------------------------------------
-; Boot block:
-; All the information we got from the boot loader for now.
-; The bootblock has a lot of data.
-
-; Save the bootblock address.
-    mov dword [_saved_bootblock_base], ebx
-; Save the signature.
-    mov dword [_magic], edx
-    ; ...
-
-; Clear some registers.
-; Load our own 64-bit gdt.
-; Setup data registers and base kernel stack.
-; Load a NULL ldt.
-
-    mov rax, qword __SYSTEM_BOOTING
-    mov qword [_system_state], rax 
-
-    xor rax, rax
-    xor rbx, rbx
-    xor rcx, rcx
-    xor rdx, rdx
-
-    mov  r8, rax
-    mov  r9, rax
-    mov r10, rax
-    mov r11, rax
-    mov r12, rax
-    mov r13, rax
-    mov r14, rax
-    mov r15, rax
-
-; GDT
-; This gdt is here in this document.
-    lgdt [EARLY_GDT64.Pointer]
-
-; Segment registers:
-; See: boot loader for CS initialization.
-    mov ax, EARLY_GDT64.Data
-    mov ds, ax
-    mov es, ax
-    ; Do we need FS and GS in x86_64?
-    mov fs, ax
-    mov gs, ax
-; Early kernel stack. 
-; 64 KB.
-    mov ss, ax
-    mov rsp,  _EarlyKernelStack
-
-; LDT
-; Initialize ldt with a NULL selector.
-    xor rax, rax
-    lldt ax
-
-; Clear registers
-; RBP, RSI, RDI.
-    xor rax, rax
-    mov rbp, rax
-    mov rsi, rax
-    mov rdi, rax
-
-; IDT
-; Uma falta, ou excessão gera uma interrupção não-mascaravel ... certo?
-; então mesmo que eu deixe as interrupções do pic mascaradas elas vão acontecer?
-; Sendo assim, esses vetores precisam ser 
-; tratados mesmo antes de tratarmos os vetores das interrupções mascaraves.
-
-; Disable IRQs
-; Out 0xFF to 0xA1 and 0x21 to disable all IRQs.
-; Esse rotina existe mais pra frente,
-; mas poderíamos antecipa-la.
-
-    ;mov al, 0xFF  
-    ;out 0xA1, al
-    ;out 0x21, al
-
-;See: unit0.asm
-; This is so dangeours
-
-    call setup_idt      ; Create a common handler, 'unhandled_int'.
-    call setup_faults   ; Setup vectors for faults and exceptions.
-    call setup_vectors  ; Some new vectors.
-
-; IDT
-; #danger:
-    lidt [_IDT_register] 
-
-; TR
-; tss stuff.
- 
-    ;mov rax, qword tss0
-
-    ;mov [EARLY_GDT64.tssData + 2], ax
-    ;shr rax, 16
-    ;mov [EARLY_GDT64.tssData + 4],  al
-    ;mov [EARLY_GDT64.tssData + 7],  ah
-
-; Load TR.
-; 0x2B = (0x28+3).
-
-    ;mov ax, word 0x2B
-    ;ltr ax
-
-; PIC
-; Early PIC initialization.
-; PIC MODE
-; Selecting the 'Processor Interrup Mode'.
-; All the APIC components are ignored here, and
-; the system will operate in the single-thread mode using LINT0.
-    cli
-    xor rax, rax
-    mov al, 00010001b    ; begin PIC1 initialization.
-    out 0x20, al
-    IODELAY
-    mov al, 00010001b    ; begin PIC2 initialization.
-    out 0xA0, al
-    IODELAY
-    mov al, 0x20         ; IRQ 0-7: interrupts 20h-27h.
-    out 0x21, al
-    IODELAY
-    mov al, 0x28         ; IRQ 8-15: interrupts 28h-2Fh.
-    out 0xA1, al
-    IODELAY
-    mov al, 4
-    out 0x21, al
-    IODELAY
-    mov al, 2
-    out 0xA1, al
-    IODELAY
-    ;mov al, 00010001b    ; 11 sfnm 80x86 support.
-    mov al, 00000001b     ; 01 80x86 support.
-    out 0x21, al
-    IODELAY
-    out 0xA1, al
-    IODELAY
-
-; Mask all interrupts.
-    cli
-    mov  al, 255
-    out  0xA1,  al
-    IODELAY
-    out  0x21,  al
-    IODELAY
-
-; PIT
-; Early PIT initialization.
-; Setup system timers.
-; Some frequencies to remember.
-; PIT 8253 e 8254 = (1234DD) 1193181.6666 / 100 = 11930. ; 1.19MHz.
-; APIC timer      = 3,579,545 / 100 = 35796  3.5 MHz.
-; 11931    ; (1193181.6666 / 100 = 11930) timer frequency 100 HZ.
-; Send 0x36 to 0x43.
-; Send 11931 to 0x40.
-
-    xor rax, rax
-    mov al, byte 0x36
-    mov dx, word 0x43
-    out dx, al
-    IODELAY
-    mov eax, dword 11931
-    mov dx, word 0x40
-    out dx, al
-    IODELAY
-    mov al, ah
-    out dx, al
-    IODELAY
-
-; #todo: 
-; RTC
-
-; Unmask all maskable interrupts.
-    mov al, 0
-    out 0xA1, al
-    IODELAY
-    out 0x21, al
-    IODELAY
-
-; No interrupts
-    cli
-
-; Set up registers.
-; See:
-; https://wiki.osdev.org/CPU_Registers_x86-64
-
-;--------------------------------------
-; Debug registers:
-; DR0 ~ DR7
-; Debug registers.
-; Disable break points.
-
-; DR0~DR3
-; Contain linear addresses of up to 4 breakpoints. 
-; If paging is enabled, they are translated to physical addresses.
-
-; DR6
-; It permits the debugger to determine 
-; which debug conditions have occurred.
-
-;--------------------------------------
-
-; Clear register 
-    xor rax, rax
-    xor rbx, rbx
-    xor rcx, rcx
-    xor rdx, rdx
-    mov  r8, rax
-    mov  r9, rax
-    mov r10, rax
-    mov r11, rax
-    mov r12, rax
-    mov r13, rax
-    mov r14, rax
-    mov r15, rax
-
-;--------------------------------------
-
-; Use the calling convention for this compiler.
-; rdi
-; No return
-; See: kmain.c
-; #todo: arch type (2) ??
-
-    xor rax, rax
-    mov rdi, rax    ; First argument.
-    ; ...
-
-; Call I_kmain() function in kmain.c
-; See: core/kmain/kmain.c
-    call _I_kmain
-dieLoop:
-    cli
-    hlt
-    jmp dieLoop
+FunctionTable:
+    %include "fn_table.asm"
 
 ; =======================================================
-
 ;; GDT
 ;; See:
 ;; https://wiki.osdev.org/Setting_Up_Long_Mode
@@ -2758,33 +2501,224 @@ _IDT_register:
     dq _idt 
 
 
-align 8
-
-
 ; Includes:
 ; ========
-; Esses includes são padronizados. Não acrescentar outros.
+
+align 4
+    %include "tss.asm"
+
+align 4
+    %include "macro.asm"
 
 ;---------------------
-; Inicialização.
-; Funções de apoio à inicialização do Kernel.
-    %include "header/header3.asm"
-    %include "header/header4.asm"
-;---------------------
 ; Interrupções de hardware (irqs) e faults.
-    %include "entry/hw/hw1.asm"
-    %include "entry/hw/hw2.asm"
+align 4
+    %include "ints/hw/hw1.asm"
+    %include "ints/hw/hw2.asm"
 ;---------------------
 ; visitor
 ; Interrupções de software.
-    %include "entry/sw/sw1.asm"
-    %include "entry/sw/sw2.asm"
+align 4
+    %include "ints/sw/sw1.asm"
+    %include "ints/sw/sw2.asm"
 
+;---------------------
+; Funções
+align 4
+    %include "pic.asm"
+align 4
+    %include "pit.asm"
+align 4
+    %include "x86_64.asm"
+
+; Startup routine called by the entry point.
+align 4
+DEBUG_START: db "START"
+align 4
+START:
+; #todo
+; We can save some values just for debug purpose.
+
+; -----------------------------------------------
+; Boot block:
+; All the information we got from the boot loader for now.
+; The bootblock has a lot of data.
+
+; Save the bootblock address.
+    mov dword [_saved_bootblock_base], ebx
+; Save the signature.
+    mov dword [_magic], edx
+    ; ...
+
+; Clear some registers.
+; Load our own 64-bit gdt.
+; Setup data registers and base kernel stack.
+; Load a NULL ldt.
+
+    mov rax, qword __SYSTEM_BOOTING
+    mov qword [_system_state], rax 
+
+    xor rax, rax
+    xor rbx, rbx
+    xor rcx, rcx
+    xor rdx, rdx
+
+    mov  r8, rax
+    mov  r9, rax
+    mov r10, rax
+    mov r11, rax
+    mov r12, rax
+    mov r13, rax
+    mov r14, rax
+    mov r15, rax
+
+; GDT
+; This gdt is here in this document.
+    lgdt [EARLY_GDT64.Pointer]
+
+; Segment registers:
+; See: boot loader for CS initialization.
+    mov ax, EARLY_GDT64.Data
+    mov ds, ax
+    mov es, ax
+    ; Do we need FS and GS in x86_64?
+    mov fs, ax
+    mov gs, ax
+; Early kernel stack. 
+; 64 KB.
+    mov ss, ax
+    mov rsp,  _EarlyKernelStack
+
+; LDT
+; Initialize ldt with a NULL selector.
+    xor rax, rax
+    lldt ax
+
+; Clear registers
+; RBP, RSI, RDI.
+    xor rax, rax
+    mov rbp, rax
+    mov rsi, rax
+    mov rdi, rax
+
+; IDT
+; Uma falta, ou excessão gera uma interrupção não-mascaravel ... certo?
+; então mesmo que eu deixe as interrupções do pic mascaradas elas vão acontecer?
+; Sendo assim, esses vetores precisam ser 
+; tratados mesmo antes de tratarmos os vetores das interrupções mascaraves.
+
+; Disable IRQs
+; Out 0xFF to 0xA1 and 0x21 to disable all IRQs.
+; Esse rotina existe mais pra frente,
+; mas poderíamos antecipa-la.
+
+    ;mov al, 0xFF  
+    ;out 0xA1, al
+    ;out 0x21, al
+
+;See: unit0.asm
+; This is so dangeours
+
+    call setup_idt      ; Create a common handler, 'unhandled_int'.
+    call setup_faults   ; Setup vectors for faults and exceptions.
+    call setup_vectors  ; Some new vectors.
+
+; IDT
+; #danger:
+    lidt [_IDT_register] 
+
+; TR
+; tss stuff.
+ 
+    ;mov rax, qword tss0
+
+    ;mov [EARLY_GDT64.tssData + 2], ax
+    ;shr rax, 16
+    ;mov [EARLY_GDT64.tssData + 4],  al
+    ;mov [EARLY_GDT64.tssData + 7],  ah
+
+; Load TR.
+; 0x2B = (0x28+3).
+
+    ;mov ax, word 0x2B
+    ;ltr ax
+
+
+; PIC
+    call PIC_early_initialization 
+
+; PIT
+    call PIT_early_initialization
+
+; Unmask all maskable interrupts.
+    mov al, 0
+    out 0xA1, al
+    IODELAY
+    out 0x21, al
+    IODELAY
+
+; No interrupts
+    cli
+
+; Set up registers.
+; See:
+; https://wiki.osdev.org/CPU_Registers_x86-64
+
+;--------------------------------------
+; Debug registers:
+; DR0 ~ DR7
+; Debug registers.
+; Disable break points.
+
+; DR0~DR3
+; Contain linear addresses of up to 4 breakpoints. 
+; If paging is enabled, they are translated to physical addresses.
+
+; DR6
+; It permits the debugger to determine 
+; which debug conditions have occurred.
+
+;--------------------------------------
+
+; Clear register 
+    xor rax, rax
+    xor rbx, rbx
+    xor rcx, rcx
+    xor rdx, rdx
+    mov  r8, rax
+    mov  r9, rax
+    mov r10, rax
+    mov r11, rax
+    mov r12, rax
+    mov r13, rax
+    mov r14, rax
+    mov r15, rax
+
+;--------------------------------------
+
+; Use the calling convention for this compiler.
+; rdi
+; No return
+; See: kmain.c
+; #todo: arch type (2) ??
+
+    xor rax, rax
+    mov rdi, rax    ; First argument.
+    ; ...
+
+; Call I_kmain() function in kmain.c
+; See: core/kmain/kmain.c
+    call _I_kmain
+dieLoop:
+    cli
+    hlt
+    jmp dieLoop
 
 ;===================================================
 ; DATA: 
 ;     Início do Segmento de dados.
 ;     Coloca uma assinatura no todo.
+
 
 segment .data
 global _data_start

@@ -1,51 +1,7 @@
-; header3.asm
+; header4.asm
 ; Created by Fred Nora.
 
-; See:
-; head_64.asm for the stack.
-
-align 8
-tss0:
-    dd 0 ;reserved
-    dq _rsp0Stack ;rsp0        #todo
-    dq 0 ;rsp1
-    dq 0 ;rsp2
-    dd 0 ;reserved
-    dd 0 ;reserved
-    dq 0 ;ist1
-    dq 0 ;ist2
-    dq 0 ;ist3
-    dq 0 ;ist4
-    dq 0 ;ist5
-    dq 0 ;ist6
-    dq 0 ;ist7
-    dd 0 ;reserved
-    dd 0 ;reserved
-    dw 0 ;reserved
-    dw 0 ;IOPB offset
-tss0_end:
-
-
-align 8
-tss1:
-    dd 0 ;reserved
-    dq _rsp0Stack ;rsp0        #todo
-    dq 0 ;rsp1
-    dq 0 ;rsp2
-    dd 0 ;reserved
-    dd 0 ;reserved
-    dq 0 ;ist1
-    dq 0 ;ist2
-    dq 0 ;ist3
-    dq 0 ;ist4
-    dq 0 ;ist5
-    dq 0 ;ist6
-    dq 0 ;ist7
-    dd 0 ;reserved
-    dd 0 ;reserved
-    dw 0 ;reserved
-    dw 0 ;IOPB offset
-tss1_end:
+;extern _Module0EntryPoint
 
 
 ; ==================================
@@ -774,6 +730,68 @@ _asm_nic_create_new_idt_entry:
     pop rbx
     pop rax
     ret 
+
+
+; dirty: The registers are dirty.
+global _asm_initialize_module0
+_asm_initialize_module0:
+
+    mov rdi, qword 1000   ; Reason = Initialize module.
+    ;call _Module0EntryPoint
+    ;call 0x30A00000
+    ret
+
+;=====================================
+; _asm_reboot:
+;     Reboot the system via ps2 keyboard.
+; Steps:
+; Wait for an empty Input Buffer with timeout, 
+; but still send reboot command even if buffer stays busy.
+;
+
+PS2KEYBOARD_PORT        EQU  0x64
+PS2KEYBOARD_CMD_REBOOT  EQU  0xFE
+
+global _asm_reboot
+_asm_reboot:
+
+    xor rax, rax
+
+; Timeout counter (arbitrary large value)
+    mov rcx, 100000
+
+; Get value and test status
+; Testing for empty buffer with timeout.
+.LNotEmpty:
+    in al, PS2KEYBOARD_PORT
+    test al, 00000010b
+    je .LContinue ; Proceed if buffer becomes empty
+    loop .LNotEmpty
+
+; Continue sending the reboot command even if timeout occurs
+.LContinue:
+
+; (Write-Back and Invalidate Cache)
+; Copy cache back to the main memory and invalidate cache.
+; Forcing cache/RAM synchronization.
+    wbinvd
+
+; Send command
+    mov al, PS2KEYBOARD_CMD_REBOOT
+    out PS2KEYBOARD_PORT, al
+
+; Infinite loop to halt
+.Lloop:
+    cli
+    hlt
+    jmp .Lloop
+
+
+
+;=====================================
+; Wrapper for reboot function.
+unit4_reboot:
+    jmp _asm_reboot
 
 ; #test:
 ;Other atomic hardware primitives:
