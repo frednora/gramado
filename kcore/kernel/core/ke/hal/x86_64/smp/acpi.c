@@ -251,19 +251,26 @@ int __x64_probe_smp_via_acpi(void)
         // field of the RSDP structure.
 
         // Mapping the rsdt address.
+        // See: x64gva.h
         address_pa = (unsigned long) (__rsdt_address & 0xFFFFFFFF);
         address_va = (unsigned long) (RSDT_VA & 0xFFFFFFFF); // Desired va.
+
+        if (address_pa == 0)
+            panic("acpi.c: address_pa\n");
+
+        // #debug
+        printk("rsdt pa: %x | rsdt va: %x\n", address_pa, address_va );
+
         // IN: ps | va
         // OUT: 0=ok | -1=fail
         // see: pages.c
-        mapStatus = (int) mm_map_2mb_region(address_pa,address_va);
+        mapStatus = 
+            (int) mm_map_2mb_region(
+                (unsigned long) address_pa,    // pa
+                (unsigned long) address_va );  // va
         if (mapStatus != 0){
-            panic("acpi.c: mapStatus\n");
+            panic("acpi.c: mm_map_2mb_region\n");
         }
-
-        // #debug
-        printk("rsdt pa: %x | rsdt va: %x\n",
-            address_pa, address_va );
 
         // RSDT:
 
@@ -271,7 +278,7 @@ int __x64_probe_smp_via_acpi(void)
         // #bugbug: Or not. Because the signature is wrong.
         // RSDT helps the system locate other ACPI tables necessary for 
         // configuring processors and power management.
-        rsdt = (struct rsdt_d *) RSDT_VA;
+        rsdt = (struct rsdt_d *) address_va;
         // #debug: Looking for "RSDT".
         // #bugbug: >>>>>>> [FAIL]
         // We cant find a valid signature.
@@ -292,6 +299,9 @@ int __x64_probe_smp_via_acpi(void)
 
         // #bugbug
         // We gotta find this table and check the elements.
+        //printk("ACPI: Breakpoint\n");
+        //refresh_screen();
+        //while(1){}
 
     } else {
         panic("ACPI: Invalid ACPI Revision\n");

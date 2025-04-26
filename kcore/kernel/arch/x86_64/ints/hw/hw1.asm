@@ -1,6 +1,7 @@
 ; hw1.asm
 ; This file handles the traps for the x86_64 processors.
 ; Only hw interrupts.
+; Created by Fred Nora.
 
 ;
 ; Imports
@@ -312,11 +313,8 @@ _irq1:
     and rax, 3
     mov [_contextCPL], rax
 
-
-; See: 
-; keyboard.c
+; See: keyboard.c
     call _irq1_KEYBOARD
-
 
 ; FPU
     fxrstor [_context_fpu_buffer]
@@ -921,8 +919,8 @@ _irq9_nic_handler:
     and rax, 3
     mov [_contextCPL], rax
 
-; Timer and taskswitching.
-; See: pit.c
+; e1000 NIC device.
+; See: e1000hw.c
 
     call _irq_E1000
 
@@ -1246,11 +1244,8 @@ _irq12:
     and rax, 3
     mov [_contextCPL], rax
 
-
-; See: 
-; keyboard.c
+; See: mouse.c
     call _irq12_MOUSE
-
 
 ; FPU
     fxrstor [_context_fpu_buffer]
@@ -1464,6 +1459,7 @@ _irq14:
 
     fxsave [__hw_fpu_buffer]
 
+; See: atairq.c
     call _irq14_PRIMARY_IDE
 
     fxrstor [__hw_fpu_buffer]
@@ -1558,6 +1554,7 @@ _irq15:
 
     fxsave [__hw_fpu_buffer]
 
+; See: atairq.c
     call _irq15_SECONDARY_IDE
 
     fxrstor [__hw_fpu_buffer]

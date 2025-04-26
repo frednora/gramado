@@ -1286,7 +1286,9 @@ DDINIT_e1000 (
 // #bugbug: 
 // >> Isso é um improviso. Ainda falta criar rotinas melhores.
 
-    virt_address = NIC_INTEL_E1000_VA;
+// This is the desired virtual address.
+// See: x64gva.h
+    virt_address = (unsigned long) NIC_INTEL_E1000_VA;
 
     int map_status = -1;
     map_status = 

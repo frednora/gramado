@@ -57,9 +57,7 @@ static void disk_reset_ata_irq_invoked (void)
     ata_irq_invoked = FALSE;
 }
 
-
-
-// global
+// Interrupt handler.
 __VOID_IRQ 
 irq14_PRIMARY_IDE (void)
 {
@@ -67,8 +65,7 @@ irq14_PRIMARY_IDE (void)
     DeviceInterface_PrimaryIDE();
 }
 
-
-// global
+// Interrupt handler.
 __VOID_IRQ 
 irq15_SECONDARY_IDE (void)
 {

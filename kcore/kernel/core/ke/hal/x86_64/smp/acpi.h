@@ -10,13 +10,16 @@
 
 //----------------------------------------------------
 // https://wiki.osdev.org/RSDP
+// For ACPI 1.0 (older systems), the RSDP contains a 32-bit physical address 
+// that points to the RSDT (Root System Description Table). Since it's a standard 32-bit address, 
+// the mask used would generally be 0xFFFFFFFF, meaning all bits are valid.
 struct rsdp_d
 {
     char Signature[8];
     uint8_t Checksum;
     char OEMID[6];
     uint8_t Revision;
-    uint32_t RsdtAddress;
+    uint32_t RsdtAddress;  // 32bit
 } __attribute__ ((packed));
 extern struct rsdp_d *rsdp;
 
