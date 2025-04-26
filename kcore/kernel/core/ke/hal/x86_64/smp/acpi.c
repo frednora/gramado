@@ -187,18 +187,23 @@ int __x64_probe_smp_via_acpi(void)
     // #breakpoint
     //while(1){ asm("hlt"); }
 
+    unsigned long __initial_acpi_address = 0;
     unsigned long __rsdt_address=0;
     unsigned long __xsdt_address=0;
+
+    // #test
+    // This is the initial address where we're gonna probe to find
+    // rsdt signature.
+    __initial_acpi_address = (unsigned long) (rsdp->RsdtAddress & 0xFFF00000); 
 
     // Use xsdp
     if (rsdp->Revision == 0x02){
         printk("ACPI: Revision 2.0 {0x02} \n");
-        // #maybe 0xFFF00000 ?
-        __rsdt_address = 
-            (unsigned long) (rsdp->RsdtAddress & 0xFFFFFFFF);
-        __xsdt_address = 
-            (unsigned long) (xsdp->XsdtAddress & 0xFFFFFFFF);
-        
+        __rsdt_address = (unsigned long) (rsdp->RsdtAddress & 0xFFFFFFFF);
+        // #bugbug
+        // Here probably the physical address is 64bit long.
+        __xsdt_address = (unsigned long) (xsdp->XsdtAddress & 0xFFFFFFFFFFFFFFFF);
+
         // #breakpoint
         //panic("x64smp.c: Revision 2.0 #todo\n");
         printk("ACPI: Revision 2.0 #todo\n");
@@ -207,8 +212,7 @@ int __x64_probe_smp_via_acpi(void)
     // Use rsdp
     }else if (rsdp->Revision == 0){
         printk("ACPI: Revision 1.0 {0x00} \n");
-        __rsdt_address = 
-            (unsigned long) (rsdp->RsdtAddress & 0xFFFFFFFF);
+        __rsdt_address = (unsigned long) (rsdp->RsdtAddress & 0xFFFFFFFF);
         __xsdt_address = 0;
         //printk("ACPI: Revision 1.0 #todo\n");
     } else {
@@ -278,7 +282,7 @@ int __x64_probe_smp_via_acpi(void)
         // #bugbug: Or not. Because the signature is wrong.
         // RSDT helps the system locate other ACPI tables necessary for 
         // configuring processors and power management.
-        rsdt = (struct rsdt_d *) address_va;
+        rsdt = (struct rsdt_d *) (address_va & 0xFFFFFFFF);
         // #debug: Looking for "RSDT".
         // #bugbug: >>>>>>> [FAIL]
         // We cant find a valid signature.
@@ -296,6 +300,10 @@ int __x64_probe_smp_via_acpi(void)
         printk("RSDT: Revision {%c}\n", rsdt->Revision);
         // OEMID[6] – Manufacturer identifier (e.g., "Intel" or "AMI").
         printk("RSDT: OEMID {%s}\n", rsdt->OEMID);
+
+        // #todo
+        // Probably this address will fail, and than, 
+        // the caller needs to probe for 'fadt' table manually.
 
         // #bugbug
         // We gotta find this table and check the elements.
