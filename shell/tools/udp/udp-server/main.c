@@ -36,32 +36,31 @@ break;
 }
 }
 }
+
 int main()
 {
-int sockfd;
-struct sockaddr_in servaddr;
-sockfd=socket(AF_INET,SOCK_DGRAM,0);
-if(sockfd==-1)
-{
-printf("socket creation failed...\n");
-exit(0);
-}
-else
-printf("Socket successfully created..\n");
-bzero(&servaddr,sizeof(servaddr));
-servaddr.sin_family=AF_INET;
-servaddr.sin_addr.s_addr=htonl(INADDR_ANY);
-servaddr.sin_port=htons(PORT);
-if((bind(sockfd,(SA *)&servaddr,sizeof(servaddr)))!=0)
-{
-printf("socket bind failed...\n");
-exit(0);
-}
-else
-printf("Socket successfully binded..\n");
-func(sockfd);
-close(sockfd);
-}
+    int sockfd;
+    struct sockaddr_in servaddr;
 
+    sockfd=socket(AF_INET,SOCK_DGRAM,0);
+    if(sockfd==-1){
+        printf("socket creation failed...\n");
+        exit(0);
+    }else
+        printf("Socket successfully created..\n");
+    bzero(&servaddr,sizeof(servaddr));
+    servaddr.sin_family=AF_INET;
+    servaddr.sin_addr.s_addr=htonl(INADDR_ANY);
+    servaddr.sin_port=htons(PORT);
+    if ((bind(sockfd,(SA *)&servaddr,sizeof(servaddr)))!=0)
+    {
+        printf("socket bind failed...\n");
+        exit(0);
+    }else
+        printf("Socket successfully binded..\n");
+    func(sockfd);
+    close(sockfd);
 
+    return EXIT_SUCCESS;
+}
 

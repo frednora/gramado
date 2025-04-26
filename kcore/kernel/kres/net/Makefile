@@ -72,7 +72,7 @@ LDFLAGS := -m elf_x86_64 -s -x -static
 
 OBJS = network.o domain.o inet.o \
 socket.o sockint.o \
-ethernet.o arp.o ipv4.o tcp.o udp.o dhcp.o    
+ethernet.o arp.o ipv4.o tcp.o udp.o dhcp.o gprot.o    
 
 all:
 
@@ -94,9 +94,10 @@ $(KERNEL_INCLUDE) $(CFLAGS) -o arp.o
 $(KERNEL_INCLUDE) $(CFLAGS) -o ipv4.o
 
 # protocols
-	$(CC) -c prot/tcp.c   $(KERNEL_INCLUDE) $(CFLAGS) -o tcp.o
-	$(CC) -c prot/udp.c   $(KERNEL_INCLUDE) $(CFLAGS) -o udp.o
-	$(CC) -c prot/dhcp.c  $(KERNEL_INCLUDE) $(CFLAGS) -o dhcp.o
+	$(CC) -c prot/tcp.c    $(KERNEL_INCLUDE) $(CFLAGS) -o tcp.o
+	$(CC) -c prot/udp.c    $(KERNEL_INCLUDE) $(CFLAGS) -o udp.o
+	$(CC) -c prot/dhcp.c   $(KERNEL_INCLUDE) $(CFLAGS) -o dhcp.o
+	$(CC) -c prot/gprot.c  $(KERNEL_INCLUDE) $(CFLAGS) -o gprot.o
 
 # link
 	$(LD) -r -o k4_net.o $(OBJS)

@@ -776,7 +776,8 @@ network_handle_udp(
             // Send a command to the init process.
             //ipc_post_message_to_init(77888, 1234, 5678);
 
-            __handle_gprotocol(sport,dport);
+            //__handle_gprotocol(sport,dport);
+            gprot_handle_protocol(udp_payload,sport,dport);
         };
 
         // Clear UDP local buffer.

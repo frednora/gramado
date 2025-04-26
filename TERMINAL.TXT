@@ -15,7 +15,6 @@ SERVER APPLICATION:
 Server-side program receives the data, process it and 
 sends result/data back to the caller.
 
-
 ======================================================================
 Copilot it:
 

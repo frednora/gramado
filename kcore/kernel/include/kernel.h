@@ -280,6 +280,9 @@
 #include "../kres/net/prot/tcp.h"
 #include "../kres/net/prot/udp.h"
 #include "../kres/net/prot/dhcp.h" 
+#include "../kres/net/prot/gprot.h"
+
+
 // Extra protocols
 #include "../kres/net/prot/icmp.h" 
 

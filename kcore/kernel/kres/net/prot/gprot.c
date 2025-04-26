@@ -1,0 +1,302 @@
+// gprot.c
+// gprot protocol support.
+// Created by Fred Nora.
+
+#include <kernel.h>
+
+
+// #test: 
+// Respond the UDP message receive on port 11888.
+// Somente se o dhcp foi initializado.
+// + Nosso IP ficou registrado na estrutura de dhcp.
+// + #todo: 
+//   O IP do alvo deveria estar salvo em alguma estrutura
+//   provavelmente na estrutura de IP.
+// + #todo: 
+//   O MAC do alvo ficaria registrado na estrutura de ethernet.
+int gprot_handle_protocol(char *data, uint16_t s_port, uint16_t d_port)
+{
+    char *buf = (char *) data;  // Testing on UDP payload for now.
+    uint16_t sport = s_port;
+    uint16_t dport = d_port;
+    const uint16_t OurPort = 11888;
+    size_t MessageSize = 256;
+
+    int NoReply = TRUE;
+
+    if (dhcp_info.initialized != TRUE)
+        goto fail;
+
+    if ((void*) buf == NULL)
+        goto fail;
+
+    if (dport != OurPort)
+        goto fail;
+
+// ----------------
+// g:0
+// packet type: 0 = request
+    if ( buf[0] == 'g' && 
+         buf[1] == ':' && 
+         buf[2] == '0' )
+    {
+        //printk("[request]\n"); refresh_screen();
+        memset(buf, 0, sizeof(buf));
+        ksprintf(buf,"g:1 ");  // Reply code
+        ksprintf(
+            (buf + 4),
+            "This is a response from Gramado OS\n");
+        NoReply = FALSE;
+        goto done;
+    }
+
+// -----------------------
+// g:1
+// packet type: 1 = reply
+    if ( buf[0] == 'g' && 
+         buf[1] == ':' && 
+         buf[2] == '1' )
+    {
+        //memset(udp_payload, 0, sizeof(udp_payload));
+
+        // #debug
+        printk("[g:1] REPLY\n");
+        refresh_screen();
+
+        NoReply = TRUE;
+        goto done;
+    }
+
+// -------------------------
+// g:2
+// packet type: 2 = event
+    if ( buf[0] == 'g' && 
+         buf[1] == ':' && 
+         buf[2] == '2' )
+    {
+        //memset(udp_payload, 0, sizeof(udp_payload));
+
+        // #debug
+        printk("[g:2] EVENT\n");
+        refresh_screen();
+
+        NoReply = TRUE;
+        goto done;
+    }
+
+// ---------------------------
+// g:3
+// packet type: 3 = error
+    if ( buf[0] == 'g' && 
+         buf[1] == ':' && 
+         buf[2] == '3' )
+    {
+        //memset(udp_payload, 0, sizeof(udp_payload));
+
+        // #debug
+        printk("[g:3] ERROR\n");
+        refresh_screen();
+
+        // #test
+        // Testing keyboard event
+        // OK, it's working. We can see a x in the client area of editor.bin.
+        // network_keyboard_event(MSG_KEYDOWN, 'x', 'x' );
+
+        NoReply = TRUE;
+        goto done;
+    }
+
+// --------------------------
+// g:4
+// packet type: 4 = disconnect
+    if ( buf[0] == 'g' && 
+         buf[1] == ':' && 
+         buf[2] == '4' )
+    {
+        //printk("[g:4] \n");
+        //refresh_screen;
+
+        memset(buf, 0, sizeof(buf));
+        ksprintf(buf,"g:0 ");          // Request
+        ksprintf( (buf + 4), "exit");  // exit command
+        NoReply = FALSE;
+        goto done;
+    }
+
+/*
+// --------------------------
+// #todo
+// g:5
+// packet type: 5 = ???
+    if ( buf[0] == 'g' && 
+         buf[1] == ':' && 
+         buf[2] == '5' )
+    {
+        //printk("[g:5] \n");
+        //refresh_screen;
+
+        memset(buf, 0, sizeof(buf));
+        ksprintf(buf,"g:0 ");          // Request
+        ksprintf( (buf + 4), "exit");  // exit command
+        NoReply = FALSE;
+        goto done;
+    }
+*/
+
+
+// #todo: Create more options.
+// ...
+
+    //if (dport == 11888)
+        //ksprintf(udp_payload,"This is a response from Gramado OS");
+
+// Fail: 
+// The received message is invalid.
+    NoReply = TRUE;
+
+// ---------------------
+// Response
+done:
+    if (NoReply == TRUE)
+        return 0;
+
+    //printk ("kernel: Sending response\n");
+    //refresh_screen();
+
+    network_send_udp(  
+        dhcp_info.your_ipv4,  // scr ip
+        __saved_caller_ipv4,  // dst ip
+        __saved_caller_mac,   // dst mac
+        dport,                // source port: "US"
+        sport,                // target port  "Who sent"
+        buf,                  // udp payload
+        MessageSize );        // udp payload size (Message size)
+
+    return 0; // ok
+
+fail:
+    return (int) -1;
+}
+
+
+/*
+int gprot_handle_protocol2(char *data, uint16_t s_port, uint16_t d_port);
+int gprot_handle_protocol2(char *data, uint16_t s_port, uint16_t d_port) 
+{
+    char *buf = data;  // UDP payload
+    uint16_t sport = s_port;
+    uint16_t dport = d_port;
+    size_t MessageSize = 256;
+    int NoReply = TRUE;
+
+    if (!data || dhcp_info.initialized != TRUE || d_port != 11888) 
+        return -1;
+
+    // Validate prefix format
+    if (buf[0] != 'g' || buf[1] != ':')
+        return 0;
+
+    switch (buf[2]) {
+        case '0':  // Request
+            snprintf(buf, MessageSize, "g:1 This is a response from Gramado OS\n");
+            NoReply = FALSE;
+            break;
+
+        case '1':  // Reply
+            printk("[g:1] REPLY\n");
+            break;
+
+        case '2':  // Event
+            printk("[g:2] EVENT\n");
+            break;
+
+        case '3':  // Error
+            printk("[g:3] ERROR\n");
+            break;
+
+        case '4':  // Disconnect
+            snprintf(buf, MessageSize, "g:0 exit");
+            NoReply = FALSE;
+            break;
+
+        default:
+            return 0;
+    }
+
+    // Send response if required
+    if (!NoReply) {
+        network_send_udp(
+            dhcp_info.your_ipv4, 
+            __saved_caller_ipv4, 
+            __saved_caller_mac, 
+            dport, 
+            sport, 
+            buf, 
+            MessageSize );
+    }
+
+    return 0;
+}
+*/
+
+
+/*
+Approach
+Identify HTTP requests based on common prefixes (GET /, POST /, etc.).
+Extract the request type (GET, POST).
+Formulate a simple response (e.g., return a basic HTTP response like "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nHello from Gramado OS").
+Reuse existing resources (use network_send_udp() to return the response).
+*/
+
+/*
+// I little bit of http
+int gprot_handle_protocol(char *data, uint16_t s_port, uint16_t d_port) ;
+int gprot_handle_protocol(char *data, uint16_t s_port, uint16_t d_port) 
+{
+    if (!data || dhcp_info.initialized != TRUE || d_port != 11888) return -1;
+
+    char *buf = data;  // UDP payload
+    uint16_t sport = s_port;
+    uint16_t dport = d_port;
+    size_t MessageSize = 256;
+    int NoReply = TRUE;
+
+    // Check for custom protocol
+    if (buf[0] == 'g' && buf[1] == ':') {
+        switch (buf[2]) {
+            case '0':  // Request
+                snprintf(buf, MessageSize, "g:1 This is a response from Gramado OS\n");
+                NoReply = FALSE;
+                break;
+
+            case '1': printk("[g:1] REPLY\n"); break;
+            case '2': printk("[g:2] EVENT\n"); break;
+            case '3': printk("[g:3] ERROR\n"); break;
+            case '4': 
+                snprintf(buf, MessageSize, "g:0 exit");
+                NoReply = FALSE;
+                break;
+
+            default: return 0;
+        }
+    }
+    // Check for HTTP request
+    else if (strncmp(buf, "GET /", 5) == 0 || strncmp(buf, "POST /", 6) == 0) {
+        snprintf(buf, MessageSize, 
+            "HTTP/1.1 200 OK\r\n"
+            "Content-Type: text/plain\r\n"
+            "\r\n"
+            "Hello from Gramado OS\n");
+        NoReply = FALSE;
+    }
+
+    // Send response if needed
+    if (!NoReply) {
+        network_send_udp(dhcp_info.your_ipv4, __saved_caller_ipv4, __saved_caller_mac, dport, sport, buf, MessageSize);
+    }
+
+    return 0;
+}
+*/
+
+
