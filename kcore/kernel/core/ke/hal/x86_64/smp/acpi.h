@@ -55,11 +55,14 @@ struct rsdt_d
     uint32_t OEMRevision;
     uint32_t CreatorID;
     uint32_t CreatorRevision;
+// ----------------------------------------------------
+// We have more thing here. That depends on the type of rsdt table.
+// The header part is the same for all kinds.
+
     // unsigned int *entry; // 4*n
 };
-// see: x64smp.c
+// see: x64smp.c and acpi.c
 extern struct rsdt_d *rsdt;
-
 
 //----------------------------------------------------
 // eXtended System Descriptor Table (XSDT) - 

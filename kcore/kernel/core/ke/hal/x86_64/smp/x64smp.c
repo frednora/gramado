@@ -158,20 +158,30 @@ int x64smp_initialization(void)
 // ----------------------
 // ACPI
 
+//
+// == ACPI ===========================================================
+//
+
     printk("\n");
     printk("\n");
     printk("== SMP VIA ACPI ===================\n");
 
     // #test #todo
     // Using the ACPI tables.
+    // See: acpi.c
+
     smp_info.probe_via = SMP_VIA_ACPI;
     smp_status = (int) __x64_probe_smp_via_acpi();
-    if (smp_status != TRUE){
-        smp_info.probe_via_acpi_failed = TRUE;
-        printk("x64smp_initialization: [x64_probe_smp_via_acpi] failed\n");
-    }
-    if (smp_status == TRUE)
-    {
+
+    // #bugbug
+    // We gotta find this table and check the elements.
+    //printk("ACPI: Breakpoint\n");
+    //refresh_screen();
+    //while(1){}
+
+    // ACPI OK.
+    if (smp_status == TRUE){
+
         // If the LAPIC is not initialized
         if (LAPIC.initialized != TRUE)
         {
@@ -188,11 +198,20 @@ int x64smp_initialization(void)
                 printk("x64smp_initialization: lapic initialization fail\n");
             };
         }
-    }
+    } else {
+        smp_info.probe_via_acpi_failed = TRUE;
+        printk("x64smp_initialization: [x64_probe_smp_via_acpi] failed\n");
+    };
 
     // #debug
     //#breakpoint
+    //printk("x64smp.c Breakpoint\n");
+    //refresh_screen();
     //while (1){ asm("hlt"); };
+
+//
+// == MP ===========================================================
+//
 
 // ----------------------
 // MP Table
@@ -208,12 +227,9 @@ int x64smp_initialization(void)
 
     smp_info.probe_via = SMP_VIA_MP_TABLE;
     smp_status = (int) __x64_probe_smp_via_mptable();
-    if (smp_status != TRUE){
-        smp_info.probe_via_mp_failed = TRUE;
-        printk("x64smp_initialization: [__x64_probe_smp_via_mptable] failed\n");
-    }
-    if (smp_status == TRUE)
-    {
+
+    if (smp_status == TRUE){
+
         // If the LAPIC is not initialized
         if (LAPIC.initialized != TRUE)
         {
@@ -239,7 +255,10 @@ int x64smp_initialization(void)
                 }
             }
         }
-    }
+    } else {
+        smp_info.probe_via_mp_failed = TRUE;
+        printk("x64smp_initialization: [__x64_probe_smp_via_mptable] failed\n");
+    };
 
     printk("---- SMP END ----\n");
     printk("\n");
@@ -248,6 +267,12 @@ int x64smp_initialization(void)
     // #breakpoint
     // x64smp_show_info();
     // while (1){ asm("hlt"); };
+
+    // #debug
+    //#breakpoint
+    //printk("x64smp.c Breakpoint\n");
+    //refresh_screen();
+    //while (1){ asm("hlt"); };
 
     return (int) smp_status;
 }

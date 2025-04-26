@@ -246,10 +246,9 @@ inline void invalidate_cache_flush(void)
 // #bugbug
 // This routine used a lot of hardcoded addresses.
 // PAGETABLE_RES5, LAPIC_VA, PD_ENTRY_LAPIC, KERNEL_PD_PA.
-void lapic_initializing(unsigned long lapic_pa)
+int lapic_initializing(unsigned long lapic_pa)
 {
-// >> Called by I_init in x64init.c
-// >> Called by x64_probe_smp_via_acpi() in x64.c
+// >> Called in x64smp.c
 // Setup BSP's local APIC.
 
     printk("lapic_initializing: \n");
@@ -264,7 +263,7 @@ void lapic_initializing(unsigned long lapic_pa)
         LAPIC.initialized = FALSE;
         //panic("lapic_initializing: lapic_pa\n");
         printk("lapic_initializing: lapic_pa\n");
-        return;
+        goto fail;
     }
 
 // #todo
@@ -344,7 +343,14 @@ void lapic_initializing(unsigned long lapic_pa)
         LAPIC.local_id,
         LAPIC.local_version );
 
+    // #hackhack
+    // This is just a test for now.
     LAPIC.initialized = TRUE;
+
+    return TRUE;
+fail:
+    //LAPIC.initialized = FALSE;
+    return FALSE;
 }
 
 //

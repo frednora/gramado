@@ -230,6 +230,12 @@
 // 768MB + 24MB mark (VA)
 // see: x64smp.c and acpi.c
 #define RSDT_VA             0x0000000031800000
+#define XSDT_VA             0x0000000031800000
+
+// #todo
+// We have more tables for ACPI support.
+// MADT FADT
+
 
 //--------------------------------------------
 

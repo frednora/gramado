@@ -85,6 +85,10 @@ int acpi_check_header02(unsigned int *ptr, char *sig)
 // + 'RSDP signature'
 int __x64_probe_smp_via_acpi(void)
 {
+// Called by x64smp_initialization() in x64smp.c.
+
+// TRUE when finding the RSDP table.
+    int Status = FALSE;
 
 // 0x040E - The base address.
 // Get a short value.
@@ -149,6 +153,7 @@ int __x64_probe_smp_via_acpi(void)
 
 // Signature not found.
     if (Found != TRUE){
+        Status = FALSE;
         printk("__x64_probe_smp_via_acpi: [RSD PTR ] wasn't found!\n");
         goto fail;
     }
@@ -191,6 +196,12 @@ int __x64_probe_smp_via_acpi(void)
     unsigned long __rsdt_address=0;
     unsigned long __xsdt_address=0;
 
+// Mapping the rsdt address.
+// Used in both revisions.
+    unsigned long address_pa = 0;
+    unsigned long address_va = 0;
+    int mapStatus = -1;
+
     // #test
     // This is the initial address where we're gonna probe to find
     // rsdt signature.
@@ -204,47 +215,65 @@ int __x64_probe_smp_via_acpi(void)
         // Here probably the physical address is 64bit long.
         __xsdt_address = (unsigned long) (xsdp->XsdtAddress & 0xFFFFFFFFFFFFFFFF);
 
+        // Mapping the rsdt address.
+        // See: x64gva.h
+        address_pa = (unsigned long) (__rsdt_address & 0xFFFFFFFF);
+        address_va = (unsigned long) (XSDT_VA & 0xFFFFFFFF); // Desired va.
+
+        if (address_pa == 0)
+            panic("acpi.c: address_pa\n");
+
+        // #debug
+        printk("xsdt pa: %x | xsdt va: %x\n", address_pa, address_va );
+
+        // IN: ps | va
+        // OUT: 0=ok | -1=fail
+        // see: pages.c
+        mapStatus = 
+            (int) mm_map_2mb_region(
+                (unsigned long) address_pa,    // pa
+                (unsigned long) address_va );  // va
+        if (mapStatus != 0){
+            panic("acpi.c: mm_map_2mb_region\n");
+        }
+
+        // #test
+        asm ("movq %cr3, %rax");
+        asm ("movq %rax, %cr3");
+
+        xsdt = (struct xsdt_d *) (address_va & 0xFFFFFFFFFFFFFFFF);
+
+        printk("XSDT signature:\n");
+
+        // If the signature is valid, let's print some fields.
+        if (xsdt->Signature[0] == "X"){
+            printk ("%c %c %c %c \n",
+                xsdt->Signature[0],
+                xsdt->Signature[1],
+                xsdt->Signature[2],
+                xsdt->Signature[3] );
+    
+            // ACPI version indicator (usually 1).
+            printk("XSDT: Revision {%c}\n", xsdt->Revision);
+            // OEMID[6] – Manufacturer identifier (e.g., "Intel" or "AMI").
+            printk("XSDT: OEMID {%s}\n", xsdt->OEMID);
+        } else {
+            printk("XSDT signature: #bugbug Wrong signature\n");
+        };
+
         // #breakpoint
         //panic("x64smp.c: Revision 2.0 #todo\n");
         printk("ACPI: Revision 2.0 #todo\n");
+
+        Status = TRUE;
         goto valid_revision;
 
     // Use rsdp
-    }else if (rsdp->Revision == 0){
+    } else if (rsdp->Revision == 0){
         printk("ACPI: Revision 1.0 {0x00} \n");
         __rsdt_address = (unsigned long) (rsdp->RsdtAddress & 0xFFFFFFFF);
         __xsdt_address = 0;
         //printk("ACPI: Revision 1.0 #todo\n");
-    } else {
-        panic("ACPI: Invalid ACPI revision\n");
-    };
-
-// Mapping the rsdt address.
-// Used in both revisions.
-    unsigned long address_pa = 0;
-    unsigned long address_va = 0;
-    int mapStatus = -1;
-
-
-// ++
-// ----------------------------------
-// Revision 1.0.
-
-// ---------------------------------------
-// RSDT (Root System Description Table)
-// This table contains pointers to all the other System Description Tables.
-// Validating the RSDT:
-// You only need to sum all the bytes in the table and compare the result to 0 (mod 0x100). 
-// https://wiki.osdev.org/RSDT
-
-    // 2.0: Not supported yet.
-    if (rsdp->Revision == 0x02){
-        //panic("x64smp.c: #todo 2.0\n");
-        printk("x64smp.c: #todo 2.0\n");
-        goto valid_revision;
-    
-    // 1.0: This is a work in progress.
-    }else if (rsdp->Revision == 0){
 
         // Print the address we have.
         //printk("rsdt address: %x \n", __rsdt_address);
@@ -276,6 +305,11 @@ int __x64_probe_smp_via_acpi(void)
             panic("acpi.c: mm_map_2mb_region\n");
         }
 
+        // #test
+        asm ("movq %cr3, %rax");
+        asm ("movq %rax, %cr3");
+    
+
         // RSDT:
 
         // Now we have a valid pointer.
@@ -288,18 +322,24 @@ int __x64_probe_smp_via_acpi(void)
         // We cant find a valid signature.
         // Probably out mapping routine is not working well 
         // and giving us a wrong va.
-        printk("RSDT signature: #bugbug Wrong signature\n");
-        printk("RSDT signature: \n");
-        printk ("%c %c %c %c \n",
-            rsdt->Signature[0],
-            rsdt->Signature[1],
-            rsdt->Signature[2],
-            rsdt->Signature[3] );
 
-        // ACPI version indicator (usually 1).
-        printk("RSDT: Revision {%c}\n", rsdt->Revision);
-        // OEMID[6] – Manufacturer identifier (e.g., "Intel" or "AMI").
-        printk("RSDT: OEMID {%s}\n", rsdt->OEMID);
+        printk("RSDT signature:\n");
+
+        // If the signature is valid, let's print some fields.
+        if (rsdt->Signature[0] == "R"){
+            printk ("%c %c %c %c \n",
+                rsdt->Signature[0],
+                rsdt->Signature[1],
+                rsdt->Signature[2],
+                rsdt->Signature[3] );
+    
+            // ACPI version indicator (usually 1).
+            printk("RSDT: Revision {%c}\n", rsdt->Revision);
+            // OEMID[6] – Manufacturer identifier (e.g., "Intel" or "AMI").
+            printk("RSDT: OEMID {%s}\n", rsdt->OEMID);
+        } else {
+            printk("RSDT signature: #bugbug Wrong signature\n");
+        };
 
         // #todo
         // Probably this address will fail, and than, 
@@ -311,12 +351,16 @@ int __x64_probe_smp_via_acpi(void)
         //refresh_screen();
         //while(1){}
 
+        Status = TRUE;
+        goto valid_revision;
+
     } else {
-        panic("ACPI: Invalid ACPI Revision\n");
+        printk("ACPI: Invalid ACPI revision\n");
+        Status = FALSE;
+        goto fail;
     };
 
-// ----------------------------------
-// --
+    panic ("ACPI: Something is wrong\n");
 
 // ---------------------------------------
 // Multiple APIC Description Table (MADT)
@@ -326,33 +370,12 @@ int __x64_probe_smp_via_acpi(void)
 // ...
 
 valid_revision:
-    return TRUE;
-
-//-------------------
-// Initialize lapic
-// #test: initializing lapic right after the return.
-//do_lapic:
-
-    // #debug
-    // #breakpoint
-
-    //printk("#breakpoint\n");
-    //while(1){ asm("hlt"); }
-
-    /*
-    // 0xFEE00000
-    lapic_initializing(LAPIC_DEFAULT_ADDRESS);
-
-    if (LAPIC.initialized == TRUE){
-        printk("__x64_probe_smp_via_acpi: lapic initialization ok\n");
+    if (Status == TRUE){
         return TRUE;
-    }else if (LAPIC.initialized != TRUE){
-        printk("__x64_probe_smp_via_acpi: lapic initialization fail\n");
-        return FALSE;
-    };
-    */
-
+    }
 fail:
+    printk("ACPI: fail\n");
+    refresh_screen();
     return FALSE;
 }
 
