@@ -43,27 +43,30 @@ unistd.o termios.o ioctl.o fcntl.o libio.o
 all: main.o all-c jackpot-link finalize clean
 	@echo "Ok?"
 main.o:
-	gcc  -c  main.c  $(CFLAGS) -I $(LIBC) -I $(LIBIO) -o main.o
+	@echo CC $@
+	@gcc  -c  main.c  $(CFLAGS) -I $(LIBC) -I $(LIBIO) -o main.o
 all-c:
+	@echo "Importing library ..."
 
-	cp $(LIBCOBJ)/crt0.o   .
-	cp $(LIBCOBJ)/rtl.o  .
+	@cp $(LIBCOBJ)/crt0.o   .
+	@cp $(LIBCOBJ)/rtl.o  .
 
-	cp $(LIBIOOBJ)/libio.o  .
+	@cp $(LIBIOOBJ)/libio.o  .
 
-	cp $(LIBCOBJ)/ctype.o   .
-	cp $(LIBCOBJ)/stdio.o .
-	cp $(LIBCOBJ)/stdlib.o .
-	cp $(LIBCOBJ)/string.o .
-	cp $(LIBCOBJ)/unistd.o  .
-	cp $(LIBCOBJ)/termios.o  .
-	cp $(LIBCOBJ)/ioctl.o  .
-	cp $(LIBCOBJ)/fcntl.o  .
+	@cp $(LIBCOBJ)/ctype.o   .
+	@cp $(LIBCOBJ)/stdio.o .
+	@cp $(LIBCOBJ)/stdlib.o .
+	@cp $(LIBCOBJ)/string.o .
+	@cp $(LIBCOBJ)/unistd.o  .
+	@cp $(LIBCOBJ)/termios.o  .
+	@cp $(LIBCOBJ)/ioctl.o  .
+	@cp $(LIBCOBJ)/fcntl.o  .
 
 jackpot-link:
-	ld -m elf_x86_64 -T ../link.ld -o REBOOT.BIN $(myObjects)    
+	@echo "Linking ..."
+	@ld -m elf_x86_64 -T ../link.ld -o REBOOT.BIN $(myObjects)    
 finalize:
-	cp REBOOT.BIN  ../bin
+	@cp REBOOT.BIN  ../bin
 clean:
 	-rm *.o
 	-rm REBOOT.BIN 

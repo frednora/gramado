@@ -52,24 +52,6 @@ PYTHON  = python
 PYTHON2 = python2
 PYTHON3 = python3
 
-#
-# Config
-#
-
-# verbose
-# Quiet compilation or not.
-ifndef CONFIG_USE_VERBOSE
-	CONFIG_USE_VERBOSE = 1
-endif
-
-ifeq ($(CONFIG_USE_VERBOSE),1)
-# Not silent. It prints the commands.
-	Q =
-else
-# silent
-	Q = @
-endif
-
 # --------------------------------------
 # == Start ====
 # build: User command.
@@ -134,78 +116,81 @@ build-gramado-os:
 # (1) $(DEP_L0)/boot/ 
 
 # ::Build the bootloader.
-	$(Q)$(MAKE) -C $(DEP_L0)/boot/
+	@echo "Compiling boot/"
+	@$(MAKE) -C $(DEP_L0)/boot/
+
+	@echo "Installing boot/"
 
 # Copy the virtual disk into the rootdir.
-	cp $(DEP_L0)/boot/GRAMHV.VHD  .
+	@cp $(DEP_L0)/boot/GRAMHV.VHD  .
 
 # Copy the bootloader into the rootdir.
-	cp $(DEP_L0)/boot/x86/bin/BM.BIN      $(BASE)/
-	cp $(DEP_L0)/boot/x86/bin/BM2.BIN     $(BASE)/
-	cp $(DEP_L0)/boot/x86/bin/BLGRAM.BIN  $(BASE)/
-	cp $(DEP_L0)/boot/x86/bin/MBR0.BIN    $(BASE)/
+	@cp $(DEP_L0)/boot/x86/bin/BM.BIN      $(BASE)/
+	@cp $(DEP_L0)/boot/x86/bin/BM2.BIN     $(BASE)/
+	@cp $(DEP_L0)/boot/x86/bin/BLGRAM.BIN  $(BASE)/
+	@cp $(DEP_L0)/boot/x86/bin/MBR0.BIN    $(BASE)/
 # Copy the bootloader into the GRAMADO/ directory.
-	cp $(DEP_L0)/boot/x86/bin/BM.BIN      $(BASE)/GRAMADO
-	cp $(DEP_L0)/boot/x86/bin/BM2.BIN     $(BASE)/GRAMADO
-	cp $(DEP_L0)/boot/x86/bin/BLGRAM.BIN  $(BASE)/GRAMADO
-	cp $(DEP_L0)/boot/x86/bin/MBR0.BIN    $(BASE)/GRAMADO
+	@cp $(DEP_L0)/boot/x86/bin/BM.BIN      $(BASE)/GRAMADO
+	@cp $(DEP_L0)/boot/x86/bin/BM2.BIN     $(BASE)/GRAMADO
+	@cp $(DEP_L0)/boot/x86/bin/BLGRAM.BIN  $(BASE)/GRAMADO
+	@cp $(DEP_L0)/boot/x86/bin/MBR0.BIN    $(BASE)/GRAMADO
 
 #===================================
 # (2) $(DEP_L0)/kernel/
 
 # ::Build kernel image.
-	$(Q)$(MAKE) -C $(DEP_L0)/kernel/
+	@echo "Compiling kernel/"
+	@$(MAKE) -C $(DEP_L0)/kernel/
+
+	@echo "Installing kernel/"
 
 # Copy the kernel to the standard system folder.
-	cp $(DEP_L0)/kernel/KERNEL.BIN  $(BASE)/GRAMADO
+	@cp $(DEP_L0)/kernel/KERNEL.BIN  $(BASE)/GRAMADO
 # Create a backup; The bootloder expects this.
-	cp $(DEP_L0)/kernel/KERNEL.BIN  $(BASE)/DE
+	@cp $(DEP_L0)/kernel/KERNEL.BIN  $(BASE)/DE
 
 #===================================
 # (3) $(DEP_L0)/modules/
 
+	@echo "Compiling modules/"
 # ::Build the ring0 module image.
-	$(Q)$(MAKE) -C $(DEP_L0)/modules/
+	@$(Q)$(MAKE) -C $(DEP_L0)/modules/
+
+	@echo "Installing modules/"
 
 # Copy the ring0 module image.
 # It is loadable, but it's not a dynlinked format.
-	cp $(DEP_L0)/modules/bin/HVMOD0.BIN  $(BASE)/
-	cp $(DEP_L0)/modules/bin/HVMOD0.BIN  $(BASE)/GRAMADO
+	@cp $(DEP_L0)/modules/bin/HVMOD0.BIN  $(BASE)/
+	@cp $(DEP_L0)/modules/bin/HVMOD0.BIN  $(BASE)/GRAMADO
 
 # Copy the ring0 module image.
 # It is loadable, but it's not a dynlinked format.
-#	cp $(DEP_L0)/modules/bin/HVMOD1.BIN  $(BASE)/
-#	cp $(DEP_L0)/modules/bin/HVMOD1.BIN  $(BASE)/GRAMADO
+#	@cp $(DEP_L0)/modules/bin/HVMOD1.BIN  $(BASE)/
+#	@cp $(DEP_L0)/modules/bin/HVMOD1.BIN  $(BASE)/GRAMADO
 
 # ...
 
 #===================================
-# LEVEL : kbase
-	$(Q)$(MAKE) -C $(DEP_L1)
+# LEVEL : kservices/
+	@echo "Compiling DEP_L1 (kservices/)"
+	@$(MAKE) -C $(DEP_L1)
 
-#===================================
-# $(DEP_L1)/
-# Build and copy init process and some other programs.
-
-#	$(Q)$(MAKE) -C $(DEP_L1)/
+	@echo "Installing DEP_L1 (kservices/)"
 
 # Copy the init process.
-	cp $(DEP_L1)/bin/INIT.BIN  $(BASE)/
-#	cp $(DEP_L1)/bin/INIT.BIN  $(BASE)/GRAMADO/
+	@cp $(DEP_L1)/bin/INIT.BIN  $(BASE)/
+#	@cp $(DEP_L1)/bin/INIT.BIN  $(BASE)/GRAMADO/
 
 #===================================
 # $(DEP_L1)/drivers/ in kernel project
 
-#	$(Q)$(MAKE) -C $(DEP_L1)/drivers/
-	-cp $(DEP_L1)/drivers/bin/VGAD.BIN  $(BASE)/GRAMADO/
+	@-cp $(DEP_L1)/drivers/bin/VGAD.BIN  $(BASE)/GRAMADO/
 
 #===================================
 # $(DEP_L1)/servers/ in kernel project
-# Build the network server and the first client.
 
-#	$(Q)$(MAKE) -C $(DEP_L1)/servers/
-	-cp $(DEP_L1)/servers/bin/NET.BIN   $(BASE)/GRAMADO/
-	-cp $(DEP_L1)/servers/bin/NETD.BIN  $(BASE)/GRAMADO/
+	@-cp $(DEP_L1)/servers/bin/NET.BIN   $(BASE)/GRAMADO/
+	@-cp $(DEP_L1)/servers/bin/NETD.BIN  $(BASE)/GRAMADO/
 
 	@echo "~build-gramado-os end?"
 
@@ -218,79 +203,85 @@ copy-extras:
 
 # ==================================
 # LEVEL : Display servers
-	make -C $(DEP_L2)/
+	@echo "Compiling DEP_L2 (preshell/)"
+	@make -C $(DEP_L2)/
 
-	-cp $(DISPLAY_SERVERS)/ds00/bin/DS00.BIN    $(BASE)/DE
-#-cp $(DISPLAY_SERVERS)/ds01/bin/DS01.BIN    $(BASE)/DE
+	@echo "Installing DEP_L2 (preshell/)"
+
+	@-cp $(DISPLAY_SERVERS)/ds00/bin/DS00.BIN    $(BASE)/DE
+#@-cp $(DISPLAY_SERVERS)/ds01/bin/DS01.BIN    $(BASE)/DE
 # 3D demos.
-	-cp $(GAMES)/bin/DEMO00.BIN   $(BASE)/DE/
-	-cp $(GAMES)/bin/DEMO01.BIN   $(BASE)/DE/
+	@-cp $(GAMES)/bin/DEMO00.BIN   $(BASE)/DE/
+	@-cp $(GAMES)/bin/DEMO01.BIN   $(BASE)/DE/
 
 # ==================================
 # LEVEL : (os/) Client-side GUI applications
-	make -C $(DEP_L3)/
+	@echo "Compiling DEP_L3 (shell/)"
+	@make -C $(DEP_L3)/
+
+	@echo "Installing DEP_L3 (shell/)"
 
 #===================================
 # Install BMPs from cali assets.
 # Copy the $(DEP_L3)/assets/
 # We can't survive without this one.
-#	cp $(DEP_L3)/assets/themes/theme01/*.BMP  $(BASE)/
-	cp $(DEP_L3)/assets/themes/theme01/*.BMP  $(BASE)/DE
+#	@cp $(DEP_L3)/assets/themes/theme01/*.BMP  $(BASE)/
+	@cp $(DEP_L3)/assets/themes/theme01/*.BMP  $(BASE)/DE
 
 # Well consolidated programs.
-	-cp $(COMMANDS)/base/bin/PUBSH.BIN    $(BASE)/GRAMADO/
-	-cp $(COMMANDS)/base/bin/PUBSH.BIN    $(BASE)/DE/
-	-cp $(COMMANDS)/base/bin/SHELL.BIN    $(BASE)/GRAMADO/
-	-cp $(COMMANDS)/base/bin/SHELL.BIN    $(BASE)/DE/
-	-cp $(COMMANDS)/base/bin/SHELLZZ.BIN  $(BASE)/GRAMADO/
-	-cp $(COMMANDS)/base/bin/SHELLZZ.BIN  $(BASE)/DE/
+	@-cp $(COMMANDS)/base/bin/PUBSH.BIN    $(BASE)/GRAMADO/
+	@-cp $(COMMANDS)/base/bin/PUBSH.BIN    $(BASE)/DE/
+	@-cp $(COMMANDS)/base/bin/SHELL.BIN    $(BASE)/GRAMADO/
+	@-cp $(COMMANDS)/base/bin/SHELL.BIN    $(BASE)/DE/
+	@-cp $(COMMANDS)/base/bin/SHELLZZ.BIN  $(BASE)/GRAMADO/
+	@-cp $(COMMANDS)/base/bin/SHELLZZ.BIN  $(BASE)/DE/
 
 # Experimental programs.
-	-cp $(COMMANDS)/base/bin/SH7.BIN        $(BASE)/GRAMADO/
-#	-cp $(COMMANDS)/base/bin/SHELLXXX.BIN   $(BASE)/GRAMADO/
-	-cp $(COMMANDS)/extra/bin/TASCII.BIN     $(BASE)/GRAMADO/
-	-cp $(COMMANDS)/extra/bin/TPRINTF.BIN    $(BASE)/GRAMADO/
+	@-cp $(COMMANDS)/base/bin/SH7.BIN        $(BASE)/GRAMADO/
+#	@-cp $(COMMANDS)/base/bin/SHELLXXX.BIN   $(BASE)/GRAMADO/
+	@-cp $(COMMANDS)/extra/bin/TASCII.BIN     $(BASE)/GRAMADO/
+	@-cp $(COMMANDS)/extra/bin/TPRINTF.BIN    $(BASE)/GRAMADO/
 
 #===================================
 
 # Copy well consolidated commands.
-	-cp $(COMMANDS)/base/bin/CAT.BIN       $(BASE)/
-	-cp $(COMMANDS)/base/bin/CAT00.BIN     $(BASE)/
-	-cp $(COMMANDS)/base/bin/REBOOT.BIN    $(BASE)/
-	-cp $(COMMANDS)/base/bin/REBOOT.BIN    $(BASE)/GRAMADO/
-	-cp $(COMMANDS)/base/bin/SHUTDOWN.BIN  $(BASE)/
-	-cp $(COMMANDS)/base/bin/SHUTDOWN.BIN  $(BASE)/GRAMADO/
-	-cp $(COMMANDS)/base/bin/UNAME.BIN     $(BASE)/
+	@-cp $(COMMANDS)/base/bin/CAT.BIN       $(BASE)/
+	@-cp $(COMMANDS)/base/bin/CAT00.BIN     $(BASE)/
+	@-cp $(COMMANDS)/base/bin/REBOOT.BIN    $(BASE)/
+	@-cp $(COMMANDS)/base/bin/REBOOT.BIN    $(BASE)/GRAMADO/
+	@-cp $(COMMANDS)/base/bin/SHUTDOWN.BIN  $(BASE)/
+	@-cp $(COMMANDS)/base/bin/SHUTDOWN.BIN  $(BASE)/GRAMADO/
+	@-cp $(COMMANDS)/base/bin/UNAME.BIN     $(BASE)/
 
 # Experimental commands.
-	-cp $(COMMANDS)/base/bin/FALSE.BIN      $(BASE)/GRAMADO/
-	-cp $(COMMANDS)/base/bin/TRUE.BIN       $(BASE)/GRAMADO/
-	-cp $(COMMANDS)/extra/bin/CMP.BIN       $(BASE)/GRAMADO/
-	-cp $(COMMANDS)/extra/bin/SHOWFUN.BIN   $(BASE)/GRAMADO/
-	-cp $(COMMANDS)/extra/bin/SUM.BIN       $(BASE)/GRAMADO/
-	-cp $(COMMANDS)/sdk/bin/GRAMCNF.BIN     $(BASE)/
-#-cp $(COMMANDS)/sdk/bin/N9.BIN         $(BASE)/GRAMADO/
-#-cp $(COMMANDS)/sdk/bin/N10.BIN        $(BASE)/GRAMADO/
-#-cp $(COMMANDS)/sdk/bin/N11.BIN        $(BASE)/GRAMADO/
-#-cp $(COMMANDS)/extra/bin/UDPTEST.BIN  $(BASE)/GRAMADO/
+	@-cp $(COMMANDS)/base/bin/FALSE.BIN      $(BASE)/GRAMADO/
+	@-cp $(COMMANDS)/base/bin/TRUE.BIN       $(BASE)/GRAMADO/
+	@-cp $(COMMANDS)/extra/bin/CMP.BIN       $(BASE)/GRAMADO/
+	@-cp $(COMMANDS)/extra/bin/SHOWFUN.BIN   $(BASE)/GRAMADO/
+	@-cp $(COMMANDS)/extra/bin/SUM.BIN       $(BASE)/GRAMADO/
+	@-cp $(COMMANDS)/sdk/bin/GRAMCNF.BIN     $(BASE)/
+#@-cp $(COMMANDS)/sdk/bin/N9.BIN         $(BASE)/GRAMADO/
+#@-cp $(COMMANDS)/sdk/bin/N10.BIN        $(BASE)/GRAMADO/
+#@-cp $(COMMANDS)/sdk/bin/N11.BIN        $(BASE)/GRAMADO/
+#@-cp $(COMMANDS)/extra/bin/UDPTEST.BIN  $(BASE)/GRAMADO/
 
-	-cp $(APPLICATIONS)/bin/TASKBAR.BIN    $(BASE)/DE
-	-cp $(APPLICATIONS)/bin/XTB.BIN        $(BASE)/DE
-	-cp $(APPLICATIONS)/bin/TERMINAL.BIN   $(BASE)/DE
-	-cp $(APPLICATIONS)/bin/TERM00.BIN     $(BASE)/DE
-#-cp $(APPLICATIONS)/bin/GWS.BIN       $(BASE)/DE
+	@-cp $(APPLICATIONS)/bin/TASKBAR.BIN    $(BASE)/DE
+	@-cp $(APPLICATIONS)/bin/XTB.BIN        $(BASE)/DE
+	@-cp $(APPLICATIONS)/bin/TERMINAL.BIN   $(BASE)/DE
+	@-cp $(APPLICATIONS)/bin/TERM00.BIN     $(BASE)/DE
+#@-cp $(APPLICATIONS)/bin/GWS.BIN       $(BASE)/DE
     # Experimental applications
     # These need the '#' prefix.
-	-cp $(APPLICATIONS)/bin/PUBTERM.BIN  $(BASE)/DE/
-	-cp $(APPLICATIONS)/bin/DOC.BIN      $(BASE)/DE/
-	-cp $(APPLICATIONS)/bin/GDM.BIN      $(BASE)/DE/
-	-cp $(APPLICATIONS)/bin/EDITOR.BIN   $(BASE)/DE/
+	@-cp $(APPLICATIONS)/bin/PUBTERM.BIN  $(BASE)/DE/
+	@-cp $(APPLICATIONS)/bin/DOC.BIN      $(BASE)/DE/
+	@-cp $(APPLICATIONS)/bin/GDM.BIN      $(BASE)/DE/
+	@-cp $(APPLICATIONS)/bin/EDITOR.BIN   $(BASE)/DE/
 
 # (browser/) browser.
 # Teabox web browser
     # Experimental applications
     # These need the '@' prefix.
-	-cp $(APPLICATIONS)/bin/TEABOX.BIN  $(BASE)/DE/
+	@-cp $(APPLICATIONS)/bin/TEABOX.BIN  $(BASE)/DE/
 
 	@echo "~ copy-extras"
 
@@ -300,7 +291,7 @@ copy-extras:
 $(DEP_L3)/gramvd:
 	@echo "========================="
 	@echo "Build: Creating the directory to mount the VHD ..."
-	sudo mkdir $(DEP_L3)/gramvd
+	@sudo mkdir $(DEP_L3)/gramvd
 
 # --------------------------------------
 #::3
@@ -308,8 +299,8 @@ $(DEP_L3)/gramvd:
 vhd-mount:
 	@echo "=========================="
 	@echo "Build: Mounting the VHD ..."
-	-sudo umount $(DEP_L3)/gramvd
-	sudo mount -t vfat -o loop,offset=32256 GRAMHV.VHD  $(DEP_L3)/gramvd/
+	@-sudo umount $(DEP_L3)/gramvd
+	@sudo mount -t vfat -o loop,offset=32256 GRAMHV.VHD  $(DEP_L3)/gramvd/
 
 # --------------------------------------
 #::4
@@ -320,7 +311,7 @@ vhd-copy-files:
 	@echo "Build: Copying files into the mounted VHD ..."
 	# Copy $(BASE)/
 	# sends everything from disk/ to root.
-	sudo cp -r $(BASE)/*  $(DEP_L3)/gramvd
+	@sudo cp -r $(BASE)/*  $(DEP_L3)/gramvd
 
 # --------------------------------------
 #:::5
@@ -328,7 +319,7 @@ vhd-copy-files:
 vhd-unmount:
 	@echo "======================"
 	@echo "Build: Unmounting the VHD ..."
-	sudo umount $(DEP_L3)/gramvd
+	@sudo umount $(DEP_L3)/gramvd
 
 # --------------------------------------
 # Run on qemu using kvm.
@@ -343,7 +334,6 @@ PHONY := runnokvm
 runnokvm: do_runnokvm
 do_runnokvm:
 	sh ./runnokvm
-
 
 # --------------------------------------
 # Basic clean.
@@ -436,6 +426,4 @@ qemu-instance:
 #xxx-instance:
 #	-cp ./GRAMHV.VHD ./XXX.VHD 
 
-
 # End
-

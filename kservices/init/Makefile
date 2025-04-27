@@ -42,27 +42,32 @@ all: main.o all-c link_app finalize clean
 main.o:
 	gcc  -c initcrt0.c  $(CFLAGS) -I $(LIBC) -o initcrt0.o
 	gcc  -c main.c      $(CFLAGS) -I $(LIBC) -o main.o
+
 all-c:
+
 	gcc  -c inittask/inittask.c  $(CFLAGS) -I $(LIBC) -o inittask.o
 
+	@echo "Importing library ..."
+
 # suspended	$(Q)cp $(LIBCOBJ)/crt0.o  .
-	$(Q)cp $(LIBCOBJ)/rtl.o  .
+	@cp $(LIBCOBJ)/rtl.o  .
 
-	$(Q)cp $(LIBCOBJ)/ctype.o  .
-	$(Q)cp $(LIBCOBJ)/stdio.o  .
-	$(Q)cp $(LIBCOBJ)/fcntl.o  .
-	$(Q)cp $(LIBCOBJ)/stdlib.o  .
-	$(Q)cp $(LIBCOBJ)/string.o  .
-	$(Q)cp $(LIBCOBJ)/unistd.o  .
+	@cp $(LIBCOBJ)/ctype.o  .
+	@cp $(LIBCOBJ)/stdio.o  .
+	@cp $(LIBCOBJ)/fcntl.o  .
+	@cp $(LIBCOBJ)/stdlib.o  .
+	@cp $(LIBCOBJ)/string.o  .
+	@cp $(LIBCOBJ)/unistd.o  .
 
-	$(Q)cp $(LIBCOBJ)/termios.o  .
-	$(Q)cp $(LIBCOBJ)/ioctl.o  .
-	$(Q)cp $(LIBCOBJ)/socket.o  .
+	@cp $(LIBCOBJ)/termios.o  .
+	@cp $(LIBCOBJ)/ioctl.o  .
+	@cp $(LIBCOBJ)/socket.o  .
 
 link_app:
-	ld -m elf_x86_64 -T ../link.ld -o INIT.BIN $(myObjects)    
+	@echo "Linking INIT.BIN ..."
+	@ld -m elf_x86_64 -T ../link.ld -o INIT.BIN $(myObjects)    
 finalize:
-	cp INIT.BIN  ../bin/
+	@cp INIT.BIN  ../bin/
 clean:
 	-rm *.o
 	-rm INIT.BIN 

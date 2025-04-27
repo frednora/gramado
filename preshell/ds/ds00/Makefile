@@ -126,28 +126,29 @@ all-c:
 gws-link:
 
 # Import objects
+	@echo "Importing library ..."
 
-	cp $(LIBCOBJ)/crt0.o .
-	cp $(LIBCOBJ)/rtl.o .
-	cp $(LIBCOBJ)/ctype.o .
-	cp $(LIBCOBJ)/stdio.o .
-	cp $(LIBCOBJ)/stdlib.o .
-	cp $(LIBCOBJ)/string.o .
-	cp $(LIBCOBJ)/conio.o .
-	cp $(LIBCOBJ)/unistd.o .
-	cp $(LIBCOBJ)/socket.o .
-	cp $(LIBCOBJ)/signal.o .
-	cp $(LIBCOBJ)/termios.o .
-	cp $(LIBCOBJ)/ioctl.o .
-	cp $(LIBCOBJ)/fcntl.o .
+	@cp $(LIBCOBJ)/crt0.o .
+	@cp $(LIBCOBJ)/rtl.o .
+	@cp $(LIBCOBJ)/ctype.o .
+	@cp $(LIBCOBJ)/stdio.o .
+	@cp $(LIBCOBJ)/stdlib.o .
+	@cp $(LIBCOBJ)/string.o .
+	@cp $(LIBCOBJ)/conio.o .
+	@cp $(LIBCOBJ)/unistd.o .
+	@cp $(LIBCOBJ)/socket.o .
+	@cp $(LIBCOBJ)/signal.o .
+	@cp $(LIBCOBJ)/termios.o .
+	@cp $(LIBCOBJ)/ioctl.o .
+	@cp $(LIBCOBJ)/fcntl.o .
 
-	cp $(LIBDISPOBJ)/libdisp.o .
+	@cp $(LIBDISPOBJ)/libdisp.o .
 
-	cp $(LIBGROBJ)/libgr.o .
+	@cp $(LIBGROBJ)/libgr.o .
 
 # Link
-
-	$(LD) $(linkFlags) -o $(linkTarget) $(myObjects)
+	@echo "Linking ..."
+	@$(LD) $(linkFlags) -o $(linkTarget) $(myObjects)
 
 finalize:
 	cp $(linkTarget) bin/

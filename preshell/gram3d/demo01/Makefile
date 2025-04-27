@@ -164,27 +164,29 @@ grprim.o camera.o world.o proj.o sprite.o models.o surface.o demos.o
 # == imported objects =============================
 #
 
-# rtl/
-	cp $(LIBCOBJ)/crt0.o .
-	cp $(LIBCOBJ)/rtl.o .
+	@echo "Importing library ..."
 
-	cp $(LIBCOBJ)/ctype.o .
-	cp $(LIBCOBJ)/stdio.o .
-	cp $(LIBCOBJ)/stdlib.o .
-	cp $(LIBCOBJ)/string.o .
-	cp $(LIBCOBJ)/conio.o .
-	cp $(LIBCOBJ)/unistd.o .
-	cp $(LIBCOBJ)/socket.o .
-	cp $(LIBCOBJ)/signal.o .
-	cp $(LIBCOBJ)/termios.o .
-	cp $(LIBCOBJ)/ioctl.o .
-	cp $(LIBCOBJ)/fcntl.o .
+# rtl/
+	@cp $(LIBCOBJ)/crt0.o .
+	@cp $(LIBCOBJ)/rtl.o .
+
+	@cp $(LIBCOBJ)/ctype.o .
+	@cp $(LIBCOBJ)/stdio.o .
+	@cp $(LIBCOBJ)/stdlib.o .
+	@cp $(LIBCOBJ)/string.o .
+	@cp $(LIBCOBJ)/conio.o .
+	@cp $(LIBCOBJ)/unistd.o .
+	@cp $(LIBCOBJ)/socket.o .
+	@cp $(LIBCOBJ)/signal.o .
+	@cp $(LIBCOBJ)/termios.o .
+	@cp $(LIBCOBJ)/ioctl.o .
+	@cp $(LIBCOBJ)/fcntl.o .
+	@cp $(LIBCOBJ)/math.o .
 
 #test
-	cp $(LIBCOBJ)/math.o .
-	cp $(LIBDISPOBJ)/libdisp.o .
-	cp $(LIBGROBJ)/libgr.o .
-	cp $(LIBGR3DOBJ)/libgr3d.o .
+	@cp $(LIBDISPOBJ)/libdisp.o .
+	@cp $(LIBGROBJ)/libgr.o .
+	@cp $(LIBGR3DOBJ)/libgr3d.o .
 
 gws-link:
 	$(LD) $(linkFlags) -o $(linkTarget) $(myObjects)

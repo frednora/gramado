@@ -41,26 +41,29 @@ all: main.o all-c cat-link finalize clean
 	@echo "Ok?"
 
 main.o:
-	gcc  -c  main.c  $(CFLAGS) -I $(LIBC) -o main.o
+	@echo CC $@
+	@gcc  -c  main.c  $(CFLAGS) -I $(LIBC) -o main.o
 all-c:
+	@echo "Importing library ..."
 
-	cp $(LIBCOBJ)/crt0.o  .
-	cp $(LIBCOBJ)/rtl.o  .
+	@cp $(LIBCOBJ)/crt0.o  .
+	@cp $(LIBCOBJ)/rtl.o  .
 	
-	cp $(LIBCOBJ)/ctype.o   .
-	cp $(LIBCOBJ)/stdio.o .
-	cp $(LIBCOBJ)/stdlib.o .
-	cp $(LIBCOBJ)/string.o .
-	cp $(LIBCOBJ)/time.o    .
-	cp $(LIBCOBJ)/unistd.o  .
-	cp $(LIBCOBJ)/termios.o  .
-	cp $(LIBCOBJ)/ioctl.o  .
-	cp $(LIBCOBJ)/fcntl.o  .
+	@cp $(LIBCOBJ)/ctype.o   .
+	@cp $(LIBCOBJ)/stdio.o .
+	@cp $(LIBCOBJ)/stdlib.o .
+	@cp $(LIBCOBJ)/string.o .
+	@cp $(LIBCOBJ)/time.o    .
+	@cp $(LIBCOBJ)/unistd.o  .
+	@cp $(LIBCOBJ)/termios.o  .
+	@cp $(LIBCOBJ)/ioctl.o  .
+	@cp $(LIBCOBJ)/fcntl.o  .
 
 cat-link:
-	ld -m elf_x86_64 -T ../link.ld -o CAT00.BIN $(myObjects)    
+	@echo "Linking ..."
+	@ld -m elf_x86_64 -T ../link.ld -o CAT00.BIN $(myObjects)    
 finalize:
-	cp CAT00.BIN  ../bin
+	@cp CAT00.BIN  ../bin
 clean:
 	-rm *.o
 	-rm CAT00.BIN 
