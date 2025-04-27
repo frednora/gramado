@@ -5,6 +5,40 @@
 #include <kernel.h>
 
 
+
+int
+gprot_send_udp ( 
+    uint8_t target_ip[4], 
+    uint8_t target_mac[6], 
+    unsigned short source_port,
+    unsigned short target_port,
+    char *data_buffer,   // UDP payload
+    size_t data_lenght )
+{
+
+// Parameters:
+    if ((void*) target_ip == NULL)
+        goto fail;
+    if ((void*) target_mac == NULL)
+        goto fail;
+    if ((void*) data_buffer == NULL)
+        goto fail;
+    if (data_lenght <= 0)
+        goto fail;
+
+    network_send_udp(  
+        dhcp_info.your_ipv4,  // scr ip
+        target_ip,            // dst ip
+        target_mac,           // dst mac
+        source_port,          // source port: "US"
+        target_port,          // target port  "Who sent"
+        data_buffer,          // udp payload
+        data_lenght );        // udp payload size (Message size)
+
+fail:
+    return (int) -1;
+}
+
 // #test: 
 // Respond the UDP message receive on port 11888.
 // Somente se o dhcp foi initializado.
@@ -163,14 +197,30 @@ done:
     //printk ("kernel: Sending response\n");
     //refresh_screen();
 
-    network_send_udp(  
+    if ((void*)buf==NULL)
+        return (int) -1;
+    if (MessageSize <= 0)
+        return (int) -1;
+
+    // #test
+    gprot_send_udp (
+        __saved_caller_ipv4,  // dst ip
+        __saved_caller_mac,   // dst mac
+        dport,                // source port: "US"
+        sport,                // target port  "Who sent something to us"
+        buf,                  // udp payload
+        MessageSize );        // udp payload size (Message size)
+    /*
+    // OK
+    network_send_udp (  
         dhcp_info.your_ipv4,  // scr ip
         __saved_caller_ipv4,  // dst ip
         __saved_caller_mac,   // dst mac
         dport,                // source port: "US"
-        sport,                // target port  "Who sent"
+        sport,                // target port  "Who sent something to us"
         buf,                  // udp payload
         MessageSize );        // udp payload size (Message size)
+    */
 
     return 0; // ok
 

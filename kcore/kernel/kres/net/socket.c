@@ -343,7 +343,7 @@ sys_accept (
     fdServer = sockfd;
     if ( fdServer < 0 || fdServer >= OPEN_MAX ){
         debug_print ("sys_accept: [FAIL] fdServer\n");
-        return (int) (-EINVAL);
+        return (int) (-EBADF);
     }
 
 // Check addr structure.
@@ -412,11 +412,9 @@ sys_accept (
         printk      ("sys_accept: [FAIL] sFile validation\n");
         goto fail;
     }
-// Is this file a socket?
+// Is this file a socket object?
     if ( is_socket(sFile) != TRUE ){
-        debug_print ("sys_accept: sFile is not a socket object\n");
-             printk ("sys_accept: sFile is not a socket object\n");
-        goto fail;
+        return (int) (-ENOTSOCK);
     }
     if (sFile->sync.can_accept != TRUE){
         debug_print ("sys_accept: sFile can NOT accept connections\n");
@@ -697,7 +695,7 @@ sys_bind (
     {
         debug_print("sys_bind: sockfd\n");
         printk     ("sys_bind: sockfd\n");
-        return (int) (-EINVAL);
+        return (int) (-EBADF);
     }
 
 // Check addr structure.
@@ -756,11 +754,9 @@ sys_bind (
        goto fail; 
     }
 
-// Is it a socket file?
+// Is this file a socket object?
     if ( is_socket(f) != TRUE ){
-        debug_print ("sys_bind: f is not a socket\n");
-        printk      ("sys_bind: f is not a socket\n");
-        goto fail;
+        return (int) (-ENOTSOCK);
     }
 
 // socket structure:
@@ -1193,13 +1189,11 @@ __connect_inet (
         goto fail;
     }
 
-// Is it a socket?
-
-    int __is = -1;
-    __is = is_socket((file *) f);
-    if (__is != TRUE){
-        printk("__connect_inet: [FAIL] f is not a socket\n");
-        goto fail;
+// Is this file a socket object?
+    int IsSocketObject = -1;
+    IsSocketObject = (int) is_socket((file *) f);
+    if (IsSocketObject != TRUE){
+        return (int) (-ENOTSOCK);
     }
 
 // This file doesn't accept connections.
@@ -1691,13 +1685,11 @@ __connect_local (
         goto fail;
     }
 
-// Is it a socket?
-
-    int __is = -1;
-    __is = is_socket((file *) f);
-    if (__is != TRUE){
-        printk("__connect_local: [FAIL] f is not a socket\n");
-        goto fail;
+// Is this file a socket object?
+    int IsSocketObject = -1;
+    IsSocketObject = (int) is_socket((file *) f);
+    if (IsSocketObject != TRUE){
+        return (int) (-ENOTSOCK);
     }
 
 // This file doesn't accept connections.
@@ -1953,6 +1945,14 @@ sys_connect (
 // We can have two types of address.
 // One for local and another one for inet.
 
+// fd
+    if ( sockfd < 0 || sockfd >= OPEN_MAX )
+    {
+        debug_print("sys_connect: sockfd\n");
+        printk     ("sys_connect: sockfd\n");
+        return (int) (-EBADF);
+    }
+
 // Invalid address.
     if ((void *) addr == NULL){
         printk ("sys_connect: addr\n");
@@ -2141,7 +2141,7 @@ int sys_listen(int sockfd, int backlog)
     {
         debug_print ("sys_listen: sockfd\n");
         printk      ("sys_listen: sockfd\n");
-        return (int) (-EINVAL);
+        return (int) (-EBADF);
     }
 
 // backlog:
@@ -2191,14 +2191,11 @@ int sys_listen(int sockfd, int backlog)
         goto fail;
     }
 
-// Is it a socket object?
-    int IsSocket = -1;
-    IsSocket = (int) is_socket((file *) f);
-    if (IsSocket != TRUE){
-        debug_print ("sys_listen: f is not a socket\n");
-        printk      ("sys_listen: f is not a socket\n");
-        //return (int) (-EINVAL);
-        goto fail;
+// Is this file a socket object?
+    int IsSocketObject = -1;
+    IsSocketObject = (int) is_socket((file *) f);
+    if (IsSocketObject != TRUE){
+        return (int) (-ENOTSOCK);
     }
 
 // This is right place for doing this.
@@ -2299,11 +2296,9 @@ int sys_socket_shutdown(int socket, int how)
     }
 
 // Is this file a socket object?
-    IsSocketObject = is_socket((file *) f);
-    if (IsSocketObject != 1){
-        debug_print("sys_socket_shutdown: f is not a socket\n");
-        printk     ("sys_socket_shutdown: f is not a socket\n");
-        goto fail;
+    IsSocketObject = (int) is_socket((file *) f);
+    if (IsSocketObject != TRUE){
+        return (int) (-ENOTSOCK);
     }
 
 // Socket
@@ -2328,6 +2323,83 @@ fail:
     printk     ("sys_socket_shutdown: [FAIL]\n");
     return (int) -1;
 }
+
+
+// https://linux.die.net/man/2/sendto
+ssize_t 
+sys_sendto ( 
+    int sockfd, 
+    const void *ubuf, 
+    size_t len, 
+    int flags,
+    const struct sockaddr *dest_addr, 
+    socklen_t addrlen )
+{
+/*
+    if (sockfd < 0 || !ubuf || len == 0 || !dest_addr)
+        return -EINVAL;
+
+    struct sockaddr_in *k_dest_addr = (struct sockaddr_in *)dest_addr;
+    if (addrlen < sizeof(struct sockaddr_in))
+        return -EINVAL;
+
+    // Convert the destination IP address from struct sockaddr_in
+    uint8_t target_ip[4] = { k_dest_addr->sin_addr.s_addr & 0xFF,
+                             (k_dest_addr->sin_addr.s_addr >> 8) & 0xFF,
+                             (k_dest_addr->sin_addr.s_addr >> 16) & 0xFF,
+                             (k_dest_addr->sin_addr.s_addr >> 24) & 0xFF };
+
+    uint8_t target_mac[6] = {  }; // Resolve MAC via ARP or existing table 
+    unsigned short source_port = ; //Retrieve from socket state
+    unsigned short target_port = ntohs(k_dest_addr->sin_port);
+
+    // Call the UDP worker function using the user-provided buffer directly
+    int ret = network_send_udp(source_ip, target_ip, target_mac, source_port, target_port, (char *)ubuf, len);
+
+    return (ret < 0) ? ret : len; // Return number of bytes sent or error code
+
+*/
+    return (int) -ENOSYS;
+}
+
+ssize_t sys_sendmsg (int sockfd, const struct msghdr *msg, int flags)
+{
+/*
+    if (sockfd < 0 || !msg || msg->msg_iovlen == 0)
+        return -EINVAL; // Invalid argument
+
+    struct sockaddr_in *dest_addr = (struct sockaddr_in *)msg->msg_name;
+    if (!dest_addr || msg->msg_namelen < sizeof(struct sockaddr_in))
+        return -EINVAL;
+
+    // Convert destination IP
+    uint8_t target_ip[4] = { dest_addr->sin_addr.s_addr & 0xFF,
+                             (dest_addr->sin_addr.s_addr >> 8) & 0xFF,
+                             (dest_addr->sin_addr.s_addr >> 16) & 0xFF,
+                             (dest_addr->sin_addr.s_addr >> 24) & 0xFF };
+
+    uint8_t target_mac[6] = {  };   // Resolve MAC via ARP or internal table
+    unsigned short source_port = ;  // Retrieve from socket state 
+    unsigned short target_port = ntohs(dest_addr->sin_port);
+
+    // Compute total buffer length
+    size_t total_len = 0;
+    for (int i = 0; i < msg->msg_iovlen; i++)
+        total_len += msg->msg_iov[i].iov_len;
+
+    if (total_len == 0)
+        return -EINVAL; // No data to send
+
+    // Call the UDP worker directly using user-space buffer(s)
+    int ret = network_send_udp(source_ip, target_ip, target_mac, source_port, target_port,
+                               (char *)msg->msg_iov[0].iov_base, total_len);
+
+    return (ret < 0) ? ret : total_len; // Return bytes sent or error code
+*/
+
+    return (int) -ENOSYS;
+}
+
 
 //
 // End

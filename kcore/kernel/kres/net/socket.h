@@ -358,5 +358,17 @@ int sys_listen (int sockfd, int backlog);
 int sys_socket (int family, int type, int protocol);
 int sys_socket_shutdown (int socket, int how);
 
+// https://linux.die.net/man/2/sendto
+ssize_t 
+sys_sendto ( 
+    int sockfd, 
+    const void *ubuf, 
+    size_t len, 
+    int flags,
+    const struct sockaddr *dest_addr, 
+    socklen_t addrlen );
+
+ssize_t sys_sendmsg (int sockfd, const struct msghdr *msg, int flags);
+
 #endif    
 

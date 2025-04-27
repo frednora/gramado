@@ -22,4 +22,106 @@
  5) DEMO00 SUBSYSTEM         | Examples: Clients of demo00.
  6) DEMO01 SUBSYSTEM         | Examples: Clients of demo01.
 
+
+ ===============================================================
+
+#todo: It looks like an easy one.
+sys_sched_yield() 
+Allows the calling process to voluntarily yield the CPU, handing control over to the scheduler.
+
+==========================
+
+
+ Below is a list of relatively straightforward POSIX-like functions 
+ (i.e., syscall implementations) that you might add to your kernel. 
+ These functions are generally considered "low-hanging fruit" for a hobby OS 
+ with a growing syscall base, and they provide useful process, I/O, and utility interfaces:
+
+---
+
+### Process Management  
+- **`sys_getpid()`**  
+  Returns the current process's ID.  
+- **`sys_getppid()`**  
+  Retrieves the parent's process ID.  
+- **`sys_exit(int status)`**  
+  Terminates the calling process and returns an exit status.  
+- **`sys_waitpid(pid_t pid, int *status, int options)`**  
+  Waits for a process to change state (e.g., to exit) and collects its status.
+
+---
+
+### File I/O and File System  
+- **`sys_open(const char *pathname, int flags, mode_t mode)`**  
+  Opens (or creates) a file and returns a file descriptor.  
+- **`sys_close(int fd)`**  
+  Closes an open file descriptor.  
+- **`sys_read(int fd, void *buf, size_t count)`**  
+  Reads data from a file descriptor into a buffer.  
+- **`sys_write(int fd, const void *buf, size_t count)`**  
+  Writes data from a buffer to a file descriptor.  
+- **`sys_lseek(int fd, off_t offset, int whence)`**  
+  Repositions the file offset for subsequent read/write operations.  
+- **`sys_fstat(int fd, struct stat *buf)`**  
+  Retrieves information about an open file.
+
+---
+
+### Directory and File Management  
+- **`sys_mkdir(const char *pathname, mode_t mode)`**  
+  Creates a new directory.  
+- **`sys_rmdir(const char *pathname)`**  
+  Removes an empty directory.  
+- **`sys_unlink(const char *pathname)`**  
+  Deletes a file (i.e., removes a link to an inode).  
+- **`sys_chdir(const char *path)`**  
+  Changes the current working directory.  
+- **`sys_getcwd(char *buf, size_t size)`**  
+  Retrieves the current working directory path.
+
+---
+
+### Memory Management  
+- **`sys_brk(void *addr)`**  
+  Adjusts the end of the data segment to provide a simple form of dynamic memory allocation.  
+- **(Optionally) `sys_mmap(...)`**  
+  Provides memory mapping support (more advanced but useful if you need to map files or devices into memory).
+
+---
+
+### Timing and Clocks  
+- **`sys_time(time_t *t)`**  
+  Returns the current time in seconds since the epoch.  
+- **`sys_gettimeofday(struct timeval *tv, struct timezone *tz)`**  
+  Fetches the current time, with microsecond resolution.
+
+---
+
+### Signal Management (if you plan on adding signal support)  
+- **`sys_kill(pid_t pid, int sig)`**  
+  Sends a signal to a process or a group of processes.  
+- **`sys_sigaction(int signum, const struct sigaction *act, struct sigaction *oldact)`**  
+  Examines or changes the action taken by the process on receipt of a specific signal.  
+- **`sys_sigprocmask(int how, const sigset_t *set, sigset_t *oldset)`**  
+  Changes the set of blocked signals (the signal mask) for the calling process.
+
+---
+
+### Terminal and Device I/O  
+- **`sys_ioctl(int fd, unsigned long request, void *arg)`**  
+  Provides device-specific input/output control operations.
+
+---
+
+### Additional Utility  
+- **`sys_pause()`**  
+  Makes the process sleep until a signal is received.  
+- **`sys_sched_yield()`**  
+  Allows the calling process to voluntarily yield the CPU, handing control over to the scheduler.
+
+---
+
+Each of these functions can be implemented with relatively simple logic once you have mechanisms for user–kernel transitions, file descriptor handling, process management, and basic memory management in place. They not only expand your OS’s functionality but also help build a more POSIX-compatible environment that can be a great learning platform.
+
+
  

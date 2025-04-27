@@ -1,0 +1,102 @@
+
+ssize_t 
+sys_sendto(int sockfd, const void *ubuf, size_t len, int flags,
+                   const struct sockaddr *dest_addr, socklen_t addrlen) 
+{
+    if (sockfd < 0 || !ubuf || len == 0 || !dest_addr)
+        return -EINVAL;
+
+    struct sockaddr_in *k_dest_addr = (struct sockaddr_in *)dest_addr;
+    if (addrlen < sizeof(struct sockaddr_in))
+        return -EINVAL;
+
+    // Allocate kernel buffer and copy data from user-space
+    void *kbuf = kmalloc(len);
+    if (!kbuf)
+        return -ENOMEM;
+    if (copy_from_user(kbuf, ubuf, len) < 0) {
+        kfree(kbuf);
+        return -EFAULT;
+    }
+
+    // Prepare the parameters for network_send_udp()
+    uint8_t source_ip[4] = { /* Retrieve from socket state */ };
+    uint8_t target_ip[4] = { k_dest_addr->sin_addr.s_addr & 0xFF,
+                             (k_dest_addr->sin_addr.s_addr >> 8) & 0xFF,
+                             (k_dest_addr->sin_addr.s_addr >> 16) & 0xFF,
+                             (k_dest_addr->sin_addr.s_addr >> 24) & 0xFF };
+    uint8_t target_mac[6] = { /* Resolve MAC via ARP or existing table */ };
+    unsigned short source_port = /* Retrieve from socket state */;
+    unsigned short target_port = ntohs(k_dest_addr->sin_port);
+
+    // Call the UDP worker function
+    int ret = network_send_udp(source_ip, target_ip, target_mac, source_port, target_port, kbuf, len);
+
+    kfree(kbuf); // Free memory after sending
+
+    return (ret < 0) ? ret : len; // Return number of bytes sent or error code
+}
+
+
+ssize_t sys_sendto(int sockfd, const void *ubuf, size_t len, int flags,
+                   const struct sockaddr *dest_addr, socklen_t addrlen) 
+{
+    if (sockfd < 0 || !ubuf || len == 0 || !dest_addr)
+        return -EINVAL;
+
+    struct sockaddr_in *k_dest_addr = (struct sockaddr_in *)dest_addr;
+    if (addrlen < sizeof(struct sockaddr_in))
+        return -EINVAL;
+
+    // Convert the destination IP address from struct sockaddr_in
+    uint8_t target_ip[4] = { k_dest_addr->sin_addr.s_addr & 0xFF,
+                             (k_dest_addr->sin_addr.s_addr >> 8) & 0xFF,
+                             (k_dest_addr->sin_addr.s_addr >> 16) & 0xFF,
+                             (k_dest_addr->sin_addr.s_addr >> 24) & 0xFF };
+
+    uint8_t target_mac[6] = { /* Resolve MAC via ARP or existing table */ };
+    unsigned short source_port = /* Retrieve from socket state */;
+    unsigned short target_port = ntohs(k_dest_addr->sin_port);
+
+    // Call the UDP worker function using the user-provided buffer directly
+    int ret = network_send_udp(source_ip, target_ip, target_mac, source_port, target_port, (char *)ubuf, len);
+
+    return (ret < 0) ? ret : len; // Return number of bytes sent or error code
+}
+
+--------
+
+ssize_t sys_sendmsg(int sockfd, const struct msghdr *msg, int flags)
+{
+    if (sockfd < 0 || !msg || msg->msg_iovlen == 0)
+        return -EINVAL; // Invalid argument
+
+    struct sockaddr_in *dest_addr = (struct sockaddr_in *)msg->msg_name;
+    if (!dest_addr || msg->msg_namelen < sizeof(struct sockaddr_in))
+        return -EINVAL;
+
+    // Convert destination IP
+    uint8_t target_ip[4] = { dest_addr->sin_addr.s_addr & 0xFF,
+                             (dest_addr->sin_addr.s_addr >> 8) & 0xFF,
+                             (dest_addr->sin_addr.s_addr >> 16) & 0xFF,
+                             (dest_addr->sin_addr.s_addr >> 24) & 0xFF };
+
+    uint8_t target_mac[6] = { /* Resolve MAC via ARP or internal table */ };
+    unsigned short source_port = /* Retrieve from socket state */;
+    unsigned short target_port = ntohs(dest_addr->sin_port);
+
+    // Compute total buffer length
+    size_t total_len = 0;
+    for (int i = 0; i < msg->msg_iovlen; i++)
+        total_len += msg->msg_iov[i].iov_len;
+
+    if (total_len == 0)
+        return -EINVAL; // No data to send
+
+    // Call the UDP worker directly using user-space buffer(s)
+    int ret = network_send_udp(source_ip, target_ip, target_mac, source_port, target_port,
+                               (char *)msg->msg_iov[0].iov_base, total_len);
+
+    return (ret < 0) ? ret : total_len; // Return bytes sent or error code
+}
+

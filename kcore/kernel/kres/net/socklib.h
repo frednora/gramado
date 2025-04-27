@@ -54,6 +54,9 @@
 //--
 //=====================================================
 
+typedef unsigned  socklen_t;
+//typedef unsigned int socklen_t;
+
 
 /*
 #ifndef sa_family_t
@@ -282,22 +285,25 @@ typedef	_BSD_SSIZE_T_	ssize_t;
 
 
 
-//bsd
-/*
- * Message header for recvmsg and sendmsg calls.
- * Used value-result for recvmsg, value only for sendmsg.
- */
-/* 
-struct msghdr {
-	void		*msg_name;	     // optional address 
-	socklen_t	msg_namelen;	 // size of address 
-	struct iovec	*msg_iov;	 // scatter/gather array 
-	int		msg_iovlen;	         // # elements in msg_iov 
-	void		*msg_control;	 // ancillary data, see below 
-	socklen_t	msg_controllen;  // ancillary data buffer len 
-	int		msg_flags;	         // flags on received message 
+// Scatter/gather array items
+struct iovec 
+{
+    void   *iov_base;  // Starting address
+    size_t  iov_len;   // Number of bytes to transfer
 };
-*/
+
+
+struct msghdr 
+{
+    void         *msg_name;        // optional address
+    socklen_t     msg_namelen;     // size of address
+    struct iovec *msg_iov;         // scatter/gather array
+    size_t        msg_iovlen;      // # elements in msg_iov
+    void         *msg_control;     // ancillary data, see below
+    size_t        msg_controllen;  // ancillary data buffer len
+    int           msg_flags;       // flags on received message
+};
+
 
 /*
 struct mmsghdr {

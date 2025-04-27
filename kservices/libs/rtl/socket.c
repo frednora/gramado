@@ -105,10 +105,9 @@ bind (
 {
     int value = -1;
 
-    if (sockfd<0)
-    {
+    if (sockfd < 0){
         errno=EBADF;
-        return (int) -1;
+        goto fail;
     }
 
 // #todo: 
@@ -116,19 +115,20 @@ bind (
 
     value = 
         (int) gramado_system_call ( 
-                  7003, 
-                  (unsigned long) sockfd, 
-                  (unsigned long) addr, 
-                  (unsigned long) addrlen );
+                7003, 
+                (unsigned long) sockfd, 
+                (unsigned long) addr, 
+                (unsigned long) addrlen );
 
-    if (value<0)
-    {
+    if (value<0){
         errno = (-value);
-        printf ("bind: [FAIL] Couldn't bind\n");
-        return (int) -1;
+        printf ("bind(): Fail\n");
+        goto fail;
     }
 
     return (int) value;
+fail:
+    return (int) -1;
 }
 
 // IN:
@@ -265,7 +265,7 @@ connect (
 
     if (sockfd < 0){
         errno = EBADF;
-        return (int) (-1);
+        goto fail;
     }
 
     value = 
@@ -278,10 +278,12 @@ connect (
     if (value<0)
     {
         errno = (-value);
-        return (int) (-1);
+        goto fail;
     }
 
     return (int) value;
+fail:
+    return (int) (-1);
 }
 
 
@@ -294,25 +296,28 @@ int shutdown(int sockfd, int how)
 {
     int value = -1;
 
-    if (sockfd<0)
-    {
+    if (sockfd < 0){
         errno = EBADF;
-        return (int) (-1);
+        goto fail;
     }
 
-    value = (int) gramado_system_call ( 
-              7009, 
-              (unsigned long) sockfd, 
-              (unsigned long) how, 
-              (unsigned long) how );
+    // #todo: Check 'how' parameter?
 
-    if (value<0)
-    {
+    value = 
+        (int) gramado_system_call ( 
+            7009, 
+            (unsigned long) sockfd, 
+            (unsigned long) how, 
+            (unsigned long) how );
+
+    if (value < 0){
         errno = (-value);
-        return (int) (-1);
+        goto fail;
     }
 
     return (int) value;
+fail:
+    return (int) (-1);
 }
 
 
@@ -366,6 +371,7 @@ int pselect(int nfds, fd_set *readfds, fd_set *writefds,
 { return -1; }
 */             
 
+// The send() call may be used only when the socket is in a connected state.
 ssize_t 
 send( 
     int sockfd, 
@@ -394,6 +400,12 @@ send(
 // 4.4BSD, SVr4, POSIX.1-2001.  
 // These interfaces first appeared in 4.2BSD.
 
+// If sendto() is used on a connection-mode (SOCK_STREAM, SOCK_SEQPACKET) socket, 
+// the arguments dest_addr and addrlen are ignored.
+// Otherwise, (when not connected) the address of the target is given by 
+// dest_addr with addrlen specifying its size. (ex: UDP) 
+
+// https://linux.die.net/man/2/sendto
 ssize_t 
 sendto ( 
     int sockfd, 
@@ -403,13 +415,32 @@ sendto (
     const struct sockaddr *dest_addr, 
     socklen_t addrlen )
 {
-    if (sockfd < 0)
-    {
-        errno = EBADF;
-        return (ssize_t) -1;
-    }
 
-    return (ssize_t) write( sockfd, (const void *) buf, len );
+// Parameters:
+    if (sockfd < 0){
+        errno = EBADF;
+        goto fail;
+    }
+    if ((void*) buf == NULL)
+       goto fail;
+    if (len <= 0)
+        goto fail;
+
+// When connected.
+// No destination? So simply send it to the socket.
+    if ((void*) dest_addr == NULL && addrlen == 0 )
+    {
+        return (ssize_t) send(sockfd, buf, len, flags);
+    }
+    
+    // #todo
+    // We need to implement a syscall for sendto() i guess.
+    // The kernel doesn't have it for now.
+
+    // Here we call the interrupt.
+
+fail:
+    return (ssize_t) -1;
 }
 
 
@@ -542,7 +573,7 @@ getsockopt(
     void *optval, 
     socklen_t *optlen)
 {
-    if(sockfd<0)
+    if (sockfd<0)
     {
         errno = EBADF;
         return (int) -1;
@@ -560,7 +591,7 @@ setsockopt (
     const void *optval, 
     socklen_t optlen )
 {
-    if(sockfd<0)
+    if (sockfd<0)
     {
         errno = EBADF;
         return (int) -1;
