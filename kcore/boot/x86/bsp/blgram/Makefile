@@ -112,7 +112,7 @@ bl-x86:
 link-x86:
 	$(LD) -m i386pe -T x86/link.ld -o $(linkTarget) $(myObjects)    
 finalize:
-	cp $(linkTarget) ../bin/
+	cp $(linkTarget) ../../bin/
 clean:
 	find . -type f -name '*.o' -delete
 	-rm $(linkTarget)

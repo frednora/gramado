@@ -10,7 +10,7 @@ all: asm-stuff cp-stuff clean
 asm-stuff:
 	nasm main.asm -o BM2.BIN
 cp-stuff:
-	-cp BM2.BIN ../bin/
+	-cp BM2.BIN ../../bin/
 clean:
 #	find . -type f -name '*.o' -delete
 	-rm BM2.BIN

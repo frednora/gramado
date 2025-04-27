@@ -25,7 +25,7 @@
 
 // Enable the initialization of e1000 controller.
 // This is used to test the network infrastructure.
-#define USE_E1000          1
+#define USE_E1000          0
 
 // ...
 

@@ -133,21 +133,22 @@ build-gramado-os:
 #===================================
 # (1) $(DEP_L0)/boot/ 
 
-# ::Build stuuf in $(DEP_L0)/boot/
+# ::Build the bootloader.
 	$(Q)$(MAKE) -C $(DEP_L0)/boot/
 
 # Copy the virtual disk into the rootdir.
 	cp $(DEP_L0)/boot/GRAMHV.VHD  .
-# Copy $(DEP_L0)/bootloader stuff into rootdir.
-	cp $(DEP_L0)/boot/x86/bsp/bin/BM.BIN      $(BASE)/
-	cp $(DEP_L0)/boot/x86/bsp/bin/BM2.BIN     $(BASE)/
-	cp $(DEP_L0)/boot/x86/bsp/bin/BLGRAM.BIN  $(BASE)/
-	cp $(DEP_L0)/boot/MBR0.BIN                $(BASE)/
-# Copy bootloader stuff into GRAMADO/ folder.
-	cp $(DEP_L0)/boot/x86/bsp/bin/BM.BIN      $(BASE)/GRAMADO
-	cp $(DEP_L0)/boot/x86/bsp/bin/BM2.BIN     $(BASE)/GRAMADO
-	cp $(DEP_L0)/boot/x86/bsp/bin/BLGRAM.BIN  $(BASE)/GRAMADO
-	cp $(DEP_L0)/boot/MBR0.BIN                $(BASE)/GRAMADO
+
+# Copy the bootloader into the rootdir.
+	cp $(DEP_L0)/boot/x86/bin/BM.BIN      $(BASE)/
+	cp $(DEP_L0)/boot/x86/bin/BM2.BIN     $(BASE)/
+	cp $(DEP_L0)/boot/x86/bin/BLGRAM.BIN  $(BASE)/
+	cp $(DEP_L0)/boot/x86/bin/MBR0.BIN    $(BASE)/
+# Copy the bootloader into the GRAMADO/ directory.
+	cp $(DEP_L0)/boot/x86/bin/BM.BIN      $(BASE)/GRAMADO
+	cp $(DEP_L0)/boot/x86/bin/BM2.BIN     $(BASE)/GRAMADO
+	cp $(DEP_L0)/boot/x86/bin/BLGRAM.BIN  $(BASE)/GRAMADO
+	cp $(DEP_L0)/boot/x86/bin/MBR0.BIN    $(BASE)/GRAMADO
 
 #===================================
 # (2) $(DEP_L0)/kernel/

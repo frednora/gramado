@@ -35,6 +35,7 @@ all:
 	$(Q)$(NASM) x86/bsp/vd/fat/stage1.asm \
 	-I x86/bsp/vd/fat/ \
 	-o MBR0.BIN
+	-cp MBR0.BIN  x86/bin/
 
 # BM.BIN
 # ::Build BM.BIN. (legacy, no dialog)
