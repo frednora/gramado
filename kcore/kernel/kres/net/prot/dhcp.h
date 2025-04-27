@@ -24,6 +24,9 @@ struct dhcp_info_d
 // This is set TRUE only after the ACK.
     int initialized;
 
+    // 1,2,3,4
+    unsigned int Step;
+
 // Your ip.
 // The IP we got from server.
     uint8_t your_ipv4[4];
@@ -59,6 +62,20 @@ extern struct dhcp_info_d  dhcp_info;
 #define DHCP_RELEASE  7
 #define DHCP_INFORM  8
 
+
+/*
+Client-Sent Messages:
+DHCP Discover (D) – Client broadcasts to find a DHCP server.
+DHCP Request (R)  – Client requests an offered IP or renews a lease.
+DHCP Decline (4)  – Client rejects an IP due to conflict.
+DHCP Release (7)  – Client gives up its leased IP.
+
+Server-Sent Messages:
+DHCP Offer (O)             – Server offers an available IP.
+DHCP Acknowledge (A / ACK) – Server confirms lease.
+DHCP Nak (6)               – Server rejects the request.
+DHCP Inform (8)            – Server provides extra configuration details.
+*/
 
 //
 // Options codes.

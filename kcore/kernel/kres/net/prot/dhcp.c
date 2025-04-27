@@ -7,6 +7,22 @@
 // D.O.R.A.
 // Discover, Offer, Request, Ack
 
+/*
+Two Types of DHCP Request:
+
+Lease Request (During DORA Process)
+This happens after the Offer phase.
+The client sends a Request packet to confirm the chosen IP offer.
+The server responds with Acknowledge (ACK), finalizing the lease.
+
+Renewal Request (Before Lease Expiration)
+The client sends a Request directly to the server before the lease expires.
+The key difference is that it includes the currently leased IP address and 
+the server identifier.
+If the server accepts, it sends an ACK confirming the renewal.
+*/
+
+
 #include <kernel.h>
 
 // dhcp info.
@@ -200,6 +216,7 @@ network_dhcp_send(
 
     // Discovering and IP.
     case DORA_D:
+        dhcp_info.Step = 1;
         printk("DHCP: DORA-D\n");
 
         //++
@@ -218,6 +235,7 @@ network_dhcp_send(
 
     // Requesting an IP.
     case DORA_R:
+        dhcp_info.Step = 3;
         printk("DHCP: DORA-R\n");
 
         //++
@@ -336,6 +354,7 @@ int network_initialize_dhcp(void)
     struct dhcp_d  Ldhcp;
 
     dhcp_info.initialized = FALSE;
+    dhcp_info.Step = 0;
 
 // Can't initialize the dhcp because 
 // the network support was not initialized yet.
@@ -470,6 +489,7 @@ network_handle_dhcp(
 // + Let's send a Request.
     if (dhcp->options[2] == DORA_O)
     {
+        dhcp_info.Step = 2;
         printk("DHCP: DORA-O\n");
 
         // #debug
@@ -504,6 +524,7 @@ network_handle_dhcp(
 // Set the online status.
     if ( dhcp->options[2] == DORA_A )
     {
+        dhcp_info.Step = 4;
         printk("DHCP: DORA-A\n");
 
         // #debug
@@ -530,10 +551,16 @@ network_handle_dhcp(
     }
 
 // ---------------------------
-// Decline
-// The server declined our request.
-    if ( dhcp->options[2] == DHCP_DECLINE ){
-        printk ("DHCP: Decline received\n");
+// DHCP_NAK: Server rejects the request.
+    if ( dhcp->options[2] == DHCP_NAK ){
+        printk ("DHCP: NAK received. Server rejected our request\n");
+        return;
+    }
+
+// ---------------------------
+// DHCP_INFORM: Server provides extra configuration details.
+    if ( dhcp->options[2] == DHCP_INFORM ){
+        printk ("DHCP: INFORM received\n");
         return;
     }
 

@@ -596,6 +596,7 @@ network_on_receiving (
 // + Call the handler for the given protocol.
 
 // If the kernel is not initialized yet.
+// No NIC device can call us yet.
     if (system_state != SYSTEM_RUNNING)
         return (int) -1;
 

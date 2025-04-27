@@ -296,8 +296,7 @@ network_send_udp (
 // #todo
 // NIC Intel device structure.
 
-    if ((void *) currentNIC == NULL)
-    {
+    if ((void *) currentNIC == NULL){
         printk("network_send_udp: currentNIC\n");
         goto fail;
     }
@@ -447,7 +446,8 @@ network_send_udp (
     Lipv4.ip_sum =
          (uint16_t) ToNetByteOrder16(Lipv4.ip_sum);
 
-    printk("ip_sum={%x} \n",Lipv4.ip_sum);
+    // #debug
+    // printk("ip_sum={%x} \n",Lipv4.ip_sum);
 
     //printk ("size %d\n", sizeof (struct ip_d) );
     //refresh_screen();
@@ -727,8 +727,12 @@ network_handle_udp(
     //die();
 
     // DHCP ports
-    if (dport == 68 || dport == 67)
+    // UDP Port 67 – Used by the DHCP server to listen for incoming requests from clients.
+    // UDP Port 68 – Used by the client to receive responses from the server.
+    //if (sport == 67 || dport == 68)
+    if (dport == 68)
     {
+        printk("UDP: on DHCP port %d\n",dport);
         network_handle_dhcp(
             (buffer + UDP_HEADER_LENGHT),
             (udp->uh_ulen - UDP_HEADER_LENGHT) );

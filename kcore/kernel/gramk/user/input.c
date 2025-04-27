@@ -1407,6 +1407,10 @@ wmRawKeyEvent(
 
     int Status = -1;
 
+// No keyborad device can send us input event.
+    if (system_state != SYSTEM_RUNNING)
+        goto fail;
+
 //
 // tty
 //
@@ -2099,6 +2103,11 @@ wmMouseEvent(
         panic("wmMouseEvent: w h\n");
     }
 
+
+// No mouse device can send us input event yet.
+    if (system_state != SYSTEM_RUNNING)
+        goto fail;
+
 // Event id:
     if (event_id < 0){
         goto fail;
@@ -2179,6 +2188,10 @@ int wmKeyboardEvent(int event_id, long long1, long long2)
 // It goes directly to the display server.
 // It's not processed by the kernel.
 
+// Nobody can send us keyboard input event yet.
+    if (system_state != SYSTEM_RUNNING)
+        goto fail;
+
     if (event_id < 0)
         goto fail;
 
@@ -2200,6 +2213,10 @@ int wmTimerEvent(int signature)
 {
 // Called by DeviceInterface_PIT() in pit.c.
 // Right after the the timer interrupt handler.
+
+// Timers can't send us timer events yet.
+    if (system_state != SYSTEM_RUNNING)
+        goto fail;
 
     if (signature != 1234){
         goto fail;
