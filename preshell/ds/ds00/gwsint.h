@@ -113,7 +113,8 @@ extern int server_mode;  // DEMO ...
 // It needs to be the last one.
 #include "libos/gramado/dc.h"
 
-#include "actions.h"
+// The services called by the dispacher.
+#include "service.h"
 
 
 struct gws_graphics_d

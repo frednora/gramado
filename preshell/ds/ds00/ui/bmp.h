@@ -1,6 +1,6 @@
-
 // bmp.h
 // BMP file support.
+// Created by Fred Nora.
 
 #ifndef __GRAMLAND_BMP_H
 #define __GRAMLAND_BMP_H    1
@@ -52,10 +52,10 @@ struct gws_bmp_infoheader_d
 
 /*
  * bmpDisplayBMP0:
- * Mostra na tela uma imagem bmp carregada na memória. 
+ * Mostra na tela uma imagem bmp carregada na memï¿½ria. 
  * No backbuffer.
  * IN:
- *     address = endereço base
+ *     address = endereï¿½o base
  *     x       = posicionamento 
  *     y       = posicionamento
  *     zoom factor

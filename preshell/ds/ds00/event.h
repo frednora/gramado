@@ -89,14 +89,12 @@ struct gws_event_d gwsEvent;
 //#test
 struct gws_event_d *gwsCurrentEvent;
 
-
 /*
  // uma janela tem o foco de entrada e o cursor esta piscando nela.
 struct gws_keyboad_focus_d
 {
     struct gws_cliend_d *client;
     struct gws_window_d* window;
-    
     //...
 };
 */

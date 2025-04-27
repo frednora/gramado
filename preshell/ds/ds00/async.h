@@ -1,6 +1,5 @@
-
 // async.h
-// + Request numbers
+// + Request numbers.
 // + Sub-request numbers.
 // Created by Fred Nora.
 

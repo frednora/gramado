@@ -27,7 +27,6 @@ struct font_info_d
     unsigned long height;
 };
 
-
 struct font_initialization_d
 {
     int initialized;

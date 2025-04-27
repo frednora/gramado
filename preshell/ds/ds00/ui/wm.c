@@ -358,6 +358,7 @@ wmProcessKeyboardEvent(
     //struct gws_window_d *tmp;
     unsigned long Result=0;
     //char name_buffer[64];
+    int wid = -1;
 
 // #todo
     unsigned int fg_color = (unsigned int) get_color(csiSystemFontColor);
@@ -459,26 +460,45 @@ wmProcessKeyboardEvent(
         // Se pressionamos alguma tecla de funçao.
         // Cada tecla de funçao aciona um botao da barra de tarefas.
 
-        // We have 4 buttons in the taskbar.
+        // Alaways affect the active window.
+        // #test: Sometimes it is the taskbar, sometimes not.
         if (long1 == VK_F1 ||
             long1 == VK_F2 ||
             long1 == VK_F3 ||
             long1 == VK_F4 )
         {
+            /*
             if ((void*)active_window != NULL)
             {
-                if (active_window->magic == 1234)
-                {
-                    window_post_message( 
-                        active_window->id, 
-                        GWS_SysKeyDown, 
-                        long1, 
-                        long1 );
+                if (active_window->magic == 1234){
+                    wid = (int) active_window->id;
+                    window_post_message( wid, GWS_SysKeyDown, long1, long1 );
                 }
             }
+            */
             return 0;
         }
 
+        // Always affect the active window.
+        // #test: Sometimes it is the taskbar, sometimes not.
+        if (long1 == VK_F5 ||
+            long1 == VK_F6 ||
+            long1 == VK_F7 ||
+            long1 == VK_F8 )
+        {
+            /*
+            if ((void*)active_window != NULL)
+            {
+                if (active_window->magic == 1234){
+                    wid = (int) active_window->id;
+                    window_post_message( wid, GWS_SysKeyDown, long1, long1 );
+                }
+            }
+            */
+            return 0;
+        }
+
+        // Always affect the active window.
         // F9  = Minimize button
         // F10 = Maximize button
         // F11 = Close button
@@ -491,8 +511,11 @@ wmProcessKeyboardEvent(
             return 0;
         }
 
-        // printf("wmProcedure: [?] GWS_SysKeyDown\n");
-        
+        // #todo
+        if (long1 == VK_F12)
+            return 0;
+
+        // Always affect the window with focus.
         // Enfileirar a mensagem na fila de mensagens
         // da janela com foco de entrada.
         // O cliente vai querer ler isso.
@@ -505,11 +528,10 @@ wmProcessKeyboardEvent(
         // Post
         wmPostMessage(
             (struct gws_window_d *) window,
-            (int)msg,
-            (unsigned long)long1,
-            (unsigned long)long2);
+            (int) msg,
+            (unsigned long) long1,
+            (unsigned long) long2);
 
-        //wm_update_desktop(TRUE,TRUE); // 
         return 0;
     }
 
@@ -597,6 +619,7 @@ wmProcessKeyboardEvent(
         }
         
         if (long1 == VK_F12){
+            yellow_status("VK_F12");
             return 0;
         }
         

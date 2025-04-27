@@ -517,7 +517,7 @@ static void do_launch_app(int app_number)
     int ret_val=-1;
 
     char filename[16];
-    size_t string_size=0;
+    size_t StringSize=0;
     memset(filename,0,16);
 
     //do_clear_console();
@@ -525,25 +525,25 @@ static void do_launch_app(int app_number)
 
 // #bugbug
 // Sending cmdline via stdin
-    rewind(stdin);
+    //rewind(stdin);
     //write( fileno(stdin), cmdline1, strlen(cmdline1) );
 
 // Launch new process.
 
     if (app_number == 1){
         sprintf(filename,app1_name);
-        string_size = strlen(app1_name);
+        StringSize = (size_t) strlen(app1_name);
     }else if (app_number == 2){
         sprintf(filename,app2_name);
-        string_size = strlen(app2_name);
+        StringSize = (size_t) strlen(app2_name);
     }else{
         return;
     }
 
-    filename[string_size] = 0;
+    filename[StringSize] = 0;
     ret_val = (int) rtl_clone_and_execute(filename);
     //ret_val = (int) rtl_clone_and_execute(app1_name);
-    if (ret_val<=0){
+    if (ret_val <= 0){
         printf("Couldn't clone\n");
         return;
     }
@@ -557,6 +557,54 @@ static void do_launch_app(int app_number)
     //isTimeToQuit = TRUE;
 }
 
+static void print_ascii_table(int fd)
+{
+    register int i=0;
+    int line=0;
+
+    if (fd<0)
+        return;
+
+    printf("ascii: :)\n");
+
+    gws_redraw_window(fd,main_window,TRUE);
+    //#define SYSTEMCALL_SETCURSOR  34
+    sc80 ( 34, 2, 2, 0 );
+
+    for(i=0; i<256; i++)
+    {
+        gws_draw_char ( 
+            fd, 
+            main_window, 
+            i*8,  //x 
+            (8*line),  //y
+            COLOR_YELLOW, i );
+        
+        if (i%10)
+            line++;
+    };
+}
+
+static void 
+updateStatusBar(
+    int fd,
+    unsigned long w, 
+    unsigned long h, 
+    int first_number, 
+    int second_number)
+{
+    if (fd<0)
+        return;
+
+// first box
+    //gws_draw_char ( fd, status_window, (w/30)  * 2, (8), COLOR_BLUE, 127 );
+// second box
+    //gws_draw_char ( fd, status_window, (w/30)  * 3, (8), COLOR_BLUE, 127 );
+// first number
+    //gws_draw_char ( fd, status_window, (w/30)  * 2, (8), COLOR_YELLOW, first_number );
+// second number
+   // gws_draw_char ( fd, status_window, (w/30)  * 3, (8), COLOR_YELLOW, second_number );
+}
 
 // Process event that came from the server.
 static int 
@@ -754,66 +802,15 @@ tbProcedure(
             switch (long1){
                 case VK_F1:  do_launch_app(1);  break;
                 case VK_F2:  do_launch_app(2);  break;
+                // ...
+                //case VK_F5: gws_async_command(fd,30,0,0);    break;
+                //case VK_F6: gws_async_command(fd,1011,0,0);  break;
+                //case VK_F7: gws_async_command(fd,30,0,0);    break;
                 default:
                     break;
             };
-
-            /*
-            switch (long1){
-
-                // 1~4
-                case VK_F1: gws_clone_and_execute("#editor.bin");   break;
-                case VK_F2: gws_clone_and_execute("#gwm.bin");      break;
-                case VK_F3: gws_clone_and_execute("#fileman.bin");  break;
-                case VK_F4: gws_clone_and_execute("#terminal.bin"); break;
-
-                // 4~8
-                //case VK_F5: gws_clone_and_execute("#browser.bin"); break;
-                //case VK_F6: gws_clone_and_execute("#browser.bin"); break;
-                //case VK_F7: gws_clone_and_execute("#browser.bin"); break;
-                case VK_F8: 
-                    // #test
-                    // Setup the flag to show or not the fps window.
-                    // Request number 6.
-                    //gws_async_command(fd,6,TRUE,0);
-                    break;
-
-
-                // 9~12
-                case VK_F9: 
-                    //gws_async_command(fd,4,1,0);
-                    //gws_async_command(fd,1,0,0);
-                    //gws_async_command(fd,4,9,0);  // cat
-                    //gws_async_command(fd,4,1,0);
-                    //gws_async_command(fd,4,2,0);
-                    //gws_clone_and_execute("#browser.bin"); 
-                    break;
-                case VK_F10: 
-                    //gws_async_command(fd,4,6,0);
-                    //gws_clone_and_execute("#browser.bin"); 
-                    break;
-                case VK_F11: 
-                    //gws_async_command(fd,4,7,0);
-                    //gws_clone_and_execute("#browser.bin"); 
-                    break;
-
-                // #test
-                case VK_F12: 
-                    //gws_async_command(fd,4,9,0);
-                    //gws_async_command(fd,4,10,0);   //triangle
-                    //gws_async_command(fd,4,11,0); //polygon
-                    //gws_async_command(fd,4,12,0); //lines
-                    //gws_clone_and_execute("#browser.bin"); 
-                    //printf("#gws.bin: Shutting down ...\n");
-                    //f12Status = (int) gws_clone_and_execute("shutdown.bin");
-                    //if (f12Status<0){ break; } // fail
-                    //exit(0);
-                    break;
- 
-                // ...
-            };
-            */
             break;
+
         default:
             goto fail;
             break;
@@ -829,71 +826,6 @@ done:
     //return (int) gws_default_procedure(fd,0,msg,long1,long2);
 fail:
     return (int) (-1);
-}
-
-static void 
-updateStatusBar(
-    int fd,
-    unsigned long w, 
-    unsigned long h, 
-    int first_number, 
-    int second_number)
-{
-    if (fd<0)
-        return;
-
-// first box
-    //gws_draw_char ( fd, status_window, (w/30)  * 2, (8), COLOR_BLUE, 127 );
-// second box
-    //gws_draw_char ( fd, status_window, (w/30)  * 3, (8), COLOR_BLUE, 127 );
-// first number
-    //gws_draw_char ( fd, status_window, (w/30)  * 2, (8), COLOR_YELLOW, first_number );
-// second number
-   // gws_draw_char ( fd, status_window, (w/30)  * 3, (8), COLOR_YELLOW, second_number );
-}
-
-
-static void print_ascii_table(int fd)
-{
-    register int i=0;
-    int line=0;
-
-    if (fd<0)
-        return;
-
-    printf("ascii: :)\n");
-
-    gws_redraw_window(fd,main_window,TRUE);
-    //#define SYSTEMCALL_SETCURSOR  34
-    sc80 ( 34, 2, 2, 0 );
-
-    for(i=0; i<256; i++)
-    {
-        gws_draw_char ( 
-            fd, 
-            main_window, 
-            i*8,  //x 
-            (8*line),  //y
-            COLOR_YELLOW, i );
-        
-        if (i%10)
-            line++;
-    };
-}
-
-static void __initialize_client_list(void)
-{
-    register int i=0;
-    for (i=0; i<CLIENT_COUNT_MAX; i++)
-    {
-        clientList[i].used = FALSE;
-        clientList[i].magic = 0;
-        clientList[i].client_id = -1;
-        
-        clientList[i].icon_info.wid = -1;
-        clientList[i].icon_info.icon_id = -1;
-        clientList[i].icon_info.state = 0;
-    };
 }
 
 // Pump event
@@ -938,6 +870,21 @@ void pump(int fd, int wid)
             e->window, e->type, e->long1, e->long2 );
 
     // ...
+}
+
+static void __initialize_client_list(void)
+{
+    register int i=0;
+    for (i=0; i<CLIENT_COUNT_MAX; i++)
+    {
+        clientList[i].used = FALSE;
+        clientList[i].magic = 0;
+        clientList[i].client_id = -1;
+        
+        clientList[i].icon_info.wid = -1;
+        clientList[i].icon_info.icon_id = -1;
+        clientList[i].icon_info.state = 0;
+    };
 }
 
 static int 
@@ -1117,6 +1064,7 @@ static int create_desktop_area(int fd)
     return 0;
 
 fail:
+    //exit(1);
     return (int) -1;
 }
 

@@ -1,5 +1,5 @@
-
 // gui.h
+// Main UI elements of the display server.
 
 #ifndef ____GUI_H
 #define ____GUI_H    1

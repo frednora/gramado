@@ -1,4 +1,7 @@
-// actions.h
+// service.h
+// The services called by the dispacher.
+// Created by Fred Nora.
+
 // This is a list of actions.
 // A route maps a request to a controller action.
 // A route is an entity that links a request with an action.
@@ -10,7 +13,6 @@
 // In main.c we have the function dispatcher() that calls dsProcedure(),
 // the function dsProcedure() will call all the handlers exposed in this header.
 // All the functions for the servers start with the prefix serviceXXXX().
-// Created by Fred Nora.
 
 // See:
 //   protocol.h = The indexes for the services.
@@ -19,8 +21,8 @@
 //   grprim.c   = some low level services.
 // ...
 
-#ifndef __ACTIONS_H
-#define __ACTIONS_H    1
+#ifndef __SERVICE_H
+#define __SERVICE_H    1
 
 // 1000
 // hello

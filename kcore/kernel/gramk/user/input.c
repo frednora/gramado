@@ -187,6 +187,9 @@ static void do_launch_app_via_initprocess(int index)
 // but the message is about launching a client-side 
 // gui application. So, we need a window server up and running.
 
+// So, we can consider the init process as a launcher,
+// the same way we have the Overview (taskbar) as a launcher.
+
     if (DisplayServerInfo.initialized != TRUE){
         return;
     }
@@ -222,7 +225,6 @@ static void do_user(void)
     }
 }
 
-// Local
 // Compare the strings that were
 // typed into the kernel virtual console.
 static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
