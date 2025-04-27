@@ -2,12 +2,16 @@
 // Creadits:
 // https://mcalabprogram.blogspot.com/2012/01/udp-sockets-chat-application-server.html
 
-#include<sys/socket.h>
-#include<netdb.h>
-#include<string.h>
-#include<stdlib.h>
-#include<stdio.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <arpa/inet.h>
 
+#define TRUE  1
+#define FALSE  0
 
 //const char *ip = "127.0.0.1";
 //#define PORT 43454
@@ -15,10 +19,62 @@
 const char *ip = "192.168.1.9";
 #define PORT  11888
 
-#define MAX 80
 #define SA  struct sockaddr
 
+// A single line with 80 chars long.
+#define MAX  80
 static char buff[MAX];
+
+static int isTimeToQuit = FALSE;
+
+// ==============================================
+
+int process_command(char *cmdline);
+
+// ==============================================
+
+int process_command(char *cmdline)
+{
+    char *p;
+
+    if ((void*)cmdline == NULL)
+        goto fail;
+    if (*cmdline == 0)
+        goto fail;
+
+    // Show
+    // printf("From Server : %s\n",buff);
+
+    // ACK: Ignore it for now.
+    if (strncmp("g:a",cmdline,3) == 0)
+        goto done;
+
+    // reply
+    if (strncmp("g:1", cmdline,3) == 0)
+    {
+        p = (cmdline + 4); // Address where the response starts.
+        printf("%s\n",p);
+        goto done;
+    }
+
+    // error
+    if (strncmp("g:3", cmdline,3) == 0){
+        printf("~ERROR\n");
+        goto done;
+    }
+
+    // Process command
+    if (strncmp("g:0 exit", cmdline,8) == 0){
+        printf("exit: Client Exit ...\n");
+        isTimeToQuit = TRUE;
+        goto done;
+    }
+    goto fail;
+done:
+    return 0;
+fail: 
+    return (int) -1;
+}
 
 int main(int argc, char **argv)
 {
@@ -40,19 +96,27 @@ int main(int argc, char **argv)
     servaddr.sin_port=htons(PORT);
     len = sizeof(servaddr);
 
+// ---------------------
 // Loop
     for (;;){
 
-        printf("\nEnter string : ");
+        if (isTimeToQuit == TRUE)
+            break;
+
+        printf("\n");
+        printf("Enter string: ");
+        bzero(buff,sizeof(buff));
+
         n=0;
         while ( (buff[n++] = getchar()) != '\n')
         {
         };
 
+        // Remove End Of Line and finalize the string.
         if (n < MAX)
         {
-            // Remove End Of Line and finalize the string.
-            if (buff[n-1] == '\n'){
+            if (buff[n-1] == '\n')
+            {
                 buff[n-1] = 0;
             }
         }
@@ -66,34 +130,25 @@ int main(int argc, char **argv)
             (SA *) &servaddr,
             len );
 
-        bzero(buff,sizeof(buff));
-
         // Receive
+        bzero(buff,sizeof(buff));
         recvfrom(
             sockfd,
             buff,
             sizeof(buff),
             0, 
-            (SA *)&servaddr,&len);
+            (SA *) &servaddr, 
+            &len );
 
-        // Show
-        printf("From Server : %s\n",buff);
-
-        // Process command
-        if (strncmp("g:0 exit", buff,8) == 0){
-            printf("Client Exit...\n");
-            exit(0);
-            break;
-        }
-
-        //if (strncmp("exit",buff,4) == 0){}
-        //if (strncmp("exit",buff,4) == 0){}
-        //if (strncmp("exit",buff,4) == 0){}
-        // ...
+        process_command(buff);
     };
 
 //
-    close(sockfd);
+    if (isTimeToQuit != TRUE){
+        return EXIT_FAILURE;
+    }
 
-    return 0;
+// 
+    close(sockfd);
+    return EXIT_SUCCESS;
 }

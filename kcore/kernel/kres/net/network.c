@@ -595,6 +595,10 @@ network_on_receiving (
 // + Handle ethernet header.
 // + Call the handler for the given protocol.
 
+// If the kernel is not initialized yet.
+    if (system_state != SYSTEM_RUNNING)
+        return (int) -1;
+
     if ((void*) frame == NULL)
         return (int) -1;
 

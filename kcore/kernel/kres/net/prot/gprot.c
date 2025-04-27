@@ -74,7 +74,6 @@ int gprot_handle_protocol(char *data, uint16_t s_port, uint16_t d_port)
          buf[1] == ':' && 
          buf[2] == '0' )
     {
-        //printk("[request]\n"); refresh_screen();
         memset(buf, 0, sizeof(buf));
         ksprintf(buf,"g:1 ");  // Reply code
         ksprintf(
@@ -91,13 +90,12 @@ int gprot_handle_protocol(char *data, uint16_t s_port, uint16_t d_port)
          buf[1] == ':' && 
          buf[2] == '1' )
     {
-        //memset(udp_payload, 0, sizeof(udp_payload));
-
-        // #debug
-        printk("[g:1] REPLY\n");
-        refresh_screen();
-
-        NoReply = TRUE;
+        memset(buf, 0, sizeof(buf));
+        ksprintf(buf,"g:a ");  // ACK
+        ksprintf(
+            (buf + 4),
+            "ACK\n");
+        NoReply = FALSE;
         goto done;
     }
 
@@ -108,13 +106,12 @@ int gprot_handle_protocol(char *data, uint16_t s_port, uint16_t d_port)
          buf[1] == ':' && 
          buf[2] == '2' )
     {
-        //memset(udp_payload, 0, sizeof(udp_payload));
-
-        // #debug
-        printk("[g:2] EVENT\n");
-        refresh_screen();
-
-        NoReply = TRUE;
+        memset(buf, 0, sizeof(buf));
+        ksprintf(buf,"g:a ");  // ACK
+        ksprintf(
+            (buf + 4),
+            "ACK\n");
+        NoReply = FALSE;
         goto done;
     }
 
@@ -125,18 +122,12 @@ int gprot_handle_protocol(char *data, uint16_t s_port, uint16_t d_port)
          buf[1] == ':' && 
          buf[2] == '3' )
     {
-        //memset(udp_payload, 0, sizeof(udp_payload));
-
-        // #debug
-        printk("[g:3] ERROR\n");
-        refresh_screen();
-
-        // #test
-        // Testing keyboard event
-        // OK, it's working. We can see a x in the client area of editor.bin.
-        // network_keyboard_event(MSG_KEYDOWN, 'x', 'x' );
-
-        NoReply = TRUE;
+        memset(buf, 0, sizeof(buf));
+        ksprintf(buf,"g:a ");  // ACK
+        ksprintf(
+            (buf + 4),
+            "ACK\n");
+        NoReply = FALSE;
         goto done;
     }
 
@@ -177,16 +168,13 @@ int gprot_handle_protocol(char *data, uint16_t s_port, uint16_t d_port)
     }
 */
 
-
-// #todo: Create more options.
-// ...
-
-    //if (dport == 11888)
-        //ksprintf(udp_payload,"This is a response from Gramado OS");
-
-// Fail: 
-// The received message is invalid.
-    NoReply = TRUE;
+// ----------------
+// Invalid request
+invalid_request:
+    memset(buf, 0, sizeof(buf));
+    ksprintf(buf,"g:3 ");  // Error
+    NoReply = FALSE;
+    goto done;
 
 // ---------------------
 // Response
