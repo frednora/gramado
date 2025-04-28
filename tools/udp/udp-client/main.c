@@ -2,31 +2,38 @@
 // Creadits:
 // https://mcalabprogram.blogspot.com/2012/01/udp-sockets-chat-application-server.html
 
+#include <sys/socket.h>
+#include <netdb.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <arpa/inet.h>
 
-#include<sys/socket.h>
-#include<netdb.h>
-#include<string.h>
-#include<stdlib.h>
-#include<stdio.h>
-
+// #hackhack
+#define TRUE  1
+#define FALSE  0
 
 #define SA   struct sockaddr
 
-
-const char *TARGET_IP = "192.168.1.9";
+const char *TARGET_IP = "192.168.1.10";
 #define TARGET_PORT  11888
 
 #define MAX 80
 
+static int isTimeToQuit = FALSE;
+
 int main(int argc, char **argv)
 {
-    char buff[MAX];
-    int sockfd, len, n;
+    static char buff[MAX];
+    int sockfd=0; 
+    int len=0; 
+    int n;
     struct sockaddr_in  servaddr;
 
-    sockfd = socket(AF_INET,SOCK_DGRAM,0);
+    sockfd = (int) socket(AF_INET,SOCK_DGRAM,0);
     if (sockfd < 0){
-        printf("socket creation failed...\n");
+        printf("on socket()\n");
         goto fail;
     } else {
         printf("Socket successfully created..\n");
@@ -38,8 +45,10 @@ int main(int argc, char **argv)
     servaddr.sin_port = htons(TARGET_PORT);
     len = sizeof(servaddr);
 
-    for (;;)
-    {
+    isTimeToQuit = FALSE;
+    for (;;){
+	if (isTimeToQuit == TRUE)
+	    break;
         printf("\nEnter string : ");
         // Clean buffer
         memset(buff,0,MAX);
@@ -73,15 +82,21 @@ int main(int argc, char **argv)
         printf("From Server : %s\n",buff);
         
         // Compare
-        if (strncmp("exit",buff,4) == 0){
+	// g:0 means (REQUEST)
+        if (strncmp("g:0 exit",buff,8) == 0)
+	{
+            isTimeToQuit = TRUE;
             printf("Client Exit...\n");
             break;
         }
+	// ...
     };
 
-    close(sockfd);
-    return 0;
+    if (isTimeToQuit == TRUE){
+        close(sockfd);
+        return EXIT_SUCCESS;
+    }
 
 fail:
-    return 0;
+    return EXIT_FAILURE;
 }

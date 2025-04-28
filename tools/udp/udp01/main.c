@@ -18,7 +18,7 @@
 
 //const char *ip = "127.0.0.1";
 //#define PORT 43454
-const char *ip = "192.168.1.4";
+const char *ip = "192.168.1.10";
 #define PORT  11888
 
 #define MAX  256  //80
