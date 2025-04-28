@@ -481,13 +481,14 @@ struct gws_rect_d *rect_from_window(struct gws_window_d *window)
 }
 
 //======================================
+// Local worker.
 // Calling kgws in the kernel.
 // Using the kgws to draw the rectangle.
 // #todo
 // At this moment, no structure ware invalidated.
 // So, the caller needs to specify a rect structure,
 // this way we can invalidated it.
-
+// IN: l, t, w, h, bg color, rop flags.
 static void 
 __draw_rectangle_via_kgws ( 
     unsigned long x, 
@@ -507,13 +508,13 @@ __draw_rectangle_via_kgws (
     Buffer[4] = (unsigned long) (color & 0xFFFFFFFF);
     Buffer[5] = (unsigned long) rop_flags;
 
-// Refresh rectangle using the kernel service number 9.
-    gramado_system_call ( 
-        9, (unsigned long) &Buffer[0], 0, 0 );
+// Syscall 0x80, service 9.
+// Refresh rectangle using the kernel services.
+    gramado_system_call ( 9, (unsigned long) Buffer, 0, 0 );
+    //sc80 ( 9, (unsigned long) Buffer, 0, 0 );
 }
 
-
-// atualiza o retângulo da surface da thread.
+// Atualiza o retângulo da surface da thread.
 void 
 setup_surface_rectangle ( 
     unsigned long left, 
@@ -1243,9 +1244,10 @@ rectBackbufferDrawRectangle0 (
 // #bugbug
 // The ws routine is not working everytime we call it.
 
+    // #important: Flag.
+    int fDrawRectangleUsingKGWS = (int) use_kgws;
     //int DrawRectangleUsingKGWS = FALSE;  // #test
     //int DrawRectangleUsingKGWS = TRUE;   // #test
-    int DrawRectangleUsingKGWS = (int) use_kgws;
 
     struct gws_rect_d rect;
 
@@ -1267,18 +1269,18 @@ rectBackbufferDrawRectangle0 (
         return; 
     }
 
-// set values
-    rect.left   =  (unsigned long) (x      & 0xFFFF);
-    rect.top    =  (unsigned long) (y      & 0xFFFF);
-    rect.width  =  (unsigned long) (width  & 0xFFFF);
-    rect.height =  (unsigned long) (height & 0xFFFF);
-//Margins
+// Set values
+    rect.left   = (unsigned long) (x      & 0xFFFF);
+    rect.top    = (unsigned long) (y      & 0xFFFF);
+    rect.width  = (unsigned long) (width  & 0xFFFF);
+    rect.height = (unsigned long) (height & 0xFFFF);
+// Margins
     rect.right  = (unsigned long) (rect.left + rect.width);
     rect.bottom = (unsigned long) (rect.top  + rect.height); 
     rect.bg_color = (unsigned int)(color & 0xFFFFFF);
 
 //
-// Fail
+// Checks
 //
 
 // #bugbug
@@ -1306,14 +1308,13 @@ rectBackbufferDrawRectangle0 (
 // Clip
 
 // Se a largura for maior que largura do dispositivo.
-    if ( rect.width > device_w ){
+    if (rect.width > device_w){
         rect.width = (unsigned long) device_w;
         //debug_print("rectBackbufferDrawRectangle0: [FAIL] rect.width > device_w\n");
         //return;
     }
-
 // Se a altura for maior que altura do dispositivo.
-    if ( rect.height > device_h ){
+    if (rect.height > device_h){
         rect.height = (unsigned long) device_h;
         //debug_print("rectBackbufferDrawRectangle0: [FAIL] rect.height > device_h\n");
         //return;
@@ -1323,12 +1324,12 @@ rectBackbufferDrawRectangle0 (
 // Se for maior que o espaço que sobra, 
 // então será igual ao espaço que sobra.
 
-
-
-// empty
-    if (fill == FALSE){
+// Empty
+    if (fill == TRUE){
+        rect.is_empty = FALSE;
+    } else if (fill == FALSE){
         rect.is_empty = TRUE;
-    }
+    };
 
 /*
 // #todo
@@ -1369,25 +1370,21 @@ rectBackbufferDrawRectangle0 (
     }
 */
 
-// fill
-    if (fill == TRUE){
-        rect.is_empty = FALSE;
-    }
-
 // Draw:
 // Drawing in the kernel using kgws.
 // Draw lines on backbuffer.
 // Invalidate the rectangle.
 
-    if (DrawRectangleUsingKGWS == TRUE)
+    if (fDrawRectangleUsingKGWS == TRUE)
     {
-         //debug_print("rectBackbufferDrawRectangle0: Using R0\n");
-         __draw_rectangle_via_kgws (
-             rect.left, rect.top, rect.width, rect.height,
-             rect.bg_color,
-             rop_flags );
-         rect.dirty = TRUE;
-         goto done;
+        // debug_print("rectBackbufferDrawRectangle0: Using R0");
+        // IN: l,t,w,h,bg color, rop flags.
+        __draw_rectangle_via_kgws (
+            rect.left, rect.top, rect.width, rect.height,
+            rect.bg_color, rop_flags );
+        rect.dirty = TRUE;
+        return;
+        //goto done;
     }
 
 //===============================================================

@@ -108,12 +108,10 @@ static void __service897(void)
 // the framebuffer.
 // When we draw a window it needs to be invalidated.
 
-    if (Draw == TRUE)
-    {
+    if (Draw == TRUE){
+        // l,t,w,h,color,rop falgs.
         backbuffer_draw_rectangle( 
-            r.left, r.top, r.width, r.height, 
-            _Color, 
-           0 );      // #todo: rop flags.
+            r.left, r.top, r.width, r.height, _Color, 0 );
         r.dirty = TRUE;
     }
 }
@@ -407,18 +405,25 @@ void *sci0 (
     }
 
 // 9 - Draw a rectangle into the backbuffer.
+// This is the esrvice called by the display server.
+// Any process can call this service?
 // SCI_BUFFER_DRAWRECT
 // see: rect.c
+// #todo:
+// Let create some better services for the display server in ring 0,
+// for performance reasons. Maybe inside a kernel module, not inside
+// the kernel image.
     if (number == 9)
     {
-        //debug_print("sci0: [9]\n");
+        // debug_print("sci0: [9]\n");
+        // IN: l,t,w,h,color,rop flags.
         backbuffer_draw_rectangle ( 
-            (unsigned long) message_address[0],    //x 
-            (unsigned long) message_address[1],    //y
-            (unsigned long) message_address[2],    //width
-            (unsigned long) message_address[3],    //height
-            (unsigned int)  message_address[4],    //color
-            (unsigned long) message_address[5] );  //rop_flags
+            (unsigned long) message_address[0], 
+            (unsigned long) message_address[1],
+            (unsigned long) message_address[2],
+            (unsigned long) message_address[3],
+            (unsigned int)  message_address[4],
+            (unsigned long) message_address[5] );
         return NULL;
     }
 
@@ -426,19 +431,18 @@ void *sci0 (
 // Region?
     if (number == 10)
     {
-        //debug_print("sci0: [10]\n");
+        // debug_print("sci0: [10]\n");
+        // IN: l,t,w,h
         refresh_rectangle ( 
-            (unsigned long) message_address[0],    //x 
-            (unsigned long) message_address[1],    //y
-            (unsigned long) message_address[2],    //width
-            (unsigned long) message_address[3] );  //height 
+            (unsigned long) message_address[0], 
+            (unsigned long) message_address[1],
+            (unsigned long) message_address[2],
+            (unsigned long) message_address[3] ); 
         return NULL;
     }
 
-// 11:
-// Flush the backbuffer into the lfb.
-    if (number == SCI_REFRESHSCREEN)
-    { 
+// 11: Schedule to flush the backbuffer into the LFB.
+    if (number == SCI_REFRESHSCREEN){ 
         invalidate_screen();
         return NULL;
     }
@@ -447,8 +451,7 @@ void *sci0 (
 // Netword: 12,13,14,15
 
 // 16 - open() implementation.
-// In ring3, see: fcntl.c
-// In ring0, see: fs.c
+// see: fs.c
 // IN: pathname, flags, mode
 // OUT: fd
     if (number == SCI_SYS_OPEN)
@@ -461,12 +464,12 @@ void *sci0 (
     }
 
 // 17 - close() implementation.
-// See: sys.c
+// see: fs.c
 // IN: fd
     if (number == SCI_SYS_CLOSE)
     {
         debug_print ("sci0: SCI_SYS_CLOSE\n");
-        return (void *) sys_close( (int) arg2 );
+        return (void *) sys_close((int) arg2);
     }
 
 // 18 - read() implementation.
@@ -1307,18 +1310,18 @@ void *sci0 (
         return NULL;
     }
 
-// #bugbug
-// Falha se tentamos pintar a tela toda.
-    if (number==391)
+// #bugbug: Is it failing when we try to draw the whole screen?
+    if (number == 391)
     {
-        //debug_print("sci0: [391]\n");
+        // debug_print("sci0: [391]\n");
+        // IN: l,t,w,h,color,rop flags.
         backbuffer_draw_rectangle ( 
-            (unsigned long) message_address[0],    //x 
-            (unsigned long) message_address[1],    //y
-            (unsigned long) message_address[2],    //width
-            (unsigned long) message_address[3],    //height
-            (unsigned int)  message_address[4],    //color
-            (unsigned long) message_address[5] );  //rop_flags
+            (unsigned long) message_address[0], 
+            (unsigned long) message_address[1],
+            (unsigned long) message_address[2],
+            (unsigned long) message_address[3],
+            (unsigned int)  message_address[4],
+            (unsigned long) message_address[5] );
         return NULL;
     }
 
@@ -1606,13 +1609,13 @@ void *sci0 (
     }
 
 // 892 - Setup the thread's surface rectangle.
-    if (number == 892)
-    {
+    if (number == 892){
+        // l,t,w,h
         __setup_surface_rectangle( 
-            (unsigned long) message_address[0],  //l 
-            (unsigned long) message_address[1],  //t
-            (unsigned long) message_address[2],  //w
-            (unsigned long) message_address[3]); //h
+            (unsigned long) message_address[0], 
+            (unsigned long) message_address[1],
+            (unsigned long) message_address[2],
+            (unsigned long) message_address[3] );
         return NULL;
     }
 

@@ -1,0 +1,37 @@
+The entry point in Linux kernel, by Copilot.
+
+Below is an overview of where you can typically find the 
+assembly entry point (the `_start` label) in the Linux kernel source 
+for several architectures. 
+Keep in mind that kernel configurations and version differences may cause 
+slight variations, but these paths are representative of the common layout:
+
+
+| **Architecture** | **_start Label File/Pathname** |
+|------------------|--------------------------------|
+| **ARM (32-bit)** | `arch/arm/boot/bootp/init.S` (your example) |
+| **x86 (32-bit)** | `arch/x86/boot/header.S` (contains the real‑mode entry point) |
+| **x86 (64-bit)** | Early startup is typically in `arch/x86/boot/compressed/head_64.S` (for the decompressor stage) and then later transitions in files like `arch/x86/kernel/head_64.S` |
+| **ARM64**        | `arch/arm64/kernel/head.S` (defines the C‑entry point after minimal assembly setup) |
+| **MIPS**         | For compressed kernels: `arch/mips/boot/compressed/head.S`; some configurations may have an uncompressed variant in `arch/mips/boot/head.S` |
+| **S390**         | `arch/s390/boot/head.S` (the initial entry in the mainframe environment) |
+| **RISC‑V**       | `arch/riscv/kernel/head.S` (contains the early startup code) |
+| **Alpha**        | `arch/alpha/boot/head.S` (serves as the entry point for Alpha systems) |
+| **SH (SuperH)**  | `arch/sh/boot/romimage/head.S` (used for booting SuperH architectures) |
+| **M68k**         | For Motorola 68000 based systems: `arch/m68k/68000/head.S` (with variants like `arch/m68k/coldfire/head.S` for ColdFire) |
+| **LoongArch**    | `arch/loongarch/kernel/head.S` (entry code for LoongArch systems) |
+| **Hexagon**      | `arch/hexagon/kernel/head.S` (entry for Qualcomm Hexagon) |
+| **Nios II**      | Compressed boot: `arch/nios2/boot/compressed/head.S`; also, an uncompressed version can be found in `arch/nios2/kernel/head.S` |
+| **Microblaze**   | `arch/microblaze/kernel/head.S` (defines the low‑level entry) |
+| **OpenRISC**     | `arch/openrisc/kernel/head.S` (contains the initial startup code) |
+
+**A Few Additional Points:**
+
+- **Architecture-specific nuances:** Although all these entry files define an `_start` label, the setup they perform is tailored to the specific hardware requirements of each architecture. For example, the x86 boot process must handle switching from real mode to protected and long modes, whereas ARM/ARM64 entry code is designed with the ARM boot protocol in mind.
+
+- **Compressed vs. uncompressed kernels:** Some architectures (like x86 and MIPS) use a compressed kernel image. This means that early boot files such as `head_64.S` (for x86_64) or `arch/mips/boot/compressed/head.S` handle decompression before transferring control to the main kernel entry (which eventually calls `start_kernel` in C).
+
+- **Transition to C code:** Later in each architecture’s initialization sequence, after minimal hardware setup is completed in assembly, control is transferred to C, typically beginning with a function like `start_kernel` in the common file `init/main.c`.
+
+Exploring these files can offer fascinating insights into how Linux is structured 
+to support a wide variety of hardware from embedded devices to high-end servers. 

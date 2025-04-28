@@ -85,16 +85,14 @@ static void __draw_button_mark_by_wid( int wid, int button_number )
         return;
     }
 
+    // IN: l, t, w, h, color, fill or not, rop flags.
     rectBackbufferDrawRectangle ( 
         (w->absolute_x +3), 
         (w->absolute_y +4), 
         (w->width -8), 
         2, 
-        COLOR_RED, 
-        FALSE,  //refresh
-        0 );    //rop_flags
+        COLOR_RED, TRUE, 0 );
 }
-
 
 // WORKER
 // Paint button borders.

@@ -1,15 +1,12 @@
 // rect.h
-
+// Created by Fred Nora.
 
 #ifndef __RECT_H
 #define __RECT_H    1
 
 
-/*
- * gws_rect_d:
- *     Estrutura para gerenciamento de retângulos.
- *     Um retângulo pertence à uma janela.
- */
+// Structure for a rectangle.
+// A rectangle belongs to a window.
 struct gws_rect_d 
 {
     //object_type_t objectType;

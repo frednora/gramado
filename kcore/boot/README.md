@@ -1,7 +1,10 @@
 # boot - Gramado Boot Loader
 
 ```
-Gramado Boot Loader.
+Gramado Boot Loader. 
+This is an external boot loader. It's not part of the kernel image.
+It's able to load a kernel image, normally called KERNEL.BIN.
+This is our own GRUB. 
 ```
 
 ## The boot loader
