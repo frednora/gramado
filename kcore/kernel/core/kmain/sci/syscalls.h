@@ -13,9 +13,8 @@
 // We can change these names,
 // Maybe startinng with Syscall_xxx
 
-#ifndef  __GRAMADO_SYSCALLS_H
-#define  __GRAMADO_SYSCALLS_H    1
-
+#ifndef  __SCI_SYSCALLS_H
+#define  __SCI_SYSCALLS_H    1
 
 //
 // == prototypes ====
@@ -60,16 +59,16 @@ void *sys_create_process (
     struct cgroup_d *cg,
     unsigned long res1,          //nothing
     unsigned long priority, 
-    int ppid, 
+    ppid_t ppid, 
     char *name,
     unsigned long iopl );
 
 /* sys.c */
 void *sys_create_thread ( 
     struct cgroup_d *cg,
-    unsigned long init_rip, 
-    unsigned long priority, 
-    int ppid, 
+    unsigned long initial_rip, 
+    unsigned long initial_stack, 
+    ppid_t ppid, 
     char *name );
 
 /* zero/sys/sys.c */

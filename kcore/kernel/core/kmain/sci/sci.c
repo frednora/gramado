@@ -601,15 +601,18 @@ void *sci0 (
 // See: sys.c
 // Cria uma thread que fica no estado INITIALIZED.
 // Outra syscall tem que colocar ela em STANDBY.
+// See: sys.c
+// IN:
+// cg (cgroup), initial rip, ini
     if (number == SCI_SYS_CREATE_THREAD)
     {
-        debug_print("sci0: [FIXME] SCI_SYS_CREATE_THREAD\n");
+        serial_printk("sci0: [72] Create thread\n");
         return (void *) sys_create_thread (
-                            NULL,
-                            arg2,             // init eip
-                            arg3,             // init stack
-                            current_process,  // pid
-                            (char *) a4 );    // name
+                            NULL,                     // cg
+                            arg2,                     // initial rip
+                            arg3,                     // initial stack
+                            (pid_t) current_process,  // ppid
+                            (char *) a4 );            // name
     }
 
 // 73
@@ -637,14 +640,14 @@ void *sci0 (
 
     if (number == SCI_SYS_CREATE_PROCESS)
     {
-        debug_print("sci0: [FIXME] SCI_SYS_CREATE_PROCESS\n");
+        serial_printk("sci0: [73] Create process\n");
         return (void *) sys_create_process ( 
                             NULL,             // cgroup
-                            0,                // Reserved
-                            arg3,             // priority
+                            (unsigned long) 0,     // Reserved
+                            (unsigned long) arg3,  // priority
                             current_process,  // ppid
                             (char *) a2,      // name
-                            RING3 );          // iopl 
+                            (unsigned long) RING3 );          // iopl 
     }
 
 // 74,75,76,77,78,79.

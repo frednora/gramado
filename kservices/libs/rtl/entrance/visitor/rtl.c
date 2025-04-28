@@ -679,11 +679,25 @@ int rtl_create_empty_directory(char *dir_name)
 
 void *rtl_create_process(const char *file_name)
 {
+// #todo
+// We can have more parameters in the function.
+
     char pName[32];
+    size_t StringSize=0;
+    unsigned long Priority = 3;  //#bugbug #todo
+    unsigned long long_rv = 0;
 
     debug_print("rtl_create_process:\n #todo\n");
-    //return NULL;
-    
+
+// Name support
+    if ((void*)file_name == NULL)
+        return NULL;
+    memset(pName,0,32);
+    StringSize = (size_t) strlen(file_name);
+    if (StringSize < 0)
+        return NULL;
+    if (StringSize >= 32)
+        return NULL;
     strncpy(pName,file_name,16);
     pName[17] = 0;
     pName[31] = 0;
@@ -692,11 +706,16 @@ void *rtl_create_process(const char *file_name)
 // Retorna o ponteiro para uma estrutura de processo
 // que esta em ring0, ou NULL.
 
-    return (void*) gramado_system_call( 
-        73, 
-        (unsigned long) &pName[0],
-        3,  //priority
-        0 );
+    long_rv = 
+        (unsigned long) gramado_system_call( 
+            (unsigned long) 73,         // Syscall number
+            (unsigned long) &pName[0],  // Process name
+            (unsigned long) Priority,   // Process priority
+            (unsigned long) 0 );        // ? #todo
+
+// #todo
+// We need to work on that return value.
+    return (void*) long_rv;
 }
 
 int rtl_start_process(void *process)

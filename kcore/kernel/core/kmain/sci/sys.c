@@ -104,7 +104,7 @@ void *sys_create_process (
     struct cgroup_d *cg,
     unsigned long res1,          //nothing
     unsigned long priority, 
-    int ppid, 
+    ppid_t ppid, 
     char *name,
     unsigned long iopl ) 
 {
@@ -187,14 +187,14 @@ void *sys_create_process (
         (void *) create_process ( 
                      NULL,  // cg #todo: cgroup came from parameters.
                      (unsigned long) CONTROLTHREAD_BASE, 
-                     PRIORITY_NORMAL_THRESHOLD, 
-                     (int) current_pid, 
+                     (unsigned long) PRIORITY_NORMAL_THRESHOLD, 
+                     (ppid_t) current_pid, 
                      (char *) NewName, 
-                     RING3, 
-                     (unsigned long ) pml4_va,
-                     (unsigned long ) kernel_mm_data.pdpt0_va,
-                     (unsigned long ) kernel_mm_data.pd0_va,
-                     ProcessPersonality );
+                     (unsigned int) RING3, 
+                     (unsigned long) pml4_va,
+                     (unsigned long) kernel_mm_data.pdpt0_va,
+                     (unsigned long) kernel_mm_data.pd0_va,
+                     (int) ProcessPersonality );
 
     if ((void*) new == NULL){
         printk("sys_create_process: new\n");
@@ -217,54 +217,57 @@ fail:
     return NULL;
 }
 
-/*
- * sys_create_thread:
- *     Create thread system interface.
- */
 
-// 72 - Create thread.
+// sys_create_thread:
+// [72] - Create thread.
 // #todo: 
-// Enviar os argumentos via buffer.
-// #todo: We can create threads not just in the current process,
-// but also in some other process. Privilegies are necessary.
+// + Enviar os argumentos via buffer.
+// + We can create threads not just in the current process,
+// but also in some other process. Privilegies 
+// will be necessary.
+// IN: ?
+// OUT: ?
 void *sys_create_thread ( 
     struct cgroup_d *cg,
-    unsigned long init_rip, 
-    unsigned long priority, 
-    int ppid, 
+    unsigned long initial_rip, 
+    unsigned long initial_stack, 
+    ppid_t ppid, 
     char *name )
 {
     struct thread_d  *Thread;
-
-    serial_printk("sys_create_thread: {%s}\n",name);
-
-// #todo:
-// Filtros, para ponteiros NULL.
-    
-    if (init_rip == 0){
-        printk ("sys_create_thread: [FAIL] init_rip\n");
-        return NULL;
-    }
-
-// #test
-// Usermode buffer validation
-// #todo: Check against more limits.
-    if (init_rip < CONTROLTHREAD_BASE){
-        panic ("sys_create_thread: init_rip\n");
-        return NULL;
-    }
-
 // #todo
 // Temos que checar o iopl do processo que chamou
 // e a thread tem que estar no mesmo ring.
-    int iopl = RING3;
+    const unsigned int iopl = RING3;
 
-// #bugbug
-// isso significa que a tid0 só pode criar threads
-// que vão rodar em ring0 ?
+    serial_printk("sys_create_thread:\n");
 
-    //if ( ppid = TID0_TID )
-        //iopl = RING0;
+// Parameters:
+    //if ((void*) cg == NULL){
+        //serial_printk ("sys_create_thread: Invalid cg\n");
+        //goto fail;
+    //}
+// #todo: Check against more limits.
+    if (initial_rip == 0){
+        serial_printk ("sys_create_thread: Invalid rip\n");
+        goto fail;
+    }
+    if (initial_rip < CONTROLTHREAD_BASE){
+        serial_printk ("sys_create_thread: Invalid rip\n");
+        goto fail;
+    }
+    //if (initial_stack == 0){
+        //serial_printk ("sys_create_thread: Invalid stack\n");
+        //goto fail;
+    //}
+    //if (ppid < 0){
+        //serial_printk ("sys_create_thread: Invalid ppid\n");
+        //goto fail;
+    //}
+    if ((void*) name == NULL){
+        serial_printk ("sys_create_thread: Invalid name\n");
+        goto fail;
+    }
 
 // Create thread.
 
@@ -275,15 +278,15 @@ void *sys_create_thread (
     Thread = 
         (struct thread_d *) create_thread ( 
                                 cg,           // cgroup  
-                                init_rip, 
-                                priority, 
-                                ppid, 
-                                name,
-                                iopl ); 
+                                (unsigned long) initial_rip, 
+                                (unsigned long) initial_stack, 
+                                (ppid_t) ppid, 
+                                (char *) name,
+                                (unsigned int) iopl ); 
 
     if ((void *) Thread == NULL){
-        debug_print("sys_create_thread: [FAIL] Thread\n");
-        return NULL;
+        debug_print("sys_create_thread: on create_thread()\n");
+        goto fail;
     }
 
     Thread->saved = FALSE;
@@ -294,7 +297,11 @@ void *sys_create_thread (
 // Put the state in STANDBY.
     //SelectForExecution ( (struct thread_d *) Thread );
 
+// #todo:
+// Why is it returning a ring0 pointer to user space?
     return (struct thread_d *) Thread;
+fail:
+    return NULL;
 }
 
 // Exit thread.

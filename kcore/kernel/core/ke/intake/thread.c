@@ -1217,7 +1217,7 @@ struct thread_d *create_thread (
     struct cgroup_d  *cg,
     unsigned long init_rip, 
     unsigned long init_stack, 
-    pid_t pid, 
+    ppid_t pid, 
     const char *name,
     unsigned int cpl )
 {
