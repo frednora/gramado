@@ -18,16 +18,16 @@ BASE = $(DISTROS)/base00
 ## =================================
 ## BACK-END:
 # Kernel Core: Boot, kernel and ring 0 modules.
-DEP_L0 = kcore
+DEP_L0 = coreos/kcore
 # Kernel Services: Init process, ring 3 drivers and ring 3 servers.
-DEP_L1 = kservices
+DEP_L1 = coreos/services
 
 ## =================================
 ## FRONT-END:
 # Shell Pre-UI: The display server.
-DEP_L2 = preshell
+DEP_L2 = de/preshell
 # Shell UI: Client-side GUI applications.
-DEP_L3 = shell
+DEP_L3 = de/shell
 
 # --------------------------
 # Display servers

@@ -6,17 +6,15 @@ Gramado OS. This project includes basicaly the bootloader, the core kernel and t
 > We're still creating the documentation for this distro.
 
 ```
-distros/ - Building full distributions into this directory.
-docs/    - The documentation.
+Core os components:
 
 kcore/      - Kernel Core: 
               Boot, kernel and ring 0 modules.
 
-kservices/  - Kernel Services: 
+services/   - Kernel Services: 
            Init process, ring 3 drivers and ring 3 servers.
-           (KERNEL CONSOLE SUBSYSTEM applications)
-           (pubsh.bin runs on PUBTERM SUBSYSTEM)
-           (shell.bin runs on TERMINAL SUBSYSTEM)
+
+Desktop environment components:
 
 pre-shell/ - Shell Pre-UI:
            The display server.
@@ -27,6 +25,15 @@ shell/    - Shell UI:
            Posix-like commands to run on virtual terminals.
            Client-side GUI applications.
            (DS00 SUBSYSTEM applications)
+           (KERNEL CONSOLE SUBSYSTEM applications)
+           (pubsh.bin runs on PUBTERM SUBSYSTEM)
+           (shell.bin runs on TERMINAL SUBSYSTEM)
+
+Distro and documentation:
+
+distros/ - Building full distributions into this directory.
+docs/    - The documentation.
+
 ```
 
 # TODO

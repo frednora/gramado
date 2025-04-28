@@ -1,17 +1,8 @@
-
- Main folders for Gramado OS.
-
-
-```
-Core os components:
-
-kcore/      - Kernel Core: 
-              Boot, kernel and ring 0 modules.
-
-services/   - Kernel Services: 
-           Init process, ring 3 drivers and ring 3 servers.
+# de - Desktop Environment
 
 Desktop environment components:
+
+```
 
 pre-shell/ - Shell Pre-UI:
            The display server.
@@ -26,11 +17,4 @@ shell/    - Shell UI:
            (pubsh.bin runs on PUBTERM SUBSYSTEM)
            (shell.bin runs on TERMINAL SUBSYSTEM)
 
-Distro and documentation:
-
-distros/ - Building full distributions into this directory.
-docs/    - The documentation.
-
 ```
-
-
