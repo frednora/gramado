@@ -6433,9 +6433,8 @@ void stdioInitialize(void)
 // ===============
 // stdin
     debug_print ("stdioInitialize: [1] stdin\n");  
-    stdin = (FILE *) malloc( sizeof(FILE) );
-    if ((void*) stdin == NULL)
-    {
+    stdin = (FILE *) malloc(sizeof(FILE));
+    if ((void*) stdin == NULL){
         debug_print ("stdioInitialize: stdin fail\n");
         //printf      ("stdioInitialize: stdin fail\n");
         exit(1);
@@ -6445,9 +6444,8 @@ void stdioInitialize(void)
 // ===============
 // stdout
     debug_print ("stdioInitialize: [2] stdout\n");  
-    stdout = (FILE *) malloc( sizeof(FILE) );
-    if ((void*) stdout == NULL)
-    {
+    stdout = (FILE *) malloc(sizeof(FILE));
+    if ((void*) stdout == NULL){
         debug_print ("stdioInitialize: stdout fail\n");
         //printf ("stdioInitialize: stdout fail\n");
         exit(1);
@@ -6457,9 +6455,8 @@ void stdioInitialize(void)
 // ===============
 // stderr
     debug_print ("stdioInitialize: [3] stderr\n");  
-    stderr = (FILE *) malloc( sizeof(FILE) );
-    if ((void*) stderr == NULL)
-    {
+    stderr = (FILE *) malloc(sizeof(FILE));
+    if ((void*) stderr == NULL){
         debug_print ("stdioInitialize: stderr fail\n");
         //printf ("stdioInitialize: stderr fail\n");
         exit(1);
@@ -6479,7 +6476,7 @@ void stdioInitialize(void)
 // ========
 // stdin
     stdin->_base = (char *) malloc(BUFSIZ);
-    if ( (void*) stdin->_base == NULL ){
+    if ((void*) stdin->_base == NULL){
         debug_print ("stdioInitialize: stdin->_base fail\n");
         //printf ("stdioInitialize: stdin->_base fail\n");
         exit(1);
@@ -6494,7 +6491,7 @@ void stdioInitialize(void)
 // ========
 // stdout
     stdout->_base = (char *) malloc(BUFSIZ);
-    if ( (void*) stdout->_base == NULL ){
+    if ((void*) stdout->_base == NULL){
         debug_print ("stdioInitialize: stdout->_base fail\n");
         //printf ("stdioInitialize: stdout->_base fail\n");
         exit(1);
@@ -6509,7 +6506,7 @@ void stdioInitialize(void)
 // ========
 // stderr   
     stderr->_base = (char *) malloc(BUFSIZ);
-    if ( (void*) stderr->_base == NULL ){
+    if ((void*) stderr->_base == NULL){
         debug_print ("stdioInitialize: stderr->_base fail\n");
         //printf ("stdioInitialize: stderr->_base fail\n");
         exit(1);

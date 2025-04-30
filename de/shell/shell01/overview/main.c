@@ -647,6 +647,17 @@ tbProcedure(
             //gws_redraw_window(fd, iconList[1], TRUE);
             //gws_redraw_window(fd, iconList[2], TRUE);
             //gws_redraw_window(fd, iconList[3], TRUE);
+
+            // #test (good)
+            // Async with 4 data
+            // Redraw and show.
+            //gws_async_command2( fd, 2000, 0,
+                //main_window,
+                //NavigationInfo.button00_window,
+                //NavigationInfo.button01_window,
+                //NavigationInfo.button02_window );
+            //draw_separator(fd);
+
             break;
 
         // One button was clicked

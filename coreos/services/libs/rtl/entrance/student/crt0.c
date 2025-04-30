@@ -180,7 +180,7 @@ void crt0(unsigned long rdi)
 
 
 // Gramado Libc initialization
-// see: rtl.c
+// see: visitor/rtl.c
     int c_status = -1;
     c_status = (int) rtl_cinit();
     if (c_status<0){
@@ -213,10 +213,15 @@ void crt0(unsigned long rdi)
 // #test
 // Reading command line from a file.
 
-    char buffer[4096];
-    memset(buffer, 0, 4096);
+    //static char buffer[4096];
+    //memset(buffer, 0, 4096);
+
+    static char buffer[512];
+    memset(buffer, 0, 512);
 
 // Copy
+// #important: Reading only 512 bytes, respecting
+// the limitation we have yet.
     int n=0;
     n = read(
             fileno(stdin),

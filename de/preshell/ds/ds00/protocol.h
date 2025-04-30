@@ -21,11 +21,7 @@
 // When we're using the AF_UNIX family of address;
 #define GRAMADO_UNIX_PATH  "/DEV/GRAMADO"
 
-
 // --------------
-
-// Um pacote tem o tamanho total de 512 bytes.
-#define sz_gPacket  (512)
 
 // Um request tem o tamanho total de 368 bytes.
 // ((14*8)+256)

@@ -187,6 +187,8 @@ const char *app_taskbar = "#taskbar.bin";  // Taskbar GUI app.
 // == Private functions: Prototypes ========
 //
 
+static int __worker_redraw_window_by_id(int id, unsigned long flags);
+
 // #test
 // Compositor thread.
 // Actually We don't want threads here.
@@ -1139,6 +1141,15 @@ int serviceAsyncCommand(void)
         if ((void*) active_window != NULL)
             maximize_window(active_window);
         break;
+    
+    case 2000:
+        yellow_status("2000: ASYNC Multiple data");
+        // Redraw and show.
+        //__worker_redraw_window_by_id((data1 & 0xFFFFFFFF),TRUE);
+        //__worker_redraw_window_by_id((data2 & 0xFFFFFFFF),TRUE);
+        //__worker_redraw_window_by_id((data3 & 0xFFFFFFFF),TRUE);
+        //__worker_redraw_window_by_id((data4 & 0xFFFFFFFF),TRUE);
+        break;
 
     // ...
 
@@ -1881,33 +1892,15 @@ int serviceDrawButton(void)
 // Redraw window.
 // It will invalidate the window, and it will need to be flushed
 // into the frame buffer.
-int serviceRedrawWindow(void)
+static int __worker_redraw_window_by_id(int id, unsigned long flags)
 {
-// Business Logic:
 // Redraw a window. (Repaint).
 
-    unsigned long *message_address = (unsigned long *) &__buffer[0];
+    //unsigned long *message_address = (unsigned long *) &__buffer[0];
     struct gws_window_d *window;
-    int window_id = -1;
+    int window_id = (int) id;
     //int msg_code = 0;
-    unsigned long flags = 0;
-
-    // #debug
-    // server_debug_print ("serviceRedrawWindow:\n");
-
-// #todo: (types)
-// Get wid, msg code and flag.
-    window_id  = message_address[0];  // window id 
-    //msg_code   = message_address[1];  // message code
-    flags      = message_address[2];  // flags
-    //??       = message_address[3];  // nothing 
-
-// #todo
-//  Not tested yet.
-    //if ( msg_code <= 0 ){
-    //    server_debug_print ("serviceRedrawWindow:\n");
-    //    goto fail;
-    //}
+    unsigned long Flags = flags;
 
 // Window ID
     window_id = (int) (window_id & 0xFFFF);
@@ -1954,7 +1947,7 @@ int serviceRedrawWindow(void)
 // TRUE = show the window now. FALSE=do not show the window.
     redraw_window ( 
         (struct gws_window_d *) window, 
-        (unsigned long) flags );
+        (unsigned long) Flags );
 
 // Invalidate
 // Now the compositor can refresh it.
@@ -1963,6 +1956,29 @@ int serviceRedrawWindow(void)
     return 0;
 fail:
     return (int) (-1);
+}
+
+int serviceRedrawWindow(void)
+{
+    unsigned long *message_address = (unsigned long *) &__buffer[0];
+    struct gws_window_d *window;
+    int window_id = -1;
+    //int msg_code = 0;
+    unsigned long flags = 0;
+
+    // #todo: (types)
+    // Get wid, msg code and flag.
+    window_id  = message_address[0];  // window id 
+    //msg_code   = message_address[1];  // message code
+    flags      = message_address[2];  // flags
+    //??       = message_address[3];  // nothing 
+
+    if (window_id<0)
+        return -1;
+
+    __worker_redraw_window_by_id(window_id,flags);
+
+    return 0;
 }
 
 // 2021

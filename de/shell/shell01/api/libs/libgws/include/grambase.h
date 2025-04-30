@@ -71,7 +71,7 @@ void gws_refresh_yield2 (int fd, int window);
 void gws_yield_n_times (unsigned long n);
 
 void *gws_create_thread ( 
-    unsigned long init_eip, 
+    unsigned long init_rip, 
     unsigned long init_stack, 
     char *name );
 

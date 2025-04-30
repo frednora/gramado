@@ -76,9 +76,14 @@ fail:
 // File read.
 // It's called by sys_read.
 // Copia à partir do início do arquivo.
-// // OUT: number of read bytes.
+// OUT: number of read bytes.
 int file_read_buffer( file *f, char *buffer, int len )
 {
+// Limits:
+// We're reading from the file structure,
+// The buffer in the file structure is BUFSIZ (1024 for now)
+// at minimum.
+
     char *p;
     int Count=0;
 
@@ -164,6 +169,8 @@ int file_read_buffer( file *f, char *buffer, int len )
 // =================================
 // Regular file, tty, iobuffer.
 // Nesse caso a leitura tem que respeitar os offsets e limites.
+// #todo:
+// We can create an IF for each one of these types.
     if ( f->____object == ObjectTypeFile ||
          f->____object == ObjectTypeTTY  ||
          f->____object == ObjectTypeIoBuffer)
@@ -211,7 +218,7 @@ int file_read_buffer( file *f, char *buffer, int len )
         // Se o offset de leitura for maior que
         // o offset de escrita, então temos que esperar.
         // #bugbug: mas talvez isso não seja assim para pipe.
-        if ( f->_r > f->_w )
+        if (f->_r > f->_w)
         {
             // EOF
             printk ("file_read_buffer: f->_r > f->_w\n");
@@ -296,8 +303,13 @@ int file_read_buffer( file *f, char *buffer, int len )
             //return -1;
         }
 
-        //---
-        memcpy( (void *) buffer, (const void *) f->_p, Count ); 
+        // Copy from the address pointed by the file structure
+        // to a given ring3 or ring0 buffer.
+        // The file structure has the limit of BUFSIZ.
+        memcpy (
+            (void *) buffer, 
+            (const void *) f->_p, 
+            Count ); 
 
         // Atualizamos o ponteiro de trabalho
         f->_p = (f->_p + Count);
@@ -543,8 +555,16 @@ ssize_t
 __read_imp (
     int fd,
     char *ubuf,       //#todo: use 'void *'
-    size_t count )    //#todo: use 'size_t'.
+    size_t count )
 {
+// Limits:
+// #test
+// Probably we can extand the limit to BUFSIZ,
+// Because this is the limit used by the sys_open().
+// #test: 
+// So, let's try to accept a user buffer 
+// with the limit up to BUFSIZ.
+
 // #: It needs to be used only as a worker for syscalls.
 // #todo
 // Get the processor pointer
@@ -555,7 +575,8 @@ __read_imp (
 
     ssize_t nbytes=0;
     struct socket_d *s;
-    int ubuf_len=0;
+    //#bugbug: We don't know the size of the user buffer.
+    //size_t ubuf_len=0;  // # Out limit is BUFSIZ
 
 //-----------------------------
     struct process_d *p;
@@ -603,27 +624,42 @@ __read_imp (
     }
 
 // Size of the buffer.
-    ubuf_len = strlen( (const char *) ubuf );
+// #test: Our limit is BUFSIZ (1024) for now.
+    //ubuf_len = strlen((const char *) ubuf);
+    //ubuf_len = sizeof((const char *) ubuf);
 
-//Se a quantidade desejada é maior que o buffer disponível,
-//temos um problema.
-    if (count > ubuf_len){
-        //debug_print ("__read_imp: [FIXME] count too large\n");
-    }
+// The user wants to read more than the size of the 
+// buffer provide by him.
+// Se a quantidade desejada é maior que o buffer disponível.
+    //if (count > ubuf_len)
+    //{
+        //serial_printk ("__read_imp: count=%d ubuf_len=%d\n",
+        //count, ubuf_len );
+        // #test
+        //panic("__read_imp: ubuf is not enough");
+    //}
 
 // Se o buffer disponível é maior que a quantidade desejada
 // então não temos problemas, nem precisamos disso. 
-    if (ubuf_len > count){
-        ubuf_len = count;
-    }
+    //if (ubuf_len > count){
+        //ubuf_len = count;
+    //}
 
 // #fixme: 
 // The buffer is too small.
+// #todo
+// We want a bigger limit for reading,
+// we will read a socke with this routine,
+// use the stadard size for a socket at least.
+// See: SO_SNDBUF and SO_RCVBUF
+// #ps:
+// Actually this routine can be able to read files
+// bigger than a socket.
 
-    if (ubuf_len > 512){
-        debug_print ("__read_imp: [FIXME] limiting ubuf_len\n");
+    //if (ubuf_len > 512){
+        //debug_print ("__read_imp: ubuf_len\n");
         //ubuf_len = 512;
-    }
+    //}
 
 // File
 // Get the object pointer.
@@ -631,14 +667,14 @@ __read_imp (
     fp = (file *) get_file_from_fd(fd);
     if ((void *) fp == NULL)
     {
-        debug_print("__read_imp: fp not open\n");
-        printk     ("__read_imp: fp not open\n");
+        debug_print("__read_imp: fp\n");
+        printk     ("__read_imp: fp\n");
         goto fail; 
     }
 
     if (fp->sync.can_read != TRUE){
-        debug_print("__read_imp: [PERMISSION] Can NOT read the file\n");
-        printk     ("__read_imp: [PERMISSION] Can NOT read the file\n");
+        debug_print("__read_imp: Permission\n");
+        printk     ("__read_imp: Permission\n");
         goto fail; 
     }
 
@@ -758,7 +794,9 @@ __read_imp (
             {
                 //debug_print ("__read_imp: >>>> READ\n");
             
-                // read!
+                // Read from the file structure to the 
+                // user buffer. The limit in the file structure
+                // is BUFSIZ (1024 for now)
                 nbytes = 
                     (ssize_t) file_read_buffer ( 
                                   (file *) fp, 
@@ -852,13 +890,18 @@ RegularFile:
 
         if (fp->_flags & __SRD)
         {
+
+            // Read from the file structure to the 
+            // user buffer. The limit in the file structure
+            // is BUFSIZ (1024 for now)
+
             nbytes = 
                 (ssize_t) file_read_buffer ( 
                               (file *) fp, 
                               (char *) ubuf, 
                               (int) count );
  
-            if (nbytes<=0){
+            if (nbytes <= 0){
                //yield (current_thread);
                goto fail;
             }
@@ -1013,7 +1056,7 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
     ssize_t nbytes=0;
     struct socket_d *s1;
     struct socket_d *s2;
-    int ubuf_len=0;
+    //int ubuf_len=0;  //#bugbug: We don't know the size of the user buffer.
     size_t ncopy=0;
 
     //debug_print("__write_imp: :)\n");
@@ -1064,27 +1107,27 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
 //
 
 // len
-    ubuf_len = strlen((const char *) ubuf);
+    //ubuf_len = strlen((const char *) ubuf);
 
 // Se a quantidade desejada é maior que o buffer disponível.
-    if(count > ubuf_len){
+    //if (count > ubuf_len){
         //debug_print("__write_imp: [FIXME] count too long!\n");
-    }
+    //}
 
 // se o buffer é maior que a quantidade desejada, 
 // então não temos problemas
-    if (ubuf_len > count ){
-        ubuf_len = count;
+    //if (ubuf_len > count ){
+        //ubuf_len = count;
         //debug_print ("__write_imp: [FIXME] Ajusting ubuf_len\n");
-    }
+    //}
 
 // #debug: 
 // limits
 // Um socket tem o tamanho de BUFSIZ.
-    if (ubuf_len > 512){
-        ubuf_len = 512;
-        debug_print ("__write_imp: [FIXME] Ajusting ubuf_len to 512\n");
-    }
+    //if (ubuf_len > 512){
+        //ubuf_len = 512;
+        //debug_print ("__write_imp: [FIXME] Ajusting ubuf_len to 512\n");
+    //}
 
 // File
 // Get the object pointer from the list
@@ -1453,6 +1496,12 @@ __open_imp (
     int flags, 
     mode_t mode )
 {
+// Limits:
+// Probably BUFSIZ (1024 for now) is the limit for this routine.
+// To improve this we need to allocate a bigger buffer 
+// in the file structure.
+// The worker is: do_read_file_from_disk() with the same limit.
+
 // Open a file, or create if is doesn't exist.
 // creat chama open.
 // open tenta ler num arquivo que nao existe?
@@ -1554,6 +1603,7 @@ __open_imp (
 // if the name doesn't have one.
 // This is not what we want for all the cases.
 
+// 
     value = 
         (int) do_read_file_from_disk ( 
                   (char *) pathname_local_copy, 
@@ -3763,6 +3813,11 @@ do_read_file_from_disk (
     int flags, 
     mode_t mode )
 {
+// Limits:
+// Probably BUFSIZ (1024 for now) is the limit for this routine.
+// To improve this we need to allocate a bigger buffer 
+// in the file structure.
+
     int __ret = -1;
     int Status = -1;
 
@@ -4767,6 +4822,7 @@ int fsInit (void)
 // Aloca memória para o buffer.
 // #todo: Define this variable in the top of the body.
 // #bugbug: Chech this size.
+// #todo: Use BUFSIZ as a normal file.
     unsigned long pipe0base = (unsigned long) kmalloc(512);
     if ((void *) pipe0base == NULL){
         panic ("fsInit: pipe0base\n");

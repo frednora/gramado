@@ -52,6 +52,8 @@ static int __check_address_validation(unsigned long address)
 /*
  * fsLoadFile:
  *    It loads a file into the memory.
+ *    Copy from the disk to the memory.
+ *    Probably called by sys_open().
 IN:
     fat_address          = FAT address.
     dir_addresss         = Directory address.
@@ -91,6 +93,10 @@ fsLoadFile (
     unsigned long buffer,
     unsigned long buffer_size_in_bytes )
 {
+// Limits:
+// Remember: This function is already able to load 
+// executables with 200KB or more, just like ds00.
+
     int Status=-1;
     register int i=0;
     int SavedDirEntry = 0;
@@ -132,13 +138,14 @@ fsLoadFile (
     debug_print ("fsLoadFile:\n");
     //printk    ("fsLoadFile:\n");
 
+// Parameters:
 // Fat address and dir address.
 // Vectors of 'short'
     if (fat_address == 0){
-        panic("fsLoadFile: [FAIL] fat_address\n");
+        panic("fsLoadFile: fat_address\n");
     }
     if (dir_address == 0){
-        panic("fsLoadFile: [FAIL] dir_address\n");
+        panic("fsLoadFile: dir_address\n");
     }
 
 // Addresses
@@ -148,7 +155,7 @@ fsLoadFile (
 // #debug
 // We only support one address for now.
     if (fat_address != VOLUME1_FAT_ADDRESS){
-        panic("fsLoadFile: Not valid fat address\n");
+        panic("fsLoadFile: Not valid FAT address\n");
     }
 
 // Initialize variables.
@@ -188,6 +195,8 @@ fsLoadFile (
     if (BufferSizeInBytes == 0){
         panic("fsLoadFile: BufferSizeInBytes = 0\n");
     }
+    // #test
+    // 2048 KB.
     if ( BufferSizeInBytes > (512*4096) ){
         panic("fsLoadFile: BufferSizeInBytes limits\n");
     }
@@ -291,16 +300,16 @@ fsLoadFile (
 // #bugbug: Is this a problem?
     if (FileSize == 0)
     {
-        debug_print("fsLoadFile: [FIXME] FileSize\n");
-        printk     ("fsLoadFile: [FIXME] FileSize %d\n", FileSize);
+        debug_print("fsLoadFile: FileSize\n");
+        printk     ("fsLoadFile: FileSize %d\n", FileSize);
         //goto fail;
     }
 
 // The file size can't be bigger than the buffer size.
     if (FileSize >= BufferSizeInBytes)
     {
-        debug_print("fsLoadFile: [FIXME] Buffer Overflow\n");
-        printk("fsLoadFile: [FIXME] FileSize %d BufferSizeInBytes %d\n",
+        debug_print("fsLoadFile: Buffer Overflow\n");
+        printk     ("fsLoadFile: FileSize %d BufferSizeInBytes %d\n",
             FileSize, BufferSizeInBytes );
         goto fail;
     }
@@ -461,7 +470,6 @@ __loop_next_entry:
 		//Nothing.
     };
  */
-
 
 // #todo
 // Poderia ter uma versão dessa função para ler
@@ -1350,6 +1358,9 @@ fs_load_image(
     const char *filename, 
     unsigned long image_va )
 {
+// Limits:
+// Remember: This function is already able to load 
+// executables with 200KB or more, just like ds00.
 
 // #todo:
 // Explain better all these variables.

@@ -422,7 +422,6 @@ ssize_t sendmsg (int sockfd, const struct msghdr *msg, int flags)
     return -1;
 }
 
-
 // recv:
 ssize_t 
 recv ( 
@@ -432,19 +431,18 @@ recv (
     int flags )
 {
 
-    if (sockfd<0){
+    if (sockfd < 0){
         errno = EBADF;
         return (ssize_t) (-1);
     }
 
-   return (ssize_t) read( sockfd, (const void *) buf, len );
+    return (ssize_t) read( sockfd, (const void *) buf, len );
 
     // #todo: Usar esse.
     //return (ssize_t) recvfrom ( (int) sockfd, 
         //(void *) buf, (size_t) len, (int) flags,
         //(struct sockaddr *) src_addr, (socklen_t *) addrlen );
 }
-
 
 ssize_t 
 recvfrom ( 
@@ -455,7 +453,7 @@ recvfrom (
     struct sockaddr *src_addr, 
     socklen_t *addrlen )
 {
-    if(sockfd<0)
+    if (sockfd < 0)
     {
         errno = EBADF;
         return (ssize_t) -1;
@@ -464,10 +462,9 @@ recvfrom (
     return (ssize_t) read( sockfd, (const void *) buf, len );
 }
 
-
 ssize_t recvmsg (int sockfd, struct msghdr *msg, int flags)
 {
-    if(sockfd<0)
+    if (sockfd < 0)
     {
         errno = EBADF;
         return (ssize_t) -1;
@@ -476,7 +473,6 @@ ssize_t recvmsg (int sockfd, struct msghdr *msg, int flags)
     debug_print ("recvmsg: [TODO]\n");
     return -1;
 }
-
 
 int 
 getpeername ( 

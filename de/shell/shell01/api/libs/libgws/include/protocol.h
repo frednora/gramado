@@ -4,6 +4,18 @@
 #ifndef  __LIBGWS_PROTOCOL_H
 #define  __LIBGWS_PROTOCOL_H    1
 
+// --------------
+
+// Um request tem o tamanho total de 368 bytes.
+// ((14*8)+256)
+// 112+256
+#define sz_gReq     (368)
+
+// Um reply tem o tamanho total de 368 bytes.
+// ((14*8)+256)
+// 112+256
+#define sz_gRep     (368)
+
 
 //
 // Request

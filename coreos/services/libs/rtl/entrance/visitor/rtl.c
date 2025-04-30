@@ -2449,10 +2449,9 @@ rtl_default_procedure(
 // Called by crt0.c
 int rtl_cinit(void)
 {
-// Initialize heap support.
-// See: 
-// stdlib/stdlib.c
 
+// Initialize heap support.
+// See: stdlib.c
     int rt_status = -1;  //fail
     rt_status = (int) stdlibInitializeRT();
     if (rt_status != 0){
@@ -2464,10 +2463,9 @@ int rtl_cinit(void)
     // #debug: put char
     //gramado_system_call(65,'2',0,0);
 
+// Initialize the standard stream support.
 // return void.
-// See: 
-// stdio/stdio.c
-
+// See: stdio.c
     stdioInitialize();
 
     return (int) rt_status;

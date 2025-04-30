@@ -95,6 +95,11 @@ sys_open(
     int flags, 
     mode_t mode )
 {
+// Limits:
+// Probably BUFSIZ (1024 for now) is the limit for this routine.
+// To improve this we need to allocate a bigger buffer 
+// in the file structure.
+
     if ((void*) pathname == NULL)
         return (int) -EFAULT;  // Bad address. Is it the right error code?
     if (*pathname == 0)
@@ -853,7 +858,7 @@ int sys_create_empty_file(const char *file_name)
 // (FileSizeInBytes/512)
     int NumberOfSectors = 2;
 // How many bytes.
-    int FileSizeInBytes = BUFSIZ; //512 * 4;  //1014
+    int FileSizeInBytes = BUFSIZ;  // 1024 for now.
 // String inside the new file.
     int UseStringForDebug = TRUE;
 
@@ -964,7 +969,7 @@ int sys_create_empty_directory(const char *dir_name)
 // We need a buffer in another place.
     char buffer[BUFSIZ];  // 1024
     int number_of_sectors = 2;
-    int size_in_bytes = BUFSIZ; //512*4;  //512; 
+    int size_in_bytes = BUFSIZ; // (1024 for now)
 
     debug_print ("sys_create_empty_directory:\n");
     printk      ("sys_create_empty_directory:\n");

@@ -610,19 +610,23 @@ go_ahead:
 // ou quando pegamos a próxima na lista.
 
     TargetThread = (void *) currentq;
-    if ((void *) TargetThread == NULL){
+    if ((void *) TargetThread == NULL)
+    {
         debug_print ("ts: Struct ");
         current_thread = (tid_t) psScheduler();
         goto ZeroGravity;
     }
-    if ( TargetThread->used != TRUE || TargetThread->magic != 1234 ){
+    if ( TargetThread->used != TRUE || TargetThread->magic != 1234 )
+    {
         debug_print ("ts: val ");
         current_thread = (tid_t) psScheduler();
         goto ZeroGravity;
     }
 // Not ready?
-    if (TargetThread->state != READY){
-        debug_print ("ts: state ");
+// Some thread in the round changed its state?
+    if (TargetThread->state != READY)
+    {
+        //debug_print ("ts: state ");
         current_thread = (tid_t) psScheduler();
         goto ZeroGravity;
     }

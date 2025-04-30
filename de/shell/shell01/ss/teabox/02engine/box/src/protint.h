@@ -11,9 +11,6 @@
 #define __GWS_PROTOCOL  1
 
 
-// Um pacote tem o tamanho total de 512 bytes.
-#define __sz_gPacket  (512)
-
 // Um request tem o tamanho total de 368 bytes.
 // ((14*8)+256)
 // 112+256
@@ -52,7 +49,6 @@ struct _gReq_Int
     unsigned long ul11;
     unsigned long ul12;
     unsigned long ul13;
-
 
 // Strings or some other data.
     unsigned char data[256];

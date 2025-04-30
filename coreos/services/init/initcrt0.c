@@ -214,14 +214,19 @@ void crt0(unsigned long rdi)
 // #test
 // Reading command line from a file.
 
-    char buffer[4096];
-    memset(buffer, 0, 4096);
+    //static char buffer[4096];
+    //memset(buffer, 0, 4096);
+
+    static char buffer[BUFSIZ];
+    memset(buffer, 0, BUFSIZ);
 
 // Read from file to the buffer.
+// #important: Reading only 512 bytes, respecting
+// the limitation we have yet.
     int n=0;
-    const size_t NumberOfBytes = 512;
+    const size_t NumberOfBytes = BUFSIZ;
     n = (int) read( fileno(stdin), buffer, NumberOfBytes );
-    buffer[511] = 0;
+    buffer[BUFSIZ-1] = 0;
 
     //if(n<=0){
         //#bugbug: We can't do this
