@@ -494,8 +494,8 @@ struct pci_device_d
 
     unsigned char max_latency;
     unsigned char min_grant;
-    unsigned char irq_pin;     //??
-    unsigned char irq_line;    //Qual IRQ será usada pelo PIC.
+    unsigned char irq_line;    // Qual IRQ será usada pelo PIC.
+    unsigned char irq_pin;     // ??
 
 // Driver
 // Estrutura para o driver do dispositivo.

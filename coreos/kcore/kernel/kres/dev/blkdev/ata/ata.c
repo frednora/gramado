@@ -1551,7 +1551,7 @@ static int __ata_initialize(int ataflag)
         goto fail;
     }
 
-//#debug
+    //#debug
     // printk (": ATA device found\n");
     // printk ("[ Vendor=%x Device=%x ]\n", PCIDeviceATA->Vendor, PCIDeviceATA->Device );
 
@@ -1561,8 +1561,13 @@ static int __ata_initialize(int ataflag)
 // Nessa hora configuramos os valores na estrutura 'ata_port.xxx'
 // see: atapci.c
 
+    // #important
+    // The PCI structure.
+    // Fill the structure PCIDeviceATA with all the information we need.
+    // See: ataci.c
+    printk("Getting PCI into for PCIDeviceATA\n");
     Value = 
-        (unsigned long) atapciSetupMassStorageController( (struct pci_device_d*) PCIDeviceATA );
+        (unsigned long) atapciSetupMassStorageController((struct pci_device_d*) PCIDeviceATA);
 
     if (Value == PCI_MSG_ERROR){
         printk ("__ata_initialize: Error Driver [%x]\n", Value );

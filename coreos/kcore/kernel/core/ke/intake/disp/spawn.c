@@ -66,8 +66,9 @@ __spawn_enter_kernelmode(
 // #todo: This feature is suspended.
 
 // This is the entry point of the new thread
-    unsigned long entry = (unsigned long) entry_va;
-    unsigned long rsp0  = (unsigned long) rsp0_va;
+    unsigned long EntryPoint = (unsigned long) entry_va;
+    unsigned long RING0_RSP  = (unsigned long) rsp0_va;
+    int fOption1 = TRUE;
 
     // #debug
     //printk("rsp0: %x \n",rsp0);
@@ -79,25 +80,56 @@ __spawn_enter_kernelmode(
         asm volatile ("outb %al, $0x20 \n");
     }
 
-// #todo
-// We need to review the stack frame for ring0
-// only for ring 0 threads with iopl 0.
 
+// #todo
+// Let's have more options here.
+// This way can setup the register in a personalized way.
+    if (fOption1 == TRUE){
+
+    // #todo
+    // We need to review the stack frame for ring0
+    // only for ring 0 threads with iopl 0.
+    // Interrupts enabled for the thread that is not the first.
     asm volatile ( 
         " movq $0, %%rax  \n" 
         " mov %%ax, %%ds  \n" 
         " mov %%ax, %%es  \n" 
         " mov %%ax, %%fs  \n" 
         " mov %%ax, %%gs  \n"
-        " movq %0, %%rax  \n" 
-        " movq %1, %%rsp  \n" 
+        " movq %0, %%rax  \n"  // entry
+        " movq %1, %%rsp  \n"  // rsp0
         " movq $0, %%rbp  \n" 
-        " pushq $0x10     \n"  
-        " pushq %%rsp     \n" 
-        " pushq $0x0202   \n"  // Interrupts enabled for the thread that is not the first.
-        " pushq $0x8      \n" 
-        " pushq %%rax     \n" 
-        " iretq           \n" :: "D"(entry), "S"(rsp0) );
+        " pushq $0x10     \n"  // SS
+        " pushq %%rsp     \n"  // RSP
+        " pushq $0x0202   \n"  // Stack frame: RFLAGS
+        " pushq $0x8      \n"  // Stack frame: CS
+        " pushq %%rax     \n"  // Stack frame: RIP
+        " iretq           \n" :: "D"(EntryPoint), "S"(RING0_RSP) );
+
+    // } else if (...) {
+    } else {
+
+    // #todo
+    // We need to review the stack frame for ring0
+    // only for ring 0 threads with iopl 0.
+    // Interrupts enabled for the thread that is not the first.
+    asm volatile ( 
+        " movq $0, %%rax  \n" 
+        " mov %%ax, %%ds  \n" 
+        " mov %%ax, %%es  \n" 
+        " mov %%ax, %%fs  \n" 
+        " mov %%ax, %%gs  \n"
+        " movq %0, %%rax  \n"  // entry
+        " movq %1, %%rsp  \n"  // rsp0
+        " movq $0, %%rbp  \n" 
+        " pushq $0x10     \n"  // SS
+        " pushq %%rsp     \n"  // RSP
+        " pushq $0x0202   \n"  // Stack frame: RFLAGS
+        " pushq $0x8      \n"  // Stack frame: CS
+        " pushq %%rax     \n"  // Stack frame: RIP
+        " iretq           \n" :: "D"(EntryPoint), "S"(RING0_RSP) );
+
+    };
 
 // Paranoia
     PROGRESS("__spawn_enter_kernelmode: -- iretq fail ----\n");
@@ -107,45 +139,72 @@ __spawn_enter_kernelmode(
 // ------------------------
 // RING 3:
 // Do not check parameters.
+// This is the entry point of the new thread
+// Probably created by a ring 3 process.
+// This is the stack pointer for the ring 3 thread.
+// Probably given by a ring 3 process.
 void 
 __spawn_enter_usermode( 
     int eoi,                 // do we need eoi ? TRUE or FALSE. 
     unsigned long entry_va,  // Entry point
     unsigned long rsp3_va )  // Stack pointer.
 {
-// Flying high!
-
-// This is the entry point of the new thread
-// Probably created by a ring 3 process.
-    unsigned long entry = (unsigned long) entry_va;
-
-// This is the stack pointer for the ring 3 thread.
-// Probably given by a ring 3 process.
-    unsigned long rsp3  = (unsigned long) rsp3_va;
+    unsigned long EntryPoint = (unsigned long) entry_va;
+    unsigned long RING3_RSP  = (unsigned long) rsp3_va;
+    int fOption1 = TRUE;
 
     if (eoi == TRUE){
         asm ("movb $0x20, %al \n");
         asm ("outb %al, $0x20 \n");
     }
 
-// #bugbug
-// Only for ring 3 with iopl 3. weak protection.
+// #todo
+// Let's have more options here.
+// This way can setup the register in a personalized way.
+    if (fOption1 == TRUE){
 
+    // #bugbug
+    // Only for ring 3 with iopl 3. weak protection.
+    // 0x3202: Interrupts enabled for the thread that is not the first.
     asm volatile ( 
         " movq $0, %%rax  \n" 
         " mov %%ax, %%ds  \n" 
         " mov %%ax, %%es  \n" 
         " mov %%ax, %%fs  \n" 
         " mov %%ax, %%gs  \n" 
-        " movq %0, %%rax  \n" 
-        " movq %1, %%rsp  \n" 
+        " movq %0, %%rax  \n"  // entry
+        " movq %1, %%rsp  \n"  // rsp3
         " movq $0, %%rbp  \n" 
-        " pushq $0x23     \n"  
-        " pushq %%rsp     \n" 
-        " pushq $0x3202   \n"  // Interrupts enabled for the thread that is not the first.
-        " pushq $0x1B     \n" 
-        " pushq %%rax     \n" 
-        " iretq           \n" :: "D"(entry), "S"(rsp3) );
+        " pushq $0x23     \n"  // Stack frame: SS
+        " pushq %%rsp     \n"  // Stack frame: RSP
+        " pushq $0x3202   \n"  // Stack frame: RFLAGS
+        " pushq $0x1B     \n"  // Stack frame: CS
+        " pushq %%rax     \n"  // Stack frame: RIP
+        " iretq           \n" :: "D"(EntryPoint), "S"(RING3_RSP) );
+
+    // } else if (...) {
+    } else {
+
+    // #bugbug
+    // Only for ring 3 with iopl 3. weak protection.
+    // 0x3202: Interrupts enabled for the thread that is not the first.
+    asm volatile ( 
+        " movq $0, %%rax  \n" 
+        " mov %%ax, %%ds  \n" 
+        " mov %%ax, %%es  \n" 
+        " mov %%ax, %%fs  \n" 
+        " mov %%ax, %%gs  \n" 
+        " movq %0, %%rax  \n"  // entry
+        " movq %1, %%rsp  \n"  // rsp3
+        " movq $0, %%rbp  \n" 
+        " pushq $0x23     \n"  // Stack frame: SS
+        " pushq %%rsp     \n"  // Stack frame: RSP
+        " pushq $0x3202   \n"  // Stack frame: RFLAGS
+        " pushq $0x1B     \n"  // Stack frame: CS
+        " pushq %%rax     \n"  // Stack frame: RIP
+        " iretq           \n" :: "D"(EntryPoint), "S"(RING3_RSP) );
+
+    };
 
 // Paranoia
     PROGRESS("__spawn_enter_usermode: -- iretq fail ----\n");
@@ -165,8 +224,8 @@ __spawn_enter_usermode(
 // of a clone process that is running for the first time.
 static void __spawn_thread_by_tid_imp(tid_t tid)
 {
+    tid_t TargetTID = (tid_t) (tid & 0xFFFFFFFF);
     struct thread_d *target_thread;
-    tid_t next_tid = (tid_t) (tid & 0xFFFF);
 
     //PROGRESS("__spawn_thread_by_tid_imp:\n");
 
@@ -178,16 +237,16 @@ static void __spawn_thread_by_tid_imp(tid_t tid)
 // Target thread
 //
 
-    if ( next_tid < 0 || next_tid >= THREAD_COUNT_MAX )
+    if ( TargetTID < 0 || TargetTID >= THREAD_COUNT_MAX )
     {
-        printk("__spawn_thread_by_tid_imp: next_tid=%d", next_tid );  
+        printk("__spawn_thread_by_tid_imp: TargetTID=%d", TargetTID );  
         keDie();
     }
-    target_thread = (void *) threadList[next_tid]; 
+    target_thread = (void *) threadList[TargetTID]; 
     if ((void *) target_thread == NULL)
     {
-        printk("__spawn_thread_by_tid_imp: target_thread, next_tid={%d}", 
-            next_tid );  
+        printk("__spawn_thread_by_tid_imp: target_thread, TargetTID={%d}", 
+            TargetTID );  
         keDie();
     }
     if ( target_thread->used != TRUE || target_thread->magic != 1234 )
@@ -202,20 +261,20 @@ static void __spawn_thread_by_tid_imp(tid_t tid)
     }
 
 // Check tid validation
-    if (target_thread->tid != next_tid){
+    if (target_thread->tid != TargetTID){
         panic("__spawn_thread_by_tid_imp: target_thread->tid validation\n");
     }
 
 // State: Needs to be in Standby.
     if (target_thread->state != STANDBY){
-        printk("__spawn_thread_by_tid_imp: TID={%d} not in Standby\n", next_tid );
+        printk("__spawn_thread_by_tid_imp: TID={%d} not in Standby\n", TargetTID );
         keDie();
     }
 
 // Saved:
 // If the context is saved, so it is not the first time.
     if (target_thread->saved == TRUE){
-        printk ("__spawn_thread_by_tid_imp: Saved TID={%d}\n", next_tid );
+        printk ("__spawn_thread_by_tid_imp: Saved TID={%d}\n", TargetTID );
         keDie();
     }
 
@@ -283,7 +342,7 @@ static void __spawn_thread_by_tid_imp(tid_t tid)
 
 // Paranoia: Check state.
     if (target_thread->state != RUNNING){
-        printk ("__spawn_thread_by_tid_imp: State TID={%d}\n", next_tid );
+        printk ("__spawn_thread_by_tid_imp: State TID={%d}\n", TargetTID );
         keDie();
     }
 

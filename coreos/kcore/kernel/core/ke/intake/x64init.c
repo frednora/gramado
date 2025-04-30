@@ -777,6 +777,9 @@ void I_x64ExecuteInitialProcess(void)
 // 0x3002
 // iopl 3. weak protection.
 // Interrupts disabled for the first thread.
+// This condition is valid for Init process.
+// For the other processes we got to check the 
+// 'spawn routine' and the 'return from interrupt routines'.
 
     asm volatile ( 
         " movq $0, %%rax  \n" 
@@ -784,10 +787,10 @@ void I_x64ExecuteInitialProcess(void)
         " mov %%ax, %%es  \n" 
         " mov %%ax, %%fs  \n" 
         " mov %%ax, %%gs  \n" 
-        " movq %0, %%rax  \n"  // entry 
+        " movq %0, %%rax  \n"  // entry
         " movq %1, %%rsp  \n"  // rsp3
         " movq $0, %%rbp  \n" 
-        " pushq $0x23     \n"  // Stack frame: SS  
+        " pushq $0x23     \n"  // Stack frame: SS
         " pushq %%rsp     \n"  // Stack frame: RSP
         " pushq $0x3002   \n"  // Stack frame: RFLAGS
         " pushq $0x1B     \n"  // Stack frame: CS

@@ -1,5 +1,6 @@
 // main.c
-// Main file for taskbar.bin application.
+// Main file for taskbar.bin application. (Overview/Explorer)
+// Created by Fred Nora.
 
 /*
  * File: main.c
@@ -8,8 +9,6 @@
  *    AF_GRAMADO family.
  *    #warning:
  *    This application is using floating point.
- * History:
- *     2020 - Created by Fred Nora.
  */
 
 // ##
@@ -1646,9 +1645,9 @@ int main(int argc, char *argv[])
 // =======================
 // Loop
 
-    unsigned long start_jiffie;
-    unsigned long end_jiffie;
-    unsigned long delta_jiffie;
+    unsigned long start_jiffie=0;
+    unsigned long end_jiffie=0;
+    unsigned long delta_jiffie=0;
     int UseSleep = TRUE;
 
 // #ps: We will sleep if a round was less than 16 ms, (60fps).
@@ -1658,8 +1657,7 @@ int main(int argc, char *argv[])
 // a bit more.
 
     while (1){
-
-        start_jiffie = rtl_jiffies();
+        start_jiffie = (unsigned long) rtl_jiffies();
         
         //if (isTimeToQuit == TRUE)
             //break;
@@ -1668,7 +1666,7 @@ int main(int argc, char *argv[])
         end_jiffie = rtl_jiffies();
         if (end_jiffie > start_jiffie)
         {
-            delta_jiffie = end_jiffie - start_jiffie;
+            delta_jiffie = (unsigned long) (end_jiffie - start_jiffie);
             if (delta_jiffie < 16)
             {
                 // #test

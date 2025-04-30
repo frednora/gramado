@@ -1202,7 +1202,7 @@ DDINIT_e1000 (
 // pci device struct
 // passado via argumento. 
 
-    if ((void *) pci_device ==  NULL){
+    if ((void *) pci_device == NULL){
         panic("DDINIT_e1000: pci_device\n");
     }
 
@@ -1413,12 +1413,22 @@ DDINIT_e1000 (
     unsigned char irq_line = 
         (unsigned char) pciGetInterruptLine(bus,dev);
 
+
+    // The value we get above.
+    if (irq_line != pci_device->irq_line)
+        panic("e1000: irq_line");
+
     //#debug
     //printk("Done irqline %d\n",irq_line);   
     //refresh_screen();
 
 // irq
     __e1000_setup_irq(irq_line);
+
+// Saving in the Intel NIC structure.
+    currentNIC->irq_line = (unsigned char) pci_device->irq_line;
+    currentNIC->irq_pin  = (unsigned char) pci_device->irq_pin;
+
 // Reset the controller.
     __e1000_reset_controller(currentNIC);
 

@@ -229,6 +229,9 @@ struct intel_nic_info_d
 // Counting the interrupts.
     int interrupt_count;
 
+    unsigned char irq_line;    // Qual IRQ será usada pelo PIC.
+    unsigned char irq_pin;     // ??
+
     // rede.
     //struct network_info_d *network;
     //struct device_d     *device;

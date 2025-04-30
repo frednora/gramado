@@ -116,7 +116,7 @@ uint32_t diskPCIScanDevice(int class)
 // Espaço de configuraçao PCI Mass Storage.
 // Nessa rotina:
 // + Encontra o tipo de driver, ser é IDE, RAID, AHCI ou Desconhecido.
-
+// It gets all the information for the PCI device structure.
 int atapciSetupMassStorageController(struct pci_device_d *D)
 {
 // Called by __ata_initialize().
@@ -375,8 +375,13 @@ int atapciSetupMassStorageController(struct pci_device_d *D)
 
 // irqline and irq pin.
     data = diskReadPCIConfigAddr ( D->bus, D->dev, D->func, 0x3C );
-    D->irq_line = (data & 0xff);
-    D->irq_pin  = (data >> 8) & 0xff;
+    D->irq_line = (unsigned char) (data & 0xFF);
+    D->irq_pin  = (unsigned char) (data >> 8) & 0xFF;
+
+// #test
+// Where are we setting up the PIC controller.
+// Is it a good time for it?
+// Maybe we're doing it only at the early kernel initialization.
 
 // PCI command and status.
     data = diskReadPCIConfigAddr ( D->bus, D->dev, D->func, 4 );
