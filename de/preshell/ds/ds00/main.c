@@ -4215,12 +4215,8 @@ static int ServerLoop(int launch_tb)
     */
 
 // Telling the Init thread that the display server is running.
-    rtl_post_to_tid(
-        0,      // Init process tid.
-        44900,  // message code
-        1234,
-        5678 );
-
+// IN: Init process'a TID, message code, signature1, signature2
+    rtl_post_to_tid( 0, 44900, 1234, 5678 );
 
     if (server_mode == SERVER_MODE_DEMO)
         IsAcceptingConnections = FALSE;
@@ -4231,9 +4227,9 @@ static int ServerLoop(int launch_tb)
 // This is the main loop.
 // Let's optimize it, because we'll spend most of our time here.
 
-    unsigned long start_jiffie;
-    unsigned long end_jiffie;
-    unsigned long delta_jiffie;
+    unsigned long start_jiffie=0;
+    unsigned long end_jiffie=0;
+    unsigned long delta_jiffie=0;
     int UseSleep = TRUE;
 
     // #ps: We will sleep if a round was less than 16 ms, (60fps).
@@ -4243,7 +4239,7 @@ static int ServerLoop(int launch_tb)
     // a bit more.
     while (running == TRUE){
 
-        start_jiffie = rtl_jiffies();
+        start_jiffie = (unsigned long) rtl_jiffies();
 
         if (IsTimeToQuit == TRUE){ break; };
 
@@ -4290,10 +4286,10 @@ static int ServerLoop(int launch_tb)
             //wmCompose();
         }
 
-        end_jiffie = rtl_jiffies();
+        end_jiffie = (unsigned long) rtl_jiffies();
         if (end_jiffie > start_jiffie)
         {
-            delta_jiffie = end_jiffie - start_jiffie;
+            delta_jiffie = (unsigned long) (end_jiffie - start_jiffie);
             if (delta_jiffie < 16)
             {
                 // #test

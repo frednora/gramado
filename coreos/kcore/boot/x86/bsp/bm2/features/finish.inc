@@ -49,7 +49,7 @@ AFTER_DATA:
 ; IN:
 ; DX = OFFSET
 ; DS = SEGMENT
-    mov dx, int21h_offset
+    mov dx, int21h_handler
     push ds
     mov ax, cs 
     mov ds, ax 
@@ -60,9 +60,10 @@ AFTER_DATA:
 
     int 0x21
 
-    ;xor ax,ax 
+    ;xor ax, ax 
     ;int 0x16
     ;int 0x19
+
 
     ;Debug breakpoint.
     ;cli
@@ -249,23 +250,6 @@ DISPATCH:
     DW  0  ;;      IN
     ;DW      PRTBUF ;print string
     ; ...
-
-; ------------------------------------------------------------
-int21h_offset:
-    PUSHA 
-
-    mov si, int21h_message00
-    call DisplayMessage   
-
-; #TODO
-; Dispatch a handler.
-    ;CALL CS:[BX+DISPATCH]
-
-    POPA 
-    IRET 
-int21h_message00:
-    db "finish.inc: Hello from 21h", 13, 10, 0
-
 
 ; ------------------------------------------------------------
 ; Set a vector in IVT.

@@ -1,7 +1,7 @@
 ; s1load.inc
 ; Library for stage1.asm
-; Load the rootdir, load the FAT and pass the command to KLDR.BIN.
-
+; Load the rootdir, load the FAT and pass the command to BM2.BIN.
+; Created by Fred Nora.
 
 ; -----------------------------------------
 ; ClusterLBA:
@@ -24,9 +24,9 @@ ReadSectors:
 ; #ps: 
 ; It goes to the next segment if it reaches the end of the current segment.
 
-    mov WORD [DAPBuffer]   ,bx
-    mov WORD [DAPBuffer+2] ,es
-    mov WORD [DAPStart]    ,ax
+    mov WORD [DAPBuffer]  , bx
+    mov WORD [DAPBuffer+2], es
+    mov WORD [DAPStart]   , ax
 ; Tentativas.
 .MAIN:
     mov di, 0x0005  
@@ -57,6 +57,7 @@ ReadSectors:
     jnz  .SECTORLOOP    
 ;.fail:
     int  0x18
+
 .__SUCCESS:
 
     ; Importante: 
@@ -83,7 +84,6 @@ ReadSectors:
     pop  ax
 
 .NextSector:
-
     inc  ax                     ; Queue next sector.
     mov WORD [DAPBuffer], bx
     mov WORD [DAPStart], ax
@@ -157,7 +157,6 @@ calculate_datasector_start:
     ; mov  WORD [datasector], 591
     ret 
 
-
 ; ------------------------------------------------
 __load_rootdir:
 ; 559 - Início do diretório raiz.
@@ -216,6 +215,7 @@ s1load_load_rootdir:
 ;  32 - root. (512 entradas)
 ; xxx - data area.
 
+; Loading BM2.BIN image.
 ; IN: Nothing
 ; Search file in rootdir, load fat and go.
 s1load_load_file_and_go:
@@ -230,7 +230,7 @@ s1load_load_file_and_go:
 .LOOP:
     push  cx
     mov  cx, 0x000B       ; Eleven character name.
-    mov  si, ImageName    ; Image name to find.
+    mov  si, ImageName    ; Image name to find. See s1data.inc
     ; It prints the image name while comparing each entry.
     ; Debug purpose.
     pusha
@@ -239,7 +239,7 @@ s1load_load_file_and_go:
     push  di
     rep  cmpsb            ; Test for entry match.
     pop  di
-    je  LOADFAT     ; Se o arquivo foi encontrado.
+    je  LOADFAT           ; Se o arquivo foi encontrado.
     pop  cx
     add  di, 0x0020       ; Queue next directory entry.
     loop  .LOOP

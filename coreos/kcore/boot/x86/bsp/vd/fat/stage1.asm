@@ -1,18 +1,26 @@
-;;
-;; Gramado MBR - 
-;; Esse é o MBR que é montado no VHD na hora de sua criação.
-;; Será o primeiro setor do disco.
-;; Essa rotina carrega o BM.BIN na memória e passa o comando para ele. 
-;; Além de passar argumentos.
-;; É um VHD de 32MB. 
-;; A primeira partição é a partição do sistema e está formatada
-;; em fat16 com 512 bytes por cluster.
-;; Obs: 
-;; Não mudar os endereços de segmento e offset usados 
-;; para não arrumar problemas.
-;; History:
-;;     2005 - Created.
-;;     It is the first file created for the project.
+; state1.asm
+;     Gramado MBR
+;     2005 - Created by Fred Nora.
+;     This file marks the beginning of the Gramado Project.
+
+; What is this?
+; This is the MBR for the Gramado Boot Loader.
+; During the build time, a VHD disk is created using nasm,
+; and at the beginning of the assembly code we have have
+; this MBR code.
+; The disk size is 32MB or 64MB.
+; The fist partition is formated with FAT16 file system.
+; It has 512 bytes per sector and 1 sector per cluster.
+
+; Purpose:
+; The main goal of this code is loading BM.BIN or BM2.BIN,
+; from the first partition to the main memory.
+; It passes some parameters an jump to the loaded file.
+
+; #important
+; Do not change 'Segments' and 'Offsets' used here,
+; it's kinda canonical.
+
 ;; Partition table:
 ;; See:
 ;;     https://thestarman.pcministry.com/asm/mbr/PartTables.htm
@@ -32,8 +40,8 @@
 ;       |--------| 0x0000:0x8000
 ;       |        |
 ;       |--------|
-;       | ROOT   |
-;       | DIR    |
+;       |  ROOT  |
+;       |  DIR   |
 ;       |--------| 0x07C0:0x0200
 ;       |BOOT SEC| 
 ;       |ORIGIN  | 
@@ -45,11 +53,16 @@
 ;       |--------| 
 ;       |        |
 ;       +--------+
-;; 16bit. Esse é o MBR do VHD.
 
+; Do NOT change this thing.
 [ORG 0x0000]
-[bits 16]
 
+; 16bit. 
+; This is the MBR. 
+; Used with legacy BIOS firmware.
+[BITS 16]
+
+; MBR's entry point.
 ; Jump to the real start routine.
 stage1_main:
     jmp GRAMADOINIT
@@ -90,6 +103,7 @@ GRAMADOINIT:
     mov sp, STACK_OFFSET
     sti
 
+; Get disk number.
 Step2:
     mov byte [DriveNumber], byte dl 
 
@@ -103,7 +117,7 @@ Step4:
     call s1load_load_rootdir
 
 ; Search file in rootdir, load fat and go.
-; Load file and pass the command to the KLDR.BIN.
+; Load file and pass the command to the BM2.BIN.
 Step5:
     jmp s1load_load_file_and_go
 
@@ -113,7 +127,7 @@ Step5:
 ; http://cars.car.coocan.jp/misc/chs2lba.html
 ; https://en.wikipedia.org/wiki/Partition_type
 ; bios = limits: h=4, c=3FF, s=A
-; vhd = CHS=963/4/17
+; vhd = CHS = 963/4/17
 
 ; Partition table support.
 ; Colocando a partition table no lugar certo. 

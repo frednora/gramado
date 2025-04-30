@@ -2,6 +2,26 @@
 ; Main file of Boot manager.
 ; 2005 - Created by Fred Nora. 
 
+; What is this?
+; This is a boot manager, it is able to load files,
+; has a popup window with two buttons and a 
+; embedded command interpreter.
+
+; Purpose:
+; the main goal of this program is loading the 
+; bootloader image into the memory and jump to it 
+; passing some parameters.
+
+; #todo
+; Create the bootloader METAFILE.
+; We need to create a configuration method 
+; where we have the option to open the initial window or not.
+; It is necessary for non-interactive systems like server machine.
+; Maybe we're gonna use a form of metafile in the empy sectors 
+; of the disk. This metafile will contain the flag that
+; say if we're gonna open the window or not.
+; The metafile will have some more options.
+
 ; Credits: MikeOS (License: BSD).
 ; Video modes:
 ; ============

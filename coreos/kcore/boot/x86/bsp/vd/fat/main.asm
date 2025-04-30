@@ -1,20 +1,25 @@
-;
 ; main.asm
+; Main file of a VHD created using nasm.
+; Yes it is a virtual disk with a program inside it.
+; 2017 - Created by Fred Nora.
+
+; What is this?
 ; Main file for creating a 32MB virtual disk using nasm.
-; The goal is loading the boot manager, BM.BIN in 0:8000H
-; and pass the control to the boot loader, also delivering
-; some few arguments.
 ; Here you will also find the VBR of the first partition
 ; at the sector 63, in hex, two FATs, reserved sectors, root dir,
 ; data area and a VHD footer.
 ; The video mode is the text mode.
-; 2017 - Created by Fred Nora.
+
+; Purpose:
+; The goal is loading the boot manager, BM.BIN in 0:8000H
+; and pass the control to the boot loader, also delivering
+; some few arguments.
 
 
 ;       +--------+
 ;       |        |
 ;       |--------|
-;       | FAT    |
+;       |  FAT   |
 ;       |--------| 0x17C0:0x0200
 ;       |        |
 ;       |--------|
@@ -24,8 +29,8 @@
 ;       |--------| 0x0000:0x8000
 ;       |        |
 ;       |--------|
-;       | ROOT   |
-;       | DIR    |
+;       |  ROOT  |
+;       |  DIR   |
 ;       |--------| 0x07C0:0x0200
 ;       |BOOT SEC| 
 ;       |ORIGIN  | 
@@ -38,8 +43,8 @@
 ;       |        |
 ;       +--------+
 
-;Map for main LBA addresses in the system disk.
-;see: vd/fat/main.asm
+; Map for main LBA addresses in the system disk.
+; see: vd/fat/main.asm
 
 ;--------------------------------------
 ;    0 = mbr
@@ -61,15 +66,20 @@
 ;  ...
 ;--------------------------------------
 
-; The standard MBR entry point is 0x7C00.
-; The origin in 0x0000,
-; but the segments in 0x07C0.
 
-[ORG 0]
-[bits 16]
+; Do NOT change this thing.
+[ORG 0x0000]
+
+; 16bit. 
+; This is the MBR. 
+; Used with legacy BIOS firmware.
+[BITS 16]
 
 HIDDEN_SECTORS EQU  63
 
+; The standard MBR entry point is 0x7C00.
+; The origin in 0x0000,
+; but the segments in 0x07C0.
 ; Sector 0.
 MBR_main:
 
