@@ -4242,6 +4242,7 @@ static int ServerLoop(int launch_tb)
     // It gives the opportunities for other threads to run a
     // a bit more.
     while (running == TRUE){
+
         start_jiffie = rtl_jiffies();
 
         if (IsTimeToQuit == TRUE){ break; };

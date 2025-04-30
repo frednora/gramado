@@ -310,25 +310,75 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
         panic("sched: Idle->tid != INIT_TID\n");
     if (Idle->tid != INIT_TID)
         panic("sched: Idle->tid != INIT_TID\n");
-// Começa a pegar da thread 1, porque a 0 ja pegamos.
-    int Start = (Idle->tid + 1);
 
 // Wake up init thread.
-    if (jiffies >= Idle->wake_jiffy)
-        do_thread_ready(TmpThread->tid);
+    do_thread_ready(TmpThread->tid);
+    //if (jiffies >= Idle->wake_jiffy)
+        //do_thread_ready(TmpThread->tid);
 
-// The Idle as the head of the p6q queue, 
-// The loop below is gonna build this list.
+// Começa a pegar da thread 1, porque a 0 ja pegamos.
+    //int Start = (Idle->tid + 1);
+    static int Start = (INIT_TID +1);
+    static int Max = THREAD_COUNT_MAX;
+
+// This loop builds the queue of READY threads.
+// Threads in other state will be checked and the 
+// structure will be updated properlly. For example: 
+// we will check if it's time wo wake up a thread.
+// The Idle as the head of the p6q queue.
 // The idle is the TID 0, so the loop starts at 1.
 
-    for ( i=Start; i<THREAD_COUNT_MAX; ++i )
+    for ( i=Start; i<Max; ++i )
     {
         TmpThread = (void *) threadList[i];
 
+        // #test: I don't like this.
+        if ((void *) TmpThread == NULL)
+            continue;
+
         if ((void *) TmpThread != NULL)
         {
-            // ---------------------------
-            // :: WAITING threads
+            // =============================
+            // Exit in progress
+            if (TmpThread->magic == 1234)
+            {
+                // Vira zombie e não sera selecionada para o proximo round
+                // se não for a idle thread nem a init thread.
+                if (TmpThread->exit_in_progress == TRUE)
+                {
+                    if (TmpThread != Idle)
+                    {
+                        // >> Não sera mais selecionada pelo scheduler.
+                        // #todo: O dead thred collector pode terminar de deleta
+                        // essa thread e deletar o processo dela
+                        // se ele estiver sinalizado como exit in progress
+                        // e ela for a thread de controle dele.
+                        TmpThread->state = ZOMBIE;
+
+                        // Invalidate the foreground thread variable.
+                        if (TmpThread->tid == foreground_thread)
+                            foreground_thread = -1;
+                        
+                        // Uma thread importante morreu?
+                        // if (TmpThread->personality == PERSONALITY_GRAMADO )
+                        //     oops();
+                        
+                        //se tick=1000 ticks per second.
+                        //TmpThread->total_time_ms = initial_time_ms - TmpThread->steps;
+                        
+                        // #todo
+                        // procure a thread que estava esperando esse evento
+                        // e acorde ela.
+                        // fazer loop.
+                        // TmpThread->tid == x->wait4tid
+
+                        continue;
+                    }
+                }
+            }
+
+            // =============================
+            // :: WAITING
             // Wake up some threads, given them a chance. 
             // and not putting waiting threads into the round.
             // Alarm and wakeup.
@@ -362,11 +412,13 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                     //printk("sched: Waking up\n");
                     do_thread_ready(TmpThread->tid);
                     //panic("Wake ok\n");
+                } else {
+                    continue;
                 }
             }
 
-            // ---------------------------
-            // :: ZOMBIE threads
+            // =============================
+            // :: ZOMBIE
             if ( TmpThread->used == TRUE && 
                  TmpThread->magic == 1234 && 
                  TmpThread->state == ZOMBIE )
@@ -403,10 +455,12 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                 TmpThread->used = FALSE;
                 TmpThread->magic = 0;
                 TmpThread = NULL;
+
+                continue;
             }
 
-            // ---------------------------
-            // :: READY threads
+            // =============================
+            // :: READY
             // Schedule regular ready threads.
             // + Check the credits.
             // + Set the quantum.
@@ -423,7 +477,7 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                 // Initialize counters.
                 TmpThread->runningCount = 0;
                 TmpThread->runningCount_ms = 0;
-                
+
                 // How many times it was scheduled.
                 TmpThread->scheduledCount++;
 
@@ -470,53 +524,11 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                     TmpThread->quantum = QUANTUM_SYSTEM_TIME_CRITICAL;
                     TmpThread->isResponder = FALSE;
                 }
-            }
 
-            // ---------------------------
-            // :: Exit
-            // exit in progress
-            if (TmpThread->magic == 1234)
-            {
-                // Vira zombie e não sera selecionada para o proximo round
-                // se não for a idle thread nem a init thread.
-                if (TmpThread->exit_in_progress == TRUE)
-                {
-                    if (TmpThread != Idle)
-                    {
-                        // >> Não sera mais selecionada pelo scheduler.
-                        // #todo: O dead thred collector pode terminar de deleta
-                        // essa thread e deletar o processo dela
-                        // se ele estiver sinalizado como exit in progress
-                        // e ela for a thread de controle dele.
-                        TmpThread->state = ZOMBIE;
-
-                        // Invalidate the foreground thread variable.
-                        if (TmpThread->tid == foreground_thread)
-                            foreground_thread = -1;
-                        
-                        // Uma thread importante morreu?
-                        // if (TmpThread->personality == PERSONALITY_GRAMADO )
-                        //     oops();
-                        
-                        //se tick=1000 ticks per second.
-                        //TmpThread->total_time_ms = initial_time_ms - TmpThread->steps;
-                        
-                        // #todo
-                        // procure a thread que estava esperando esse evento
-                        // e acorde ela.
-                        // fazer loop.
-                        // TmpThread->tid == x->wait4tid
-                    }
-                }
-            }
-            
-            // Credits:
-            // If this thread received more than n credits, 
-            // we increment the quantum.
-            if (TmpThread->magic == 1234)
-            {
-                if (TmpThread->credits >= 2)
-                {
+                // Credits:
+                // If this thread received more than n credits during the last round, 
+                // we increment the quantum.
+                if (TmpThread->credits >= 2){
                     TmpThread->quantum = (TmpThread->quantum + 1);
                     TmpThread->credits = 0;
                 }

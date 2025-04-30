@@ -549,8 +549,7 @@ void I_x64ExecuteInitialProcess(void)
 
 // :: MOVEMENT 2 ( Standby --> Running )
 
-    if (t->state == STANDBY)
-    {
+    if (t->state == STANDBY){
         t->state = RUNNING;
         debug_print("I_x64ExecuteInitialProcess: Now RUNNING!\n");
     }
@@ -728,12 +727,12 @@ void I_x64ExecuteInitialProcess(void)
     //printk     ("I_x64ExecuteInitialProcess: [x64] Go to user mode! IRETQ\n");
     //refresh_screen();
 
-// Here is where the boot routine ends.
-    system_state = SYSTEM_RUNNING;
-    serial_printk("system_state = {%s}\n",SYSTEM_RUNNING);
-
 // The kernel has booted.
     has_booted = TRUE;
+
+// Here is where the boot routine ends.
+    system_state = SYSTEM_RUNNING;
+    serial_printk("system_state = {%d}\n",SYSTEM_RUNNING);
 
 // =============
 // Fly!

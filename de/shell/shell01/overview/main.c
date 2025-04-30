@@ -1657,8 +1657,8 @@ int main(int argc, char *argv[])
 // It gives the opportunities for other threads to run a
 // a bit more.
 
-
     while (1){
+
         start_jiffie = rtl_jiffies();
         
         //if (isTimeToQuit == TRUE)
@@ -1677,7 +1677,6 @@ int main(int argc, char *argv[])
                     rtl_sleep(16 - delta_jiffie);
             }    
         }
-
     };
 
 /*

@@ -351,17 +351,18 @@ fail:
 // using system messages.
 int xxxEventLoopSystemEvents(void)
 {
-    NoReply = TRUE;
 
 // #todo
 // Get the id of the caller.
 // Get the message code.
 // Who can call us?
 
-    unsigned long start_jiffie;
-    unsigned long end_jiffie;
-    unsigned long delta_jiffie;
+    unsigned long start_jiffie=0;
+    unsigned long end_jiffie=0;
+    unsigned long delta_jiffie=0;
     int UseSleep = TRUE;
+
+    NoReply = TRUE;
 
 // #ps: We will sleep if a round was less than 16 ms, (60fps).
 // The thread wait until complete the 16 ms.
@@ -372,7 +373,9 @@ int xxxEventLoopSystemEvents(void)
 // Nessa hora ja não nos preocupamos mais com essa thread.
 // Ele receberá algumas mensagens eventualmente.
     while (TRUE){
-        start_jiffie = rtl_jiffies();
+
+        //start_jiffie = rtl_jiffies();
+
 		if (isTimeToQuitServer == TRUE){
 			break;
 		}
@@ -401,6 +404,7 @@ int xxxEventLoopSystemEvents(void)
             xxxSendResponse();
         }
 
+        /*
         end_jiffie = rtl_jiffies();
         if (end_jiffie > start_jiffie)
         {
@@ -413,6 +417,7 @@ int xxxEventLoopSystemEvents(void)
                     rtl_sleep(16 - delta_jiffie);
             }    
         }
+        */
     };
 
     return 0;

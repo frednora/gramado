@@ -532,6 +532,13 @@ ZeroGravity:
 // We can do this if a thread was selected as 'timeout_thread'.
 // It means that the thread need to run now, in the next tick.
 
+    // #important:
+    // See: ipc.c, sci.c, thread.c
+    // For some reason, probably an input event, the kernel is
+    // making this thread a higher priority thread, and it will
+    // run along on it own round. Probably it is an input event.
+    // #bugbug
+    // At this time ts.c is operating as a scheduler for a single thread.
     if ((void*) timeout_thread != NULL)
     {
         if (timeout_thread->magic == 1234)
@@ -539,8 +546,24 @@ ZeroGravity:
             if (timeout_thread->waiting_for_timeout == TRUE)
             {
                 timeout_thread->waiting_for_timeout = FALSE;
+
+                // Ready to run.
+                timeout_thread->state = READY;
+
+                // Initialize counters.
+                timeout_thread->runningCount = 0;
+                timeout_thread->runningCount_ms = 0;
+
+                // How many times it was scheduled.
+                timeout_thread->scheduledCount++;
+
+                // quantum
+                timeout_thread->quantum = QUANTUM_NORMAL_TIME_CRITICAL;
+
+                // Queue with only one thread.
                 currentq = (void *) timeout_thread;
                 currentq->next = NULL;
+
                 goto go_ahead;
             }
         }
@@ -612,7 +635,7 @@ go_ahead:
     TargetThread = (void *) currentq;
     if ((void *) TargetThread == NULL)
     {
-        debug_print ("ts: Struct ");
+        debug_print ("ts: pointer ");
         current_thread = (tid_t) psScheduler();
         goto ZeroGravity;
     }
@@ -623,10 +646,13 @@ go_ahead:
         goto ZeroGravity;
     }
 // Not ready?
-// Some thread in the round changed its state?
+// We get from the queue a valid thread that changed it's state.
     if (TargetThread->state != READY)
     {
-        //debug_print ("ts: state ");
+        // #debug
+        debug_print ("ts: state ");
+        //serial_printk ("ts: state name=%s tid=%d ", 
+            //TargetThread->__threadname, TargetThread->tid);
         current_thread = (tid_t) psScheduler();
         goto ZeroGravity;
     }
@@ -634,6 +660,8 @@ go_ahead:
 //
 // == Dispatcher ====
 //
+
+// OK, we already checked and out target thread is a valid one.
     
 // Current selected.
     current_thread = (int) TargetThread->tid;

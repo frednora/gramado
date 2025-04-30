@@ -767,16 +767,12 @@ int keReboot(void)
 }
 
 // Called by main to execute the first process.
+// See: x64init.c
+// Never returns.
 int ke_x64ExecuteInitialProcess(void)
 {
     serial_printk("ke_x64ExecuteInitialProcess:\n");
-
-// See: x64init.c
-// Never returns.
     I_x64ExecuteInitialProcess();
-
-//fail:
-    //panic("ke_x64ExecuteInitialProcess: fail\n");
     return (int) -1;
 }
 
