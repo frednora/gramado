@@ -8,6 +8,7 @@ Gramado OS. This project includes basicaly the bootloader, the core kernel and t
 
 > [!IMPORTANT]
 > We're still creating the documentation for this distro.
+> Always changing the folder names.
 
 ## The folders
 
@@ -251,30 +252,6 @@ Please make some comments on Github or send messages to Fred Nora.
 ## How to Build?
 
 > See the [Gramado OS build instructions](https://github.com/frednora/gramado/blob/main/docs/building/build.md)
-
-# Folders
-
-```
-distros/ - Building full distributions into this directory.
-docs/    - The documentation.
-
-kcore/      - Kernel Core: 
-              Boot, kernel and ring 0 modules.
-
-kservices/  - Kernel Services: 
-           Init process, ring 3 drivers and ring 3 servers.
-           (KERNEL CONSOLE SUBSYSTEM applications)
-           (pubsh.bin runs on PUBTERM SUBSYSTEM)
-           (shell.bin runs on TERMINAL SUBSYSTEM)
-
-shpreui/ - Shell Pre-UI:
-           The display server.
-
-shui/    - Shell UI:
-           Client-side GUI applications.
-           (DS00 SUBSYSTEM applications)
-```
-
 
 # Warning
 

@@ -29,11 +29,5 @@ shell/
     (KERNEL CONSOLE SUBSYSTEM applications)
     (pubsh.bin runs on PUBTERM SUBSYSTEM)
     (shell.bin runs on TERMINAL SUBSYSTEM)
-
-Distro and documentation:
-
-distros/ - Building full distributions into this directory.
-docs/    - The documentation.
-
 ```
 
