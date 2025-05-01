@@ -2,11 +2,6 @@
 
  Gramado is a 64bit kernel.
 
-```
- kernel/           - The kernel
- kernel/core/apps/ - Loadable applications and modules.
-```
-
 ## The OS
 
 Gramado OS. This project includes basicaly the bootloader, the core kernel and the init process.
@@ -14,39 +9,25 @@ Gramado OS. This project includes basicaly the bootloader, the core kernel and t
 > [!IMPORTANT]
 > We're still creating the documentation for this distro.
 
+## The folders
+
 ```
-Core os components:
-
-kcore/      - Kernel Core: 
-              Boot, kernel and ring 0 modules.
-
-services/   - Kernel Services: 
-           Init process, ring 3 drivers and ring 3 servers.
-
-Desktop environment components:
-
-pre-shell/ - Shell Pre-UI:
-           The display server.
-           3D demos. A game engine running on top of the kernel,
-           that works like a display server.
-
-shell/    - Shell UI:
-           Posix-like commands to run on virtual terminals.
-           Client-side GUI applications.
-           (DS00 SUBSYSTEM applications)
-           (KERNEL CONSOLE SUBSYSTEM applications)
-           (pubsh.bin runs on PUBTERM SUBSYSTEM)
-           (shell.bin runs on TERMINAL SUBSYSTEM)
-
-Distro and documentation:
-
 distros/ - Building full distributions into this directory.
 docs/    - The documentation.
-
+kernel/  - The kernel.
+         - Bootloader, kernel modules and applications
+           in kernel/core/apps/. Why not?
+tools/   - SDK tools.
 ```
 
-# TODO
-CREATE THE FOLDERS WHERE THAT REPRESENTS EACH SUBSYSTEM TO PUT THE APPS INTO IT.
+## Special folder.
+
+```
+kernel/core/apps/:
++ Bootloader, kernel modules.
++ Posix commands.
++ Display server and client-side GUI applications.
+```
 
 > [!IMPORTANT]
 > Build instruction

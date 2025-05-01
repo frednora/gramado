@@ -1,4 +1,4 @@
-# kres
+# res
 
   The resources. The built-in subsystems.
 
