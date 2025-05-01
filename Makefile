@@ -18,16 +18,16 @@ BASE = $(DISTROS)/base00
 ## =================================
 ## BACK-END:
 # Kernel Core: Boot, kernel and ring 0 modules.
-DEP_L0 = coreos/kcore
+DEP_L0 = kernel/core/apps/kcore
 # Kernel Services: Init process, ring 3 drivers and ring 3 servers.
-DEP_L1 = coreos/services
+DEP_L1 = kernel/core/apps/kservices
 
 ## =================================
 ## FRONT-END:
 # Shell Pre-UI: The display server.
-DEP_L2 = de/preshell
+DEP_L2 = kernel/core/apps/preshell
 # Shell UI: Client-side GUI applications.
-DEP_L3 = de/shell
+DEP_L3 = kernel/core/apps/shell
 
 # --------------------------
 # Display servers
@@ -136,18 +136,18 @@ build-gramado-os:
 	@cp $(DEP_L0)/boot/x86/bin/MBR0.BIN    $(BASE)/GRAMADO
 
 #===================================
-# (2) $(DEP_L0)/kernel/
+# (2) kernel/
 
 # ::Build kernel image.
 	@echo "Compiling kernel/"
-	@$(MAKE) -C $(DEP_L0)/kernel/
+	@$(MAKE) -C kernel/
 
 	@echo "Installing kernel/"
 
 # Copy the kernel to the standard system folder.
-	@cp $(DEP_L0)/kernel/KERNEL.BIN  $(BASE)/GRAMADO
+	@cp kernel/KERNEL.BIN  $(BASE)/GRAMADO
 # Create a backup; The bootloder expects this.
-	@cp $(DEP_L0)/kernel/KERNEL.BIN  $(BASE)/DE
+	@cp kernel/KERNEL.BIN  $(BASE)/DE
 
 #===================================
 # (3) $(DEP_L0)/modules/
@@ -340,8 +340,8 @@ do_runnokvm:
 clean:
 	-rm *.o
 	-rm *.BIN
-	-rm $(DEP_L0)/kernel/*.o
-	-rm $(DEP_L0)/kernel/*.BIN
+	-rm kernel/*.o
+	-rm kernel/*.BIN
 	@echo "~clean"
 
 # --------------------------------------
@@ -362,11 +362,11 @@ clean-all: clean
 	-rm -rf $(DEP_L0)/boot/x86/bin/*.BIN
 
 # ==================
-# (2) $(DEP_L0)/kernel/
+# (2) kernel/
 # Clear kernel image
-	-rm $(DEP_L0)/kernel/*.o
-	-rm $(DEP_L0)/kernel/*.BIN
-	-rm -rf $(DEP_L0)/kernel/KERNEL.BIN
+	-rm kernel/*.o
+	-rm kernel/*.BIN
+	-rm -rf kernel/KERNEL.BIN
 
 # ==================
 # (3) $(DEP_L0)/modules/

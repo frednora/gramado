@@ -1,0 +1,4 @@
+PinkZone:
+
+ The Graphical Device Interface and 
+ The User Interaction Interface.

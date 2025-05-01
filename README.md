@@ -1,4 +1,13 @@
-# Gramado OS
+# Gramado
+
+ Gramado is a 64bit kernel.
+
+```
+ kernel/           - The kernel
+ kernel/core/apps/ - Loadable applications and modules.
+```
+
+## The OS
 
 Gramado OS. This project includes basicaly the bootloader, the core kernel and the init process.
 
