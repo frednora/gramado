@@ -19,14 +19,15 @@ die(){
 # Hello!
 	echo "~~~~>"
 
+#	-netdev type=user,id=net1 -device e1000,netdev=net1
+
 # Launch qemu application.
 # Order: CPU, RAM, DISK, DEVICES.
 	$QEMU \
 	-smp $GRAMADO_CPUS \
 	-m   $GRAMADO_RAM_SIZE \
 	-hda $GRAMADO_DISK_IMAGE \
-	-serial stdio \
-	-netdev type=user,id=net1 -device e1000,netdev=net1
+	-serial stdio
 
 # Exit the script.
 	die

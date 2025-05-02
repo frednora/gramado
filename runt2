@@ -19,6 +19,12 @@ die(){
 # Hello!
 	echo "~~~~>"
 
+# Audio stuff
+#	-device ich9-intel-hda -device hda-duplex \
+
+# NIC
+#	-netdev type=user,id=net1 -device e1000,netdev=net1
+
 # Launch qemu application.
 # Order: CPU, RAM, DISK, DEVICES.
 
@@ -26,9 +32,8 @@ die(){
 	-smp $GRAMADO_CPUS \
 	-m   $GRAMADO_RAM_SIZE \
 	-drive file=$GRAMADO_DISK_IMAGE,format=raw,bus=0 \
-	-device ich9-intel-hda -device hda-duplex \
 	-serial stdio \
-	-netdev type=user,id=net1 -device e1000,netdev=net1
+
 
 # Exit the script.
 	die

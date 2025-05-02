@@ -12,13 +12,21 @@ QEMU="qemu-system-x86_64"
 # Hello
 	echo "~~~~>"
 
+# Audio stuff
+#	-device ich9-intel-hda -device hda-duplex \
+
+# NIC
+#	-nic model=e1000
+#	-netdev type=user,id=net1 -device e1000,netdev=net1
+
 # Launch qemu application.
 # Order: CPU, RAM, DISK, DEVICES.
 	$QEMU \
+	-machine type=pc \
 	-smp $GRAMADO_CPUS \
 	-m   $GRAMADO_RAM_SIZE \
-	-device ich9-intel-hda -device hda-duplex \
 	-drive file=$GRAMADO_DISK_IMAGE,format=raw,bus=0 \
-	-serial stdio \
-	-netdev type=user,id=net1 -device e1000,netdev=net1
+	-serial stdio 
+
+
 
