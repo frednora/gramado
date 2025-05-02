@@ -181,8 +181,8 @@ done:
 
     network_send_udp(  
         dhcp_info.your_ipv4,  // scr ip
-        __saved_caller_ipv4,  // dst ip
-        __saved_caller_mac,   // dst mac
+        NetworkSaved.caller_ipv4,  // dst ip
+        NetworkSaved.caller_mac,   // dst mac
         dport,                // source port: "US"
         sport,                // target port  "Who sent"
         udp_payload,          // udp payload

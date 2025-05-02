@@ -222,8 +222,8 @@ done:
 
     // #test
     gprot_send_udp (
-        __saved_caller_ipv4,  // dst ip
-        __saved_caller_mac,   // dst mac
+        NetworkSaved.caller_ipv4,  // dst ip
+        NetworkSaved.caller_mac,   // dst mac
         dport,                // source port: "US"
         sport,                // target port  "Who sent something to us"
         buf,                  // udp payload
@@ -232,8 +232,8 @@ done:
     // OK
     network_send_udp (  
         dhcp_info.your_ipv4,  // scr ip
-        __saved_caller_ipv4,  // dst ip
-        __saved_caller_mac,   // dst mac
+        NetworkSaved.caller_ipv4,  // dst ip
+        NetworkSaved.caller_mac,   // dst mac
         dport,                // source port: "US"
         sport,                // target port  "Who sent something to us"
         buf,                  // udp payload
@@ -295,8 +295,8 @@ int gprot_handle_protocol2(char *data, uint16_t s_port, uint16_t d_port)
     if (!NoReply) {
         network_send_udp(
             dhcp_info.your_ipv4, 
-            __saved_caller_ipv4, 
-            __saved_caller_mac, 
+            NetworkSaved.caller_ipv4, 
+            NetworkSaved.caller_mac, 
             dport, 
             sport, 
             buf, 
@@ -359,8 +359,16 @@ int gprot_handle_protocol(char *data, uint16_t s_port, uint16_t d_port)
     }
 
     // Send response if needed
-    if (!NoReply) {
-        network_send_udp(dhcp_info.your_ipv4, __saved_caller_ipv4, __saved_caller_mac, dport, sport, buf, MessageSize);
+    if (!NoReply) 
+    {
+        network_send_udp(
+            dhcp_info.your_ipv4, 
+            NetworkSaved.calleripv4, 
+            NetworkSaved.caller_mac, 
+            dport, 
+            sport, 
+            buf, 
+            MessageSize );
     }
 
     return 0;

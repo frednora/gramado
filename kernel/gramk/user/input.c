@@ -240,16 +240,12 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
     //debug_print("consoleCompareStrings: \n");
     printk("\n");
 
-    if ((void*) cmdline == NULL)
-    {
+    if ((void*) cmdline == NULL){
         printk("Invalid cmdline\n");
-        //goto fail;
         goto exit_cmp;
     }
-    if (buffer_size <= 0)
-    {
+    if (buffer_size <= 0){
         printk("Invalid buffer_size\n");
-        //goto fail;
         goto exit_cmp;
     }
 
@@ -259,7 +255,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 // about: Crear screen and print version string.
     if ( kstrncmp( cmdline, "about", 5 ) == 0 ){
         gramk_show_banner();
-        printk("About: The kernel console\n");
+        printk("The kernel console\n");
         goto exit_cmp;
     }
 
@@ -296,37 +292,42 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         network_test_NIC();
         goto exit_cmp;
     }
-    if ( kstrncmp(cmdline,"test-arp",8) == 0 ){
-        network_send_arp_request();
-        goto exit_cmp;
-    }
-    if ( kstrncmp(cmdline,"test-arp2",9) == 0 ){
-        network_send_arp_request2();
-        goto exit_cmp;
-    }
     // Print arp table.
     if ( kstrncmp(cmdline,"arp",3) == 0 ){
         arp_show_table();
         goto exit_cmp;
     }
+    if ( kstrncmp(cmdline,"test-arp",8) == 0 ){
+        network_send_arp_request();
+        goto exit_cmp;
+    }
+    if ( kstrncmp(cmdline,"test-arp-2",10) == 0 ){
+        network_send_arp_request2();
+        goto exit_cmp;
+    }
+    if (kstrncmp(cmdline,"udp",3) == 0)
+    {
+        //#test: Test sender.
+        goto exit_cmp;
+    }
+
     if ( kstrncmp(cmdline,"test-udp",8) == 0 ){
         network_test_udp();
         goto exit_cmp;
     }
-    if ( kstrncmp(cmdline,"test-udp2",9) == 0 ){
+    if ( kstrncmp(cmdline,"test-udp-2",10) == 0 ){
         network_test_udp2();
         goto exit_cmp;
     }
-
+    if ( kstrncmp(cmdline,"dhcp",4) == 0 ){
+        network_show_dhcp_info();
+        goto exit_cmp;
+    }
     if ( kstrncmp(cmdline,"test-dhcp",9) == 0 ){
         network_initialize_dhcp();
         goto exit_cmp;
     }
 
-    if ( kstrncmp(cmdline,"dhcp",4) == 0 ){
-        network_show_dhcp_info();
-        goto exit_cmp;
-    }
 
 // string: Testing string functions.
     if ( kstrncmp(cmdline,"string",6) == 0 )
@@ -371,24 +372,6 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         goto exit_cmp;
     }
 */
-
-// mm1: 
-// Show paged memory list.
-// #todo: Explain it better.
-// IN: max index.
-    if ( kstrncmp(cmdline,"mm1",3) == 0 ){
-        mmShowPagedMemoryList(512); 
-        goto exit_cmp;
-    }
-
-// mm2: 
-// Show the blocks allocated by the kernel allocator.
-// It's inside the kernel heap.
-// #todo: Explain it better.
-    if ( kstrncmp(cmdline,"mm2",3) == 0 ){
-        mmShowMemoryBlocksForTheKernelAllocator(); 
-        goto exit_cmp;
-    }
 
 // exit: Exit the embedded kernel console.
     if ( kstrncmp(cmdline,"exit",4) == 0 ){
@@ -512,6 +495,24 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         goto exit_cmp;
     }
 
+// mm1: 
+// Show paged memory list.
+// #todo: Explain it better.
+// IN: max index.
+    if ( kstrncmp(cmdline,"mm1",3) == 0 ){
+        mmShowPagedMemoryList(512); 
+        goto exit_cmp;
+    }
+
+// mm2: 
+// Show the blocks allocated by the kernel allocator.
+// It's inside the kernel heap.
+// #todo: Explain it better.
+    if ( kstrncmp(cmdline,"mm2",3) == 0 ){
+        mmShowMemoryBlocksForTheKernelAllocator(); 
+        goto exit_cmp;
+    }
+
 // path:
 // Test the use of 'pathnames' with multiple levels.
 // #test: This test will allocate some pages
@@ -530,7 +531,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 // ps2-qemu:
 // Testing the full initialization of ps2 interface.
 // This is a work in progress.
-// See: dev/i8042.c
+// See: i8042.c
     if ( kstrncmp( cmdline, "ps2-qemu", 8 ) == 0 )
     {
         if (HVInfo.initialized == TRUE){
@@ -574,6 +575,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 // tty: Read and write from tty device.
     if ( kstrncmp( cmdline, "tty", 3 ) == 0 )
     {
+        tty_write(1,"Hello",5);
         // Esgotando as filas.
         //while (1){
            // __test_tty();
@@ -589,15 +591,15 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         //#todo: Create serialShowInfo in serial.c.
         //#todo: Only com1 for now.
         printk("com1.divisor:       %d\n",
-            SerialPortInfo.com1.divisor);
+            SerialPortInfo.com1.divisor );
         printk("com1.divisorLoByte: %d\n",
-            SerialPortInfo.com1.divisorLoByte);
+            SerialPortInfo.com1.divisorLoByte );
         printk("com1.divisorHiByte: %d\n",
-            SerialPortInfo.com1.divisorHiByte);
+            SerialPortInfo.com1.divisorHiByte );
         printk("com1.baud_rate:      %d\n",
-            SerialPortInfo.com1.baud_rate);
+            SerialPortInfo.com1.baud_rate );
         printk("com1.is_faulty:      %d\n",
-            SerialPortInfo.com1.is_faulty);
+            SerialPortInfo.com1.is_faulty );
         goto exit_cmp;
     }
 
@@ -609,13 +611,10 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
     }
 
 // Invalid command
-
-    //printk("\n");
     printk ("Error: Command not found!\n");
-    //printk("\n");
 
 exit_cmp:
-   //nothing
+    // Nothing
 done:
     consolePrompt();
     return 0;

@@ -150,7 +150,10 @@ network_handle_ethernet (
 */
 
 // Save the MAC of the caller.
-    network_fill_mac(__saved_caller_mac, eth->mac_src);
+    network_fill_mac(
+        NetworkSaved.caller_mac, 
+        eth->mac_src );
+
 // #todo
 // Here we can check if the destination is us,
 // if the packet is not for us, we simply drop it.

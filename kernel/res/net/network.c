@@ -30,14 +30,9 @@ struct network_info_d *NetworkInfo;
 char *default_network_name_string = "default-network-name";
 char *default_network_version_string = "0.0.0";
 
-// Target MAC.
-unsigned char __saved_gateway_mac[6];
 
-// Used for responses
-unsigned char __saved_caller_mac[6];
-unsigned char __saved_our_mac[6];
-unsigned char __saved_caller_ipv4[4];
-unsigned char __saved_our_ipv4[4];
+// Used for fast responses
+struct network_saved_d  NetworkSaved;
 
 // ====================================================
 
@@ -689,7 +684,9 @@ network_on_receiving (
         //(unsigned short) eth->type);
 
 // Save the MAC of the caller.
-    network_fill_mac(__saved_caller_mac, eth->mac_src);
+    network_fill_mac(
+        NetworkSaved.caller_mac, 
+        eth->mac_src );
 // #todo
 // Here we can check if the destination is us,
 // if the packet is not for us, we simply drop it.

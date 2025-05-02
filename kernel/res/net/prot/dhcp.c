@@ -1,4 +1,3 @@
-
 // dhcp.c
 // dhcp initialization.
 // 2023 - Created by Fred Nora.

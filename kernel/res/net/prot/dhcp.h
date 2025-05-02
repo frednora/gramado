@@ -24,17 +24,13 @@ struct dhcp_info_d
 // This is set TRUE only after the ACK.
     int initialized;
 
-    // 1,2,3,4
-    unsigned int Step;
+    unsigned int Step;  // 1,2,3,4 (DORA)
 
-// Your ip.
-// The IP we got from server.
-    uint8_t your_ipv4[4];
-
-// The server IP.
-    uint8_t server_ipv4[4];
-// The server MAC.
-    uint8_t server_mac[6];
+// US:
+    uint8_t your_ipv4[4];  // Your IP. We got it from the server.
+// SERVER:
+    uint8_t server_ipv4[4];  // The server IP.
+    uint8_t server_mac[6];   // The server MAC.
 
     //...
 };

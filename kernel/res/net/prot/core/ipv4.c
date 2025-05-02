@@ -195,7 +195,10 @@ network_handle_ipv4(
     unsigned char *dst_ipv4 = (unsigned char *) &ip->ip_dst.s_addr;
 
 // Save the IP of the caller.
-    network_fill_ipv4(__saved_caller_ipv4, src_ipv4);
+// For fast response.
+    network_fill_ipv4(
+        NetworkSaved.caller_ipv4, 
+        src_ipv4 );
 
 // Show data.
 // Bytes: Net-style.
@@ -259,27 +262,27 @@ network_handle_ipv4(
     Protocol = (uint8_t) ip->ip_p;
     //printk("Protocol: {%xH}\n",Protocol);
 
-// UDP
-    if (Protocol == PROTOCOL_IP_UDP){
-        //printk("IP: UDP Protocol\n");
-        network_handle_udp( payload_pointer, payload_size );
-        return;
-    }
-// ICMP: ping?
-    if (Protocol == PROTOCOL_IP_ICMP){
-        //printk("IP: ICMP Protocol\n");
-        //network_handle_icmp(..);
-        goto drop;
-    }
-// TCP
-    if (Protocol == PROTOCOL_IP_TCP){
-        //printk("IP: TCP Protocol\n");        
-        network_handle_tcp( payload_pointer, payload_size );
-        return;
-    }
+    switch (Protocol)
+    {
+        case PROTOCOL_IP_TCP:
+            network_handle_tcp( payload_pointer, payload_size );
+            return;
+            break;
+        case PROTOCOL_IP_UDP:
+            network_handle_udp( payload_pointer, payload_size );
+            return;
+            break;
 
-    // #debug
-    // Not supported ipv4 protocol.
+        // Not supported ipv4 protocol.
+        case PROTOCOL_IP_ICMP:
+        // ...
+        default:
+            goto drop;
+            break;
+    };
+
+// Something went wrong!
+    goto fail;
 
 drop:
     return;
@@ -306,6 +309,7 @@ drop:
     //printk("Dst IPV4: {%x}\n", ip->ip_dst.s_addr);
     // destination
 
+    /*
     printk ("Src: %d.%d.%d.%d\n",
         src_ipv4[0], src_ipv4[1], src_ipv4[2], src_ipv4[3]);
     printk ("Dst:  %d.%d.%d.%d\n",
@@ -315,6 +319,7 @@ drop:
     printk("network_handle_ipv4: #breakpoint :)\n");
     while (1){
     };
+    */
 
 fail:
     printk("network_handle_ipv4: Fail\n");

@@ -4,12 +4,21 @@
 #ifndef __NET_NETWORK_H
 #define __NET_NETWORK_H    1
 
-
-// Used for responses
-extern unsigned char __saved_caller_mac[6];
-extern unsigned char __saved_our_mac[6];
-extern unsigned char __saved_caller_ipv4[4];
-extern unsigned char __saved_our_ipv4[4];
+// Used for fast responses
+struct network_saved_d
+{
+// Gateway info
+    unsigned char gateway_ipv4[4];
+    unsigned char gateway_mac[6];
+// Our info.
+// We have another structure for our information.
+    //unsigned char our_ipv4[4];
+    //unsigned char our_mac[6];
+// Caller's info.
+    unsigned char caller_ipv4[4];
+    unsigned char caller_mac[6];
+};
+extern struct network_saved_d  NetworkSaved;
 
 
 // 8192
