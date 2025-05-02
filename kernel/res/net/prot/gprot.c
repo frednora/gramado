@@ -4,7 +4,9 @@
 
 #include <kernel.h>
 
-
+static char response_file[512];
+const char *gprot_response_file = 
+    "<html><head></head><body><span>This is the Gramado Kernel</span></body></html>\x00";
 
 int
 gprot_send_udp ( 
@@ -66,6 +68,34 @@ int gprot_handle_protocol(char *data, uint16_t s_port, uint16_t d_port)
 
     if (dport != OurPort)
         goto fail;
+
+// ----------------
+// g:/
+// packet type: 0 = request
+    
+    if ( buf[0] == 'g' && 
+         buf[1] == ':' && 
+         buf[2] == '/' )
+    {
+        // Prepare the file
+        memset(response_file, 0, sizeof(response_file));
+        //ksprintf(response_file,"g:1 ");
+        //ksprintf(response_file,"<spam>Hello world<spam/>");
+        ksprintf(response_file,gprot_response_file);
+
+        memset(buf, 0, sizeof(buf));
+        ksprintf(buf,"g:1 ");  // Reply code
+        ksprintf(
+            (buf + 4),
+            response_file );
+        //ksprintf(buf,sizeof(response_file));
+        //ksprintf(buf,"g:1 ");  // Reply code
+        //ksprintf(
+        //    (buf + 4),
+        //    "This is a response from Gramado OS\n");
+        NoReply = FALSE;
+        goto done;
+    }
 
 // ----------------
 // g:0

@@ -1,0 +1,9 @@
+<html>
+ <head>
+ </head>
+ 
+ <body>
+ <span>This is the Gramado Kernel</span>
+ </body>
+</html>
+

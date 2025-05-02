@@ -16,7 +16,7 @@
 //const char *ip = "127.0.0.1";
 //#define PORT 43454
 
-const char *ip = "192.168.1.10";
+const char *ip = "192.168.1.14";
 #define PORT  11888
 
 #define SA  struct sockaddr
@@ -26,6 +26,9 @@ const char *ip = "192.168.1.10";
 static char buff[MAX];
 
 static int isTimeToQuit = FALSE;
+
+FILE *file_saved;
+char file_buffer[512];
 
 // ==============================================
 
@@ -53,6 +56,11 @@ int process_command(char *cmdline)
     if (strncmp("g:1", cmdline,3) == 0)
     {
         p = (cmdline + 4); // Address where the response starts.
+        //printf("%s\n",p);
+        // Saving reply
+        memset(file_buffer,0,512);
+        sprintf(file_buffer,p);
+        fwrite(file_buffer, sizeof(char), sizeof(file_buffer),file_saved);
         printf("%s\n",p);
         goto done;
     }
@@ -95,6 +103,9 @@ int main(int argc, char **argv)
     servaddr.sin_addr.s_addr = inet_addr(ip);
     servaddr.sin_port=htons(PORT);
     len = sizeof(servaddr);
+
+    FILE *file_r = fopen("received.txt", "w");
+    file_saved = file_r;
 
 // ---------------------
 // Loop
