@@ -55,10 +55,12 @@ ksys_console_process_keyboard_input (
     unsigned long long2 );
 
 // See: input.c
-int gramk_process_cad_combination(unsigned long flags);
-int gramk_set_input_targets(int stdin_target, int queue_target);
-void gramk_enter_kernel_console(void);
-void gramk_exit_kernel_console(void);
+int input_set_input_targets(int stdin_target, int queue_target);
+
+int input_process_cad_combination(unsigned long flags);
+
+void input_enter_kernel_console(void);
+void input_exit_kernel_console(void);
 
 int 
 wmRawKeyEvent(

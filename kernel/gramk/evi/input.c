@@ -64,19 +64,18 @@ __consoleProcessKeyboardInput (
 // ================================================
 //
 
-void gramk_enter_kernel_console(void)
+void input_enter_kernel_console(void)
 {
     do_enter_embedded_shell(FALSE);
 }
 
-void gramk_exit_kernel_console(void)
+void input_exit_kernel_console(void)
 {
     do_exit_embedded_shell();
 }
 
-
 // Process CAD combination
-int gramk_process_cad_combination(unsigned long flags)
+int input_process_cad_combination(unsigned long flags)
 {
 // If it's allowed to reboot via CAD combination.
 // Calling the wrapper to have a safe reboot.
@@ -94,7 +93,7 @@ int gramk_process_cad_combination(unsigned long flags)
 // + stdin file.
 // + Message queue of the foreground thread.
 // Let's select the valid targets.
-int gramk_set_input_targets(int stdin_target, int queue_target)
+int input_set_input_targets(int stdin_target, int queue_target)
 {
 
 // Not initialized
@@ -375,7 +374,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 
 // exit: Exit the embedded kernel console.
     if ( kstrncmp(cmdline,"exit",4) == 0 ){
-        gramk_exit_kernel_console(); 
+        input_exit_kernel_console(); 
         goto exit_cmp;
     }
 

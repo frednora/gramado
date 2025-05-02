@@ -491,36 +491,6 @@ fail:
     return FALSE;
 }
 
-int User_initialize(void)
-{
-    debug_print("User_initialize:\n");
-
-    current_user = 0;
-
-// User session and cgroup;
-    current_usersession = 0;
-
-// Initialize user info structure
-    printk ("User_initialize: init_user_info\n");
-    //init_user_info ();   
-
-//
-// Security
-//
-
-// Initialize User Session, and cgroup.
-// user section
-    //printk ("User_initialize: initializing user session\n");
-    //init_user_session();
-
-// Initializing the first cgroup
-    printk ("User_initialize: initializing first cgroup\n");   
-    init_first_cgroup();
-
-    //debug_print("User_initialize: done\n");
-    return 0;
-}
-
 static int init_logon_manager (void)
 {
     return 0;
@@ -550,63 +520,37 @@ static int register_logoff_process (pid_t pid)
     return 0;
 }
 
-// Ring0 components for the display server.
-// #todo: Maybe gramk.c is a right place for this routine.
-int gramkInitialize(void)
+//
+// #
+// INITIALIZATION
+//
+
+// session, logon, logoff ...
+int userInitializeStuff(void)
 {
 // Called by keInitialize() in ke.c
 
-    debug_print("gramkInitialize: [TODO FIXME]\n");
+    debug_print("userInitializeStuff: [TODO FIXME]\n");
 
-//-------------------------------
-// The 'gui' structure
-// #bugbug
-// Is it the first time? Or not?
-
-    gui = (void *) kmalloc( sizeof(struct gui_d) );
-    if ((void *) gui == NULL){
-        panic("gramkInitialize: [FAIL] gui\n");
-    }
+    current_user = 0;
+    // User session and cgroup;
+    current_usersession = 0;
+    // Initialize user info structure
+    //printk ("userInitializeStuff: init_user_info\n");
+    //init_user_info ();   
 
 //
-// TTY
+// Security
 //
 
-// tty support.
-// As mensagens do kernel precisam usar esses parametros.
-// o kernel usa a tty0.
+// Initialize User Session, and cgroup.
+// user section
+    //printk ("User_initialize: initializing user session\n");
+    //init_user_session();
 
-    // Limpa a lista
-    printk ("gramkInitialize: Initializing tty module\n");
-    //tty_init_module();
-
-    // Limpa a lista de terminais virtuais tamb�m.
-    printk ("gramkInitialize: Initializing vt module\n");
-    //vt_init_module();
-
-    User_initialize();
-
-    // Enable both input targets for now.
-    // stdin and thread's queue,
-    gramk_set_input_targets(TRUE,TRUE);
-
-// See: ws.h
-// hostname:Displaynumber.Screennumber
-// gramado:0.0
-
-// display and screen
-    current_display = 0;
-    current_screen  = 0;
-
-// #test
-// Mostrando as mensagens antes de pintarmos a primeira janela.
-
-    //#debug
-    //breakpoint
-    //refresh_screen();
-    //while(1){}
-
-    // ...
+// Initializing the first cgroup
+    printk ("userInitializeStuff: initializing first cgroup\n");   
+    init_first_cgroup();
 
     init_logon_manager();
     //init_logoff(...);

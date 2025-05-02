@@ -956,8 +956,31 @@ int keInitialize(int phase)
         gre_initialize();
         // Desktop stuff.
         // Ring0 components for the display server.
+        
+        // #todo
+        // This is the gui structure,
+        gui = (void *) kmalloc(sizeof(struct gui_d));
+        if ((void *) gui == NULL){
+            panic("ke.c: [FAIL] gui\n");
+        }
+
+        // See: ws.h
+        // hostname:Displaynumber.Screennumber
+        // gramado:0.0
+
+        // #todo: Move to evi/?
+        // display and screen
+        current_display = 0;
+        current_screen = 0;
+
+        // #todo: Move to evi/?
+        // Enable both input targets for now.
+        // stdin and thread's queue,
+        input_set_input_targets(TRUE,TRUE);
+
         // see: user.c
-        gramkInitialize();
+        userInitializeStuff();
+
         // Display server registration support.
         // See: dispsrv.c
         ds_init();

@@ -218,9 +218,9 @@
 #include "../gramk/gdi/osshell.h"
 #include "../gramk/gdi/gdi.h"
 
-#include "../gramk/user/input.h"
-#include "../gramk/user/callback.h"
-
+// Event Interface.
+#include "../gramk/evi/input.h"
+#include "../gramk/evi/callback.h"
 
 // ==================================
 // dev/
@@ -354,8 +354,6 @@
 // ==================================
 // The user interactions.
 #include "../gramk/user/user.h"
-
-#include "../gramk/con/con.h"
 
 // Exporting some gramk functions to the other modules
 // inside the base kernel.

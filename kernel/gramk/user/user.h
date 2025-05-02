@@ -58,29 +58,6 @@ extern int current_usersession;
 #define USER_SESSION_COUNT_MAX  16
 extern unsigned long usessionList[USER_SESSION_COUNT_MAX];
 
-//
-// == prototypes ===========================
-//
-
-// Initialize the first cgroup.
-int init_first_cgroup(void);
-
-void set_current_cgroup(struct cgroup_d *cg);
-struct cgroup_d *get_current_cgroup(void);
-
-int get_current_cg_id(void);
-
-int RegisterCG(struct cgroup_d *cg);
-struct cgroup_d *CreateCG(void);
-
-// --------------------------------------------
-
-// Ring0 components for the display server.
-int gramkInitialize (void);
-
-// --------------------------------------------
-
-
 /*
  Um usuário só pode rodar o servidor de recursos gráficos se ele estiver no modo terminal.
  No Gramado o modo terminal utiliza o servidor de recursos gráficos kgws, que é um servidor
@@ -212,8 +189,20 @@ extern struct user_info_d *CurrentUser;    // Current user
 extern unsigned long userList[USER_COUNT_MAX];
 
 //
-// == prototypes ====================
+// == prototypes ===========================
 //
+
+// Initialize the first cgroup.
+int init_first_cgroup(void);
+
+void set_current_cgroup(struct cgroup_d *cg);
+struct cgroup_d *get_current_cgroup(void);
+
+int get_current_cg_id(void);
+
+int RegisterCG(struct cgroup_d *cg);
+struct cgroup_d *CreateCG(void);
+
 
 int GetCurrentGroupId (void);
 
@@ -233,15 +222,11 @@ int sys_setuid(uid_t user_id);
 int sys_getusername(char *ubuff);
 int sys_setusername(const char *new_username);
 
-
-struct user_info_d *CreateUser( char *name, int type );
+struct user_info_d *CreateUser(char *name, int type);
 
 int userCreateRootUser(void);
 
-int User_initialize(void);
+int userInitializeStuff(void);
 
 #endif    
-
-
-
 

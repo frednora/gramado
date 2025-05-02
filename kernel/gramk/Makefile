@@ -72,13 +72,9 @@ LDFLAGS := -m elf_x86_64 -s -x -static
 # Everything is a file.
 OBJS = pixel.o line.o rect.o bitblt.o bg.o font.o char.o text.o gre.o \
 input.o dispsrv.o osshell.o callback.o user.o \
-con.o \
 gramk.o    
 
 all:
-
-# con - Console interface.
-	$(CC) -c con/con.c  $(KERNEL_INCLUDE) $(CFLAGS) -o con.o
 
 # gre - Graphics Engine interface.
 	$(CC) -c gdi/gre/pixel.c   $(KERNEL_INCLUDE) $(CFLAGS) -o pixel.o
@@ -96,8 +92,9 @@ all:
 	$(CC) -c gdi/osshell.c  $(KERNEL_INCLUDE) $(CFLAGS) -o osshell.o
 
 # user - User interaction interface.
-	$(CC) -c user/input.c     $(KERNEL_INCLUDE) $(CFLAGS) -o input.o
-	$(CC) -c user/callback.c  $(KERNEL_INCLUDE) $(CFLAGS) -o callback.o
+	$(CC) -c evi/input.c     $(KERNEL_INCLUDE) $(CFLAGS) -o input.o
+	$(CC) -c evi/callback.c  $(KERNEL_INCLUDE) $(CFLAGS) -o callback.o
+
 	$(CC) -c user/user.c      $(KERNEL_INCLUDE) $(CFLAGS) -o user.o
 
 # Wrapper  for all the interfaces in this module.
