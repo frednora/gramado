@@ -5830,6 +5830,11 @@ ProcessEvent:
     //if (msg == 800350)
        //something()
 
+    // The kernel received a gprot message 
+    // and redirected it to us.
+    if (msg == 800800)
+        yellow_status("ds00: 800800");
+
 //Unknown:
     return 0;
 fail:

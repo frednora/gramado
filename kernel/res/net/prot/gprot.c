@@ -97,6 +97,26 @@ int gprot_handle_protocol(char *data, uint16_t s_port, uint16_t d_port)
         goto done;
     }
 
+
+
+// ----------------
+// g:x
+// packet type: 0 = request
+    if ( buf[0] == 'g' && 
+         buf[1] == ':' && 
+         buf[2] == 'x' )
+    {
+        memset(buf, 0, sizeof(buf));
+        ksprintf(buf,"g:1 ");  // Reply code
+        ksprintf(
+            (buf + 4),
+            "Gramado OS received a g:x request\n");
+
+        ipc_post_message_to_ds( (int) 800800, 0, 0 );
+        NoReply = FALSE;
+        goto done;
+    }
+
 // ----------------
 // g:0
 // packet type: 0 = request

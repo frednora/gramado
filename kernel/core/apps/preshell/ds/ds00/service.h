@@ -27,6 +27,8 @@
 // 1000
 // hello
 
+int serviceHello(void);
+
 // 1001
 // Create window.
 // See: main.c

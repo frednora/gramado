@@ -1182,6 +1182,12 @@ fail:
     return (int) (-1);
 }
 
+// 1000
+int serviceHello(void)
+{
+    return 0;
+}
+
 /*
  * serviceCreateWindow:
  *     Create a window.
@@ -3312,10 +3318,10 @@ static void dispacher(int fd)
         SendEvent = TRUE;  // The response is an EVENT, not a REPLY.
     }
 
-// Process request.
-// Do the service.
-    // #debug
-    // debug_print("dispacher: Process request\n");
+
+//
+// Procedure
+//
 
 // OUT
 // <0 : error 
@@ -4056,6 +4062,7 @@ static int ServerLoop(int launch_tb)
         // OK
         if (bind_status >= 0)
             break;
+        // Fail
         BindReentry--;
         if (BindReentry <= 0)
             break;

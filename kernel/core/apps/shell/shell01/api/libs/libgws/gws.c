@@ -2839,8 +2839,8 @@ struct gws_event_d *gws_get_next_event(
         return NULL;
     }
     */
-   if ((void*) event == NULL)
-   goto fail;
+    if ((void*) event == NULL)
+        goto fail;
 
 // Request
     req_status = (int) __gws_get_next_event_request(fd,wid);
