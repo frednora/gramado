@@ -79,8 +79,7 @@
 // Quantos diretórios podemos alocar aqui?
 // 31KB. (31 alocações)
 
-// This is the base address of a pre-alocated
-// heap of pagetables.
+// This is the base address of a pre-alocated heap of pagetables.
 // 31KB. (31 alocações)
 #define ____DANGER_TABLE_POINTER_HEAP_BASE  0x1000
 

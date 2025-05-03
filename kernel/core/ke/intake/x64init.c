@@ -139,7 +139,7 @@ fail:
 // ps: We are using the kernel page directories now,
 // this way but we're gonna clone the kernel pages
 // when creating the init process.
-// #define CONTROLTHREAD_BASE        0x00200000
+// CONTROLTHREAD_BASE = 0x00200000
 // See: x64gva.h
 // #bugbug:
 // Por que esse endereço está disponível para uso?
@@ -1257,6 +1257,16 @@ int I_x64_initialize(void)
 // Starting phase 1.
     //PROGRESS(":: Call\n"); 
     Initialization.current_phase = 1;
+
+
+// The main virtual addresses for all the user processes.
+// All the user processes have the same virtual address.
+    vaList[MM_COMPONENT_USERPROCESS_BASE_VA] = 
+        (unsigned long) CONTROLTHREAD_BASE;
+    vaList[MM_COMPONENT_USERPROCESS_ENTRYPOINT_VA] = 
+        (unsigned long) CONTROLTHREAD_ENTRYPOINT;
+    vaList[MM_COMPONENT_USERPROCESS_STACK_VA] = 
+        (unsigned long) CONTROLTHREAD_STACK;
 
 // -------------------------------
 // Initialize a lot of kernel components

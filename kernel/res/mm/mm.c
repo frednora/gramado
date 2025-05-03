@@ -8,6 +8,11 @@
 
 #include <kernel.h>
 
+// List of main physical addresses.
+unsigned long paList[32];
+// List of main virtual addresses.
+unsigned long vaList[32];
+
 // --------------------------------
 // Kernel Heap support.
 unsigned long heapCount=0;          // Conta os heaps do sistema

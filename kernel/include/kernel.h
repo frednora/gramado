@@ -107,7 +107,6 @@
 #include "../res/mm/mmsize.h"
 #include "../res/mm/x86_64/x64gpa.h"
 #include "../res/mm/x86_64/x64gva.h"
-#include "../res/mm/mm.h"
 #include "../res/mm/memmap.h" 
 #include "../res/mm/x86_64/intelmm.h"
 #include "../res/mm/mmblock.h"
@@ -118,6 +117,7 @@
 #include "../res/mm/heap.h"      // Heap pointer support.
 #include "../res/mm/aspace.h"    // Address Space, (data base account).
 #include "../res/mm/bank.h"      // Bank. database
+#include "../res/mm/mm.h"
 
 // ==================================
 // hal/

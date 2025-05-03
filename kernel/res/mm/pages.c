@@ -1176,8 +1176,8 @@ static void __initialize_canonical_physical_regions(void)
     SMALL_kernel_base_pa = (unsigned long) SMALLSYSTEM_KERNELBASE;
     SMALL_user_pa        = (unsigned long) SMALLSYSTEM_USERBASE;
     SMALL_cga_pa         = (unsigned long) SMALLSYSTEM_CGA;
-    SMALL_frontbuffer_pa = (unsigned long) gSavedLFB;                    //frontbuffer // #todo: precisamos que o bl passe  endereço físico para mapearmos o lfb.
-    SMALL_backbuffer_pa  = (unsigned long) BACKBUFFER_PA;       //backbuffer
+    SMALL_frontbuffer_pa = (unsigned long) gSavedLFB;      //frontbuffer // #todo: precisamos que o bl passe  endereço físico para mapearmos o lfb.
+    SMALL_backbuffer_pa  = (unsigned long) BACKBUFFER_PA;  //backbuffer
     SMALL_pagedpool_pa   = (unsigned long) SMALLSYSTEM_PAGEDPOLL_START;  //PAGED POOL
     SMALL_heappool_pa    = (unsigned long) SMALLSYSTEM_HEAPPOLL_START;
     SMALL_extraheap1_pa  = (unsigned long) SMALLSYSTEM_EXTRAHEAP1_START;
@@ -1246,9 +1246,13 @@ static void __initialize_ring0area(void)
 // Início da memória RAM.
 
 // pa
+    paList[MM_COMPONENT_SYSTEM_ORIGIN_PA] = (unsigned long) SYSTEM_ORIGIN;
     unsigned long kerneladdress_pa = (unsigned long) SYSTEM_ORIGIN;
+
 // va
+    vaList[MM_COMPONENT_SYSTEM_ORIGIN_VA] = (unsigned long) RING0AREA_VA;
     g_ring0area_va = (unsigned long) RING0AREA_VA;
+
 // pdindex
     int pdindex = (int) X64_GET_PDE_INDEX(RING0AREA_VA);
 // size
@@ -1320,9 +1324,13 @@ static void __initialize_ring3area(void)
 // pa
 // user_address_pa:   
 // User area, (32MB mark) 0x02000000.
+    paList[MM_COMPONENT_USER_BASE_PA] = (unsigned long) USER_BASE_PA;
     unsigned long useraddress_pa = (unsigned long) USER_BASE_PA;
+
 // va
+    vaList[MM_COMPONENT_USER_BASE_VA] = (unsigned long) RING3AREA_VA;
     g_ring3area_va = (unsigned long) RING3AREA_VA;
+
 // pd index
     int pdindex = (int) X64_GET_PDE_INDEX(RING3AREA_VA);
 // size
@@ -1374,9 +1382,13 @@ static void __initialize_kernelimage_region(void)
 // pa
 // kernel_base_pa:    
 // Início da imagem do kernel. (1MB mark).
+    paList[MM_COMPONENT_KERNEL_BASE_PA] = (unsigned long) KERNEL_BASE_PA;
     unsigned long kernelimage_pa = (unsigned long) KERNEL_BASE_PA;
+
 // va
+    vaList[MM_COMPONENT_KERNEL_BASE_VA] = (unsigned long) KERNELIMAGE_VA;
     g_kernelimage_va = (unsigned long) KERNELIMAGE_VA;
+
 // pd index
     int pdindex = (int) X64_GET_PDE_INDEX(KERNELIMAGE_VA);
 // size
@@ -1442,6 +1454,7 @@ static void __initialize_frontbuffer(void)
 // -----------------------------------------
 // pa
 // Saving the physical address into a global variable.
+    paList[MM_COMPONENT_FRONTBUFFER_PA] = (unsigned long) SMALL_frontbuffer_pa;
     g_frontbuffer_pa = 
         (unsigned long) SMALL_frontbuffer_pa;
     // Local variable.
@@ -1451,6 +1464,7 @@ static void __initialize_frontbuffer(void)
 // -----------------------------------------
 // va
 // Saving the virtual address into a global variable.
+    vaList[MM_COMPONENT_FRONTBUFFER_VA] = (unsigned long) FRONTBUFFER_VA;
     g_frontbuffer_va = (unsigned long) FRONTBUFFER_VA;
 
 // -----------------------------------------
@@ -1520,6 +1534,7 @@ static void __initialize_backbuffer(void)
 // ----------------------------
 // pa
 // Saving the physical address into a global variable.
+    paList[MM_COMPONENT_BACKBUFFER_PA] = (unsigned long) SMALL_backbuffer_pa;
     g_backbuffer_pa = (unsigned long) SMALL_backbuffer_pa; 
     // Local variable.
     unsigned long backbuffer_pa = (unsigned long) SMALL_backbuffer_pa; 
@@ -1527,6 +1542,7 @@ static void __initialize_backbuffer(void)
 // ----------------------------
 // va
 // Saving the virtual address into a global variable.
+    vaList[MM_COMPONENT_BACKBUFFER_VA] = (unsigned long) BACKBUFFER_VA;
     g_backbuffer_va = (unsigned long) BACKBUFFER_VA;
 
 // ----------------------------
@@ -1570,15 +1586,20 @@ static void __initialize_pagedpool(void)
 {
     unsigned long *pt_pagedpool = 
         (unsigned long *) get_table_pointer_va();  //PAGETABLE_PAGEDPOOL;
+
 // pa
-    unsigned long pagedpool_pa = 
-        (unsigned long) SMALL_pagedpool_pa;
+    paList[MM_COMPONENT_PAGEDPOOL_PA] = (unsigned long) SMALL_pagedpool_pa;
+    unsigned long pagedpool_pa = (unsigned long) SMALL_pagedpool_pa;
+
 // va
 // Esse é o endereço virtual do início do pool de pageframes.
 // #bugbug: O paged pool so tem 2mb, veja pages.c
 // então só podemos mapear 2*1024*1024/4096 páginas.
 // 0x30600000;  // 2mb a mais que o backbuffer
+    vaList[MM_COMPONENT_PAGEDPOOL_VA] = (unsigned long) PAGEDPOOL_VA;
     g_pagedpool_va = (unsigned long) PAGEDPOOL_VA;
+
+
 // pd index
     int pdindex = (int) X64_GET_PDE_INDEX(PAGEDPOOL_VA);
 // size
@@ -1686,11 +1707,16 @@ static void __initialize_heappool(void)
 // The pagetable.
     unsigned long *pt_heappool = 
         (unsigned long *) get_table_pointer_va();  //PAGETABLE_HEAPPOOL; 
-// The pa.
-    unsigned long heappool_pa = 
-        (unsigned long) SMALL_heappool_pa;
-// The va. 0x30800000;
+
+// pa.
+    paList[MM_COMPONENT_HEAPPOOL_PA] = (unsigned long) SMALL_heappool_pa;
+    unsigned long heappool_pa = (unsigned long) SMALL_heappool_pa;
+
+// va. 0x30800000;
+    vaList[MM_COMPONENT_HEAPPOOL_VA] = (unsigned long) HEAPPOOL_VA;
     g_heappool_va = (unsigned long) HEAPPOOL_VA;
+
+
 // pd index
     int pdindex = (int) X64_GET_PDE_INDEX(HEAPPOOL_VA);
 // Used memory. 2048 KB.
@@ -1735,12 +1761,15 @@ static void __initialize_extraheap1(void)
 {
     unsigned long *pt_extraheap1 = 
         (unsigned long *) get_table_pointer_va();
+
 // pa
-    unsigned long extraheap1_pa = 
-        (unsigned long) SMALL_extraheap1_pa;
-// va
-// 0x30A00000
+    paList[MM_COMPONENT_EXTRAHEAP1_PA] = (unsigned long) SMALL_extraheap1_pa;
+    unsigned long extraheap1_pa = (unsigned long) SMALL_extraheap1_pa;
+
+// va: 0x30A00000
+    vaList[MM_COMPONENT_EXTRAHEAP1_VA] = (unsigned long) EXTRAHEAP1_VA;
     g_extraheap1_va = (unsigned long) EXTRAHEAP1_VA;
+
 // pd index
     int pdindex = (int) X64_GET_PDE_INDEX(EXTRAHEAP1_VA);
 // size
@@ -1771,12 +1800,16 @@ static void __initialize_extraheap2(void)
 {
     unsigned long *pt_extraheap2 = 
         (unsigned long *) get_table_pointer_va();
+
 // pa
+    paList[MM_COMPONENT_EXTRAHEAP2_PA] = (unsigned long) SMALL_extraheap2_pa;
     unsigned long extraheap2_pa = 
         (unsigned long) SMALL_extraheap2_pa;
-// va
-// 0x30C00000
+
+// va: 0x30C00000
+    vaList[MM_COMPONENT_EXTRAHEAP2_VA] = (unsigned long) EXTRAHEAP2_VA;
     g_extraheap2_va = (unsigned long) EXTRAHEAP2_VA;
+
 // pd index
     int pdindex = (int) X64_GET_PDE_INDEX(EXTRAHEAP2_VA);
 // size
@@ -1806,12 +1839,16 @@ static void __initialize_extraheap3(void)
 {
     unsigned long *pt_extraheap3 = 
         (unsigned long *) get_table_pointer_va();
+
 // pa
+    paList[MM_COMPONENT_EXTRAHEAP3_PA] = (unsigned long) SMALL_extraheap3_pa;
     unsigned long extraheap3_pa = 
         (unsigned long) SMALL_extraheap3_pa;
-// va
-// 0x30E00000
+
+// va: 0x30E00000
+    vaList[MM_COMPONENT_EXTRAHEAP3_VA] = (unsigned long) EXTRAHEAP3_VA;
     g_extraheap3_va = (unsigned long) EXTRAHEAP3_VA;
+
 // pd index
     int pdindex = (int) X64_GET_PDE_INDEX(EXTRAHEAP3_VA);
 // size
@@ -2278,6 +2315,8 @@ void pages_print_info(int system_type)
     switch (system_type){
 
     case stSmallSystem:
+        printk("pages.c: Small system\n");
+            /*
             printk("Origin PA:            %xH \n", SMALL_origin_pa );
             printk("Base kernel start PA: %xH \n", SMALL_kernel_base_pa );
             printk("User area start PA:   %xH \n", SMALL_user_pa );
@@ -2289,8 +2328,11 @@ void pages_print_info(int system_type)
             printk("extraheap1 PA:        %xH \n", SMALL_extraheap1_pa );
             printk("extraheap2 PA:        %xH \n", SMALL_extraheap2_pa );
             printk("extraheap3 PA:        %xH \n", SMALL_extraheap3_pa );
+            */
         break;
     case stMediumSystem:
+        printk("pages.c: Medium system\n");
+            /*
             printk("Origin PA:            %xH \n", MEDIUM_origin_pa );
             printk("Base kernel start PA: %xH \n", MEDIUM_kernel_base_pa );
             printk("User area start PA:   %xH \n", MEDIUM_user_pa );
@@ -2302,8 +2344,11 @@ void pages_print_info(int system_type)
             printk("extraheap1 PA:        %xH \n", MEDIUM_extraheap1_pa );
             printk("extraheap2 PA:        %xH \n", MEDIUM_extraheap2_pa );
             printk("extraheap3 PA:        %xH \n", MEDIUM_extraheap3_pa );
+            */
         break;
     case stLargeSystem:
+        printk("pages.c: Large system\n");
+            /*
             printk("Origin PA:            %xH \n", LARGE_origin_pa );
             printk("Base kernel start PA: %xH \n", LARGE_kernel_base_pa );
             printk("User area start PA:   %xH \n", LARGE_user_pa );
@@ -2315,10 +2360,25 @@ void pages_print_info(int system_type)
             printk("extraheap1 PA:        %xH \n", LARGE_extraheap1_pa );
             printk("extraheap2 PA:        %xH \n", LARGE_extraheap2_pa );
             printk("extraheap3 PA:        %xH \n", LARGE_extraheap3_pa );
+            */
         break;
     default:
+        printk("pages.c: system_type failed\n");
         break;
     };
+
+// Print given the saved addresses used in this system.
+    printk("Origin PA:            %xH \n", paList[MM_COMPONENT_SYSTEM_ORIGIN_PA] );
+    printk("Base kernel start PA: %xH \n", paList[MM_COMPONENT_KERNEL_BASE_PA] );
+    printk("User area start PA:   %xH \n", paList[MM_COMPONENT_USER_BASE_PA] );
+    printk("frontbuffer PA:       %xH \n", paList[MM_COMPONENT_FRONTBUFFER_PA] );
+    printk("backbuffer PA:        %xH \n", paList[MM_COMPONENT_BACKBUFFER_PA] );
+    printk("heap pool PA:         %xH \n", paList[MM_COMPONENT_HEAPPOOL_PA] );
+    printk("extraheap1 PA:        %xH \n", paList[MM_COMPONENT_EXTRAHEAP1_PA] );
+    printk("extraheap2 PA:        %xH \n", paList[MM_COMPONENT_EXTRAHEAP2_PA] );
+    printk("extraheap3 PA:        %xH \n", paList[MM_COMPONENT_EXTRAHEAP3_PA] );
+    // #todo: We have 4 paged pool areas.
+    printk("paged memory pool PA: %xH \n", paList[MM_COMPONENT_PAGEDPOOL_PA] );
 }
 
 void pages_print_video_info(void)

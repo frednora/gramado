@@ -38,22 +38,6 @@
 #define KERNEL_PML4_VA 0x000000000009C000
 
 
-//
-// process support.
-//
-
-
-
-// #test 
-// Isso será usado por todos os processos em ring3
-// no ambiente do sistema principal.
-#define CONTROLTHREAD_BASE        0x00200000  // base
-#define CONTROLTHREAD_ENTRYPOINT  0x00201000  // entry point
-// Stack do processo em ring3.
-// Lembre-se que o processo vai precisa de um heap.
-#define CONTROLTHREAD_STACK       0x003FFFF0  // stack 
-
-
 // ==============================================================
 
 
@@ -78,6 +62,14 @@
 #define RING3AREA_VA    0x0000000000200000
 // 0x00201000 Entrypoint
 // 0x003FFFF0 Stack 
+
+// Isso será usado por todos os processos em ring3
+// no ambiente do sistema principal.
+#define CONTROLTHREAD_BASE        0x00200000  // base
+#define CONTROLTHREAD_ENTRYPOINT  0x00201000  // entry point
+// Stack do processo em ring3.
+// Lembre-se que o processo vai precisa de um heap.
+#define CONTROLTHREAD_STACK       0x003FFFF0  // stack 
 
 //
 // Warning:
