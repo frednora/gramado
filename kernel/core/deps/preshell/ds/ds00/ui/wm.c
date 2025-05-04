@@ -4340,6 +4340,12 @@ void wm_rebuild_list(void)
 {
     struct gws_window_d *window;
     register int i=0;
+
+    // #todo:
+    // Reset the global linked list.
+    //first_window = NULL;
+    //last_window = NULL;
+
     for (i=0; i<WINDOW_COUNT_MAX; i++)
     {
         window = (struct gws_window_d *) windowList[i];
@@ -5288,6 +5294,13 @@ static void on_drop(void)
 
 // local
 // Se o mouse esta passando sobre alguma janela de alguns tipos.
+// #todo:
+// Implementation Considerations
+// Instead of just scanning siblings, extend the probe to traverse child windows 
+// within WT_OVERLAPPED windows.
+// Introduce a recursive approach so the probe can go deeper into sub-windows.
+// Ensure that title bar controls are prioritized before checking the client area.
+
 void 
 __probe_window_hover(
     unsigned long long1, 
@@ -5318,7 +5331,7 @@ __probe_window_hover(
     // Get a pointer for a window.
     w = (struct gws_window_d *) windowList[i];
     // If this is a valid pointer.
-    if ( (void*) w != NULL )
+    if ((void*) w != NULL)
     {
         if (w->magic == 1234)
         {

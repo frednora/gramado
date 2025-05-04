@@ -319,6 +319,7 @@
 #include "../res/fs/inode.h"
 #include "../res/fs/exec_elf.h"
 #include "../res/fs/pipe.h"
+#include "../res/fs/files.h"
 #include "../res/fs/fs.h"
 
 // ==================================

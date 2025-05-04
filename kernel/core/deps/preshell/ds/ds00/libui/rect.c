@@ -91,6 +91,25 @@ rect_intersect(
 }
 */
 
+/*
+// Returns TRUE if the two rectangles, r1 and r2, intersect; otherwise, FALSE.
+// Assumes that for every rectangle, r->left < r->right and r->top < r->bottom.
+static inline int rect_intersect(const struct gws_rect_d *r1, const struct gws_rect_d *r2) 
+{
+    if (r1 == NULL) return FALSE;
+    if (r2 == NULL) return FALSE;
+
+    if ((r1->left   < r2->right) &&
+        (r1->top    < r2->bottom) &&
+        (r1->right  > r2->left)  &&
+        (r1->bottom > r2->top))
+    {
+        return TRUE;
+    }
+    return FALSE;
+}
+*/
+
 int
 set_rect ( 
     struct gws_rect_d *rect, 

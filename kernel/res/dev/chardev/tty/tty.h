@@ -175,7 +175,7 @@ struct tty_queue
 #define CHARSET_NAME_SIZE  64
 
 // tty_d:
-// This is famouse TTY structure.
+// This is famous TTY structure.
 struct tty_d
 {
     object_type_t objectType;
