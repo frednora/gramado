@@ -24,19 +24,47 @@ tools/   - SDK tools.
 ## Special folder.
 
 ```
-kernel/core/apps/:
+kernel/core/deps/:
 + Bootloader, kernel modules.
 + Posix commands.
 + Display server and client-side GUI applications.
 ```
+## Where is the boot loader?
 
-> [!IMPORTANT]
-> Build instruction
+kernel/core/deps/kcore/boot/
 
-```
-$ make
-$ ./run
-```
+## Where is the kernel?
+
+kernel/
+
+## Where are the ring 0 kernel modules?
+
+kernel/core/deps/kcore/modules/
+
+## Where is the Init Process?
+
+kernel/core/deps/kservices/init/
+
+## Where is the ring 3 device drivers?
+
+kernel/core/deps/kservices/drivers/
+
+## Where is the ring 3 servers?
+
+kernel/core/deps/kservices/servers/
+
+## Where is the display server?
+
+kernel/core/deps/preshell/ds/ds00/
+
+## Where are the POSIX-like command programs?
+
+kernel/core/deps/shell/shell00/
+
+## Where are the client-side GUI applications?
+
+kernel/core/deps/shell/shell01/
+
 
 > [!IMPORTANT]
 > Gramado OS kernel is in a pre-alpha state, and only suitable for use by developers.
@@ -148,6 +176,9 @@ it includes front-end and back-end layers.
 The main developer is Fred Nora, a brazilian developer.
 Fred Nora is the creator and main maintainer of the project.
 Contributions are welcome.
+
+> [!IMPORTANT]
+> Build instruction
 
 ## Building and running on vm
 
