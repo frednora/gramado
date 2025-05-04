@@ -11,23 +11,28 @@ DISTROS = distros
 # The binaries compiled here will go to this directory.
 BASE = $(DISTROS)/base00
 
-# Quote:
-# "Do Oiapoque ao Chuí"
-# The kernel lives in a shell.
+# #test
+# Putting the dependencies inside the kernel source tree.
+# The OS has two major components:
+# The 'kernel image' and the 'dependencies'
+# The dependencies are: boot loader, modules, and apps.
+# All the dependencies are in kernel/core/deps/ folder,
+# It's because of the close interaction 
+# with the other subfolders in kernel/core/.
 
 ## =================================
 ## BACK-END:
 # Kernel Core: Boot, kernel and ring 0 modules.
-DEP_L0 = kernel/core/apps/kcore
+DEP_L0 = kernel/core/deps/kcore
 # Kernel Services: Init process, ring 3 drivers and ring 3 servers.
-DEP_L1 = kernel/core/apps/kservices
+DEP_L1 = kernel/core/deps/kservices
 
 ## =================================
 ## FRONT-END:
 # Shell Pre-UI: The display server.
-DEP_L2 = kernel/core/apps/preshell
+DEP_L2 = kernel/core/deps/preshell
 # Shell UI: Client-side GUI applications.
-DEP_L3 = kernel/core/apps/shell
+DEP_L3 = kernel/core/deps/shell
 
 # --------------------------
 # Display servers

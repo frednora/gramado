@@ -2802,37 +2802,55 @@ static int dsSendResponse(int fd, int type)
         };
     }
 
+//
 // Write
-    for (i=0; i<8; i++){
+//
 
-    n_writes = write( fd, __buffer, sizeof(__buffer) );
-    //n_writes = send ( fd, __buffer, sizeof(__buffer), 0 );
-
-// No. 
-// We couldn't send a response.
-// O que acontece se nao conseguirmos enviar uma resposta?
-// Certamente o cliente tentara ler e tera problemas.
-// Deveriamos fechar a conexao?
-// Deveriamos enviar um alerta
-
-    if (n_writes <= 0)
+    /*
+    // Our message is snaller than a response structure.
+    // We can send a small message. Smaller than the structure.
+    if (sizeof(__buffer) < sizeof(struct _gRep))
     {
-        //#debug
-        //server_debug_print ("dsSendResponse: response fail\n");
-        printf             ("dsSendResponse: Couldn't send reply\n");
-        //close(fd);
+        printf ("dsSendResponse: Buffer size\n");
         Status = -1;
-        //goto exit1;
+        goto exit1;
     }
+    */
 
-// YES, We sent the response.
-    if (n_writes > 0)
+    // We can't send a message with size=0.
+    if (sizeof(__buffer) <= 0)
     {
-        Status = 0; //OK
-        //goto exit0;
-        break;
+        //printf ("dsSendResponse: Buffer size\n");
+        Status = -1;
+        goto exit1;
     }
 
+    for (i=0; i<8; i++)
+    {
+        n_writes = (int) write( fd, __buffer, sizeof(__buffer) );
+        //n_writes = (int) send( fd, __buffer, sizeof(__buffer), 0 );
+
+        // YES: We sent the response.
+        if (n_writes > 0)
+        {
+            Status = 0;
+            break;
+        }
+
+        // NO: We couldn't send the response.
+        // O que acontece se nao conseguirmos enviar uma resposta?
+        // Certamente o cliente tentara ler e tera problemas.
+        // Deveriamos fechar a conexao?
+        // Deveriamos enviar um alerta
+
+        if (n_writes <= 0)
+        {
+            // #debug NOISE!
+            printf ("dsSendResponse: Couldn't send reply\n");
+            //close(fd);
+            Status = -1;
+            //goto exit1;
+        }
     };
 
     if (Status < 0)
@@ -3295,8 +3313,17 @@ static void dispacher(int fd)
 
 // Read
     n_reads = (ssize_t) read( fd, __buffer, sizeof(__buffer) );
-    if (n_reads <= 0){
-        //server_debug_print ("dispacher: read fail\n");
+
+    // No data.
+    if (n_reads <= 0)
+    {
+        goto exit2;
+    }
+
+    // Less than a single message.
+    // see: protocol.h
+    if (n_reads < sizeof(struct _gReq))
+    {
         goto exit2;
     }
 
