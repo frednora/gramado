@@ -1,10 +1,6 @@
-/*
- * File: unistd.c
- *     Unix standard.
- *     ... and maybe posix stuff.
- * History:
- *     2019 - Created by Fred Nora.
- */
+// unistd.c
+// Unix standard.
+// Created by Fred Nora.
 
 #include <sys/types.h>  
 #include <errno.h>
@@ -44,12 +40,15 @@
 // Global thing. Don't use 'static'.
 // Number of last error.
 // Maybe errno.c is a better place for this. 
-int errno=0;
-int sys_nerr=0;
 
-/*
-//#todo: fix the order
-const char *const sys_errlist[] = {
+int errno = 0;    // The number of the last error.
+int sys_nerr=0;   // The size of the list of strings.
+
+
+
+// #todo: 
+// Fix the order.
+const char *sys_errlist[] = {
 
 	"Operation succeeded",        //0 
 	"Invalid argument",           //EINVAL
@@ -79,8 +78,6 @@ const char *const sys_errlist[] = {
 	"Argument list too long",     //E2BIG 
 	"Bad file number",            //EBADF 
 };
-*/
-
 
 // The <unistd.h> header shall declare 
 // the following external variables:

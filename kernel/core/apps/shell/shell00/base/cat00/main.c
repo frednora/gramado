@@ -39,9 +39,45 @@ const char *HelpString = "options: --help, --version, --number";
 static void doHelp(void);
 static void doVersion(void);
 // ...
-static int process_file(char *file_name, int file_index);
+static int process_file(char *file_name);
 static void __clear_buffer(void);
 //-----------------------------
+
+
+static void cat00_error( char *why);
+static void cat00_notice(char *where);
+
+// ==========================================
+
+static void cat00_error( char *why)
+{
+    if ((void*) why == NULL)
+        return;
+    if (*why == 0)
+        return;
+
+	fprintf (stderr, "device error: %s\n", why);
+	fflush (stderr);
+}
+
+// Log a cat.bin error.
+static void cat00_notice(char *where)
+{
+    if ((void*) where == NULL)
+        return;
+    if (*where == 0)
+        return;
+
+	fprintf (stderr, "error: %s at %s\n",
+		 (errno > 0 && errno < sys_nerr)  // max 
+		 ? sys_errlist[errno]             // List of strings
+		 : "?",
+		 where );
+
+// Send
+	fflush(stderr);
+}
+
 
 static void doHelp(void)
 {
@@ -54,7 +90,7 @@ static void doVersion(void)
 
 // OUT:
 // nwrites or fail.
-static int process_file(char *file_name, int file_index)
+static int process_file(char *file_name)
 {
     int ReturnValue = 0;
     int fdRead = -1;
@@ -63,35 +99,41 @@ static int process_file(char *file_name, int file_index)
 
 // Parameters
     if ((void*) file_name == NULL){
-        printf ("process_file: Missing file_name parameter in file {%d}\n", 
-            file_index);
-        goto fail;
-    }
-    // see: Max
-    if (file_index < 0){
-        printf ("process_file: file_index parameter failed in file {%d}\n", 
-            file_index);
+        printf ("process_file: Missing file_name parameter\n");
         goto fail;
     }
 
+//
 // Open
+//
+
     fdRead = (int) open((char *) file_name, 0, "a+");
     if (fdRead < 0){
-        printf ("process_file: File {%d} failed on open()\n", file_index);
+        printf ("process_file: on open()\n");
         goto fail;
     }
+
+//
 // Read from fd.
-    nreads = read( fdRead, buffer, 511 );
+//
+
+    nreads = (int) read( fdRead, buffer, 511 );
     if (nreads <= 0){
-        printf ("cat00: File {%d} failed on read()\n", file_index);
+        printf ("cat00: File {%d} failed on read()\n", fdRead);
         goto fail;
     }
+
+//
+// Write
+//
+
 // Write on stdout. If there's no redirection. 
 // Print the whole file into the screen.
 // In this case we don't have any modification flag.
-    nwrites = write( fileno(stdout), buffer, sizeof(buffer) );
+    nwrites = (int) write( fileno(stdout), buffer, sizeof(buffer) );
     if (nwrites <= 0){
-        printf ("cat00: File {%d} failed on write()\n", file_index);
+        printf ("cat00: File {%d} failed on write()\n", 
+            fileno(stdout) );
         goto fail;
     }
     ReturnValue = nwrites;
@@ -178,17 +220,16 @@ int main(int argc, char *argv[])
             fShowEnds = TRUE;
         }
         
-        //
-        // It's NOT a flag.
-        //
 
+        // It's NOT a flag.
         // Open the file and print the content into the screen.
         if (isFlag == FALSE)
         {
             if (i >= Max){
                 goto fail;
             }
-            FileStatus = (int) process_file((char *) argv[i], i);
+
+            FileStatus = (int) process_file((char *) argv[i]);
             if (FileStatus < 0){
                 goto fail;
             }

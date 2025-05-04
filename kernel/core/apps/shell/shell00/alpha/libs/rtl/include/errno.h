@@ -1,3 +1,5 @@
+// errno.h
+
 //#test
 //Isso é um test ainda.
 
@@ -81,11 +83,9 @@
 #define ECONNREFUSED  61
 
 
-
-// #See:
-// unistd.c
+// See: unistd.c
 extern int errno;
 extern int sys_nerr;
-
+extern const char *sys_errlist[];
 
 #endif	/* Not _ERRNO_H_ */

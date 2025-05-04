@@ -5402,8 +5402,10 @@ __probe_window_hover(
     //printf ("Not Found\n");
 
     on_mouse_leave(mouse_hover);  // repinte a antiga
-    mouse_hover = (void*) __root_window;
 
+// This ensures that the previous hover state is canceled and 
+// that the root window becomes the default hover target.
+    mouse_hover = (void*) __root_window;
 }
 
 unsigned long wmGetLastInputJiffie(int update)

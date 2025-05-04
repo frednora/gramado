@@ -77,6 +77,9 @@ int main(int argc, char **argv)
     int fMachine=FALSE;
     int fNodeName=FALSE;
 
+    //#test
+    // stdout = stderr;
+
 // Get parametes.
     // #debug
     // printf("argc: {%d}\n",argc);

@@ -3261,7 +3261,7 @@ static int __input_STDIN(int fd)
     //printf ("__input_STDIN: Stop listening stdin\n");
     cr();
     lf();
-    tputstring(fd,"__input_STDIN: Stop listening stdin");
+    tputstring(fd,"__input_STDIN: exit this loop");
     return 0;
 
 fail:
@@ -3310,11 +3310,11 @@ RelaunchShell:
 // Reaproveitando a estrutura em ring3 do stderr.
     //new_stdin = (FILE *) fopen("gramado.txt","a+");
     //new_stdin = stderr;
-    __terminal_input_fp = stdin;   //save global.
-    if ((void*) __terminal_input_fp == NULL){
-        printf("__input_from_connector: __terminal_input_fp\n");
-        return -1;
-    }
+   // __terminal_input_fp = stdin;   //save global.
+   // if ((void*) __terminal_input_fp == NULL){
+   //     printf("__input_from_connector: __terminal_input_fp\n");
+   //     return -1;
+   // }
 
 // --------------------------------------
 // #test
@@ -3341,7 +3341,7 @@ RelaunchShell:
 
         // VT Interactivity
         // + Get bytes from stdin.
-        C = fgetc(__terminal_input_fp);
+        C = fgetc(stdin);
         if (C > 0)
         {
             // VT Renderer
@@ -3352,6 +3352,7 @@ RelaunchShell:
                 MSG_KEYDOWN,  // message code
                 C,            // long1 (ascii)
                 C );          // long2 (ascii)
+            //continue;
         }
 
         // #todo
