@@ -2818,6 +2818,9 @@ fail:
 
 // The server will return an event 
 // from the its client's event queue.
+// #todo
+// We need to work on that function with the purpose 
+// of avoinding with multiple pointers.
 struct gws_event_d *gws_get_next_event(
     int fd,
     int wid,

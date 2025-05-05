@@ -1091,33 +1091,6 @@ int editor_initialize(int argc, char *argv[])
 //=================================
 */
 
-    // #importante
-    // Se não usarmos o loop acima, então podemos pegar
-    // as mensagens do sistema....
-    // O ws pode mandar mensagens de sistema para o
-    // wm registrado.
-
-    /*
-    struct gws_event_d *Event;
-     
-    for(;;){
-        
-        Event = (struct gws_event_d *) gws_next_event();
-        
-        if (Event.type == 0){
-           gws_debug_print("editor: event 0\n");
-        
-        }else if (Event.type == 1){
-           gws_debug_print("editor: event 1\n");
-        
-        }else if (Event.type == 2){
-           gws_debug_print("editor: event 2\n");
-        
-        }else{
-           gws_debug_print("editor: Not valid event!\n");
-        };
-    };
-    */
 
 // exit
     //close (client_fd);

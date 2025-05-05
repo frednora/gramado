@@ -10,7 +10,6 @@ all:
 # Client-side GUI applications
 	make -C shell01/
 
-
 clean:
 # Unix-like commands
 	#-rm she00/base/bin/*.BIN

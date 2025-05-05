@@ -1,9 +1,8 @@
-/*
- * File: events.h
- * 
- *     Events support for libgws.
- *     This header should be included by including "gws.h".
- */
+// events.h
+// Event support for libgws.
+// This header is include in the gws.h
+// Created by Fred Nora.
+
 
 #ifndef __LIBGWS_EVENTS_H
 #define __LIBGWS_EVENTS_H  1
@@ -31,41 +30,55 @@ struct gws_window_event_d
 struct gws_event_d
 {
 
+// Security
     int used;
     int magic;
 
-// 'wid' is the window.
-// 'msg' is the event type.
-
-    //standard msg block
-    //int wid;    // window id.   (The window associated with this event)
-    //int msg;    // msg. (event type).
-    int window;   //event->window
-    int type;     //event->type
+// Header
+// Window ID, Event type, data1, data2 
+    int window;  // Event target.
+    int type;
     unsigned long long1;
     unsigned long long2;
 
-    // extra
-    //unsigned long long3;
-    //unsigned long long4;
-    //unsigned long long5;
-    //unsigned long long6;
-    
+// Extra data
+    unsigned long long3;
+    unsigned long long4;
+    unsigned long long5;
+    unsigned long long6;
+
+// #todo:
+// Maybe we're gonna use these sub-structures.
+// These fields shoud containd information about the devices.
     struct gws_keyboard_event_d kEvent;
     struct gws_mouse_event_d    mEvent;
     struct gws_window_event_d   wEvent;
     // ...
-    
+
+//
+// Event propagation support.
+//
+
+// Indicates whether the event bubbles up the DOM tree.
+    int bubbles;
+
+// Marks the event as processed, preventing further propagation.
+// TRUE or FALSE.
+    int handled;
+
+// ??
+// Determines if the event’s default action can be prevented.
+    //int cancelable;
+
+
+
+// Navigation.
     struct gws_event_d *next;
 };
-
-#define GWS_EVENT_SIZE  (sizeof(struct gws_event_d))
-
-//struct gws_event_d *CurrentEvent;
 extern struct gws_event_d *CurrentEvent;
 
+// Structure size.
+#define GWS_EVENT_SIZE  (sizeof(struct gws_event_d))
+
 #endif    
-
-
-
 

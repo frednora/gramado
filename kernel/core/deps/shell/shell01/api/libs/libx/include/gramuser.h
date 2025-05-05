@@ -230,11 +230,6 @@ struct gws_event_d *gws_get_next_event(
 
 int XNextEvent (struct _XDisplay *dpy, struct _XEvent *event);
 
-// get next event.
-// the window server return the next event
-// from the queue of a client.
-struct gws_event_d *gws_next_event(int fd);
-
 // Send event.
 // It is gonna be used by the window manager to send 
 // events to the window server.

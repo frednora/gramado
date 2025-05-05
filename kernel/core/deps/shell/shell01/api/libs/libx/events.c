@@ -18,19 +18,6 @@
 
 char __gws_events_message_buffer[512];
 
-// get next event.
-// the window server return the next event
-// from the queue of a client.
-
-// #todo
-struct gws_event_d *gws_next_event(int fd)
-{
-    if (fd<0)
-        return NULL;
-
-    printf("gws_next_event: #todo\n"); 
-    return NULL;
-}
 
 // Send event.
 // It is gonna be used by the window manager to send 

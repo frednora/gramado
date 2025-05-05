@@ -1,5 +1,7 @@
-
 // events.c
+// Event support
+// see: events.h, gramuser.h.
+// Created by Fred Nora.
 
 #include <types.h>
 #include <stdio.h>
@@ -17,16 +19,6 @@
 
 char __gws_events_message_buffer[512];
 
-// get next event.
-// the window server return the next event
-// from the queue of a client.
-
-struct gws_event_d *gws_next_event(int fd)
-{
-    gws_debug_print ("gws_next_event: [TODO]\n"); 
-
-    return (struct gws_event_d *) 0;
-}
 
 // Send event.
 // It is gonna be used by the window manager to send 

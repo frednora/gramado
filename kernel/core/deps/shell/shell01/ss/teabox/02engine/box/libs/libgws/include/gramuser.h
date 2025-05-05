@@ -1,6 +1,6 @@
-
 // gramuser.h
 // User interactive components, not system components.
+// Created by Fred Nora.
 
 #ifndef __LIBGWS_GRAMUSER_H_
 #define __LIBGWS_GRAMUSER_H_    1
@@ -11,7 +11,6 @@ unsigned int gws_explode_byte_32(unsigned char data);
 
 unsigned int gws_rgb(int r, int g, int b);
 unsigned int gws_argb(int a, int r, int g, int b);
-
 
 //
 // == 2d ==============================================
@@ -215,11 +214,6 @@ struct gws_event_d *gws_get_next_event(
     int fd, 
     int wid,
     struct gws_event_d *event );
-
-// get next event.
-// the window server return the next event
-// from the queue of a client.
-struct gws_event_d *gws_next_event(int fd);
 
 // Send event.
 // It is gonna be used by the window manager to send 
