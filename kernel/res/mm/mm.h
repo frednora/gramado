@@ -54,6 +54,8 @@ extern unsigned long vaList[32];
 
 // =========================
 
+int mm_gc(void);
+
 int mmInitialize(int phase);
 
 #endif    

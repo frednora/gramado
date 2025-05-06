@@ -144,8 +144,8 @@ void *sys_create_process (
 // Old pml4.
     unsigned long old_pml4=0;
     old_pml4 = CurrentThread->pml4_PA;  //save
-// Switch
-    x64_load_pml4_table( kernel_mm_data.pml4_pa );
+// Switch cr3.
+    x64mm_load_pml4_table( kernel_mm_data.pml4_pa );
 // VA
     void *pml4_va = (void *) CloneKernelPML4();
     if (pml4_va == 0){
@@ -204,8 +204,8 @@ void *sys_create_process (
     // #debug
     serial_printk("sys_create_process: done\n");
 
-// Switch back
-    x64_load_pml4_table(old_pml4);
+// Switch cr3 back
+    x64mm_load_pml4_table(old_pml4);
 
 // done:
     return (void*) new;
@@ -213,10 +213,9 @@ void *sys_create_process (
 fail:
     printk("sys_create_process: fail\n");
 // Switch back
-    x64_load_pml4_table(old_pml4);
+    x64mm_load_pml4_table(old_pml4);
     return NULL;
 }
-
 
 // sys_create_thread:
 // [72] - Create thread.

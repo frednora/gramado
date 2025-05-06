@@ -108,8 +108,6 @@ int x64_init_intel(void);
 // Show info
 void x64_info(void);
 
-void x64_load_pml4_table(unsigned long phy_addr);
-
 // see: x64nmi.c 
 void x64_all_faults(unsigned long number);
 

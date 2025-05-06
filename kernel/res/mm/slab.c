@@ -1,5 +1,6 @@
-
 // slab.c
+// Created by Fred Nora.
+
 // O pool tem dois blocos de 2MB cada.
 // O alocador vai alocar blocos de 1MB, 
 // se falhar, retornará 0, permitindo que quem chamou o alocar

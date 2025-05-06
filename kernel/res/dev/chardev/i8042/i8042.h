@@ -236,6 +236,8 @@ void prepare_for_output (void);
 unsigned char wait_then_read (int port);
 void wait_then_write ( int port, int data );
 
+void i8042_reboot_via_keyboard(void);
+
 void ps2kbd_initialize_device (void);
 void ps2mouse_initialize_device (void);
 

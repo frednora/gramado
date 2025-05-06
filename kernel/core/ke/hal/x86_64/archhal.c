@@ -117,5 +117,8 @@ void archhal_speaker_off (void)
 
 void archhal_reboot(void)
 {
+// Reboot via i8042 keyboard using Assembly code.
+// This is a good code.
+// It used timeout, invalidate cache and has a soft place to fall.
     asm_reboot();
 }

@@ -70,6 +70,7 @@ LDFLAGS := -m elf_x86_64 -s -x -static
 
 OBJS = mmsize.o \
 mmusage.o \
+x64mm.o \
 mm.o \
 mminfo.o \
 mmpool.o \
@@ -80,6 +81,13 @@ mmft.o
 
 
 all:
+
+# arm
+
+# x86_64
+	$(CC) -c x86_64/x64mm.c  $(KERNEL_INCLUDE) $(CFLAGS) -o x64mm.o
+
+# mm
 	$(CC) -c mmsize.c   $(KERNEL_INCLUDE) $(CFLAGS) -o mmsize.o
 	$(CC) -c mmusage.c  $(KERNEL_INCLUDE) $(CFLAGS) -o mmusage.o
 	$(CC) -c mm.c       $(KERNEL_INCLUDE) $(CFLAGS) -o mm.o
@@ -97,5 +105,4 @@ all:
 
 clean:
 	rm *.o    
-	
 	

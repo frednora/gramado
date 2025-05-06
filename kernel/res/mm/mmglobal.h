@@ -6,6 +6,10 @@
 #ifndef __MM_MMGLOBAL_H
 #define __MM_MMGLOBAL_H    1
 
+
+// #todo
+// Everything here is x86_64 and we can move to x64mm.h
+
 // #test
 // It needs to be a global thing.
 

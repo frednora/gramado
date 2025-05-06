@@ -893,11 +893,6 @@ int x64_init_intel (void)
     return 0;
 }
 
-void x64_load_pml4_table(unsigned long phy_addr)
-{
-    asm volatile ("movq %0, %%cr3"::"r"(phy_addr));
-}
-
 //
 // End
 //

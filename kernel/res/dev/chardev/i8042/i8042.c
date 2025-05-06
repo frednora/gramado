@@ -154,6 +154,15 @@ void wait_then_write( int port, int data )
     out8( port, data );
 }
 
+
+void i8042_reboot_via_keyboard(void)
+{
+// Reboot via i8042 keyboard using Assembly code.
+// This is a good code.
+// It used timeout, invalidate cache and has a soft place to fall.
+    hal_reboot();
+}
+
 // ---------------------------------
 // DDINIT_ps2:
 // PS2 full initialization

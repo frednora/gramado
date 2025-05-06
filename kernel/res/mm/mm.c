@@ -100,10 +100,22 @@ static unsigned long mm_prev_pointer=0;
 
 // ----------------------------
 
-static int __init_heap(void);
-static int __init_stack(void);
+static int __init_kernel_heap(void);
+static int __init_kernel_stack(void);
 
 // ----------------------------
+
+
+// mm_gc:
+// Garbage collector.
+// #todo:
+// Let's clean up some memory let's reuse some freed structures.
+int mm_gc(void)
+{
+    panic ("mm_gc: Unimplemented\n");
+    return (int) -1;
+}
+
 
 /*
 unsigned long slab_2mb_extraheap2(void)
@@ -126,18 +138,18 @@ unsigned long slab_2mb_extraheap3(void)
 */
 
 
-/*
- * __init_heap:
- *     Iniciar a gerência de Heap do kernel. 
- * Essa rotina controi a mão o heap usado pelo processo kernel.
- *     +Ela é chamada apenas uma vez.
- *     +Ela deve ser chamada entes de qualquer outra operação 
- * envolvendo o heap do processo kernel.
- * @todo: Rotinas de automação da criação de heaps para processos.
- */
-
+// __init_kernel_heap:
+// Initializes the kernel heap management.
+// This routine builds a handed mande heap that is gonna be used 
+// by the kernel. (ps: also kernel process)
+// + It's called once.
+// + Needs to be called before any other kernel operation that uses the heap.
+// #todo:
+// We need a routine for automation in the creation of new heaps.
+// #ps: Maybe we already have one.
 // OUT: 0=OK.
-static int __init_heap(void)
+
+static int __init_kernel_heap(void)
 {
     register int i=0;
 
@@ -170,32 +182,32 @@ static int __init_heap(void)
 
 // Check Heap Pointer.
     if (g_heap_pointer == 0){
-        debug_print("__init_heap: [FAIL] g_heap_pointer\n");
+        debug_print("__init_kernel_heap: g_heap_pointer\n");
         goto fail;
     }
 
 // Check Heap Pointer overflow.
     if (g_heap_pointer > kernel_heap_end){
-        debug_print("__init_heap: [FAIL] Heap Pointer Overflow\n");
+        debug_print("__init_kernel_heap: Heap Pointer Overflow\n");
         goto fail;
     }
 
 // Heap Start
     if (kernel_heap_start == 0){
-        debug_print("__init_heap: [FAIL] HeapStart\n");
+        debug_print("__init_kernel_heap: HeapStart\n");
         goto fail;
     }
 
 // Heap End
     if (kernel_heap_end == 0){
-        debug_print("__init_heap: [FAIL] HeapEnd\n");
+        debug_print("__init_kernel_heap: HeapEnd\n");
         goto fail;
     }
 
 // Check available heap.
 // #todo: Tentar crescer o heap.
     if (g_available_heap == 0){
-        debug_print("__init_heap: [FAIL] g_available_heap\n");
+        debug_print("__init_kernel_heap: g_available_heap\n");
         goto fail;
     }
 
@@ -221,18 +233,17 @@ static int __init_heap(void)
 // ====================================
 fail:
     KernelHeap.initialized = FALSE;
-    debug_print("__init_heap: Fail\n");
+    debug_print("__init_kernel_heap: Fail\n");
     //refresh_screen();
     return (int) -1;
 }
 
-/*
- * __init_stack:
- *     Iniciar a gerência de Stack do kernel. 
- *     #todo: Usar stackInit(). 
- */
+// __init_kernel_stack:
+// Initializes the kernel stack management.
+// + It's called once.
+// + Needs to be called before any other kernel operation that uses the stack.
 // OUT: 0=OK.
-static int __init_stack(void)
+static int __init_kernel_stack(void)
 {
 // Globals
 
@@ -249,12 +260,12 @@ static int __init_stack(void)
 
 // End
     if (kernel_stack_end == 0){
-        debug_print("__init_stack: [FAIL] kernel_stack_end\n");
+        debug_print("__init_kernel_stack: kernel_stack_end\n");
         goto fail;
     }
 // Start
     if (kernel_stack_start == 0){
-        debug_print("__init_stack: [FAIL] kernel_stack_start\n");
+        debug_print("__init_kernel_stack: kernel_stack_start\n");
         goto fail;
     }
 
@@ -266,13 +277,6 @@ static int __init_stack(void)
 fail:
     KernelStack.initialized = FALSE;
     return (int) -1;
-}
-
-// #todo: Move this routine to another file.
-int kernel_gc(void)
-{
-    panic ("kernel_gc: Unimplemented\n");
-    return -1;
 }
 
 struct heap_d *memory_create_new_heap ( 
@@ -332,13 +336,14 @@ int mmInitialize(int phase)
         // Clear BSS.
         // Criar mmClearBSS()
 
-        // heap and stack
-        Status = (int) __init_heap();
+        // Initializing kernel heap.
+        Status = (int) __init_kernel_heap();
         if (Status != 0){
             debug_print("mmInitialize: Heap\n");
             goto fail;
         }
-        Status = (int) __init_stack();
+        // Initializing kernel stack.
+        Status = (int) __init_kernel_stack();
         if (Status != 0){
             debug_print ("mmInitialize: Stack\n");
             goto fail;

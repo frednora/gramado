@@ -738,7 +738,7 @@ pid_t copy_process(
 do_clone:
 
     // Switch
-    //x64_load_pml4_table( kernel_mm_data.pml4_pa );
+    //x64mm_load_pml4_table( kernel_mm_data.pml4_pa );
 
     //printk (":)\n");
     //refresh_screen();
@@ -1412,7 +1412,7 @@ do_clone:
     //while(1){}
 
     // Switch back
-    //x64_load_pml4_table( old_pml4 );
+    //x64mm_load_pml4_table( old_pml4 );
 
 //
 // Balance 
@@ -1481,7 +1481,7 @@ fail:
     // Switch back
     // Se falhamos logo após pegarmos o valor.
     //if (old_pml4 != 0){
-    //    x64_load_pml4_table( old_pml4 );
+    //    x64mm_load_pml4_table( old_pml4 );
     //}
 
     copy_process_in_progress=FALSE;

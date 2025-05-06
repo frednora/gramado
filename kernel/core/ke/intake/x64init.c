@@ -612,10 +612,9 @@ void I_x64ExecuteInitialProcess(void)
 
     unsigned long __pml4_pa = (unsigned long) t->pml4_PA;
     // Set CR3 register
-    x64_load_pml4_table(__pml4_pa);
-    // Refresh
-    asm volatile ("movq %cr3, %rax");
-    asm volatile ("movq %rax, %cr3");
+    x64mm_load_pml4_table(__pml4_pa);
+    // Refresh cr3.
+    x64mm_refresh_cr3();
 
 // #maybe
 // Vamos iniciar antes para que

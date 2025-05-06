@@ -1,6 +1,8 @@
-
 // intelmm.h
 // x86_64 only.
+// #attention: We also have the header x64mm.h
+// we need to merge them.
+// Created by Fred Nora.
 
 #ifndef __MM_INTELMM_H
 #define __MM_INTELMM_H    1

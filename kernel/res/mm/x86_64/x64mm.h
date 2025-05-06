@@ -1,8 +1,10 @@
-
 // x64mm.h
+// #attention: We also have the header intelmm.h
+// we need to merge them.
+// Created by Fred Nora.
 
-#ifndef __X64MM_H
-#define __X64MM_H    1
+#ifndef __MM_X64MM_H
+#define __MM_X64MM_H    1
 
 // Salvando o último endereço válido de memória ram.
 // usado em head.asm
@@ -817,15 +819,20 @@ void mmShowPagedMemoryList(int max);
 // mm support
 void mmTestingPageAlloc(void);
 
-int kernel_gc (void);
-
 unsigned long get_new_frame (void);
 unsigned long alloc_frame(void);
 
 // #danger
 unsigned long get_table_pointer_va(void);
 
+
+void __enable_pae(void);
+void x64mm_enable_paging(void);
+
 void load_pml4_table(void *phy_addr);
+void x64mm_load_pml4_table(unsigned long phy_addr);
+void x64mm_refresh_cr3(void);
+
 
 void *CloneKernelPDPT0(void);
 void *CloneKernelPD0(void);
