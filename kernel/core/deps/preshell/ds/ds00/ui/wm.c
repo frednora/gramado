@@ -512,8 +512,13 @@ wmProcessKeyboardEvent(
         }
 
         // #todo
+        // Testing the yellow dialog.
         if (long1 == VK_F12)
+        {
+            YellowDialogInfo.useYellowDialog = TRUE;
+            YellowDialogInfo.display_dialog = TRUE;
             return 0;
+        }
 
         // Always affect the window with focus.
         // Enfileirar a mensagem na fila de mensagens
@@ -5713,6 +5718,12 @@ ProcessEvent:
 // #test
     long3 = (unsigned long) RTLEventBuffer[4];  //jiffie
 
+
+// Is it time to use the yellow dialog?
+    if (YellowDialogInfo.useYellowDialog == TRUE){
+        yellow_status_dialog(msg,long1,long2,long2);
+        return 0;
+    }
 
 // -----------------------
 // MOUSE events

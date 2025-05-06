@@ -11,6 +11,8 @@
 struct statusbar_info_d  StatusBarInfo;
 
 
+struct yellow_dialog_info_d  YellowDialogInfo;
+
 // ===================================
 
 // yellow bar. (rectangle not window)
@@ -161,3 +163,39 @@ void yellow_status(const char *string)
     yellowstatus0(string,TRUE);
 }
 
+int 
+yellow_status_dialog (
+    int msg,
+    unsigned long long1,
+    unsigned long long2,
+    unsigned long long3 )
+{
+    if (YellowDialogInfo.display_dialog == TRUE){
+        yellow_status("DIALOG: Reboot system?");
+        YellowDialogInfo.display_dialog = FALSE;
+    }
+
+    if (msg == GWS_SysKeyDown && long1 == VK_F11)
+    {
+        YellowDialogInfo.display_dialog = FALSE;
+        YellowDialogInfo.useYellowDialog = FALSE;
+        return 0;
+    }
+
+    if (msg == GWS_SysKeyDown && long1 == VK_F12)
+    {
+        YellowDialogInfo.display_dialog = FALSE;
+        YellowDialogInfo.useYellowDialog = FALSE;
+        rtl_reboot();
+    }
+
+    return 0;
+}
+
+int yellow_dialog_initialize(void)
+{
+    YellowDialogInfo.initialized = TRUE;
+    YellowDialogInfo.display_dialog = FALSE;
+    YellowDialogInfo.useYellowDialog = FALSE;
+    return 0;
+}

@@ -3811,7 +3811,8 @@ static int ServerInitialization(void)
 // Window manager
     wmInitializeGlobals();
     wmInitializeStructure();
-
+    // Initialize Yellow dialog.
+    yellow_dialog_initialize();
 
 /*
     FILE *input_fp;
@@ -4493,6 +4494,21 @@ int main (int argc, char **argv)
     if (Status != 0){
         goto fail;
     }
+
+/*
+// Effect
+// #testing an effect using BMP file.
+    for (i=0; i<32; i++)
+    {
+        bmp_decode_system_icon0(
+            1,     // Image index
+            2,     // l
+            2,     // t
+            TRUE,  // Show or not. 
+            i );   // Zoom factor.
+        rtl_sleep(100);
+    };
+*/
 
     Status = (int) ServerLoop(fLaunchTB);
     if (Status != 0){
