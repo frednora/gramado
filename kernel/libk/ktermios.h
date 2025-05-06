@@ -1,4 +1,3 @@
-
 // ktermios.h
 // ring0, kernel base.
 // Created by Fred Nora.
@@ -17,8 +16,8 @@
 //sending signals (ou MSG_)
 // control functions.
 
-#ifndef __KTERMIOS_H
-#define __KTERMIOS_H    1
+#ifndef __LIBK_KTERMIOS_H
+#define __LIBK_KTERMIOS_H    1
 
 // Types.
 // Terminal input output data types.
@@ -70,13 +69,12 @@ Macro: int NCCS
 // ================================================
 
 //
-// termio
+// termio_d
 //
 
 #define NCC  8
 
-// #todo: struct termio_d
-struct termio 
+struct termio_d
 {
     unsigned short c_iflag;  // input mode flags 
     unsigned short c_oflag;  // output mode flags 
@@ -88,11 +86,13 @@ struct termio
 
     unsigned char c_cc[NCC];  // control characters
 };
+#define termio  termio_d 
+
 
 // ================================================
 
 //
-// termios
+// termios_d
 //
 
 // See:
@@ -102,7 +102,6 @@ struct termio
 // Size of cc_c array, some extra space for extensions.
 #define NCCS  20
 
-//struct termios 
 struct termios_d
 {
     tcflag_t c_iflag;      // input modes 
@@ -121,6 +120,7 @@ struct termios_d
     speed_t  c_ispeed;     // input speed 
     speed_t  c_ospeed;     // output speed 
 };
+// #define termios  termios_d
 
 // ================================================
 

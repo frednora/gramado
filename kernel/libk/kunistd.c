@@ -1,7 +1,19 @@
 // kunistd.c
 // Created by Fred Nora.
 
-#include <kernel.h>    
+#include <kernel.h>
+
+long fpathconf(int fildes, int name)
+{
+    debug_print("fpathconf: [TODO]\n");
+    return -1;
+}
+
+long pathconf(const char *pathname, int name)
+{
+    debug_print("pathconf: [TODO]\n");    
+    return -1;
+} 
 
 // sys_gethostname:
 // Get host name.
@@ -83,18 +95,6 @@ fail:
     refresh_screen();
     return (int) -1;
 }
-
-long fpathconf(int fildes, int name)
-{
-    debug_print("fpathconf: [TODO]\n");
-    return -1;
-}
-
-long pathconf(const char *pathname, int name)
-{
-    debug_print("pathconf: [TODO]\n");    
-    return -1;
-} 
 
 // sys_lseek - reposition read/write file offset
 // See:

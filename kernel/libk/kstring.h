@@ -1,10 +1,9 @@
-
 // kstring.h
 // Ring 0, string operations.
 // Created by Fred Nora.
 
-#ifndef __KSTRING_H
-#define __KSTRING_H    1
+#ifndef __LIBK_KSTRING_H
+#define __LIBK_KSTRING_H    1
 
 // #important
 void *memcpy   ( void *v_dst, const void *v_src, unsigned long n );
@@ -45,7 +44,7 @@ string_compute_checksum (
 
 #define LSH_TOK_DELIM   " \t\r\n\a" 
 #define LSH_TOK_DELIM2  " \t\r\n\a+!:=/.<>;|&" 
-#define SPACE " "
+#define SPACE  " "
 #define TOKENLIST_MAX_DEFAULT  80
 
 char *k_strtok_r (

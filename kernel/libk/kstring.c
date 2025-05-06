@@ -448,15 +448,15 @@ void *memset ( void *ptr, int value, int size )
     return (void *) ptr;
 }
 
-
-/* Copyright (c) 2011, 2012 Jonas 'Sortie' Termansen. */
+// strcspn
+// Copyright (c) 2011, 2012 Jonas 'Sortie' Termansen.
 size_t strcspn(const char* str, const char* reject)
 {
     register int i=0;
     int matches = 0;
     register int reject_length = 0;
 
-    while ( reject[reject_length] ){
+    while (reject[reject_length]){
         reject_length++;
     };
 
@@ -480,8 +480,8 @@ size_t strcspn(const char* str, const char* reject)
     };
 }
 
-/* Copyright (c) 2011, 2012 Jonas 'Sortie' Termansen. */
-// ?? is it working?
+// strspn
+// Copyright (c) 2011, 2012 Jonas 'Sortie' Termansen.
 size_t strspn (const char* str, const char* accept)
 {
     int matches = 0;
