@@ -1599,6 +1599,90 @@ regularfile_ioctl (
     return -1;
 }
 
+file *new_file(object_type_t object_type)
+{
+// Called by kstdio_initialize().
+
+    file *new_file;
+    int slot = -1;
+
+// stderr
+// pega slot em file_table[] para stderr
+
+    slot = get_free_slots_in_the_file_table();
+    if ( slot < 0 || slot >= NUMBER_OF_FILES ){
+        x_panic("new_file: slot");
+    }
+    new_file = (file *) file_table[slot];
+    if ((void*) new_file == NULL){
+        x_panic("new_file: new_file");
+    }
+    new_file->filetable_index = slot;
+
+// fd
+// We don't have this yet.
+    //new_file->_file = STDERR_FILENO;  //2
+    new_file->_file = -1;
+
+// This is a regular file.
+    new_file->____object = object_type;
+// sync
+    new_file->sync.sender_pid = (pid_t) -1;
+    new_file->sync.receiver_pid = (pid_t) -1;
+    new_file->sync.can_read    = TRUE;
+    new_file->sync.can_write   = TRUE;
+    new_file->sync.can_execute = FALSE;
+    new_file->sync.can_accept  = FALSE;
+    new_file->sync.can_connect = FALSE;
+// _flags
+    new_file->_flags = (__SWR | __SRD); 
+
+// buffer
+
+    //new_file->_base = &prompt_err[0];  //See: kstdio.h
+    //new_file->_p = &prompt_err[0];
+
+    new_file->_base = kmalloc(PROMPT_SIZE);
+    if ( (void*) new_file->_base == NULL )
+        panic("new_file: new_file->_base");
+    new_file->_p = new_file->_base;
+
+    new_file->_bf._base = new_file->_base;
+    new_file->_lbfsize = PROMPT_SIZE; //128; //#todo
+    new_file->_r = 0;
+    new_file->_w = 0;
+    new_file->_cnt = PROMPT_SIZE;
+    
+    // #todo
+    new_file->_tmpfname = "NONAME.TXT";
+
+    new_file->fd_counter = 1;
+    // ...
+    // inode support.
+    // pega slot em inode_table[] 
+    slot = get_free_slots_in_the_inode_table();
+    if (slot<0 || slot >=NUMBER_OF_FILES){
+        x_panic("new_file: new_file inode slot\n");
+    }
+    new_file->inode = (struct inode_d *) inode_table[slot];
+    new_file->inodetable_index = slot;
+    if ((void*) new_file->inode == NULL){
+        x_panic("new_file: new_file inode struct\n");
+    }
+    new_file->inode->filestruct_counter = 1; //inicialize
+
+// Copy the name
+    memcpy ( 
+        (void*)       new_file->inode->path, 
+        (const void*) new_file->_tmpfname, 
+              sizeof( new_file->inode->path ) );
+
+    new_file->used = TRUE;
+    new_file->magic = 1234;
+
+// Return the pointer for a new stream.
+    return (file*) new_file;
+}
 
 // #warning
 // Because the libc has hardcoded file descriptor values for the
@@ -1830,93 +1914,6 @@ static void __initialize_stderr(void)
     stderr->magic = 1234;
 }
 
-
-file *new_file(object_type_t object_type)
-{
-// Called by kstdio_initialize().
-
-    file *new_file;
-    int slot = -1;
-
-// stderr
-// pega slot em file_table[] para stderr
-
-    slot = get_free_slots_in_the_file_table();
-    if ( slot < 0 || slot >= NUMBER_OF_FILES ){
-        x_panic("new_file: slot");
-    }
-    new_file = (file *) file_table[slot];
-    if ((void*) new_file == NULL){
-        x_panic("new_file: new_file");
-    }
-    new_file->filetable_index = slot;
-
-// fd
-// We don't have this yet.
-    //new_file->_file = STDERR_FILENO;  //2
-    new_file->_file = -1;
-
-// This is a regular file.
-    new_file->____object = object_type;
-// sync
-    new_file->sync.sender_pid = (pid_t) -1;
-    new_file->sync.receiver_pid = (pid_t) -1;
-    new_file->sync.can_read    = TRUE;
-    new_file->sync.can_write   = TRUE;
-    new_file->sync.can_execute = FALSE;
-    new_file->sync.can_accept  = FALSE;
-    new_file->sync.can_connect = FALSE;
-// _flags
-    new_file->_flags = (__SWR | __SRD); 
-
-// buffer
-
-    //new_file->_base = &prompt_err[0];  //See: kstdio.h
-    //new_file->_p = &prompt_err[0];
-
-    new_file->_base = kmalloc(PROMPT_SIZE);
-    if ( (void*) new_file->_base == NULL )
-        panic("new_file: new_file->_base");
-    new_file->_p = new_file->_base;
-
-    new_file->_bf._base = new_file->_base;
-    new_file->_lbfsize = PROMPT_SIZE; //128; //#todo
-    new_file->_r = 0;
-    new_file->_w = 0;
-    new_file->_cnt = PROMPT_SIZE;
-    
-    // #todo
-    new_file->_tmpfname = "NONAME.TXT";
-
-    new_file->fd_counter = 1;
-    // ...
-    // inode support.
-    // pega slot em inode_table[] 
-    slot = get_free_slots_in_the_inode_table();
-    if (slot<0 || slot >=NUMBER_OF_FILES){
-        x_panic("new_file: new_file inode slot\n");
-    }
-    new_file->inode = (struct inode_d *) inode_table[slot];
-    new_file->inodetable_index = slot;
-    if ((void*) new_file->inode == NULL){
-        x_panic("new_file: new_file inode struct\n");
-    }
-    new_file->inode->filestruct_counter = 1; //inicialize
-
-// Copy the name
-    memcpy ( 
-        (void*)       new_file->inode->path, 
-        (const void*) new_file->_tmpfname, 
-              sizeof( new_file->inode->path ) );
-
-    new_file->used = TRUE;
-    new_file->magic = 1234;
-
-// Return the pointer for a new stream.
-    return (file*) new_file;
-}
-
-
 // Os buffers dos arquivos acima.
 // prompt[]
 // Esses prompts são usados como arquivos.
@@ -2120,6 +2117,12 @@ static void __initialize_virtual_consoles(void)
     //while(1){}
 }
 
+
+//
+// #
+// INITIALIZATION
+//
+
 /*
  * kstdio_initialize:
  *     Inicializando stdio pertencente ao kernel base.
@@ -2142,14 +2145,14 @@ static void __initialize_virtual_consoles(void)
 
 int kstdio_initialize(void)
 {
-    kstdio_standard_streams_initialized = FALSE;
 
 // Ja temos suporte a print nesse momento por causa
 // das configurações de console. Mas nessa rotina 
 // refaremos as configurações de console.
 
-    debug_print("kstdio_initialize: [TODO]\n");
-    //printk   ("kstdio_initialize: [TODO]\n");
+    kstdio_standard_streams_initialized = FALSE;
+
+    debug_print("kstdio_initialize:\n");
 
 // ??
 // Input mode
@@ -2188,13 +2191,12 @@ int kstdio_initialize(void)
     //while(1){}
 
 // Background (Second time).
-    displayInitializeBackground(
-        COLOR_KERNEL_BACKGROUND,
-        TRUE );
+    displayInitializeBackground( COLOR_KERNEL_BACKGROUND, TRUE );
 
 // Done
     kstdio_standard_streams_initialized = TRUE;
     return TRUE;
+
 //fail:
     //return FALSE;
 }

@@ -2,8 +2,8 @@
 // Standard io support for libc in ring0.
 // Created by Fred Nora.
 
-#ifndef __KSTDIO_H
-#define __KSTDIO_H    1
+#ifndef __LIBK_KSTDIO_H
+#define __LIBK_KSTDIO_H    1
 
 // input() function support?
 #define INPUT_MODE_LINE              0
@@ -286,11 +286,8 @@ extern unsigned long syncList[SYNC_COUNT_MAX];
 // =============================
 //
 
-/*
- * file_d:
- *     File structure.
- *     ring 0.
- */
+// File structure.
+// Ring 0.
 struct file_d
 {
     // The 'operation mode'.
@@ -653,21 +650,16 @@ regularfile_ioctl (
     unsigned long request, 
     unsigned long arg );
 
+//
+// #
+// INITIALIZATION
+//
+
 int kstdio_initialize(void);
 
 
-// -----------------------------------
-// printf() in ring0.
-// No more printf() in ring0.
-//https://en.wikipedia.org/wiki/Printk
-#define printk  kinguio_printf
-
-// -----------------------------------
-// sprintf() in ring0.
-#define ksprintf  mysprintf
-
-// ??
-// crt/
+// ------------------
+// crt/ prefix
 #define crt_printf   kinguio_printf
 #define crt_sprintf  mysprintf
 #define crt_fseek    k_fseek
@@ -675,6 +667,15 @@ int kstdio_initialize(void);
 #define crt_ftell    k_ftell
 #define crt_fclose   k_fclose
 // ...
+
+// -----------------------------------
+// sprintf() in ring0.
+#define ksprintf  mysprintf
+
+// -----------------------------------
+// printf() in ring0.
+#define printk  kinguio_printf
+
 
 #endif    
 

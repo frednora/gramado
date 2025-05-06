@@ -25,9 +25,9 @@ int rand(void)
 {
     int ret_value=0;
     int extra_value = 8;
-    unsigned int seed = (unsigned int) (jiffies & 0xFFFFFFFF);
+    unsigned int Seed = (unsigned int) (jiffies & 0xFFFFFFFF);
 
-    srand(seed);
+    srand(Seed);
     ret_value = (int) ((__randseed * extra_value) + extra_value);
 
     return (int) ret_value;
@@ -70,13 +70,11 @@ int k_atoi(const char *str)
         str++;
     };
 
+    //return (int) (sign ? -rv : rv);
     if (sign){
         return (int) (-rv);
-    }else{
-        return (int) (rv);
-    };
-
-    //return (int) (sign ? -rv : rv);
+    }
+    return (int) (rv);
 }
 
 // Supporting the services 808 e 809.
@@ -111,7 +109,7 @@ void *slab_alloc (size_t size)
 
 // kmalloc implementation.
 // IN: Clear or not the allocated memory.
-// See: mm/mm.c
+// See: mm.c
 static void *__kmalloc_impl(size_t size, int clean)
 {
     void *ptr;
@@ -218,8 +216,8 @@ void kfree(void *ptr)
 // Alloca e preenche com zero.
 void *kcalloc(size_t count, size_t size)
 {
-    //void *ptr;
     size_t new_size = (size_t) (count * size);
+    //void *ptr;
 
 // #todo
     //if (size <= 0)

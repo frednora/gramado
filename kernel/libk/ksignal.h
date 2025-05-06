@@ -1,26 +1,24 @@
 // ksignal.h
 // Created by Fred Nora.
 
-#ifndef  __SIGNAL_H
-#define  __SIGNAL_H    1
+#ifndef  __LIBK_KSIGNAL_H
+#define  __LIBK_KSIGNAL_H    1
 
 // Definitions
 typedef          int  sig_atomic_t;
 typedef unsigned int  sigset_t;
 // ...
 
-
-/* Type of a signal handler.  */
+// Type of a signal handler.
 typedef void (*sighandler_t)(int);
 
-typedef sighandler_t __sighandler_t;
-typedef sighandler_t sig_t;
-//...
+typedef sighandler_t  __sighandler_t;
+typedef sighandler_t  sig_t;
+// ...
 
-#define SIG_DFL ((__sighandler_t) 0)
-#define SIG_ERR ((__sighandler_t)-1)
-#define SIG_IGN ((__sighandler_t) 1)
-
+#define SIG_DFL  ((__sighandler_t) 0)
+#define SIG_ERR  ((__sighandler_t)-1)
+#define SIG_IGN  ((__sighandler_t) 1)
 
 /*
 The C standard defines only 6 signals. 
@@ -344,10 +342,8 @@ struct sigvec {
 #define SV_INTERRUPT	SA_RESTART	/* same bit, opposite sense */
 #define sv_onstack sv_flags	/* isn't compatibility wonderful! */
 
-/*
- * Structure used in sigaltstack call.
- */
 
+// Structure used in sigaltstack call.
 struct sigaltstack
 {
     char  *ss_base;     /* signal stack base */
@@ -355,11 +351,7 @@ struct sigaltstack
     int    ss_onstack;  /* current status */
 };
 
-
-/*
- * Structure used in sigstack call.
- */
-
+// Structure used in sigstack call.
 struct sigstack
 {
     char  *ss_sp;       /* signal stack pointer */

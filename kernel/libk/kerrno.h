@@ -17,8 +17,8 @@ Network and Socket Errors (ENOTSOCK, ECONNRESET, ENETUNREACH, ETIMEDOUT, etc.)
 Permission Errors (EPERM, EACCES, etc.)
 */
 
-#ifndef __ERRNO_H
-#define __ERRNO_H    1
+#ifndef __LIBK_ERRNO_H
+#define __LIBK_ERRNO_H    1
 
 // List
 #define EPERM      1	/* Operation not permitted */
