@@ -21,7 +21,6 @@ unsigned long pipeList[NUMBER_OF_PIPES];
 file *stdin;
 file *stdout;
 file *stderr;
-
 int kstdio_standard_streams_initialized=FALSE;
 
 // VFS
@@ -64,8 +63,10 @@ int stdio_verbosemode_flag=0;
 unsigned long syncList[SYNC_COUNT_MAX];
 
 
+//
+// =========================================================
+//
 
-// ---------------------------
 static void __clear_prompt_buffers(void);
 static void __initialize_file_table(void);
 static void __initialize_inode_table(void);
@@ -76,18 +77,25 @@ static void __initialize_stderr(void);
 static void __initialize_virtual_consoles(void);
 
 static char *_vsputs_r(char *dest, char *src);
-// ---------------------------
+
+//
+// =========================================================
+//
 
 // Feed stdin.
-int kstdio_feed_stdin(int ch)
-{
-
 // ASCII Codes (0x00~0x7F)
 // Extended ASCII Codes (0x80~0xFF)
-
+int kstdio_feed_stdin(int ch)
+{
     char Data = (char) (ch & 0xFF);
     char ch_buffer[2];
+    int wbytes = 0;
 
+// Parameter:
+    //if (ch < 0)
+        //return EOF;
+
+// stdin validation
     if ((void*) stdin == NULL){
         goto fail;
     }
@@ -111,8 +119,6 @@ int kstdio_feed_stdin(int ch)
 // Write
 // Write 1 byte.
 // see: fs.c
-
-    int wbytes = 0;
 
     wbytes = 
         (int) file_write_buffer ( 
@@ -153,7 +159,7 @@ int sys_setup_stdin(int stdin_fd)
         return FALSE;
 // Process structure
     p = (struct process_d *) processList[current_process];
-    if ( (void*)p == NULL ){
+    if ((void*) p == NULL){
         return FALSE;
     }
     if (p->used != TRUE){
@@ -189,13 +195,15 @@ int sys_setup_stdin(int stdin_fd)
 
 int is_socket(file *f)
 {
-// Fail
+
+// Parameter validation.
     if ((void *) f == NULL){
         return FALSE;
     }
     if (f->magic != 1234){
         return FALSE;
     }
+
 // Yes
     if (f->____object == ObjectTypeSocket){
         return TRUE;
@@ -206,10 +214,12 @@ int is_socket(file *f)
 
 int is_virtual_console(file *f)
 {
-// Fail
+
+// Parameter validation.
     if ((void *) f == NULL){
         return FALSE;
     }
+
 // Yes
     if (f->____object == ObjectTypeVirtualConsole){
         return TRUE;
@@ -390,9 +400,11 @@ int putchar(int ch)
 // Maybe we can filter the printable chars
 // for the console font.
 
-    if (ch<0){
+// Parameter:
+    if (ch < 0){
         goto fail;
     }
+
     if (fg_console<0 || fg_console > 3){
         goto fail;
     }
@@ -445,8 +457,7 @@ prints (
         if (pad & PAD_ZERO) padchar = '0';
     }
 
-
-    if ( !(pad & PAD_RIGHT) ) 
+    if (!(pad & PAD_RIGHT)) 
     {
         //#ugly
         for ( ; width > 0; --width)
@@ -531,7 +542,7 @@ printi (
             printchar (out, '-');
             ++pc;
             --width;
-        }else { 
+        } else { 
             *--s = '-'; 
         };
     }
@@ -604,7 +615,11 @@ int print ( char **out, int *varg )
             {
                 // #bugbug: definition here.
                 register char *s = *((char **)varg++);
-                 pc += prints (out, s?s:"(null)", width, pad);
+                 pc += prints ( 
+                           out, 
+                           s?s:"<NULL>", 
+                           width, 
+                           pad );
 
                 continue;
             }
@@ -641,7 +656,7 @@ int print ( char **out, int *varg )
             }
 
         // Os caracteres normais diferentes de "%".
-        }else{
+        } else {
             ____out:
                 printchar (out, *format);
                 ++pc;
@@ -655,7 +670,6 @@ int print ( char **out, int *varg )
 
     return (int) pc;
 }
-
 
 /*
  * printk_old:
@@ -683,7 +697,7 @@ int printk_old( const char *format, ... )
 
 // #bugbug:
 // Se print() está usando '0' como buffer,
-// então ele está sujando a IVT. 
+// então ele está sujando a IVT?
 // #:
 // print() nao analisa flags.
 
@@ -739,7 +753,7 @@ kinguio_i2hex(
     {
         if (*cp == '0'){
             cp++;
-        }else{
+        } else {
             strcpy (dest,cp);
             break;
         };
@@ -878,18 +892,19 @@ kinguio_vsprintf(
     return (int) ( (long) str_tmp - (long) str );
 }
 
-
 // Print a string.
 void kinguio_puts(const char* str)
 {
-    register int i=0;
     size_t StringLen=0;
+    register int i=0;
     int _char=0;
 
+// Parameter:
     if (!str){
         return;
     }
 
+// String lenght.
     StringLen = (size_t) strlen(str);
     if (StringLen <= 0)
         return;
@@ -897,11 +912,13 @@ void kinguio_puts(const char* str)
 // Print chars. 
     for (i=0; i<StringLen; i++)
     {
-        _char = (int) ( str[i] & 0xFF );
+        _char = (int) (str[i] & 0xFF);
+
         // Draw, and refresh a single char.
         console_outbyte2 (_char, fg_console);
+
         // Draw, but not refresh.
-         //console_outbyte (_char, fg_console);
+        //console_outbyte (_char, fg_console);
     };
 }
 
@@ -935,7 +952,7 @@ int kinguio_printf(const char *fmt, ...)
             return (int) debug_print_nbytes( 
                          (const void *) data_buffer, 
                          (size_t) sizeof(data_buffer) );
-    }else{
+    } else {
         // Print the data buffer.
         kinguio_puts(data_buffer);
     };
@@ -991,6 +1008,8 @@ int mysprintf(char *buf, const char *fmt, ...)
 
 int k_ungetc( int c, file *f )
 {
+
+// Parameters:
     if (c == EOF){ 
         return (int) c;
     }
@@ -1011,18 +1030,22 @@ int k_ungetc( int c, file *f )
 
 long k_ftell(file *f)
 {
+// Parameter:
     if ((void *) f == NULL){
         return EOF;
     }
+
     return (long) (f->_p - f->_base);
 }
 
 // Return the fd.
 int k_fileno(file *f)
 {
+// Parameter:
     if ((void *) f == NULL){
         return EOF;
     }
+
     return (int) f->_file;  
 }
 
@@ -1030,6 +1053,7 @@ int k_fgetc(file *f)
 {
     int ch=0;
 
+// Parameter:
     if ((void *) f == NULL){
         printk ("k_fgetc: f\n");
         goto fail;
@@ -1062,8 +1086,8 @@ int k_fgetc(file *f)
 		//nao podemos acessar um ponteiro nulo... no caso endereço.
 
 // Buffer pointer
-    if ( f->_p == 0 ){
-        printk ("k_fgetc: [FAIL] f->_p \n");
+    if (f->_p == 0){
+        printk ("k_fgetc: f->_p\n");
         goto fail;
     }
 
@@ -1272,7 +1296,6 @@ done:
     return 0;
 }
 
-
 // bsd stuff
 /*
  * Various output routines call wsetup to be sure it is safe to write,
@@ -1330,9 +1353,10 @@ int k_fputc( int ch, file *f )
         f->_cnt--;
         // The buffer is full.
         // #todo: What we need to do now?
-        if ( f->_cnt <= 0 ){
-            debug_print ("k_fputc: [DEBUG] _cnt\n");
-            panic       ("k_fputc: [DEBUG] _cnt\n");
+        if (f->_cnt <= 0)
+        {
+            debug_print ("k_fputc: _cnt\n");
+            panic       ("k_fputc: _cnt\n");
             f->_cnt = 0;
             return EOF;
         }
@@ -1359,7 +1383,6 @@ int k_fputc( int ch, file *f )
 //fail:
     return EOF;
 }
-
 
 int k_fscanf (file *f, const char *format, ... )
 {
@@ -1405,6 +1428,7 @@ void k_rewind(file *f)
 // Change f->magic to 4321.
 int k_fclose (file *f)
 {
+// Parameter validation
     if ((void *) f == NULL){
         return EOF;
     }
@@ -1414,8 +1438,9 @@ int k_fclose (file *f)
     if (f->magic != 1234){
         return EOF;
     }
+
     f->used = TRUE;
-// Inverted.
+// Inverted value.
     f->magic = 4321;
     return 0;
 }
@@ -1424,6 +1449,7 @@ int k_fputs(const char *str, file *f)
 {
     size_t StringSize=0;
 
+// Parameter:
     if ((void*) str == NULL){
         goto fail;
     }
@@ -1431,7 +1457,7 @@ int k_fputs(const char *str, file *f)
         goto fail;
     } 
 
-// Get string size.
+// String size.
     StringSize = (size_t) strlen(str);
     if (StringSize > f->_cnt){
         goto fail;
@@ -1453,6 +1479,8 @@ fail:
 // https://linux.die.net/man/3/setvbuf
 void k_setbuf(file *f, char *buf)
 {
+
+// Parameters:
     if ((void *) f == NULL){
         debug_print("k_setbuf: f\n");
         return;
@@ -1504,32 +1532,31 @@ void k_setbuffer (file *f, char *buf, size_t size)
     */
 
 
-    if ( (void *) f == NULL ){
+    if ((void *) f == NULL)
+    {
         // #todo
         // Maybe we need a message here.
         return;
+    }
 
-    }else{
-
-        //#todo
-        //se o buffer é válido.
+//#todo
+//se o buffer é válido.
         
-        //if (stream->_bf._base != NULL) 
-        //{
-            //if (stream->cnt > 0)
-                //fflush (stream);
+    //if (stream->_bf._base != NULL) 
+    //{
+        //if (stream->cnt > 0)
+             //fflush (stream);
                 
             //free (stream->buf);
-        //}
+    //}
         
-        // Udate stream.
-        f->_bf._base = buf;
-        f->_lbfsize = size;        
-        // ?? stream->bufmode = mode;
-        f->_p = buf;
-        // ??stream->cnt = 0;
-        //...
-    };
+    // Udate stream.
+    f->_bf._base = buf;
+    f->_lbfsize = size;        
+    // ?? stream->bufmode = mode;
+    f->_p = buf;
+    // ??stream->cnt = 0;
+    //...
 }
 
 void k_setlinebuf(file *f)
@@ -1538,6 +1565,8 @@ void k_setlinebuf(file *f)
     if ((void *) f == NULL){
         return;
     }
+
+    //...
 }
 
 // #todo
@@ -1669,7 +1698,7 @@ file *new_file(object_type_t object_type)
     if ((void*) new_file->inode == NULL){
         x_panic("new_file: new_file inode struct\n");
     }
-    new_file->inode->filestruct_counter = 1; //inicialize
+    new_file->inode->filestruct_counter = 1;  //Inicialize
 
 // Copy the name
     memcpy ( 
