@@ -885,8 +885,8 @@ fs_load_path (
 // #hardcoded
 // #bugbug: fs_buffers[]
 
-    unsigned long DirBufferSizeInBytes = (unsigned long) (512*32); //4pages
-    //unsigned long DirBufferSizeInBytes = (unsigned long) (4096);
+    // 16384 = 32*512 = 4 PAGES. 
+    unsigned long DirBufferSizeInBytes = (unsigned long) 16384;
 
     // Not absolute   
     if (p[0] != '/'){
@@ -1252,6 +1252,10 @@ int fsLoadFileFromCurrentTargetDir(void)
 //++
     //taskswitch_lock ();
     //scheduler_lock ();
+
+// IN: 
+// FAT address, dir address, # dir entries, name, 
+// buffer address, buffer size in bytes.
     Ret = 
         (int) fsLoadFile ( 
                   (unsigned long) VOLUME1_FAT_ADDRESS,                     // fat cache address
@@ -1287,15 +1291,22 @@ fail:
 
 // ---------------
 
+// 2MB file size limit.
+// How many times we can call this function?
 static int 
 __try_to_load_program_from_special_folder( 
     const char *filename, 
     unsigned long image_va )
 {
-// Only inside /PROGRAMS/
+// Load form /DE/ or /GRAMADO/. 
+// It depends on the prefix on pathname.
+// '@' for GRAMADO and '#' for DE.
 
     unsigned long status = -1;
-    unsigned long BUGBUG_IMAGE_SIZE_LIMIT = (unsigned long) (512 * 4096);
+
+// 2048 KB = 2MB
+// 2097152 = (512 * 4096) = 512 pages.
+    unsigned long BUGBUG_IMAGE_SIZE_LIMIT = (unsigned long) (2097152);
 
     char *new_filename;
     new_filename = filename;
@@ -1333,7 +1344,7 @@ __try_to_load_program_from_special_folder(
                             new_filename, 
                             image_va, 
                             BUGBUG_IMAGE_SIZE_LIMIT );
-    }else{
+    } else {
         goto fail;
     };
 

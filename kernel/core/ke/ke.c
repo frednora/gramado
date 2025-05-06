@@ -169,13 +169,15 @@ int windowLoadGramadoIcons(void)
         goto fail;
     }
 
-
-// app icon
+// Load .BMP file.
+// IN: 
+// FAT address, dir address, # dir entries, name, 
+// buffer address, buffer size in bytes.
     fRet = 
         (unsigned long) fsLoadFile ( 
                             VOLUME1_FAT_ADDRESS,
-                            sdDE.address, //VOLUME1_ROOTDIR_ADDRESS, 
-                            512,  //FAT16_ROOT_ENTRIES,
+                            sdDE.address,
+                            512,
                             "APP     BMP", 
                             (unsigned long) icon_cache.app,
                             tmp_size );
@@ -184,12 +186,15 @@ int windowLoadGramadoIcons(void)
         goto fail;
     }
 
-// file icon
+// Load .BMP file.
+// IN: 
+// FAT address, dir address, # dir entries, name, 
+// buffer address, buffer size in bytes.
     fRet = 
         (unsigned long) fsLoadFile ( 
                             VOLUME1_FAT_ADDRESS,
-                            sdDE.address, //VOLUME1_ROOTDIR_ADDRESS, 
-                            512,  //FAT16_ROOT_ENTRIES, 
+                            sdDE.address,
+                            512,
                             "FILE    BMP", 
                             (unsigned long) icon_cache.file,
                             tmp_size );
@@ -198,12 +203,15 @@ int windowLoadGramadoIcons(void)
         goto fail;
     }
 
-// folder icon
+// Load .BMP file.
+// IN: 
+// FAT address, dir address, # dir entries, name, 
+// buffer address, buffer size in bytes.
     fRet = 
         (unsigned long) fsLoadFile ( 
                             VOLUME1_FAT_ADDRESS, 
-                            sdDE.address, //VOLUME1_ROOTDIR_ADDRESS, 
-                            512,  //FAT16_ROOT_ENTRIES,
+                            sdDE.address,
+                            512,
                             "FOLDER  BMP", 
                             (unsigned long) icon_cache.folder,
                             tmp_size );
@@ -212,12 +220,15 @@ int windowLoadGramadoIcons(void)
         goto fail;
     }
 
-// terminal icon
+// Load .BMP file.
+// IN: 
+// FAT address, dir address, # dir entries, name, 
+// buffer address, buffer size in bytes.
     fRet = 
         (unsigned long) fsLoadFile ( 
                             VOLUME1_FAT_ADDRESS, 
-                            sdDE.address, //VOLUME1_ROOTDIR_ADDRESS, 
-                            512,  //FAT16_ROOT_ENTRIES, 
+                            sdDE.address,
+                            512,
                             "TERMINALBMP", 
                             (unsigned long) icon_cache.terminal,
                             tmp_size );
@@ -226,12 +237,15 @@ int windowLoadGramadoIcons(void)
         goto fail;
     }
 
-// cursor icon
+// Load .BMP file.
+// IN: 
+// FAT address, dir address, # dir entries, name, 
+// buffer address, buffer size in bytes.
     fRet = 
         (unsigned long) fsLoadFile ( 
                             VOLUME1_FAT_ADDRESS, 
-                            sdDE.address, //VOLUME1_ROOTDIR_ADDRESS, 
-                            512,  //FAT16_ROOT_ENTRIES,
+                            sdDE.address,
+                            512,
                             "CURSOR  BMP", 
                             (unsigned long) icon_cache.cursor,
                             tmp_size );

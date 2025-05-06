@@ -5,8 +5,8 @@
 #define __KE_KE_H    1
 
 
-
 void keRefreshScreen(void);
+
 void 
 keDrawString ( 
     unsigned long x,
