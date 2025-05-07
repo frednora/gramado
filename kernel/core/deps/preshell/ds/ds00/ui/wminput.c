@@ -296,8 +296,8 @@ wmProcessKeyboardEvent(
         // Testing the yellow dialog.
         if (long1 == VK_F12)
         {
-            YellowDialogInfo.useYellowDialog = TRUE;
-            YellowDialogInfo.display_dialog = TRUE;
+            //YellowDialogInfo.useYellowDialog = TRUE;
+            //YellowDialogInfo.display_dialog = TRUE;
             return 0;
         }
 
@@ -403,9 +403,13 @@ wmProcessKeyboardEvent(
             control_action(msg,long1);
             return 0;
         }
-        
-        if (long1 == VK_F12){
-            yellow_status("VK_F12");
+
+        // #todo
+        // Testing the yellow dialog.
+        if (long1 == VK_F12)
+        {
+            YellowDialogInfo.useYellowDialog = TRUE;
+            YellowDialogInfo.display_dialog = TRUE;
             return 0;
         }
         

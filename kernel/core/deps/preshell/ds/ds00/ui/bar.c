@@ -175,18 +175,21 @@ yellow_status_dialog (
         YellowDialogInfo.display_dialog = FALSE;
     }
 
-    if (msg == GWS_SysKeyDown && long1 == VK_F11)
+    // break f11
+    if (msg == GWS_SysKeyUp && long1 == VK_F11)
     {
         YellowDialogInfo.display_dialog = FALSE;
         YellowDialogInfo.useYellowDialog = FALSE;
         return 0;
     }
 
-    if (msg == GWS_SysKeyDown && long1 == VK_F12)
+    // break f12
+    if (msg == GWS_SysKeyUp && long1 == VK_F12)
     {
         YellowDialogInfo.display_dialog = FALSE;
         YellowDialogInfo.useYellowDialog = FALSE;
-        rtl_reboot();
+        // #debug: Only for debug.
+        wm_reboot();
     }
 
     return 0;
