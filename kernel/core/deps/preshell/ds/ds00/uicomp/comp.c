@@ -581,23 +581,29 @@ void comp_initialize_mouse(void)
 // Set new mouse position.
 void comp_set_mouse_position(long x, long y)
 {
-    unsigned long w = gws_get_device_width();
-    unsigned long h = gws_get_device_height();
+    unsigned long minw = 0;
+    unsigned long maxw = gws_get_device_width();
+    unsigned long minh = 0;
+    unsigned long maxh = gws_get_device_height();
 
 // Lower limit
-    if (x < 0){ x=0; }
-    if (y < 0){ y=0; }
+    if (x < minw){ x=minw; }
+    if (y < minh){ y=minh; }
+
 // Upper limit
 // #bugbug: Check if it is '>=' instead.
-    if (x > w){
-        x=w;
+    if (x > maxw){
+        x=maxw;
     }
-    if (y > h){
-        y=h;
+    if (y > maxh){
+        y=maxh;
     }
+
 // Save it globally.
     __new_mouse_x = (long) x;
     __new_mouse_y = (long) y;
+
+    // changed = TRUE;
 }
 
 //

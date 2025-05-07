@@ -8,6 +8,7 @@
 
 // ===============================================
 
+// Mouse events.
 // Quando temos um evento de mouse,
 // vamos enviar esse evento para a janela.
 // Os aplicativos estao recebendo
@@ -32,6 +33,9 @@ wmProcessMouseEvent(
     unsigned long in_x=0;
     unsigned long in_y=0;
     register int Tail=0;
+
+    if (ServerState.state != SERVER_STATE_RUNNING)
+        return;
 
     if (gUseMouse != TRUE){
         return;
@@ -128,7 +132,7 @@ not_valid:
 }
 
 
-// #todo: explain it
+// Keyboard events.
 unsigned long 
 wmProcessKeyboardEvent(
     int msg,
@@ -144,6 +148,9 @@ wmProcessKeyboardEvent(
 // #todo
     unsigned int fg_color = (unsigned int) get_color(csiSystemFontColor);
     //unsigned int bg_color = (unsigned int) get_color(csiSystemFontColor);
+
+    if (ServerState.state != SERVER_STATE_RUNNING)
+        return 0;
 
     if (msg < 0){
         return 0;
@@ -423,13 +430,16 @@ wmProcessKeyboardEvent(
     return 0;
 }
 
-
+// Timer events.
 void wmProcessTimerEvent(unsigned long long1, unsigned long long2)
 {
     struct gws_window_d *window;
 
     //#debug
     //printf("Tick\n");
+
+    if (ServerState.state != SERVER_STATE_RUNNING)
+        return;
 
 // We need the keyboard_owner.
 // #todo: Only if the plain is blinking the cursor.

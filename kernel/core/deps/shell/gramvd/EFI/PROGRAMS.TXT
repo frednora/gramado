@@ -1,0 +1,2 @@
+
+ This is the file EFI.TXT inside the /EFI/ directory.

@@ -1,8 +1,8 @@
 // input.h
 // Created by Fred Nora.
 
-#ifndef __USER_INPUT_H
-#define __USER_INPUT_H    1
+#ifndef __EVI_INPUT_H
+#define __EVI_INPUT_H    1
 
 
 // -----------------------------------

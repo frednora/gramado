@@ -83,7 +83,8 @@ extern int server_mode;  // DEMO ...
 // Compositor
 #include "uicomp/comp.h"
 
-#include "event.h"    // view inputs
+// view inputs
+#include "ui/event.h"
 
 // #imported
 

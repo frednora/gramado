@@ -1,0 +1,29 @@
+
+box Routes 
+[
+    meta meta1(){ name("/about");     content("actionAbout");     }
+    meta meta2(){ name("/products");  content("actionProducts");  }
+    meta meta3(){ name("/block");     content("actionBlog");      }
+] 
+
+/*
+ design note:
+
+ /blog  --> actionBlog()
+You sent
+modelBlog()
+You sent
+viewBlog()
+You sent
+-----
+You sent
+for a request like this:
+You sent
+GET /blog
+
+*/
+
+
+
+
+

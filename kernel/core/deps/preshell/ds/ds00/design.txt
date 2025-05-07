@@ -1,0 +1,23 @@
+
+ New idea for the layers: (Not implemented yet)
+
+--------------------------------------
+Interaction with the user.
+3) user/
+  + ui/ (Window manager) 
+
+--------------------------------------
+Draw/refresh
+2) engine/
+  + libui/ (Primitives)
+
+--------------------------------------
+Interaction with the host os.
+Connection and input.
+1) drivers/
+   + osdep/   
+   + gdi/
+   + keyboard/
+   + mouse/
+
+
