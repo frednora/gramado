@@ -195,13 +195,21 @@ extern struct gws_windowmanager_d  WindowManager;
 
 // =========================================
 
+extern int grab_is_active;
+extern int is_dragging;
+
+int control_action(int msg, unsigned long long1);
+void on_enter(void);
+void on_mouse_pressed(void);
+void on_mouse_released(void);
+void on_doubleclick(void);
+
+void __probe_window_hover(unsigned long long1, unsigned long long2);
+
+
 //
 // Input support
 //
-
-int wmInputReader(void);
-int wmInputReader2(void);
-int wmSTDINInputReader(void);
 
 void wmInitializeGlobals(void);
 unsigned long wmGetLastInputJiffie(int update);
