@@ -4279,9 +4279,9 @@ static int ServerLoop(int launch_tb)
         if (IsTimeToQuit == TRUE){ break; };
 
         // Get system messages via thread queue.
-        // See: ui/wm.c
+        // See: ui/wminput.c
         if (IsAcceptingInput == TRUE){
-            xxGetAndProcessSystemEvents();
+            wminputGetAndProcessSystemEvents();
         }
 
         // Get application messages via socket connection.

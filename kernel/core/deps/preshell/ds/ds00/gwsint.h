@@ -60,6 +60,8 @@ extern int server_mode;  // DEMO ...
 #include "ui/swamp.h"  // Swamp
 
 #include "ui/wm.h"
+#include "ui/wminput.h"
+
 
 #include "libui/bitblt.h"
 

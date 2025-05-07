@@ -199,7 +199,6 @@ extern struct gws_windowmanager_d  WindowManager;
 // Input support
 //
 
-int xxGetAndProcessSystemEvents(void);
 int wmInputReader(void);
 int wmInputReader2(void);
 int wmSTDINInputReader(void);

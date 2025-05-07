@@ -3116,7 +3116,6 @@ static void wm_tile(void)
 
     struct gws_window_d *w;
     int cnt=0;
-    //int c=0;
     register int i=0;
 
 // Nothing to do.
@@ -3134,18 +3133,25 @@ static void wm_tile(void)
 // Start with the first_window of the list.
 // zorder: The last window is on top of the zorder.
 
-// =============================
-// Get the size of the list.
-    cnt=0;
+    // Do we have a valid first window?
     w = (struct gws_window_d *) first_window;
     if ((void*)w == NULL){
         //debug_print("wm_tile: w==NULL\n");
         return;
     }
+
+// =============================
+// Get the size of the list.
+    cnt=0;
     while ((void*)w != NULL)
     {
+        // Update the level of a window.
         w->zIndex = (int) cnt;
+
+        // Get the next window.
         w = (struct gws_window_d *) w->next;
+
+        // Update the counter.
         cnt++;
     };
 
@@ -5997,11 +6003,6 @@ int wmInputReader2(void)
     };
 
     return 0;
-}
-
-int xxGetAndProcessSystemEvents(void)
-{
-    return (int) wmInputReader();
 }
 
 void wm_change_bg_color(unsigned int color, int tile, int fullscreen)

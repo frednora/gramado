@@ -91,9 +91,9 @@ CINCLUDES += -I $(LIBGR)
 CINCLUDES += -I .    
 CINCLUDES += -I ../
 
-
 # Objects
 myObjects = wm.o \
+wminput.o \
 bmp.o \
 menu.o \
 fnt8x16.o \
@@ -111,6 +111,8 @@ main.o:
 #	$(CC)  -c grinput.c  $(CFLAGS) $(CINCLUDES) -o grinput.o
 	$(CC)  -c wm.c    $(CFLAGS) $(CINCLUDES) -o wm.o
 all-c:
+
+	$(CC)  -c wminput.c    $(CFLAGS) $(CINCLUDES) -o wminput.o
 
 	$(CC) -c bmp.c       $(CFLAGS) $(CINCLUDES) -o bmp.o
 
