@@ -204,7 +204,7 @@ void on_mouse_pressed(void);
 void on_mouse_released(void);
 void on_doubleclick(void);
 
-void __probe_window_hover(unsigned long long1, unsigned long long2);
+void wm_hit_test_00(unsigned long long1, unsigned long long2);
 
 
 //
@@ -240,11 +240,16 @@ void wm_update_active_window(void);
 void wm_enter_fullscreen_mode(void);
 void wm_exit_fullscreen_mode(int tile);
 
+
+// Add a window on top of the list of childs.
+void wm_add_childwindow(struct gws_window_d *parent, struct gws_window_d *window);
+
 // list support
 // not tested yet
 void wm_add_window_to_bottom(struct gws_window_d *window);
 void wm_add_window_to_top(struct gws_window_d *window);
 void wm_rebuild_list(void);
+void wm_rebuild_list2(void);
 
 void wm_remove_window_from_list_and_kill(struct gws_window_d *window);
 void wm_remove_window_from_list(struct gws_window_d *window);

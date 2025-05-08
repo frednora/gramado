@@ -186,6 +186,10 @@ __drawrectangle0(
 // 1=backbuffer
 // 2=frontbuffer
 
+    // Last check
+    if ((Rect.right - Rect.left) == 0)
+        goto fail;
+
     while (1)
     {
         // 1=backbuffer
@@ -347,6 +351,13 @@ __refresh_rectangle0 (
     hl_width = (unsigned int) (width  & 0xFFFF);
     lines    = (unsigned int) (height & 0xFFFF);
 
+// Fail
+    if (hl_width == 0)
+        return;
+// Fail
+    if (lines == 0)
+        return;
+
 // How many bytes per pixel?
     switch (gSavedBPP){
         case 32:
@@ -380,6 +391,10 @@ __refresh_rectangle0 (
 
     dest = (void *)       (dest + offset);
     src  = (const void *) (src  + offset);
+
+// Fail
+    if (dest == src)
+        return;
 
 // #bugbug
 // Isso pode nos dar problemas.

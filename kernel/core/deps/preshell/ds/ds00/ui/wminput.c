@@ -72,17 +72,20 @@ wmProcessMouseEvent(
         } else if (grab_is_active != TRUE){
             is_dragging = FALSE;
         };
+
         // Set flag to erease mouse pointer.
         // Não queremos rastro.
         DoWeNeedToEraseMousePointer(TRUE);
+
         // Update the global mouse position.
         // The compositor is doing its job,
         // painting the pointer in the right position.
         // Lets update the position. See: comp.c
         comp_set_mouse_position(saved_x,saved_y);
+
         // Check the window we are inside of 
         // and update the mouse_hover pointer.
-        __probe_window_hover(saved_x,saved_y);
+        wm_hit_test_00(saved_x,saved_y);
 
         return;
     }

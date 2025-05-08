@@ -2557,7 +2557,6 @@ wmCreateWindowFrame (
     return 0;
 }
 
-
 // Change the root window color and reboot.
 void wm_reboot(void)
 {
@@ -3783,22 +3782,101 @@ void activate_last_window(void)
     set_active_window(last_window);
 }
 
+// Add a window on top of the list of childs.
+void wm_add_childwindow(struct gws_window_d *parent, struct gws_window_d *window)
+{
+// #todo
+// NOT TESTED YET !!!
+
+    struct gws_window_d  *tmp;
+
+// ========================
+    //if( window == __root_window )
+        //return;
+// ========================
+
+// ========================
+// PARENT:: Structure validation
+    if ((void*) parent == NULL){
+        return;
+    }
+    if (parent->used != TRUE){
+        return;
+    }
+    if (parent->magic != 1234){
+        return;
+    }
+// Type validation for parent window.
+    if (parent->type != WT_OVERLAPPED){
+        return;
+    }
+
+// ========================
+// CHILD:: Structure validation
+    if ((void*) window == NULL){
+        return;
+    }
+    if (window->used != TRUE){
+        return;
+    }
+    if (window->magic != 1234){
+        return;
+    }
+// Type validation for child.
+// The list of child can have window of any type,
+// like buttons etc.
+    //if (window->type != WT_OVERLAPPED){
+        //return;
+    //}
+
+// ===================================
+
+    tmp = parent;
+    while ( (void*) tmp->child_list != NULL )
+    {
+        tmp = tmp->child_list;
+    };
+
+// Agora somos a última da fila.
+    tmp->child_list = (struct gws_window_d *) window;
+
+done:
+    // The child doesn't have a child yet.
+    window->child_list = NULL;
+}
+
 void wm_add_window_to_bottom(struct gws_window_d *window)
 {
-    struct gws_window_d *tmp;
+    struct gws_window_d *old_first;
 
+// Parameter:
     if ((void*) window == NULL)
         return;
     if (window->magic != 1234)
         return;
+
+// Invalid first window? So, we're the new first window.
+    if ((void*) window == NULL){
+        first_window = window;
+        return;
+    }
+// Invalid first window? So, we're the new first window.
+    if (window->magic != 1234){
+        first_window = window;
+        return;
+    }
+// We already are the first window. Nothing to do.
     if (window == first_window)
         return;
 
-    tmp = first_window;
-    // New first
+// Save the old first. That is calid window.
+    old_first = first_window;
+// Set us as the new first window.
     first_window = window;
-    // Reconciliate.
-    first_window->next = tmp;
+// Now we are the first and the old first is our next.
+    first_window->next = old_first;
+// Now we are the prev of the old first window.
+    old_first->prev = first_window;
 }
 
 // The list starts with first_window.
@@ -3858,7 +3936,9 @@ void wm_add_window_to_top(struct gws_window_d *window)
     };
 
 // Agora somos a última da fila.
-    Next->next  = (struct gws_window_d *) window;
+    Next->next = (struct gws_window_d *) window;
+// Então sabemos quem é nossa prev.
+    window->prev = Next;
 
 done:
     last_window = (struct gws_window_d *) window;
@@ -3866,6 +3946,12 @@ done:
     set_active_window(window);
 }
 
+// Refresh list.
+// It builds a list following the order they are 
+// found in the global list windowList[]
+// Only WT_OVERLAPPED.
+// The list starts with first_window.
+// Purpose: Have a new list to draw the desktop.
 void wm_rebuild_list(void)
 {
     struct gws_window_d *window;
@@ -3879,12 +3965,47 @@ void wm_rebuild_list(void)
     for (i=0; i<WINDOW_COUNT_MAX; i++)
     {
         window = (struct gws_window_d *) windowList[i];
+
+        // #test
+        //if ((void*) window == NULL)
+            //continue;
+
         if ((void*) window != NULL)
         {
             if (window->magic == 1234)
             {
                 if (window->type == WT_OVERLAPPED){
                     wm_add_window_to_top(window);
+                }
+            }
+        }
+    };
+}
+
+void wm_rebuild_list2(void)
+{
+    struct gws_window_d *window;
+    register int i=0;
+
+    // #todo:
+    // Reset the global linked list.
+    //first_window = NULL;
+    //last_window = NULL;
+
+    for (i=0; i<WINDOW_COUNT_MAX; i++)
+    {
+        window = (struct gws_window_d *) windowList[i];
+
+        // #test
+        //if ((void*) window == NULL)
+            //continue;
+
+        if ((void*) window != NULL)
+        {
+            if (window->magic == 1234)
+            {
+                if (window->type == WT_OVERLAPPED){
+                    wm_add_window_to_bottom(window);
                 }
             }
         }
@@ -4832,7 +4953,7 @@ static void on_drop(void)
 // Ensure that title bar controls are prioritized before checking the client area.
 
 void 
-__probe_window_hover(
+wm_hit_test_00(
     unsigned long long1, 
     unsigned long long2 )
 {
