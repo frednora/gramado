@@ -1015,18 +1015,7 @@ void activate_last_window(void);
 
 struct gws_window_d *get_parent(struct gws_window_d *w);
 
-int 
-is_within2 ( 
-    struct gws_window_d *window, 
-    unsigned long x, 
-    unsigned long y );
-
-int 
-is_within ( 
-    struct gws_window_d *window, 
-    unsigned long x, 
-    unsigned long y );
-
+    
 //refaz zorder.
 void reset_zorder(void);
 
@@ -1177,6 +1166,21 @@ gwssrv_change_window_position (
 //void gwsWindowUnlock(struct gws_window_d *window);
 
 int gwsDefineInitialRootWindow(struct gws_window_d *window);
+
+
+// Hit test
+int 
+is_within ( 
+    struct gws_window_d *window, 
+    unsigned long x, 
+    unsigned long y );
+
+// Hit test
+int 
+is_within2 ( 
+    struct gws_window_d *window, 
+    unsigned long x, 
+    unsigned long y );
 
 // Initialize the window support.
 int window_initialize(void);

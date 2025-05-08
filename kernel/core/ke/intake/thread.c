@@ -1,5 +1,5 @@
 // thread.c
-// Created by Fred Nora. 
+// Created by Fred Nora.
 
 #include <kernel.h>
 

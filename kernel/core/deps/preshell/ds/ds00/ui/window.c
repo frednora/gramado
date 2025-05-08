@@ -2785,6 +2785,99 @@ void minimize_window(struct gws_window_d *window)
     wm_update_desktop2();
 }
 
+// Hit test
+int 
+is_within ( 
+    struct gws_window_d *window, 
+    unsigned long x, 
+    unsigned long y )
+{
+// #bugbug
+// E se a janela tem janela mae?
+
+// Parameter:
+    if ((void*) window == NULL)
+        return FALSE;
+    if (window->used != TRUE)
+        return FALSE;
+    if (window->magic != 1234)
+        return FALSE;
+
+// Within?
+    if ( x >= window->absolute_x  && 
+         x <= window->absolute_right  &&
+         y >= window->absolute_y  &&
+         y <= window->absolute_bottom )
+    {
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+
+// Hit test
+int 
+is_within2 ( 
+    struct gws_window_d *window, 
+    unsigned long x, 
+    unsigned long y )
+{
+    struct gws_window_d *pw;
+    struct gws_window_d *w;
+
+// #bugbug
+// E se a janela tem janela mae?
+
+// Parameter:
+    if ((void*) window == NULL)
+        return FALSE;
+    if (window->used != TRUE)
+        return FALSE;
+    if (window->magic != 1234)
+        return FALSE;
+
+// ====
+
+// pw
+// The parent window.
+    pw = window->parent;
+    if ((void*) pw == NULL){
+        return FALSE;
+    }
+    if (pw->used != TRUE)
+        return FALSE;
+    if (pw->magic != 1234)
+        return FALSE;
+
+// w
+// The window itself
+    w = window;
+    if ((void*) w == NULL){
+        return FALSE;
+    }
+    if (w->used != TRUE)
+        return FALSE;
+    if (w->magic != 1234)
+        return FALSE;
+
+// Relative to the parent.
+    int x1= pw->absolute_x + w->absolute_x; 
+    int x2= x1 + w->width;
+    int y1= pw->absolute_y  + w->absolute_y;
+    int y2= y1 + w->height;
+
+    if( x > x1 && 
+        x < x2 &&
+        y > y1 && 
+        y < y2 )
+    {
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 // window_initialize:
 // Initialize the window support.
 // Called by gwsInitGUI() in gws.c.

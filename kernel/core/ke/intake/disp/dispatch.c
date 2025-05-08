@@ -42,10 +42,9 @@ void IncrementDispatcherCount(int type)
         return;
     }
 
-    if ( (void *) DispatchCountBlock == NULL ){
+    if ((void *) DispatchCountBlock == NULL){
         panic ("IncrementDispatcherCount:\n");
     }
-    
     if (DispatchCountBlock->magic != 1234){
         panic ("IncrementDispatcherCount: validation\n");
     }
@@ -133,7 +132,7 @@ dispatch_current:
         panic("dispatcher: current_thread\n");
     }
     TargetThread = (void *) threadList[current_thread];
-    if ( (void *) TargetThread == NULL ){
+    if ((void *) TargetThread == NULL){
         panic ("dispatcher: TargetThread\n");
     }
     if (TargetThread->magic != 1234){

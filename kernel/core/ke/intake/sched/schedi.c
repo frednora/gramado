@@ -301,14 +301,15 @@ int do_waitpid (pid_t pid, int *status, int options)
     if ((void *) p == NULL){
         printk ("do_waitpid: Current process struct fail\n");
         return -1;
-    }else{
+    } else {
 
-        if ( p->used != 1 || p->magic != 1234 ){
+        if ( p->used != TRUE || p->magic != 1234 )
+        {
             debug_print ("do_waitpid: validation\n");
+            //#todo: Fail?
         }
         
-        // #todo: Esse if não é necessário.
-        if ( p->used == 1 && p->magic == 1234 )
+        if ( p->used == TRUE && p->magic == 1234 )
         {
 
             //#debug
@@ -493,7 +494,7 @@ void wait_for_a_reason ( tid_t tid, int reason )
 
     } else {
 
-        if ( t->used != 1 || t->magic != 1234 ){
+        if ( t->used != TRUE || t->magic != 1234 ){
             debug_print ("wait_for_a_reason: t validation\n");
         }
 

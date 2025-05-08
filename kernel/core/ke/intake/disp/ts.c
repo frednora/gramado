@@ -294,8 +294,7 @@ static void __task_switch(void)
     if ((void *) CurrentProcess == NULL){
         panic ("ts: CurrentProcess\n");
     }
-    if ( CurrentProcess->used != TRUE || 
-         CurrentProcess->magic != 1234 )
+    if ( CurrentProcess->used != TRUE || CurrentProcess->magic != 1234 )
     {
         panic ("ts: CurrentProcess validation\n");
     }

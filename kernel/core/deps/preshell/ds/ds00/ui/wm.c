@@ -5365,91 +5365,6 @@ void wm_exit_fullscreen_mode(int tile)
     wm_update_desktop(tile,TRUE);
 }
 
-int 
-is_within2 ( 
-    struct gws_window_d *window, 
-    unsigned long x, 
-    unsigned long y )
-{
-    struct gws_window_d *pw;
-    struct gws_window_d *w;
-
-// #bugbug
-// E se a janela tem janela mae?
-
-// window validation
-    if ( (void*) window == NULL ){
-        return FALSE;
-    }
-    if ( window->used != TRUE && window->magic != 1234 ){
-        return FALSE;
-    }
-
-// ====
-
-// pw
-// The parent window.
-    pw = window->parent;
-    if ((void*) pw == NULL){
-        return FALSE;
-    }
-    if ( pw->used != TRUE && pw->magic != 1234 ){
-        return FALSE;
-    }
-
-// w
-// The window itself
-    w = window;
-    if ((void*) w == NULL){
-        return FALSE;
-    }
-    if ( w->used != TRUE && w->magic != 1234 ){
-        return FALSE;
-    }
-
-//relative to the parent.
-    int x1= pw->absolute_x + w->absolute_x; 
-    int x2= x1 + w->width;
-    int y1= pw->absolute_y  + w->absolute_y;
-    int y2= y1 + w->height;
-
-    if( x > x1 && 
-        x < x2 &&
-        y > y1 && 
-        y < y2 )
-    {
-        return TRUE;
-    }
-
-    return FALSE;
-}
-
-
-//#todo: Explain it.
-int 
-is_within ( 
-    struct gws_window_d *window, 
-    unsigned long x, 
-    unsigned long y )
-{
-// #bugbug
-// E se a janela tem janela mae?
-    if ( (void*) window != NULL )
-    {
-        if ( window->used == TRUE && window->magic == 1234 )
-        {
-            if ( x >= window->absolute_x   && 
-                 x <= window->absolute_right  &&
-                 y >= window->absolute_y    &&
-                 y <= window->absolute_bottom )
-            {
-                return TRUE;
-            }
-        }
-    }
-    return FALSE;
-}
-
 /*
 void destroy_window (struct gws_window_d *window);
 void destroy_window (struct gws_window_d *window)
@@ -6247,7 +6162,7 @@ void reset_zorder(void)
      for ( i=0; i<WINDOW_COUNT_MAX; ++i)
      {
          w = (struct gws_window_d *) windowList[i];
-         if ( (void*) w != NULL )
+         if ((void*) w != NULL)
          {
              if ( w->used == TRUE && w->magic == 1234 )
              {
