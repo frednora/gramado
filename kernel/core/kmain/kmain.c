@@ -157,6 +157,7 @@ static void earlyinit_OutputSupport(void);
 
 static int earlyinit(void);
 static int archinit(void);
+static int deviceinit(void);
 static int lateinit(void);
 
 //
@@ -720,6 +721,38 @@ static int archinit(void)
     return 0;
 }
 
+static int deviceinit(void)
+{
+        // ================================
+        // Early ps/2 initialization.
+        // Initializing ps/2 controller.
+        // #todo: 
+        // Essa inicialização deve ser adiada.
+        // deixando para o processo init fazer isso.
+        // Chamaremos essa inicialização básica nesse momento.
+        // A inicialização completa será chamada pelo processo init.
+        // See: i8042.c
+        // ================
+        // Early initialization
+        // Only the keyboard.
+        // It is working
+        // ================
+        // This is the full initialization.
+        // #bugbug This is a test yet.
+        // It fails in the real machine.
+
+    //PROGRESS(":: Early PS2 initialization\n"); 
+    DDINIT_ps2_early_initialization();
+    //DDINIT_ps2(); // (full initialization)
+
+    // #todo: Move to evi/?
+    // Enable both input targets for now.
+    // stdin and thread's queue,
+    input_set_input_targets(TRUE,TRUE);
+
+    return 0;
+}
+
 // :: Level ?
 static int lateinit(void)
 {
@@ -739,6 +772,10 @@ static int lateinit(void)
     tty_initialize_legacy_pty();
 
 // -------------------------------------
+
+    // see: user.c
+    userInitializeStuff();
+
 // The root user
 // Initialize the user list.
     register int u=0;
@@ -754,6 +791,17 @@ static int lateinit(void)
     if (UserStatus != TRUE)
         panic("lateinit: on userCreateRootUser\n");
 
+
+    // ==========================
+    // Network support.
+    // ?? At this moment we already initialized the e1000 driver.
+    // See: network.c
+    networkInit();
+
+// -------------------------------------
+// Setup utsname structure.
+    __setup_utsname();
+
 // -------------------------------------
 // Runlevel switch:
 // Enter into the debug console instead of jumping 
@@ -768,9 +816,6 @@ static int lateinit(void)
         __enter_debug_mode();
     }
 
-// -------------------------------------
-// Setup utsname structure.
-    __setup_utsname();
 
 // -------------------------------------
 // Initialize support for loadable kernel modules.
@@ -829,7 +874,8 @@ void I_kmain(int arch_type)
 // + [3:1] keInitialize(1)
 // + [3:2] keInitialize(2)
 // + [4]   archinit()
-// + [5]   lateinit()
+// + [5]   deviceinit()
+// + [6]   lateinit()
 // ==================================
 
     int Status = FALSE;
@@ -985,12 +1031,17 @@ void I_kmain(int arch_type)
     // [4]
     archinit();
 
+
+// -------------------------------
+    // [5]
+    deviceinit();
+
 // -------------------------------
     int late_status = 0;
     if (Status == TRUE)
     {
         PROGRESS(":: archinit\n");
-        // [5]
+        // [6]
         late_status = (int) lateinit();
         if (late_status < 0)
             goto fail;

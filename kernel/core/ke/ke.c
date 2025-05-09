@@ -833,6 +833,11 @@ int keInitializeIntake(void)
     return TRUE;
 }
 
+//
+// #
+// INITIALIZATION
+//
+
 // --------------------------------
 // Initialize ke phase 0.
 // + kernel font.
@@ -923,28 +928,6 @@ int keInitialize(int phase)
 
         // serial_printk("phase %d\n",phase);
 
-        // ================================
-        // Early ps/2 initialization.
-        // Initializing ps/2 controller.
-        // #todo: 
-        // Essa inicialização deve ser adiada.
-        // deixando para o processo init fazer isso.
-        // Chamaremos essa inicialização básica nesse momento.
-        // A inicialização completa será chamada pelo processo init.
-        // See: i8042.c
-        // ================
-        // Early initialization
-        // Only the keyboard.
-        // It is working
-        // ================
-        // This is the full initialization.
-        // #bugbug This is a test yet.
-        // It fails in the real machine.
-
-        //PROGRESS(":: Early PS2 initialization\n"); 
-        DDINIT_ps2_early_initialization();
-        //DDINIT_ps2(); // (full initialization)
-
         //================================
         // Initialize all the kernel graphics support.
         // Initialize all the kernel graphics support.
@@ -990,10 +973,10 @@ int keInitialize(int phase)
         // #todo: Move to evi/?
         // Enable both input targets for now.
         // stdin and thread's queue,
-        input_set_input_targets(TRUE,TRUE);
+        //input_set_input_targets(TRUE,TRUE);
 
         // see: user.c
-        userInitializeStuff();
+        // userInitializeStuff();
 
         // Display server registration support.
         // See: dispsrv.c
@@ -1017,7 +1000,7 @@ int keInitialize(int phase)
         // Network support.
         // ?? At this moment we already initialized the e1000 driver.
         // See: network.c
-        networkInit();
+        // networkInit();
 
         goto InitializeEnd;
 

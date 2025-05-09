@@ -1080,7 +1080,6 @@ static int I_initKernelComponents(void)
 // in our system, including the hal stuff i guess.
     devmgr_initialize();
 
-
 // Initialize system HAL.
     Status = halInitialize();
     if (Status != TRUE){
@@ -1091,7 +1090,6 @@ static int I_initKernelComponents(void)
 
 // Initializat PCI interface.
     init_pci();
-
 
 //
 // $

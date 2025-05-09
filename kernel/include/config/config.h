@@ -15,6 +15,7 @@
 // ...
 
 // Use headless mode.
+// It changes the whey printk will work. Sending bytes to the serial port.
 #define CONFIG_HEADLESS_MODE  0
 
 // ------------------------------------------------------
@@ -26,7 +27,6 @@
 // Enable the initialization of e1000 controller.
 // This is used to test the network infrastructure.
 #define USE_E1000          0
-
 
 // ...
 

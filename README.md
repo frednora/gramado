@@ -88,7 +88,8 @@ The kernel initialization in I_kmain():
 // + [3:1] keInitialize(1)
 // + [3:2] keInitialize(2)
 // + [4]   archinit()
-// + [5]   lateinit()
+// + [5]   deviceinit()
+// + [6]   lateinit()
 // ==================================
 ```
 

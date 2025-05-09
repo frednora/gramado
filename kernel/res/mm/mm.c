@@ -292,132 +292,6 @@ void memory_destroy_heap (struct heap_d *heap)
     panic ("memory_destroy_heap: Unimplemented\n");
 }
 
-
-// mmInit:
-// Inicializa o memory manager.
-// Init Memory Manager for x64:
-// Heap, Stack, Pages, mmblocks, memory sizes, memory zones ...
-// OUT: TRUE or FALSE.
-// -------------------------------
-// Initialize mm phase 0.
-// + Initialize video support.
-// + Inittialize heap support.
-// + Inittialize stack support. 
-// + Initialize memory sizes.
-// -------------------------------
-// Initialize mm phase 1.
-// + Initialize framepool support.
-// + Initializing the paging infra-structure.
-//   Mapping all the static system areas.
-
-int mmInitialize(int phase)
-{
-// Called by I_kmain() in kmain.c.
-// + Initialize the memory support.
-//   The kernel heap and the kernel stack.
-// + The implementation of the main kernel allocator.
-// + Initialize the physical memory manager.
-// + Initialize the paging support.
-
-    int Status=0;
-    register int i=0;
-
-    //debug_print("mmInitialize: [TODO] [FIXME]\n");
-
-    if (phase == 0){
-
-        // Video support
-        gramk_initialize_video();
-
-        // #todo: 
-        // Inicializar algumas variáveis globais.
-        // Chamar os construtores para inicializar o básico.
-        // #todo: 
-        // Clear BSS.
-        // Criar mmClearBSS()
-
-        // Initializing kernel heap.
-        Status = (int) __init_kernel_heap();
-        if (Status != 0){
-            debug_print("mmInitialize: Heap\n");
-            goto fail;
-        }
-        // Initializing kernel stack.
-        Status = (int) __init_kernel_stack();
-        if (Status != 0){
-            debug_print ("mmInitialize: Stack\n");
-            goto fail;
-        }
-
-        // Initialize the list of pointer.
-        while (i<MMBLOCK_COUNT_MAX){
-            mmblockList[i] = (unsigned long) 0;
-            i++;
-        };
-
-        // Primeiro Bloco.
-        // current_mmblock = (void *) NULL;
-
-        // #importante:
-        // Inicializando o índice la lista de ponteiros 
-        // para estruturas de alocação.
-
-        mmblockCount = (int) 0;
-
-        // ...
-
-        // Initialize the size of the physical memory
-        // and the size of the system based on the memory size.
-        // It needs to be before the pagetables initialization.
-        // see: mmsize.c
-        mmsize_initialize();
-
-        // #debug
-        //while(1){}
-   
-        // End of phase 0.
-        goto InitializeEnd;
-
-
-    // phase 1
-    } else if (phase == 1) {
-
-        // Inicializando o framepool (paged pool).
-        // see mmpool.c
-        initializeFramesAlloc();
-
-        // Continua...
-
-        // Initializing the paging infrastructure.
-        // Mapping all the static system areas.
-        // See: pages.c
-        int PagingStatus=-1;
-        PagingStatus = (int) mmInitializePaging();
-        if (PagingStatus<0){
-            x_panic("mmInitialize: Paging");
-        }
-
-        // End of phase 1.
-        goto InitializeEnd;
-    } else {
-        // Wrong phase number.
-        // goto fail;
-    };
-
-InitializeEnd:
-    //#debug
-    //debug_print("mmInitialize: done\n");
-    //refresh_screen();
-    //while(1){}
-    return TRUE;
-
-fail:
-    debug_print("mmInitialize: fail\n");
-    //refresh_screen();
-    //while(1){}
-    return FALSE;
-}
-
 /*
  * heapAllocateMemory:
  *     Aloca memória no heap do kernel.
@@ -733,5 +607,135 @@ unsigned long get_process_heap_pointer (pid_t pid)
 
 fail:
     return (unsigned long) 0; 
+}
+
+//
+// #
+// INITIALIZATION
+//
+
+// mmInitialize:
+// Inicializa o memory manager.
+// Init Memory Manager for x64:
+// Heap, Stack, Pages, mmblocks, memory sizes, memory zones ...
+// OUT: TRUE or FALSE.
+// -------------------------------
+// Initialize mm phase 0.
+// + Initialize video support.
+// + Inittialize heap support.
+// + Inittialize stack support. 
+// + Initialize memory sizes.
+// -------------------------------
+// Initialize mm phase 1.
+// + Initialize framepool support.
+// + Initializing the paging infra-structure.
+//   Mapping all the static system areas.
+
+int mmInitialize(int phase)
+{
+// Called by I_kmain() in kmain.c.
+// + Initialize the memory support.
+//   The kernel heap and the kernel stack.
+// + The implementation of the main kernel allocator.
+// + Initialize the physical memory manager.
+// + Initialize the paging support.
+
+    int Status=0;
+    register int i=0;
+
+    //debug_print("mmInitialize: [TODO] [FIXME]\n");
+
+    if (phase == 0){
+
+        // Video support
+        gramk_initialize_video();
+
+        // #todo: 
+        // Inicializar algumas variáveis globais.
+        // Chamar os construtores para inicializar o básico.
+        // #todo: 
+        // Clear BSS.
+        // Criar mmClearBSS()
+
+        // Initializing kernel heap.
+        Status = (int) __init_kernel_heap();
+        if (Status != 0){
+            debug_print("mmInitialize: Heap\n");
+            goto fail;
+        }
+        // Initializing kernel stack.
+        Status = (int) __init_kernel_stack();
+        if (Status != 0){
+            debug_print ("mmInitialize: Stack\n");
+            goto fail;
+        }
+
+        // Initialize the list of pointer.
+        while (i<MMBLOCK_COUNT_MAX){
+            mmblockList[i] = (unsigned long) 0;
+            i++;
+        };
+
+        // Primeiro Bloco.
+        // current_mmblock = (void *) NULL;
+
+        // #importante:
+        // Inicializando o índice la lista de ponteiros 
+        // para estruturas de alocação.
+
+        mmblockCount = (int) 0;
+
+        // ...
+
+        // Initialize the size of the physical memory
+        // and the size of the system based on the memory size.
+        // It needs to be before the pagetables initialization.
+        // see: mmsize.c
+        mmsize_initialize();
+
+        // #debug
+        //while(1){}
+   
+        // End of phase 0.
+        goto InitializeEnd;
+
+
+    // phase 1
+    } else if (phase == 1) {
+
+        // Inicializando o framepool (paged pool).
+        // see mmpool.c
+        initializeFramesAlloc();
+
+        // Continua...
+
+        // Initializing the paging infrastructure.
+        // Mapping all the static system areas.
+        // See: pages.c
+        int PagingStatus=-1;
+        PagingStatus = (int) mmInitializePaging();
+        if (PagingStatus<0){
+            x_panic("mmInitialize: Paging");
+        }
+
+        // End of phase 1.
+        goto InitializeEnd;
+    } else {
+        // Wrong phase number.
+        // goto fail;
+    };
+
+InitializeEnd:
+    //#debug
+    //debug_print("mmInitialize: done\n");
+    //refresh_screen();
+    //while(1){}
+    return TRUE;
+
+fail:
+    debug_print("mmInitialize: fail\n");
+    //refresh_screen();
+    //while(1){}
+    return FALSE;
 }
 
