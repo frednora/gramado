@@ -74,6 +74,24 @@ kernel/core/deps/shell/shell01/
 
 This project includes basicaly the bootloader, the core kernel and the init process.
 
+## Kernel initialization
+
+The kernel initialization in I_kmain():
+
+```
+// ==================================
+// Levels:
+// + [1]   earlyinit()
+// + [2:0] mmInitialize(0)
+// + [2:1] mmInitialize(1)
+// + [3:0] keInitialize(0)
+// + [3:1] keInitialize(1)
+// + [3:2] keInitialize(2)
+// + [4]   archinit()
+// + [5]   lateinit()
+// ==================================
+```
+
 ## What is Gramado Operating System?
 
 GramadoOS is a 64bit graphical operating system. It has a bootloader, a kernel and a desktop environment.

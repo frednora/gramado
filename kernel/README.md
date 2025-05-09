@@ -3,6 +3,25 @@
 This is code for the base kernel. It builds the image KERNEL.BIN.
 
 
+## Kernel initialization
+
+The kernel initialization in I_kmain():
+
+```
+// ==================================
+// Levels:
+// + [1]   earlyinit()
+// + [2:0] mmInitialize(0)
+// + [2:1] mmInitialize(1)
+// + [3:0] keInitialize(0)
+// + [3:1] keInitialize(1)
+// + [3:2] keInitialize(2)
+// + [4]   archinit()
+// + [5]   lateinit()
+// ==================================
+```
+
+
 ## Folders
 
 ```

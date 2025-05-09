@@ -1,5 +1,5 @@
 /*
- * File: kinit.h
+ * File: kmain.h
  *     Initialization support.
  * History:
  *     2015 - Created by Fred Nora.
@@ -76,9 +76,23 @@ extern struct initialization_d  Initialization;
 
 // ========================
 
+
+//
+// Used during the kernel initialization.
+//
+
+// ::(1)
+// The kernel starts at ke/x86_64/startup/
+// see: '_kernel_begin' in head_64.asm.
+
+// ::(2)
+// Global initialization.
+// see: init.c
+void I_kmain(int arch_type);
+
+
 // See: kmain.c
-// See: ke/x86_64/x64init.c
-void keInitGlobals(void);
+void init_globals(void);
 
 #endif    
 

@@ -149,12 +149,15 @@ static void __enter_debug_mode(void);
 static void __print_final_messages(void);
 static void __setup_utsname(void);
 
-// Preinit routines
-static int preinit_SetupBootblock(void);
-static void preinit_Globals(int arch_type);
-static void preinit_Serial(void);
-static void preinit_OutputSupport(void);
-static int preinit(void);
+// Early init routines
+static int earlyinit_SetupBootblock(void);
+static void earlyinit_Globals(int arch_type);
+static void earlyinit_Serial(void);
+static void earlyinit_OutputSupport(void);
+
+static int earlyinit(void);
+static int archinit(void);
+static int lateinit(void);
 
 //
 // =======================================================
@@ -255,7 +258,7 @@ Loop:
     goto Loop;
 }
 
-void keInitGlobals(void)
+void init_globals(void)
 {
 // Called by I_initKernelComponents() in x64init.c
 // Architecture independent?
@@ -319,7 +322,7 @@ void keInitGlobals(void)
 // It also makes the early initialization of the consoles.
     Status = (int) kstdio_initialize();
     if (Status != TRUE){
-        panic("keInitGlobals: kstdio_initialize fail\n");
+        panic("init_globals: kstdio_initialize fail\n");
     }
 
 // Screen
@@ -341,14 +344,14 @@ void keInitGlobals(void)
 
 //
 // $
-// PREINIT
+// EARLY INIT
 //
 
 // ==============================
 // #limitation: No serial debug yet.
 // #todo: #bugbug
 // We have another BootBlock structure in info.h
-static int preinit_SetupBootblock(void)
+static int earlyinit_SetupBootblock(void)
 {
 // We don't have any print support for now.
 // #bugbug
@@ -470,7 +473,7 @@ static int preinit_SetupBootblock(void)
 }
 
 // ==========================
-static void preinit_Globals(int arch_type)
+static void earlyinit_Globals(int arch_type)
 {
 // We don't have any print support for now.
 
@@ -526,7 +529,7 @@ static void preinit_Globals(int arch_type)
 
 // =========================
 // see: serial.c
-static void preinit_Serial(void)
+static void earlyinit_Serial(void)
 {
 // We still don't have any print support yet.
 // But at the end of this routine we can use the serial debug.
@@ -536,16 +539,16 @@ static void preinit_Serial(void)
 
     int Status=FALSE;
     Status = DDINIT_serial();
-    if (Status!=TRUE){
+    if (Status != TRUE){
         //#bugbug
         //Oh boy!, We can't use the serial debug.
     }
     PROGRESS("Welcome!\n");
-    PROGRESS("preinit_Serial: Serial debug initialized\n");
+    PROGRESS("earlyinit_Serial: Serial debug initialized\n");
 }
 
 // ======================
-static void preinit_OutputSupport(void)
+static void earlyinit_OutputSupport(void)
 {
 // #important: 
 // We do not have all the runtime support yet.
@@ -553,25 +556,24 @@ static void preinit_OutputSupport(void)
 // We only initialized some console structures,
 // not the full support for printk functions.
 
-    //PROGRESS("::(2)(1)(4)\n");
-    //PROGRESS("preinit_OutputSupport:\n");
+    //PROGRESS("earlyinit_OutputSupport:\n");
 
 // O refresh ainda não funciona, 
 // precisamos calcular se a quantidade mapeada é suficiente.
     refresh_screen_enabled = FALSE;
 
-    //PROGRESS("preinit_OutputSupport: gramk_initialize_virtual_consoles\n");
+    //PROGRESS("earlyinit_OutputSupport: gramk_initialize_virtual_consoles\n");
     gramk_initialize_virtual_consoles();
 
-    //debug_print("preinit_OutputSupport: preinit_OutputSupport\n");
+    //debug_print("earlyinit_OutputSupport: earlyinit_OutputSupport\n");
 
 // #important: 
 // We do not have all the runtime support yet.
 // We can't use printk yet.
 }
 
-// ==========================
-static int preinit(void)
+// :: Level 1 
+static int earlyinit(void)
 {
 // We don't have any print support for now.
 // But here is the moment when we initialize the
@@ -607,20 +609,17 @@ static int preinit(void)
 // Hack Hack
     VideoBlock.useGui = TRUE;
 
-// ::(2)(1)(1)
 // first of all
 // Getting critical boot information.
-    preinit_SetupBootblock();
-// ::(2)(1)(2)
-// We do not have serial debug yet.
-    preinit_Globals(0);  // IN: arch_type
+    earlyinit_SetupBootblock();
 
-// ::(2)(1)(3)
+// We do not have serial debug yet.
+    earlyinit_Globals(0);  // IN: arch_type
+
 // Serial debug support.
 // After that routine we can use the serial debug functions.
-    preinit_Serial();
+    earlyinit_Serial();
 
-// ::(2)(1)(4)
 // Initialize the virtual console structures.
 // We do not have all the runtime support yet.
 // We can't use printk yet.
@@ -629,143 +628,14 @@ static int preinit(void)
 // We can't use printk yet.
 // We only initialized some console structures,
 // not the full support for printk functions.
-    preinit_OutputSupport();
+    earlyinit_OutputSupport();
 
     return 0;
 }
 
-
-//
-// $
-// MAIN
-//
-
-// --------------------------------
-// ::(2)
-// See: kernel.h
-void I_kmain(int arch_type)
+// :: Level ?
+static int archinit(void)
 {
-// Called by START in startup/head_64.asm.
-// This is the first function in C.
-// We don't have any print support yet.
-
-    int Status = FALSE;
-    //int UseDebugMode=TRUE;  //#bugbug
-    int UseDebugMode=FALSE;
-
-// Product type.
-// see: heauty/product.h
-    g_product_type = PRODUCT_TYPE;
-    // Status Flag and Edition flag.
-    gSystemStatus = 1;
-    gSystemEdition = 0;
-    __failing_kernel_subsystem = KERNEL_SUBSYSTEM_INVALID;
-    has_booted = FALSE;
-
-// Setup debug mode.
-// Enable the usage of the serial debug.
-// It is not initialized yet.
-// #see: debug.c
-    disable_serial_debug();
-    if (USE_SERIALDEBUG == 1){
-        enable_serial_debug();
-    }
-
-// Config headless mode.
-// In headless mode stdout sends data to the serial port.
-    Initialization.headless_mode = FALSE;
-    if (CONFIG_HEADLESS_MODE == 1)
-        Initialization.headless_mode = TRUE;
-
-    // #hack
-    current_arch = CURRENT_ARCH_X86_64;
-    //current_arch = (int) arch_type;
-
-//
-// Pre-init
-//
-
-// Preinit
-// We don't have any print support yet.
-// We initialized the serial debug support, and console structures, 
-// but we still can't use the printk functions.
-
-    system_state = SYSTEM_PREINIT;
-    preinit();
-
-//
-// Booting
-//
-
-    PROGRESS(":: BOOTING\n");
-    system_state = SYSTEM_BOOTING;
-
-// boot info
-    if (xBootBlock.initialized != TRUE){
-        panic("I_kmain: xBootBlock.initialized\n");
-    }
-
-//
-// mm subsystem
-//
-
-    //PROGRESS(":: Initialize mm subsystem\n");
-
-// Initialize mm phase 0.
-// See: mm.c
-// + Initialize video support.
-// + Inittialize heap support.
-// + Inittialize stack support. 
-// + Initialize memory sizes.
-    PROGRESS(":: MM PHASE 0\n");
-    Status = (int) mmInitialize(0);
-    if (Status != TRUE){
-        __failing_kernel_subsystem = KERNEL_SUBSYSTEM_MM;
-        if (Initialization.is_serial_log_initialized == TRUE){
-            debug_print("I_kmain: mmInitialize phase 0 fail\n");
-        }
-        goto fail;
-    }
-    Initialization.mm_phase0 = TRUE;
-
-// Initialize mm phase 1.
-// + Initialize framepoll support.
-// + Initializing the paging infrastructure.
-//   Mapping all the static system areas.
-    PROGRESS(":: MM PHASE 1\n");
-    Status = (int) mmInitialize(1);
-    if (Status != TRUE){
-        __failing_kernel_subsystem = KERNEL_SUBSYSTEM_MM;
-        if (Initialization.is_serial_log_initialized == TRUE){
-            debug_print("I_kmain: mmInitialize phase 1 fail\n");
-        }
-        goto fail;
-    }
-    Initialization.mm_phase1 = TRUE;
-
-    g_module_runtime_initialized = TRUE;
-
-//
-// ke subsystem
-//
-
-    //PROGRESS(":: Initialize ke subsystem\n");
-
-// Initialize ke phase 0.
-// See: ke.c
-// + kernel font.
-// + background.
-// + refresh support.
-// + show banner and resolution info.
-// + Check gramado mode and grab data from linker.
-// + Initialize bootloader display device.
-    PROGRESS(":: KE PHASE 0\n");
-    Status = (int) keInitialize(0);
-    if (Status != TRUE){
-        __failing_kernel_subsystem = KERNEL_SUBSYSTEM_KE;
-        goto fail;
-    }
-    Initialization.ke_phase0 = TRUE;
 
 /*
 //++
@@ -782,60 +652,6 @@ void I_kmain(int arch_type)
 //----------
 //--
 */
-
-// Initialize ke phase 1.
-// + Calling I_x64main to 
-//   initialize a lot of stuff from the 
-//   current architecture.
-// + PS2 early initialization.
-    PROGRESS(":: KE PHASE 1\n");
-    Status = (int) keInitialize(1);
-    if (Status != TRUE){
-        __failing_kernel_subsystem = KERNEL_SUBSYSTEM_KE;
-        goto fail;
-    }
-    Initialization.ke_phase1 = TRUE;
-
-// Initialize ke phase 2.
-// + Initialize background.
-// + Load BMP icons.
-    PROGRESS(":: KE PHASE 2\n");
-    Status = (int) keInitialize(2);
-    if (Status != TRUE){
-        __failing_kernel_subsystem = KERNEL_SUBSYSTEM_KE;
-        goto fail;
-    }
-    Initialization.ke_phase2 = TRUE;
-
-// #test
-// Creating the legacy pty maste and pty slave.
-// see: pty.c
-    // #debug
-    //printk (":: Creating legacy ptys\n");
-    //refresh_screen();
-
-    PROGRESS(":: PTY\n");
-    tty_initialize_legacy_pty();
-
-//
-// The root user
-//
-
-// Initialize the user list.
-    register int u=0;
-    for (u=0; u<USER_COUNT_MAX; u++){
-        userList[u] = 0;
-    };
-
-// #test
-// At this point we already have almost all we need to 
-// pass the control to the init process.
-// So, lets setup the the user for all the resources we created.
-
-    int UserStatus = FALSE;
-    UserStatus = (int) userCreateRootUser();
-    if (UserStatus != TRUE)
-        panic("I_kmain: on userCreateRootUser\n");
 
 // ----------------------------------
 // Last thing
@@ -855,7 +671,7 @@ void I_kmain(int arch_type)
             // it sends a formated string to the serial port.
             // #ok, it is working at this part, not in the
             // beginning of the routine.
-            serial_printk("I_kmain: processor_type {%d}\n",
+            serial_printk("archinit: processor_type {%d}\n",
                 processor_type );
 
             // k2_ke/x86_64/x64smp.c
@@ -901,76 +717,283 @@ void I_kmain(int arch_type)
         }
     }
 
-    // #debug Breakpoint
+    return 0;
+}
+
+// :: Level ?
+static int lateinit(void)
+{
+    int ok = 0;
+    //int UseDebugMode=TRUE;  //#bugbug
+    int UseDebugMode=FALSE;
+
+// -------------------------------------
+// #test
+// Creating the legacy pty maste and pty slave.
+// see: pty.c
+    // #debug
+    //printk (":: Creating legacy ptys\n");
     //refresh_screen();
-    //while(1){}
 
-//
+    PROGRESS(":: PTY\n");
+    tty_initialize_legacy_pty();
+
+// -------------------------------------
+// The root user
+// Initialize the user list.
+    register int u=0;
+    for (u=0; u<USER_COUNT_MAX; u++){
+        userList[u] = 0;
+    };
+// #test
+// At this point we already have almost all we need to 
+// pass the control to the init process.
+// So, lets setup the the user for all the resources we created.
+    int UserStatus = FALSE;
+    UserStatus = (int) userCreateRootUser();
+    if (UserStatus != TRUE)
+        panic("lateinit: on userCreateRootUser\n");
+
+// -------------------------------------
 // Runlevel switch:
-//
-
 // Enter into the debug console instead of jumping 
 // into the init thread.
 // ::: Initialization on debug mode
 // Initialize the default kernel virtual console.
 // It depends on the run_level.
+// #bugbug: The interrupts are not initialized,
+// it's done via init process?
 // See: kgwm.c
     if (UseDebugMode == TRUE){
         __enter_debug_mode();
     }
 
+// -------------------------------------
 // Setup utsname structure.
     __setup_utsname();
 
-
+// -------------------------------------
 // Initialize support for loadable kernel modules.
 // See: mod.c 
     int mod_status = -1;
     mod_status = (int) mod_initialize();
     if (mod_status != TRUE)
-        panic("I_kmain: on mod_initialize()\n");
+        panic("lateinit: on mod_initialize()\n");
 
-
-// -------------------------------
-//StartSystemEnd:
-
-
-// The initialization failed.
-    if (Status != TRUE)
-    {
-        __print_final_messages();
-        system_state = SYSTEM_DEAD;
-        while (1){
-            asm ("cli");
-            asm ("hlt");
-        };
-    }
-
+// -------------------------------------
 // Execute the first ring3 process.
 // ireq to init thread.
 // See: ke.c
+    PROGRESS(":: INITIAL PROCESS\n");
+    /*
+    //#debug
+    refresh_screen();
+    while (1){ 
+        asm volatile ("cli");
+        asm volatile ("hlt"); 
+    };
+    */
+    ok = (int) ke_x64ExecuteInitialProcess();
+    if (ok < 0){
+        panic ("lateinit: Couldn't launch init process\n");
+        // #todo:
+        // Maybe we can call the kernel console for debuging purpose.
+        goto fail;
+    }
 
-    int ok = 0;
+// done:
+    return 0;
+
+fail:
+    return (int) -1;
+}
+
+//
+// $
+// MAIN
+//
+
+// --------------------------------
+// Called by START in startup/head_64.asm.
+// This is the first function in C.
+// We don't have any print support yet.
+// See: kernel.h, kmain.h
+void I_kmain(int arch_type)
+{
+// ==================================
+// Levels:
+// + [1]   earlyinit()
+// + [2:0] mmInitialize(0)
+// + [2:1] mmInitialize(1)
+// + [3:0] keInitialize(0)
+// + [3:1] keInitialize(1)
+// + [3:2] keInitialize(2)
+// + [4]   archinit()
+// + [5]   lateinit()
+// ==================================
+
+    int Status = FALSE;
+
+// Product type.
+// see: heauty/product.h
+    g_product_type = PRODUCT_TYPE;
+    // Status Flag and Edition flag.
+    gSystemStatus = 1;
+    gSystemEdition = 0;
+    __failing_kernel_subsystem = KERNEL_SUBSYSTEM_INVALID;
+    has_booted = FALSE;
+
+// Setup debug mode.
+// Enable the usage of the serial debug.
+// It is not initialized yet.
+// #see: debug.c
+    disable_serial_debug();
+    if (USE_SERIALDEBUG == 1){
+        enable_serial_debug();
+    }
+
+// Config headless mode.
+// In headless mode stdout sends data to the serial port.
+    Initialization.headless_mode = FALSE;
+    if (CONFIG_HEADLESS_MODE == 1)
+        Initialization.headless_mode = TRUE;
+
+    // #hack
+    current_arch = CURRENT_ARCH_X86_64;
+    //current_arch = (int) arch_type;
+
+// -------------------------------
+// Early init
+// We don't have any print support yet.
+// We initialized the serial debug support, and console structures, 
+// but we still can't use the printk functions.
+
+    system_state = SYSTEM_PREINIT;
+    // [1]
+    earlyinit();
+
+//
+// Booting
+//
+
+    PROGRESS(":: BOOTING\n");
+    system_state = SYSTEM_BOOTING;
+
+// boot info
+    if (xBootBlock.initialized != TRUE){
+        panic("I_kmain: xBootBlock.initialized\n");
+    }
+
+//
+// mm subsystem
+//
+
+    //PROGRESS(":: Initialize mm subsystem\n");
+
+// -------------------------------
+// Initialize mm phase 0.
+// See: mm.c
+// + Initialize video support.
+// + Inittialize heap support.
+// + Inittialize stack support. 
+// + Initialize memory sizes.
+    PROGRESS(":: MM PHASE 0\n");
+    // [2:0]
+    Status = (int) mmInitialize(0);
+    if (Status != TRUE){
+        __failing_kernel_subsystem = KERNEL_SUBSYSTEM_MM;
+        if (Initialization.is_serial_log_initialized == TRUE){
+            debug_print("I_kmain: mmInitialize phase 0 fail\n");
+        }
+        goto fail;
+    }
+    Initialization.mm_phase0 = TRUE;
+
+// -------------------------------
+// Initialize mm phase 1.
+// + Initialize framepoll support.
+// + Initializing the paging infrastructure.
+//   Mapping all the static system areas.
+    PROGRESS(":: MM PHASE 1\n");
+    // [2:1]
+    Status = (int) mmInitialize(1);
+    if (Status != TRUE){
+        __failing_kernel_subsystem = KERNEL_SUBSYSTEM_MM;
+        if (Initialization.is_serial_log_initialized == TRUE){
+            debug_print("I_kmain: mmInitialize phase 1 fail\n");
+        }
+        goto fail;
+    }
+    Initialization.mm_phase1 = TRUE;
+
+    g_module_runtime_initialized = TRUE;
+
+//
+// ke subsystem
+//
+
+    //PROGRESS(":: Initialize ke subsystem\n");
+
+// -------------------------------
+// Initialize ke phase 0.
+// See: ke.c
+// + kernel font.
+// + background.
+// + refresh support.
+// + show banner and resolution info.
+// + Check gramado mode and grab data from linker.
+// + Initialize bootloader display device.
+    PROGRESS(":: KE PHASE 0\n");
+    // [3:0]
+    Status = (int) keInitialize(0);
+    if (Status != TRUE){
+        __failing_kernel_subsystem = KERNEL_SUBSYSTEM_KE;
+        goto fail;
+    }
+    Initialization.ke_phase0 = TRUE;
+
+// -------------------------------
+// Initialize ke phase 1.
+// + Calling I_x64main to 
+//   initialize a lot of stuff from the 
+//   current architecture.
+// + PS2 early initialization.
+    PROGRESS(":: KE PHASE 1\n");
+    // [3:1]
+    Status = (int) keInitialize(1);
+    if (Status != TRUE){
+        __failing_kernel_subsystem = KERNEL_SUBSYSTEM_KE;
+        goto fail;
+    }
+    Initialization.ke_phase1 = TRUE;
+
+// -------------------------------
+// Initialize ke phase 2.
+// + Initialize background.
+// + Load BMP icons.
+    PROGRESS(":: KE PHASE 2\n");
+    // [3:2]
+    Status = (int) keInitialize(2);
+    if (Status != TRUE){
+        __failing_kernel_subsystem = KERNEL_SUBSYSTEM_KE;
+        goto fail;
+    }
+    Initialization.ke_phase2 = TRUE;
+
+// -------------------------------
+    PROGRESS(":: archinit\n");
+    // [4]
+    archinit();
+
+// -------------------------------
+    int late_status = 0;
     if (Status == TRUE)
     {
-        PROGRESS(":: INITIAL PROCESS\n");
-
-        /*
-        //#debug
-        refresh_screen();
-        while (1){ 
-            asm volatile ("cli");
-            asm volatile ("hlt"); 
-        };
-        */
-
-        ok = (int) ke_x64ExecuteInitialProcess();
-        if (ok < 0){
-            panic ("kmain.c: Couldn't launch init process\n");
-            // #todo:
-            // Maybe we can call the kernel console for debuging purpose.
+        PROGRESS(":: archinit\n");
+        // [5]
+        late_status = (int) lateinit();
+        if (late_status < 0)
             goto fail;
-        }
     }
 
 // Initialization fail

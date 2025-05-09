@@ -185,27 +185,6 @@ struct kernel_classes_d  KernelClasses;
 //
 
 
-//
-// Used during the kernel initialization.
-//
-
-// ::(1)
-// The kernel starts at ke/x86_64/startup/
-// see: '_kernel_begin' in head_64.asm.
-
-// ::(2)
-// Global initialization.
-// see: init.c
-void I_kmain(int arch_type);
-
-
-// x86_64 Initialization. (Main routine)
-// see: x64init.c
-int I_x64_initialize(void);
-
-// ::(3)
-// see: x64init.c
-void I_x64ExecuteInitialProcess(void);
 
 // ===========================
 

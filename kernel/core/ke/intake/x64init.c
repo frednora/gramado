@@ -1073,9 +1073,8 @@ static int I_initKernelComponents(void)
 
 // Initialize globals.
 // See: kmain.c
-    keInitGlobals();
+    init_globals();
     //PROGRESS("init_globals ok\n"); 
-
 
 // Create the device list for all the devices
 // in our system, including the hal stuff i guess.

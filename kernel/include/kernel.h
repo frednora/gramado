@@ -49,7 +49,8 @@
 #include "../core/ke/hal/pints.h"       // profiler
 
 // ===============================
-#include "../core/ke/kinit.h"   // kernel initialization.
+#include "../core/ke/intake/x64init.h"  // x64 kernel initialization.
+#include "../core/kmain/kmain.h"        // kernel initialization.
 
 // ===============================
 // kmain/
