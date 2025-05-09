@@ -1078,7 +1078,7 @@ static int I_initKernelComponents(void)
 
 // Create the device list for all the devices
 // in our system, including the hal stuff i guess.
-    devmgr_initialize();
+    devInitialize();
 
 // Initialize system HAL.
     Status = halInitialize();
@@ -1119,11 +1119,6 @@ static int I_initKernelComponents(void)
     // The current compilation method is not allowing us
     // to move the routines bellow as part of init_storage_support().
 
-// Disks and volumes.
-// see: storage.c
-    disk_init();
-    volume_init();
-
 // Initializat ata device driver.
 // see: ata.c
 // IN: msg, data1.
@@ -1151,8 +1146,8 @@ static int I_initKernelComponents(void)
 // File systems support.
 // see: fs.c
 
-    //vfsInit();
-    fsInit();
+    // vfs?
+    fsInitialize();
     // ...
 
 // ok

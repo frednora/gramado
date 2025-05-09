@@ -1,0 +1,11 @@
++---------------+-------------------------------+-----------------------------+-------+---+-----+---+-----+---+----+---+--------------------------------------------------+
+| Entry Name    | Limit                         | Base                        | Type  | S | DPL | P | AVL | L | DB | G | Description                                      |
++---------------+-------------------------------+-----------------------------+-------+---+-----+---+-----+---+----+---+--------------------------------------------------+
+| GNULL_SEL     | 0                             | 0                           | 0x0   | 0 | 0   | 0 | 0   | 0 | 0  | 0 | Null descriptor                                  |
+| GCODE_SEL     | 0                             | 0                           | 0xA   | 1 | 0   | 1 | 0   | 1 | 0  | 0 | Ring 0 Code Segment (Execute/Read)               |
+| GDATA_SEL     | 0                             | 0                           | 0x2   | 1 | 0   | 1 | 0   | 1 | 0  | 0 | Ring 0 Data Segment (Read/Write)                 |
+| GUCODE_SEL    | 0                             | 0                           | 0xA   | 1 | 3   | 1 | 0   | 1 | 0  | 0 | Ring 3 Code Segment (Execute/Read)               |
+| GUDATA_SEL    | 0                             | 0                           | 0x2   | 1 | 3   | 1 | 0   | 1 | 0  | 0 | Ring 3 Data Segment (Read/Write)                 |
+| GTSS_SEL      | sizeof(struct tss_d) - 1      | TSS base (lower 32 bits)    | 0x9   | 0 | 3   | 1 | 0   | 0 | 0  | 1 | TSS Descriptor – first 8 bytes (64-bit available)|
+| GTSS_CONT_SEL | (unsigned long)tss >> 32      | (unsigned long)tss >> 48    | 0     | 0 | 0   | 0 | 0   | 0 | 0  | 0 | TSS Descriptor – second 8 bytes (upper TSS base) |
++---------------+-------------------------------+-----------------------------+-------+---+-----+---+-----+---+----+---+--------------------------------------------------+

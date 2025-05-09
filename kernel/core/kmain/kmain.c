@@ -795,8 +795,8 @@ static int lateinit(void)
     // ==========================
     // Network support.
     // ?? At this moment we already initialized the e1000 driver.
-    // See: network.c
-    networkInit();
+    // See: net.c
+    netInitialize();
 
 // -------------------------------------
 // Setup utsname structure.

@@ -1010,10 +1010,10 @@ void networkUpdateCounter(int the_counter)
 // INITIALIZATION
 //
 
-// networkInit:
-// Called by keInitialize() in ke.c.
+// netInitialize:
+// Called by lateinit() in ke.c.
 // Remember, we already initialized the driver for e1000 nic device.
-int networkInit(void)
+int netInitialize(void)
 {
 // + Setup network status.
 // + Setup network info structure.
@@ -1027,7 +1027,7 @@ int networkInit(void)
     register int i=0;
     void *tmp_buffer_address;
 
-    PROGRESS ("networkInit:\n");
+    PROGRESS ("netInitialize:\n");
 
 //======================================
 // Network initialization structure.
@@ -1249,7 +1249,7 @@ int networkInit(void)
 fail:
     // #debug
     // For now we cant's fail on the network initialization.
-    panic("networkInit: Fail\n");
+    panic("netInitialize: Fail\n");
     return (int) -1;
 }
 

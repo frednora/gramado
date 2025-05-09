@@ -3,6 +3,13 @@
 
 #include <kernel.h>
 
+
+// Main structure for managing the storage information.
+// See: 
+// I_init() in x64init.c
+struct storage_d  *storage;
+
+
 // The number of sectors in the boot disk.
 // See: storage_set_total_lba_for_boot_disk().
 unsigned long gNumberOfSectorsInBootDisk=0;
@@ -86,6 +93,10 @@ static int __create_vfs_partition(void);
 
 static int __ShowDiskInfo(int index);
 static int __ShowVolumeInfo(int index);
+
+
+static int disk_init(void);
+static int volume_init(void);
 
 // =================================================
 
@@ -557,7 +568,7 @@ storage_write_sector(
 // and rebuild the list. This way all the information made here
 // was gone. #fixme
 
-int disk_init (void)
+static int disk_init(void)
 {
     struct disk_d *d;
     unsigned char BootDisk=0;
@@ -699,7 +710,7 @@ void *disk_get_disk_handle(int number)
  *     Inicializa o volume manager.
  */
 
-int volume_init (void)
+static int volume_init(void)
 {
     int Status = -1;  //fail
     register int i=0;
@@ -1041,6 +1052,9 @@ int init_storage_support(void)
     storage->system_volume = NULL;
     storage->bootvolume_fp = NULL;
     // ...
+
+    disk_init();
+    volume_init();
 
     return TRUE;
 }

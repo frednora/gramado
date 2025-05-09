@@ -507,9 +507,6 @@ unsigned long fs_count_path_levels (unsigned char *path);
 void *get_file(int Index);
 void set_file( void *file, int Index);
 
-int fsInit (void);
-void fs_init_structures (void);
-
 int file_close (file *_file);
 size_t file_get_len(file *_file);
 struct inode_d *file_inode(file *f);
@@ -723,6 +720,12 @@ fs_load_path (
 int fsLoadFileFromCurrentTargetDir (void);
 
 int fs_load_image( const char *filename, unsigned long image_va );
+
+
+void fs_init_structures (void);
+
+int __fs_initialize_imp(void);
+int fsInitialize(void);
 
 #endif    
 

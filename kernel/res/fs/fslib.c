@@ -4660,25 +4660,20 @@ void fsInitializeWorkingDiretoryString (void)
 }
 
 
-//
-// $
-// INITIALIZATION
-//
-
 // =========================================
-// fsInit:
-// Called by I_initKernelComponents() in x64init.c
-int fsInit (void)
+// __fs_initialize_imp:
+// Called by fsInitialize() in fs.c.
+int __fs_initialize_imp (void)
 {
     register int i=0;
     int slot = -1;
 
-    PROGRESS("fsInit:\n");
+    PROGRESS("__fs_initialize_imp:\n");
 
 // Initialize slab buffers to load directories.
     int buffers_ok = (int) __initialize_fs_buffers();
     if (buffers_ok < 0){
-        panic("fsInit: buffers");
+        panic("__fs_initialize_imp: buffers");
     }
 
 // Undefined fs type.
@@ -4709,13 +4704,13 @@ int fsInit (void)
     // pega slot em file_table[] para
     slot = get_free_slots_in_the_file_table();
     if (slot<0 || slot >= NUMBER_OF_FILES){
-        panic("fsInit: slot\n");
+        panic("__fs_initialize_imp: slot\n");
     }
     volume1_rootdir_fp = (file *) file_table[slot];
     volume1_rootdir_fp->filetable_index = slot;
 
     if ((void *) volume1_rootdir_fp == NULL){
-        panic ("fsInit: volume1_rootdir_fp\n");
+        panic ("__fs_initialize_imp: volume1_rootdir_fp\n");
     }
 
     volume1_rootdir_fp->used = TRUE;
@@ -4737,12 +4732,12 @@ int fsInit (void)
 // pega slot em inode_table[] 
     slot = get_free_slots_in_the_inode_table();
     if (slot < 0 || slot >= 32){
-        panic("fsInit: volume1_rootdir_fp inode slot\n");
+        panic("__fs_initialize_imp: volume1_rootdir_fp inode slot\n");
     }
     volume1_rootdir_fp->inode = (struct inode_d *) inode_table[slot];
     volume1_rootdir_fp->inodetable_index = slot;
     if ((void*) volume1_rootdir_fp->inode == NULL){
-        panic("fsInit: volume1_rootdir_fp inode struct\n");
+        panic("__fs_initialize_imp: volume1_rootdir_fp inode struct\n");
     }
     volume1_rootdir_fp->inode->filestruct_counter = 1;  //inicialize
     memcpy ( 
@@ -4755,9 +4750,9 @@ int fsInit (void)
 // The file pointer represents the boot volume.
 // see: storage.h
     if ((void*) storage == NULL)
-        panic("fsInit: storage\n");
+        panic("__fs_initialize_imp: storage\n");
     if (storage->magic != 1234)
-        panic("fsInit: storage validation\n");
+        panic("__fs_initialize_imp: storage validation\n");
 
     storage->bootvolume_fp = (file *) volume1_rootdir_fp;
 
@@ -4767,13 +4762,13 @@ int fsInit (void)
     // pega slot em file_table[] para
     slot = get_free_slots_in_the_file_table();
     if (slot<0 || slot >= NUMBER_OF_FILES){
-        panic("fsInit: slot\n");
+        panic("__fs_initialize_imp: slot\n");
     }
     volume2_rootdir_fp = (file *) file_table[slot];
     volume2_rootdir_fp->filetable_index = slot;
 
     if ((void *) volume2_rootdir_fp == NULL){
-        panic ("fsInit: volume2_rootdir_fp\n");
+        panic ("__fs_initialize_imp: volume2_rootdir_fp\n");
     }
     volume2_rootdir_fp->used = TRUE;
     volume2_rootdir_fp->magic = 1234;
@@ -4791,12 +4786,12 @@ int fsInit (void)
 // pega slot em inode_table[] 
     slot = get_free_slots_in_the_inode_table();
     if (slot<0 || slot >= 32){
-        panic("fsInit: volume2_rootdir inode slot\n");
+        panic("__fs_initialize_imp: volume2_rootdir inode slot\n");
     }
     volume2_rootdir_fp->inode = (struct inode_d *) inode_table[slot];
     volume2_rootdir_fp->inodetable_index = slot;
     if ( (void*) volume2_rootdir_fp->inode == NULL ){
-        panic("fsInit: volume2_rootdir_fp inode struct");
+        panic("__fs_initialize_imp: volume2_rootdir_fp inode struct");
     }
     volume2_rootdir_fp->inode->filestruct_counter = 1;  //inicialize
     memcpy ( 
@@ -4816,7 +4811,7 @@ int fsInit (void)
     
     pipe_gramadocore_init_execve = (file *) kmalloc(sizeof(file));
     if ((void *) pipe_gramadocore_init_execve == NULL){
-        panic ("fsInit: pipe_gramadocore_init_execve\n");
+        panic ("__fs_initialize_imp: pipe_gramadocore_init_execve\n");
     }
 
 // Aloca memória para o buffer.
@@ -4825,7 +4820,7 @@ int fsInit (void)
 // #todo: Use BUFSIZ as a normal file.
     unsigned long pipe0base = (unsigned long) kmalloc(512);
     if ((void *) pipe0base == NULL){
-        panic ("fsInit: pipe0base\n");
+        panic ("__fs_initialize_imp: pipe0base\n");
     }
 
     pipe_gramadocore_init_execve->used = TRUE;

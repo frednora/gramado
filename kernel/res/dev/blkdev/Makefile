@@ -3,7 +3,7 @@
 # Makefile for the kernel device drivers.
 
 
-INCLUDE = ../../include
+INCLUDE = ../../../include
 
 AS	= as
 LD	= ld
@@ -72,17 +72,28 @@ LDFLAGS := -m elf_x86_64 -s -x -static
 
 # Everything is a file.
 OBJS = \
-dev.o io.o    
+ata.o atadma.o atahdd.o atainfo.o atairq.o atapci.o \
+disk_r.o disk_w.o storage.o    
+
 
 all:
 
-# i/o
-	$(CC) -c dev.c   $(KERNEL_INCLUDE) $(CFLAGS) -o dev.o 
-	$(CC) -c io.c       $(KERNEL_INCLUDE) $(CFLAGS) -o io.o
+# ata
+	$(CC) -c ata/ata.c     $(KERNEL_INCLUDE) $(CFLAGS) -o ata.o 
+	$(CC) -c ata/atadma.c  $(KERNEL_INCLUDE) $(CFLAGS) -o atadma.o 
+	$(CC) -c ata/atahdd.c  $(KERNEL_INCLUDE) $(CFLAGS) -o atahdd.o 
+	$(CC) -c ata/atainfo.c $(KERNEL_INCLUDE) $(CFLAGS) -o atainfo.o 
+	$(CC) -c ata/atairq.c  $(KERNEL_INCLUDE) $(CFLAGS) -o atairq.o 
+	$(CC) -c ata/atapci.c  $(KERNEL_INCLUDE) $(CFLAGS) -o atapci.o 
+	$(CC) -c ata/disk_r.c  $(KERNEL_INCLUDE) $(CFLAGS) -o disk_r.o
+	$(CC) -c ata/disk_w.c  $(KERNEL_INCLUDE) $(CFLAGS) -o disk_w.o
+
+# storage
+	$(CC) -c storage.c $(KERNEL_INCLUDE) $(CFLAGS) -o storage.o 
 
 # link
-	$(LD) -r -o p4_dev.o $(OBJS)
-	cp p4_dev.o ../../
+	$(LD) -r -o blkdev.o $(OBJS)
+	cp blkdev.o  ../../../
 	rm *.o
 
 clean:

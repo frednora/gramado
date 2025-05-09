@@ -70,14 +70,16 @@ KERNEL_INCLUDE := -I $(INCLUDE)
 # LDFLAGS := -m elf_x86_64 -static
 LDFLAGS := -m elf_x86_64 -s -x -static  
 
-OBJS = network.o domain.o inet.o \
+OBJS = domain.o inet.o \
 socket.o sockint.o \
-ethernet.o arp.o ipv4.o tcp.o udp.o dhcp.o gprot.o    
+ethernet.o arp.o ipv4.o tcp.o udp.o dhcp.o gprot.o \
+net.o    
 
 all:
 
+	$(CC) -c net.c  $(KERNEL_INCLUDE) $(CFLAGS) -o net.o
+
 # network
-	$(CC) -c network.c  $(KERNEL_INCLUDE) $(CFLAGS) -o network.o
 	$(CC) -c domain.c   $(KERNEL_INCLUDE) $(CFLAGS) -o domain.o
 	$(CC) -c inet.c     $(KERNEL_INCLUDE) $(CFLAGS) -o inet.o
 

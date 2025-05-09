@@ -36,10 +36,6 @@
 #include "../core/kmain/gdef.h"
 
 // ==================================
-// dev/
-// #include "../res/dev/dev.h"
-
-// ==================================
 // ke/
 #include "../core/ke/intake/sync.h"
 
@@ -189,8 +185,7 @@
 
 // ==================================
 // dev/
-#include "../res/dev/dev.h"
-
+#include "../res/dev/dev00.h"
 
 // ==================================
 // gramk/
@@ -246,9 +241,6 @@
 // ata, sata
 #include "../res/dev/blkdev/ata/ata.h"
 // Storage manager.
-#include "../res/dev/blkdev/superblk.h"
-#include "../res/dev/blkdev/volume.h"
-#include "../res/dev/blkdev/disk.h"
 #include "../res/dev/blkdev/storage.h"
 
 // netdev/
@@ -297,14 +289,13 @@
 #include "../res/net/socket.h"      //last always
 
 #include "../res/net/domain.h"
-#include "../res/net/network.h"     //(network) Gerenciamento de rede.  
-
-#include "../res/net/net.h"
+#include "../res/net/net.h"     //(network) Gerenciamento de rede.  
 
 // ----------------------
 // Last:
+// Device interface.
 // Device manager.
-#include "../res/dev/devmgr.h"
+#include "../res/dev/dev.h"
 
 // ==================================
 // fs/

@@ -3,10 +3,8 @@
 // Credits:
 //   + Original Created by Nelson Cole.
 
-
-#ifndef __ATA_H
-#define __ATA_H    1
-
+#ifndef __BLKDEV_ATA_H
+#define __BLKDEV_ATA_H    1
 
 /*
 //
@@ -64,11 +62,6 @@ Here's a list of subclasses for the PCI class 1 (Mass Storage Controller):
 
 // ============================================
 
-
-
-
-
-
 // -------------------------------------------
 
 #define IDE_ATA    0
@@ -116,8 +109,6 @@ Here's a list of subclasses for the PCI class 1 (Mass Storage Controller):
 #define ATA_RAID_CONTROLLER  0x4
 #define ATA_AHCI_CONTROLLER  0x6
 #define ATA_UNKNOWN_CONTROLLER  0xFF   
-
-
 
 
 // Retorno da inicializacao PCI. 
@@ -251,7 +242,6 @@ Here's a list of subclasses for the PCI class 1 (Mass Storage Controller):
 #define ATA_REG_ALTSTATUS  0x0C
 #define ATA_REG_DEVADDRESS 0x0D
 
-
 // ===========================================================
 
 extern int g_ata_driver_initialized;
@@ -291,12 +281,8 @@ extern struct pci_device_d *PCIDeviceATA;
 // extern struct pci_device_d *PCIDeviceATA2;
 // ...
 
-
-/*
- * dev_nport:
- *     AHCI ports;
- */
-
+// dev_nport:
+// AHCI ports
 struct dev_nport 
 { 
     unsigned char dev0;
@@ -502,7 +488,8 @@ extern unsigned long ATA_BAR5;  // AHCI Base Address / SATA Index Data Pair Base
 #define ide_dma_secundary   0x01
 
 // ide_dma_prdt:
-struct {
+// See: ata.c and atadma.c
+static struct {
     uint32_t addr;
     uint32_t len;
 }ide_dma_prdt[4];
@@ -531,7 +518,6 @@ typedef enum {
 	idetypesSecondaryMaster,  // 2
 	idetypesSecondarySlave    // 3
 }ide_types_t;
-
 
 typedef enum {
     idedevicetypesPATA,    // 0
@@ -696,7 +682,6 @@ void ata_show_ide_info(void);
 void ata_show_device_list_info(void);
 void ata_show_ata_controller_info(void);
 void ata_show_ata_info_for_boot_disk(void);
-
 
 // Driver initialization
 int 

@@ -1015,3 +1015,17 @@ fail:
     return (int) -1;
 }
 
+//
+// #
+// INITIALIZATION
+//
+
+// Called by I_initKernelComponents() in x64init.c
+int fsInitialize(void)
+{
+    // see: fslib.c.
+    __fs_initialize_imp();
+
+    return 0;
+}
+

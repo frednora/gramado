@@ -3,7 +3,7 @@
 # Makefile for the kernel device drivers.
 
 
-INCLUDE = ../../include
+INCLUDE = ../../../include
 
 AS	= as
 LD	= ld
@@ -72,17 +72,24 @@ LDFLAGS := -m elf_x86_64 -s -x -static
 
 # Everything is a file.
 OBJS = \
-dev.o io.o    
+e1000hw.o e1000.o    
+
 
 all:
 
-# i/o
-	$(CC) -c dev.c   $(KERNEL_INCLUDE) $(CFLAGS) -o dev.o 
-	$(CC) -c io.c       $(KERNEL_INCLUDE) $(CFLAGS) -o io.o
+# e100
+# ...
+
+# e1000
+	$(CC) -c e1000/e1000hw.c  $(KERNEL_INCLUDE) $(CFLAGS) -o e1000hw.o 
+	$(CC) -c e1000/e1000.c    $(KERNEL_INCLUDE) $(CFLAGS) -o e1000.o 
+
+# rtl81xx
+# ...
 
 # link
-	$(LD) -r -o p4_dev.o $(OBJS)
-	cp p4_dev.o ../../
+	$(LD) -r -o netdev.o $(OBJS)
+	cp netdev.o ../../../
 	rm *.o
 
 clean:

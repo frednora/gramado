@@ -488,6 +488,42 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         goto exit_cmp;
     }
 
+    // gdt: 
+    // #bugbug: We can't trust in these values yet.
+    unsigned long *a;
+    unsigned long *b;
+    // We have two gdts: EARLY_GDT64 and xxx_gdt;
+    // 
+    if ( kstrncmp( cmdline, "gdt", 3 ) == 0 )
+    {
+        a = (unsigned long *) &xxx_gdt[0];
+        b = (unsigned long *) &xxx_gdt[0] + 32;
+        printk("0: %x %x\n",a[0],b[0]);
+
+        a = (unsigned long *) &xxx_gdt[1];
+        b = (unsigned long *) &xxx_gdt[1] + 32;
+        printk("1: %x %x\n",a[0],b[0]);
+
+        a = (unsigned long *) &xxx_gdt[2];
+        b = (unsigned long *) &xxx_gdt[2] + 32;
+        printk("2: %x %x\n",a[0],b[0]);
+
+        a = (unsigned long *) &xxx_gdt[3];
+        b = (unsigned long *) &xxx_gdt[3] + 32;
+        printk("3: %x %x\n",a[0],b[0]);
+
+        a = (unsigned long *) &xxx_gdt[4];
+        b = (unsigned long *) &xxx_gdt[4] + 32;
+        printk("4: %x %x\n",a[0],b[0]);
+
+        a = (unsigned long *) &xxx_gdt[5];
+        b = (unsigned long *) &xxx_gdt[5] + 32;
+        printk("5: %x %x\n",a[0],b[0]);
+
+        refresh_screen();
+        goto exit_cmp;
+    }
+
 // memory:
     if ( kstrncmp( cmdline, "memory", 6 ) == 0 ){
         mmShowMemoryInfo();

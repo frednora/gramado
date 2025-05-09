@@ -1,4 +1,4 @@
-// devmgr.c
+// dev.c
 // Created by Fred Nora.
 
 #include <kernel.h>  
@@ -352,7 +352,7 @@ static int __devmgr_init_device_list(void)
 // INITIALIZATION
 //
 
-// devmgr_initialize:
+// devInitialize:
 // Called by I_initKernelComponents() in x64init.c.
 // Inicializa o gerenciamento de dispositivos.
 // Inicializa a lista de dispositivos.
@@ -363,11 +363,11 @@ static int __devmgr_init_device_list(void)
 // At this moment we didn't initialize any device,
 // maybe only the 'serial port' used in the basic debug.
 
-void devmgr_initialize(void)
+void devInitialize(void)
 {
     register int i=0;
 
-    debug_print("devmgr_initialize:\n");
+    debug_print("devInitialize:\n");
 
 // Initialize the list of devices.
     __devmgr_init_device_list();
