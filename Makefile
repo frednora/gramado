@@ -21,30 +21,37 @@ BASE = $(DISTROS)/base00
 # with the other subfolders in kernel/core/.
 
 ## =================================
-## BACK-END:
 # Kernel Core: Boot, kernel and ring 0 modules.
 DEP_L0 = kernel/core/deps/kcore
 # Kernel Services: Init process, ring 3 drivers and ring 3 servers.
 DEP_L1 = kernel/core/deps/kservices
 
 ## =================================
-## FRONT-END:
 # Shell Pre-UI: The display server.
-DEP_L2 = kernel/core/deps/preshell
+DEP_L2 = kernel/core/gdeps/preshell
 # Shell UI: Client-side GUI applications.
-DEP_L3 = kernel/core/deps/shell
+DEP_L3 = kernel/core/gdeps/shell
+
+
+# --------------------------
+# Unix-like commands
+COMMANDS = $(DEP_L1)/shell00
 
 # --------------------------
 # Display servers
 DISPLAY_SERVERS = $(DEP_L2)/ds
-# windowing system with 3D demos
-GAMES           = $(DEP_L2)/gram3d
 
 # --------------------------
-# Unix-like commands
-COMMANDS     = $(DEP_L3)/shell00
+# windowing system with 3D demos
+GAMES = $(DEP_L2)/gram3d
+
+# --------------------------
 # Client-side GUI applications
 APPLICATIONS = $(DEP_L3)/shell01
+
+# --------------------------
+# Client-side GUI applications with X library
+X_APPLICATIONS = $(DEP_L3)/xapps
 
 # Make variables (CC, etc...)
 AS      = as
@@ -271,7 +278,6 @@ copy-extras:
 #@-cp $(COMMANDS)/extra/bin/UDPTEST.BIN  $(BASE)/GRAMADO/
 
 	@-cp $(APPLICATIONS)/bin/TASKBAR.BIN    $(BASE)/DE
-	@-cp $(APPLICATIONS)/bin/XTB.BIN        $(BASE)/DE
 	@-cp $(APPLICATIONS)/bin/TERMINAL.BIN   $(BASE)/DE
 	@-cp $(APPLICATIONS)/bin/TERM00.BIN     $(BASE)/DE
 #@-cp $(APPLICATIONS)/bin/GWS.BIN       $(BASE)/DE
@@ -287,6 +293,9 @@ copy-extras:
     # Experimental applications
     # These need the '@' prefix.
 	@-cp $(APPLICATIONS)/bin/TEABOX.BIN  $(BASE)/DE/
+
+# X applications
+	@-cp $(X_APPLICATIONS)/bin/XTB.BIN  $(BASE)/DE
 
 	@echo "~ copy-extras"
 

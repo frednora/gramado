@@ -16,6 +16,9 @@ all:
 	make -C drivers/
 	make -C servers/
 
+# Unix-like commands
+	make -C shell00/
+
 
 clean:
 	-rm -f *.o
@@ -29,6 +32,9 @@ clean-all:
 	-rm -f libs/rtl/obj/*.o
 
 	-rm -f init/*.o
+
+# Unix-like commands
+#	#-rm she00/base/bin/*.BIN
 
 	# ...
 

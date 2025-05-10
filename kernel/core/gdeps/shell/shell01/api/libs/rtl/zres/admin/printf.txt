@@ -1,0 +1,15 @@
+
+0 - printf
+1 - kinguio_printf
+2 - kinguio_vsprintf
+
+3:
+_vsputs_r
+kinguio_i2hex
+kinguio_itoa
+kinguio_utoa
+va_arg
+
+--------------
+1 - kinguio_puts
+2 - putchar
