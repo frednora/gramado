@@ -35,7 +35,7 @@ DEP_L3 = kernel/core/gdeps/shell
 
 # --------------------------
 # Unix-like commands
-COMMANDS = $(DEP_L1)/shell00
+COMMANDS = $(DEP_L1)/cmds
 
 # --------------------------
 # Display servers

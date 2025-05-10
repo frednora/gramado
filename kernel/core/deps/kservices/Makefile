@@ -17,8 +17,7 @@ all:
 	make -C servers/
 
 # Unix-like commands
-	make -C shell00/
-
+	make -C cmds/
 
 clean:
 	-rm -f *.o
@@ -34,7 +33,7 @@ clean-all:
 	-rm -f init/*.o
 
 # Unix-like commands
-#	#-rm she00/base/bin/*.BIN
+#	#-rm cmds/base/bin/*.BIN
 
 	# ...
 
