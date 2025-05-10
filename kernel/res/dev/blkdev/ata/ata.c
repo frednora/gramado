@@ -1698,10 +1698,11 @@ static int __ata_initialize(int ataflag)
         current_sd->next = NULL;
 
         // #bugbug
-        // Is this a buffer? For what?
-        // Is this buffer enough?
+        // Local pointer.
+        // Is this biffer enough?
         ata_devinfo_buffer = (unsigned short *) kmalloc(4096);
-        if ((void *) ata_devinfo_buffer == NULL){
+        if ((void *) ata_devinfo_buffer == NULL)
+        {
             printk ("ata_initialize: ata_devinfo_buffer\n");
             Status = (int) -1;
             goto fail;

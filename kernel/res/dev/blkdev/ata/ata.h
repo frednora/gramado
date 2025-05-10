@@ -489,10 +489,13 @@ extern unsigned long ATA_BAR5;  // AHCI Base Address / SATA Index Data Pair Base
 
 // ide_dma_prdt:
 // See: ata.c and atadma.c
-static struct {
+struct ide_dma_prdt_d
+{
     uint32_t addr;
     uint32_t len;
-}ide_dma_prdt[4];
+};
+// See: atadma.c
+extern struct ide_dma_prdt_d  ide_dma_prdt[4];
 
 
 //

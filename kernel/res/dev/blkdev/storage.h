@@ -587,7 +587,6 @@ extern unsigned long diskList[DISK_COUNT_MAX];
 void *disk_get_disk_handle(int number);
 
 struct partition_table_d *disk_get_partition_table(int index);
-int disk_initialize_mbr_info(void);
 void disk_show_mbr_info(void);
 
 //
@@ -687,16 +686,12 @@ storage_write_sector(
     unsigned long buffer, 
     unsigned long lba );
 
-// Get the number of sectors in the boot disk
-// and save it into a global variable, for now.
-int storage_set_total_lba_for_boot_disk(void);
-
 //
 // $
 // INITIALIZATION
 //
 
-int init_storage_support(void);
+int storageInitialize(void);
 
 #endif    
 

@@ -1,7 +1,10 @@
-
 // atadma.c
+// Created by Nelson Cole.
 
 #include <kernel.h>  
+
+
+struct ide_dma_prdt_d  ide_dma_prdt[4];
 
 
 // ide_dma_start:

@@ -1091,64 +1091,19 @@ static int I_initKernelComponents(void)
 // Initializat PCI interface.
     init_pci();
 
-//
-// $
-// STORAGE
-//
-
-// ++
-// ===============================
-
-// Storage manager
-// Ordem: storage, disk, volume, file system.
-// #importante 
-// A estrutura 'storage' vai ser o nível mais baixo.
-// É nela que as outras partes devem se basear.
-
-    //PROGRESS("storage, disk, volume, fs\n"); 
-// Storage
-// Create the main 'storage' structure.
+// Initialize storage support.
+// Disk, volume, MBR ...
+// see: storage.c
     int st_status=FALSE;
-    st_status = init_storage_support();
+    st_status = storageInitialize();
     if (st_status != TRUE){
-       printk("I_initKernelComponents: init_storage_support fail\n");
+       printk("I_initKernelComponents: on storageInitialize()\n");
        return FALSE;
     }
 
-    // #bugbug
-    // The current compilation method is not allowing us
-    // to move the routines bellow as part of init_storage_support().
-
-// Initializat ata device driver.
-// see: ata.c
-// IN: msg, data1.
-    DDINIT_ata( 1, FORCEPIO );
-
-// >> Precisa do bootdisk e do ata device.
-// Set the number of sectors in the boot disk.
-// It depends on the disk and ata initialization.
-// So, now we can do this.
-    Status = (int) storage_set_total_lba_for_boot_disk();
-    if (Status != TRUE){
-        printk ("I_initKernelComponents: storage_set_total_lba_for_boot_disk fail\n"); 
-        return FALSE;
-    }
-    //PROGRESS("storage_set_total_lba_for_boot_disk ok\n"); 
-
-// mbr info
-// It depends on the total lba value for boot disk.
-// Its because we're gonna rad the disk to get the partition tables.
-    disk_initialize_mbr_info();
-
-// ===============================
-//--
-
-// File systems support.
+// Initialize file system support.
 // see: fs.c
-
-    // vfs?
     fsInitialize();
-    // ...
 
 // ok
 // Return to the main initialization routine
@@ -1163,7 +1118,6 @@ static int I_initKernelComponents(void)
 //fail1:
     // If we already have printk verbose.
 fail0:
-    PROGRESS("::(5)(3)(?): Fail");
     debug_print ("I_initKernelComponents: fail\n");
     return FALSE;
 }
@@ -1267,6 +1221,9 @@ int I_x64_initialize(void)
 // + Initialize storage manager.
 // + Initialize filesystem support.
 
+    // #debug
+    PROGRESS("Calling I_initKernelComponents\n"); 
+
     Status = (int) I_initKernelComponents(); 
     if (Status != TRUE){
         printk("I_x64_initialize: on I_initKernelComponents\n");
@@ -1281,6 +1238,9 @@ int I_x64_initialize(void)
 // ==========================
 // microkernel components:
 // scheduler, process, thread (intake)
+
+    // #debug
+    PROGRESS("Calling keInitializeIntake\n"); 
 
     Status = keInitializeIntake();
     if (Status != TRUE){
@@ -1301,7 +1261,10 @@ int I_x64_initialize(void)
 // a process structure to handle the kernel base and the
 // window server's control thread.
 
-    PROGRESS("Create kernel process\n"); 
+    // #debug
+    PROGRESS("Calling I_x64CreateKernelProcess\n"); 
+
+    //PROGRESS("Create kernel process\n"); 
     Status = I_x64CreateKernelProcess();
     if (Status != TRUE){
         debug_print ("Couldn't create the Kernel process\n");
@@ -1312,7 +1275,10 @@ int I_x64_initialize(void)
 // [INIT PROCESS] :: Create the first ring3 process.
 // INIT.BIN.
 
-    PROGRESS("Create init process\n"); 
+    // #debug
+    PROGRESS("Calling I_x64CreateInitialProcess\n"); 
+
+    //PROGRESS("Create init process\n"); 
     Status = I_x64CreateInitialProcess();
     if (Status != TRUE){
         debug_print ("Couldn't create the Initial process\n");

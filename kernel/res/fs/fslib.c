@@ -4859,6 +4859,8 @@ int __fs_initialize_imp (void)
     fsbp_initialize_bp_directories();
     // ...
 
+    PROGRESS("__fs_initialize_imp: Done\n");
+
     return 0;
 }
 

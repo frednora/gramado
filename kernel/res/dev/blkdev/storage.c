@@ -98,6 +98,12 @@ static int __ShowVolumeInfo(int index);
 static int disk_init(void);
 static int volume_init(void);
 
+
+// Get the number of sectors in the boot disk
+// and save it into a global variable, for now.
+static int storage_set_total_lba_for_boot_disk(void);
+static int disk_initialize_mbr_info(void);
+
 // =================================================
 
 // Show disk information given its descriptor.
@@ -449,8 +455,7 @@ struct partition_table_d *disk_get_partition_table(int index)
     return (struct partition_table_d *) pt;
 };
 
-
-int disk_initialize_mbr_info(void)
+static int disk_initialize_mbr_info(void)
 {
 // #bugbug
 // Only if the ata driver is already initialized.
@@ -704,12 +709,7 @@ void *disk_get_disk_handle(int number)
     return (void *) diskList[number];
 }
 
-
-/*
- * volume_init:
- *     Inicializa o volume manager.
- */
-
+// Worker: Initialize volume support.
 static int volume_init(void)
 {
     int Status = -1;  //fail
@@ -839,28 +839,21 @@ void volume_show_info (void)
 
 void *volume_get_volume_handle(int number)
 {
-
-// Parameter
-    if ( number < 0 || 
-         number >= VOLUME_COUNT_MAX )
+    if ( number < 0 || number >= VOLUME_COUNT_MAX )
     {
         return NULL;
     }
-
     return (void *) volumeList[number];
 }
 
 void *volume_get_current_volume_info (void)
 {
-    if ( current_volume < 0 || 
-         current_volume > VOLUME_COUNT_MAX )
+    if ( current_volume < 0 || current_volume > VOLUME_COUNT_MAX )
     {
         return NULL;
     }
-
     return (void *) volumeList[VOLUME_COUNT_MAX];
 }
-
 
 /*
  * read_lba:
@@ -974,7 +967,7 @@ fail:
 
 // Get the number of sectors in the boot disk
 // and save it into a global variable, for now.
-int storage_set_total_lba_for_boot_disk(void)
+static int storage_set_total_lba_for_boot_disk(void)
 {
     struct disk_d *disk;
     struct ata_device_d  *ata_device;
@@ -1032,7 +1025,13 @@ fail:
 // INITIALIZATION
 //
 
-int init_storage_support(void)
+// Storage manager
+// Ordem: storage, disk, volume, file system.
+// #importante 
+// A estrutura 'storage' vai ser o nível mais baixo.
+// É nela que as outras partes devem se basear.
+// Create the main 'storage' structure.
+int storageInitialize(void)
 {
 // Called by I_initKernelComponents in x64init.c
 // #bugbug
@@ -1053,8 +1052,34 @@ int init_storage_support(void)
     storage->bootvolume_fp = NULL;
     // ...
 
+// Initialize disk support.
     disk_init();
+
+// Initialize volume support.
     volume_init();
+
+// Initializat ata device driver.
+// see: ata.c
+// IN: msg, data1.
+    DDINIT_ata( 1, FORCEPIO );
+
+
+// >> Precisa do bootdisk e do ata device.
+// Set the number of sectors in the boot disk.
+// It depends on the disk and ata initialization.
+// So, now we can do this.
+    int Status = FALSE;
+    Status = (int) storage_set_total_lba_for_boot_disk();
+    if (Status != TRUE){
+        printk ("init_storage_support: storage_set_total_lba_for_boot_disk fail\n"); 
+        return FALSE;
+    }
+    //PROGRESS("storage_set_total_lba_for_boot_disk ok\n"); 
+
+// mbr info
+// It depends on the total lba value for boot disk.
+// Its because we're gonna rad the disk to get the partition tables.
+    disk_initialize_mbr_info();
 
     return TRUE;
 }

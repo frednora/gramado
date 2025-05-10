@@ -98,20 +98,19 @@ objects-y += p3_libk.o
 # res/ - Kernel resources (COLD)
 # We can create interfaces that belongs to a given cgroup.
 
-objects-y += p4_net.o    
-objects-y += p4_fs.o  
+objects-y += p4_mm.o  
+
+objects-y += p4_bus.o  
 
 objects-y += blkdev.o  
 objects-y += chardev.o  
 objects-y += netdev.o  
 objects-y += p4_dev.o  
 
-objects-y += p4_mm.o  
-objects-y += p4_bus.o  
+objects-y += p4_net.o    
 
-#objects-y += linux.o  
-#objects-y += windows.o  
-#objects-y += your.o  
+objects-y += p4_fs.o  
+
 
 # ========================
 PHONY := all
