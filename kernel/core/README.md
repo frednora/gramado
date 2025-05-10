@@ -5,10 +5,11 @@
 ## Folders
 
 ```
-  * apps  - 
-      Bootloader, kernel module, 
-      posix applications and client-side gui applications.
   * arch  - Entry
+  * deps  - 
+      Bootloader, kernel module, posix-commands.
+  * gdeps - 
+      Client-side GUI applications.
   * ke    - Top level kernel functions.
   * kmain - Main functions. Wrappers.
 ```
