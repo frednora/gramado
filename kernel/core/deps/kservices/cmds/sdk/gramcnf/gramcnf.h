@@ -1,8 +1,6 @@
-/*
- * gramcnf.h
- *     This is the main header.
- *  2018 - Created by Fred Nora.
- */
+// gramcnf.h
+// This is the main header.
+// 2018 - Created by Fred Nora.
 
 // rtl
 #include <types.h>
@@ -24,7 +22,3 @@
 #include "parser.h"
 #include "tree.h" 
 #include "compiler.h" 
-
-
-
-

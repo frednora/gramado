@@ -1,7 +1,5 @@
-/*
- * File: parser.c
- * 2018 - Created by Fred Nora.
- */
+// File: parser.c
+// 2018 - Created by Fred Nora.
 
 #include "gramcnf.h"
 

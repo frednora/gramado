@@ -1,9 +1,10 @@
 # gramcnf:
+# Language Interpreter for Gramado OS.
+# 2019 - Created by Fred Nora.
+
 # It's a project based on gramc.
 # The goal here is to create a small parser
 # for a new language for configuration files.
-# history:
-# 2019 - Created by Fred Nora.
 
 VERSION = 0
 PATCHLEVEL = 0

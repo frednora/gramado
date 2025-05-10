@@ -1,8 +1,6 @@
-/*
- * sum command.
- * Sum bytes in file mod 2^16
- * unix v7 ?
- */
+// sum command for Gramado OS.
+// Sum bytes in file mod 2^16
+// unix v7 ?
 
 #include <stdio.h>
 #include <stdlib.h>

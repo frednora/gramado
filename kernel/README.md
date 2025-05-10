@@ -28,7 +28,8 @@ The kernel initialization in I_kmain():
 ```
 core/:
 This is the hot spot, the singularity.
-  core/apps  - Putting the whole universe into here.
+  core/deps  - boot, ring 0 modules, posix commands.
+  core/gdeps - Client-side GUI applications.
   core/arch  - Entry point and initialization.
   core/ke    - Task manager.
   core/kmain - The main initialization routine and some wrappers. 

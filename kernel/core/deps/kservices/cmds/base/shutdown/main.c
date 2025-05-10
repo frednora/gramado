@@ -1,9 +1,9 @@
+// 'shutdown' command for Gramado OS.
+// Created by Fred Nora.
 
-// 'shutdown' command for Gramado.
 // It shuts down the machine via i/o ports
 // if we are running on qemu.
 // Environment: ring 3 application.
-// Created by Fred Nora.
 
 // + It only works on qemu. (TCG or KVM).
 // + It works on qemu with TCG.

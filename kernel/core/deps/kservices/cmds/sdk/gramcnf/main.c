@@ -1,7 +1,5 @@
-
 // main.c
-// GRAMCNF.BIN - c-like interpreter.
-// Ported from Gramado 32bit.
+// GRAMCNF.BIN - c-like interpreter for Gramado OS.
 // 2022 - Fred Nora
 
 #include "gramcnf.h"

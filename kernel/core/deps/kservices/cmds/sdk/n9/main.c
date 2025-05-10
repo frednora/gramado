@@ -1,4 +1,3 @@
-
 // 2023 - Created by Fred Nora.
 
 #include <stdio.h>

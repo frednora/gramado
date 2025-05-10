@@ -1,5 +1,5 @@
-
 // token.h
+// Created by Fred Nora.
 
 #ifndef __TOKEN_H
 #define __TOKEN_H    1
@@ -355,8 +355,6 @@ static	 while
 #define CONSTANT_MAX  8
 // -------------------------------------------------------------------------
 
-
-
 #define CONSTANT_TYPE_BYTE 1
 #define CONSTANT_TYPE_WORD 2
 #define CONSTANT_TYPE_DWORD 4
@@ -367,12 +365,10 @@ static	 while
 #define CONSTANT_BASE_DEC 10
 #define CONSTANT_BASE_HEX 16
 
-
 //#TODO RETURN SUPPORT;
 
 #define RETURN_TOKEN 0
 #define RETURN_TYPE 1
-
 
 #define SYMBOLTYPE_FUNCTION           1
 #define SYMBOLTYPE_FUNCTION_PROTOTYPE 2

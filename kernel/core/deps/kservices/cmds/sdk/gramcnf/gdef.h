@@ -1,5 +1,5 @@
-
 // gdef.h
+// Created by Fred Nora.
 
 #ifndef __GDEF_H
 #define __GDEF_H    1

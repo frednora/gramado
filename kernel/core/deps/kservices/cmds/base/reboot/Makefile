@@ -1,6 +1,7 @@
-#reboot command for gde
-#history:
+#reboot command for Gramado OS.
 #2019 - Created by Fred Nora.
+
+#history:
 #todo:
 #fazer um makefile pra compilar o shell
 #obs: #bugbug tem que arrumas as coisas aqui.

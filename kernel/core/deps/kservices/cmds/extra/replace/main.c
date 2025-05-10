@@ -8,22 +8,7 @@
 
 static int replace(char *text, char *word, char *new);
 
-
-int main (int argc, char *argv[])
-{
-    int status = -1;
-    char text[] = "Apenas um teste.";
-
-// Replace
-    status = replace(text, "um", "dois");
-    if (status<=0){
-        printf ("fail\n");
-        return -1;
-    }
-    printf ("%s \n",text);
-    //puts(text);
-    return 0;  
-}
+//==========================
 
 static int replace(char *text, char *word, char *new)
 {
@@ -50,4 +35,19 @@ static int replace(char *text, char *word, char *new)
     return 1;
 }
 
+int main (int argc, char *argv[])
+{
+    int status = -1;
+    char text[] = "Apenas um teste.";
+
+// Replace
+    status = replace(text, "um", "dois");
+    if (status<=0){
+        printf ("fail\n");
+        return -1;
+    }
+    printf ("%s \n",text);
+    //puts(text);
+    return 0;  
+}
 

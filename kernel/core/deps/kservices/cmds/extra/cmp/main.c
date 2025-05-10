@@ -1,5 +1,6 @@
-
 // CMP.BIN
+// # cmp command for Gramado OS.
+
 // The cmp command from unix v7
 // compare, or compare skipping.
 // $ cmp file1 file2

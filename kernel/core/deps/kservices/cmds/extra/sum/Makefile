@@ -1,5 +1,4 @@
-
-# sum
+# sum command for Gramado OS.
 # 2019 - Created by Fred Nora.
 
 VERSION = 0

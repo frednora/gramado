@@ -1,4 +1,4 @@
-// 'reboot' command for Gramado.
+// 'reboot' command for Gramado OS.
 // Created by Fred Nora.
 
 // rtl
