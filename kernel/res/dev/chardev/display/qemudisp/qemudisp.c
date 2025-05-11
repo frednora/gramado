@@ -33,7 +33,8 @@ qemudisp_ioctl (
 //
 
 
-int qemudisp_initialize(void)
+
+int DDINIT_qemudisp(void)
 {
     int Status = -1;
 

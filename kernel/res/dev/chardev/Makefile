@@ -72,11 +72,10 @@ LDFLAGS := -m elf_x86_64 -s -x -static
 
 # Everything is a file.
 OBJS = \
-bldisp.o \
+bldisp.o display.o \
 tty.o console.o pty.o \
 i8042.o kbdmap.o ps2kbd.o ps2mouse.o keyboard.o mouse.o \
 serial.o    
-
 
 all:
 
@@ -84,6 +83,7 @@ all:
 # bl display device
 	$(CC) -c display/bldisp/bldisp.c  $(KERNEL_INCLUDE) $(CFLAGS) -o bldisp.o
 #$(CC) -c display/qemudisp/qemudisp.c  $(KERNEL_INCLUDE) $(CFLAGS) -o qemudisp.o
+	$(CC) -c display/display.c  $(KERNEL_INCLUDE) $(CFLAGS) -o display.o
 
 # Keyboard map.
 	$(CC) -c kbdmap.c   $(KERNEL_INCLUDE) $(CFLAGS) -o kbdmap.o

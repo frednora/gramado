@@ -16,7 +16,7 @@ qemudisp_ioctl (
     unsigned long request, 
     unsigned long arg );
 
-int qemudisp_initialize(void);
+int DDINIT_qemudisp(void);
 
 #endif  
 

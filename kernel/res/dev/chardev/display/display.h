@@ -1,5 +1,5 @@
 // display.h
-// Display device support.
+// Main header for the display manager.
 // Created by Fred Nora.
 
 #ifndef __COMMON_DISPLAY_H
@@ -157,6 +157,9 @@ struct video_d  VideoBlock;
 //
 
 void bldisp_show_info(void);
+
+
+int displayInitialize(void);
 
 #endif    
 
