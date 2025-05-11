@@ -518,6 +518,31 @@ pid_t copy_process(
 
     copy_process_in_progress=TRUE;
 
+
+// Parameters:
+
+// File name
+    if ((void*) filename == NULL){
+        panic ("copy_process: filename\n");
+    }
+    if (*filename == 0){
+        panic ("copy_process: *filename\n");
+    }
+// ppid
+    //if (pid<0)
+        //goto fail;
+// Flag
+// #debug: 
+// The caller is trying to clone the process using the
+// unix style, but we're not prepared for that.
+    if ((clone_flags & F_CLONE_UNIX_STYLE) != 0)
+    {
+        printk("clone_process: F_CLONE_UNIX_STYLE\n");
+        refresh_screen();
+        // Fail
+        return (pid_t) -1;
+    }
+
 // Copiar a tabela pml4 do kernel.
     _pml4 = (void *) CloneKernelPML4();
     if ((void*) _pml4 == NULL){
@@ -1051,8 +1076,8 @@ do_clone:
 
     Status = 
         (int) fs_load_image(
-                  filename, 
-                  (unsigned long) child_process->Image );
+                filename, 
+                (unsigned long) child_process->Image );
 
     if (Status != 0)
     {

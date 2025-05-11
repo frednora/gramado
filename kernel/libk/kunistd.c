@@ -3,6 +3,19 @@
 
 #include <kernel.h>
 
+
+
+// execve:
+// This is a work in progress.
+int 
+sys_execve ( 
+    const char *path, 
+    char *const argv[], 
+    char *const envp[] )
+{
+    return -1;
+}
+
 long fpathconf(int fildes, int name)
 {
     debug_print("fpathconf: [TODO]\n");

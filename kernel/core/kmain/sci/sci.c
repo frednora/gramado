@@ -593,12 +593,20 @@ void *sci0 (
 // #todo: 
 // See at the beginning of this routine.
 
-    if (number == SCI_EXIT){
+    if (number == SCI_EXIT)
+    {
         panic("sci0: SCI_EXIT\n");
         return NULL;
     }
 
 // 71 - fork?
+// See: sys.c
+    if (number == 71)
+    {
+        //panic("sci0: [71] fork()\n");
+        debug_print("sci0: [71] fork()\n");
+        return (void *) sys_fork();
+    }
 
 // 72
 // See: sys.c
@@ -1143,6 +1151,18 @@ void *sci0 (
     }
     if (number == SCI_GETCURSORY){
         return (void *) get_cursor_y();
+    }
+
+
+
+// #test
+// 248 - sys_execve()
+// see: kunistd.c in libk/
+    if (number == 248)
+    {
+        printk("[248]: sys_execve() Not implemented\n");
+        refresh_screen();
+        return (void *) -1;
     }
 
 // =====================================

@@ -105,7 +105,7 @@ search_in_dir (
 // the whole commant line to this routine.
 // We need only the filename.
     if (stringSize > 11){
-        printk ("search_in_dir: [ERROR] Wrong name size. {%d} \n", 
+        printk ("search_in_dir: [ERROR] Wrong name size. {%d}\n", 
             stringSize);
         printk ("filename: %s\n",file_name);
         goto fail;

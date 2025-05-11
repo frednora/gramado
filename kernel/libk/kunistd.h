@@ -36,6 +36,14 @@ typedef int  tgid_t;
 // Prototypes ======================
 //
 
+// sys_execve:
+// This is a work in progress.
+int 
+sys_execve ( 
+    const char *path, 
+    char *const argv[], 
+    char *const envp[] );
+
 long fpathconf(int fildes, int name);
 long pathconf(const char *pathname, int name);
 

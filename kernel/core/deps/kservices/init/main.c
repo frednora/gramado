@@ -305,6 +305,26 @@ static int input_compare_string(void)
         goto exit_cmp;
     }
 
+    // #fork
+    // The purpose of this command is
+    // helping the implementation of fork() syscall,
+    int fork_rv = -1;
+    if ( strncmp(prompt,"fork",4) == 0 )
+    {
+        fork_rv = (int) fork();
+        printf ("return value: %d\n",fork_rv);
+        goto exit_cmp;
+    }
+
+    // #execve
+    int execve_rv = -1;
+    if ( strncmp(prompt,"execve",6) == 0 )
+    {
+        //execve_rv = (int) execve("test.bin",?,?);
+        //printf ("return value: %d\n",execve_rv);
+        goto exit_cmp;
+    }
+
     if ( strncmp(prompt,"int3",4) == 0 ){
         do_int3();
         goto exit_cmp;

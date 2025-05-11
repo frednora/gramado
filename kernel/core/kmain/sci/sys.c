@@ -323,11 +323,47 @@ fail:
 // We're working in a helper function for clonning processes.
 // See: clone.c
 // #todo: Maybe the return type is pid_t.
+// Called by sci.c
 int sys_fork(void)
 {
+    // Local copy
+    static char Name[8+1+3];
+    pid_t ParentPID = get_current_pid();
+    pid_t ChildPID = -1;
+
+// #todo:
+// We gotta create a flag to make the worker know
+// that we want to fork the current process using the 
+// unix style, where the child starts at the same RIP of father.
+// for now, copy process launch a child that will start at the entrypoint.
+    unsigned long LongFlag = F_CLONE_UNIX_STYLE;
+
     debug_print ("sys_fork: \n");
-    // #todo
-    // Call copy_process(...)
+
+    if (ParentPID < 0)
+        goto fail;
+
+    memset(Name,0,8+1+3);
+
+    // #debug
+    // This is a test
+    // In UNIX style we don't we're gonna use the father's name.
+    strncpy(Name,"cat.bin",7);
+
+    ChildPID = 
+        (pid_t) copy_process(
+                Name,
+                ParentPID,
+                LongFlag );
+
+    if (ChildPID < 0)
+    {
+        //errno = ?
+        goto fail;
+    }
+    return (pid_t) ChildPID;
+
+fail:
     return (int) -1;
 }
 

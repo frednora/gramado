@@ -130,11 +130,8 @@ int execv(const char *path, char *const argv[])
     //return (int) execve ( path, (char **) argv, environ ); //#todo: use this one.
 }
 
-/*
- * execve:
- * 
- */
-
+// execve:
+// This is a work in progress.
 int 
 execve ( 
     const char *path, 
@@ -143,9 +140,16 @@ execve (
 {
     int value = -1;
 
-    if( (void*) path == NULL ){
+// Parameter:
+    if ((void*) path == NULL)
+    {
         errno = EINVAL;
-        return -1;
+        goto fail;
+    }
+    if (*path == 0)
+    {
+        errno = EINVAL;
+        goto fail;
     }
 
     value = 
@@ -158,10 +162,12 @@ execve (
     if (value < 0)
     {
         errno = (-value);
-        return (int) (-1);
+        goto fail;
     } 
 
     return (int) value;
+fail:
+    return (int) -1;
 }
 
 ssize_t read_tty (int fd, const void *buf, size_t count)
@@ -453,7 +459,6 @@ void exit(int status)
 // Wait forever.
     while (1){ asm ("pause"); };
 }
-
 
 pid_t fork(void)
 {
