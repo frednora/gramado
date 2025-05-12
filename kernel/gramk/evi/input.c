@@ -2297,25 +2297,25 @@ int wmTimerEvent(int signature)
 // Acho que o assembly importa esses valores,
 // e é mais difícil importar de estruturas.
 
-    if (ws_callback_info.initialized != TRUE)
+    if (ds_callback_info.initialized != TRUE)
         return 0;
 
-    if (ws_callback_info.initialized == TRUE)
+    if (ds_callback_info.initialized == TRUE)
     {
-        if ( ws_callback_info.each_n_ms < 1 ||
-              ws_callback_info.each_n_ms > JIFFY_FREQ )
+        if ( ds_callback_info.each_n_ms < 1 ||
+              ds_callback_info.each_n_ms > JIFFY_FREQ )
         {
-            panic ("PIT: Invalid ws_callback_info.each_n_ms\n");
+            panic ("PIT: Invalid ds_callback_info.each_n_ms\n");
         }
  
-        if ( (jiffies % (ws_callback_info.each_n_ms) ) == 0 )
+        if ( (jiffies % (ds_callback_info.each_n_ms) ) == 0 )
         {
             // reinitialize callback based on the saved value.
-                if ( ws_callback_info.callback_address_saved != 0 )
+                if ( ds_callback_info.callback_address_saved != 0 )
                 {
                     setup_callback(
-                        ws_callback_info.callback_address_saved,
-                        ws_callback_info.each_n_ms );
+                        ds_callback_info.callback_address_saved,
+                        ds_callback_info.each_n_ms );
                }
         }
     }

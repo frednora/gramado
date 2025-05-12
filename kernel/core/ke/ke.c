@@ -980,8 +980,9 @@ int keInitialize(int phase)
         // Display server registration support.
         // See: dispsrv.c
         ds_init();
-        // ws callback support.
-        initialize_ws_callback_info();
+
+        // Initialize the callback support.
+        callbackInitialize();
 
         // Final message before jumping to init process.
         //PROGRESS("keInitialize: phase 2\n");

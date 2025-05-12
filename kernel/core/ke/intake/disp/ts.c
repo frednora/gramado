@@ -874,13 +874,12 @@ void tsTaskSwitch(void)
         // por uma chamada do window server.
         // see: callback.c
         // Return. No taskswitching
-        if (ws_callback_info.ready == TRUE)
+        if (ds_callback_info.ready == TRUE)
         {
-            prepare_next_ws_callback();
+            prepare_next_ds_callback();
             return;
         }
     }
-
 
 // The task switching routine.
     __task_switch();

@@ -9,13 +9,13 @@
 
 ;
 ; Callback support.
+; See: callback.c, callback.h
 ;
 
 ; Flag
 extern _asmflagDoCallbackAfterCR3
 ; Address
 extern _ring3_callback_address
-
 
 ; ts
 extern _task_switch_status
@@ -62,7 +62,7 @@ extern _contextR15
 
 
 ;------------------------------------------------
-; Salta para um callback no window server em ring3.
+; Start a routine in ring3.
 ; + Essa rotina foi chamada somente quando o kernel estava usando
 ;   a paginação do aplicativo window server.
 ; + Interrupçoes desabilitadas
@@ -72,6 +72,7 @@ extern _contextR15
 ; par ao kernel na rotina callback_restorer, e por fim
 ; devemos definitivamente voltarmos para o aplicativo em ring 3,
 ; através da rotina irq0_release.
+;
 ; IN:
 ; ss     - Reusado do contexto salvo do aplicativo.
 ; rsp    - Reusado do contexto salvo do aplicativo.
@@ -91,6 +92,21 @@ __doRing3Callback:
     push rbx                  ; rip
 ; Go to the ring3 procedure.
     iretq
+
+; #test
+; Here we're gonna call the ring3handler for the 
+; a target signal
+;__doCallRing3Signalhandler:
+; Get the RIP address.
+    ;mov rbx, qword [_ring3_callback_address]
+; Setup the stack frame.
+    ;push qword [_contextSS]   ; ss
+    ;push qword [_contextRSP]  ; rsp
+    ;push qword 0x3000         ; rflags interrupçoes desabilitadas.
+    ;push qword [_contextCS]   ; cs
+    ;push rbx                  ; rip
+; Go to the ring3 procedure.
+    ;iretq
 
 ; -------------------------------------
 ; Irq0 release.

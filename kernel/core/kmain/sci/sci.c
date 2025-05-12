@@ -2688,12 +2688,12 @@ void *sci2 (
             panic("sci2: [44000] Invalid PID\n");
         }
         // nao foi inicializado pela inicialização do kenrel.
-        if ( ws_callback_info.initialized != TRUE ){
+        if ( ds_callback_info.initialized != TRUE ){
             panic("sci2: [44000] callback support Not initialized\n");
         }
         // Se ele ja esta pronto para efetuarmos o iretq
         // é porque tem alguma coisa errada.
-        if ( ws_callback_info.ready == TRUE ){
+        if ( ds_callback_info.ready == TRUE ){
             panic("sci2: [44000] called again\n");
         }
         // Enable for the first time.

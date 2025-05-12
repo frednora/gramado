@@ -5,6 +5,7 @@
 
 ;
 ; Callback support.
+; See: callback.c, callback.h
 ;
 
 ; Flag
@@ -68,6 +69,12 @@ _int198:
 ; chamar o callback novamente.
     mov qword [_asmflagDoCallbackAfterCR3], 0
     mov qword [_ring3_callback_address], 0
+
+; #bugbug:
+; Here we're using the release routine that belongs to the irq0
+; to return from the callback restorer's interrupt. It happens because,
+; the last saved context is the context of the thread that is using 
+; the callback. But we need to handle this situation in a better way.
 
 ; Normal timer exit. (after cr3).
 ; temos que terminal a rotina do timer e
