@@ -316,6 +316,15 @@ static int input_compare_string(void)
         goto exit_cmp;
     }
 
+    // Testing syscall instruction.
+    if ( strncmp(prompt,"syscall",7) == 0 )
+    {
+        printf ("syscall: BEFORE\n");
+        asm ("syscall");
+        printf ("syscall: AFTER\n");
+        goto exit_cmp;
+    }
+
     // #execve
     int execve_rv = -1;
     if ( strncmp(prompt,"execve",6) == 0 )

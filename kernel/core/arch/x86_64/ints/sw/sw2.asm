@@ -28,6 +28,55 @@ unhandled_int:
     iretq
 
 
+syscall_handler:
+    ; Save user-space return address (RIP) and stack pointer (RSP)
+    mov qword [.SavedRIP], rcx  ; Save user-space RIP
+    mov qword [.SavedRSP], r11  ; Save user-space RSP
+
+    ; Do something (handle syscall)
+
+    ; Restore user-space values before returning
+    mov rcx, qword [.SavedRIP]  ; Restore user-space RIP
+    mov rsp, qword [.SavedRSP]  ; Restore user-space RSP
+    sysret                      ; Return to user mode
+
+; Storage for saved values
+.SavedRIP: dq 0
+.SavedRSP: dq 0
+
+
+; Initializing the syscall support for x86_64 machines.
+; Writing to MSRs (Model-Specific Registers)
+; Before using syscall, configure the entry point for system calls:
+; Called by head_64.asm.
+sw2_initialize_syscall_support;
+
+; #todo
+; This is not working yet. We got fault number 6.
+; This is a work in progress.
+
+; Check CPU Mode
+    ;mov eax, 0x80000001
+    ;cpuid
+    ;test edx, (1 << 11)  ; Check syscall support
+    ;jz no_syscall_support
+; Verify MSR Values
+    ;mov ecx, 0xC0000082
+    ;rdmsr
+
+    mov ecx, 0xC0000082  ; IA32_LSTAR (syscall entry point)
+    mov rax, syscall_handler  ; Address of syscall handler
+    mov rdx, 0
+    wrmsr
+
+    mov ecx, 0xC0000084  ; IA32_FMASK (mask for syscall flags)
+    mov rax, 0x3F        ; Disable interrupts during syscall
+    mov rdx, 0
+    wrmsr
+
+    ret
+
+
 ; -------------------------------------
 ; callback restorer.
 ; temos que terminal a rotina do timer e

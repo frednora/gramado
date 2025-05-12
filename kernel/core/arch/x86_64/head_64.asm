@@ -2679,6 +2679,16 @@ START:
 ; which debug conditions have occurred.
 
 ;--------------------------------------
+; #test
+; Initializing syscall support
+; see: sw2.asm
+; #todo
+; This is not working yet. We got fault number 6.
+; This is a work in progress.
+
+    ; call sw2_initialize_syscall_support
+
+;--------------------------------------
 
 ; Clear register 
     xor rax, rax
