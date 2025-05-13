@@ -236,6 +236,46 @@ __ps_setup_x64_context (
     t->saved = FALSE;
 }
 
+
+int destroy_thread_structure(struct thread_d *thread)
+{
+    tid_t TID = -1;
+    struct thread_d *tmp;
+
+    if ((void*) thread == NULL)
+        return -1;
+    if (thread->used != TRUE)
+        return -1;
+// Valid for MAGIC=1234 or MAGIC=4321
+
+// #todo
+// Remove it from processList[] based on index=pid.
+    TID = (pid_t) thread->tid;
+    if (TID<0)
+        return -1;
+    if (TID >= THREAD_COUNT_MAX)
+        return -1;
+    
+    tmp = (struct thread_d *) threadList[TID];
+    if (thread != tmp)
+        return -1;
+
+// Destroy the structure.
+// #todo: We can erase the whole structure.
+
+    thread->magic = 0;
+    thread->used = FALSE;
+    thread = NULL;
+
+    return 0;
+}
+
+// Try to reuse the thread structure.
+int gc_thread_structure(struct thread_d *thread)
+{
+    return 0;
+}
+
 // Get structure pointer of init thread.
 struct thread_d *get_init_thread(void)
 {

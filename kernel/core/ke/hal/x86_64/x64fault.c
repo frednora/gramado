@@ -4,7 +4,7 @@
 
 #include <kernel.h>
 
-static int __kill_faulty_process(void);
+static int __kill_faulty_current_process(void);
 
 // --------------------------
 
@@ -15,34 +15,48 @@ static int __kill_faulty_process(void);
 // #bugbug: #todo
 // E se a excessão ocorrer durante a fase em ring 0 
 // de um proceso em ring 3?
-static int __kill_faulty_process(void)
-{
 // #todo: Explain it better.
 // Local routine!
 // #todo:
 // We need a global worker in process.c
 
+// It kills the faulty process (current).
+// Not valid for kernel process or init process.
+static int __kill_faulty_current_process(void)
+{
     struct process_d *p;
     struct thread_d *t;
-    pid_t pid=-1;
-    tid_t tid=-1;
+    pid_t pid = -1;
+    tid_t tid = -1;
+
+    int isKernel = FALSE;
+    int isInit = FALSE;
 
 // The current process and the current thread.
     pid = (pid_t) get_current_process();
     tid = (tid_t) current_thread;
 
 // Process validation
-// We can't close the Kernel process or the Init process.
+
     if (pid<0 || pid >= PROCESS_COUNT_MAX)
     {
         goto fail;
     }
-    if (pid == GRAMADO_PID_KERNEL){
-        goto fail;
-    }
-    if (pid == GRAMADO_PID_INIT){
-        goto fail;
-    }
+
+// We can't close the Kernel process or the Init process.
+    switch (pid){
+        case GRAMADO_PID_KERNEL:
+            isKernel = TRUE;
+            goto fail;
+            break;
+        case GRAMADO_PID_INIT:
+            isInit = TRUE;
+            goto fail;
+            break;
+        // ...
+        //default:
+            //break;
+    };
 
 // Process validation
 // We can't close the Kernel process or the Init process.
@@ -53,13 +67,15 @@ static int __kill_faulty_process(void)
     if (p->magic != 1234){
         goto fail;
     }
+
+// Kernel
     if (p == KernelProcess){
         goto fail;
     }
+// Init
     if (p == InitProcess){
         goto fail;
     }
-
 
 // Thread validation
 // We can't close the Init thread.
@@ -73,6 +89,7 @@ static int __kill_faulty_process(void)
     {
         goto fail;
     }
+// Init TID
     if (tid == INIT_TID){
         goto fail;
     }
@@ -87,20 +104,16 @@ static int __kill_faulty_process(void)
     if (t->magic != 1234){
         goto fail;
     }
+// Init thread
     if (t == InitThread){
         goto fail;
     }
 
-// Destroy the process structure.
 // Destroy the thread structure.
+    destroy_thread_structure(t);
 
-    p->magic = 0;
-    p->used = FALSE;
-    p = NULL;
-
-    t->magic = 0;
-    t->used = FALSE;
-    t = NULL;
+// Destroy the process structure.
+    destroy_process_structure(p);
 
     return 0;
 
@@ -257,12 +270,14 @@ void x64_all_faults(unsigned long number)
         // estava no momento da falta. Se foi em ring0
         // entao temos problema.
         // 0=OK | -1 = FAIL.
-        killstatus= (int) __kill_faulty_process();
+        killstatus= (int) __kill_faulty_current_process();
         if (killstatus != 0){
             x_panic("x64_all_faults: Coudn't kill process");
         }
         if (killstatus == 0)
         {
+            // #debug
+            // Not necessary
             printk("The process was killed\n");
             
             //
@@ -278,7 +293,9 @@ void x64_all_faults(unsigned long number)
             
             // Change the thread state.
             // MOVEMENT 4 (Ready --> Running).
-            // Update cr3 and context.
+            // It restores the context and update cr3. 
+            // So, when returning to the caller
+            // it will use the context of the target thread.
             dispatcher(DISPATCHER_CURRENT);  
             
             // Se the next current process.

@@ -325,6 +325,19 @@ static int input_compare_string(void)
         goto exit_cmp;
     }
 
+    // Testing PF
+    if ( strncmp(prompt,"pf",2) == 0 )
+    {
+        /*
+        // Remember: KERNEL PANIC. We can't kill the init process.
+        int *pf_ptr = NULL;
+        // Dereferencing the NULL pointer triggers a page fault.
+        int pf_value = *pf_ptr;
+        printf("Value: %d\n", pf_value);
+        */
+        goto exit_cmp;
+    }
+
     // #execve
     int execve_rv = -1;
     if ( strncmp(prompt,"execve",6) == 0 )

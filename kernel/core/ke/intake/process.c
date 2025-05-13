@@ -58,6 +58,48 @@ struct process_d  *InitProcess;    // Init process.
 
 //==============================================
 
+
+int destroy_process_structure(struct process_d *process)
+{
+    pid_t PID = -1;
+    struct process_d *tmp;
+
+    if ((void*) process == NULL)
+        return -1;
+    if (process->used != TRUE)
+        return -1;
+// Valid for MAGIC=1234 or MAGIC=4321
+
+// #todo
+// Remove it from processList[] based on index=pid.
+    PID = (pid_t) process->pid;
+    if (PID<0)
+        return -1;
+    if (PID >= PROCESS_COUNT_MAX)
+        return -1;
+    
+    tmp = (struct process_d *) processList[PID];
+    if (process != tmp)
+        return -1;
+
+// Destroy the structure.
+// #todo: We can erase the whole structure.
+
+    process->magic = 0;
+    process->used = FALSE;
+    process = NULL;
+
+    return 0;
+}
+
+
+// Try to reuse the process structure.
+int gc_process_structure(struct process_d *process)
+{
+    return 0;
+}
+
+
 struct process_d *get_kernel_process(void)
 {
     return (struct process_d *) KernelProcess;
@@ -87,7 +129,6 @@ void close_all_threads_of_this_process(struct process_d *process)
 
     // ...
 }
-
 
 // #todo
 // This is a work in progress.

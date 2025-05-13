@@ -959,6 +959,9 @@ extern unsigned long processList[PROCESS_COUNT_MAX];
 // == Prototypes =====================================================
 //
 
+int destroy_process_structure(struct process_d *process);
+int gc_process_structure(struct process_d *process);
+
 struct process_d *get_kernel_process(void);
 struct process_d *get_init_process(void);
 

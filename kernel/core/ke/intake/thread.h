@@ -808,6 +808,7 @@ extern unsigned long threadList[THREAD_COUNT_MAX];
 // == prototypes ===========================
 //
 
+
 struct thread_d *get_init_thread(void);
 
 // From tlib.c
@@ -820,6 +821,9 @@ void show_thread_information(void);
 void keEarlyRing0IdleThread(void);
 
 // From thread.c
+
+int destroy_thread_structure(struct thread_d *thread);
+int gc_thread_structure(struct thread_d *thread);
 
 unsigned long GetThreadStats( tid_t tid, int index );
 

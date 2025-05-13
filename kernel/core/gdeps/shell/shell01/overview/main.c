@@ -1085,6 +1085,15 @@ int main(int argc, char *argv[])
 // #test
 // Testing floating point.
 
+    /*
+    // #debug: Let's crash this application
+    int *pf_ptr = NULL;
+    // Dereferencing the NULL pointer triggers a page fault.
+    int pf_value = *pf_ptr;
+    printf("Value: %d\n", pf_value);
+    */
+
+
 // #config
 
     int ShowCube = FALSE;

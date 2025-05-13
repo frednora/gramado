@@ -247,11 +247,12 @@ fail0:
  * que ser�o usadas pelo arquivo em assembly para carregar os valores 
  * dentro dos registradores.
  * @todo:   
- *     Mudar nome para contextRestoreCurrent();.
+ *     Mudar nome para x64contRestoreContext();.
  */
 // unit 3: Release the context.
 // Burgundy?
 
+// It restores the context and update cr3. 
 void restore_current_context (void)
 {
     struct thread_d  *t;
