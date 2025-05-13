@@ -2323,7 +2323,6 @@ fail:
     return (ssize_t) -1;
 }
 
-
 ssize_t console_write_string(int console_number, const char *string)
 {
 // Write a string into a console.
@@ -2334,7 +2333,6 @@ ssize_t console_write_string(int console_number, const char *string)
     size_t Counter = 0;
 
 // Parameters:
-
     if (console_number < 0)
         goto fail;
     if (console_number >= CONSOLETTYS_COUNT_MAX){
