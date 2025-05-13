@@ -8,10 +8,12 @@
 #define __HAL_CPUID_H    1
 
 // cpuid macro.
-#define cpuid( in, a, b, c, d)\
+#define MACRO_CPUID( in, a, b, c, d)\
     asm ("cpuid": "=a" (a), "=b" (b), "=c" (c), "=d" (d) : "a" (in));
 
-//#define CPUID  cpuid
+// ---
+#define __cpuid  MACRO_CPUID
+#define cpuid    MACRO_CPUID
 
 
 // Vendor Strings. 

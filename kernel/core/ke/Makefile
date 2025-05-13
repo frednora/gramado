@@ -78,6 +78,8 @@ OBJS = thread.o tlib.o process.o plib.o \
 ithread.o clone.o \
 ipc.o \
 sync.o \
+cpuid.o \
+cpu.o \
 detect.o \
 ke.o \
 archhal.o \
@@ -155,6 +157,11 @@ all:
 	$(CC) -c hal/x86_64/x64sc.c     $(KERNEL_INCLUDE) $(CFLAGS) -o x64sc.o
 	$(CC) -c hal/x86_64/x64fault.c  $(KERNEL_INCLUDE) $(CFLAGS) -o x64fault.o
 	$(CC) -c hal/x86_64/archhal.c   $(KERNEL_INCLUDE) $(CFLAGS) -o archhal.o
+
+	$(CC) -c hal/x86_64/archhal.c   $(KERNEL_INCLUDE) $(CFLAGS) -o archhal.o
+
+	$(CC) -c hal/x86_64/cpuid.c  $(KERNEL_INCLUDE) $(CFLAGS) -o cpuid.o
+	$(CC) -c hal/x86_64/cpu.c    $(KERNEL_INCLUDE) $(CFLAGS) -o cpu.o
 
 # ---------------------
 	$(CC) -c hal/detect.c  $(KERNEL_INCLUDE) $(CFLAGS) -o detect.o
