@@ -93,6 +93,7 @@ sched.o schedi.o schedq.o
 
 all:
 
+
 # ---------------------
 # intake/  (The MICROKERNEL)
 # process, thread, dispatcher and scheduler.
@@ -120,6 +121,11 @@ all:
 	$(CC) -c intake/sched/schedi.c  $(KERNEL_INCLUDE)  $(CFLAGS) -o schedi.o  
 	$(CC) -c intake/sched/schedq.c  $(KERNEL_INCLUDE)  $(CFLAGS) -o schedq.o  
 
+#--------
+# intake
+# Microkernel. 'Cause it's all about process and thread.
+	$(CC) -c intake/queue.c    $(KERNEL_INCLUDE) $(CFLAGS) -o queue.o
+	$(CC) -c intake/x64init.c  $(KERNEL_INCLUDE) $(CFLAGS) -o x64init.o
 
 # ---------------------
 # hal/arm/ (HAL)
@@ -128,8 +134,6 @@ all:
 
 # ---------------------
 # hal/x86_64/ (HAL)
-
-	$(CC) -c hal/x86_64/detect.c  $(KERNEL_INCLUDE) $(CFLAGS) -o detect.o
 
 # SMP support
 	$(CC) -c hal/x86_64/smp/mpfloat.c  $(KERNEL_INCLUDE) $(CFLAGS) -o mpfloat.o
@@ -153,17 +157,15 @@ all:
 	$(CC) -c hal/x86_64/archhal.c   $(KERNEL_INCLUDE) $(CFLAGS) -o archhal.o
 
 # ---------------------
+	$(CC) -c hal/detect.c  $(KERNEL_INCLUDE) $(CFLAGS) -o detect.o
+
+# ---------------------
 # Architecture-independent HAL interface
 	$(CC) -c hal/hal.c    $(KERNEL_INCLUDE) $(CFLAGS) -o hal.o
 
 #--------
-# intake
-# Microkernel. 'Cause it's all about process and thread.
-	$(CC) -c intake/queue.c    $(KERNEL_INCLUDE) $(CFLAGS) -o queue.o
-	$(CC) -c intake/x64init.c  $(KERNEL_INCLUDE) $(CFLAGS) -o x64init.o
-
-#--------
 	$(CC) -c ke.c     $(KERNEL_INCLUDE) $(CFLAGS) -o ke.o
+
 
 # link
 	$(LD) -r -o p1_ke.o $(OBJS)

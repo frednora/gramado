@@ -1,134 +1,10 @@
 // detect.c
-
+// Created by Fred Nora.
 
 #include <kernel.h>
 
 
 int syscall_is_supported = FALSE;
-
-
-/*
- * hal_probe_cpu:
- *     Detectar qual é o tipo de processador. 
- *     Salva o tipo na estrutura.
- * #todo: Estamos usando cpuid para testar os 2 tipos de arquitetura.
- * nao sei qual ha instruções diferentes para arquiteturas diferentes.
- */
-int hal_probe_cpu(void)
-{
-    unsigned int eax=0;
-    unsigned int ebx=0;
-    unsigned int ecx=0;
-    unsigned int edx=0;
-
-    debug_print ("hal_probe_cpu:\n");
-
-// Check processor structure.
-    if ((void *) processor == NULL){
-        x_panic("hal_probe_cpu: [FAIL] processor\n");
-    }
-
-// Unknown processor type.
-    processor->Type = Processor_NULL;
-
-//
-// Check vendor
-//
-
-    cpuid( 0, eax, ebx, ecx, edx ); 
-
-// TestIntel: Confere se é intel.
-    if ( ebx == CPUID_VENDOR_INTEL_1 && 
-         edx == CPUID_VENDOR_INTEL_2 && 
-         ecx == CPUID_VENDOR_INTEL_3 )
-    {
-        processor->Type = Processor_INTEL;
-        return 0;
-    }
-
-// TestAmd: Confere se é AMD.
-    if ( ebx == CPUID_VENDOR_AMD_1 && 
-         edx == CPUID_VENDOR_AMD_2 && 
-         ecx == CPUID_VENDOR_AMD_3 )
-    {
-        processor->Type = Processor_AMD;
-        return 0;
-    }
-    
-// fail:
-    x_panic("hal_probe_cpu: [FAIL] Processor not supported\n");
-    return (int) (-1);
-}
-
-/*
- * hal_probe_processor_type:
- *     Sonda pra ver apenas qual é a empresa do processador.
- */
-// Called by I_initKernelComponents() in x64init.c.c
-int hal_probe_processor_type (void)
-{
-    unsigned int eax=0;
-    unsigned int ebx=0;
-    unsigned int ecx=0;
-    unsigned int edx=0;
-    unsigned int name[32];
-    int MASK_LSB_8 = 0xFF;  
-
-    //debug.
-    debug_print("hal_probe_processor_type:\n");
-    //printk("Scaning x86 CPU ...\n");
-
-// Check processor structure.
-    if ((void *) processor == NULL){
-        x_panic("hal_probe_processor_type: processor\n");
-    }
-
-// Unknown processor type.
-    // processor->Type = Processor_NULL;
-
-// vendor
-// This is the same for intel and amd processors.
-    cpuid( 0, eax, ebx, ecx, edx ); 
-    name[0] = ebx;
-    name[1] = edx;
-    name[2] = ecx;
-    name[3] = 0;
-
-// Salva na estrutura.
-    processor->Vendor[0] = ebx;
-    processor->Vendor[1] = edx;
-    processor->Vendor[2] = ecx;
-    processor->Vendor[3] = 0;
-
-// #hackhack
-// #fixme
-// Na verdade quando estamos rodando no qemu, é amd.
-// #todo: Precisamos do nome certo usado pelo qemu.
-
-    return Processor_AMD;
-
-    /*
-    // Confere se é Intel.
-    if ( ebx == CPUID_VENDOR_INTEL_1 && 
-         edx == CPUID_VENDOR_INTEL_2 && 
-         ecx == CPUID_VENDOR_INTEL_3 )
-    {
-        return (int) Processor_INTEL; 
-    }
-
-    // Confere se é AMD
-    if ( ebx == CPUID_VENDOR_AMD_1 && 
-         edx == CPUID_VENDOR_AMD_2 && 
-         ecx == CPUID_VENDOR_AMD_3 )
-    {
-        return (int) Processor_AMD; 
-    }
-    */
-
-// Continua...
-
-    return (int) Processor_NULL;
-}
 
 // ====================================
 // MSR
@@ -265,7 +141,6 @@ void syscall_set_mask(uint32_t mask)
 
 // See: sw2.asm
 extern unsigned long syscall_handler;
-
 void initialize_syscall(void) 
 {
     // Step 1: Check if SYSCALL is supported
@@ -288,5 +163,146 @@ void initialize_syscall(void)
 }
 
 
+/*
+ * hal_probe_cpu:
+ *     Detectar qual é o tipo de processador. 
+ *     Salva o tipo na estrutura.
+ * #todo: Estamos usando cpuid para testar os 2 tipos de arquitetura.
+ * nao sei qual ha instruções diferentes para arquiteturas diferentes.
+ */
+int hal_probe_cpu(void)
+{
+    unsigned int eax=0;
+    unsigned int ebx=0;
+    unsigned int ecx=0;
+    unsigned int edx=0;
 
+    debug_print ("hal_probe_cpu:\n");
+
+// Check processor structure.
+    if ((void *) processor == NULL){
+        x_panic("hal_probe_cpu: [FAIL] processor\n");
+    }
+
+// Unknown processor type.
+    processor->Type = Processor_NULL;
+
+//
+// Check vendor
+//
+
+    cpuid( 0, eax, ebx, ecx, edx ); 
+
+// TestIntel: Confere se é intel.
+    if ( ebx == CPUID_VENDOR_INTEL_1 && 
+         edx == CPUID_VENDOR_INTEL_2 && 
+         ecx == CPUID_VENDOR_INTEL_3 )
+    {
+        processor->Type = Processor_INTEL;
+        return 0;
+    }
+
+// TestAmd: Confere se é AMD.
+    if ( ebx == CPUID_VENDOR_AMD_1 && 
+         edx == CPUID_VENDOR_AMD_2 && 
+         ecx == CPUID_VENDOR_AMD_3 )
+    {
+        processor->Type = Processor_AMD;
+        return 0;
+    }
+    
+// fail:
+    x_panic("hal_probe_cpu: [FAIL] Processor not supported\n");
+    return (int) (-1);
+}
+
+/*
+ * hal_probe_processor_type:
+ *     Sonda pra ver apenas qual é a empresa do processador.
+ */
+// Called by I_initKernelComponents() in x64init.c.c
+int hal_probe_processor_type (void)
+{
+    unsigned int eax=0;
+    unsigned int ebx=0;
+    unsigned int ecx=0;
+    unsigned int edx=0;
+    unsigned int name[32];
+    int MASK_LSB_8 = 0xFF;  
+
+    //debug.
+    debug_print("hal_probe_processor_type:\n");
+    //printk("Scaning x86 CPU ...\n");
+
+// Check processor structure.
+    if ((void *) processor == NULL){
+        x_panic("hal_probe_processor_type: processor\n");
+    }
+
+// Unknown processor type.
+    // processor->Type = Processor_NULL;
+
+// vendor
+// This is the same for intel and amd processors.
+    cpuid( 0, eax, ebx, ecx, edx ); 
+    name[0] = ebx;
+    name[1] = edx;
+    name[2] = ecx;
+    name[3] = 0;
+
+// Salva na estrutura.
+    processor->Vendor[0] = ebx;
+    processor->Vendor[1] = edx;
+    processor->Vendor[2] = ecx;
+    processor->Vendor[3] = 0;
+
+// #hackhack
+// #fixme
+// Na verdade quando estamos rodando no qemu, é amd.
+// #todo: Precisamos do nome certo usado pelo qemu.
+
+    return Processor_AMD;
+
+    /*
+    // Confere se é Intel.
+    if ( ebx == CPUID_VENDOR_INTEL_1 && 
+         edx == CPUID_VENDOR_INTEL_2 && 
+         ecx == CPUID_VENDOR_INTEL_3 )
+    {
+        return (int) Processor_INTEL; 
+    }
+
+    // Confere se é AMD
+    if ( ebx == CPUID_VENDOR_AMD_1 && 
+         edx == CPUID_VENDOR_AMD_2 && 
+         ecx == CPUID_VENDOR_AMD_3 )
+    {
+        return (int) Processor_AMD; 
+    }
+    */
+
+// Continua...
+
+    return (int) Processor_NULL;
+}
+
+/*
+ * hal_hardware_detect:
+ *     Detecta fabricantes específicos suportados pelo núcleo.
+ * 8086, 1237  //PCI & Memory.
+ * 8086, 7000  //PIIX3 PCI-to-ISA Bridge (Triton II).
+ * 1022, 2000  //Advanced Micro Devices, PCnet LANCE PCI Ethernet Controller.
+ * 8086, 7113  //PIIX4/4E/4M Power Management Controller.
+ * 8086, 2829  //Intel(R) ICH8M SATA AHCI Controller.
+ * //...
+ *
+ */
+// Consumer Chipsets (Z87, H87, H81) Haswell LGA1150. 
+// Business Chipsets (Q87, Q85, B85) Haswell LGA1150.
+
+int hal_hardware_detect (void)
+{
+    debug_print ("hal_hardware_detect: [TODO]\n");
+    return 0;    //#todo
+}
 

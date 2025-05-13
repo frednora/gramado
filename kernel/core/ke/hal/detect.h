@@ -6,6 +6,10 @@
 #define __KE_DETECT_H    1
 
 
+//
+// syscall instruction support
+//
+
 extern int syscall_is_supported;
 
 int check_syscall_support(void);
@@ -15,8 +19,14 @@ void syscall_set_entry_point(uint64_t ent);
 void syscall_set_mask(uint32_t mask);
 void initialize_syscall(void);
 
+//
+// Probe cpu type
+//
+
 int hal_probe_cpu(void);
 int hal_probe_processor_type(void);
+
+int hal_hardware_detect(void);
 
 #endif    
 

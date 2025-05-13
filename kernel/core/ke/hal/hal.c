@@ -269,26 +269,6 @@ void hal_init_cpu (void)
 }
 
 /*
- * hal_hardware_detect:
- *     Detecta fabricantes específicos suportados pelo núcleo.
- * 8086, 1237  //PCI & Memory.
- * 8086, 7000  //PIIX3 PCI-to-ISA Bridge (Triton II).
- * 1022, 2000  //Advanced Micro Devices, PCnet LANCE PCI Ethernet Controller.
- * 8086, 7113  //PIIX4/4E/4M Power Management Controller.
- * 8086, 2829  //Intel(R) ICH8M SATA AHCI Controller.
- * //...
- *
- */
-// Consumer Chipsets (Z87, H87, H81) Haswell LGA1150. 
-// Business Chipsets (Q87, Q85, B85) Haswell LGA1150.
-
-int hal_hardware_detect (void)
-{
-    debug_print ("hal_hardware_detect: [TODO]\n");
-    return 0;    //#todo
-}
-
-/*
  * halInitialize:
  * Initialize kernel base hal.
  */

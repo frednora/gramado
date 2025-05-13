@@ -119,7 +119,6 @@ void hal_speaker_off(void);
 void hal_test_speaker(void);
 
 void hal_init_cpu(void);
-int hal_hardware_detect(void);
 int halInitialize(void);
 
 #endif    
