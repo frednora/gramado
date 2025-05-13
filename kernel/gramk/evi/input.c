@@ -276,6 +276,15 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         goto exit_cmp;
     }
 
+// Has syscall support?
+    if ( kstrncmp(cmdline,"syscall",7) == 0 )
+    {
+        //probe_if_cpu_has_support_to_syscall();
+        initialize_syscall();
+        goto exit_cmp;
+    }
+
+
 // mbr:
 // see: storage.c
     if ( kstrncmp(cmdline,"mbr",3) == 0 ){

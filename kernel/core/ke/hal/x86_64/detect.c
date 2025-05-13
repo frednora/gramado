@@ -1,7 +1,11 @@
-
 // detect.c
 
+
 #include <kernel.h>
+
+
+int syscall_is_supported = FALSE;
+
 
 /*
  * hal_probe_cpu:
@@ -190,4 +194,99 @@ static int check_apic(void)
     return edx & CPUID_FEAT_EDX_APIC;
 }
 */
+
+// ------------------
+
+
+// Check if SYSCALL is supported
+int check_syscall_support(void)
+{
+    unsigned int eax=0;
+    unsigned int ebx=0;
+    unsigned int ecx=0;
+    unsigned int edx=0;
+
+    cpuid(0x80000001, eax, ebx, ecx, edx);  // Extended feature flags
+
+    return (edx & (1 << 11)) ? 1 : 0;  // Check if bit 11 in EDX is set
+}
+
+int probe_if_cpu_has_support_to_syscall(void) 
+{
+    syscall_is_supported = FALSE;
+
+    if (check_syscall_support()) {
+        syscall_is_supported = TRUE;
+        printk("SYSCALL is supported!\n");
+    } else {
+        syscall_is_supported = FALSE;
+        printk("SYSCALL is NOT supported!\n");
+    }
+    return 0;
+}
+
+// ------------------
+
+#define __IA32_EFER 0xC0000080  // MSR for enabling SYSCALL/SYSRET
+
+void syscall_enable(void) 
+{
+    uint32_t lo, hi;
+
+    // Read IA32_EFER
+    cpuGetMSR(__IA32_EFER, &lo, &hi);
+
+    // Check if SYSCALL is already enabled
+    if (!(lo & 1)) {
+        lo |= 1;  // Set bit 0 (SCE - SYSCALL Enable)
+        cpuSetMSR(__IA32_EFER, lo, hi);  // Write back to IA32_EFER
+    }
+}
+
+
+#define __SYSCALL_REG_LSTAR 0xC0000082  // MSR for syscall entry point
+#define __SYSCALL_REG_FMASK 0xC0000084  // MSR for syscall flag mask
+
+// Set the syscall entry point (correctly handling 64-bit addresses)
+void syscall_set_entry_point(uint64_t ent) 
+{
+    uint32_t alpha = (uint32_t)(ent & 0xFFFFFFFF);  // Lower 32 bits
+    uint32_t beta = (uint32_t)(ent >> 32);         // Upper 32 bits
+    cpuSetMSR(__SYSCALL_REG_LSTAR, alpha, beta);
+}
+
+// Set the syscall mask (disables specific flags during syscall)
+void syscall_set_mask(uint32_t mask) 
+{
+    uint32_t alpha = mask;
+    uint32_t beta = 0;
+    cpuSetMSR(__SYSCALL_REG_FMASK, alpha, beta);
+}
+
+// See: sw2.asm
+extern unsigned long syscall_handler;
+
+void initialize_syscall(void) 
+{
+    // Step 1: Check if SYSCALL is supported
+    if (!check_syscall_support()) 
+    {
+        printk("SYSCALL is NOT supported on this CPU!\n");
+        return;
+    }
+
+    // Step 2: Enable SYSCALL/SYSRET in IA32_EFER
+    syscall_enable();
+
+    // Step 3: Set the syscall entry point (handler address)
+    syscall_set_entry_point((uint64_t)syscall_handler);
+
+    // Step 4: Set the syscall mask (disable specific flags)
+    syscall_set_mask(0x3F);  // Example mask (disable interrupts)
+
+    printk("SYSCALL setup complete!\n");
+}
+
+
+
 

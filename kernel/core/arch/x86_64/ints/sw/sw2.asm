@@ -28,7 +28,9 @@ unhandled_int:
     iretq
 
 
-syscall_handler:
+align 4
+global _syscall_handler
+_syscall_handler:
     ; Save user-space return address (RIP) and stack pointer (RSP)
     mov qword [.SavedRIP], rcx  ; Save user-space RIP
     mov qword [.SavedRSP], r11  ; Save user-space RSP
@@ -64,15 +66,15 @@ sw2_initialize_syscall_support;
     ;mov ecx, 0xC0000082
     ;rdmsr
 
-    mov ecx, 0xC0000082  ; IA32_LSTAR (syscall entry point)
-    mov rax, syscall_handler  ; Address of syscall handler
-    mov rdx, 0
-    wrmsr
+    ;mov ecx, 0xC0000082  ; IA32_LSTAR (syscall entry point)
+    ;mov rax, _syscall_handler  ; Address of syscall handler
+    ;mov rdx, 0
+    ;wrmsr
 
-    mov ecx, 0xC0000084  ; IA32_FMASK (mask for syscall flags)
-    mov rax, 0x3F        ; Disable interrupts during syscall
-    mov rdx, 0
-    wrmsr
+    ;mov ecx, 0xC0000084  ; IA32_FMASK (mask for syscall flags)
+    ;mov rax, 0x3F        ; Disable interrupts during syscall
+    ;mov rdx, 0
+    ;wrmsr
 
     ret
 
