@@ -71,7 +71,8 @@ LDFLAGS := -m elf_x86_64 -s -x -static
 
 # Everything is a file.
 OBJS = pixel.o line.o rect.o bitblt.o bg.o font.o char.o text.o gre.o \
-input.o dispsrv.o osshell.o callback.o user.o \
+obroker.o output.o ibroker.o input.o \
+dispsrv.o osshell.o callback.o user.o \
 gramk.o    
 
 all:
@@ -92,7 +93,11 @@ all:
 	$(CC) -c gdi/osshell.c  $(KERNEL_INCLUDE) $(CFLAGS) -o osshell.o
 
 # user - User interaction interface.
-	$(CC) -c evi/input.c     $(KERNEL_INCLUDE) $(CFLAGS) -o input.o
+	$(CC) -c evi/obroker.c  $(KERNEL_INCLUDE) $(CFLAGS) -o obroker.o
+	$(CC) -c evi/output.c   $(KERNEL_INCLUDE) $(CFLAGS) -o output.o
+	$(CC) -c evi/ibroker.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ibroker.o
+	$(CC) -c evi/input.c    $(KERNEL_INCLUDE) $(CFLAGS) -o input.o
+
 	$(CC) -c evi/callback.c  $(KERNEL_INCLUDE) $(CFLAGS) -o callback.o
 
 	$(CC) -c user/user.c      $(KERNEL_INCLUDE) $(CFLAGS) -o user.o

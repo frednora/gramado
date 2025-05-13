@@ -1,5 +1,5 @@
-
 // kbdmap.h
+// keyboard chardmap.
 
 #ifndef __KBDMAP_H
 #define __KBDMAP_H    1

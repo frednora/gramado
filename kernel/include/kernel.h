@@ -212,9 +212,13 @@
 
 #include "../gramk/gdi/dispsrv.h"
 #include "../gramk/gdi/osshell.h"
+
 #include "../gramk/gdi/gdi.h"
 
 // Event Interface.
+#include "../gramk/evi/obroker.h"
+#include "../gramk/evi/output.h"
+#include "../gramk/evi/ibroker.h"
 #include "../gramk/evi/input.h"
 #include "../gramk/evi/callback.h"
 

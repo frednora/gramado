@@ -1,4 +1,3 @@
-
 // kbdmap.c
 // ring0 keymap support.
 // It's working fine.
