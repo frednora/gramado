@@ -96,9 +96,9 @@ void
 fs_load_metafile (
     unsigned long buffer, 
     unsigned long first_lba, 
-    unsigned long size )
+    unsigned long size_in_sectors )
 {
-    unsigned long SizeInSectors = (size & 0xFFFFFFFF);
+    unsigned long SizeInSectors = (size_in_sectors & 0xFFFFFFFF);
 
     debug_print ("fs_load_metafile:\n");
 
@@ -107,8 +107,8 @@ fs_load_metafile (
         debug_print ("fs_load_metafile: [ERROR] buffer\n");
         return;
     }
-    if (size == 0){
-        debug_print ("fs_load_metafile: [ERROR] size\n");
+    if (size_in_sectors == 0){
+        debug_print ("fs_load_metafile: [ERROR] size_in_sectors\n");
         return;
     }
 

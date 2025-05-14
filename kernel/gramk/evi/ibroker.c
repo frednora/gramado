@@ -259,6 +259,33 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         goto exit_cmp;
     }
 
+// #test
+// bootcnf
+// Saving the config metafile for the boot loader.
+    char cnf_buffer[512];
+
+    if (kstrncmp(cmdline, "boot-m", 6) == 0)  // Save 'M' (Show menu)
+    {
+        printk("Setting boot mode: SHOW MENU\n");
+        memset(cnf_buffer, 0, 512);
+        cnf_buffer[0] = 'M';  // Boot mode
+        memcpy(&cnf_buffer[1], "CNF", 3);  // Signature
+        fs_store_metafile(cnf_buffer, 1, 1);  // Save to sector 2
+        fs_store_metafile(cnf_buffer, 2, 1);  // Save to sector 3
+        goto exit_cmp;
+    }
+
+    if (kstrncmp(cmdline, "boot-s", 6) == 0)  // Save 'S' (Skip menu)
+    {
+        printk("Setting boot mode: SKIP MENU\n");
+        memset(cnf_buffer, 0, 512);
+        cnf_buffer[0] = 'S';  // Boot mode
+        memcpy(&cnf_buffer[1], "CNF", 3);  // Signature
+        fs_store_metafile(cnf_buffer, 1, 1);  // Save to sector 2
+        fs_store_metafile(cnf_buffer, 2, 1);  // Save to sector 3
+        goto exit_cmp;
+    }
+
 // active: Count active threads.
     if ( kstrncmp(cmdline,"active",6) == 0){
         LongValue = (unsigned long) sched_count_active_threads();

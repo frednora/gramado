@@ -9,7 +9,7 @@ __do_save_sequence (
     int p,
     unsigned long buffer_va, 
     unsigned long lba, 
-    size_t number_of_clusters );
+    size_t number_of_sectors );
   
 // ----------------------------
 
@@ -18,7 +18,7 @@ __do_save_sequence (
     int p,
     unsigned long buffer_va, 
     unsigned long lba, 
-    size_t number_of_clusters )
+    size_t number_of_sectors )
 {
     int i=0;
 
@@ -27,7 +27,7 @@ __do_save_sequence (
     unsigned long buffer_off=0;
     unsigned long lba_base = (unsigned long) lba;
     unsigned long lba_off=0;
-    size_t Total = (size_t) (number_of_clusters & 0xFFFFFFFF);
+    size_t Total = (size_t) (number_of_sectors & 0xFFFFFFFF);
     //size_t Max=0; 
 
     //if (p<0)
@@ -110,6 +110,37 @@ fatWriteCluster (
     //return 0;  //#todo
 }
 
+
+void 
+fs_store_metafile (
+    unsigned long buffer, 
+    unsigned long first_lba, 
+    unsigned long size_in_sectors )
+{
+
+// Parameters
+    if (buffer == 0){
+        panic("fs_save_fat: buffer\n");
+    }
+    if (first_lba == 0){
+        panic("fs_save_fat: first_lba\n");
+    }
+    // VOLUME1_FAT_SIZE
+    // Only one size for now
+    //if (size_in_sectors != ?){
+    //    panic("fs_save_fat: size_in_sectors\n");
+    //}
+
+// Do save!
+// ata_get_current_ide_port_index()
+    __do_save_sequence(
+        __IDE_PORT, //port   // #bugbug: hard coded.
+        (unsigned long) buffer,
+        (unsigned long) first_lba,
+        (size_t) size_in_sectors ); // size in sectors.
+}
+
+
 // Save fat into the disk.
 // Low level. It doesn't check the status of the fat cache.
 int 
@@ -125,8 +156,7 @@ fs_save_fat (
     printk      ("Saving fat\n");
     refresh_screen();
 
-// Filters
-
+// Parameters
     if (fat_address == 0){
         panic("fs_save_fat: fat_address\n");
     }
@@ -145,7 +175,7 @@ fs_save_fat (
         __IDE_PORT, //port   // #bugbug: hard coded.
         (unsigned long) fat_address,
         (unsigned long) fat_lba,
-        (size_t) fat_size );
+        (size_t) fat_size ); // size in sectors.
 
 // #bugbug: 
 // Debug provisório.
@@ -195,7 +225,7 @@ fs_save_rootdir (
         __IDE_PORT,
         (unsigned long) root_address,
         (unsigned long) root_lba,
-        (size_t) root_size );
+        (size_t) root_size );  // size in sectors.
 
 // #bugbug: 
 // Debug provisório.

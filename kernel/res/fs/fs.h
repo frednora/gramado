@@ -547,7 +547,14 @@ void
 fs_load_metafile (
     unsigned long buffer, 
     unsigned long first_lba, 
-    unsigned long size );
+    unsigned long size_in_sectors );
+
+void 
+fs_store_metafile (
+    unsigned long buffer, 
+    unsigned long first_lba, 
+    unsigned long size_in_sectors );
+
 
 // MBR
 void fs_load_mbr(unsigned long mbr_address);

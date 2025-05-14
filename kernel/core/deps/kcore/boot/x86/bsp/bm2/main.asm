@@ -303,6 +303,64 @@ bm_main:
     mov word [DISKINFO16_cylinders], ax
 
 
+; ===========================================
+; #test
+
+; Byte 0: 
+; Boot Mode (0x4D = Menu, 0x53 = Skip)
+; Bytes 1-3: 
+; Signature ("CNF")
+; Byte 4:    
+; Graphics Mode (0x00 = 320x200, 0x01 = 640x480, 0x02 = 800x600)
+
+    MOV AH, 0x02        ; BIOS read sector function
+    MOV AL, 0x01        ; Read 1 sector
+    MOV CH, 0x00        ; Cylinder 0
+    MOV CL, 0x02        ; Sector 2 (1-based index)
+    MOV DH, 0x00        ; Head 0
+    MOV DL, [bootmanagerDriveNumber]  ; Disk number
+    MOV BX, CONFIG_BUFFER      ; Memory location to store data
+    INT 0x13            ; Call BIOS
+
+; Compare first byte
+
+    ; M?
+    MOV AL, [CONFIG_BUFFER]    ; Load first byte of sector into AL
+    CMP AL, 0x4D        ; Compare with 'M' (ASCII)
+    JE MATCH_FOUND      ; Jump if match found
+
+    ; S?
+    MOV AL, [CONFIG_BUFFER]    ; Load first byte of sector into AL
+    CMP AL, 0x53        ; Compare with 'S' (ASCII)
+    JE SKIP_MENU         ; Jump if match found
+
+; Default option. Open the menu.
+NoValidOption:
+    jmp menu_loop
+
+SKIP_MENU:
+    MOV AH, 0x0E        ; BIOS teletype output function
+    MOV AL, 'S'         ; Print 'S' for no match
+    INT 0x10
+    ; Select boot option.
+    ; 1 = Starts system GUI.
+    ; 0 = Starts the Boot Manager CLI.
+    mov byte [finish_saved_boot_option], 1  ; default option.
+    jmp after_menu
+    ;JMP $
+
+MATCH_FOUND:
+    MOV AH, 0x0E
+    MOV AL, 'M'         ; Print 'M' for match found
+    INT 0x10
+    jmp menu_loop
+    ;JMP $
+
+; Allocate 512 bytes for sector storage
+
+CONFIG_BUFFER: 
+    TIMES 512 DB 0
+
 ; ++
 ; ===========================================
 menu_loop:

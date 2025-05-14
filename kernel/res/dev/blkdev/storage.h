@@ -40,6 +40,10 @@ struct superblock_d
 // mbr
 #define MBR_LBA  0 
 
+// #todo
+//#define BOOTCONFIG1_LBA  1 
+//#define BOOTCONFIG2_LBA  2 
+
 //================================
 // boot partition
 // size=32MB.
