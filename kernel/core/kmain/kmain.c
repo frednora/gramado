@@ -917,6 +917,7 @@ void I_kmain(int arch_type)
     {
         Initialization.headless_mode = TRUE;
         Initialization.printk_to_serial = TRUE;
+        // ...
     }
 
 // =============================================

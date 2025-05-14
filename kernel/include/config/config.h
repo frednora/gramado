@@ -83,14 +83,7 @@
 // ------------------------------------------------------
 // virtualbox Info:
 // PIIX3 ATA: LUN#0: disk, PCHS=963/4/17, total number of sectors 65536
-#define FRED_VHD_32MB
-#if defined(FRED_VHD_32MB)
-#define VHD_32MB_CHS { 963, 4, 17,  0 }  
-//#define VHD_32MB_CHS { 862, 4, 19,  0 }  
-//#define VHD_32MB_CHS { 0x35E, 0x4, 0x13, 0 }  
-#else 
-#error "must define vhd"
-#endif
+// #define VHD_32MB_CHS { 963, 4, 17 }  
 // ------------------------------------------------------
 
 // #bugbug
@@ -152,28 +145,6 @@ sixth..     ide5, usually PCI, probed
 // Full multi-user graphical mode. 
 // #define DEFAULT_RUNLEVEL  0
 #define DEFAULT_RUNLEVEL  5
-
-
-// ------------------------------------------------------
-// Setup verbose preferences.
-
-//
-// ==== VERBOSE ====
-//
-
-//
-// Set up what kind of debug message we wanna see.
-//
-
-// #bugbug
-// Essas flags perderam o sentido
-// precisamos renomear ou usarmos apenas a principal.
-
-// Esse é usado para exibir somente os marcadores principais,
-// que são mesnagens escritas em maiúculas.
-// funciona como uma visão panorâmica, 
-// uma espinha dorsal, um esqueleto.
-#define KERNEL_VERBOSE  1
 
 
 // ==================================================
