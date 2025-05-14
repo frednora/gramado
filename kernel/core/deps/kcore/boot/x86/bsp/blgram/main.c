@@ -759,7 +759,7 @@ void bl_main(void)
     fs_load_fatEx();
     g_fat16_fat_status = TRUE;
 
-
+/*
 // -------------------------------------------
 // Testing if the driver is reading.
 #if defined(BAREMETAL_VERBOSE)
@@ -781,7 +781,14 @@ void bl_main(void)
     //while(1){ asm("cli"); asm("hlt"); }
 
 #endif  
+*/
 
+// -------------------------------------------
+// #todo
+// Loading configuration metafile from the second sector.
+    //static char cnfBuffer[512];
+    //read_lba( cnfBuffer, 1 );
+    //read_lba( cnfBuffer, 2 );
 
 // -------------------------------------------
 // Loading kernel image.
