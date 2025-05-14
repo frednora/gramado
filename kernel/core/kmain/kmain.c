@@ -1051,6 +1051,7 @@ void I_kmain(int arch_type)
 
 
 // -------------------------------
+    PROGRESS(":: deviceinit\n");
     // [5]
     deviceinit();
 
@@ -1058,7 +1059,7 @@ void I_kmain(int arch_type)
     int late_status = 0;
     if (Status == TRUE)
     {
-        PROGRESS(":: archinit\n");
+        PROGRESS(":: lateinit\n");
         // [6]
         late_status = (int) lateinit();
         if (late_status < 0)
