@@ -13,10 +13,8 @@
 #define TRUE  1
 #define FALSE  0
 
-//const char *ip = "127.0.0.1";
-//#define PORT 43454
 
-const char *ip = "192.168.1.4";
+//const char *default_ip = "192.168.1.4";
 #define PORT  11888
 
 #define SA  struct sockaddr
@@ -89,6 +87,16 @@ int main(int argc, char **argv)
     int sockfd, len, n;
     struct sockaddr_in  servaddr;
 
+// Check if an IP address is provided
+    //if (argc != 2)
+    if (argc < 2) {
+        fprintf(stderr, "Usage: %s <IP address>\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    // Use the IP provided from the command line
+    const char *server_ip = argv[1];
+
 // Socket
     sockfd = socket(AF_INET,SOCK_DGRAM,0);
     if (sockfd == -1){
@@ -101,7 +109,7 @@ int main(int argc, char **argv)
     //bzero(&servaddr,sizeof(len));
     bzero(&servaddr, sizeof(servaddr));
     servaddr.sin_family=AF_INET;
-    servaddr.sin_addr.s_addr = inet_addr(ip);
+    servaddr.sin_addr.s_addr = inet_addr(server_ip);
     servaddr.sin_port=htons(PORT);
     len = sizeof(servaddr);
 
