@@ -75,7 +75,8 @@
 ; Used with legacy BIOS firmware.
 [BITS 16]
 
-HIDDEN_SECTORS EQU  63
+; HIDDEN_SECTORS EQU  63
+HIDDEN_SECTORS EQU  62
 
 ; The standard MBR entry point is 0x7C00.
 ; The origin in 0x0000,
@@ -89,6 +90,26 @@ MBR_main:
     %include "stage1.asm"
 
 eof: 
+
+;-----------------------------------
+; Configuration file.
+; 512 bytes of persistent configuration used by the bootloader.
+
+; S = Skip menu | M = Open menu.
+.SkipMenu:     db 'S'
+.Signature00:  db 'C' 
+.Signature01:  db 'N' 
+.Signature02:  db 'F' 
+; #todo
+; Default resolution mode. For VESA initialization.
+; 0x00 320x200 | 0x01 640x480 | 0x02 800x600 | ...
+.Resolution:   db 0x02
+
+; Padding until 512
+    times (512 -5) db 0x00
+;-----------------------------------
+
+
 ; Padding for setting up the VBR at the right place.
 ; 63 hidden sectors.
     times (HIDDEN_SECTORS*512) - (eof-MBR_main) db 'b'
