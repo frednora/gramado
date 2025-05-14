@@ -307,9 +307,15 @@ unsigned long get_process_stats(pid_t pid, int index)
 
         case 41:  return (unsigned long) p->thread_count;  break;
         case 42:  return (unsigned long) p->bound_type;  break;
-        case 43:  return (unsigned long) p->preempted;  break;
-        case 44:  return (unsigned long) p->saved;  break;
-        case 45:  return (unsigned long) p->PreviousMode;  break;
+        case 43:  
+            return 0;  //#deprecated  
+            break;
+        case 44:  
+            return 0;  //#deprecated  
+            break;
+        case 45:  
+            return 0;  //#deprecated  
+            break;
         case 46:  return (unsigned long) p->wait4pid;  break;
         case 47:  return (unsigned long) p->exit_code;  break;
         case 48:  return (unsigned long) p->signal;  break;

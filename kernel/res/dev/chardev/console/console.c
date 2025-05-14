@@ -2410,8 +2410,8 @@ void csi_P (int nr, int console_number)
     if (console_number >= CONSOLETTYS_COUNT_MAX)
         return;
 
-    if (nr > CONSOLE_TTYS[console_number].cursor_right -1 ){
-        nr = CONSOLE_TTYS[console_number].cursor_right -1 ;
+    if (nr > CONSOLE_TTYS[console_number].cursor_right -1){
+        nr = CONSOLE_TTYS[console_number].cursor_right -1;
     } else {
         if (!nr){
             nr = 1;
@@ -2441,8 +2441,8 @@ void csi_at (int nr, int console_number)
     if (console_number >= CONSOLETTYS_COUNT_MAX)
         return;
 
-    if (nr > CONSOLE_TTYS[console_number].cursor_right -1 ){
-        nr = CONSOLE_TTYS[console_number].cursor_right -1 ;
+    if (nr > CONSOLE_TTYS[console_number].cursor_right -1){
+        nr = CONSOLE_TTYS[console_number].cursor_right -1;
     }else{
         if (!nr){
             nr=1;
@@ -2545,7 +2545,7 @@ console_ioctl (
 // Standard stream.
 // Only the fd 1 is a console.
 // This is the fg_console, always.
-    if ( fd != 1 )
+    if (fd != 1)
     {
         //#debug
         panic ("console_ioctl: fd != 1\n");
@@ -2884,10 +2884,10 @@ fail:
     return (int) -1;
 }
 
-// It affects only the fg_console.
-int console_clear(void)
+// Create a console.
+int console_clear00(int console_number)
 {
-    int ConsoleID = fg_console;
+    int ConsoleID = console_number;
     unsigned int bg_color = COLOR_BLUE; 
     unsigned int fg_color = COLOR_WHITE;
 
@@ -2901,6 +2901,22 @@ int console_clear(void)
 // IN: bg color, fg color, console number.
     console_clear_imp( bg_color, fg_color, ConsoleID );
     return 0;
+fail:
+    return (int) -1;
+}
+
+// Create foreground console.
+int console_clear(void)
+{
+    int rv = -1;
+
+    if (fg_console < 0)
+        goto fail;
+    if (fg_console >= CONSOLETTYS_COUNT_MAX)
+        goto fail;
+
+    rv = (int) console_clear00(fg_console);
+    return (int) rv;
 fail:
     return (int) -1;
 }

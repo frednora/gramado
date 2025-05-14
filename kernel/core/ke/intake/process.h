@@ -234,9 +234,47 @@ struct process_d
 // Process Group IDentifier.
     pgid_t pgid;
 
-// --------------------------
-// Security Access Token
+//
+// Name
+//
 
+// Short name
+// +name     (EXEMPLO.BIN)
+    char __processname[64];
+    size_t processName_len;
+
+// Long name. (extra)
+    char *name;  //Nome do processo. 
+
+// +pathname (/root/boot/EXEMPLO.BIN)
+	//char *pathname;  //@todo: Incluir.	
+
+// +cmd      (EXEM) 
+    char *cmd;  //Nome curto que serve de comando.
+
+//
+// == Priorities ============
+//
+
+// Priority levels.
+// Used by processes and threads.
+// Classes:
+// 1 ~ 5 = variable.
+// 6 ~ 9 = realtime.
+// variable:
+//     Can be changed on the fly.
+// realtime:
+//     Can't be changed on the fly.
+// # ps:
+// The base priority is never changed. It's used to classify
+// the priority level.
+// The priority can't be changed to a level below the base priority.
+// The base priority is static and the current priority is dinamic.
+
+    unsigned long base_priority;  // static 
+    unsigned long priority;       // dinamic
+
+// Security Access Token
     struct token_d  token;
 
 // --------------------------
@@ -245,22 +283,23 @@ struct process_d
 
 // --------------------------
 
-// Personality
-// O sistema pra qual o programa foi feito.
-// Pode se referir a uma versao diferente do Gramado
-// Ou ate mesmo outro sistema operaciona.
-// Dai o Gramado tenta rodar se for possivel,
-// fazer adaptaçoes para compatibilidade.
+// The target OS for the process.
+// It can be a different version of Gramado OS or another OS.
     int personality;
-
-// see: layer.h
-    int _layer;
 
 // The environment subsystem that this process is running into.
 // unknown, cali, gramado.
     env_subsystem_t env_subsystem;
 
-    int exit_in_progress;
+// Importante:
+// isso substituir� a flag 'terminal'
+// APPMODE_TERMINAL = O kernel cria uma estrutura de terminal 
+// com uma janela associada a essa estrutura, essa janela ser� a 
+// janela de terminal para o aplicativo.
+// APPMODE_WINDOW = O kernel n�o cria estrutura de terminal para 
+// esse processo e o processo criar� janelas.
+
+    appmode_t appMode;
 
 // #todo
 // Usage, in percentage.
@@ -275,47 +314,10 @@ struct process_d
 // if it is protected. ex: It can't be killed by another process.
     int _protected;
 
-// Counting th e read/write operations.
-// Operatinons using fd.
-// #warning
-// The goal here is counting how many timer the operation was called.
-    unsigned int read_counter;
-    unsigned int write_counter;
-
-// ---------------------------
-// #test
-// Controlling the acccess to the main folders
-// of the system disk.
-// List of root chars
-// 0 = '/' - Regular root dir.
-// 1 = '@' - Access to /GRAMADO/ root dir.
-// 2 = '#' - Access to /DE/ root dir
-// TRUE = Can access
-// FALSE = Can't access
-    //int root_access[3]; (#todo: put this into the structure)
-    //struct fs_access_d  fs_access;
-    // ex: p->fs_access.root_access[0] = TRUE;
-    // ex: p->fs_access.root_access[1] = FALSE;
-// ---------------------------
-
-// Open files.
-// #todo:
-// Check this.
-// We're still using 32 in all over the kernel.
-    unsigned long Objects[64];
-
-// Connectors.
-// 2 Indexes to the table above, Objects[i];
-// The connectors are created in copy_process_struct() in clone.c.
-// when the terminal is clonning himself to create a child.
-    int Connectors[2];
-// Only the terminals can create connectors.
-    int _is_terminal;           // Father process
-    int _is_child_of_terminal;  // Child process.
-
 // State.
 // flag ?
     process_state_t state; 
+
 
 // Plano de execuçao.
 // Processes:
@@ -324,27 +326,9 @@ struct process_d
 
     int plane;
 
-// error.
-    //unsigned long error; 
+    // see: layer.h
+    int _layer;
 
-//
-// Name
-//
-
-	// @todo:
-	// +name     (Nome=EXEMPLO.BIN)
-	// +pathname (Caminho=/root/boot/EXEMPLO.BIN)
-	// +cmd      (linha de comando ex:EXEM ) 
-
-	//char *pathname;              //@todo: Incluir.	
-    char *cmd;                     //Nome curto que serve de comando.
-    char *name;                    //Nome do processo. 
-	//unsigned long name_address;    //@todo: n�o usar isso.
-
-// #test
-// Assim fica mais facil enviar para o aplicativo.
-    char __processname[64];    // HOSTNAME_BUFFER_SIZE
-    size_t processName_len;    // len 
 
 //
 // Input
@@ -377,15 +361,87 @@ struct process_d
 
     char *net_buffer;
 
-// Importante:
-// isso substituir� a flag 'terminal'
-// APPMODE_TERMINAL = O kernel cria uma estrutura de terminal 
-// com uma janela associada a essa estrutura, essa janela ser� a 
-// janela de terminal para o aplicativo.
-// APPMODE_WINDOW = O kernel n�o cria estrutura de terminal para 
-// esse processo e o processo criar� janelas.
 
-    appmode_t appMode;
+// ============================================
+
+// ---------------------------
+// #test
+// Controlling the acccess to the main folders
+// of the system disk.
+// List of root chars
+// 0 = '/' - Regular root dir.
+// 1 = '@' - Access to /GRAMADO/ root dir.
+// 2 = '#' - Access to /DE/ root dir
+// TRUE = Can access
+// FALSE = Can't access
+    //int root_access[3]; (#todo: put this into the structure)
+    //struct fs_access_d  fs_access;
+    // ex: p->fs_access.root_access[0] = TRUE;
+    // ex: p->fs_access.root_access[1] = FALSE;
+// ---------------------------
+
+// Open files.
+// #todo:
+// Check this.
+// We're still using 32 in all over the kernel.
+    unsigned long Objects[64];
+
+// Connectors.
+// 2 Indexes to the table above, Objects[i];
+// The connectors are created in copy_process_struct() in clone.c.
+// when the terminal is clonning himself to create a child.
+    int Connectors[2];
+// Only the terminals can create connectors.
+    int _is_terminal;           // Father process
+    int _is_child_of_terminal;  // Child process.
+
+// ORDEM: 
+// O que segue eh referenciado com pouca frequencia.
+
+// Ponteiros para as streams do fluxo padrão
+// stdin, stdout, stderr.
+// For now, all the processes are using the same 
+// standard stream. The same three files.
+
+    unsigned long standard_streams[3];
+
+//
+// == fs ===============
+//
+
+// #important
+// This is gonna help us to navigate in the levels of the pathname.
+// See: get_dir() on namei.c on linux 0.01
+
+// #todo
+// NOT initialized yet!
+
+// #todo #test
+// Colocando um pouco de simetria nos simbolos.
+
+// absolute pathname and relative pathname. 
+
+    file *file_root;
+    file *file_cwd;
+    struct inode_d *inode_root;
+    struct inode_d *inode_cwd;
+
+// #todo #bugbug
+// Size ?? 
+// Esse tamanho deve ser igual ao 
+// encontrado no modulo /fs.
+ 
+    char root_string[32];
+    char  cwd_string[32];
+
+// Counting th e read/write operations.
+// Operatinons using fd.
+// #warning
+// The goal here is counting how many timer the operation was called.
+    unsigned int read_counter;
+    unsigned int write_counter;
+
+// ===================================================
 
 // Banco de dados
 // #??
@@ -645,33 +701,11 @@ struct process_d
 // Environment.
 //
 
+// CPL
     unsigned int cpl;
 
-// #todo: use 'unsigned int'
 // IOPL of the task. (ring).
     unsigned int rflags_iopl; 
-
-//
-// == Priorities ============
-//
-
-// Priority levels.
-// Used by processes and threads.
-// Classes:
-// 1 ~ 5 = variable.
-// 6 ~ 9 = realtime.
-// variable:
-//     Can be changed on the fly.
-// realtime:
-//     Can't be changed on the fly.
-// # ps:
-// The base priority is never changed. It's used to classify
-// the priority level.
-// The priority can't be changed to a level below the base priority.
-// The base priority is static and the current priority is dinamic.
-
-    unsigned long base_priority;  // static 
-    unsigned long priority;       // dinamic
 
 // Que tipo de scheduler o processo utiliza. 
 // (rr, realtime ...).
@@ -735,49 +769,23 @@ struct process_d
 
     int bound_type;
 
-// preempted:
-// flag ~ Sinaliza que um processo pode ou nao sofrer preempçao.
-// Uma tarefa de menor prioridade pode deixar o estado running 
-// para assumir o estado ready em favor de uma tarefa 
-// de maior prioridade que assumir o estado running.
-// Como na verdade quem sofre preempcao eh a thread, entao
-// esse marcador devera ser herdado pelos threads desse processo.
 
-    unsigned long preempted;
+//
+// Thread support
+//
 
-    //saved ~ Sinaliza que a tarefa teve o seu contexto salvo.
-    unsigned long saved;
+    struct thread_d *control;  // The control thread.
+    struct thread_d *extra;    // The extra thread.
 
-    unsigned long PreviousMode;
+// The thread list.
+// #todo
+// We need to decide what kind of list we're gonna use.
 
-// Quantas threads o processo tem.
-    int thread_count;
-
-// Thread de controle
-// Usada para input de mensagens e sinais.
-// Se fechar ela, tem que fechar o processo.
-    struct thread_d *control;
-
-// Isso pode funcionar em parceria com control, 
-// quando criarmos novos processos ou clonarmos.
-    struct thread_d *extra;
-
-
-// ==============
-// #todo: The thread list.
-
-// Lista com ponteiros de estrutura das threads do processo.
-// O indice dessa lista serve para enumeralas. 
-// @todo: Usar array de estruturas din�mico. (Alocar).
-
-    unsigned long tList[32];      //@todo: deletar  
-    //struct thread_d *Threads;   //@todo: usar esse.
-    //struct thread_d CurrentThread;
-
-    //A primeira thead de uma lista linkada.
+// Linked list?
     struct thread_d *threadListHead;
-    //struct thread_d *threadReadyListHead;
-    //...
+// Array?
+    unsigned long tList[32];
+    int thread_count;          // Thread counter.
 
 // ==============
 
@@ -794,49 +802,6 @@ struct process_d
     struct usession_d  *usession;  // user session
     struct cgroup_d *cg;           // cgroup.        
 
-// ============================================
-
-// ORDEM: 
-// O que segue eh referenciado com pouca frequencia.
-
-// Ponteiros para as streams do fluxo padrão
-// stdin, stdout, stderr.
-// For now, all the processes are using the same 
-// standard stream. The same three files.
-
-    unsigned long standard_streams[3];
-
-
-//
-// == fs ===============
-//
-
-// #important
-// This is gonna help us to navigate in the levels of the pathname.
-// See: get_dir() on namei.c on linux 0.01
-
-// #todo
-// NOT initialized yet!
-
-// #todo #test
-// Colocando um pouco de simetria nos simbolos.
-
-// absolute pathname and relative pathname. 
-
-    file *file_root;
-    file *file_cwd;
-    struct inode_d *inode_root;
-    struct inode_d *inode_cwd;
-
-// #todo #bugbug
-// Size ?? 
-// Esse tamanho deve ser igual ao 
-// encontrado no modulo /fs.
- 
-    char root_string[32];
-    char  cwd_string[32];
-
-// ===================================================
 
 // @todo:
 // Outros:
@@ -930,7 +895,12 @@ struct process_d
 // See: rtl/net/gdef.h
 // See: rtl/net/socket.h
 
-// Motivo do processo fechar.
+// error.
+    //unsigned long error; 
+
+// En exit operation is in progress.
+    int exit_in_progress;
+// The reson this process is exiting.
     int exit_code;
 
     struct process_d  *prev;

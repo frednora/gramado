@@ -191,6 +191,7 @@ console_clear_imp (
     unsigned int fg_color, 
     int console_number );
 
+int console_clear00(int console_number);
 int console_clear(void);
 
 int VirtualConsole_early_initialization(void);
