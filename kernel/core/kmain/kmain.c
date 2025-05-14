@@ -898,11 +898,28 @@ void I_kmain(int arch_type)
         enable_serial_debug();
     }
 
+//
+// Config
+//
+
 // Config headless mode.
 // In headless mode stdout sends data to the serial port.
     Initialization.headless_mode = FALSE;
+    Initialization.printk_to_serial = FALSE;
+    // ...
+
+// Redirect printk to serial port?
+    if (CONFIG_PRINTK_TO_SERIAL == 1){
+        Initialization.printk_to_serial = TRUE;
+    }
+// Headless mode?
     if (CONFIG_HEADLESS_MODE == 1)
+    {
         Initialization.headless_mode = TRUE;
+        Initialization.printk_to_serial = TRUE;
+    }
+
+// =============================================
 
     // #hack
     current_arch = CURRENT_ARCH_X86_64;

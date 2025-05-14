@@ -67,6 +67,9 @@ struct initialization_d
 // See: config.h
     int headless_mode;
 
+// Redirect printk to serial debug.
+    int printk_to_serial;
+
     // ...
 }; 
 

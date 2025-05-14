@@ -1195,7 +1195,7 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
         // If the file is a console.
         if (fp->____object == ObjectTypeVirtualConsole)
         {
-            if (Initialization.headless_mode == TRUE){
+            if (Initialization.printk_to_serial == TRUE){
                 return (int) debug_print_nbytes( 
                     (const void *) ubuf, 
                     (size_t) count );

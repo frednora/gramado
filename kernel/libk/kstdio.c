@@ -948,7 +948,7 @@ int kinguio_printf(const char *fmt, ...)
 // Lets print it or send it to the serial port.
 //
 
-    if (Initialization.headless_mode == TRUE){
+    if (Initialization.printk_to_serial == TRUE){
             return (int) debug_print_nbytes( 
                          (const void *) data_buffer, 
                          (size_t) sizeof(data_buffer) );
