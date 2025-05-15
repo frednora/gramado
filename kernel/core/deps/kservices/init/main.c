@@ -32,9 +32,10 @@ static const char *app5_name = "shell.bin";
 // --dm - Launches the default Display Manager.
 // --tb - Launches the default taskbar application.
 // -?   - ...
-//static const char *cmdline1 = "ds00 -1 -2 -3";
-//static const char *cmdline1 = "ds00 -1 -2 -3 --dm";
+
 static const char *cmdline1 = "ds00 -1 -2 -3 --tb";
+//static const char *cmdline1 = "ds00 -1 -2 -3 --dm";
+static const char *cmdline2 = "ds00 -1 -2 -3 --tb";
 // ...
 
 struct init_d  Init;
@@ -52,7 +53,6 @@ static void do_init_prompt(void);
 static inline void do_int3(void);
 static void do_launch_de(void);
 static void do_launch_de2(void);
-static void do_launch_de3(void);
 static void do_launch_list(void);
 static inline void do_sti(void);
 
@@ -150,9 +150,11 @@ static inline void do_int3(void)
 static void do_launch_de(void)
 {
     int ret_val=-1;
-
     char filename[16];
     size_t string_size=0;
+
+    static int cmdlineNumber = 1;
+
     memset(filename,0,16);
 
     do_clear_console();
@@ -160,7 +162,14 @@ static void do_launch_de(void)
 
 // Sending cmdline via stdin.
     rewind(stdin);
-    write( fileno(stdin), cmdline1, strlen(cmdline1) );
+
+    if (cmdlineNumber == 1){
+        write( fileno(stdin), cmdline1, strlen(cmdline1) );
+    } else if (cmdlineNumber == 2){
+        write( fileno(stdin), cmdline2, strlen(cmdline2) );
+    } else {
+        write( fileno(stdin), cmdline1, strlen(cmdline1) );
+    };
 
 // Launch new process.
     sprintf(filename,app1_name);
@@ -214,12 +223,6 @@ static void do_launch_de2(void)
     //printf("pid=%d\n",ret_val);
 // Quit the command line.
     isTimeToQuitCmdLine = TRUE;
-}
-
-// #suspended
-static void do_launch_de3(void)
-{
-    return;
 }
 
 static void do_launch_list(void)

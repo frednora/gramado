@@ -2199,6 +2199,934 @@ fail:
     return NULL;
 }
 
+// Create the controls given the titlebar.
+// min, max, close.
+void do_create_controls(struct gws_window_d *w_titlebar)
+{
+
+// Windows
+    struct gws_window_d *w_minimize;
+    struct gws_window_d *w_maximize;
+    struct gws_window_d *w_close;
+
+    //?
+    int id = -1;
+
+// Colors for the button
+    unsigned int bg_color = (unsigned int) get_color(csiButton);
+    //unsigned int bg_color = (unsigned int) get_color(csiButton);
+
+// Parameters:
+    if ((void*)w_titlebar == NULL){
+        return;
+    }
+    if (w_titlebar->magic != 1234){
+        return;
+    }
+    //if(window->isTitleBar!=TRUE)
+    //    return;
+
+    w_titlebar->Controls.initialized = FALSE;
+
+    w_titlebar->Controls.minimize_wid = -1;
+    w_titlebar->Controls.maximize_wid = -1;
+    w_titlebar->Controls.close_wid    = -1;
+
+
+// Width and height.
+    unsigned long ButtonWidth = 
+        METRICS_TITLEBAR_CONTROLS_DEFAULT_WIDTH;
+    unsigned long ButtonHeight = 
+        METRICS_TITLEBAR_CONTROLS_DEFAULT_HEIGHT;
+
+    unsigned long LastLeft = 0;
+
+    unsigned long TopPadding=1; //2;  // Top margin
+    unsigned long RightPadding=2;  // Right margin
+    
+    unsigned long SeparatorWidth=1;
+
+// #test
+// #bugbug
+    //Top=1;
+    //ButtonWidth  = (unsigned long) (w_titlebar->width -4);
+    //ButtonHeight = (unsigned long) (w_titlebar->height -4);
+
+// ================================================
+// minimize
+
+    LastLeft = 
+        (unsigned long)( 
+            w_titlebar->width - 
+            (3*ButtonWidth) - 
+            (2*SeparatorWidth) - 
+            RightPadding );
+
+    w_minimize = 
+        (struct gws_window_d *) CreateWindow ( 
+            WT_BUTTON, 0, 1, 1, 
+            "_",           // String  
+            LastLeft,      // l 
+            TopPadding,    // t 
+            ButtonWidth,   // w
+            ButtonHeight,  // t
+            w_titlebar, 0, bg_color, bg_color );
+
+    if ((void *) w_minimize == NULL){
+        //server_debug_print ("xx: minimize fail \n");
+        return;
+    }
+    if (w_minimize->magic != 1234){
+        return;
+    }
+    w_minimize->isControl = TRUE;
+
+    w_minimize->left_offset = 
+        (unsigned long) (w_titlebar->width - LastLeft);
+
+    w_minimize->type = WT_BUTTON;
+    w_minimize->isMinimizeControl = TRUE;
+    w_minimize->bg_color_when_mousehover = 
+        (unsigned int) get_color(csiWhenMouseHoverMinimizeControl);
+
+    id = RegisterWindow(w_minimize);
+    if (id<0){
+        //server_debug_print("xxx: Couldn't register w_minimize\n");
+        return;
+    }
+    w_titlebar->Controls.minimize_wid = (int) id;
+
+// ================================================
+// maximize
+    LastLeft = 
+        (unsigned long)(
+        w_titlebar->width - 
+        (2*ButtonWidth) - 
+        (1*SeparatorWidth) - 
+        RightPadding );
+
+    w_maximize = 
+        (struct gws_window_d *) CreateWindow ( 
+            WT_BUTTON, 0, 1, 1, 
+            "M",           // String  
+            LastLeft,      // l 
+            TopPadding,    // t 
+            ButtonWidth,   // w
+            ButtonHeight,  // h
+            w_titlebar, 0, bg_color, bg_color );
+
+    if ((void *) w_maximize == NULL){
+        //server_debug_print ("xx: w_maximize fail \n");
+        return;
+    }
+    if (w_maximize->magic!=1234){
+        return;
+    }
+    w_maximize->isControl = TRUE;
+    
+    w_maximize->left_offset = 
+        (unsigned long) (w_titlebar->width - LastLeft);
+
+    w_maximize->type = WT_BUTTON;
+    w_maximize->isMaximizeControl = TRUE;
+    w_maximize->bg_color_when_mousehover = 
+        (unsigned int) get_color(csiWhenMouseHoverMaximizeControl);
+
+    id = RegisterWindow(w_maximize);
+    if (id<0){
+        //server_debug_print ("xxx: Couldn't register w_maximize\n");
+        return;
+    }
+    w_titlebar->Controls.maximize_wid = (int) id;
+
+// ================================================
+// close
+    LastLeft = 
+        (unsigned long)(
+        w_titlebar->width - 
+        (1*ButtonWidth)  - 
+         RightPadding );
+
+    w_close = 
+        (struct gws_window_d *) CreateWindow ( 
+            WT_BUTTON, 0, 1, 1, 
+            "X",           // String  
+            LastLeft,      // l 
+            TopPadding,    // t 
+            ButtonWidth,   // w
+            ButtonHeight,  // h
+            w_titlebar, 0, bg_color, bg_color );
+
+    if ((void *) w_close == NULL){
+        //server_debug_print ("xx: w_close fail \n");
+        return;
+    }
+    if (w_close->magic!=1234){
+        return;
+    }
+    w_close->isControl = TRUE;
+    
+    w_close->left_offset = 
+        (unsigned long) (w_titlebar->width - LastLeft);
+
+    w_close->type = WT_BUTTON;
+    w_close->isCloseControl = TRUE;
+    w_close->bg_color_when_mousehover = 
+        (unsigned int) get_color(csiWhenMouseHoverCloseControl);
+
+    id = RegisterWindow(w_close);
+    if (id<0){
+        //server_debug_print ("xxx: Couldn't register w_close\n");
+        return;
+    }
+    w_titlebar->Controls.close_wid = (int) id;
+
+    w_titlebar->Controls.initialized = TRUE;
+}
+
+// Create titlebar and controls.
+struct gws_window_d *do_create_titlebar(
+    struct gws_window_d *parent,
+    unsigned long tb_height,
+    unsigned int color,
+    unsigned int ornament_color,
+    int has_icon,
+    int icon_id,
+    int has_string )
+{
+// Respect the border size
+// of the parent.
+
+    struct gws_window_d *tbWindow;
+    // The position and the dimensions depends on the
+    // border size.
+    unsigned long TitleBarLeft=0;
+    unsigned long TitleBarTop=0;
+    unsigned long TitleBarWidth=0;
+    unsigned long TitleBarHeight = tb_height;  //#todo metrics
+    // Color and rop.
+    unsigned int TitleBarColor = color;
+    unsigned long rop=0;
+    //unsigned long rop= 0x20;
+    int useIcon = FALSE;
+
+// Parameters:
+    if ((void*) parent == NULL)
+        return NULL;
+    if (parent->magic != 1234)
+        return NULL;
+
+// Get parameter.
+    useIcon = has_icon;
+
+// Overlapped + maximized.
+// If Overlapped and maximized, create a titlebar is different,
+// it goes on top of screen and the window has no borders.
+    int IsMaximized=FALSE;
+    if (parent->type == WT_OVERLAPPED &&
+        parent->style == WS_MAXIMIZED )
+    {
+        IsMaximized=TRUE;
+    }
+
+// border size.
+// Respect the border size
+// of the parent.
+    //unsigned long BorderSize = parent->border_size;
+
+// #todo: 
+// Different position, depending on the style
+// if the parent is maximized or not.
+// Without border, everything changes.
+    if (IsMaximized == TRUE)
+    {
+        TitleBarLeft = 0;
+        TitleBarTop = 0;
+        TitleBarWidth = parent->width;
+    }
+// A parent não está maximizada,
+// então considere diminuir a largura, 
+// para incluir as bordas.
+    if (IsMaximized != TRUE)
+    {
+        TitleBarLeft = parent->border_size;
+        TitleBarTop  = parent->border_size;
+        // border size can't be '0'.
+        //if (parent->border_size==0){
+        //    printf ("bsize%d\n",parent->border_size);
+        //    while(1){}
+        //}
+        TitleBarWidth = (parent->width - parent->border_size - parent->border_size);
+    }
+
+    // Saving
+    parent->titlebar_height = TitleBarHeight;
+    parent->titlebar_width = TitleBarWidth;
+    parent->titlebar_color = (unsigned int) TitleBarColor;
+    parent->titlebar_text_color = 
+        (unsigned int) get_color(csiTitleBarTextColor);
+    // ...
+
+    rop = (unsigned long) parent->rop;
+
+//-----------
+
+// #important: 
+// WT_SIMPLE with text.
+// lembre-se estamos relativos à area de cliente
+// da janela mão, seja ela de qual tipo for.
+    tbWindow = 
+       (void *) doCreateWindow ( 
+                    WT_TITLEBAR, 0, 1, 1, "TitleBar", 
+                    TitleBarLeft, 
+                    TitleBarTop, 
+                    TitleBarWidth, 
+                    TitleBarHeight, 
+                    (struct gws_window_d *) parent, 
+                    0, 
+                    TitleBarColor,  //frame 
+                    TitleBarColor,  //client
+                    (unsigned long) rop );   // rop_flags from the parent 
+
+    if ((void *) tbWindow == NULL){
+        //server_debug_print ("do_create_titlebar: tbWindow\n");
+        return NULL;
+    }
+    tbWindow->type = WT_SIMPLE;
+    tbWindow->isTitleBar = TRUE;
+
+// No room drawing more stuff inside the tb window.
+    if (tbWindow->width == 0)
+        return NULL;
+
+// --------------------------------
+// Icon
+
+// O posicionamento em relação
+// à janela é consistente por questão de estilo.
+// See: bmp.c
+// IN: index, left, top.
+// Icon ID:
+// Devemos receber um argumento do aplicativo,
+// na hora da criação da janela.
+
+// Decode the bmp that is in a buffer
+// and display it directly into the framebuffer. 
+// IN: index, left, top
+// see: bmp.c
+    unsigned long iL=0;
+    unsigned long iT=0;
+    unsigned long iWidth = 16;
+
+    parent->titlebarHasIcon = FALSE;
+
+    if (useIcon == TRUE)
+    {
+        // Icon ID
+        if (icon_id < 1 || icon_id > 5)
+        {
+            //icon_id = 1;
+            yellow_status("Invalid icon_id");
+            return NULL;
+        }
+        parent->frame.titlebar_icon_id = icon_id;
+
+        // Draw icon
+        iL = (unsigned long) (tbWindow->absolute_x + METRICS_ICON_LEFTPAD);
+        iT = (unsigned long) (tbWindow->absolute_y + METRICS_ICON_TOPPAD);
+        bmp_decode_system_icon( 
+            (int) icon_id, 
+            (unsigned long) iL, 
+            (unsigned long) iT,
+            FALSE );
+        parent->titlebarHasIcon = TRUE;
+    }
+
+// ---------------------------
+// Ornament
+    // int useOrnament = TRUE;
+
+// Ornamento:
+// Ornamento na parte de baixo da title bar.
+// #important:
+// O ornamento é pintado dentro da barra, então isso
+// não afetará o positionamento da área de cliente.
+// border on bottom.
+// Usado para explicitar se a janela é ativa ou não
+// e como separador entre a barra de títulos e a segunda
+// área da janela de aplicativo.
+// Usado somente por overlapped window.
+
+    unsigned int OrnamentColor1 = ornament_color;
+    unsigned long OrnamentHeight = METRICS_TITLEBAR_ORNAMENT_SIZE;
+    if (IsMaximized == TRUE){
+        OrnamentHeight = 1;
+    }
+    parent->frame.ornament_color1   = OrnamentColor1;
+    parent->titlebar_ornament_color = OrnamentColor1;
+
+    painterFillWindowRectangle(
+        tbWindow->absolute_x, 
+        ( (tbWindow->absolute_y) + (tbWindow->height) - METRICS_TITLEBAR_ORNAMENT_SIZE ),  
+        tbWindow->width, 
+        OrnamentHeight, 
+        OrnamentColor1, 
+        0 );  // rop_flags no rop in this case?
+
+//----------------------
+// String
+// Titlebar string support.
+// Using the parent's name.
+
+    int useTitleString = has_string;  //#HACK
+    unsigned long StringLeftPad = 0;
+    unsigned long StringTopPad = 8;  // char size.
+    size_t StringSize = (size_t) strlen( (const char *) parent->name );
+    if (StringSize > 64){
+        StringSize = 64;
+    }
+
+// --------------------------------------
+// Left PAD.
+// pad | icon | pad | pad
+    if (useIcon == FALSE){
+        StringLeftPad = (unsigned long) METRICS_ICON_LEFTPAD;
+    }
+    if (useIcon == TRUE){
+        StringLeftPad = 
+            (unsigned long) ( METRICS_ICON_LEFTPAD +iWidth +(2*METRICS_ICON_LEFTPAD));
+    }
+
+// --------------------------------------
+// Top PAD.
+
+    StringTopPad = 
+        ( ( (unsigned long) tbWindow->height - FontInitialization.height ) >> 1 );
+
+//
+// Text support
+//
+
+    // #todo
+    // We already did that before.
+    //parent->titlebar_text_color = 
+        //(unsigned int) get_color(csiTitleBarTextColor);
+
+// #todo
+// Temos que gerenciar o posicionamento da string.
+// #bugbug: Use 'const char *'
+
+    tbWindow->name = (char *) strdup((const char *) parent->name);
+    if ((void*) tbWindow->name == NULL){
+        printf("do_create_titlebar: Invalid name\n");
+        return NULL;
+    }
+
+    unsigned long sL=0;
+    unsigned long sT=0;
+    unsigned int sColor = (unsigned int) parent->titlebar_text_color;
+    if (useTitleString == TRUE)
+    {
+        // Saving relative position.
+        parent->titlebar_text_left = StringLeftPad;
+        parent->titlebar_text_top = StringTopPad;
+        sL = (unsigned long) ((tbWindow->absolute_x) + StringLeftPad);
+        sT = (unsigned long) ((tbWindow->absolute_y) + StringTopPad);
+        grDrawString ( sL, sT, sColor, tbWindow->name );
+    }
+
+// ---------------------------------
+// Controls
+    do_create_controls(tbWindow);
+
+    // Invalidate the tb window.
+    tbWindow->dirty = TRUE;
+    // Invalidade all the controls.
+    if ((void*) tbWindow->titlebar != NULL)
+    {
+        invalidate_window_by_id(
+            tbWindow->titlebar->Controls.minimize_wid );
+        invalidate_window_by_id(
+            tbWindow->titlebar->Controls.maximize_wid );
+        invalidate_window_by_id(
+            tbWindow->titlebar->Controls.close_wid );
+    }
+
+// ----------------------
+// The parent has a valid pointer for the tb window.
+    parent->titlebar = (struct gws_window_d *) tbWindow;
+
+    return (struct gws_window_d *) tbWindow;
+}
+
+// wmCreateWindowFrame:
+// Called by CreateWindow in createw.c
+// #importante:
+// Essa rotina será chamada depois que criarmos uma janela básica,
+// mas só para alguns tipos de janelas, pois nem todos os tipos 
+// precisam de um frame. Ou ainda, cada tipo de janela tem um 
+// frame diferente. Por exemplo: Podemos considerar que um checkbox 
+// tem um tipo de frame.
+// Toda janela criada pode ter um frame.
+// Durante a rotina de criação do frame para uma janela que ja existe
+// podemos chamar a rotina de criação da caption bar, que vai criar os
+// botões de controle ... mas nem toda janela que tem frame precisa
+// de uma caption bar (Title bar).
+// Estilo do frame:
+// Dependendo do estilo do frame, podemos ou nao criar a caption bar.
+// Por exemplo: Uma editbox tem um frame mas não tem uma caption bar.
+// IN:
+// parent = parent window ??
+// window = The window where to build the frame.
+// x
+// y
+// width
+// height
+// style = Estilo do frame.
+// OUT:
+// 0   = ok, no erros;
+// < 0 = not ok. something is wrong.
+
+int 
+wmCreateWindowFrame ( 
+    struct gws_window_d *parent,
+    struct gws_window_d *window,
+    unsigned long border_size,
+    unsigned int border_color1,
+    unsigned int border_color2,
+    unsigned int border_color3,
+    unsigned int ornament_color1,
+    unsigned int ornament_color2,
+    int frame_style ) 
+{
+    int useFrame       = FALSE;
+    int useTitleBar    = FALSE;
+    int useTitleString = FALSE;
+    int useIcon        = FALSE;
+    int useStatusBar   = FALSE;
+    int useBorder      = FALSE;
+    // ...
+
+// #bugbug
+// os parâmetros 
+// parent, 
+// x,y,width,height 
+// não estão sendo usados.
+
+// Overlapped.
+// Janela de aplicativos.
+
+// Title bar and status bar.
+    struct gws_window_d  *tbWindow;
+    struct gws_window_d  *sbWindow;
+    int id=-1;  //usado pra registrar janelas filhas.
+    int Type=0;
+// Border size
+    unsigned long BorderSize = (border_size & 0xFFFF);
+// Border color
+    unsigned int BorderColor1 = border_color1;  // top/left
+    unsigned int BorderColor2 = border_color2;  // right/bottom
+    unsigned int BorderColor3 = border_color3;
+// Ornament color
+    unsigned int OrnamentColor1 = ornament_color1;
+    unsigned int OrnamentColor2 = ornament_color2;
+// Title bar height
+    unsigned long TitleBarHeight = 
+        METRICS_TITLEBAR_DEFAULT_HEIGHT;
+
+// Titlebar color for active window.
+    unsigned int TitleBarColor = 
+        (unsigned int) get_color(csiActiveWindowTitleBar);
+
+    int icon_id = ICON_ID_APP; //dfault.
+
+    //unsigned long X = (x & 0xFFFF);
+    //unsigned long Y = (y & 0xFFFF);
+    //unsigned long Width = (width & 0xFFFF);
+    //unsigned long Height = (height & 0xFFFF);
+
+// #todo
+// Se estamos minimizados ou a janela mãe está minimizada,
+// então não temos o que pintar.
+// #todo
+// O estilo de frame é diferente se estamos em full screen ou maximizados.
+// não teremos bordas laterais
+// #todo
+// Cada elemento da frame que incluimos, incrementa
+// o w.top do retângulo da área de cliente.
+
+// check parent
+    if ((void*) parent == NULL){
+        //server_debug_print ("wmCreateWindowFrame: [FAIL] parent\n");
+        return -1;
+    }
+    if (parent->used != TRUE || parent->magic != 1234){
+        return -1;
+    }
+
+// check window
+    if ((void*) window == NULL){
+        //server_debug_print ("wmCreateWindowFrame: [FAIL] window\n");
+        return -1;
+    }
+    if (window->used != TRUE || window->magic != 1234){
+        return -1;
+    }
+
+// Uma overlapped maximizada não tem borda.
+    int IsMaximized = FALSE;
+    if (window->style & WS_MAXIMIZED){
+        IsMaximized=TRUE;
+    }
+// Uma overlapped maximizada não tem borda.
+    int IsFullscreen = FALSE;
+    if (window->style & WS_FULLSCREEN){
+        IsFullscreen=TRUE;
+    }
+
+// #bugbug
+// Estamos mascarando pois os valores anda corrompendo.
+    window->absolute_x = (window->absolute_x & 0xFFFF);
+    window->absolute_y = (window->absolute_y & 0xFFFF);
+    window->width  = (window->width  & 0xFFFF);
+    window->height = (window->height & 0xFFFF);
+
+// #test:
+// Defaults:
+// Colocamos default, depois muda de acordo com os parametros.
+    window->frame.titlebar_icon_id = ICON_ID_DEFAULT;
+    // ...
+
+// #todo
+// Desenhar o frame e depois desenhar a barra de títulos
+// caso esse estilo de frame precise de uma barra.
+// Editbox
+// EDITBOX NÃO PRECISA DE BARRA DE TÍTULOS.
+// MAS PRECISA DE FRAME ... QUE SERÃO AS BORDAS.
+
+// Type
+// Qual é o tipo da janela em qual precisamos
+// criar o frame. Isso indica o tipo de frame.
+
+    Type = window->type;
+
+    switch (Type){
+
+    case WT_EDITBOX:
+    case WT_EDITBOX_MULTIPLE_LINES:
+        useFrame=TRUE; 
+        useIcon=FALSE;
+        useBorder=TRUE;
+        break;
+
+    // Uma overlapped maximizada não tem borda.
+    case WT_OVERLAPPED:
+        useFrame=TRUE; 
+        useTitleBar=TRUE;  // Normalmente uma janela tem a barra de t[itulos.
+        useTitleString=TRUE;
+        useIcon=TRUE;
+        useBorder=TRUE;
+        // Quando a overlapped esta em fullscreen,
+        // então não usamos title bar,
+        // nem bordas.
+        if (window->style & WS_FULLSCREEN)
+        {
+            //useFrame=FALSE;
+            useTitleBar=FALSE;
+            useTitleString=FALSE;
+            useIcon=FALSE;
+            useBorder=FALSE;
+        }
+        if (window->style & WS_STATUSBAR){
+            useStatusBar=TRUE;
+        }
+        break;
+
+    case WT_BUTTON:
+    case WT_ICON:
+        useFrame=TRUE;
+        useIcon=FALSE;
+        break;
+
+    //default: break;
+    };
+
+    if (useFrame == FALSE){
+        //server_debug_print ("wmCreateWindowFrame: [ERROR] This type does not use a frame.\n");
+        return -1;
+    }
+
+// ===============================================
+// editbox
+
+    if ( Type == WT_EDITBOX_SINGLE_LINE || 
+         Type == WT_EDITBOX_MULTIPLE_LINES )
+    {
+
+        // #todo
+        // The window structure has a element for border size
+        // and a flag to indicate that border is used.
+        // It also has a border style.
+
+        // #todo: Essa rotina de cores deve ir para
+        // dentro da função __draw_window_border().
+        // ou passar tudo via argumento.
+        // ou criar uma rotina para mudar as caracteristicas da borda.
+         
+        // Se tiver o foco.
+        if (window == keyboard_owner){
+            BorderColor1 = (unsigned int) get_color(csiWWFBorder);
+            BorderColor2 = (unsigned int) get_color(csiWWFBorder);
+            BorderSize = 2;  //#todo: worker
+        }else if (window != keyboard_owner){
+            BorderColor1 = (unsigned int) get_color(csiWindowBorder);
+            BorderColor2 = (unsigned int) get_color(csiWindowBorder);
+            BorderSize = 1;  //#todo: worker
+        };
+        
+        window->border_size = 0;
+        window->borderUsed = FALSE;
+        if (useBorder == TRUE){
+            window->border_color1 = (unsigned int) BorderColor1;
+            window->border_color2 = (unsigned int) BorderColor2;
+            window->border_size = BorderSize;
+            window->borderUsed = TRUE;
+        }
+
+        // Draw the border of an edit box.
+        __draw_window_border(parent,window);
+        return 0;
+    }
+
+// ===============================================
+// Overlapped?
+// Draw border, titlebar and status bar.
+// #todo:
+// String right não pode ser maior que 'last left' button.
+
+    if (Type == WT_OVERLAPPED)
+    {
+        // #todo
+        // Maybe we nned border size and padding size.
+        
+        // Consistente para overlapped.
+        //BorderSize = METRICS_BORDER_SIZE;
+        // ...
+        
+        // #todo
+        // The window structure has a element for border size
+        // and a flag to indicate that border is used.
+        // It also has a border style.
+
+        // Se tiver o foco.
+        //if (window->focus == TRUE){
+        //    BorderColor1 = (unsigned int) get_color(csiWWFBorder);
+        //    BorderColor2 = (unsigned int) get_color(csiWWFBorder);
+        //}else{
+        //    BorderColor1 = (unsigned int) get_color(csiWindowBorder);
+        //    BorderColor2 = (unsigned int) get_color(csiWindowBorder);
+        //};
+
+        //window->border_size = 0;
+        //window->borderUsed = FALSE;
+        //if (useBorder==TRUE){
+            //window->border_color1 = (unsigned int) BorderColor1;
+            //window->border_color2 = (unsigned int) BorderColor2;
+            //window->border_size   = BorderSize;
+        //    window->borderUsed    = TRUE;
+        //}
+
+        // Quatro bordas de uma janela overlapped.
+        // Uma overlapped maximizada não tem bordas.
+        window->borderUsed = FALSE;
+        
+        if ( IsMaximized == FALSE && 
+             IsFullscreen == FALSE)
+        {
+            //WindowManager.is_fullscreen = TRUE;
+            //WindowManager.fullscreen_window = window;
+            
+            window->borderUsed = FALSE;
+            __draw_window_border(parent,window);
+            // Now we have a border size.
+        }
+
+        // #important:
+        // The border in an overlapped window will affect
+        // the top position of the client area rectangle.
+        window->rcClient.top += window->border_size;
+
+        //
+        // Title bar
+        //
+
+        // #todo
+        // The window structure has a flag to indicate that
+        // we are using titlebar.
+        // It also has a title bar style.
+        // Based on this style, we can setup some
+        // ornaments for this title bar.
+        // #todo
+        // Simple title bar.
+        // We're gonna have a wm inside the display server.
+        // The title bar will be very simple.
+        // We're gonna have a client area.
+        // #bugbug
+        // Isso vai depender da resolução da tela.
+        // Um tamanho fixo pode fica muito fino em uma resolução alta
+        // e muito largo em uma resolução muito baixa.
+        
+        // Title bar
+        // Se a janela overlapped tem uma title bar.
+        // #todo: Essa janela foi registrada?
+        if (useTitleBar == TRUE)
+        {
+            // This is a application window.
+            if (window->style & WS_APP)
+                icon_id = ICON_ID_APP;
+            // This is a application window.
+            if (window->style & WS_DIALOG) 
+                icon_id = ICON_ID_FILE;
+            // This is a application window.
+            if (window->style & WS_TERMINAL) 
+                icon_id = ICON_ID_TERMINAL;
+
+            // IN: 
+            // parent, border size, height, color, ornament color,
+            //  use icon, use string.
+            tbWindow = 
+                (struct gws_window_d *) do_create_titlebar(
+                    window,
+                    TitleBarHeight,
+                    TitleBarColor,
+                    OrnamentColor1,
+                    useIcon,
+                    icon_id,
+                    useTitleString );
+
+            // Register window
+            id = RegisterWindow(tbWindow);
+            if (id<0){
+                //server_debug_print ("wmCreateWindowFrame: Couldn't register window\n");
+                return -1;
+            }
+
+            // #important:
+            // The Titlebar in an overlapped window will affect
+            // the top position of the client area rectangle.
+            // Depois de pintarmos a titlebar,
+            // temos que atualizar o top da área de cliente.
+            window->rcClient.top += window->titlebar_height;
+        }  //--use title bar.
+        // ooooooooooooooooooooooooooooooooooooooooooooooo
+
+        // #todo:
+        // nessa hora podemos pintar a barra de menu, se o style
+        // da janela assim quiser. Depois disso precisaremos
+        // atualizar o top da área de cliente.
+        //window->rcClient.top += window->titlebar_height;
+
+        // Status bar
+        // (In the bottom)
+        // #todo: It turns the client area smaller.
+        //if (window->style & WS_STATUSBAR)
+        if (useStatusBar == TRUE)
+        {
+            //#debug
+            //printf ("sb\n");
+            //while(1){}
+
+            // #todo
+            // Move these variables to the start of the routine.
+            unsigned long sbLeft=0;
+            unsigned long sbTop=0;
+            unsigned long sbWidth=8;
+            unsigned long sbHeight=32;
+
+            window->statusbar_height=sbHeight;
+
+            unsigned int sbColor = COLOR_STATUSBAR4;
+            window->statusbar_color = (unsigned int) sbColor;
+
+            // ??
+            // Se tem uma parent válida?
+            // Porque depende da parent?
+            //if ( (void*) window->parent != NULL )
+            if ((void*) window != NULL)
+            {
+                // Relative to the app window.
+                sbTop = 
+                (unsigned long) (window->rcClient.height - window->statusbar_height);
+                // #bugbug
+                // We're gonna fail if we use
+                // the whole width 'window->width'.
+                // Clipping?
+                sbWidth = 
+                (unsigned long) (window->width - 4);
+            }
+
+            // Estamos relativos à nossa área de cliente
+            // Seja ela do tipo que for.
+            // #todo: apos criarmos a janela de status no fim da
+            // area de cliente, então precisamos redimensionar a
+            // nossa área de cliente.
+            
+            // #debug
+            //printf ("l=%d t=%d w=%d h=%d\n",
+            //    sbLeft, sbTop, sbWidth, sbHeight );
+            //while(1){}
+            
+            sbWindow = 
+                (void *) doCreateWindow ( 
+                             WT_SIMPLE, 
+                             0, // Style 
+                             1, 
+                             1, 
+                             "Statusbar", 
+                             sbLeft, sbTop, sbWidth, sbHeight,
+                             (struct gws_window_d *) window, 
+                             0, 
+                             window->statusbar_color,  //frame
+                             window->statusbar_color,  //client
+                             (unsigned long) window->rop );   // rop_flags  
+            
+            // Depois de pintarmos a status bar, caso o estilo exija,
+            // então devemos atualizar a altura da área de cliente.
+            window->rcClient.height -= window->statusbar_height;
+
+            if ((void *) sbWindow == NULL){
+                //server_debug_print ("wmCreateWindowFrame: sbWindow fail \n");
+                return -1;
+            }
+            sbWindow->type = WT_SIMPLE;
+            sbWindow->isStatusBar = TRUE;
+            window->statusbar = (struct gws_window_d *) sbWindow;  // Window pointer.
+            // Register window
+            id = RegisterWindow(tbWindow);
+            if (id<0){
+                //server_debug_print ("wmCreateWindowFrame: Couldn't register window\n");
+                return -1;
+            }
+        }
+
+        // ok
+        return 0;
+    }
+
+// ===============================================
+// Icon
+
+    if (Type == WT_ICON)
+    {
+        window->borderUsed = TRUE;
+        __draw_window_border(parent,window);
+        //printf("border\n"); while(1){}
+        return 0;
+    }
+
+    return 0;
+}
+
 // RegisterWindow: 
 // Register a window.
 // OUT:

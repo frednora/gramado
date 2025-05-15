@@ -97,16 +97,19 @@ eof:
 
 ; S = Skip menu | M = Open menu.
 .SkipMenu:     db 'S'
+; Signature
 .Signature00:  db 'C' 
 .Signature01:  db 'N' 
-.Signature02:  db 'F' 
+.Signature02:  db 'F'
+; 0x00=Desktop, 0x01=Server, 0x02=Embedded
+.ProductType:  db 0x00
 ; #todo
 ; Default resolution mode. For VESA initialization.
 ; 0x00 320x200 | 0x01 640x480 | 0x02 800x600 | ...
 .Resolution:   db 0x02
 
 ; Padding until 512
-    times (512 -5) db 0x00
+    times (512 -6) db 0x00
 ;-----------------------------------
 
 

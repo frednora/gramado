@@ -328,21 +328,20 @@ static int __gwssrv_init_globals(void)
 // == buffers ======================================
 //
 
+// Let's setup the screens[i].
+// 0=frontbuffer and 1=backbuffer.
 // Clear the list of pointers.
+// Setup pointers.
 
     for (i=0; i<MAX_SCREENS; ++i){ 
         screens[i] = 0; 
     };
-
-// Setup pointers;
-
     screens[SCREEN_FRONTBUFFER] = (unsigned long) ____FRONTBUFFER_VA;
     screens[SCREEN_BACKBUFFER]  = (unsigned long) ____BACKBUFFER_VA;
-
     if ( screens[SCREEN_FRONTBUFFER] == 0 || 
          screens[SCREEN_BACKBUFFER] == 0 )
     {
-        printf ("gwssrv_init_globals: [FAIL] screens\n");
+        printf ("gwssrv_init_globals: screens\n");
         exit(1);
     }
 
@@ -350,14 +349,15 @@ static int __gwssrv_init_globals(void)
     refresh_device_screen_flag = FALSE;    
     refresh_valid_screen_flag = FALSE;
 
-
 // Initialize the default color scheme.
+// See: wm.c
     int cs_status=-1;
     cs_status = (int) gwssrv_initialize_default_color_scheme();
     if (cs_status){
         printf("gwssrv_init_globals: Color scheme\n");
         exit(1);
     }
+
     //...
 
     return 0;

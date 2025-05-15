@@ -1,15 +1,18 @@
-
 // metrics.h
+// Some default values for window metrics for
+// a consistent UI style.
+// Created by Fred Nora.
 
-#ifndef __METRICS_H
-#define __METRICS_H    1
+// #obs:
+// Um conjunto de meditas consistentes caracterizam 
+// um estilo próprio.
+
+#ifndef __UI_METRICS_H
+#define __UI_METRICS_H    1
 
 //
 // Metrics - Consistent UI style
 //
-
-// Conjunto de meditas consistentes
-// que caracterizam um estilo próprio.
 
 // pad
 // The icon on title bar.
@@ -38,20 +41,30 @@
 
 // Default height
 // 24 = (16 +2+2 +2+2)
-#define METRICS_TITLEBAR_DEFAULT_HEIGHT  24
+//#define METRICS_TITLEBAR_DEFAULT_HEIGHT  24
+#define METRICS_TITLEBAR_DEFAULT_HEIGHT  26
+
 // 40 = (32 +2+2 +2+2)
 #define METRICS_SUPERTITLEBAR_DEFAULT_HEIGHT  40
+//#define METRICS_SUPERTITLEBAR_DEFAULT_HEIGHT  41
+
+// The difference between the titlebar height and 
+// the size of the button.
+#define __gap_BT_TB  4
+//#define __gap_BT_TB  3
+//#define __gap_BT_TB  2
 
 // Control width.
 // #todo: Bigger will crash?
 #define METRICS_TITLEBAR_CONTROLS_DEFAULT_WIDTH \
-    (METRICS_TITLEBAR_DEFAULT_HEIGHT-4)
+    (METRICS_TITLEBAR_DEFAULT_HEIGHT - __gap_BT_TB)
+
 // Control height.
 // #todo: Bigger will crash?
 // Bigger will paint outside the titlebar.
 // It is accepted in some cases. Just like a skin.
 #define METRICS_TITLEBAR_CONTROLS_DEFAULT_HEIGHT \
-    (METRICS_TITLEBAR_DEFAULT_HEIGHT-4)
+    (METRICS_TITLEBAR_DEFAULT_HEIGHT - __gap_BT_TB)
 
 // Ornament size
 // Usado para explicitar se a janela é ativa ou não
@@ -74,7 +87,5 @@
 
 // ...
 
-
 #endif    
-
 
