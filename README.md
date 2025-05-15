@@ -327,5 +327,5 @@ The source code uses the MIT license.
 ## Quotes:
 
 ```
-    "Transfiguration"
+    "Retro tank"
 ```
