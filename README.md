@@ -99,7 +99,7 @@ GramadoOS is a 64bit graphical operating system. It has a bootloader, a kernel a
 This is the first ditribution created using the Gramado OS kernel.
 
 This image shows the first process that runs after the kernel initialization.
-![Screenshot](https://raw.githubusercontent.com/polard8/screenshots/main/kernel-01.png)
+![Screenshot](https://raw.githubusercontent.com/efgab/screenshots/main/kernel-01.png)
 
 You can install a desktop environment on top of the kernel. The default, the desktop environment 
 can be found in the xde/ folder.
@@ -156,7 +156,7 @@ You can use the zbase/usys/libs/ or zbase/usys/commands/alpha/libs/ to create Po
 
 This is a screenshot of the desktop environment running on top of the kernel.
 You can find code in the windows/ folder.
-![Screenshot](https://raw.githubusercontent.com/polard8/screenshots/main/gramado-8.png)
+![Screenshot](https://raw.githubusercontent.com/efgab/screenshots/main/gramado-8.png)
 
 
 ## Gramado API 
@@ -167,7 +167,7 @@ You can find the API to create client-side GUI application in os/apps/api/.
 
 This is a screenshot of 3D demo running on top of the kernel.
 You can find code in the zde/aurora/ folder.
-![Screenshot](https://raw.githubusercontent.com/polard8/screenshots/main/gramado-3.png)
+![Screenshot](https://raw.githubusercontent.com/efgab/screenshots/main/gramado-3.png)
 
 ## The source code.
 
