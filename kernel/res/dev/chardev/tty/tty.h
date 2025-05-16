@@ -263,6 +263,11 @@ struct tty_d
 
     struct tty_queue output_queue;     // Output buffer.
 
+// Saving prev char into the struct
+// to avoid conflict when multiple threads are calling the
+// same worker.
+    char prev_char;
+
 //
 // == Synchronization ========
 //

@@ -1283,12 +1283,12 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
             fp->tid_waiting = -1;
             if (fp->sync.block_on_write_full == TRUE)
             {
-                 //#debug
-                 //debug_print("__write_imp: SLEEP WRITER\n");
-                 fp->tid_waiting = current_thread;
-                 //do_thread_waiting(current_thread);
-                 yield (current_thread);
-                 goto fail;
+                //#debug
+                //debug_print("__write_imp: SLEEP WRITER\n");
+                fp->tid_waiting = current_thread;
+                //do_thread_waiting(current_thread);
+                yield (current_thread);
+                goto fail;
             }
             yield (current_thread); 
             goto fail;

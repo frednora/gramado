@@ -439,7 +439,6 @@ console_interrupt(
         goto fail;
     }
 
-
     switch (DeviceType){
 
         // keyboard
@@ -504,7 +503,6 @@ int console_get_current_virtual_console(void)
 {
     return (int) fg_console;
 }
-
 
 // Called by: 
 // __local_ps2kbd_procedure in ps2kbd.c
@@ -898,7 +896,7 @@ void console_outbyte (int c, int console_number)
 
     register int Ch = c;
     int n = (int) console_number;
-    static char prev=0;
+
 // char support.
     unsigned long __cWidth  = gwsGetCurrentFontCharWidth();
     unsigned long __cHeight = gwsGetCurrentFontCharHeight();
@@ -955,7 +953,7 @@ void console_outbyte (int c, int console_number)
 // Início da próxima linha. 
 // not used!!!  "...\r\n";
 
-    if ( Ch == '\n' && prev == '\r' ) 
+    if ( Ch == '\n' && CONSOLE_TTYS[n].prev_char == '\r' ) 
     {
         // #todo: 
         // Melhorar esse limite.
@@ -965,11 +963,11 @@ void console_outbyte (int c, int console_number)
             }
             // Última linha.
             CONSOLE_TTYS[n].cursor_y = ( CONSOLE_TTYS[n].cursor_bottom -1 );
-            prev = Ch; 
+            CONSOLE_TTYS[n].prev_char = Ch; 
         }else{
             CONSOLE_TTYS[n].cursor_y++;
             CONSOLE_TTYS[n].cursor_x = CONSOLE_TTYS[n].cursor_left;
-            prev = Ch;
+            CONSOLE_TTYS[n].prev_char = Ch;
         };
         return;
     }
@@ -977,7 +975,7 @@ void console_outbyte (int c, int console_number)
 // Próxima linha no modo terminal.
 // "...\n"
 
-    if ( Ch == '\n' && prev != '\r' ) 
+    if ( Ch == '\n' && CONSOLE_TTYS[n].prev_char != '\r' ) 
     {
         // Se o line feed apareceu quando estamos na ultima linha
         if ( CONSOLE_TTYS[n].cursor_y >= CONSOLE_TTYS[n].cursor_bottom){
@@ -985,7 +983,7 @@ void console_outbyte (int c, int console_number)
                 console_scroll_rect(n,CONSOLE_SCROLL_DIRECTION_UP);
             }
             CONSOLE_TTYS[n].cursor_y = (CONSOLE_TTYS[n].cursor_bottom -1);
-            prev = Ch;
+            CONSOLE_TTYS[n].prev_char = Ch;
         }else{
             CONSOLE_TTYS[n].cursor_y++;
             // Retornaremos mesmo assim ao início da linha 
@@ -1005,19 +1003,26 @@ void console_outbyte (int c, int console_number)
             // Obs: No caso estarmos imprimindo em um editor 
             // então não devemos voltar ao início da linha.
 
-            prev = Ch;
+            CONSOLE_TTYS[n].prev_char = Ch;
         };
 
         return;
     }
 
+// Apenas voltar ao início da linha.
+    if (Ch == '\r')
+    {
+        CONSOLE_TTYS[n].cursor_x = CONSOLE_TTYS[n].cursor_left;
+        CONSOLE_TTYS[n].prev_char = Ch;
+        return; 
+    }
+
 // TAB
 // #todo: Criar a variável 'g_tab_size'.
-
-    if ( Ch == '\t' ) 
+    if (Ch == '\t') 
     {
         CONSOLE_TTYS[n].cursor_x += (8);
-        prev = Ch;
+        CONSOLE_TTYS[n].prev_char = Ch;
         return; 
 
         // Não adianta só avançar, tem que apagar o caminho até lá.
@@ -1039,14 +1044,6 @@ void console_outbyte (int c, int console_number)
     //    return;
     //};
 
-// Apenas voltar ao início da linha.
-    if (Ch == '\r')
-    {
-        CONSOLE_TTYS[n].cursor_x = CONSOLE_TTYS[n].cursor_left;
-        prev = Ch;
-        return; 
-    }
-
 // Space
 // #bugbug 
 // Com isso o ascii 0x20 foi pintado, 
@@ -1056,17 +1053,19 @@ void console_outbyte (int c, int console_number)
     if (Ch == 0x20)
     {
         CONSOLE_TTYS[n].cursor_x++;
-        prev = Ch;
+        CONSOLE_TTYS[n].prev_char = Ch;
         return; 
     }
 
 // Backspace
 
     //if ( Ch == '\b' )
-    if (Ch == 0x8)
+    if (Ch == 0x8) 
     {
-        CONSOLE_TTYS[n].cursor_x--; 
-        prev = Ch;
+        if (CONSOLE_TTYS[n].cursor_x > CONSOLE_TTYS[n].cursor_left)
+            CONSOLE_TTYS[n].cursor_x--;
+        // Optionally handle crossing to the previous line.
+        CONSOLE_TTYS[n].prev_char = Ch;
         return;
     }
 
@@ -1132,7 +1131,7 @@ void console_outbyte (int c, int console_number)
         __ConsoleDraw_Outbyte(Ch,n);
     }
 
-    prev = Ch;
+    CONSOLE_TTYS[n].prev_char = Ch;
 }
 
 void console_outbyte2 (int c, int console_number)
@@ -1142,7 +1141,7 @@ void console_outbyte2 (int c, int console_number)
 
     register int Ch = c;
     int n = (int) console_number;
-    static char prev=0;
+
 // char support.
     unsigned long __cWidth  = gwsGetCurrentFontCharWidth();
     unsigned long __cHeight = gwsGetCurrentFontCharHeight();
@@ -1201,7 +1200,7 @@ void console_outbyte2 (int c, int console_number)
 // Início da próxima linha. 
 // not used!!!  "...\r\n";
 
-    if ( Ch == '\n' && prev == '\r' ) 
+    if ( Ch == '\n' && CONSOLE_TTYS[n].prev_char == '\r' ) 
     {
         // #todo: 
         // Melhorar esse limite.
@@ -1212,12 +1211,12 @@ void console_outbyte2 (int c, int console_number)
             }
             // Vai para última linha
             CONSOLE_TTYS[n].cursor_y = ( CONSOLE_TTYS[n].cursor_bottom -1 );
-            prev = Ch; 
+            CONSOLE_TTYS[n].prev_char = Ch; 
         // Avança uma linha e volta para o começo da linha.
         }else{
             CONSOLE_TTYS[n].cursor_y++;
             CONSOLE_TTYS[n].cursor_x = CONSOLE_TTYS[n].cursor_left;
-            prev = Ch;
+            CONSOLE_TTYS[n].prev_char = Ch;
         };
         return;
     }
@@ -1225,7 +1224,7 @@ void console_outbyte2 (int c, int console_number)
 // Próxima linha no modo terminal.
 // "...\n"
 
-    if ( Ch == '\n' && prev != '\r' ) 
+    if ( Ch == '\n' && CONSOLE_TTYS[n].prev_char != '\r' ) 
     {
         // Se o line feed apareceu quando estamos na ultima linha
         if ( CONSOLE_TTYS[n].cursor_y >= CONSOLE_TTYS[n].cursor_bottom){
@@ -1233,7 +1232,7 @@ void console_outbyte2 (int c, int console_number)
                 console_scroll_rect(n,CONSOLE_SCROLL_DIRECTION_UP);
             }
             CONSOLE_TTYS[n].cursor_y = (CONSOLE_TTYS[n].cursor_bottom -1);
-            prev = Ch;
+            CONSOLE_TTYS[n].prev_char = Ch;
         }else{
             CONSOLE_TTYS[n].cursor_y++;
             // Retornaremos mesmo assim ao início da linha 
@@ -1253,7 +1252,7 @@ void console_outbyte2 (int c, int console_number)
             // Obs: No caso estarmos imprimindo em um editor 
             // então não devemos voltar ao início da linha.
 
-            prev = Ch;
+            CONSOLE_TTYS[n].prev_char = Ch;
         };
 
         return;
@@ -1265,7 +1264,7 @@ void console_outbyte2 (int c, int console_number)
     if ( Ch == '\t' ) 
     {
         CONSOLE_TTYS[n].cursor_x += (8);
-        prev = Ch;
+        CONSOLE_TTYS[n].prev_char = Ch;
         return; 
 
         // Não adianta só avançar, tem que apagar o caminho até lá.
@@ -1291,7 +1290,7 @@ void console_outbyte2 (int c, int console_number)
     if (Ch == '\r')
     {
         CONSOLE_TTYS[n].cursor_x = CONSOLE_TTYS[n].cursor_left;
-        prev = Ch;
+        CONSOLE_TTYS[n].prev_char = Ch;
         return; 
     }
 
@@ -1304,7 +1303,7 @@ void console_outbyte2 (int c, int console_number)
     if (Ch == 0x20)
     {
         CONSOLE_TTYS[n].cursor_x++;
-        prev = Ch;
+        CONSOLE_TTYS[n].prev_char = Ch;
         return; 
     }
 
@@ -1312,7 +1311,7 @@ void console_outbyte2 (int c, int console_number)
     //if (Ch == 0x8)
     if ( Ch == '\b' )
     {
-        prev = Ch;
+        CONSOLE_TTYS[n].prev_char = Ch;
         if (CONSOLE_TTYS[n].cursor_x > 0){
             CONSOLE_TTYS[n].cursor_x--; 
             return;
@@ -1391,7 +1390,7 @@ void console_outbyte2 (int c, int console_number)
     }
 
 // Atualisa o prev.
-    prev = Ch;
+    CONSOLE_TTYS[n].prev_char = Ch;
 
 // Refresh
     unsigned long x=0;

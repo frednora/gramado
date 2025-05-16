@@ -72,11 +72,10 @@ void test_fat16_find_volume_info(void)
 // Put the name into a local buffer.
     char name_buffer[16];
     memset(name_buffer, 0, 16);
+
     register int i=0;
-    for (i=0; i<(8+3); i++)
-    {
-        name_buffer[i] = 
-            vol_label_directory_entry->FileName[i];
+    for (i=0; i<(8+3); i++){
+        name_buffer[i] = vol_label_directory_entry->FileName[i];
     };
 
 // Show info:    
@@ -88,7 +87,6 @@ void test_fat16_find_volume_info(void)
 fail:
     return;
 }
-
 
 // fat16_get_entry_info:
 // IN:
@@ -167,7 +165,7 @@ from_FAT_name (
 
     for (j=7; j >= 0 && src[j] == 0x20; j--)
     {
-        // Nothing.
+        // Nothing
     };
 
     k=0;
