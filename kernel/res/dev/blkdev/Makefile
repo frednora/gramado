@@ -78,7 +78,7 @@ disk_r.o disk_w.o storage.o
 
 all:
 
-# ata
+# ATA
 	$(CC) -c ata/ata.c     $(KERNEL_INCLUDE) $(CFLAGS) -o ata.o 
 	$(CC) -c ata/atadma.c  $(KERNEL_INCLUDE) $(CFLAGS) -o atadma.o 
 	$(CC) -c ata/atahdd.c  $(KERNEL_INCLUDE) $(CFLAGS) -o atahdd.o 
@@ -87,6 +87,9 @@ all:
 	$(CC) -c ata/atapci.c  $(KERNEL_INCLUDE) $(CFLAGS) -o atapci.o 
 	$(CC) -c ata/disk_r.c  $(KERNEL_INCLUDE) $(CFLAGS) -o disk_r.o
 	$(CC) -c ata/disk_w.c  $(KERNEL_INCLUDE) $(CFLAGS) -o disk_w.o
+
+# AHCI
+#	$(CC) -c ahci/ahci.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ahci.o 
 
 # storage
 	$(CC) -c storage.c $(KERNEL_INCLUDE) $(CFLAGS) -o storage.o 

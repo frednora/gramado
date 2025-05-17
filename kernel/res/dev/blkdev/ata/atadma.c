@@ -44,12 +44,10 @@ int ide_dma_read_status (int p)
 }
 
 /*
- ****************************************
  * ide_dma_data:
  *     O que segue é um suporte ao controlador de DMA para uso nas rotinas de IDE. 
  *     #todo Nelson, Não se esqueça de habiliatar o // Bus Master Enable
  *  no espaço de configuraçao PCI (offset 0x4 Command Register)
- *
  * 2018 - Created by Nelson Cole. 
  */
 

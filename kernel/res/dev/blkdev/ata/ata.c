@@ -1819,7 +1819,6 @@ done:
 // DDINIT_ata:
 // Device driver initialization.
 // Rotina de diálogo com o driver ATA. 
-// Called by init_executive() in system.c
 // #importante
 // Nessa hora ja temos as estruturas de disk e volume inicializadas.
 // entao as estruturas usadas pelo driver ata, pode
@@ -1835,8 +1834,10 @@ DDINIT_ata (
     int msg, 
     unsigned long long1 )
 {
-// Called by zeroInitializeSystemComponents in system.c.
+// Called by storageInitialize() in storage.c.
 // Do some ata routine given the operation number.
+// Probably the kernel already have a list of found 
+// PCI devices at this time, and we're gonna use this list.
 
     int Status = 1;  // Error.
 

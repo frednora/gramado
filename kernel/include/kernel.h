@@ -244,6 +244,7 @@
 // Block devices
 // ata, sata
 #include "../res/dev/blkdev/ata/ata.h"
+//#include "../res/dev/blkdev/ahci/ahci.h"
 // Storage manager.
 #include "../res/dev/blkdev/storage.h"
 
