@@ -152,20 +152,24 @@ struct sockcred
 // The socket structure.
 struct socket_d
 {
+    // Core object information
     object_type_t objectType;
     object_class_t objectClass;
     int used;
     int magic;
     int id;
 
-    int family;
-    int type;
-    int protocol;
+    // Basic socket parameters
+    int family;    // e.g. AF_INET, AF_INET6
+    int type;      // e.g. SOCK_STREAM, SOCK_DGRAM
+    int protocol;  // e.g. IPPROTO_TCP, IPPROTO_UDP
 
+// Ownership information.
 // process, user, group.
     pid_t pid;
     uid_t uid; 
     gid_t gid;
+
 // maybe
     //struct sockpeercred  peercred;
 
@@ -176,10 +180,18 @@ struct socket_d
 // 1=LOCAL | 2=REMOTE
     int connection_type;
 
+// Local
 // ip and port.
     unsigned int ip_ipv4;
     unsigned long ip_ipv6;
     unsigned short port;
+
+// Remote
+// ip and port.
+    //unsigned int remote_ip_ipv4;
+    //unsigned long remote_ip_ipv6;
+    //unsigned short remote_port;
+
 
 //
 // Protocol flags
@@ -229,19 +241,19 @@ struct socket_d
     int clientfd_on_server;
 // ====================================
 
-// Nosso arquivo.
-// Eh o objeto socket??
+// Is this a socket file?
+// Associated File Data (if sockets are file objects in your system)
     file *private_file;
-// testing
+// Debugging magic string
     char magic_string[8];
 
-// Local structures for address.
+// Local address storage (if needed as a fallback)
     struct sockaddr     addr;
     struct sockaddr_in  addr_in; 
 
-// #todo
-// Navegation
-    //struct socket_d *next;
+// Navigation
+// If you need to chain sockets in a list.
+    struct socket_d *next;
 };
 
 // see: socket.c

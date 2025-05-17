@@ -1,5 +1,6 @@
-
 // arp.h
+// Support for ARP protocol.
+// Created by Fred Nora.
 
 #ifndef __NET_ARP_H 
 #define __NET_ARP_H    1
@@ -12,7 +13,7 @@
 #define ARP_OPC_REPLY    0x0002
 
 // ARP header length
-#define ARP_HEADER_LENGHT  28
+#define ARP_HEADER_LENGTH  28
 
 // arp struct
 struct ether_arp 
@@ -42,19 +43,16 @@ struct ether_arp
 
 } __attribute__((packed)); 
 
-
-
 // arp cache item
 // ipv4 networks.
 struct arp_cache_item_d
 {
     int used;
     int magic;
-    int id;  // Table index.
+    int id;
     uint8_t ipv4_address[4];
     uint8_t mac_address[6];
-    // #todo
-    // Aging? jiffies?
+    // #todo: Aging, jiffies, timestamp, etc.
 };
 
 // see: arp.c

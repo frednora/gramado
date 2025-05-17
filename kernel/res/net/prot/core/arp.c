@@ -289,7 +289,7 @@ network_send_arp(
 // Copy the arp header into the buffer.
 // 28 bytes
 // It starts right after the ethernet header.
-    for (i=0; i<ARP_HEADER_LENGHT; i++){
+    for (i=0; i<ARP_HEADER_LENGTH; i++){
         frame[ETHERNET_HEADER_LENGHT + i] = (unsigned char) src_arp[i]; 
     };
 
@@ -298,7 +298,7 @@ network_send_arp(
     // 14 + 28 = 42
     size_t ARP_TOTAL_SIZE = 
         ( ETHERNET_HEADER_LENGHT + \
-          ARP_HEADER_LENGHT );
+          ARP_HEADER_LENGTH );
 // Sending a frame!
     //e1000_send( currentNIC, ARP_TOTAL_SIZE, frame );
     // #test
@@ -403,7 +403,7 @@ network_handle_arp(
     }
 
 // The minimum size.
-    //if (size < ARP_HEADER_LENGHT){
+    //if (size < ARP_HEADER_LENGTH){
     //    printk("network_handle_arp: size\n");
     //    goto fail;
     //}
@@ -536,6 +536,4 @@ fail:
     printk("network_handle_arp: Fail\n");
     return;
 }
-
-
 

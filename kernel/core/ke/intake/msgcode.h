@@ -14,7 +14,7 @@
 
 #define MSG_NULL  0 
  
-// Window (1-19)  
+// --- Window-related messages (1 - 19) ---
 #define MSG_CREATE        1
 #define MSG_DESTROY       2
 #define MSG_MOVE          3 
@@ -34,13 +34,13 @@
 #define MSG_RESTORE       16
 #define MSG_SHOWDEFAULT   17
 
-// Keyboard (20~23)
+// --- Keyboard messages (20 - 23) ---
 #define MSG_KEYDOWN       20
 #define MSG_KEYUP         21
 #define MSG_SYSKEYDOWN    22
 #define MSG_SYSKEYUP      23
 
-// Mouse (30~39)
+// --- Mouse messages (30 - 39) ---
 #define MSG_MOUSEKEYDOWN     30
 #define MSG_MOUSEKEYUP       31
 #define MSG_MOUSEBUTTONDOWN  30
@@ -54,8 +54,7 @@
 #define MSG_MOUSEENTERED     38    //?? capturou ??
 #define MSG_MOUSEEXITED      39   //?? descapturou ??
 
-// -----------
-
+// --- Command messages (40 - 46) ---
 #define __MSG_COMMAND  40
 #define MSG_COMMAND     __MSG_COMMAND
 #define MSG_SYSCOMMAND  __MSG_COMMAND  
@@ -79,7 +78,7 @@
 // #bugbug: 
 // Temos outro grupo de mensagems abordadndo esse tema logo abaixo.
 
-// Terminal
+// --- Terminal messages (49 - 51) ---
 #define MSG_TERMINAL_COMMAND   49
 #define MSG_TERMINAL_SHUTDOWN  50
 #define MSG_TERMINAL_REBOOT    51
@@ -87,12 +86,12 @@
 // #deprecated
 //#define MSG_DEVELOPER  52
 
-
+// --- Timer messages ---
 // Um timer expirou.
 #define MSG_TIMER  53
 
 //
-// Network
+// --- Network messages ---
 //
 
 // O servidor de rede se comunica com o processo.
@@ -101,13 +100,11 @@
 // O driver de network está notificando um processo em ring3.
 #define MSG_NETWORK_NOTIFY_PROCESS  56
 
-// Mouse (60~62++)
-// mouse support: continuação ...
+// --- Extended Mouse messages (60 - 62++) ---
 #define MSG_MOUSE_DOUBLECLICKED   60
 #define MSG_MOUSE_DRAG            61
 #define MSG_MOUSE_DROP            62
 //...
-
 
 // control+a
 // Seleciona todos os elementos.
@@ -121,12 +118,11 @@
 // control+s
 #define MSG_SAVE    72
 
-// Arrow
+// --- Arrow keys (Control operations) ---
 #define MSG_CONTROL_ARROW_UP     80
 #define MSG_CONTROL_ARROW_DOWN   81
 #define MSG_CONTROL_ARROW_LEFT   82
 #define MSG_CONTROL_ARROW_RIGHT  83
-
 
 // --------------------------
 // #deprecated
@@ -137,22 +133,17 @@
 //#define TERMINALCOMMAND_PRINT??? 1001
 // --------------------------
 
-
-// Scroll
-// o evento de rolagem aconteceu ...
-// O número do evento será entregue em long1.
+// --- Scroll messages ---
+// The event number will be delivered in long1.
 #define MSG_HSCROLL  2000
 #define MSG_VSCROLL  2001
 
-// #test
-// Notify parent about some important event that happed with the child.
-// The data value can specify what happened.
+// --- Parent Notification ---
+// Notify parent about important events occurring in a child.
 #define MSG_NOTIFY_PARENT  4000
 
-
-// ??
-// Hotkey
-#define MSG_HOTKEY  8888
+// --- Hotkey messages ---
+#define MSG_HOTKEY  8888  //??
 
 // ...
 
