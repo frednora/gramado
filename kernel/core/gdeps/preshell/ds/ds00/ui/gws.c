@@ -333,13 +333,32 @@ static int __gwssrv_init_globals(void)
 // Clear the list of pointers.
 // Setup pointers.
 
-    for (i=0; i<MAX_SCREENS; ++i){ 
-        screens[i] = 0; 
+    for (i=0; i<MAX_SCREENS; ++i)
+    { 
+        screens[i].initialized = FALSE;
+        screens[i].base_address = 0; 
+
+        // The screen belongs to an offscreen window.
+        screens[i].OffscreeWindow.initialized = FALSE;
+        screens[i].OffscreeWindow.pid = -1;
+        screens[i].OffscreeWindow.wid = -1;
+        screens[i].OffscreeWindow._dirty = FALSE;
     };
-    screens[SCREEN_FRONTBUFFER] = (unsigned long) ____FRONTBUFFER_VA;
-    screens[SCREEN_BACKBUFFER]  = (unsigned long) ____BACKBUFFER_VA;
-    if ( screens[SCREEN_FRONTBUFFER] == 0 || 
-         screens[SCREEN_BACKBUFFER] == 0 )
+
+// The frontbuffer.
+    screens[SCREEN_FRONTBUFFER].base_address = 
+        (unsigned long) ____FRONTBUFFER_VA;
+
+// The backbuffer.
+// This is where the desktop scene will be composed
+// using all the offscreen canvas that belongs to the clients.
+// We can register the pointer for the 
+// application's canvas into the screens[] array fo structure.
+    screens[SCREEN_BACKBUFFER].base_address = 
+        (unsigned long) ____BACKBUFFER_VA;
+
+    if ( screens[SCREEN_FRONTBUFFER].base_address == 0 || 
+         screens[SCREEN_BACKBUFFER].base_address == 0 )
     {
         printf ("gwssrv_init_globals: screens\n");
         exit(1);

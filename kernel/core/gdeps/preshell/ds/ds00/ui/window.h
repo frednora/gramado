@@ -366,6 +366,11 @@ struct gws_window_d
     int id;
     //int wid;
 
+// Offscreen canvas?
+// The information about the area where this window paints.
+// The compositor needs this to build the final desktop scene.
+    struct screen_information_d  s_canvas;
+
 // The input status.
 // If the window is disable, it can't receive input from keyboard or mouse.
     int enabled;

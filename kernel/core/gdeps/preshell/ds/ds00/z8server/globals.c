@@ -64,7 +64,8 @@ unsigned long __device_bpp=0;
 // Device context
 struct dc_d  *gr_dc;  //default dc
 
-unsigned long screens[MAX_SCREENS];
+// See: globals.h
+struct screen_information_d  screens[MAX_SCREENS];
 
 struct gui_d  *gui;
 

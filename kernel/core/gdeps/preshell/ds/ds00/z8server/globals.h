@@ -251,16 +251,43 @@ extern int use_vsync;
 #define VSYNC_NO   0
 
 
-// Pointers to screens.
-#define MAX_SCREENS    4
-#define SCREEN_FRONTBUFFER     0
-#define SCREEN_BACKBUFFER      1
+// Indexes to screens.
+#define MAX_SCREENS    4 
+#define SCREEN_FRONTBUFFER     0  // VRAM
+#define SCREEN_BACKBUFFER      1  // RAM
 //#define SCREEN_BACKBUFFER2   2
 //#define SCREEN_BACKBUFFER3   3
 
-extern unsigned long screens[MAX_SCREENS];
 
+struct offscreen_window_d
+{
+    int initialized;
 
+// This is an offscreen buffer for a window.
+    int wid;  // The Window ID.
+    pid_t pid;  // The client's PID.
+
+// The paint is done, let's flush it into the backbuffer.
+    int _dirty;
+
+    // ...
+};
+
+// Each window needs to have an index for one of this structurea.
+// This way the display server will know the information about 
+// the window's canvas.
+struct screen_information_d
+{
+    int initialized;
+    unsigned long base_address;
+
+// When this screen belongs to an offscreen window.
+// It will be used by the compositor to build the desktop scene.
+    struct offscreen_window_d  OffscreeWindow;
+
+    // ...
+};
+extern struct screen_information_d  screens[MAX_SCREENS];
 
 /*
 struct vid_d

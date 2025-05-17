@@ -3864,7 +3864,8 @@ static int ServerInitialization(void)
         };
         //exit(0);
     }
-    if ( serverClient->used != TRUE || serverClient->magic != 1234 ){
+    if ( serverClient->used != TRUE || serverClient->magic != 1234 )
+    {
         printf("ds00: serverClient validation\n");
         while (1){
         };
