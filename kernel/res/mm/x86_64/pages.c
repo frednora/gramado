@@ -7,7 +7,7 @@
 
 
 /*
-mmInitializePaging():
+pagesInitializePaging():
     This is the main function here. The goal is mapping some 
 2MB blocks of memory that is gonna be used by the kernel and 
 the init process.
@@ -101,6 +101,92 @@ static void __initialize_extraheap3(void);
 static void __mmSetupMemoryUsage(void);
 
 // ==================================================
+
+
+void pages_print_info(int system_type)
+{
+
+    if (system_type<0)
+        return;
+
+    switch (system_type){
+
+    case stSmallSystem:
+        printk("pages.c: Small system\n");
+            /*
+            printk("Origin PA:            %xH \n", SMALL_origin_pa );
+            printk("Base kernel start PA: %xH \n", SMALL_kernel_base_pa );
+            printk("User area start PA:   %xH \n", SMALL_user_pa );
+            printk("cga memory PA:        %xH \n", SMALL_cga_pa );
+            printk("frontbuffer PA:       %xH \n", SMALL_frontbuffer_pa );
+            printk("backbuffer PA:        %xH \n", SMALL_backbuffer_pa );
+            printk("paged memory pool PA: %xH \n", SMALL_pagedpool_pa );
+            printk("heap pool PA:         %xH \n", SMALL_heappool_pa );
+            printk("extraheap1 PA:        %xH \n", SMALL_extraheap1_pa );
+            printk("extraheap2 PA:        %xH \n", SMALL_extraheap2_pa );
+            printk("extraheap3 PA:        %xH \n", SMALL_extraheap3_pa );
+            */
+        break;
+    case stMediumSystem:
+        printk("pages.c: Medium system\n");
+            /*
+            printk("Origin PA:            %xH \n", MEDIUM_origin_pa );
+            printk("Base kernel start PA: %xH \n", MEDIUM_kernel_base_pa );
+            printk("User area start PA:   %xH \n", MEDIUM_user_pa );
+            printk("cga memory PA:        %xH \n", MEDIUM_cga_pa );
+            printk("frontbuffer PA:       %xH \n", MEDIUM_frontbuffer_pa );
+            printk("backbuffer PA:        %xH \n", MEDIUM_backbuffer_pa );
+            printk("paged memory pool PA: %xH \n", MEDIUM_pagedpool_pa );
+            printk("heap pool PA:         %xH \n", MEDIUM_heappool_pa );
+            printk("extraheap1 PA:        %xH \n", MEDIUM_extraheap1_pa );
+            printk("extraheap2 PA:        %xH \n", MEDIUM_extraheap2_pa );
+            printk("extraheap3 PA:        %xH \n", MEDIUM_extraheap3_pa );
+            */
+        break;
+    case stLargeSystem:
+        printk("pages.c: Large system\n");
+            /*
+            printk("Origin PA:            %xH \n", LARGE_origin_pa );
+            printk("Base kernel start PA: %xH \n", LARGE_kernel_base_pa );
+            printk("User area start PA:   %xH \n", LARGE_user_pa );
+            printk("cga memory PA:        %xH \n", LARGE_cga_pa );
+            printk("frontbuffer PA:       %xH \n", LARGE_frontbuffer_pa );
+            printk("backbuffer PA:        %xH \n", LARGE_backbuffer_pa );
+            printk("paged memory pool PA: %xH \n", LARGE_pagedpool_pa );
+            printk("heap pool PA:         %xH \n", LARGE_heappool_pa );
+            printk("extraheap1 PA:        %xH \n", LARGE_extraheap1_pa );
+            printk("extraheap2 PA:        %xH \n", LARGE_extraheap2_pa );
+            printk("extraheap3 PA:        %xH \n", LARGE_extraheap3_pa );
+            */
+        break;
+    default:
+        printk("pages.c: system_type failed\n");
+        break;
+    };
+
+// Print given the saved addresses used in this system.
+    printk("Origin PA:            %xH \n", paList[MM_COMPONENT_SYSTEM_ORIGIN_PA] );
+    printk("Base kernel start PA: %xH \n", paList[MM_COMPONENT_KERNEL_BASE_PA] );
+    printk("User area start PA:   %xH \n", paList[MM_COMPONENT_USER_BASE_PA] );
+    printk("frontbuffer PA:       %xH \n", paList[MM_COMPONENT_FRONTBUFFER_PA] );
+    printk("backbuffer PA:        %xH \n", paList[MM_COMPONENT_BACKBUFFER_PA] );
+    printk("heap pool PA:         %xH \n", paList[MM_COMPONENT_HEAPPOOL_PA] );
+    printk("extraheap1 PA:        %xH \n", paList[MM_COMPONENT_EXTRAHEAP1_PA] );
+    printk("extraheap2 PA:        %xH \n", paList[MM_COMPONENT_EXTRAHEAP2_PA] );
+    printk("extraheap3 PA:        %xH \n", paList[MM_COMPONENT_EXTRAHEAP3_PA] );
+    // #todo: We have 4 paged pool areas.
+    printk("paged memory pool PA: %xH \n", paList[MM_COMPONENT_PAGEDPOOL_PA] );
+}
+
+void pages_print_video_info(void)
+{
+// Video info
+    printk("\n\n");
+    printk ("Frontbuffer PA: {%x} | Frontbuffer VA: {%x}\n", 
+        SMALL_frontbuffer_pa, g_frontbuffer_va );
+    printk ("Backbuffer PA: {%x} | Backbuffer VA: {%x}\n", 
+        SMALL_backbuffer_pa, g_backbuffer_va );
+}
 
 // Vamos criar uma pagetable com 512 entradas
 // para mapearmos uma região da memória física.
@@ -298,11 +384,9 @@ void *CreateAndIntallPageTable (
     */
 }
 
-
-
 // #todo
 // Describe this thing.
-unsigned long get_new_frame (void)
+unsigned long get_new_frame(void)
 {
     int i=0;
 
@@ -323,14 +407,12 @@ unsigned long get_new_frame (void)
     return 0;
 }
 
-
 // Wrapper
 unsigned long alloc_frame(void)
 {
     panic("alloc_frame: [FIXME] This is a work in progress\n");
     return (unsigned long) get_new_frame();
 }
-
 
 // ===================================================================
 //
@@ -620,7 +702,7 @@ fail:
 static void __mmSetupMemoryUsage(void)
 {
 // Local worker.
-// Called by mmInitializePaging().
+// Called by pagesInitializePaging().
 
     //debug_print("__mmSetupMemoryUsage: Setup memory usage\n");
 
@@ -911,7 +993,7 @@ mm_fill_n_pagetables(
 // Talvez ja tenhamos feito isso antes, mas não tem problema.
 void __initialize_ram_usage_varables(void)
 {
-// Called by mmInitializePaging().
+// Called by pagesInitializePaging().
 
 // The whole range.
     memorysizeUsed = 0;
@@ -933,7 +1015,7 @@ void __initialize_ram_usage_varables(void)
 
 static void __initialize_canonical_physical_regions(void)
 {
-// Called by mmInitializePaging().
+// Called by pagesInitializePaging().
 
 // small systems
     SMALL_origin_pa      = (unsigned long) SMALLSYSTEM_ORIGIN_ADDRESS;
@@ -1646,7 +1728,7 @@ static void __initialize_extraheap3(void)
 
 static void __initialize_canonical_kernel_pagetables(void)
 {
-// Called by mmInitializePaging().
+// Called by pagesInitializePaging().
 // Install some pagetables into the 
 // kernel page directory 0.
 
@@ -1721,8 +1803,8 @@ void test(void)
         status = (int) mm_map_2mb_region(pa,va);
         if (status != 0)
         {
-            debug_print("mmInitializePaging: bigbuffer\n");
-            x_panic    ("mmInitializePaging: bigbuffer\n");
+            debug_print("pagesInitializePaging: bigbuffer\n");
+            x_panic    ("pagesInitializePaging: bigbuffer\n");
         }
     };
 // --------------------------------------------
@@ -1731,20 +1813,24 @@ void test(void)
 */
 
 
-// ======================================
-// mmInitializePaging:
+//
+// #
+// INITIALIZATION
+//
+
+// pagesInitializePaging:
 // Main routine.
 // This routine initializes the paging infrastructure.
 // Initalizing the paging support.
 // Mapping the static system areas.
-// Called by mmInit() in mminit.c
+// Called in mm.c
 
-int mmInitializePaging(void)
+int pagesInitializePaging(void)
 {
     register unsigned int i=0;
 
     //if( serial_debug == TRUE )
-        //debug_print("mmInitializePaging:\n");
+        //debug_print("pagesInitializePaging:\n");
 
 // local worker:
 // RAM usage management.
@@ -1829,8 +1915,8 @@ int mmInitializePaging(void)
          kernel_mm_data.pd0_va   == 0 || 
          kernel_mm_data.pd0_pa   == 0 )
     {
-        debug_print ("mmInitializePaging: [FAIL] Invalid kernel_mm_data\n");
-        x_panic     ("mmInitializePaging: [FAIL] Invalid kernel_mm_data\n");
+        debug_print ("pagesInitializePaging: Invalid kernel_mm_data\n");
+        x_panic     ("pagesInitializePaging: Invalid kernel_mm_data\n");
     }
 
 //
@@ -1919,10 +2005,10 @@ int mmInitializePaging(void)
     __initialize_canonical_kernel_pagetables();
 
     if (memorysizeTotal == 0){
-        debug_print ("mmInitializePaging: [FIXME] We need the memorysizeTotal\n");
+        debug_print ("pagesInitializePaging: [FIXME] We need the memorysizeTotal\n");
         //while(1){}
     }
-    //debug_print ("mmInitializePaging: [DEBUG] memorysizeTotal is not zero\n");
+    //debug_print ("pagesInitializePaging: [DEBUG] memorysizeTotal is not zero\n");
     //while(1){}
 
 
@@ -1961,7 +2047,7 @@ int mmInitializePaging(void)
 
 // ==============================================
 
-    //debug_print("mmInitializePaging: [DANGER] Load cr3\n");
+    //debug_print("pagesInitializePaging: [DANGER] Load cr3\n");
 
 // pae
     //printk ("SetUpPaging: __enable_pae\n");
@@ -2062,97 +2148,11 @@ int mmInitializePaging(void)
     //}
 
 //done:
-    //debug_print("mmInitializePaging: done\n");
+    //debug_print("pagesInitializePaging: done\n");
 // OK
     return 0;
 fail:
     return (int) -1;
-}
-
-
-void pages_print_info(int system_type)
-{
-
-    if (system_type<0)
-        return;
-
-    switch (system_type){
-
-    case stSmallSystem:
-        printk("pages.c: Small system\n");
-            /*
-            printk("Origin PA:            %xH \n", SMALL_origin_pa );
-            printk("Base kernel start PA: %xH \n", SMALL_kernel_base_pa );
-            printk("User area start PA:   %xH \n", SMALL_user_pa );
-            printk("cga memory PA:        %xH \n", SMALL_cga_pa );
-            printk("frontbuffer PA:       %xH \n", SMALL_frontbuffer_pa );
-            printk("backbuffer PA:        %xH \n", SMALL_backbuffer_pa );
-            printk("paged memory pool PA: %xH \n", SMALL_pagedpool_pa );
-            printk("heap pool PA:         %xH \n", SMALL_heappool_pa );
-            printk("extraheap1 PA:        %xH \n", SMALL_extraheap1_pa );
-            printk("extraheap2 PA:        %xH \n", SMALL_extraheap2_pa );
-            printk("extraheap3 PA:        %xH \n", SMALL_extraheap3_pa );
-            */
-        break;
-    case stMediumSystem:
-        printk("pages.c: Medium system\n");
-            /*
-            printk("Origin PA:            %xH \n", MEDIUM_origin_pa );
-            printk("Base kernel start PA: %xH \n", MEDIUM_kernel_base_pa );
-            printk("User area start PA:   %xH \n", MEDIUM_user_pa );
-            printk("cga memory PA:        %xH \n", MEDIUM_cga_pa );
-            printk("frontbuffer PA:       %xH \n", MEDIUM_frontbuffer_pa );
-            printk("backbuffer PA:        %xH \n", MEDIUM_backbuffer_pa );
-            printk("paged memory pool PA: %xH \n", MEDIUM_pagedpool_pa );
-            printk("heap pool PA:         %xH \n", MEDIUM_heappool_pa );
-            printk("extraheap1 PA:        %xH \n", MEDIUM_extraheap1_pa );
-            printk("extraheap2 PA:        %xH \n", MEDIUM_extraheap2_pa );
-            printk("extraheap3 PA:        %xH \n", MEDIUM_extraheap3_pa );
-            */
-        break;
-    case stLargeSystem:
-        printk("pages.c: Large system\n");
-            /*
-            printk("Origin PA:            %xH \n", LARGE_origin_pa );
-            printk("Base kernel start PA: %xH \n", LARGE_kernel_base_pa );
-            printk("User area start PA:   %xH \n", LARGE_user_pa );
-            printk("cga memory PA:        %xH \n", LARGE_cga_pa );
-            printk("frontbuffer PA:       %xH \n", LARGE_frontbuffer_pa );
-            printk("backbuffer PA:        %xH \n", LARGE_backbuffer_pa );
-            printk("paged memory pool PA: %xH \n", LARGE_pagedpool_pa );
-            printk("heap pool PA:         %xH \n", LARGE_heappool_pa );
-            printk("extraheap1 PA:        %xH \n", LARGE_extraheap1_pa );
-            printk("extraheap2 PA:        %xH \n", LARGE_extraheap2_pa );
-            printk("extraheap3 PA:        %xH \n", LARGE_extraheap3_pa );
-            */
-        break;
-    default:
-        printk("pages.c: system_type failed\n");
-        break;
-    };
-
-// Print given the saved addresses used in this system.
-    printk("Origin PA:            %xH \n", paList[MM_COMPONENT_SYSTEM_ORIGIN_PA] );
-    printk("Base kernel start PA: %xH \n", paList[MM_COMPONENT_KERNEL_BASE_PA] );
-    printk("User area start PA:   %xH \n", paList[MM_COMPONENT_USER_BASE_PA] );
-    printk("frontbuffer PA:       %xH \n", paList[MM_COMPONENT_FRONTBUFFER_PA] );
-    printk("backbuffer PA:        %xH \n", paList[MM_COMPONENT_BACKBUFFER_PA] );
-    printk("heap pool PA:         %xH \n", paList[MM_COMPONENT_HEAPPOOL_PA] );
-    printk("extraheap1 PA:        %xH \n", paList[MM_COMPONENT_EXTRAHEAP1_PA] );
-    printk("extraheap2 PA:        %xH \n", paList[MM_COMPONENT_EXTRAHEAP2_PA] );
-    printk("extraheap3 PA:        %xH \n", paList[MM_COMPONENT_EXTRAHEAP3_PA] );
-    // #todo: We have 4 paged pool areas.
-    printk("paged memory pool PA: %xH \n", paList[MM_COMPONENT_PAGEDPOOL_PA] );
-}
-
-void pages_print_video_info(void)
-{
-// Video info
-    printk("\n\n");
-    printk ("Frontbuffer PA: {%x} | Frontbuffer VA: {%x}\n", 
-        SMALL_frontbuffer_pa, g_frontbuffer_va );
-    printk ("Backbuffer PA: {%x} | Backbuffer VA: {%x}\n", 
-        SMALL_backbuffer_pa, g_backbuffer_va );
 }
 
 //

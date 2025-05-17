@@ -774,21 +774,8 @@ struct x64_address_space_d
 // == prototypes =================================================
 //
 
-void pages_print_info(int system_type);
-void pages_print_video_info(void);
-
 //unsigned long slab_2mb_extraheap2(void);
 //unsigned long slab_2mb_extraheap3(void);
-
-void *CreateAndIntallPageTable (
-    unsigned long pml4_va,   // page map level 4
-    unsigned long pml4_index,
-    unsigned long pdpt_va,   // page directory pointer table
-    unsigned long pdpt_index,
-    unsigned long pd_va,     // page directory 
-    int pd_index,            // Install the pagetable into this entry of the page directory. 
-    unsigned long region_pa );
-
 
 // IN:
 // Endereço virtual do diretório de páginas.
@@ -805,10 +792,6 @@ mm_fill_page_table(
     unsigned long region_2mb_pa,
     unsigned long flags );
 
-// Memory initialization.
-// This routine initializes the paging infrastructure.
-int mmInitializePaging(void);
-
 // Memory info.
 void mmShowMemoryInfo(void);
 void mmShowPML4Entry(int index, unsigned long pml4_va);
@@ -819,13 +802,6 @@ void mmShowPagedMemoryList(int max);
 // mm support
 void mmTestingPageAlloc(void);
 
-unsigned long get_new_frame (void);
-unsigned long alloc_frame(void);
-
-// #danger
-unsigned long get_table_pointer_va(void);
-
-
 void __enable_pae(void);
 void x64mm_enable_paging(void);
 
@@ -834,25 +810,11 @@ void x64mm_load_pml4_table(unsigned long phy_addr);
 void x64mm_refresh_cr3(void);
 
 
-void *CloneKernelPDPT0(void);
-void *CloneKernelPD0(void);
-void *CloneKernelPML4 (void);
-void *clone_pml4 ( unsigned long pml4_va );
-
-int isValidPageStruct(struct page_d *p);
-void freePage (struct page_d *p);
-void notfreePage (struct page_d *p);
-
 // Wrapper
 unsigned long 
 virtual_to_physical ( 
     unsigned long virtual_address, 
     unsigned long pml4_va );
-
-int mm_is_page_aligned_va(unsigned long va);
-
-// #todo
-void pages_calc_mem (void);
 
 // #todo
 // #fixme
@@ -872,11 +834,6 @@ void initializeFramesAlloc(void);
 // see: slab.c
 void slab_initialize(void);
 void *slab_1MB_allocator(void);
-
-int 
-mm_map_2mb_region(
-    unsigned long pa,
-    unsigned long va);
 
 #endif    
 

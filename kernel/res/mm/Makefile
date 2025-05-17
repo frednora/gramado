@@ -1,5 +1,5 @@
 # mm/
-# Compile all the files and create ar_mm.o
+# Compile all the files and create p4_mm.o
 # Makefile for the kernel memory manager.
 # Created by Fred Nora.
 
@@ -86,6 +86,7 @@ all:
 
 # x86_64
 	$(CC) -c x86_64/x64mm.c  $(KERNEL_INCLUDE) $(CFLAGS) -o x64mm.o
+	$(CC) -c x86_64/pages.c  $(KERNEL_INCLUDE) $(CFLAGS) -o pages.o
 
 # mm
 	$(CC) -c mmsize.c   $(KERNEL_INCLUDE) $(CFLAGS) -o mmsize.o
@@ -93,7 +94,6 @@ all:
 	$(CC) -c mm.c       $(KERNEL_INCLUDE) $(CFLAGS) -o mm.o
 	$(CC) -c mminfo.c   $(KERNEL_INCLUDE) $(CFLAGS) -o mminfo.o
 	$(CC) -c mmpool.c   $(KERNEL_INCLUDE) $(CFLAGS) -o mmpool.o
-	$(CC) -c pages.c    $(KERNEL_INCLUDE) $(CFLAGS) -o pages.o
 	$(CC) -c slab.c     $(KERNEL_INCLUDE) $(CFLAGS) -o slab.o
 	$(CC) -c mmrt.c     $(KERNEL_INCLUDE) $(CFLAGS) -o mmrt.o
 	$(CC) -c mmft.c     $(KERNEL_INCLUDE) $(CFLAGS) -o mmft.o

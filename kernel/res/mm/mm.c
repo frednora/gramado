@@ -713,7 +713,7 @@ int mmInitialize(int phase)
         // Mapping all the static system areas.
         // See: pages.c
         int PagingStatus=-1;
-        PagingStatus = (int) mmInitializePaging();
+        PagingStatus = (int) pagesInitializePaging();
         if (PagingStatus<0){
             x_panic("mmInitialize: Paging");
         }

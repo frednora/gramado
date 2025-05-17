@@ -109,6 +109,7 @@
 #include "../res/mm/mmblock.h"
 #include "../res/mm/mmusage.h"
 #include "../res/mm/x86_64/x64mm.h"
+#include "../res/mm/x86_64/pages.h"
 #include "../res/mm/mmft.h"
 #include "../res/mm/mmglobal.h"  // Deve ficar mais acima.
 #include "../res/mm/heap.h"      // Heap pointer support.

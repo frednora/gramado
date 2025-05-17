@@ -1,15 +1,13 @@
-
 // mmft.c
 // The frame table FT.
 // A pool of frames.
+// Created by Fred Nora.
 
 #include <kernel.h>
 
 // Frametable struct.
 // see: x64mm.h
 struct frame_table_d  FT;
-
-
 
 // I_initialize_frame_table:
 // Frame table to handle a pool of page frames.
@@ -44,7 +42,7 @@ struct frame_table_d  FT;
 // enough for this operation.
 int I_initialize_frame_table(void)
 {
-// Called by mmInitializePaging().
+// Called by pagesInitializePaging().
 
 // #warning:
 // Essa rotina depende da sondagem do 

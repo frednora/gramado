@@ -10,7 +10,7 @@ The `pages.c` file in your Gramado OS repository handles the initialization of t
     - `__initialize_ring0area()`, `__initialize_ring3area()`, `__initialize_kernelimage_region()`, and similar functions set up specific memory regions like the kernel image, front buffer, back buffer, paged pool, heap pool, and extra heaps.
 
 3. **Main Function**:
-    - `mmInitializePaging()` is the main function that orchestrates the initialization of the paging system. It calls the helper functions to set up RAM usage variables, physical regions, and kernel page tables. It then loads the PML4 table into the CR3 register to activate the new paging setup.
+    - `pagesInitializePaging()` is the main function that orchestrates the initialization of the paging system. It calls the helper functions to set up RAM usage variables, physical regions, and kernel page tables. It then loads the PML4 table into the CR3 register to activate the new paging setup.
 
 4. **Page Table Creation**:
     - `mm_fill_page_table()` is a function that fills a page table with entries to map a given 2MB region of physical memory to virtual memory.
