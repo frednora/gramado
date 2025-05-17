@@ -1,20 +1,11 @@
-
 // kstdio.h
 // Created by Fred Nora.
 
 #ifndef __CRT_KSTDIO_H
 #define __CRT_KSTDIO_H    1
 
-struct module_initialization_d
-{
-    int initialized;
-    //unsigned long ksysmboltable_address;
-};
-extern struct module_initialization_d  ModuleInitialization;
-
 void newm0_print_string (char *s);
-int newm0_1001(void);
-int newm0_initialize(void);
+
 
 char *kinguio_itoa (int val, char *str);
 

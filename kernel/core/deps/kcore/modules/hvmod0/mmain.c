@@ -10,8 +10,134 @@
 
 #include "kernel.h"
 
+
+// kernel sysboltable address.
+// Pointer for the table of function pointers
+// exported by the base kernel.
+unsigned long *kfunctions;
+// Function Number
+int FN_DIE=0;      //it works
+int FN_PUTCHARK=1; //it works
+int FN_REBOOT=2;   //it works
+int FN_REFESHSCREEN=3;
+int FN_PUTCHAR_FGCONSOLE=4;  //(1arg)
+// #todo: Call dead thread collector, scheduler ...
+// read flags
+// read messages
+// ...
+
+
+// #todo: Move this to another place.
+struct module_initialization_d  ModuleInitialization;
+
+// =====================================================
+
+
+
+int newm0_1001(void)
+{
+    if (ModuleInitialization.initialized != TRUE){
+        goto fail;
+    }
+    newm0_print_string("newm0_1001: reason 1001\n");
+
+    //for (i=0; i<100; i++)
+    //    caller0( (unsigned long) kfunctions[FN_PUTCHARK] );
+
+    //caller0( (unsigned long) kfunctions[FN_DIE] );
+    //caller0( (unsigned long) kfunctions[FN_PUTCHARK] );
+    //caller0( (unsigned long) kfunctions[FN_REBOOT] );
+    //do_int3();
+    //caller1( kfunctions[FN_PUTCHAR_FGCONSOLE], 'x');
+
+// #testing printk
+    long value = 1234;
+    //printk("mod0.bin: Testing printk | value={%d} :)\n",
+        //value);
+
+// #testing reboot.
+// ok, it's working.
+    //printk("mod0.bin: Testing reboot via ports\n");
+    //do_reboot();
+
+// Done
+    return TRUE;
+fail:
+    return FALSE;
+}
+
+// #todo: Why this name?
+// Why this functions is here? Move it to another place.
+// OUT: TRUE or FALSE.
+int newm0_initialize(void)
+{
+
+// The kernel static entry point.
+// #bugbug: It's not safe.
+// We need a random address.
+    unsigned char *k = (unsigned char *) 0x30001000;
+
+// #test
+// Lookup for "__GRAMADO__"
+// see: head_64.asm
+    register int i=0;
+    int Found=0;  //FALSE
+    unsigned long __function_table=0;
+
+    ModuleInitialization.initialized = FALSE;
+
+    for (i=0; i<100; i++)
+    {
+        if (k[i+0]  == '_' &&
+            k[i+1]  == '_' &&
+            k[i+2]  == 'G' &&
+            k[i+3]  == 'R' &&
+            k[i+4]  == 'A' &&
+            k[i+5]  == 'M' &&
+            k[i+6]  == 'A' &&
+            k[i+7]  == 'D' &&
+            k[i+8]  == 'O' &&
+            k[i+9]  == '_' &&
+            k[i+10] == '_')
+        {
+            Found = 1;
+            // The function table starts here.
+            __function_table = (unsigned long) &k[i+11];
+        }
+    };
+
+// Symbol table 'exported' hehe by the kernel.
+    //unsigned long *kfunctions = (unsigned long *) __function_table;
+    kfunctions = (unsigned long *) __function_table;
+
+// Reinitialize the indexes for safety
+    FN_DIE=0;      //it works
+    FN_PUTCHARK=1; //it works
+    FN_REBOOT=2;   //it works
+    FN_REFESHSCREEN=3;
+    FN_PUTCHAR_FGCONSOLE=4;  //(1arg)
+    // ...
+
+// done?
+    // TRUE
+    if (Found==1)
+    {
+        ModuleInitialization.initialized = TRUE;
+
+        //#debug
+        //newm0_print_string("newm0_initialize: Initialized\n");
+
+        return TRUE;
+    }
+
+fail:
+    ModuleInitialization.initialized = FALSE;
+    return FALSE;
+}
+
 // ---------------------------
 // mmain:
+// Called by kernel_start() in head.c
 unsigned long 
 mmain (
     unsigned char sc_id,   // system call id.
@@ -48,6 +174,7 @@ mmain (
         // Initializing the module.
         case 1000:
             // Initialize the server functions.
+            // See: kstdio.c
             Status = (int) newm0_initialize();
             if (Status == TRUE){
                 printk("Initialization OK\n");
@@ -116,10 +243,14 @@ mmain (
 
         // Testing the parameter list.
         case 8888:
-            if (ModuleInitialization.initialized != TRUE){
+            
+            if (ModuleInitialization.initialized != TRUE)
+            {
+                // See: kstdio.c
                 newm0_initialize();
             }
-            if (ModuleInitialization.initialized == TRUE){
+            if (ModuleInitialization.initialized == TRUE)
+            {
                 printk("Parameters: %d | %d | %d | %d\n",
                     param1, param2, param3, param4 );
                 return (unsigned long) 1234;

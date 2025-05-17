@@ -20,6 +20,8 @@
 
 #include "globals.h"
 
+#include "../mmain.h"
+
 #include "../ke/ports64.h"
 #include "../ke/hal.h"
 #include "../ke/kal.h"

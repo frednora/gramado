@@ -3,23 +3,6 @@
 
 #include <kernel.h>
 
-// kernel sysboltable address.
-// Pointer for the table of function pointers
-// exported by the base kernel.
-unsigned long *kfunctions;
-int DIE=0;      //it works
-int PUTCHARK=1; //it works
-int REBOOT=2;   //it works
-int REFESHSCREEN=3;
-int PUTCHAR_FGCONSOLE=4;  //(1arg)
-// #todo: Call dead thread collector, scheduler ...
-// read flags
-// read messages
-// ...
-
-// #todo: Move this to another place.
-struct module_initialization_d  ModuleInitialization;
-
 
 // ================================
 
@@ -51,14 +34,10 @@ static void __kstdio_puts(const char* str)
 // Print chars. 
     for (i=0; i<StringLen; i++)
     {
-        _char = (int) ( str[i] & 0xFF );
-        caller1( 
-            kfunctions[PUTCHAR_FGCONSOLE], 
-            _char ); 
+        _char = (int) (str[i] & 0xFF);
+        caller1( kfunctions[FN_PUTCHAR_FGCONSOLE], _char ); 
     };
 }
-
-
 
 // local worker
 static char *_vsputs_r(char *dest, char *src)
@@ -74,110 +53,18 @@ static char *_vsputs_r(char *dest, char *src)
     return (char *) udest;
 }
 
-int newm0_1001(void)
-{
-    if (ModuleInitialization.initialized != TRUE){
-        goto fail;
-    }
-    newm0_print_string("newm0_1001: reason 1001\n");
-
-    //for (i=0; i<100; i++)
-    //    caller0( (unsigned long) kfunctions[PUTCHARK] );
-
-    //caller0( (unsigned long) kfunctions[DIE] );
-    //caller0( (unsigned long) kfunctions[PUTCHARK] );
-    //caller0( (unsigned long) kfunctions[REBOOT] );
-    //do_int3();
-    //caller1( kfunctions[PUTCHAR_FGCONSOLE], 'x');
-
-// #testing printk
-    long value = 1234;
-    //printk("mod0.bin: Testing printk | value={%d} :)\n",
-        //value);
-
-// #testing reboot.
-// ok, it's working.
-    //printk("mod0.bin: Testing reboot via ports\n");
-    //do_reboot();
-
-// Done
-    return TRUE;
-fail:
-    return FALSE;
-}
-
-
-// OUT: TRUE or FALSE.
-int newm0_initialize(void)
-{
-
-// The kernel static entry point.
-// #bugbug: It's not safe.
-// We need a random address.
-    unsigned char *k = (unsigned char *) 0x30001000;
-
-// #test
-// Lookup for "__GRAMADO__"
-// see: head_64.asm
-    register int i=0;
-    int Found=0;  //FALSE
-    unsigned long __function_table=0;
-
-    ModuleInitialization.initialized = FALSE;
-
-    for (i=0; i<100; i++)
-    {
-        if (k[i+0]  == '_' &&
-            k[i+1]  == '_' &&
-            k[i+2]  == 'G' &&
-            k[i+3]  == 'R' &&
-            k[i+4]  == 'A' &&
-            k[i+5]  == 'M' &&
-            k[i+6]  == 'A' &&
-            k[i+7]  == 'D' &&
-            k[i+8]  == 'O' &&
-            k[i+9]  == '_' &&
-            k[i+10] == '_')
-        {
-            Found = 1;
-            // The function table starts here.
-            __function_table = (unsigned long) &k[i+11];
-        }
-    };
-
-// Symbol table 'exported' hehe by the kernel.
-    //unsigned long *kfunctions = (unsigned long *) __function_table;
-    kfunctions = (unsigned long *) __function_table;
-
-// done?
-    // TRUE
-    if (Found==1)
-    {
-        ModuleInitialization.initialized = TRUE;
-
-        //#debug
-        //newm0_print_string("newm0_initialize: Initialized\n");
-
-        return TRUE;
-    }
-
-fail:
-    ModuleInitialization.initialized = FALSE;
-    return FALSE;
-}
-
 void newm0_print_string (char *s)
 {
     register int i=0;
-    int size=0;
+    size_t size=0;
+
     size = module_strlen(s);
     if (size <= 0)
         return;
-    for (i=0; i<size; i++)
-    {
-        caller1( 
-            kfunctions[PUTCHAR_FGCONSOLE], 
-            s[i] );
+
+// print string
+    for (i=0; i<size; i++){
+        caller1( kfunctions[FN_PUTCHAR_FGCONSOLE], s[i] );
     };
 }
 

@@ -1,5 +1,5 @@
-
 // head.h
+// Created by Fred Nora.
 
 #ifndef __HEAD_H
 #define __HEAD_H  1

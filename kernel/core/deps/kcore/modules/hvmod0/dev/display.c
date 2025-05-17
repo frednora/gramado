@@ -27,7 +27,9 @@ display_initialization_phase1(
 // At this moment, maybe we can call the 
 // kernel to initialize some components 
 // that at this moment live in kernel.
-    if (ModuleInitialization.initialized != TRUE){
+    if (ModuleInitialization.initialized != TRUE)
+    {
+        // See: kstdio.c
         newm0_initialize();
     }
 

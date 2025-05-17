@@ -58,7 +58,7 @@ kernel_start(
 // #test #todo
 // Other options
 // FF - Called by kernel itself.
-    if ( id == 0xFF )
+    if (id == 0xFF)
     {
         return_value = 
             (unsigned long) mmain(
