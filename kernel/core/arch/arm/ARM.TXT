@@ -1,0 +1,42 @@
+Learning ARM from the basics.
+
+---------------------------------------
+General Registers:
+
+r0–r15: These are the core registers.
+
+r0–r3:  Used for function arguments and return values.
+r4–r11: General-purpose registers.
+
+r12 (IP): Intra-procedure call register.
+r13 (SP): Stack pointer.
+r14 (LR): Link register (stores return addresses).
+r15 (PC): Program counter.
+
+---------------------------------------
+Special Registers:
+
+CPSR (Current Program Status Register): 
+Holds condition flags (N, Z, C, V), interrupt enable bits, and mode bits.
+
+SPSR (Saved Program Status Register): 
+Used during exception handling to store the previous state.
+
+---------------------------------------
+ARM64 (AArch64) Registers:
+
+x0–x30: 
+General-purpose 64-bit registers (x0–x7 used for function arguments).
+
+SP (Stack Pointer): Controls the stack.
+PC (Program Counter): Tracks execution flow.
+
+NZCV: Holds condition flags.
+
+---------------------------------------
+ARM uses a load/store architecture, meaning it relies 
+heavily on moving data between registers and memory explicitly.
+
+---------------------------------------
+
+
