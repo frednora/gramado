@@ -1,4 +1,3 @@
-
 // #obs
 // a syscall está em stubs/
 // Aqui vamos criar outras interações com 

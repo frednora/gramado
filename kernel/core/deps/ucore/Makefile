@@ -1,4 +1,3 @@
-# Build all in usys/
 # System commands running in ring 3.
 # important: We can find the init process in init/ folder.
 # Created by Fred Nora.

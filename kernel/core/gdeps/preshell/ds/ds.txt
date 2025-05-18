@@ -1,0 +1,14 @@
+ds/ folder:
+
+Here we have the main display server in ds00/ and 
+the libraries used by the display server in libs/.
+
+There is no external dependencies. We can build the display server 
+only using it's own libraries found in libs/.
+
+---------------------------------
+Why?
+Why do we have a lot of different versions of the libc 
+in usermode. R: Because it's good for the kernel. In this case 
+the kernel is experiencing the scenario where different libc's are 
+trying to access the kernel. 

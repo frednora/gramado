@@ -43,15 +43,15 @@ kernel/core/deps/kcore/modules/
 
 ## Where is the Init Process?
 
-kernel/core/deps/kservices/init/
+kernel/core/deps/ucore/init/
 
 ## Where is the ring 3 device drivers?
 
-kernel/core/deps/kservices/drivers/
+kernel/core/deps/ucore/drivers/
 
 ## Where is the ring 3 servers?
 
-kernel/core/deps/kservices/servers/
+kernel/core/deps/ucore/servers/
 
 ## Where is the display server?
 

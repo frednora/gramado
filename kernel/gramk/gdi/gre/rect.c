@@ -512,6 +512,10 @@ refresh_rectangle (
     unsigned long height )
 {
 
+// This worker is implemented in ring 0, inside the kernel image. 
+// But there is another worker in ring 3 inside the display server 
+// that is calling this worker in ring 0 via syscall.
+
 // == FLASH ========
 // #todo: Create a global variable for this.
 // #debug

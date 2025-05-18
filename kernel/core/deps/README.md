@@ -21,13 +21,17 @@ Source code for non-kernel stuff. Actually the kernel only depends on the Init p
 ```
 Core os components:
 
+----------------------
+>> Ring 0
 kcore/:
  - Kernel Core componets
 kernel/core/apps/:
  - Boot, ring 0 modules, posix commands.
  - Display server and client-side GUI applications.
 
-kservices/
+----------------------
+>> Ring 3
+ucore/
  - System services. 
    Init process, ring 3 drivers and ring 3 servers.
 
@@ -47,15 +51,15 @@ kernel/core/deps/kcore/modules/
 
 ## Where is the Init Process?
 
-kernel/core/deps/kservices/init/
+kernel/core/deps/ucore/init/
 
 ## Where is the ring 3 device drivers?
 
-kernel/core/deps/kservices/drivers/
+kernel/core/deps/ucore/drivers/
 
 ## Where is the ring 3 servers?
 
-kernel/core/deps/kservices/servers/
+kernel/core/deps/ucore/servers/
 
 ## Where is the display server?
 

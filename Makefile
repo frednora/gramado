@@ -21,10 +21,12 @@ BASE = $(DISTROS)/base00
 # with the other subfolders in kernel/core/.
 
 ## =================================
-# Kernel Core: Boot, kernel and ring 0 modules.
+# Kernel Core: 
+# Boot, kernel and ring 0 modules.
 DEP_L0 = kernel/core/deps/kcore
-# Kernel Services: Init process, ring 3 drivers and ring 3 servers.
-DEP_L1 = kernel/core/deps/kservices
+# Kernel Services: 
+# Init process, ring 3 drivers and ring 3 servers.
+DEP_L1 = kernel/core/deps/ucore
 
 ## =================================
 # Shell Pre-UI: The display server.
@@ -183,11 +185,11 @@ build-gramado-os:
 # ...
 
 #===================================
-# LEVEL : kservices/
-	@echo "Compiling DEP_L1 (kservices/)"
+# LEVEL : ucore/
+	@echo "Compiling DEP_L1 (ucore/)"
 	@$(MAKE) -C $(DEP_L1)
 
-	@echo "Installing DEP_L1 (kservices/)"
+	@echo "Installing DEP_L1 (ucore/)"
 
 # Copy the init process.
 	@cp $(DEP_L1)/bin/INIT.BIN  $(BASE)/

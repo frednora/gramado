@@ -14,6 +14,16 @@ bitblt(
     unsigned long rop,
     int op )
 {
+
+
+// #todo
+// We can build this routine for now,
+// we need to implement the worker to copy rectangles 
+// from different positions in both buffer, the src buffer and 
+// the destination buffer.
+// In kernel we can copy rectangle, but only in the same position
+// in both buffers.
+
     if ( (void*) dst_rect == NULL ){
         return -1;
     }

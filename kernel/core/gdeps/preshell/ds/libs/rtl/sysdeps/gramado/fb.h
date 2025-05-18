@@ -1,4 +1,3 @@
-
 // fb.h
 // framebuffer control.
 // Let's build some routines for controlling

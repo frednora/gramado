@@ -1,0 +1,92 @@
+The __refresh_rectangle0() worker in rect.c
+
+
+static void 
+__refresh_rectangle0 ( 
+    unsigned long x, 
+    unsigned long y, 
+    unsigned long width, 
+    unsigned long height,
+    unsigned long buffer_dest,
+    unsigned long buffer_src );
+
+===============================================
+
+Overview of Your Worker
+
+Initial Setup and Input Validation:
+
+The function receives coordinates (x, y), dimensions (width, height), and addresses for the destination and source buffers.
+It retrieves the device dimensions using screenGetWidth() and screenGetHeight(), and then validates them.
+The incoming coordinates and sizes are masked with 0xFFFF to ensure they’re within acceptable bounds.
+
+================================
+
+Determining Bytes per Pixel:
+
+Based on a global variable (gSavedBPP), the function sets bytes_count (e.g., 4 for 32‑bit color, 3 for 24‑bit).
+This value is critical since it affects pitch calculation and pointer arithmetic.
+
+=====================================
+
+
+Calculating Pitch and Offset:
+
+Screen Pitch: Calculated as bytes_count * deviceWidth, this tells you how many bytes are in a single full scanline of your destination.
+
+Rectangle Pitch: The number of bytes in one line of your rectangle is computed as bytes_count * hl_width.
+
+Offset: The starting position in both buffers is determined by the given (x, y) coordinates. The offset calculation is:
+offset = (Y * screen_pitch) + (X * bytes_count)
+This adjustment lets you target an arbitrary rectangle within the larger buffers.
+
+
+====================================
+
+Optimized Copy Loops Using Strength Reduction:
+
+Divisible by 8: If the rectangle’s line size in bytes is divisible by 8, it uses memcpy64 (copying 8 bytes at a time).
+
+Divisible by 4: Otherwise, if divisible by 4, it uses memcpy32 (4 bytes at a time).
+
+Fallback: If neither condition is met, a standard memcpy is used.
+
+In each loop, clipping is enforced by checking that you're not writing beyond deviceHeight.
+
+=============================================
+
+Extra Considerations:
+
+There’s a commented-out vsync call and debugging prints—these might be useful during development.
+
+The function ensures that if the source and destination buffers are the same, it returns immediately.
+
+=============================
+
+Potential Improvements or Considerations
+Support for Arbitrary Source and Destination Offsets: 
+Your current design calculates a common offset for both buffers. 
+If you ever need to copy from a source rectangle with a different 
+origin than the destination (which is often the case in a BitBlt implementation),
+ you would modify the offset calculation. For example:
+
+
+unsigned int src_offset = (srcY * src_pitch) + (srcX * bytes_count);
+unsigned int dest_offset = (Y * screen_pitch) + (X * bytes_count);
+dest = (void*)((unsigned char*)dest + dest_offset);
+src  = (const void*)((unsigned char*)src + src_offset);
+
+This way, you can independently manage source and destination positions.
+===========================================
+
+Combining with Additional Operations: Since you’re planning to support more operations (like flipping, inverting, or alpha blending), this worker can be the foundational “copy” on which you build transformations. For example, you could copy the rectangle into an intermediate buffer and then perform pixel manipulation based on the combined flags.
+
+Error Handling and Boundary Checking: Although there is some clipping in place, you might want to ensure that both the source and destination rectangles lie entirely within their respective buffers to avoid potential memory corruption. Adding further boundary checks can help make the routine more robust.
+
+Specialized memcpy Versions: Make sure that memcpy64 and memcpy32 are well-tested and optimized for your platform. Their implementations can significantly affect overall performance, especially when refreshing large areas of the screen.
+
+===============
+
+Final Thoughts
+Your worker function lays a strong foundation for a complete BitBlt implementation. It effectively demonstrates how to manage pitch, perform clipping, and optimize memory transfers based on rectangle size. If you plan to integrate more operations later (like flipping, rotating, or blending), this routine can serve as your core “fast path” for the basic copy operation. Once you’ve confirmed that this worker behaves as expected, you can wrap it with logic to apply the additional bit flags and operations that you define.
+

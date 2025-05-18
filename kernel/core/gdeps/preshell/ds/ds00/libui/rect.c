@@ -407,7 +407,7 @@ rect_set_bottom (
 // #todo
 // Do not check the validation.
 // We need a prefix that tell us that 
-// we will no chack the validation os the addresses
+// we will no check the validation os the addresses
 
 static void *__rect_memcpy32 ( 
     void *v_dst, 
@@ -435,25 +435,34 @@ static void *__rect_memcpy32 (
 // dirty retangle into the frame buffer.
 // We are using a flag to guide us if we realy need to refresh 
 // the given rectangle.
-
 int gwssrv_refresh_this_rect(struct gws_rect_d *rect)
 {
+// Flush the rectangle into the framebuffer.
+// This function flushes the contents of a given dirty rectangle into the framebuffer,
+// provided that it has been marked dirty. Returns 0 for success or -1 on error.
+
     if ((void *) rect == NULL){ 
         return -1; 
     }
+    // Only refresh if the rectangle is marked as dirty.
     if (rect->dirty != TRUE){ 
         return -1; 
     }
 
+    // Refresh the area.
     gws_refresh_rectangle ( 
         rect->left, rect->top, rect->width, rect->height );
 
+    // Clear the dirty flag after refresh.
     rect->dirty = FALSE;
 
     return 0;
 }
 
 // Flush the rectangle into the framebuffer.
+// Flush the given rectangle by calling the refresh function.
+// This is a higher-level wrapper, 
+// which could be extended or hooked for debugging.
 int flush_rectangle(struct gws_rect_d *rect)
 {
     if ((void *) rect == NULL){
@@ -790,6 +799,7 @@ gws_refresh_rectangle (
 }
 
 // gws_refresh_rectangle0:
+// Copy a rectangle.
 // From backbuffer to frontbuffer.
 void 
 gws_refresh_rectangle0 ( 

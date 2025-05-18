@@ -1,4 +1,6 @@
-
+// syscall.h
+// List of syscall numbers for the ring 3 display server support.
+// Created by Fred Nora.
 
 //#define syscall_vector  0x80
 

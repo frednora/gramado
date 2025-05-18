@@ -2,15 +2,15 @@
  What is the subsystem for the apps here in this folder?
 
 -----------------------------------------------------
- udrivers/
+ drivers/
  All the apps here runs in KERNEL CONSOLE SUBSYSTEM.
 
 -----------------------------------------------------
- uservers/
+ servers/
  All the apps here runs in KERNEL CONSOLE SUBSYSTEM.
 
 -----------------------------------------------------
- usys/
+ 
  All the apps here runs in KERNEL CONSOLE SUBSYSTEM.
  > But some applications runs in different subsystem, 
 just like pubsh.bin that runs in PUBTERM SUBSYSTEM.
