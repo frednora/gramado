@@ -55,15 +55,15 @@ kernel/core/deps/ucore/servers/
 
 ## Where is the display server?
 
-kernel/core/deps/preshell/ds/ds00/
+kernel/core/gdeps/preshell/ds/ds00/
 
 ## Where are the POSIX-like command programs?
 
-kernel/core/deps/shell/shell00/
+kernel/core/gdeps/shell/shell00/
 
 ## Where are the client-side GUI applications?
 
-kernel/core/deps/shell/shell01/
+kernel/core/gdeps/shell/shell01/
 
 
 > [!IMPORTANT]

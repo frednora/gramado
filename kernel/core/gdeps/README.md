@@ -7,7 +7,6 @@ preshell - Display server and 3D demos.
 shell    - Client-side GUI applications.
 ```
 
-
 ```
 Desktop environment components:
 
