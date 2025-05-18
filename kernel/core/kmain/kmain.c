@@ -881,7 +881,7 @@ void I_kmain(int arch_type)
     int Status = FALSE;
 
 // Product type.
-// see: heauty/product.h
+// see: config/product.h
     g_product_type = PRODUCT_TYPE;
     // Status Flag and Edition flag.
     gSystemStatus = 1;

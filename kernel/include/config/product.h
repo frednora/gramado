@@ -1,5 +1,6 @@
-
 // product.h
+// Product configuration.
+// Created by Fred Nora.
 
 #ifndef __PRODUCT_PRODUCT_H
 #define __PRODUCT_PRODUCT_H    1
@@ -54,13 +55,18 @@
 // Current product type
 // Updated by the builder.
 
-#define PRODUCT_TYPE         PT_GRAMADO_HYPERVISOR
+//#define PRODUCT_TYPE         PT_GRAMADO_HYPERVISOR
 //#define PRODUCT_TYPE         PT_GRAMADO_HYPERVISOR_HEADLESS
-#define PRODUCT_TYPE_STRING  PT_GRAMADO_HYPERVISOR_STRING
-
+#define PRODUCT_TYPE         PT_GRAMADO_HYPERVISOR_CLI
 //#define PRODUCT_TYPE         PT_GRAMADO_DESKTOP
-//#define PRODUCT_TYPE_STRING  PT_GRAMADO_DESKTOP_STRING
+// ...
 
+// -----------------------------
+#define PRODUCT_TYPE_STRING  PT_GRAMADO_HYPERVISOR_STRING
+//#define PRODUCT_TYPE_STRING  PT_GRAMADO_DESKTOP_STRING
+// ...
+
+// -----------------------------
 #define MACHINE_TYPE_STRING  "x86_64"
 
 

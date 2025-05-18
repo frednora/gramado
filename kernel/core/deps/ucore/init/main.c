@@ -11,6 +11,21 @@
 // Used when processing the control keys.
 #include "inc/ascii.h"
 
+// Run the event loop. 
+// Getting input from the message queue in the control thread.
+// When the command line exit or fail.
+int fRunEventLoop = FALSE;
+int fHeadlessMode = FALSE;
+// Run the command line. 
+// Getting input from stdin.
+int fRunCommandLine = FALSE;
+int fRunDesktop = FALSE;
+int fReboot = FALSE;
+int fshutdown = FALSE;
+// Was it launched by the kernel?
+int InvalidLauncher = FALSE;
+
+
 #define __COLOR_BLUE   0x000000FF
 #define __COLOR_WHITE  0x00FFFFFF
 
@@ -551,8 +566,16 @@ static int input_compare_string(void)
         goto exit_cmp;
     }
 
-    if (strncmp(prompt,"win",3) == 0){ do_launch_de(); goto exit_cmp; }
-    if (strncmp(prompt,"WIN",3) == 0){ do_launch_de(); goto exit_cmp; }
+    if (strncmp(prompt,"win",3) == 0)
+    { 
+        do_launch_de();
+        goto exit_cmp; 
+    }
+    if (strncmp(prompt,"WIN",3) == 0)
+    { 
+        do_launch_de();
+        goto exit_cmp; 
+    }
 // ----------------------------------------
 
     // printf ("Command not found, type 'help' for more commands\n");
@@ -786,8 +809,12 @@ static int loopMenu(void)
 
         C = (int) fgetc(stdin);
 
-        if (C == 'g'){
+        if (C == 'g')
+        {
             do_launch_de();
+            msgloop_RunServer();
+            printf ("init: Unexpected error\n");
+            exit(0);
             break;
         }
 
@@ -881,18 +908,23 @@ int main( int argc, char **argv)
 
     register int i=0;
 
-    //int fHeadlessMode = TRUE;
-    int fHeadlessMode = FALSE;
+// --------------------------
 
-// Run the command line. 
-// Getting input from stdin.
-    int fRunCommandLine = FALSE;
 // Run the event loop. 
 // Getting input from the message queue in the control thread.
 // When the command line exit or fail.
-    int fRunEventLoop = FALSE;
+    fRunEventLoop = FALSE;
+    fHeadlessMode = FALSE;
+// Run the command line. 
+// Getting input from stdin.
+    fRunCommandLine = FALSE;
+    fRunDesktop = FALSE;
+    fReboot = FALSE;
+    fshutdown = FALSE;
 // Was it launched by the kernel?
-    int InvalidLauncher = FALSE;
+    InvalidLauncher = FALSE;
+
+// --------------------------
 
     Init.initialized = FALSE;
     Init.argc = (int) argc;
@@ -930,23 +962,29 @@ int main( int argc, char **argv)
             // At the end of the routine, based on the flags the system will 
             // decide the precedence.
 
+            // Run the init process in server mode.
+            if (strcmp("mode=server", argv[i]) == 0)
+                fRunEventLoop = TRUE;
+
             // Headless mode.
-            // #todo: mode=headless
-            if (strcmp("--hl", argv[i]) == 0)
+            if (strcmp("mode=headless", argv[i]) == 0)
                 fHeadlessMode = TRUE;
 
-            // Launching the directly.
-            // #todo: mode=desktop
-
+            // CLI experience
             // Run the embedded cmdline interpreter.
-            // #todo: mode=cmd
-            if (strcmp("--cmd", argv[i]) == 0)
+            if (strcmp("mode=cli", argv[i]) == 0)
                 fRunCommandLine = TRUE;
+    
+            // FULL Desktop experience
+            if (strcmp("mode=desktop", argv[i]) == 0)
+                fRunDesktop = TRUE;
 
-            // Run the init process in server mode.
-            // #todo: mode=server
-            if (strcmp("--server", argv[i]) == 0)
-                fRunEventLoop = TRUE;
+            // #todo
+            //if (strcmp("mode=reboot", argv[i]) == 0)
+                // ...
+
+            //if (strcmp("mode=shutdown", argv[i]) == 0)
+                // ...
 
             //...
 
@@ -1032,7 +1070,7 @@ int main( int argc, char **argv)
     while(1){}
 */
 
-/*
+
 // #todo: Working on flag precedence.
 // Parsed all arguments; now decide which mode to enter.
 // Prefer autonomous operation: 
@@ -1041,35 +1079,49 @@ int main( int argc, char **argv)
 // 2: headless mode > 
 // 3: interactive CLI/GUI, ensuring stable, non-verbose startup.
 
-if (fRunEventLoop) {
-    // Highest priority: Launch server (event loop) mode.
-    init_server_mode();    // Dedicated background processing using IPC.
-}
-else if (fHeadlessMode) {
-    // Next priority: Headless mode.
-    init_headless_mode();  // Launch necessary services without interactive output.
-}
-else if (fRunCommandLine) {
-    // If interactive flag is set: Start the command-line interface.
-    init_command_line_mode(); // For interactive user debugging or admin tasks.
-}
-else {
-    // Fallback: default mode (likely interactive) when no flag is provided.
-    init_default_mode();
-}
-*/
 
+// Highest priority: Launch server (event loop) mode.
+    if (fRunEventLoop) {
+        goto ServerLoop;
 
-
-// ----------------------------
-// Headless mode
+// Next priority: Headless mode.
 // see: msgloop.c
-    if (fHeadlessMode == TRUE)
-    {
+    } else if (fHeadlessMode) {
         Init.is_headless = TRUE;
         msgloop_RunServer_HeadlessMode();
+        //printf ("init: Unexpected error\n");
+        //exit(0);
         goto unexpected_exit;
-    }
+
+// If interactive flag is set: Start the command-line interface.
+    } else if (fRunCommandLine) {
+        goto CommandInterpreter;
+
+    } else if (fRunDesktop) {
+        printf ("init: Desktop\n");
+        do_launch_de();
+        msgloop_RunServer();
+        //printf ("init: Unexpected error\n");
+        //exit(0);
+        //goto ServerLoop;
+        goto unexpected_exit;
+
+    } else if (fReboot) {
+        printf ("init: Reboot\n");
+        rtl_reboot(); // Provisory
+        goto ServerLoop;
+
+    } else if (fshutdown) {
+        printf ("init: Shutdown\n");
+        // #todo
+        goto ServerLoop;
+
+// Fallback: 
+// Default mode (likely interactive) when no flag is provided.
+    } else {
+        printf ("init: Default\n");
+        goto ServerLoop;
+    };
 
 //
 // Loop
@@ -1080,8 +1132,15 @@ CommandInterpreter:
 // Get input from stdin.
 // Local function.
     int cmdline_status = -1;
-    if (fRunCommandLine == TRUE){
+    if (fRunCommandLine == TRUE)
+    {
         cmdline_status = (int) loopSTDIN();
+        if (isTimeToQuitCmdLine == TRUE)
+        {
+            msgloop_RunServer();
+            printf("init: Unexpected exit\n");
+            exit(0);
+        }   
     }
 
     // Fall through :)

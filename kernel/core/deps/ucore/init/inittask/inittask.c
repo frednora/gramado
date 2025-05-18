@@ -42,7 +42,7 @@ void do_net_on(void);
 
 void xxxSendResponse(void);
 
-int 
+static int 
 xxxProcessEvent ( 
     void *window, 
     int msg, 
@@ -50,7 +50,7 @@ xxxProcessEvent (
     unsigned long long2,
     int caller_tid );
 
-int xxxEventLoopSystemEvents(void);
+static int xxxEventLoopSystemEvents(void);
 
 void libinit_clear_msg_buffer(void);
 int libinit_initialize_library(void);
@@ -174,7 +174,7 @@ void xxxSendResponse(void)
 // Process events.
 // These events come from the kernel or another process.
 // The caller TID for the kernel is 99.
-int 
+static int 
 xxxProcessEvent ( 
     void *window, 
     int msg, 
@@ -302,7 +302,7 @@ xxxProcessEvent (
 
 // Reboot receive.
 // #warning
-// Who can send us this message?
+// Who can send us this message? Only the kernel?
     case 55888:
         // Not the kernel
         if (caller_tid != 99){
@@ -349,7 +349,7 @@ fail:
 // Process the events.
 // Respont the request of other processes, 
 // using system messages.
-int xxxEventLoopSystemEvents(void)
+static int xxxEventLoopSystemEvents(void)
 {
 
 // #todo
@@ -524,12 +524,12 @@ int msgloop_RunServer_HeadlessMode(void)
 // The network infra-structure has a flag
 // to not pump data from the NIC device.
 // Let's enable the input.
-    do_net_on();
+    //do_net_on();
 
 // dhcp
 // Let's o the dhcp dialog.
 // Maybe this is the first time we're doing this.
-    do_dhcp_dialog();
+    //do_dhcp_dialog();
 
     Status = (int) msgloop_RunServer();
     if (Status<0){

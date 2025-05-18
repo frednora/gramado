@@ -14,18 +14,20 @@ static int InitialProcessInitialized = FALSE;
 // The command line for init.bin.
 // These are the cmdline options for the init process.
 // Passed via stdin.
-// --hl = Headless mode. No cmdline interpreter.
-// --cmd = Run the cmdline interpreter.
-// --server = Run embedded server.
+
+// mode=server   | Run embedded server.
+// mode=headless | Headless mode. No cmdline interpreter.
+// mode=desktop  | Run the cmdline interpreter.
 // --reboot = Reboot the machine.
 // --shutdown = Shutdown the machine.
 
-const char *initbin_cmdline1 = "INIT.BIN: --cmd --server";
-//const char *initbin_cmdline2 = "INIT.BIN: --cmd --server";
-const char *initbin_cmdline3 = "INIT.BIN: --hl";
-//const char *initbin_cmdline4 = "INIT.BIN: --reboot";
-//const char *initbin_cmdline5 = "INIT.BIN: --shutdown";
-//...
+const char *initbin_cmdline_server   = "INIT.BIN: mode=server";
+const char *initbin_cmdline_headless = "INIT.BIN: mode=headless";
+const char *initbin_cmdline_cli      = "INIT.BIN: mode=cli";
+const char *initbin_cmdline_desktop  = "INIT.BIN: mode=desktop";
+const char *initbin_cmdline_reboot   = "INIT.BIN: mode=reboot";
+const char *initbin_cmdline_shutdown = "INIT.BIN: mode=shutdown";
+// ...
 
 //Onde ficam os códigos e arquivos de configuração usados na inicialização.
 //A ideia é que se a inicialização precisar de algum arquivo, deve procurá-lo
@@ -97,14 +99,42 @@ static int __setup_stdin_cmdline(void)
 // #todo: We can copy a different comand line depending on
 // the runlevel number.
 
+// #todo:
+// When we set g_product_type?
+// see: kmain.c and config/product.h
     switch (g_product_type)
     {
+        // Headless
         case PT_GRAMADO_HYPERVISOR_HEADLESS:
         case PT_GRAMADO_SERVER_HEADLESS:
-            crt_sprintf( cmdline, initbin_cmdline3 );
+        case PT_GRAMADO_WORKSTATION_HEADLESS:
+        case PT_GRAMADO_DESKTOP_HEADLESS:
+        case PT_GRAMADO_IOT_HEADLESS:
+            crt_sprintf( cmdline, initbin_cmdline_headless );
             break;
+
+        // CLI
+        case PT_GRAMADO_HYPERVISOR_CLI:
+        case PT_GRAMADO_SERVER_CLI:
+        case PT_GRAMADO_WORKSTATION_CLI:
+        case PT_GRAMADO_DESKTOP_CLI:
+        case PT_GRAMADO_IOT_CLI:
+            crt_sprintf( cmdline, initbin_cmdline_cli );
+            break;
+
+        // Desktop experience
+        case PT_GRAMADO_HYPERVISOR:
+        case PT_GRAMADO_SERVER:
+        case PT_GRAMADO_WORKSTATION:
+        case PT_GRAMADO_DESKTOP:
+        case PT_GRAMADO_IOT:
+            crt_sprintf( cmdline, initbin_cmdline_desktop );
+            break;
+        // ...
+
+        // CLI mode for init process.
         default:
-            crt_sprintf( cmdline, initbin_cmdline1 );
+            crt_sprintf( cmdline, initbin_cmdline_cli );
             break;
     };
 
