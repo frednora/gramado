@@ -923,14 +923,28 @@ int main( int argc, char **argv)
     {
         for (i=1; i < argc; i++)
         {
+            // #todo
+            // Ensure that if multiple conflicting flags are given, 
+            // the code clearly defines what takes precedence.
+            // #todo
+            // At the end of the routine, based on the flags the system will 
+            // decide the precedence.
+
+            // Headless mode.
+            // #todo: mode=headless
             if (strcmp("--hl", argv[i]) == 0)
                 fHeadlessMode = TRUE;
 
+            // Launching the directly.
+            // #todo: mode=desktop
+
             // Run the embedded cmdline interpreter.
+            // #todo: mode=cmd
             if (strcmp("--cmd", argv[i]) == 0)
                 fRunCommandLine = TRUE;
 
             // Run the init process in server mode.
+            // #todo: mode=server
             if (strcmp("--server", argv[i]) == 0)
                 fRunEventLoop = TRUE;
 
@@ -1017,6 +1031,35 @@ int main( int argc, char **argv)
     printf("init.bin: Brakpoint\n");
     while(1){}
 */
+
+/*
+// #todo: Working on flag precedence.
+// Parsed all arguments; now decide which mode to enter.
+// Prefer autonomous operation: 
+// #todo: In our design, silent modes come first:
+// 1: server mode > 
+// 2: headless mode > 
+// 3: interactive CLI/GUI, ensuring stable, non-verbose startup.
+
+if (fRunEventLoop) {
+    // Highest priority: Launch server (event loop) mode.
+    init_server_mode();    // Dedicated background processing using IPC.
+}
+else if (fHeadlessMode) {
+    // Next priority: Headless mode.
+    init_headless_mode();  // Launch necessary services without interactive output.
+}
+else if (fRunCommandLine) {
+    // If interactive flag is set: Start the command-line interface.
+    init_command_line_mode(); // For interactive user debugging or admin tasks.
+}
+else {
+    // Fallback: default mode (likely interactive) when no flag is provided.
+    init_default_mode();
+}
+*/
+
+
 
 // ----------------------------
 // Headless mode
