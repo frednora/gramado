@@ -12,6 +12,29 @@ static void __x_panic_show_message(const char *final_string, unsigned long flags
 // =============================================
 //
 
+
+void gramk_update_progress_bar(unsigned long percent)
+{
+    unsigned long rectLeft=0;
+    unsigned long rectTop=0;
+    unsigned long rectWidth = gSavedX;  // (Device width) see: kmain.c
+    unsigned long rectHeight = (8*3); // Char height * 3  //28;
+    unsigned int RectColor = COLOR_GRAY;
+
+    unsigned long OneElement = (unsigned long) (rectWidth/100);
+    if (percent > 100)
+        percent = 100;
+    rectWidth = (unsigned long) OneElement * percent;
+
+// Draw
+    backbuffer_draw_rectangle ( 
+        rectLeft, rectTop, rectWidth, rectHeight, 
+        RectColor, 
+        0 );
+// Flush
+    refresh_rectangle(rectLeft, rectTop, rectWidth, rectHeight);
+}
+
 // see: bldisp.c
 void refresh_screen(void)
 {
@@ -146,7 +169,9 @@ void gramk_show_banner(void)
     
 // Crear screen and print version string.
     PROGRESS("gramk_show_banner:\n");
-    console_banner( product_string, build_string, 0 );
+
+    const unsigned long BannerFlags = 0x1000;  // Do not clear console.
+    console_banner( product_string, build_string, BannerFlags );
 }
 
 // Setup Default kernel font.

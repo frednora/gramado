@@ -2467,9 +2467,15 @@ console_banner(
     const char *build_string, 
     unsigned long banner_flags )
 {
-
     unsigned int bg_color = COLOR_BLUE;
     unsigned int fg_color = COLOR_WHITE;
+    int ClearOrNot = TRUE;
+
+
+    // #todo: 
+    // Change this based on flags.
+    if (banner_flags & 0x1000)
+        ClearOrNot =  FALSE;
 
 // Serial debug
     if (Initialization.is_serial_log_initialized == TRUE){
@@ -2496,10 +2502,15 @@ console_banner(
         return;
     }
 
+// Get colors
     bg_color = CONSOLE_TTYS[fg_console].bg_color;
     fg_color = CONSOLE_TTYS[fg_console].fg_color;
-    console_clear_imp( bg_color, fg_color, fg_console );
-    set_up_cursor(0,0);
+
+    if (ClearOrNot == TRUE)
+    {
+        console_clear_imp( bg_color, fg_color, fg_console );
+        set_up_cursor(0,0);
+    }
 
     if ((void*) product_string == NULL)
         return;
