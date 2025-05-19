@@ -6,7 +6,7 @@
 
 
 // -----------------------------------------------------------------------
-// High-Level BitBlt Function
+// BitBlt Function
 // -----------------------------------------------------------------------
 //
 // Copies from one rectangle of a source surface to a rectangle of a destination
@@ -25,7 +25,7 @@
 // #important
 // The copy area is the width and height of the destine.
 int 
-bitblt(
+bitblt00(
     struct gws_rect_d *dst_rect,
     struct gws_rect_d *src_rect,
     unsigned long dst_surface_base,  // Destination buffer base address
@@ -71,81 +71,18 @@ bitblt(
     return 0;
 }
 
-
-// #bugbug
-// This is wrong
 int 
-backbuffer_bitblt(
-    struct gws_rect_d *src_rect,
-    unsigned long new_rop,
-    int op,
-    int show )
+bitblt01(
+    struct dc_d *dc_dst,   // Handle to the destination device context.
+    unsigned long dst_l,   // X-coordinate of the upper-left corner of the destination rectangle.
+    unsigned long dst_t,   // Y-coordinate of the upper-left corner of the destination rectangle.
+    struct dc_d *dc_src,   // Handle to the source device context.
+    unsigned long src_l,   // X-coordinate of the upper-left corner of the source rectangle.
+    unsigned long src_t,   // Y-coordinate of the upper-left corner of the source rectangle.
+    unsigned long width,   // Width of the source and destination rectangles.
+    unsigned long height,  // Height of the source and destination rectangles.
+    unsigned long rop )    // Raster operation code (defines how pixels are combined).
 {
-    struct gws_rect_d *r;
-    r = src_rect;
-    if ((void*) r == NULL )
-        return -1;
-
-    r->rop = new_rop;
-
-
-// 0
-    if (op == BITBLT_OP_ERASE)
-    {
-        r->bg_color = COLOR_BLACK;
-        backbuffer_draw_rectangle( 
-           r->left,
-           r->top,
-           r->width,
-           r->height,
-           r->bg_color,
-           r->rop );
-    }
-
-// 1
-    if (op == BITBLT_OP_COPY)
-    {
-        backbuffer_draw_rectangle( 
-           r->left,
-           r->top,
-           r->width,
-           r->height,
-           r->bg_color,
-           r->rop );
-    }
-
-    if (show)
-        flush_rectangle(r);
-
-    return 0;
+    return (int) -1;
 }
-
-
-int 
-frontbuffer_bitblt(
-    struct gws_rect_d *src_rect,
-    unsigned long new_rop,
-    int op )
-{
-    struct gws_rect_d *r;
-    r = src_rect;
-    if ((void*) r == NULL )
-        return -1;
-
-    r->rop = new_rop;
-
-    if (op == BITBLT_OP_COPY)
-    {
-        frontbuffer_draw_rectangle( 
-           r->left,
-           r->top,
-           r->width,
-           r->height,
-           r->bg_color,
-           r->rop );
-    }
-
-    return 0;
-}
-
 

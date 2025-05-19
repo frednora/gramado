@@ -113,8 +113,9 @@
 //
 
 
+
 int 
-bitblt(
+bitblt00(
     struct gws_rect_d *dst_rect,
     struct gws_rect_d *src_rect,
     unsigned long dst_surface_base,  // Destination buffer base address
@@ -123,17 +124,16 @@ bitblt(
     int op );                        // Additional operation flags (e.g., flip, alpha blend)
 
 int 
-backbuffer_bitblt(
-    struct gws_rect_d *src_rect,
-    unsigned long new_rop,
-    int op,
-    int show );
-
-int 
-frontbuffer_bitblt(
-    struct gws_rect_d *src_rect,
-    unsigned long new_rop,
-    int op );
+bitblt01(
+    struct dc_d *dc_dst,   // Handle to the destination device context.
+    unsigned long dst_l,   // X-coordinate of the upper-left corner of the destination rectangle.
+    unsigned long dst_t,   // Y-coordinate of the upper-left corner of the destination rectangle.
+    struct dc_d *dc_src,   // Handle to the source device context.
+    unsigned long src_l,   // X-coordinate of the upper-left corner of the source rectangle.
+    unsigned long src_t,   // Y-coordinate of the upper-left corner of the source rectangle.
+    unsigned long width,   // Width of the source and destination rectangles.
+    unsigned long height,  // Height of the source and destination rectangles.
+    unsigned long rop );   // Raster operation code (defines how pixels are combined).
 
 
 #endif    

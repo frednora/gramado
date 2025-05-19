@@ -448,7 +448,7 @@ wmProcessKeyboardEvent(
             r2.width = 200;
             r2.height = 200;
 
-            bitblt(
+            bitblt00 (
                 &r1,  // destination rect
                 &r2,  // source rect   
                 ____BACKBUFFER_VA,         // dst base buffer

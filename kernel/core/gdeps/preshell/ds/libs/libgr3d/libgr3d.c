@@ -1,3 +1,6 @@
+// libgr3d.c
+// 3D using integers.
+// Created by Fred Nora.
 
 
 #include "include/libgr3d.h"

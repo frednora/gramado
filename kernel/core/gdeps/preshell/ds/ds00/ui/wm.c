@@ -4700,7 +4700,7 @@ struct gws_window_d *wmCreateRootWindow(unsigned int bg_color)
     w->client_dc = NULL;
 
 // Default dc.
-    if ( (void*) gr_dc != NULL )
+    if ((void*) gr_dc != NULL)
     {
         if (gr_dc->initialized == TRUE)
         {

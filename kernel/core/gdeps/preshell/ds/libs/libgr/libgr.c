@@ -1,5 +1,5 @@
-
 // libgr.c
+// Created by Fred Nora.
 
 #include "include/libgr.h"
 
@@ -569,15 +569,4 @@ xxxDeflateCubeZ (
 
     return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
 
