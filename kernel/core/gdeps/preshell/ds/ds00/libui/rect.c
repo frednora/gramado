@@ -567,6 +567,7 @@ void invalidate_surface_retangle (void)
     gramado_system_call ( 893, 0, 0, 0 );
 }
 
+// ======================================
 // Copy a rectangle.
 // #todo
 // IN:
@@ -734,6 +735,229 @@ __refresh_rectangle0 (
         for ( i=0; i < lines; i++ ){
             if (UseClipping == TRUE){
                 if ( (FirstLine + i) > deviceHeight ){ break; }
+            }
+            memcpy ( (void *) dest, (const void *) src, rectangle_pitch );
+            dest += screen_pitch; 
+            src  += screen_pitch; 
+        };
+        return;
+    }
+}
+
+// ======================================
+// Copy a rectangle.
+// #todo
+// IN:
+// w, h, 
+// dst l, dst t, dst address, 
+// src l, src t, src address.
+void 
+__refresh_rectangle1 ( 
+    unsigned long width,    // common
+    unsigned long height,   // common
+    unsigned long dst_x,        // dst stuff
+    unsigned long dst_y,        // dst stuff
+    unsigned long buffer_dest,  // dst stuff
+    unsigned long src_x,        // src stuff
+    unsigned long src_y,        // src stuff
+    unsigned long buffer_src )  // src stuff
+{
+
+    //debug_print("refresh_rectangle: r0 :)\n");
+
+    //void *dest       = (void *)      FRONTBUFFER_ADDRESS;
+    //const void *src  = (const void*) BACKBUFFER_ADDRESS;
+    void *dest       = (void *)      buffer_dest;
+    const void *src  = (const void*) buffer_src;
+
+// loop
+    register unsigned int i=0;
+    register unsigned int lines=0;
+    unsigned int line_size=0; 
+    register int count=0; 
+
+// Screen pitch.
+// screen line size in pixels * bytes per pixel.
+    unsigned int screen_pitch=0;  
+// Rectangle pitch
+// rectangle line size in pixels * bytes per pixel.
+    unsigned int rectangle_pitch=0;  
+
+    unsigned int src_offset=0;
+    unsigned int dst_offset=0;
+
+// = 3; 24bpp
+    int bytes_count=0;
+
+// First line for both
+    int dstFirstLine = (int) (dst_y & 0xFFFF);
+    int srcFirstLine = (int) (src_y & 0xFFFF);
+
+    //int UseVSync = FALSE;
+    int UseClipping = TRUE;
+
+//==========
+// dc
+    //unsigned long deviceWidth  = (unsigned long) screenGetWidth();
+    //unsigned long deviceHeight = (unsigned long) screenGetHeight();
+// Device info.
+    unsigned long deviceWidth  = (unsigned long) gws_get_device_width();
+    unsigned long deviceHeight = (unsigned long) gws_get_device_height();
+
+    if ( deviceWidth == 0 || deviceHeight == 0 )
+    {
+        debug_print ("refresh_rectangle: w h\n");
+        //panic       ("refresh_rectangle: w h\n");
+        return;
+    }
+
+//
+// Internal
+//
+
+
+    unsigned long dstX = (unsigned long) (dst_x & 0xFFFF);
+    unsigned long srcX = (unsigned long) (src_x & 0xFFFF);
+
+    unsigned long dstY = (unsigned long) (dst_y & 0xFFFF);
+    unsigned long srcY = (unsigned long) (src_y & 0xFFFF);
+
+// both
+    line_size = (unsigned int) (width  & 0xFFFF); 
+    lines     = (unsigned int) (height & 0xFFFF);
+
+    switch (SavedBPP){
+    // (32/8)
+    case 32:
+        bytes_count = 4;
+        break;
+    // (24/8)
+    case 24:
+        bytes_count = 3;
+        break;
+    // ...
+    default:
+        //panic ("refresh_rectangle: SavedBPP\n");
+        return;
+        break;
+    };
+
+//
+// Pitch
+//
+
+// Screen pitch.
+// Screen line size in pixels plus bytes per pixel.
+    screen_pitch = (unsigned int) (bytes_count * deviceWidth);
+
+// both
+// Rectangle pitch.
+// rectangle line size in pixels * bytes per pixel.
+//(line_size * bytes_count) é o número de bytes por linha. 
+    rectangle_pitch = (unsigned int) (bytes_count * line_size);
+
+// #atenção.
+//offset = (unsigned int) BUFFER_PIXEL_OFFSET( x, y );
+
+    dst_offset = (unsigned int) ( (dstY*screen_pitch) + (bytes_count*dstX) );
+    src_offset = (unsigned int) ( (srcY*screen_pitch) + (bytes_count*srcX) );
+
+    dest = (void *)       (dest + dst_offset); 
+    src  = (const void *) (src  + src_offset); 
+
+// #bugbug
+// Isso pode nos dar problemas.
+// ?? Isso ainda é necessário nos dias de hoje ??
+
+    //if ( UseVSync == TRUE){
+        //vsync();
+    //}
+
+// ================================
+// Se for divisível por 8.
+// Copy lines
+// See:'strength reduction'
+// Clipping?
+// Não copiamos a parte que está fora da janela do dispositivo.
+// memcpy64: 8 bytes per time.
+
+    if ( (rectangle_pitch % 8) == 0 )
+    {
+        count = (rectangle_pitch>>3);
+        for ( i=0; i < lines; i++ )
+        {
+            if (UseClipping == TRUE)
+            {
+                if ( (dstFirstLine + i) > deviceHeight )
+                { 
+                    break; 
+                }
+                if ( (srcFirstLine + i) > deviceHeight )
+                { 
+                    break; 
+                }
+            }
+            memcpy64 ( (void *) dest, (const void *) src, count );
+            dest += screen_pitch;
+            src  += screen_pitch;
+        };
+        return;
+    }
+
+// ================================
+// Se for divisível por 4.
+// Esse não será usado se for divisóvel por 8.
+// Mas será chamado se for menor que 8, apenas 4.
+// Copy lines
+// See:'strength reduction'
+// Clipping?
+// Não copiamos a parte que está fora da janela do dispositivo.
+// memcpy32: 4 bytes per time.
+
+    if ( (rectangle_pitch % 4) == 0 )
+    {
+        count = (rectangle_pitch>>2);
+        for ( i=0; i < lines; i++ )
+        {
+            if (UseClipping == TRUE)
+            {
+                if ( (dstFirstLine + i) > deviceHeight )
+                { 
+                    break; 
+                }
+                if ( (srcFirstLine + i) > deviceHeight )
+                { 
+                    break; 
+                }
+            }
+            memcpy32 ( (void *) dest, (const void *) src, count );
+            //__rect_memcpy32 ( (void *) dest, (const void *) src, count );
+            dest += screen_pitch;
+            src  += screen_pitch;
+        };
+        return;
+    }
+
+// ================================
+// Se não for divisível por 4. (slow)
+// Copy lines
+// Clipping?
+// Não copiamos a parte que está fora da janela do dispositivo.
+// memcpy: 1 byte per time.
+
+    if ( (rectangle_pitch % 4) != 0 )
+    {
+        for ( i=0; i < lines; i++ ){
+            if (UseClipping == TRUE)
+            {
+                if ( (dstFirstLine + i) > deviceHeight )
+                { 
+                    break; 
+                }
+                if ( (srcFirstLine + i) > deviceHeight )
+                { 
+                    break; 
+                }
             }
             memcpy ( (void *) dest, (const void *) src, rectangle_pitch );
             dest += screen_pitch; 

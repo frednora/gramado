@@ -420,6 +420,44 @@ wmProcessKeyboardEvent(
         {
             YellowDialogInfo.useYellowDialog = TRUE;
             YellowDialogInfo.display_dialog = TRUE;
+
+            /*
+            // #test OK
+            // Testing the copying of a rectangle.
+            // Valid only inside the backbuffer.
+            __refresh_rectangle1( 
+                400, 200,  // w and h
+                10, 10, ____BACKBUFFER_VA,      // Destination
+                100, 100, ____BACKBUFFER_VA );  // Source
+            wm_flush_window(__root_window);     // Flush screen
+            */
+
+            /*
+            // #test  OK
+            // Testing the bitblt() routine
+            // #important
+            // The copy area is the width and height of the destine.
+            struct gws_rect_d r1;
+            r1.left = 10;
+            r1.top = 10;
+            r1.width = 100;     // copy width
+            r1.height = 100;    // copy height
+            struct gws_rect_d r2;
+            r2.left = 200;
+            r2.top = 200;
+            r2.width = 200;
+            r2.height = 200;
+
+            bitblt(
+                &r1,  // destination rect
+                &r2,  // source rect   
+                ____BACKBUFFER_VA,         // dst base buffer
+                ____BACKBUFFER_VA,         // src base buffer
+               0,                          // rop
+               0 );                        // op
+            wm_flush_window(__root_window);     // Flush screen
+            */
+
             return 0;
         }
         

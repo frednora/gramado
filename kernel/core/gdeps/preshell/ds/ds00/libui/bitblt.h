@@ -117,8 +117,10 @@ int
 bitblt(
     struct gws_rect_d *dst_rect,
     struct gws_rect_d *src_rect,
-    unsigned long new_rop,
-    int op );
+    unsigned long dst_surface_base,  // Destination buffer base address
+    unsigned long src_surface_base,  // Source buffer base address
+    unsigned long rop,               // Raster operation flags (e.g., SRCCOPY)
+    int op );                        // Additional operation flags (e.g., flip, alpha blend)
 
 int 
 backbuffer_bitblt(

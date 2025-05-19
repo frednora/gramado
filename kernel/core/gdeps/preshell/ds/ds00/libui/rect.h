@@ -131,6 +131,20 @@ gws_refresh_rectangle0 (
     unsigned long dst_surface_base,
     unsigned long src_surface_base );
 
+// Copy rectangle
+// worker for bitblt in other document.
+void 
+__refresh_rectangle1 ( 
+    unsigned long width,    // common
+    unsigned long height,   // common
+    unsigned long dst_x,        // dst stuff
+    unsigned long dst_y,        // dst stuff
+    unsigned long buffer_dest,  // dst stuff
+    unsigned long src_x,        // src stuff
+    unsigned long src_y,        // src stuff
+    unsigned long buffer_src );  // src stuff
+
+
 // Paint it into the backbuffer.
 void 
 rectBackbufferDrawRectangle0 ( 
