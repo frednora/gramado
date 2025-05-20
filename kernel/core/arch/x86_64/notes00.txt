@@ -1,0 +1,12 @@
+
+-----------------------------------
+1. Folder Contents & Code Structure
+
+The folder contains core kernel initialization and interrupt handler code, 
+including files like head_64.asm, x86_64.asm, pic.asm, pit.asm, and others. 
+
+Both head_64.asm and x86_64.asm contain the logic for setting up 
+the Interrupt Descriptor Table (IDT) and initializing handlers for CPU 
+exceptions and hardware IRQs.
+
+-----------------------------------

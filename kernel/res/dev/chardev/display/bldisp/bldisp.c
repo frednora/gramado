@@ -628,7 +628,7 @@ void invalidate_screen(void)
  *     Inicializando o gerenciamento de tela.
  */ 
 // #bugbug
-// Screen is a reagion in the display, or in many displays.
+// Screen is a region in the display, or in many displays.
 // Display is a monitor, or a set o hid in a given host.
 
 int bldispScreenInit(void)
@@ -648,6 +648,11 @@ int bldispScreenInit(void)
 // bytes per pixel = ((32/8)*800)
     screen_pitch = (unsigned long) ( (gSavedBPP/8) * gSavedX );
     //...
+
+// Background (Second time).
+// Lets do this in the late initialization?
+    displayInitializeBackground( COLOR_KERNEL_BACKGROUND, TRUE );
+
     return 0;
 }
 

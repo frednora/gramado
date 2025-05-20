@@ -5,13 +5,14 @@
 
 #include <kernel.h>
 
+
+int config_use_progressbar = FALSE;
+
+// =============================================
+
 static void __x_panic_show_message(const char *final_string, unsigned long flags);
 
-
-//
 // =============================================
-//
-
 
 void gramk_update_progress_bar(unsigned long percent)
 {
@@ -25,6 +26,9 @@ void gramk_update_progress_bar(unsigned long percent)
     if (percent > 100)
         percent = 100;
     rectWidth = (unsigned long) OneElement * percent;
+
+    if (config_use_progressbar != TRUE)
+        return;
 
 // Draw
     backbuffer_draw_rectangle ( 
@@ -142,7 +146,7 @@ void gramk_panic(const char *final_string)
 // We have a virtual console and we can use the printk.
 // This is the first message in the screen.
 // see: tty/console.c
-void gramk_show_banner(void)
+void gramk_show_banner(int clear_console)
 {
 // Called by keInitialize() in ke.c.
 
@@ -170,7 +174,12 @@ void gramk_show_banner(void)
 // Crear screen and print version string.
     PROGRESS("gramk_show_banner:\n");
 
-    const unsigned long BannerFlags = 0x1000;  // Do not clear console.
+    unsigned long BannerFlags;
+    if (clear_console == TRUE){
+        BannerFlags = 0;
+    } else {
+        BannerFlags = 0x1000;
+    };
     console_banner( product_string, build_string, BannerFlags );
 }
 

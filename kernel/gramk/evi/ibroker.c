@@ -252,9 +252,11 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 // ==================
 
 
-// about: Crear screen and print version string.
-    if ( kstrncmp( cmdline, "about", 5 ) == 0 ){
-        gramk_show_banner();
+// about: 
+// Print banner but do not clear the screen (FALSE).
+    if ( kstrncmp( cmdline, "about", 5 ) == 0 )
+    {
+        gramk_show_banner(FALSE);
         printk("The kernel console\n");
         goto exit_cmp;
     }

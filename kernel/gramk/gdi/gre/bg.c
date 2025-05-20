@@ -33,10 +33,6 @@ static void __displayPaintBackground(unsigned int color, int show)
         color,
         0 );   //rop_flags
 
-// Cursor.
-// #bugbug: This routine is not working at this time.
-    set_up_cursor(0,0);
-
     if (show == TRUE)
         refresh_screen();
 
@@ -58,7 +54,11 @@ static void __displayPaintBackground(unsigned int color, int show)
 int displayInitializeBackground(unsigned int color,int show)
 {
     __displayPaintBackground((unsigned int) color,show);
-    //set_up_cursor(0,0);
+
+// Cursor.
+// #bugbug: This routine is not working at this time.
+    set_up_cursor(0,0);
+
     background_info.initialized = TRUE;
 
     return 0;

@@ -1104,7 +1104,6 @@ static int I_initKernelComponents(void)
 // Initialize globals.
 // See: kmain.c
     init_globals();
-    //PROGRESS("init_globals ok\n"); 
 
 // Create the device list for all the devices
 // in our system, including the hal stuff i guess.
@@ -1113,10 +1112,9 @@ static int I_initKernelComponents(void)
 // Initialize system HAL.
     Status = halInitialize();
     if (Status != TRUE){
-        printk("I_initKernelComponents: halInitialize fail\n");
+        printk("I_initKernelComponents: on halInitialize()\n");
         return FALSE;
     }
-    //PROGRESS("halInitialize ok\n"); 
 
 // Initializat PCI interface.
     init_pci();

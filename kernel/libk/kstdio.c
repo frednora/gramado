@@ -2219,9 +2219,6 @@ int kstdio_initialize(void)
     //PROGRESS("BREAKPOINT\n");
     //while(1){}
 
-// Background (Second time).
-    displayInitializeBackground( COLOR_KERNEL_BACKGROUND, TRUE );
-
 // Done
     kstdio_standard_streams_initialized = TRUE;
     return TRUE;

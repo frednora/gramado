@@ -110,10 +110,7 @@ int dead_thread_collector_flag=0;
 //pid_t current_dead_process;
 //int current_dead_thread;
 
-
-
 //char InitialUserProcessName[32] = "INIT.BIN"
-
 
 // --------------------------------------
 // head_64.asm is given us these two values.
@@ -326,6 +323,12 @@ void init_globals(void)
         panic("init_globals: kstdio_initialize fail\n");
     }
 
+// ===================
+
+// The kernel request
+// See: request.c
+    clearDeferredKernelRequest();
+
 // Screen
 // Now we can print strings in the screen.
 // Reinitializing ... 
@@ -334,12 +337,6 @@ void init_globals(void)
 
     //debug_print("keInitGlobals: [printk] WE HAVE MESSAGES NOW!\n");
     //printk     ("keInitGlobals: [printk] WE HAVE MESSAGES NOW!\n");
-
-// ===================
-
-// The kernel request
-// See: request.c
-    clearDeferredKernelRequest();
 }
 
 
@@ -888,6 +885,11 @@ void I_kmain(int arch_type)
     gSystemEdition = 0;
     __failing_kernel_subsystem = KERNEL_SUBSYSTEM_INVALID;
     has_booted = FALSE;
+
+    config_use_progressbar = FALSE;
+    if (CONFIG_USE_PROGRESSBAR == 1){
+        config_use_progressbar = TRUE;
+    }
 
 // Setup debug mode.
 // Enable the usage of the serial debug.

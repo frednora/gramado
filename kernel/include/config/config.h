@@ -19,6 +19,8 @@
 #define CONFIG_HEADLESS_MODE  0
 #define CONFIG_PRINTK_TO_SERIAL  0
 
+#define CONFIG_USE_PROGRESSBAR  0
+
 // ------------------------------------------------------
 // Device flags:
 

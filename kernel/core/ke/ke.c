@@ -881,10 +881,12 @@ int keInitialize(int phase)
         // Now we have console debug
         Initialization.is_console_log_initialized = TRUE;
 
-        gramk_show_banner();
+        // Print banner but do not clear the screen.
+        gramk_show_banner(FALSE);
 
         // Print resolution info
         __print_resolution_info();
+
         // Check gramado mode
         __check_gramado_mode();
         // Import data from linker.
@@ -917,6 +919,8 @@ int keInitialize(int phase)
         if (Status != TRUE){
             goto fail;
         }
+
+        // while(1){}
 
         goto InitializeEnd;
 
