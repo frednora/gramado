@@ -670,33 +670,41 @@ void *malloc(size_t size)
 
 // ===========
 
-    void *ptr;
-    unsigned long new_size = ( unsigned long) size;
+    void *base_ptr;
+    // #todo: 
+    // This flag is important
+    // and we don't have it in other instances of libc.
+    unsigned long longSize = 
+        (unsigned long) (size & 0xFFFFFFFF);
 
     //debug_print ("malloc:\n");
 
 // Parameter:
-    if (size < 0){
-        debug_print ("malloc: size\n");
+    if (size <= 0){
         return NULL; 
     }
-    if (size == 0){ 
-        new_size = 1;
+
+// -----------------------
+// Select the allocation method.
+
+// If the local heap is available.
+    if (UseLocalAllocator == TRUE){
+        base_ptr = (void *) heapAllocateMemory(longSize);
     }
 
-    if ( UseLocalAllocator == TRUE ){
-        ptr = (void *) heapAllocateMemory(new_size);
+// Using a shared heap.
+// #danger
+    if (UseLocalAllocator == FALSE){
+        base_ptr = (void *) shAlloc(longSize);
     }
 
-    if ( UseLocalAllocator == FALSE ){
-        ptr = (void *) shAlloc(new_size);
-    }
+// -----------------------
+// Pointer validation
 
-    if ( (void *) ptr == NULL )
-    {
-        debug_print ("malloc: [FAIL] ptr\n");
-        //printf("malloc: falha ao alocar memoria!\n");
-        //refresh_screen();
+    // #bugbug
+    // We can't use printf during the library's initialization.
+    if ((void *) base_ptr == NULL){
+        debug_print ("malloc: Invalid base_ptr\n");
         return NULL;
     }
 
@@ -708,24 +716,25 @@ void *malloc(size_t size)
 	};
 */
 
-    return (void *) ptr; 
+// Base pointer for the allocated area.
+    return (void *) base_ptr; 
 }
-
 
 void *xmalloc (size_t size)
 {
     void *ptr;
 
 // Parameter:
-    if (size<=0){
-        stdlib_die ("xmalloc: [FAIL] size\n");
+    if (size <= 0){
+        stdlib_die ("xmalloc: Invalid size\n");
     }
 
     ptr = (void*) malloc(size);
-    if( (void*) ptr == NULL ){
-        stdlib_die ("xmalloc: [FAIL] ptr\n");
+    if ((void*) ptr == NULL){
+        stdlib_die ("xmalloc: Invalid ptr\n");
     }
 
+// Base pointer for the allocated area
     return (void *) ptr;
 }
 
@@ -762,7 +771,7 @@ char *xstrdup(char const *string)
     }
 
 // String size
-    Size = strlen (string);
+    Size = strlen(string);
     if (Size <= 0){
         stdlib_die ("xstrdup: [FAIL] Size\n");
     }
@@ -771,9 +780,13 @@ char *xstrdup(char const *string)
     return (char *) xmemdup(string,Size);
 }
 
-void *realloc ( void *start, size_t newsize )
+void *realloc(void *start, size_t newsize)
 {
     void *newstart;
+
+// Parameter:
+    if (newsize<0)
+        return NULL;
 
     newstart = (void *) malloc(newsize);
     
@@ -790,7 +803,7 @@ void *realloc ( void *start, size_t newsize )
         return newstart;
     };
 
-//fail.
+// Fail
    return NULL;
 }
 
@@ -883,10 +896,13 @@ void *calloc(size_t num, size_t size)
 }
 */
 
-
-void *rtl_calloc (size_t count, size_t size)
+// Wrapper for calloc.
+void *rtl_calloc(size_t count, size_t size)
 {
     size_t t = (count*size);
+
+    if (size<0)
+        return NULL;
 
     if (t == 0)
     {
@@ -897,23 +913,23 @@ void *rtl_calloc (size_t count, size_t size)
     return (void *) calloc(count,size);
 }
 
-// calloc: 
-// Aloca e preenche com zero.
- 
-void *calloc (size_t count, size_t size)
+// calloc: Allocate and fill with zeros.
+void *calloc(size_t count, size_t size)
 {
     void *ptr;
     size_t new_size = (size_t) (count * size);
 
 // Parameter:
     if (count <= 0){
-        new_size = (1*size);
+        return NULL;
     }
 
+// Allocate
     ptr = (void*) malloc(new_size);
-    if ((void*) ptr != NULL){
-        memset(ptr, 0, new_size);
-    }
+    if ((void*) ptr == NULL)
+        return NULL;
+// Clear
+    memset(ptr, 0, new_size);
 
     return (void*) ptr;
 }
@@ -924,10 +940,7 @@ void *xcalloc (size_t count, size_t size)
 
 // Parameter:
     if (size <= 0)
-    {
-        count = 1;
-        size  = 8;
-    }
+        return NULL;
 
     ptr = (void*) calloc(count,size);
     if ((void*) ptr == NULL){
@@ -939,8 +952,8 @@ void *xcalloc (size_t count, size_t size)
 
 void *xzalloc (size_t n)
 {
-    if (n<=0){
-        n=1;
+    if (n <= 0){
+        return NULL;
     }
     return (void *) xcalloc(n,1);
 }
@@ -953,38 +966,42 @@ void *zmalloc (size_t size)
 
 // Parameter:
     if (size <= 0){
-        size=1;
+        return NULL;
     }
 
     ptr = (void*) malloc(size);
-    if ( (void *) ptr == NULL ){
+
+    if ((void *) ptr == NULL){
         //free (ptr);
         return NULL;
-    }else{
-        memset (ptr, 0, size);
-        return (void*) ptr;
-    };
+    }
 
-// fail
-    return NULL;
+    memset (ptr, 0, size);
+
+    return (void*) ptr;
 }
 
-// system:
-// chama um comando com base em uma cmdline.
+
 // #todo
 // No implemented yet.
 // #todo
 // Call the shell application?
-
 int system(const char *command)
 {
+    char *p;
+
+// Parameter:
     if ((void*) command == NULL)
         goto fail;
     if (*command == 0)
         goto fail;
 
+    p = command;
+    while (*p == ' ')
+        p++;
+
 // Clone
-    return (int) rtl_clone_and_execute(command);
+    return (int) rtl_clone_and_execute(p);
 
 fail:
     return (int) -1;
@@ -1078,11 +1095,10 @@ int setenv (const char *name, const char *value, int overwrite)
 {
     //debug_print("setenv: [TODO]\n"); 
 
-    if ( (void *) name == NULL ){
+    if ((void *) name == NULL){
         debug_print ("setenv: [FAIL] name\n");
         return -1;
     }
-
     if (*name == 0){
         debug_print ("setenv: [FAIL] *name\n");
         return -1;
@@ -1092,17 +1108,17 @@ int setenv (const char *name, const char *value, int overwrite)
 // value
 //
 
-    if ( (void *) value == NULL ){
+    if ((void *) value == NULL){
         debug_print ("setenv: [FAIL] value\n");
         return -1;
     }
-
     if (*value == 0){
         debug_print ("setenv: [FAIL] *value\n");
         return -1;
     }
 
 // #todo: ...
+
     return (int) (-1);
 }
 
