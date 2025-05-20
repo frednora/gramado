@@ -76,7 +76,7 @@ PHONY := all
 all:  \
 build-gramado-os \
 copy-extras \
-$(DEP_L3)/gramvd \
+$(DISTROS)/gramvd \
 vhd-mount \
 vhd-copy-files \
 vhd-unmount \
@@ -108,7 +108,7 @@ build-gramado-os
 PHONY := image
 image: do_image
 do_image: \
-$(DEP_L3)/gramvd    \
+$(DISTROS)/gramvd    \
 vhd-mount          \
 vhd-copy-files     \
 vhd-unmount        \
@@ -312,11 +312,11 @@ copy-extras:
 
 # --------------------------------------
 #::2
-# Step 2: $(DEP_L3)/gramvd  - Creating the directory to mount the VHD.
-$(DEP_L3)/gramvd:
+# Step 2: $(DISTROS)/gramvd  - Creating the directory to mount the VHD.
+$(DISTROS)/gramvd:
 	@echo "========================="
 	@echo "Build: Creating the directory to mount the VHD ..."
-	@sudo mkdir $(DEP_L3)/gramvd
+	@sudo mkdir $(DISTROS)/gramvd
 
 # --------------------------------------
 #::3
@@ -324,8 +324,8 @@ $(DEP_L3)/gramvd:
 vhd-mount:
 	@echo "=========================="
 	@echo "Build: Mounting the VHD ..."
-	@-sudo umount $(DEP_L3)/gramvd
-	@sudo mount -t vfat -o loop,offset=32256 GRAMHV.VHD  $(DEP_L3)/gramvd/
+	@-sudo umount $(DISTROS)/gramvd
+	@sudo mount -t vfat -o loop,offset=32256 GRAMHV.VHD  $(DISTROS)/gramvd/
 
 # --------------------------------------
 #::4
@@ -336,7 +336,7 @@ vhd-copy-files:
 	@echo "Build: Copying files into the mounted VHD ..."
 	# Copy $(BASE)/
 	# sends everything from disk/ to root.
-	@sudo cp -r $(BASE)/*  $(DEP_L3)/gramvd
+	@sudo cp -r $(BASE)/*  $(DISTROS)/gramvd
 
 # --------------------------------------
 #:::5
@@ -344,7 +344,7 @@ vhd-copy-files:
 vhd-unmount:
 	@echo "======================"
 	@echo "Build: Unmounting the VHD ..."
-	@sudo umount $(DEP_L3)/gramvd
+	@sudo umount $(DISTROS)/gramvd
 
 # --------------------------------------
 # Run on qemu using kvm.

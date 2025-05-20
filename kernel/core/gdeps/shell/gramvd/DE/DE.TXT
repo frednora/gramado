@@ -1,2 +1,0 @@
-
-  This is the DE.TXT file in DE/ folder.
