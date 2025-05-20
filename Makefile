@@ -34,6 +34,8 @@ DEP_L2 = kernel/core/gdeps/preshell
 # Shell UI: Client-side GUI applications.
 DEP_L3 = kernel/core/gdeps/shell
 
+OUTSIDE_L0 = outside
+#OUTSIDE_L1 = outside?
 
 # --------------------------
 # Unix-like commands
@@ -53,7 +55,7 @@ APPLICATIONS = $(DEP_L3)/shell01
 
 # --------------------------
 # Client-side GUI applications with X library
-X_APPLICATIONS = $(DEP_L3)/xapps
+X_APPLICATIONS = $(OUTSIDE_L0)/xapps
 
 # Make variables (CC, etc...)
 AS      = as
@@ -295,6 +297,11 @@ copy-extras:
     # Experimental applications
     # These need the '@' prefix.
 	@-cp $(APPLICATIONS)/bin/TEABOX.BIN  $(BASE)/DE/
+
+
+# Compiling outside stuff
+	@echo "Compiling DEP_L3 (outside/)"
+	@make -C $(OUTSIDE_L0)/
 
 # X applications
 	@-cp $(X_APPLICATIONS)/bin/XTB.BIN  $(BASE)/DE
