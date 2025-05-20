@@ -46,16 +46,17 @@ COMMANDS = $(DEP_L1)/cmds
 DISPLAY_SERVERS = $(DEP_L2)/ds
 
 # --------------------------
-# windowing system with 3D demos
-GAMES = $(DEP_L2)/gram3d
-
-# --------------------------
 # Client-side GUI applications
 APPLICATIONS = $(DEP_L3)/shell01
 
 # --------------------------
+# windowing system with 3D demos
+GAMES = $(OUTSIDE_L0)/gram3d
+
+# --------------------------
 # Client-side GUI applications with X library
 X_APPLICATIONS = $(OUTSIDE_L0)/xapps
+
 
 # Make variables (CC, etc...)
 AS      = as
@@ -226,9 +227,6 @@ copy-extras:
 
 	@-cp $(DISPLAY_SERVERS)/ds00/bin/DS00.BIN    $(BASE)/DE
 #@-cp $(DISPLAY_SERVERS)/ds01/bin/DS01.BIN    $(BASE)/DE
-# 3D demos.
-	@-cp $(GAMES)/bin/DEMO00.BIN   $(BASE)/DE/
-	@-cp $(GAMES)/bin/DEMO01.BIN   $(BASE)/DE/
 
 # ==================================
 # LEVEL : (os/) Client-side GUI applications
@@ -302,6 +300,10 @@ copy-extras:
 # Compiling outside stuff
 	@echo "Compiling DEP_L3 (outside/)"
 	@make -C $(OUTSIDE_L0)/
+
+# 3D demos.
+	@-cp $(GAMES)/bin/DEMO00.BIN   $(BASE)/DE/
+	@-cp $(GAMES)/bin/DEMO01.BIN   $(BASE)/DE/
 
 # X applications
 	@-cp $(X_APPLICATIONS)/bin/XTB.BIN  $(BASE)/DE
