@@ -82,16 +82,33 @@ extern _contextR15
 ;
 
 __doRing3Callback:
-; Get the RIP address.
-    mov rbx, qword [_ring3_callback_address]
+
+    ; Valid only for ring 3.
+    mov rax, qword [_contextCS]   ; Get CPL
+    and rax, 3                    ; Select 2 bits
+    ; Compare
+    cmp rax, 3
+    jne .R3Callbackfailed
+
 ; Setup the stack frame.
     push qword [_contextSS]   ; ss
     push qword [_contextRSP]  ; rsp
     push qword 0x3000         ; rflags interrupçoes desabilitadas.
     push qword [_contextCS]   ; cs
+; Get the RIP address.
+    mov rbx, qword [_ring3_callback_address]
     push rbx                  ; rip
 ; Go to the ring3 procedure.
     iretq
+; ------------------------------
+.R3Callbackfailed:
+    ; #todo Create a fancy routine for this failure.
+    cli
+    hlt
+    jmp .R3Callbackfailed
+
+
+
 
 ; #test
 ; Here we're gonna call the ring3handler for the 
@@ -183,12 +200,40 @@ irq0_release:
     mov rcx, qword [_contextRCX] 
     mov rdx, qword [_contextRDX] 
 
+; --------------------------------------------
+; Stack frame saga
+
+    ;----------------------------------------
+    ; Now rebuild the hardware-saved stack frame.
+    ; The appropriate frame is chosen based on _contextCPL.
+    ;----------------------------------------
+
+    mov rax, qword [_contextCS]   ; Get CPL
+    and rax, 3                    ; Select 2 bits
+
+    ; Compare
+    cmp rax, 3
+    je .restore_user_mode
+    cmp rax, 0
+    je .restore_kernel_mode
+    jmp .InvalidThread
+
 ; Stack frame. (all double)
+.restore_kernel_mode:
+    push qword [_contextRFLAGS]  ; rflags
+    push qword [_contextCS]      ; cs
+    push qword [_contextRIP]     ; rip
+    jmp .stackframe_done
+
+; Stack frame. (all double)
+.restore_user_mode:
     push qword [_contextSS]      ; ss
     push qword [_contextRSP]     ; rsp
     push qword [_contextRFLAGS]  ; rflags
     push qword [_contextCS]      ; cs
     push qword [_contextRIP]     ; rip
+
+.stackframe_done:
 
 ; EOI - Only the first PIC.
     mov al, 20h
@@ -207,6 +252,13 @@ irq0_release:
 
     sti
     iretq
+; --------------------------------------
+.InvalidThread:
+    ; #todo: Call a fancy worker
+    cli
+    hlt
+    jmp .InvalidThread
+; --------------------------------------
 
 ;----------------------------------------------
 ; _turn_task_switch_on:

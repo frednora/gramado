@@ -157,33 +157,9 @@ _irq0:
     pop qword [_contextRIP]     ; rip
     pop qword [_contextCS]      ; cs  (R3)
     pop qword [_contextRFLAGS]  ; rflags
-
-.TestCPL:
-
-    push rax
-    mov rax, qword [_contextCS]  ; Get CPL
-
-    and rax, 3                   ; Select 2 bits
-    cmp rax, 3
-    je .R3Thread 
-    cmp rax, 0
-    je .R0Thread
-    pop rax
-    jmp .InvalidThread
-
-.R0Thread:
-    mov qword [_contextRSP], 0
-    mov qword [_contextSS], 0
-    pop rax
-    jmp .AfterStackFrame
-
-.R3Thread:
     pop qword [_contextRSP]     ; rsp
     pop qword [_contextSS]      ; ss
-    pop rax
-    jmp .AfterStackFrame
 
-.AfterStackFrame:
     mov qword [_contextRDX], rdx 
     mov qword [_contextRCX], rcx 
     mov qword [_contextRBX], rbx 
@@ -250,12 +226,6 @@ _irq0:
 ; see: hw2.asm
 
     jmp irq0_release
-; --------------------------------------
-.InvalidThread:
-    ; #todo: Call a fancy worker
-    cli
-    hlt
-    jmp .InvalidThread
 ; --------------------------------------
 
 ;========================================
