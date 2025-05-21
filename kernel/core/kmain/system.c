@@ -27,6 +27,20 @@ void soft_die(void)
     soft_die();
 }
 
+// The kernel hangs.
+void die(void)
+{
+    if (Initialization.is_serial_log_initialized == TRUE){
+        PROGRESS("die:\n");
+    }
+    if (Initialization.is_console_log_initialized == TRUE){
+        printk("die: System Halted\n");
+        refresh_screen();
+    }
+    __a_soft_place_to_fall();
+    die();
+}
+
 /*
  * doGetSystemMetrics:
  *     Retorna informações sobre o sistema.
@@ -525,20 +539,6 @@ done:
     return (unsigned long) 0;
 }
 
-// The kernel hangs.
-void die(void)
-{
-    if (Initialization.is_serial_log_initialized == TRUE){
-        PROGRESS("die:\n");
-    }
-    if (Initialization.is_console_log_initialized == TRUE){
-        printk("die: System Halted\n");
-        refresh_screen();
-    }
-    __a_soft_place_to_fall();
-    die();
-}
-
 // This is a worker. Called by keReboot or sys_reboot.
 // Implementation of a safe reboot routine.
 // # We need to return when 
@@ -553,7 +553,7 @@ int do_reboot(unsigned long flags)
 // Is it the superuser?
 // We only trust in superusser for this call.
 
-    debug_print("do_reboot:\n");
+    serial_printk("do_reboot: flags=%x\n",flags);
 
 // #todo
 // Use MAGIC arguments.
@@ -578,6 +578,11 @@ fail:
     return (int) -1;
 }
 
+int system_reboot(unsigned long flags)
+{
+    do_reboot(flags);
+    return (int) -1;
+}
 
 
 /*

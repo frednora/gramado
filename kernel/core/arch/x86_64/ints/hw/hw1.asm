@@ -52,6 +52,7 @@ extern _context_fpu_buffer
 
 ; ...
 
+; extern _string_panic
 
 
 align 16
@@ -138,17 +139,14 @@ global _irq0
 _irq0:
 ; Maskable interrupt
 
-    ; #ps:
-    ; Actually we dont need this in hw interrupts,
-    ; because all the IDT entries are using 8E00,
-    ; present, dpl=0, interrupt gate, where the interrupts
-    ; are disabled by default.
+; #ps: Actually we dont need this in hw interrupts,
+; because all the IDT entries are using 8E00, present, dpl=0, 
+; interrupt gate, where the interrupts are disabled by default.
 
     cli
 
 ; No caso do dispatcher lançar uma nova thread,
 ; então ele deve acionar enviar um EIO.
-
     ; mov dword [_irq0PendingEOI], 1
 
 ;; == Save context ====================
@@ -162,8 +160,8 @@ _irq0:
 
     push rax
     mov rax, qword [_contextCS]  ; Get CPL
-
     and rax, 3                   ; Select 2 bits
+
     cmp rax, 3
     je .R3Thread 
     cmp rax, 0
@@ -171,12 +169,14 @@ _irq0:
     pop rax
     jmp .InvalidThread
 
+; Stackframe for ring 0 has only 3 elements.
 .R0Thread:
     pop rax
     mov qword [_contextRSP], 0
     mov qword [_contextSS], 0
     jmp .AfterStackFrame
 
+; Stack frame for ring 3 has 5 elements.
 .R3Thread:
     pop rax
     pop qword [_contextRSP]     ; rsp
@@ -277,7 +277,7 @@ _irq1:
 ; No caso do dispatcher lançar uma nova thread,
 ; então ele deve acionar enviar um EIO.
 
-    ; mov dword [_irq0PendingEOI], 1
+    ; mov dword [_irq1PendingEOI], 1
 
 ;; == Save context ====================
     
@@ -420,7 +420,7 @@ _irq1:
     ;IODELAY  
 
     ;; variável usada pelo dispatcher.
-    ;mov dword [_irq0PendingEOI], 0
+    ;mov dword [_irq1PendingEOI], 0
 
     ; Acumulator
     mov rax, qword [_contextRAX]

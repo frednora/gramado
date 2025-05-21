@@ -20,6 +20,7 @@ extern _ring3_callback_address
 ; ts
 extern _task_switch_status
 
+; extern _string_panic
 
 ;;
 ;; == Context =============================================
@@ -219,6 +220,7 @@ irq0_release:
     jmp .InvalidThread
 
 ; Stack frame. (all double)
+; Stackframe for ring 0 has only 3 elements.
 .restore_kernel_mode:
     push qword [_contextRFLAGS]  ; rflags
     push qword [_contextCS]      ; cs
@@ -226,6 +228,7 @@ irq0_release:
     jmp .stackframe_done
 
 ; Stack frame. (all double)
+; Stack frame for ring 3 has 5 elements.
 .restore_user_mode:
     push qword [_contextSS]      ; ss
     push qword [_contextRSP]     ; rsp
@@ -238,7 +241,6 @@ irq0_release:
 ; EOI - Only the first PIC.
     mov al, 20h
     out 20h, al  
-    ;IODELAY  
 
     ;; variável usada pelo dispatcher.
     ;mov dword [_irq0PendingEOI], 0
@@ -247,8 +249,8 @@ irq0_release:
     mov rax, qword [_contextRAX]
 
 ; #bugbug
-; We do NOT need the 'sti'. 
-; The flags in the 'eflags' will reenable it.
+; We do NOT need the 'sti'.
+; The flags in the 'rflags' will reenable it.
 
     sti
     iretq

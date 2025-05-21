@@ -262,11 +262,19 @@ extern struct system_d  *System;
 // == Prototypes =====================
 //
 
+// Finalizations support.
+void soft_die(void);
+void die(void);
+
+#define DIE    die 
+
 
 unsigned long doGetSystemMetrics(int index);
 void doSetupVersion(void);
 
 int do_reboot(unsigned long flags);
+int system_reboot(unsigned long flags);
+
 int zeroInitializeSystemComponents(void);
 
 #endif    

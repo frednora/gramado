@@ -377,6 +377,7 @@
 // ==================================
 
 #include "../core/kmain/wrappers.h"
+#include "../core/kmain/panic.h"
 
 // cgroups and namespaces
 #include "../core/kmain/cont/cg.h"

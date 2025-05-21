@@ -184,20 +184,6 @@ struct kernel_classes_d  KernelClasses;
 // == prototypes ==========================================
 //
 
-
-
-// ===========================
-
-// Finalizations support.
-void panic( const char *format, ... );
-void soft_die(void);
-void die(void);
-
-#define PANIC  panic
-#define DIE    die 
-
-// ------------------------
-
 int 
 core_post_message( 
     tid_t sender_tid,

@@ -26,7 +26,19 @@ void panic( const char *format, ... )
         printk("panic: KERNEL PANIC\n");
         print( 0, varg );
     }
+
+    // #todo
+    // If headless, use serial_printk().
+
 // Hang
     keDie();
 }
 
+void string_panic(char *string)
+{
+    if ((void*) string == NULL)
+        panic("string_panic: Invalid string");
+    if (*string == 0)
+        panic("string_panic: Invalid string");
+    panic(string);
+}
