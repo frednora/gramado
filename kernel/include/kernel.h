@@ -22,7 +22,8 @@
 
 // -------
 
-#include "../core/arch/arch.h"
+//#include "../core/arch/arm/arch.h"
+#include "../core/arch/x86_64/arch.h"
 
 //
 // Core control  kmain/
