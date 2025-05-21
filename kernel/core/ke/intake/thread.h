@@ -359,7 +359,9 @@ struct thread_d
 // Wait support.
 //
 
-    int waiting_for_timeout;
+// The thread needs priority to respont to an event.
+    int has_pending_event;
+
 // #test
 // The thread is waiting for a reason.
     thread_wait_reason_t wait_reason;
@@ -792,7 +794,10 @@ struct thread_d
 // See: thread.c
 extern struct thread_d  *InitThread;
 extern struct thread_d  *ClonedThread;
-extern struct thread_d  *timeout_thread;
+
+// Event responder
+extern int g_use_event_responder;
+extern struct thread_d  *ev_responder_thread;
 
 // Maximum number of kernel threads in the system.
 // Cada lista poderá usasr uma prioridadr diferente,
@@ -810,6 +815,8 @@ extern unsigned long threadList[THREAD_COUNT_MAX];
 
 
 struct thread_d *get_init_thread(void);
+struct thread_d *get_next_on_queue_or_the_init_thread(struct thread_d *q);
+struct thread_d *get_ev_responter(void);
 
 // From tlib.c
 void show_slot(tid_t tid);

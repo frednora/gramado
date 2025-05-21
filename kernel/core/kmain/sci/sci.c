@@ -2464,8 +2464,8 @@ void *sci2 (
 
             // #test: Selecting the timeout thread, that will have priority in the round.
             // Cutting the round and selecting it as next.
-            //timeout_thread = (struct thread_d *) t;
-            //timeout_thread->waiting_for_timeout = TRUE;
+            //ev_responder_thread = (struct thread_d *) t;
+            //ev_responder_thread->has_pending_event = TRUE;
         }
 
         return NULL;

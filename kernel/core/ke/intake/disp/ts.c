@@ -528,42 +528,47 @@ ZeroGravity:
     }
 
 // Pick a thread and break the round?
-// We can do this if a thread was selected as 'timeout_thread'.
+// We can do this if a thread was selected as 'ev_responder_thread'.
 // It means that the thread need to run now, in the next tick.
 
     // #important:
+    // Event Responder.
     // See: ipc.c, sci.c, thread.c
     // For some reason, probably an input event, the kernel is
     // making this thread a higher priority thread, and it will
     // run along on it own round. Probably it is an input event.
     // #bugbug
     // At this time ts.c is operating as a scheduler for a single thread.
-    if ((void*) timeout_thread != NULL)
+
+    // Do we have an event responder that has a pending event?
+    if (g_use_event_responder == TRUE) 
     {
-        if (timeout_thread->magic == 1234)
+        if ((void*) ev_responder_thread != NULL)
         {
-            if (timeout_thread->waiting_for_timeout == TRUE)
+            if (ev_responder_thread->magic == 1234)
             {
-                timeout_thread->waiting_for_timeout = FALSE;
+                if (ev_responder_thread->has_pending_event == TRUE)
+                {
+                    ev_responder_thread->has_pending_event = FALSE;
 
-                // Ready to run.
-                timeout_thread->state = READY;
+                    // Initialize counters.
+                    ev_responder_thread->runningCount = 0;
+                    ev_responder_thread->runningCount_ms = 0;
 
-                // Initialize counters.
-                timeout_thread->runningCount = 0;
-                timeout_thread->runningCount_ms = 0;
+                    // How many times it was scheduled.
+                    ev_responder_thread->scheduledCount++;
 
-                // How many times it was scheduled.
-                timeout_thread->scheduledCount++;
+                    // Quantum
+                    ev_responder_thread->quantum = QUANTUM_NORMAL_TIME_CRITICAL;
 
-                // quantum
-                timeout_thread->quantum = QUANTUM_NORMAL_TIME_CRITICAL;
+                    // Ready to run.
+                    ev_responder_thread->state = READY;
 
-                // Queue with only one thread.
-                currentq = (void *) timeout_thread;
-                currentq->next = NULL;
-
-                goto go_ahead;
+                    // Queue with only one thread.
+                    currentq = (void *) ev_responder_thread;
+                    currentq->next = NULL;
+                    goto go_ahead;
+                }
             }
         }
     }
@@ -592,13 +597,16 @@ ZeroGravity:
 // Isso é ruin quando tem poucas threads, mas não faz diferença
 // se o round for composto por muitas threads.
 
+// ----------------------------------------
 // The queue is over.
 // End of round. Rebuild the round.
-    if ((void *) currentq->next == NULL){
+    if ((void *) currentq->next == NULL)
+    {
         current_thread = (tid_t) psScheduler();
         goto go_ahead;
     }
 
+// ----------------------------------------
 // The queue is not over,
 // let's get the next thread in the linked list.
     if ((void *) currentq->next != NULL){

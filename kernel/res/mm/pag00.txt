@@ -1,0 +1,120 @@
+Your code is a solid foundation for paging initialization in a custom x86_64 kernel, and it’s clear you have detailed knowledge of the hardware and OS internals. Here are some observations about possible mistakes and suggestions for improvements, especially regarding mapping larger memory regions:
+
+---
+
+## 1. **Use of 4KB Pages Only (vs. 2MB/1GB Large Pages)**
+
+### Observation
+Your code primarily creates page tables mapping regions in 2MB chunks, but does so by allocating 4KB-aligned page tables and filling them. While this works, it is less efficient for large contiguous memory regions.
+
+### Suggestion: Use Large Pages (2MB or 1GB)
+- **2MB Pages**: On x86_64, you can set the "PS" (Page Size) bit in Page Directory Entries (PDEs) to directly map a 2MB region without a page table.
+- **1GB Pages**: Similarly, with the PS bit in PDPT entries, you can map 1GB regions.
+
+**Benefits:**
+- Fewer page tables, less memory overhead.
+- Faster TLB (Translation Lookaside Buffer) coverage.
+
+**Example for 2MB page:**
+```c
+// Set PS in PDE to map 2MB directly
+PageDirectory[pd_index] = (region_pa & 0xFFFFFFFFFFE00000) | PAGE_PRESENT | PAGE_WRITE | PAGE_SIZE_2MB;
+```
+- Where `PAGE_SIZE_2MB` is (1 << 7).
+
+**Example for 1GB page:**
+```c
+PageDirectoryPointerTable[pdpt_index] = (region_pa & 0xFFFFFFFFC0000000) | PAGE_PRESENT | PAGE_WRITE | (1<<7);
+```
+
+---
+
+## 2. **Hardcoded 2MB Mapping Loops**
+
+### Observation
+Currently, each region seems to be mapped with a single 2MB table. If you want to map larger areas (e.g., 16MB, 1GB), you’d need to repeat the table creation and mapping for each 2MB chunk.
+
+### Suggestion: Generalize Mapping
+- Write a function that takes a base VA, base PA, and size, and iteratively maps as many 2MB or 1GB chunks as needed.
+- For areas that don’t align with 2MB/1GB, fall back to 4KB pages for the remainder.
+
+**Example pseudo-code:**
+```c
+void map_region_large(unsigned long base_va, unsigned long base_pa, size_t size) {
+    size_t mapped = 0;
+    while (mapped + (1UL << 21) <= size) {
+        // Map 2MB chunk with a single PDE
+        map_2mb_page(base_va + mapped, base_pa + mapped);
+        mapped += (1UL << 21); // 2MB
+    }
+    // Optionally: handle leftover <2MB region with 4KB pages
+}
+```
+
+---
+
+## 3. **Potential Mistake: Heap Base Growth and Limits**
+
+### Observation
+`get_table_pointer_va` increments `table_pointer_heap_base` for each new table, but the limit check against `FAT_ADDRESS` is a hard stop. If you map large regions, you might run out of heap for page tables.
+
+### Suggestion
+- Consider preallocating a larger region for page tables if mapping lots of memory.
+- Or, allocate page tables dynamically from a memory manager as soon as it is initialized.
+
+---
+
+## 4. **Possible Mistake: Identity Mapping Assumptions**
+
+### Observation
+You assume identity mapping for certain VA/PA ranges (e.g., “endereço físico e virtual são iguais nessa região”). Make sure this is always true, otherwise, table pointer math or accesses may fail.
+
+### Suggestion
+- Document or assert the identity mapping zones.
+- Consider a more general VA ↔ PA translation where needed.
+
+---
+
+## 5. **Error Handling and Debugging**
+
+### Observation
+Several functions panic or return NULL if parameters are invalid. This is good, but for extensibility and reliability, you may want to log more info or gracefully handle partial failures.
+
+---
+
+## 6. **Refactoring for Clarity and Maintainability**
+
+- Consider breaking up large initialization routines into smaller, reusable helpers.
+- Add more comments in English for future contributors (or yourself).
+- Remove commented-out or legacy code once you’re sure it’s not needed.
+
+---
+
+## 7. **Documentation and Constants**
+
+- Make sure all magic numbers (e.g., 512, 0x1000, etc.) are replaced with named constants.
+- Document the intended use of each mapped region (VA/PA, who uses it, etc.).
+
+---
+
+## 8. **Check for Overlaps and Conflicts**
+
+- When mapping larger regions, ensure you do not overlap with reserved or device areas.
+- Consider maintaining a region map during boot.
+
+---
+
+## 9. **Use of Modern Features**
+
+- If your hardware supports it and you need even bigger mappings, consider using 1GB pages for ultra-large contiguous memory areas (if your memory layout allows).
+
+---
+
+## **Summary**
+
+- **Use 2MB or 1GB large pages** for big contiguous regions by setting the PS bit.
+- **Generalize your mapping functions** to support variable size and multiple chunks.
+- **Pre-plan or dynamically allocate** enough space for page tables if mapping lots of memory.
+- **Add more robust error handling, assertions, and documentation.**
+
+If you’d like, I can help you write a generic region mapping function that uses 2MB/1GB large pages when possible—just ask!

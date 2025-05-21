@@ -193,8 +193,7 @@ struct thread_d *create_init_thread(void)
     t->desired_sleep_ms = 0;
 
     // Wait
-    // Wait
-    t->waiting_for_timeout = FALSE;
+    t->has_pending_event = FALSE;
     t->wait_reason = WAIT_REASON_NULL;
 
 // ===================================

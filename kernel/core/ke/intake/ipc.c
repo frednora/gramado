@@ -31,8 +31,7 @@ ipc_post_message_to_tid2 (
     struct thread_d *t;
     struct msg_d *m;
     int MessageCode=0;
-    // #test
-    int UseTimeout=TRUE;
+
 // TIDs
     tid_t src_tid = (tid_t) (sender_tid & 0xFFFF);
     tid_t dst_tid = (tid_t) (receiver_tid & 0xFFFF);
@@ -71,17 +70,16 @@ ipc_post_message_to_tid2 (
 // A malicious process could send a lot of messages
 // causing starvation in the other threads?
 
-    if (UseTimeout==TRUE)
+    if (g_use_event_responder == TRUE)
     {
         //if (MessageCode == MSG_KEYDOWN)
         //{
             // #test: Selecting the timeout thread, that will have priority in the round.
             // Cutting the round and selecting it as next.
-            timeout_thread = (struct thread_d *) t;
-            timeout_thread->waiting_for_timeout = TRUE;
+            ev_responder_thread = (struct thread_d *) t;
+            ev_responder_thread->has_pending_event = TRUE;
         //}
     }
-
 
 //
 // The message
@@ -170,8 +168,6 @@ ipc_post_message_to_tid (
     struct thread_d *t;
     struct msg_d *m;
     int MessageCode=0;
-    // #test
-    int UseTimeout=TRUE;
 
 // TIDs
     tid_t src_tid = (tid_t) (sender_tid & 0xFFFF);
@@ -208,13 +204,12 @@ ipc_post_message_to_tid (
 // A malicious process could send a lot of messages
 // causing starvation in the other threads?
 
-    if (UseTimeout == TRUE)
+    if (g_use_event_responder == TRUE)
     {
         // A thread quer rodar porque recebeu uma mensagem.
-        // #todo: Isso eh bom para mensagens de interaçao
-        // do usuario.
-        timeout_thread = (struct thread_d *) t;
-        timeout_thread->waiting_for_timeout = TRUE;
+        // #todo: Isso eh bom para mensagens de interaçao do usuario.
+        ev_responder_thread = (struct thread_d *) t;
+        ev_responder_thread->has_pending_event = TRUE;
 
         // #warning
         // I don't know if it is really good.
