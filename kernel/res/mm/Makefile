@@ -74,7 +74,7 @@ x64mm.o \
 mm.o \
 mminfo.o \
 mmpool.o \
-pages.o \
+paging.o \
 slab.o \
 mmrt.o \
 mmft.o    
@@ -85,8 +85,8 @@ all:
 # arm
 
 # x86_64
-	$(CC) -c x86_64/x64mm.c  $(KERNEL_INCLUDE) $(CFLAGS) -o x64mm.o
-	$(CC) -c x86_64/pages.c  $(KERNEL_INCLUDE) $(CFLAGS) -o pages.o
+	$(CC) -c x86_64/x64mm.c   $(KERNEL_INCLUDE) $(CFLAGS) -o x64mm.o
+	$(CC) -c x86_64/paging.c  $(KERNEL_INCLUDE) $(CFLAGS) -o paging.o
 
 # mm
 	$(CC) -c mmsize.c   $(KERNEL_INCLUDE) $(CFLAGS) -o mmsize.o

@@ -1,9 +1,11 @@
-// pages.c
+// paging.c
+// Paging for x86_64 machines.
+// Created by Fred Nora.
+
 // Memory manager.
 // It maps the first portions of memory ised by the kernel
 // and the init process.
 // Routines valid for Intel x64 machines.
-// Created by Fred Nora.
 
 
 /*

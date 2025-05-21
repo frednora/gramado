@@ -12,21 +12,6 @@
 extern unsigned long blSavedLastValidAddress;
 extern unsigned long blSavedPhysicalMemoryInKB;
 
-// Definições dos campos das páginas.
-#define PAGE_PRESENT  0x001
-#define PAGE_WRITE    0x002
-#define PAGE_USER     0x004
-// 0x008 write through
-#define PAGE_NOCACHE   0x010
-#define PAGE_ACCESSED  0x020
-#define PAGE_DIRTY     0x040
-//0x080 page atribute table
-#define PAGE_GLOBAL  0x100
-#define PAGE_AVAIL   0xE00
-#define PAGE_PRESENT_WRITE       ( PAGE_WRITE | PAGE_PRESENT )
-#define PAGE_PRESENT_WRITE_USER  ( PAGE_USER | PAGE_WRITE | PAGE_PRESENT )
-#define PAGE_KERNEL_PGPROT       (PAGE_PRESENT_WRITE)
-
 // Kernel pml4. (cr3)
 // The virtual address of the kernel pml4 table.
 // see: pages.c
@@ -122,18 +107,21 @@ struct mm_zones_d *zones;
 // variaveis blobais de endereços 
 // usados no gerenciamento de zonas de memoria.
 
+/*
 #define SYSTEMZONE_START 0
 #define SYSTEMZONE_END   0x0FFFFFFF 
 #define WINDOWZONE_START 0x10000000
 //#define WINDOWZONE_END ??
+*/
 
+/*
 unsigned long systemzoneStart;
 unsigned long systemzoneEnd;
 unsigned long systemzoneSize;
 unsigned long windowzoneStart;
 unsigned long windowzoneEnd;    //?? Devemos levar em consideraçao o calculo do tamanho da mem�ria
 unsigned long windowzoneSize;
-
+*/
 
 
 /*
@@ -180,11 +168,13 @@ struct page_directory_d
     struct page_directory_d *next;  
 };
 
+/*
 struct page_directory_d *pagedirectoryKernelProcess;    // KERNEL.
 struct page_directory_d *pagedirectoryIdleProcess;      // IDLE.
 struct page_directory_d *pagedirectoryCurrent;          // Current.
 struct page_directory_d *pagedirectoryShared;           // Shared. 
 //...
+*/
 
 
 //
@@ -237,7 +227,7 @@ struct page_table_d
     struct page_table_d *next;
 };
 
-struct page_table_d *pagetableCurrent;
+// struct page_table_d *pagetableCurrent;
 //...
 
 //
@@ -273,6 +263,7 @@ unsigned long pagetableList[PAGETABLE_COUNT_MAX];
  ** Obs: Ficar�o nesse lugar caso se tenha mem�ria dispon�vel para isso.
  **/
 
+/*
 // Frames Super Block.
 // Vari�veis globais parecem ser uma op��o melhor de estrutura
 // para esse caso. 
@@ -286,6 +277,7 @@ unsigned long mmFramesSuperBlockTotal;      //Total de frames.
 unsigned long mmFramesSuperBlockTotalFree;  //Total de frames livres. 
 unsigned long mmFramesSuperBlockTotalUsed;  //Total de frames e uso. 
 //Continua...
+*/
 
 // ((0x1FFFFFFF - 0x10000000) / 512)  = QUANTIDADE DE FRAMES NESSA �REA.
 #define FSB_FRAMES_MAX      (1*1024) //?? @todo: Determinar melhor isso
@@ -341,17 +333,15 @@ unsigned long fsbFreeFrames[FSB_FREEFRAMES_MAX];
 // Na verdade um processo ter� uma lista de framepools.
 
 
-//List.(1024 framepools de 4MB d� 4GB).
-#define FRAMEPOOL_COUNT_MAX 1024
+// List.(1024 framepools de 4MB d� 4GB).
+#define FRAMEPOOL_COUNT_MAX  1024
 
 
 //
 // ## MEMORY PARTITION ##
 //
 
-// Um framepool tem 4MB de tamanho.
-// #todo: Um framepool em 64bit talvez seja de 2mb.
-#define MEMORY_PARTITION_SIZE   (4 * MB)
+// #define MEMORY_PARTITION_SIZE   (2 * MB)
 
 
 // Obs: 
@@ -491,9 +481,6 @@ struct memory_info_d
 //...
 
 
-
-
-
 // -----------------------------------
 
 // Estrutura para gerência de página.
@@ -579,6 +566,8 @@ struct frame_pool_d
     struct frame_pool_d *next;
 };
 
+/*
+
 // Cada framepool abaixo � o framepool inicial de uma regi�o.
 // Uma regis�o pode ter v�rios framepools.
 
@@ -618,6 +607,8 @@ struct frame_pool_d *framepoolCurrent;
 //struct frame_pool_d *framepoolKernelNonPagedPool;
 //struct frame_pool_d *framepoolUserPagedPool;
 //struct frame_pool_d *framepoolUserNonPagedPool;
+
+*/
 
 //
 //  PAGEABLE AREA
