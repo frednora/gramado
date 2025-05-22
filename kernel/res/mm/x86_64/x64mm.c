@@ -4,13 +4,23 @@
 
 #include <kernel.h>
 
+// See: x64mm.h
+// Kernel process.
+struct mm_data_d  kernel_mm_data;
+// Init process.
+struct mm_data_d  init_mm_data;
+// A new process been created.
+struct mm_data_d  newprocess_mm_data;
+// ...
+
+
+// ========================================================
 
 // Local worker
 static unsigned long 
 __virtual_to_physical ( 
     unsigned long virtual_address, 
     unsigned long pml4_va );
-
 
 // ========================================================
 

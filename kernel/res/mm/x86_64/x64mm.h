@@ -55,15 +55,14 @@ struct mm_data_d
     unsigned long pd0_pa; 
 };
 
+// See: x64mm.c
 // Kernel process.
-struct mm_data_d kernel_mm_data;
+extern struct mm_data_d  kernel_mm_data;
 // Init process.
-struct mm_data_d init_mm_data;
+extern struct mm_data_d  init_mm_data;
 // A new process been created.
-struct mm_data_d newprocess_mm_data;
+extern struct mm_data_d  newprocess_mm_data;
 // ...
-
-
 
 
 //
