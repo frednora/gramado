@@ -551,20 +551,19 @@ ZeroGravity:
                 {
                     ev_responder_thread->has_pending_event = FALSE;
 
-                    // Initialize counters.
+                    // Initialize counters
                     ev_responder_thread->runningCount = 0;
                     ev_responder_thread->runningCount_ms = 0;
-
-                    // How many times it was scheduled.
+                    // Quantum
+                    ev_responder_thread->quantum = QUANTUM_MAX;
+                    // Priority
+                    ev_responder_thread->priority = PRIORITY_MAX;
+                    // Ready to run
+                    ev_responder_thread->state = READY;
+                    // How many times it was scheduled
                     ev_responder_thread->scheduledCount++;
 
-                    // Quantum
-                    ev_responder_thread->quantum = QUANTUM_NORMAL_TIME_CRITICAL;
-
-                    // Ready to run.
-                    ev_responder_thread->state = READY;
-
-                    // Queue with only one thread.
+                    // Queue with only one thread
                     currentq = (void *) ev_responder_thread;
                     currentq->next = NULL;
                     goto go_ahead;

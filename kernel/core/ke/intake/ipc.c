@@ -72,13 +72,12 @@ ipc_post_message_to_tid2 (
 
     if (g_use_event_responder == TRUE)
     {
-        //if (MessageCode == MSG_KEYDOWN)
-        //{
-            // #test: Selecting the timeout thread, that will have priority in the round.
-            // Cutting the round and selecting it as next.
-            ev_responder_thread = (struct thread_d *) t;
-            ev_responder_thread->has_pending_event = TRUE;
-        //}
+        t->has_pending_event = TRUE;
+        t->quantum = QUANTUM_MAX;
+        t->priority = PRIORITY_MAX;
+        t->state = READY;
+
+        ev_responder_thread = (struct thread_d *) t;
     }
 
 //
@@ -206,16 +205,12 @@ ipc_post_message_to_tid (
 
     if (g_use_event_responder == TRUE)
     {
-        // A thread quer rodar porque recebeu uma mensagem.
-        // #todo: Isso eh bom para mensagens de interaçao do usuario.
-        ev_responder_thread = (struct thread_d *) t;
-        ev_responder_thread->has_pending_event = TRUE;
+        t->has_pending_event = TRUE;
+        t->quantum = QUANTUM_MAX;
+        t->priority = PRIORITY_MAX;
+        t->state = READY;
 
-        // #warning
-        // I don't know if it is really good.
-        // Essa thread esta no modo de eficiencia.
-        //if (t->pe_mode == PE_MODE_PERFORMANCE)
-            //t->quantum = QUANTUM_MAX;
+        ev_responder_thread = (struct thread_d *) t;
     }
 
 //

@@ -1,5 +1,5 @@
-
 // quantum.h
+// Created by Fred Nora.
 
 #ifndef __QUANTUM_H
 #define __QUANTUM_H    1
