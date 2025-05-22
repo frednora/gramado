@@ -15,6 +15,26 @@ struct thread_d  *currentq;
 
 // ========================================
 
+
+int set_currentq(struct thread_d *thread)
+{
+    if ((void*) thread == NULL)
+        return -1;
+    if (thread->used != TRUE)
+        return -1;
+    if (thread->magic != 1234)
+        return -1;
+
+// Set
+    currentq = thread;  
+    return 0;
+}
+
+struct thread_d *get_currentq(void)
+{
+    return (struct thread_d *) currentq;
+}
+
 int qlist_set_element(int index, struct thread_d *head_thread)
 {
 
@@ -30,9 +50,11 @@ int qlist_set_element(int index, struct thread_d *head_thread)
     //if (head_thread->magic != 1234)
         //goto fail;
 
-// The current queue
-    if (index == SCHED_CURRENT_QUEUE){
-        qList[SCHED_CURRENT_QUEUE] = (unsigned long) head_thread;
+// The default queue
+    if (index == SCHED_DEFAULT_QUEUE)
+    {
+        qList[SCHED_DEFAULT_QUEUE] = (unsigned long) head_thread;
+        currentq = (void *) head_thread; // Also the current
         return 0;
     }
 // P1 ~ P6
@@ -55,9 +77,9 @@ struct thread_d *qlist_get_element(int index)
         goto fail;
     }
 
-// The current queue
-    if (index == SCHED_CURRENT_QUEUE){
-        return (struct thread_d *) qList[SCHED_CURRENT_QUEUE];
+// The default queue
+    if (index == SCHED_DEFAULT_QUEUE){
+        return (struct thread_d *) qList[SCHED_DEFAULT_QUEUE];
     }
 // P1 ~ P6    
     if ( index >= SCHED_P1_QUEUE || index <= SCHED_P6_QUEUE )

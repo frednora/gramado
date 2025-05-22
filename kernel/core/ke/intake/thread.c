@@ -34,10 +34,6 @@ struct thread_d  *InitThread;
 struct thread_d  *ClonedThread;
 
 
-int g_use_event_responder=TRUE;
-struct thread_d *ev_responder_thread;
-
-
 //
 // == private functions: prototypes ================
 //
@@ -276,64 +272,6 @@ int destroy_thread_structure(struct thread_d *thread)
 int gc_thread_structure(struct thread_d *thread)
 {
     return 0;
-}
-
-// Get structure pointer of init thread.
-struct thread_d *get_init_thread(void)
-{
-    return (struct thread_d *) InitThread;
-}
-
-// Try to get the next thread into a linked list.
-// If the next is invalid, then get the init thread,
-// that normally is the first in the round.
-struct thread_d *get_next_on_queue_or_the_init_thread(struct thread_d *q)
-{
-    struct thread_d *next;
-
-// Invalid queue pointer.
-    if ((void*) q == NULL)
-        return (struct thread_d *) InitThread;
-    if (q->used != TRUE)
-        return (struct thread_d *) InitThread;
-    if (q->magic != 1234)
-        return (struct thread_d *) InitThread;
-
-// Get next.
-    next = (struct thread_d *) q->next;
-
-// Invalid next pointer.
-    if ((void*) next == NULL)
-        return (struct thread_d *) InitThread;
-    if (next->used != TRUE)
-        return (struct thread_d *) InitThread;
-    if (next->magic != 1234)
-        return (struct thread_d *) InitThread;
-
-// Return next thread on queue.
-    return (struct thread_d *) next;
-}
-
-// Get the event responder thread.
-// NULL if it fails.
-struct thread_d *get_ev_responter(void)
-{
-    if (g_use_event_responder != TRUE)
-        goto fail;
-
-// Invalid pointer.
-    if ((void*) ev_responder_thread == NULL)
-        goto fail;
-    if (ev_responder_thread->used != TRUE)
-        goto fail;
-    if (ev_responder_thread->magic != 1234)
-        goto fail;
-
-// Return the pointer for the event responder.
-    return (struct thread_d *) ev_responder_thread;
-
-fail:
-    return NULL;
 }
 
 // helper

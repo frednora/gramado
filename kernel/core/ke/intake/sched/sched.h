@@ -5,6 +5,12 @@
 #ifndef __PS_SCHED_H
 #define __PS_SCHED_H    1
 
+
+// ----------------------------------------
+// Event responter thread
+extern int g_use_event_responder;
+extern struct thread_d  *ev_responder_thread;
+
 //#define NR_TASKS ??
 //#define FIRST_TASK ?
 //#define LAST_TASK ? 
@@ -39,6 +45,12 @@ extern struct scheduler_info_d  SchedulerInfo;
 //
 // == prototypes ============
 //
+
+struct thread_d *get_init_thread(void);
+struct thread_d *get_next_on_queue_or_the_init_thread(struct thread_d *q);
+struct thread_d *get_ev_responter(void);
+int set_ev_responder(struct thread_d *thread);
+int has_pending_event(struct thread_d *thread);
 
 //
 // In schedi.c

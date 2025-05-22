@@ -5,9 +5,6 @@
 #ifndef __SCHEDQ_H
 #define __SCHEDQ_H    1
 
-// The index for the head of the current queue.
-#define SCHED_CURRENT_QUEUE  0
-
 // Priority classes
 // See: prio.h
 
@@ -23,6 +20,9 @@
 // Max number of elements.
 #define SCHEQ_QUEUE_COUNT_MAX  7
 
+// The index for the head of the current queue.
+#define SCHED_DEFAULT_QUEUE  0
+
 // List of heads.
 // see: schedq.c
 extern unsigned long qList[SCHEQ_QUEUE_COUNT_MAX];
@@ -35,6 +35,9 @@ extern struct thread_d  *currentq;
 //
 // == Prototypes =================================
 //
+
+int set_currentq(struct thread_d *thread);
+struct thread_d *get_currentq(void);
 
 int qlist_set_element(int index, struct thread_d *head_thread);
 struct thread_d *qlist_get_element(int index);

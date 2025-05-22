@@ -77,7 +77,8 @@ ipc_post_message_to_tid2 (
         t->priority = PRIORITY_MAX;
         t->state = READY;
 
-        ev_responder_thread = (struct thread_d *) t;
+        //ev_responder_thread = (struct thread_d *) t;
+        set_ev_responder(t);
     }
 
 //
@@ -210,7 +211,8 @@ ipc_post_message_to_tid (
         t->priority = PRIORITY_MAX;
         t->state = READY;
 
-        ev_responder_thread = (struct thread_d *) t;
+        //ev_responder_thread = (struct thread_d *) t;
+        set_ev_responder(t);
     }
 
 //

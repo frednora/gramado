@@ -795,9 +795,6 @@ struct thread_d
 extern struct thread_d  *InitThread;
 extern struct thread_d  *ClonedThread;
 
-// Event responder
-extern int g_use_event_responder;
-extern struct thread_d  *ev_responder_thread;
 
 // Maximum number of kernel threads in the system.
 // Cada lista poderá usasr uma prioridadr diferente,
@@ -813,10 +810,6 @@ extern unsigned long threadList[THREAD_COUNT_MAX];
 // == prototypes ===========================
 //
 
-
-struct thread_d *get_init_thread(void);
-struct thread_d *get_next_on_queue_or_the_init_thread(struct thread_d *q);
-struct thread_d *get_ev_responter(void);
 
 // From tlib.c
 void show_slot(tid_t tid);

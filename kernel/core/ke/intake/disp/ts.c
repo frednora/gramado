@@ -541,34 +541,33 @@ ZeroGravity:
     // At this time ts.c is operating as a scheduler for a single thread.
 
     // Do we have an event responder that has a pending event?
+    int hasEvent = FALSE;
+    // Are we using the event responder feature?
     if (g_use_event_responder == TRUE) 
     {
-        if ((void*) ev_responder_thread != NULL)
+        // Do we have a pending event?
+        hasEvent = (int) has_pending_event(ev_responder_thread);
+        // Yes we do!
+        if (hasEvent == TRUE)
         {
-            if (ev_responder_thread->magic == 1234)
-            {
-                if (ev_responder_thread->has_pending_event == TRUE)
-                {
-                    ev_responder_thread->has_pending_event = FALSE;
+            // Initialize counters
+            ev_responder_thread->runningCount = 0;
+            ev_responder_thread->runningCount_ms = 0;
+            // Quantum
+            ev_responder_thread->quantum = QUANTUM_MAX;
+            // Priority
+            ev_responder_thread->priority = PRIORITY_MAX;
+            // Ready to run
+            ev_responder_thread->state = READY;
+            // How many times it was scheduled
+            ev_responder_thread->scheduledCount++;
+            // Update
+            ev_responder_thread->has_pending_event = FALSE;
 
-                    // Initialize counters
-                    ev_responder_thread->runningCount = 0;
-                    ev_responder_thread->runningCount_ms = 0;
-                    // Quantum
-                    ev_responder_thread->quantum = QUANTUM_MAX;
-                    // Priority
-                    ev_responder_thread->priority = PRIORITY_MAX;
-                    // Ready to run
-                    ev_responder_thread->state = READY;
-                    // How many times it was scheduled
-                    ev_responder_thread->scheduledCount++;
-
-                    // Queue with only one thread
-                    currentq = (void *) ev_responder_thread;
-                    currentq->next = NULL;
-                    goto go_ahead;
-                }
-            }
+            // Queue with only one thread
+            currentq = (void *) ev_responder_thread;
+            currentq->next = NULL;
+            goto go_ahead;
         }
     }
 

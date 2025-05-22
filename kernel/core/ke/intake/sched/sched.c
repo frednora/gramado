@@ -21,13 +21,20 @@ struct scheduler_info_d  SchedulerInfo;
 unsigned long g_scheduler_status = LOCKED;
 
 // Normal priorities
-static struct thread_d  *p1q;
+static struct thread_d  *p1q;  // Lower
 static struct thread_d  *p2q;
 static struct thread_d  *p3q;
 // System priorities
 static struct thread_d  *p4q;
 static struct thread_d  *p5q;
 static struct thread_d  *p6q;  // Higher
+
+
+// ----------------------------------------
+// Event responter thread
+int g_use_event_responder=TRUE;
+struct thread_d *ev_responder_thread;
+
 
 //
 // == Private functions: prototypes =============
@@ -107,6 +114,100 @@ static void __sched_notify_parent(struct thread_d *thread, int event_number)
         Receiver );
 
     //printk ("__sched_notify_parent: done\n");
+}
+
+
+// Get structure pointer of init thread.
+struct thread_d *get_init_thread(void)
+{
+    return (struct thread_d *) InitThread;
+}
+
+// Try to get the next thread into a linked list.
+// If the next is invalid, then get the init thread,
+// that normally is the first in the round.
+struct thread_d *get_next_on_queue_or_the_init_thread(struct thread_d *q)
+{
+    struct thread_d *next;
+
+// Invalid queue pointer.
+    if ((void*) q == NULL)
+        return (struct thread_d *) InitThread;
+    if (q->used != TRUE)
+        return (struct thread_d *) InitThread;
+    if (q->magic != 1234)
+        return (struct thread_d *) InitThread;
+
+// Get next.
+    next = (struct thread_d *) q->next;
+
+// Invalid next pointer.
+    if ((void*) next == NULL)
+        return (struct thread_d *) InitThread;
+    if (next->used != TRUE)
+        return (struct thread_d *) InitThread;
+    if (next->magic != 1234)
+        return (struct thread_d *) InitThread;
+
+// Return next thread on queue.
+    return (struct thread_d *) next;
+}
+
+// Get the event responder thread.
+// NULL if it fails.
+struct thread_d *get_ev_responter(void)
+{
+    if (g_use_event_responder != TRUE)
+        goto fail;
+
+// Invalid pointer.
+    if ((void*) ev_responder_thread == NULL)
+        goto fail;
+    if (ev_responder_thread->used != TRUE)
+        goto fail;
+    if (ev_responder_thread->magic != 1234)
+        goto fail;
+
+// Return the pointer for the event responder.
+    return (struct thread_d *) ev_responder_thread;
+
+fail:
+    return NULL;
+}
+
+int set_ev_responder(struct thread_d *thread)
+{
+    if ((void*) thread == NULL)
+        return -1;
+    if (thread->used != TRUE)
+        return -1;
+    if (thread->magic != 1234)
+        return -1;
+
+// Set
+    ev_responder_thread = thread;  
+    ev_responder_thread->quantum = QUANTUM_MAX;    // Quantum
+    ev_responder_thread->priority = PRIORITY_MAX;  // Priority
+    return 0;
+}
+
+// Do we have a pending event on this thread?
+int has_pending_event(struct thread_d *thread)
+{
+    if ((void*) thread == NULL)
+        return FALSE;
+    if (thread->used != TRUE)
+        return FALSE;
+    if (thread->magic != 1234)
+        return FALSE;
+
+// Do we have a pending event on this thread?
+    if (thread->has_pending_event == TRUE)
+        return TRUE;
+
+// Confirm. In the case of invalid values.
+    thread->has_pending_event = FALSE;
+    return FALSE;
 }
 
 // Lock scheduler
@@ -205,8 +306,8 @@ void sched_cut_round(struct thread_d *last_thread)
 
 static tid_t __scheduler_rr(unsigned long sched_flags)
 { 
-// + Build the p6q queue.
-// + Setup p6q as the currentq, used by the task switcher.
+// + Build the p1q queue.
+// + Setup p1q as the currentq, used by the task switcher.
 
     struct thread_d *TmpThread;
 
@@ -215,8 +316,8 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
     tid_t FirstTID = -1;
 
 // These are the queues,
-// But RR will build only the p6q, the one with higher priority.
-    p1q = NULL;
+// But RR will build only the p1q, the one with lower priority.
+    p1q = NULL;  // Lower priority
     p2q = NULL;
     p3q = NULL;
     p4q = NULL;
@@ -285,24 +386,38 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
     }
 
 
-// This is the head of the currentq.
-// Setup Idle as the head of the currentq queue, 
-// used by the task switcher.
-    currentq = (void *) Idle;
-    qlist_set_element(SCHED_CURRENT_QUEUE,currentq);
+// Setup Idle as the head of all queues.
 
-// Setup Idle as the head of the p6q queue, 
-// The loop below is gonna build this list.
-// The idle is the TID 0, so the loop starts at 1.
+    p1q = (void*) Idle;
+    qlist_set_element(SCHED_P1_QUEUE,p1q);
+    p2q = (void*) Idle;
+    qlist_set_element(SCHED_P2_QUEUE,p2q);
+    p3q = (void*) Idle;
+    qlist_set_element(SCHED_P3_QUEUE,p3q);
+    p4q = (void*) Idle;
+    qlist_set_element(SCHED_P4_QUEUE,p4q);
+    p5q = (void*) Idle;
+    qlist_set_element(SCHED_P5_QUEUE,p5q);
     p6q = (void*) Idle;
     qlist_set_element(SCHED_P6_QUEUE,p6q);
+
+
+// This is the head of the currentq.
+// Setup Idle as the head of the currentq queue, used by the task switcher.
+
+    currentq = (void *) p1q; // Not necessary.
+    qlist_set_element(SCHED_DEFAULT_QUEUE,p1q);
+
+// ---------------------------------------------
+// The loop below is gonna build this list.
+// The idle is the TID 0, so the loop starts at 1.
 
 // ---------------------------------------------
 // Walking
 // READY threads in the threadList[].
 
 
-// The Idle as the head of the p6q queue, 
+// The Idle as the head of the p1q queue, 
 // The loop below is gonna build this list.
 // The idle is the TID 0, so the loop starts at 1.
 
@@ -325,7 +440,7 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
 // Threads in other state will be checked and the 
 // structure will be updated properlly. For example: 
 // we will check if it's time wo wake up a thread.
-// The Idle as the head of the p6q queue.
+// The Idle as the head of the p1q queue.
 // The idle is the TID 0, so the loop starts at 1.
 
     for ( i=Start; i<Max; ++i )
@@ -469,10 +584,10 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                  TmpThread->state == READY )
             {
                 // Recreate the linked list.
-                // The p6q and it's next.
+                // The p1q and it's next.
 
-                p6q->next = (void *) TmpThread;
-                p6q       = (void *) p6q->next;
+                p1q->next = (void *) TmpThread;
+                p1q       = (void *) p1q->next;
 
                 // Initialize counters.
                 TmpThread->runningCount = 0;
@@ -538,7 +653,7 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
 
 // Finalizing the list.
 // This way we need to re-scheduler at the end of each round.
-    p6q->next = NULL;
+    p1q->next = NULL;
 
 // #todo
 // Let's try some other lists.
