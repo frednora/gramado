@@ -25,16 +25,19 @@
 //#include "../core/arch/arm/arch.h"
 #include "../core/arch/x86_64/arch.h"
 
+
 //
 // Core control  kmain/
 //
 
-#include "../core/kmain/bootinfo.h"
 #include "../core/kmain/mode.h"
 #include "../core/kmain/state.h"
 #include "../core/kmain/system.h"
 #include "../core/kmain/klimits2.h"
-#include "../core/kmain/gdef.h"
+
+#include "../core/kmain/globals.h"
+
+#include "../core/kmain/bootblk/bootblk.h"
 
 // ==================================
 // ke/

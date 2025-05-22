@@ -491,19 +491,19 @@ static void __check_refresh_support(void)
 // Para os outros casos o pitch será '0'.
 
     /*
-    if ( xBootBlock.bpp != 24 &&  
-         xBootBlock.bpp != 32 )
+    if ( bootblk.bpp != 24 &&  
+         bootblk.bpp != 32 )
     {
         //panic
     }
     */
 
-    if ( xBootBlock.bpp == 24 || 
-         xBootBlock.bpp == 32 )
+    // Bytes per pixel and pitch.
+    // 24 and 32
+    if ( bootblk.bpp == 24 || bootblk.bpp == 32 )
     {
-        bytes_per_pixel = (xBootBlock.bpp / 8); 
-        pitch = 
-            (unsigned long) (xBootBlock.deviceWidth * bytes_per_pixel);
+        bytes_per_pixel = (bootblk.bpp / 8); 
+        pitch = (unsigned long) (bootblk.deviceWidth * bytes_per_pixel);
     }  
 
 // pitch fail,
@@ -521,8 +521,9 @@ static void __check_refresh_support(void)
 // Screen size in kb.
 // Remember: For now we only have 2048KB mapped for LFB.
 // Quantos KB vamos precisar para uma tela nessa resoluçao?
+
     screen_size_in_kb = 
-        (unsigned long) ( (pitch * xBootBlock.deviceHeight)/1024 );
+        (unsigned long) ( (pitch * bootblk.deviceHeight)/1024 );
 
     // #debug
     //printk ("Screen size: %d KB\n", screen_size_in_kb);
@@ -531,8 +532,7 @@ static void __check_refresh_support(void)
 // for maior que o que temos disponivel.
 // Entao nao podemos habilitar o refresh screen.
 
-    if (screen_size_in_kb >= 2048)
-    {
+    if (screen_size_in_kb >= 2048){
         refresh_screen_enabled = FALSE;
         debug_print("Screen size fail screen_size_in_kb\n");
     }
@@ -597,16 +597,16 @@ static void __print_resolution_info(void)
 {
 // Print device info.
     printk ("Width:%d Height:%d BPP:%d\n",
-        xBootBlock.deviceWidth,
-        xBootBlock.deviceHeight,
-        xBootBlock.bpp );
+        bootblk.deviceWidth,
+        bootblk.deviceHeight,
+        bootblk.bpp );
 // ---------------
 // Is it supported?
 // #temp
 // Supported widths. 800, 640, 320.
-    if ( xBootBlock.deviceWidth != 800 &&
-         xBootBlock.deviceWidth != 640 &&
-         xBootBlock.deviceWidth != 320 )
+    if ( bootblk.deviceWidth != 800 &&
+         bootblk.deviceWidth != 640 &&
+         bootblk.deviceWidth != 320 )
     {
         panic("__print_resolution_info: Unsupported resolution\n");
     }

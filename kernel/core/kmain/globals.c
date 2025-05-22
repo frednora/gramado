@@ -1,7 +1,6 @@
-
 // globals.c
-// Is mm/ the right place for this document?
-// Maybe ke/?
+// Created by Fred Nora.
+
 
 #include <kernel.h>
 
@@ -12,20 +11,6 @@
 // Type of product.
 int g_product_type = PRODUCT_TYPE;
 
-
-//
-// Boot support
-//
-
-// #bugbug
-// We are using another structure.
-// see: kmain.c
-// see: gdef.h
-//struct boot_block_d  BootBlock;
-
-// This is the write structure for this.
-// see: display.h, init.c, bldisp.c
-struct x_boot_block_d  xBootBlock;
 
 
 // Salvando o último endereço válido de memória ram.

@@ -2,28 +2,9 @@
 // Main header for the display manager.
 // Created by Fred Nora.
 
-#ifndef __COMMON_DISPLAY_H
-#define __COMMON_DISPLAY_H    1
+#ifndef __DISPLAY_DISPLAY_H
+#define __DISPLAY_DISPLAY_H    1
 
-// Local boot structure.
-struct x_boot_block_d
-{
-    int initialized;
-    unsigned long lfb_pa;
-    unsigned long deviceWidth;    // in pixels
-    unsigned long deviceHeight;   // in pixels
-    unsigned long bpp;            // bytes per pixel
-    unsigned long last_valid_pa;  // Last valid physical address.
-    unsigned long gramado_mode;   // system mode.
-    // ...
-
-    // #test
-    // The IDE port number given by the 32bit boot loader.
-    unsigned long ide_port_number;
-};
-
-// see: globals.c, init.c, bldisp.c
-extern struct x_boot_block_d  xBootBlock;
 
 // #test
 // We can use only an area of the screen.
@@ -54,15 +35,9 @@ struct display_device_d
 // Structure initialization.
     int initialized;
 
-//
 // LFB - Linear Frame Buffer
-//
-
-// Start
     unsigned long framebuffer_pa;
     unsigned long framebuffer_va;
-
-// End
     //unsigned long framebuffer_end_pa;
     //unsigned long framebuffer_end_va;
 

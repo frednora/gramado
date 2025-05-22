@@ -1,10 +1,4 @@
-
-# virt/
-# Compile all the files and create ar_zcall.o
-
-# Makefile for the kernel syscall support
-# and the toplevel functions.
-# These are the wrappers that call the workers.
+# Compiling kmain/ folder.
 
 INCLUDE = ../../include
 
@@ -75,7 +69,7 @@ KERNEL_INCLUDE := -I $(INCLUDE)
 # LDFLAGS := -m elf_x86_64 -static
 LDFLAGS := -m elf_x86_64 -s -x -static  
 
-OBJS = globals.o \
+OBJS = globals.o bootblk.o \
 debug.o \
 info.o \
 panic.o \
@@ -95,6 +89,7 @@ all:
 
 # globals
 	$(CC) -c globals.c $(KERNEL_INCLUDE) $(CFLAGS) -o globals.o
+	$(CC) -c bootblk/bootblk.c $(KERNEL_INCLUDE) $(CFLAGS) -o bootblk.o
 
 # Overall routines.
 	$(CC) -c debug.c    $(KERNEL_INCLUDE) $(CFLAGS) -o debug.o

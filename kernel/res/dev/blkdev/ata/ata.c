@@ -1498,7 +1498,7 @@ static int __ata_initialize(int ataflag)
 /*
     //#debug
     printk ("kernel CONFIG:     ATA port: %d\n",boottime_ideport_index);   // from config.h
-    printk ("kernel xBootBlock: ATA port: %d\n",xBootBlock.ide_port_number);  // from bootblock, from bl.bin
+    printk ("kernel bootblk: ATA port: %d\n",bootblk.ide_port_number);  // from bootblock, from bl.bin
     refresh_screen();
     while(1){}
 */

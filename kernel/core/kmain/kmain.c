@@ -118,22 +118,6 @@ int dead_thread_collector_flag=0;
 unsigned long magic=0;
 unsigned long saved_bootblock_base=0;
 
-// --------------------------------------
-// The base address of the boot block.
-// virtual = physical.
-#define BootBlockVA    0x0000000000090000
-// --------------------------------------
-// Indexes into the boot block.
-// Each entry has 64bit.
-#define bbOffsetLFB_PA  0  // offset 0
-#define bbOffsetX       1  // offset 8
-#define bbOffsetY       2  // offset 16
-#define bbOffsetBPP     3  // offset 24
-#define bbLastValidPA   4  // offset 32  // Last valid physical address.
-#define bbGramadoMode   5  // offset 40  // jail, p1, home ...
-//#test
-#define bb_idePortNumber  6  // offset 48.
-// ...
 
 // ================================
 
@@ -408,8 +392,7 @@ static int earlyinit_SetupBootblock(void)
 // info:
 // Save the info into a kernel structure
 // defined in mm/globals.c.
-// See the structure x_boot_block_d 
-// in include/dev/display/common/display.h
+// See the structure bootblk_d in bootblk.h.
 // #bugbug
 // Actually this is swrong, because the boot info
 // structure is given not only information about 
@@ -424,40 +407,40 @@ static int earlyinit_SetupBootblock(void)
 // Display device info
 // Boot display device. (VESA)
 
-    xBootBlock.lfb_pa        = (unsigned long) xxxxBootBlock[bbOffsetLFB_PA];
-    xBootBlock.deviceWidth   = (unsigned long) xxxxBootBlock[bbOffsetX];
-    xBootBlock.deviceHeight  = (unsigned long) xxxxBootBlock[bbOffsetY];
-    xBootBlock.bpp           = (unsigned long) xxxxBootBlock[bbOffsetBPP];
+    bootblk.lfb_pa        = (unsigned long) xxxxBootBlock[bbOffsetLFB_PA];
+    bootblk.deviceWidth   = (unsigned long) xxxxBootBlock[bbOffsetX];
+    bootblk.deviceHeight  = (unsigned long) xxxxBootBlock[bbOffsetY];
+    bootblk.bpp           = (unsigned long) xxxxBootBlock[bbOffsetBPP];
 
 // Saving the resolution info into another place.
 // See: kernel.h
-    gSavedLFB = (unsigned long) xBootBlock.lfb_pa;
-    gSavedX   = (unsigned long) xBootBlock.deviceWidth;
-    gSavedY   = (unsigned long) xBootBlock.deviceHeight;
-    gSavedBPP = (unsigned long) xBootBlock.bpp;
+    gSavedLFB = (unsigned long) bootblk.lfb_pa;
+    gSavedX   = (unsigned long) bootblk.deviceWidth;
+    gSavedY   = (unsigned long) bootblk.deviceHeight;
+    gSavedBPP = (unsigned long) bootblk.bpp;
 
 // Set up private variables in screen.c
     screenSetSize(gSavedX,gSavedY);
 
 // -------------------------
 // Memory info
-    xBootBlock.last_valid_pa = (unsigned long) xxxxBootBlock[bbLastValidPA];
+    bootblk.last_valid_pa = (unsigned long) xxxxBootBlock[bbLastValidPA];
 // Last valid physical address.
 // Used to get the available physical memory.
-    blSavedLastValidAddress = (unsigned long) xBootBlock.last_valid_pa; 
+    blSavedLastValidAddress = (unsigned long) bootblk.last_valid_pa; 
 // Memory size in KB.
     blSavedPhysicalMemoryInKB = 
         (unsigned long) (blSavedLastValidAddress / 1024);
 
 // -------------------------
 // System info
-    xBootBlock.gramado_mode  = (unsigned long) xxxxBootBlock[bbGramadoMode];
+    bootblk.gramado_mode  = (unsigned long) xxxxBootBlock[bbGramadoMode];
 // Gramado mode. (jail, p1, home ...)
 // Save global variable.
-    current_mode = (unsigned long) xBootBlock.gramado_mode;
+    current_mode = (unsigned long) bootblk.gramado_mode;
 
 // 48
-    xBootBlock.ide_port_number  = (unsigned long) xxxxBootBlock[bb_idePortNumber];
+    bootblk.ide_port_number  = (unsigned long) xxxxBootBlock[bb_idePortNumber];
 
 // ---------------------
 // #note
@@ -466,7 +449,7 @@ static int earlyinit_SetupBootblock(void)
 // + ...
 
 // Validation
-    xBootBlock.initialized = TRUE;
+    bootblk.initialized = TRUE;
     return 0;
 }
 
@@ -948,8 +931,8 @@ void I_kmain(int arch_type)
     system_state = SYSTEM_BOOTING;
 
 // boot info
-    if (xBootBlock.initialized != TRUE){
-        panic("I_kmain: xBootBlock.initialized\n");
+    if (bootblk.initialized != TRUE){
+        panic("I_kmain: bootblk.initialized\n");
     }
 
 //

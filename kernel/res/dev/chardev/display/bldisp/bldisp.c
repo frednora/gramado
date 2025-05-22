@@ -898,9 +898,9 @@ int DDINIT_bldisp(void)
     }
     memset ( bl_display_device, 0, sizeof(struct display_device_d) );
 
-// xBootBlock was initialized by init.c
-    if (xBootBlock.initialized != TRUE){
-        x_panic ("DDINIT_bldisp: xBootBlock");
+// bootblk was initialized by kmain.c
+    if (bootblk.initialized != TRUE){
+        x_panic ("DDINIT_bldisp: bootblk");
     }
 
 // Structure initialization.
@@ -908,20 +908,20 @@ int DDINIT_bldisp(void)
     bl_display_device->owner_pid = (pid_t) GRAMADO_PID_KERNEL;
 
 // framebuffer address.
-    bl_display_device->framebuffer_pa = (unsigned long) xBootBlock.lfb_pa;
+    bl_display_device->framebuffer_pa = (unsigned long) bootblk.lfb_pa;
     bl_display_device->framebuffer_va = (unsigned long) FRONTBUFFER_VA;
 
 // w, h, bpp.
     bl_display_device->framebuffer_width  = 
-        (unsigned long) xBootBlock.deviceWidth;
+        (unsigned long) bootblk.deviceWidth;
     bl_display_device->framebuffer_height = 
-        (unsigned long) xBootBlock.deviceHeight;
+        (unsigned long) bootblk.deviceHeight;
     bl_display_device->framebuffer_bpp = 
-        (unsigned long) xBootBlock.bpp;
+        (unsigned long) bootblk.bpp;
 // Pitch
 // Ex: ((32/8)*800)
     bl_display_device->framebuffer_pitch = 
-        (unsigned long) ( (xBootBlock.bpp/8) * xBootBlock.deviceWidth);
+        (unsigned long) ( (bootblk.bpp/8) * bootblk.deviceWidth);
 
 // Screen size in bytes.
     bl_display_device->framebuffer_size_in_bytes =
