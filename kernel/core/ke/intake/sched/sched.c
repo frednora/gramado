@@ -631,7 +631,8 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                 // Display server: (High)(Most responsive)
                 if (DisplayServerInfo.initialized == TRUE){
                     if (TmpThread->tid == DisplayServerInfo.tid){
-                        TmpThread->quantum = QUANTUM_SYSTEM_TIME_CRITICAL;
+                        //TmpThread->quantum = QUANTUM_SYSTEM_TIME_CRITICAL;
+                        TmpThread->quantum = QUANTUM_MAX;
                     }
                 }
                 // This thread received an input event.

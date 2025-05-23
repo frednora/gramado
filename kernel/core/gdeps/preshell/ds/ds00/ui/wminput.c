@@ -41,8 +41,7 @@ wmProcessMouseEvent(
         return;
     }
 
-// Error. 
-// Nothing to do.
+// Invalid event type.
     if (event_type < 0){
         return;
     }
@@ -61,6 +60,10 @@ wmProcessMouseEvent(
 // as rotinas de pintura de cursor que estao no kernel.
     if (event_type == GWS_MouseMove)
     {
+        // #test
+        if (gUseMouse != TRUE)
+            return;
+
         // If we already clicked the window
         // and now we're moving it.
         // So, now we're dragging it.
@@ -82,6 +85,9 @@ wmProcessMouseEvent(
         // painting the pointer in the right position.
         // Lets update the position. See: comp.c
         comp_set_mouse_position(saved_x,saved_y);
+
+        // #test
+        __display_mouse_cursor();
 
         // Check the window we are inside of 
         // and update the mouse_hover pointer.
@@ -775,7 +781,6 @@ ProcessEvent:
 // #test
     long3 = (unsigned long) RTLEventBuffer[4];  //jiffie
 
-
 // Is it time to use the yellow dialog?
     if (YellowDialogInfo.useYellowDialog == TRUE){
         yellow_status_dialog(msg,long1,long2,long2);
@@ -793,19 +798,14 @@ ProcessEvent:
             DoubleClick.current = (unsigned long) long3;
         }
 
-        // 
         wmProcessMouseEvent(
-            (int) msg,
-            (unsigned long) long1,
-            (unsigned long) long2 ); 
-        
-        // LOOP;
-        // Processamos um evento de movimento,
+            (int) msg, (unsigned long) long1, (unsigned long) long2 ); 
+
+        // LOOP: Processamos um evento de movimento,
         // provavelmente teremos outro subsequente.
         if (msg == GWS_MouseMove){
             goto GetNextEvent;
         }
-  
         return 0;
     }
 

@@ -505,7 +505,6 @@ void comp_display_desktop_components(void)
 // wmCompose:
 // Called by the main routine for now.
 // Its gonna be called by the timer.
-// See: comp.c
 void 
 wmCompose(
     unsigned long jiffies, 

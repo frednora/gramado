@@ -60,6 +60,7 @@ void reactRefreshDirtyWindows(void);
 void wmReactToPaintEvents(void);
 // A worker for wmCompose().
 
+void __display_mouse_cursor(void);
 void comp_display_desktop_components(void);
 
 

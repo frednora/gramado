@@ -386,17 +386,21 @@ ipc_post_message_to_ds (
         goto fail;
     }
     ReceiverTID = (tid_t) DisplayServerInfo.tid;
-    if ( ReceiverTID < 0 || 
-         ReceiverTID >= THREAD_COUNT_MAX )
+    if ( ReceiverTID < 0 || ReceiverTID >= THREAD_COUNT_MAX )
     {
         goto fail;
     }
 
+// More credits to the receiver.
+    do_credits_by_tid(ReceiverTID);
+    do_credits_by_tid(ReceiverTID);
+
+// Wake up the server, it sleeps frequently.
+    wakeup_thread(ReceiverTID);
+
+// ---------------------
     if (msg < 0)
         goto fail;
-
-    // More credits to the receiver.
-    do_credits_by_tid(ReceiverTID);
 
     //if(msg == MSG_MOUSEMOVE){
     //    printk ("x:%d y:%d\n",long1, long2);
@@ -429,6 +433,9 @@ int ipc_post_input_event_to_ds(int event_id, long long1, long long2)
 
     if (event_id < 0)
         goto fail;
+
+
+
 
     switch (event_id)
     {

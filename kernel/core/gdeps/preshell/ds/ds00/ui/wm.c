@@ -139,6 +139,7 @@ void __button_released(int wid);
 
 // =====================================================
 
+static const unsigned long minimum_press_duration_in_ms = 75;
 
 void __button_pressed(int wid)
 {
@@ -146,6 +147,8 @@ void __button_pressed(int wid)
         return; 
     set_status_by_id( wid, BS_PRESSED );
     redraw_window_by_id(wid,TRUE);
+// Sleep x ms to affirm the visual effect.
+    rtl_sleep(minimum_press_duration_in_ms);
 }
 void __button_released(int wid)
 {
@@ -309,8 +312,7 @@ void on_mouse_pressed(void)
 // Not a control, not the start menu, not the menuitem.
     if (mouse_hover->type == WT_BUTTON)
     {
-        if ( mouse_hover->isControl != TRUE )
-        {
+        if (mouse_hover->isControl != TRUE){
             __button_pressed(ButtonID);
             return;
         }
@@ -320,8 +322,7 @@ void on_mouse_pressed(void)
 //#test
 // Start menu button.
     /*
-    if (mouse_hover->id == StartMenu.wid)
-    {
+    if (mouse_hover->id == StartMenu.wid){
         __button_pressed(ButtonID);
         return;
     }
@@ -379,8 +380,7 @@ void on_mouse_pressed(void)
 // Redraw the button
     if (mouse_hover->isMinimizeControl == TRUE)
     {
-        if (mouse_hover->type == WT_BUTTON)
-        {
+        if (mouse_hover->type == WT_BUTTON){
             __button_pressed(ButtonID);
             return;
         }
@@ -390,8 +390,7 @@ void on_mouse_pressed(void)
 // Redraw the button
     if (mouse_hover->isMaximizeControl == TRUE)
     {
-        if (mouse_hover->type == WT_BUTTON)
-        {
+        if (mouse_hover->type == WT_BUTTON){
             __button_pressed(ButtonID);
             return;
         }
@@ -401,8 +400,7 @@ void on_mouse_pressed(void)
 // Redraw the button
     if (mouse_hover->isCloseControl == TRUE)
     {
-        if (mouse_hover->type == WT_BUTTON)
-        {
+        if (mouse_hover->type == WT_BUTTON){
             __button_pressed(ButtonID);
             return;
         }
