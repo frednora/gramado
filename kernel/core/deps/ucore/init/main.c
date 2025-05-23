@@ -786,16 +786,19 @@ static int loopMenu(void)
 // maybe there is no window server installed.
 
     printf("\n");
-    printf(":: Cool menu ::\n");
-
+    printf("=============================================================\n");
+    printf("                     System Configuration  \n");
+    printf("=============================================================\n");
     printf("\n");
-    printf("  + (q) - Quit the cool menu\n");  
     printf("\n");
-    printf("  + (g) - Initialize GUI\n");  
+    printf("  + (g) - Initialize GUI\n");
     printf("\n");
-    printf("  + (r) - Reboot the system\n");  
+    printf("  + (q) - Quit the cool menu\n");
+    printf("\n");
+    printf("  + (r) - Reboot the system\n"); 
     printf("\n");
     printf("  + (s) - Shutdown the system\n");  
+    printf("\n");
 
     do_init_prompt();
 
