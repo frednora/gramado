@@ -662,6 +662,21 @@ ataWriteSector (
     unsigned long reserved1,
     unsigned long reserved2 );
 
+// Load boot metafile into the memory.
+void 
+ata_load_boot_metafile (
+    unsigned long buffer, 
+    unsigned long first_lba, 
+    unsigned long size_in_sectors );
+
+// Save the boot metafile into the disk.
+void 
+ata_store_boot_metafile (
+    unsigned long buffer, 
+    unsigned long first_lba, 
+    unsigned long size_in_sectors );
+
+
 void ide_dma_start(int p);
 void ide_dma_stop(int p);
 int ide_dma_read_status(int p);

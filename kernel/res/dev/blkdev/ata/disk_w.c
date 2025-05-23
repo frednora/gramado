@@ -110,9 +110,8 @@ fatWriteCluster (
     //return 0;  //#todo
 }
 
-
 void 
-fs_store_metafile (
+ata_store_boot_metafile (
     unsigned long buffer, 
     unsigned long first_lba, 
     unsigned long size_in_sectors )
@@ -120,15 +119,15 @@ fs_store_metafile (
 
 // Parameters
     if (buffer == 0){
-        panic("fs_save_fat: buffer\n");
+        panic("ata_store_boot_metafile: buffer\n");
     }
     if (first_lba == 0){
-        panic("fs_save_fat: first_lba\n");
+        panic("ata_store_boot_metafile: first_lba\n");
     }
     // VOLUME1_FAT_SIZE
     // Only one size for now
     //if (size_in_sectors != ?){
-    //    panic("fs_save_fat: size_in_sectors\n");
+    //    panic("ata_store_boot_metafile: size_in_sectors\n");
     //}
 
 // Do save!

@@ -768,6 +768,27 @@ void sys_pwd(void)
     fs_print_process_cwd (current_process);
 }
 
+
+void 
+fs_load_boot_metafile (
+    unsigned long buffer, 
+    unsigned long first_lba, 
+    unsigned long size_in_sectors )
+{
+// See: disk_r.c
+    ata_load_boot_metafile(buffer,first_lba,size_in_sectors);
+}
+
+void 
+fs_store_boot_metafile (
+    unsigned long buffer, 
+    unsigned long first_lba, 
+    unsigned long size_in_sectors )
+{
+// See: disk_w.c
+    ata_store_boot_metafile(buffer,first_lba,size_in_sectors);
+}
+
 // Wrapper
 // #todo: Explain it.
 int 

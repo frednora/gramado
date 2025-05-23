@@ -543,17 +543,21 @@ fatLoadCluster (
     unsigned long address, 
     unsigned long spc );
 
+
+// Load boot metafile into the memory.
 void 
-fs_load_metafile (
+fs_load_boot_metafile (
     unsigned long buffer, 
     unsigned long first_lba, 
     unsigned long size_in_sectors );
 
+// Save the boot metafile into the disk.
 void 
-fs_store_metafile (
+fs_store_boot_metafile (
     unsigned long buffer, 
     unsigned long first_lba, 
     unsigned long size_in_sectors );
+
 
 
 // MBR

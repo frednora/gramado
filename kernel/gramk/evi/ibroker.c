@@ -272,8 +272,8 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         memset(cnf_buffer, 0, 512);
         cnf_buffer[0] = 'M';  // Boot mode
         memcpy(&cnf_buffer[1], "CNF", 3);  // Signature
-        fs_store_metafile(cnf_buffer, 1, 1);  // Save to sector 2
-        fs_store_metafile(cnf_buffer, 2, 1);  // Save to sector 3
+        fs_store_boot_metafile(cnf_buffer, 1, 1);  // Save to sector 2
+        fs_store_boot_metafile(cnf_buffer, 2, 1);  // Save to sector 3
         goto exit_cmp;
     }
 
@@ -283,8 +283,8 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         memset(cnf_buffer, 0, 512);
         cnf_buffer[0] = 'S';  // Boot mode
         memcpy(&cnf_buffer[1], "CNF", 3);  // Signature
-        fs_store_metafile(cnf_buffer, 1, 1);  // Save to sector 2
-        fs_store_metafile(cnf_buffer, 2, 1);  // Save to sector 3
+        fs_store_boot_metafile(cnf_buffer, 1, 1);  // Save to sector 2
+        fs_store_boot_metafile(cnf_buffer, 2, 1);  // Save to sector 3
         goto exit_cmp;
     }
 
