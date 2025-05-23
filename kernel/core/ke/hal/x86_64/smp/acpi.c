@@ -246,7 +246,8 @@ int __x64_probe_smp_via_acpi(void)
         printk("XSDT signature:\n");
 
         // If the signature is valid, let's print some fields.
-        if (xsdt->Signature[0] == "X"){
+        // #todo memcmp(xsdt->Signature, "XSDT", 4) == 0)
+        if (xsdt->Signature[0] == 'X'){
             printk ("%c %c %c %c \n",
                 xsdt->Signature[0],
                 xsdt->Signature[1],
@@ -326,7 +327,8 @@ int __x64_probe_smp_via_acpi(void)
         printk("RSDT signature:\n");
 
         // If the signature is valid, let's print some fields.
-        if (rsdt->Signature[0] == "R"){
+        // #todo memcmp(rsdt->Signature, "RSDT", 4) == 0)
+        if (rsdt->Signature[0] == 'R'){
             printk ("%c %c %c %c \n",
                 rsdt->Signature[0],
                 rsdt->Signature[1],

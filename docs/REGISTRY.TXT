@@ -1,0 +1,7 @@
+
+ What about creating a full system registry 
+ using the metafiles in the first sectors?
+
+ For now all we have is a small configuration metafile 
+ used by the bootmanager and kernel.
+ 
