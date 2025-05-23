@@ -726,6 +726,7 @@ static inline void do_cli(void)
 }
 
 // Try to execute the command line in the prompt[].
+// IN: ?
 static void __try_execute(int fd)
 {
 
@@ -4145,10 +4146,6 @@ int terminal_init(unsigned short flags)
         }
     }
 
-// Inicializando prompt[].
-    //input('\n');
-    input('\0');
-
 //
 // Client
 //
@@ -4184,6 +4181,9 @@ int terminal_init(unsigned short flags)
      sc80 ( 34, 2, 2, 0 );
 //=================
 */
+
+// Inicializando prompt[].
+    input('\0');
 
     clear_terminal_client_window(client_fd);
     doPrompt(client_fd);

@@ -576,11 +576,40 @@ static int input_compare_string(void)
         do_launch_de();
         goto exit_cmp; 
     }
+
+/*
 // ----------------------------------------
+// start as a hook for the next command line.
+    char *new_cmdline;
+    char new_filename[8];
+    int new_counter=0;
+    if (strncmp(prompt,"start",5) == 0)
+    {
+        // Clear the filename buffer
+        memset(new_filename,0,8);
+
+        // Get the new command line.
+        new_cmdline = (prompt+6);
+        // Skip white spaces.
+        while (*new_cmdline == ' ')
+            new_cmdline++;
+        // Copy the name and more.
+        memcpy(new_filename, new_cmdline, 8);
+
+        rewind(stderr);
+        write(fileno(stderr), new_cmdline, 80);
+        rtl_clone_and_execute(new_filename);
+        rtl_sleep(2000);
+        goto exit_cmp;
+    }
+// ----------------------------------------
+*/
 
     // printf ("Command not found, type 'help' for more commands\n");
 
-    // Emergency menu.
+// ----------------------------------------
+// Emergency menu.
+// Open the menu if the command is invalid.
     loopMenu();
 
 /*
