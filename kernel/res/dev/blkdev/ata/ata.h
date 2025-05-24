@@ -503,11 +503,11 @@ extern struct ide_dma_prdt_d  ide_dma_prdt[4];
 //
 
 
-// IDE ports.
+// IDE ports:
 // 0 primary master 
 // 1 primary slave 
 // 2 secondary master 
-// 3 secondary slave.
+// 3 secondary slave
 typedef enum {
 	ideportsPrimaryMaster,    // 0
 	ideportsPrimarySlave,     // 1
@@ -515,13 +515,8 @@ typedef enum {
 	ideportsSecondarySlave    // 3
 }ide_ports_t;
 
-typedef enum {
-	idetypesPrimaryMaster,    // 0
-	idetypesPrimarySlave,     // 1
-	idetypesSecondaryMaster,  // 2
-	idetypesSecondarySlave    // 3
-}ide_types_t;
-
+// The ATA controller mode supports two 
+// interface standards: PATA and SATA.
 typedef enum {
     idedevicetypesPATA,    // 0
     idedevicetypesPATAPI,  // 1

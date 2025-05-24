@@ -19,10 +19,8 @@
 // ICH5 - Integraçao do SATA e suporte total ACPI 2.0.
 // ICH6 - Implementaram os controladores AHCI SATA pela primeira vez.
 
-
 #ifndef __DD_IDE_H
 #define __DD_IDE_H    1
-
 
 //see: ide.c
 extern int ATAFlag;
@@ -30,11 +28,9 @@ extern int ATAFlag;
 #define FORCEPIO  1234
 //...
 
-
 // IO Delay.
 #define io_delay() \
     asm("out %%al,$0x80"::);
-
 
 //
 // PCI
@@ -229,8 +225,6 @@ extern _u8 ata_record_dev;
 extern _u8 ata_record_channel;
 
 
-
-
 // ?
 // dev_nport structure.
 struct dev_nport 
@@ -271,10 +265,9 @@ struct dev_nport
 //see: ide.c
 extern struct dev_nport  dev_nport;
 
-
 // ata_pci:
 // Suporta a IDE Controller.
-// Essa é uma estrutura de superte a discos ata.
+// Essa é uma estrutura de suporte a discos ata.
 struct ata_pci
 {
     _u16 vendor_id;
@@ -322,7 +315,7 @@ struct ata
     uint32_t bus_master_base_address;
     uint32_t ahci_base_address;
 };
-//see: ide.c
+//see: ata.c
 extern struct ata  ata;
 
 // ??
@@ -346,8 +339,6 @@ typedef struct st_dev
 typedef struct st_dev  st_dev_t;
 
 
-
-
 //
 // IDE support 
 //
@@ -358,11 +349,11 @@ extern int g_current_ide_device;
 // Port number.
 extern int g_current_ide_port;
 
-
+// IDE ports:
 // 0 primary master 
 // 1 primary slave 
 // 2 secondary master 
-// 3 secondary slave.
+// 3 secondary slave
 typedef enum {
     ideportsPrimaryMaster,      // 0
     ideportsPrimarySlave,       // 1
@@ -370,13 +361,8 @@ typedef enum {
     ideportsSecondarySlave      // 3
 }ide_ports_t;
 
-typedef enum {
-    idetypesPrimaryMaster,      // 0
-    idetypesPrimarySlave,       // 1
-    idetypesSecondaryMaster,    // 2
-    idetypesSecondarySlave      // 3
-}ide_types_t;
-
+// The ATA controller mode supports two 
+// interface standards: PATA and SATA.
 typedef enum {
     idedevicetypesPATA,    // 0
     idedevicetypesPATAPI,  // 1
@@ -389,16 +375,17 @@ typedef enum {
 // DEVICE TYPES
 //
 
+// ATA Controller mode supports two interface standars:
+// PATA and SATA.
+
 #define ATADEV_UNKNOWN  (-1)
 
-// PATA
+// PATA interface standard
 #define ATADEV_PATA    idedevicetypesPATA
 #define ATADEV_PATAPI  idedevicetypesPATAPI
-
-// SATA
+// SATA interface standard
 #define ATADEV_SATA    idedevicetypesSATA
 #define ATADEV_SATAPI  idedevicetypesSATAPI
-
 
 //
 // SIGNATURE
@@ -411,11 +398,10 @@ typedef enum {
 #define ATADEV_PATAPI_SIG2  0xEB
 
 // SATA
-#define ATADEV_SATA_SIG1    0x3c
-#define ATADEV_SATA_SIG2    0xc3
+#define ATADEV_SATA_SIG1    0x3C
+#define ATADEV_SATA_SIG2    0xC3
 #define ATADEV_SATAPI_SIG1  0x69
 #define ATADEV_SATAPI_SIG2  0x96
-
 
 
 // ->state field
@@ -424,8 +410,8 @@ typedef enum {
 // #define ATA_DEVICE_STATE_DEAD          2000
 
 
-// IDE ports support
-struct ide_ports_d 
+// Structure for IDE port.
+struct ide_port_d 
 {
     int used;
     int magic;
@@ -447,7 +433,7 @@ struct ide_ports_d
 };
 // see: ata.c
 // #todo: Initialize these structure before using them.
-extern struct ide_ports_d  ide_ports[4];
+extern struct ide_port_d  ide_port[4];
 
 
 #define IDE_ATA    0
@@ -521,13 +507,13 @@ struct ide_d
     // sobre o dispositivo controlador de ide.	
 
     int current_port;
-    struct ide_ports_d *primary_master; 
-    struct ide_ports_d *primary_slave; 
-    struct ide_ports_d *secondary_master; 
-    struct ide_ports_d *secondary_slave; 
+    struct ide_port_d *primary_master; 
+    struct ide_port_d *primary_slave; 
+    struct ide_port_d *secondary_master; 
+    struct ide_port_d *secondary_slave; 
 };
 
-typedef struct ide_d ide_t;
+typedef struct ide_d  ide_t;
 
 //see: ide.c
 extern struct ide_d  IDE;

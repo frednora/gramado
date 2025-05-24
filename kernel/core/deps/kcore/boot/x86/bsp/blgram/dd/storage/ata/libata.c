@@ -1,5 +1,4 @@
 // libata.c
-
 // IDE controller support.
 // 2013 - Created by Fred Nora.
 
@@ -78,9 +77,7 @@ __ata_pio_rw_sector (
     int port_index,
     int slave ); 
 
-
 // ===================================================================
-
 
 uint8_t hdd_ata_status_read(int p)
 {
@@ -89,7 +86,7 @@ uint8_t hdd_ata_status_read(int p)
 
     //return inb(ata[p].cmd_block_base_addr + ATA_REG_STATUS);
 
-    return (uint8_t) in8( (int) ide_ports[p].base_port + 7 );
+    return (uint8_t) in8( (int) ide_port[p].base_port + 7 );
 }
 
 int hdd_ata_wait_not_busy(int p)
@@ -109,7 +106,7 @@ void hdd_ata_cmd_write ( int port, int cmd_val )
 
     //outb(ata.cmd_block_base_address + ATA_REG_CMD,cmd_val);
 
-    out8 ( (int) ide_ports[port].base_port + 7 , (int) cmd_val );
+    out8 ( (int) ide_port[port].base_port + 7 , (int) cmd_val );
     ata_wait (400);  
 }
 
@@ -131,10 +128,9 @@ __libata_pio_read (
     asm volatile (\
         "cld;\
          rep; insw":: "D" (buffer),\
-         "d" ( ide_ports[p].base_port + 0 ),\
+         "d" (ide_port[p].base_port + 0),\
           "c" (bytes/2));
 }
-
 
 static void 
 __libata_pio_write ( 
@@ -145,10 +141,9 @@ __libata_pio_write (
     asm volatile (\
                 "cld;\
                 rep; outsw"::"S"(buffer),\
-                "d"( ide_ports[p].base_port + 0 ),\
+                "d"(ide_port[p].base_port + 0),\
                 "c"(bytes/2));
 }
-
 
 /*
  * __ata_pio_rw_sector
@@ -222,19 +217,19 @@ __ata_pio_rw_sector (
 // int and long has the same size.
 
     out8( 
-        (int) ( ide_ports[port_index].base_port + 6 ), 
+        (int) (ide_port[port_index].base_port + 6), 
         (int) tmplba );
 
 // #test
     //out8( 
-        // (int) ide_ports[port_index].base_port + 6, 
+        // (int) ide_port[port_index].base_port + 6, 
         // (int) 0xE0 | (master << 4) | ((tmplba >> 24) & 0x0F));
  
 // 0x01F2
 // Port to send number of sectors.
 
     out8( 
-        (int) ( ide_ports[port_index].base_port + 2 ), 
+        (int) (ide_port[port_index].base_port + 2), 
         (int) 1 );
 
 // 0x1F3  
@@ -242,7 +237,7 @@ __ata_pio_rw_sector (
 
     tmplba = lba;
     tmplba = tmplba & 0x000000FF;
-    out8( (int) ide_ports[port_index].base_port + 3 , (int) tmplba );
+    out8( (int) ide_port[port_index].base_port + 3 , (int) tmplba );
 
 // 0x1F4
 // Port to send bit 8 - 15 of LBA.
@@ -250,7 +245,7 @@ __ata_pio_rw_sector (
     tmplba = lba;
     tmplba = tmplba >> 8;
     tmplba = tmplba & 0x000000FF;
-    out8( (int) ide_ports[port_index].base_port + 4 , (int) tmplba );
+    out8( (int) ide_port[port_index].base_port + 4 , (int) tmplba );
 
 // 0x1F5:
 // Port to send bit 16 - 23 of LBA
@@ -258,14 +253,14 @@ __ata_pio_rw_sector (
     tmplba = lba;
     tmplba = tmplba >> 16;
     tmplba = tmplba & 0x000000FF;
-    out8( (int) ide_ports[port_index].base_port + 5 , (int) tmplba );
+    out8( (int) ide_port[port_index].base_port + 5 , (int) tmplba );
 
 // =================================================
 
     /*
     if (_lba >= 0x10000000) 
     {
-        Port = (unsigned short) (ide_ports[port_index].base_port);  // Base port 
+        Port = (unsigned short) (ide_port[port_index].base_port);  // Base port 
 		out8 (Port + ATA_REG_SECCOUNT, 0);																// Yes, so setup 48-bit addressing mode
 		out8 (Port + ATA_REG_LBA3, ((_lba & 0xFF000000) >> 24));
 		out8 (Port + ATA_REG_LBA4, 0);
@@ -278,7 +273,7 @@ __ata_pio_rw_sector (
 // Command port
 // Operation: read or write
 
-    Port = (unsigned short) (ide_ports[port_index].base_port + ATA_REG_CMD); 
+    Port = (unsigned short) (ide_port[port_index].base_port + ATA_REG_CMD); 
 
     //if (lba >= 0x10000000) {
     //    if (operation_number == __OPERATION_PIO_READ){
@@ -310,7 +305,7 @@ __ata_pio_rw_sector (
 
 again:
 
-    c = (unsigned char) in8( (int) ide_ports[port_index].base_port + 7);
+    c = (unsigned char) in8( (int) ide_port[port_index].base_port + 7 );
 
 // Select a bit.
     c = (c & 8);

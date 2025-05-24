@@ -79,7 +79,7 @@ int g_current_ide_port = 0;
 
 // see: ata.h
 // #todo: Initialize these structure before using them.
-struct ide_ports_d  ide_ports[4];
+struct ide_port_d  ide_port[4];
 
 unsigned long ide_handler_address=0;
 
@@ -256,12 +256,12 @@ void show_ide_info()
     // four ports.
     for ( i=0; i<4; i++ ){
         printf ("\n");
-        printf ("id        = %d \n", ide_ports[i].id );
-        printf ("used      = %d \n", ide_ports[i].used );
-        printf ("magic     = %d \n", ide_ports[i].magic );
-        printf ("type      = %d \n", ide_ports[i].type );
-        printf ("name      = %s \n", ide_ports[i].name );
-        printf ("base_port = %x \n", ide_ports[i].base_port );
+        printf ("id        = %d \n", ide_port[i].id );
+        printf ("used      = %d \n", ide_port[i].used );
+        printf ("magic     = %d \n", ide_port[i].magic );
+        printf ("type      = %d \n", ide_port[i].type );
+        printf ("name      = %s \n", ide_port[i].name );
+        printf ("base_port = %x \n", ide_port[i].base_port );
     };
 
 	/*
@@ -1439,12 +1439,12 @@ int __ata_identify_device(char port)
         ata_wait_no_drq();
 
         // Salvando o tipo em estrutura de porta.
-        ide_ports[port].id = (uint8_t) port;
-        ide_ports[port].name = "PATA";
-        ide_ports[port].type = (int) idedevicetypesPATA;
+        ide_port[port].id = (uint8_t) port;
+        ide_port[port].name = "PATA";
+        ide_port[port].type = (int) idedevicetypesPATA;
 
-        ide_ports[port].used = (int) TRUE;
-        ide_ports[port].magic = (int) 1234;
+        ide_port[port].used = (int) TRUE;
+        ide_port[port].magic = (int) 1234;
 
         new_dev->dev_type = 
             (ata_devinfo_buffer[0] &0x8000)?    0xffff: ATA_DEVICE_TYPE;
@@ -1487,12 +1487,12 @@ int __ata_identify_device(char port)
         //ata_wait_no_drq();
 
         // Salvando o tipo em estrutura de porta.
-        ide_ports[port].id = (uint8_t) port;
-        ide_ports[port].name = "PATAPI";
-        ide_ports[port].type = (int) idedevicetypesPATAPI;
+        ide_port[port].id = (uint8_t) port;
+        ide_port[port].name = "PATAPI";
+        ide_port[port].type = (int) idedevicetypesPATAPI;
 
-        ide_ports[port].used = (int) TRUE;
-        ide_ports[port].magic = (int) 1234;
+        ide_port[port].used = (int) TRUE;
+        ide_port[port].magic = (int) 1234;
 
         new_dev->dev_type = 
               (ata_devinfo_buffer[0]&0x8000)? ATAPI_DEVICE_TYPE: 0xffff;
@@ -1535,13 +1535,13 @@ int __ata_identify_device(char port)
         //ata_wait_not_busy();
         //ata_wait_no_drq();
 
-        //salvando o tipo em estrutura de porta.
-        ide_ports[port].id = (uint8_t) port;
-        ide_ports[port].name = "SATA";
-        ide_ports[port].type = (int) idedevicetypesSATA;
+        // Salvando o tipo em estrutura de porta.
+        ide_port[port].id = (uint8_t) port;
+        ide_port[port].name = "SATA";
+        ide_port[port].type = (int) idedevicetypesSATA;
 
-        ide_ports[port].used = (int) TRUE;
-        ide_ports[port].magic = (int) 1234;
+        ide_port[port].used = (int) TRUE;
+        ide_port[port].magic = (int) 1234;
 
         printf ("__ata_identify_device: [FAIL] SATA not supported :)\n");
         goto fail;
@@ -1557,13 +1557,13 @@ int __ata_identify_device(char port)
         //ata_wait_not_busy();
         //ata_wait_no_drq();
 
-        //salvando o tipo em estrutura de porta.
-        ide_ports[port].id = (uint8_t) port;
-        ide_ports[port].name = "SATAPI";
-        ide_ports[port].type = (int) idedevicetypesSATAPI;
+        // Salvando o tipo em estrutura de porta.
+        ide_port[port].id = (uint8_t) port;
+        ide_port[port].name = "SATAPI";
+        ide_port[port].type = (int) idedevicetypesSATAPI;
 
-        ide_ports[port].used = (int) TRUE;
-        ide_ports[port].magic = (int) 1234;
+        ide_port[port].used = (int) TRUE;
+        ide_port[port].magic = (int) 1234;
 
         printf ("__ata_identify_device: [FAIL] SATAPI not supported :)\n");
         goto fail;
@@ -1718,10 +1718,10 @@ static int __ata_probe_controller(int ataflag)
 
 // Clear
 // Just to avoid sosme dirty values.
-    bzero( &ide_ports[0], sizeof(struct ide_ports_d) );
-    bzero( &ide_ports[1], sizeof(struct ide_ports_d) );
-    bzero( &ide_ports[2], sizeof(struct ide_ports_d) );
-    bzero( &ide_ports[3], sizeof(struct ide_ports_d) );
+    bzero( &ide_port[0], sizeof(struct ide_port_d) );
+    bzero( &ide_port[1], sizeof(struct ide_port_d) );
+    bzero( &ide_port[2], sizeof(struct ide_port_d) );
+    bzero( &ide_port[3], sizeof(struct ide_port_d) );
 
 // ================================================
 
@@ -1895,13 +1895,12 @@ static int __ata_probe_controller(int ataflag)
 // Secondary Master, also called SATA3.
 // Secondary Slave,  also called SATA4.
 
-    // Primary
-    ide_ports[0].base_port = (unsigned short) ATA_BAR0;
-    ide_ports[1].base_port = (unsigned short) ATA_BAR1;
-
-    // Secondary
-    ide_ports[2].base_port = (unsigned short) ATA_BAR2;
-    ide_ports[3].base_port = (unsigned short) ATA_BAR3;
+// Primary
+    ide_port[0].base_port = (unsigned short) ATA_BAR0;
+    ide_port[1].base_port = (unsigned short) ATA_BAR1;
+// Secondary
+    ide_port[2].base_port = (unsigned short) ATA_BAR2;
+    ide_port[3].base_port = (unsigned short) ATA_BAR3;
 
 // TODO: Tem ainda a porta do dma na bar4 e bar5
     // ATA_BAR4

@@ -1,18 +1,8 @@
 // libata.h
-
+// Created by Fred Nora.
 
 #ifndef __DD_HDD_H
 #define __DD_HDD_H    1
-
-
-/*
-// #test: Not in use.
-struct hdd_d
-{
-    int dummy;
-};
-*/
-
 
 // --------------------------
 
@@ -30,7 +20,4 @@ ata_write_sector (
     unsigned long cx, 
     unsigned long dx ); 
 
-
-
 #endif   
-
