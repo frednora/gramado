@@ -595,7 +595,7 @@ struct ide_port_d
 // podemos usar ponteiros para estruturas.
 };
 // Four ports.
-extern struct ide_port_d  ide_ports[4];
+extern struct ide_port_d  ide_port[4];
 
 //
 // == Prototypes ==============================================

@@ -6,17 +6,15 @@
 
 #include <kernel.h>  
 
-
 // Internal
 #define __OPERATION_PIO_READ  1000
 #define __OPERATION_PIO_WRITE  2000
-
 
 //
 // Private functions: prototypes.
 //
 
-static uint8_t __hdd_ata_status_read (unsigned int port_index);
+static uint8_t __hdd_ata_status_read(unsigned int port_index);
 
 static void 
 __hdd_ata_cmd_write ( 
@@ -68,11 +66,10 @@ static uint8_t __hdd_ata_status_read (unsigned int port_index)
 // #bugbug: 
 // Rever o offset.
 
-    port = (unsigned short) (ide_ports[port_index].base_port + 7);
+    port = (unsigned short) (ide_port[port_index].base_port + 7);
 
-    return (uint8_t) in8( (unsigned short) port );
+    return (uint8_t) in8((unsigned short) port);
 }
-
 
 static void 
 __hdd_ata_cmd_write ( 
@@ -88,7 +85,7 @@ __hdd_ata_cmd_write (
 // no_busy 
     __hdd_ata_wait_not_busy(port_index);
 
-    port = (unsigned short) (ide_ports[port_index].base_port + 7);
+    port = (unsigned short) (ide_port[port_index].base_port + 7);
 
     out8( 
         (unsigned short) port, 
@@ -213,7 +210,7 @@ __hdd_ata_pio_read (
 
     //ATA_REG_DATA
     port = 
-        (unsigned short) (ide_ports[port_index].base_port + 0);
+        (unsigned short) (ide_port[port_index].base_port + 0);
 
     asm volatile (\
         "cld;\
@@ -271,8 +268,7 @@ __hdd_ata_pio_write (
     //#todo
     //if ( (void*) buffer == NULL ){ return; );
 
-    port = 
-        (unsigned short) (ide_ports[port_index].base_port + 0);
+    port = (unsigned short) (ide_port[port_index].base_port + 0);
 
     asm volatile (\
         "cld;\
@@ -347,9 +343,9 @@ __pio_rw_sector (
 // Master or slave?
 //#define ATA_MASTER  0
 //#define ATA_SLAVE   1 
-// see: ide.h
+// see: ata.h
 
-    uint8_t value = (uint8_t) ide_ports[port_index].dev_num;
+    uint8_t value = (uint8_t) ide_port[port_index].dev_num;
     int is_slave = FALSE;
     // Not a slave device.
     if (value == ATA_MASTER){
@@ -389,7 +385,7 @@ __pio_rw_sector (
 // Drive/Head Register 
 // Used to select a drive and/or head. 
 // Supports extra address/flag bits.
-    port = (unsigned short) (ide_ports[port_index].base_port + ATA_REG_DEVSEL);
+    port = (unsigned short) (ide_port[port_index].base_port + ATA_REG_DEVSEL);
     out8 ( 
         (unsigned short) port, 
         (unsigned char) lba );
@@ -400,11 +396,11 @@ __pio_rw_sector (
 // ATA_REG_SECCOUNT
 // Sector Count Register
 // Number of sectors to read/write (0 is a special value).
-    port = (unsigned short) (ide_ports[port_index].base_port + ATA_REG_SECCOUNT);
+    port = (unsigned short) (ide_port[port_index].base_port + ATA_REG_SECCOUNT);
 
 // #bugbug: Not working on qemu.
 // ATA_REG_SECCOUNT1
-    //port = (unsigned short) (ide_ports[port_index].base_port + 0x08);
+    //port = (unsigned short) (ide_port[port_index].base_port + 0x08);
 
     out8 ( (unsigned short) port, (unsigned char) 1 );
 
@@ -415,7 +411,7 @@ __pio_rw_sector (
 
     lba = (unsigned int) _lba;
     lba = (unsigned int) (lba & 0x000000FF);
-    port = (unsigned short) (ide_ports[port_index].base_port + ATA_REG_LBA0); 
+    port = (unsigned short) (ide_port[port_index].base_port + ATA_REG_LBA0); 
     out8 ( 
         (unsigned short) port, 
         (unsigned char) lba );
@@ -429,7 +425,7 @@ __pio_rw_sector (
     lba = (unsigned int) _lba;
     lba = (unsigned int) (lba >> 8);
     lba = (unsigned int) (lba & 0x000000FF);
-    port = (unsigned short) (ide_ports[port_index].base_port + ATA_REG_LBA1); 
+    port = (unsigned short) (ide_port[port_index].base_port + ATA_REG_LBA1); 
     out8 ( 
         (unsigned short) port, 
         (unsigned char) lba );
@@ -441,7 +437,7 @@ __pio_rw_sector (
     lba = (unsigned int) _lba;
     lba = (unsigned int) (lba >> 16);
     lba = (unsigned int) (lba & 0x000000FF);
-    port = (unsigned short) (ide_ports[port_index].base_port + ATA_REG_LBA2); 
+    port = (unsigned short) (ide_port[port_index].base_port + ATA_REG_LBA2); 
     out8 ( 
         (unsigned short) port, 
         (unsigned char) lba );
@@ -451,7 +447,7 @@ __pio_rw_sector (
     /*
     if (_lba >= 0x10000000) 
     {
-        port = (unsigned short) (ide_ports[port_index].base_port);  // Base port 
+        port = (unsigned short) (ide_port[port_index].base_port);  // Base port 
 		out8 (port + ATA_REG_SECCOUNT, 0);																// Yes, so setup 48-bit addressing mode
 		out8 (port + ATA_REG_LBA3, ((_lba & 0xFF000000) >> 24));
 		out8 (port + ATA_REG_LBA4, 0);
@@ -463,7 +459,7 @@ __pio_rw_sector (
 // 0x1F7; Command port
 // Operation: read or write
 
-    port = (unsigned short) (ide_ports[port_index].base_port + ATA_REG_CMD); 
+    port = (unsigned short) (ide_port[port_index].base_port + ATA_REG_CMD); 
 
     //if (lba >= 0x10000000) {
     //    if (operation_number == __OPERATION_PIO_READ){
@@ -500,7 +496,7 @@ __pio_rw_sector (
 again:
 
 // Pega um byte de status.
-    port = (unsigned short) (ide_ports[port_index].base_port + 7);
+    port = (unsigned short) (ide_port[port_index].base_port + 7);
     c = (unsigned char) in8( (unsigned short) port );
 
 // Seleciona o bit do byte de status.

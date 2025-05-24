@@ -1,10 +1,8 @@
-
 // atainfo.c
 // Show information about ata support.
 // 2021 - Created by Fred Nora.
 
 #include <kernel.h>
-
 
 void ata_show_ata_controller_info(void)
 {
@@ -46,20 +44,20 @@ void ata_show_ide_info(void)
     for ( i=0; i<4; i++ )
     {
         printk("\n");
-        printk ("id=%d \n", ide_ports[i].id );
+        printk ("id=%d \n", ide_port[i].id );
         printk ("channel=%d dev_num=%d \n", 
-            ide_ports[i].channel, 
-            ide_ports[i].dev_num );
+            ide_port[i].channel, 
+            ide_port[i].dev_num );
         //printk ("used=%d magic=%d \n", 
-        //    ide_ports[i].used, 
-        //    ide_ports[i].magic );
-        printk ("type=%d      \n", ide_ports[i].type );
-        printk ("base_port=%x \n", ide_ports[i].base_port );
-        printk ("name=%s      \n", ide_ports[i].name );
+        //    ide_port[i].used, 
+        //    ide_port[i].magic );
+        printk ("type=%d      \n", ide_port[i].type );
+        printk ("base_port=%x \n", ide_port[i].base_port );
+        printk ("name=%s      \n", ide_port[i].name );
 
 // #todo: This is what we need.
         printk ("Size in sectors = %d \n", 
-            ide_ports[i].size_in_sectors );
+            ide_port[i].size_in_sectors );
     };
 
 //

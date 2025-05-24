@@ -56,8 +56,8 @@ static uint32_t __next_sd_id = 0;
 // --------------------------
 
 // Four ports.
-// see: ide.h
-struct ide_port_d  ide_ports[4];
+// see: ata.h
+struct ide_port_d  ide_port[4];
 
 struct dev_nport  dev_nport;
 
@@ -685,7 +685,7 @@ static int __ide_identify_device(uint8_t nport)
         //refresh_screen();
         //while(1){}
         
-        ide_ports[nport].size_in_sectors = (unsigned long) Max_LBA;
+        ide_port[nport].size_in_sectors = (unsigned long) Max_LBA;
     }
 */
 
@@ -719,19 +719,19 @@ static int __ide_identify_device(uint8_t nport)
         ata_wait_not_busy(nport);
         ata_wait_no_drq(nport);
 
-        // See: ide.h
+        // See: ata.h
 
-        ide_ports[nport].id = (uint8_t) nport;           // Port index.
-        ide_ports[nport].type = (int) idedevicetypesPATA;  // Device type.
-        ide_ports[nport].name = "PATA";
-        ide_ports[nport].channel = ata_port[nport].channel;  // Primary or secondary.
-        ide_ports[nport].dev_num = ata_port[nport].dev_num;  // Master or slave.
-        ide_ports[nport].used = (int) TRUE;
-        ide_ports[nport].magic = (int) 1234;
+        ide_port[nport].id = (uint8_t) nport;             // Port index.
+        ide_port[nport].type = (int) idedevicetypesPATA;  // Device type.
+        ide_port[nport].name = "PATA";
+        ide_port[nport].channel = ata_port[nport].channel;  // Primary or secondary.
+        ide_port[nport].dev_num = ata_port[nport].dev_num;  // Master or slave.
+        ide_port[nport].used = (int) TRUE;
+        ide_port[nport].magic = (int) 1234;
 
         // Disk
         // See: disk.h
-        disk = (struct disk_d *) kmalloc( sizeof(struct disk_d) );
+        disk = (struct disk_d *) kmalloc(sizeof(struct disk_d));
         if ((void*) disk == NULL){
             debug_print("__ide_identify_device: disk on PATA\n");
             goto fail;
@@ -794,15 +794,15 @@ static int __ide_identify_device(uint8_t nport)
         ata_wait_not_busy(nport);
         ata_wait_no_drq(nport);
 
-        // See: ide.h
+        // See: ata.h
 
-        ide_ports[nport].id = (uint8_t) nport;
-        ide_ports[nport].type = (int) idedevicetypesPATAPI;
-        ide_ports[nport].name = "PATAPI";
-        ide_ports[nport].channel = ata_port[nport].channel;  // Primary or secondary.
-        ide_ports[nport].dev_num = ata_port[nport].dev_num;  // Master or slave.
-        ide_ports[nport].used = (int) TRUE;
-        ide_ports[nport].magic = (int) 1234;
+        ide_port[nport].id = (uint8_t) nport;
+        ide_port[nport].type = (int) idedevicetypesPATAPI;
+        ide_port[nport].name = "PATAPI";
+        ide_port[nport].channel = ata_port[nport].channel;  // Primary or secondary.
+        ide_port[nport].dev_num = ata_port[nport].dev_num;  // Master or slave.
+        ide_port[nport].used = (int) TRUE;
+        ide_port[nport].magic = (int) 1234;
 
         // Disk
         // See: disk.h
@@ -853,15 +853,15 @@ static int __ide_identify_device(uint8_t nport)
         ata_wait_not_busy(nport);
         ata_wait_no_drq(nport);
 
-        // See: ide.h
+        // See: ata.h
 
-        ide_ports[nport].id = (uint8_t) nport;
-        ide_ports[nport].type = (int) idedevicetypesSATA;  // Device type.
-        ide_ports[nport].name = "SATA";                    // Port name.
-        ide_ports[nport].channel = ata_port[nport].channel;  // Primary or secondary.
-        ide_ports[nport].dev_num = ata_port[nport].dev_num;  // Master or slave.
-        ide_ports[nport].used = (int) TRUE;
-        ide_ports[nport].magic = (int) 1234;
+        ide_port[nport].id = (uint8_t) nport;
+        ide_port[nport].type = (int) idedevicetypesSATA;  // Device type.
+        ide_port[nport].name = "SATA";                    // Port name.
+        ide_port[nport].channel = ata_port[nport].channel;  // Primary or secondary.
+        ide_port[nport].dev_num = ata_port[nport].dev_num;  // Master or slave.
+        ide_port[nport].used = (int) TRUE;
+        ide_port[nport].magic = (int) 1234;
 
         // Disk
         // See: disk.h
@@ -923,14 +923,14 @@ static int __ide_identify_device(uint8_t nport)
         ata_wait_not_busy(nport);
         ata_wait_no_drq(nport);
 
-        // See: ide.h
-        ide_ports[nport].id = (uint8_t) nport;
-        ide_ports[nport].type = (int) idedevicetypesSATAPI;
-        ide_ports[nport].name = "SATAPI";
-        ide_ports[nport].channel = ata_port[nport].channel;  // Primary or secondary.
-        ide_ports[nport].dev_num = ata_port[nport].dev_num;  // Master or slave.
-        ide_ports[nport].used = (int) TRUE;
-        ide_ports[nport].magic = (int) 1234;
+        // See: ata.h
+        ide_port[nport].id = (uint8_t) nport;
+        ide_port[nport].type = (int) idedevicetypesSATAPI;
+        ide_port[nport].name = "SATAPI";
+        ide_port[nport].channel = ata_port[nport].channel;  // Primary or secondary.
+        ide_port[nport].dev_num = ata_port[nport].dev_num;  // Master or slave.
+        ide_port[nport].used = (int) TRUE;
+        ide_port[nport].magic = (int) 1234;
 
         // Disk
         // See: disk.h
@@ -1598,16 +1598,15 @@ static int __ata_initialize(int ataflag)
     ATA_BAR4 = ( PCIDeviceATA->BAR4 & ~0x7 ) + ATA_IDE_BAR4_BUS_MASTER * ( !PCIDeviceATA->BAR4 );
     ATA_BAR5 = ( PCIDeviceATA->BAR5 & ~0xf ) + ATA_IDE_BAR5            * ( !PCIDeviceATA->BAR5 );
 
-// Get the base i/o port for 
-// all the 4 ATA ports.
+// Get the base i/o port for all the 4 ATA ports.
 // Colocando nas estruturas.
-    ide_ports[0].base_port = 
+    ide_port[0].base_port = 
         (unsigned short) (ATA_BAR0_PRIMARY_COMMAND_PORT   & 0xFFFF);
-    ide_ports[1].base_port = 
+    ide_port[1].base_port = 
         (unsigned short) (ATA_BAR1_PRIMARY_CONTROL_PORT   & 0xFFFF);
-    ide_ports[2].base_port = 
+    ide_port[2].base_port = 
         (unsigned short) (ATA_BAR2_SECONDARY_COMMAND_PORT & 0xFFFF);
-    ide_ports[3].base_port = 
+    ide_port[3].base_port = 
         (unsigned short) (ATA_BAR3_SECONDARY_CONTROL_PORT & 0xFFFF);
     // Tem ainda a porta do dma na bar4.
 
