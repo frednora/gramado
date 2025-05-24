@@ -1201,16 +1201,30 @@ __gws_settext_request (
 
 // String support
 // Fill the string buffer
-    int string_off = 8;
+    static int string_off = 8;
     char *p = (char *) &message_buffer[string_off];
 
-    for (i=0; i<250; i++)
+    
+    // 250 is the max limit for now.
+    // #bugbug: Too smal for multiple lines.
+    // #bugbug: What is the string size?
+
+    size_t StringLenght = 0;
+    StringLenght = (size_t) strlen(string);
+    if (StringLenght <= 0){
+        printf("__gws_settext_request: StringLenght\n");
+        exit(0);
+    }
+    if (StringLenght > 250)
+        StringLenght = 250;
+
+    for (i=0; i<StringLenght; i++)
     {
-        *p = *string;   // Put a char.
-        // Increment both
-        p++;
-        string++; 
+        *p = *string;    // Put a char
+        p++;             // Increment target pointer
+        string++;        // Increment source pointer 
     };
+
     // Finalize the string
     *p = 0;
 

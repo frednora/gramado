@@ -591,7 +591,7 @@ void redraw_text_for_editbox(struct gws_window_d *window)
     if ((void*)window == NULL)
         return;
     if (window->magic != 1234)
-         return;
+        return;
     if ( window->type != WT_EDITBOX_SINGLE_LINE &&
          window->type != WT_EDITBOX_MULTIPLE_LINES )
     {
@@ -601,44 +601,89 @@ void redraw_text_for_editbox(struct gws_window_d *window)
 // -----------------------------------
 // #todo
 // No support for multiple lines yet.
-    if (window->type != WT_EDITBOX_SINGLE_LINE){
-        return;
-    }
-
+    //if (window->type != WT_EDITBOX_SINGLE_LINE){
+    //    return;
+    //}
 
 // No text
-    if ( (void*) window->window_text == NULL )
+    if ((void*) window->window_text == NULL)
     {
         //window->textbuffer_size_in_bytes = 0;
         //window->text_size_in_bytes = 0;
         return;
     }
-
 // Get the base
     p = window->window_text;
 
 // Clear the local buffer for single line.
     memset(sl_local_buffer,0,64);
 
-    int max=64; //provisorio
+    int TotalChars = window->text_size_in_bytes;
+    int MaxPerLine=64; //provisorio
     if (window->width_in_chars > 64){
-        max=64;
+        MaxPerLine=64;
     }else{
-        max = window->width_in_chars;
+        MaxPerLine = window->width_in_chars;
     };
 
-    for (i=0; i<max; i++)
+    // #bugbug: Invalid window buffer size.
+    if (TotalChars <= 0)
+        TotalChars = 1;
+
+    // Can't be bihher than our local buffer
+    if (TotalChars > 64)
+        TotalChars = 64;
+
+    // Put into the local buffer
+    for (i=0; i<TotalChars; i++)
     {
         sl_local_buffer[i] = *p;
         p++;
     };
 
-// Draw the string into the window.
-    grDrawString ( 
-        (window->absolute_x + 8), 
-        (window->absolute_y + 8), 
-        COLOR_BLACK, 
-        sl_local_buffer );
+
+// Draw the string into the window for single line
+    if ( window->type == WT_EDITBOX_SINGLE_LINE )
+    {
+        grDrawString ( 
+            (window->absolute_x + 8), 
+            (window->absolute_y + 8), 
+            COLOR_BLACK, 
+            sl_local_buffer );
+        return;
+    }
+
+
+// Let's print multiple lines.
+// Draw the string into the window for single line
+    int Counter=0;
+    unsigned long l = (window->absolute_x + 8);
+    unsigned long t = (window->absolute_y + 8);
+    if ( window->type == WT_EDITBOX_MULTIPLE_LINES )
+    {
+        for (Counter=0; Counter<=TotalChars; Counter++)
+        {
+            if (sl_local_buffer[Counter] == 0x00)
+                break;
+            grBackbufferDrawCharTransparent2 ( 
+                l, 
+                t, 
+                (unsigned int) COLOR_BLACK, 
+                sl_local_buffer[Counter],
+                FontInitialization.address );
+            
+            // Next column
+            l = l+8;
+
+            // Next line
+            if ((Counter % 32) == 0)
+            {
+                t = t+8;  // next line
+                l = (window->absolute_x + 8); // First col.
+            }
+        };
+        return;
+    }
 }
 
 //------------
@@ -696,7 +741,7 @@ redraw_window (
 // shadow: Not used for now.
     if (window->shadowUsed == TRUE)
     {
-        if ( (unsigned long) window->type == WT_OVERLAPPED )
+        if ((unsigned long) window->type == WT_OVERLAPPED)
         {
             if (window == keyboard_owner){
                 __tmp_color = xCOLOR_GRAY1;
@@ -919,12 +964,13 @@ redraw_window (
         }
 
         // Text
+        // It's working for single line, but not for multiple lines
         if ( window->type == WT_EDITBOX_SINGLE_LINE ||
              window->type == WT_EDITBOX_MULTIPLE_LINES )
         {
             // #test
             // We're testing it yet.
-            // redraw_text_for_editbox(window);
+            redraw_text_for_editbox(window);
         }
 
         //...

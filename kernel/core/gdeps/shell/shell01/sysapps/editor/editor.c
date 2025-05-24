@@ -247,7 +247,7 @@ static void update_clients(int fd)
         client_window,
         cwText.w,
         cwText.h );
-    gws_set_focus(fd,client_window);
+    //gws_set_focus(fd,client_window);
     gws_redraw_window(fd, client_window, TRUE);
 }
 
@@ -413,7 +413,10 @@ editorProcedure(
     // If the event window is the main window, so
     // redraw everyone.
     case MSG_PAINT:
-        if (event_window == main_window){
+        if (event_window == main_window)
+        {
+            __test_text(fd,addressbar_window);
+            __test_text(fd,client_window);
             update_clients(fd);
             return 0;
         }
@@ -479,21 +482,32 @@ static void __test_text(int fd, int wid)
     memset(string_buffer,0,256);
     sprintf(string_buffer,"dirty");
 
+//
 // Inject
+//
+
+    const char *short_text = "Short text";
+    const char *long_text = "This is a long text, a really long text";
+    char *target_text;
+
+    if (wid == addressbar_window)
+        target_text = short_text;
+    if (wid == client_window)
+        target_text = long_text;
+
+    // #bugbug: What is the size?
+    // The limit is 256 chars.
     gws_set_text (
         (int) fd,      // fd,
-        (int) wid,    // window id,
+        (int) wid,     // window id,
         (unsigned long)  1, 
         (unsigned long)  1, 
         (unsigned long) COLOR_BLACK,
-        "Injected text :)");
+        target_text );
 
-    //#debug
-    //return;
-
+/*
+// ------------------
 // Get back
-
-
     Status = 
     gws_get_text (
         (int) fd,     // fd,
@@ -502,6 +516,7 @@ static void __test_text(int fd, int wid)
         (unsigned long)  1, 
         (unsigned long) COLOR_BLACK,
         (char *) string_buffer );
+*/
 
     //if ( (void*) p == NULL ){
     //    printf("editor.bin: Invalid text buffer\n");
@@ -512,6 +527,7 @@ static void __test_text(int fd, int wid)
     //printf("__test_text: {%s}\n",string_buffer);
     //while(1){}
 
+/*
 // ------------------
 // Print into the window.
     p = string_buffer;
@@ -522,6 +538,7 @@ static void __test_text(int fd, int wid)
         (unsigned long)  8, 
         (unsigned long) COLOR_RED,
         p );
+*/
 }
 
 // #test

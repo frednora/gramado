@@ -34,7 +34,7 @@ grDrawString (
 
     if ((void *) string == NULL)
         return;
-    if ( *string == 0 )
+    if (*string == 0)
         return;
 
 // #fail
@@ -118,7 +118,7 @@ dtextDrawText (
 // String validation
     if ((void *) string == NULL)
         return;
-    if ( *string == 0 )
+    if (*string == 0)
         return;
 
 // Draw
@@ -158,7 +158,7 @@ dtextDrawText2 (
 // String validation
     if ((void *) string == NULL)
         return;
-    if ( *string == 0 )
+    if (*string == 0)
         return;
 
 // Draw

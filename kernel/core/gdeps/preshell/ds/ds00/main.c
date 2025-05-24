@@ -2385,8 +2385,9 @@ int serviceSetText(void)
 // #todo: Talvez poderiamos receber o tamanho da string.
     unsigned char buf[256+1];
     memset(buf,0,256);
-    int string_off=8;
+    static int string_off=8;
     char *p = (char *) &message_address[string_off];
+    // Get 256 chars.
     for (i=0; i<256; i++)
     {
         buf[i] = *p;  //Get a char
@@ -2450,23 +2451,28 @@ int serviceSetText(void)
         goto fail;
     }
 
-    if ( (void*) window->window_text == NULL )
+    if ((void*) window->window_text == NULL)
     {
         printf("window_text\n");
         goto fail;
     }
+
+    // Clear the window buffer.
     memset( window->window_text, 0, 64 );
 
-    window->text_size_in_bytes = 0;  // No text
-    //128
-    for (i=0; i<64; i++)
+    // Inject the text into the window buffer.
+    if ((void*) window->window_text != NULL)
     {
-        if ( (void*) window->window_text != NULL )
+        window->text_size_in_bytes = 0;  // No text
+        for (i=0; i<64; i++)
         {
-            window->window_text[i] = (char) buf[i];
-            window->text_size_in_bytes++;
-        }
-    };
+            if (buf[i] != 0x00)
+            {
+                window->window_text[i] = (char) buf[i];
+                window->text_size_in_bytes++;
+            }
+        };
+    }
 
     //#debug
     //printf("WINDOW: %s\n",window->window_text);
