@@ -56,13 +56,13 @@ myObjects = head.o main.o globals.o \
 loader.o init.o ports.o x86.o \
 stdio.o stdlib.o string.o \
 pages.o heap.o \
-keyboard.o pci.o libata.o ata.o storage.o timer.o \
+pci.o \
+keyboard.o libata.o ata.o ahci.o storage.o timer.o \
 fs.o \
 shell.o \
 proced.o \
 abort.o \
 faults.o    
-
 
 all-bl: bl-x86 link-x86 finalize clean
 
@@ -85,8 +85,8 @@ bl-x86:
 
 	$(CC) -c dd/storage/ata/libata.c  $(myIncludes) $(CFLAGS)  -o libata.o
 	$(CC) -c dd/storage/ata/ata.c     $(myIncludes) $(CFLAGS)  -o ata.o
+	$(CC) -c dd/storage/ahci/ata.c    $(myIncludes) $(CFLAGS)  -o ahci.o
 	$(CC) -c dd/storage/storage.c     $(myIncludes) $(CFLAGS)  -o storage.o
-
 
 # fs
 	$(CC) -c fs/fs.c      $(myIncludes) $(CFLAGS) -o fs.o

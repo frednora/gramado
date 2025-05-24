@@ -2,12 +2,12 @@
 // This is the master header for the bootloader.
 // 2013 - Created by Fred Nora.
 
-/*
- *     Header principal do Boot Loader de 32 bits, BL.BIN.
- *     Feito em 32bit C/Assembly.
- *     Declara��es e prot�tipos para as fun��es principais do Boot Loader.
- *     Oferecer o suporte necess�rio nessa fase de inicializa��o.
- */
+// BLGRAM.BIN:
+// This is the 32bit bootloader for Gramado OS.
+// 32bit C/Assembly.
+
+// Boot Loader version.
+#define BL_VERSION  "0.1"
 
 // OS modes
 // #important
@@ -23,37 +23,25 @@
 
 extern int current_mode;
 
-//
 // Config
-//
-
 #include "config/config.h" 
-
 // Globals
-
 #include "gdef.h"
- 
+
+// Display info.
+// Came from boot manager.
 extern unsigned long SavedX;
 extern unsigned long SavedY;
 extern unsigned long SavedBPP;
 
-/*
- * Vari�veis importadas.
- * Stack pointers ??
- */
- 
+// Stack pointers?
 extern unsigned long task0_stack;
 extern unsigned long task1_stack;
 extern unsigned long task2_stack;
 
-//
-// Fun��es importadas.
-//
  
 extern void refresh_screen();
  
-// Boot Loader version.
-#define BL_VERSION  "0.1"
 
 /*
  * Status do carregamento de um arquivo.
@@ -64,12 +52,8 @@ extern void refresh_screen();
 //#define LOAD_
 //Continua...
 
-/*
- * FDC support.
- * PORTS: Constants for support ports.
- *        @todo: N�o oferecer mais suporte ao FDC. 
- */
- 
+// FDC support. (Floppy :])
+// PORTS: Constants for support ports.
 #define DOR1  0x3F2    //Digital Output Register. 
 #define DOR2  0x372  
 #define MSR1  0x3F4    //Main Status Register. 
@@ -83,15 +67,12 @@ extern void refresh_screen();
 #define DOR   DOR1
 #define DSR   MSR1
 
-
-/*
- * Processor mode constants.
- */
-
-#define SI_RM 0    //Real mode.
-#define SI_PM 1    //Protected mode.
-#define SI_LM 2    //Long mode.
-#define SI_SM 3    //SMM, System Management Mode (Supervisor Mode).
+// Processor modes.
+// Intel?
+#define SI_RM 0    // Real mode.
+#define SI_PM 1    // Protected mode.
+#define SI_LM 2    // Long mode.
+#define SI_SM 3    // SMM, System Management Mode (Supervisor Mode).
 
 /*
  * Boot Loader page directory constants.
@@ -113,6 +94,8 @@ extern void refresh_screen();
  * carregando os diret�rios de p�gina onde bem entender.
  * 
  */
+
+// Main page tables for Intel archtechture.
 #define BOOTLOADER_PAGEDIRECTORY  0x9C000    //Directory.
 #define KM_PAGETABLE              0x8C000    //Kernel page table.
 #define KM2_PAGETABLE             0x8D000    //Kernel page table 2.
@@ -124,17 +107,18 @@ extern void refresh_screen();
  * Kernel memory constants.
  */
 
-#define KERNEL_BASE     0x00100000    //1MB f�sico.
-#define KERNEL_ADDRESS  0x00100000    //F�sico.
-#define KERNEL_VA       0xC0000000    //L�gico. 
-
+// Physical address for the base of the kernel image. 1 MB mark.
+#define KERNEL_BASE     0x00100000
+#define KERNEL_ADDRESS  0x00100000
+// Virtual address for the base of the kernel image.
+#define KERNEL_VA       0xC0000000
 
 /*
  * User mode memory constants.
  */
-#define  USER_BASE       0x00400000    //4MB f�sico.
-//#define  USER_BASE32MB_PA   0x02000000    //32MB f�sico.
 
+ #define  USER_BASE       0x00400000    //4MB f�sico.
+//#define  USER_BASE32MB_PA   0x02000000    //32MB f�sico.
 
 /*
  * Video Memory constans.
@@ -157,16 +141,14 @@ extern void refresh_screen();
  *
  */
 //#define DLL_VA 0             //V�nculo din�mico, .DLL, .SO.  
-#define APP_VA 0x00400000    //Padr�o para aplicativos. 4MB. 
+#define APP_VA  0x00400000    //Padr�o para aplicativos. 4MB. 
 //...
-
 
 // File support: 
 // Usado pelo loader pra carregar arquivos do sistema.
 // Obs: Esses s�o endere�os f�sicos para carregamento das aplica���es
 // do sistema. Por�m o endere�o l�gico para o carregamento das
 // aplica��es ser� 0x400000 e das bibliotecas compartilhadas ser� 0x0.
-
 
 // #todo: delete it!
 #define INIT_ADDRESS         0x00400000    //F�sico.
@@ -197,17 +179,17 @@ extern void refresh_screen();
 #define CHAR_WIDTH   8
 #define CHAR_HEIGHT  8
  
-//Line 
+// Line
+// #deprecated
 #define LINE         1024    //800.??
 #define LINE_MAX     768     //600. ?? 
 
-//Column
+// Column
+// #deprecated
 //#define COL          1024    //800. ??
 #define COL_MAX      1024    //800. ??
 
-
 //...
-
 
 /*
  * Constants for window support.
@@ -244,12 +226,11 @@ extern void refresh_screen();
 // Boot loader colors.
 //
 
-
-#define COLOR_WHITE 0x00FFFFFF
-#define COLOR_BLACK 0x00000000
-#define COLOR_RED   0x0000FF00
-#define COLOR_GRAY  0x00808080
-#define COLOR_BLUE  0x000000FF
+#define COLOR_WHITE  0x00FFFFFF
+#define COLOR_BLACK  0x00000000
+#define COLOR_RED    0x0000FF00
+#define COLOR_GRAY   0x00808080
+#define COLOR_BLUE   0x000000FF
 // ...
 
 /*
@@ -301,10 +282,8 @@ extern void refresh_screen();
 #include "dd/storage/ata/ata.h"
 // AHCI
 #include "dd/storage/ahci/ahci.h"
-
 // STORAGE
 #include "dd/storage/storage.h"
-
 
 //#include "timer.h"  // irq 0.
 
@@ -318,10 +297,10 @@ extern void refresh_screen();
 
 
 //
-// Vari�veis globais.
+// Globals
 //
 
-// Se o boot loader est� inicializado.
+// Initialization support.
 extern int g_initialized;
 extern int g_driver_hdd_initialized;
 
@@ -485,7 +464,6 @@ struct gdtr_d
 gdtr_t bl_gdtr;    //Sem ponteiro. 
 */
 
-
 struct menuitem_d
 {
     int id;
@@ -573,12 +551,11 @@ void SetUpPaging(void);
 
 //
 // Disk support.
-//  @todo: usar ingl�s.
 //
-void limpa_root(); //@todo: usar ingl�s.
-void limpa_fat();  //@todo: usar ingl�s.
 
-
+// #todo: Translate
+void limpa_root();
+void limpa_fat();
 
 //
 // PCI support.
@@ -603,10 +580,8 @@ pciConfigReadWord (
 
 void system_services();
 
-
 void init_globals(void);
 void boot(); 
-
 
 void reboot(void);
 
@@ -614,7 +589,6 @@ void reboot(void);
 void abort(void);
 // main.c
 void bl_abort();
-
 
 // main.c
 void bl_die(void);
