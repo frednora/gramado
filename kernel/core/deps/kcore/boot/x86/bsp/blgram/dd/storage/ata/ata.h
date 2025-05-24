@@ -493,7 +493,7 @@ struct ide_disk_d
 };
 typedef struct ide_disk_d  ide_disk_t;
 
- 
+
 /*
  * ide_d:
  * #IMPORTANTE
@@ -519,31 +519,28 @@ typedef struct ide_d  ide_t;
 extern struct ide_d  IDE;
 
  
-
 //
 // Prototypes =================================
 //
 
 void show_ide_info();
 
-
-// ata_dev.c
+// #todo: Translate
 int nport_ajuste(char nport);
 
-// ata_main.c
 void set_ata_addr(int channel);
 
 // ata.c
 void ata_wait(int val);
-_u8 ata_wait_not_busy();
-_u8 ata_wait_busy();
+_u8 ata_wait_not_busy(void);
+_u8 ata_wait_busy(void);
 _u8 ata_wait_no_drq();
 _u8 ata_wait_drq();
 _u8 ata_wait_irq();
-_u8 ata_status_read();
+_u8 ata_status_read(void);
 void ata_cmd_write(int cmd_val);
 
-int disk_ata_wait_irq();
+int disk_ata_wait_irq(void);
 
 // worker
 _u8 __ata_assert_dever(char nport);
@@ -553,7 +550,7 @@ void __ata_pio_read(_void *buffer,_i32 bytes);
 void __ata_pio_write(_void *buffer,_i32 bytes);
 static inline void __atapi_pio_read ( void *buffer, uint32_t bytes );
 
-//ide_dma.c
+// dma
 void 
 ide_dma_data ( 
     void *addr, 
@@ -563,10 +560,6 @@ ide_dma_data (
 void ide_dma_start();
 void ide_dma_stop();
 int ide_dma_read_status();
-
-//ahci.c
-void ahci_mass_storage_init();
-
 
 //
 // $

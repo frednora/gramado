@@ -85,7 +85,7 @@ bl-x86:
 
 	$(CC) -c dd/storage/ata/libata.c  $(myIncludes) $(CFLAGS)  -o libata.o
 	$(CC) -c dd/storage/ata/ata.c     $(myIncludes) $(CFLAGS)  -o ata.o
-	$(CC) -c dd/storage/ahci/ata.c    $(myIncludes) $(CFLAGS)  -o ahci.o
+	$(CC) -c dd/storage/ahci/ahci.c   $(myIncludes) $(CFLAGS)  -o ahci.o
 	$(CC) -c dd/storage/storage.c     $(myIncludes) $(CFLAGS)  -o storage.o
 
 # fs

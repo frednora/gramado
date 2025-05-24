@@ -30,9 +30,13 @@
 // == prototypes ============================================
 //
 
+//
+// printf
+//
 
-//printf
 int printf(const char *format, ...);
+#define blprint  printf
+
 int putchar(int ch);
 static void printchar(char **str, int c);
 static int printi(
@@ -45,7 +49,10 @@ static int printi(
     int letbase );
 static int print(char **out, int *varg);
 static int prints(char **out, const char *string, int width, int pad);
+
 int sprintf(char *out, const char *format, ...);
+#define blsprint  sprintf
+
 int printf_main(void); //teste ...
 
 void scroll(void);

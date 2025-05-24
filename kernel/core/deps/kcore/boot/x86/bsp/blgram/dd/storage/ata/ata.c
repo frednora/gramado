@@ -198,15 +198,14 @@ void diskATAIRQHandler2 ()
     ata_irq_invoked = 1;   
 }
 
-/*
- * disk_ata_wait_irq:
- *     Esperando pela interrup��o.
- * OUT:
- *     0    = ok por status da interrup��o. 
- *     -1   = ok por status do controlador.
- *     0x80 = ok por tempo esperado.
- */
-int disk_ata_wait_irq()
+
+// disk_ata_wait_irq:
+// waiting for the interrupt.
+// OUT:
+//     0 = ok by interrupt status.
+//    -1 = ok by controller status.
+//  0x80 = ok by timeout.
+int disk_ata_wait_irq(void)
 {
    _u32 tmp = 0x10000;
    _u8 data=0;
@@ -357,7 +356,7 @@ void ata_wait (_i32 val)
 // Nelson, ao configurar os bits BUSY e DRQ. 
 // Devemos verificar retornos de erros.
 
-_u8 ata_wait_not_busy()
+_u8 ata_wait_not_busy(void)
 {
     while ( ata_status_read() & ATA_SR_BSY ){
         if ( ata_status_read() & ATA_SR_ERR ){
@@ -368,7 +367,7 @@ _u8 ata_wait_not_busy()
     return 0;
 }
 
-_u8 ata_wait_busy()
+_u8 ata_wait_busy(void)
 {
     while ( !(ata_status_read() & ATA_SR_BSY ) )
     {
@@ -448,16 +447,15 @@ void ata_soft_reset()
         Data & 0xfb ); 
 }
 
-//#bugbug
-//L� o status de um disco determinado, se os valores  
-//na estrutura estiverem certos.
+// #bugbug
+// Read the status of a 'given disk'.
+// If everything is ok with the structure.
 
-_u8 ata_status_read()
+_u8 ata_status_read(void)
 {
     _u8 Value=0;
 
     Value = (_u8) in8( ata.cmd_block_base_address + ATA_REG_STATUS );
-
     return (_u8) Value;
 }
 
@@ -481,39 +479,43 @@ _u8 __ata_assert_dever(char nport)
 
     switch (nport){
 
+    // Primary master.
     case 0:
         ata.channel = 0;  // Primary
         ata.dev_num = 0;  // Not slave
         break;
 
+    //  Primary slave.
     case 1:   
-        ata.channel = 0;  //  Primary
+        ata.channel = 0;  // Primary
         ata.dev_num = 1;  // Slave
         break;
 
+    // Secondary master.
     case 2:
         ata.channel = 1;  // Secondary
         ata.dev_num = 0;  // Not slave
         break;
 
+    // Secondary slave.
     case 3:
         ata.channel = 1;  // Secondary
         ata.dev_num = 1;  // Slave
         break;
 
-    // Fail.
+    // Fail
     default:
-        printf ("bl-__ata_assert_dever: [FAIL] Port %d, value not used\n", 
-            nport );
-        return -1;
+        printf("blgram: __ata_assert_dever()\n");
+        printf("Port %d, value not used\n", nport );
+        goto fail;
         break;
     };
 
     set_ata_addr (ata.channel);
-
     return 0;
+
 fail:
-    return -1;
+    return (_u8) -1;
 }
 
 // Set address.
