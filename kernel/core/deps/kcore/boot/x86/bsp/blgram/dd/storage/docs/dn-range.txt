@@ -1,0 +1,12 @@
+
+    O disco.
+
+O disco tem uma quantidade de setores.
+O driver de disco tem uma funçao de baixo nivel 
+que efetivamente escreve setores dentro do disco. 
+Essa funçao precisa saber quantos setores tem dentro do disco 
+pra nao escrever 'fora do disco'.
+Eu finalmente implementei essa checagem, 
+onde a funçao so escreve se o numero do setor estiver 
+dentro da quantidade de setores que o disco possui. 
+Dentro do range valido.

@@ -1,0 +1,9 @@
+
+  Tested on baremetal:
+
+  Chipset: 8086:27C0
+  IDE interface [0101]: 
+  Intel Corporation NM10/ICH7 Family SATA Controller 
+  [IDE mode] [8086:27c0] (rev 01)
+
+

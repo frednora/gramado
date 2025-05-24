@@ -1,0 +1,39 @@
+Controller modes and interfaces standards.
+
+---------------------------------------
+Controller modes:
++ AHCI
++ ATA (IDE mode)
+  (Before the existence of ATA there was only the IDE controller mode)
+
+---------------------------------------
+Interface standards:
++ SATA 
++ PATA (IDE)
+
+---------------------------------------
+Controller modes and interfaces:
++ AHCI: Handles only SATA interface.
++ ATA:  Handles SATA and PATA interfaces.
+        PATA is also known as IDE.
+
+==============================================================
+
+Your summary is essentially on point. To clarify:
+
+---------------------------------
+Controller Modes:
++ AHCI: 
+  Exclusively manages SATA devices, providing modern features 
+  like Native Command Queuing (NCQ) and hot swapping.
++ ATA (Legacy IDE Mode): 
+  Handles both SATA (in compatibility mode) and PATA devices. 
+  Historically, before the advent of ATA standards, 
+  the only available controller mode was what we now refer to as the IDE mode.
+
+---------------------------------
+Interface Standards:
++ SATA: 
+  The modern serial interface used by newer drives.
++ PATA (IDE): 
+  The older parallel interface standard, often just called IDE.
