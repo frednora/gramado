@@ -5050,7 +5050,6 @@ void set_top_window (struct gws_window_d *window)
     top_window = (void*) window;
 }
 
-
 int 
 gws_resize_window ( 
     struct gws_window_d *window, 
@@ -5060,9 +5059,8 @@ gws_resize_window (
     struct gws_window_d *tmp_window;
     int tmp_wid = -1;
 
-
-    if ( (void *) window == NULL ){
-        return -1;
+    if ((void *) window == NULL){
+        return (int) -1;
     }
 
 // #todo
@@ -5070,18 +5068,22 @@ gws_resize_window (
         //return -1;
 
 // Só precisa mudar se for diferente.
-    if ( window->width != cx || window->height != cy )
+    if ( window->width == cx && window->height == cy )
     {
+        return (int) 0; // ok
+    }
 
-        // Temos um valor mínimo no caso
-        // de janelas do tipo overlapped.
-        // Mesma coisa para o valor máximo.
-        // Uma janela overlapped não pode ser to tamanho da tela,
-        // mesmo que estejamos em modo fullscreen, pois o modo
-        // full screen usa apenas o conteúdo da área de cliente,
-        // não a janela do tipo overlapped.
-        if (window->type == WT_OVERLAPPED)
-        {
+// --------------------------------------------
+// Temos um valor mínimo no caso
+// de janelas do tipo overlapped.
+// Mesma coisa para o valor máximo.
+// Uma janela overlapped não pode ser to tamanho da tela,
+// mesmo que estejamos em modo fullscreen, pois o modo
+// full screen usa apenas o conteúdo da área de cliente,
+// não a janela do tipo overlapped.
+
+    if (window->type == WT_OVERLAPPED)
+    {
             if (cx < METRICS_DEFAULT_MINIMUM_WINDOW_WIDTH){
                 cx = METRICS_DEFAULT_MINIMUM_WINDOW_WIDTH;
             }
@@ -5098,16 +5100,23 @@ gws_resize_window (
                     cy=WindowManager.wa.height;
                 }
             }
-        }
+    }
 
-        window->width = (unsigned long) cx;
-        window->height = (unsigned long) cy;
+//
+// Change it
+//
 
-        // Muda tambem as dimençoes da titlebar.
-        // Muda somente a largura, pois a altura deve 
-        // continuar a mesma;
-        if (window->type == WT_OVERLAPPED)
-        {
+// --------------------------------------------
+// For all the types.
+    window->width = (unsigned long) cx;
+    window->height = (unsigned long) cy;
+
+// --------------------------------------------
+
+// Muda tambem as dimençoes da titlebar.
+// Muda somente a largura, pois a altura deve continuar a mesma;
+    if (window->type == WT_OVERLAPPED)
+    {
             // titlebar
             if ( (void*) window->titlebar != NULL )
             {
@@ -5180,7 +5189,18 @@ gws_resize_window (
             //#bugbug: e se a janela for menor que 32?
             window->rcClient.height = 
                 (unsigned long) (window->height -2 -32 -2); 
-        }
+    }
+
+// --------------------------------------------
+// Text on edit box.
+    if ( window->type == WT_EDITBOX_SINGLE_LINE || 
+         window->type == WT_EDITBOX_MULTIPLE_LINES )
+    {
+        // #todo: We need a variable for char width.
+        window->width_in_chars  = 
+            (unsigned long) (window->width / 8);   //>>3
+        window->height_in_chars = 
+            (unsigned long) (window->height / 8);  //>>3
     }
 
 // #bugbug

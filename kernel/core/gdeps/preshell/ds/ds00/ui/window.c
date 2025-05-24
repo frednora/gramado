@@ -813,8 +813,7 @@ void *doCreateWindow (
     window->width  = (unsigned long) (WindowWidth  & 0xFFFF);
     window->height = (unsigned long) (WindowHeight & 0xFFFF);
 
-// #todo
-// We need a variable for char width.
+// #todo: We need a variable for char width.
     window->width_in_chars  = 
         (unsigned long) (window->width / 8);   //>>3
     window->height_in_chars = 

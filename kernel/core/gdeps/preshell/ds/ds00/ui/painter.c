@@ -584,9 +584,15 @@ int redraw_titlebar_window(struct gws_window_d *window)
 void redraw_text_for_editbox(struct gws_window_d *window)
 {
     char *p;
-// Local buffer for single line.
-    static char sl_local_buffer[64];
     register int i=0;
+
+// Prepare the caret string (underscore in this case)
+    char caret_string[2];
+    caret_string[0] = '_';    // Or use '|' or whatever symbol you prefer for caret
+    caret_string[1] = 0x00;
+
+// Choose the caret color (e.g., black)
+    unsigned int caret_color = COLOR_BLACK;
 
     if ((void*)window == NULL)
         return;
@@ -597,14 +603,6 @@ void redraw_text_for_editbox(struct gws_window_d *window)
     {
         return;
     }
-
-// -----------------------------------
-// #todo
-// No support for multiple lines yet.
-    //if (window->type != WT_EDITBOX_SINGLE_LINE){
-    //    return;
-    //}
-
 // No text
     if ((void*) window->window_text == NULL)
     {
@@ -612,77 +610,120 @@ void redraw_text_for_editbox(struct gws_window_d *window)
         //window->text_size_in_bytes = 0;
         return;
     }
+
 // Get the base
     p = window->window_text;
 
-// Clear the local buffer for single line.
-    memset(sl_local_buffer,0,64);
+// Total chars
+    int total_chars = window->text_size_in_bytes;
+    if (total_chars <= 0)
+        total_chars = 0;
 
-    int TotalChars = window->text_size_in_bytes;
-    int MaxPerLine=64; //provisorio
-    if (window->width_in_chars > 64){
-        MaxPerLine=64;
-    }else{
-        MaxPerLine = window->width_in_chars;
-    };
+    unsigned int font_width  = FontInitialization.width  ? FontInitialization.width  : 8;
+    unsigned int font_height = FontInitialization.height ? FontInitialization.height : 8;
 
-    // #bugbug: Invalid window buffer size.
-    if (TotalChars <= 0)
-        TotalChars = 1;
+// Chars per line.
+    //int chars_per_line = (window->width - 16) / font_width; // 8px margin left/right
+    int chars_per_line = (int) (window->width_in_chars & 0xFFFFFFFF);
+    if (chars_per_line < 1) 
+        chars_per_line = 1;
+    if (chars_per_line > METRICS_MAX_CHARS_PER_LINE) 
+        chars_per_line = METRICS_MAX_CHARS_PER_LINE;
 
-    // Can't be bihher than our local buffer
-    if (TotalChars > 64)
-        TotalChars = 64;
+// Chars per column.
+    //int max_lines = (window->height - 16) / font_height; // 8px margin top/bottom
+    int max_lines = (int) (window->height_in_chars & 0xFFFFFFFF);
+    if (max_lines < 1) 
+        max_lines = 1;
 
-    // Put into the local buffer
-    for (i=0; i<TotalChars; i++)
-    {
-        sl_local_buffer[i] = *p;
-        p++;
-    };
-
-
+// -------------------------------------------------------
 // Draw the string into the window for single line
     if ( window->type == WT_EDITBOX_SINGLE_LINE )
     {
+       // Only print up to chars_per_line
+        char line_buffer00[chars_per_line + 1];
+        memset(line_buffer00, 0, sizeof(line_buffer00));
+        int to_copy = (total_chars > chars_per_line) ? chars_per_line : total_chars;
+        // Copy
+        memcpy(line_buffer00, p, to_copy);
+        line_buffer00[to_copy] = 0;
+        // Draw
         grDrawString ( 
-            (window->absolute_x + 8), 
-            (window->absolute_y + 8), 
+            (window->absolute_x + METRICS_EDITBOX_MARGIN_LEFT), 
+            (window->absolute_y + METRICS_EDITBOX_MARGIN_TOP), 
             COLOR_BLACK, 
-            sl_local_buffer );
+            line_buffer00 );
+
+        /*
+        // #todo: Update the input pointer position in chars.
+        // and draw it at the end of the line.
+        window->ip_x = 0;
+        window->ip_y = 0;
+        // Draw the caret at the input pointer position (in chars, not pixels)
+        dtextDrawText2(
+            window,
+            window->ip_x *8,
+            window->ip_y *8,  
+            caret_color,
+            caret_string,
+            TRUE );
+        */
+
         return;
     }
 
-
+// -------------------------------------
 // Let's print multiple lines.
 // Draw the string into the window for single line
-    int Counter=0;
-    unsigned long l = (window->absolute_x + 8);
-    unsigned long t = (window->absolute_y + 8);
-    if ( window->type == WT_EDITBOX_MULTIPLE_LINES )
-    {
-        for (Counter=0; Counter<=TotalChars; Counter++)
-        {
-            if (sl_local_buffer[Counter] == 0x00)
-                break;
-            grBackbufferDrawCharTransparent2 ( 
-                l, 
-                t, 
-                (unsigned int) COLOR_BLACK, 
-                sl_local_buffer[Counter],
-                FontInitialization.address );
-            
-            // Next column
-            l = l+8;
+    int line = 0;
+    int col = 0;
+    char line_buffer[chars_per_line + 1];
+    memset(line_buffer, 0, sizeof(line_buffer));
 
-            // Next line
-            if ((Counter % 32) == 0)
-            {
-                t = t+8;  // next line
-                l = (window->absolute_x + 8); // First col.
-            }
-        };
-        return;
+    for ( i=0; 
+          i < total_chars && line < max_lines; 
+          i++ )
+    {
+        char c = p[i];  // Get
+
+        if (c == '\n' || col == chars_per_line) 
+        {
+            // Print current line
+            line_buffer[col] = 0;
+            grDrawString(
+                window->absolute_x + METRICS_EDITBOX_MARGIN_LEFT,
+                window->absolute_y + METRICS_EDITBOX_MARGIN_TOP + line * font_height,
+                COLOR_BLACK,
+                line_buffer
+            );
+            line++;
+            col = 0;
+            memset(line_buffer, 0, sizeof(line_buffer));
+
+            if (c == '\n')
+                continue; // do not add '\n' to buffer
+        }
+
+        // Fill the buffer
+        if ( line < max_lines && 
+             col < chars_per_line && 
+             c != '\n' ) 
+        {
+            line_buffer[col++] = c;
+        }
+    };
+
+    // Print remaining chars if any
+    if ( col > 0 && 
+         line < max_lines ) 
+    {
+        line_buffer[col] = 0;
+        grDrawString(
+            window->absolute_x + METRICS_EDITBOX_MARGIN_LEFT,
+            window->absolute_y + METRICS_EDITBOX_MARGIN_TOP + line * font_height,
+            COLOR_BLACK,
+            line_buffer
+        );
     }
 }
 

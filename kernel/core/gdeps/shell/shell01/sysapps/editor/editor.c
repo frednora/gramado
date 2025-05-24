@@ -487,7 +487,9 @@ static void __test_text(int fd, int wid)
 //
 
     const char *short_text = "Short text";
-    const char *long_text = "This is a long text, a really long text";
+    //const char *long_text = "This is a long text, a really long text";
+    const char *long_text = 
+        "This is a long text, a really, really, really, really, really long text";
     char *target_text;
 
     if (wid == addressbar_window)
