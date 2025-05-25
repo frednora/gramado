@@ -1,9 +1,6 @@
-/*
- * File: config.h 
- * Configuration file for the 32bit boot loader.
- * Created by Fred Nora.
- */
-
+// File: config.h 
+// Configuration file for the 32bit boot loader.
+// Created by Fred Nora.
 
 //
 // Debug flag.
@@ -73,11 +70,86 @@
 //#define __CONFIG_IDE_PORT    __BAR2
 //#define __CONFIG_IDE_PORT    __BAR3
 
+// The configuration file statically selects a port 
+// (e.g., Primary/Master) at build time:
+// This tells our bootloader:
+// "When reading the kernel image (or any file), use this port as the source disk."
+
+/*
+Why This Can Be Limiting
+If the BIOS boots from a different disk (say, secondary master or a slave device), your hardcoded setting may not match the device the BIOS actually booted from.
+In multi-disk systems (or virtual machines with several disks), this could cause the bootloader to look for the kernel in the wrong place.
+*/
+
+/*
+How BIOS Boot Actually Works
+BIOS loads the boot sector from the boot device it selected—this device is usually mapped as "Drive 0x80" (the first hard disk) in BIOS INT 13h services.
+The bootloader is loaded from this disk, but at this point, it doesn’t necessarily know if it was the primary master or another device.
+>>>> The bootloader, when switching to protected mode and 
+direct ATA access, must figure out which ATA port (and which master/slave) corresponds 
+to the device BIOS used.
+*/
+
+/*
+How Professional Bootloaders Solve It
+Some bootloaders query the BIOS (via INT 13h) to get the drive number (0x80 = first HD, 0x81 = second, etc).
+When switching to protected mode/ATA, they may probe all ports and try to match the disk signature (e.g., by reading the MBR and checking for a unique value).
+Some BIOSes provide drive geometry info or device mapping in memory (e.g., at 0x475), but this is not always reliable.
+*/
+
+/*
+What You Can Do in Your Bootloader
+Best Practice:
+At startup, scan all 4 ports (primary/secondary, master/slave).
+For each, try to read the MBR or a known sector.
+Check for a "boot signature" or look for the expected partition table.
+Once you find the matching disk, use that port for all subsequent reads.
+*/
+
+
+/*
+ * Port Index Mapping:
+ * __BAR0 - 0 (Primary, Master, 0x1F0)
+ * __BAR1 - 1 (Primary, Control, 0x3F6)
+ * __BAR2 - 2 (Secondary, Master, 0x170)
+ * __BAR3 - 3 (Secondary, Control, 0x376)
+ */
+
+// ============================
+// BARs (Base Address Registers):
+
+// These constants (__BAR0 to __BAR3) represent indices 
+// for the four standard IDE port address groups:
+// __BAR0 (0x1F0): Primary Channel, Command Block (usually Primary Master)
+// __BAR1 (0x3F6): Primary Channel, Control Block
+// __BAR2 (0x170): Secondary Channel, Command Block (usually Secondary Master)
+// __BAR3 (0x376): Secondary Channel, Control Block
+
+// IDE Port Selection:
+// __CONFIG_IDE_PORT is set to __BAR0 (Primary, master) by default.
+// You can change this define (by uncommenting/commenting) to select 
+// which IDE port your loader or driver will use as its default.
+
+/*
+How this is used:
+In your ATA/IDE code, g_current_ide_port or similar variables are initialized using __CONFIG_IDE_PORT.
+All low-level read/write and control routines use this port index to select which hardware registers to interact with.
+This makes it easy to switch between primary/secondary and master/slave drives for testing or deployment without changing code logic—just change the config.
+*/
+
+/*
+This config lets you pick which IDE port your code will use as the default.
+By default, you’re targeting the Primary, Master drive.
+You can quickly switch to another drive or channel by changing one line.
+The approach is simple and effective for legacy IDE and boot environments.
+*/
+
 // #importante
 // Esses valores são usados pelo driver.
 // #obs
 // Talvez podemos tomar essa decisão de acordo com o número 
 // do dispositivo que foi passado pelo BIOS.
+
 
 
 // Discos:

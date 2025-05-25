@@ -2,6 +2,19 @@
 // IDE controller support.
 // 2013 - Created by Fred Nora.
 
+// Purpose:
+// This file implements low-level IDE/ATA sector read/write routines, 
+// using PIO (Programmed I/O) mode, for the 32-bit bootloader environment.
+
+/*
+Key Features:
+Supports reading and writing a sector from/to disk using port I/O.
+Can address up to 4 ports (primary/secondary, master/slave).
+Functions: ata_read_sector, ata_write_sector, and their helpers.
+Designed to be called from higher-level filesystem code (fs.c).
+Heavy usage of per-port addressing via ide_port[p].base_port.
+*/
+
 /*
  * Low level routines to read and write a sector into/from the disk.
  * Environment:
@@ -27,14 +40,19 @@
 00:01:59.902766 /Devices/IDE0/ATA0/Unit0/WrittenBytes        0 bytes
  */ 
 
+/* 
+ * Example disk stats (Oracle VirtualBox, PIIX3 ATA):
+ *   - Only PIO mode is used for read operations.
+ *   - No DMA or ATAPI operations performed in this environment.
+ */
 
 #include "../../../bl.h"
 
-
 /*
- * Externs
+ * Externs:
+ * - Functions and variables provided elsewhere, needed for sector I/O.
  */
- 
+
 extern void os_read_sector();
 extern void os_write_sector();
 extern void reset_ide0();
@@ -43,32 +61,33 @@ extern void reset_ide0();
 extern unsigned long hd_buffer;
 extern unsigned long hd_lba;
 
-// Internal
+// Internals
 int hddStatus=0;
 int hddError=0;
-//...
+// ...
 
-
+// Operation codes for internal use.
 #define __OPERATION_PIO_READ  1000
 #define __OPERATION_PIO_WRITE  2000
 
+// ================================================
 
+/*
+ * Local PIO transfer routines.
+ * These functions perform the actual word transfers to/from the disk.
+ */
+static void  __libata_pio_read( int p, void *buffer, int bytes );
+static void __libata_pio_write( int p, void *buffer, int bytes );
 
-static void 
-__libata_pio_read ( 
-    int p, 
-    void *buffer, 
-    int bytes );
-
-static void 
-__libata_pio_write ( 
-    int p, 
-    void *buffer, 
-    int bytes );
-
-
-// Read or write a sector using PIO mode.
-
+/*
+ * Core low-level function:
+ * Reads or writes a sector on the given port using PIO mode.
+ * - buffer:     Address of the sector buffer.
+ * - lba:        Logical Block Address to access.
+ * - operation:  __OPERATION_PIO_READ or __OPERATION_PIO_WRITE.
+ * - port_index: Index into ide_port[] (0-3 for four ports).
+ * - slave:      0 = master, 1 = slave.
+ */
 static int 
 __ata_pio_rw_sector ( 
     unsigned long buffer, 
@@ -79,16 +98,29 @@ __ata_pio_rw_sector (
 
 // ===================================================================
 
+/* ========================
+   Register/Status Helpers
+   ======================== */
+
+/*
+ * hdd_ata_status_read
+ *   Reads the status register for the given port.
+ *   Returns the raw ATA status byte.
+ */
 uint8_t hdd_ata_status_read(int p)
 {
-// #bugbug: 
-//rever o offset
+// #bugbug: Rever o offset
 
-    //return inb(ata[p].cmd_block_base_addr + ATA_REG_STATUS);
-
+    // The ATA status register is at offset 7 from base port.
     return (uint8_t) in8( (int) ide_port[p].base_port + 7 );
+    //return inb(ata[p].cmd_block_base_addr + ATA_REG_STATUS);
 }
 
+/*
+ * hdd_ata_wait_not_busy
+ *   Waits for the BSY (busy) bit to clear on the given port.
+ *   Returns 0 if successful, 1 if the ERR (error) bit is set.
+ */
 int hdd_ata_wait_not_busy(int p)
 {
     while ( hdd_ata_status_read(p) & ATA_SR_BSY )
@@ -98,19 +130,27 @@ int hdd_ata_wait_not_busy(int p)
     return 0;
 }
 
+/*
+ * hdd_ata_cmd_write
+ *   Writes a command byte to the command register for the given port.
+ *   Waits for the device to become not busy, then writes the command.
+ *   After writing, waits ~400ns (as per ATA spec) for command acceptance.
+ */
 void hdd_ata_cmd_write ( int port, int cmd_val )
 {
-
-// no_busy 
+    // no_busy 
     hdd_ata_wait_not_busy(port);
-
     //outb(ata.cmd_block_base_address + ATA_REG_CMD,cmd_val);
-
     out8 ( (int) ide_port[port].base_port + 7 , (int) cmd_val );
     ata_wait (400);  
 }
 
-int hdd_ata_wait_no_drq (int p)
+/*
+ * hdd_ata_wait_no_drq
+ *   Waits for the DRQ (Data Request) bit to clear on the given port.
+ *   Returns 0 if successful, 1 if the ERR (error) bit is set.
+ */
+int hdd_ata_wait_no_drq(int p)
 {
     while ( hdd_ata_status_read(p) &ATA_SR_DRQ)
         if (hdd_ata_status_read(p) &ATA_SR_ERR)
@@ -119,11 +159,17 @@ int hdd_ata_wait_no_drq (int p)
     return 0;
 }
 
-static void 
-__libata_pio_read ( 
-    int p, 
-    void *buffer, 
-    int bytes )
+/* ========================
+   PIO Data Transfer
+   ======================== */
+
+
+/*
+ * __libata_pio_read
+ *   Reads 'bytes' from the disk data register (port p) into 'buffer' using PIO.
+ *   - Uses the 'rep insw' instruction for high-speed 16-bit word transfer.
+ */
+static void __libata_pio_read( int p, void *buffer, int bytes )
 {
     asm volatile (\
         "cld;\
@@ -132,11 +178,12 @@ __libata_pio_read (
           "c" (bytes/2));
 }
 
-static void 
-__libata_pio_write ( 
-    int p, 
-    void *buffer, 
-    int bytes )
+/*
+ * __libata_pio_write
+ *   Writes 'bytes' from 'buffer' to the disk data register (port p) using PIO.
+ *   - Uses 'rep outsw' for high-speed 16-bit word transfer.
+ */
+static void __libata_pio_write( int p, void *buffer, int bytes )
 {
     asm volatile (\
                 "cld;\
@@ -144,6 +191,10 @@ __libata_pio_write (
                 "d"(ide_port[p].base_port + 0),\
                 "c"(bytes/2));
 }
+
+/* ========================
+   Main Sector R/W Routine
+   ======================== */
 
 /*
  * __ata_pio_rw_sector
@@ -158,6 +209,35 @@ __libata_pio_write (
 // IN:
 // port_index = We have 4 valid ports.
 // slave = slave or not.
+/*
+Handles the sequence for a PIO sector read/write:
+Drive/head/lba selection (master/slave, LBA bits)
+Sector count and address (set registers for LBA28)
+Issue command:
+0x20 = read
+0x30 = write
+Wait for device ready (DRQ set, with timeout)
+Transfer data:
+If read: calls __libata_pio_read
+If write: calls __libata_pio_write, then flushes cache
+Error/timeout handling
+*/
+/*
+ * __ata_pio_rw_sector
+ *   Reads or writes a single sector using PIO mode, on the specified port/device.
+ *   Handles:
+ *     - Master/slave selection
+ *     - LBA addressing (28-bit)
+ *     - Register setup (sector count, LBA)
+ *     - Command issue (0x20=read, 0x30=write)
+ *     - Data transfer to/from buffer
+ *     - Status/error checking and cache flush (for write)
+ *
+ *   Returns:
+ *     0 on success
+ *    -1 for invalid operation or port
+ *    -3 for timeout
+ */
 static int 
 __ata_pio_rw_sector ( 
     unsigned long buffer, 
@@ -169,18 +249,14 @@ __ata_pio_rw_sector (
     unsigned long tmplba = (unsigned long) lba;
     unsigned short Port;
 
-
-// Invalid operation number.
+    // Only accept valid operation codes
     if ( operation_number != __OPERATION_PIO_READ && 
          operation_number != __OPERATION_PIO_WRITE )
     {
         return (int) -1;
     }
 
-// #bugbug
-// s� funcionaram as portas 0 e 2.
-// para primary e secondary.
-
+    // Only accept valid port indices (0-3)
     if ( port_index < 0 || port_index >= 4 )
     {
         // #todo: Message
@@ -197,6 +273,8 @@ __ata_pio_rw_sector (
 // 7  1 Always set.
 // 0x01F6; 
 // Port to send drive and bit 24 - 27 of LBA
+
+    // Select master/slave and set LBA bits 24-27
 
     tmplba = (unsigned long) (tmplba >> 24);
 
@@ -227,10 +305,15 @@ __ata_pio_rw_sector (
  
 // 0x01F2
 // Port to send number of sectors.
+// Set sector count to 1 (we are reading/writing one sector)
 
     out8( 
         (int) (ide_port[port_index].base_port + 2), 
         (int) 1 );
+
+//
+// Set LBA 0-23
+//
 
 // 0x1F3  
 // Port to send bit 0 - 7 of LBA.
@@ -273,6 +356,7 @@ __ata_pio_rw_sector (
 // Command port
 // Operation: read or write
 
+    // Issue read or write command (0x20 or 0x30)
     Port = (unsigned short) (ide_port[port_index].base_port + ATA_REG_CMD); 
 
     //if (lba >= 0x10000000) {
@@ -284,29 +368,22 @@ __ata_pio_rw_sector (
     //    }
     //} else {
         if (operation_number == __OPERATION_PIO_READ){
-            out8 ( (unsigned short) Port, (unsigned char) 0x20 );
+            out8 ( (unsigned short) Port, (unsigned char) 0x20 ); // READ SECTOR
         }
         if (operation_number == __OPERATION_PIO_WRITE){
-            out8 ( (unsigned short) Port, (unsigned char) 0x30 );
+            out8 ( (unsigned short) Port, (unsigned char) 0x30 ); // WRITE SECTOR
         }
     //}
-
 
 // PIO or DMA ??
 // If the command is going to use DMA, set the Features Register to 1, otherwise 0 for PIO.
     // outb (0x1F1, isDMA)
 
-// timeout sim, n�o podemos esperar para sempre.
-// #todo
-// Colocar essas declara��es no in�cio da fun��o.
-
+// Wait for DRQ (Data Request) bit to be set, with timeout
     unsigned char c=0;
     unsigned long timeout = (4444*512);
-
 again:
-
     c = (unsigned char) in8( (int) ide_port[port_index].base_port + 7 );
-
 // Select a bit.
     c = (c & 8);
 
@@ -326,9 +403,10 @@ again:
     }
 
 //
-// read or write.
+// Read or write.
 //
 
+    // Perform the data transfer
     switch (operation_number){
 
         // read
@@ -348,7 +426,7 @@ again:
                 (void *) buffer, 
                 (int)    512 );
 
-            //Flush Cache
+            // Flush cache after write
 
             //if (lba >= 0x10000000) {
             //    hdd_ata_cmd_write ( 
@@ -379,12 +457,17 @@ again:
     return 0;
 }
 
+/* ========================
+   Entry Points
+   ======================== */
+
 /*
- * ata_read_sector:
- * eax - buffer
- * ebx - lba
- * ecx - null
- * edx - null
+ * ata_read_sector
+ *   Reads a single 512-byte sector from disk into the buffer at 'ax' using LBA 'bx'.
+ *   - ax: Buffer address
+ *   - bx: LBA address
+ *   - cx, dx: unused
+ *   Uses current global port and device selection.
  */
 void 
 ata_read_sector ( 
@@ -396,17 +479,14 @@ ata_read_sector (
     static int Operation = __OPERATION_PIO_READ;  //0x20;  // Read
 
     // Channel and device number
-    int ideChannel = g_current_ide_channel;
-    int isSlave = g_current_ide_device;
-	
 // #bugbug 
 // We have 4 valid ports.
 // We do not have the IDE port, so, we are using the ide channel.
-	int idePort = g_current_ide_port;
-	
+    //int ideChannel = g_current_ide_channel;  // Port index (0-3)
+    int idePort      = g_current_ide_port;     // Port index (0-3)
+    int isSlave      = g_current_ide_device;   // 0=master, 1=slave
 
-
-//====================== WARNING ==============================
+// ====================== WARNING ==============================
 // #IMPORTANTE:
 // #todo
 // So falta conseguirmos as variaveis que indicam o canal e 
@@ -419,8 +499,8 @@ ata_read_sector (
         (unsigned long) ax,  // Buffer
         (unsigned long) bx,  // LBA
         (int) Operation, 
-        (int) idePort,    // We have 4 valid ports.
-        (int) isSlave );  // Slave or not.
+        (int) idePort,       // We have 4 valid ports.
+        (int) isSlave );     // Slave or not.
 
 /*
 //antigo.
@@ -439,13 +519,13 @@ ata_read_sector (
 }
 
 /*
- * ata_write_sector:
- * eax - buffer
- * ebx - lba
- * ecx - null
- * edx - null
+ * ata_write_sector
+ *   Writes a single 512-byte sector from buffer at 'ax' to disk at LBA 'bx'.
+ *   - ax: Buffer address
+ *   - bx: LBA address
+ *   - cx, dx: unused
+ *   Uses current global port and device selection.
  */
-
 void 
 ata_write_sector ( 
     unsigned long ax, 
@@ -454,16 +534,13 @@ ata_write_sector (
     unsigned long dx )
 {
     static int Operation = __OPERATION_PIO_WRITE; //0x30;  // Read
-
-    // Channel and device number
-    int ideChannel = g_current_ide_channel;
-    int isSlave = g_current_ide_device;
-	
+// Channel and device number
 // #bugbug 
 // We have 4 valid ports.
 // We do not have the IDE port, so, we are using the ide channel.
-	int idePort = g_current_ide_port;
-	
+    //int ideChannel = g_current_ide_channel;    // Port index (0-3)
+    int idePort = g_current_ide_port;            // Port index (0-3)
+    int isSlave = g_current_ide_device;          // 0=master, 1=slave
 
 // =========================== WARNING ==============================
 // #IMPORTANTE:
@@ -482,8 +559,8 @@ ata_write_sector (
         (unsigned long) ax,  // Buffer
         (unsigned long) bx,  // LBA
         (int) Operation, 
-        (int) idePort,    // We have 4 valid ports.
-        (int) isSlave );  // Slave or not.
+        (int) idePort,       // We have 4 valid ports.
+        (int) isSlave );     // Slave or not.
 
 /*
 // Antigo.
@@ -498,9 +575,6 @@ ata_write_sector (
 */
 
 }
-
-
-
 
 //
 // End

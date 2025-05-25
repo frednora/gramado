@@ -300,6 +300,12 @@ extern struct ata_pci  ata_pci;
 
 // ata:
 // Estrutura para o controle de execução do programa. 
+// Uses a single global ata structure for representing the 
+// currently selected device (and its registers).
+// Device/port selection is done by updating this global 
+// (ata.channel, ata.dev_num, etc.) before each operation.
+// Functions like __ata_assert_dever(nport) update the global ata struct 
+// to switch between ports/devices.
 struct ata
 {
     //int used;

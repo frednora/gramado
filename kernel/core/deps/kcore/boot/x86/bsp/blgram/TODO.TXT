@@ -1,0 +1,18 @@
+Certainly! Here’s a more detailed and beginner-friendly comment for your TODO file, with simpler English and a step-by-step explanation suitable for a Brazilian developer:
+
+```c
+// TODO:
+// To help the bootloader or the kernel know which disk is the real boot disk,
+// we can create a special mark (signature) on the disk during the installation or at first boot.
+// For example, after the MBR (Master Boot Record), we can write a unique word or code
+// (like "GRAMADO" or a number) into the second sector (LBA 1).
+// Later, when the bootloader or the kernel starts, it can read the second sector of each disk
+// and look for this mark. If the mark is found, we know this is the correct disk to use for booting.
+// This method avoids confusion when there are many disks or when disks are copies of each other.
+// Steps:
+// 1. During install or first boot, write your chosen signature in sector 2 (LBA 1).
+// 2. When booting, read sector 2 (LBA 1) from every disk you find.
+// 3. If you find the signature, select this disk as the boot disk.
+```
+
+Let me know if you want it even simpler, or if you need the comment in Portuguese as well!

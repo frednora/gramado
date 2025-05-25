@@ -1,0 +1,77 @@
+Great question! This is an important and subtle part of bootloader and low-level disk driver design.
+
+---
+
+## **Understanding "Boot Port" Selection**
+
+### 1. **What the Configuration Does**
+Your configuration file statically selects a port (e.g., Primary/Master) at build time:
+```c
+#define __CONFIG_IDE_PORT __BAR0 // Primary, master
+```
+This tells your bootloader:  
+**"When reading the kernel image (or any file), use this port as the source disk."**
+
+---
+
+### 2. **Why This Can Be Limiting**
+- If the BIOS boots from a different disk (say, secondary master or a slave device), your hardcoded setting may not match the device the BIOS actually booted from.
+- In multi-disk systems (or virtual machines with several disks), this could cause the bootloader to look for the kernel in the wrong place.
+
+---
+
+### 3. **How BIOS Boot Actually Works**
+- **BIOS loads the boot sector from the boot device it selected**—this device is usually mapped as "Drive 0x80" (the first hard disk) in BIOS INT 13h services.
+- The bootloader is loaded from this disk, but at this point, it doesn’t necessarily know if it was the primary master or another device.
+- The bootloader, when switching to protected mode and direct ATA access, **must figure out which ATA port (and which master/slave) corresponds to the device BIOS used**.
+
+---
+
+### 4. **How Professional Bootloaders Solve It**
+- **Some bootloaders query the BIOS (via INT 13h) to get the drive number (0x80 = first HD, 0x81 = second, etc).**
+- When switching to protected mode/ATA, they may probe all ports and try to match the disk signature (e.g., by reading the MBR and checking for a unique value).
+- Some BIOSes provide drive geometry info or device mapping in memory (e.g., at 0x475), but this is not always reliable.
+
+---
+
+### 5. **What You Can Do in Your Bootloader**
+**Best Practice:**
+1. **At startup, scan all 4 ports (primary/secondary, master/slave).**
+2. **For each, try to read the MBR or a known sector.**
+3. **Check for a "boot signature" or look for the expected partition table.**
+4. **Once you find the matching disk, use that port for all subsequent reads.**
+
+**Alternative:**
+- If you want to keep things simple, require the user (or VM config) to always boot from the primary master, but this limits flexibility.
+
+---
+
+### 6. **Sample Pseudocode for Boot Port Detection**
+```c
+int detected_boot_port = -1;
+for (int port = 0; port < 4; port++) {
+    if (probe_ata_device(port)) {
+        if (disk_has_valid_boot_sector(port)) {
+            detected_boot_port = port;
+            break;
+        }
+    }
+}
+if (detected_boot_port == -1) {
+    // No valid boot device found!
+}
+```
+- `probe_ata_device(port)` checks if a device is present/ready.
+- `disk_has_valid_boot_sector(port)` reads sector 0 and checks for 0x55AA signature and a valid partition table.
+
+---
+
+## **Summary**
+
+- Relying solely on a static configuration works for simple setups but is fragile.
+- For robust booting on any port, **probe all ports at boot time** and use the one with a valid boot sector or matching disk signature.
+- This approach is used by professional bootloaders and operating systems for maximum compatibility.
+
+---
+
+**Would you like a sample code snippet or further guidance on how to implement this detection logic in your bootloader?**
