@@ -70,6 +70,19 @@
 //#define __CONFIG_IDE_PORT    __BAR2
 //#define __CONFIG_IDE_PORT    __BAR3
 
+/*
+ * __CONFIG_IDE_PORT
+ * -----------------
+ * This macro controls which ATA port the driver operates on.
+ *    0 = Primary Master (ata_port[0])
+ *    1 = Primary Slave  (ata_port[1])
+ *    2 = Secondary Master (ata_port[2])
+ *    3 = Secondary Slave  (ata_port[3])
+ * By default, only Primary Master is enabled for simplicity and safety.
+ * Update this value to enable other ports for reading/writing or to test multi-drive support.
+ * Full multi-port logic is available in ata_port[4], but may be gated behind this config for bootloader stability.
+ */
+
 // The configuration file statically selects a port 
 // (e.g., Primary/Master) at build time:
 // This tells our bootloader:

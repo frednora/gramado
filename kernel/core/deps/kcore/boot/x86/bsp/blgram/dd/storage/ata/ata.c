@@ -1,58 +1,55 @@
 // ata.c
 // ATA/AHCI device controller implementation for the Gramado OS bootloader.
-// 
+//
 // This file provides low-level routines for initializing and interacting
 // with ATA-compatible storage devices (IDE/PATA/SATA), including PCI probing,
 // device detection, and basic PIO/DMA data transfer routines.
-// 
+//
 // Environment:
 //   - 32-bit protected mode bootloader (not kernel proper)
 //   - Direct hardware access (I/O ports, PCI configuration space)
-// 
+//
 // History:
 //   - 2017: Original port from Sirius OS (BSD-2-Clause License) by Nelson Cole.
 //   - 2021: Updated and maintained by Fred Nora.
-// 
+//
 // References:
 //   - https://wiki.osdev.org/ATA_PIO_Mode
 //   - https://wiki.osdev.org/PCI_IDE_Controller
 //
-
-// See:
-// https://wiki.osdev.org/ATA_PIO_Mode
-
-// #ps:
+// Notes:
+//   - This driver now supports up to four ATA ports, managed by the ata_port[4] structure.
+//   - Each port (0-3) corresponds to Primary Master, Primary Slave, Secondary Master, and Secondary Slave.
+//   - All routines reference ata_port[i] for port-specific operations and configuration.
+//
 // Successfully loading a ~400KB kernel image from a FAT16 partition 
 // using your ATA PIO driver for the primary master is a significant achievement, 
 // especially in a bootloader or early OS context. 
 // This means:
 // + PIO sector read path is robust for at least one drive/channel.
 // + FAT16 implementation is functional enough to traverse directories, 
-// find files, and read data at a block level.
+//   find files, and read data at a block level.
 // + The integration between the file system and the ATA driver is stable 
-// for this scenario.
-
+//   for this scenario.
+//
 // #todo:
 // - Review type usage and switch to standard C types.
 // - Use conventional type names for consistency.
 // - Focus is on disk device list management (diskList).
-
-// # todo
+//
 // Main goals
-// Extend the ATA driver to handle all 4 ports 
-// (Primary Master, Primary Slave, Secondary Master, Secondary Slave).
-// Prepare the codebase for future AHCI (SATA) driver support, 
-// using the structure found in the ahci/ folder.
-
+// - Extend the ATA driver to handle all 4 ports (Primary Master, Primary Slave, Secondary Master, Secondary Slave).
+// - Prepare the codebase for future AHCI (SATA) driver support, using the structure found in the ahci/ folder.
+//
 // Next Steps to Broaden Device Support
-// Extend to Four Ports (Primary/Secondary, Master/Slave):
-// Prepare for Modularization and Future AHCI Support:
-
+// - Extend to Four Ports (Primary/Secondary, Master/Slave)
+// - Prepare for Modularization and Future AHCI Support
+//
 // Testing:
-// Try reading from a FAT16 partition on another port (e.g., secondary master). 
-// Adjust device selection logic as needed.
-// Ensure error handling (timeouts, missing devices, etc.) remains robust.
-
+// - Try reading from a FAT16 partition on another port (e.g., secondary master).
+// - Adjust device selection logic as needed.
+// - Ensure error handling (timeouts, missing devices, etc.) remains robust.
+//
 /*
 IDE (Integrated Drive Electronics) can handle up to four drives, which may be:
   - ATA (Serial): Most modern hard drives.
@@ -89,74 +86,70 @@ IDE (Integrated Drive Electronics) can handle up to four drives, which may be:
 // Global Variables and Data Structures
 //
 
+// Global flags and structures for ATA driver state management.
 // Driver initialization/config flags. See ata.h for possible values.
 int ATAFlag=0;
 
-// Device port and PCI structure instances
+// Device port configuration (PCI, IO). See ata_pci and dev_nport structures.
 struct dev_nport  dev_nport;
 struct ata_pci  ata_pci;
 
 // Buffer for device information returned by IDENTIFY DEVICE/PACKET
 static _u16 *ata_devinfo_buffer;
 
-// Last used device/channel for command optimization
+// Last used device/channel for command optimization between ports.
 _u8 ata_record_dev=0;
 _u8 ata_record_channel=0;
 
-
-// ATA controller
+// Main controller structure.
 struct ata_controller_d  AtaController;
 
-// ATA ports
+// Array of ATA port structures for all four ports.
+// ata_port[0] = Primary Master, ata_port[1] = Primary Slave,
+// ata_port[2] = Secondary Master, ata_port[3] = Secondary Slave
 struct ata_port_d  ata_port[4];
 
-// Array of port structures representing the four possible IDE ports
-// (primary/secondary, master/slave) - see ata.h for ide_port_d
+// Array of IDE port information structures (for diagnostic and reporting).
 struct ide_port_d  ide_port[4];
 
-//
-// IDE Port and Channel State
-//
+// ===== IDE Port and Channel State Management =====
 
-// Current channel (0=Primary, 1=Secondary) and device (0=Master, 1=Slave)
-int g_current_ide_channel=0;  // Primary/Secondary
-int g_current_ide_device=0;   // Master/Slave  
-// Current IDE port number (0-3, see above)
+// Current selected channel (0=Primary, 1=Secondary) and device (0=Master, 1=Slave)
+int g_current_ide_channel=0;  // 0: Primary, 1: Secondary
+int g_current_ide_device=0;   // 0: Master,  1: Slave
+// Current IDE port index (0-3, see ata_port[4])
 int g_current_ide_port = 0;
 
-// IRQ handler address (if needed for vectoring)
+// IRQ handler address (optional, for custom vectoring)
 unsigned long ide_handler_address=0;
 
-// List of IDE channel structures (supporting up to 8 channels)
-// and the global IDE controller structure
+// IDE channel structure array (up to 8 possible channels, for expansion/future use)
 struct ide_channel_d  idechannelList[8];
 
+// Global IDE controller structure for overall state
 struct ide_d  IDE;
 
-// Pointer to the currently selected device in the device queue
-st_dev_t *current_dev;
-
-// Head of the device linked list (ready queue)
-st_dev_t *ready_queue_dev;
+// Device queue pointers for scheduling among detected drives
+st_dev_t *current_dev;      // Pointer to current device in queue
+st_dev_t *ready_queue_dev;  // Head of device linked list (ready queue)
 
 // pid?
-// Next available device ID for enumeration
+// Next available device ID for enumeration and tracking
 uint32_t  dev_next_pid = 0;
 
-// Buffer for DMA transfers (physical address required)
+// DMA transfer buffer (must be physically contiguous for hardware DMA)
 _u8 *dma_addr;
 
-// String names for reporting device type (ATA or ATAPI)
+// Device type strings (for reporting/diagnostics)
 const char *dev_type[] = {
     "ATA",
     "ATAPI"
 };
 
-// IRQ support.
-//static _u32 ata_irq_invoked = 1; 
+// IRQ support (flag set by IRQ handler, polled by driver code)
 static _u32 ata_irq_invoked = 0;
 
-// Human-readable strings for common ATA PCI sub-class codes
+// Human-readable PCI sub-class codes (for reporting detected controllers)
 static const char *ata_sub_class_code_register_strings[] = {
     "Unknown",
     "IDE Controller",
@@ -167,18 +160,6 @@ static const char *ata_sub_class_code_register_strings[] = {
     "AHCI Controller"
 };
 
-/*
-// PCI Base Address Registers (BARs) for the ATA controller
-// These are programmed during PCI enumeration and used for register access
-static _u32 ATA_BAR0=0;    // Primary Command Block Base Address
-static _u32 ATA_BAR1=0;    // Primary Control Block Base Address
-static _u32 ATA_BAR2=0;    // Secondary Command Block Base Address
-static _u32 ATA_BAR3=0;    // Secondary Control Block Base Address
-static _u32 ATA_BAR4=0;    // Legacy Bus Master Base Address (for DMA)
-// Note: 
-// BAR5 is typically used for AHCI (not standard legacy IDE)
-static _u32 ATA_BAR5=0;    // AHCI Base Address / SATA Index Data Pair Base Address
-*/
 
 unsigned long ATA_BAR0_PRIMARY_COMMAND_PORT=0;    // Primary Command Block Base Address
 unsigned long ATA_BAR1_PRIMARY_CONTROL_PORT=0;    // Primary Control Block Base Address
@@ -187,7 +168,7 @@ unsigned long ATA_BAR3_SECONDARY_CONTROL_PORT=0;  // Secondary Control Block Bas
 unsigned long ATA_BAR4=0;  // Legacy Bus Master Base Address
 unsigned long ATA_BAR5=0;  // AHCI Base Address / SATA Index Data Pair Base Address
 
-
+// =======================================
 
 static void ata_cmd_write(int p, int cmd_val);
 
@@ -291,14 +272,13 @@ void diskATAIRQHandler2 ()
 
 /*
  * disk_ata_wait_irq
- *   Waits for an ATA interrupt to signal operation completion.
+ *   Wait for ATA interrupt indicating operation completion on the specified port.
  *   Returns:
- *     0    = Success, IRQ received.
- *    -1    = Error condition detected via status register.
- *   0x80   = Timeout occurred before IRQ was signaled.
+ *     0    = Success (IRQ received)
+ *    -1    = Error detected via status register
+ *   0x80   = Timeout occurred before IRQ
  *
- *   Note: The function polls a global IRQ flag, which should be set by the IRQ handler.
- *         It also checks the ATA status register for errors or completion.
+ *   Note: Always check/clear ata_irq_invoked before and after use!
  */
 static int disk_ata_wait_irq(int p)
 {
@@ -398,11 +378,10 @@ void show_ide_info()
 /*
  * __ata_pio_read
  *   Reads data from the ATA data register into a buffer using PIO (Programmed I/O).
+ *   - p: Port index (0-3), refers to ata_port[p].
  *   - buffer: Destination buffer for read data.
  *   - bytes: Number of bytes to read (must be even, as insw reads 16 bits).
- *
- *   Uses the 'rep; insw' instruction to efficiently read 'bytes/2' words.
- *   The data register offset is ATA_REG_DATA relative to the command block base.
+ *   Uses 'rep; insw' to efficiently read 'bytes/2' words from the port's data register.
  */
 static void __ata_pio_read ( int p, void *buffer, _i32 bytes )
 {
@@ -416,10 +395,10 @@ static void __ata_pio_read ( int p, void *buffer, _i32 bytes )
 /*
  * __ata_pio_write
  *   Writes data from a buffer to the ATA data register using PIO.
+ *   - p: Port index (0-3), refers to ata_port[p].
  *   - buffer: Source buffer for write data.
  *   - bytes: Number of bytes to write (must be even).
- *
- *   Uses 'rep; outsw' to efficiently write 'bytes/2' words.
+ *   Uses 'rep; outsw' to efficiently write 'bytes/2' words to the port's data register.
  */
 static void __ata_pio_write ( int p, void *buffer, _i32 bytes )
 {
@@ -432,9 +411,11 @@ static void __ata_pio_write ( int p, void *buffer, _i32 bytes )
 
 /*
  * __atapi_pio_read
- *   Specialized PIO read for ATAPI devices (such as CD-ROMs).
+ *   PIO read routine specialized for ATAPI devices (e.g., CD-ROM).
+ *   - p: Port index (0-3), refers to ata_port[p].
  *   - buffer: Destination buffer.
  *   - bytes: Number of bytes to read.
+ *   Uses 'rep; insw' for efficient transfer.
  */
 static inline void __atapi_pio_read ( int p, void *buffer, uint32_t bytes )
 {
@@ -468,12 +449,8 @@ void disk_reset_ata_irq_invoked ()
 
 /*
  * ata_wait
- *   Simple delay loop utilizing io_delay().
- *   Used to provide necessary timing gaps (in PIO cycles) after I/O operations,
- *   e.g., per ATA timing requirements or for waiting between status polls.
- *
- *   val: approximate number of microseconds to wait (divided by 100).
- *        The actual delay is approximate and hardware-dependent.
+ *   Simple delay loop for timing gaps between I/O operations.
+ *   - val: Approximate microseconds to wait (divided by 100).
  */
 void ata_wait(int val)
 {
@@ -494,9 +471,9 @@ void ata_wait(int val)
 
 /*
  * ata_wait_not_busy
- *   Polls the ATA status register until the BSY (busy) bit is cleared.
- *   Returns 0 if BSY clears without error, 1 if the ERR bit is set.
- *   Used to wait for the device to become ready for a new command.
+ *   Waits until the BSY (busy) bit is cleared for the specified port.
+ *   Returns 0 if BSY clears, 1 if error.
+ *   Use this after issuing a command to ata_port[p].
  */
 static _u8 ata_wait_not_busy(int p)
 {
@@ -514,9 +491,9 @@ static _u8 ata_wait_not_busy(int p)
 
 /*
  * ata_wait_busy
- *   Waits until the device sets the BSY (busy) bit, indicating it's processing.
- *   Returns 0 if successful, 1 if error bit is set.
- *   Note: This is less commonly used than 'not busy' polling.
+ *   Waits for the BSY (busy) bit to be set for the port.
+ *   Returns 0 if successful, 1 if error.
+ *   Less commonly used; for port p (0-3).
  */
 static _u8 ata_wait_busy(int p)
 {
@@ -535,8 +512,8 @@ static _u8 ata_wait_busy(int p)
 
 /*
  * ata_wait_no_drq
- *   Waits until the DRQ (Data Request) bit is cleared, indicating data is not ready.
- *   Returns 0 if successful, 1 if error bit is set.
+ *   Waits until the DRQ (Data Request) bit is cleared for the port.
+ *   Returns 0 if successful, 1 if error.
  */
 static _u8 ata_wait_no_drq(int p)
 {
@@ -555,8 +532,8 @@ static _u8 ata_wait_no_drq(int p)
 
 /*
  * ata_wait_drq
- *   Waits until the DRQ (Data Request) bit is set, meaning the device is ready to transfer data.
- *   Returns 0 if successful, 1 if error bit is set.
+ *   Waits until the DRQ (Data Request) bit is set for the port.
+ *   Returns 0 if successful, 1 if error.
  */
 static _u8 ata_wait_drq(int p)
 {
@@ -575,11 +552,8 @@ static _u8 ata_wait_drq(int p)
 
 /*
  * ata_wait_irq
- *   Waits for an ATA IRQ (interrupt) or times out.
- *   Returns:
- *     0    = IRQ received
- *    -1    = Error bit set
- *   0x80   = Timeout
+ *   Waits for an ATA IRQ (interrupt) or times out for the specified port.
+ *   Returns 0 on IRQ, -1 on error, 0x80 on timeout.
  */
 static _u8 ata_wait_irq(int p)
 {
@@ -616,9 +590,9 @@ static _u8 ata_wait_irq(int p)
 
 /*
  * ata_soft_reset
- *   Issues a soft reset to the ATA device on the current channel.
- *   This sequence toggles the SRST (Soft Reset) bit in the control register.
- *   Used for controller/device recovery and device signature detection.
+ *   Issues a soft reset to the ATA device on the specified port (ata_port[p]).
+ *   Toggles the SRST (Soft Reset) bit in the control register.
+ *   Used for recovery and device signature detection per port.
  */
 static void ata_soft_reset(int p)
 {
@@ -642,7 +616,7 @@ static void ata_soft_reset(int p)
 
 /*
  * ata_status_read
- *   Reads the ATA status register for the current device/channel.
+ *   Reads the ATA status register for the given port (ata_port[p]).
  *   Returns the raw status byte.
  */
 static _u8 ata_status_read(int p)
@@ -658,11 +632,9 @@ static _u8 ata_status_read(int p)
 
 /*
  * ata_cmd_write
- *   Sends a command byte to the ATA device's command register.
- *   Waits for the device to become not busy before issuing the command.
+ *   Issues a command byte to the ATA command register for port ata_port[p].
+ *   Waits for the device to be not busy before issuing.
  *   After writing, a short delay ensures command acceptance.
- *
- *   cmd_val: the ATA command byte (e.g., IDENTIFY DEVICE, READ SECTOR, etc.)
  */
 static void ata_cmd_write(int p, int cmd_val)
 {
@@ -673,15 +645,11 @@ static void ata_cmd_write(int p, int cmd_val)
 
 /*
  * __ata_assert_dever
- *   Sets up the ATA global structure for a specific port (0-3), mapping to
- *   primary/secondary channel and master/slave device per standard legacy ATA.
- *   This must be called before any port-specific register access.
- *   - nport: 0=Primary Master, 1=Primary Slave, 2=Secondary Master, 3=Secondary Slave
- *   Returns: 0 on success, -1 on invalid port.
- *
- * [For your goals: 
- * This is a central point for generalizing multi-port support.
- * You can later extend this for AHCI by mapping nport to AHCI port numbers.]
+ *   Set up ata_port[nport] for the selected port (0-3).
+ *   Maps nport to standard legacy ATA meaning:
+ *     0=Primary Master, 1=Primary Slave, 2=Secondary Master, 3=Secondary Slave.
+ *   Must be called before port-specific register access.
+ *   Returns 0 on success, -1 on invalid port.
  */
 static _u8 __ata_assert_dever(char nport)
 {
@@ -735,11 +703,9 @@ fail:
 
 /*
  * __set_ata_addr
- *   Sets the ATA base address registers for the selected channel.
- *   This function must be called after changing channel selection.
- *   - channel: 0=Primary, 1=Secondary
- *
- *   [For AHCI: channel selection will be replaced by port selection and MMIO base.]
+ *   Sets the ATA base address registers for the selected channel (0=Primary, 1=Secondary).
+ *   Populates ata_port[p] fields for command/control/bus master addresses.
+ *   For AHCI in the future, this would be replaced by port selection and MMIO base.
  */
 static void __set_ata_addr(int p, int channel)
 {
@@ -775,11 +741,9 @@ static void __set_ata_addr(int p, int channel)
 
 /*
  * dev_switch
- *   Advances to the next device in the ready_queue_dev linked list.
- *   If at the end of the list, wraps to the start.
- *   Used to support scheduling and access to multiple drives.
- *   [For multi-port: 
- *    Ensures your driver can cycle through all detected devices.]
+ *   Advances to next device in the ready_queue_dev linked list.
+ *   Wraps to start if at end. Used for cycling through all detected devices.
+ *   Ensures driver can cycle through all detected ports/devices.
  */
 static inline void dev_switch(void)
 {
@@ -824,13 +788,9 @@ static inline int getnport_dev()
 
 /*
  * nport_ajuste
- *   Advances the device queue until the selected device matches 
- * the requested port (nport).
+ *   Advances the device queue until the selected device matches requested port (nport).
  *   Returns 0 on success, -1 on failure (e.g., port not found after 4 tries).
- *   This function helps ensure that the correct device is active 
- * before issuing commands.
- *   [In the future, could be replaced by a direct lookup if you maintain 
- * an array of devices per port.]
+ *   Ensures correct device is active before issuing commands.
  */
 static int nport_ajuste(char nport)
 {
@@ -861,21 +821,13 @@ fail:
 
 /*
  * ata_set_device_and_sector
- *   Prepares the ATA registers to specify which 
- * device, sector (address), and access mode
- * are to be used for the next command (e.g., read/write).
- *
- *   count:      Number of sectors to transfer.
- *   addr:       LBA (Logical Block Address) of the first sector.
- *   access_type: 28 for LBA28, 48 for LBA48, 0 for CHS (not supported).
- *   nport:      Port index (0-3): 0=Primary Master, 1=Primary Slave, 2=Secondary Master, 3=Secondary Slave.
- *
- *   This is a critical routine: 
- * it ensures the correct device is selected and registers are
- * properly set for addressing. 
- * LBA48 (large disk) and LBA28 (legacy 28-bit addressing) are supported.
- *   For multi-port support, always call this before a command, 
- * passing the correct nport.
+ *   Prepares ATA registers in ata_port[nport] to specify device, sector (LBA), and access mode.
+ *   Supports both LBA28 and LBA48 addressing.
+ *   - count:      Number of sectors to transfer.
+ *   - addr:       LBA of the first sector.
+ *   - access_type: 28 for LBA28, 48 for LBA48.
+ *   - nport:      ATA port index (0-3, see ata_port[4]).
+ *   Always call this before issuing a command, passing the correct nport.
  */
 static inline void ata_set_device_and_sector ( 
     _u32 count, 
@@ -1509,15 +1461,11 @@ static uint32_t __ataPCIScanDevice(int class)
 
 /*
  * __detect_device_type
- *   Determines the type of device connected to the given IDE port.
- *   Reads the device signature after a soft reset and an IDENTIFY command.
- *   Returns a constant indicating device type 
- * (ATADEV_PATA, ATADEV_PATAPI, ATADEV_SATA, etc.).
- *   nport: Port index (0-3).
- *
- *   This function is essential for distinguishing between ATA hard drives, 
- * ATAPI CD/DVDs, and SATA devices. It is called during device enumeration 
- * for each port.
+ *   Determines the type of device connected to ata_port[nport] (0-3).
+ *   Reads the device signature after a soft reset and IDENTIFY command.
+ *   Returns a constant indicating device type (ATADEV_PATA, ATADEV_PATAPI, etc).
+ *   Essential for distinguishing hard drives, ATAPI devices, SATA, etc.
+ *   Called during enumeration for each port.
  */
 static int __detect_device_type(uint8_t nport)
 {
@@ -1663,11 +1611,9 @@ fail:
 
 /*
  * __ata_identify_device
- *   Issues the IDENTIFY command on the given port and fills device structures with details.
- *   Allocates and links a new st_dev_t structure for each detected device.
- *   Handles both ATA and ATAPI devices, and records their capabilities and geometry.
+ *   Issues IDENTIFY command on ata_port[port] and fills device structures with details.
+ *   Handles both ATA and ATAPI, and records capabilities.
  *   Returns 0 on success, -1 on failure.
- *
  *   This is the main per-port device setup routine.
  */
 int __ata_identify_device(char port)
@@ -1893,13 +1839,9 @@ fail:
 
 /*
  * __ata_initialize_controller
- *   Initializes the ATA controller and enumerates all possible 
- * devices on all 4 ports.
- *   Allocates the ready queue for devices, prepares the info buffer, 
- * and calls __ata_identify_device() for each port (0-3).
- *
- *   This function is crucial for multi-port support: it sets up the device list
- *   so the driver can later perform I/O on any detected device.
+ *   Initializes the ATA controller and enumerates all possible devices on all 4 ports.
+ *   Allocates ready queue, prepares info buffer, and calls __ata_identify_device() for each port.
+ *   This is crucial for multi-port support: it sets up the device list for later I/O.
  */
 static int __ata_initialize_controller(void)
 {
@@ -1970,23 +1912,12 @@ static int __ata_initialize_controller(void)
 
 /*
  * __ata_probe_controller
- *   Probes the PCI bus for an ATA (or similar) storage controller,
- *   reads BARs and configures base addresses, and initializes the controller.
- *   Supports legacy IDE, basic support for AHCI and RAID (currently prints not supported).
- *   Sets up the ide_port[] array for all 4 ports.
- *
- *   This is the first step in supporting all available controllers and ports.
- *   For AHCI: the AHCI-specific handling will need to be expanded here.
- * 
+ *   Probes PCI bus for ATA controller, sets up BARs, initializes controller for all ports.
+ *   Sets up ide_port[] and ata_port[] for all 4 ATA ports.
+ *   Calls __ata_initialize_controller() for multi-port device enumeration.
+ *   Prepares for future AHCI/SATA and RAID support.
  *   Credits: Nelson Cole.
  */
-// Sondando a interface PCI para encontrarmos um dispositivo
-// que seja de armazenamento de dados.
-// #bugbug: 
-// E se tivermos mais que um dispositivo desse tipo.
-// #todo
-// Talvez essa sondagem pode nos dizer se o dispositivo 
-// é primary/secondary e master/slave.
 static int __ata_probe_controller(int ataflag)
 {
     int Status = 1;  //error
@@ -2315,9 +2246,9 @@ done:
 
 /*
  * ata_initialize
- *   Main driver initialization, called from OS_Loader_Main in main.c.
- *   This is the bootloader's entry point for ATA support.
- *   Sets up the controller, devices, and marks the driver as initialized.
+ *   Main driver initialization entry—called from OS_Loader_Main in main.c.
+ *   Sets up controller, all ports/devices, and marks driver initialized.
+ *   Always initializes all four ports using ata_port[4] for full multi-device support.
  */
 int ata_initialize(void)
 {

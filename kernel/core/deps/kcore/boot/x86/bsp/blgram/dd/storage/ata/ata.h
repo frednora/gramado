@@ -1,12 +1,11 @@
-// ata.c
-// ATA/AHCI controller.
+// ata.h
+// ATA/AHCI controller definitions for multi-port (4-port) support.
+// Now fully structured for managing all 4 ATA ports via ata_port[4] (Primary Master, Primary Slave, Secondary Master, Secondary Slave).
 // Environment:
-//     32bit bootloader.
+//     32-bit bootloader (not kernel proper). Direct hardware access (I/O ports, PCI).
 // History:
-//     2017 - Ported from Sirius OS, BSD-2-Clause License.
-//     This device driver was created by Nelson Cole, for Sirius OS.
-//     2021 - Some new changes by Fred Nora.
-
+//     2017 - Ported from Sirius OS, BSD-2-Clause License, by Nelson Cole.
+//     2021 - Multi-port and maintenance by Fred Nora.
 
 // See:
 // https://wiki.osdev.org/ATA_Command_Matrix
@@ -108,7 +107,8 @@ Here's a list of subclasses for the PCI class 1 (Mass Storage Controller):
 // 0x09: SAS (Serial Attached SCSI)
 #define __SAS_CONTROLLER      0x09
 
-// Number of ports.
+// The bootloader ATA driver supports up to 4 ports using ata_port[4]:
+// 0=Primary Master, 1=Primary Slave, 2=Secondary Master, 3=Secondary Slave
 #define ATA_NUMBER_OF_PORTS  4
 //#define SATA_NUMBER_OF_PORTS  ?
 
@@ -301,25 +301,43 @@ struct ata_pci
 extern struct ata_pci  ata_pci;
 
 
+/*
+ * struct ata_controller_d
+ * ----------------------------------------------------------------------
+ * Main controller-level state for the ATA (or compatible) storage controller.
+ * This structure tracks high-level information about the detected controller,
+ * including what type of storage controller was found (IDE/ATA, RAID, AHCI/SATA, etc.)
+ * and whether it has been properly initialized.
+ *
+ * - 'initialized': Set to nonzero after the controller and all ports (ata_port[4])
+ *    are successfully probed and configured.
+ * - 'chip_control_type': Identifies the controller type, such as IDE, RAID, or AHCI,
+ *    using one of the __ATA_CONTROLLER, __RAID_CONTROLLER, or __AHCI_CONTROLLER constants.
+ *
+ * Note: Per-port and per-device information is tracked in ata_port[4] and other structures;
+ * ata_controller_d is only for the general controller overview and global state.
+ */
 struct ata_controller_d
 {
-// ATA Mass storage controler structure.
-
-// The structure was initialized.
+// 0: Not initialized; 1: Controller and ports are ready.
     int initialized;
-// IDE, RAID, AHCI.
+// See __ATA_CONTROLLER, __RAID_CONTROLLER, __AHCI_CONTROLLER, etc.
     uint8_t chip_control_type;
 };
 extern struct ata_controller_d AtaController;
 
-// ata:
-// Estrutura para o controle de execução do programa. 
-// Uses a single global ata structure for representing the 
-// currently selected device (and its registers).
-// Device/port selection is done by updating this global 
-// (ata.channel, ata.dev_num, etc.) before each operation.
-// Functions like __ata_assert_dever(nport) update the global ata struct 
-// to switch between ports/devices.
+/*
+ * ata_port_d
+ * Structure representing an individual ATA port (Primary Master, Primary Slave, Secondary Master, Secondary Slave).
+ * All per-port state, addressing, and configuration is contained here.
+ * The driver uses an array ata_port[4] for handling all four ATA ports independently.
+ * Indexed as:
+ *   ata_port[0] = Primary Master
+ *   ata_port[1] = Primary Slave
+ *   ata_port[2] = Secondary Master
+ *   ata_port[3] = Secondary Slave
+ * All routines in ata.c reference ata_port[i] for port-specific logic.
+ */
 struct ata_port_d
 {
     //int used;
@@ -335,8 +353,13 @@ struct ata_port_d
     uint32_t bus_master_base_address;
     uint32_t ahci_base_address;
 };
-// ATA ports
-// see: ata.c
+
+/*
+ * ata_port[4]
+ * Global array of ATA port structures, one for each possible legacy port.
+ * All ATA register accesses and state are now per-port, 
+ * enabling robust multi-device support.
+ */
 extern struct ata_port_d  ata_port[4];
 
 // ??
