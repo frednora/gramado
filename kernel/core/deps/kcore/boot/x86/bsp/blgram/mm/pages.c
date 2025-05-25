@@ -531,6 +531,7 @@ Entry_386:
     //printf ("SetUpPaging: [breakpoint] DONE \n");
     //printf ("SetUpPaging: DONE, returning to assembly in head.s \n");
     //refresh_screen();
+    //while(1){}
 
 // Go to kernel
 // See: transfer.inc

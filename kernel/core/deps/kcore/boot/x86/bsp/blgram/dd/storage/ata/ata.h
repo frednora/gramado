@@ -472,7 +472,6 @@ struct ide_port_d
     unsigned short base_port;
     //unsigned short base_cmd;		//command base register 
     //unsigned short base_ctl;		//control base register 
-
     //...
 };
 // see: ata.c

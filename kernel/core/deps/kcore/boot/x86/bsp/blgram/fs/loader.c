@@ -166,6 +166,7 @@ int elfLoadKernelImage(const char *pathname, const char *default_pathname)
 fail:
     printf("elfLoadKernelImage: Fail\n");
     refresh_screen();
+    //while(1){}
     return (int) (-1);
 }
 

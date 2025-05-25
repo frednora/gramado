@@ -278,18 +278,34 @@ __ata_pio_rw_sector (
 
     tmplba = (unsigned long) (tmplba >> 24);
 
+// -------------------------------------------------------
 // no bit 4.
 // 0 = master | 1 = slave
 
+    int isSlave = (int) (slave & 0xF);
+
+// NOT a slave
 // master. bit 4 = 0
-    if (slave == 0){
+    if (isSlave == 0)
+    {
+        //#debug
+        //printf ("MASTER\n");
+        //refresh_screen();
+        //while(1){}
         tmplba = (unsigned long)(tmplba | 0x000000E0);    //1110 0000b;
     }
 
 // slave. bit 4 = 1
-    if (slave == 1){
+    if (isSlave == 1)
+    {
+        //#debug
+        //printf ("SLAVE\n");
+        //refresh_screen();
+        //while(1){}
         tmplba = (unsigned long)(tmplba | 0x000000F0);    //1111 0000b;
     }
+// -------------------------------------------------------
+
 
 // In 32bit machine
 // int and long has the same size.
@@ -478,13 +494,14 @@ ata_read_sector (
 {
     static int Operation = __OPERATION_PIO_READ;  //0x20;  // Read
 
+    int idePort      = g_current_ide_port;     // Port index (0-3)
+
     // Channel and device number
 // #bugbug 
 // We have 4 valid ports.
 // We do not have the IDE port, so, we are using the ide channel.
-    //int ideChannel = g_current_ide_channel;  // Port index (0-3)
-    int idePort      = g_current_ide_port;     // Port index (0-3)
-    int isSlave      = g_current_ide_device;   // 0=master, 1=slave
+    int ideChannel = g_current_ide_channel;  // 2 channels
+    int isSlave    = g_current_ide_device;   // 0=master, 1=slave
 
 // ====================== WARNING ==============================
 // #IMPORTANTE:
@@ -534,13 +551,23 @@ ata_write_sector (
     unsigned long dx )
 {
     static int Operation = __OPERATION_PIO_WRITE; //0x30;  // Read
+
+    int idePort = g_current_ide_port;            // Port index (0-3)
+
 // Channel and device number
 // #bugbug 
 // We have 4 valid ports.
 // We do not have the IDE port, so, we are using the ide channel.
-    //int ideChannel = g_current_ide_channel;    // Port index (0-3)
-    int idePort = g_current_ide_port;            // Port index (0-3)
-    int isSlave = g_current_ide_device;          // 0=master, 1=slave
+    int ideChannel = g_current_ide_channel;    // two channels
+    int isSlave    = g_current_ide_device;          // 0=master, 1=slave
+
+/*
+    printf("ata_write_sector: idePort=%d isSlave=%d\n",
+        idePort, 
+        isSlave);
+    refresh_screen();
+    while(1){}
+*/
 
 // =========================== WARNING ==============================
 // #IMPORTANTE:

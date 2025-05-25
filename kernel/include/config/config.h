@@ -53,34 +53,29 @@
 #define IMAGESIZE_LIMIT_IN_KB  405
 //...
 
+// IDE Interface:
+// Primary Master Drive.
+// Primary Slave Drive.
+// Secondary Master Drive.
+// Secondary Slave Drive.
 
-// ------------------------------------------------------
-// Disk configuration:
-// ## IMPORTANTE ##
-// TEM QUE CONFIGURAR O BL TAMBÉM
-// Usaremos essa configuraçao provisoriamente
-// ate que tenhamos a condiçao de selecionarmos corretamente
-// o canal e o dispositivo.
-// Inicializaremos essas variaveis ao inicializarmos
-// o controlador de ata. ide. em ata.c ata_initialize.
-// USE PRIMARY MASTER!!
-// Portas bases encontradas nas BARs.
-// BAR0 = base port 1F0 
-// BAR1 = base port 3F6 
-// BAR2 = base port 170 
-// BAR3 = base port 376 
-// #importante
-// master e slave é coisa do PATA
-// então 3f6 pode ser canal 2 e 376 pode ser canal 3.
+// Serial IDE
+// Primary Master,   also called SATA1.
+// Primary Slave,    also called SATA2.
+// Secondary Master, also called SATA3.
+// Secondary Slave,  also called SATA4.
 
-#define __BAR0  0   // Primary, master   (Channel 0)
-#define __BAR1  1   // Secondary, master (Channel 1)
-#define __BAR2  2   // Primary, slave    (Channel 0)
-#define __BAR3  3   // Secondary, slave  (Channel 1)
+#define __BAR0  0  // 0x1F0
+#define __BAR1  1  // 0x3F6
+#define __BAR2  2  // 0x170
+#define __BAR3  3  // 0x376
 
 // See: 
 // ata_initialize in ata.c
 #define __IDE_PORT    __BAR0   // Primary   (Channel 0)
+//#define __IDE_PORT    __BAR1   // 
+//#define __IDE_PORT    __BAR2   // 
+//#define __IDE_PORT    __BAR3   // 
 
 // ------------------------------------------------------
 // virtualbox Info:

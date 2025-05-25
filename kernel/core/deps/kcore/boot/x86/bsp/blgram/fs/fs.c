@@ -372,6 +372,9 @@ fsLoadFile (
 // Cluster inicial.
     unsigned short cluster=0;
 
+    //printf("fsLoadFile:\n");
+    //refresh_screen();
+    //while(1){}
 
 // Parameters:
     if ((void*) name == NULL){
@@ -392,6 +395,16 @@ fsLoadFile (
     }
 
 //loadRoot:
+
+    /*
+    // #test
+    // Printing root entries to know if the root was loaded properly.
+    clear_backbuffer();
+    printf("Root: >>>>>>>>>>>>>>>>>>>>> [%s]\n", dir);
+    refresh_screen();
+    while(1){}
+    */
+
 
 //#test: 
 // Suspendendo o carregamento do root.
@@ -439,9 +452,11 @@ fsLoadFile (
 
 // =======================
 // not found
-// Se o arquivo n�o for encontrado.
+// Se o arquivo nao for encontrado.
 // file_not_found:
-    printf ("fsLoadFile: [FAIL] File not found\n"); 
+    printf ("fsLoadFile: [FAIL] File not found ----------------------\n"); 
+    refresh_screen();
+    while(1){}
     goto fail;
 
 // ===========================
@@ -567,6 +582,7 @@ LOOP_next_entry:
 fail:
     printf ("fsLoadFile: Fail\n");
     refresh_screen ();
+    //while (1){}
     return 1;
 
 // ==============================
@@ -867,6 +883,7 @@ int fs_load_path(const char *path, unsigned long address)
 fail:
     printf("fs_load_path: Fail\n");
     refresh_screen();
+    //while(1){}
     return (int) (-1);
 }
 

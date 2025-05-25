@@ -385,6 +385,14 @@ void show_ide_info()
  */
 static void __ata_pio_read ( int p, void *buffer, _i32 bytes )
 {
+
+    /*
+    clear_backbuffer();
+    printf("Root: >>>>>>>>>>>>>>>>>>>>> [%d]\n", p);
+    refresh_screen();
+    while(1){}
+    */
+
     asm volatile (\
         "cld;\
         rep; insw"::"D"(buffer),\
@@ -2117,6 +2125,17 @@ static int __ata_probe_controller(int ataflag)
 // TODO: Tem ainda a porta do dma na bar4 e bar5
     // ATA_BAR4
     // ATA_BAR5
+
+    /*
+    clear_backbuffer();
+    printf(">>>>>>>>>>>>>>>>>>>> %x %x %x %x\n", 
+    ide_port[0].base_port,
+    ide_port[1].base_port,
+    ide_port[2].base_port,
+    ide_port[3].base_port );
+    refresh_screen();
+    while(1){}
+    */
 
 //
 // Now initialize for controller type

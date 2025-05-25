@@ -16,8 +16,9 @@ void read_lba( unsigned long address, unsigned long lba )
 
     // if ( address == 0 ){}
 
-    if (BootDisk.initialized != TRUE)
-    {
+    //printf("read_lba:\n");
+
+    if (BootDisk.initialized != TRUE){
         printf("read_lba: BootDisk not initialized\n");
         goto fail;
     }
@@ -30,6 +31,8 @@ void read_lba( unsigned long address, unsigned long lba )
             break;
 
         case CONTROLLER_TYPE_ATA:
+            // see: libata.c
+            printf("CONTROLLER_TYPE_ATA\n");
             ata_read_sector ( address, lba, 0, 0 );
             break;
         

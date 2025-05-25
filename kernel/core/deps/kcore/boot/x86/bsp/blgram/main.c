@@ -679,14 +679,13 @@ void bl_main(void)
         bl_die();
     }
 
-    /*
+    
     // #debug
     // #test
     // Always 0x80 for only one disk.
-    printf("Disk number: %x\n",BootBlock.disk_number);
+    printf("blgram: Disk number: %x\n",BootBlock.disk_number);
     refresh_screen();
-    while(1){}
-    */
+    //while(1){}
 
 
 // -- #bugbug -----------------------------------------------------
@@ -722,10 +721,11 @@ void bl_main(void)
 // malloc support.
     init_heap();
 
-#if defined(BAREMETAL_VERBOSE)
-    printf ("bl: Init hdd\n");
+//#if defined(BAREMETAL_VERBOSE)
+    printf ("bl: Calling storage_initialize()\n");
     refresh_screen();
-#endif  
+    //while(1){}
+//#endif  
 
 //
     int StorageStatus = FALSE;
@@ -737,6 +737,9 @@ void bl_main(void)
 
 // --------------------------------------
 
+    printf ("bl: After storage_initialize()\n");
+    refresh_screen();
+    //while(1){}
 
 // -------------------------------------------
 // Loading root dir.
@@ -747,6 +750,10 @@ void bl_main(void)
    fs_load_rootdirEx();
     g_fat16_root_status = TRUE;
 
+    printf ("bl: After fs_load_rootdirEx()\n");
+    refresh_screen();
+    //while(1){}
+
 
 // -------------------------------------------
 // Loading FAT.
@@ -756,6 +763,12 @@ void bl_main(void)
 #endif  
     fs_load_fatEx();
     g_fat16_fat_status = TRUE;
+
+    printf ("bl: After fs_load_fatEx()\n");
+    refresh_screen();
+    //while(1){}
+
+    clear_backbuffer();
 
 /*
 // -------------------------------------------
@@ -799,10 +812,9 @@ void bl_main(void)
 // Initialize the de kernel environment.
 // #todo:
 // At this moment we need to update the bootblock
-// to tell the kernel that we're loading him from
-// a new perpective.
+// to tell the kernel that we're loading him from a new perpective.
     if (initialize_de == TRUE){
-        printf("blgram: Initializing de kernel\n");
+        printf("bl_main: Initializing de kernel\n");
         refresh_screen();
         Status = bl_load_kernel_image_for_de();
 
@@ -868,7 +880,7 @@ void bl_main(void)
 
 //#debug
 /*
-    printf ("OS_Loader_Main:\n");
+    printf ("bl_main:\n");
     printf ("The kernel image is already loaded\n");
     printf ("Let's setup long mode,\n");
     printf ("paging and jump to the kernel.\n");
@@ -969,7 +981,7 @@ See: https://wiki.osdev.org/X86-64
 // See: pages.c
 
     //#debug
-    //printf ("OS_Loader_Main: Setup paging ...\n");
+    //printf ("bl_main: Setup paging ...\n");
     //refresh_screen();
     //while(1){}
 
