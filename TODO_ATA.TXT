@@ -1,4 +1,11 @@
 
+// TODO: 
+If the signature is found during the read test, 
+associate the boot disk with the port that was tested.
+
+-----------------------------------
+
+
 Here’s a more detailed and beginner-friendly comment for your TODO file, 
 with simpler English and a step-by-step explanation suitable for a Brazilian developer:
 HAHAHAHAH !!!

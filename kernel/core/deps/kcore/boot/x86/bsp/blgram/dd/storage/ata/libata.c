@@ -238,6 +238,45 @@ Error/timeout handling
  *    -1 for invalid operation or port
  *    -3 for timeout
  */
+/*
+ * __ata_pio_rw_sector
+ *   Reads or writes a single sector using PIO mode on the specified port/device.
+ * 
+ *   Parameters:
+ *     buffer          - Address of the 512-byte data buffer.
+ *     lba             - Logical Block Address (LBA) of the sector to access (28-bit addressing).
+ *     operation_number- __OPERATION_PIO_READ (read) or __OPERATION_PIO_WRITE (write).
+ *     port_index      - ATA port index (0=Primary Master, 1=Primary Slave, 2=Secondary Master, 3=Secondary Slave).
+ *     slave           - 0 for master, 1 for slave (bit 4 in device/head register).
+ * 
+ *   Returns:
+ *     0   - Success
+ *     -1  - Invalid arguments/operation/port
+ *     -3  - Timeout waiting for device ready
+ *
+ *   Process:
+ *     1. Selects target device (master/slave) and sets LBA bits 24-27 in Drive/Head register (0x1F6).
+ *     2. Sets sector count to 1.
+ *     3. Sets LBA low/mid/high registers (0x1F3-0x1F5).
+ *     4. Issues ATA command (0x20=read, 0x30=write) to Command register (0x1F7).
+ *     5. Waits for DRQ=1 (device ready for data transfer).
+ *     6. Transfers 512 bytes using rep insw/outsw.
+ *     7. (If write) Flushes drive cache.
+ */
+/*
++ Wait for device to be not busy (BSY=0) using hdd_ata_wait_not_busy().
++ Set up registers for sector count, LBA low/mid/high, and device/head (with slave/master bit).
++ Write the command (READ_SECTORS or WRITE_SECTORS) using hdd_ata_cmd_write().
++ Wait for DRQ (data request) and perform the PIO transfer.
++ Optionally, check for errors after the transfer.
+*/
+
+// #bugbug
+// Both master and slave on the same channel (primary or secondary) always 
+// use the same command/base port (0x1F0 for primary, 0x170 for secondary).
+// The control port (0x3F6 or 0x376) is only for device control (reset, nIEN, etc.), 
+// not for read/write/data/status commands.
+
 static int 
 __ata_pio_rw_sector ( 
     unsigned long buffer, 
@@ -263,6 +302,15 @@ __ata_pio_rw_sector (
         return -1;
     }
 
+    /*
+    // #debug
+    // Printing the base port
+    clear_backbuffer();
+    printf("base port: %x\n",ide_port[port_index].base_port);
+    refresh_screen();
+    while(1){}
+    */
+
 // Selecionar se � master ou slave.
 //  outb (0x1F6, slavebit<<4)
 // 0 - 3    In CHS addressing, bits 0 to 3 of the head. 
@@ -276,14 +324,25 @@ __ata_pio_rw_sector (
 
     // Select master/slave and set LBA bits 24-27
 
-    tmplba = (unsigned long) (tmplba >> 24);
+    // ---- Device/Head Register setup (0x1F6/6) ----
+    // Bits: 7=1, 6=LBA=1, 5=1, 4=DRV (slave), 3-0=LBA(24-27)
+    // 0xA0 = 1010 0000 = base for master, LBA mode
+    // 0xB0 = 1011 0000 = base for slave, LBA mode
+    //tmplba = (unsigned long) (tmplba >> 24); // LBA bits 24-27 only
+    tmplba = (lba >> 24) & 0x0F; // LBA bits 24-27 only
 
 // -------------------------------------------------------
 // no bit 4.
 // 0 = master | 1 = slave
 
-    int isSlave = (int) (slave & 0xF);
+    //int isSlave = (int) (slave & 0xF);
+    // Quick fix
+    uint8_t isSlave = (uint8_t) ata_port[port_index].dev_num;
 
+    // 0xE0 = 1110 0000 = LBA=1, DEV=0 (master)
+    // 0xF0 = 1111 0000 = LBA=1, DEV=1 (slave)
+
+/*
 // NOT a slave
 // master. bit 4 = 0
     if (isSlave == 0)
@@ -294,7 +353,9 @@ __ata_pio_rw_sector (
         //while(1){}
         tmplba = (unsigned long)(tmplba | 0x000000E0);    //1110 0000b;
     }
+*/
 
+/*
 // slave. bit 4 = 1
     if (isSlave == 1)
     {
@@ -305,14 +366,34 @@ __ata_pio_rw_sector (
         tmplba = (unsigned long)(tmplba | 0x000000F0);    //1111 0000b;
     }
 // -------------------------------------------------------
-
+*/
 
 // In 32bit machine
 // int and long has the same size.
+/*
+Bits 7:5 = 1 1 1
+Bit 6: LBA (should be 1 for LBA)
+Bit 5: Always 1
+Bit 4: 0=Master, 1=Slave
+Bits 3-0: LBA bits 24-27
+*/
+
+    // 0xE0 = 1110 0000 = LBA=1, DEV=0 (master)
+    // 0xF0 = 1111 0000 = LBA=1, DEV=1 (slave)
+
+    //unsigned char dev_head = 0xE0 | (isSlave << 4) | tmplba;
+    unsigned char dev_head = 0xE0 | (isSlave << 4) | ((lba >> 24) & 0x0F);
 
     out8( 
         (int) (ide_port[port_index].base_port + 6), 
-        (int) tmplba );
+        (int) (dev_head & 0xFF) );
+    //out8( 
+        //(int) (ide_port[port_index].base_port + 6), 
+        //(int) tmplba );
+
+// After writing Device/Head register, 
+// ATA spec requires a 400ns delay (usually 4 status reads).
+    io_delay();
 
 // #test
     //out8( 
@@ -323,13 +404,17 @@ __ata_pio_rw_sector (
 // Port to send number of sectors.
 // Set sector count to 1 (we are reading/writing one sector)
 
+    // ---- Sector Count (0x1F2/2): Set to 1 sector ----
     out8( 
         (int) (ide_port[port_index].base_port + 2), 
         (int) 1 );
+    io_delay();
 
 //
 // Set LBA 0-23
 //
+
+// ---- LBA Registers (0x1F3-0x1F5/3-5): LBA bits 0-23 ----
 
 // 0x1F3  
 // Port to send bit 0 - 7 of LBA.
@@ -337,6 +422,7 @@ __ata_pio_rw_sector (
     tmplba = lba;
     tmplba = tmplba & 0x000000FF;
     out8( (int) ide_port[port_index].base_port + 3 , (int) tmplba );
+    //io_delay();
 
 // 0x1F4
 // Port to send bit 8 - 15 of LBA.
@@ -345,6 +431,7 @@ __ata_pio_rw_sector (
     tmplba = tmplba >> 8;
     tmplba = tmplba & 0x000000FF;
     out8( (int) ide_port[port_index].base_port + 4 , (int) tmplba );
+    //io_delay();
 
 // 0x1F5:
 // Port to send bit 16 - 23 of LBA
@@ -353,6 +440,7 @@ __ata_pio_rw_sector (
     tmplba = tmplba >> 16;
     tmplba = tmplba & 0x000000FF;
     out8( (int) ide_port[port_index].base_port + 5 , (int) tmplba );
+    //io_delay();
 
 // =================================================
 
@@ -385,9 +473,11 @@ __ata_pio_rw_sector (
     //} else {
         if (operation_number == __OPERATION_PIO_READ){
             out8 ( (unsigned short) Port, (unsigned char) 0x20 ); // READ SECTOR
+            io_delay();
         }
         if (operation_number == __OPERATION_PIO_WRITE){
             out8 ( (unsigned short) Port, (unsigned char) 0x30 ); // WRITE SECTOR
+            io_delay();
         }
     //}
 
@@ -396,31 +486,38 @@ __ata_pio_rw_sector (
     // outb (0x1F1, isDMA)
 
 // Wait for DRQ (Data Request) bit to be set, with timeout
+// ---- Wait for DRQ (bit 3) set ----
     unsigned char c=0;
-    unsigned long timeout = (4444*512);
+    unsigned long timeout = (4444*1024); // Arbitrary large timeout; tune as needed
 again:
     c = (unsigned char) in8( (int) ide_port[port_index].base_port + 7 );
+
 // Select a bit.
-    c = (c & 8);
+    c = (c & 8);  // DRQ (bit 3) set: ready for data transfer
+
+    if (c & 0x08) // DRQ (bit 3) set: ready for data transfer
+        goto __OK;
 
     if (c == 0)
     {
         timeout--;
-        if (timeout == 0)
-        {
+        if (timeout == 0){
             printf("__ata_pio_rw_sector: [FAIL] rw sector timeout\n");
             return -3;
         }
-
         // #bugbug: 
         // Isso pode enrroscar aqui.
-
         goto again;
     }
+
+__OK:
 
 //
 // Read or write.
 //
+
+// ---- Data Transfer ----
+
 
     // Perform the data transfer
     switch (operation_number){

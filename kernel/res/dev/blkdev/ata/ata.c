@@ -1598,6 +1598,9 @@ static int __ata_initialize(int ataflag)
 
 // Get the base i/o port for all the 4 ATA ports.
 // Colocando nas estruturas.
+
+    /*
+    // #bugbug This is wrong
     ide_port[0].base_port = 
         (unsigned short) (ATA_BAR0_PRIMARY_COMMAND_PORT   & 0xFFFF);
     ide_port[1].base_port = 
@@ -1607,6 +1610,13 @@ static int __ata_initialize(int ataflag)
     ide_port[3].base_port = 
         (unsigned short) (ATA_BAR3_SECONDARY_CONTROL_PORT & 0xFFFF);
     // Tem ainda a porta do dma na bar4.
+    */
+
+    // # this is right
+    ide_port[0].base_port = ATA_BAR0_PRIMARY_COMMAND_PORT;   // 0x1F0, primary master
+    ide_port[1].base_port = ATA_BAR0_PRIMARY_COMMAND_PORT;   // 0x1F0, primary slave 
+    ide_port[2].base_port = ATA_BAR2_SECONDARY_COMMAND_PORT; // 0x170, secondary master
+    ide_port[3].base_port = ATA_BAR2_SECONDARY_COMMAND_PORT; // 0x170, secondary slave
 
 //
 // De acordo com o tipo.

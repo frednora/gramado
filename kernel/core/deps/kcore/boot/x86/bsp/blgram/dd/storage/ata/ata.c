@@ -2117,10 +2117,19 @@ static int __ata_probe_controller(int ataflag)
 // Secondary Slave,  also called SATA4.
 
     // Configure ide_port[] base addresses for all 4 ports
-    ide_port[0].base_port = (unsigned short) ATA_BAR0_PRIMARY_COMMAND_PORT; // Primary Command
-    ide_port[1].base_port = (unsigned short) ATA_BAR1_PRIMARY_CONTROL_PORT; // Primary Control
-    ide_port[2].base_port = (unsigned short) ATA_BAR2_SECONDARY_COMMAND_PORT; // Secondary Command
-    ide_port[3].base_port = (unsigned short) ATA_BAR3_SECONDARY_CONTROL_PORT; // Secondary Control
+
+    // Wrong #bugbug
+    //ide_port[0].base_port = (unsigned short) ATA_BAR0_PRIMARY_COMMAND_PORT; // Primary Command
+    //ide_port[1].base_port = (unsigned short) ATA_BAR1_PRIMARY_CONTROL_PORT; // Primary Control
+    //ide_port[2].base_port = (unsigned short) ATA_BAR2_SECONDARY_COMMAND_PORT; // Secondary Command
+    //ide_port[3].base_port = (unsigned short) ATA_BAR3_SECONDARY_CONTROL_PORT; // Secondary Control
+
+    // #right it is working
+    ide_port[0].base_port = (unsigned short) ATA_BAR0_PRIMARY_COMMAND_PORT;   // 0x1F0, Primary Command (Master)
+    ide_port[1].base_port = (unsigned short) ATA_BAR0_PRIMARY_COMMAND_PORT;   // 0x1F0, Primary Command (Slave)
+    ide_port[2].base_port = (unsigned short) ATA_BAR2_SECONDARY_COMMAND_PORT; // 0x170, Secondary Command (Master)
+    ide_port[3].base_port = (unsigned short) ATA_BAR2_SECONDARY_COMMAND_PORT; // 0x170, Secondary Command (Slave)
+
 
 // TODO: Tem ainda a porta do dma na bar4 e bar5
     // ATA_BAR4
