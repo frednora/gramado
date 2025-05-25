@@ -240,5 +240,22 @@
 
 //...
 
+
+unsigned short 
+pciConfigReadWord ( 
+    unsigned char bus, 
+    unsigned char slot, 
+    unsigned char func, 
+    unsigned char offset );
+
+unsigned short pciCheckDevice(unsigned char bus, unsigned char slot);
+unsigned short pciCheckVendor(unsigned char bus, unsigned char slot);
+unsigned char pciGetClassCode(unsigned char bus, unsigned char slot);
+
+int pciInfo(void);
+
+int pciInit(void); 
+
+
 #endif   
 

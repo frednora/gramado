@@ -83,3 +83,28 @@ void write_lba ( unsigned long address, unsigned long lba )
 fail:
     return;
 }
+
+// Called by main.c
+int storage_initialize(void)
+{
+    int Status = FALSE;
+
+// AHCI:
+// Try initialization for the ahci mode.
+// AHCI handles only SATA interface standard.
+    Status = (int) ahci_initialize();
+    if (Status != TRUE){
+        // Nothing in case of failure.
+    }
+
+// ATA:
+// Try initialization for the ata mode.
+// ATA handles PATA and SATA intarface standards.
+    Status = (int) ata_initialize();
+    if (Status != TRUE){
+        return FALSE;        
+    }
+
+// Done
+    return TRUE;
+}

@@ -301,7 +301,6 @@ extern void refresh_screen();
 //
 
 // Initialization support.
-extern int g_initialized;
 extern int g_driver_hdd_initialized;
 
 
@@ -544,10 +543,8 @@ unsigned long input(unsigned long ch);
 void timer();
 int blTimerInit();
 
-//
-// Paging support.
-//
-void SetUpPaging(void);
+
+#include "mm/pages.h"
 
 //
 // Disk support.
@@ -558,29 +555,11 @@ void limpa_root();
 void limpa_fat();
 
 //
-// PCI support.
-//
-
-int pciInit(void); 
-int pciInfo(void);
-unsigned char pciGetClassCode(unsigned char bus, unsigned char slot);
-unsigned short pciCheckVendor(unsigned char bus, unsigned char slot);
-unsigned short pciCheckDevice(unsigned char bus, unsigned char slot);
-
-unsigned short 
-pciConfigReadWord ( 
-    unsigned char bus, 
-    unsigned char slot, 
-    unsigned char func, 
-    unsigned char offset );
-
-//
 // Boot Loader services.
 //
 
 void system_services();
 
-void init_globals(void);
 void boot(); 
 
 void reboot(void);
@@ -601,8 +580,8 @@ void panic(const char *msg);
 // INITIALIZATION
 //
 
-// init.c
-int init(void);
+#include "init.h"
+
 
 // main.c
 void bl_main(void);

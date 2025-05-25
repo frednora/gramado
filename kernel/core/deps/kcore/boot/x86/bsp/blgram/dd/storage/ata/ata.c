@@ -2253,7 +2253,7 @@ int ata_initialize(void)
     __ata_initialization_dialog( 1, FORCEPIO, FORCEPIO );
     g_driver_hdd_initialized = (int) TRUE;
 
-    return 0;
+    return TRUE;
 }
 
 //

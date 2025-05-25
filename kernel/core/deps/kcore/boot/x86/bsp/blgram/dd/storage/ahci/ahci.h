@@ -10,6 +10,7 @@
 #define NR_PORTS  32  // maximum number of ports
 //#define NR_CMDS   32  // maximum number of queued commands
 
+int ahci_initialize(void);
 
 #endif  
 

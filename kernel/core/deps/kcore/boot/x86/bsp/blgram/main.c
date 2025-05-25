@@ -92,7 +92,6 @@ struct boot_block_d  BootBlock;
 
 int current_mode=0;
 
-int g_initialized=0;
 int g_driver_hdd_initialized=0;
 
 
@@ -675,8 +674,9 @@ void bl_main(void)
 // with all the data we have to the kernel.
 // See: init.c
     Status = (int) init();
-    if (Status != 0){
-        // #todo
+    if (Status != TRUE){
+        printf("bl_main: on init()\n");
+        bl_die();
     }
 
     /*
@@ -727,17 +727,15 @@ void bl_main(void)
     refresh_screen();
 #endif  
 
-// Initialize ATA support.
-// ATA/PATA is the main term here.
-// IDE is an alias for ATA
-// SATA is the evolution of ATA.
-    ata_initialize();
-
-// debug
-    if (g_initialized != TRUE){
-        printf("bl_main: g_initialized\n");
+//
+    int StorageStatus = FALSE;
+    StorageStatus = (int) storage_initialize();
+    if (StorageStatus != TRUE){
+        printf("bl_main: on storage_initialize()\n");
         bl_die();
     }
+
+// --------------------------------------
 
 
 // -------------------------------------------

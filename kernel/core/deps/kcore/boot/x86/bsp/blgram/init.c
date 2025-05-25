@@ -17,6 +17,8 @@ extern unsigned long SavedBootBlock;
 //extern unsigned long SavedBPP;
 
 // -----------------------------------------------
+static void __init_globals(void);
+
 static void __fill_the_bootblock_for_32bit_mode(void);
 
 // -----------------------------------------------
@@ -80,15 +82,8 @@ set_up_text_color (
     g_char_attrib = (backcolor << 4) | (forecolor & 0x0F);
 }
 
-
-/*
- * init_globals:
- *     Inicia vari�veis globais.
- *     @Mudar para BlInitGlobals();
- *     o retorno por ser int.
- */
-//void BlInitGlobals() 
-void init_globals(void)
+// Initialize global variables.
+static void __init_globals(void)
 {
 // Pr�ximo procedimento, status and file system type.
 // 1=fat16.
@@ -104,11 +99,9 @@ void init_globals(void)
 }
 
 
-/*
- * init:
- *     Fun��o principal do arquivo init.c.
- */
+// Main initialization routine.
 // Called by OS_Loader_Main in main.c
+// OUT: TRUE or FALSE.
 //int init (int ?){ 
 int init(void)
 {
@@ -146,29 +139,19 @@ int init(void)
         bl_clear(0);
         set_up_text_color (0x0F, 0x00);
         printf ("BL.BIN-init: Text Mode\n");
-        refresh_screen();
-        //#hang
-        while(1){
-            asm("cli");
-        };
+        goto fail;
     }
 
 //
 // Inicializando o Boot Loader.
 //
 
-//T�tulo.
-//#ifdef BL_VERBOSE
+    // #? Is this function already working?
     printf ("BL.BIN: Initializing ...\n");
-    // printf ("init: Boot Loader Version %s \n", BL_VERSION );	
     refresh_screen();
-//#endif
 
-    //globais.	
-//#ifdef BL_VERBOSE	
-	//printf("init: Globals..\n");
-//#endif	
-    init_globals();
+    // Initialize global variables
+    __init_globals();
 
 // The boot block
 // Fill a 32bit version of the boot block into a structure.
@@ -216,10 +199,11 @@ int init(void)
 // Pega o valor herdado do Boot Manager.
     // LegacyCR3 = (unsigned long) GetCR3();
 
-// Continua?
+// ...
 
-    g_initialized = (int) TRUE;
-    return 0;  
+    return TRUE;
+fail:
+    return FALSE;
 }
 
 //

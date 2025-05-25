@@ -21,5 +21,7 @@ void read_lba( unsigned long address, unsigned long lba );
 void write_lba( unsigned long address, unsigned long lba );
 
 
+int storage_initialize(void);
+
 #endif    
 
