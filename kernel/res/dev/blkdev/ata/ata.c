@@ -55,8 +55,9 @@ static uint32_t __next_sd_id = 0;
 
 // --------------------------
 
-// Four ports.
-// see: ata.h
+struct ata_controller_d AtaController;
+
+struct ata_port_d  ata_port[4];
 struct ide_port_d  ide_port[4];
 
 struct dev_nport  dev_nport;
@@ -68,10 +69,7 @@ struct ata_device_d *current_sd;
 // see: ata.h
 struct ata_device_d *ready_queue_dev;
 
-// Not a pointer.
-// see: ata.h
-struct ata_port_d  ata_port[4];  // 32 ports.
-struct ata_controller_d AtaController;
+
 
 //
 // == Private functions: prototypes ==============

@@ -196,13 +196,15 @@ Here's a list of subclasses for the PCI class 1 (Mass Storage Controller):
 #define ATA_REG_CMD      0x07
 #define ATA_REG_STATUS   0x07
 
-// Devices
-#define ATA_MASTER_DEV  0x00
-#define ATA_SLAVE_DEV   0x01
 
 // Bus
 #define ATA_PRIMARY    0x00
 #define ATA_SECONDARY  0x01
+
+// Devices
+#define ATA_MASTER_DEV  0x00
+#define ATA_SLAVE_DEV   0x01
+
 
 // ATA type.
 #define ATA_DEVICE_TYPE    0x00
@@ -298,6 +300,18 @@ struct ata_pci
 //see: ata.c
 extern struct ata_pci  ata_pci;
 
+
+struct ata_controller_d
+{
+// ATA Mass storage controler structure.
+
+// The structure was initialized.
+    int initialized;
+// IDE, RAID, AHCI.
+    uint8_t chip_control_type;
+};
+extern struct ata_controller_d AtaController;
+
 // ata:
 // Estrutura para o controle de execução do programa. 
 // Uses a single global ata structure for representing the 
@@ -306,11 +320,11 @@ extern struct ata_pci  ata_pci;
 // (ata.channel, ata.dev_num, etc.) before each operation.
 // Functions like __ata_assert_dever(nport) update the global ata struct 
 // to switch between ports/devices.
-struct ata
+struct ata_port_d
 {
     //int used;
     //int magic;
-    uint8_t  chip_control_type;
+    //uint8_t  chip_control_type;
     uint8_t  channel;
     uint8_t  dev_type;
     uint8_t  dev_num;
@@ -321,8 +335,9 @@ struct ata
     uint32_t bus_master_base_address;
     uint32_t ahci_base_address;
 };
-//see: ata.c
-extern struct ata  ata;
+// ATA ports
+// see: ata.c
+extern struct ata_port_d  ata_port[4];
 
 // ??
 // st_dev:
@@ -529,32 +544,7 @@ extern struct ide_d  IDE;
 // Prototypes =================================
 //
 
-void show_ide_info();
-
-// #todo: Translate
-int nport_ajuste(char nport);
-
-void set_ata_addr(int channel);
-
-// ata.c
 void ata_wait(int val);
-_u8 ata_wait_not_busy(void);
-_u8 ata_wait_busy(void);
-_u8 ata_wait_no_drq();
-_u8 ata_wait_drq();
-_u8 ata_wait_irq();
-_u8 ata_status_read(void);
-void ata_cmd_write(int cmd_val);
-
-int disk_ata_wait_irq(void);
-
-// worker
-_u8 __ata_assert_dever(char nport);
-
-// low level workers.
-void __ata_pio_read(_void *buffer,_i32 bytes);
-void __ata_pio_write(_void *buffer,_i32 bytes);
-static inline void __atapi_pio_read ( void *buffer, uint32_t bytes );
 
 // dma
 void 
@@ -563,9 +553,11 @@ ide_dma_data (
     uint16_t byte_count, 
     uint8_t flg, 
     uint8_t nport );
-void ide_dma_start();
-void ide_dma_stop();
-int ide_dma_read_status();
+void ide_dma_start(int p);
+void ide_dma_stop(int p);
+int ide_dma_read_status(int p);
+
+void show_ide_info();
 
 //
 // $
