@@ -54,7 +54,9 @@ segment .head_x86
 ; See: gdef.h
 extern ___last_valid_address 
 
-extern _g_lbf_pa  ; LFB - Linear Frame Buffer. (physical address).
+extern _g_lbf_pa         ; LFB - Linear Frame Buffer. (physical address).
+extern _g_DiskSignature  ; Buffer for DiskSignature.
+
 extern _bl_main   ; Entrada da parte em C.
 ;...
 
@@ -83,7 +85,7 @@ KRN_ENTRYPOINT  equ  0x00101000  ; Entry point
 ; IN:
 ; al:  Boot mode.
 ; ebx: LFB physical addres.
-; ecx: Boot block address.
+; ecx: Boot block address. Disk signature.
 ; edx: Boot block address.
 ; ebp: Boot block address.
 ; edi: Gramado mode. (jail, p1, home ...)
@@ -122,13 +124,14 @@ StartLoader:
 
 ; Salva o LFB.
 ; Global para endereço fisico do LFB.
-    mov dword [_g_lbf_pa], ebx    
+    ;mov dword [_g_lbf_pa], ebx    
 
 ; #todo: 
 ; Passar o bootblock em ebx e a flag em al.
 
     mov byte [bl_video_mode], al
-    mov dword [_g_lbf_pa], ebx      ;Endereço fisico do LFB.
+    mov dword [_g_lbf_pa], ebx         ; Endereço fisico do LFB.
+    mov dword [_g_DiskSignature], ecx  ; Address for DiskSignature.
 
 ; Boot Block: 
 ; BootBlock pointer.

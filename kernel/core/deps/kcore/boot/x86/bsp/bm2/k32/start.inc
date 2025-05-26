@@ -679,9 +679,10 @@ startGUI:
 
 ; Boot block address.
     mov ebp, dword BootBlock
-    mov ecx, ebp                ; Table
+    mov ecx, dword CONFIG_BUFFER2  ; Passing the address for the signature.
+    ;mov ecx, ebp                ; Table  #todo: disk signature.
     mov edx, ebp                ; Table
-    
+
 ; Gramado mode. (jail, p1, home ...)
     mov edi, dword [tmp_gamemode]
 
@@ -696,7 +697,7 @@ startGUI:
 ; IN:
 ; al:  Boot mode.
 ; ebx: LFB physical addres.
-; ecx: Boot block address.
+; ecx: Boot block address.  #todo Disk signature.
 ; edx: Boot block address.
 ; ebp: Boot block address.
 ; edi: Gramado mode. (jail, p1, home ...)

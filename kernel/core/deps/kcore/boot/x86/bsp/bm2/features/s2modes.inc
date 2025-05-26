@@ -346,6 +346,7 @@ s2modespm32:
 ;; > ecx 
 ;; > edx
 ;; Saving the boot block in ecx and edx
+;; #bugbug: No sense!
 
     mov ecx, ebp 
     mov edx, ebp 

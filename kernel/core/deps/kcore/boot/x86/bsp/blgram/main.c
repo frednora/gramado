@@ -125,6 +125,8 @@ unsigned long next_address=0;    //??
 
 unsigned long g_lbf_pa=0;    //Endereço Físico do LFB.
 unsigned long g_lbf_va=0;    //Endereço Lógico do LFB.
+unsigned long g_DiskSignature=0;  // Address of DiskSignature.
+
 
 // See: bootloader.h
 system_t system_info;
@@ -687,6 +689,22 @@ void bl_main(void)
     refresh_screen();
     //while(1){}
 
+    // The disk signature passed by bm2 via ecx.
+    // It's working
+    // #todo:
+    // Now we need to save these values and probe all 
+    // the ATA ports to find what is the disk that we 
+    // booted from. Comparing this signature with the signature
+    // into the sector 0x04.
+
+    /*
+    unsigned long *disk_sig1 = (unsigned long *) g_DiskSignature;
+    unsigned long *disk_sig2 = (unsigned long *) (g_DiskSignature +4);
+    printf("blgram: Disk signature 1: %x\n", disk_sig1[0] ); //ok
+    printf("blgram: Disk signature 2: %x\n", disk_sig2[0] );
+    refresh_screen();
+    while(1){}
+    */
 
 // -- #bugbug -----------------------------------------------------
 

@@ -365,6 +365,7 @@ extern unsigned long next_address;  //??
  */
 extern unsigned long g_lbf_pa;    //Endere�o F�sico do LFB.
 extern unsigned long g_lbf_va;    //Endere�o L�gico do LFB.
+extern unsigned long g_DiskSignature;  // Address of DiskSignature.
 
 /*
  * Structures for Boot Loader.
