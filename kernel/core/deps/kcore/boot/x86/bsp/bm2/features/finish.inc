@@ -15,7 +15,6 @@ stage2_msg_pe_sigNotFound:
 stage2_msg_pe_sigFound: 
     db "finish.inc: Signature found", 13, 10, 0
 
-
 ; ==============================================================
 ; AFTER_DATA:
 ; Called by load_stuff() in main.asm.
@@ -64,13 +63,11 @@ AFTER_DATA:
     ;int 0x16
     ;int 0x19
 
-
     ;Debug breakpoint.
     ;cli
     ;hlt
     ;jmp $
 ;--------------------------
-
 
 ;; PE signature for BL.BIN image.
 ;; Check if we have the PE signature at the beginning of the file.
@@ -267,4 +264,24 @@ SETVECT:
         MOV     ES:[BX+2], DS
         RET
 
+
+;--------------------------------------------------
+; get_random_byte - Reads multiple hardware ports
+; to generate a pseudo-random byte.
+;
+; Returns:
+;   AL = Sum of values read from four ports
+;--------------------------------------------------
+get_random_byte:
+    in al, 0x60       ; Read from keyboard controller
+    mov byte [.SaveIt], al 
+    in al, 0x40       ; Read from PIT timer counter
+    add byte [.SaveIt], al   
+    in al, 0x61       ; Read system control port (changes often)
+    add byte [.SaveIt], al     
+    in al, 0x62       ; Read another port for extra variability
+    add byte [.SaveIt], al     
+    mov al, byte [.SaveIt]
+    ret               ; Return with AL containing the sum
+.SaveIt: db 00
 

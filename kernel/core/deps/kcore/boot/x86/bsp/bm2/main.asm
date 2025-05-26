@@ -306,6 +306,44 @@ bm_main:
 ; ===========================================
 ; #test
 
+; Generate a signature.
+; Signature: 0xEE, 0xAA, 0xD8, 0x??
+; #todo: 
+; In the future we're gonna use some random value 
+; generated on the fly.
+    mov al, 0xEE
+    mov byte [CONFIG_BUFFER2 +0], al 
+    mov al, 0xAA
+    mov byte [CONFIG_BUFFER2 +1], al 
+    mov al, 0xD8
+    mov byte [CONFIG_BUFFER2 +2], al 
+    mov al, [bootmanagerDriveNumber]  ; Disk number from boot manager
+    mov byte [CONFIG_BUFFER2 +3], al 
+; Get one more byte. Return in AL.
+; See: finish.inc
+    call get_random_byte
+    mov byte [CONFIG_BUFFER2 + 4], al   ; Store the random result in your signature
+    call get_random_byte
+    mov byte [CONFIG_BUFFER2 + 5], al   ; Store the random result in your signature
+    call get_random_byte
+    mov byte [CONFIG_BUFFER2 + 6], al   ; Store the random result in your signature
+    call get_random_byte
+    mov byte [CONFIG_BUFFER2 + 7], al   ; Store the random result in your signature
+
+; Sector 4
+; Write disk configuration
+    MOV AH, 0x03            ; BIOS write sector function
+    MOV AL, 0x01            ; Write 1 sector
+    MOV CH, 0x00            ; Cylinder 0
+    MOV CL, 0x04            ; Sector 4 (1-based index)
+    MOV DH, 0x00            ; Head 0
+    MOV DL, [bootmanagerDriveNumber]  ; Disk number from boot manager
+    MOV BX, CONFIG_BUFFER2  ; Memory location containing the config data
+    INT 0x13                ; Call BIOS disk services
+
+; ===========================================
+; #test
+
 ; Byte 0: 
 ; Boot Mode (0x4D = Menu, 0x53 = Skip)
 ; Bytes 1-3: 
@@ -313,6 +351,8 @@ bm_main:
 ; Byte 4:    
 ; Graphics Mode (0x00 = 320x200, 0x01 = 640x480, 0x02 = 800x600)
 
+; Sector 2
+; Read boot configuration 
     MOV AH, 0x02        ; BIOS read sector function
     MOV AL, 0x01        ; Read 1 sector
     MOV CH, 0x00        ; Cylinder 0
@@ -357,8 +397,10 @@ MATCH_FOUND:
     ;JMP $
 
 ; Allocate 512 bytes for sector storage
-
 CONFIG_BUFFER: 
+    TIMES 512 DB 0
+; Allocate 512 bytes for sector storage
+CONFIG_BUFFER2: 
     TIMES 512 DB 0
 
 ; ++
