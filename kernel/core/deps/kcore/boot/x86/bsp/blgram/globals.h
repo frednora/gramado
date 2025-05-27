@@ -1,13 +1,25 @@
-// gdef.h
+// globals.h
 // Global definitions for the boot loader.
 // #ps Put this in the top of the includes.
 // 2016 - Created by Fred Nora.
 
-#ifndef __GDEF_H
-#define __GDEF_H    1
+#ifndef __GLOBALS_H
+#define __GLOBALS_H    1
 
 // Do we need to initialize the DE/.
 extern int initialize_de;
+
+
+// Variables for LFB Address support. 
+// See: globals.c
+extern unsigned long g_lbf_pa;    // LFB physical address.
+extern unsigned long g_lbf_va;    // LFB virtual address.
+
+// Variables for Disk signature support.
+// See: globals.c
+extern unsigned long g_DiskSignature;  // Base address for the table.
+extern unsigned long *g_disk_sig1;       // Signature 1
+extern unsigned long *g_disk_sig2;       // Signature 2
 
 
 //

@@ -30,9 +30,9 @@ void read_lba( unsigned long address, unsigned long lba )
             //ahci_read_sector(...)
             break;
 
+        // see: libata.c
         case CONTROLLER_TYPE_ATA:
-            // see: libata.c
-            printf("CONTROLLER_TYPE_ATA\n");
+            //printf("CONTROLLER_TYPE_ATA\n");
             ata_read_sector ( address, lba, 0, 0 );
             break;
         

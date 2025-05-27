@@ -454,7 +454,7 @@ fsLoadFile (
 // not found
 // Se o arquivo nao for encontrado.
 // file_not_found:
-    printf ("fsLoadFile: [FAIL] File not found ----------------------\n"); 
+    printf ("fsLoadFile: [FAIL] File not found\n"); 
     refresh_screen();
     while(1){}
     goto fail;
@@ -546,10 +546,9 @@ LOOP_next_entry:
  */
 
 // Read one sector.
-// Ler um setor. 
 // (data_area_base + next_cluster - 2)
 // 512 bytes por cluster.
-// See: hdd.c
+// See: storage.c
 
     read_lba ( 
         file_address, 
@@ -578,7 +577,7 @@ LOOP_next_entry:
     goto LOOP_next_entry;
 
 // ===================================
-// O arquivo n�o pode ser carregado.
+// Couldn't load the file.
 fail:
     printf ("fsLoadFile: Fail\n");
     refresh_screen ();

@@ -26,7 +26,7 @@ extern int current_mode;
 // Config
 #include "config/config.h" 
 // Globals
-#include "gdef.h"
+#include "globals.h"
 
 // Display info.
 // Came from boot manager.
@@ -351,31 +351,14 @@ extern unsigned long g_next_proc;
 extern unsigned long g_nova_mensagem;
 extern unsigned long next_address;  //??
 
-/*
- * Variables for task support.
- * @todo: N�o usar o termo task.
- */ 
-//unsigned long current_task;
 
-//unsigned long proximo;  //??
+// 
+// Structures for Boot Loader.
+//
 
 
-/*
- * Variables for LFB Address support. 
- */
-extern unsigned long g_lbf_pa;    //Endere�o F�sico do LFB.
-extern unsigned long g_lbf_va;    //Endere�o L�gico do LFB.
-extern unsigned long g_DiskSignature;  // Address of DiskSignature.
-
-/*
- * Structures for Boot Loader.
- */
-
-/*
- * system_d:
- *     Structure for global system informations.
- */
-
+// system_d:
+// Structure for global system informations.
 struct system_d
 {
     unsigned long processor_mode;        
@@ -576,16 +559,10 @@ void bl_die(void);
 // main.c
 void panic(const char *msg); 
 
-//
-// $
-// INITIALIZATION
-//
 
 #include "init.h"
 
-
-// main.c
-void bl_main(void);
+#include "blmain.h"
 
 //
 // End

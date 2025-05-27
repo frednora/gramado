@@ -52,7 +52,7 @@ CFLAGS = -m32 \
 myIncludes = -I ./ 
 
 # Objects 
-myObjects = head.o main.o globals.o \
+myObjects = head.o blmain.o globals.o \
 loader.o init.o ports.o x86.o \
 stdio.o stdlib.o string.o \
 pages.o heap.o \
@@ -70,7 +70,7 @@ bl-x86:
 
 # Head
 	$(NASM)  -I x86/  x86/head.s -f elf -o head.o
-	$(CC) -c main.c    $(myIncludes) $(CFLAGS) -o main.o 
+	$(CC) -c blmain.c  $(myIncludes) $(CFLAGS) -o blmain.o 
 
 	$(CC) -c abort.c   $(myIncludes) $(CFLAGS) -o abort.o
 	$(CC) -c globals.c $(myIncludes) $(CFLAGS) -o globals.o 
