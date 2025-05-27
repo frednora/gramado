@@ -1037,6 +1037,27 @@ int storageInitialize(void)
 // #bugbug
 // When the rest of the structure is initialized?
 
+
+//
+// Quick test. (#debug)
+//
+
+/*
+// #todo:
+// we're gonna probe the 4 ATA ports in order to find
+// this signature in one of the disks.
+    unsigned long *sig = (unsigned long *) bootblk.disk_signature_address;
+    // Print 8 bytes.
+    printk ("Address: %x | Disk signature: %x\n", 
+        bootblk.disk_signature_address, 
+        sig[0] );
+    refresh_screen();
+    while(1){}
+*/
+
+// ==================================================================
+// storage structure.
+
     storage = (void *) kmalloc( sizeof(struct storage_d) );
     if ((void *) storage == NULL){
        printk("init_storage_support: storage\n");

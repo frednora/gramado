@@ -10,17 +10,51 @@
 // The base address of the boot block.
 // virtual = physical.
 #define BootBlockVA    0x0000000000090000
-// --------------------------------------
-// Indexes into the boot block.
-// Each entry has 64bit.
-#define bbOffsetLFB_PA  0  // offset 0
-#define bbOffsetX       1  // offset 8
-#define bbOffsetY       2  // offset 16
-#define bbOffsetBPP     3  // offset 24
-#define bbLastValidPA   4  // offset 32  // Last valid physical address.
-#define bbGramadoMode   5  // offset 40  // jail, p1, home ...
-//#test
-#define bb_idePortNumber  6  // offset 48.
+
+/**********************************
+ * Boot Block Field Indexes
+ * -------------------------
+ * There are 8 fields in the boot block.
+ * Each field is 64 bits (8 bytes) in size.
+ *
+ * Byte offsets are computed as:
+ *    offset = Field_Index * 8
+ **********************************/
+
+// Field 0: Contains the LFB physical address.
+// Stored at bytes 0–7.
+#define bbOffsetLFB_PA   0   // Offset: 0  (0 * 8)
+
+// Field 1: Contains the X coordinate.
+// Stored at bytes 8–15.
+#define bbOffsetX        1   // Offset: 8  (1 * 8)
+
+// Field 2: Contains the Y coordinate.
+// Stored at bytes 16–23.
+#define bbOffsetY        2   // Offset: 16 (2 * 8)
+
+// Field 3: Contains the bits-per-pixel (BPP) value.
+// Stored at bytes 24–31.
+#define bbOffsetBPP      3   // Offset: 24 (3 * 8)
+
+// Field 4: Contains the last valid physical address information.
+// The lower 32 bits store the 32-bit physical address,
+// and the upper 32 bits (within the same 8-byte field) hold a complement (typically 0x00000000).
+// Stored at bytes 32–39.
+#define bbLastValidPA    4   // Offset: 32 (4 * 8)
+
+// Field 5: Specifies the Gramado mode (e.g., jail, p1, home, etc.).
+// Stored at bytes 40–47.
+#define bbGramadoMode    5   // Offset: 40 (5 * 8)
+
+// Field 6: (Deprecated) Previously held the IDE port number.
+// Stored at bytes 48–55.
+#define bb_idePortNumber 6   // Offset: 48 (6 * 8)
+
+// Field 7: Holds the boot disk signature provided by the blgram (from bm2).
+// Stored at bytes 56–63.
+#define bbDiskSignature  7   // Offset: 56 (7 * 8)
+
 // ...
 
 
@@ -48,6 +82,10 @@ struct bootblk_d
     // #test
     // The IDE port number given by the 32bit boot loader.
     unsigned long ide_port_number;
+
+// Let's save here the base address for the disk signature
+// that was injected into the disk during the boot phase.
+    unsigned long disk_signature_address;
 
     // ...
 };

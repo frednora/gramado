@@ -87,7 +87,8 @@ int gdefShowLogo=0;
 int gdefShowProgressBar=0;
 //...
 
-// See: gdef.h
+// Bootblock received from bm2.bin.
+// See: globals.h
 struct boot_block_d  BootBlock;
 
 int current_mode=0;
@@ -372,10 +373,10 @@ static unsigned long bl_setup_physical_memory(void)
 // ...
 
     unsigned long *LastValid = 
-        (unsigned long*) (0x00090000 + 32); 
+        (unsigned long*) (KPARAM_BOOTBLOCK_ADDRESS + 32);
     
     unsigned long *LastValidComplement = 
-        (unsigned long*) (0x00090000 + 36); 
+        (unsigned long*) (KPARAM_BOOTBLOCK_ADDRESS + 36); 
 
     LastValid[0]           = (unsigned long) __address;
     LastValidComplement[0] = (unsigned long) 0;
@@ -410,7 +411,15 @@ bl_clean_memory(
     register int i=0;
     unsigned long *CLEARBASE = (unsigned char *) start_address;
     int max_in_mb = 32;
-    int max = ( (1024 * 1024 * max_in_mb ) / 4 );  // (32mb/4)
+    // (32mb/4)
+    int max = ( (1024 * 1024 * max_in_mb ) / 4 );
+// Each MB equals 1 << 20 bytes.
+// Dividing by 4 is equivalent to shifting right by 2 bits.
+// Thus, multiplying max_in_mb MB by (1 << 20) and then dividing by 4
+// is equivalent to:
+//   max = max_in_mb * (1 << (20 - 2))
+//   max = max_in_mb << 18
+// int max = max_in_mb << 18;
 
 // Limpamos somente se está dentro da área
 // previamente descoberta.
@@ -455,16 +464,16 @@ static int bl_load_kernel_image_for_de(void)
 // essa função aborta ao primeiro sinal de perigo.
 // See: loader.c
 
-    Status = (int) elfLoadKernelImage(
-                       image_pathname_de, 
-                       image_default_pathname_de );
+    Status = 
+        (int) elfLoadKernelImage(
+                image_pathname_de, 
+                image_default_pathname_de );
     if (Status < 0){
-        printf ("bl_load_kernel_image_for_de: elfLoadKernelImage fail\n");
+        printf ("bl_load_kernel_image_for_de: on elfLoadKernelImage()\n");
         goto fail;
     }
 
-    // OK
-    return (int) Status;
+    return (int) Status;  // OK
 
 fail:
     refresh_screen();
@@ -701,6 +710,23 @@ void bl_main(void)
     //printf("blgram: Disk signature 2: %x\n", g_disk_sig2[0] );
     //refresh_screen();
     //while(1){}
+
+
+// ------------------------------------------
+// #test
+// Passing to the kernel the pointer to the signature bia bootblock.
+// See: kparam.h
+    unsigned long *sig_addres = 
+        (unsigned long*) (KPARAM_BOOTBLOCK_ADDRESS + 56);
+    unsigned long *sig_addres_complement = 
+        (unsigned long*) (KPARAM_BOOTBLOCK_ADDRESS + 56 + 4); 
+
+// Passing to the kernel the pointer to the signature bia bootblock.
+// See: kparam.h
+    sig_addres[0]            = (unsigned long) g_DiskSignature;
+    sig_addres_complement[0] = (unsigned long) 0;
+// ------------------------------------------
+
 
 // -- #bugbug -----------------------------------------------------
 

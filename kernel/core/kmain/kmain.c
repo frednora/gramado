@@ -116,6 +116,9 @@ int dead_thread_collector_flag=0;
 // head_64.asm is given us these two values.
 // See: head_64.asm.
 unsigned long magic=0;
+// Saving the bootblock address passed by the blgram.
+// But we already know it. 
+// See: BootBlockVA in bootblk.h
 unsigned long saved_bootblock_base=0;
 
 
@@ -434,13 +437,20 @@ static int earlyinit_SetupBootblock(void)
 
 // -------------------------
 // System info
-    bootblk.gramado_mode  = (unsigned long) xxxxBootBlock[bbGramadoMode];
+    bootblk.gramado_mode = (unsigned long) xxxxBootBlock[bbGramadoMode];
 // Gramado mode. (jail, p1, home ...)
 // Save global variable.
     current_mode = (unsigned long) bootblk.gramado_mode;
 
 // 48
-    bootblk.ide_port_number  = (unsigned long) xxxxBootBlock[bb_idePortNumber];
+    bootblk.ide_port_number = (unsigned long) xxxxBootBlock[bb_idePortNumber];
+
+
+// ---------------------
+// #test
+// Just saving it for now. We're gnna use it later.
+    bootblk.disk_signature_address = 
+        (unsigned long) xxxxBootBlock[bbDiskSignature];
 
 // ---------------------
 // #note
@@ -922,6 +932,7 @@ void I_kmain(int arch_type)
     earlyinit();
     gramk_update_progress_bar(5);
     //while(1){}
+
 
 //
 // Booting

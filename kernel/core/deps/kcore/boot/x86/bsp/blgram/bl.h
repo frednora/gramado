@@ -28,6 +28,10 @@ extern int current_mode;
 // Globals
 #include "globals.h"
 
+// The parameters passed from this bootloader to the kernel image.
+#include "kparam.h"
+
+
 // Display info.
 // Came from boot manager.
 extern unsigned long SavedX;

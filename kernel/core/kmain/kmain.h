@@ -5,9 +5,11 @@
  *     2015 - Created by Fred Nora.
  */
 
-#ifndef __KE_INIT_H
-#define __KE_INIT_H    1
+#ifndef __KMAIN_H
+#define __KMAIN_H    1
 
+// Saving the bootblock address passed by the blgram.
+extern unsigned long saved_bootblock_base;
 
 // Initialization support.
 struct initialization_d

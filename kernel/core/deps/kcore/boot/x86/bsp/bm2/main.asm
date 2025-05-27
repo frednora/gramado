@@ -397,9 +397,12 @@ MATCH_FOUND:
     ;JMP $
 
 ; Allocate 512 bytes for sector storage
+DebugBuffer01: db "CONFIG_BUFFER"
 CONFIG_BUFFER: 
     TIMES 512 DB 0
+
 ; Allocate 512 bytes for sector storage
+DebugBuffer02: db "CONFIG_BUFFER2"
 CONFIG_BUFFER2: 
     TIMES 512 DB 0
 

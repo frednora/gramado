@@ -9,7 +9,7 @@ __HEAD
 
 [bits 64]
 
-; See: init.c
+; See: kmain.c
 extern _saved_bootblock_base
 extern _magic
 extern _I_kmain
@@ -2534,6 +2534,8 @@ align 4
 ; Startup routine called by the entry point.
 align 4
 DEBUG_START: db "START"
+
+; =================================================
 align 4
 START:
 ; #todo
