@@ -21,6 +21,18 @@ extern unsigned long g_DiskSignature;  // Base address for the table.
 extern unsigned long *g_disk_sig1;       // Signature 1
 extern unsigned long *g_disk_sig2;       // Signature 2
 
+// #todo #test
+struct ata_boot_disk_info_d
+{
+    // Current IDE port index (0-3, see ata_port[4])
+    int port;
+
+    // Current selected channel (0=Primary, 1=Secondary) and device (0=Master, 1=Slave)
+    int channel;  // 0: Primary, 1: Secondary
+    int device;   // 0: Master,  1: Slave
+};
+extern struct ata_boot_disk_info_d  ata_boot_disk_info;
+
 
 //
 // The boot block structure.

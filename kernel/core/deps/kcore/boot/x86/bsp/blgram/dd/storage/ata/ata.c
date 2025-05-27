@@ -236,6 +236,7 @@ static int __detect_device_type(uint8_t nport);
 
 int __ata_identify_device(char port);
 
+static int __ata_probe_boot_disk_signature(void);
 static int __ata_initialize_controller(void);
 
 // Inicializa o IDE e mostra informações sobre o disco.
@@ -1845,6 +1846,114 @@ fail:
     return (int) -1;
 }
 
+// Called to probe for the boot disk signature into all the 4 ports. 
+static int __ata_probe_boot_disk_signature(void)
+{
+    register int i=0;
+
+// #test
+// Is this a good moment to check what is the ATA port 
+// where is the disk that we booted from?
+// Goal:
+// + Read a given sector from all the 4 ports.
+// + Check if the signature found in the disk 
+//   maches with the own we got from the boot manager.
+//   In this case, it means that we are in the correct boot disk.
+
+    int idePort = g_current_ide_port;          // Port index (0-3)
+    //int ideChannel = g_current_ide_channel;  // 2 channels
+    int isSlave = g_current_ide_device;     // 0=master, 1=slave
+
+    static char sig_buffer[512];
+
+    clear_backbuffer();
+    refresh_screen();
+
+    for (i=0; i<4; i++){
+
+    bzero(sig_buffer,512); // Crear the local buffer for current use.
+
+    idePort = i;
+    g_current_ide_port = i;
+    switch (idePort)
+    {
+        // Primary master
+        case 0:
+            g_current_ide_channel = 0;
+            g_current_ide_device = 0;  // Not slave
+		    break;
+        // Primary slave
+        case 1:
+            g_current_ide_channel = 0; 
+            g_current_ide_device = 1;  // Slave
+            break;
+        // Secondary master
+        case 2:
+            g_current_ide_channel = 1;
+            g_current_ide_device = 0;  // Not slave
+            break;
+        // Secondary slave
+        case 3:
+            g_current_ide_channel = 1; 
+            g_current_ide_device = 1;  // Slave
+            break;
+        default:
+            // #debug
+            printf ("__ata_probe_boot_disk_signature: Invalid port number\n");
+            refresh_screen();
+            while(1){}
+            break;
+    };
+    isSlave = g_current_ide_device;
+
+    // Read from the curent port.
+    // see: libata.c
+    libata_pio_rw_sector ( 
+        (unsigned long) sig_buffer,  // Buffer
+        (unsigned long) 0x04 -1,     // LBA ok
+        (int) idePort,               // We have 4 valid ports.
+        (int) isSlave );             // Slave or not.
+
+    // Print the buffer.
+    printf("\n");
+    unsigned long *s1 = (unsigned long *) &sig_buffer[0];
+    unsigned long *s2 = (unsigned long *) &sig_buffer[4];
+    printf("Port %d: Disk signature 1: %x\n", i, s1[0] );// first dword
+    printf("Port %d: Disk signature 2: %x\n", i, s2[0] );// second dword
+    refresh_screen();
+
+    // Disk found!
+    if ( g_disk_sig1[0] == s1[0] &&
+         g_disk_sig2[0] == s2[0] )
+    {
+        // Update the structure to identify the boot disk 
+        // and its done.
+        ata_boot_disk_info.port    = (int) g_current_ide_port;
+        ata_boot_disk_info.channel = (int) g_current_ide_channel;
+        ata_boot_disk_info.device  = (int) g_current_ide_device;
+
+        printf("Signature found in: port=%d ch=%d dev=%d\n",
+            ata_boot_disk_info.port,
+            ata_boot_disk_info.channel,
+            ata_boot_disk_info.device );
+        
+        refresh_screen();      
+        //while(1){}
+
+        // Done
+        // #todo:
+        // OK, it's working,
+        // now we gotta recreate this routine into the 
+        // kernel image too.
+        return 0;
+    }
+
+    };
+
+fail:
+    return (int) -1;
+}
+
 /*
  * __ata_initialize_controller
  *   Initializes the ATA controller and enumerates all possible devices on all 4 ports.
@@ -1853,6 +1962,7 @@ fail:
  */
 static int __ata_initialize_controller(void)
 {
+    register int i=0;
     int port=0;
 
     // #test
@@ -1910,7 +2020,20 @@ static int __ata_initialize_controller(void)
         __ata_identify_device(port);
     };
 
-    return 0;
+//=======================================================
+// Probe for the boot disk signature into all the 4 ports. 
+    int disk_ok = -1;
+    disk_ok = (int) __ata_probe_boot_disk_signature();
+    if (disk_ok < 0){
+        printf("__ata_initialize_controller: Boot disk not found\n");
+        bl_die();
+    }
+
+    //printf("breakpoint\n");
+    //refresh_screen();
+    //while(1){}
+
+    return 0; // ok
 }
 
 //
@@ -1996,37 +2119,37 @@ static int __ata_probe_controller(int ataflag)
 // Primary Slave,    also called SATA2.
 // Secondary Master, also called SATA3.
 // Secondary Slave,  also called SATA4.
-	
-	switch (g_current_ide_port)
-	{
+
+    switch (g_current_ide_port)
+    {
         // Primary master
-		case 0:
-		    g_current_ide_channel = 0;
+        case 0:
+            g_current_ide_channel = 0;
             g_current_ide_device = 0;  // Not slave
 		    break;
         // Primary slave
-		case 1:
-		    g_current_ide_channel = 0; 
+        case 1:
+            g_current_ide_channel = 0; 
             g_current_ide_device = 1;  // Slave
-		    break;
+            break;
         // Secondary master
-		case 2:
-		    g_current_ide_channel = 1;
+        case 2:
+            g_current_ide_channel = 1;
             g_current_ide_device = 0;  // Not slave
-		    break;
-        // SEcondary slave
-		case 3:
-		    g_current_ide_channel = 1; 
+            break;
+        // Secondary slave
+        case 3:
+            g_current_ide_channel = 1; 
             g_current_ide_device = 1;  // Slave
-		    break;
-		default:
-		    // #debug
-			printf ("Invalid IDE port number\n");
-			refresh_screen();
-			while(1){}
-			goto fail;
-			break;
-	};
+            break;
+        default:
+            // #debug
+            printf ("Invalid IDE port number\n");
+            refresh_screen();
+            while(1){}
+            goto fail;
+            break;
+    };
 
 // ===============================================================
 
@@ -2099,39 +2222,38 @@ static int __ata_probe_controller(int ataflag)
     ATA_BAR4 = ( ata_pci.bar4 & ~0x7 ) + ATA_IDE_BAR4 * ( !ata_pci.bar4 );
     ATA_BAR5 = ( ata_pci.bar5 & ~0xf ) + ATA_IDE_BAR5 * ( !ata_pci.bar5 );
 
-// Saving the 'port addresses' into the structure 
-// for future use.
-// See:
-// https://wiki.osdev.org/PCI_IDE_Controller
 
+// Saving the 'port addresses' into the structure for future use.
+// Configure ide_port[] base addresses for all 4 ports
 // IDE Interface:
 // Primary Master Drive.
 // Primary Slave Drive.
 // Secondary Master Drive.
 // Secondary Slave Drive.
-
 // Serial IDE
 // Primary Master,   also called SATA1.
 // Primary Slave,    also called SATA2.
 // Secondary Master, also called SATA3.
 // Secondary Slave,  also called SATA4.
+// See: 
+// https://wiki.osdev.org/PCI_IDE_Controller
 
-    // Configure ide_port[] base addresses for all 4 ports
+// 0x1F0, Primary Command (Master)
+    ide_port[0].base_port = 
+        (unsigned short) ATA_BAR0_PRIMARY_COMMAND_PORT;
+// 0x1F0, Primary Command (Slave)
+    ide_port[1].base_port = 
+        (unsigned short) ATA_BAR0_PRIMARY_COMMAND_PORT;
 
-    // Wrong #bugbug
-    //ide_port[0].base_port = (unsigned short) ATA_BAR0_PRIMARY_COMMAND_PORT; // Primary Command
-    //ide_port[1].base_port = (unsigned short) ATA_BAR1_PRIMARY_CONTROL_PORT; // Primary Control
-    //ide_port[2].base_port = (unsigned short) ATA_BAR2_SECONDARY_COMMAND_PORT; // Secondary Command
-    //ide_port[3].base_port = (unsigned short) ATA_BAR3_SECONDARY_CONTROL_PORT; // Secondary Control
+// 0x170, Secondary Command (Master)
+    ide_port[2].base_port = 
+        (unsigned short) ATA_BAR2_SECONDARY_COMMAND_PORT;
+// 0x170, Secondary Command (Slave)
+    ide_port[3].base_port = 
+        (unsigned short) ATA_BAR2_SECONDARY_COMMAND_PORT;
 
-    // #right it is working
-    ide_port[0].base_port = (unsigned short) ATA_BAR0_PRIMARY_COMMAND_PORT;   // 0x1F0, Primary Command (Master)
-    ide_port[1].base_port = (unsigned short) ATA_BAR0_PRIMARY_COMMAND_PORT;   // 0x1F0, Primary Command (Slave)
-    ide_port[2].base_port = (unsigned short) ATA_BAR2_SECONDARY_COMMAND_PORT; // 0x170, Secondary Command (Master)
-    ide_port[3].base_port = (unsigned short) ATA_BAR2_SECONDARY_COMMAND_PORT; // 0x170, Secondary Command (Slave)
-
-
-// TODO: Tem ainda a porta do dma na bar4 e bar5
+// #todo: 
+// BAR4 and BAR5 for DMA support.
     // ATA_BAR4
     // ATA_BAR5
 

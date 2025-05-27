@@ -4,7 +4,20 @@
 #ifndef __DD_HDD_H
 #define __DD_HDD_H    1
 
+// Operation codes for internal use.
+#define __OPERATION_PIO_READ  1000
+#define __OPERATION_PIO_WRITE  2000
+
 // --------------------------
+
+
+// Wrapper
+int 
+libata_pio_rw_sector ( 
+    unsigned long buffer, 
+    unsigned long lba, 
+    int port_index,     
+    int slave );
 
 void 
 ata_read_hd_sector ( 

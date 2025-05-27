@@ -66,10 +66,6 @@ int hddStatus=0;
 int hddError=0;
 // ...
 
-// Operation codes for internal use.
-#define __OPERATION_PIO_READ  1000
-#define __OPERATION_PIO_WRITE  2000
-
 // ================================================
 
 /*
@@ -570,6 +566,32 @@ __OK:
     return 0;
 }
 
+// Wrapper
+int 
+libata_pio_rw_sector ( 
+    unsigned long buffer, 
+    unsigned long lba, 
+    int port_index,     
+    int slave )  
+{
+
+// #todo: Filters
+
+    int rv=0;
+    static int Operation = __OPERATION_PIO_READ;
+
+    // Read from the curent port.
+    rv = 
+    (int) __ata_pio_rw_sector ( 
+        (unsigned long) buffer,  // Buffer
+        (unsigned long) lba,        // LBA
+        (int) Operation, 
+        (int) port_index,               // We have 4 valid ports.
+        (int) slave );             // Slave or not.
+
+    return (int) rv;
+}
+
 /* ========================
    Entry Points
    ======================== */
@@ -589,9 +611,9 @@ ata_read_sector (
     unsigned long cx, 
     unsigned long dx )
 {
-    static int Operation = __OPERATION_PIO_READ;  //0x20;  // Read
+    static int Operation = __OPERATION_PIO_READ;
 
-    int idePort      = g_current_ide_port;     // Port index (0-3)
+    int idePort = g_current_ide_port;     // Port index (0-3)
 
     // Channel and device number
 // #bugbug 
