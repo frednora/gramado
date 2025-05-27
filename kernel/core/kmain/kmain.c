@@ -448,8 +448,9 @@ static int earlyinit_SetupBootblock(void)
 
 // ---------------------
 // #test
+// The signature per se.
 // Just saving it for now. We're gnna use it later.
-    bootblk.disk_signature_address = 
+    bootblk.disk_signature = 
         (unsigned long) xxxxBootBlock[bbDiskSignature];
 
 // ---------------------

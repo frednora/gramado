@@ -83,9 +83,8 @@ struct bootblk_d
     // The IDE port number given by the 32bit boot loader.
     unsigned long ide_port_number;
 
-// Let's save here the base address for the disk signature
-// that was injected into the disk during the boot phase.
-    unsigned long disk_signature_address;
+// The signature per se.
+    unsigned long disk_signature;
 
     // ...
 };

@@ -1042,18 +1042,28 @@ int storageInitialize(void)
 // Quick test. (#debug)
 //
 
-/*
+// #test
+// Receiving the signature per se, not the address anymore.
 // #todo:
 // we're gonna probe the 4 ATA ports in order to find
 // this signature in one of the disks.
-    unsigned long *sig = (unsigned long *) bootblk.disk_signature_address;
+
+
+    // >>>>> Not the address <<<<<
     // Print 8 bytes.
-    printk ("Address: %x | Disk signature: %x\n", 
-        bootblk.disk_signature_address, 
-        sig[0] );
+    // #bugbug: >>> printk is not able to print 64bit values.
+    unsigned char *value64bit = (unsigned char *) &bootblk.disk_signature;
+    printk ("The signature: %x\n", value64bit[0] );
+    printk ("The signature: %x\n", value64bit[1] );
+    printk ("The signature: %x\n", value64bit[2] );
+    printk ("The signature: %x\n", value64bit[3] );
+    printk ("The signature: %x\n", value64bit[4] );
+    printk ("The signature: %x\n", value64bit[5] );
+    printk ("The signature: %x\n", value64bit[6] );
+    printk ("The signature: %x\n", value64bit[7] );
     refresh_screen();
-    while(1){}
-*/
+    //while(1){}
+
 
 // ==================================================================
 // storage structure.

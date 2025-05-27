@@ -713,18 +713,21 @@ void bl_main(void)
 
 
 // ------------------------------------------
+// ------------------------------------------
 // #test
 // Passing to the kernel the pointer to the signature bia bootblock.
 // See: kparam.h
-    unsigned long *sig_addres = 
+    unsigned long *sig1 = 
         (unsigned long*) (KPARAM_BOOTBLOCK_ADDRESS + 56);
-    unsigned long *sig_addres_complement = 
+    unsigned long *sig2 = 
         (unsigned long*) (KPARAM_BOOTBLOCK_ADDRESS + 56 + 4); 
 
-// Passing to the kernel the pointer to the signature bia bootblock.
-// See: kparam.h
-    sig_addres[0]            = (unsigned long) g_DiskSignature;
-    sig_addres_complement[0] = (unsigned long) 0;
+// #test
+// Passing the signature per se. Not the address anymore.
+    sig1[0] = (unsigned long) g_disk_sig1[0];
+    sig2[0] = (unsigned long) g_disk_sig2[0];
+// ------------------------------------------
+
 // ------------------------------------------
 
 
