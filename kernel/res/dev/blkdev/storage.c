@@ -98,6 +98,7 @@ static int __ShowVolumeInfo(int index);
 static int disk_init(void);
 static int volume_init(void);
 
+static int __validate_disksignature_from_bootblock(void);
 
 // Get the number of sectors in the boot disk
 // and save it into a global variable, for now.
@@ -1020,6 +1021,48 @@ fail:
     return FALSE;
 }
 
+static int __validate_disksignature_from_bootblock(void)
+{
+// This signature came from bootblock.
+// We're gonna use it to compare agains the only in the ATA disks.
+
+//
+// Quick test. (#debug)
+//
+
+// #test
+// Receiving the signature per se, not the address anymore.
+// #todo:
+// we're gonna probe the 4 ATA ports in order to find
+// this signature in one of the disks.
+
+    // >>>>> Not the address <<<<<
+    // Print 8 bytes.
+    // #bugbug: >>> printk is not able to print 64bit values.
+    unsigned char *value64bit = (unsigned char *) &bootblk.disk_signature;
+
+    if (value64bit[0] != 0xEE)
+        panic ("Signature 0xEE");
+    if (value64bit[1] != 0xAA)
+        panic ("Signature 0xAA");
+    if (value64bit[2] != 0xD8)
+        panic ("Signature 0xD8");
+
+    /*
+    printk ("The signature: %x\n", value64bit[0] );
+    printk ("The signature: %x\n", value64bit[1] );
+    printk ("The signature: %x\n", value64bit[2] );
+    printk ("The signature: %x\n", value64bit[3] );
+    printk ("The signature: %x\n", value64bit[4] );
+    printk ("The signature: %x\n", value64bit[5] );
+    printk ("The signature: %x\n", value64bit[6] );
+    printk ("The signature: %x\n", value64bit[7] );
+    //refresh_screen();
+    //while(1){}
+    */
+
+    return 0;  //ok
+}
 //
 // $
 // INITIALIZATION
@@ -1037,33 +1080,8 @@ int storageInitialize(void)
 // #bugbug
 // When the rest of the structure is initialized?
 
-
-//
-// Quick test. (#debug)
-//
-
-// #test
-// Receiving the signature per se, not the address anymore.
-// #todo:
-// we're gonna probe the 4 ATA ports in order to find
-// this signature in one of the disks.
-
-
-    // >>>>> Not the address <<<<<
-    // Print 8 bytes.
-    // #bugbug: >>> printk is not able to print 64bit values.
-    unsigned char *value64bit = (unsigned char *) &bootblk.disk_signature;
-    printk ("The signature: %x\n", value64bit[0] );
-    printk ("The signature: %x\n", value64bit[1] );
-    printk ("The signature: %x\n", value64bit[2] );
-    printk ("The signature: %x\n", value64bit[3] );
-    printk ("The signature: %x\n", value64bit[4] );
-    printk ("The signature: %x\n", value64bit[5] );
-    printk ("The signature: %x\n", value64bit[6] );
-    printk ("The signature: %x\n", value64bit[7] );
-    refresh_screen();
-    //while(1){}
-
+// check bootdisk signature from bootblock.
+    __validate_disksignature_from_bootblock();
 
 // ==================================================================
 // storage structure.

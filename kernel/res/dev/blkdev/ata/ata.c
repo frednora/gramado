@@ -1488,17 +1488,18 @@ static int __ata_initialize(int ataflag)
 // de acessarmos outros discos.
 // See: config.h
 
-
     ata_set_boottime_ide_port_index(__IDE_PORT);
     ata_set_current_ide_port_index(__IDE_PORT);
 
 /*
     //#debug
-    printk ("kernel CONFIG:     ATA port: %d\n",boottime_ideport_index);   // from config.h
+    printk ("kernel CONFIG:  ATA port: %d\n",boottime_ideport_index);   // from config.h
     printk ("kernel bootblk: ATA port: %d\n",bootblk.ide_port_number);  // from bootblock, from bl.bin
     refresh_screen();
     while(1){}
 */
+
+
 
 // ============================================
 
