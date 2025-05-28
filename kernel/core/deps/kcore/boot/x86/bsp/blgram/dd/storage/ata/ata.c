@@ -101,6 +101,9 @@ static _u16 *ata_devinfo_buffer;
 _u8 ata_record_dev=0;
 _u8 ata_record_channel=0;
 
+// The current port information
+struct ata_current_port_d  ATACurrentPort;
+
 // Main controller structure.
 struct ata_controller_d  AtaController;
 
@@ -113,12 +116,6 @@ struct ata_port_d  ata_port[4];
 struct ide_port_d  ide_port[4];
 
 // ===== IDE Port and Channel State Management =====
-
-// Current selected channel (0=Primary, 1=Secondary) and device (0=Master, 1=Slave)
-int g_current_ide_channel=0;  // 0: Primary, 1: Secondary
-int g_current_ide_device=0;   // 0: Master,  1: Slave
-// Current IDE port index (0-3, see ata_port[4])
-int g_current_ide_port = 0;
 
 // IRQ handler address (optional, for custom vectoring)
 unsigned long ide_handler_address=0;
@@ -1860,9 +1857,9 @@ static int __ata_probe_boot_disk_signature(void)
 //   maches with the own we got from the boot manager.
 //   In this case, it means that we are in the correct boot disk.
 
-    int idePort = g_current_ide_port;          // Port index (0-3)
-    //int ideChannel = g_current_ide_channel;  // 2 channels
-    int isSlave = g_current_ide_device;     // 0=master, 1=slave
+    int idePort = ATACurrentPort.g_current_ide_port;          // Port index (0-3)
+    //int ideChannel = ATACurrentPort.g_current_ide_channel;  // 2 channels
+    int isSlave = ATACurrentPort.g_current_ide_device;        // 0=master, 1=slave
 
     static char sig_buffer[512];
 
@@ -1874,28 +1871,28 @@ static int __ata_probe_boot_disk_signature(void)
     bzero(sig_buffer,512); // Crear the local buffer for current use.
 
     idePort = i;
-    g_current_ide_port = i;
+    ATACurrentPort.g_current_ide_port = i;
     switch (idePort)
     {
         // Primary master
         case 0:
-            g_current_ide_channel = 0;
-            g_current_ide_device = 0;  // Not slave
+            ATACurrentPort.g_current_ide_channel = 0;
+            ATACurrentPort.g_current_ide_device = 0;  // Not slave
 		    break;
         // Primary slave
         case 1:
-            g_current_ide_channel = 0; 
-            g_current_ide_device = 1;  // Slave
+            ATACurrentPort.g_current_ide_channel = 0; 
+            ATACurrentPort.g_current_ide_device = 1;  // Slave
             break;
         // Secondary master
         case 2:
-            g_current_ide_channel = 1;
-            g_current_ide_device = 0;  // Not slave
+            ATACurrentPort.g_current_ide_channel = 1;
+            ATACurrentPort.g_current_ide_device = 0;  // Not slave
             break;
         // Secondary slave
         case 3:
-            g_current_ide_channel = 1; 
-            g_current_ide_device = 1;  // Slave
+            ATACurrentPort.g_current_ide_channel = 1; 
+            ATACurrentPort.g_current_ide_device = 1;  // Slave
             break;
         default:
             // #debug
@@ -1904,7 +1901,7 @@ static int __ata_probe_boot_disk_signature(void)
             while(1){}
             break;
     };
-    isSlave = g_current_ide_device;
+    isSlave = ATACurrentPort.g_current_ide_device;
 
     // Read from the curent port.
     // see: libata.c
@@ -1926,11 +1923,10 @@ static int __ata_probe_boot_disk_signature(void)
     if ( g_disk_sig1[0] == s1[0] &&
          g_disk_sig2[0] == s2[0] )
     {
-        // Update the structure to identify the boot disk 
-        // and its done.
-        ata_boot_disk_info.port    = (int) g_current_ide_port;
-        ata_boot_disk_info.channel = (int) g_current_ide_channel;
-        ata_boot_disk_info.device  = (int) g_current_ide_device;
+        // Update the structure to identify the boot disk and its done.
+        ata_boot_disk_info.port    = (int) ATACurrentPort.g_current_ide_port;
+        ata_boot_disk_info.channel = (int) ATACurrentPort.g_current_ide_channel;
+        ata_boot_disk_info.device  = (int) ATACurrentPort.g_current_ide_device;
 
         printf("Signature found in: port=%d ch=%d dev=%d\n",
             ata_boot_disk_info.port,
@@ -2066,15 +2062,6 @@ static int __ata_probe_controller(int ataflag)
 
 // ================================================
 
-// #importante 
-// HACK HACK
-// usando as defini��es feitas em config.h
-// at� que possamos encontrar o canal e o dispositivo certos.
-// __IDE_PORT indica qual � o canal.
-// __IDE_SLAVE indica se � master ou slave.
-// ex: primary/master.
-// See: config.h
-
 // #importante:
 // Veja no kernel.
 // Fizemos de um jeito diferente no driver que est'a no kernel.
@@ -2084,11 +2071,11 @@ static int __ata_probe_controller(int ataflag)
 
     // #important:
     // Use a pre-set config for which port is primary (from config.h)
-    g_current_ide_port = __CONFIG_IDE_PORT;
+    ATACurrentPort.g_current_ide_port = __CONFIG_DEFAULT_ATA_PORT;
 
     /*
     //#debug
-    printf ("bl CONFIG:     IDE port: %d\n",g_current_ide_port);   // from config.h
+    printf ("bl CONFIG: IDE port: %d\n",ATACurrentPort.g_current_ide_port);   // from config.h
     //printf ("bl xBootBlock: IDE port: %d\n",xBootBlock.ide_port_number);  // from bootblock, from bl.bin
     refresh_screen();
     while(1){}
@@ -2102,7 +2089,7 @@ static int __ata_probe_controller(int ataflag)
     unsigned long *bb = (unsigned long *) (0x90000 + 48);
     bb[0] = 0; // clean 4 bytes
     bb[1] = 0; // clean 4 bytes
-    bb[0] = (unsigned long) (g_current_ide_port & 0xff);
+    bb[0] = (unsigned long) (ATACurrentPort.g_current_ide_port & 0xff);
 */
 
 // See:
@@ -2120,27 +2107,27 @@ static int __ata_probe_controller(int ataflag)
 // Secondary Master, also called SATA3.
 // Secondary Slave,  also called SATA4.
 
-    switch (g_current_ide_port)
+    switch (ATACurrentPort.g_current_ide_port)
     {
         // Primary master
         case 0:
-            g_current_ide_channel = 0;
-            g_current_ide_device = 0;  // Not slave
+            ATACurrentPort.g_current_ide_channel = 0;
+            ATACurrentPort.g_current_ide_device = 0;  // Not slave
 		    break;
         // Primary slave
         case 1:
-            g_current_ide_channel = 0; 
-            g_current_ide_device = 1;  // Slave
+            ATACurrentPort.g_current_ide_channel = 0; 
+            ATACurrentPort.g_current_ide_device = 1;  // Slave
             break;
         // Secondary master
         case 2:
-            g_current_ide_channel = 1;
-            g_current_ide_device = 0;  // Not slave
+            ATACurrentPort.g_current_ide_channel = 1;
+            ATACurrentPort.g_current_ide_device = 0;  // Not slave
             break;
         // Secondary slave
         case 3:
-            g_current_ide_channel = 1; 
-            g_current_ide_device = 1;  // Slave
+            ATACurrentPort.g_current_ide_channel = 1; 
+            ATACurrentPort.g_current_ide_device = 1;  // Slave
             break;
         default:
             // #debug

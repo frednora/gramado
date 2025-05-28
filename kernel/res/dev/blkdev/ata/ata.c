@@ -22,21 +22,10 @@ static unsigned short *ata_devinfo_buffer;
 unsigned char ata_record_dev=0;
 unsigned char ata_record_channel=0;
 
-// #important
-// Qual é o canal e o dispositivo usado no momento
-// pela rotina de leitura e escrita.
-// See: config.h ata.c hdd.c
-int g_current_ide_port_index=0;
 
-// #important
-// Qual é o canal e o dispositivo usado no momento do boot 
-// pela rotina de leitura e escrita.
-// See: config.h ata.c hdd.c
-int g_boottime_ide_port_index=0;
+// The current port information
+struct ata_current_port_d  ATACurrentPort;
 
-
-int g_current_ide_channel=0;
-int g_current_ide_device=0;
 
 // base address 
 // BAR0 is the start of the I/O ports used by the primary channel.
@@ -372,22 +361,22 @@ inline void atapi_pio_read ( int p, void *buffer, uint32_t bytes )
 
 void ata_set_boottime_ide_port_index(unsigned int port_index)
 {
-    g_boottime_ide_port_index = (int) port_index;
+    ATACurrentPort.g_boottime_ide_port_index = (int) port_index;
 }
 
 int ata_get_boottime_ide_port_index(void)
 {
-    return (int) g_boottime_ide_port_index;
+    return (int) ATACurrentPort.g_boottime_ide_port_index;
 }
 
 void ata_set_current_ide_port_index(unsigned int port_index)
 {
-    g_current_ide_port_index = (int) port_index;
+    ATACurrentPort.g_current_ide_port_index = (int) port_index;
 }
 
 int ata_get_current_ide_port_index(void)
 {
-    return (int) g_current_ide_port_index;
+    return (int) ATACurrentPort.g_current_ide_port_index;
 }
 
 // dev_switch:
@@ -1457,12 +1446,12 @@ static int __ata_probe_boot_disk_signature(void)
 //   maches with the own we got from the boot manager.
 //   In this case, it means that we are in the correct boot disk.
 
-    //int idePort = g_current_ide_port_index;          // Port index (0-3)
-    //int ideChannel = g_current_ide_channel;  // 2 channels
-    //int isSlave = g_current_ide_device;     // 0=master, 1=slave
-    
-    int idePort = 0; // Default
-    int isSlave = 0;  //Default
+    //int idePort    = ATACurrentPort.g_current_ide_port_index;  // Port index (0-3)
+    //int ideChannel = ATACurrentPort.g_current_ide_channel;     // 2 channels
+    //int isSlave    = ATACurrentPort.g_current_ide_device;      // 0=master, 1=slave
+
+    int idePort = 0;  // Default
+    int isSlave = 0;  // Default
 
     static char sig_buffer[512];
 
@@ -1473,31 +1462,31 @@ static int __ata_probe_boot_disk_signature(void)
 
     bzero(sig_buffer,512); // Crear the local buffer for current use.
 
-    idePort = i;                    // Current
-    g_current_ide_port_index = i;   // Current
-    g_boottime_ide_port_index = i;  // Current
+    idePort = i;                                   // Current
+    ATACurrentPort.g_current_ide_port_index  = i;  // Current
+    ATACurrentPort.g_boottime_ide_port_index = i;  // Current
 
     switch (idePort)
     {
         // Primary master
         case 0:
-            g_current_ide_channel = 0;
-            g_current_ide_device = 0;  // Not slave
+            ATACurrentPort.g_current_ide_channel = 0;
+            ATACurrentPort.g_current_ide_device = 0;  // Not slave
 		    break;
         // Primary slave
         case 1:
-            g_current_ide_channel = 0; 
-            g_current_ide_device = 1;  // Slave
+            ATACurrentPort.g_current_ide_channel = 0; 
+            ATACurrentPort.g_current_ide_device = 1;  // Slave
             break;
         // Secondary master
         case 2:
-            g_current_ide_channel = 1;
-            g_current_ide_device = 0;  // Not slave
+            ATACurrentPort.g_current_ide_channel = 1;
+            ATACurrentPort.g_current_ide_device = 0;  // Not slave
             break;
         // Secondary slave
         case 3:
-            g_current_ide_channel = 1; 
-            g_current_ide_device = 1;  // Slave
+            ATACurrentPort.g_current_ide_channel = 1; 
+            ATACurrentPort.g_current_ide_device = 1;  // Slave
             break;
         default:
             // #debug
@@ -1508,7 +1497,7 @@ static int __ata_probe_boot_disk_signature(void)
     };
 
     // Is it slave or not?
-    isSlave = g_current_ide_device;
+    isSlave = ATACurrentPort.g_current_ide_device;
 
     // Read from the curent port.
     // see: libata.c
@@ -1530,19 +1519,18 @@ static int __ata_probe_boot_disk_signature(void)
     // Disk found?
     // Comparing against the signature we received from the bootblock.
     // 8 bytes long
-    if ( s[0] == bootblk.disk_signature )
+    if (s[0] == bootblk.disk_signature)
     {
-        // Update the structure to identify the boot disk 
-        // and its done.
+        // Update the structure to identify the boot disk and its done.
         //ata_boot_disk_info.port    = (int) g_current_ide_port;
-        //ata_boot_disk_info.channel = (int) g_current_ide_channel;
-        //ata_boot_disk_info.device  = (int) g_current_ide_device;
+        //ata_boot_disk_info.channel = (int) ATACurrentPort.g_current_ide_channel;
+        //ata_boot_disk_info.device  = (int) ATACurrentPort.g_current_ide_device;
 
         printk("Signature found in: port=%d ch=%d dev=%d\n",
-            g_current_ide_port_index,
-            g_current_ide_channel,
-            g_current_ide_device );
-        
+            ATACurrentPort.g_current_ide_port_index,
+            ATACurrentPort.g_current_ide_channel,
+            ATACurrentPort.g_current_ide_device );
+
         //refresh_screen();      
         //while(1){}
 
@@ -1616,21 +1604,11 @@ static int __ata_initialize(int ataflag)
     //ata_port.magic = 0;
 
 // ======================================
-// #importante 
-// HACK HACK
-// Usando as definições feitas em config.h
-// até que possamos encontrar dinamicamente 
-// o canal e o dispositivo certos.
-// __IDE_PORT indica qual é o indice de porta.
-// Configumos o atual como sendo o mesmo
-// usado durante o boot.
-// #todo
-// Poderemos mudar o atual conforme nossa intenção
-// de acessarmos outros discos.
+// The default ATA port.
 // See: config.h
 
-    ata_set_boottime_ide_port_index(__IDE_PORT);
-    ata_set_current_ide_port_index(__IDE_PORT);
+    ata_set_boottime_ide_port_index(__CONFIG_DEFAULT_ATA_PORT);
+    ata_set_current_ide_port_index(__CONFIG_DEFAULT_ATA_PORT);
 
 /*
     //#debug
@@ -1639,8 +1617,6 @@ static int __ata_initialize(int ataflag)
     refresh_screen();
     while(1){}
 */
-
-
 
 // ============================================
 
@@ -1913,13 +1889,13 @@ static int __ata_initialize(int ataflag)
         while (1)
         {
             // End of list
-            if ((void*)tmp==NULL)
+            if ((void*)tmp == NULL)
                 break;
-            
+
             // Is it what we're looking for?
-            if (tmp->dev_nport   == g_current_ide_port_index && 
-                tmp->dev_channel == g_current_ide_channel &&
-                tmp->dev_num     == g_current_ide_device )
+            if (tmp->dev_nport   == ATACurrentPort.g_current_ide_port_index && 
+                tmp->dev_channel == ATACurrentPort.g_current_ide_channel &&
+                tmp->dev_num     == ATACurrentPort.g_current_ide_device )
             {
                 printk("ata.c: Valid boot device\n");
                 refresh_screen();

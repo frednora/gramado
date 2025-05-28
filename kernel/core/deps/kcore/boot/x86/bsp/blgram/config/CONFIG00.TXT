@@ -7,7 +7,7 @@ Great question! This is an important and subtle part of bootloader and low-level
 ### 1. **What the Configuration Does**
 Your configuration file statically selects a port (e.g., Primary/Master) at build time:
 ```c
-#define __CONFIG_IDE_PORT __BAR0 // Primary, master
+#define __CONFIG_DEFAULT_ATA_PORT __BAR0 // Primary, master
 ```
 This tells your bootloader:  
 **"When reading the kernel image (or any file), use this port as the source disk."**

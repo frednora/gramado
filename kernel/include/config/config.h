@@ -72,10 +72,10 @@
 
 // See: 
 // Saved by __ata_initialize() in ata.c
-#define __IDE_PORT    __BAR0   // Primary   (Channel 0)
-//#define __IDE_PORT    __BAR1   // 
-//#define __IDE_PORT    __BAR2   // 
-//#define __IDE_PORT    __BAR3   // 
+#define __CONFIG_DEFAULT_ATA_PORT    __BAR0   // Primary   (Channel 0)
+//#define __CONFIG_DEFAULT_ATA_PORT    __BAR1   // 
+//#define __CONFIG_DEFAULT_ATA_PORT    __BAR2   // 
+//#define __CONFIG_DEFAULT_ATA_PORT    __BAR3   // 
 
 // ------------------------------------------------------
 // virtualbox Info:

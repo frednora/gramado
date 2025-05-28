@@ -133,12 +133,11 @@ ata_store_boot_metafile (
 // Do save!
 // ata_get_current_ide_port_index()
     __do_save_sequence(
-        g_current_ide_port_index, //port   // #bugbug: hard coded.
+        ATACurrentPort.g_current_ide_port_index,  // port
         (unsigned long) buffer,
         (unsigned long) first_lba,
-        (size_t) size_in_sectors ); // size in sectors.
+        (size_t) size_in_sectors );
 }
-
 
 // Save fat into the disk.
 // Low level. It doesn't check the status of the fat cache.
@@ -171,16 +170,15 @@ fs_save_fat (
 // Do save!
 // ata_get_current_ide_port_index()
     __do_save_sequence(
-        g_current_ide_port_index, //port   // #bugbug: hard coded.
+        ATACurrentPort.g_current_ide_port_index,  // port
         (unsigned long) fat_address,
         (unsigned long) fat_lba,
-        (size_t) fat_size ); // size in sectors.
+        (size_t) fat_size );
 
-// #bugbug: 
-// Debug provisório.
-    debug_print ("fs_save_fat: Done\n");
-    printk      ("fs_save_fat: Done\n"); 
-    refresh_screen ();
+// #bugbug: Provisory
+    debug_print("fs_save_fat: Done\n");
+    printk     ("fs_save_fat: Done\n"); 
+    refresh_screen();
 
     return 0;
 }
@@ -221,16 +219,15 @@ fs_save_rootdir (
 // Do save!
 // ata_get_current_ide_port_index()
     __do_save_sequence(
-        g_current_ide_port_index,
+        ATACurrentPort.g_current_ide_port_index,
         (unsigned long) root_address,
         (unsigned long) root_lba,
-        (size_t) root_size );  // size in sectors.
+        (size_t) root_size );    // Size in sectors.
 
-// #bugbug: 
-// Debug provisório.
-    debug_print ("fs_save_rootdir: Done\n");
-    printk      ("fs_save_rootdir: Done\n"); 
-    refresh_screen ();
+// #bugbug: Provisory
+    debug_print("fs_save_rootdir: Done\n");
+    printk     ("fs_save_rootdir: Done\n"); 
+    refresh_screen();
 
     return 0;
 }

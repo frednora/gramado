@@ -65,13 +65,13 @@
 #define __BAR3  3  // 0x376
 
 // See: diskATAInitialize in ide.c
-#define __CONFIG_IDE_PORT    __BAR0    // Primary, master
-//#define __CONFIG_IDE_PORT    __BAR1
-//#define __CONFIG_IDE_PORT    __BAR2
-//#define __CONFIG_IDE_PORT    __BAR3
+#define __CONFIG_DEFAULT_ATA_PORT    __BAR0    // Primary, master
+//#define __CONFIG_DEFAULT_ATA_PORT    __BAR1
+//#define __CONFIG_DEFAULT_ATA_PORT    __BAR2
+//#define __CONFIG_DEFAULT_ATA_PORT    __BAR3
 
 /*
- * __CONFIG_IDE_PORT
+ * __CONFIG_DEFAULT_ATA_PORT
  * -----------------
  * This macro controls which ATA port the driver operates on.
  *    0 = Primary Master (ata_port[0])
@@ -139,13 +139,13 @@ Once you find the matching disk, use that port for all subsequent reads.
 // __BAR3 (0x376): Secondary Channel, Control Block
 
 // IDE Port Selection:
-// __CONFIG_IDE_PORT is set to __BAR0 (Primary, master) by default.
+// __CONFIG_DEFAULT_ATA_PORT is set to __BAR0 (Primary, master) by default.
 // You can change this define (by uncommenting/commenting) to select 
 // which IDE port your loader or driver will use as its default.
 
 /*
 How this is used:
-In your ATA/IDE code, g_current_ide_port or similar variables are initialized using __CONFIG_IDE_PORT.
+In your ATA/IDE code, g_current_ide_port or similar variables are initialized using __CONFIG_DEFAULT_ATA_PORT.
 All low-level read/write and control routines use this port index to select which hardware registers to interact with.
 This makes it easy to switch between primary/secondary and master/slave drives for testing or deployment without changing code logic—just change the config.
 */

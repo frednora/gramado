@@ -387,11 +387,18 @@ typedef struct st_dev  st_dev_t;
 // IDE support 
 //
 
-// Channel and device number
-extern int g_current_ide_channel;
-extern int g_current_ide_device;
-// Port number.
-extern int g_current_ide_port;
+// The current port information
+struct ata_current_port_d
+{
+// Current selected channel (0=Primary, 1=Secondary) and device (0=Master, 1=Slave)
+    int g_current_ide_channel;  // 0: Primary, 1: Secondary
+    int g_current_ide_device;   // 0: Master (Not slave),  1: Slave
+
+// Current IDE port index (0-3, see ata_port[4])
+    int g_current_ide_port;
+};
+extern struct ata_current_port_d  ATACurrentPort;
+
 
 // IDE ports:
 // 0 primary master 

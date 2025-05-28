@@ -613,14 +613,14 @@ ata_read_sector (
 {
     static int Operation = __OPERATION_PIO_READ;
 
-    int idePort = g_current_ide_port;     // Port index (0-3)
+    int idePort = ATACurrentPort.g_current_ide_port;     // Port index (0-3)
 
     // Channel and device number
 // #bugbug 
 // We have 4 valid ports.
 // We do not have the IDE port, so, we are using the ide channel.
-    int ideChannel = g_current_ide_channel;  // 2 channels
-    int isSlave    = g_current_ide_device;   // 0=master, 1=slave
+    int ideChannel = ATACurrentPort.g_current_ide_channel;  // 2 channels
+    int isSlave    = ATACurrentPort.g_current_ide_device;   // 0=master, 1=slave
 
 // ====================== WARNING ==============================
 // #IMPORTANTE:
@@ -669,16 +669,16 @@ ata_write_sector (
     unsigned long cx, 
     unsigned long dx )
 {
-    static int Operation = __OPERATION_PIO_WRITE; //0x30;  // Read
+    static int Operation = __OPERATION_PIO_WRITE;
 
-    int idePort = g_current_ide_port;            // Port index (0-3)
+    int idePort = ATACurrentPort.g_current_ide_port;            // Port index (0-3)
 
 // Channel and device number
 // #bugbug 
 // We have 4 valid ports.
 // We do not have the IDE port, so, we are using the ide channel.
-    int ideChannel = g_current_ide_channel;    // two channels
-    int isSlave    = g_current_ide_device;          // 0=master, 1=slave
+    int ideChannel = ATACurrentPort.g_current_ide_channel;  // two channels
+    int isSlave    = ATACurrentPort.g_current_ide_device;   // 0=master, 1=slave
 
 /*
     printf("ata_write_sector: idePort=%d isSlave=%d\n",

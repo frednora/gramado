@@ -257,19 +257,23 @@ extern int ATAFlag;
 extern unsigned short *ata_identify_dev_buf;
 extern unsigned char ata_record_dev;
 extern unsigned char ata_record_channel;
-// #important
-// Qual é o canal e o dispositivo usado no momento
-// pela rotina de leitura e escrita.
-// See: config.h ata.c hdd.c
-extern int g_current_ide_port_index; 
-// #important
-// Qual é o canal e o dispositivo usado no momento do boot 
-// pela rotina de leitura e escrita.
-// See: config.h ata.c hdd.c
-extern int g_boottime_ide_port_index; 
 
-extern int g_current_ide_channel;
-extern int g_current_ide_device;
+
+// The current port information
+struct ata_current_port_d
+{
+// Current selected channel (0=Primary, 1=Secondary) and device (0=Master, 1=Slave)
+    int g_current_ide_channel;  // 0: Primary, 1: Secondary
+    int g_current_ide_device;   // 0: Master (Not slave),  1: Slave
+
+// Current and boottime IDE port index (0-3, see ata_port[4])
+    int g_current_ide_port_index;
+    int g_boottime_ide_port_index;
+};
+// The current port information
+extern struct ata_current_port_d  ATACurrentPort;
+
+
 
 // Internal
 #define __OPERATION_PIO_READ  1000
