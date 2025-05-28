@@ -95,8 +95,8 @@ static int __ShowDiskInfo(int index);
 static int __ShowVolumeInfo(int index);
 
 
-static int disk_init(void);
-static int volume_init(void);
+static int __disk_init(void);
+static int __volume_init(void);
 
 static int __validate_disksignature_from_bootblock(void);
 
@@ -565,7 +565,7 @@ storage_write_sector(
     return (int) res; 
 }
 
-// disk_init:
+// __disk_init:
 // Initialize the disk manager.
 // #bugbug
 // #fixme
@@ -574,18 +574,18 @@ storage_write_sector(
 // and rebuild the list. This way all the information made here
 // was gone. #fixme
 
-static int disk_init(void)
+static int __disk_init(void)
 {
     struct disk_d *d;
-    unsigned char BootDisk=0;
+    unsigned char BootDiskNumber=0;
     register int i=0;
 
     // #debug
-    // printk ("disk_init: Initializing..\n");
+    // printk ("__disk_init: Initializing..\n");
 
 // Check the storage structure.
     if ((void *) storage == NULL){
-        panic("disk_init: storage\n");
+        panic("__disk_init: storage\n");
     }
 // Clean the disk list.
     for ( i=0; i<DISK_COUNT_MAX; i++ ){
@@ -602,7 +602,7 @@ static int disk_init(void)
 
     d = (void *) kmalloc( sizeof(struct disk_d) );
     if ((void *) d == NULL){
-        panic("disk_init: d\n");
+        panic("__disk_init: d\n");
     }
     memset ( d, 0, sizeof(struct disk_d) );
     d->used = (int) TRUE;
@@ -633,33 +633,40 @@ static int disk_init(void)
     //d->boot_disk_number = (char) info_get_boot_info(3);
     d->boot_disk_number = -1;  //#fail
 
-    BootDisk = (char) d->boot_disk_number;
+    BootDiskNumber = (char) d->boot_disk_number;
 
 // #bugbug: if d->name is a ponter we need to point to
 // a const well define string, or create a new one.
 
 
-    switch (BootDisk){
+    /*
+    switch (BootDiskNumber){
     case 0x80:  d->name = sda_string;  break;
     case 0x81:  d->name = sdb_string;  break;
     case 0x82:  d->name = sdc_string;  break;
     case 0x83:  d->name = sdd_string;  break;
     default:
-        debug_print("disk_init: [FAIL] default boot disk number\n");
+        debug_print("__disk_init: [FAIL] default boot disk number\n");
         d->name = sdfail_string;
         break;
     };
+    */
+
+    // Default name.
+    d->name = sdfail_string;
 
     d->next = NULL;
 
+// This will become the system disk.
 // #bugbug
 // Is this structure initialized?
     if ((void*) storage != NULL){
         storage->system_disk = (struct disk_d *) d;
     }
 
-// global.
-    ____boot____disk =  (struct disk_d *) d;
+// This will become the boot disk.
+// global
+    ____boot____disk = (struct disk_d *) d;
 
 // #todo
 // Maybe this is the right moment to save the pointer
@@ -711,7 +718,7 @@ void *disk_get_disk_handle(int number)
 }
 
 // Worker: Initialize volume support.
-static int volume_init(void)
+static int __volume_init(void)
 {
     int Status = -1;  //fail
     register int i=0;
@@ -720,7 +727,7 @@ static int volume_init(void)
 
     // The main structure.
     if ((void *) storage == NULL){
-        panic ("volume_init: storage");
+        panic ("__volume_init: storage");
     }
 
     // Clear the list
@@ -735,19 +742,19 @@ static int volume_init(void)
 // Volume 0 - vfs
     Status = (int) __create_vfs_partition();
     if(Status<0){
-        panic("volume_init: __create_vfs_partition fail\n");
+        panic("__volume_init: __create_vfs_partition fail\n");
     }
 
 // Volume 1 - Boot partition.
     Status = (int) __create_boot_partition();
     if(Status<0){
-        panic("volume_init: __create_boot_partition fail\n");
+        panic("__volume_init: __create_boot_partition fail\n");
     }
 
 // Volume 2 - System partition.
     Status = (int) __create_system_partition();
     if(Status<0){
-        panic("volume_init: __create_system_partition fail\n");
+        panic("__volume_init: __create_system_partition fail\n");
     }
 
 //done:
@@ -976,6 +983,7 @@ static int storage_set_total_lba_for_boot_disk(void)
 // --------------------------------
 // Get the boot disk
     disk = (struct disk_d *) ____boot____disk;
+
     if ((void*) disk == NULL){
         printk("disk\n");
         goto fail;
@@ -1100,18 +1108,22 @@ int storageInitialize(void)
     storage->system_volume = NULL;
     storage->bootvolume_fp = NULL;
     // ...
+// =====================================
 
 // Initialize disk support.
-    disk_init();
+    __disk_init();
 
 // Initialize volume support.
-    volume_init();
+    __volume_init();
+
+// =====================================
 
 // Initializat ata device driver.
 // see: ata.c
 // IN: msg, data1.
     DDINIT_ata( 1, FORCEPIO );
 
+// =====================================
 
 // >> Precisa do bootdisk e do ata device.
 // Set the number of sectors in the boot disk.

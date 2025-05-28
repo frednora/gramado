@@ -34,6 +34,10 @@ int g_current_ide_port_index=0;
 // See: config.h ata.c hdd.c
 int g_boottime_ide_port_index=0;
 
+
+int g_current_ide_channel=0;
+int g_current_ide_device=0;
+
 // base address 
 // BAR0 is the start of the I/O ports used by the primary channel.
 // BAR1 is the start of the I/O ports which control the primary channel.
@@ -89,6 +93,7 @@ static int nport_ajust(char nport);
 // INITIALIZATION
 //
 
+static int __ata_probe_boot_disk_signature(void);
 static int __ide_identify_device(uint8_t nport);
 static int ata_initialize_ide_device(char port);
 static int __ata_initialize(int ataflag);
@@ -984,6 +989,10 @@ fail:
 // Called by ata_initialize.
 static int ata_initialize_ide_device(char port)
 {
+// #bugbug
+// It needs the boot time ide port.
+// We need to know what is the port used duting the boot time.
+
 // Inicializa uma porta e coloca numa lista encadeada de
 // estruturas de ata_device.
 
@@ -1002,7 +1011,6 @@ static int ata_initialize_ide_device(char port)
 
     struct ata_device_d  *new_dev;
 
-    int isBootTimeIDEPort=FALSE;
     int data=0;
     unsigned long value1=0;
     unsigned long value2=0;
@@ -1022,15 +1030,6 @@ static int ata_initialize_ide_device(char port)
         panic("ata_initialize_ide_device: storage\n");
     }
 
-// boot disk
-// We need this structure.
-    if ((void*) ____boot____disk == NULL){
-        panic("ata_initialize_ide_device: ____boot____disk\n");
-    }
-    if ( ____boot____disk->magic != 1234 ){
-        panic("ata_initialize_ide_device: ____boot____disk->magic\n");
-    }
-
 // boot partition
 // We need this structure.
     if ((void*) volume_bootpartition == NULL){
@@ -1038,14 +1037,6 @@ static int ata_initialize_ide_device(char port)
     }
     if (volume_bootpartition->magic != 1234){
         panic("ata_initialize_ide_device: volume_bootpartition->magic\n");
-    }
-
-// Is it the boottime ide port?
-    int boottime_ideport = ata_get_boottime_ide_port_index();
-   
-    // YES!
-    if (port == boottime_ideport){
-        isBootTimeIDEPort = TRUE;
     }
 
 //
@@ -1325,6 +1316,8 @@ static int ata_initialize_ide_device(char port)
 
     new_dev->dev_nport = port;
 
+// ==========================================================
+
 //
 // bootitme device?
 //
@@ -1332,9 +1325,28 @@ static int ata_initialize_ide_device(char port)
 // This is the boottime ide port.
 // So we're gonna save the pointer
 // into the boot disk structure.
+    int isBootTimeIDEPort=FALSE;
+
+// Is it the boottime ide port?
+    int boottime_ideport = 
+        (int) ata_get_boottime_ide_port_index();
+    // YES!
+    if (boottime_ideport == port)
+    {
+        isBootTimeIDEPort = TRUE;
+    }
 
 // Not a boottime device.
     new_dev->boottime_device = FALSE;
+
+// boot disk
+// We need this structure.
+    if ((void*) ____boot____disk == NULL){
+        panic("ata_initialize_ide_device: ____boot____disk\n");
+    }
+    if ( ____boot____disk->magic != 1234 ){
+        panic("ata_initialize_ide_device: ____boot____disk->magic\n");
+    }
 
     if (isBootTimeIDEPort == TRUE)
     {
@@ -1342,8 +1354,13 @@ static int ata_initialize_ide_device(char port)
         {
             if (____boot____disk->magic == 1234)
             {
-                // ??
-                // Only for ATA devices.
+                // ok, this is provisory.
+                // Because 'boottime_ideport' is not valid yet.
+                // We need to rebuilt this routine later.
+                // #bugbug
+                // So: ____boot____disk->ata_device in invalid
+
+                // Only for ATA devices. ??
                 ____boot____disk->ata_device = 
                     (struct ata_device_d *) new_dev;
 
@@ -1422,6 +1439,130 @@ fail:
     panic("ata_initialize_ide_device: fail\n");
     return -1;  // Not reached.
 }
+
+
+//----------------------------------------------
+
+// Called to probe for the boot disk signature into all the 4 ports. 
+static int __ata_probe_boot_disk_signature(void)
+{
+    register int i=0;
+
+// #test
+// Is this a good moment to check what is the ATA port 
+// where is the disk that we booted from?
+// Goal:
+// + Read a given sector from all the 4 ports.
+// + Check if the signature found in the disk 
+//   maches with the own we got from the boot manager.
+//   In this case, it means that we are in the correct boot disk.
+
+    //int idePort = g_current_ide_port_index;          // Port index (0-3)
+    //int ideChannel = g_current_ide_channel;  // 2 channels
+    //int isSlave = g_current_ide_device;     // 0=master, 1=slave
+    
+    int idePort = 0; // Default
+    int isSlave = 0;  //Default
+
+    static char sig_buffer[512];
+
+    //clear_backbuffer();
+    //refresh_screen();
+
+    for (i=0; i<4; i++){
+
+    bzero(sig_buffer,512); // Crear the local buffer for current use.
+
+    idePort = i;                    // Current
+    g_current_ide_port_index = i;   // Current
+    g_boottime_ide_port_index = i;  // Current
+
+    switch (idePort)
+    {
+        // Primary master
+        case 0:
+            g_current_ide_channel = 0;
+            g_current_ide_device = 0;  // Not slave
+		    break;
+        // Primary slave
+        case 1:
+            g_current_ide_channel = 0; 
+            g_current_ide_device = 1;  // Slave
+            break;
+        // Secondary master
+        case 2:
+            g_current_ide_channel = 1;
+            g_current_ide_device = 0;  // Not slave
+            break;
+        // Secondary slave
+        case 3:
+            g_current_ide_channel = 1; 
+            g_current_ide_device = 1;  // Slave
+            break;
+        default:
+            // #debug
+            printk ("__ata_probe_boot_disk_signature: Invalid port number\n");
+            refresh_screen();
+            while(1){}
+            break;
+    };
+
+    // Is it slave or not?
+    isSlave = g_current_ide_device;
+
+    // Read from the curent port.
+    // see: libata.c
+    atahdd_pio_rw_sector ( 
+        (unsigned long) sig_buffer,  // Buffer
+        (unsigned long) 0x04 -1,     // LBA ok
+        (int) __OPERATION_PIO_READ,  // Read operation 
+        (int) idePort );             // We have 4 valid ports.
+    
+    // #todo: Check the return value from the operation abouve.
+
+    // Print the buffer.
+    // printk only can handle 4 bytes, our signature has 8.
+    printk("\n");
+    unsigned long *s = (unsigned long *) &sig_buffer[0];
+    printk("Port %d: Disk signature 2: %x\n", i, s[0] ); 
+    refresh_screen();
+
+    // Disk found?
+    // Comparing against the signature we received from the bootblock.
+    // 8 bytes long
+    if ( s[0] == bootblk.disk_signature )
+    {
+        // Update the structure to identify the boot disk 
+        // and its done.
+        //ata_boot_disk_info.port    = (int) g_current_ide_port;
+        //ata_boot_disk_info.channel = (int) g_current_ide_channel;
+        //ata_boot_disk_info.device  = (int) g_current_ide_device;
+
+        printk("Signature found in: port=%d ch=%d dev=%d\n",
+            g_current_ide_port_index,
+            g_current_ide_channel,
+            g_current_ide_device );
+        
+        //refresh_screen();      
+        //while(1){}
+
+        // Done
+        // #todo:
+        // OK, it's working,
+        // now we gotta recreate this routine into the 
+        // kernel image too.
+        return 0;
+    }
+
+    };
+
+fail:
+    panic("k: Signature not found");
+    return (int) -1;
+}
+
+//----------------------------------------------
+
 
 // ++
 //----------------------------------------------
@@ -1740,12 +1881,69 @@ static int __ata_initialize(int ataflag)
             iPortNumber < 4; 
             iPortNumber++ )
         {
+            // #
+            // It needs the boot time ide port.
+            // We need to know what is the port used duting the boot time.
             ata_initialize_ide_device(iPortNumber);
         };
 
+        // #bugbug
+        // We need to setup ____boot____disk->ata_device again,
+        // right after discovering the port we're using for boot.
+
+        // ____boot____disk->ata_device = ????
+
+        //=======================================================
+        // Probe for the boot disk signature into all the 4 ports. 
+        int disk_ok = -1;
+        disk_ok = (int) __ata_probe_boot_disk_signature();
+        if (disk_ok < 0){
+            printk(": Boot disk not found\n");
+            keDie();
+        }
+
+        struct ata_device_d *tmp;
+
+        // Head of list
+        tmp = (struct ata_device_d *) ready_queue_dev;
+        if ((void*) tmp == NULL)
+            panic("Head is missing");
+        //if (tmp->magic != 1234)
+            //panic("Head magic is missing");
+        while (1)
+        {
+            // End of list
+            if ((void*)tmp==NULL)
+                break;
+            
+            // Is it what we're looking for?
+            if (tmp->dev_nport   == g_current_ide_port_index && 
+                tmp->dev_channel == g_current_ide_channel &&
+                tmp->dev_num     == g_current_ide_device )
+            {
+                printk("ata.c: Valid boot device\n");
+                refresh_screen();
+                //while(1){}
+
+                ____boot____disk->ata_device = tmp;
+                tmp->disk = (struct disk_d *) ____boot____disk;
+
+                Status = 0;
+                goto done;
+            }
+
+            tmp = (struct ata_device_d *) tmp->next;
+        }
+
+        //printk("Invalid boot device\n");
+        //refresh_screen();
+        //while(1){}
+
+        panic("ata.c: Invalid boot device\n");
+
         // Ok
-        Status = 0;
-        goto done;
+        //Status = 0;
+        //goto done;
     }
 
 

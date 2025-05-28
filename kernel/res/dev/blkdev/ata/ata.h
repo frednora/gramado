@@ -268,6 +268,12 @@ extern int g_current_ide_port_index;
 // See: config.h ata.c hdd.c
 extern int g_boottime_ide_port_index; 
 
+extern int g_current_ide_channel;
+extern int g_current_ide_device;
+
+// Internal
+#define __OPERATION_PIO_READ  1000
+#define __OPERATION_PIO_WRITE  2000
 
 /*
  * PCIDeviceATA:
@@ -644,6 +650,14 @@ diskWritePCIConfigAddr (
     int fun, 
     int offset, 
     int data );
+
+// Global wrapper
+int 
+atahdd_pio_rw_sector ( 
+    unsigned long buffer, 
+    unsigned int _lba, 
+    int operation_number, 
+    unsigned int port_index );
 
 int 
 ataReadSector( 

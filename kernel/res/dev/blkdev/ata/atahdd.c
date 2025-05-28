@@ -6,9 +6,6 @@
 
 #include <kernel.h>  
 
-// Internal
-#define __OPERATION_PIO_READ  1000
-#define __OPERATION_PIO_WRITE  2000
 
 //
 // Private functions: prototypes.
@@ -278,6 +275,19 @@ __hdd_ata_pio_write (
 }
 
 // -----------------------------------------
+
+// Global wrapper
+int 
+atahdd_pio_rw_sector ( 
+    unsigned long buffer, 
+    unsigned int _lba, 
+    int operation_number, 
+    unsigned int port_index )
+{
+    int rv = -1;
+    rv = (int) __pio_rw_sector(buffer, _lba, operation_number, port_index);
+    return (int) rv; 
+}
 
 /*
  * __pio_rw_sector:
