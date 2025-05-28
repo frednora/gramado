@@ -3699,7 +3699,7 @@ save_file:
             // Wait and write!
             
             // ata_get_current_ide_port_index()
-            disk_ata_wait_irq(__IDE_PORT);
+            disk_ata_wait_irq(g_current_ide_port_index);
 
             //grava - Aqui next esta certo!
             //write_lba ( (unsigned long) address, VOLUME1_DATAAREA_LBA + next -2 );

@@ -133,7 +133,7 @@ ata_store_boot_metafile (
 // Do save!
 // ata_get_current_ide_port_index()
     __do_save_sequence(
-        __IDE_PORT, //port   // #bugbug: hard coded.
+        g_current_ide_port_index, //port   // #bugbug: hard coded.
         (unsigned long) buffer,
         (unsigned long) first_lba,
         (size_t) size_in_sectors ); // size in sectors.
@@ -171,7 +171,7 @@ fs_save_fat (
 // Do save!
 // ata_get_current_ide_port_index()
     __do_save_sequence(
-        __IDE_PORT, //port   // #bugbug: hard coded.
+        g_current_ide_port_index, //port   // #bugbug: hard coded.
         (unsigned long) fat_address,
         (unsigned long) fat_lba,
         (size_t) fat_size ); // size in sectors.
@@ -221,7 +221,7 @@ fs_save_rootdir (
 // Do save!
 // ata_get_current_ide_port_index()
     __do_save_sequence(
-        __IDE_PORT,
+        g_current_ide_port_index,
         (unsigned long) root_address,
         (unsigned long) root_lba,
         (size_t) root_size );  // size in sectors.

@@ -18,7 +18,6 @@ int ATAFlag=0;
 
 static unsigned short *ata_devinfo_buffer;
 
-
 // Saving values.
 unsigned char ata_record_dev=0;
 unsigned char ata_record_channel=0;
@@ -1490,8 +1489,8 @@ static int __ata_initialize(int ataflag)
 // See: config.h
 
 
-    unsigned int boottime_ideport_index = __IDE_PORT;
-    unsigned int current_ideport_index = __IDE_PORT;
+    ata_set_boottime_ide_port_index(__IDE_PORT);
+    ata_set_current_ide_port_index(__IDE_PORT);
 
 /*
     //#debug
@@ -1501,8 +1500,6 @@ static int __ata_initialize(int ataflag)
     while(1){}
 */
 
-    ata_set_boottime_ide_port_index(boottime_ideport_index);
-    ata_set_current_ide_port_index(current_ideport_index);
 // ============================================
 
 // ??

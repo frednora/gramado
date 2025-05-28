@@ -71,7 +71,7 @@
 #define __BAR3  3  // 0x376
 
 // See: 
-// ata_initialize in ata.c
+// Saved by __ata_initialize() in ata.c
 #define __IDE_PORT    __BAR0   // Primary   (Channel 0)
 //#define __IDE_PORT    __BAR1   // 
 //#define __IDE_PORT    __BAR2   // 

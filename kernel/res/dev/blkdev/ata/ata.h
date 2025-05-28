@@ -6,6 +6,8 @@
 #ifndef __BLKDEV_ATA_H
 #define __BLKDEV_ATA_H    1
 
+
+
 /*
 //
 // PCI CLASS (Mass storage device) 
