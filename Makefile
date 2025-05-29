@@ -57,6 +57,9 @@ GAMES = $(OUTSIDE_L0)/gram3d
 # Client-side GUI applications with X library
 X_APPLICATIONS = $(OUTSIDE_L0)/xapps
 
+# --------------------------
+# Creating one cpp application just for fun
+CPP00_APPLICATION = $(OUTSIDE_L0)/cpp00
 
 # Make variables (CC, etc...)
 AS      = as
@@ -307,6 +310,9 @@ copy-extras:
 
 # X applications
 	@-cp $(X_APPLICATIONS)/bin/XTB.BIN  $(BASE)/DE
+
+# cpp application example
+	@-cp $(CPP00_APPLICATION)/bin/CPP00.BIN  $(BASE)/DE
 
 	@echo "~ copy-extras"
 
