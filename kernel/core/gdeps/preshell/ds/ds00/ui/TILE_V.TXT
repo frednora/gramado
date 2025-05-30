@@ -1,0 +1,44 @@
+
+ This is the code for the vertical mode in the 
+ wm_tile() function.
+ It was created by Copilot and not tested yet.
+
+     // Vertical: 2 lines, master window at bottom
+    if (WindowManager.vertical == TRUE)
+    {
+        int num_slaves = cnt - 1;
+        unsigned long wa_left   = WindowManager.wa.left;
+        unsigned long wa_top    = WindowManager.wa.top;
+        unsigned long wa_width  = WindowManager.wa.width;
+        unsigned long wa_height = WindowManager.wa.height;
+        unsigned long row1_height = (wa_height / 2) - 2;
+        unsigned long row2_height = wa_height - row1_height - 4; // bottom half
+        unsigned long slave_width = num_slaves > 0 ? (wa_width / num_slaves) : wa_width;
+
+        if (i < num_slaves) {
+            // Slave windows in top row
+            w->border_size = 1;
+            gws_resize_window(w, slave_width - 4, row1_height - 4);
+            gwssrv_change_window_position(
+                w,
+                wa_left + (slave_width * i) + 2,
+                wa_top + 2
+            );
+        } else {
+            // Master window in bottom row
+            w->border_size = 2;
+            gws_resize_window(w, wa_width - 4, row2_height - 4);
+            gwssrv_change_window_position(
+                w,
+                wa_left + 2,
+                wa_top + row1_height + 2
+            );
+            // Set master as active
+            active_window  = (void*) w;
+            keyboard_owner = (void*) w;
+            last_window    = (void*) w;
+            top_window     = (void*) w;
+            mouse_owner    = NULL;
+            mouse_hover    = NULL;
+        }
+    }
