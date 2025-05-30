@@ -1770,11 +1770,22 @@ static void wm_tile(void)
     unsigned long w2=0;
     unsigned long h2=0;
 
+// Initialize iterator.
     i=0;
 
+// Check counter validation.
     if (cnt <= 0){
         return;
     }
+
+// Validate window manager mode.
+    if (WindowManager.mode != WM_MODE_TILED)
+        return;
+
+// Loop
+// Now we have a list and we're gonna use this list 
+// to compose the desktop with valid application windows
+// following the tile mode.
 
     while ((void*)w != NULL)
     {
@@ -1784,87 +1795,82 @@ static void wm_tile(void)
 
         // Order: resize, then change position.
 
-        // Window manager in tiled mode.
-        if (WindowManager.mode == WM_MODE_TILED)
+        // Vertical: It means 2 lines of windows.
+        if (WindowManager.vertical == TRUE)
         {
-            // Horizontal
-            if (WindowManager.vertical==FALSE)
-            {
-                // for titlebar color support,
-                // not the active window.
-                w->border_size = 1;
-
-                // resize.
-                // width: Metade da largura da área de trabalho.
-                // height: Altura da área de trabalho dividido pela
-                // quantidade de janelas que temos.
-                Width  = (unsigned long) (WindowManager.wa.width / 2) -4;
-                Height = (unsigned long) WindowManager.wa.height;
-                if (cnt > 1)
-                    Height = (unsigned long) (WindowManager.wa.height / (cnt-1));
-
-                w2 = Width;
-                h2 = Height -4;
-                gws_resize_window(w, w2, h2);
-
-                // positions.
-                // left: Começa na metade da área de tranalho.
-                // top: Depende do indice da janela na lista.
-                Left = (unsigned long) (WindowManager.wa.width / 2) +2;
-                Top  = (unsigned long) WindowManager.wa.top + (Height * i);
-                l2 = Left;
-                t2 = Top +2;
-                gwssrv_change_window_position(w, l2, t2);
-
-                // master?
-                // Se estivermos na última janela da lista,
-                // então ela será a master.
-                // ocupara toda a metade esquerda da área de trabalho.
-                if (i == cnt-1)
-                {
-                    // for titlebar color support.
-                    // the active window.
-                    w->border_size = 2;
-
-                    active_window = (void*) w;   // Active window
-                    keyboard_owner = (void*) w;  // Window with focus.
-                    last_window    = (void*) w;  // Top
-                    top_window     = (void*) w;  // Top z-order: top window.
-                    mouse_owner = NULL;
-                    mouse_hover = NULL;
-                    
-                    // Change for the second time for this widnow.
-                    
-                    // resize.
-                    // width: metade da área de trabalho.
-                    // height: altura da área de trabalho.
-                    Width  = (unsigned long) (WindowManager.wa.width / 2);
-                    Height = (unsigned long) WindowManager.wa.height;
-                    w2 = Width  -4;
-                    h2 = Height -4;
-                    gws_resize_window(w, w2, h2);
-
-                    // positions.
-                    // Canto superior esquerdo. Com padding.
-                    Left = (unsigned long) WindowManager.wa.left;
-                    Top  = (unsigned long) WindowManager.wa.top; 
-                    l2 = Left +2;
-                    t2 = Top  +2;
-                    gwssrv_change_window_position(w, l2, t2);
-                }
-            }
-
-            // Vertical.
-            if (WindowManager.vertical==TRUE)
-            {
-                //#todo:
-                //w->height = WindowManager.wa.height; 
-                //w->width  = (WindowManager.wa.width/cnt);
-                //w->left   = (w->width * i);
-                //w->top    = 0;
-            }
+            //#todo:
+            //w->height = WindowManager.wa.height; 
+            //w->width  = (WindowManager.wa.width/cnt);
+            //w->left   = (w->width * i);
+            //w->top    = 0;
         }
 
+        // Horizontal: It means 2 columns of windows.
+        if (WindowManager.vertical == FALSE)
+        {
+            // For titlebar color support. It's NOT the active window.
+            w->border_size = 1;
+
+            // Resize
+            // Width:  Half of the width of our working area.
+            // Height: The height of the working area less 24, 
+            // divided by the amount of windows we have.
+            // 24 is the yellow status bar.
+            Width  = (unsigned long) (WindowManager.wa.width / 2) -4;
+            Height = (unsigned long) WindowManager.wa.height;
+            if (cnt > 1){
+                Height = 
+                    (unsigned long) ((WindowManager.wa.height -24) / (cnt-1));
+            }
+            w2 = Width;
+            h2 = (Height -4);
+            gws_resize_window(w, w2, h2);
+
+            // Positions
+            // Left: It starts at the half of the working area.
+            // Top:  It depends on the window's index in this list.
+            Left = (unsigned long) (WindowManager.wa.width / 2) +2;
+            Top  = (unsigned long) WindowManager.wa.top + (Height * i);
+            l2 = Left;
+            t2 = (Top +2);
+            gwssrv_change_window_position(w, l2, t2);
+
+            // Is this the master window?
+            // If we're in the last window, so it's the master window.
+            // It occupies the left half of the working area.
+            if (i == cnt-1)
+            {
+                // For titlebar color support. It's the active window.
+                w->border_size = 2;
+
+                active_window  = (void*) w;  // Active window
+                keyboard_owner = (void*) w;  // Window with focus.
+                last_window    = (void*) w;  // Top
+                top_window     = (void*) w;  // Top z-order: top window.
+                mouse_owner = NULL;
+                mouse_hover = NULL;
+                    
+                // Change for the second time for this widnow.
+                    
+                // Resize
+                // Width:  Half of the working area.
+                // Height: Height of the working area leass 24.
+                // 24 is the yellow status bar.
+                Width  = (unsigned long) (WindowManager.wa.width / 2);
+                Height = (unsigned long) (WindowManager.wa.height -24);
+                w2 = (Width  -4);
+                h2 = (Height -4);
+                gws_resize_window(w, w2, h2);
+
+                // Positions
+                // Top left corner. With padding.
+                Left = (unsigned long) WindowManager.wa.left;
+                Top  = (unsigned long) WindowManager.wa.top; 
+                l2 = (Left +2);
+                t2 = (Top  +2);
+                gwssrv_change_window_position(w, l2, t2);
+            }
+        }
         w = (struct gws_window_d *) w->next;
         i++;
     };
@@ -4775,47 +4781,36 @@ int dock_window( struct gws_window_d *window, int position )
     if (position<0)
         goto fail;
 
-
+// Can't be the root window or the taskbar.
+    if (window == __root_window) { goto fail; }
+    if (window == taskbar_window){ goto fail; }
 // Can't be a button
     if (window->type == WT_BUTTON){
         goto fail;
     }
+// ...
 
-// Can't be the root
-    if (window == __root_window){
-        goto fail;
-    }
-// Can't be the active window
-    if (window == taskbar_window){
-        goto fail;
-    }
-
-// Window manager:
-
+// The window manager needs to be initialized and it can't
+// be in fullscreen mode.
     if (WindowManager.initialized != TRUE){
         goto fail;
     }
-// Can't dock a window in fullscreen mode.
     if (WindowManager.is_fullscreen == TRUE){
         goto fail;
     }
 
-// todo
-// Use the working area, not the device area.
-    //unsigned long w = gws_get_device_width();
-    //unsigned long h = gws_get_device_height();
-
-// #test
 // Using the working area
+// Is the working area already initialized?
     unsigned long l = WindowManager.wa.left;
     unsigned long t = WindowManager.wa.top;
     unsigned long w = WindowManager.wa.width;
     unsigned long h = WindowManager.wa.height;
-    if ( w==0 || h==0 ){
+    if ( w == 0 || h == 0 ){
         goto fail;
     }
 
 // Dock given the position.
+// 1=top | 2=right | 3=bottom | 4=left
     switch (position){
 
         // -----------------
@@ -4848,6 +4843,7 @@ int dock_window( struct gws_window_d *window, int position )
             if (window->state == WINDOW_STATE_MINIMIZED){
                 break;
             }
+            // 24 is the yellow status bar at the bottom.
             gws_resize_window( window, 
               (w>>1)-4, 
               (h -4 -24) );
@@ -4871,6 +4867,7 @@ int dock_window( struct gws_window_d *window, int position )
             if (window->state == WINDOW_STATE_MINIMIZED){
                 break;
             }
+            // 24 is the yellow status bar at the bottom.
             gws_resize_window( window, 
               ((w>>1) -4), 
               (h -4 -24) );
