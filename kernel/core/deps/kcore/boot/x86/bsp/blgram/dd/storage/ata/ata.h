@@ -90,22 +90,6 @@ Here's a list of subclasses for the PCI class 1 (Mass Storage Controller):
 0x0C: PCIe (PCI Express)
 */
 
-#define CONTROLLER_TYPE_UNKNOWN  (-1)
-
-// 0x00: SCSI
-#define __SCSI_CONTROLLER     0x0
-// Sub-class 01h = IDE Controller
-#define __ATA_CONTROLLER      0x1
-// raid
-#define __RAID_CONTROLLER     0x4
-// Sub-class 05h = ATA Controller with ADMA
-#define __ATA_CONTROLLER_DMA  0x5   // (USB ?)
-// Sub-class 06h = SATA Controller
-#define __AHCI_CONTROLLER     0x6
-// 0x08: NVMe (Non-Volatile Memory Express)
-#define __NVME_CONTROLLER     0x08
-// 0x09: SAS (Serial Attached SCSI)
-#define __SAS_CONTROLLER      0x09
 
 // The bootloader ATA driver supports up to 4 ports using ata_port[4]:
 // 0=Primary Master, 1=Primary Slave, 2=Secondary Master, 3=Secondary Slave
@@ -437,22 +421,6 @@ typedef enum {
 // SATA interface standard
 #define ATADEV_SATA    idedevicetypesSATA
 #define ATADEV_SATAPI  idedevicetypesSATAPI
-
-//
-// SIGNATURE
-//
-
-// PATA
-#define ATADEV_PATA_SIG1    0
-#define ATADEV_PATA_SIG2    0
-#define ATADEV_PATAPI_SIG1  0x14
-#define ATADEV_PATAPI_SIG2  0xEB
-
-// SATA
-#define ATADEV_SATA_SIG1    0x3C
-#define ATADEV_SATA_SIG2    0xC3
-#define ATADEV_SATAPI_SIG1  0x69
-#define ATADEV_SATAPI_SIG2  0x96
 
 
 // ->state field

@@ -5,13 +5,23 @@
 #define  __BLKDEV_STORAGE_H    1
 
 
+// --------------------------------------------------
 // Controller mode
+
 #define STORAGE_CONTROLLER_MODE_SCSI     0x00
 #define STORAGE_CONTROLLER_MODE_ATA      0x01
 #define STORAGE_CONTROLLER_MODE_RAID     0x04
+// Sub-class 05h = ATA Controller with ADMA
+#define STORAGE_CONTROLLER_MODE_DMA      0x05   // (USB ?)
 #define STORAGE_CONTROLLER_MODE_AHCI     0x06
-#define STORAGE_CONTROLLER_MODE_UNKNOWN  0xFF   
+// 0x08: NVMe (Non-Volatile Memory Express)
+#define STORAGE_CONTROLLER_MODE_NVME     0x08
+// 0x09: SAS (Serial Attached SCSI)
+#define STORAGE_CONTROLLER_MODE_SAS      0x09
+#define STORAGE_CONTROLLER_MODE_UNKNOWN  0xFF
 
+
+// --------------------------------------------------
 // Interface standard
 // ...
 
