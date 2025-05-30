@@ -1804,10 +1804,8 @@ static void wm_tile(void)
             w->border_size = 1;
 
             // Resize
-            // Width:  Half of the width of our working area.
-            // Height: The height of the working area less 24, 
-            // divided by the amount of windows we have.
-            // 24 is the yellow status bar.
+            // Width: The width of the working area divided by the number of windows.
+            // Height: The height of the working area less 24 divided by 2.
 
             Width = (unsigned long) WindowManager.wa.width;
             if (cnt > 1){
@@ -1819,8 +1817,8 @@ static void wm_tile(void)
             gws_resize_window(w, w2, h2);
 
             // Positions
-            // Left: It starts at the half of the working area.
-            // Top:  It depends on the window's index in this list.
+            // Left: It depends on the window's index in this list. 
+            // Top:  It starts at the half of the working area's height.
             Left  = (unsigned long) WindowManager.wa.left + (Width * i);
             Top = (unsigned long) (WindowManager.wa.height / 2);
             l2 = (Left + 2);
@@ -1845,9 +1843,8 @@ static void wm_tile(void)
                 // Change for the second time for this widnow.
                     
                 // Resize
-                // Width:  Half of the working area.
-                // Height: Height of the working area leass 24.
-                // 24 is the yellow status bar.
+                // Width:  The width of the working area.
+                // Height: The height of the working area divided by 2.
                 Width = (unsigned long) WindowManager.wa.width;
                 Height  = (unsigned long) (WindowManager.wa.height / 2) -4;
                 w2 = (Width  -4);
