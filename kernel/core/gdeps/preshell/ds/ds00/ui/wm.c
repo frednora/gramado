@@ -1463,10 +1463,12 @@ void wmInitializeStructure(void)
         WindowManager.Config.has_wallpaper = FALSE;
 
 // Clear the structure.
-    WindowManager.mode = WM_MODE_TILED;  //tiling
+    WindowManager.mode = WM_MODE_TILED;  // Tiling
+
 // Orientation
-    WindowManager.vertical = FALSE;   // horizontal. default
+    WindowManager.vertical = FALSE;   // Horizontal is the default
     //WindowManager.vertical = TRUE;
+
 // How many frames until now.
     WindowManager.frame_counter = 0;
     WindowManager.fps = 0;
@@ -1798,11 +1800,68 @@ static void wm_tile(void)
         // Vertical: It means 2 lines of windows.
         if (WindowManager.vertical == TRUE)
         {
-            //#todo:
-            //w->height = WindowManager.wa.height; 
-            //w->width  = (WindowManager.wa.width/cnt);
-            //w->left   = (w->width * i);
-            //w->top    = 0;
+            // For titlebar color support. It's NOT the active window.
+            w->border_size = 1;
+
+            // Resize
+            // Width:  Half of the width of our working area.
+            // Height: The height of the working area less 24, 
+            // divided by the amount of windows we have.
+            // 24 is the yellow status bar.
+
+            Width = (unsigned long) WindowManager.wa.width;
+            if (cnt > 1){
+                Width = (unsigned long) (WindowManager.wa.width / (cnt-1));
+            }
+            Height = (unsigned long) ((WindowManager.wa.height -24) / 2) -8;
+            w2 = (Width -4);
+            h2 = (Height -8);
+            gws_resize_window(w, w2, h2);
+
+            // Positions
+            // Left: It starts at the half of the working area.
+            // Top:  It depends on the window's index in this list.
+            Left  = (unsigned long) WindowManager.wa.left + (Width * i);
+            Top = (unsigned long) (WindowManager.wa.height / 2);
+            l2 = (Left + 2);
+            t2 = Top;
+            gwssrv_change_window_position(w, l2, t2);
+
+            // Is this the master window?
+            // If we're in the last window, so it's the master window.
+            // It occupies the left half of the working area.
+            if (i == cnt-1)
+            {
+                // For titlebar color support. It's the active window.
+                w->border_size = 2;
+
+                active_window  = (void*) w;  // Active window
+                keyboard_owner = (void*) w;  // Window with focus.
+                last_window    = (void*) w;  // Top
+                top_window     = (void*) w;  // Top z-order: top window.
+                mouse_owner = NULL;
+                mouse_hover = NULL;
+                    
+                // Change for the second time for this widnow.
+                    
+                // Resize
+                // Width:  Half of the working area.
+                // Height: Height of the working area leass 24.
+                // 24 is the yellow status bar.
+                Width = (unsigned long) WindowManager.wa.width;
+                Height  = (unsigned long) (WindowManager.wa.height / 2) -4;
+                w2 = (Width  -4);
+                h2 = (Height -4);
+                gws_resize_window(w, w2, h2);
+
+                // Positions
+                // Top left corner. With padding.
+                Left = (unsigned long) WindowManager.wa.left;
+                Top  = (unsigned long) WindowManager.wa.top; 
+                l2 = (Left +2);
+                t2 = (Top  +2);
+                gwssrv_change_window_position(w, l2, t2);
+            }
         }
 
         // Horizontal: It means 2 columns of windows.
