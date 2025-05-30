@@ -14,16 +14,16 @@ void ata_show_ata_controller_info(void)
 // Print data.
     switch (AtaController.controller_type)
     {
-        case ATA_IDE_CONTROLLER:
-            printk("IDE controller\n");
+        case STORAGE_CONTROLLER_MODE_ATA:
+            printk("ATA controller\n");
             break;
-        case ATA_RAID_CONTROLLER:
+        case STORAGE_CONTROLLER_MODE_RAID:
             printk("RAID controller\n");
             break;
-        case ATA_AHCI_CONTROLLER:
+        case STORAGE_CONTROLLER_MODE_AHCI:
             printk("AHCI controller\n");
             break;
-        case ATA_UNKNOWN_CONTROLLER:
+        case STORAGE_CONTROLLER_MODE_UNKNOWN:
         default:
             printk("Unknown controller type\n");
             break;

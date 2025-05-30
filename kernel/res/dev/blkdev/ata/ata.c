@@ -698,7 +698,8 @@ static int __ide_identify_device(uint8_t nport)
 
 // ==========================
 // # PATA
-    if ( sig_byte_1 == ATADEV_PATA_SIG1 && sig_byte_2 == ATADEV_PATA_SIG2 )
+    if ( sig_byte_1 == STORAGE_INTERFACE_STANDARD_PATA_SIG1 && 
+         sig_byte_2 == STORAGE_INTERFACE_STANDARD_PATA_SIG2 )
     {
         // kputs("Unidade PATA\n");
         // aqui esperamos pelo DRQ
@@ -775,7 +776,8 @@ static int __ide_identify_device(uint8_t nport)
 
 // ==========================
 // # PATAPI
-    if ( sig_byte_1 == ATADEV_PATAPI_SIG1 && sig_byte_2 == ATADEV_PATAPI_SIG2 )
+    if ( sig_byte_1 == STORAGE_INTERFACE_STANDARD_PATAPI_SIG1 && 
+         sig_byte_2 == STORAGE_INTERFACE_STANDARD_PATAPI_SIG2 )
     {
         //kputs("Unidade PATAPI\n");   
         ata_cmd_write(nport,ATA_CMD_IDENTIFY_PACKET_DEVICE);
@@ -832,7 +834,8 @@ static int __ide_identify_device(uint8_t nport)
 
 // ==========================
 // #SATA
-    if ( sig_byte_1 == ATADEV_SATA_SIG1 && sig_byte_2 == ATADEV_SATA_SIG2 )
+    if ( sig_byte_1 == STORAGE_INTERFACE_STANDARD_SATA_SIG1 && 
+         sig_byte_2 == STORAGE_INTERFACE_STANDARD_SATA_SIG2 )
     {
         //kputs("Unidade SATA\n");   
         // O dispositivo responde imediatamente um erro ao cmd Identify device
@@ -904,7 +907,8 @@ static int __ide_identify_device(uint8_t nport)
 
 // ==========================
 // # SATAPI
-    if (sig_byte_1 == ATADEV_SATAPI_SIG1  && sig_byte_2 == ATADEV_SATAPI_SIG2)
+    if (sig_byte_1 == STORAGE_INTERFACE_STANDARD_SATAPI_SIG1 && 
+        sig_byte_2 == STORAGE_INTERFACE_STANDARD_SATAPI_SIG2)
     {
         //kputs("Unidade SATAPI\n");   
         ata_cmd_write(nport,ATA_CMD_IDENTIFY_PACKET_DEVICE);
@@ -1712,26 +1716,10 @@ static int __ata_initialize(int ataflag)
     ATA_BAR5 = ( PCIDeviceATA->BAR5 & ~0xf ) + ATA_IDE_BAR5            * ( !PCIDeviceATA->BAR5 );
 
 // Get the base i/o port for all the 4 ATA ports.
-// Colocando nas estruturas.
-
-    /*
-    // #bugbug This is wrong
-    ide_port[0].base_port = 
-        (unsigned short) (ATA_BAR0_PRIMARY_COMMAND_PORT   & 0xFFFF);
-    ide_port[1].base_port = 
-        (unsigned short) (ATA_BAR1_PRIMARY_CONTROL_PORT   & 0xFFFF);
-    ide_port[2].base_port = 
-        (unsigned short) (ATA_BAR2_SECONDARY_COMMAND_PORT & 0xFFFF);
-    ide_port[3].base_port = 
-        (unsigned short) (ATA_BAR3_SECONDARY_CONTROL_PORT & 0xFFFF);
-    // Tem ainda a porta do dma na bar4.
-    */
-
-    // # this is right
-    ide_port[0].base_port = ATA_BAR0_PRIMARY_COMMAND_PORT;   // 0x1F0, primary master
-    ide_port[1].base_port = ATA_BAR0_PRIMARY_COMMAND_PORT;   // 0x1F0, primary slave 
-    ide_port[2].base_port = ATA_BAR2_SECONDARY_COMMAND_PORT; // 0x170, secondary master
-    ide_port[3].base_port = ATA_BAR2_SECONDARY_COMMAND_PORT; // 0x170, secondary slave
+    ide_port[0].base_port = ATA_BAR0_PRIMARY_COMMAND_PORT;    // 0x1F0, primary master
+    ide_port[1].base_port = ATA_BAR0_PRIMARY_COMMAND_PORT;    // 0x1F0, primary slave 
+    ide_port[2].base_port = ATA_BAR2_SECONDARY_COMMAND_PORT;  // 0x170, secondary master
+    ide_port[3].base_port = ATA_BAR2_SECONDARY_COMMAND_PORT;  // 0x170, secondary slave
 
 //
 // De acordo com o tipo.
@@ -1757,7 +1745,7 @@ static int __ata_initialize(int ataflag)
 // ATA controller type.
 
     // Type
-    if (AtaController.controller_type == ATA_IDE_CONTROLLER){
+    if (AtaController.controller_type == STORAGE_CONTROLLER_MODE_ATA){
 
         printk ("__ata_initialize: [ATA] Initialize ports\n");
         //while(1){}
@@ -1926,7 +1914,7 @@ static int __ata_initialize(int ataflag)
 // ==============================================
 // RAID controller.
 
-    if (AtaController.controller_type == ATA_RAID_CONTROLLER)
+    if (AtaController.controller_type == STORAGE_CONTROLLER_MODE_RAID)
     {
         // #debug
         printk ("__ata_initialize: [RAID] Unsupported type\n");
@@ -1945,7 +1933,7 @@ static int __ata_initialize(int ataflag)
 // It emulates ICH9 not I440FX.
 // see: https://wiki.qemu.org/Features/Q35
 
-    if (AtaController.controller_type == ATA_AHCI_CONTROLLER){
+    if (AtaController.controller_type == STORAGE_CONTROLLER_MODE_AHCI){
         printk ("__ata_initialize: [AHCI] Unsupported type\n");
         while(1){}
         Status = (int) -1;
@@ -1955,7 +1943,7 @@ static int __ata_initialize(int ataflag)
 // ==============================================
 // Unknown controller type.
 
-    if (AtaController.controller_type == ATA_UNKNOWN_CONTROLLER){
+    if (AtaController.controller_type == STORAGE_CONTROLLER_MODE_UNKNOWN){
         printk ("__ata_initialize: [UNKNOWN] Unsupported type\n");
         while(1){}
         Status = (int) -1;

@@ -105,13 +105,6 @@ Here's a list of subclasses for the PCI class 1 (Mass Storage Controller):
 #define DMA_PHYS_ADDR3  0xb0000 
 
 
-// Controladores de unidades ATA.
-#define ATA_SCSI_CONTROLLER  0
-#define ATA_IDE_CONTROLLER   0x1
-#define ATA_RAID_CONTROLLER  0x4
-#define ATA_AHCI_CONTROLLER  0x6
-#define ATA_UNKNOWN_CONTROLLER  0xFF   
-
 
 // Retorno da inicializacao PCI. 
 #define PCI_MSG_ERROR       -1
@@ -556,21 +549,6 @@ typedef enum {
 #define ATADEV_SATAPI  idedevicetypesSATAPI
 */
 
-//
-// SIGNATURE
-//
-
-// PATA
-#define ATADEV_PATA_SIG1    0
-#define ATADEV_PATA_SIG2    0
-#define ATADEV_PATAPI_SIG1  0x14
-#define ATADEV_PATAPI_SIG2  0xEB
-
-// SATA
-#define ATADEV_SATA_SIG1    0x3c
-#define ATADEV_SATA_SIG2    0xc3
-#define ATADEV_SATAPI_SIG1  0x69
-#define ATADEV_SATAPI_SIG2  0x96
 
 
 // ----------------

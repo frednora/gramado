@@ -5,6 +5,37 @@
 #define  __BLKDEV_STORAGE_H    1
 
 
+// Controller mode
+#define STORAGE_CONTROLLER_MODE_SCSI     0x00
+#define STORAGE_CONTROLLER_MODE_ATA      0x01
+#define STORAGE_CONTROLLER_MODE_RAID     0x04
+#define STORAGE_CONTROLLER_MODE_AHCI     0x06
+#define STORAGE_CONTROLLER_MODE_UNKNOWN  0xFF   
+
+// Interface standard
+// ...
+
+
+//
+// Signature for interface standard.
+//
+
+// ATA controller mode handles PATA and SATA interface standards.
+// AHCI controller mode handles only SATA interface standards,
+
+// PATA
+#define STORAGE_INTERFACE_STANDARD_PATA_SIG1    0
+#define STORAGE_INTERFACE_STANDARD_PATA_SIG2    0
+#define STORAGE_INTERFACE_STANDARD_PATAPI_SIG1  0x14
+#define STORAGE_INTERFACE_STANDARD_PATAPI_SIG2  0xEB
+
+// SATA
+#define STORAGE_INTERFACE_STANDARD_SATA_SIG1    0x3C
+#define STORAGE_INTERFACE_STANDARD_SATA_SIG2    0xC3
+#define STORAGE_INTERFACE_STANDARD_SATAPI_SIG1  0x69
+#define STORAGE_INTERFACE_STANDARD_SATAPI_SIG2  0x96
+
+
 //==================================================================
 // superblock
 
