@@ -3748,6 +3748,36 @@ static inline void __outb(uint16_t port, uint8_t val)
 */
 
 
+// ==================================================
+// Testing the feature of printing long numbers with printf.
+
+// Example main function to test printing of 64-bit numbers.
+static int test_printf(void);
+static int test_printf(void) 
+{
+    // Define a 64-bit number. For this example, we use an unsigned long,
+    // since your custom printf expects 64-bit values for the %lx and %lu specifiers.
+    //unsigned long testValue = 0x123456789ABCDEF0UL;
+    unsigned long testValue = 0x123456789ABCDEF0;
+
+    // Print a header message indicating what we're testing.
+    // This uses your custom printf which ultimately calls kinguio_vsprintf.
+    printf("Testing 64-bit number printing features:\n");
+
+    // Print the test value in hexadecimal.
+    // The format specifier "%lx" triggers the custom code path:
+    //   - 'l' sets the type64bit flag to TRUE.
+    //   - 'x' causes the number to be converted to a hexadecimal string.
+    printf("Hexadecimal: %lx\n", testValue);
+
+    // Print the test value in unsigned integer (decimal) format.
+    // The format specifier "%lu" similarly uses the 64-bit conversion path.
+    printf("Unsigned integer: %lu\n", testValue);
+
+    return 0;
+}
+
+
 // Gramado game engine.
 // main: entry point
 // see: gramado.h
@@ -3766,6 +3796,14 @@ int main(int argc, char **argv)
     gUseCallback = FALSE;
 // Stating time.
     starting_tick = (unsigned long) rtl_jiffies();
+
+
+
+// ==================
+// OK, its working
+    //test_printf();
+    //while(1){}
+
 
 //0 = Time to quit.
     Status = (int) on_execute();
