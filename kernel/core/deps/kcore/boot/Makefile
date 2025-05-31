@@ -32,8 +32,13 @@ all:
 
 # BLGRAM.BIN
 # ::Build BLGRAM.BIN
+# This is the bootloader for Gramado OS.
 	@echo "Compiling BL.BIN"
 	@$(MAKE) -C x86/bsp/blgram/ 
+
+# #todo
+# Maybe we can have another bootloader for a different 
+# operating system kernel.
 
 clean:
 #todo
