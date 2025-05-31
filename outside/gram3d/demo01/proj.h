@@ -1,15 +1,16 @@
-// projint.h
-// Projection support using Integer values.
-// Created by Fred Nora.
 
-#ifndef __PROJINT_H
-#define __PROJINT_H    1
+// proj.h
+// Projection support.
+
+#ifndef PROJ_H
+#define PROJ_H    1
+
 
 extern struct gr_mat4x4_d matProj;
 
-
 // ======================================================
-// The structure for graphical perspective projection.
+// ??
+// graphical projection perspective
 // See:
 // https://en.wikipedia.org/wiki/Perspective_(graphical)
 struct gr_projection_d
@@ -73,6 +74,29 @@ struct gr_projection_d
 };
 extern struct gr_projection_d  *CurrentProjection;
 
+// ======================================================
+struct gr_projectionF_d
+{
+// Using float
+
+    int initialized;
+
+    float znear;
+    float zfar;
+    float fov;
+    
+    float ar;  //aspect ratio
+    unsigned long width;
+    unsigned long height;
+    
+    float scale_factor;
+    
+    //#todo: hotspot
+
+    //struct gr_mat4x4_d *projection_matrix;
+};
+extern struct gr_projectionF_d  CurrentProjectionF;
+
 
 // ======================================================
 // Not using float.
@@ -86,6 +110,20 @@ void
 gwsDepthRange(
     int minZ, 
     int maxZ);
+
+// ======================================================
+// Using float.
+
+int 
+grInitializeProjection(
+    float znear, 
+    float zfar, 
+    float fov,
+    unsigned long width,
+    unsigned long height,
+    float scalefactor );
+
+
 
 #endif    
 

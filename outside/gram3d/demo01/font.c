@@ -1,6 +1,6 @@
-// font.c
-// The font support.
-// Created by Fred Nora.
+
+// todo: 
+// the font support.
 
 #include "gram3d.h"
 
@@ -16,9 +16,11 @@ unsigned long g9x16fontAddress=0;         // 9x16,80×25,VGA
 //unsigned long gws_eye_sprite_address=0;
 
 
+
 static void __initialize_lt8x8_font(void);
 
 // ==================
+
 
 /*
 //U8 waves[8*4]={
@@ -1735,10 +1737,11 @@ static void __initialize_lt8x8_font(void)
     register int i=0;
 
     tmp = (unsigned char *) malloc (256*8);
-    if ((unsigned char *) tmp == NULL){
+    if ( (unsigned char *) tmp == NULL ){
         printf ("__initialize_lt8x8_font: [FAIL] tmp\n");
         exit(1);
     }
+
 
     for (i=0; i<(256*8); i++)
     {

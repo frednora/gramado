@@ -1,5 +1,5 @@
 
-# game1 - 3D game for Gramado OS.
+# demo00 - 3D game for Gramado OS.
 # This is also a server.
 # It's called by the init process.
 # 2022 - Created by Fred Nora.
@@ -175,11 +175,7 @@ demos.o models.o flycube.o cat00.o polygon.o tri00.o lin00.o curve00.o
 
 	$(CC)  -c  wm.c   $(user_ccflags) $(CINCLUDES) -I include/  -o wm.o
 
-
-# test
-
-	$(CC)  -c  scan00.c   $(user_ccflags) $(CINCLUDES) -I include/  -o scan00.o
-
+	$(CC)  -c demos/scan00.c   $(user_ccflags) $(CINCLUDES) -I include/  -o scan00.o
 
 #
 # == imported objects =============================

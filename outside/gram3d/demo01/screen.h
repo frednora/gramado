@@ -1,14 +1,11 @@
-// screen.h
-// Created by Fred Nora.
 
 #ifndef ____SCREEN_H
 #define ____SCREEN_H    1
 
 
-// See: globals.c
-extern int refresh_device_screen_flag;
-extern int refresh_valid_screen_flag;
 
+int refresh_device_screen_flag;
+int refresh_valid_screen_flag;
 
 struct gws_screen_d
 {
@@ -54,8 +51,9 @@ struct gws_screen_d
 // The device screen.
 // The refresh is called by refresh_device_screen();
 // It is called explicit by the app.
-// see: globals.c
-extern struct gws_screen_d  *DeviceScreen;
+struct gws_screen_d *DeviceScreen;
+
+
 
 //
 // == prototypes ================================
@@ -73,4 +71,14 @@ void refresh_valid_screen(void);
 
 
 #endif    
+
+
+
+
+
+
+
+
+
+
 

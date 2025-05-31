@@ -1,12 +1,14 @@
-// client.h
-// Created by Fred Nora.
+
 
 #ifndef ____CLIENT_H
 #define ____CLIENT_H    1
 
+
+
 // Nesse arquivo fica a estrutura de cliente.
 // Essa estrutura vai conter as informações
 // e características dos clientes.
+
 
 //
 // Current
@@ -18,20 +20,24 @@
 // O kernel alimenta a fila de mensagens do ws qunado tem um ws
 // instalado.
 
-extern int current_client;
+int current_client;
+
 
 struct gws_client_d
 {
     int used;
     int magic;
+
     int id;
+    
     char name[128];
 
 // The overlapped window for this client.
     int window;
 
-// a area ocupada pela janela
-// pode ser do tamanho da janela ou ainda maior.    
+    // a area ocupada pela janela
+    // pode ser do tamanho da janela ou ainda maior.
+    
     int l;
     int t;
     int w;
@@ -45,6 +51,7 @@ struct gws_client_d
     // TRUE = estamos nessa tad
     // FALSE = nao estamos nessa tag.
     int tags[4];
+
 
 // #todo
     unsigned long flags;
@@ -64,7 +71,7 @@ struct gws_client_d
 
     int is_connected;
 
-// host, display, screen
+    // host, display, screen
     struct gws_host_d     host;
     struct gws_display_d  display;  
     struct gws_screen_d   screen;
@@ -76,6 +83,7 @@ struct gws_client_d
     pid_t pid; 
     gid_t gid;
     int tid;
+
 
 // Spin
 // Lets count how many times this client
@@ -91,20 +99,24 @@ struct gws_client_d
     struct gws_client_d *next;
 };
 
-// see: globals.c
-extern struct gws_client_d  *serverClient;
-extern struct gws_client_d  *currentClient;
+struct gws_client_d  *serverClient;
+struct gws_client_d  *currentClient;
 // ...
+
 // list
-extern struct gws_client_d  *first_client;
+struct gws_client_d  *first_client;
 
 #define SERVER_CLIENT_INDEX 0
 #define CLIENT_COUNT_MAX 32
-extern unsigned long connections[CLIENT_COUNT_MAX];
+unsigned long connections[CLIENT_COUNT_MAX];
+
 
 //
 // == prototypes =============================
 //
 
+
 #endif    
+
+
 

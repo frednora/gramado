@@ -1,26 +1,20 @@
 // scan00.c
 // Let's scan floating values.
-
 // Let's scan floating values witha custom function created by Copilot.
-
 // v 1.234 -5.678e-2 9.0123
 
 
-/*
-#include <ctype.h>
-#include <math.h>
-#include <stdio.h>
-*/
 
-#include "gram3d.h"
+#include "../gram3d.h"
 
 // Local, for now.
 // Declaration of our custom float parser.
-float custom_read_float(const char **strPtr);
-double pow0000(double __x, double __y);
+double __pow0000(double __x, double __y);
+
+// ==============================================================
 
 
-double pow0000(double __x, double __y)
+double __pow0000(double __x, double __y)
 {
     double RetValue = 0.0;
     asm volatile (
@@ -45,7 +39,7 @@ double pow0000(double __x, double __y)
 // =========================================
 
 /**
- * custom_read_float - Parses a floating-point number from a string.
+ * scan00_custom_read_float - Parses a floating-point number from a string.
  *
  * @strPtr: A pointer to the string pointer that points to the number.
  *          The function will update this pointer to the position immediately
@@ -57,7 +51,9 @@ double pow0000(double __x, double __y)
  * the integral part followed by an optional fractional part (after a decimal point),
  * and an optional exponent prefixed with 'e' or 'E'.
  */
-float custom_read_float(const char **strPtr) {
+
+float scan00_custom_read_float(const char **strPtr) 
+{
     const char *s = *strPtr;
     
     // Skip any leading whitespace.
@@ -111,7 +107,7 @@ float custom_read_float(const char **strPtr) {
             s++;
         }
         //result *= pow(10, expSign * exponent);
-        result *= pow0000(10, expSign * exponent);
+        result *= __pow0000(10, expSign * exponent);
     }
 
     // Update the pointer to reflect the new reading position.
@@ -144,9 +140,9 @@ int testing_model_scanner(void)
         ptr++;
     
     // Parse three floats for the vertex coordinates.
-    float x = (float) custom_read_float(&ptr);
-    float y = (float) custom_read_float(&ptr);
-    float z = (float) custom_read_float(&ptr);
+    float x = (float) scan00_custom_read_float(&ptr);
+    float y = (float) scan00_custom_read_float(&ptr);
+    float z = (float) scan00_custom_read_float(&ptr);
 
     // Output the parsed coordinates.
     printf("Parsed Vertex Coordinates:\n");

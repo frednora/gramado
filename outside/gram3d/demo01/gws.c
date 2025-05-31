@@ -1,20 +1,22 @@
-// gws.c
-// Gramado windowing system.
-// 2019 - Created by Fred Nora.
+/*
+ * File: gws.c
+ *     Part of the Gramado Window Server.
+ * History:
+ *     2019 - Created by Fred Nora.
+ */
 
+// Window server routines.
 #include "gram3d.h"
-
-
-struct gws_graphics_d *Currentgraphics;
-struct engine_d  Engine;
 
 int dirty=0;
 int background=0;
 
+struct gws_graphics_d *Currentgraphics;
+struct engine_d  Engine;
 
-// =======================================
 static int __init_globals(void);
-// ...
+
+
 // =======================================
 
 
@@ -50,6 +52,7 @@ void xxxThread (void)
         //asm ( "pause" );
     };
 }
+
 
 /*
  * ____test_threads:
@@ -160,8 +163,10 @@ void ____test_threads (void)
 	//permitir que o shell continue.
 }
 
+
     
 /*
+ **************************
  * gwssrv_create_thread:
  *     Create a thread.
  *     #todo: 
@@ -181,6 +186,7 @@ void *gwssrv_create_thread (
                         init_stack, 
                         (unsigned long) name );
 }
+
 
 /*
  * gwssrv_start_thread:
@@ -271,134 +277,6 @@ unsigned long gws_get_device_height(void)
 {
     return (unsigned long) __device_height;
 }
-
-// invalidate the frame.
-void invalidate(void)
-{
-    dirty = TRUE;
-}
-
-// validate the frame.
-void validate(void)
-{
-    dirty = FALSE;
-}
-
-// Check the frame validation
-int isdirty(void)
-{
-    return (int) dirty;
-}
-
-// invalidate all the background.
-void invalidate_background(void)
-{
-    // #bugbug: Use background_dirty ??
-    background = TRUE;
-}
-
-void validate_background(void)
-{
-    background = FALSE;
-}
-
-// Check the background validation.
-int is_background_dirty(void)
-{
-    return (int) background;
-}
-
-
-void gwssrv_set_keyboard_focus(int window)
-{
-    if (window<0)
-        return;
-    set_focus_by_id(window);
-}
-
-
-// Refresh the device screen
-// #todo: move to view/
-void refresh_screen(void)
-{
-    refresh_device_screen();
-}
-
-// Refresh the device screen
-// #todo: move to view/
-void refresh_device_screen(void)
-{
-    debug_print ("refresh_device_screen:\n");
-
-    gws_show_backbuffer();
-    refresh_device_screen_flag = FALSE; // Invalidate.
-}
-
-
-// Refresh the valid screen of the current display.
-// #todo: move to view/
-void refresh_valid_screen(void)
-{
-
-    debug_print ("refresh_valid_screen:\n");
-
-    if ( (void*) CurrentDisplay == NULL ){
-        printf("refresh_valid_screen: [ERROR] CurrentDisplay\n");
-        exit (1);
-    }
-
-//
-// The valid SCREEN
-//
-
-    // Se a valid screen não existe.
-    if ( (void*) CurrentDisplay->valid_screen == NULL ){
-        debug_print ("refresh_valid_screen: [FAIL] No valid screen\n");
-        return;
-    }
-
-    // A valid screen é justamente a screen do device.
-    if ( CurrentDisplay->valid_screen == CurrentDisplay->device_screen )
-    {
-        debug_print ("refresh_valid_screen: show the device screen\n");
-        gws_show_backbuffer();
-    }
-
-    refresh_valid_screen_flag = FALSE; // Invalidate.
-}
-
-
-/*
-// Copiamos o lfb no backbuffer.
-void 
-copy_backbuffer ( 
-    void *lfb,             // lfb
-    void *target_buffer,   // target buffer
-    int ofs,               // offset to walk
-    int count);             // how much
-void 
-copy_backbuffer ( 
-    void *lfb,             // lfb
-    void *target_buffer,   // target buffer
-    int ofs,               // offset to walk
-    int count)             // how much
-{
-
-    void *front_buffer  = (void *) lfb;
-    void *buffer        = (void *) target_buffer;
-
-    if (front_buffer == NULL)
-        return;
- 
-    if (buffer == NULL)
-        return;
-
-    memcpy ( 
-        buffer       + ofs, 
-        front_buffer + ofs, 
-        count );
-}
-*/
 
 
 // __init_globals:
@@ -502,16 +380,14 @@ static int __init_globals(void)
     return 0;
 }
 
-//
-// $
-// INITIALIZATION
-//
 
 /*
  * gwsInit:
  *     Initialize the server. 
  */
+
 // Called by initGraphics() in main.c
+
 int gwsInit(void)
 {
     debug_print("gwsInit:\n");
@@ -838,29 +714,167 @@ int gwsInit(void)
     return 0;
 }
 
+
+// invalidate the frame.
+void invalidate(void)
+{
+    dirty = TRUE;
+}
+
+// validate the frame.
+void validate(void)
+{
+    dirty = FALSE;
+}
+
+// Check the frame validation
+int isdirty(void)
+{
+    return (int) dirty;
+}
+
+// invalidate all the background.
+void invalidate_background(void)
+{
+    // #bugbug: Use background_dirty ??
+    background = TRUE;
+}
+
+void validate_background(void)
+{
+    background = FALSE;
+}
+
+// Check the background validation.
+int is_background_dirty(void)
+{
+    return (int) background;
+}
+
+
+void gwssrv_set_keyboard_focus(int window)
+{
+    if (window<0)
+        return;
+    set_focus_by_id(window);
+}
+
+
+// Refresh the device screen
+// #todo: move to view/
+void refresh_screen(void)
+{
+    refresh_device_screen();
+}
+
+// Refresh the device screen
+// #todo: move to view/
+void refresh_device_screen(void)
+{
+    debug_print ("refresh_device_screen:\n");
+
+    gws_show_backbuffer();
+    refresh_device_screen_flag = FALSE; // Invalidate.
+}
+
+
+// Refresh the valid screen of the current display.
+// #todo: move to view/
+void refresh_valid_screen(void)
+{
+
+    debug_print ("refresh_valid_screen:\n");
+
+    if ( (void*) CurrentDisplay == NULL ){
+        printf("refresh_valid_screen: [ERROR] CurrentDisplay\n");
+        exit (1);
+    }
+
 //
-// $
-// INITIALIZATION
+// The valid SCREEN
 //
 
-// ??
-// Is it in use?
-// Wrapper.
+    // Se a valid screen não existe.
+    if ( (void*) CurrentDisplay->valid_screen == NULL ){
+        debug_print ("refresh_valid_screen: [FAIL] No valid screen\n");
+        return;
+    }
+
+    // A valid screen é justamente a screen do device.
+    if ( CurrentDisplay->valid_screen == CurrentDisplay->device_screen )
+    {
+        debug_print ("refresh_valid_screen: show the device screen\n");
+        gws_show_backbuffer();
+    }
+
+    refresh_valid_screen_flag = FALSE; // Invalidate.
+}
+
+
+/*
+// Copiamos o lfb no backbuffer.
+void 
+copy_backbuffer ( 
+    void *lfb,             // lfb
+    void *target_buffer,   // target buffer
+    int ofs,               // offset to walk
+    int count);             // how much
+void 
+copy_backbuffer ( 
+    void *lfb,             // lfb
+    void *target_buffer,   // target buffer
+    int ofs,               // offset to walk
+    int count)             // how much
+{
+
+    void *front_buffer  = (void *) lfb;
+    void *buffer        = (void *) target_buffer;
+
+    if (front_buffer == NULL)
+        return;
+ 
+    if (buffer == NULL)
+        return;
+
+    memcpy ( 
+        buffer       + ofs, 
+        front_buffer + ofs, 
+        count );
+}
+*/
+
+
+
+
+
+
+/*
+ * serverInit
+ * 
+ */
+
+// Is it used?
+
 int serverInit (void)
 {
     int Status = -1;
     
-    printf ("serverInit: Initializing\n");
+    printf ("serverInit: Initializing gws server ...\n");
 
     Status = (int) gwsInit();
-    if (Status < 0){
+
+    if (Status<0){
         printf ("serverInit: fail\n");
     }
-
+    
     return (int) Status;
 }
 
+
+
 //
-// End
+// End.
 //
+
+
 

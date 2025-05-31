@@ -1,5 +1,5 @@
+
 // surface.c
-// Created by Fred Nora.
 
 #include "gram3d.h"
 
@@ -131,4 +131,8 @@ void gramado_flush_surface(struct gws_window_d *clipping_window)
 {
     demoFlushSurface(clipping_window);
 }
+
+
+
+
 

@@ -1,6 +1,6 @@
+
 // font.h
-// The font support.
-// Created by Fred Nora.
+// the font support.
 
 #ifndef GWS_FONT_H
 #define GWS_FONT_H    1

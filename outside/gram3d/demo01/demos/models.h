@@ -1,4 +1,3 @@
-
 // models.h
 // This is a place for structures of default models.
 

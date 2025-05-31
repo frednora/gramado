@@ -1,6 +1,6 @@
+
 // dc.h
-// Device Context support.
-// Created by Fred Nora.
+// Device Context.
 
 #ifndef __DC_H
 #define __DC_H    1
@@ -90,6 +90,7 @@ struct dc_d
     unsigned long zfar;
     unsigned long zrange;
 
+
 // center
     unsigned long hotspot_x;
     unsigned long hotspot_y;
@@ -100,6 +101,7 @@ struct dc_d
     unsigned long max_x;
     unsigned long min_y;
     unsigned long max_y;
+
 
 // #todo:
 // We have and array with 16 colors with 4 bytes each.

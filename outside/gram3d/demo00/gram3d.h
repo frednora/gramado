@@ -68,6 +68,7 @@ extern int current_mode;
 // Common for all the demos
 #include "demos/demos.h"
 #include "demos/models.h"
+#include "demos/scan00.h"
 
 // Demos
 #include "demos/flycube.h"

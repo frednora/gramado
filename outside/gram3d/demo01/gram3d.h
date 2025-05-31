@@ -1,5 +1,5 @@
+
 // gram3d.h 
-// Main header for the project.
 // Created by Fred Nora.
 
 // ...
@@ -41,12 +41,10 @@ extern int current_mode;
 #include "window.h"
 #include "bmp.h"
 
-// osdep/
-// X11 "Host:Display.Screen" pattern.
 // h:0.0
-#include "osdep/screen.h"   // X11-like
-#include "osdep/display.h"  // X11-like
-#include "osdep/host.h"     // X11-like h:0.0
+#include "screen.h"   // X-like
+#include "display.h"  // X-like
+#include "host.h"     // X-like h:0.0
 
 // Teremos isso aqui no window server,
 // kgws é outro ws par ao ambiente de setup e tera 
@@ -63,32 +61,38 @@ extern int current_mode;
 #include "grprim.h"
 #include "camera.h"
 #include "world.h"
-
-// Projection support using Float values.
-#include "projf.h"
-// Projection support using Integer values.
-#include "projint.h"
-
+#include "proj.h"
 #include "sprite.h"
 #include "surface.h"
-#include "models.h"
 
-#include "demos.h"
+// Common for all the demos
+#include "demos/demos.h"
+#include "demos/models.h"
+#include "demos/scan00.h"
+
+// Demos
+#include "demos/flycube.h"
+#include "demos/cat00.h"
+#include "demos/polygon.h"
+#include "demos/tri00.h"
+#include "demos/lin00.h"
+#include "demos/curve00.h"
+
 
 #include "packet.h"
 
 
-// #osdep
+// # model. business logic
 // #todo:
-// We can put this thing in the library. 
-// (libgws) or (libcon)
-#include "osdep/connect.h"
+// We can put this thing in the library. (libgws)
+// or (libcon)
+#include "connect.h"
 
 #include "font.h"
 
 // Client structure.
 // O proprio servidor poderia ser o cliente 0??
-#include "osdep/client.h"
+#include "client.h"
 // # model. business logic
 #include "services.h"
 
@@ -99,6 +103,8 @@ extern int current_mode;
 // It needs to be the last one.
 #include "dc.h"
 
+// See: scan00.c
+int testing_model_scanner(void);
 
 struct gws_graphics_d
 {

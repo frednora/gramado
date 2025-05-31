@@ -1,8 +1,10 @@
+
 // globals.h
-// Created by Fred Nora.
+
 
 #ifndef __GWSSRV_GLOBALS_H
 #define __GWSSRV_GLOBALS_H   1
+
 
 // Host Operating System
 #define OS_OTHER    0
@@ -17,17 +19,12 @@
 #define VM_QEMU        3
 #define VM_VIRTUALBOX  4
 
+
 // =========================
 // h:d.s
 extern char *host_name;
 extern char *display_number;
 extern char *screen_number;
-
-// The device screen.
-// The refresh is called by refresh_device_screen();
-// It is called explicit by the app.
-// see: globals.c
-extern struct gws_screen_d  *DeviceScreen;
 
 extern int gUseLeftHand;
 extern int gUseCallback;
@@ -44,6 +41,7 @@ extern unsigned long starting_tick;
 #define GRAMADO_CALIFORNIA  0x05
 extern int current_mode;
 
+
 // ## button support ##
 #define GWS_COLOR_BUTTONFACE            0x00F0F0F0
 #define GWS_COLOR_BUTTONFACE2           0x00E0E0E0
@@ -57,6 +55,7 @@ extern int current_mode;
 #define GWS_COLOR_BUTTONSHADOW2         0x00303030 
 #define GWS_COLOR_BUTTONSHADOW3         0x00202020 
 #define GWS_COLOR_BUTTONTEXT            COLOR_TEXT
+
 
 // #importante
 // usaremos essas definições para configurarmos
@@ -95,6 +94,7 @@ extern int current_mode;
 #define PRIDE_COLOR_TERMINALFONT                  0x00FFFFFF  
 //...
 
+
 /*
  * ColorSchemeType:
  *     Enumerando os esquemas de cores. 
@@ -105,11 +105,13 @@ extern int current_mode;
  */
 
 typedef enum {
+
     ColorSchemeNull,      // 0 - Null.
     ColorSchemeHumility,  // 1 - Gray stuff.
     ColorSchemePride,     // 2 - Colorful.
     ColorSchemeUser,      // 3 - Personalizado. Criado ou carregado.
     // ...
+
 }ColorSchemeType;
 
 
@@ -159,16 +161,23 @@ typedef enum {
 
 struct gws_color_scheme_d
 {
+    //@todo: É preciso ainda definir esse tipo de objeto.
+	//definir em gdef.h
+	//object_type_t objectType;
+	//object_class_t objectClass;	
+
+    int id;
+
     int used;
     int magic;
-    int id;
-    char *name; 
 
 	//marcador de estilo de design para 
 	//o padrão de cores.
 	//cada estilo pode invocar por si um padrão de cores.
 	//ou o padrão de cores por si pode representar um estilo.
     int style;
+
+    char *name; 
 
 	//cada índice desse array representará um elemento gráfico,
 	//os valores no array são cores correspondentes aos elementos gráficos 
@@ -178,10 +187,9 @@ struct gws_color_scheme_d
 	//...
 };
 
-// see: globals.c
-extern struct gws_color_scheme_d* GWSCurrentColorScheme;
-extern struct gws_color_scheme_d* GWSHumilityColorScheme; // Simples.
-extern struct gws_color_scheme_d* GWSPrideColorScheme;    // Colorido.
+struct gws_color_scheme_d* GWSCurrentColorScheme;
+struct gws_color_scheme_d* GWSHumilityColorScheme; // Simples.
+struct gws_color_scheme_d* GWSPrideColorScheme;    // Colorido.
 
 
 //
@@ -215,6 +223,18 @@ extern int use_vsync;
 #define VSYNC_YES  1
 #define VSYNC_NO   0
 
+
+// Pointers to screens.
+#define MAX_SCREENS    4
+#define SCREEN_FRONTBUFFER     0
+#define SCREEN_BACKBUFFER      1
+//#define SCREEN_BACKBUFFER2   2
+//#define SCREEN_BACKBUFFER3   3
+
+extern unsigned long screens[MAX_SCREENS];
+
+
+
 /*
 struct vid_d
 {
@@ -227,6 +247,7 @@ struct vid_d
 struct vid_d vidConfig;
 */
 
+
 //
 // == Prototypes ===================================================
 //
@@ -236,4 +257,6 @@ void gwssrv_initialize_color_schemes (int selected_type);
 int gwssrv_select_color_scheme (int type);
 
 #endif   
+
+
 

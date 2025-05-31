@@ -1,6 +1,5 @@
-// camera.h
-// Created by Fred Nora.
 
+// camera.h
 #ifndef __CAMERA_H
 #define __CAMERA_H    1
 

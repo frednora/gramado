@@ -1,30 +1,13 @@
 // proj.c
 // Projection support.
-// Integer and float.
 // Created by Fred Nora.
 
 #include "gram3d.h"
 
-
-// ========================================
-// Using float
-
-// The projection structure.
-// see: projf.h
-struct gr_projectionF_d  CurrentProjectionF;
-
-// The projection matrix Using float values.
-// See: libs/libgr3d/include/grprim3d.h
-struct gr_mat4x4_d matProj;
-
-// ========================================
-// Using integer
-
-// The structure for graphical perspective projection.
-// Do not use floating point.
-// See: projint.h
 struct gr_projection_d  *CurrentProjection;
 
+
+struct gr_mat4x4_d matProj;
 
 // ===================================================
 
@@ -32,30 +15,29 @@ int projection_initialize(void)
 {
 // Not using float.
 
-// Projection structure.
-// See: projint.h
-    struct gr_projection_d *proj;
-    proj = (void *) malloc( sizeof(struct gr_projection_d) );
-    if ((void*) proj == NULL){
-        printf("projection_initialize: proj\n");
-        goto FatalError;
-    }
-    proj->initialized = FALSE;
-    // #todo: Perspective or orthogonal
-    proj->type = 1; 
+// See: 
+// gr_projection_d
 
-// Device context structure.
-// gr_dc is the default device context structure.
-    if ((void*) gr_dc == NULL){
+    CurrentProjection = (void *) malloc ( sizeof( struct gr_projection_d ) );
+    if ( (void*) CurrentProjection == NULL ){
+        printf("projection_initialize: CurrentProjection\n");
+        exit(1);
+    }
+
+    if ( (void*) gr_dc == NULL){
         printf("projection_initialize: gr_dc\n");
-        goto FatalError;
+        exit(1);
     }
     if (gr_dc->initialized != TRUE){
         printf("projection_initialize: gr_dc->initialized\n");
-        goto FatalError;
+        exit(1);
     }
+
 // Use the default dc.
-    proj->dc = gr_dc;
+    CurrentProjection->dc = gr_dc;
+    CurrentProjection->initialized = FALSE;
+    // #todo: Perspective or orthogonal
+    CurrentProjection->type = 1; 
 
 //
 // Orthographic projection plane
@@ -67,77 +49,57 @@ int projection_initialize(void)
 // são dependentes do dispositivos.
 // Do mesmo modo que podemos ter uma tela virtual.
 
-    proj->l = gr_dc->absolute_x;
-    proj->t = gr_dc->absolute_y;
-    proj->w = gr_dc->width;
-    proj->h = gr_dc->height;
+    CurrentProjection->l = gr_dc->absolute_x;
+    CurrentProjection->t = gr_dc->absolute_y;
+    CurrentProjection->w = gr_dc->width;
+    CurrentProjection->h = gr_dc->height;
 
-    proj->r = gr_dc->right;
-    proj->b = gr_dc->bottom;
+    CurrentProjection->r = gr_dc->right;
+    CurrentProjection->b = gr_dc->bottom;
 
 // z range.
-    proj->zNear  = gr_dc->znear;
-    proj->zFar   = gr_dc->zfar;
-    proj->zRange = gr_dc->zrange;
+    CurrentProjection->zNear  = gr_dc->znear;
+    CurrentProjection->zFar   = gr_dc->zfar;
+    CurrentProjection->zRange = gr_dc->zrange;
 
-    //proj->angle_of_view = ?;
-    //proj->ar = ?;
-    //proj->frustrum_apex = ?;
-    //proj->frustrum_view = ?;
+    //CurrentProjection->angle_of_view = ?;
+    //CurrentProjection->ar = ?;
+    //CurrentProjection->frustrum_apex = ?;
+    //CurrentProjection->frustrum_view = ?;
 
     //...
 
-    proj->used = TRUE;
-    proj->magic = 1234;
-    proj->initialized = TRUE;
-
-// Save the current projection.
-    CurrentProjection = (struct gr_projection_d *) proj;
+    CurrentProjection->used = TRUE;
+    CurrentProjection->magic = 1234;
+    CurrentProjection->initialized = TRUE;
 
     return 0;
-
-FatalError:
-// Fatal error.
-// We can't survive without this.
-    printf("projection_initialize: FAIL\n");
-    exit (1);
-    return (int) -1;
 }
+
+
+
 
 // Projection view.
 // Changing the view for a given projection.
 int view (struct gr_projection_d *projection, int near, int far)
 {
-// This structure uses Integer values.
-
-// Parameters:
-    if ((void*) projection == NULL){
+    if ( (void*) projection == NULL ){
         printf("view: projection\n");
-        goto fail;
+        return -1;
     }
     if (projection->initialized != TRUE){
         printf("view: initialized\n");
-        goto fail;
+        return -1;
     }
 
-    // #ps
-    // Far must be bigger than near.
-
-// The projection info structure.
-// Using Integer values.
-    if ((void*) CurrentProjection == NULL){
-        goto fail;
-    }
     CurrentProjection->zNear  = (int) near;
     CurrentProjection->zFar   = (int) far;
-    CurrentProjection->zRange = (int) (far - near); 
-//done
+    CurrentProjection->zRange = 
+         (int) (CurrentProjection->zFar - CurrentProjection->zNear);
+
     return 0;
-fail:
-    return (int) -1;
 }
 
-// Wrapper
 int 
 gr_depth_range(
     struct gr_projection_d *projection, 
@@ -147,7 +109,6 @@ gr_depth_range(
     return (int) view(projection,near,far);
 }
 
-// Wrapper
 // Limites da profundidade usada pelo raster.
 // See: view().
 void 
@@ -161,8 +122,7 @@ gwsDepthRange(
 
 // ======================================================
 // Using float.
-// Initializes the CurrentProjectionF structure.
-// This structure uses Float values.
+
 int 
 grInitializeProjection(
     float znear, 
@@ -173,37 +133,39 @@ grInitializeProjection(
     float scalefactor )
 {
 // Projection Matrix
-    float DefaultScaleFactor = (float) 0.5f;
     float fNear = (float) znear;  //0.1f;
     float fFar  = (float) zfar;   //1000.0f;
     float fFov = (float) fov;     //90.0f;
 
     CurrentProjectionF.initialized = FALSE;
 
-// #ps
-// The far must be bigger than near.
-
     CurrentProjectionF.znear = (float) znear;
     CurrentProjectionF.zfar  = (float) zfar;
     CurrentProjectionF.fov   = (float) fov;
 
-//
-// The Scale factor
-//
-
-// #todo: 
-// We have a formula for this, the caller needs to respect it.
 // % da tela.
-    
-    if ((float) scalefactor <= 0.0f){
-        scalefactor = (float) DefaultScaleFactor;
+    if ( (float) scalefactor <= 0.0f ){
+        scalefactor = (float) 0.5f;   // default
     }
     CurrentProjectionF.scale_factor = (float) scalefactor;
 
+// fail
+// Division by '0'.
+    if (height == 0){
+        return -1;
+    }
+
+    float fAspectRatio = (float) width / (float) height;
+    //float fAspectRatio = (float) 800 / (float) 600;
+    //float fAspectRatio = (float)ScreenHeight() / (float)ScreenWidth();
+
+    CurrentProjectionF.width = (unsigned long) (width & 0xFFFFFFFF);
+    CurrentProjectionF.height = (unsigned long) (height & 0xFFFFFFFF);
+    CurrentProjectionF.ar = (float) fAspectRatio;
+
 // :::: The fov scaling factor. ::::
-// This represents the scale factor but using radians instead of degree.
-// fov in radient.
 // Quanto menor for o angulo, maior será o objeto.
+// fov in radient.
 // 1/tan(fov/2)
 
     float fFovRad = 
@@ -215,30 +177,6 @@ grInitializeProjection(
     // but this value is not working fine.
     // Se we are using somethig between 0.01f and 2.0f.
     //CurrentProjectionF.scale_factor = fFovRad;
-
-//
-// The aspect ratio
-//
-
-// Fatal error.
-// Division by '0'.
-    if (height == 0){
-        goto fail;
-    }
-    float fAspectRatio = (float) width / (float) height;
-    //float fAspectRatio = (float) 800 / (float) 600;
-    //float fAspectRatio = (float)ScreenHeight() / (float)ScreenWidth();
-    CurrentProjectionF.width = (unsigned long) (width & 0xFFFFFFFF);
-    CurrentProjectionF.height = (unsigned long) (height & 0xFFFFFFFF);
-    CurrentProjectionF.ar = (float) fAspectRatio;
-
-//
-// The projection matrix.
-//
-
-// This matrix was define on top of proj.c.
-// See: 
-// libs/libgr3d/include/grprim3d.h
 
     // afx
     matProj.m[0][0] = (float) (fAspectRatio * fFovRad);
@@ -253,10 +191,16 @@ grInitializeProjection(
     
     matProj.m[3][3] = (float) 0.0f;
 
-// Done:
     CurrentProjectionF.initialized = TRUE;
+
     return 0;
-fail:
-    return (int) -1;
 }
+
+
+
+
+
+
+
+
 

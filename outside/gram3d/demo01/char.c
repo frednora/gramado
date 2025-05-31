@@ -1,16 +1,15 @@
-// char.c 
-// Char support.
-// 2019 - Created by Fred Nora.
+/*
+ * File: char.c 
+ *     gws - Char support.
+ * History:
+ *     2019 - Created by Fred Nora.
+ */
 
 #include "gram3d.h"
-
 
 // Draw char support
 int gcharWidth=0;
 int gcharHeight=0;
-
-//============================================
-
 
 // IN: left, right, top, bottom.
 void
@@ -135,7 +134,7 @@ int gwssrv_init_char(void)
     return 0;
 }
 
-// Build a transparent 8x8 char into the backbuffer.
+// Constrói um caractere transparente 8x8 no buffer.
 void 
 charBackbufferCharBlt ( 
     unsigned long x, 
@@ -146,12 +145,12 @@ charBackbufferCharBlt (
     grBackbufferDrawCharTransparent ( x, y, color, c );
 }
 
-void charSetCharWidth (int width)
+void charSetCharWidth ( int width )
 {
     gcharWidth = (int) width;
 }
 
-void charSetCharHeight (int height)
+void charSetCharHeight ( int height )
 {
     gcharHeight = (int) height;
 }
@@ -167,7 +166,7 @@ int charGetCharHeight (void)
 }
 
 /*
- * grBackbufferDrawCharTransparent:
+ * charBackbufferDrawcharTransparent:
  *     Desenha um caractere sem alterar o pano de fundo.
  *     >> no backbuffer.
  */
@@ -258,7 +257,9 @@ grBackbufferDrawCharTransparent (
 
 // O caractere sendo trabalhado.
 
-    work_char = (void *) gws_currentfont_address + (c * gcharHeight);
+    work_char = 
+        (void *) gws_currentfont_address + (c * gcharHeight);
+
 
 // Draw char
 // Put pixel using the ring3 routine.
@@ -291,7 +292,7 @@ grBackbufferDrawCharTransparent (
 }
 
 /*
- * grBackbufferDrawChar:
+ * charBackbufferDrawchar:
  *     Constrói um caractere no backbuffer.
  *     Desenha um caractere e pinta o pano de fundo.
  */ 
@@ -379,7 +380,8 @@ grBackbufferDrawChar (
 // O caractere sendo trabalhado.
 // Offset da tabela de chars de altura 8 na ROM.
 
-    work_char = (void *) gws_currentfont_address + (c * gcharHeight);
+    work_char = 
+        (void *) gws_currentfont_address + (c * gcharHeight);
 
 // Draw:
 // Draw a char using a ring3 routine.

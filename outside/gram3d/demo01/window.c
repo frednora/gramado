@@ -29,17 +29,6 @@
 
 static int config_use_transparency=FALSE;
 
-
-// #todo: Podemos colocar isso em outro lugar?
-// Contagem de janelas existentes.
-// precisa ser inicializada.
-unsigned long windows_count=0;
-
-// ...
-
-int show_fps_window=0;
-
-
 // habilitando/desabilitando globalmente 
 // alguns componentes da janela
 
@@ -64,11 +53,6 @@ extern struct gws_window_d  *taskbar_startmenu_button_window;
 extern struct gws_window_d *first_window;
 extern struct gws_window_d *last_window;
 
-
-unsigned long zList[ZORDER_MAX];
-
-// see: window.h
-struct gws_surface_d *rootSurface;
 
 //
 // == private functions: prototypes =============
@@ -201,7 +185,8 @@ void *xxxCreateSurfaceWindow(
                      (unsigned long) &message_buffer[0], 
                      (unsigned long) &message_buffer[0] );
 
-    if ((void *) wObjectPointer == NULL){
+    if ( (void *) wObjectPointer == NULL )
+    {
         gwssrv_debug_print ("xxxCreateSurfaceWindow: [FAIL] wObjectPointer\n");
         return NULL;
     }
@@ -212,6 +197,7 @@ void *xxxCreateSurfaceWindow(
 
     return (void *) wObjectPointer;
 }
+
 
 // not tested yet
 struct gws_surface_d *xxxCreateSurface( 
@@ -229,12 +215,14 @@ struct gws_surface_d *xxxCreateSurface(
 //
 
     surface = 
-        (struct gws_surface_d *) malloc ( sizeof(struct gws_surface_d) );
+        (struct gws_surface_d *) malloc ( sizeof( struct gws_surface_d ) );
 
-    if ((void*) surface == NULL){
+    if ( (void*) surface == NULL )
+    {
         //todo: message
         return NULL;
     }
+
     surface->initialized = FALSE;
 
 //
@@ -247,11 +235,12 @@ struct gws_surface_d *xxxCreateSurface(
                      left, top, width, height, 
                      0, 0, COLOR_BLACK, COLOR_BLACK );  
 
-    if ((void*) surfaceWindowObject == NULL){
+    if ( (void*) surfaceWindowObject == NULL )
+    {
         //todo: message
         return NULL;
     }
-
+    
 //
 // structure
 //
@@ -267,10 +256,10 @@ struct gws_surface_d *xxxCreateSurface(
     surface->locked = FALSE;
     
     surface->next = NULL;
+    surface->initialized = TRUE;
 
     surface->used = TRUE;
     surface->magic = 1234;
-    surface->initialized = TRUE;
 
     return (struct gws_surface_d *) surface;
 }
@@ -2050,10 +2039,9 @@ int RegisterWindow(struct gws_window_d *window)
     register int __slot=0;
     struct gws_window_d *tmp;
 
-// Parameter:
     if ((void *) window == NULL){
         //gws_debug_print ("RegisterWindow: window struct\n");
-        goto fail;
+        return (int) -1;
     }
 
 // Contagem de janelas e limites.
@@ -2065,7 +2053,7 @@ int RegisterWindow(struct gws_window_d *window)
     if (windows_count >= WINDOW_COUNT_MAX){
         //gws_debug_print ("RegisterWindow: Limits\n");
         printf ("RegisterWindow: Limits\n");
-        goto fail;
+        return -1;
     }
 
 // Search for empty slot
@@ -2083,7 +2071,8 @@ int RegisterWindow(struct gws_window_d *window)
         }
     };
 
-fail:
+// fail
+    //gwssrv_debug_print("No more slots\n");
     return (int) (-1);
 }
 
@@ -2126,7 +2115,6 @@ struct gws_rect_d *clientrect_from_window(struct gws_window_d *window)
 {
     struct gws_rect_d *rect;
 
-// Parameter:
     if ((void*) window == NULL)
         return NULL;
     if (window->used != TRUE)
@@ -2144,7 +2132,6 @@ struct gws_rect_d *rect_from_window(struct gws_window_d *window)
 {
     struct gws_rect_d *rect;
 
-// Parameter:
     if ((void*) window == NULL)
         return NULL;
     if (window->used != TRUE)

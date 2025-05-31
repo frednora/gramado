@@ -1,21 +1,8 @@
+
 // display.h
-// Display device support.
-// Created by Fred Nora.
 
 #ifndef ____DISPLAY_H
 #define ____DISPLAY_H    1
-
-
-
-// Pointers to screens.
-#define MAX_SCREENS    4
-#define SCREEN_FRONTBUFFER     0
-#define SCREEN_BACKBUFFER      1
-//#define SCREEN_BACKBUFFER2   2
-//#define SCREEN_BACKBUFFER3   3
-
-extern unsigned long screens[MAX_SCREENS];
-
 
 
 struct gws_display_d
@@ -75,12 +62,13 @@ struct gws_display_d
 
     struct gws_display_d *next;
 };
-// see: globals.c
-extern struct gws_display_d  *CurrentDisplay;
+
+struct gws_display_d  *CurrentDisplay;
 
 //#todo
 //#define GWS_DISPLAY_MAX 128;
 //unsigned long displayList[GWS_DISPLAY_MAX];
+
 
 #endif    
 

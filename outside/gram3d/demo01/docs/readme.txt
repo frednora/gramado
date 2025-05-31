@@ -1,10 +1,10 @@
 
- demo01/
+ demo00/
  Let's create a documentation for this demo.
 
- For now, we're simply iterating the demo00/ creating a better standard for this type of project.
- The main goal is organizing the code for future iterations. But we will also want 
-a better understanding of the support for graphical projection.
-
+ This demo was the first one created for Gramado OS.
+ maybe we're not gonne do changes in this projects, it's because
+we have some iterations where we can use our creativity to discover new possibilities.
+ see: demo01/, demo02/ ...
 
 

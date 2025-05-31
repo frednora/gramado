@@ -1,5 +1,5 @@
 /*
-# demo01 - 3D game for Gramado OS.
+# demo00 - 3D game for Gramado OS.
 # This is also a server.
 # It's called by the init process.
 # 2022 - Created by Fred Nora.
@@ -3373,18 +3373,18 @@ static int on_execute(void)
 // ex: OsInit();
 
     // #debug
-    gwssrv_debug_print("demo01: Initializing\n");
+    gwssrv_debug_print("demo00: Initializing\n");
 
 // Initialize the client list support.
     initClientSupport();
 
 // The server is also a client.
     if ((void*) serverClient == NULL){
-        printf("demo01: serverClient\n");
+        printf("demo00: serverClient\n");
         goto fail;
     }
     if ( serverClient->used != TRUE || serverClient->magic != 1234 ){
-        printf("demo01: serverClient validation\n");
+        printf("demo00: serverClient validation\n");
         goto fail;
     } 
 
@@ -3404,7 +3404,7 @@ static int on_execute(void)
 
     _status = (int) registerDS();
     if (_status < 0){
-        printf ("demo01: Couldn't register the server\n");
+        printf ("demo00: Couldn't register the server\n");
         goto fail;
     }
     display_server->registration_status = TRUE;
@@ -3439,7 +3439,7 @@ static int on_execute(void)
 // Socket: Creating the socket for the server.
     server_fd = (int) socket(AF_GRAMADO, SOCK_STREAM, 0);
     if (server_fd < 0){
-        printf ("demo01: on socket()\n");
+        printf ("demo00: on socket()\n");
         goto fail;
     }
 // Global variable
@@ -3464,7 +3464,7 @@ static int on_execute(void)
                   addrlen );
 
     if (bind_status < 0){
-        printf ("demo01: on bind()\n");
+        printf ("demo00: on bind()\n");
         goto fail;
     }
 
@@ -3494,7 +3494,7 @@ static int on_execute(void)
     int graphics_status = -1;
     graphics_status = (int) InitHot();
     if (graphics_status < 0){
-        printf("demo01: InitHot failed\n");
+        printf("demo00: InitHot failed\n");
         goto fail;
     }
 
@@ -3506,12 +3506,13 @@ static int on_execute(void)
 
 // No root window.
     if ((void*) WindowManager.root == NULL){
-        printf("demo01: WindowManager.root fail\n");
+        printf("demo00: WindowManager.root fail\n");
         goto fail;
     }
 // No taskbar.
-    if ((void*) WindowManager.taskbar == NULL){
-        printf("demo01: WindowManager.taskbar fail\n");
+    if ((void*) WindowManager.taskbar == NULL)
+    {
+        printf("demo00: WindowManager.taskbar fail\n");
         goto fail;
     }
 
@@ -3625,7 +3626,7 @@ static int on_execute(void)
 // Chamamos o accepr soment quando
 // o servidor estiver aceitando conexoes.
 
-    gwssrv_debug_print("demo01: Entering main loop\n");
+    gwssrv_debug_print("demo00: Entering main loop\n");
     rtl_focus_on_this_thread();
     running = TRUE;
 
@@ -3647,9 +3648,7 @@ static int on_execute(void)
     }
 
     while (running == TRUE){
-
-        beginTick = (unsigned long) rtl_jiffies();
-
+        gBeginTick = (unsigned long) rtl_jiffies();
         if (IsTimeToQuit == TRUE){
             break;
         }
@@ -3675,7 +3674,7 @@ static int on_execute(void)
 
             //#debug
             if (newconn == ____saved_server_fd){
-                printf("demo01: Invalid connection\n");
+                printf(": Invalid connection\n");
                 goto fail;
             }
             //close(newconn);
@@ -3702,9 +3701,9 @@ static int on_execute(void)
 
 // Is it time to quit?
     if (IsTimeToQuit == TRUE){
-        debug_print ("demo01: IsTimeToQuit\n");
+        debug_print ("demo00: IsTimeToQuit\n");
     } else {
-        debug_print ("demo01: [ERROR] Invalid IsTimeToQuit\n");
+        debug_print ("demo00: [ERROR] Invalid IsTimeToQuit\n");
     };
 
 // #todo
@@ -3747,6 +3746,36 @@ static inline void __outb(uint16_t port, uint8_t val)
 */
 
 
+// ==================================================
+// Testing the feature of printing long numbers with printf.
+
+// Example main function to test printing of 64-bit numbers.
+static int test_printf(void);
+static int test_printf(void) 
+{
+    // Define a 64-bit number. For this example, we use an unsigned long,
+    // since your custom printf expects 64-bit values for the %lx and %lu specifiers.
+    //unsigned long testValue = 0x123456789ABCDEF0UL;
+    unsigned long testValue = 0x123456789ABCDEF0;
+
+    // Print a header message indicating what we're testing.
+    // This uses your custom printf which ultimately calls kinguio_vsprintf.
+    printf("Testing 64-bit number printing features:\n");
+
+    // Print the test value in hexadecimal.
+    // The format specifier "%lx" triggers the custom code path:
+    //   - 'l' sets the type64bit flag to TRUE.
+    //   - 'x' causes the number to be converted to a hexadecimal string.
+    printf("Hexadecimal: %lx\n", testValue);
+
+    // Print the test value in unsigned integer (decimal) format.
+    // The format specifier "%lu" similarly uses the 64-bit conversion path.
+    printf("Unsigned integer: %lu\n", testValue);
+
+    return 0;
+}
+
+
 // Gramado game engine.
 // main: entry point
 // see: gramado.h
@@ -3765,6 +3794,54 @@ int main(int argc, char **argv)
     gUseCallback = FALSE;
 // Stating time.
     starting_tick = (unsigned long) rtl_jiffies();
+
+
+
+// ==================
+// Tests
+
+// OK, its working
+    //test_printf();
+    //while(1){}
+
+// ==================
+// Tests
+
+
+    // Parse three floats for the vertex coordinates.
+    float x = (float)  1.1f;
+    float y = (float)  1.2f;
+    float z = (float)  1.3f;
+
+/*
+    // Output the parsed coordinates.
+    printf("Parsed Vertex Coordinates:\n");
+    printf("x = %f\n", (double)x);
+    printf("y = %f\n", (double)y);
+    printf("z = %f\n", (double)z);
+
+    printf("Test float output: %f\n", (float) 3.14159);
+    printf("Multiple float test: %f, %f, %f\n", 1.23, -4.56, 789.1011);
+*/
+
+/*
+    char buffer[10];
+    snprintf(buffer, sizeof(buffer), "123456789012345");  // Should be truncated safely
+    printf("Truncated Output: %s\n", buffer);
+*/
+
+/*
+    char buffer[100];
+    int xx=42;
+    int yy=255;
+    //sprintf(buffer, "Int: %d, Hex: %x, Float: %f", 42, 255, 3.14159);
+    //sprintf(buffer, "Int: %d, Hex: %x", (int) xx, (int) yy);
+    sprintf(buffer,"String");
+    printf("Formatted Output: %s\n", buffer);
+*/
+
+    //testing_model_scanner();
+    //while(1){}
 
 //0 = Time to quit.
     Status = (int) on_execute();

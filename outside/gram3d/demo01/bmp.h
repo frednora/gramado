@@ -1,14 +1,14 @@
+
 // bmp.h
 // BMP file support.
-// Created by Fred Nora.
 
 #ifndef __ENG_BMP_H
 #define __ENG_BMP_H    1
 
 // Signature "MB" 
-#define BMP_TYPE  0x4D42        
+#define BMP_TYPE 0x4D42        
 
-// No operation with the color.
+// Não há operação com cor.
 #define  BMP_CHANGE_COLOR_NULL  0
 // O pixel com a cor selecionada deve ser ignorado.
 #define  BMP_CHANGE_COLOR_TRANSPARENT  1000
@@ -17,11 +17,11 @@
 // ...
 
 
-// Flag que avisa que deve haver alguma mudanï¿½a nas cores. 
+// Flag que avisa que deve haver alguma mudança nas cores. 
 extern int bmp_change_color_flag; 
 // Salva-se aqui uma cor para substituir outra. 
 extern unsigned int bmp_substitute_color; 
-// Cor selecionada para ser substituï¿½da ou ignorada. 
+// Cor selecionada para ser substituída ou ignorada. 
 extern unsigned int bmp_selected_color; 
 
 

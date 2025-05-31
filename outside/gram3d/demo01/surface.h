@@ -1,8 +1,5 @@
-// surface.h
-// Created by Fred Nora.
 
-#ifndef __SURFACE_H
-#define __SURFACE_H    1
+// surface.h
 
 void 
 demoClearSurface(
@@ -10,7 +7,5 @@ demoClearSurface(
     unsigned int color );
 
 void demoFlushSurface(struct gws_window_d *clipping_window);
+
 void demoClearWA(unsigned int color);
-
-#endif   
-

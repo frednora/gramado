@@ -1,7 +1,7 @@
-
 // models.c
 
-#include "gram3d.h"
+
+#include "../gram3d.h"
 
 struct cat_model_d  CatModel;
 

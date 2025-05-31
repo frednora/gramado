@@ -1,11 +1,14 @@
-// window.h
-// Window support.
-// 2020 - Created by Fred Nora.
+/*
+ * File: window.h
+ * History:
+ *     2020 - Created by Fred Nora.
+ */
 
 #ifndef ____WINDOW_H
 #define ____WINDOW_H    1
 
 #include "event.h"
+
 
 // ===============================================================
 
@@ -40,6 +43,12 @@
 // ...
 
 // ===============================================================
+
+
+
+
+
+
 
 
 // The window manager global structure.
@@ -137,6 +146,25 @@ extern struct gws_windowmanager_d  WindowManager;
 #define WM_MODE_OVERLAPPED  2
 #define WM_MODE_MONO        3
 
+// ======
+
+
+
+// ======
+
+// wm prototypes
+void __set_default_background_color(unsigned int color);
+unsigned int __get_default_background_color(void);
+
+void __set_custom_background_color(unsigned int color);
+unsigned int __get_custom_background_color(void);
+
+int __has_custom_background_color(void);
+int __has_wallpaper(void);
+
+void __init_wm_structure(void);
+
+
 //apresentação.
 #define VIEW_NULL      0
 #define VIEW_FULL      1000
@@ -193,11 +221,11 @@ extern struct gws_windowmanager_d  WindowManager;
 // #todo: Podemos colocar isso em outro lugar?
 // Contagem de janelas existentes.
 // precisa ser inicializada.
-extern unsigned long windows_count;
+unsigned long windows_count;
 
 // ...
 
-extern int show_fps_window;
+int show_fps_window;
 
 
 /*
@@ -205,8 +233,12 @@ extern int show_fps_window;
  *     Structure for button object.
  *     Env: gws in ring3.
  */
+
 struct gws_button_d
 {
+    //object_type_t   objectType;
+    //object_class_t  objectClass;
+
     int used;
     int magic;
 
@@ -265,6 +297,7 @@ struct gws_button_d
 
     struct gws_button_d *Next;  
 };
+
 
 
 /*
@@ -368,6 +401,7 @@ typedef enum {
 }gws_server_window_classes_t;
 
 
+
 //estrutura para window class
 struct gws_window_class_d
 {
@@ -397,6 +431,7 @@ struct gws_window_class_d
 
 // Input pointer device type.
 typedef enum {
+
     IP_DEVICE_NULL,
     IP_DEVICE_KEYBOARD,
     IP_DEVICE_MOUSE
@@ -404,12 +439,11 @@ typedef enum {
 } gws_ip_device_t;
 
 
+
 // The controls for a given window.
 // w.Controls->minimize
 struct windowcontrols_d
 {
-    int initialized;
-
     //struct gws_window_d *minimize;
     //struct gws_window_d *maximize;  //maximize/restore
     //struct gws_window_d *close;  
@@ -417,6 +451,8 @@ struct windowcontrols_d
     int minimize_wid;
     int maximize_wid;
     int close_wid;
+    
+    int initialized;
 };
 
 //
@@ -491,11 +527,11 @@ struct windowframe_d
 
 struct gws_window_d 
 {
+    int id;
+    //int wid;
 // Structure validation
     int used;
     int magic;
-    int id;
-    //int wid;
 // Controls
     struct windowcontrols_d  Controls;
 // Single event
@@ -1104,7 +1140,7 @@ extern unsigned long windowList[WINDOW_COUNT_MAX];
 #define BOTTOM_WINDOW  0
 // ...
 
-extern unsigned long zList[ZORDER_MAX];
+unsigned long zList[ZORDER_MAX];
 
 //
 // ================================================================
@@ -1120,9 +1156,6 @@ struct gws_surface_d
     int used;
     int magic;
 
-// Só depois de inicializada os valores da janela são validos.
-    int initialized;
-
     // Pointer to the window in kgws.
     // Redirection?
     void *window_object;
@@ -1132,38 +1165,26 @@ struct gws_surface_d
     unsigned long width;
     unsigned long height;
 
-    int dirty;    
-    int locked;
+    // Só depois de inicializada os valores da janela são validos.
+    int initialized;
 
+    int dirty;
+    
+    int locked;
+    
     // ...
     
     struct gws_surface_d *next;
 };
+struct gws_surface_d *rootSurface;
 
-// see: window.c
-extern struct gws_surface_d *rootSurface;
 
 //
 // == prototypes ===========================
 //
 
-// ===========================================
-
-// wm prototypes
-void __set_default_background_color(unsigned int color);
-unsigned int __get_default_background_color(void);
-
-void __set_custom_background_color(unsigned int color);
-unsigned int __get_custom_background_color(void);
-
-int __has_custom_background_color(void);
-int __has_wallpaper(void);
-
-void __init_wm_structure(void);
-
-// ====
-
 void set_status_by_id( int wid, int status );
+
 
 //
 // Focus
@@ -1581,9 +1602,12 @@ void gwsWindowUnlock (struct gws_window_d *window);
 int gwsDefineInitialRootWindow ( struct gws_window_d *window );
 int gwssrv_init_windows(void);
 
+
 #endif    
 
+
+
 //
-// End
+// End.
 //
 

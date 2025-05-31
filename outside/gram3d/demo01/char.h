@@ -1,5 +1,3 @@
-// char.h
-// Created by Fred Nora.
 
 #ifndef __CHAR_H
 #define __CHAR_H  1

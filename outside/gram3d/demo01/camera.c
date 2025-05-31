@@ -1,42 +1,12 @@
-// camera.c
-// Created by Fred Nora.
 
 #include "gram3d.h"
 
 
-
+// Not using float.
+struct gr_camera_d  *CurrentCamera;
 // Using float.
 struct gr_cameraF_d  CurrentCameraF;
 
-// Not using float.
-struct gr_camera_d  *CurrentCamera;
-
-
-// ==============================================
-// Using float.    
-
-// Initialize the camera structure.
-// Using float.
-int cameraF_initialize(void)
-{
-    CurrentCameraF.initialized = FALSE;
-
-// Position
-    CurrentCameraF.position.x = (float) 0.0f;
-    CurrentCameraF.position.y = (float) 0.0f;
-    CurrentCameraF.position.z = (float) 0.0f;
-// Upview
-    CurrentCameraF.upview.x = (float) 0.0f;
-    CurrentCameraF.upview.y = (float) 0.5f;
-    CurrentCameraF.upview.z = (float) 0.0f;
-// Lookat
-    CurrentCameraF.lookat.x = (float) 0.0f;
-    CurrentCameraF.lookat.y = (float) 0.0f;
-    CurrentCameraF.lookat.z = (float) 0.0f;
-
-    CurrentCameraF.initialized = TRUE;
-    return 0;
-}
 
 // ==============================================
 // Not using float.
@@ -44,7 +14,7 @@ int cameraF_initialize(void)
 int camera_initialize(void)
 {
     CurrentCamera = (void *) malloc( sizeof( struct gr_camera_d ) );
-    if ((void*) CurrentCamera == NULL){
+    if ( (void*) CurrentCamera == NULL ){
         printf("camera_initialize: fail\n");
         exit(1);
     }
@@ -52,7 +22,6 @@ int camera_initialize(void)
     CurrentCamera->initialized = FALSE;
     CurrentCamera->used = TRUE;
     CurrentCamera->magic = 1234;
-
 // Position
     CurrentCamera->position.x = 0;
     CurrentCamera->position.y = 0;
@@ -66,7 +35,7 @@ int camera_initialize(void)
     CurrentCamera->lookat.y = 0;
     CurrentCamera->lookat.z = 0;
 
-    if ((void*) CurrentProjection != NULL)
+    if ( (void*) CurrentProjection != NULL )
     {
         if (CurrentProjection->initialized == TRUE){
             CurrentCamera->projection = 
@@ -75,23 +44,23 @@ int camera_initialize(void)
     }
 
     CurrentCamera->initialized = TRUE;
+
     return 0;
 }
 
-// Update camera.
 int 
 camera ( 
     int x, int y, int z,
     int xUp, int yUp, int zUp,
     int xLookAt, int yLookAt, int zLookAt )
 {
+// Update camera.
 
-// Structure validation
-    if ((void*) CurrentCamera == NULL){
-        goto fail;
+    if ( (void*) CurrentCamera == NULL ){
+        return -1;
     }
     if (CurrentCamera->magic != 1234){
-        goto fail;
+        return -1;
     }
 
 // EYE:
@@ -111,55 +80,43 @@ camera (
     CurrentCamera->lookat.z = zLookAt;
 
     return 0;
-
-fail:
-    return (int) -1;
 }
 
 int 
 unveil_camera(
     int model_x, int model_y, int model_z )
 {
-// Object window
+// object window
     struct gws_window_d *ow;
-// Ray
-    struct gr_ray_d  r;
-
-// Object window.
-// Use the demo window if it is possible
     ow = NULL;
-    if ((void*) __demo_window != NULL)
-    {
-        if (__demo_window->magic == 1234)
+// #todo
+// Use the demo window if it is possible
+    if ( (void*) __demo_window != NULL ){
+        if (__demo_window->magic==1234)
             ow = __demo_window;
     }
 
-//
-// Ray
-//
+    struct gr_ray_d  r;
 
     r.used = TRUE;
     r.magic = 1234;
 
-// Reset origin
+// origin
+// reset
     r.p[RAY_ORIGIN].x = 0;
     r.p[RAY_ORIGIN].y = 0;
     r.p[RAY_ORIGIN].z = 0;
     r.p[RAY_ORIGIN].color = COLOR_WHITE;
 
-//
-// Structure
-//
-
 // Where is our camera?
-    if ((void*) CurrentCamera == NULL){
-        goto fail;
+    if ( (void*) CurrentCamera == NULL ){
+        return -1;
     }
     if (CurrentCamera->magic != 1234){
-        goto fail;
+        return -1;
     }
     if (CurrentCamera->initialized != TRUE){
-        goto fail;
+        return -1;
     }
 
 //
@@ -170,13 +127,13 @@ unveil_camera(
 //ray: 0.0.0 ---> banco
 
 // --------------------------------
-// Change the look at vector.
+// change the look at vector.
     CurrentCamera->lookat.x = model_x;
     CurrentCamera->lookat.y = model_y;
     CurrentCamera->lookat.z = model_z;
 
 // --------------------------------
-// Draw the camera (circle)
+// draw the camera (circle)
     // camera circle
     grCircle3 ( 
         ow,
@@ -240,8 +197,29 @@ unveil_camera(
         r.p[0].color ); 
 
     return 0;
-
-fail:
-    return (int) -1;
 }
+
+// ==============================================
+// Using float.    
+
+int cameraF_initialize(void)
+{
+// Using float.
+    CurrentCameraF.initialized = FALSE;
+// Position
+    CurrentCameraF.position.x = (float) 0.0f;
+    CurrentCameraF.position.y = (float) 0.0f;
+    CurrentCameraF.position.z = (float) 0.0f;
+// Upview
+    CurrentCameraF.upview.x = (float) 0.0f;
+    CurrentCameraF.upview.y = (float) 0.5f;   // # Up  :)
+    CurrentCameraF.upview.z = (float) 0.0f;
+// Lookat
+    CurrentCameraF.lookat.x = (float) 0.0f;
+    CurrentCameraF.lookat.y = (float) 0.0f;
+    CurrentCameraF.lookat.z = (float) 0.0f;
+    CurrentCameraF.initialized = TRUE;
+    return 0;
+}
+
 
