@@ -4,6 +4,9 @@
 
 #include "gram3d.h"
 
+//static int sequence[3*16];  //cube
+static int sequence[4096];  //cube
+static char model_file_buffer[4096];
 
 /*
 // Cube fake object file.
@@ -22,13 +25,9 @@ float arrayFakeFile[] = {
 };
 */
 
-struct gws_window_d *__demo_window;
-
-int gUseDemos = TRUE;
 static int game_update_taskbar=TRUE;
 static int frames=0;
 static int hits=0;
-unsigned long beginTick=0;
 unsigned long accumulatedDeltaTick=0;
 unsigned long sec=0;
 static char buf_fps[64];
@@ -72,8 +71,120 @@ static void drawFlyingCube(struct cube_model_d *cube, float vel);
 
 //======================
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>      // For open()
+#include <unistd.h>     // For read(), close(), lseek()
+#include <ctype.h>
+
+// Declaration of your custom float parser.
+float custom_read_float(const char **strPtr);
+
+// Example implementation of custom_read_float()
+// (Replace this with your full implementation from scan00.c)
+/*
+float custom_read_float(const char **strPtr) {
+    // ... your custom parser code ...
+}
+*/
 
 
+
+// =====================
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>      // For open()
+#include <unistd.h>     // For read(), close(), lseek()
+#include <string.h>
+#include <ctype.h>
+
+
+// Revised function: Loads a multi‑line sequence file using custom_read_float()
+// Each line may have one or more numbers.
+// The parsed numbers (as floats) are cast to int and stored into the sequence array.
+int load_sequence_multiline(int *sequence, int max_elements) 
+{
+
+    /*
+    // Open the file using open()
+    //int fd = open(filename, O_RDONLY);
+    int fd = open(filename, 0, "a+");
+
+    if (fd < 0) {
+        printf("Error: Could not open file %s\n", filename);
+        return -1;
+    }
+    
+    off_t fsize = 512;
+    // Determine the file size using lseek()
+    //off_t fsize = lseek(fd, 0, SEEK_END);
+    //if (fsize == -1) {
+    //    printf("Error: Could not determine file size.\n");
+        //close(fd);
+    //    return -1;
+    //}
+    // Reset file pointer to beginning.
+    //lseek(fd, 0, SEEK_SET);
+    
+    // Allocate a buffer and read the entire file.
+    //char *buffer = (char *)malloc(fsize + 1);
+    char *buffer = (char *)malloc(fsize);
+    if (buffer == NULL) 
+    {
+        printf("Error: Could not allocate buffer memory of size %ld\n", (long)fsize);
+        //close(fd);
+        return -1;
+    }
+
+    //ssize_t bytesRead = read(fd, buffer, fsize);
+    ssize_t bytesRead = read(fd, buffer, fsize);
+    if (bytesRead < 0) {
+        printf("Error: Could not read from file.\n");
+        //free(buffer);
+        //close(fd);
+        return -1;
+    }
+    buffer[bytesRead] = '\0';
+    //close(fd);
+
+*/
+
+    // Now, use strtok_r() to split the buffer into lines.
+    char *saveptr = NULL;
+    char *line = strtok_r(model_file_buffer, "\n", &saveptr);
+    int count = 0;
+    
+    while (line != NULL && count < max_elements) 
+    {
+        // For each line, prepare a pointer for parsing numbers.
+        const char *p = line;
+        
+        // Use custom_read_float() as long as there is something in the line.
+        while (*p != '\0' && count < max_elements) 
+        {
+            // Skip any whitespace if needed (custom_read_float takes care of this).
+            float value = custom_read_float(&p);
+            // If you wish, you can add a check here to ensure a valid number was parsed.
+            sequence[count] = (int) value;
+
+            //#debug ok
+            //printf("%d\n",sequence[count]);
+
+            count++;
+        }
+        line = strtok_r(NULL, "\n", &saveptr);
+    }
+
+    //while(1){}
+
+    //free(buffer);
+    return count;
+}
+
+// Example main routine to test the multi-line loader.
+#define SEQUENCE_MAX_ELEMENTS 48
+
+//=====================
 static void drawTerrain(struct cube_model_d *cube, float fElapsedTime)
 {
 // No rotation. Small translation in positive z.
@@ -145,6 +256,7 @@ static void drawTerrain(struct cube_model_d *cube, float fElapsedTime)
 	matRotZ.m[2][2] = (float) 1.0f;
 	matRotZ.m[3][3] = (float) 1.0f;
 
+
 // 12 triangles.
 // Order: north, top, south, bottom, east, west.
 // clockwise
@@ -160,6 +272,7 @@ static void drawTerrain(struct cube_model_d *cube, float fElapsedTime)
     sequence[27] = (int) 2; sequence[28] = (int) 6; sequence[29] = (int) 4; //f 2 6 4 // east top      n  
     sequence[30] = (int) 7; sequence[31] = (int) 1; sequence[32] = (int) 3; //f 7 1 3 // west bottom   n
     sequence[33] = (int) 7; sequence[34] = (int) 3; sequence[35] = (int) 5; //f 7 3 5 // west top      s 
+
 
 // ---------
 // #test
@@ -395,7 +508,7 @@ static void drawFlyingCube(struct cube_model_d *cube, float vel)
     struct gr_triangleF3D_d  triRotatedXY;   // Rotate in Y
     struct gr_triangleF3D_d  triRotatedXYZ;  // Rotate in Z (Projected)
 
-    int sequence[3*16];  //cube
+    //int sequence[3*16];  //cube
     int cull=FALSE;
     register int i=0;  //loop
     int nTriangles=12;
@@ -467,6 +580,7 @@ static void drawFlyingCube(struct cube_model_d *cube, float vel)
     matRotZ.m[2][2] = (float) 1.0f;
     matRotZ.m[3][3] = (float) 1.0f;
 
+/*
 // ?
 // The 'face' has three vector.
 // Now we're selecting the indexes for these three vectors. I guess.
@@ -485,6 +599,18 @@ static void drawFlyingCube(struct cube_model_d *cube, float vel)
     sequence[27] = (int) 2; sequence[28] = (int) 6; sequence[29] = (int) 4; //f 2 6 4 // east top      n  
     sequence[30] = (int) 7; sequence[31] = (int) 1; sequence[32] = (int) 3; //f 7 1 3 // west bottom   n
     sequence[33] = (int) 7; sequence[34] = (int) 3; sequence[35] = (int) 5; //f 7 3 5 // west top      s 
+*/
+
+    // #
+    // This function is populating sequence[] correctly.
+
+    int numElements = load_sequence_multiline(sequence, SEQUENCE_MAX_ELEMENTS);
+    if (numElements < 0) 
+    {
+        printf("numElements\n");
+        exit(0);
+    }
+
 
 // ---------
 // #test
@@ -1505,6 +1631,53 @@ void demoFlyingCubeSetup(void)
     //demoClearWA(COLOR_BLACK);
     //wm_Update_TaskBar("Hello",TRUE);
     game_update_taskbar = FALSE;
+//================================================
+
+    const char *filename = "sequence.txt";
+    
+    // Open the file using open()
+    //int fd = open(filename, O_RDONLY);
+    int fd = open(filename, 0, "a+");
+
+    if (fd < 0) {
+        printf("Error: Could not open file %s\n", filename);
+        exit(0);
+    }
+    
+    off_t fsize = 512;
+    // Determine the file size using lseek()
+    //off_t fsize = lseek(fd, 0, SEEK_END);
+    //if (fsize == -1) {
+    //    printf("Error: Could not determine file size.\n");
+        //close(fd);
+    //    return -1;
+    //}
+    // Reset file pointer to beginning.
+    //lseek(fd, 0, SEEK_SET);
+    
+    // Allocate a buffer and read the entire file.
+    //char *buffer = (char *)malloc(fsize + 1);
+    //char *buffer = (char *)malloc(fsize);
+    //if (buffer == NULL) 
+    //{
+    //    printf("Error: Could not allocate buffer memory of size %ld\n", (long)fsize);
+        //close(fd);
+    //    return -1;
+    //}
+    
+
+    //ssize_t bytesRead = read(fd, buffer, fsize);
+    ssize_t bytesRead = read(fd, model_file_buffer, fsize);
+    if (bytesRead < 0) {
+        printf("Error: Could not read from file.\n");
+        //free(buffer);
+        //close(fd);
+        //return -1;
+        exit(0);
+    }
+    model_file_buffer[bytesRead] = '\0';
+    //close(fd);
+
 }
 
 // Build, paint and display the frame.
@@ -1535,7 +1708,7 @@ void demoFlyingCube(int draw_desktop, unsigned int bg_color)
 
 // Begin time.
 // Moved to the main loop of the server.
-    //unsigned long beginTick = rtl_jiffies();
+    //unsigned long gBeginTick = rtl_jiffies();
 
 // -------------------------
 // Clear canvas.
@@ -1601,7 +1774,7 @@ void demoFlyingCube(int draw_desktop, unsigned int bg_color)
     //}
 
     unsigned long endTick = rtl_jiffies();
-    accumulatedDeltaTick += endTick - beginTick;
+    accumulatedDeltaTick += (endTick - gBeginTick);
 // New frame.
     frames++;
 

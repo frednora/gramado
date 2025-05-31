@@ -149,11 +149,24 @@ line.o rect.o window.o gws.o comp.o bmp.o connect.o button.o
 	$(CC)  -c world.c   $(user_ccflags) $(CINCLUDES) -o world.o
 	$(CC)  -c proj.c    $(user_ccflags) $(CINCLUDES) -o proj.o
 	$(CC)  -c sprite.c  $(user_ccflags) $(CINCLUDES) -o sprite.o
-	$(CC)  -c models.c  $(user_ccflags) $(CINCLUDES) -o models.o
 	$(CC)  -c surface.c $(user_ccflags) $(CINCLUDES) -o surface.o
-	$(CC)  -c demos.c   $(user_ccflags) $(CINCLUDES) -o demos.o
+
+# Common for all the demos.
+	$(CC)  -c demos/demos.c   $(user_ccflags) $(CINCLUDES) -o demos.o
+	$(CC)  -c demos/models.c  $(user_ccflags) $(CINCLUDES) -o models.o
+# Demos
+	$(CC)  -c demos/flycube.c  $(user_ccflags) $(CINCLUDES) -o flycube.o
+	$(CC)  -c demos/cat00.c    $(user_ccflags) $(CINCLUDES) -o cat00.o
+	$(CC)  -c demos/polygon.c  $(user_ccflags) $(CINCLUDES) -o polygon.o
+	$(CC)  -c demos/tri00.c    $(user_ccflags) $(CINCLUDES) -o tri00.o
+	$(CC)  -c demos/lin00.c    $(user_ccflags) $(CINCLUDES) -o lin00.o
+	$(CC)  -c demos/curve00.c  $(user_ccflags) $(CINCLUDES) -o curve00.o
+
+
 	$(LD) -r -o archive_fx.o \
-grprim.o camera.o world.o proj.o sprite.o models.o surface.o demos.o 
+grprim.o camera.o world.o proj.o sprite.o surface.o \
+demos.o models.o flycube.o cat00.o polygon.o tri00.o lin00.o curve00.o    
+
 
 #extra
 	$(CC)  -c  xxxinput.c  $(user_ccflags) $(CINCLUDES) -o xxxinput.o

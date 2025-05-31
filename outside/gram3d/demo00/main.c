@@ -3648,9 +3648,7 @@ static int on_execute(void)
     }
 
     while (running == TRUE){
-
-        beginTick = (unsigned long) rtl_jiffies();
-
+        gBeginTick = (unsigned long) rtl_jiffies();
         if (IsTimeToQuit == TRUE){
             break;
         }

@@ -2,11 +2,8 @@
 // A place for demos.
 // Created by Fred Nora.
 
-#include "gram3d.h"
+#include "../gram3d.h"
 
-//static int sequence[3*16];  //cube
-static int sequence[4096];  //cube
-static char model_file_buffer[4096];
 
 /*
 // Cube fake object file.
@@ -25,13 +22,12 @@ float arrayFakeFile[] = {
 };
 */
 
-struct gws_window_d *__demo_window;
 
-int gUseDemos = TRUE;
+
+
 static int game_update_taskbar=TRUE;
 static int frames=0;
 static int hits=0;
-unsigned long beginTick=0;
 unsigned long accumulatedDeltaTick=0;
 unsigned long sec=0;
 static char buf_fps[64];
@@ -63,133 +59,15 @@ static int __r[4][4] = {
 */
 
 
-struct gws_window_d *__create_demo_window (
-    unsigned long left,
-    unsigned long top,
-    unsigned long width,
-    unsigned long height );
-
-static void drawTerrain(struct cube_model_d *cube, float fElapsedTime);
-static void drawFlyingCube(struct cube_model_d *cube, float vel);
+static void __drawTerrain(struct cube_model_d *cube, float fElapsedTime);
+static void __drawFlyingCube(struct cube_model_d *cube, float vel);
 
 
 //======================
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <fcntl.h>      // For open()
-#include <unistd.h>     // For read(), close(), lseek()
-#include <ctype.h>
-
-// Declaration of your custom float parser.
-float custom_read_float(const char **strPtr);
-
-// Example implementation of custom_read_float()
-// (Replace this with your full implementation from scan00.c)
-/*
-float custom_read_float(const char **strPtr) {
-    // ... your custom parser code ...
-}
-*/
 
 
-
-// =====================
-#include <stdio.h>
-#include <stdlib.h>
-#include <fcntl.h>      // For open()
-#include <unistd.h>     // For read(), close(), lseek()
-#include <string.h>
-#include <ctype.h>
-
-
-// Revised function: Loads a multi‑line sequence file using custom_read_float()
-// Each line may have one or more numbers.
-// The parsed numbers (as floats) are cast to int and stored into the sequence array.
-int load_sequence_multiline(int *sequence, int max_elements) 
-{
-
-    /*
-    // Open the file using open()
-    //int fd = open(filename, O_RDONLY);
-    int fd = open(filename, 0, "a+");
-
-    if (fd < 0) {
-        printf("Error: Could not open file %s\n", filename);
-        return -1;
-    }
-    
-    off_t fsize = 512;
-    // Determine the file size using lseek()
-    //off_t fsize = lseek(fd, 0, SEEK_END);
-    //if (fsize == -1) {
-    //    printf("Error: Could not determine file size.\n");
-        //close(fd);
-    //    return -1;
-    //}
-    // Reset file pointer to beginning.
-    //lseek(fd, 0, SEEK_SET);
-    
-    // Allocate a buffer and read the entire file.
-    //char *buffer = (char *)malloc(fsize + 1);
-    char *buffer = (char *)malloc(fsize);
-    if (buffer == NULL) 
-    {
-        printf("Error: Could not allocate buffer memory of size %ld\n", (long)fsize);
-        //close(fd);
-        return -1;
-    }
-
-    //ssize_t bytesRead = read(fd, buffer, fsize);
-    ssize_t bytesRead = read(fd, buffer, fsize);
-    if (bytesRead < 0) {
-        printf("Error: Could not read from file.\n");
-        //free(buffer);
-        //close(fd);
-        return -1;
-    }
-    buffer[bytesRead] = '\0';
-    //close(fd);
-
-*/
-
-    // Now, use strtok_r() to split the buffer into lines.
-    char *saveptr = NULL;
-    char *line = strtok_r(model_file_buffer, "\n", &saveptr);
-    int count = 0;
-    
-    while (line != NULL && count < max_elements) 
-    {
-        // For each line, prepare a pointer for parsing numbers.
-        const char *p = line;
-        
-        // Use custom_read_float() as long as there is something in the line.
-        while (*p != '\0' && count < max_elements) 
-        {
-            // Skip any whitespace if needed (custom_read_float takes care of this).
-            float value = custom_read_float(&p);
-            // If you wish, you can add a check here to ensure a valid number was parsed.
-            sequence[count] = (int) value;
-
-            //#debug ok
-            //printf("%d\n",sequence[count]);
-
-            count++;
-        }
-        line = strtok_r(NULL, "\n", &saveptr);
-    }
-
-    //while(1){}
-
-    //free(buffer);
-    return count;
-}
-
-// Example main routine to test the multi-line loader.
-#define SEQUENCE_MAX_ELEMENTS 48
-
-//=====================
-static void drawTerrain(struct cube_model_d *cube, float fElapsedTime)
+static void __drawTerrain(struct cube_model_d *cube, float fElapsedTime)
 {
 // No rotation. Small translation in positive z.
 
@@ -260,7 +138,6 @@ static void drawTerrain(struct cube_model_d *cube, float fElapsedTime)
 	matRotZ.m[2][2] = (float) 1.0f;
 	matRotZ.m[3][3] = (float) 1.0f;
 
-
 // 12 triangles.
 // Order: north, top, south, bottom, east, west.
 // clockwise
@@ -276,7 +153,6 @@ static void drawTerrain(struct cube_model_d *cube, float fElapsedTime)
     sequence[27] = (int) 2; sequence[28] = (int) 6; sequence[29] = (int) 4; //f 2 6 4 // east top      n  
     sequence[30] = (int) 7; sequence[31] = (int) 1; sequence[32] = (int) 3; //f 7 1 3 // west bottom   n
     sequence[33] = (int) 7; sequence[34] = (int) 3; sequence[35] = (int) 5; //f 7 3 5 // west top      s 
-
 
 // ---------
 // #test
@@ -499,7 +375,7 @@ static void drawTerrain(struct cube_model_d *cube, float fElapsedTime)
 
 // Draw the cube.
 // Elapsed time means the amount of time between two events.
-static void drawFlyingCube(struct cube_model_d *cube, float vel)
+static void __drawFlyingCube(struct cube_model_d *cube, float vel)
 {
     char string0[16];
 // Matrices
@@ -512,7 +388,7 @@ static void drawFlyingCube(struct cube_model_d *cube, float vel)
     struct gr_triangleF3D_d  triRotatedXY;   // Rotate in Y
     struct gr_triangleF3D_d  triRotatedXYZ;  // Rotate in Z (Projected)
 
-    //int sequence[3*16];  //cube
+    int sequence[3*16];  //cube
     int cull=FALSE;
     register int i=0;  //loop
     int nTriangles=12;
@@ -584,7 +460,6 @@ static void drawFlyingCube(struct cube_model_d *cube, float vel)
     matRotZ.m[2][2] = (float) 1.0f;
     matRotZ.m[3][3] = (float) 1.0f;
 
-/*
 // ?
 // The 'face' has three vector.
 // Now we're selecting the indexes for these three vectors. I guess.
@@ -603,18 +478,6 @@ static void drawFlyingCube(struct cube_model_d *cube, float vel)
     sequence[27] = (int) 2; sequence[28] = (int) 6; sequence[29] = (int) 4; //f 2 6 4 // east top      n  
     sequence[30] = (int) 7; sequence[31] = (int) 1; sequence[32] = (int) 3; //f 7 1 3 // west bottom   n
     sequence[33] = (int) 7; sequence[34] = (int) 3; sequence[35] = (int) 5; //f 7 3 5 // west top      s 
-*/
-
-    // #
-    // This function is populating sequence[] correctly.
-
-    int numElements = load_sequence_multiline(sequence, SEQUENCE_MAX_ELEMENTS);
-    if (numElements < 0) 
-    {
-        printf("numElements\n");
-        exit(0);
-    }
-
 
 // ---------
 // #test
@@ -911,509 +774,6 @@ static void drawFlyingCube(struct cube_model_d *cube, float vel)
     };  // loop: Number of triangles.
 }
 
-struct gws_window_d *__create_demo_window (
-    unsigned long left,
-    unsigned long top,
-    unsigned long width,
-    unsigned long height )
-{
-    struct gws_window_d *w;
-
-    if ( (void*) __root_window == NULL ){
-        return NULL;
-    }
-
-// Create window
-
-    w = 
-        (struct gws_window_d *) CreateWindow ( 
-                                    WT_SIMPLE, 
-                                    0, //style
-                                    1, //status 
-                                    1, //view
-                                    "DemoWin",  
-                                    left, top, width, height,   
-                                    __root_window, 0, 
-                                    COLOR_BLACK, 
-                                    COLOR_BLACK );
-
-    if ( (void *) w == NULL ){
-        return NULL;
-    }
-    if ( w->used != TRUE ||  w->magic != 1234 ){
-        return NULL;
-    }
-
-// Register the window.
-    int WindowId= -1;
-    WindowId = (int) RegisterWindow(w);
-    if (WindowId<0){
-         return NULL;
-    }
-// ok
-    return (struct gws_window_d *)  w;
-}
-
-void demoLines(void)
-{
-    int i=0;
-    for (i=0; i<320; i+=5)
-    {
-        //3d
-        plotLine3d ( 
-            NULL,
-            0,i,0,      //x,y,z 
-            320-i,0,0,  //x,y,z 
-            COLOR_WHITE); 
-
-        //3d
-        plotLine3d ( 
-            NULL,
-            0,i,0,      //x,y,z 
-            -(320-i),0,0,  //x,y,z 
-            COLOR_WHITE); 
-      
-        // ====
-
-        //3d
-        plotLine3d ( 
-            NULL,
-            -i,0,0,      //x,y,z 
-            0,-(320-i),0,  //x,y,z 
-            COLOR_WHITE); 
-
-        //3d
-        plotLine3d ( 
-           NULL,
-            i,0,0,      //x,y,z 
-           0, -(320-i),0,  //x,y,z 
-            COLOR_WHITE); 
-
-
-    };
-    refresh_screen();
-}
-
-void demoCat(void)
-{
-    register int i=0;
-    int j=0;
-    int count = 8;
-    int scale_max = 100;
-
-// ---------------
-// Create a demo window
-    struct gws_window_d *dw;
-    dw = NULL;
-    dw = (struct gws_window_d *) __create_demo_window(8,8,200,140);
-    if( (void*) dw != NULL )
-    {
-       if(dw->magic==1234){
-           __demo_window = dw;
-       }
-    }
-//---------------------
-
-// depth clipping
-// IN: projection, znear, zfar.
-    gr_depth_range( CurrentProjection, 0, 100 );
-
-// The camera for the cat.
-// 'int' values.
-// IN: Position vector, upview vector, lookat vector.
-    camera ( 
-        0,0,0,
-        0,0,0,
-        0,0,0 );
-
-// Setup model
-// IN: eyes, whiskers, mouth
-    __setupCatModel(TRUE,TRUE,TRUE);
-
-
-// Loop
-    while (count>0)
-    {
-        for (i=0; i<scale_max; i++)
-        {
-            validate_background();                 //begin paint
-            demoClearSurface(dw,GRCOLOR_LIGHTCYAN);   // Clear surface
-            // IN: eye scale, x,y,z
-            __draw_cat(1,0,0,i);
-            demoFlushSurface(dw);
-            //invalidate_background();               // end paint
-            //gr_dc_refresh_screen(gr_dc);
-
-            // good for qemu,
-            //for (j=0; j<8; j++){ gwssrv_yield();}  // Delay
-            // good for kvm,
-            //for (j=0; j<80; j++){ gwssrv_yield();}  // Delay
-            
-            //rtl_yield();
-        };
-
-        count--;
-    };
-}
-
-
-void demoTriangle(void)
-{
-
-// ---------------
-// Create a demo window
-    struct gws_window_d *dw;
-    dw = NULL;
-    dw = (struct gws_window_d *) __create_demo_window(8,8,200,140);
-    if( (void*) dw != NULL )
-    {
-       if(dw->magic==1234){
-           __demo_window = dw;
-       }
-    }
-
-//------------------------------------------
-    struct gr_triangle_d *triangle;
-    int line_size = 40;
-
-// Create the triangle.
-    triangle = (void *) malloc( sizeof( struct gr_triangle_d ) );
-    if ( (void*) triangle == NULL )
-        return;
-    triangle->used = TRUE;
-    triangle->magic = 1234;
-    triangle->initialized = FALSE;
-// down
-    triangle->p[0].x = 0; 
-    triangle->p[0].y = 0;
-    triangle->p[0].z = 0;
-    triangle->p[0].color = COLOR_RED;
-// right
-    triangle->p[1].x = (line_size>>1); 
-    triangle->p[1].y = (line_size>>1);
-    triangle->p[1].z =  0;
-    triangle->p[1].color = COLOR_GREEN;
-// left
-    triangle->p[2].x = -(line_size>>1);
-    triangle->p[2].y =  (line_size>>1);
-    triangle->p[2].z =   0;
-    triangle->p[2].color = COLOR_BLUE;
-
-    triangle->initialized = TRUE;
-
-    int i=0;
-    int j=0;
-    int max = 150;
-    //int T=0;
-
-    for(i=0; i<max; i++)
-    {
-        // clear
-        demoClearSurface(dw,COLOR_BLACK);
-        // Draw a lot of triangles.
-        //for(j=0; j<max; j++)
-        //{
-            // translation
-            triangle->p[0].x++;
-            triangle->p[1].x++;
-            triangle->p[2].x++;
-            grTriangle3(dw,triangle);
-        //};
-
-        // flush surface
-        demoFlushSurface(dw);
-        rtl_yield();
-        //T++;
-    };
-}
-
-// demo: polygon type polyline
-// asteroids space ship like.
-void demoPolygon(void)
-{
-// Down arrow shape.
-
-    struct gr_polygon_d *p;
-    unsigned long vecList[8];
-    
-    struct gr_vec3D_d *v0;
-    struct gr_vec3D_d *v1;
-    struct gr_vec3D_d *v2;
-    struct gr_vec3D_d *v3;
-    struct gr_vec3D_d *v4;
-
-    // ...
-
-    int i=0;
-    int TranslationOffset=0;
-    int j=0;
-
-// Structure
-    p = (struct gr_polygon_d *) malloc( sizeof( struct gr_polygon_d ) );
-    if ((void*)p==NULL){
-        return;
-    }
-
-// polygon type
-    p->type = POLYGON_POLYLINE;
-// number of elements
-    p->n = 6;
-
-// clear vecList.
-// This is a local list.
-
-    p->list_address = (void*) vecList;
-
-    for(i=0; i<8; i++){
-        vecList[i] = 0;
-    };
-
-// Creating some points.
-// 5 vectors
-
-    v0 = (struct gr_vec3D_d *) malloc( sizeof( struct gr_vec3D_d ) );
-    if((void*)v0==NULL){return;}
-
-    v1 = (struct gr_vec3D_d *) malloc( sizeof( struct gr_vec3D_d ) );
-    if((void*)v1==NULL){return;}
-
-    v2 = (struct gr_vec3D_d *) malloc( sizeof( struct gr_vec3D_d ) );
-    if((void*)v2==NULL){return;}
-
-    v3 = (struct gr_vec3D_d *) malloc( sizeof( struct gr_vec3D_d ) );
-    if((void*)v3==NULL){return;}
-
-    v4 = (struct gr_vec3D_d *) malloc( sizeof( struct gr_vec3D_d ) );
-    if((void*)v4==NULL){return;}
-
-    vecList[0] = (unsigned long) v0;
-    vecList[1] = (unsigned long) v1;
-    vecList[2] = (unsigned long) v2;
-    vecList[3] = (unsigned long) v3;
-    vecList[4] = (unsigned long) v4;
-    vecList[5] = (unsigned long) v0;  //circular
-
-// loop
-// animation loop.
-
-    int times=0;
-
-    while(1){
-
-    times++;
-    if(times>8){break;}
-    
-    // translation in Y
-    TranslationOffset=0;
-    
-    // animation loop: 
-    // clear the screen and draw the the model 10 times.
-    
-    for (i=0; i<10; i++){
-
-    demoClearSurface(NULL,COLOR_BLACK);
-           
-    TranslationOffset = (TranslationOffset+i);
-    
-    v0->x = -(20);
-    v0->y =  (20+TranslationOffset);
-    v0->z =   0;
-    v0->color = COLOR_WHITE;
-
-    // fixed
-    v1->x = (0);
-    v1->y = (0+TranslationOffset);
-    v1->z = 0;
-    v1->color = COLOR_WHITE;
-
-    v2->x = (20);
-    v2->y = (20+TranslationOffset);
-    v2->z =  0;
-    v2->color = COLOR_WHITE;
-
-    v3->x =   (0);
-    v3->y = -(20-TranslationOffset);  
-    v3->z =   0;
-    v3->color = COLOR_WHITE;
-
-    v4->x = -(20);
-    v4->y =  (20+TranslationOffset);  
-    v4->z =  0;
-    v4->color = COLOR_WHITE;
-
-
-// Draw
-    xxxPolygonZ(p);
-// Show
-    demoFlushSurface(NULL);  
-    
-    for (j=0; j<8; j++){ gwssrv_yield(); }
-
-    };
-    };   //while
-}
-
-
-void demoPolygon2(void)
-{
-// Diamond shape.
-
-    struct gr_polygon_d *p;
-    unsigned long vecList[8];
-    
-    struct gr_vec3D_d *v0;
-    struct gr_vec3D_d *v1;
-    struct gr_vec3D_d *v2;
-    struct gr_vec3D_d *v3;
-    struct gr_vec3D_d *v4;
-
-    // ...
-
-    int i=0;
-    int TranslationOffset=0;
-    int j=0;
-
-// structure
-
-    p = (struct gr_polygon_d *) malloc( sizeof( struct gr_polygon_d ) );
-    if((void*)p==NULL){
-        return;
-    }
-
-// polygon type
-    p->type = POLYGON_POLYPOINT;
-    //p->type = POLYGON_POLYLINE;
-// number of elements
-    p->n = 6;
-
-// clear vecList.
-// This is a local list.
-
-    p->list_address = (void*) vecList;
-
-    for(i=0; i<8; i++){
-        vecList[i] = 0;
-    };
-
-// Creating some points.
-
-    v0 = (struct gr_vec3D_d *) malloc( sizeof( struct gr_vec3D_d ) );
-    if((void*)v0==NULL){return;}
-
-    v1 = (struct gr_vec3D_d *) malloc( sizeof( struct gr_vec3D_d ) );
-    if((void*)v1==NULL){return;}
-
-    v2 = (struct gr_vec3D_d *) malloc( sizeof( struct gr_vec3D_d ) );
-    if((void*)v2==NULL){return;}
-
-    v3 = (struct gr_vec3D_d *) malloc( sizeof( struct gr_vec3D_d ) );
-    if((void*)v3==NULL){return;}
-
-    v4 = (struct gr_vec3D_d *) malloc( sizeof( struct gr_vec3D_d ) );
-    if((void*)v4==NULL){return;}
-
-    vecList[0] = (unsigned long) v0;
-    vecList[1] = (unsigned long) v1;
-    vecList[2] = (unsigned long) v2;
-    vecList[3] = (unsigned long) v3;
-    vecList[4] = (unsigned long) v4;
-    vecList[5] = (unsigned long) v0;  //circular
-
-// loop
-// animation loop
-
-    int times=0;
-
-    while(1){
-
-    times++;
-    if(times>8){break;}
-    
-    // translation in Y
-    TranslationOffset=0;
-    
-    // animation loop: 
-    // clear the screen and draw the the model 10 times.
-    
-    for (i=0; i<10; i++){
-
-    // clear surface
-    demoClearSurface(NULL,COLOR_BLACK);
-    
-    TranslationOffset = (TranslationOffset+i);
-    
-    v0->x = -(20);
-    v0->y =  (10+TranslationOffset);
-    v0->z =   0;
-    v0->color = COLOR_WHITE;
-
-    // fixed
-    v1->x = (20);
-    v1->y = (10+TranslationOffset);
-    v1->z =  0;
-    v1->color = COLOR_WHITE;
-
-    v2->x =  30;
-    v2->y = (0+TranslationOffset);
-    v2->z =  0;
-    v2->color = COLOR_WHITE;
-
-    v3->x = 0;
-    v3->y = -(10-TranslationOffset);  
-    v3->z =  0;
-    v3->color = COLOR_WHITE;
-
-    v4->x = -30;
-    v4->y = (0+TranslationOffset);  
-    v4->z = 0;
-    v4->color = COLOR_WHITE;
-
-// Draw
-
-    //p->type = POLYGON_POLYPOINT;
-    //xxxPolygonZ(p);
-    //gws_refresh_rectangle(0,0,320,200);
-
-    p->type = POLYGON_POLYLINE;
-    xxxPolygonZ(p);
-
-    // flush surface.
-    demoFlushSurface(NULL);  
-    
-    //delay
-    for (j=0; j<20; j++){ gwssrv_yield();}
-
-    };
-    };   //while
-}
-
-// Curva e string.
-void demoCurve(void)
-{
-    register int i=0;
-    register int j=0;
-    int count=8;
-
-    // IN: ?, near, far
-    gr_depth_range( CurrentProjection, 0, 100 );
-// Loop
-    while (count>0){
-    count--;
-    for (i=0; i<10; i++)
-    {
-        validate_background();
-        demoClearSurface(NULL,GRCOLOR_LIGHTYELLOW);
-        // IN: position, modelz
-        __draw_demo_curve1(i,0);
-        //__draw_demo_curve1(i,i*4);
-        //invalidate_background();
-        demoFlushSurface(NULL);      // flush surface
-        // delay  
-        //for (j=0; j<8; j++){ gwssrv_yield();}
-    };
-    }
-}
-
 // Control + arrow key
 void FlyingCubeMove(int number, int direction, float value)
 {
@@ -1635,53 +995,6 @@ void demoFlyingCubeSetup(void)
     //demoClearWA(COLOR_BLACK);
     //wm_Update_TaskBar("Hello",TRUE);
     game_update_taskbar = FALSE;
-//================================================
-
-    const char *filename = "sequence.txt";
-    
-    // Open the file using open()
-    //int fd = open(filename, O_RDONLY);
-    int fd = open(filename, 0, "a+");
-
-    if (fd < 0) {
-        printf("Error: Could not open file %s\n", filename);
-        exit(0);
-    }
-    
-    off_t fsize = 512;
-    // Determine the file size using lseek()
-    //off_t fsize = lseek(fd, 0, SEEK_END);
-    //if (fsize == -1) {
-    //    printf("Error: Could not determine file size.\n");
-        //close(fd);
-    //    return -1;
-    //}
-    // Reset file pointer to beginning.
-    //lseek(fd, 0, SEEK_SET);
-    
-    // Allocate a buffer and read the entire file.
-    //char *buffer = (char *)malloc(fsize + 1);
-    //char *buffer = (char *)malloc(fsize);
-    //if (buffer == NULL) 
-    //{
-    //    printf("Error: Could not allocate buffer memory of size %ld\n", (long)fsize);
-        //close(fd);
-    //    return -1;
-    //}
-    
-
-    //ssize_t bytesRead = read(fd, buffer, fsize);
-    ssize_t bytesRead = read(fd, model_file_buffer, fsize);
-    if (bytesRead < 0) {
-        printf("Error: Could not read from file.\n");
-        //free(buffer);
-        //close(fd);
-        //return -1;
-        exit(0);
-    }
-    model_file_buffer[bytesRead] = '\0';
-    //close(fd);
-
 }
 
 // Build, paint and display the frame.
@@ -1712,7 +1025,7 @@ void demoFlyingCube(int draw_desktop, unsigned int bg_color)
 
 // Begin time.
 // Moved to the main loop of the server.
-    //unsigned long beginTick = rtl_jiffies();
+    //unsigned long gBeginTick = rtl_jiffies();
 
 // -------------------------
 // Clear canvas.
@@ -1729,7 +1042,7 @@ void demoFlyingCube(int draw_desktop, unsigned int bg_color)
 // Draw terrain.
 // No rotation. Small translation in positive z.
 // 12 triangles.
-    drawTerrain(terrain,0.0f);
+    __drawTerrain(terrain,0.0f);
 
 //- Loop ------------------------------
 // Draw all the cubes.
@@ -1763,7 +1076,7 @@ void demoFlyingCube(int draw_desktop, unsigned int bg_color)
             tmp_cube->t = (float) tmp_cube->t + (float) sec * 0.1f;
             tmp_cube->v = (float) tmp_cube->t * tmp_cube->a;  
             
-            drawFlyingCube( 
+            __drawFlyingCube( 
                 (struct cube_model_d *) tmp_cube,
                 (float) tmp_cube->v );
         }
@@ -1778,7 +1091,7 @@ void demoFlyingCube(int draw_desktop, unsigned int bg_color)
     //}
 
     unsigned long endTick = rtl_jiffies();
-    accumulatedDeltaTick += endTick - beginTick;
+    accumulatedDeltaTick += (endTick - gBeginTick);
 // New frame.
     frames++;
 

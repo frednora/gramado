@@ -64,9 +64,19 @@ extern int current_mode;
 #include "proj.h"
 #include "sprite.h"
 #include "surface.h"
-#include "models.h"
 
-#include "demos.h"
+// Common for all the demos
+#include "demos/demos.h"
+#include "demos/models.h"
+
+// Demos
+#include "demos/flycube.h"
+#include "demos/cat00.h"
+#include "demos/polygon.h"
+#include "demos/tri00.h"
+#include "demos/lin00.h"
+#include "demos/curve00.h"
+
 
 #include "packet.h"
 
