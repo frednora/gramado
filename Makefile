@@ -452,6 +452,10 @@ danger-install-sda:
 danger-install-sdb:
 	sudo dd if=./GRAMHV.VHD of=/dev/sdb
 
+# Remore Zone.Identifier files created by MS Windows.
+danger-remove-zone-id:
+	find . -name "*Zone.Identifier" -type f -delete
+
 qemu-instance:
 	-cp ./GRAMHV.VHD ./QEMU.VHD 
 #xxx-instance:
