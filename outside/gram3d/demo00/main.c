@@ -3800,10 +3800,50 @@ int main(int argc, char **argv)
 
 
 // ==================
+// Tests
+
 // OK, its working
     //test_printf();
     //while(1){}
 
+// ==================
+// Tests
+
+
+    // Parse three floats for the vertex coordinates.
+    float x = (float)  1.1f;
+    float y = (float)  1.2f;
+    float z = (float)  1.3f;
+
+/*
+    // Output the parsed coordinates.
+    printf("Parsed Vertex Coordinates:\n");
+    printf("x = %f\n", (double)x);
+    printf("y = %f\n", (double)y);
+    printf("z = %f\n", (double)z);
+
+    printf("Test float output: %f\n", (float) 3.14159);
+    printf("Multiple float test: %f, %f, %f\n", 1.23, -4.56, 789.1011);
+*/
+
+/*
+    char buffer[10];
+    snprintf(buffer, sizeof(buffer), "123456789012345");  // Should be truncated safely
+    printf("Truncated Output: %s\n", buffer);
+*/
+
+/*
+    char buffer[100];
+    int xx=42;
+    int yy=255;
+    //sprintf(buffer, "Int: %d, Hex: %x, Float: %f", 42, 255, 3.14159);
+    //sprintf(buffer, "Int: %d, Hex: %x", (int) xx, (int) yy);
+    sprintf(buffer,"String");
+    printf("Formatted Output: %s\n", buffer);
+*/
+
+    //testing_model_scanner();
+    //while(1){}
 
 //0 = Time to quit.
     Status = (int) on_execute();

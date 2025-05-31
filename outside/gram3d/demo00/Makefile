@@ -110,6 +110,9 @@ myObjects += archive_fx.o
 myObjects += archive_extra.o    
 myObjects += wm.o   
 
+#test
+myObjects += scan00.o   
+
 myObjects += math.o   
 
 
@@ -158,6 +161,12 @@ grprim.o camera.o world.o proj.o sprite.o models.o surface.o demos.o
 	$(LD) -r -o archive_extra.o  xxxinput.o font.o 
 
 	$(CC)  -c  wm.c   $(user_ccflags) $(CINCLUDES) -I include/  -o wm.o
+
+
+# test
+
+	$(CC)  -c  scan00.c   $(user_ccflags) $(CINCLUDES) -I include/  -o scan00.o
+
 
 #
 # == imported objects =============================

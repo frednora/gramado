@@ -55,18 +55,67 @@ double ceil(double __x)
 }
 
 
+#include <stdio.h>
+
+#define PRECISION 20  // Number of terms in the Taylor series
+
+/**
+ * exp - Computes e^number using Taylor series expansion.
+ *
+ * @number: The exponent to which e is raised.
+ *
+ * Returns: Approximate value of e^number.
+ */
+/*
+double exp00(double number);
+double exp00(double number) 
+{
+    double result = 1.0;  // First term (e^0 = 1)
+    double term = 1.0;    // Current term in the series
+    int i=0;
+
+    for (i = 1; i < PRECISION; i++) {
+        term *= number / i;  // Compute next term
+        result += term;      // Add to result
+    }
+
+    return (double) result;
+}
+*/
+
 // #todo
 // x to power of y
 double pow(double __x, double __y)
 {
-// If x^0 return 1
-    if (__y == 0){ return (double) 1; }
-// If we need to find of 0^y
-    if (__x == 0){ return 0; }
+    return 0.0;
 
-// #todo
+/*
+    // Edge case: x^0 should return 1
+    if (__y == 0) return 1.0;
 
-    return 0;
+    // Edge case: If base is zero and exponent is positive, return 0
+    if (__x == 0) return 0.0;
+
+    // If exponent is an integer, use iterative multiplication
+    if ((int)__y == __y)  // Checking if y is an integer
+    {
+        double result = 1.0;
+        int exponent = (int)__y;
+        
+        // Handle negative exponent
+        int positive_exp = (exponent < 0) ? -exponent : exponent;
+        for (int i = 0; i < positive_exp; i++)
+        {
+            result *= __x;
+        }
+        
+        // If exponent was negative, return the reciprocal
+        return (exponent < 0) ? (1.0 / result) : result;
+    }
+    
+    // If exponent is fractional, use exp(y * log(x)) approach
+    return exp(__y * log(__x));
+*/
 }
 
 

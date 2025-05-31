@@ -92,6 +92,8 @@ extern int current_mode;
 // It needs to be the last one.
 #include "dc.h"
 
+// See: scan00.c
+int testing_model_scanner(void);
 
 struct gws_graphics_d
 {

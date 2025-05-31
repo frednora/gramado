@@ -1827,17 +1827,93 @@ printi (
     return pc + prints(out, s, width, pad);
 }
 
+
+#include <stdbool.h>
+
+// local worker
+// Helper function to convert an integer to a string
+void __int_to_string(char *buffer, int value) {
+    int i = 0, temp = value;
+    char temp_buffer[20];
+    
+    if (value == 0) {
+        buffer[0] = '0';
+        buffer[1] = '\0';
+        return;
+    }
+
+    // Convert integer part to string
+    bool is_negative = value < 0;
+    if (is_negative) temp = -temp;
+
+    while (temp > 0) {
+        temp_buffer[i++] = (temp % 10) + '0';
+        temp /= 10;
+    }
+
+    if (is_negative) temp_buffer[i++] = '-';
+
+    // Reverse the string
+    int j = 0;
+    while (i > 0) {
+        buffer[j++] = temp_buffer[--i];
+    }
+    buffer[j] = '\0';
+}
+
+// local worker
+// Float-to-string conversion without snprintf
+int __float_to_string(char *buffer, size_t size, double value) {
+    if (size < 1) return -1;  // Prevent buffer overflows
+    
+    int integer_part = (int)value;       // Extract integer part
+    double fraction = value - integer_part; // Extract fraction part
+
+    if (fraction < 0) fraction = -fraction;  // Ensure fraction is positive
+
+    char int_buffer[20];
+    __int_to_string(int_buffer, integer_part); // Convert integer part
+
+    // Append integer part to buffer
+    int pos = 0;
+    while (int_buffer[pos] != '\0') {
+        buffer[pos] = int_buffer[pos];
+        pos++;
+    }
+
+    // Append decimal point
+    buffer[pos++] = '.';
+
+    // Convert fractional part manually (6 decimal places)
+    int i=0;
+    for (i = 0; i < 6; i++) {
+        fraction *= 10;
+        buffer[pos++] = ((int)fraction % 10) + '0';
+    }
+
+    buffer[pos] = '\0';  // Null terminate the string
+    return pos;          // Return length of formatted string
+}
+
+/*
+// Helper function to convert a floating-point value to a string
+int float_to_string(char *buffer, size_t size, double value) 
+{
+    return snprintf(buffer, size, "%f", value);  // Simple replacement using snprintf
+}
+*/
+
 /*
  * print:
  *     Used by printf.
  */
-
 int print ( char **out, int *varg )
 {
     register int width, pad;
     register int pc = 0;
     register char *format = (char *) (*varg++);
     char scr[2];
+    char buffer[256];  // Buffer for float conversion
 
     for ( ; *format != 0; format++ ) 
     {
@@ -1909,6 +1985,20 @@ int print ( char **out, int *varg )
 				pc += prints ( out, scr, width, pad);
 				continue;
 			}
+
+            // %f (floating-point)
+            if (*format == 'f') {
+                double f_val = *( (double *) varg++ );  // Retrieve the floating-point argument
+                
+                // Convert float to string and append to the output
+                __float_to_string(buffer, sizeof(buffer), f_val);
+                pc += prints(out, buffer, width, pad);
+
+                // #debug
+                // printf ("Debug: %d\n",buffer);
+
+                continue;
+            }
 			
 			//Nothing.
 		
@@ -2370,7 +2460,7 @@ kinguio_vsprintf(
     char _c_r[] = "\0\0";
 
     // A buffer to hold converted numbers as strings.
-    char buffer[256];
+    static char buffer[1024];
 
     // Variables for handling numerical conversions.
     // d|i|x
@@ -2497,6 +2587,53 @@ kinguio_vsprintf(
                 // Convert the integer to hexadecimal (8 digits may be assumed).
                 kinguio_i2hex(d,buffer,8);
                 str_tmp = _vsputs_r(str_tmp,buffer);
+                break;
+
+            // #test
+            // %f: Print a floating-point number.
+            case 'f':
+            {
+                double f_val = va_arg(ap, double);  // Retrieve the float argument
+                char buffer[256];  // Temporary storage for formatted float
+
+                // Handle negative numbers
+                int is_negative = (f_val < 0) ? 1 : 0;
+                if (is_negative) {
+                    f_val = -f_val;
+                }
+
+                // Extract integer and fractional parts
+                int integer_part = (int)f_val;
+                double fractional_part = f_val - integer_part;
+
+                // Manually convert the integer part without overwriting the buffer
+                int pos = 0;
+                char int_buffer[20];  
+                __int_to_string(int_buffer, integer_part);  // Convert integer part manually
+                while (int_buffer[pos] != '\0') {
+                    buffer[pos] = int_buffer[pos];
+                    pos++;
+                }
+
+                // Append decimal point
+                buffer[pos++] = '.';
+
+                // Convert fractional part manually (6 decimal places)
+                int it=0;
+                for (it = 0; it < 6; it++) {
+                    fractional_part *= 10;
+                    int digit = (int)fractional_part;
+                    buffer[pos++] = digit + '0';
+                    fractional_part -= digit;
+                }
+
+                buffer[pos] = '\0';  // Null terminate the string
+
+                // Debugging step
+                //printf("Debug: Fixed Float Conversion = [%s]\n", buffer);
+
+                str_tmp = _vsputs_r(str_tmp, buffer);
+            }
                 break;
 
             // Default: If an unknown specifier is met, output a literal "%%".
@@ -2738,6 +2875,20 @@ int sprintf ( char *out, const char *format, ... )
 
     return (int) print( &out, varg );
 }
+
+/*
+int copilot_sprintf(char *out, const char *format, ...) ;
+int copilot_sprintf(char *out, const char *format, ...) 
+{
+    va_list args;
+    va_start(args, format);
+
+    int result = vsnprintf(out, 1024, format, args);  // Use vsnprintf for safety
+
+    va_end(args);
+    return result;
+}
+*/
 
 
 void printchar ( char **str, int c )
@@ -4998,28 +5149,20 @@ static void sized_buffer_putch(char*& bufptr, char ch)
  * snprintf:
  *     #todo
  */
-
 int snprintf ( char *str, size_t count, const char *fmt, ... )
 {
     va_list ap;
-    va_start (ap, fmt);
+    va_start(ap, fmt);
 
-    size_t ret=0;
+    // Call vsnprintf to handle format conversion
+    //int ret = vsnprintf(str, count, fmt, ap);   
+    //int ret = kinguio_vsprintf(str, fmt, ap);   
 
-    debug_print ("snprintf: [TODO]\n");
-
-    if ( count <= 0 )
-        return EOF;
-
-
-	//#todo 
-	//Isso parece fácil
-	//ret = vsnprintf(str, count, fmt, ap);
-
-
-    va_end (ap);
+    va_end(ap);
     
-    return ret;
+    //return ret; // Return number of characters written
+
+    return -1;
 }
 
 
@@ -5787,6 +5930,16 @@ vsnprintf (
     return -1; 
 }
 */
+
+// Simple implementation using vsprintf()
+int vsnprintf(char *str, size_t size, const char *format, va_list ap) 
+{
+    // #bugbug
+    // It really crashes the system.
+    //return (int) kinguio_vsprintf(str, format, ap); 
+    return -1;
+}
+
 
 
 /*
