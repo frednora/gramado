@@ -123,6 +123,12 @@ static int running = FALSE;
 extern struct gws_window_d *keyboard_owner;
 extern struct gws_window_d *mouse_owner;
 
+
+static int frames=0;
+unsigned long accumulatedDeltaTick=0;
+static char buf_fps[64];
+unsigned long sec=0;
+
 //
 // == Private functions: Prototypes ========
 //
@@ -3633,6 +3639,17 @@ static int on_execute(void)
     display_server->status = STATUS_RUNNING;
     display_server->initialized = TRUE;
 
+
+    unsigned long end_jiffie=0;
+    unsigned long delta_jiffie=0;
+    int UseSleep = TRUE;
+
+    // Initialize counters.
+    accumulatedDeltaTick=0;
+    sec=0;
+// Clear the buffer for the string in the yellow bar.
+    memset(buf_fps,0,64);
+
 // Testing demos.
     //demoCat();
     //demoCurve();
@@ -3649,9 +3666,7 @@ static int on_execute(void)
 
     while (running == TRUE){
         gBeginTick = (unsigned long) rtl_jiffies();
-        if (IsTimeToQuit == TRUE){
-            break;
-        }
+        if (IsTimeToQuit == TRUE){ break; }
 
         // See: wm.c
         wmInputReader();
@@ -3691,9 +3706,53 @@ static int on_execute(void)
         // calling this drawing routine.
         // see: demos.c
         // IN: Draw desktop, color.
-        if (ShowDemo){
-            //demoFlyingCube(TRUE,COLOR_BLACK);
-            demoFlyingCube(FALSE,COLOR_BLACK);
+        if (ShowDemo)
+        {
+            demoFlyingCube( FALSE, COLOR_BLACK, sec );
+
+            // At this moment we already painted the whole scene
+            // for your demo. Let's print the bar on top of it.
+
+            end_jiffie = (unsigned long) rtl_jiffies();
+            delta_jiffie = (unsigned long) (end_jiffie - gBeginTick);
+            // Add the time we were running.
+            accumulatedDeltaTick += delta_jiffie;
+            // New frame.
+            frames++;
+
+            // Ja se passou 1 segundo?
+            if (accumulatedDeltaTick > 1000)
+            {
+                sec++; // New second.
+                memset(buf_fps,0,64);
+                itoa(frames,buf_fps);
+                strcat(buf_fps," FPS");
+                accumulatedDeltaTick=0;
+                frames=0;
+            }
+
+            // Draw yellow bar with the info.
+            yellowstatus0(buf_fps,FALSE);
+
+            // Flush the backbuffer into the framebuffer.
+            gramado_flush_surface(NULL);
+        
+            // Wait or not?
+            if (end_jiffie > gBeginTick)
+            {   
+                // 60 times per second.
+                if (delta_jiffie < 16)
+                {
+                    // #test
+                    // This function is still in test phase.
+                    if (UseSleep == TRUE)
+                    {
+                        rtl_sleep(16 - delta_jiffie);
+                        // Add the time we were waiting.
+                        accumulatedDeltaTick += (16 - delta_jiffie);
+                    }
+                }
+            }
         }
     };
 

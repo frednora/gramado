@@ -23,14 +23,9 @@ float arrayFakeFile[] = {
 */
 
 
-
-
 static int game_update_taskbar=TRUE;
-static int frames=0;
+
 static int hits=0;
-unsigned long accumulatedDeltaTick=0;
-unsigned long sec=0;
-static char buf_fps[64];
 
 // For the demo.
 #define CUBE_MAX  8
@@ -830,11 +825,6 @@ void demoFlyingCubeSetup(void)
     struct cube_model_d *cube;
 // Cube1
     register int i=0;
-    
-    accumulatedDeltaTick=0;
-    sec=0;
-// Clear the buffer for the string in the yellow bar.
-    memset(buf_fps,0,64);
 
 /*
     for (i=0; i<8; i++){
@@ -1009,7 +999,7 @@ void demoFlyingCubeSetup(void)
 // given all the dots of this model.
 // We need to create a function that will draw 3D cubes.
 
-void demoFlyingCube(int draw_desktop, unsigned int bg_color)
+void demoFlyingCube(int draw_desktop, unsigned int bg_color, unsigned long sec)
 {
 // The function on_execute() in main.c initilizes this demos
 // and spins into a loop calling this function to draw
@@ -1083,33 +1073,5 @@ void demoFlyingCube(int draw_desktop, unsigned int bg_color)
 
         n++;
     };
-
-    //yellowstatus0("test",FALSE);  //draw but don't refresh
-    //if(game_update_taskbar){
-    //    wm_Update_TaskBar("53$",FALSE); //redraw, but not refresh
-    //    game_update_taskbar = FALSE;
-    //}
-
-    unsigned long endTick = rtl_jiffies();
-    accumulatedDeltaTick += (endTick - gBeginTick);
-// New frame.
-    frames++;
-
-// Ja se passou 1 segundo?
-    if (accumulatedDeltaTick > 1000)
-    {
-        sec++; // New second.
-        memset(buf_fps,0,64);
-        itoa(frames,buf_fps);
-            strcat(buf_fps," FPS");
-        accumulatedDeltaTick=0;
-        frames=0;
-    }
-
-// Draw yellow bar.
-    yellowstatus0(buf_fps,FALSE);
-
-// Flush the backbuffer into the framebuffer.
-    gramado_flush_surface(NULL);
 }
 
