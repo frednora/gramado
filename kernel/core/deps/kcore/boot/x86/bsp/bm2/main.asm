@@ -1,16 +1,54 @@
-; main.asm 
-; Main file of Boot manager.
-; 2005 - Created by Fred Nora. 
+;-----------------------------------------------------------------------------
+; File: main.asm
+; Main entry point for GramadoOS Boot Manager (BM2.BIN)
+; Author: Fred Nora (2005)
+; Credits: MikeOS (BSD License)
+; Description:
+;   This assembly file implements the 16/32-bit boot manager responsible for:
+;     - Displaying an interactive boot menu or launching a CLI
+;     - Loading the selected bootloader image into memory
+;     - Passing disk parameters and boot configuration to the bootloader
+;     - Transitioning from 16-bit real mode to 32-bit protected mode
+;
+; Features:
+;   * Simple GUI/menu for boot selection (OK/Cancel dialog)
+;   * Embedded command interpreter for non-interactive/server systems
+;   * Reads/writes disk configuration sectors
+;   * Handles disk geometry and BIOS parameter gathering
+;   * Modular: includes for drivers, FS, dialogs, etc.
+;
+; Build Info:
+;   - Loaded at 0x0000:0x8000 (32 KiB image)
+;   - Compatible with BIOS and VESA video modes (default: 800x600)
+;   - Extensively commented for maintainability and learning
+;-----------------------------------------------------------------------------
+
+;------------------------------------------------------------
+; Boot Manager Flow:
+; 1. Setup segments and stack
+; 2. Read disk geometry (heads, sectors, cylinders)
+; 3. Read boot configuration sector to select menu or skip
+; 4. If menu: show dialog, accept input
+; 5. Load bootloader image and jump to it
+;------------------------------------------------------------
+
+;-------------------------------------------------
+; Table of Contents
+;  - Entry point and setup ............. [bm_main]
+;  - Disk geometry and config .......... [disk_setup]
+;  - Menu logic and dialog ............. [menu_loop]
+;  - Bootloader loading ................ [load_bootloader_image]
+;  - Data and messages ................. [DATA]
+;  - 32-bit includes ................... [bootmanager_main]
+;-------------------------------------------------
 
 ; What is this?
 ; This is a boot manager, it is able to load files,
-; has a popup window with two buttons and a 
-; embedded command interpreter.
+; has a popup window with two buttons and a embedded command interpreter.
 
 ; Purpose:
-; the main goal of this program is loading the 
-; bootloader image into the memory and jump to it 
-; passing some parameters.
+; the main goal of this program is loading the bootloader image into the 
+; memory and jump to it passing some parameters.
 
 ; #todo
 ; Create the bootloader METAFILE.
@@ -22,8 +60,11 @@
 ; say if we're gonna open the window or not.
 ; The metafile will have some more options.
 
-; Credits: MikeOS (License: BSD).
-; Video modes:
+;-----------------------------------------------------------------------------
+; Video Mode Configuration
+;-----------------------------------------------------------------------------
+; The default Gramado mode and video mode are set here.
+; These can be changed by modifying the following constants:
 ; ============
 ; VirtualBox:
 ; ===============
@@ -37,6 +78,7 @@
 ; The main resolution is 800x600x24.
 ; The only way to change the resolution for now is 
 ; changing a global variable in this document.
+
 
 ;---------------------------------------------------
 ; #importante
@@ -78,12 +120,6 @@
 	%DEFINE GBM_VER '1.1'	; version number
 
 
-[ORG 0x8000]
-; We are in 0000H:8000H
-
-; 32768 - 65535 (hex: 8000h - FFFFh)
-; 32KiB space for BM2.BIN
-
 ;;=====================================
 ;;    Entry point do Boot Manager    ;;
 ;;=====================================
@@ -96,12 +132,32 @@
 ;; in the command shell.
 ;; It's like a 'gamemode'.
 
-;;GRAMADO_DEFAULT_MODE EQU 0x00  ; jail        320x200
-;;GRAMADO_DEFAULT_MODE EQU 0x01  ; p1          640x480
-GRAMADO_DEFAULT_MODE EQU 0x02  ; home        800x600
-;;GRAMADO_DEFAULT_MODE EQU 0x03  ; p2          1024x768
-;;GRAMADO_DEFAULT_MODE EQU 0x04  ; castle      ??
-;;GRAMADO_DEFAULT_MODE EQU 0x05  ; california  ??
+;-----------------------------------------------------------------------------
+; Video Mode Configuration
+;-----------------------------------------------------------------------------
+; The default Gramado mode and video mode are set here.
+; These can be changed by modifying the following constants:
+;
+; GRAMADO_DEFAULT_MODE:
+;   0x00 = 320x200 (jail)
+;   0x01 = 640x480 (p1)
+;   0x02 = 800x600 (home, default)
+;   0x03 = 1024x768 (p2)
+;
+; G_VIDEO_MODE:
+;   0x0112 = 640x480x24bpp (default)
+;   0x0115 = 800x600x24bpp
+;   0x0118 = 1024x768x24bpp
+;
+; To change resolution, update the values below.
+;-----------------------------------------------------------------------------
+
+;;GRAMADO_DEFAULT_MODE EQU  0x00  ; jail        320x200
+;;GRAMADO_DEFAULT_MODE EQU  0x01  ; p1          640x480
+GRAMADO_DEFAULT_MODE EQU  0x02  ; home        800x600
+;;GRAMADO_DEFAULT_MODE EQU  0x03  ; p2          1024x768
+;;GRAMADO_DEFAULT_MODE EQU  0x04  ; castle      ??
+;;GRAMADO_DEFAULT_MODE EQU  0x05  ; california  ??
 ;; ...
 
 ;; == Selecting the mode =======================
@@ -114,15 +170,32 @@ GRAMADO_DEFAULT_MODE EQU 0x02  ; home        800x600
 ;; It works on nvidia geforce too, but with 32bpp.
 
 ;; 24bpp on qemu
-;; G_VIDEO_MODE EQU 0x010F    ;320x200
-G_VIDEO_MODE EQU 0x0112    ;640x480
-;; G_VIDEO_MODE EQU 0x0115    ;800x600
-;; G_VIDEO_MODE EQU 0x0118    ;1024x768
+;; G_VIDEO_MODE EQU  0x010F    ;320x200
+G_VIDEO_MODE EQU  0x0112    ;640x480
+;; G_VIDEO_MODE EQU  0x0115    ;800x600
+;; G_VIDEO_MODE EQU  0x0118    ;1024x768
 ;; ...
 ;; ======================================
 
-;; 16 bit:
-;; Estamos no primeiro setor do BM.BIN, ele começa em 16 bit.
+
+;==============================================================================
+; Gramado OS Boot Manager - Main File (main.asm)
+;==============================================================================
+; Purpose:
+;   - Provide a simple boot manager for Gramado OS
+;   - Let user select between GUI boot, CLI, or other options
+;   - Load the chosen bootloader into memory and transfer control
+;
+; Control Flow:
+;   1. Setup segments/stack
+;   2. Get disk geometry and boot config
+;   3. Show menu or skip to boot
+;   4. Load bootloader and jump
+;==============================================================================
+; We are in 0000H:8000H
+; 32768 - 65535 (hex: 8000h - FFFFh)
+; 32KiB space for BM2.BIN
+[ORG 0x8000]
 [bits 16]
 
 ; Entry point.
@@ -140,22 +213,26 @@ os_call_vectors:
 ; see: features/disk.inc
 ROOTDIRSTART EQU  (bootmanagerOEM_ID)
 ROOTDIRSIZE  EQU  (bootmanagerOEM_ID+4)
-
 ; ...
 
-; ========
-; bm_main:
-; The real entry point.
-; #importante: 
-; O unico argumento passado pelo MBR foi o numero do disco.
-; IN: dl = Disk number.
+
+;-----------------------------------------------------------------------------
+; 16-bit Entry Point (bm_main)
+;-----------------------------------------------------------------------------
+; This is the main entry for the Boot Manager (BM2.BIN).
+; - Sets up segment registers and stack (stack at 0x0000:0x6000)
+; - Saves disk number (passed in DL)
 ; /dev/sda - 0x80
 ; /dev/sdb - 0x81
 ; /dev/sdc - 0x82
 ; /dev/sdd - 0x83
-
+; - Initializes data segments and prepares for hardware interrogation
+; - Reads disk geometry (heads, sectors/track, cylinders)
+; - Writes/reads boot configuration sector to determine boot mode/menu
+; IN: 
+;     DL = Disl number.
+;-----------------------------------------------------------------------------
 bm_main:
-; Entry point. (16bits)
 
 ; Set up registers.
 ; Adjust segment registers and stack.
@@ -177,7 +254,7 @@ bm_main:
     mov ds, ax
     mov es, ax
 
-; Save disk number.
+; Save boot disk info for later use
     mov byte [bootmanagerDriveNumber], dl
     mov byte [META$FILE.DISK_NUMBER], dl
     mov byte [DISKINFO16_disk_number], dl
@@ -225,9 +302,15 @@ bm_main:
     ;xor ax, ax
     ;int 0x16
 
-; Get disk info.
-; Get drive parameters: 
-; =====================
+;-----------------------------------------------------------------------------
+; BIOS Disk Parameter Query (INT 13h, AH=08h)
+;-----------------------------------------------------------------------------
+; Retrieves the disk's physical geometry:
+;   - Number of heads
+;   - Sectors per track
+;   - Number of cylinders
+; Results are saved for later use by the bootloader and config routines.
+;-----------------------------------------------------------------------------
 ; Return: CF set on error.
 ; AH = status (07h).
 ; CF clear if successful.
@@ -252,6 +335,7 @@ bm_main:
 ; O valor de Heads foi gravado no BPB mas precisar� ser passado a diante
 ; para uso posterior.
 
+; Heads: DH = highest head number (0-based), add 1 for count
     xor ax, ax
     mov al, dh
     inc ax    ;From 0-based to count.
@@ -276,6 +360,7 @@ bm_main:
 ; O valor de SPT foi gravado no BPB mas precisar 
 ; ser passado a diante para uso posterior.
 
+; Sectors per Track: Bits 5-0 of CL
     xor eax, eax 
     mov al, cl
     and al, byte 00111111b            ;03Fh
@@ -291,6 +376,7 @@ bm_main:
 ; O valor de CylinderNumbers foi gravado em variável 
 ; mas precisar ser passado a diante para uso posterior.
 
+; Cylinders: Combine bits 6-7 of CL and all bits of CH
     xor eax, eax
     mov al, cl           ; Two high bits of cylinder number in bits 6&7.
     and al, 11000000b    ; Mask it.
@@ -306,11 +392,21 @@ bm_main:
 ; ===========================================
 ; #test
 
+;------------------------------------------------------------------------------
+; Boot Disk Signature Injection and Identification
+;------------------------------------------------------------------------------
+; We write a unique signature to a known sector (e.g., sector 4) on the boot disk.
+; - The signature is also passed as a parameter to the next boot stage.
+; - The next stage (e.g., kernel) can scan all disks/ATA ports for this signature
+;   to reliably identify the true boot disk, regardless of BIOS drive number.
+;   This is especially useful in systems with multiple disks, VMs, or ambiguous setups.
+; - The signature includes fixed values, the disk number, and random bytes for uniqueness.
+;------------------------------------------------------------------------------
+
 ; Generate a signature.
 ; Signature: 0xEE, 0xAA, 0xD8, 0x??
 ; #todo: 
-; In the future we're gonna use some random value 
-; generated on the fly.
+; In the future we're gonna use some random value generated on the fly.
     mov al, 0xEE
     mov byte [CONFIG_BUFFER2 +0], al 
     mov al, 0xAA
@@ -344,6 +440,17 @@ bm_main:
 ; ===========================================
 ; #test
 
+;------------------------------------------------------------------------------
+; Feature: Skip Boot Menu for Headless Mode
+; -----------------------------------------------------------------------------
+; If the configuration sector contains the flag to skip the menu ('S'),
+; the system will boot directly, enabling headless or automated startup.
+; Useful for servers, VMs, and non-interactive environments.
+; Configuration is read from sector 2, byte 0:
+;   0x4D ('M'): Show menu
+;   0x53 ('S'): Skip menu (headless mode)
+;------------------------------------------------------------------------------
+
 ; Byte 0: 
 ; Boot Mode (0x4D = Menu, 0x53 = Skip)
 ; Bytes 1-3: 
@@ -353,6 +460,7 @@ bm_main:
 
 ; Sector 2
 ; Read boot configuration 
+; Read configuration sector to determine if we should skip the menu
     MOV AH, 0x02        ; BIOS read sector function
     MOV AL, 0x01        ; Read 1 sector
     MOV CH, 0x00        ; Cylinder 0
@@ -363,16 +471,17 @@ bm_main:
     INT 0x13            ; Call BIOS
 
 ; Compare first byte
+; Evaluate the configuration byte for menu behavior
 
     ; M?
-    MOV AL, [CONFIG_BUFFER]    ; Load first byte of sector into AL
-    CMP AL, 0x4D        ; Compare with 'M' (ASCII)
-    JE MATCH_FOUND      ; Jump if match found
+    MOV AL, [CONFIG_BUFFER]  ; Load first byte of sector into AL
+    CMP AL, 0x4D             ; Compare with 'M' (ASCII)
+    JE MATCH_FOUND           ; Jump if match found
 
     ; S?
-    MOV AL, [CONFIG_BUFFER]    ; Load first byte of sector into AL
-    CMP AL, 0x53        ; Compare with 'S' (ASCII)
-    JE SKIP_MENU         ; Jump if match found
+    MOV AL, [CONFIG_BUFFER]  ; Load first byte of sector into AL
+    CMP AL, 0x53             ; Compare with 'S' (ASCII)
+    JE SKIP_MENU             ; Jump if match found
 
 ; Default option. Open the menu.
 NoValidOption:
@@ -530,12 +639,14 @@ ImageName_GramadoOSBootloader:
     %include "features/int21h.inc"
     %include "features/pm.inc"
 
-;--------------------------------------------------------
-; 32 bits - (Boot Manager 32bit Asm.)
-;--------------------------------------------------------
 
+;-----------------------------------------------------------------------------
+; 32-bit Protected Mode Definitions & Includes
+;-----------------------------------------------------------------------------
+; These includes bring in the 32-bit boot manager logic, drivers,
+; file systems, and shell. Execution jumps here after protected mode switch.
+;-----------------------------------------------------------------------------
 [bits 32]
-
 bootmanager_main:
 
 ; Em ordem de prioridade na compilação.

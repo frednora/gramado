@@ -1,49 +1,48 @@
+;==========================================================
 ; shell32/shell.inc
-; This is a 32bit shell embedded inside the boot manager.
+; 32-bit Shell for Boot Manager - Main Entry
+;
+; This file implements a basic command interpreter (shell) 
+; for the boot manager in Gramado OS.
+;
 ; Credits:
-;     Original - (BareMetal OS, Return Infinity).
-; History: 
-;     2015 - Adapted by Fred Nora.
-
-
-; #todo: Long description.
-;     Boot Manager Shell.
-;     Arquivo principal do Shell do Boot Manager.
-; #importante: 
-; No Boot Manager, o interpretador de comandos se revela importante, 
-; especialmente quando � usado para ver informa��es sobre os dispositivos 
-; de armazenamento e sobre o boot.
-; Ou seja, o foco do interpretador de comandos do Boot Manager deve ser
-; as informa��es sobre o disco de boot e sobre a parti��o ativa. O �nico
-; arquivo que o boot manager deve se preocupar � o Boot Loader, no caso
-; BL.BIN.
-; #todo: 
-; Visualizar e manipular informa��es no metafile sobre arquivos e 
-; armazenamento de dados.
-; #importante: 
-; � obriga��o da rotina que fizer alguma altera��o no metafile sinalizar, 
-; configurando a flag 'shell_exit_flag' com as op��es '0' ou '1'.
-; Assim a rotina exit decidir� se salva o metafile antes de iniciar ou n�o.
-; '1' significa salvar o metafile e '0' significa n�o salvar.
+;   Original version inspired by BareMetal OS (Return Infinity).
+;   Adapted for Gramado OS by Fred Nora, 2015.
+;
+; Overview:
+;   - Interprets user commands entered at the boot manager prompt.
+;   - Provides commands for boot modes, disk/partition info, 
+;     file/directory operations, system control (reboot/shutdown), 
+;     and launching applications.
+;   - Focuses on boot device and active partition information.
+;   - Only the boot loader (BL.BIN) is handled directly by the boot manager.
+;
+; Note:
+;   Any routine modifying the metafile must set the 'shell_exit_flag' 
+;   to indicate whether to save changes (1) or not (0) on exit.
+;==========================================================
 
 
 align 1
     db 'SHELL'
 align 1
 
-;=====================================================
+;==========================================================
 ; os_command_line:
-;     In�cio do loop para pegar comandos.
-;     #### LOOP ####
+; Main command loop for reading and executing user commands.
+;
 ; IN:
-;     Nothing.
+;   None.
 ; OUT:
-;     EAX = 0, Sair sem salvar o metafile, depois reiniciar. 
-;     EAX = 1, Sair salvando o metafile, depois reiniciar.
-; Called for the first time by startShellLoop in start.inc.
-; #todo
-; Simplify this thing.
-;++
+;   EAX = 0  -- Exit without saving metafile (then reboot).
+;   EAX = 1  -- Exit and save metafile (then reboot).
+;
+; This procedure is first called by startShellLoop in start.inc.
+; It repeatedly prompts for user input, parses commands, and 
+; dispatches to appropriate handlers.
+;
+; #todo: Simplify and modularize as needed.
+;==========================================================
 
 os_command_line:
 ; We're gonna get a string.
@@ -52,7 +51,7 @@ os_command_line:
     mov byte [key], 0
 
 ; #todo: Deprecated
-; Flag diferente de zero se haver� alguma opera��o com arquivo.
+; Check if a file operation flag is set
     cmp byte [file_flag], 0
     je .do_prompt
 
@@ -62,16 +61,17 @@ os_command_line:
     ;mov [os_Font_Color], ebx
 
 .do_change_name:
-    ; Mostra uma string, que � um prompt para mudar o nome do arquivo.
+    ; Show prompt to change file name
     mov esi, prompt_change_file
     call os_output
-    ; N�o mostra o prompt.
+    ; Skip showing the regular prompt
     jmp .no_prompt
 
-; Print new prompt.
+; Display the main shell prompt
 ; See: shlib.inc
 .do_prompt:
     call show_prompt_string
+
 .no_prompt:
 
     ;Color.
@@ -98,19 +98,20 @@ os_command_line:
 
 .newLine:
     call os_print_newline
-    jecxz os_command_line    ;;Loop
+    jecxz os_command_line    ; Loop if no input
 
 ; Remove extra spaces.
 ; 'os_string_parse' stores the number of words in ECX.
 .extraSpaces:
     mov esi, edi
     call os_string_parse
-    jecxz os_command_line    ;;Loop 
+    jecxz os_command_line    ; Loop if no input
 
 ; Store the number of words found in the string.
 .saveTotalWords:
     mov byte [app_argc], cl
 
+; Copy first word (command) to cli_command_string
 ; Copy the first word in the string to a new string. 
 ; This is the command/application to run.
 .copyFirstword:
@@ -163,6 +164,7 @@ os_command_line:
 ; #BUGBUG
 ; Trocamos um caractere por outro dentro de uma string.
 
+; Replace spaces in cli_temp_string with 0x00 (split arguments)
 .killSpaces:
 
     mov esi, cli_temp_string
@@ -170,6 +172,14 @@ os_command_line:
     mov bl, 0x00                ;Coloque zero.
     call os_string_change_char  ;lib32\string32.inc
     pop esi                     ;Pop the command string.
+
+
+    ;======================================================
+    ; === COMMAND DISPATCH ===
+    ; Compare entered command with known shell commands.
+    ; If a match is found, jump to its handler.
+    ; Otherwise, process as a file or application operation.
+    ;------------------------------------------------------
 
 ; ==========================================================
 ;         ++++ COMPARE ++++
@@ -411,7 +421,10 @@ add_ext_app:
     call os_string_append    ; Append the extension to the command string.
     jmp full_name
 
-; Ver a opera��o de arquivo escolhida.
+;======================================================
+; === FILE/DIR/APP OPERATION HANDLERS ===
+; Each option below handles a specific file, dir, or app action.
+;======================================================
 
 full_name:
 ver_operacao_escolhida:
@@ -527,21 +540,21 @@ os_command_line_ret:
     ret
 
 
-;================================================
-; Wrapper
+;==========================================================
+; Wrapper for shell startup
 init_shell:
     jmp  shellInit
 
 ;================================================
 ; shellInit:
-;     Interface para chamar o in�cio do Shell do Boot Manager.
+; Entry point to start the boot manager shell.
 ;     Obs: O Essa rotina pode receber algum argumento.
 ; IN:   Nothing.
 ; OUT:  Nothing.
 ; #bugbug
 ; We need to initialize the i8042 when we enter 
 ; in the 32bit protected mode environment.
-;+
+;==========================================================
 shellInit: 
 ; #todo:
 ; Maybe we can create a loop here.
