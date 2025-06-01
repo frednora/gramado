@@ -292,32 +292,34 @@ void memory_destroy_heap (struct heap_d *heap)
     panic ("memory_destroy_heap: Unimplemented\n");
 }
 
+
 /*
  * heapAllocateMemory:
- *     Aloca memória no heap do kernel.
- * IMPORTANTE: 
- *     Aloca BLOCOS de memória dentro do heap do processo Kernel.
- * @todo: 
- *     ?? Ao fim dessa rotina, os valores da estrutura devem ser 
- * armazenas no header, lá onde foi alocado espaço para o header, 
- * assim tem-se informações sobre o header alocado. ??
- *  A estrutura header do heap, é uma estrutura e deve ficar antes 
- * da área desejada. Partes={ header,client,footer }.
- * Obs: 
- *     ?? A estrutura usada aqui é salva onde, ou não é salva ??
+ *   Allocates a block of memory from the kernel heap, tracked with an mmblock_d header.
+ *
+ *   The allocated block consists of:
+ *     [mmblock_d header][User Area][Footer]
+ *
+ *   - The header stores metadata (address, size, usage, etc.).
+ *   - The user area is returned to the caller.
+ *   - The footer marks the end of the allocation.
+ *
+ *   The function ensures the heap pointer and allocation are valid, 
+ *   updates all housekeeping fields, and maintains the list of allocations.
+ *
+ * IN:
+ *   size   Size in bytes to allocate.
+ * OUT:
+ *   Returns the address of the allocated user area if successful, or 0 on failure.
  */
-
-// IN:
-// Size in bytes.
-// OUT: 
-// Address if success. '0' if fail.
-
 unsigned long heapAllocateMemory(unsigned long size)
 {
 // This is a worker for kmalloc() and __kmalloc_impl() in kstdlib.c
 // Allocate memory inside the kernel heap.
 
     struct mmblock_d *Current;
+
+// Calculate sizes for header and user area.
 
 // Header
     unsigned long HeaderBase = 0;
@@ -327,14 +329,13 @@ unsigned long heapAllocateMemory(unsigned long size)
     unsigned long UserAreaBase = 0;
     unsigned long UserAreaInBytes = (unsigned long) size;
 
-// The desired size if 0.
-// Can't allocate 0 size.
+// Do not allow zero-sized allocations. Enforce a minimum.
+// We can't use zero.
     if (UserAreaInBytes == 0){
         UserAreaInBytes = (unsigned long) 8;
     }
 
-// No more available heap.
-// 0 bytes.
+// Fail if the heap is exhausted.
     if (g_available_heap == 0){
         debug_print ("heapAllocateMemory: g_available_heap={0}\n");
         printk      ("heapAllocateMemory: g_available_heap={0}\n");
@@ -344,9 +345,7 @@ unsigned long heapAllocateMemory(unsigned long size)
 // #bugbug
 // And if the available heap is an invalid big number?
 
-// Se o tamanho desejado é maior ou 
-// igual ao espaço disponível.
-
+// Fail if not enough heap space for this allocation.
     if (UserAreaInBytes >= g_available_heap)
     {
         debug_print ("heapAllocateMemory error: UserAreaInBytes >= g_available_heap\n");
@@ -358,13 +357,7 @@ unsigned long heapAllocateMemory(unsigned long size)
         goto fail;
     }
 
-// Contador de blocos.
-// #obs: 
-// Temos um limite para a quantidade de índices na lista de blocos.
-// #bugbug
-// Mesmo tendo espaço suficiente no heap, estamos chegando 
-// nesse limite de indices.
-
+// Increment block count and ensure we do not exceed block tracking array size.
     mmblockCount++;
     if (mmblockCount >= MMBLOCK_COUNT_MAX){
         x_panic ("heapAllocateMemory: mmblockCount\n");
@@ -390,6 +383,8 @@ unsigned long heapAllocateMemory(unsigned long size)
 
 // Out of range.
 // Se estiver fora dos limites do heap do kernel.
+
+// Ensure heap pointer is within kernel heap boundaries.
     if ( g_heap_pointer < KERNEL_HEAP_START || 
           g_heap_pointer >= KERNEL_HEAP_END )
     {
@@ -406,10 +401,12 @@ unsigned long heapAllocateMemory(unsigned long size)
 // O endereço do ponteiro da estrutura será o pointer do heap.
 
 // Agora temos um ponteiro para a estrutura.
+
+// Create and initialize mmblock_d header at the current heap pointer.
     Current = (void *) g_heap_pointer;
     if ((void *) Current == NULL){
-        debug_print("heapAllocateMemory: [FAIL] struct\n");
-        printk     ("heapAllocateMemory: [FAIL] struct\n");
+        debug_print("heapAllocateMemory: Current\n");
+        printk     ("heapAllocateMemory: Current\n");
         goto fail;
     }
 
@@ -429,6 +426,8 @@ unsigned long heapAllocateMemory(unsigned long size)
 // 0=not free 1=FREE (SUPER IMPORTANTE)
 
 // Saving the address of the pointer of the structure.
+
+// Initialize header fields.
     HeaderBase =  (unsigned long) g_heap_pointer;
     Current->Header = (unsigned long) HeaderBase; 
     Current->headerSize = (unsigned long) HeaderInBytes; 
@@ -437,6 +436,7 @@ unsigned long heapAllocateMemory(unsigned long size)
 // User area
 //
 
+// Initialize user area fields.
     UserAreaBase = (unsigned long) (HeaderBase + HeaderInBytes);
     Current->userArea = (unsigned long) UserAreaBase;
     Current->userareaSize = (unsigned long) UserAreaInBytes;
@@ -458,9 +458,11 @@ unsigned long heapAllocateMemory(unsigned long size)
 // Por enquanto o tamanho da área de cliente tem 
 // apenas o tamanho do espaço solicitado.
  
+// Calculate and set footer (end of allocation).
     Current->Footer = (unsigned long) (UserAreaBase + UserAreaInBytes);
 
 //--------------------------------------------
+// Update heap usage statistics.
 
 // All the bytes used this time.
     unsigned long Total = 
@@ -471,24 +473,27 @@ unsigned long heapAllocateMemory(unsigned long size)
 
 //--------------------------------------------
 
-// Previous heap pointer.
+// Save previous heap pointer.
     mm_prev_pointer = (unsigned long) g_heap_pointer; 
 // Next heap pointer.
+// Move to next free position.
     g_heap_pointer = (unsigned long) Current->Footer;
 
 //--------------------------------------------
 
+// Set metadata for tracking this allocation.
     Current->Id = (int) mmblockCount; 
-
-    Current->Free = FALSE;  // Not free!
+    Current->Free = FALSE;  // Not free! Block is now allocated.
     Current->Used = TRUE;
     Current->Magic = 1234;
 
 // List of pointers.
+// Store pointer to header in tracking array.
     mmblockList[mmblockCount] = (unsigned long) Current;
 
 // OK
 // Return the address of the start of the user area.
+// Return pointer to the user-usable area.
     return (unsigned long) UserAreaBase;
 
 // #todo: 
@@ -501,6 +506,19 @@ fail:
     return (unsigned long) 0;
 }
 
+
+/*
+ * heapFreeMemory:
+ *   Marks a previously allocated heap block as reusable (stock),
+ *   by modifying its mmblock_d header. Does NOT actually reclaim memory,
+ *   but prepares the header for potential reuse in future allocations.
+ *
+ *   The pointer provided must point to the start of the user area
+ *   (not the block header).
+ *
+ * IN:
+ *   ptr   Pointer to the user area of the allocated block.
+ */
 // Mark the structure as 'reusable'. STOCK
 // #todo: Precisamos de rotinas que nos mostre
 // essas estruturas.
@@ -510,13 +528,13 @@ fail:
 // O tamanho do header é MMBLOCK_HEADER_SIZE.
 // A alocação de memória não é afetada por essa rotina,
 // ela continua do ponteiro onde parou.
-void heapFreeMemory(void *ptr)
-{
 // This is a worker for kfree() in kstdlib.c
 // It sets the ->magic flag to 4321, turning the
 // mmblock_d structure reusable.
 // #todo: We can clean up the user area.
 
+void heapFreeMemory(void *ptr)
+{
     struct mmblock_d *block_header;
 
 // Validation
@@ -525,8 +543,7 @@ void heapFreeMemory(void *ptr)
         return;
     }
 
-// Validation
-// Out of range.
+// Ensure pointer is within heap bounds.
     if ( ptr < (void *) KERNEL_HEAP_START || 
          ptr >= (void *) KERNEL_HEAP_END )
     {
@@ -538,20 +555,20 @@ void heapFreeMemory(void *ptr)
 // Encontrando o endereço do header.
 // O ponteiro passado é o endereço da área de cliente.
 
+// Find header by subtracting header size from the given pointer.
     unsigned long UserAreaStart = (unsigned long) ptr; 
     unsigned long headerSize = sizeof(struct mmblock_d);
-
-
 // The base of the header.
     block_header = (void *) (UserAreaStart - headerSize);
 
-// Invalid block header.
-    if ((void *) block_header == NULL){
+// Validate header.
+    if ((void *) block_header == NULL)
+    {
         debug_print("heapFreeMemory: block_header\n");
         return;
     }
-// Invalid block header.
-    if ( block_header->Used != TRUE || block_header->Magic != 1234 ){
+    if ( block_header->Used != TRUE || block_header->Magic != 1234 )
+    {
         debug_print("heapFreeMemory: block_header validation\n");
         return;
     }
@@ -559,10 +576,9 @@ void heapFreeMemory(void *ptr)
 // It's free now.
     //block_header->Free = 1;
 
-// Apenas marcamos a estrutura como reusável,
-// pois agora ela esta no STOCK.
-    block_header->Used = TRUE;   // still alive.
-    block_header->Magic = 4321;  // reusable, stock
+// Mark the mmblock as reusable (stock); does not actually reclaim space.
+    block_header->Used = TRUE;   // Still valid, but now reusable.
+    block_header->Magic = 4321;  // Set magic to indicate reusable.
 }
 
 // get_process_heap_pointer:

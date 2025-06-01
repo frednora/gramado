@@ -10,39 +10,27 @@
 #define MMBLOCK_COUNT_MAX  (2*4096)
 
 
- /*
- * @todo: 
- * Os blocos precisam de alguma organiza��o. 
- * Por enquanto, o total � 256 heaps de tamanhos diferentes.
- * Os blocos formar�o uma lista encadeada que ser� percorrida para se 
- * encontrar um bloco vazio. (walk).
- * Importante: A mem�ria ser� organizada em bancos, que conter�o mem�ria 
- * privada e mem�ria compartilhada. Os blocos de mem�ria e os heaps 
- * precisam estar associadoas aos bancos, que conter�o informa��es sobre 
- * processos e usu�rios. @todo:
- * Obs: Os bancos est�o definidos em bank.h
- * Obs: Um heap de processo tem v�rios blocos dentro.
- * IMPORTANTE: 
- *     Talvez tenhamos algum limite para o tamanho dessa estrutura 
- * em especial. (N�o incluir nenhuma vari�vel por enquanto!).
- */ 
-
-// Essa estrutura é para gerenciar áreas de memória 
-// alocadas dinamicamente dentro do heap do processo kernel. 
-// >>> Don't change this structure.
-// It has a fixed size.
-
 /*
  * mmblock_d:
- * This strcture is used to represent blocks of memory only 
- * inside the Kernel's heap.
- * We also have another structure used to represent blocks of 
- * physical memory called aspace_d.
- * The blocks of memory inside the heap are allocated dinamicaly.
+ * Represents a single dynamically allocated memory block within the kernel's heap.
+ * 
+ * Each block tracks its metadata, allocation status, and linkage for heap management.
+ * This structure is strictly used for kernel heap allocations (not physical memory).
+ * 
+ * -------------------------------------------------------------------------
+ * Structure layout overview:
+ *   [Header][User Area][Footer]
+ * 
+ * - Header:    Metadata and management info.
+ * - User Area: The usable, allocated memory for the kernel.
+ * - Footer:    Marks the end of the block, useful for integrity checks.
+ * -------------------------------------------------------------------------
+ * 
+ * NOTE: Do not change the layout or size of this structure. It must remain
+ *       fixed for compatibility with the memory allocator.
+ * 
+ * See also: aspace_d for physical memory block management.
  */
-
-struct mmblock_d 
-{
 // This is the structure to handle each allocation into the kernel heap.
 // The structure has three major components:
 // + The 'header base'. 
@@ -51,56 +39,57 @@ struct mmblock_d
 //    This is the start of the allocated area.
 // + The 'footer address'.
 //    This is the end of the allocated area.
+struct mmblock_d 
+{
 
 //
 // Header
 //
 
-// Here goes the address of the start of the structure.
+// Address of the start of this structure in memory.
     unsigned long Header;
-// Header size in bytes.
-// This is the size of the structure.
+// Size of the header (this structure) in bytes.
     unsigned long headerSize;
 
 //
 // User area
 //
 
-// The address of the start of the user area.
+// Address of the start of the usable (allocated) area for the user/kernel.
     unsigned long userArea;
+// Size of the user area (the memory given to the allocator/requester).
     unsigned long userareaSize;
 
 //
 // Footer
 //
 
-// The address of the end of the user area.
+// Address marking the end of the user area (footer).
     unsigned long Footer;
 
 // ----------------
 
-// Block identification.
+// Unique identifier for this memory block (for debugging/tracking).
     int Id;
 
 // Structure validation
+// Magic number for structure validation and integrity checking.
     int Used; 
     int Magic;
 
 // This block is free or not.
+// Free flag: 1 if this memory block is free (available), 0 if allocated.
     int Free;
 
-// process
+// PID of the process owning this block (if applicable)
     pid_t pid;
 
-// thread
+// TID of the thread owning this block (if applicable).
     tid_t tid;
 
 // Navigation
+// Pointer to the next memory block in the heap's linked list.
     struct mmblock_d  *Next;
-
-// #crazy
-// Debug info
-    //char name[8];
 };
 extern struct mmblock_d  *current_mmblock;
 
