@@ -1,11 +1,11 @@
 # kernel - The kernel.
 
-This is code for the base kernel. It builds the image KERNEL.BIN.
+This directory contains the code for the base kernel. It builds the image KERNEL.BIN.
 
 
 ## Kernel initialization
 
-The kernel initialization in I_kmain():
+The kernel initialization is handled by the function I_kmain(), which follows these steps:
 
 ```
 // ==================================
@@ -27,44 +27,37 @@ The kernel initialization in I_kmain():
 
 ```
 core/:
-This is the hot spot, the singularity.
-  core/deps  - boot, ring 0 modules, posix commands.
-  core/gdeps - Client-side GUI applications.
-  core/arch  - Entry point and initialization.
-  core/ke    - Task manager.
-  core/kmain - The main initialization routine and some wrappers. 
+  The core of the kernel; the primary processing unit.
+  core/deps   - Boot, ring 0 modules, POSIX commands.
+  core/gdeps  - Client-side GUI applications.
+  core/arch   - Entry point and initialization.
+  core/ke     - Task manager.
+  core/kmain  - Main initialization routine and wrappers.
 
 gramk/:
-The interface for the graphics device and the user interaction manager.
+  Interface for the graphics device and the user interaction manager.
 
 include/:
-Main header files for the kernel.
+  Main header files for the kernel.
 
 libk/:
-The kernel library.
+  The kernel library.
 
 res/:
-Kernel resources. For containers.
-
+  Kernel resources for containers.
 ```
 
-## About core/ folder:
+## About the core/ Folder
 
 ```
-  It is basically for CPU and process stuff.
+This folder primarily contains CPU and process management code.
 ```
 
-## About res/ folder:
+## About the res/ folder:
 
 ```
-  Based on the idea that we need to control the kernel resourses used 
-by the process groups, we put all these resources into a single folder called res/. 
+The res/ directory is based on the idea of managing kernel resources used by process groups. All such resources are organized within this folder.
 
-  So the core/ folder needs to control the access to theses resources 
-inside the res/ folder.
-  mm/ is also considered a resource, so the right place for this compiment is inside res/ 
-not as a core/ component.
+The core/ folder is responsible for controlling access to the resources in res/. The memory management component (mm/) is also considered a resource, so it belongs under res/ rather than as a component of core/.
 ```
-
-
       
