@@ -36,8 +36,8 @@ struct network_saved_d  NetworkSaved;
 
 // ====================================================
 
-static void __initialize_ws_info(pid_t pid);
-static void __maximize_ws_priority(pid_t pid);
+static void __initialize_ds_info(pid_t pid);
+static void __maximize_ds_priority(pid_t pid);
 
 // ====================================================
 
@@ -93,20 +93,19 @@ network_mouse_event(
     wmMouseEvent( event_id, data1, data2 );
 }
 
-
-
 // Setup DisplayServerInfo global structure.
-static void __initialize_ws_info(pid_t pid)
+// See: dispsrv.h
+static void __initialize_ds_info(pid_t pid)
 {
     struct process_d *p;
     struct thread_d *t;
     pid_t current_process = -1;
 
-    //debug_print ("__initialize_ws_info:\n");
+    //debug_print ("__initialize_ds_info:\n");
 
 // Maybe we can just emit an error message and return.
     if (DisplayServerInfo.initialized == TRUE){
-        panic("__initialize_ws_info: Another display server is on\n");
+        panic("__initialize_ds_info: Another display server is on\n");
     }
     DisplayServerInfo.initialized = FALSE;
 
@@ -118,7 +117,7 @@ static void __initialize_ws_info(pid_t pid)
     }
     current_process = (pid_t) get_current_process();
     if (pid != current_process){
-        panic("__initialize_ws_info: pid != current_process\n");
+        panic("__initialize_ds_info: pid != current_process\n");
     }
     p = (struct process_d *) processList[pid];
     if ((void*) p == NULL){
@@ -166,12 +165,11 @@ static void __initialize_ws_info(pid_t pid)
     DisplayServerInfo.initialized = TRUE;
 }
 
-
 // #test
 // Changing the window server's quantum. 
 // The purpose here is boosting it when it is trying to register itself.
 // class 1: Normal threads.
-static void __maximize_ws_priority(pid_t pid)
+static void __maximize_ds_priority(pid_t pid)
 {
     struct process_d *p;
     struct thread_d *t;
@@ -184,19 +182,20 @@ static void __maximize_ws_priority(pid_t pid)
     unsigned long ThreadBasePriority = ProcessBasePriority;
     unsigned long ThreadPriority     = ProcessPriority;
 
+// PID
     pid_t current_process = (pid_t) get_current_process();
-
     if (pid<=0 || pid >= PROCESS_COUNT_MAX){
         return;
     }
     if (pid != current_process){
-        debug_print ("__maximize_ws_priority: pid != current_process\n");
-        panic       ("__maximize_ws_priority: pid != current_process\n");
+        debug_print ("__maximize_ds_priority: pid\n");
+        panic       ("__maximize_ds_priority: pid\n");
     }
 
+// -------------------------
 // process
     p = (struct process_d *) processList[pid];
-    if ((void*)p==NULL)
+    if ((void*)p == NULL)
         return;
     if (p->used!=TRUE)
         return;
@@ -207,6 +206,7 @@ static void __maximize_ws_priority(pid_t pid)
     p->base_priority = ProcessBasePriority;
     p->priority      = ProcessPriority;
 
+// -------------------------
 // thread
     t = (struct thread_d *) p->control;
     if ((void*) t == NULL){ return; }
@@ -215,9 +215,9 @@ static void __maximize_ws_priority(pid_t pid)
     t->type = ThreadType;
     t->base_priority = ThreadBasePriority;
     t->priority      = ThreadPriority;
-
 // see: sched.h
     t->quantum = QUANTUM_MAX;
+
 }
 
 int 
@@ -238,13 +238,18 @@ network_register_ring3_network_server(
 
 // Register display server into a given valid cgroup.
 // Called by sci.c
+// See: dispsrv.h
 int 
 network_register_ring3_display_server(
     struct cgroup_d *cg,
     pid_t caller_pid )
 {
-// 513 - SYS_SET_WS_PID
+// 513 - SYS_SET_DS_PID
 // Syscall implementation.
+
+    // #todo:
+    // Maybe we can move the workers for this job from here to dispsrv.c.
+    // Keeping here only the wrapper.
 
     struct process_d *p;
     pid_t current_process = (pid_t) -1;
@@ -299,8 +304,9 @@ network_register_ring3_display_server(
 // Maybe this method belongs to the sys_bind() routine.
     socket_set_gramado_port( GRAMADO_PORT_WS, (pid_t) current_process );
 
-    __initialize_ws_info(current_process);
-    __maximize_ws_priority(current_process);
+// See: dispsrv.h
+    __initialize_ds_info(current_process);
+    __maximize_ds_priority(current_process);
 
 // Setup c1/
 // Change the foreground console.
@@ -333,7 +339,7 @@ network_register_ring3_browser(
     struct cgroup_d *cg,
     pid_t caller_pid )
 {
-// 513 - SYS_SET_WS_PID
+// 513 - SYS_SET_DS_PID
 // Syscall implementation.
 
     struct process_d *p;
@@ -392,8 +398,8 @@ network_register_ring3_browser(
     socket_set_gramado_port( GRAMADO_PORT_BR, (pid_t) current_process );
 
     // This is for display servers, not browsers
-    //__initialize_ws_info(current_process);
-    //__maximize_ws_priority(current_process);
+    //__initialize_ds_info(current_process);
+    //__maximize_ds_priority(current_process);
 
 // Setup c1/
 // Change the foreground console.

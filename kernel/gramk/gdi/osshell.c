@@ -17,5 +17,5 @@
 
 
 // see: osshell.h
-struct osshell_info_d OSShell_Info;
+struct osshell_info_d  OSShell_Info;
 

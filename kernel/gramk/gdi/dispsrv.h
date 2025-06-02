@@ -7,16 +7,18 @@
 // direct to this component.
 
 
-#ifndef __USER_DISPSRV_H
-#define __USER_DISPSRV_H    1
+#ifndef __GDI_DISPSRV_H
+#define __GDI_DISPSRV_H    1
 
 
 //
 // == window server ==================================================
 //
 
-// ===============================================================
+
 // This structure handles the display server registration.
+// The default display server is ds00.bin for now.
+// See: net.c
 struct ds_info_d
 {
     int initialized;

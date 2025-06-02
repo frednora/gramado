@@ -15,7 +15,8 @@ Gramado OS is a project that includes the bootloader, the core kernel, and the i
 ```
 distros/ - Complete distributions are built here.
 docs/    - Documentation.
-kernel/  - The kernel, including the bootloader, kernel modules, and applications (see kernel/core/apps/).
+kernel/  - The kernel, including the bootloader, kernel modules, and 
+           applications (see kernel/core/apps/).
 tools/   - SDK tools.
 ```
 
@@ -177,8 +178,10 @@ You can find code in the zde/aurora/ folder.
 ## Notes on Building an OS
 
 ```
-Building an operating system is a great way to learn how systems work and to understand the full software stack required to run applications.
-However, if your goal is to make money, high demand is typically found in application development (web front-end and back-end).
+Building an operating system is a great way to learn how systems work and 
+to understand the full software stack required to run applications.
+However, if your goal is to make money, high demand is typically found in 
+application development (web front-end and back-end).
 ```
 
 ## Who are the developers?
@@ -204,7 +207,8 @@ $ make clean-all
 
 ## What are the host machine to build the project?
 
-> * Gramado OS has been compiled and tested on Ubuntu LTS releases, including WSL2 on Windows and various Ubuntu versions.
+> * Gramado OS has been compiled and tested on Ubuntu LTS releases, 
+>   including WSL2 on Windows and various Ubuntu versions.
 > * A typical build environment:
 
 ```
