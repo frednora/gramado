@@ -12,17 +12,6 @@
 
 void demos_startup_animation(int i);
 
-void demoLines(void);
-void demoLine1(void);
-
-void demoTriangle(void);
-
-void demoPolygon(void);
-void demoPolygon2(void);
-
-// curve+string
-void demoCurve(void);
-
 #endif    
 
 

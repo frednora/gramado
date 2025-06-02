@@ -96,8 +96,15 @@ extern int server_mode;  // DEMO ...
 #include "libui/proj.h"
 
 #include "ui/sprite.h"
+
+// #demos/
 #include "ui/demos/demos.h"
 #include "ui/demos/cat.h"
+#include "ui/demos/poly00.h"
+#include "ui/demos/lin00.h"
+#include "ui/demos/tri00.h"
+#include "ui/demos/curve00.h"
+
 
 #include "libos/gramado/packet.h"
 #include "libos/gramado/connect.h"

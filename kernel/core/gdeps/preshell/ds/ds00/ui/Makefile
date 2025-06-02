@@ -101,7 +101,7 @@ font.o \
 painter.o \
 window.o \
 bar.o wa.o swamp.o sprite.o \
-demos.o cat.o \
+demos.o cat.o poly00.o lin00.o tri00.o curve00.o \
 gws.o   
 
 
@@ -133,8 +133,12 @@ all-c:
 	$(CC) -c sprite.c    $(CFLAGS) $(CINCLUDES) -o sprite.o
 
 # demos/
-	$(CC) -c demos/demos.c  $(CFLAGS) $(CINCLUDES) -o demos.o
-	$(CC) -c demos/cat.c    $(CFLAGS) $(CINCLUDES) -o cat.o
+	$(CC) -c demos/demos.c    $(CFLAGS) $(CINCLUDES) -o demos.o
+	$(CC) -c demos/cat.c      $(CFLAGS) $(CINCLUDES) -o cat.o
+	$(CC) -c demos/poly00.c   $(CFLAGS) $(CINCLUDES) -o poly00.o
+	$(CC) -c demos/lin00.c    $(CFLAGS) $(CINCLUDES) -o lin00.o
+	$(CC) -c demos/tri00.c    $(CFLAGS) $(CINCLUDES) -o tri00.o
+	$(CC) -c demos/curve00.c  $(CFLAGS) $(CINCLUDES) -o curve00.o
 
 	$(CC) -c gws.c       $(CFLAGS) $(CINCLUDES) -o gws.o
 
