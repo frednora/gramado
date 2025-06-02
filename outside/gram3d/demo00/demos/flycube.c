@@ -999,7 +999,7 @@ void demoFlyingCubeSetup(void)
 // given all the dots of this model.
 // We need to create a function that will draw 3D cubes.
 
-void demoFlyingCube(int draw_desktop, unsigned int bg_color, unsigned long sec)
+void demoFlyingCube(int draw_terrain,unsigned long sec)
 {
 // The function on_execute() in main.c initilizes this demos
 // and spins into a loop calling this function to draw
@@ -1017,22 +1017,14 @@ void demoFlyingCube(int draw_desktop, unsigned int bg_color, unsigned long sec)
 // Moved to the main loop of the server.
     //unsigned long gBeginTick = rtl_jiffies();
 
-// -------------------------
-// Clear canvas.
-    //demoClearWA(COLOR_BLACK);            //clear surface
-    gramado_clear_surface(NULL,bg_color);  //clear surface
 
-// -------------------------
-// Draw desktop?
-// IN: ?
-    if (draw_desktop){
-        wm_update_desktop(TRUE,TRUE);
-    }
 // -------------------------
 // Draw terrain.
 // No rotation. Small translation in positive z.
 // 12 triangles.
-    __drawTerrain(terrain,0.0f);
+    if (draw_terrain == TRUE){
+        __drawTerrain(terrain,0.0f);
+    }
 
 //- Loop ------------------------------
 // Draw all the cubes.

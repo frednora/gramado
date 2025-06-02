@@ -13,7 +13,7 @@ void demoFlyingCubeSetup(void);
 
 // Draw a single frame.
 // This is called by the gameloop.
-void demoFlyingCube(int draw_desktop, unsigned int bg_color, unsigned long sec);
+void demoFlyingCube(int draw_terrain,unsigned long sec);
 
 #endif    
 

@@ -3708,7 +3708,21 @@ static int on_execute(void)
         // IN: Draw desktop, color.
         if (ShowDemo)
         {
-            demoFlyingCube( FALSE, COLOR_BLACK, sec );
+            //
+            // #### PAINT BEGIN ####
+            //
+
+            // -------------------------
+            // Clear canvas.
+            //demoClearWA(COLOR_BLACK);                 //clear surface
+            //gramado_clear_surface(NULL,COLOR_BLACK);  //clear surface
+
+            // Draw desktop?
+            // IN: tile,show
+            wm_update_desktop(TRUE,FALSE);
+
+            // IN: draw terrain, second counter
+            demoFlyingCube(FALSE,sec);
 
             // At this moment we already painted the whole scene
             // for your demo. Let's print the bar on top of it.
@@ -3736,6 +3750,10 @@ static int on_execute(void)
 
             // Flush the backbuffer into the framebuffer.
             gramado_flush_surface(NULL);
+
+            //
+            // #### PAINT END ####
+            //
         
             // Wait or not?
             if (end_jiffie > gBeginTick)
