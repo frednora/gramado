@@ -1,4 +1,5 @@
 // cat.c
+// Created by Fred Nora.
 
 #include "../../gwsint.h"
 

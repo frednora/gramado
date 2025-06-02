@@ -1,4 +1,6 @@
 // tri00.c
+// Triangles.
+// Created by Fred Nora.
 
 #include "../../gwsint.h"
 
@@ -10,7 +12,7 @@ void demoTriangle(void)
     int T=0;
 
     triangle = (void *) malloc( sizeof( struct gr_triangle_d ) );
-    if ((void*) triangle == NULL ){
+    if ((void*) triangle == NULL){
         return;
     }
 

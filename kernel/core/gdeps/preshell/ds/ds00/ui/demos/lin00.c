@@ -1,4 +1,6 @@
 // lin00.c
+// Demo Lines
+// Created by Fred Nora.
 
 #include "../../gwsint.h"
 

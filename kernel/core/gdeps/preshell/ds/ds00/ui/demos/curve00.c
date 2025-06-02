@@ -1,4 +1,5 @@
 // curve00.c
+// Created by Fred Nora.
 
 #include "../../gwsint.h"
 

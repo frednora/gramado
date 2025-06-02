@@ -1,4 +1,6 @@
 // poly00.c
+// Polygons
+// Created by Fred Nora.
 
 #include "../../gwsint.h"
 
