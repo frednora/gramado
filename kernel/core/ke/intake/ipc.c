@@ -215,9 +215,6 @@ ipc_post_message_to_tid (
         set_ev_responder(t);
     }
 
-
-
-
 // ======================================================
     // Only coalesce for mouse move messages
     if (MessageCode == MSG_MOUSEMOVE) 
@@ -225,22 +222,30 @@ ipc_post_message_to_tid (
         int last_index = (t->MsgQueueTail - 1 + MSG_QUEUE_MAX) % MSG_QUEUE_MAX;
         struct msg_d *last_msg = t->MsgQueue[last_index];
 
+        if ((void*) last_msg == NULL){
+            panic ("ipc_post_message_to_tid: last_msg\n");
+        }
+        if ( last_msg->used != TRUE || last_msg->magic != 1234 ){
+            panic ("ipc_post_message_to_tid: last_msg validation\n");
+        }
+
         // Check if last message is also a mouse move
-        if (last_msg && last_msg->msg == MSG_MOUSEMOVE) 
+        if (last_msg->msg == MSG_MOUSEMOVE) 
         {
             // Overwrite the last message with the new coordinates
             last_msg->long1 = long1;
             last_msg->long2 = long2;
             // Optionally update timestamps or other fields
             // Extra payload
-            m->long3 = (unsigned long) jiffies;
-            m->long4 = (unsigned long) jiffies;
+            last_msg->long3 = (unsigned long) jiffies;
+            last_msg->long4 = (unsigned long) jiffies;
             // ...
+            last_msg->sender_tid   = (tid_t) src_tid; 
+            last_msg->receiver_tid = (tid_t) dst_tid;
             return 0; // Do NOT advance MsgQueueTail, since we didn't add a new message
         }
     }
 // ======================================================
-
 
 //
 // The message
