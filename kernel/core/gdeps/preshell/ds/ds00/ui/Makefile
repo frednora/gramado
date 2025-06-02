@@ -100,7 +100,9 @@ fnt8x16.o \
 font.o \
 painter.o \
 window.o \
-bar.o wa.o swamp.o sprite.o demos.o gws.o   
+bar.o wa.o swamp.o sprite.o \
+demos.o cat.o \
+gws.o   
 
 
 .PHONY: all all-c gws-link finalize clean
@@ -129,7 +131,11 @@ all-c:
 	$(CC)  -c swamp.c  $(CFLAGS) $(CINCLUDES) -o swamp.o
 
 	$(CC) -c sprite.c    $(CFLAGS) $(CINCLUDES) -o sprite.o
-	$(CC) -c demos.c     $(CFLAGS) $(CINCLUDES) -o demos.o
+
+# demos/
+	$(CC) -c demos/demos.c  $(CFLAGS) $(CINCLUDES) -o demos.o
+	$(CC) -c demos/cat.c    $(CFLAGS) $(CINCLUDES) -o cat.o
+
 	$(CC) -c gws.c       $(CFLAGS) $(CINCLUDES) -o gws.o
 
 gws-link:
