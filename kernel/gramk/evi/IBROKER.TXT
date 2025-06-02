@@ -1,0 +1,48 @@
+ibroker.c By Copilot.
+
+That's correct! Here's a summary of what kernel/gramk/evi/ibroker.c does in Gramado OS, 
+with additional technical detail:
+
+Overview
+
+- This file is the main event broker for input events within the Gramado kernel.
+- It handles input from the PS/2 keyboard, PS/2 mouse, and PIT timer.
+- Its responsibilities are to distribute (or "broker") these events to the correct destinations:
+  - The event/message queue of the window/display server (for GUI events).
+  - The stdin file/stream (for terminal and console input).
+  - Some events, especially certain key combinations, are processed internally within the kernel.
+
+Main Responsibilities
+
+1. Keyboard Input:
+   - Low-level keyboard events (raw scancodes) are received (via wmRawKeyEvent).
+   - Events are translated into system messages (key up, key down, etc.).
+   - Some key combinations (Ctrl+Alt+Del, function keys, shell triggers) can trigger internal actions (like reboot, switching consoles, or entering the embedded shell).
+   - Regular key presses may be sent to both:
+     - The display server (as a message for GUI apps).
+     - The stdin file (for terminal/console usage).
+
+2. Mouse Input:
+   - Mouse events are received (via wmMouseEvent).
+   - These are primarily forwarded to the display server thread (for window system handling).
+   - There is logic for mouse movement, button presses, etc.
+
+3. Timer Events:
+   - PIT timer events are handled (via wmTimerEvent).
+   - These may generate periodic system messages to the display server (for animation, cursor blinking, etc.).
+
+4. Internal Command Processing (Embedded Shell):
+   - There is a built-in kernel shell (activated by certain key combos).
+   - The shell parses and executes some maintenance/diagnostic commands directly inside the kernel (e.g., about, reboot, memory, disk, user, etc.).
+   - Command parsing is done by __shellParseCommandLine and ksys_shell_parse_cmdline.
+
+5. Modifiers and State Management:
+   - The broker tracks the state of modifier keys (Shift, Ctrl, Alt, Caps Lock, etc.) to handle combinations correctly.
+   - It manages the selection of input targets (InputTargets struct), so input can be routed as needed.
+
+Key Takeaway
+
+- This file acts as the central "input event router" for the kernel, deciding where to send each event and whether to handle it internally.
+- It's crucial for supporting both text-based and GUI input, as well as for handling low-level system shortcuts and commands.
+
+If you want details about a specific function or mechanism in this file, let me know!

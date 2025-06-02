@@ -215,6 +215,33 @@ ipc_post_message_to_tid (
         set_ev_responder(t);
     }
 
+
+
+
+// ======================================================
+    // Only coalesce for mouse move messages
+    if (MessageCode == MSG_MOUSEMOVE) 
+    {
+        int last_index = (t->MsgQueueTail - 1 + MSG_QUEUE_MAX) % MSG_QUEUE_MAX;
+        struct msg_d *last_msg = t->MsgQueue[last_index];
+
+        // Check if last message is also a mouse move
+        if (last_msg && last_msg->msg == MSG_MOUSEMOVE) 
+        {
+            // Overwrite the last message with the new coordinates
+            last_msg->long1 = long1;
+            last_msg->long2 = long2;
+            // Optionally update timestamps or other fields
+            // Extra payload
+            m->long3 = (unsigned long) jiffies;
+            m->long4 = (unsigned long) jiffies;
+            // ...
+            return 0; // Do NOT advance MsgQueueTail, since we didn't add a new message
+        }
+    }
+// ======================================================
+
+
 //
 // The message
 //

@@ -7,6 +7,18 @@
 // PS2 keyboard, PS2 mouse and pit timer events goes here.
 // see: wmKeyEvent, wmMouseEvent and wmTimerEvent.
 
+/*
+Overview
+
+This file is the main event broker for input events within the Gramado kernel.
+It handles input from the PS/2 keyboard, PS/2 mouse, and PIT timer.
+Its responsibilities are to distribute (or "broker") these events to the correct destinations:
++ The event/message queue of the window/display server (for GUI events).
++ The stdin file/stream (for terminal and console input).
++ Some events, especially certain key combinations, are processed internally within the kernel.
+*/
+
+
 // This is the interface for the keyboard and mouse devices.
 // The input events for these devices goes here
 // and then they are send to the event queue in the 
