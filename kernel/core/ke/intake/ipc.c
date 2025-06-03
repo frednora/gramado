@@ -236,7 +236,8 @@ ipc_post_message_to_tid (
         }
 
         // Check if last message is also a mouse move
-        if (last_msg->msg == MSG_MOUSEMOVE) 
+        if ( last_msg->msg == MSG_MOUSEMOVE && 
+             last_msg->receiver_tid == (tid_t) dst_tid ) 
         {
             // Overwrite the last message with the new coordinates
             last_msg->long1 = long1;
@@ -292,7 +293,7 @@ ipc_post_message_to_tid (
         }
 
         // Now handle coalescing for both regular keys and control+arrow
-        if (isMake == TRUE) 
+        if (isMake == TRUE && __last_msg->receiver_tid == (tid_t) dst_tid) 
         {
             if (__last_msg->msg == MSG_KEYDOWN && __last_msg->long1 == long1) 
             {
@@ -305,7 +306,7 @@ ipc_post_message_to_tid (
                 return 0;
             }
         }
-        if (isControlArrow == TRUE) 
+        if (isControlArrow == TRUE && __last_msg->receiver_tid == (tid_t) dst_tid) 
         {
             if (__last_msg->msg == MessageCode) 
             {
