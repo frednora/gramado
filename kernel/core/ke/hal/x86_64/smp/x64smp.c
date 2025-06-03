@@ -201,6 +201,10 @@ int x64smp_initialization(void)
     } else {
         smp_info.probe_via_acpi_failed = TRUE;
         printk("x64smp_initialization: [x64_probe_smp_via_acpi] failed\n");
+        refresh_screen();
+        
+        // ok for now lets try MP.
+        //while(1){}
     };
 
     // #debug

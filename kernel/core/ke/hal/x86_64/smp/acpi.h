@@ -221,7 +221,7 @@ struct GenericAddressStructure
 //----------------------------------------------------
 // see:
 // https://wiki.osdev.org/FADT
-struct FADT
+struct FADT_d
 {
     //struct   ACPISDTHeader h;
     struct rsdt_d  h;
@@ -292,7 +292,7 @@ struct FADT
     struct GenericAddressStructure X_GPE0Block;
     struct GenericAddressStructure X_GPE1Block;
 };
-
+extern struct FADT_d *fadt;
 // ========================================
 
 

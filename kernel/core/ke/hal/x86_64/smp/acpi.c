@@ -15,6 +15,10 @@ struct xsdp_d *xsdp;
 struct rsdt_d *rsdt;
 struct xsdt_d *xsdt;
 
+struct FADT_d *fadt;
+
+static struct FADT_d *__brute_force_probe_fadt(unsigned long base_address);
+static int __brute_force_probe_xsdt(unsigned long base_addr);
 static int __acpi_rsdp(unsigned long rsdp_pointer);
 
 // =============================================
@@ -68,6 +72,58 @@ int acpi_check_header02(unsigned int *ptr, char *sig)
 
 // Fail
    return (int) (-1);
+}
+
+static struct FADT_d *__brute_force_probe_fadt(unsigned long base_address)
+{
+    unsigned char *p = (unsigned char *)base_address;
+    size_t scan_range = 0x1000; // Scan 4KB, adjust as needed
+    size_t step = 16;           // ACPI tables are 16-byte aligned
+    size_t i=0;
+
+    for (i=0; i < scan_range; i += step) 
+    {
+        struct FADT_d *hdr = (struct FADT_d *)(p + i);
+        if (hdr->h.Signature[0] == 'F' &&
+            hdr->h.Signature[1] == 'A' &&
+            hdr->h.Signature[2] == 'C' &&
+            hdr->h.Signature[3] == 'P') 
+        {
+            printk("__brute_force_probe_fadt: Found FACP at offset 0x%zx\n", i);
+            return hdr;
+        }
+    }
+
+    printk("__brute_force_probe_fadt: Could not find FACP signature near base address\n");
+    return NULL;
+}
+
+static int __brute_force_probe_xsdt(unsigned long base_addr)
+{
+    unsigned char *p = (unsigned char *)(base_addr - 256);
+    int range = 512;  // Scan 256 bytes before and after
+    int i=0;
+
+    for (i=0; i < range; i += 16) 
+    {
+        if (p[i+0] == 'X' && p[i+1] == 'S' && p[i+2] == 'D' && p[i+3] == 'T') 
+        {
+            xsdt = (struct xsdt_d *)(p + i);
+
+            //printk("Found XSDT at offset %d\n", i - 256);
+            printk("XSDT found: %c\n", 
+                xsdt->Signature[0] );
+            //refresh_screen();
+            //while(1){}
+
+            // Now you can process xsdt as usual.
+            return TRUE;
+        }
+    };
+
+// fail:
+    printk("Could not find XSDT signature near expected address\n");
+    return FALSE;
 }
 
 // Probe rsdp or xrdp.
@@ -175,7 +231,8 @@ static int __acpi_rsdp(unsigned long rsdp_pointer)
             printk("XSDT signature: #bugbug Wrong signature\n");
 
             // #debug
-            //goto fail;
+            // Signature failed
+            goto fail;
         };
 
         // #breakpoint
@@ -260,7 +317,8 @@ static int __acpi_rsdp(unsigned long rsdp_pointer)
             printk("RSDT signature: #bugbug Wrong signature\n");
 
             // #debug
-            //goto fail;
+            // Signature failed
+            goto fail;
         };
 
         // #todo
@@ -400,10 +458,34 @@ int acpi_probe(void)
 // Save the address
     smp_info.RSD_PTR_address = (unsigned long) __rsdp_Pointer;
 
-// Probe rsdp or xsdp.
+    // Try the normal probe first.
     Status = (int) __acpi_rsdp(__rsdp_Pointer);
-    if (Status != TRUE)
-        goto fail;
+    if (Status != TRUE) 
+    {
+        printk("acpi_probe: failed on __acpi_rsdp()\n");
+        // If failed, try brute force probe.
+        Status = (int) __brute_force_probe_xsdt(__rsdp_Pointer);
+        if (Status != TRUE) 
+        {
+            printk("acpi_probe: failed on __brute_force_probe_xsdt()\n");
+
+            fadt = (struct FADT_d *)__brute_force_probe_fadt(__rsdp_Pointer);
+            // #debug
+            printk("After __brute_force_probe_fadt()\n");
+            refresh_screen();
+            
+            // Leats fail ... the caller will try MP instead.
+            //while(1){}
+
+            goto fail;
+        }
+
+    }
+
+    // #debug
+    printk("rsdp ok\n");
+    refresh_screen();
+    while(1){}
 
     return TRUE;
 
