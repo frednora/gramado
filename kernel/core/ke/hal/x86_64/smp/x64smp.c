@@ -198,6 +198,7 @@ int x64smp_initialization(void)
                 printk("x64smp_initialization: lapic initialization fail\n");
             };
         }
+
     } else {
         smp_info.probe_via_acpi_failed = TRUE;
         printk("x64smp_initialization: [x64_probe_smp_via_acpi] failed\n");

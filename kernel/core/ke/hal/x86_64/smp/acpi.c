@@ -126,6 +126,20 @@ static int __brute_force_probe_xsdt(unsigned long base_addr)
     return FALSE;
 }
 
+#define BYTES_TO_READ 256       // Number of bytes to print
+void __dump_memory(void *address, size_t size) 
+{
+    unsigned char *ptr = (unsigned char *)address;
+    size_t i;
+    for (i = 0; i < size; i++) 
+    {
+        printk("%c ", ptr[i]);
+        if ((i + 1) % 16 == 0) 
+            printk("\n"); // Format output nicely
+    }
+    printk("\n");
+}
+
 // Probe rsdp or xrdp.
 static int __acpi_rsdp(unsigned long rsdp_pointer)
 {
@@ -186,7 +200,7 @@ static int __acpi_rsdp(unsigned long rsdp_pointer)
 
         // Mapping the rsdt address.
         // See: x64gva.h
-        address_pa = (unsigned long) (__rsdt_address & 0xFFFFFFFF);
+        address_pa = (unsigned long) __xsdt_address;         // 64bit address. right.
         address_va = (unsigned long) (XSDT_VA & 0xFFFFFFFF); // Desired va.
 
         if (address_pa == 0)
@@ -212,11 +226,54 @@ static int __acpi_rsdp(unsigned long rsdp_pointer)
 
         xsdt = (struct xsdt_d *) (address_va & 0xFFFFFFFFFFFFFFFF);
 
+        // ------------------------------------------
+        // Dumping xsdt to check the validation of the mapping.
+        //__dump_memory(address_va, BYTES_TO_READ);
+
+        printk ("Signature? %c %c %c %c \n",
+            xsdt->Signature[0],
+            xsdt->Signature[1],
+            xsdt->Signature[2],
+            xsdt->Signature[3] );
+
+        // ACPI version indicator (usually 1).
+        printk("XSDT: Revision {%c}\n", xsdt->Revision);
+        // OEMID[6] – Manufacturer identifier (e.g., "Intel" or "AMI").
+        printk("XSDT: OEMID {%s}\n", xsdt->OEMID);
+        refresh_screen();
+
+        /*
+        // failing
+        if (kstrncmp(xsdt->Signature, "XSDT", 4) == 0)
+        {
+            printk("XSDT ok\n");
+            refresh_screen();
+            return TRUE;
+        }
+        if (kstrncmp(xsdt->Signature, "RSDT", 4) == 0) 
+        {
+            printk("RSDT ok\n");
+            refresh_screen();
+            return TRUE;
+        }
+        */
+
+
+        //#hack
+        //return TRUE;
+
+        //#debug
+        //refresh_screen();
+        //while(1){}
+
+        // ------------------------------------------
         printk("XSDT signature:\n");
 
         // If the signature is valid, let's print some fields.
         // #todo memcmp(xsdt->Signature, "XSDT", 4) == 0)
-        if (xsdt->Signature[0] == 'X'){
+        if ( xsdt->Signature[0] == 'X' || 
+             xsdt->Signature[0] == 'R' ){
+
             printk ("%c %c %c %c \n",
                 xsdt->Signature[0],
                 xsdt->Signature[1],
@@ -227,6 +284,9 @@ static int __acpi_rsdp(unsigned long rsdp_pointer)
             printk("XSDT: Revision {%c}\n", xsdt->Revision);
             // OEMID[6] – Manufacturer identifier (e.g., "Intel" or "AMI").
             printk("XSDT: OEMID {%s}\n", xsdt->OEMID);
+            //refresh_screen();
+            //while(1){}
+
         } else {
             printk("XSDT signature: #bugbug Wrong signature\n");
 
@@ -463,6 +523,9 @@ int acpi_probe(void)
     if (Status != TRUE) 
     {
         printk("acpi_probe: failed on __acpi_rsdp()\n");
+        goto fail;
+
+        /*
         // If failed, try brute force probe.
         Status = (int) __brute_force_probe_xsdt(__rsdp_Pointer);
         if (Status != TRUE) 
@@ -479,13 +542,26 @@ int acpi_probe(void)
 
             goto fail;
         }
-
+        */
     }
 
     // #debug
     printk("rsdp ok\n");
     refresh_screen();
-    while(1){}
+
+    unsigned long va = (unsigned long) xsdt;
+    fadt = (struct FADT_d *)__brute_force_probe_fadt(va);
+
+    // Lets print the signature
+    printk("fadt signature: \n");
+    printk ("%c %c %c %c \n",
+        fadt->h.Signature[0],
+        fadt->h.Signature[1],
+        fadt->h.Signature[2],
+        fadt->h.Signature[3] );
+
+    refresh_screen();
+    //while(1){}
 
     return TRUE;
 

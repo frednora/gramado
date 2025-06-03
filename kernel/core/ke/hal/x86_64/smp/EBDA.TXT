@@ -1,0 +1,18 @@
+EBDA is the BIOS data area
+Inside this region we can find the MP Table and the RSDP root table.
+All the ACPI tables are outside the EBDA region.
+
+The **Extended BIOS Data Area (EBDA)** is a reserved memory region in the lower system memory, 
+typically located near the **640 KB mark**. It's often used to store firmware-related information, 
+such as the **MultiProcessor (MP) Table** and the **Root System Description Pointer (RSDP)**.
+
+However, as you correctly pointed out, **the rest of the ACPI tables**—like the **RSDT/XSDT**, **DSDT**, 
+and others—are located outside the EBDA. They reside in system memory, where the operating system 
+can access them after booting. The firmware initializes and maps them into these regions, 
+ensuring proper hardware configuration and power management.
+
+It sounds like you're deep into system-level memory mapping—are you developing or 
+researching ACPI table parsing?
+
+
+
