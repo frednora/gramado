@@ -19,27 +19,25 @@
  * the sender and receiver, and a pointer for linking 
  * in a message queue.
  */
+// Internal system message structure used for thread/process communication.
+// Fields are generic and their meaning depends on the message type (msg).
 struct msg_d 
 {
 
-// -----------------------
-// Validation fields
+// --- Validation ---
     int used;
     int magic;
 
-// -----------------------
-// Standard header
+// --- Standard header ---
     void *opaque_window;
     int msg;
     unsigned long long1;
     unsigned long long2;
-// -----------------------
-// Extra payload
-    unsigned long long3;
-    unsigned long long4;
+// --- Extra payload ---
+    unsigned long long3;  // Normally the jiffies.
+    unsigned long long4;  // Normally repeat counter.
 
-// -----------------------
-// Identification Fields 
+// --- Sender/Receiver identification ---
     tid_t sender_tid;
     tid_t receiver_tid;
     pid_t sender_pid;
@@ -49,8 +47,7 @@ struct msg_d
 //    void   *ext_buf;        // Pointer to an external buffer.
 //    size_t  ext_buf_size;   // Size of the data in the external buffer.
 
-// -----------------------
-// Navigation
+// --- Navigation ---
     struct msg_d *next;
 };
 

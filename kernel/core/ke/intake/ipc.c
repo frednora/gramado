@@ -216,7 +216,13 @@ ipc_post_message_to_tid (
     }
 
 // ======================================================
-    // Only coalesce for mouse move messages
+// Only coalesce for mouse move messages
+// Prevents queue flooding with excessive mouse move events.
+// Reduces input lag: The display server always receives the most recent mouse position.
+//Leaves more room in the queue for other important events (clicks, keypresses, etc).
+// Industry standard: This is the same approach used in major OSes and GUI toolkits.
+// Interpret the message as "the mouse is now at this position."
+
     if (MessageCode == MSG_MOUSEMOVE) 
     {
         int last_index = (t->MsgQueueTail - 1 + MSG_QUEUE_MAX) % MSG_QUEUE_MAX;
@@ -246,6 +252,74 @@ ipc_post_message_to_tid (
         }
     }
 // ======================================================
+
+// ======================================================
+// #todo:
+// We can implement a repeat counter for keydown when an user keep
+// a key pressed for a long time.
+// Interpret the message as "the key is currently held down, and has repeated N times."
+
+    int isMake = FALSE;
+    int isControlArrow =  FALSE;
+    switch (MessageCode) {
+    case MSG_KEYDOWN:
+        // Handle keydown (with repeat count logic)
+        isMake = TRUE;
+        break;
+
+    case MSG_CONTROL_ARROW_UP:
+    case MSG_CONTROL_ARROW_DOWN:
+    case MSG_CONTROL_ARROW_LEFT:
+    case MSG_CONTROL_ARROW_RIGHT:
+        // Handle Control+Arrow key (with repeat count logic)
+        isControlArrow = TRUE;
+        break;
+
+    default:
+        // Other messages
+        break;
+    };
+
+    if (isMake == TRUE || isControlArrow == TRUE)
+    {
+        int __last_index = (t->MsgQueueTail - 1 + MSG_QUEUE_MAX) % MSG_QUEUE_MAX;
+        struct msg_d *__last_msg = t->MsgQueue[__last_index];
+        if ((void*) __last_msg == NULL){
+            panic ("ipc_post_message_to_tid: __last_msg\n");
+        }
+        if ( __last_msg->used != TRUE || __last_msg->magic != 1234 ){
+            panic ("ipc_post_message_to_tid: __last_msg validation\n");
+        }
+
+        // Now handle coalescing for both regular keys and control+arrow
+        if (isMake == TRUE) 
+        {
+            if (__last_msg->msg == MSG_KEYDOWN && __last_msg->long1 == long1) 
+            {
+                __last_msg->long1 = long1;
+                __last_msg->long2 = long2;
+                __last_msg->long3 = (unsigned long) jiffies;
+                __last_msg->long4 += 1; // increment repeat count
+                __last_msg->sender_tid   = (tid_t) src_tid; 
+                __last_msg->receiver_tid = (tid_t) dst_tid;
+                return 0;
+            }
+        }
+        if (isControlArrow == TRUE) 
+        {
+            if (__last_msg->msg == MessageCode) 
+            {
+                __last_msg->long3 = (unsigned long) jiffies;
+                __last_msg->long4 += 1; // increment repeat count
+                __last_msg->sender_tid   = (tid_t) src_tid; 
+                __last_msg->receiver_tid = (tid_t) dst_tid;
+                return 0;
+            }
+        }
+    }
+
+// ======================================================
+
 
 //
 // The message

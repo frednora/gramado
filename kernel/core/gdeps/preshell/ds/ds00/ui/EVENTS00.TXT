@@ -1,0 +1,42 @@
+About requesting events via socket.
+
+You're absolutely right—requesting events from the display server via socket (or any IPC mechanism with a context switch and data copy) can be **expensive** compared to direct, local access. This is a classic challenge in GUI and window system architecture.
+
+### Why is it Expensive?
+- **Context switching:** Each request/response may involve kernel-to-user transitions.
+- **Data copying:** Events must be serialized/deserialized and transferred between client and server.
+- **Latency:** Network or socket communication (even on localhost) adds overhead.
+- **Synchronization:** Blocking/waiting for events may stall client applications.
+
+### Common Strategies to Mitigate This Cost
+
+#### 1. **Event Batching**
+- Server can batch multiple events and send them in one response, reducing round-trips.
+
+#### 2. **Shared Memory Event Queues**
+- Use a shared memory region for event queues.
+- Clients “peek” at events directly, and only notify the server (via socket) when the queue is empty or needs to be refilled.
+- Example: X11 MIT-SHM extension, modern Wayland compositors.
+
+#### 3. **Event Notification Instead of Polling**
+- Instead of clients polling for events, the server notifies clients (e.g., with a signal, or by writing to a socket when new events arrive).
+- Clients block on the socket and only wake up when there’s an event.
+
+#### 4. **Minimize Event Requests**
+- Only request events when the client is idle or after handling all previous events.
+- Avoid requesting events in a tight loop.
+
+#### 5. **Client-side Event Caching**
+- When a batch of events is received, store them in a client-side queue and process them as needed, reducing requests.
+
+### Example: Shared Memory Queue (Pseudo-Flow)
+1. Setup: Client & server agree on a shared memory buffer for events.
+2. Server writes events into the buffer.
+3. Client reads events from the buffer directly, only using the socket for notifications (e.g., “new event available!”).
+
+---
+
+**Summary:**  
+- Requesting events via socket is expensive due to context switch and data copy costs.
+- Use batching, shared memory, event notification, or caching to minimize these costs and improve performance.
+

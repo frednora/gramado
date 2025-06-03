@@ -125,7 +125,29 @@ fail:
     return (int) -1;
 }
 
+
+/*
+On sending PAINT message to the clients:
+How Mature Systems Mitigate This
+Expose/paint events are batched to minimize redundant repaints.
+Dirty rectangle management is used: only the changed region is repainted.
+Shared memory buffers are used for drawing, reducing IPC overhead.
+Compositing: The client draws into a buffer, and only the buffer handle 
+is passed to the server.
+Event coalescing: Multiple paint requests may be merged into one.
+*/
+
 // Post message to the window.
+// Post an event message to the specified window's event queue.
+//
+// Parameters:
+//   wid        - Window ID (index in windowList)
+//   event_type - Event/message type code
+//   long1      - First event parameter (usage depends on event_type)
+//   long2      - Second event parameter (usage depends on event_type)
+//
+// Returns:
+//   0 on success, -1 on error (invalid parameters or window)
 int 
 window_post_message( 
     int wid, 
@@ -156,16 +178,17 @@ window_post_message(
 // Event
 //
 
-// Get offset.
+// --- Post event message to window's circular event queue ---
+
+// Get current tail index for the queue
     register int Tail = (int) w->ev_tail;
-// Post
-    w->ev_wid[Tail] = 
-        (unsigned long) (wid & 0xFFFFFFFF);
-    w->ev_msg[Tail] = 
-        (unsigned long) (event_type & 0xFFFFFFFF);
+// Fill in event data at the current tail position
+    w->ev_wid[Tail]   = (unsigned long) (wid & 0xFFFFFFFF);        // Window ID
+    w->ev_msg[Tail]   = (unsigned long) (event_type & 0xFFFFFFFF); // Event/message code
     w->ev_long1[Tail] = (unsigned long) long1;
     w->ev_long2[Tail] = (unsigned long) long2;
-// Circula
+
+// Advance the tail index, wrapping around if necessary (circular buffer)
     w->ev_tail++;
     if (w->ev_tail >= 32){
         w->ev_tail=0;
