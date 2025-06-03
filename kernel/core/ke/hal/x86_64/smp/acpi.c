@@ -89,7 +89,9 @@ static struct FADT_d *__brute_force_probe_fadt(unsigned long base_address)
             hdr->h.Signature[2] == 'C' &&
             hdr->h.Signature[3] == 'P') 
         {
-            printk("__brute_force_probe_fadt: Found FACP at offset 0x%zx\n", i);
+            //printk("__brute_force_probe_fadt: Found FACP at offset 0x%zx\n", i);
+            printk("FACP was found\n");
+            smp_info.fadt_found = TRUE;
             return hdr;
         }
     }

@@ -143,11 +143,15 @@ void __show_cpu_intel_parameters(void)
     };
 
 // smp_info
-    if(smp_info.initialized == TRUE){
-        printk("[smp_info initialized\n");
+    if (smp_info.initialized == TRUE){
+        printk("smp_info initialized\n");
     }else{
         printk("[ERROR] smp_info not initialized\n");
     };
+
+    if (smp_info.fadt_found == TRUE)
+        printk("FADT was found\n");
+
 
     // Continua ...
 

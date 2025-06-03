@@ -37,6 +37,9 @@ struct smp_info_d
     int probe_via_acpi_failed;
     int probe_via_mp_failed;
 
+// FADT was found.
+    int fadt_found;
+
 // ACPI
     unsigned long RSD_PTR_address;
 
