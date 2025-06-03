@@ -1,11 +1,10 @@
-
 // bmp.c
 // Very basic support for BMP files.
 // We get an address calling the kernel given an index
 // we're we find a pre-loaded image.
 // 2015 - Created by Fred Nora.
 
-#include "gram3d.h"
+#include "../gram3d.h"
 
 // Flag que avisa que deve haver alguma mudança nas cores. 
 int bmp_change_color_flag = FALSE;

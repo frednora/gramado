@@ -33,13 +33,17 @@ extern int current_mode;
 
 #include "lib00/char.h"
 #include "lib00/dtext.h"
-#include "lib00/line.h"
 
-#include "wt.h"
-#include "menu.h"
+#include "libui/line.h"
+#include "libui/wt.h"
+#include "libui/menu.h"
+#include "libui/rect.h"
+#include "libui/window.h"
+#include "libui/bmp.h"
+
+
 #include "xxxinput.h"   //#test
-#include "window.h"
-#include "bmp.h"
+
 
 // h:0.0
 #include "screen.h"   // X-like
@@ -50,10 +54,13 @@ extern int current_mode;
 // kgws é outro ws par ao ambiente de setup e tera 
 // seu próprio gerenciamento.
 #include "security.h"
-#include "gui.h"
-#include "comp.h"
+
+#include "ui/gui.h"
+#include "ui/comp.h"
+
 #include "event.h"    // view inputs
 
+// Imported
 #include <grprim0.h>   // Common for eng/ and gramland/.
 #include <libgr.h>     // Common for eng/ and gramland/.
 #include <grprim3d.h>  // Only for eng/
@@ -103,6 +110,8 @@ extern int current_mode;
 // 'dc->something'
 // It needs to be the last one.
 #include "dc.h"
+
+#include "ui/wm.h"
 
 // See: scan00.c
 int testing_model_scanner(void);

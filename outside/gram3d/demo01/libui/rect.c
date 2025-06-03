@@ -1,8 +1,8 @@
-
 // rect.c 
 // Rectangle support for gws.
 
-#include "gram3d.h"
+#include "../gram3d.h"
+
 
 //
 // == private functions: prototypes ====================

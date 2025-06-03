@@ -1,8 +1,7 @@
-
 // comp.h
 
-#ifndef __COMP_H
-#define __COMP_H    1
+#ifndef __UI_COMP_H
+#define __UI_COMP_H    1
 
 long comp_get_mouse_x_position(void);
 long comp_get_mouse_y_position(void);

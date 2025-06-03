@@ -104,15 +104,19 @@ myObjects += libgr.o
 myObjects += libgr3d.o
 
 myObjects += archive_basics1.o
-myObjects += archive_basics2.o
+myObjects += archive_libui.o
 myObjects += archive_fx.o    
 myObjects += archive_extra.o    
-myObjects += wm.o   
 
 #test
 myObjects += scan00.o   
 
 myObjects += math.o   
+
+myObjects += comp.o   
+myObjects += wm.o   
+myObjects += gws.o   
+myObjects += connect.o   
 
 
 .PHONY: all all-c gws-link finalize clean
@@ -126,21 +130,19 @@ main.o:
 
 all-c:
 
-#basics1
+# basics1
 	$(CC)  -c  lib00/char.c  $(user_ccflags) $(CINCLUDES) -o char.o
 	$(CC)  -c  lib00/dtext.c $(user_ccflags) $(CINCLUDES) -o dtext.o
 	$(LD) -r -o archive_basics1.o char.o dtext.o 
 
-	$(CC)  -c  lib00/line.c      $(user_ccflags) $(CINCLUDES) -o line.o
-	$(CC)  -c  rect.c      $(user_ccflags) $(CINCLUDES) -o rect.o
-	$(CC)  -c  window.c    $(user_ccflags) $(CINCLUDES) -o window.o
-	$(CC)  -c  gws.c       $(user_ccflags) $(CINCLUDES) -o gws.o
-	$(CC)  -c  comp.c      $(user_ccflags) $(CINCLUDES) -o comp.o
-	$(CC)  -c  bmp.c       $(user_ccflags) $(CINCLUDES) -o bmp.o
-	$(CC)  -c  connect.c   $(user_ccflags) $(CINCLUDES) -o connect.o
-	$(CC)  -c  button.c    $(user_ccflags) $(CINCLUDES) -o button.o
-	$(LD) -r -o archive_basics2.o \
-line.o rect.o window.o gws.o comp.o bmp.o connect.o button.o
+# libui
+	$(CC)  -c  libui/line.c    $(user_ccflags) $(CINCLUDES) -o line.o
+	$(CC)  -c  libui/rect.c    $(user_ccflags) $(CINCLUDES) -o rect.o
+	$(CC)  -c  libui/window.c  $(user_ccflags) $(CINCLUDES) -o window.o
+	$(CC)  -c  libui/button.c  $(user_ccflags) $(CINCLUDES) -o button.o
+	$(CC)  -c  libui/bmp.c     $(user_ccflags) $(CINCLUDES) -o bmp.o
+	$(LD) -r -o archive_libui.o \
+line.o rect.o window.o button.o bmp.o    
 
 
 #fx
@@ -173,9 +175,16 @@ demos.o models.o flycube.o cat00.o polygon.o tri00.o lin00.o curve00.o
 	$(CC)  -c  font.c      $(user_ccflags) $(CINCLUDES) -o font.o
 	$(LD) -r -o archive_extra.o  xxxinput.o font.o 
 
-	$(CC)  -c  wm.c   $(user_ccflags) $(CINCLUDES) -I include/  -o wm.o
 
 	$(CC)  -c demos/scan00.c   $(user_ccflags) $(CINCLUDES) -I include/  -o scan00.o
+
+# ui/
+	$(CC)  -c  ui/wm.c    $(user_ccflags) $(CINCLUDES) -I include/  -o wm.o
+	$(CC)  -c  ui/comp.c  $(user_ccflags) $(CINCLUDES) -o comp.o
+
+	$(CC)  -c  gws.c       $(user_ccflags) $(CINCLUDES) -o gws.o
+	$(CC)  -c  connect.c   $(user_ccflags) $(CINCLUDES) -o connect.o
+
 
 #
 # == imported objects =============================

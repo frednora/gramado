@@ -1,8 +1,8 @@
 // line.h
 
 
-#ifndef __LIB00_LINE_H
-#define __LIB00_LINE_H    1
+#ifndef __LIBUI_LINE_H
+#define __LIBUI_LINE_H    1
 
 
 void plotLineRect4 ( int x1, int y1, int x2, int y2, int color );

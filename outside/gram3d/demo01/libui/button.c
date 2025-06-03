@@ -1,9 +1,8 @@
-/*
- * File: button.c
- *     Create button.
- */
+// button.c
+// Button support.
+// Maybe the button is a window now.
 
-#include "gram3d.h"
+#include "../gram3d.h"
 
 /*
  * gws_draw_button:

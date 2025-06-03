@@ -1,9 +1,9 @@
-
 // comp.c
 // Created by Fred Nora.
 
+
 // Display server routines.
-#include "gram3d.h"
+#include "../gram3d.h"
 
 //global
 int comp_config_use_mouse = FALSE;

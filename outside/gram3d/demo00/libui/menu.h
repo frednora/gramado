@@ -1,9 +1,8 @@
-
 // menu.h
 
 
-#ifndef GWS_MENU_H
-#define GWS_MENU_H    1
+#ifndef __LIBUI__MENU_H
+#define __LIBUI__MENU_H    1
 
 // Menu item types
 #define MI_TYPE_SEPARATOR  1000

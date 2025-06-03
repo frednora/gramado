@@ -5,7 +5,7 @@
  *     2020 - Create by Fred Nora.
  */
 
-#include "gram3d.h"
+#include "../gram3d.h"
 
 extern int comp_config_use_mouse;
 
@@ -2196,14 +2196,12 @@ void wm_update_active_window(void)
 }
 
 
-// vamos gerenciar a janela de cliente
-// recentemente criada.
+// vamos gerenciar a janela de cliente recentemente criada.
 // Precisamos associar essa estrutura de janela
 // com uma estrutura de cliente. 
 // Somente janelas overlapped serao consideradas clientes
 // por essa rotina.
-// Isso sera chamado de dentro do serviço 
-// que cria janelas.
+// Isso sera chamado de dentro do serviço que cria janelas.
 
 int wmManageWindow( struct gws_window_d *w )
 {
@@ -4164,7 +4162,6 @@ int wmInputReader2(void)
     return 0;
 }
 
-
 void wm_change_bg_color(unsigned int color, int tile, int fullscreen)
 {
 // Change the custon background color.
@@ -4212,7 +4209,6 @@ void wm_enter_fullscreen_mode(void)
         return;
     }
 }
-
 
 void wm_exit_fullscreen_mode(int tile)
 {
