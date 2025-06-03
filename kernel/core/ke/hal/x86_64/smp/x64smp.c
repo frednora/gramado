@@ -171,7 +171,7 @@ int x64smp_initialization(void)
     // See: acpi.c
 
     smp_info.probe_via = SMP_VIA_ACPI;
-    smp_status = (int) __x64_probe_smp_via_acpi();
+    smp_status = (int) acpi_probe();
 
     // #bugbug
     // We gotta find this table and check the elements.

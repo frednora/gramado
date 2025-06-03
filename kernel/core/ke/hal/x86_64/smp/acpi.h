@@ -299,7 +299,7 @@ struct FADT
 int acpi_check_header(unsigned int *ptr, char *sig);
 int acpi_check_header02(unsigned int *ptr, char *sig);
 
-int __x64_probe_smp_via_acpi(void);
+int acpi_probe(void);
 
 // ...
 

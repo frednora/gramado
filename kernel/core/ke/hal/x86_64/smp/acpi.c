@@ -15,6 +15,8 @@ struct xsdp_d *xsdp;
 struct rsdt_d *rsdt;
 struct xsdt_d *xsdt;
 
+static int __acpi_rsdp(unsigned long rsdp_pointer);
+
 // =============================================
 
 /*
@@ -68,110 +70,20 @@ int acpi_check_header02(unsigned int *ptr, char *sig)
    return (int) (-1);
 }
 
-
-//
-// $
-// VIA ACPI
-//
-
-// After you've gathered the information, 
-// you'll need to disable the PIC and prepare for I/O APIC. 
-// You also need to setup BSP's local APIC. 
-// Then, startup the APs using SIPIs.
-// You should be able to find a MADT table 
-// in the RSDT table or in the XSDT table.
-// #todo
-// Probe the acpi table.
-// + 'RSDP signature'
-int __x64_probe_smp_via_acpi(void)
+// Probe rsdp or xrdp.
+static int __acpi_rsdp(unsigned long rsdp_pointer)
 {
-// Called by x64smp_initialization() in x64smp.c.
 
 // TRUE when finding the RSDP table.
     int Status = FALSE;
-
-// 0x040E - The base address.
-// Get a short value.
-    unsigned short *bda = (unsigned short*) BDA_BASE;
-    unsigned long ebda_address=0;
-    register int i=0;
-    unsigned char *p;
-// Signature elements.
-    unsigned char c1=0;
-    unsigned char c2=0;
-    unsigned char c3=0;
-    unsigned char c4=0;
-    unsigned char c5=0;
-    unsigned char c6=0;
-    unsigned char c7=0;
-    unsigned char c8=0;
-
-//
-// Probe ebda address at bda base.
-//
-
-    printk("EBDA short Address: %x\n", bda[0] ); 
-    ebda_address = (unsigned long) ( bda[0] << 4 );
-    ebda_address = (unsigned long) ( ebda_address & 0xFFFFFFFF );
-    printk("EBDA Address: %x\n", ebda_address ); 
-
-// base
-// between 0xF0000 and 0xFFFFF.
-// #todo: filter
-    p = ebda_address;
-
-// The signature was found?
-    static int Found = FALSE;
-
-// Probe for the signature. // "RSD PTR "
-    int max = (int) (0xFFFFF - ebda_address);
-    for (i=0; i<max; i++){
-        c1 = p[i+0];
-        c2 = p[i+1];
-        c3 = p[i+2];
-        c4 = p[i+3];
-        c5 = p[i+4];
-        c6 = p[i+5];
-        c7 = p[i+6];
-        c8 = p[i+7];
-
-        // "RSD PTR "
-        if ( c1 == 'R' && 
-             c2 == 'S' && 
-             c3 == 'D' && 
-             c4 == ' ' &&
-             c5 == 'P' &&
-             c6 == 'T' &&
-             c7 == 'R' &&
-             c8 == ' '  )
-        {
-            printk (":: Found [RSD PTR ] at index %d. :)\n",i);
-            Found=TRUE;
-            break;
-        }
-    };
-
-// Signature not found.
-    if (Found != TRUE){
-        Status = FALSE;
-        printk("__x64_probe_smp_via_acpi: [RSD PTR ] wasn't found!\n");
-        goto fail;
-    }
-
-// Get address
-    unsigned long __rsdp_Pointer = 
-        (unsigned long) (ebda_address + i);
-
-// Save the address
-    smp_info.RSD_PTR_address = (unsigned long) __rsdp_Pointer;
 
 // --------------------------------------------------------------
 // To find the RSDT you need first to locate and check the RSDP, 
 // then use the RsdtPointer for ACPI Version < 2.0 an XsdtPointer for any other case. 
 
 // The root table.
-    rsdp = (struct rsdp_d *) __rsdp_Pointer;  // 1.0
-    xsdp = (struct xsdp_d *) __rsdp_Pointer;  // 2.0
+    rsdp = (struct rsdp_d *) rsdp_pointer;  // 1.0
+    xsdp = (struct xsdp_d *) rsdp_pointer;  // 2.0
 
 // #debug: Signature OK.
     printk("RSDP signature: \n");
@@ -207,7 +119,8 @@ int __x64_probe_smp_via_acpi(void)
     // rsdt signature.
     __initial_acpi_address = (unsigned long) (rsdp->RsdtAddress & 0xFFF00000); 
 
-    // Use xsdp
+// ------------------------------------------------
+// Revision 0x02: Use xsdp
     if (rsdp->Revision == 0x02){
         printk("ACPI: Revision 2.0 {0x02} \n");
         __rsdt_address = (unsigned long) (rsdp->RsdtAddress & 0xFFFFFFFF);
@@ -260,6 +173,9 @@ int __x64_probe_smp_via_acpi(void)
             printk("XSDT: OEMID {%s}\n", xsdt->OEMID);
         } else {
             printk("XSDT signature: #bugbug Wrong signature\n");
+
+            // #debug
+            //goto fail;
         };
 
         // #breakpoint
@@ -269,8 +185,9 @@ int __x64_probe_smp_via_acpi(void)
         Status = TRUE;
         goto valid_revision;
 
-    // Use rsdp
-    } else if (rsdp->Revision == 0){
+// ------------------------------------------------
+// Revision 0x00: Use rsdp
+    } else if (rsdp->Revision == 0x00){
         printk("ACPI: Revision 1.0 {0x00} \n");
         __rsdt_address = (unsigned long) (rsdp->RsdtAddress & 0xFFFFFFFF);
         __xsdt_address = 0;
@@ -341,6 +258,9 @@ int __x64_probe_smp_via_acpi(void)
             printk("RSDT: OEMID {%s}\n", rsdt->OEMID);
         } else {
             printk("RSDT signature: #bugbug Wrong signature\n");
+
+            // #debug
+            //goto fail;
         };
 
         // #todo
@@ -356,6 +276,8 @@ int __x64_probe_smp_via_acpi(void)
         Status = TRUE;
         goto valid_revision;
 
+// ------------------------------------------------
+// Invalid Resivion:
     } else {
         printk("ACPI: Invalid ACPI revision\n");
         Status = FALSE;
@@ -364,7 +286,8 @@ int __x64_probe_smp_via_acpi(void)
 
     panic ("ACPI: Something is wrong\n");
 
-// ---------------------------------------
+// ------------------------------------------------
+// Valid Revision: What is next?
 // Multiple APIC Description Table (MADT)
 // You should be able to find a MADT table in the RSDT table or in the XSDT table. 
 // The table has a list of local-APICs, 
@@ -376,8 +299,115 @@ valid_revision:
         return TRUE;
     }
 fail:
-    printk("ACPI: fail\n");
+    printk("ACPI: Failed probing rsdp info\n");
     refresh_screen();
+    return FALSE;
+}
+
+//
+// $
+// VIA ACPI
+//
+
+// After you've gathered the information, 
+// you'll need to disable the PIC and prepare for I/O APIC. 
+// You also need to setup BSP's local APIC. 
+// Then, startup the APs using SIPIs.
+// You should be able to find a MADT table 
+// in the RSDT table or in the XSDT table.
+// #todo
+// Probe the acpi table.
+// + 'RSDP signature'
+int acpi_probe(void)
+{
+// Called by x64smp_initialization() in x64smp.c.
+
+// TRUE when finding the RSDP table.
+    int Status = FALSE;
+
+// 0x040E - The base address.
+// Get a short value.
+    unsigned short *bda = (unsigned short*) BDA_BASE;
+    unsigned long ebda_address=0;
+    register int i=0;
+    unsigned char *p;
+// Signature elements.
+    unsigned char c1=0;
+    unsigned char c2=0;
+    unsigned char c3=0;
+    unsigned char c4=0;
+    unsigned char c5=0;
+    unsigned char c6=0;
+    unsigned char c7=0;
+    unsigned char c8=0;
+
+//
+// Probe ebda address at bda base.
+//
+
+    printk("EBDA short Address: %x\n", bda[0] ); 
+    ebda_address = (unsigned long) ( bda[0] << 4 );
+    ebda_address = (unsigned long) ( ebda_address & 0xFFFFFFFF );
+    printk("EBDA Address: %x\n", ebda_address ); 
+
+// base
+// between 0xF0000 and 0xFFFFF.
+// #todo: filter
+    p = ebda_address;
+
+// The signature was found?
+    static int Found = FALSE;
+
+
+// Probe for the signature. // "RSD PTR "
+    int max = (int) (0xFFFFF - ebda_address);
+    for (i=0; i<max; i++){
+        c1 = p[i+0];
+        c2 = p[i+1];
+        c3 = p[i+2];
+        c4 = p[i+3];
+        c5 = p[i+4];
+        c6 = p[i+5];
+        c7 = p[i+6];
+        c8 = p[i+7];
+
+        // "RSD PTR "
+        if ( c1 == 'R' && 
+             c2 == 'S' && 
+             c3 == 'D' && 
+             c4 == ' ' &&
+             c5 == 'P' &&
+             c6 == 'T' &&
+             c7 == 'R' &&
+             c8 == ' '  )
+        {
+            printk (":: Found [RSD PTR ] at index %d. :)\n",i);
+            Found=TRUE;
+            break;
+        }
+    };
+
+// Signature not found.
+    if (Found != TRUE){
+        Status = FALSE;
+        printk("acpi_probe: [RSD PTR ] wasn't found!\n");
+        goto fail;
+    }
+
+// Get address
+    unsigned long __rsdp_Pointer = (unsigned long) (ebda_address + i);
+
+// Save the address
+    smp_info.RSD_PTR_address = (unsigned long) __rsdp_Pointer;
+
+// Probe rsdp or xsdp.
+    Status = (int) __acpi_rsdp(__rsdp_Pointer);
+    if (Status != TRUE)
+        goto fail;
+
+    return TRUE;
+
+fail:
     return FALSE;
 }
 
