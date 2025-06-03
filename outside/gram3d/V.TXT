@@ -1,0 +1,11 @@
+
+
+----------------------------------
+Espaços vetoriais   (That triple mystical thing)
+V = {}
+
+----------------------------------
+Subespaços vetoriais
+V = { T, U, W ... }
+
+

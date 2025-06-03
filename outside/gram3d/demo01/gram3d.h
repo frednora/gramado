@@ -31,9 +31,9 @@ extern int current_mode;
 // Graphics device library.
 #include <libdisp.h>
 
-#include "char.h"
-#include "dtext.h"
-#include "line.h"
+#include "lib00/char.h"
+#include "lib00/dtext.h"
+#include "lib00/line.h"
 
 #include "wt.h"
 #include "menu.h"
@@ -58,12 +58,13 @@ extern int current_mode;
 #include <libgr.h>     // Common for eng/ and gramland/.
 #include <grprim3d.h>  // Only for eng/
 #include <libgr3d.h>   // Only for eng/
-#include "grprim.h"
-#include "camera.h"
-#include "world.h"
-#include "proj.h"
-#include "sprite.h"
-#include "surface.h"
+
+#include "lib00/grprim.h"
+#include "lib00/camera.h"
+#include "lib00/world.h"
+#include "lib00/proj.h"
+#include "lib00/sprite.h"
+#include "lib00/surface.h"
 
 // Common for all the demos
 #include "demos/demos.h"

@@ -1,4 +1,3 @@
-
 # demo00 - 3D game for Gramado OS.
 # This is also a server.
 # It's called by the init process.
@@ -128,11 +127,11 @@ main.o:
 all-c:
 
 #basics1
-	$(CC)  -c  char.c  $(user_ccflags) $(CINCLUDES) -o char.o
-	$(CC)  -c  dtext.c $(user_ccflags) $(CINCLUDES) -o dtext.o
+	$(CC)  -c  lib00/char.c  $(user_ccflags) $(CINCLUDES) -o char.o
+	$(CC)  -c  lib00/dtext.c $(user_ccflags) $(CINCLUDES) -o dtext.o
 	$(LD) -r -o archive_basics1.o char.o dtext.o 
 
-	$(CC)  -c  line.c      $(user_ccflags) $(CINCLUDES) -o line.o
+	$(CC)  -c  lib00/line.c      $(user_ccflags) $(CINCLUDES) -o line.o
 	$(CC)  -c  rect.c      $(user_ccflags) $(CINCLUDES) -o rect.o
 	$(CC)  -c  window.c    $(user_ccflags) $(CINCLUDES) -o window.o
 	$(CC)  -c  gws.c       $(user_ccflags) $(CINCLUDES) -o gws.o
@@ -143,13 +142,14 @@ all-c:
 	$(LD) -r -o archive_basics2.o \
 line.o rect.o window.o gws.o comp.o bmp.o connect.o button.o
 
+
 #fx
-	$(CC)  -c grprim.c  $(user_ccflags) $(CINCLUDES) -o grprim.o
-	$(CC)  -c camera.c  $(user_ccflags) $(CINCLUDES) -o camera.o
-	$(CC)  -c world.c   $(user_ccflags) $(CINCLUDES) -o world.o
-	$(CC)  -c proj.c    $(user_ccflags) $(CINCLUDES) -o proj.o
-	$(CC)  -c sprite.c  $(user_ccflags) $(CINCLUDES) -o sprite.o
-	$(CC)  -c surface.c $(user_ccflags) $(CINCLUDES) -o surface.o
+	$(CC)  -c lib00/grprim.c  $(user_ccflags) $(CINCLUDES) -o grprim.o
+	$(CC)  -c lib00/camera.c  $(user_ccflags) $(CINCLUDES) -o camera.o
+	$(CC)  -c lib00/world.c   $(user_ccflags) $(CINCLUDES) -o world.o
+	$(CC)  -c lib00/proj.c    $(user_ccflags) $(CINCLUDES) -o proj.o
+	$(CC)  -c lib00/sprite.c  $(user_ccflags) $(CINCLUDES) -o sprite.o
+	$(CC)  -c lib00/surface.c $(user_ccflags) $(CINCLUDES) -o surface.o
 
 # Common for all the demos.
 	$(CC)  -c demos/demos.c   $(user_ccflags) $(CINCLUDES) -o demos.o

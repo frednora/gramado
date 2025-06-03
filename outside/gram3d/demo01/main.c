@@ -3642,7 +3642,12 @@ static int on_execute(void)
 
     unsigned long end_jiffie=0;
     unsigned long delta_jiffie=0;
+
+    // Flags
     int UseSleep = TRUE;
+    int DrawDesktop = FALSE;
+    int DrawYellowStatus = TRUE;
+    // ...
 
     // Initialize counters.
     accumulatedDeltaTick=0;
@@ -3715,11 +3720,13 @@ static int on_execute(void)
             // -------------------------
             // Clear canvas.
             //demoClearWA(COLOR_BLACK);                 //clear surface
-            //gramado_clear_surface(NULL,COLOR_BLACK);  //clear surface
+            gramado_clear_surface(NULL,COLOR_BLACK);  //clear surface
 
             // Draw desktop?
             // IN: tile,show
-            wm_update_desktop(TRUE,FALSE);
+            if (DrawDesktop){
+                wm_update_desktop(TRUE,FALSE);
+            }
 
             // IN: draw terrain, second counter
             demoFlyingCube(FALSE,sec);
@@ -3746,7 +3753,9 @@ static int on_execute(void)
             }
 
             // Draw yellow bar with the info.
-            yellowstatus0(buf_fps,FALSE);
+            if (DrawYellowStatus){
+                yellowstatus0(buf_fps,FALSE);
+            }
 
             // Flush the backbuffer into the framebuffer.
             gramado_flush_surface(NULL);
