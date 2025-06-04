@@ -221,6 +221,25 @@ struct GenericAddressStructure
 //----------------------------------------------------
 // see:
 // https://wiki.osdev.org/FADT
+/*
+Main Functions of FADT:
+
+Power Management Configuration – 
+Defines system-wide power management settings, including sleep states (S0-S5) and wake-up capabilities.
+
+Hardware Feature Flags – 
+Specifies whether certain ACPI features, such as legacy PIC/APIC support, are enabled.
+
+System Interrupts – 
+Provides details on System Control Interrupt (SCI) settings, which are crucial for ACPI event handling.
+
+DSDT Pointer – 
+Points to the Differentiated System Description Table (DSDT), which contains ACPI-defined methods 
+for device configuration.
+
+Firmware Control – 
+Includes addresses for firmware-related operations, such as System Management Mode (SMM) interactions.
+*/
 struct FADT_d
 {
     //struct   ACPISDTHeader h;

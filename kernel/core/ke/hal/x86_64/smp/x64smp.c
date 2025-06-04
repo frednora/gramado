@@ -158,19 +158,21 @@ int x64smp_initialization(void)
 // ----------------------
 // ACPI
 
+// Setup the desired mode.
+// #test: But for now the initialization is just getting some information 
+// using both methods, ACPI and MP Tables.
+
+    smp_info.probe_via = SMP_VIA_ACPI;
+
 //
 // == ACPI ===========================================================
 //
 
     printk("\n");
-    printk("\n");
     printk("== SMP VIA ACPI ===================\n");
 
-    // #test #todo
-    // Using the ACPI tables.
-    // See: acpi.c
-
-    smp_info.probe_via = SMP_VIA_ACPI;
+// Using the ACPI tables.
+// See: acpi.c
     smp_status = (int) acpi_probe();
 
     // #bugbug
@@ -200,6 +202,7 @@ int x64smp_initialization(void)
         }
 
     } else {
+
         smp_info.probe_via_acpi_failed = TRUE;
         printk("x64smp_initialization: [x64_probe_smp_via_acpi] failed\n");
         refresh_screen();
