@@ -4,6 +4,9 @@
 
 #include "../gram3d.h"
 
+#include <fcntl.h>
+#include <unistd.h>
+
 
 // Use demos or not
 int gUseDemos = TRUE;
@@ -23,100 +26,52 @@ static char model_file_buffer[512];
 
 // ===================================
 
-// Revised function: Loads a multi‑line sequence file using scan00_custom_read_float()
-// Each line may have one or more numbers.
-// The parsed numbers (as floats) are cast to int and stored into the sequence array.
-int load_sequence_multiline(int *sequence, int max_elements) 
+// Function to read entire file into buffer using open()
+// # Limited size. 512 bytes
+char *demosReadFileIntoBuffer(const char *filename) 
 {
+    size_t FakeFileSize=512;
+    int fd;
 
-    /*
-    // Open the file using open()
-    //int fd = open(filename, O_RDONLY);
-    int fd = open(filename, 0, "a+");
+    if ((void*) filename == NULL)
+        return NULL;
+    if (*filename == 0)
+        return NULL;
 
+// --------------------------
+// Open
+    fd = open(filename,0,"a+");
     if (fd < 0) {
-        printf("Error: Could not open file %s\n", filename);
-        return -1;
+        printf("File opening failed\n");
+        return NULL;
     }
-    
-    off_t fsize = 512;
-    // Determine the file size using lseek()
-    //off_t fsize = lseek(fd, 0, SEEK_END);
-    //if (fsize == -1) {
-    //    printf("Error: Could not determine file size.\n");
-        //close(fd);
-    //    return -1;
-    //}
-    // Reset file pointer to beginning.
-    //lseek(fd, 0, SEEK_SET);
-    
-    // Allocate a buffer and read the entire file.
-    //char *buffer = (char *)malloc(fsize + 1);
-    char *buffer = (char *)malloc(fsize);
-    if (buffer == NULL) 
+
+    // Get file size
+    //off_t size = lseek(fd, 0, SEEK_END);
+    //lseek(fd, 0, SEEK_SET); // Reset file position
+
+    // Allocate buffer
+    char *buffer = malloc(FakeFileSize);
+    if (!buffer) 
     {
-        printf("Error: Could not allocate buffer memory of size %ld\n", (long)fsize);
+        printf("Memory allocation failed\n");
         //close(fd);
-        return -1;
+        return NULL;
     }
 
-    //ssize_t bytesRead = read(fd, buffer, fsize);
-    ssize_t bytesRead = read(fd, buffer, fsize);
-    if (bytesRead < 0) {
-        printf("Error: Could not read from file.\n");
-        //free(buffer);
-        //close(fd);
-        return -1;
-    }
-    buffer[bytesRead] = '\0';
-    //close(fd);
+    // Read file content
+    memset(buffer,0,FakeFileSize);
 
-*/
+// --------------------------
+// Read
+    ssize_t bytesRead = read(fd, buffer, FakeFileSize);
+    buffer[bytesRead] = '\0'; // Null-terminate
 
-    // Now, use strtok_r() to split the buffer into lines.
-    char *saveptr = NULL;
-    char *line = strtok_r(model_file_buffer, "\n", &saveptr);
-    int count = 0;
-    
-    while (line != NULL && count < max_elements) 
-    {
-        // For each line, prepare a pointer for parsing numbers.
-        const char *p = line;
-        
-        // Use scan00_custom_read_float() as long as there is something in the line.
-        while (*p != '\0' && count < max_elements) 
-        {
-            // Skip any whitespace if needed (scan00_custom_read_float takes care of this).
-            float value = (float) scan00_custom_read_float(&p);
-            // If you wish, you can add a check here to ensure a valid number was parsed.
-            sequence[count] = (int) value;
+    //close(fd); // Close file descriptor
 
-            //#debug ok
-            //printf("%d\n",sequence[count]);
-
-            count++;
-        }
-        line = strtok_r(NULL, "\n", &saveptr);
-    }
-
-    //while(1){}
-
-    //free(buffer);
-    return count;
+// Return 
+    return (char *) buffer;
 }
-
-
-/*
-// How to use the function load_sequence_multiline()
-
-    int numElements = load_sequence_multiline(sequence, SEQUENCE_MAX_ELEMENTS);
-    if (numElements < 0) {
-        printf("numElements\n");
-        exit(0);
-    }
-
-*/
-
 
 struct gws_window_d *__create_demo_window (
     unsigned long left,

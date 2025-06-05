@@ -17,6 +17,7 @@ extern unsigned long gBeginTick;
 
 // =====================================
 
+char *demosReadFileIntoBuffer(const char *filename);
 
 struct gws_window_d *__create_demo_window (
     unsigned long left,

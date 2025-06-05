@@ -4,8 +4,9 @@
 
 #include "../gram3d.h"
 
-#include <fcntl.h>
-#include <unistd.h>
+// for open()
+//#include <fcntl.h>
+//#include <unistd.h>
 
 
 static int game_update_taskbar=TRUE;
@@ -888,41 +889,6 @@ void demoFlyingCube(int draw_terrain,unsigned long sec)
 }
 
 
-// Worker
-// Function to read entire file into buffer using open()
-// char *__readFileIntoBuffer(const char *filename) ;
-char *__readFileIntoBuffer(const char *filename) 
-{
-    size_t FakeFileSize=512;
-
-    //int fd = open(filename, O_RDONLY); // Open file in read-only mode
-    int fd = open(filename,0,"a+");
-    if (fd < 0) {
-        printf("File opening failed\n");
-        return NULL;
-    }
-
-    // Get file size
-    //off_t size = lseek(fd, 0, SEEK_END);
-    //lseek(fd, 0, SEEK_SET); // Reset file position
-
-    // Allocate buffer
-    char *buffer = malloc(FakeFileSize);
-    if (!buffer) 
-    {
-        printf("Memory allocation failed\n");
-        //close(fd);
-        return NULL;
-    }
-
-    // Read file content
-    memset(buffer,0,FakeFileSize);
-    ssize_t bytesRead = read(fd, buffer, FakeFileSize);
-    buffer[bytesRead] = '\0'; // Null-terminate
-
-    //close(fd); // Close file descriptor
-    return (char *) buffer;
-}
 
 //
 // #
@@ -1013,11 +979,11 @@ void demoFlyingCubeSetup(void)
             "v 0.3 -0.2 -0.3\n";  // Vertex 8: bottom back right (expanded base)
         */
 
-        //const char *cubeData = (char *) __readFileIntoBuffer("cube.txt");
-        const char *cubeData = (char *) __readFileIntoBuffer("cube02.txt");
+        //const char *cubeData = (char *) demosReadFileIntoBuffer("cube.txt");
+        const char *cubeData = (char *) demosReadFileIntoBuffer("cube02.txt");
         // ...
         if ((void*)cubeData == NULL){
-            printf("on __readFileIntoBuffer()\n");
+            printf("on demosReadFileIntoBuffer()\n");
             exit(0);
         }
         const char *nextLine = cubeData;
