@@ -113,9 +113,6 @@ extern int current_mode;
 
 #include "ui/wm.h"
 
-// See: scan00.c
-int testing_model_scanner(void);
-
 struct gws_graphics_d
 {
     int used;

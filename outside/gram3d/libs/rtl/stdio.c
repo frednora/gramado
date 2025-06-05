@@ -2589,6 +2589,7 @@ kinguio_vsprintf(
                 str_tmp = _vsputs_r(str_tmp,buffer);
                 break;
 
+            /*
             // #test
             // %f: Print a floating-point number.
             case 'f':
@@ -2635,6 +2636,60 @@ kinguio_vsprintf(
                 str_tmp = _vsputs_r(str_tmp, buffer);
             }
                 break;
+            */
+
+            // %f: Print a floating-point number.
+            case 'f':
+            {
+                double f_val = va_arg(ap, double);  // Retrieve the float argument
+                char buffer[256];  // Temporary storage for formatted float
+                int pos = 0;       // Buffer position
+
+                // Handle negative numbers: if negative, set the sign flag and convert to positive.
+                int is_negative = (f_val < 0) ? 1 : 0;
+                if (is_negative) {
+                    f_val = -f_val;
+                    buffer[pos++] = '-'; // Insert the '-' sign at the beginning.
+                }
+
+                // Extract integer and fractional parts.
+                int integer_part = (int)f_val;
+                double fractional_part = f_val - integer_part;
+
+                // Convert integer part into a temporary buffer.
+                char int_buffer[20];  
+                __int_to_string(int_buffer, integer_part);  // Your custom implementation to convert int to string.
+    
+                // Append the integer part into 'buffer'.
+                int i = 0;
+                while (int_buffer[i] != '\0')
+                {
+                    buffer[pos++] = int_buffer[i];
+                    i++;
+                }
+
+                // Append the decimal point.
+                buffer[pos++] = '.';
+
+                // Convert fractional part manually (6 decimal places).
+                for (i = 0; i < 6; i++) {
+                    fractional_part *= 10;
+                    int digit = (int)fractional_part;
+                    buffer[pos++] = digit + '0';
+                    fractional_part -= digit;
+                }
+
+                // Null-terminate the formatted string.
+                buffer[pos] = '\0';
+
+                // Debugging: If needed, you can print the final formatted number.
+                // printf("Debug: Fixed Float Conversion = [%s]\n", buffer);
+
+                // Output the formatted string.
+                str_tmp = _vsputs_r(str_tmp, buffer);
+            }
+                break;
+
 
             // Default: If an unknown specifier is met, output a literal "%%".
             default:

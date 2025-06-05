@@ -455,24 +455,33 @@ static void __drawFlyingCube(struct cube_model_d *cube, float vel)
     matRotZ.m[2][2] = (float) 1.0f;
     matRotZ.m[3][3] = (float) 1.0f;
 
-// ?
-// The 'face' has three vector.
-// Now we're selecting the indexes for these three vectors. I guess.
-// 12 triangles. (12*3) = 36 vectors.
+//
+// Surfaces
+//
+
+// Let's select what are the vectors for each one of the surfaces.
+// Each 'face' of the triangle has three vector.
+// Now we're selecting these indexes for these three vectors. 
+// The vectors were created during the setup phase.
+
+// We have 12 triangles. 
+// (12*3) = 36 vectors.
 // Order: north, top, south, bottom, east, west.
-// clockwise
-    sequence[0]  = (int) 1; sequence[1]  = (int) 2;  sequence[2] = (int) 4; //f 1 2 4 // north bottom  n
-    sequence[3]  = (int) 1; sequence[4]  = (int) 4;  sequence[5] = (int) 3; //f 1 4 3 // north top     n
-    sequence[6]  = (int) 3; sequence[7]  = (int) 4;  sequence[8] = (int) 6; //f 3 4 6 // top right     s
-    sequence[9]  = (int) 3; sequence[10] = (int) 6; sequence[11] = (int) 5; //f 3 6 5 // top left      s   
-    sequence[12] = (int) 5; sequence[13] = (int) 6; sequence[14] = (int) 8; //f 5 6 8 // south right   s
-    sequence[15] = (int) 5; sequence[16] = (int) 8; sequence[17] = (int) 7; //f 5 8 7 // south left    s
-    sequence[18] = (int) 7; sequence[19] = (int) 8; sequence[20] = (int) 2; //f 7 8 2 // bottom right  n
-    sequence[21] = (int) 7; sequence[22] = (int) 2; sequence[23] = (int) 1; //f 7 2 1 // bottom left   n
-    sequence[24] = (int) 2; sequence[25] = (int) 8; sequence[26] = (int) 6; //f 2 8 6 // east bottom   s
-    sequence[27] = (int) 2; sequence[28] = (int) 6; sequence[29] = (int) 4; //f 2 6 4 // east top      n  
-    sequence[30] = (int) 7; sequence[31] = (int) 1; sequence[32] = (int) 3; //f 7 1 3 // west bottom   n
-    sequence[33] = (int) 7; sequence[34] = (int) 3; sequence[35] = (int) 5; //f 7 3 5 // west top      s 
+// Clockwise
+
+// We are selecting the vectors for each surface,
+    sequence[0]  = (int) 1; sequence[1]  = (int) 2;  sequence[2] = (int) 4;  //f 1 2 4 // north bottom  n
+    sequence[3]  = (int) 1; sequence[4]  = (int) 4;  sequence[5] = (int) 3;  //f 1 4 3 // north top     n
+    sequence[6]  = (int) 3; sequence[7]  = (int) 4;  sequence[8] = (int) 6;  //f 3 4 6 // top right     s
+    sequence[9]  = (int) 3; sequence[10] = (int) 6; sequence[11] = (int) 5;  //f 3 6 5 // top left      s   
+    sequence[12] = (int) 5; sequence[13] = (int) 6; sequence[14] = (int) 8;  //f 5 6 8 // south right   s
+    sequence[15] = (int) 5; sequence[16] = (int) 8; sequence[17] = (int) 7;  //f 5 8 7 // south left    s
+    sequence[18] = (int) 7; sequence[19] = (int) 8; sequence[20] = (int) 2;  //f 7 8 2 // bottom right  n
+    sequence[21] = (int) 7; sequence[22] = (int) 2; sequence[23] = (int) 1;  //f 7 2 1 // bottom left   n
+    sequence[24] = (int) 2; sequence[25] = (int) 8; sequence[26] = (int) 6;  //f 2 8 6 // east bottom   s
+    sequence[27] = (int) 2; sequence[28] = (int) 6; sequence[29] = (int) 4;  //f 2 6 4 // east top      n  
+    sequence[30] = (int) 7; sequence[31] = (int) 1; sequence[32] = (int) 3;  //f 7 1 3 // west bottom   n
+    sequence[33] = (int) 7; sequence[34] = (int) 3; sequence[35] = (int) 5;  //f 7 3 5 // west top      s 
 
 // ---------
 // #test
@@ -813,6 +822,92 @@ void FlyingCubeMove(int number, int direction, float value)
 */
 }
 
+// Build, paint and display the frame.
+// Called by the engine, by the function on_execute() in main.c.
+// + Clear the surface 
+// + Draw the frame.
+//   background.
+//   (terrain + 7 cubes).
+//   It means 12*8 triangles.
+// #todo:
+// We're drawing the cube based on a static model
+// given all the dots of this model.
+// We need to create a function that will draw 3D cubes.
+
+void demoFlyingCube(int draw_terrain,unsigned long sec)
+{
+// The function on_execute() in main.c initilizes this demos
+// and spins into a loop calling this function to draw
+// all the scene.
+// #todo: It means that of this demo was not initialized,
+// we need to abort this function.
+
+    struct cube_model_d *tmp_cube;
+
+    // #todo
+    // This demo was initialized before calling this drawing routine?
+
+
+// Begin time.
+// Moved to the main loop of the server.
+    //unsigned long gBeginTick = rtl_jiffies();
+
+
+// -------------------------
+// Draw terrain.
+// No rotation. Small translation in positive z.
+// 12 triangles.
+    if (draw_terrain == TRUE){
+        __drawTerrain(terrain,0.0f);
+    }
+
+//- Loop ------------------------------
+// Draw all the cubes.
+// (12*7) triangles.
+    register int n=1; // terrain =0
+    while (1){
+
+        if (n >= CUBE_MAX){
+            break;
+        }
+
+        // Get a pointer for the next cube.
+        tmp_cube = (struct cube_model_d *) cubes[n];
+        if ((void*) tmp_cube == NULL){
+            //printf("tmp_cube\n");
+            //exit(1);
+            break;
+        }
+
+        //IN: cube number, direction, amount
+        //FlyingCubeMove( n, 1, (float) 0.01f );
+
+        // Acceletarion: How fast the velocity changes.
+        // Each cube has it's own acceleration.
+        // Cada cubo tem uma aceleração diferente.
+        // Então, com o passar do tempo,
+        // cada cubo tera um incremento diferente na sua velocidade.
+
+        if (tmp_cube != NULL)
+        {
+            tmp_cube->t = (float) tmp_cube->t + (float) sec * 0.1f;
+            tmp_cube->v = (float) tmp_cube->t * tmp_cube->a;  
+            
+            __drawFlyingCube( 
+                (struct cube_model_d *) tmp_cube,
+                (float) tmp_cube->v );
+        }
+
+        n++;
+    };
+}
+
+
+//
+// #
+// INITIALIZATION
+//
+
 // Called by the engine
 // obs: 
 // We have an embedded model into this function
@@ -864,11 +959,109 @@ void demoFlyingCubeSetup(void)
             cube->vecs[i].z = (float) 0.0f;
         };
 
+    
+        // -- Test -----------------------------------------------------
+        struct gr_vecF3D_d vertex;
+        // Multi-line string containing vertex data.
+        //const char *cubeData = "v 1.0 2.0 3.0 \n v 4.0 5.0 6.0 \n v 7.0 8.0 9.0 \n";
+        
+        /*
+        // Original
+        const char *cubeData =
+            "v -0.2 -0.2  0.2\n"
+            "v  0.2 -0.2  0.2\n"
+            "v -0.2  0.2  0.2\n"
+            "v  0.2  0.2  0.2\n"
+            "v -0.2  0.2 -0.2\n"
+            "v  0.2  0.2 -0.2\n"
+            "v -0.2 -0.2 -0.2\n"
+            "v  0.2 -0.2 -0.2\n";
+            */
+
+/*
+        const char *cubeData =
+    "v 0.0000 -0.2000 0.2828\n"  // Vertex 1: front bottom left (rotated)
+    "v 0.2828 -0.2000 0.0000\n"  // Vertex 2: front bottom right (rotated)
+    "v 0.0000 0.2000 0.2828\n"   // Vertex 3: front top left (rotated)
+    "v 0.2828 0.2000 0.0000\n"   // Vertex 4: front top right (rotated)
+    "v -0.2828 0.2000 0.0000\n"   // Vertex 5: back top left (rotated)
+    "v 0.0000 0.2000 -0.2828\n"   // Vertex 6: back top right (rotated)
+    "v -0.2828 -0.2000 0.0000\n"  // Vertex 7: back bottom left (rotated)
+    "v 0.0000 -0.2000 -0.2828\n"; // Vertex 8: back bottom right (rotated)
+*/
+
+/*
+         const char *cubeData =
+    "v -0.1366 -0.2732 0.1634\n"  // Vertex 1: rotated front-bottom-left
+    "v 0.2098 -0.2732 -0.0366\n"  // Vertex 2: rotated front-bottom-right
+    "v -0.0366 0.0732 0.3369\n"   // Vertex 3: rotated front-top-left
+    "v 0.3098 0.0732 0.1367\n"    // Vertex 4: rotated front-top-right
+    "v -0.2098 0.2732 0.0366\n"   // Vertex 5: rotated back-top-left
+    "v 0.1366 0.2732 -0.1634\n"   // Vertex 6: rotated back-top-right
+    "v -0.3098 -0.0732 -0.1367\n"  // Vertex 7: rotated back-bottom-left
+    "v 0.0366 -0.0732 -0.3367\n"; // Vertex 8: rotated back-bottom-right
+*/
+
+
+// "tapered" or truncated-pyramid shape using eight vertices.
+// Same Vertex Count & Order. Different Geometry.
+const char *cubeData =
+    "v -0.3 -0.2 0.3\n"   // Vertex 1: bottom front left (expanded base)
+    "v 0.3 -0.2 0.3\n"    // Vertex 2: bottom front right (expanded base)
+    "v -0.1 0.2 0.2\n"    // Vertex 3: top front left (contracted top)
+    "v 0.1 0.2 0.2\n"     // Vertex 4: top front right (contracted top)
+    "v -0.1 0.2 -0.2\n"   // Vertex 5: top back left (contracted top)
+    "v 0.1 0.2 -0.2\n"    // Vertex 6: top back right (contracted top)
+    "v -0.3 -0.2 -0.3\n"  // Vertex 7: bottom back left (expanded base)
+    "v 0.3 -0.2 -0.3\n";  // Vertex 8: bottom back right (expanded base)
+
+
+/*
+const char *cubeData =
+    "v -0.2 -0.2 0.2\n"    // Vertex 1: bottom front left
+    "v 0.2 -0.2 0.2\n"     // Vertex 2: bottom front right
+    "v -0.1 0.2 0.25\n"    // Vertex 3: top front left (twisted)
+    "v 0.1 0.2 0.2\n"      // Vertex 4: top front right (twisted)
+    "v -0.1 0.2 -0.25\n"   // Vertex 5: top back left  (twisted)
+    "v 0.1 0.2 -0.2\n"     // Vertex 6: top back right (twisted)
+    "v -0.2 -0.2 -0.2\n"   // Vertex 7: bottom back left
+    "v 0.2 -0.2 -0.2\n";   // Vertex 8: bottom back right
+*/
+
+
+        const char *nextLine = cubeData;
+        int Counter = 1; // Start at 1 and End at 8.
+        do {
+            if (Counter > 8)
+                break;
+            const char *temp = scan00_scanline(nextLine, &vertex);
+            // Process (print) the current vertex.
+            //printf("Parsed Vertex: x = %f, y = %f, z = %f\n",
+                //vertex.x, vertex.y, vertex.z);
+            
+            // Populate.
+            cube->vecs[Counter].x = (float) vertex.x;
+            cube->vecs[Counter].y = (float) vertex.y;
+            cube->vecs[Counter].z = (float) vertex.z;
+
+            nextLine = temp;
+            Counter++;
+
+        } while (nextLine != NULL);
+
+        //while(1){}
+        // -------------------------------------------------------
+
         // The model for a regular cube.
         // #todo: >> Load this from a file.
         // #todo: Maybe import these values from an array.
         // see: arrayFakeFile[]
 
+        // Here we're creating the vectors for our cube.
+        // During the drawing phase we're gonna select vectors to create the triangles.
+        // We have two triangles per surface,
+
+        /*
         cube->vecs[1].x = (float) -0.2f;  cube->vecs[1].y = (float) -0.2f;  cube->vecs[1].z = (float) 0.2f;
         cube->vecs[2].x = (float)  0.2f;  cube->vecs[2].y = (float) -0.2f;  cube->vecs[2].z = (float) 0.2f;
         cube->vecs[3].x = (float) -0.2f;  cube->vecs[3].y = (float)  0.2f;  cube->vecs[3].z = (float) 0.2f;
@@ -878,6 +1071,7 @@ void demoFlyingCubeSetup(void)
         cube->vecs[6].x = (float)  0.2f;  cube->vecs[6].y = (float)  0.2f;  cube->vecs[6].z = (float) -0.2f;
         cube->vecs[7].x = (float) -0.2f;  cube->vecs[7].y = (float) -0.2f;  cube->vecs[7].z = (float) -0.2f;
         cube->vecs[8].x = (float)  0.2f;  cube->vecs[8].y = (float) -0.2f;  cube->vecs[8].z = (float) -0.2f;
+        */
 
         // 12 faces, 12 colors.
         cube->colors[0] = GRCOLOR_LIGHTYELLOW;
@@ -985,85 +1179,5 @@ void demoFlyingCubeSetup(void)
     //demoClearWA(COLOR_BLACK);
     //wm_Update_TaskBar("Hello",TRUE);
     game_update_taskbar = FALSE;
-}
-
-// Build, paint and display the frame.
-// Called by the engine, by the function on_execute() in main.c.
-// + Clear the surface 
-// + Draw the frame.
-//   background.
-//   (terrain + 7 cubes).
-//   It means 12*8 triangles.
-// #todo:
-// We're drawing the cube based on a static model
-// given all the dots of this model.
-// We need to create a function that will draw 3D cubes.
-
-void demoFlyingCube(int draw_terrain,unsigned long sec)
-{
-// The function on_execute() in main.c initilizes this demos
-// and spins into a loop calling this function to draw
-// all the scene.
-// #todo: It means that of this demo was not initialized,
-// we need to abort this function.
-
-    struct cube_model_d *tmp_cube;
-
-    // #todo
-    // This demo was initialized before calling this drawing routine?
-
-
-// Begin time.
-// Moved to the main loop of the server.
-    //unsigned long gBeginTick = rtl_jiffies();
-
-
-// -------------------------
-// Draw terrain.
-// No rotation. Small translation in positive z.
-// 12 triangles.
-    if (draw_terrain == TRUE){
-        __drawTerrain(terrain,0.0f);
-    }
-
-//- Loop ------------------------------
-// Draw all the cubes.
-// (12*7) triangles.
-    register int n=1; // terrain =0
-    while (1){
-
-        if (n >= CUBE_MAX){
-            break;
-        }
-
-        // Get a pointer for the next cube.
-        tmp_cube = (struct cube_model_d *) cubes[n];
-        if ((void*) tmp_cube == NULL){
-            //printf("tmp_cube\n");
-            //exit(1);
-            break;
-        }
-
-        //IN: cube number, direction, amount
-        //FlyingCubeMove( n, 1, (float) 0.01f );
-
-        // Acceletarion: How fast the velocity changes.
-        // Each cube has it's own acceleration.
-        // Cada cubo tem uma aceleração diferente.
-        // Então, com o passar do tempo,
-        // cada cubo tera um incremento diferente na sua velocidade.
-
-        if (tmp_cube != NULL)
-        {
-            tmp_cube->t = (float) tmp_cube->t + (float) sec * 0.1f;
-            tmp_cube->v = (float) tmp_cube->t * tmp_cube->a;  
-            
-            __drawFlyingCube( 
-                (struct cube_model_d *) tmp_cube,
-                (float) tmp_cube->v );
-        }
-
-        n++;
-    };
 }
 
