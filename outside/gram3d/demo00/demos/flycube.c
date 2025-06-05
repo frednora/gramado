@@ -4,23 +4,8 @@
 
 #include "../gram3d.h"
 
-
-/*
-// Cube fake object file.
-// 12 triangles for a cube.
-// #bugbug
-// Maybe this initialization is gonna fail.
-float arrayFakeFile[] = { 
-    -0.2f, -0.2f, 0.2f, 
-     0.2f, -0.2f, 0.2f,
-    -0.2f,  0.2f, 0.2f,
-     0.2f,  0.2f, 0.2f,        
-    -0.2f,  0.2f, -0.2f,
-     0.2f,  0.2f, -0.2f,
-    -0.2f, -0.2f, -0.2f,
-     0.2f, -0.2f, -0.2f 
-};
-*/
+#include <fcntl.h>
+#include <unistd.h>
 
 
 static int game_update_taskbar=TRUE;
@@ -903,6 +888,42 @@ void demoFlyingCube(int draw_terrain,unsigned long sec)
 }
 
 
+// Worker
+// Function to read entire file into buffer using open()
+// char *__readFileIntoBuffer(const char *filename) ;
+char *__readFileIntoBuffer(const char *filename) 
+{
+    size_t FakeFileSize=512;
+
+    //int fd = open(filename, O_RDONLY); // Open file in read-only mode
+    int fd = open(filename,0,"a+");
+    if (fd < 0) {
+        printf("File opening failed\n");
+        return NULL;
+    }
+
+    // Get file size
+    //off_t size = lseek(fd, 0, SEEK_END);
+    //lseek(fd, 0, SEEK_SET); // Reset file position
+
+    // Allocate buffer
+    char *buffer = malloc(FakeFileSize);
+    if (!buffer) 
+    {
+        printf("Memory allocation failed\n");
+        //close(fd);
+        return NULL;
+    }
+
+    // Read file content
+    memset(buffer,0,FakeFileSize);
+    ssize_t bytesRead = read(fd, buffer, FakeFileSize);
+    buffer[bytesRead] = '\0'; // Null-terminate
+
+    //close(fd); // Close file descriptor
+    return (char *) buffer;
+}
+
 //
 // #
 // INITIALIZATION
@@ -976,59 +997,29 @@ void demoFlyingCubeSetup(void)
             "v  0.2  0.2 -0.2\n"
             "v -0.2 -0.2 -0.2\n"
             "v  0.2 -0.2 -0.2\n";
-            */
+        */
 
-/*
+        /*
+        // "tapered" or truncated-pyramid shape using eight vertices.
+        // Same Vertex Count & Order. Different Geometry.
         const char *cubeData =
-    "v 0.0000 -0.2000 0.2828\n"  // Vertex 1: front bottom left (rotated)
-    "v 0.2828 -0.2000 0.0000\n"  // Vertex 2: front bottom right (rotated)
-    "v 0.0000 0.2000 0.2828\n"   // Vertex 3: front top left (rotated)
-    "v 0.2828 0.2000 0.0000\n"   // Vertex 4: front top right (rotated)
-    "v -0.2828 0.2000 0.0000\n"   // Vertex 5: back top left (rotated)
-    "v 0.0000 0.2000 -0.2828\n"   // Vertex 6: back top right (rotated)
-    "v -0.2828 -0.2000 0.0000\n"  // Vertex 7: back bottom left (rotated)
-    "v 0.0000 -0.2000 -0.2828\n"; // Vertex 8: back bottom right (rotated)
-*/
+            "v -0.3 -0.2 0.3\n"   // Vertex 1: bottom front left (expanded base)
+            "v 0.3 -0.2 0.3\n"    // Vertex 2: bottom front right (expanded base)
+            "v -0.1 0.2 0.2\n"    // Vertex 3: top front left (contracted top)
+            "v 0.1 0.2 0.2\n"     // Vertex 4: top front right (contracted top)
+            "v -0.1 0.2 -0.2\n"   // Vertex 5: top back left (contracted top)
+            "v 0.1 0.2 -0.2\n"    // Vertex 6: top back right (contracted top)
+            "v -0.3 -0.2 -0.3\n"  // Vertex 7: bottom back left (expanded base)
+            "v 0.3 -0.2 -0.3\n";  // Vertex 8: bottom back right (expanded base)
+        */
 
-/*
-         const char *cubeData =
-    "v -0.1366 -0.2732 0.1634\n"  // Vertex 1: rotated front-bottom-left
-    "v 0.2098 -0.2732 -0.0366\n"  // Vertex 2: rotated front-bottom-right
-    "v -0.0366 0.0732 0.3369\n"   // Vertex 3: rotated front-top-left
-    "v 0.3098 0.0732 0.1367\n"    // Vertex 4: rotated front-top-right
-    "v -0.2098 0.2732 0.0366\n"   // Vertex 5: rotated back-top-left
-    "v 0.1366 0.2732 -0.1634\n"   // Vertex 6: rotated back-top-right
-    "v -0.3098 -0.0732 -0.1367\n"  // Vertex 7: rotated back-bottom-left
-    "v 0.0366 -0.0732 -0.3367\n"; // Vertex 8: rotated back-bottom-right
-*/
-
-
-// "tapered" or truncated-pyramid shape using eight vertices.
-// Same Vertex Count & Order. Different Geometry.
-const char *cubeData =
-    "v -0.3 -0.2 0.3\n"   // Vertex 1: bottom front left (expanded base)
-    "v 0.3 -0.2 0.3\n"    // Vertex 2: bottom front right (expanded base)
-    "v -0.1 0.2 0.2\n"    // Vertex 3: top front left (contracted top)
-    "v 0.1 0.2 0.2\n"     // Vertex 4: top front right (contracted top)
-    "v -0.1 0.2 -0.2\n"   // Vertex 5: top back left (contracted top)
-    "v 0.1 0.2 -0.2\n"    // Vertex 6: top back right (contracted top)
-    "v -0.3 -0.2 -0.3\n"  // Vertex 7: bottom back left (expanded base)
-    "v 0.3 -0.2 -0.3\n";  // Vertex 8: bottom back right (expanded base)
-
-
-/*
-const char *cubeData =
-    "v -0.2 -0.2 0.2\n"    // Vertex 1: bottom front left
-    "v 0.2 -0.2 0.2\n"     // Vertex 2: bottom front right
-    "v -0.1 0.2 0.25\n"    // Vertex 3: top front left (twisted)
-    "v 0.1 0.2 0.2\n"      // Vertex 4: top front right (twisted)
-    "v -0.1 0.2 -0.25\n"   // Vertex 5: top back left  (twisted)
-    "v 0.1 0.2 -0.2\n"     // Vertex 6: top back right (twisted)
-    "v -0.2 -0.2 -0.2\n"   // Vertex 7: bottom back left
-    "v 0.2 -0.2 -0.2\n";   // Vertex 8: bottom back right
-*/
-
-
+        //const char *cubeData = (char *) __readFileIntoBuffer("cube.txt");
+        const char *cubeData = (char *) __readFileIntoBuffer("cube02.txt");
+        // ...
+        if ((void*)cubeData == NULL){
+            printf("on __readFileIntoBuffer()\n");
+            exit(0);
+        }
         const char *nextLine = cubeData;
         int Counter = 1; // Start at 1 and End at 8.
         do {
