@@ -1918,7 +1918,7 @@ int print ( char **out, int *varg )
     for ( ; *format != 0; format++ ) 
     {
 
-		//switch.
+		// Switch
         if ( *format == '%' ) 
         {
 
@@ -1946,7 +1946,7 @@ int print ( char **out, int *varg )
 				width += *format - '0';
 			};
 			
-			//string
+			// String
 			if ( *format == 's' ){
 				
 				register char *s = *( (char **) varg++ );
@@ -1954,18 +1954,17 @@ int print ( char **out, int *varg )
 				continue;
 			}
 			
-			//int
+			// int
 			if ( *format == 'd' ){
 				pc += printi ( out, *varg++, 10, 1, width, pad, 'a');
 				continue;
 			}
 			
-			//hexa
+			// hexa
 			if ( *format == 'x' ){
 				pc += printi ( out, *varg++, 16, 0, width, pad, 'a');
 				continue;
 			}
-			
 			if ( *format == 'X' ){
 				pc += printi ( out, *varg++, 16, 0, width, pad, 'A');
 				continue;
@@ -1975,9 +1974,9 @@ int print ( char **out, int *varg )
 				pc += printi ( out, *varg++, 10, 0, width, pad, 'a');
 				continue;
 			}
-			
-			//char
-			//char are converted to int then pushed on the stack. 
+
+            // Char
+            // char are converted to int then pushed on the stack. 
 			if ( *format == 'c' ){
 				
 				scr[0] = *varg++;
@@ -2007,7 +2006,7 @@ int print ( char **out, int *varg )
 			    printchar ( out, *format );
 			    ++pc;
 		};
-		//Nothing.
+		// Nothing
     };
 
     if (out){
@@ -2019,7 +2018,6 @@ int print ( char **out, int *varg )
 
 
 /* 
- ****************************************************
  * printf:
  *     Imprime uma string formatada.
  *     Assuming sizeof(void *) == sizeof(int).
@@ -2223,7 +2221,7 @@ kinguio_l2hex(
         16-n );   //64bit
 }
 
-//local
+// Local
 static char *__utoa_r (unsigned long val, char *str)
 {
     char* valuestring = (char*) str;
@@ -2252,7 +2250,7 @@ static char *__utoa_r (unsigned long val, char *str)
 }
 
 
-//local
+// local
 char *kinguio_utoa(
     unsigned long val, 
     char *dst, 
@@ -2588,55 +2586,6 @@ kinguio_vsprintf(
                 kinguio_i2hex(d,buffer,8);
                 str_tmp = _vsputs_r(str_tmp,buffer);
                 break;
-
-            /*
-            // #test
-            // %f: Print a floating-point number.
-            case 'f':
-            {
-                double f_val = va_arg(ap, double);  // Retrieve the float argument
-                char buffer[256];  // Temporary storage for formatted float
-
-                // Handle negative numbers
-                int is_negative = (f_val < 0) ? 1 : 0;
-                if (is_negative) {
-                    f_val = -f_val;
-                }
-
-                // Extract integer and fractional parts
-                int integer_part = (int)f_val;
-                double fractional_part = f_val - integer_part;
-
-                // Manually convert the integer part without overwriting the buffer
-                int pos = 0;
-                char int_buffer[20];  
-                __int_to_string(int_buffer, integer_part);  // Convert integer part manually
-                while (int_buffer[pos] != '\0') {
-                    buffer[pos] = int_buffer[pos];
-                    pos++;
-                }
-
-                // Append decimal point
-                buffer[pos++] = '.';
-
-                // Convert fractional part manually (6 decimal places)
-                int it=0;
-                for (it = 0; it < 6; it++) {
-                    fractional_part *= 10;
-                    int digit = (int)fractional_part;
-                    buffer[pos++] = digit + '0';
-                    fractional_part -= digit;
-                }
-
-                buffer[pos] = '\0';  // Null terminate the string
-
-                // Debugging step
-                //printf("Debug: Fixed Float Conversion = [%s]\n", buffer);
-
-                str_tmp = _vsputs_r(str_tmp, buffer);
-            }
-                break;
-            */
 
             // %f: Print a floating-point number.
             case 'f':

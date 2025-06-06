@@ -612,7 +612,16 @@ int mysprintf(char *buf, const char *fmt, ...);
 // ===================================
 // The kinguio support for printf().
 // Credits: Nelson Cole.
+void 
+kinguio_i2hex_versao2(
+    unsigned long val, 
+    char* dest, 
+    int len);
 void kinguio_i2hex(unsigned int val, char* dest, int len);
+char *kinguio_utoa(
+    unsigned long val, 
+    char *dst, 
+    int radix );
 char *kinguio_itoa(int val, char *str);
 int kinguio_vsprintf(char * str,const char * fmt, va_list ap);
 void kinguio_puts(const char* str);

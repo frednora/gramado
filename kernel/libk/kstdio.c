@@ -572,17 +572,13 @@ int print ( char **out, int *varg )
     register int width = 0;
     register int pad = 0;
     register int pc = 0;
-
-// #bugbug
-// Different sizes.
-// Compilation warning!
     register char *format = (char *) (*varg++);
-
     char scr[2];
 
-    // ugly
+    // Ugly
     for ( ; *format != 0; ++format ) 
     {
+        // Switch
         if ( *format == '%' ) 
         {
             ++format;
@@ -613,10 +609,10 @@ int print ( char **out, int *varg )
                 width += *format - '0';
             };
 
-            //#ugly
+            // #ugly
+            // String
             if ( *format == 's' ) 
             {
-                // #bugbug: definition here.
                 register char *s = *((char **)varg++);
                  pc += prints ( 
                            out, 
@@ -627,11 +623,13 @@ int print ( char **out, int *varg )
                 continue;
             }
 
+            // Integer
             if ( *format == 'd' ){
                 pc += printi (out, *varg++, 10, 1, width, pad, 'a');
                 continue;
             }
 
+            // Hexa
             if ( *format == 'x' ){
                 pc += printi (out, *varg++, 16, 0, width, pad, 'a');
                 continue;
@@ -648,15 +646,19 @@ int print ( char **out, int *varg )
             }
 
             // #ugly
+            // Char
+            // char are converted to int then pushed on the stack. 
             if ( *format == 'c' ) 
             {
-                // 'char' are converted to int 
-                // then pushed on the stack.
                 scr[0] = *varg++;
                 scr[1] = '\0';
                 pc += prints (out, scr, width, pad);
                 continue;
             }
+
+            // %f (floating-point)
+            // Not inside the kernel for now.
+            // if (*format == 'f') { ... }
 
         // Os caracteres normais diferentes de "%".
         } else {
@@ -682,6 +684,56 @@ int vsprintf(char *string, const char *format, va_list ap)
 {
 }
 */
+
+void 
+kinguio_i2hex_versao2(
+    unsigned long val, 
+    char* dest, 
+    int len)
+{
+    register int i=0; 
+    char *cp;
+    int x=0;
+    unsigned long n=0;
+
+    if (val == 0)
+    {
+        cp = &dest[0];
+        *cp++ = '0';
+        *cp = '\0';
+        return;
+    }
+
+    n = val;
+    cp = &dest[len];
+    while (cp > dest)
+    {
+        x = n & 0xF;
+        n >>= 4;
+        *--cp = x + ((x > 9) ? 'A' - 10 : '0');
+    };
+
+    dest[len]='\0';
+
+    cp = &dest[0];
+    for (i=0; i<len; i++)
+    {
+        if (*cp == '0'){
+            cp++;
+        }else{
+            strcpy(dest,cp);
+            break;
+        };
+    };
+
+    cp = &dest[0];
+    n = strlen(cp);
+
+    memset(
+        dest+n,
+        0,
+        len-n );
+}
 
 // ===================================
 
@@ -736,6 +788,51 @@ kinguio_i2hex(
     memset( (dest+n), 0, (8-n) );
 }
 
+// Local
+static char *__utoa_r (unsigned long val, char *str)
+{
+    char* valuestring = (char*) str;
+    unsigned long value = val;
+    char swap, *p;
+
+    p = valuestring;
+
+    do
+    {
+        *p++ = (char)(value % 10) + '0';
+        value /= 10;
+
+    } while (value);
+
+    *p-- = '\0';
+
+    while (p > valuestring)
+    {
+        swap = *valuestring;
+        *valuestring++ = *p;
+        *p-- = swap;
+    }
+
+    return str;
+}
+
+char *kinguio_utoa(
+    unsigned long val, 
+    char *dst, 
+    int radix )
+{
+    char *cp = (char *) dst;
+    unsigned long lu = (unsigned long)val;
+
+    if(radix == 16)
+        kinguio_i2hex_versao2(lu, cp, 16);
+    else 
+        __utoa_r(lu, cp);
+    return dst;
+
+    return dst;  //#bugbug
+}
+
 char *kinguio_itoa (int val, char *str) 
 {
     int value = val;
@@ -787,79 +884,216 @@ static char *_vsputs_r(char *dest, char *src)
     return (char *) udest;
 }
 
+/**
+ * kinguio_vsprintf - Formats a string and writes the result into the supplied buffer.
+ *
+ * This function interprets a format string (similar to printf) and writes the corresponding
+ * formatted output into the string buffer pointed to by 'str'. It supports a subset of format
+ * specifiers including characters ('%c'), strings ('%s' or '%S'), signed integers ('%d' or '%i'),
+ * unsigned integers ('%u'), and hexadecimal numbers ('%x' or '%X'). In addition, it supports a
+ * 64-bit flag (using the 'l' modifier) for specific unsigned formats.
+ *
+ * Parameters:
+ *   str   - Pointer to the destination character buffer where the formatted string will be written.
+ *   fmt   - The format string; it may include the format specifiers mentioned above.
+ *   ap    - The variable argument list containing additional values to format.
+ *
+ * Returns:
+ *   The total number of characters written to the destination buffer. This is computed by
+ *   calculating the difference between the updated string pointer and the original buffer start.
+ */
+/*
+Additional Details
+
+Function Overview: 
+The function iterates through the format string character by character. When it 
+encounters a %, it checks if a length modifier (l) exists to signal handling of a 64-bit number. 
+Then, it processes the type specifier (e.g., %c, %s, %d, %u, %x) by retrieving the corresponding value 
+from the variable argument list and converting it into a string form.
+
+Error Handling: 
+Notice that when a NULL string is found (for %s or %S), the function writes "(null)" to the buffer. 
+This provides a safe fallback rather than causing a crash.
+
+Return Value: 
+The difference between the final pointer and the start of the buffer gives the total number of 
+characters written. Casting to long ensures that the pointer difference is computed correctly, 
+then the result is cast back to an int for the return value.
+*/
+// Worker for printf and sprintf.
 int 
 kinguio_vsprintf(
     char *str, 
     const char *fmt, 
     va_list ap )
 {
-    char *str_tmp = str;
+
+// 'index' tracks the current position in the format string.
     register int index=0;
-    unsigned char u=0;
-    int d=0;
-    char c=0; 
-    char *s;
-    char buffer[256];  //#bugbug: Too short.
+
+// Variables for processing individual characters and strings.
+    char c=0;  // Temporary storage for a single character
+    char *s;   // Pointer to a string argument
+    char *str_tmp = str;  // Pointer used to build the result string; initially at the start of 'str'
+
+// _c_r is a two-character array used to store a single character as a null-terminated string.
     char _c_r[] = "\0\0";
 
+    // A buffer to hold converted numbers as strings.
+    static char buffer[1024];
+    //char buffer[256];
+
+    // Variables for handling numerical conversions.
+    // d|i|x
+    int   d=0;  // Temporary storage for int values
+    //long ld=0;  // Temporary storage for long integers (signed)
+
+    // Unsigned numbers handling (using either int or long, depending on format specifiers).
+    // u
+    //unsigned char u=0;
+    unsigned int   u=0;
+    unsigned long lu=0;
+
+    // Flag indicating a 64-bit format specifier was found.
+    int type64bit = FALSE;
+
+// Loop
+// Process each character of the format string until the null-terminator is reached.
     while ( fmt[index] )
     {
+        // Check for '%' which signals the start of a format specifier.
         switch (fmt[index]){
 
         case '%':
+            // Move to the character following '%'
             ++index;
+
+            // Estamos lidando com 64bit?
+            // Vamos para o próximo char e indicaremos essa condição.
+            // Check if there is a length modifier (the 'l' for 64-bit values)
+            if (fmt[index] == 'l')
+            {
+                ++index;
+                type64bit = TRUE;  // Mark that we are handling a 64-bit value for the next specifier.
+            }
+
             switch (fmt[index]){
 
+            // Process the conversion specifier (e.g., c, s, d, u, x, etc.).
             case 'c':
-                *_c_r = c = (char) va_arg (ap, int);
-                str_tmp = _vsputs_r(str_tmp,_c_r);
+                // Retrieve the next int argument and convert it to a char.
+                // Place the character in _c_r and output it.
+                *_c_r = c = (char) va_arg(ap, int);
+                str_tmp = _vsputs_r(str_tmp,_c_r);  // print
                 break;
 
+            // char*
+            // %s or %S: Output a string.
             case 's':
+            case 'S':
+                // Retrieve the string pointer argument.
                 s = va_arg (ap, char*);
-                if ((void*) s == NULL){
-                    s = "<NULL>";
+                // If string is not NULL, output it; otherwise, output "(null)".
+                if ((void*) s != NULL){
+                    str_tmp = _vsputs_r(str_tmp,s);
                 }
-                str_tmp = _vsputs_r(str_tmp,s);
+                if ((void*) s == NULL){
+                    str_tmp = _vsputs_r(str_tmp,"(null)");
+                }
                 break;
 
+            // int
+            // %d or %i: Output a signed integer.
             case 'd':
             case 'i':
+                // Get the next int argument.
                 d = va_arg (ap, int);
+                // Convert the integer to its ASCII representation and store in buffer.
                 kinguio_itoa (d,buffer);
+                // Append the converted string to the output.
                 str_tmp = _vsputs_r(str_tmp,buffer);
                 break;
 
+            // unsigned int or unsigned long
+            // %u: Output an unsigned integer.
             case 'u':
+                //'lu'
+                // Check if a 64-bit unsigned value is expected.
+                if (type64bit == TRUE)
+                {
+                    // Retrieve an unsigned long argument.
+                    lu = va_arg (ap, unsigned long);
+                    // Convert it to a string in base 10.
+                    //kinguio_itoa (lu,buffer);
+                    kinguio_utoa(lu, buffer, 10);  //ok
+                    str_tmp  = _vsputs_r(str_tmp,buffer);
+                    // Reset the flag for future specifiers.
+                    type64bit=FALSE;
+                    break;
+                }
+
+                //if(type64bit==FALSE){
+                // For standard (non-64 bit) unsigned int.
                 u = va_arg (ap, unsigned int);
+                // Convert the unsigned integer to string.
                 kinguio_itoa (u,buffer);
-                str_tmp = _vsputs_r(str_tmp,buffer);
+                //utoa(u, buffer, 10);
+                str_tmp  = _vsputs_r(str_tmp,buffer);
+                //}
                 break;
 
+            // int  (hexa) or unsigned long
+            // %x or %X: Output an integer in hexadecimal format.
             case 'X':
             case 'x':
+                // Check if a 64-bit value is indicated.
+                //'lx'  #fail
+                if (type64bit == TRUE)
+                {
+                    // Retrieve the next unsigned long argument.
+                    lu = va_arg (ap, unsigned long);
+                    // Convert the number to a hexadecimal string using base 16.
+                    //kinguio_itoa (lu,buffer);
+                    kinguio_utoa(lu, buffer, 16);
+                    str_tmp  = _vsputs_r(str_tmp,buffer);
+                    type64bit=FALSE;
+                    break;
+                }
+                // For non-64-bit numbers, assume int.
                 d = va_arg (ap, int);
-                kinguio_i2hex(d, buffer,8);
+                //d = va_arg (ap, unsigned int);
+                // Convert the integer to hexadecimal (8 digits may be assumed).
+                kinguio_i2hex(d,buffer,8);
                 str_tmp = _vsputs_r(str_tmp,buffer);
                 break;
 
+            // %f: Print a floating-point number.
+            //case 'f':
+                //break;
+
+
+            // Default: If an unknown specifier is met, output a literal "%%".
             default:
                 str_tmp = _vsputs_r(str_tmp,"%%");
                 break;
             }
             break;
 
+        // For any character that is not '%', simply copy it to the output.
         default:
             *_c_r = fmt[index];
             str_tmp = _vsputs_r(str_tmp,_c_r);
             break;
         }
+        // Move to the next character in the format string.
         ++index;
     }
 
     // #todo: Include this.
     // *str = 0;
 
+// Return the total number of characters written by measuring the difference
+// between the final output pointer and the beginning of the destination buffer.
     return (int) ( (long) str_tmp - (long) str );
 }
 
