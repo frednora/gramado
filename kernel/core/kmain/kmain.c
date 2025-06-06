@@ -302,12 +302,13 @@ void init_globals(void)
     g_currentvolume_filesystem_type = FS_TYPE_FAT16;
     g_currentvolume_fatbits = (int) 16;
 
-// Inicializa as estruturas do fluxo padrão.
-// Isso vai usar a file table.
-// It also makes the early initialization of the consoles.
-    Status = (int) kstdio_initialize();
+// libk/ module.
+// + Initialize srtuctures for the stadard streams.
+// + It uses the global file table.
+// + It also makes the early initialization of the consoles.
+    Status = (int) libk_initialize();
     if (Status != TRUE){
-        panic("init_globals: kstdio_initialize fail\n");
+        x_panic("init_globals: on libk_initialize()\n");
     }
 
 // ===================

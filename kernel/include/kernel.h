@@ -84,7 +84,10 @@
 #include "../libk/kcdefs.h"
 #include "../libk/kstddef.h"
 #include "../libk/klimits.h"
+
 #include "../libk/kstdio.h"
+#include "../libk/printk/printk.h"
+
 #include "../libk/kstdlib.h"
 #include "../libk/kstring.h"
 #include "../libk/kctype.h"
@@ -96,6 +99,9 @@
 #include "../libk/kioctls.h"
 #include "../libk/ktermios.h"
 #include "../libk/kttydef.h"
+
+#include "../libk/libk.h"
+
 
 // ==================================
 // ke/

@@ -14,9 +14,6 @@ extern int g_inputmode;
 #define PAD_RIGHT  1
 #define PAD_ZERO   2
 
-// The following should be enough for 32 bit int.
-#define PRINT_BUF_LEN  12
-
 //
 // bsd style.
 //
@@ -601,11 +598,6 @@ int print( char **out, int *varg );
 // service 8002
 int sys_setup_stdin(int stdin_fd);
 
-// #suspensa
-// Essa implementação foi feita para 32bit e não funciona
-// por inteiro em long mode.
-// Usaremos kinguio_printf por enquanto.
-int printk_old( const char *format, ... );
 
 // ===================================
 
@@ -624,7 +616,7 @@ void kinguio_i2hex(unsigned int val, char* dest, int len);
 char *kinguio_itoa(int val, char *str);
 int kinguio_vsprintf(char * str,const char * fmt, va_list ap);
 void kinguio_puts(const char* str);
-int kinguio_printf(const char *fmt, ...);
+
 // ===================================
 
 int k_ungetc ( int c, file *f );
@@ -658,23 +650,9 @@ regularfile_ioctl (
 int kstdio_initialize(void);
 
 
-// ------------------
-// crt/ prefix
-#define crt_printf   kinguio_printf
-#define crt_sprintf  mysprintf
-#define crt_fseek    k_fseek
-#define crt_rewind   k_rewind
-#define crt_ftell    k_ftell
-#define crt_fclose   k_fclose
-// ...
-
 // -----------------------------------
 // sprintf() in ring0.
 #define ksprintf  mysprintf
-
-// -----------------------------------
-// printf() in ring0.
-#define printk  kinguio_printf
 
 
 #endif    

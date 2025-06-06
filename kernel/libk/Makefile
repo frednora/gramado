@@ -68,15 +68,23 @@ KERNEL_INCLUDE := -I $(INCLUDE)
 LDFLAGS := -m elf_x86_64 -s -x -static  
 
 # Everything is a file.
-OBJS = kctype.o kstdio.o ksignal.o kstdlib.o kstring.o kunistd.o    
+OBJS = kctype.o kstdio.o printk.o ksignal.o kstdlib.o kstring.o kunistd.o \
+libk.o    
+
 
 all:
 	$(CC) -c kctype.c  $(KERNEL_INCLUDE) $(CFLAGS) -o kctype.o
-	$(CC) -c kstdio.c  $(KERNEL_INCLUDE) $(CFLAGS) -o kstdio.o
 	$(CC) -c ksignal.c $(KERNEL_INCLUDE) $(CFLAGS) -o ksignal.o
 	$(CC) -c kstdlib.c $(KERNEL_INCLUDE) $(CFLAGS) -o kstdlib.o
 	$(CC) -c kstring.c $(KERNEL_INCLUDE) $(CFLAGS) -o kstring.o
 	$(CC) -c kunistd.c $(KERNEL_INCLUDE) $(CFLAGS) -o kunistd.o
+
+	$(CC) -c kstdio.c  $(KERNEL_INCLUDE) $(CFLAGS) -o kstdio.o
+	$(CC) -c printk/printk.c  $(KERNEL_INCLUDE) $(CFLAGS) -o printk.o
+
+
+# Whapper for the whole libk/ module.
+	$(CC) -c libk.c  $(KERNEL_INCLUDE) $(CFLAGS) -o libk.o
 
 # link
 	$(LD) -r -o p3_libk.o $(OBJS)
