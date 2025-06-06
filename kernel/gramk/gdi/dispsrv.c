@@ -23,6 +23,87 @@ struct ds_info_d  DisplayServerInfo;
 
 // ==================================================
 
+// Setup DisplayServerInfo global structure.
+// See: dispsrv.h
+int dispsrv_setup_ds_info(pid_t pid)
+{
+    struct process_d *p;
+    struct thread_d *t;
+    pid_t current_process = -1;
+
+    //debug_print ("__initialize_ds_info:\n");
+
+// Maybe we can just emit an error message and return.
+    if (DisplayServerInfo.initialized == TRUE)
+    {
+        // #debug
+        printk("dispsrv_setup_ds_info: Another display server is on\n");
+        goto fail;
+    }
+    DisplayServerInfo.initialized = FALSE;
+
+// -----------------
+// PID: The process pointer.
+
+    if (pid < 0 || pid >= PROCESS_COUNT_MAX){
+        goto fail;
+    }
+    current_process = (pid_t) get_current_process();
+    if (pid != current_process)
+    {
+        // #debug
+        printk("dispsrv_setup_ds_info: pid != current_process\n");
+        goto fail;
+    }
+    p = (struct process_d *) processList[pid];
+    if ((void*) p == NULL){
+        goto fail;
+    }
+    if (p->magic != 1234){
+        goto fail;
+    }
+    DisplayServerInfo.pid = (pid_t) pid;
+
+// -----------------
+// TID: The control thread.
+
+    t = (struct thread_d *) p->control;
+    if ((void*) t == NULL){
+        goto fail;
+    }
+    if (t->magic != 1234){
+        goto fail;
+    }
+    DisplayServerInfo.tid = (tid_t) t->tid;
+
+// ----------------
+// Process Personality
+    p->personality = (int) PERSONALITY_GRAMADO;
+    DisplayServerInfo.pid_personality = (int) PERSONALITY_GRAMADO;
+
+// ----------------
+// The environment.
+// The display server.
+    p->env_subsystem = GramadoSubsystem;
+
+// ----------------
+// Security Access token
+
+    // users
+    // ...
+
+    // group of users.
+    p->token.gid  = (gid_t) GID_DEFAULT;
+    p->token.rgid = (gid_t) GID_DEFAULT;  // real
+    p->token.egid = (gid_t) GID_DEFAULT;  // effective
+    p->token.sgid = (gid_t) GID_DEFAULT;  // saved
+
+    DisplayServerInfo.initialized = TRUE;
+// OK
+    return 0;
+fail:
+    return (int) -1;
+}
 
 int 
 ds_ioctl ( 

@@ -1,4 +1,4 @@
-// network.c
+// net.c
 // Network layer. (IP)
 // Transport layer. (TCP/UDP/...)
 // Created by Fred Nora.
@@ -6,7 +6,6 @@
 #include <kernel.h>
 
 struct network_initialization_d  NetworkInitialization;
-
 
 static unsigned long on_receiving_counter=0;
 static unsigned long on_sending_counter=0;
@@ -36,7 +35,6 @@ struct network_saved_d  NetworkSaved;
 
 // ====================================================
 
-static void __initialize_ds_info(pid_t pid);
 static void __maximize_ds_priority(pid_t pid);
 
 // ====================================================
@@ -91,78 +89,6 @@ network_mouse_event(
 
 // Sent event to input.c
     wmMouseEvent( event_id, data1, data2 );
-}
-
-// Setup DisplayServerInfo global structure.
-// See: dispsrv.h
-static void __initialize_ds_info(pid_t pid)
-{
-    struct process_d *p;
-    struct thread_d *t;
-    pid_t current_process = -1;
-
-    //debug_print ("__initialize_ds_info:\n");
-
-// Maybe we can just emit an error message and return.
-    if (DisplayServerInfo.initialized == TRUE){
-        panic("__initialize_ds_info: Another display server is on\n");
-    }
-    DisplayServerInfo.initialized = FALSE;
-
-// -----------------
-// PID
-// Get process pointer.
-    if (pid < 0 || pid >= PROCESS_COUNT_MAX){
-        return;
-    }
-    current_process = (pid_t) get_current_process();
-    if (pid != current_process){
-        panic("__initialize_ds_info: pid != current_process\n");
-    }
-    p = (struct process_d *) processList[pid];
-    if ((void*) p == NULL){
-        return;
-    }
-    if (p->magic != 1234){
-        return;
-    }
-    DisplayServerInfo.pid = (pid_t) pid;
-
-// -----------------
-// TID
-// The control thread.
-    t = (struct thread_d *) p->control;
-    if ((void*) t == NULL){
-        return;
-    }
-    if (t->magic != 1234){
-        return;
-    }
-    DisplayServerInfo.tid = (tid_t) t->tid;
-
-// ----------------
-// Process Personality
-    p->personality = (int) PERSONALITY_GRAMADO;
-    DisplayServerInfo.pid_personality = (int) PERSONALITY_GRAMADO;
-
-// ----------------
-// The environment.
-// The display server.
-    p->env_subsystem = GramadoSubsystem;
-
-// ----------------
-// Security Access token
-
-    // users
-    // ...
-
-    // group of users.
-    p->token.gid  = (gid_t) GID_DEFAULT;
-    p->token.rgid = (gid_t) GID_DEFAULT;  // real
-    p->token.egid = (gid_t) GID_DEFAULT;  // effective
-    p->token.sgid = (gid_t) GID_DEFAULT;  // saved
-
-    DisplayServerInfo.initialized = TRUE;
 }
 
 // #test
@@ -304,18 +230,28 @@ network_register_ring3_display_server(
 // Maybe this method belongs to the sys_bind() routine.
     socket_set_gramado_port( GRAMADO_PORT_WS, (pid_t) current_process );
 
-// See: dispsrv.h
-    __initialize_ds_info(current_process);
+// Initialize DisplayServerInfo structure.
+// See: dispsrv.h and dispsrv.c.
+    int ds_status = -1;
+    ds_status = (int) dispsrv_setup_ds_info(current_process);
+    if (ds_status < 0){
+        printk("on dispsrv_setup_ds_info()\n");
+        goto fail;
+    }
+
+// Setup priority
     __maximize_ds_priority(current_process);
 
-// Setup c1/
 // Change the foreground console.
+// Setup c1/
     console_set_current_virtual_console(CONSOLE1);
 
+// #test
 // Setup the new layer for this process.
     p->_layer = (int) LAYER_DISPLAY_SERVER;
 
 // #test
+// Is the control thread valid?
     t = p->control;
     if ((void*) t == NULL)
         goto fail;

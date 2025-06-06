@@ -12,9 +12,8 @@
 
 
 //
-// == window server ==================================================
+// == display server ==================================================
 //
-
 
 // This structure handles the display server registration.
 // The default display server is ds00.bin for now.
@@ -34,6 +33,8 @@ struct ds_info_d
 extern struct ds_info_d  DisplayServerInfo;
 
 // ===============================================================
+
+int dispsrv_setup_ds_info(pid_t pid);
 
 int 
 ds_ioctl ( 

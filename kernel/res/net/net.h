@@ -1,4 +1,4 @@
-// network.h
+// net.h
 // Created by Fred Nora.
 
 #ifndef __NET_NETWORK_H
