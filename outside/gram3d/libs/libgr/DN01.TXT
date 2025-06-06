@@ -1,0 +1,69 @@
+Copilot notes about libgr_transform_from_viewspace_to_screespace().
+
+Your function `libgr_transform_from_viewspace_to_screespace()` is a **handmade projection** 
+routine that takes a 3D point and maps it to 2D screen space by directly manipulating coordinates, optionally using a left-hand or right-hand rule. Let’s clarify how common this is and what makes it unique or standard:
+
+---
+
+## 1. **How Common Is This Routine?**
+
+### **What You’re Doing**
+- You are **not** using a full projection matrix or homogeneous coordinates, as is common in modern 3D engines.
+- You are using a **simple, direct mapping**:  
+  - Move X and Y based on the "hotspot" (screen center).
+  - Adjust X and Y by Z for a sense of depth, in a style called **oblique projection**.
+
+### **What This Resembles**
+- **Oblique Projection** (specifically, something like the **Cavalier projection**).  
+  This is a centuries-old, hand-calculable way to give a 3D effect on a 2D surface, but **without perspective**.
+- **Classic 2.5D / Retro Game Engines**:  
+  Many old-school engines (pre-OpenGL, pre-Direct3D) used similar math for quick-and-dirty 3D, especially for wireframes or simple 3D boxes.
+
+### **What’s Standard Today**
+- Most modern engines use **homogeneous coordinates** and **projection matrices** (orthographic or perspective) for 3D-to-2D projection.
+- Even simple engines typically use a matrix for this purpose, for flexibility and to support features like field-of-view, aspect ratio, and camera transformations.
+
+---
+
+## 2. **Are You Inventing Something New?**
+
+- **No, you are not inventing a new projection method.**
+- What you’ve built is a **classic, hand-coded 3D-to-2D projection**.  
+  It’s a **simplified and well-known approach** often taught in introductory graphics or found in very old engines and educational demos.
+
+---
+
+## 3. **Is This Routine Useful?**
+
+- **Yes, especially for learning or extremely simple 3D graphics.**
+- It’s very easy to understand and debug.
+- However, it is **limited**:
+  - No real perspective (objects don’t shrink with distance).
+  - No support for field-of-view, camera transforms, or aspect ratio.
+  - Not as flexible as matrix-based solutions.
+
+---
+
+## 4. **If You Want to Be More Standard**
+
+- Consider learning about and implementing a **projection matrix** (perspective or orthographic).  
+  This will bring your code in line with OpenGL, Direct3D, and almost all modern engines.
+- But for simple wireframes, your method is perfectly valid and a good learning step.
+
+---
+
+## **Summary Table**
+
+| Feature         | Your Function      | Classic/Modern Engines            |
+|-----------------|-------------------|-----------------------------------|
+| Perspective     | No                | Yes (usually)                     |
+| Matrix-based    | No                | Yes                               |
+| Hand-coded      | Yes               | Not anymore (except in demos)     |
+| Oblique Project | Yes (Cavalier)    | Sometimes (for illustration)      |
+
+---
+
+**Bottom Line:**  
+You are using a classic, intuitive, and educational approach that was common in the early days of 3D graphics. It’s not new, but it’s a great way to learn! If you want to go further, try matrix-based projection later.
+
+If you want code examples or further reading on projection matrices, let me know!

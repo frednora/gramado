@@ -2,6 +2,23 @@
 // 3D floating routines.
 // Created by Fred Nora.
 
+/*
+// Functions found here:
+
+gr_MultiplyMatrixVector:
+transforms a 3D vector by a 4x4 matrix, handling translation and perspective division.
+
+grVectorCrossProduct:
+gives you a perpendicular vector (useful for normals).
+
+dot_productF:
+calculates how much two vectors point in the same direction.
+
+gr_discriminant:
+is used for intersection tests (like in ray tracing) to check if a quadratic equation has real solutions.
+*/
+
+
 #ifndef __LIBGR3D_H
 #define __LIBGR3D_H   1
 

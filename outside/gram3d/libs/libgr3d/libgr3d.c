@@ -3,18 +3,48 @@
 // sing float values.
 // Created by Fred Nora.
 
+/*
+// Functions found here:
+
+gr_MultiplyMatrixVector:
+transforms a 3D vector by a 4x4 matrix, handling translation and perspective division.
+
+grVectorCrossProduct:
+gives you a perpendicular vector (useful for normals).
+
+dot_productF:
+calculates how much two vectors point in the same direction.
+
+gr_discriminant:
+is used for intersection tests (like in ray tracing) to check if a quadratic equation has real solutions.
+*/
+
 #include "include/libgr3d.h"
 
 int libgr_dummy=0;
 
 // =============================================
 
+// gr_MultiplyMatrixVector
+// Multiplies a 3D vector by a 4x4 transformation matrix.
+// This is commonly used for transformations like rotation, scaling, translation, and 
+// projection in 3D graphics.
+// Inputs:
+//   i - input vector (x, y, z). Assumes w = 1 for position vectors.
+//   o - output vector (result of transformation)
+//   m - 4x4 transformation matrix
+// #ps: Normalized.
 void 
 gr_MultiplyMatrixVector(
     struct gr_vecF3D_d *i, 
     struct gr_vecF3D_d *o, 
     struct gr_mat4x4_d *m )
 {
+    // Multiply the input vector by the matrix to get the transformed coordinates.
+    // The last row/column handle translation and perspective divide.
+    // Output is calculated as:
+    // o.x = i.x * m00 + i.y * m10 + i.z * m20 + m30
+
     o->x = 
         (float) (
         i->x * m->m[0][0] + 
@@ -36,6 +66,7 @@ gr_MultiplyMatrixVector(
         i->z * m->m[2][2] + 
         m->m[3][2] );
 
+    // Compute the homogeneous coordinate w
     float w = 
         (float) (
         i->x * m->m[0][3] + 
@@ -43,7 +74,8 @@ gr_MultiplyMatrixVector(
         i->z * m->m[2][3] + 
         m->m[3][3] );
 
-// Normalization.
+// Normalization
+// If w is not 1.0, normalize the result to convert from homogeneous coordinates to 3D space
     if (w != 0.0f)
     {
         o->x = (float) (o->x / w); 
@@ -52,6 +84,10 @@ gr_MultiplyMatrixVector(
     }
 }
 
+// grVectorCrossProduct
+// Calculates the cross product of two 3D vectors.
+// The cross product produces a vector that is perpendicular to both input vectors.
+// Useful for computing normals in 3D graphics.
 struct gr_vecF3D_d *grVectorCrossProduct(
     struct gr_vecF3D_d *v1, 
     struct gr_vecF3D_d *v2 )
@@ -60,6 +96,10 @@ struct gr_vecF3D_d *grVectorCrossProduct(
 
     struct gr_vecF3D_d vRes;
 
+    // Cross product formula:
+    // x = y1*z2 - z1*y2
+    // y = z1*x2 - x1*z2
+    // z = x1*y2 - y1*x2
     vRes.x = (float) (v1->y * v2->z - v1->z * v2->y);
     vRes.y = (float) (v1->z * v2->x - v1->x * v2->z);
     vRes.z = (float) (v1->x * v2->y - v1->y * v2->x);
@@ -67,36 +107,51 @@ struct gr_vecF3D_d *grVectorCrossProduct(
     return (struct gr_vecF3D_d *) &vRes;
 }
 
-float dot_productF( struct gr_vecF3D_d *v1, struct gr_vecF3D_d *v2 )
-{
+// dot_productF
+// Computes the dot product (scalar product) of two 3D vectors.
+// The result is a scalar value that describes how aligned the vectors are.
+// If the result is 0, the vectors are perpendicular.
+// If positive, they point in similar directions. If negative, opposite.
 // Dot product.
 // The dot product describe the 
 // relationship between two vectors.
 // Positive: Same direction
 // negative: Opposite direction
 // 0:        Perpendicular.
+float dot_productF( struct gr_vecF3D_d *v1, struct gr_vecF3D_d *v2 )
+{
 
-// Fake perpendicular.
+// Safety check for NULL pointers
+// Fake perpendicular
     if ( (void*) v1 == NULL ){ return (float) 0.0f; }
     if ( (void*) v2 == NULL ){ return (float) 0.0f; }
+
+// Standard formula: x1*x2 + y1*y2 + z1*z2
 // (x*x + y*y + z*z)
     return (float) ( v1->x * v2->x + 
                      v1->y * v2->y + 
                      v1->z * v2->z );
 }
 
-// Get delta for bhaskara.
+// -------------------------------
+// gr_discriminant
+// Computes the discriminant (delta) for a quadratic equation: ax^2 + bx + c = 0
+// Used for determining the number of intersections (e.g., in ray tracing).
+// Returns:
+//   < 0 : No real roots (no intersection)
+//   = 0 : One real root (tangent or touching)
+//   > 0 : Two real roots (intersection)
+// -------------------------------
+// Get delta for bhaskara. (pt-br)
 // d<0: (negative) "Raiz de número negativo em Baskara"
 // d=0: (null)     duas raizes reais iguais.
 // d>0: (positive) duas raizes reais diferentes. (Intersection)
-float gr_discriminant(float a, float b, float c)
-{
+// -------------------------------
 // Used to test for intesection in the ray tracing.
 // Discriminant: Delta da função em bhaskara.
+float gr_discriminant(float a, float b, float c)
+{
     float Discriminant = (float) ((b*b) - (4*a*c));
     return (float) Discriminant;
 }
-
-
-
 

@@ -1,5 +1,24 @@
-
 // libgr.c
+
+/*
+Key observation on libgr_transform_from_viewspace_to_screespace(), by Copilot.
+
+What This Resembles:
+Oblique Projection (specifically, something like the Cavalier projection).
+This is a centuries-old, hand-calculable way to give a 3D effect on a 2D surface, but without perspective.
+
+Classic 2.5D / Retro Game Engines: <<< --- That is cool
+Many old-school engines (pre-OpenGL, pre-Direct3D) used similar math for quick-and-dirty 3D, 
+especially for wireframes or simple 3D boxes.
+
+What’s Standard Today <<< --- That is complex and not so cool
+Most modern engines use homogeneous coordinates and 
+projection matrices (orthographic or perspective) for 3D-to-2D projection.
+Even simple engines typically use a matrix for this purpose, 
+for flexibility and to support features like field-of-view, aspect ratio, and 
+camera transformations.
+*/
+
 
 #include "include/libgr.h"
 
@@ -7,15 +26,27 @@ int coisolibgr=0;
 
 // -------------------------------------------------------
 
+// Purpose:
+// Transforms a 2D coordinate from the "view space" to "screen space," considering 
+// a screen center (hotspot) as the origin.
+// #
+// The viewspace is the view considering the camera's point of view.
+// Parameter Handling
+// res_x, res_y: Output pointers for screen-space coordinates.
+// _x, _y: Input coordinates in view space.
+// _hotspotx, _hotspoty: The center of the screen in screen coordinates.
+
 int 
 libgr_transform_to_screespace(
     int *res_x, int *res_y,
     int _x, int _y, 
     int _hotspotx, int _hotspoty )
 {
-// #
-// The viewspace is the view considering 
-// the camera's point of view.
+// Summary:
+// This function maps a point (x, y) from a centered coordinate system 
+// to the regular screen coordinates, with a chosen origin (hotspot).
+
+// Convert Inputs
 
 // 3d
 // save parameters. (++)
@@ -36,6 +67,9 @@ libgr_transform_to_screespace(
     //int RegisterZValue=FALSE;
 
 // --------------------
+// Transform the X Coordinate
+// If x >= 0: Move right from the hotspot.
+// If x < 0:  Move left from the hotspot.
 
     // x positivo, para direita.
     if (x >= 0 ){
@@ -52,6 +86,10 @@ libgr_transform_to_screespace(
 
 // ===================================================
 // Y::
+// Transform the Y Coordinate
+// If y >= 0: Move up from the hotspot (screen Y axis usually grows downward).
+// If y < 0:  Move down from the hotspot.
+
     // y positivo, para cima.
     if ( y >= 0 ){
         Y = (int) ( hotspoty - y );
@@ -63,6 +101,9 @@ libgr_transform_to_screespace(
 
 // ===================================================
 // Return values:
+// Write Back the Result
+// Store calculated values in *res_x and *res_y if output is valid.
+// Returns 0 on success, -1 on failure (null pointers).
 
     // fail
     if ( (void*) res_x == NULL ){ return (int) -1; }
@@ -125,6 +166,16 @@ int _hotspotx, _hotspoty:
     The x and y coordinates of the hotspot, which is the center of the screen in 2D space.
 */
 
+/*
+Parameter Handling
+res_x, res_y: Output pointers.
+_x, _y, _z: Input 3D coordinates (view space).
+left_hand: Use left-hand (TRUE) or right-hand (FALSE) coordinate system.
+_hotspotx, _hotspoty: The screen center.
+*/
+
+// #
+// The viewspace is the view considering the camera's point of view.
 int 
 libgr_transform_from_viewspace_to_screespace(
     int *res_x, int *res_y,
@@ -132,9 +183,15 @@ libgr_transform_from_viewspace_to_screespace(
     int left_hand,
     int _hotspotx, int _hotspoty )
 {
-// #
-// The viewspace is the view considering 
-// the camera's point of view.
+// Purpose:
+// Projects a 3D point (x, y, z) in "view space" to a 2D screen-space coordinate (res_x, res_y) using 
+// a simple hand-made oblique projection, with optional left-hand or right-hand rules.
+// Summary:
+// This function implements a Cavalier Oblique projection (simple 3D-to-2D), 
+// which is easy to visualize and code. The z component is mapped to both X and Y for the oblique effect, 
+// and the handedness parameter (left_hand) controls the projection style.
+
+// Convert Inputs
 
 // 3d
 // save parameters. (++)
@@ -164,6 +221,8 @@ libgr_transform_from_viewspace_to_screespace(
 
 // ===================================================
 // X::
+// Project X (2D X calculation)
+
 
 // --------------------
 // z maior ou igual a zero.
@@ -205,6 +264,8 @@ done:
 
 // ===================================================
 // Y::
+// Project Y (2D Y calculation)
+
      // y positivo, para cima.
      if ( y >= 0 ){
          Y = (int) ( hotspoty - y );
@@ -216,41 +277,45 @@ done:
 
 // ===================================================
 // Z::
+// Adjust for Z using the chosen coordinate system.
 // Posição canônica do eixo z.
-// Usado para projeção em 2D depois de feita
-// as transformações.
+// Usado para projeção em 2D depois de feita as transformações.
 
-    // LEFT-HAND
+    // LEFT-HAND: Left-hand system
     if (left_hand == TRUE)
     {
         // z é positivo para todos os casos 
         // onde z é maior igual a 0.
-        if(z >= 0)
+        // Move right and up by z
+        if (z >= 0)
         { 
             X = (X + z);  //para direita
             Y = (Y - z);  //para cima
         }
         // z é módulo para todos os casos 
         // em que z é menor que 0.
-        if(z < 0){ z = abs(z);
+        //  Move left and down by |z|
+        if (z < 0){ z = abs(z);
             X = (X - z);   // para esquerda
             Y = (Y + z);   // para baixo
         }
     }
 
-    // RIGHT-HAND
+    // RIGHT-HAND: Right-hand system
     if (left_hand != TRUE)
     {
         // z é positivo para todos os casos 
         // onde z é maior igual a 0.
-        if(z >= 0)
+        // Move left and down by z
+        if (z >= 0)
         { 
             X = (X - z);  //para esquerda
             Y = (Y + z);  //para baixo
         }
         // z é módulo para todos os casos 
         // em que z é menor que 0.
-        if(z < 0){ z = abs(z);
+        // Move right and up by |z|
+        if (z < 0){ z = abs(z);
             X = (X + z);   // para esquerda
             Y = (Y - z);   // para baixo
         }
@@ -258,6 +323,9 @@ done:
 
 // ===================================================
 // Return values:
+// Write Back the Result
+// Store calculated values in *res_x and *res_y if output is valid.
+// Returns 0 on success, -1 on failure (null pointers).
 
     // fail
     if ( (void*) res_x == NULL ){ return (int) -1; }
