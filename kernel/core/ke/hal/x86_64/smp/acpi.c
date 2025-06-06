@@ -189,7 +189,12 @@ static int __acpi_rsdp(unsigned long rsdp_pointer)
             panic("acpi.c: address_pa\n");
 
         // #debug
-        printk("xsdt pa: %x | xsdt va: %x\n", address_pa, address_va );
+        // printk("xsdt pa: %x | xsdt va: %x\n", address_pa, address_va );
+        // printk("xsdt pa lx: %lx | xsdt va lu: %lu\n", address_pa, address_pa );
+
+        // #debug
+        // refresh_screen();
+        // while(1){}
 
         // IN: ps | va
         // OUT: 0=ok | -1=fail
