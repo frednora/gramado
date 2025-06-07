@@ -1,6 +1,33 @@
 // libgr.c
 
 /*
+This method is a form of “oblique” or “fake” projection 
+(like the Cavalier/Cabinet projections in technical drawing), based on 
+simply adding or subtracting z, and is not used for true 3D rendering where perspective is needed.
+It was, however, very common for early 2.5D engines and certain kinds of “fake 3D” graphics.
+*/
+
+/*
+What Are 2.5D Engines?
+“2.5D” refers to engines that simulate 3D using 2D techniques, often for performance or hardware reasons.
+These engines don’t do full 3D perspective math, but instead use tricks to give a sense of depth.
+*/
+
+/*
+// ------------------------------------
+Projection math in these fake 3D engines.
+
+Commonly, for isometric:
+screen_x = origin_x + (x - y) * tile_width/2
+screen_y = origin_y + (x + y) * tile_height/2
+
+For oblique/cavalier (sometimes used for “fake” 3D):
+screen_x = origin_x + x + z * kx
+screen_y = origin_y + y + z * ky
+(where kx/ky are constants, often 1 or 0.5).
+*/
+
+/*
 Key observation on libgr_transform_from_viewspace_to_screespace(), by Copilot.
 
 What This Resembles:

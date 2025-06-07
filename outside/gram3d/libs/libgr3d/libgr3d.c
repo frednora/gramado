@@ -155,3 +155,57 @@ float gr_discriminant(float a, float b, float c)
     return (float) Discriminant;
 }
 
+
+/*
+void 
+transform_oblique_matrix(
+    float x, float y, float z, 
+    float hotspotx, float hotspoty, 
+    int lefthand, 
+    float *outX, float *outY ) 
+{
+    float zproj = (z >= 0) ? z : -z;
+    int sign    = (z >= 0) ? 1 : -1;
+
+    if (lefthand) {
+        *outX = hotspotx + x + sign * zproj;
+        *outY = hotspoty - y - sign * zproj;
+    } else {
+        *outX = hotspotx + x - sign * zproj;
+        *outY = hotspoty - y + sign * zproj;
+    }
+}
+*/
+
+
+// Summary
+// This function mimics your original algorithm using matrix multiplication.
+// The matrix coefficients change depending on the sign of z.
+// You still need to handle the sign and absolute value logic outside the matrix, 
+// as is typical for this kind of “oblique” projection.
+
+/*
+void 
+transform_oblique_matrix(
+    float x, float y, float z,
+    float hotspotx, float hotspoty,
+    int lefthand,
+    float *outX, float *outY ) 
+{
+    float zproj = (z >= 0) ? z : -z;
+    int sign    = (z >= 0) ? 1 : -1;
+
+    float mat[2][3];
+
+    if (lefthand) {
+        mat[0][0] = 1; mat[0][1] = 0; mat[0][2] = sign;
+        mat[1][0] = 0; mat[1][1] = -1; mat[1][2] = -sign;
+    } else {
+        mat[0][0] = 1; mat[0][1] = 0; mat[0][2] = -sign;
+        mat[1][0] = 0; mat[1][1] = -1; mat[1][2] = sign;
+    };
+
+    *outX = hotspotx + mat[0][0]*x + mat[0][1]*y + mat[0][2]*zproj;
+    *outY = hotspoty + mat[1][0]*x + mat[1][1]*y + mat[1][2]*zproj;
+}
+*/

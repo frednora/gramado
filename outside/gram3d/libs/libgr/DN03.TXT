@@ -1,0 +1,27 @@
+The function libgr_transform_from_viewspace_to_screespace() makes a tranformation from R3 to R2.
+
+Yes, you are correct in your understanding. 
+The function name libgr_transform_from_viewspace_to_screespace() suggests that it performs a 
+transformation from "view space" (usually a 3D coordinate system, R³) to 
+"screen space" (a 2D coordinate system, R²).
+
+In the context of graphics programming:
+
+- **View space (R³):** 
+This is a three-dimensional coordinate system after a scene has been transformed by 
+the camera (view) matrix but before projection onto the screen.
+
+- **Screen space (R²):** 
+This is the two-dimensional coordinate system of the output display (the screen or window) 
+where final pixel positions are determined.
+
+So, the transformation function likely takes 3D coordinates (x, y, z) from view space and 
+maps them to 2D screen coordinates (x, y), which is a mapping from R³ to R².
+
+-------------------------------------------------------------
+System	|z Condition | X Formula	           | Y Formula
+Left	|z ≥ 0	     | X = hotspotx + x + z	   | Y = hotspoty - y - z
+Left	|z < 0	     | X = hotspotx + x - |z|  | Y = hotspoty - y + |z|
+Right	|z ≥ 0	     | X = hotspotx + x - z	   | Y = hotspoty - y + z
+Right	|z < 0	     | X = hotspotx + x + |z|  | Y = hotspoty - y - |z|
+
