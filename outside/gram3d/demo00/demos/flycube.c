@@ -94,6 +94,10 @@ static void __drawTerrain(struct cube_model_d *cube, float fElapsedTime)
 //------------------------------------------------
 // Rotation X
 // counter-clockwise
+// R_x(θ) =
+//|  1    0          0   |
+//|  0   cos(θ)  -sin(θ) |
+//|  0   sin(θ)   cos(θ) |
 	matRotX.m[0][0] = (float) 1.0f;
 	matRotX.m[1][1] = (float) cosf(cube->fThetaAngle * 0.5f);
 	matRotX.m[1][2] = (float) -sinf(cube->fThetaAngle * 0.5f);
@@ -103,6 +107,10 @@ static void __drawTerrain(struct cube_model_d *cube, float fElapsedTime)
 //------------------------------------------------
 // Rotation Y
 // counter-clockwise
+// R_y(θ) =
+//|  cos(θ)   0   sin(θ)  |
+//|   0       1     0     |
+//| -sin(θ)   0   cos(θ)  |
     matRotY.m[0][0] = cosf(0.0f);//(cube->fThetaAngle * 0.5f);
     matRotY.m[0][2] = sinf(0.0f);//(cube->fThetaAngle * 0.5f);
     matRotY.m[1][1] = (float) 1.0f;
@@ -112,6 +120,10 @@ static void __drawTerrain(struct cube_model_d *cube, float fElapsedTime)
 //------------------------------------------------
 // Rotation Z
 // counter-clockwise
+//R_z(θ) =
+//|  cos(θ)  -sin(θ)   0  |
+//|  sin(θ)   cos(θ)   0  |
+//|    0        0      1  |
 	matRotZ.m[0][0] = (float) cosf(0.0f);//(cube->fThetaAngle);
 	matRotZ.m[0][1] = (float) -sinf(0.0f);//(cube->fThetaAngle);
 	matRotZ.m[1][0] = (float) sinf(0.0f);//(cube->fThetaAngle);
@@ -416,6 +428,10 @@ static void __drawFlyingCube(struct cube_model_d *cube, float vel)
 //------------------------------------------------
 // Rotation X
 // counter-clockwise
+// R_x(θ) =
+//|  1    0          0   |
+//|  0   cos(θ)  -sin(θ) |
+//|  0   sin(θ)   cos(θ) |
     matRotX.m[0][0] = (float) 1.0f;
     matRotX.m[1][1] = (float) cosf(cube->fThetaAngle * 0.5f);
     matRotX.m[1][2] = (float) -sinf(cube->fThetaAngle * 0.5f);
@@ -425,6 +441,10 @@ static void __drawFlyingCube(struct cube_model_d *cube, float vel)
 //------------------------------------------------
 // Rotation Y
 // counter-clockwise
+// R_y(θ) =
+//|  cos(θ)   0   sin(θ)  |
+//|   0       1     0     |
+//| -sin(θ)   0   cos(θ)  |
     matRotY.m[0][0] = cosf(0.0f);//(cube->fThetaAngle * 0.5f);
     matRotY.m[0][2] = sinf(0.0f);//(cube->fThetaAngle * 0.5f);
     matRotY.m[1][1] = (float) 1.0f;
@@ -434,6 +454,10 @@ static void __drawFlyingCube(struct cube_model_d *cube, float vel)
 //------------------------------------------------
 // Rotation Z
 // counter-clockwise
+//R_z(θ) =
+//|  cos(θ)  -sin(θ)   0  |
+//|  sin(θ)   cos(θ)   0  |
+//|    0        0      1  |
     matRotZ.m[0][0] = (float) cosf(0.0f);//(cube->fThetaAngle);
     matRotZ.m[0][1] = (float) -sinf(0.0f);//(cube->fThetaAngle);
     matRotZ.m[1][0] = (float) sinf(0.0f);//(cube->fThetaAngle);

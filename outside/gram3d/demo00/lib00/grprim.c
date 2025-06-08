@@ -1924,6 +1924,11 @@ plotTriangleF(
         // 0.5f
         scale_factor = (float) CurrentProjectionF.scale_factor;
 
+        // #option:
+        // Modifying it dynamically based on distance
+        // scale_factor = 1.0f / (1.0f + t->p[0].z * 0.1f);
+        // scale_factor = 1.0f / tanf(VerticalFOV / 2);
+
         // #todo: hotspot
     }
 
@@ -2005,6 +2010,24 @@ plotTriangleF(
 
     // #test
     //float factor = (float) scale_factor;
+
+//
+// The perspective division.
+//
+
+// Scaling 𝑧 Before Division
+// This adjusts how objects shrink with distance.
+// Dividing 𝑥 and 𝑦 by 𝑧 for Perspective
+// Why This Is Crucial
+// Without dividing X and Y by Z, the 3D scene would look orthographic (no depth scaling).
+// Perspective projection ensures objects shrink proportionally to their distance
+
+// Placing perspective division at the final stage of the pipeline ensures that 
+// all previous transformations—rotation, translation, and scaling—are applied 
+// before normalizing the coordinates. This approach has several key advantages:
+// + Preserves Transformation Integrity
+// + Keeps Objects in Homogeneous Space Until Needed
+// + Prevents Artifacts in Multi-Step Transformations
 
     if (t->p[0].z != 0.0f)
     {

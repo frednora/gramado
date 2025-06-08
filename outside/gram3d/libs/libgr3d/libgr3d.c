@@ -76,6 +76,12 @@ gr_MultiplyMatrixVector(
 
 // Normalization
 // If w is not 1.0, normalize the result to convert from homogeneous coordinates to 3D space
+// This ensures that distant objects shrink properly, creating depth perception.
+// Key Takeaway
+// Without this final normalization, the transformed points would remain in homogeneous space, 
+// meaning they wouldn’t correctly scale with distance. The division by 𝑤 ensures proper 
+// perspective distortion, making your 3D scene visually correct.
+
     if (w != 0.0f)
     {
         o->x = (float) (o->x / w); 
