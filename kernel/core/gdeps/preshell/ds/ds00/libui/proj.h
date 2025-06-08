@@ -1,5 +1,6 @@
-
 // proj.h
+// Projection
+// Created by Fred Nora.
 
 #ifndef __PROJ_H
 #define __PROJ_H    1

@@ -1,7 +1,7 @@
 # libui/
 # 2020 - Created by Fred Nora.
 
-#linkTarget = GRAMLAND.BIN
+#linkTarget = xxxx.BIN
 
 # See: https://linux.die.net/man/1/ld
 # -s --strip-all:   Omit all symbol information from the output file.
@@ -93,7 +93,7 @@ CINCLUDES += -I ../
     
 # Objects
 myObjects = char.o \
-dtext.o proj.o grprim.o camera.o line.o rect.o bitblt.o   
+dtext.o proj.o transf.o grprim.o camera.o line.o rect.o bitblt.o   
 
 
 .PHONY: all all-c gws-link finalize clean
@@ -106,6 +106,7 @@ all-c:
 	$(CC)  -c char.c    $(CFLAGS) $(CINCLUDES) -o char.o
 	$(CC)  -c dtext.c   $(CFLAGS) $(CINCLUDES) -o dtext.o
 	$(CC)  -c proj.c    $(CFLAGS) $(CINCLUDES) -o proj.o
+	$(CC)  -c transf.c  $(CFLAGS) $(CINCLUDES) -o transf.o
 	$(CC)  -c grprim.c  $(CFLAGS) $(CINCLUDES) -o grprim.o
 	$(CC)  -c camera.c  $(CFLAGS) $(CINCLUDES) -o camera.o
 	$(CC)  -c line.c    $(CFLAGS) $(CINCLUDES) -o line.o

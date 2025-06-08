@@ -1,6 +1,6 @@
-
 // grprim.h 
 // Header for primitives.
+// Created by Fred Nora.
 
 #ifndef __GRPRIM_H
 #define __GRPRIM_H   1
@@ -16,8 +16,6 @@
 //
 // ===========================================================
 //
-
-int grInit(void);
 
 
 // See: view()
@@ -190,6 +188,10 @@ plotCharBackbufferDrawcharTransparentZ (
     unsigned int color, 
     unsigned long c,
     int z );
+
+
+int grInit(void);
+
 
 #endif    
 

@@ -10,6 +10,7 @@ struct char_initialization_d  CharInitialization;
 // ================================================
 
 
+// Border in Terry's style.
 // IN: left, right, top, bottom.
 void
 DrawBorder( 
@@ -34,95 +35,94 @@ DrawBorder(
 
     if (solid) {
 
-      //PlotScreenU8(CH_DBL_TL+attr,l-1,t-1);
-      //PlotScreenU8(CH_DBL_TR+attr,r+1,t-1);
-      //PlotScreenU8(CH_DBL_BL+attr,l-1,b+1);
-      //PlotScreenU8(CH_DBL_BR+attr,r+1,b+1);
+        //PlotScreenU8(CH_DBL_TL+attr,l-1,t-1);
+        //PlotScreenU8(CH_DBL_TR+attr,r+1,t-1);
+        //PlotScreenU8(CH_DBL_BL+attr,l-1,b+1);
+        //PlotScreenU8(CH_DBL_BR+attr,r+1,b+1);
       
-      grBackbufferDrawCharTransparent( l-CharSize, t-CharSize, COLOR_BLUE, CH_DBL_TL );
-      grBackbufferDrawCharTransparent( r,          t-CharSize, COLOR_BLUE, CH_DBL_TR );
-      grBackbufferDrawCharTransparent( l-CharSize, b,          COLOR_BLUE, CH_DBL_BL );
-      grBackbufferDrawCharTransparent( r,          b,          COLOR_BLUE, CH_DBL_BR );
+        grBackbufferDrawCharTransparent( l-CharSize, t-CharSize, COLOR_BLUE, CH_DBL_TL );
+        grBackbufferDrawCharTransparent( r,          t-CharSize, COLOR_BLUE, CH_DBL_TR );
+        grBackbufferDrawCharTransparent( l-CharSize, b,          COLOR_BLUE, CH_DBL_BL );
+        grBackbufferDrawCharTransparent( r,          b,          COLOR_BLUE, CH_DBL_BR );
 
-      // title
-      grBackbufferDrawCharTransparent( l,              t-CharSize, COLOR_BLUE, 'M' );
-      grBackbufferDrawCharTransparent( l+(CharSize*1), t-CharSize, COLOR_BLUE, 'E' );
-      grBackbufferDrawCharTransparent( l+(CharSize*2), t-CharSize, COLOR_BLUE, 'N' );
-      grBackbufferDrawCharTransparent( l+(CharSize*3), t-CharSize, COLOR_BLUE, 'U' );
+        // title
+        grBackbufferDrawCharTransparent( l,              t-CharSize, COLOR_BLUE, 'M' );
+        grBackbufferDrawCharTransparent( l+(CharSize*1), t-CharSize, COLOR_BLUE, 'E' );
+        grBackbufferDrawCharTransparent( l+(CharSize*2), t-CharSize, COLOR_BLUE, 'N' );
+        grBackbufferDrawCharTransparent( l+(CharSize*3), t-CharSize, COLOR_BLUE, 'U' );
 
-      // Controller. [x]
-      // #todo: precisamos salvar a posiçao do controle.
-      grBackbufferDrawCharTransparent( r-(CharSize*1), t-CharSize, COLOR_BLUE, ']' );
-      grBackbufferDrawCharTransparent( r-(CharSize*2), t-CharSize, COLOR_BLUE, 'x' );
-      grBackbufferDrawCharTransparent( r-(CharSize*3), t-CharSize, COLOR_BLUE, '[' );
+        // Controller. [x]
+        // #todo: precisamos salvar a posiçao do controle.
+        grBackbufferDrawCharTransparent( r-(CharSize*1), t-CharSize, COLOR_BLUE, ']' );
+        grBackbufferDrawCharTransparent( r-(CharSize*2), t-CharSize, COLOR_BLUE, 'x' );
+        grBackbufferDrawCharTransparent( r-(CharSize*3), t-CharSize, COLOR_BLUE, '[' );
 
-      j=0;
-      for (i=l; i < (l+(w/CharSize)); i++) 
-      {
-         //PlotScreenU8(CH_DBL_HORZ+attr,i,t-1);
-         //PlotScreenU8(CH_DBL_HORZ+attr,i,b+1);
+        j=0;
+        for (i=l; i < (l+(w/CharSize)); i++) 
+        {
+            //PlotScreenU8(CH_DBL_HORZ+attr,i,t-1);
+            //PlotScreenU8(CH_DBL_HORZ+attr,i,b+1);
 
-          grBackbufferDrawCharTransparent( i+j+(8*4), t-CharSize, COLOR_BLUE, CH_DBL_HORZ );
-          grBackbufferDrawCharTransparent( i+j, b,          COLOR_BLUE, CH_DBL_HORZ );
-          j+=4;
-      };
+            grBackbufferDrawCharTransparent( i+j+(8*4), t-CharSize, COLOR_BLUE, CH_DBL_HORZ );
+            grBackbufferDrawCharTransparent( i+j, b,          COLOR_BLUE, CH_DBL_HORZ );
+            j += 4;
+        };
 
-      j=0;
-      for (i=t; i < (t+(h/CharSize)); i++) 
-      {
-          //PlotScreenU8(CH_DBL_VERT+attr,l-1,i);
-          //PlotScreenU8(CH_DBL_VERT+attr,r+1,i);
+        j=0;
+        for (i=t; i < (t+(h/CharSize)); i++) 
+        {
+            //PlotScreenU8(CH_DBL_VERT+attr,l-1,i);
+            //PlotScreenU8(CH_DBL_VERT+attr,r+1,i);
 
-         grBackbufferDrawCharTransparent( l-CharSize,i+j, COLOR_BLUE, CH_DBL_VERT );
-         grBackbufferDrawCharTransparent( r,         i+j, COLOR_BLUE, CH_DBL_VERT );
-         j+=4;
-      };
-
-    }else{
+            grBackbufferDrawCharTransparent( l-CharSize,i+j, COLOR_BLUE, CH_DBL_VERT );
+            grBackbufferDrawCharTransparent( r,         i+j, COLOR_BLUE, CH_DBL_VERT );
+            j += 4;
+        };
+    } else {
   
-      //PlotScreenU8(CH_DBL_TL+attr,l-1,t-1);
-      //PlotScreenU8(CH_DBL_TR+attr,r+1,t-1);
-      //PlotScreenU8(CH_DBL_BL+attr,l-1,b+1);
-      //PlotScreenU8(CH_DBL_BR+attr,r+1,b+1);
+        //PlotScreenU8(CH_DBL_TL+attr,l-1,t-1);
+        //PlotScreenU8(CH_DBL_TR+attr,r+1,t-1);
+        //PlotScreenU8(CH_DBL_BL+attr,l-1,b+1);
+        //PlotScreenU8(CH_DBL_BR+attr,r+1,b+1);
       
-      grBackbufferDrawCharTransparent( l-CharSize, t-CharSize, COLOR_BLUE, CH_DBL_TL );
-      grBackbufferDrawCharTransparent( r,          t-CharSize, COLOR_BLUE, CH_DBL_TR );
-      grBackbufferDrawCharTransparent( l-CharSize, b,          COLOR_BLUE, CH_DBL_BL );
-      grBackbufferDrawCharTransparent( r,          b,          COLOR_BLUE, CH_DBL_BR );
+        grBackbufferDrawCharTransparent( l-CharSize, t-CharSize, COLOR_BLUE, CH_DBL_TL );
+        grBackbufferDrawCharTransparent( r,          t-CharSize, COLOR_BLUE, CH_DBL_TR );
+        grBackbufferDrawCharTransparent( l-CharSize, b,          COLOR_BLUE, CH_DBL_BL );
+        grBackbufferDrawCharTransparent( r,          b,          COLOR_BLUE, CH_DBL_BR );
 
-      // title
-      grBackbufferDrawCharTransparent( l,              t-CharSize, COLOR_BLUE, 'M' );
-      grBackbufferDrawCharTransparent( l+(CharSize*1), t-CharSize, COLOR_BLUE, 'E' );
-      grBackbufferDrawCharTransparent( l+(CharSize*2), t-CharSize, COLOR_BLUE, 'N' );
-      grBackbufferDrawCharTransparent( l+(CharSize*3), t-CharSize, COLOR_BLUE, 'U' );
+        // title
+        grBackbufferDrawCharTransparent( l,              t-CharSize, COLOR_BLUE, 'M' );
+        grBackbufferDrawCharTransparent( l+(CharSize*1), t-CharSize, COLOR_BLUE, 'E' );
+        grBackbufferDrawCharTransparent( l+(CharSize*2), t-CharSize, COLOR_BLUE, 'N' );
+        grBackbufferDrawCharTransparent( l+(CharSize*3), t-CharSize, COLOR_BLUE, 'U' );
 
-      // Controller. [x]
-      // #todo: precisamos salvar a posiçao do controle.
-      grBackbufferDrawCharTransparent( r-(CharSize*1), t-CharSize, COLOR_BLUE, ']' );
-      grBackbufferDrawCharTransparent( r-(CharSize*2), t-CharSize, COLOR_BLUE, 'x' );
-      grBackbufferDrawCharTransparent( r-(CharSize*3), t-CharSize, COLOR_BLUE, '[' );
+        // Controller. [x]
+        // #todo: precisamos salvar a posiçao do controle.
+        grBackbufferDrawCharTransparent( r-(CharSize*1), t-CharSize, COLOR_BLUE, ']' );
+        grBackbufferDrawCharTransparent( r-(CharSize*2), t-CharSize, COLOR_BLUE, 'x' );
+        grBackbufferDrawCharTransparent( r-(CharSize*3), t-CharSize, COLOR_BLUE, '[' );
 
-      j=0;
-      for (i=l; i < (l+(w/CharSize)); i++) 
-      {
-         //PlotScreenU8(CH_DBL_HORZ+attr,i,t-1);
-         //PlotScreenU8(CH_DBL_HORZ+attr,i,b+1);
+        j=0;
+        for (i=l; i < (l+(w/CharSize)); i++) 
+        {
+            //PlotScreenU8(CH_DBL_HORZ+attr,i,t-1);
+            //PlotScreenU8(CH_DBL_HORZ+attr,i,b+1);
 
-          grBackbufferDrawCharTransparent( i+j+(8*4), t-CharSize, COLOR_BLUE, CH_DBL_HORZ );
-          grBackbufferDrawCharTransparent( i+j, b,          COLOR_BLUE, CH_DBL_HORZ );
-          j+=4;
-      };
+            grBackbufferDrawCharTransparent( i+j+(8*4), t-CharSize, COLOR_BLUE, CH_DBL_HORZ );
+            grBackbufferDrawCharTransparent( i+j, b,          COLOR_BLUE, CH_DBL_HORZ );
+            j += 4;
+        };
 
-      j=0;
-      for (i=t; i < (t+(h/CharSize)); i++) 
-      {
-          //PlotScreenU8(CH_DBL_VERT+attr,l-1,i);
-          //PlotScreenU8(CH_DBL_VERT+attr,r+1,i);
+        j=0;
+        for (i=t; i < (t+(h/CharSize)); i++) 
+        {
+            //PlotScreenU8(CH_DBL_VERT+attr,l-1,i);
+            //PlotScreenU8(CH_DBL_VERT+attr,r+1,i);
 
-         grBackbufferDrawCharTransparent( l-CharSize,i+j, COLOR_BLUE, CH_DBL_VERT );
-         grBackbufferDrawCharTransparent( r,         i+j, COLOR_BLUE, CH_DBL_VERT );
-         j+=4;
-      };
+            grBackbufferDrawCharTransparent( l-CharSize,i+j, COLOR_BLUE, CH_DBL_VERT );
+            grBackbufferDrawCharTransparent( r,         i+j, COLOR_BLUE, CH_DBL_VERT );
+            j += 4;
+        };
     };
 }
 
@@ -178,7 +178,7 @@ int charGetCharHeight (void)
 }
 
 /*
- * charBackbufferDrawcharTransparent:
+ * grBackbufferDrawCharTransparent:
  *     Desenha um caractere sem alterar o pano de fundo.
  *     >> no backbuffer.
  */
@@ -345,7 +345,7 @@ fail:
 }
 
 /*
- * charBackbufferDrawchar:
+ * grBackbufferDrawChar:
  *     Constrói um caractere no backbuffer.
  *     Desenha um caractere e pinta o pano de fundo.
  */ 

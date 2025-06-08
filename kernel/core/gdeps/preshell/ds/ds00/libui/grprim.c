@@ -99,96 +99,7 @@
 //x1 = width / (right-left) * (x-left)
 //y1 = height / (bottom-top) * (y-top)
 
-
-// =============================================================
-// #projection:
-// For orthographics projection there is no scaling factor.
-// For perspective, we do have scaling.
-
-// Camera and Perspective 
-// camera:
-// location, pointing at, pointing to top.
-// .., lookat(view vector), top (upvector).
-// perspective:
-// view frustrum
-// near, far ...
-// from, to
-
-// Device hotspot.
-// 'Principle Point'.
-static unsigned long HotSpotX=0;
-static unsigned long HotSpotY=0;
-
-// Window hotspot.
-//static unsigned long WindowHotSpotX=0;
-//static unsigned long WindowHotSpotY=0;
-
-static void 
-__transform_from_modelspace_to_screespace(
-    int *res_x,
-    int *res_y,
-    int _x, int _y, int _z,
-    int use_z_translation );
-    
-// =============================
-
-/*
- * grInit:
- *     Initialize the 3d support.
- *     Create the hotspot to normalize the screen.
- *     The device context was created in the beginning of
- * of the initialization.
- *     To handle the device context we have the structures:
- * 'display' and 'screen'. The clients will use the data 
- * in these structures.
- */
-
-int grInit(void)
-{
-    unsigned long deviceWidth  = gws_get_device_width();
-    unsigned long deviceHeight = gws_get_device_height();
-
-    server_debug_print("grInit:\n");
-
-    if ( deviceWidth == 0 || deviceHeight == 0 )
-    {
-        //server_debug_print ("grInit: [FAIL] w h\n");
-        printf             ("grInit: [FAIL] w h\n");
-        exit(1);
-    }
-
-// center of the screen.
-// #todo: 
-// We need the option to put the hotspot 
-// at the center of the window.
-    HotSpotX = (deviceWidth >> 1);
-    HotSpotY = (deviceHeight >> 1);
-
-// == Projection =========
-// Initialize the current projection.
-// Change the view for the current projection.
-    //server_debug_print("grInit: projection\n");
-    projection_initialize();
-// Changing the view for the current projection.
-    gr_depth_range(CurrentProjection,0,40);
-
-// == Camera ==========
-// Initialize the current camera.
-// Change some attributes for the current camera.
-// The projection is a field in the camera's structure.
-    //server_debug_print ("grInit: camera\n");
-    camera_initialize();
-    camera ( 
-        -40, -40, 0,     // position vector
-        -40,  40, 0,     // upview vector
-         10,  10, 10 );  // lookat vector
-
-    // ...
-
-    //server_debug_print ("grInit: done\n");
-    return 0;
-}
-
+  
 /*
 // #bugbug
 // Not tested.
@@ -279,137 +190,6 @@ t3(
     *z2 = (1 *z1);
 }
 */
-
-// worker: Used by grPlot0()
-// Projection Transform - Perspective Projection
-// Projection Transform - Orthographic Projection
-// The x and y coordinates (in the range of -1 to +1) 
-// represent its position on the screen, and the z value
-// (in the range of 0 to 1) represents its depth, 
-// i.e., how far away from the near plane.
-// Transforma no 'world space' para o 'view port'.
-// The world space, is common to all the objects. 
-// But each object can have your own 'local space'.
-// #
-// Not standard ortographic projection.
-static void 
-__transform_from_modelspace_to_screespace(
-    int *res_x,
-    int *res_y,
-    int _x, int _y, int _z,
-    int use_z_translation )
-{
-
-// (0,0) represents the top/left corner in a 2d screen.
-// The center of the screen in 2d is the hotspot.
-// (0,0,0) represents the center of the screen in 3d
-// (0,0,0) in 3d is also the hotspot.
-
-// 3d
-// save parameters. (++)
-    int x  = (int) _x;  //1
-    int y  = (int) _y;  //2
-    //int x2 = (int) _y;  //3 #crazy
-    int z  = (int) _z;  //4
-    int hotspotx = (int) (HotSpotX & 0xFFFFFFFF);
-    int hotspoty = (int) (HotSpotY & 0xFFFFFFFF);
-// 2d:
-// final result.
-    int X=0;
-    int Y=0;
-    //int UseZTranslation = TRUE;
-    //int UseZTranslation = FALSE;
-    int UseZTranslation = (int) use_z_translation;
-    // Register z value into the z buffer.
-    //int RegisterZValue=FALSE;
-
-// The world space.
-// (HotSpotX,HotSpotY,0)
-// This is the origin of the 'world space'.
-// model space.
-// Been the reference for all the 'object spaces'.
-
-// ===================================================
-// X::
-
-// --------------------
-// z maior ou igual a zero.
-//    |
-//    ----
-//
-    if (z >= 0)
-    {
-        // x positivo, para direita.
-        if (x >= 0 ){
-            X = (int) ( hotspotx + x );
-        }
-        // x negativo, para esquerda.
-        if (x < 0 ){ x = abs(x);   
-            X = (int) ( hotspotx - x );
-        }
-        goto done;
-    }
-
-// --------------------
-// z negativo
-//  _
-//   |
-//
-    if (z < 0)
-    {
-        // x positivo, para direita.
-        if (x >= 0){
-            X = (int) (hotspotx + x);
-        }
-        // x negativo, para esquerda.
-        if (x < 0){  x = abs(x); 
-            X = (int) (hotspotx - x);
-        }
-        goto done;
-    }
-
-done:
-
-// ===================================================
-// Y::
-     // y positivo, para cima.
-     if ( y >= 0 ){
-         Y = (int) ( hotspoty - y );
-     }
-     // y negativo, para baixo
-     if ( y < 0 ){ y = abs(y);
-         Y = (int) ( hotspoty + y );
-     }
-
-// ===================================================
-// Z::
-    if (UseZTranslation == TRUE)
-    {
-        // z é positivo para todos os casos 
-        // onde z é maior igual a 0.
-        if(z >= 0){ 
-            X = (X + z); 
-            Y = (Y - z); 
-        }
-        // z é módulo para todos os casos 
-        // em que z é menor que 0.
-        if(z < 0){ z = abs(z);
-            X = (X - z); 
-            Y = (Y + z); 
-        }
-    }
-
-// ===================================================
-// Return the values
-    if ((void*) res_x != NULL){
-        *res_x = (int) X;
-    }
-    if ((void*) res_y != NULL){
-        *res_y = (int) Y;
-    }
-
-    return;
-}
 
 /*
  * grPlot0:
@@ -2210,6 +1990,65 @@ int servicepixelBackBufferPutpixel(void)
     return 0;
 fail:
     return (int) -1;
+}
+
+// =============================
+
+/*
+ * grInit:
+ *     Initialize the 3d support.
+ *     Create the hotspot to normalize the screen.
+ *     The device context was created in the beginning of
+ * of the initialization.
+ *     To handle the device context we have the structures:
+ * 'display' and 'screen'. The clients will use the data in these structures.
+ */
+
+int grInit(void)
+{
+    unsigned long deviceWidth  = gws_get_device_width();
+    unsigned long deviceHeight = gws_get_device_height();
+
+    server_debug_print("grInit:\n");
+
+    if ( deviceWidth == 0 || deviceHeight == 0 )
+    {
+        printf ("grInit: [FAIL] w h\n");
+        exit(1);
+    }
+
+// center of the screen.
+// #todo: 
+// We need the option to put the hotspot at the center of the window.
+    unsigned long myHotSpotX = (unsigned long) (deviceWidth >> 1);
+    unsigned long myHotSpotY = (unsigned long) (deviceHeight >> 1);
+
+    transf_setup_hotspot(myHotSpotX,myHotSpotY);
+
+
+// == Projection =========
+// Initialize the current projection.
+// Change the view for the current projection.
+    //server_debug_print("grInit: projection\n");
+    projection_initialize();
+// Changing the view for the current projection.
+    gr_depth_range(CurrentProjection,0,40);
+
+// == Camera ==========
+// Initialize the current camera.
+// Change some attributes for the current camera.
+// The projection is a field in the camera's structure.
+    //server_debug_print ("grInit: camera\n");
+    camera_initialize();
+    camera ( 
+        -40, -40, 0,     // position vector
+        -40,  40, 0,     // upview vector
+         10,  10, 10 );  // lookat vector
+
+    // ...
+
+    //server_debug_print ("grInit: done\n");
+    return 0;
 }
 
 //

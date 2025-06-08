@@ -91,6 +91,7 @@ extern int server_mode;  // DEMO ...
 #include <grprim0.h>
 #include <libgr.h>
 
+#include "libui/transf.h"
 #include "libui/grprim.h"
 #include "libui/camera.h"
 #include "libui/proj.h"

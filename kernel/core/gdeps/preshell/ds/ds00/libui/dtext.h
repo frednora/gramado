@@ -1,4 +1,5 @@
 // dtext.h
+// Draw text.
 // Created by Fred Nora.
 
 #ifndef __DTEXT_H

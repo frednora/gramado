@@ -1,4 +1,3 @@
-
 // proj.c
 // Projection support.
 // Created by Fred Nora.
