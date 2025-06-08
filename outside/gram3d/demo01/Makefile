@@ -115,6 +115,7 @@ myObjects += math.o
 
 myObjects += comp.o   
 myObjects += wm.o   
+myObjects += screen.o   
 myObjects += gws.o   
 myObjects += connect.o   
 
@@ -169,12 +170,10 @@ line.o rect.o window.o button.o bmp.o
 grprim.o camera.o world.o proj.o sprite.o surface.o \
 demos.o models.o flycube.o cat00.o polygon.o tri00.o lin00.o curve00.o    
 
-
 #extra
 	$(CC)  -c  xxxinput.c  $(user_ccflags) $(CINCLUDES) -o xxxinput.o
 	$(CC)  -c  font.c      $(user_ccflags) $(CINCLUDES) -o font.o
 	$(LD) -r -o archive_extra.o  xxxinput.o font.o 
-
 
 	$(CC)  -c demos/scan00.c   $(user_ccflags) $(CINCLUDES) -I include/  -o scan00.o
 
@@ -182,6 +181,7 @@ demos.o models.o flycube.o cat00.o polygon.o tri00.o lin00.o curve00.o
 	$(CC)  -c  ui/wm.c    $(user_ccflags) $(CINCLUDES) -I include/  -o wm.o
 	$(CC)  -c  ui/comp.c  $(user_ccflags) $(CINCLUDES) -o comp.o
 
+	$(CC)  -c  screen.c    $(user_ccflags) $(CINCLUDES) -o screen.o
 	$(CC)  -c  gws.c       $(user_ccflags) $(CINCLUDES) -o gws.o
 	$(CC)  -c  connect.c   $(user_ccflags) $(CINCLUDES) -o connect.o
 

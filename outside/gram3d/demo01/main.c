@@ -3719,7 +3719,7 @@ static int on_execute(void)
 
             // -------------------------
             // Clear canvas.
-            //demoClearWA(COLOR_BLACK);                 //clear surface
+            //demoClearWA(COLOR_BLACK);               //clear surface
             gramado_clear_surface(NULL,COLOR_BLACK);  //clear surface
 
             // Draw desktop?
@@ -3757,13 +3757,14 @@ static int on_execute(void)
                 yellowstatus0(buf_fps,FALSE);
             }
 
-            // Flush the backbuffer into the framebuffer.
-            gramado_flush_surface(NULL);
-
             //
             // #### PAINT END ####
             //
-        
+
+            // Flush the backbuffer into the framebuffer.
+            gramado_flush_surface(NULL);
+
+
             // Wait or not?
             if (end_jiffie > gBeginTick)
             {   

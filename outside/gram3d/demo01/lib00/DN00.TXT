@@ -1,0 +1,114 @@
+Design Notes, by Copilot.
+
+Here’s a **plain text design notes document** focused on the matrix and vector concepts 
+in `grprim.c` and `libgr3d.c`, with minimal code and clear, conceptual explanations. 
+This is written as if for a developer or student wanting to understand the 3D math design 
+of your Gramado OS graphics code.
+
+---
+
+# Gramado OS 3D Graphics: Matrix and Vector Design Notes
+
+## Introduction
+
+This document summarizes the main mathematical concepts behind the use of matrices and vectors in the Gramado OS 3D graphics libraries, as implemented in `grprim.c` and `libgr3d.c`. The goal is to explain, in simple terms, how and why matrix operations are used in 3D drawing and animation.
+
+---
+
+## Why Matrices and Vectors?
+
+In 3D graphics, everything you see on the screen—points, lines, triangles, cubes—are represented by vectors (positions in 3D space). To move, rotate, scale, or project them onto a 2D screen, we use matrices. Matrices let us combine several transformations into one, and apply them efficiently to any number of vectors.
+
+---
+
+## Key Concepts
+
+### 1. Vectors
+
+- A vector in 3D is just a list of three numbers: (x, y, z).
+- Vectors represent positions, directions, and sometimes colors.
+
+### 2. Matrices
+
+- The main tool for transforming vectors is the 4x4 matrix.
+- A 4x4 matrix allows us to perform rotation, scaling, translation (movement), and perspective projection all in one operation.
+- The extra row and column (the 4th) are used for what's called "homogeneous coordinates," which make translation and perspective possible.
+
+### 3. Types of Transformations
+
+**Translation:** Moves an object in 3D space.
+
+**Scaling:** Makes an object bigger or smaller.
+
+**Rotation:** Rotates an object around an axis (X, Y, or Z).
+
+**Projection:** Converts 3D coordinates into 2D screen coordinates, simulating the way a camera or human eye works.
+
+**Affine Transformation:** Any combination of the above, which can be combined into a single matrix.
+
+### 4. The Transformation Pipeline
+
+When drawing a 3D object, several transformations are applied in sequence:
+
+1. **Model Transformation:** Places and orients the object in the world.
+2. **View Transformation:** Moves the entire world so that the camera is at the origin, looking in a particular direction.
+3. **Projection Transformation:** Projects the 3D world onto the 2D screen, simulating perspective.
+4. **Viewport Transformation:** Maps the 2D projection to the actual pixels on the screen.
+
+All of these can be combined into a single 4x4 matrix, which is then applied to every vertex of the object.
+
+---
+
+## How Matrices Are Used in Gramado OS
+
+### Matrix-Vector Multiplication
+
+- The most common operation is multiplying a vector by a matrix.
+- This applies the transformation encoded in the matrix to the vector.
+- If the matrix includes translation, rotation, and projection, all those are applied at once.
+
+### Building Matrices
+
+- Rotation matrices are created specifically for the X, Y, or Z axis, depending on which way you want to rotate.
+- Scaling and translation matrices are also built as needed.
+- Often, these matrices are multiplied together to make a single "composite" matrix.
+
+### Cross Product and Dot Product
+
+- The **cross product** of two vectors produces a third vector that is perpendicular to both. This is used for things like finding the "normal" to a triangle for lighting.
+- The **dot product** tells you how much two vectors point in the same direction. It is used for lighting, and to check if something is facing the camera.
+
+### Perspective Division
+
+- After applying the projection matrix, the coordinates are divided by a value called "w" (from the fourth component of the homogeneous vector). This step is what creates the illusion of perspective—objects farther away appear smaller.
+
+---
+
+## How This Is Encapsulated in the Code
+
+- `libgr3d.c` provides the basic math operations: multiplying vectors by matrices, and computing dot and cross products.
+- `grprim.c` uses these operations to transform the vertices of objects (like triangles and cubes) before drawing them.
+- For example, to rotate a triangle, `grprim.c` builds a rotation matrix and then transforms each of the triangle's vertices using that matrix.
+
+---
+
+## Summary
+
+- **Vectors** represent points and directions in 3D.
+- **Matrices** represent transformations (move, rotate, scale, project).
+- By multiplying a vector by a matrix, we transform it.
+- Sequences of transformations are combined by multiplying matrices together.
+- The pipeline typically goes: Model → View → Projection → Viewport.
+- All 3D rendering in Gramado OS uses these principles, whether drawing simple lines or complex cubes.
+
+---
+
+## Further Reading
+
+- Homogeneous coordinates in computer graphics
+- Transformation matrices for 3D graphics
+- The graphics pipeline (model, view, projection)
+
+---
+
+End of notes.

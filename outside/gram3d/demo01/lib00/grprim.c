@@ -2,6 +2,31 @@
 // Primitives.
 // 2020 - Created by Fred Nora.
 
+// 3D transformations (rotation, scaling, translation) are handled using 4x4 matrices.
+// The actual math is performed in libgr3d.c, but we construct and use these matrices here
+// to transform objects in 3D space. Each transformation (like rotation or translation) 
+// has its own matrix, and they can be combined by multiplying matrices together.
+
+// To rotate a triangle, we create a rotation matrix (e.g., matRotX for X axis)
+// and then multiply each vertex (a 3D vector) by this matrix using gr_MultiplyMatrixVector.
+// The result is that the triangle is rotated in 3D space.
+
+// 3D rendering uses several matrix types:
+// - Model matrix: Transforms object from local to world space.
+// - View matrix:   Moves world so the camera is at the origin.
+// - Projection matrix: Projects 3D world onto 2D screen (perspective/orthographic).
+// These transformations are combined by multiplying the matrices in order, then applying
+// the result to each vertex.
+
+/*
+ * Matrix math in this file:
+ * - 3D transformations (rotation, scaling, translation) use 4x4 matrices.
+ * - Matrices are constructed for each transform and applied to object vertices.
+ * - The math is handled in libgr3d.c, and used here for manipulating 3D objects.
+ * - Typical transform order: Model (object), then View (camera), then Projection (screen).
+ * - Use gr_MultiplyMatrixVector to apply a matrix to a vector.
+ */
+
 #include "../gram3d.h"
 
 // The projection structure.
@@ -109,6 +134,9 @@ struct gr_projectionF_d  CurrentProjectionF;
 // near, far ...
 // from, to
 
+// These formulas represent how 2D points are transformed 
+// using matrix multiplication. In 3D, similar logic applies 
+// but with 4x4 matrices for homogeneous coordinates.
 
 // Device hotspot.
 static unsigned long HotSpotX=0;
@@ -1896,6 +1924,11 @@ plotTriangleF(
         // 0.5f
         scale_factor = (float) CurrentProjectionF.scale_factor;
 
+        // #option:
+        // Modifying it dynamically based on distance
+        // scale_factor = 1.0f / (1.0f + t->p[0].z * 0.1f);
+        // scale_factor = 1.0f / tanf(VerticalFOV / 2);
+
         // #todo: hotspot
     }
 
@@ -1977,6 +2010,24 @@ plotTriangleF(
 
     // #test
     //float factor = (float) scale_factor;
+
+//
+// The perspective division.
+//
+
+// Scaling 𝑧 Before Division
+// This adjusts how objects shrink with distance.
+// Dividing 𝑥 and 𝑦 by 𝑧 for Perspective
+// Why This Is Crucial
+// Without dividing X and Y by Z, the 3D scene would look orthographic (no depth scaling).
+// Perspective projection ensures objects shrink proportionally to their distance
+
+// Placing perspective division at the final stage of the pipeline ensures that 
+// all previous transformations—rotation, translation, and scaling—are applied 
+// before normalizing the coordinates. This approach has several key advantages:
+// + Preserves Transformation Integrity
+// + Keeps Objects in Homogeneous Space Until Needed
+// + Prevents Artifacts in Multi-Step Transformations
 
     if (t->p[0].z != 0.0f)
     {
@@ -3034,6 +3085,14 @@ matrix_multiply_2x3 (
 
 //--------------------------------------------------
 // Rotate in x
+// Rotates a triangle around the X axis.
+// angle: rotation amount in radians
+// fElapsedTime: time step for smooth animation
+// in_tri: original triangle
+// out_tri: rotated triangle (result)
+//
+// Internally, constructs a rotation matrix (matRotX), then multiplies
+// each vertex of the triangle by this matrix (using gr_MultiplyMatrixVector).
 int 
 gr_rotate_x(
     struct gr_triangleF3D_d *in_tri,
@@ -3046,36 +3105,44 @@ gr_rotate_x(
     //angle += 1.0f * fElapsedTime;
     angle = (float) angle * (float) fElapsedTime;
 
-// gerando a matriz de tranformação.
-// Rotation X
+// -- Rotation X --------------
+// This sets up a 4x4 rotation matrix for rotating around the X axis.
+// The extra row and column allow for translation and perspective transforms 
+// if needed (homogeneous coordinates).
+// Gerando a matriz de tranformação.
+
+    // Set up the X rotation matrix (homogeneous 4x4)
     matRotX.m[0][0] = (float) 1.0f;
-    matRotX.m[1][1] =  cosf(angle * 0.5f); //why 0.5f?
-    matRotX.m[1][2] =  -sinf(angle * 0.5f);
-    matRotX.m[2][1] = sinf(angle * 0.5f);
+    matRotX.m[1][1] =  cosf(angle * 0.5f);  //why 0.5f?
+    matRotX.m[1][2] = -sinf(angle * 0.5f);
+    matRotX.m[2][1] =  sinf(angle * 0.5f);
     matRotX.m[2][2] =  cosf(angle * 0.5f);
     matRotX.m[3][3] = (float) 1.0f;
 
 // ---------------------------------------------------
 
-    if ( (void*) in_tri == NULL )
-        return -1;
-    if ( (void*) out_tri == NULL )
-        return -1;
+    if ((void*) in_tri == NULL)
+        return (int) -1;
+    if ((void*) out_tri == NULL)
+        return (int) -1;
 
 //-----------------------------    
 // Rotate in X-Axis
+// Multiply each vertex of the triangle by the rotation matrix.
+// This rotates the triangle in 3D space.
+
     gr_MultiplyMatrixVector(
         (struct gr_vecF3D_d *) &in_tri->p[0], 
         (struct gr_vecF3D_d *) &out_tri->p[0], 
-        &matRotX);
+        &matRotX );
     gr_MultiplyMatrixVector(
         (struct gr_vecF3D_d *) &in_tri->p[1], 
         (struct gr_vecF3D_d *) &out_tri->p[1], 
-        &matRotX);
+        &matRotX );
     gr_MultiplyMatrixVector(
         (struct gr_vecF3D_d *) &in_tri->p[2], 
         (struct gr_vecF3D_d *) &out_tri->p[2], 
-        &matRotX);
+        &matRotX );
 
     return 0;
 }

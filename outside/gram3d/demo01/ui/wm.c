@@ -4415,85 +4415,6 @@ is_within (
     return FALSE;
 }
 
-
-// validate
-void validate_window (struct gws_window_d *window)
-{
-    if ( (void*) window != NULL )
-    {
-        if ( window->used == TRUE && window->magic == 1234 )
-        {
-            window->dirty = FALSE;
-        }
-    }
-}
-
-
-void invalidate_window_by_id( int wid )
-{
-    struct gws_window_d *w;
-
-// #todo: 
-// Chamar o metodo de validação de janela.
-
-    if(wid<0)
-        return;
-    if(wid>=WINDOW_COUNT_MAX)
-        return;
-    w = (struct gws_window_d *)windowList[wid];
-    
-    if((void*)w==NULL){
-        return;
-    }
-    if (w->used!=TRUE) { return; }
-    if (w->magic!=1234){ return; }
-
-    invalidate_window(w);    
-}
-
-
-// Invalidate
-void invalidate_window (struct gws_window_d *window)
-{
-    if ( (void*) window != NULL )
-    {
-        if ( window->used == TRUE && window->magic == 1234 )
-        {
-            window->dirty = TRUE;
-        }
-    }
-}
-
-
-void invalidate_root_window(void)
-{
-    invalidate_window ( (struct gws_window_d *) __root_window );
-}
-
-
-void invalidate_taskbar_window(void)
-{
-    invalidate_window ( (struct gws_window_d *) taskbar_window );
-}
-
-
-void __begin_paint(struct gws_window_d *window)
-{
-    if( (void*) window == NULL )
-        return;
-
-    validate_window(window);
-}
-
-
-void __end_paint(struct gws_window_d *window)
-{
-    if( (void*) window == NULL )
-        return;
-
-    invalidate_window(window);
-}
-
 /*
 void destroy_window (struct gws_window_d *window);
 void destroy_window (struct gws_window_d *window)
@@ -4511,10 +4432,6 @@ void destroy_window (struct gws_window_d *window)
     }
 }
 */
-
-
-
-
 
 //
 //===================================================================

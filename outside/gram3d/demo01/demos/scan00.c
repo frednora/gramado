@@ -116,39 +116,52 @@ float scan00_custom_read_float(const char **strPtr)
     return sign * result;
 }
 
-
-int testing_model_scanner(void) 
+// Modified function: it now returns a pointer into the string after the newline.
+const char * scan00_scanline(const char *line_ptr, struct gr_vecF3D_d *return_v)
 {
-    // Example vertex line from a 3D model (e.g., Wavefront OBJ format)
+    // 'ptr' will traverse the string.
+    const char *ptr = line_ptr;
 
-    // ok, this is working.
-    //const char *line = "v 1.234 2.345 3.456";
-    const char *line = "v 0.1 0.2 0.3";
+    // Skip any whitespace before the identifier.
+    while (*ptr && isspace((unsigned char)*ptr))
+        ptr++;
 
-    //const char *line = "v 1.234 -5.678e-2 9.0123";
-    //const char *line = "v .123, v 123., v -0.0001e5";
+    // If we reached the end already, return NULL.
+    if (*ptr == '\0')
+        return NULL;
 
-
-    // Pointer to traverse the line.
-    const char *ptr = line;
-    
-    // Skip the initial identifier ("v") and subsequent whitespace.
+    // Skip the initial identifier ("v") if it's present.
     if (*ptr == 'v') {
         ptr++;
     }
+
+    // Skip any whitespace after the identifier.
     while (*ptr && isspace((unsigned char)*ptr))
         ptr++;
     
-    // Parse three floats for the vertex coordinates.
-    float x = (float) scan00_custom_read_float(&ptr);
-    float y = (float) scan00_custom_read_float(&ptr);
-    float z = (float) scan00_custom_read_float(&ptr);
+    // Parse three floats and store them in the structure.
+    return_v->x = scan00_custom_read_float(&ptr);
+    return_v->y = scan00_custom_read_float(&ptr);
+    return_v->z = scan00_custom_read_float(&ptr);
 
-    // Output the parsed coordinates.
-    printf("Parsed Vertex Coordinates:\n");
-    printf("x = %f\n", (double)x);
-    printf("y = %f\n", (double)y);
-    printf("z = %f\n", (double)z);
-    
-    return 0;
+    // Debug output: print the parsed coordinates.
+    //printf("Parsed Vertex Coordinates:\n");
+    //printf("x = %f\n", (double)return_v->x);
+    //printf("y = %f\n", (double)return_v->y);
+    //printf("z = %f\n", (double)return_v->z);
+
+    // Advance 'ptr' to the end of the current line.
+    while (*ptr && *ptr != '\n')
+        ptr++;
+
+    // If a newline is found, move one character beyond it.
+    if (*ptr == '\n')
+        ptr++;
+
+    // If we've reached the end of the string, return NULL.
+    if (*ptr == '\0')
+        return NULL;
+
+    // Otherwise, return the pointer to the next line's start.
+    return ptr;
 }

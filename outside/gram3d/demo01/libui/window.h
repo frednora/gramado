@@ -1164,15 +1164,6 @@ is_within (
 
 //refaz zorder.
 void reset_zorder(void);
-void validate_window (struct gws_window_d *window);
-
-void invalidate_window_by_id( int wid );
-void invalidate_window (struct gws_window_d *window);
-
-void invalidate_root_window(void);
-void invalidate_taskbar_window(void);
-void __begin_paint(struct gws_window_d *window);
-void __end_paint(struct gws_window_d *window);
 
 // #todo
 // Precisamos usar o esquema de cores.
@@ -1473,6 +1464,20 @@ update_window (
 
 void gwsWindowLock (struct gws_window_d *window);
 void gwsWindowUnlock (struct gws_window_d *window);
+
+
+void invalidate_window (struct gws_window_d *window);
+void validate_window (struct gws_window_d *window);
+
+void invalidate_window_by_id(int wid);
+
+void invalidate_root_window(void);
+void invalidate_taskbar_window(void);
+
+void __begin_paint(struct gws_window_d *window);
+void __end_paint(struct gws_window_d *window);
+
+
 int gwsDefineInitialRootWindow ( struct gws_window_d *window );
 int gwssrv_init_windows(void);
 

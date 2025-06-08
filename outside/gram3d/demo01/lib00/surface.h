@@ -11,5 +11,9 @@ demoClearSurface(
 void demoFlushSurface(struct gws_window_d *clipping_window);
 void demoClearWA(unsigned int color);
 
+
+void gramado_clear_surface(struct gws_window_d *clipping_window, unsigned int color);
+void gramado_flush_surface(struct gws_window_d *clipping_window);
+
 #endif    
 

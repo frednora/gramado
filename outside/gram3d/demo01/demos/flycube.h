@@ -8,12 +8,17 @@
 // Input support
 void FlyingCubeMove(int number, int direction, float value);
 
-// Setup the demos
-void demoFlyingCubeSetup(void);
-
 // Draw a single frame.
 // This is called by the gameloop.
 void demoFlyingCube(int draw_terrain,unsigned long sec);
+
+//
+// #
+// INITIALIZATION
+//
+
+// Setup the demos
+void demoFlyingCubeSetup(void);
 
 #endif    
 
