@@ -1,8 +1,8 @@
 // char.h
 // Created by Fred Nora.
 
-#ifndef __CHAR_H
-#define __CHAR_H  1
+#ifndef __LIBUI_CHAR_H
+#define __LIBUI_CHAR_H  1
 
 
 struct char_initialization_d

@@ -1,7 +1,9 @@
-
 // camera.h
-#ifndef __CAMERA_H
-#define __CAMERA_H    1
+// Created by Fred Nora.
+
+#ifndef __LIBUI_CAMERA_H
+#define __LIBUI_CAMERA_H    1
+
 
 // Camera
 struct gr_camera_d

@@ -2,8 +2,8 @@
 // Draw text.
 // Created by Fred Nora.
 
-#ifndef __DTEXT_H
-#define __DTEXT_H    1
+#ifndef __LIBUI_DTEXT_H
+#define __LIBUI_DTEXT_H    1
 
 //
 // Text/String support.

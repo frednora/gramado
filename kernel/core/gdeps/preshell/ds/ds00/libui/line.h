@@ -1,8 +1,9 @@
-
 // line.h
+// Line support
+// Created by Fred Nora.
 
-#ifndef GWS_LINE_H
-#define GWS_LINE_H    1
+#ifndef __LIBUI_LINE_H
+#define __LIBUI_LINE_H    1
 
 
 void plotLineRect4 ( int x1, int y1, int x2, int y2, int color );
@@ -23,11 +24,8 @@ A_naive_line_drawing_algorithm(
 void test_draw_line(void);
 void test_draw_line2(void);
 
-
-/* 
- * lineBackbufferDrawHorizontalLine:
- *     Draw a horizontal line on backbuffer. 
- */
+// grBackbufferDrawHorizontalLine:
+// Draw a horizontal line on backbuffer. 
 
 void 
 grBackbufferDrawHorizontalLine ( 
@@ -52,12 +50,10 @@ frontbuffer_draw_horizontal_line (
     unsigned int color,
     unsigned long rop_flags );
 
-
 #endif    
 
-
 //
-// End.
+// End
 //
 
 

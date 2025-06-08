@@ -2,8 +2,8 @@
 // Header for primitives.
 // Created by Fred Nora.
 
-#ifndef __GRPRIM_H
-#define __GRPRIM_H   1
+#ifndef __LIBUI_GRPRIM_H
+#define __LIBUI_GRPRIM_H   1
 
 // The Perspective Calculation
 // we can calculate the location of a 3D vertex in a 

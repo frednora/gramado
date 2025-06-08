@@ -1,8 +1,8 @@
 // transf.h
 // Transformation support.
 
-#ifndef __TRANSF_H
-#define __TRANSF_H    1
+#ifndef __LIBUI_TRANSF_H
+#define __LIBUI_TRANSF_H    1
 
 // =============================================================
 // #projection:

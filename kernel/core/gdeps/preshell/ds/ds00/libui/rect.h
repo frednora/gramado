@@ -1,8 +1,8 @@
 // rect.h
 // Created by Fred Nora.
 
-#ifndef __RECT_H
-#define __RECT_H    1
+#ifndef __LIBUI_RECT_H
+#define __LIBUI_RECT_H    1
 
 
 // Structure for a rectangle.

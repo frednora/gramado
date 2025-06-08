@@ -2,8 +2,8 @@
 // Projection
 // Created by Fred Nora.
 
-#ifndef __PROJ_H
-#define __PROJ_H    1
+#ifndef __LIBUI_PROJ_H
+#define __LIBUI_PROJ_H    1
 
 // ??
 // graphical projection perspective

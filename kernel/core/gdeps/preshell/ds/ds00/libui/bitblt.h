@@ -1,8 +1,9 @@
 // bitblt.h
 // Bit-block transfer.
+// Created by Fred Nora.
 
-#ifndef __RTL_BITBLT_H
-#define __RTL_BITBLT_H    1
+#ifndef __LIBUI_BITBLT_H
+#define __LIBUI_BITBLT_H    1
 
 /**
  * BITBLT_OP_ERASE
