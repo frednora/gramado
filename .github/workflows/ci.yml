@@ -1,0 +1,31 @@
+name: Build and Test Gramado OS (64-bit)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential gcc make nasm python3 qemu-system-x86
+
+      - name: Build Gramado OS
+        run: make all
+
+      - name: Run QEMU 64-bit test (headless)
+        run: |
+          chmod +x ./run
+          qemu-system-x86_64 -m 512M -drive file=GRAMHV.VHD,format=raw -nographic &
+          sleep 10
+          pkill qemu-system-x86_64 || true
+        
