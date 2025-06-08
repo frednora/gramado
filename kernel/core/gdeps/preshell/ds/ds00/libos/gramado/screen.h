@@ -52,8 +52,7 @@ struct gws_screen_d
 // The device screen.
 // The refresh is called by refresh_device_screen();
 // It is called explicit by the app.
-struct gws_screen_d *DeviceScreen;
-
+extern struct gws_screen_d *DeviceScreen;
 
 
 //

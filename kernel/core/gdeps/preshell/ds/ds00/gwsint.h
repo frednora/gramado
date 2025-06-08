@@ -218,15 +218,10 @@ char *gwssrv_get_version(void);
 
 // --------------------------
 
-void invalidate(void);
-void validate(void);
-int isdirty(void);
 
-void invalidate_background(void);
-void validate_background(void);
-int is_background_dirty(void);
-
-void gwssrv_set_keyboard_focus(int window);
+//
+// Thread
+//
 
 void xxxThread (void);
 void ____test_threads (void);
@@ -238,13 +233,17 @@ void *gwssrv_create_thread (
 
 void gwssrv_start_thread (void *thread);
 
-// Drain input
+//
+// Input
+//
+
+void gwssrv_set_keyboard_focus(int window);
 int service_drain_input (void);
 
 unsigned long gws_get_device_width(void);
 unsigned long gws_get_device_height(void);
 
-void gws_show_backbuffer(void);
+
 void gwssrv_broadcast_close(void);
 
 void ServerShutdown(int server_fd);
