@@ -1,8 +1,9 @@
 // painter.h
+// Created by Fred Nora
 
+#ifndef __UI_PAINTER_H
+#define __UI_PAINTER_H    1
 
-#ifndef __PAINTER_H
-#define __PAINTER_H    1
 
 int 
 painterFillWindowRectangle( 

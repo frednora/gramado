@@ -1,8 +1,8 @@
-
 // menu.h
+// Created by Fred Nora.
 
-#ifndef GWS_MENU_H
-#define GWS_MENU_H    1
+#ifndef __UI_MENU_H
+#define __UI_MENU_H    1
 
 
 #define MENU_EVENT_PRESSED      1000

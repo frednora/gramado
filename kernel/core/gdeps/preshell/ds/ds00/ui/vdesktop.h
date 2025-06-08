@@ -1,4 +1,3 @@
-
 // vdesktop.h
 // Virtual desktops.
 // ps:
@@ -6,10 +5,11 @@
 // found inside the kernel. 
 // In the kernel will be used for security and
 // distribuition of resources.
+// Created by Fred Nora.
 
 
-#ifndef __VDESKTOP_H
-#define __VDESKTOP_H    1
+#ifndef __UI_VDESKTOP_H
+#define __UI_VDESKTOP_H    1
 
 
 struct gws_vdesktop_d

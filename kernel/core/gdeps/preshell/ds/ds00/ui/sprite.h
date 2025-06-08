@@ -2,8 +2,8 @@
 // Sprite support.
 // Created by Fred Nora.
 
-#ifndef  ____SPRITE_H
-#define  ____SPRITE_H    1
+#ifndef __UI_SPRITE_H
+#define __UI_SPRITE_H    1
 
 // Types
 // #todo: maybe create a 'enum'

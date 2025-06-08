@@ -1,8 +1,8 @@
 // window.h
 // 2020 - Created by Fred Nora.
 
-#ifndef ____WINDOW_H
-#define ____WINDOW_H    1
+#ifndef __UI_WINDOW_H
+#define __UI_WINDOW_H    1
 
 #include "event.h"
 

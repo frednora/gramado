@@ -1,9 +1,9 @@
-
 // wt.h
 // Window Types
+// Created by Fred Nora.
 
-#ifndef ____WT_H
-#define ____WT_H    1
+#ifndef __UI_WT_H
+#define __UI_WT_H    1
 
 #define WT_NULL          0 
 #define WT_SIMPLE        1

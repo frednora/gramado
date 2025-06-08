@@ -1,8 +1,10 @@
 // gui.h
 // Main UI elements of the display server.
+// Created by Fred Nora.
 
-#ifndef ____GUI_H
-#define ____GUI_H    1
+#ifndef __UI_GUI_H
+#define __UI_GUI_H    1
+
 
 struct gui_d 
 {

@@ -1,12 +1,11 @@
-
 // swamp.h
 // Swamp area.
 // #todo
 // Change the name of this file.
+// Created by Fred Nora
 
-
-#ifndef __AREAS_SWAMP_H
-#define __AREAS_SWAMP_H    1
+#ifndef __UI_SWAMP_H
+#define __UI_SWAMP_H    1
 
 //struct taskbar_d  TaskBar;
 //struct start_menu_d StartMenu;
@@ -23,8 +22,6 @@
 #define TB_BUTTON_HEIGHT  (TB_HEIGHT - (TB_BUTTON_PADDING*2))
 #define TB_BUTTON_WIDTH  TB_BUTTON_HEIGHT
 // #define TB_BUTTONS_MAX  8
-
-
 
 #define SWAMP_STATE_GRACE  2000
 #define SWAMP_STATE_BRIO   1000

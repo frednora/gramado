@@ -1,9 +1,9 @@
-
 // colors.h
 // Server-side system colors.
+// Created by Fred Nora.
 
-#ifndef ____COLORS_H
-#define ____COLORS_H    1
+#ifndef __UI_COLORS_H
+#define __UI_COLORS_H    1
 
 
 // #test

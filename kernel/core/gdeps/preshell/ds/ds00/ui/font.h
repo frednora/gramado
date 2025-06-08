@@ -2,8 +2,8 @@
 // Headers for font support.
 // Created by Fred Nora.
 
-#ifndef GWS_FONT_H
-#define GWS_FONT_H    1
+#ifndef __UI_FONT_H
+#define __UI_FONT_H    1
 
 
 #define DEFAULT_FONT_WIDTH  8

@@ -2,8 +2,8 @@
 // Window manager support.
 // Created by Fred Nora.
 
-#ifndef ____WM_H
-#define ____WM_H    1
+#ifndef __UI_WM_H
+#define __UI_WM_H    1
 
 struct gws_container_d
 {

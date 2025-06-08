@@ -2,8 +2,8 @@
 // Event manager.
 // Created by Fred Nora.
 
-#ifndef EVENT_H
-#define EVENT_H    1
+#ifndef __UI_EVENT_H
+#define __UI_EVENT_H    1
 
 // #todo: 
 // no gramado as mensagens do systema

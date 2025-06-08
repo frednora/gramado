@@ -1,8 +1,8 @@
 // gws.h
 // Created by Fred Nora.
 
-#ifndef __GWS_H
-#define __GWS_H    1
+#ifndef __UI_GWS_H
+#define __UI_GWS_H    1
 
 
 void invalidate(void);

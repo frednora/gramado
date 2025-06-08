@@ -2,8 +2,8 @@
 // BMP file support.
 // Created by Fred Nora.
 
-#ifndef __GRAMLAND_BMP_H
-#define __GRAMLAND_BMP_H    1
+#ifndef __UI_BMP_H
+#define __UI_BMP_H    1
 
 
 //#define BMP_DEFAULT_ZOOM_FACTOR  8

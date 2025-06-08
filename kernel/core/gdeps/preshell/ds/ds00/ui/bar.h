@@ -1,9 +1,9 @@
-
 // bar.h
 // Far Far Away area.
 // Draw and update the notification bar. (yellow bar) (status bar).
 // #todo
 // Change the name of this file.
+// Created by Fred Nora.
 
 #ifndef __UI_BAR_H
 #define __UI_BAR_H    1
