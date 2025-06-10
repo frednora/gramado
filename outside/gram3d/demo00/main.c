@@ -3669,9 +3669,10 @@ static int on_execute(void)
     {
         // ==============================================
         // >>> Setup the current demo
-        //demoFlyingCubeSetup();
+        demoFlyingCubeSetup();
         //cat00SetupDemo();
-        tri00SetupDemo();
+        //tri00SetupDemo();
+        //curve00SetupDemo();
         // ...
     }
 
@@ -3737,9 +3738,10 @@ static int on_execute(void)
             // ===================================
             // Draw the scene for the current demo
             // IN: draw terrain, second counter
-            //demoFlyingCube(FALSE,sec);
+            demoFlyingCube(FALSE,sec);
             //demoCat();
-            demoTriangle();
+            //demoTriangle();
+            //demoCurve();
             // ...
 
             // At this moment we already painted the whole scene

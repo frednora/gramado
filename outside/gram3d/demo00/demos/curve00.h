@@ -6,6 +6,10 @@
 // curve+string
 void demoCurve(void);
 
+// Setup.
+// Called once.
+void curve00SetupDemo(void);
+
 
 #endif   
 
