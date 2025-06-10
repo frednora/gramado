@@ -73,6 +73,7 @@ char *demosReadFileIntoBuffer(const char *filename)
     return (char *) buffer;
 }
 
+// Worker called by the demos.
 struct gws_window_d *__create_demo_window (
     unsigned long left,
     unsigned long top,
@@ -81,12 +82,11 @@ struct gws_window_d *__create_demo_window (
 {
     struct gws_window_d *w;
 
-    if ( (void*) __root_window == NULL ){
+    if ((void*) __root_window == NULL){
         return NULL;
     }
 
 // Create window
-
     w = 
         (struct gws_window_d *) CreateWindow ( 
                                     WT_SIMPLE, 
@@ -95,7 +95,8 @@ struct gws_window_d *__create_demo_window (
                                     1, //view
                                     "DemoWin",  
                                     left, top, width, height,   
-                                    __root_window, 0, 
+                                    __root_window, 
+                                    0, 
                                     COLOR_BLACK, 
                                     COLOR_BLACK );
 
