@@ -5,7 +5,7 @@
 
 struct cat_demo_info_d  CatDemoInfo;
 
-struct gws_window_d *dw;
+struct gws_window_d *dw_cat;
 
 
 static void __drawCatScene(void);
@@ -19,9 +19,9 @@ static void __drawCatScene(void);
 static void __drawCatScene(void)
 {
 
-    if ((void*) dw == NULL)
+    if ((void*) dw_cat == NULL)
         return;
-    if (dw->magic != 1234)
+    if (dw_cat->magic != 1234)
         return;
 
 // ---------------------------------
@@ -37,7 +37,7 @@ static void __drawCatScene(void)
         //for (i=0; i<scale_max; i++)
         //{
             //validate_background();                  //begin paint
-            demoClearSurface(dw,GRCOLOR_LIGHTCYAN);   // Clear surface
+            demoClearSurface(dw_cat,GRCOLOR_LIGHTCYAN);   // Clear surface
             
 
             // IN: eye scale, x,y,z
@@ -45,7 +45,7 @@ static void __drawCatScene(void)
                 1, 
                 0, 0, CatDemoInfo.z_counter );
 
-            demoFlushSurface(dw);
+            demoFlushSurface(dw_cat);
 
             //invalidate_background();               // end paint
             //gr_dc_refresh_screen(gr_dc);
@@ -92,15 +92,15 @@ void cat00SetupDemo(void)
     unsigned long w_left = ((w - w_width) >> 1);
     unsigned long w_top =  ((h - w_height) >> 1);
 
-    dw = NULL;
-    dw = 
+    dw_cat = NULL;
+    dw_cat = 
         (struct gws_window_d *) __create_demo_window(
                                     w_left, w_top, w_width, w_height );
 
-    if ((void*) dw != NULL)
+    if ((void*) dw_cat != NULL)
     {
-       if (dw->magic == 1234){
-           __demo_window = dw;
+       if (dw_cat->magic == 1234){
+           __demo_window = dw_cat;
        }
     }
 //---------------------
