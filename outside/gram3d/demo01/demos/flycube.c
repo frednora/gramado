@@ -927,6 +927,8 @@ void demoFlyingCube(int draw_terrain,unsigned long sec)
 //
 void demoFlyingCubeSetup(void)
 {
+// This is called once.
+
 // first cube
     struct cube_model_d *cube;
 // Cube1
@@ -1003,8 +1005,8 @@ void demoFlyingCubeSetup(void)
             "v 0.3 -0.2 -0.3\n";  // Vertex 8: bottom back right (expanded base)
         */
 
-        //const char *cubeData = (char *) demosReadFileIntoBuffer("cube.txt");
-        const char *cubeData = (char *) demosReadFileIntoBuffer("cube02.txt");
+        const char *cubeData = (char *) demosReadFileIntoBuffer("cube.txt");
+        //const char *cubeData = (char *) demosReadFileIntoBuffer("cube02.txt");
         // ...
         if ((void*)cubeData == NULL){
             printf("on demosReadFileIntoBuffer()\n");

@@ -3665,8 +3665,15 @@ static int on_execute(void)
     //while(1){}
 
     // see: demos.c
-    if (ShowDemo){
+    if (ShowDemo)
+    {
+        // ==============================================
+        // >>> Setup the current demo
         demoFlyingCubeSetup();
+        //cat00SetupDemo();
+        //tri00SetupDemo();
+        //curve00SetupDemo();
+        // ...
     }
 
     while (running == TRUE){
@@ -3728,8 +3735,14 @@ static int on_execute(void)
                 wm_update_desktop(TRUE,FALSE);
             }
 
+            // ===================================
+            // Draw the scene for the current demo
             // IN: draw terrain, second counter
             demoFlyingCube(FALSE,sec);
+            //demoCat();
+            //demoTriangle();
+            //demoCurve();
+            // ...
 
             // At this moment we already painted the whole scene
             // for your demo. Let's print the bar on top of it.

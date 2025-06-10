@@ -5,6 +5,10 @@
 
 void demoTriangle(void);
 
+// Setup demo.
+// Called once.
+void tri00SetupDemo(void);
+
 
 #endif   
 
