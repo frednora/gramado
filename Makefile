@@ -72,6 +72,10 @@ PYTHON  = python
 PYTHON2 = python2
 PYTHON3 = python3
 
+
+# todo
+# MYMAKE_FLAGS = -j4
+
 # --------------------------------------
 # == Start ====
 # build: User command.
@@ -93,28 +97,6 @@ clean
 	chmod 755 ./runt1
 	chmod 755 ./runt2
 	@echo "Done?"
-
-# --------------------------------------
-# build: Developer comand 1.
-# install
-# Build the images and put them all into $(BASE)/ folder.
-PHONY := install
-install: do_install
-do_install: \
-build-gramado-os  
-
-
-# --------------------------------------
-# build: Developer comand 2.
-# image
-# Copy all the files from $(BASE)/ to the VHD.
-PHONY := image
-image: do_image
-do_image: \
-$(DISTROS)/gramvd    \
-vhd-mount          \
-vhd-copy-files     \
-vhd-unmount        \
 
 # --------------------------------------
 #::0
@@ -327,7 +309,8 @@ $(DISTROS)/gramvd:
 # --------------------------------------
 #::3
 # ~ Step 3: vhd-mount - Mounting the VHD.
-vhd-mount:
+# mounts the disk, depends on the directory existing
+vhd-mount: $(DISTROS)/gramvd
 	@echo "=========================="
 	@echo "Build: Mounting the VHD ..."
 	@-sudo umount $(DISTROS)/gramvd
@@ -337,7 +320,8 @@ vhd-mount:
 #::4
 # ~ Step 4 vhd-copy-files - Copying files into the mounted VHD.
 # Copying the $(BASE)/ folder into the mounted VHD.
-vhd-copy-files:
+# copies files, depends on the disk being mounted
+vhd-copy-files: vhd-mount
 	@echo "========================="
 	@echo "Build: Copying files into the mounted VHD ..."
 	# Copy $(BASE)/
@@ -347,7 +331,8 @@ vhd-copy-files:
 # --------------------------------------
 #:::5
 # ~ Step 5 vhd-unmount  - Unmounting the VHD.
-vhd-unmount:
+ # unmounts, depends on files being copied
+vhd-unmount: vhd-copy-files
 	@echo "======================"
 	@echo "Build: Unmounting the VHD ..."
 	@sudo umount $(DISTROS)/gramvd
@@ -365,6 +350,39 @@ PHONY := runnokvm
 runnokvm: do_runnokvm
 do_runnokvm:
 	sh ./runnokvm
+
+
+test-vhd-mount: $(DISTROS)/gramvd
+	@echo "=========================="
+	@echo "Build: Mounting the VHD ..."
+	@-sudo umount $(DISTROS)/gramvd
+	@sudo mount -t vfat -o loop,offset=32256 GRAMHV.VHD  $(DISTROS)/gramvd/
+
+test-vhd-unmount:
+	@echo "======================"
+	@echo "Build: Unmounting the VHD ..."
+	@sudo umount $(DISTROS)/gramvd
+
+# --------------------------------------
+# build: Developer comand 1.
+# install
+# Build the images and put them all into $(BASE)/ folder.
+PHONY := install
+install: do_install
+do_install: \
+build-gramado-os  
+
+# --------------------------------------
+# build: Developer comand 2.
+# image
+# Copy all the files from $(BASE)/ to the VHD.
+PHONY := image
+image: do_image
+do_image: \
+$(DISTROS)/gramvd    \
+vhd-mount          \
+vhd-copy-files     \
+vhd-unmount        \
 
 # --------------------------------------
 # Basic clean.

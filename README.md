@@ -198,6 +198,7 @@ application development (web front-end and back-end).
 $ make
 $ ./run
 ```
+ps: Do NOT use the fancy '-j' thingy for now.
 
 ## Cleaning Up for a Fresh Compilation
 
