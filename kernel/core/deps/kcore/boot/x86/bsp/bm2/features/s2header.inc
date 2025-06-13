@@ -3,9 +3,9 @@
 ; This is the header file for the Gramado Boot Manager.
 ; Defines and variables used in the Stage 2.
 ; Importante:
-; O arquivo stage2.inc faz uma sequência de inclusões de módulos
-; de 16bit que compõem o stage2. Os promeiros devem ser s2metafile.inc 
-; e s2header.inc que servirão de suporte para todos os outros modulos
+; O arquivo stage2.inc faz uma sequï¿½ncia de inclusï¿½es de mï¿½dulos
+; de 16bit que compï¿½em o stage2. Os promeiros devem ser s2metafile.inc 
+; e s2header.inc que servirï¿½o de suporte para todos os outros modulos
 ; do stage2.
 ; 2015 - Created by Fred Nora.
 ;
@@ -29,7 +29,7 @@
 ;
 ;
 
-; Definições usadas apenas em 16bit.
+; Definiï¿½ï¿½es usadas apenas em 16bit.
 ; #bugbug: Isso deveria ficar num arquivo mais global.
 %DEFINE BOOTMANAGER_VER  '1.1'
 ;;...
@@ -55,7 +55,7 @@ ROOT_OFFSET   equ  0
 ROOT_LBA      equ  559
 
 ; ========================
-; Aqui está a localização do bootloader na memória. 
+; Aqui estï¿½ a localizaï¿½ï¿½o do bootloader na memï¿½ria. 
 ; A LBAno importa, pois ele foi carregado do sistema sistema de 
 ; arquivos e a LBA inicial dele estava armazenada na entrada do 
 ; diretrio raiz.
@@ -79,22 +79,22 @@ BL_LBA      equ  0
 
 
 
-; Definições.
+; Definiï¿½ï¿½es.
 
 ;;
 ;; #BUGBUG: 
-;; Talvez o diretório raiz deva ser carregado em outro lugar quando
-;; estamos em 16 bit. Em 32bit o boot manager utiliza endereços altos 
-;; com facilidade aqui em 16bit é mais difícil, se não impossível.
-;; @todo: Encontrar novos endereços para esses elementos
+;; Talvez o diretï¿½rio raiz deva ser carregado em outro lugar quando
+;; estamos em 16 bit. Em 32bit o boot manager utiliza endereï¿½os altos 
+;; com facilidade aqui em 16bit ï¿½ mais difï¿½cil, se nï¿½o impossï¿½vel.
+;; @todo: Encontrar novos endereï¿½os para esses elementos
 ;; que estejam dentro do limite de 1MB.
 ;; Vamos tentar em 70000h, fica bem depois do boot loader e antes da pilha em 90000.
 ;; Obs: valores improvisados, potencialmente podem causar bug. #bugbug.
 ;;
-;; es:bx    "Os valores aqui são referentes ao offset apenas."
+;; es:bx    "Os valores aqui sï¿½o referentes ao offset apenas."
 ;;          "Lembrese de configurar a base na rotina" 
 ;;
-;Valores para formatação com imdisk. (volume 31mb)
+;Valores para formataï¿½ï¿½o com imdisk. (volume 31mb)
 S2_FAT16_VBR_ADDRESS       equ 0x0000; 0x001A0000  ;0x00020000.
 S2_FAT16_VBR_LBA           equ 63 ;134         ;vbr.
 S2_FAT16_FAT_ADDRESS       equ 0x1000 ;0x001B0000  ;0x00060000.
@@ -106,7 +106,7 @@ S2_FAT16_DATAAREA_LBA      equ 591 ;296         ;data.
 ;;... 
 
 
-;Modos de inicialização.
+;Modos de inicializaï¿½ï¿½o.
 BOOTMODE_SHELL  EQU 1    ;Shell do Boot Manager em modo texto.
 BOOTMODE_GUI    EQU 2    ;GUI.
 
@@ -114,12 +114,12 @@ BOOTMODE_GUI    EQU 2    ;GUI.
 ; Kernel info:
 ; ============
 ;
-; O KERNEL.BIN será carregado em 0x00100000 pelo BL.BIN.
+; O KERNEL.BIN serï¿½ carregado em 0x00100000 pelo BL.BIN.
 ;
 
 
 ;@todo: bug bug (trocar)
-;Esses Valores estão errados, o certo é 0x00100000.
+;Esses Valores estï¿½o errados, o certo ï¿½ 0x00100000.
 kernel_seg            equ 0900h
 kernel_off            equ 0h
 kernel_entry_point    equ 0x00008200
@@ -132,7 +132,7 @@ kernel_entry_point    equ 0x00008200
 FAT16_FILE_SEGMENT      equ 0x2000
 FAT16_FILE_OFFSET       equ 0x0000  
 
-; Algumas definições.
+; Algumas definiï¿½ï¿½es.
 
 ;VGA display memory segment.
 VGA_VIDEO_SEGMENT       equ  0A000h  
@@ -157,18 +157,18 @@ TEST_TEXT_COL           equ  17      ;column to display test text at.
 TEST_TEXT_WIDTH         equ  8       ;width of a character in pixels.
 
 
-;status do modo gráfico.
+;status do modo grï¿½fico.
 g_graphic_mode_status:  db 0
 ;Font.
 FontPointer:            dd 0
 ;Segmentos em modo real.
 DS_REAL_MODE:           DW 0
 ES_REAL_MODE:           DW 0
-; Variáveis usadas pelo carregador de arquivos.
+; Variï¿½veis usadas pelo carregador de arquivos.
 qual_file               db 0 
 destino_seg             dw 0
 destino_off             dw 0
-; Aqui ficará o armazenado o endereço do nome do arquivo.
+; Aqui ficarï¿½ o armazenado o endereï¿½o do nome do arquivo.
 ImageNamePos:           dw 0
 ;Disco.
 absoluteSector          db 0x00
@@ -196,7 +196,8 @@ g_Fat16BPB  dd 0    ;Para rotinas de 32 bit.
 ;; == Messages =====================================================
 ;;
 
-;; Splash.
+; Splash
+; Change this name to 'msg_bm_banner'
 msg_bm_splash:
     db 'Gramado Boot Manager ', 
     db 'version ', BOOTMANAGER_VER, 13, 10, 0 
@@ -204,51 +205,100 @@ msg_bm_splash:
 msg_s2_init: 
     db 13, 10, "s2: Initializing stage 2", 13, 10, 0
 
+msg_a20:
+    db "s2: A20", 13, 10, 0
+
+msg_selecting_videomode:
+    db "s2: Selecting video mode", 13, 10, 0
+
 msg_s2_activating_mode:       
     db "s2: Activating mode", 13, 10, 0
 
 msg_s2_failure:               
     db "s2: No sig", 13, 10, 0  
 
-;msg
-msg_iniciando_bootmanager    db "s2: Initializing",         13, 10, 0
-msg_kernel_carregado         db "s2: Kernel carregado",     13, 10, 0
-msg_desligando_disquete      db "s2: Motor off",            13, 10, 0
-msg_initializing_VESA        db "s2: Initializing VESA",    13, 10, 0
-msg_a20                      db "s2: A20",                  13, 10, 0
-msg_detect_harware           db "s2: Detecting hw",         13, 10, 0
-msg_selecting_videomode      db "s2: Selecting video mode", 13, 10, 0
-msg_tudo_carregado           db "s2: All loaded",0
-msg_back                     db "s2: RM",0
-;msg
-msgfile1                     db "s2: L",0 
-msgLoading                   db "s2: L",0
-msgFailure                   db "s2: NOT FOUND",0
-msgFim                       db "s2: Loaded",0
-msgOK                        db "s2: Executing app",0
-msgCRLF                      db " ",0
-msgProgress                  db ".",0
-;debug
-debug_msg_1                  db "s2: Press any key",0
-debug_msg_2                  db "s2: loaded.",0
-debug_msg_3                  db "s2: F",0
-debug_msg_done               db "s2: Loaded, returning",0
-; Outros
-s_a20                        db "s2: A20", 13, 10,0 
-s_test_mode12h               db "s2: Mode 12h",0 
+; msg
+msg_iniciando_bootmanager:
+    db "s2: Initializing", 13, 10, 0
 
-;Mensagens usadas pelo sistema de arquivos.
-;msg_s2fat16_Loading db 'L',13,10,0
-msg_s2fat16_sf_root_ok   db 'Root Ok',13,10,0
-msg_s2fat16_sf_root_fail db 'R',13,10,0  ;;Root Not Found.
-msg_s2fat16_diskfail     db 'DF',0
-msg_s2fat16_Failure      db 'F',13,10,0 ;File not found.
-msg_s2file_ok            db 'File found',13,10,0  
-msg_s2fat16_step1        db '~1',13,10,0
-msg_s2fat16_step2        db '~2',13,10,0
-msg_s2fat16_step3        db '~3',13,10,0
-msg_s2fat16_step4        db '~4',13,10,0
-;...
+msg_kernel_carregado:
+    db "s2: Loading", 13, 10, 0
+
+msg_desligando_disquete:
+    db "s2: Motor off", 13, 10, 0
+
+msg_initializing_VESA:
+    db "s2: Initializing VESA", 13, 10, 0
+
+msg_detect_harware:
+    db "s2: Detecting hw", 13, 10, 0
+
+msg_tudo_carregado:
+    db "s2: All loaded", 0
+
+msg_back:
+    db "s2: RM",0
+
+;msg
+msgfile1:
+    db "s2: L",0 
+msgLoading:
+    db "s2: L",0
+msgFailure:
+    db "s2: NOT FOUND",0
+msgFim:
+    db "s2: Loaded",0
+msgOK:
+    db "s2: Executing app",0
+
+; #bugbug: This is wrong
+msgCRLF:
+    db " ", 0
+
+; Dot
+msgProgress:
+    db ".",0
+
+;debug
+debug_msg_1:
+    db "s2: Press any key",0
+debug_msg_2:
+    db "s2: loaded.",0
+debug_msg_3:
+    db "s2: F",0
+debug_msg_done:
+    db "s2: Loaded, returning",0
+
+; Outros
+s_a20:
+    db "s2: A20", 13, 10, 0 
+s_test_mode12h:               
+    db "s2: Mode 12h",0 
+
+; Mensagens usadas pelo sistema de arquivos.
+;msg_s2fat16_Loading: db 'L',13,10,0
+msg_s2fat16_sf_root_ok:   
+    db 'Root Ok', 13, 10, 0
+; Root Not Found.
+msg_s2fat16_sf_root_fail:
+    db 'R', 13, 10, 0
+msg_s2fat16_diskfail:
+    db 'DF', 0
+; File not found.
+msg_s2fat16_Failure:
+    db 'F', 13, 10, 0
+; File found
+msg_s2file_ok:
+    db 'File found', 13, 10, 0
+  
+msg_s2fat16_step1:
+    db '~1', 13, 10, 0
+msg_s2fat16_step2:
+    db '~2', 13, 10, 0
+msg_s2fat16_step3:
+    db '~3', 13, 10, 0
+msg_s2fat16_step4:
+    db '~4', 13, 10, 0
 
 ;
 ; End

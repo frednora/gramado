@@ -1,24 +1,12 @@
-;
-; File: s2vesa.inc
-;
-;     Setup graphic mode via VESA.
-;
-;---------------------------------------------------------;
-;                                                         ;
-; Autor: (c) Craig Bamford, All rights reserved.          ;
-; Version: Frederico Martins Nora.                        ;
-;                                                         ;
+; s2vesa.inc
+; Setup graphic mode via VESA.
+; Created by Fed Nora.
+
+; Credits:                                                         ;
+; Autor: (c) Craig Bamford, All rights reserved.
+
 ;=========================================================;
-; Histórico de revisão:                                   ;
-;                                                         ;
-; Vesa Information Block                       01/05/2011 ;
-; Versão                                    13/março/2013 ;
-; revisão 1                                  27/maio/2013 ;
-; revisão 2                                    7/jan/2014 ;
-; revisão 3                                          2015 ;
-;                                                         ;
-;=========================================================;
-frame_buffer  dd  0                                       ;
+frame_buffer:  dd  0                                      ;
 ;=========================================================;
 ; VESA INFORMATION BLOCK                                  ;
 ;=========================================================;
@@ -97,9 +85,11 @@ Mode_Info:	                                              ;
 ; VESA MODE INFORMATION END                               ;
 ;=========================================================;
 ;
-;Space for info ret by vid BIOS.
+; Space for info ret by vid BIOS.
 ;
-VESAINFO  db  'VBE2'
+
+VESAINFO: 
+    db  'VBE2'
     times  508  db  0
 	
 MODEINFO:
@@ -110,11 +100,11 @@ MODEINFO:
 ;
 
 ;
-;funções VESA.
+; VESA functions
 ;
 	
 ;
-; 0x4112 is 640x480x24bit	(*inicialização)   (3 bytes por pixel) 
+; 0x4112 is 640x480x24bit	(*inicializaï¿½ï¿½o)   (3 bytes por pixel) 
 ; 0x4115 is 800x600x24bit	(*gui)             (3 bytes por pixel) 
 ; 0x4118 is 1024x768x24bit   	
 ; 0x411B is 1280x1024x24bit	
@@ -164,7 +154,6 @@ MODEINFO:
 ; GeForce_8400_GS equ 0x06E4  
 ; GeForce 8400 GS: 0x0115   800x600x32BPP
 
-
 ;
 ; Define a placa de video
 ;
@@ -176,17 +165,18 @@ my_video_card: dd 0
 
 ;-------------------------------------------------- 
 ; stage2_init_vesa:
-;     Inicia o modo VESA via bios.
-;     ; Vesa start code.
+;
+; Initialize VESA mode via BIOS.
+; Vesa start code.
 ;
 ; 0x4115  ;800 x 600   (geforce=32bpp,oraclevm=24bpp) 
 ; 	;mov bx, 4112h    ;640x480x32bpp.
-;
+
 stage2_init_vesa:
     pusha
 	
     mov bx, 4000h
-	add bx, word [META$FILE.VIDEO_MODE]    ;Adiciona o número do modo.
+	add bx, word [META$FILE.VIDEO_MODE]    ; Add the mode number.
 	
 	mov ax, 4f01h
     mov di, Mode_Info   
@@ -200,48 +190,49 @@ stage2_init_vesa:
 	ret
 	
 
-;----------------------------------------
 ; search_vesa:
-;     Procura por VESA.
-;     Ver se a máquina suporta o padrão VESA.
-;
+; Check if the firmware supports VESA or not.
 search_vesa: 
-	;Display Vesa version.
+	; Display Vesa version
 	mov ax, 0x4F00
     mov di, 0xA000
     int 0x10
-    ;Se VESA é suportada.
+    ; If VESA is supported
 	cmp ax, word 0x004F
     je .vesaOK
-;NO VESA.	
+
+; No VESA
 .noVESA:	
     pusha 
 	call Window.StatusBar   
 	mov si, msg_no_vesa
     call PoeString 
 	popa
-	stc    ;Flag avisa que nao há vesa.	
+	stc    ; Flag is saying that there is not VESA.
 	ret
-;vesa OK.
-.vesaOK:     
-	;Prepara a string para apresentar o número da versão.
+
+; VESA OK
+.vesaOK:   
+
+    ; Prepare it to show the version mumber.
 	mov ax, word [di+4]
     mov dx, ax
     add ax, word 48*256+48   
 	mov byte [msg_ver_vesa+19], ah
     mov byte [msg_ver_vesa+21], al
-	;Mostra número da versão.
+
+    ; Show the version number.
+    ; #todo
 	pusha
     call Window.StatusBar
     mov si, msg_ver_vesa
     call PoeString
     popa
 	
-	;;#bugbug
-	;;Não tá dando pra usar recuperar depois esses valores
-	;;quando estivermos em 32bit.
+	; #bugbug: 
+    ; Can't we reuse these values when in 32bit mode.
 	
-	;Salva parâmetros no META$FILE.
+    ; Save parameters into the META$FILE.
 	xor ax, ax
 	mov ax, word [ModeInfo_XResolution]
     mov word [META$FILE.SCREEN_X], ax
@@ -251,8 +242,8 @@ search_vesa:
 	mov ax, word [ModeInfo_YResolution]
     mov word [META$FILE.SCREEN_Y], ax
 	mov word [g_y_resolution], ax
-	
-	;;#bugbug Isso é 'byte'
+
+    ; #bugbug: Is this a byte only?
 	xor ax, ax
 	mov ax, word [ModeInfo_BitsPerPixel]
     mov word [META$FILE.BPP], ax
@@ -260,44 +251,46 @@ search_vesa:
 	
 .done:
 	xor ax, ax
-	clc    ;Limpa a flag.
+	clc    ; Clear the flag
 	ret
 	
-	
-;Pegar Bits Por Pixel.	
-s2vesaGetBPP:
-    mov al, byte [ModeInfo_BitsPerPixel]
-	ret
 
-;Pegar largura da tela em pixels.		
+; Get screen width in pixels.
 s2vesaGetWidth:
     mov ax, word [ModeInfo_XResolution] 
     ret
 	
-;Pegar altura da tela em pixels.	
+; Get the screen height in pixels.	
 s2vesaGetHeight:
     mov ax, word [ModeInfo_YResolution]
 	ret
-	
-;Inicializa VESA.	
+
+; Get Bits Per Pixel.
+s2vesaGetBPP:
+    mov al, byte [ModeInfo_BitsPerPixel]
+	ret
+
+; Initialize VESA.
 s2vesaInitVESA:
     call stage2_init_vesa
 	ret
 
-;Ver se VESA é suportada.	
+; Check if VESA is supported.
 s2vesaSearchVESA:
     call search_vesa
 	ret
 
+;
+; Messages
+;
+
+msg_no_machine:
+    db "s2: vesa: No machine",13,10,0		
+msg_no_vesa:
+    db "s2: vesa: No VESA",13,10,0
+msg_ver_vesa:
+    db "s2: vesa: Ver",13,10,0	
 
 ;
-; Mensagens.
-;
-
-msg_no_machine db "s2vesa error: Machine",13,10,0		
-msg_no_vesa    db "s2vesa No VESA",13,10,0
-msg_ver_vesa   db "s2vesa Ver",13,10,0	
-	
-;
-;fim.
+; End
 ;
