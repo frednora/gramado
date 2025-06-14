@@ -72,7 +72,7 @@ static int parse_content(int token);
 static int parse_do(int token);
 static int parse_for(int token);
 static int parse_if(int token);
-static int parse_return(int token);
+static int parse_return(int token, int *return_value);
 static unsigned long parse_sizeof(int token);
 static int parse_while(int token);
 //static int parse_number(int olen);
@@ -658,7 +658,7 @@ static int parse_number(int olen)
 // return (int) (1+2);
 // return function();
 // return (int) function();
-static int parse_return(int token)
+static int parse_return(int token, int *return_value)
 {
     int c=0;
     int running = 1;
@@ -684,16 +684,19 @@ static int parse_return(int token)
 // Se a próxima keyword for um ';' então não temos uma expressão.
 
 // Eval
+// see: tree.c
 
     eval_ret = (unsigned long) tree_eval();
-
-// itoa
-    itoa ( (int) eval_ret, buffer );
-    // ??
-    //buffer = (char *) itoa ( (int) eval_ret);
-
     // #debug
     printf("parse_return: value={%d}\n",eval_ret);
+
+// Returning the value.
+    if (return_value != NULL){
+        *return_value = (int) eval_ret;
+    }
+
+    // #debug
+    itoa ( (int) eval_ret, buffer );
     printf("parse_return: value={%s}\n",buffer);
 
 //
@@ -719,6 +722,11 @@ static int parse_return(int token)
         c = TK_SEPARATOR;
         return c;
     }
+
+    // Improved error handling
+    //printf ("parse_return: Error: ';' not found after return expression (line %d)\n", 
+    //    lexer_currentline );
+    //exit(1);
 
 //
 // Debug hang
@@ -2231,13 +2239,23 @@ int parse(int dump_output)
                             printf("State3: keyword return found in line %d\n",lexer_currentline);
                             //printf ("State3: TK_KEYWORD={%s} KWRETURN, line %d \n", 
                                 //real_token_buffer, lexer_currentline );
+                            
+                            // #test
+                            int __result=0; 
 
-                            token = parse_return(TK_KEYWORD);
+                            token = parse_return(TK_KEYWORD, &__result);
                             // Expected: ';'.
                             if (token != TK_SEPARATOR){
                                 printf ("State3: TK_KEYWORD TK_SEPARATOR fail\n");
                                 exit (1);
                             }
+                            // #debug
+                            printf("State3: return result={%d} in line %d\n", 
+                                __result, lexer_currentline );
+                            
+                            //#debug
+                            //while(1){}
+
                             State = 1;
                             break;
                         }
