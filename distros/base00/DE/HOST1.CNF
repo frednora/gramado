@@ -2,12 +2,13 @@
 box Host [
 
     // 1
-    meta meta1(){ name("host ipv4");        content("192.168.1.5");  }
+    meta meta1(){ name("host ipv4");  content("192.168.1.5");    return 1 + 2;  }
 
 // 2
 meta meta3(){
     name("gateway ipv4");
     content("192.168.1.1");
+    return 1 + 2;
 }
 
 // 3
@@ -16,6 +17,7 @@ meta2 ()
 {
     name("dns server ipv4");
     content("8.8.8.8");
+    return 1 + 2;
 }
 
 ]

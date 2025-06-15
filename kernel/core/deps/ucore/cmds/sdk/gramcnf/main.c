@@ -167,18 +167,17 @@ static void debugShowStat(void)
     printf("Printing metadata structure. :)\n");
 
 // metadata
+    printf("\n");
     for (i=0; i<32; i++)
     {
         if (metadata[i].initialized == TRUE)
         {
-            printf("\n");
-            printf("id{%d}: tag{%s} name{%s} content{%s}\n",
+            printf("id{%d}: tag{%s} name{%s} content{%s} return{%d}\n",
                 metadata[i].id,
                 metadata[i].meta_tag,
                 metadata[i].name,
-                metadata[i].content );
-            //printf("name{%s}\n",    metadata[i].name); 
-            //printf("content{%s}\n", metadata[i].content);
+                metadata[i].content,
+                metadata[i].return_value ); // unsigned int
         }
     };
 

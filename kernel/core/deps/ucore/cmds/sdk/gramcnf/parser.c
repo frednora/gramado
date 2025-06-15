@@ -430,18 +430,21 @@ static int parse_content(int token)
                 real_token_buffer,
                 string_size );
             metadata[meta_index].content_size = string_size;
-            metadata[meta_index].initialized = TRUE;
+
+            // Let's initialize it only after the return statement.
+
+            //metadata[meta_index].initialized = TRUE;
             //printf("INITIALIZED\n");
             
             // Salva o index.
-            metadata[meta_index].id = (int) meta_index;
+            //metadata[meta_index].id = (int) meta_index;
             
             // Só muda de index depois de 2 strings.
-            meta_index++;
-            if (meta_index >= 32){
-                printf("meta_index limits\n");
-                goto error0;
-            }
+            //meta_index++;
+            //if (meta_index >= 32){
+                //printf("meta_index limits\n");
+                //goto error0;
+            //}
 
             // Come back to first stage.
             meta_stage=0;
@@ -2252,7 +2255,25 @@ int parse(int dump_output)
                             // #debug
                             printf("State3: return result={%d} in line %d\n", 
                                 __result, lexer_currentline );
-                            
+
+                            metadata[meta_index].return_value = (unsigned int) __result;
+
+                            // Finally let's initialize the meta f() thingy.
+
+                            metadata[meta_index].initialized = TRUE;
+                            //printf("INITIALIZED\n");
+            
+                            // Salva o index.
+                            metadata[meta_index].id = (int) meta_index;
+            
+                            // Só muda de index depois de 2 strings.
+                            meta_index++;
+                            if (meta_index >= 32){
+                                printf("meta_index limits\n");
+                                exit(0);
+                                //goto error0;
+                            }
+
                             //#debug
                             //while(1){}
 

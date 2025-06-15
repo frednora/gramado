@@ -1,22 +1,33 @@
 
-box One 
+box Theme2
 [
-    //meta meta1(){ name("background-color");     content("green");  }
-    //meta meta2(){ name("window-color");         content("white");  }
-    //meta meta3(){ name("titlebar-color");       content("blue");   }
+    // Comment single line
 
-    meta meta4(){ name("titlebar-text-color");  content("white");  }
+    /*
+        Comment 
+        Multiple
+        Lines
+    */
 
-    meta meta5()
+    meta meta00()
     {
-        name("titlebar-icon");
+        name("meta00");
         content("2");
+        return 1 + 2;
     }
 
+    meta meta01()
+    {
+        name("meta01");
+        content("ffff");
+        return 1 + 4;
+    }
 
     meta metareturn() 
     {
-        return 6 & 3;
+        name("metareturn");
+        content("default-content");
+        return 1000*8;
     }
 ] 
 
