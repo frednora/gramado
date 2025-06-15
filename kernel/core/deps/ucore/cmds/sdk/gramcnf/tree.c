@@ -503,13 +503,32 @@ static int oper(char c, int opnd1, int opnd2)
     case '*':  return (opnd1 * opnd2);  break;  // '*'
     case '+':  return (opnd1 + opnd2);  break;  // '+'
     case '-':  return (opnd1 - opnd2);  break;  // '-' 
-    case '/':  return (opnd1 / opnd2);  break;  // '/'
 
-    // #todo
-    // Yes we have some pow functions in math.c
-    case '^': 
-        return 0; //return(pow(opnd1,opnd2));
+// '/'
+    case '/':
+        if (opnd2 == 0) {
+            printf("oper: Division by zero!\n");
+            return 0; // or handle as needed
+        }
+        return (opnd1 / opnd2);  
         break;
+
+// '%'
+    case '%':
+        if (opnd2 == 0) {
+            printf("oper: Modulo by zero!\n");
+            return 0;
+        }
+        return (opnd1 % opnd2);  
+        break;
+
+    case '&':  return (opnd1 & opnd2);  break;   // bitwise AND
+    case '|':  return (opnd1 | opnd2);  break;   // bitwise OR
+    case '^':  return (opnd1 ^ opnd2);  break;   // bitwise XOR
+    case '<':  return (opnd1 < opnd2);  break;   // less than
+    case '>':  return (opnd1 > opnd2);  break;   // greater than
+    //case '=':  return (opnd1 == opnd2);  break;  // equality
+    //case '!':  return (opnd1 != opnd2);  break;  // not equal
 
     //...
 
@@ -797,7 +816,23 @@ unsigned long tree_eval(void)
                 goto do_bst;  // #done
             }
             break;
-        
+
+        case TK_ARITHCOMPARE:
+            //printf("tree_eval: TK_ARITHCOMPARE %c\n", real_token_buffer[0]);
+            if (lexer_expression == LT_EXPR)
+            {
+                exp_buffer[exp_offset] = (int) '<';
+                exp_offset++;
+                State=1;
+            }
+            if (lexer_expression == GT_EXPR)
+            {
+                exp_buffer[exp_offset] = (int) '>';
+                exp_offset++;
+                State=1;
+            }
+            break;
+
         // State2 default
         default:
             break;  

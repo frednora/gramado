@@ -12,12 +12,11 @@ box One
         name("titlebar-icon");
         content("2");
     }
-    
+
+
     meta metareturn() 
     {
-        //return 1 + 2;
-        //return 100 + 200;
-        return 100 * 4;
+        return 6 & 3;
     }
 ] 
 

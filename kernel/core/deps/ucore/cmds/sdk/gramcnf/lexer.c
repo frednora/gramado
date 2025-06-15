@@ -302,7 +302,7 @@ begin:
 				// então vamos retornar a barra para que a rotina continue 
 				// tratando a expressão.
                 ungetc ( c, finput );
-				//return (int) '/';
+				return (int) '/';
                 break;
 
             //#test 
