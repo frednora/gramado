@@ -1,6 +1,9 @@
 // lexer.c
-// Inspired on gcc 0.9.
+// The lexer for gramcnf interpreter.
 // 2018 - Created by Fred Nora.
+
+// Credits:
+// Inspired on gcc 0.9.
 
 #include "gramcnf.h"
 

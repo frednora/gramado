@@ -1,9 +1,9 @@
 // main.c
-// GRAMCNF.BIN - c-like interpreter for Gramado OS.
+// This is the main file for a C-like interpreter for Gramado OS.
+// Target: GRAMCNF.BIN
 // 2022 - Fred Nora
 
 #include "gramcnf.h"
-
 
 // See: parser.h
 struct program_d  program;

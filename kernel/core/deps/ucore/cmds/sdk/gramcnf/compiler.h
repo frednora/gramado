@@ -1,5 +1,5 @@
-
 // compiler.h
+// Created by Fred Nora.
 
 #ifndef __COMPILER_H
 #define __COMPILER_H    1

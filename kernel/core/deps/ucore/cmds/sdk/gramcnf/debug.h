@@ -1,5 +1,5 @@
-
 // debug.h
+// Created by Fred Nora.
 
 #ifndef __DEBUG_H
 #define __DEBUG_H    1

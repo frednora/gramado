@@ -1,4 +1,5 @@
-// File: parser.c
+// parser.c
+// The parser for the gramcnf project.
 // 2018 - Created by Fred Nora.
 
 #include "gramcnf.h"

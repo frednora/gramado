@@ -1,11 +1,12 @@
-
 // compiler.c 
+// High level part of the interpreter.
+// lexer >> parser >> compiler
+// 2022 - Fred Nora
+
 // Aqui ficará o compilador, 
 // que transformará a linguagem intermediária em assembly.
 // Bom, como ainda não temos linguagem intermediária,
 // vamos transformar C em Assembly
-// lexer >> parser >> compiler
-// 2022 - Fred Nora
 
 #include "gramcnf.h"
 
@@ -16,7 +17,7 @@
 // + Parse the tokens.
 // + Return a pointer to the output file.
 // OUT: The output pointer.
-FILE *compiler (int dump_output)
+FILE *compiler(int dump_output)
 {
     int lexer_return = -1;
     int parser_return = -1;

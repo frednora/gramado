@@ -2,6 +2,7 @@
 // bst - Binary Search Tree
 // Evaluation an expression.
 // Document created by Fred Nora.
+// Credits: I don't know who is the original author.
 
 
 #include "gramcnf.h"

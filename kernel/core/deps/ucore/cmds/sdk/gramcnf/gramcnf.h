@@ -1,5 +1,6 @@
 // gramcnf.h
-// This is the main header.
+// This is the main header included into 
+// all source files of the gramcnf project.
 // 2018 - Created by Fred Nora.
 
 // rtl

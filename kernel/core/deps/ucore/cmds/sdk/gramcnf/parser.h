@@ -1,4 +1,5 @@
 // parser.h
+// The parser for the gramcnf project.
 // Created by Fred Nora.
 
 #ifndef __PARSER_H
@@ -12,13 +13,12 @@ extern long id[ID_MAX];
 // Elementos que explicam a constante.
 extern long constant[CONSTANT_MAX];
 
-
 // Salvando a string das constantes,
 // onde a constante será armazenada dependendo do tipo.
-extern char constant_byte[2];   //0xFF
-extern char constant_word[4];   //0xFFFF
-extern char constant_dword[8];  //0xFFFFFFFF
-extern char constant_qword[16];  //0xFFFFFFFFFFFFFFFF
+extern char constant_byte[2];    // 0xFF
+extern char constant_word[4];    // 0xFFFF
+extern char constant_dword[8];   // 0xFFFFFFFF
+extern char constant_qword[16];  // 0xFFFFFFFFFFFFFFFF
 // O que colocar antes dessa constante.
 // Isso varia com a base. Ex: 0x, 0X
 extern char constant_before[2];
@@ -26,17 +26,14 @@ extern char constant_before[2];
 // Isso varia com a base. Ex: H, B.
 extern char constant_after[2];
 
-
 //--------------------
 extern long return_info[8];
-
 
 extern unsigned long functionList[FUNCTION_COUNT_MAX];
 
 // #test
 //#define gramc_skip_blanks(p)     {while (*(p) == ' ') { (p)++; }}
 //#define gramc_skip_nonblanks(p)  {while (*(p) && *(p) != ' ') { (p)++; }}
-
 
 // Espiada, olhadinha.
 // #importante

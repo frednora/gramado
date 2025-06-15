@@ -1,9 +1,10 @@
 // lexer.h
+// This is the main header file for the lexer component 
+// of the gramcnf project.
 // Created by Fred Nora.
 
 #ifndef __LEXER_H
 #define __LEXER_H    1
-
 
 // ## current ##
 // Usado pelo lexer pra saber qual lugar na lista 

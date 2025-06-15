@@ -1,5 +1,10 @@
+// config.h
+// Main header for gramcnf configuration.
+// Created by Fred Nora.
 
-//config.h
+#ifndef __CONFIG_H
+#define __CONFIG_H    1
+
 // #todo
 // provavelmente configurar como deve reagir de acordo com a 
 // plataforma host
@@ -13,11 +18,5 @@
 // mais fáceis.
 //#define bootstrap 1 
 
-#ifndef __CONFIG_H
-#define __CONFIG_H    1
-
-
 #endif   
-
-
 

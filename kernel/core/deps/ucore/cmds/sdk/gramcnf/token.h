@@ -1,4 +1,5 @@
 // token.h
+// Token definitions and structures for the gramcnf project.
 // Created by Fred Nora.
 
 #ifndef __TOKEN_H
