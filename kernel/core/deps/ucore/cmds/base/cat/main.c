@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
 
     // #debug
     printf("CAT.BIN: argc %d | argv[0] %s | argv[1] %s", 
-        argc,       // quantos argumentos 
+        argc,       // Number of parameters
         argv[0],    // CAT.BIN
         argv[1] );  // FILE.TXT
     //printf("\n");

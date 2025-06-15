@@ -1,8 +1,7 @@
-/*
- * File: main.c
- *     Simple virtual terminal.
- *     2021 - Created by Fred Nora.
- */
+// main.c
+// This is the main file for term00 virtual terminal.
+// 2021 - Created by Fred Nora.
+
 // #test
 // For now it has a small embedded command line interpreter.
 // The POSIX terminal interface.
@@ -53,6 +52,8 @@
 // see: terminal.c and term0.h.
 extern struct terminal_d  Terminal;
 
+
+// Main function for the terminal application.
 int main(int argc, char *argv[])
 { 
     int Status = -1;
@@ -132,7 +133,9 @@ int main(int argc, char *argv[])
 // create the main window, create the terminal window and fall into a loop.
 // See: terminal.c
 // IN: flags
+
     const unsigned short INIT_FLAGS = 0;
+
     Status = (int) terminal_init(INIT_FLAGS);
     if (Status != 0)
         printf("main: Something is wrong\n");

@@ -1,12 +1,8 @@
 // terminal.c
+// This is the implementation of the terminal application.
 // Created by Fred Nora.
 
 //#include <ctype.h>
-// #todo:
-// We need to change the name of this document?
-
-// #test:
-// Testing ioctl()
 #include <termios.h>
 #include <fcntl.h>
 #include <sys/ioctls.h>
@@ -23,10 +19,8 @@
 #include <gws.h>
 
 
-
 #define IP(a, b, c, d) \
     (a << 24 | b << 16 | c << 8 | d)
-
 
 // The main structure.
 // see: terminal.h
@@ -247,7 +241,6 @@ static void __test_post_async_hello(void);
 static void __winmax(int fd);
 static void __winmin(int fd);
 
-
 //#test
 static void update_clients(int fd);
 
@@ -273,7 +266,6 @@ static void terminal_poweroff_machine(int fd)
     gws_shutdown(fd);
 }
 
-//#test
 static void update_clients(int fd)
 {
     // Terminal window
@@ -360,10 +352,10 @@ static void update_clients(int fd)
     }
 }
 
+// Send async hello. msgcode=44888.
+// #todo: Explain it better.
 static void __test_post_async_hello(void)
 {
-// Send async hello. 44888.
-
     unsigned long message_buffer[32];
 // The tid of init.bin is '0', i guess. :)
     int InitProcessControlTID = 0;
@@ -552,25 +544,24 @@ void __test_gws(int fd)
     int Window = Terminal.main_window_id;
     //int Window = Terminal.client_window_id;
 
+// Parameters:
     if(fd<0){
         return;
     }
+
     gws_change_window_position(fd,Window,0,0);
-    gws_resize_window(
-        fd, Window, 400, 400);
+    gws_resize_window( fd, Window, 400, 400);
     //gws_refresh_window(fd,Window); //#bugbug
     //text
     //gws_draw_text(fd,Window,0,0,COLOR_RED,"This is a string");
 //redraw and refresh.
-    gws_redraw_window(
-         fd, Window, TRUE );
+    gws_redraw_window( fd, Window, TRUE );
 //redraw and not refresh.
     //gws_redraw_window(
          //fd, Window, FALSE );
     //text
     //gws_draw_text(fd,Window,0,0,COLOR_RED,"This is a string");
 }
-
 
 // Testing the 'foreground console' configuration.
 // It's working.
@@ -657,7 +648,6 @@ static void __test_ioctl(void)
     //ioctl(1, 1000,COLOR_CYAN);
 
     //printf ("done\n");
-
 }
 
 // Comand 'w-main'.
@@ -665,8 +655,9 @@ static void __test_winfo(int fd, int wid)
 {
     struct gws_window_info_d *Info;
 
-    if(fd<0) { return; }
-    if(wid<0){ return; }
+// Parameters:
+    if (fd<0) { return; }
+    if (wid<0){ return; }
 
     Info = (void*) malloc( sizeof(struct gws_window_info_d) );
     if ((void*) Info == NULL){
@@ -690,7 +681,6 @@ static void __test_winfo(int fd, int wid)
     printf("Client rectangle info: l=%d t=%d w=%d h=%d\n",
         Info->cr_left, Info->cr_top, Info->cr_width, Info->cr_height );
 }
-
 
 /*
 static void __test_rand(void);
@@ -735,15 +725,17 @@ static void __try_execute(int fd)
 // + The limit for the write() operation is 512 for now.
     size_t WriteLimit = 512;
 
+// Parameters:
     if (fd<0){
         return;
     }
+
 // Empty buffer
    if (*prompt == 0){
        goto fail;
    }
 
-// Clone.
+// Clone
 // #important:
 // For now the system will crash if the
 // command is not found.
@@ -799,7 +791,6 @@ static void __try_execute(int fd)
     register int ii=0;
     char filename_buffer[12]; //8+3+1
     char *p;
-
 
 // ---------------
 // Grab the filename in the first word of the cmdline.
@@ -1526,7 +1517,6 @@ exit_cmp:
     return;
 }
 
-
 static void doHelp(int fd)
 {
 
@@ -1575,7 +1565,6 @@ static void doHelp(int fd)
  */
 }
 
-
 static void doAbout(int fd)
 {
 // This is the terminal application, 
@@ -1592,7 +1581,7 @@ static void doAbout(int fd)
     lf();
 }
 
-
+// Draw the prompt.
 static void doPrompt(int fd)
 {
     register int i=0;
@@ -1671,12 +1660,13 @@ static void doPrompt(int fd)
 // Setup this thread as foreground thread,
 // this way the app can receive input via stdin.
     rtl_focus_on_this_thread();
-
 }
 
 // interna
 // Isso chama o aplicativo true.bin
 // que se conecta a esse via tty e nos envia uma mensagem.
+
+// Testing tty support.
 void test_tty_support(int fd)
 {
     gws_debug_print("test_tty_support: [FIXME] undefined reference\n");
@@ -1772,8 +1762,7 @@ static void __send_to_child (void)
     shared_flag[0] = 1; 
 }
 
-
-
+// Testing the standard stream.
 // Write something in the standard stream and call shell.bin.
 void test_standard_stream(int fd)
 {
@@ -1871,11 +1860,10 @@ void test_standard_stream(int fd)
     */
 }
 
-
+// Launch a child.
 void
 test_child_message(void)
 {
-    // lançando um processo filho.  
     // #todo: use clone_and_execute.
     sc80 ( 900, 
        (unsigned long) "sh1.bin", 0, 0 );
@@ -1886,15 +1874,18 @@ test_child_message(void)
 // =======================
 //
 
-// Called by tputc.
+// Write a char into the terminal client window.
+// This is the main function to write a char into the window.
+// It is called by tputc() and input().
+// fd: File descriptor.
+// window: The terminal client window id.
+
 void 
 terminal_write_char (
     int fd, 
     int window, 
     int c )
 {
-// worker
-// Print the char into the window.
     unsigned long CharWidth = 8;
     unsigned long CharHeight = 8;
 
@@ -1903,7 +1894,6 @@ terminal_write_char (
         CharWidth = FontInfo.width;
         CharHeight = FontInfo.height;
     }
-
 
     static char prev=0;
     unsigned long x = (cursor_x*CharWidth);
@@ -1973,7 +1963,6 @@ terminal_write_char (
     }
 }
 
-
 /*
  * terminalInsertNextChar:
  *     Coloca um char na próxima posição do buffer.
@@ -1983,6 +1972,8 @@ terminal_write_char (
  */
 //#importante:
 //o refresh é chamado no default do procedimento de janela
+
+// Insert char into the line buffer.
 void terminalInsertNextChar(char c)
 {
 	// #todo
@@ -1990,46 +1981,46 @@ void terminalInsertNextChar(char c)
 	// \n \r ... ??
 	// Coloca no buffer.
 
+    if (cursor_x < 0 || cursor_y < 0)
+        return;
+
     LINES[cursor_y].CHARS[cursor_x] = (char) c;
 }
 
-
-// # terminal stuff
+// Insert null terminator
 void terminalInsertNullTerminator (void)
 {
     terminalInsertNextChar ( (char) '\0' );
 }
 
-
-// # terminal stuff
+// Insert LF
 void terminalInsertLF (void)
 {
     terminalInsertNextChar ( (char) '\n' );
 }
 
-// # terminal stuff
+// Insert CR
 void terminalInsertCR (void)
 {
     terminalInsertNextChar ( (char) '\r' );
 }
 
-
-// # terminal stuff
-//line feed
+// Line feed
 void lf(void)
 {
     //#todo
     //terminalInsertLF();
-    
+
+// Next line
     cursor_y++;
-    if (cursor_y >= Terminal.height_in_chars)
-    {
+
+// Clear
+    if (cursor_y >= Terminal.height_in_chars){
         clear_terminal_client_window(Terminal.client_window_id);
     }
 }
 
-// # terminal stuff
-//carriege return
+// Carriege return
 void cr(void)
 {
     //#todo
@@ -2037,10 +2028,7 @@ void cr(void)
     cursor_x = 0;
 }
 
-
-// # terminal stuff
-// ??
-//voltando uma linha.
+// voltando uma linha.
 void ri (void)
 {
 	//if ( screen_buffer_y > top ){
@@ -2055,14 +2043,13 @@ void ri (void)
 	//scrdown();
 }
 
-
-// # terminal stuff
+// Delete the char at the cursor position.
 void del (void)
 {
-    //if(cursor_x<0){cursor_x=0;}
-    //if(cursor_y<0){cursor_y=0;}
+    if (cursor_x < 0 || cursor_y < 0)
+        return;
     
-    LINES[cursor_y].CHARS[cursor_x] = (char) '\0';
+    LINES[cursor_y].CHARS[cursor_x]      = (char) '\0';
     LINES[cursor_y].ATTRIBUTES[cursor_x] = 7;
 }
 
@@ -2846,63 +2833,58 @@ __testPrintBuffer(void)
 }
 */
 
-
-//Qual será a linha que estará no topo da janela.
-void textSetTopRow ( int number )
+// Qual será a linha que estará no topo da janela.
+void textSetTopRow (int number)
 {
+    if (number < 0)
+        return;
     textTopRow = (int) number; 
 }
-
 
 int textGetTopRow (void)
 {
     return (int) textTopRow;
 }
 
-
-//Qual será a linha que estará na parte de baixo da janela.
-void textSetBottomRow ( int number )
+// Qual será a linha que estará na parte de baixo da janela.
+void textSetBottomRow (int number)
 {
+    if (number < 0)
+        return;
     textBottomRow = (int) number; 
 }
-
 
 int textGetBottomRow (void)
 {
     return (int) textBottomRow; 
 }
 
-void textSetCurrentRow ( int number )
+void textSetCurrentRow (int number)
 {
+    if (number < 0)
+        return;
     cursor_y = (int) number; 
 }
-
 
 int textGetCurrentRow (void)
 {
     return (int) cursor_y;
 }
 
-
-
-void textSetCurrentCol ( int number )
+void textSetCurrentCol (int number)
 {
+    if (number < 0)
+        return;
     cursor_x = (int) number; 
 }
-
 
 int textGetCurrentCol (void)
 {
     return (int) cursor_x; 
 }
 
-
-/*
- * move_to:
- *    Move o cursor de posição.
- *    Assim o próximo char será em outro lugar da janela.
- */
-
+// Move cursor position
+// #bugbug: Is this still valid?
 void move_to ( unsigned long x, unsigned long y )
 {
     if ( x > __wlMaxColumns || y > __wlMaxRows )
@@ -2952,9 +2934,8 @@ struct sockaddr_in addr = {
 */
 
 
-
-//interna
-int __terminal_clone_and_execute ( char *name )
+// Local. Not in use.
+int __terminal_clone_and_execute (char *name)
 {
     //if( (void*) name == NULL )
     //    return -1;
@@ -3445,6 +3426,12 @@ static void __get_system_event(int fd, int wid)
 {
     int msg_code = 0;
 
+// Validate parameters.
+    //if (fd<0 || wid<0){
+        //printf("__get_system_event: Invalid parameters\n");
+        //return;
+    //}
+
 // Get one single event.
     if ( rtl_get_event() != TRUE )
         return;
@@ -3652,7 +3639,6 @@ static void terminalInitWindowPosition(void)
     //wpWindowTop = (unsigned long) ( (smScreenHeight - wsWindowHeight)/2 );  	
 }
 
-
 // __initializeTerminalComponents:
 // Não emite mensagens.
 // #bugbug
@@ -3767,8 +3753,7 @@ static void __initialize_basics(void)
 
     __sequence_status=0;
 
-// CSI - Control Sequence Introducer.
-// see: term0.h
+// CSI - Control Sequence Introducer
     for (i=0; i<CSI_BUFFER_SIZE; i++){
         CSI_BUFFER[i] = 0;
     };
@@ -3778,8 +3763,7 @@ static void __initialize_basics(void)
     __tmp_x=0;
     __tmp_y=0;
 
-
-// Limite de tamanho da janela.
+// Window limits
     wlMinWindowWidth=0;
     wlMinWindowHeight=0;
     wlMaxWindowWidth=0;
@@ -3792,11 +3776,10 @@ static void __initialize_basics(void)
 // INITIALIZATION
 //
 
-// --------------------------------
-// Initialization.
 // This routine will initialize the terminal variables, 
 // create the socket for the application, connect with the display server, 
 // create the main window, create the terminal window and fall into a loop.
+
 int terminal_init(unsigned short flags)
 {
 // Called by main() in main.c
@@ -3822,7 +3805,6 @@ int terminal_init(unsigned short flags)
 // #todo: Check for 'zero'.
     w = gws_get_system_metrics(1);
     h = gws_get_system_metrics(2);
-
 
 // Socket
 // Create the socket and save the fd into the terminal structure.
@@ -3869,7 +3851,7 @@ int terminal_init(unsigned short flags)
             // Espere um segundo.
             //rtl_sleep_until(1000);
 
-        }else{
+        } else {
             break; 
         };
     };
@@ -3891,10 +3873,8 @@ int terminal_init(unsigned short flags)
     // #hack
     if (w == 320)
         mwWidth = 240;
-    unsigned long mwLeft   = ( ( w - mwWidth ) >> 1 );
-    unsigned long mwTop    = ( ( h - mwHeight) >> 1 );
-    //unsigned long mwLeft   = 0; //( ( w - mwWidth ) >> 1 );
-    //unsigned long mwTop    = 0; // ( ( h - mwHeight) >> 1 );
+    unsigned long mwLeft = (( w - mwWidth ) >> 1);
+    unsigned long mwTop  = (( h - mwHeight) >> 1);
 
     unsigned int mwColor = COLOR_WINDOW;
 
@@ -3908,8 +3888,7 @@ int terminal_init(unsigned short flags)
 
 // ===================================================
 // main window
-// style: 
-// 0x0001=maximized | 0x0002=minimized | 0x0004=fullscreen
+// style: 0x0001=maximized | 0x0002=minimized | 0x0004=fullscreen
 
     main_window = 
         (int) gws_create_window (
@@ -3924,15 +3903,13 @@ int terminal_init(unsigned short flags)
                   mwColor, 
                   mwColor );
 
-    if (main_window<0)
-    {
-        printf("terminal: fail on main_window\n");
+    if (main_window < 0){
+        printf("terminal.c: fail on main_window\n");
         exit(1);
     }
     Terminal.main_window_id = main_window;
 
-    // #debug
-    // We don't need to do that now.
+    // #debug: We don't need to do that for now.
     gws_refresh_window(client_fd, main_window);
 
 // ===================================================
@@ -3971,8 +3948,7 @@ int terminal_init(unsigned short flags)
     wi = (void*) malloc( sizeof(struct gws_window_info_d) );
     if ((void*) wi == NULL){
         printf("terminal: wi\n");
-        while (1){
-        };
+        exit (1);
     }
     //IN: fd, wid, window info structure.
     gws_get_window_info(
@@ -3982,13 +3958,11 @@ int terminal_init(unsigned short flags)
 
     if (wi->used != TRUE){
         printf("terminal: wi->used\n");
-        while (1){
-        };
+        exit (1);
     }
     if (wi->magic != 1234){
         printf("terminal: wi->magic\n");
-        while (1){
-        };
+        exit (1);
     }
 
 // Setting new values for the client window.
@@ -3996,29 +3970,25 @@ int terminal_init(unsigned short flags)
 // Não pode ser maior que o dispositivo.
     if (wi->cr_left >= w){
         printf("terminal: wi->cr_left\n");
-        while (1){
-        };
+        exit (1);
     }
 
 // Não pode ser maior que o dispositivo.
     if (wi->cr_top >= h){
         printf("terminal: wi->cr_top\n");
-        while (1){
-        };
+        exit (1);
     }
 
 // Não pode ser maior que o dispositivo.
     if (wi->cr_width == 0 || wi->cr_width > w){
         printf("terminal: wi->cr_width\n");
-        while (1){
-        };
+        exit (1);
     }
 
 // Não pode ser maior que o dispositivo.
     if (wi->cr_height == 0 || wi->cr_height > h){
         printf("terminal: wi->height\n");
-        while (1){
-        };
+        exit (1);
     }
 
 // #danger
@@ -4040,6 +4010,7 @@ int terminal_init(unsigned short flags)
     wWidth  = wi->cr_width;
     wHeight = wi->cr_height;
 
+// Create terminal window.
     terminal_window = 
         (int) gws_create_window (
                   client_fd,
@@ -4050,15 +4021,13 @@ int terminal_init(unsigned short flags)
                   COLOR_BLACK,
                   COLOR_BLACK );
 
-    if (terminal_window<0)
-    {
+    if (terminal_window < 0){
         printf("terminal: fail on terminal_window\n");
         exit(1);
     }
     Terminal.client_window_id = terminal_window;
     //#debug
     gws_refresh_window(client_fd, terminal_window);
-
 
     Terminal._mode = 0;
 
@@ -4069,15 +4038,12 @@ int terminal_init(unsigned short flags)
     Terminal.top  = 0;
     //Terminal.left = wLeft;  //0;
     //Terminal.top  = wTop;   //0;
-// Width and height
-// In pixels.
+// Width and height in pixels.
     Terminal.width = wWidth;
     Terminal.height = wHeight;
-// In chars.
-    Terminal.width_in_chars = 
-        (unsigned long)((wWidth/8) & 0xFFFF);
-    Terminal.height_in_chars = 
-        (unsigned long)((wHeight/8) & 0xFFFF);
+// Width and height in chars.
+    Terminal.width_in_chars  = (unsigned long)((wWidth/8)  & 0xFFFF);
+    Terminal.height_in_chars = (unsigned long)((wHeight/8) & 0xFFFF);
 
     Terminal.initialized = TRUE;
 
@@ -4233,7 +4199,7 @@ done:
 fail:
     debug_print("terminal.bin: Fail\n"); 
     printf     ("terminal.bin: Fail\n");
-    return -1;
+    return (int) -1;
 }
 
 //
