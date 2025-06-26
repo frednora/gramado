@@ -3744,6 +3744,8 @@ static int on_execute(void)
             //demoCurve();
             // ...
 
+            //noraDrawingStuff(); // loop
+
             // At this moment we already painted the whole scene
             // for your demo. Let's print the bar on top of it.
 

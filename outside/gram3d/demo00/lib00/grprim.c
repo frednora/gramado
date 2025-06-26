@@ -3001,7 +3001,8 @@ void noraDrawingStuff(void)
 {
     register int x=0;
     register int y=0;
-    unsigned int color = COLOR_BLACK;
+    //unsigned int color = COLOR_BLACK;
+    unsigned int color = COLOR_WHITE;
 
 // Colunas.
     for (x=0; x<SavedX; x++)
@@ -3031,6 +3032,10 @@ void noraDrawingStuff3 (int x, int y, int z)
     register int _x=0;
     register int _y=0;
     register int _z = z;
+
+    //unsigned int color = COLOR_BLACK;
+    //unsigned int color = COLOR_WHITE;
+
 
     int limitX = (SavedX >> 1);
     int limitY = (SavedY >> 1);

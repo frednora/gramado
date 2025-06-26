@@ -97,7 +97,7 @@ The kernel initialization in I_kmain():
 GramadoOS is a 64-bit graphical operating system, featuring a bootloader, kernel, and a desktop environment. This is the first distribution created using the Gramado OS kernel.
 
 This image shows the first process that runs after the kernel initialization.
-![Screenshot](https://raw.githubusercontent.com/efgab/screenshots/main/kernel-01.png)
+![Screenshot](https://raw.githubusercontent.com/seekbalance/screenshots/main/kernel-01.png)
 
 You can install a desktop environment on top of the kernel. The default desktop environment is located in the gdeps/ folder.
 
@@ -154,7 +154,7 @@ See deps/ucore/cmds/.
 
 This is a screenshot of the desktop environment running on top of the kernel.
 You can find code in the gdeps/ folder.
-![Screenshot](https://raw.githubusercontent.com/efgab/screenshots/main/gramado-8.png)
+![Screenshot](https://raw.githubusercontent.com/seekbalance/screenshots/main/gramado-8.png)
 
 
 ## Gramado API 
@@ -165,7 +165,7 @@ You can find the API to create client-side GUI application in gdeps/.
 
 This is a screenshot of 3D demo running on top of the kernel.
 You can find code in the zde/aurora/ folder.
-![Screenshot](https://raw.githubusercontent.com/efgab/screenshots/main/gramado-3.png)
+![Screenshot](https://raw.githubusercontent.com/seekbalance/screenshots/main/gramado-3.png)
 
 ## The source code.
 
