@@ -10,7 +10,6 @@ EXTRAVERSION =
 
 Q = @ 
 
-
 CFLAGS = -m64 \
 	-std=gnu89 \
 	-nodefaultlibs \

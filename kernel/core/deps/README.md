@@ -24,15 +24,14 @@ Core os components:
 ----------------------
 >> Ring 0
 kcore/:
- - Kernelmode core componets
- - Boot, ring 0 modules
+  - Kernelmode core componets
+  - Boot, ring 0 modules
 
 ----------------------
 >> Ring 3
 ucore/
- - Usermode core componets
-   Init process, ring 3 drivers and ring 3 servers.
-
+  - Usermode core componets
+    Init process, ring 3 drivers and ring 3 servers.
 ```
 
 ## Where is the boot loader?

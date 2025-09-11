@@ -1,15 +1,13 @@
 # core
 
-  The core components of the kernel. (The controllers.) And applications.
+  The core components of the kernel (The controllers) and applications.
 
 ## Folders
 
 ```
-  * arch  - Entry
-  * deps  - 
-      Bootloader, kernel module, posix-commands.
-  * gdeps - 
-      Client-side GUI applications.
+  * arch  - Kernel entry
+  * deps  - Bootloader, kernel module, Init process and ring 3 posix-commands.
+  * gdeps - Client-side GUI applications.
   * ke    - Top level kernel functions.
   * kmain - Main functions. Wrappers.
 ```
