@@ -2,7 +2,6 @@
 
 This directory contains the code for the base kernel. It builds the image KERNEL.BIN.
 
-
 ## Kernel initialization
 
 The kernel initialization is handled by the function I_kmain(), which follows these steps:
@@ -28,7 +27,7 @@ The kernel initialization is handled by the function I_kmain(), which follows th
 ```
 core/:
   The core of the kernel; the primary processing unit.
-  core/deps   - Boot, ring 0 modules, POSIX commands.
+  core/deps   - Ring 0 modules, POSIX commands.
   core/gdeps  - Client-side GUI applications.
   core/arch   - Entry point and initialization.
   core/ke     - Task manager.

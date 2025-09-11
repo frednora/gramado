@@ -15,14 +15,14 @@ BASE = $(DISTROS)/base00
 # Putting the dependencies inside the kernel source tree.
 # The OS has two major components:
 # The 'kernel image' and the 'dependencies'
-# The dependencies are: boot loader, modules, and apps.
+# The dependencies are: modules, and apps.
 # All the dependencies are in kernel/core/deps/ folder,
 # It's because of the close interaction 
 # with the other subfolders in kernel/core/.
 
 ## =================================
 # Kernel Core: 
-# Boot, kernel and ring 0 modules.
+# ring 0 modules.
 DEP_L0 = kernel/core/deps/kcore
 # Kernel Services: 
 # Init process, ring 3 drivers and ring 3 servers.
@@ -115,27 +115,27 @@ build-gramado-os:
 # See: fs/loader.c
 
 #===================================
-# (1) $(DEP_L0)/boot/ 
+# (1) k08/boot/ 
 
 # ::Build the bootloader.
 	@echo "Compiling boot/"
-	@$(MAKE) -C $(DEP_L0)/boot/
+	@$(MAKE) -C k08/boot/
 
 	@echo "Installing boot/"
 
 # Copy the virtual disk into the rootdir.
-	@cp $(DEP_L0)/boot/GRAMHV.VHD  .
+	@cp k08/boot/GRAMHV.VHD  .
 
 # Copy the bootloader into the rootdir.
-	@cp $(DEP_L0)/boot/x86/bin/BM.BIN      $(BASE)/
-	@cp $(DEP_L0)/boot/x86/bin/BM2.BIN     $(BASE)/
-	@cp $(DEP_L0)/boot/x86/bin/BLGRAM.BIN  $(BASE)/
-	@cp $(DEP_L0)/boot/x86/bin/MBR0.BIN    $(BASE)/
+	@cp k08/boot/x86/bin/BM.BIN      $(BASE)/
+	@cp k08/boot/x86/bin/BM2.BIN     $(BASE)/
+	@cp k08/boot/x86/bin/BLGRAM.BIN  $(BASE)/
+	@cp k08/boot/x86/bin/MBR0.BIN    $(BASE)/
 # Copy the bootloader into the GRAMADO/ directory.
-	@cp $(DEP_L0)/boot/x86/bin/BM.BIN      $(BASE)/GRAMADO
-	@cp $(DEP_L0)/boot/x86/bin/BM2.BIN     $(BASE)/GRAMADO
-	@cp $(DEP_L0)/boot/x86/bin/BLGRAM.BIN  $(BASE)/GRAMADO
-	@cp $(DEP_L0)/boot/x86/bin/MBR0.BIN    $(BASE)/GRAMADO
+	@cp k08/boot/x86/bin/BM.BIN      $(BASE)/GRAMADO
+	@cp k08/boot/x86/bin/BM2.BIN     $(BASE)/GRAMADO
+	@cp k08/boot/x86/bin/BLGRAM.BIN  $(BASE)/GRAMADO
+	@cp k08/boot/x86/bin/MBR0.BIN    $(BASE)/GRAMADO
 
 #===================================
 # (2) kernel/
@@ -402,13 +402,13 @@ clean-all: clean
 	-rm *.VHD
 	-rm *.ISO
 
-	-rm $(DEP_L0)/boot/*.VHD 
+	-rm k08/boot/*.VHD 
 
 # ==================
-# (1) $(DEP_L0)/boot/
+# (1) k08/boot/
 # Clear boot images
-#	-rm -rf $(DEP_L0)/boot/arm/bin/*.BIN
-	-rm -rf $(DEP_L0)/boot/x86/bin/*.BIN
+#	-rm -rf k08/boot/arm/bin/*.BIN
+	-rm -rf k08/boot/x86/bin/*.BIN
 
 # ==================
 # (2) kernel/

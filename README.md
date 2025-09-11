@@ -15,8 +15,10 @@ Gramado OS is a project that includes the bootloader, the core kernel, and the i
 ```
 distros/ - Complete distributions are built here.
 docs/    - Documentation.
-kernel/  - The kernel, including the bootloader, kernel modules, and 
-           applications (see kernel/core/apps/).
+k08/     - Pre-kernel stuff. (Boot loader)
+kernel/  - The kernel, kernel modules, and 
+           applications (see kernel/core/).
+outside/ - 3D stuff and experiments.
 tools/   - SDK tools.
 ```
 
@@ -24,13 +26,12 @@ tools/   - SDK tools.
 
 ```
 kernel/core/deps/:
-- Bootloader and kernel modules.
 - POSIX commands.
 - Display server and client-side GUI applications.
 ```
 ## Where is the boot loader?
 
-kernel/core/deps/kcore/boot/
+k08/boot/
 
 ## Where is the kernel?
 
@@ -71,7 +72,7 @@ kernel/core/gdeps/shell/shell01/
 
 ## What is Gramado OS Kernel?
 
-Gramado OS Kernel includes the bootloader, the core kernel, and the init process.
+Gramado OS Kernel is 64bit image running in ring 0.
 
 ## Kernel initialization
 
