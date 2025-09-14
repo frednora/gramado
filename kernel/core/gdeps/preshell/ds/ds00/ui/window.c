@@ -1772,8 +1772,6 @@ void *CreateWindow (
         ClientAreaColor = (unsigned int) client_color;
     };
 
-
-
     /*
     // #debug
     int mystate = (status & 0xFFFFFFFF);
@@ -1789,7 +1787,6 @@ void *CreateWindow (
         printf("WINDOW_STATE_MAXIMIZED\n"); exit(0);
     }
     */
-
 
 // =================
 // name

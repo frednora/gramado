@@ -5,7 +5,6 @@
 // Version?
 // See protocol version in protocol.h.
 
-
 extern int os_mode;      // GRAMADO_P1 ...
 extern int server_mode;  // DEMO ...
 
@@ -54,14 +53,12 @@ extern int server_mode;  // DEMO ...
 #include "libui/char.h"
 #include "libui/dtext.h"
 
-
 #include "ui/bar.h"    // Notification bar. (yellow)
 #include "ui/wa.h"     // Working Area
 #include "ui/swamp.h"  // Swamp
 
 #include "ui/wm.h"
 #include "ui/wminput.h"
-
 
 #include "libui/bitblt.h"
 
@@ -77,7 +74,6 @@ extern int server_mode;  // DEMO ...
 #include "libos/gramado/surface.h"
 #include "libos/gramado/gramado.h"
 
-
 #include "ui/gui.h"
 
 // Compositor
@@ -87,7 +83,6 @@ extern int server_mode;  // DEMO ...
 #include "ui/event.h"
 
 // #imported
-
 #include <grprim0.h>
 #include <libgr.h>
 
@@ -105,7 +100,6 @@ extern int server_mode;  // DEMO ...
 #include "ui/demos/lin00.h"
 #include "ui/demos/tri00.h"
 #include "ui/demos/curve00.h"
-
 
 #include "libos/gramado/packet.h"
 #include "libos/gramado/connect.h"
@@ -138,7 +132,6 @@ struct gws_graphics_d
 };
 extern struct gws_graphics_d *Currentgraphics;
 
-
 struct engine_d
 {
 
@@ -161,12 +154,10 @@ struct display_server_d
 {
     int initialized;
 
-// The name of the display server.
+// Name, edition and version.
     char name[64];
     char edition_name[64];
-
     char version_string[16];
-
     unsigned long version_major;
     unsigned long version_minor;
 
@@ -194,11 +185,11 @@ struct display_server_d
     // input support
     // ...
 };
-
-//see: main.c
+// see: main.c
 extern struct display_server_d  *display_server;
 
 #define STATUS_RUNNING    1
+// ..
 
 //
 // == Prototypes =============================
@@ -210,40 +201,38 @@ extern struct display_server_d  *display_server;
 
 int server_is_accepting_input(void);
 void server_set_input_status(int is_accepting);
-void server_debug_print (char *string);
-unsigned long server_get_system_metrics (int index);
-void server_enter_critical_section (void);
-void server_exit_critical_section (void);
+void server_debug_print(char *string);
+unsigned long server_get_system_metrics(int index);
+void server_enter_critical_section(void);
+void server_exit_critical_section(void);
 void server_quit(void);
 char *gwssrv_get_version(void);
 
 // --------------------------
 
-
 //
 // Thread
 //
 
-void xxxThread (void);
-void ____test_threads (void);
+void xxxThread(void);
+void ____test_threads(void);
 
 void *gwssrv_create_thread ( 
     unsigned long init_eip, 
     unsigned long init_stack, 
     char *name );
 
-void gwssrv_start_thread (void *thread);
+void gwssrv_start_thread(void *thread);
 
 //
 // Input
 //
 
 void gwssrv_set_keyboard_focus(int window);
-int service_drain_input (void);
+int service_drain_input(void);
 
 unsigned long gws_get_device_width(void);
 unsigned long gws_get_device_height(void);
-
 
 void gwssrv_broadcast_close(void);
 
@@ -252,5 +241,4 @@ void ServerShutdown(int server_fd);
 //
 // End
 //
-
 

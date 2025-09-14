@@ -69,19 +69,17 @@ See: https://wiki.osdev.org/Graphics_stack
 
 #include "gwsint.h"
 
-
 #define VERSION  "0.1"
 #define VERSION_MAJOR  0
 #define VERSION_MINOR  1
 
-
 // -------------------------------------
 // The flags in the main() routine.
 // Only main.c ca handle these values.
-static int f1= FALSE;
-static int f2= FALSE;
-static int f3= FALSE;
-static int f4= FALSE;
+static int f1=FALSE;
+static int f2=FALSE;
+static int f3=FALSE;
+static int f4=FALSE;
 static int fLaunchDM=FALSE;  // Launch the default display manager.
 static int fLaunchTB=FALSE;  // Launch the default taskbar application.
 //static int fLaunchTerminal=FALSE;  // Launch the default terminal.
@@ -115,13 +113,11 @@ static int fLaunchTB=FALSE;  // Launch the default taskbar application.
 #define wsVK_F3    0x3D  //61 
 #define wsVK_F4    0x3E  //62 
 
-
 #define wsVK_RETURN    0x1C
 #define wsVK_TAB       0x0F
 
 #define wsCOLOR_BLACK    0x000000
 #define wsCOLOR_GRAY     0x808080 
-
 
 // #standard
 #define GNP_WID        0
@@ -154,6 +150,9 @@ struct display_server_d  *display_server;
 
 #define SERVER_BACKLOG  8
 
+static int running = FALSE;
+
+static int IsTimeToQuit = FALSE;
 static int IsAcceptingInput = FALSE;
 static int IsAcceptingConnections = FALSE;
 static int IsComposing = FALSE;
@@ -163,15 +162,12 @@ static int connection_status = 0;
 // How many times the accept() routine returned a valid value.
 static unsigned long dispatch_counter=0;
 
-static int IsTimeToQuit = FALSE;
-static int NoReply = FALSE;
+static int NoReply=FALSE;
 static int Notify_PongClient=FALSE;
 static int ____saved_server_fd = -1;
 
 static int ____saved_wm_magic_pid = -1;  // ?? The wm sends us its pid
 static int __saved_sync_id = -1;
-
-static int running = FALSE;
 
 static unsigned long last_dx = 0;
 static unsigned long last_dy = 0;
@@ -286,22 +282,22 @@ void server_enter_critical_section (void)
 // FALSE = CLOSED.
 
     while (1){
-        S = (int) gramado_system_call ( 226, 0, 0, 0 );
-
-        if (S == 1){ goto done; }
+        S = (int) gramado_system_call( 226, 0, 0, 0 );
+        if (S == 1){
+            goto done;
+        }
     };
-
-// Close the gate. turn FALSE.
 done:
-    gramado_system_call ( 227, 0, 0, 0 );
+    // Close the gate. Turn FALSE.
+    gramado_system_call( 227, 0, 0, 0 );
     return;
 }
 
-// exit critical section
-// open the gate.
-void server_exit_critical_section (void)
+// Exit critical section. 
+// Open the gate.
+void server_exit_critical_section(void)
 {
-    gramado_system_call ( 228, 0, 0, 0 );
+    gramado_system_call( 228, 0, 0, 0 );
 }
 
 void server_quit(void)
@@ -321,7 +317,6 @@ void server_quit(void)
 // the message to close.
 // void server_initialize_cleanup(void);
 // void server_initialize_cleanup(void){}
-
 
 
 //#ugly
@@ -469,7 +464,6 @@ __again:
         goto __again;
     }
 
-
     // Cleaning
     message_buffer[0] = 0;
     message_buffer[1] = 0;
@@ -493,9 +487,8 @@ static void xxxxCompositor_Thread(void)
 {
     // #debug
     printf ("f\n");
-    wmReactToPaintEvents();
+    //wmReactToPaintEvents();
 }
-
 
 //
 // $$ 
@@ -512,7 +505,7 @@ int serviceClientEvent(void)
     // The buffer is a global variable.
     //unsigned long *message_address = (unsigned long *) &__buffer[0];
     //return 0;  //ok
-    return -1;
+    return (int) (-1);
 }
 
 // serviceNextEvent:
@@ -561,29 +554,28 @@ int serviceNextEvent(void)
 
 // Building the next response.
 // It will be sent in the socket loop.
-// Lets clean
+// Lets clean it.
     for (i=0; i<32; i++)
         next_response[i] = 0;
 
-//header
+// Header: Nothing, msg type, signature, signature.
     next_response[0] = 0;
-    next_response[1] = SERVER_PACKET_TYPE_EVENT;  //msg type
-    next_response[2] = 1234;  //signature
-    next_response[3] = 5678;  //signature
+    next_response[1] = SERVER_PACKET_TYPE_EVENT;
+    next_response[2] = 1234;
+    next_response[3] = 5678;
 // Index
     Head = (int) (w->ev_head & 0xFFFFFFFF);
-// The message packet.
-// wid, msg=(event type), data1, data2.
+// The message packet: wid, msg=(event type), data1, data2.
     next_response[4] = (unsigned long) w->ev_wid[Head];
     next_response[5] = (unsigned long) w->ev_msg[Head];
     next_response[6] = (unsigned long) w->ev_long1[Head];
     next_response[7] = (unsigned long) w->ev_long2[Head];
-// Round
+// Round it.
     w->ev_head++;
     if (w->ev_head >= 32){
         w->ev_head=0;
     }
-// Clean
+// Clean it.
     w->ev_wid[Head] = 0;
     w->ev_msg[Head] = 0;
     w->ev_long1[Head] = 0;
@@ -619,6 +611,8 @@ int serviceNextEvent2(void)
     if (focus_w->magic != 1234){
         goto fail;
     }
+// #alert:
+// Converting from long to int.
     Index   = (int) message_address[2];  //long1
     Restart = (int) message_address[3];  //long2
 
@@ -629,11 +623,11 @@ int serviceNextEvent2(void)
     for (i=0; i<32; i++)
         next_response[i] = 0;
 
-//header
-    next_response[0] = 0;  //
-    next_response[1] = SERVER_PACKET_TYPE_EVENT;  //msg type
-    next_response[2] = 1234;  //signature
-    next_response[3] = 5678;  //signature
+// Header: Nothing, msg type, signature, signature.
+    next_response[0] = 0;
+    next_response[1] = SERVER_PACKET_TYPE_EVENT;
+    next_response[2] = 1234;
+    next_response[3] = 5678;
 
 // Index
 // It comes in the request.
@@ -641,8 +635,7 @@ int serviceNextEvent2(void)
     if (Head<0||Head>=32){
         goto fail;
     }
-// The message packet.
-// wid, msg=(event type), data1, data2.
+// The message packet: wid, msg=(event type), data1, data2.
     next_response[4] = (unsigned long) focus_w->ev_wid[Head];
     next_response[5] = (unsigned long) focus_w->ev_msg[Head];
     next_response[6] = (unsigned long) focus_w->ev_long1[Head];
@@ -707,7 +700,7 @@ int serviceGetWindowInfo(void)
     }
 // Window
     w = (struct gws_window_d *) windowList[wid];
-    if ( (void*) w == NULL ){
+    if ((void*) w == NULL){
         goto fail;
     }
     if (w->used != TRUE){
@@ -722,20 +715,17 @@ int serviceGetWindowInfo(void)
     for (i=0; i<32; i++)
         next_response[i] = 0;
 
-// Header
-// wid, msg type, signature1, signature2.
+// Header: wid, msg type, signature1, signature2.
     next_response[0] = (unsigned long) (wid & 0xFFFFFFFF);
     next_response[1] = SERVER_PACKET_TYPE_REPLY;
     next_response[2] = 1234;
     next_response[3] = 5678;
-// Window
-// l,t,w,h
+// Window: l,t,w,h
     next_response[7]  = (unsigned long) w->absolute_x;
     next_response[8]  = (unsigned long) w->absolute_y;
     next_response[9]  = (unsigned long) w->width;
     next_response[10] = (unsigned long) w->height;
-// Client rectangle
-// l,t,w,h
+// Client rectangle: l,t,w,h
     next_response[13] = (unsigned long) w->rcClient.left;
     next_response[14] = (unsigned long) w->rcClient.top; 
     next_response[15] = (unsigned long) w->rcClient.width;
@@ -750,7 +740,7 @@ int serviceGetWindowInfo(void)
         //__root_window->width, 
         //__root_window->height );
 
-//ok, send a reply response.
+// ok, send a reply response.
 done:
     return 0;
 fail:
@@ -1205,8 +1195,6 @@ int serviceHello(void)
 // Save it as an argument of the window structure.
 int serviceCreateWindow(int client_fd)
 {
-// Business Logic:
-// Create a window.
 
 // The buffer is a global variable.
     unsigned long *message_address = (unsigned long *) &__buffer[0];
@@ -1367,7 +1355,6 @@ int serviceCreateWindow(int client_fd)
         exit(1);
     }
 
-
 /*
 // #test #debug
     if (Parent->id == 0){
@@ -1446,7 +1433,6 @@ int serviceCreateWindow(int client_fd)
     }
     */
     
-
     //#hack #test
     if (type == WT_OVERLAPPED)
     {
@@ -1456,6 +1442,9 @@ int serviceCreateWindow(int client_fd)
         last_dy += 40;
     }
 
+// Calling the wrapper function.
+// This function belongs to the server code, not a library.
+// See: window.c
     Window = 
         (struct gws_window_d *) CreateWindow ( 
                                     type,      // type
@@ -1610,13 +1599,16 @@ int serviceCreateWindow(int client_fd)
     for (i=0; i<32; i++)
         next_response[i] = 0;
 
-    next_response[0] = (unsigned long) (wid & 0xFFFFFFFF);  // wid
-    next_response[1] = SERVER_PACKET_TYPE_REPLY;            // msg code
-    next_response[2] = 0;  //#todo: Maybe we can send aditional info here.
-    next_response[3] = 0;  //#todo: Maybe we can send aditional info here.
+// Response: wid, msg code, nothing, nothing.
+// Maybe we can send additional info in the future.
+    next_response[0] = (unsigned long) (wid & 0xFFFFFFFF);
+    next_response[1] = SERVER_PACKET_TYPE_REPLY;
+    next_response[2] = 0;
+    next_response[3] = 0;
 
+// Done
     return 0;
-
+// Fail
 fail:
     //server_debug_print("serviceCreateWindow: FAIL\n");
     //#debug
@@ -2872,7 +2864,6 @@ static int dsSendResponse(int fd, int type)
         next_response[i] = 0;
     };
 
-
     // Fall through.
 
 // Fail
@@ -3351,7 +3342,6 @@ static void dispacher(int fd)
         SendEvent = TRUE;  // The response is an EVENT, not a REPLY.
     }
 
-
 //
 // Procedure
 //
@@ -3361,10 +3351,10 @@ static void dispacher(int fd)
 
     Status = 
         (int) dsProcedure (
-                  (int) fd,
-                  (int)           message_buffer[1],
-                  (unsigned long) message_buffer[2],
-                  (unsigned long) message_buffer[3] );
+                (int) fd,
+                (int)           message_buffer[1],
+                (unsigned long) message_buffer[2],
+                (unsigned long) message_buffer[3] );
 
 // Como o serviço não pode ser prestado corretamente.
 // Então logo abaixo mandaremos uma resposta de erro
@@ -3376,7 +3366,6 @@ static void dispacher(int fd)
 //
 // == Sending reply ==========
 //
-
 
 // First, check if we need a reply.
 // Alguns requests não exigem resposta.
@@ -3435,7 +3424,7 @@ static void dispacher(int fd)
     //if(Status >= 0)
         //goto exit0;
 
-// Fall
+// Fall trough
 
 exit2:
     message_buffer[0] = 0;
