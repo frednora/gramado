@@ -94,7 +94,7 @@ network_dhcp_send(
     unsigned short sport, 
     unsigned short dport )
 {
-    char *p; // For hostname support.
+    char *p;  // For hostname support.
     int opt_size = 0;
 
 // Parameters

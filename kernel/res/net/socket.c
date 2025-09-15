@@ -18,7 +18,6 @@ static unsigned short __new_client_port_number =
 unsigned char localhost_ipv4[4] = { 127, 0, 0, 1 };
 
 
-
 static int 
 __connect_inet ( 
     int sockfd, 
@@ -1932,7 +1931,6 @@ fail:
     return (int) -1;
 }
 
-
 // syscall implementation
 int 
 sys_connect ( 
@@ -1944,6 +1942,8 @@ sys_connect (
 // #warning
 // We can have two types of address.
 // One for local and another one for inet.
+
+    //unsigned long *limit_address = (unsigned long *) CONTROLTHREAD_BASE;
 
 // fd
     if ( sockfd < 0 || sockfd >= OPEN_MAX )
@@ -1961,6 +1961,7 @@ sys_connect (
 // Address validation.
 // It needs to be a ring3 address.
 // #todo: Check agains more limits.
+// #bugbug: Comparison between pointer and integer.
     if (addr < CONTROLTHREAD_BASE){
         panic("sys_connect: addr is not ring3\n");
         //return (int) (-EINVAL);

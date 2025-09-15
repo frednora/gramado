@@ -220,7 +220,7 @@ int gprot_handle_protocol(char *data, uint16_t s_port, uint16_t d_port)
 
 // ----------------
 // Invalid request
-invalid_request:
+// invalid_request:
     memset(buf, 0, sizeof(buf));
     ksprintf(buf,"g:3 ");  // Error
     NoReply = FALSE;

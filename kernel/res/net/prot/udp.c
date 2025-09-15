@@ -538,8 +538,8 @@ network_send_udp (
 // >Step3) Copiando o header udp.
 // >Step4) Copiando os dados.
 
-//Step1
-//copia o header ethernet
+// Step1
+// Copia o header ethernet
     int eth_offset=0;
     for ( j=0; j<ETHERNET_HEADER_LENGHT; j++ )
     {
@@ -641,10 +641,9 @@ network_handle_udp(
     ssize_t size )
 {
     struct udp_d *udp;
-    register int i=0;
+    //register int i=0;
 
     //printk ("UDP: Received\n");
-
 
 // Parameters:
     if ((void*) buffer == NULL){

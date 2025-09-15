@@ -7,7 +7,6 @@ static char tcp_payload[1024];
 
 // ===================================================
 
-
 //
 // $
 // HANDLER
@@ -24,7 +23,7 @@ network_handle_tcp(
 // communication between two TCP endpoints.
 
     struct tcp_d *tcp;
-    register int i=0;
+    //register int i=0;
     uint16_t flags=0;
 
     // #debug
