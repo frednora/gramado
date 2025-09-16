@@ -25,7 +25,7 @@ tools/   - SDK tools.
 ## Special folder.
 
 ```
-kernel/core/deps/:
+k08/deps/:
 - POSIX commands.
 - Display server and client-side GUI applications.
 ```
@@ -39,31 +39,31 @@ kernel/
 
 ## Where are the ring 0 kernel modules?
 
-kernel/core/deps/kcore/modules/
+k08/deps/kcore/modules/
 
 ## Where is the Init Process?
 
-kernel/core/deps/ucore/init/
+k08/deps/ucore/init/
 
 ## Where is the ring 3 device drivers?
 
-kernel/core/deps/ucore/drivers/
+k08/deps/ucore/drivers/
 
 ## Where is the ring 3 servers?
 
-kernel/core/deps/ucore/servers/
+k08/deps/ucore/servers/
 
 ## Where is the display server?
 
-kernel/core/gdeps/preshell/ds/ds00/
+k08/gdeps/preshell/ds/ds00/
 
 ## Where are the POSIX-like command programs?
 
-kernel/core/gdeps/shell/shell00/
+k08/gdeps/shell/shell00/
 
 ## Where are the client-side GUI applications?
 
-kernel/core/gdeps/shell/shell01/
+k08/gdeps/shell/shell01/
 
 
 > [!IMPORTANT]

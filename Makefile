@@ -16,23 +16,23 @@ BASE = $(DISTROS)/base00
 # The OS has two major components:
 # The 'kernel image' and the 'dependencies'
 # The dependencies are: modules, and apps.
-# All the dependencies are in kernel/core/deps/ folder,
+# All the dependencies are in k08/deps/ folder,
 # It's because of the close interaction 
 # with the other subfolders in kernel/core/.
 
 ## =================================
 # Kernel Core: 
 # ring 0 modules.
-DEP_L0 = kernel/core/deps/kcore
+DEP_L0 = k08/deps/kcore
 # Kernel Services: 
 # Init process, ring 3 drivers and ring 3 servers.
-DEP_L1 = kernel/core/deps/ucore
+DEP_L1 = k08/deps/ucore
 
 ## =================================
 # Shell Pre-UI: The display server.
-DEP_L2 = kernel/core/gdeps/preshell
+DEP_L2 = k08/gdeps/preshell
 # Shell UI: Client-side GUI applications.
-DEP_L3 = kernel/core/gdeps/shell
+DEP_L3 = k08/gdeps/shell
 
 OUTSIDE_L0 = outside
 #OUTSIDE_L1 = outside?

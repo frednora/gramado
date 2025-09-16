@@ -6,8 +6,6 @@
 
 ```
   * arch  - Kernel entry
-  * deps  - Bootloader, kernel module, Init process and ring 3 posix-commands.
-  * gdeps - Client-side GUI applications.
   * ke    - Top level kernel functions.
   * kmain - Main functions. Wrappers.
 ```
