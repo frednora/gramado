@@ -3,7 +3,7 @@
 // Created by Fred Nora.
 
 // Version?
-// See protocol version in protocol.h.
+// See protocol version in api/protocol.h.
 
 extern int os_mode;      // GRAMADO_P1 ...
 extern int server_mode;  // DEMO ...
@@ -26,8 +26,8 @@ extern int server_mode;  // DEMO ...
 
 // Configuration and debug support.
 #include "config/config.h"
-#include "protocol.h"
-#include "async.h"
+#include "api/protocol.h"
+#include "api/async.h"
 #include "z8server/globals.h"
 #include "ui/colors.h"
 #include "ui/themes/humility.h"
@@ -101,10 +101,12 @@ extern int server_mode;  // DEMO ...
 #include "ui/demos/tri00.h"
 #include "ui/demos/curve00.h"
 
+#include "ui/font.h"
+
 #include "libos/gramado/packet.h"
 #include "libos/gramado/connect.h"
 
-#include "ui/font.h"
+//#include "ui/font.h"
 
 // Client structure.
 // O proprio servidor poderia ser o cliente 0??
@@ -116,12 +118,12 @@ extern int server_mode;  // DEMO ...
 // This is the structure that is gonna be used by the
 // drawing routines.
 // 'dc->something'
-// It needs to be the last one.
+// It needs to be one of the last includes.
 #include "libos/gramado/dc.h"
 
 // The services called by the dispacher.
-#include "service.h"
-
+// It needs to be the last one.
+#include "api/service.h"
 
 struct gws_graphics_d
 {
