@@ -1,6 +1,6 @@
-# k08 - Pre-kernel stuff
+# k08
 
-Pre-kernel stuff. Just like the bootloader.
+Some OS main components that are not the kernel image itself.
 
 ## The initialization
 
