@@ -21,45 +21,36 @@ BASE = $(DISTROS)/base00
 # with the other subfolders in kernel/core/.
 
 ## =================================
-# Kernel Core: 
-# ring 0 modules.
+# Kernel Core: Ring 0 modules.
 DEP_L0 = k08/deps/kcore
-# Kernel Services: 
-# Init process, ring 3 drivers and ring 3 servers.
+
+## =================================
+# Kernel Services: Init process, ring 3 drivers and ring 3 servers.
 DEP_L1 = k08/deps/ucore
+# Unix-like commands
+COMMANDS = $(DEP_L1)/cmds
 
 ## =================================
 # Shell Pre-UI: The display server.
 DEP_L2 = k08/gdeps/preshell
-# Shell UI: Client-side GUI applications.
-DEP_L3 = k08/gdeps/shell
-
-OUTSIDE_L0 = outside
-#OUTSIDE_L1 = outside?
-
-# --------------------------
-# Unix-like commands
-COMMANDS = $(DEP_L1)/cmds
-
-# --------------------------
 # Display servers
 DISPLAY_SERVERS = $(DEP_L2)/ds
 
-# --------------------------
+## =================================
+# Shell UI: Client-side GUI applications.
+DEP_L3 = k08/gdeps/shell
 # Client-side GUI applications
 APPLICATIONS = $(DEP_L3)/shell01
 
-# --------------------------
+## =================================
+OUTSIDE_L0 = outside
 # windowing system with 3D demos
 GAMES = $(OUTSIDE_L0)/gram3d
-
-# --------------------------
 # Client-side GUI applications with X library
 X_APPLICATIONS = $(OUTSIDE_L0)/xapps
-
-# --------------------------
 # Creating one cpp application just for fun
 CPP00_APPLICATION = $(OUTSIDE_L0)/cpp00
+
 
 # Make variables (CC, etc...)
 AS      = as

@@ -746,8 +746,13 @@ tbProcedure(
             gws_refresh_window(fd,tmpNewWID);
             break;
 
+        // #bugbug
+        // The taskbar application is the Shell, just like the explorer.exe
+        // in Windows. We can't simply close it.
+        // #todo
+        // It only can happen when in certain situations.
         case MSG_CLOSE:
-            printf("taskbar: Closing...\n");
+            printf("taskbar: Closing... #bugbug\n");
             exit(0);
             break;
         

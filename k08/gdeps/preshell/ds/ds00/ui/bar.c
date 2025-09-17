@@ -1,4 +1,3 @@
-
 // bar.c
 // Draw and update the notification bar. (yellow bar) (status bar).
 // #todo 
@@ -7,9 +6,7 @@
 
 #include "../gwsint.h"
 
-
 struct statusbar_info_d  StatusBarInfo;
-
 
 struct yellow_dialog_info_d  YellowDialogInfo;
 
