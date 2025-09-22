@@ -1,7 +1,10 @@
-# dev/
-# Compile all the files and create ar_dev.o
-# Makefile for the kernel device drivers.
+# blkdev/ 
+# Module for block devices.
+# This module is used by the kernel to support block devices.
+# AHCI devices, ATA devices and storage interface.
+# Compile all the files and create blkdev.o
 
+targetFile = blkdev.o
 
 INCLUDE = ../../../include
 
@@ -20,7 +23,6 @@ PYTHON	= python
 PYTHON2	= python2
 PYTHON3	= python3
 RUBY	= ruby
-
 
 # test: gramado 64bit
 # See: https://gcc.gnu.org/onlinedocs/gcc/Code-Gen-Options.html
@@ -69,14 +71,17 @@ KERNEL_INCLUDE := -I $(INCLUDE)
 # LDFLAGS := -m elf_x86_64 -static
 LDFLAGS := -m elf_x86_64 -s -x -static  
 
-
 # Everything is a file.
 OBJS = \
 ata.o atadma.o atahdd.o atainfo.o atairq.o atapci.o \
 disk_r.o disk_w.o storage.o    
 
-
 all:
+
+# AHCI
+#	$(CC) -c ahci/ahci.c      $(KERNEL_INCLUDE) $(CFLAGS) -o ahci.o 
+#	$(CC) -c ahci/ahciinfo.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ahciinfo.o 
+#	$(CC) -c ahci/ahcipci.c   $(KERNEL_INCLUDE) $(CFLAGS) -o ahcipci.o 
 
 # ATA
 	$(CC) -c ata/ata.c     $(KERNEL_INCLUDE) $(CFLAGS) -o ata.o 
@@ -88,15 +93,12 @@ all:
 	$(CC) -c ata/disk_r.c  $(KERNEL_INCLUDE) $(CFLAGS) -o disk_r.o
 	$(CC) -c ata/disk_w.c  $(KERNEL_INCLUDE) $(CFLAGS) -o disk_w.o
 
-# AHCI
-#	$(CC) -c ahci/ahci.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ahci.o 
-
 # storage
 	$(CC) -c storage.c $(KERNEL_INCLUDE) $(CFLAGS) -o storage.o 
 
 # link
-	$(LD) -r -o blkdev.o $(OBJS)
-	cp blkdev.o  ../../../
+	$(LD) -r -o $(targetFile) $(OBJS)
+	cp $(targetFile)  ../../../
 	rm *.o
 
 clean:
