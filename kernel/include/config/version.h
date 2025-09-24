@@ -9,7 +9,7 @@
 
 // Current build number
 // Updated by the builder
-#define __CURRENT_BUILD_NUMBER    349
+#define __CURRENT_BUILD_NUMBER    350
 
 // Version
 #define VERSION_MAJOR    0
@@ -20,8 +20,8 @@
 #define VERSION_WORD    0x0008
 // Strings
 #define VERSION_STRING    "0.8"
-#define BUILD_STRING      "349"
-#define BUILD_CODENAME_STRING  "s2"
+#define BUILD_STRING      "350"
+#define BUILD_CODENAME_STRING  "MACRO HARD"
 #define RELEASE_STRING    PRODUCT_TYPE_STRING
 
 #endif  

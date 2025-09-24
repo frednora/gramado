@@ -521,7 +521,7 @@ grPlot2D (
 // We use:
 // Left-hand System (LHS) 
 // LHS is clockwise (CW).
-// Same as Microsoft Direct3D.
+// Same as Direct3D.
 // See: https://en.wikipedia.org/wiki/Direct3D
 // window ?
 // Essa rotina pode pintar em qualquer posição 
@@ -686,12 +686,11 @@ grPlot0 (
 // We use:
 // Left-hand System (LHS) 
 // LHS is clockwise (CW).
-// Same as Microsoft Direct3D.
+// Same as Direct3D.
 // See: https://en.wikipedia.org/wiki/Direct3D
 // Another way is:
 // Right-Hand Coordinate System (RHS).
 // RHS is counter-clockwise (CCW).
-
 
 // The clipping window.
 // #todo

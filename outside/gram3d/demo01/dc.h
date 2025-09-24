@@ -1,10 +1,8 @@
-
 // dc.h
 // Device Context.
 
 #ifndef __DC_H
 #define __DC_H    1
-
 
 /*
 // Losethos colors.
@@ -13,7 +11,6 @@ public BGREntry vga_palette4_std[16] = {
     0xAA0000,0xAA00AA,0xAA5500,0xAAAAAA,
     0x555555,0x5555FF,0x55FF55,0x55FFFF,
     0xFF5555,0xFF55FF,0xFFFF55,0xFFFFFF };
-
 
 public BGREntry vga_palette4_gray[16] = {
     0x000000,0x111111,0x222222,0x333333,
@@ -34,13 +31,8 @@ public BGREntry vga_palette4_gray[16] = {
 #define DCF_DONT_DRAW       8
 // ...
 
-
+// Struture for Device Context (DC).
 // Information about the drawing attributes of a device.
-// See:
-// https://docs.microsoft.com/en-us/windows/win32/gdi/device-contexts
-// https://docs.microsoft.com/en-us/windows/win32/gdi/about-device-contexts
-// https://docs.microsoft.com/en-us/cpp/mfc/device-contexts?view=msvc-170
-// ...
 struct dc_d
 {
     int used;
@@ -90,7 +82,6 @@ struct dc_d
     unsigned long zfar;
     unsigned long zrange;
 
-
 // center
     unsigned long hotspot_x;
     unsigned long hotspot_y;
@@ -101,7 +92,6 @@ struct dc_d
     unsigned long max_x;
     unsigned long min_y;
     unsigned long max_y;
-
 
 // #todo:
 // We have and array with 16 colors with 4 bytes each.
@@ -116,10 +106,8 @@ struct dc_d
 // We can use this for copying from a context to another.
     struct dc_d *next;
 };
-
 // see: globals.c
 extern struct dc_d  *gr_dc;   // default dc?
 
 #endif    
-
 

@@ -475,8 +475,6 @@ void *doCreateWindow (
 // #bugbug
 // maximized, minimized and fullscreen are not style features.
 // move these things to another flag.
-// see:
-// https://learn.microsoft.com/en-us/windows/win32/winmsg/window-styles
 // see: border, captions, scrobar ...
 
 // Maximized

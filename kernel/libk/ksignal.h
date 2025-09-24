@@ -162,7 +162,7 @@ SIGTERM Solicitação de finalização
 */
 
 /*
-Comentários (microsoft)
+Comentários (credits: Microsoft Learn)
 O argumento de sig deve ser uma das constantes manifestas listadas abaixo (definido em SIGNAL.H).
 SIGABRT
 Encerramento anormal. A ação padrão encerra o programa de chamada com o código de saída 3.

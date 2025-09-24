@@ -13,7 +13,7 @@ o que posso fazer por enquanto eh organizar o sistema para que o
 boot aconteça no hypervisor.
 
   Um hypervisor pode ser magrinho e os drivers ficam na partiçao raiz, 
-como acontece com o hyperv da microsoft. Ou o hypervisor pode ser gordinho 
+como acontece com o hyperv. Ou o hypervisor pode ser gordinho 
 e conter os drivers que serao acessador pela partiçao raiz e pelos guests, 
 como acontece com o linux com kvm.
   Bom, esse eh o primeiro passo de muitos. 

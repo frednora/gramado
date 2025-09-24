@@ -17,12 +17,8 @@
 #define DCF_DONT_DRAW       8
 // ...
 
+// Struture for Device Context.
 // Information about the drawing attributes of a device.
-// See:
-// https://docs.microsoft.com/en-us/windows/win32/gdi/device-contexts
-// https://docs.microsoft.com/en-us/windows/win32/gdi/about-device-contexts
-// https://docs.microsoft.com/en-us/cpp/mfc/device-contexts?view=msvc-170
-// ...
 struct dc_d
 {
     int used;

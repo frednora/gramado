@@ -2,17 +2,15 @@
 // Presentation: Put a pixel into the backbuffer.
 // Created by Fred Nora.
 
-//D - Destination bitmap
-//P - Selected brush (also called pattern)
-//S - Source bitmap
+// D - Destination bitmap
+// P - Selected brush (also called pattern)
+// S - Source bitmap
 
 // See:
 // bit block transfer
 // https://en.wikipedia.org/wiki/Bit_blit
-// https://docs.microsoft.com/en-us/windows/win32/gdi/ternary-raster-operations
 
 #include <kernel.h>
-
 
 int 
 backbuffer_putpixel ( 

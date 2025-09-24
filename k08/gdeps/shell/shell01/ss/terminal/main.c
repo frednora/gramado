@@ -30,8 +30,6 @@
 // See:
 // https://wiki.osdev.org/Message_Passing_Tutorial
 // https://wiki.osdev.org/Synchronization_Primitives
-// https://devblogs.microsoft.com/commandline/
-// /windows-command-line-introducing-the-windows-pseudo-console-conpty/
 // ...
 
 #include <types.h>
