@@ -1,0 +1,208 @@
+@charset "UTF-8";
+
+/* ============================================================
+   TOUCHGRASS.CSS
+   A minimalist, playful, and responsive CSS library.
+   Inspired by nature and simplicity 🌱
+   Created by ChatGPT.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   0) ROOT VARIABLES
+   ------------------------------------------------------------ */
+:root {
+  /* Base colors */
+  --tg-color-black:   #000000;
+  --tg-color-white:   #ffffff;
+  --tg-color-gray1:   #333333;
+  --tg-color-gray2:   #888888;
+  --tg-color-gray3:   #dddddd;
+
+  /* Theme (Grass & Sun vibes 🌱☀️) */
+  --tg-color-primary:   #3BAF4A;  /* Green */
+  --tg-color-secondary: #F9C80E;  /* Yellow */
+  --tg-color-accent:    #2D9CDB;  /* Sky blue */
+  --tg-color-bg:        #FAFAFA;  /* Background */
+}
+
+/* ============================================================
+   GLOBAL RESET & TYPOGRAPHY
+   ------------------------------------------------------------ */
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  background-color: var(--tg-color-bg);
+  color: var(--tg-color-gray1);
+}
+
+h1,h2,h3,h4,h5,h6 { margin: 0; padding: 0; }
+p { margin: 0 0 1em 0; line-height: 1.6; }
+
+a {
+  color: var(--tg-color-accent);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+a:hover {
+  color: var(--tg-color-primary);
+}
+a:focus {
+  outline: 2px solid var(--tg-color-secondary);
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   LAYOUT
+   ------------------------------------------------------------ */
+.tg-container {
+  text-align: center;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.tg-main-content {
+  margin-left: 0;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+/* Desktop adjustment */
+@media (min-width: 1024px) {
+  .tg-main-content {
+    margin-left: 240px;
+    text-align: center;
+  }
+}
+
+/* ============================================================
+   NAVIGATION
+   ------------------------------------------------------------ */
+.tg-nav {
+  font-size: 4.5vw;
+  border-bottom: 2px solid var(--tg-color-gray3);
+  background: var(--tg-color-white);
+}
+
+.tg-nav ul {
+  margin: 0;
+  padding: 0.5rem;
+  list-style: none;
+  text-align: center;
+}
+
+.tg-nav li {
+  display: inline-block;
+  margin: 0 1rem;
+}
+
+.tg-nav a {
+  color: var(--tg-color-primary);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+/* ============================================================
+   SIDEBAR
+   ------------------------------------------------------------ */
+.tg-sidebar {
+  width: 100%;
+  background: var(--tg-color-white);
+  padding: 1rem;
+}
+
+.tg-sidebar ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+
+.tg-sidebar a {
+  display: block;
+  padding: 12px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  color: var(--tg-color-primary);
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s;
+}
+
+.tg-sidebar a:hover {
+  background: rgba(59, 175, 74, 0.1);
+  color: #267b35;
+}
+
+/* Desktop fixed sidebar */
+@media (min-width: 1024px) {
+  .tg-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 220px;
+    height: 100vh;
+    background: var(--tg-color-primary);
+    color: var(--tg-color-white);
+  }
+  .tg-sidebar a {
+    color: var(--tg-color-white);
+  }
+}
+
+/* ============================================================
+   HEADERS & TEXT
+   ------------------------------------------------------------ */
+.tg-header {
+  font-size: 2rem;
+  color: var(--tg-color-primary);
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+.tg-text {
+  font-size: 1.1rem;
+  color: var(--tg-color-gray1);
+}
+
+/* ============================================================
+   BUTTONS
+   ------------------------------------------------------------ */
+.tg-button {
+  display: inline-block;
+  background: var(--tg-color-primary);
+  color: #fff;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.tg-button:hover {
+  background: #2e8b3d;
+}
+.tg-button:active {
+  background: #1e5d28;
+}
+
+/* ============================================================
+   IMAGES
+   ------------------------------------------------------------ */
+.tg-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  margin: 1rem 0;
+}
+
+/* ============================================================
+   FOOTER
+   ------------------------------------------------------------ */
+.tg-footer {
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--tg-color-gray2);
+  padding: 2rem 0;
+  border-top: 2px solid var(--tg-color-gray3);
+}

@@ -1,0 +1,156 @@
+/* assets/css/polar.css - Created by Grok, based on polard8.css.
+   Mobile-First Style Library for Seek Balance
+   Theme: Cool, harmonious "polar" aesthetic—crisp blues/whites for calm focus.
+   Structure: Mobile-first base styles, with @media for larger devices. */
+
+/* 1. CSS Variables: Theme Consistency */
+:root {
+    --polar-primary: #4a90e2; /* Cool blue for buttons/links */
+    --polar-hover: #357abd; /* Hover state */
+    --polar-secondary: #7b68ee; /* Lavender for highlights */
+    --text-dark: #2c3e50; /* Navy for headings */
+    --text-light: #5d6d7e; /* Gray for body */
+    --bg-polar: #ecf0f1; /* Light background */
+    --card-bg: #ffffff; /* White cards */
+    --border-soft: 1px solid #bdc3c7;
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --font-polar: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --font-heading: 'Georgia', serif;
+}
+
+/* 2. Mobile-First Base Styles (Optimized for <768px) */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-polar);
+    color: var(--text-light);
+    line-height: 1.5;
+    background: var(--bg-polar);
+    font-size: 16px; /* Base font size for mobile */
+}
+
+/* Container: Single-column, narrow for mobile */
+.polar-container {
+    max-width: 100%;
+    padding: var(--spacing-md);
+    margin: var(--spacing-sm);
+    background: var(--card-bg);
+}
+
+/* Typography: Smaller for mobile readability */
+h1 { font-size: 1.8rem; text-align: center; font-family: var(--font-heading); color: var(--text-dark); }
+h2 { font-size: 1.5rem; margin-bottom: var(--spacing-sm); }
+h3 { font-size: 1.2rem; margin-bottom: var(--spacing-xs); }
+p { font-size: 1rem; margin-bottom: var(--spacing-md); text-align: left; }
+
+/* Links & Buttons: Compact for touch */
+a { color: var(--polar-primary); text-decoration: none; }
+a:hover { color: var(--polar-hover); }
+
+.polar-button {
+    display: block; /* Full-width for mobile */
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--polar-primary);
+    color: #fff;
+    border-radius: 4px;
+    text-align: center;
+    font-weight: bold;
+    transition: background 0.3s ease;
+}
+
+.polar-button:hover {
+    background: var(--polar-hover);
+}
+
+/* Cards: Simple for mobile */
+.polar-card {
+    background: var(--card-bg);
+    padding: var(--spacing-md);
+    border: var(--border-soft);
+    border-radius: 6px;
+    margin-bottom: var(--spacing-md);
+}
+
+/* Grid: Single-column for mobile */
+.polar-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+/* Forms: Full-width inputs for mobile */
+form {
+    margin: var(--spacing-md) 0;
+}
+
+input, textarea, button {
+    font-family: var(--font-polar);
+    padding: var(--spacing-sm);
+    border: var(--border-soft);
+    border-radius: 4px;
+    width: 100%;
+    font-size: 1rem;
+}
+
+/* Highlight: For project callouts */
+.balance-highlight {
+    background: var(--bg-polar);
+    padding: var(--spacing-sm);
+    border-left: 3px solid var(--polar-primary);
+    margin: var(--spacing-md) 0;
+}
+
+/* 3. Large Device Styles (Tablets/Desktops, >=768px) */
+@media (min-width: 768px) {
+    body { font-size: 18px; } /* Slightly larger text */
+    
+    .polar-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: var(--spacing-lg);
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Add depth */
+    }
+
+    h1 { font-size: 2.5rem; }
+    h2 { font-size: 2rem; }
+    h3 { font-size: 1.5rem; }
+    p { font-size: 1.1rem; text-align: justify; }
+
+    .polar-button {
+        display: inline-block; /* Inline for desktop */
+        padding: var(--spacing-sm) calc(var(--spacing-md) * 1.5);
+    }
+
+    .polar-card {
+        padding: var(--spacing-lg);
+        transition: box-shadow 0.3s ease;
+    }
+
+    .polar-card:hover {
+        box-shadow: 0 6px 12px rgba(74, 144, 226, 0.2); /* Polar glow */
+    }
+
+    .polar-grid {
+        flex-direction: row; /* Multi-column for desktop */
+        gap: var(--spacing-md);
+    }
+
+    input, textarea {
+        max-width: 500px; /* Limit form width */
+    }
+}
+
+/* 4. Extra Large Devices (>=1200px) */
+@media (min-width: 1200px) {
+    .polar-container { max-width: 1100px; }
+    h1 { font-size: 3rem; }
+    .polar-grid { gap: var(--spacing-lg); }
+}

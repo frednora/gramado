@@ -1,0 +1,131 @@
+
+html, body {
+    margin: 0;
+    padding: 0;
+    background-color: #F2EFEF;
+}
+
+/* header*/
+.main-header {
+    color: #D73B60;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.image-container {
+    text-align: center;
+}
+.main-image {
+    width: 75%;
+    height: auto;
+}
+
+.main-button {
+    text-align: center;
+}
+
+/* main footer.*/
+.main-footer {
+    color: #C0C0C0;
+    text-align: center;
+}
+
+/* ------------------------------------ */
+
+/* MEDIA QUERY */
+
+/* small */
+@media (min-width: 200px) and (max-width: 1023px ) {
+
+.nav {
+    /*display: none;*/
+    /*max-height: none;*/
+    /*top: 0;*/
+    /*position: relative;*/
+    /*float: left;*/
+    width: fit-content;
+    background-color: transparent;
+    width: 100%;
+    text-align: center;
+}
+.nav ul {
+    width: 100%;
+    margin: 0;
+    text-align: center;
+}
+.nav li {
+    width: 100%;
+    display: block;
+    /*padding: 0 2%;*/
+    text-align: center;
+}
+.nav a {
+    color: #808080;
+    text-decoration: none;
+    text-transform: uppercase;
+    display: inline-block;
+    text-align: center;
+}
+.nav a:hover {
+    background-color: rgba(255, 255, 255, .7); /*white*/
+    text-align: center;
+}
+.main-nav {
+    font-size: 1.1em;
+    text-align: center;
+    border-top: 2px solid rgba(200, 200, 200, .3);
+    border-bottom: 2px solid rgba(200, 200, 200, .3);
+}
+
+
+
+.main-image {
+    width: 75%;
+    height: auto;
+}
+
+}
+
+/* large */
+@media (min-width: 1024px) {
+
+/* Navigation bar */
+.nav {
+    text-align: center;
+}
+.nav ul {
+    margin: 0;
+}
+.nav li {
+    display: inline;
+    padding: 0 2%; /*distancia entre os items*/
+}
+.nav a {
+    color: #808080;
+    text-decoration: none;
+    text-transform: uppercase;
+    display: inline-block;
+}
+.nav a:hover {
+    background-color: rgba(255, 255, 255, .7); /*White*/
+}
+/*??*/
+.main-nav {
+    font-size: 1.1em;
+    text-align: center;
+    border-top: 2px solid rgba(200, 200, 200, .3);
+    border-bottom: 2px solid rgba(200, 200, 200, .3);
+}
+
+.main-image {
+    width: 50%;
+    height: auto;
+}
+
+}
+
+
+
+
+
+

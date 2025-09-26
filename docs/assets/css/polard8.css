@@ -1,0 +1,410 @@
+@charset "UTF-8";
+:root {
+/* Gray scale */
+    --polard8-color-black:  #000000;
+    --polard8-color-gray1:  #202020;
+    --polard8-color-gray2:  #404040;
+    --polard8-color-gray3:  #606060;
+    --polard8-color-gray4:  #808080;
+    --polard8-color-gray5:  #a0a0a0;
+    --polard8-color-gray6:  #c0c0c0;
+    --polard8-color-gray7:  #e0e0e0;
+    --polard8-color-white:  #ffffff;
+/* App components */
+/* This helps you quickly theme or brand the library. */
+    --polard8-color-primary: #F3770B;
+    --polard8-color-secondary: #222;
+    --polard8-color-accent: #0089FF;
+    --polard8-color-bg: #FAFAFA;
+/* ... */
+}
+
+/*
+ * polard8.css minimalist css library.
+ * Created by Fred Nora.
+ * (This is a work in progress)
+ */
+
+/*
+ * Library components:
+ * ===============================================
+ *   0 ) Initialization     - Global scope
+ * -------------------------------------
+ *   1.1 ) .polard8-banner    - Banner
+ *   1.2 ) .polard8-nav       - Navigation bar
+ *   1.3 ) .polard8-container - Container
+ *   1.4 ) .polard8-header    - Header
+ * -------------------------------------
+ *   2.1 ) .polard8-text      - Text
+ *   2.2 ) .polard8-image     - Image
+ *   2.3 ) .polard8-button    - Button
+ * -------------------------------------
+ *   3.1 ) .polard8-footer    - Footer
+ */
+
+/*   0 ) Initialization     - Global scope */
+html, body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #FAFAFA;
+}
+h1,h2,h3,h4,h5,h6 {
+    margin: 0;
+    padding: 0;
+}
+a {
+    color: #0069d6;
+}
+a:hover {
+    color: #0089FF;
+}
+a:focus {
+    outline: 2px solid #F3770B;  /*High-contrast orange outline*/ 
+    outline-offset: 2px;          /*Small space between outline and link*/ 
+}
+a:focus-visible {
+    outline: 2px solid #F3770B;  /* High-contrast orange outline */
+    outline-offset: 2px;
+}
+
+/* 
+ * Small screen: ------------------------------
+ * Mobile first?
+ */
+
+/* 1.1 ) .polard8-banner    - Banner */
+
+/* 1.2 ) .polard8-nav       - Navigation bar */
+.polard8-nav {
+    font-size: 4.5vw;
+    border-top: 2px solid rgba(88, 88, 88, .3);
+    border-bottom: 2px solid rgba(129, 129, 129, .3);
+}
+.polard8-nav ul {
+    text-align: center;
+    margin: 0;
+}
+.polard8-nav li {
+    width: fit-content;
+    text-align: center;
+    display: block;
+    padding: 0.4% 0.2% 0.2% 0.2%;
+}
+.polard8-nav a {
+    text-align: center;
+    text-decoration: none;
+    text-transform: uppercase;
+    color: #F3770B;
+    display: inline-block;
+}
+.polard8-nav a:hover {
+    background-color: rgba(256, 256, 256, .9); 
+}
+
+/* Sidebar for small screens */
+
+.polard8-sidebar {
+    width: 100vw;
+    height: auto;
+    position: static;
+    box-shadow: none;
+    padding-top: 0; 
+}
+
+.polard8-sidebar ul {
+    text-align: center;
+    margin: 0;
+}
+.polard8-sidebar li {
+    width: fit-content;
+    text-align: center;
+    display: block;
+    /*padding: 0.4% 0.2% 0.2% 0.2%;*/
+    padding: 0.2% 0.2% 0.2% 0.2%;
+}    
+
+.polard8-sidebar a {
+  display: block;               /* Full clickable block for tap targets */
+  text-align: center;           /* Center text for both icons and text */
+  text-decoration: none;        /* Remove underline */
+  text-transform: uppercase;    /* Consistent look */
+  color: #F3770B;               /* Brand color */
+  font-weight: 500;             /* Slightly bolder for readability */
+  padding: 12px 0;              /* Touch-friendly vertical padding */
+  border-radius: 6px;           /* Slightly rounded corners */
+  transition: background 0.2s, color 0.2s;  /* Smooth hover effect */
+  margin: 0 8px 8px 8px;        /* Space between links */
+  font-size: 1.2em;             /* Slightly larger for accessibility */
+}
+
+.polard8-sidebar a:hover,
+.polard8-sidebar a:focus {
+  background: rgba(243, 119, 11, 0.1);   /* Subtle brand highlight */
+  color: #d35e00;                        /* Slightly darker on hover */
+  text-decoration: underline;            /* Optional: show underline on hover */
+  outline: none;                         /* Remove default focus outline */
+}
+
+
+.polard8-sidebar-image {
+  display: block;
+  margin-left: auto;
+  margin-top: 8px;
+  margin-right: auto;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  max-width: 80%;
+  width: 120px;
+  height: auto;
+}
+
+.polard8-main-content {
+    margin-left: 0;
+    padding-top: 60px; /* Add space for nav if needed */
+    font-size: 4.4vw;
+    text-align: center;
+}
+
+
+/* 1.3 ) .polard8-container - Container */
+.polard8-container {
+    font-size: 4.4vw;
+    text-align: center;
+}
+
+/* 1.4 ) .polard8-header    - Header */
+.polard8-header{
+    font-size: 3.5vw;
+    color: #F3770B;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.polard8-header-image {
+    text-align: center;
+    width: 11%;
+    height: auto;
+}
+
+
+/* 2.1 ) .polard8-text      - Text */
+.polard8-text{
+    font-size: 3.5vw;
+}
+
+/* 2.2 ) .polard8-image     - Image */
+.polard8-image {
+    width: 96%;
+    height: auto;
+}
+.polard8-image-container {
+    text-align: center;
+    border-top: 4px solid rgba(222, 222, 222, .3);
+}
+
+/* 2.3 ) .polard8-button    - Button */
+.polard8-button {
+    font-size: 4.5vw;
+    text-align: center;
+    color: #fff;
+    background-color: #F3770B;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-bottom-color: rgba(0, 0, 0, 0.25);
+    border-radius: .25rem;
+    padding: .375rem .75rem;
+    display: inline-block;
+}
+.polard8-button:hover {
+    background-color: #F3770B;
+    text-decoration: none;
+}
+.polard8-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px lightskyblue;
+}
+.polard8-button:active {
+  background-color: #333;
+  border-color: #333;
+  color: #eee;
+}
+
+/* 3.1 ) .polard8-footer    - Footer */
+.polard8-footer {
+    font-size: 3.5vw;
+    text-align: center;
+    color: #F0F0F0;
+    padding-bottom: 2%;
+}
+.polard8-footer-logo {
+    text-align: center;
+    border-top: 4px solid rgba(222, 222, 222, .3);
+}
+
+
+/*
+ * ------------------------------------------------------
+ * Component: Media queries. 
+ */
+
+
+/* large screen */
+@media (min-width: 1024px) {
+
+/* 1.1 ) .polard8-banner    - Banner */
+
+/* 1.2 ) .polard8-nav       - Navigation bar */
+.polard8-nav {
+    font-size: 2.2vw;
+    border-top: 2px solid rgba(80, 80, 80, .3);
+    border-bottom: 2px solid rgba(123, 123, 123, .3);
+}
+.polard8-nav ul {
+    text-align: center;
+    margin: 0;
+}
+.polard8-nav li {
+    text-align: center;
+    display: inline;
+    padding: 0 2%;
+}
+.polard8-nav a {
+    text-decoration: none;
+    text-transform: uppercase;
+    color: #F3770B;
+    display: inline-block;
+}
+.polard8-nav a:hover {
+    background-color: rgba(256, 256, 256, .9); 
+}
+
+/* Fixed sidebar styles */
+.polard8-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 220px;
+    height: 100vh;
+    background: #222;
+    color: #fff;
+    padding-top: 0px;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.10);
+    z-index: 1000;
+}
+
+.polard8-sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.polard8-sidebar li {
+    margin: 16px 0;
+}
+
+.polard8-sidebar a {
+    font-size: 1em;             /* Slightly smaller font for desktop */
+    padding: 10px 0;
+    margin: 0 12px 12px 12px;   /* More horizontal and vertical space */
+    border-radius: 8px;         /* More rounded corners for large screens */
+    color: #e0e0e0;
+}
+.polard8-sidebar a:hover,
+.polard8-sidebar a:focus {
+    color: #e0e0e0;
+}
+
+.polard8-sidebar-image {
+  display: block;
+  /*margin: 0 auto 24px auto;*/
+  margin-top: 4px;
+  margin-bottom: 4px;
+  margin
+  border-radius: 16px; /* More visible rounding */
+  max-width: 80%;
+  width: 120px;
+  height: auto;
+  background: transparent; /* Just in case */
+}
+
+/* Push main content to the right */
+.polard8-main-content {
+    margin-left: 240px; /* slightly larger than sidebar width */
+    padding: 20px;
+    font-size: 4.4vw;
+    text-align: center;
+}
+
+/* 1.3 ) .polard8-container - Container */
+.polard8-container {
+    font-size: 4.0vw;
+    text-align: center;
+}
+
+/* 1.4 ) .polard8-header    - Header */
+.polard8-header{
+    font-size: 1.8vw;
+    color: #202020;
+}
+.polard8-header-image {
+    text-align: center;
+    width: 11%;
+    height: auto;
+}
+
+/* 2.1 ) .polard8-text      - Text */
+.polard8-text{
+    font-size: 2.2vw;
+    color: #202020;
+}
+
+/* 2.2 ) .polard8-image     - Image */
+.polard8-image {
+    width: 50%;
+    height: auto;
+}
+.polard8-image-container {
+    text-align: center;
+    border-top: 4px solid rgba(222, 222, 222, .3);
+}
+
+/* 2.3 ) .polard8-button    - Button */
+.polard8-button {
+    font-size: 2.2vw;
+    text-align: center;
+    color: #fff;
+    background-color: #F3770B;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-bottom-color: rgba(0, 0, 0, 0.25);
+    border-radius: .25rem;
+    padding: .375rem .75rem;
+    display: inline-block;
+}
+.polard8-button:hover {
+    background-color: #F3770B;
+    text-decoration: none;
+}
+.polard8-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px lightskyblue;
+}
+.polard8-button:active {
+  background-color: #333;
+  border-color: #333;
+  color: #eee;
+}
+
+/* 3.1 ) .polard8-footer    - Footer */
+.polard8-footer {
+    font-size: 1.4vw;
+    text-align: center;
+    color: #c0c0c0;
+    padding-bottom: 2%;
+}
+.polard8-footer-logo {
+    text-align: center;
+    border-top: 4px solid rgba(222, 222, 222, .3);
+}
+
+}
+

@@ -1,0 +1,212 @@
+@charset "UTF-8";
+
+/* ============================================================
+   POLARD8.CSS
+   A minimalist CSS library.
+   Created by Fred Nora.
+   Organized and documented for clarity and easy theming.
+   Logical grouping: 
+   Global → Layout → Navigation → Content → Components → Utilities → Media Queries.
+   This version was created by Chat GPT.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   0) ROOT VARIABLES
+   Define global color palette and theme values.
+   Change these to brand or re-skin the library quickly.
+   ------------------------------------------------------------ */
+:root {
+  /* Grayscale */
+  --polard8-color-black:  #000000;
+  --polard8-color-gray1:  #202020;
+  --polard8-color-gray2:  #404040;
+  --polard8-color-gray3:  #606060;
+  --polard8-color-gray4:  #808080;
+  --polard8-color-gray5:  #a0a0a0;
+  --polard8-color-gray6:  #c0c0c0;
+  --polard8-color-gray7:  #e0e0e0;
+  --polard8-color-white:  #ffffff;
+
+  /* Theme colors */
+  --polard8-color-primary:   #F3770B;   /* Brand orange */
+  --polard8-color-secondary: #222;      /* Dark neutral */
+  --polard8-color-accent:    #0089FF;   /* Blue highlight */
+  --polard8-color-bg:        #FAFAFA;   /* Background */
+}
+
+/* ============================================================
+   GLOBAL RESET & TYPOGRAPHY
+   Normalize margins/paddings and define base font stack.
+   ============================================================ */
+html, body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: var(--polard8-color-bg);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  padding: 0;
+}
+
+a {
+  color: #0069d6;
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--polard8-color-accent);
+}
+
+a:focus,
+a:focus-visible {
+  outline: 2px solid var(--polard8-color-primary);
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   NAVIGATION
+   Horizontal nav for large screens, stacked links for mobile.
+   ------------------------------------------------------------ */
+.polard8-nav {
+  font-size: 4.5vw;
+  border-top: 2px solid rgba(88, 88, 88, .3);
+  border-bottom: 2px solid rgba(129, 129, 129, .3);
+}
+
+.polard8-nav ul {
+  margin: 0;
+  text-align: center;
+}
+
+.polard8-nav li {
+  display: block;
+  text-align: center;
+  padding: 0.4% 0.2%;
+}
+
+.polard8-nav a {
+  display: inline-block;
+  color: var(--polard8-color-primary);
+  text-transform: uppercase;
+}
+
+.polard8-nav a:hover {
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+/* ============================================================
+   SIDEBAR
+   Mobile: static stacked links.
+   Desktop: fixed vertical sidebar.
+   ------------------------------------------------------------ */
+.polard8-sidebar {
+  width: 100vw;
+  height: auto;
+  position: static;
+  box-shadow: none;
+  padding-top: 0;
+}
+
+.polard8-sidebar ul {
+  margin: 0;
+  text-align: center;
+  list-style: none;
+}
+
+.polard8-sidebar a {
+  display: block;
+  text-align: center;
+  color: var(--polard8-color-primary);
+  font-weight: 500;
+  padding: 12px 0;
+  margin: 0 8px 8px;
+  border-radius: 6px;
+  transition: background 0.2s, color 0.2s;
+}
+
+/* Hover/Focus states */
+.polard8-sidebar a:hover,
+.polard8-sidebar a:focus {
+  background: rgba(243, 119, 11, 0.1);
+  color: #d35e00;
+  text-decoration: underline;
+  outline: none;
+}
+
+/* ============================================================
+   BUTTONS
+   Primary orange button with hover/active/focus states.
+   ------------------------------------------------------------ */
+.polard8-button {
+  font-size: 4.5vw;
+  text-align: center;
+  font-weight: 600;
+  color: #fff;
+  background-color: var(--polard8-color-primary);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-bottom-color: rgba(0, 0, 0, 0.25);
+  border-radius: 0.25rem;
+  padding: .375rem .75rem;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.polard8-button:hover {
+  background-color: var(--polard8-color-primary);
+  opacity: 0.95;
+}
+
+.polard8-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px lightskyblue;
+}
+
+.polard8-button:active {
+  background-color: #333;
+  border-color: #333;
+  color: #eee;
+}
+
+/* ============================================================
+   MAIN CONTENT AREA
+   Adjusted automatically based on sidebar presence.
+   ============================================================ */
+.polard8-main-content {
+  margin-left: 0;        /* mobile default */
+  padding: 20px;
+  text-align: center;    /* keep centered by default */
+  font-size: 4.4vw;
+}
+
+.polard8-container {
+    font-size: 4.0vw;
+    text-align: center;
+}
+
+/* ============================================================
+   MEDIA QUERIES
+   Adjust layout for large screens (≥1024px).
+   ------------------------------------------------------------ */
+@media (min-width: 1024px) {
+  .polard8-nav { font-size: 2.2vw; }
+  .polard8-nav li { display: inline; padding: 0 2%; }
+
+  .polard8-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 220px;
+    height: 100vh;
+    background: var(--polard8-color-secondary);
+    color: #fff;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+  }
+
+  .polard8-main-content {
+    margin-left: 240px;
+    padding: 20px;
+    text-align: center;    /* keep centered by default */
+  }
+}
