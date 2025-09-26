@@ -2218,7 +2218,7 @@ fail:
 
 // Create the controls given the titlebar.
 // min, max, close.
-void do_create_controls(struct gws_window_d *w_titlebar)
+int do_create_controls(struct gws_window_d *w_titlebar)
 {
 
 // Windows
@@ -2232,13 +2232,14 @@ void do_create_controls(struct gws_window_d *w_titlebar)
 // Colors for the button
     unsigned int bg_color = (unsigned int) get_color(csiButton);
     //unsigned int bg_color = (unsigned int) get_color(csiButton);
+    // ...
 
 // Parameters:
     if ((void*)w_titlebar == NULL){
-        return;
+        goto fail;
     }
     if (w_titlebar->magic != 1234){
-        return;
+        goto fail;
     }
     //if(window->isTitleBar!=TRUE)
     //    return;
@@ -2248,7 +2249,6 @@ void do_create_controls(struct gws_window_d *w_titlebar)
     w_titlebar->Controls.minimize_wid = -1;
     w_titlebar->Controls.maximize_wid = -1;
     w_titlebar->Controls.close_wid    = -1;
-
 
 // Width and height.
     unsigned long ButtonWidth = 
@@ -2274,11 +2274,12 @@ void do_create_controls(struct gws_window_d *w_titlebar)
 
     LastLeft = 
         (unsigned long)( 
-            w_titlebar->width - 
-            (3*ButtonWidth) - 
-            (2*SeparatorWidth) - 
-            RightPadding );
+        w_titlebar->width - 
+        (3*ButtonWidth) - 
+        (2*SeparatorWidth) - 
+        RightPadding );
 
+    // Create a window of button type.
     w_minimize = 
         (struct gws_window_d *) CreateWindow ( 
             WT_BUTTON, 0, 1, 1, 
@@ -2291,10 +2292,10 @@ void do_create_controls(struct gws_window_d *w_titlebar)
 
     if ((void *) w_minimize == NULL){
         //server_debug_print ("xx: minimize fail \n");
-        return;
+        goto fail;
     }
     if (w_minimize->magic != 1234){
-        return;
+        goto fail;
     }
     w_minimize->isControl = TRUE;
 
@@ -2306,15 +2307,16 @@ void do_create_controls(struct gws_window_d *w_titlebar)
     w_minimize->bg_color_when_mousehover = 
         (unsigned int) get_color(csiWhenMouseHoverMinimizeControl);
 
-    id = RegisterWindow(w_minimize);
+    id = (int) RegisterWindow(w_minimize);
     if (id<0){
         //server_debug_print("xxx: Couldn't register w_minimize\n");
-        return;
+        goto fail;
     }
     w_titlebar->Controls.minimize_wid = (int) id;
 
 // ================================================
 // maximize
+
     LastLeft = 
         (unsigned long)(
         w_titlebar->width - 
@@ -2322,6 +2324,7 @@ void do_create_controls(struct gws_window_d *w_titlebar)
         (1*SeparatorWidth) - 
         RightPadding );
 
+    // Create a window of button type.
     w_maximize = 
         (struct gws_window_d *) CreateWindow ( 
             WT_BUTTON, 0, 1, 1, 
@@ -2334,10 +2337,10 @@ void do_create_controls(struct gws_window_d *w_titlebar)
 
     if ((void *) w_maximize == NULL){
         //server_debug_print ("xx: w_maximize fail \n");
-        return;
+        goto fail;
     }
     if (w_maximize->magic!=1234){
-        return;
+        goto fail;
     }
     w_maximize->isControl = TRUE;
     
@@ -2352,18 +2355,20 @@ void do_create_controls(struct gws_window_d *w_titlebar)
     id = RegisterWindow(w_maximize);
     if (id<0){
         //server_debug_print ("xxx: Couldn't register w_maximize\n");
-        return;
+        goto fail;
     }
     w_titlebar->Controls.maximize_wid = (int) id;
 
 // ================================================
 // close
+
     LastLeft = 
         (unsigned long)(
         w_titlebar->width - 
-        (1*ButtonWidth)  - 
-         RightPadding );
+        (1*ButtonWidth) - 
+        RightPadding );
 
+    // Create a window of button type.
     w_close = 
         (struct gws_window_d *) CreateWindow ( 
             WT_BUTTON, 0, 1, 1, 
@@ -2376,10 +2381,10 @@ void do_create_controls(struct gws_window_d *w_titlebar)
 
     if ((void *) w_close == NULL){
         //server_debug_print ("xx: w_close fail \n");
-        return;
+        goto fail;
     }
     if (w_close->magic!=1234){
-        return;
+        goto fail;
     }
     w_close->isControl = TRUE;
     
@@ -2394,11 +2399,16 @@ void do_create_controls(struct gws_window_d *w_titlebar)
     id = RegisterWindow(w_close);
     if (id<0){
         //server_debug_print ("xxx: Couldn't register w_close\n");
-        return;
+        goto fail;
     }
     w_titlebar->Controls.close_wid = (int) id;
 
     w_titlebar->Controls.initialized = TRUE;
+
+// Done
+    return 0;
+fail:
+    return (int) -1;
 }
 
 // Create titlebar and controls.
@@ -2473,7 +2483,8 @@ struct gws_window_d *do_create_titlebar(
         //    printf ("bsize%d\n",parent->border_size);
         //    while(1){}
         //}
-        TitleBarWidth = (parent->width - parent->border_size - parent->border_size);
+        TitleBarWidth = 
+            (parent->width - parent->border_size - parent->border_size);
     }
 
     // Saving
@@ -2492,18 +2503,19 @@ struct gws_window_d *do_create_titlebar(
 // WT_SIMPLE with text.
 // lembre-se estamos relativos à area de cliente
 // da janela mão, seja ela de qual tipo for.
+
     tbWindow = 
        (void *) doCreateWindow ( 
-                    WT_TITLEBAR, 0, 1, 1, "TitleBar", 
-                    TitleBarLeft, 
-                    TitleBarTop, 
-                    TitleBarWidth, 
-                    TitleBarHeight, 
-                    (struct gws_window_d *) parent, 
-                    0, 
-                    TitleBarColor,  //frame 
-                    TitleBarColor,  //client
-                    (unsigned long) rop );   // rop_flags from the parent 
+                WT_TITLEBAR, 0, 1, 1, "TitleBar", 
+                TitleBarLeft, 
+                TitleBarTop, 
+                TitleBarWidth, 
+                TitleBarHeight, 
+                (struct gws_window_d *) parent, 
+                0, 
+                TitleBarColor,  //frame 
+                TitleBarColor,  //client
+                (unsigned long) rop );   // rop_flags from the parent 
 
     if ((void *) tbWindow == NULL){
         //server_debug_print ("do_create_titlebar: tbWindow\n");
@@ -2654,23 +2666,20 @@ struct gws_window_d *do_create_titlebar(
 
 // ---------------------------------
 // Controls
-    do_create_controls(tbWindow);
+    int controls_ok = FALSE;
+    controls_ok = (int) do_create_controls(tbWindow);
+    // Only if we created the controls.
+    if (controls_ok == 0){
+        // Invalidade all the controls.
+        invalidate_window_by_id(tbWindow->Controls.minimize_wid);
+        invalidate_window_by_id(tbWindow->Controls.maximize_wid);
+        invalidate_window_by_id(tbWindow->Controls.close_wid);
+    }
 
     // Invalidate the tb window.
     tbWindow->dirty = TRUE;
-    // Invalidade all the controls.
-    if ((void*) tbWindow->titlebar != NULL)
-    {
-        invalidate_window_by_id(
-            tbWindow->titlebar->Controls.minimize_wid );
-        invalidate_window_by_id(
-            tbWindow->titlebar->Controls.maximize_wid );
-        invalidate_window_by_id(
-            tbWindow->titlebar->Controls.close_wid );
-    }
 
-// ----------------------
-// The parent has a valid pointer for the tb window.
+// Now the parent has a valid ponter to the titlebar.
     parent->titlebar = (struct gws_window_d *) tbWindow;
 
     return (struct gws_window_d *) tbWindow;

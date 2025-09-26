@@ -1034,9 +1034,12 @@ struct gws_window_d *wmCreateRootWindow(unsigned int bg_color);
 // Controls
 //
 
-void do_create_controls(struct gws_window_d *w_titlebar);
+int do_create_controls(struct gws_window_d *w_titlebar);
 
-// Create titlebar and controls.
+//
+// Title bar
+//
+
 struct gws_window_d *do_create_titlebar(
     struct gws_window_d *parent,
     unsigned long tb_height,
