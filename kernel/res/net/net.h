@@ -194,19 +194,18 @@ extern struct network_info_d *NetworkInfo;
 //
 
 // Network interface for keyboard input.
-void 
+int 
 network_keyboard_event( 
     int event_id,
     long long1, 
     long long2 );
 
 // Network interface for mouse input.
-void 
+int 
 network_mouse_event( 
     int event_id, 
     long data1, 
     long data2 );
-
 
 int 
 network_register_ring3_osshell(

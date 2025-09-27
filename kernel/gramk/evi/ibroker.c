@@ -2164,15 +2164,14 @@ fail:
 // então podemos enviar o status das teclads de controle
 // atraves do segundo long.
 
+// Called by __ps2mouse_parse_data_packet() in ps2mouse.c.
+// Right after the ps2 mouse interrupt handler.
 int 
 wmMouseEvent(
     int event_id,
     long long1, 
     long long2 )
 {
-// Called by __ps2mouse_parse_data_packet() in ps2mouse.c.
-// Right after the ps2 mouse interrupt handler.
-
     int Status = -1;
     //static long old_x=0;
     //static long old_y=0;
@@ -2194,7 +2193,7 @@ wmMouseEvent(
     if (system_state != SYSTEM_RUNNING)
         goto fail;
 
-// Event id:
+// Parameters:
     if (event_id < 0){
         goto fail;
     }
@@ -2221,7 +2220,7 @@ wmMouseEvent(
 
     if (event_id == MSG_MOUSEMOVE)
     {
-        // Limits.
+        // Limits
         if (long1 < 1){ long1=1; }
         if (long2 < 1){ long2=1; }
         if (long1 >= deviceWidth) { long1 = (deviceWidth-1);  }
@@ -2269,15 +2268,16 @@ fail:
     return (int) -1;
 }
 
-int wmKeyboardEvent(int event_id, long long1, long long2)
-{
 // It goes directly to the display server.
 // It's not processed by the kernel.
+int wmKeyboardEvent(int event_id, long long1, long long2)
+{
 
 // Nobody can send us keyboard input event yet.
     if (system_state != SYSTEM_RUNNING)
         goto fail;
 
+// Parameters:
     if (event_id < 0)
         goto fail;
 
@@ -2295,15 +2295,16 @@ fail:
     return (int) -1;
 }
 
-int wmTimerEvent(int signature)
-{
 // Called by DeviceInterface_PIT() in pit.c.
 // Right after the the timer interrupt handler.
+int wmTimerEvent(int signature)
+{
 
 // Timers can't send us timer events yet.
     if (system_state != SYSTEM_RUNNING)
         goto fail;
 
+// Parameters:
     if (signature != 1234){
         goto fail;
     }
@@ -2311,7 +2312,7 @@ int wmTimerEvent(int signature)
 // #test
 // Master timer.
 // After 1 Sec.
-    if ( (jiffies % JIFFY_FREQ) == 0){
+    if ((jiffies % JIFFY_FREQ) == 0){
         ipc_post_message_to_ds( MSG_TIMER, 1234, jiffies );
     }
 

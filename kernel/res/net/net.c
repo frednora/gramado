@@ -40,55 +40,52 @@ static void __maximize_ds_priority(pid_t pid);
 // ====================================================
 
 // Network interface for keyboard input.
-void 
+int 
 network_keyboard_event( 
     int event_id,
     long long1, 
     long long2 )
 {
-
     if (event_id < 0)
         goto fail;
-
-// see:
-// user/input.c
-    wmKeyboardEvent(
-            event_id, 
-            (long) long1, 
-            (long) long2 );
-
+// Send it to the event broker.
+// See: gramk/evi/ibroker.c
+    wmKeyboardEvent( event_id, (long) long1, (long) long2 );
+    return 0;
 fail:
-    return;
+    return (int) -1;
 }
 
 // Network interface for mouse input.
-void 
+int 
 network_mouse_event( 
     int event_id, 
     long data1, 
     long data2 )
 {
-    int __event_id = event_id;
-    long __data1 = data1;
-    long __data2 = data2;
+    //int __event_id = (int) event_id;
+    //long __data1 = data1;
+    //long __data2 = data2;
 
 // Event validation
-
     if (event_id < 0)
-        return;
-
-    switch (event_id)
-    {
-        case MSG_MOUSEPRESSED:   break;
-        case MSG_MOUSERELEASED:  break;
-        case MSG_MOUSEMOVE:      break;
-        default:
-            return;
-            break;
+        goto fail;
+    switch (event_id){
+    // Valid events
+    case MSG_MOUSEPRESSED:   break;
+    case MSG_MOUSERELEASED:  break;
+    case MSG_MOUSEMOVE:      break;
+    // Invalid events
+    default:
+        goto fail;
+        break;
     };
-
-// Sent event to input.c
+// Send it to the event broker.
+// See: gramk/evi/ibroker.c
     wmMouseEvent( event_id, data1, data2 );
+    return 0;
+fail:
+    return (int) -1;
 }
 
 // #test
