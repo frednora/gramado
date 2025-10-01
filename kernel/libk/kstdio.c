@@ -65,7 +65,6 @@ int stdio_verbosemode_flag=0;
 // see: kstdio.h
 unsigned long syncList[SYNC_COUNT_MAX];
 
-
 //
 // =========================================================
 //
@@ -76,9 +75,7 @@ static void __initialize_inode_table(void);
 static void __initialize_stdin(void);
 static void __initialize_stdout(void);
 static void __initialize_stderr(void);
-
 static void __initialize_virtual_consoles(void);
-
 static char *_vsputs_r(char *dest, char *src);
 
 //
@@ -119,7 +116,7 @@ int kstdio_feed_stdin(int ch)
 // Data
     ch_buffer[0] = (char) (Data & 0xFF);
 
-// Write
+// Write:
 // Write 1 byte.
 // see: fs.c
 
@@ -408,19 +405,17 @@ int putchar(int ch)
         goto fail;
     }
 
+// Draw char into the foreground console.
+// But do not refresh the char into the screen.
     if (fg_console<0 || fg_console > 3){
         goto fail;
     }
-
-// + Draw char.
-// + Do not refresh char.
     console_outbyte( ch, fg_console );
 
     return (int) ch;
 fail:
     return (int)(-1);
 }
-
 
 /*
  *  == Segue aqui o suporte a função 'printk' ====
@@ -454,10 +449,15 @@ prints (
     if (width > 0) 
     {
         // ?? ugly
-        for (ptr = string; *ptr; ++ptr) ++len;
-        if (len >= width) width = 0;
-        else width -= len;
-        if (pad & PAD_ZERO) padchar = '0';
+        // The if statements are outside the for loop. 
+        for (ptr = string; *ptr; ++ptr)
+            ++len;
+        if (len >= width) 
+            width = 0;
+        else 
+            width -= len;
+        if (pad & PAD_ZERO) 
+            padchar = '0';
     }
 
     if (!(pad & PAD_RIGHT)) 
