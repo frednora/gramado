@@ -92,7 +92,7 @@ uint32_t diskPCIScanDevice(int class)
 
                 data = in32(PCI_PORT_DATA);
 
-                if ( ( data >> 24 & 0xff ) == class )
+                if (( data >> 24 & 0xff ) == class)
                 {
                     // #debug
                     // printk ("Detected PCI device: %s\n", 

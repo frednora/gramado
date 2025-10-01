@@ -502,7 +502,7 @@ static int __ide_identify_device(uint8_t nport)
 // #todo:
 // Review the data sent to the port.
     out8( 
-        (unsigned short) ( ata_port[nport].cmd_block_base_address + ATA_REG_DEVSEL), 
+        (unsigned short) ( ata_port[nport].cmd_block_base_address + ATA_REG_DEVSEL ), 
         (unsigned char) 0xE0 | ata_port[nport].dev_num << 4 );
 
 // Sector count
