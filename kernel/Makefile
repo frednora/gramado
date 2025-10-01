@@ -1,6 +1,11 @@
 # Makefile for the Gramado kernel.
 # Created by Fred Nora.
 
+# ==== Order ====
+# Red Zone:   core/
+# Pink Zone:  gramk/
+# White Zone: libk/ and res/
+
 # Tools
 include core/arch/x86_64/makeinc
 
