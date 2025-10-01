@@ -1,9 +1,8 @@
 // printk.c
 // printk support.
-
+// Created by Fred Nora.
 
 #include <kernel.h>
-
 
 /*
  * printk_old:
@@ -25,7 +24,7 @@
 // por inteiro em long mode.
 // Usaremos kinguio_printf por enquanto.
 
-int printk_old( const char *format, ... )
+int printk_old(const char *format, ...)
 {
     register int *varg = (int *) (&format);
 
@@ -48,27 +47,35 @@ int kinguio_printf(const char *fmt, ...)
 
 // If the virtual console isn't full initialized yet.
     if (Initialization.is_console_log_initialized != TRUE){
-        return -1;
+        return (int) -1;
     }
 
-    memset (data_buffer, 0, 1024); 
+    memset (data_buffer, 0, 1024);
+
+    /*
+    if ((void*) fmt == NULL){
+        return (int) -1;
+    }
+    if (*fmt == 0){
+        return (int) -1;
+    }
+    */
 
 //----------
+// See: kstdio.c
     va_list ap;
     va_start(ap, fmt);
-    ret = kinguio_vsprintf(data_buffer, fmt, ap);
+    ret = (int) kinguio_vsprintf(data_buffer, fmt, ap);
     va_end(ap);
 //-----------
 
-//
 // Now we already have the formated string.
 // Lets print it or send it to the serial port.
-//
 
     if (Initialization.printk_to_serial == TRUE){
             return (int) debug_print_nbytes( 
-                         (const void *) data_buffer, 
-                         (size_t) sizeof(data_buffer) );
+                        (const void *) data_buffer, 
+                        (size_t) sizeof(data_buffer) );
     } else {
         // Print the data buffer.
         kinguio_puts(data_buffer);
@@ -77,5 +84,4 @@ int kinguio_printf(const char *fmt, ...)
     return (int) ret;
 }
 // ===================================
-
 
