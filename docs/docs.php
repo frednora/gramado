@@ -31,8 +31,10 @@
                 transform: translate(-50%, -50%);
                 border-radius: .33rem;
                 padding: 10px;
-                background-color: lightyellow; /*#44ab44;*/
+                background-color: lightyellow;
+                border: solid lightgray 1px;
                 box-shadow: 10px 10px lightgray;
+
                 text-align: center;
             }
 
@@ -44,16 +46,14 @@
                 text-decoration: auto;
                 text-align: center;
             }
+            .button:hover {
+                background-color: lightgray;
+            }
 
             .noicon {
                 padding-left: 30px;
             }
-
             .iconpos {
-            }
-
-            .button:hover{
-                background-color: lightyellow;
             }
 </style>
 
@@ -81,10 +81,9 @@
             {
     ?>
 
-                <!-- Button -->
-                <br/>
-                <a href="/<?php echo $file; ?>/index.html"><?php echo $file; ?>/</a>
-
+            <!-- Link -->
+            <a href="/<?php echo $file; ?>/index.html"><?php echo $file; ?>/</a>
+            <br/>
     <?php
             }
         }
