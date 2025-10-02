@@ -718,8 +718,17 @@ extern struct storage_d  *storage;
 // == prototypes ============================================
 //
 
-void read_lba( unsigned long address, unsigned long lba );
-void write_lba( unsigned long address, unsigned long lba );
+int 
+read_lba( 
+    int disk_id, 
+    unsigned long address, 
+    unsigned long lba );
+
+int 
+write_lba( 
+    int disk_id,
+    unsigned long address, 
+    unsigned long lba );
 
 int
 storage_read_sector( 

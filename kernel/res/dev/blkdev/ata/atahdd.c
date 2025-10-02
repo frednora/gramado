@@ -601,6 +601,7 @@ failTimeOut:
 
 int
 ataReadSector ( 
+    unsigned int ide_port,
     unsigned long buffer, 
     unsigned long lba, 
     unsigned long reserved1, 
@@ -612,8 +613,13 @@ ataReadSector (
 // #bugbug
 // This is the port index, not the channel index.
 // >>> We have 4 valid ports, but only 2 channels.
+/*
     unsigned int idePort = 
         (unsigned int) ata_get_current_ide_port_index();
+*/
+
+// Parameter:
+    unsigned int idePort = (unsigned int) ide_port;
 
 /*
 // ====================================================
@@ -668,7 +674,6 @@ ataReadSector (
     return (int) Status;
 }
 
-
 /*
  * ataWriteSector:
  * IN: 
@@ -677,9 +682,9 @@ ataReadSector (
  * reserved1 - null
  * reserved2 - null
  */
-
 int
 ataWriteSector ( 
+    unsigned int ide_port,
     unsigned long buffer,
     unsigned long lba,
     unsigned long reserved1,
@@ -691,8 +696,13 @@ ataWriteSector (
 // #bugbug
 // This is the port index, not the channel index.
 // >>> We have 4 valid ports, but only 2 channels.
+/*
     unsigned int idePort = 
        (unsigned int) ata_get_current_ide_port_index();
+*/
+
+// Parameter:
+    unsigned int idePort = (unsigned int) ide_port;
 
 // ================ ATENÇAO ==============================
 // #IMPORTANTE:

@@ -527,7 +527,9 @@ __loop_next_entry:
     }
 
 // Read disk.
+    int FakeDiskId = 0;  //#todo: fake disk id.
     read_lba ( 
+        FakeDiskId,  // #todo: fake disk id.
         Buffer, 
         ( VOLUME1_DATAAREA_LBA + cluster -2 ) ); 
 

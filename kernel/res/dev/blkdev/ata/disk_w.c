@@ -1,4 +1,3 @@
-
 // disk_w.c
 // Created by Fred Nora.
 
@@ -38,6 +37,10 @@ __do_save_sequence (
 // How much is the max number of cluster we can save 
 // into this disk.
 
+    unsigned int L_current_ide_port = 
+        (unsigned int) ata_get_current_ide_port_index();
+
+
 // Esperando antes do próximo.
 
     for (i=0; i<Total; i++)
@@ -53,6 +56,7 @@ __do_save_sequence (
         disk_ata_wait_irq(p);
 
         ataWriteSector ( 
+            L_current_ide_port,
             (unsigned long) ( buffer_base + buffer_off ), 
             (unsigned long) ( lba_base    + lba_off ), 
             0, 
@@ -99,9 +103,13 @@ fatWriteCluster (
         return;
     }
 
+    int FakeDiskId = 0;  //#todo: fake disk id.
     for (i=0; i < spc; i++)
     {
-        write_lba( address, (sector + i) );
+        write_lba( 
+            FakeDiskId,        // Fake disk id. #todo
+            address,           // Address 
+            (sector + i) );    // LBA
         address = (address +512); 
     };
 

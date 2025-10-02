@@ -536,8 +536,12 @@ storage_read_sector(
     if (buffer == 0)
         goto fail;
 
+    unsigned int L_current_ide_port = 
+        (unsigned int) ata_get_current_ide_port_index();
+
     res = 
         (int) ataReadSector ( 
+            L_current_ide_port,
             (unsigned long) buffer, 
             (unsigned long) lba, 
             0, 
@@ -572,8 +576,12 @@ storage_write_sector(
     if (buffer == 0)
         goto fail;
 
+    unsigned int L_current_ide_port = 
+        (unsigned int) ata_get_current_ide_port_index();
+
     res = 
         (int) ataWriteSector ( 
+            L_current_ide_port,
             (unsigned long) buffer, 
             (unsigned long) lba, 
             0, 
@@ -900,18 +908,29 @@ void *volume_get_current_volume_info (void)
 // the disk structure and the controller type.
 // We're gonna call different functions depending 
 // on the controller type.
-void 
+int 
 read_lba ( 
+    int disk_id,
     unsigned long address, 
     unsigned long lba )
 {
 // #todo
 // Fazer algum filtro de argumentos?
 
+    /*
+    if (disk_id < 0){
+        debug_print ("read_lba: [FAIL] disk_id\n");
+        goto fail;
+    }   
+    */
+
     if (address == 0){
         debug_print ("read_lba: [FAIL] Limits\n");
         goto fail;
     }
+
+    unsigned int L_current_ide_port = 
+        (unsigned int) ata_get_current_ide_port_index();
 
 // Is it FAT12/FAT16/FA32 boot disk?
 // Is it a FAT disk at all?
@@ -921,32 +940,41 @@ read_lba (
 
     case 32:
         debug_print ("read_lba: [FAIL] FAT32 not supported\n");
-        return;
+        goto fail;
         break;
 
     case 16:
         //#todo: return value.
         //#todo: IN: buffer,lba,?,?,
-        ataReadSector ( address, lba, 0, 0 );
-        return;
+        // #see: ata.c
+        ataReadSector ( 
+            L_current_ide_port, 
+            address, 
+            lba, 
+            0, 
+            0 );
+
+        return 0;  // ok
         break;
 
     // Nothing.
     case 12:
         debug_print ("read_lba: [FAIL] FAT12 not supported\n");
-        return;
+        goto fail;
         break;
 
     default:
         debug_print ("read_lba: [FAIL] g_currentvolume_fatbits not supported\n");
         panic ("read_lba: default\n");
+        //goto fail;
         break;
     };
-// Nothing
+
+    // Nothing
 
 fail:
     refresh_screen();
-    return;
+    return (int) -1;
 }
 
 /*
@@ -966,16 +994,30 @@ fail:
 // the disk structure and the controller type.
 // We're gonna call different functions depending 
 // on the controller type.
-void write_lba( unsigned long address, unsigned long lba )
+int 
+write_lba( 
+    int disk_id,
+    unsigned long address, 
+    unsigned long lba )
 {
 
 // #todo: 
 // Check lba limits.
 
+    /*
+    if (disk_id < 0){
+        debug_print ("read_lba: [FAIL] disk_id\n");
+        goto fail;
+    }   
+    */
+
     if (address == 0){
         debug_print ("write_lba: [FAIL] Limits\n");
         goto fail;
     }
+
+    unsigned int L_current_ide_port = 
+        (unsigned int) ata_get_current_ide_port_index();
 
     // See: volume.h
     switch (g_currentvolume_fatbits){
@@ -989,8 +1031,14 @@ void write_lba( unsigned long address, unsigned long lba )
         // We need to have the information 
         // about the controller type in order to decide 
         // which function we gonna use.
-        ataWriteSector ( address, lba, 0, 0 ); 
-        return;
+        // #see: ata.c
+        ataWriteSector (
+            L_current_ide_port,
+            address, 
+            lba, 
+            0, 
+            0 ); 
+        return 0; // ok
         break;
 
     case 12:
@@ -1001,6 +1049,7 @@ void write_lba( unsigned long address, unsigned long lba )
     default:
         printk ("write_lba: default\n");
         panic ("read_lba: default\n");
+        //goto fail;
         break;
     };
 
@@ -1008,7 +1057,7 @@ void write_lba( unsigned long address, unsigned long lba )
 
 fail:
     refresh_screen();
-    return;
+    return (int) -1;
 }
 
 // Get the number of sectors in the boot disk

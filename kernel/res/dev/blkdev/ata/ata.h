@@ -643,6 +643,7 @@ atahdd_pio_rw_sector (
 
 int 
 ataReadSector( 
+    unsigned int ide_port,
     unsigned long buffer, 
     unsigned long lba, 
     unsigned long reserved1, 
@@ -650,6 +651,7 @@ ataReadSector(
 
 int 
 ataWriteSector ( 
+    unsigned int ide_port,
     unsigned long buffer,
     unsigned long lba,
     unsigned long reserved1,

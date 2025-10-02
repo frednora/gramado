@@ -3660,6 +3660,10 @@ save_file:
     //if (next == 0xFFF8)
         //what??
 
+
+    unsigned int L_current_ide_port = 
+        (unsigned int) ata_get_current_ide_port_index();
+
 // Loop
 // Pegamos o atual na lista.
 // Se ele eh o sinalizador de fim de lista, 
@@ -3704,6 +3708,7 @@ save_file:
             //grava - Aqui next esta certo!
             //write_lba ( (unsigned long) address, VOLUME1_DATAAREA_LBA + next -2 );
             ataWriteSector ( 
+                L_current_ide_port,
                 (unsigned long) address, 
                 (unsigned long) ( VOLUME1_DATAAREA_LBA + next -2), 
                 0, 

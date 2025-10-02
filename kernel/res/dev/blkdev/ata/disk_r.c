@@ -33,10 +33,20 @@ __load_sequential_sectors (
 
     // debug_print ("__load_sequential_sectors:\n");
 
+    unsigned int L_current_ide_port = 
+        (unsigned int) ata_get_current_ide_port_index();
+
     for ( i=0; i < sectors; i++ )
     {
         next_lba = (unsigned long) (lba + i);
-        ataReadSector ( address + b, next_lba, 0, 0 );
+
+        ataReadSector ( 
+            L_current_ide_port, 
+            address + b, 
+            next_lba, 
+            0, 
+            0 );
+
         b = (b +512);
     };
 
@@ -84,9 +94,15 @@ fatLoadCluster (
 {
     unsigned long i=0;
     unsigned long SectorSize = 512;  //#todo: via argument.
+
+    int FakeDiskId = 0;  //#todo: fake disk id.
+
     for ( i=0; i<spc; i++ )
     {
-        read_lba( address, sector + i );
+        read_lba( 
+            FakeDiskId,  // Fake disk id. #todo
+            address,       // Address
+            sector + i );  // LBA
         address = (address + SectorSize); 
     };
 }
