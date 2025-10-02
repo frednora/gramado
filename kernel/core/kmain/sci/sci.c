@@ -321,8 +321,16 @@ void *sci0 (
 // #todo: This operation needs permition.
 // #todo: Return value.
 // IN: buffer address and lba address.
-    if (number == SCI_READ_LBA){
-        storage_read_sector( (unsigned long) arg2, (unsigned long) arg3 ); 
+    if (number == SCI_READ_LBA)
+    {
+        // #todo
+        // We need a valid disk id.
+        // For now we are using a fake disk id.
+
+        storage_read_sector( 
+            (int) 0,               // fake disk id. #bugbug
+            (unsigned long) arg2,   
+            (unsigned long) arg3 ); 
         return NULL;
     }
 
@@ -331,8 +339,16 @@ void *sci0 (
 // #todo: This operation needs permition.
 // #todo: Return value.
 // IN: buffer address and lba address.
-    if (number == SCI_WRITE_LBA){ 
-        storage_write_sector( (unsigned long) arg2, (unsigned long) arg3 ); 
+    if (number == SCI_WRITE_LBA)
+    {
+        // #todo
+        // We need a valid disk id.
+        // For now we are using a fake disk id.
+ 
+        storage_write_sector(
+            (int) 0,               // fake disk id. #bugbug 
+            (unsigned long) arg2, 
+            (unsigned long) arg3 ); 
         return NULL;
     }
 

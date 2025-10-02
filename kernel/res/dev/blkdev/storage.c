@@ -515,15 +515,26 @@ void disk_show_mbr_info(void)
 // #todo:
 // What is the disk?
 // What is the LBA limits?
+// #todo:
+// It needs to depends of the disk id.
+// When found the disk id we have access to 
+// the disk structure and the controller type.
+// We're gonna call different functions depending 
+// on the controller type.
 int
 storage_read_sector( 
+    int disk_id,
     unsigned long buffer, 
     unsigned long lba )
 {
     int res = -1;
 
+// #todo
+// Get the disk structure using the disk_id,
+// and check the controller type.
+
     if (buffer == 0)
-        return (int) -1;
+        goto fail;
 
     res = 
         (int) ataReadSector ( 
@@ -532,21 +543,34 @@ storage_read_sector(
             0, 
             0 );
 
-    return (int) res; 
+    return (int) res;
+fail:
+    return (int) -1;
 }
 
 // #todo:
 // What is the disk?
 // What is the LBA limits?
+// #todo:
+// It needs to depends of the disk id.
+// When found the disk id we have access to 
+// the disk structure and the controller type.
+// We're gonna call different functions depending 
+// on the controller type.
 int
 storage_write_sector( 
+    int disk_id,
     unsigned long buffer, 
     unsigned long lba )
 {
     int res = -1;
 
+// #todo
+// Get the disk structure using the disk_id,
+// and check the controller type.
+
     if (buffer == 0)
-        return (int) -1;
+        goto fail;
 
     res = 
         (int) ataWriteSector ( 
@@ -555,7 +579,9 @@ storage_write_sector(
             0, 
             0 );
 
-    return (int) res; 
+    return (int) res;
+fail:
+    return (int) -1;
 }
 
 // __disk_init:
@@ -868,7 +894,12 @@ void *volume_get_current_volume_info (void)
 // ...
 // #todo
 // use 'buffer_va'.
-
+// #todo:
+// It needs to depends of the disk id.
+// When found the disk id we have access to 
+// the disk structure and the controller type.
+// We're gonna call different functions depending 
+// on the controller type.
 void 
 read_lba ( 
     unsigned long address, 
@@ -929,6 +960,12 @@ fail:
 // #bugbug
 // Essa rotina e' independente do sistema de arquivos.
 // #todo: use 'int' return.
+// #todo:
+// It needs to depends of the disk id.
+// When found the disk id we have access to 
+// the disk structure and the controller type.
+// We're gonna call different functions depending 
+// on the controller type.
 void write_lba( unsigned long address, unsigned long lba )
 {
 
@@ -949,6 +986,9 @@ void write_lba( unsigned long address, unsigned long lba )
         break;
 
     case 16:
+        // We need to have the information 
+        // about the controller type in order to decide 
+        // which function we gonna use.
         ataWriteSector ( address, lba, 0, 0 ); 
         return;
         break;

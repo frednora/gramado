@@ -723,11 +723,13 @@ void write_lba( unsigned long address, unsigned long lba );
 
 int
 storage_read_sector( 
+    int disk_id,
     unsigned long buffer, 
     unsigned long lba );
 
 int
 storage_write_sector( 
+    int disk_id,
     unsigned long buffer, 
     unsigned long lba );
 
