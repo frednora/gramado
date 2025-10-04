@@ -16,29 +16,29 @@ BASE = $(DISTROS)/base00
 # The OS has two major components:
 # The 'kernel image' and the 'dependencies'
 # The dependencies are: modules, and apps.
-# All the dependencies are in k08/deps/ folder,
-# It's because of the close interaction 
+# All the dependencies are in kextra/deps/ folder,
+# It's because of the close interaction kextra/deps
 # with the other subfolders in kernel/core/.
 
 ## =================================
 # Kernel Core: Ring 0 modules.
-DEP_L0 = k08/deps/kcore
+DEP_L0 = kextra/deps/kcore
 
 ## =================================
 # Kernel Services: Init process, ring 3 drivers and ring 3 servers.
-DEP_L1 = k08/deps/ucore
+DEP_L1 = kextra/deps/ucore
 # Unix-like commands
 COMMANDS = $(DEP_L1)/cmds
 
 ## =================================
 # Shell Pre-UI: The display server.
-DEP_L2 = k08/gdeps/preshell
+DEP_L2 = kextra/gdeps/preshell
 # Display servers
 DISPLAY_SERVERS = $(DEP_L2)/ds
 
 ## =================================
 # Shell UI: Client-side GUI applications.
-DEP_L3 = k08/gdeps/shell
+DEP_L3 = kextra/gdeps/shell
 # Client-side GUI applications
 APPLICATIONS = $(DEP_L3)/shell01
 
@@ -106,27 +106,27 @@ build-gramado-os:
 # See: fs/loader.c
 
 #===================================
-# (1) k08/boot/ 
+# (1) gramboot/boot/ 
 
 # ::Build the bootloader.
 	@echo "Compiling boot/"
-	@$(MAKE) -C k08/boot/
+	@$(MAKE) -C gramboot/boot/
 
 	@echo "Installing boot/"
 
 # Copy the virtual disk into the rootdir.
-	@cp k08/boot/GRAMHV.VHD  .
+	@cp gramboot/boot/GRAMHV.VHD  .
 
 # Copy the bootloader into the rootdir.
-	@cp k08/boot/x86/bin/BM.BIN      $(BASE)/
-	@cp k08/boot/x86/bin/BM2.BIN     $(BASE)/
-	@cp k08/boot/x86/bin/BLGRAM.BIN  $(BASE)/
-	@cp k08/boot/x86/bin/MBR0.BIN    $(BASE)/
+	@cp gramboot/boot/x86/bin/BM.BIN      $(BASE)/
+	@cp gramboot/boot/x86/bin/BM2.BIN     $(BASE)/
+	@cp gramboot/boot/x86/bin/BLGRAM.BIN  $(BASE)/
+	@cp gramboot/boot/x86/bin/MBR0.BIN    $(BASE)/
 # Copy the bootloader into the GRAMADO/ directory.
-	@cp k08/boot/x86/bin/BM.BIN      $(BASE)/GRAMADO
-	@cp k08/boot/x86/bin/BM2.BIN     $(BASE)/GRAMADO
-	@cp k08/boot/x86/bin/BLGRAM.BIN  $(BASE)/GRAMADO
-	@cp k08/boot/x86/bin/MBR0.BIN    $(BASE)/GRAMADO
+	@cp gramboot/boot/x86/bin/BM.BIN      $(BASE)/GRAMADO
+	@cp gramboot/boot/x86/bin/BM2.BIN     $(BASE)/GRAMADO
+	@cp gramboot/boot/x86/bin/BLGRAM.BIN  $(BASE)/GRAMADO
+	@cp gramboot/boot/x86/bin/MBR0.BIN    $(BASE)/GRAMADO
 
 #===================================
 # (2) kernel/
@@ -393,13 +393,13 @@ clean-all: clean
 	-rm *.VHD
 	-rm *.ISO
 
-	-rm k08/boot/*.VHD 
+	-rm gramboot/boot/*.VHD 
 
 # ==================
-# (1) k08/boot/
+# (1) gramboot/boot/
 # Clear boot images
-#	-rm -rf k08/boot/arm/bin/*.BIN
-	-rm -rf k08/boot/x86/bin/*.BIN
+#	-rm -rf gramboot/boot/arm/bin/*.BIN
+	-rm -rf gramboot/boot/x86/bin/*.BIN
 
 # ==================
 # (2) kernel/

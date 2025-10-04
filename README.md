@@ -13,25 +13,26 @@ Gramado OS is a project that includes the bootloader, the core kernel, and the i
 ## The folders
 
 ```
-distros/ - Complete distributions are built here.
-docs/    - Documentation.
-k08/     - Pre-kernel stuff. (Boot loader)
-kernel/  - The kernel, kernel modules, and 
-           applications (see kernel/core/).
-outside/ - 3D stuff and experiments.
-tools/   - SDK tools.
+distros/   - Complete distributions are built here.
+docs/      - Documentation.
+gramboot/  - Pre-kernel stuff. (Boot loader)
+kernel/    - The core kernel components.
+kextra/    - Ring 0 modules, initi process, unix-like commands,
+             display server, ring3 client-side GUI applications.
+outside/   - 3D stuff and experiments.
+tools/     - SDK tools.
 ```
 
 ## Special folder.
 
 ```
-k08/deps/:
+kextra/deps/:
 - POSIX commands.
 - Display server and client-side GUI applications.
 ```
 ## Where is the boot loader?
 
-k08/boot/
+gramboot/boot/
 
 ## Where is the kernel?
 
@@ -39,31 +40,31 @@ kernel/
 
 ## Where are the ring 0 kernel modules?
 
-k08/deps/kcore/modules/
+kextra/deps/kcore/modules/
 
 ## Where is the Init Process?
 
-k08/deps/ucore/init/
+kextra/deps/ucore/init/
 
 ## Where is the ring 3 device drivers?
 
-k08/deps/ucore/drivers/
+kextra/deps/ucore/drivers/
 
 ## Where is the ring 3 servers?
 
-k08/deps/ucore/servers/
+kextra/deps/ucore/servers/
 
 ## Where is the display server?
 
-k08/gdeps/preshell/ds/ds00/
+kextra/gdeps/preshell/ds/ds00/
 
 ## Where are the POSIX-like command programs?
 
-k08/gdeps/shell/shell00/
+kextra/gdeps/shell/shell00/
 
 ## Where are the client-side GUI applications?
 
-k08/gdeps/shell/shell01/
+kextra/gdeps/shell/shell01/
 
 
 > [!IMPORTANT]
