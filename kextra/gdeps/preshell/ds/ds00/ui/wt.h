@@ -20,7 +20,7 @@
 #define WT_CHECKBOX      5
 // Cria uma scroll bar. Para ser usada como janela filha.
 #define WT_SCROLLBAR     6 
-#define WT_EDITBOX_MULTIPLE_LINES 7
+#define WT_EDITBOX_MULTIPLE_LINES  7
 #define WT_BUTTON     8   
 #define WT_STATUSBAR  9
 #define WT_ICON       10

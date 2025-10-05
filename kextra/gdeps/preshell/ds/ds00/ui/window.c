@@ -967,22 +967,20 @@ void *doCreateWindow (
                 (unsigned long) ( window->parent->absolute_x + 
                 window->parent->rcClient.left + 
                 WindowX );
-            window->absolute_y  = 
+            window->absolute_y = 
                 (unsigned long) ( window->parent->absolute_y +
                 window->parent->rcClient.top + 
                 WindowY );
 
             // Fora da área de cliente.
-            if ( window->type == WT_TITLEBAR)
+            if (window->type == WT_TITLEBAR)
             {
                 window->absolute_x = 
-                    (unsigned long) ( window->parent->absolute_x + WindowX );
-                window->absolute_y  = 
-                    (unsigned long) ( window->parent->absolute_y + WindowY );
+                    (unsigned long) (window->parent->absolute_x + WindowX);
+                window->absolute_y = 
+                    (unsigned long) (window->parent->absolute_y + WindowY);
             }
-                    
-            // Fora da área de cliente.
-                    
+            // ?
         }
     }
 
@@ -1757,6 +1755,10 @@ void *CreateWindow (
 
     //server_debug_print ("CreateWindow:\n");
 
+// The color for the frame and client area.
+// If the window is overlapped or button
+// we use the color scheme. Otherwise
+// we use the colors given by the caller.
     unsigned int FrameColor;
     unsigned int ClientAreaColor;
     if (type == WT_OVERLAPPED){
@@ -1765,6 +1767,7 @@ void *CreateWindow (
     } else if (type == WT_BUTTON) {
         FrameColor = (unsigned int) get_color(csiButton);
         ClientAreaColor = (unsigned int) get_color(csiWindow);
+    // Given by the caller.
     } else {
         FrameColor = (unsigned int) frame_color;
         ClientAreaColor = (unsigned int) client_color;
@@ -1819,21 +1822,33 @@ void *CreateWindow (
 
 // #todo: 
 // Colocar mascara nos valores passados via parâmetro.
-    // #todo: ValidType=FALSE;
+// #todo: ValidType=FALSE;
+// See: wt.h
     switch (type){
-    case WT_OVERLAPPED:
-    case WT_EDITBOX: 
-    case WT_EDITBOX_MULTIPLE_LINES:
-    case WT_BUTTON:
-    case WT_SIMPLE:
-    case WT_ICON:
+    case WT_SIMPLE:  // 1
+    case WT_EDITBOX_SINGLE_LINE:  // 2 
+    case WT_OVERLAPPED:  // 3
+    case WT_CHECKBOX:  // 5
+    case WT_SCROLLBAR:  // 6
+    case WT_EDITBOX_MULTIPLE_LINES:  // 7
+    case WT_BUTTON:  // 8
+    case WT_ICON:  // 10
+    // ...
         ValidType=TRUE;
         break;
     };
-
-    // #todo: if (ValidType != TRUE){
-    if (ValidType == FALSE){
-        //server_debug_print ("CreateWindow: Invalid type\n");
+    // The application can't create a titlebar alone.
+    // It is only for internal use.
+    if (type == WT_TITLEBAR){
+        goto fail;
+    }
+    // The application can't create a statusbar alone.
+    // It is only for internal use.
+    if (type == WT_STATUSBAR){
+        goto fail;
+    }
+// Is it a valid type?
+    if (ValidType != TRUE){
         goto fail;
     }
 
@@ -1860,8 +1875,38 @@ void *CreateWindow (
 // ============================
 // Types with frame.
 
-//====
-// Overlapped
+// ====
+// 1 - Simple
+    if (type == WT_SIMPLE)
+    {
+        //server_debug_print ("CreateWindow: WT_SIMPLE \n");
+
+        __w = 
+            (void *) doCreateWindow ( 
+                         WT_SIMPLE, 
+                         style, 
+                         status, 
+                         state,  // view: min, max ... 
+                         (char *) _name,
+                         x, y, width, height, 
+                         (struct gws_window_d *) pWindow, 
+                         desktop_id, 
+                         FrameColor, ClientAreaColor, 
+                         (unsigned long) __rop_flags );  
+
+        if ((void *) __w == NULL){
+            //server_debug_print ("CreateWindow: doCreateWindow fail\n");
+            goto fail;
+        }
+
+        __w->type = WT_SIMPLE;
+        //__w->locked = FALSE;
+        __w->enabled = TRUE;
+        goto draw_frame;
+    }
+
+// ====
+// 3 - Overlapped
     if (type == WT_OVERLAPPED)
     {
         //server_debug_print ("CreateWindow: WT_OVERLAPPED\n");
@@ -1934,10 +1979,11 @@ void *CreateWindow (
 // #todo
 // It does not exist by itself. It needs a parent window.
 
-//====
-// edit box
+// ====
+// 2 and 7 - edit box
 // Podemos usar o esquema padrão de cores ...
-    if ( type == WT_EDITBOX || type == WT_EDITBOX_MULTIPLE_LINES )
+    if ( type == WT_EDITBOX_SINGLE_LINE || 
+         type == WT_EDITBOX_MULTIPLE_LINES )
     {
         //server_debug_print ("CreateWindow: WT_EDITBOX WT_EDITBOX_MULTIPLE_LINES \n");
 
@@ -1994,7 +2040,7 @@ void *CreateWindow (
 // It needs a parent window.
 
 // =======
-// button
+// 8 - button
 // Podemos usar o esquema padrão de cores ...
     if (type == WT_BUTTON)
     {
@@ -2032,38 +2078,8 @@ void *CreateWindow (
 
 // ============================
 
-//====
-// Simple
-    if (type == WT_SIMPLE)
-    {
-        //server_debug_print ("CreateWindow: WT_SIMPLE \n");
-
-        __w = 
-            (void *) doCreateWindow ( 
-                         WT_SIMPLE, 
-                         style, 
-                         status, 
-                         state,  // view: min, max ... 
-                         (char *) _name,
-                         x, y, width, height, 
-                         (struct gws_window_d *) pWindow, 
-                         desktop_id, 
-                         FrameColor, ClientAreaColor, 
-                         (unsigned long) __rop_flags );  
-
-        if ((void *) __w == NULL){
-            //server_debug_print ("CreateWindow: doCreateWindow fail\n");
-            goto fail;
-        }
-
-        __w->type = WT_SIMPLE;
-        //__w->locked = FALSE;
-        __w->enabled = TRUE;
-        goto draw_frame;
-    }
-
 // ---------------------
-// Icon 
+// 10 - Icon 
 
     if (type == WT_ICON)
     {
@@ -2095,6 +2111,28 @@ void *CreateWindow (
 
 
 // ---------------------
+// #todo:
+// Let's create other types here.
+
+    // 5 - Check box
+    if (type == WT_CHECKBOX)
+    {
+        // #todo
+        // Call the worker.
+        goto fail;
+    }
+
+    // 6 - Scroll bar
+    // Yes, the application will be able 
+    // to create scroll bars, given the parent window.
+    if (type == WT_SCROLLBAR)
+    {
+        // #todo
+        // Call the worker.
+        // Check if we have a valid parent window.
+        goto fail;
+    }
+    // ...
 
 //type_fail:
     //server_debug_print ("CreateWindow: [FAIL] type\n");

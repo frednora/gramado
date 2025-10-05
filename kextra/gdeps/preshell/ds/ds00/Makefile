@@ -13,10 +13,8 @@ linkTarget = DS00.BIN
 # LDFLAGS := -m elf_x86_64 -static
 # LDFLAGS := -m elf_x86_64 -s -x -static  
 
-
 linkFlags  = -m elf_x86_64 \
 -s -x -static -T ../link.ld
-
 
 VERSION = 0
 PATCHLEVEL = 1
