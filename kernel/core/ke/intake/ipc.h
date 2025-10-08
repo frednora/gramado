@@ -120,12 +120,12 @@ void *sys_get_message2(unsigned long ubuf, int index, int restart);
 unsigned long
 sys_post_message_to_tid( 
     int tid, 
-    unsigned long message_buffer );
+    unsigned long ubuf );
 
 // #todo
 // Broadcast system message to all the threads.
 // IN: Buffer
-unsigned long sys_broadcast_system_message(unsigned long message_buffer);
+unsigned long sys_broadcast_system_message(unsigned long ubuf);
 
 #endif    
 

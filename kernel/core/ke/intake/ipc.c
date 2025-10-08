@@ -36,7 +36,7 @@ ipc_post_message_to_tid2 (
     tid_t src_tid = (tid_t) (sender_tid & 0xFFFF);
     tid_t dst_tid = (tid_t) (receiver_tid & 0xFFFF);
 
-// Message code.
+// Message code
     MessageCode = (int) (msg & 0xFFFFFFFF);
     if (MessageCode<0){
         goto fail;
@@ -132,7 +132,7 @@ ipc_post_message_to_tid2 (
 
 fail2:
     if ((void*) t == NULL){
-        return -1;
+        return (int) -1;
     }
     t->MsgQueueTail++;
     if (t->MsgQueueTail >= MSG_QUEUE_MAX){
@@ -722,19 +722,16 @@ void *sys_get_message(unsigned long ubuf)
     //m->sender_pid
     //m->receiver_pid
 
-//
-// Jiffies
-//
-
 // ---------------------------------
+// Jiffies
+
 // Jiffies when the message was posted by the kernel.
     message_address[10] = (unsigned long) m->long3; 
-// ---------------------------------
 // Jiffies when gotten by the app.
     message_address[11] = (unsigned long) jiffies;
 
 // ----------------------------
-// Clear the entry.
+// Clear the entry
 // Consumimos a mensagem. Ela não existe mais.
 // Mas preservamos a estrutura.
 
@@ -757,6 +754,9 @@ void *sys_get_message(unsigned long ubuf)
     if (t->MsgQueueHead >= MSG_QUEUE_MAX){
         t->MsgQueueHead=0;
     }
+    // #test: Testing new routine.
+    // t->MsgQueueHead = ((t->MsgQueueHead + 1) % MSG_QUEUE_MAX);
+
     // Yes, We have a message.
     // #bugbug: 
     // Maybe we can do this in a different way.
@@ -773,7 +773,8 @@ fail0:
     if (t->MsgQueueHead >= MSG_QUEUE_MAX){
         t->MsgQueueHead=0;
     }
-    // No message.
+    // t->MsgQueueHead = ((t->MsgQueueHead + 1) % MSG_QUEUE_MAX);
+    // No message
     return NULL;
 }
 
@@ -793,7 +794,7 @@ void *sys_get_message2(
 
 // buffer
 // #todo: Check some other invalid address.
-    if ( ubuf == 0 ){ 
+    if (ubuf == 0){ 
         panic ("sys_get_message2: ubuf\n");
         //return NULL;
     }
@@ -937,7 +938,7 @@ fail0:
 unsigned long
 sys_post_message_to_tid( 
     int tid, 
-    unsigned long message_buffer )
+    unsigned long ubuf )
 {
     tid_t src_tid = (tid_t) current_thread;   // caller's tid.
     tid_t dst_tid = (tid_t) tid;              // targt tid.
@@ -946,14 +947,18 @@ sys_post_message_to_tid(
     if ( dst_tid < 0 || dst_tid >= THREAD_COUNT_MAX ){
         return 0;
     }
-// Message buffer
-// Buffer in ring3.
-    if (message_buffer == 0){
+// Pointer to a ring 3 buffer.
+// #todo
+// Check the validation of this address agaisnt the valid user area,
+// cause this function will be called by the applications.
+// It needs to be abouve the user base area.
+    if (ubuf == 0){
         return 0;
     }
-    unsigned long *ubuf = (unsigned long *) message_buffer;
-// Message code
-    int MessageCode = (int) ( ubuf[1] & 0xFFFFFFFF );
+    unsigned long *m = (unsigned long *) ubuf;
+// Get the message code.
+// Only the first 32 bits.
+    int MessageCode = (int) (m[1] & 0xFFFFFFFF);
 
 // Post message.
 // Asynchronous.
@@ -966,8 +971,8 @@ sys_post_message_to_tid(
         (tid_t) src_tid,    // sender tid
         (tid_t) dst_tid,    // receiver tid
         (int) MessageCode,
-        (unsigned long) ubuf[2],
-        (unsigned long) ubuf[3] );
+        (unsigned long) m[2],
+        (unsigned long) m[3] );
     */
 
     // #ps: Newm implementation. Sending more data.
@@ -975,10 +980,10 @@ sys_post_message_to_tid(
         (tid_t) src_tid,    // sender tid
         (tid_t) dst_tid,    // receiver tid
         (int) MessageCode,
-        (unsigned long) ubuf[2],
-        (unsigned long) ubuf[3],
-        (unsigned long) ubuf[4],
-        (unsigned long) ubuf[5] );
+        (unsigned long) m[2],
+        (unsigned long) m[3],
+        (unsigned long) m[4],
+        (unsigned long) m[5] );
 
 // Let's notify the scheduler
 // that we need some priority for the receiver in this case.
@@ -991,33 +996,33 @@ sys_post_message_to_tid(
 // Broadcast system message to all the threads.
 // IN: Buffer
 // OUT: The number of posted messages.
-unsigned long sys_broadcast_system_message(unsigned long message_buffer)
+unsigned long sys_broadcast_system_message(unsigned long ubuf)
 {
     tid_t Sender_TID = (tid_t) current_thread;
     unsigned long long_rv=0;
 
+// Pointer to a ring 3 buffer.
 // #todo
 // Check the validation of this address agaisnt the valid user area,
 // cause this function will be called by the applications.
 // It needs to be abouve the user base area.
-    if (message_buffer == 0)
+    if (ubuf == 0){
         return 0;
-
-    unsigned long *ubuf = (unsigned long *) message_buffer;
-
-// Message code
-    int MessageCode = (int) ( ubuf[1] & 0xFFFFFFFF );
+    }
+    unsigned long *m = (unsigned long *) ubuf;
+// Get the message code.
+// Only the first 32 bits.
+    int MessageCode = (int) (m[1] & 0xFFFFFFFF);
 
 // Call the worker.
     long_rv = 
     (unsigned long) ipc_broadcast_system_message(
         (tid_t) Sender_TID, // The sender is always the current_thread.
         (int) MessageCode,
-        (unsigned long) ubuf[2],
-        (unsigned long) ubuf[3],
-        (unsigned long) ubuf[4],
-        (unsigned long) ubuf[5] );
-    
+        (unsigned long) m[2],
+        (unsigned long) m[3],
+        (unsigned long) m[4],
+        (unsigned long) m[5] );
+
     return (unsigned long) long_rv;
 }
-
