@@ -66,11 +66,8 @@ static int gramcnf_initialize(void)
     //printf ("gramcnf_initialize:\n");
 
 // Clear buffers
-
     infile_size = 0;
     outfile_size = 0;
-
-
 // Clear infile and outfile buffers.
     for ( i=0; i<INFILE_MAX_SIZE; i++ ){
         infile[i] = '\0';
@@ -297,16 +294,18 @@ int main(int argc, char *argv[])
     //printf("Calling fopen()    :)\n");
     //while(1){}
 
+    //if ((void*) argv[2] == NULL) 
+        //goto fail;
+
     fp = fopen((char *) argv[2], "rb");
-    if (fp == NULL)
-    {
+    if (fp == NULL){
         printf("gramcnf: Couldn't open the input file\n");
         doUsage(argv);
         goto fail;
     }
 
-// Input file.
-// para que getc leia desse arquivo que carregamos.
+// Input file
+// Para que getc leia desse arquivo que carregamos.
     stdin = fp;
     finput = fp;
  

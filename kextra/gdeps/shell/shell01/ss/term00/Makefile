@@ -1,4 +1,5 @@
 # Makefile for the term00 virtual terminal.
+# Create the binary: TERM00.BIN
 # 2019 - Created by Fred Nora.
 
 #todo:

@@ -1565,19 +1565,21 @@ static void doHelp(int fd)
  */
 }
 
-static void doAbout(int fd)
-{
 // This is the terminal application, 
 // the goal is receiving data from other programs via stdout.
 // But for now we are using a embedded shell.
+static void doAbout(int fd)
+{
+    const char *String = 
+        "term00.bin: This is the terminal application";
 
-    if(fd<0)
+    if (fd < 0){
         return;
-
-    cr();
+    }
+    cr(); 
     lf();
-    tputstring(fd,"terminal.bin: This is the terminal application");
-    cr();
+    tputstring(fd, String);
+    cr(); 
     lf();
 }
 
