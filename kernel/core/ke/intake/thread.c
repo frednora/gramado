@@ -33,14 +33,12 @@ struct thread_d  *InitThread;
 // Ponteiro para a thread usada na hora da clonagem de processos.
 struct thread_d  *ClonedThread;
 
-
 //
-// == private functions: prototypes ================
+// == Private functions: Prototypes ================
 //
 
-// worker for create_thread.
-static void 
-__ps_initialize_thread_common_elements(struct thread_d *t);
+// Worker for create_thread
+static void __ps_initialize_thread_common_elements(struct thread_d *t);
 
 // worker for create_thread.
 static void 
@@ -54,17 +52,17 @@ __ps_setup_x64_context (
 // =========================================================
 //
 
-// worker
-static void 
-__ps_initialize_thread_common_elements(struct thread_d *t)
+// Worker
+static void __ps_initialize_thread_common_elements(struct thread_d *t)
 {
     register int i=0;
     struct msg_d  *tmp;
 
+// #ps: Not cheching the pointer
+
     t->objectType = ObjectTypeThread;
     t->objectClass = ObjectClassKernelObject;
-
-// If this thread is a virtual terminal or not.
+// If this thread is a virtual terminal or not
     t->isVirtualTerminal = FALSE;
 
 //
@@ -97,10 +95,8 @@ __ps_initialize_thread_common_elements(struct thread_d *t)
     t->MsgQueueHead = 0;
     t->MsgQueueTail = 0;
 
-// Create all the 32 pointers
-// for the messages.
-    for ( i=0; i<MSG_QUEUE_MAX; ++i )
-    {
+// Create all the 32 pointers for the messages
+    for (i=0; i<MSG_QUEUE_MAX; ++i){
         tmp = (struct msg_d *) kmalloc( sizeof(struct msg_d) );
         if ((void*) tmp == NULL){
             panic("__ps_initialize_thread_common_elements: tmp");
@@ -143,6 +139,8 @@ __ps_setup_x64_context (
     unsigned long init_stack,
     unsigned long init_rip )
 {
+
+// #ps: Do not check the pointer
 
 // cpl
     if (cpl != RING0 && cpl != RING3){
@@ -234,29 +232,29 @@ __ps_setup_x64_context (
     t->saved = FALSE;
 }
 
-
 int destroy_thread_structure(struct thread_d *thread)
 {
     tid_t TID = -1;
     struct thread_d *tmp;
 
     if ((void*) thread == NULL)
-        return -1;
+        goto fail;
     if (thread->used != TRUE)
-        return -1;
+        goto fail;
 // Valid for MAGIC=1234 or MAGIC=4321
 
 // #todo
 // Remove it from processList[] based on index=pid.
     TID = (pid_t) thread->tid;
-    if (TID<0)
-        return -1;
+    if (TID < 0)
+        goto fail;
     if (TID >= THREAD_COUNT_MAX)
-        return -1;
+        goto fail;
     
     tmp = (struct thread_d *) threadList[TID];
-    if (thread != tmp)
-        return -1;
+    if (thread != tmp){
+        goto fail;
+    }
 
 // Destroy the structure.
 // #todo: We can erase the whole structure.
@@ -266,22 +264,32 @@ int destroy_thread_structure(struct thread_d *thread)
     thread = NULL;
 
     return 0;
+fail:
+    return (int) -1;
 }
 
 // Try to reuse the thread structure.
 int gc_thread_structure(struct thread_d *thread)
 {
+    if ((void*) thread == NULL)
+        goto fail;
+    
+    // ...
+
     return 0;
+fail:
+    return (int) -1;
 }
 
 // helper
 // Thread stats
-unsigned long GetThreadStats( tid_t tid, int index )
+unsigned long GetThreadStats(tid_t tid, int index)
 {
     struct thread_d *t;
 
 // Parameters
-    if (tid < 0 || tid >= THREAD_COUNT_MAX){
+    if (tid < 0 || tid >= THREAD_COUNT_MAX)
+    {
         return 0;
     }
     if (index < 0){
@@ -303,11 +311,11 @@ unsigned long GetThreadStats( tid_t tid, int index )
  
     switch (index){
 
-        case 1:  return (unsigned long) t->tid;       break;
+        case 1:  return (unsigned long) t->tid;        break;
         case 2:  return (unsigned long) t->owner_pid;  break;
-        case 3:  return (unsigned long) t->type;      break;
-        case 4:  return (unsigned long) t->state;     break;
-        case 5:  return (unsigned long) t->plane;     break;
+        case 3:  return (unsigned long) t->type;       break;
+        case 4:  return (unsigned long) t->state;      break;
+        case 5:  return (unsigned long) t->plane;      break;
         
         // #todo: Not used. 
         case 6:
@@ -422,7 +430,8 @@ int getthreadname(tid_t tid, char *buffer)
     char *name_buffer = (char *) buffer;
 
 // Parameters
-    if ( tid < 0 || tid >= THREAD_COUNT_MAX ){
+    if ( tid < 0 || tid >= THREAD_COUNT_MAX )
+    {
         goto fail;
     }
     if ((void*) buffer == NULL){
@@ -434,16 +443,15 @@ int getthreadname(tid_t tid, char *buffer)
     if ((void *) t == NULL){
         goto fail;
     }
-    if ( t->used != TRUE || t->magic != 1234 ){
+    if ( t->used != TRUE || t->magic != 1234 )
+    {
         goto fail;
     }
 
 // Copy 64 bytes
-    strcpy(
-        name_buffer, 
-        (const char *) t->__threadname );       
+    strcpy(name_buffer, (const char *) t->__threadname);
 
-// Return the lenght.
+// Return the lenght
     return (int) t->threadName_len;
 fail:
     return (int) (-1);
@@ -463,7 +471,8 @@ void *FindReadyThread(void)
 {
     register int i=0;
     struct thread_d  *t;
-    for ( i=0; i<THREAD_COUNT_MAX; ++i )
+
+    for (i=0; i<THREAD_COUNT_MAX; ++i)
     {
         t = (void *) threadList[i];
         if ((void *) t != NULL)
@@ -485,7 +494,6 @@ void *FindReadyThread(void)
 // > -1 if the function fails.
 thread_state_t GetThreadState(struct thread_d *thread)
 {
-
 // Parameter
     if ((void *) thread == NULL){
         goto fail;
@@ -493,9 +501,7 @@ thread_state_t GetThreadState(struct thread_d *thread)
     if (thread->used != TRUE){
         goto fail;
     }
-
     return (thread_state_t) thread->state;
-
 fail:
     return (thread_state_t) -1;
 }
@@ -505,7 +511,6 @@ fail:
 // > -1 if the function fails.
 thread_type_t GetThreadType(struct thread_d *thread)
 {
-
 // Parameter
     if ((void *) thread == NULL){
         goto fail;
@@ -513,20 +518,18 @@ thread_type_t GetThreadType(struct thread_d *thread)
     if (thread->used != TRUE){
         goto fail;
     }
-
     return (thread_type_t) thread->type;
-
 fail:
     return (thread_type_t) -1;
 }
 
-// Set the current TID.
+// Set the current TID
 void SetCurrentTID(tid_t tid)
 {
     current_thread = (tid_t) tid;
 }
 
-// Get the current TID.
+// Get the current TID
 tid_t GetCurrentTID(void)
 {
     return (tid_t) current_thread;
@@ -620,13 +623,11 @@ void thread_show_profiler_info (void)
     refresh_screen();
 }
 
-unsigned long 
-thread_get_profiler_percentage (struct thread_d *thread)
+unsigned long thread_get_profiler_percentage(struct thread_d *thread)
 {
     if ((void *) thread == NULL){
         panic ("thread_get_profiler_percentage: thread\n");
     }
- 
     return (unsigned long) thread->profiler_percentage_running;
 }
 
@@ -739,15 +740,15 @@ int thread_profiler(int service)
  *     Torna o estado ZOMBIE mas não destrói a estrutura.
  *     Outra rotina destruirá as informações de uma estrutura de thread zombie.
  */
- 
-void exit_thread (tid_t tid)
+int exit_thread(tid_t tid)
 {
     struct thread_d *Idle;
     struct thread_d *Thread;
 
-    if (tid < 0 || tid >= THREAD_COUNT_MAX){
+    if (tid < 0 || tid >= THREAD_COUNT_MAX)
+    {
         debug_print ("exit_thread: tid\n");
-        return;
+        goto fail;
     }
 
 // Init thread.
@@ -782,23 +783,25 @@ void exit_thread (tid_t tid)
 // Let the scheduler put this thread in the ZOMBIE state.
     Thread->exit_in_progress = TRUE;
     //Thread->state = ZOMBIE;
-    return;
+    return 0;
 
 fail:
-    //#debug
-    refresh_screen();
-    return;
+    refresh_screen();  // #debug
+    return (int) -1;
 }
 
-// Exit current thread.
-void exit_current_thread(void)
+// Exit current thread
+int exit_current_thread(void)
 {
     if (current_thread < 0)
-        return;
-    if (current_thread >= THREAD_COUNT_MAX){
-        return;
+        goto fail;
+    if (current_thread >= THREAD_COUNT_MAX)
+    {
+        goto fail;
     }
-    exit_thread(current_thread);
+    return (int) exit_thread(current_thread);
+fail:
+    return (int) -1;
 }
 
 // copy_thread_struct:

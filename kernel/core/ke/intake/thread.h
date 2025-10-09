@@ -881,8 +881,8 @@ struct thread_d *copy_thread_struct(struct thread_d *thread);
 // Exit
 //
 
-void exit_thread(tid_t tid);
-void exit_current_thread(void);
+int exit_thread(tid_t tid);
+int exit_current_thread(void);
 
 // ===
 
