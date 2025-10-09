@@ -161,22 +161,21 @@ copy_inflate_rect (
     unsigned long cx, 
     unsigned long cy )
 {
-    if ( (void*) rectDest == NULL ){
+    if ((void*) rectDest == NULL){
+        return;
+    }
+    if ((void*) rectSrc == NULL){
         return;
     }
 
-    if ( (void*) rectSrc == NULL ){
-        return;
-    }
-
-// inflate and copy.
+// Inflate and copy
 // todo: fazer isso em duas etapas.
     rectDest->left   = rectSrc->left   -= cx;
     rectDest->top    = rectSrc->top    -= cy;
     rectDest->right  = rectSrc->right  += cx;
     rectDest->bottom = rectSrc->bottom += cy;
 
-// update width and height
+// Update width and height
     rectSrc->width   = (rectSrc->right   - rectSrc->left);
     rectSrc->height  = (rectSrc->bottom  - rectSrc->top);
     rectDest->width  = (rectDest->right  - rectDest->left);
@@ -216,11 +215,10 @@ copy_offset_rect (
     unsigned long cx, 
     unsigned long cy )
 {
-    if ( (void*) rectDest == NULL ){
+    if ((void*) rectDest == NULL){
         return;
     }
-
-    if ( (void*) rectSrc == NULL ){
+    if ((void*) rectSrc == NULL){
         return;
     }
 
@@ -245,8 +243,8 @@ copy_offset_rect (
 // pois empty pode significar apenas nao pintado. not fill.
 int rect_validate_size(struct gws_rect_d *rect)
 {
-    if ( (void*) rect == NULL ){
-        return -1;
+    if ((void*) rect == NULL){
+        return (int) -1;
     }
 
     if ((rect->left >= rect->right) || 
@@ -260,8 +258,8 @@ int rect_validate_size(struct gws_rect_d *rect)
 
 int rect_validate_size2(struct gws_rect_d *rect)
 {
-    if ( (void*) rect == NULL ){
-        return -1;
+    if ((void*) rect == NULL){
+        return (int) -1;
     }
 
     if ( (rect->width  <= 0 ) || 
@@ -277,7 +275,7 @@ int rect_validate_size2(struct gws_rect_d *rect)
 int is_rect_null(struct gws_rect_d *rect)
 {
     if ((void*) rect == NULL){
-        return -1;
+        return (int) -1;
     }
 
     if (rect->width == 0 && rect->height == 0)
@@ -290,15 +288,14 @@ int is_rect_null(struct gws_rect_d *rect)
 
 int is_rect_empty(struct gws_rect_d *rect)
 {
-    if ( (void*) rect == NULL ){
+    if ((void*) rect == NULL){
         return (int) -1;
     }
-
     if (rect->is_empty == TRUE){
         return (int) TRUE;
     }
- 
     rect->is_empty = FALSE;
+
     return FALSE;
 }
 
@@ -307,10 +304,9 @@ int is_rect_empty(struct gws_rect_d *rect)
 int is_rect_dirty(struct gws_rect_d *rect)
 {
     // Error!
-    if ( (void*) rect == NULL ){
+    if ((void*) rect == NULL){
         return (int) -1;
     }
-
     // true
     if (rect->dirty == TRUE){
         return (int) TRUE;
@@ -325,7 +321,7 @@ rect_contains_vertically (
     struct gws_rect_d *rect,  
     unsigned long y ) 
 {
-    if ( (void*) rect == NULL ){
+    if ((void*) rect == NULL){
         return (int) -1;
     }
 
@@ -442,14 +438,14 @@ int gwssrv_refresh_this_rect(struct gws_rect_d *rect)
 // provided that it has been marked dirty. Returns 0 for success or -1 on error.
 
     if ((void *) rect == NULL){ 
-        return -1; 
+        return (int) -1; 
     }
     // Only refresh if the rectangle is marked as dirty.
     if (rect->dirty != TRUE){ 
-        return -1; 
+        return (int) -1; 
     }
 
-    // Refresh the area.
+    // Refresh the area
     gws_refresh_rectangle ( 
         rect->left, rect->top, rect->width, rect->height );
 
@@ -466,7 +462,7 @@ int gwssrv_refresh_this_rect(struct gws_rect_d *rect)
 int flush_rectangle(struct gws_rect_d *rect)
 {
     if ((void *) rect == NULL){
-        return -1;
+        return (int) -1;
     }
     return (int) gwssrv_refresh_this_rect(rect);
 }
@@ -615,8 +611,8 @@ __refresh_rectangle0 (
 // Device info.
     unsigned long deviceWidth  = (unsigned long) gws_get_device_width();
     unsigned long deviceHeight = (unsigned long) gws_get_device_height();
-
-    if ( deviceWidth == 0 || deviceHeight == 0 ){
+    if ( deviceWidth == 0 || deviceHeight == 0 )
+    {
         debug_print ("refresh_rectangle: w h\n");
         //panic       ("refresh_rectangle: w h\n");
         return;
@@ -684,10 +680,10 @@ __refresh_rectangle0 (
 // Não copiamos a parte que está fora da janela do dispositivo.
 // memcpy64: 8 bytes per time.
 
-    if ( (rectangle_pitch % 8) == 0 )
+    if ((rectangle_pitch % 8) == 0)
     {
-        count = (rectangle_pitch>>3);
-        for ( i=0; i < lines; i++ ){
+        count = (rectangle_pitch >> 3);
+        for (i=0; i < lines; i++){
             if (UseClipping == TRUE){
                 if ( (FirstLine + i) > deviceHeight ){ break; }
             }
@@ -708,10 +704,10 @@ __refresh_rectangle0 (
 // Não copiamos a parte que está fora da janela do dispositivo.
 // memcpy32: 4 bytes per time.
 
-    if ( (rectangle_pitch % 4) == 0 )
+    if ((rectangle_pitch % 4) == 0)
     {
-        count = (rectangle_pitch>>2);
-        for ( i=0; i < lines; i++ ){
+        count = (rectangle_pitch >> 2);
+        for (i=0; i < lines; i++){
             if (UseClipping == TRUE){
                 if ( (FirstLine + i) > deviceHeight ){ break; }
             }
@@ -730,9 +726,9 @@ __refresh_rectangle0 (
 // Não copiamos a parte que está fora da janela do dispositivo.
 // memcpy: 1 byte per time.
 
-    if ( (rectangle_pitch % 4) != 0 )
+    if ((rectangle_pitch % 4) != 0)
     {
-        for ( i=0; i < lines; i++ ){
+        for (i=0; i < lines; i++){
             if (UseClipping == TRUE){
                 if ( (FirstLine + i) > deviceHeight ){ break; }
             }
@@ -803,7 +799,6 @@ __refresh_rectangle1 (
 // Device info.
     unsigned long deviceWidth  = (unsigned long) gws_get_device_width();
     unsigned long deviceHeight = (unsigned long) gws_get_device_height();
-
     if ( deviceWidth == 0 || deviceHeight == 0 )
     {
         debug_print ("refresh_rectangle: w h\n");
@@ -814,7 +809,6 @@ __refresh_rectangle1 (
 //
 // Internal
 //
-
 
     unsigned long dstX = (unsigned long) (dst_x & 0xFFFF);
     unsigned long srcX = (unsigned long) (src_x & 0xFFFF);
@@ -881,10 +875,10 @@ __refresh_rectangle1 (
 // Não copiamos a parte que está fora da janela do dispositivo.
 // memcpy64: 8 bytes per time.
 
-    if ( (rectangle_pitch % 8) == 0 )
+    if ((rectangle_pitch % 8) == 0)
     {
-        count = (rectangle_pitch>>3);
-        for ( i=0; i < lines; i++ )
+        count = (rectangle_pitch >> 3);
+        for (i=0; i < lines; i++)
         {
             if (UseClipping == TRUE)
             {
@@ -914,18 +908,18 @@ __refresh_rectangle1 (
 // Não copiamos a parte que está fora da janela do dispositivo.
 // memcpy32: 4 bytes per time.
 
-    if ( (rectangle_pitch % 4) == 0 )
+    if ((rectangle_pitch % 4) == 0)
     {
-        count = (rectangle_pitch>>2);
-        for ( i=0; i < lines; i++ )
+        count = (rectangle_pitch >> 2);
+        for (i=0; i < lines; i++)
         {
             if (UseClipping == TRUE)
             {
-                if ( (dstFirstLine + i) > deviceHeight )
+                if ((dstFirstLine + i) > deviceHeight)
                 { 
                     break; 
                 }
-                if ( (srcFirstLine + i) > deviceHeight )
+                if ((srcFirstLine + i) > deviceHeight)
                 { 
                     break; 
                 }
@@ -945,16 +939,16 @@ __refresh_rectangle1 (
 // Não copiamos a parte que está fora da janela do dispositivo.
 // memcpy: 1 byte per time.
 
-    if ( (rectangle_pitch % 4) != 0 )
+    if ((rectangle_pitch % 4) != 0)
     {
-        for ( i=0; i < lines; i++ ){
+        for (i=0; i < lines; i++){
             if (UseClipping == TRUE)
             {
-                if ( (dstFirstLine + i) > deviceHeight )
+                if ((dstFirstLine + i) > deviceHeight)
                 { 
                     break; 
                 }
-                if ( (srcFirstLine + i) > deviceHeight )
+                if ((srcFirstLine + i) > deviceHeight)
                 { 
                     break; 
                 }
@@ -1017,9 +1011,7 @@ gws_refresh_rectangle (
 // the limits of the screen, not a givem DC.
 
     gws_refresh_rectangle0(
-        x, y, width, height,
-        dst_surface_base, 
-        src_surface_base );
+        x, y, width, height, dst_surface_base, src_surface_base );
 }
 
 // gws_refresh_rectangle0:
@@ -1259,7 +1251,6 @@ frontbuffer_draw_rectangle(
     unsigned int color,
     unsigned long rop_flags )
 {
-
 // 1=backbuffer
 // 2=frontbuffer
     __drawrectangle0(
@@ -1269,18 +1260,15 @@ frontbuffer_draw_rectangle(
         2 );      // back or front.
 }
 
-
 /* 
  * __drawrectangle0:
  *     Draw a rectangle on backbuffer or frontbuffer.
  */
-
 // Service 9.
 // #bugbug
 // Agora precisamos considerar o limite de apenas 2mb
 // de lfb mapeados e de apenas 2 mb de backbuffer mapeados.
 // Pois nao queremos escrever em area nao mapeada.
-
 // IN:
 // 1=backbuffer
 // 2=frontbuffer
@@ -1297,7 +1285,7 @@ __drawrectangle0(
 {
     //server_debug_print("__drawrectangle0: :)\n");
 
-// Copy.
+// Copy
 
     unsigned long X      = (x      & 0xFFFF);
     unsigned long Y      = (y      & 0xFFFF);
@@ -1313,7 +1301,7 @@ __drawrectangle0(
         return;
     }
 
-//loop
+// loop
     unsigned long internal_height = (unsigned long) Height;
 // #todo
 // Get the clipping window/rectangle.
@@ -1498,9 +1486,10 @@ rectBackbufferDrawRectangle0 (
 // The ws routine is not working everytime we call it.
 
     // #important: Flag.
+    // Draw rectangle using the kernel painter.
     int fDrawRectangleUsingKGWS = (int) use_kgws;
-    //int DrawRectangleUsingKGWS = FALSE;  // #test
-    //int DrawRectangleUsingKGWS = TRUE;   // #test
+    //int fDrawRectangleUsingKGWS = FALSE;  // #test
+    //int fDrawRectangleUsingKGWS = TRUE;   // #test
 
     struct gws_rect_d rect;
 
@@ -1637,14 +1626,12 @@ rectBackbufferDrawRectangle0 (
             rect.bg_color, rop_flags );
         rect.dirty = TRUE;
         return;
-        //goto done;
     }
 
 //===============================================================
 // Draw:
 // Draw the rectangle 
 // using the routine here in the display server.
-
 
 /*
 // Clip
@@ -1753,14 +1740,12 @@ int update_rectangle(struct gws_rect_d *rect)
     unsigned long Height=0;
     unsigned int Color=0;
 
-// validations
-
-    if ( (void*) rect == NULL ){
-        return -1;
+// Parameters:
+    if ((void*) rect == NULL){
+        goto fail;
     }
-
-    if (rect->used != TRUE) { return -1; }
-    if (rect->magic != 1234){ return -1; }
+    if (rect->used != TRUE) { goto fail; }
+    if (rect->magic != 1234){ goto fail; }
 
 // Values
     Left   = (unsigned long) (rect->left   & 0xFFFF); 
@@ -1783,9 +1768,10 @@ int update_rectangle(struct gws_rect_d *rect)
 // Invalidate rectangle.
     rect->dirty = TRUE;
     return 0;
+fail:
+    return (int) -1;
 }
 
 //
 // End
 //
-

@@ -57,7 +57,6 @@ rect_contains_horizontally (
     struct gws_rect_d *rect,
     unsigned long x );
 
-
 void 
 rect_set_left ( 
     struct gws_rect_d *rect, 
@@ -144,7 +143,6 @@ __refresh_rectangle1 (
     unsigned long src_y,        // src stuff
     unsigned long buffer_src );  // src stuff
 
-
 // Paint it into the backbuffer.
 void 
 rectBackbufferDrawRectangle0 ( 
@@ -168,7 +166,6 @@ rectBackbufferDrawRectangle (
     int fill,
     unsigned long rop_flags );
 
-
 int update_rectangle(struct gws_rect_d *rect);
 
 int
@@ -178,8 +175,6 @@ set_rect (
     unsigned long top,
     unsigned long width,
     unsigned long height );
-
-
 
 void 
 inflate_rect ( 
@@ -206,8 +201,6 @@ copy_offset_rect (
     struct gws_rect_d *rectSrc, 
     unsigned long cx, 
     unsigned long cy ); 
-    
-
 
 //
 // Surface support
@@ -222,8 +215,6 @@ setup_surface_rectangle (
     unsigned long height );
 
 void invalidate_surface_retangle(void);
-
-
 
 #endif   
 
