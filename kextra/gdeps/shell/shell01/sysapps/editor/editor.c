@@ -692,15 +692,13 @@ int editor_initialize(int argc, char *argv[])
 
 // ============================
 // Open display.
-// IN: 
-// hostname:number.screen_number
-
+// IN: hostname:number.screen_number
     Display = (struct gws_display_d *) gws_open_display(display_name_string);
     if ((void*) Display == NULL){
         printf("editor.bin: Display\n");
         goto fail;
     }
-
+// Get client socket.
     client_fd = (int) Display->fd;
     if (client_fd <= 0){
         printf("editor.bin: fd\n");
@@ -712,6 +710,8 @@ int editor_initialize(int argc, char *argv[])
     // editor_init_globals();
 
 // Device info
+// #todo: Maybe all these information needs to be 
+// available in the display structure we got early.
     unsigned long w = gws_get_system_metrics(1);
     unsigned long h = gws_get_system_metrics(2);
     if ( w == 0 || h == 0 )
@@ -788,7 +788,6 @@ int editor_initialize(int argc, char *argv[])
     //#debug
     gws_refresh_window(client_fd, main_window);
 
-
 // Label.
 // Text inside the main window.
 // Right below the title bar.
@@ -811,33 +810,34 @@ int editor_initialize(int argc, char *argv[])
 // -----------------------------
 
     // Local.
-    struct gws_window_info_d lWi;
+    struct gws_window_info_d  lWi;
 
 // Get info about the main window.
-//IN: fd, wid, window info structure.
+// IN: fd, wid, window info structure.
     gws_get_window_info(
         client_fd, 
         main_window,   // The app window.
         (struct gws_window_info_d *) &lWi );
-
 
 // Address bar - (edit box)
 // Inside the main window.
 // se a janela mae é overlapped, 
 // então estamos relativos à sua área de cliente.
 
+    unsigned long ab_l = (( lWi.cr_width/8 )*2);
+    unsigned long ab_t = 4;
+    unsigned long ab_w = (( lWi.cr_width/8 )*3);
+    unsigned long ab_h = 24;
+
 // Create address bar window.
     addressbar_window = 
         (int) gws_create_window (
-                  client_fd,
-                  WT_EDITBOX, 1, 1, bar1_string,
-                  (( lWi.cr_width/8 )*2),  //l
-                  4,                       //t
-                  (( lWi.cr_width/8 )*3), 
-                  24,    
-                  main_window, 
-                  0, 
-                  COLOR_WHITE, COLOR_WHITE );
+                client_fd,
+                WT_EDITBOX, 1, 1, bar1_string,
+                ab_l, ab_t, ab_w, ab_h,
+                main_window, 
+                0, 
+                COLOR_WHITE, COLOR_WHITE );
 
     if (addressbar_window < 0){
         printf("editor.bin: addressbar_window failed\n");

@@ -1,4 +1,5 @@
 // main.c
+// EDITOR.BIN
 // Simple text editor for Gramado OS.
 // 2020 - Created by Fred Nora.
 
