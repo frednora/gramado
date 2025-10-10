@@ -1,6 +1,5 @@
 /*
  * File: main.c
- *    This is the InitProcess.
  *    Client side application for Gramado Window Server.
  *    Using socket to connect with gws.
  *    AF_GRAMADO family.
@@ -142,9 +141,9 @@ int main(int argc, char *argv[])
 
     client_fd = (int) __gws_initialization();
     if (client_fd < 0){
-         gws_debug_print("gws.bin: Initialization fail\n");
-         printf         ("gws.bin: Initialization fail\n");
-         exit(1);
+        gws_debug_print("gws.bin: Initialization fail\n");
+        printf         ("gws.bin: Initialization fail\n");
+        exit(1);
     }
 
 //========================================

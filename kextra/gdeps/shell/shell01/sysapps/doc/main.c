@@ -1,6 +1,6 @@
 // main.c
-// c-like interpreter.
-// Ported from Gramado 32bit. 
+// DOC.BIN
+// This is a text aditor and a language interpreter.
 // 2022 - Fred Nora
 
 #include "gramcnf.h"
@@ -19,23 +19,21 @@
 // The client-side library.
 #include <gws.h>
 
-
-
-// network ports.
-#define PORTS_WS  4040
-#define PORTS_NS  4041
-#define PORTS_FS  4042
+// Network ports
+#define PORTS_DS  4040  // Display server
+//#define PORTS_NS  4041
+//#define PORTS_FS  4042
 // ...
 
 #define IP(a, b, c, d)  (a << 24 | b << 16 | c << 8 | d)
 
-
-
+// Windows
 static int __main_window = -1;
 static int __addressbar_window = -1;
 static int __button_window = -1;
 static int __client_window = -1;
 
+// Child window parameters.
 struct child_window_d
 {
     unsigned long l;
@@ -43,19 +41,17 @@ struct child_window_d
     unsigned long w;
     unsigned long h;
 };
-struct child_window_d cwAddressBar;
-struct child_window_d cwButton;
-struct child_window_d cwClientWindow;
+struct child_window_d  cwAddressBar;
+struct child_window_d  cwButton;
+struct child_window_d  cwClientWindow;
 // ...
-
-
 
 
 //#define __VERSION__ "0.1"
 //const char copyright[] = "Copyright (c) Fred Nora";
 
-//default name.
-char program_name[] = "[Default program name]";
+// Default name.
+const char program_name[] = "[Default program name]";
 char *compiler_name;
 //static int running = 1;
 int running = 1;
@@ -193,12 +189,10 @@ static void debugShowStat(void)
 // main:
 //
 
-static
-int doc_viewer( int argc, char *argv[] );
-
+static int doc_viewer( int argc, char *argv[] );
 
 // chamado para interpretar o documento.
-static int doc_viewer ( int argc, char *argv[] )
+static int doc_viewer( int argc, char *argv[] )
 {
 // Input
     FILE *fp;
@@ -605,10 +599,11 @@ int main ( int argc, char *argv[] )
     // doc_viewer(argc,argv);
 
 // -------------------------------------
-    struct sockaddr_in addr_in;
+// Connect to the display server at 127.0.0.1:4040
+    struct sockaddr_in  addr_in;
     addr_in.sin_family = AF_INET;
     addr_in.sin_addr.s_addr = IP(127,0,0,1);
-    addr_in.sin_port = PORTS_WS;   
+    addr_in.sin_port = PORTS_DS;   
 // -------------------------------------
 
     int client_fd = -1;
@@ -624,7 +619,8 @@ int main ( int argc, char *argv[] )
         exit(1);
     }
 
-// socket
+// Create the socket for the client.
+
     //client_fd = socket( AF_INET, SOCK_STREAM, 0 );
     client_fd = socket( AF_INET, SOCK_RAW, 0 );
     if (client_fd<0)
@@ -633,9 +629,7 @@ int main ( int argc, char *argv[] )
        exit(1);
     }
 
-// connect
-// Nessa hora colocamos no accept um fd.
-// Então o servidor escreverá em nosso arquivo.
+// Connect to the server.
 
     while (TRUE){
         if (connect(client_fd, (void *) &addr_in, sizeof(addr_in)) < 0){ 
@@ -646,10 +640,7 @@ int main ( int argc, char *argv[] )
 
 // ==============================================
 
-// #todo: 
-// Salvar em global.
-// Por enquanto aqui.
-
+// Internal window list.
     int main_window=0;
     int addressbar_window=0;    
     int client_window=0;
@@ -688,7 +679,7 @@ int main ( int argc, char *argv[] )
                   app_name,
                   viewwindowx, viewwindowy, w_width, w_height,
                   0, 
-                  0x0000,  
+                  0x0000,
                   COLOR_GRAY, COLOR_GRAY );
 
     if (main_window < 0){

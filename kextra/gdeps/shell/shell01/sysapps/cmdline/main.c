@@ -722,18 +722,16 @@ int main(int argc, char *argv[])
 // Only connect. Nothing more.
 // Create socket and call connect().
     client_fd = (int) __initialization();
-    if (client_fd < 0)
-    {
-         gws_debug_print("cmdline: __initialization fail\n");
-         printf         ("cmdline: __initialization fail\n");
-         exit(1);
+    if (client_fd < 0){
+        gws_debug_print("cmdline: __initialization fail\n");
+        printf         ("cmdline: __initialization fail\n");
+        exit(1);
     }
 
 // #debug
     //printf(":: Entering CMDLINE.BIN pid{%d} fd{%d}\n",
         //getpid(), client_fd);
     //while(1){}
-
 
 //========================================
 
@@ -793,9 +791,6 @@ int main(int argc, char *argv[])
     //gws_async_command(client_fd,5,0,0);  // Draw black rectangle.
     //}
 
-
-
-
 // #debug
 // ok
 
@@ -804,24 +799,20 @@ int main(int argc, char *argv[])
     //while(1){}
     //asm ("int $3");
 
-//
-// Window
-//
+// ========================
+// Create the main window.
 
-
-// ===========================
-    gws_debug_print ("cmdline.bin: 1 Creating main window \n");
+    //gws_debug_print ("cmdline.bin: 1 Creating main window \n");
     //printf          ("cmdline.bin: Creating main window \n");
 
     main_window = 
         (int) gws_create_window (
-                  client_fd,
-                  WT_SIMPLE, 1, 1, "cmdline",
-                  0, 0, w, h-40,
-                  0, 0, COLOR_GRAY, COLOR_GRAY);
+                client_fd,
+                WT_SIMPLE, 1, 1, "cmdline",
+                0, 0, w, h-40,
+                0, 0, COLOR_GRAY, COLOR_GRAY);
 
-    if (main_window<0)
-    {
+    if (main_window < 0){
         printf ("cmdline.bin: main_window\n");
         exit(1);
     }
@@ -842,19 +833,21 @@ int main(int argc, char *argv[])
     //while(1){}
     //asm ("int $3");
 
+// ===============================
+// Create window.
+// Barra azul no topo.
 
-// barra azul no topo.
-//===============================
-    gws_debug_print ("cmdline.bin:  Creating  window \n");
+    //gws_debug_print ("cmdline.bin:  Creating  window \n");
     //printf          ("cmdline.bin: Creating main window \n");
+
     int tmp1 = -1;
-    tmp1 = (int) gws_create_window (
-                     client_fd,
-                     WT_SIMPLE, 1, 1, "status",
-                     0, 0, w, 24,
-                     0, 0, COLOR_BLUE, COLOR_BLUE );
-    if (tmp1<0)
-    {
+    tmp1 = 
+        (int) gws_create_window (
+                client_fd,
+                WT_SIMPLE, 1, 1, "status",
+                0, 0, w, 24,
+                0, 0, COLOR_BLUE, COLOR_BLUE );
+    if (tmp1 < 0){
         printf ("cmdline.bin: tmp1\n");
         exit(1);
     }
@@ -864,20 +857,18 @@ int main(int argc, char *argv[])
     //printf ("CMDLINE.BIN: status_window created\n");
     //while(1){}
     
-
     //printf("gws.bin: [2] after create simple gray bar window :)\n");
 
     // #debug
     //gws_refresh_window (client_fd, tmp1);
     //asm ("int $3");
 
-
 //===================
 // Drawing a char just for fun,not for profit.
 
     gws_debug_print ("cmdline.bin: 2 Drawing a char \n");
     //printf          ("cmdline.bin: Drawing a char \n");
-    if(status_window>0)
+    if (status_window > 0)
     {
         gws_draw_char ( 
             client_fd, 
@@ -886,11 +877,9 @@ int main(int argc, char *argv[])
     }
 //====================   
 
-
     // #debug
     //gws_refresh_window (client_fd, tmp1);
     //asm ("int $3");
-
     
     /*
     //
@@ -918,8 +907,6 @@ int main(int argc, char *argv[])
     };
     // ============================================================
     */
-    
-    
 
     // Create a little window in the top left corner.
     //gws_create_window (client_fd,
@@ -931,7 +918,6 @@ int main(int argc, char *argv[])
     // IN: fd, window id, x, y, color, char.
     //gws_draw_char ( client_fd, 0, 
         //16, 8, COLOR_RED, 'C' );
-
 
     /*
     gws_debug_print ("gws.bin: 3 Testing Plot0 4x\n");
@@ -1007,13 +993,7 @@ int main(int argc, char *argv[])
     //gws_async_command(client_fd,6,FALSE,0);
 
 
-//
-// Refresh
-//
-
-// #test
-// nem precisa ja que todas as rotinas que criam as janelas 
-// estao mostrando as janelas.
+// Show main window.
 
     gws_refresh_window (client_fd, main_window);
 
@@ -1026,7 +1006,7 @@ int main(int argc, char *argv[])
 // Podemos nesse momento ler alguma configuração
 // que nos diga qual interface devemos inicializar.
 
-    if(launchChild == TRUE)
+    if (launchChild == TRUE)
     {
         gws_redraw_window(client_fd,game_window,0);
         
@@ -1049,20 +1029,17 @@ int main(int argc, char *argv[])
 
     //=================================
 
-
 // =================================
 // Focus
 
-
-// set focus
+// Set focus
     rtl_focus_on_this_thread();
-
-// set focus
+// Set focus
     gws_async_command(
-         client_fd,
-         9,             // set focus
-         game_window,
-         game_window );
+        client_fd,
+        9,             // set focus
+        game_window,
+        game_window );
 
 //
 // Banner
@@ -1085,10 +1062,6 @@ int main(int argc, char *argv[])
     printf ("#test lX: %lX \n",0x1000ABCDDCBA0001); //
     // ...
 */
-
-
-
-
 
 // ===============================
 // Testing fpu

@@ -122,10 +122,11 @@ Network: Intel e1000 NIC (works in Oracle VirtualBox)
 ```
 Software
 Processes and threads
+Preemptive thread switching
 Round-robin scheduler (threads only)
 Syscalls via software interrupts (traps)
 IPC: sockets and system messages (queue in thread structure)
-4 ring 0 kernel virtual consoles (fullscreen raw mode)
+Four ring 0 kernel virtual consoles (fullscreen raw mode)
 General-use TTYs and PTYs for ring 3 virtual terminals
 FAT16 file system for boot partition (no dedicated system partition yet)
 POSIX libc: ring 0 implementation for ring 3 libraries

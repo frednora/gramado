@@ -1,8 +1,4 @@
-# docviewer (browser)
-# gramcnf:
-# It's a project based on gramc.
-# The goal here is to create a small parser
-# for a new language for configuration files.
+# DOC.BIN - docviewer (browser)
 # history:
 # 2019 - Created by Fred Nora.
 
@@ -10,7 +6,7 @@ VERSION = 0
 PATCHLEVEL = 0
 SUBLEVEL = 0
 EXTRAVERSION =
-#NAME = gramcnf
+#NAME = DOC
 
 linkFlags  = -m elf_x86_64 \
 -s -x -static -T ../../link.ld
