@@ -58,8 +58,6 @@ struct sockaddr_in addr = {
 };
 */
 
-
-
 // Screen
 unsigned long screen_width=0;
 unsigned long screen_height=0;
@@ -95,7 +93,6 @@ struct child_window_d cwButton1;
 struct child_window_d cwBar2;
 struct child_window_d cwButton2;
 
-
 // #todo
 // int button_list[8];
 
@@ -118,10 +115,8 @@ static int blink_status=FALSE;
 
 // ========
 
-
 static void pump(int fd);
 static void __event_loop(int fd);
-
 static void do_done(int fd);
 
 //prototype
@@ -157,7 +152,6 @@ static void update_clients(int fd)
         main_window,   // The app window.
         (struct gws_window_info_d *) &lWi );
 
-
 // ---------------------------------------------
 // cwBar1
     cwBar1.l = (( lWi.cr_width/8 )*2) +20; 
@@ -165,15 +159,9 @@ static void update_clients(int fd)
     cwBar1.w = (( lWi.cr_width/8 )*2);
     cwBar1.h = 24;
     gws_change_window_position( 
-        fd,
-        bar1_window,
-        cwBar1.l,
-        cwBar1.t );
+        fd, bar1_window, cwBar1.l, cwBar1.t );
     gws_resize_window(
-        fd,
-        bar1_window,
-        cwBar1.w,
-        cwBar1.h );
+        fd, bar1_window, cwBar1.w, cwBar1.h );
 
 // ---------------------------------------------
 // cwButton1
@@ -182,15 +170,9 @@ static void update_clients(int fd)
     cwButton1.w = (( lWi.cr_width/8 )*2);
     cwButton1.h = 24;
     gws_change_window_position( 
-        fd,
-        button1_window,
-        cwButton1.l,
-        cwButton1.t );
+        fd, button1_window, cwButton1.l, cwButton1.t );
     gws_resize_window(
-        fd,
-        button1_window,
-        cwButton1.w,
-        cwButton1.h );
+        fd, button1_window, cwButton1.w, cwButton1.h );
 
 // ---------------------------------------------
 // cwBar2
@@ -199,15 +181,9 @@ static void update_clients(int fd)
     cwBar2.w = (( lWi.cr_width/8 )*2);
     cwBar2.h = 24;
     gws_change_window_position( 
-        fd,
-        bar2_window,
-        cwBar2.l,
-        cwBar2.t );
+        fd, bar2_window, cwBar2.l, cwBar2.t );
     gws_resize_window(
-        fd,
-        bar2_window,
-        cwBar2.w,
-        cwBar2.h );
+        fd, bar2_window, cwBar2.w, cwBar2.h );
 
 // ---------------------------------------------
 // cwButton2
@@ -216,20 +192,14 @@ static void update_clients(int fd)
     cwButton2.w = (( lWi.cr_width/8 )*2);
     cwButton2.h = 24;
     gws_change_window_position( 
-        fd,
-        button2_window,
-        cwButton2.l,
-        cwButton2.t );
+        fd, button2_window, cwButton2.l, cwButton2.t );
     gws_resize_window(
-        fd,
-        button2_window,
-        cwButton2.w,
-        cwButton2.h );
+        fd, button2_window, cwButton2.w, cwButton2.h );
 
 // ----------
 
-    //Original
-    gws_set_focus(fd,bar2_window);
+    // Original
+    gws_set_focus(fd, bar2_window);
 
     //#test
     //gws_set_focus(fd,button2_window);
@@ -333,7 +303,6 @@ static void destroy_windows(int fd)
     gws_destroy_window(fd,main_window);
 }
 
-
 // do_done:
 // >> Launch the taskbar application.
 // >> Close the gdm application.
@@ -352,6 +321,7 @@ static void do_done(int fd)
     exit(0);
 }
 
+// Window procedure.
 static int 
 gdmProcedure(
     int fd, 
@@ -364,13 +334,13 @@ gdmProcedure(
 
 // Parameters
     if (fd<0){
-        return -1;
+        goto fail;
     }
     if (event_window<0){
-        return -1;
+        goto fail;
     }
     if (event_type<0){
-        return -1;
+        goto fail;
     }
 
 // Events
@@ -408,7 +378,6 @@ gdmProcedure(
         }
         return 0;
         break;
-
 
     // #todo
     // We can create the message button clicked.
@@ -468,13 +437,14 @@ gdmProcedure(
         break;
 
     //...
-    
+
     default:
-        return -1;
+        goto fail;
         break;
     };
 
-    return -1;
+fail:
+    return (int) -1;
 }
 
 static void pump(int fd)
@@ -543,6 +513,8 @@ static void __event_loop(int fd)
         return;
     }
 
+// Stay in a loop getting the message and dispatching it 
+// to the procedure.
     while (1){
         pump(fd);
     };
@@ -570,8 +542,6 @@ int main( int argc, char *argv[] )
         }
         //...
     };
-
-
 
 // Screen
     screen_width=0;
@@ -601,12 +571,8 @@ int main( int argc, char *argv[] )
 
     blink_status=FALSE;
 
-
-// ============================
-// Open display.
-// IN: 
-// hostname:number.screen_number
-
+// Open display
+// IN: hostname:number.screen_number
     Display = (struct gws_display_d *) gws_open_display(display_name);
     if ((void*) Display == NULL)
     {
@@ -614,8 +580,7 @@ int main( int argc, char *argv[] )
         printf     ("gdm: Couldn't open display\n");
         exit(1);
     }
-
-// Socket fd.
+// Get client socket
     client_fd = (int) Display->fd;
     if (client_fd <= 0){
         debug_print("gdm: bad fd\n");
@@ -649,7 +614,7 @@ int main( int argc, char *argv[] )
     gdm_x = 
         (unsigned long) ( ( screen_width  - gdm_width ) >> 1 );
     gdm_y = 
-        (unsigned long) ( ( screen_height - gdm_height) >> 1 ); 
+        (unsigned long) ( ( screen_height - gdm_height) >> 1 );
 
     // #hack
     if (screen_width == 320)
@@ -676,19 +641,18 @@ int main( int argc, char *argv[] )
 
     main_window = 
         (int) gws_create_window (
-                  client_fd,
-                  WT_OVERLAPPED, 
-                  WINDOW_STATUS_ACTIVE,  // status 
-                  VIEW_NULL,             // view
-                  program_name, 
-                  gdm_x, gdm_y, gdm_width, gdm_height,
-                  0, 
-                  0x0000,  
-                  COLOR_RED,   // #todo: client bg. Not implemented. 
-                  COLOR_GRAY );
+                client_fd,
+                WT_OVERLAPPED, 
+                WINDOW_STATUS_ACTIVE,  // status 
+                VIEW_NULL,             // view
+                program_name, 
+                gdm_x, gdm_y, gdm_width, gdm_height,
+                0, 
+                0x0000,  
+                COLOR_RED,   // #todo: client bg. Not implemented. 
+                COLOR_GRAY );
 
-    if (main_window <= 0)
-    {
+    if (main_window <= 0){
         debug_print("gdm: main_window\n");
         printf     ("gdm: main_window\n");
         exit(1);

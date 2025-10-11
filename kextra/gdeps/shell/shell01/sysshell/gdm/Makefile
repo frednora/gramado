@@ -1,16 +1,14 @@
-
-#gdm - Gramado Display Manager.
-#2019 - Created by Fred Nora.
+# GDM.BIN - Gramado Display Manager.
+# 2019 - Created by Fred Nora.
 #todo:
 #fazer um makefile pra compilar o shell
 #obs: #bugbug tem que arrumas as coisas aqui.
-
 
 VERSION = 0
 PATCHLEVEL = 0
 SUBLEVEL = 0
 EXTRAVERSION =
-#NAME = 
+#NAME = GDM
 
 linkFlags  = -m elf_x86_64 \
 -s -x -static -T ../../link.ld

@@ -1,5 +1,6 @@
 /*
  * File: main.c
+ +    SETUP.BIN - System installer.
  *    Client side application for Gramado Window Server.
  *    Using socket to connect with gws.
  *    AF_GRAMADO family.
@@ -480,10 +481,7 @@ done:
     //return (int) gws_default_procedure(fd,0,msg,long1,long2);
 }
 
-
-//==========================================
-// Main
-
+// The main function
 int main ( int argc, char *argv[] )
 {
 
@@ -493,22 +491,21 @@ int main ( int argc, char *argv[] )
     int launchChild = TRUE;
     // ...
 
-
     int client_fd = -1;
     int main_window = -1;
     
-
 // hello
     gws_debug_print ("setup.bin: Hello world \n");
     printf          ("setup.bin: Hello world \n");
-
 
 // interrupts
     gws_debug_print ("setup.bin: Enable interrupts \n");
     printf          ("setup.bin: Enable interrupts \n");
 
-    asm ("int $199 \n");
-
+// #bugbug
+// Do we still need this.
+// We already did that in another place before.
+    // asm ("int $199 \n");
 
 // interrupts
 // Unlock the taskswitching support.
