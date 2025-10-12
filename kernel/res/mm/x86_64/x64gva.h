@@ -81,15 +81,11 @@
 //
 
 // 768MB mark (VA)
-#define KERNELIMAGE_VA  0x0000000030000000
-// Alias
 // The start of the kernel image virtual address.
-#define KERNEL_IMAGE_BASE  KERNELIMAGE_VA  
-#define KERNBASE           KERNELIMAGE_VA
+#define KERNELIMAGE_VA  0x0000000030000000
 
-// Entry point
-// Start of kernel text.
-#define KERNTEXTOFF  (KERNBASE + 0x1000)
+// Entry point: Start of kernel text.
+#define KERNELIMAGE_ENTRYPOINT_VA  (KERNELIMAGE_VA + 0x1000)
 
 //
 // heap and stack  (va)

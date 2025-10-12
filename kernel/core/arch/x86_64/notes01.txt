@@ -1,0 +1,33 @@
+
+ The virtual address for the kernel.
+
+---------------------------
+0x30000000
+This is the current virtual address for the kernel.
+It is a temporary measure during development to avoid complex high-address mappings. 
+There is a lot of new table in 64bit, and for simplicity i am using less table for now 
+untill the moment i will be able to load the kernel into a standard high place.
+
+0xFFFF800000000000 is the desired address.
+
+test 01:
+
+Virtual Address Breakdown: For 0xFFFF800000000000 in 48-bit mode:PML4 Index: Bits 39–47 → 0x1FF (511, since bits 47–63 are 1).
+PDP Index: Bits 30–38 → 0x0 (0, for the first 512 GB region).
+PD Index: Bits 21–29 → 0x0 (0, for the first 1 GB region).
+PT Index: Bits 12–20 → 0x0 (0, for the first 4 KB page).
+Page Offset: Bits 0–11 → 0x0 (offset within the 4 KB page).
+
+Let’s calculate the indexes for 0xFFFF800000000000:PML4 Index: (0xFFFF800000000000 >> 39) & 0x1FF = 0x1FF (511)Bits 39–47: 111111111 (binary) = 511 (decimal).
+
+PDP Index: (0xFFFF800000000000 >> 30) & 0x1FF = 0x0 (0)Bits 30–38: 100000000 (binary, but only bits 30–38 matter) = 0 (decimal).
+
+PD Index: (0xFFFF800000000000 >> 21) & 0x1FF = 0x0 (0)Bits 21–29: 000000000 (binary) = 0 (decimal).
+
+PT Index: (0xFFFF800000000000 >> 12) & 0x1FF = 0x0 (0)Bits 12–20: 000000000 (binary) = 0 (decimal).
+
+Page Offset: 0x0 (offset within the 4 KB page).
+
+
+
+

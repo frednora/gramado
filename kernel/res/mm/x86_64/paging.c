@@ -7,7 +7,6 @@
 // and the init process.
 // Routines valid for Intel x64 machines.
 
-
 /*
 pagesInitializePaging():
     This is the main function here. The goal is mapping some 
@@ -1240,7 +1239,7 @@ static void __initialize_kernelimage_region(void)
 // pd index
     int pdindex = (int) X64_GET_PDE_INDEX(KERNELIMAGE_VA);
 // size
-    mm_used_kernelimage = (1024 * 2);  //2mb
+    mm_used_kernelimage = (1024 * 2);  // 2 MB
 
 // kernel_base_pa = 0x100000pys
 // (0x100000pys = 0x30000000virt).

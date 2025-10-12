@@ -44,8 +44,6 @@ void x64mm_enable_paging(void)
                   " movq %%rax, %%cr0       " :: );
 }
 
-
-
 // Precisa ser um endereço físico.
 // 64bit?
 void load_pml4_table(void *phy_addr)
@@ -64,7 +62,6 @@ void x64mm_refresh_cr3(void)
     asm volatile ("movq %cr3, %rax");
     asm volatile ("movq %rax, %cr3");
 }
-
 
 // Worker
 static unsigned long 
@@ -210,7 +207,6 @@ virtual_to_physical (
     return (unsigned long) __virtual_to_physical(virtual_address,pml4_va);
 }
 
-
 // ---------------------------
 // mm_fill_page_table:
 // Cria uma page table com 512 entradas
@@ -245,16 +241,14 @@ mm_fill_page_table(
 // #todo
 // We need to validate some limits here.
 
-// Validation
-    if ( directory_entry < 0 || 
-         directory_entry >= 512 )
+// Invalid index for the directory entry.
+    if ( directory_entry < 0 || directory_entry >= 512 )
     {
-        return -1;
+        return (int) -1;
     }
 
 // Fill the pagetable with 512 entries.
-    for ( i=0; i<512; ++i )
-    {
+    for ( i=0; i<512; ++i ){
         pt[i] = (unsigned long) (pa | flags);
         pa    = (unsigned long) (pa + 4096);
     };

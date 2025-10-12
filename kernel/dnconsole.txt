@@ -1,0 +1,4 @@
+Maybe we can use another files to print into 
+the kernel consoles given more freedom to the standard streams.
+/dev/console0 to /dev/console3 
+

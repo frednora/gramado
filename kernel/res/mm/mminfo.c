@@ -196,11 +196,11 @@ void mmShowMemoryInfo(void)
 //
 
     //#todo
-    //unsigned long imageStart = KERNEL_IMAGE_BASE;
+    //unsigned long imageStart = KERNELIMAGE_VA;
     //unsigned long imageEnd;
     //unsigned long imageSize = 
 
-    unsigned long imageAvailableAreaStart = KERNEL_IMAGE_BASE;
+    unsigned long imageAvailableAreaStart = KERNELIMAGE_VA;
     unsigned long imageAvailableAreaEnd   = (kernel_heap_start - 8);
     unsigned long imageAvailableAreaSize_in_Bytes = 
         (imageAvailableAreaEnd - imageAvailableAreaStart);

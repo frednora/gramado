@@ -411,7 +411,7 @@ static void clear_terminal_client_window(int fd)
 // Maximize application window.
 // #bugbug: Covering the taskbar.
 // #todo: Isso pode virar uma função na biblioteca.
-// mas podemos deixar o window server fazer isso.
+// mas podemos deixar o display server fazer isso.
 static void __winmax(int fd)
 {
 // #bugbug
@@ -468,7 +468,7 @@ static void __winmax(int fd)
 // Minimize application window.
 // #bugbug: Covering the taskbar.
 // #todo: Isso pode virar uma função na biblioteca.
-// mas podemos deixar o window server fazer isso.
+// mas podemos deixar o display server fazer isso.
 static void __winmin(int fd)
 {
 // #bugbug
@@ -1271,7 +1271,7 @@ static void compareStrings(int fd)
     }
 
 // Enable mouse.
-// Begging the window server to initialize
+// Begging the display server to initialize
 // the mouse support. The kernel part and the ws part.
     if ( strncmp(prompt,"ps2-qemu", 8) == 0 )
     {
@@ -1936,7 +1936,7 @@ terminal_write_char (
 
 // Draw!
 // Draw the char into the given window.
-// Vamos pintar o char na janela usando o window server.
+// Vamos pintar o char na janela usando o display server.
 // White on black
 // IN: fd, wid, l, t, color, ch.
 
@@ -3083,7 +3083,7 @@ terminalProcedure (
                 return 0;
                 break;
 
-            // Draw the char using the window server.
+            // Draw the char using the display server.
             // tputc() uses escape sequence.
             default:
                 // Coloca na cmdline

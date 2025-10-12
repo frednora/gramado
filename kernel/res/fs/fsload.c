@@ -35,7 +35,7 @@ static int __check_address_validation(unsigned long address)
 // fat, rootdir, base kernel, lfb, backbuffer ...
     if (address == VOLUME1_FAT_ADDRESS_VA)           { Status=FALSE; }
     if (address == VOLUME1_ROOTDIR_ADDRESS_VA)       { Status=FALSE; }
-    if (address == KERNEL_IMAGE_BASE)                { Status=FALSE; }
+    if (address == KERNELIMAGE_VA)                   { Status=FALSE; }
     if (address == DEFAULT_LFB_VIRTUALADDRESS)       { Status=FALSE; }
     if (address == DEFAULT_BACKBUFFER_VIRTUALADDRESS){ Status=FALSE; }
     // ...
