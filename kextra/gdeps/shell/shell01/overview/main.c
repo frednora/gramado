@@ -216,7 +216,7 @@ const char *app2_name = "#editor.bin";
 
 static void __test_gr(int fd);
 
-static int __initialization(void);
+static int __initialize_connection(void);
 static void doPrompt(int fd);
 static void compareStrings(int fd);
 static void testASCIITable(int fd,unsigned long w, unsigned long h);
@@ -267,7 +267,7 @@ static int create_desktop_area(int fd);
 // do suporte as rotinas de socket e as definiçoes.
 // tem que incluir mais coisa na lib.
 
-static int __initialization(void)
+static int __initialize_connection(void)
 {
 
 //==============================
@@ -1098,7 +1098,6 @@ int main(int argc, char *argv[])
     printf("Value: %d\n", pf_value);
     */
 
-
 // #config
 
     int ShowCube = FALSE;
@@ -1106,7 +1105,6 @@ int main(int argc, char *argv[])
     int useDesktop = FALSE; //TRUE;
     // ...
     int client_fd = -1;
-
 
 // Initialize navigation info structure.
     NavigationInfo.button00_window = -1;
@@ -1130,7 +1128,6 @@ int main(int argc, char *argv[])
     //gws_debug_print ("taskbar.bin: Enable interrupts \n");
     //printf          ("taskbar.bin: Enable interrupts \n");
     //asm ("int $199 \n");
-
 
 // interrupts
 // Unlock the taskswitching support.
@@ -1159,11 +1156,11 @@ int main(int argc, char *argv[])
 // Connection
 // Only connect. Nothing more.
 // Create socket and call connect().
-    client_fd = (int) __initialization();
+    client_fd = (int) __initialize_connection();
     if (client_fd < 0)
     {
-        gws_debug_print("taskbar.bin: __initialization fail\n");
-        printf         ("taskbar.bin: __initialization fail\n");
+        gws_debug_print("taskbar.bin: __initialize_connection fail\n");
+        printf         ("taskbar.bin: __initialize_connection fail\n");
         exit(1);
     }
 
@@ -1245,7 +1242,7 @@ int main(int argc, char *argv[])
 // Window
 //
 
-// The taskbar window.
+// Create the main window. The frame for the taskbar application.
     unsigned long tb_l = 0;
     unsigned long tb_t = h - TASKBAR_HEIGHT;
     unsigned long tb_w = w;
@@ -1255,18 +1252,21 @@ int main(int argc, char *argv[])
 
     main_window = 
         (int) gws_create_window (
-                  client_fd,
-                  WT_SIMPLE, 1, 1, program_name,
-                  tb_l, tb_t, tb_w, tb_h,
-                  0, 
-                  style, 
-                  HONEY_COLOR_TASKBAR, HONEY_COLOR_TASKBAR );
+                client_fd,
+                WT_SIMPLE, 1, 1, program_name,
+                tb_l, tb_t, tb_w, tb_h,
+                0, 
+                style, 
+                HONEY_COLOR_TASKBAR, HONEY_COLOR_TASKBAR );
 
     if (main_window < 0){
         printf ("taskbar.bin: main_window\n");
         exit(1);
     }
     gws_set_active( client_fd, main_window );
+
+    // #test: Show the window early.
+    gws_refresh_window(client_fd, main_window);
 
 // ========================
 // Create button based on the taskbar dimensions.

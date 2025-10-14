@@ -265,6 +265,7 @@ int main(int argc, char *argv[])
             fShowStats = TRUE;
         }
         // Dump (Show) output file.
+        // Show assembly code.
         if ( strncmp( argv[i], "--dumpo", 7) == 0 ){
             fDumpOutput = TRUE;
         }
@@ -342,9 +343,26 @@ int main(int argc, char *argv[])
        //
     //}
 
+// Show the content of the output file.
+// This is an assembly code.
+// 'outfile' is a buffer for the assembly code 
+// generate by the compiler.
+    if (fDumpOutput == TRUE){
+        printf ("\n");
+        printf ("-----------------------\n");    
+        printf ("OUTPUT FILE:\n");
+        printf ("%s\n", outfile);
+        printf ("\n");
+        printf ("-----------------------\n");
+        printf ("number of lines: %d \n", lexer_currentline );
+    }
+
+// Show stats
     if (fShowStats){
         debugShowStat();
     }
+
+
 
     printf("Done :)\n");
     return EXIT_SUCCESS;

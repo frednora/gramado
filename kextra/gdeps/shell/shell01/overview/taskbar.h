@@ -1,9 +1,8 @@
-
 // taskbar.h
+// This is the header for the taskbar application.
 
 #ifndef __TASKBAR_H
 #define __TASKBAR_H    1
-
 
 struct icon_info_d
 {
@@ -16,7 +15,6 @@ struct icon_info_d
 // the state of the client application.
     int state;
 };
-
 
 struct tb_client_d 
 {
@@ -34,10 +32,5 @@ struct tb_client_d
 #define CLIENT_COUNT_MAX  32
 extern struct tb_client_d clientList[CLIENT_COUNT_MAX];
 
-
 #endif   
-
-
-
-
 

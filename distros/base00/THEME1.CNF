@@ -5,6 +5,13 @@ box One
     meta meta2(){ name("window-color");         content("white");      return 1 + 2; }
     meta meta3(){ name("titlebar-color");       content("blue");       return 1 + 2; }
     meta meta4(){ name("titlebar-text-color");  content("white");      return 1 + 2; }
-    meta meta5(){ name("titlebar-icon");        content("2");          return 1 + 2; }
+
+meta meta5()
+{
+    name("titlebar-icon");
+    content("2");
+    return 1 + 2;
+}
+
 ] 
 

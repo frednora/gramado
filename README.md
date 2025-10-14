@@ -17,8 +17,9 @@ distros/   - Complete distributions are built here.
 docs/      - Documentation.
 gramboot/  - Pre-kernel stuff. (Boot loader)
 kernel/    - The core kernel components.
-kextra/    - Ring 0 modules, initi process, unix-like commands,
-             display server, ring3 client-side GUI applications.
+kextra/    - Ring 0 kernel modules. 
+           - Ring 3 init process, unix-like commands,
+             display server and client-side GUI applications.
 outside/   - 3D stuff and experiments.
 tools/     - SDK tools.
 ```

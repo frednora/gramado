@@ -1675,26 +1675,21 @@ expression_exit:
     return (unsigned long) Result;
 }
 
-void dump_output_file(void)
+// Generate content for the output file.
+void concat_into_outfile(void)
 {
+
 // Incluindo no arquivo de output os segmentos.
     strcat ( outfile, TEXT );
     strcat ( outfile, DATA );
     strcat ( outfile, BSS );
-// Exibimos o arquivo de output.
-    printf ("\n");
-    printf ("--------------------------------\n");    
-    printf ("OUTPUT FILE:\n");
-    printf ("%s\n", outfile);
-    printf ("\n");
-    printf ("--------------------------------\n");
-    printf ("number of lines: %d \n", lexer_currentline );
 }
 
 // -------------------------
 // parse:
 // Função principal.
 // Pegando tokens com o lexer e fazendo coisas ...
+// Called by compiler() in compiler.c
 int parse(int dump_output)
 {
 // Stages:
@@ -2456,7 +2451,8 @@ debug_output:
 // --------------------------------
 // Dump output file?
     if (dump_output){
-        dump_output_file();
+        // Save the content of the output file into a buffer.
+        concat_into_outfile();
     }
 
 /*

@@ -3911,7 +3911,7 @@ int terminal_init(unsigned short flags)
     }
     Terminal.main_window_id = main_window;
 
-    // #debug: We don't need to do that for now.
+    // #test: Show the window early.
     gws_refresh_window(client_fd, main_window);
 
 // ===================================================
