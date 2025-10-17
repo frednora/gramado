@@ -31,7 +31,6 @@
 // This is used to test the network infrastructure.
 #define USE_E1000          0
 
-
 // ...
 
 // ------------------------------------------------------

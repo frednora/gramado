@@ -17,17 +17,17 @@ distros/   - Complete distributions are built here.
 docs/      - Documentation.
 gramboot/  - Pre-kernel stuff. (Boot loader)
 kernel/    - The core kernel components.
-kextra/    - Ring 0 kernel modules. 
+userland/  - Ring 0 kernel modules. 
            - Ring 3 init process, unix-like commands,
              display server and client-side GUI applications.
-outside/   - 3D stuff and experiments.
+           - 3D stuff and experiments.
 tools/     - SDK tools.
 ```
 
 ## Special folder.
 
 ```
-kextra/deps/:
+userland/deps/:
 - POSIX commands.
 - Display server and client-side GUI applications.
 ```
@@ -41,31 +41,31 @@ kernel/
 
 ## Where are the ring 0 kernel modules?
 
-kextra/deps/kcore/modules/
+userland/deps/kcore/modules/
 
 ## Where is the Init Process?
 
-kextra/deps/ucore/init/
+userland/deps/ucore/init/
 
 ## Where is the ring 3 device drivers?
 
-kextra/deps/ucore/drivers/
+userland/deps/ucore/drivers/
 
 ## Where is the ring 3 servers?
 
-kextra/deps/ucore/servers/
+userland/deps/ucore/servers/
 
 ## Where is the display server?
 
-kextra/gdeps/preshell/ds/ds00/
+userland/gdeps/preshell/ds/ds00/
 
 ## Where are the POSIX-like command programs?
 
-kextra/gdeps/shell/shell00/
+userland/gdeps/shell/shell00/
 
 ## Where are the client-side GUI applications?
 
-kextra/gdeps/shell/shell01/
+userland/gdeps/shell/shell01/
 
 
 > [!IMPORTANT]

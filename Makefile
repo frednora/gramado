@@ -16,34 +16,34 @@ BASE = $(DISTROS)/base00
 # The OS has two major components:
 # The 'kernel image' and the 'dependencies'
 # The dependencies are: modules, and apps.
-# All the dependencies are in kextra/deps/ folder,
-# It's because of the close interaction kextra/deps
+# All the dependencies are in userland/deps/ folder,
+# It's because of the close interaction userland/deps
 # with the other subfolders in kernel/core/.
 
 ## =================================
 # Kernel Core: Ring 0 modules.
-DEP_L0 = kextra/deps/kcore
+DEP_L0 = userland/deps/kcore
 
 ## =================================
 # Kernel Services: Init process, ring 3 drivers and ring 3 servers.
-DEP_L1 = kextra/deps/ucore
+DEP_L1 = userland/deps/ucore
 # Unix-like commands
 COMMANDS = $(DEP_L1)/cmds
 
 ## =================================
 # Shell Pre-UI: The display server.
-DEP_L2 = kextra/gdeps/preshell
+DEP_L2 = userland/gdeps/preshell
 # Display servers
 DISPLAY_SERVERS = $(DEP_L2)/ds
 
 ## =================================
 # Shell UI: Client-side GUI applications.
-DEP_L3 = kextra/gdeps/shell
+DEP_L3 = userland/gdeps/shell
 # Client-side GUI applications
 APPLICATIONS = $(DEP_L3)/shell01
 
 ## =================================
-OUTSIDE_L0 = outside
+OUTSIDE_L0 = userland/outside
 # windowing system with 3D demos
 GAMES = $(OUTSIDE_L0)/gram3d
 # Client-side GUI applications with X library
