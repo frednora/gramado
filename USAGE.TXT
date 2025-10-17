@@ -1,0 +1,13 @@
+
+ Quick explanation about how to test the system.
+ (We still need to create a documentation)
+
+ -----------------------------------------------
+ When in the command prompt:
+  + type 'wsq' or 'gramado' to start the Desktop Environment with the full GUI.
+
+ -----------------------------------------------
+ When in the DE:
+  + Press control+f1 to launch the virtual terminal.
+  + Press shift+f12 to start the mouse support on qemu.
+
