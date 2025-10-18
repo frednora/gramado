@@ -73,7 +73,7 @@ PYTHON3 = python3
 PHONY := all
 all:  \
 build-gramado-os \
-copy-extras \
+build-extras \
 $(DISTROS)/gramvd \
 vhd-mount \
 vhd-copy-files \
@@ -189,10 +189,10 @@ build-gramado-os:
 
 # --------------------------------------
 # Let's add a bit of shame in the project.
-PHONY := copy-extras
-copy-extras:
+PHONY := build-extras
+build-extras:
 
-	@echo "copy-extras"
+	@echo "build-extras"
 
 # ==================================
 # LEVEL : Display servers
@@ -287,7 +287,7 @@ copy-extras:
 # cpp application example
 	@-cp $(CPP00_APPLICATION)/bin/CPP00.BIN  $(BASE)/DE
 
-	@echo "~ copy-extras"
+	@echo "~ build-extras"
 
 # --------------------------------------
 #::2
