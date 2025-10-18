@@ -385,9 +385,7 @@ static int __init_globals(void)
  * gwsInit:
  *     Initialize the server. 
  */
-
-// Called by initGraphics() in main.c
-
+// Called by initGraphics() in demo01main.c
 int gwsInit(void)
 {
     debug_print("gwsInit:\n");
@@ -517,9 +515,7 @@ int gwsInit(void)
 // This is the default device context structure.
 
     // dc object
-    gr_dc = 
-        (struct dc_d *) malloc ( sizeof( struct dc_d ) );
-
+    gr_dc = (struct dc_d *) malloc ( sizeof( struct dc_d ) );
     if ( (void*) gr_dc == NULL ){
         printf ("gwsInit: Couldn't create default dc\n");
         exit(1);

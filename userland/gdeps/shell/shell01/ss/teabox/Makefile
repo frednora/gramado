@@ -1,10 +1,11 @@
-
-#browser.bin
-#history:
-#2019 - Created by Fred Nora.
-#todo:
-#fazer um makefile pra compilar o shell
-#obs: #bugbug tem que arrumas as coisas aqui.
+# TEABOX.BIN.
+# This is a kind of browser. 
+# This application has a kind of rendering engine.
+# history:
+# 2019 - Created by Fred Nora.
+# todo:
+# fazer um makefile pra compilar o shell
+# obs: #bugbug tem que arrumas as coisas aqui.
 
 
 VERSION = 0
@@ -17,7 +18,6 @@ linkFlags = -m elf_x86_64 \
 -s -x -static -T ../link.ld
 
 linkTarget = TEABOX.BIN  
-
 
 # usermode cross compiler flags.
 CFLAGS = -Wall

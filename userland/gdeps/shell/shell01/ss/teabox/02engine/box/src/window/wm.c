@@ -5404,10 +5404,10 @@ struct gws_window_d *wmCreateRootWindow(void)
     */
 
     // Using the viewport context
-    unsigned long left   = ViewportInfo.left;
-    unsigned long top    = ViewportInfo.top;
-    unsigned long width  = (unsigned long) (ViewportInfo.width);
-    unsigned long height = (unsigned long) (ViewportInfo.height);
+    unsigned long left   = (unsigned long) ViewportInfo.left;
+    unsigned long top    = (unsigned long) ViewportInfo.top;
+    unsigned long width  = (unsigned long) ViewportInfo.width;
+    unsigned long height = (unsigned long) ViewportInfo.height;
 
     if (width == 0 || height == 0 )
     {
@@ -5420,7 +5420,6 @@ struct gws_window_d *wmCreateRootWindow(void)
     unsigned int rootwindow_color = WM_DEFAULT_BACKGROUND_COLOR;
     __set_default_background_color( WM_DEFAULT_BACKGROUND_COLOR );
     __set_custom_background_color(WM_DEFAULT_BACKGROUND_COLOR);
-
 
     debug_print("wmCreateRootWindow:\n");
 
@@ -5493,6 +5492,12 @@ struct gws_window_d *wmCreateRootWindow(void)
 
     //#debug
     flush_window(w);
+
+// #bugbug
+// The root window is to been painted in the client rectangle 
+// of the browser's UI window.
+
+    //exit(0);  //#debug
 
     //#debug
     //printf ("root top: %d\n",w->absolute_y);

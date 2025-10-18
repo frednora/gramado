@@ -137,7 +137,7 @@ static void flyingCubeDemoLoop(void);
 // Called by dispatcher().
 static int __send_response(int fd, int is_error);
 
-static int InitHot(void);
+static int RenderingEngineInitGraphics(void); //wrapper
 static int on_execute(void);
 static void dispacher(int fd);
 
@@ -1395,8 +1395,6 @@ static void initBackground(void)
     //while(1){}
 }
 
-
-
 /*
  * initGraphics:
  *     Initialize the graphics support.
@@ -1405,6 +1403,7 @@ static void initBackground(void)
 // The current display and the current screen.
 // Initialize the 3d support.
 
+// Init graphics for the rendering engine.
 static int initGraphics(void)
 {
     int __init_status = -1;
@@ -3213,7 +3212,7 @@ void __init_ws_structure(void)
 // Init ws infrastructure.
 // Initialize the '3D' graphics support.
 // Let's create the standard green background.
-static int InitHot(void)
+static int RenderingEngineInitGraphics(void)
 {
     int graphics_status = -1;
 
@@ -3221,7 +3220,7 @@ static int InitHot(void)
 
     graphics_status = (int) initGraphics();
     if (graphics_status < 0){
-        printf("InitHot: initGraphics failed\n");
+        printf("RenderingEngineInitGraphics: initGraphics failed\n");
         return -1;
         //while(1){}
         //exit(1);
@@ -3324,7 +3323,6 @@ static int on_execute(void)
     }
     */
 
-
     /*
     //#test
     char display[100];
@@ -3350,18 +3348,18 @@ static int on_execute(void)
 // ex: OsInit();
 
     // #debug
-    gwssrv_debug_print("ENG.BIN: Initializing\n");
+    gwssrv_debug_print(": Initializing\n");
 
 // Initialize the client list support.
     initClientSupport();
 
 // The server is also a client.
     if ((void*) serverClient == NULL){
-        printf("eng.bin: serverClient\n");
+        printf(": serverClient\n");
         goto fail;
     }
     if ( serverClient->used != TRUE || serverClient->magic != 1234 ){
-        printf("eng.bin: serverClient validation\n");
+        printf(": serverClient validation\n");
         goto fail;
     } 
 
@@ -3437,9 +3435,9 @@ static int on_execute(void)
 // Bind:
     bind_status = 
         (int) bind (
-                  server_fd, 
-                  (struct sockaddr *) &server_address, 
-                  addrlen );
+                server_fd, 
+                (struct sockaddr *) &server_address, 
+                addrlen );
 
     if (bind_status < 0){
         printf ("eng.bin: on bind()\n");
@@ -3470,9 +3468,9 @@ static int on_execute(void)
 // #todo: Change the name of this function.
 
     int graphics_status = -1;
-    graphics_status = (int) InitHot();
+    graphics_status = (int) RenderingEngineInitGraphics();
     if (graphics_status < 0){
-        printf("eng.bin: InitHot failed\n");
+        printf("eng.bin: RenderingEngineInitGraphics failed\n");
         goto fail;
     }
 
@@ -3545,7 +3543,6 @@ static int on_execute(void)
     //printf ("fd: %d\n", serverClient->fd);
     //while(1){}
 
-
 //
 // Client
 //
@@ -3579,7 +3576,6 @@ static int on_execute(void)
 // socket que usaremos ... por isso poderemos fecha-lo
 // para assim obtermos um novo da próxima vez.
 
-
 //#todo:
 // No loop precisamos de accept() read() e write();
 
@@ -3612,7 +3608,7 @@ static int on_execute(void)
 // Chamamos o accepr soment quando
 // o servidor estiver aceitando conexoes.
 
-    gwssrv_debug_print("eng.bin: Entering main loop\n");
+    gwssrv_debug_print(": Entering main loop\n");
     rtl_focus_on_this_thread();
     running = TRUE;
 
@@ -3636,8 +3632,7 @@ static int on_execute(void)
 // Not using the event loop here,
 // lets return to the UI and use its event loop.
 
-    if (UseEventLoop != TRUE)
-    {
+    if (UseEventLoop != TRUE){
         IsTimeToQuit = TRUE;
         printf("demo01: Not using event loop\n");
         return 0;
@@ -3814,14 +3809,14 @@ int demo01_tests(int index)
 // see: gramado.h
 // IN: The viewport.
 //     The viewport is the client area of the applications frame window.
-int demo01main(
+// Called by ui.c
+int 
+demo01main(
     unsigned long viewport_left,
     unsigned long viewport_top,
     unsigned long viewport_width,
     unsigned long viewport_height )
 {
-// Called by ui.c
-
     int Status = -1;
 
 // Saving the viewport
@@ -3830,16 +3825,24 @@ int demo01main(
     ViewportInfo.width  = (unsigned long) viewport_width;
     ViewportInfo.height = (unsigned long) viewport_height;
     ViewportInfo.initialized = TRUE;
-    printf ("demo01: ViewportInfo values gotten\n");
+    //printf ("demo01: ViewportInfo values gotten\n");
 
-    // It changes when we create the taskbar.
+// It changes when we create the taskbar.
     WindowManager.wa_left   = ViewportInfo.left;
     WindowManager.wa_top    = ViewportInfo.top;
     WindowManager.wa_width  = ViewportInfo.width;
     WindowManager.wa_height = ViewportInfo.height;
     // NOT initialized here.
     // we will do this later.
-    //WindowManager.initialized = ?; 
+    //WindowManager.initialized = ?;
+
+
+/*
+// #todo: Is ti already done?
+    grprim_update_hotspot(
+        mw_left + LmwWindowInfo.cr_left + (LmwWindowInfo.cr_width >> 1),
+        mw_top  + LmwWindowInfo.cr_top  + (LmwWindowInfo.cr_height >> 1) );
+*/
 
 // #todo
 // Parse the parameters and select the flags.

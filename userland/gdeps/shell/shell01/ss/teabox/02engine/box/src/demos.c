@@ -933,9 +933,9 @@ void demoCat(int draw_desktop)
     int count = 8;
     int scale_max = 100;
 
-    unsigned long dw_left = 0;  // Em relação à root que esta no viewport.
-    unsigned long dw_top = 0;   // Em relação à root que esta no viewport.
-    unsigned long dw_width = ViewportInfo.width;
+    unsigned long dw_left   = ViewportInfo.left;
+    unsigned long dw_top    = ViewportInfo.top;
+    unsigned long dw_width  = ViewportInfo.width;
     unsigned long dw_height = ViewportInfo.height;
 
 // ---------------
@@ -1042,9 +1042,9 @@ void demoTriangle(void)
             ViewportInfo.top,
             ViewportInfo.width,
             ViewportInfo.height );
-    if( (void*) dw != NULL )
+    if ((void*) dw != NULL)
     {
-       if(dw->magic==1234){
+       if (dw->magic == 1234){
            __demo_window = dw;
        }
     }
@@ -1436,7 +1436,8 @@ void FlyingCubeMove(int number, int direction, float value)
 */
 }
 
-// called by the engine
+// This can be called by two components:
+// ui.c and demo01main.c
 void demoFlyingCubeSetup(void)
 {
 // first cube
@@ -1449,9 +1450,10 @@ void demoFlyingCubeSetup(void)
 // Clear the buffer for the string in the yellow bar.
     memset(buf_fps,0,64);
 
-    unsigned long dw_left = 0;  // Em relação à root que esta no viewport.
-    unsigned long dw_top = 0;   // Em relação à root que esta no viewport.
-    unsigned long dw_width = ViewportInfo.width;
+// It was setup in demo01main.c
+    unsigned long dw_left   = ViewportInfo.left;
+    unsigned long dw_top    = ViewportInfo.top;
+    unsigned long dw_width  = ViewportInfo.width;
     unsigned long dw_height = ViewportInfo.height;
 
 //--------------------------------
@@ -1472,9 +1474,17 @@ void demoFlyingCubeSetup(void)
     //dw            = __root_window;
     //__demo_window = __root_window;
 
-
     //#debug
     flush_window(dw);
+
+// #bugbug
+// The demo window is to been painted in the client rectangle 
+// of the browser's UI window.
+// ps: We also need to consider the position of the root window.
+// check out the code at wmCreateRootWindow() in wm.c.
+
+    // #debug
+    //exit(0);
 
     // #todo: Test this
     // Update hotspot position for the center of the window.

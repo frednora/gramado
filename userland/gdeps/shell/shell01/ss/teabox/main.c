@@ -29,6 +29,7 @@ int main( int argc, char *argv[] )
         //...
     };
 
+// See: 00ui/
     return (int) uiInitialize();
 }
 

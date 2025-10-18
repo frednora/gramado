@@ -1,0 +1,5 @@
+
+ We need to fit the 'root window' of the rendering engine and 
+ the 'demo window' of our demo with the 'client rectangle' of the 
+ main window of the application's UI.
+ 

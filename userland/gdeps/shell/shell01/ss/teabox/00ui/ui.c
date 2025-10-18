@@ -464,10 +464,9 @@ fail:
     return (int) -1;
 }
 
+// Called by main().
 int uiInitialize(void)
 {
-// Called by main().
-
     struct sockaddr_in addr_in;
     addr_in.sin_family = AF_INET;
     addr_in.sin_addr.s_addr = IP(127,0,0,1);
@@ -476,16 +475,16 @@ int uiInitialize(void)
     int client_fd = -1;
 
 // socket
-    client_fd = socket( AF_INET, SOCK_RAW, 0 );
-    if (client_fd<0){
-       printf ("browser: on socket()\n");
+    client_fd = (int) socket( AF_INET, SOCK_RAW, 0 );
+    if (client_fd < 0){
+       printf("ui.c: on socket()\n");
        exit(1);
     }
 
 // connect
     while (TRUE){
         if (connect(client_fd, (void *) &addr_in, sizeof(addr_in)) < 0){ 
-            printf ("browser: on connect()\n"); 
+            printf ("ui.c: on connect()\n"); 
         }else{ break; }; 
     };
 
@@ -495,7 +494,7 @@ int uiInitialize(void)
     unsigned long w = gws_get_system_metrics(1);
     unsigned long h = gws_get_system_metrics(2);
     if ( w == 0 || h == 0 ){
-        printf ("browser: w h\n");
+        printf ("ui.c: w h\n");
         exit(1);
     }
 
@@ -519,12 +518,12 @@ int uiInitialize(void)
     if (h > 640){ w_height = 480; }
 
 // Left
-    //unsigned long viewwindowx = ( ( w - w_width ) >> 1 );
     unsigned long viewwindowx = 8;
+    //unsigned long viewwindowx = ( ( w - w_width ) >> 1 );
 
 // Top
-    //unsigned long viewwindowy = ( ( h - w_height) >> 1 );
     unsigned long viewwindowy = 8;
+    //unsigned long viewwindowy = ( ( h - w_height) >> 1 );
 
 // #test
 // #bugbug
@@ -549,6 +548,7 @@ int uiInitialize(void)
     mw_width  = (unsigned long) w_width;
     mw_height = (unsigned long) w_height;
 
+// ===================
 // Main window
 // style: 
 // 0x0001=maximized | 0x0002=minimized | 0x0004=fullscreen | 0x0008 statusbar
@@ -560,10 +560,10 @@ int uiInitialize(void)
                 mw_left, mw_top, mw_width, mw_height );
 
     if (main_window < 0){
-        debug_print("browser: main_window\n"); 
+        debug_print("ui.c: main_window\n"); 
         exit(1);
     }
-// Save globally
+// Save it globally
     if (main_window > 0){
         __main_window = main_window;
     }
@@ -574,21 +574,18 @@ int uiInitialize(void)
 // Se a janela mae for overlapped,
 // entao seremos relativos à sua áre de cliente.
 
-    //unsigned long ab_width = (w_width -4 -4 -24 -4);
     unsigned long ab_width = (w_width -50);
 
     addressbar_window = 
         (int) gws_create_window (
-                  client_fd,
-                  WT_EDITBOX, 1, 1, ab_name,
-                  4, 
-                  4, 
-                  (w_width -4 -4 -24 -4), 
-                  24,//32,
-                  main_window,  // janela mãe é overlapped. pinta na client area.
-                  WS_CHILD, 
-                  COLOR_WHITE, 
-                  COLOR_WHITE );
+                client_fd,
+                WT_EDITBOX, 1, 1, ab_name,
+                4, 
+                4, 
+                (w_width -4 -4 -24 -4), 
+                24,
+                main_window,  // janela mãe é overlapped. pinta na client area.
+                WS_CHILD, COLOR_WHITE, COLOR_WHITE );
 
     if (addressbar_window < 0){
         debug_print("browser: addressbar_window fail\n"); 
@@ -614,25 +611,24 @@ int uiInitialize(void)
 
     button = 
         (int) gws_create_window (
-                  client_fd,
-                  WT_BUTTON, 
-                  BS_DEFAULT, 
-                  1, 
-                  bt_label,
-                  cwButton.l, cwButton.t, cwButton.w, cwButton.h, 
-                  main_window, 
-                  0, COLOR_GRAY, COLOR_GRAY );
+                client_fd,
+                WT_BUTTON, 
+                BS_DEFAULT, 
+                1, 
+                bt_label,
+                cwButton.l, cwButton.t, cwButton.w, cwButton.h, 
+                main_window, 
+                0, COLOR_GRAY, COLOR_GRAY );
 
-    if (button<0)
-        printf("browser: button fail\n"); 
-    if (button>0){
+    if (button < 0)
+        printf("ui.c: button fail\n"); 
+    if (button > 0){
         __button_window = button;
     }
 
 // ===================
-// client window (White)
-// Se a janela mãe é overlapped,
-// pinta na client area.
+// client window (RED)
+// Se a janela mãe é overlapped, pinta na client area.
 
     cw_left = 4;
     cw_top  = 4 +24 +4;
@@ -641,20 +637,20 @@ int uiInitialize(void)
 
     client_window = 
         (int) gws_create_window (
-                  client_fd,
-                  WT_SIMPLE, 1, 1, cw_name,
-                  cw_left, cw_top, cw_width, cw_height,
-                  main_window,
-                  0, COLOR_RED, COLOR_RED );
+                client_fd,
+                WT_SIMPLE, 1, 1, cw_name,
+                cw_left, cw_top, cw_width, cw_height,
+                main_window,
+                0, COLOR_RED, COLOR_RED );
 
     if (client_window < 0)
-        printf("browser: client_window fail\n"); 
-
+        printf("ui.c: client_window fail\n"); 
 
     unsigned long TextLeft = 8;
     unsigned long TextTop = 8;
     unsigned int TextColor = COLOR_BLACK;
 
+// Draw text on client window.
 // Save globally and print the text.
 // IN: fd, wid, left, top, color, label
     if (client_window > 0)
@@ -669,29 +665,34 @@ int uiInitialize(void)
             cw_label );
     }
 
-// Refresh main window
-    gws_refresh_window( client_fd, main_window );
 // Set active window
-    gws_set_active( client_fd, main_window );
 // Set window with focus
-    gws_set_focus( client_fd, client_window );
+// Refresh main window
+    gws_set_active     (client_fd, main_window);
+    gws_set_focus      (client_fd, client_window);
+    gws_refresh_window (client_fd, main_window);
 
-// -----------------------------------------
-// #test
+// ============================================
+// 
+//                3D engine 
+//
+// ============================================
+
+
 // Initializing the 3D engine.
 // see: 
-// main function in demo01main.c in box/src/.
-
+// Main function in demo01main.c in 02engine/box/src/.
 
     // Window Info for main window.
     struct gws_window_info_d LmwWindowInfo;
     int status=0;
 
 // Get info about the main window.
+// We need to know the client rectangle.
 // IN: fd, wid, window info structure.
     gws_get_window_info(
         client_fd, 
-        __main_window,   // The app window.
+        __main_window,   // The app window
         (struct gws_window_info_d *) &LmwWindowInfo );
  
         // Initialize
@@ -716,6 +717,8 @@ int uiInitialize(void)
 
     // #test: 
     // Update hotspot
+    // #bugbug: This is the wrong place to do it.
+    // It needs to be inside demo01main().
     grprim_update_hotspot(
         mw_left + LmwWindowInfo.cr_left + (LmwWindowInfo.cr_width >> 1),
         mw_top  + LmwWindowInfo.cr_top  + (LmwWindowInfo.cr_height >> 1) );
