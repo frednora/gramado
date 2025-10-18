@@ -2,7 +2,7 @@
 // The font support.
 // Created by Fred Nora.
 
-#include "../gwsint.h"
+#include "../ds.h"
 
 // See: font.h
 struct font_initialization_d  FontInitialization;

@@ -3,10 +3,9 @@
 // The window manager is embedded into the display server.
 // 2020 - Create by Fred Nora.
 
-#include "../gwsint.h"
+#include "../ds.h"
 
 const char *rootwindow_name = "RootWin";
-
 
 // Double click
 struct double_click_d DoubleClick;

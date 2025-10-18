@@ -2,8 +2,7 @@
 // Bit-block Transfer.
 // Created by Fred Nora.
 
-#include "../gwsint.h"
-
+#include "../ds.h"
 
 // -----------------------------------------------------------------------
 // BitBlt Function

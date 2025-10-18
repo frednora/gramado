@@ -6,7 +6,7 @@
 // But maybe it will be useful for effects.
 // Created by Fred Nora.
 
-#include "../../gwsint.h"
+#include "../../ds.h"
 
 int gUseDemos = TRUE;
 

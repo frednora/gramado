@@ -2,20 +2,20 @@
 // Part of the display server.
 // 2019 - Created by Fred Nora.
 
-#include "../gwsint.h"
+#include "../ds.h"
 
 // Flag for the whole screen.
 static int __dirty = FALSE;
 
+
 // #todo: Explain this structure.
 struct gws_graphics_d *Currentgraphics;
-
 // #todo: Explain this structure.
 struct engine_d  Engine;
-
 // #todo: Explain this structure.
 // See: display.h
 struct gws_display_d  *CurrentDisplay;
+
 
 static int __gwssrv_init_globals(void);
 // ==============================================

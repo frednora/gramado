@@ -2,13 +2,11 @@
 // view: Char support.
 // 2019 - Created by Fred Nora.
 
-#include "../gwsint.h"
+#include "../ds.h"
 
 struct char_initialization_d  CharInitialization;
 
-
 // ================================================
-
 
 // Border in Terry's style.
 // IN: left, right, top, bottom.

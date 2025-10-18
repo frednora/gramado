@@ -4,7 +4,7 @@
 // we're we find a pre-loaded image.
 // 2015 - Created by Fred Nora.
 
-#include "gwsint.h"
+#include "../ds.h"
 
 // Signature. "MB".
 #define BMP_TYPE  0x4D42

@@ -1,7 +1,7 @@
 // curve00.c
 // Created by Fred Nora.
 
-#include "../../gwsint.h"
+#include "../../ds.h"
 
 
 static void __draw_demo_curve1(int position, int model_z);

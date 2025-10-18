@@ -2,7 +2,7 @@
 // Triangles.
 // Created by Fred Nora.
 
-#include "../../gwsint.h"
+#include "../../ds.h"
 
 
 void demoTriangle(void)

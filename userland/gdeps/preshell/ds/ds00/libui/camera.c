@@ -1,11 +1,9 @@
-
 // camera.c
 // Created by Fred Nora.
 
-#include "../gwsint.h"
+#include "../ds.h"
 
 struct gr_camera_d  *CurrentCamera;
-
 
 // ======================================
 

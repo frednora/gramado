@@ -20,3 +20,7 @@ clean:
 #	-rm -f ds0~1/*.o
 	-rm -f ds00/bin/*.BIN
 #	-rm -f ds01/bin/*.BIN
+
+clean-all:
+	-rm -f ds00/*.o
+	-rm -f ds00/bin/*.BIN

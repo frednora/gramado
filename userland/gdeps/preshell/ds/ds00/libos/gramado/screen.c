@@ -1,6 +1,6 @@
 // screen.c
 
-#include "../../gwsint.h"
+#include "../../ds.h"
 
 
 // The device screen.

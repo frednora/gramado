@@ -4,10 +4,9 @@
 // Change the name of this file.
 // Created by Fred Nora.
 
-#include "../gwsint.h"
+#include "../ds.h"
 
 struct statusbar_info_d  StatusBarInfo;
-
 struct yellow_dialog_info_d  YellowDialogInfo;
 
 // ===================================

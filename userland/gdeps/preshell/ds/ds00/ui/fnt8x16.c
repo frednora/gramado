@@ -8,8 +8,7 @@
 // Just testing fonts with 8x16 dimension.
 // We know nothing about the special symbols until now.
 
-#include "../gwsint.h"
-
+#include "../ds.h"
 
 //#define FNT8X16_FONTDATAMAX   4096
 

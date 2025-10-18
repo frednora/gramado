@@ -1,10 +1,9 @@
-
 // line.c 
 // Line support.
 // We are using the library libgd.o.
 // Created by Fred Nora.
 
-#include "../gwsint.h"
+#include "../ds.h"
 
 // #todo
 // Use 'unsigned int' for 'color'.

@@ -2,8 +2,7 @@
 // Draw text routines.
 // Created by Fred Nora.
 
-
-#include "../gwsint.h"
+#include "../ds.h"
 
 // grDrawString:
 // Draw a string on the screen. 

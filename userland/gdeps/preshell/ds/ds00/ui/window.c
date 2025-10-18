@@ -15,7 +15,7 @@
 // o posicionamento do 'top' da área de cliente 
 // possa ser atualizado. (rect)
 
-#include "../gwsint.h"
+#include "../ds.h"
 
 #define OVERLAPPED_MIN_WIDTH    80
 #define OVERLAPPED_MIN_HEIGHT   80

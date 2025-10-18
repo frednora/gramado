@@ -1,7 +1,7 @@
 // globals.c
 // 2022 - Created by Fred Nora.
 
-#include "../gwsint.h"
+#include "../ds.h"
 
 // os mode = GRAMADO_P1 ...
 int os_mode=0;  
@@ -16,11 +16,9 @@ char *display_number;
 char *screen_number;
 // struct gws_host_d  Hostinfo;
 
-
 //
 // == buffer ===============================================
 //
-
 
 // This is the buffer used when we receive 
 // requests via socket.

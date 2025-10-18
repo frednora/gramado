@@ -2,7 +2,7 @@
 // Created by Fred Nora.
 
 
-#include "../../gwsint.h"
+#include "../../ds.h"
 
 static gramado_initialized = FALSE;
 // #todo:

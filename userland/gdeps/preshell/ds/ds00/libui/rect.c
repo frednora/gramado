@@ -2,7 +2,7 @@
 // Rectangle support.
 // Created by Fred Nora.
 
-#include "../gwsint.h"
+#include "../ds.h"
 
 //
 // == private functions: prototypes ====================

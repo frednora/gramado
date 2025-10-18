@@ -1,9 +1,8 @@
-
 // menu.c
 // Menu support.
 // Created by Fred Nora.
 
-#include "../gwsint.h"
+#include "../ds.h"
 
 //struct gws_menu_d *main_menu;
 

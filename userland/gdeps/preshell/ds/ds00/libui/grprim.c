@@ -2,7 +2,7 @@
 // Primitives.
 // 2020 - Created by Fred Nora.
 
-#include "../gwsint.h"
+#include "../ds.h"
 
 // ??
 // Swap two bytes

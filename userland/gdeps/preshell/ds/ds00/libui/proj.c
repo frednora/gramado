@@ -2,7 +2,7 @@
 // Projection support.
 // Created by Fred Nora.
 
-#include "../gwsint.h"
+#include "../ds.h"
 
 struct gr_projection_d  *CurrentProjection;
 

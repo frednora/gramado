@@ -1,7 +1,7 @@
 // cat.c
 // Created by Fred Nora.
 
-#include "../../gwsint.h"
+#include "../../ds.h"
 
 // See: demos.h
 struct cat_model_d CatModel;

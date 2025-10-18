@@ -1,10 +1,11 @@
 // bmp help by Copilot.
 
-
+/*
 The provided implementation of bmpDisplayBMP0 already includes 
 support for multiple bpp values (1, 4, 8, 16, 24, and 32). 
 However, it can be improved to handle additional details of 
 BMP traditional structures such as:
+*/
 
 /*
 Accurate handling of compression formats.

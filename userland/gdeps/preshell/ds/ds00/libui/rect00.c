@@ -1,9 +1,9 @@
 //
 
+/*
 Below is an example of a new worker function written for the display server that supports independent offsets in the destination and source buffers. In other words, you can copy a rectangle from one part of the source surface to a different location on the destination surface. This code preserves much of your previous work (using our fast‐path memcpy routines when possible) and adapts it by introducing separate coordinate parameters for source and destination.
-
 Feel free to adjust variable names or error handling to suit your style and requirements.
-
+*/
 
 /**
  * __refresh_rectangle_with_offsets:

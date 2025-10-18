@@ -3,8 +3,7 @@
 // into the backbuffer and display it into the frontbuffer.
 // Created by Fred Nora.
 
-#include "../gwsint.h"
-
+#include "../ds.h"
 
 // It manages the compositor behavior.
 struct compositor_d  Compositor;

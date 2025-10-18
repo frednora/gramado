@@ -2,7 +2,7 @@
 // Polygons
 // Created by Fred Nora.
 
-#include "../../gwsint.h"
+#include "../../ds.h"
 
 // demo: polygon type polyline
 // asteroids space ship like.

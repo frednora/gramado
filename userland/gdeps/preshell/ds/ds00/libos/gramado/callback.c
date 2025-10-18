@@ -5,7 +5,7 @@
 // This type of feature is suspended for now, but it works.
 // Created by Fred Nora.
 
-#include "../../gwsint.h"
+#include "../../ds.h"
 
 static unsigned long callback_counter=0;
 

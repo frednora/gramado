@@ -1,10 +1,8 @@
 // wminput.c
-// Input support.
+// Window manager input support.
 // Created by Fred Nora.
 
-
-#include "../gwsint.h"
-
+#include "../ds.h"
 
 // ===============================================
 

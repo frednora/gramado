@@ -1,7 +1,8 @@
 // client.c
+// Client support routines.
 // Created by Fred Nora.
 
-#include "../gwsint.h"
+#include "../ds.h"
 
 // "... and the house of God will overflow ..."
 unsigned long clientList[CLIENT_COUNT_MAX];
@@ -9,10 +10,10 @@ unsigned long clientList[CLIENT_COUNT_MAX];
 struct gws_client_d  *serverClient;
 struct gws_client_d  *currentClient;
 // ...
-
 // Linked list
 struct gws_client_d  *first_client;
 
+// ===================================
 
 void initClientStruct(struct gws_client_d *c)
 {

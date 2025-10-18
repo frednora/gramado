@@ -3,7 +3,7 @@
 // That shared area used to draw things.
 // Created by Fred Nora.
 
-#include "../../gwsint.h"
+#include "../../ds.h"
 
 struct gws_surface_d  *rootSurface;
 

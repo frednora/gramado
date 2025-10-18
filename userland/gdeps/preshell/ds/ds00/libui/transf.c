@@ -1,7 +1,7 @@
 // transf.c
 // Transformation support.
 
-#include "../gwsint.h"
+#include "../ds.h"
 
 
 // Device hotspot.

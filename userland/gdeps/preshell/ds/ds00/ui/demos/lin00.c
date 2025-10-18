@@ -2,7 +2,7 @@
 // Demo Lines
 // Created by Fred Nora.
 
-#include "../../gwsint.h"
+#include "../../ds.h"
 
 
 void demoLines(void)

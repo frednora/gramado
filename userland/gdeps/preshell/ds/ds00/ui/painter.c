@@ -3,7 +3,7 @@
 // Drawing the graphical components.
 // Created by Fred Nora.
 
-#include "../gwsint.h"
+#include "../ds.h"
 
 static void __draw_button_mark_by_wid( int wid, int button_number );
 //===================================================================

@@ -73,15 +73,18 @@ CFLAGS += -fno-pie
 CFLAGS += -fno-omit-frame-pointer
 CFLAGS += -fno-optimize-sibling-calls    
 
-
+# rtl - Gramado libc
 LIBC        = ../libs/rtl/include/
 LIBCOBJ     = ../libs/rtl/obj
 
+# libdisp - Gramado display library
 LIBDISP     = ../libs/libdisp/include/
 LIBDISPOBJ  = ../libs/libdisp/obj
 
+# libgr - Gramado graphics library
 LIBGR       = ../libs/libgr/include/
 LIBGROBJ    = ../libs/libgr/obj
+
 
 CINCLUDES  = -I $(LIBC)  
 CINCLUDES += -I $(LIBDISP)

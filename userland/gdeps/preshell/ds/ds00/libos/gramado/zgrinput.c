@@ -13,7 +13,8 @@
 // São específicas para o gramado.
 // Começaremos com as rotinas de mouse.
 
-#include "gwsint.h"
+#include "ds.h"
+// #include "../../ds.h"
 
 // =============================================================
 

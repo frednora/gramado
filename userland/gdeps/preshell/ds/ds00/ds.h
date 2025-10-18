@@ -1,5 +1,4 @@
-// gwsint.h 
-// Internal definitions for the Display Server.
+// ds.h - Display server header file.
 // Created by Fred Nora.
 
 // Version?

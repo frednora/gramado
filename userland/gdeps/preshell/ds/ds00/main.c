@@ -67,7 +67,7 @@ See: https://wiki.osdev.org/Graphics_stack
 // This file is part of this project.
 // It is NOT a library.
 
-#include "gwsint.h"
+#include "ds.h"
 
 #define VERSION  "0.1"
 #define VERSION_MAJOR  0
