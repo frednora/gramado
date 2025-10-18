@@ -82,11 +82,10 @@ clean
 
 # Giving permitions to run.
 	chmod 755 ./run
-	chmod 755 ./runnokvm
-
-# tests
+	chmod 755 ./run2
 	chmod 755 ./runt1
 	chmod 755 ./runt2
+
 	@echo "Done?"
 
 # --------------------------------------

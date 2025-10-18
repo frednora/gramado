@@ -1,9 +1,9 @@
 #!/bin/bash
-# Running Gramado OS on qemu with no kvm accel
+# Running Gramado OS on qemu with kvm accel
 
 # Common
 GRAMADO_CPUS="2"
-GRAMADO_RAM_SIZE="256"
+GRAMADO_RAM_SIZE="512"
 GRAMADO_DISK_IMAGE="GRAMHV.VHD"
 
 QEMU="qemu-system-x86_64"

@@ -1,6 +1,6 @@
 # docs
 
-The documentation for Gramado OS
+The documentation for Gramado OS. (This is a work in progress).
 
 ## Folders
 
@@ -11,6 +11,8 @@ building/ - How to build the operating system.
 running/  - How to run the operating system.
 ```
 
+## todo
 
+All we have for now are notes in .txt files. We need to get it better.
 
 

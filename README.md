@@ -10,17 +10,22 @@ Gramado OS is a project that includes the bootloader, the core kernel, and the i
 > Documentation for this distribution is still under development.
 > Folder names are subject to change.
 
-## The folders
+## The core folders
 
 ```
-distros/   - Complete distributions are built here.
-docs/      - Documentation.
 gramboot/  - Pre-kernel stuff. (Boot loader)
 kernel/    - The core kernel components.
 userland/  - Ring 0 kernel modules. 
            - Ring 3 init process, unix-like commands,
              display server and client-side GUI applications.
            - 3D stuff and experiments.
+```
+
+## The extra folders
+
+```
+distros/   - Complete distributions are built here.
+docs/      - Documentation.
 tools/     - SDK tools.
 ```
 
