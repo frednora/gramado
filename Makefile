@@ -22,7 +22,7 @@ BASE = $(DISTROS)/base00
 
 ## =================================
 # Kernel Core: Ring 0 modules.
-DEP_L0 = userland/deps/kcore
+# DEP_L0 = userland/deps/kcore
 
 ## =================================
 # Kernel Services: Init process, ring 3 drivers and ring 3 servers.
@@ -142,23 +142,23 @@ build-gramado-os:
 	@cp kernel/KERNEL.BIN  $(BASE)/DE
 
 #===================================
-# (3) $(DEP_L0)/modules/
+# (3) modules/
 
 	@echo "Compiling modules/"
 # ::Build the ring0 module image.
-	@$(Q)$(MAKE) -C $(DEP_L0)/modules/
+	@$(Q)$(MAKE) -C modules/
 
 	@echo "Installing modules/"
 
 # Copy the ring0 module image.
 # It is loadable, but it's not a dynlinked format.
-	@cp $(DEP_L0)/modules/bin/HVMOD0.BIN  $(BASE)/
-	@cp $(DEP_L0)/modules/bin/HVMOD0.BIN  $(BASE)/GRAMADO
+	@cp modules/bin/HVMOD0.BIN  $(BASE)/
+	@cp modules/bin/HVMOD0.BIN  $(BASE)/GRAMADO
 
 # Copy the ring0 module image.
 # It is loadable, but it's not a dynlinked format.
-#	@cp $(DEP_L0)/modules/bin/HVMOD1.BIN  $(BASE)/
-#	@cp $(DEP_L0)/modules/bin/HVMOD1.BIN  $(BASE)/GRAMADO
+#	@cp modules/bin/HVMOD1.BIN  $(BASE)/
+#	@cp modules/bin/HVMOD1.BIN  $(BASE)/GRAMADO
 
 # ...
 
@@ -408,11 +408,11 @@ clean-all: clean
 	-rm -rf kernel/KERNEL.BIN
 
 # ==================
-# (3) $(DEP_L0)/modules/
+# (3) modules/
 # Clear the ring0 module images
-	-rm -rf $(DEP_L0)/modules/*.o
-	-rm -rf $(DEP_L0)/modules/*.BIN
-	-rm -rf $(DEP_L0)/modules/bin/*.BIN
+	-rm -rf modules/*.o
+	-rm -rf modules/*.BIN
+	-rm -rf modules/bin/*.BIN
 
 # ==================
 # $(DEP_L1)/
