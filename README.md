@@ -5,7 +5,7 @@ Gramado OS is a 64bit operating system.
 ## Overview
 
 ```
-Gramado OS is a project that includes the bootloader, the kernel, and the init process.
+Gramado OS is a project that includes the bootloader, the kernel image, and the init process.
 ```
 
 ```
@@ -42,6 +42,16 @@ userland/deps/:
 - POSIX commands.
 - Display server and client-side GUI applications.
 ```
+
+## Key artifacts produced
+
+```
++ .VHD file formated with FAT16-like file system.
++ Boot loader images.
++ KERNEL.BIN kernel image.
++ INIT.BIN image.
+```
+
 ## Where is the boot loader?
 
 gramboot/boot/

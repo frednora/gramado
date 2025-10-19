@@ -383,6 +383,10 @@ clean:
 	-rm kernel/*.BIN
 	@echo "~clean"
 
+# #todo: Delete some files in the distros/ folder.
+# dist-clean:
+#	@echo "~dist-clean"
+
 # --------------------------------------
 # Clean up all the mess.
 clean-all: clean

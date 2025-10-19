@@ -1,10 +1,14 @@
 # Makefile for the Gramado kernel.
 # Created by Fred Nora.
 
-# ==== Order ====
-# Red Zone:   core/
-# Pink Zone:  gramk/
-# White Zone: libk/ and res/
+# -----------------------------------------
+# Order of compilation:
+# -----------------------------------------
+# Zone         | Subfolders to compile
+# -----------------------------------------
+# Red   (Hot)  | core/
+# Pink  (Warm) | gramk/
+# White (Cold) | libk/ and res/
 
 # Tools
 include core/arch/x86_64/makeinc
@@ -28,7 +32,7 @@ linkFlags := -m elf_x86_64 \
 #
 
 ifndef CONFIG_USE_VERBOSE
-	CONFIG_USE_VERBOSE = 1
+	CONFIG_USE_VERBOSE=1
 endif
 
 ifeq ($(CONFIG_USE_VERBOSE),1)
@@ -78,8 +82,8 @@ CFLAGS := \
 # ========================
 # Config
 
-#test
-#CONFIG_MAIN=y
+# test
+MYTEST_CONFIG=n
 # ...
 
 # ========================
@@ -116,6 +120,8 @@ objects-y += p4_net.o
 
 objects-y += p4_fs.o  
 
+# test
+# objects-$(MYTEST_CONFIG) += fake_mytest.o
 
 # ========================
 PHONY := all
