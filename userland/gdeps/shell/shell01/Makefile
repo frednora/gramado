@@ -1,3 +1,4 @@
+# shell01
 # Client-side GUI applications.
 
 all:
@@ -9,9 +10,10 @@ all:
 	make -C api/
 
 # 2
-# The explorer
-# desktop, taskbar, launcher, filemanager ...
-	make -C overview/
+# Taskbar
+# "The explorer": desktop, taskbar, launcher, filemanager ...
+# For now it is only a taskbar.
+	make -C taskbar/
 
 # 3
 # Output entity for subsystems

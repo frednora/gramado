@@ -13,7 +13,8 @@ All the client-side GUI applications are here. This is the Operating System Shel
 
 + bin/      - Final images.
 
-+ overview/ - The Shell application.
++ taskbar/  - The taskbar.
+              The Shell application.
               Desktop, taskbar, filemanager etc
 
 + ss/       - Subsystems / Virtual Terminals.
