@@ -7,9 +7,8 @@
 // #todo
 // In the case of server operating systems,
 // input responsiveness is not a priority,
-// in this case, the scheduler can boost the quantum of 
-// network related tasks, not the display server or
-// foreground thread.
+// in this case, the scheduler can boost the quantum of network 
+// related tasks, not the display server or foreground thread.
 
 #include <kernel.h>
 
@@ -29,12 +28,10 @@ static struct thread_d  *p4q;
 static struct thread_d  *p5q;
 static struct thread_d  *p6q;  // Higher
 
-
 // ----------------------------------------
 // Event responter thread
 int g_use_event_responder=TRUE;
 struct thread_d *ev_responder_thread;
-
 
 //
 // == Private functions: prototypes =============
@@ -49,8 +46,7 @@ static void __sched_notify_parent(struct thread_d *thread, int event_number)
 {
 // Notify parent process that something happened.
 
-
-    //#todo
+    // #todo
     // This is a work in progress!
 
     struct process_d *p_owner;
@@ -58,12 +54,11 @@ static void __sched_notify_parent(struct thread_d *thread, int event_number)
 
     //printk ("__sched_notify_parent: #test\n");
 
-// Parameter:
+// Parameters:
     if ((void*) thread == NULL)
         return;
     if (thread->magic != 1234)
         return;
-
     // #todo:
     //if (event_number<0)
         //return;
@@ -93,7 +88,7 @@ static void __sched_notify_parent(struct thread_d *thread, int event_number)
     if (p_parent->magic != 1234)
         return;
 
-// Get target thread.
+// Get target thread
     struct thread_d *target_thread;
     target_thread = (struct thread_d *) p_parent->control;
     if ((void*) target_thread == NULL)
@@ -116,8 +111,7 @@ static void __sched_notify_parent(struct thread_d *thread, int event_number)
     //printk ("__sched_notify_parent: done\n");
 }
 
-
-// Get structure pointer of init thread.
+// Get structure pointer of init thread
 struct thread_d *get_init_thread(void)
 {
     return (struct thread_d *) InitThread;
@@ -130,7 +124,7 @@ struct thread_d *get_next_on_queue_or_the_init_thread(struct thread_d *q)
 {
     struct thread_d *next;
 
-// Invalid queue pointer.
+// Invalid queue pointer
     if ((void*) q == NULL)
         return (struct thread_d *) InitThread;
     if (q->used != TRUE)
@@ -138,10 +132,10 @@ struct thread_d *get_next_on_queue_or_the_init_thread(struct thread_d *q)
     if (q->magic != 1234)
         return (struct thread_d *) InitThread;
 
-// Get next.
+// Get next
     next = (struct thread_d *) q->next;
 
-// Invalid next pointer.
+// Invalid next pointer
     if ((void*) next == NULL)
         return (struct thread_d *) InitThread;
     if (next->used != TRUE)
@@ -149,7 +143,7 @@ struct thread_d *get_next_on_queue_or_the_init_thread(struct thread_d *q)
     if (next->magic != 1234)
         return (struct thread_d *) InitThread;
 
-// Return next thread on queue.
+// Return next thread on queue
     return (struct thread_d *) next;
 }
 
@@ -160,7 +154,7 @@ struct thread_d *get_ev_responter(void)
     if (g_use_event_responder != TRUE)
         goto fail;
 
-// Invalid pointer.
+// Invalid pointer
     if ((void*) ev_responder_thread == NULL)
         goto fail;
     if (ev_responder_thread->used != TRUE)
@@ -168,27 +162,29 @@ struct thread_d *get_ev_responter(void)
     if (ev_responder_thread->magic != 1234)
         goto fail;
 
-// Return the pointer for the event responder.
+// Return the pointer for the event responder
     return (struct thread_d *) ev_responder_thread;
-
 fail:
     return NULL;
 }
 
+// Set the event responder thread
 int set_ev_responder(struct thread_d *thread)
 {
     if ((void*) thread == NULL)
-        return -1;
+        goto fail;
     if (thread->used != TRUE)
-        return -1;
+        goto fail;
     if (thread->magic != 1234)
-        return -1;
+        goto fail;
 
 // Set
     ev_responder_thread = thread;  
     ev_responder_thread->quantum = QUANTUM_MAX;    // Quantum
     ev_responder_thread->priority = PRIORITY_MAX;  // Priority
     return 0;
+fail:
+    return (int) -1;
 }
 
 // Do we have a pending event on this thread?
@@ -220,11 +216,8 @@ void scheduler_unlock (void){
     g_scheduler_status = (unsigned long) UNLOCKED;
 }
 
-/*
- * scheduler_get_status:
- *     Pega o status do scheduler, se ele está travado ou não.
- */
-unsigned long scheduler_get_status (void)
+// Get scheduler status
+unsigned long scheduler_get_status(void)
 {
     return (unsigned long) g_scheduler_status;
 }
@@ -266,7 +259,6 @@ void sched_cut_round(struct thread_d *last_thread)
     Current->next = (struct thread_d *) last_thread;
     last_thread->next = NULL; 
 }
-
 
 //
 // $
@@ -385,7 +377,6 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
         panic("__scheduler_rr: FirstTID\n");
     }
 
-
 // Setup Idle as the head of all queues.
 
     p1q = (void*) Idle;
@@ -401,7 +392,6 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
     p6q = (void*) Idle;
     qlist_set_element(SCHED_P6_QUEUE,p6q);
 
-
 // This is the head of the currentq.
 // Setup Idle as the head of the currentq queue, used by the task switcher.
 
@@ -415,7 +405,6 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
 // ---------------------------------------------
 // Walking
 // READY threads in the threadList[].
-
 
 // The Idle as the head of the p1q queue, 
 // The loop below is gonna build this list.
@@ -785,7 +774,6 @@ tid_t psScheduler(void)
 // We have more than one thread into the processor,
 // let's squedule it using our routine and return the tid.
     return (tid_t) scheduler();
-
 fail:
     // Returning an invalid tid.
     return (tid_t) -1;
@@ -922,7 +910,6 @@ int init_scheduler(unsigned long sched_flags)
     SchedulerInfo.initialized = TRUE;
     return 0;
 }
-
 
 //
 // End

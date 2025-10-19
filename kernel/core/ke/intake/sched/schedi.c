@@ -46,7 +46,7 @@ void do_thread_blocked(tid_t tid)
 
 // structure
     t = (void *) threadList[tid];
-    if ( (void*) t == NULL ){
+    if ((void*) t == NULL){
         return;
     }
     if (t->used != TRUE){
@@ -164,11 +164,14 @@ void do_thread_running(tid_t tid)
     }
 
     t = (void *) threadList[tid];
-// Valid?
-    if ((void *) t != NULL){
-        if ( t->used == TRUE && t->magic == 1234 ){
-            t->state = RUNNING;
-        }
+    if ((void *) t == NULL){
+        return;
+    }
+
+// Change state
+    if ( t->used == TRUE && t->magic == 1234 )
+    {
+        t->state = RUNNING;
     }
 }
 
@@ -487,17 +490,13 @@ void wait_for_a_reason ( tid_t tid, int reason )
 //
 
     t = (struct thread_d *) threadList[tid];
-
-    if ( (void *) t == NULL ){
+    if ((void *) t == NULL){
         debug_print ("wait_for_a_reason: t\n");
         return;
-
     } else {
-
-        if ( t->used != TRUE || t->magic != 1234 ){
-            debug_print ("wait_for_a_reason: t validation\n");
-        }
-
+        //if ( t->used != TRUE || t->magic != 1234 ){
+        //    debug_print ("wait_for_a_reason: t validation\n");
+        //}
         if ( t->used == TRUE && t->magic == 1234 )
         {
             // t->wait_reason[reason] = 1;
@@ -793,7 +792,8 @@ void sleep(tid_t tid, unsigned long ms)
     if ((void *) t == NULL){
         return;
     }
-    if ( t->used != TRUE || t->magic != 1234 ){
+    if ( t->used != TRUE || t->magic != 1234 )
+    {
         return;
     }
 
@@ -839,9 +839,7 @@ void schedi_check_for_standby(void)
     register int Max = THREAD_COUNT_MAX;
 
     do {
-
         t = (void *) threadList[i];
-
         if ((void *) t != NULL)
         {
             if ( t->used == TRUE && 
