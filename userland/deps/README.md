@@ -1,72 +1,21 @@
-# deps - Dependencies 
+# zbase - Non-graphical ring 3 components.
 
-Source code for non-kernel stuff. Actually the kernel only depends on the Init process, the rest is OS dependencies.
+Ring 3 stuff: Some non-graphical ring 3 components, just like init process and posix commands.
 
-## Dependencies in kernel/core/deps/
-
-```
-# #test
-# Putting the dependencies inside the kernel source tree.
-# The OS has two major components:
-# The 'kernel image' and the 'dependencies'
-# The dependencies are: boot loader, modules, and apps.
-# All the dependencies are in kernel/core/deps/ folder,
-# It's because of the close interaction 
-# with the other subfolders in kernel/core/.
-# Where is the shell?, Where is the utilities? (by Unix guys) 
-```
-
-## Dependencies
+## Folders:
 
 ```
-Core os components:
-
-----------------------
->> Ring 0
-kcore/:
-  - Kernelmode core componets
-  - Boot, ring 0 modules
-
-----------------------
->> Ring 3
-ucore/
-  - Usermode core componets
-    Init process, ring 3 drivers and ring 3 servers.
+Ring 3 Init process and Posix-like commands. 
 ```
 
-## Where is the boot loader?
+## Initialization
 
-kernel/core/deps/kcore/boot/
+```
+The kernel loads and pass the command to the init process. The init process has 
+and embedded command interpreter and you can use it to load the display server. Finally the display server will load the taskbar application.
+```
 
-## Where is the kernel?
+## Posix-like commands
 
-kernel/
-
-## Where are the ring 0 kernel modules?
-
-kernel/core/deps/kcore/modules/
-
-## Where is the Init Process?
-
-kernel/core/deps/ucore/init/
-
-## Where is the ring 3 device drivers?
-
-kernel/core/deps/ucore/drivers/
-
-## Where is the ring 3 servers?
-
-kernel/core/deps/ucore/servers/
-
-## Where is the display server?
-
-kernel/core/gdeps/preshell/ds/ds00/
-
-## Where are the POSIX-like command programs?
-
-kernel/core/gdeps/shell/shell00/
-
-## Where are the client-side GUI applications?
-
-kernel/core/gdeps/shell/shell01/
+You can create Posix-like commands using the library found in usys/libs/ or usys/commands/libs/.
 

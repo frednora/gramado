@@ -66,8 +66,8 @@ link_app:
 	@echo "Linking INIT.BIN ..."
 	@ld -m elf_x86_64 -T ../link.ld -o INIT.BIN $(myObjects)    
 finalize:
-	@cp INIT.BIN  ../bin/
+	@cp INIT.BIN  bin/
 clean:
 	-rm *.o
 	-rm INIT.BIN 
-	
+

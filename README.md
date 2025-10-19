@@ -15,8 +15,8 @@ Gramado OS is a project that includes the bootloader, the core kernel, and the i
 ```
 gramboot/  - Pre-kernel stuff. (Boot loader)
 kernel/    - The core kernel components.
-userland/  - Ring 0 kernel modules. 
-           - Ring 3 init process, unix-like commands,
+modules/   - Ring 0 loadable kernel modules. Not dynlinked.
+userland/  - Ring 3 init process, unix-like commands,
              display server and client-side GUI applications.
            - 3D stuff and experiments.
 ```

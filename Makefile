@@ -26,7 +26,7 @@ BASE = $(DISTROS)/base00
 
 ## =================================
 # Kernel Services: Init process, ring 3 drivers and ring 3 servers.
-DEP_L1 = userland/deps/ucore
+DEP_L1 = userland/deps
 # Unix-like commands
 COMMANDS = $(DEP_L1)/cmds
 
@@ -170,8 +170,8 @@ build-gramado-os:
 	@echo "Installing DEP_L1 (ucore/)"
 
 # Copy the init process.
-	@cp $(DEP_L1)/bin/INIT.BIN  $(BASE)/
-#	@cp $(DEP_L1)/bin/INIT.BIN  $(BASE)/GRAMADO/
+	@cp $(DEP_L1)/init/bin/INIT.BIN  $(BASE)/
+#	@cp $(DEP_L1)/init/bin/INIT.BIN  $(BASE)/GRAMADO/
 
 #===================================
 # $(DEP_L1)/drivers/ in kernel project
@@ -416,10 +416,11 @@ clean-all: clean
 
 # ==================
 # $(DEP_L1)/
+
 # Clear INIT.BIN
-	-rm $(DEP_L1)/bin/*.BIN
 	-rm $(DEP_L1)/init/*.o
 	-rm $(DEP_L1)/init/*.BIN 
+	-rm $(DEP_L1)/init/bin/*.BIN 
 
 	-rm $(DEP_L1)/servers/netd/client/*.o
 	-rm $(DEP_L1)/servers/netd/client/*.BIN
