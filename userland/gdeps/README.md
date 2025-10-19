@@ -1,10 +1,11 @@
-# gdeps
+# gdeps - Graphical ring 3 components.
 
 Graphical dependencies for Gramado OS.
 
 ```
-preshell - Display server and 3D demos.
-shell    - Client-side GUI applications.
+preshell/ - Display servers.
+shell/    - Client-side GUI applications.
+outside/  - 3D demos.
 ```
 
 ```
@@ -13,8 +14,6 @@ Desktop environment components:
 preshell/ 
   Shell Pre-UI:
   The display server.
-  3D demos. A game engine running on top of the kernel,
-  that works like a display server.
 
 shell/
   - Shell UI:

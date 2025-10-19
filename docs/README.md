@@ -1,4 +1,4 @@
-# docs
+# docs - Documentation
 
 The documentation for Gramado OS. (This is a work in progress).
 

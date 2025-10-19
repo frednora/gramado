@@ -1,4 +1,4 @@
-# kernel - The kernel.
+# kernel - The kernel image
 
 This directory contains the code for the base kernel. It builds the image KERNEL.BIN.
 
