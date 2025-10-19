@@ -1,10 +1,16 @@
-# Gramado
+# Gramado OS
 
- Gramado is a 64bit kernel.
+Gramado OS is a 64bit operating system.
 
 ## Overview
 
-Gramado OS is a project that includes the bootloader, the core kernel, and the init process.
+```
+Gramado OS is a project that includes the bootloader, the kernel, and the init process.
+```
+
+```
+Some extra features are: Ring 3 display server, client-side GUI applications, virtual terminal, Posix-like commands and 3D demos.
+```
 
 > [!IMPORTANT]
 > Documentation for this distribution is still under development.

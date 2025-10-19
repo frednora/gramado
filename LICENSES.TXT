@@ -1,0 +1,7 @@
+
+I like permissive license models like MIT and BSD. (Fred Nora)
+
++ MIT (This is the main license)
++ BSD (Also a good one)
+
+In Gramado OS You will find some components that came from BSD.
