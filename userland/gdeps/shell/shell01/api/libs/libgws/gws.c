@@ -47,7 +47,7 @@ static char __gws_message_buffer[512];
 //
 
 // == Get window info ==========================
-static int __gws_get_window_info_request( int fd, int wid );
+static int __gws_get_window_info_request(int fd, int wid);
 static struct gws_window_info_d *__gws_get_window_info_response(
     int fd,
     struct gws_window_info_d *window_info );
@@ -62,7 +62,7 @@ static struct gws_event_d *__gws_get_next_event_response (
 static int 
 __gws_change_window_position_request ( 
     int fd, int window, unsigned long x, unsigned long y );
-static int __gws_change_window_position_reponse( int fd );
+static int __gws_change_window_position_reponse(int fd);
 
 // == Resize window ==========================
 static int 
@@ -134,7 +134,6 @@ __gws_settext_request (
     unsigned long color,
     char *string );
 
-
 // == get text ==========================
 static int 
 __gws_gettext_request (
@@ -161,7 +160,6 @@ static int __gws_clone_and_execute_response(int fd);
 // == ... ==========================
 
 static void __gws_clear_msg_buff(void);
-
 
 //
 // == Helper functions ============================
@@ -361,8 +359,8 @@ static int __gws_get_next_event_request(int fd,int wid)
 {
     unsigned long *message_buffer = 
         (unsigned long *) &__gws_message_buffer[0];
-    int n_writes = 0;
     register int i=0;
+    int n_writes = 0;
 
 // Parameters?
     if (fd < 0){
@@ -414,13 +412,13 @@ static struct gws_event_d *__gws_get_next_event_response (
 {
     unsigned long *message_buffer = 
         (unsigned long *) &__gws_message_buffer[0];
+    register int i=0;
     ssize_t n_reads=0;
 // The header
     int wid=0;
     int msg_code=0;
     unsigned long sig1=0;
     unsigned long sig2=0;
-    register int i=0;
 
     //gws_debug_print ("__gws_get_next_event_response: rd\n"); 
 
@@ -491,7 +489,7 @@ static struct gws_event_d *__gws_get_next_event_response (
 
 process_event:
 
-// Get the message sent by the server.
+// Get the message sent by the server
     wid      = (int)           message_buffer[0];  // window id
     msg_code = (int)           message_buffer[1];  // message code: (It is an EVENT)
     sig1     = (unsigned long) message_buffer[2];  // Signature 1: 1234
@@ -517,7 +515,7 @@ process_event:
         goto fail0;
     }
 
-// The event properly.
+// The event properly
     event->used = FALSE;
     event->magic = 0;
 
@@ -641,8 +639,8 @@ __gws_change_window_position_request (
 {
     unsigned long *message_buffer = 
         (unsigned long *) &__gws_message_buffer[0];
-    int n_writes = 0;
     register int i=0;
+    int n_writes = 0;
 
     if (fd<0){
         goto fail;
@@ -683,8 +681,8 @@ static int __gws_change_window_position_reponse(int fd)
 {
     unsigned long *message_buffer = 
         (unsigned long *) &__gws_message_buffer[0];
-    ssize_t n_reads=0;
     register int i=0;
+    ssize_t n_reads=0;
 
 // #test
 // Waiting for response. ==================
@@ -778,8 +776,8 @@ __gws_resize_window_request (
 {
     unsigned long *message_buffer = 
         (unsigned long *) &__gws_message_buffer[0];
-    int n_writes = 0;
     register int i=0;
+    int n_writes = 0;
 
     if (fd<0){
         goto fail;
@@ -820,8 +818,8 @@ static int __gws_resize_window_reponse(int fd)
 {
     unsigned long *message_buffer = 
         (unsigned long *) &__gws_message_buffer[0];
-    ssize_t n_reads=0;
     register int i=0;
+    ssize_t n_reads=0;
 
 // Waiting for response.
 // Espera para ler a resposta. 
@@ -976,8 +974,8 @@ static int __gws_refresh_rectangle_response(int fd)
 {
     unsigned long *message_buffer = 
         (unsigned long *) &__gws_message_buffer[0];
-    ssize_t n_reads=0;
     register int i=0;
+    ssize_t n_reads=0;
 
     //gws_debug_print ("__gws_refresh_rectangle_response: rd\n");      
 
@@ -1084,10 +1082,10 @@ __gws_drawtext_request (
 {
     unsigned long *message_buffer = 
         (unsigned long *) &__gws_message_buffer[0];
-    //unsigned long *string_buffer = (unsigned long *) &__gws_message_buffer[128];
-    int n_writes = 0;
     register int i=0;
+    int n_writes = 0;
     char LocalString[256];
+    //unsigned long *string_buffer = (unsigned long *) &__gws_message_buffer[128];
 
 // Parameters:
     if (fd<0){
@@ -1174,9 +1172,9 @@ __gws_settext_request (
 {
     unsigned long *message_buffer = 
         (unsigned long *) &__gws_message_buffer[0];
-    //unsigned long *string_buffer = (unsigned long *) &__gws_message_buffer[128];
-    int n_writes = 0;
     register int i=0;
+    int n_writes = 0;
+    //unsigned long *string_buffer = (unsigned long *) &__gws_message_buffer[128];
 
 // Parameters:
     if (fd<0){
@@ -1204,7 +1202,6 @@ __gws_settext_request (
     static int string_off = 8;
     char *p = (char *) &message_buffer[string_off];
 
-    
     // 250 is the max limit for now.
     // #bugbug: Too smal for multiple lines.
     // #bugbug: What is the string size?
@@ -1225,8 +1222,7 @@ __gws_settext_request (
         string++;        // Increment source pointer 
     };
 
-    // Finalize the string
-    *p = 0;
+    *p = 0;  // Finalize the string
 
 // Write
     n_writes = 
@@ -1254,8 +1250,8 @@ __gws_gettext_request (
 {
     unsigned long *message_buffer = 
         (unsigned long *) &__gws_message_buffer[0];
-    //unsigned long *string_buffer = (unsigned long *) &__gws_message_buffer[128];
     int n_writes = 0;
+    //unsigned long *string_buffer = (unsigned long *) &__gws_message_buffer[128];
 
 // Parameters:
     if (fd<0){
@@ -1327,9 +1323,9 @@ static char *__gws_gettext_response(int fd)
 {
     unsigned long *message_buffer = 
         (unsigned long *) &__gws_message_buffer[0];
+    register int i=0;
     ssize_t n_reads=0;
     char *p = (char *) &message_buffer[8];  // src
-    register int i=0;
 
     if (fd<0){
         //printf ("__gws_gettext_response: fd\n");
@@ -1427,9 +1423,9 @@ __gws_clone_and_execute_request (
 {
     unsigned long *message_buffer = 
         (unsigned long *) &__gws_message_buffer[0];
-    //unsigned long *string_buffer = (unsigned long *) &__gws_message_buffer[128];
-    int n_writes = 0;
     register int i=0;
+    int n_writes = 0;
+    //unsigned long *string_buffer = (unsigned long *) &__gws_message_buffer[128];
 
 // Parameters:
     if (fd<0){
@@ -1441,14 +1437,14 @@ __gws_clone_and_execute_request (
     if (*string == 0)
         goto fail;
 
-    size_t StringSize = 0;
+    size_t StringSize=0;
     StringSize = (size_t) strlen(string);
     if (StringSize <= 0)
         goto fail;
     if (StringSize > 250)
         goto fail;
 
-// Clean the main buffer.
+// Clean the main buffer
     for (i=0; i<512; i++){
         __gws_message_buffer[i] = 0;
     };
@@ -1475,14 +1471,12 @@ __gws_clone_and_execute_request (
         p++;
         string++;
     };
-    // finalize
-    *p = 0;
+
+    *p = 0;  // Finalize
     p++;
-    // finalize again.
-    *p = 0;
+    *p = 0;  // Finalize again
 
 // Write
-
     n_writes = 
         (int) send ( 
                 fd, 
@@ -1548,7 +1542,7 @@ response_loop:
     // Se retornou -1 é porque algo está errado com o arquivo.
     if (n_reads < 0){
         //gws_debug_print ("__gws_clone_and_execute_response: recv fail.\n");
-        printf          ("__gws_clone_and_execute_response: recv fail.\n");
+        printf          ("__gws_clone_and_execute_response: recv fail\n");
         //printf ("Something is wrong with the socket.\n");
         goto fail;
         //exit (1);
@@ -1568,7 +1562,7 @@ response_loop:
             break; 
     };
 
-// Process reply.
+// Process reply
 // A resposta tras o window id no início do buffer.
 process_reply:
 
@@ -1586,7 +1580,7 @@ process_reply:
 
     return (int) message_buffer[0];
 
-// Process an event.
+// Process an event
 process_event:
     // gws_debug_print ("__gws_clone_and_execute_response: We got an event\n"); 
     return 0;
@@ -1596,7 +1590,7 @@ fail:
 
 // Create window - request.
 // #todo
-// Describe all the parameter.
+// Describe all the parameter
 static int 
 __gws_createwindow_request (
     int fd,
@@ -1614,13 +1608,12 @@ __gws_createwindow_request (
 {
     unsigned long *message_buffer = 
         (unsigned long *) &__gws_message_buffer[0];
-    int n_writes=0;
     register int i=0;
+    int n_writes=0;
     char *Name;
     char LocalName[256];
     int client_pid = (int) rtl_current_process();
     int client_tid = (int) rtl_current_thread();
-
 
     if (fd<0){
         goto fail;
@@ -1632,7 +1625,7 @@ __gws_createwindow_request (
     if (*name == 0)
         goto fail;
 
-// Clean the main buffer.
+// Clean the main buffer
     for (i=0; i<512; i++){
         __gws_message_buffer[i] = 0;
     };
@@ -1700,8 +1693,8 @@ __gws_createwindow_request (
         *p = LocalName[i];
         p++;
     };
-    // Finalize
-    *p = 0;
+
+    *p = 0;  // Finalize
 // ------
 
 // Write
@@ -1739,8 +1732,8 @@ static wid_t __gws_createwindow_response(int fd)
 {
     unsigned long *message_buffer = 
         (unsigned long *) &__gws_message_buffer[0];
-    ssize_t n_reads=0;
     register int i=0;
+    ssize_t n_reads=0;
 
     if (fd<0){
         goto fail;
@@ -1824,10 +1817,10 @@ void gws_debug_print(const char *string)
         (unsigned long) string );
 }
 
-// Initialize the library.
+// Initialize the library
 int gws_initialize_library(void)
 {
-    pid_t ws_pid = -1;    // PID do window server.
+    pid_t ws_pid = -1;    // PID do window server
     int __ApplicationFD = -1;
 
     __gws_clear_msg_buff();
@@ -1835,7 +1828,7 @@ int gws_initialize_library(void)
     ws_pid = (pid_t) gws_initialize_connection();
     if (ws_pid < 0){
         gws_debug_print("gws_initialize_library: [fail] ws_pid\n");
-        return (int) -1;
+        goto fail;
     }
 
 // #todo:
@@ -1848,6 +1841,8 @@ int gws_initialize_library(void)
 
     return 0;
     // return (int) ws_pid;
+fail:
+    return (int) -1;
 }
 
 void *gws_malloc(size_t size)
@@ -1879,7 +1874,7 @@ gws_draw_char (
     int Response=0;
     int Value=0;
     int req_status = -1;
-    unsigned int Color = color;
+    unsigned int Color = (unsigned int) color;
 
 // Parameters:
     if (fd<0)    {goto fail;}
@@ -1921,7 +1916,7 @@ fail:
     return;
 }
 
-// Draw text.
+// Draw text
 void 
 gws_draw_text (
     int fd, 
@@ -2122,7 +2117,7 @@ gws_get_text (
     if ((void*) p != NULL)
     {
         // O ponteiro dado pelo app.
-        if ( (void*) where != NULL )
+        if ((void*) where != NULL)
         {
             // Copy
             for (c=0; c<64; c++)
@@ -2173,13 +2168,13 @@ gws_clone_and_execute2 (
 // IN: fd, window, x, y, color, string
     req_status = 
         (int) __gws_clone_and_execute_request (
-                  (int) fd,
-                  (unsigned long) arg1,
-                  (unsigned long) arg2,
-                  (unsigned long) arg3,
-                  (unsigned long) arg4,
-                  (const char *) string );
-    if(req_status<=0){
+                (int) fd,
+                (unsigned long) arg1,
+                (unsigned long) arg2,
+                (unsigned long) arg3,
+                (unsigned long) arg4,
+                (const char *) string );
+    if (req_status <= 0){
         goto fail;
     }
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_REQUEST );
@@ -2210,13 +2205,13 @@ fail:
 // Try to execute the command line in the prompt[] buffer.
 void gws_clone_and_execute_from_prompt(int fd)
 {
-    char filename_buffer[32]; //8+3+1
+    char filename_buffer[32];  //8+3+1
 // Limits:
 // + The prompt[] limit is BUFSIZ = 1024;
 // + The limit for the write() operation is 512 for now.
     size_t WriteLimit = 512;
 
-// Clean the buffer.
+// Clean the buffer
     memset(filename_buffer,0,32);
 
     if (fd < 0){
@@ -2227,7 +2222,7 @@ void gws_clone_and_execute_from_prompt(int fd)
         goto fail;
     }
 
-// Clone.
+// Clone
 // #important:
 // For now the system will crash if the
 // command is not found.
@@ -2276,9 +2271,9 @@ void gws_clone_and_execute_from_prompt(int fd)
 // The command line accepts only one word
 // and the command line has too many words.
 
-//#todo
-//Create a method.
-//int rtl_get_first_word_in_a_string(char *buffer_pointer, char *string);
+// #todo
+// Create a method.
+// int rtl_get_first_word_in_a_string(char *buffer_pointer, char *string);
 
     register int ii=0;
     char *p;
@@ -2302,12 +2297,12 @@ void gws_clone_and_execute_from_prompt(int fd)
              *p == ' ' ||
              *p == '\t' )
         {
-            // Finalize the buffer that contain the image name.
+            // Finalize the buffer that contain the image name
             filename_buffer[ii] = 0;
             break;
         }
 
-        // Printable.
+        // Printable
         // Put the char into the buffer.
         // What are these chars? 
         // It includes symbols? Or just letters?
@@ -2474,16 +2469,11 @@ void gws_clone_and_execute_from_prompt(int fd)
     //    0,0,0,0,
     //    "reboot.bin" );
 
-    res = 
-        (int) gws_clone_and_execute2(
-                  fd,
-                  0,0,0,0,
-                  filename_buffer );
-
-   if (res<0){
-       //#debug #todo: do not use printf.
-       //printf("gws_clone_and_execute2: fail\n");
-   }
+    res = (int) gws_clone_and_execute2( fd, 0, 0, 0, 0, filename_buffer );
+    if (res<0){
+        //#debug #todo: do not use printf.
+        //printf("gws_clone_and_execute2: fail\n");
+    }
 
 // #bugbug
 // breakpoint
@@ -2525,7 +2515,6 @@ void *gws_services (
     //printf("gws_services: #todo\n");
     return NULL;
 }
-
 
 // gws_send_message_to_process:
 // Envia uma mensagem para a thread de controle de um dado processo.
@@ -2579,7 +2568,6 @@ fail:
 
 // gws_send_message_to_thread:
 // Envia uma mensagem para uma thread.
-
 int 
 gws_send_message_to_thread ( 
     int tid, 
@@ -2715,8 +2703,7 @@ gws_change_window_position (
     if (window<0){ goto fail; }
 
 // Request
-    req_status = 
-        (int) __gws_change_window_position_request(fd,window,x,y);
+    req_status = (int) __gws_change_window_position_request(fd,window,x,y);
     if (req_status <= 0){
         goto fail;
     }
@@ -2742,7 +2729,7 @@ fail:
     return (int) -1;
 }
 
-// Resize window.
+// Resize window
 int 
 gws_resize_window( 
     int fd, 
@@ -2936,8 +2923,7 @@ struct gws_window_info_d *gws_get_window_info(
 
     wi = 
         (struct gws_window_info_d *) __gws_get_window_info_response( 
-                                         fd, 
-                                         window_info );
+                                        fd, window_info );
 
     if ((void*) wi == NULL){
         debug_print("gws_get_window_info: fail\n");
@@ -2997,7 +2983,7 @@ gws_refresh_window(int fd, wid_t wid)
 
 // Request
     req_status = (int) __gws_refresh_window_request(fd,wid);
-    if (req_status<=0){
+    if (req_status <= 0){
         goto fail;
     }
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_REQUEST );
@@ -3040,11 +3026,11 @@ gws_refresh_retangle (
 // Request
     req_status = 
         (int) __gws_refresh_rectangle_request (
-                  (int) fd,
-                  (unsigned long) left, 
-                  (unsigned long) top,
-                  (unsigned long) width, 
-                  (unsigned long) height );
+                (int) fd,
+                (unsigned long) left, 
+                (unsigned long) top,
+                (unsigned long) width, 
+                (unsigned long) height );
 
     if (req_status <= 0){
         goto fail;
@@ -3112,14 +3098,12 @@ void gws_invalidate_window(int fd,int wid)
     gws_async_command(fd,13,0,wid);
 }
 
-
 /*
  * gws_create_window: 
  *     Create a window.
  *     Given it's type.
  */
 // OUT: wid
-
 wid_t
 gws_create_window ( 
     int fd,
@@ -3174,15 +3158,15 @@ gws_create_window (
 // Request
     req_status = 
         (int) __gws_createwindow_request ( 
-                  fd, 
-                  x, y, width, height, 
-                  color, 
-                  type, 
-                  status,
-                  view,
-                  style, 
-                  parentwindow, 
-                  (const char *) windowname );
+                fd, 
+                x, y, width, height, 
+                color, 
+                type, 
+                status,
+                view,
+                style, 
+                parentwindow, 
+                (const char *) windowname );
 
     if (req_status <= 0){
         goto fail;
@@ -3292,6 +3276,8 @@ void gws_refresh_yield (int fd)
     if (fd<0){
         return;
     }
+    // #todo
+    // Explain the (-4) value.
     gws_refresh_window (fd, -4);  //??: fd,window
     gws_yield();
 }
@@ -3412,8 +3398,7 @@ int gws_clone_and_execute(const char *name)
     // #todo
     // Ret = (int) rtl_clone_and_execute(name);
 
-    Value = 
-        (unsigned long) sc82( 900, (unsigned long) name, 0, 0 );
+    Value = (unsigned long) sc82( 900, (unsigned long) name, 0, 0 );
 
 // #todo
 // Error message
@@ -3422,15 +3407,14 @@ fail:
     return (int) -1;
 }
 
-// Get system metrics.
-unsigned long gws_get_system_metrics (int index)
+// Get system metrics
+unsigned long gws_get_system_metrics(int index)
 {
     if (index<0){
         return 0;
     }
     return (unsigned long) rtl_get_system_metrics((int) index);
 }
-
 
 // Enter critical section
 // close the gate
@@ -3465,9 +3449,8 @@ done:
 // open the gate.
 void gws_exit_critical_section (void)
 {
-    gws_system_call ( 228, 0, 0, 0 );
+    gws_system_call( 228, 0, 0, 0 );
 }
-
 
 /*
 //refresh raw rectangle
@@ -3493,7 +3476,6 @@ gws_refresh_rectangle(
 }
 */
 
-
 // constructor
 // Create the structure, given only a type.
 /*
@@ -3509,7 +3491,6 @@ int gws_window ( int fd, int type )
     return wid;
 }
 */
-
 
 // Create menu and return a pointer to a menu structure.
 // This a good thing when 
@@ -3542,9 +3523,8 @@ struct gws_menu_d *gws_create_menu (
 // #todo: 'count' limits.
 
 // Menu
-    menu = 
-        (struct gws_menu_d *) gws_malloc( sizeof(struct gws_menu_d) );
-    if ( (void *) menu == NULL ){
+    menu = (struct gws_menu_d *) gws_malloc( sizeof(struct gws_menu_d) );
+    if ((void *) menu == NULL){
         debug_print("gws_create_menu: [FAIL] menu\n");
         goto fail;
     }
@@ -3565,15 +3545,16 @@ struct gws_menu_d *gws_create_menu (
 
     window = 
         (int) gws_create_window ( 
-                  fd,
-                  WT_SIMPLE, 1, 1, "Menu",
-                  menu->x,  //Deslocamento em relação a janela mãe. 
-                  menu->y,  //Deslocamento em relação a janela mãe. 
-                  width, 
-                  height,
-                  parent, 0, color, color );
+                fd,
+                WT_SIMPLE, 1, 1, "Menu",
+                menu->x,  //Deslocamento em relação a janela mãe. 
+                menu->y,  //Deslocamento em relação a janela mãe. 
+                width, 
+                height,
+                parent, 0, color, color );
 
-    if (window <= 0){
+    if (window <= 0)
+    {
         debug_print("gws_create_menu: [FAIL] window\n");
         //gws_free(menu);
         menu->window = 0;  //#bugbug !!!!
@@ -3584,8 +3565,7 @@ struct gws_menu_d *gws_create_menu (
 // #bugbug
     menu->window = (int) window;
     menu->parent = (int) parent;
-
-// Return the pointer.
+// Return the pointer
     return (struct gws_menu_d *) menu;
 fail:
     return NULL;
@@ -3613,7 +3593,7 @@ struct gws_menu_item_d *gws_create_menu_item (
         goto fail;
     }
 
-// Create menu item.
+// Create menu item
     size_t Size = sizeof(struct gws_menu_item_d);
     item = (struct gws_menu_item_d *) gws_malloc(Size);
     if ((void *) item == NULL){
@@ -3643,14 +3623,14 @@ struct gws_menu_item_d *gws_create_menu_item (
     {
         window = 
             (int) gws_create_window ( 
-                      fd,
-                      WT_BUTTON,1,1, label,
-                      item->x, 
-                      item->y, 
-                      item->width, 
-                      item->height,
-                      menu->window,  // #bugbug 
-                      0, COLOR_GRAY, COLOR_GRAY );
+                    fd,
+                    WT_BUTTON,1,1, label,
+                    item->x, 
+                    item->y, 
+                    item->width, 
+                    item->height,
+                    menu->window,  // #bugbug 
+                    0, COLOR_GRAY, COLOR_GRAY );
 
         //debug
         //gws_draw_char (
@@ -3661,7 +3641,7 @@ struct gws_menu_item_d *gws_create_menu_item (
               //COLOR_RED,
               //'x');
 
-         item->window = window;
+        item->window = window;
     }
 
 // Return the pointer fot the menu item.
@@ -3707,7 +3687,7 @@ fail:
     return (int) -1;
 }
 
-// Create empty directory.
+// Create empty directory
 int gws_create_empty_directory(const char *dir_name)
 {
 
@@ -3816,7 +3796,7 @@ gws_async_command (
 // caso não seja possível escrever.
 
 // --------------------
-// Clean the main buffer.
+// Clean the main buffer
     for (i=0; i<512; i++){
         __gws_message_buffer[i] = 0;
     };
@@ -3843,18 +3823,19 @@ gws_async_command (
 // Sending ...
     n_writes = 
         (int) send ( 
-                  fd,
-                  __gws_message_buffer, 
-                  sizeof(__gws_message_buffer), 
-                  0 );
+                fd,
+                __gws_message_buffer, 
+                sizeof(__gws_message_buffer), 
+                0 );
 
     if (n_writes <= 0){
         goto fail;
     }
 
+// Sync
     rtl_set_file_sync ( fd, SYNC_REQUEST_SET_ACTION, ACTION_REQUEST );
 
-// No return.
+// No return
     while (1){
         Value = (int) rtl_get_file_sync( fd, SYNC_REQUEST_GET_ACTION );
         // Essa é a sincronização esperada.
@@ -3891,9 +3872,9 @@ gws_async_command2 (
 {
     unsigned long *message_buffer = 
         (unsigned long *) &__gws_message_buffer[0];
+    register int i=0;
     int n_writes=0;
     int Value=0;
-    register int i=0;
 
     // #debug
     // gws_debug_print ("gws_async_command2: send...\n"); 
@@ -3916,15 +3897,15 @@ gws_async_command2 (
 // Message code. (2222?)
     message_buffer[1] = GWS_AsyncCommand;
 // #todo: We need a list of services we can all with this function.
-    message_buffer[2] = request;           // request
-    message_buffer[3] = sub_request;       // sub request
+    message_buffer[2] = request;      // request
+    message_buffer[3] = sub_request;  // sub request
 
-// data
-// #todo: We can deliver more data if we want.
-    message_buffer[4] = (unsigned long) data1;  // data1
-    message_buffer[5] = (unsigned long) data2;  // data2
-    message_buffer[6] = (unsigned long) data3;  // data3
-    message_buffer[7] = (unsigned long) data4;  // data4
+// Data field
+// #todo: We can deliver more data if we want
+    message_buffer[4] = (unsigned long) data1;
+    message_buffer[5] = (unsigned long) data2;
+    message_buffer[6] = (unsigned long) data3;
+    message_buffer[7] = (unsigned long) data4;
     // ...
 
     if (fd<0){
@@ -3934,15 +3915,16 @@ gws_async_command2 (
 
     n_writes = 
         (int) send ( 
-                  fd,
-                  __gws_message_buffer, 
-                  sizeof(__gws_message_buffer), 
-                  0 );
+                fd,
+                __gws_message_buffer, 
+                sizeof(__gws_message_buffer), 
+                0 );
 
     if (n_writes <= 0){
-         goto fail;
+        goto fail;
     }
 
+// Sync
     rtl_set_file_sync ( fd, SYNC_REQUEST_SET_ACTION, ACTION_REQUEST );
 
 // No return
@@ -3969,8 +3951,8 @@ fail:
 }
 
 // #test
-// No response.
-// Sending the wm's pid to the ws.
+// No response
+// Sending the wm's pid to the ds.
 // Don't trust in this method. There is no response.
 // We can use this to broadcast.
 void gws_send_wm_magic( int fd, int pid )
@@ -4030,12 +4012,12 @@ struct gws_display_d *gws_open_display(const char *display_name)
 // (2)
 // Create the socket file.
     //client_fd = socket( AF_INET, SOCK_STREAM, 0 );
-    client_fd = socket( AF_INET, SOCK_RAW, 0 );
-    if (client_fd<0){
+    client_fd = (int) socket( AF_INET, SOCK_RAW, 0 );
+    if (client_fd < 0){
        printf ("gws_open_display: Couldn't create socket\n");
        goto fail;
     }
-// Network socket.
+// Network socket
     Display->fd = (int) client_fd;
     Display->connected = FALSE;
 
@@ -4132,8 +4114,7 @@ void gws_close_display(struct gws_display_d *display)
     if ((void*) display->display_name != NULL)
     {
         // #bugbug: string size?
-        printf("Closing the %s display for GWS\n",
-            display->display_name );
+        printf("Closing the %s display\n", display->display_name );
     }
 
 // #todo
@@ -4158,9 +4139,9 @@ int gws_set_current_display(struct gws_display_d *display)
     {
         goto fail;
     }
-// ok
+
+// ok, done.
     libgwsCurrentDisplay = (struct gws_display_d *) display;
-// Done
     return 0;
 fail:
     return (int) -1;
@@ -4203,26 +4184,20 @@ int application_start(void)
     struct gws_display_d *Display;
 
 // ============================
-// Open display.
-// IN: 
-// hostname:number.screen_number
+// Open display
+// IN: hostname:number.screen_number
 
     Display = (struct gws_display_d *) gws_open_display("display:name.0");
-    if ((void*) Display == NULL)
-    {
+    if ((void*) Display == NULL){
         debug_print ("application_start: Couldn't open display\n");
         printf      ("application_start: Couldn't open display\n");
-        //exit(1);
         goto fail;
     }
-    if (Display->fd <= 0)
-    {
+    if (Display->fd <= 0){
         debug_print ("application_start: bad Display->fd\n");
         printf      ("application_start: bad Display->fd\n");
-        //exit(1);
         goto fail;
     }
-
     __ApplicationDisplay = (struct gws_display_d *) Display;
     __ApplicationFD = (int) Display->fd;
 
@@ -4281,7 +4256,7 @@ gws_default_procedure (
     unsigned long long2 )
 {
 
-    gws_debug_print ("gws_default_procedure:\n");
+    //gws_debug_print ("gws_default_procedure:\n");
 
     if (fd < 0){
         goto fail;
