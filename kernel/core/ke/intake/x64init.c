@@ -223,13 +223,13 @@ static int __load_initbin_image(void)
 //    0 = ok
 
     Status = 
-        (unsigned long) fsLoadFile( 
-                            VOLUME1_FAT_ADDRESS, 
-                            VOLUME1_ROOTDIR_ADDRESS, 
-                            FAT16_ROOT_ENTRIES,    //#bugbug: number of entries.
-                            init_image_name, 
-                            (unsigned long) ImageAddress,  // buffer
-                            BUGBUG_IMAGE_SIZE_LIMIT );     // buffer limits
+        (int) fsLoadFile( 
+                VOLUME1_FAT_ADDRESS, 
+                VOLUME1_ROOTDIR_ADDRESS, 
+                FAT16_ROOT_ENTRIES,    //#bugbug: number of entries.
+                init_image_name, 
+                (unsigned long) ImageAddress,  // buffer
+                BUGBUG_IMAGE_SIZE_LIMIT );     // buffer limits
 
     if (Status != 0){
         printk("__load_initbin_image: on fsLoadFile()\n");
@@ -237,12 +237,13 @@ static int __load_initbin_image(void)
     }
 
 // OUT: 
-//    1 = fail 
+//   -1 = fail 
 //    0 = ok
 
     return 0;
 fail:
-    return -1;
+    // refresh_screen();
+    return (int) -1;
 }
 
 // Load INIT.BIN.

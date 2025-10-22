@@ -84,7 +84,7 @@ OUT:
 // is dir_address virtual or physical?
 // Change this name to dir_pa or dir_va.
 
-unsigned long 
+int 
 fsLoadFile ( 
     unsigned long fat_address,
     unsigned long dir_address,
@@ -97,7 +97,7 @@ fsLoadFile (
 // Remember: This function is already able to load 
 // executables with 200KB or more, just like ds00.
 
-    int Status=-1;
+    int Status = -1;
     register int i=0;
     int SavedDirEntry = 0;
     unsigned short next=0;
@@ -531,9 +531,9 @@ __loop_next_entry:
     read_lba ( 
         FakeDiskId,  // #todo: fake disk id.
         Buffer, 
-        ( VOLUME1_DATAAREA_LBA + cluster -2 ) ); 
+        ( VOLUME1_DATAAREA_LBA + cluster -2 )); 
 
-// Update buffer pointer.
+// Update buffer pointer
     Buffer = (unsigned long) (Buffer + SectorSize); 
 
 // Update cluster.
@@ -567,8 +567,9 @@ __loop_next_entry:
         {
             panic("fsLoadFile: nreads\n");
         }
+
         // 0 = OK
-        return (unsigned long) 0; 
+        return (int) 0;
     }
 
     nreads++;
@@ -578,16 +579,16 @@ fail:
     debug_print("fsLoadFile: [FAIL]\n");
     printk     ("fsLoadFile: [FAIL] file={%s}\n", file_name );
     refresh_screen();
-    return (unsigned long) 1;
+    return (int) -1;
 }
 
 // Not tested yet
-unsigned long 
+int 
 fsLoadFile2 ( 
     struct file_context_d *fc, 
     unsigned char *file_name )
 {
-    unsigned long rv=0;
+    int rv=0;
 
 // File context
     if ((void*) fc == NULL){
@@ -607,7 +608,7 @@ fsLoadFile2 (
     fc->file_name = file_name;
 
     rv = 
-        (unsigned long) fsLoadFile ( 
+        (int) fsLoadFile ( 
             (unsigned long)   fc->fat_address,
             (unsigned long)   fc->dir_address,
             (int)             fc->dir_entries,
@@ -615,7 +616,7 @@ fsLoadFile2 (
             (unsigned long)   fc->file_address,
             (unsigned long)   fc->buffer_limit );
 
-    return (unsigned long) rv;
+    return (int) rv;
 }
 
 // -------------------------------------
@@ -625,7 +626,7 @@ fsLoadFile2 (
 // + program_name: Program name.
 // + buffer: Pre-allocated buffer.
 // + buffer_size_in_bytes: Buffer size in bytes.
-unsigned long 
+int 
 fsLoadProgramFromGRAMADO (
     char *program_name,
     unsigned long buffer,
@@ -633,7 +634,7 @@ fsLoadProgramFromGRAMADO (
 {
 // Load an image from PROGRAM/
 
-    unsigned long Status=1; // fail
+    int Status = -1; // fail
 
     // #debug
     //printk ("fsLoadProgramFromGRAMADO:\n");
@@ -678,21 +679,22 @@ fsLoadProgramFromGRAMADO (
  */
 
     Status = 
-        (unsigned long) fsLoadFile( 
-                            VOLUME1_FAT_ADDRESS, 
-                            programs_directory_address, // onde procurar 
-                            512,    //#bugbug: number of entries.
-                            program_name, 
-                            (unsigned long) buffer,  // buffer
-                            (unsigned long) buffer_size_in_bytes );  // buffer limits in bytes
-    if (Status!=0){
+        (int) fsLoadFile( 
+                VOLUME1_FAT_ADDRESS, 
+                programs_directory_address, // onde procurar 
+                512,    //#bugbug: number of entries.
+                program_name, 
+                (unsigned long) buffer,  // buffer
+                (unsigned long) buffer_size_in_bytes );  // buffer limits in bytes
+    if (Status != 0)
+    {
         goto fail;
     }
     return 0;
 
 fail:
     refresh_screen();
-    return 1;
+    return (int) -1;
 }
 
 // -------------------------------------
@@ -702,7 +704,7 @@ fail:
 // + program_name: Program name.
 // + buffer: Pre-allocated buffer.
 // + buffer_size_in_bytes: Buffer size in bytes.
-unsigned long 
+int 
 fsLoadProgramFromDE (
     char *program_name,
     unsigned long buffer,
@@ -710,7 +712,7 @@ fsLoadProgramFromDE (
 {
 // Load an image from PROGRAM/
 
-    unsigned long Status=1; // fail
+    int Status = -1; // fail
 
     // #debug
     //printk ("fsLoadProgramFromDE:\n");
@@ -753,21 +755,22 @@ fsLoadProgramFromDE (
  */
 
     Status = 
-        (unsigned long) fsLoadFile( 
-                            VOLUME1_FAT_ADDRESS, 
-                            programs_directory_address, // onde procurar 
-                            512,    //#bugbug: number of entries.
-                            program_name, 
-                            (unsigned long) buffer,  // buffer
-                            (unsigned long) buffer_size_in_bytes );  // buffer limits in bytes
-    if (Status!=0){
+        (int) fsLoadFile( 
+                VOLUME1_FAT_ADDRESS, 
+                programs_directory_address, // onde procurar 
+                512,    //#bugbug: number of entries.
+                program_name, 
+                (unsigned long) buffer,  // buffer
+                (unsigned long) buffer_size_in_bytes );  // buffer limits in bytes
+    if (Status != 0)
+    {
         goto fail;
     }
     return 0;
 
 fail:
     refresh_screen();
-    return 1;
+    return (int) -1;
 }
 
 /*
@@ -1053,14 +1056,15 @@ fs_load_path (
                 // Load the file. (The last level)
                 // IN: 
                 // fat address, dir address, filename, file address.
-                Ret = fsLoadFile ( 
+                Ret = 
+                    (int) fsLoadFile ( 
                           (unsigned long) VOLUME1_FAT_ADDRESS,  // fat address
                           (unsigned long) __src_buffer,         // dir address. onde procurar. 
                           (unsigned long) MaxEntries,          // #bugbug: Number of entries. 
                           (unsigned char *) name_buffer,       // nome 
                           (unsigned long) __dst_buffer,         // addr. Onde carregar.
                           (unsigned long) __file_buffer_size_in_bytes );  // tamanho do buffer onde carregar.             
-                // ok.
+                // ok
                 if (Ret == 0)
                 {
                     printk("Level %d loaded!\n\n",l);
@@ -1163,7 +1167,8 @@ fs_load_path (
                 // Load the directory. (Not the last level)
                 // IN: 
                 // fat address, dir address, filename, file address.
-                Ret = fsLoadFile ( 
+                Ret = 
+                    (int) fsLoadFile ( 
                           (unsigned long) VOLUME1_FAT_ADDRESS,  // fat address
                           (unsigned long) __src_buffer,         // dir address. onde procurar.
                           (int) MaxEntries,                    // #bugbug: Number of entries.  
@@ -1171,7 +1176,7 @@ fs_load_path (
                           (unsigned long) __dst_buffer,         // onde carregar. 
                           (unsigned long) DirBufferSizeInBytes );                             // tamanho do buffer onde carregar.
   
-                // ok.
+                // ok
                 if (Ret == 0)
                 {
                     printk("Level %d loaded!\n\n",l);
@@ -1304,7 +1309,7 @@ __try_to_load_program_from_special_folder(
 // It depends on the prefix on pathname.
 // '@' for GRAMADO and '#' for DE.
 
-    unsigned long status = -1;
+    int Status = -1;
 
 // 2048 KB = 2MB
 // 2097152 = (512 * 4096) = 512 pages.
@@ -1326,32 +1331,31 @@ __try_to_load_program_from_special_folder(
 // Skip first char and  load the image.
 //
 
-    status = -1;
-
     // From GRAMADO/
     if ( *new_filename == '@' ){
         new_filename++;
         fs_fntos((char *) new_filename);
-        status = 
-        (unsigned long) fsLoadProgramFromGRAMADO( 
-                            new_filename, 
-                            image_va, 
-                            BUGBUG_IMAGE_SIZE_LIMIT );
+        Status = 
+        (int) fsLoadProgramFromGRAMADO( 
+                new_filename, 
+                image_va, 
+                BUGBUG_IMAGE_SIZE_LIMIT );
+
     // From PROGRAMS/
-    }else if ( *new_filename == '#' ){
+    } else if ( *new_filename == '#' ){
         new_filename++;
         fs_fntos((char *) new_filename);
-        status = 
-        (unsigned long) fsLoadProgramFromDE( 
-                            new_filename, 
-                            image_va, 
-                            BUGBUG_IMAGE_SIZE_LIMIT );
+        Status = 
+        (int) fsLoadProgramFromDE( 
+                new_filename, 
+                image_va, 
+                BUGBUG_IMAGE_SIZE_LIMIT );
     } else {
         goto fail;
     };
 
 // done:
-    if (status == 0)
+    if (Status == 0)
     {
         // OK.
         return 0;
@@ -1364,16 +1368,16 @@ fail:
 // fs_load_image:
 // helper.
 // Loading a image given the filename and its virtual address.
-// called by copy_process in clone.c right after a
+// Called by copy_process in clone.c right after a
 // syscall to 'clone and execute'.
+// Limits:
+// Remember: This function is already able to load 
+// executables with 400KB or more, just like ds00.
 int 
 fs_load_image( 
     const char *filename, 
     unsigned long image_va )
 {
-// Limits:
-// Remember: This function is already able to load 
-// executables with 200KB or more, just like ds00.
 
 // #todo:
 // Explain better all these variables.
@@ -1394,43 +1398,44 @@ fs_load_image(
 
 // Parameter:
     if ((void*) filename == NULL){
-        panic ("fs_load_image: filename\n");
+        printk("fs_load_image: filename\n");
+        goto fail;
     }
     if (*filename == 0){
-        panic ("fs_load_image: *filename\n");
+        printk("fs_load_image: *filename\n");
+        goto fail;
     }
     path = filename;
     name = filename;
 
 //
-// Path support.
+// Path support
 //
 
 // Loading image from the cwd.
     if ( path[0] == '.' && 
          path[1] == '/' )
     {
-        debug_print ("fs_load_image: [FIXME] Can't execute from cwd\n");
+        //debug_print ("fs_load_image: [FIXME] Can't execute from cwd\n");
         printk      ("fs_load_image: [FIXME] Can't execute from cwd\n");
         goto fail;
     }
 
-// Loading image from 
-// /GRAMADO/ or /PROGRAMS/ directories.
+// #test:
+// Loading image from /GRAMADO/ or /DE/ directories.
 
     if ( *filename == '@' || 
          *filename == '#' )
     {
         return (int) __try_to_load_program_from_special_folder( 
-                        filename,
-                        image_va );
+                        filename, image_va );
     }
 
 // Loading image from the root directory.
     if (*filename == '/')
     {
         filename++;
-        // New name.
+        // New name
         path = filename;
         name = filename;
     }
@@ -1460,10 +1465,10 @@ __search:
     if (Status == 1){ 
         goto __found; 
     }
-    debug_print ("fs_load_image: [FAIL] File not found!\n");
-    printk      ("fs_load_image: [FAIL] File not found!\n");
+    printk ("fs_load_image: [FAIL] File not found!\n");
     goto fail;
 
+// :)
 // The file was found into the directory.
 __found:
 
@@ -1472,8 +1477,8 @@ __found:
 // [3]
 // #debug
 
-    debug_print ("fs_load_image: [3] Loading the image.\n");
-       //printk ("fs_load_image: [3] Loading the image.\n");
+    //debug_print ("fs_load_image: [3] Loading the image\n");
+       //printk ("fs_load_image: [3] Loading the image\n");
 
 // Loading from rootdir?
 // >> Load file:
@@ -1515,11 +1520,18 @@ __found:
 
 // ok?
     return (int) Status;
+
 fail:
+
     // #debug
     // We still need this kind of break,
     // cause the fs infrastructure is still immature.
-    panic("fs_load_image: fail\n");
+    // panic("fs_load_image: fail\n");
+
+    // #test
+    // We're supressing that old break and printing a message instead.
+    refresh_screen();
+
     return (int) -1;
 }
 

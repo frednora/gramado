@@ -1,0 +1,17 @@
+
+  Parts of an application, actually, parts of a process:
+
+------------------------------------
+ App  (Process or set of processes)
+------------------------------------
+ Framework
+------------------------------------
+ Library
+------------------------------------
+ System (OS components)
+------------------------------------
+
+
+====================================================
+
+ Actually an application is a set of processes, called job.

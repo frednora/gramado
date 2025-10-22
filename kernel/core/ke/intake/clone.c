@@ -6,13 +6,10 @@
 // Na maquina real, o processo clone esta recebendo
 // o mesmo pid do processo pai. Mas no qemu esta funcionando bem.
 
-
 #include <kernel.h> 
-
 
 int copy_process_in_progress=FALSE;
 unsigned long __copy_process_counter=0;
-
 
 /*
  * copy_process_struct
@@ -477,7 +474,8 @@ fail:
 // OUT:
 // The pid of the clone or fail.
 
-pid_t copy_process( 
+pid_t 
+copy_process( 
     const char *filename, 
     pid_t pid, 
     unsigned long clone_flags )
@@ -518,7 +516,6 @@ pid_t copy_process(
 
     copy_process_in_progress=TRUE;
 
-
 // Parameters:
 
 // File name
@@ -531,17 +528,18 @@ pid_t copy_process(
 // ppid
     //if (pid<0)
         //goto fail;
+
 // Flag
 // #debug: 
-// The caller is trying to clone the process using the
-// unix style, but we're not prepared for that.
-    if ((clone_flags & F_CLONE_UNIX_STYLE) != 0)
-    {
-        printk("clone_process: F_CLONE_UNIX_STYLE\n");
-        refresh_screen();
-        // Fail
-        return (pid_t) -1;
+// The caller is trying to clone the process using the unix style, 
+// but we're not prepared for that yet.
+    if ((clone_flags & F_CLONE_UNIX_STYLE) != 0){
+        printk("clone_process: #todo F_CLONE_UNIX_STYLE\n");
+        goto fail;
     }
+
+    // #todo
+    // Check more clone_flags here.
 
 // Copiar a tabela pml4 do kernel.
     _pml4 = (void *) CloneKernelPML4();
@@ -568,7 +566,6 @@ pid_t copy_process(
 // We need to get the fs directory size to allocate a buffer
 // to this fs directory.
 
-
 // loop
 // Socket support.
 // indice usado na inicializaçao da lista de 
@@ -586,8 +583,7 @@ pid_t copy_process(
 // from parameters.
 
     // #debug
-    debug_print ("copy_process: This is a work in progress \n");
-         //printk ("copy_process: This is a work in progress \n");
+    // debug_print ("copy_process:\n");
 
 // pega
     pid_t current_process = (pid_t) get_current_process();
@@ -622,7 +618,7 @@ pid_t copy_process(
     }
 
 // cpl:
-// Apenas processos em ring3 podem clonar por enquanto.
+// Only ring 3 processes can clone for now.
     if (parent_process->cpl != RING3){
         panic("copy_process: cpl != RING3\n");
     }
@@ -909,8 +905,8 @@ do_clone:
 //see: process.c
 
     // #debug
-    debug_print("copy_process: [1] Copying process image and stack.\n");
-    //printk   ("copy_process: [1] Copying process image and stack.\n");
+    debug_print("copy_process: [1] Copying process image and stack\n");
+    //printk   ("copy_process: [1] Copying process image and stack\n");
 
 // Allocating memory for the image and for the stack.
     Status = (int) alloc_memory_for_image_and_stack(parent_process);
@@ -974,18 +970,17 @@ do_clone:
         panic("copy_process: [FAIL] copy_thread_struct\n");
     }
 
-// #bugbug: We already get the childs personality.
-// it needs to be a parameter given by the caller.
+// #bugbug: 
+// We already get the childs personality.
+// It needs to be a parameter given by the caller.
 
     //child_thread->personality = (int) parent_thread->personality;
 
-// Save the pointer for the control thread.
+// Save the pointer for the control thread
     child_process->control = (struct thread_d *) child_thread;
-
-// The child process is the owner of the child thread.
+// The child process is the owner of the child thread
     child_thread->owner_process = (struct process_d *) child_process;
-
-// Salvando o pid do owner.
+// Saving the owner pid
     child_thread->owner_pid = (pid_t) child_pid;
 
 // Breakpoint
@@ -995,9 +990,7 @@ do_clone:
     //refresh_screen();
     //return 0;
 
-
-// RIP
-// Standard va entry point. (0x201000)
+// Standard va entry point. (RIP = 0x201000)
     child_thread->context.rip = (unsigned long) CONTROLTHREAD_ENTRYPOINT;
 
 // RSP
@@ -1038,7 +1031,6 @@ do_clone:
 // Salvando o pid do owner.
     //child_thread->ownerPID = (pid_t) child_pid;
 
-
 //
 // Load image
 //
@@ -1053,7 +1045,7 @@ do_clone:
 
     child_process->Image   = (unsigned long) parent_process->childImage;     //va
     child_process->ImagePA = (unsigned long) parent_process->childImage_PA;  //pa
-// Check both addresses.
+// Check both addresses
     // va
     if ((void *) child_process->Image == NULL){
         panic("copy_process: [FAIL] child_process->Image\n");
@@ -1067,17 +1059,15 @@ do_clone:
 // Load image
 //
 
-    debug_print("copy_process: [3] load image\n");
+    debug_print("copy_process: [4] load image\n");
 
-// Carregando a imagem do clone no buffer criado para ela.
-// IN: 
-// name, image va.
+// Loading the image for the clone into the buffer created for it.
+// IN: name, image va.
 // see: fsload.c
 
     Status = 
-        (int) fs_load_image(
-                filename, 
-                (unsigned long) child_process->Image );
+        (int) fs_load_image( 
+            filename, (unsigned long) child_process->Image );
 
     if (Status != 0)
     {
@@ -1092,7 +1082,6 @@ do_clone:
     //printk (" :) \n");
     //refresh_screen();
     //return 0;
-
 
 // [5]
 // Check ELF signature.
@@ -1488,13 +1477,10 @@ do_clone:
     return (pid_t) child_pid;
 
 fail:
-//fail0:
 
-// #debug
+    // #debug
     debug_print ("copy_process: [X] Fail\n");
-    //debug_print ("----------------------\n");
     printk      ("copy_process: [X] Fail\n");
-    //printk      ("----------------------\n");
     refresh_screen();
 
     // Nem chegamos a pegar o valor.

@@ -6,11 +6,9 @@
 
 struct font_initialization_d  FontInitialization;
 
-
 //
 // ==================================================
 //
-
 
 int gwsGetCurrentFontCharWidth (void)
 {
@@ -50,20 +48,20 @@ int gwsInstallFont(char *file_name)
 // Load a font from the disk.
 // # Not in use.
 
-    unsigned long fileret=0;
-
+    int fileret = -1;
 // #todo #bugbug
 // Rever esse tamanho.
-
     unsigned long tmp_size = (8*4096);
-    void *font_buffer = (void *) allocPages(8);
 
+// Check parameter
     if ((void *) file_name == NULL){
         panic("gwsInstallFont: file_name\n");
     }
     if ( *file_name == 0 ){
         panic("gwsInstallFont: *file_name\n");
     }
+
+    void *font_buffer = (void *) allocPages(8);
     if ((void *) font_buffer == NULL){
         panic("gwsInstallFont: font_buffer\n");
     }
@@ -76,15 +74,18 @@ int gwsInstallFont(char *file_name)
     int number_of_entries = FAT16_ROOT_ENTRIES;
 
     fileret = 
-        (unsigned long) fsLoadFile ( 
-                            (unsigned long) VOLUME1_FAT_ADDRESS, 
-                            (unsigned long) dir_address, 
-                            (int) number_of_entries, 
-                            (const char *) file_name, 
-                            (unsigned long) font_buffer,
-                            (unsigned long) tmp_size );
+        (int) fsLoadFile ( 
+                (unsigned long) VOLUME1_FAT_ADDRESS, 
+                (unsigned long) dir_address, 
+                (int) number_of_entries, 
+                (const char *) file_name, 
+                (unsigned long) font_buffer,
+                (unsigned long) tmp_size );
 
-    if (fileret != 0){
+    if (fileret != 0)
+    {
+        // #test
+        // We don't wanna continue without a font.
         panic ("gwsInstallFont: fileret\n");
     }
 

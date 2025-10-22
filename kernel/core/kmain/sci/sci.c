@@ -2189,7 +2189,7 @@ void *sci2 (
 // O filho inicia sua execução do início da imagem.
 // #bugbug: Isso às vezes falha na máquina real.
 // #todo: Use more arguments.
-// See: clone.c
+// See: intake/clone.c
 // IN: 
 //   + file name, 
 //   + parent pid, 

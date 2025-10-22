@@ -103,16 +103,17 @@ static void __do_initialize_sdGRAMADO(void)
     // We alocated 8 pages,
     // but we are using 4 pages.
 
-    unsigned long Ret = 1;  // 1 fail | 0 ok.
-    Ret = fsLoadFile ( 
-              (unsigned long) VOLUME1_FAT_ADDRESS,      // fat address
-              (unsigned long) VOLUME1_ROOTDIR_ADDRESS,  // dir address. onde procurar.
-              (int) FAT16_DEFAULT_NUMBER_OF_ENTRIES,    // Number of entries.  
-              (const char *) DirectoryName,
-              (unsigned long) DirectoryBufferAddress,  // onde carregar. 
-              (unsigned long) DirectoryBufferSizeInBytes );                            
+    int Ret = -1;  // -1 fail | 0 ok.
+    Ret = 
+    (int) fsLoadFile ( 
+            (unsigned long) VOLUME1_FAT_ADDRESS,      // fat address
+            (unsigned long) VOLUME1_ROOTDIR_ADDRESS,  // dir address. onde procurar.
+            (int) FAT16_DEFAULT_NUMBER_OF_ENTRIES,    // Number of entries.  
+            (const char *) DirectoryName,
+            (unsigned long) DirectoryBufferAddress,  // onde carregar. 
+            (unsigned long) DirectoryBufferSizeInBytes );                            
 
-    if (Ret!=0){
+    if (Ret != 0){
         x_panic("__do_initialize_sdGRAMADO: Load");
     }
 
@@ -168,16 +169,17 @@ static void __do_initialize_sdDE(void)
     //(32*512) = 16384.
     DirectoryBufferSizeInBytes = 16384;
 
-    unsigned long Ret = 1;  // 1 fail | 0 ok.
-    Ret = fsLoadFile ( 
-              (unsigned long) VOLUME1_FAT_ADDRESS,      // fat address
-              (unsigned long) VOLUME1_ROOTDIR_ADDRESS,  // dir address. onde procurar.
-              (int) FAT16_DEFAULT_NUMBER_OF_ENTRIES,    // Number of entries.  
-              (const char *) DirectoryName,
-              (unsigned long) DirectoryBufferAddress,  // onde carregar. 
-              (unsigned long) DirectoryBufferSizeInBytes );                            
+    int Ret = -1;  // -1 fail | 0 ok.
+    Ret = 
+    (int) fsLoadFile ( 
+            (unsigned long) VOLUME1_FAT_ADDRESS,      // fat address
+            (unsigned long) VOLUME1_ROOTDIR_ADDRESS,  // dir address. onde procurar.
+            (int) FAT16_DEFAULT_NUMBER_OF_ENTRIES,    // Number of entries.  
+            (const char *) DirectoryName,
+            (unsigned long) DirectoryBufferAddress,  // onde carregar. 
+            (unsigned long) DirectoryBufferSizeInBytes );                            
 
-    if (Ret!=0){
+    if (Ret != 0){
         x_panic("__do_initialize_sdDE: Load");
     }
 

@@ -209,7 +209,7 @@ static int __load_mod_image(char *image_name)
 // We have a limit for the image size.
     unsigned long BUGBUG_IMAGE_SIZE_LIMIT = (512 * 4096);
 
-    unsigned long fileret=1;
+    int fileret = -1;
 
 // Check the validation of the name.
     if ((void*) image_name == NULL){
@@ -233,25 +233,27 @@ static int __load_mod_image(char *image_name)
 //    0 = ok
 
     fileret = 
-        (unsigned long) fsLoadFile( 
-                            VOLUME1_FAT_ADDRESS, 
-                            VOLUME1_ROOTDIR_ADDRESS, 
-                            FAT16_ROOT_ENTRIES,    //#bugbug: number of entries.
-                            image_name, 
-                            (unsigned long) ImageAddress,
-                            BUGBUG_IMAGE_SIZE_LIMIT ); 
+        (int) fsLoadFile( 
+                VOLUME1_FAT_ADDRESS, 
+                VOLUME1_ROOTDIR_ADDRESS, 
+                FAT16_ROOT_ENTRIES,    //#bugbug: number of entries.
+                image_name, 
+                (unsigned long) ImageAddress,
+                BUGBUG_IMAGE_SIZE_LIMIT ); 
 
-    if (fileret != 0){
+    if (fileret != 0)
+    {
         printk("__load_mod_image: on fsLoadFile()\n");
         goto fail;
     }
 
 // OUT: 
-//    1 = fail 
+//    -1 = fail 
 //    0 = ok
     return 0;
 
 fail:
+    //refresh_screen(); 
     return (int) -1;
 }
 

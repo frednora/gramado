@@ -99,7 +99,7 @@ static unsigned long __last_tick(void)
 // It's a part of the window system's initialization.
 int windowLoadGramadoIcons(void)
 {
-    unsigned long fRet=0;
+    int fRet = -1;
 
     icon_cache.initialized = FALSE;
 
@@ -161,11 +161,11 @@ int windowLoadGramadoIcons(void)
 
 // sdDE struture.
     if (sdDE.initialized != TRUE){
-        printk("fsLoadProgramFromDE: sdDE.initialized\n");
+        printk("windowLoadGramadoIcons: sdDE.initialized\n");
         goto fail;
     }
     if (sdDE.address == 0){
-        printk("fsLoadProgramFromDE: sdDE.address\n");
+        printk("windowLoadGramadoIcons: sdDE.address\n");
         goto fail;
     }
 
@@ -174,13 +174,13 @@ int windowLoadGramadoIcons(void)
 // FAT address, dir address, # dir entries, name, 
 // buffer address, buffer size in bytes.
     fRet = 
-        (unsigned long) fsLoadFile ( 
-                            VOLUME1_FAT_ADDRESS,
-                            sdDE.address,
-                            512,
-                            "APP     BMP", 
-                            (unsigned long) icon_cache.app,
-                            tmp_size );
+        (int) fsLoadFile ( 
+                VOLUME1_FAT_ADDRESS,
+                sdDE.address,
+                512,
+                "APP     BMP", 
+                (unsigned long) icon_cache.app,
+                tmp_size );
     if (fRet != 0){
         printk("windowLoadGramadoIcons: APP.BMP\n");
         goto fail;
@@ -191,13 +191,13 @@ int windowLoadGramadoIcons(void)
 // FAT address, dir address, # dir entries, name, 
 // buffer address, buffer size in bytes.
     fRet = 
-        (unsigned long) fsLoadFile ( 
-                            VOLUME1_FAT_ADDRESS,
-                            sdDE.address,
-                            512,
-                            "FILE    BMP", 
-                            (unsigned long) icon_cache.file,
-                            tmp_size );
+        (int) fsLoadFile ( 
+                VOLUME1_FAT_ADDRESS,
+                sdDE.address,
+                512,
+                "FILE    BMP", 
+                (unsigned long) icon_cache.file,
+                tmp_size );
     if (fRet != 0){
         printk("windowLoadGramadoIcons: FILE.BMP\n");
         goto fail;
@@ -208,13 +208,13 @@ int windowLoadGramadoIcons(void)
 // FAT address, dir address, # dir entries, name, 
 // buffer address, buffer size in bytes.
     fRet = 
-        (unsigned long) fsLoadFile ( 
-                            VOLUME1_FAT_ADDRESS, 
-                            sdDE.address,
-                            512,
-                            "FOLDER  BMP", 
-                            (unsigned long) icon_cache.folder,
-                            tmp_size );
+        (int) fsLoadFile ( 
+                VOLUME1_FAT_ADDRESS, 
+                sdDE.address,
+                512,
+                "FOLDER  BMP", 
+                (unsigned long) icon_cache.folder,
+                tmp_size );
     if (fRet != 0){
         printk("windowLoadGramadoIcons: FOLDER.BMP\n");
         goto fail;
@@ -225,13 +225,13 @@ int windowLoadGramadoIcons(void)
 // FAT address, dir address, # dir entries, name, 
 // buffer address, buffer size in bytes.
     fRet = 
-        (unsigned long) fsLoadFile ( 
-                            VOLUME1_FAT_ADDRESS, 
-                            sdDE.address,
-                            512,
-                            "TERMINALBMP", 
-                            (unsigned long) icon_cache.terminal,
-                            tmp_size );
+        (int) fsLoadFile ( 
+                VOLUME1_FAT_ADDRESS, 
+                sdDE.address,
+                512,
+                "TERMINALBMP", 
+                (unsigned long) icon_cache.terminal,
+                tmp_size );
     if (fRet != 0){
         printk("windowLoadGramadoIcons: TERMINAL.BMP\n");
         goto fail;
@@ -242,13 +242,13 @@ int windowLoadGramadoIcons(void)
 // FAT address, dir address, # dir entries, name, 
 // buffer address, buffer size in bytes.
     fRet = 
-        (unsigned long) fsLoadFile ( 
-                            VOLUME1_FAT_ADDRESS, 
-                            sdDE.address,
-                            512,
-                            "CURSOR  BMP", 
-                            (unsigned long) icon_cache.cursor,
-                            tmp_size );
+        (int) fsLoadFile ( 
+                VOLUME1_FAT_ADDRESS, 
+                sdDE.address,
+                512,
+                "CURSOR  BMP", 
+                (unsigned long) icon_cache.cursor,
+                tmp_size );
     if (fRet != 0){
         printk("windowLoadGramadoIcons: CURSOR.BMP\n");
         goto fail;
@@ -259,10 +259,15 @@ int windowLoadGramadoIcons(void)
 // conferindo apenas a assinatura em cada um deles.
     icon_cache.initialized = TRUE;
     return 0;
+
 fail:
     icon_cache.initialized = FALSE;
+
+    // #test
+    // PANIC: We don't wanna continue without icons for now.
     panic ("windowLoadGramadoIcons: Fail\n");
-    return -1;
+
+    return (int) -1;
 }
 
 // ============================

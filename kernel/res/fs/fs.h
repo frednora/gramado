@@ -693,7 +693,7 @@ void sys_cd_command ( const char *string );
 
 // From fsload.c
 
-unsigned long 
+int 
 fsLoadFile ( 
     unsigned long fat_address,
     unsigned long dir_address,
@@ -702,21 +702,20 @@ fsLoadFile (
     unsigned long buffer,
     unsigned long buffer_size_in_bytes );
 
-unsigned long 
+int 
 fsLoadFile2 ( 
     struct file_context_d *fc, 
     unsigned char *file_name );
 
-
 // Load an image from GRAMADO/
-unsigned long 
+int 
 fsLoadProgramFromGRAMADO (
     char *program_name,
     unsigned long buffer,
     unsigned long buffer_size_in_bytes );
 
 // Load an image from DE/
-unsigned long 
+int 
 fsLoadProgramFromDE (
     char *program_name,
     unsigned long buffer,
@@ -728,10 +727,9 @@ fs_load_path (
     unsigned long address, 
     unsigned long buffer_size );
 
-int fsLoadFileFromCurrentTargetDir (void);
+int fsLoadFileFromCurrentTargetDir(void);
 
 int fs_load_image( const char *filename, unsigned long image_va );
-
 
 void fs_init_structures (void);
 
