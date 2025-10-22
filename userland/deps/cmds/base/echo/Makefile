@@ -1,7 +1,6 @@
-
-#history:
-#2019 - Created by Fred Nora.
-
+# echo command for Gramado OS.
+# history:
+# 2019 - Created by Fred Nora.
 
 VERSION = 0
 PATCHLEVEL = 0

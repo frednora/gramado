@@ -1,5 +1,5 @@
 #reboot command for Gramado OS.
-#2019 - Created by Fred Nora.
+# 2019 - Created by Fred Nora.
 
 #history:
 #todo:
@@ -11,6 +11,12 @@ PATCHLEVEL = 0
 SUBLEVEL = 0
 EXTRAVERSION =
 #NAME = 
+
+linkFlags = -m elf_x86_64 \
+-s -x -static -T ../link.ld
+
+linkTarget = REBOOT.BIN 
+
 
 CFLAGS = -m64 \
 	-std=gnu89 \
@@ -65,10 +71,11 @@ all-c:
 
 jackpot-link:
 	@echo "Linking ..."
-	@ld -m elf_x86_64 -T ../link.ld -o REBOOT.BIN $(myObjects)    
+	@ld $(linkFlags) -o $(linkTarget) $(myObjects) 
+
 finalize:
-	@cp REBOOT.BIN  ../bin
+	@cp $(linkTarget)  ../bin
 clean:
 	-rm *.o
-	-rm REBOOT.BIN 
+	-rm $(linkTarget) 
 	

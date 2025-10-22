@@ -7,6 +7,12 @@ SUBLEVEL = 0
 EXTRAVERSION =
 #NAME = shutdown
 
+linkFlags = -m elf_x86_64 \
+-s -x -static -T ../link.ld
+
+linkTarget = SHUTDOWN.BIN 
+
+
 CFLAGS = -m64 \
 	-std=gnu89 \
 	-nodefaultlibs \
@@ -66,10 +72,10 @@ all-c:
 
 jackpot-link:
 	@echo "Linking ..."
-	@ld -m elf_x86_64 -T ../link.ld -o SHUTDOWN.BIN $(myObjects)    
+	@ld $(linkFlags) -o $(linkTarget) $(myObjects) 
 finalize:
-	@cp SHUTDOWN.BIN  ../bin
+	@cp $(linkTarget)  ../bin
 clean:
 	-rm *.o
-	-rm SHUTDOWN.BIN 
+	-rm $(linkTarget) 
 	
