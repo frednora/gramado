@@ -57,7 +57,7 @@ struct stack
 static int my_isdigit(char ch);
 static void exibirEmOrdem (struct node *node);
 static void exibirPreOrdem(struct node *node);
-static void exibirPosOrdem (struct node *node);
+static void exibirPosOrdemAndInclude (struct node *node);
 
 static void inorder(struct node *root);
 static struct node *newNode(int data_type, int data);
@@ -65,7 +65,7 @@ static struct node *insert( struct node* node, int data_type, int data );
 static void push( struct stack *s, int x );
 static int pop (struct stack *s);
 static int oper(char c, int opnd1, int opnd2);
-static int eval(void);
+static int __eval(void);
 static int bst_initialize(void);
 static void treeInitializeGlobals(void);
 
@@ -129,6 +129,7 @@ static void exibirEmOrdem (struct node *node)
     if ((void*) node == NULL)
         return;
 
+    //#debug
     printf("%d %d\n", node->_datatype, node->_data);
 
     exibirEmOrdem (node->left);
@@ -145,6 +146,7 @@ static void exibirPreOrdem(struct node *node)
     if ((void*) node == NULL)
         return;
 
+    //#debug
     printf("%d %d\n", node->_datatype, node->_data);
 
     exibirPreOrdem(node->left);
@@ -156,7 +158,7 @@ static void exibirPreOrdem(struct node *node)
 // Exibe em n�veis. de baixo para cima.
 // desce at� o ultimo pela esquerda
 // visita o da direita e imprime;
-static void exibirPosOrdem (struct node *node)
+static void exibirPosOrdemAndInclude (struct node *node)
 {
 // Include into POS_BUFFER[] 
 // this buffer is used by eval.
@@ -167,7 +169,7 @@ static void exibirPosOrdem (struct node *node)
     //?? # what is that?
     if ( buffer_offset < 0 || buffer_offset >= 32 )
     {
-        printf("exibirPosOrdem: buffer_offset\n");
+        printf("exibirPosOrdemAndInclude: buffer_offset\n");
         return;
     }
 
@@ -176,7 +178,8 @@ static void exibirPosOrdem (struct node *node)
 // isso simula uma digita��o
 // eval() vai usar esse buffer
 
-    printf("%d %d\n", node->_datatype, node->_data);
+    //#debug
+    //printf("%d %d\n", node->_datatype, node->_data);
 
      DT_BUFFER[buffer_offset] = (int) node->_datatype;  // Save data type
     POS_BUFFER[buffer_offset] = (int) node->_data;      // Save data
@@ -189,8 +192,8 @@ static void exibirPosOrdem (struct node *node)
 // + digit
 // + digit
 
-    exibirPosOrdem(node->left);
-    exibirPosOrdem(node->right);
+    exibirPosOrdemAndInclude(node->left);
+    exibirPosOrdemAndInclude(node->right);
 }
 
 // insert:
@@ -259,10 +262,10 @@ static int bst_initialize(void)
     int MyInteger = 0;
     char opCH=0;
 
-// Global.
+// Global
     buffer_offset = 0;
 
-    printf ("bst_initialize:\n");
+    //printf ("bst_initialize:\n");
 
     memset(buffer_digits,0,sizeof(buffer_digits));
     memset(buffer_op,    0,sizeof(buffer_op));
@@ -276,7 +279,7 @@ static int bst_initialize(void)
 // Colocamos nos buffers em ordem.
 // ? representa o fim do buffer
 // Se ainda não chegou ao fim, continua.
-    printf ("for:: \n");
+    //printf ("for:: \n");
 
     int is_operator=FALSE;
     // Number of elements found in the expression
@@ -335,9 +338,8 @@ static int bst_initialize(void)
     buffer_digits[buffer_digits_offset] = (int) 0;  // Digitos
         buffer_op[buffer_op_offset]     = (int) 0;  // Operadores
 
-    printf("total_digits=%d total_op=%d\n", 
-       buffer_digits_offset,
-       buffer_op_offset );
+    //printf("total_digits=%d total_op=%d\n", 
+       //buffer_digits_offset, buffer_op_offset );
 
 // ===================================================================
 // #todo: 
@@ -351,14 +353,14 @@ static int bst_initialize(void)
 // -----------------------------------
 // :: root
 // Inserindo root.
-    printf ("insert root\n");
+    //printf ("insert root\n");
     root = insert(root, DT_INVALID, 'R'); // Invalid data type
 
 // -----------------------------------
 // :: Operadores +
 // Coloca todos os operadores na árvore.
 
-    printf ("for:: Put all operators into the tree\n");
+    //printf ("for:: Put all operators into the tree\n");
     for ( 
         i=0; 
         i<buffer_op_offset; 
@@ -374,7 +376,7 @@ static int bst_initialize(void)
 // :: Digits
 // Coloca todos os digitos na árvore.
 // Cada operador vai operar sobre dois digitos.
-    printf ("for:: Put all digits into the tree\n");
+    //printf ("for:: Put all digits into the tree\n");
 
     //for ( i=0; (c = buffer1[i]) != '?'; i++ )
     for ( 
@@ -422,8 +424,8 @@ static int bst_initialize(void)
 // #important
 // Include into POS_BUFFER[] 
 // this buffer is used by eval.
-    printf(":: pos ordem: and include into POS_BUFFER[] \n");
-    exibirPosOrdem(root);
+    //printf(":: pos ordem: and include into POS_BUFFER[] \n");
+    exibirPosOrdemAndInclude(root);
 
     return 0; 
 } 
@@ -436,8 +438,7 @@ static void push( struct stack *s, int x )
 
 // Parameter
     if ((void*) s == NULL){
-        printf("push: s\n");
-        exit(1);
+        printf("push: s\n");  exit(1);
     }
 
     if (s->top < 0){
@@ -450,7 +451,7 @@ static void push( struct stack *s, int x )
     }
 
     // #debug
-    printf(">>>> PUSH %d into %d\n", x, s->top);
+    //printf(">>>> PUSH %d into %d\n", x, s->top);
 
     s->items[ s->top ] = (int) x;
 
@@ -464,8 +465,7 @@ static int pop(struct stack *s)
 
 // Parameter
     if ((void*) s == NULL){
-        printf("pop: [FAIL] s\n");
-        exit(1);
+        printf("pop: [FAIL] s\n");  exit(1);
     }
 
     if (s->top < 0){
@@ -480,7 +480,7 @@ static int pop(struct stack *s)
     Value = (int) s->items[s->top];
 
     // #debug
-    printf("<<<< POP %d from %d\n", Value, s->top );
+    //printf("<<<< POP %d from %d\n", Value, s->top );
 
     if (s->top > 0)
         s->top--;
@@ -540,8 +540,8 @@ static int oper(char c, int opnd1, int opnd2)
     };
 }
 
-// Internal worker.
-static int eval(void)
+// Internal worker
+static int __eval(void)
 {
     register int i=0;
     int opnd1=0;
@@ -549,14 +549,14 @@ static int eval(void)
     int val=0;
     struct stack stk;
 
-    printf("eval: Show DT_BUFFER[] and POS_BUFFER[]\n");
+    /*
+    //printf("eval: Show DT_BUFFER[] and POS_BUFFER[]\n");
     // O elemento extra é o root node.
-    for (i=0; i<(exp_offset+1); i++)
-    {
-        printf("%d %d\n",
-             DT_BUFFER[i], 
-            POS_BUFFER[i]);
+    for (i=0; i<(exp_offset+1); i++){
+        printf("%d %d\n", DT_BUFFER[i], POS_BUFFER[i]);
     };
+    */
+
     memset( &stk, 0, sizeof(struct stack) );
     //stk.top = -1;
     stk.top = 0;
@@ -603,7 +603,7 @@ static int eval(void)
             case '=':
                 is_operator = TRUE;
                 if (MyDT != DT_OPERATOR){
-                    printf("eval: Expected DT_OPERATOR data type in %d\n",i);
+                    printf("__eval: Expected DT_OPERATOR data type in %d\n",i);
                     exit(1);
                 }
                 opCHSaved = opCH;
@@ -615,7 +615,7 @@ static int eval(void)
             case 'R':
                 is_operator = -1;
                 if (MyDT != DT_INVALID){
-                    printf("eval: Expected DT_INVALID data type in %d\n",i);
+                    printf("__eval: Expected DT_INVALID data type in %d\n",i);
                     exit(1);
                 }
                 break;
@@ -623,7 +623,7 @@ static int eval(void)
             default:
                 is_operator = FALSE;
                 if (MyDT != DT_DIGIT){
-                    printf("eval: Expected DT_DIGIT data type in %d\n",i);
+                    printf("__eval: Expected DT_DIGIT data type in %d\n",i);
                     exit(1);
                 }
                 DigitCounter++;
@@ -633,22 +633,21 @@ static int eval(void)
                 {
                     if (DigitCounter == 2)
                     {
-                        stk.top--;  // Get last included.
+                        stk.top--;  // Get last included
                         opnd2 = (int) pop(&stk);
                         opnd1 = (int) pop(&stk);
                         val = (int) oper( (char) opCHSaved, opnd1, opnd2 );
-                        printf("eval: value={%d}\n",val);
-                        // Push result.
-                        push( &stk, val );
+                        //printf("__eval: value={%d}\n",val);
+                        push( &stk, val );  // Push result
                     }
                 }
                 break;
         }
     }
 
-// O resultado é o que sobrou na pilha.
+// O resultado é o que sobrou na pilha
     stk.top--;  // Get last included.
-    int FinalValue = pop(&stk);
+    int FinalValue = (int) pop(&stk);
     return (int) FinalValue;
 }
 
@@ -733,7 +732,7 @@ unsigned long tree_eval(void)
     {
         if ( strncmp ( (char *) real_token_buffer, ";", 1 ) == 0  )
         {
-            printf("tree_eval: ';' was found!\n");
+            //printf("tree_eval: ';' was found!\n");
             exp_buffer[exp_offset] = (int) 0;
             //exp_offset++;
             goto do_bst;
@@ -769,8 +768,7 @@ unsigned long tree_eval(void)
         // #todo
         // Temos que tratar as aberturas e fechamentos (),{}	
         default:
-            printf("tree_eval: State1 default\n");
-            exit(1);
+            printf("tree_eval: State1 default\n"); exit(1);
             break;
         }
         break;
@@ -811,7 +809,7 @@ unsigned long tree_eval(void)
             // ';'
             if ( strncmp( (char *) real_token_buffer, ";", 1 ) == 0  )
             {
-                printf("tree_eval: ';' was found\n");
+                //printf("tree_eval: ';' was found\n");
                 exp_buffer[exp_offset] = (int) 0;
                 //exp_offset++;
                 goto do_bst;  // #done
@@ -855,10 +853,11 @@ do_bst:
 
 //==================================================
 // #debug
-// Visualizando o buffer.
-    printf("\n");
-    printf("do_bst: Show buffer\n");
+// Visualizando o buffer
+    //printf("\n");
+    //printf("do_bst: Show buffer\n");
 
+    /*
     //for (j=0; j<32; j++)
     //for (j=0; j<16; j++)
     for (j=0; j<exp_offset; j++)
@@ -870,6 +869,8 @@ do_bst:
             printf("exp_buffer: %c\n", exp_buffer[j]);
         }
     };
+    */
+
     //#debug 
     //hang
     //printf("do_bst: *debug breakpoint");
@@ -895,11 +896,10 @@ do_bst:
 // Eval
 //
 
-// This is the moment where we get the final result.
-
+// This is the moment where we get the final result
     unsigned long ret_val=0;
-    ret_val = (unsigned long) eval(); 
-    printf("result: >>>>> %d\n",ret_val);
+    ret_val = (unsigned long) __eval(); 
+    //printf("result: >>>>> %d\n",ret_val);
     return (unsigned long) ret_val; 
 done:
     return (unsigned long) ret_val;

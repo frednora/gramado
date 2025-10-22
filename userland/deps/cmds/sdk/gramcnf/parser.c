@@ -254,7 +254,7 @@ static int parse_name(int token)
 // (
 //
 
-    c = yylex ();
+    c = yylex();
     if (c != TK_SEPARATOR){
         printf("parse_name: expected (\n");  exit(1);
     }
@@ -673,7 +673,7 @@ static int parse_return(int token, int *return_value)
     //char *buffer;
 
 // #debug
-    printf ("parse_return:\n");
+    //printf ("parse_return:\n");
 
 // Se entramos errado.
     if ( token != TK_KEYWORD || 
@@ -701,7 +701,7 @@ static int parse_return(int token, int *return_value)
 
     // #debug
     itoa ( (int) eval_ret, buffer );
-    printf("parse_return: value={%s}\n",buffer);
+    //printf("parse_return: value={%s}\n",buffer);
 
 //
 // Output
@@ -722,7 +722,7 @@ static int parse_return(int token, int *return_value)
 // #bugbug: The routine above is returning after find the ';'.
     if ( strncmp( (char *) real_token_buffer, ";", 1 ) == 0 )
     {
-        printf("parse_return: ';' found\n");
+        //printf("parse_return: ';' found\n");
         c = TK_SEPARATOR;
         return c;
     }
@@ -1741,7 +1741,7 @@ int parse(int dump_output)
     //====================
     //--
 
-// Initial message.
+// Initial message
     printf ("parse:\n");
 
 // Vamos usar um while até que se encontre o fim do arquivo.
@@ -2235,7 +2235,7 @@ int parse(int dump_output)
                         if (keyword_found == KWRETURN)
                         {
                             // #debug
-                            printf("State3: keyword return found in line %d\n",lexer_currentline);
+                            //printf("State3: keyword return found in line %d\n",lexer_currentline);
                             //printf ("State3: TK_KEYWORD={%s} KWRETURN, line %d \n", 
                                 //real_token_buffer, lexer_currentline );
                             
@@ -2249,8 +2249,8 @@ int parse(int dump_output)
                                 exit (1);
                             }
                             // #debug
-                            printf("State3: return result={%d} in line %d\n", 
-                                __result, lexer_currentline );
+                            //printf("State3: return result={%d} in line %d\n", 
+                               // __result, lexer_currentline );
 
                             metadata[meta_index].return_value = (unsigned int) __result;
 
