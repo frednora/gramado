@@ -10,3 +10,18 @@ It can server as parameter for the folder's order.
 + 2-Applications: cli and gui applications.
 + 1-Windows: Display server. (top/wider layer)
 
+================================================
+pt-br design notes:
+
+Na perspectiva do usuário, o sistema tem as seguintes camadas: 
+Janelas, Aplicativos, Drivers e Núcleo. 
+
+Mas na ótica do desenvolvedor, a camada mais alta seria a camada dos aplicativos, 
+pois eles dependem da infraestrutura de janelas.
+
+Talvez seja importante considerar a forma com que o usuário vê as coisas. 
+Pois podemos fazer mudanças na aparência das janelas sem
+ modificarmos os aplicativos ... nesse caso, na ótica do desenvolvedor, 
+ houve mudança na infraestrutura de janelas ... mas na ótica do usuário 
+ houve apenas mudanças na camada mais externa.
+ 
