@@ -32,9 +32,10 @@ COMMANDS = $(DEP_L1)/cmds
 
 ## =================================
 # Shell Pre-UI: The display server.
-DEP_L2 = userland/gdeps/preshell
+# The infrastruture for the windows.
+DEP_L2_LAST = winu/core
 # Display servers
-DISPLAY_SERVERS = $(DEP_L2)/ds
+DISPLAY_SERVERS = $(DEP_L2_LAST)/ds
 
 ## =================================
 # Shell UI: Client-side GUI applications.
@@ -195,10 +196,10 @@ build-extras:
 
 # ==================================
 # LEVEL : Display servers
-	@echo "Compiling DEP_L2 (preshell/)"
-	@make -C $(DEP_L2)/
+	@echo "Compiling DEP_L2_LAST (winu/core/)"
+	@make -C $(DEP_L2_LAST)/
 
-	@echo "Installing DEP_L2 (preshell/)"
+	@echo "Installing DEP_L2_LAST (winu/core/)"
 
 	@-cp $(DISPLAY_SERVERS)/ds00/bin/DS00.BIN    $(BASE)/DE
 #@-cp $(DISPLAY_SERVERS)/ds01/bin/DS01.BIN    $(BASE)/DE
