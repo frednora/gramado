@@ -1,5 +1,5 @@
-# gramk/
-# Compile all the files and create ar_gramk.o
+# wink/
+# Compile all the files and create p2_wink.o
 
 # Makefile for the user interaction support.
 # Keyboard, mouse and display.
@@ -106,8 +106,8 @@ all:
 	$(CC) -c gramk.c  $(KERNEL_INCLUDE) $(CFLAGS) -o gramk.o
 
 # link
-	$(LD) -r -o p2_gramk.o $(OBJS)
-	cp p2_gramk.o ../
+	$(LD) -r -o p2_wink.o $(OBJS)
+	cp p2_wink.o ../
 	rm *.o
 
 clean:

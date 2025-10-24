@@ -199,11 +199,11 @@
 #include "../res/dev/dev00.h"
 
 // ==================================
-// gramk/
+// wink/ (fka gramk/)
 // sw - Graphics Engine
-#include "../gramk/gdi/gre/color.h"
-#include "../gramk/gdi/gre/font.h"
-#include "../gramk/gdi/gre/bg.h"
+#include "../wink/gdi/gre/color.h"
+#include "../wink/gdi/gre/font.h"
+#include "../wink/gdi/gre/bg.h"
 
 // ==================================
 // ke/
@@ -211,27 +211,27 @@
 #include "../core/ke/intake/msgcode.h"
 
 // ==================================
-// gramk/
+// wink/
 
-#include "../gramk/gdi/gre/pixel.h"
-#include "../gramk/gdi/gre/char.h"
-#include "../gramk/gdi/gre/text.h"
-#include "../gramk/gdi/gre/line.h"
-#include "../gramk/gdi/gre/rect.h"
-#include "../gramk/gdi/gre/bitblt.h"
-#include "../gramk/gdi/gre/gre.h"
+#include "../wink/gdi/gre/pixel.h"
+#include "../wink/gdi/gre/char.h"
+#include "../wink/gdi/gre/text.h"
+#include "../wink/gdi/gre/line.h"
+#include "../wink/gdi/gre/rect.h"
+#include "../wink/gdi/gre/bitblt.h"
+#include "../wink/gdi/gre/gre.h"
 
-#include "../gramk/gdi/dispsrv.h"
-#include "../gramk/gdi/osshell.h"
+#include "../wink/gdi/dispsrv.h"
+#include "../wink/gdi/osshell.h"
 
-#include "../gramk/gdi/gdi.h"
+#include "../wink/gdi/gdi.h"
 
-// Event Interface.
-#include "../gramk/evi/obroker.h"
-#include "../gramk/evi/output.h"
-#include "../gramk/evi/ibroker.h"
-#include "../gramk/evi/input.h"
-#include "../gramk/evi/callback.h"
+// Event Interface
+#include "../wink/evi/obroker.h"
+#include "../wink/evi/output.h"
+#include "../wink/evi/ibroker.h"
+#include "../wink/evi/input.h"
+#include "../wink/evi/callback.h"
 
 // ==================================
 // dev/
@@ -361,12 +361,12 @@
 #include "../core/ke/ke.h"
 
 // ==================================
-// The user interactions.
-#include "../gramk/user/user.h"
+// The user interactions
+#include "../wink/user/user.h"
 
-// Exporting some gramk functions to the other modules
+// Exporting some wink functions to the other modules
 // inside the base kernel.
-#include "../gramk/gramk.h"
+#include "../wink/gramk.h"
 
 // Reboot system.
 #include "../core/kmain/reboot.h"

@@ -7,7 +7,7 @@
 # Zone         | Subfolders to compile
 # -----------------------------------------
 # Red   (Hot)  | core/
-# Pink  (Warm) | gramk/
+# Pink  (Warm) | wink/
 # White (Cold) | libk/ and res/
 
 # Tools
@@ -97,8 +97,8 @@ objects-y += p1_ke.o
 objects-y += p1_kmain.o  
 
 # ==[Part 02]======================
-# gramk/ - Main wrapper for the kernel io system.
-objects-y += p2_gramk.o  
+# wink/ - Main wrapper for the kernel io system.
+objects-y += p2_wink.o  
 
 # ==[Part 03]======================
 objects-y += p3_libk.o  
@@ -143,7 +143,7 @@ RedZone:
 PinkZone:
 # Part 02
 	@echo "Compiling: Compiling PinkZone"
-	$(Q)$(MAKE) -C gramk/
+	$(Q)$(MAKE) -C wink/
 
 # ----------------
 WhiteZone:
@@ -172,7 +172,7 @@ clean-all:
 	rm -rf core/clibs/*.o   
 	rm -rf core/ke/*.o   
 	rm -rf core/kmain/*.o   
-	rm -rf core/gramk/*.o   
+	rm -rf core/wink/*.o   
 
 	rm -rf res/bus/*.o   
 	rm -rf res/dev/*.o   
