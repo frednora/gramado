@@ -1,0 +1,12 @@
+
+New perspective for the operating system:
+How the user see the system.
+>> The first thing the user see is the windows. <<
+
+It can server as parameter for the folder's order.
+
++ 4-Kernel: boot, kernel, kernel modules. (bottom)
++ 3-Drivers: Device drivers.
++ 2-Applications: cli and gui applications.
++ 1-Windows: Display server. (top/wider layer)
+
