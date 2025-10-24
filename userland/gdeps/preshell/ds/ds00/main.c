@@ -825,13 +825,13 @@ int serviceAsyncCommand(void)
 
     // window_id  = message_address[0];
 // message code
-    message_id = message_address[1];
+    message_id = (unsigned long) message_address[1];
 // Service code. 
 // #todo: Create a list of services. 
-    request_id    = message_address[2];
-    subrequest_id = message_address[3];
+    request_id    = (unsigned long) message_address[2];
+    subrequest_id = (unsigned long) message_address[3];
 // data
-    data = message_address[4];
+    data = (unsigned long) message_address[4];
     // ...
 
     data1 = (unsigned long) message_address[4];   //same as 'data'
@@ -1092,6 +1092,21 @@ int serviceAsyncCommand(void)
         printf("91: Lock window %d\n",wid);
         break;
     */
+
+    // Dock window
+    // see: wm.c
+    // IN:
+    // request_id = dock operation (92)
+    // subrequest_id = witch side?
+    case 92:
+        // #todo: Not tested yet. This is a work in progress.
+        // dock_window_by_id(wid,subrequest_id);
+        break;
+    
+    case 93:
+        // IN: position
+        dock_active_window(subrequest_id);
+        break;
 
     // 1000 - Put a pixel into the backbuffer.
     // IN: color, x, y, rop

@@ -164,7 +164,7 @@ struct navigation_info_d
 // Buttons
     int button00_window;
     int button01_window;
-    int button02_window;
+    //int button02_window;
 // Separator
     int useSeparator;
 
@@ -201,9 +201,9 @@ const char *program_name = "Taskbar";
 //const char *start_menu_button_label = "|||";
 
 // Main labels
-const char *buttom00_label = "|||";
-const char *buttom01_label = "0";
-const char *buttom02_label = "<";
+const char *buttom00_label = "<";  // Navigation
+const char *buttom01_label = ">";  // Navigation
+const char *buttom02_label = "[]";  // Purpose?
 
 const char *app1_name = "#terminal.bin";
 const char *app2_name = "#editor.bin";
@@ -638,7 +638,7 @@ tbProcedure(
             gws_redraw_window(fd, main_window, TRUE);
             gws_redraw_window(fd, NavigationInfo.button00_window, TRUE);
             gws_redraw_window(fd, NavigationInfo.button01_window, TRUE);
-            gws_redraw_window(fd, NavigationInfo.button02_window, TRUE);
+            //gws_redraw_window(fd, NavigationInfo.button02_window, TRUE);
             draw_separator(fd);
             //#test
             //#todo
@@ -674,7 +674,9 @@ tbProcedure(
             // # Display apps. (recent apps?), maximize.
             if (long1 == NavigationInfo.button00_window)
             {
-                gws_async_command(fd,30,0,0);  // TILE (Update desktop)
+                // witch_side: 1=top, 2=right, 3=bottom, 4=left
+                gws_dock_active_window(fd,4);
+                //gws_async_command(fd,30,0,0);  // TILE (Update desktop)
                 //gws_async_command(fd,15,0,0); //SET ACTIVE WINDOW BY WID
                 //gws_async_command(fd,1014,0,0); //maximize active window
 
@@ -706,12 +708,16 @@ tbProcedure(
                 printf("done %d\n",tmpNewWID);
                 */
             }
-            // #todo: Minimize apps and Show desktop.
+
             if (long1 == NavigationInfo.button01_window)
-                gws_async_command(fd,1011,0,0);
+            {
+                // witch_side: 1=top, 2=right, 3=bottom, 4=left
+                gws_dock_active_window(fd,2);
+                //gws_async_command(fd,1011,0,0);
+            }
             // #todo: Back
-            if (long1 == NavigationInfo.button02_window)
-                gws_async_command(fd,30,0,0);
+            //if (long1 == NavigationInfo.button02_window)
+                //gws_async_command(fd,30,0,0);
             break;
 
         // Add new client. Given the wid.
@@ -951,29 +957,36 @@ fail:
     return (int) -1;
 }
 
+// Draw a separator in the navigation bar.
 static int draw_separator(int fd)
 {
-// ========================
-// Create separator
+    unsigned long sLeft = 2 +84 +84;
+    unsigned long sTop  = 8;
+    const char *SeparatorString = "|";
+    unsigned int SeparatorColor = COLOR_GRAY;
 
+// Parameter:
     if (fd<0)
-        return -1;
+        goto fail;
 
+// Filters
     if (main_window<0)
-        return -1;
-
+        goto fail;
     if (NavigationInfo.useSeparator != TRUE)
-        return -1;
+        goto fail;
 
+// Draw it in the pre-defined position.
     gws_draw_text (
         (int) fd,
         (int) main_window,
-        (unsigned long) 2 +84 +84 +84 +2,
-        (unsigned long) 8,
-        (unsigned long) COLOR_GRAY,
-        "|" );
+        (unsigned long) sLeft,
+        (unsigned long) sTop,
+        (unsigned int) SeparatorColor,
+        SeparatorString );
 
     return 0;
+fail:
+    return (int) -1;
 }
 
 static int create_icons_on_desktop(int fd)
@@ -1109,7 +1122,7 @@ int main(int argc, char *argv[])
 // Initialize navigation info structure.
     NavigationInfo.button00_window = -1;
     NavigationInfo.button01_window = -1;
-    NavigationInfo.button02_window = -1;
+    //NavigationInfo.button02_window = -1;
     NavigationInfo.useSeparator = TRUE;
     NavigationInfo.initialized = TRUE;
 
@@ -1157,8 +1170,7 @@ int main(int argc, char *argv[])
 // Only connect. Nothing more.
 // Create socket and call connect().
     client_fd = (int) __initialize_connection();
-    if (client_fd < 0)
-    {
+    if (client_fd < 0){
         gws_debug_print("taskbar.bin: __initialize_connection fail\n");
         printf         ("taskbar.bin: __initialize_connection fail\n");
         exit(1);
@@ -1176,7 +1188,6 @@ int main(int argc, char *argv[])
         create_desktop_area(client_fd);
 
 // ==================================================
-
 
 //========================================
 
@@ -1269,29 +1280,29 @@ int main(int argc, char *argv[])
     gws_refresh_window(client_fd, main_window);
 
 // ========================
-// Create button based on the taskbar dimensions.
+// Create button based on the taskbar dimensions
 
     NavigationInfo.button00_window = 
     (int) create_bar_icon (
         client_fd,
         main_window,
         0, // Icon ID
-        2, 
-        2, 
+        2,  // Left
+        2,  // Top
         (8*10),   // 8 chars width. 
         tb_h -2,
         buttom00_label );
 
 // ========================
-// Create button based on the taskbar dimensions.
+// Create button based on the taskbar dimensions
 
     NavigationInfo.button01_window = 
     (int) create_bar_icon (
         client_fd,
         main_window,
         0, // Icon ID
-        2 +84, 
-        2, 
+        2 +84,  // Left
+        2,      // Top
         (8*10),   // 8 chars width. 
         tb_h -2,
         buttom01_label );
@@ -1299,17 +1310,18 @@ int main(int argc, char *argv[])
 // ========================
 // Create button based on the taskbar dimensions.
 
+    /*
     NavigationInfo.button02_window = 
     (int) create_bar_icon (
         client_fd,
         main_window,
         0, // Icon ID
-        2 +84 +84, 
-        2, 
+        2 +84 +84,  // Left 
+        2,          // Top
         (8*10),   // 8 chars width. 
         tb_h -2,
         buttom02_label );
-
+    */
 
 // ========================
 // Create separator

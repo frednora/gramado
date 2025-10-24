@@ -4823,6 +4823,8 @@ int gwsDefineInitialRootWindow (struct gws_window_d *window)
 
 // Dock a given window into a given corner.
 // Not valid in fullscreen mode.
+// IN: 
+// position: 1=top, 2=right, 3=bottom, 4=left
 int dock_window( struct gws_window_d *window, int position )
 {
 
@@ -4950,6 +4952,38 @@ int dock_window( struct gws_window_d *window, int position )
 fail:
     return (int) -1;
 }
+
+void dock_window_by_id(int wid, int position)
+{
+// Redraw and show.
+
+    struct gws_window_d *w;
+
+// Redraw and show the root window.
+    //redraw_window(__root_window,TRUE);
+
+// wid
+    if (wid<0){
+        return;
+    }
+    if (wid>=WINDOW_COUNT_MAX){
+        return;
+    }
+
+// Window structure
+    w = (struct gws_window_d *) windowList[wid];
+    if ((void*)w==NULL)  { return; }
+    if (w->used != TRUE) { return; }
+    if (w->magic != 1234){ return; }
+
+    if (w->type != WT_OVERLAPPED){
+        return;
+    }
+    
+// Dock it
+    dock_window(w,position);
+}
+
 
 // Dock the active window into a given corner.
 int dock_active_window(int position)

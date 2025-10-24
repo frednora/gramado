@@ -3767,6 +3767,26 @@ void gws_clear_window(int fd, wid_t wid)
     gws_async_command( fd, 14, 0, wid );
 }
 
+// witch_side: 1=top, 2=right, 3=bottom, 4=left
+void gws_dock_window(int fd, wid_t wid, int witch_side)
+{
+    if (fd<0) { return; }
+    if (wid<0){ return; }
+// IN: fd, request, sub-request, data.
+// witch_side: 1=top, 2=right, 3=bottom, 4=left
+    gws_async_command( fd, 92, witch_side, wid );
+}
+
+// witch_side: 1=top, 2=right, 3=bottom, 4=left
+void gws_dock_active_window(int fd, int witch_side)
+{
+    if (fd<0) { return; }
+    //if (witch_side<0){ return; }
+// IN: fd, request, sub-request, data.
+// witch_side: 1=top, 2=right, 3=bottom, 4=left
+    gws_async_command( fd, 93, witch_side, 0 );
+}
+
 // Send async request.
 // Single data. (1 data)
 // No response.

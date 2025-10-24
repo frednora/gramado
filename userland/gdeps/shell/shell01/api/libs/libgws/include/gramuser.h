@@ -164,6 +164,9 @@ void gws_set_active(int fd, wid_t wid);
 void gws_set_focus(int fd, wid_t wid);
 void gws_clear_window(int fd, wid_t wid);
 
+void gws_dock_window(int fd, wid_t wid, int witch_side);
+void gws_dock_active_window(int fd, int witch_side);
+
 // wm initialization
 void gws_send_wm_magic( int fd, int pid );
 

@@ -1135,8 +1135,10 @@ void change_window_state(struct gws_window_d *window, int state);
 void maximize_window(struct gws_window_d *window);
 void minimize_window(struct gws_window_d *window);
 
-int dock_active_window(int position);
+
 int dock_window( struct gws_window_d *window, int position );
+void dock_window_by_id(int wid, int position);
+int dock_active_window(int position);
 
 //
 // Focus
