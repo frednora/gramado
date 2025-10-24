@@ -275,7 +275,5 @@ void doSetupVersion(void);
 int do_reboot(unsigned long flags);
 int system_reboot(unsigned long flags);
 
-int zeroInitializeSystemComponents(void);
-
 #endif    
 

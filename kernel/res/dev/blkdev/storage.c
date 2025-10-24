@@ -3,12 +3,8 @@
 
 #include <kernel.h>
 
-
 // Main structure for managing the storage information.
-// See: 
-// I_init() in x64init.c
 struct storage_d  *storage;
-
 
 // The number of sectors in the boot disk.
 // See: storage_set_total_lba_for_boot_disk().

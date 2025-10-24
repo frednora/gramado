@@ -638,32 +638,3 @@ void doSetupVersion(void)
     }
 }
 
-/*
- * zeroInitializeSystemComponents:
- *     Initialize the kernel executive.
- *     Architecture (independent) inicialization. 
- */
-// called by I_Init().
-// Probe PCI devices.
-// see: /dev/pci/
-// Initialize rtc support.
-// see: /hal/x86_64/rtc.c 
-// Initialize ATA support.
-// #importante: 
-// Só depois de inicializarmos o ata é que 
-// podemos carregar algum arquivo.
-// #importante
-// Nessa hora ja temos as estruturas de disk e volume inicializadas.
-// entao as estruturas usadas pelo driver ata, pode
-// se registrar em disk ou volume.
-// see: /dev/ata/atainit.c
-// OUT: return TRUE if its ok.
-
-int zeroInitializeSystemComponents(void)
-{
-    // #deprecated
-
-    debug_print ("zeroInitializeSystemComponents:\n");
-    return TRUE;
-}
-

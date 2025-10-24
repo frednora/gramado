@@ -729,7 +729,7 @@ void x64_init_fpu (void)
 // before using any floating point operations.
 // see:
 // https://wiki.osdev.org/FPU
-// Called by I_init() in x64init.c
+// Called by halInitialize() in hal.c
 int x64_init_fpu_support(void)
 {
 // + Enable SSE support.

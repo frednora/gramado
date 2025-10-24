@@ -197,7 +197,7 @@ void hv_ps2_full_initialization(void)
 }
 
 // #todo: Used during the initialization.
-// called by I_init() in x64init.c
+// called by halInitialize() in hal.c
 int hv_probe_info(void)
 {
 // Probe if we are already running on a hypervisor.

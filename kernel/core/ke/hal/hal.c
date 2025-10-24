@@ -368,7 +368,7 @@ int halInitialize(void)
         hv_probe_info();
 
         //#breakpoint
-        //printk("#breakpoint in I_init()\n");
+        //printk("#breakpoint in halInitialize()\n");
         //refresh_screen();
         //while(1){}
 

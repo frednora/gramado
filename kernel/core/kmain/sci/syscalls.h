@@ -20,41 +20,40 @@
 // == prototypes ====
 //
 
-// visitor/sci.c
+// sci.c
 void *sci0 ( 
     unsigned long number, 
     unsigned long arg2, 
     unsigned long arg3, 
     unsigned long arg4 );
 
-// visitor/sci.c
+// sci.c
 void *sci1 ( 
     unsigned long number, 
     unsigned long arg2, 
     unsigned long arg3, 
     unsigned long arg4 );
 
-// visitor/sci.c
+// sci.c
 void *sci2 ( 
     unsigned long number, 
     unsigned long arg2, 
     unsigned long arg3, 
     unsigned long arg4 );
 
-// visitor/sci.c
+// sci.c
 void *sci3 ( 
     unsigned long number, 
     unsigned long arg2, 
     unsigned long arg3, 
     unsigned long arg4 );
 
-
 // --------------------------------
 
-/* zero/sys/sys.c */
+// See: sys.c
 unsigned long sys_get_system_metrics(int n);
 
-/* sys.c */
+// See: sys.c
 void *sys_create_process ( 
     struct cgroup_d *cg,
     unsigned long res1,          //nothing
@@ -63,7 +62,7 @@ void *sys_create_process (
     char *name,
     unsigned long iopl );
 
-/* sys.c */
+// See: sys.c
 void *sys_create_thread ( 
     struct cgroup_d *cg,
     unsigned long initial_rip, 
@@ -71,7 +70,7 @@ void *sys_create_thread (
     ppid_t ppid, 
     char *name );
 
-/* zero/sys/sys.c */
+// See: sys.c
 int sys_exit_thread(tid_t tid);
 int sys_fork(void);
 pid_t sys_getpid(void);

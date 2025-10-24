@@ -14,9 +14,7 @@
 // by the syscalls.
 // sys_xxxx is the prefix for the routines used by the syscalls.
 
-
 #include <kernel.h> 
-
 
 // See:
 // kunistd.h
@@ -68,12 +66,11 @@ unsigned long sys_alarm(unsigned long seconds)
         seconds_remaining = (unsigned long) ((old - jiffies) / 1000);
     }
 
-
 //
-// Update.
+// Update
 //
 
-// Update the thread info.
+// Update the thread info
 
     if (seconds == 0){
         extra_ms = (unsigned long) 0;
@@ -92,7 +89,7 @@ unsigned long sys_alarm(unsigned long seconds)
 // See: system.c
 unsigned long sys_get_system_metrics(int n)
 {
-    if(n<0){
+    if (n<0){
         return 0;  //#bugbug: ThIS is wrong!
     }
     return (unsigned long) doGetSystemMetrics((int)n);
@@ -185,16 +182,16 @@ void *sys_create_process (
 
     new = 
         (void *) create_process ( 
-                     NULL,  // cg #todo: cgroup came from parameters.
-                     (unsigned long) CONTROLTHREAD_BASE, 
-                     (unsigned long) PRIORITY_NORMAL_THRESHOLD, 
-                     (ppid_t) current_pid, 
-                     (char *) NewName, 
-                     (unsigned int) RING3, 
-                     (unsigned long) pml4_va,
-                     (unsigned long) kernel_mm_data.pdpt0_va,
-                     (unsigned long) kernel_mm_data.pd0_va,
-                     (int) ProcessPersonality );
+                    NULL,  // cg #todo: cgroup came from parameters.
+                    (unsigned long) CONTROLTHREAD_BASE, 
+                    (unsigned long) PRIORITY_NORMAL_THRESHOLD, 
+                    (ppid_t) current_pid, 
+                    (char *) NewName, 
+                    (unsigned int) RING3, 
+                    (unsigned long) pml4_va,
+                    (unsigned long) kernel_mm_data.pdpt0_va,
+                    (unsigned long) kernel_mm_data.pd0_va,
+                    (int) ProcessPersonality );
 
     if ((void*) new == NULL){
         printk("sys_create_process: new\n");

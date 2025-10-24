@@ -707,10 +707,7 @@ struct storage_d
     file *bootvolume_fp;
 };
 
-
 // Main structure for managing the storage information.
-// See: 
-// I_init() in x64init.c
 // Defined in storage.c
 extern struct storage_d  *storage;
 
