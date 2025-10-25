@@ -4,10 +4,8 @@
 // other components of the base kernel.
 // Created by Fred Nora.
 
-
 #ifndef __GRAMK_GRAMK_H
 #define __GRAMK_GRAMK_H    1
-
 
 extern int config_use_progressbar;
 
@@ -27,8 +25,7 @@ void gramk_initialize_default_kernel_font(void);
 void gramk_initialize_background(void);
 void gramk_initialize_video(void);
 void gramk_initialize_virtual_consoles(void);
-void gramk_set_cursor( unsigned long x, unsigned long y );
+void gramk_set_cursor(unsigned long x, unsigned long y);
 
 #endif  
-
 

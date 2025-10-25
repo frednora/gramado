@@ -3209,9 +3209,32 @@ ssize_t getline(char** lineptr, size_t* n, FILE* stream)
 }
 */
 
+/*
+// Get it from stdin.
+// #test: This is a work in progress.
+ssize_t getline(char *buf, int size);
+ssize_t getline(char *buf, int size)
+{
+    char *initbuf = buf;
+    int c=0;
+
+    while (1)
+    {
+	    c = (int) getc(stdin);
+  	    *buf++ = c;
+	    if (c <= 0) 
+            goto fail;
+  	    if (buf - initbuf == size - 1) 
+            return (int) (buf - initbuf);
+  	    if (c == '\n')
+            return (int) (buf - initbuf);
+    };
+fail:
+    return (ssize_t) -1;
+}
+*/
 
 /*
- *********************************
  * ungetc:
  */
 // #todo:

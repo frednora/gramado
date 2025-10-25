@@ -69,6 +69,7 @@ static inline void do_int3(void);
 static void do_launch_de(void);
 static void do_launch_de2(void);
 static void do_launch_list(void);
+static int do_init_winu(void);
 static inline void do_sti(void);
 
 
@@ -256,6 +257,13 @@ static void do_launch_list(void)
 // It's too much faster if we do not quit.
 // But we need to quit and start listening for messages.
     isTimeToQuitCmdLine = TRUE;
+}
+
+// Initialize Winu graphics subsystem.
+static int do_init_winu(void)
+{
+    do_launch_de();
+    return 0;
 }
 
 static inline void do_sti(void)
@@ -446,13 +454,15 @@ static int input_compare_string(void)
     if ( strncmp(prompt,"ws",2) == 0 ){
         //printf ("~WS\n");
         //rtl_clone_and_execute("#ds00.bin");
-        do_launch_de();
+        //do_launch_de();
+        do_init_winu();
         goto exit_cmp;
     }
 // Initialize the display server and quit the command line.
     if ( strncmp(prompt,"wsq",3) == 0 ){
         //printf ("~WSQ\n");
-        do_launch_de();
+        //do_launch_de();
+        do_init_winu();
         goto exit_cmp;
     }
 // Initialize the display server, the terminal and 
@@ -465,15 +475,23 @@ static int input_compare_string(void)
 
     if ( strncmp(prompt,"boot",4) == 0 ){
         //printf ("~BOOT\n");
-        do_launch_de();
+        //do_launch_de();
+        do_init_winu();
         goto exit_cmp;
     }
     if ( strncmp(prompt,"gramado",7) == 0 ){
         //printf ("~GRAMADO\n");
-        do_launch_de();
+        //do_launch_de();
+        do_init_winu();
         goto exit_cmp;
     }
-
+    // Initialize the winu graphics subsystem.
+    // #todo: The purpose is enter and exit from the winu mode.
+    // Comming back to the init process, that represents the core os.
+    if ( strncmp(prompt,"winu",4) == 0 ){
+        do_init_winu();
+        goto exit_cmp;
+    }
 
 //==============================
 // Network Server:
