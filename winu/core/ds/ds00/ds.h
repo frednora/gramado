@@ -47,6 +47,7 @@ extern int server_mode;  // DEMO ...
 #include "libui/rect.h"
 
 #include "ui/window.h"
+#include "ui/createw.h"
 
 // Draw inside the windows.
 #include "libui/char.h"

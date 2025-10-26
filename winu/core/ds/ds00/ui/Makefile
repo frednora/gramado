@@ -100,6 +100,7 @@ fnt8x16.o \
 font.o \
 painter.o \
 window.o \
+createw.o \
 bar.o wa.o swamp.o sprite.o \
 demos.o cat.o poly00.o lin00.o tri00.o curve00.o \
 gws.o   
@@ -125,6 +126,7 @@ all-c:
 
 	$(CC)  -c painter.c  $(CFLAGS) $(CINCLUDES) -o painter.o
 	$(CC)  -c window.c   $(CFLAGS) $(CINCLUDES) -o window.o
+	$(CC)  -c createw.c  $(CFLAGS) $(CINCLUDES) -o createw.o
 
 	$(CC)  -c bar.c    $(CFLAGS) $(CINCLUDES) -o bar.o
 	$(CC)  -c wa.c     $(CFLAGS) $(CINCLUDES) -o wa.o

@@ -692,7 +692,7 @@ bmpDisplayBMP (
 
 // gwssrv_display_system_icon:
 // Called by createwDrawFrame on createw.c
-// >> Called by wmCreateWindowFrame in wm.c
+// >> Called by doCreateWindowFrame in wm.c
 int 
 bmp_decode_system_icon0 ( 
     int index, 

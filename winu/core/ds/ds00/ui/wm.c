@@ -157,29 +157,6 @@ void __button_released(int wid)
     redraw_window_by_id(wid,TRUE);
 }
 
-
-struct gws_window_d *get_parent(struct gws_window_d *w)
-{
-    struct gws_window_d *p;
-
-    if ((void*) w == NULL)
-        goto fail;
-    if (w->magic != 1234){
-        goto fail;
-    }
-
-    p = (struct gws_window_d *) w->parent;
-    if ((void*) p == NULL)
-        goto fail;
-    if (p->magic != 1234){
-        goto fail;
-    }
-
-    return (struct gws_window_d *) p;
-fail:
-    return NULL;
-}
-
 static void launch_app_by_id(int id)
 {
     static int MaxNumberOfApps = 4;
@@ -2839,7 +2816,6 @@ void set_active_by_id(int wid)
     set_active_window(w);
 }
 
-
 void set_first_window( struct gws_window_d *window)
 {
     first_window = (struct gws_window_d *) window;
@@ -2852,8 +2828,8 @@ struct gws_window_d *get_first_window(void)
 
 void set_last_window(struct gws_window_d *window)
 {
-    if ( (void*) window == NULL ){
-         return;
+    if ((void*) window == NULL){
+        return;
     }
     if (window->magic != 1234){
         return;
