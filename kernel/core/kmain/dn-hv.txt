@@ -1,2 +1,0 @@
-
-VMX: https://wiki.osdev.org/VMX

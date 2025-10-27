@@ -7,6 +7,7 @@
 
 // ------------------------------------------------------
 // Target machine
+// #todo: Explain it better.
 #define __TARGET_MACHINE_BAREMETAL     0
 #define __TARGET_MACHINE_QEMU          1
 #define __TARGET_MACHINE_VIRTUALBOX    2
@@ -15,8 +16,8 @@
 // ...
 
 // Use headless mode.
-// It changes the whey printk will work. Sending bytes to the serial port.
 #define CONFIG_HEADLESS_MODE  0
+// It changes the whey printk will work. Sending bytes to the serial port.
 #define CONFIG_PRINTK_TO_SERIAL  0
 
 #define CONFIG_USE_PROGRESSBAR  0

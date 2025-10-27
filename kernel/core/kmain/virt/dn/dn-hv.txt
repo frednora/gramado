@@ -1,0 +1,30 @@
+
+VMX: https://wiki.osdev.org/VMX
+
+
+Intel:
+1. VMLAUNCH / VMRESUME (Enter a Virtual Machine)
+2. VMEXIT (Exit a Virtual Machine)
+
+VMLAUNCH: 
+Initiates a virtual machine (VM) by transitioning from the host (your hypervisor/kernel) 
+to the guest (the VM’s code) for the first time. It loads the guest’s state from 
+a VMCS (Virtual Machine Control Structure) and starts execution.
+
+VMRESUME: 
+Resumes a previously interrupted VM (after a VMEXIT) by restoring the guest’s state 
+from the VMCS. It’s used for subsequent entries into the same VM.
+
+VMEXIT: 
+Automatically transfers control from the guest VM back to the host (your hypervisor/kernel) 
+when specific events occur, as defined in the VMCS. These events include interrupts, 
+privileged instructions (e.g., CPUID, HLT), I/O operations, or page faults, 
+depending on VMCS settings.
+
+
+
+
+
+
+
+

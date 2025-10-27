@@ -1,4 +1,5 @@
 // mmain.h
+// Created by Fred Nora.
 
 #ifndef __MMAIN_H
 #define __MMAIN_H    1
