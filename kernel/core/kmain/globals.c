@@ -86,9 +86,10 @@ int g_smp_initialized = FALSE;
 // see: window.h
 struct gui_d  *gui; 
 
-
-// Logon.
+// Logon
 int g_logged=FALSE;
+
+int g_redirect_printk_to_serial_during_syscalls=FALSE;
 
 
 // Kernel information variables.

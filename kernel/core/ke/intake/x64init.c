@@ -513,8 +513,9 @@ void I_x64ExecuteInitialProcess(void)
     PROGRESS("I_x64ExecuteInitialProcess:\n");
     //PROGRESS("::(3)\n");   
     //debug_print("I_x64ExecuteInitialProcess:\n");
+
     // For real machine.
-    //printk      ("I_x64ExecuteInitialProcess: [TODO]\n");
+    printk ("I_x64ExecuteInitialProcess:\n");
 
     // #debug
     //panic("I_x64ExecuteInitialProcess: breakpoint :)");

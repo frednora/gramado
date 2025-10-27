@@ -17,9 +17,18 @@
 
 // Use headless mode.
 #define CONFIG_HEADLESS_MODE  0
-// It changes the whey printk will work. Sending bytes to the serial port.
-#define CONFIG_PRINTK_TO_SERIAL  0
 
+// #test
+// It changes the whey printk will work. Sending bytes to the serial port.
+// This is case only for the initialization process.
+#define CONFIG_PRINTK_TO_SERIAL_DURING_INITIALIZATION  1
+
+// #test
+// It changes the whey printk will work. Sending bytes to the serial port.
+// This is case only for syscalls.
+#define CONFIG_PRINTK_TO_SERIAL_DURING_SYSCALLS  0
+
+// Progress bar during the kernel initialization.
 #define CONFIG_USE_PROGRESSBAR  0
 
 // ------------------------------------------------------

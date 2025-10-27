@@ -81,6 +81,8 @@ extern int g_extraheap3_initialized;
 // see: globals.c
 extern int has_booted;
 
+extern int g_redirect_printk_to_serial_during_syscalls;
+
 #endif   
 
 //

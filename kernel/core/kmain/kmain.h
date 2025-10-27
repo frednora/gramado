@@ -99,6 +99,10 @@ void I_kmain(int arch_type);
 // See: kmain.c
 void init_globals(void);
 
+// See: kmain.c
+void init_globals(void);
+
+
 #endif    
 
 

@@ -1195,10 +1195,14 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
         // If the file is a console.
         if (fp->____object == ObjectTypeVirtualConsole)
         {
-            if (Initialization.printk_to_serial == TRUE){
+            // Print it into the serial port.
+            // This flag is valid only for syscalls.
+            if (g_redirect_printk_to_serial_during_syscalls == TRUE){
                 return (int) debug_print_nbytes( 
                     (const void *) ubuf, 
                     (size_t) count );
+
+            // Print it into the console.
             } else {
                 return (int) console_write ( 
                     (int) fg_console, 
@@ -1206,7 +1210,6 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
                     (size_t) count );
             }
         }
-
         // ...
         goto fail;
     }

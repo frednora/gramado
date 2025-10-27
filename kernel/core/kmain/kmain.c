@@ -325,8 +325,15 @@ void init_globals(void)
 
     //debug_print("keInitGlobals: [printk] WE HAVE MESSAGES NOW!\n");
     //printk     ("keInitGlobals: [printk] WE HAVE MESSAGES NOW!\n");
-}
 
+// Redirect printk to serial port during syscalls.
+// See: config.h and fslib.c
+    if ( CONFIG_PRINTK_TO_SERIAL_DURING_SYSCALLS == 1 ){
+        g_redirect_printk_to_serial_during_syscalls = TRUE;
+    } else {
+        g_redirect_printk_to_serial_during_syscalls = FALSE;
+    };
+}
 
 //
 // $
@@ -906,7 +913,7 @@ void I_kmain(int arch_type)
     // ...
 
 // Redirect printk to serial port?
-    if (CONFIG_PRINTK_TO_SERIAL == 1){
+    if (CONFIG_PRINTK_TO_SERIAL_DURING_INITIALIZATION == 1){
         Initialization.printk_to_serial = TRUE;
     }
 // Headless mode?
