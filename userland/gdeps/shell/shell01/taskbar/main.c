@@ -3,17 +3,12 @@
 // Created by Fred Nora.
 
 /*
- * File: main.c
  *    Client side application for Gramado Window Server.
  *    Using socket to connect with gws.
  *    AF_GRAMADO family.
  *    #warning:
  *    This application is using floating point.
  */
-
-// ##
-// This is a test.
-// This code is a mess.
 
 // #todo
 // This is gonna be a command line interpreter application.
@@ -61,8 +56,7 @@
 #include "taskbar.h"
 
 
-
-// network ports.
+// Network ports
 #define PORTS_WS  4040
 #define PORTS_NS  4041
 #define PORTS_FS  4042
@@ -72,13 +66,10 @@
     (a << 24 | b << 16 | c << 8 | d)
 
 
-
-//
 // Colors
-//
-
 #define HONEY_COLOR_TASKBAR  0x00C3C3C3 
 #define MYGREEN  0x0b6623
+//...
 
 // #bugbug
 // The display server doesn't know the value we're setting here.
@@ -151,6 +142,9 @@ struct tb_client_d clientList[CLIENT_COUNT_MAX];
 
 static int main_window = -1;
 static int desktop_window = -1;
+// ...
+
+static int isTimeToQuit=FALSE;
 
 // Main buttons
 // (Navigation bar)
@@ -759,7 +753,9 @@ tbProcedure(
         // It only can happen when in certain situations.
         case MSG_CLOSE:
             printf("taskbar: Closing... #bugbug\n");
-            exit(0);
+            //exit(0);
+            // Let's leave the main loop.
+            isTimeToQuit = TRUE;
             break;
         
         case MSG_COMMAND:
@@ -1119,6 +1115,8 @@ int main(int argc, char *argv[])
     // ...
     int client_fd = -1;
 
+    isTimeToQuit=FALSE;
+
 // Initialize navigation info structure.
     NavigationInfo.button00_window = -1;
     NavigationInfo.button01_window = -1;
@@ -1441,90 +1439,13 @@ int main(int argc, char *argv[])
         //2, 2, 8, 8,
         //0, 0, COLOR_RED, COLOR_RED);
 
-    // Draw a char.
-    // IN: fd, window id, x, y, color, char.
-    //gws_draw_char ( client_fd, 0, 
-        //16, 8, COLOR_RED, 'C' );
-
-
-    /*
-    gws_debug_print ("gws.bin: 3 Testing Plot0 4x\n");
-    printf          ("gws.bin: 3 Testing Plot0 4x\n");
-
-    //test: plot point;
-    //um ponto em cada quadrante.
-    gws_plot0 ( client_fd, -50,  50, 0, COLOR_RED );
-    gws_plot0 ( client_fd,  50,  50, 0, COLOR_GREEN );
-    gws_plot0 ( client_fd,  50, -50, 0, COLOR_BLUE );
-    gws_plot0 ( client_fd, -50, -50, 0, COLOR_YELLOW );
-    */
-
-//
-// == cube ==================================
-//
-
-    // #maybe
-    // The custon status bar?
-    // Maybe the custon status bar can be a window.
-
-    //gws_debug_print ("taskbar.bin: 4 Testing Plot cube\n");
-    //printf        ("taskbar.bin: 4 Testing Plot cube\n");
-
-/*
-
-// back
-    int backLeft   = (-(w/8)); 
-    int backRight  =   (w/8);
-    int backTop    = (60);
-    int backBottom = (10);
-
-// front
-    int frontLeft   = (-(w/8)); 
-    int frontRight  =   (w/8);
-    int frontTop    = -(10);
-    int frontBottom = -(60);
-
-// z ?
-    int zTest = 0;
-    
-    int north_color = COLOR_RED;
-    int south_color = COLOR_BLUE;
-*/
-
-
-    //gws_debug_print("LOOP:\n");
-    //printf ("LOOP:\n");
-
-
-    //
-    // Loop
-    //
-
-    // #test
-    //gws_refresh_window (client_fd, main_window);
-        
-
-    //??
-    //testASCIITable(client_fd,w,h);
-
-
 // #test
 // Setup the flag to show or not the fps window.
 // Request number 6.
-
     //gws_async_command(client_fd,6,FALSE,0);
 
-
-//
 // Refresh
-//
-
-// #test
-// nem precisa ja que todas as rotinas que criam as janelas 
-// estao mostrando as janelas.
-
     gws_refresh_window(client_fd, main_window);
-
 
 //
 // Client
@@ -1535,7 +1456,7 @@ int main(int argc, char *argv[])
 // que nos diga qual interface devemos inicializar.
 
     /*
-    if(launchChild == TRUE)
+    if (launchChild == TRUE)
     {
         gws_redraw_window(client_fd,main_window,0);
         
@@ -1551,12 +1472,9 @@ int main(int argc, char *argv[])
 // Input
 //
     
-    // Enable input method number 1.
-    // Event queue in the current thread.
-
+// Enable input method number 1.
+// Event queue in the current thread.
     //gws_enable_input_method(1);
-
-    //=================================
 
 
 // =================================
@@ -1568,85 +1486,21 @@ int main(int argc, char *argv[])
 // Set focus on main window.
 // #bugbug
 // Maybe it can switch the foreground thread.
-/*
-    gws_async_command(
-         client_fd,
-         9,             // 9 = set focus
-         main_window,
-         main_window );
-*/
+    // 9 = set focus
+    // gws_async_command( client_fd, 9, main_window, main_window );
 
-//
-// Banner
-//
 
+// #test:
+// Setup kernel console.
 // Set cursor position on top of the raw window.
-// #bugbug
-// Sometimes we use printf directly on screen for debug purpose.
+// We're using graphics, but we want to keep the console,
+// in a known position.
     sc80 ( 34, 2, 2, 0 );
 
-/*
-//#tests
-    printf ("taskbar.bin: Gramado OS\n");
-    printf ("#test s null: %s\n",NULL);
-    printf ("#test S null: %S\n",NULL);
-    printf ("#test u:  %u  \n",12345678);         //ok
-    printf ("#test lu: %lu \n",1234567887654321); //ok
-    printf ("#test x:  %x  \n",0x1234ABCD);         //
-    printf ("#test lx: %lx \n",0x1234ABCDDCBA4321); //
-    printf ("#test X:  %X  \n",0x1000ABCD);         //
-    printf ("#test lX: %lX \n",0x1000ABCDDCBA0001); //
-    // ...
-*/
+// Show prompt
+    //doPrompt(client_fd);
 
-// ===============================
-// Testing fpu
-
-    //printf("\n");
-    //printf("Testing math:\n");
-    //printf("\n");
-
-/*
-// -------------------
-// float. ok on qemu.
-    float float_var = 1.5;
-    unsigned int float_res = (unsigned int) (float_var + float_var);
-    printf("float_res={%d}\n",(unsigned int)float_res);
-*/
-
-
-/*
-// -------------------
-// double. ok on qemu.
-    double double_var = 2.5000;
-    unsigned int double_res = (unsigned int) (double_var + double_var);
-    printf("double_res={%d}\n",(unsigned int)double_res);
-*/
-
-/*
-// -------------------
-// #test
-// See: math.c in rtl/
-    //unsigned int square_root = (unsigned int) sqrt(81);
-    //printf("sqrt of 81 = {%d}\n",(unsigned int)square_root);
-    unsigned long square_root = (unsigned long) sqrt(81);
-    printf("sqrt of 81 = {%d}\n",(unsigned long)square_root);
-*/
-
-/*
-// -------------------
-    // 9 ao cubo.
-    //long r9 = (long) power0(9,3);
-    //long r9 = (long) power1(9,3);
-    //long r9 = (long) power2(9,3);
-    //long r9 = (long) power3(9,3);
-    long r9 = (long) power4(9,3);
-    printf("9^3 = {%d}\n", (long) r9);
-*/
-
-// ===============================
-
-//#breakpoint
+    //#breakpoint
     //printf("taskbar.bin: Breakpoint :)\n");
     //while(1){}
 
@@ -1661,15 +1515,12 @@ int main(int argc, char *argv[])
 */
 
 // ===============================
-// Show prompt.
-    //doPrompt(client_fd);
-
-// ===============================
 //
     __initialize_client_list();
 
 // =======================
-// Loop
+// Event loop
+// Getting input events from the system.
 
     unsigned long start_jiffie=0;
     unsigned long end_jiffie=0;
@@ -1679,24 +1530,23 @@ int main(int argc, char *argv[])
 // #ps: We will sleep if a round was less than 16 ms, (60fps).
 // The thread wait until complete the 16 ms.
 // #bugbug: Valid only if the timer fires 1000 times a second.
-// It gives the opportunities for other threads to run a
-// a bit more.
+// It gives the opportunities for other threads to run a bit more.
 
     while (1){
+
+        if (isTimeToQuit == TRUE)
+            break;
+
         start_jiffie = (unsigned long) rtl_jiffies();
-        
-        //if (isTimeToQuit == TRUE)
-            //break;
+        // Get and process event.
         pump(client_fd,main_window);
-        
         end_jiffie = rtl_jiffies();
+
         if (end_jiffie > start_jiffie)
         {
             delta_jiffie = (unsigned long) (end_jiffie - start_jiffie);
-            if (delta_jiffie < 16)
-            {
-                // #test
-                // This function is still in test phase.
+            // Let's sleep if the round was less than 16 ms.
+            if (delta_jiffie < 16){
                 if (UseSleep == TRUE)
                     rtl_sleep(16 - delta_jiffie);
             }    
@@ -1737,8 +1587,7 @@ int main(int argc, char *argv[])
     //gws_debug_print ("gws: Pinging\n");
     //gws_async_command(client_fd,2,0,0);
 
-
-    while(1){}
+    //while(1){}
     // ...
 
     /*
@@ -1768,7 +1617,7 @@ int main(int argc, char *argv[])
     */
  
 // Done:
-    gws_debug_print("taskbar.bin: bye :)\n");
+    gws_debug_print("taskbar.bin: Exit\n");
     return EXIT_SUCCESS;
 }
 
