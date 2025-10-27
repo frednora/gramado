@@ -1,4 +1,20 @@
+
 Controller modes and interfaces standards.
+
+In the physical SATA disk we only have the internal SATA controller. 
+But the HBA controller in the motherboard can operate as AHCI or IDE.
+
+pt-br:
+No disco físico do tipo SATA tem um controlador interno para dispositivos SATA. 
+Já na placa mãe, tem um controlador chamado HBA, ele pode operar em dois modos distintos, 
+AHCI ou IDE. O BIOS consegue fazer a seleção do modo, mas me parece que 
+em alguns casos da pra fazer isso via software. 
+O propósito é transferência de dados entre a memória e o dispositivo. 
+No modo AHCI tem um tipo de DMA que é diferente daquele antigo DMA. 
+
+In general we have two controller modes and two interfaces:
+AHCI/ATA modes.
+SATA/PATA interfaces.
 
 ---------------------------------------
 Controller modes:

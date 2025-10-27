@@ -1,0 +1,51 @@
+
+-------------------------------------------------
+Controller modes
+
+AHCI (Advanced Host Controller Interface):
++ Purpose
+  A standard for SATA host controllers that defines a register-level interface 
+  for software to communicate with SATA devices.
++ Interface handled	
+  Designed exclusively for the SATA interface, 
+  allowing full use of its capabilities.
++ Performance
+  Higher performance than ATA mode, especially with multiple I/O requests.
++ Features
+ Supports modern SATA features like:
+ - Native Command Queuing (NCQ): 
+   Optimizes the order of read/write commands to increase performance.
+ - Hot Swapping: Allows drives to be connected and disconnected while the system is running.
+ - TRIM support for SSDs.
++ Implementation for OS
+  Requires a more modern and specific AHCI driver to enable advanced features.
+
+ATA (Legacy IDE Mode):
++ Purpose
+  A legacy mode that emulates the behavior of the older Parallel ATA (PATA) interface 
+  for compatibility with legacy hardware and older operating systems.
++ Interface handled	
+  Can handle both SATA and PATA interfaces.
+  When using an ATA controller with a SATA drive, 
+  the controller runs in a compatibility mode, sacrificing performance.
+  It is the native mode for PATA (IDE) drives.
++ Performance
+  Slower than AHCI mode.
++ Features
+  Lacks advanced features like NCQ and hot-swapping.
++ Implementation for OS
+  Allows older operating systems to run without SATA-specific drivers.
+
+-------------------------------------------------
+Interface standards
+
+SATA (Serial ATA): 
+This is the modern, faster interface standard for storage devices. 
+A host controller in AHCI mode uses the SATA interface to 
+its full potential, while a controller in ATA mode 
+can only use the SATA interface in a legacy-compatible way.
+
+PATA (Parallel ATA): 
+This is the older, slower interface standard. 
+A PATA drive is inherently an ATA device and 
+can only be accessed via a controller running in ATA mode.

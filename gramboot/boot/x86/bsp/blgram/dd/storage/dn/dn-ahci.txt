@@ -1,0 +1,105 @@
+
+AHCI device driver:
+
+According to the OSDev Wiki, creating an AHCI SATA controller driver 
+for a hobby operating system involves several key steps, 
+starting with 
++ identifying the AHCI controller on the PCI bus and 
+  preparing for memory-mapped I/O. 
+The process then moves to 
++ initializing the controller, 
++ configuring each port, 
++ handling I/O operations 
+  by issuing commands and processing results, and finally 
++ implementing a higher-level block device interface 
+  for integration with the OS. 
+For more details, visit OSDev.org.
+
+
+Steps to create a ahci/sata device driver:
+
+1. Detect and switch the controller to AHCI mode
+  Identify the AHCI controller via PCI
+  Change controller mode (if needed)
+  Claim the device
+
+2. Map the AHCI memory registers
+  Read the BAR: 
+  Read the Base Address Register (BAR) from the PCI configuration space of the 
+  AHCI controller. This gives you the physical address of the 
+  AHCI Host Controller Registers (HBA).
+  Set up the MMIO: 
+  Your kernel needs to set up a virtual memory mapping for the physical address 
+  obtained from the BAR. All communication with the AHCI controller will happen 
+  through this mapped memory region.
+
+3. Initialize the AHCI controller
+Before you can interact with individual ports, the overall controller must be initialized.
+Global controller reset: 
+  Perform a Host Controller Reset by setting the HR bit 
+  in the HBA's Global Host Control Register (HBA_GHC). 
+  Wait for the reset to complete.
+Enable the AHCI mode: 
+  After the reset, set the AE (AHCI Enable) bit 
+  in the HBA_GHC to enable AHCI functionality.
+Determine port count: 
+  Read the PI (Port Implemented) register to find out which ports are available 
+  on the controller. This will help you iterate through the available ports later.
+
+4. Initialize each AHCI port
+Unlike IDE, AHCI ports are independent. 
+You must initialize each one that has a device attached.
+Loop through implemented ports: 
+  Iterate through each bit in the PI register. 
+  For each set bit, initialize the corresponding port.
+Port reset and configuration: 
+For each port:
+  Reset the port.
+  Wait for the port to become ready.
+  Allocate and set up memory for command lists, command tables, and 
+  received FIS structures. These must be physically contiguous blocks of memory.
+  Write the physical addresses of these memory structures to the 
+  Command List Base Address (CLB), FIS Base Address (FB), and 
+  Command Table Base Address (CTBA) registers for that specific port.
+Power management: 
+  Configure the port's power state.
+Spin up the device: 
+  If the device is a mechanical drive, issue a command to spin it up.
+Enable port features: 
+  Enable features like command queuing (FRE and ST bits).
+
+5. Handle I/O operations
+AHCI uses a descriptor-based DMA model, which is fundamentally different 
+from the programmed I/O (PIO) or legacy DMA you likely used for your IDE driver.
+
+Prepare a command: 
+For each read or write request, you must build a "Command Header" and a "Command Table" in the memory you previously allocated for the port. These structures contain the SATA command (e.g., READ_DMA_EXT), the LBA address, sector count, and a list of physical memory buffers for the data transfer.
+
+Issue the command: 
+To start the transfer, set the appropriate bit in the port's Command Issue (CI) register. This tells the controller to fetch and execute your command.
+
+Handle interrupts: 
+The controller will generate an interrupt when a command completes. Your interrupt service routine (ISR) will need to:
+Check the Interrupt Status (IS) register to see which ports triggered the interrupt.
+Clear the interrupt status bits.
+Check the Command Issue (CI) register to confirm command completion.
+Verify the command completed successfully by examining status registers and the received FIS data.
+
+Retrieve data and signal completion: 
+If the command was a read, the data will be in the buffer you provided. 
+Your ISR should then signal the completion of the I/O operation 
+to the higher-level kernel code.
+
+6. Integrate with block device layer
+Once you can perform low-level reads and writes, 
+you can integrate your AHCI driver with the rest of your OS.
+
+Expose block devices: 
+Create a block device interface that abstracts the AHCI port. This allows the file system and other parts of the kernel to interact with the disk without needing to know the low-level AHCI details.
+
+Queue requests: 
+Your block device layer can use the AHCI command queue to handle multiple I/O requests concurrently and take full advantage of NCQ.
+
+Handle hot-swapping: 
+Implement logic to detect when drives are connected or removed, using port status change interrupts. This adds robustness to your driver.
+

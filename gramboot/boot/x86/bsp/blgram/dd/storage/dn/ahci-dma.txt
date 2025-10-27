@@ -1,0 +1,33 @@
+
+ Understanding DMA for AHCI.
+
+New concepts to master for AHCI
+Comparint the old DMA method for FDC with the new method 
+used in AHCI devices.
+
+
+1. Descriptor-based DMA
+This is the most significant departure from your FDC DMA.
+FDC DMA: 
+Typically uses a simple, single-buffer transfer controlled by a legacy DMA controller. You set up the physical address and size, and the controller handles the transfer.
+AHCI DMA: 
+Uses a more complex, descriptor-based model. You allocate physically contiguous memory for a Command List and Command Tables. A Command Header within the list points to a Command Table, which contains one or more Physical Region Descriptors (PRDs). The PRDs define the scattered data buffers for the DMA transfer. The AHCI controller's DMA engine is integrated and more autonomous. 
+
+2. Command slots and Native Command Queuing (NCQ)
+AHCI introduces hardware-based command queues. 
+
+Command Slots: 
+Each AHCI port has 32 command slots. To issue a command, you find an empty slot, fill out the corresponding Command Header and Command Table, and then set the bit for that slot in the Command Issue (CI) register.
+
+Native Command Queuing (NCQ): 
+This is a key benefit of AHCI. The controller doesn't process commands in the order they are issued. Instead, it sends them to the device, which can reorder them to minimize the time spent moving the drive's heads. This requires your driver to keep track of which request corresponds to which command slot. 
+
+3. Physically contiguous memory 
+While both FDC and AHCI DMA require physical addresses, the requirements differ.
+
+AHCI: 
+The Command Lists and Command Tables must be in physically contiguous memory blocks. 
+This is a critical requirement you will need to manage using a physical memory allocator.
+ The data buffers themselves can be scattered across physical memory pages, 
+ which is what the PRDs describe (scatter-gather DMA). 
+
