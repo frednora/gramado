@@ -84,7 +84,21 @@ void network_save_dhcp_server_id( uint8_t ip[4] )
 }
 
 // -----------------------
-// Send dhcp.
+// Send dhcp
+// #debug: 
+// Key Areas to Investigate:
+// + Broadcast Flag (dhcp->flags)
+//   You're currently using 0x0000, which requests a unicast reply.
+//   Some DHCP servers require the broadcast flag (0x8000) to be set, 
+//   especially if the client has no IP yet.
+//   Try setting dhcp->flags = ToNetByteOrder16(0x8000); 
+//   for the Discover phase.
+// + Transaction ID (xid)
+// + UDP Payload Size
+// + MAC Address Validity
+// + UDP Send Function
+// + NIC Readiness
+
 void 
 network_dhcp_send(
     struct dhcp_d *dhcp,
@@ -117,7 +131,11 @@ network_dhcp_send(
 // The Transaction ID. 
 // It's a random number chosen by the client 
 // to identify an IP address allocation.
-    dhcp->xid   = ToNetByteOrder32(0x3903F326);
+// 0x3903F326
+
+//#todo: Get a random number.
+    unsigned int xid = (unsigned int) 0x3903F326;
+    dhcp->xid = ToNetByteOrder32(xid);
 
 // Elapsed time in seconds.
     dhcp->secs  = ToNetByteOrder16(0);
@@ -127,6 +145,7 @@ network_dhcp_send(
 // If this flag is set to 0, the DHCP server sent a reply back by unicast; 
 // if this flag is set to 1, the DHCP server sent a reply back by broadcast. 
 // The remaining bits of the flags field are reserved for future use.
+
     dhcp->flags = ToNetByteOrder16(0x0000);
     //dhcp->flags = ToNetByteOrder16(0x8000);
 
@@ -385,15 +404,22 @@ int network_initialize_dhcp(void)
     // #debug
     // printk("network_initialize_dhcp: Sending Discover\n");
 
+    // #test
+    // Let's send it more then once.
+    register int i=0;
+    for (i=0; i<5; i++){
+
     network_dhcp_send( 
         (struct dhcp_d *) &Ldhcp,    // dhcp header 
-        DORA_D,                      // Message code.
+        DORA_D,                      // Message code
         __dhcp_source_ipv4,          // 255.255.255.255
         __dhcp_target_ipv4,          // FF.FF.FF.FF.FF.FF
-        68,                          // src port
-        67 );                        // dst port
+        68,                          // src port (DHCP client)
+        67 );                        // dst port (DHCP server)
 
-    printk("network_initialize_dhcp: Done\n");
+    };
+
+    //printk("network_initialize_dhcp:\n");
     //dhcp_info.initialized =  TRUE;
 
     //while(1){}

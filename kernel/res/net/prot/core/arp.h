@@ -79,26 +79,32 @@ arp_table_set_entry(
 void arp_table_show_index(int index);
 void arp_show_table(void);
 
+// Wrapper
+void network_send_arp_request(void);
+// Wrapper
+void network_send_arp_request2(void);
+
+// Worker
+// Send ARP request to a given ipv4.
+void 
+network_arp_request_to(
+    uint8_t src_ipv4[4],
+    uint8_t dst_ipv4[4] );
+
+// Worker
+void 
+network_send_arp_reply(
+    uint8_t target_mac[6],
+    uint8_t target_ip[4] );
+
+
+// Low level worker.
 void 
 network_send_arp( 
     uint8_t target_mac[6],
     uint8_t source_ip[4], 
     uint8_t target_ip[4], 
     int op );
-
-// Send ARP request to a given ipv4.
-void 
-network_arp_request_to(
-    uint8_t src_ipv4[4],
-    uint8_t dst_ipv4[4] );
-void network_send_arp_request(void);
-void network_send_arp_request2(void);
-
-void 
-network_send_arp_reply(
-    uint8_t target_mac[6],
-    uint8_t target_ip[4] );
-
 
 //
 // $

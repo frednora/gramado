@@ -1,0 +1,48 @@
+
+Association Before DHCP
+On Wi-Fi, the device must associate with an access point (AP) first.
+
+This involves scanning for networks, authenticating (e.g., WPA2), and connecting.
+
+Only after association can DHCP begin.
+
+-----------------------------------------------
+Not receiving 'Offer'?
+That’s a classic DHCP debugging headache, Fred,
+intermittent Offer responses usually point to 
+timing, broadcast handling, or low-level packet issues.
+
+### Common Causes of Missing DHCP Offers
+
+#### 1. **Broadcast Flag Handling**
+- DHCP Discover is usually sent as a broadcast (`255.255.255.255`), but some servers expect the **broadcast flag** to be set in the DHCP header.
+- If your OS doesn’t set this flag, some servers may try to reply via unicast — which your stack might not be ready to receive.
+
+#### 2. **UDP Port Binding**
+- DHCP uses UDP ports:
+  - Client: **68**
+  - Server: **67**
+- Make sure your OS is correctly listening on port 68 and not dropping incoming packets due to port mismatch or firewall-like behavior.
+
+#### 3. **MAC Address Issues**
+- DHCP servers often use the client’s MAC address to track leases.
+- If your OS sends malformed or inconsistent MAC addresses (e.g., all zeros, broadcast MAC, or changing between boots), the server might ignore the request.
+
+#### 4. **Timing and Retransmission**
+- DHCP Discover should be retried if no Offer is received.
+- Some servers are slow or busy — try waiting longer or sending multiple Discover packets with exponential backoff.
+
+#### 5. **Packet Format**
+- Double-check your DHCP Discover packet:
+  - Is the `magic cookie` present?
+  - Are required options included (e.g., `DHCP Message Type`, `Client Identifier`, `Parameter Request List`)?
+  - Is the packet properly padded and aligned?
+
+#### 6. **Network Stack Readiness**
+- Are you fully initializing your NIC before sending Discover?
+- Is your driver flushing buffers or dropping incoming packets due to ring buffer mismanagement?
+
+#### 7. **Wi-Fi Specific Quirks (if applicable)**
+- If you're testing over Wi-Fi, some APs throttle or delay broadcast/multicast frames.
+- Try testing over wired Ethernet first to rule this out.
+

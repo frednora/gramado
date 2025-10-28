@@ -643,7 +643,8 @@ network_handle_udp(
     struct udp_d *udp;
     //register int i=0;
 
-    //printk ("UDP: Received\n");
+    // #debug
+    printk ("UDP: Received\n");
 
 // Parameters:
     if ((void*) buffer == NULL){

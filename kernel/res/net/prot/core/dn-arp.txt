@@ -1,0 +1,65 @@
+Who Gets the ARP Request?
+
+----------------------------
+Typically, the first ARP request is for the default gateway.
+The gateway is the router that connects the local network to 
+other networks (like the internet).
+The OS needs the MAC address of the gateway to send packets destined for 
+outside the local subnet.
+
+----------------------------
+ARP requests are sent as broadcasts.
+The ARP packet is broadcast to all devices 
+on the local network (using the MAC address FF:FF:FF:FF:FF:FF).
+Only the device with the matching IP address (e.g., the gateway) will respond 
+with its MAC address.
+
+===========================================
+###  DHCP Comes First, Then ARP 
+
+When a computer boots up and joins a network, it typically doesn't have an 
+IP address yet. Here's how it gets one:
+
+(DORA) SEQUENCE
+
+#### 1. **DHCP Discovery (Broadcast)**
+- The computer sends a **DHCP Discover** message to `255.255.255.255` (broadcast).
+- It’s asking: “Is there a DHCP server out there?”
+
+#### 2. **DHCP Offer**
+- A DHCP server replies with an **Offer**, suggesting an IP address and other network settings (like subnet mask, gateway, DNS).
+
+#### 3. **DHCP Request**
+- The computer sends a **Request** saying “Yes, I’d like to use that IP.”
+
+#### 4. **DHCP Acknowledgment**
+- The server confirms with an **ACK**, and the computer now has an IP address.
+
+### Now ARP Enters the Scene
+
+Once the IP is assigned:
+- The computer sends an **ARP request for the default gateway** to learn its MAC address.
+- It may also send a **gratuitous ARP** for its own IP 
+  to check for conflicts (i.e., “Is anyone else using this IP?”).
+
+### Bonus: DHCP Itself Uses ARP Too
+- The DHCP server might ARP the offered IP before assigning it, 
+  to ensure it's not already in use.
+
+So yes — DHCP comes first, and ARP follows once the IP is known. 
+Want to dive into how DHCP works in Wi-Fi vs Ethernet, or 
+how IPv6 changes the game with SLAAC and NDP?
+
+ARP Broadcasts Are Managed Differently
+Wi-Fi uses 802.11 frames, not Ethernet frames.
+
+Broadcasts like ARP are sent as multicast frames over Wi-Fi, which are less efficient and often transmitted at lower data rates.
+
+Some APs may throttle or filter broadcast traffic to reduce congestion.
+
+Same protocols, different transport.
+
+Wi-Fi adds layers like association, authentication, and power management.
+
+DHCP and ARP still do their jobs — just with a few extra steps and quirks.
+

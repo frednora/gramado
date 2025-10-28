@@ -101,8 +101,10 @@ void arp_show_table(void)
 {
     register int i=0;
 
-    if (ARP_Table.initialized != TRUE)
+    if (ARP_Table.initialized != TRUE){
+        printk("Table not initialized\n");
         return;
+    }
 
     printk("ARP table:\n");
     printk("-------------------------------------\n");
@@ -113,6 +115,84 @@ void arp_show_table(void)
     printk("-------------------------------------\n");
 }
 
+// Wrapper
+// Request to gateway
+void network_send_arp_request(void)
+{
+    printk("Send ARP to 192, 168, 1, 1\n");
+
+// Send
+// #bugbug: What is this address?
+// IN: src ipv4, dst ipv4
+    network_arp_request_to( 
+        __arp_gramado_default_ipv4, // 0, 0, 0, 0
+        __arp_target_default_ipv4   // 192, 168, 1, 1
+    );
+}
+
+// Wrapper
+// Request to gateway
+void network_send_arp_request2(void)
+{
+    printk("Send ARP to 192, 168, 1, 1\n");
+
+// Send
+// IN: src ipv4, dst ipv4
+    network_arp_request_to( 
+        __arp_gramado_default_ipv4,  // 0, 0, 0, 0
+        __arp_gateway_default_ipv4   // 192, 168, 1, 1
+    );
+}
+
+// Worker
+// Send ARP request to a given ipv4.
+void 
+network_arp_request_to(
+    uint8_t src_ipv4[4],
+    uint8_t dst_ipv4[4] )
+{
+    if (networkGetStatus() != TRUE){
+        printk("network_arp_request_to: network offline\n");
+        return;
+    }
+
+// Send ARP request.
+// IN:
+// Target MAC, Source IP, Target IP, Operation.
+    network_send_arp( 
+        __arp_broadcast_mac,  // target mac (broadcast)
+        src_ipv4,             // src ip 
+        dst_ipv4,             // dst ip 
+        ARP_OPC_REQUEST       // operation
+    );
+}
+
+// Worker
+void 
+network_send_arp_reply(
+    uint8_t target_mac[6],
+    uint8_t target_ip[4] )
+{
+
+// #warning
+// We really need to do the dhcp dialog before.
+// Why?
+// Is it true?
+    if (dhcp_info.initialized != TRUE)
+        return;
+
+// Send ARP reply.
+// IN:
+// Target MAC, Source IP, Target IP, Operation.
+    network_send_arp( 
+        target_mac,           // target mac
+        dhcp_info.your_ipv4,  // src ip 
+        target_ip,            // dst ip (Linux)
+        ARP_OPC_REPLY         // operation
+    );
+}
+
+// Low level worker.
 // Ethernet + arp
 void 
 network_send_arp( 
@@ -315,63 +395,6 @@ fail:
     return;
 }
 
-// Request to gateway
-void network_send_arp_request(void)
-{
-// Send ARP request to 192.168.1.6.
-    //if (networkGetStatus() != TRUE)
-    //   return;
-    // IN: src ipv4, dst ipv4, dst mac.
-    network_arp_request_to( 
-        __arp_gramado_default_ipv4,
-        __arp_target_default_ipv4 );
-}
-
-// Request to gateway
-void network_send_arp_request2(void)
-{
-// Send ARP request to 192.168.1.1.
-    //if (networkGetStatus() != TRUE)
-    //   return;
-    // IN: src ipv4, dst ipv4, dst mac.
-    network_arp_request_to( 
-        __arp_gramado_default_ipv4,
-        __arp_gateway_default_ipv4 );
-}
-
-// Send ARP request to a given ipv4.
-void 
-network_arp_request_to(
-    uint8_t src_ipv4[4],
-    uint8_t dst_ipv4[4] )
-{
-    if (networkGetStatus() != TRUE)
-       return;
-    network_send_arp( 
-        __arp_broadcast_mac,   // target mac (broadcast)
-        src_ipv4,  // src ip 
-        dst_ipv4,  // dst ip 
-        ARP_OPC_REQUEST );
-}
-
-void 
-network_send_arp_reply(
-    uint8_t target_mac[6],
-    uint8_t target_ip[4] )
-{
-// #warning
-// We really need to do the dhcp dialog before.
-    if (dhcp_info.initialized != TRUE)
-        return;
-
-    network_send_arp( 
-        target_mac,           // target mac
-        dhcp_info.your_ipv4,  // src ip 
-        target_ip,            // dst ip (Linux)
-        ARP_OPC_REPLY );
-}
-
-
 //
 // $
 // HANDLER
@@ -390,7 +413,6 @@ network_handle_arp(
 // 0x0806
 
     struct ether_arp *ar;
-
 
 // #warning
 // It's ok to use pointer here.

@@ -21,7 +21,10 @@
 // #test
 // It changes the whey printk will work. Sending bytes to the serial port.
 // This is case only for the initialization process.
-#define CONFIG_PRINTK_TO_SERIAL_DURING_INITIALIZATION  1
+// #bugbug: 
+// It also supress the use of printk after the initialization.
+// So, we can't see the output for the kernel console.
+#define CONFIG_PRINTK_TO_SERIAL_DURING_INITIALIZATION  0
 
 // #test
 // It changes the whey printk will work. Sending bytes to the serial port.
