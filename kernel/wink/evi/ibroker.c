@@ -150,6 +150,10 @@ static void do_enter_embedded_shell(int kernel_in_debug_mode)
     int console_index = fg_console;
     // ShellFlag = FALSE;
 
+// #test
+// Reactivate the usage of printk in the kernel console.
+    Initialization.printk_to_serial = FALSE;
+
 // Set up console
     jobcontrol_switch_console(0);
 // Message
@@ -159,17 +163,28 @@ static void do_enter_embedded_shell(int kernel_in_debug_mode)
     //printk("kernel console number %d\n",console_index);
     //printk("Prompt ON: Type something\n");
     //consolePrompt();  // It will refresh the screen.
+
 // Flag
     ShellFlag = TRUE;
 }
 
 static void do_exit_embedded_shell(void)
 {
+
 // log
     printk("\n");
     printk("Prompt OFF: Bye\n");
     printk("\n");
     refresh_screen();
+
+// Supress the use of printk in the kernel console 
+// if it is what the configuration wants.
+    if (CONFIG_PRINTK_TO_SERIAL == 1){
+        Initialization.printk_to_serial = TRUE;
+    }else{
+        Initialization.printk_to_serial = FALSE;
+    }
+
 // done
     ShellFlag = FALSE;
 }
@@ -1278,7 +1293,7 @@ __consoleProcessKeyboardInput (
                 break;
 
             case VK_F9:
-                // Enter ring0 embedded shell.
+                // Enter ring0 embedded shell
                 if (ctrl_status == TRUE){
                     do_enter_embedded_shell(FALSE);
                     return 0;

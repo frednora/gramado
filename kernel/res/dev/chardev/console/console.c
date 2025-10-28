@@ -517,8 +517,7 @@ void jobcontrol_switch_console(int n)
     unsigned int bg_color=COLOR_BLACK;
     unsigned int fg_color=COLOR_WHITE;
 
-    if  (n<0 || 
-         n >= CONSOLETTYS_COUNT_MAX )
+    if  ( n<0 || n >= CONSOLETTYS_COUNT_MAX )
     {
         return;
     }

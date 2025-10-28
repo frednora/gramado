@@ -913,7 +913,8 @@ void I_kmain(int arch_type)
     // ...
 
 // Redirect printk to serial port?
-    if (CONFIG_PRINTK_TO_SERIAL_DURING_INITIALIZATION == 1){
+// It affects printk during all the time.
+    if (CONFIG_PRINTK_TO_SERIAL == 1){
         Initialization.printk_to_serial = TRUE;
     }
 // Headless mode?
