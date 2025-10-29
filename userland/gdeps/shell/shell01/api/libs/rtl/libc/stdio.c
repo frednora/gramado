@@ -1,14 +1,16 @@
+// stdio.c
+// I/O routines support.
+// c99 - ISO/IEC 9899:1999
+// Environment: ring3.
+// Created by Fred Nora.
+
 /*
- * File: stdio.c
- *     I/O routines support.
- *     c99 - ISO/IEC 9899:1999
- * Environment: ring3.
  * Credits:
- *     printf: https://www.menie.org/georges/embedded/small_printf_source_code.html
- *     stdio_fntos: Luiz Felipe
- *     Serenity OS. (bsd)
- *     2015 - Created by Fred Nora.
- *     2020 - New functions.
+ * Serenity OS. (BSD 2 license)
+ * printf() function:
+ * https://www.menie.org/georges/embedded/small_printf_source_code.html
+ * Nelson Cole
+ * stdio_fntos function: Luiz Felipe
  */
 
 #include <limits.h>
@@ -25,8 +27,7 @@
 #include <string.h>
 #include <rtl/gramado.h>  //?
 
-
-/* we use this so that we can do without the ctype library */
+// We use this so that we can do without the ctype library.
 /*
 #define __is_digit(c)  \
     ((c) >= '0' && (c) <= '9')
@@ -52,7 +53,6 @@ char prompt_out[PROMPT_MAX_DEFAULT];
 char prompt_err[PROMPT_MAX_DEFAULT]; 
 //char prompt_text[] = "$ ";
 //...
-
 
 // -------------------------
 // Globals
@@ -102,7 +102,6 @@ static char *_vsputs_r(char *dest, char *src);
 // =========================================================
 //
 
-
 /*
 char *out_char(char *dst,char ch);
 char *out_char(char *dst,char ch)
@@ -114,7 +113,6 @@ char *out_char(char *dst,char ch)
   return dst;
 }
 */
-
 
 /*
 char terry_toupper(char ch);
@@ -131,14 +129,13 @@ int rtl_y_or_n(void)
 {
     static int ch=0;
 
-    if ( (void*) stdin == NULL )
+    if ((void*) stdin == NULL)
         goto crazy_fail;
 
     printf("Type: 'y' or 'n'\n");
 
-// Get and convert to capital.
-    while (1)
-    {
+// Get and convert to capital
+    while (1){
         ch = (int) fgetc(stdin);
         ch = (int) toupper(ch);
         // Yes
@@ -151,7 +148,6 @@ int rtl_y_or_n(void)
             return FALSE;
         };
     };
-
 crazy_fail:
     return (int) -1;
 }
@@ -199,14 +195,14 @@ int stdio_atoi(char *s)
     };
 
     if (sign){ 
-        return (-rv);
-    }else{ 
-        return (rv);
+        return (int) (-rv);
+    } else { 
+        return (int) (rv);
     };
 
+    // ??
     // return (sign ? -rv : rv);
 }
-
 
 // stdio_fntos:
 // rotina interna de support.
@@ -299,7 +295,6 @@ void __init_FILE (FILE *fp, int fd, unsigned char *buffer, int flags )
 }
 */
 
-
 /*
  # todo
 FILE *__make_FILE (int fd)
@@ -335,11 +330,11 @@ FILE *__make_FILE (int fd)
 // #todo
 // https://linux.die.net/man/3/remove
 
-int remove (const char *pathname)
+int remove(const char *pathname)
 {
-    debug_print ("remove: [TODO] It removes a file from the file system\n");
+    //debug_print ("remove: [TODO] It removes a file from the file system\n");
 
-    if ( (void*) pathname == NULL){
+    if ((void*) pathname == NULL){
         goto fail;
     }
     if (*pathname == 0){
@@ -363,25 +358,25 @@ _strout (
     int fillch )
 {
 
-//#todo: filtros.
+//#todo: filters
 
     while (adjust < 0)
     {
-        if (*string=='-' && fillch=='0')
+        if (*string == '-' && fillch == '0')
         {
-            putc (*string++, file);
+            putc(*string++, file);
             count--;
         }
-        putc (fillch, file);
+        putc(fillch, file);
         adjust++;
     };
 
-    while (--count>=0){
-        putc (*string++, file);
+    while (--count >= 0){
+        putc(*string++, file);
     };
 
     while (adjust) {
-        putc (fillch, file);
+        putc(fillch, file);
         adjust--;
     };
 }
@@ -927,22 +922,22 @@ fail:
     return (int) EOF;
 }
 
-// Don't change it.
+// Don't change it
 int getc (FILE *stream){
-    return (int) __getc (stream);
+    return (int) __getc(stream);
 }
 
-// Don't change it.
+// Don't change it
 int putc (int ch, FILE *stream){
-    return (int) __putc (ch, stream);
+    return (int) __putc(ch, stream);
 }
 
-// Don't change it.
-int fgetc(FILE *stream){
+// Don't change it
+int fgetc (FILE *stream){
     return (int) getc(stream);
 }
 
-// Don't change it.
+// Don't change it
 int fputc ( int ch, FILE *stream ){
     return (int) putc(ch,stream);
 }
@@ -951,14 +946,14 @@ int fputc ( int ch, FILE *stream ){
 // Root 2
 //
 
-// Don't change it.
+// Don't change it
 int getchar (void){
     return (int) getc(stdin);
 }
 
-// Don't change it.
+// Don't change it
 int putchar (int ch){
-    return (int) putc ( (int) ch, stdout );
+    return (int) putc((int) ch, stdout);
 }
 
 //
@@ -994,7 +989,7 @@ int puts(const char *s)
     register int c=0;
 
     if ((void*) s == NULL)
-        return -1;
+        return (int) -1;
 
     while (c = *s++){
         putchar(c);
@@ -1047,14 +1042,12 @@ int fputs( const char *s, FILE *stream )
     //if ( (void*) s == NULL ){}
 
     // #ugly
-    while (c = *s++)
-    {
-        r = putc(c,stream);
+    while (c = *s++){
+        r = (int) putc(c,stream);
     };
 
-    return (r);
+    return (int) r;
 }
-
 
 //
 // Root 5

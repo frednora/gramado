@@ -1888,6 +1888,7 @@ terminal_write_char (
     int window, 
     int c )
 {
+    static char prev=0;
     unsigned long CharWidth = 8;
     unsigned long CharHeight = 8;
 
@@ -1897,15 +1898,16 @@ terminal_write_char (
         CharHeight = FontInfo.height;
     }
 
-    static char prev=0;
-    unsigned long x = (cursor_x*CharWidth);
-    unsigned long y = (cursor_y*CharHeight);
+    unsigned long x = (cursor_x * CharWidth);
+    unsigned long y = (cursor_y * CharHeight);
 
     if (fd<0)    {return;}
     if (window<0){return;}
-    if (c<0)     {return;}
 
+    // #test: Suppresing this if statement.
+    //if (c<0)     {return;}
 
+    // #todo
     // #todo TAB
     /*
     if (c == '\t')
@@ -1915,6 +1917,7 @@ terminal_write_char (
     }
     */
 
+
     if (c == '\r')
     {
         cursor_x=0;
@@ -1923,7 +1926,7 @@ terminal_write_char (
     }
 
     //if ( c == '\n' && prev == '\r' ) 
-    if ( c == '\n')
+    if (c == '\n')
     {
         //printf("NEWLINE\n");
         cursor_x=0; // começo da linha ...(desnecessário)
@@ -1964,7 +1967,7 @@ terminal_write_char (
     cursor_x++;
     
     //if (cursor_x > __wlMaxColumns)
-    if(cursor_x >= Terminal.width_in_chars)
+    if (cursor_x >= Terminal.width_in_chars)
     {
         cursor_y++;
         cursor_x=0;
@@ -2248,8 +2251,7 @@ tputc (
 // (0x00~0x1F) and 0x7F.
 
     int is_control=FALSE;
-    if ( ascii <= 0x1F || 
-         ascii == 0x7F )
+    if (ascii <= 0x1F || ascii == 0x7F)
     {
         is_control = TRUE;
     }
@@ -2257,8 +2259,8 @@ tputc (
 // Invalid socket
     if (fd<0)
         return;
-// Invalid target window.
-    if (window<0)
+// Invalid target window
+    if (window < 0)
         return;
 // Invalid char len.
 // #bugbug: Isso nem precisa.
@@ -3047,9 +3049,9 @@ terminalProcedure (
     unsigned long long1, 
     unsigned long long2 )
 {
-    if (fd<0)    {return -1;}
-    if (window<0){return -1;}  // Event window
-    if (msg<0)   {return -1;}  // Event type
+    if (fd<0)    {return (int) -1;}
+    if (window<0){return (int) -1;}  // Event window
+    if (msg<0)   {return (int) -1;}  // Event type
 
 // ==================
 
@@ -3141,9 +3143,8 @@ terminalProcedure (
         {
             // #debug
             //printf("terminal.bin: [MSG_PAINT]\n");
-            
-            // #test
-            // Updating the terminal window.
+
+            // Updating the terminal window
             update_clients(fd);
             if (Terminal._mode == TERMINAL_MODE_EMBEDDED)
                 doPrompt(fd);
