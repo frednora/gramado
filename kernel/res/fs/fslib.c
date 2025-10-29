@@ -357,7 +357,7 @@ file_write_buffer (
 
     // debug_print ("file_write_buffer:\n");
 
-// File validation.
+// File validation
     if ((void *) f == NULL){
         printk ("file_write_buffer: f\n");
         goto fail;
@@ -469,7 +469,7 @@ file_write_buffer (
         }
 
         if (len < 0){
-            return -1;
+            return (int) -1;
         }
 
         // Se o que desejamos escrever é maior que o espaço que temos.
@@ -482,7 +482,7 @@ file_write_buffer (
                 f->_r = f->_lbfsize;
                 f->_p = f->_base + f->_lbfsize;
                 f->_cnt = 0;
-                return -1;
+                return (int) -1;
             }
 
             // Só podemos escrever esse tanto.
@@ -501,16 +501,16 @@ file_write_buffer (
             f->_cnt = ( f->_lbfsize - f->_w );
         }
 
-        // Vamos escrever aqui.
+        // Update the pointer
         f->_p = (f->_base + f->_w);
 
-        // Escrevemos usando o ponteiro de escrita.
+        // Write it, using the pointer
         memcpy( (void *) f->_p, (const void *) string, len ); 
     
-        // Atualizamos o ponteiro de escrita
+        // Update the pointer
         f->_p = (f->_p + len);
 
-        // Atualizamos o offset de escrita.
+        // Update the offset for writing
         f->_w = (f->_w + len);
     
         // Atualizamos o quanto nos falta.

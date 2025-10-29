@@ -933,24 +933,29 @@ __consoleProcessKeyboardInput (
 //
 
     if (msg < 0){
-        debug_print("__consoleProcessKeyboardInput: Invalid msg\n");
-        return -1;
+        debug_print("__consoleProcessKeyboardInput: msg\n");
+        return (int) -1;
     }
 
     switch (msg){
 
-// ==============
-// msg:
-// Mouse stuff.
+// No mouse message here. Only keyboard.
     case MSG_MOUSEMOVE:
     case MSG_MOUSEPRESSED:
     case MSG_MOUSERELEASED:
-        return -1;
+        return (int) -1;
         break;
 
 // ==============
-// msg:
-// Keydown.
+// msg: Keyup
+
+    // Nothing for now
+    //case MSG_KEYUP:
+        //return (int) -1;
+        //break;
+
+// ==============
+// msg: Keydown
     case MSG_KEYDOWN:
 
         // Para todas as teclas quando o console não está ativo.
@@ -1001,19 +1006,17 @@ __consoleProcessKeyboardInput (
 
         default:
 
-            // Console!
-            // YES, we're using the embedded kernel console.
-            // O teclado vai colocar o char no prompt[]
-            // e exibir o char na tela somente se o prompt
-            // estiver acionado.
-            if (ShellFlag == TRUE)
-            {
-                consoleInputChar (long1);
-                console_putchar ( (int) long1, fg_console );
+            // Console: Yes, we're using the embedded kernel console.
+            // + Put the char into the prompt[] buffer.
+            // + Print the char into the screen using fg_console.
+
+            if (ShellFlag == TRUE){
+                consoleInputChar(long1);
+                console_putchar((int) long1, fg_console);
                 return 0;
             }
 
-            // Not console.
+            // Not console
             // NO, we're not using the kernel console.
             // Pois não queremos que algum aplicativo imprima na tela
             // enquanto o console virtual está imprimindo.
@@ -1111,8 +1114,7 @@ __consoleProcessKeyboardInput (
         break;
 
 // ==============
-// msg:
-// Syskeyup.
+// msg: Syskeyup
 // liberadas: teclas de funçao
 // syskeyup foi enviado antes pela função que chamou essa função.
 // não existe combinação de tecla de controle e syskeyup.
@@ -1130,8 +1132,7 @@ __consoleProcessKeyboardInput (
         break;
 
 // ==============
-// msg:
-// Syskeydown.
+// msg: Syskeydown
 // Pressionadas: teclas de funçao
 // Se nenhum modificador esta acionado,
 // entao apenas enviamos a tecla de funçao 
@@ -1369,18 +1370,17 @@ __consoleProcessKeyboardInput (
 
 // ==============
     default:
-        return -1;
+        return (int) -1;
         break;
     };
 
 //unexpected_fail:
-    return -1;
+    return (int) -1;
 
 fail:
     debug_print("__consoleProcessKeyboardInput: fail\n");
-    return -1;
+    return (int) -1;
 }
-
 
 // Process input
 unsigned long 
@@ -1472,18 +1472,17 @@ wmRawKeyEvent(
 // Right after the ps2 keyboard interrupt handler.
 // Post keyboard event to the current foreground thread.
 
-    // Who is the current virtual console?
+// Who is the current virtual console?
     struct tty_d *target_tty;
+
+// Flag for the moment were a key is released
+    int fBreak = FALSE;
 
 // #bugbug
 // Sometimes we're sending data to multiple targets.
 // Maybe its gonna depend on the input mode.
 
     int Prefix = (int) (prefix & 0xFF);
-
-// Um bit sinaliza o break, 
-// que representa que a tecla foi liberada.
-    int fBreak = FALSE;
 
 // Step 0 
 // Declarações de variáveis.
@@ -1793,8 +1792,6 @@ wmRawKeyEvent(
                 Event_Message = MSG_SYSKEYDOWN;
                 break;
 
-
-
             // back space será tratado como tecla normal
 
             // #todo: tab,
@@ -2048,7 +2045,6 @@ done:
                 // the raw buffer to the tty slave.
                 // This way the terminal sends data to the command
                 // connected to him.
-                
             }
         }
 

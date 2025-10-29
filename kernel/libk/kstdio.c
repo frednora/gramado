@@ -116,9 +116,8 @@ int kstdio_feed_stdin(int ch)
 // Data
     ch_buffer[0] = (char) (Data & 0xFF);
 
-// Write:
 // Write 1 byte.
-// see: fs.c
+// see: fslib.c
 
     wbytes = 
         (int) file_write_buffer ( 
