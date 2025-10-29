@@ -1905,9 +1905,15 @@ terminal_write_char (
     if (window<0){return;}
     if (c<0)     {return;}
 
-// #todo
-// Ver no kernel esse tipo de rotina
-// tab;
+
+    // #todo TAB
+    /*
+    if (c == '\t')
+    {
+        printf("TAB\n");
+        return;
+    }
+    */
 
     if (c == '\r')
     {
@@ -2329,6 +2335,9 @@ tputc (
             case '\r':      /* CR */
             case '\f':      /* LF */
             case '\n':      /* LF */
+
+                //if (ascii == '\t')
+                    //exit(0); //debug
                 terminal_write_char (fd, window, (int) ascii);
                 //printf ("%c",ascii); //debug
                 return;
@@ -3052,7 +3061,7 @@ terminalProcedure (
         //break;
 
     case MSG_KEYDOWN:
-        switch(long1)
+        switch (long1)
         {
             //case 0:
                 //break;

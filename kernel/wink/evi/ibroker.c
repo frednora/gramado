@@ -987,7 +987,7 @@ __consoleProcessKeyboardInput (
 
          //case 'd':
          //case 'D':
-         //    if(ctrl_status==TRUE && alt_status==TRUE)
+         //    if (ctrl_status==TRUE && alt_status==TRUE)
          //    {
          //        do_enter_embedded_shell(FALSE);
          //        return 0;
@@ -996,7 +996,7 @@ __consoleProcessKeyboardInput (
 
         //case VK_TAB: 
             //printk("TAB\n"); 
-            //invalidate_screen();
+            //refresh_screen();
             //break;
 
         default:
@@ -1944,16 +1944,12 @@ done:
     Event_LongRawByte = 
         (unsigned long) (Keyboard_RawByte & 0x000000FF);
 
-// ??
-// 0 is null in the ascii table.
-// 0x00 ~ 0x7F
-    if (Event_LongASCIICode == 0){
-        goto fail;
-    }
-
 // ------------------------------------
 // It's an extended keyboard key.
 // Send combination keys to the display server.
+// #todo: 
+// Extended-key prefix handling must happen 
+// before you reject zero-mapped scancodes.
     if (Prefix == 0xE0 || Prefix== 0xE1)
     {
         Status = 
@@ -1963,6 +1959,13 @@ done:
                 (unsigned long) Event_LongASCIICode,
                 (unsigned long) Event_LongRawByte );
         return (int) Status;
+    }
+
+// Unmapped scancode
+// It's ok to simply return
+    if (Event_LongASCIICode == 0)
+    {
+        return 0;
     }
 
 // ==================================

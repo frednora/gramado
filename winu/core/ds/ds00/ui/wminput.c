@@ -138,8 +138,7 @@ not_valid:
     return;
 }
 
-
-// Keyboard events.
+// Keyboard events
 unsigned long 
 wmProcessKeyboardEvent(
     int msg,
@@ -730,9 +729,7 @@ int wmInputReader(void)
 // not by the client-side appications.
 
     int status=0;
-
     register long i=0;
-
     long extra_attempts = 4;
 
     // --------
