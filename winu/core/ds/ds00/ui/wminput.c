@@ -821,6 +821,13 @@ ProcessEvent:
         // Only combination keys like 'control+c'.
         // So, we're not printing typed keys on editbox.
         //printf("keyboard event\n");
+
+        // #test:
+        // Reativating this.
+        // Kernel is sending typed keys to the display server.
+        // Remember: The kernel is also sending it to other apps via stdin.
+        // #todo: Maybe the display server needs to ignore these keys sometimes.
+
         wmProcessKeyboardEvent( 
             (int) msg, (unsigned long) long1, (unsigned long) long2 );
         return 0;

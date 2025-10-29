@@ -2063,9 +2063,17 @@ done:
 
             // ds queue:: 
             // regular keys, not combinations.
+    
             // #test
-            // NOT SENDING typing chars to the server for now.
-            /*
+            // NOT SENDING typing chars to the display server for now.
+            // Thais is why the ds is not printing the typed chars
+            // in the editbox anymore.
+
+            // #test:
+            // Reativating this.
+            // Sending typed keys to the display server.
+            // Remember: We are also sending it to other apps via stdin.
+            // #todo: Maybe the display server needs to ignore these keys sometimes.
             if (InputTargets.target_thread_queue == TRUE)
             {
                 ipc_post_message_to_ds(
@@ -2073,7 +2081,7 @@ done:
                     Event_LongASCIICode,
                     Event_LongRawByte );
             }
-            */
+            
 
             // Let's send only the function keys to the display server,
             // not the other ones. In order to be used by the window manager.
