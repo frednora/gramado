@@ -365,17 +365,17 @@ editorProcedure(
 
 // Parameters
     if (fd<0){
-        return -1;
+        return (int) -1;
     }
     if (event_window<0){
-        return -1;
+        return (int) -1;
     }
     if (event_type < 0){
-        return -1;
+        return (int) -1;
     }
 
 // Events
-    switch(event_type){
+    switch (event_type){
 
     case 0:
         //#debug

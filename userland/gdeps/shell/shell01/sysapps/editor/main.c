@@ -28,7 +28,7 @@
 int main(int argc, char *argv[])
 {
     //if (argc < 0)
-        //return 1;
+        // return EXIT_FAILURE;
     return (int) editor_initialize(argc,argv);
 }
 

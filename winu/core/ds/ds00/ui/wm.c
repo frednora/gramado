@@ -3315,7 +3315,6 @@ wm_draw_char_into_the_window(
 // that belongs to the window. This way the client application
 // can grab this texts via request.
 
-
 // draw char support.
     unsigned char _string[4];
 // Vamos checar se é um controle ou outro tipo de char.
@@ -3346,7 +3345,8 @@ wm_draw_char_into_the_window(
         return;
 
 
-// Invalid char
+// Invalid char?
+// We don't need this?
     if (ch<0){
         return;
     }
@@ -3427,10 +3427,13 @@ wm_draw_char_into_the_window(
     }
 
 // TAB
-// (control=0x0F)
+// (control = 0x0F)
 // O ALT esta pressionado?
     if (ch == VK_TAB)
     {
+        //#debug
+        // printf("wm.c TAB\n");
+
         window->ip_x += 8;
         if (window->ip_x >= window->width_in_chars)
         {
@@ -3453,7 +3456,7 @@ wm_draw_char_into_the_window(
 
 // ----------------------
 
-// Not printable.
+// Not printable
 // 32~127
 // A=41h | a=61H
 // Control character or non-printing character (NPC).

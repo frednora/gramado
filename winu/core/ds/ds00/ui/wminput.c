@@ -180,6 +180,9 @@ wmProcessKeyboardEvent(
     }
 */
 
+    //if (long1 == VK_TAB)
+        //printf("VK_TAB\n");
+
 //================================
     if (msg == GWS_KeyDown)
     {
@@ -226,8 +229,8 @@ wmProcessKeyboardEvent(
         */
 
         // The is the window with focus.
-        wm_draw_char_into_the_window(
-            window, (int) long1, fg_color );
+        // See: wm.c
+        wm_draw_char_into_the_window( window, (int) long1, fg_color );
         
         // The is the window with focus.
         // Enqueue a message into the queue that belongs
@@ -807,10 +810,17 @@ ProcessEvent:
 // -----------------------
 // Some keyboard events.
 // Print char into the keyboard owner window.
+// GWS_KeyUp ?
     if ( msg == GWS_KeyDown ||
          msg == GWS_SysKeyDown ||
          msg == GWS_SysKeyUp )
     {
+        // #attention
+        // Probably the kernel is not sending this type 
+        // of message to the Display Server anymore. 
+        // Only combination keys like 'control+c'.
+        // So, we're not printing typed keys on editbox.
+        //printf("keyboard event\n");
         wmProcessKeyboardEvent( 
             (int) msg, (unsigned long) long1, (unsigned long) long2 );
         return 0;
