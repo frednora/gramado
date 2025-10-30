@@ -1,0 +1,15 @@
+
+ Who has the authority to change the forground thread, the one that has 
+the permission to get keyboard input?
+
+In graphical environment the authority is the window manager.
+In Gramado OS, the window manager is embedded into the display server,
+so, this way the authority is the display server.
+
+In CLI/headless environment the authority needs to be the terminal emulator or the shell.
+In Gramado OS, this is a work in progress.
+
+#todo
+We are still working on the permissions to change the forground thread,
+using a kernel structure for input authority. This structure will control 
+what is the the process that can change the foreground thread.
