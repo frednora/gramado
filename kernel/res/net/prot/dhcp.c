@@ -51,6 +51,10 @@ unsigned char __dhcp_target_ipv4[4]  = {
 unsigned char __dhcp_target_mac[6] = { 
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF 
 };
+// Target broadcast MAC.
+unsigned char __dhcp_target_broadcast_mac[6] = { 
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF 
+};
 
 //---------------
 
@@ -117,10 +121,10 @@ network_dhcp_send(
         goto fail;
     }
     // DORA
-    if (message_type < 0){
-        printk("network_dhcp_send: message_type\n");
-        goto fail;       
-    }
+    //if (message_type < 0){
+        //printk("network_dhcp_send: message_type\n");
+        //goto fail;       
+    //}
 
     dhcp->op    = 1;  // 1=REQUEST | 2=REPLY
     dhcp->htype = 1;  // 1 = Ethernet
@@ -133,12 +137,19 @@ network_dhcp_send(
 // to identify an IP address allocation.
 // 0x3903F326
 
-//#todo: Get a random number.
-    unsigned int xid = (unsigned int) 0x3903F326;
+// Transaction ID: 
+// Uses a randomized xid with a seed from jiffies.
+// Are you using a fresh xid for each Discover?
+// Servers match replies to this ID — if reused or stale, replies may be ignored.
+
+    unsigned int xid;
+    srand(jiffies);
+    xid = (unsigned int) rand(); 
+    xid = (unsigned int) (xid + 0x3903F326);
     dhcp->xid = ToNetByteOrder32(xid);
 
 // Elapsed time in seconds.
-    dhcp->secs  = ToNetByteOrder16(0);
+    dhcp->secs = ToNetByteOrder16(0);
 
 // flags: 
 // The leftmost bit is defined as the BROADCAST (B) flag. 
@@ -146,8 +157,11 @@ network_dhcp_send(
 // if this flag is set to 1, the DHCP server sent a reply back by broadcast. 
 // The remaining bits of the flags field are reserved for future use.
 
-    dhcp->flags = ToNetByteOrder16(0x0000);
-    //dhcp->flags = ToNetByteOrder16(0x8000);
+    if (message_type == DORA_D) {
+        dhcp->flags = ToNetByteOrder16(0x8000);  // Broadcast
+    } else {
+        dhcp->flags = ToNetByteOrder16(0x0000);  // Unicast
+    };
 
 // ciaddr: Client IP address.
     dhcp->ciaddr = (unsigned int) 0;
@@ -310,7 +324,11 @@ network_dhcp_send(
         //--
 
         // Option End
+        // Is your options array terminated with OPT_END?
+        // Missing this can cause the server to ignore the packet.
         dhcp->options[29]= OPT_END;
+        // 312-byte limit.
+        // #define DHCP_OPTIONS_MAX 312
         opt_size = 30;
         break;
 
@@ -324,14 +342,18 @@ network_dhcp_send(
 // UDP payload is the base of the dhcp structure.
 
     char *__udp_payload = (char *) dhcp;
-    size_t __udp_payload_size = (size_t) ( sizeof(struct dhcp_d) );
+
+// Size
+    size_t __udp_payload_size = (size_t) (sizeof(struct dhcp_d));
+    //size_t __udp_payload_size = 
+        //sizeof(struct dhcp_d) - (sizeof(dhcp->options) + opt_size);
 
     printk("network_dhcp_send: Send UDP\n");
 
 // IN:
 // src ip, 
-// target ip,
-// target mac,
+// target ip,  (should be 255.255.255.255.)
+// target mac, (broadcast)
 // src port, 
 // destination port,
 // payload buffer, 
@@ -340,7 +362,7 @@ network_dhcp_send(
     network_send_udp( 
         __dhcp_source_ipv4, 
         __dhcp_target_ipv4,
-        __dhcp_target_mac,
+        __dhcp_target_broadcast_mac,
         sport, 
         dport,
         __udp_payload, 
