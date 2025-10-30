@@ -1,0 +1,75 @@
+Who Sets Foreground?
+The foreground is set by the current input authority — 
+which is either the display server (in GUI mode) or 
+the TTY session leader (in console mode).
+
+================================================
+Goal: Unified Rule, Two Modes
+Mode                               | Who Sets Foreground?       | Rule
+GUI Mode (display server running)  | Display Server             | Only trusted DS
+Console Mode (no display server)   | Kernel + TTY login/session | Standard tcsetpgrp() allowed
+
+
+There is a moment where the display server register itself. 
+So, this is a good opportunity to change the input authority.
+
+// Types of input authorities:
+#define AUTH_DISPLAY_SERVER  1000
+#define AUTH_NO_GUI          1001
+
+struct input_authority_d {
+    int used;
+    int magic;
+    int initialized;
+// Options: 
+// + AUTH_DISPLAY_SERVER when we have a running display server.
+// + AUTH_NO_GUI when we do not have a running display server.
+    int current_authority;
+};
+
+                ┌─────────────────┐
+                │   AUTH_KERNEL   │
+                │ (panic, boot)   │
+                └───────┬─────────┘
+                        ↓
+               init starts → AUTH_NO_GUI
+                        ↓
+                ┌─────────────────┐
+                │   AUTH_NO_GUI   │
+                │  (shell, TTY)   │
+                └───────┬─────────┘
+          register           unregister
+             ↓                   ↓
+        ┌─────────────────┐   process exit
+        │ AUTH_DISPLAY_SERVER│ ───────────┐
+        │    (GUI mode)      │           ↓
+        └─────────────────┘       back to NO_GUI
+
+
+Keyboard → Kernel → [Sends key event to Display Server via system message]
+                    ↓
+              Display Server renders 'a' into Text Editor's editbox
+                    ↓
+              Kernel also writes 'a' to stdin of Second App
+                    ↓
+         Second App (not focused!) receives 'a' → confusion!
+
+The editor has a child window that has the focus and its application window, 
+(the frame), is the active window. Everything is right untill here. 
+But the second applications is being considered as foreground thread, 
+so this way the kernel will allow this second application to read in stdin.
+
+[Display Server / Window Manager]
+    │
+    ▼
+[Text Editor App]
+    ├── Window Frame (active window)
+    └── EditBox Child Window ← **has keyboard focus**
+        ↓
+        Display Server sends key events here → correct
+
+[Kernel]
+    └── Considers **Second App** as "foreground thread"
+        → Allows it to read from `stdin` → **WRONG**
+
+

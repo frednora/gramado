@@ -926,6 +926,19 @@ void I_kmain(int arch_type)
     }
 
 // =============================================
+// Input authority
+// Who will be able to setup the current foreground thread.
+// Funtamental for the input system.
+// First initialization.
+// The main change is when the display server is registered.
+// See: net.c
+
+    InputAuthority.used = TRUE;
+    InputAuthority.magic = 1234;
+    InputAuthority.current_authority = AUTH_KERNEL;
+    InputAuthority.initialized = TRUE;
+
+// =============================================
 
     // #hack
     current_arch = CURRENT_ARCH_X86_64;

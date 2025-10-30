@@ -3,6 +3,8 @@
 
 #include <kernel.h>
 
+struct input_authority_d  InputAuthority;
+
 unsigned long ksys_mouse_event(int event_id,long long1, long long2)
 {
     if (event_id<0)

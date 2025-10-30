@@ -5,6 +5,29 @@
 #define __EVI_INPUT_H    1
 
 
+// Types of input authorities:
+#define AUTH_KERNEL          1000
+#define AUTH_DISPLAY_SERVER  1001
+#define AUTH_NO_GUI          1002
+
+// Who will be able to setup the current foreground thread.
+// Funtamental for the input system.
+struct input_authority_d {
+    int used;
+    int magic;
+    int initialized;
+// Options: 
+// + AUTH_KERNEL when the kernel console is active, in boot or panic.
+// + AUTH_NO_GUI when we do not have a running display server.
+// + AUTH_DISPLAY_SERVER when we have a running display server.
+    int current_authority;
+};
+// #test #todo
+// This is a test yet.
+// We're implementing it, but it is not fully in use. 
+// Defined in input.c
+extern struct input_authority_d  InputAuthority;
+
 // -----------------------------------
 // Input targets:
 // We can sent input to some targets:

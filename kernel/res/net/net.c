@@ -258,6 +258,11 @@ network_register_ring3_display_server(
 // #test
     t->pe_mode = PE_MODE_PERFORMANCE;
 
+// Change the input authority
+// Who will be able to setup the current foreground thread.
+// Funtamental for the input system.
+    InputAuthority.current_authority = AUTH_DISPLAY_SERVER;
+
     return TRUE;
 
 fail:
