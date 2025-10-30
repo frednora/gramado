@@ -931,6 +931,8 @@ void I_kmain(int arch_type)
 // Funtamental for the input system.
 // First initialization.
 // The main change is when the display server is registered.
+// The first change is when the initialization 
+// launches the init process.
 // See: net.c
 
     InputAuthority.used = TRUE;

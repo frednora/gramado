@@ -751,6 +751,10 @@ void I_x64ExecuteInitialProcess(void)
 // ==============
 */
 
+// Input authority
+
+        InputAuthority.current_authority = AUTH_NO_GUI;
+
 // ==============
 // #debug
 

@@ -786,7 +786,7 @@ int keReboot(void)
 }
 
 // Called by main to execute the first process.
-// See: x64init.c
+// See: intake/x64init.c
 // Never returns.
 int ke_x64ExecuteInitialProcess(void)
 {

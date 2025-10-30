@@ -2432,9 +2432,44 @@ void *sci2 (
 // Set the foreground thread given it's tid.
 // #todo: We need a method for that.
 // IN: arg2=tid.
+// #test
+// The permission to change the foreground thread 
+// depends on the input authority.
     if (number == 10011)
     {
         debug_print("sci2: [10011] set foreground thread tid\n");
+
+        // The permission is ok if the current thread (caller) 
+        // is the display server and the input authority is AUTH_DISPLAY_SERVER. 
+        // See: DisplayServerInfo.tid
+        // The permission is also ok is the current thread (caller)  
+        // is not the display server and the input authority is AUTH_NO_GUI.
+
+        // The display server is trying to change the foreground thread.
+        // The display server is the input authority.
+        if ( current_thread == DisplayServerInfo.tid && 
+             InputAuthority.current_authority == AUTH_DISPLAY_SERVER )
+        {
+            // #debug
+            // ok. This is the best case.
+            printk("10011: tid=ds | auth=ds\n");
+            refresh_screen();
+        }
+
+        // Some process that is not the display server 
+        // is trying to change the foreground thread.
+        // The display server is the input authority.
+        if ( current_thread != DisplayServerInfo.tid && 
+             InputAuthority.current_authority == AUTH_DISPLAY_SERVER )
+        {
+            // #debug
+            // #bugbug: Only the display server can chage the 
+            // forground thread when the authority is ds.
+            // We can use the activation or focus to set up the foreground thread.
+            printk("10011: tid!=ds | auth=ds\n");
+            refresh_screen();
+        }
+
         //Change the priority of the old foreground thread?
         //set_thread_priority( threadList[foreground_thread], PRIORITY_NORMAL);
         if (arg2<0 || arg2>=THREAD_COUNT_MAX)
@@ -2487,11 +2522,47 @@ void *sci2 (
         return NULL;
     }
 
-    // Lose the input focus.
-    // We don't wanna be the foreground thread anymore.
+// Lose the input focus.
+// We don't wanna be the foreground thread anymore.
+// #test
+// The permission to change the foreground thread 
+// depends on the input authority.
     if (number == 10012)
     {
         debug_print("sci2: [10012] lose input focus\n");
+
+        // The permission is ok if the current thread (caller) 
+        // is the display server and the input authority is AUTH_DISPLAY_SERVER. 
+        // See: DisplayServerInfo.tid
+        // The permission is also ok is the current thread (caller)  
+        // is not the display server and the input authority is AUTH_NO_GUI.
+
+        /*
+        // The display server is trying to change the foreground thread.
+        // The display server is the input authority.
+        if ( current_thread == DisplayServerInfo.tid && 
+             InputAuthority.current_authority == AUTH_DISPLAY_SERVER )
+        {
+            // #debug
+            printk("10012: tid=ds | auth=ds\n");
+            refresh_screen();
+        }
+        */
+
+
+        /*
+        // Some process that is not the display server 
+        // is trying to change the foreground thread.
+        // The display server is the input authority.
+        if ( current_thread != DisplayServerInfo.tid && 
+             InputAuthority.current_authority == AUTH_DISPLAY_SERVER )
+        {
+            // #debug
+            printk("10012: tid!=ds | auth=ds\n");
+            refresh_screen();
+        }
+        */
+
         //Change the priority of the old foreground thread?
         //set_thread_priority( threadList[foreground_thread], PRIORITY_NORMAL);
         if (arg2<0 || arg2>=THREAD_COUNT_MAX)
