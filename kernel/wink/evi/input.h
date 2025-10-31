@@ -6,9 +6,13 @@
 
 
 // Types of input authorities:
-#define AUTH_KERNEL          1000
-#define AUTH_NO_GUI          1001
-#define AUTH_DISPLAY_SERVER  1002
+#define AUTH_KERNEL    1000
+#define AUTH_NO_GUI    1001
+#define AUTH_GUI       1002
+// The window manager normally changes the foreground thread,
+// when in Graphical Environment mode. But Gramado OS 
+// has the window manager embedded into the display server.
+#define AUTH_DISPLAY_SERVER    AUTH_GUI
 
 // Who will be able to setup the current foreground thread.
 // Funtamental for the input system.
