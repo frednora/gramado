@@ -4,6 +4,21 @@
 #ifndef __EVI_INPUT_H
 #define __EVI_INPUT_H    1
 
+/*
+What Your input_authority_d Structure Enables
+
+Dynamic Input Routing: 
+By abstracting input authority into a struct, you allow the kernel 
+to switch between input modes based on system state.
+
+Security & Control: 
+Only the designated authority (kernel, display server, etc.) can 
+set the foreground thread, preventing unauthorized input hijacking.
+
+Extensibility: 
+You can later add more modes (e.g., remote desktop, multi-user sessions) 
+without rewriting core input logic.
+*/
 
 // Types of input authorities:
 #define AUTH_KERNEL    1000

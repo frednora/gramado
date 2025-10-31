@@ -2445,6 +2445,9 @@ void *sci2 (
         // The permission is also ok is the current thread (caller)  
         // is not the display server and the input authority is AUTH_NO_GUI.
 
+        // We can create a worker:
+        // bool has_input_authority(int caller_tid) ??
+
         // The display server is trying to change the foreground thread.
         // The display server is the input authority.
         if ( current_thread == DisplayServerInfo.tid && 
