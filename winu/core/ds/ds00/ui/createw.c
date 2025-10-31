@@ -669,11 +669,11 @@ doCreateWindowFrame (
     unsigned long TitleBarHeight = 
         METRICS_TITLEBAR_DEFAULT_HEIGHT;
 
-// Titlebar color for active window.
+// Titlebar color for active window
     unsigned int TitleBarColor = 
         (unsigned int) get_color(csiActiveWindowTitleBar);
 
-    int icon_id = ICON_ID_APP; //dfault.
+    int icon_id = ICON_ID_APP;  // Default
 
     //unsigned long X = (x & 0xFFFF);
     //unsigned long Y = (y & 0xFFFF);
@@ -693,19 +693,19 @@ doCreateWindowFrame (
 // check parent
     if ((void*) parent == NULL){
         //server_debug_print ("doCreateWindowFrame: [FAIL] parent\n");
-        return -1;
+        goto fail;
     }
     if (parent->used != TRUE || parent->magic != 1234){
-        return -1;
+        goto fail;
     }
 
 // check window
     if ((void*) window == NULL){
         //server_debug_print ("doCreateWindowFrame: [FAIL] window\n");
-        return -1;
+        goto fail;
     }
     if (window->used != TRUE || window->magic != 1234){
-        return -1;
+        goto fail;
     }
 
 // Uma overlapped maximizada não tem borda.
@@ -749,7 +749,8 @@ doCreateWindowFrame (
 
     case WT_EDITBOX:
     case WT_EDITBOX_MULTIPLE_LINES:
-        useFrame=TRUE; 
+        useFrame=TRUE;
+        window->is_frameless = FALSE;
         useIcon=FALSE;
         useBorder=TRUE;
         break;
@@ -757,6 +758,7 @@ doCreateWindowFrame (
     // Uma overlapped maximizada não tem borda.
     case WT_OVERLAPPED:
         useFrame=TRUE; 
+        window->is_frameless = FALSE;
         useTitleBar=TRUE;  // Normalmente uma janela tem a barra de t[itulos.
         useTitleString=TRUE;
         useIcon=TRUE;
@@ -780,15 +782,18 @@ doCreateWindowFrame (
     case WT_BUTTON:
     case WT_ICON:
         useFrame=TRUE;
+        window->is_frameless = FALSE;
         useIcon=FALSE;
         break;
 
     //default: break;
     };
 
-    if (useFrame == FALSE){
+    if (useFrame == FALSE)
+    {
+        window->is_frameless = TRUE;
         //server_debug_print ("doCreateWindowFrame: [ERROR] This type does not use a frame.\n");
-        return -1;
+        goto fail;
     }
 
 // ===============================================
@@ -940,10 +945,10 @@ doCreateWindowFrame (
                     useTitleString );
 
             // Register window
-            id = RegisterWindow(tbWindow);
+            id = (int) RegisterWindow(tbWindow);
             if (id<0){
                 //server_debug_print ("doCreateWindowFrame: Couldn't register window\n");
-                return -1;
+                goto fail;
             }
 
             // #important:
@@ -1031,21 +1036,20 @@ doCreateWindowFrame (
 
             if ((void *) sbWindow == NULL){
                 //server_debug_print ("doCreateWindowFrame: sbWindow fail \n");
-                return -1;
+                goto fail;
             }
             sbWindow->type = WT_SIMPLE;
             sbWindow->isStatusBar = TRUE;
             window->statusbar = (struct gws_window_d *) sbWindow;  // Window pointer.
             // Register window
-            id = RegisterWindow(tbWindow);
+            id = (int) RegisterWindow(tbWindow);
             if (id<0){
                 //server_debug_print ("doCreateWindowFrame: Couldn't register window\n");
-                return -1;
+                goto fail;
             }
         }
 
-        // ok
-        return 0;
+        return 0;  // OK
     }
 
 // ===============================================
@@ -1060,6 +1064,8 @@ doCreateWindowFrame (
     }
 
     return 0;
+fail:
+    return (int) (-1);
 }
 
 /*
@@ -2699,16 +2705,16 @@ void *CreateWindow (
 
         __w = 
             (void *) doCreateWindow ( 
-                         WT_SIMPLE, 
-                         style, 
-                         status, 
-                         state,  // view: min, max ... 
-                         (char *) _name,
-                         x, y, width, height, 
-                         (struct gws_window_d *) pWindow, 
-                         desktop_id, 
-                         FrameColor, ClientAreaColor, 
-                         (unsigned long) __rop_flags );  
+                        WT_SIMPLE, 
+                        style, 
+                        status, 
+                        state,  // view: min, max ... 
+                        (char *) _name,
+                        x, y, width, height, 
+                        (struct gws_window_d *) pWindow, 
+                        desktop_id, 
+                        FrameColor, ClientAreaColor, 
+                        (unsigned long) __rop_flags );  
 
         if ((void *) __w == NULL){
             //server_debug_print ("CreateWindow: doCreateWindow fail\n");

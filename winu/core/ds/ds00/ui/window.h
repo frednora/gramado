@@ -380,9 +380,10 @@ struct gws_window_d
 
 // The window frame
 // Top frame has: title bar, tool bar, menu bar ...
+    int is_frameless;
     struct windowframe_d  frame;
 
-// The frame's rectangle.
+// The frame's rectangle
 // #bugbug: Is it relative or absolute?
     struct gws_rect_d  rcWindow;
 // The Client area.
