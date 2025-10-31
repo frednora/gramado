@@ -22,11 +22,8 @@
 // Client-side library.
 #include <gws.h>
 
-
-
 #define IP(a, b, c, d) \
     (a << 24 | b << 16 | c << 8 | d)
-
 
 // The main structure.
 // see: terminal.h
@@ -271,7 +268,7 @@ static void terminal_poweroff_machine(int fd)
     gws_shutdown(fd);
 }
 
-//#test
+// #test
 static void update_clients(int fd)
 {
     // Terminal window
@@ -1542,7 +1539,6 @@ static void doAbout(int fd)
     lf();
 }
 
-
 static void doPrompt(int fd)
 {
     register int i=0;
@@ -1583,6 +1579,20 @@ static void doPrompt(int fd)
         return;
     }
 
+// --------------------------------------------
+// focus
+
+// #test
+// Setup this thread as foreground thread,
+// this way the app can receive input via stdin.
+    //rtl_focus_on_this_thread();
+
+// #test
+// Using the display server as input authority in order 
+// to setup the current foreground thread for keyboard input 
+// via stdin
+    gws_set_focus(fd,wid);
+
 // -------------------------------
 
     if (FontInfo.initialized == TRUE)
@@ -1616,12 +1626,6 @@ static void doPrompt(int fd)
 
     // it works
     //gws_refresh_window(fd,wid);
-
-// #test
-// Setup this thread as foreground thread,
-// this way the app can receive input via stdin.
-    rtl_focus_on_this_thread();
-
 }
 
 // interna
