@@ -1539,6 +1539,27 @@ static void doPrompt(int fd)
         return;
     }
 
+// ==========================
+// focus
+
+// #test
+// Setup this thread as foreground thread,
+// this way the app can receive input via stdin.
+    //rtl_focus_on_this_thread();
+
+// #test: Setting focus via display server.
+// #bugbug:
+// Actually in the case of this terminal, 
+// the foreground thread needs to be the shell application 
+// connected with this terminal. So it needs to use another 
+// type of input authority, because the shell is not connected
+// with the display server in order to send request asking 
+// to change the focus and set the foreground thread.
+
+    // #bugbug
+    gws_set_focus(fd,wid);
+
+
 // Draw prompt symbol.
     gws_draw_char ( 
         fd, 
@@ -1564,11 +1585,6 @@ static void doPrompt(int fd)
 
     // it works
     //gws_refresh_window(fd,wid);
-
-// #test
-// Setup this thread as foreground thread,
-// this way the app can receive input via stdin.
-    rtl_focus_on_this_thread();
 }
 
 
