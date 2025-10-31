@@ -1983,7 +1983,6 @@ void *doCreateWindow (
     window->shadow_style     = 0;
     window->background_style = 0;
     window->titlebar_style   = 0;
-    window->controls_style   = 0;
     window->border_style     = 0;
     window->menubar_style    = 0;
     window->toolbar_style    = 0;

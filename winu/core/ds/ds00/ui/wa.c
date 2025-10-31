@@ -1,8 +1,6 @@
 // wa.c
-// Working Area. (Vomit)
-// #todo
-// What is this?
-// Change the name of this file.
+// Working Area.
+// Created by Fred Nora.
 
 #include "../ds.h"
 

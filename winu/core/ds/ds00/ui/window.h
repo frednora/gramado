@@ -275,7 +275,7 @@ typedef enum {
 // 'int maximize_or_restore_wid;'
 struct windowcontrols_d
 {
-// Structure initialization.
+// Structure initialization
     int initialized;
 
     int minimize_wid;
@@ -355,7 +355,6 @@ struct mouse_pointer_properties_d
     // ...
 };
 
-// gws_window_d:
 // Server-side window object.
 struct gws_window_d 
 {
@@ -438,9 +437,6 @@ struct gws_window_d
 // Window style
     unsigned long style;
 
-// Controls
-    struct windowcontrols_d  Controls;
-
 // ===================================
 // Name/label support.
     char *name;
@@ -452,9 +448,9 @@ struct gws_window_d
 // Uma janela de aplicativo
 // poderá ter janelas de aplicativo dentro de sua área de cliente.
     int multiple;
-// Used to invalidate the rectangle.
-// If the window is dirty, so the whole window rectangle
-// needs to be flushed into the framebuffer.
+
+// Invalidate a window.
+// The whole window needs to be flushed into the framebuffer.
     int dirty;
 
 // Se tem o foco de entrada ou não.
@@ -548,10 +544,8 @@ struct gws_window_d
 //==================================================
 // DC - Device context
 
-// #todo
-    struct dc_d  *window_dc;
-// Maybe we can have a device context only for the client area.
-    struct dc_d  *client_dc;
+    struct dc_d  *window_dc;  // Window's device context
+    struct dc_d  *client_dc;  // Clent area's device context
 
 // ==================================================
 // STACK - The layers/parts of a window.
@@ -607,12 +601,8 @@ struct gws_window_d
 // ================
 // 4 - Controls
 
-    int minimizebuttonUsed;
-    int maximizebuttonUsed;
-    int closebuttonUsed;
-
-    int controls_style;
     int controlsUsed;
+    struct windowcontrols_d  Controls;
 
 // ================
 // 5 - Borders

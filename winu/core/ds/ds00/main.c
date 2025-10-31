@@ -946,6 +946,7 @@ int serviceAsyncCommand(void)
         if (data<0){
             goto done;
         }
+        // see: wm.c
         set_focus_by_id((int) data);
         goto done;
         break;

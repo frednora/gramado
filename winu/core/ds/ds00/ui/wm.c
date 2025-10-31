@@ -1063,7 +1063,6 @@ void on_doubleclick(void)
     if (w->magic != 1234)
         return;
 
-
 // is titlebar?
     if (w->isTitleBar == TRUE)
     {
@@ -1075,13 +1074,15 @@ void on_doubleclick(void)
             return;
         if (p->magic != 1234)
             return;
-        
-        if (p->type == WT_OVERLAPPED)
-        {
-            last_window = p;
-            wm_update_desktop3(p);
-            
-            /*
+        // The parent is not a Frame window
+        if (p->type != WT_OVERLAPPED)
+            return;
+
+        // Setup the last window and update the desktop.
+        last_window = p;
+        wm_update_desktop3(p);
+
+        /*
             set_active_window(p);
 
             // Enter fullscreen mode.
@@ -1093,12 +1094,10 @@ void on_doubleclick(void)
                 wm_exit_fullscreen_mode(TRUE);
                 return;
             }
-            */
-        }
+        */
     }
 
     // ...
-
 }
 
 // Post a message into the window with focus message queue.
@@ -2253,13 +2252,13 @@ void  wm_update_desktop2(void)
 
     WindowManager.is_fullscreen = FALSE;
 
-// Redraw the root window.
+// Redraw the root window
     if ((void*)__root_window != NULL){
         redraw_window(__root_window,FALSE);
     }
 
 // List
-// Get the first window.
+// Get the first window
     w = (struct gws_window_d *) first_window;
     if ((void*) w == NULL){
         goto done;
@@ -2327,9 +2326,9 @@ done:
                 w->titlebar->dirty = FALSE;  // Validate tittle bar
                 
                 // Validate the controls
-                validate_window_by_id(w->titlebar->Controls.minimize_wid );
-                validate_window_by_id(w->titlebar->Controls.maximize_wid );
-                validate_window_by_id(w->titlebar->Controls.close_wid );
+                validate_window_by_id(w->titlebar->Controls.minimize_wid);
+                validate_window_by_id(w->titlebar->Controls.maximize_wid);
+                validate_window_by_id(w->titlebar->Controls.close_wid);
             }
         }
         w = w->next;
@@ -2343,7 +2342,7 @@ done:
     //window_post_message_broadcast( 0, GWS_Paint, 0, 0 );
 
 // ----------------
-// Send pessage only to the top window.
+// Send message only to the top window.
     if ((void*) active_window != NULL){
         if (active_window->magic == 1234){
             window_post_message( active_window->id, GWS_Paint, 0, 0 );
@@ -2360,12 +2359,12 @@ void wm_update_desktop3(struct gws_window_d *new_active_window)
     if ((void*) new_active_window == NULL)
         return;
 
-    if ( new_active_window == last_window )
+    if (new_active_window == last_window)
         goto done;
 
 // Se nao for a primeira da lista,
 // entao retira da lista e coloca no final.
-    if ( new_active_window != first_window )
+    if (new_active_window != first_window)
     {
         // Simply remove from the list.
         wm_remove_window_from_list(new_active_window);
@@ -2573,10 +2572,11 @@ void set_focus(struct gws_window_d *window)
 // -----------------------------------------
 // EDIT BOX:
 // Redraw it with a new style.
-// Thr routine will need to know if 
+// The routine will need to know if 
 // we're the keyboard owner to select the style.
 // IN: window, show
-    if ( window->type == WT_EDITBOX || 
+    if ( window->type == WT_SIMPLE ||
+         window->type == WT_EDITBOX || 
          window->type == WT_EDITBOX_MULTIPLE_LINES || 
          window->type == WT_BUTTON )
     {
@@ -2774,7 +2774,7 @@ void set_focus_by_id(int wid)
 {
     struct gws_window_d *w;
 
-// wid
+// Parameter:
     if (wid<0){
         return;
     }

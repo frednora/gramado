@@ -1624,6 +1624,31 @@ static void doPrompt(int fd)
         return;
     }
 
+//--------------------------------------
+//
+// Focus
+//
+
+// #important
+// Use the right input authority. (display server)
+
+// #test:
+// As the display server is the authority for 
+// selecting the foreground thread, let's call the display server 
+// to set the focus and select the foreground thread 
+// associated with the window.
+
+// #test
+// Setup this thread as foreground thread,
+// this way the app can receive input via stdin.
+    //rtl_focus_on_this_thread();
+
+// #test
+// Using display server as the input authority.
+// ok. It is working.
+// But we need the prompt string.
+    gws_set_focus(fd,wid);
+
 // -------------------------------
 
     if (FontInfo.initialized == TRUE)
@@ -1657,11 +1682,6 @@ static void doPrompt(int fd)
 
     // it works
     //gws_refresh_window(fd,wid);
-
-// #test
-// Setup this thread as foreground thread,
-// this way the app can receive input via stdin.
-    rtl_focus_on_this_thread();
 }
 
 // interna
