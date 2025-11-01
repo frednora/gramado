@@ -3,12 +3,24 @@
 // Core scheduler code and related routines.
 // Created by Fred Nora.
 
+// The Core Purpose (in one sentence)Every time the scheduler is invoked, 
+// rebuild a new, complete, ordered linked list of threads that are 
+// ready to run in the next round-robin cycle — 
+// starting with the idle thread, followed by 
+// all eligible READY threads in TID order.
+
+// Why Rebuild the List Every Time?Answer in one sentence:
+// Because quantum is a per-round resource, not a per-thread static value — 
+// and the next round’s quantum depends on 
+// dynamic runtime feedback (credits, foreground status, input events, etc.).
+
 // #test
 // #todo
 // In the case of server operating systems,
 // input responsiveness is not a priority,
 // in this case, the scheduler can boost the quantum of network 
 // related tasks, not the display server or foreground thread.
+
 
 #include <kernel.h>
 
@@ -432,8 +444,7 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
 // The Idle as the head of the p1q queue.
 // The idle is the TID 0, so the loop starts at 1.
 
-    for ( i=Start; i<Max; ++i )
-    {
+    for (i=Start; i<Max; ++i){
         TmpThread = (void *) threadList[i];
 
         // #test: I don't like this.

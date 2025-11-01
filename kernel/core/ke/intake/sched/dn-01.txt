@@ -1,0 +1,122 @@
+/*
+1. Quantum = “Time Budget for This Round”
+This is not a fixed priority.
+It is a budget that says:  
+“In the next round, you get X ms before we preempt you.”
+So when the round ends:Some threads used all their quantum.
+Some were preempted early (I/O, sleep).
+Some got extra credits (e.g. handled 3 input events).
+The foreground thread changed.
+The display server is under heavy load.
+The old quantum values are stale.
+
+2. Rebuilding = Re-evaluating Policy
+Is this the foreground thread? Yes → boost
+Did it handle input events?    Yes → isResponder = TRUE
+Did it earn credits this round? credits >= 2 → +1 quantum
+Is it a network thread (server OS)? Yes → medium boost
+Was it starved last round?  Yes → raise base_priority
+These are runtime, feedback-driven decisions.
+You cannot precompute them at thread creation.
+You cannot cache them across rounds.
+
+3. The Round Is the Accounting Period
+hink of the round as a billing cycle:Phase
+Action
+Start of round
+Assign budget (quantum) based on policy
+During round
+Threads spend ticks; dispatcher counts down
+End of round
+Collect feedback (credits, events, foreground)
+Next round
+Rebuild list + reassign budgets
+
+→ The list and the quantum are inseparable.
+You don’t just reuse the old list with new pointers.
+You rebuild the list to embed the new quantum policy.
+
+4. Why Not Keep the List and Just Update Quantum?
+5. The Round Is a Snapshot of System Intent
+6. Analogy: Airline Boarding
+
+Flight boarding One scheduling round
+Boarding groups (1, 2, 3, …) Quantum levels
+Re-printing boarding passes every flight Rebuilding the list
+Passenger gets upgraded mid-flight credits++, isResponder = TRUE
+
+You don’t reuse yesterday’s boarding list.
+You reprint based on current status.
+
+>>>>>>>>>>>>>>>> #bugbug <<<<<<<<<<<<<<<<<<<<<<
+7. So Why Is This Efficient?
+Yes, rebuilding is O(n) — but:
+n = number of threads  Usually < 1000, often < 100
+Called once per round  e.g. every 10–50 ms
+Cost: 1000 × 20 cycles = 20k cycles  < 1% of a 2GHz CPU
+
+8. The Deep Truth
+The linked list is not a data structure. It is a policy document.
+It says:“In the next 50ms, this is the order and budget we give to each thread.”
+And because policy changes, the document must be rewritten.
+
+Final Answer to Your QuestionWhy rebuild the list every time?
+Because the quantum is a per-round promise, and the promise changes every round based on runtime behavior. The only way to honor the new promise is to rebuild the list from scratch — embedding both order and budget.
+
+“Can we avoid rebuilding the list every round — and reuse it when nothing changed?”
+Your Goal: Reuse the List When Possible
+if (nothing_changed) {
+    reuse_current_round();   // O(1)
+} else {
+    rebuild_round();         // O(n)
+}
+This is classic optimization:  
+Cache the expensive work. Invalidate on change.
+When Can We Reuse the List?The list can be reused if and only if:Condition
+Must Be True to Reuse
+1. No thread woke up
+No WAITING → READY
+2. No thread blocked/exited
+No READY → WAITING/ZOMBIE
+3. No quantum policy changed
+Foreground, display server, isResponder, credits
+4. No new threads created
+No thread_create()
+If all 4 are true, the old list is still valid.
+
+#todo: 
+Create a 'dirty' flag for the round.
+CurrentRound.dirty = TRUE;
+
+“I am creating priority queues. That is gonna be cool.”
+
+The Big Picture: 
+From Flat RR to Tiered Priority Queues
+
+Flat RR:  idle → t1 → t2 → t3 → NULL  All threads equal
+Priority Queues:  p6q → p5q → p4q → p3q → p2q → p1q  High-priority runs first
+
+Reflection: Why Priority Queues Are Cool
+1. Real-Time Responsiveness
+2. Server OS Policy (Your Original Comment)
+“boost the quantum of network related tasks, not the display server”
+3. Starvation Protection via Aging
+
+The New Mental Model: Queue of Queues
+
+Scheduler picks: p6q → p5q → p4q → p3q → p2q → p1q
+Until it finds a non-empty queue.
+Then runs the head of that queue.
+
+CurrentRound.dirty Is Still King
+
+Thread changes priority CurrentRound.dirty = TRUE
+Thread becomes READY    CurrentRound.dirty = TRUE
+Thread exits            CurrentRound.dirty = TRUE
+→ Fast path: reuse all 6 queues.
+→ Slow path: rebuild all 6.
+
+“Real-time as an option… the administrator selects the real-time scheduler.”
+
+*/
+
