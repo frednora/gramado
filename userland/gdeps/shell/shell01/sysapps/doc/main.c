@@ -365,17 +365,15 @@ static void usage(char **argv)
         __VERSION__ );
 }
 
-
 static void update_clients(int fd)
 {
-    // Local
-    struct gws_window_info_d lWi;
+    struct gws_window_info_d lWi;  // Local
 
     if (fd<0){
         return;
     }
 // Get info about the main window.
-//IN: fd, wid, window info structure.
+// IN: fd, wid, window info structure.
     gws_get_window_info(
         fd, 
         __main_window,   // The app window.
@@ -398,9 +396,9 @@ static void update_clients(int fd)
         cwAddressBar.w,
         cwAddressBar.h );
 
+// Set focus using the display server as input authority.
     gws_set_focus(fd,__addressbar_window);
     gws_redraw_window(fd, __addressbar_window, TRUE);
-
 
 //---------------------------------------------
 // Button

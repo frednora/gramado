@@ -17,10 +17,7 @@ all:
 
 # 3
 # Output entity for subsystems
-	make -C  ss/pubterm/
-	make -C  ss/terminal/
-	make -C  ss/term00/
-	make -C  ss/teabox/
+	make -C ss/
 
 # 4
 # Normal programs.
