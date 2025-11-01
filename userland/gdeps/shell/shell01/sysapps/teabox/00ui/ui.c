@@ -55,7 +55,6 @@ static int isTimeToQuit=FALSE;
 // Window Info for main window.
 struct gws_window_info_d mwWindowInfo;
 
-
 // The main window
 // DEFAULT VALUES.
 unsigned long mw_left   = 4;
@@ -82,7 +81,6 @@ unsigned long cw_height = 40;
 #define IP(a, b, c, d) \
     (a << 24 | b << 16 | c << 8 | d)
 
-
 //char *hello = "Hello there!\n";
 /*
 #define IP(a, b, c, d) (a << 24 | b << 16 | c << 8 | d)
@@ -97,7 +95,6 @@ static int __main_window = -1;
 static int __addressbar_window = -1;
 static int __button_window = -1;
 static int __client_window = -1;
-
 
 struct child_window_d
 {
@@ -138,8 +135,7 @@ static void update_clients(int fd);
 
 static void update_clients(int fd)
 {
-    // Local
-    struct gws_window_info_d lWi;
+    struct gws_window_info_d lWi;  // Local
 
     if (fd<0){
         return;
@@ -180,7 +176,9 @@ static void update_clients(int fd)
 
     // #test
     // This is gonna repaint the bar with bold border.
+    // Using the display server as input authority.
     gws_set_focus(fd,__addressbar_window);
+
     // #test
     // This is gonna redraw it respecting the focus style.
     gws_redraw_window(fd, __addressbar_window, TRUE);
@@ -203,7 +201,6 @@ static void update_clients(int fd)
         cwButton.h );
 
     gws_redraw_window(fd, __button_window, TRUE);
-
 
 //-----------------------
 // the client window
@@ -231,7 +228,6 @@ static void update_clients(int fd)
         cwClientWindow.h );
 
     gws_redraw_window(fd, __client_window, TRUE);
-
 
 // #test
 // Updating the demo window based on the 
@@ -498,10 +494,7 @@ int uiInitialize(void)
         exit(1);
     }
 
-// #todo: 
-// Salvar em global.
-// Por enquanto aqui.
-
+// Saving locally for now.
     int main_window=0;
     int addressbar_window=0;    
     int client_window=0;
@@ -574,16 +567,14 @@ int uiInitialize(void)
 // Se a janela mae for overlapped,
 // entao seremos relativos à sua áre de cliente.
 
-    unsigned long ab_width = (w_width -50);
+    unsigned long ab_width = (w_width -4 -4 -24 -4);
+    unsigned long ab_height = 24;
 
     addressbar_window = 
         (int) gws_create_window (
                 client_fd,
                 WT_EDITBOX, 1, 1, ab_name,
-                4, 
-                4, 
-                (w_width -4 -4 -24 -4), 
-                24,
+                4, 4, ab_width, ab_height,
                 main_window,  // janela mãe é overlapped. pinta na client area.
                 WS_CHILD, COLOR_WHITE, COLOR_WHITE );
 
@@ -672,6 +663,9 @@ int uiInitialize(void)
     gws_set_focus      (client_fd, client_window);
     gws_refresh_window (client_fd, main_window);
 
+    //#debug
+    // exit(0);
+
 // ============================================
 // 
 //                3D engine 
@@ -703,10 +697,22 @@ int uiInitialize(void)
         // #important:
         // NOT using the event loop in demo01main(),
         // we're gonna use the event loop here.
+
+        // #bugbug
+        // Creating the viewport and working area.
+
+        /*
         status = 
             (int) demo01main(
                 mw_left + LmwWindowInfo.cr_left, 
                 mw_top  + LmwWindowInfo.cr_top, 
+                LmwWindowInfo.cr_width, 
+                LmwWindowInfo.cr_height );  
+        */
+        status = 
+            (int) demo01main(
+                LmwWindowInfo.cr_left + mw_left, 
+                LmwWindowInfo.cr_top  + mw_top, 
                 LmwWindowInfo.cr_width, 
                 LmwWindowInfo.cr_height );  
 
