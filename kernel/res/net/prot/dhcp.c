@@ -6,6 +6,11 @@
 // D.O.R.A.
 // Discover, Offer, Request, Ack
 
+// #important
+// Use 'legacy' acceleration on Virtualbox, NOT the Hyper-v acceleration.
+// That was the reason for the issues in DHCP dialog.
+
+
 /*
 Two Types of DHCP Request:
 
@@ -20,6 +25,29 @@ The key difference is that it includes the currently leased IP address and
 the server identifier.
 If the server accepts, it sends an ACK confirming the renewal.
 */
+
+
+// #todo
+// #bugbug
+// BUG 1: You reuse the same dhcp struct in network_handle_dhcp()
+// network_dhcp_send(dhcp, DORA_R, ...);
+// You're passing the received packet buffer as the send buffer. 
+// This corrupts the received Offer → Request will be malformed.
+// BUG 2: UDP Payload Size is Wrong
+// size_t __udp_payload_size = sizeof(struct dhcp_d);
+// size_t payload_size = offsetof(struct dhcp_d, options) + opt_size;
+// BUG 3: Source IP in Discover should be 0.0.0.0
+// BUG 4: No validation of xid match
+// BUG 5: No timeout / retry logic
+// You send 5 Discover — good, but no exponential backoff.
+
+// FINAL RECOMMENDATIONS
+// + Use local send buffer     Avoid corrupting received packet
+// + Use dynamic payload size  Avoid garbage
+// + Validate xid              Prevent replay attacks
+// + Add timeout + retry       Robustness
+// + Parse options in ACK      Get subnet, gateway, DNS
+
 
 
 #include <kernel.h>

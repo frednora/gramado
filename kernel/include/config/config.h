@@ -42,6 +42,9 @@
 
 // Enable the initialization of e1000 controller.
 // This is used to test the network infrastructure.
+// #important
+// Use 'legacy' acceleration on Virtualbox, NOT the Hyper-v acceleration.
+// That was the reason for the issues in DHCP dialog.
 #define USE_E1000          0
 
 // ...

@@ -864,7 +864,7 @@ void pump(int fd, int wid)
     if (wid<0)
         return;
 
-// Request event with the server.
+// Request event with the display server.
     e = 
         (struct gws_event_d *) gws_get_next_event(
                                    fd, 
