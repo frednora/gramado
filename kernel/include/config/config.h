@@ -46,8 +46,7 @@
 // Use 'legacy' acceleration on Virtualbox, NOT the Hyper-v acceleration.
 // That was the reason for the issues in DHCP dialog.
 // #todo: See 'Core isolation' in network/firewall configuration.
-#define USE_E1000          0  
-
+#define USE_E1000          0 
 
 // ...
 

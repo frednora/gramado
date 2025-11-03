@@ -96,7 +96,9 @@ myObjects = wm.o \
 wminput.o \
 bmp.o \
 menu.o \
+fnt8x8.o \
 fnt8x16.o \
+lt8x8.o \
 font.o \
 painter.o \
 window.o \
@@ -121,7 +123,9 @@ all-c:
 
 	$(CC)  -c menu.c     $(CFLAGS) $(CINCLUDES) -o menu.o
 
+	$(CC)  -c fnt8x8.c   $(CFLAGS) $(CINCLUDES) -o fnt8x8.o
 	$(CC)  -c fnt8x16.c  $(CFLAGS) $(CINCLUDES) -o fnt8x16.o
+	$(CC)  -c lt8x8.c    $(CFLAGS) $(CINCLUDES) -o lt8x8.o
 	$(CC)  -c font.c     $(CFLAGS) $(CINCLUDES) -o font.o
 
 	$(CC)  -c painter.c  $(CFLAGS) $(CINCLUDES) -o painter.o

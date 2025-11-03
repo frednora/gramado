@@ -10,8 +10,20 @@
 #define DEFAULT_FONT_HEIGHT  8
 extern char *font_lt8x8;
 
+
+// 8x8
+#define FONTDATAMAX  2048
+extern unsigned char font_lin8x8[FONTDATAMAX];
+
+// 8x16
 #define FNT8X16_FONTDATAMAX   4096
 extern unsigned char fontdata_8x16[FNT8X16_FONTDATAMAX];
+
+// 8x8
+// Losethos font.
+// Inverted order.
+// Credits: Terry Davis.
+extern unsigned char __inverted_font_lt8x8[256*8];
 
 
 //
@@ -33,7 +45,7 @@ struct font_initialization_d
     unsigned long address;
     unsigned long width;
     unsigned long height;
-    int current_font;   //index
+    int index_for_current_font;
 };
 // See: font.c
 extern struct font_initialization_d  FontInitialization;
@@ -50,6 +62,8 @@ fontSetInfo(
     unsigned long address, 
     unsigned long char_width, 
     unsigned long char_height );
+
+void fontSetCurrentFontIndex(int index);
 
 int font_initialize(void);
 
