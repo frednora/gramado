@@ -104,9 +104,6 @@ _u8 ata_record_channel=0;
 // The current port information
 struct ata_current_port_d  ATACurrentPort;
 
-// Main controller structure.
-struct ata_controller_d  AtaController;
-
 // Array of ATA port structures for all four ports.
 // ata_port[0] = Primary Master, ata_port[1] = Primary Slave,
 // ata_port[2] = Secondary Master, ata_port[3] = Secondary Slave
@@ -347,7 +344,7 @@ void show_ide_info()
 	//if( ata != NULL )
 	//{
 		printf("ata:\n");
- 	    printf("type={%d}\n", (int) AtaController.chip_control_type);
+ 	    printf("type={%d}\n", (int) StorageController.controller_type);
 	    printf("channel={%d}\n", (int) ata.channel);
 	    printf("devType={%d}\n", (int) ata.dev_type);
 	    printf("devNum={%d}\n", (int) ata.dev_num);
@@ -1143,9 +1140,8 @@ __ataPCIConfigurationSpace (
 {
     uint32_t data=0;
 
-// Controller type.
-    AtaController.chip_control_type = STORAGE_CONTROLLER_MODE_UNKNOWN;
-
+// Controller type
+    StorageController.controller_type = STORAGE_CONTROLLER_MODE_UNKNOWN;
 
     printf ("Initializing PCI Mass Storage support..\n");
 
@@ -1185,7 +1181,7 @@ __ataPCIConfigurationSpace (
     if ( ata_pci.class == PCI_CLASS_MASS && 
          ata_pci.subclass == STORAGE_CONTROLLER_MODE_SCSI ){
 
-        AtaController.chip_control_type = STORAGE_CONTROLLER_MODE_SCSI; // :)
+        StorageController.controller_type = STORAGE_CONTROLLER_MODE_SCSI;
         printf ("SCSI not supported\n");
         return (int) PCI_MSG_ERROR;
 
@@ -1197,7 +1193,7 @@ __ataPCIConfigurationSpace (
     } else if ( ata_pci.class == PCI_CLASS_MASS && 
          ata_pci.subclass == STORAGE_CONTROLLER_MODE_ATA ){
 
-        AtaController.chip_control_type = STORAGE_CONTROLLER_MODE_ATA; // :)
+        StorageController.controller_type = STORAGE_CONTROLLER_MODE_ATA;
 
         // IDE
         //#debug
@@ -1246,7 +1242,7 @@ __ataPCIConfigurationSpace (
         __ataWritePCIConfigAddr( bus, dev, fun, 0x48, data | 0xf);
 
         printf("[ Sub Class Code %s Programming Interface %d Revision ID %d ]\n",\
-            ata_sub_class_code_register_strings[AtaController.chip_control_type],
+            ata_sub_class_code_register_strings[StorageController.controller_type],
             ata_pci.prog_if,
             ata_pci.revision_id );
 
@@ -1258,7 +1254,7 @@ __ataPCIConfigurationSpace (
     } else if ( ata_pci.class == PCI_CLASS_MASS && 
                 ata_pci.subclass == STORAGE_CONTROLLER_MODE_RAID ){
 
-        AtaController.chip_control_type = STORAGE_CONTROLLER_MODE_RAID; // :)
+        StorageController.controller_type = STORAGE_CONTROLLER_MODE_RAID;
         printf ("RAID not supported\n");
         return (int) PCI_MSG_ERROR;
 
@@ -1270,7 +1266,7 @@ __ataPCIConfigurationSpace (
     } else if ( ata_pci.class == PCI_CLASS_MASS && 
                 ata_pci.subclass == STORAGE_CONTROLLER_MODE_DMA ){
 
-        AtaController.chip_control_type = STORAGE_CONTROLLER_MODE_DMA; // :)
+        StorageController.controller_type = STORAGE_CONTROLLER_MODE_DMA;
         printf ("ATA DMA not supported\n");
         return (int) PCI_MSG_ERROR;
 
@@ -1282,7 +1278,7 @@ __ataPCIConfigurationSpace (
     } else if ( ata_pci.class == PCI_CLASS_MASS && 
                 ata_pci.subclass == STORAGE_CONTROLLER_MODE_AHCI ){
 
-        AtaController.chip_control_type = STORAGE_CONTROLLER_MODE_AHCI; // :)
+        StorageController.controller_type = STORAGE_CONTROLLER_MODE_AHCI;
 
         // ACHI
         //#debug
@@ -1326,7 +1322,7 @@ __ataPCIConfigurationSpace (
         __ataWritePCIConfigAddr ( bus, dev, fun, 4, data & ~0x400);
 
         printf("[ Sub Class Code %s Programming Interface %d Revision ID %d ]\n",\
-            ata_sub_class_code_register_strings[AtaController.chip_control_type], 
+            ata_sub_class_code_register_strings[StorageController.controller_type], 
             ata_pci.prog_if,
             ata_pci.revision_id );
 
@@ -1335,7 +1331,7 @@ __ataPCIConfigurationSpace (
     } else if ( ata_pci.class == PCI_CLASS_MASS && 
                 ata_pci.subclass == STORAGE_CONTROLLER_MODE_NVME ){
 
-        AtaController.chip_control_type = STORAGE_CONTROLLER_MODE_NVME; // :)
+        StorageController.controller_type = STORAGE_CONTROLLER_MODE_NVME;
         printf ("NVME not supported\n");
         return (int) PCI_MSG_ERROR;
 
@@ -1343,7 +1339,7 @@ __ataPCIConfigurationSpace (
     } else if ( ata_pci.class == PCI_CLASS_MASS && 
                 ata_pci.subclass == STORAGE_CONTROLLER_MODE_SAS ){
 
-        AtaController.chip_control_type = STORAGE_CONTROLLER_MODE_SAS; // :)
+        StorageController.controller_type = STORAGE_CONTROLLER_MODE_SAS;
         printf ("SAS not supported\n");
         return (int) PCI_MSG_ERROR;
 
@@ -1351,7 +1347,7 @@ __ataPCIConfigurationSpace (
     // ?:? = Class/subclass not supported.
     } else {
 
-        AtaController.chip_control_type = STORAGE_CONTROLLER_MODE_UNKNOWN; // :)
+        StorageController.controller_type = STORAGE_CONTROLLER_MODE_UNKNOWN;
         printf ("Unknown controller type. Class=%d Subclass=%d\n", 
             ata_pci.class, ata_pci.subclass);
         return (int) PCI_MSG_ERROR;
@@ -2187,7 +2183,7 @@ static int __ata_probe_controller(int ataflag)
 // Mass storage device only.
 
     // Read PCI config for this controller 
-    // (fills ata_pci and sets AtaController.chip_control_type)
+    // (fills ata_pci and sets StorageController.controller_type)
     data = (_u32) __ataPCIConfigurationSpace( bus, dev, fun );
     if (data != PCI_MSG_SUCCESSFUL)
     {
@@ -2274,14 +2270,14 @@ static int __ata_probe_controller(int ataflag)
 // Type ATA
 // Sub-class 01h = IDE Controller
 // IDE controller: proceed with full ATA support (multi-port)
-    if (AtaController.chip_control_type == STORAGE_CONTROLLER_MODE_ATA){
+    if (StorageController.controller_type == STORAGE_CONTROLLER_MODE_ATA){
         
         BootDisk.controller_type = CONTROLLER_TYPE_ATA;
         __ata_initialize_controller();
 
 // =========================
 // Type RAID
-    } else if (AtaController.chip_control_type == STORAGE_CONTROLLER_MODE_RAID){
+    } else if (StorageController.controller_type == STORAGE_CONTROLLER_MODE_RAID){
 
         BootDisk.controller_type = -1;
         printf ("__ata_probe_controller: RAID not supported\n");
@@ -2289,7 +2285,7 @@ static int __ata_probe_controller(int ataflag)
 
 // =========================
 // Type ATA DMA.
-    } else if (AtaController.chip_control_type == STORAGE_CONTROLLER_MODE_DMA){
+    } else if (StorageController.controller_type == STORAGE_CONTROLLER_MODE_DMA){
 
         BootDisk.controller_type = -1;
         printf ("__ata_probe_controller: ATA DMA not supported\n");
@@ -2298,7 +2294,7 @@ static int __ata_probe_controller(int ataflag)
 // =========================
 // Type AHCI.
 // Sub-class 06h = SATA Controller
-    } else if (AtaController.chip_control_type == STORAGE_CONTROLLER_MODE_AHCI){
+    } else if (StorageController.controller_type == STORAGE_CONTROLLER_MODE_AHCI){
 
         BootDisk.controller_type = CONTROLLER_TYPE_AHCI;
         printf ("__ata_probe_controller: AHCI not supported\n");

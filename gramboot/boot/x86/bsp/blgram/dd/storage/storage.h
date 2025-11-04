@@ -46,6 +46,32 @@
 
 
 
+/*
+ * struct storage_controller_d
+ * ----------------------------------------------------------------------
+ * Main controller-level state for the ATA (or compatible) storage controller.
+ * This structure tracks high-level information about the detected controller,
+ * including what type of storage controller was found (IDE/ATA, RAID, AHCI/SATA, etc.)
+ * and whether it has been properly initialized.
+ *
+ * - 'initialized': Set to nonzero after the controller and all ports (ata_port[4])
+ *    are successfully probed and configured.
+ * - 'controller_type': Identifies the controller type, such as IDE, RAID, or AHCI,
+ *    using one of the __ATA_CONTROLLER, __RAID_CONTROLLER, or __AHCI_CONTROLLER constants.
+ *
+ * Note: Per-port and per-device information is tracked in ata_port[4] and other structures;
+ * storage_controller_d is only for the general controller overview and global state.
+ */
+struct storage_controller_d
+{
+// 0: Not initialized; 1: Controller and ports are ready.
+    int initialized;
+// See __ATA_CONTROLLER, __RAID_CONTROLLER, __AHCI_CONTROLLER, etc.
+    uint8_t controller_type;
+};
+extern struct storage_controller_d  StorageController;
+
+
 
 // Internal use
 #define CONTROLLER_TYPE_ATA   1000

@@ -4,6 +4,9 @@
 
 #include "../../bl.h"
 
+// Main controller structure.
+struct storage_controller_d  StorageController;
+
 
 struct boot_disk_d  BootDisk;
 

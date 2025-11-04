@@ -286,31 +286,6 @@ extern struct ata_pci  ata_pci;
 
 
 /*
- * struct ata_controller_d
- * ----------------------------------------------------------------------
- * Main controller-level state for the ATA (or compatible) storage controller.
- * This structure tracks high-level information about the detected controller,
- * including what type of storage controller was found (IDE/ATA, RAID, AHCI/SATA, etc.)
- * and whether it has been properly initialized.
- *
- * - 'initialized': Set to nonzero after the controller and all ports (ata_port[4])
- *    are successfully probed and configured.
- * - 'chip_control_type': Identifies the controller type, such as IDE, RAID, or AHCI,
- *    using one of the __ATA_CONTROLLER, __RAID_CONTROLLER, or __AHCI_CONTROLLER constants.
- *
- * Note: Per-port and per-device information is tracked in ata_port[4] and other structures;
- * ata_controller_d is only for the general controller overview and global state.
- */
-struct ata_controller_d
-{
-// 0: Not initialized; 1: Controller and ports are ready.
-    int initialized;
-// See __ATA_CONTROLLER, __RAID_CONTROLLER, __AHCI_CONTROLLER, etc.
-    uint8_t chip_control_type;
-};
-extern struct ata_controller_d AtaController;
-
-/*
  * ata_port_d
  * Structure representing an individual ATA port (Primary Master, Primary Slave, Secondary Master, Secondary Slave).
  * All per-port state, addressing, and configuration is contained here.
@@ -326,7 +301,7 @@ struct ata_port_d
 {
     //int used;
     //int magic;
-    //uint8_t  chip_control_type;
+    //uint8_t  controller_type;
     uint8_t  channel;
     uint8_t  dev_type;
     uint8_t  dev_num;
