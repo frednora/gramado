@@ -4,6 +4,7 @@
 #ifndef __KE_KE_H
 #define __KE_KE_H    1
 
+int keLoadGramadoIcons(void);
 
 void keRefreshScreen(void);
 

@@ -5,6 +5,17 @@
 
 #include <kernel.h>  
 
+
+//--------------------------------------
+// Ponteiros para ícones
+// Ponteiros para o endereço onde os ícones foram carregados.
+// queremos saber se o endereço alocado eh compartilhado ...
+// para o window server usar ... entao chamaremos de sharedbufferIcon.
+
+// Icon cache structure.
+// see: gre.h
+struct icon_cache_d  icon_cache;
+
 //  Compositor
 int DemoFlag=0;
 int UpdateScreenFlag=0;
@@ -568,6 +579,220 @@ void demo0(void)
     //rectangleZ( 10, 10, 10+20,10+20,COLOR_BLUE,0);                  
     //refresh_screen();
 }
+
+// ============================
+// Get a shared buffer to a system icon.
+// it is gonna be used by the window server.
+// It is a pre allocated buffer containg an bmp icon loaded at it.
+// Service 9100
+// See: window.h
+
+void *gre_get_system_icon(int n)
+{
+    if (icon_cache.initialized != TRUE){
+        return NULL;
+    }
+
+    if (n < 1 || n > 5){
+        return NULL;
+    }
+
+// #bugbug
+// This is very unsafe.
+// The app can mess up our memory.
+// #todo
+// Only the window server can access this routine.
+
+    switch (n){
+    case 1: return (void *) icon_cache.app;       break;
+    case 2: return (void *) icon_cache.file;      break;
+    case 3: return (void *) icon_cache.folder;    break;
+    case 4: return (void *) icon_cache.terminal;  break;
+    case 5: return (void *) icon_cache.cursor;    break;
+    // ...
+    };
+
+    return NULL;
+}
+
+//----------------------------------------------
+
+// greLoadGramadoIcons: Worker
+// Load some .BMP system icons into the memory.
+// It's a part of the window system's initialization.
+int greLoadGramadoIcons(void)
+{
+    int fRet = -1;
+
+    icon_cache.initialized = FALSE;
+
+    //#debug
+    //printk("greLoadGramadoIcons:\n");
+
+// ## Icon support ##
+// iconSupport:
+// Carregando alguns ícones básicos usados pelo sistema.
+// ## size ##
+// Vamos carregar ícones pequenos.
+// @todo checar a validade dos ponteiros.
+// #bugbug
+// Size determinado, mas não sabemos o tamanho dos ícones.
+// 4 pages.
+// 16 KB ? Is it enough ?
+// Sim, os ícones que estamos usam possuem no máximo 2KB.
+// See: base/
+
+    unsigned long tmp_size = (4*4096);
+    icon_cache.size_in_bytes = (size_t) tmp_size;
+
+// See: window.h
+    icon_cache.app      = (void *) allocPages(4);
+    icon_cache.file     = (void *) allocPages(4);
+    icon_cache.folder   = (void *) allocPages(4);
+    icon_cache.terminal = (void *) allocPages(4);
+    icon_cache.cursor   = (void *) allocPages(4);
+    // ...
+
+    if ( (void *) icon_cache.app == NULL ){
+        printk ("greLoadGramadoIcons: app\n");
+        goto fail;
+    }
+    if ( (void *) icon_cache.file == NULL ){
+        printk ("greLoadGramadoIcons: file\n");
+        goto fail;
+    }
+    if ( (void *) icon_cache.folder == NULL ){
+        printk ("greLoadGramadoIcons: folder\n");
+        goto fail;
+    }
+    if ( (void *) icon_cache.terminal == NULL ){
+        printk ("greLoadGramadoIcons: terminal\n");
+        goto fail;
+    }
+    if ( (void *) icon_cache.cursor == NULL ){
+        printk ("greLoadGramadoIcons: cursor\n");
+        goto fail;
+    }
+
+//
+// Load .BMP images
+//
+
+// Loading from the rootdir, '/'.
+// #todo:
+// Maybe we can load these files from DE/ folder.
+
+// sdDE struture.
+    if (sdDE.initialized != TRUE){
+        printk("greLoadGramadoIcons: sdDE.initialized\n");
+        goto fail;
+    }
+    if (sdDE.address == 0){
+        printk("greLoadGramadoIcons: sdDE.address\n");
+        goto fail;
+    }
+
+// Load .BMP file.
+// IN: 
+// FAT address, dir address, # dir entries, name, 
+// buffer address, buffer size in bytes.
+    fRet = 
+        (int) fsLoadFile ( 
+                VOLUME1_FAT_ADDRESS,
+                sdDE.address,
+                512,
+                "APP     BMP", 
+                (unsigned long) icon_cache.app,
+                tmp_size );
+    if (fRet != 0){
+        printk("greLoadGramadoIcons: APP.BMP\n");
+        goto fail;
+    }
+
+// Load .BMP file.
+// IN: 
+// FAT address, dir address, # dir entries, name, 
+// buffer address, buffer size in bytes.
+    fRet = 
+        (int) fsLoadFile ( 
+                VOLUME1_FAT_ADDRESS,
+                sdDE.address,
+                512,
+                "FILE    BMP", 
+                (unsigned long) icon_cache.file,
+                tmp_size );
+    if (fRet != 0){
+        printk("greLoadGramadoIcons: FILE.BMP\n");
+        goto fail;
+    }
+
+// Load .BMP file.
+// IN: 
+// FAT address, dir address, # dir entries, name, 
+// buffer address, buffer size in bytes.
+    fRet = 
+        (int) fsLoadFile ( 
+                VOLUME1_FAT_ADDRESS, 
+                sdDE.address,
+                512,
+                "FOLDER  BMP", 
+                (unsigned long) icon_cache.folder,
+                tmp_size );
+    if (fRet != 0){
+        printk("greLoadGramadoIcons: FOLDER.BMP\n");
+        goto fail;
+    }
+
+// Load .BMP file.
+// IN: 
+// FAT address, dir address, # dir entries, name, 
+// buffer address, buffer size in bytes.
+    fRet = 
+        (int) fsLoadFile ( 
+                VOLUME1_FAT_ADDRESS, 
+                sdDE.address,
+                512,
+                "TERMINALBMP", 
+                (unsigned long) icon_cache.terminal,
+                tmp_size );
+    if (fRet != 0){
+        printk("greLoadGramadoIcons: TERMINAL.BMP\n");
+        goto fail;
+    }
+
+// Load .BMP file.
+// IN: 
+// FAT address, dir address, # dir entries, name, 
+// buffer address, buffer size in bytes.
+    fRet = 
+        (int) fsLoadFile ( 
+                VOLUME1_FAT_ADDRESS, 
+                sdDE.address,
+                512,
+                "CURSOR  BMP", 
+                (unsigned long) icon_cache.cursor,
+                tmp_size );
+    if (fRet != 0){
+        printk("greLoadGramadoIcons: CURSOR.BMP\n");
+        goto fail;
+    }
+
+// More?
+// Podemos checar se eles foram carregados corretamente,
+// conferindo apenas a assinatura em cada um deles.
+    icon_cache.initialized = TRUE;
+    return 0;
+
+fail:
+    icon_cache.initialized = FALSE;
+
+    // #test
+    // PANIC: We don't wanna continue without icons for now.
+    panic ("greLoadGramadoIcons: Fail\n");
+
+    return (int) -1;
+}
+
 
 static int __gre_initialize_globals(void)
 {

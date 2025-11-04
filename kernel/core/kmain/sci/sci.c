@@ -1855,7 +1855,7 @@ void *sci0 (
     if (number == 9100){
         if (arg2<0)
             return NULL;
-        return (void *) ui_get_system_icon((int) arg2);
+        return (void *) gre_get_system_icon((int) arg2);
     }
 
 // ========================================================

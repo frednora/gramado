@@ -230,8 +230,9 @@ void demo0(void);
 void kgws_enable(void);
 void kgws_disable(void);
 
-int windowLoadGramadoIcons(void);
-void *ui_get_system_icon(int n);
+void *gre_get_system_icon(int n);
+
+int greLoadGramadoIcons(void);
 
 //
 // $

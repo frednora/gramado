@@ -600,7 +600,7 @@
 // See: kstdio
 // IN: fd
 
-// 9100 - ui_get_system_icon
+// 9100 - gre_get_system_icon
 // Pegando o endereço de um buffer de icone.
 // queremos saber se ele eh compartilhado.
 // shared_buffer_terminal_icon
