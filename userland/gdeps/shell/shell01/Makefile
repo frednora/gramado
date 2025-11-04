@@ -33,6 +33,7 @@ all:
 
 # test
 	make -C menuapp/
+	make -C launch/
 
 clean:
 	-rm bin/*.BIN

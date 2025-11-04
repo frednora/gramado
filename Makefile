@@ -257,6 +257,7 @@ build-extras:
 
 	@-cp $(APPLICATIONS)/bin/TASKBAR.BIN    $(BASE)/DE
 	@-cp $(APPLICATIONS)/bin/MENUAPP.BIN    $(BASE)/DE
+	@-cp $(APPLICATIONS)/bin/LAUNCH.BIN     $(BASE)/DE
 	@-cp $(APPLICATIONS)/bin/TERMINAL.BIN   $(BASE)/DE
 	@-cp $(APPLICATIONS)/bin/TERM00.BIN     $(BASE)/DE
 #@-cp $(APPLICATIONS)/bin/GWS.BIN       $(BASE)/DE
