@@ -47,8 +47,6 @@ static uint32_t __next_sd_id = 0;
 
 // --------------------------
 
-struct ata_controller_d AtaController;
-
 struct ata_port_d  ata_port[4];
 struct ide_port_d  ide_port[4];
 
@@ -1601,7 +1599,7 @@ static int __ata_initialize(int ataflag)
 
 // Driver status.
     g_ata_driver_initialized = FALSE;
-    AtaController.initialized = FALSE;
+    StorageController.initialized = FALSE;
 
 // A estrutura ainda nao foi configurada.
     //ata_port.used = FALSE;
@@ -1745,7 +1743,7 @@ static int __ata_initialize(int ataflag)
 // ATA controller type.
 
     // Type
-    if (AtaController.controller_type == STORAGE_CONTROLLER_MODE_ATA){
+    if (StorageController.controller_type == STORAGE_CONTROLLER_MODE_ATA){
 
         printk ("__ata_initialize: [ATA] Initialize ports\n");
         //while(1){}
@@ -1914,7 +1912,7 @@ static int __ata_initialize(int ataflag)
 // ==============================================
 // RAID controller.
 
-    if (AtaController.controller_type == STORAGE_CONTROLLER_MODE_RAID)
+    if (StorageController.controller_type == STORAGE_CONTROLLER_MODE_RAID)
     {
         // #debug
         printk ("__ata_initialize: [RAID] Unsupported type\n");
@@ -1933,7 +1931,7 @@ static int __ata_initialize(int ataflag)
 // It emulates ICH9 not I440FX.
 // see: https://wiki.qemu.org/Features/Q35
 
-    if (AtaController.controller_type == STORAGE_CONTROLLER_MODE_AHCI){
+    if (StorageController.controller_type == STORAGE_CONTROLLER_MODE_AHCI){
         printk ("__ata_initialize: [AHCI] Unsupported type\n");
         while(1){}
         Status = (int) -1;
@@ -1943,7 +1941,7 @@ static int __ata_initialize(int ataflag)
 // ==============================================
 // Unknown controller type.
 
-    if (AtaController.controller_type == STORAGE_CONTROLLER_MODE_UNKNOWN){
+    if (StorageController.controller_type == STORAGE_CONTROLLER_MODE_UNKNOWN){
         printk ("__ata_initialize: [UNKNOWN] Unsupported type\n");
         while(1){}
         Status = (int) -1;
@@ -1970,7 +1968,7 @@ done:
 
 // Driver status.
     g_ata_driver_initialized = TRUE;
-    AtaController.initialized = TRUE;
+    StorageController.initialized = TRUE;
 
     return (int) Status;
 }

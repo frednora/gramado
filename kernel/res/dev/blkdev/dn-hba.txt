@@ -1,0 +1,4 @@
+
+So, the HBA has a AHCI controler and 
+this AHCI controler is able to emulate the old IDE.
+

@@ -343,16 +343,6 @@ struct ata_port_info_d
 };
 
 
-struct ata_controller_d
-{
-// ATA Mass storage controler structure.
-
-// The structure was initialized.
-    int initialized;
-// IDE, RAID, AHCI.
-    uint8_t controller_type;
-};
-extern struct ata_controller_d AtaController;
 
 /*
  * ata:

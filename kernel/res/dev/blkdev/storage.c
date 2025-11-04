@@ -6,6 +6,10 @@
 // Main structure for managing the storage information.
 struct storage_d  *storage;
 
+
+struct storage_controller_d  StorageController;
+
+
 // The number of sectors in the boot disk.
 // See: storage_set_total_lba_for_boot_disk().
 unsigned long gNumberOfSectorsInBootDisk=0;

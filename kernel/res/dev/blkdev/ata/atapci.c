@@ -130,7 +130,7 @@ int atapciSetupMassStorageController(struct pci_device_d *D)
 // We still don't know the type of this controller.
 // But the caller already knows that 
 // it's a mass storage device, and ide.
-    AtaController.controller_type = (uint8_t) STORAGE_CONTROLLER_MODE_UNKNOWN;
+    StorageController.controller_type = (uint8_t) STORAGE_CONTROLLER_MODE_UNKNOWN;
 
 // Check parameters.
     if ((void *) D == NULL){
@@ -190,7 +190,7 @@ int atapciSetupMassStorageController(struct pci_device_d *D)
     if ( D->classCode == PCI_CLASSCODE_MASS && 
          D->subclass == PCI_SUBCLASS_SCSI ){
 
-        AtaController.controller_type = (uint8_t) PCI_SUBCLASS_SCSI;
+        StorageController.controller_type = (uint8_t) PCI_SUBCLASS_SCSI;
         printk ("atapciSetupMassStorageController: SCSI not supported\n");
         goto fail;
 
@@ -204,7 +204,7 @@ int atapciSetupMassStorageController(struct pci_device_d *D)
                 D->subclass == PCI_SUBCLASS_IDE ){
 
         // #type: (ATA).
-        AtaController.controller_type = (uint8_t) STORAGE_CONTROLLER_MODE_ATA; 
+        StorageController.controller_type = (uint8_t) STORAGE_CONTROLLER_MODE_ATA; 
 
         // Compatibilidade e nativo, primary.
         data  = diskReadPCIConfigAddr ( D->bus, D->dev, D->func, 8 );
@@ -241,7 +241,7 @@ int atapciSetupMassStorageController(struct pci_device_d *D)
 
         // #debug
         // printk ("[ Sub Class Code %s Programming Interface %d Revision ID %d ]\n",\
-        //    ata_sub_class_code_register_strings[AtaController.controller_type],
+        //    ata_sub_class_code_register_strings[StorageController.controller_type],
         //    ata_pci.progif,
         //    ata_pci.revisionId );
 
@@ -259,7 +259,7 @@ int atapciSetupMassStorageController(struct pci_device_d *D)
                D->subclass == PCI_SUBCLASS_RAID ){
 
         // #type: (ATA RAID).
-        AtaController.controller_type = (uint8_t) STORAGE_CONTROLLER_MODE_RAID;
+        StorageController.controller_type = (uint8_t) STORAGE_CONTROLLER_MODE_RAID;
         printk ("atapciSetupMassStorageController: ATA RAID not supported\n");
         goto fail;
 
@@ -277,7 +277,7 @@ int atapciSetupMassStorageController(struct pci_device_d *D)
                D->subclass == PCI_SUBCLASS_SATA ){
 
         // #type (ACHI)
-        AtaController.controller_type = (uint8_t) STORAGE_CONTROLLER_MODE_AHCI;
+        StorageController.controller_type = (uint8_t) STORAGE_CONTROLLER_MODE_AHCI;
 
         // Compatibilidade e nativo, primary.
         data = diskReadPCIConfigAddr ( D->bus, D->dev, D->func, 8 );
@@ -319,7 +319,7 @@ int atapciSetupMassStorageController(struct pci_device_d *D)
     }else if ( D->classCode == PCI_CLASSCODE_MASS && 
                D->subclass == PCI_SUBCLASS_SERIALSCSI ){
 
-        AtaController.controller_type = (uint8_t) PCI_SUBCLASS_SCSI;
+        StorageController.controller_type = (uint8_t) PCI_SUBCLASS_SCSI;
         printk ("atapciSetupMassStorageController: Serial SCSI not supported\n");
         goto fail;
 
@@ -327,7 +327,7 @@ int atapciSetupMassStorageController(struct pci_device_d *D)
     }else if ( D->classCode == PCI_CLASSCODE_MASS && 
                D->subclass == PCI_SUBCLASS_NVMEMORY ){
 
-        AtaController.controller_type = (uint8_t) PCI_SUBCLASS_SCSI;
+        StorageController.controller_type = (uint8_t) PCI_SUBCLASS_SCSI;
         printk ("atapciSetupMassStorageController: NVMe not supported\n");
         goto fail;
 
@@ -335,7 +335,7 @@ int atapciSetupMassStorageController(struct pci_device_d *D)
     }else if ( D->classCode == PCI_CLASSCODE_MASS && 
                D->subclass == PCI_SUBCLASS_SAS ){
 
-        AtaController.controller_type = (uint8_t) PCI_SUBCLASS_SCSI;
+        StorageController.controller_type = (uint8_t) PCI_SUBCLASS_SCSI;
         printk ("atapciSetupMassStorageController: SAS not supported\n");
         goto fail;
 
@@ -349,7 +349,7 @@ int atapciSetupMassStorageController(struct pci_device_d *D)
     // ?:? = Class/subclass not supported.
     // #type: Unknown controller.
     }else{
-        AtaController.controller_type = (uint8_t) STORAGE_CONTROLLER_MODE_UNKNOWN;
+        StorageController.controller_type = (uint8_t) STORAGE_CONTROLLER_MODE_UNKNOWN;
         printk("atapciSetupMassStorageController: Mass Storage Device NOT supported\n");
         goto fail;
     };

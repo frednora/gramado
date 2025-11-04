@@ -12,7 +12,7 @@ void ata_show_ata_controller_info(void)
         return;
 
 // Print data.
-    switch (AtaController.controller_type)
+    switch (StorageController.controller_type)
     {
         case STORAGE_CONTROLLER_MODE_ATA:
             printk("ATA controller\n");

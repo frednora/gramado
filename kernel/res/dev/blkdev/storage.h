@@ -46,6 +46,23 @@
 #define STORAGE_INTERFACE_STANDARD_SATAPI_SIG2  0x96
 
 
+// Storage Controller
+// There is two types fo HBA:
+// + Integrated HBAs and
+// + Dedicated HBA Cards
+struct storage_controller_d
+{
+// ATA Mass storage controler structure.
+
+// The structure was initialized.
+    int initialized;
+// IDE, RAID, AHCI.
+    uint8_t controller_type;
+};
+extern struct storage_controller_d  StorageController;
+
+
+
 //==================================================================
 // superblock
 
