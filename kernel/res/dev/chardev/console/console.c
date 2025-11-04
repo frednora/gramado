@@ -531,8 +531,8 @@ void jobcontrol_switch_console(int n)
     fg_color = (unsigned int) CONSOLE_TTYS[n].fg_color;
     console_clear_imp( bg_color, fg_color, n );
 
-// banner
-    gramk_show_banner(TRUE);
+// Banner
+    wink_show_banner(TRUE);
     consolePrompt();
     //printk ("Console number {%d}\n", n);
 }
@@ -3238,7 +3238,7 @@ DDINIT_console(
 // We have 4 preallocated tty structures for virtual consoles.
 int VirtualConsole_early_initialization(void)
 {
-// Called by gramk_initialize_virtual_consoles() in zero.c
+// Called by wink_initialize_virtual_consoles() in zero.c
 
     register int i=0;
 

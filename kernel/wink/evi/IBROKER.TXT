@@ -1,6 +1,6 @@
 ibroker.c By Copilot.
 
-That's correct! Here's a summary of what kernel/gramk/evi/ibroker.c does in Gramado OS, 
+That's correct! Here's a summary of what kernel/wink/evi/ibroker.c does in Gramado OS, 
 with additional technical detail:
 
 Overview

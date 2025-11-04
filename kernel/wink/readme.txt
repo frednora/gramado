@@ -4,7 +4,7 @@ Main components:
 gre  - Graphics output.
 user - User input.
 
-gramk.c will be wrapper for everything here.
+wink.c will be wrapper for everything here.
 
 ------------------------------------
 The goal is creating two interfaces, one for output and another one for input.

@@ -877,9 +877,9 @@ int keInitialize(int phase)
         // serial_printk("phase %d\n",phase);
 
         // kernel font.
-        gramk_initialize_default_kernel_font();
+        wink_initialize_default_kernel_font();
         // Initializing background for the very first time.
-        gramk_initialize_background();
+        wink_initialize_background();
         // Setup refresh/flush support.
         // Flush data into the lfb.
         __check_refresh_support();
@@ -887,7 +887,7 @@ int keInitialize(int phase)
         Initialization.is_console_log_initialized = TRUE;
 
         // Print banner but do not clear the screen.
-        gramk_show_banner(FALSE);
+        wink_show_banner(FALSE);
 
         // Print resolution info
         __print_resolution_info();
@@ -957,7 +957,7 @@ int keInitialize(int phase)
 
         //PROGRESS(":: kgws, ws, ws callback\n"); 
         // Graphics infrastruture.
-        // see: gramk/gre/gre.c
+        // see: wink/gre/gre.c
         gre_initialize();
         // Desktop stuff.
         // Ring0 components for the display server.
@@ -1000,7 +1000,7 @@ int keInitialize(int phase)
         //refresh_screen();
         //while(1){}
         // Clear the screen again.
-        gramk_initialize_background();
+        wink_initialize_background();
         // Loading .BMP icon images.
         //PROGRESS("::(2)(?) Icons\n"); 
         windowLoadGramadoIcons();

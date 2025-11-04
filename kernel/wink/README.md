@@ -1,5 +1,4 @@
-# gramk 
-
+# wink
 
 ```
 Main components:
@@ -13,7 +12,7 @@ evi  - [Input support]  Event Interface,.
 gdi  - [Output support] Graphics device interface.
 user - User configuration.
 
-gramk.c will be wrapper for everything here.
+wink.c will be wrapper for everything here.
 
 ------------------------------------
 The goal is creating two interfaces, one for output and another one for input.

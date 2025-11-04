@@ -33,9 +33,6 @@ core/:
   core/ke     - Task manager.
   core/kmain  - Main initialization routine and wrappers.
 
-gramk/:
-  Interface for the graphics device and the user interaction manager.
-
 include/:
   Main header files for the kernel.
 
@@ -44,6 +41,9 @@ libk/:
 
 res/:
   Kernel resources for containers.
+
+wink/:
+  Interface for the graphics device and the user interaction manager.
 ```
 
 ## About the core/ Folder

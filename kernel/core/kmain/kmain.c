@@ -562,8 +562,8 @@ static void earlyinit_OutputSupport(void)
 // precisamos calcular se a quantidade mapeada é suficiente.
     refresh_screen_enabled = FALSE;
 
-    //PROGRESS("earlyinit_OutputSupport: gramk_initialize_virtual_consoles\n");
-    gramk_initialize_virtual_consoles();
+    //PROGRESS("earlyinit_OutputSupport: wink_initialize_virtual_consoles\n");
+    wink_initialize_virtual_consoles();
 
     //debug_print("earlyinit_OutputSupport: earlyinit_OutputSupport\n");
 
@@ -955,9 +955,8 @@ void I_kmain(int arch_type)
     system_state = SYSTEM_PREINIT;
     // [1]
     earlyinit();
-    gramk_update_progress_bar(5);
+    wink_update_progress_bar(5);
     //while(1){}
-
 
 //
 // Booting
@@ -995,9 +994,8 @@ void I_kmain(int arch_type)
         goto fail;
     }
     Initialization.mm_phase0 = TRUE;
-    gramk_update_progress_bar(20);
+    wink_update_progress_bar(20);
     //while(1){}
-
 
 // -------------------------------
 // Initialize mm phase 1.
@@ -1015,7 +1013,7 @@ void I_kmain(int arch_type)
         goto fail;
     }
     Initialization.mm_phase1 = TRUE;
-    gramk_update_progress_bar(40);
+    wink_update_progress_bar(40);
     //while(1){}
 
     g_module_runtime_initialized = TRUE;
@@ -1043,9 +1041,8 @@ void I_kmain(int arch_type)
         goto fail;
     }
     Initialization.ke_phase0 = TRUE;
-    gramk_update_progress_bar(50);
+    wink_update_progress_bar(50);
     //while(1){}
-
 
 // -------------------------------
 // Initialize ke phase 1.
@@ -1061,9 +1058,8 @@ void I_kmain(int arch_type)
         goto fail;
     }
     Initialization.ke_phase1 = TRUE;
-    gramk_update_progress_bar(60);
+    wink_update_progress_bar(60);
     //while(1){}
-
 
 // -------------------------------
 // Initialize ke phase 2.
@@ -1077,22 +1073,21 @@ void I_kmain(int arch_type)
         goto fail;
     }
     Initialization.ke_phase2 = TRUE;
-    gramk_update_progress_bar(70);
+    wink_update_progress_bar(70);
     //while(1){}
 
 // -------------------------------
     PROGRESS(":: archinit\n");
     // [4]
     archinit();
-    gramk_update_progress_bar(80);
+    wink_update_progress_bar(80);
     //while(1){}
-
 
 // -------------------------------
     PROGRESS(":: deviceinit\n");
     // [5]
     deviceinit();
-    gramk_update_progress_bar(100);
+    wink_update_progress_bar(100);
     //while(1){}
 
 // -------------------------------

@@ -1,5 +1,5 @@
-// gramk.c
-// Wrappers for the gramk/ kernel components.
+// wink.c
+// Wrappers for the wink/ kernel components.
 // This is a safer way to call this services.
 // Created by Fred Nora.
 
@@ -14,7 +14,7 @@ static void __x_panic_show_message(const char *final_string, unsigned long flags
 
 // =============================================
 
-void gramk_update_progress_bar(unsigned long percent)
+void wink_update_progress_bar(unsigned long percent)
 {
     unsigned long rectLeft=0;
     unsigned long rectTop=0;
@@ -46,12 +46,12 @@ void refresh_screen(void)
     bldisp_flush(0);
 }
 
-void gramk_refresh_screen(void)
+void wink_refresh_screen(void)
 {
     refresh_screen();
 }
 
-void gramk_putchar_in_fgconsole(unsigned long _char)
+void wink_putchar_in_fgconsole(unsigned long _char)
 {
     int C = (int) (_char & 0xFF);
 
@@ -125,7 +125,7 @@ void x_panic(const char *final_string)
 }
 
 // Print the string into a box and halt carefully.
-void gramk_panic(const char *final_string)
+void wink_panic(const char *final_string)
 {
     __x_panic_show_message(final_string, 1);
     while (1){
@@ -134,12 +134,10 @@ void gramk_panic(const char *final_string)
     };
 }
 
-// =================================
-// Console:
 // We have a virtual console and we can use the printk.
 // This is the first message in the screen.
 // see: tty/console.c
-void gramk_show_banner(int clear_console)
+void wink_show_banner(int clear_console)
 {
 // Called by keInitialize() in ke.c.
 
@@ -165,8 +163,8 @@ void gramk_show_banner(int clear_console)
         return;
     build_string[size+1]=0;
     
-// Crear screen and print version string.
-    PROGRESS("gramk_show_banner:\n");
+// Crear screen and print version string
+    PROGRESS("wink_show_banner:\n");
     if (clear_console == TRUE){
         BannerFlags = 0;
     } else {
@@ -178,22 +176,22 @@ void gramk_show_banner(int clear_console)
 // Setup Default kernel font.
 // ROM BIOS 8x8 font.
 // see: gre/font.c
-void gramk_initialize_default_kernel_font(void)
+void wink_initialize_default_kernel_font(void)
 {
     font_initialize();
 }
 
 // see:
 // gre/bg.c
-void gramk_initialize_background(void)
+void wink_initialize_background(void)
 {
     displayInitializeBackground(COLOR_KERNEL_BACKGROUND,TRUE);
-    //PROGRESS("gramk_initialize_background: ok\n");
+    //PROGRESS("wink_initialize_background: ok\n");
 }
 
 // See: 
 // dev/chardev/display/bldisp/bldisp.c
-void gramk_initialize_video(void)
+void wink_initialize_video(void)
 {
     //#breakpoint: BLACK ON WHITE.
     //ok, funcionou na maq real no modo jail, provavelmente 320x200.
@@ -201,7 +199,7 @@ void gramk_initialize_video(void)
     //while(1){asm("hlt");};
 
     Video_initialize();
-    //PROGRESS("gramk_initialize_video: Initialized\n");
+    //PROGRESS("wink_initialize_video: Initialized\n");
 }
 
 // As estruturas de console sao estruturas de tty,
@@ -211,22 +209,22 @@ void gramk_initialize_video(void)
 // We need to test it better.
 // see:
 // dev/chardev/tty/console.c
-// crt/kstdio.c
-void gramk_initialize_virtual_consoles(void)
+// kstdio.c
+void wink_initialize_virtual_consoles(void)
 {
     int status = -1;
 // The early initialization of the virtual consoles,
 // it will happen again in kstdio.c if it fails here.
     status = (int) VirtualConsole_early_initialization();
     if (status < 0)
-        x_panic("gramk_initialize_virtual_consoles");
+        x_panic("wink_initialize_virtual_consoles");
 }
 
 // 34 - Setup cursor for the current virtual console.
 // See: core/system.c
 // IN: x,y
 // #todo: Essa rotina dever pertencer ao user/
-void gramk_set_cursor(unsigned long x, unsigned long y)
+void wink_set_cursor(unsigned long x, unsigned long y)
 {
 
 // #todo
@@ -236,4 +234,4 @@ void gramk_set_cursor(unsigned long x, unsigned long y)
 }
 
 // #bugbug
-// gramkInitialize() was implemented in user.c
+// winkInitialize() was implemented in user.c

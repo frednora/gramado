@@ -49,7 +49,7 @@ network_keyboard_event(
     if (event_id < 0)
         goto fail;
 // Send it to the event broker.
-// See: gramk/evi/ibroker.c
+// See: wink/evi/ibroker.c
     wmKeyboardEvent( event_id, (long) long1, (long) long2 );
     return 0;
 fail:
@@ -81,7 +81,7 @@ network_mouse_event(
         break;
     };
 // Send it to the event broker.
-// See: gramk/evi/ibroker.c
+// See: wink/evi/ibroker.c
     wmMouseEvent( event_id, data1, data2 );
     return 0;
 fail:

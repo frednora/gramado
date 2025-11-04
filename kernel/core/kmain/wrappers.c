@@ -1,6 +1,6 @@
 // wrappers.c
 // Userful wrappers functions.
-// See: gramk/ for overall wrapper functions.
+// See: wink/ for overall wrapper functions.
 // Created by Fred Nora.
 
 #include <kernel.h>

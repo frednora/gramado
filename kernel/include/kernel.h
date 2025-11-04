@@ -199,7 +199,7 @@
 #include "../res/dev/dev00.h"
 
 // ==================================
-// wink/ (fka gramk/)
+// wink/ 
 // sw - Graphics Engine
 #include "../wink/gdi/gre/color.h"
 #include "../wink/gdi/gre/font.h"
@@ -366,7 +366,7 @@
 
 // Exporting some wink functions to the other modules
 // inside the base kernel.
-#include "../wink/gramk.h"
+#include "../wink/wink.h"
 
 // Reboot system.
 #include "../core/kmain/reboot.h"

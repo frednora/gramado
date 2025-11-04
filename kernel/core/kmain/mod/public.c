@@ -18,7 +18,7 @@ void xp_die(void)
 void xp_putchar_test(void)
 {
     const int c = 'x';
-    gramk_putchar_in_fgconsole(c);
+    wink_putchar_in_fgconsole(c);
 }
 
 // 2
@@ -30,12 +30,12 @@ void xp_reboot(void)
 // 3
 void xp_refresh_screen(void)
 {
-    gramk_refresh_screen();
+    wink_refresh_screen();
 }
 
 // 4
 void xp_putchar_in_fgconsole(unsigned long _char)
 {
-    gramk_putchar_in_fgconsole(_char);
+    wink_putchar_in_fgconsole(_char);
 }
 

@@ -48,7 +48,7 @@ struct cgroup_d
 };
 
 // The main cgroup.
-// See: gramk/user/user.c
+// See: /user.c
 extern struct cgroup_d  *system_cg;
 
 extern int cg_counter;

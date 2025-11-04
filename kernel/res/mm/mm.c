@@ -664,7 +664,7 @@ int mmInitialize(int phase)
     if (phase == 0){
 
         // Video support
-        gramk_initialize_video();
+        wink_initialize_video();
 
         // #todo: 
         // Inicializar algumas variáveis globais.

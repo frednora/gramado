@@ -519,10 +519,9 @@ void *sci0 (
 // 30,31,32 - Putpixel?
 // 33 - free number.
 
-// 34
-// Setup cursor position for the current virtual console.
+// 34: Setup cursor position for the current virtual console
     if (number == SCI_CALI_SET_CURSOR){
-        gramk_set_cursor((unsigned long) arg2, (unsigned long) arg3);
+        wink_set_cursor((unsigned long) arg2, (unsigned long) arg3);
         return NULL;
     }
 

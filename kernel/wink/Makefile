@@ -73,7 +73,7 @@ LDFLAGS := -m elf_x86_64 -s -x -static
 OBJS = pixel.o line.o rect.o bitblt.o bg.o font.o char.o text.o gre.o \
 obroker.o output.o ibroker.o input.o \
 dispsrv.o osshell.o callback.o user.o \
-gramk.o    
+wink.o    
 
 all:
 
@@ -102,8 +102,8 @@ all:
 
 	$(CC) -c user/user.c      $(KERNEL_INCLUDE) $(CFLAGS) -o user.o
 
-# Wrapper  for all the interfaces in this module.
-	$(CC) -c gramk.c  $(KERNEL_INCLUDE) $(CFLAGS) -o gramk.o
+# Wrapper for all the interfaces in this module
+	$(CC) -c wink.c  $(KERNEL_INCLUDE) $(CFLAGS) -o wink.o
 
 # link
 	$(LD) -r -o p2_wink.o $(OBJS)
