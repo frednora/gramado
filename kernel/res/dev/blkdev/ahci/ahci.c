@@ -4,6 +4,13 @@
 #include <kernel.h>
 
 
+struct ahci_port_d  ahci_port[4];
+struct ahci_current_port_d  AHCICurrentPort;
+
+
+
+
+
 static int __ahci_initialize(void);
 
 
