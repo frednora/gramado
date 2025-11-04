@@ -514,12 +514,12 @@ static void __winmin(int fd)
 // its because the client are also changed.
 // Get window info:
 // IN: fd, wid, window info structure.
-    gws_get_window_info(
-        fd, 
-        wid,
-        (struct gws_window_info_d *) wi );
-    if (wi->used != TRUE){ return; }
-    if (wi->magic!=1234) { return; }
+
+    gws_get_window_info( fd, wid, (struct gws_window_info_d *) wi );
+    if (wi->used != TRUE){ 
+        return; 
+    }
+    if (wi->magic != 1234) { return; }
 
 // Show info:
 // Frame: l,t,w,h
@@ -545,7 +545,7 @@ void __test_gws(int fd)
     //int Window = Terminal.client_window_id;
 
 // Parameters:
-    if(fd<0){
+    if (fd<0){
         return;
     }
 
@@ -556,9 +556,8 @@ void __test_gws(int fd)
     //gws_draw_text(fd,Window,0,0,COLOR_RED,"This is a string");
 //redraw and refresh.
     gws_redraw_window( fd, Window, TRUE );
-//redraw and not refresh.
-    //gws_redraw_window(
-         //fd, Window, FALSE );
+//redraw and not refresh
+    //gws_redraw_window( fd, Window, FALSE );
     //text
     //gws_draw_text(fd,Window,0,0,COLOR_RED,"This is a string");
 }
@@ -667,12 +666,12 @@ static void __test_winfo(int fd, int wid)
 
 // Get window info:
 // IN: fd, wid, window info structure.
-    gws_get_window_info(
-        fd, 
-        wid,
-        (struct gws_window_info_d *) Info );
-    if (Info->used != TRUE){ return; }
-    if (Info->magic!=1234) { return; }
+    gws_get_window_info( fd, wid, (struct gws_window_info_d *) Info );
+    if (Info->used != TRUE){ 
+        return; 
+    }
+    if (Info->magic != 1234){ return; }
+
 // Show info:
 // Frame: l,t,w,h
     printf("Frame info: l=%d t=%d w=%d h=%d\n",
@@ -918,11 +917,9 @@ static void __try_execute(int fd)
 
 //----------------------------------
 
-
 //
 // Clone and execute.
 //
-
 
 //#todo
 // Tem que limpar o buffer do arquivo em ring0, 
@@ -1235,15 +1232,10 @@ static void compareStrings(int fd)
 // But it will send us a message back.
     if ( strncmp(prompt,"msg2",4) == 0 )
     {
-        rtl_post_to_tid(
-            0,      // Init process tid.
-            44888,  // message code
-            1234,
-            5678 );
-            
+        // IN: PID for init process, msgcode, sig, sig.
+        rtl_post_to_tid( 0, 44888, 1234, 5678 );
         goto exit_cmp;
     }
-
 
 // Sleep until
 // IN: ms.
@@ -1354,15 +1346,12 @@ static void compareStrings(int fd)
         goto exit_cmp;
     }
 
-// #test
 // Print a string inside the client window?
     if ( strncmp(prompt, "string", 6) == 0 )
     {
-        cr();
-        lf();  // next line.
+        cr(); 
+        lf();
         tputstring(fd, "This is a string!\n");
-        //cr();
-        //lf();  // enxt line.
         goto exit_cmp;
     }
 
@@ -1438,7 +1427,8 @@ static void compareStrings(int fd)
 
 // 'console'
     int fg_console = -1;
-    if ( strncmp(prompt,"console",7) == 0 ){
+    if ( strncmp(prompt,"console",7) == 0 )
+    {
         fg_console = (int) rtl_get_system_metrics(400);
         fg_console = (int) (fg_console & 0xFF);
         printf("The current fg_console is {%d}\n",fg_console);
@@ -1519,50 +1509,20 @@ exit_cmp:
 
 static void doHelp(int fd)
 {
+    const char *String = 
+        "term00.bin: This is the terminal application\n";
 
-// Parameter:
     if (fd<0){
         return;
     }
-
     cr();
     lf();
-    tputstring(fd,"term00.bin: This is the terminal application\n");
+    tputstring(fd, String);
     tputstring(fd,"You can type some commands\n");
     tputstring(fd,"cls, help ...\n");
     tputstring(fd,"reboot, shutdown, cat, uname ...\n");
-
-/*
- //# oldstuff
-        cursor_y++;
-
-        cursor_x=0;   
-        gws_draw_char ( 
-            fd, 
-            Terminal.client_window_id, 
-            (cursor_x*8), 
-            (cursor_y*8), 
-            fg_color, 
-            '\\' ); 
-
-        cursor_x=1;
-        gws_draw_char ( 
-            fd, 
-            Terminal.client_window_id, 
-            (cursor_x*8), 
-            (cursor_y*8), 
-            fg_color, 
-            'o' ); 
-
-        cursor_x=2;
-        gws_draw_char ( 
-            fd, 
-            Terminal.client_window_id, 
-            (cursor_x*8), 
-            (cursor_y*8), 
-            fg_color, 
-            '/' ); 
- */
+    //cr();
+    //lf();
 }
 
 // This is the terminal application, 
@@ -1571,7 +1531,7 @@ static void doHelp(int fd)
 static void doAbout(int fd)
 {
     const char *String = 
-        "term00.bin: This is the terminal application";
+        "term00.bin: This is the terminal application\n";
 
     if (fd < 0){
         return;
@@ -1579,8 +1539,8 @@ static void doAbout(int fd)
     cr(); 
     lf();
     tputstring(fd, String);
-    cr(); 
-    lf();
+    //cr(); 
+    //lf();
 }
 
 // Draw the prompt.
@@ -1758,6 +1718,7 @@ void test_tty_support(int fd)
 
 static void __send_to_child (void)
 {
+    register int i=0;
     char *shared_flag   = (char *) (0xC0800000 -0x210);   // flag
     char *shared_memory = (char *) (0xC0800000 -0x200);   // input
     //char *shared_memory = (char *) (0xC0800000 -0x100); // output
@@ -1772,8 +1733,6 @@ static void __send_to_child (void)
     //send a system message.(maybe)
     //flag?
 
-
-    int i=0;
     // Send the command line to the shared memory.
     for(i=0; i<80; i++){ shared_memory[i] = prompt[i]; }
     // Clear prompt.
