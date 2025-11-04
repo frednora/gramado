@@ -1,4 +1,15 @@
 
+
+
+ That's excectly Joe wants to see.
+
+ + Videos
+ + Pictures
+ + Texts
+
+ ======================
+
+
  List of subsystems in Gramado OS based on the output entity:
 
  We are working in the concept of subsystems. We don't have 
