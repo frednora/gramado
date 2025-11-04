@@ -69,8 +69,13 @@ struct storage_controller_d
 // See __ATA_CONTROLLER, __RAID_CONTROLLER, __AHCI_CONTROLLER, etc.
     uint8_t controller_type;
 };
+// #todo
+// We got to separate the moment we're probing for 
+// the controller type and the moment we're initializating one of them.
+// #bugbug: 
+// At this moment the probing process is happening inside 
+// the ata initialization.
 extern struct storage_controller_d  StorageController;
-
 
 
 // Internal use
