@@ -31,6 +31,9 @@ all:
 # xapps
 #	make -C xapps/
 
+# test
+	make -C menuapp/
+
 clean:
 	-rm bin/*.BIN
 clean-all:

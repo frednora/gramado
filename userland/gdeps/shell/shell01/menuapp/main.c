@@ -38,18 +38,20 @@ static int __initialize_connection(void);
 static int __initialize_connection(void)
 {
 
-//==============================
+// -------------------------
     struct sockaddr_in addr_in;
     addr_in.sin_family = AF_INET;
-    addr_in.sin_addr.s_addr = IP(127,0,0,1);
-    addr_in.sin_port = PORTS_WS;
-//==============================
+    addr_in.sin_addr.s_addr = IP(127,0,0,1);    //ok
+    //addr_in.sin_addr.s_addr = IP(127,0,0,9);  //fail
+    addr_in.sin_port = __PORTS_DISPLAY_SERVER;
+// -------------------------
+
 
     int client_fd = -1;
 
     //gws_debug_print ("-------------------------\n"); 
     //printf          ("-------------------------\n"); 
-    gws_debug_print("taskbar.bin: Initializing\n");
+    //gws_debug_print("taskbar.bin: Initializing\n");
     //printf       ("taskbar.bin: Initializing ...\n");
 
 // Socket:
@@ -78,7 +80,7 @@ static int __initialize_connection(void)
 // Tentando nos conectar ao endereço indicado na estrutura
 // Como o domínio é AF_GRAMADO, então o endereço é "w","s".
 
-    //printf ("gws: Trying to connect to the address 'ws' ...\n");      
+    //printf ("gws: Trying to connect ..\n");      
 
     while (TRUE){
         if (connect(client_fd, (void *) &addr_in, sizeof(addr_in)) < 0){ 
@@ -94,17 +96,59 @@ int main(int argc, char *argv[])
 {
     int client_fd=-1;
 
-    printf("MENUAPP.BIN: Hello\n");
+    //printf("MENUAPP.BIN: Hello\n");
 
     client_fd = (int) __initialize_connection();
-    if (client_fd<0)
+    if (client_fd<0){
+        printf("on connection\n");
         return EXIT_FAILURE;
+    }
+
+//
+// Create main window
+//
+    //printf("MENUAPP.BIN: Create window\n");
+
+    int main_window;
+    const char *program_name = "MENUWINDOW";
+
+    main_window = 
+        (int) gws_create_window (
+                  client_fd,
+                  WT_OVERLAPPED, 
+                  WINDOW_STATUS_ACTIVE,  // status
+                  VIEW_NULL,             // view
+                  program_name,
+                  20, 20, 200, 300,
+                  0,
+                  0x0000,   // style?
+                  COLOR_WINDOW, 
+                  COLOR_WINDOW );
+
+    if (main_window < 0){
+        printf("on create window\n");
+        return EXIT_FAILURE;
+    }
+
+    gws_refresh_window(client_fd,main_window);
 
 
 //
 // Menu structure
 //
+
+    //printf("MENUAPP.BIN: Create menu\n");
+
     struct gws_menu_d *menu00;
+    struct gws_window_info_d lWi;
+
+// Get info about the main window.
+// IN: fd, wid, window info structure.
+    gws_get_window_info(
+        client_fd, 
+        main_window,   // The app window.
+        (struct gws_window_info_d *) &lWi );
+
 
 //
 // Creating the menu
@@ -113,33 +157,74 @@ int main(int argc, char *argv[])
     menu00 = 
         (struct gws_menu_d *) gws_create_menu(
             client_fd,
-            0,
-            TRUE,
-            4,
-            10,
-            10,
-            40,
-            40,
-            0xffffffff 
+            main_window,  // Parent
+            TRUE,         // Highlight
+            4,            // n of itens
+            0, 0, lWi.cr_width, lWi.cr_height,   // Relative to the client area rectangle.
+            COLOR_GRAY
         );
 
-    if ((void*) menu00 == NULL)
+    if ((void*) menu00 == NULL){
+        printf("on create menu\n");
         return EXIT_FAILURE;
-
+    }
 
 //
 // Menu item
 //
 
-/*
-struct gws_menu_item_d *gws_create_menu_item (
-    int fd,
-    const char *label,
-    int id,
-    struct gws_menu_d *menu)
-*/
+    struct gws_menu_item_d *tmp;
+    const char *tmp_label0 = "Menu item 0";
+    const char *tmp_label1 = "Menu item 1";
+    const char *tmp_label2 = "Menu item 2";
+    const char *tmp_label3 = "Menu item 3";
 
+    tmp = 
+        (struct gws_menu_item_d *) gws_create_menu_item (
+            client_fd,
+            tmp_label0,
+            0,  // index
+            menu00 );
+
+    tmp = 
+        (struct gws_menu_item_d *) gws_create_menu_item (
+            client_fd,
+            tmp_label1,
+            1,  // index
+            menu00 );
+
+    tmp = 
+        (struct gws_menu_item_d *) gws_create_menu_item (
+            client_fd,
+            tmp_label2,
+            2,  // index
+            menu00 );
+
+    tmp = 
+        (struct gws_menu_item_d *) gws_create_menu_item (
+            client_fd,
+            tmp_label3,
+            3,  // index
+            menu00 );
+
+
+// Refresh only the menu window
+    int menu_window = menu00->window;
+    gws_refresh_window(client_fd,menu_window);
+
+// Refresh the whole application window
+    //gws_refresh_window(client_fd,main_window);
+
+
+
+//
+// Event loop
+//
+
+    // #todo
+
+
+// Done
     printf("Test done\n");
-
     return EXIT_SUCCESS;
 }
