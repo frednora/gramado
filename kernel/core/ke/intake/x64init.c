@@ -42,10 +42,10 @@ const char *initbin_cmdline_shutdown = "INIT.BIN: mode=shutdown";
 const char *kernel_process_default_name = "KERNEL-PROCESS";
 
 // -------------------
-// Image name for the init process. INIT.BIN
-const char *init_image_name = "INIT    BIN";
 // The default name for the init process
 const char *init_process_default_name = "INIT-PROCESS";
+// Image name for the init process. INIT.BIN
+const char *init_image_name = "INIT    BIN";
 
 // =========================================
 
@@ -337,16 +337,16 @@ static int I_x64CreateInitialProcess(void)
 
     InitProcess = 
         (void *) create_process( 
-                     NULL,  
-                     (unsigned long) CONTROLTHREAD_BASE,  //0x00200000 
-                     BasePriority, 
-                     (int) KernelProcess->pid, 
-                     init_process_default_name, 
-                     RING3, 
-                     (unsigned long) init_pml4_va,
-                     (unsigned long) kernel_mm_data.pdpt0_va,
-                     (unsigned long) kernel_mm_data.pd0_va,
-                     PERSONALITY_GRAMADO );
+                    NULL,  
+                    (unsigned long) CONTROLTHREAD_BASE,  //0x00200000 
+                    BasePriority, 
+                    (int) KernelProcess->pid, 
+                    init_process_default_name, 
+                    RING3, 
+                    (unsigned long) init_pml4_va,
+                    (unsigned long) kernel_mm_data.pdpt0_va,
+                    (unsigned long) kernel_mm_data.pd0_va,
+                    PERSONALITY_GRAMADO );
 
 // validation
     if ((void *) InitProcess == NULL){
@@ -752,8 +752,7 @@ void I_x64ExecuteInitialProcess(void)
 */
 
 // Input authority
-
-        InputAuthority.current_authority = AUTH_NO_GUI;
+    InputAuthority.current_authority = AUTH_NO_GUI;
 
 // ==============
 // #debug
@@ -905,7 +904,6 @@ static int I_x64CreateKernelProcess(void)
         printk ("I_x64CreateKernelProcess: pid\n");
         return FALSE;
     }
-
 
 // Security Access Token
 

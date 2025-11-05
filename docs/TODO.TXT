@@ -9,6 +9,16 @@
 
  ======================
 
+ bugbug:
+ At some time when clonning a process, something is messing up
+ the names of the processes in the structure. For both,
+ parent and child.
+ Specially for the init process and the display server.
+ Maybe they are using a different routine to clone 
+ the processes.
+ >>> It happens excectly when the init process clone itself and 
+ launch the display server or when the display server clone itself 
+ and launch the taskbar.
 
  List of subsystems in Gramado OS based on the output entity:
 

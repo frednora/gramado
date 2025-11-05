@@ -1071,10 +1071,9 @@ void ps_initialize_process_common_elements(struct process_d *p)
 //
 
 //++
-// IN: type, subtype.
-    p->tty = (struct tty_d *) tty_create(
-        TTY_TYPE_PTY,
-        TTY_SUBTYPE_UNDEFINED );
+// IN: type, subtype
+    p->tty = 
+        (struct tty_d *) tty_create( TTY_TYPE_PTY, TTY_SUBTYPE_UNDEFINED );
 
     if ((void *) p->tty == NULL){
         panic("ps_initialize_process_common_elements: Couldn't create tty\n");
@@ -1134,6 +1133,11 @@ struct process_d *create_and_initialize_process_object(void)
         printk     ("create_and_initialize_process_object: [FAIL] new_process\n");
         goto fail;
     }
+
+
+    // Initialize
+    memset(new_process->__processname,0,64);
+    new_process->processName_len = 0;
 
 // Default personality
     new_process->personality = PERSONALITY_GRAMADO;
@@ -1364,8 +1368,7 @@ struct process_d *create_process (
     }
     memset( Process, 0, sizeof(struct process_d) );
 
-// Worker:
-// Initializing the elements common for all types of processes.
+// Initializing the elements common for all types of processes
     ps_initialize_process_common_elements((struct process_d *) Process);
 
 // ====================
@@ -1397,11 +1400,16 @@ struct process_d *create_process (
 
 // Name
 
-    Process->name = (char *) name; //@todo: usar esse.
+    Process->name = (char *) name;
+
     //Process->cmd = NULL;  //nome curto que serve de comando.
     //Process->pathname = NULL; 
     //#test
     //64 bytes max.
+
+    // #bugbug: This is dangerous
+    // #todo: Clear first.
+    memset(Process->__processname,0,64);
     strcpy ( Process->__processname, (const char *) name);
     Process->processName_len = sizeof(Process->__processname);
 

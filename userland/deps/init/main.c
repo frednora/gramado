@@ -166,12 +166,12 @@ static inline void do_int3(void)
 static void do_launch_de(void)
 {
     int ret_val=-1;
-    char filename[16];
+    char filename[32];
     size_t string_size=0;
 
     static int cmdlineNumber = 1;
 
-    memset(filename,0,16);
+    memset(filename,0,32);
 
     do_clear_console();
     printf ("Launching Display Server\n");
@@ -192,8 +192,14 @@ static void do_launch_de(void)
     string_size = strlen(app1_name);
     filename[string_size] = 0;
 
+// #bugbug
+// Maybe we're facing some problem with the process names when calling this function,
+// and the same doesn't happen when we use the version in libgws.
+// But init process cant use libgws.
+
 // Launch
-    ret_val = (int) rtl_clone_and_execute(filename);
+    //ret_val = (int) rtl_clone_and_execute(filename);
+    ret_val = (int) rtl_clone_and_execute(app1_name);
     if (ret_val <= 0){
         printf("Couldn't clone\n");
         return;

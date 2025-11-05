@@ -64,7 +64,7 @@ copy_process_struct(
     */
 
 // ===========================
-// Check process 1
+// Check process 1 (Father)
     Process1 = (struct process_d *) p1;
     if ((void *) Process1 == NULL){
         printk("copy_process_struct: Process1\n"); 
@@ -76,7 +76,7 @@ copy_process_struct(
         goto fail;
     }
 // ===========================
-// Check process 2
+// Check process 2 (Child)
     Process2 = (struct process_d *) p2;     
     if ((void *) Process2 == NULL){
         printk("copy_process_struct: Process1\n");
@@ -480,6 +480,12 @@ copy_process(
     pid_t pid, 
     unsigned long clone_flags )
 {
+
+    // #bugbug
+    // #todo
+    // When clonning a process something is messing up 
+    // with the process names, for the father and for the child.
+
     pid_t parent_pid = (pid_t) pid;    //parameter
     pid_t child_pid  = (pid_t) (-1);   //fail
 
@@ -514,7 +520,8 @@ copy_process(
     _pd = 0;
     _pt = 0;
 
-    copy_process_in_progress=TRUE;
+// Flag
+    copy_process_in_progress = TRUE;
 
 // Parameters:
 
@@ -766,8 +773,7 @@ do_clone:
     //return -1;
 
 // Worker
-// See: 
-// process.c
+// See: process.c
 
     child_process = 
         (struct process_d *) create_and_initialize_process_object();
@@ -1340,6 +1346,13 @@ do_clone:
 // RIP:
 // Entry point 0x201000.
     child_thread->context.rip = (unsigned long) __image_entrypoint_va;
+
+//
+// Process name
+//
+
+// #bugbug
+// Something is wrong with the names
 
 // Process name
     memset(child_process->__processname, 0, 64);

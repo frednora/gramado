@@ -19,9 +19,9 @@
 void show_process_information (void)
 {
     struct process_d *p;
-    int i=0;
+    register int i=0;
 
-    printk ("show_process_information: \n");
+    printk ("show_process_information:\n");
 
     for ( i=0; i<PROCESS_COUNT_MAX; i++ )
     {
