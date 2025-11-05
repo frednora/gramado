@@ -238,13 +238,12 @@ struct process_d
 // Name
 //
 
-// Short name
-// +name     (EXEMPLO.BIN)
+// Short name: (EXEMPLE.BIN)
     char __processname[64];
     size_t processName_len;
 
 // Long name. (extra)
-    char *name;  //Nome do processo. 
+    char *name;
 
 // +pathname (/root/boot/EXEMPLO.BIN)
 	//char *pathname;  //@todo: Incluir.	
@@ -953,7 +952,7 @@ void show_process_information (void);
 
 unsigned long get_process_stats ( pid_t pid, int index );
 
-int getprocessname ( pid_t pid, char *buffer );
+int getprocessname(pid_t pid, char *ubuf);
 
 pid_t getNewPID (void);
 int processTesting (pid_t pid);

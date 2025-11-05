@@ -624,8 +624,16 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
     }
 
 // process:
-    if ( kstrncmp( cmdline, "process", 7 ) == 0 ){
-        //__test_process();
+    if ( kstrncmp( cmdline, "process", 7 ) == 0 )
+    {
+        show_process_information();
+        goto exit_cmp;
+    }
+
+// thread:
+    if ( kstrncmp( cmdline, "thread", 6 ) == 0 )
+    {
+        show_thread_information();
         goto exit_cmp;
     }
 

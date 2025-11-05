@@ -4,18 +4,9 @@
 
 #include <kernel.h>
 
-/*
- * show_process_information:
- *     Mostra informa��es sobre os processos. 
- *     #todo: na verdade um aplicativo em user mode deve fazer esse trabalho
- * solicitando informa��es sobre cada processo atrav�s de chamadas.
- */
 
-// Mostrar informa��es sobre os processos da lista.
-// obs: as imagens s�o carregadas em endere�os virtuais diferentes
-// e o endere�o mostrado � em rela��o ao diret�rio de p�ginas do kernel
-// pois o kernel � que controla o posicionamento das imagens.
-
+// Display information about the processes.
+// The structures are created inside the kernel's heap using kmallok.
 void show_process_information (void)
 {
     struct process_d *p;
@@ -28,7 +19,7 @@ void show_process_information (void)
         p = (void *) processList[i];
 
         if ( (void *) p != NULL && 
-             p->used  == TRUE && 
+             p->used == TRUE && 
              p->magic == 1234 )
         {
             //printk("\n");
@@ -63,12 +54,11 @@ void show_process_information (void)
             printk("allocated memory = { %d Bytes }\n", 
                 p->allocated_memory );
         }
-    // Nothing.
+    // Nothing
     };
 
     refresh_screen();
 }
-
 
 // Usado pelo comando "current-process" no shell
 void show_currentprocess_info (void)

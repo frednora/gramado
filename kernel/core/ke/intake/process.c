@@ -336,16 +336,17 @@ unsigned long get_process_stats(pid_t pid, int index)
 // Systemcall 882.
 // OUT: string len.
 // type: ssize_t ?
-int getprocessname ( pid_t pid, char *buffer )
+
+int getprocessname(pid_t pid, char *ubuf)
 {
+    char *name_buffer = (char *) ubuf;
     struct process_d  *p;
-    char *name_buffer = (char *) buffer;
 
 // Parameters
     if (pid < 0 || pid >= PROCESS_COUNT_MAX){
         goto fail;
     }
-    if ((void*) buffer == NULL){
+    if ((void*) ubuf == NULL){
         goto fail;
     }
  
@@ -361,9 +362,13 @@ int getprocessname ( pid_t pid, char *buffer )
 // 64 bytes
 // #todo #bugbug: 
 // Check the lenght and use another copy function.
-    strcpy ( 
-        name_buffer, 
-        (const char *) p->__processname );
+// No Length Check (Buffer Overflow Risk):
+// Suggested Correction — Use strncpy:
+    
+    //strcpy ( name_buffer, (const char *) p->__processname );
+
+    strncpy(name_buffer, (const char *)p->__processname, 63);
+    name_buffer[63] = '\0';
 
 // Return the len.
 // #bugbug: 
@@ -1398,20 +1403,28 @@ struct process_d *create_process (
     Process->pid = (pid_t) PID; 
     Process->ppid = (pid_t) ppid;
 
+
+// ------------
 // Name
+
+    // #bugbug: This is dangerous
+
+    memset(Process->__processname,0,64);  // ok
+
+    // Wrong?
+    //strcpy ( Process->__processname, (const char *) name);
+    //Process->processName_len = sizeof(Process->__processname);
+
+    strncpy(Process->__processname, name, 63);
+    Process->__processname[63] = '\0';
+    Process->processName_len = strlen(Process->__processname);
 
     Process->name = (char *) name;
 
+// ------------
+
     //Process->cmd = NULL;  //nome curto que serve de comando.
     //Process->pathname = NULL; 
-    //#test
-    //64 bytes max.
-
-    // #bugbug: This is dangerous
-    // #todo: Clear first.
-    memset(Process->__processname,0,64);
-    strcpy ( Process->__processname, (const char *) name);
-    Process->processName_len = sizeof(Process->__processname);
 
     BasePriority = (unsigned long) priority; 
     Process->base_priority = BasePriority;
