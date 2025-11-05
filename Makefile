@@ -265,8 +265,10 @@ build-extras:
     # These need the '#' prefix.
 	@-cp $(APPLICATIONS)/bin/PUBTERM.BIN  $(BASE)/DE/
 	@-cp $(APPLICATIONS)/bin/DOC.BIN      $(BASE)/DE/
-	@-cp $(APPLICATIONS)/bin/GDM.BIN      $(BASE)/DE/
 	@-cp $(APPLICATIONS)/bin/EDITOR.BIN   $(BASE)/DE/
+
+	@-cp $(APPLICATIONS)/bin/GDM.BIN      $(BASE)/DE/
+	@-cp $(APPLICATIONS)/bin/SETUP.BIN    $(BASE)/DE/
 
 # (browser/) browser.
 # Teabox web browser
