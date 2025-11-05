@@ -1359,7 +1359,38 @@ do_clone:
 // So when the syscall made by init process try handle the process names 
 // its facing some problems ... the same do not happens with the other syscalls 
 // because they are using different allocators that do not have problems.
+// Actually:
+// No entire-structure overwrite or wild pointer is corrupting the process struct — 
+// it's localized to the name buffer logic.
+// The problem is isolated to the name copy logic, or the arrangement of the name member IN memory.
+// Either a buffer overflow, alias/overlap, or a copy/deep copy error between the parent and 
+// the cloned child process’s name field.
 
+// #debug
+// Log Addresses of name Buffers:
+// Add debug print right before and after the syscall that clones the process:
+// If they match or are close, you have overlap/aliasing.
+//printf("Parent process name buffer address: %p\n", (void*)parent_process->__processname);
+//printf("Child process name buffer address:  %p\n", (void*)child_process->__processname);
+
+//Summary
+//Only the name is corrupted? It's almost certainly
+//A copy problem,
+//Buffer overflow,
+//Or a buffer overlap (likely with statically allocated init struct).
+
+// The kernel can always read from the caller’s pointer, so “bad pointer from userspace” is NOT the problem.
+// The corruption occurs after, or during the logic that copies/assigns the filename to the child’s process struct.
+
+/*
+// #important
+// ahaaah, each ring 3 process has a different address for the process structure. That is a good thing.
+What does this mean for your bug?
+If the __processname array is still getting corrupted for some processes, the problem is most likely:
+Out-of-bounds write elsewhere in memory (such as from array overruns, buffer mismanagement, or bad pointer casts).
+A logic bug that writes to the wrong process struct by index (e.g., if you use a bad index into processList[], or use dangling pointers in a list).
+A copy routine somewhere accidentally writes to more memory than intended (such as a loop overrunning 64 bytes).
+*/
 
 /*
 // Process name
@@ -1382,6 +1413,7 @@ do_clone:
     child_process->processName_len = __NameSize;
 */
 
+/*
 // Copy at most 8 bytes of filename into child_process->__processname for debugging.
     size_t dbg_n = strlen(filename);
     if (dbg_n > 8) 
@@ -1398,6 +1430,18 @@ do_clone:
 
     // Save the length
     child_process->processName_len = dbg_n;
+*/
+
+    strncpy(child_process->__processname, filename, 63);
+    child_process->__processname[63] = '\0';
+    child_process->processName_len = strlen(child_process->__processname);
+
+/*
+    child_process->__processname[0] = 'O';
+    child_process->__processname[1] = 'K';
+    child_process->__processname[2] = '\0';
+    child_process->processName_len = 2;
+*/
 
     //#debug
     //ok

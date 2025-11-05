@@ -1099,7 +1099,7 @@ struct process_d *processObject(void)
 {
     struct process_d *p;
 
-    p = (void *) kmalloc( sizeof(struct process_d) );
+    p = (void *) kmalloc(sizeof(struct process_d));
     if ((void *) p == NULL){
         return NULL;
     }
@@ -1362,7 +1362,7 @@ struct process_d *create_process (
     //}
 
 // Process
-    Process = (void *) kmalloc( sizeof(struct process_d) );
+    Process = (void *) kmalloc(sizeof(struct process_d));
     if ((void *) Process == NULL){
         panic("create_process: Process\n");
     }

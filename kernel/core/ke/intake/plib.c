@@ -34,6 +34,9 @@ void show_process_information (void)
             //printk("\n");
             printk("\n=====================================\n");
             printk(">>[%s]\n", p->__processname);
+            printk("Process struct at %x, __processname at %s\n", 
+                p, 
+                p->__processname);
             printk("PID=%d PPID=%d \n", p->pid,  p->ppid );
             printk("~Personality={%d}\n", p->personality);
             

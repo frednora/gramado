@@ -228,7 +228,7 @@ static void do_launch_de2(void)
     rewind(stdin);
     write( fileno(stdin), cmdline1, strlen(cmdline1) );
 // Launch new process.
-    ret_val = (int) rtl_clone_and_execute("#ds00.bin");
+    ret_val = (int) rtl_clone_and_execute(app1_name);
     if (ret_val<=0){
         printf("Couldn't clone\n");
         return;
@@ -251,7 +251,7 @@ static void do_launch_list(void)
 {
 // Raw and ugly set of programs.
 
-    rtl_clone_and_execute("#ds00.bin");
+    rtl_clone_and_execute(app1_name);
     rtl_clone_and_execute("#taskbar.bin");
     rtl_clone_and_execute("#terminal.bin");
     //rtl_clone_and_execute("#editor.bin");
@@ -459,7 +459,7 @@ static int input_compare_string(void)
 // Initialize the display server.
     if ( strncmp(prompt,"ws",2) == 0 ){
         //printf ("~WS\n");
-        //rtl_clone_and_execute("#ds00.bin");
+        //rtl_clone_and_execute(app1_name);
         //do_launch_de();
         do_init_winu();
         goto exit_cmp;
