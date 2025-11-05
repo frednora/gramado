@@ -1354,6 +1354,14 @@ do_clone:
 // #bugbug
 // Something is wrong with the names
 
+
+// um ... probably the key point is that they are using different allocators. 
+// So when the syscall made by init process try handle the process names 
+// its facing some problems ... the same do not happens with the other syscalls 
+// because they are using different allocators that do not have problems.
+
+
+/*
 // Process name
     memset(child_process->__processname, 0, 64);
     size_t __NameSize = sizeof(filename);
@@ -1362,6 +1370,34 @@ do_clone:
     }
     strcpy( child_process->__processname, (const char *) filename );   
     child_process->processName_len = (size_t) __NameSize;
+*/
+
+/*
+    size_t __NameSize = strlen(filename);
+    if (__NameSize >= 64) {   // 63 + null terminator
+        __NameSize = 63;      // Truncate, or panic if you want
+    }
+    strncpy(child_process->__processname, filename, __NameSize);
+    child_process->__processname[__NameSize] = '\0';
+    child_process->processName_len = __NameSize;
+*/
+
+// Copy at most 8 bytes of filename into child_process->__processname for debugging.
+    size_t dbg_n = strlen(filename);
+    if (dbg_n > 8) 
+        dbg_n = 8;
+
+    // Clear the name buffer (optional, for debug clarity)
+    memset(child_process->__processname, 0, 64);
+
+    // Copy only up to 8 bytes
+    memcpy(child_process->__processname, filename, dbg_n);
+
+    // Always null-terminate at the 8th position for safety
+    child_process->__processname[dbg_n] = '\0';
+
+    // Save the length
+    child_process->processName_len = dbg_n;
 
     //#debug
     //ok

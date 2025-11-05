@@ -2058,15 +2058,15 @@ void rtl_broken_vessels(void)
 }
 
 // OUT: Child's PID.
-int rtl_clone_and_execute(char *name)
+int rtl_clone_and_execute(const char *name)
 {
     if ((void *) name == NULL){
         printf ("rtl_clone_and_execute: [FAIL] name\n");
-        return (int) -1;
+        goto fail;
     }
     if ( *name == 0 ){
         printf ("rtl_clone_and_execute: [FAIL] *name\n");
-        return (int) -1;
+        goto fail;
     }
 
     //rewind(stdin);
@@ -2079,21 +2079,24 @@ int rtl_clone_and_execute(char *name)
 // Maybe we can send a raw command line.
 
     return (int) sc82( 900, (unsigned long) name, 0, 0 );
+fail:
+    return (int) -1;
 }
 
 
-int rtl_spawn_process( const char *path )
+int rtl_spawn_process(const char *path)
 {
-    if ( (void *) path == NULL ){
+    if ((void *) path == NULL){
         printf ("rtl_spawn_process: [FAIL] name\n");
-        return -1;
+        goto fail;
     }
     if (*path == 0){
         printf ("rtl_spawn_process: [FAIL] *name\n");
-        return -1;
+        goto fail;
     }
-
     return (int) rtl_clone_and_execute((char*)path);
+fail:
+    return (int) -1;
 }
 
 // get current thread
@@ -2269,7 +2272,7 @@ unsigned long rtl_memory_size_in_kb(void)
 // Send the command lint to stdin,
 // and execute a cloned process where it's name
 // is in the first word of the cmdline string.
-int rtl_execute_cmdline( char *cmdline )
+int rtl_execute_cmdline(char *cmdline)
 {
     char cmd[512];
     char filename_buffer[12]; //8+3+1

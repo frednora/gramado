@@ -2086,7 +2086,7 @@ void rtl_broken_vessels(void)
 }
 
 // OUT: Child's PID.
-int rtl_clone_and_execute(char *name)
+int rtl_clone_and_execute(const char *name)
 {
 
 // Parameter
