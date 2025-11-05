@@ -1532,6 +1532,8 @@ int main(int argc, char *argv[])
 // #bugbug: Valid only if the timer fires 1000 times a second.
 // It gives the opportunities for other threads to run a bit more.
 
+    // isTimeToQuit =  FALSE;
+
     while (1){
 
         if (isTimeToQuit == TRUE)
