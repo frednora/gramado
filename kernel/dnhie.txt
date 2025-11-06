@@ -1,0 +1,11 @@
+
+ Gramado Kernel Hierarchy
+
+From lowest to highest:
+ + (0) core/arch/
+ + (1) core/ke/hal/
+ + (2) core/ke/intake/
+ + (3) res/ 
+ + (4) winu/
+ + (5) core/ke/main/
+ + (6) libk/

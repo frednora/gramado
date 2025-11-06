@@ -2,6 +2,20 @@
 
 This directory contains the code for the base kernel. It builds the image KERNEL.BIN.
 
+## Gramado Kernel Hierarchy
+
+```
+From lowest to highest:
+
+ + (0) core/arch/
+ + (1) core/ke/hal/
+ + (2) core/ke/intake/
+ + (3) res/ 
+ + (4) winu/
+ + (5) core/ke/main/
+ + (6) libk/
+```
+
 ## Kernel initialization
 
 The kernel initialization is handled by the function I_kmain(), which follows these steps:
