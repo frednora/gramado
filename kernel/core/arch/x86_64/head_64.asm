@@ -2761,7 +2761,7 @@ global _EarlyKernelStack
 _EarlyKernelStack:
 
 
-; Used by the tss in unit0lib.asm.
+; See: x64.c and tss.h
 ; 64 KB
 global _rsp0StackEnd
 _rsp0StackEnd:

@@ -1,5 +1,5 @@
-
 // tss.h
+// Created by Fred Nora.
 
 #ifndef __TSS_H
 #define __TSS_H    1
@@ -54,6 +54,7 @@ struct tss_d  *CurrentTSS;
 // == prototypes ===========================
 //
 
+// See: x64.c
 void 
 tss_init( 
     struct tss_d *tss, 

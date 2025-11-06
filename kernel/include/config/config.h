@@ -5,6 +5,18 @@
 #ifndef ____KERNEL_CONFIG_H
 #define ____KERNEL_CONFIG_H    1
 
+// #bugbug
+// see: process.c
+// #todo: We really need to fix up this limits.
+#define CONFIG_IMAGESIZE_LIMIT_IN_KB  408  //405  400
+//...
+
+// See: head_64.asm, x64.c and tss.h
+//#define CONFIG_RING0_STACK_SIZE_IN_KB    8
+
+// See: clone.c process.c and process.h
+#define CONFIG_RING3_STACK_SIZE_IN_KB    64  //32
+
 // ------------------------------------------------------
 // Target machine
 // #todo: Explain it better.
@@ -60,14 +72,6 @@
 
 
 // ------------------------------------------------------
-
-// #bugbug
-// see: process.c
-// #todo: We really need to fix up this limits.
-
-//#define IMAGESIZE_LIMIT_IN_KB  400
-#define IMAGESIZE_LIMIT_IN_KB  405
-//...
 
 // IDE Interface:
 // Primary Master Drive.

@@ -633,7 +633,7 @@ struct process_d
     unsigned long childImage; 
     unsigned long childImage_PA; 
     unsigned long childStack; 
-    unsigned long childStackPA; 
+    unsigned long childStack_PA; 
 
 
 // #todo: 

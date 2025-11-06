@@ -563,7 +563,7 @@ __loop_next_entry:
         // See: gramado/config.h
         // bytes per sector = 512.
         // sectors per cluster  = 1.
-        if ( (nreads/2) > IMAGESIZE_LIMIT_IN_KB )
+        if ( (nreads/2) > CONFIG_IMAGESIZE_LIMIT_IN_KB )
         {
             panic("fsLoadFile: nreads\n");
         }

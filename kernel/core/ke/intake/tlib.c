@@ -24,9 +24,9 @@ void show_slot(tid_t tid)
 
 // Show one slot
     printk ("\n");
-    printk ("TID   PID   pdPA  Prio  State Quan Jiffies initial_rip rflags   tName \n");
-    printk ("====  ====  ====  ====  ===== ==== ====    ==========  ======  =====   \n");
-    printk ("%d    %d    %x   %d    %d    %d    %d      %x          %x      %s      \n", 
+    printk ("TID   PID   pdPA  Prio  State Quan Jiffies initial_rip rflags  tName\n");
+    printk ("====  ====  ====  ====  ===== ==== ====    ==========  ======  =====\n");
+    printk ("%d    %d    %x   %d    %d    %d    %d      %x          %x      %s   \n", 
         t->tid, 
         t->owner_pid,
         t->pml4_PA,
@@ -38,9 +38,13 @@ void show_slot(tid_t tid)
         t->context.rflags,
         t->name_address );
 
+    printk("stack va={%x}\n", t->context.rsp);
+    printk("owner process va={%x}\n", t->owner_process);
+
+    /*
     printk(":: to supervisor{%d} | to user{%d}\n",
         t->transition_counter.to_supervisor,
-        t->transition_counter.to_user);
+        t->transition_counter.to_user); */
 
     if (t->tid == foreground_thread)
         printk("[__FOREGROUND__]\n");

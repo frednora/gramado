@@ -810,30 +810,28 @@ int alloc_memory_for_image_and_stack(struct process_d *process)
 // o allocador de páginas.
 // O slab allocator nos dar 1MB e o alocador d páginas
 // nos dara quantas páginas pedirmos. Mas ele é muito limitado ainda.
-// see: gramado/config.h
+// see: config.h
 
-    int imagesize_in_kb = IMAGESIZE_LIMIT_IN_KB; //400;
+    int imagesize_in_kb = CONFIG_IMAGESIZE_LIMIT_IN_KB; //400+;
     int number_of_pages_on_image=0;
     number_of_pages_on_image = (int) (imagesize_in_kb*1024)/4096;     // 
 
+// Slab allocator.
+// 1MB?
     __new_base = (unsigned long) slab_1MB_allocator();
     
 // Se o slab se esgotou, então tenta o alocador normal.
-    if (__new_base == 0)
-    {
-        __new_base = 
-            (unsigned long) mmAllocPages(number_of_pages_on_image); 
-
+// 400+ KB
+    if (__new_base == 0){
+        __new_base = (unsigned long) mmAllocPages(number_of_pages_on_image);
         // #todo
-        // Here we can clean 1MB.
+        // Here we can't clean 1MB.
     }
-// Check!
+// Check again!
     if (__new_base == 0){
         panic ("alloc_memory_for_image_and_stack: __new_base\n");
     }
-
-// #warning:
-// Dangerous
+// #warning: Dangerous
 // Clear only 400KB
     memset( (void*) __new_base, 0, (imagesize_in_kb*1024) );
 
@@ -859,15 +857,14 @@ int alloc_memory_for_image_and_stack(struct process_d *process)
 // Quantas páginas temos em 32KB?
 
     static int number_of_pages_on_stack=0;
-    number_of_pages_on_stack = (int) (32*1024)/4096;
+    number_of_pages_on_stack = (int) (CONFIG_RING3_STACK_SIZE_IN_KB*1024)/4096;
     __new_stack = (unsigned long) mmAllocPages(number_of_pages_on_stack); 
     if (__new_stack == 0){
         panic("alloc_memory_for_image_and_stack: __new_stack\n");
     }
 
     // Clear th 32 KB
-    memset (__new_stack, 0, (32*1024));
-
+    memset (__new_stack, 0, (CONFIG_RING3_STACK_SIZE_IN_KB*1024));
 
     /*
     //#debug
@@ -920,10 +917,15 @@ int alloc_memory_for_image_and_stack(struct process_d *process)
 
 // Copia a pilha do process.
 // Copia do fim da stack. 32KB.
+// #bugbug: 
+// Is this wrong? Each thread has a different va for the stack?
+// WRONG! THE REAL VIRTUAL ADDRESS FOR THE STACK CAN BE FOUND IN THE THREAD STRUCTURE.
+/*
     memcpy ( 
         (void *) __new_stack, 
-        (const void *) ( CONTROLTHREAD_STACK-(32*1024) ), 
-        (32*1024) );
+        (const void *) ( CONTROLTHREAD_STACK-(CONFIG_RING3_STACK_SIZE_IN_KB*1024) ), 
+        (CONFIG_RING3_STACK_SIZE_IN_KB*1024) );
+*/
 
     //memcpy ( 
         //(void *) __new_stack, 
@@ -978,13 +980,16 @@ int alloc_memory_for_image_and_stack(struct process_d *process)
 
 // Salvando os endereços virtuais onde 
 // carregamos a imagem e a pilha.
-    process->childImage = (unsigned long) __new_base;
-    process->childStack = (unsigned long) __new_stack;
-
 // Salvando endereços físicos obtidos anteriormente.  
 // Esses endereços representam a base da imagem e o inicio da pilha.
+
+// Image
+    process->childImage = (unsigned long) __new_base;
     process->childImage_PA = (unsigned long) new_base_PA;
-    process->childStackPA  = (unsigned long) new_stack_PA;
+
+// Stack
+    process->childStack = (unsigned long) __new_stack;
+    process->childStack_PA = (unsigned long) new_stack_PA;
 
 // #debug
 // Showing the addresses of base and stack pointers.
@@ -1290,7 +1295,7 @@ struct process_d *create_and_initialize_process_object(void)
     new_process->StackStart = 
         (unsigned long) CONTROLTHREAD_STACK;
     new_process->StackSize = 
-        (unsigned long) (32*1024);  
+        (unsigned long) (CONFIG_RING3_STACK_SIZE_IN_KB*1024);  
     new_process->StackEnd = 
         (unsigned long) ( new_process->StackStart - new_process->StackSize );
 

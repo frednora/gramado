@@ -903,7 +903,7 @@ do_clone:
 // parent_process->childImage    : Endereço virtual do buffer para a imagem do clone.
 // parent_process->childStack    : Endereço virtual para a pilha em ring3 usada pelo clone.
 // parent_process->childImage_PA : Endereço físico do buffer para a imagem do clone.
-// parent_process->childStackPA  : Endereço físico para a pilha em ring3 usada pelo clone.
+// parent_process->childStack_PA : Endereço físico para a pilha em ring3 usada pelo clone.
 // [1]
 // #bugbug: 
 // Na verdade não estamos mais copiando e 
@@ -1025,8 +1025,9 @@ do_clone:
 // #todo: Precismos levar emconsideração o tamanho da stack
 // que foi alocada anteriormente. Precisamos de uma variavel
 // na estrutura que registre seu tamanho.
+// ok This is the va allocated to the stack. Not the canonical address.
     child_thread->context.rsp = 
-        (unsigned long) (parent_process->childStack + (30*1024));
+        (unsigned long) (parent_process->childStack + (CONFIG_RING3_STACK_SIZE_IN_KB*1024) -1);
 
     // #debug
     // ok
@@ -1288,6 +1289,7 @@ do_clone:
         (unsigned long) __flags );               // flags.
 
 // Image base va.
+// The desired canonical virtual address. CONTROLTHREAD_BASE
     child_process->Image = (unsigned long) __image_va; 
 
 // Clonning the kernel's pdpt0.
@@ -1363,6 +1365,7 @@ do_clone:
 
 // RIP:
 // Entry point 0x201000.
+// The desired canonical virtual address. CONTROLTHREAD_ENTRYPOINT
     child_thread->context.rip = (unsigned long) __image_entrypoint_va;
 
 //
@@ -1371,7 +1374,6 @@ do_clone:
 
 // #bugbug
 // Something is wrong with the names
-
 
 // um ... probably the key point is that they are using different allocators. 
 // So when the syscall made by init process try handle the process names 
