@@ -22,3 +22,24 @@ is messing up the process name in the structure.
 It happens when the clone routine if truing to allocate memory for the stack.
 Maybe the problem is in the allocator. Maybe it works with another size for the stack,
 and it is a huge problem, we cant change it now.
+
+-----------------------
+pt-br
+
+Nome do processo:
+
+Acabo de descobrir que os nomes de dois dos processos estão corrompidos na estrutura de processo. 
+Apenas dois deles. 
+
+Isso não está afetando a execução dos processos pois threads usam estruturas diferentes.
+
+Provavelmente o problema ocorre no momento em que o alocador aloca memória 
+para a stack do processo em ring 3 durante a syscall para clonar um processo.
+
+Aposto que vai demorar um tempão pra conseguir consertar isso. 
+O lado bom é que estou trabalhando na infraestrutura de memória para processos.
+
+Tá tudo improvisado ainda. Mas tem que trabalhar em campos como 
+text, data, bss, heap e stack. Sem contar que temos a stack de ring 0 também.
+
+
