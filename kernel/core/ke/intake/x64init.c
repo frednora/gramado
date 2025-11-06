@@ -587,7 +587,7 @@ void I_x64ExecuteInitialProcess(void)
     }
 
 //
-// Current process.
+// Current process
 //
 
     if (t->owner_process->pid != GRAMADO_PID_INIT){
@@ -635,17 +635,18 @@ void I_x64ExecuteInitialProcess(void)
     //taskswitch_lock();
     //scheduler_lock();
 
+// The right memory environment for the Init Process.
 // Setup cr3.
 // This is a Physical address.
 // See: x64.c
 // Reload tlb.
 // See: https://en.wikipedia.org/wiki/Translation_lookaside_buffer
-// #bugbug: rever isso.
+// #bugbug: Check this.
 
     unsigned long __pml4_pa = (unsigned long) t->pml4_PA;
     // Set CR3 register
     x64mm_load_pml4_table(__pml4_pa);
-    // Refresh cr3.
+    // Refresh CR3 (Reload TLB)
     x64mm_refresh_cr3();
 
 // #maybe
@@ -790,8 +791,7 @@ void I_x64ExecuteInitialProcess(void)
         panic ("I_x64ExecuteInitialProcess: cpl\n");
     }
 
-// iopl
-// weak protection
+// iopl (Weak protection)
     if (t->rflags_initial_iopl != 3){
         panic ("I_x64ExecuteInitialProcess: rflags_initial_iopl\n");
     }

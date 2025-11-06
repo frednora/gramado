@@ -268,7 +268,7 @@ tryAgain:
         // tenta novamente, começando numa base diferente.
         if ( (void *) slot != NULL )
         {
-            Base = (Base + Count);
+            Base = (int) (Base + Count);
             Base++;
             Count = 0;
             
@@ -291,14 +291,11 @@ tryAgain:
     return (int) -1;
 }
 
-
-
 /*
  * allocPages:
  * @param número de páginas contíguas.
- * Obs: Pode ser que os pageframes não sejam 
- * contíguos mas as páginas serão.
- * estamos usando uma page table toda já mapeada. 4MB.
+ * Obs: Pode ser que os pageframes não sejam contíguos mas as páginas serão.
+ * estamos usando uma page table toda já mapeada. 
  * @TODO: ESSA ROTINA ESTÁ INCOMPLETA ... REVISAR. #bugbug
  * #bugbug: 
  * Se estamos lidando com o endereço base vitual, então estamos 
@@ -307,8 +304,7 @@ tryAgain:
 // #bugbug
 // Estamos alocando memória compartilhada?
 // então seria sh_allocPages() 
-// Essa rotina aloca uma quantidade de páginas
-// de um pool de páginas.
+// Essa rotina aloca uma quantidade de páginas de um pool de páginas.
 // São compartilhadas.
 // #todo: Explicar o ring e as permissões.
 // #tomos que ter um marcador de páginas disponíveis para
@@ -321,11 +317,11 @@ void *allocPages(int size)
 // Esse é o endereço virtual do início do pool de pageframes.
 // #bugbug: O paged pool so tem 2mb, veja pages.c
 // então só podemos mapear 2*1024*1024/4096 páginas.
-    unsigned long base = (unsigned long) g_pagedpool_va;
+    const unsigned long base = (unsigned long) g_pagedpool_va;
     void *final_va;
     int __slot=0;
 // Página inicial da lista
-    struct page_d *Ret;   
+    struct page_d *pRet; // pagina inicial da lista criada nessa rotina. 
     struct page_d *pageConductor;
     struct page_d *p;  //#todo: use page instead of p.
     unsigned long va=0;
@@ -337,15 +333,29 @@ void *allocPages(int size)
     //debug_print ("allocPages:\n");
 
 // Se devemos ou não incremetar o contador de uso.
-    int IncrementUsageCounter=TRUE; //P->allocated_memory
-    struct process_d *process;
-    process = (void*) get_current_process_pointer();
-    if( (void*) process == NULL )
-        IncrementUsageCounter=FALSE;
-    if(process->magic!=1234)
-        IncrementUsageCounter=FALSE;
+    int IncrementUsageCounter=TRUE;  //P->allocated_memory
 
-// Checando limites.
+    /*
+
+    // #suspended:
+    // It's suspended because the allocator is called during the kernel initialization,
+    // when we still do not have a pointer for the current process yet.
+
+    struct process_d *cp_pointer;  // Pointer for the current process.
+    cp_pointer = (void*) get_current_process_pointer();
+    if ((void*) cp_pointer == NULL)
+    {
+        IncrementUsageCounter=FALSE;
+        panic ("allocPages: cp_pointer\n");
+    }
+    if (cp_pointer->magic != 1234)
+    {
+        IncrementUsageCounter=FALSE;
+        panic("allocPages: cp_pointer->magic\n");
+    }
+    */
+
+// Checando limites
 
 // Problemas com o size.
     if (size <= 0)
@@ -364,17 +374,20 @@ void *allocPages(int size)
         if ( (void*) final_va != NULL )
         {
             memset( final_va, 0, PAGE_SIZE );
+            /*
             if (IncrementUsageCounter == TRUE)
             {
-                if ( (void*) process != NULL )
-                    process->allocated_memory += PAGE_SIZE;
+                if ( (void*) cp_pointer != NULL )
+                    cp_pointer->allocated_memory += PAGE_SIZE;
             }
+            */
         }
         
         return (void*) final_va;
     }
 
-// Se o size for maior que o limite.
+// #bugbug
+// Se o size for maior que o limite total, para alem do disponivel
     if ( size >= PAGE_COUNT_MAX ){
         panic ("allocPages: size limits\n");
     }
@@ -390,16 +403,23 @@ void *allocPages(int size)
     __first_free_slot = (int) __firstSlotForAList(size);
 
     //if ( __first_free_slot < 0 )
-    if ( __first_free_slot == -1 ){
+    if (__first_free_slot == -1)
+    {
         debug_print ("allocPages: No more free slots\n");
         panic       ("allocPages: No more free slots\n");
     }
 
 // Procurar slot vazio.
 // Começamos a contar do frame logo após o condutor.
+// #bugbug: (__first_free_slot + size + 1) pode estar alem do fim da lista.
+
+    int TargetSize = (__first_free_slot + size + 1);
+    if (TargetSize >= PAGE_COUNT_MAX)
+        panic ("allocPages: TargetSize\n");
+
     for ( 
         __slot = __first_free_slot; 
-        __slot < (__first_free_slot+size+1);
+        __slot < TargetSize;
         __slot++ )
     {
         p = (void *) pageAllocList[__slot];
@@ -417,7 +437,7 @@ void *allocPages(int size)
 
             //printk("#");
             
-            p->id = __slot;
+            p->id = (int) __slot;
             p->used  = TRUE;
             p->magic = 1234;
             p->free = FALSE;
@@ -430,6 +450,9 @@ void *allocPages(int size)
             // Precisamos usar pml4
 
             // Pegando o endereço virtual.
+            // #bugbug: 
+            // Estamos usando o pml4 do kernel para todos os programas que chamam essa rotina?
+            // Não deveria ser um endereço para cada processo?
             va = (unsigned long) ( base + (p->id * PAGE_SIZE) ); 
             pa = (unsigned long) virtual_to_physical ( va, gKernelPML4Address ); 
 
@@ -463,15 +486,24 @@ void *allocPages(int size)
             Count++;
             if ( Count >= size )
             {
-                Ret = (void *) pageAllocList[__first_free_slot];
+                pRet = (void *) pageAllocList[__first_free_slot];
                 
+                /*
                 if (IncrementUsageCounter==TRUE)
                 {
-                    if( (void*) process != NULL )
-                        process->allocated_memory += (size*PAGE_SIZE);
+                    if ((void*) cp_pointer != NULL)
+                        cp_pointer->allocated_memory += (size*PAGE_SIZE);
                 }
-                
-                return (void *) ( base + (Ret->id * PAGE_SIZE) );
+                */
+
+                if ((void *) pRet == NULL)
+                    panic ("allocPages: pRet\n");
+                if (pRet->used != TRUE)
+                    panic ("allocPages: pRet->used\n");
+                if (pRet->magic != 1234)
+                    panic ("allocPages: pRet->magic\n");
+
+                return (void *) ( base + (pRet->id * PAGE_SIZE) );
             }
             //fail
         };
@@ -492,7 +524,7 @@ void *mmAllocPage(void)
 
 void *mmAllocPages(int size)
 {
-// IN: Number of pages.
+// IN: Number of pages
     return (void*) allocPages(size);
 }
 
@@ -519,7 +551,7 @@ void initializeFramesAlloc(void)
 // #bugbug
 // Talvez seja desnecessário criar essa entrada.
 
-    p = (void *) kmalloc( sizeof(struct page_d) );
+    p = (void *) kmalloc(sizeof(struct page_d));
     if ((void*) p == NULL){
         debug_print("initializeFramesAlloc:\n");
         panic      ("initializeFramesAlloc:\n");

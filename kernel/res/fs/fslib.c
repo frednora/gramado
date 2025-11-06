@@ -59,6 +59,10 @@ static int __initialize_fs_buffers(void)
     unsigned long TmpAddr=0;
 
 // #bugbug
+// At this moment we don't have a process defined as current
+// and that information is used in the routine allocPages()
+
+// #bugbug
 // 4 pages per level.
     for (i=0; i<Max; i++){
         TmpAddr = (unsigned long) allocPages(PagesPerBuffer);

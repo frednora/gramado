@@ -176,7 +176,7 @@ static void do_launch_de(void)
     do_clear_console();
     printf ("Launching Display Server\n");
 
-// Sending cmdline via stdin.
+// Sending cmdline via stdin
     rewind(stdin);
 
     if (cmdlineNumber == 1){
@@ -204,6 +204,8 @@ static void do_launch_de(void)
         printf("Couldn't clone\n");
         return;
     }
+
+    //while(1){}
 
     //printf("pid=%d\n",ret_val);
 

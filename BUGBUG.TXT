@@ -1,0 +1,16 @@
+
+>>>> Process name into the process structure is failing when calling the clone function. <<<<
+
+When the init process call the 'clone' syscall to launch the child,
+something mess up the process name in the process structure.
+Tracking the issue we realized that the problem first happens 
+when we call alloc_memory_for_image_and_stack() that will call allocPages() 
+during the clone function.
+At this time the clone routine is trying to create the stack for the 
+child process.
+ps: 
+There is a lot of hardcoded routines that needs a stack with 32KB,
+>>> We can't simply change this size.
+But at some way, changing the size can solve the problem?
+
+We still do not have a solution for that.

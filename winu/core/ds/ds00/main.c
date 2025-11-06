@@ -4404,6 +4404,8 @@ int main (int argc, char **argv)
 
     server_mode = SERVER_MODE_SERVER;
 
+    //while(1){};  //#debug
+
     if (argc>0)
     {
         for (i=0; i<argc; i++)

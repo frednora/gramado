@@ -750,8 +750,8 @@ int alloc_memory_for_image_and_stack(struct process_d *process)
 // CAlled by clone_process() in clone.c
 // #bugbug: Limit 400KB.
 
-    unsigned long __new_base=0;   // Image base.
-    unsigned long __new_stack=0;  // App stack.
+    static unsigned long __new_base=0;   // Image base.
+    static unsigned long __new_stack=0;  // App stack.
 
     if ((void *) process == NULL){
         panic("alloc_memory_for_image_and_stack: process\n");
@@ -839,6 +839,14 @@ int alloc_memory_for_image_and_stack(struct process_d *process)
 
 // ==================================================
 
+/*
+// At this time, process name is ok.
+    printk("Init Process name:  {%s} #debug\n", 
+        (void*) InitProcess->__processname );
+    refresh_screen();
+    while(1){}
+*/
+
 // ==================================================
 // Stack
 
@@ -850,18 +858,38 @@ int alloc_memory_for_image_and_stack(struct process_d *process)
 // 32 KB
 // Quantas páginas temos em 32KB?
 
-    int number_of_pages_on_stack=0;
+    static int number_of_pages_on_stack=0;
     number_of_pages_on_stack = (int) (32*1024)/4096;
-    __new_stack = 
-        (unsigned long) mmAllocPages(number_of_pages_on_stack); 
+    __new_stack = (unsigned long) mmAllocPages(number_of_pages_on_stack); 
     if (__new_stack == 0){
         panic("alloc_memory_for_image_and_stack: __new_stack\n");
     }
 
-    // Clear th 32 KB.
+    // Clear th 32 KB
     memset (__new_stack, 0, (32*1024));
 
+
+    /*
+    //#debug
+    printk("Init Process name:  {%s} #debug\n", 
+        (void*) InitProcess->__processname );
+    refresh_screen();
+    while(1){}
+    */
+
+
 // ==================================================
+
+/*
+// #bugbug
+// The routine above is the moment where we mess up 
+// the process name for the init process when the init process
+// is trying to create its first child via clone.
+    printk("Init Process name:  {%s} #debug\n", 
+        (void*) InitProcess->__processname );
+    refresh_screen();
+    while(1){}
+*/
 
 //
 // == Copying memory ==========

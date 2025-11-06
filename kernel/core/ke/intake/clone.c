@@ -910,6 +910,14 @@ do_clone:
 // sim criando um endereçamento novo.
 //see: process.c
 
+/*
+// At this point the process name is ok.
+    printk("Init Process name:  {%s} #debug\n", 
+        (void*) InitProcess->__processname );
+    refresh_screen();
+    while(1){}
+*/
+
     // #debug
     debug_print("copy_process: [1] Copying process image and stack\n");
     //printk   ("copy_process: [1] Copying process image and stack\n");
@@ -921,6 +929,16 @@ do_clone:
     }
 
 // Breakpoint
+
+/*
+// At this point we have problems with the process name 
+// when we're cloning the init process.
+    printk("Init Process name:  {%s} #debug\n", 
+        (void*) InitProcess->__processname );
+    refresh_screen();
+    while(1){}
+*/
+
 
     //#debug
     //printk (" :) \n");
@@ -1370,8 +1388,15 @@ do_clone:
 // Log Addresses of name Buffers:
 // Add debug print right before and after the syscall that clones the process:
 // If they match or are close, you have overlap/aliasing.
-//printf("Parent process name buffer address: %p\n", (void*)parent_process->__processname);
-//printf("Child process name buffer address:  %p\n", (void*)child_process->__processname);
+//printk("Parent process name buffer address: %s\n", (void*)parent_process->__processname);
+//printk("Child process name buffer address:  %s\n", (void*)child_process->__processname);
+
+    /*
+    printk("Init Process name:  {%s} #debug\n", 
+        (void*) InitProcess->__processname );
+    refresh_screen();
+    while(1){}
+    */
 
 //Summary
 //Only the name is corrupted? It's almost certainly
