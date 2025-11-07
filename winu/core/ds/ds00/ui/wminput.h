@@ -9,10 +9,11 @@
 #define MSG_MOUSE_DOUBLECLICKED   60
 #define MSG_MOUSE_DRAG            61
 #define MSG_MOUSE_DROP            62
+// ...
 
 // Key combination
-int wmProcessCombinationEvent(int msg_code);
 inline int is_combination(int msg_code);
+int wmProcessCombinationEvent(int msg_code);
 
 // Process mouse events.
 void 

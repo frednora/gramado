@@ -4,8 +4,40 @@
 
 #include "../ds.h"
 
-// ===============================================
 
+// Worker
+// #todo
+// We can carefully move some routine from wm.c to this file.
+inline int is_combination(int msg_code)
+{
+    if (msg_code<0)
+        return FALSE;
+
+    switch (msg_code){
+    case GWS_ControlArrowUp:
+    case GWS_ControlArrowRight:
+    case GWS_ControlArrowDown:
+    case GWS_ControlArrowLeft:
+    case GWS_Cut:
+    case GWS_Copy:
+    case GWS_Paste:
+    case GWS_Undo:
+    case GWS_SelectAll:
+    case GWS_Find:
+    case GWS_Save:
+    case 88112:
+        return TRUE;
+        break;
+    //...
+    default:
+        return FALSE;
+        break;
+    };
+
+    return FALSE;
+}
+
+// ===============================================
 // Mouse events.
 // Quando temos um evento de mouse,
 // vamos enviar esse evento para a janela.
@@ -45,7 +77,7 @@ wmProcessMouseEvent(
     }
 
 // --------------------------------
-// Move:
+/// event type: mouse move
 // Process but do not send message for now.
 // #todo
 // Esse eh o momento de exibirmos o cursor do mouse.
@@ -95,7 +127,7 @@ wmProcessMouseEvent(
     }
 
 // --------------------------------
-// Pressed:
+/// event type: mouse pressed
 // Process but do not send message for now.
 
     if (event_type == GWS_MousePressed)
@@ -116,13 +148,15 @@ wmProcessMouseEvent(
     }
 
 // --------------------------------
-// Released:
+/// event type: Mouse released
 // Process and send message.
     if (event_type == GWS_MouseReleased){
         on_mouse_released();
         return;
     }
 
+// --------------------------------
+// event type: Mouse double clicked
     if (event_type == MSG_MOUSE_DOUBLECLICKED)
     {
         yellow_status("MSG_MOUSE_DOUBLECLICKED");
@@ -132,9 +166,12 @@ wmProcessMouseEvent(
 
     // ...
 
+// ====================================
+// #todo: More mouse event types?
+
 // Not valid event type
-not_valid:
-    return;
+//not_valid:
+    //return;
 }
 
 // Keyboard events
@@ -182,7 +219,8 @@ wmProcessKeyboardEvent(
     //if (long1 == VK_TAB)
         //printf("VK_TAB\n");
 
-//================================
+// ================================
+// event type: keydown
     if (msg == GWS_KeyDown)
     {
         // We need the keyboard_owner.
@@ -244,13 +282,15 @@ wmProcessKeyboardEvent(
         return 0;
     }
 
-//================================
+// ================================
+// event type: keyup
     if (msg == GWS_KeyUp)
     {
         // Nothing for now.
     }
 
-//================================
+// ================================
+// event type: syskeydown
     if (msg == GWS_SysKeyDown)
     {
         // Se pressionamos alguma tecla de funçao.
@@ -336,7 +376,8 @@ wmProcessKeyboardEvent(
         return 0;
     }
 
-//================================
+// ================================
+// event type: syskeyup
     if (msg == GWS_SysKeyUp)
     {
         // Se liberamos alguma das 4 teclas de funçao.
@@ -471,8 +512,11 @@ wmProcessKeyboardEvent(
         return 0;
     }
 
-// Not a valid msg
+// ====================================
+// #todo: More keyboard event types?
 
+// Not a valid msg
+// #todo: Maybe a differet return value.
     return 0;
 }
 
@@ -533,7 +577,8 @@ int wmProcessCombinationEvent(int msg_code)
 // z, x, c, v
 //
 
-// Control + z. (Undo)
+// ===============================
+// [control + z] (Undo)
     if (msg_code == GWS_Undo)
     {
         yellow_status("Undo");
@@ -542,7 +587,8 @@ int wmProcessCombinationEvent(int msg_code)
         return 0;
     }
 
-// Control + x. (Cut)
+// ===============================
+// [control + x] (Cut)
     if (msg_code == GWS_Cut)
     {
         yellow_status("Cut");
@@ -565,7 +611,8 @@ int wmProcessCombinationEvent(int msg_code)
         return 0;
     }
 
-// Control + c. (Copy)
+// ===============================
+// [control + c] (Copy)
     if (msg_code == GWS_Copy)
     {
         yellow_status("Copy");
@@ -579,20 +626,19 @@ int wmProcessCombinationEvent(int msg_code)
         return 0;
     }
 
-// Control + v. (Paste)
+// ===============================
+// [control + v] (Paste)
     if (msg_code == GWS_Paste)
     {
         yellow_status("Paste");
         return 0;
     }
 
-// [control + a]
-// Select all.
-// #test (ok)
-// Post message to all the overlapped windows.
-// #test:
-// Sending the wrong message.  
-// This is just a test for now.
+// ===============================
+// [control + a] (Select all)
+// #test
+// For now we're posting Close message for all 
+// the overllaped windows.
     if (msg_code == GWS_SelectAll)
     {
         yellow_status("Control + a");       
@@ -600,23 +646,23 @@ int wmProcessCombinationEvent(int msg_code)
         return 0;
     }
 
-// [control+f]
-// Find
+// ===============================
+// [control + f] (Find)
     if (msg_code == GWS_Find){
         yellow_status("Control + f");
         return 0;
     }
 
-// Control + s
-// #test
-// Cfor the root window.
-// Only refresh if it is already created.
+// ===============================
+// [control + s] (Save?)
+// Not implemented yet
     if (msg_code == GWS_Save){
         yellow_status("Control + s");
         return 0;
     }
 
 /*
+// ===============================
 // #todo
 // Control + w
 // Close the active window.
@@ -628,9 +674,9 @@ int wmProcessCombinationEvent(int msg_code)
     }
 */
 
-// --------------
+// ===============================
+// [control + arrow keys]
 
-// Control + Arrow keys.
     if (msg_code == GWS_ControlArrowUp)
     {
         //yellow_status("Control + up");
@@ -656,6 +702,7 @@ int wmProcessCombinationEvent(int msg_code)
         return 0;
     }
 
+// ===============================
 // [shift + f12]
 // Enable the ps2 mouse support
 // by making the full ps2-initialization.
@@ -675,43 +722,12 @@ int wmProcessCombinationEvent(int msg_code)
         return 0;
     }
 
+// ===============================
+// #todo: More key combinations?
+
 fail:
     return (int) (-1);
 }
-
-
-// #todo
-// We can carefully move some routine from wm.c to this file.
-
-inline int is_combination(int msg_code)
-{
-    if (msg_code<0)
-        return FALSE;
-
-    switch (msg_code){
-    case GWS_ControlArrowUp:
-    case GWS_ControlArrowRight:
-    case GWS_ControlArrowDown:
-    case GWS_ControlArrowLeft:
-    case GWS_Cut:
-    case GWS_Copy:
-    case GWS_Paste:
-    case GWS_Undo:
-    case GWS_SelectAll:
-    case GWS_Find:
-    case GWS_Save:
-    case 88112:
-        return TRUE;
-        break;
-    //...
-    default:
-        return FALSE;
-        break;
-    };
-
-    return FALSE;
-}
-
 
 // wmInputReader:
 // (Input port)
@@ -1081,6 +1097,7 @@ int wmSTDINInputReader(void)
     return (int) nreads;
 }
 
+// Get and process input events
 int wminputGetAndProcessSystemEvents(void)
 {
     return (int) wmInputReader();
