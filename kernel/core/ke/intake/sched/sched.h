@@ -26,7 +26,7 @@ extern unsigned long g_scheduler_status;
  */
 
 #define SCHED_POLICY_RR    0
-#define SCHED_POLICY_QUEUES  1
+#define SCHED_POLICY_PRIORITY_INTERLEAVING  1  // Queues
 // ...
 
 // Scheduler information

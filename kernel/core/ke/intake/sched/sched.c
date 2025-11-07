@@ -50,7 +50,10 @@ struct thread_d *ev_responder_thread;
 //
 
 static void __sched_notify_parent(struct thread_d *thread, int event_number);
+
 static tid_t __scheduler_rr(unsigned long sched_flags);
+static tid_t __scheduler_priorityinterleaving(unsigned long sched_flags);
+//...
 
 // =======================================
 
@@ -665,7 +668,24 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
     return (tid_t) FirstTID;
 }
 
-// Wrapper for __scheduler_rr() or other type.
+// #todo
+// Gradual Rollout: 
+// Consider enabling the new policy only 
+// for specific thread groups or subsystems
+static tid_t __scheduler_priorityinterleaving(unsigned long sched_flags)
+{
+    // #todo: Not implemented yet
+
+    if (SchedulerInfo.policy != SCHED_POLICY_PRIORITY_INTERLEAVING)
+    {
+        panic("__scheduler_priorityinterleaving: Scheduler policy\n");
+    }
+
+    return (tid_t) -1;
+}
+
+// Wrapper for __scheduler_rr(), __scheduler_priorityinterleaving()
+//  or other types.
 // Esperamos que o worker construa um round e
 // que a primeira tid seja a idle.
 // OUT: next tid.
@@ -675,7 +695,7 @@ tid_t scheduler(void)
     struct thread_d *Idle;
     tid_t first_tid = (-1);
     //#todo: Create a method for this.
-    int Policy = SchedulerInfo.policy;
+    int Policy = (int) SchedulerInfo.policy;
     //#todo: Create a method for this.
     unsigned long sched_flags = (unsigned long) SchedulerInfo.flags;
 
@@ -693,14 +713,12 @@ tid_t scheduler(void)
         panic("scheduler: SchedulerInfo.initialized\n");
     }
 
-// Policy
-// #todo: 
-// Pegaremos a sched_flags de uma variavel global
-// pois eh configuravel.
+// Select the current policy
 // IN: sched_flags
     if (Policy == SCHED_POLICY_RR){
         first_tid = (tid_t) __scheduler_rr(0);
-    } else if (Policy == SCHED_POLICY_QUEUES){
+    } else if (Policy == SCHED_POLICY_PRIORITY_INTERLEAVING){
+        //first_tid = (tid_t) __scheduler_priorityinterleaving(0);
         panic("scheduler: Policy not supported\n");
     } else {
         panic("scheduler: Invalid policy\n");
@@ -914,7 +932,7 @@ int init_scheduler(unsigned long sched_flags)
 // -------------------------------
 // Scheduler policies
 // See: sched.h
-    SchedulerInfo.policy = SCHED_POLICY_RR;
+    SchedulerInfo.policy = SCHED_POLICY_RR;  // Default
     SchedulerInfo.rr_round_counter = 0;
     SchedulerInfo.flags = (unsigned long) sched_flags;
 
