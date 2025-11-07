@@ -6,13 +6,12 @@ This directory contains the code for the base kernel. It builds the image KERNEL
 
 ```
 From lowest to highest:
-
  + (0) core/arch/
  + (1) core/ke/hal/
  + (2) core/ke/intake/
- + (3) res/ 
- + (4) winu/
- + (5) core/ke/main/
+ + (3) core/ke/main/
+ + (4) res/ 
+ + (5) winu/
  + (6) libk/
 ```
 
