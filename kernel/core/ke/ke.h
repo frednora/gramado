@@ -4,16 +4,6 @@
 #ifndef __KE_KE_H
 #define __KE_KE_H    1
 
-int keLoadGramadoIcons(void);
-
-void keRefreshScreen(void);
-
-void 
-keDrawString ( 
-    unsigned long x,
-    unsigned long y,
-    unsigned int color,
-    const char *string );
 
 unsigned long keGetSystemMetrics(int index);
 void keDie(void);

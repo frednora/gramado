@@ -82,14 +82,6 @@ static unsigned long __last_tick(void)
 
 //----------------------------------------------
 
-// keLoadGramadoIcons: Wrapper
-// Load some .BMP system icons into the memory.
-// It's a part of the window system's initialization.
-int keLoadGramadoIcons(void)
-{
-    return (int) greLoadGramadoIcons();
-}
-
 unsigned long get_update_screen_frequency(void)
 {
     return (unsigned long) flush_fps;
@@ -164,7 +156,7 @@ void schedulerUpdateScreen(void)
         0, 0, deviceWidth, 24, COLOR_KERNEL_BACKGROUND, 0 );
     ksprintf(data,"  FPS %d       ",fps);
     data[12]=0;
-    keDrawString(0,8,COLOR_YELLOW,data);
+    winkDrawString(0,8,COLOR_YELLOW,data);
     refresh_rectangle ( 0, 0, deviceWidth, 24 );
 //=========================
 */
@@ -228,27 +220,6 @@ void schedulerUpdateScreen(void)
 
 // Atualizado pelo timer.
     UpdateScreenFlag = FALSE;
-}
-
-// see: bldisp.c
-void keRefreshScreen(void)
-{
-    bldisp_flush(0);
-}
-
-// Wrapper
-void 
-keDrawString ( 
-    unsigned long x,
-    unsigned long y,
-    unsigned int color,
-    const char *string )
-{
-    if ((void*) string == NULL)
-        return;
-    if (*string == 0)
-        return;
-    draw_string(x, y, color, string);
 }
 
 // Worker
@@ -789,7 +760,7 @@ int keInitialize(int phase)
         wink_initialize_background();
         // Loading .BMP icon images.
         //PROGRESS("::(2)(?) Icons\n"); 
-        keLoadGramadoIcons();
+        winkLoadGramadoIcons();
 
         // ==========================
         // Network support.

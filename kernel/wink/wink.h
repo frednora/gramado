@@ -9,6 +9,18 @@
 
 extern int config_use_progressbar;
 
+void winkRefreshScreen(void);
+
+void 
+winkDrawString ( 
+    unsigned long x,
+    unsigned long y,
+    unsigned int color,
+    const char *string );
+
+int winkLoadGramadoIcons(void);
+
+
 void wink_update_progress_bar(unsigned long percent);
 
 void refresh_screen(void);

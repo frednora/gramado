@@ -231,7 +231,7 @@ void keEarlyRing0IdleThread (void)
 Loop:
 // acende
     //backbuffer_draw_rectangle( 0, 0, deviceWidth, 28, COLOR_KERNEL_BACKGROUND );
-    //keDrawString(8,8,COLOR_YELLOW," Gramado Operating System ");
+    //winkDrawString(8,8,COLOR_YELLOW," Gramado Operating System ");
     //refresh_screen();
 // relax
     asm ("sti");

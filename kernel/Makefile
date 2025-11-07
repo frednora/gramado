@@ -7,8 +7,8 @@
 # Zone         | Subfolders to compile
 # -----------------------------------------
 # Red   (Hot)  | core/
-# Pink  (Warm) | wink/
-# White (Cold) | libk/ and res/
+# Pink  (Warm) | wink/ and res/
+# White (Cold) | libk/ 
 
 # Tools
 include core/arch/x86_64/makeinc

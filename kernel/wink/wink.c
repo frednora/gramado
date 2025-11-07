@@ -14,6 +14,35 @@ static void __x_panic_show_message(const char *final_string, unsigned long flags
 
 // =============================================
 
+// see: bldisp.c
+void winkRefreshScreen(void)
+{
+    bldisp_flush(0);
+}
+
+// Wrapper
+void 
+winkDrawString ( 
+    unsigned long x,
+    unsigned long y,
+    unsigned int color,
+    const char *string )
+{
+    if ((void*) string == NULL)
+        return;
+    if (*string == 0)
+        return;
+    draw_string(x, y, color, string);
+}
+
+// winkLoadGramadoIcons: Wrapper
+// Load some .BMP system icons into the memory.
+// It's a part of the window system's initialization.
+int winkLoadGramadoIcons(void)
+{
+    return (int) greLoadGramadoIcons();
+}
+
 void wink_update_progress_bar(unsigned long percent)
 {
     unsigned long rectLeft=0;
