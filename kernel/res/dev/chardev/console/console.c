@@ -50,6 +50,8 @@ int ShellFlag=FALSE;
 
 // global
 // Foreground console.
+// When writing in stdout the content will be printed into the display.
+// So, this is the console that have access to the display (LFB).
 int fg_console=0;
 
 // O redirecionador.

@@ -206,7 +206,12 @@ int DDINIT_ps2(void)
         in8(0x60);
     };
 
-    PS2.pooling = FALSE;
+    if (CONFIG_USE_POOLING_FOR_PS2 == TRUE){
+        PS2.pooling = TRUE;
+    } else {
+        PS2.pooling = FALSE;
+    };
+
     PS2.used = TRUE;
     PS2.magic = 1234;
 
@@ -249,7 +254,12 @@ int DDINIT_ps2_early_initialization(void)
         in8(0x60);
     };
 
-    PS2.pooling = FALSE;
+    if (CONFIG_USE_POOLING_FOR_PS2 == TRUE){
+        PS2.pooling = TRUE;
+    } else {
+        PS2.pooling = FALSE;
+    };
+
     PS2.used = TRUE;
     PS2.magic = 1234;
 

@@ -1,4 +1,4 @@
-// vdesktop.h
+// desktop.h
 // Virtual desktops.
 // ps:
 // This is not the same concept of desktops
@@ -8,11 +8,10 @@
 // Created by Fred Nora.
 
 
-#ifndef __UI_VDESKTOP_H
-#define __UI_VDESKTOP_H    1
+#ifndef __UI_DESKTOP_H
+#define __UI_DESKTOP_H    1
 
-
-struct gws_vdesktop_d
+struct gws_desktop_d
 {
     int used;
     int magic;
@@ -24,16 +23,14 @@ struct gws_vdesktop_d
     unsigned long flags;
 
 // Windows
-    struct gws_window_d *desktop_window;   //root?
+    struct gws_window_d *desktop_window;   // Root window?
     struct gws_window_d *sysmenu_window;
     struct gws_window_d *fg_window;
     struct gws_window_d *notification_window;
+    // ...
 
-    struct gws_vdesktop_d *next;
+    struct gws_desktop_d *next;
 };
 
-
-
 #endif    
-
 

@@ -62,7 +62,9 @@ extern int server_mode;  // DEMO ...
 
 #include "libui/bitblt.h"
 
-#include "ui/vdesktop.h"
+// #suspended
+//#include "ui/desktop.h"
+
 #include "ui/painter.h"
 #include "ui/bmp.h"
 
