@@ -5,11 +5,17 @@ Gramado OS is a 64bit operating system.
 ## Overview
 
 ```
-Gramado OS is a project that includes the bootloader, the kernel image, and the init process.
+> Gramado OS is a project that includes the bootloader, 
+> the kernel image, and the init process.
 ```
 
 ```
-Some extra features are: Ring 3 display server, client-side GUI applications, virtual terminal, Posix-like commands and 3D demos.
+Some extra features are: 
+> Ring 3 display server 
+> client-side GUI applications 
+> virtual terminal
+> Posix-like commands
+> 3D demos
 ```
 
 > [!IMPORTANT]
@@ -62,31 +68,31 @@ kernel/
 
 ## Where are the ring 0 kernel modules?
 
-userland/deps/kcore/modules/
+modules/
 
 ## Where is the Init Process?
 
-userland/deps/ucore/init/
+userland/deps/init/
 
 ## Where is the ring 3 device drivers?
 
-userland/deps/ucore/drivers/
+userland/deps/drivers/
 
 ## Where is the ring 3 servers?
 
-userland/deps/ucore/servers/
+userland/deps/servers/
 
 ## Where is the display server?
 
-userland/gdeps/preshell/ds/ds00/
-
-## Where are the POSIX-like command programs?
-
-userland/gdeps/shell/shell00/
+winu/core/ds/ds00/
 
 ## Where are the client-side GUI applications?
 
 userland/gdeps/shell/shell01/
+
+## Where are the POSIX-like command programs?
+
+userland/deps/cmds/
 
 
 > [!IMPORTANT]
