@@ -143,20 +143,32 @@ static const unsigned long minimum_press_duration_in_ms = 75;
 void __button_pressed(int wid)
 {
     if (wid < 0 || wid >= WINDOW_COUNT_MAX)
-        return; 
+    {
+        return;
+    }
     set_status_by_id( wid, BS_PRESSED );
+
+    // #todo:
+    // Check if the ancestor is an application window,
+    // and activate the window if it is inactive.
+
+// Redraw and sleep x ms to affirm the visual effect
     redraw_window_by_id(wid,TRUE);
-// Sleep x ms to affirm the visual effect.
     rtl_sleep(minimum_press_duration_in_ms);
 }
+
 void __button_released(int wid)
 {
     if (wid < 0 || wid >= WINDOW_COUNT_MAX)
-        return; 
+    {
+        return;
+    }
     set_status_by_id( wid, BS_RELEASED );
+// Redraw
     redraw_window_by_id(wid,TRUE);
 }
 
+// IN: Application ID
 static void launch_app_by_id(int id)
 {
     static int MaxNumberOfApps = 4;
@@ -185,19 +197,17 @@ fail:
     return;
 }
 
+// Called by wmProcessKeyboardEvent().
 void on_enter(void)
 {
-// Called by wmProcessKeyboardEvent().
-
     struct gws_window_d *window;
 
-    // We need the keyboard_owner.
+// Get the the keyboard_owner
     window = (struct gws_window_d *) get_focus();
     if ((void*) window == NULL)
         return;
     if (window->magic != 1234)
         return;
-
 
 //
 // Blinking cursor on [enter]
@@ -260,53 +270,54 @@ position:
 // So, set the focus?
 void on_mouse_pressed(void)
 {
-    int ButtonID = -1;
+    int obj_WID = -1;
 
-// Validating the window mouse_over.
+// Validating the window mouse_over
     if ((void*) mouse_hover == NULL){
         return;
     }
     if (mouse_hover->magic != 1234){
         return;
     }
-
     //if (mouse_hover == __root_window)
         //return;
 
-// Set the mouse_owner.
+// Set the mouse_owner
 // #todo
 // Maybe we can send a message to this window,
 // and the client can make all the changes it wants.
 
     mouse_owner = mouse_hover;
 
-    ButtonID = (int) mouse_hover->id;
+// Get the wid
+// Is it a button or something?
+    obj_WID = (int) mouse_hover->id;
 
 // -------------------------
+// Button pressed
 // #test
 // Regular button and quick launch button.
 // Not a control, not the start menu, not the menuitem.
     if (mouse_hover->type == WT_BUTTON)
     {
         if (mouse_hover->isControl != TRUE){
-            __button_pressed(ButtonID);
+            __button_pressed(obj_WID);
             return;
         }
     }
 
 // -------------------------
-//#test
-// Start menu button.
+// Start menu button
+
     /*
     if (mouse_hover->id == StartMenu.wid){
-        __button_pressed(ButtonID);
+        __button_pressed(obj_WID);
         return;
     }
     */
 
-//
+// -------------------------
 // Title bar
-//
 
     //struct gws_window_d *p;
 
@@ -357,7 +368,7 @@ void on_mouse_pressed(void)
     if (mouse_hover->isMinimizeControl == TRUE)
     {
         if (mouse_hover->type == WT_BUTTON){
-            __button_pressed(ButtonID);
+            __button_pressed(obj_WID);
             return;
         }
     }
@@ -367,7 +378,7 @@ void on_mouse_pressed(void)
     if (mouse_hover->isMaximizeControl == TRUE)
     {
         if (mouse_hover->type == WT_BUTTON){
-            __button_pressed(ButtonID);
+            __button_pressed(obj_WID);
             return;
         }
     }
@@ -377,31 +388,10 @@ void on_mouse_pressed(void)
     if (mouse_hover->isCloseControl == TRUE)
     {
         if (mouse_hover->type == WT_BUTTON){
-            __button_pressed(ButtonID);
+            __button_pressed(obj_WID);
             return;
         }
     }
-
-//
-// Menu item
-// 
-
-// ===================================
-// >> menuitem
-// Lidando com menuitens
-// Se clicamos em um menu item.
-// Redraw the button
-    // #deprecated
-    /*
-    if (mouse_hover->isMenuItem == TRUE)
-    {
-        if (mouse_hover->type == WT_BUTTON)
-        {
-            __button_pressed(ButtonID);
-            return;
-        }
-    }
-    */
 }
 
 void on_mouse_released(void)
@@ -419,7 +409,7 @@ void on_mouse_released(void)
     unsigned long x_diff=0;
     unsigned long y_diff=0;
 
-    int ButtonWID = -1;
+    int obj_WID = -1;
 
     // #hackhack
     // #todo: We need to get this value.
@@ -449,18 +439,19 @@ void on_mouse_released(void)
 
 // When the mouse is hover a tb button.
 
-    // safety first.
-    // mouse_hover validation
-
+// Validate mouse_hover
     if ((void*) mouse_hover == NULL)
         return;
     if (mouse_hover->magic != 1234)
         return;
 
+// Get the wid
+// Is it an button or something?
+    obj_WID = (int) mouse_hover->id;
 
-// If the mouse is hover a button.
-    ButtonWID = (int) mouse_hover->id;
-// If the mouse is hover an editbox.
+// Get position.
+// If the mouse is hover an editbox or something
+// Is it relative to what?
     saved_x = comp_get_mouse_x_position();
     saved_y = comp_get_mouse_y_position();
 
@@ -567,7 +558,7 @@ void on_mouse_released(void)
         // We're a regular button.
         if (mouse_hover->isControl != TRUE)
         {
-            __button_released(ButtonWID);
+            __button_released(obj_WID);
             
             // Sending a message
             // #todo
@@ -610,7 +601,7 @@ void on_mouse_released(void)
 // #test
 // Start menu button was released.
     /*
-    if (ButtonWID == StartMenu.wid){
+    if (obj_WID == StartMenu.wid){
         //wmProcessMenuEvent(MENU_EVENT_RELEASED,StartMenu.wid);
         return;
     }
@@ -711,7 +702,7 @@ void on_mouse_released(void)
     {
         if (mouse_hover->type == WT_BUTTON)
         {
-            __button_released(ButtonWID);
+            __button_released(obj_WID);
             //yellow_status("Release on min control\n");
             on_control_clicked(mouse_hover);
             return;
@@ -724,7 +715,7 @@ void on_mouse_released(void)
     {
         if (mouse_hover->type == WT_BUTTON)
         {
-            __button_released(ButtonWID);
+            __button_released(obj_WID);
             //yellow_status("Release on max control\n");
             on_control_clicked(mouse_hover);
             return;
@@ -737,7 +728,7 @@ void on_mouse_released(void)
     {
         if (mouse_hover->type == WT_BUTTON)
         {
-            __button_released(ButtonWID);
+            __button_released(obj_WID);
             //yellow_status("Release on close control\n");
             // #test
             // On control clicked
@@ -765,14 +756,14 @@ void on_mouse_released(void)
     {
         if (mouse_hover->type == WT_BUTTON)
         {
-            __button_released(ButtonWID);
+            __button_released(obj_WID);
 
             // Disable all the windows in the menu.
             main_menu_all_windows_input_status(FALSE);
             // Update desktop but don't show the menu.
             wm_update_desktop(TRUE,TRUE);
 
-            selected_item = (unsigned long)(ButtonWID & 0xFFFF);
+            selected_item = (unsigned long)(obj_WID & 0xFFFF);
             // #test: see: menu.c
             on_mi_clicked((unsigned long)selected_item);
 

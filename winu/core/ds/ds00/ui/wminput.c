@@ -39,7 +39,7 @@ wmProcessMouseEvent(
         return;
     }
 
-// Invalid event type.
+// Parameter:
     if (event_type < 0){
         return;
     }
@@ -101,8 +101,7 @@ wmProcessMouseEvent(
     if (event_type == GWS_MousePressed)
     {
         DoubleClick.is_doubleclick = FALSE;
-        DoubleClick.delta =
-            (DoubleClick.current - DoubleClick.last);
+        DoubleClick.delta = (DoubleClick.current - DoubleClick.last);
         DoubleClick.last = DoubleClick.current; 
         // Yes, it's a double click
         if (DoubleClick.delta < DoubleClick.speed)
