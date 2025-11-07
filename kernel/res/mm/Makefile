@@ -1,5 +1,5 @@
 # mm/
-# Compile all the files and create p4_mm.o
+# Compile all the files and create p3_mm.o
 # Makefile for the kernel memory manager.
 # Created by Fred Nora.
 
@@ -99,8 +99,8 @@ all:
 	$(CC) -c mmft.c     $(KERNEL_INCLUDE) $(CFLAGS) -o mmft.o
 
 # link
-	$(LD) -r -o p4_mm.o $(OBJS)
-	cp p4_mm.o ../../
+	$(LD) -r -o p3_mm.o $(OBJS)
+	cp p3_mm.o ../../
 	rm *.o
 
 clean:

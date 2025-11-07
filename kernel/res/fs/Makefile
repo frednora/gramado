@@ -1,7 +1,5 @@
-
 # fs/
-# Compile all the files and create ar_fs.o
-
+# Compile all the files and create p3_fs.o
 # Makefile for the kernel filesystems.
 
 INCLUDE = ../../include
@@ -90,8 +88,8 @@ all:
 	$(CC) -c fat/fat16.c  $(KERNEL_INCLUDE) $(CFLAGS) -o fat16.o
 
 # link
-	$(LD) -r -o p4_fs.o $(OBJS)
-	cp p4_fs.o ../../
+	$(LD) -r -o p3_fs.o $(OBJS)
+	cp p3_fs.o ../../
 	rm *.o
 
 clean:

@@ -1,5 +1,6 @@
 // libk.c
 // Wrapper for the whole libk/ module.
+// Created by Fred Nora.
 
 #include <kernel.h>
 

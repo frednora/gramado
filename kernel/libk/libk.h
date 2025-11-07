@@ -1,7 +1,11 @@
 // libk.h
+// Created by Fred Nora.
 
 #ifndef __LIBK_LIBK_H
 #define __LIBK_LIBK_H    1
+
+// ======================================
+
 
 
 
@@ -17,7 +21,6 @@ int libk_initialize(void);
 #define crt_fclose   k_fclose
 // ...
 
-
 // ------------------
 // libk prefix
 #define libk_printf   kinguio_printf
@@ -27,7 +30,6 @@ int libk_initialize(void);
 #define libk_ftell    k_ftell
 #define libk_fclose   k_fclose
 // ...
-
 
 #endif    
 

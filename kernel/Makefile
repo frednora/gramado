@@ -90,6 +90,9 @@ MYTEST_CONFIG=n
 # Gramado objects:
 # Heat control.
 
+# I will not change the order for now.
+# I want, but i will not.
+
 # ==[Part 01]======================
 # core/ (HOT)
 objects-y := head_64.o 
@@ -101,24 +104,21 @@ objects-y += p1_kmain.o
 objects-y += p2_wink.o  
 
 # ==[Part 03]======================
-objects-y += p3_libk.o  
-
-# ==[Part 04]======================
 # res/ - Kernel resources (COLD)
 # We can create interfaces that belongs to a given cgroup.
 
-objects-y += p4_mm.o  
-
-objects-y += p4_bus.o  
-
+objects-y += p3_mm.o  
+objects-y += p3_bus.o  
 objects-y += blkdev.o  
 objects-y += chardev.o  
 objects-y += netdev.o  
-objects-y += p4_dev.o  
+objects-y += p3_dev.o  
+objects-y += p3_net.o    
+objects-y += p3_fs.o  
 
-objects-y += p4_net.o    
-
-objects-y += p4_fs.o  
+# ==[Part 04]======================
+# libk/ (Runtime Library)
+objects-y += p4_libk.o  
 
 # test
 # objects-$(MYTEST_CONFIG) += fake_mytest.o
@@ -140,17 +140,19 @@ RedZone:
 
 # ----------------
 # Graphical Device Interface and User Interaction Interface.
+# Resources
 PinkZone:
-# Part 02
+# Part 02 and Part 3
 	@echo "Compiling: Compiling PinkZone"
 	$(Q)$(MAKE) -C wink/
+	$(Q)$(MAKE) -C res/
 
 # ----------------
+# libk/ (Runtime Library)
 WhiteZone:
-# Part 03, Part 04.
+# Part 04
 	@echo "Compiling: Compiling WhiteZone"
 	$(Q)$(MAKE) -C libk/
-	$(Q)$(MAKE) -C res/
 #   ...
 
 # ----------------

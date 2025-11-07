@@ -1,5 +1,5 @@
 # dev/
-# Compile all the files and create ar_dev.o
+# Compile all the files and create p3_dev.o
 # Makefile for the kernel device drivers.
 
 
@@ -81,8 +81,8 @@ all:
 	$(CC) -c io.c       $(KERNEL_INCLUDE) $(CFLAGS) -o io.o
 
 # link
-	$(LD) -r -o p4_dev.o $(OBJS)
-	cp p4_dev.o ../../
+	$(LD) -r -o p3_dev.o $(OBJS)
+	cp p3_dev.o ../../
 	rm *.o
 
 clean:

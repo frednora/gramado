@@ -1,6 +1,5 @@
-
 # bus/
-# Compile all the files and create j0_bus.o
+# Compile all the files and create p3_bus.o
 
 # Makefile for the kernel device drivers.
 
@@ -90,8 +89,8 @@ all:
 # ...
 
 # link
-	$(LD) -r -o p4_bus.o $(OBJS)
-	cp p4_bus.o ../../
+	$(LD) -r -o p3_bus.o $(OBJS)
+	cp p3_bus.o ../../
 	rm *.o
 
 clean:

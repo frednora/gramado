@@ -1,6 +1,5 @@
-
 # net/
-# Compile all the files and create ar_net.o
+# Compile all the files and create p3_net.o
 # Makefile for the kernel networking.
 
 INCLUDE = ../../include
@@ -102,8 +101,8 @@ $(KERNEL_INCLUDE) $(CFLAGS) -o ipv4.o
 	$(CC) -c prot/gprot.c  $(KERNEL_INCLUDE) $(CFLAGS) -o gprot.o
 
 # link
-	$(LD) -r -o p4_net.o $(OBJS)
-	cp p4_net.o ../../
+	$(LD) -r -o p3_net.o $(OBJS)
+	cp p3_net.o ../../
 	rm *.o
 
 clean:

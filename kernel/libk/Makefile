@@ -1,6 +1,6 @@
-# clibs/
-# Compile all the files and create ar_crt.o
-# Makefile for the libc support.
+# libk/
+# Create p4_libk.o kernel module.
+# Highest level component.
 
 INCLUDE = ../include
 
@@ -71,7 +71,6 @@ LDFLAGS := -m elf_x86_64 -s -x -static
 OBJS = kctype.o kstdio.o printk.o ksignal.o kstdlib.o kstring.o kunistd.o \
 libk.o    
 
-
 all:
 	$(CC) -c kctype.c  $(KERNEL_INCLUDE) $(CFLAGS) -o kctype.o
 	$(CC) -c ksignal.c $(KERNEL_INCLUDE) $(CFLAGS) -o ksignal.o
@@ -82,13 +81,12 @@ all:
 	$(CC) -c kstdio.c  $(KERNEL_INCLUDE) $(CFLAGS) -o kstdio.o
 	$(CC) -c printk/printk.c  $(KERNEL_INCLUDE) $(CFLAGS) -o printk.o
 
-
-# Whapper for the whole libk/ module.
+# Whapper for the whole libk/ module
 	$(CC) -c libk.c  $(KERNEL_INCLUDE) $(CFLAGS) -o libk.o
 
 # link
-	$(LD) -r -o p3_libk.o $(OBJS)
-	cp p3_libk.o ../
+	$(LD) -r -o p4_libk.o $(OBJS)
+	cp p4_libk.o ../
 	rm *.o
 
 clean:
