@@ -39,9 +39,9 @@ DISPLAY_SERVERS = $(DEP_L2_LAST)/ds
 
 ## =================================
 # Shell UI: Client-side GUI applications.
-DEP_L3 = userland/gdeps/shell
+DEP_L3 = userland/shell
 # Client-side GUI applications
-APPLICATIONS = $(DEP_L3)/shell01
+APPLICATIONS = $(DEP_L3)/shell00
 
 ## =================================
 OUTSIDE_L0 = userland/outside
@@ -215,8 +215,8 @@ build-extras:
 # Install BMPs from cali assets.
 # Copy the $(DEP_L3)/assets/
 # We can't survive without this one.
-#	@cp $(DEP_L3)/assets/themes/theme01/*.BMP  $(BASE)/
-	@cp $(DEP_L3)/assets/themes/theme01/*.BMP  $(BASE)/DE
+#	@cp $(DEP_L3)/shell00/assets/themes/theme01/*.BMP  $(BASE)/
+	@cp $(DEP_L3)/shell00/assets/themes/theme01/*.BMP  $(BASE)/DE
 
 # Well consolidated programs.
 	@-cp $(COMMANDS)/base/bin/PUBSH.BIN    $(BASE)/GRAMADO/
