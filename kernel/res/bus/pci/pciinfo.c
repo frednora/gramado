@@ -1,38 +1,115 @@
 // pciinfo.c
 // Created by Fred Nora.
 
+
+// 80EE:CAFE is the VirtualBox Guest Additions PCI device. 
+// It’s categorized under Class 8, Subclass 0x80 (Other Base System Peripheral), and 
+// it exists purely to support VirtualBox’s host–guest integration features.
+
 #include <kernel.h>  
 
-// Class strings
-// Obs: 
-// Parece que outra forma de lista é mais apropriado.
+
+// PCI Class Code Strings
+// Indexed by class code [0x00–0xFF]
+// Source: PCI Local Bus Specification
 
 static const char* pci_class_strings[] = {
-	"Unknow",                              //0x00 (Pre 2.0 device)
-	"Mass Storage Controller",             //0x01
-	"Network Controller",                  //0x02
-	"Display Controller",                  //0x03
-	"Multimedia Controller",               //0x04 (Multimedia Device)
-	"Memory Controller",                   //0x05
-	"Bridge Device",                       //0x06
-	"Simple Communication Controller",     //0x07
-	"Base System Peripheral",              //0x08
-	"Input Device",                        //0x09
-	"Docking Station",                     //0x0a
-	"Processor",                           //0x0b
-	"Serial Bus Controller",               //0x0c
-	"Wireless Controller",                 //0x0d
-	"Intelligent IO Controllers",          //0x0e
-	"Satellite Communication Controller",  //0x0f
-	"Encryption Decryption Controller",    //0x10
-	"Data Acquisition and Signal Processing Controller",
-	0
-	//"Processing Accelerators",      //0x12
-	//"Non-Essential Instrumentation" //0x13
-	//Daqui pra frente está reservado.
-	//0xff (Device does not fit in any defined classes)
+    /* 0x00 */ "Unclassified",
+    /* 0x01 */ "Mass Storage Controller",
+    /* 0x02 */ "Network Controller",
+    /* 0x03 */ "Display Controller",
+    /* 0x04 */ "Multimedia Controller",
+    /* 0x05 */ "Memory Controller",
+    /* 0x06 */ "Bridge Device",
+    /* 0x07 */ "Simple Communication Controller",
+    /* 0x08 */ "Base System Peripheral",
+    /* 0x09 */ "Input Device Controller",
+    /* 0x0A */ "Docking Station",
+    /* 0x0B */ "Processor",
+    /* 0x0C */ "Serial Bus Controller",
+    /* 0x0D */ "Wireless Controller",
+    /* 0x0E */ "Intelligent I/O Controller",
+    /* 0x0F */ "Satellite Communication Controller",
+    /* 0x10 */ "Encryption Controller",
+    /* 0x11 */ "Signal Processing Controller",
+    /* 0x12 */ "Processing Accelerator",
+    /* 0x13 */ "Non-Essential Instrumentation",
+
+    // 0x14–0x3F Reserved
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,
+
+    /* 0x40 */ "Co-Processor",
+
+    // 0x41–0xFE Reserved
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+
+    /* 0xFF */ "Unassigned Class (Vendor Specific)",
 };
 
+// PCI Mass Storage Subclass Strings
+// Indexed by subclass code [0x00–0xFF]
+// Source: PCI Local Bus Specification
+
+static const char* pci_mass_storage_subclass_strings[] = {
+    /* 0x00 */ "SCSI Bus Controller",
+    /* 0x01 */ "IDE Controller",
+    /* 0x02 */ "Floppy Disk Controller",
+    /* 0x03 */ "IPI Bus Controller",
+    /* 0x04 */ "RAID Controller",
+    /* 0x05 */ "ATA Controller (ADMA interface)",
+    /* 0x06 */ "Serial ATA Controller",
+    /* 0x07 */ "Serial Attached SCSI (SAS) Controller",
+    /* 0x08 */ "Non-Volatile Memory Controller",   // e.g. NVMe
+    /* 0x09 */ "Universal Flash Storage (UFS) Controller",
+    /* 0x0A */ 0, // Reserved
+    /* 0x0B */ 0, // Reserved
+    /* 0x0C */ 0, // Reserved
+    /* 0x0D */ 0, // Reserved
+    /* 0x0E */ 0, // Reserved
+    /* 0x0F */ 0, // Reserved
+    /* 0x80 */ "Other Mass Storage Controller"
+};
+
+// PCI Bridge Subclass Strings
+// Indexed by subclass code [0x00–0xFF]
+// Source: PCI Local Bus Specification
+
+static const char* pci_bridge_subclass_strings[] = {
+    /* 0x00 */ "Host/PCI Bridge",
+    /* 0x01 */ "PCI/ISA Bridge",
+    /* 0x02 */ "PCI/EISA Bridge",
+    /* 0x03 */ "PCI/Micro Channel Bridge",
+    /* 0x04 */ "PCI/PCI Bridge",
+    /* 0x05 */ "PCI/PCMCIA Bridge",
+    /* 0x06 */ "PCI/NuBus Bridge",
+    /* 0x07 */ "PCI/CardBus Bridge",
+    /* 0x08 */ "PCI/RACEway Bridge",
+    /* 0x09 */ "PCI/Semi-Transparent PCI-to-PCI Bridge",
+    /* 0x0A */ "PCI/InfiniBand-to-PCI Host Bridge",
+    /* 0x0B */ 0, // Reserved
+    /* 0x0C */ 0, // Reserved
+    /* 0x0D */ 0, // Reserved
+    /* 0x0E */ 0, // Reserved
+    /* 0x0F */ 0, // Reserved
+    /* 0x80 */ "Other Bridge Device"
+};
 
 /*
  * pciInfo:
@@ -50,9 +127,14 @@ int pciInfo(void)
 {
     struct pci_device_d *d;
     register int i=0;
+    int Counter=0;
     const int Max = PCI_DEVICE_LIST_SIZE;
-    char *class_string;
+
     int ClassCode=0;
+    int SubclassCode=0;
+    char *class_string;
+    char *mass_subclass_string;
+    char *bridge_subclass_string;
 
     printk ("pciInfo:\n");
 
@@ -63,24 +145,42 @@ int pciInfo(void)
         {
             if ( d->used == TRUE && d->magic == 1234 )
             {
-                // #bugbug
-                // What is the limit for this index?
-                ClassCode = d->classCode;
-                class_string = (char *) pci_class_strings[ClassCode]; 
+                Counter++;
                 printk ("\n");
-                printk ("[%d/%d/%d] Vend=%x Dev=%x Class=%s SubClass=%x iLine=%d iPin=%d \n",
-                    d->bus, d->dev , d->func,
-                    d->Vendor, d->Device, 
-                    class_string, d->subclass, 
+
+                // #bugbug: What is the limit for this index?
+                ClassCode = d->classCode;
+                SubclassCode = d->subclass;
+                class_string = 
+                    (char *) pci_class_strings[ClassCode]; 
+                mass_subclass_string = 
+                    (char *) pci_mass_storage_subclass_strings[SubclassCode];
+                bridge_subclass_string = 
+                    (char *) pci_bridge_subclass_strings[SubclassCode];
+
+                printk ("[%d:%d:%d] Vend=%x Dev=%x iLine=%d iPin=%d\n", 
+                    d->bus, d->dev, d->func, d->Vendor, d->Device,
                     d->irq_line, d->irq_pin );
+
+                if (ClassCode == PCI_CLASSCODE_MASS){
+                    printk("Class={%s} Subclass={%s}\n", 
+                        class_string, mass_subclass_string);
+                } else if (ClassCode == PCI_CLASSCODE_BRIDGE) {
+                    printk("Class={%s} Subclass={%s}\n", 
+                        class_string, bridge_subclass_string);
+                } else {
+                    printk("Class={%s} Subclass={%d}\n", 
+                        class_string, d->subclass);
+                }
             }
         }
     };
 
-    printk ("Done\n");
-    return 0; 
+    printk ("Done %d devices found\n",Counter);
+    return 0;
+fail:
+    return (int) -1;
 }
-
 
 /*
  * pciShowDeviceInfo:
@@ -92,31 +192,29 @@ int pciShowDeviceInfo(int number)
     struct pci_device_d *D;
 
 // Limits
-// Pega um ponteiro de estrutura na lista.
-
-    if ( number < 0 || 
-         number >= PCI_DEVICE_LIST_SIZE)
+    if ( number < 0 || number >= PCI_DEVICE_LIST_SIZE )
     {
         goto fail;
     }
 
-// Get the number.
+// Get the pointer
     D = (void *) pcideviceList[number];
     if ((void *) D == NULL)
         goto fail;
     if (D->used != TRUE)
         goto fail;
-    if (D->magic != 1234)
+    if (D->magic != 1234){
         goto fail;
+    }
 
-// print
+// Print
     printk ("Vend={%x} Dev={%x} ClassCode={%x} IntLine={%x}\n",
         D->Vendor, D->Device, D->classCode, D->irq_line );
 
 // done
     return 0;
 fail:
-    return -1;
+    return (int) -1;
 }
 
 //
