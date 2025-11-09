@@ -720,6 +720,9 @@ static void __drawFlyingCube(struct cube_model_d *cube, float vel)
         // discarding all triangles where the dot product of 
         // their surface normal and the camera-to-triangle 
         // vector is greater than or equal to zero.
+        // In this case they are in the same direction.
+        // That is not what we want. when the face of the triangle and 
+        // the camera points to the same direcion we do not paint the triangle.
         // Nesse caso eles estão na mesma direção ou
         // são perpendiculares. Só queremos os vetores que
         // estão em direções opostas.
