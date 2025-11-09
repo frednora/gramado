@@ -191,6 +191,7 @@
 // display device support.
 #include "../res/dev/chardev/display/display.h"
 // bootloader display device
+#include "../res/dev/chardev/display/bldisp/rop.h"
 #include "../res/dev/chardev/display/bldisp/bldisp.h"
 //#include "../res/dev/chardev/display/qemudisp/qemudisp.h"
 
