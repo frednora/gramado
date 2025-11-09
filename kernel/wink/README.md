@@ -1,5 +1,7 @@
 # wink
 
+Ring 0 support for the windowing system.
+
 ```
 Main components:
 #todo: Maybe we can provide two 'devices' that can be open

@@ -1,9 +1,11 @@
-# shpreui - Shell Pre-UI
+# core
 
-The core of windowing system.
+The core components for the windowing system.
 
 ```
-Display server and 3D demos.
+ + ds/   - 2D display servers.
+ + ds3d/ - 3D display server.
+           It has embedded 3D demo.
 ```
 
 ## This is a screenshot of GramadoDE desktop environment running on top of the kernel.
@@ -26,7 +28,7 @@ folder ds/ds00/.
 ds/ folder is the place for the display servers. The default display server is ds00.
 ```
 
-## gramadox - a place for 3D demos.
+## ds3d - A place for 3D display server with demos.
 
 Here you can find some 3D demos that run in the same place of the display server.
 So, instead of initializing the display server you can initialize a demo.
