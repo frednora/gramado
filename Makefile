@@ -36,6 +36,8 @@ COMMANDS = $(DEP_L1)/cmds
 DEP_L2_LAST = winu/core
 # Display servers
 DISPLAY_SERVERS = $(DEP_L2_LAST)/ds
+# Display server with embedded 3D demos
+GAMES = $(DEP_L2_LAST)/ds3d
 
 ## =================================
 # Shell UI: Client-side GUI applications.
@@ -45,8 +47,6 @@ APPLICATIONS = $(DEP_L3)/shell00
 
 ## =================================
 OUTSIDE_L0 = userland/outside
-# windowing system with 3D demos
-GAMES = $(OUTSIDE_L0)/gram3d
 # Client-side GUI applications with X library
 X_APPLICATIONS = $(OUTSIDE_L0)/xapps
 # Creating one cpp application just for fun
@@ -203,6 +203,10 @@ build-extras:
 
 	@-cp $(DISPLAY_SERVERS)/ds00/bin/DS00.BIN    $(BASE)/DE
 #@-cp $(DISPLAY_SERVERS)/ds01/bin/DS01.BIN    $(BASE)/DE
+# Display servers with 3D demos.
+	@-cp $(GAMES)/bin/DEMO00.BIN   $(BASE)/DE/
+	@-cp $(GAMES)/bin/DEMO01.BIN   $(BASE)/DE/
+
 
 # ==================================
 # LEVEL : (os/) Client-side GUI applications
@@ -280,10 +284,6 @@ build-extras:
 # Compiling outside stuff
 	@echo "Compiling DEP_L3 (outside/)"
 	@make -C $(OUTSIDE_L0)/
-
-# 3D demos.
-	@-cp $(GAMES)/bin/DEMO00.BIN   $(BASE)/DE/
-	@-cp $(GAMES)/bin/DEMO01.BIN   $(BASE)/DE/
 
 # X applications
 	@-cp $(X_APPLICATIONS)/bin/XTB.BIN  $(BASE)/DE
