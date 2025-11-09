@@ -39,11 +39,12 @@ libgr_transform_to_screespace(
 
     // x positivo, para direita.
     if (x >= 0 ){
-        X = (int) ( hotspotx + x );
+        X = (int) (hotspotx + x);
     }
     // x negativo, para esquerda.
-    if (x < 0 ){ x = abs(x);   
-        X = (int) ( hotspotx - x );
+    if (x < 0 ){ 
+        x = abs(x);   
+        X = (int) (hotspotx - x);
     }
 
 //    goto done;
@@ -54,28 +55,28 @@ libgr_transform_to_screespace(
 // Y::
     // y positivo, para cima.
     if ( y >= 0 ){
-        Y = (int) ( hotspoty - y );
+        Y = (int) (hotspoty - y);
     }
     // y negativo, para baixo
-    if ( y < 0 ){ y = abs(y);
-        Y = (int) ( hotspoty + y );
+    if ( y < 0 ){ 
+        y = abs(y);
+        Y = (int) (hotspoty + y);
     }
 
 // ===================================================
 // Return values:
 
     // fail
-    if ( (void*) res_x == NULL ){ return (int) -1; }
-    if ( (void*) res_y == NULL ){ return (int) -1; }
+    if ((void*) res_x == NULL){ goto fail; }
+    if ((void*) res_y == NULL){ goto fail; }
 
     *res_x = (int) X;
     *res_y = (int) Y;
 
-    // ok
-    return 0;
-
+    return 0;  // OK
+fail:
+    return (int) -1;
 }
-
 
 // Transforme from the (x,y,z) coordinates of the 'view space'
 // to the (x,y) coordinates of the 2d screen space.
@@ -145,11 +146,12 @@ libgr_transform_from_viewspace_to_screespace(
     {
         // x positivo, para direita.
         if (x >= 0 ){
-            X = (int) ( hotspotx + x );
+            X = (int) (hotspotx + x);
         }
         // x negativo, para esquerda.
-        if (x < 0 ){ x = abs(x);   
-            X = (int) ( hotspotx - x );
+        if (x < 0 ){ 
+            x = abs(x);   
+            X = (int) (hotspotx - x);
         }
         goto done;
     }
@@ -166,7 +168,8 @@ libgr_transform_from_viewspace_to_screespace(
             X = (int) (hotspotx + x);
         }
         // x negativo, para esquerda.
-        if (x < 0){  x = abs(x); 
+        if (x < 0){
+            x = abs(x);
             X = (int) (hotspotx - x);
         }
         goto done;
@@ -178,11 +181,12 @@ done:
 // Y::
      // y positivo, para cima.
      if ( y >= 0 ){
-         Y = (int) ( hotspoty - y );
+        Y = (int) (hotspoty - y);
      }
      // y negativo, para baixo
-     if ( y < 0 ){ y = abs(y);
-         Y = (int) ( hotspoty + y );
+     if ( y < 0 ){ 
+        y = abs(y);
+        Y = (int) (hotspoty + y);
      }
 
 // ===================================================
@@ -196,14 +200,15 @@ done:
     {
         // z é positivo para todos os casos 
         // onde z é maior igual a 0.
-        if(z >= 0)
+        if (z >= 0)
         { 
             X = (X + z);  //para direita
             Y = (Y - z);  //para cima
         }
         // z é módulo para todos os casos 
         // em que z é menor que 0.
-        if(z < 0){ z = abs(z);
+        if (z < 0){ 
+            z = abs(z);
             X = (X - z);   // para esquerda
             Y = (Y + z);   // para baixo
         }
@@ -214,14 +219,15 @@ done:
     {
         // z é positivo para todos os casos 
         // onde z é maior igual a 0.
-        if(z >= 0)
+        if (z >= 0)
         { 
             X = (X - z);  //para esquerda
             Y = (Y + z);  //para baixo
         }
         // z é módulo para todos os casos 
         // em que z é menor que 0.
-        if(z < 0){ z = abs(z);
+        if (z < 0){ 
+            z = abs(z);
             X = (X + z);   // para esquerda
             Y = (Y - z);   // para baixo
         }
@@ -231,14 +237,15 @@ done:
 // Return values:
 
     // fail
-    if ( (void*) res_x == NULL ){ return (int) -1; }
-    if ( (void*) res_y == NULL ){ return (int) -1; }
+    if ((void*) res_x == NULL){ goto fail; }
+    if ((void*) res_y == NULL){ goto fail; }
 
     *res_x = (int) X;
     *res_y = (int) Y;
 
-    // ok
-    return 0;
+    return 0;  // OK
+fail:
+    return (int) -1;
 }
 
 // #ugly
@@ -259,7 +266,6 @@ void multiply4 (int mat1[4][4], int mat2[4][4], int res[4][4])
         };
     };
 }
-
 
 // Fibonacci Series using Recursion 
 // ??: slow.
@@ -299,7 +305,6 @@ void __print_fib(int max)
     };
 }
 */
-
 
 //#todo: Explain it better.
 unsigned int 
@@ -355,7 +360,7 @@ int dot_product( struct gr_vec3D_d *v1, struct gr_vec3D_d *v2 )
     scalar += (v1->y * v2->y);
     scalar += (v1->z * v2->z);
 
-    return (int) (scalar & 0xFFFFFFFF );
+    return (int) (scalar & 0xFFFFFFFF);
 }
 
 // inline?
@@ -405,15 +410,15 @@ gr_find_obj_height_int (
 // ------------
 // Razão entre a distância da imagem e a distância do objeto.
     if (obj_distance == 0){
-        return -1;  //fail
+        goto fail;
     }
     int tmp = (int) (img_distance/obj_distance);
 
 // ------------
 // Altura da imagem dividida pela
 // razão entre a distância da imagem e a distância do objeto.
-    if (tmp==0){
-        return -1;  //fail
+    if (tmp == 0){
+        goto fail;
     }
     int resOH = (int) (img_height / tmp);
 
@@ -422,13 +427,16 @@ gr_find_obj_height_int (
 // Return the object height
 // Check pointer validation
 
-    if( (int*) obj_height == NULL){
-        return -1;  //fail
+    if ((int*) obj_height == NULL)
+    {
+        goto fail;
     }
     
     *obj_height = (int) resOH;
-    
-    return 0; //ok
+
+    return 0;  // ok
+fail:
+    return (int) -1;
 }
 
 int 
@@ -443,7 +451,7 @@ gr_find_img_height_int (
 // ------------
 // Razão entre a distância da imagem e a distância do objeto.
     if (obj_distance == 0){
-        return -1;  //fail
+        goto fail;
     }
     int tmp = (int) (img_distance/obj_distance);
 
@@ -454,18 +462,21 @@ gr_find_img_height_int (
 // Return the image height
 // Check pointer validation
 
-    if ( (int*) img_height == NULL){
-        return -1;  //fail
+    if ((int*) img_height == NULL)
+    {
+        goto fail;
     }
 
     *img_height = (int) resIH;
 
-    return 0; //ok
+    return 0;  //ok
+fail:
+    return (int) -1;
 }
 
 void gr_scale_vec( struct gr_vec3D_d *v, int scale )
 {
-    if ( (void*) v == NULL )
+    if ((void*) v == NULL)
         return;
 
     v->x *= scale;
@@ -479,12 +490,12 @@ xxxInflateCubeZ (
     struct gr_cube_d *cube, 
     int value )
 {
-    if ( (void*) cube == NULL ){
-        return (-1);
-    }
-
     //int value = z;
     //int value = z*2;
+
+    if ((void*) cube == NULL){
+        goto fail;
+    }
 
 // South points =====================================
     cube->p[0].x = (cube->p[0].x - value);
@@ -521,6 +532,8 @@ xxxInflateCubeZ (
     cube->p[7].z = (cube->p[7].z + value);
 
     return 0;
+fail:
+    return (int) -1;
 }
 
 // Scaling: Deflate cube.
@@ -529,8 +542,8 @@ xxxDeflateCubeZ (
     struct gr_cube_d *cube, 
     int value )
 {
-    if ( (void*) cube == NULL ){
-        return -1;
+    if ((void*) cube == NULL){
+        goto fail;
     }
 
 // South points ==========================
@@ -568,5 +581,7 @@ xxxDeflateCubeZ (
     cube->p[7].z = (cube->p[7].z - value);
 
     return 0;
+fail:
+    return (int) -1;
 }
 

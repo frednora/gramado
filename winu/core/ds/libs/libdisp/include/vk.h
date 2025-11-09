@@ -1,12 +1,10 @@
-
-// File: vk.h
-
+// vk.h
+// Created by Fred Nora
 
 #ifndef GWS_VK_H
 #define GWS_VK_H    1
 
-
-// Virtual keys.
+// Virtual keys
 #define VK_LBUTTON   0x01
 #define VK_RBUTTON   0x02
 #define VK_CANCEL    0x03
