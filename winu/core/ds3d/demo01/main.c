@@ -3648,6 +3648,22 @@ static int on_execute(void)
     int DrawDesktop = FALSE;
     int DrawYellowStatus = TRUE;
     // ...
+// Draw the desktop before the demos?
+// see: config.h
+    if (CONFIG_DRAW_DESKTOP == 1){
+        DrawDesktop = TRUE;
+    } else {
+        DrawDesktop = FALSE;
+    }
+
+// Draw the yellow status bar after the demo
+// see: config.h
+    if (CONFIG_DRAW_YELLOW_STATUS == 1){
+        DrawYellowStatus = TRUE;
+    } else {
+        DrawYellowStatus = FALSE;
+    }
+
 
     // Initialize counters.
     accumulatedDeltaTick=0;

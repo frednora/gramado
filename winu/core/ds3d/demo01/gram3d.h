@@ -24,6 +24,8 @@ extern int current_mode;
 //#test
 #include <math.h>
 
+#include "config.h"
+
 #include "protocol.h"
 
 #include "globals.h"
