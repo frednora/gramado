@@ -1,6 +1,6 @@
-
 // libgd.h
-// graphics device library.
+// Graphics device library.
+// Created by Fred Nora.
 
 #ifndef __LIBDISP_H
 #define __LIBDISP_H  1
@@ -8,8 +8,21 @@
 #include "vk.h"       // # view input events
 #include "lt8x8.h"
 
+/*
+// #test: 
+// Addresses used by the frontbuffer
+struct libgd_frontbuffer_info_d 
+{
+    int initialized;
 
-int libgd_initialize(void);
+    unsigned long frontbuffer_begin_va;
+    unsigned long frontbuffer_end_va;
+
+    unsigned long frontbuffer_visible_area_begin_va;
+    unsigned long frontbuffer_visible_area_end_va;
+};
+extern struct libgd_frontbuffer_info_d  FrontbufferInfo;
+*/
 
 int 
 libdisp_backbuffer_putpixel ( 
@@ -65,6 +78,14 @@ libgd_putpixel (
     int back_or_front );
 
 unsigned int grBackBufferGetPixelColor( int x, int y );
+
+//
+// #
+// INITIALIZATION 
+//
+
+// Initialize the libgd library
+int libgd_initialize(void);
 
 #endif    
 

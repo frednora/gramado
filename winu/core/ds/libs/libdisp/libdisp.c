@@ -16,15 +16,20 @@
 
 static int libgd_current_mode=0;
 
-// #ordem
-// hardware, software
+// Backbuffer - Dark Zone
 static unsigned long libgd_BACKBUFFER_VA=0;
+// Frontbuffer (LFB) - Light Zone
 static unsigned long libgd_FRONTBUFFER_VA=0;
+
+// #test: 
+// Addresses used by the frontbuffer
+// struct libgd_frontbuffer_info_d  FrontbufferInfo;
+
 // Saving
 static unsigned long libgd_SavedX=0;
 static unsigned long libgd_SavedY=0;
 static unsigned long libgd_SavedBPP=0; 
-// helper.
+// Helper
 static unsigned long libgd_device_width=0;
 static unsigned long libgd_device_height=0;
 static unsigned long libgd_device_bpp=0;
@@ -81,52 +86,6 @@ libgd_put_pixel(
     *(unsigned int*)( (unsigned int*) address ) = (unsigned int) color;
 }
 */
-
-// Initialize the library.
-int libgd_initialize(void)
-{
-    libgd_current_mode = server_get_system_metrics(130);
-    if (libgd_current_mode < 0){
-        printf("libgd_initialize: [FAIL] libgd_current_mode\n");
-        goto fail;
-    }
-
-// Buffers
-    libgd_FRONTBUFFER_VA = (unsigned long) rtl_get_system_metrics(11);
-    libgd_BACKBUFFER_VA  = (unsigned long) rtl_get_system_metrics(12);
-// Screen
-// Width, Height and Bits Per Pixel.
-    libgd_device_width  = (unsigned long) server_get_system_metrics(1);
-    libgd_device_height = (unsigned long) server_get_system_metrics(2);
-    libgd_device_bpp    = (unsigned long) server_get_system_metrics(9);
-// Saving
-    libgd_SavedX   = (unsigned long) libgd_device_width;
-    libgd_SavedY   = (unsigned long) libgd_device_height;
-    libgd_SavedBPP = (unsigned long) libgd_device_bpp;
-
-
-// Backbuffer and frontbuffer.
-    if ( libgd_FRONTBUFFER_VA == 0 || libgd_BACKBUFFER_VA == 0 )
-    {
-        printf("libgd_initialize: Buffers\n");
-        goto fail;
-    }
-
-// Width, Height and Bits Per Pixel.
-    if ( libgd_device_width == 0 || 
-         libgd_device_height == 0 || 
-         libgd_device_bpp == 0 )
-    {
-        printf("libgd_initialize: w, h and bpp\n");
-        goto fail;
-    }
-
-
-    return 0;
-fail:
-    exit(1);
-    return (int) -1;
-}
 
 // Plot pixel into the raster.
 // The origin is top/left of the viewport. (0,0).
@@ -747,16 +706,10 @@ backbuffer_putpixel (
     unsigned long _rop_flags )
 {
     unsigned long buffer = (unsigned long) libgd_BACKBUFFER_VA;
-// Putpixel at the given buffer address.
-    putpixel0(
-        _color,
-        _x,
-        _y,
-        _rop_flags,
-        buffer );
+// Putpixel at the given buffer address
+    putpixel0( _color, _x, _y, _rop_flags, buffer );
 }
 
-// #todo: Not tested yet.
 void 
 frontbuffer_putpixel ( 
     unsigned int  _color,
@@ -765,15 +718,12 @@ frontbuffer_putpixel (
     unsigned long _rop_flags )
 {
     unsigned long buffer = (unsigned long) libgd_FRONTBUFFER_VA;
-// Putpixel at the given buffer address.
-    putpixel0(
-        _color,
-        _x,
-        _y,
-        _rop_flags,
-        buffer );
+// Putpixel at the given buffer address
+    putpixel0( _color, _x, _y, _rop_flags, buffer );
 }
 
+// IN: 
+// back_or_front: 1=back | 2=front
 int 
 libgd_putpixel ( 
     unsigned int color, 
@@ -782,8 +732,6 @@ libgd_putpixel (
     unsigned long rop,
     int back_or_front )
 {
-// 1=back | 2=front
-
     if (back_or_front ==1){
         backbuffer_putpixel(color,x,y,rop);
         return 0;
@@ -792,14 +740,13 @@ libgd_putpixel (
         frontbuffer_putpixel(color,x,y,rop);
         return 0;
     }
-
-    return -1;
+    return (int) -1;
 }
 
 //============
 
-// Get the color value given the position.
-unsigned int grBackBufferGetPixelColor( int x, int y )
+// Get the color value given the position
+unsigned int grBackBufferGetPixelColor(int x, int y)
 {
     unsigned char *where = (unsigned char *) libgd_BACKBUFFER_VA;
 // 3 = 24 bpp
@@ -850,6 +797,61 @@ unsigned int grBackBufferGetPixelColor( int x, int y )
 
 // Return the color value.
     return (unsigned int) ColorBuffer;
+}
+
+//
+// #
+// INITIALIZATION 
+//
+
+// Initialize the libgd library
+int libgd_initialize(void)
+{
+
+// Get current mode
+// Gramado mode
+// get gramado mode.
+// jail, p1, home, p2, castle ...
+    libgd_current_mode = server_get_system_metrics(130);
+    if (libgd_current_mode < 0){
+        printf("libgd_initialize: [FAIL] libgd_current_mode\n");
+        goto fail;
+    }
+
+// Get backbuffer and frontbuffer virtual addresses
+    libgd_BACKBUFFER_VA  = (unsigned long) rtl_get_system_metrics(12);
+    libgd_FRONTBUFFER_VA = (unsigned long) rtl_get_system_metrics(11);
+
+// Screen
+// Width, Height and Bits Per Pixel.
+    libgd_device_width  = (unsigned long) server_get_system_metrics(1);
+    libgd_device_height = (unsigned long) server_get_system_metrics(2);
+    libgd_device_bpp    = (unsigned long) server_get_system_metrics(9);
+// Saving
+    libgd_SavedX   = (unsigned long) libgd_device_width;
+    libgd_SavedY   = (unsigned long) libgd_device_height;
+    libgd_SavedBPP = (unsigned long) libgd_device_bpp;
+
+
+// Backbuffer and frontbuffer.
+    if ( libgd_FRONTBUFFER_VA == 0 || libgd_BACKBUFFER_VA == 0 )
+    {
+        printf("libgd_initialize: Buffers\n");
+        goto fail;
+    }
+
+// Width, Height and Bits Per Pixel.
+    if ( libgd_device_width == 0 || 
+         libgd_device_height == 0 || 
+         libgd_device_bpp == 0 )
+    {
+        printf("libgd_initialize: w, h and bpp\n");
+        goto fail;
+    }
+
+    return 0;
+fail:
+    return (int) -1;
 }
 
 //

@@ -264,22 +264,25 @@ unsigned long gws_get_device_height(void)
 static int __gwssrv_init_globals(void)
 {
     register int i=0;
+    int Status = -1;
 
 // The gate is open.
     Compositor._locked = FALSE;
 
 // Initializing the graphics device library.
 // see: libgd.c
-    libgd_initialize();
+    Status = (int) libgd_initialize();
+    if (Status < 0){
+        printf ("gws.c: on libgd_initialize()\n");
+        exit(1);
+    }
 
 // Gramado mode
 // get gramado mode.
 // jail, p1, home, p2, castle ...
-// Check validation and panic if fail.
- 
     os_mode = server_get_system_metrics(130);
     if (os_mode < 0){
-        printf ("__gwssrv_init_globals: os_mode\n");
+        printf ("on server_get_system_metrics()\n");
         exit(1);
     }
 

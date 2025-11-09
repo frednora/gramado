@@ -251,7 +251,7 @@ backbuffer_draw_horizontal_line (
     if (x1 > x2){
         return;
     }
-// IN: color, x, y, rop flags.
+// IN: color, x, y, rop flags
     while (x1 < x2){
         backbuffer_putpixel( color, x1, y, rop_flags ); 
         x1++;
