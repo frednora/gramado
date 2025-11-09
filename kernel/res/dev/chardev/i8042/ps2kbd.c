@@ -231,6 +231,25 @@ void i8042_keyboard_expect_ack (void)
 
 
 /*
+ * DeviceInterface_PS2Keyboard:
+ *   Low-level PS/2 keyboard handler for ABNT2 layout.
+ *   Called by the IRQ1 handler when a key event occurs.
+ *
+ * Responsibilities:
+ *   - Read raw scancodes from the PS/2 controller (port 0x60).
+ *   - Distinguish between keyboard and mouse bytes.
+ *   - Handle ACK/RESEND responses from the controller.
+ *   - Track extended scancode prefixes (0xE0, 0xE1).
+ *   - Forward scancodes to the window server (or line discipline).
+ *
+ * Notes:
+ *   - Currently uses a small 128-byte buffer.
+ *   - Should eventually be moved into a dedicated driver file.
+ *   - The driver must notify the kernel about input events so
+ *     threads waiting for keyboard input can be awakened.
+ */
+
+/*
  * DeviceInterface_PS2Keyboard: 
  *     Vamos pegar o raw code.
  *     Keyboard handler for abnt2 keyboard.

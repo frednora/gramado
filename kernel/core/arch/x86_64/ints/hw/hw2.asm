@@ -127,6 +127,15 @@ __doRing3Callback:
     ;iretq
 
 ; -------------------------------------
+; irq0_release:
+;   Common release path for IRQ0 (PIT timer).
+;   Optionally performs a ring3 callback handoff,
+;   refreshes CR3 (if necessary), restores CPU context,
+;   sends EOI, and returns via iretq.
+; See: _irq0 in unit1hw.asm, ts.c, pit.c, sci.c.
+; -------------------------------------
+
+; -------------------------------------
 ; Irq0 release.
 ; Timer interrupt.
 ; See: _irq0 in unit1hw.asm.

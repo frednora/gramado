@@ -453,6 +453,25 @@ int __get_device_id(void)
     return (int) i8042_mouse_read(); 
 }
 
+
+// DeviceInterface_PS2Mouse:
+//   Low-level PS/2 mouse handler.
+//   Called by irq12_MOUSE in mouse.c.
+//
+// Responsibilities:
+//   - Read raw bytes from the PS/2 controller (port 0x60).
+//   - Distinguish mouse vs. keyboard bytes.
+//   - Handle packet alignment and ACK/RESEND responses.
+//   - Assemble multi-byte packets (3 bytes for standard mouse,
+//     4 bytes if scroll wheel is present).
+//   - Pass completed packets to __ps2mouse_parse_data_packet().
+//
+// Notes:
+//   - Streaming mode can lose packet alignment; single-packet mode
+//     uses ACK (0xFA) to mark boundaries.
+//   - Each packet encodes button states and X/Y movement deltas.
+//   - This routine updates PS2Mouse.last_jiffy for timing/debugging.
+
 // Called by irq12_MOUSE in mouse.c.
 // See: https://wiki.osdev.org/Mouse_Input
 // See: https://wiki.osdev.org/User:Kmtdk
@@ -602,12 +621,11 @@ void DeviceInterface_PS2Mouse(void)
         break;
     };
 
-    };  // WHELE ends.
+    };  // WHILE ends
 
 done:
     return;
 }
-
 
 // #todo ioctl
 int 

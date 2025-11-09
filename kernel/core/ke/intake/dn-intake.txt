@@ -4,3 +4,72 @@
   Intake process
   Receiving and dispatching the students right after a preemption.
 
+  Splitting into sched/ (policy, who runs next) and 
+  disp/ (mechanics: save/restore/spawn/switch) is exactly 
+  the separation you want — decisions vs. machinery.
+
+---
+
+##  Separation of `disp/` and `sched/`
+
+### 1. `disp/` — The Dispatcher
+- **Role:** Handles the *mechanics* of switching threads.  
+- **Responsibilities:**
+  - Saving the current thread’s CPU context (registers, segments, FPU state).  
+  - Restoring the context of the next thread.  
+  - Spawning new threads and building their initial stack frames.  
+  - Managing low‑level details like CR3 reloads, stack pointer handoffs, and iretq.  
+- **Analogy:** The dispatcher is the *gearbox* — it doesn’t decide where the car goes, but it makes sure the engine’s power is transferred smoothly.
+
+### 2. `sched/` — The Scheduler
+- **Role:** Implements the *policy* of who runs next.  
+- **Responsibilities:**
+  - Maintaining queues of READY, BLOCKED, and STANDBY threads.  
+  - Applying scheduling algorithms (round‑robin, priority, event responder).  
+  - Handling preemption when a quantum expires.  
+  - Making fairness and responsiveness decisions.  
+- **Analogy:** The scheduler is the *driver* — it decides which direction to take, when to accelerate, and when to yield.
+
+---
+
+##  Why the separation is important
+
+- **Clarity of design:**  
+  - `sched/` answers *“who should run?”*  
+  - `disp/` answers *“how do we switch to them?”*  
+  Keeping these questions apart avoids tangled logic.
+
+- **Flexibility:**  
+  - You can experiment with different scheduling policies (round‑robin, priority, EDF) inside `sched/` without touching the delicate context‑switching code in `disp/`.  
+  - Likewise, you can optimize dispatcher mechanics (lazy FPU save, per‑CPU stacks) without rewriting scheduling policy.
+
+- **Safety:**  
+  - Dispatcher code is extremely low‑level and fragile; isolating it reduces the chance of bugs creeping in from higher‑level scheduling logic.  
+  - Scheduler code can be more experimental and policy‑driven without risking corruption of register save/restore.
+
+- **Extensibility:**  
+  - Future features like SMP, load balancing, or pluggable scheduling classes can live in `sched/`.  
+  - Dispatcher remains a stable foundation, only extended when new hardware features (APIC, IST stacks) require it.
+
+---
+
+##  Example flow
+
+1. **Timer interrupt fires** → enters ISR.  
+2. **Dispatcher (`disp/`)** saves current context.  
+3. **Scheduler (`sched/`)** decides if the current thread continues or another should run.  
+4. **Dispatcher (`disp/`)** restores the chosen thread’s context and returns with `iretq`.  
+
+---
+
+ **Key takeaway:**  
+By splitting **dispatcher mechanics** from **scheduler policy**, 
+you’ve built a kernel that is both *robust* and *adaptable*. 
+The dispatcher is the reliable machinery; 
+the scheduler is the flexible brain. 
+Together, they make multitasking possible without chaos.
+
+---
+
+
+

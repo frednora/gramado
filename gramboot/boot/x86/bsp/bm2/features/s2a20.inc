@@ -1,12 +1,18 @@
 ;
 ; File: rm/s2a20.inc
-; + A20_fast_enable: Enable a20 line using port 0x92.
-; + A20_enable: Enable a20 line using keyboard.
-; 2005 - Created by Fred Nora.
+; Routines to enable the A20 line during boot.
+; The A20 line allows access to memory above 1 MB.
+; Two methods are provided:
+;   1. Fast method using port 0x92 (System Control Port A).
+;   2. Legacy method using the keyboard controller (ports 0x64/0x60).
+; Created by Fred Nora, 2005.
 ;
 
 ; -----------------------------------
-; + A20_fast_enable: Enable a20 line using port 0x92.
+; A20_fast_enable:
+; Enable the A20 line using port 0x92.
+; This is the preferred method on modern hardware,
+; as it is simple and reliable.
 A20_fast_enable:
     push ax
     in al, 0x92
@@ -16,9 +22,12 @@ A20_fast_enable:
     ret
 
 ; -----------------------------------
-; + A20_enable: Enable a20 line using keyboard.
-;     Habilitar a linha A20.
-;     5 tentativas depois tenta outro método.
+; A20_enable:
+; Enable the A20 line using the keyboard controller.
+; This is the legacy method, used if port 0x92 is unavailable.
+; The routine attempts two methods, each up to 5 times:
+;   Method 1: Read/modify/write the 8042 output port.
+;   Method 2: Send the "Enable A20" command directly.
 ;++
 A20_enable:
 
@@ -54,17 +63,17 @@ A20_enable:
     call .command_wait
     mov al, 0xD1
     out dx, al
-; Quando o controlador está pronto para receber, 
+; Quando o controlador estï¿½ pronto para receber, 
 ; retire o byte da pilha, 
 ; configure o bit enable-A20, 
-; e envie o byte modificado para a porta de saída.
+; e envie o byte modificado para a porta de saï¿½da.
     call .command_wait
     pop ax
     or al, 2
     out 0x60, al
-; Leia de novo o byte para verificar se a mudança ocorreu. 
-; Se ocorreu, então a rotina existe. 
-; Caso contrário, tente as 5 vezes antes do método #2.
+; Leia de novo o byte para verificar se a mudanï¿½a ocorreu. 
+; Se ocorreu, entï¿½o a rotina existe. 
+; Caso contrï¿½rio, tente as 5 vezes antes do mï¿½todo #2.
     call .get_data
     and al, 2
     jnz .done
@@ -75,7 +84,7 @@ A20_enable:
 ; because LOOP stops looping when CX is zero)
     mov cl, 5
 
-; Attempt 2 - Segunda tentativa. Segundo método. 
+; Attempt 2 - Segunda tentativa. Segundo mï¿½todo. 
 .start_attempt2:
 ; Simplesmente envie um comando ao controlador 
 ; para ligar a linha a20.

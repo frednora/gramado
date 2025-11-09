@@ -10,7 +10,7 @@
 ; Limpar a flag nt em rflags
 ; e dar refresh na pipeline. #todo
 ; Isso evita taskswitching via hardware quando em 32bit.
-
+; This prevents hardware task switching in 32‑bit compatibility mode.
 global _x64_clear_nt_flag
 _x64_clear_nt_flag:
     push rax
@@ -29,6 +29,10 @@ _x64_clear_nt_flag:
     ret
 
 ; Called by x64_init_gdt() in x64.c
+; Loads a new GDT with lgdt.
+; Then reloads all segment registers (ds, es, fs, gs, ss) 
+; with selector 0x10 (your data segment).
+; This ensures the CPU is using your fresh descriptors.
 global _gdt_flush
 _gdt_flush:
 
@@ -65,6 +69,12 @@ _gdt_flush:
 ; It means that it cam be called from ring3 and the interrupts
 ; will be disabled.
 ;
+; Builds 256 entries pointing to a single handler (unhandled_int).
+; Splits the 64‑bit handler address into low/mid/high parts and 
+; writes them into the descriptor fields.
+; Uses type 0xEE00 (present, DPL=3, interrupt gate, interrupts disabled).
+; This means even ring 3 can trigger these gates, but interrupts will be 
+; masked during handling.
 setup_idt:
 
     ;pushad
@@ -175,6 +185,11 @@ d_offset_63_32: dd 0
 ; It means that it cam be called from ring3 and the interrupts
 ; will be disabled.
 ;
+; Takes a handler address in rax and a vector number in rbx.
+; Computes the offset into the IDT (vector * 16).
+; Writes the handler address and attributes into the chosen entry.
+; Uses 0xEE00 (ring 3 callable) for syscalls.
+
 global _setup_system_interrupt
 _setup_system_interrupt:
 
@@ -293,6 +308,9 @@ address_offset_63_32: dd 0
 ; In the case of trap gates the interrupt are not disable,
 ; allowing nesting interrupts. 
 ;
+
+; Same as above, but uses 0x8E00 (ring 0 only).
+; This is correct for IRQs, since userland shouldn’t trigger them.
 
 ; Testing this for hw interrupts.
 global _setup_system_interrupt_hw

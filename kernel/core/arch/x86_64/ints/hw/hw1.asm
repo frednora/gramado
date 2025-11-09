@@ -119,6 +119,14 @@ hw_reboot:
 ; ----------------------------------------------------------------------
 
 
+;================================
+; _irq0:
+;   IRQ0 - PIT timer interrupt (vector 32).
+;   Captures CPU context (handling R0/R3 stack-frame differences),
+;   calls the C-level timer handler, restores state, and releases.
+;   EOI is expected in irq0_release (hw2.asm).
+;================================
+
 ;;=====================================================
 ;;  ## TIMER ##
 ;;=====================================================

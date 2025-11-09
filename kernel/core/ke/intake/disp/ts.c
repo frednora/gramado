@@ -101,6 +101,24 @@ static void __tsCry(unsigned long flags)
 // ->preempted permitisse. 
 // talvez o certo seja ->preenptable.
 
+/*
+Useful routines:
+Run a kernel service check (dead thread collector, deferred requests, signal delivery).
+Update statistics (per‑thread counters, working set analysis, IPC queues).
+Trigger a safe callback into a loadable kernel module.
+*/
+
+/*
+Crazy experiments:
+Drop in a “hello limbo” plugin that just logs a message every tick.
+Run a toy interpreter (like your own mini‑eBPF) to execute bytecode safely.
+Flip a flag that makes the scheduler pick an unusual thread (event responder, idle, etc.).
+*/
+
+/*
+Catastrophic tests (controlled):
+*/
+
 static void __tsOnFinishedExecuting(struct thread_d *t)
 {
     if ((void*) t == NULL)
