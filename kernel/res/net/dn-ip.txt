@@ -6,3 +6,52 @@ nosso IP oferecido pelo servidor. Depois a gente responte
 aos ARPs usando o IP oferecido pelo dhcp ... 
 dessa forma os dispositivos terao as informaçoes corretas 
 sobre o nosso sistema.
+
+
+ DHCP or Static IP?
+
+---
+
+## IP Addressing in a Hobby OS
+
+When building or experimenting with a hobby operating system, there are **two valid approaches** to give the system an IP identity:
+
+### 1. **DHCP (Automatic)**
+- The OS implements the DHCP client logic (Discover → Offer → Request → Ack).
+- If the dialog completes successfully, the OS gets:
+  - IP address
+  - Subnet mask
+  - Gateway
+  - DNS servers
+- After that, the OS uses **ARP** to resolve MAC addresses for local communication.
+
+ **Challenge in hobby OSes:**  
+Implementing the full DHCP state machine can be tricky. Timing issues, incomplete packet parsing, or missing options often cause the dialog to fail.
+
+---
+
+### 2. **Static IP (Manual)**
+- The developer (or user) hardcodes or configures:
+  - IP address
+  - Subnet mask
+  - Gateway
+  - DNS servers
+- The OS then uses **ARP** to discover the MAC address of the gateway or any local peers.
+
+ **Advantage:**  
+This bypasses the complexity of DHCP and ensures the OS can at least communicate on the network.
+
+---
+
+## Practical Strategy for Hobby OS Networking
+- **Start with static IPs**: It’s simpler and lets you test ARP, ICMP (ping), and basic TCP/UDP communication.
+- **Add DHCP later**: Once the stack is stable, implement DHCP for convenience and flexibility.
+- **Fallback logic**: Some systems try DHCP first, and if it fails, they fall back to a static IP (often called *link-local addressing* or *manual fallback*).
+
+---
+
+So in short:  
+A hobby OS can either **complete the DHCP dialog** or **fall back to manual IP setup**. Both are valid, but static IP is often the safer starting point until the DHCP client code matures.
+
+---
+
