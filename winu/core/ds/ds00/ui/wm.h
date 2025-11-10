@@ -198,6 +198,7 @@ extern struct gws_windowmanager_d  WindowManager;
 extern int grab_is_active;
 extern int is_dragging;
 
+
 int control_action(int msg, unsigned long long1);
 void on_enter(void);
 void on_mouse_pressed(void);

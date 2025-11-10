@@ -355,7 +355,18 @@ struct mouse_pointer_properties_d
     // ...
 };
 
-// Server-side window object.
+
+struct per_window_backbuffer_d 
+{
+    int initialized;
+    int in_use;
+
+    int dirty;
+    unsigned long address;
+    unsigned long size_in_kb;
+};
+
+// Server-side window object
 struct gws_window_d 
 {
 // Structure validation
@@ -717,7 +728,8 @@ struct gws_window_d
 // passar a janela direto de seu próprio buffer para o LFB, sem passar 
 // pelo Backbuffer.
 
-    void *dedicated_buf;  //Qual buffer dedicado a janela usa.
+    //void *dedicated_buf;  //Qual buffer dedicado a janela usa.
+    struct per_window_backbuffer_d  pwb;  // Per-window buffer.
 
     void *back_buf;       //Qual backbuffer a janela usa.
     void *front_buf;      //Qual frontbuffer a janela usa. (LFB).	

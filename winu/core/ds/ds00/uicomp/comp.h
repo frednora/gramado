@@ -31,6 +31,12 @@ struct compositor_d
 };
 extern struct compositor_d  Compositor;
 
+// Spare buffer
+extern char *spare_128kb_buffer_p;
+
+void *comp_create_slab_spare_128kb_buffer(size_t size_in_kb);
+void *compCreateCanvasUsingSpareBuffer(void);
+void comp_test_spare_buffer(void);
 
 // Flush the window's rectangle
 int gws_show_window_rect(struct gws_window_d *window);

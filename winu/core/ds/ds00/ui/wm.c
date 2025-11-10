@@ -4662,7 +4662,6 @@ struct gws_window_d *gws_window_from_id (int id)
 }
 */
 
-
 // Create root window
 // Called by gwsInit in gws.c.
 // #todo: Talvez essa função possa receber mais argumentos.
@@ -4680,8 +4679,8 @@ struct gws_window_d *wmCreateRootWindow(unsigned int bg_color)
     unsigned long top = 0;
 // #bugbug: Estamos confiando nesses valores.
 // #bugbug: Estamos usado device info sem checar.
-    unsigned long width  = (unsigned long) (__device_width  & 0xFFFF );
-    unsigned long height = (unsigned long) (__device_height & 0xFFFF );
+    unsigned long width  = (unsigned long) (__device_width  & 0xFFFF);
+    unsigned long height = (unsigned long) (__device_height & 0xFFFF);
 
     if (__device_width == 0 || __device_height == 0)
     {
@@ -4690,7 +4689,7 @@ struct gws_window_d *wmCreateRootWindow(unsigned int bg_color)
         exit(1);
     }
 
-// Default background color.
+// Default background color
     __set_default_background_color(bg_color);
     __set_custom_background_color(bg_color);
 
@@ -4719,8 +4718,13 @@ struct gws_window_d *wmCreateRootWindow(unsigned int bg_color)
     }
     w->used = TRUE;
     w->magic = 1234;
+
 // Buffers
-    w->dedicated_buf = NULL;
+
+    //w->dedicated_buf = NULL;   // #suspended
+    w->pwb.initialized = FALSE;  // Not for root for now.
+
+
     w->back_buf = NULL;
     w->front_buf = NULL;
     w->depth_buf = NULL;

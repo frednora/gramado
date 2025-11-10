@@ -145,7 +145,7 @@ void yellowstatus0(const char *string,int refresh)
         bar_size = 32;
     }
 
-// Mostra o retângulo.
+// Display the rectangle.
     if (refresh){
         gws_refresh_rectangle( Left, Top, bar_size, Height );
     }
@@ -153,7 +153,7 @@ void yellowstatus0(const char *string,int refresh)
 
 void yellow_status(const char *string)
 {
-    if ( (void*)string==NULL ){
+    if ((void*)string == NULL){
         return;
     }
     yellowstatus0(string,TRUE);

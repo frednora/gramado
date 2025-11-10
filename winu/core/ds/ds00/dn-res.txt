@@ -1,0 +1,39 @@
+
+Backbuffer Usage and Spare Space
+
+
+Mode	    Bytes per pixel	Total bytes used 
+800×600×24	3	            1,440,000	     
+800×600×32	4	            1,920,000	     
+
+
+Used KB	     Spare bytes (from 2,097,152)  Spare KB (÷1024)
+1,406.25 KB  657,152	                   641.25 KB
+1,875.00 KB  177,152	                   173.00 KB
+
+============================================================
+Resolution: 800x600x32
+
+Step-by-Step Calculation
+Resolution: 800×600 = 480,000 pixels
+
+Bytes per pixel (32-bit color): 
+32÷8 = 4bytes
+
+Total bytes: 
+480,000 × 4 = 1,920,000 bytes
+
+Convert to kilobytes (1 KB = 1024 bytes):
+
+1,920,000 / 1024 ≈ 1875 KB
+
+========================
+
+Result
+Your 800×600×32 backbuffer requires ~1875 KB.
+
+Since your buffer is 2 MB = 2048 KB, 
+you have about 173 KB of free space left over.
+
+
+

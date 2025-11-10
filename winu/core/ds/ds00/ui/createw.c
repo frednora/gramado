@@ -1445,7 +1445,11 @@ void *doCreateWindow (
         (unsigned int) get_color(csiWhenMouseHover);
 
 // buffers
-    window->dedicated_buf = NULL;
+    
+    //window->dedicated_buf = NULL; // suspended
+
+    window->pwb.initialized = FALSE;
+
     window->back_buf = NULL;
     window->front_buf = NULL;
     window->depth_buf = NULL;

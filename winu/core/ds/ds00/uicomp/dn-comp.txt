@@ -1,0 +1,20 @@
+Flow of Operations
+
+Allocate
+Reserve the tail region of your global backbuffer.
+Assign its base address and size into pwb.address and pwb.size_in_kb.
+Mark pwb.initialized = 1, pwb.in_use = 1.
+
+Draw
+Render the component (e.g., a button) into its per‑window buffer.
+Set pwb.dirty = 1 whenever pixels change.
+
+Composite
+On each frame, check if pwb.dirty == 1.
+If dirty, blit the buffer into the main backbuffer at the window’s (x,y) coordinates.
+Clear the dirty flag after the copy.
+
+Present
+Copy the main backbuffer → frontbuffer as usual.
+The component now appears on screen, but its drawing logic was isolated in its own buffer.
+

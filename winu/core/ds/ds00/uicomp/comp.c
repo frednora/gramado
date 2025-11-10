@@ -8,6 +8,9 @@
 // It manages the compositor behavior.
 struct compositor_d  Compositor;
 
+// Spare buffer
+char *spare_128kb_buffer_p;
+
 // #todo
 // Create some configuration globals here
 // int gUseSomething = TRUE;
@@ -45,6 +48,112 @@ static void direct_draw_mouse_pointer(void);
 // trocar o nome dessa systemcall.
 // refresh screen será associado à refresh all windows.
 
+
+//==============================================================
+// comp_create_spare_buffer
+//
+// Allocate a pointer into the spare region of the global backbuffer.
+//
+// Parameters:
+//   size_in_kb - requested buffer size in kilobytes.
+//
+// Behavior:
+//   - Reads device metrics (width, height, bytes per pixel).
+//   - Computes the visible backbuffer size in bytes.
+//   - Compares against the fixed 2 MB allocation.
+//   - If there is enough spare space (>= size_in_kb), returns
+//     a pointer to the start of the spare region immediately
+//     after the visible backbuffer.
+//   - Otherwise returns NULL.
+//
+// Notes:
+//   - Currently assumes a fixed 2 MB backbuffer allocation.
+//   - Caller is responsible for ensuring the buffer does not
+//     exceed the spare region or overlap with other allocations.
+//   - Alignment is not enforced; add rounding if hardware requires.
+//
+// Return:
+//   void* pointer to the allocated spare buffer region,
+//   or NULL if insufficient space.
+//==============================================================
+
+// The compositor:
+// Doesn’t care who drew the pixels or how.
+// Its job is purely to check flags 
+// (dirty, show_when_creating, redraw, etc.) and 
+// decide whether to copy/blit the buffer into the global backbuffer.
+void *comp_create_slab_spare_128kb_buffer(size_t size_in_kb)
+{
+// Device info
+// #bugbug
+// If you ever change resolution or bpp, recompute the spare size before writing.
+    unsigned long DeviceWidth  = (unsigned long) server_get_system_metrics(1);
+    unsigned long DeviceHeight = (unsigned long) server_get_system_metrics(2);
+    unsigned long DeviceBPP    = (unsigned long) server_get_system_metrics(9);
+
+// Backbuffer Address
+    unsigned long BackbufferAddress = (unsigned long) rtl_get_system_metrics(12);
+// Backbuffer total size
+// #bugbug: Constant for now. This is gonna change.
+    unsigned long TotalBackbufferInBytes = (2*1024*1024);  // 2 MB
+
+// Backbuffer visible area. (Screen size)
+    unsigned long Pitch = (DeviceWidth * DeviceBPP);
+    unsigned long BackbufferSizeInBytes = (DeviceHeight * Pitch);
+    unsigned long BackbufferSizeInKB = (BackbufferSizeInBytes/1024);
+
+// Spare area
+    unsigned long TotalSpareInBytes = (TotalBackbufferInBytes - BackbufferSizeInBytes);
+    unsigned long TotalSpareInKB = (TotalSpareInBytes / 1024);
+    unsigned long addr;
+
+    if (TotalSpareInKB > size_in_kb){
+        addr = (unsigned long) BackbufferAddress + BackbufferSizeInBytes;
+        return (void*) addr;
+    } else {
+        return NULL;
+    }
+// fail
+    return NULL;
+}
+
+// Create a drawable buffer in a spare area 
+// at the end of the backbuffer.
+// The compositor:
+// Doesn’t care who drew the pixels or how.
+// Its job is purely to check flags 
+// (dirty, show_when_creating, redraw, etc.) and 
+// decide whether to copy/blit the buffer into the global backbuffer.
+void *compCreateCanvasUsingSpareBuffer(void)
+{
+    void *b;
+    // 10x10
+    size_t WindowSizeInBytes = 10*4*10;
+    b = (void *) comp_create_slab_spare_128kb_buffer(WindowSizeInBytes);
+    if ((void*) b == NULL){
+        return NULL;
+    }
+// Draw something early.
+    // Draw a red pixel at (0,0) inside the spare buffer
+    putpixel0(0xFFFF0000, 0, 0, ROP_COPY, (unsigned long) b);
+    return (void *) b;
+};
+
+
+void comp_test_spare_buffer(void)
+{
+    unsigned long BackbufferAddress = (unsigned long) rtl_get_system_metrics(12);
+    if ((void*)spare_128kb_buffer_p == NULL)
+        return;
+    unsigned char *dst = (unsigned char *) BackbufferAddress;
+    unsigned char *src = (unsigned char *) spare_128kb_buffer_p;
+    int i=0;
+    int max=10*4*10;
+    // Copy byte by byte
+    for (i=0; i<max; i++){
+        dst[i] = src[i];
+    };
+}
 
 // ??
 // Using the kernel to show the backbuffer.
@@ -489,6 +598,11 @@ void comp_display_desktop_components(void)
 // Refresh only the components that was changed by the painter.
     wmReactToPaintEvents();
 
+// #test
+// Copy bytes from the spare buffer to the 
+// top left corner of the screen.
+    // comp_test_spare_buffer();
+
 // Show the mouse cursor in the screen.
     if (gUseMouse == TRUE){
         __display_mouse_cursor();
@@ -636,6 +750,24 @@ int compInitializeCompositor(void)
 // Initialize the mouser support.
 // Not enabled yet.
     comp_initialize_mouse();
+
+/*
+This was the first experiment in order to have a future
+ compositor with per-window buffers. I will expand this 
+ idea and use the allocator for the next experiments ... 
+ starting small and in the future, all the windows will have
+  a big side-buffer that has the same size of the screen ...
+   for full screen mode. It allows the painter to build 
+   small and big windows in the side-buffer
+*/
+
+/*
+    spare_128kb_buffer_p = (void *) compCreateCanvasUsingSpareBuffer();
+    if ((void*) spare_128kb_buffer_p == NULL){
+        printf("comp.c: on compCreateCanvasUsingSpareBuffer()\n");
+        exit(1);
+    }
+*/
 
 // ...
 

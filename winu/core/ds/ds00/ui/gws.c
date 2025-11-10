@@ -380,6 +380,8 @@ static int __gwssrv_init_globals(void)
         exit(1);
     }
 
+    
+
     //...
 
     return 0;
