@@ -189,6 +189,8 @@ int DDINIT_ps2(void)
     ps2kbd_initialize_device();
     PS2.keyboard_initialized = TRUE;
 
+    PS2Keyboard.use_polling = CONFIG_USE_POOLING_FOR_PS2_KEYBOARD;
+
 //
 // Mouse
 //
@@ -200,6 +202,8 @@ int DDINIT_ps2(void)
 // Port 2: Mouse
     ps2mouse_initialize_device();
     PS2.mouse_initialized = TRUE;
+
+    PS2Mouse.use_polling = CONFIG_USE_POOLING_FOR_PS2_MOUSE;
 
 // Drain
     for (i=0; i<100; i++){
@@ -239,6 +243,10 @@ int DDINIT_ps2_early_initialization(void)
     ps2kbd_initialize_device();
     PS2.keyboard_initialized = TRUE;
 
+// #test 
+// #todo: Use config.h
+    PS2Keyboard.use_polling = CONFIG_USE_POOLING_FOR_PS2_KEYBOARD;
+
 //
 // Mouse
 //
@@ -248,6 +256,10 @@ int DDINIT_ps2_early_initialization(void)
 // in the early ps2 initialization routine.
     PS2.mouse_initialized = FALSE;
     PS2Mouse.initialized = FALSE;
+
+// #test 
+// #todo: Use config.h
+    PS2Mouse.use_polling = CONFIG_USE_POOLING_FOR_PS2_MOUSE;
 
 // Drain
     for (i=0; i<100; i++){

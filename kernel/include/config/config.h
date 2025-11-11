@@ -60,10 +60,17 @@
 // #todo: See 'Core isolation' in network/firewall configuration.
 #define USE_E1000          0 
 
+// #test: Pooling PS2 Keyboard and Mouse.
 // Use pooling instead of interrupts for ps2 devices.
 // Good for real machines that lacks interrupts in long mode,
 // with ps2 keyboard and mouse.
+// #bugbug: 
+// >>>>  This is a test yet. <<<<
+// >>>>  It may not work! Be careful! <<<<
+
 #define CONFIG_USE_POOLING_FOR_PS2  0
+#define CONFIG_USE_POOLING_FOR_PS2_KEYBOARD  0
+#define CONFIG_USE_POOLING_FOR_PS2_MOUSE  0
 
 // ...
 

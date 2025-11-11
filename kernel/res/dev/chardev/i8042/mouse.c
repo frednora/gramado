@@ -39,15 +39,13 @@ void ps2mouse_poll(void)
 // We need a loop for mouse polling.
 // It's because a packet uses more than on interrupt.
 
-/*
     if (PS2Mouse.initialized != TRUE)
         return;
     if (PS2Mouse.irq_is_working == TRUE)
         return;
     if (PS2Mouse.use_polling == TRUE){
-        DeviceInterface_PS2Mouse();
+        irq12_MOUSE();
     }
-*/
 }
 
 
@@ -81,6 +79,12 @@ int ps2mouse_initialize_driver(void)
     return 0;
 }
 
+int i8042_IsPS2MousePooling(void)
+{
+    return (int) PS2Mouse.use_polling;
+}
+
+
 //
 // $
 // HANDLER
@@ -97,6 +101,12 @@ irq12_MOUSE (void)
     }
     PS2Mouse.irq_is_working = TRUE;
     PS2Mouse.last_jiffy = (unsigned long) get_systime_totalticks();
+
+
+// When called during the IRQ
+    if (PS2Mouse.use_polling != TRUE){
+        //return;
+    }
 
 // Disable keyboard port.
 // Call the main routine.

@@ -45,7 +45,7 @@ void ps2kbd_poll(void)
     if (PS2Keyboard.irq_is_working == TRUE)
         return;
     if (PS2Keyboard.use_polling == TRUE){
-        DeviceInterface_PS2Keyboard();
+        irq1_KEYBOARD();
     }
 }
 
@@ -81,6 +81,11 @@ int ps2kbd_initialize_driver(void)
     return 0;
 }
 
+int i8042_IsPS2KeyboardPooling(void)
+{
+    return (int) PS2Keyboard.use_polling;
+}
+
 //
 // $
 // HANDLER
@@ -97,6 +102,11 @@ irq1_KEYBOARD (void)
     }
     PS2Keyboard.irq_is_working = TRUE;
     PS2Keyboard.last_jiffy = (unsigned long) get_systime_totalticks();
+
+// When calling during the IRQ
+    if (PS2Keyboard.use_polling != TRUE){
+        //return;
+    }
 
 // + Disable mouse port.
 // + Call the main routine.

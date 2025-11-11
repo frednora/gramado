@@ -200,6 +200,17 @@ irq0_TIMER (void)
 // See: pic.h
     DeviceInterface_PIT();
 
+// 1000 times per second.
+// Pooling given the configuration
+    int keyboard_pooling_status = (int) i8042_IsPS2KeyboardPooling();
+    int mouse_pooling_status = (int) i8042_IsPS2MousePooling(); 
+    if (keyboard_pooling_status == TRUE){
+        irq1_KEYBOARD();
+    }
+    if (mouse_pooling_status == TRUE){
+        irq12_MOUSE();
+    }
+
 // Calling the taskswitching routine.
 // See: ps/disp/ts.c
 // #todo #bugbug

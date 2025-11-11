@@ -228,6 +228,7 @@ struct ps2_d  PS2;
 // == prototypes ==================
 //
 
+
 void I8042Controller_do_drain(void);
 
 void prepare_for_input (void);
