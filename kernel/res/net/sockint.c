@@ -650,8 +650,6 @@ socket_gramado (
     }
 
 // Buffer
-
-    //buff = (char *) newPage ();
     buff = (char *) kmalloc(BUFSIZ);
     if ((void *) buff == NULL){
         //Process->Objects[__slot] = (unsigned long) 0;
@@ -832,14 +830,13 @@ socket_unix (
         }
     };
 
-// Check slot validation. 
-    if ( __slot == -1 ){
+// Check slot validation
+    if (__slot == -1){
         printk ("socket_unix: No free slots\n");
         goto fail;
     }
 
 // Buffer
-    //buff = (char *) newPage ();
     buff = (char *) kmalloc(BUFSIZ);
     if ((void *) buff == NULL){
         //Process->Objects[__slot] = (unsigned long) 0;
@@ -1037,13 +1034,12 @@ socket_inet (
     };
 
 // Fail
-    if ( __slot == -1 ){
+    if (__slot == -1){
         printk ("socket_inet: No free slots\n");
         goto fail;
     }
 
 // Buffer
-    //buff = (char *) newPage ();
     buff = (char *) kmalloc(BUFSIZ);
     if ((void *) buff == NULL){
         //Process->Objects[__slot] = (unsigned long) 0;

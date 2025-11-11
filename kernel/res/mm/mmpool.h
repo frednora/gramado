@@ -7,7 +7,7 @@
 // Allocators
 // #todo: 
 // Explain the purpose of each one of these routine here in this file.
-void *newPage(void);
+void *mmNewPage(void);
 void *mm_alloc_single_page(void);
 void *mm_alloc_contig_pages(size_t size);
 void *allocPages(size_t size);

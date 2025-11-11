@@ -335,17 +335,15 @@ int sys_pipe( int *pipefd, int flags )
         }
     };
 
-    // Check slots validation. 
-    if ( slot1 == -1 || slot2 == -1 )
+    // Check slots validation 
+    if (slot1 == -1 || slot2 == -1)
     {
         debug_print("sys_pipe: slots alocation fail\n");
         // todo: printk
         goto fail;
     }
 
-// buffer
-
-    //char *buff = (char *) newPage();
+// Buffer
     char *buff = (char *) kmalloc(BUFSIZ);
     if ((void *) buff == NULL)
     {

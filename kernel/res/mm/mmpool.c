@@ -137,7 +137,7 @@ tryAgain:
 }
 
 /*
- * newPage:
+ * mmNewPage:
  * Aloca uma página em memoria compartilhada de ring3 
  * e retorna seu endereço virtual inicial. 
  * Isso é feito com base no id do pageframe e no endereço virtual 
@@ -153,7 +153,7 @@ tryAgain:
 // #todo
 // #fixme
 
-void *newPage(void)
+void *mmNewPage(void)
 {
 // Esse é o endereço virtual do início do pool de páginas.
     unsigned long base = (unsigned long) g_pagedpool_va;
@@ -162,35 +162,35 @@ void *newPage(void)
     int PageSize = PAGE_SIZE;  //4096;
     struct page_d *New;
 
-    //debug_print ("newPage:\n");
+    //debug_print ("mmNewPage:\n");
 
 // Invalid base address.
     if (base == 0){
-        debug_print ("newPage: base\n");
-        panic       ("newPage: base\n");
+        debug_print ("mmNewPage: base\n");
+        panic       ("mmNewPage: base\n");
     }
 
 // Create and register a page object.
     New = (void *) __pageObject();
     if (New == NULL){
-        debug_print ("newPage: New\n");
-        panic       ("newPage: New\n");
+        debug_print ("mmNewPage: New\n");
+        panic       ("mmNewPage: New\n");
     }
     if (New->used != TRUE){
-        debug_print ("newPage: New used\n");
-        panic       ("newPage: New used\n");
+        debug_print ("mmNewPage: New used\n");
+        panic       ("mmNewPage: New used\n");
     }
     if (New->magic != 1234){
-        debug_print ("newPage: New magic\n");
-        panic       ("newPage: New magic\n");
+        debug_print ("mmNewPage: New magic\n");
+        panic       ("mmNewPage: New magic\n");
     }
 
-// Index validation.
+// Index validation
     if (New->id < 0){
-        panic ("newPage: id underflow\n");
+        panic ("mmNewPage: id underflow\n");
     }
     if (New->id >= PAGE_COUNT_MAX){
-        panic ("newPage: id overflow\n");
+        panic ("mmNewPage: id overflow\n");
     }
 
     New->locked = FALSE;
@@ -200,7 +200,7 @@ void *newPage(void)
     New->ref_count = 1;
 
     // #debug
-    //printk ("newPage: base=%x id=%d \n",base,New->id);
+    //printk ("mmNewPage: base=%x id=%d \n",base,New->id);
     //while(1){}
 
 //
@@ -210,8 +210,8 @@ void *newPage(void)
 
     unsigned long va_offset = (unsigned long) (New->id * PageSize);
     va = (unsigned long) (base + va_offset);
-    if (va==0){
-        panic("newPage: va==0\n");
+    if (va == 0){
+        panic("mmNewPage: va==0\n");
     }
 
 //
@@ -224,10 +224,10 @@ void *newPage(void)
 
 // Invalid physical address.
 // #todo
-// SMALLSYSTEM_PAGEDPOLL_START is the physical address for the base
-// in small systems.
+// SMALLSYSTEM_PAGEDPOLL_START is the physical address for 
+// the base in small systems.
     if (pa==0){
-        panic ("newPage: pa==0\n");
+        panic ("mmNewPage: pa==0\n");
     }
 
 // ++
@@ -262,20 +262,18 @@ void *newPage(void)
     //return (void *) ( base + (New->id * PageSize) );
 
 fail:
-    debug_print ("newPage: fail\n");
-    panic       ("newPage: fail\n");
+    debug_print ("mmNewPage: fail\n");
+    panic       ("mmNewPage: fail\n");
     return NULL;
 }
 
-
-// Allocate single page.
+// Allocate single page
 void *mm_alloc_single_page(void)
 {
-    //return (void *) allocPages (1);
-    return (void *) newPage();
+    return (void *) mmNewPage();
 }
 
-// Allocate n contiguous pages.
+// Allocate n contiguous pages
 void *mm_alloc_contig_pages(size_t size)
 {
     debug_print("mm_alloc_contig_pages: [TODO] [FIXME]\n");
@@ -355,7 +353,7 @@ void *allocPages(size_t size)
 
 // Checando limites
 
-// Problemas com o size.
+// Invalid size
     if (size <= 0)
     {
         //size = 1;
@@ -364,12 +362,12 @@ void *allocPages(size_t size)
         //return NULL;
     }
 
-// Se é pra alocar apenas uma página.
+// If it is for allocating only one page
     if (size == 1)
     {
-        final_va = (void *) newPage();
-        
-        if ( (void*) final_va != NULL )
+        final_va = (void *) mmNewPage();
+
+        if ((void*) final_va != NULL)
         {
             memset( final_va, 0, PAGE_SIZE );
             /*
@@ -517,7 +515,7 @@ fail:
 
 void *mmAllocPage(void)
 {
-    return (void*) newPage();
+    return (void*) mmNewPage();
 }
 
 // IN: Number of pages
