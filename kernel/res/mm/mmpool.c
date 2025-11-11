@@ -77,6 +77,64 @@ fail:
     return NULL; 
 }
 
+/*
+ * __firstSlotForAList:
+ * Retorna o primeiro índice de uma sequência de slots livres 
+ * em pageAllocList[].
+ */
+
+// IN:
+// A quantidade de slots livres consecutivos que precisamos.
+// Nosso limite é 1024, que é o tamanho do pool.
+// OUT:
+// Retorna o índice do primeiro slot 
+// de uma sequencia concatenada de slots livres.
+// Ou retorn '-1' no caso de erro.
+// #todo: Explain it better.
+
+static int __firstSlotForAList(int size)
+{
+    register int i=0;
+
+// Nosso limite é 512, que é o tamanho do pool.
+// pois o pool tem 2mb,que dá 512 páginas de 4kb.
+    int Max = PAGE_COUNT_MAX;  //512;  
+
+    int Base=0;
+    int Count=0;
+    void *slot;
+
+tryAgain:
+
+    for (i=Base; i<Max; i++)
+    {
+        slot = (void *) pageAllocList[i];
+
+        // tenta novamente, começando numa base diferente.
+        if ((void *) slot != NULL)
+        {
+            Base = (int) (Base + Count);
+            Base++;
+            Count = 0;
+            
+            //#bugbug: Podemos fica aqui pra sempre?
+            goto tryAgain;
+        }
+
+        Count++; 
+
+        if (Count >= size)
+        {
+            // OUT: 
+            // Retorna o índice do primeiro slot 
+            // de uma sequencia concatenada de slots livres.
+            return (int) Base; 
+        }
+    };
+
+// Fail: No empty slot.
+    return (int) -1;
+}
 
 /*
  * newPage:
@@ -231,66 +289,6 @@ void *mm_alloc_contig_pages(size_t size)
     return NULL; 
 }
 
-
-/*
- * __firstSlotForAList:
- * Retorna o primeiro índice de uma sequência de slots livres 
- * em pageAllocList[].
- */
-
-// IN:
-// A quantidade de slots livres consecutivos que precisamos.
-// Nosso limite é 1024, que é o tamanho do pool.
-// OUT:
-// Retorna o índice do primeiro slot 
-// de uma sequencia concatenada de slots livres.
-// Ou retorn '-1' no caso de erro.
-// #todo: Explain it better.
-
-static int __firstSlotForAList(int size)
-{
-    register int i=0;
-
-// Nosso limite é 512, que é o tamanho do pool.
-// pois o pool tem 2mb,que dá 512 páginas de 4kb.
-    int Max = PAGE_COUNT_MAX;//512;  
-
-    int Base = 0;
-    int Count = 0;
-    void *slot;
-
-tryAgain:
-
-    for ( i=Base; i < Max; i++ )
-    {
-        slot = (void *) pageAllocList[i];
-
-        // tenta novamente, começando numa base diferente.
-        if ( (void *) slot != NULL )
-        {
-            Base = (int) (Base + Count);
-            Base++;
-            Count = 0;
-            
-            //#bugbug: Podemos fica aqui pra sempre?
-            goto tryAgain;
-        }
-
-        Count++; 
-
-        if (Count >= size)
-        {
-            // OUT: 
-            // Retorna o índice do primeiro slot 
-            // de uma sequencia concatenada de slots livres.
-            return (int) Base; 
-        }
-    };
-
-// Fail: No empty slot.
-    return (int) -1;
-}
-
 /*
  * allocPages:
  * @param número de páginas contíguas.
@@ -312,7 +310,7 @@ tryAgain:
 // Nosso limite é 512 páginas, pois so temos 2mb de pool.
 // #todo: change to 'ssize_t number_of_pages'.
 // IN: number of pages.
-void *allocPages(int size)
+void *allocPages(size_t size)
 {
 // Esse é o endereço virtual do início do pool de pageframes.
 // #bugbug: O paged pool so tem 2mb, veja pages.c
@@ -388,7 +386,7 @@ void *allocPages(int size)
 
 // #bugbug
 // Se o size for maior que o limite total, para alem do disponivel
-    if ( size >= PAGE_COUNT_MAX ){
+    if (size >= PAGE_COUNT_MAX){
         panic ("allocPages: size limits\n");
     }
 
@@ -522,24 +520,24 @@ void *mmAllocPage(void)
     return (void*) newPage();
 }
 
-void *mmAllocPages(int size)
+// IN: Number of pages
+void *mmAllocPages(size_t size)
 {
 // IN: Number of pages
     return (void*) allocPages(size);
 }
 
-// initializeFramesAlloc:
-// Inicializa o framepool. 
+// Initializes the list of pages
+// + Initializes the pageAllocList[] list
+// + Setup the first slot just for testing purpose.
 void initializeFramesAlloc(void)
 {
-    struct page_d  *p;
     int __slot = 0;
+    struct page_d  *p;
 
     //debug_print("initializeFramesAlloc:\n");
 
-// Inicializando a lista de pages.
-// 512 pages
-
+// Initializes the list of pages. 512 pages.
     for ( __slot=0; 
           __slot < PAGE_COUNT_MAX; 
           __slot++ )
@@ -547,21 +545,18 @@ void initializeFramesAlloc(void)
         pageAllocList[__slot] = (unsigned long) 0;
     };
 
-// Criando o primeiro para testes.
-// #bugbug
-// Talvez seja desnecessário criar essa entrada.
-
+// Create and save the pointer for the first entry,
+// #todo: Maybe it's not necessary.
     p = (void *) kmalloc(sizeof(struct page_d));
     if ((void*) p == NULL){
         debug_print("initializeFramesAlloc:\n");
         panic      ("initializeFramesAlloc:\n");
     }
-    memset ( p, 0, sizeof(struct page_d) );
+    memset( p, 0, sizeof(struct page_d) );
     p->used = TRUE;
     p->magic = 1234;
-
     p->id = 0;
-    p->free = TRUE;  //free
+    p->free = TRUE;  // Free
     p->next = NULL; 
     // ...
     pageAllocList[0] = (unsigned long) p;

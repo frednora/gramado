@@ -806,21 +806,6 @@ virtual_to_physical (
     unsigned long virtual_address, 
     unsigned long pml4_va );
 
-// #todo
-// #fixme
-void *newPage(void);
-
-void *mm_alloc_single_page(void);
-void *mm_alloc_contig_pages(size_t size);
-
-void *allocPages(int size);
-
-// Interface.
-void *mmAllocPage(void);
-void *mmAllocPages(int size);
-
-void initializeFramesAlloc(void);
-
 // see: slab.c
 void slab_initialize(void);
 void *slab_1MB_allocator(void);

@@ -121,6 +121,7 @@
 #include "../res/mm/x86_64/x64mm.h"
 #include "../res/mm/x86_64/paging.h"
 #include "../res/mm/mmft.h"
+#include "../res/mm/mmpool.h"
 #include "../res/mm/mmglobal.h"  // Deve ficar mais acima.
 #include "../res/mm/heap.h"      // Heap pointer support.
 #include "../res/mm/aspace.h"    // Address Space, (data base account).
