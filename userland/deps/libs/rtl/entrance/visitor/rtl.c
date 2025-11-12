@@ -739,46 +739,50 @@ int rtl_start_process_pid( pid_t pid )
 }
 */
 
-
-/*
- * rtl_create_thread:
- *     Create a thread.
- *     #todo: 
- *     Precisamos uma função que envie mais argumentos.
- *     Essa será uma rotina de baixo nível para pthreads.
- */
-
+// Create a thread
+// #todo: 
+// This is gonna be a worker for pthreads.
+// We need a function with more arguments.
+// #define	SYSTEMCALL_CREATETHREAD     72
+// IN:
+// inti_rip: initial instruction pointer
+// init_stack: initial stack pointer
+// name: thread name
 void *rtl_create_thread ( 
     unsigned long init_rip, 
     unsigned long init_stack, 
-    char *name )
+    const char *name )
 {
-    //#define	SYSTEMCALL_CREATETHREAD     72
-    debug_print ("rtl_create_thread:\n");
+    // #debug
+    //debug_print ("rtl_create_thread:\n");
+    //     printf ("rtl_create_thread:\n");
+
     return (void *) gramado_system_call ( 
-                        72,    //SYSTEMCALL_CREATETHREAD, 
+                        72, 
                         init_rip, 
                         init_stack, 
                         (unsigned long) name );
 }
 
-
-/*
- * rtl_start_thread:
- *     Coloca no estado standby para executar pela primeira vez
- */
-
-// #todo: Change return to 'int'
-void rtl_start_thread (void *thread)
+// Start a thread
+// Put it into the standby state to run for the first time.
+// IN: 
+// thread_r0_pointer: Ring 0 pointer for a thread. (unsafe)
+int rtl_start_thread(void *thread_r0_pointer)
 {
     debug_print ("rtl_create_thread:\n");
+
+    if ((void*) thread_r0_pointer == NULL)
+        return (int) -1;
+
+// Call the service in ring 0.
     gramado_system_call ( 
         SYSTEMCALL_STARTTHREAD, 
-        (unsigned long) thread, 
-        (unsigned long) thread, 
-        (unsigned long) thread );
+        (unsigned long) thread_r0_pointer, 
+        (unsigned long) thread_r0_pointer, 
+        (unsigned long) thread_r0_pointer );
+    return 0;
 }
-
 
 /*
 int rtl_get_thread_tid( void *thread);

@@ -216,9 +216,9 @@ int rtl_start_process(void *process);
 void *rtl_create_thread ( 
     unsigned long init_rip, 
     unsigned long init_stack, 
-    char *name );
+    const char *name );
 
-void rtl_start_thread(void *thread);
+int rtl_start_thread(void *thread_r0_pointer);
 
 // ===================================================
 

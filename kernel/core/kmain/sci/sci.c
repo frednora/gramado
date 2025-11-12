@@ -625,11 +625,12 @@ void *sci0 (
 
 // 72
 // See: sys.c
-// Cria uma thread que fica no estado INITIALIZED.
-// Outra syscall tem que colocar ela em STANDBY.
+// It creates a thread that's in INITIALIZED state.
+// Another syscall has to put it in STANDBY.
 // See: sys.c
 // IN:
-// cg (cgroup), initial rip, ini
+// cg (cgroup), initial rip, initial stack, ppid, name
+// #todo: Is it a ring 3 stack address?
     if (number == SCI_SYS_CREATE_THREAD)
     {
         serial_printk("sci0: [72] Create thread\n");
@@ -742,11 +743,11 @@ void *sci0 (
 // 90~99 Reservado para thread support
 
 // 94
+// #bugbug
+// Why the user has a ponter to the ring0 thread structure?
     if (number == SCI_STARTTHREAD)
     {
         debug_print("sci0: SCI_STARTTHREAD\n");
-        // #bugbug
-        // Why the user has a ponter to the ring0 thread structure?
         return (void *) core_start_thread((struct thread_d *) arg2);
     }
 

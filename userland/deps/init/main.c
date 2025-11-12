@@ -64,6 +64,7 @@ static void do_clear_console(void);
 static inline void do_cli(void);
 static inline void do_hlt(void);
 static void do_help(void);
+static void do_test_thread(void);
 static void do_init_prompt(void);
 static inline void do_int3(void);
 static void do_launch_de(void);
@@ -136,6 +137,52 @@ static void do_help(void)
 // See: ds00/
     printf ("'wsq': Launch the GUI\n");
     printf ("[control + f9] to open the kernel console\n");
+}
+
+void fn_thread00(void);
+void fn_thread00(void)
+{
+    printf ("fn_thread00: Running ...\n");
+    while (1){
+    };
+}
+
+static void do_test_thread(void)
+{
+    void *r0_pointer;
+    void *stack_pointer;
+
+    printf ("\n");
+    printf ("do_test_thread:\n");
+
+// Allocate memory for the stack.
+    stack_pointer = (void*) malloc(4096);
+    if ( (void*) stack_pointer == NULL )
+    {
+        printf ("do_test_thread: stack fail\n");
+        return;
+    }
+
+// Create the thread.
+    r0_pointer = 
+        (void *) rtl_create_thread(
+                    (unsigned long) &fn_thread00,   // initial rip
+                    (unsigned long) stack_pointer,  // initial stack
+                    "thread_test" );                // name
+
+
+// Start the thread.
+    if ( (void*) r0_pointer == NULL ){
+        printf ("do_test_thread: rtl_create_thread fail\n");
+        return;
+    }
+
+    int Status = -1;
+    Status = (int) rtl_start_thread(r0_pointer);
+    if (Status < 0){
+        printf ("do_test_thread: rtl_start_thread fail\n");
+        return;
+    }
 }
 
 static void do_init_prompt(void)
@@ -498,6 +545,14 @@ static int input_compare_string(void)
     // Comming back to the init process, that represents the core os.
     if ( strncmp(prompt,"winu",4) == 0 ){
         do_init_winu();
+        goto exit_cmp;
+    }
+
+// #test
+// Test the creation and initialization of a ring 3 thread.
+    if ( strncmp(prompt,"thread",6) == 0 )
+    {
+        do_test_thread();
         goto exit_cmp;
     }
 
