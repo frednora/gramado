@@ -429,7 +429,7 @@ int acpi_probe(void)
 // Get a short value.
     unsigned short *bda = (unsigned short*) BDA_BASE;
     unsigned long ebda_address=0;
-    register int i=0;
+
     unsigned char *p;
 // Signature elements.
     unsigned char c1=0;
@@ -453,13 +453,19 @@ int acpi_probe(void)
 // base
 // between 0xF0000 and 0xFFFFF.
 // #todo: filter
-    p = ebda_address;
+
 
 // The signature was found?
     static int Found = FALSE;
 
-// Probe for the signature. // "RSD PTR "
-    int max = (int) (0xFFFFF - ebda_address);
+    register int i=0;
+
+// ------------------------------------------
+// "RSD PTR "
+// Probe for the signature in ebda_address.
+    p = ebda_address;
+    //int max = (int) (0xFFFFF - ebda_address);
+    int max = (int) (ebda_address + 0x10000);
     for (i=0; i<max; i++){
         c1 = p[i+0];
         c2 = p[i+1];
@@ -480,16 +486,56 @@ int acpi_probe(void)
              c7 == 'R' &&
              c8 == ' '  )
         {
-            printk (":: Found [RSD PTR ] at index %d. :)\n",i);
+            printk (":1: Found [RSD PTR ] at index %d. :)\n",i);
             Found=TRUE;
             break;
         }
     };
 
-// Signature not found.
-    if (Found != TRUE){
+// ------------------------------------------
+// "RSD PTR "
+// Probe for the signature in 0xE0000, (Standard address)
+// Start = 0xE0000;
+// End   = 0x100000;
+
+    // Try again
+    if (Found != TRUE)
+    {
+        p = 0xE0000;
+        //int max = (int) (0xFFFFF - ebda_address);
+        max = (int) (0x100000);
+        for (i=0; i<max; i++){
+            c1 = p[i+0];
+            c2 = p[i+1];
+            c3 = p[i+2];
+            c4 = p[i+3];
+            c5 = p[i+4];
+            c6 = p[i+5];
+            c7 = p[i+6];
+            c8 = p[i+7];
+
+            // "RSD PTR "
+            if ( c1 == 'R' && 
+                 c2 == 'S' && 
+                 c3 == 'D' && 
+                 c4 == ' ' &&
+                 c5 == 'P' &&
+                 c6 == 'T' &&
+                 c7 == 'R' &&
+                 c8 == ' '  )
+            {
+                printk (":2: Found [RSD PTR ] at index %d. :)\n",i);
+                Found=TRUE;
+                break;
+            }
+        };
+    }
+
+// Signature not found in two tries.
+    if (Found != TRUE)
+    {
         Status = FALSE;
-        printk("acpi_probe: [RSD PTR ] wasn't found!\n");
+        printk("acpi_probe: [RSD PTR ] wasn't found\n");
         goto fail;
     }
 

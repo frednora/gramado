@@ -1,4 +1,7 @@
 
+// #important:
+// In Virtual we only find the processors when using ICH9, not in PIIX3.
+
 #todo
 
 ------------------------------------

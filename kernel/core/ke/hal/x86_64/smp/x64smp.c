@@ -138,6 +138,9 @@ int x64smp_initialization(void)
 // + Via ACPI.
 // + Via MP. And then initialize lapic.
 
+// #important:
+// In Virtual we only find the processors when using ICH9, not in PIIX3.
+
     int smp_status = FALSE;  // fail
 
     smp_info.initialized = FALSE;
@@ -273,8 +276,8 @@ int x64smp_initialization(void)
 
     // #debug
     // #breakpoint
-    // x64smp_show_info();
-    // while (1){ asm("hlt"); };
+    //x64smp_show_info();
+    //while (1){ asm("hlt"); };
 
     // #debug
     //#breakpoint
