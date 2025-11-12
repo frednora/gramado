@@ -172,13 +172,14 @@ void *sys_create_process (
     if (CurrentProcess->magic!=1234)
         return NULL;
 
-// Process personality
-    ProcessPersonality = (int) CurrentProcess->personality;
-    if (ProcessPersonality != PERSONALITY_GRAMADO){
+// Environment subsystem
+    if ( ProcessPersonality != PERSONALITY_POSIX &&
+         ProcessPersonality != PERSONALITY_GUI )
+    {
         panic("sys_create_process: ProcessPersonality\n");
     }
 
-// Create process.
+// Create process
 
     new = 
         (void *) create_process ( 

@@ -23,26 +23,22 @@
 #define G_DEFAULT_PROCESSHEAP_SIZE      (  32 * 1024)
 #define G_DEFAULT_PROCESSHEAP_COUNTMAX  (64) 
 
-//-----------------
-
-//
-// Process environment
-//
 
 // -----------------------------
-// Environment subsystems.
-// For commands and applications.
+
+// Personality types:
+// Based on environment subsystems.
+// Only GUI and Non-GUI.
+// daemons, r3 drivers and r3 servers are NON-GUI.
 typedef enum {
-    UnknownSubsystem,
-    CaliSubsystem,     // ama/
-    GramadoSubsystem   // zing/
-    // ...
-} env_subsystem_t;
+// Unknown personality.
+    PERSONALITY_UNKNOWN,
+// Standard userland applications. (Default option)
+    PERSONALITY_POSIX,
+// Graphical apps. Display server and client-side GUI applications.
+    PERSONALITY_GUI
+} personality_t;
 
-// -----------------------------
-
-// This process was made to Gramado OS.
-#define PERSONALITY_GRAMADO  1000
 // ...
 
 // Processes:
@@ -282,13 +278,9 @@ struct process_d
 
 // --------------------------
 
-// The target OS for the process.
-// It can be a different version of Gramado OS or another OS.
-    int personality;
-
-// The environment subsystem that this process is running into.
-// unknown, cali, gramado.
-    env_subsystem_t env_subsystem;
+// Personality types:
+// Based on environment subsystems.
+    personality_t personality;
 
 // Importante:
 // isso substituir� a flag 'terminal'
@@ -324,10 +316,6 @@ struct process_d
 // Os processos GWS são FOREGROUND.
 
     int plane;
-
-    // see: layer.h
-    int _layer;
-
 
 //
 // Input
@@ -1019,7 +1007,7 @@ struct process_d *create_process (
     unsigned long pml4_va,
     unsigned long pdpt0_va,
     unsigned long pd0_va,
-    int personality );
+    personality_t personality );
 
 //
 // $

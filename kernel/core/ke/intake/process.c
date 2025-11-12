@@ -1172,18 +1172,12 @@ struct process_d *create_and_initialize_process_object(void)
         goto fail;
     }
 
-
     // Initialize
     memset(new_process->__processname,0,64);
     new_process->processName_len = 0;
 
 // Default personality
-    new_process->personality = PERSONALITY_GRAMADO;
-// see: layer.h
-    new_process->_layer = LAYER_UNDEFINED;
-// #test
-// No environment yet.
-    new_process->env_subsystem = UnknownSubsystem;
+    new_process->personality = PERSONALITY_POSIX;
 
 // Get PID.
 // Obtêm um índice para um slot vazio na lista de processos.
@@ -1334,7 +1328,7 @@ struct process_d *create_process (
     unsigned long pml4_va,
     unsigned long pdpt0_va,
     unsigned long pd0_va,
-    int personality )
+    personality_t personality )
 {
     struct process_d  *Process;
     register pid_t PID = -1;
@@ -1342,7 +1336,7 @@ struct process_d *create_process (
     struct process_d *EmptyEntry;
     unsigned long BasePriority=0;
     unsigned long Priority=0;
-    int Personality = personality;
+    personality_t Personality = personality;
 
     // #debug
     debug_print ("create_process:\n");
@@ -1485,9 +1479,6 @@ struct process_d *create_process (
 
     // sessão crítica.
     Process->_critical = 0;
-
-// see: layer.h
-    Process->_layer = LAYER_UNDEFINED;
 
 // #todo: Via argument
      Process->plane = FOREGROUND_PROCESS;

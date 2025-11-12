@@ -78,13 +78,8 @@ int dispsrv_setup_ds_info(pid_t pid)
 
 // ----------------
 // Process Personality
-    p->personality = (int) PERSONALITY_GRAMADO;
-    DisplayServerInfo.pid_personality = (int) PERSONALITY_GRAMADO;
-
-// ----------------
-// The environment.
-// The display server.
-    p->env_subsystem = GramadoSubsystem;
+    p->personality = (int) PERSONALITY_GUI;
+    DisplayServerInfo.pid_personality = (int) PERSONALITY_GUI;
 
 // ----------------
 // Security Access token

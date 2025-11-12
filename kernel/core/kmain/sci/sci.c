@@ -217,8 +217,6 @@ void *sci0 (
 // Pointer for cgroup
     struct cgroup_d *cg;
 
-    int layer = LAYER_UNDEFINED;
-
     unsigned long *message_address = (unsigned long *) arg2;
     unsigned long *a2 = (unsigned long*) arg2;
     unsigned long *a3 = (unsigned long*) arg3;
@@ -275,12 +273,13 @@ void *sci0 (
         panic("sci0: p validation\n");
     }
 
-    layer = p->_layer;
-
-// Feito pra rodar no Gramado OS.
-    if (p->personality != PERSONALITY_GRAMADO){
+// Environment subsystem
+    if ( p->personality != PERSONALITY_POSIX &&
+         p->personality != PERSONALITY_GUI )
+    {
         panic("sci0: Personality\n");
     }
+
 
 // Counting ...
     p->syscalls_counter++;
@@ -1878,7 +1877,6 @@ void *sci1 (
 
     struct process_d *p;
     struct thread_d *t;
-    int layer = LAYER_UNDEFINED;
 
     debug_print("sci1: [TODO]\n");
 
@@ -1995,7 +1993,6 @@ void *sci2 (
 
     struct process_d *p;
     struct thread_d *t;
-    int layer = LAYER_UNDEFINED;
 
     pid_t current_process = (pid_t) get_current_process();
 
@@ -2038,14 +2035,12 @@ void *sci2 (
         panic("sci2: p validation\n");
     }
 
-// Personality
-// Feito pra rodar no Gramado OS.
-    if (p->personality != PERSONALITY_GRAMADO){
+// Environment subsystem
+    if ( p->personality != PERSONALITY_POSIX &&
+         p->personality != PERSONALITY_GUI )
+    {
         panic("sci2: Personality\n");
     }
-
-// The layer
-    layer = p->_layer;
 
 // Counting syscalls ...
     p->syscalls_counter++;
@@ -2824,7 +2819,6 @@ void *sci3 (
 
     struct process_d *p;
     struct thread_d *t;
-    int layer = LAYER_UNDEFINED;
 
     debug_print("sci1: [TODO]\n");
 

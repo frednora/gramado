@@ -244,10 +244,6 @@ network_register_ring3_display_server(
     console_set_current_virtual_console(CONSOLE1);
 
 // #test
-// Setup the new layer for this process.
-    p->_layer = (int) LAYER_DISPLAY_SERVER;
-
-// #test
 // Is the control thread valid?
     t = p->control;
     if ((void*) t == NULL)
@@ -342,10 +338,6 @@ network_register_ring3_browser(
 // Setup c1/
 // Change the foreground console.
     //console_set_current_virtual_console(CONSOLE1);
-
-// Setup the new layer for this process.
-// The browser is in the same layer of display servers for now.
-    p->_layer = (int) LAYER_DISPLAY_SERVER;
 
 // #test
     t = p->control;

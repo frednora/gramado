@@ -478,7 +478,7 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                             foreground_thread = -1;
                         
                         // Uma thread importante morreu?
-                        // if (TmpThread->personality == PERSONALITY_GRAMADO )
+                        // if (TmpThread->personality == PERSONALITY_POSIX )
                         //     oops();
                         
                         //se tick=1000 ticks per second.
@@ -611,7 +611,7 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
 
                 // Balance
                 // Non interactive system services and processes.
-                //if (TmpThread->personality == PERSONALITY_GRAMADO){
+                //if (TmpThread->personality == PERSONALITY_POSIX){
                 //    TmpThread->quantum = QUANTUM_MIN;
                 //}
 
