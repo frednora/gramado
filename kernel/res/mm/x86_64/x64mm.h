@@ -806,10 +806,6 @@ virtual_to_physical (
     unsigned long virtual_address, 
     unsigned long pml4_va );
 
-// see: slab.c
-void slab_initialize(void);
-void *slab_1MB_allocator(void);
-
 #endif    
 
 

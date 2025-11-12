@@ -119,6 +119,7 @@
 #include "../res/mm/mmblock.h"
 #include "../res/mm/mmusage.h"
 #include "../res/mm/x86_64/x64mm.h"
+#include "../res/mm/slab.h"
 #include "../res/mm/x86_64/paging.h"
 #include "../res/mm/mmft.h"
 #include "../res/mm/mmpool.h"

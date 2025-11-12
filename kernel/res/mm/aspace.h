@@ -53,8 +53,7 @@ struct aspace_d
 	//?? @questionamento: Uma conta poderia pertencer à mais de um banco
 	// ou devemos indicar aqui à que banco essa conta pertence.
 	//struct bank_d *bank;
-	
-	//navegação.
+
     struct aspace_d *next;
 };
 

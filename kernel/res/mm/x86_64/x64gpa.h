@@ -562,6 +562,18 @@ A conservative approach is to avoid everything above 0x00080000.
 //
 
 
+// ...
+
+// Physical region
+struct x64_physical_region_d 
+{
+    unsigned long start_pa;
+    unsigned long end_pa;
+    unsigned long size;
+    int type;
+};
+
+
 #endif    
 
 

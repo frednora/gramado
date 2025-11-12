@@ -1,4 +1,7 @@
-
+// bank.h
+// Bank structures
+// This is a work in progress. No in use yet.
+//
 
 // Número máximo de bancos no sistema. 
 #define BANKS_COUNT_MAX  8
@@ -17,19 +20,15 @@ int banksCount;
 int lastBank;
 
 typedef enum {
-
     banktypeLDB,    // LDB - Local Data Base.   (private)
     banktypeGDB,    // GDB - Global Data Base.  (shareable)
     banktypeKDB,    // KDB - Kernel Data Base.  (kernel only)
     banktypeFDB,    // FDB - Free Data Base.    (free memory)
-
 }bank_type_t;
 
 
-typedef struct bank_d bank_t;
 struct bank_d
 {
-
 	object_type_t  objectType;
 	object_class_t objectClass;
 
@@ -50,25 +49,16 @@ struct bank_d
 	//struct aspace_d *aspaceListHead;
 	//struct dspace_d *dspaceListHead;	
 
-
 	// Lista de processos utilizando esse objeto.
 	struct process_d *processListHead;
 	//struct process_d *currentProcess;
 	//int processCount;
 
     //...	
-	
-	//Navegação.
+
     struct bank_d *Next;  
 };
-
-struct bank_d *Bank;
-//bank_t *Bank;
-//bank_t *KernelBank;
-//...
-
-
-
-
-
-
+// struct bank_d *Bank;
+// struct bank_d *Bank;
+// struct bank_d *KernelBank;
+// ...

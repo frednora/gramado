@@ -1,4 +1,5 @@
 // slab.c
+// Slab allocators.
 // Created by Fred Nora.
 
 // O pool tem dois blocos de 2MB cada.
@@ -31,52 +32,6 @@ struct newpagedpool_d  NewPagedPool;
 
 
 // --------------------------------------------------------------
-
-// #todo:
-// Explain it better.
-// This code manages the extraheaps 2 and 3,
-// creating buffers that are gonna be used by a slab allocator
-// called slab_1MB_allocator().
-void slab_initialize(void)
-{
-    NewPagedPool.initialized = FALSE;
-
-// We need these two addresses.
-// The virtual addresses for 
-// extraheap 2 and extraheap3.
-
-    if ( g_extraheap2_va == 0 || 
-         g_extraheap3_va == 0 )
-    {
-        panic("slab_initialize: address\n");
-    }
-
-//-------------------
-// Two reagions of 1MB each in the extraheap2.
-// a1
-    NewPagedPool.a1_va = 
-        (unsigned long) g_extraheap2_va;
-    NewPagedPool.Free[0] = TRUE;
-// a2
-    NewPagedPool.a2_va = 
-        (unsigned long) (g_extraheap2_va + (1024*1024) );
-    NewPagedPool.Free[1] = TRUE;
-
-//-------------------
-// Two reagions of 1MB each in the extraheap3.
-// b1
-    NewPagedPool.b1_va = 
-        (unsigned long) g_extraheap3_va;
-    NewPagedPool.Free[2] = TRUE;
-// b2
-    NewPagedPool.b2_va = 
-        (unsigned long) (g_extraheap3_va + (1024*1024) );
-    NewPagedPool.Free[3] = TRUE;
-//----
-
-// Now the slab allocator can use these addresses.
-    NewPagedPool.initialized = TRUE;
-}
 
 // global
 // Used by alloc_memory_for_image_and_stack() in process.c
@@ -158,8 +113,47 @@ void *slab_1MB_allocator(void)
     return NULL;
 }
 
+// #todo:
+// Explain it better.
+// This code manages the extraheaps 2 and 3,
+// creating buffers that are gonna be used by a slab allocator
+void slab_initialize(void)
+{
+    NewPagedPool.initialized = FALSE;
 
+// We need these two addresses.
+// The virtual addresses for 
+// extraheap 2 and extraheap3.
 
+    if ( g_extraheap2_va == 0 || g_extraheap3_va == 0 )
+    {
+        panic("slab_initialize: address\n");
+    }
 
+//-------------------
+// Two reagions of 1MB each in the extraheap2.
+// a1
+    NewPagedPool.a1_va = 
+        (unsigned long) g_extraheap2_va;
+    NewPagedPool.Free[0] = TRUE;
+// a2
+    NewPagedPool.a2_va = 
+        (unsigned long) (g_extraheap2_va + (1024*1024) );
+    NewPagedPool.Free[1] = TRUE;
 
+//-------------------
+// Two reagions of 1MB each in the extraheap3.
+// b1
+    NewPagedPool.b1_va = 
+        (unsigned long) g_extraheap3_va;
+    NewPagedPool.Free[2] = TRUE;
+// b2
+    NewPagedPool.b2_va = 
+        (unsigned long) (g_extraheap3_va + (1024*1024) );
+    NewPagedPool.Free[3] = TRUE;
+//----
+
+// Now the slab allocator can use these addresses.
+    NewPagedPool.initialized = TRUE;
+}
 
