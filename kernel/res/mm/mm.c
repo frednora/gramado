@@ -151,11 +151,11 @@ unsigned long slab_2mb_extraheap3(void)
 
 static int __init_kernel_heap(void)
 {
-    register int i=0;
-
     // #bugbug
-    // não usar printk
-    // printk ainda não funciona nesse momento.
+    // Do NOT use printk here,
+    // it's was not initialized yet.
+
+    register int i=0;
 
     KernelHeap.initialized = FALSE;
 
@@ -168,73 +168,63 @@ static int __init_kernel_heap(void)
 // We need the full paging initialization 
 // to play with the memory.
 
-// start and end.
+// Start and End of the kernel heap.
+// See: x64gva.h
     kernel_heap_start = (unsigned long) KERNEL_HEAP_START;
     kernel_heap_end   = (unsigned long) KERNEL_HEAP_END;
+    KernelHeap.start  = (unsigned long) kernel_heap_start;
+    KernelHeap.end    = (unsigned long) kernel_heap_end;
 
-    KernelHeap.start = (unsigned long) kernel_heap_start;
-    KernelHeap.end   = (unsigned long) kernel_heap_end;
-
-// Heap Pointer, Available heap and Counter.
+// Heap pointer, available heap and counter.
     g_heap_pointer   = (unsigned long) kernel_heap_start; 
     g_available_heap = (unsigned long) (kernel_heap_end - kernel_heap_start);  
     heapCount = 0; 
 
-// Check Heap Pointer.
-    if (g_heap_pointer == 0){
-        debug_print("__init_kernel_heap: g_heap_pointer\n");
-        goto fail;
-    }
+//
+// Validate some values.
+// 
 
-// Check Heap Pointer overflow.
-    if (g_heap_pointer > kernel_heap_end){
-        debug_print("__init_kernel_heap: Heap Pointer Overflow\n");
-        goto fail;
-    }
-
-// Heap Start
+// Check heap start
     if (kernel_heap_start == 0){
         debug_print("__init_kernel_heap: HeapStart\n");
         goto fail;
     }
-
-// Heap End
+// Check heap end
     if (kernel_heap_end == 0){
         debug_print("__init_kernel_heap: HeapEnd\n");
         goto fail;
     }
-
-// Check available heap.
-// #todo: Tentar crescer o heap.
+// Check heap pointer
+    if (g_heap_pointer == 0){
+        debug_print("__init_kernel_heap: g_heap_pointer\n");
+        goto fail;
+    }
+// Check heap pointer overflow
+    if (g_heap_pointer > kernel_heap_end){
+        debug_print("__init_kernel_heap: Heap Pointer Overflow\n");
+        goto fail;
+    }
+// Check available heap
     if (g_available_heap == 0){
         debug_print("__init_kernel_heap: g_available_heap\n");
         goto fail;
     }
 
-// Heap list: 
-// Inicializa a lista de heaps.
-
+// Initialize the list of heaps.
     while (i < HEAP_COUNT_MAX){
         heapList[i] = (unsigned long) 0;
         i++;
     };
 
-    //KernelHeap = (void*) x??;
+    // More?
 
-    //More?!
-
+// OK
     KernelHeap.initialized = TRUE;
+    return 0;  // OK
 
-// OUT: 0=OK.
-    return 0;
-
-
-// Falha ao iniciar o heap do kernel.
-// ====================================
 fail:
     KernelHeap.initialized = FALSE;
     debug_print("__init_kernel_heap: Fail\n");
-    //refresh_screen();
     return (int) -1;
 }
 
@@ -245,37 +235,46 @@ fail:
 // OUT: 0=OK.
 static int __init_kernel_stack(void)
 {
-// Globals
+    // #bugbug
+    // Do NOT use printk here,
+    // it's was not initialized yet.
+
+    KernelStack.initialized = FALSE;
 
 // #warning
 // We will not clear this area at this moment.
 // We need the full paging initialization 
 // to play with the memory.
 
-    KernelStack.initialized = FALSE;
+// Start and End of the kernel stack.
+// See: x64gva.h
     kernel_stack_end   = (unsigned long) KERNEL_STACK_END; 
     kernel_stack_start = (unsigned long) KERNEL_STACK_START; 
-    KernelStack.end   = (unsigned long) kernel_stack_end;
-    KernelStack.start = (unsigned long) kernel_stack_start;
+    KernelStack.end    = (unsigned long) kernel_stack_end;
+    KernelStack.start  = (unsigned long) kernel_stack_start;
 
-// End
+//
+// Validate some values.
+//
+
+// Check stack end
     if (kernel_stack_end == 0){
         debug_print("__init_kernel_stack: kernel_stack_end\n");
         goto fail;
     }
-// Start
+// Check stack start
     if (kernel_stack_start == 0){
         debug_print("__init_kernel_stack: kernel_stack_start\n");
         goto fail;
     }
 
+// OK
     KernelStack.initialized = TRUE;
-
-// OUT: 0=OK.
-    return 0;
+    return 0;  // OK
 
 fail:
     KernelStack.initialized = FALSE;
+    debug_print("__init_kernel_stack: Fail\n");
     return (int) -1;
 }
 

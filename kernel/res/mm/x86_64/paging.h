@@ -105,10 +105,17 @@ unsigned long alloc_frame(void);
 // #danger
 unsigned long get_table_pointer_va(void);
 
-void *CloneKernelPDPT0(void);
+// Clone the kernel's pd0. (Page Directory 0).
 void *CloneKernelPD0(void);
-void *CloneKernelPML4 (void);
-void *clone_pml4 ( unsigned long pml4_va );
+
+// Clone the kernel's pdpt0. (Page Directory Pointer Table 0).
+void *CloneKernelPDPT0(void);
+
+// Clone the kernel's pml4.
+void *CloneKernelPML4(void);
+
+// Clone a given pml4.
+void *clone_pml4(unsigned long pml4_va);
 
 int isValidPageStruct(struct page_d *p);
 

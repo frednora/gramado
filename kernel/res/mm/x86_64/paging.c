@@ -478,39 +478,9 @@ unsigned long get_table_pointer_va(void)
     return (unsigned long) table_pointer_heap_base;
 }
 
-
-void *CloneKernelPDPT0(void)
-{
-    register int i=0;
-    unsigned long destAddressVA=0; 
-
-// Pegamos um edereço que serve de base para
-// criarmos um pdpt.
-// Identidade 1:1.
-
-    destAddressVA = (unsigned long) get_table_pointer_va(); 
-    if ( destAddressVA == 0 ){
-        panic ("CloneKernelPDPT0: destAddressVA\n");
-    }
-
-// The virtual address of the kernel page directory and
-// the virtual address of the new page directory.
-// #bugbug: What directory we are using right now? kernel?
-
-    unsigned long *src = (unsigned long *) kernel_mm_data.pdpt0_va; //gKernelPML4Address;
-    unsigned long *dst = (unsigned long *) destAddressVA;
-
-// Copy
-    for ( i=0; i < 512; ++i ){
-        dst[i] = (unsigned long) src[i];
-    };
-
-// Done.
-// The virtual address of the new pml4. 
-    return (void *) destAddressVA;
-}
-
-
+// CloneKernelPD0:
+// Clone the kernel's pd0. (Page Directory 0).
+// OUT: The virtual address for the new directory.
 void *CloneKernelPD0(void)
 {
     register int i=0;
@@ -541,14 +511,43 @@ void *CloneKernelPD0(void)
     return (void *) destAddressVA;
 }
 
+// CloneKernelPDPT0:
+// Clone the kernel's pdpt0. (Page Directory Pointer Table 0).
+// OUT: The virtual address for the new pdpt.
+void *CloneKernelPDPT0(void)
+{
+    register int i=0;
+    unsigned long destAddressVA=0; 
 
-/*
- * CloneKernelPML4:
- *    Clone the kernel pml4.
- *    OUT: The virtual address of the new directory.
- */
+// Pegamos um edereço que serve de base para
+// criarmos um pdpt.
+// Identidade 1:1.
 
-// OUT: va
+    destAddressVA = (unsigned long) get_table_pointer_va(); 
+    if ( destAddressVA == 0 ){
+        panic ("CloneKernelPDPT0: destAddressVA\n");
+    }
+
+// The virtual address of the kernel page directory and
+// the virtual address of the new page directory.
+// #bugbug: What directory we are using right now? kernel?
+
+    unsigned long *src = (unsigned long *) kernel_mm_data.pdpt0_va;
+    unsigned long *dst = (unsigned long *) destAddressVA;
+
+// Copy
+    for ( i=0; i < 512; ++i ){
+        dst[i] = (unsigned long) src[i];
+    };
+
+// Done.
+// The virtual address of the new pml4. 
+    return (void *) destAddressVA;
+}
+
+// CloneKernelPML4:
+// Clone the kernel pml4.
+// OUT: The virtual address for the new pml4.
 void *CloneKernelPML4(void)
 {
     register int i=0;
@@ -582,23 +581,13 @@ void *CloneKernelPML4(void)
     return (void *) destAddressVA;
 }
 
-
-/*
- * clone_pml4:
- *     Clone a given page directory.
- */
-
-// Clona um pml4 dado seu endereço.
-// Queremos clonar o diretório atual,
-// para que o processo filho tenha o mesmo diretório do processo pai. 
-// #??
-// Esse endereço virtual eh valido?
-// Pertence ao diretorio que estamos usando no momento?
-// #todo
-// clone_pml4
-// OUT:
-// The address of the new pml4.
-
+// clone_pml4:
+// Clone a given page directory.
+// We want to clone the current directory,
+// so the child process has the same directory as the parent process.
+// Is this a valid address?
+// It belongs to the directory we are using right now?
+// OUT: The address of the new pml4.
 void *clone_pml4(unsigned long pml4_va)
 {
     register int i=0;
@@ -607,7 +596,7 @@ void *clone_pml4(unsigned long pml4_va)
 // #test
 // no directory in the address '0'
 
-    if ( pml4_va == 0 ){
+    if (pml4_va == 0){
         panic("clone_pml4: pml4_va\n");
     }
 

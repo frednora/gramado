@@ -266,16 +266,12 @@ A conservative approach is to avoid everything above 0x00080000.
 // == 1 MB ==================================================
 //
 
-// EXTENDED MEMORY
-
-// 1MB físico.
-// #importante: 
-// Foram mapeados 2MB para 
-//  + a 'imagem do kernel' e para 
-//  + o 'heap' e 
-//  + a 'stack'.
+// This is the extended memory start mark.
+// 1MB physical address.
+// It was mapped 2MB for the kernel image, heap and stack.
 
 // 1
+// 0x00100000
 #define KERNEL_BASE_PA  0x00100000
 #define SMALLSYSTEM_KERNELBASE   KERNEL_BASE_PA
 #define MEDIUMSYSTEM_KERNELBASE  KERNEL_BASE_PA
@@ -287,9 +283,7 @@ A conservative approach is to avoid everything above 0x00080000.
 
 // 2
 // 0x00200000
-// #warning
-// Reserved to extend the area for the kernel image.
-
+// Reserved to extend the area for the kernel image
 
 //
 // == 4 MB ==================================================
@@ -297,16 +291,11 @@ A conservative approach is to avoid everything above 0x00080000.
 
 // 4
 // 0x00400000
-// #warning
-// Reserved to extend the area for the kernel image.
-
+// Reserved to extend the area for the kernel image
 
 // 6
 // 0x00600000
-// #warning
-// Reserved to extend the area for the kernel image.
-
-
+// Reserved to extend the area for the kernel image
 
 //
 // == 8 MB ==================================================
@@ -314,34 +303,26 @@ A conservative approach is to avoid everything above 0x00080000.
 
 // 8
 // 0x00800000
-// #warning
-// Reserved to extend the area for the kernel image.
-
+// Reserved to extend the area for the kernel image
 
 // 10
 // 0xA00000
-// #warning
-// Reserved to extend the area for the kernel image.
-
+// Reserved to extend the area for the kernel image
 
 // 12
 // 0xC00000
-// #warning
-// Reserved to extend the area for the kernel image.
-
+// Reserved to extend the area for the kernel image
 
 // 14
 // 0xE00000
-// #warning
-// Reserved to extend the area for the kernel image.
-
+// Reserved to extend the area for the kernel image
 
 //
 // == 16 MB =========================================================
 //
-// 0x01000000
 
 // 16
+// 0x01000000
 // #bugbug
 // The 'heap pool' has 2MB in size
 // and it starts at 0x01000000. (16MB mark).
@@ -374,49 +355,46 @@ A conservative approach is to avoid everything above 0x00080000.
 
 // 24
 #define PAGEDPOOL1_PA  (0x01000000 + 0x800000) 
+// 26
+#define PAGEDPOOL2_PA  (0x01000000 + 0xA00000) 
+// 28
+#define PAGEDPOOL3_PA  (0x01000000 + 0xC00000) 
+// 30
+#define PAGEDPOOL4_PA  (0x01000000 + 0xE00000) 
+
 #define SMALLSYSTEM_PAGEDPOLL_START   PAGEDPOOL1_PA
 #define MEDIUMSYSTEM_PAGEDPOLL_START  PAGEDPOOL1_PA
 #define LARGESYSTEM_PAGEDPOLL_START   PAGEDPOOL1_PA
 #define PAGEDPOOL_PA  PAGEDPOOL1_PA
-
-// 26
-#define PAGEDPOOL2_PA  (0x01000000 + 0xA00000) 
-
-// 28
-#define PAGEDPOOL3_PA  (0x01000000 + 0xC00000) 
-
-// 30
-#define PAGEDPOOL4_PA  (0x01000000 + 0xE00000) 
 
 
 //
 // == 32 MB =========================================================
 //
 
-// O processo init foi carregado na marca de 
-// 32MB fisico e 2MB virtual.
-// 0x02000000
-// Um sistema maior que 32MB já é considerado Small.
-// #atenção:
-// Essa é uma area em user mode.
-// #todo
-// Pra que essa area esta sendo usada?
+// The Init Process was loaded at the mark of 
+// 32MB physical and 2MB virtual.
+// This is an user mode area.
+// During the initialization, the kernel prepares this special area
+// for the Init Process.
 
-// 32 MB mark
+// 32
+// 0x02000000
 #define USER_BASE_PA  0x02000000 
 #define SMALLSYSTEM_USERBASE     USER_BASE_PA
 #define MEDIUMSYSTEM_USERBASE    USER_BASE_PA
 #define LARGESYSTEM_USERBASE     USER_BASE_PA
 
-// #important: 
-// Segue-se bastaste espaço livre.
-// Mas como o processo init foi carregado na marca de 
-// 32MB fisico e 2MB virtual, entao devemos deixar 
-// esse espaço fisico para o processo init.
-
 // 34
+// Reserved to extend the init process.
 // 36
+// Reserved to extend the init process.
 // 38
+// Reserved to extend the init process.
+
+// We have more empty space here.
+// Probably we can reserve it for the init process too.
+
 // 40
 // 42
 // 44
@@ -434,17 +412,13 @@ A conservative approach is to avoid everything above 0x00080000.
 // == 64 MB =========================================================
 //
 
+// 64
 // 0x04000000
-// #important: Segue-se bastaste espaço livre.
-// ...
+// The backbuffer has only 2MB in size for now.
+// But maybe in the future we can extend it.
 #define BACKBUFFER_PA  0x04000000
 
-// #test
-// Let's reserve a big space here for the backbuffer.
-// Maybe we can have more than one backbuffer in this area,
-// or even a place for some surfaces.
-
-
+// Here is a big space reserved for the backbuffer.
 
 //
 // 128MB and 256MB marks -----------------------------------------------
@@ -452,46 +426,48 @@ A conservative approach is to avoid everything above 0x00080000.
 
 // ----------------------------------
 // Frame Table
-
+// The frametable starts before the 128MB mark
+// and ends before the 256MB mark.
 
 // Start
 #define __128MB_MARK_PA      (0x08000000)
 #define FRAMETABLE_START_PA  __128MB_MARK_PA
-
 // End
-// #ps: End at 256MB mark less 8MB.
 #define __256MB_MARK_PA      (0x10000000)
 #define FRAMETABLE_END_PA    (__256MB_MARK_PA - 0x800000)
 
-// -----------------------------------------
 // #warning
 // When the system has 256MB installed
 // the detection routine can detect only 255,
-// because it is not checking the lask MB.
-// #ps:
-// 256 MB mark is free to use when we have 512mb of memory or more.
-// -----------------------------------------
+// because it's not checking the last 1 MB.
 
+
+//
+// == 256 MB =========================================================
+//
+
+// 256
+// 0x10000000
+// #ps: 256 MB mark is free to use when we have 512mb of memory or more.
 #define WINDOWS_POOL_START_PA  __256MB_MARK_PA
 
 // Let's put some windows here.
 // 256/2 = 128 application windows.
 
-
 //
 // == 512 MB =========================================================
 //
 
-
+// 512
+// 0x20000000
 #define __512MB_MARK_PA  (0x20000000)
 
 //
 // == 1GB =========================================================
 //
 
+// 1GB
 // 0x40000000
-// #available
-
 #define __1GB_MARK_PA  (0x40000000)
 
 // #todo
@@ -508,21 +484,40 @@ A conservative approach is to avoid everything above 0x00080000.
 // == 2GB =========================================================
 //
 
+// 2GB
 // 0x80000000
-// #available
-
 #define __2GB_MARK_PA  (0x80000000)
 
 //
 // == 3GB =========================================================
 //
 
+// 3GB
 // 0xC0000000
-// #available
-
 #define __3GB_MARK_PA  (0xC0000000)
 
+// [APIC I/O unit]
+// i/o apic physical.
+// The address space reserved for the local APIC 
+// is used by each processor to access its own local APIC.
+// Subsequent I/O APIC addresses are assigned in 4K increments.
+// 0xFEC00000 + 0x1000
+#define __IOAPIC_PA  0xFEC00000
 
+// [APIC Local Unit]
+// local apic physical address.
+// The address space reserved for the I/O APIC 
+// must be shareable by all processors 
+// to permit dynamic reconfiguration
+#define __LAPIC_PA   0xFEE00000
+
+//--------------------------------------------------
+
+//
+// == 4GB =========================================================
+//
+
+// ...
 
 // =================================================================
 
@@ -543,30 +538,10 @@ A conservative approach is to avoid everything above 0x00080000.
     0x80000000 = 2    GB
 */
 
-
-// [APIC I/O unit]
-// i/o apic physical.
-// The address space reserved for the local APIC 
-// is used by each processor to access its own local APIC.
-// Subsequent I/O APIC addresses are assigned in 4K increments.
-// 0xFEC00000 + 0x1000
-#define __IOAPIC_PA  0xFEC00000
-
-// [APIC Local Unit]
-// local apic physical address.
-// The address space reserved for the I/O APIC 
-// must be shareable by all processors 
-// to permit dynamic reconfiguration
-#define __LAPIC_PA   0xFEE00000
-
-//--------------------------------------------------
-
 //
-// After 4GB ... 
+// ====================================================
 //
 
-
-// ...
 
 // Physical region
 struct x64_physical_region_d 

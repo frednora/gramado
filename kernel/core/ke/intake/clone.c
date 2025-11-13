@@ -548,7 +548,7 @@ copy_process(
     // #todo
     // Check more clone_flags here.
 
-// Copiar a tabela pml4 do kernel.
+// Clonning the kernel's pml4.
     _pml4 = (void *) CloneKernelPML4();
     if ((void*) _pml4 == NULL){
         panic("copy_process: _pml4\n");
@@ -1249,8 +1249,9 @@ do_clone:
 // determinada entrada no diretório de páginas.
 // Antes vamos clonar o diretório de páginas do kernel.
 
-    child_process->pd0_VA = 
-        (unsigned long) CloneKernelPD0();
+// Clonning the kernel's pd0.
+// (Page Directory 0)
+    child_process->pd0_VA = (unsigned long) CloneKernelPD0();
     child_process->pd0_PA = 
         (unsigned long) virtual_to_physical ( 
                             child_process->pd0_VA, 
@@ -1293,8 +1294,8 @@ do_clone:
     child_process->Image = (unsigned long) __image_va; 
 
 // Clonning the kernel's pdpt0.
-    child_process->pdpt0_VA = 
-        (unsigned long) CloneKernelPDPT0();
+// (Page Directory Pointer Table 0)
+    child_process->pdpt0_VA = (unsigned long) CloneKernelPDPT0();
     child_process->pdpt0_PA = 
         (unsigned long) virtual_to_physical ( 
                             child_process->pdpt0_VA, 

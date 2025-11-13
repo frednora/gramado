@@ -38,19 +38,13 @@ struct mm_data_d
 {
     int used;
     int magic;
-
+// The pml4 table
     unsigned long pml4_va; 
     unsigned long pml4_pa; 
-
-// We just need one table to handle a basic initialization.
-
-// Saving the pointer for the first table.
+// The first pdpt (Page Directory Pointer Table)
     unsigned long pdpt0_va; 
     unsigned long pdpt0_pa; 
-
-// We just need one table to handle a basic initialization.
-
-// Saving the pointer for the first table.
+// The first pd (Page Directory)
     unsigned long pd0_va; 
     unsigned long pd0_pa; 
 };
