@@ -1,3 +1,0 @@
-
-//arquivo criado para compatibilidade 
-
