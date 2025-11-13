@@ -64,7 +64,8 @@ struct kernel_module_d
 extern struct kernel_module_d  *kernel_mod0;
 
 // see: mod.c
-extern unsigned long kmList[KMODULE_MAX];
+// Not exported anymore.
+//extern unsigned long kmList[KMODULE_MAX];
 
 //----------------------------------------------
 

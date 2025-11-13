@@ -55,7 +55,7 @@ losethos os - Adam1a.HPP.
 #define LAPIC_APIC_ID                0x020
 #define LAPIC_APIC_VERSION           0x030
 #define LAPIC_TASK_PRIORITY          0x080
-#define LAPIC_ARIBITRATION_PRIORITY  0x090
+#define LAPIC_ARBITRATION_PRIORITY   0x090
 #define LAPIC_PROCESSOR_PRIORITY     0x0A0
 #define LAPIC_EOI                    0x0B0
 #define LAPIC_LOG_DST                0x0D0

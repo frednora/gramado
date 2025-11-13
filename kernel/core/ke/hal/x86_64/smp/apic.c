@@ -635,8 +635,6 @@ void APIC::wakeupSequence(U32 apicId, U8 pvect)
 // NOTE: ICRLow and ICRHigh are types in the Silcos kernel. If your code uses direct bit
 // manipulations you must replace some code with bit operations.
 
-
-
 void local_apic_send_init(unsigned int apic_id)
 {
 // Send one time.
@@ -666,7 +664,7 @@ void local_apic_send_init(unsigned int apic_id)
 }
 
 
-
+// vector={0x08} =  address={0x8000}
 void 
 local_apic_send_startup(
     unsigned int apic_id, 
@@ -711,6 +709,11 @@ void Send_INIT_IPI_Once(unsigned int apic_id)
 }
 
 // Send STARTUP IPI (twice)
+// + What the function does
+// + Loops twice, sending a STARTUP IPI to the target APIC ID.
+// + Clears the Error Status Register (0x280) before each send.
+// + Uses vector 0x08 → trampoline at 0x8000.
+// + Waits 200 ms between sends.
 void Send_STARTUP_IPI_Twice(unsigned int apic_id)
 {
 // Twice

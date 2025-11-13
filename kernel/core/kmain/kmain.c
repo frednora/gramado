@@ -144,6 +144,8 @@ static int archinit(void);
 static int deviceinit(void);
 static int lateinit(void);
 
+static int __test_initialize_ap_processor(int apic_id);
+
 //
 // =======================================================
 //
@@ -633,6 +635,68 @@ static int earlyinit(void)
     return 0;
 }
 
+
+static int __test_initialize_ap_processor(int apic_id)
+{
+    // AP base address
+    //unsigned char *ap_base = (unsigned char *) 0x00020000; 0x8000;  // AP trampoline base address.
+    // AP signature pointer.
+    // The AP will change the memory value at this address to
+    // 0xA0 when it starts.
+    unsigned char *ap_signature_pointer = 
+        (unsigned char *) 0x00029000; //0x9000;
+
+//SIPI vector: 0x20000 >> 12 = 0x20, so you’d send SIPI with vector 0x20.
+
+    if (CONFIG_INITIALIZE_SECOND_PROCESSOR == 1)
+    {
+        // (Step 1) Load AP image into memory.
+        // Address 0x8000, vector 0x08
+        printk("Loading AP image ...\n");
+        refresh_screen();
+
+        // #todo: Check return value.
+        fsLoadFile ( 
+            VOLUME1_FAT_ADDRESS,
+            VOLUME1_ROOTDIR_ADDRESS, //sdDE.address,
+            FAT16_ROOT_ENTRIES, //512,           // Number of dir entries?
+            "APX86   BIN", // AP image file name 
+            (unsigned long) 0x00020000, //0x8000,  // Address
+            (2*4096));  //(4*4096) );  // Size in bytes.
+
+        // (Step 2)
+        // vector={0x08} =  address={0x8000}
+        printk("Sending INIT IPI ...\n");
+        refresh_screen();
+        //local_apic_send_startup(1,0x08);
+        local_apic_send_startup(1,0x20);
+
+        // (Step 3)
+        printk("Sending STARTUP IPI twice ...\n");
+        refresh_screen();
+        Send_STARTUP_IPI_Twice(1);
+
+        // Check if we have at least one AP running.
+        while (1){
+            if (ap_signature_pointer[0] == 0xA0 && 
+                ap_signature_pointer[1] == 0xA0 )
+            {
+                printk("AP is running!\n");
+                refresh_screen();
+                break;
+            }
+        };
+
+        // #debug
+        //printk(">>>> breakpoint\n");
+        //refresh_screen();
+        //while(1){asm ("cli"); asm ("hlt");}
+
+    } // End of CONFIG_INITIALIZE_SECOND_PROCESSOR
+
+    return 0;
+}
+
 // :: Level ?
 static int archinit(void)
 {
@@ -660,6 +724,7 @@ static int archinit(void)
 
     int smp_status = FALSE;
     int processor_type = -1;
+
     if (USE_SMP == 1)
     {
         processor_type = (int) hal_probe_processor_type();
@@ -711,9 +776,19 @@ static int archinit(void)
             // see: x64info.c
             //x64_info();
 
-            // #debug
-            //printk(">>>> breakpoint\n");
-            //while(1){asm ("cli"); asm ("hlt");}
+            if (CONFIG_INITIALIZE_SECOND_PROCESSOR == 1)
+            {
+                // Initialize AP processor.
+                __test_initialize_ap_processor(1);  // APIC ID 1
+                //__test_initialize_ap_processor(2); // APIC ID 2
+                // ...
+
+                // #debug
+                //printk(">>>> breakpoint\n");
+                //refresh_screen();
+                //while(1){asm ("cli"); asm ("hlt");}
+
+            } // End of CONFIG_INITIALIZE_SECOND_PROCESSOR
         }
     }
 
@@ -781,6 +856,15 @@ static int lateinit(void)
     for (u=0; u<USER_COUNT_MAX; u++){
         userList[u] = 0;
     };
+
+/*
+ // ok
+    // Wait for some problem with the AP that was initialized.
+    printk("Waiting ...\n");
+    refresh_screen();
+    while(1){}
+*/
+
 // #test
 // At this point we already have almost all we need to 
 // pass the control to the init process.
@@ -791,11 +875,27 @@ static int lateinit(void)
         panic("lateinit: on userCreateRootUser\n");
 
 
+/*
+// ok
+    // Wait for some problem with the AP that was initialized.
+    printk("Waiting ...\n");
+    refresh_screen();
+    while(1){}
+*/
+
     // ==========================
     // Network support.
     // ?? At this moment we already initialized the e1000 driver.
     // See: net.c
     netInitialize();
+
+/*
+    // ok
+    // Wait for some problem with the AP that was initialized.
+    printk("Waiting ...\n");
+    refresh_screen();
+    while(1){}
+*/
 
 // -------------------------------------
 // Setup utsname structure.
@@ -815,6 +915,14 @@ static int lateinit(void)
         __enter_debug_mode();
     }
 
+/*
+    // ok
+    // Wait for some problem with the AP that was initialized.
+    printk("Waiting ...\n");
+    refresh_screen();
+    while(1){}
+*/
+
 
 // -------------------------------------
 // Initialize support for loadable kernel modules.
@@ -824,11 +932,14 @@ static int lateinit(void)
     if (mod_status != TRUE)
         panic("lateinit: on mod_initialize()\n");
 
+
 // -------------------------------------
 // Execute the first ring3 process.
 // ireq to init thread.
 // See: ke.c
+
     //PROGRESS(":: INITIAL PROCESS\n");
+
     /*
     //#debug
     refresh_screen();

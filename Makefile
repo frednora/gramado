@@ -122,11 +122,15 @@ build-gramado-os:
 	@cp gramboot/boot/x86/bin/BM2.BIN     $(BASE)/
 	@cp gramboot/boot/x86/bin/BLGRAM.BIN  $(BASE)/
 	@cp gramboot/boot/x86/bin/MBR0.BIN    $(BASE)/
+	@cp gramboot/boot/x86/bin/APX86.BIN   $(BASE)/
 # Copy the bootloader into the GRAMADO/ directory.
 	@cp gramboot/boot/x86/bin/BM.BIN      $(BASE)/GRAMADO
 	@cp gramboot/boot/x86/bin/BM2.BIN     $(BASE)/GRAMADO
 	@cp gramboot/boot/x86/bin/BLGRAM.BIN  $(BASE)/GRAMADO
 	@cp gramboot/boot/x86/bin/MBR0.BIN    $(BASE)/GRAMADO
+
+# Copy the bootloader into the DE/ directory.
+#	@cp gramboot/boot/x86/bin/APX86.BIN   $(BASE)/DE   
 
 #===================================
 # (2) kernel/
@@ -154,7 +158,8 @@ build-gramado-os:
 # Copy the ring0 module image.
 # It is loadable, but it's not a dynlinked format.
 	@cp modules/bin/HVMOD0.BIN  $(BASE)/
-	@cp modules/bin/HVMOD0.BIN  $(BASE)/GRAMADO
+#	@cp modules/bin/HVMOD0.BIN  $(BASE)/GRAMADO
+	@cp modules/bin/HVMOD0.BIN  $(BASE)/DE
 
 # Copy the ring0 module image.
 # It is loadable, but it's not a dynlinked format.

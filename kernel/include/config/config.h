@@ -78,10 +78,14 @@
 // lapic/ioapic debug.
 // see: kmain.c, apic.c, ioapic.c.
 #define USE_SMP        1
+// #test
+// This is a test yet.
+// >> It works only on Virtualbox using ICH9 chipset. <<
+// #set to 1 to test it.
+#define CONFIG_INITIALIZE_SECOND_PROCESSOR  0
 #define ENABLE_APIC    0
 #define ENABLE_IOAPIC  0
 // ...
-
 
 // ------------------------------------------------------
 

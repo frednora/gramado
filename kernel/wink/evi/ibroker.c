@@ -637,6 +637,21 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         goto exit_cmp;
     }
 
+// Test if some AP put the signature in a given address.
+    unsigned char *ap_signature_pointer = 
+        (unsigned char *) 0x00029000; //0x9000;
+
+    if ( kstrncmp( cmdline, "ap", 2 ) == 0 )
+    {
+        if (ap_signature_pointer[0] == 0xA0 && 
+            ap_signature_pointer[1] == 0xA0 )
+        {
+            printk("AP is running!\n");
+            refresh_screen();
+        }
+        goto exit_cmp;
+    }
+
 // ps2-qemu:
 // Testing the full initialization of ps2 interface.
 // This is a work in progress.

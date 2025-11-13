@@ -508,7 +508,7 @@ void I_x64ExecuteInitialProcess(void)
     //PROGRESS("::(3)\n");   
     //debug_print("I_x64ExecuteInitialProcess:\n");
 
-    // For real machine.
+    // For real machine
     printk ("I_x64ExecuteInitialProcess:\n");
 
     // #debug

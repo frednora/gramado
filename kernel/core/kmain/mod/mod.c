@@ -9,7 +9,7 @@
 // see: kernel.h
 struct kernel_module_d  *kernel_mod0;
 
-unsigned long kmList[KMODULE_MAX];
+static unsigned long kmList[KMODULE_MAX];
 
 // -------------------
 // Ring0 Module.
@@ -21,7 +21,7 @@ const char *mod0_image_name = "HVMOD0  BIN";
 
 
 static int __mod_initialize_first_module(void);
-static int __load_mod_image(char *image_name);
+static int __load_mod_image(const char *image_name);
 
 // ==================================
 
@@ -197,19 +197,22 @@ static int __mod_initialize_first_module(void)
 // Save some of this information in the process structure. 
 // see: exec_elf.h and process.h
 
-static int __load_mod_image(char *image_name)
+static int __load_mod_image(const char *image_name)
 {
+
+    int fileret = -1;
 
 // The virtual address for the module image.
 // #warning
 // This is a static address. Why not?
 // Hack me!
-    unsigned long ImageAddress = (unsigned long) 0x30A00000;
+    const unsigned long ImageAddress = 
+        (unsigned long) 0x30A00000;
+
 // #bugbug
 // We have a limit for the image size.
-    unsigned long BUGBUG_IMAGE_SIZE_LIMIT = (512 * 4096);
-
-    int fileret = -1;
+    const unsigned long BUGBUG_IMAGE_SIZE_LIMIT = 
+        (unsigned long) (512 * 4096);
 
 // Check the validation of the name.
     if ((void*) image_name == NULL){
@@ -217,6 +220,14 @@ static int __load_mod_image(char *image_name)
     }
     if (*image_name == 0)
         panic("__load_mod_image: image_name\n");
+
+/*
+// ok
+    // Wait for some problem with the AP that was initialized.
+    printk("Waiting before load ...\n");
+    refresh_screen();
+    while(1){}
+*/
 
 // ---------------------
 // It loads a file into the memory.
@@ -232,6 +243,7 @@ static int __load_mod_image(char *image_name)
 //    1 = fail 
 //    0 = ok
 
+    
     fileret = 
         (int) fsLoadFile( 
                 VOLUME1_FAT_ADDRESS, 
@@ -240,9 +252,28 @@ static int __load_mod_image(char *image_name)
                 image_name, 
                 (unsigned long) ImageAddress,
                 BUGBUG_IMAGE_SIZE_LIMIT ); 
+    
+    /*
+    fileret = 
+        (int) fsLoadFile( 
+                VOLUME1_FAT_ADDRESS, 
+                sdDE.address, 
+                512,    //#bugbug: number of entries.
+                image_name, 
+                (unsigned long) ImageAddress,
+                BUGBUG_IMAGE_SIZE_LIMIT ); 
+    */
 
-    if (fileret != 0)
-    {
+
+    /*
+    // Wait for some problem with the AP that was initialized.
+    printk("Waiting after load ...\n");
+    refresh_screen();
+    while(1){}
+    */
+
+
+    if (fileret != 0){
         printk("__load_mod_image: on fsLoadFile()\n");
         goto fail;
     }
@@ -275,6 +306,14 @@ int mod_initialize(void)
     for (i=0; i<KMODULE_MAX; i++){
         kmList[i] = 0;
     };
+
+/*
+// ok
+    // Wait for some problem with the AP that was initialized.
+    printk("Waiting mod ...\n");
+    refresh_screen();
+    while(1){}
+*/
 
 //
 // The first Kernel module
