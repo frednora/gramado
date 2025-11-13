@@ -644,9 +644,14 @@ static int __test_initialize_ap_processor(int apic_id)
     // The AP will change the memory value at this address to
     // 0xA0 when it starts.
     unsigned char *ap_signature_pointer = 
-        (unsigned char *) 0x00029000; //0x9000;
+        (unsigned char *) ____DANGER_TRAMPOLINE_CODE_SIGNATURE_AREA;
 
-//SIPI vector: 0x20000 >> 12 = 0x20, so you’d send SIPI with vector 0x20.
+    // ex: SIPI vector: 0x20000 >> 12 = 0x20, 
+    // so you’d send SIPI with vector 0x20.
+    unsigned int vector = 
+        (unsigned int) (____DANGER_TRAMPOLINE_CODE_BASE >> 12);  // 0x20
+
+    unsigned long BufferSizeInBytes = (2*4096);  // 8KB
 
     if (CONFIG_INITIALIZE_SECOND_PROCESSOR == 1)
     {
@@ -661,15 +666,13 @@ static int __test_initialize_ap_processor(int apic_id)
             VOLUME1_ROOTDIR_ADDRESS, //sdDE.address,
             FAT16_ROOT_ENTRIES, //512,           // Number of dir entries?
             "APX86   BIN", // AP image file name 
-            (unsigned long) 0x00020000, //0x8000,  // Address
-            (2*4096));  //(4*4096) );  // Size in bytes.
+            (unsigned long) ____DANGER_TRAMPOLINE_CODE_BASE, // Address
+            BufferSizeInBytes );
 
         // (Step 2)
-        // vector={0x08} =  address={0x8000}
         printk("Sending INIT IPI ...\n");
         refresh_screen();
-        //local_apic_send_startup(1,0x08);
-        local_apic_send_startup(1,0x20);
+        local_apic_send_startup(1,vector);  // APIC ID 1
 
         // (Step 3)
         printk("Sending STARTUP IPI twice ...\n");

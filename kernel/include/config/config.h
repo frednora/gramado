@@ -36,7 +36,7 @@
 // #bugbug: 
 // It also supress the use of printk after the initialization.
 // So, we can't see the output for the kernel console.
-#define CONFIG_PRINTK_TO_SERIAL  1
+#define CONFIG_PRINTK_TO_SERIAL  0
 
 // #test
 // It changes the whey printk will work. Sending bytes to the serial port.
@@ -82,7 +82,7 @@
 // This is a test yet.
 // >> It works only on Virtualbox using ICH9 chipset. <<
 // #set to 1 to test it.
-#define CONFIG_INITIALIZE_SECOND_PROCESSOR  0
+#define CONFIG_INITIALIZE_SECOND_PROCESSOR  1
 #define ENABLE_APIC    0
 #define ENABLE_IOAPIC  0
 // ...

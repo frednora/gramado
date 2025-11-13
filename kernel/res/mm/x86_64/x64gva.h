@@ -108,8 +108,7 @@
 #define KERNEL_HEAP_END    0x301D0000
 #define KERNEL_HEAP_SIZE   (KERNEL_HEAP_END - KERNEL_HEAP_START)
 
-// Tem um espaço perdido para
-// evitar colisão.
+// Tem um espaço perdido para evitar colisão?
 
 //
 // Kernel stack -----------------------------------------

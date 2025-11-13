@@ -93,14 +93,10 @@
 //
 
 //#define __128KBMARK  0x00020000
-
-//
 // #imortant:
 // AP tranpoline code area.
-//
-
-// 0x00020000  base
-// 0x00029000  signature area
+#define ____DANGER_TRAMPOLINE_CODE_BASE  0x20000
+#define ____DANGER_TRAMPOLINE_CODE_SIGNATURE_AREA  0x29000
 
 //
 // == 192 KB ==================================================

@@ -664,7 +664,7 @@ void local_apic_send_init(unsigned int apic_id)
 }
 
 
-// vector={0x08} =  address={0x8000}
+// ex: vector={0x08} =  address={0x8000}
 void 
 local_apic_send_startup(
     unsigned int apic_id, 
