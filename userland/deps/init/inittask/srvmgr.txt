@@ -1,0 +1,216 @@
+// Building a service manager.
+
+// init/inc/init.h additions
+#define SRV_NAME_MAX 32
+#define SRV_TABLE_MAX 64
+
+typedef struct service_entry_d {
+    int used;
+    int magic;
+    int service_id;          // optional well-known ID (e.g., 1=display, 2=taskbar)
+    int tid;                 // current endpoint
+    char name[SRV_NAME_MAX]; // optional human-readable name
+    unsigned long flags;     // subscription flags, capabilities
+} service_entry_t;
+
+typedef struct service_registry_d {
+    int initialized;
+    int count;
+    service_entry_t entries[SRV_TABLE_MAX];
+} service_registry_t;
+
+extern service_registry_t ServiceRegistry;
+
+
+//=================================================
+
+// Globally in initask.c
+service_registry_t ServiceRegistry;
+
+static void sm_init_registry(void) {
+    memset(&ServiceRegistry, 0, sizeof(ServiceRegistry));
+    ServiceRegistry.initialized = TRUE;
+}
+
+// ===============================================
+// Core helpers
+
+static int sm_register_service(int caller_tid, int service_id, const char *name, unsigned long flags) {
+    if (caller_tid <= 0) return -1;
+
+    // Overwrite existing entry for same service_id or name
+    for (int i = 0; i < SRV_TABLE_MAX; i++) {
+        service_entry_t *e = &ServiceRegistry.entries[i];
+        if (e->used &&
+            ((service_id > 0 && e->service_id == service_id) ||
+             (name && name[0] && strncmp(e->name, name, SRV_NAME_MAX) == 0))) {
+            e->tid = caller_tid;
+            e->flags = flags;
+            return 0;
+        }
+    }
+
+    // Insert new
+    for (int i = 0; i < SRV_TABLE_MAX; i++) {
+        service_entry_t *e = &ServiceRegistry.entries[i];
+        if (!e->used) {
+            e->used = TRUE;
+            e->magic = 1234;
+            e->service_id = service_id;
+            e->tid = caller_tid;
+            e->flags = flags;
+            if (name) {
+                strncpy(e->name, name, SRV_NAME_MAX-1);
+                e->name[SRV_NAME_MAX-1] = '\0';
+            }
+            ServiceRegistry.count++;
+            return 0;
+        }
+    }
+    return -1; // table full
+}
+
+static int sm_lookup_service_tid(int service_id, const char *name) {
+    for (int i = 0; i < SRV_TABLE_MAX; i++) {
+        service_entry_t *e = &ServiceRegistry.entries[i];
+        if (!e->used || e->magic != 1234) continue;
+        if ((service_id > 0 && e->service_id == service_id) ||
+            (name && name[0] && strncmp(e->name, name, SRV_NAME_MAX) == 0)) {
+            return e->tid;
+        }
+    }
+    return -1;
+}
+
+static int sm_broadcast(int msg_code, unsigned long long1, unsigned long long2, unsigned long flags) {
+    unsigned long buf[8] = {0};
+    buf[1] = (unsigned long)(msg_code & 0xFFFFFFFF);
+    buf[2] = long1;
+    buf[3] = long2;
+    // optional: buf[6..] payload
+
+    for (int i = 0; i < SRV_TABLE_MAX; i++) {
+        service_entry_t *e = &ServiceRegistry.entries[i];
+        if (!e->used || e->magic != 1234) continue;
+        // filter by flags/event class if needed
+        if (e->tid > 0) {
+            rtl_post_system_message(e->tid, (unsigned long)buf);
+        }
+    }
+    return 0;
+}
+// ===============================================
+/*
+Handlers inside xxxProcessEvent()
+Add cases for the new codes, using the source TID 
+you already capture (Caller.tid = RTLEventBuffer[8] & 0xFFFF):
+*/
+
+
+// Example codes:
+#define SRV_REGISTER        42000
+#define SRV_LOOKUP          42001
+#define SRV_REPLY_LOOKUP    42002
+#define SRV_SUBSCRIBE       42003
+#define SRV_SEND            42004
+
+case SRV_REGISTER: {
+    int service_id = (int)(long1 & 0xFFFF);
+    unsigned long flags = (unsigned long)long2;
+    // Optional: read name from RTLEventBuffer[6].. or a known place
+    const char *name = (const char *)&RTLEventBuffer[6]; // if you decide to embed
+    sm_register_service(caller_tid, service_id, name, flags);
+    break;
+}
+
+case SRV_LOOKUP: {
+    int service_id = (int)(long1 & 0xFFFF);
+    const char *name = (const char *)&RTLEventBuffer[6];
+    int tid = sm_lookup_service_tid(service_id, name);
+    unsigned long reply[8] = {0};
+    reply[1] = SRV_REPLY_LOOKUP;
+    reply[2] = (unsigned long)(tid > 0 ? tid : 0);
+    reply[3] = (unsigned long)(tid > 0 ? 0 : (unsigned long)-1); // status
+    rtl_post_system_message(caller_tid, (unsigned long)reply);
+    break;
+}
+
+case SRV_SUBSCRIBE: {
+    int event_class = (int)(long1 & 0xFFFF);
+    unsigned long flags = (unsigned long)long2;
+    // update caller's flags to indicate interest in this class
+    // you could maintain separate bitfields per entry
+    sm_register_service(caller_tid, 0, NULL, flags | (1 << event_class));
+    break;
+}
+
+case SRV_SEND: {
+    int target_id = (int)(long1 & 0xFFFF);
+    int msg_code  = (int)(long2 & 0xFFFFFFFF);
+    int dst_tid = sm_lookup_service_tid(target_id, NULL);
+    if (dst_tid > 0) {
+        // Reuse incoming buffer as payload, or build a small one
+        RTLEventBuffer[1] = msg_code;
+        rtl_post_system_message(dst_tid, (unsigned long)RTLEventBuffer);
+    }
+    break;
+}
+// ===============================================
+
+/*
+Client-side helpers
+Add thin wrappers to any user-space process (display server, taskbar, apps) 
+so they can talk to init easily. This keeps PID/TID discovery centralized and 
+avoids hardcoding.
+*/
+
+// client_lib.h
+#define INIT_TID    1   // or whatever your system uses for init’s endpoint TID
+#define SERVICE_ID_DISPLAY 1
+#define SERVICE_ID_TASKBAR 2
+
+static int svc_register(int service_id, const char *name, unsigned long flags) {
+    unsigned long buf[16] = {0};
+    buf[1] = SRV_REGISTER;
+    buf[2] = (unsigned long)(service_id & 0xFFFF);
+    buf[3] = flags;
+    if (name) {
+        strncpy((char*)&buf[6], name, 32);
+    }
+    return rtl_post_system_message(INIT_TID, (unsigned long)buf);
+}
+
+static int svc_lookup_tid(int service_id, const char *name) {
+    unsigned long buf[16] = {0};
+    buf[1] = SRV_LOOKUP;
+    buf[2] = (unsigned long)(service_id & 0xFFFF);
+    if (name) {
+        strncpy((char*)&buf[6], name, 32);
+    }
+    rtl_post_system_message(INIT_TID, (unsigned long)buf);
+
+    // Caller should block/wait for reply or poll its queue,
+    // then read SRV_REPLY_LOOKUP from its own RTLEventBuffer
+    // and extract TID from long1.
+    // Implement a small wait-for-reply utility if needed.
+    return 0;
+}
+
+static int svc_send_by_id(int target_service_id, int msg_code,
+                          unsigned long long1, unsigned long long2) {
+    unsigned long buf[16] = {0};
+    buf[1] = SRV_SEND;
+    buf[2] = (unsigned long)(target_service_id & 0xFFFF);
+    buf[3] = (unsigned long)(msg_code & 0xFFFFFFFF);
+    buf[6] = long1;
+    buf[7] = long2;
+    return rtl_post_system_message(INIT_TID, (unsigned long)buf);
+}
+
+// ===============================================
+
+/*
+Display server: Call svc_register(SERVICE_ID_DISPLAY, "ds00", flags) during startup (e.g., after 44900 / when ready).
+Taskbar: Call svc_register(SERVICE_ID_TASKBAR, "taskbar", flags) when it launches.
+*/
+
