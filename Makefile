@@ -24,8 +24,6 @@ BASE = $(DISTROS)/base00
 ## =================================
 # Kernel Services: Init process, ring 3 drivers and ring 3 servers.
 USERLAND_L1 = userland
-# Unix-like commands
-COMMANDS = $(USERLAND_L1)/cmds
 
 ## =================================
 # Shell Pre-UI: The display server.
@@ -42,6 +40,14 @@ DEP_L3 = apps
 
 # Client-side GUI applications
 APPLICATIONS = apps
+
+## =================================
+# Shell UI: Client-side GUI applications.
+DEP_L4 = cmds
+
+# Unix-like commands
+COMMANDS = cmds
+
 
 ## =================================
 # userland extras
@@ -210,13 +216,13 @@ build-extras:
 	@-cp $(GAMES)/bin/DEMO00.BIN   $(BASE)/DE/
 	@-cp $(GAMES)/bin/DEMO01.BIN   $(BASE)/DE/
 
-
-# ==================================
-# LEVEL : (os/) Client-side GUI applications
-	@echo "Compiling DEP_L3 (shell/)"
+# Compiling client-side GUI applications
+	@echo "Compiling DEP_L3 (apps/)"
 	@make -C $(DEP_L3)/
 
-	@echo "Installing DEP_L3 (shell/)"
+# Compiling Unix-like commands
+	@echo "Compiling DEP_L4 (cmds/)"
+	@make -C $(DEP_L4)/
 
 #===================================
 # Install BMPs from cali assets.
@@ -225,41 +231,41 @@ build-extras:
 	@cp apps/assets/themes/theme01/*.BMP  $(BASE)/DE
 
 # Well consolidated programs.
-	@-cp $(COMMANDS)/base/bin/PUBSH.BIN    $(BASE)/GRAMADO/
-	@-cp $(COMMANDS)/base/bin/PUBSH.BIN    $(BASE)/DE/
-	@-cp $(COMMANDS)/base/bin/SHELL.BIN    $(BASE)/GRAMADO/
-	@-cp $(COMMANDS)/base/bin/SHELL.BIN    $(BASE)/DE/
-	@-cp $(COMMANDS)/base/bin/SHELLZZ.BIN  $(BASE)/GRAMADO/
-	@-cp $(COMMANDS)/base/bin/SHELLZZ.BIN  $(BASE)/DE/
+	@-cp $(COMMANDS)/bin/PUBSH.BIN    $(BASE)/GRAMADO/
+	@-cp $(COMMANDS)/bin/PUBSH.BIN    $(BASE)/DE/
+	@-cp $(COMMANDS)/bin/SHELL.BIN    $(BASE)/GRAMADO/
+	@-cp $(COMMANDS)/bin/SHELL.BIN    $(BASE)/DE/
+#	@-cp $(COMMANDS)/bin/SHELLZZ.BIN  $(BASE)/GRAMADO/
+#	@-cp $(COMMANDS)/bin/SHELLZZ.BIN  $(BASE)/DE/
 
 # Experimental programs.
-	@-cp $(COMMANDS)/base/bin/SH7.BIN        $(BASE)/GRAMADO/
-#	@-cp $(COMMANDS)/base/bin/SHELLXXX.BIN   $(BASE)/GRAMADO/
-	@-cp $(COMMANDS)/extra/bin/TASCII.BIN     $(BASE)/GRAMADO/
-	@-cp $(COMMANDS)/extra/bin/TPRINTF.BIN    $(BASE)/GRAMADO/
+	@-cp $(COMMANDS)/bin/SH7.BIN        $(BASE)/GRAMADO/
+#	@-cp $(COMMANDS)/bin/SHELLXXX.BIN   $(BASE)/GRAMADO/
+#	@-cp $(COMMANDS)/bin/TASCII.BIN     $(BASE)/GRAMADO/
+#	@-cp $(COMMANDS)/bin/TPRINTF.BIN    $(BASE)/GRAMADO/
 
 #===================================
 
 # Copy well consolidated commands.
-	@-cp $(COMMANDS)/base/bin/CAT.BIN       $(BASE)/
-	@-cp $(COMMANDS)/base/bin/CAT00.BIN     $(BASE)/
-	@-cp $(COMMANDS)/base/bin/REBOOT.BIN    $(BASE)/
-	@-cp $(COMMANDS)/base/bin/REBOOT.BIN    $(BASE)/GRAMADO/
-	@-cp $(COMMANDS)/base/bin/SHUTDOWN.BIN  $(BASE)/
-	@-cp $(COMMANDS)/base/bin/SHUTDOWN.BIN  $(BASE)/GRAMADO/
-	@-cp $(COMMANDS)/base/bin/UNAME.BIN     $(BASE)/
+	@-cp $(COMMANDS)/bin/CAT.BIN       $(BASE)/
+	@-cp $(COMMANDS)/bin/CAT00.BIN     $(BASE)/
+	@-cp $(COMMANDS)/bin/REBOOT.BIN    $(BASE)/
+	@-cp $(COMMANDS)/bin/REBOOT.BIN    $(BASE)/GRAMADO/
+	@-cp $(COMMANDS)/bin/SHUTDOWN.BIN  $(BASE)/
+	@-cp $(COMMANDS)/bin/SHUTDOWN.BIN  $(BASE)/GRAMADO/
+	@-cp $(COMMANDS)/bin/UNAME.BIN     $(BASE)/
 
 # Experimental commands.
-	@-cp $(COMMANDS)/base/bin/FALSE.BIN      $(BASE)/GRAMADO/
-	@-cp $(COMMANDS)/base/bin/TRUE.BIN       $(BASE)/GRAMADO/
-	@-cp $(COMMANDS)/extra/bin/CMP.BIN       $(BASE)/GRAMADO/
-	@-cp $(COMMANDS)/extra/bin/SHOWFUN.BIN   $(BASE)/GRAMADO/
-	@-cp $(COMMANDS)/extra/bin/SUM.BIN       $(BASE)/GRAMADO/
-	@-cp $(COMMANDS)/sdk/bin/GRAMCNF.BIN     $(BASE)/
-#@-cp $(COMMANDS)/sdk/bin/N9.BIN         $(BASE)/GRAMADO/
-#@-cp $(COMMANDS)/sdk/bin/N10.BIN        $(BASE)/GRAMADO/
-#@-cp $(COMMANDS)/sdk/bin/N11.BIN        $(BASE)/GRAMADO/
-#@-cp $(COMMANDS)/extra/bin/UDPTEST.BIN  $(BASE)/GRAMADO/
+#	@-cp $(COMMANDS)/bin/FALSE.BIN      $(BASE)/GRAMADO/
+#	@-cp $(COMMANDS)/bin/TRUE.BIN       $(BASE)/GRAMADO/
+#	@-cp $(COMMANDS)/bin/CMP.BIN       $(BASE)/GRAMADO/
+#	@-cp $(COMMANDS)/bin/SHOWFUN.BIN   $(BASE)/GRAMADO/
+#	@-cp $(COMMANDS)/bin/SUM.BIN       $(BASE)/GRAMADO/
+	@-cp $(COMMANDS)/bin/GRAMCNF.BIN     $(BASE)/
+#@-cp $(COMMANDS)/bin/N9.BIN         $(BASE)/GRAMADO/
+#@-cp $(COMMANDS)/bin/N10.BIN        $(BASE)/GRAMADO/
+#@-cp $(COMMANDS)/bin/N11.BIN        $(BASE)/GRAMADO/
+#@-cp $(COMMANDS)/bin/UDPTEST.BIN  $(BASE)/GRAMADO/
 
 	@-cp $(APPLICATIONS)/bin/TASKBAR.BIN    $(BASE)/DE
 	@-cp $(APPLICATIONS)/bin/MENUAPP.BIN    $(BASE)/DE

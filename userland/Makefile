@@ -4,8 +4,6 @@
 
 all:
 
-# Unix-like commands
-	make -C cmds/
 # Ring 3 drivers
 	make -C drivers/
 # The init process
