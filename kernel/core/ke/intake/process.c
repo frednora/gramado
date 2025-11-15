@@ -339,7 +339,6 @@ unsigned long get_process_stats(pid_t pid, int index)
 
 int getprocessname(pid_t pid, char *ubuf)
 {
-    char *name_buffer = (char *) ubuf;
     struct process_d  *p;
 
 // Parameters
@@ -365,10 +364,11 @@ int getprocessname(pid_t pid, char *ubuf)
 // No Length Check (Buffer Overflow Risk):
 // Suggested Correction — Use strncpy:
     
-    //strcpy ( name_buffer, (const char *) p->__processname );
+    //strcpy ( ubuf, (const char *) p->__processname );
 
-    strncpy(name_buffer, (const char *)p->__processname, 63);
-    name_buffer[63] = '\0';
+    //size?
+   // strncpy(ubuf, (const char *)p->__processname, 63);
+   // ubuf[63] = '\0';
 
 // Return the len.
 // #bugbug: 
@@ -835,15 +835,6 @@ int alloc_memory_for_image_and_stack(struct process_d *process)
 // Clear only 400KB
     memset( (void*) __new_base, 0, (imagesize_in_kb*1024) );
 
-// ==================================================
-
-/*
-// At this time, process name is ok.
-    printk("Init Process name:  {%s} #debug\n", 
-        (void*) InitProcess->__processname );
-    refresh_screen();
-    while(1){}
-*/
 
 // ==================================================
 // Stack
@@ -865,28 +856,6 @@ int alloc_memory_for_image_and_stack(struct process_d *process)
 
     // Clear th 32 KB
     memset (__new_stack, 0, (CONFIG_RING3_STACK_SIZE_IN_KB*1024));
-
-    /*
-    //#debug
-    printk("Init Process name:  {%s} #debug\n", 
-        (void*) InitProcess->__processname );
-    refresh_screen();
-    while(1){}
-    */
-
-
-// ==================================================
-
-/*
-// #bugbug
-// The routine above is the moment where we mess up 
-// the process name for the init process when the init process
-// is trying to create its first child via clone.
-    printk("Init Process name:  {%s} #debug\n", 
-        (void*) InitProcess->__processname );
-    refresh_screen();
-    while(1){}
-*/
 
 //
 // == Copying memory ==========
@@ -1172,10 +1141,6 @@ struct process_d *create_and_initialize_process_object(void)
         goto fail;
     }
 
-    // Initialize
-    memset(new_process->__processname,0,64);
-    new_process->processName_len = 0;
-
 // Default personality
     new_process->personality = PERSONALITY_POSIX;
 
@@ -1434,18 +1399,21 @@ struct process_d *create_process (
 // ------------
 // Name
 
-    // #bugbug: This is dangerous
+// Clear the buffer
+    memset(Process->__processname2, 0, sizeof(Process->__processname2));
 
-    memset(Process->__processname,0,64);  // ok
+// Copy the full name safely
+    strncpy(Process->__processname2, name, sizeof(Process->__processname2)-1);
 
-    // Wrong?
-    //strcpy ( Process->__processname, (const char *) name);
-    //Process->processName_len = sizeof(Process->__processname);
+// Always null‑terminate
+    Process->__processname2[sizeof(Process->__processname2)-1] = '\0';
 
-    strncpy(Process->__processname, name, 63);
-    Process->__processname[63] = '\0';
-    Process->processName_len = strlen(Process->__processname);
+// Save the actual length
+    Process->processName_len = 
+        k_strnlen(Process->__processname2, sizeof(Process->__processname2));
 
+
+// Short name pointer
     Process->name = (char *) name;
 
 // ------------

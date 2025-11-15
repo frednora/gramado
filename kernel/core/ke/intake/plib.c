@@ -4,6 +4,13 @@
 
 #include <kernel.h>
 
+/*
+static void print_size_bytes_kb(const char *label, unsigned long bytes) {
+    unsigned long kb = bytes / 1024;
+    printk("%s=%lu Bytes (%lu KB)\n", label, bytes, kb);
+}
+*/
+
 
 // Display information about the processes.
 // The structures are created inside the kernel's heap using kmallok.
@@ -24,10 +31,9 @@ void show_process_information (void)
         {
             //printk("\n");
             printk("\n=====================================\n");
-            printk(">>[%s]\n", p->__processname);
-            printk("Process struct at %x, __processname at %s\n", 
-                p, 
-                p->__processname);
+            printk(">> __processname2[%s]\n", p->__processname2);
+            printk("Process struct at %x, len=%d\n", 
+                p, p->processName_len );
             printk("PID=%d PPID=%d \n", p->pid,  p->ppid );
             printk("~Personality={%d}\n", p->personality);
             

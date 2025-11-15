@@ -11,6 +11,11 @@
 int copy_process_in_progress=FALSE;
 unsigned long __copy_process_counter=0;
 
+//#test
+// Local copy for the process name.
+char __local_process_name[64] = {0};
+
+
 /*
  * copy_process_struct
  *   + Copy elements of the process structure.
@@ -307,16 +312,17 @@ copy_process_struct(
     int spot1=0; //index in Objects[i]
     int spot2=0;
 
+    // If the father is a terminal.
     if (Process1->_is_terminal == TRUE){
 
     // fp
     connector1 = (file *) new_file(ObjectTypeFile);
-    if ( (void*) connector1 == NULL )
+    if ((void*) connector1 == NULL)
         panic("copy_process_struct: connector1\n");
 
     // fp
     connector2 = (file *) new_file(ObjectTypeFile);
-    if ( (void*) connector2 == NULL )
+    if ((void*) connector2 == NULL)
         panic("copy_process_struct: connector2\n");
 
 // =======================================================
@@ -445,6 +451,7 @@ copy_process_struct(
     Process2->next = Process1->next; 
     //Status = 0;
     return (int) 0;
+
 // Fail
 fail:
     Status = 1;  //-1 ??
@@ -910,14 +917,6 @@ do_clone:
 // sim criando um endereçamento novo.
 //see: process.c
 
-/*
-// At this point the process name is ok.
-    printk("Init Process name:  {%s} #debug\n", 
-        (void*) InitProcess->__processname );
-    refresh_screen();
-    while(1){}
-*/
-
     // #debug
     debug_print("copy_process: [1] Copying process image and stack\n");
     //printk   ("copy_process: [1] Copying process image and stack\n");
@@ -929,16 +928,6 @@ do_clone:
     }
 
 // Breakpoint
-
-/*
-// At this point we have problems with the process name 
-// when we're cloning the init process.
-    printk("Init Process name:  {%s} #debug\n", 
-        (void*) InitProcess->__processname );
-    refresh_screen();
-    while(1){}
-*/
-
 
     //#debug
     //printk (" :) \n");
@@ -1387,19 +1376,6 @@ do_clone:
 // Either a buffer overflow, alias/overlap, or a copy/deep copy error between the parent and 
 // the cloned child process’s name field.
 
-// #debug
-// Log Addresses of name Buffers:
-// Add debug print right before and after the syscall that clones the process:
-// If they match or are close, you have overlap/aliasing.
-//printk("Parent process name buffer address: %s\n", (void*)parent_process->__processname);
-//printk("Child process name buffer address:  %s\n", (void*)child_process->__processname);
-
-    /*
-    printk("Init Process name:  {%s} #debug\n", 
-        (void*) InitProcess->__processname );
-    refresh_screen();
-    while(1){}
-    */
 
 //Summary
 //Only the name is corrupted? It's almost certainly
@@ -1409,67 +1385,6 @@ do_clone:
 
 // The kernel can always read from the caller’s pointer, so “bad pointer from userspace” is NOT the problem.
 // The corruption occurs after, or during the logic that copies/assigns the filename to the child’s process struct.
-
-/*
-// #important
-// ahaaah, each ring 3 process has a different address for the process structure. That is a good thing.
-What does this mean for your bug?
-If the __processname array is still getting corrupted for some processes, the problem is most likely:
-Out-of-bounds write elsewhere in memory (such as from array overruns, buffer mismanagement, or bad pointer casts).
-A logic bug that writes to the wrong process struct by index (e.g., if you use a bad index into processList[], or use dangling pointers in a list).
-A copy routine somewhere accidentally writes to more memory than intended (such as a loop overrunning 64 bytes).
-*/
-
-/*
-// Process name
-    memset(child_process->__processname, 0, 64);
-    size_t __NameSize = sizeof(filename);
-    if (__NameSize >= 64){
-        panic("clone_process: __NameSize\n");
-    }
-    strcpy( child_process->__processname, (const char *) filename );   
-    child_process->processName_len = (size_t) __NameSize;
-*/
-
-/*
-    size_t __NameSize = strlen(filename);
-    if (__NameSize >= 64) {   // 63 + null terminator
-        __NameSize = 63;      // Truncate, or panic if you want
-    }
-    strncpy(child_process->__processname, filename, __NameSize);
-    child_process->__processname[__NameSize] = '\0';
-    child_process->processName_len = __NameSize;
-*/
-
-/*
-// Copy at most 8 bytes of filename into child_process->__processname for debugging.
-    size_t dbg_n = strlen(filename);
-    if (dbg_n > 8) 
-        dbg_n = 8;
-
-    // Clear the name buffer (optional, for debug clarity)
-    memset(child_process->__processname, 0, 64);
-
-    // Copy only up to 8 bytes
-    memcpy(child_process->__processname, filename, dbg_n);
-
-    // Always null-terminate at the 8th position for safety
-    child_process->__processname[dbg_n] = '\0';
-
-    // Save the length
-    child_process->processName_len = dbg_n;
-*/
-
-    strncpy(child_process->__processname, filename, 63);
-    child_process->__processname[63] = '\0';
-    child_process->processName_len = strlen(child_process->__processname);
-
-/*
-    child_process->__processname[0] = 'O';
-    child_process->__processname[1] = 'K';
-    child_process->__processname[2] = '\0';
-    child_process->processName_len = 2;
-*/
 
     //#debug
     //ok
@@ -1549,6 +1464,19 @@ A copy routine somewhere accidentally writes to more memory than intended (such 
     // Switch back
     //x64mm_load_pml4_table( old_pml4 );
 
+// Clear the buffer
+    memset(child_process->__processname2, 0, sizeof(child_process->__processname2));
+
+// Copy the full name safely
+    strncpy(child_process->__processname2, filename, sizeof(child_process->__processname2)-1);
+
+// Always null‑terminate
+    child_process->__processname2[sizeof(child_process->__processname2)-1] = '\0';
+
+// Save the actual length
+    child_process->processName_len = 
+        k_strnlen(child_process->__processname2, sizeof(child_process->__processname2));
+
 //
 // Balance 
 //
@@ -1592,9 +1520,8 @@ A copy routine somewhere accidentally writes to more memory than intended (such 
     __copy_process_counter++;
 
 // Done
-    copy_process_in_progress = FALSE;
-
 // Return to the father the child's PID.
+    copy_process_in_progress = FALSE;
     return (pid_t) child_pid;
 
 fail:
@@ -1617,7 +1544,6 @@ fail:
     //}
 
     copy_process_in_progress=FALSE;
-
     return (pid_t) (-1);
 }
 

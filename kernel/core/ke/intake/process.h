@@ -235,8 +235,17 @@ struct process_d
 //
 
 // Short name: (EXEMPLE.BIN)
+
+// #bugbug: >>>>>> DO NOT REMOVE! <<<<<<<
+// leaving __processname[] in place as a “vestigial” buffer, 
+// you avoid shifting the struct layout and accidentally 
+// moving the corruption into some other field.
     char __processname[64];
+
+// This is a valid one. Keep this.
+    char __processname2[64];
     size_t processName_len;
+
 
 // Long name. (extra)
     char *name;

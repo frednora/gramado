@@ -151,6 +151,16 @@ void *memcpy64( void *v_dst, const void *v_src, unsigned long n )
     return v_dst;
 }
 
+char *safe_strcpy(char *to, const char *from, size_t maxlen)
+{
+    size_t i;
+    for (i = 0; i < maxlen - 1 && from[i] != '\0'; i++) {
+        to[i] = from[i];
+    }
+    to[i] = '\0';  // always terminate
+    return to;
+}
+
 // strcpy:  
 //     Copy a string
 char *strcpy( char *to, const char *from )
@@ -257,6 +267,17 @@ size_t strlen(const char *s)
 
     return (size_t) i;
 }
+
+// Simple strnlen implementation for kernel use
+size_t k_strnlen(const char *s, size_t maxlen)
+{
+    size_t i = 0;
+    while (i < maxlen && s[i] != '\0') {
+        i++;
+    }
+    return i;
+}
+
 
 /*
 Outra opção:

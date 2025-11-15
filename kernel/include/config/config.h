@@ -49,7 +49,7 @@
 // ------------------------------------------------------
 // Device flags:
 
-// Sending verbose to serial port.
+// Sending verbose to serial port
 #define USE_SERIALDEBUG    0
 
 // Enable the initialization of e1000 controller.
