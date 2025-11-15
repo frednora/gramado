@@ -16,19 +16,16 @@ BASE = $(DISTROS)/base00
 # The OS has two major components:
 # The 'kernel image' and the 'dependencies'
 # The dependencies are: modules, and apps.
-# All the dependencies are in userland/deps/ folder,
-# It's because of the close interaction userland/deps
-# with the other subfolders in kernel/core/.
+# All the dependencies are in userland/ folder,
+# It's because of the close interaction userland
+# with the other subfolders in core/.
 
-## =================================
-# Kernel Core: Ring 0 modules.
-# DEP_L0 = userland/deps/kcore
 
 ## =================================
 # Kernel Services: Init process, ring 3 drivers and ring 3 servers.
-DEP_L1 = userland/deps
+USERLAND_L1 = userland
 # Unix-like commands
-COMMANDS = $(DEP_L1)/cmds
+COMMANDS = $(USERLAND_L1)/cmds
 
 ## =================================
 # Shell Pre-UI: The display server.
@@ -41,17 +38,18 @@ GAMES = $(DEP_L2_LAST)/ds3d
 
 ## =================================
 # Shell UI: Client-side GUI applications.
-DEP_L3 = userland/shell
+DEP_L3 = apps
+
 # Client-side GUI applications
-APPLICATIONS = $(DEP_L3)/shell00
+APPLICATIONS = apps
 
 ## =================================
-OUTSIDE_L0 = userland/outside
+# userland extras
+USERLAND_EXTRAS = ulextras
 # Client-side GUI applications with X library
-X_APPLICATIONS = $(OUTSIDE_L0)/xapps
+ULEXTRAS_X = $(USERLAND_EXTRAS)/xapps
 # Creating one cpp application just for fun
-CPP00_APPLICATION = $(OUTSIDE_L0)/cpp00
-
+ULEXTRAS_CPP00 = $(USERLAND_EXTRAS)/cpp00
 
 # Make variables (CC, etc...)
 AS      = as
@@ -170,25 +168,25 @@ build-gramado-os:
 
 #===================================
 # LEVEL : ucore/
-	@echo "Compiling DEP_L1 (ucore/)"
-	@$(MAKE) -C $(DEP_L1)
+	@echo "Compiling USERLAND_L1"
+	@$(MAKE) -C $(USERLAND_L1)
 
-	@echo "Installing DEP_L1 (ucore/)"
+	@echo "Installing USERLAND_L1"
 
 # Copy the init process.
-	@cp $(DEP_L1)/init/bin/INIT.BIN  $(BASE)/
-#	@cp $(DEP_L1)/init/bin/INIT.BIN  $(BASE)/GRAMADO/
+	@cp $(USERLAND_L1)/init/src/bin/INIT.BIN  $(BASE)/
+#	@cp $(USERLAND_L1)/init/src/bin/INIT.BIN  $(BASE)/GRAMADO/
 
 #===================================
-# $(DEP_L1)/drivers/ in kernel project
+# $(USERLAND_L1)/drivers/ in kernel project
 
-	@-cp $(DEP_L1)/drivers/bin/VGAD.BIN  $(BASE)/GRAMADO/
+	@-cp $(USERLAND_L1)/drivers/bin/VGAD.BIN  $(BASE)/GRAMADO/
 
 #===================================
-# $(DEP_L1)/servers/ in kernel project
+# $(USERLAND_L1)/servers/ in kernel project
 
-	@-cp $(DEP_L1)/servers/bin/NET.BIN   $(BASE)/GRAMADO/
-	@-cp $(DEP_L1)/servers/bin/NETD.BIN  $(BASE)/GRAMADO/
+	@-cp $(USERLAND_L1)/servers/bin/NET.BIN   $(BASE)/GRAMADO/
+	@-cp $(USERLAND_L1)/servers/bin/NETD.BIN  $(BASE)/GRAMADO/
 
 	@echo "~build-gramado-os end?"
 
@@ -224,8 +222,7 @@ build-extras:
 # Install BMPs from cali assets.
 # Copy the $(DEP_L3)/assets/
 # We can't survive without this one.
-#	@cp $(DEP_L3)/shell00/assets/themes/theme01/*.BMP  $(BASE)/
-	@cp $(DEP_L3)/shell00/assets/themes/theme01/*.BMP  $(BASE)/DE
+	@cp apps/assets/themes/theme01/*.BMP  $(BASE)/DE
 
 # Well consolidated programs.
 	@-cp $(COMMANDS)/base/bin/PUBSH.BIN    $(BASE)/GRAMADO/
@@ -286,15 +283,15 @@ build-extras:
 	@-cp $(APPLICATIONS)/bin/TEABOX.BIN  $(BASE)/DE/
 
 
-# Compiling outside stuff
-	@echo "Compiling DEP_L3 (outside/)"
-	@make -C $(OUTSIDE_L0)/
+# Compiling ulextras stuff
+	@echo "Compiling DEP_L3 (ulextras/)"
+	@make -C $(USERLAND_EXTRAS)/
 
-# X applications
-	@-cp $(X_APPLICATIONS)/bin/XTB.BIN  $(BASE)/DE
+# X-like applications
+	@-cp $(ULEXTRAS_X)/bin/XTB.BIN  $(BASE)/DE
 
 # cpp application example
-	@-cp $(CPP00_APPLICATION)/bin/CPP00.BIN  $(BASE)/DE
+	@-cp $(ULEXTRAS_CPP00)/bin/CPP00.BIN  $(BASE)/DE
 
 	@echo "~ build-extras"
 
@@ -429,17 +426,17 @@ clean-all: clean
 	-rm -rf modules/bin/*.BIN
 
 # ==================
-# $(DEP_L1)/
+# $(USERLAND_L1)/
 
 # Clear INIT.BIN
-	-rm $(DEP_L1)/init/*.o
-	-rm $(DEP_L1)/init/*.BIN 
-	-rm $(DEP_L1)/init/bin/*.BIN 
+	-rm $(USERLAND_L1)/init/src/*.o
+	-rm $(USERLAND_L1)/init/src/*.BIN 
+	-rm $(USERLAND_L1)/init/src/bin/*.BIN 
 
-	-rm $(DEP_L1)/servers/netd/client/*.o
-	-rm $(DEP_L1)/servers/netd/client/*.BIN
-	-rm $(DEP_L1)/servers/netd/server/*.o
-	-rm $(DEP_L1)/servers/netd/server/*.BIN 
+	-rm $(USERLAND_L1)/servers/netd/client/*.o
+	-rm $(USERLAND_L1)/servers/netd/client/*.BIN
+	-rm $(USERLAND_L1)/servers/netd/server/*.o
+	-rm $(USERLAND_L1)/servers/netd/server/*.BIN 
 
 # ==================
 # Clear the disk cache
