@@ -89,9 +89,8 @@ apic.o apictim.o ioapic.o \
 pit.o ports64.o rtc.o \
 x64.o x64info.o x64init.o x64sc.o x64fault.o x64smp.o \
 queue.o \
-ts.o dispatch.o spawn.o x64cont.o \
+ts.o dispatch.o spawn.o callback.o x64cont.o \
 sched.o schedi.o schedq.o    
-
 
 all:
 
@@ -117,6 +116,7 @@ all:
 	$(CC) -c intake/disp/ts.c              $(KERNEL_INCLUDE)  $(CFLAGS) -o ts.o  
 	$(CC) -c intake/disp/dispatch.c        $(KERNEL_INCLUDE)  $(CFLAGS) -o dispatch.o  
 	$(CC) -c intake/disp/spawn.c           $(KERNEL_INCLUDE)  $(CFLAGS) -o spawn.o  
+	$(CC) -c intake/disp/callback.c        $(KERNEL_INCLUDE)  $(CFLAGS) -o callback.o  
 	$(CC) -c intake/disp/x86_64/x64cont.c  $(KERNEL_INCLUDE)  $(CFLAGS) -o x64cont.o  
 
 	$(CC) -c intake/sched/sched.c   $(KERNEL_INCLUDE)  $(CFLAGS) -o sched.o  

@@ -3,13 +3,13 @@
 // Messages using the circular queue into the thread structure.
 // Created by Fred Nora.
 
-#ifndef __PS_MSG_H
-#define __PS_MSG_H    1
+#ifndef __INTAKE_IPC_H
+#define __INTAKE_IPC_H    1
 
 
-/* Define magic values for message reusability. */
-#define MSG_MAGIC_VALID       1234   /* Message is valid and in use. */
-#define MSG_MAGIC_REUSABLE    4231   /* Message can be reused (freed and ready). */
+// Define magic values for message reusability.
+#define MSG_MAGIC_VALID       1234  // Message is valid and in use.
+#define MSG_MAGIC_REUSABLE    4231  // Message can be reused (freed and ready).
 
 /* 
  * Message structure.

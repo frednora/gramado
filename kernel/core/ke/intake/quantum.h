@@ -1,8 +1,8 @@
 // quantum.h
 // Created by Fred Nora.
 
-#ifndef __QUANTUM_H
-#define __QUANTUM_H    1
+#ifndef __INTAKE_QUANTUM_H
+#define __INTAKE_QUANTUM_H    1
 
 // ===============================================
 

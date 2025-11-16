@@ -2,8 +2,8 @@
 // Scheduling support.
 // Created by Fred Nora.
 
-#ifndef __PS_SCHED_H
-#define __PS_SCHED_H    1
+#ifndef __SCHED_SCHED_H
+#define __SCHED_SCHED_H    1
 
 
 // ----------------------------------------

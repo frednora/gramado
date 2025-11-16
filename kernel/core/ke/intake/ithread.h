@@ -1,4 +1,4 @@
-// ithread
+// ithread.h
 // Support for init thread.
 // Created by Fred Nora.
 

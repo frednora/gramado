@@ -2,8 +2,8 @@
 // Context switch support.
 // Created Fred Nora.
 
-#ifndef __TS_H
-#define __TS_H    1
+#ifndef __DISP_TS_H
+#define __DISP_TS_H    1
 
 extern unsigned long task_switch_status;
 

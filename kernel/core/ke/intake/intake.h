@@ -6,8 +6,8 @@
 // the microkernel components
 // This kernel actually is not a microkernel.
 
-#ifndef __KE_MK_H
-#define __KE_MK_H    1
+#ifndef __INTAKE_INTAKE_H
+#define __INTAKE_INTAKE_H    1
 
 /*
  * Segments @todo: Include this constants.

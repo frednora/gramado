@@ -1,9 +1,9 @@
-
 // kpid.h
 // Managing the helper processes.
+// Created by Fred Nora.
 
-#ifndef __KE_KPID_H
-#define __KE_KPID_H    1
+#ifndef __INTAKE_KPID_H
+#define __INTAKE_KPID_H    1
 
 //
 // Main processes

@@ -234,7 +234,10 @@
 #include "../wink/evi/output.h"
 #include "../wink/evi/ibroker.h"
 #include "../wink/evi/input.h"
-#include "../wink/evi/callback.h"
+
+// ===========
+
+#include "../core/ke/intake/disp/callback.h"
 
 // ==================================
 // dev/

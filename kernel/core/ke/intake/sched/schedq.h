@@ -2,8 +2,8 @@
 // Manage the queues used by the task switching and scheduler.
 // Created by Fred Nora.
 
-#ifndef __SCHEDQ_H
-#define __SCHEDQ_H    1
+#ifndef __SCHED_SCHEDQ_H
+#define __SCHED_SCHEDQ_H    1
 
 // Priority classes
 // See: prio.h

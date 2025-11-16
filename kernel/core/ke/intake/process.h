@@ -1,8 +1,8 @@
 // process.h
 // Created by Fred Nora.
 
-#ifndef __PS_PROCESS_H
-#define __PS_PROCESS_H    1
+#ifndef __INTAKE_PROCESS_H
+#define __INTAKE_PROCESS_H    1
 
 //#bugbug
 //talvez aqui nao seja o melhor lugar pra definir isso.

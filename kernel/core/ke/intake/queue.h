@@ -1,9 +1,9 @@
-
 // queue.h
-// This routines are suspended.
+// #suspended ?
+// Created by Fred Nora.
 
-#ifndef __KE_QUEUE_H
-#define __KE_QUEUE_H    1
+#ifndef __INTAKE_QUEUE_H
+#define __INTAKE_QUEUE_H    1
 
 // Ordenação das listas de filas.
 #define QUEUE_NULL     0

@@ -1,8 +1,8 @@
 // callback.h
 // Created by Fred Nora.
 
-#ifndef __GRAMK_CALLBACK_H
-#define __GRAMK_CALLBACK_H    1
+#ifndef __DISP_CALLBACK_H
+#define __DISP_CALLBACK_H    1
 
 extern unsigned long asmflagDoCallbackAfterCR3;
 

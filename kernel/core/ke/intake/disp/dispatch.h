@@ -1,26 +1,18 @@
-/*
- * File: dispatch.h
- *     Dispatcher support.
- *     2015 - Created by Fred Nora.
- */
+// dispatch.h
+// Dispatcher support.
+// 2015 - Created by Fred Nora.
 
-#ifndef __DISPATCH_H  
-#define __DISPATCH_H    1
+#ifndef __DISP_DISPATCH_H  
+#define __DISP_DISPATCH_H    1
 
-//
 // Dispatcher types
-//
-
 // Used in disptcher();
-
 #define DISPATCHER_UNDEFINED  0  // Type undefined.
 #define DISPATCHER_CURRENT    1  // Dispatch the current thread.
 #define DISPATCHER_IDLE       2  // Dispatch the current idle thread and select it as the current.
 // ...
 
-
-
-//Enumerador de criterio de sele��o de thread.
+// Criteria for selecting threads
 #define SELECT_IDLE_COUNT         1
 #define SELECT_INITIALIZED_COUNT  2
 #define SELECT_NEXT_COUNT         3 
@@ -28,7 +20,7 @@
 #define SELECT_ANY_COUNT          5
 #define SELECT_IDEAL_COUNT        6
 #define SELECT_DISPATCHER_COUNT   7
-
+// ...
 
 // Seleciona o tipo de dispatcher sendo usado no momento.
 extern int dispatcherType;

@@ -5,8 +5,8 @@
 // the display server (libgws/gramland)
 // 2023 - Created by Fred Nora.
 
-#ifndef __MSG_CODE_H
-#define __MSG_CODE_H    1
+#ifndef __INTAKE_MSGCODE_H
+#define __INTAKE_MSGCODE_H    1
 
 //
 // Message codes

@@ -134,7 +134,6 @@ int callbackInitialize(void)
     ds_callback_info.initialized = TRUE;
 // ========================================================
 
-
     return 0;
 }
 

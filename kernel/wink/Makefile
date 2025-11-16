@@ -72,7 +72,7 @@ LDFLAGS := -m elf_x86_64 -s -x -static
 # Everything is a file.
 OBJS = pixel.o line.o rect.o bitblt.o bg.o font.o char.o text.o gre.o \
 obroker.o output.o ibroker.o input.o \
-dispsrv.o osshell.o callback.o user.o \
+dispsrv.o osshell.o user.o \
 wink.o    
 
 all:
@@ -97,8 +97,6 @@ all:
 	$(CC) -c evi/output.c   $(KERNEL_INCLUDE) $(CFLAGS) -o output.o
 	$(CC) -c evi/ibroker.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ibroker.o
 	$(CC) -c evi/input.c    $(KERNEL_INCLUDE) $(CFLAGS) -o input.o
-
-	$(CC) -c evi/callback.c  $(KERNEL_INCLUDE) $(CFLAGS) -o callback.o
 
 	$(CC) -c user/user.c      $(KERNEL_INCLUDE) $(CFLAGS) -o user.o
 

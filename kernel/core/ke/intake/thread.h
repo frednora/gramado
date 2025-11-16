@@ -1,8 +1,8 @@
 // thread.h
 // Created by Fred Nora.
 
-#ifndef __PS_THREAD_H
-#define __PS_THREAD_H    1
+#ifndef __INTAKE_THREAD_H
+#define __INTAKE_THREAD_H    1
 
 // =================================
 // System threads: (canonical)

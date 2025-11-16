@@ -1,9 +1,9 @@
-
 // prio.h
 // Priorities
+// Created by Fred Nora.
 
-#ifndef __PRIO_H
-#define __PRIO_H    1
+#ifndef __INTAKE_PRIO_H
+#define __INTAKE_PRIO_H    1
 
 //
 // == Priorities ==================================================
