@@ -9,17 +9,18 @@ static int __spawn_eoi_is_necessary = FALSE;
 // == Private functions: Prototypes =======
 //
 
-void 
-__spawn_enter_usermode( 
-    int eoi, 
-    unsigned long entry_va, 
-    unsigned long rsp3_va );
 
-void 
+static void 
 __spawn_enter_kernelmode( 
     int eoi, 
     unsigned long entry_va,
     unsigned long rsp0_va );
+
+static void 
+__spawn_enter_usermode( 
+    int eoi, 
+    unsigned long entry_va, 
+    unsigned long rsp3_va );
 
 static int __spawn_is_eoi_needed(void);
 
@@ -57,7 +58,7 @@ static int __spawn_is_eoi_needed(void)
 // ------------------------
 // RING 0:
 // Do not check parameters.
-void 
+static void 
 __spawn_enter_kernelmode( 
     int eoi,                 // do we need eoi ? TRUE or FALSE. 
     unsigned long entry_va,  // Entry point
@@ -143,7 +144,7 @@ __spawn_enter_kernelmode(
 // Probably created by a ring 3 process.
 // This is the stack pointer for the ring 3 thread.
 // Probably given by a ring 3 process.
-void 
+static void 
 __spawn_enter_usermode( 
     int eoi,                 // do we need eoi ? TRUE or FALSE. 
     unsigned long entry_va,  // Entry point

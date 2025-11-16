@@ -898,16 +898,6 @@ void kill_thread(tid_t tid);
 void kill_all_threads(void);
 void kill_zombie_threads(void);
 
-// ==
-
-// The spawn routine need to make a eoi.
-void spawn_set_eoi_state(void);
-// The spawn routine do not need to make a eoi.
-void spawn_reset_eoi_state(void);
-
-
-void psSpawnThreadByTID(tid_t tid);
-
 
 //
 // $

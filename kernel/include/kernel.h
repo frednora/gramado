@@ -349,6 +349,7 @@
 #include "../core/ke/intake/disp/ts.h"
 #include "../core/ke/intake/queue.h"
 #include "../core/ke/intake/intake.h"
+#include "../core/ke/intake/disp/spawn.h"
 #include "../core/ke/intake/disp/dispatch.h"
 
 #include "../core/ke/intake/thread.h"
