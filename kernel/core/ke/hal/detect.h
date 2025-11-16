@@ -2,8 +2,8 @@
 // Detech hardware components for HAL layer.
 // Created by Fred Nora.
 
-#ifndef __KE_DETECT_H
-#define __KE_DETECT_H    1
+#ifndef __HAL_DETECT_H
+#define __HAL_DETECT_H    1
 
 
 //

@@ -71,9 +71,8 @@ static void __ps_initialize_thread_common_elements(struct thread_d *t)
 
     // Thread->wait4pid =
 
-// loop
-// Waiting reasons.
-    // for ( i=0; i<8; ++i ){ t->wait_reason[i] = (int) 0; };
+// Waiting reason
+    // t->wait_reason = WAIT_REASON_NULL;
 
     t->flags = 0;
 
@@ -1182,10 +1181,8 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
 	//Thread->control_menu_procedure
 	//Thread->wait4pid =
 
-// Razões para esperar.
-    //for ( w=0; w<8; w++ ){
-    //    clone->wait_reason[w] = father->wait_reason[w];
-    //};
+// Wait reason
+    // clone->wait_reason = WAIT_REASON_NULL;
 
     clone->flags = 0;
 

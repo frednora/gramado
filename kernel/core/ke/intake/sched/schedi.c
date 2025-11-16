@@ -499,9 +499,9 @@ void wait_for_a_reason ( tid_t tid, int reason )
         //}
         if ( t->used == TRUE && t->magic == 1234 )
         {
-            // t->wait_reason[reason] = 1;
+            // t->wait_reason = ?;
 
-            // ## Wait ##
+            // Set state
             t->state =  WAITING;
         }
     };
@@ -557,7 +557,7 @@ int wakeup_thread_reason ( tid_t tid, int reason )
         }
 
 		// OK.
-        if ( t->wait_reason[reason] != 1 ){
+        if ( t->wait_reason != 1 ){
             debug_print ("wakeup_thread_reason: status\n");
             goto fail;
 
@@ -574,7 +574,7 @@ int wakeup_thread_reason ( tid_t tid, int reason )
 					if ( current_dead_process > 0 && 
 					     current_dead_process == t->wait4pid )
 					{
-					    t->wait_reason[reason] = 0;
+					    t->wait_reason = WAIT_REASON_NULL;
 					    do_thread_ready (tid);
 					}
 					break;
@@ -586,13 +586,13 @@ int wakeup_thread_reason ( tid_t tid, int reason )
 					if ( current_dead_thread > 0 && 
 					     current_dead_thread == t->wait4tid )
 					{
-					    t->wait_reason[reason] = 0;
+			            t->wait_reason = WAIT_REASON_NULL;
 					    do_thread_ready (tid);
 					}
 					break;
 					
 				case WAIT_REASON_TEST:
-					t->wait_reason[reason] = 0;
+				    t->wait_reason = WAIT_REASON_NULL;
 					do_thread_ready (tid);
 				    break;
 			    
@@ -601,8 +601,7 @@ int wakeup_thread_reason ( tid_t tid, int reason )
 			
             goto done;
 		}
-		
-		//nothing
+		// nothing
     };
 
 fail:

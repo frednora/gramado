@@ -3,6 +3,11 @@
 
 #include <kernel.h>
 
+// #todo
+// Use call back only when the thread is in the alertable state.
+// For example, when it is waiting for input, sleeping or etc.
+
+
 //--------------------------------------
 
 // #test
@@ -69,8 +74,6 @@ void setup_callback(unsigned long r3_address, unsigned long ms)
 
 }
 
-
-
 void prepare_next_ds_callback(void)
 {
     if ( ds_callback_info.ready != TRUE ){
@@ -123,8 +126,8 @@ int callbackInitialize(void)
    // Initialize the support for every process.
 
 // ========================================================
-// Initializing the callback support 
-// exclusively for the display server.
+// Initializing the callback support exclusively for 
+// the main thread of the display server.
     ds_callback_info.ready = FALSE;  // status
     ds_callback_info.callback_address = 0;   //#bugbug Invalid ring3 address.
     ds_callback_info.callback_address_saved = 0;

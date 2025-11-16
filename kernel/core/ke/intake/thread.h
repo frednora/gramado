@@ -44,46 +44,60 @@
 #define BACKGROUND_THREAD  1 
 #define FOREGROUND_THREAD  2
 
-// #importante
-// Razões para esperar
-// #todo: isso precisa ser inicializado.
-// #todo: tem que fazer um enum para enumerar as razões.
-// o índice é o selecionador da razão pela 
-// qual a thread está esperando.
-// existem umas 20 razões pra esperar.
-// 0 - esperando por mensagem.(presa num loop)
-// 1 - esperando outra thread finalizar. wait4tid
-// 2 - esperando um processo finalizar. wait4pid
-// 3 - esperando um objeto. (BLOCKED)(espera genérica)
-// ...
-
-// #importante
-// isso será usado na estrutura de thread em wait_reason[]
-// Com limite de 10 por enquanto.
 
 typedef enum {
-	WAIT_REASON_NULL,
-	WAIT_REASON_LOOP,           
-	WAIT_REASON_EXIT,
-	WAIT_REASON_BLOCKED,
-	WAIT_REASON_PREMMPTED,      // ?? Esperando a preempção de thread de menor prio.
-	WAIT_REASON_SEMAPHORE,      // ?? Semáforo.
-	WAIT_REASON_WAIT4PID,       // Esperando o processo filho morrer.
-	WAIT_REASON_WAIT4TID,       // Esperando uma thread morrer.
-	WAIT_REASON_TEST            // # Usada pelo desenvolvedor para testes.
-	// ...
-}thread_wait_reason_t;
 
-/*
- * thread_type_t:
- *     Enumerando os tipos de threads:
- */
-// priority class
+// General
+// 1:: Safety. Null/default and lifecycle waits are checked before anything else.
+    WAIT_REASON_NULL,           // Default / no reason (uninitialized)
+
+// Lifecycle / Termination
+// 1:: Safety. Null/default and lifecycle waits are checked before anything else.
+    WAIT_REASON_WAIT4PID,       // Waiting for a child process to terminate
+    WAIT_REASON_WAIT4TID,       // Waiting for a specific thread to terminate
+    WAIT_REASON_PEXIT,          // Waiting for process to exit
+    WAIT_REASON_TEXIT,          // Waiting for thread to exit
+
+// Synchronization / Blocking
+// 2:: Correctness. Synchronization ensures shared resources aren’t corrupted.
+
+    WAIT_REASON_SEMAPHORE,      // Waiting on a semaphore
+    WAIT_REASON_MUTEX,          // Waiting on a mutex/lock (mutual exclusion)
+    WAIT_REASON_CONDITION,      // Waiting on a condition variable
+    WAIT_REASON_RWLOCK,         // Waiting on a read/write lock
+    WAIT_REASON_BLOCKED,        // Generic blocked state (unspecified resource)
+
+// Scheduling / Preemption
+// 3:: Performance. Scheduling/preemption decides CPU fairness.
+    WAIT_REASON_PREEMPTED,      // Preempted by a higher-priority thread
+    WAIT_REASON_YIELD,          // Voluntarily yielded CPU, waiting to be rescheduled
+    WAIT_REASON_PRIORITY_BOOST, // Waiting for priority adjustment/boost
+
+// I/O / External Events
+// 4:: Responsiveness. I/O and messaging keep the system interactive.
+    WAIT_REASON_IO,             // Waiting for I/O completion (disk, network, etc.)
+    WAIT_REASON_TIMER,          // Sleeping until a timer/timeout expires
+    WAIT_REASON_SIGNAL,         // Waiting for a signal/event
+    WAIT_REASON_INTERRUPT,      // Waiting for a hardware interrupt
+
+// System / Messaging
+// 5:: Responsiveness. I/O and messaging keep the system interactive.
+    WAIT_REASON_LOOP,           // Waiting for a system message (event loop)
+
+// Debug / Development
+// 6:: Diagnostics. Debugging reasons shouldn’t interfere with normal operation.
+    WAIT_REASON_TEST,           // Developer test reason (custom use)
+    WAIT_REASON_BREAKPOINT,     // Suspended at a debug breakpoint
+    WAIT_REASON_TRACE           // Waiting for tracing/profiling event
+} thread_wait_reason_t;
+
+
+// Thread types
 typedef enum {
     THREAD_TYPE_NULL,
-    THREAD_TYPE_SYSTEM,       // high priority
-    THREAD_TYPE_INTERACTIVE,  // medium priority (first plane)
-    THREAD_TYPE_BATCH,        // low priority
+    THREAD_TYPE_SYSTEM,       // High priority
+    THREAD_TYPE_INTERACTIVE,  // Medium priority (first plane)
+    THREAD_TYPE_BATCH,        // Low priority
 }thread_type_t;
 
 /*
@@ -133,55 +147,42 @@ BLOCKED: Thread is waiting for an external resource (e.g., I/O) to become availa
 */
 
 /*
- * thread_state_t:
- *    Enumeram os estados de uma threads, (8 estados).
- *    Existem 2 grupos, 'Earth' e 'Space'.
- *    Obs: Rodam no 'espaço'.
- *
- * Earth: (INITIALIZED, STANDBY, ZOMBIE, DEAD).
- * Space: (READY, RUNNING, WAITING, BLOCKED).
- *
- *  INITIALIZED,    //Earth, Criado o contexto e parâmetros.
- *  STANDBY,        //Earth, Pronta para rodar pela primeira vez. Ir para o 'espaço'.
- *  ZOMBIE,         //Earth, Terminou a execução. Voltou para a 'terra'.
- *  DEAD,           //Earth, Deleted.
- * 
- *  READY,          //Space, Thread is ready to run again.
- *  RUNNING,        //Space, Thread is currently running.
- *  WAITING,        //Space, Thread is waiting.	
- *  BLOCKED,        //Space, Thread is blocked by an event.
- *
- * Obs: 
- *     Na prática, a troca de status está seguindo um organograma de 
- * movimentos. 
- *     @todo: Descrever esses movimentos na documentação. Incluir a 
- * visualização através do gráfico.
- */
+Earth States (Lifecycle Management)
+ + INITIALIZED (0) Context and parameters are created, but execution hasn’t started.
+ + STANDBY (1) Prepared to run for the first time, but not yet scheduled.
+ + ZOMBIE (2) Execution has terminated, but the thread object still exists (often used to collect exit status).
+ + DEAD (3) Fully deleted; resources can be reclaimed.
 
-// canonical.
+Space States (Execution Flow)
+ READY (4) Thread is ready to run again (waiting for CPU scheduling).
+ RUNNING (5) Actively executing instructions on the CPU.
+ WAITING (6) Suspended until some condition or resource becomes available.
+ BLOCKED (7) Prevented from running due to an external event (e.g., I/O wait, synchronization).
+*/
+
+/*
+Conceptual Difference
+ + Earth group → Describes the existence and lifecycle of the thread object itself.
+ + Space group → Describes the execution status of the thread while it exists.
+*/
+
+/*
+ Thread states.
+ Two groups:
+ + Earth: (INITIALIZED, STANDBY, ZOMBIE, DEAD)
+ + Space: (READY, RUNNING, WAITING, BLOCKED)
+*/
 typedef enum {
-
-//0 Earth, Criado o contexto e parâmetros.
-    INITIALIZED,
-//1 Earth, Pronta para rodar pela primeira vez. 
-//         Ir para o 'espaço'.
-    STANDBY,
-//2 Earth, Terminou a execução. Voltou para a 'terra'.
-    ZOMBIE,
-//3 Earth, Deleted.
-    DEAD,
-
-//----
-
-//4 Space, Thread is ready to run again.
-    READY,
-//5 Space, Thread is currently running.
-    RUNNING,
-//6 Space, Thread is waiting.
-    WAITING,
-//7 Space, Thread is blocked by an event.
-    BLOCKED,
-
+// Earth states (lifecycle-related states)
+    INITIALIZED,  // 0 - The context and parameters were created.
+    STANDBY,      // 1 - Ready to run for the first time.
+    ZOMBIE,       // 2 - Execution terminated.
+    DEAD,         // 3 - Deleted. Now we can delete the object.
+// Space states (execution-related states)
+    READY,        // 4 - Thread is ready to run again.
+    RUNNING,      // 5 - Thread is currently running.
+    WAITING,      // 6 - Thread is waiting.
+    BLOCKED       // 7 - Thread is blocked by an event.
 }thread_state_t;
 
 
@@ -362,9 +363,13 @@ struct thread_d
 // The thread needs priority to respont to an event.
     int has_pending_event;
 
-// #test
 // The thread is waiting for a reason.
     thread_wait_reason_t wait_reason;
+
+// Deadlock support
+// Purpose: A flag (often 0 or 1) that indicates whether 
+// this thread has been identified as part of a deadlock cycle.
+    int deadlock_detected;
 
 // Plano de execução.
 // Threads:

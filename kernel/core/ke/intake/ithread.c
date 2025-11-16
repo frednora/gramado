@@ -98,8 +98,9 @@ struct thread_d *create_init_thread(void)
     t->PF.in_pf = FALSE;  // Not in a pf routine.
     t->PF.pf_counter = 0;
 
-    // Clean the 'wait reason'.
-    //for ( r=0; r<8; ++r ){ t->wait_reason[r] = (int) 0; };
+// #todo
+// Clean the wait reason
+    // t->wait_reason = WAIT_REASON_NULL;
 
     t->flags = 0;
 
@@ -108,7 +109,7 @@ struct thread_d *create_init_thread(void)
 //
 
 // ===============================
-// Message queue.
+// Message queue
 
     for (q=0; q<MSG_QUEUE_MAX; ++q){
         t->MsgQueue[q] = 0;

@@ -2,9 +2,8 @@
 // HAL interface. Architecture-independent.
 // Created by Fred Nora.
 
-
-#ifndef __KE_HAL_H
-#define __KE_HAL_H    1
+#ifndef __HAL_HAL_H
+#define __HAL_HAL_H    1
 
 //#todo: This is a fs thing.
 #define PARTITION_BOOT_FLAG  0x80
