@@ -252,12 +252,11 @@ fail:
 // + Configura sua estrutura de processo.
 // + Configura sua estrutura de thraed.
 // Não passa o comando para o processo.
-
-static int I_x64CreateInitialProcess(void)
-{
 // This is a ring 3 process.
 // It loads the first ring3 program, the INIT.BIN.
 
+static int I_x64CreateInitialProcess(void)
+{
     pid_t InitProcessPID = -1;
 
 // #debug
@@ -353,7 +352,7 @@ static int I_x64CreateInitialProcess(void)
         printk("I_x64CreateInitialProcess: InitProcess\n");
         return FALSE;
     }
-    if ( InitProcess->used != TRUE || InitProcess->magic != 1234 )
+    if (InitProcess->used != TRUE || InitProcess->magic != 1234)
     {
         printk("I_x64CreateInitialProcess: InitProcess validation\n");
         return FALSE;
@@ -367,6 +366,12 @@ static int I_x64CreateInitialProcess(void)
         printk ("I_x64CreateInitialProcess: InitProcessPID\n");
         return FALSE;
     }
+
+// Initialize the thred support for this process.
+    InitProcess->control = NULL;
+    InitProcess->extra = NULL;
+    InitProcess->threadListHead = NULL;
+    InitProcess->thread_count = 0;
 
 // Security Access Token.
 
@@ -476,17 +481,19 @@ static int I_x64CreateInitialProcess(void)
 
 // Set the control thread for the init process.
     InitProcess->control = InitThread;
+// Initialize the list of threads for this process.
+    InitProcess->threadListHead = InitThread;
+    InitProcess->thread_count = 1;  // Control thread is the first.
 
-// Set the current process
+// Set the current process (Canonical value)
     set_current_process(InitProcessPID);
 
 // Set the current thread
-    current_thread = InitThread->tid;
+    current_thread = (tid_t) InitThread->tid;
 
-// Agora ja temos um processo em user mode devidamente 
-// configurado. Então a rotina de inicialização em init/
-// poderá pasasr o comando para ele quando quizer.
-
+// Done:
+// Now We already have one valid user mode process.
+// The caller can run this thread if he wants to.
     InitialProcessInitialized = TRUE;
     return TRUE;
 }
@@ -898,6 +905,12 @@ static int I_x64CreateKernelProcess(void)
         printk ("I_x64CreateKernelProcess: pid\n");
         return FALSE;
     }
+
+// Initialize the thred support for this process.
+    KernelProcess->control = NULL;
+    KernelProcess->extra = NULL;
+    KernelProcess->threadListHead = NULL;
+    KernelProcess->thread_count = 0;
 
 // Security Access Token
 

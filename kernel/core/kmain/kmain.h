@@ -95,6 +95,8 @@ extern struct initialization_d  Initialization;
 // see: init.c
 void I_kmain(int arch_type);
 
+void I_initialize_kernel(int arch_type, int processor_number);
+
 
 // See: kmain.c
 void init_globals(void);

@@ -17,7 +17,13 @@ From lowest to highest:
 
 ## Kernel initialization
 
-The kernel initialization is handled by the function I_kmain(), which follows these steps:
+```
+ See: kmain.c
+ The first function for the BSP is I_main, but the real main routine 
+ for all the processors is I_initialize_kernel().
+ The kernel initialization is handled by the function I_initialize_kernel, 
+ which follows these steps:
+```
 
 ```
 // ==================================

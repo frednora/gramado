@@ -966,17 +966,11 @@ fail:
     return (int) -1;
 }
 
-//
-// $
-// MAIN
-//
-
-// --------------------------------
-// Called by START in startup/head_64.asm.
-// This is the first function in C.
+// Called by I_kmain during the initialization of the BSP,
+// and for other routine during the initialization of an AP.
 // We don't have any print support yet.
 // See: kernel.h, kmain.h
-void I_kmain(int arch_type)
+void I_initialize_kernel(int arch_type, int processor_number)
 {
 // ==================================
 // Levels:
@@ -1227,6 +1221,29 @@ fail:
     system_state = SYSTEM_ABORTED;
     x_panic("Error: 0x02");
     die();
+
+// Not reached
+    while (1){
+        asm ("cli");
+        asm ("hlt");
+    };
+}
+
+//
+// $
+// MAIN
+//
+
+// --------------------------------
+// Called by START in startup/head_64.asm.
+// This is the first function in C.
+// We don't have any print support yet.
+// See: kernel.h, kmain.h
+void I_kmain(int arch_type)
+{
+    static int ProcessorNumber = 0;
+// I_kmain is called only for the BSP. So it needs to be number 0.
+    I_initialize_kernel(arch_type, ProcessorNumber);
 
 // Not reached
     while (1){

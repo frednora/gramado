@@ -770,15 +770,13 @@ struct process_d
     struct thread_d *control;  // The control thread.
     struct thread_d *extra;    // The extra thread.
 
-// The thread list.
+// The thread list. (linked)
 // #todo
-// We need to decide what kind of list we're gonna use.
-
-// Linked list?
+// >>> We need to decide what kind of list we're gonna use.
     struct thread_d *threadListHead;
 // Array?
     unsigned long tList[32];
-    int thread_count;          // Thread counter.
+    int thread_count;          // Thread counter
 
 // ==============
 

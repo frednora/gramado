@@ -105,7 +105,11 @@ Gramado OS Kernel is 64bit image running in ring 0.
 
 ## Kernel initialization
 
-The kernel initialization in I_kmain():
+```
+ See: kmain.c:
+ First function is I_main().
+ The kernel initialization in I_initialize_kernel():
+```
 
 ```
 // ==================================

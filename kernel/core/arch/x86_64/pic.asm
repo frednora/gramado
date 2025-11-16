@@ -1,5 +1,11 @@
 ; pic.asm
+; 8259 PIC controller support.
+; Created by Fred Nora.
 
+PIC1_PORT0 equ  0x20
+PIC1_PORT1 equ  0x21
+PIC2_PORT0 equ  0xA0
+PIC2_PORT1 equ  0xA1
 
 ;============================================
 ; PIC
