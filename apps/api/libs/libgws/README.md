@@ -1,4 +1,10 @@
-# libgws - Client-side API for display server.
+# libgws - API for the client-side GUI library.
+
+```
+  The client-side GUI applications are linked against this library 
+in order to connect with the display server via socket for 
+sending and receiving messages.
+```
 
 We include this library in the applications 
 to make requests to the display server.
