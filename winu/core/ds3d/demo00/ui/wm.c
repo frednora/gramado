@@ -1,9 +1,6 @@
-/*
- * File: wm.c 
- *     The Window Manager.
- * History:
- *     2020 - Create by Fred Nora.
- */
+// wm.c 
+// The Window Manager.
+// 2020 - Create by Fred Nora.
 
 #include "../gram3d.h"
 
@@ -3687,10 +3684,18 @@ int wmSTDINInputReader(void)
     return (int) nreads;
 }
 
+// Process key combinations
 static int on_combination(int msg_code)
 {
-    if (msg_code<0)
-        return -1;
+
+// Parameters:
+    if (msg_code < 0)
+        goto fail;
+
+
+//
+// Control + arrows
+//
 
     if (msg_code == GWS_ControlArrowUp){
         //dock_active_window(1);
@@ -3713,9 +3718,14 @@ static int on_combination(int msg_code)
         return 0;
     }
 
+// Cut
     if (msg_code == GWS_Cut)
-    {printf("ws: cut\n"); return 0;}
+    {
+        printf("ws: cut\n"); 
+        return 0;
+    }
 
+// Copy
     if (msg_code == GWS_Copy)
     {
         printf("ws: copy\n"); 
@@ -3728,11 +3738,19 @@ static int on_combination(int msg_code)
         return 0;
     }
 
+// Paste
     if (msg_code == GWS_Paste)
-    {printf("ws: paste\n"); return 0;}
+    {
+        printf("ws: paste\n"); 
+        return 0; 
+    }
 
+// Undo
     if (msg_code == GWS_Undo)
-    {printf("ws: undo\n"); return 0;}
+    {
+        printf("ws: undo\n"); 
+        return 0;
+    }
 
 // [control + a]
     if (msg_code == GWS_SelectAll)
@@ -3751,18 +3769,24 @@ static int on_combination(int msg_code)
         return 0;
     }
 
-
+// Find
     if (msg_code == GWS_Find)
-    {printf("ws: find\n"); return 0;}
+    {
+        printf("ws: find\n");
+        return 0;
+    }
 
+// Save
     if (msg_code == GWS_Save)
     {
         printf("Save\n");
         //on_menu();  //#test
-        //rtl_clone_and_execute("gdm.bin");
+        //rtl_clone_and_execute("#gdm.bin");
+        rtl_clone_and_execute("#term00.bin");
         return 0;
     }
 
+// ??
 // #tests
 // Via shift + f12
 // + Enable mouse.
@@ -3779,8 +3803,8 @@ static int on_combination(int msg_code)
         return 0;
     }
 
-//OK
-    return -1;
+fail:
+    return (int) -1;
 }
 
 static int is_combination(int msg_code)
@@ -3846,7 +3870,10 @@ new_event:
     long1 = (unsigned long) RTLEventBuffer[2];
     long2 = (unsigned long) RTLEventBuffer[3];
 
-// MOUSE events
+//
+// Mouse events
+//
+
     if ( msg == GWS_MouseMove || 
          msg == GWS_MousePressed ||
          msg == GWS_MouseReleased )
@@ -3857,6 +3884,10 @@ new_event:
             (unsigned long) long2 ); 
         return 0;
     }
+
+//
+// Keyboard events
+//
 
 // Print char into the keyboard owner window.
     if ( msg == GWS_KeyDown ||
@@ -3891,6 +3922,13 @@ new_event:
         // ...
     }
  */
+
+//
+// Timer events
+//
+
+// #todo ...
+
 
 // Sys commands
     //if (msg == GWS_Command){

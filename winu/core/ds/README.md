@@ -1,4 +1,10 @@
-# core - Display servers and runtime libraries.
+# ds - Display servers and runtime libraries.
+
+```
+ Display servers for Gramado OS. 
+ No floating point support.
+ ds00/ is the main display server for Gramado OS.
+```
 
 ```
   * ds00/ - The main display server.
