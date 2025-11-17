@@ -1,5 +1,6 @@
 // console.c
 // Console device.
+// Console’s renderer
 // This is the virtual console driver, embedded into the kernel base.
 // It handles the device-independent part of the console infrastructure.
 // + We receive bytes from the ps2 keyboard driver.

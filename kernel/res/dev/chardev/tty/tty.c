@@ -1,4 +1,5 @@
 // tty.c
+// Kernsl-side support for TTYs.
 // Created by Fred Nora.
 
 #include <kernel.h>  
@@ -29,8 +30,84 @@ int tty_write_byte(struct tty_d *tty)
 }
 */
 
+/*
+int test_tty_copy_raw_buffer(struct tty_d *to, struct tty_d *from);
+int test_tty_copy_raw_buffer(struct tty_d *to, struct tty_d *from) 
+{
+    int copied = 0;
+    while (from->raw_queue.tail != from->raw_queue.head) {
+        char c = from->raw_queue.buf[from->raw_queue.tail];
+        from->raw_queue.tail = (from->raw_queue.tail + 1) % TTY_BUF_SIZE;
+        to->raw_queue.buf[to->raw_queue.head] = c;
+        to->raw_queue.head = (to->raw_queue.head + 1) % TTY_BUF_SIZE;
+        copied++;
+    }
+    return copied;
+}
+*/
 
-int tty_copy_raw_buffer( struct tty_d *tty_to, struct tty_d *tty_from )
+// Flush the raw queue of a TTY.
+// Place this in tty.c and declare in tty.h if needed.
+
+void tty_flush_raw_queue(struct tty_d *tty, int console_number)
+{
+    if (!tty || tty->magic != TTY_MAGIC)
+        return;
+
+    struct tty_queue *q = &tty->raw_queue;
+
+    while (q->tail != q->head)
+    {
+        char c = q->buf[q->tail];
+        q->tail = (q->tail + 1) % q->buffer_size;
+        if (q->cnt > 0) 
+            q->cnt--;
+
+        // Render the character on the console
+        console_outbyte((int)c, console_number);
+    };
+}
+
+void tty_flush_canonical_queue(struct tty_d *tty, int console_number)
+{
+    if (!tty || tty->magic != TTY_MAGIC) return;
+
+    struct tty_queue *q = &tty->canonical_queue;
+
+    while (q->tail != q->head)
+    {
+        char c = q->buf[q->tail];
+        q->tail = (q->tail + 1) % q->buffer_size;
+        if (q->cnt > 0) q->cnt--;
+
+        console_outbyte((int)c, console_number);
+    }
+}
+
+// Flush the output queue of a TTY.
+// Place this in tty.c and declare in tty.h if needed.
+
+void tty_flush_output_queue(struct tty_d *tty, int console_number)
+{
+    if (!tty || tty->magic != TTY_MAGIC) return;
+
+    struct tty_queue *q = &tty->output_queue;
+
+    while (q->tail != q->head)
+    {
+        char c = q->buf[q->tail];
+        q->tail = (q->tail + 1) % q->buffer_size;
+        if (q->cnt > 0) q->cnt--;
+
+        // Render the character on the console
+        console_outbyte((int)c, console_number);
+    }
+}
+
+int 
+tty_copy_raw_buffer( 
+    struct tty_d *tty_to, 
+    struct tty_d *tty_from )
 {
     register int i=0;
 
@@ -55,6 +132,47 @@ fail:
     return (int) -1;
 }
 
+// Get a single byte from a tty_queue.
+// Returns the byte (0–255) or -1 if empty.
+int tty_queue_getchar(struct tty_queue *q)
+{
+    if (!q)
+        return (int) -1;
+
+    if (q->head == q->tail) {
+        return (int) -1; // queue empty
+    }
+
+    char c = q->buf[q->tail];
+    q->tail = (q->tail + 1) % q->buffer_size;
+    q->cnt--;
+    return (int)(unsigned char)c;
+}
+
+// Small worker for TTY queues.
+// Drop this into tty.c (and declare in tty.h if you want).
+
+// Put a single byte into a tty_queue.
+// Returns 0 on success, -1 if full.
+int tty_queue_putchar(struct tty_queue *q, char c)
+{
+    if (!q) 
+        return (int) -1;
+
+    unsigned long next_head = (q->head + 1) % q->buffer_size;
+
+    // Full if advancing head would equal tail
+    if (next_head == q->tail) {
+        return (int) -1; // queue full
+    }
+
+    q->buf[q->head] = c;
+    q->head = next_head;
+    q->cnt++;
+    return 0;
+}
+
+
 /*
  * __tty_read:
  *     Read n bytes from a tty. raw buffer.
@@ -65,6 +183,7 @@ fail:
  */
 // Called by tty_read.
 
+// Read from the raw queue.
 int 
 __tty_read ( 
     struct tty_d *tty, 
@@ -72,7 +191,7 @@ __tty_read (
     int nr )
 {
     register int i=0;
-    char data[TTY_BUF_SIZE];
+    char Ldata[TTY_BUF_SIZE];
     char c=0;
     char *b;
 
@@ -108,7 +227,7 @@ __tty_read (
 // Lembrando que no modo canônico teremos algum tipo de edição.
 // então o usuário receberá uma fila somente depois que ele digitar
 // [enter]
-// Get data from the queue.
+// Get Ldata from the queue.
 // Isso tem o mesmo tamanho
 // da fila de tty.
 
@@ -142,14 +261,13 @@ __tty_read (
             return (int) i;  // Quantos bytes conseguimos ler.
         }
 
-        // get one char
+        // Get one char
         c = tty->raw_queue.buf[ tty->raw_queue.tail ];
-        // avança na fila
-        tty->raw_queue.tail++;
-        data[i] = c;
+        tty->raw_queue.tail++;  // Next in queue
+        Ldata[i] = c;            // Save into the local Buffer
         i++;
         rbytes--;
-        if (rbytes<=0){
+        if (rbytes <= 0){
             break;
         }
     };
@@ -168,9 +286,9 @@ __tty_read (
 // Copiando os bytes de nosso buffer local para
 // o buffer de usuário.
     memcpy( 
-        (void *) b,          // To (user buffer)
-        (const void *) data, // from (local buffer)
-        i );                 // n bytes lidos
+        (void *) b,           // To (user buffer)
+        (const void *) Ldata, // from (local buffer)
+        i );                  // n bytes lidos
 
     // #debug
     printk("__tty_read: [DONE] %d bytes read\n",i);
@@ -181,7 +299,7 @@ __tty_read (
     return (int) i;
 
 fail:
-    refresh_screen();
+    //refresh_screen();
     return (int) (-1);
 }
 
@@ -197,6 +315,7 @@ fail:
 // ?? Why
 // We are sending a message to a process.
 
+// Write into the raw queue.
 int 
 __tty_write ( 
     struct tty_d *tty, 
@@ -204,7 +323,7 @@ __tty_write (
     int nr )
 {
     register int i=0;
-    char data[TTY_BUF_SIZE];
+    char Ldata[TTY_BUF_SIZE];
     char c=0;
     char *b;
 
@@ -216,7 +335,7 @@ __tty_write (
 
 // Parameters:
     if ((void *) tty == NULL){
-        debug_print("__tty_write: tty\n");
+        printk("__tty_write: tty\n");
         goto fail;
     }
     if ( tty->used != TRUE || tty->magic != 1234 ){
@@ -241,7 +360,7 @@ __tty_write (
 // Lembrando que no modo canônico teremos algum tipo de edição,
 // então o usuário receberá uma fila somente 
 // depois que ele digitar [enter].
-// Get data from the queue.
+// Get Ldata from the queue.
 // Isso tem o mesmo tamanho da fila de tty.
 
 // Quantos bytes escrever.
@@ -262,8 +381,8 @@ __tty_write (
 // Receive
 // Copiando bytes do buffer do usuário para nosso buffer local.
     memcpy( 
-        (void *) data,      // To (Local buffer).
-        (const void *) b,   // From
+        (void *) Ldata,      // To (Local buffer).
+        (const void *) b,    // From
         wbytes ); 
 
 //
@@ -284,7 +403,7 @@ __tty_write (
         }
 
         // Pega um char do buffer local.
-        c = data[i];
+        c = Ldata[i];
         // Salva um char na fila do tty
         tty->raw_queue.buf[ tty->raw_queue.head ] = c;
         // Avança na fila.
@@ -304,23 +423,18 @@ __tty_write (
 // 
 
 // #test
-// Precisamos copiar para a tty slave se
-// essa tty esta conectada.
+//  Copying byte from master to slave if the connection is valid.
     int nbytes_copied = 0;
     struct tty_d *tty_slave;
     tty_slave = (struct tty_d *) tty->link;
-    if ((void*) tty_slave != NULL)
-    {
-        if (tty_slave->magic == 1234)
-        {
-            // #todo
-            // Copy from master to slave.
-            nbytes_copied = (int) tty_copy_raw_buffer(tty,tty_slave);
+    if ((void*) tty_slave != NULL){
+        if (tty_slave->magic == 1234){
+            nbytes_copied = (int) tty_copy_raw_buffer(tty_slave,tty);
             // #debug
             printk("%d bytes copied to slave\n",nbytes_copied);
         }
     }
- 
+
 done:
 
     //#debug
@@ -337,8 +451,28 @@ done:
 // Retornamos a quantidade que gravamos na fila da tty.
     return (int) i;
 fail:
-    refresh_screen();
+    printk("__tty_write: fail\n");
     return (int) (-1);
+}
+
+// Write into the output queue.
+int __tty_write2(struct tty_d *tty, char *buffer, int nr)
+{
+    if (!tty || tty->magic != TTY_MAGIC) 
+        return -1;
+    if (!buffer || nr <= 0) 
+        return -1;
+
+    int written = 0;
+    while (written < nr) {
+        if (tty_queue_putchar(&tty->output_queue, buffer[written]) < 0) {
+            break; // queue full
+        }
+        written++;
+    }
+
+    printk("__tty_write: [DONE] %d/%d bytes written\n", written, nr);
+    return written;
 }
 
 
@@ -497,8 +631,14 @@ tty_write (
     // if(__tty->magic != 1234)
     //     goto fail;
 
-// Read tty
+/*
     return (int) __tty_write ( 
+                     (struct tty_d *) __tty, 
+                     (char *) buffer, 
+                     (int) n );
+*/
+
+    return (int) __tty_write2 ( 
                      (struct tty_d *) __tty, 
                      (char *) buffer, 
                      (int) n );
@@ -506,6 +646,7 @@ tty_write (
 fail:
     return (int) -1;
 }
+
 
 /*
  //#todo
@@ -616,15 +757,14 @@ struct tty_d *file_tty (file *f)
     return (struct tty_d *) f->tty;
 }
 
-// #todo
-// flush the output buffer to the current virtual console.
+// Flush the output buffer to the current virtual console
 void tty_flush(struct tty_d *tty)
-{
-    // todo
-    debug_print("tty_flush: [TODO]\n");
-    
+{   
     if ((void*) tty == NULL)
         return;
+    if (tty->magic != 1234)
+        return;
+    tty_flush_output_queue(tty,fg_console);
 }
 
 void tty_start(struct tty_d *tty)
@@ -760,7 +900,8 @@ tty_sets (
 
 // Now. The change occurs immediately. 
     case TCSANOW:
-        memcpy ( &tty->termios, termiosp, sizeof(struct termios_d) );
+        memcpy(&tty->termios, termiosp, sizeof(struct termios_d));
+        ret = 0;
         break;
     // ...
     default:

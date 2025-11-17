@@ -1,13 +1,12 @@
-// tty driver header.
+// ttydrv.h
+// TTY driver header.
+// Created by Fred Nora.
 
-
-#ifndef ____TTYDRV_H
-#define ____TTYDRV_H  1
-
+#ifndef __TTY_TTYDRV_H
+#define __TTY_TTYDRV_H  1
 
 //#define TTY_DRIVER_MAGIC		0x5402
 #define TTY_DRIVER_MAGIC		1234
-
 
 //credits: linux
 /* tty driver types */
@@ -17,7 +16,6 @@
 #define TTY_DRIVER_TYPE_PTY		0x0004
 #define TTY_DRIVER_TYPE_SCC		0x0005	/* scc driver */
 #define TTY_DRIVER_TYPE_SYSCONS		0x0006
-
 
 //credits: linux
 //tty driver flags

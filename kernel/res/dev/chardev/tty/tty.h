@@ -1,8 +1,10 @@
 // tty.h
+// Kernsl-side support for TTYs.
 // Created by Fred Nora.
 
-#ifndef ____TTY_H
-#define ____TTY_H  1
+
+#ifndef __TTY_TTY_H
+#define __TTY_TTY_H  1
 
 #define TTY_MAGIC  1234
 #define TTY_BUF_SIZE  1024
@@ -30,7 +32,7 @@
 #define TTY_SUBTYPE_PTY_SLAVE       400
 // ...
 
-//These bits are used in the flags field of the tty structure.
+// These bits are used in the flags field of the tty structure.
 #define TTY_THROTTLED         0	/* Call unthrottle() at threshold min */
 #define TTY_IO_ERROR          1	/* Cause an I/O error (may be no ldisc too) */
 #define TTY_OTHER_CLOSED      2	/* Other side (if any) has closed */
@@ -409,19 +411,31 @@ struct tty_d
 // == prototypes ===============================================
 //
 
+void tty_flush_raw_queue(struct tty_d *tty, int console_number);
+void tty_flush_canonical_queue(struct tty_d *tty, int console_number);
+void tty_flush_output_queue(struct tty_d *tty, int console_number);
+
 int tty_copy_raw_buffer( struct tty_d *tty_to, struct tty_d *tty_from );
 
+int tty_queue_putchar(struct tty_queue *q, char c);
+int tty_queue_getchar(struct tty_queue *q);
+
+// Read from the raw queue.
 int 
 __tty_read ( 
     struct tty_d *tty, 
     char *buffer, 
     int nr );
 
+// Write into the raw queue.
 int 
 __tty_write ( 
     struct tty_d *tty, 
     char *buffer, 
     int nr );
+
+// Write into the output queue.
+int __tty_write2(struct tty_d *tty, char *buffer, int nr);
 
 int 
 tty_read ( 

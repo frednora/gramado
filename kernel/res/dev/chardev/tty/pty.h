@@ -1,3 +1,8 @@
+// pty.h
+// Psedoterminal
+// Kernel-side support for virtual terminals. 
+// Created by Fred Nora.
+
 // see: 
 //http://man7.org/linux/man-pages/man7/pty.7.html
 //https://en.wikipedia.org/wiki/Pseudoterminal
@@ -36,8 +41,8 @@
 // The master side talks to your emulator (Virtual terminal), 
 // while the slave side talks to the kernel.
 
-#ifndef ____PTY_H
-#define ____PTY_H  1
+#ifndef __TTY_PTY_H
+#define __TTY_PTY_H  1
 
 
 // Lets manage all the pty devices.
@@ -51,7 +56,7 @@ struct tty_info_d
     // Number of element in the list.
     unsigned int number_of_ptys;
 };
-extern struct pty_info_d *TTYInfo;
+extern struct pty_info_d *PTYInfo;
 
 
 // Exporting

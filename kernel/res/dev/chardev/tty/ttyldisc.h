@@ -1,10 +1,9 @@
-//tty line discipline header.
+// ttyldisc.h
+// TTY line discipline header.
+// Created by Fred Nora.
 
-
-
-#ifndef ____TTYLDISC_H
-#define ____TTYLDISC_H  1
-
+#ifndef __TTY_TTYLDISC_H
+#define __TTY_TTYLDISC_H  1
 
 
 //

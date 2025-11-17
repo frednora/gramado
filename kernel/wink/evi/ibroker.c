@@ -697,13 +697,25 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
     }
 
 // tty: Read and write from tty device.
+// The console is inside the kernel. The routine will get the fd 1 
+// for the current process, that i don't know what process is. 
+// But probably fd=1 represents the current console. If we write() into 
+// this file it will display the message in the screen. But in our case 
+// we're simply getting the tty associated with the file.
+
+// ok. It is working
+    struct tty_d *myTTY = (struct tty_d *) &CONSOLE_TTYS[fg_console];
     if ( kstrncmp( cmdline, "tty", 3 ) == 0 )
     {
-        tty_write(1,"Hello",5);
-        // Esgotando as filas.
-        //while (1){
-           // __test_tty();
-        //};
+        //tty_write(1,"Hello",5); // failing
+
+        // Raw queue
+        //__tty_write (myTTY,"Hello Raw Queue",15);
+        //tty_flush_raw_queue(myTTY,fg_console);
+
+        // Output queue
+        __tty_write2 (myTTY,"Hello Raw Queue",15);
+        tty_flush(myTTY);
         goto exit_cmp;
     }
 

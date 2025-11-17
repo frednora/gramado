@@ -1,7 +1,6 @@
-
 // pty.c
 // Psedoterminal
-// Virtual terminal support. 
+// Kernel-side support for virtual terminals. 
 // Created by Fred Nora.
 
 // >> PTY master for the virtual terminal and 
@@ -13,12 +12,20 @@
 // a list of virtual consoles. But in this case we will have 
 // limited number of virtual terminals.
 
+/*
+Minimal working path
+ Keep the legacy globals for now.
+ Route master writes into slave’s raw queue.
+ Route slave writes into master’s raw queue.
+ Expose the slave as /dev/ttyX so applications can open it.
+ Let the emulator bind to the master.
+ That will give you a usable PTY pair for testing shells inside your OS, 
+ even before you implement canonical editing or job control.
+*/
 
 #include <kernel.h>
 
-
-struct pty_info_d *TTYInfo;
-
+struct pty_info_d *PTYInfo;
 
 struct tty_d *legacy_pty_master;
 struct tty_d *legacy_pty_slave;
