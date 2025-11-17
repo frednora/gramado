@@ -2,10 +2,12 @@
 // Let's scan floating values.
 // Let's scan floating values witha custom function created by Copilot.
 // v 1.234 -5.678e-2 9.0123
-
+// Created by Fred Nora.
 
 
 #include "../gram3d.h"
+
+// ==============================================================
 
 // Local, for now.
 // Declaration of our custom float parser.
@@ -13,7 +15,7 @@ double __pow0000(double __x, double __y);
 
 // ==============================================================
 
-
+// Internal
 double __pow0000(double __x, double __y)
 {
     double RetValue = 0.0;

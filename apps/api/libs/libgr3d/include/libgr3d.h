@@ -6,11 +6,24 @@
 #define __LIBGR3D_LIBGR3D_H   1
 
 
+// rtl
 #include <stddef.h>
-#include "grprim3d.h"
+#include <fcntl.h>
+#include <unistd.h>
 
+// Helpers
+#include "grprim3d.h"
+// ...
 
 extern int libgr_dummy;
+
+// Load a file.
+char *libgr3dReadFileIntoBuffer(const char *filename);
+
+float scan00_custom_read_float(const char **strPtr);
+
+// It scans a single line given the pointer
+const char *scan00_scanline(const char *line_ptr, struct gr_vecF3D_d *return_v);
 
 
 void 
