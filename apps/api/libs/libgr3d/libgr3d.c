@@ -50,44 +50,51 @@ double __pow0000(double __x, double __y)
 float scan00_custom_read_float(const char **strPtr) 
 {
     const char *s = *strPtr;
-    
-    // Skip any leading whitespace.
-    while (isspace((unsigned char)*s))
+
+// Skip any leading whitespace
+    while ( isspace((unsigned char)*s) )
+    {
         s++;
+    };
     
-    // Process optional sign.
+// Process optional sign
     int sign = 1;
-    if (*s == '-') {
+    if (*s == '-'){
         sign = -1;
         s++;
-    } else if (*s == '+') {
+    } else if (*s == '+'){
         s++;
-    }
-    
+    };
+
     // Parse the integer part of the number.
     float result = 0.0f;
     //double result = 0.0;  // Use double for better accuracy
 
-    while (*s && isdigit((unsigned char)*s)) {
+    while ( *s && isdigit((unsigned char)*s) )
+    {
         result = result * 10.0f + (*s - '0');
         s++;
-    }
-    
-    // Parse the fractional part if a decimal point is present.
-    if (*s == '.') {
+    };
+
+// Parse the fractional part if a decimal point is present
+    if (*s == '.')
+    {
         s++;
         float fraction = 0.0f;
         float divisor = 10.0f;
-        while (*s && isdigit((unsigned char)*s)) {
+        while (*s && isdigit((unsigned char)*s))
+        {
             fraction += (*s - '0') / divisor;
             divisor *= 10.0f;
             s++;
-        }
+        };
         result += fraction;
     }
-    
-    // Parse exponential part if present.
-    if (*s == 'e' || *s == 'E') {
+
+// Parse exponential part if present
+// 'e' or 'E'
+    if (*s == 'e' || *s == 'E') 
+    {
         s++;
         int expSign = 1;
         if (*s == '-') {
@@ -97,44 +104,53 @@ float scan00_custom_read_float(const char **strPtr)
             s++;
         }
         int exponent = 0;
-        while (*s && isdigit((unsigned char)*s)) {
+        while (*s && isdigit((unsigned char)*s)) 
+        {
             exponent = exponent * 10 + (*s - '0');
             s++;
-        }
+        };
         //result *= pow(10, expSign * exponent);
         result *= __pow0000(10, expSign * exponent);
     }
 
-    // Update the pointer to reflect the new reading position.
+// Update the pointer to reflect the new reading position
     *strPtr = s;
     
     return sign * result;
+// #todo: return type.
+    //return (float) (sign * result);
 }
 
 // Modified function: it now returns a pointer into the string after the newline.
-const char *scan00_scanline(const char *line_ptr, struct gr_vecF3D_d *return_v)
+const char *scan00_scanline(
+    const char *line_ptr, 
+    struct gr_vecF3D_d *return_v )
 {
     // 'ptr' will traverse the string.
     const char *ptr = line_ptr;
 
-    // Skip any whitespace before the identifier.
+// Skip any whitespace before the identifier
     while (*ptr && isspace((unsigned char)*ptr))
+    {
         ptr++;
+    };
 
-    // If we reached the end already, return NULL.
+// If we reached the end already, return NULL
     if (*ptr == '\0')
         return NULL;
 
-    // Skip the initial identifier ("v") if it's present.
+// Skip the initial identifier ("v") if it's present
     if (*ptr == 'v') {
         ptr++;
     }
 
-    // Skip any whitespace after the identifier.
+// Skip any whitespace after the identifier
     while (*ptr && isspace((unsigned char)*ptr))
+    {
         ptr++;
-    
-    // Parse three floats and store them in the structure.
+    };
+
+// Parse three floats and store them in the structure
     return_v->x = scan00_custom_read_float(&ptr);
     return_v->y = scan00_custom_read_float(&ptr);
     return_v->z = scan00_custom_read_float(&ptr);
@@ -145,22 +161,25 @@ const char *scan00_scanline(const char *line_ptr, struct gr_vecF3D_d *return_v)
     //printf("y = %f\n", (double)return_v->y);
     //printf("z = %f\n", (double)return_v->z);
 
-    // Advance 'ptr' to the end of the current line.
+// Advance 'ptr' to the end of the current line
     while (*ptr && *ptr != '\n')
+    {
         ptr++;
+    };
 
-    // If a newline is found, move one character beyond it.
+// If a newline is found, move one character beyond it
     if (*ptr == '\n')
         ptr++;
 
-    // If we've reached the end of the string, return NULL.
+// If we've reached the end of the string, return NULL
     if (*ptr == '\0')
         return NULL;
 
-    // Otherwise, return the pointer to the next line's start.
+// Otherwise, return the pointer to the next line's start
     return ptr;
+// #todo: Return type.
+    //return (const char *) ptr;
 }
-
 
 
 void 
