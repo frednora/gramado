@@ -1,0 +1,20 @@
+
+ We are creating a 3D library for the client-side GUI applications for Gramado OS.
+ Our starting point is getting the routines already implemented into 
+ the 3D demos for Gramado OS.
+
+ The goal here is getting the routines found in the 3D demos for Gramado 
+and porting them here. This way, the routines can be used by the 
+client-side GUI applications.
+ There are structures, primitives and other routines that can be useful 
+in this library. 
+
+We're gonna need:
+ + The structures for the vectors.
+ + Matrix operations.
+ + The primitive routines.
+ + Some other complex routines found in the demos.
+ + The triangle rasterization routines. (2D)
+ + The support to load and interpret the file
+   that contain the model. (The vectors for the model)
++ ... Well, get everything that can be reused.

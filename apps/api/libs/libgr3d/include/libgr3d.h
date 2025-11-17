@@ -1,12 +1,14 @@
-
 // libgr3d.h
 // 3D floating routines.
+// Created by Fred Nora.
 
-#ifndef __LIBGR3D_H
-#define __LIBGR3D_H   1
+#ifndef __LIBGR3D_LIBGR3D_H
+#define __LIBGR3D_LIBGR3D_H   1
 
-#include "grprim3d.h"
+
 #include <stddef.h>
+#include "grprim3d.h"
+
 
 extern int libgr_dummy;
 

@@ -1,9 +1,9 @@
-
 // grprim3d.h
 // Some 3D stuff using float.
+// Created by Fred Nora.
 
-#ifndef __GRPRIM3D_H
-#define __GRPRIM3D_H    1
+#ifndef __LIBGR3D_GRPRIM3D_H
+#define __LIBGR3D_GRPRIM3D_H    1
 
 
 // 2D float point.
