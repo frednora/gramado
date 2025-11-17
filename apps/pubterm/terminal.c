@@ -32,7 +32,9 @@ const char *child_image_name = "#pubsh.bin";
 // The main structure.
 // see: terminal.h
 struct terminal_d  Terminal;
-FILE *__terminal_input_fp;
+
+FILE *fp_input_from_system;
+FILE *fp_input_from_shell;
 
 // Windows
 struct gws_window_info_d *wi;  // Window info for the main window.
@@ -1559,7 +1561,6 @@ static void doPrompt(int fd)
     // #bugbug
     gws_set_focus(fd,wid);
 
-
 // Draw prompt symbol.
     gws_draw_char ( 
         fd, 
@@ -3017,6 +3018,8 @@ terminalProcedure (
         update_clients(fd);
         if (Terminal._mode == TERMINAL_MODE_EMBEDDED)
             doPrompt(fd);
+        // #bugbug: Recursion?
+        //gws_set_focus(fd,main_window);
         return 0;
         break;
 
@@ -3131,6 +3134,10 @@ fail:
 // local
 // Pegando o input de 'stderr'.
 // It's working
+// #test
+// The terminal reads from stdin and sends the data to one of the connectors ... 
+// the shell will read the connector and send back using the other connector, 
+// then the terminal reads the other connector.
 static int __input_from_connector(int fd)
 {
 // #importante:
@@ -3164,33 +3171,49 @@ RelaunchShell:
         //goto fail;
     rtl_sleep(1000);
 
-// ------------------------------
-// New stdin.
-// Reaproveitando a estrutura em ring3 do stderr.
-// Save it globally.
+/*
+Terminal Responsibilities
+ Read from original stdin (keyboard events).
+ Write into connectors[1] → this becomes shell’s stdin.
+ Read from connectors[0] → this is shell’s stdout.
+ Render output on the terminal window.
+*/
 
-    __terminal_input_fp = stderr;
-    if ((void*) __terminal_input_fp == NULL){
-        printf("__input_from_connector: __terminal_input_fp\n");
+// In the Terminal:
+
+// (1) Terminal will read input from the standard stdin,
+//     because we have the foreground thread when we have the focus.
+    // stdin
+
+// (2) We will send data to the shell using this channel
+    int connector1_fd = (int) sc82(902,1,0,0);  // channel 1 (Terminal → Shell)
+    if (connector1_fd < 0){
         goto fail;
     }
 
-// --------------------------------------
-// #test
-// Let's get the fd for the connector0.
-// We already told to the kernel that we're a terminal 
-// when we called syscall 901 in main(), so this way 
-// we're able to get out connector.
-// Our connector is gonna be our new stdin.
-// We need to call this routine after the rtl_clone_and_execute().
-
-    int connector0_fd = -1;
-    connector0_fd = (int) sc82(902,0,0,0);
+// (1) Shell will send data to the us using this channel
+    int connector0_fd = (int) sc82(902,0,0,0);  // channel 0 (Shell → Terminal)
     if (connector0_fd < 0){
         goto fail;
     }
-// The terminal is reading from connector 0.
-    __terminal_input_fp->_file = (int) connector0_fd;
+
+
+// Input from system
+    fp_input_from_system = stdin;
+    if ((void*) fp_input_from_system == NULL){
+        printf("__input_from_connector: fp_input_from_system\n");
+        goto fail;
+    }
+    fp_input_from_system->_file = (int) stdin->_file;
+
+// Input from shell
+    fp_input_from_shell = stderr;
+    if ((void*) fp_input_from_shell == NULL){
+        printf("__input_from_connector: fp_input_from_shell\n");
+        goto fail;
+    }
+    fp_input_from_shell->_file = (int) connector0_fd;
+
 
 // -----------------------
 // Loop
@@ -3200,10 +3223,36 @@ RelaunchShell:
 // IN: socket, wid, msg, data1, data2
 
     const int MessageCode = MSG_KEYDOWN;
+    char myBuffer[2];
+
+    rewind(fp_input_from_system);
+    rewind(fp_input_from_shell);
 
     while (1){
-        // VT Interactivity
-        C = (int) fgetc(__terminal_input_fp);
+
+        // Get from standard stdin
+        C = (int) fgetc(fp_input_from_system);
+        if (C == EOF){
+            //printf("Terminal: EOF in fp_input_from_system\n");
+        }
+        if (C > 0)
+        {
+            myBuffer[0] = (char) C;
+            // Send to the shell via connector1_fd
+            write(connector1_fd,myBuffer,1);
+            
+            // #debug ok
+            //printf("%c\n",C);
+        }
+
+        while (1){
+        // Get from shell via connector0_fd
+        C = (int) fgetc(fp_input_from_shell);
+        if (C == EOF){
+            //printf("Terminal: EOF in fp_input_from_shell\n");
+        }
+        if (C<=0)
+            break;
         if (C > 0)
         {
             // VT Renderer
@@ -3218,6 +3267,7 @@ RelaunchShell:
         //if (C == 4){
         //    goto done;
         //}
+        }
 
         // Get system events
         if (fGetSystemEvents == TRUE){
@@ -3228,7 +3278,6 @@ RelaunchShell:
         if (fGetWSEvents == TRUE){
             __get_ds_event( client_fd, main_window );
         }
-
     };
 
     goto RelaunchShell;

@@ -307,27 +307,27 @@ copy_process_struct(
 // Create connectors.
 // Only a terminal can create connectors.
 
-    file *connector1;  //fp
-    file *connector2;
-    int spot1=0; //index in Objects[i]
+    file *fp_connector1;  //fp
+    file *fp_connector2;
+    int spot1=0;  //index in Objects[i]
     int spot2=0;
 
     // If the father is a terminal.
-    if (Process1->_is_terminal == TRUE){
+    if (Process1->TerminalConnection._is_terminal == TRUE){
 
-    // fp
-    connector1 = (file *) new_file(ObjectTypeFile);
-    if ((void*) connector1 == NULL)
-        panic("copy_process_struct: connector1\n");
+    // Create fp for connector 1.
+    fp_connector1 = (file *) new_file(ObjectTypeFile);
+    if ((void*) fp_connector1 == NULL)
+        panic("copy_process_struct: fp_connector1\n");
 
-    // fp
-    connector2 = (file *) new_file(ObjectTypeFile);
-    if ((void*) connector2 == NULL)
-        panic("copy_process_struct: connector2\n");
+    // Create fp for connector 2.
+    fp_connector2 = (file *) new_file(ObjectTypeFile);
+    if ((void*) fp_connector2 == NULL)
+        panic("copy_process_struct: fp_connector2\n");
 
 // =======================================================
-// Find empy spot in Objects[i] for the process 1.
-    spot1=0; // index in Objects[i]
+// Find empty spot in Objects[i] for the process 1.
+    spot1=0;  // index in Objects[i]
     spot2=0;
     // Remember: 31 is the socket and is not available.
     // #bugbug: What happens when the loop fails?
@@ -351,19 +351,18 @@ copy_process_struct(
     };
     // #bugbug: What happens when the loop fails? crash!
     if (spot1 == 0)
-        panic("copy_process_struct: No spot1 for connector1\n");
+        panic("copy_process_struct: No spot1 for Process1\n");
     if (spot2 == 0)
-        panic("copy_process_struct: No spot2 for connector1\n");
-    // ok
-    // Save them.
+        panic("copy_process_struct: No spot2 for Process1\n");
+    // ok, Save them
     // What is the terminal and what is the application?
-    Process1->Objects[spot1] = (unsigned long) connector1;
-    Process1->Connectors[0] = spot1;
-    Process1->Objects[spot2] = (unsigned long) connector2;
-    Process1->Connectors[1] = spot2;
+    Process1->Objects[spot1] = (unsigned long) fp_connector1;
+    Process1->TerminalConnection.Connectors[0] = spot1;
+    Process1->Objects[spot2] = (unsigned long) fp_connector2;
+    Process1->TerminalConnection.Connectors[1] = spot2;
 
 // =======================================================
-// Find empy spot in Objects[i] for the process 2.
+// Find empty spot in Objects[i] for the process 2.
     spot1=0;
     spot2=0;
     // Remember: 31 is the socket and is not available.
@@ -385,18 +384,26 @@ copy_process_struct(
         }
     };
     if (spot1 == 0)
-        panic("copy_process_struct: No spot1 for connector1\n");
+        panic("copy_process_struct: No spot1 for Process2\n");
     if (spot2 == 0)
-        panic("copy_process_struct: No spot2 for connector1\n");
-    Process2->Objects[spot1] = (unsigned long) connector1;
-    Process2->Connectors[0] = spot1;
-    Process2->Objects[spot2] = (unsigned long) connector2;
-    Process2->Connectors[1] = spot2;
+        panic("copy_process_struct: No spot2 for Process2\n");
+    Process2->Objects[spot1] = (unsigned long) fp_connector1;
+    Process2->TerminalConnection.Connectors[0] = spot1;
+    Process2->Objects[spot2] = (unsigned long) fp_connector2;
+    Process2->TerminalConnection.Connectors[1] = spot2;
 
 // =======================================================
-    // Set flags.
-    Process1->_is_terminal = TRUE;           // Father
-    Process2->_is_child_of_terminal = TRUE;  // Child (The clone)
+// Set flags
+// Process1 is the terminal.
+// Process2 is the child.
+
+    // Father
+    Process1->TerminalConnection._is_terminal = TRUE;
+    Process1->TerminalConnection._is_child_of_terminal = FALSE; 
+
+    // Child (The clone)
+    Process2->TerminalConnection._is_terminal = FALSE;
+    Process2->TerminalConnection._is_child_of_terminal = TRUE;
 
     //#debug
     //printk("A terminal created two connectors\n");

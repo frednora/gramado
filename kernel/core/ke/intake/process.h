@@ -209,6 +209,23 @@ struct token_d
 
 };
 
+// Terminal Connection support.
+// When a child wants to communicate with a terminal 
+// via standard streams.
+struct terminal_connection_d 
+{
+    int initialized;
+
+// Connectors.
+// 2 Indexes to the table above, Objects[i];
+// The connectors are created in copy_process_struct() in clone.c.
+// when the terminal is clonning himself to create a child.
+    int Connectors[2];
+
+// Only the terminals can create connectors.
+    int _is_terminal;           // Father process
+    int _is_child_of_terminal;  // Child process
+};
 
 // PCB - Process Control Block
 
@@ -382,14 +399,10 @@ struct process_d
 // We're still using 32 in all over the kernel.
     unsigned long Objects[64];
 
-// Connectors.
-// 2 Indexes to the table above, Objects[i];
-// The connectors are created in copy_process_struct() in clone.c.
-// when the terminal is clonning himself to create a child.
-    int Connectors[2];
-// Only the terminals can create connectors.
-    int _is_terminal;           // Father process
-    int _is_child_of_terminal;  // Child process.
+// Terminal Connection support.
+// When a child wants to communicate with a terminal 
+// via standard streams.
+    struct terminal_connection_d  TerminalConnection;
 
 // ORDEM: 
 // O que segue eh referenciado com pouca frequencia.

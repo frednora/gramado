@@ -1153,8 +1153,10 @@ struct process_d *create_and_initialize_process_object(void)
     new_process->pid = -1;
     new_process->ppid = -1;
 
-    new_process->_is_terminal = FALSE;
-    new_process->_is_child_of_terminal = FALSE;
+    new_process->TerminalConnection._is_terminal = FALSE;
+    new_process->TerminalConnection._is_child_of_terminal = FALSE;
+    new_process->TerminalConnection.Connectors[0] = 0;
+    new_process->TerminalConnection.Connectors[1] = 0;
 
 // Get new pid.
 // #:: We have a valid range here!

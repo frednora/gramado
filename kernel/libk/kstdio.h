@@ -289,7 +289,6 @@ struct file_d
 {
     // The 'operation mode'.
     object_type_t ____object;
-
     int used;
     int magic;
 

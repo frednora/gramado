@@ -26,6 +26,10 @@ int isTimeToQuit=FALSE;
 unsigned long device_width=0;
 unsigned long device_height=0;
 
+FILE *fp_input_from_terminal;
+FILE *fp_output_to_terminal;
+
+
 //======================================
 
 static void shellPrompt(void);
@@ -145,12 +149,27 @@ static void shellPrompt(void)
     //printf("\n");
     //printf("$\n");
 
-
+/*
 // Line feed (unix)
     printf("\033D $ ");
-
     //printf("$ ");
     fflush(stdout);
+
+// Line feed (unix)
+    printf("\033D 2 ");
+    //printf("$ ");
+    fflush(stdout);
+*/
+/*
+    const char *msg1 = "\033D $ ";
+    write(stdout->_file, msg1, strlen(msg1));
+    const char *msg2 = "\033D 2 ";
+    write(stdout->_file, msg2, strlen(msg2));
+*/
+
+    printf("\033D $ \n");
+    //#bugbug: The second does not work
+    //printf("\033D $2 \n");
 }
 
 // local
@@ -391,35 +410,51 @@ int main(int argc, char *argv[])
     int C=0;
     isTimeToQuit = FALSE;
 
-// -----------------------------------
-// (>>> stdout)
-// Still using the kernel console.
+// Shell side:
+// Shell will get the connectors.
 
-// -----------------------------------
-// (>>> stderr)
-// Now we have a new stdout.
-// Now we're gonna send the data to the terminal.bin
-// that is reading stderr.
-
-    stdout = stderr;
-
-
-    int connector0_fd = 0;
-    int connector1_fd = 0;
-
-    int UseConnectors=TRUE;
-    if (UseConnectors == TRUE){
-    connector0_fd = (int) sc82(902,0,0,0);
-    //connector1_fd = (int) sc82(902,1,0,0);
-    //#debug
-    //printf("terminal.bin: connector0_fd %d | connector1_fd %d \n",
-    //    connector0_fd, connector1_fd);
-    //while(1){}
-    // The shell is writing on connector 0,
-    // the same connector the terminal is reading from.
-     stdout->_file = (int) connector0_fd;
+// The sell will read data from the terminal using this connector.
+// Shell’s stdin (Terminal writes keyboard input here).
+    int connector1_fd = (int) sc82(902,1,0,0);  
+    if (connector1_fd < 0){
+        goto fail;
     }
 
+// The sell will send data to the terminal using this connector.
+// Shell’s stdout (Terminal reads output here).
+    int connector0_fd = (int) sc82(902,0,0,0); 
+    if (connector0_fd < 0){
+        goto fail;
+    }
+
+// #important:
+// We gotta send it to stderr.
+// So lets make the redirection.
+
+    int UseConnectors=TRUE;
+
+    if (UseConnectors == TRUE)
+    {
+        // Input pointers
+        fp_input_from_terminal = stdin;
+        // Input descriptors
+        fp_input_from_terminal->_file = (int) connector1_fd;
+        // stdin->_file = connector1_fd → Shell reads from connector1.
+        stdin->_file = (int) connector1_fd;
+
+
+        // Output pointers
+        fp_output_to_terminal = stderr;
+        stdout = stderr;
+        // Output descriptors
+        fp_output_to_terminal->_file = (int) connector0_fd;
+        // stdout->_file = connector0_fd → Shell writes to connector0.
+        stdout->_file = (int) connector0_fd;
+    }
+
+// ---------------------------
+
+/*
     doLF();
     printf("shell.bin: argc={%d} \n",argc);
     if (argc>0){
@@ -427,6 +462,7 @@ int main(int argc, char *argv[])
             printf("argv[%d]: %s\n", i, argv[i] );
         };
     }
+*/
 
     shellPrompt();
 
@@ -434,6 +470,9 @@ int main(int argc, char *argv[])
 // Loop: (Input events).
 // Reading from stdin and sending to our new stdout.
 // stderr.
+
+    rewind(fp_input_from_terminal);
+    rewind(fp_output_to_terminal);
 
     while (1){
 
@@ -444,10 +483,14 @@ int main(int argc, char *argv[])
         // We got a PF when we type a lot of keys.
         // And sometimes when we type Enter.
 
-        C = fgetc(stdin);
+        // Reads from fp_input_from_terminal (connector1).
+        C = (int) fgetc(fp_input_from_terminal);
         // Como estamos usando um arquivo regular,
         // entao o kernel concatena ate chegar no fim do arquivo.
         if (C == EOF){
+
+            //#debug
+            //printf ("Shell: EOF\n");
             //rewind(stdin);
             //exit(0);
         }

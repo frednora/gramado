@@ -2204,35 +2204,44 @@ void *sci2 (
                             (unsigned long) clone_flags );
     }
 
+// ----------------------------------
 // This process is telling us that he wants
 // to be treated as a terminal,
 // giving him the permission to create Connectors[i].
     if (number == 901)
     {
-        if (p->_is_terminal == TRUE)
+        // Already done.
+        if (p->TerminalConnection._is_terminal == TRUE)
             return NULL;
+        // Signature?
         if (arg2 != 1234)
             return NULL;
-        p->Connectors[0] = -1;
-        p->Connectors[1] = -1;
-        p->_is_terminal = TRUE;
+        p->TerminalConnection.Connectors[0] = -1;
+        p->TerminalConnection.Connectors[1] = -1;
+        p->TerminalConnection._is_terminal = TRUE;
         return NULL;
     }
 
+// ----------------------------------
 // Get the file descriptor for a given connector
 // #todo: Create a worker for this.
+// Terminals and its childs can call this service.
+// Normally this is called by the child after 
+// the father call the clone service that stablishes the connection.
+// Only a terminal can create connectors. So it needs to 
+// set itself as a terminal before calling the clone().
 // return: 
 // NULL = fail.
     int conn_fd = 0;
     if (number == 902)
     {
-        if (p->_is_terminal == TRUE || 
-            p->_is_child_of_terminal == TRUE )
+        if (p->TerminalConnection._is_terminal == TRUE || 
+            p->TerminalConnection._is_child_of_terminal == TRUE )
         {
-            // The first connector
+            // Get the first connector
             if (arg2 == 0)
             {
-                conn_fd = (int) p->Connectors[0];
+                conn_fd = (int) p->TerminalConnection.Connectors[0];
                 if (conn_fd < 0)
                     return NULL;
                 if (conn_fd < 3)
@@ -2242,10 +2251,10 @@ void *sci2 (
                     return NULL;
                 return (void*) (conn_fd & 0xFF);
             }
-            // The second connector
+            // Get the second connector
             if (arg2 == 1)
             {
-                conn_fd = (int) p->Connectors[1];
+                conn_fd = (int) p->TerminalConnection.Connectors[1];
                 if (conn_fd < 0)
                     return NULL;
                 if (conn_fd < 3)
@@ -2255,12 +2264,11 @@ void *sci2 (
                     return NULL;
                 return (void*) (conn_fd & 0xFF);
             }
-            // Fail
-            // Invalid connector number.
+            // Fail. Invalid connector number.
             return NULL;
         }
         // Fail
-        return (void*) NULL;
+        return NULL;
     }
 
 // 8000 - ioctl() implementation.
@@ -2430,9 +2438,10 @@ void *sci2 (
 // #test
 // The permission to change the foreground thread 
 // depends on the input authority.
+
     if (number == 10011)
     {
-        debug_print("sci2: [10011] set foreground thread tid\n");
+        //debug_print("sci2: [10011] set foreground thread tid\n");
 
         // The permission is ok if the current thread (caller) 
         // is the display server and the input authority is AUTH_DISPLAY_SERVER. 
@@ -2451,7 +2460,7 @@ void *sci2 (
             // #debug
             // ok. This is the best case.
             printk("10011: tid=ds | auth=ds\n");
-            refresh_screen();
+            //refresh_screen();
         }
 
         // Some process that is not the display server 
@@ -2465,7 +2474,7 @@ void *sci2 (
             // forground thread when the authority is ds.
             // We can use the activation or focus to set up the foreground thread.
             printk("10011: tid!=ds | auth=ds\n");
-            refresh_screen();
+            //refresh_screen();
         }
 
         //Change the priority of the old foreground thread?
