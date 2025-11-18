@@ -47,11 +47,34 @@ struct smp_info_d
     struct mp_floating_pointer_structure_d *mp_floating_point;
     struct mp_configuration_table_d *mp_configuration_table;
 
-// How many processors did we find?
-// Array of pointers.
-// Pointer for this structure: (struct entry_processor_d)
-    unsigned long processors[32];
-    unsigned int number_of_processors;
+//
+// mpfloat processors
+//
+
+// Array of pointers for entries found in MP table.
+// For struct entry_processor_d
+// See: mpfloat.h
+    unsigned long mptable_pointer_for_processor_entry[32]; 
+    unsigned int mptable_number_of_processors;
+    unsigned int mptable_number_of_entries;
+
+//
+// acpi processors
+//
+
+// Array of pointers for entries found in MP table.
+// See: acpi.h ?
+    //unsigned long acpitable_pointer_for_processor_entry[32]; 
+    //unsigned int acpitable_number_of_processors;
+
+//
+// processors (global cpu info)
+//
+
+// For processor_d
+// see: cpu.h
+    //unsigned long cpu[32];
+    //unsigned int number_of_cpus;
 
 // Step2:
 // Disable PIC for BSP.

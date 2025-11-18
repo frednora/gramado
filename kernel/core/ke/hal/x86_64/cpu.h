@@ -31,14 +31,13 @@
 extern int processors_count;
 
 //
-// Structures.
+// Structures
 //
 
-// processor info
+// Processor info
 // #bugbug: 
 // For now, this is only for Intel.
-// We need to use it as a generic structure,
-// not specific
+// We need to use it as a generic structure, not specific
 
 struct processor_d   
 {
@@ -191,7 +190,6 @@ struct processor_d
 // Navigation.
     struct processor_d  *next;
 };
-
 extern struct processor_d  *processor;
 
 // List of processors.
@@ -246,8 +244,7 @@ extern struct UPProcessorBlock_d  UPProcessorBlock;
 // == prototypes ===========================================
 //
 
-// MSR support.
-
+// MSR support
 int cpuHasMSR(void);
 void cpuGetMSR(unsigned int msr, unsigned int *lo, unsigned int *hi);
 void cpuSetMSR(unsigned int msr, unsigned int lo, unsigned int hi);

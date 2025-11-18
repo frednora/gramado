@@ -348,15 +348,15 @@ Assignment  |    4 |      8 | One entry per system interrupt source.
 
 // Clean the list
     for (i=0; i<32; i++){
-        smp_info.processors[i] = 0;
+        smp_info.mptable_pointer_for_processor_entry[i] = 0;  // Null pointer
     };
-    smp_info.number_of_processors = 0;
+    smp_info.mptable_number_of_processors = 0;
 
-// #test
-// #bugbug
-// EntryCount has the max number of entries.
-    if (EntryCount > 32)
-    {
+// Save the number of entries we got before.
+    smp_info.mptable_number_of_entries = EntryCount;
+// Limit our loop to match with the number of pointers we're 
+// capable of handling. #todo: Expand it.
+    if (EntryCount > 32){
         printk("#bugbug: EntryCount > 32\n");
         EntryCount = 32;
     }
@@ -388,7 +388,9 @@ Assignment  |    4 |      8 | One entry per system interrupt source.
             //printk(">>>>> PROCESSOR found! in entry %d\n",i);
             printk("Entry %d: Type %d [PROCESSOR]\n", i, e->type );
 
-            smp_info.processors[NumberOfProcessors] = (unsigned long) e;
+            // Save the pointer
+            smp_info.mptable_pointer_for_processor_entry[NumberOfProcessors] = 
+                (unsigned long) e;
             NumberOfProcessors += 1;
 
             // apic id.
@@ -452,17 +454,19 @@ Assignment  |    4 |      8 | One entry per system interrupt source.
 // Global number of processors.
     g_processor_count = (unsigned int) NumberOfProcessors;
 // smp number of processors.
-    smp_info.number_of_processors = (unsigned int) NumberOfProcessors;
-    printk("Processor count: {%d}\n", smp_info.number_of_processors );
+    smp_info.mptable_number_of_processors = (unsigned int) NumberOfProcessors;
+    printk("Processor count: {%d}\n", smp_info.mptable_number_of_processors );
 
 // smp done.
     smp_info.initialized = TRUE;
     printk("__x64_probe_smp_via_mptable: done\n");
 
+
     // #debug
+    //printk("breakpoint\n");
     //refresh_screen();
-    //while(1){
-    //};
+    //while(1){};
+
 
     // g_smp_initialized = TRUE;
     return TRUE;

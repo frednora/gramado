@@ -655,12 +655,14 @@ static int __test_initialize_ap_processor(int apic_id)
 
     unsigned long BufferSizeInBytes = (2*4096);  // 8KB
 
+    // No APs processors yet
+    smp_info.nr_ap_running = 0;
     if (CONFIG_INITIALIZE_SECOND_PROCESSOR == 1)
     {
         // (Step 1) Load AP image into memory.
         // Address 0x8000, vector 0x08
         printk("Loading AP image ...\n");
-        refresh_screen();
+        //refresh_screen();
 
         // #todo: Check return value.
         fsLoadFile ( 
@@ -687,7 +689,9 @@ static int __test_initialize_ap_processor(int apic_id)
                 ap_signature_pointer[1] == 0xA0 )
             {
                 printk("AP is running!\n");
-                refresh_screen();
+                //refresh_screen();
+                // Our first AP processor is running
+                smp_info.nr_ap_running = 1;
                 break;
             }
         };
@@ -1178,7 +1182,11 @@ void I_kmain(int arch_type)
     gSystemStatus = 1;
     gSystemEdition = 0;
     __failing_kernel_subsystem = KERNEL_SUBSYSTEM_INVALID;
+
     has_booted = FALSE;
+
+// No APs processors yet
+    smp_info.nr_ap_running = 0;
 
     config_use_progressbar = FALSE;
     if (CONFIG_USE_PROGRESSBAR == 1){

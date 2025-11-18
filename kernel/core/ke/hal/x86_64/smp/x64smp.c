@@ -1,5 +1,6 @@
 // x64smp.c
-// Symmetric multiprocessing
+// Symmetric multiprocessing (SMP) support for x86_64.
+// Created by Fred Nora.
 
 // Initialization
 // Probing if smp is supported.
@@ -88,8 +89,7 @@ struct smp_info_d  smp_info;
 
 void x64smp_show_info(void)
 {
-    if (smp_info.initialized != TRUE)
-    {
+    if (smp_info.initialized != TRUE){
         printk ("smp_info not initialized!\n");
         return;
     }
@@ -108,7 +108,7 @@ void x64smp_show_info(void)
 
 
     printk("Number of processors: %d\n",
-        smp_info.number_of_processors );
+        smp_info.mptable_number_of_processors );
 
     printk("NR AP running: %d\n",
         smp_info.nr_ap_running );
@@ -300,12 +300,12 @@ void x64_show_smp_into(void)
     if (smp_info.initialized != TRUE)
         return;
     // #debug
-    if (smp_info.number_of_processors > 16)
+    if (smp_info.mptable_number_of_processors > 16)
         return;
 
-    for (i=0; i<smp_info.number_of_processors; i++)
+    for (i=0; i<smp_info.mptable_number_of_processors; i++)
     {
-        p_entry = (struct entry_processor_d *) smp_info.processors[i];
+        p_entry = (struct entry_processor_d *) smp_info.mptable_pointer_for_processor_entry[i];
         if ( (void*) p_entry != NULL )
         {
             //#todo

@@ -1,4 +1,6 @@
 // mpfloat.h
+// MP Floating Pointer table support.
+// Created by Fred Nora.
 
 
 #ifndef __SMP_MPFLOAT_H

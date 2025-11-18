@@ -330,8 +330,10 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 // to show the information about the smp initialization.
     if ( kstrncmp(cmdline,"smp",3) == 0 )
     {
-        printk("Processor count: {%d}\n", 
-            smp_info.number_of_processors );
+        //printk("Processor count: {%d}\n", 
+            //smp_info.mptable_number_of_processors );
+
+        x64smp_show_info();
         goto exit_cmp;
     }
 
