@@ -1,8 +1,31 @@
-; header4.asm
+; x86_64.asm
 ; Created by Fred Nora.
 
 ;extern _Module0EntryPoint
 
+
+; Type/flags word:
+; 0xEE00 → Present=1, DPL=3, Type=0xE (interrupt gate).
+;  + Means: user mode (ring 3) can call this gate (e.g. syscalls).
+;  + Interrupt gate → IF cleared on entry.
+;0x8E00 → Present=1, DPL=0, Type=0xE (interrupt gate).
+;  + Means: only ring 0 can trigger it (hardware IRQs, faults).
+;  + Interrupt gate → IF cleared on entry.
+
+; What this means in practice
+; Syscalls (0xEE00):
+; + Ring 3 can invoke them (INT 0x80, etc.).
+; + IF is cleared when entering, so interrupts are disabled until you return with IRETQ.
+; + This is safe, but it means syscalls run with interrupts off unless you re‑enable inside the kernel.
+; Hardware IRQs (0x8E00):
+; + Only ring 0 can trigger them (as expected).
+; + IF cleared on entry, so no nested IRQs.
+; + Standard choice for hardware interrupts.
+
+; In simple terms
+; + 0x8E00 → hardware IRQs, kernel‑only, interrupts disabled on entry.
+; + 0xEE00 → syscalls, user‑callable, interrupts disabled on entry.
+; + 0xEF00 (if you ever use it) → syscalls, user‑callable, interrupts stay enabled.
 
 ; ==================================
 ; Clear Nested Task bit in RFLAGS.
@@ -76,6 +99,7 @@ _gdt_flush:
 ; This means even ring 3 can trigger these gates, but interrupts will be 
 ; masked during handling.
 setup_idt:
+; Using 0xEE00
 
     ;pushad
     push rax
@@ -192,6 +216,7 @@ d_offset_63_32: dd 0
 
 global _setup_system_interrupt
 _setup_system_interrupt:
+; Using 0xEE00
 
     push rax
     push rbx
@@ -297,6 +322,10 @@ address_offset_63_32: dd 0
 ;    rbx = número do vetor (0x80).(número da interrupção.)
 ;
 ; 0xEE00 - (present, dpl=3, interrupt gate) (disable interrupts)
+; Type = 0xE → Interrupt gate (64‑bit).
+; DPL = 3 → User mode (ring 3) is allowed to invoke this gate.
+; P = 1 → Entry is present.
+; Other bits → Reserved or set according to long mode requirements.
 ;
 ; 0x8E00 - (present, dpl=0, interrupt gate) (disable interrupts)
 ;
@@ -315,6 +344,7 @@ address_offset_63_32: dd 0
 ; Testing this for hw interrupts.
 global _setup_system_interrupt_hw
 _setup_system_interrupt_hw:
+; Using 0x8E00
 
     push rax
     push rbx
@@ -377,7 +407,8 @@ _setup_system_interrupt_hw:
     xor rax, rax
     mov ax, word [__address_offset_31_16]
     shl rax, 16
-    ;0x8E00 - (present, dpl=0, interrupt gate) (disable interrupts)
+    ; 0x8E00 - (present, dpl=0, interrupt gate) (disable interrupts)
+    ; These don’t clear IF, so interrupts can nest.
     mov ax, word 0x8E00
     mov dword [rdi+4], eax
 ;=========================================
@@ -422,138 +453,161 @@ __address_offset_63_32: dd 0
 ; present, dpl=3, interrupt gate
 ; Interrupts desabled.
 
+;  What 0xEE00 means
+; + Type = 0xE → 64‑bit interrupt gate
+; + DPL = 3 → Descriptor Privilege Level = 3 → user mode (ring 3) can invoke this gate
+; + P = 1 → Entry is present
+; + Behavior: 
+;   Interrupt gates clear IF (disable maskable interrupts) on entry
+
+; If you use 0xEE00 for faults
+; + You’re saying: 
+;   “user mode is allowed to call these exception vectors directly.”
+; + That means a ring 3 program could execute INT 0x0 (divide error) 
+;   or INT 0xD (GP fault) and jump straight into 
+;   your kernel’s fault handler.
+; + That’s usually not desirable, because it bypasses 
+;   your syscall interface and lets user code trigger 
+;   kernel exception handlers arbitrarily.
+; + The CPU will still deliver real exceptions correctly, 
+;   but you’ve opened up a way for user code to fake them.
+;   >>> Good to build the handlers and test them <<<
+
 setup_faults:
+; We're using 0xEE00: (Permissive)
+; Standard way: 0x8E00 (Restrict to ring 0)
+
     push rax
     push rbx
 
 ;#0
     mov rax, qword _fault_N0
     mov rbx, qword 0
-    call _setup_system_interrupt
+    call _setup_system_interrupt ; 0xEE00
 ;#1  
     mov rax, qword _fault_N1
     mov rbx, qword 1
-    call _setup_system_interrupt
+    call _setup_system_interrupt ; 0xEE00
 ;#2  
     mov rax, qword _fault_N2
     mov rbx, qword 2
-    call _setup_system_interrupt
+    call _setup_system_interrupt ; 0xEE00
 ;#3  debug
     mov rax, qword _fault_N3
     mov rbx, qword 3
-    call _setup_system_interrupt
+    call _setup_system_interrupt ; 0xEE00
 ;#4  
     mov rax, qword _fault_N4
     mov rbx, qword 4
-    call _setup_system_interrupt
+    call _setup_system_interrupt ; 0xEE00
 ;#5  
     mov rax, qword _fault_N5
     mov rbx, qword 5
-    call _setup_system_interrupt
+    call _setup_system_interrupt ; 0xEE00
 ;#6 - Invalid opcode
     mov rax, qword _fault_INVALID_OPCODE
     mov rbx, qword 6
-    call _setup_system_interrupt
+    call _setup_system_interrupt ; 0xEE00
 ;#7  
     mov rax, qword _fault_N7
     mov rbx, qword 7
-    call _setup_system_interrupt
+    call _setup_system_interrupt ; 0xEE00
 ;#8 - double fault
     mov rax, qword _fault_DOUBLE
     mov rbx, qword 8
-    call _setup_system_interrupt
+    call _setup_system_interrupt ; 0xEE00
 ;#9  
     mov rax, qword _fault_N9
     mov rbx, qword 9
-    call _setup_system_interrupt
+    call _setup_system_interrupt ; 0xEE00
 ;#10  
     mov rax, qword _fault_N10
     mov rbx, qword 10
-    call _setup_system_interrupt
+    call _setup_system_interrupt ; 0xEE00
 ;#11  
     mov rax, qword _fault_N11
     mov rbx, qword 11
-    call _setup_system_interrupt
+    call _setup_system_interrupt ; 0xEE00
 ;#12 - stack
     mov rax, qword _fault_STACK
     mov rbx, qword 12
-    call _setup_system_interrupt
+    call _setup_system_interrupt ; 0xEE00
 ;#13 - general protection
     mov rax, qword _fault_GP
     mov rbx, qword 13
-    call _setup_system_interrupt
+    call _setup_system_interrupt ; 0xEE00
 ;#14  
     mov rax, qword _fault_N14
     mov rbx, qword 14
-    call _setup_system_interrupt
+    call _setup_system_interrupt ; 0xEE00
 ;#15 
     mov rax, qword _fault_N15
     mov rbx, qword 15
-    call _setup_system_interrupt
+    call _setup_system_interrupt ; 0xEE00
 ;#16 
     mov rax, qword _fault_N16
     mov rbx, qword 16
-    call _setup_system_interrupt
+    call _setup_system_interrupt ; 0xEE00
 ;#17  
     mov rax, qword _fault_N17
     mov rbx, qword 17
-    call _setup_system_interrupt
+    call _setup_system_interrupt ; 0xEE00
 ;#18  
     mov rax, qword _fault_N18
     mov rbx, qword 18
-    call _setup_system_interrupt
+    call _setup_system_interrupt ; 0xEE00
 ;#19 - Intel reserved.
     mov rax, qword _fault_N19
     mov rbx, qword 19
-    call _setup_system_interrupt
+    call _setup_system_interrupt ; 0xEE00
 ;#20 - Intel reserved.
     mov rax, qword _fault_N20
     mov rbx, qword 20
-    call _setup_system_interrupt
+    call _setup_system_interrupt ; 0xEE00
 ;#21 - Intel reserved.
     mov rax, qword _fault_N21
     mov rbx, qword 21
-    call _setup_system_interrupt
+    call _setup_system_interrupt ; 0xEE00
 ;#22 - Intel reserved.
     mov rax, qword _fault_N22
     mov rbx, qword 22
-    call _setup_system_interrupt
+    call _setup_system_interrupt ; 0xEE00
 ;#23 - Intel reserved.
     mov rax, qword _fault_N23
     mov rbx, qword 23
-    call _setup_system_interrupt
+    call _setup_system_interrupt ; 0xEE00
 ;#24 - Intel reserved.
     mov rax, qword _fault_N24
     mov rbx, qword 24
-    call _setup_system_interrupt
+    call _setup_system_interrupt ; 0xEE00
 ;#25 - Intel reserved.
     mov rax, qword _fault_N25
     mov rbx, qword 25
-    call _setup_system_interrupt
+    call _setup_system_interrupt ; 0xEE00
 ;#26 - Intel reserved.
     mov rax, qword _fault_N26
     mov rbx, qword 26
-    call _setup_system_interrupt
+    call _setup_system_interrupt ; 0xEE00
 ;#27 - Intel reserved.
     mov rax, qword _fault_N27
     mov rbx, qword 27
-    call _setup_system_interrupt
+    call _setup_system_interrupt ; 0xEE00
 ;#28 - Intel reserved.
     mov rax, qword _fault_N28
     mov rbx, qword 28
-    call _setup_system_interrupt
+    call _setup_system_interrupt ; 0xEE00
 ;#29 - Intel reserved.
     mov rax, qword _fault_N29
     mov rbx, qword 29
-    call _setup_system_interrupt
+    call _setup_system_interrupt ; 0xEE00
 ;#30 - Intel reserved.
     mov rax, qword _fault_N30
     mov rbx, qword 30
-    call _setup_system_interrupt
+    call _setup_system_interrupt ; 0xEE00
 ;#31 - Intel reserved.
     mov rax, qword _fault_N31
     mov rbx, qword 31
-    call _setup_system_interrupt
+    call _setup_system_interrupt ; 0xEE00
 
     pop rbx
     pop rax
@@ -561,11 +615,9 @@ setup_faults:
 
 ;=====================================
 ; setup_vectors:
-;     Setup some IDT vectors.
-; hw interrupts:
+; Setup some hw and sw IDT vectors.
 ; see: hw1.asm
-
-
+; 
 setup_vectors:
 
     push rax
@@ -579,50 +631,43 @@ setup_vectors:
 ; Recreating this entry in _turn_task_switch_on() in hw2.asm.
     mov rax,  qword unhandled_irq
     mov rbx,  qword 32
-    ;call _setup_system_interrupt
-    call _setup_system_interrupt_hw  ;#testing 0x8E00
+    call _setup_system_interrupt_hw  ; 0x8E00
 
 ; 33 - PS2 Keyboard.
 ; See: unit1hw.asm
     mov rax,  qword _irq1
     mov rbx,  qword 33
-    ;call _setup_system_interrupt
-    call _setup_system_interrupt_hw  ;#testing 0x8E00
+    call _setup_system_interrupt_hw  ; 0x8E00
 
 ; 40 - Clock, rtc.
     mov rax,  qword unhandled_irq
     mov rbx,  qword 40
-    ;call _setup_system_interrupt
-    call _setup_system_interrupt_hw  ;#testing 0x8E00
+    call _setup_system_interrupt_hw  ; 0x8E00
 
 ; fake nic
     ;mov rax,  qword unhandled_irq
     ;mov rbx,  qword 41
     ;call _setup_system_interrupt
-    call _setup_system_interrupt_hw  ;#testing 0x8E00
-
+    ;call _setup_system_interrupt_hw  ; 0x8E00
 
 ; 44 - PS2 Mouse.
 ; See: unit1hw.asm
     mov rax,  qword _irq12
     mov rbx,  qword 44
-    ;call _setup_system_interrupt
-    call _setup_system_interrupt_hw  ;#testing 0x8E00
+    call _setup_system_interrupt_hw  ; 0x8E00
 
 ; 46 - ide
 ; irq 14
     mov rax,  qword unhandled_irq
     mov rbx,  qword 46
-    ;call _setup_system_interrupt
-    call _setup_system_interrupt_hw  ;#testing 0x8E00
+    call _setup_system_interrupt_hw  ; 0x8E00
 
 
 ; 47 - ide
 ; irq 15
     mov rax,  qword unhandled_irq
     mov rbx,  qword 47
-    ;call _setup_system_interrupt
-    call _setup_system_interrupt_hw  ;#testing 0x8E00
+    call _setup_system_interrupt_hw  ; 0x8E00
 
 ;
 ; == System calls ===========================
@@ -641,19 +686,19 @@ setup_vectors:
 ; 0x80
     mov rax,  qword _int128
     mov rbx,  qword 128
-    call _setup_system_interrupt  
+    call _setup_system_interrupt ; 0xEE00
 ; 0x81
     mov rax,  qword _int129
     mov rbx,  qword 129
-    call _setup_system_interrupt  
+    call _setup_system_interrupt  ; 0xEE00 
 ; 0x82
     mov rax,  qword _int130
     mov rbx,  qword 130
-    call _setup_system_interrupt  
+    call _setup_system_interrupt  ; 0xEE00
 ; 0x83
     mov rax, qword _int131
     mov rbx, qword 131
-    call _setup_system_interrupt  
+    call _setup_system_interrupt  ; 0xEE00
 ; ...
 
 ;========================
@@ -670,7 +715,7 @@ setup_vectors:
 
     mov rax,  qword _int198
     mov rbx,  qword 198
-    call _setup_system_interrupt  
+    call _setup_system_interrupt  ; 0xEE00 
 
 ; =====================
 ; Called by the ring3 process at the initialization
@@ -687,7 +732,7 @@ setup_vectors:
 
     mov rax,  qword _int199
     mov rbx,  qword 199
-    call _setup_system_interrupt  
+    call _setup_system_interrupt   ; 0xEE00
 
     ;; ...
 
@@ -738,8 +783,7 @@ _asm_nic_create_new_idt_entry:
 
     ;mov rbx, qword [_nic_idt_entry_new_number]
     mov rbx, qword 41  ;32+9
-    ;call _setup_system_interrupt
-    call _setup_system_interrupt_hw  ;#testing 0x8E00
+    call _setup_system_interrupt_hw  ; 0x8E00
 
 ;; #test: 
 ;; Não sei se precisa carregar novamente.

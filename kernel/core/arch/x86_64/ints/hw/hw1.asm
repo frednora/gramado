@@ -127,6 +127,9 @@ hw_reboot:
 ;   EOI is expected in irq0_release (hw2.asm).
 ;================================
 
+; Error codes: 
+; PIT IRQ has no error code, but remember to handle exceptions 
+; that push an error code (GP, PF, DF) with a variant entry stub.
 ;;=====================================================
 ;;  ## TIMER ##
 ;;=====================================================
@@ -134,11 +137,9 @@ hw_reboot:
 ;; IRQ 0. 
 ;; Timer interrupt handler
 ;; See:
-;; 1pump/arch/x86_64/pit.c
-;; 0mem/core/ps/disp/ts.c
+;; pit.c
+;; disp/ts.c
 ;;
-
-
 ;================================
 extern _irq0_TIMER
 ; Capture context
@@ -213,10 +214,18 @@ _irq0:
 
 ; Data segments
     xor rax, rax
+; FS/GS bases come from MSRs (IA32_FS_BASE, IA32_GS_BASE), 
+; not the selector’s descriptor base. 
+; Moving a selector into fs/gs does not set their base; 
+; you need wrmsr if you use per-CPU or TLS bases. 
+; Saving/restoring just the selectors may not preserve 
+; what you expect.
     mov ax, gs
     mov word [_contextGS], ax
     mov ax, fs
     mov word [_contextFS], ax
+; DS and ES are largely ignored for data addressing in long mode; 
+; loading them is typically redundant.
     mov ax, es
     mov word [_contextES], ax
     mov ax, ds

@@ -132,13 +132,13 @@ __doRing3Callback:
 ;   Optionally performs a ring3 callback handoff,
 ;   refreshes CR3 (if necessary), restores CPU context,
 ;   sends EOI, and returns via iretq.
-; See: _irq0 in unit1hw.asm, ts.c, pit.c, sci.c.
+; See: _irq0 in hw1.asm, ts.c, pit.c, sci.c.
 ; -------------------------------------
 
 ; -------------------------------------
 ; Irq0 release.
 ; Timer interrupt.
-; See: _irq0 in unit1hw.asm.
+; See: _irq0 in hw1.asm.
 ; See: ts.c, pit.c, sci.c.
 align 4  
 irq0_release:
@@ -167,8 +167,9 @@ irq0_release:
 ; This is a 64bit pointer to the pml4 table.
 
 ; #bugbug
-; Não precisamos fazer refresh em todo tick,
-; somente quando houver troca de tarefa.
+; CR3 refresh: 
+; We flush TLB each tick; only do it when switching address spaces. 
+; Otherwise it’s needless overhead.
 
     mov RAX, CR3  
     IODELAY 
@@ -182,10 +183,18 @@ irq0_release:
 
     ; Segments
     xor rax, rax
+; DS and ES are largely ignored for data addressing in long mode; 
+; loading them is typically redundant.
     mov ax, word [_contextDS]
     mov ds, ax
     mov ax, word [_contextES]
     mov es, ax
+; FS/GS bases come from MSRs (IA32_FS_BASE, IA32_GS_BASE), 
+; not the selector’s descriptor base. 
+; Moving a selector into fs/gs does not set their base; 
+; you need wrmsr if you use per-CPU or TLS bases. 
+; Saving/restoring just the selectors may not preserve 
+; what you expect.
     mov ax, word [_contextFS]
     mov fs, ax
     mov ax, word [_contextGS]
@@ -260,8 +269,12 @@ irq0_release:
 ; #bugbug
 ; We do NOT need the 'sti'.
 ; The flags in the 'rflags' will reenable it.
+; IRETQ will re‑enable them safely.
 
-    sti
+    ; #test: We are testing it with nout the sti.
+    ; Avoiding extra timer interrupt.
+    ;sti
+
     iretq
 ; --------------------------------------
 .InvalidThread:

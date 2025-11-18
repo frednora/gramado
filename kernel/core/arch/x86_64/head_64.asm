@@ -144,10 +144,25 @@ align 8
 
 ;; IDT
 
-; Usadas nas entradas da idt.
+; 0x8E00 = 1000 1110 0000 0000 in binary
+; + P = 1 (bit 15) → Entry is present/valid
+; + DPL = 00 (bits 13–14) → Descriptor Privilege Level = 0 → only ring 0 (kernel) can invoke this gate
+; + Type = 1110 (bits 8–11) → 64‑bit interrupt gate
+; + Other bits = 0 → reserved/unused
 
-sys_interrupt equ    0x8E 
-sys_code      equ    8     ;Code selector.
+; By filling the whole IDT with 0x8E00 entries:
+; We created kernel‑only interrupt gates for all 256 vectors.
+; That means:
+; User mode (ring 3) cannot call them directly (DPL=0).
+; They all run in ring 0.
+; Interrupts are disabled on entry, preventing nested IRQs.
+; This is a safe “default fill” — it ensures that if 
+; any vector is triggered, it goes to your handler in kernel mode, 
+; and you won’t get re‑entered by another IRQ until you finish.
+
+; Used in IDE entries
+sys_interrupt equ    0x8E  ; Interrupt gates 
+sys_code      equ    8     ; Code selector
 
 ;=====================================;
 ; IDT.                                ;
@@ -2618,12 +2633,12 @@ START:
     ;out 0xA1, al
     ;out 0x21, al
 
-;See: unit0.asm
-; This is so dangeours
-
-    call setup_idt      ; Create a common handler, 'unhandled_int'.
-    call setup_faults   ; Setup vectors for faults and exceptions.
-    call setup_vectors  ; Some new vectors.
+; Create a common handler, 'unhandled_int'. (0xEE00)
+    call setup_idt   
+; Setup vectors for faults and exceptions.  (0xEE00) 
+    call setup_faults
+; Some new vectors. (sw=0xEE00 hw=0x8E00)
+    call setup_vectors
 
 ; IDT
 ; #danger:
