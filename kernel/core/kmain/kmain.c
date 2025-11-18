@@ -225,6 +225,10 @@ void keEarlyRing0IdleThread (void)
 // #danger: Do NOT change this function.
 // #bugbug: This thread can't execute complex routine for now.
     //printk("");  //fail
+
+    //debug_print ("keEarlyRing0IdleThread: w h\n");
+
+    /*
     unsigned long deviceWidth  = (unsigned long) screenGetWidth();
     unsigned long deviceHeight = (unsigned long) screenGetHeight();
     if ( deviceWidth == 0 || deviceHeight == 0 )
@@ -232,6 +236,7 @@ void keEarlyRing0IdleThread (void)
         debug_print ("keEarlyRing0IdleThread: w h\n");
         panic       ("keEarlyRing0IdleThread: w h\n");
     }
+    */
 Loop:
 // acende
     //backbuffer_draw_rectangle( 0, 0, deviceWidth, 28, COLOR_KERNEL_BACKGROUND );

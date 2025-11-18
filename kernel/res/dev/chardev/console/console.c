@@ -1504,69 +1504,6 @@ int consoleInputChar(int c)
     return (int) kinput(ascii);
 }
 
-
-void __dummy_thread(void)
-{
-    while (1){
-    };
-}
-
-void __test_process(void)
-{
-    struct process_d *p;
-
-// Wrapper
-// Only ring3 for now.
-// See: sys.c
-    p = (void*) sys_create_process ( 
-            NULL, 
-            0,                      // Reserved
-            PRIORITY_NORMAL_THRESHOLD,          // priority
-            get_current_process(),  // ppid
-            "no-name",              // name
-            RING3 );                // iopl 
-
-    if ((void*) p == NULL){
-        printk("p fail\n");
-        return;
-    }
-
-    //show_process_information();
-        
-// ok, it is working.
-// Create and initialize a process structure.
-    //__create_and_initialize_process_object();
-}
-
-// #test
-// Creating a ring0 thread.
-// #bugbug: 
-// We're having problems with ring0 context switching.
-
-void __test_thread(void)
-{
-
-// #bugbug: ring0 threads are a huge problem.
-// Avoid that for now.
-
-    struct thread_d *t;
-
-    t = 
-        (struct thread_d *) create_thread ( 
-                                NULL,
-                                __dummy_thread,    // init_rip, 
-                                PRIORITY_NORMAL_THRESHOLD, 
-                                get_current_process(), 
-                                "no-name",
-                                RING0 ); 
-    if ((void*) t == NULL){
-        printk("fail\n");
-        return;
-    }
-
-    //show_slots();
-}
-
 void DANGER_VGA_clear_screen(void)
 {
 /*

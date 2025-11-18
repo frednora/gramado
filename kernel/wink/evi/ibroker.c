@@ -75,9 +75,37 @@ __consoleProcessKeyboardInput (
     unsigned long long1, 
     unsigned long long2 );
 
+static void setup_minimal_ring0_thread(void);
+
 //
 // ================================================
 //
+
+
+// Minimal ring 0 thread example
+
+static void setup_minimal_ring0_thread(void)
+{
+    unsigned long stack_base = (unsigned long) kmalloc(4096);
+    unsigned long entry_point = (unsigned long) &keEarlyRing0IdleThread;
+
+    struct thread_d *t = create_thread(
+        NULL,              // parent process (NULL for kernel)
+        entry_point,       // initial RIP
+        stack_base + 4096, // initial RSP (top of stack)
+        0,                 // owner PID (0 for kernel)
+        "ring0-worker",    // thread name
+        RING0              // CPL = 0 (kernel mode)
+    );
+
+    if ((void*)t == NULL) {
+        panic("Failed to create ring0 thread");
+    }
+
+    // Mark it ready to run
+    SelectForExecution(t);
+}
+
 
 void input_enter_kernel_console(void)
 {
@@ -640,6 +668,16 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         show_thread_information();
         goto exit_cmp;
     }
+
+/*
+// Launch a ring 0 thread
+// #bugbug: We're still working to support ring 0 threads.
+    if ( kstrncmp( cmdline, "r0-thread", 9 ) == 0 )
+    {
+        //setup_minimal_ring0_thread();
+        goto exit_cmp;
+    }
+*/
 
 // Test if some AP put the signature in a given address.
     unsigned char *ap_signature_pointer = 
