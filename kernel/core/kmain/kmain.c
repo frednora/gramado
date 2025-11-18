@@ -146,6 +146,8 @@ static int lateinit(void);
 
 static int __test_initialize_ap_processor(int apic_id);
 
+static int I_initialize_kernel(int arch_type, int processor_number);
+
 //
 // =======================================================
 //
@@ -966,11 +968,11 @@ fail:
     return (int) -1;
 }
 
-// Called by I_kmain during the initialization of the BSP,
-// and for other routine during the initialization of an AP.
+// Called by I_kmain during the initialization of the BSP.
+// APs have a different initialization routine.
 // We don't have any print support yet.
 // See: kernel.h, kmain.h
-void I_initialize_kernel(int arch_type, int processor_number)
+static int I_initialize_kernel(int arch_type, int processor_number)
 {
 // ==================================
 // Levels:
@@ -986,73 +988,6 @@ void I_initialize_kernel(int arch_type, int processor_number)
 // ==================================
 
     int Status = FALSE;
-
-// Product type.
-// see: config/product.h
-    g_product_type = PRODUCT_TYPE;
-    // Status Flag and Edition flag.
-    gSystemStatus = 1;
-    gSystemEdition = 0;
-    __failing_kernel_subsystem = KERNEL_SUBSYSTEM_INVALID;
-    has_booted = FALSE;
-
-    config_use_progressbar = FALSE;
-    if (CONFIG_USE_PROGRESSBAR == 1){
-        config_use_progressbar = TRUE;
-    }
-
-// Setup debug mode.
-// Enable the usage of the serial debug.
-// It is not initialized yet.
-// #see: debug.c
-    disable_serial_debug();
-    if (USE_SERIALDEBUG == 1){
-        enable_serial_debug();
-    }
-
-//
-// Config
-//
-
-// Config headless mode.
-// In headless mode stdout sends data to the serial port.
-    Initialization.headless_mode = FALSE;
-    Initialization.printk_to_serial = FALSE;
-    // ...
-
-// Redirect printk to serial port?
-// It affects printk during all the time.
-    if (CONFIG_PRINTK_TO_SERIAL == 1){
-        Initialization.printk_to_serial = TRUE;
-    }
-// Headless mode?
-    if (CONFIG_HEADLESS_MODE == 1)
-    {
-        Initialization.headless_mode = TRUE;
-        Initialization.printk_to_serial = TRUE;
-        // ...
-    }
-
-// =============================================
-// Input authority
-// Who will be able to setup the current foreground thread.
-// Funtamental for the input system.
-// First initialization.
-// The main change is when the display server is registered.
-// The first change is when the initialization 
-// launches the init process.
-// See: net.c
-
-    InputAuthority.used = TRUE;
-    InputAuthority.magic = 1234;
-    InputAuthority.current_authority = AUTH_KERNEL;
-    InputAuthority.initialized = TRUE;
-
-// =============================================
-
-    // #hack
-    current_arch = CURRENT_ARCH_X86_64;
-    //current_arch = (int) arch_type;
 
 // -------------------------------
 // Early init
@@ -1211,22 +1146,8 @@ void I_initialize_kernel(int arch_type, int processor_number)
 
 // Initialization fail
 fail:
-// #todo
-// Print error info if it is possible.
-// + __failing_kernel_subsystem
-// + system_state
-// ...
-
-    PROGRESS("::(2)(2)(?) Initialization fail\n");
     system_state = SYSTEM_ABORTED;
-    x_panic("Error: 0x02");
-    die();
-
-// Not reached
-    while (1){
-        asm ("cli");
-        asm ("hlt");
-    };
+    return FALSE;
 }
 
 //
@@ -1241,9 +1162,111 @@ fail:
 // See: kernel.h, kmain.h
 void I_kmain(int arch_type)
 {
+    int Status = -1;
     static int ProcessorNumber = 0;
+
+// #test
+// Initialize variable that makes sense only for the BSP,
+// Because APs do not call I_kmain.
+
+    system_state = SYSTEM_PREINIT;
+
+// Product type.
+// see: config/product.h
+    g_product_type = PRODUCT_TYPE;
+    // Status Flag and Edition flag.
+    gSystemStatus = 1;
+    gSystemEdition = 0;
+    __failing_kernel_subsystem = KERNEL_SUBSYSTEM_INVALID;
+    has_booted = FALSE;
+
+    config_use_progressbar = FALSE;
+    if (CONFIG_USE_PROGRESSBAR == 1){
+        config_use_progressbar = TRUE;
+    }
+
+// Setup debug mode.
+// Enable the usage of the serial debug.
+// It is not initialized yet.
+// #see: debug.c
+    disable_serial_debug();
+    if (USE_SERIALDEBUG == 1){
+        enable_serial_debug();
+    }
+
+
+//
+// Config
+//
+
+// Config headless mode.
+// In headless mode stdout sends data to the serial port.
+    Initialization.headless_mode = FALSE;
+    Initialization.printk_to_serial = FALSE;
+    // ...
+
+// Redirect printk to serial port?
+// It affects printk during all the time.
+    if (CONFIG_PRINTK_TO_SERIAL == 1){
+        Initialization.printk_to_serial = TRUE;
+    }
+// Headless mode?
+    if (CONFIG_HEADLESS_MODE == 1)
+    {
+        Initialization.headless_mode = TRUE;
+        Initialization.printk_to_serial = TRUE;
+        // ...
+    }
+
+// =============================================
+// Input authority
+// Who will be able to setup the current foreground thread.
+// Funtamental for the input system.
+// First initialization.
+// The main change is when the display server is registered.
+// The first change is when the initialization 
+// launches the init process.
+// See: net.c
+
+    InputAuthority.used = TRUE;
+    InputAuthority.magic = 1234;
+    InputAuthority.current_authority = AUTH_KERNEL;
+    InputAuthority.initialized = TRUE;
+
+// =============================================
+
+    // #hack
+    current_arch = CURRENT_ARCH_X86_64;
+    //current_arch = (int) arch_type;
+
+
 // I_kmain is called only for the BSP. So it needs to be number 0.
-    I_initialize_kernel(arch_type, ProcessorNumber);
+    Status = (int) I_initialize_kernel(arch_type, ProcessorNumber);
+    if (Status == FALSE){
+        PROGRESS("on I_initialize_kernel()\n");
+    }
+    if (system_state == SYSTEM_ABORTED){
+        PROGRESS("SYSTEM_ABORTED\n");
+    }
+
+// Die
+    PROGRESS("Initialization fail\n");
+    x_panic("Error: 0x02");
+    die();
+// Not reached
+    while (1){
+        asm ("cli");
+        asm ("hlt");
+    };
+}
+
+// First function called by all the AP processors.
+void AP_kmain(void)
+{
+
+    //
+    // #todo
+    //
 
 // Not reached
     while (1){

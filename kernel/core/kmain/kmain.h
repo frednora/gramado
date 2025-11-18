@@ -91,12 +91,10 @@ extern struct initialization_d  Initialization;
 // see: '_kernel_begin' in head_64.asm.
 
 // ::(2)
-// Global initialization.
-// see: init.c
+// First function called by the BSP processor.
 void I_kmain(int arch_type);
-
-void I_initialize_kernel(int arch_type, int processor_number);
-
+// First function called by all the AP processors.
+void AP_kmain(void);
 
 // See: kmain.c
 void init_globals(void);
