@@ -1,8 +1,19 @@
 // ibroker.h
+// Created by Fred Nora
 
-#ifndef __GDI_IBROKER_H
-#define __GDI_IBROKER_H    1
+#ifndef __EVI_IBROKER_H
+#define __EVI_IBROKER_H    1
 
+
+struct input_broker_info_d 
+{
+    int initialized;
+    int shell_flag;
+    // ...
+};
+extern struct input_broker_info_d  InputBrokerInfo;
+
+// ==========================
 
 int ksys_shell_parse_cmdline(char *cmdline_address, size_t buffer_size);
 
@@ -33,6 +44,7 @@ int wmMouseEvent(int event_id,long long1, long long2);
 int wmKeyboardEvent(int event_id,long long1, long long2);
 int wmTimerEvent(int signature);
 
+int ibroker_initialize(void);
 
 #endif 
 

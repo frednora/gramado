@@ -48,10 +48,6 @@ extern int fg_console;
 
 extern struct tty_struct *redirect;
 
-// Se o console esta atuando como um shell comparando palavras.
-// See: console.c and kgwm.c.
-extern int ShellFlag;
-
 #define CONSOLE_DEVICE_KEYBOARD  1
 #define CONSOLE_DEVICE_SERIAL    2
 #define CONSOLE_DEVICE_NETWORK   3

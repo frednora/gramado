@@ -45,6 +45,8 @@ static int CAD_is_allowed = TRUE;
 struct input_targets_d  InputTargets;
 
 
+struct input_broker_info_d  InputBrokerInfo;
+
 //
 // ================================================
 //
@@ -148,7 +150,7 @@ int input_set_input_targets(int stdin_target, int queue_target)
 static void do_enter_embedded_shell(int kernel_in_debug_mode)
 {
     int console_index = fg_console;
-    // ShellFlag = FALSE;
+    // InputBrokerInfo.shell_flag = FALSE;
 
 // #test
 // Reactivate the usage of printk in the kernel console.
@@ -165,7 +167,7 @@ static void do_enter_embedded_shell(int kernel_in_debug_mode)
     //consolePrompt();  // It will refresh the screen.
 
 // Flag
-    ShellFlag = TRUE;
+    InputBrokerInfo.shell_flag = TRUE;
 }
 
 static void do_exit_embedded_shell(void)
@@ -186,7 +188,7 @@ static void do_exit_embedded_shell(void)
     }
 
 // done
-    ShellFlag = FALSE;
+    InputBrokerInfo.shell_flag = FALSE;
 }
 
 // local
@@ -768,7 +770,7 @@ int ksys_shell_parse_cmdline(char *cmdline_address, size_t buffer_size)
 // We can also have another shells inside the kernel,
 // maybe in a loadable module. mod0.
 
-    if (ShellFlag != TRUE)
+    if (InputBrokerInfo.shell_flag != TRUE)
         goto fail;
 
 // prompt[] buffer is where the command line is.
@@ -1002,21 +1004,21 @@ __consoleProcessKeyboardInput (
 
         // Nao proccessaremos keydown 
         // se nao estivermos em modo shell.
-        if (ShellFlag != TRUE){
+        if (InputBrokerInfo.shell_flag != TRUE){
             //return 0;
         }
 
         switch (long1){
 
         case VK_RETURN:
-            //if(ShellFlag!=TRUE){
+            //if (InputBrokerInfo.shell_flag != TRUE){
                 //wmSendInputToWindowManager(0,MSG_KEYDOWN,long1,long2);
                 //return 0;
             //}
 
             // Le's run the embedded shell in order to 
             // compare the estrings.
-            if (ShellFlag == TRUE)
+            if (InputBrokerInfo.shell_flag == TRUE)
             {
                 kinput('\0');  // Finalize
                 // Parse the string in prompt[].
@@ -1045,7 +1047,7 @@ __consoleProcessKeyboardInput (
             // + Put the char into the prompt[] buffer.
             // + Print the char into the screen using fg_console.
 
-            if (ShellFlag == TRUE){
+            if (InputBrokerInfo.shell_flag == TRUE){
                 consoleInputChar(long1);
                 console_putchar((int) long1, fg_console);
                 return 0;
@@ -1055,7 +1057,7 @@ __consoleProcessKeyboardInput (
             // NO, we're not using the kernel console.
             // Pois não queremos que algum aplicativo imprima na tela
             // enquanto o console virtual está imprimindo.
-            if (ShellFlag != TRUE)
+            if (InputBrokerInfo.shell_flag != TRUE)
             {
 
                 // Algumas combinações são enviadas para o display server.
@@ -2031,7 +2033,7 @@ done:
 
 // --------------------
 // Not in the embedded shell.
-    if (ShellFlag != TRUE)
+    if (InputBrokerInfo.shell_flag != TRUE)
     {
         // STDIN
         // Only normal keys. For terminal support.
@@ -2156,7 +2158,7 @@ done:
 /*
     // #test
     // Simply write into the fg console
-    if (ShellFlag == TRUE)
+    if (InputBrokerInfo.shell_flag == TRUE)
     {
         consoleInputChar (long1);
         console_putchar ( (int) long1, fg_console );
@@ -2436,3 +2438,9 @@ fail:
     return (int) -1;
 }
 
+int ibroker_initialize(void)
+{
+    InputBrokerInfo.shell_flag = FALSE;
+    InputBrokerInfo.initialized = TRUE;
+    return 0;
+}

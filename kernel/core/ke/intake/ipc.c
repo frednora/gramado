@@ -3,6 +3,21 @@
 // Messages using the circular queue into the thread structure.
 // Created by Fred Nora.
 
+/*
+Summary
+Low-level workers: 
+  ipc_post_message_to_tid, 
+  ipc_post_message_to_tid2
+Wrappers for destinations: 
+  ipc_post_message_to_foreground_thread, 
+  ipc_post_message_to_init, 
+  ipc_post_message_to_ds
+Specialized input dispatcher: 
+  ipc_post_input_event_to_ds
+Broadcast dispatcher: 
+  ipc_broadcast_system_message
+*/
+
 #include <kernel.h>
 
 // #todo

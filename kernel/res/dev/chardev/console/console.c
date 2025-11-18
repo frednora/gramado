@@ -46,8 +46,6 @@ const char *device_name_nonameconsole = "CON-NONAME";
 
 #define __RESPONSE  "\033[?1;2c"
 
-// Se o console esta atuando como um shell comparando palavras.
-int ShellFlag=FALSE;
 
 // global
 // Foreground console.
@@ -3257,9 +3255,12 @@ int VirtualConsole_early_initialization(void)
 // Redirecionador.
     redirect = NULL;
 
+// Initialize the input broker.
 // No embedded shell for now.
 // No input in prompt[].
-    ShellFlag = FALSE;
+    ibroker_initialize();
+// Initialize the output broker.
+    obroker_initialize();
 
     __EscapeSequenceStage=0;
 
