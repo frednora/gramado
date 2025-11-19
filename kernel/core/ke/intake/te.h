@@ -228,22 +228,22 @@ struct terminal_connection_d
     int _is_child_of_terminal;  // Child process
 };
 
-// Thread Environment structure.
-// Old Process structure.
-// >>> It will become te_d, 'thread environment' structure.
+// Thread Environment structure. (fka process_d)
+// The old 'process_d' structure.
 struct te_d
 {
     object_type_t objectType;
     object_class_t objectClass;
     int used;
     int magic;
+
     process_type_t type;
 
 // --------------------------
 // PROCESS
 
 // Process IDentifier. (posix)
-    pid_t pid;
+    pid_t pid;  // 'thread environment id'
 // Parent Process IDentifier 
     ppid_t ppid;
 // Process Group IDentifier.
@@ -915,8 +915,8 @@ struct te_d
 };
 
 // see: process.c
-extern struct te_d  *KernelProcess;  // Base kernel.
-extern struct te_d  *InitProcess;    // Init process.
+extern struct te_d  *TEKernelProcess;  // Base kernel.
+extern struct te_d  *TEInitProcess;    // Init process.
 
 // Max number of processes.
 #define  PROCESS_COUNT_MAX  1024 

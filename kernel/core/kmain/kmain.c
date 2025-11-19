@@ -493,10 +493,10 @@ static void earlyinit_Globals(int arch_type)
     SchedulerInfo.policy = SCHED_POLICY_RR;
     SchedulerInfo.flags  = (unsigned long) 0;
 
-    InitProcess = NULL;
-    InitThread = NULL;
+    InitThread = NULL;   // thread
+    TEInitProcess = NULL;  // thread environment
 
-    // Invalidate.
+    // Invalidate
     set_current_process(-1);
     SetCurrentTID(-1);
 

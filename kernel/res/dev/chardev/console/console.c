@@ -1558,18 +1558,18 @@ static void __test_tty(void)
     char data1[8];
     data1[0]='x';  data1[1]='y';  data1[2]='z';  data1[3]=0; //dirty
 
-// Kernel process.
-    if ((void*) KernelProcess == NULL){
+// Kernel 'thread environment' structure process.
+    if ((void*) TEKernelProcess == NULL){
         return;
     }
-    if (KernelProcess->magic != 1234){
+    if (TEKernelProcess->magic != 1234){
         return;
     }
 
 // Write to the kernel's tty.
-    __tty_write(KernelProcess->tty,data0,3);
+    __tty_write(TEKernelProcess->tty,data0,3);
 // Read from the kernel's tty.
-    __tty_read (KernelProcess->tty,data1,3);
+    __tty_read (TEKernelProcess->tty,data1,3);
 
 // Print the buffer.
     printk("%c\n",data1[0]);
@@ -2982,8 +2982,8 @@ DDINIT_console(
 // Not blocked
     CONSOLE_TTYS[ConsoleIndex].is_blocked = FALSE;
 
-    // process
-    //CONSOLE_TTYS[ConsoleIndex].process = KernelProcess;
+    // (process) 'thread environment'
+    //CONSOLE_TTYS[ConsoleIndex].process = TEKernelProcess;
     
     // thread
     //CONSOLE_TTYS[ConsoleIndex].thread  = ?

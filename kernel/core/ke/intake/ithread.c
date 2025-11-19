@@ -27,11 +27,11 @@ struct thread_d *create_init_thread(void)
     debug_print ("create_init_thread:\n");
 
 // We need a valid init process structure.
-    if ((void *) InitProcess == NULL){
-        panic ("create_init_thread: InitProcess\n");
+    if ((void *) TEInitProcess == NULL){
+        panic ("create_init_thread: TEInitProcess\n");
     }
-    if (InitProcess->magic != 1234){
-        panic ("create_init_thread: InitProcess validation\n");
+    if (TEInitProcess->magic != 1234){
+        panic ("create_init_thread: TEInitProcess validation\n");
     }
 // Thread structure.
     t = (void *) kmalloc( sizeof(struct thread_d) );
@@ -50,9 +50,9 @@ struct thread_d *create_init_thread(void)
 
 // The pointer for the process we belong to.
 // Belongs to this 'thread environment'
-    t->te = (void *) InitProcess;
+    t->te = (void *) TEInitProcess;
 // The thread environment id
-    t->pid = (pid_t) InitProcess->pid; 
+    t->pid = (pid_t) TEInitProcess->pid; 
 
 // Low priority
     t->base_priority = PRIORITY_SYSTEM_THRESHOLD;  // Static
@@ -90,7 +90,7 @@ struct thread_d *create_init_thread(void)
 //
 
     // pml4 physical address
-    t->pml4_PA = (unsigned long ) InitProcess->pml4_PA;
+    t->pml4_PA = (unsigned long ) TEInitProcess->pml4_PA;
     if (t->pml4_PA == 0){
         panic("create_init_thread: t->pml4_PA\n");
     }

@@ -55,8 +55,9 @@ static pid_t __current_pid = (pid_t) (-1);  //fail
 
 static pid_t caller_process_id=0;
 
-struct te_d  *KernelProcess;  // Base kernel.
-struct te_d  *InitProcess;    // Init process.
+// The 'thread environment' structure.
+struct te_d  *TEKernelProcess;  // Kernel process
+struct te_d  *TEInitProcess;    // Init process
 
 //==============================================
 
@@ -100,14 +101,12 @@ int gc_process_structure(struct te_d *process)
     return 0;
 }
 
-struct te_d *get_kernel_process(void)
-{
-    return (struct te_d *) KernelProcess;
+struct te_d *get_kernel_process(void){
+    return (struct te_d *) TEKernelProcess;
 }
 
-struct te_d *get_init_process(void)
-{
-    return (struct te_d *) InitProcess;
+struct te_d *get_init_process(void){
+    return (struct te_d *) TEInitProcess;
 }
 
 void close_all_threads_of_this_process(struct te_d *process)
@@ -132,7 +131,7 @@ void close_all_threads_of_this_process(struct te_d *process)
 
 // #todo
 // This is a work in progress.
-// + Block all processes in the list but not the KernelProcess.
+// + Block all processes in the list but not the TEKernelProcess.
 // + Invalidate all the strutures.
 // ...
 void close_all_processes(void)
@@ -140,8 +139,8 @@ void close_all_processes(void)
     struct te_d  *p;
     register int i=0;
 
-    if ((void *) KernelProcess == NULL){
-        panic ("close_all_processes: KernelProcess\n");
+    if ((void *) TEKernelProcess == NULL){
+        panic ("close_all_processes: TEKernelProcess\n");
     }
 
     for ( i=0; 
@@ -149,7 +148,7 @@ void close_all_processes(void)
           i++ )
     {
         p = (void *) teList[i];
-        if (p != KernelProcess)
+        if (p != TEKernelProcess)
         {
             // #todo: This is not the right state.
             p->state = PROCESS_BLOCKED;

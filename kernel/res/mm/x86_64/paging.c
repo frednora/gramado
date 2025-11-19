@@ -1590,7 +1590,7 @@ static void __initialize_heappool(void)
 // 2mb, ring0, start = 0x30A00000.
 // Ring 0 kernel module. MOD0.BIN.
 // See: x64init.c When we setup the Heap pointer.
-// InitProcess->Heap = (unsigned long) g_extraheap1_va; :)
+// TEInitProcess->Heap = (unsigned long) g_extraheap1_va; :)
 // 2048 KB = (2 MB).
 
 static void __initialize_extraheap1(void)

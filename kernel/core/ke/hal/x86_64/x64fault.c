@@ -68,12 +68,12 @@ static int __kill_faulty_current_process(void)
         goto fail;
     }
 
-// Kernel
-    if (p == KernelProcess){
+// The thread environment structure for the Kernel Process.
+    if (p == TEKernelProcess){
         goto fail;
     }
-// Init
-    if (p == InitProcess){
+// The thread environment structure for the Init Process.
+    if (p == TEInitProcess){
         goto fail;
     }
 

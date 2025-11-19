@@ -334,12 +334,12 @@ static int I_x64CreateInitialProcess(void)
     unsigned long BasePriority = PRIORITY_SYSTEM_THRESHOLD;
     unsigned long Priority     = PRIORITY_SYSTEM_THRESHOLD;
 
-    InitProcess = 
+    TEInitProcess = 
         (void *) create_process( 
                     NULL,  
                     (unsigned long) FLOWERTHREAD_BASE,  //0x00200000 
                     BasePriority, 
-                    (int) KernelProcess->pid, 
+                    (int) TEKernelProcess->pid, 
                     init_process_default_name, 
                     RING3, 
                     (unsigned long) init_pml4_va,
@@ -348,30 +348,30 @@ static int I_x64CreateInitialProcess(void)
                     PERSONALITY_POSIX );
 
 // validation
-    if ((void *) InitProcess == NULL){
-        printk("I_x64CreateInitialProcess: InitProcess\n");
+    if ((void *) TEInitProcess == NULL){
+        printk("I_x64CreateInitialProcess: TEInitProcess\n");
         return FALSE;
     }
-    if (InitProcess->used != TRUE || InitProcess->magic != 1234)
+    if (TEInitProcess->used != TRUE || TEInitProcess->magic != 1234)
     {
-        printk("I_x64CreateInitialProcess: InitProcess validation\n");
+        printk("I_x64CreateInitialProcess: TEInitProcess validation\n");
         return FALSE;
     }
 
 // #bugbug: 
 // Who gave this pid to this process? create_process did?
 
-    InitProcessPID = (pid_t) InitProcess->pid;
+    InitProcessPID = (pid_t) TEInitProcess->pid;
     if (InitProcessPID != GRAMADO_PID_INIT){
         printk ("I_x64CreateInitialProcess: InitProcessPID\n");
         return FALSE;
     }
 
 // Initialize the thread support for this process
-    InitProcess->flower = NULL;
-    InitProcess->extra = NULL;
-    InitProcess->threadListHead = NULL;
-    InitProcess->thread_count = 0;
+    TEInitProcess->flower = NULL;
+    TEInitProcess->extra = NULL;
+    TEInitProcess->threadListHead = NULL;
+    TEInitProcess->thread_count = 0;
 
 // Security Access Token.
 
@@ -379,16 +379,16 @@ static int I_x64CreateInitialProcess(void)
     //...
 
     // Group of users.
-    InitProcess->token.gid  = (gid_t) GID_DEFAULT;
-    InitProcess->token.rgid = (gid_t) GID_DEFAULT;  // real 
-    InitProcess->token.egid = (gid_t) GID_DEFAULT;  // effective
-    InitProcess->token.sgid = (gid_t) GID_DEFAULT;  // saved
+    TEInitProcess->token.gid  = (gid_t) GID_DEFAULT;
+    TEInitProcess->token.rgid = (gid_t) GID_DEFAULT;  // real 
+    TEInitProcess->token.egid = (gid_t) GID_DEFAULT;  // effective
+    TEInitProcess->token.sgid = (gid_t) GID_DEFAULT;  // saved
 
 // The init process is a system application.
-    InitProcess->type = PROCESS_TYPE_SYSTEM;
+    TEInitProcess->type = PROCESS_TYPE_SYSTEM;
 
-    InitProcess->base_priority = BasePriority;    
-    InitProcess->priority = Priority;
+    TEInitProcess->base_priority = BasePriority;    
+    TEInitProcess->priority = Priority;
 
 // -----------------------------------------------
 // init_mm_data
@@ -403,16 +403,16 @@ static int I_x64CreateInitialProcess(void)
 // -----------------------------------------------
 
 // Esse foi configurado agora.
-    InitProcess->pml4_VA = init_mm_data.pml4_va;
-    InitProcess->pml4_PA = init_mm_data.pml4_pa; 
+    TEInitProcess->pml4_VA = init_mm_data.pml4_va;
+    TEInitProcess->pml4_PA = init_mm_data.pml4_pa; 
 
 // Herdado do kernel
-    InitProcess->pdpt0_VA = kernel_mm_data.pdpt0_va;
-    InitProcess->pdpt0_PA = kernel_mm_data.pdpt0_pa; 
+    TEInitProcess->pdpt0_VA = kernel_mm_data.pdpt0_va;
+    TEInitProcess->pdpt0_PA = kernel_mm_data.pdpt0_pa; 
 
 // Herdado do kernel
-    InitProcess->pd0_VA = kernel_mm_data.pd0_va;
-    InitProcess->pd0_PA = kernel_mm_data.pd0_pa; 
+    TEInitProcess->pd0_VA = kernel_mm_data.pd0_va;
+    TEInitProcess->pd0_PA = kernel_mm_data.pd0_pa; 
 
     fs_initialize_process_cwd ( InitProcessPID, "/" );
 
@@ -454,12 +454,12 @@ static int I_x64CreateInitialProcess(void)
 //
 
 // Herdando do processo configurado logo antes.
-    InitThread->pml4_VA  = InitProcess->pml4_VA;
-    InitThread->pml4_PA  = InitProcess->pml4_PA;
-    InitThread->pdpt0_VA = InitProcess->pdpt0_VA;
-    InitThread->pdpt0_PA = InitProcess->pdpt0_PA;
-    InitThread->pd0_VA   = InitProcess->pd0_VA;
-    InitThread->pd0_PA   = InitProcess->pd0_PA;
+    InitThread->pml4_VA  = TEInitProcess->pml4_VA;
+    InitThread->pml4_PA  = TEInitProcess->pml4_PA;
+    InitThread->pdpt0_VA = TEInitProcess->pdpt0_VA;
+    InitThread->pdpt0_PA = TEInitProcess->pdpt0_PA;
+    InitThread->pd0_VA   = TEInitProcess->pd0_VA;
+    InitThread->pd0_PA   = TEInitProcess->pd0_PA;
 
 // #todo 
 // #bugbug
@@ -473,7 +473,7 @@ static int I_x64CreateInitialProcess(void)
 
     //ipccore_register ( 
         //(int) 0, 
-        //(struct te_d *) InitProcess, 
+        //(struct te_d *) TEInitProcess, 
         //(struct thread_d *) InitThread ); 
 
     InitThread->pe_mode = PE_MODE_EFFICIENCY;
@@ -481,10 +481,10 @@ static int I_x64CreateInitialProcess(void)
 // ===========================
 
 // Set the flower thread for the init process.
-    InitProcess->flower = InitThread;
+    TEInitProcess->flower = InitThread;
 // Initialize the list of threads for this process.
-    InitProcess->threadListHead = InitThread;
-    InitProcess->thread_count = 1;  // flower thread is the first.
+    TEInitProcess->threadListHead = InitThread;
+    TEInitProcess->thread_count = 1;  // flower thread is the first.
 
 // Set the current process (Canonical value)
     set_current_process(InitProcessPID);
@@ -876,7 +876,7 @@ static int I_x64CreateKernelProcess(void)
 
     ppid_t MyPPID = 0;
 
-    KernelProcess = 
+    TEKernelProcess = 
         (void *) create_process( 
                     NULL,  
                     (unsigned long) 0x30000000, 
@@ -890,12 +890,12 @@ static int I_x64CreateKernelProcess(void)
                     PERSONALITY_POSIX );
 
 // Struct and struct validation.
-    if ((void *) KernelProcess == NULL){
-        printk("I_x64CreateKernelProcess: KernelProcess\n");
+    if ((void *) TEKernelProcess == NULL){
+        printk("I_x64CreateKernelProcess: TEKernelProcess\n");
         return FALSE;
     }
-    if (KernelProcess->used != TRUE || KernelProcess->magic != 1234){
-        printk("I_x64CreateKernelProcess: KernelProcess validation\n");
+    if (TEKernelProcess->used != TRUE || TEKernelProcess->magic != 1234){
+        printk("I_x64CreateKernelProcess: TEKernelProcess validation\n");
         return FALSE;
     }
 
@@ -904,34 +904,34 @@ static int I_x64CreateKernelProcess(void)
 // #warning
 // It's because the kernel was the first
 // process created. Then the pid is equal 0.
-    if (KernelProcess->pid != GRAMADO_PID_KERNEL){
+    if (TEKernelProcess->pid != GRAMADO_PID_KERNEL){
         printk ("I_x64CreateKernelProcess: pid\n");
         return FALSE;
     }
 
 // Initialize the thread support for this process
-    KernelProcess->flower = NULL;
-    KernelProcess->extra = NULL;
-    KernelProcess->threadListHead = NULL;
-    KernelProcess->thread_count = 0;
+    TEKernelProcess->flower = NULL;
+    TEKernelProcess->extra = NULL;
+    TEKernelProcess->threadListHead = NULL;
+    TEKernelProcess->thread_count = 0;
 
 // Security Access Token
 
     // user
 
     // group of users
-    KernelProcess->token.gid  = (gid_t) GID_DEFAULT;
-    KernelProcess->token.rgid = (gid_t) GID_DEFAULT;  // real 
-    KernelProcess->token.egid = (gid_t) GID_DEFAULT;  // effective
-    KernelProcess->token.sgid = (gid_t) GID_DEFAULT;  // saved
+    TEKernelProcess->token.gid  = (gid_t) GID_DEFAULT;
+    TEKernelProcess->token.rgid = (gid_t) GID_DEFAULT;  // real 
+    TEKernelProcess->token.egid = (gid_t) GID_DEFAULT;  // effective
+    TEKernelProcess->token.sgid = (gid_t) GID_DEFAULT;  // saved
 
 // The kernel process is a system program.
 // KERNEL.BIN and GWSSRV.BIN
 
-    KernelProcess->type = PROCESS_TYPE_SYSTEM;
+    TEKernelProcess->type = PROCESS_TYPE_SYSTEM;
 
-    KernelProcess->base_priority = BasePriority;
-    KernelProcess->priority = Priority;
+    TEKernelProcess->base_priority = BasePriority;
+    TEKernelProcess->priority = Priority;
 
 //
 // mm
@@ -944,18 +944,18 @@ static int I_x64CreateKernelProcess(void)
         return FALSE;
     }
 
-    KernelProcess->pml4_VA = kernel_mm_data.pml4_va;
-    KernelProcess->pml4_PA = kernel_mm_data.pml4_pa; 
+    TEKernelProcess->pml4_VA = kernel_mm_data.pml4_va;
+    TEKernelProcess->pml4_PA = kernel_mm_data.pml4_pa; 
 
-    KernelProcess->pdpt0_VA = kernel_mm_data.pdpt0_va;
-    KernelProcess->pdpt0_PA = kernel_mm_data.pdpt0_pa; 
+    TEKernelProcess->pdpt0_VA = kernel_mm_data.pdpt0_va;
+    TEKernelProcess->pdpt0_PA = kernel_mm_data.pdpt0_pa; 
 
-    KernelProcess->pd0_VA = kernel_mm_data.pd0_va;
-    KernelProcess->pd0_PA = kernel_mm_data.pd0_pa; 
+    TEKernelProcess->pd0_VA = kernel_mm_data.pd0_va;
+    TEKernelProcess->pd0_PA = kernel_mm_data.pd0_pa; 
 
 
 // cwd
-    fs_initialize_process_cwd ( KernelProcess->pid, "/" ); 
+    fs_initialize_process_cwd ( TEKernelProcess->pid, "/" ); 
 
 // ==================
 // The flower thread.
@@ -1026,14 +1026,14 @@ static int I_x64CreateTID0(void)
 
 // Memory
 
-    tid0_thread->pml4_VA  = KernelProcess->pml4_VA;
-    tid0_thread->pml4_PA  = KernelProcess->pml4_PA;
+    tid0_thread->pml4_VA  = TEKernelProcess->pml4_VA;
+    tid0_thread->pml4_PA  = TEKernelProcess->pml4_PA;
 
-    tid0_thread->pdpt0_VA = KernelProcess->pdpt0_VA;
-    tid0_thread->pdpt0_PA = KernelProcess->pdpt0_PA;
+    tid0_thread->pdpt0_VA = TEKernelProcess->pdpt0_VA;
+    tid0_thread->pdpt0_PA = TEKernelProcess->pdpt0_PA;
 
-    tid0_thread->pd0_VA   = KernelProcess->pd0_VA;
-    tid0_thread->pd0_PA   = KernelProcess->pd0_PA;
+    tid0_thread->pd0_VA   = TEKernelProcess->pd0_VA;
+    tid0_thread->pd0_PA   = TEKernelProcess->pd0_PA;
 
 //
 // tss
@@ -1075,9 +1075,9 @@ static int I_x64CreateTID0(void)
 // OK, the loadable tharead that belongs to the ws is
 // the kernel process's flower thread. :)
 
-    if ((void*)KernelProcess != NULL)
+    if ((void*)TEKernelProcess != NULL)
     {
-        KernelProcess->flower = (struct thread_d *) ____IDLE;
+        TEKernelProcess->flower = (struct thread_d *) ____IDLE;
     }
 
 */

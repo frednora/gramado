@@ -1875,11 +1875,12 @@ void *sci1 (
 // Getting requests from ring3 applications via systemcalls.
 // :: Services in mod0.
 
-    struct te_d *p;
-    struct thread_d *t;
+    struct thread_d *t;  // thread
+    struct te_d *te;     // thread environment
 
     debug_print("sci1: [TODO]\n");
 
+// thread environment id (fka PID)
     pid_t current_process = (pid_t) get_current_process();
 
 
@@ -1906,14 +1907,14 @@ void *sci1 (
     if (current_process<0 || current_process >= PROCESS_COUNT_MAX){
         panic("sci1: current_process\n");
     }
-    p = (struct te_d *) teList[current_process];
-    if ((void*) p == NULL){
-        debug_print("sci0: p\n");
-        panic("sci1: p\n");
+    te = (struct te_d *) teList[current_process];
+    if ((void*) te == NULL){
+        debug_print("sci1: te\n");
+        panic("sci1: te\n");
     }
-    if ( p->used != TRUE || p->magic != 1234 ){
-        debug_print("sci1: p validation\n");
-        panic("sci1: p validation\n");
+    if ( te->used != TRUE || te->magic != 1234 ){
+        debug_print("sci1: te validation\n");
+        panic("sci1: te validation\n");
     }
 
 // The display server was not initialized yet.
@@ -1930,7 +1931,7 @@ void *sci1 (
     }
 // #test
 // Only the display server can access this service.
-    if (p->pid != DisplayServerInfo.pid)
+    if (te->pid != DisplayServerInfo.pid)
     {
         // OUT: Access denied.
         return 4321;
@@ -2828,11 +2829,12 @@ void *sci3 (
 // Getting requests from ring3 applications via systemcalls.
 // :: Services in mod0.
 
-    struct te_d *p;
-    struct thread_d *t;
+    struct thread_d *t;  // thread
+    struct te_d *te;      // thread environment
 
-    debug_print("sci1: [TODO]\n");
+    debug_print("sci3: [TODO]\n");
 
+// thread environment id (fka PID)
     pid_t current_process = (pid_t) get_current_process();
 
 // #test
@@ -2858,14 +2860,14 @@ void *sci3 (
     if (current_process<0 || current_process >= PROCESS_COUNT_MAX){
         panic("sci3: current_process\n");
     }
-    p = (struct te_d *) teList[current_process];
-    if ((void*) p == NULL){
+    te = (struct te_d *) teList[current_process];
+    if ((void*) te == NULL){
         debug_print("sci3: p\n");
         panic("sci3: p\n");
     }
-    if ( p->used != TRUE || p->magic != 1234 ){
-        debug_print("sci3: p validation\n");
-        panic("sci3: p validation\n");
+    if ( te->used != TRUE || te->magic != 1234 ){
+        debug_print("sci3: te validation\n");
+        panic("sci3: te validation\n");
     }
 
 // The display server was not initialized yet.
@@ -2882,12 +2884,11 @@ void *sci3 (
     }
 // #test
 // Only the display server can access this service.
-    if (p->pid != DisplayServerInfo.pid)
+    if (te->pid != DisplayServerInfo.pid)
     {
         // OUT: Access denied.
         return 4321;
     }
-
 
 //++
 //-------------------------------------
