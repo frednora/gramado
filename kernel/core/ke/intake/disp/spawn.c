@@ -221,7 +221,7 @@ __spawn_enter_usermode(
 // __spawn_thread_by_tid_imp:
 // main worker.
 // Spawn a new thread.
-// The flag 'new_clone' indicates this is the control thread
+// The flag 'new_clone' indicates this is the flower thread
 // of a clone process that is running for the first time.
 static void __spawn_thread_by_tid_imp(tid_t tid)
 {
@@ -258,7 +258,7 @@ static void __spawn_thread_by_tid_imp(tid_t tid)
 // Is it a new clone?
 // new clone
     if (target_thread->new_clone == TRUE){
-        debug_print("__spawn_thread_by_tid_imp: Spawning the control thread of a new clone\n");
+        debug_print("__spawn_thread_by_tid_imp: Spawning the flower thread of a new clone\n");
     }
 
 // Check tid validation
@@ -518,7 +518,7 @@ void psSpawnThreadByTID(tid_t tid)
 
 /*
 // spawn_pid:
-// Spawn the control thread of a process.
+// Spawn the flower thread of a process.
 // Remember we need to call this after 
 // the irq0 interrupt. Cause the spawn routine
 // has the eoi.
@@ -544,7 +544,7 @@ void spawn_pid(pid_t pid)
     }
 
 // Spawn
-    __tid = (tid_t) p->control->tid;
+    __tid = (tid_t) p->flower->tid;
     psSpawnThread(__tid);
 // Not reached
     panic("spawn_pid: Fail\n");

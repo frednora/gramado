@@ -367,8 +367,8 @@ static int I_x64CreateInitialProcess(void)
         return FALSE;
     }
 
-// Initialize the thred support for this process.
-    InitProcess->control = NULL;
+// Initialize the thread support for this process
+    InitProcess->flower = NULL;
     InitProcess->extra = NULL;
     InitProcess->threadListHead = NULL;
     InitProcess->thread_count = 0;
@@ -421,7 +421,7 @@ static int I_x64CreateInitialProcess(void)
 
 // Criamos um thread em ring3.
 // O valor de eflags é 0x3200. The app is gonna change that.
-// The control thread of the first ring 3 process.
+// The flower thread of the first ring 3 process.
 // See: ithread.c
 // Struct, and struct validation.
 
@@ -479,11 +479,11 @@ static int I_x64CreateInitialProcess(void)
 
 // ===========================
 
-// Set the control thread for the init process.
-    InitProcess->control = InitThread;
+// Set the flower thread for the init process.
+    InitProcess->flower = InitThread;
 // Initialize the list of threads for this process.
     InitProcess->threadListHead = InitThread;
-    InitProcess->thread_count = 1;  // Control thread is the first.
+    InitProcess->thread_count = 1;  // flower thread is the first.
 
 // Set the current process (Canonical value)
     set_current_process(InitProcessPID);
@@ -546,7 +546,7 @@ void I_x64ExecuteInitialProcess(void)
         panic("I_x64ExecuteInitialProcess: cmdline\n");
     }
 
-// The first thread to run will the control thread 
+// The first thread to run will the flower thread 
 // of the init process. It is called InitThread.
 
     t = (struct thread_d *) InitThread; 
@@ -906,8 +906,8 @@ static int I_x64CreateKernelProcess(void)
         return FALSE;
     }
 
-// Initialize the thred support for this process.
-    KernelProcess->control = NULL;
+// Initialize the thread support for this process
+    KernelProcess->flower = NULL;
     KernelProcess->extra = NULL;
     KernelProcess->threadListHead = NULL;
     KernelProcess->thread_count = 0;
@@ -955,8 +955,8 @@ static int I_x64CreateKernelProcess(void)
     fs_initialize_process_cwd ( KernelProcess->pid, "/" ); 
 
 // ==================
-// The control thread.
-// This is the control thread for the 
+// The flower thread.
+// This is the flower thread for the 
 // window server image.
 
     /*
@@ -992,7 +992,7 @@ static int I_x64CreateTID0(void)
     //debug_print ("I_x64CreateTID0:\n");
 
 // Thread
-// This is the control thread of the window server module.
+// This is the flower thread of the window server module.
 // See: create.c, thread.h.
 
     tid0_thread = (void *) create_tid0();
@@ -1056,7 +1056,7 @@ static int I_x64CreateTID0(void)
 
 // Idle thread
 // For now,
-// the control thread of the window server will be our idle thread.
+// the flower thread of the window server will be our idle thread.
 // But it is not actually a idle routine, 
 // it is a standard server code.
 
@@ -1068,13 +1068,13 @@ static int I_x64CreateTID0(void)
 
 
 // ??
-// This is the control thread of the kernel process.
+// This is the flower thread of the kernel process.
 // OK, the loadable tharead that belongs to the ws is
-// the kernel process's control thread. :)
+// the kernel process's flower thread. :)
 
     if ((void*)KernelProcess != NULL)
     {
-        KernelProcess->control = (struct thread_d *) ____IDLE;
+        KernelProcess->flower = (struct thread_d *) ____IDLE;
     }
 
 */
@@ -1292,7 +1292,7 @@ int I_x64_initialize(void)
 // Local
 // It loads the window server's image and create
 // a process structure to handle the kernel base and the
-// window server's control thread.
+// window server's flower thread.
 
     // #debug
     PROGRESS("Calling I_x64CreateKernelProcess\n"); 

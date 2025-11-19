@@ -29,10 +29,10 @@ pid_t __gpidWindowServer=0;
 // ------
 // Process used by the console during the job control.
 // #hackhack: 
-// For now we are using the control thread associated with the
+// For now we are using the flower thread associated with the
 // window with focus.
 // #todo
-// But we need to use the control thread of the foreground process
+// But we need to use the flower thread of the foreground process
 // associated with the console TTY.
 pid_t foreground_process=0;
 
@@ -124,8 +124,8 @@ void close_all_threads_of_this_process(struct process_d *process)
     if (process->magic != 1234)
         return;
 
-// Kill control thread.
-    tmp_thread = (struct thread_d *) process->control;
+// Kill flower thread
+    tmp_thread = (struct thread_d *) process->flower;
 
     // ...
 }
@@ -732,7 +732,7 @@ int process_get_tty (pid_t pid)
 // >> code, data, bss, heap and stack.
 // For now, all the processes has 4MB,
 // and the stack begins at CONTROLTHREAD_STACK.
-// We just use the control thread.
+// We just use the flower thread.
 // #bugbug
 // Imagem com limite de 200KB. (fail)
 // heap ?? Depois              (fail)
@@ -1011,8 +1011,8 @@ void ps_initialize_process_common_elements(struct process_d *p)
 // Threads
 //
 
-// The control thread.
-    p->control = NULL;
+// The flower thread
+    p->flower = NULL;
 // List of threads.
     p->threadListHead = NULL;
 // Absolute pathname and relative pathname.
@@ -1251,7 +1251,7 @@ struct process_d *create_and_initialize_process_object(void)
 // Stack support
 // Stack for the clone. 
 // #bugbug: The stack size?
-    new_process->control->context.rsp = 
+    new_process->flower->context.rsp = 
         (unsigned long) CONTROLTHREAD_STACK;
     new_process->StackStart = 
         (unsigned long) CONTROLTHREAD_STACK;

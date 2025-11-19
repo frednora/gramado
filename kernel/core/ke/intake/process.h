@@ -227,8 +227,9 @@ struct terminal_connection_d
     int _is_child_of_terminal;  // Child process
 };
 
-// PCB - Process Control Block
-
+// Process structure.
+// >>> It will become te_d, 'thread environment' structure.
+// struct te_d
 struct process_d 
 {
     object_type_t objectType;
@@ -780,8 +781,9 @@ struct process_d
 // Thread support
 //
 
-    struct thread_d *control;  // The control thread.
-    struct thread_d *extra;    // The extra thread.
+// Gramado has flowers.
+    struct thread_d *flower;  // The first thread
+    struct thread_d *extra;   // The extra thread
 
 // The thread list. (linked)
 // #todo

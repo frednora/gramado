@@ -105,14 +105,14 @@ static void __sched_notify_parent(struct thread_d *thread, int event_number)
 
 // Get target thread
     struct thread_d *target_thread;
-    target_thread = (struct thread_d *) p_parent->control;
+    target_thread = (struct thread_d *) p_parent->flower;
     if ((void*) target_thread == NULL)
         return;
     if (target_thread->magic != 1234)
         return;
 
 // #test
-// Send message to the control thread of
+// Send message to the flower thread of
 // the parent process.
     tid_t Sender   = thread->tid; 
     tid_t Receiver = target_thread->tid;
@@ -362,7 +362,7 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
     }
 
 // A idle thread precisa ser a 
-// thread de controle do processo init.
+// thread flower do processo init.
     if (Idle != InitThread){
         panic("__scheduler_rr: Idle != InitThread\n");
     }
@@ -385,7 +385,7 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
     FirstTID = (tid_t) Idle->tid;
 
 // A idle thread precisa ser a 
-// thread de controle do processo init.
+// thread flower do processo init.
 // INIT_TID = SYSTEM_THRESHOLD_TID.
 
     if (FirstTID != SYSTEM_THRESHOLD_TID){
@@ -470,7 +470,7 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                         // #todo: O dead thred collector pode terminar de deleta
                         // essa thread e deletar o processo dela
                         // se ele estiver sinalizado como exit in progress
-                        // e ela for a thread de controle dele.
+                        // e ela for a thread flower dele.
                         TmpThread->state = ZOMBIE;
 
                         // Invalidate the foreground thread variable.

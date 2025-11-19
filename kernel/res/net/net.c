@@ -131,7 +131,7 @@ static void __maximize_ds_priority(pid_t pid)
 
 // -------------------------
 // thread
-    t = (struct thread_d *) p->control;
+    t = (struct thread_d *) p->flower;
     if ((void*) t == NULL){ return; }
     if (t->magic != 1234) { return; }
 
@@ -244,8 +244,8 @@ network_register_ring3_display_server(
     console_set_current_virtual_console(CONSOLE1);
 
 // #test
-// Is the control thread valid?
-    t = p->control;
+// Is the flower thread valid?
+    t = p->flower;
     if ((void*) t == NULL)
         goto fail;
     if (t->magic != 1234)
@@ -340,7 +340,7 @@ network_register_ring3_browser(
     //console_set_current_virtual_console(CONSOLE1);
 
 // #test
-    t = p->control;
+    t = p->flower;
     if ((void*) t == NULL)
         goto fail;
     if (t->magic != 1234)

@@ -230,8 +230,7 @@ struct pf_info_d
 
 #define MSG_QUEUE_MAX  64
 
-// TCB - Thread Control Block
-
+// The thread structure
 struct thread_d 
 {
     object_type_t objectType;
@@ -334,7 +333,7 @@ struct thread_d
 // flag, Estado atual da tarefa. ( RUNNING, DEAD ... ).
     thread_state_t state;
 
-// The is the control thread of a new clone process.
+// This is the first thread of a new clone process. (TID?)
     int new_clone;
 
 // #todo

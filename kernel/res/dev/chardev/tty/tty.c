@@ -1320,7 +1320,7 @@ fail:
  */
 // #test Nope?
 // We are including a pointer to the RIT. raw input thread.
-// This is the control thread of the window with focus on kgws.
+// This is the flower thread of the window with focus on kgws.
 // See: tty.h
 
 struct tty_d *tty_create(short type, short subtype)
@@ -1371,7 +1371,7 @@ struct tty_d *tty_create(short type, short subtype)
 
 // No thread for now.
 // ?? What thread we need to use here?
-    //__tty->control = NULL;
+    //__tty->flower = NULL;
 // No user logged yet.
     __tty->user_info = NULL;
 

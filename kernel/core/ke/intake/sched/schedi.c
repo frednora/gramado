@@ -324,23 +324,22 @@ int do_waitpid (pid_t pid, int *status, int options)
 			//um dos filhos.
             p->wait4pid = (pid_t) pid; 
 
-            //checando se a thread atual é a thread de controle. 
-            if (current_thread == p->control->tid )
+            //checando se a thread atual é a thread flower. 
+            if (current_thread == p->flower->tid)
             {
                 //#debug
-                //printk ("the current thread is also the control thread\n");
+                //printk ("the current thread is also the flower thread\n");
             }
            
             //printk ("blocking thread\n");
             //tem que bloquear todas as threads do pai.
             //Isso pode estar falhando;
-            //block_for_a_reason ( (int) p->control, (int) WAIT_REASON_WAIT4PID );
-            p->control->state = BLOCKED; 
-       }
-   };
+            //block_for_a_reason ( (int) p->flower, (int) WAIT_REASON_WAIT4PID );
+            p->flower->state = BLOCKED; 
+        }
+    };
 
-	//aqui precisamos dar informações sobre o status 
-	//do processo
+	// aqui precisamos dar informações sobre o status do processo
 
     // #bugbug: Isso pode ter falhado.
     //fake value. 

@@ -288,7 +288,7 @@ void *sci0 (
 // #todo: Put this in the right spot.
 // exit
 // Marcamos no processo nossa intenção de fechar.
-// Marcamos na thread de controle nossa intenção de fechar.
+// Marcamos na thread flower nossa intenção de fechar.
 // #todo: as outras threads do processo.
 // see: sched.c
     if (number == SCI_EXIT)
@@ -298,11 +298,11 @@ void *sci0 (
         
         // Quando o scheduler passar por ela,
         // vai pular ela e marca-la como zombie.
-        if ((void*) p->control != NULL)
+        if ((void*) p->flower != NULL)
         {
-            if (p->control->magic == 1234)
+            if (p->flower->magic == 1234)
             {
-                p->control->exit_in_progress = TRUE;
+                p->flower->exit_in_progress = TRUE;
                 p->exit_in_progress = TRUE;
             }
         }

@@ -22,11 +22,11 @@ tid_t foreground_thread=0;
 // gerenciamento de energia.
 //struct thread_d  *____IDLE;
 
-// The control thread of the window sever kernel module.
+// The flower thread of the window sever kernel module.
 // The ring 0 thread. tid0
 //struct thread_d  *tid0_thread;
 
-// Essa é a thread de controle do processo init2.bin
+// Essa é a thread flower do processo init2.bin
 // É o primeiro processo em ring3.
 // Idle Thread. TID=0    
 struct thread_d  *InitThread;
@@ -204,7 +204,7 @@ __ps_setup_x64_context (
 // Common
 //
 
-// This is used by the control thread.
+// This is used by the flower thread
     t->initial_rip = (unsigned long) init_rip; 
 
 // General purpose registers.
@@ -564,7 +564,7 @@ void *GetForegroundThread(void)
     return (void*) GetThreadByTID(foreground_thread);
 }
 
-// Get the pointer for the control thread 
+// Get the pointer for the flower thread 
 // of the current Display server application.
 void *GetDSThread(void)
 {
@@ -1096,7 +1096,7 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
     clone->context.rip = 
         (unsigned long) father->context.rip;   // wrong 
 
-// O endereço incial, para controle.
+// Initial address
     clone->initial_rip = 
         (unsigned long) father->initial_rip; 
 

@@ -1,5 +1,5 @@
 // pit.c
-// Programmable Interval Timer (PIT) - (Intel 8253/8254) 
+// Programmable Interval Timer (PIT) - (Intel 8253/8254)
 // 2013 - Created by Fred Nora.
 
 // See:
@@ -649,8 +649,8 @@ struct timer_d *create_timer (
         debug_print("create_timer: [FAIL] current_thread\n");
         return NULL;
     }
-    // Thread de controle.
-    //Thread = (struct thread_d *) Process->control;
+    // The flower thread
+    //Thread = (struct thread_d *) Process->flower;
     Thread = (struct thread_d *) threadList[current_thread];
     if ((void*) Thread == NULL){
         debug_print("create_timer: [FAIL] Thread\n");

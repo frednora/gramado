@@ -23,7 +23,7 @@ char __local_process_name[64] = {0};
  *     in the process structure.
  */
 // Cloning the process structure.
-// It will also copies the control thread.
+// It will also copies the flower thread.
 // #todo: It depends on the childs personality.
 // Called by clone_process at clone.c
 // IN:
@@ -413,14 +413,14 @@ copy_process_struct(
     }
 
 // ========================
-// Thread de controle
+// flower thread
 
-// Vamos clonar a thread de controle do processo pai.
+// Vamos clonar a thread flower do processo pai.
 // obs:
-// Me parece que a fun��o que clona apenas a thread de controle 
+// Me parece que a fun��o que clona apenas a thread flower 
 // chama-se fork1. #todo
 // #todo: Precisamos copiar todas as threads
-// vamos come�ar pela thread de controle.
+// vamos come�ar pela thread flower.
 // teoriacamente elas precisam ter o mesmo endere�o virtual ...
 // mas est�o em endere�os f�sicos diferentes.
 // #bugbug precisamos clonar a thread.
@@ -483,7 +483,7 @@ fail:
 
 // #todo
 // The stack for the process.
-// Maybe it needs to reflect only the control thread.
+// Maybe it needs to reflect only the flower thread.
 
 // OUT:
 // The pid of the clone or fail.
@@ -690,9 +690,9 @@ copy_process(
     // ...
 
 //
-// Parent's control thread
+// Parent's flower thread
 //
-    parent_thread = (struct thread_d *) parent_process->control;
+    parent_thread = (struct thread_d *) parent_process->flower;
     if ((void*) parent_thread == NULL){
         panic("copy_process: parent_thread\n");
     }
@@ -722,7 +722,7 @@ copy_process(
 //
 
 // [pai]
-// Change the state of the parent's control thread.
+// Change the state of the parent's flower thread.
 // #bugbug: Por que?
 // A rotina copy_process foi chamada por um processo em ring3
 // via systemcall e não tem o seu contexto salvo na estrutura da thread,
@@ -741,7 +741,7 @@ copy_process(
     }
 
 // A thread que fez a chamada precisa ser
-// a thread de controle do processo pai.
+// a thread flower do processo pai.
     if (current_thread != parent_thread->tid){
         panic("copy_process: current_thread mismatched\n");
     }
@@ -945,7 +945,7 @@ do_clone:
 // [2]
 // Copiar a estrutura de processo. 
 // Do atual para o clone que estamos criando.
-// #important: It will also copy the control thread.
+// #important: It will also copy the flower thread.
 // see: process.c
 
     //#debug
@@ -996,8 +996,8 @@ do_clone:
 
     //child_thread->personality = (int) parent_thread->personality;
 
-// Save the pointer for the control thread
-    child_process->control = (struct thread_d *) child_thread;
+// Save the pointer for the flower thread
+    child_process->flower = (struct thread_d *) child_thread;
 // The child process is the owner of the child thread
     child_thread->owner_process = (struct process_d *) child_process;
 // Saving the owner pid
@@ -1034,7 +1034,7 @@ do_clone:
 
 // #hackhack
 // Vamos herdar porque configuramos esses valores para o process clone.
-// Agora eles serão usados na thread de controle do clone.
+// Agora eles serão usados na thread flower do clone.
 
     child_thread->pml4_VA = (unsigned long) child_process->pml4_VA;
     child_thread->pml4_PA = (unsigned long) child_process->pml4_PA;
@@ -1045,7 +1045,7 @@ do_clone:
     //refresh_screen();
     //while(1){}
 
-// A control thread do processo clone
+// A flower thread do processo clone
 // está herdando as tabelas usadas por ele.
     child_thread->pml4_PA = (unsigned long) child_process->pml4_PA;
 
@@ -1356,7 +1356,7 @@ do_clone:
 // Conseguimos isso por causa da criação da pagetable, logo acima.
 // #caution
 // Entry point and stack.
-// We are clonning only the control thread.
+// We are clonning only the flower thread.
 // The entry point in the start of the image. 0x201000.
 // And the stack ??
 
@@ -1508,7 +1508,7 @@ do_clone:
     }
 
 // Select for execution
-// Então a thread de controle esta em INITIALIZED e não em STANDBY.
+// Então a thread flower esta em INITIALIZED e não em STANDBY.
 // Change the state to standby.
 // This thread is gonna run in the next taskswitch.
 

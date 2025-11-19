@@ -65,9 +65,9 @@ int dispsrv_setup_ds_info(pid_t pid)
     DisplayServerInfo.pid = (pid_t) pid;
 
 // -----------------
-// TID: The control thread.
+// TID: The flower thread
 
-    t = (struct thread_d *) p->control;
+    t = (struct thread_d *) p->flower;
     if ((void*) t == NULL){
         goto fail;
     }
