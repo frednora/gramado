@@ -552,7 +552,6 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
     if ( kstrncmp( cmdline, "console", 7 ) == 0 )
     {
         printk("Console number: {%d}\n",fg_console);
-        refresh_screen();
         goto exit_cmp;
     }
 
@@ -745,10 +744,15 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 // this file it will display the message in the screen. But in our case 
 // we're simply getting the tty associated with the file.
 
-// ok. It is working
+
     struct tty_d *myTTY = (struct tty_d *) &CONSOLE_TTYS[fg_console];
     if ( kstrncmp( cmdline, "tty", 3 ) == 0 )
     {
+        // Select the worker,
+        // it determines the destination.
+        //tty_set_output_worker(myTTY, TTY_OUTPUT_WORKER_FGCONSOLE);
+        tty_set_output_worker(myTTY, TTY_OUTPUT_WORKER_SERIALPORT);
+
         //tty_write(1,"Hello",5); // failing
 
         // Raw queue
@@ -757,7 +761,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 
         // Output queue
         __tty_write2 (myTTY,"Hello Raw Queue",15);
-        tty_flush(myTTY);
+        //tty_flush(myTTY);
         goto exit_cmp;
     }
 

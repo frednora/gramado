@@ -3030,7 +3030,9 @@ DDINIT_console(
     CONSOLE_TTYS[ConsoleIndex].output_queue.buffer_size = TTY_BUF_SIZE;
     for(i=0; i<TTY_BUF_SIZE; i++){ CONSOLE_TTYS[ConsoleIndex].output_queue.buf[i] = 0; }
 
-
+// Set default during the initialization
+    CONSOLE_TTYS[ConsoleIndex].output_worker_number = 
+        TTY_OUTPUT_WORKER_FGCONSOLE;
 
 // Cursor dimentions in pixel.
 // #bugbug: determinado

@@ -172,6 +172,14 @@ struct tty_queue
     struct thread_d *thread_list;
 };
 
+// Selects the worker given the destination 
+// when writing into the tty's output queue.
+// see: int output_worker_number;
+#define TTY_OUTPUT_WORKER_FGCONSOLE   0
+#define TTY_OUTPUT_WORKER_STDIN       1
+#define TTY_OUTPUT_WORKER_SERIALPORT  2
+#define TTY_OUTPUT_WORKER_PTYSLAVE    3
+// ...
 
 #define TTY_NAME_SIZE  64
 #define CHARSET_NAME_SIZE  64
@@ -264,6 +272,10 @@ struct tty_d
     struct tty_queue canonical_queue;  // Canonical buffer.
 
     struct tty_queue output_queue;     // Output buffer.
+
+// What worker this tty wants to use 
+// when writing into output queue.
+    int output_worker_number;
 
 // Saving prev char into the struct
 // to avoid conflict when multiple threads are calling the
@@ -415,7 +427,23 @@ void tty_flush_raw_queue(struct tty_d *tty, int console_number);
 void tty_flush_canonical_queue(struct tty_d *tty, int console_number);
 void tty_flush_output_queue(struct tty_d *tty, int console_number);
 
-int tty_copy_raw_buffer( struct tty_d *tty_to, struct tty_d *tty_from );
+void 
+tty_flush_output_queue_to_serial(
+    struct tty_d *tty, 
+    int port_number );
+void tty_flush_output_queue_to_stdin( struct tty_d *tty);
+
+void tty_flush_output_queue_ex(struct tty_d *tty);
+
+int 
+tty_copy_raw_buffer( 
+    struct tty_d *tty_to, 
+    struct tty_d *tty_from );
+
+int 
+tty_copy_output_buffer( 
+    struct tty_d *tty_to, 
+    struct tty_d *tty_from );
 
 int tty_queue_putchar(struct tty_queue *q, char c);
 int tty_queue_getchar(struct tty_queue *q);
@@ -448,6 +476,8 @@ tty_write (
     int fd, 
     char *buffer, 
     int n );
+
+int tty_set_output_worker(struct tty_d *tty, int worker_number);
 
 int tty_reset_termios (struct tty_d *tty);
 

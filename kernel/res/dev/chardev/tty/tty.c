@@ -86,10 +86,10 @@ void tty_flush_canonical_queue(struct tty_d *tty, int console_number)
 
 // Flush the output queue of a TTY.
 // Place this in tty.c and declare in tty.h if needed.
-
 void tty_flush_output_queue(struct tty_d *tty, int console_number)
 {
-    if (!tty || tty->magic != TTY_MAGIC) return;
+    if (!tty || tty->magic != TTY_MAGIC)
+        return;
 
     struct tty_queue *q = &tty->output_queue;
 
@@ -101,6 +101,103 @@ void tty_flush_output_queue(struct tty_d *tty, int console_number)
 
         // Render the character on the console
         console_outbyte((int)c, console_number);
+    }
+}
+
+void 
+tty_flush_output_queue_to_serial(
+    struct tty_d *tty, 
+    int port_number )
+{
+    int FinalChar=0;
+
+    if (!tty || tty->magic != TTY_MAGIC)
+        return;
+
+// Validate port number
+    if ( port_number != COM1_PORT && 
+         port_number != COM2_PORT &&
+         port_number != COM3_PORT &&
+         port_number != COM4_PORT )
+    {
+        return;
+    }
+
+    struct tty_queue *q = &tty->output_queue;
+
+    while (q->tail != q->head)
+    {
+        char c = q->buf[q->tail];
+        q->tail = (q->tail + 1) % q->buffer_size;
+        if (q->cnt > 0) 
+            q->cnt--;
+
+        FinalChar = (int) (c & 0xFF);
+        //serial_print(port_number,(char)FinalChar);
+        serial_printk("%c",c); // Only on port 0.
+    }
+}
+
+void tty_flush_output_queue_to_stdin( struct tty_d *tty)
+{
+    int FinalChar=0;
+
+    if (!tty || tty->magic != TTY_MAGIC)
+        return;
+
+    struct tty_queue *q = &tty->output_queue;
+
+    while (q->tail != q->head)
+    {
+        char c = q->buf[q->tail];
+        q->tail = (q->tail + 1) % q->buffer_size;
+        if (q->cnt > 0) q->cnt--;
+
+        FinalChar = (int) (c & 0xFF);
+        kstdio_feed_stdin((int) FinalChar);
+    }
+}
+
+/*
+Handles four cases:
+ Foreground console → flushes to screen.
+ STDIN injection → simulates keyboard input.
+ Serial port → sends to COM1.
+ PTY master → slave → forwards output queue into the slave’s buffer.
+*/
+void tty_flush_output_queue_ex(struct tty_d *tty) 
+{
+    struct tty_d *link; // Redirection for pty master.
+
+    if (!tty || tty->magic != TTY_MAGIC)
+        return;
+
+    switch (tty->output_worker_number) {
+        case TTY_OUTPUT_WORKER_FGCONSOLE: // 0 Screen console
+            tty_flush_output_queue(tty, fg_console);
+            break;
+
+        case TTY_OUTPUT_WORKER_STDIN: // 1 Inject into stdin (simulate keyboard input)
+            tty_flush_output_queue_to_stdin(tty);
+            break;
+
+        case TTY_OUTPUT_WORKER_SERIALPORT: // 2 Serial port
+            tty_flush_output_queue_to_serial(tty, COM1_PORT);
+            break;
+
+        case TTY_OUTPUT_WORKER_PTYSLAVE: // pty maste >> pty slave
+            link = (struct tty_d *) tty->link;
+            if ( (void*) link == NULL)
+                break;
+            if (link->magic != 1234)
+                break;
+            // Send to slave
+            tty_copy_output_buffer(link,tty);
+            break;
+
+        default:
+            // Unknown worker, ignore or log error
+            break;
     }
 }
 
@@ -126,6 +223,36 @@ tty_copy_raw_buffer(
 // Copy
     for (i=0; i<TTY_BUF_SIZE; i++){
         tty_to->raw_queue.buf[i] = (char) tty_from->raw_queue.buf[i]; 
+    };
+    return (int) i;
+fail:
+    return (int) -1;
+}
+
+int 
+tty_copy_output_buffer( 
+    struct tty_d *tty_to, 
+    struct tty_d *tty_from )
+{
+    register int i=0;
+
+// Parameters:
+    if ((void*) tty_to == NULL){
+        goto fail;
+    }
+    if ((void*) tty_from == NULL){
+        goto fail;
+    }
+    if (tty_to->magic != 1234)
+        goto fail;
+    if (tty_from->magic != 1234)
+        goto fail;
+
+// Copy
+    for (i=0; i<TTY_BUF_SIZE; i++)
+    {
+        tty_to->output_queue.buf[i] = 
+            (char) tty_from->output_queue.buf[i]; 
     };
     return (int) i;
 fail:
@@ -471,7 +598,10 @@ int __tty_write2(struct tty_d *tty, char *buffer, int nr)
         written++;
     }
 
-    printk("__tty_write: [DONE] %d/%d bytes written\n", written, nr);
+    //#debug
+    //printk("__tty_write: [DONE] %d/%d bytes written\n", written, nr);
+
+    tty_flush_output_queue_ex(tty);
     return written;
 }
 
@@ -679,6 +809,27 @@ int tty_change_font_address( struct tty_d *tty, void *font_address )
     return 0;
 }
 */
+
+// Change the output worker for a given TTY.
+// This can be called directly or via tty_ioctl.
+int tty_set_output_worker(struct tty_d *tty, int worker_number)
+{
+    if (!tty || tty->magic != TTY_MAGIC)
+        return -1;
+
+    switch (worker_number) {
+        case TTY_OUTPUT_WORKER_FGCONSOLE:
+        case TTY_OUTPUT_WORKER_STDIN:
+        case TTY_OUTPUT_WORKER_SERIALPORT:
+        case TTY_OUTPUT_WORKER_PTYSLAVE:
+            tty->output_worker_number = worker_number;
+            return 0;
+
+        default:
+            // Invalid worker number
+            return -1;
+    }
+}
 
 // tty_reset_termios: 
 // Reset termios in a given tty.
@@ -1072,6 +1223,18 @@ tty_ioctl (
     // TIOCINQ, TIOCSTI, TIOCMGET, TIOCMBIS, TIOCMBIC, TIOCMSET,
     // TIOCGSOFTCAR, TIOCSSOFTCAR
 
+// Change the output worker for a given TTY.
+    case 800:
+        switch (arg){
+           case TTY_OUTPUT_WORKER_FGCONSOLE:
+           case TTY_OUTPUT_WORKER_STDIN:
+           case TTY_OUTPUT_WORKER_SERIALPORT:
+           case TTY_OUTPUT_WORKER_PTYSLAVE:
+               //tty_set_output_worker(tty,(unsigned int)arg);
+               break;
+        };
+        break;
+
 //CLEAN
     case 900:
         //tty->_rbuffer->_w = 0;
@@ -1155,7 +1318,7 @@ fail:
  * OUT:
  *     pointer.
  */
-// #test
+// #test Nope?
 // We are including a pointer to the RIT. raw input thread.
 // This is the control thread of the window with focus on kgws.
 // See: tty.h
@@ -1277,6 +1440,9 @@ struct tty_d *tty_create(short type, short subtype)
     __tty->output_queue.tail = 0;
     __tty->output_queue.buffer_size = TTY_BUF_SIZE;
     for(i=0; i<TTY_BUF_SIZE; i++){ __tty->output_queue.buf[i] = 0; }
+
+// Set default during the initialization
+    __tty->output_worker_number = TTY_OUTPUT_WORKER_FGCONSOLE;
 
 // system metrics.
 
