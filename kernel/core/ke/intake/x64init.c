@@ -442,9 +442,10 @@ static int I_x64CreateInitialProcess(void)
         printk("I_x64CreateInitialProcess: InitThread->tid\n");
         return FALSE;
     }
-// Invalid owner PID.
-    if (InitThread->owner_pid != GRAMADO_PID_INIT){
-        printk ("I_x64CreateInitialProcess: InitThread->owner_pid\n");
+
+// Invalid 'thread environment id' (PID)
+    if (InitThread->pid != GRAMADO_PID_INIT){
+        printk ("I_x64CreateInitialProcess: InitThread->pid\n");
         return FALSE;
     }
 
@@ -472,7 +473,7 @@ static int I_x64CreateInitialProcess(void)
 
     //ipccore_register ( 
         //(int) 0, 
-        //(struct process_d *) InitProcess, 
+        //(struct te_d *) InitProcess, 
         //(struct thread_d *) InitThread ); 
 
     InitThread->pe_mode = PE_MODE_EFFICIENCY;
@@ -591,8 +592,10 @@ void I_x64ExecuteInitialProcess(void)
 // Current process
 //
 
-    if (t->owner_process->pid != GRAMADO_PID_INIT){
-        panic("I_x64ExecuteInitialProcess: t->owner_process->pid\n");
+// Check the 'thread environment id' (PID) 
+// into our 'thread environment' (process) structure.
+    if (t->te->pid != GRAMADO_PID_INIT){
+        panic("I_x64ExecuteInitialProcess: t->te->pid\n");
     }
     set_current_process(GRAMADO_PID_INIT);
 

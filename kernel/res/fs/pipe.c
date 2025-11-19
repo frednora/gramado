@@ -21,7 +21,7 @@ int sys_dup(int oldfd)
 {
     file *f_old;
     file *f_new;
-    struct process_d *Process;
+    struct te_d *Process;
     pid_t current_process=-1;
     register int i=0;
     int slot = -1;
@@ -33,7 +33,7 @@ int sys_dup(int oldfd)
 
 // Process
     current_process = (pid_t) get_current_process();
-    Process = (void *) processList[current_process];
+    Process = (void *) teList[current_process];
     if ((void *) Process == NULL){
         //debug_print("sys_dup: [FAIL]\n");
         goto fail;
@@ -113,7 +113,7 @@ int sys_dup2(int oldfd, int newfd)
 {
     file *f_old;
     file *f_new;
-    struct process_d *Process;
+    struct te_d *Process;
     pid_t current_process = -1;
 
     if ( oldfd < 0 || oldfd >= OPEN_MAX )
@@ -124,7 +124,7 @@ int sys_dup2(int oldfd, int newfd)
 
 // Process
     current_process = (pid_t) get_current_process();
-    Process = (void *) processList[current_process];
+    Process = (void *) teList[current_process];
     if ((void *) Process == NULL){
         //#todo: We need a message here.
         goto fail;
@@ -187,7 +187,7 @@ int sys_dup3(int oldfd, int newfd, int flags)
 {
     file  *f_old;
     file  *f_new;
-    struct process_d *Process;
+    struct te_d *Process;
     pid_t current_process = -1;
 
     //#todo: flags.
@@ -200,7 +200,7 @@ int sys_dup3(int oldfd, int newfd, int flags)
 
 // Process
     current_process = (pid_t) get_current_process();
-    Process = (void *) processList[current_process];
+    Process = (void *) teList[current_process];
     if ((void *) Process == NULL){
         goto fail;
     }
@@ -270,7 +270,7 @@ int sys_pipe( int *pipefd, int flags )
 {
     file *f1;
     file *f2;
-    struct process_d *Process;
+    struct te_d *Process;
     pid_t current_process = -1;
     register int i=0;
     int slot1 = -1;
@@ -287,7 +287,7 @@ int sys_pipe( int *pipefd, int flags )
 
 // Process
     current_process = (pid_t) get_current_process();
-    Process = (void *) processList[current_process];
+    Process = (void *) teList[current_process];
     if ((void *) Process == NULL){
         //debug_print("sys_pipe: Process\n");
         //todo printk
@@ -303,7 +303,7 @@ int sys_pipe( int *pipefd, int flags )
 //temos que criar uma rotina que procure slots em Process->Streams[]
 //e colocarmos em process.c
 //essa é afunção que estamos criando.
-	// process_find_empty_stream_slot ( struct process_d *process );
+	// process_find_empty_stream_slot ( struct te_d *process );
 
 // procurar 2 slots livres.
 

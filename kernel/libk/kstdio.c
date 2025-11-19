@@ -145,7 +145,7 @@ fail:
 int sys_setup_stdin(int stdin_fd)
 {
     file *f;
-    struct process_d *p;
+    struct te_d *p;
     pid_t current_process = -1;
 
     if (stdin_fd < 0 || stdin_fd >= 32){
@@ -157,7 +157,7 @@ int sys_setup_stdin(int stdin_fd)
     if ( current_process < 0 || current_process >= PROCESS_COUNT_MAX )
         return FALSE;
 // Process structure
-    p = (struct process_d *) processList[current_process];
+    p = (struct te_d *) teList[current_process];
     if ((void*) p == NULL){
         return FALSE;
     }

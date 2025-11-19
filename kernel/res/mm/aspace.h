@@ -38,7 +38,7 @@ struct aspace_d
 	//        essa área de memória.
 	
 	//Lista de processos utilizando esse objeto.
-	struct process_d *processListHead;
+	struct te_d *te_list_head;
 	//int processCount;
 	
 	// propriedades da região.

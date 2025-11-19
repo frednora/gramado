@@ -64,8 +64,8 @@ static void __sched_notify_parent(struct thread_d *thread, int event_number)
     // #todo
     // This is a work in progress!
 
-    struct process_d *p_owner;
-    struct process_d *p_parent;
+    struct te_d *p_owner;
+    struct te_d *p_parent;
 
     //printk ("__sched_notify_parent: #test\n");
 
@@ -80,12 +80,13 @@ static void __sched_notify_parent(struct thread_d *thread, int event_number)
 
 // Owner process
 // The thread belongs to this process
-    pid_t owner_pid = thread->owner_pid;
-    if (owner_pid < 0)
+// The 'thread environment id' (PID)
+    pid_t teid = thread->pid;
+    if (teid < 0)
         return;
-    if (owner_pid >= PROCESS_COUNT_MAX)
+    if (teid >= PROCESS_COUNT_MAX)
         return;
-    p_owner = (struct process_d *) processList[owner_pid];
+    p_owner = (struct te_d *) teList[teid];
     if ((void*) p_owner == NULL)
         return;
     if (p_owner->magic != 1234)
@@ -97,7 +98,7 @@ static void __sched_notify_parent(struct thread_d *thread, int event_number)
         return;
     if (parent_pid >= PROCESS_COUNT_MAX)
         return;
-    p_parent = (struct process_d *) processList[parent_pid];
+    p_parent = (struct te_d *) teList[parent_pid];
     if ((void*) p_parent == NULL)
         return;
     if (p_parent->magic != 1234)

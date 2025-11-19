@@ -103,7 +103,7 @@ struct device_d
 //de gerenciamento.
     //int pid;
     //unsigned long queue[8];
-    //struct process_d *list;
+    //struct te_d *list;
 
 // Driver.
 // ?? Talvez pudesse ser 'device driver' e não 'tty driver'

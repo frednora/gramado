@@ -118,7 +118,7 @@ fail:
 off_t sys_lseek(int fd, off_t offset, int whence)
 {
     file *f;
-    struct process_d *p;
+    struct te_d *p;
     pid_t current_process = -1;
 
     // #debug
@@ -142,8 +142,8 @@ off_t sys_lseek(int fd, off_t offset, int whence)
         goto fail;
     }
 
-// Process structure.
-    p = (struct process_d *) processList[current_process];
+// Process structure
+    p = (struct te_d *) teList[current_process];
     if ((void *) p == NULL){
         debug_print("sys_lseek: p\n");
         goto fail;

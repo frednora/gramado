@@ -584,7 +584,7 @@ void heapFreeMemory(void *ptr)
 // ?? Pega o 'heap pointer' do heap de um processo. ??
 unsigned long get_process_heap_pointer (pid_t pid)
 {
-    struct process_d *p;
+    struct te_d *p;
     unsigned long heapLimit=0;
 
     if (pid < 0 || pid >= PROCESS_COUNT_MAX){
@@ -593,8 +593,8 @@ unsigned long get_process_heap_pointer (pid_t pid)
     }
 
 // Process
-    p = (void *) processList[pid];
-    if ( (void *) p == NULL ){
+    p = (void *) teList[pid];
+    if ((void *) p == NULL){
         printk ("get_process_heap_pointer: p\n");
         goto fail;
     }

@@ -626,7 +626,7 @@ tty_read (
     int n )
 {
     struct tty_d *__tty;
-    struct process_d *p;
+    struct te_d *p;
     pid_t current_process = -1;
     file *f;
 
@@ -649,7 +649,7 @@ tty_read (
     if (current_process<0 || current_process >= PROCESS_COUNT_MAX){
         goto fail;
     }
-    p = (struct process_d *) processList[current_process];
+    p = (struct te_d *) teList[current_process];
     if ((void*) p == NULL){
         debug_print("tty_read: p\n");
         goto fail;
@@ -703,7 +703,7 @@ tty_write (
     int n )
 {
     struct tty_d *__tty;
-    struct process_d *p;
+    struct te_d *p;
     pid_t current_process = -1;
     file *f;
 
@@ -727,7 +727,7 @@ tty_write (
     if (current_process<0 || current_process >= PROCESS_COUNT_MAX){
         goto fail;
     }
-    p = (struct process_d *) processList[current_process];
+    p = (struct te_d *) teList[current_process];
     if ((void*) p == NULL){
         debug_print("tty_write: p\n");
         goto fail;
@@ -1090,7 +1090,7 @@ tty_ioctl (
     struct tty_d *tty;
     struct tty_d *other_tty;
 
-    struct process_d *p;
+    struct te_d *p;
     pid_t current_process = -1;
     file *f;
 
@@ -1113,7 +1113,7 @@ tty_ioctl (
     if (current_process < 0 || current_process >= PROCESS_COUNT_MAX){ 
         return -1;
     }
-    p = (struct process_d *) processList[current_process];
+    p = (struct te_d *) teList[current_process];
     if ((void *) p == NULL){
         goto fail;
     }

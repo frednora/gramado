@@ -54,12 +54,12 @@ struct ttydrv_d
 
     int flags;        // tty driver flags.
 
-     // owner process.
-    struct process_d *process;
+     // owner process
+    struct te_d *process;
 
-    // control thread.
-    struct process_d *thread;
-    
+    // flower thread.
+    struct te_d *thread;
+
 //
 // == (1) storage ========
 //

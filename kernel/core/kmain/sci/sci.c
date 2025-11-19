@@ -211,8 +211,8 @@ void *sci0 (
 
 // Thread
     struct thread_d *t;
-// Process
-    struct process_d *p;
+    struct te_d *p;
+
     pid_t current_process = -1;
 // Pointer for cgroup
     struct cgroup_d *cg;
@@ -263,7 +263,7 @@ void *sci0 (
     if (current_process<0 || current_process >= PROCESS_COUNT_MAX){
         panic("sci0: current_process\n");
     }
-    p = (struct process_d *) processList[current_process];
+    p = (struct te_d *) teList[current_process];
     if ((void*) p == NULL){
         debug_print("sci0: p\n");
         panic("sci0: p\n");
@@ -1875,7 +1875,7 @@ void *sci1 (
 // Getting requests from ring3 applications via systemcalls.
 // :: Services in mod0.
 
-    struct process_d *p;
+    struct te_d *p;
     struct thread_d *t;
 
     debug_print("sci1: [TODO]\n");
@@ -1906,7 +1906,7 @@ void *sci1 (
     if (current_process<0 || current_process >= PROCESS_COUNT_MAX){
         panic("sci1: current_process\n");
     }
-    p = (struct process_d *) processList[current_process];
+    p = (struct te_d *) teList[current_process];
     if ((void*) p == NULL){
         debug_print("sci0: p\n");
         panic("sci1: p\n");
@@ -1991,7 +1991,7 @@ void *sci2 (
 // Getting requests from ring3 applications via systemcalls.
 // :: Services in kernel.
 
-    struct process_d *p;
+    struct te_d *p;
     struct thread_d *t;
 
     pid_t current_process = (pid_t) get_current_process();
@@ -2025,7 +2025,7 @@ void *sci2 (
         panic("sci2: current_process\n");
     }
 
-    p = (struct process_d *) processList[current_process];
+    p = (struct te_d *) teList[current_process];
     if ((void*) p == NULL){
         debug_print("sci2: p\n");
         panic("sci2: p\n");
@@ -2163,11 +2163,13 @@ void *sci2 (
     if (number == 801)
     {
         switch (arg2) {
+        // TID
         case 100:
             return (void*) t->tid;
             break;
+        // 'thread environment id', the PID
         case 101:
-            return (void*) t->owner_pid;
+            return (void*) t->pid;
             break;
         // ...
         default:
@@ -2826,7 +2828,7 @@ void *sci3 (
 // Getting requests from ring3 applications via systemcalls.
 // :: Services in mod0.
 
-    struct process_d *p;
+    struct te_d *p;
     struct thread_d *t;
 
     debug_print("sci1: [TODO]\n");
@@ -2856,7 +2858,7 @@ void *sci3 (
     if (current_process<0 || current_process >= PROCESS_COUNT_MAX){
         panic("sci3: current_process\n");
     }
-    p = (struct process_d *) processList[current_process];
+    p = (struct te_d *) teList[current_process];
     if ((void*) p == NULL){
         debug_print("sci3: p\n");
         panic("sci3: p\n");

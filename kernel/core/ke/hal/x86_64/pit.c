@@ -625,7 +625,7 @@ struct timer_d *create_timer (
     int type )
 {
     struct timer_d   *Timer;
-    struct process_d *Process;
+    struct te_d *Process;
     struct thread_d  *Thread;
     int ID = -1;  //erro;
 
@@ -639,7 +639,7 @@ struct timer_d *create_timer (
         debug_print("create_timer: [FAIL] pid\n");
         return NULL;
     }
-    Process = (struct process_d *) processList[pid];
+    Process = (struct te_d *) teList[pid];
     if ((void*) Process == NULL){
         debug_print("create_timer: [FAIL] Process\n");
         return NULL;
@@ -713,8 +713,8 @@ struct timer_d *create_timer (
             Timer->type = (int) type;
             
             // Pegamos logo acima.
-            Timer->process = (struct process_d *) Process;
             Timer->thread  = (struct thread_d *)  Thread;
+            Timer->process = (struct te_d *) Process;
             Timer->pid     = pid;
             Timer->tid     = current_thread;
 

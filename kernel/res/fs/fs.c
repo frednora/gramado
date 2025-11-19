@@ -361,7 +361,7 @@ fail:
 void sys_set_file_sync(int fd, int request, int data)
 {
     file *object;
-    struct process_d  *p;
+    struct te_d  *p;
     pid_t current_process = -1;
    
     //#bugbug
@@ -391,7 +391,7 @@ void sys_set_file_sync(int fd, int request, int data)
         debug_print("sys_set_file_sync: current_process\n");
         return;
     }
-    p = (void *) processList[current_process];
+    p = (void *) teList[current_process];
     if ((void *) p == NULL){
         debug_print("sys_set_file_sync: p\n");
         return;
@@ -478,7 +478,7 @@ void sys_set_file_sync(int fd, int request, int data)
 int sys_get_file_sync(int fd, int request)
 {
     file *object;
-    struct process_d  *p;
+    struct te_d  *p;
     pid_t current_process = -1;
     
     //#bugbug
@@ -506,7 +506,7 @@ int sys_get_file_sync(int fd, int request)
         debug_print("sys_get_file_sync: current_process\n");
         goto fail;
     }
-    p = (void *) processList[current_process];
+    p = (void *) teList[current_process];
     if ((void *) p == NULL){
         debug_print("sys_get_file_sync: p\n");
         goto fail;
@@ -574,7 +574,7 @@ int sys_get_device_number_by_path(const char *path)
 int sys_open_device_by_number(int device_index)
 {
     file *fp;
-    struct process_d *p;
+    struct te_d *p;
     pid_t current_process = -1;
     register int __slot=0;
     int i = device_index;
@@ -607,7 +607,7 @@ int sys_open_device_by_number(int device_index)
     if (current_process < 0 || current_process >= PROCESS_COUNT_MAX){
         goto fail;
     }
-    p = (struct process_d *) processList[current_process];
+    p = (struct te_d *) teList[current_process];
     if ((void *) p == NULL){
         debug_print ("sys_open_device_by_number: p\n");
         goto fail;
@@ -677,7 +677,7 @@ unsigned long sys_get_file_size(const char *path)
 int sys_sleep_if_socket_is_empty(int fd)
 {
     file *object;
-    struct process_d *p;
+    struct te_d *p;
     pid_t current_process = -1;
 
 // Parameter
@@ -691,7 +691,7 @@ int sys_sleep_if_socket_is_empty(int fd)
         debug_print("sys_sleep_if_socket_is_empty: current_process\n");
         goto fail;
     }
-    p = (void *) processList[current_process];
+    p = (void *) teList[current_process];
     if ((void *) p == NULL){
         debug_print("sys_sleep_if_socket_is_empty: p\n");
         goto fail;

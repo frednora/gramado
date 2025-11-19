@@ -49,9 +49,10 @@ struct thread_d *create_init_thread(void)
     //t->tgid = (tgid_t) ?; // tgid
 
 // The pointer for the process we belong to.
-    t->owner_process = (void *) InitProcess;
-// The PID for the process we belong to.
-    t->owner_pid = (pid_t) InitProcess->pid; 
+// Belongs to this 'thread environment'
+    t->te = (void *) InitProcess;
+// The thread environment id
+    t->pid = (pid_t) InitProcess->pid; 
 
 // Low priority
     t->base_priority = PRIORITY_SYSTEM_THRESHOLD;  // Static

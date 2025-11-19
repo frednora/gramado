@@ -337,7 +337,7 @@ void *allocPages(size_t size)
     // It's suspended because the allocator is called during the kernel initialization,
     // when we still do not have a pointer for the current process yet.
 
-    struct process_d *cp_pointer;  // Pointer for the current process.
+    struct te_d *cp_pointer;  // Pointer for the current process.
     cp_pointer = (void*) get_current_process_pointer();
     if ((void*) cp_pointer == NULL)
     {

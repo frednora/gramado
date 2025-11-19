@@ -169,7 +169,7 @@ fail:
 // Show the private socket for a process.
 void show_socket_for_a_process (pid_t pid)
 {
-    struct process_d  *p;
+    struct te_d  *p;
     struct socket_d  *s;
 
     // #debug
@@ -182,7 +182,7 @@ void show_socket_for_a_process (pid_t pid)
     }
 
 // process
-    p = (struct process_d *) processList[pid];
+    p = (struct te_d *) teList[pid];
     if ((void *) p == NULL){
         printk("p\n");
         goto fail;
@@ -228,7 +228,7 @@ struct socket_d *get_socket_from_fd(int fd)
 {
 // Get from the current process.
 
-    struct process_d *p;
+    struct te_d *p;
     pid_t current_process = -1;
     file *_file;
 
@@ -244,7 +244,7 @@ struct socket_d *get_socket_from_fd(int fd)
     if (current_process<0 || current_process>=PROCESS_COUNT_MAX){
         goto fail;
     }
-    p = (struct process_d *) processList[current_process];
+    p = (struct te_d *) teList[current_process];
     if ((void *) p == NULL){
         goto fail;
     }
@@ -396,12 +396,12 @@ struct socket_d *get_socket_in_process_list(unsigned short target_port)
 {
     struct socket_d *sock;
     register int i=0;
-    struct process_d *process;
+    struct te_d *process;
 
     for (i=0; i<PROCESS_COUNT_MAX; i++)
     {
         // Get process
-        process = (struct process_d *) processList[i];
+        process = (struct te_d *) teList[i];
         if ((void*) process != NULL)
         {
             if (process->magic == 1234)
@@ -480,7 +480,7 @@ int socket_write ( int fd, char *buf, int count )
 
 int socket_ioctl ( int fd, unsigned long request, unsigned long arg )
 {
-    struct process_d *p;
+    struct te_d *p;
     pid_t current_process = -1;
     file *f;
 
@@ -494,7 +494,7 @@ int socket_ioctl ( int fd, unsigned long request, unsigned long arg )
 
 // process
     current_process = (pid_t) get_current_process();
-    p = (void*) processList[current_process];
+    p = (void*) teList[current_process];
     if ((void *) p == NULL){
         debug_print("socket_ioctl: p\n");
         goto fail;
@@ -570,7 +570,7 @@ socket_gramado (
 {
 // Called by sys_socket().
 
-    struct process_d *Process;
+    struct te_d *Process;
     pid_t current_process = -1;
     file *_file;
     char *buff;
@@ -607,7 +607,7 @@ socket_gramado (
         printk ("socket_gramado: current_process\n");
         goto fail;
     }
-    Process = (void *) processList[current_process];
+    Process = (void *) teList[current_process];
     if ((void *) Process == NULL){
         printk("socket_gramado: Process\n");
         goto fail;
@@ -622,7 +622,7 @@ socket_gramado (
 //e colocarmos em process.c
 //essa é afunção que estamos criando.
     
-    // process_find_empty_stream_slot ( struct process_d *process );
+    // process_find_empty_stream_slot ( struct te_d *process );
 
 // #improvisando
 // 0, 1, 2 são reservados para o fluxo padrão.
@@ -759,7 +759,7 @@ socket_unix (
 {
 // Called by sys_socket().
 
-    struct process_d *Process;
+    struct te_d *Process;
     pid_t current_process = -1;
     file *_file;
     char *buff;
@@ -795,7 +795,7 @@ socket_unix (
         printk ("socket_unix: current_process\n");
         goto fail;
     }
-    Process = (void *) processList[current_process];
+    Process = (void *) teList[current_process];
     if ((void *) Process == NULL){
         printk("socket_unix: Process\n");
         goto fail;
@@ -810,7 +810,7 @@ socket_unix (
 // Temos que criar uma rotina que procure slots em Process->Streams[]
 // e colocarmos em process.c
 // essa é afunção que estamos criando.
-// process_find_empty_stream_slot ( struct process_d *process );
+// process_find_empty_stream_slot ( struct te_d *process );
 
 // #improvisando
 // 0, 1, 2 são reservados para o fluxo padrão.
@@ -952,7 +952,7 @@ socket_inet (
 {
 // Called by sys_socket().
 
-    struct process_d *Process;
+    struct te_d *Process;
     pid_t current_process = -1;
     file *_file;
     char *buff;
@@ -999,7 +999,7 @@ socket_inet (
         printk ("socket_inet: current_process\n");
         goto fail;
     }
-    Process = (void *) processList[current_process];
+    Process = (void *) teList[current_process];
     if ((void *) Process == NULL){
         printk("socket_inet: Process\n");
         goto fail;
@@ -1014,7 +1014,7 @@ socket_inet (
 //e colocarmos em process.c
 //essa é afunção que estamos criando.
 
-    // process_find_empty_stream_slot ( struct process_d *process );
+    // process_find_empty_stream_slot ( struct te_d *process );
 
 // #improvisando
 // 0, 1, 2 são reservados para o fluxo padrão.

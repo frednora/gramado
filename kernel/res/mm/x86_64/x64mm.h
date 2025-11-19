@@ -142,7 +142,7 @@ struct page_directory_d
 
 //Qual processo � o dono do diret�rio de p�ginas.
 //talvez seja possivel reaproveitar o diret�rio.
-    struct process_d *process;
+    struct te_d *process;
 
 // Endereço onde ficar� o diret�rio de p�ginas.
 // Obs: Para configurar um diret�rio de p�ginas talvez
@@ -207,7 +207,7 @@ struct page_table_d
     struct page_directory_d *directory;
 
 // Cada pagetable pertence � um processo.
-    struct process_d *process;
+    struct te_d *process;
 
 // Travando uma pagetable inteira,
 // nenhuma de suas p�ginas poder�o se descarregadas
@@ -412,7 +412,7 @@ struct process_memory_info_d
     object_type_t  objectType;
     object_class_t objectClass;
 
-    struct process_d *process;
+    struct te_d *process;
 
 //valor em KB. (quantidade de p�ginas + tamanho da p�gina.)
 
@@ -553,7 +553,7 @@ struct frame_pool_d
     unsigned long address; 
 
 //Qual processo é o dono desse framepool.
-    struct process_d *process;
+    struct te_d *process;
 
 // Navigation
     struct frame_pool_d *next;

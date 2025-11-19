@@ -269,13 +269,15 @@ static void __tsOnFinishedExecuting(struct thread_d *t)
 static void __task_switch(void)
 {
 // Current
-    struct process_d *CurrentProcess;
     struct thread_d  *CurrentThread;
+    struct te_d *CurrentProcess;
 // Target
-    struct process_d *TargetProcess;
     struct thread_d  *TargetThread;
+    struct te_d *TargetProcess;
+
 // The owner of the current thread.
-    pid_t owner_pid = (pid_t) (-1);  //fail
+// The 'thread environment id' for the current thread.
+    pid_t te_id = (pid_t) (-1);  //fail
 // tmp tid
     //tid_t tmp_tid = -1;
 // =======================================================
@@ -301,14 +303,13 @@ static void __task_switch(void)
 // The owner of the current thread.
 
 // pid
-    owner_pid = (pid_t) CurrentThread->owner_pid;
-    if ( owner_pid < 0 || 
-         owner_pid >= PROCESS_COUNT_MAX )
+    te_id = (pid_t) CurrentThread->pid;
+    if ( te_id < 0 || te_id >= PROCESS_COUNT_MAX )
     {
-        panic ("ts: owner_pid\n");
+        panic ("ts: te_id\n");
     }
 // structure
-    CurrentProcess = (void *) processList[owner_pid];
+    CurrentProcess = (void *) teList[te_id];
     if ((void *) CurrentProcess == NULL){
         panic ("ts: CurrentProcess\n");
     }
@@ -317,11 +318,11 @@ static void __task_switch(void)
         panic ("ts: CurrentProcess validation\n");
     }
 // check pid
-    if (CurrentProcess->pid != owner_pid){
-        panic("ts: CurrentProcess->pid != owner_pid\n");
+    if (CurrentProcess->pid != te_id){
+        panic("ts: CurrentProcess->pid != te_id\n");
     }
-// Set the new current process.
-    set_current_process(owner_pid);
+// Set the new current process (thread environment id)
+    set_current_process(te_id);
 
 //
 // == Counting =================================
@@ -768,7 +769,7 @@ dispatch_current:
 // Owner validation.
 // Owner PID.
 
-    pid_t targetthread_OwnerPID = (pid_t) TargetThread->owner_pid;
+    pid_t targetthread_OwnerPID = (pid_t) TargetThread->pid;
     if ( targetthread_OwnerPID < 0 || 
          targetthread_OwnerPID >= THREAD_COUNT_MAX )
     {
@@ -777,7 +778,7 @@ dispatch_current:
     }
 
 // Target process 
-    TargetProcess = (void *) processList[targetthread_OwnerPID];
+    TargetProcess = (void *) teList[targetthread_OwnerPID];
     if ((void *) TargetProcess == NULL){
         printk ("ts: TargetProcess %s struct fail\n", TargetProcess->name );
         die();

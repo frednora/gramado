@@ -1,8 +1,9 @@
-// process.h
+// te.h
+// Thread Environment (Process)
 // Created by Fred Nora.
 
-#ifndef __INTAKE_PROCESS_H
-#define __INTAKE_PROCESS_H    1
+#ifndef __INTAKE_TE_H
+#define __INTAKE_TE_H    1
 
 //#bugbug
 //talvez aqui nao seja o melhor lugar pra definir isso.
@@ -227,10 +228,10 @@ struct terminal_connection_d
     int _is_child_of_terminal;  // Child process
 };
 
-// Process structure.
+// Thread Environment structure.
+// Old Process structure.
 // >>> It will become te_d, 'thread environment' structure.
-// struct te_d
-struct process_d 
+struct te_d
 {
     object_type_t objectType;
     object_class_t objectClass;
@@ -834,7 +835,7 @@ struct process_d
 
 // Lista de processos filhos que estao no estado zumbi.
 // List of terminated childs
-    struct process_d  *zombieChildListHead;
+    struct te_d  *zombieChildListHead;
 
 //
 // IPC - Inter-Process Communication.
@@ -909,18 +910,18 @@ struct process_d
 // The reson this process is exiting.
     int exit_code;
 
-    struct process_d  *prev;
-    struct process_d  *next;
+    struct te_d  *prev;
+    struct te_d  *next;
 };
 
 // see: process.c
-extern struct process_d  *KernelProcess;  // Base kernel.
-extern struct process_d  *InitProcess;    // Init process.
+extern struct te_d  *KernelProcess;  // Base kernel.
+extern struct te_d  *InitProcess;    // Init process.
 
 // Max number of processes.
 #define  PROCESS_COUNT_MAX  1024 
 // Process table.
-extern unsigned long processList[PROCESS_COUNT_MAX];
+extern unsigned long teList[PROCESS_COUNT_MAX];
 
 // ----------------------------------------------------------
 
@@ -935,13 +936,13 @@ extern unsigned long processList[PROCESS_COUNT_MAX];
 // == Prototypes =====================================================
 //
 
-int destroy_process_structure(struct process_d *process);
-int gc_process_structure(struct process_d *process);
+int destroy_process_structure(struct te_d *process);
+int gc_process_structure(struct te_d *process);
 
-struct process_d *get_kernel_process(void);
-struct process_d *get_init_process(void);
+struct te_d *get_kernel_process(void);
+struct te_d *get_init_process(void);
 
-void close_all_threads_of_this_process(struct process_d *process);
+void close_all_threads_of_this_process(struct te_d *process);
 
 void close_all_processes(void);
 
@@ -949,7 +950,7 @@ void set_current_process(pid_t pid);
 pid_t get_current_process(void);
 
 pid_t get_current_pid(void);
-struct process_d *get_current_process_pointer(void);
+struct te_d *get_current_process_pointer(void);
 
 
 //==============
@@ -963,23 +964,23 @@ int getprocessname(pid_t pid, char *ubuf);
 
 pid_t getNewPID (void);
 int processTesting (pid_t pid);
-int processSendSignal (struct process_d *p, unsigned long signal);
+int processSendSignal (struct te_d *p, unsigned long signal);
 
 // ===
   
-unsigned long GetProcessPML4_PA(struct process_d *process);
-unsigned long GetProcessPML4_VA(struct process_d *process);
+unsigned long GetProcessPML4_PA(struct te_d *process);
+unsigned long GetProcessPML4_VA(struct te_d *process);
 
 unsigned long GetProcessHeapStart(pid_t pid);
 
 void 
 SetProcessPML4_VA ( 
-    struct process_d *process, 
+    struct te_d *process, 
     unsigned long va );
 
 void 
 SetProcessPML4_PA ( 
-    struct process_d *process, 
+    struct te_d *process, 
     unsigned long pa );
 
 pid_t get_caller_process_id (void);
@@ -996,12 +997,12 @@ file *process_get_file (int fd);
 
 int process_get_tty (pid_t pid);
 
-int alloc_memory_for_image_and_stack(struct process_d *process);
+int alloc_memory_for_image_and_stack(struct te_d *process);
 
 // Worker for create_process.
-void ps_initialize_process_common_elements(struct process_d *p);
+void ps_initialize_process_common_elements(struct te_d *p);
 
-struct process_d *processObject (void);
+struct te_d *processObject (void);
 
 //
 // $
@@ -1009,14 +1010,14 @@ struct process_d *processObject (void);
 //
 
 // Create and initialize a process structure.
-struct process_d *create_and_initialize_process_object(void);
+struct te_d *create_and_initialize_process_object(void);
 
 //
 // $
 // CREATE PROCESS
 //
 
-struct process_d *create_process ( 
+struct te_d *create_process ( 
     struct cgroup_d *cg,
     unsigned long base_address, 
     unsigned long priority, 

@@ -1568,7 +1568,7 @@ wmRawKeyEvent(
 // Step 0 
 // Declarações de variáveis.
 
-    //struct process_d  *__p;
+    //struct te_d  *__p;
     //struct thread_d   *t;
 
     //unsigned long status = 0;

@@ -28,7 +28,7 @@ void show_slot(tid_t tid)
     printk ("====  ====  ====  ====  ===== ==== ====    ==========  ======  =====\n");
     printk ("%d    %d    %x   %d    %d    %d    %d      %x          %x      %s   \n", 
         t->tid, 
-        t->owner_pid,
+        t->pid,  // Thread Environment ID.
         t->pml4_PA,
         t->priority, 
         t->state,
@@ -39,7 +39,7 @@ void show_slot(tid_t tid)
         t->name_address );
 
     printk("stack va={%x}\n", t->context.rsp);
-    printk("owner process va={%x}\n", t->owner_process);
+    printk("owner process va={%x}\n", t->te); // thread environment
 
     /*
     printk(":: to supervisor{%d} | to user{%d}\n",
@@ -66,8 +66,8 @@ done:
 // Mostra as tarefas válidas, mesmo que estejam com problemas.
 void show_slots(void)
 {
-    struct process_d  *p;
     struct thread_d   *t;
+    struct te_d  *p;
     register int i=0;
 
     printk("\n");

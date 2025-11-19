@@ -1,5 +1,5 @@
-// plib.c
-// Process library.
+// telib.c
+// Thread Environment library (Process library)
 // Created by Fred Nora.
 
 #include <kernel.h>
@@ -11,19 +11,18 @@ static void print_size_bytes_kb(const char *label, unsigned long bytes) {
 }
 */
 
-
 // Display information about the processes.
 // The structures are created inside the kernel's heap using kmallok.
 void show_process_information (void)
 {
-    struct process_d *p;
+    struct te_d *p;
     register int i=0;
 
     printk ("show_process_information:\n");
 
     for ( i=0; i<PROCESS_COUNT_MAX; i++ )
     {
-        p = (void *) processList[i];
+        p = (void *) teList[i];
 
         if ( (void *) p != NULL && 
              p->used == TRUE && 
@@ -69,7 +68,7 @@ void show_process_information (void)
 // Usado pelo comando "current-process" no shell
 void show_currentprocess_info (void)
 {
-    struct process_d  *Current;
+    struct te_d  *Current;
     pid_t current_process = (pid_t) get_current_process();
 
     if ( current_process < 0 || 
@@ -80,7 +79,7 @@ void show_currentprocess_info (void)
     }
 
 // Struct
-    Current = (void *) processList[current_process];
+    Current = (void *) teList[current_process];
     if ((void *) Current == NULL){
         printk ("show_currentprocess_info: [FAIL] Current \n");
         return;

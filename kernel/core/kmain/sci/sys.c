@@ -105,10 +105,10 @@ void *sys_create_process (
     char *name,
     unsigned long iopl ) 
 {
-    struct process_d *new;
+    struct te_d *new;
     char NewName[32];
     struct thread_d *CurrentThread;
-    struct process_d *CurrentProcess;
+    struct te_d *CurrentProcess;
     int ProcessPersonality=0;
 
 //
@@ -166,10 +166,10 @@ void *sys_create_process (
     if (current_pid<0 || current_pid >= PROCESS_COUNT_MAX){
         panic("sys_create_process: current_pid\n");
     }
-    CurrentProcess = (struct process_d *) processList[current_pid];
+    CurrentProcess = (struct te_d *) teList[current_pid];
     if ( (void*) CurrentProcess == NULL )
         return NULL;
-    if (CurrentProcess->magic!=1234)
+    if (CurrentProcess->magic != 1234)
         return NULL;
 
 // Environment subsystem
@@ -371,16 +371,16 @@ pid_t sys_getpid (void)
     return (pid_t) get_current_pid();
 }
 
-// 81: Get the PID of the father.
+// 81: Get the PID of the father
 pid_t sys_getppid(void)
 {
-    struct process_d *p;
+    struct te_d *p;
 
     pid_t current_pid = (pid_t) get_current_pid();
     if (current_pid < 0 || current_pid >= PROCESS_COUNT_MAX){
         goto fail;
     }
-    p = (void *) processList[current_pid];
+    p = (void *) teList[current_pid];
     if ((void *) p == NULL){
         goto fail;
     }

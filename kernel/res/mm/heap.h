@@ -59,11 +59,10 @@ struct heap_d
 	//unsigned long freeBlocks[32];
 	//unsigned long Blocks[64];
 
-// Um heap pertence à um processo.
-    struct process_d *process;
 // Um heap pode pertencer à um thread.
+// Um heap pertence à um processo.
     struct thread_d *thread;
-
+    struct te_d *process;
 // The heap belongs to a cgroup;
     struct cgroup_d *cgroup;
 

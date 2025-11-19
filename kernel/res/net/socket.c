@@ -67,7 +67,7 @@ int sys_socket( int family, int type, int protocol )
 // Socket structure
     struct socket_d *__socket;
 // Current process
-    struct process_d *p;
+    struct te_d *p;
     pid_t current_process = -1;
 // ip:port
 // Used in the socket struture
@@ -142,7 +142,7 @@ int sys_socket( int family, int type, int protocol )
         panic       ("sys_socket: current_process fail\n");
     }
 // Process structure
-    p = (struct process_d *) processList[current_process];
+    p = (struct te_d *) teList[current_process];
     if ((void *) p == NULL){
         debug_print ("sys_socket: p\n");
         panic       ("sys_socket: p\n");
@@ -306,7 +306,7 @@ sys_accept (
 // Service 7002
 
 // Server process.
-    struct process_d *sProcess;
+    struct te_d *sProcess;
     pid_t current_process = -1;
 // Server socket and client socket.
     struct socket_d *sSocket;
@@ -384,7 +384,7 @@ sys_accept (
         goto fail;
     }
 // Server process
-    sProcess = (struct process_d *) processList[current_process];
+    sProcess = (struct te_d *) teList[current_process];
     if ((void *) sProcess == NULL){
         debug_print ("sys_accept: [FAIL] sProcess\n");
         printk      ("sys_accept: [FAIL] sProcess\n");
@@ -678,7 +678,7 @@ sys_bind (
 {
 // Service 7003
 
-    struct process_d  *p;   // Process
+    struct te_d  *p;   // Process
     pid_t current_process = -1;
     struct file_d     *f;   // File
     struct socket_d   *s;   // Socket
@@ -728,7 +728,7 @@ sys_bind (
         printk("sys_bind: current_process\n");
         goto fail;
     }
-    p = (struct process_d *) processList[current_process];
+    p = (struct te_d *) teList[current_process];
     if ((void *) p == NULL){
         debug_print("sys_bind: p\n");
         printk     ("sys_bind: p\n");
@@ -906,8 +906,8 @@ __connect_inet (
 // a lista de arquivos abertos se esgotara rapidamente.
 
 // Client process and server process.
-    struct process_d *cProcess;
-    struct process_d *sProcess;
+    struct te_d *cProcess;
+    struct te_d *sProcess;
     pid_t target_pid = (-1);  //fail
 // Client socket and server socket.
     struct socket_d *client_socket;
@@ -1156,7 +1156,7 @@ __connect_inet (
     }
 // Client process.
 // sender's process structure.
-    cProcess = (struct process_d *) processList[current_process];
+    cProcess = (struct te_d *) teList[current_process];
     if ((void *) cProcess == NULL){
         debug_print("__connect_inet: cProcess fail\n");
         printk     ("__connect_inet: cProcess fail\n");
@@ -1250,10 +1250,9 @@ __connect_inet (
 
 // The server's process structure.
 // O processo cliente chamou essa função e
-// então pegaremos agora o processo alvo,
-// que é um servidor.
+// então pegaremos agora o processo alvo, que é um servidor.
 
-    sProcess = (struct process_d *) processList[target_pid];
+    sProcess = (struct te_d *) teList[target_pid];
     if ((void *) sProcess == NULL){
         debug_print("__connect_inet: sProcess fail\n");
         printk     ("__connect_inet: sProcess fail\n");
@@ -1495,8 +1494,8 @@ __connect_local (
 // a lista de arquivos abertos se esgotara rapidamente.
 
 // Client process and server process.
-    struct process_d *cProcess;
-    struct process_d *sProcess;
+    struct te_d *cProcess;
+    struct te_d *sProcess;
     pid_t target_pid = (-1);  //fail
 // Client socket and server socket.
     struct socket_d *client_socket;
@@ -1652,7 +1651,7 @@ __connect_local (
 
 // Client process.
 // sender's process structure.
-    cProcess = (struct process_d *) processList[current_process];
+    cProcess = (struct te_d *) teList[current_process];
     if ((void *) cProcess == NULL){
         debug_print("__connect_local: cProcess fail\n");
         printk     ("__connect_local: cProcess fail\n");
@@ -1749,7 +1748,7 @@ __connect_local (
 // então pegaremos agora o processo alvo,
 // que é um servidor.
 
-    sProcess = (struct process_d *) processList[target_pid];
+    sProcess = (struct te_d *) teList[target_pid];
     if ((void *) sProcess == NULL){
         debug_print("__connect_local: sProcess fail\n");
         printk     ("__connect_local: sProcess fail\n");
@@ -2016,7 +2015,7 @@ sys_getsockname (
 // Service 7007
 
 // Process, file and socket.
-    struct process_d  *p;
+    struct te_d  *p;
     pid_t current_process = -1;
     struct file_d     *f;
     struct socket_d   *s;
@@ -2040,7 +2039,7 @@ sys_getsockname (
 
 // process
     current_process = (pid_t) get_current_process();
-    p = (struct process_d *) processList[current_process]; 
+    p = (struct te_d *) teList[current_process]; 
     if ((void *) p == NULL){
         printk ("sys_getsockname: p fail\n");
         goto fail;
@@ -2123,7 +2122,7 @@ int sys_listen(int sockfd, int backlog)
 // Service 7004
 // Called by sci.c
 
-    struct process_d  *p;
+    struct te_d  *p;
     pid_t current_process = -1;
     file *f;
     struct socket_d  *s;
@@ -2175,7 +2174,7 @@ int sys_listen(int sockfd, int backlog)
         goto fail;
     }
 // process
-    p = (struct process_d *) processList[current_process];
+    p = (struct te_d *) teList[current_process];
     if ((void *) p == NULL){
         debug_print("sys_listen: p fail\n");
         printk     ("sys_listen: p fail\n");
@@ -2252,7 +2251,7 @@ int sys_socket_shutdown(int socket, int how)
     // mas nao destruir o socket?
 
 // The current process.
-    struct process_d *p;
+    struct te_d *p;
     pid_t current_process = -1;
 // The file indicated by the fd.
     file *f;
@@ -2278,7 +2277,7 @@ int sys_socket_shutdown(int socket, int how)
         printk      ("sys_socket_shutdown: p fail\n");
         goto fail;        
     }
-    p = (struct process_d *) processList[current_process];
+    p = (struct te_d *) teList[current_process];
     if ((void *) p == NULL){
         debug_print ("sys_socket_shutdown: p fail\n");
         printk      ("sys_socket_shutdown: p fail\n");

@@ -347,25 +347,25 @@ static void __spawn_thread_by_tid_imp(tid_t tid)
         keDie();
     }
 
-// Do we have an owner process?
-    if ((void*) target_thread->owner_process == NULL){
-        panic("__spawn_thread_by_tid_imp: target_thread->owner_process\n");
+// Is it a valid 'thread environment'?
+    if ((void*) target_thread->te == NULL){
+        panic("__spawn_thread_by_tid_imp: target_thread->te\n");
     }
 
 // Pegamos o pid.
 // #bugbug: 
 // Talvez o ponteiro t->process nao foi devidamente inicializado.
 
-    //pid_t cur_pid = (pid_t) target_thread->process->pid;
-    pid_t cur_pid = (pid_t) target_thread->owner_pid;
+    // 'thread environment id' (PID)
+    pid_t cur_teid = (pid_t) target_thread->pid;
 
-    if ( cur_pid < 0 || cur_pid >= PROCESS_COUNT_MAX ){
-        panic("__spawn_thread_by_tid_imp: cur_pid\n");
+    if ( cur_teid < 0 || cur_teid >= PROCESS_COUNT_MAX ){
+        panic("__spawn_thread_by_tid_imp: cur_teid\n");
     }
 
 // #important
 // The current process will be the owner pid.
-    set_current_process(cur_pid);
+    set_current_process(cur_teid);
 
 // Set current thread
 
@@ -526,7 +526,7 @@ void psSpawnThreadByTID(tid_t tid)
 // Not tested yet.
 void spawn_pid(pid_t pid)
 {
-    struct process_d *p;
+    struct te_d *p;
     tid_t __tid=-1;
 
 // pid
@@ -535,7 +535,7 @@ void spawn_pid(pid_t pid)
     }
 
 // process structure.
-    p = (struct process_d *) processList[pid];
+    p = (struct te_d *) teList[pid];
     if ((void*) p == NULL){
         panic("spawn_pid: p\n");
     }

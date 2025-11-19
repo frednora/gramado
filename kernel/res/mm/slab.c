@@ -46,7 +46,7 @@ void *slab_1MB_allocator(void)
 /*
 // Se devemos ou não incremetar o contador de uso.
     int IncrementUsageCounter=TRUE; //P->allocated_memory
-    struct process_d *process;
+    struct te_d *process;
     process = (void*) get_current_process_pointer();
     if( (void*) process == NULL )
         IncrementUsageCounter=FALSE;
@@ -58,7 +58,7 @@ void *slab_1MB_allocator(void)
 // At this moment we're gonna know what is the
 // process that is calling the allocator.
 // Lets see if its a valid process.
-    struct process_d *process;
+    struct te_d *process;
     process = (void*) get_current_process_pointer();
     if ((void*) process == NULL)
         panic ("slab_1MB_allocator: process\n");

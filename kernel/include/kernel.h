@@ -340,10 +340,6 @@
 #include "../res/res.h"
 
 // ==================================
-// ke/
-// Process structures
-
-// ==================================
 // intake/
 #include "../core/ke/intake/prio.h"     // Priority
 #include "../core/ke/intake/quantum.h"  // Quantum
@@ -356,7 +352,7 @@
 #include "../core/ke/intake/disp/dispatch.h"
 
 #include "../core/ke/intake/thread.h"
-#include "../core/ke/intake/process.h"
+#include "../core/ke/intake/te.h"
 #include "../core/ke/intake/ithread.h"
 #include "../core/ke/intake/clone.h"
 #include "../core/ke/intake/ipc.h"

@@ -94,7 +94,7 @@ fail:
 // class 1: Normal threads.
 static void __maximize_ds_priority(pid_t pid)
 {
-    struct process_d *p;
+    struct te_d *p;
     struct thread_d *t;
 
     unsigned long ProcessType         = PROCESS_TYPE_SYSTEM;
@@ -117,7 +117,7 @@ static void __maximize_ds_priority(pid_t pid)
 
 // -------------------------
 // process
-    p = (struct process_d *) processList[pid];
+    p = (struct te_d *) teList[pid];
     if ((void*)p == NULL)
         return;
     if (p->used!=TRUE)
@@ -174,7 +174,7 @@ network_register_ring3_display_server(
     // Maybe we can move the workers for this job from here to dispsrv.c.
     // Keeping here only the wrapper.
 
-    struct process_d *p;
+    struct te_d *p;
     pid_t current_process = (pid_t) -1;
     struct thread_d *t;
 
@@ -192,7 +192,7 @@ network_register_ring3_display_server(
     {
         panic("network_register_ring3_display_server: current_process\n");
     }
-    p = (struct process_d *) processList[current_process];
+    p = (struct te_d *) teList[current_process];
     if ((void*) p == NULL)
         panic("network_register_ring3_display_server: p\n");
     if (p->magic != 1234)
@@ -276,7 +276,7 @@ network_register_ring3_browser(
 // 513 - SYS_SET_DS_PID
 // Syscall implementation.
 
-    struct process_d *p;
+    struct te_d *p;
     pid_t current_process = (pid_t) -1;
     struct thread_d *t;
 
@@ -294,7 +294,7 @@ network_register_ring3_browser(
     {
         panic("network_register_ring3_display_server: current_process\n");
     }
-    p = (struct process_d *) processList[current_process];
+    p = (struct te_d *) teList[current_process];
     if ((void*) p == NULL)
         panic("network_register_ring3_display_server: p\n");
     if (p->magic != 1234)

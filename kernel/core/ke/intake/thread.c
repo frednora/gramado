@@ -243,7 +243,7 @@ int destroy_thread_structure(struct thread_d *thread)
 // Valid for MAGIC=1234 or MAGIC=4321
 
 // #todo
-// Remove it from processList[] based on index=pid.
+// Remove it from teList[] based on index=pid.
     TID = (pid_t) thread->tid;
     if (TID < 0)
         goto fail;
@@ -309,13 +309,11 @@ unsigned long GetThreadStats(tid_t tid, int index)
 // ...
  
     switch (index){
-
-        case 1:  return (unsigned long) t->tid;        break;
-        case 2:  return (unsigned long) t->owner_pid;  break;
-        case 3:  return (unsigned long) t->type;       break;
-        case 4:  return (unsigned long) t->state;      break;
-        case 5:  return (unsigned long) t->plane;      break;
-        
+        case 1:  return (unsigned long) t->tid;    break;
+        case 2:  return (unsigned long) t->pid;    break;
+        case 3:  return (unsigned long) t->type;   break;
+        case 4:  return (unsigned long) t->state;  break;
+        case 5:  return (unsigned long) t->plane;  break;
         // #todo: Not used. 
         case 6:
             return 0;
@@ -885,13 +883,13 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
         panic("copy_thread_struct: father_cpl!=RING3\n");
 
     debug_print("copy_thread_struct: create thread\n");
-    
+
     clone = 
         (struct thread_d *) create_thread ( 
                                 NULL,  
                                 0,  // initial rip 
                                 0,  // initial rsp
-                                father->owner_pid, 
+                                father->pid, 
                                 "clone-thread",
                                 father_cpl );
 
@@ -1173,8 +1171,10 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
     clone->blockedCount = father->blockedCount;  //Tempo bloqueada.
 
 // Qual processo pertence a thread clone.
-// Pois bem, por enquanto ela pertence ao mesmo dono da thread pai.
-    clone->owner_process = father->owner_process; 
+// Pois bem, por enquanto ela pertence ao mesmo dono 
+// da thread pai.
+// The 'thread environment' structure. (fka process)
+    clone->te = father->te; 
 
 	//Thread->window_station
 	//Thread->cg  // cgroup
@@ -1253,10 +1253,11 @@ struct thread_d *create_thread (
     const char *name,
     unsigned int cpl )
 {
-// Create a thread.
+// Create a thread
 
-    struct process_d *Process;
     struct thread_d  *Thread;
+    struct te_d *Process;
+
 // Empty slot
     struct thread_d *Empty;
     pid_t ProcessID = -1;
@@ -1335,7 +1336,7 @@ struct thread_d *create_thread (
         panic("create_thread: ProcessID");
     }
     // Structure
-    Process = (void *) processList[ProcessID]; 
+    Process = (void *) teList[ProcessID]; 
     if ((void *) Process == NULL){
         panic ("create_thread: Process\n");
     }
@@ -1404,11 +1405,11 @@ try_next_slot:
     //Thread->tgid = ?;  // Thread group IDentifier
 // ======================================
 
-// Belongs to this process.
-    Thread->owner_process = (void *) Process;
-    Thread->owner_pid = (pid_t)  ProcessID;
+// Belongs to this thread environment (process)
+    Thread->te = (void *) Process;    // thread environment structure.
+    Thread->pid = (pid_t) ProcessID;  // PID
 
-// Thread name.
+// Thread name
 // #test 64 bytes max.
     Thread->name_address = (unsigned long) name;
     strcpy( Thread->__threadname, (const char *) name );

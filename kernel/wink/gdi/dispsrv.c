@@ -27,7 +27,7 @@ struct ds_info_d  DisplayServerInfo;
 // See: dispsrv.h
 int dispsrv_setup_ds_info(pid_t pid)
 {
-    struct process_d *p;
+    struct te_d *p;
     struct thread_d *t;
     pid_t current_process = -1;
 
@@ -55,7 +55,7 @@ int dispsrv_setup_ds_info(pid_t pid)
         printk("dispsrv_setup_ds_info: pid != current_process\n");
         goto fail;
     }
-    p = (struct process_d *) processList[pid];
+    p = (struct te_d *) teList[pid];
     if ((void*) p == NULL){
         goto fail;
     }

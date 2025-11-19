@@ -18,8 +18,8 @@ extern int copy_process_in_progress;
 
 int 
 copy_process_struct(
-    struct process_d *p1,
-    struct process_d *p2 );
+    struct te_d *p1,
+    struct te_d *p2 );
 
 pid_t 
 copy_process( 

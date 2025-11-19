@@ -583,7 +583,7 @@ __read_imp (
     //size_t ubuf_len=0;  // # Out limit is BUFSIZ
 
 //-----------------------------
-    struct process_d *p;
+    struct te_d *p;
     pid_t current_process = (pid_t) get_current_process();
 // Process
 // #todo: There is a helper for that small routine.
@@ -591,7 +591,7 @@ __read_imp (
         debug_print("__read_imp: current_process\n");
         goto fail;
     }
-    p = (void *) processList[current_process];
+    p = (void *) teList[current_process];
     if ((void *) p == NULL){
         debug_print("__read_imp: p\n");
         goto fail;
@@ -1066,7 +1066,7 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
     //debug_print("__write_imp: :)\n");
 
 //-----------------------------
-    struct process_d *p;
+    struct te_d *p;
     pid_t current_process = (pid_t) get_current_process();
 // Process
 // #todo: There is a helper for that small routine.
@@ -1074,7 +1074,7 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
         debug_print("__write_imp: current_process\n");
         goto fail;
     }
-    p = (void *) processList[current_process];
+    p = (void *) teList[current_process];
     if ((void *) p == NULL){
         debug_print("__write_imp: p\n");
         goto fail;
@@ -1659,7 +1659,7 @@ int __close_imp(int fd)
 // #: It needs to be used only as a worker for syscalls.
 
     file *object;
-    struct process_d *p;
+    struct te_d *p;
     pid_t current_process = -1;
     int Done=FALSE;
 
@@ -1688,7 +1688,7 @@ int __close_imp(int fd)
         debug_print("__close_imp: current_process\n");
         goto fail;
     }
-    p = (void *) processList[current_process];
+    p = (void *) teList[current_process];
     if ((void *) p == NULL){
         debug_print("__close_imp: p\n");
         goto fail;
@@ -1826,7 +1826,7 @@ file *get_file_from_fd(int fd)
 // File pointer
     file *fp;
 // Current process
-    struct process_d *p;
+    struct te_d *p;
     pid_t current_pid = -1;
 
 // Parameter
@@ -1839,7 +1839,7 @@ file *get_file_from_fd(int fd)
     if ( current_pid < 0 || current_pid >= PROCESS_COUNT_MAX ){
         return NULL;
     }
-    p = (struct process_d *) processList[current_pid];
+    p = (struct te_d *) teList[current_pid];
     if ((void*) p == NULL){
         debug_print ("get_file_from_fd: p\n");
         panic       ("get_file_from_fd: p\n");
@@ -2442,7 +2442,7 @@ done:
 
 void fsUpdateWorkingDiretoryString (char *string)
 {
-    struct process_d  *p;
+    struct te_d  *p;
     pid_t current_process = -1;
     char *tmp;
     register int i=0; 
@@ -2482,7 +2482,7 @@ void fsUpdateWorkingDiretoryString (char *string)
     if (current_process < 0 || current_process >= PROCESS_COUNT_MAX){
         panic ("fsUpdateWorkingDiretoryString: current_process\n");
     }
-    p = (struct process_d *) processList[current_process];
+    p = (struct te_d *) teList[current_process];
     if ((void *) p == NULL){
         panic ("fsUpdateWorkingDiretoryString: p\n");
     }else{
@@ -2903,7 +2903,7 @@ AddExt:
 int fs_get_free_fd_from_pid (pid_t pid)
 {
     register int __slot=0;
-    struct process_d *p;
+    struct te_d *p;
 
 // Parameter
     if ( pid<0 || pid >= PROCESS_COUNT_MAX ){
@@ -2912,7 +2912,7 @@ int fs_get_free_fd_from_pid (pid_t pid)
     }
 
 // Process
-    p = (struct process_d *) processList[pid];
+    p = (struct te_d *) teList[pid];
     if ((void *) p == NULL){
         debug_print ("fs_get_free_fd_from_pid: p\n");
         goto fail;
@@ -2944,7 +2944,7 @@ fail:
 // What functions is calling us?
 int fs_initialize_process_cwd ( pid_t pid, char *string )
 {
-    struct process_d *p;
+    struct te_d *p;
     register int i=0;
 
 // Parameters
@@ -2965,7 +2965,7 @@ int fs_initialize_process_cwd ( pid_t pid, char *string )
 // #importante
 // Vamos copiar a string para a estrutura do processo atual.
 
-    p = (struct process_d *) processList[pid];
+    p = (struct te_d *) teList[pid];
     if ((void *) p == NULL){
         panic ("fs_initialize_process_cwd: p\n");
     }
@@ -3004,7 +3004,7 @@ int fs_initialize_process_cwd ( pid_t pid, char *string )
 
 void fs_pathname_backup ( pid_t pid, int n )
 {
-    struct process_d *p;
+    struct te_d *p;
     register int i=0;
 
 // CWD
@@ -3023,7 +3023,7 @@ void fs_pathname_backup ( pid_t pid, int n )
     }
 
 // Process
-    p = (struct process_d *) processList[pid];
+    p = (struct te_d *) teList[pid];
     if ((void *) p == NULL){
         panic ("fsUpdateWorkingDiretoryString: p\n");
     }
@@ -3061,7 +3061,7 @@ void fs_pathname_backup ( pid_t pid, int n )
 // Service 170: Print the cwd string of a given PID.
 int fs_print_process_cwd(pid_t pid)
 {
-    struct process_d *p;
+    struct te_d *p;
 
     //debug_print ("fs_print_process_cwd:\n");
     printk      ("fs_print_process_cwd:\n");
@@ -3073,7 +3073,7 @@ int fs_print_process_cwd(pid_t pid)
     }
 
 // Process
-    p = (struct process_d *) processList[pid];
+    p = (struct te_d *) teList[pid];
     if ((void *) p == NULL){
         panic ("fs_print_process_cwd: p\n");
     }else{
@@ -3837,7 +3837,7 @@ do_read_file_from_disk (
     file *fp;
 
     size_t FileSize = -1;
-    struct process_d *p;
+    struct te_d *p;
     int __slot = -1;  // o fd.
     void *buff;
 
@@ -4027,7 +4027,7 @@ EndOfShortcuts:
 __go:
 
 // Process
-    p = (struct process_d *) get_current_process_pointer();
+    p = (struct te_d *) get_current_process_pointer();
     if ((void *) p == NULL){
         printk("do_read_file_from_disk: p\n");
         goto fail;

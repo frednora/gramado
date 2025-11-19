@@ -24,8 +24,8 @@ static int __kill_faulty_current_process(void);
 // Not valid for kernel process or init process.
 static int __kill_faulty_current_process(void)
 {
-    struct process_d *p;
     struct thread_d *t;
+    struct te_d *p;
     pid_t pid = -1;
     tid_t tid = -1;
 
@@ -60,7 +60,7 @@ static int __kill_faulty_current_process(void)
 
 // Process validation
 // We can't close the Kernel process or the Init process.
-    p = (void*) processList[pid];
+    p = (void*) teList[pid];
     if (p->used != TRUE){
         goto fail;
     }
@@ -133,7 +133,7 @@ void x64_all_faults(unsigned long number)
     //    asm volatile ("movq %%cr2, %0":"=r"(address):);
     //}
 
-    //struct process_d *CurrentProcess;
+    //struct te_d *CurrentProcess;
     //struct thread_d  *CurrentThread;
 
     //Get these values using assembly inline.

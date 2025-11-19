@@ -137,7 +137,7 @@ void *kmalloc(size_t size)
 {
     void *ptr;
     size_t _lsize = size;
-    struct process_d *process;
+    struct te_d *process;
 // Se devemos ou não incremetar o contador de uso.
     int IncrementUsageCounter=TRUE;  //P->allocated_memory
 

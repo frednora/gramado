@@ -238,16 +238,21 @@ struct thread_d
     int used;
     int magic;
 
+// The thread environment structure. (Process)
+    struct te_d  *te;
+    pid_t pid; // The (Thread Environment ID)
+    //#todo process group
+
+// Thread ID
+    tid_t tid;
+// Thread Group ID.
+    tgid_t tgid;
+
 // type:
 // (SYSTEM, INTERACTIVE, BATCH)
 // #todo: If the thread is not interactive,
 // so it will not receive keyboard input.
     thread_type_t type;
-
-// Thread ID.
-    tid_t tid;
-// Thread Group ID.
-    tgid_t tgid;
 
 // If this thread is a virtual terminal or not.
     int isVirtualTerminal;
@@ -299,14 +304,6 @@ struct thread_d
 // ex: It can't be killed by another process.
 
     int _protected;
-
-//
-// Identifiers
-//
-
-// Owner process
-    struct process_d  *owner_process;
-    pid_t owner_pid;
 
 // ========================================================
 // ORDEM: 

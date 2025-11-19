@@ -35,13 +35,13 @@ char __local_process_name[64] = {0};
 
 int 
 copy_process_struct(
-    struct process_d *p1,    // Father
-    struct process_d *p2 )   // Child
+    struct te_d *p1,    // Father
+    struct te_d *p2 )   // Child
 {
 // Called by clone_process() in clone.c.
 
-    struct process_d *Process1;  // Father
-    struct process_d *Process2;  // Child
+    struct te_d *Process1;  // Father
+    struct te_d *Process2;  // Child
     file *__f;
     int Status=0;
     register int i=0;
@@ -70,7 +70,7 @@ copy_process_struct(
 
 // ===========================
 // Check process 1 (Father)
-    Process1 = (struct process_d *) p1;
+    Process1 = (struct te_d *) p1;
     if ((void *) Process1 == NULL){
         printk("copy_process_struct: Process1\n"); 
         goto fail;
@@ -82,7 +82,7 @@ copy_process_struct(
     }
 // ===========================
 // Check process 2 (Child)
-    Process2 = (struct process_d *) p2;     
+    Process2 = (struct te_d *) p2;     
     if ((void *) Process2 == NULL){
         printk("copy_process_struct: Process1\n");
         goto fail; 
@@ -503,8 +503,8 @@ copy_process(
     pid_t parent_pid = (pid_t) pid;    //parameter
     pid_t child_pid  = (pid_t) (-1);   //fail
 
-    struct process_d *parent_process;  // The process we will clone.
-    struct process_d *child_process;   // The process we will create.
+    struct te_d *parent_process;  // The process we will clone.
+    struct te_d *child_process;   // The process we will create.
 
     struct thread_d *parent_thread;
     struct thread_d *child_thread;
@@ -628,7 +628,7 @@ copy_process(
         goto fail;
     }
 // parent process pointer.
-    parent_process = (struct process_d *) processList[parent_pid];
+    parent_process = (struct te_d *) teList[parent_pid];
     if ((void *) parent_process == NULL){
         printk("copy_process: parent_process\n");
         goto fail;
@@ -736,8 +736,10 @@ copy_process(
     parent_thread->state = RUNNING;
 
 // O dono da parent thread tem que ser o processo pai.
-    if (parent_thread->owner_pid != parent_process->pid){
-        panic("copy_process: parent_thread->owner_pid\n");
+// Let's check the validation for the 
+// Thread Environment ID.
+    if (parent_thread->pid != parent_process->pid){
+        panic("copy_process: parent_thread->pid\n");
     }
 
 // A thread que fez a chamada precisa ser
@@ -790,7 +792,7 @@ do_clone:
 // See: process.c
 
     child_process = 
-        (struct process_d *) create_and_initialize_process_object();
+        (struct te_d *) create_and_initialize_process_object();
 
     if ((void *) child_process == NULL){
         debug_print("copy_process: child_process\n");
@@ -998,10 +1000,10 @@ do_clone:
 
 // Save the pointer for the flower thread
     child_process->flower = (struct thread_d *) child_thread;
-// The child process is the owner of the child thread
-    child_thread->owner_process = (struct process_d *) child_process;
-// Saving the owner pid
-    child_thread->owner_pid = (pid_t) child_pid;
+// This is the 'thread environment' for the child thread
+    child_thread->te = (struct te_d *) child_process;  // te
+// Saving the thread environment id.
+    child_thread->pid = (pid_t) child_pid;
 
 // Breakpoint
 

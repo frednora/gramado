@@ -1,9 +1,8 @@
-
 // mmft.h
+// Created by Fred Nora.
 
 #ifndef __MM_MMFT_H
 #define __MM_MMFT_H    1
-
 
 // FT:
 // Frame table. 

@@ -248,7 +248,7 @@ void mmShowMemoryInfo(void)
 
 void mmShowPML4EntryForAllProcesses (int entry_number)
 {
-    struct process_d  *p;
+    struct te_d  *p;
     int i=0;
 
     printk ("mmShowPML4EntryForAllProcesses:\n");
@@ -260,9 +260,8 @@ void mmShowPML4EntryForAllProcesses (int entry_number)
 
     for ( i=0; i<111; i++)
     {
-        p = (struct process_d *) processList[i];
-
-        if ( (void *) p != NULL )
+        p = (struct te_d *) teList[i];
+        if ((void *) p != NULL)
         {
 
             // #fixme

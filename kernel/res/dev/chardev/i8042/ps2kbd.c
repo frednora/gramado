@@ -284,10 +284,10 @@ void DeviceInterface_PS2Keyboard(void)
 // Make/Break code.
     unsigned char __raw=0;
     unsigned char val=0;
-    // Usado nos testes
-    //struct process_d *p;
-    // Usado pra checar se a foreground thread quer raw input.
+
+// Usado pra checar se a foreground thread quer raw input.
     struct thread_d *t;
+    //struct te_d *p;
 
     unsigned char status;
     int is_mouse_device;

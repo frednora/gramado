@@ -153,8 +153,8 @@ struct timer_d
     int type;
 
 // Owner
-    struct process_d *process;
     struct thread_d  *thread;
+    struct te_d *process;
     pid_t pid;
     tid_t tid;
 

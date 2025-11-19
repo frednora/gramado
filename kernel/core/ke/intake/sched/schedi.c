@@ -289,7 +289,7 @@ void do_thread_zombie(tid_t tid)
 
 int do_waitpid (pid_t pid, int *status, int options)
 {
-    struct process_d *p;
+    struct te_d *p;
     pid_t current_process = (pid_t) get_current_process();
 
     //#debug
@@ -300,7 +300,7 @@ int do_waitpid (pid_t pid, int *status, int options)
     // tem que bloquear o processo atual até que um dos seus 
     // processos filhos seja fechado.
 
-    p = (struct process_d *) processList[current_process];
+    p = (struct te_d *) teList[current_process];
     if ((void *) p == NULL){
         printk ("do_waitpid: Current process struct fail\n");
         return -1;

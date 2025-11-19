@@ -2479,7 +2479,7 @@ console_ioctl (
     //struct tty_d *other_tty;
 
     //pid_t current_process = -1;
-    //struct process_d *p;
+    //struct te_d *p;
     //file *f;
 
     debug_print ("console_ioctl: TODO\n");

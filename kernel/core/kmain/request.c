@@ -105,8 +105,8 @@ int processDeferredKernelRequest(void)
 // Processing the defered kernel request.
 
 // Targets
-    struct process_d  *Process;
     struct thread_d   *Thread;
+    struct te_d  *Process;
     int PID=-1;
     int TID=-1;
     unsigned long r=0;    //Número do request.
@@ -129,7 +129,7 @@ int processDeferredKernelRequest(void)
     if ( PID < 0 || PID > PROCESS_COUNT_MAX ){
         Process = NULL;
     }else{
-        Process = (void *) processList[PID];
+        Process = (void *) teList[PID];
     };
 
     if ( TID < 0 || TID > THREAD_COUNT_MAX ){

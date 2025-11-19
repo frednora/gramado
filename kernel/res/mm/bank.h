@@ -50,8 +50,8 @@ struct bank_d
 	//struct dspace_d *dspaceListHead;	
 
 	// Lista de processos utilizando esse objeto.
-	struct process_d *processListHead;
-	//struct process_d *currentProcess;
+	struct te_d *te_list_head;
+	//struct te_d *currentProcess;
 	//int processCount;
 
     //...	

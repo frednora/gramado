@@ -1,10 +1,12 @@
-// process.c
+// te.c
+// Thread Environment (Process)
 // Created by Fred Nora.
 
 #include <kernel.h>
 
-// List of all processes.
-unsigned long processList[PROCESS_COUNT_MAX];
+// List of all processes
+// Global list for all the Thread Environment structures.
+unsigned long teList[PROCESS_COUNT_MAX];
 
 
 // See: kpid.h
@@ -53,16 +55,16 @@ static pid_t __current_pid = (pid_t) (-1);  //fail
 
 static pid_t caller_process_id=0;
 
-struct process_d  *KernelProcess;  // Base kernel.
-struct process_d  *InitProcess;    // Init process.
+struct te_d  *KernelProcess;  // Base kernel.
+struct te_d  *InitProcess;    // Init process.
 
 //==============================================
 
 
-int destroy_process_structure(struct process_d *process)
+int destroy_process_structure(struct te_d *process)
 {
     pid_t PID = -1;
-    struct process_d *tmp;
+    struct te_d *tmp;
 
     if ((void*) process == NULL)
         return -1;
@@ -71,14 +73,14 @@ int destroy_process_structure(struct process_d *process)
 // Valid for MAGIC=1234 or MAGIC=4321
 
 // #todo
-// Remove it from processList[] based on index=pid.
+// Remove it from teList[] based on index=pid.
     PID = (pid_t) process->pid;
     if (PID<0)
         return -1;
     if (PID >= PROCESS_COUNT_MAX)
         return -1;
     
-    tmp = (struct process_d *) processList[PID];
+    tmp = (struct te_d *) teList[PID];
     if (process != tmp)
         return -1;
 
@@ -92,25 +94,23 @@ int destroy_process_structure(struct process_d *process)
     return 0;
 }
 
-
-// Try to reuse the process structure.
-int gc_process_structure(struct process_d *process)
+// Try to reuse the process structure
+int gc_process_structure(struct te_d *process)
 {
     return 0;
 }
 
-
-struct process_d *get_kernel_process(void)
+struct te_d *get_kernel_process(void)
 {
-    return (struct process_d *) KernelProcess;
+    return (struct te_d *) KernelProcess;
 }
 
-struct process_d *get_init_process(void)
+struct te_d *get_init_process(void)
 {
-    return (struct process_d *) InitProcess;
+    return (struct te_d *) InitProcess;
 }
 
-void close_all_threads_of_this_process(struct process_d *process)
+void close_all_threads_of_this_process(struct te_d *process)
 {
     // #todo
     // Thread list for a process is still not implemented.
@@ -137,7 +137,7 @@ void close_all_threads_of_this_process(struct process_d *process)
 // ...
 void close_all_processes(void)
 {
-    struct process_d  *p;
+    struct te_d  *p;
     register int i=0;
 
     if ((void *) KernelProcess == NULL){
@@ -148,14 +148,14 @@ void close_all_processes(void)
           i <= PROCESS_COUNT_MAX; 
           i++ )
     {
-        p = (void *) processList[i];
+        p = (void *) teList[i];
         if (p != KernelProcess)
         {
             // #todo: This is not the right state.
             p->state = PROCESS_BLOCKED;
             p->used = FALSE;
             p->magic = 0;
-            processList[i] = (unsigned long) 0;
+            teList[i] = (unsigned long) 0;
         }
     };
 }
@@ -176,9 +176,9 @@ pid_t get_current_pid(void)
 }
 
 // Return the pointer for a valid current process.
-struct process_d *get_current_process_pointer(void)
+struct te_d *get_current_process_pointer(void)
 {
-    struct process_d *p;
+    struct te_d *p;
     pid_t __pid = -1;
 
 // so podemos chamar essa rotina depois que o kernel lançou
@@ -193,7 +193,7 @@ struct process_d *get_current_process_pointer(void)
     {
         goto fail;
     }
-    p = (struct process_d *) processList[__pid];
+    p = (struct te_d *) teList[__pid];
     if (p->used != TRUE){
         //panic ("get_current_process_pointer: used\n");
         goto fail;
@@ -203,7 +203,7 @@ struct process_d *get_current_process_pointer(void)
         goto fail;
     }
 
-    return (struct process_d *) p;
+    return (struct te_d *) p;
 fail:
     return NULL;
 }
@@ -215,13 +215,13 @@ fail:
 // pelos aplicativos.
 unsigned long get_process_stats(pid_t pid, int index)
 {
-    struct process_d *p;
+    struct te_d *p;
 
     if (pid<0 || pid >= PROCESS_COUNT_MAX){
         panic ("get_process_stats: pid \n");
     }
 
-    p = (void *) processList[pid];
+    p = (void *) teList[pid];
     if ((void *) p == NULL){
         return 0;
     } 
@@ -339,7 +339,7 @@ unsigned long get_process_stats(pid_t pid, int index)
 
 int getprocessname(pid_t pid, char *ubuf)
 {
-    struct process_d  *p;
+    struct te_d  *p;
 
 // Parameters
     if (pid < 0 || pid >= PROCESS_COUNT_MAX){
@@ -350,7 +350,7 @@ int getprocessname(pid_t pid, char *ubuf)
     }
  
 // Process structure
-    p = (struct process_d *) processList[pid]; 
+    p = (struct te_d *) teList[pid]; 
     if ((void *) p == NULL){
         goto fail;
     }
@@ -389,11 +389,11 @@ fail:
 pid_t getNewPID (void)
 {
     register int i = GRAMADO_PID_BASE;
-    struct process_d *p;
+    struct te_d *p;
 
     while (i < PROCESS_COUNT_MAX)
     {
-        p = (struct process_d *) processList[i];
+        p = (struct te_d *) teList[i];
         if ((void *) p == NULL)
         { 
             // Return the new PID.
@@ -414,7 +414,7 @@ pid_t getNewPID (void)
 // #todo: Rethink return values and function name.
 int processTesting (pid_t pid)
 {
-    struct process_d  *p;
+    struct te_d  *p;
 
 // Parameter
     if (pid < 0)
@@ -422,7 +422,7 @@ int processTesting (pid_t pid)
     if (pid >= PROCESS_COUNT_MAX)
         goto fail;
     
-    p = (void *) processList[pid];
+    p = (void *) teList[pid];
     if ((void *) p == NULL){
         return 0;
     }
@@ -447,7 +447,7 @@ fail:
  *     @todo: Rotinas envolvendo sinais devem ir para outro arquivo.
  */
 
-int processSendSignal (struct process_d *p, unsigned long signal)
+int processSendSignal (struct te_d *p, unsigned long signal)
 {
 	//SIGNAL_COUNT_MAX
 
@@ -479,7 +479,7 @@ int processSendSignal (struct process_d *p, unsigned long signal)
     return 1;
 }
 
-unsigned long GetProcessPML4_PA(struct process_d *process)
+unsigned long GetProcessPML4_PA(struct te_d *process)
 {
     if ((void *) process != NULL)
     {
@@ -490,7 +490,7 @@ unsigned long GetProcessPML4_PA(struct process_d *process)
     return (unsigned long) 0;
 }
 
-unsigned long GetProcessPML4_VA (struct process_d *process)
+unsigned long GetProcessPML4_VA (struct te_d *process)
 {
     if( (void *) process != NULL )
     {
@@ -504,7 +504,7 @@ unsigned long GetProcessPML4_VA (struct process_d *process)
 // VA, I guess.
 unsigned long GetProcessHeapStart (pid_t pid)
 {
-    struct process_d  *process;
+    struct te_d  *process;
 
 // #debug
     debug_print ("GetProcessHeapStart:\n");
@@ -520,7 +520,7 @@ unsigned long GetProcessHeapStart (pid_t pid)
     }
 
 // process structure.
-    process = (struct process_d *) processList[pid];
+    process = (struct te_d *) teList[pid];
     if ( (void *) process == NULL ){
         debug_print ("process\n");
         goto fail;
@@ -541,7 +541,7 @@ fail:
 
 void 
 SetProcessPML4_VA ( 
-    struct process_d *process, 
+    struct te_d *process, 
     unsigned long va )
 {
     if ((void *) process != NULL){
@@ -551,7 +551,7 @@ SetProcessPML4_VA (
 
 void 
 SetProcessPML4_PA ( 
-    struct process_d *process, 
+    struct te_d *process, 
     unsigned long pa )
 {
     if ( (void *) process != NULL ){
@@ -577,7 +577,7 @@ void set_caller_process_id (pid_t pid)
 
 void process_close_gate(int pid)
 {
-    struct process_d  *p;
+    struct te_d  *p;
 
 // #todo: max limit
     if (pid<0){
@@ -585,7 +585,7 @@ void process_close_gate(int pid)
     }
 
 // Process
-    p = (void *) processList[pid];
+    p = (void *) teList[pid];
     if ((void *) p == NULL){
         panic ("process_close_gate: p\n");
     } else {
@@ -602,7 +602,7 @@ void process_close_gate(int pid)
 // Open gate. Turn it TRUE.
 void process_open_gate (int pid)
 {
-    struct process_d  *p;
+    struct te_d  *p;
 
 // #todo
 // max limit
@@ -612,7 +612,7 @@ void process_open_gate (int pid)
     }
 
 // Process
-    p = (void *) processList[pid];
+    p = (void *) teList[pid];
     if ((void *) p == NULL){
         panic ("process_open_gate: p\n");
     } else {
@@ -629,7 +629,7 @@ void process_open_gate (int pid)
 
 file *process_get_file_from_pid ( pid_t pid, int fd )
 {
-    struct process_d *p;
+    struct te_d *p;
     //file *fp;
 
 // #todo: max limit
@@ -638,8 +638,8 @@ file *process_get_file_from_pid ( pid_t pid, int fd )
         return NULL;
     }
 
-// Get process pointer.
-    p = (struct process_d *) processList[pid];
+// Get process pointer
+    p = (struct te_d *) teList[pid];
 
     //#todo: Check process validation.
 
@@ -679,7 +679,7 @@ int process_get_tty (pid_t pid)
 {
     // Usada para debug.
 
-    struct process_d *p;
+    struct te_d *p;
     struct tty_d *tty;
 
 // Parameter
@@ -688,7 +688,7 @@ int process_get_tty (pid_t pid)
         return (int) (-EINVAL);
     }
 
-    p = (struct process_d *) processList[pid];
+    p = (struct te_d *) teList[pid];
     if ((void *) p == NULL)
     {
         debug_print ("process_get_tty: p\n");
@@ -745,7 +745,7 @@ int process_get_tty (pid_t pid)
 // Na verdade não estamos mais copiando e 
 // sim criando um endereçamento novo.
 
-int alloc_memory_for_image_and_stack(struct process_d *process)
+int alloc_memory_for_image_and_stack(struct te_d *process)
 {
 // CAlled by clone_process() in clone.c
 // #bugbug: Limit 400KB.
@@ -976,7 +976,7 @@ int alloc_memory_for_image_and_stack(struct process_d *process)
 
 // Worker for create_process.
 // Do not check parameters validation.
-void ps_initialize_process_common_elements(struct process_d *p)
+void ps_initialize_process_common_elements(struct te_d *p)
 {
 // Called by create_process().
 
@@ -1102,20 +1102,20 @@ void ps_initialize_process_common_elements(struct process_d *p)
 // Pointer to a new structure.
 // NULL if it fails.
 
-struct process_d *processObject(void)
+struct te_d *processObject(void)
 {
-    struct process_d *p;
+    struct te_d *p;
 
-    p = (void *) kmalloc(sizeof(struct process_d));
+    p = (void *) kmalloc(sizeof(struct te_d));
     if ((void *) p == NULL){
         return NULL;
     }
-    memset( p, 0, sizeof(struct process_d) );
+    memset( p, 0, sizeof(struct te_d) );
 
 // #todo
 // Maybe we can clean up the structure
 // or initialize some basic elements.
-    return (struct process_d *) p;
+    return (struct te_d *) p;
 }
 
 //
@@ -1124,17 +1124,17 @@ struct process_d *processObject(void)
 //
 
 // OUT: process struture pointer.
-struct process_d *create_and_initialize_process_object(void)
+struct te_d *create_and_initialize_process_object(void)
 {
 // Called by clone_process() in clone.c
 //...
 
     pid_t NewPID = (pid_t) (-1);  //fail
-    struct process_d  *new_process;
+    struct te_d  *new_process;
     register int i=0;
 
 // Process structure.
-    new_process = (struct process_d *) processObject();
+    new_process = (struct te_d *) processObject();
     if ((void *) new_process == NULL){
         debug_print("create_and_initialize_process_object: [FAIL] new_process\n");
         printk     ("create_and_initialize_process_object: [FAIL] new_process\n");
@@ -1269,12 +1269,12 @@ struct process_d *create_and_initialize_process_object(void)
 
     new_process->used = TRUE;
     new_process->magic = 1234;
-// Save a finalized structure.
-    processList[NewPID] = (unsigned long) new_process;
+// Save a finalized structure
+    teList[NewPID] = (unsigned long) new_process;
 
 // OUT:
 // Pointer for a structure of a new process.
-    return (struct process_d *) new_process;
+    return (struct te_d *) new_process;
 fail:
     return NULL;
 }
@@ -1285,7 +1285,7 @@ fail:
 //
 
 // Create process
-struct process_d *create_process ( 
+struct te_d *create_process ( 
     struct cgroup_d *cg,
     unsigned long base_address, 
     unsigned long priority, 
@@ -1297,10 +1297,10 @@ struct process_d *create_process (
     unsigned long pd0_va,
     personality_t personality )
 {
-    struct process_d  *Process;
+    struct te_d  *Process;
     register pid_t PID = -1;
     // Para a entrada vazia no array de processos.
-    struct process_d *EmptyEntry;
+    struct te_d *EmptyEntry;
     unsigned long BasePriority=0;
     unsigned long Priority=0;
     personality_t Personality = personality;
@@ -1361,14 +1361,14 @@ struct process_d *create_process (
     //}
 
 // Process
-    Process = (void *) kmalloc(sizeof(struct process_d));
+    Process = (void *) kmalloc(sizeof(struct te_d));
     if ((void *) Process == NULL){
         panic("create_process: Process\n");
     }
-    memset( Process, 0, sizeof(struct process_d) );
+    memset( Process, 0, sizeof(struct te_d) );
 
 // Initializing the elements common for all types of processes
-    ps_initialize_process_common_elements((struct process_d *) Process);
+    ps_initialize_process_common_elements((struct te_d *) Process);
 
 // ====================
 // get_next:
@@ -1385,7 +1385,7 @@ struct process_d *create_process (
             printk      ("create_process: getNewPID %d\n", PID);
             goto fail;
         }
-        EmptyEntry = (void *) processList[PID];
+        EmptyEntry = (void *) teList[PID];
         if ((void *) EmptyEntry == NULL){ 
             break;
         }
@@ -1744,7 +1744,7 @@ struct process_d *create_process (
 // Register
 // List
 // Coloca o processo criado na lista de processos.
-    processList[PID] = (unsigned long) Process;
+    teList[PID] = (unsigned long) Process;
 // #todo
     // last_created = PID;
     Process->state = INITIALIZED;
@@ -1791,7 +1791,7 @@ void init_processes (void)
 
     i=0;
     while (i < PROCESS_COUNT_MAX){
-        processList[i] = (unsigned long) 0;
+        teList[i] = (unsigned long) 0;
         i++;
     };
 
