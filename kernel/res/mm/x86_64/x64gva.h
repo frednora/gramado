@@ -65,11 +65,11 @@
 
 // Isso será usado por todos os processos em ring3
 // no ambiente do sistema principal.
-#define CONTROLTHREAD_BASE        0x00200000  // base
-#define CONTROLTHREAD_ENTRYPOINT  0x00201000  // entry point
+#define FLOWERTHREAD_BASE        0x00200000  // base
+#define FLOWERTHREAD_ENTRYPOINT  0x00201000  // entry point
 // Stack do processo em ring3.
 // Lembre-se que o processo vai precisa de um heap.
-#define CONTROLTHREAD_STACK       0x003FFFF0  // stack 
+#define FLOWERTHREAD_STACK       0x003FFFF0  // stack 
 
 //
 // Warning:

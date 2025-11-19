@@ -169,7 +169,7 @@ fail:
 // ps: We are using the kernel page directories now,
 // this way but we're gonna clone the kernel pages
 // when creating the init process.
-// CONTROLTHREAD_BASE = 0x00200000
+// FLOWERTHREAD_BASE = 0x00200000
 // See: x64gva.h
 // #bugbug:
 // Por que esse endereço está disponível para uso?
@@ -195,7 +195,7 @@ static int __load_initbin_image(void)
 // #bugbug
 // Explain it better.
     unsigned long ImageAddress = 
-        (unsigned long) CONTROLTHREAD_BASE;
+        (unsigned long) FLOWERTHREAD_BASE;
 
 // #bugbug
 // We have a limit for the image size.
@@ -337,7 +337,7 @@ static int I_x64CreateInitialProcess(void)
     InitProcess = 
         (void *) create_process( 
                     NULL,  
-                    (unsigned long) CONTROLTHREAD_BASE,  //0x00200000 
+                    (unsigned long) FLOWERTHREAD_BASE,  //0x00200000 
                     BasePriority, 
                     (int) KernelProcess->pid, 
                     init_process_default_name, 
@@ -688,7 +688,7 @@ void I_x64ExecuteInitialProcess(void)
 // >>> Mas logo acima, acabamos de mudar as tabelas.
 
     int elfStatus = -1;
-    elfStatus = (int) fsCheckELFFile((unsigned long) CONTROLTHREAD_BASE);
+    elfStatus = (int) fsCheckELFFile((unsigned long) FLOWERTHREAD_BASE);
     if (elfStatus < 0)
     {
         debug_print("I_x64ExecuteInitialProcess: .ELF signature\n");
@@ -708,7 +708,7 @@ void I_x64ExecuteInitialProcess(void)
 
     // The base of the image.
     // The header is in the top.
-    elf_header = (struct elf_header_64bit_d *) CONTROLTHREAD_BASE;
+    elf_header = (struct elf_header_64bit_d *) FLOWERTHREAD_BASE;
 
 // signature
     printk ("Signature: %c %c %c \n",
@@ -741,7 +741,7 @@ void I_x64ExecuteInitialProcess(void)
     printk ("Machine: %x\n", elf_header->e_machine);
 
 // entry
-    if( elf_header->e_entry != CONTROLTHREAD_ENTRYPOINT )
+    if( elf_header->e_entry != FLOWERTHREAD_ENTRYPOINT )
     {
         //
     }
@@ -803,7 +803,7 @@ void I_x64ExecuteInitialProcess(void)
     //while(1){}
 
 // Entry point and ring3 stack.
-// CONTROLTHREAD_ENTRYPOINT
+// FLOWERTHREAD_ENTRYPOINT
 
     const unsigned long EntryPoint = (unsigned long) 0x0000000000201000;
     const unsigned long RING3_RSP  = (unsigned long) 0x00000000002FFFF0;
@@ -1240,11 +1240,11 @@ int I_x64_initialize(void)
 // The main virtual addresses for all the user processes.
 // All the user processes have the same virtual address.
     vaList[MM_COMPONENT_USERPROCESS_BASE_VA] = 
-        (unsigned long) CONTROLTHREAD_BASE;
+        (unsigned long) FLOWERTHREAD_BASE;
     vaList[MM_COMPONENT_USERPROCESS_ENTRYPOINT_VA] = 
-        (unsigned long) CONTROLTHREAD_ENTRYPOINT;
+        (unsigned long) FLOWERTHREAD_ENTRYPOINT;
     vaList[MM_COMPONENT_USERPROCESS_STACK_VA] = 
-        (unsigned long) CONTROLTHREAD_STACK;
+        (unsigned long) FLOWERTHREAD_STACK;
 
 // -------------------------------
 // Initialize a lot of kernel components

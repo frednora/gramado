@@ -184,7 +184,7 @@ void *sys_create_process (
     new = 
         (void *) create_process ( 
                     NULL,  // cg #todo: cgroup came from parameters.
-                    (unsigned long) CONTROLTHREAD_BASE, 
+                    (unsigned long) FLOWERTHREAD_BASE, 
                     (unsigned long) PRIORITY_NORMAL_THRESHOLD, 
                     (ppid_t) current_pid, 
                     (char *) NewName, 
@@ -249,7 +249,7 @@ void *sys_create_thread (
         serial_printk ("sys_create_thread: Invalid rip\n");
         goto fail;
     }
-    if (initial_rip < CONTROLTHREAD_BASE){
+    if (initial_rip < FLOWERTHREAD_BASE){
         serial_printk ("sys_create_thread: Invalid rip\n");
         goto fail;
     }
@@ -508,7 +508,7 @@ int sys_serial_debug_printk(char *s)
 // #test
 // Usermode buffer validation
 // #todo: Check against more limits.
-    if (s < CONTROLTHREAD_BASE)
+    if (s < FLOWERTHREAD_BASE)
     {
         panic ("sys_read: Invalid s\n");
         //return (ssize_t) -EFAULT;  // bad address
@@ -586,7 +586,7 @@ int sys_uname(struct utsname *ubuf)
         return (int) -EFAULT;
     }
 // #todo: validate it against more limits.
-    if (ubuf < CONTROLTHREAD_BASE){
+    if (ubuf < FLOWERTHREAD_BASE){
         panic ("sys_uname: Invalid ubuf\n");
     }
 

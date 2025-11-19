@@ -731,7 +731,7 @@ int process_get_tty (pid_t pid)
 // O que copiar?
 // >> code, data, bss, heap and stack.
 // For now, all the processes has 4MB,
-// and the stack begins at CONTROLTHREAD_STACK.
+// and the stack begins at FLOWERTHREAD_STACK.
 // We just use the flower thread.
 // #bugbug
 // Imagem com limite de 200KB. (fail)
@@ -880,7 +880,7 @@ int alloc_memory_for_image_and_stack(struct process_d *process)
     //if( ... ){
     memcpy ( 
         (void *) __new_base,  
-        (const void *) CONTROLTHREAD_ENTRYPOINT, 
+        (const void *) FLOWERTHREAD_ENTRYPOINT, 
         (imagesize_in_kb*1024) );
     //}
 
@@ -892,13 +892,13 @@ int alloc_memory_for_image_and_stack(struct process_d *process)
 /*
     memcpy ( 
         (void *) __new_stack, 
-        (const void *) ( CONTROLTHREAD_STACK-(CONFIG_RING3_STACK_SIZE_IN_KB*1024) ), 
+        (const void *) ( FLOWERTHREAD_STACK-(CONFIG_RING3_STACK_SIZE_IN_KB*1024) ), 
         (CONFIG_RING3_STACK_SIZE_IN_KB*1024) );
 */
 
     //memcpy ( 
         //(void *) __new_stack, 
-        //(const void *) ( CONTROLTHREAD_STACK-(128*1024) ), 
+        //(const void *) ( FLOWERTHREAD_STACK-(128*1024) ), 
         //(128*1024) );
 
 //
@@ -1252,9 +1252,9 @@ struct process_d *create_and_initialize_process_object(void)
 // Stack for the clone. 
 // #bugbug: The stack size?
     new_process->flower->context.rsp = 
-        (unsigned long) CONTROLTHREAD_STACK;
+        (unsigned long) FLOWERTHREAD_STACK;
     new_process->StackStart = 
-        (unsigned long) CONTROLTHREAD_STACK;
+        (unsigned long) FLOWERTHREAD_STACK;
     new_process->StackSize = 
         (unsigned long) (CONFIG_RING3_STACK_SIZE_IN_KB*1024);  
     new_process->StackEnd = 
@@ -1264,8 +1264,8 @@ struct process_d *create_and_initialize_process_object(void)
 //#debug: print stack info.
 
 // #todo: Explain it better.
-// 0x200000
-    new_process->Image = (unsigned long) CONTROLTHREAD_BASE;
+// 0x00200000
+    new_process->Image = (unsigned long) FLOWERTHREAD_BASE;
 
     new_process->used = TRUE;
     new_process->magic = 1234;

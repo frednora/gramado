@@ -4,7 +4,6 @@
 
 #include <kernel.h>
 
-
 ssize_t sys_read(int fd, const char *ubuf, size_t count)
 {
     if (fd<0){
@@ -33,7 +32,7 @@ ssize_t sys_read(int fd, const char *ubuf, size_t count)
 // #test
 // Usermode buffer validation
 // #todo: Check against more limits.
-    if (ubuf < CONTROLTHREAD_BASE)
+    if (ubuf < FLOWERTHREAD_BASE)
     {
         panic ("sys_read: Invalid ubuf\n");
         //return (ssize_t) -EFAULT;  // bad address
@@ -69,7 +68,7 @@ ssize_t sys_write(int fd, const char *ubuf, size_t count)
 // #test
 // Usermode buffer validation
 // #todo: Check agains more limits.
-    if (ubuf < CONTROLTHREAD_BASE)
+    if (ubuf < FLOWERTHREAD_BASE)
     {
         panic ("sys_write: Invalid ubuf\n");
         //return (ssize_t) -EFAULT;  // bad address

@@ -1011,7 +1011,7 @@ do_clone:
     //return 0;
 
 // Standard va entry point. (RIP = 0x201000)
-    child_thread->context.rip = (unsigned long) CONTROLTHREAD_ENTRYPOINT;
+    child_thread->context.rip = (unsigned long) FLOWERTHREAD_ENTRYPOINT;
 
 // RSP
 // 32KB size
@@ -1264,14 +1264,14 @@ do_clone:
 // early in this routine. But this is the one we want.
 // This is the standard one.
     unsigned long __image_va =
-        (unsigned long) CONTROLTHREAD_BASE;
+        (unsigned long) FLOWERTHREAD_BASE;
 // The va for the entry point of the image. 0x201000
     unsigned long __image_entrypoint_va = 
-        (unsigned long) CONTROLTHREAD_ENTRYPOINT;  
+        (unsigned long) FLOWERTHREAD_ENTRYPOINT;  
 
 // pd index
     int __pdindex = 
-        (int) X64_GET_PDE_INDEX(CONTROLTHREAD_BASE);
+        (int) X64_GET_PDE_INDEX(FLOWERTHREAD_BASE);
     unsigned long __flags = 
         (unsigned long) (PAGE_USER | PAGE_WRITE | PAGE_PRESENT); // 7
 
@@ -1286,7 +1286,7 @@ do_clone:
         (unsigned long) __flags );               // flags.
 
 // Image base va.
-// The desired canonical virtual address. CONTROLTHREAD_BASE
+// The desired canonical virtual address. FLOWERTHREAD_BASE
     child_process->Image = (unsigned long) __image_va; 
 
 // Clonning the kernel's pdpt0.
@@ -1362,7 +1362,7 @@ do_clone:
 
 // RIP:
 // Entry point 0x201000.
-// The desired canonical virtual address. CONTROLTHREAD_ENTRYPOINT
+// The desired canonical virtual address. FLOWERTHREAD_ENTRYPOINT
     child_thread->context.rip = (unsigned long) __image_entrypoint_va;
 
 //

@@ -231,12 +231,12 @@ struct thread_d *create_init_thread(void)
     t->rflags_initial_iopl = (unsigned int) 3; 
     t->rflags_current_iopl = (unsigned int) 3; 
 
-// Stack frame.
+// Stack frame
     t->context.ss     = 0x23;
-    t->context.rsp    = (unsigned long) CONTROLTHREAD_STACK; 
+    t->context.rsp    = (unsigned long) FLOWERTHREAD_STACK; 
     t->context.rflags = 0x3202;  // #caution
     t->context.cs     = 0x1B;
-    t->context.rip    = (unsigned long) CONTROLTHREAD_ENTRYPOINT; 
+    t->context.rip    = (unsigned long) FLOWERTHREAD_ENTRYPOINT; 
 
     t->context.ds = 0x23;  
     t->context.es = 0x23;

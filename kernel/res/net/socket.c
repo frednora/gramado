@@ -358,7 +358,7 @@ sys_accept (
 // Address validation.
 // It needs to be a ring3 address.
 // #todo: Check agains more limits.
-    if (addr < CONTROLTHREAD_BASE){
+    if (addr < FLOWERTHREAD_BASE){
         panic("sys_accept: addr is not ring3\n");
         //return (int) (-EINVAL);
     }
@@ -708,7 +708,7 @@ sys_bind (
 // Address validation.
 // It needs to be a ring3 address.
 // #todo: Check agains more limits.
-    if (addr < CONTROLTHREAD_BASE){
+    if (addr < FLOWERTHREAD_BASE){
         panic("sys_bind: addr is not ring3\n");
         //return (int) (-EINVAL);
     }
@@ -1943,7 +1943,7 @@ sys_connect (
 // We can have two types of address.
 // One for local and another one for inet.
 
-    //unsigned long *limit_address = (unsigned long *) CONTROLTHREAD_BASE;
+    //unsigned long *limit_address = (unsigned long *) FLOWERTHREAD_BASE;
 
 // fd
     if ( sockfd < 0 || sockfd >= OPEN_MAX )
@@ -1962,7 +1962,7 @@ sys_connect (
 // It needs to be a ring3 address.
 // #todo: Check agains more limits.
 // #bugbug: Comparison between pointer and integer.
-    if (addr < CONTROLTHREAD_BASE){
+    if (addr < FLOWERTHREAD_BASE){
         panic("sys_connect: addr is not ring3\n");
         //return (int) (-EINVAL);
     }
