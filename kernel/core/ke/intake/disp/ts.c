@@ -256,18 +256,18 @@ static void __tsOnFinishedExecuting(struct thread_d *t)
 
 /*
  * __task_switch:
- * + Switch the thread.
- * + Save and restore context.
- * + Preempt thread if the quantum is over.
+ * + Switch the thread
+ * + Save and restore context
+ * + Preempt thread if the quantum is over
  *   In this case we will spawn a new thread if there is one
  *   in standby state.
- * + Select the next thread and dispatch.
- * + Return to _irq0.
+ * + Select the next thread and dispatch
+ * + Return to _irq0
  */
+// Worker:
+// Called by psTaskSwitch()
 static void __task_switch(void)
 {
-// Called by psTaskSwitch().
-
 // Current
     struct process_d *CurrentProcess;
     struct thread_d  *CurrentThread;
@@ -324,18 +324,18 @@ static void __task_switch(void)
     set_current_process(owner_pid);
 
 //
-// == Conting =================================
+// == Counting =================================
 //
 
-// Increment total ticks.
+// Increment total ticks
     CurrentThread->step++;
 // Total time in ms.
     CurrentThread->total_time_ms = 
         (unsigned long) CurrentThread->total_time_ms + (DEFAULT_PIT_FREQ/sys_time_hz);
 
-// Increment tick counter for the current quantum.
+// Increment tick counter for the current quantum
     CurrentThread->runningCount++;
-// How many ticks in this quantum given in ms.
+// How many ticks in this quantum given in ms
     CurrentThread->runningCount_ms = 
         (unsigned long) CurrentThread->runningCount_ms + (DEFAULT_PIT_FREQ/sys_time_hz);
 
@@ -347,7 +347,7 @@ static void __task_switch(void)
 
 // Locked?
 // Taskswitch locked? 
-// Return without saving.
+// Return without saving
     if (task_switch_status == LOCKED){
         IncrementDispatcherCount (SELECT_CURRENT_COUNT);
         debug_print ("ts: Locked\n");
@@ -355,10 +355,6 @@ static void __task_switch(void)
     }
 
 // Not Unlocked?
-// Nesse momento a thread atual sofre preempção por tempo
-// Em seguida tentamos selecionar outra thread.
-// Save the context.
-// Not unlocked?
     if (task_switch_status != UNLOCKED){
         panic ("ts: task_switch_status != UNLOCKED\n");
     }
@@ -366,6 +362,10 @@ static void __task_switch(void)
 //
 // Save context
 //
+
+// Nesse momento a thread atual sofre preempção por tempo
+// Em seguida tentamos selecionar outra thread.
+// Save the context.
 
 // #todo:
 // Put the tid as an argument.
@@ -380,7 +380,7 @@ static void __task_switch(void)
 // para esse dado tick e saltarmos para o handler
 // de single shot configurado para esse timer.
 
-    //if( (jiffies % 16) == 0 ){
+    //if ((jiffies % 16) == 0){
         //spawn_test_signal();
     //}
 //=======================================================
@@ -456,6 +456,11 @@ static void __task_switch(void)
 
     } else if ( CurrentThread->runningCount >= CurrentThread->quantum ){
 
+        // Is it a ring 0 thread?
+        // At this moment if the policy allows,
+        // we can simply return for ring 0 threads.
+        // Do not allowing taskswitching for ring 0 threads.
+
         // The context is already saved,
         // we can process something before planing the next thread.
         __tsOnFinishedExecuting(CurrentThread);
@@ -475,23 +480,21 @@ static void __task_switch(void)
 // Undefined quantum state.
 // We're lost with the processing time for this thread.
 // #todo:
-// Maybe we can reset the quantum and balance the processing time 
-// for this thread.
+// Maybe we can reset the quantum and 
+// balance the processing time for this thread.
 
-    }else{
+    } else {
         panic ("ts: CurrentThread->runningCount\n");
     };
 
-//CrazyFail:
-// Crazy Fail!
+// CrazyFail:
 // #bugbug
-// Não deveríamos estar aqui.
-// Podemos abortar ou selecionar a próxima provisóriamente.
-    //#debug
-    //panic ("ts.c: crazy fail");
+// We couldn't reach this point.
+// Let's try to run the current thread.
+    //panic ("ts.c: Crazy fail");
     goto dispatch_current; 
 
-// =====================================================================
+// =============================================================
 
 //
 // == TRY NEXT THREAD =====
@@ -524,24 +527,28 @@ ZeroGravity:
 // Only 1 thread.
 // The Idle thread is gonna be the scheduler condutor.
 
-// No threads.
-// The counter is telling us that there is no thread in 
-// this system.
+// No threads. The counter is telling us that 
+// there is no thread in this system for uniprocessor.
+// See: cpu.h
+// #todo: For SMP?
     if (UPProcessorBlock.threads_counter == 0){
         panic("ts: No threads\n");
     }
 
 // Only one thread.
-// The counter is telling us that there is only on thread in the system.
-// It needs to be the init thread.
-// Let's put this thread in the first place of the current queue.
+// The counter is telling us that there is only 
+// one thread in the system for uniprocessor.
+// It needs to be the thread marked as init for uniprocessor.
     if (UPProcessorBlock.threads_counter == 1)
     {
-        if ((void *)InitThread != UPProcessorBlock.IdleThread){
-            panic("ts: Invalid single thread\n");
+        if ( UPProcessorBlock.IdleThread != (void *) InitThread )
+        {
+            panic("ts: Invalid idle thread for up\n");
         }
-
+        // Let's run the init thread for Uniprocessor
         currentq = (void *) UPProcessorBlock.IdleThread;
+        // No next ?
+        // currentq->next = NULL;
         goto go_ahead;
     }
 
@@ -559,30 +566,26 @@ ZeroGravity:
     // At this time ts.c is operating as a scheduler for a single thread.
 
     // Do we have an event responder that has a pending event?
-    int hasEvent = FALSE;
     // Are we using the event responder feature?
+    // Do we have a pending event for the ev responder thread?
+    // Set main fields, rebuild the queue and go ahead.
+    int hasEvent = FALSE;
     if (g_use_event_responder == TRUE) 
     {
-        // Do we have a pending event?
         hasEvent = (int) has_pending_event(ev_responder_thread);
-        // Yes we do!
         if (hasEvent == TRUE)
         {
-            // Initialize counters
             ev_responder_thread->runningCount = 0;
             ev_responder_thread->runningCount_ms = 0;
-            // Quantum
             ev_responder_thread->quantum = QUANTUM_MAX;
-            // Priority
             ev_responder_thread->priority = PRIORITY_MAX;
-            // Ready to run
-            ev_responder_thread->state = READY;
+            ev_responder_thread->state = READY;  // Read to run
             // How many times it was scheduled
             ev_responder_thread->scheduledCount++;
-            // Update
+            // Update flag
             ev_responder_thread->has_pending_event = FALSE;
 
-            // Queue with only one thread
+            // Rebuild a queue with only one thread
             currentq = (void *) ev_responder_thread;
             currentq->next = NULL;
             goto go_ahead;
@@ -590,55 +593,45 @@ ZeroGravity:
     }
 
 //
-// End of round ?
+// End of round?
 //
 
-// ---------------------------------
-// Reescalonar se chegamos ao fim do round.
-// #bugbug
-// Ao fim do round estamos tendo problemas ao reescalonar 
-// Podemos tentar repedir o round só para teste...
-// depois melhoramos o reescalonamento.
-// #importante:
-// #todo: #test: 
-// De tempos em tempos uma interrupção pode chamar o escalonador,
-// ao invés de chamarmos o escalonador ao fim de todo round.
-// #critério:
-// Se alcançamos o fim da lista encadeada cujo ponteiro é 'Conductor'.
-// Então chamamos o scheduler para reescalonar as threads.
-// Essa rotina reescalona e entrega um novo current_thread e
-// Conductor.
-// #?
-// Estamos reconstruindo o round muitas vezes por segundo.
-// Isso é ruin quando tem poucas threads, mas não faz diferença
-// se o round for composto por muitas threads.
-
 // ----------------------------------------
-// The queue is over.
-// End of round. Rebuild the round.
-    if ((void *) currentq->next == NULL)
-    {
-        current_thread = (tid_t) psScheduler();
-        goto go_ahead;
-    }
-
-// ----------------------------------------
-// The queue is not over,
-// let's get the next thread in the linked list.
+// The queue is NOT over, get the next into the linked list
     if ((void *) currentq->next != NULL){
         currentq = (void *) currentq->next;
         goto go_ahead;
     }
 
+// ----------------------------------------
+// End of round. 
+// Rebuild the linked list and get the current thread.
+    if ((void *) currentq->next == NULL){
+        current_thread = (tid_t) psScheduler();
+        goto go_ahead;
+    }
+
+/*
+// #test
+// Maybe init thread can be our last option
+    if ((void *)InitThread != NULL)
+    {
+        if (InitThread->magic == 1234)
+        {
+            current_thread = (tid_t) InitThread->tid;
+            goto go_ahead;
+        }
+    }
+*/
+
 // Not reached.
 // This is the end of our options when trying to select a thread.
     panic("ts: Unexpected error\n");
 
-// ---------------------------------------------------
+// ==============================================
 // Go ahead
-// #importante:
-// Nesse momento já temos uma thread selecionada,
-// vamos checar a validade e executar ela.
+// At this moment we already have a selected thread.
+// Let's check it's validation and try to execure it.
 // #importante:
 // Caso a thread selecionada não seja válida, temos duas opções,
 // ou chamamos o escalonador, ou saltamos para o início dessa rotina
@@ -654,6 +647,9 @@ go_ahead:
 // TARGET:
 // Esse foi o ponteiro configurado pelo scheduler
 // ou quando pegamos a próxima na lista.
+
+// #bugbug
+// Jumping to ZeroGravity can put us into an infinity loop.
 
     TargetThread = (void *) currentq;
     if ((void *) TargetThread == NULL)
@@ -853,7 +849,7 @@ void tsTaskSwitch(void)
     pid_t current_process_pid = -1;
     pid_t ws_pid = -1;
 
-// Filters.
+// Filters
 
 // #::
 // A interrupçao de timer pode acontecer 
@@ -872,7 +868,7 @@ void tsTaskSwitch(void)
         die();
     }
 
-// Current thread.
+// Current thread
 // First check!
 // This variable was set at the last release or the last spawn.
 // Global variable.
@@ -905,7 +901,7 @@ void tsTaskSwitch(void)
         }
     }
 
-// The task switching routine.
+// The task switching routine
     __task_switch();
 }
 

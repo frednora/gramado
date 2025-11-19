@@ -225,17 +225,17 @@ struct UPProcessorBlock_d
 // Threads
 //
 
-// The idle thread for this processor.
+// The idle thread for this processor
     struct thread_d *IdleThread;
-// The current thread running in this processor.
+// The current thread running in this processor
     struct thread_d *CurrentThread;
-// The next thread to run in this processor.
+// The next thread to run in this processor
     struct thread_d *NextThread;
     //...
-// Number of total threads in this processor.
+// Number of total threads in this processor
     unsigned long threads_counter;
 
-// No navigation links in this case.
+// No navigation links in this case
 };
 extern struct UPProcessorBlock_d  UPProcessorBlock;
 

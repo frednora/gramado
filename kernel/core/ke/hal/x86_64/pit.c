@@ -192,15 +192,15 @@ void pit_speaker_off (void)
 // It is up to the interrupt service routine to reset the latch. 
 // It does that by setting bit 7 of port 0x61 (system control port B).
 
+// Timer and taskswitching
 __VOID_IRQ 
 irq0_TIMER (void)
 {
 
 // Calling the timer routine.
-// See: pic.h
     DeviceInterface_PIT();
 
-// 1000 times per second.
+// 1000 times per second
 // Pooling given the configuration
     int keyboard_pooling_status = (int) i8042_IsPS2KeyboardPooling();
     int mouse_pooling_status = (int) i8042_IsPS2MousePooling(); 
@@ -239,16 +239,14 @@ irq0_TIMER (void)
 }
 
 
+// The PIT handler for timer routines.
+// Called by irq0_TIMER().
 void DeviceInterface_PIT(void)
 {
-// The pit handler.
-// Called by irq0_TIMER().
-
     if (PITInfo.initialized != TRUE)
         return;
 
-// Increment tick counter.
-    jiffies++;
+    jiffies++;  // Increment global tick counter
 
 // Update the seed for rand() function.
 // Ring0 only

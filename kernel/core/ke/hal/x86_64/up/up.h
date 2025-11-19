@@ -12,6 +12,7 @@
 
 // Obs: 
 // Não tem ponteiro. Apenas para UniProcessor.
+// #bugbug: up.h is only for Intel.
 // See: cpu.h and hal.c 
 extern struct UPProcessorBlock_d  UPProcessorBlock;
 

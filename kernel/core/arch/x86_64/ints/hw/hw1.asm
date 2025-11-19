@@ -255,7 +255,7 @@ _irq0:
     and rax, 3
     mov [_contextCPL], rax
 
-; Timer and taskswitching.
+; Timer and taskswitching
 ; See: pit.c
 
     call _irq0_TIMER
