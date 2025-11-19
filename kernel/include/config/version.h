@@ -10,7 +10,7 @@
 
 // Current build number
 // Updated by the builder
-#define __CURRENT_BUILD_NUMBER    354
+#define __CURRENT_BUILD_NUMBER    355
 
 // Version
 #define VERSION_MAJOR    0
@@ -21,8 +21,8 @@
 #define VERSION_WORD    0x0008
 // Strings
 #define VERSION_STRING    "0.8"
-#define BUILD_STRING      "354"
-#define BUILD_CODENAME_STRING  "Giant Otter"
+#define BUILD_STRING      "355"
+#define BUILD_CODENAME_STRING  "Pre-Panda"
 #define RELEASE_STRING    PRODUCT_TYPE_STRING
 
 #endif  
