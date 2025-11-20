@@ -302,8 +302,9 @@ static void __task_switch(void)
 // Current process
 // The owner of the current thread.
 
-// pid
-    te_id = (pid_t) CurrentThread->pid;
+// Get the 'thread group id'. 
+// Also called 'thread environment id' (fka PID)
+    te_id = (pid_t) CurrentThread->tgid;
     if ( te_id < 0 || te_id >= PROCESS_COUNT_MAX )
     {
         panic ("ts: te_id\n");
@@ -766,10 +767,9 @@ dispatch_current:
 //done:
 // We will return in the end of this function.
 
-// Owner validation.
-// Owner PID.
-
-    pid_t targetthread_OwnerPID = (pid_t) TargetThread->pid;
+// Validate Thread group id.
+// Also known as 'thread environment id' (fka PID)
+    pid_t targetthread_OwnerPID = (pid_t) TargetThread->tgid;
     if ( targetthread_OwnerPID < 0 || 
          targetthread_OwnerPID >= THREAD_COUNT_MAX )
     {

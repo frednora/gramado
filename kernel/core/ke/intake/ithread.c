@@ -46,13 +46,12 @@ struct thread_d *create_init_thread(void)
 
 // THREAD IDENTIFIERS
     t->tid = (tid_t) (TID & 0xFFFF);
-    //t->tgid = (tgid_t) ?; // tgid
 
 // The pointer for the process we belong to.
 // Belongs to this 'thread environment'
     t->te = (void *) TEInitProcess;
-// The thread environment id
-    t->pid = (pid_t) TEInitProcess->pid; 
+// The thread environment id (fka PID)
+    t->tgid = (tgid_t) TEInitProcess->pid; 
 
 // Low priority
     t->base_priority = PRIORITY_SYSTEM_THRESHOLD;  // Static

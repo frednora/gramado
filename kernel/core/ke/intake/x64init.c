@@ -443,9 +443,9 @@ static int I_x64CreateInitialProcess(void)
         return FALSE;
     }
 
-// Invalid 'thread environment id' (PID)
-    if (InitThread->pid != GRAMADO_PID_INIT){
-        printk ("I_x64CreateInitialProcess: InitThread->pid\n");
+// Invalid 'thread environment id' (fka PID)
+    if (InitThread->tgid != GRAMADO_PID_INIT){
+        printk ("I_x64CreateInitialProcess: InitThread->tgid\n");
         return FALSE;
     }
 

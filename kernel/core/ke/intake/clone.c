@@ -737,9 +737,9 @@ copy_process(
 
 // O dono da parent thread tem que ser o processo pai.
 // Let's check the validation for the 
-// Thread Environment ID.
-    if (parent_thread->pid != parent_process->pid){
-        panic("copy_process: parent_thread->pid\n");
+// Thread group id = Thread Environment ID (fka PID)
+    if (parent_thread->tgid != parent_process->pid){
+        panic("copy_process: parent_thread->tgid\n");
     }
 
 // A thread que fez a chamada precisa ser
@@ -1002,8 +1002,9 @@ do_clone:
     child_process->flower = (struct thread_d *) child_thread;
 // This is the 'thread environment' for the child thread
     child_thread->te = (struct te_d *) child_process;  // te
-// Saving the thread environment id.
-    child_thread->pid = (pid_t) child_pid;
+// Saving the thread group id.
+// Thread environment id (fka PID)
+    child_thread->tgid = (tgid_t) child_pid;
 
 // Breakpoint
 

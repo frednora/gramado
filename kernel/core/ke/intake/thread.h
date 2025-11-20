@@ -238,15 +238,20 @@ struct thread_d
     int used;
     int magic;
 
-// The thread environment structure. (Process)
-    struct te_d  *te;
-    pid_t pid; // The (Thread Environment ID)
-    //#todo process group
+// The thread environment structure. (fka Process)
+// thread->te->pid is returned by getpid().
+    struct te_d *te;
+
+// Thread Group ID (thread environment id)
+// Shared among all threads in the same environment.
+// This is the same value found in thread->te->pid.
+// Returned by getpid().
+    tgid_t tgid;
 
 // Thread ID
+// Unique per thread, used by the scheduler.
+// Returned by gettid().
     tid_t tid;
-// Thread Group ID.
-    tgid_t tgid;
 
 // type:
 // (SYSTEM, INTERACTIVE, BATCH)

@@ -2168,13 +2168,16 @@ void *sci2 (
         case 100:
             return (void*) t->tid;
             break;
-        // 'thread environment id', the PID
+        // The thread group id,
+        // also known as 'thread environment id'
+        // (fka PID) 
         case 101:
-            return (void*) t->pid;
+            return (void*) t->tgid;
             break;
         // ...
         default:
-            return NULL;
+            // #todo return -1;
+            return NULL;  //#bugbug
             break;
         };
     }

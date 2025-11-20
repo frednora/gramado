@@ -310,7 +310,7 @@ unsigned long GetThreadStats(tid_t tid, int index)
  
     switch (index){
         case 1:  return (unsigned long) t->tid;    break;
-        case 2:  return (unsigned long) t->pid;    break;
+        case 2:  return (unsigned long) t->tgid;   break;  // PID
         case 3:  return (unsigned long) t->type;   break;
         case 4:  return (unsigned long) t->state;  break;
         case 5:  return (unsigned long) t->plane;  break;
@@ -889,7 +889,7 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
                                 NULL,  
                                 0,  // initial rip 
                                 0,  // initial rsp
-                                father->pid, 
+                                father->tgid,  // PID
                                 "clone-thread",
                                 father_cpl );
 
@@ -1402,12 +1402,11 @@ try_next_slot:
 // Index Ok.
 // Now we have an index number.
     Thread->tid = (tid_t) i;
-    //Thread->tgid = ?;  // Thread group IDentifier
 // ======================================
 
 // Belongs to this thread environment (process)
     Thread->te = (void *) Process;    // thread environment structure.
-    Thread->pid = (pid_t) ProcessID;  // PID
+    Thread->tgid = (tgid_t) ProcessID;  // PID
 
 // Thread name
 // #test 64 bytes max.

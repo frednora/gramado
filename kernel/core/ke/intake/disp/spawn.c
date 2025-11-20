@@ -356,10 +356,11 @@ static void __spawn_thread_by_tid_imp(tid_t tid)
 // #bugbug: 
 // Talvez o ponteiro t->process nao foi devidamente inicializado.
 
-    // 'thread environment id' (PID)
-    pid_t cur_teid = (pid_t) target_thread->pid;
-
-    if ( cur_teid < 0 || cur_teid >= PROCESS_COUNT_MAX ){
+// Get the thread group id.
+// Also known as 'thread environment id' (fka PID)
+    pid_t cur_teid = (pid_t) target_thread->tgid;
+    if ( cur_teid < 0 || cur_teid >= PROCESS_COUNT_MAX )
+    {
         panic("__spawn_thread_by_tid_imp: cur_teid\n");
     }
 

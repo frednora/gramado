@@ -80,8 +80,9 @@ static void __sched_notify_parent(struct thread_d *thread, int event_number)
 
 // Owner process
 // The thread belongs to this process
-// The 'thread environment id' (PID)
-    pid_t teid = thread->pid;
+// The thread group id,
+// also known as 'thread environment id' (fka PID)
+    pid_t teid = (pid_t) thread->tgid;
     if (teid < 0)
         return;
     if (teid >= PROCESS_COUNT_MAX)

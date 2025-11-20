@@ -28,7 +28,7 @@ void show_slot(tid_t tid)
     printk ("====  ====  ====  ====  ===== ==== ====    ==========  ======  =====\n");
     printk ("%d    %d    %x   %d    %d    %d    %d      %x          %x      %s   \n", 
         t->tid, 
-        t->pid,  // Thread Environment ID.
+        t->tgid,  // Thread Environment ID. (fka PID)
         t->pml4_PA,
         t->priority, 
         t->state,
