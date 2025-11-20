@@ -727,7 +727,12 @@ void *sci0 (
         return (void *) get_current_pid();
    }
 
-// 86, 87 - livre
+// 86 - livre
+
+// 87
+    if (number == 87){
+        return (void*) current_thread;
+    }
 
 // Testa se o processo é válido
 // se for valido retorna 1234

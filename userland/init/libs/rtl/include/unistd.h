@@ -1,28 +1,18 @@
-/*
- * File: unistd.h
- *
- *     Standard symbolic constants and types.
- *
- * History:
- *     2018 - Created by Fred Nora.
- *     2020 - New functions.
- */
- 
+// unistd.h
+// Headers for unistd.c
+// 2018 - Created by Fred Nora.
 
-#ifndef _UNISTD_H
-#define _UNISTD_H 
-
+#ifndef __UNISTD_H
+#define __UNISTD_H 
 
 #include <sys/types.h>
 
-
-// The <unistd.h> header shall declare the following external variables:
+// The <unistd.h> header shall declare 
+// the following external variables:
 
 extern char **environ;
 extern char  *optarg;
 extern int    opterr, optind, optopt;
-
-
 
 /*
  In the C and C++ programming languages, unistd.h is the name 
@@ -165,36 +155,34 @@ pid_t fork (void);
 pid_t vfork(void);
 
 
-
-
-
-
 // uid
-int setuid ( uid_t uid );
-uid_t getuid (void);
+int setuid(uid_t uid);
+uid_t getuid(void);
 
 
 // gid
 int setgid(gid_t gid);
-gid_t getgid (void);
+gid_t getgid(void);
 
 
 // euid
 int seteuid(uid_t euid);
-uid_t geteuid (void); 
+uid_t geteuid(void); 
 
 // egid
 int setegid(gid_t egid);
 gid_t getegid(void);
 
-
 // pid
-pid_t getpid (void);
+// The 'thread group id', 
+// also known as 'thread environment id' (fka PID)
+pid_t getpid(void);
 
 //ppid
 pid_t getppid (void);
 
 
+int gettid(void);
 
 
 int dup (int oldfd);

@@ -556,6 +556,22 @@ static int input_compare_string(void)
         goto exit_cmp;
     }
 
+    int myPID = -1;
+    if ( strncmp(prompt,"getpid",6) == 0 )
+    {
+        myPID = (int) getpid();
+        printf ("PID={%d}\n",myPID);
+        goto exit_cmp;
+    }
+
+    int myTID = -1;
+    if ( strncmp(prompt,"gettid",6) == 0 )
+    {
+        myTID = (int) gettid();
+        printf ("PID={%d}\n",myTID);
+        goto exit_cmp;
+    }
+
 //==============================
 // Network Server:
 
