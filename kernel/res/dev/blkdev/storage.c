@@ -6,9 +6,7 @@
 // Main structure for managing the storage information.
 struct storage_d  *storage;
 
-
 struct storage_controller_d  StorageController;
-
 
 // The number of sectors in the boot disk.
 // See: storage_set_total_lba_for_boot_disk().
@@ -973,7 +971,6 @@ read_lba (
     // Nothing
 
 fail:
-    refresh_screen();
     return (int) -1;
 }
 
@@ -1056,7 +1053,6 @@ write_lba(
 // Nothing
 
 fail:
-    refresh_screen();
     return (int) -1;
 }
 
@@ -1101,7 +1097,7 @@ static int storage_set_total_lba_for_boot_disk(void)
     gNumberOfSectorsInBootDisk = 
         (unsigned long) ata_device->dev_total_num_sector;
 
-// Save it in the main storage structure.
+// Save it in the main storage structure
     if ((void*) storage == NULL){
         printk("storage\n");
         goto fail;
@@ -1109,9 +1105,8 @@ static int storage_set_total_lba_for_boot_disk(void)
     storage->mumber_of_sectors_in_boot_disk = 
         (unsigned long) ata_device->dev_total_num_sector;
 
-//done
-    //refresh_screen();
     return TRUE;
+
 fail:
     return FALSE;
 }
@@ -1152,7 +1147,6 @@ static int __validate_disksignature_from_bootblock(void)
     printk ("The signature: %x\n", value64bit[5] );
     printk ("The signature: %x\n", value64bit[6] );
     printk ("The signature: %x\n", value64bit[7] );
-    //refresh_screen();
     //while(1){}
     */
 

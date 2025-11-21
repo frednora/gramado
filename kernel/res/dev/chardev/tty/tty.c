@@ -426,7 +426,6 @@ __tty_read (
     return (int) i;
 
 fail:
-    //refresh_screen();
     return (int) (-1);
 }
 
@@ -1260,7 +1259,6 @@ tty_ioctl (
 
     case TIOCCONS:
         printk("tty_ioctl: TIOCCONS (Redirecting output)\n");
-        refresh_screen();
         if ( is_superuser() != TRUE )
             return -EPERM;
         // Se a tty eh um console.

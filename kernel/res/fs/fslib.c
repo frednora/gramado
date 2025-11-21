@@ -303,7 +303,6 @@ int file_read_buffer( file *f, char *buffer, int len )
             printk ("file_read_buffer: Count <= 0 SECOND\n");
             goto fail;
             //printk("local_len\n");
-            //refresh_screen();
             //return -1;
         }
 
@@ -337,7 +336,6 @@ int file_read_buffer( file *f, char *buffer, int len )
     }
 
 fail:
-    //refresh_screen();
     return EOF;
 }
 
@@ -533,7 +531,6 @@ file_write_buffer (
 // Unknown type
 fail:
     //printk ("file_write_buffer: fail\n");
-    //refresh_screen();
     return EOF;
 }
 
@@ -862,7 +859,6 @@ RegularFile:
          //    if ( fp->_flags & __SRD )
          //        printk("can read\n");
          //    printk("__read_imp-OUTPUT 5: %s \n",fp->_base);
-         //    refresh_screen();
          //}
 
         //debug_print("__read_imp: [DEBUG] Trying to read a regular file object\n");
@@ -878,10 +874,8 @@ RegularFile:
             //fp->tid_waiting = current_thread;
             //fp->_flags |= __SWR;  //pode escrever.
             //scheduler();
-            
+
             //printk("__read_imp: fp->_flags & __SRD \n");
-            //refresh_screen();
-            
             goto fail;
         }
         
@@ -943,7 +937,6 @@ RegularFile:
 
     if (fp->____object == ObjectTypePTMX){
         printk ("__read_imp: [TODO] trying to read a PTMX device file\n");
-        //refresh_screen();
         return 0;
     }
 
@@ -952,7 +945,6 @@ RegularFile:
 
     if (fp->____object == ObjectTypePTY){
         printk ("__read_imp: [TODO] trying to read a PTY device file\n");
-        //refresh_screen();
         return 0;
     }
 
@@ -961,7 +953,6 @@ RegularFile:
 
     if (fp->____object == ObjectTypeFileSystem){
         printk ("__read_imp: [TODO] trying to read a file system\n");
-        //refresh_screen();
         return 0;
     }
 
@@ -998,14 +989,13 @@ fail:
 // Isso pode degradar o desempenho.
 
     // printk ("__read_imp: [FAIL] something is wrong!\n");
-    //refresh_screen();  
     //bloqueando, autorizando a escrita e reescalonando.
     //do_thread_waiting (current_thread);
     //fp->tid_waiting = current_thread;
     //fp->_flags |= __SWR;  //pode escrever      
     //scheduler();  //#bugbug: Isso é um teste  
 
-// Something is wrong!
+// Something is wrong
     return (ssize_t) (-1);
 }
 
@@ -1148,7 +1138,6 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
         //printk("entry2: %x\n", __P->Objects[2]);
         //printk("entry3: %x\n", __P->Objects[3]);
         //printk("entry4: %x\n", __P->Objects[4]);
-        //refresh_screen();
         //while(1){}
         goto fail;
     }
@@ -1426,7 +1415,6 @@ RegularFile:
 // Pseudo terminal multiplexer.
     if (fp->____object == ObjectTypePTMX){
         printk ("__write_imp: [TODO] trying to write a PTMX device file\n");
-        //refresh_screen();
         return 0;
     }
 
@@ -1434,7 +1422,6 @@ RegularFile:
 // pty () pseudo terminal.
     if (fp->____object == ObjectTypePTY){
         printk ("__write_imp: [TODO] trying to write a PTY device file\n");
-        //refresh_screen();
         return 0;
     }
 
@@ -1442,7 +1429,6 @@ RegularFile:
 // File system
     if (fp->____object == ObjectTypeFileSystem){
         printk ("__write_imp: [TODO] trying to write a file system\n");
-        //refresh_screen();
         return 0;
     }
 
@@ -1457,7 +1443,7 @@ RegularFile:
     // ...
 
 //==============================================
-    debug_print ("__write_imp: [FAIL] Unknown object type!\n");
+    debug_print ("__write_imp: [FAIL] Unknown object type\n");
 //==============================================
 
 fail:
@@ -1467,10 +1453,6 @@ fail:
 fail2:
 
     //invalidate_screen();
-
-// #bugbug: 
-// Isso pode degradar o desempenho.
-    //refresh_screen();   
 
     // Não conseguimos escrever ... 
     // Estamos com problemas 
@@ -1594,8 +1576,7 @@ __open_imp (
             // Put it into the list inside the
             // current process structure
             // and return the fd.
-            printk("__open_imp: #todo isDevice!\n");
-            //refresh_screen();
+            printk("__open_imp: #todo isDevice\n");
             goto fail;
         }
     }
@@ -1629,9 +1610,8 @@ __open_imp (
     }
 
 // fd
-    // #debug
-    // refresh_screen();
     return (int) value;
+
 fail:
     return (int) -1;
 }
@@ -2374,7 +2354,6 @@ int fsList(const char *dir_name)
 
 fail:
     debug_print ("fsList: fail\n");
-    //refresh_screen();
     return (int) -1;
 }
 
@@ -2429,7 +2408,6 @@ fsListFiles (
 fail:
     printk ("fail\n");
 done:
-    //refresh_screen ();
     return;
 }
 
@@ -3103,7 +3081,6 @@ int fs_print_process_cwd(pid_t pid)
                 p->pid, current_target_dir.name);
         }
 
-        //refresh_screen();
         return 0;
     };
 
@@ -3128,7 +3105,6 @@ void fs_show_file_info (file *f)
     // StringSize = (size_t) strlen(f->_tmpfname);
     if ((void*) f->_tmpfname != NULL){
         printk ("Name={%s}\n",f->_tmpfname);
-        //refresh_screen();
     }
 }
 
@@ -3146,8 +3122,6 @@ void fs_show_file_table(void)
             fs_show_file_info(f);
         }
     };
-
-    //refresh_screen();
 }
 
 void fs_show_inode_info (struct inode_d *i)
@@ -3183,7 +3157,6 @@ void fs_show_inode_table(void)
             }
         }
     };
-    //refresh_screen();
 }
 
 void fs_show_root_fs_info(void)
@@ -3216,11 +3189,10 @@ void fs_show_root_fs_info(void)
 
 fail:
     printk("fail\n");
+
 done:
-    //refresh_screen();
     return;
 }
-
 
 /*
  * fsSaveFile:
@@ -3435,7 +3407,6 @@ out_of_range:
     goto fail;
 
     // #debug
-    //refresh_screen();
     //while(1){ asm("hlt"); }
 
 // #importante:
@@ -3451,7 +3422,6 @@ save_file:
 
     //#debug
     //printk("fsSaveFile: save_file: \n"); 
-    //refresh_screen();
 
 // Início da lista.
     i = 0; 
@@ -3636,7 +3606,6 @@ save_file:
 
     //#debug
     //printk("fsSaveFile: reset and while\n"); 
-    //refresh_screen();
 
     //reset_ide0 ();
 
@@ -3705,7 +3674,6 @@ save_file:
  
             //#debug 
             //printk("write_lba\n");
-            //refresh_screen();
             
             // Wait and write!
             
@@ -3766,7 +3734,6 @@ do_save_dir_and_fat:
 
     //debug_print ("fsSaveFile: [DEBUG] do_save_dir_and_fat\n");
     //printk("fsSaveFile: do_save_dir_and_fat:\n"); 
-    //refresh_screen();
 
 // Save root
 // #bugbug: We need to save a directory, not the root.
@@ -3781,19 +3748,15 @@ do_save_dir_and_fat:
     // #debug
     //debug_print ("fsSaveFile: done\n");
     //printk      ("fsSaveFile: done\n");
-    //refresh_screen();
 
     return 0;
 
 fail:
-    debug_print("fsSaveFile: Fail\n");
-    printk     ("fsSaveFile: Fail\n");
-    //refresh_screen ();
+    debug_print("fsSaveFile: fail\n");
+    printk     ("fsSaveFile: fail\n");
     return (int) 1;  // Why 1?
     //return -1;
 }
-
-
 
 /*
  * do_read_file_from_disk: 
@@ -3951,9 +3914,7 @@ EndOfShortcuts:
 
 // #debug
 
-    //printk ("do_read_file_from_disk: FILE={%s}\n",
-    //    file_name);
-    //refresh_screen();
+    //printk ("do_read_file_from_disk: FILE={%s}\n", file_name);
 
 // #bugbug
 // We need to search in the inode list. inode_table[]
@@ -3977,9 +3938,8 @@ EndOfShortcuts:
 // Let's create it if the flags tell us to do that.
     if (Status != TRUE)
     {
-         //#debug
-        printk ("do_read_file_from_disk: [FIXME] File not found!\n");
-        //refresh_screen();
+        //#debug
+        printk ("do_read_file_from_disk: [FIXME] File not found\n");
 
         // Create a new one.
         // #todo: Use sys_create_empty_file.
@@ -3990,8 +3950,7 @@ EndOfShortcuts:
             // #todo:
             // Define the default value for this case.
             buff = (void*) kmalloc(BUFSIZ);
-            if ((void*) buff == NULL)
-            {
+            if ((void*) buff == NULL){
                 printk("do_read_file_from_disk: buff\n");
                 goto fail;
             }
@@ -4012,14 +3971,12 @@ EndOfShortcuts:
                            (char) 0x20 );         // flag 
               //--
 
-              // Ok
-              if (__ret == 0){
-                  debug_print("do_read_file_from_disk: Created new file\n");
-                  //refresh_screen();
-                  goto __go;
-              }
-         }
-
+            // Ok
+            if (__ret == 0){
+                debug_print("do_read_file_from_disk: Created new file\n");
+                goto __go;
+            }
+        }
         printk("do_read_file_from_disk: [FIXME] Can't create new file\n");
         goto fail;
     }
@@ -4143,7 +4100,6 @@ __OK:
 
 // #debug
     //printk ("FILE_AGAIN={%s}\n",file_name);
-    //refresh_screen();
 
 // File size.
 // #bugbug: 
@@ -4187,7 +4143,6 @@ __OK:
         {
             printk ("do_read_file_from_disk: File size out of limits\n");
             printk ("%d bytes \n",FileSize);
-            //refresh_screen();
             return (-1);
         }
         
@@ -4202,7 +4157,6 @@ __OK:
         fp->_base = (char *) kmalloc(buflen);
         if ((void *) fp->_base == NULL){
             printk ("do_read_file_from_disk: Couldn't create a new buffer\n");
-            //refresh_screen();
             return -1;             
         }
         memset(fp->_base, 0, buflen);
@@ -4218,7 +4172,6 @@ __OK:
     //if (FileSize > 1024*1024)
     //{
     //    printk ("do_read_file_from_disk: File size out of limits\n");
-    //    refresh_screen();
     //    return -1;
     //}
 
@@ -4259,7 +4212,6 @@ __OK:
     if (fp->_fsize >= fp->_lbfsize)
     {
         printk ("do_read_file_from_disk: File larger than buffer\n");
-        //refresh_screen();
         fp->_r = fp->_lbfsize;
         fp->_w = fp->_lbfsize;
         fp->_cnt = 0;
@@ -4387,7 +4339,6 @@ __OK:
     //printk ("process name: %s\n",p->__processname);
     //printk ("fd %d\n",fp->_file);
     //printk("do_read_file_from_disk-OUTPUT: %s \n",fp->_base);
-    //refresh_screen();
 
 done:
 // Return fd. Called by open().
@@ -4395,8 +4346,8 @@ done:
 // Here is a good moment to validate the fp structure,
 // not in the beginning of the routine.
     return (int) fp->_file;
+
 fail:
-    //refresh_screen();
     return (int) -1;
 }
 

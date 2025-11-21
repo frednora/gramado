@@ -80,8 +80,6 @@ void test_fat16_find_volume_info(void)
 
 // Show info:    
     printk("Disk name: {%s}\n",name_buffer);
-    refresh_screen();
-
     return;
 
 fail:
@@ -488,7 +486,6 @@ fail:
     //if ( (void*) NameX != NULL )
         // printk ("fsRootDirGetFileSize: %s not found\n", NameX );
 
-    //refresh_screen();
     return (unsigned long) 0;
 
 // Found!
@@ -497,7 +494,6 @@ found:
 
     // #debug
     // printk("arquivo encontrado\n");
-    // refresh_screen();
     // while(1){}
 
 // #debug
@@ -514,14 +510,12 @@ found:
 	//printk ("done: FileSize=%d \n" , FileSize);
 
 	//#debug
-	//refresh_screen();
 	//while(1){ asm("hlt"); }
 
     // #debug
     // printk ("fsGetFileSize: FileSize=%d \n" , FileSize );
-    // refresh_screen ();
 
-    return (unsigned long) ( FileSize & 0x00000000FFFFFFFF );
+    return (unsigned long) (FileSize & 0x00000000FFFFFFFF);
 }
 
 /*

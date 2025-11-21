@@ -250,7 +250,6 @@ int sys_ioctl( int fd, unsigned long request, unsigned long arg )
 
     // #debug
     // We need to see the error messages.
-    //refresh_screen();
 
     return (int) status;
 }
@@ -431,7 +430,6 @@ void sys_set_file_sync(int fd, int request, int data)
 
         //#debug
         //printk("216:\n"); 
-        //refresh_screen();
 
         object->sync.action = 0;
         //object->_flags = (__SWR | __SRD); 
@@ -450,7 +448,6 @@ void sys_set_file_sync(int fd, int request, int data)
 
         //#debug
         //printk("217:\n"); 
-        //refresh_screen();
 
         object->sync.action = 0;
         //object->_flags = (__SWR | __SRD); 
@@ -641,7 +638,6 @@ __OK:
     return (int) __slot;
 
 fail:
-    //refresh_screen();
     return (int) -1;
 }
 
@@ -1030,8 +1026,8 @@ int sys_create_empty_directory(const char *dir_name)
 // #todo
 // the file structure.
     return (int) __ret;
+
 fail:
-    refresh_screen();
     return (int) -1;
 }
 

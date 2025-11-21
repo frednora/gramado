@@ -454,7 +454,6 @@ int sys_pipe( int *pipefd, int flags )
 
     //#debug
     //printk ("sys_pipe: %d %d\n",slot1,slot2);
-    //refresh_screen();
 
 // OK
     debug_print("sys_pipe: done\n");

@@ -375,7 +375,6 @@ __found:
 
     // #debug
     // printk ("file FOUND!\n");
-    // refresh_screen();
     // while(1){}
 
 // Cluster
@@ -576,9 +575,8 @@ __loop_next_entry:
     goto __loop_next_entry;
 
 fail:
-    debug_print("fsLoadFile: [FAIL]\n");
+    debug_print("fsLoadFile: fail\n");
     printk     ("fsLoadFile: [FAIL] file={%s}\n", file_name );
-    refresh_screen();
     return (int) -1;
 }
 
@@ -693,11 +691,9 @@ fsLoadProgramFromGRAMADO (
     return 0;
 
 fail:
-    refresh_screen();
     return (int) -1;
 }
 
-// -------------------------------------
 // fsLoadProgramFromDE:
 // Load an image from DE/.
 // IN:
@@ -769,7 +765,6 @@ fsLoadProgramFromDE (
     return 0;
 
 fail:
-    refresh_screen();
     return (int) -1;
 }
 
@@ -1195,13 +1190,10 @@ fs_load_path (
     };   
 
 fail:
-    debug_print("fs_load_path: Fail\n");
-    printk     ("fs_load_path: Fail\n");
-    refresh_screen();
-    return (-1);
+    debug_print("fs_load_path: fail\n");
+    printk     ("fs_load_path: fail\n");
+    return (int) (-1);
 }
-
-// -------------
 
 /*
  * fsLoadFileFromCurrentTargetDir:
@@ -1527,10 +1519,6 @@ fail:
     // We still need this kind of break,
     // cause the fs infrastructure is still immature.
     // panic("fs_load_image: fail\n");
-
-    // #test
-    // We're supressing that old break and printing a message instead.
-    refresh_screen();
 
     return (int) -1;
 }

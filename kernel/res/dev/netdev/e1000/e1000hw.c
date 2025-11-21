@@ -364,7 +364,6 @@ static void __initialize_tx_support(struct intel_nic_info_d *d)
             d->legacy_tx_descs[i].addr2, 
             d->tx_buffers_virt[i] );
     };
-    refresh_screen();
     while(1){}
 */
 
@@ -390,14 +389,12 @@ static void __initialize_tx_support(struct intel_nic_info_d *d)
         0x3804, 
         (unsigned int) (d->tx_descs_phys >> 32) );   //high
 
-
 /*
 // #debug
     printk ("PA_LOW={%x} PA_HIGH={%x} VA={%x} \n",
         d->tx_descs_phys,
         (d->tx_descs_phys >> 32), 
         d->legacy_tx_descs );
-    refresh_screen();
     while(1){}
 */
 
@@ -526,9 +523,8 @@ static void __initialize_tx_support(struct intel_nic_info_d *d)
     
 	
 	//iow32(d, TCTL, TCTL_EN);
-	
+
 	//printk("nic_i8254x_reset: Done\n");
-	//refresh_screen();	
 	
 	//endereço físico  dos rings;
 	//printk("tx_ring_pa=%x rx_ring_pa=%x \n", 
@@ -608,7 +604,6 @@ static void __initialize_rx_support(struct intel_nic_info_d *d)
             d->legacy_rx_descs[i].addr2, 
             d->rx_buffers_virt[i] );
     };
-    refresh_screen();
     while(1){}
 */
 
@@ -636,7 +631,6 @@ static void __initialize_rx_support(struct intel_nic_info_d *d)
         d->rx_descs_phys,
         (d->rx_descs_phys >> 32), 
         d->legacy_rx_descs );
-    refresh_screen();
     while(1){}
 */
 
@@ -725,15 +719,11 @@ static void __e1000_setup_irq(int irq_line)
     printk("__e1000_setup_irq: idt_num={%d}\n", idt_num);
     printk("__e1000_setup_irq: handler={%x}\n", handler);
 	//printk ("PCIRegisterIRQHandler: pin={%d}\n",currentNIC->pci->irq_pin);//shared INTA#
-	//refresh_screen();
 	//while(1){}
 	//#debug interrupção=41 
 
-	//refresh_screen();
-	//while(1){}
-
 //
-// Creating IDT entry.
+// Creating IDT entry
 //
 
 // Chamando asm:
@@ -840,11 +830,9 @@ e1000hw_send(
     {
         // Nothing
     };
-
-// done
     return 0;
+
 fail:
-    refresh_screen();
     return (int) -1;
 }
 
@@ -1413,17 +1401,14 @@ DDINIT_e1000 (
     unsigned char irq_line = 
         (unsigned char) pciGetInterruptLine(bus,dev);
 
-
-    // The value we get above.
+    // The value we get above
     if (irq_line != pci_device->irq_line)
         panic("e1000: irq_line");
 
     //#debug
     //printk("Done irqline %d\n",irq_line);   
-    //refresh_screen();
 
-// irq
-    __e1000_setup_irq(irq_line);
+    __e1000_setup_irq(irq_line);  // irq line
 
 // Saving in the Intel NIC structure.
     currentNIC->irq_line = (unsigned char) pci_device->irq_line;
@@ -1438,7 +1423,6 @@ DDINIT_e1000 (
 
     //#debug
     //printk ("e1000_init_nic: Test #breakpoint\n");
-    //refresh_screen();
     //while(1){ asm("hlt"); }
 
 // 0 = no errors

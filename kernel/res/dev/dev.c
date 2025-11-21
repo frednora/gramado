@@ -124,7 +124,6 @@ file *devmgr_search_in_dev_list(char *path)
                     {
                         // #debug
                         printk("Device found!\n");
-                        //refresh_screen();
                         // OUT:
                         // Return the file pointer for 
                         // the file structure of this device.

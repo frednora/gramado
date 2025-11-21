@@ -182,12 +182,8 @@ void ata_show_ata_info_for_boot_disk(void)
         return;
     }
 
-// --------------------------------
-    // Show the number of blocks.
+// Show the number of blocks
     printk("Number of blocks: %d\n",
         ata_device->dev_total_num_sector );
-
-// done
-    refresh_screen();
 }
 

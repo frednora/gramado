@@ -120,9 +120,8 @@ search_in_dir (
         //    stringSize++;
         //}
         //printk ("Name_Desired={%s}\n",Name_Desired);
-            
+    
             //#debug
-        //refresh_screen();
             //while(1){}
     
         if (stringSize == 10){
@@ -143,10 +142,8 @@ search_in_dir (
         }
     }
 
-// Copy
-// Copy all the 11 chars.
+// Copy all the 11 chars and finalize string
     strncpy(Name_Desired, file_name, 11);
-// Finalize
     Name_Desired[11] = 0;
 //---------------------------
 
@@ -215,13 +212,12 @@ search_in_dir (
             // Nothing
         }
 
-        // Próxima entrada. Repete 512 vezes.
-        j += 0x20;
+        j += 0x20;  // Next entry. Repeat it 512 times
     };
 
 fail:
     //debug_print("search_in_dir: Not found\n");
-    printk     ("search_in_dir: Not found %s\n",Name_Desired);
+    printk("search_in_dir: Not found %s\n",Name_Desired);
     // return FALSE;
     return (int) -1;
 }
@@ -232,7 +228,7 @@ int search_in_root(const char *file_name)
     // #test #todo
     // unsigned long dir_va = (unsigned long) get_rootdir_va();
 
-// Pointer validation.
+// parameter:
     if ((void *) file_name == NULL){
         debug_print("search_in_root: file_name\n");
         goto fail;
@@ -343,8 +339,7 @@ findEmptyDirectoryEntry (
         if (dir[j] == 0){
             return (int) i; 
         }
-        // Next entry
-        j = (int) (j + EntrySizeInBytes);
+        j = (int) (j + EntrySizeInBytes);  // Next entry
     };
 
 fail:

@@ -76,7 +76,6 @@ uint32_t diskPCIScanDevice(int class)
 
     // #debug
     //printk ("diskPCIScanDevice:\n");
-    //refresh_screen ();
 
 // Probe
 
@@ -179,7 +178,6 @@ int atapciSetupMassStorageController(struct pci_device_d *D)
 // #importante:
 // Aqui detectamos o tipo de dispositivo com base 
 // nas informações de classe e subclasse.
-
 
 //
 // == #SCSI ========
@@ -408,7 +406,6 @@ int atapciSetupMassStorageController(struct pci_device_d *D)
 fail:
     //ata_port.used = FALSE;
     //ata_port.magic = 0;
-    refresh_screen();
     return (int) PCI_MSG_ERROR;
 }
 

@@ -36,7 +36,7 @@ __load_sequential_sectors (
     unsigned int L_current_ide_port = 
         (unsigned int) ata_get_current_ide_port_index();
 
-    for ( i=0; i < sectors; i++ )
+    for (i=0; i < sectors; i++)
     {
         next_lba = (unsigned long) (lba + i);
 
@@ -75,7 +75,6 @@ fatClustToSect (
     return (unsigned long) (C * spc) + first_data_sector;
 }
 
-
 /*
  * fatLoadCluster:
  *     Carrega um cluster.
@@ -85,7 +84,6 @@ fatClustToSect (
  *         spc     ~ Número de setores por cluster.
  * Começa do primeiro setor do cluster.
  */
- 
 void 
 fatLoadCluster ( 
     unsigned long sector, 
@@ -93,16 +91,12 @@ fatLoadCluster (
     unsigned long spc )
 {
     unsigned long i=0;
-    unsigned long SectorSize = 512;  //#todo: via argument.
+    unsigned long SectorSize = 512;  //#todo: via argument
+    int FakeDiskId = 0;  //#todo: fake disk id
 
-    int FakeDiskId = 0;  //#todo: fake disk id.
-
-    for ( i=0; i<spc; i++ )
-    {
-        read_lba( 
-            FakeDiskId,  // Fake disk id. #todo
-            address,       // Address
-            sector + i );  // LBA
+    for (i=0; i<spc; i++){
+        // IN: disk id, address, lba
+        read_lba( FakeDiskId, address, (sector + i) );
         address = (address + SectorSize); 
     };
 }
@@ -128,10 +122,7 @@ ata_load_boot_metafile (
         return;
     }
 
-    __load_sequential_sectors ( 
-        buffer, 
-        first_lba, 
-        SizeInSectors );
+    __load_sequential_sectors(  buffer, first_lba, SizeInSectors );
 }
 
 void fs_load_mbr(unsigned long mbr_address)
@@ -146,10 +137,7 @@ void fs_load_mbr(unsigned long mbr_address)
 
     debug_print ("fs_load_rootdir:\n");
 
-    __load_sequential_sectors ( 
-        MBR_Address, 
-        MBR_Lba, 
-        MBR_Size );
+    __load_sequential_sectors ( MBR_Address, MBR_Lba, MBR_Size );
 }
 
 /*
@@ -201,7 +189,7 @@ fs_load_fat(
 // Load
     __load_sequential_sectors ( FatAddress, FatLBA, FatSizeInSectors );
 
-// Change cache state.
+// Change cache state
     g_fat_cache_loaded = FAT_CACHE_LOADED;
 }
 

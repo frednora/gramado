@@ -34,8 +34,7 @@ __do_save_sequence (
 
 // #todo:
 // #bugbug:
-// How much is the max number of cluster we can save 
-// into this disk.
+// How much is the max number of cluster we can save into this disk.
 
     unsigned int L_current_ide_port = 
         (unsigned int) ata_get_current_ide_port_index();
@@ -71,7 +70,7 @@ __do_save_sequence (
         lba_off    += 1;
     };
     
-// ok. No errors.
+// ok. No errors
     return 0;
 }
 
@@ -94,6 +93,7 @@ fatWriteCluster (
     unsigned long spc )
 {
     unsigned long i=0;
+    int FakeDiskId = 0;  //#todo: fake disk id
 
     // #todo
     // We need some limits here for now.
@@ -103,13 +103,9 @@ fatWriteCluster (
         return;
     }
 
-    int FakeDiskId = 0;  //#todo: fake disk id.
-    for (i=0; i < spc; i++)
-    {
-        write_lba( 
-            FakeDiskId,        // Fake disk id. #todo
-            address,           // Address 
-            (sector + i) );    // LBA
+    for (i=0; i<spc; i++){
+        // IN: disk id, address, LBA
+        write_lba( FakeDiskId, address, (sector + i) );
         address = (address +512); 
     };
 
@@ -182,8 +178,8 @@ fs_save_fat (
         (size_t) fat_size );
 
 // #bugbug: Provisory
-    debug_print("fs_save_fat: Done\n");
-    printk     ("fs_save_fat: Done\n"); 
+    //debug_print("fs_save_fat: Done\n");
+    //printk     ("fs_save_fat: Done\n"); 
 
     return 0;
 }
@@ -223,8 +219,8 @@ fs_save_rootdir (
         (size_t) root_size );    // Size in sectors.
 
 // #bugbug: Provisory
-    debug_print("fs_save_rootdir: Done\n");
-    printk     ("fs_save_rootdir: Done\n"); 
+    //debug_print("fs_save_rootdir: Done\n");
+    //printk     ("fs_save_rootdir: Done\n"); 
 
     return 0;
 }
