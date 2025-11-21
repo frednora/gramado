@@ -3,12 +3,16 @@
 // into the backbuffer and display it into the frontbuffer.
 // Created by Fred Nora.
 
+// comp.c:
+// stays focused on buffer management, composition, and flush logic.
+
 #include "../ds.h"
 
 // It manages the compositor behavior.
 struct compositor_d  Compositor;
 
 // Spare buffer
+struct spare_buffer_clip_info_d  SpareBufferClipInfo;
 char *spare_128kb_buffer_p;
 
 // #todo
@@ -47,6 +51,28 @@ static void direct_draw_mouse_pointer(void);
 // #todo
 // trocar o nome dessa systemcall.
 // refresh screen será associado à refresh all windows.
+// Initialize the spare buffer clipping info
+void setup_spare_buffer_clip(unsigned long width,
+                             unsigned long height,
+                             unsigned long bpp,
+                             void *base)
+{
+    // Mark as not initialized until all fields are set
+    SpareBufferClipInfo.initialized = 0;
+
+    SpareBufferClipInfo.width  = width;
+    SpareBufferClipInfo.height = height;
+    SpareBufferClipInfo.bpp    = bpp;
+
+    // Calculate pitch: width * bytes per pixel
+    SpareBufferClipInfo.pitch  = width * bpp;
+
+    // Base pointer to buffer memory
+    SpareBufferClipInfo.base   = base;
+
+    // Now mark as initialized
+    SpareBufferClipInfo.initialized = 1;
+}
 
 
 //==============================================================
@@ -84,6 +110,9 @@ static void direct_draw_mouse_pointer(void);
 // decide whether to copy/blit the buffer into the global backbuffer.
 void *comp_create_slab_spare_128kb_buffer(size_t size_in_kb)
 {
+
+    SpareBufferClipInfo.initialized = FALSE;
+
 // Device info
 // #bugbug
 // If you ever change resolution or bpp, recompute the spare size before writing.
@@ -109,11 +138,28 @@ void *comp_create_slab_spare_128kb_buffer(size_t size_in_kb)
 
     if (TotalSpareInKB > size_in_kb){
         addr = (unsigned long) BackbufferAddress + BackbufferSizeInBytes;
+
+        // --- Setup clipping info for spare buffer ---
+        SpareBufferClipInfo.initialized = FALSE;
+
+        SpareBufferClipInfo.bpp    = DeviceBPP;  // bytes per pixel
+        SpareBufferClipInfo.pitch  = Pitch;      // Same of the device
+
+        SpareBufferClipInfo.width  = DeviceWidth;   // align with OS-supported width
+        SpareBufferClipInfo.height = (TotalSpareInBytes/Pitch);
+
+        SpareBufferClipInfo.base   = (void*) addr;
+
+        SpareBufferClipInfo.initialized = TRUE;
+        // -------------------------------------------
+
         return (void*) addr;
     } else {
+        SpareBufferClipInfo.initialized = FALSE;
         return NULL;
     }
 // fail
+    SpareBufferClipInfo.initialized = FALSE;
     return NULL;
 }
 
@@ -133,12 +179,89 @@ void *compCreateCanvasUsingSpareBuffer(void)
     if ((void*) b == NULL){
         return NULL;
     }
+
+    spare_128kb_buffer_p = b;
+
+// Draw something early.
+// First: draw a test pattern into the spare buffer
+    if (CONFIG_TEST_SPARE_BUFFER == 1){
+        comp_draw_into_spare_buffer();
+    }
+
 // Draw something early.
     // Draw a red pixel at (0,0) inside the spare buffer
-    putpixel0(0xFFFF0000, 0, 0, ROP_COPY, (unsigned long) b);
+    //putpixel0(0xFFFF0000, 0, 0, ROP_COPY, (unsigned long) b);
     return (void *) b;
 };
 
+// Draw a pixel into the spare buffer. Using clipping.
+void 
+spare_putpixel0(
+    unsigned int color, 
+    unsigned long x, 
+    unsigned long y, 
+    unsigned long rop )
+{
+// Not initialized.
+    if (SpareBufferClipInfo.initialized != TRUE)
+        return;
+
+    if (SpareBufferClipInfo.width == 0)
+        return;
+    if (SpareBufferClipInfo.height == 0)
+        return;
+
+// Clipping
+// Using 'unsigned long'.
+    if (x >= SpareBufferClipInfo.width)
+        return;
+    if (y >= SpareBufferClipInfo.height)
+        return;
+
+// # PF
+// #todo: Check against the limits this application can access
+    if ((void*) SpareBufferClipInfo.base == NULL)
+        return;
+
+// Draw
+    putpixel0(
+        color, 
+        x, y, 
+        rop, 
+        (unsigned long) SpareBufferClipInfo.base );
+}
+
+// Test drawing directly into the spare buffer using putpixel0.
+// Only draws pixels, does not blit or refresh.
+void comp_draw_into_spare_buffer(void)
+{
+
+/*
+// Old test without clipping
+    if ((void*) spare_128kb_buffer_p == NULL)
+        return;
+    unsigned long canvas = (unsigned long) spare_128kb_buffer_p;
+    // Draw a few colored pixels in different positions
+    putpixel0(0xFFFF0000, 0, 0, ROP_COPY, canvas);
+    putpixel0(0xFFFF0000, 9, 0, ROP_COPY, canvas);
+    putpixel0(0xFFFF0000, 9, 9, ROP_COPY, canvas);
+    putpixel0(0xFFFF0000, 0, 9, ROP_COPY, canvas);
+*/
+
+// New test using clipping
+    spare_putpixel0(0xFFFF0000, 0, 0, ROP_COPY);
+    spare_putpixel0(0xFFFF0000, 9, 0, ROP_COPY);
+    spare_putpixel0(0xFFFF0000, 9, 9, ROP_COPY);
+    spare_putpixel0(0xFFFF0000, 0, 9, ROP_COPY);
+
+/*
+    spare_putpixel0(
+        0xFFFF0000, 
+        (SpareBufferClipInfo.width >> 1), 
+        (SpareBufferClipInfo.height >> 1), 
+        ROP_COPY );
+*/
+}
 
 void comp_test_spare_buffer(void)
 {
@@ -154,6 +277,26 @@ void comp_test_spare_buffer(void)
         dst[i] = src[i];
     };
 }
+
+// Copy from spare buffer (0,0) into backbuffer at (dst_x, dst_y).
+void comp_blit_spare_to_backbuffer(
+    int dst_x, int dst_y,
+    int width, int height )
+{
+    unsigned long backbuffer_addr = (unsigned long) rtl_get_system_metrics(12);
+    unsigned long spare_addr      = (unsigned long) spare_128kb_buffer_p;
+
+    if (!spare_addr || !backbuffer_addr)
+        return;
+
+    // Use rectangle worker with source fixed at (0,0).
+    __refresh_rectangle1(
+        width, height,
+        dst_x, dst_y, backbuffer_addr,   // destination
+        0, 0, spare_addr                 // source (always top-left)
+    );
+}
+
 
 // ??
 // Using the kernel to show the backbuffer.
@@ -598,10 +741,15 @@ void comp_display_desktop_components(void)
 // Refresh only the components that was changed by the painter.
     wmReactToPaintEvents();
 
+//---------
 // #test
 // Copy bytes from the spare buffer to the 
 // top left corner of the screen.
-    // comp_test_spare_buffer();
+    //comp_test_spare_buffer();
+    comp_blit_spare_to_backbuffer(100, 100,10,10);
+    //refresh_screen(); //whole screen
+    gws_refresh_rectangle ( 100, 100, 10, 10 );
+//---------
 
 // Show the mouse cursor in the screen.
     if (gUseMouse == TRUE){
@@ -761,13 +909,16 @@ This was the first experiment in order to have a future
    small and big windows in the side-buffer
 */
 
-/*
-    spare_128kb_buffer_p = (void *) compCreateCanvasUsingSpareBuffer();
-    if ((void*) spare_128kb_buffer_p == NULL){
-        printf("comp.c: on compCreateCanvasUsingSpareBuffer()\n");
-        exit(1);
+// -------------------------
+    if (CONFIG_TEST_SPARE_BUFFER == 1)
+    {
+        spare_128kb_buffer_p = (void *) compCreateCanvasUsingSpareBuffer();
+        if ((void*) spare_128kb_buffer_p == NULL){
+            printf("comp.c: on compCreateCanvasUsingSpareBuffer()\n");
+            exit(1);
+        }
     }
-*/
+// -------------------------
 
 // ...
 

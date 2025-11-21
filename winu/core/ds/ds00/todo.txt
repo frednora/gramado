@@ -1,0 +1,7 @@
+
+Optimization required.
+
+ The time spend drawing and refreshing the objects or 
+ the whole screen has a by impact in the system responsiveness,
+ the keyboard gets slower for example.
+ We need to reduce the painting refreshing operations. 

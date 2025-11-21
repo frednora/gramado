@@ -1,0 +1,172 @@
+ Terms used in graphics systems.
+
+- Drawing into the offscreen canvas is usually called **rendering**.  
+- Copying from the canvas to the backbuffer is typically called a **blit** (block transfer) or **buffer copy**.  
+- Copying from the backbuffer to the frontbuffer (LFB) is called **buffer swap** or **page flip**.  
+
+---------------------------------------------------
+Step 1:
+Drawing into the offscreen canvas is usually called rendering.
+
+---------------------------------------------------
+Step 2:
+Copying from the canvas to the backbuffer is typically called 
+a blit (block transfer) or buffer copy.
+
+---------------------------------------------------
+Step 3:
+Copying from the backbuffer to the frontbuffer (LFB) 
+is called buffer swap or page flip.
+
+---
+
+###  Detailed Explanation of Each Step
+
+1. **Rendering (Canvas → Offscreen Buffer)**  
+   - When the graphics system draws objects into an offscreen buffer (your "canvas"), this is the **rendering stage**.  
+   - Rendering means the GPU (or CPU in older systems) executes drawing commands to produce pixel data in memory.  
+   - This offscreen buffer is not visible yet; it’s just a staging area for the image.
+
+2. **Blitting / Copying (Canvas → Backbuffer)**  
+   - Moving the rendered image from the canvas into the backbuffer is generally referred to as a **blit** (short for *block image transfer*).  
+   - In graphics APIs, this can also be called **copying**, **buffer transfer**, or **resolve** (especially if multisampling is involved).  
+   - The backbuffer is sized to match the display resolution and holds the complete frame that will be shown next.
+
+3. **Buffer Swap / Page Flip (Backbuffer → Frontbuffer)**  
+   - The final step is making the backbuffer visible by swapping it with the frontbuffer.  
+   - This operation is called a **buffer swap** in OpenGL/DirectX terminology, or a **page flip** in lower-level graphics systems.  
+   - The frontbuffer is the actual memory read by the display hardware (the linear frame buffer, LFB).  
+   - By swapping, the GPU avoids copying large amounts of data; instead, it just changes which buffer pointer the display hardware reads from.
+
+---
+
+###  Summary Table
+
+| Step | Source → Destination               | Common Term |
+|------|----------------------              |-------------|
+| 1    | Drawer → Canvas (offscreen buffer) | **Rendering** |
+| 2    | Canvas → Backbuffer                | **Blit / Buffer Copy** |
+| 3    | Backbuffer → Frontbuffer (LFB)     | **Buffer Swap / Page Flip** |
+
+Sources: 
+
+---
+
+So, in your system:  
+- **Render** into the canvas.  
+- **Blit** the canvas into the backbuffer.  
+- **Swap** the backbuffer into the frontbuffer.  
+
+=========================================
+
+Step 1 → Rendering: drawing the object/model into the offscreen canvas.
+Step 2 → Blitting/Copying: transferring that canvas into the backbuffer.
+Step 3 → Buffer Swap/Page Flip: presenting the backbuffer to the frontbuffer (the LFB).
+
+=========================================
+ Rendering:
+ The term os looking for is 'rendering'.
+ It is the term used when the object or model is drawn into the offscreen canvas.
+
+=========================================
+ Refresh:
+In some systems, developers or documentation loosely use "refresh" 
+to mean copying or updating the frontbuffer from the backbuffer, 
+especially when the GPU doesn’t support true page flipping and 
+instead performs a blit (copy) operation.
+
+=========================================
+ Mapped:
+Mapped in X11:
+ A window is mapped when the X server has assigned it a place in the screen’s window hierarchy.
+ That means the window has coordinates and stacking order, so the server knows where it should appear if drawn.
+ Mapping does not guarantee that the window’s pixels have already been copied into the frontbuffer (LFB).
+
+Visibility vs. Mapping:
+ A mapped window is eligible to be displayed, but whether it is actually visible depends on other factors: it could be obscured by other windows, minimized, or not yet drawn into its backing store.
+ The X server will only copy/blit the window’s contents into the framebuffer during the next compositing/refresh cycle.
+ 
+ It captures the idea that:
+ The window has been assigned a position and stacking order in the screen hierarchy.
+ The system now knows where it belongs in the final buffer (LFB).
+ But whether its pixels are actually visible depends on compositing, overlapping windows, and whether the client has drawn into it yet.
+
+ In older X terminology, “mapped” essentially meant that 
+ the window was now displayed (copied into the frontbuffer / LFB).
+ In X11, a window is “mapped” when it becomes visible on the screen.
+ Technically, mapping means the window has been associated with a region of the frontbuffer (the display’s framebuffer) so that the X server will actually draw it during refresh.
+ Before mapping, a window can exist (created, allocated resources, drawn into its own offscreen backing store), but it won’t be shown.
+ Once mapped, the window is part of the visible hierarchy, and its contents are copied/blitted into the screen’s framebuffer during the display cycle.
+
+========================================================================
+
+Perfect, let’s build a glossary of the most common terms used in graphics programming for the operation of **transferring blocks of pixel data between buffers**. These are the words you’ll encounter across APIs (X11, DirectX, OpenGL, Vulkan, etc.) and in graphics literature:
+
+---
+
+###  Terms for Buffer-to-Buffer Transfers
+
+- **Blit (Block Image Transfer)**  
+  - The classic term for copying a rectangular block of pixels from one buffer to another.  
+  - Often optimized to handle transparency, scaling, or raster operations.  
+  - Originates from early 2D graphics systems (Amiga, X11, Windows GDI).
+
+- **BitBlt / Bit Block Transfer**  
+  - Windows GDI’s specific name for blitting.  
+  - Supports raster operations (ROP codes) like copy, XOR, AND, etc.  
+  - Example: `BitBlt()` API call in Win32.
+
+- **Copy / Buffer Copy**  
+  - A generic term in modern APIs (DirectX, Vulkan, OpenGL) for moving data between buffers.  
+  - Example: `glCopyTexImage2D`, `vkCmdCopyBuffer`.
+
+- **Transfer / Resolve**  
+  - Used when moving data between buffers with different formats or usages.  
+  - “Resolve” is common in multisampling: copying from a multisampled buffer into a single-sampled buffer.  
+  - Example: `vkCmdResolveImage`.
+
+- **Present**  
+  - DirectX term for showing the backbuffer on the screen.  
+  - Involves transferring or flipping the backbuffer into the frontbuffer.  
+  - Example: `IDXGISwapChain::Present`.
+
+- **Swap / Page Flip**  
+  - Instead of copying, the GPU swaps pointers so the backbuffer becomes the frontbuffer.  
+  - Very efficient because no pixel data is moved.  
+  - Common in double-buffered rendering.
+
+- **Upload / Download**  
+  - Transfer between system memory and GPU memory.  
+  - “Upload” → CPU → GPU (e.g., textures, vertex data).  
+  - “Download” → GPU → CPU (e.g., screenshots, readbacks).
+
+- **DMA Transfer (Direct Memory Access)**  
+  - Hardware-level term for moving blocks of data without CPU intervention.  
+  - Used under the hood for blits and buffer copies.
+
+- **Composite**  
+  - In window systems (X11, modern compositors), compositing means combining multiple buffers (windows, layers) into a single framebuffer.  
+  - Involves blitting plus blending.
+
+---
+
+### 🗂 Summary Table
+
+| Term        | Context / Usage |
+|-------------|-----------------|
+| **Blit**    | General pixel block transfer |
+| **BitBlt**  | Windows GDI blitting with raster ops |
+| **Copy**    | Generic buffer-to-buffer transfer |
+| **Resolve** | Multisample → single-sample transfer |
+| **Present** | DirectX swap chain display |
+| **Swap**    | Page flip (backbuffer → frontbuffer) |
+| **Upload**  | CPU → GPU transfer |
+| **Download**| GPU → CPU transfer |
+| **DMA**     | Hardware-level block transfer |
+| **Composite** | Combining multiple buffers into one |
+
+---
+
+ So, “blit” is the classic umbrella term, but depending on the API and 
+ context you’ll see these variations.  
+

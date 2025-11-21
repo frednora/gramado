@@ -26,5 +26,7 @@
 // see: rect.c
 #define USE_KERNEL_TO_DRAW_RECTANGLES  1
 
+#define CONFIG_TEST_SPARE_BUFFER  0
+
 #endif    
 
