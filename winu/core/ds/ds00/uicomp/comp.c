@@ -364,6 +364,7 @@ void reactRefreshDirtyWindows(void)
 // Called by compose.
 // + We need to encapsulate the variables used by this routine
 //   to prevent about concorrent access problems.
+
 // #bugbug
 // This is not a effitient way of doing this.
 // We got to refresh folowind the bottom top order.
@@ -379,6 +380,8 @@ void reactRefreshDirtyWindows(void)
 
     struct gws_window_d *w;
 
+    int fOnlyValidate = FALSE;
+
 // Is the root window a valid window
 
 // Get the window pointer, refresh the windows retangle via KGWS and 
@@ -392,19 +395,32 @@ void reactRefreshDirtyWindows(void)
             {
                 if (w->dirty == TRUE)
                 {
-                    gws_refresh_rectangle ( 
-                        w->absolute_x, 
-                        w->absolute_y, 
-                        w->width, 
-                        w->height );
 
-                    // We're done.
-                    // We do the other windows in the next round.
-                    if (w == __root_window){
-                       validate_window(w);
-                       return;
+                    // If the root window was refreshed,
+                    // there is no need to refresh any other window,
+                    // so, lets simply validate them.
+                    if (fOnlyValidate != TRUE)
+                    {
+                        gws_refresh_rectangle ( 
+                            w->absolute_x, 
+                            w->absolute_y, 
+                            w->width, 
+                            w->height );
                     }
+
+                    // Validate the window we refreshed.
                     validate_window(w);
+                    // The window was the root.
+                    // There is no need to refresh anyother
+                    // #bugbug: But they are still marked as dirty.
+                    // For now, we're gonna refresh them in the next round,
+                    // but we can simple validate all the rest.
+                    if (w == __root_window)
+                    {
+                        // Continue the loop,
+                        // but now we will only validate the windows, not refresh.
+                        fOnlyValidate = TRUE;
+                    }
                 }
             }
         }
@@ -741,15 +757,18 @@ void comp_display_desktop_components(void)
 // Refresh only the components that was changed by the painter.
     wmReactToPaintEvents();
 
-//---------
-// #test
-// Copy bytes from the spare buffer to the 
-// top left corner of the screen.
-    //comp_test_spare_buffer();
-    comp_blit_spare_to_backbuffer(100, 100,10,10);
-    //refresh_screen(); //whole screen
-    gws_refresh_rectangle ( 100, 100, 10, 10 );
-//---------
+    if (CONFIG_TEST_SPARE_BUFFER == 1)
+    {
+        //---------
+        // #test
+        // Copy bytes from the spare buffer to the 
+        // top left corner of the screen.
+        //comp_test_spare_buffer();
+        comp_blit_spare_to_backbuffer(100, 100,10,10);
+        gws_refresh_rectangle ( 100, 100, 10, 10 );
+        //refresh_screen(); //whole screen
+        //---------
+    }
 
 // Show the mouse cursor in the screen.
     if (gUseMouse == TRUE){
