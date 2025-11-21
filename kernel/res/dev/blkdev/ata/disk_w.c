@@ -147,7 +147,7 @@ ata_store_boot_metafile (
         (size_t) size_in_sectors );
 }
 
-// Save fat into the disk.
+// Save FAT into the disk.
 // Low level. It doesn't check the status of the fat cache.
 int 
 fs_save_fat ( 
@@ -156,13 +156,11 @@ fs_save_fat (
     size_t fat_size )
 {
 
-// #bugbug: 
-// Debug provisório.
-    debug_print ("fs_save_fat:\n");
-    printk      ("Saving fat\n");
-    refresh_screen();
+// #bugbug
+    debug_print("fs_save_fat:\n");
+    printk("Saving FAT\n");
 
-// Parameters
+// Parameters:
     if (fat_address == 0){
         panic("fs_save_fat: fat_address\n");
     }
@@ -186,16 +184,11 @@ fs_save_fat (
 // #bugbug: Provisory
     debug_print("fs_save_fat: Done\n");
     printk     ("fs_save_fat: Done\n"); 
-    refresh_screen();
 
     return 0;
 }
 
-/*
- * fs_save_rootdir:
- *     Salva o diretório raiz no disco.
- *     @todo: Identificar parâmetros do sistema de arquivos atual. 
- */
+// Save root dir into the disk
 int 
 fs_save_rootdir ( 
     unsigned long root_address, 
@@ -203,14 +196,11 @@ fs_save_rootdir (
     size_t root_size )
 {
 
-// #bugbug: 
-// Debug
-    debug_print ("fs_save_rootdir:\n");
-    printk      ("Saving rootdir\n");
-    refresh_screen();
+// #bugbug
+    debug_print("fs_save_rootdir:\n");
+    printk("Saving rootdir\n");
 
-// Filters
-
+// parameters:
     if (root_address == 0){
         panic("fs_save_rootdir: root_address\n");
     }
@@ -224,7 +214,7 @@ fs_save_rootdir (
         panic("fs_save_rootdir: root_size\n");
     }
 
-// Do save!
+// Save
 // ata_get_current_ide_port_index()
     __do_save_sequence(
         ATACurrentPort.g_current_ide_port_index,
@@ -235,7 +225,6 @@ fs_save_rootdir (
 // #bugbug: Provisory
     debug_print("fs_save_rootdir: Done\n");
     printk     ("fs_save_rootdir: Done\n"); 
-    refresh_screen();
 
     return 0;
 }

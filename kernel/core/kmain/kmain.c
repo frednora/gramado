@@ -667,7 +667,6 @@ static int __test_initialize_ap_processor(int apic_id)
         // (Step 1) Load AP image into memory.
         // Address 0x8000, vector 0x08
         printk("Loading AP image ...\n");
-        //refresh_screen();
 
         // #todo: Check return value.
         fsLoadFile ( 
@@ -680,12 +679,11 @@ static int __test_initialize_ap_processor(int apic_id)
 
         // (Step 2)
         printk("Sending INIT IPI ...\n");
-        refresh_screen();
         local_apic_send_startup(1,vector);  // APIC ID 1
 
         // (Step 3)
         printk("Sending STARTUP IPI twice ...\n");
-        refresh_screen();
+        refresh_screen(); //wait
         Send_STARTUP_IPI_Twice(1);
 
         // Check if we have at least one AP running.
@@ -694,7 +692,6 @@ static int __test_initialize_ap_processor(int apic_id)
                 ap_signature_pointer[1] == 0xA0 )
             {
                 printk("AP is running!\n");
-                //refresh_screen();
                 // Our first AP processor is running
                 smp_info.nr_ap_running = 1;
                 break;
@@ -854,7 +851,6 @@ static int lateinit(void)
 // see: pty.c
     // #debug
     //printk (":: Creating legacy ptys\n");
-    //refresh_screen();
 
     //PROGRESS(":: PTY\n");
     tty_initialize_legacy_pty();

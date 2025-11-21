@@ -766,7 +766,6 @@ void comp_display_desktop_components(void)
         //comp_test_spare_buffer();
         comp_blit_spare_to_backbuffer(100, 100,10,10);
         gws_refresh_rectangle ( 100, 100, 10, 10 );
-        //refresh_screen(); //whole screen
         //---------
     }
 

@@ -575,7 +575,6 @@ static int __ide_identify_device(uint8_t nport)
     rw_size_in_sectors = in8( ata_port[nport].cmd_block_base_address + ATA_REG_SECCOUNT );
     if (rw_size_in_sectors>0){
        printk("::#breakpoint NumberOfSectors %d \n",rw_size_in_sectors);
-       refresh_screen();
        while(1){}
     }
     //===============
@@ -671,7 +670,6 @@ static int __ide_identify_device(uint8_t nport)
     if( Max_LBA > 0 )
     {
         printk("::#breakpoint Max_LBA %d \n",Max_LBA);
-        //refresh_screen();
         //while(1){}
         
         ide_port[nport].size_in_sectors = (unsigned long) Max_LBA;
@@ -1171,7 +1169,6 @@ static int ata_initialize_ide_device(char port)
         //{
         //     printk ("#debug: >>>> ata Size %d\n", 
         //         new_dev->dev_total_num_sector );
-        //     refresh_screen();
         //     while(1){}
         //}
 
@@ -1272,7 +1269,6 @@ static int ata_initialize_ide_device(char port)
         //{
         //   printk ("#debug: >>>> atapi Size %d\n", 
         //       new_dev->dev_total_num_sector );
-        //   refresh_screen();
         //   while(1){}
         //}
 
@@ -1389,17 +1385,15 @@ static int ata_initialize_ide_device(char port)
         break;
     };
 
-// Linked list.
-    new_dev->next = NULL;
+    new_dev->next = NULL;  // Linked list
 
     // #debug
     // printk("[ Detected Disk type: %s ]\n", dev_type[new_dev->dev_type] );
-    // refresh_screen ();
 
 // =========================================
 
 //
-// Add no fim da lista (ready_queue_dev).
+// Add no fim da lista (ready_queue_dev)
 //
     struct ata_device_d *tmp;
     tmp = (struct ata_device_d *) ready_queue_dev;
@@ -1426,13 +1420,9 @@ static int ata_initialize_ide_device(char port)
     return 0;
 
 fail:
-    refresh_screen();
     panic("ata_initialize_ide_device: fail\n");
-    return -1;  // Not reached.
+    return -1;  // Not reached
 }
-
-
-//----------------------------------------------
 
 // Called to probe for the boot disk signature into all the 4 ports. 
 static int __ata_probe_boot_disk_signature(void)
@@ -1458,11 +1448,10 @@ static int __ata_probe_boot_disk_signature(void)
     static char sig_buffer[512];
 
     //clear_backbuffer();
-    //refresh_screen();
 
     for (i=0; i<4; i++){
 
-    bzero(sig_buffer,512); // Crear the local buffer for current use.
+    bzero(sig_buffer,512);  // Crear the local buffer for current use
 
     idePort = i;                                   // Current
     ATACurrentPort.g_current_ide_port_index  = i;  // Current
@@ -1494,7 +1483,10 @@ static int __ata_probe_boot_disk_signature(void)
             // #debug
             printk ("__ata_probe_boot_disk_signature: Invalid port number\n");
             refresh_screen();
-            while(1){}
+            while (1){
+                asm (" cli ");
+                asm (" hlt ");
+            }
             break;
     };
 
@@ -1513,10 +1505,8 @@ static int __ata_probe_boot_disk_signature(void)
 
     // Print the buffer.
     // printk only can handle 4 bytes, our signature has 8.
-    printk("\n");
     unsigned long *s = (unsigned long *) &sig_buffer[0];
     printk("Port %d: Disk signature 2: %x\n", i, s[0] ); 
-    refresh_screen();
 
     // Disk found?
     // Comparing against the signature we received from the bootblock.
@@ -1533,7 +1523,6 @@ static int __ata_probe_boot_disk_signature(void)
             ATACurrentPort.g_current_ide_channel,
             ATACurrentPort.g_current_ide_device );
 
-        //refresh_screen();      
         //while(1){}
 
         // Done
@@ -1616,11 +1605,8 @@ static int __ata_initialize(int ataflag)
     //#debug
     printk ("kernel CONFIG:  ATA port: %d\n",boottime_ideport_index);   // from config.h
     printk ("kernel bootblk: ATA port: %d\n",bootblk.ide_port_number);  // from bootblock, from bl.bin
-    refresh_screen();
     while(1){}
 */
-
-// ============================================
 
 // ??
 // Configurando flags do driver.
@@ -1763,11 +1749,10 @@ static int __ata_initialize(int ataflag)
             0x00 );
 
         // ??
-        ata_record_dev     = 0xff;
+        ata_record_dev = 0xff;
         ata_record_channel = 0xff;
 
         //printk ("Initializing ATA Mass Storage device ...\n");
-        //refresh_screen ();
 
         // As estruturas de disco serão colocadas em uma lista encadeada.
         
@@ -1884,7 +1869,6 @@ static int __ata_initialize(int ataflag)
                 tmp->dev_num     == ATACurrentPort.g_current_ide_device )
             {
                 printk("ata.c: Valid boot device\n");
-                refresh_screen();
                 //while(1){}
 
                 ____boot____disk->ata_device = tmp;
@@ -1898,7 +1882,6 @@ static int __ata_initialize(int ataflag)
         }
 
         //printk("Invalid boot device\n");
-        //refresh_screen();
         //while(1){}
 
         panic("ata.c: Invalid boot device\n");
@@ -1908,9 +1891,8 @@ static int __ata_initialize(int ataflag)
         //goto done;
     }
 
-
 // ==============================================
-// RAID controller.
+// RAID controller
 
     if (StorageController.controller_type == STORAGE_CONTROLLER_MODE_RAID)
     {

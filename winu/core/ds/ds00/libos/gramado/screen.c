@@ -1,7 +1,8 @@
 // screen.c
+// Scress support.
+// Created by Fred Nora.
 
 #include "../../ds.h"
-
 
 // The device screen.
 // The refresh is called by refresh_device_screen();
@@ -11,23 +12,18 @@ struct gws_screen_d *DeviceScreen;
 
 
 // Refresh the device screen
-void refresh_screen(void)
+void refresh_device_screen(void)
 {
-    refresh_device_screen();
+    gws_show_backbuffer();
+    refresh_device_screen_flag = FALSE;  // Validation
 }
 
 // Refresh the device screen
-void refresh_device_screen(void)
-{
-    //debug_print ("refresh_device_screen:\n");
-
-    gws_show_backbuffer();
-    refresh_device_screen_flag = FALSE; // Invalidate.
+void refresh_screen(void){
+    refresh_device_screen();
 }
 
-
 // Refresh the valid screen of the current display.
-// #todo: move to view/
 void refresh_valid_screen(void)
 {
     //debug_print ("refresh_valid_screen:\n");
@@ -54,6 +50,6 @@ void refresh_valid_screen(void)
         gws_show_backbuffer();
     }
 
-    refresh_valid_screen_flag = FALSE; // Invalidate.
+    refresh_valid_screen_flag = FALSE;  // VAlidation
 }
 

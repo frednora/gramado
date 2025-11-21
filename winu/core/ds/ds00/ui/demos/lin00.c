@@ -5,10 +5,9 @@
 #include "../../ds.h"
 
 
+// Draw lines
 void demoLines(void)
 {
-// Draw lines.
-
     register int i=0;
 
     for (i=0; i<320; i+=5)
@@ -34,7 +33,9 @@ void demoLines(void)
             COLOR_WHITE);
     };
 
-    refresh_screen();
+    demoFlushSurface();
+    // #debug dangerous
+    //refresh_screen();
 }
 
 void demoLine1(void)
@@ -59,7 +60,7 @@ void demoLine1(void)
             y1+=8;                 //You should modify this if
             x2+=8;                 //it's not an equal square (like 250x250)
     };
-    demoFlushSurface();  
+    demoFlushSurface();
 }
 
 

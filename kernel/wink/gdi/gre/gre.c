@@ -81,12 +81,10 @@ void kgws_enable(void)
 {
     debug_print("kgws_enable: Enable KGWS\n");
          printk("kgws_enable: Enable KGWS\n");
-    refresh_screen();
 
     // Sending event messages to the thread associated with the wwf.
     //current_input_mode = INPUT_MODE_SETUP;
-    IOControl.useEventQueue = TRUE;
-    
+    IOControl.useEventQueue = TRUE;    
     EnableKGWS = TRUE;
 }
 
@@ -567,9 +565,9 @@ void demoFred1(void)
     };
 }
 
+// Test some functions
 void demo0(void)
 {
-    // #test 
     //grPlot0(0,10,10,COLOR_GREEN);
     //plotCircleZ ( 0, 12, 25, COLOR_GREEN, 0); 
     //plotLine3d ( 4, 3,0, 40, 2,0, COLOR_WHITE);      
@@ -577,7 +575,6 @@ void demo0(void)
     //demoFred0();
     //demoFred1();
     //rectangleZ( 10, 10, 10+20,10+20,COLOR_BLUE,0);                  
-    //refresh_screen();
 }
 
 // ============================
@@ -585,8 +582,6 @@ void demo0(void)
 // it is gonna be used by the window server.
 // It is a pre allocated buffer containg an bmp icon loaded at it.
 // Service 9100
-// See: window.h
-
 void *gre_get_system_icon(int n)
 {
     if (icon_cache.initialized != TRUE){

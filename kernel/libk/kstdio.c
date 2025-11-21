@@ -231,8 +231,8 @@ int is_virtual_console(file *f)
 // standard input() libc function.
 unsigned long kinput(unsigned long ch)
 {
-    char c = (char) ch;
     register int i=0;
+    char c = (char) ch;
 
 // Input mode.
 // #bugbug:
@@ -249,24 +249,20 @@ unsigned long kinput(unsigned long ch)
         {
             //printk ("kstdio-input: [FAIL] INPUT_MODE_LINE full buffer!\n");
             goto fail;
-            // refresh_screen ();
-            //return (unsigned long) 0; 
         }
     }
 
-    //tem que ter o tamanho de um arquivo.
+    // Tem que ter o tamanho de um arquivo.
     if (g_inputmode == INPUT_MODE_MULTIPLE_LINES)
     {
         if (prompt_pos >= PROMPT_SIZE)
         {
             //printk("kstdio-input: [FAIL] INPUT_MODE_MULTIPLE_LINES full buffer\n");
             goto fail;
-            //refresh_screen();
-            //return (unsigned long) 0; 
         }
     }
 
-// Trata o caractere digitado. 
+// Trata o caractere digitado
 
     switch (c){
 
@@ -278,7 +274,7 @@ unsigned long kinput(unsigned long ch)
         //modo linha 
         if (g_inputmode == INPUT_MODE_LINE)
         {
-            prompt[prompt_pos] = (char )'\0'; //end of line.
+            prompt[prompt_pos] = (char )'\0';  // end of line
             //#todo: ?? ldiscCompare();
             // o compare está no aplicativo.
             for (i=0; i<PROMPT_MAX_DEFAULT; i++)
@@ -290,7 +286,7 @@ unsigned long kinput(unsigned long ch)
             prompt_pos=0;
             goto input_done;
         }
-        //modo multiplas linhas 
+        // modo multiplas linhas 
         if (g_inputmode == INPUT_MODE_MULTIPLE_LINES)
         {
             prompt[prompt_pos] = (char )'\r'; 
@@ -325,11 +321,10 @@ unsigned long kinput(unsigned long ch)
 
 //input_more:
     return 0;
+
 input_done:
     return VK_RETURN;
 fail:
-    // #bugbug: Slow.
-    refresh_screen();
     return (unsigned long) 0; 
 }
 
@@ -1236,17 +1231,13 @@ int k_fgetc(file *f)
 		{
 			stream->_flags = (stream->_flags | _IOEOF); 
 			stream->_cnt = 0;
-			
-		    //printk ("#debug: fgetc: $\n");
-			
+		    //printk ("#debug: fgetc: $\n");			
 			//isso funciona, significa que a estrutura tem ponteiro e base validos.
 			//printk("show fgetc:: %s @\n", stream->_base );
-		    //refresh_screen();
-			
 			return EOF;
 		};
 		*/
-		
+
 		//#debug
 		//nao podemos acessar um ponteiro nulo... no caso endereço.
 
@@ -1260,20 +1251,16 @@ int k_fgetc(file *f)
 // Tem que ter a opção de pegarmos usando o posicionamento
 // no buffer. O terminal gosta dessas coisas.
 
-// Get the char.
+// Get the char
     ch = (int) *f->_p;
-
 // Update the pointer
     f->_p++;
     f->_cnt--;
-
+// Return the char
     return (int) ch;
 
 fail:
-    //#debug
-    // #bugbug: Slow
     printk ("k_fgetc: fail\n");
-    refresh_screen();
     return EOF;
 }
 
@@ -1284,10 +1271,10 @@ int k_feof (file *f)
     if ((void *) f == NULL){
         return (int) (-1);
     } else {
-        ch = k_fgetc(f);
+        ch = (int) k_fgetc(f);
         if (ch == EOF){
             return (int) 1;
-        }else{
+        } else {
             return 0;
         };
     };
@@ -1300,10 +1287,14 @@ int k_feof (file *f)
 
 int k_ferror(file *f)
 {
+    int r=0;
+
     if ((void *) f == NULL){
         return EOF;
     }
-    return (int) ((f->_flags & _IOERR));
+    r = (int) ((f->_flags & _IOERR));
+
+    return (int) r;
 }
 
 // k_fseek:
@@ -1367,7 +1358,6 @@ SEEK_END
         f->_w = offset;
         f->_p = (f->_base + offset); 
         //printk("offset: %d\n",offset);
-        //refresh_screen();
         //while(1){}
         goto done;
         break;
@@ -1455,7 +1445,6 @@ SEEK_END
 
 fail:
     printk ("k_fseek fail\n");
-    refresh_screen();
     return (int) (-1);
 done:
     return 0;
@@ -1475,7 +1464,6 @@ int __swsetup(file *fp)
 }
 */
 
-
 /*
  * Write the given character into the (probably full) buffer for
  * the given file.  Flush the buffer out if it is or becomes full,
@@ -1491,8 +1479,7 @@ int __swbuf (int c, file *fp)
 }
 */
 
-
-int k_fputc( int ch, file *f )
+int k_fputc(int ch, file *f)
 {
 
 // Pointer validation
@@ -1507,16 +1494,16 @@ int k_fputc( int ch, file *f )
 
     if ( f->_cnt > 0 && ch != '\n' )
     {
-        // Write it into the buffer.
-        ksprintf ( f->_p, "%c", ch);
-        // Update the pointer.
+        // Write it into the buffer
+        ksprintf(f->_p, "%c", ch);
+        // Update the pointer
         f->_p++;
-        // Update the offset for the writer.
+        // Update the offset for the writer
         f->_w++;
-        // Update the counter.
+        // Update the counter
         // How many bytes the buffer still have?
         f->_cnt--;
-        // The buffer is full.
+        // The buffer is full
         // #todo: What we need to do now?
         if (f->_cnt <= 0)
         {
@@ -1525,7 +1512,7 @@ int k_fputc( int ch, file *f )
             f->_cnt = 0;
             return EOF;
         }
-        f->_flags |= __SRD;  //pode ler.
+        f->_flags |= __SRD;  // Can read
         return (int) ch;  
     }
 
@@ -1533,7 +1520,7 @@ int k_fputc( int ch, file *f )
 // se o buffer está cheio.
 
     /*
-    //Now writing. 
+    //Now writing
     if (stream->flags & _IORW)
     {
         stream->flags &= ~_IOREAD;
@@ -1541,9 +1528,9 @@ int k_fputc( int ch, file *f )
     }
     */
 
-    //File is not writable. 
+    // File is not writable 
     //if (!(stream->flags & _IOWRITE))
-         //return (EOF);        
+        //return (EOF);        
 
 //fail:
     return EOF;
@@ -1551,8 +1538,13 @@ int k_fputc( int ch, file *f )
 
 int k_fscanf (file *f, const char *format, ... )
 {
+    if ((void*)f == NULL)
+        goto fail;
+
     panic ("k_fscanf: #todo\n");
-    return -1;
+
+fail:
+    return (int) -1;
 }
 
 /*
@@ -1593,7 +1585,7 @@ void k_rewind(file *f)
 // Change f->magic to 4321.
 int k_fclose (file *f)
 {
-// Parameter validation
+// Parameter:
     if ((void *) f == NULL){
         return EOF;
     }
@@ -1605,8 +1597,7 @@ int k_fclose (file *f)
     }
 
     f->used = TRUE;
-// Inverted value.
-    f->magic = 4321;
+    f->magic = 4321;  // Inverted value
     return 0;
 }
 
@@ -1622,19 +1613,20 @@ int k_fputs(const char *str, file *f)
         goto fail;
     } 
 
-// String size.
+// String size
     StringSize = (size_t) strlen(str);
     if (StringSize > f->_cnt){
         goto fail;
     }
-// Update _cnt.
+// Update _cnt
     f->_cnt = (int) (f->_cnt - StringSize);
 // Put
-    ksprintf( f->_p, str );
-// Update _p.
+    ksprintf(f->_p, str);
+// Update _p
     f->_p = (f->_p + StringSize);
 // OK
     return 0;
+
 fail:
     return (int) (-1);
 }
@@ -1684,25 +1676,19 @@ void k_setbuffer (file *f, char *buf, size_t size)
   // #todo
   // Check parameters.
 
-    /*
-    if ( (void *) f == NULL ){
-        debug_print("k_setbuffer: f\n");
-        return;
-    }
-
-    if ( (void *) buf == NULL ){
-        debug_print("k_setbuffer: buf\n");
-        return;
-    }
-    */
-
-
     if ((void *) f == NULL)
     {
         // #todo
         // Maybe we need a message here.
         return;
     }
+
+    /*
+    if ( (void *) buf == NULL ){
+        debug_print("k_setbuffer: buf\n");
+        return;
+    }
+    */
 
 //#todo
 //se o buffer é válido.
@@ -1743,31 +1729,28 @@ k_setvbuf (
     int mode, 
     size_t size )
 {
-    if ( (void *) f == NULL ){
-        // MSG ?
+
+    if ((void *) f == NULL){
         return -1;
-    }else{
+    }
 
-        //#todo
-        //se o buffer é válido.
+    // #todo: Buffer validation
 
-        //if (f->_bf._base != NULL) 
-        //{
-            //if (f->cnt > 0)
-                //fflush (f);
-                
+    //if (f->_bf._base != NULL) 
+    //{
+        //if (f->cnt > 0)
+            //fflush (f);
             //free (f->buf);
-        //}
-        
-        // Udate stream.
-        f->_bf._base = buf;
-        f->_lbfsize = size; 
-        // ?? f->bufmode = mode;
+    //}
+    
+    // Udate stream
+    f->_bf._base = buf;
+    f->_lbfsize = size; 
+    // ?? f->bufmode = mode;
 
-        f->_p = buf;
-        // ??f->cnt = 0;
-        //...
-    };
+    f->_p = buf;
+    // ??f->cnt = 0;
+    //...
 
     return 0;
 }
@@ -1781,7 +1764,7 @@ regularfile_ioctl (
     unsigned long request, 
     unsigned long arg )
 {
-    debug_print ("regularfile_ioctl: #todo\n");
+    // debug_print ("regularfile_ioctl: #todo\n");
 
     if ( fd < 0 || fd >= OPEN_MAX )
     {
@@ -1793,10 +1776,9 @@ regularfile_ioctl (
     return -1;
 }
 
+// Called by kstdio_initialize().
 file *new_file(object_type_t object_type)
 {
-// Called by kstdio_initialize().
-
     file *new_file;
     int slot = -1;
 
@@ -1874,7 +1856,7 @@ file *new_file(object_type_t object_type)
     new_file->used = TRUE;
     new_file->magic = 1234;
 
-// Return the pointer for a new stream.
+// Return the pointer for a new stream
     return (file*) new_file;
 }
 
@@ -1883,12 +1865,11 @@ file *new_file(object_type_t object_type)
 // standard streams, we gotta use the same values.
 // So, this way we need to use the same file descriptors.
 // We're gonna use STDIN_FILENO.
+// Called by kstdio_initialize().
 static void __initialize_stdin(void)
 {
-// Called by kstdio_initialize().
-
     int fd = STDIN_FILENO;
-    int slot=-1;
+    int slot = -1;
 
 // stdin
 // pega slot em file_table[] para stdin
@@ -1959,10 +1940,9 @@ static void __initialize_stdin(void)
 // standard streams, we gotta use the same values.
 // So, this way we need to use the same file descriptors.
 // We're gonna use STDOUT_FILENO.
+// Called by kstdio_initialize().
 static void __initialize_stdout(void)
 {
-// Called by kstdio_initialize().
-
     int slot=-1;
     int fd = STDOUT_FILENO;
 
@@ -2040,10 +2020,9 @@ static void __initialize_stdout(void)
 // standard streams, we gotta use the same values.
 // So, this way we need to use the same file descriptors.
 // We're gonna use STDERR_FILENO.
+// Called by kstdio_initialize().
 static void __initialize_stderr(void)
 {
-// Called by kstdio_initialize().
-
     int fd = STDERR_FILENO;
     int slot = -1;
 
@@ -2116,6 +2095,7 @@ static void __initialize_stderr(void)
 static void __clear_prompt_buffers(void)
 {
     register int i=0;
+
     for (i=0; i<PROMPT_SIZE; i++)
     {
         prompt[i] = (char) '\0';
@@ -2205,22 +2185,22 @@ static void __initialize_virtual_consoles(void)
         x_panic("__initialize_virtual_consoles: Invalid stdout");
 
 //
-// Setup colors.
+// Setup colors
 //
 
     unsigned int bg_colors[CONSOLETTYS_COUNT_MAX];
     unsigned int fg_colors[CONSOLETTYS_COUNT_MAX];
 
-// Default kernel console.
+// Default kernel console
     bg_colors[0] = (unsigned int) COLOR_BLUE;
     fg_colors[0] = (unsigned int) COLOR_WHITE;
-// Auxiliary kernel console.
+// Auxiliary kernel console
     bg_colors[1] = (unsigned int) COLOR_BLUE;
     fg_colors[1] = (unsigned int) COLOR_YELLOW;
-// Warning console.
+// Warning console
     bg_colors[2] = (unsigned int) COLOR_ORANGE;
     fg_colors[2] = (unsigned int) COLOR_WHITE;
-// Danger console.
+// Danger console
     bg_colors[3] = (unsigned int) COLOR_RED;
     fg_colors[3] = (unsigned int) COLOR_YELLOW;
 
@@ -2299,18 +2279,16 @@ static void __initialize_virtual_consoles(void)
         }
     };
 
-// The foreground console.
+// The foreground console
     jobcontrol_switch_console(DEFAULT_CONSOLE);
-// Setup the pointer for the current console.
+// Setup the pointer for the current console
     set_up_cursor(0,0);
 
 // #test
     //set_up_cursor(0,1);
     //console_outbyte('x',fg_console);
-    //refresh_screen();
     //while(1){}
 }
-
 
 //
 // #
@@ -2359,8 +2337,7 @@ int kstdio_initialize(void)
     stdio_terminalmode_flag = TRUE;
     stdio_verbosemode_flag = TRUE;
 
-// Last registered error.
-    errno = 0;
+    errno = 0;  // Last registered error
 
 // Buffers used by the standard stream.
 // Initialize the global file table.
@@ -2391,5 +2368,4 @@ int kstdio_initialize(void)
 //fail:
     //return FALSE;
 }
-
 

@@ -450,16 +450,13 @@ int userCreateRootUser(void)
         printk("userCreateRootUser: RootUser validation\n");
     }
 
-// User ID.
+// User ID
     if (RootUser->userId != 0){
         panic("userCreateRootUser: root is not 0\n");
     }
 
-// #debug
-// Print the username.
+// #debug Print the username
     printk("Username: {%s}\n",RootUser->__username);
-    //refresh_screen();
-    //while(1){}
 
 // Lets associate the user structure and the fg console.
 // #todo: We need a method for this routine.
@@ -470,8 +467,7 @@ int userCreateRootUser(void)
     if (CONSOLE_TTYS[fg_console].initialized != TRUE){
         panic("userCreateRootUser: fg_console not initialized\n");
     }
-    CONSOLE_TTYS[fg_console].user_info = 
-        (struct user_info_d *) RootUser;
+    CONSOLE_TTYS[fg_console].user_info = (struct user_info_d *) RootUser;
 
 // Set the current user.
 // We need a method for this.
@@ -484,10 +480,9 @@ int userCreateRootUser(void)
     if ( isSuper != TRUE )
         panic("userCreateRootUser: Not super user\n");
 
-// Done
     return TRUE;
+
 fail:
-    refresh_screen();
     return FALSE;
 }
 

@@ -59,26 +59,15 @@ extern struct gws_screen_d *DeviceScreen;
 // == prototypes ================================
 //
 
+// Refresh the device screen
+void refresh_device_screen(void);
 
 // Refresh the device screen
 void refresh_screen(void);
-
-// Refresh the device screen
-void refresh_device_screen(void);
 
 // Refresh the valid screen
 void refresh_valid_screen(void);
 
 
 #endif    
-
-
-
-
-
-
-
-
-
-
 

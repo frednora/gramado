@@ -2264,10 +2264,9 @@ void *doCreateWindow (
             window->width, window->height );
 
         //#debug
-        refresh_screen ();
         while (1){}
     }
- */
+*/
 
 // =================================
 // ## Shadow ## (Shadow for the frame)

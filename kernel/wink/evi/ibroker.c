@@ -617,7 +617,6 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         b = (unsigned long *) &xxx_gdt[5] + 32;
         printk("5: %x %x\n",a[0],b[0]);
 
-        refresh_screen();
         goto exit_cmp;
     }
 
@@ -685,10 +684,9 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
     if ( kstrncmp( cmdline, "ap", 2 ) == 0 )
     {
         if (ap_signature_pointer[0] == 0xA0 && 
-            ap_signature_pointer[1] == 0xA0 )
+            ap_signature_pointer[1] == 0xA0)
         {
             printk("AP is running!\n");
-            refresh_screen();
         }
         goto exit_cmp;
     }
@@ -820,11 +818,11 @@ int ksys_shell_parse_cmdline(char *cmdline_address, size_t buffer_size)
 // prompt[] buffer is where the command line is.
     __shellParseCommandLine(prompt, sizeof(prompt));
 
-// Show any printing.
+// Show any printing message from the functions above.
     //invalidate_screen();
     refresh_screen();
-
     return 0;
+
 fail: 
     return (int) -1;
 }
@@ -1082,7 +1080,6 @@ __consoleProcessKeyboardInput (
 
         //case VK_TAB: 
             //printk("TAB\n"); 
-            //refresh_screen();
             //break;
 
         default:
@@ -1673,8 +1670,6 @@ wmRawKeyEvent(
     if (scStatus == TRUE){
         printk ("raw byte {%d,%x} \n", 
             Keyboard_RawByte, Keyboard_RawByte );
-        // Refresh screen?
-        refresh_screen();
     }
     */
 
@@ -1688,7 +1683,6 @@ wmRawKeyEvent(
          //goto key_released;
     //if ( Keyboard_RawByte < 0x7F )
          //goto key_pressed;
-
 
 // ==========
 // Step 2

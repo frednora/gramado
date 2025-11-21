@@ -2037,7 +2037,6 @@ void wm_update_desktop(int tile, int show)
         TRUE,  // show
         4 // zoom factor
         );
-    //refresh_screen();
     while(1){}
 */
 

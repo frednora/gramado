@@ -157,11 +157,9 @@ struct socket_d *create_socket_object(void)
 
     s->used = TRUE;
     s->magic = 1234;
-
     return (struct socket_d *) s;
 
 fail:
-    //refresh_screen();
     return NULL;
 }
 
@@ -205,18 +203,13 @@ void show_socket_for_a_process (pid_t pid)
     }
 
 //done:
-// Show
-// sockaddr structure.
+// Show sockaddr structure
     printk ("family %d \n",s->addr.sa_family);
     printk ("data %s   \n",s->addr.sa_data);
-    //printk ("",s->);
-    //printk ("",s->);
-    //printk ("",s->);
-    //refresh_screen();
+    // ...
     return;
 
 fail:
-   //refresh_screen();
    return;
 }
 
@@ -350,11 +343,10 @@ socket_dialog (
         default:
             debug_print ("socket_dialog: default\n");
             printk      ("socket_dialog: default\n");
-            refresh_screen();
             break;
     };
 
-    // Fail
+// Fail
     return 0;
 }
 
@@ -524,7 +516,6 @@ int socket_ioctl ( int fd, unsigned long request, unsigned long arg )
     case 4000:
         debug_print ("socket_ioctl: [4000]\n");
         printk("socket_ioctl: [4000] fd %d pid %d #debug\n", fd, arg);
-        //refresh_screen();
         // Is it a valid pid?
         f->sync.sender_pid = (pid_t) arg;
         return 0;
@@ -730,26 +721,24 @@ socket_gramado (
 // na estrutura de processo do processo atual.
     Process->priv = (void *) sock;
 
-
 // fd
     _file->_file = __slot;
 // Colocando na lista de arquivos abertos no processo.
     Process->Objects[__slot] = (unsigned long) _file;
     _file->used = TRUE;
     _file->magic = 1234;
-// ok.
-// Retornamos o fd na lista de arquivos abertos pelo processo.
+// ok: Retornamos o fd na lista de arquivos abertos pelo processo
     return (int) __slot;
 
 fail:
-    debug_print ("socket_gramado: [FAIL]\n");
-    //refresh_screen();
+    debug_print ("socket_gramado: fail\n");
     return (int) (-1);
 }
 
 // Configura a estrutura de socket para um socket da
 // família AF_UNIX or AF_LOCAL.
 // Precisa ser uma rotina parecida com a do outro tipo criado.
+// Called by sys_socket().
 int 
 socket_unix ( 
     struct socket_d *sock, 
@@ -757,8 +746,6 @@ socket_unix (
     int type, 
     int protocol )
 {
-// Called by sys_socket().
-
     struct te_d *Process;
     pid_t current_process = -1;
     file *_file;
@@ -928,7 +915,6 @@ socket_unix (
 
 fail:
     debug_print ("socket_unix: fail\n");
-    //refresh_screen();
     return (int) (-1);
 }
 
@@ -1120,16 +1106,15 @@ socket_inet (
     _file->magic = 1234;
 // Colocando na lista de arquivos abertos no processo.
     Process->Objects[__slot] = (unsigned long) _file;
-// OK, return the fd.
+// OK, return the fd
     return (int) __slot;
 
 fail:
-    debug_print ("socket_inet: [FAIL]\n");
-    //refresh_screen();
+    debug_print ("socket_inet: fail\n");
     return (int) (-1);
 }
 
-// Initialize socket list.
+// Initialize socket list
 int socket_init(void)
 {
     register int i=0;

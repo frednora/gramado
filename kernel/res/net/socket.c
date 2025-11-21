@@ -77,14 +77,12 @@ int sys_socket( int family, int type, int protocol )
     int Verbose = FALSE;
 
     // #debug
-    // Slow.
 
     /*
     if (Verbose == TRUE){
         printk ("\n======================================\n");
         printk ("sys_socket: PID %d | family %d | type %d | protocol %d \n",
             current_process, family, type, protocol );
-        refresh_screen();
     }
     */
 
@@ -256,8 +254,7 @@ int sys_socket( int family, int type, int protocol )
     // ...
 
 fail:
-    debug_print ("sys_socket: [FAIL] Something is wrong!\n");
-    //refresh_screen();
+    debug_print ("sys_socket: fail\n");
     return (int) (-1);
 }
 
@@ -442,7 +439,6 @@ sys_accept (
 /*
     if (sSocket->state == SS_CONNECTED){
         printk("sys_accept: [FAIL] socket is already SS_CONNECTED\n");
-        refresh_screen();
         return -1;
     }
  */
@@ -498,8 +494,7 @@ sys_accept (
     if (sSocket->state == SS_CONNECTED){
         debug_print ("sys_accept: Already connected!\n");
         //printk      ("sys_accept: Already connected!\n");
-        //refresh_screen();
-        //return -1;
+         //return -1;
         return (int) fdServer;
     }
  */
@@ -625,6 +620,7 @@ sys_accept (
                 printk("sys_accept: Breakpoint\n");
                 refresh_screen();
                 while (1){
+                    asm (" cli "); 
                     asm (" hlt ");
                 };
             }
@@ -645,15 +641,7 @@ sys_accept (
 // So we need a flag to indicate this status.
 
 fail:
-
-    // #debug
     //debug_print ("sys_accept: [FAIL] Something is wrong!\n");
-    //printk    ("sys_accept: [FAIL] Something is wrong!\n");
-    //refresh_screen();
-    
-    if (Verbose == TRUE){
-        refresh_screen();
-    }
     return (int) -1;
 }
 
@@ -840,9 +828,8 @@ sys_bind (
 
 // fail
 fail:
-    debug_print ("sys_bind: [FAIL] Something is wrong!\n");
-    printk      ("sys_bind: [FAIL] Something is wrong!\n");
-    //refresh_screen();
+    debug_print ("sys_bind: fail\n");
+    printk      ("sys_bind: fail\n");
     return (int) (-1);
 }
 
@@ -940,7 +927,6 @@ __connect_inet (
     if ( client_socket_fd < 0 || client_socket_fd >= OPEN_MAX ){
         debug_print ("__connect_inet: client_socket_fd\n");
         printk      ("__connect_inet: client_socket_fd\n");
-        //refresh_screen();
         return (int) (-EINVAL);
     }
 
@@ -948,10 +934,8 @@ __connect_inet (
 // Usando a estrutura que nos foi passada.
     if ((void *) addr == NULL){
         printk ("__connect_inet: addr\n");
-        //refresh_screen();
         return (int) (-EINVAL);
     }
-
 
 //  ==============
 
@@ -1028,7 +1012,6 @@ __connect_inet (
              in_localhost = TRUE;
              // #debug
              //printk("It's the localhost\n");
-             //refresh_screen();
              //while(1){}
         }
         // No, it's not.
@@ -1412,25 +1395,25 @@ __OK_new_slot:
 
     // #debug
     //if (Verbose==TRUE){
-    //printk     ("sys_connect: Pending connection\n");
-    //refresh_screen();
+    //    printk("sys_connect: Pending connection\n");
     //}
 
-    // #debug 
-    // #breakpoint
+    // #debug breakpoint
     if (Verbose == TRUE)
     {
-        printk("__connect_inet: Breakpoint :)\n");
+        printk("__connect_inet: Breakpoint\n");
         refresh_screen();
         while (1){
+            asm (" cli ");
             asm (" hlt ");
         };
     }
-//ok
+// ok
     return 0;
+
 fail:
-    debug_print("__connect_inet: Fail\n");
-    printk     ("__connect_inet: Fail\n");
+    debug_print("__connect_inet: fail\n");
+    printk     ("__connect_inet: fail\n");
     return (int) -1;
 }
 
@@ -1528,21 +1511,20 @@ __connect_local (
 // client_socket_fd é um soquete de quem quer se conectar.
 // O addr indica o alvo.
     client_socket_fd = sockfd;
-    if ( client_socket_fd < 0 || client_socket_fd >= OPEN_MAX ){
+    if ( client_socket_fd < 0 || client_socket_fd >= OPEN_MAX )
+    {
         debug_print ("__connect_local: client_socket_fd\n");
         printk      ("__connect_local: client_socket_fd\n");
-        //refresh_screen();
         return (int) (-EINVAL);
     }
 
 // addr
 // Usando a estrutura que nos foi passada.
-    if ((void *) addr == NULL){
+    if ((void *) addr == NULL)
+    {
         printk ("__connect_local: addr\n");
-        //refresh_screen();
         return (int) (-EINVAL);
     }
-
 
 //  ==============
 
@@ -1908,25 +1890,25 @@ __OK_new_slot:
 
     // #debug
     //if (Verbose==TRUE){
-    //printk     ("sys_connect: Pending connection\n");
-    //refresh_screen();
+    //    printk("sys_connect: Pending connection\n");
     //}
 
-    // #debug 
-    // #breakpoint
+    // #debug breakpoint
     if (Verbose == TRUE)
     {
-        printk("__connect_local: Breakpoint :)\n");
+        printk("__connect_local: Breakpoint\n");
         refresh_screen();
         while (1){
+            asm (" cli ");
             asm (" hlt ");
         };
     }
 //ok
     return 0;
+
 fail:
-    debug_print("__connect_local: Fail\n");
-    printk     ("__connect_local: Fail\n");
+    debug_print("__connect_local: fail\n");
+    printk     ("__connect_local: fail\n");
     return (int) -1;
 }
 
@@ -2085,13 +2067,12 @@ sys_getsockname (
     //if ( ...
     //if ( ...
     // ...
-    
-    printk ("sys_getsockname: process %d ; family %d ; len %d \n", 
+
+    printk ("sys_getsockname: process %d ; family %d ; len %d\n", 
         current_process, addr->sa_family, addrlen  );
  
  fail:
     printk ("sys_getsockname: fail\n");
-    refresh_screen();
     return (int) -1;
 }
 
@@ -2231,12 +2212,10 @@ int sys_listen(int sockfd, int backlog)
 
 //fake ok.
     return 0;
-// ==============================================
+
 fail:
-    debug_print("sys_listen: [FAIL]\n");
-    printk     ("sys_listen: [FAIL]\n");
-    //refresh_screen();
-    //while(1){}
+    debug_print("sys_listen: fail\n");
+    printk     ("sys_listen: fail\n");
     return (int) -1;
 }
 

@@ -3542,13 +3542,10 @@ static void __initializeBackground(void)
 // gws.c
 
     if (os_mode == GRAMADO_JAIL){
-        //server_debug_print ("gwssrv: __initializeBackground: Calling refresh_screen\n");
-        //refresh_screen();
     }
 
 // #debug
     //server_debug_print ("gwssrv: __initializeBackground: done\n");
-    //refresh_screen();
     //while(1){}
 }
 

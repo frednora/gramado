@@ -1,6 +1,6 @@
-
 // stdlib.c
-// Standard library.
+// Standard library
+// Created by Fred Nora.
 
 #include <types.h>
 #include <errno.h>
@@ -270,7 +270,6 @@ fail:
         kernel_stack_start,
         kernel_stack_end);
 
-    refresh_screen(); 
     while(1){}
 */
 
@@ -606,7 +605,6 @@ try_again:
             debug_print ("heapAllocateMemory: [ERROR] last valid heap pointer limits\n");
             printf      ("heapAllocateMemory: [ERROR] last valid heap pointer limits");
             //printf("*lib hang, (fatal error)\n");
-            //refresh_screen();
             //while(1){}
             return 0;
         }
@@ -947,14 +945,12 @@ void *malloc(size_t size)
     {
         debug_print ("malloc: [FAIL] ptr\n");
         //printf("malloc: falha ao alocar memoria!\n");
-        //refresh_screen();
         return NULL;
     }
 
 /*
 	if((void*) ret < KERNEL_HEAP_START){
 	    printf("malloc: falha ao alocar memoria! Limits\n");
-		refresh_screen();
 		return NULL;
 	};
 */
@@ -1117,16 +1113,14 @@ void free(void *ptr)
 		//Se estamos aqui é porque algo deu errado.
         goto fail;
 	};
-//Nothing.
+// Nothing
 fail:	
-    refresh_screen();
 	while(1){}
 done:	
 */
 
    return;
 }
-
 
 /*
 void *calloc(size_t num, size_t size);
