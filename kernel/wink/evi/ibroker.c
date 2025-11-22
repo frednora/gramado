@@ -389,6 +389,14 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         goto exit_cmp;
     }
 
+// Unmask lapic timer.
+    if ( kstrncmp(cmdline,"timer",5) == 0 )
+    {
+        // IN: vector number, 1=masked
+        //apic_timer_setup_periodic(220,0);
+        goto exit_cmp;
+    }
+
 // Has syscall support?
     if ( kstrncmp(cmdline,"syscall",7) == 0 )
     {

@@ -763,11 +763,14 @@ static int archinit(void)
             // #warning
             // This routine is gonna disable the legacy PIC.
             // see: apic.c
-            //if (ENABLE_APIC == 1)
-            //{
-                //if (LAPIC.initialized == TRUE)
-                    //enable_apic();
-            //}
+            if (ENABLE_APIC == 1)
+            {
+                // Enable apic and timer
+                if (LAPIC.initialized == TRUE)
+                    enable_apic();
+                //printk("kmain: breakpoint on enable_apic()\n");
+                //while(1){}
+            }
 
             // >> ENABLE IOAPIC
             // #todo

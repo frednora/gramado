@@ -208,6 +208,8 @@ extern struct lapic_info_d  LAPIC;
 
 // =======================
 
+void local_apic_eoi(void);
+
 // Check presence of apic.
 int has_apic (void);
 void cpu_set_apic_base(unsigned long apic);

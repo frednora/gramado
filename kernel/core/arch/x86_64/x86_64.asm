@@ -27,7 +27,129 @@
 ; + 0xEF00 (if you ever use it) → syscalls, user‑callable, interrupts stay enabled.
 
 
+; See: apic.c
+extern _local_apic_eoi
+; ============================================
+; 0x48 - LAPIC Timer
+global _lapic_timer_handler
+_lapic_timer_handler:
+    push rax
+    push rcx
+    push rdx
 
+    ; Debug notification (optional)
+    mov al, 'T'
+    mov dx, 0x3F8
+    out dx, al
+
+    ; Call the C routine to write EOI
+    call _local_apic_eoi
+
+    pop rdx
+    pop rcx
+    pop rax
+    iretq
+
+; ============================================
+; 0x49 - Performance Counter
+global _lapic_perf_handler
+_lapic_perf_handler:
+    push rax
+    push rcx
+    push rdx
+
+    ; ... optional profiling bump/counter ...
+
+    ; Call the C routine to write EOI
+    call _local_apic_eoi
+
+
+    pop rdx
+    pop rcx
+    pop rax
+    iretq
+
+; ============================================
+; 0x4A - LINT0 (ExtINT / legacy PIC handoff) — often masked
+global _lapic_lint0_handler
+_lapic_lint0_handler:
+    push rax
+    push rcx
+    push rdx
+
+    ; If you actually route ExtINT, you’d cascade to 8259 handler.
+    ; In modern IOAPIC setups, LINT0 stays masked.
+
+    ; Call the C routine to write EOI
+    call _local_apic_eoi
+
+    pop rdx
+    pop rcx
+    pop rax
+    iretq
+
+; ============================================
+; 0x4B - LINT1 (NMI)
+; NMIs are non-maskable. LAPIC may mark in-service; issue EOI to be safe.
+global _lapic_nmi_handler
+_lapic_nmi_handler:
+    push rax
+    push rcx
+    push rdx
+
+    ; Minimal, fast handling. Avoid heavy work here.
+    ; Log or signal, then return.
+
+    ; EOI (safe, even for NMI)
+    ; Call the C routine to write EOI
+    call _local_apic_eoi
+
+
+    pop rdx
+    pop rcx
+    pop rax
+    iretq
+
+; ============================================
+; 0x4C - LAPIC Error
+global _lapic_error_handler
+_lapic_error_handler:
+    push rax
+    push rcx
+    push rdx
+
+    ; Optionally read LAPIC ESR (Error Status Register) to clear latched errors.
+    ; Write to ESR (read-after-write) sequence if you implement it.
+
+    ; EOI required
+    ; Call the C routine to write EOI
+    call _local_apic_eoi
+
+
+    pop rdx
+    pop rcx
+    pop rax
+    iretq
+
+; ============================================
+; 0x4D - Thermal sensor
+global _lapic_thermal_handler
+_lapic_thermal_handler:
+    push rax
+    push rcx
+    push rdx
+
+    ; Handle/record thermal event, throttle, etc.
+
+    ; EOI required
+    ; Call the C routine to write EOI
+    call _local_apic_eoi
+
+
+    pop rdx
+    pop rcx
+    pop rax
+    iretq
 
 ; ============================================
 ; Spurious interrupt handler (vector 0xFF)
@@ -649,7 +771,13 @@ setup_faults:
 ; setup_vectors:
 ; Setup some hw and sw IDT vectors.
 ; see: hw1.asm
-; 
+
+; Exceptions (0–31): untouched, reserved by the CPU.
+; IOAPIC legacy IRQs (32–47): your timer, keyboard, RTC, mouse, IDE.
+; Syscalls (128–199): your INT 0x80–0x83, plus 198/199 for callbacks and enabling interrupts.
+; LAPIC LVT block (220–225): Timer, Perf, LINT0, LINT1, Error, Thermal.
+; Spurious (255): safe handler with no EOI.
+
 setup_vectors:
 
     push rax
@@ -766,6 +894,40 @@ setup_vectors:
     mov rbx,  qword 199
     call _setup_system_interrupt   ; 0xEE00
 
+
+; === LAPIC local sources (LVT block starting at 220) ===
+
+; 220 - LAPIC Timer (0xDC)
+    mov rax, qword _lapic_timer_handler
+    mov rbx, qword 220
+    call _setup_system_interrupt_hw  ; 0x8E00
+
+; 221 - Performance Counter  (0xDD)
+    mov rax, qword _lapic_perf_handler
+    mov rbx, qword 221
+    call _setup_system_interrupt_hw  ; 0x8E00
+
+; 222 - LINT0 (ExtINT) (0xDE)
+    mov rax, qword _lapic_lint0_handler
+    mov rbx, qword 222
+    call _setup_system_interrupt_hw  ; 0x8E00
+
+; 223 - LINT1 (NMI) (0xDF)
+    mov rax, qword _lapic_nmi_handler
+    mov rbx, qword 223
+    call _setup_system_interrupt_hw  ; 0x8E00
+
+; 224 - LAPIC Error (0xE0)
+    mov rax, qword _lapic_error_handler
+    mov rbx, qword 224
+    call _setup_system_interrupt_hw  ; 0x8E00
+
+; 225 - Thermal sensor 225 (0xE1)
+    mov rax, qword _lapic_thermal_handler
+    mov rbx, qword 225
+    call _setup_system_interrupt_hw  ; 0x8E00
+
+; CMCI (optional) 226 (0xE2)
 
 ; 255 - Spurious interrupt vector (SVR)
 ; Handler should just acknowledge and return.

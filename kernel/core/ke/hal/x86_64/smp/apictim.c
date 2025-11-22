@@ -31,6 +31,28 @@ static void __pit_perform_sleep(void);
 
 //---------------------------------
 
+
+
+// apictim.c
+
+// Configure LAPIC timer in periodic mode.
+// Pass `masked = 1` to start masked, `masked = 0` to start unmasked.
+void apic_timer_setup_periodic(unsigned int vector, int masked)
+{
+    unsigned int val =
+        APIC_TIMER_CONFIG_DATA_LVT(
+            1,          // TimerMode: periodic
+            masked ? 1 : 0, // Mask bit
+            APIC_TIMER_NULL,
+            APIC_TIMER_NULL,
+            0,          // TriggerMode: edge
+            APIC_TIMER_NULL,
+            vector & 0xFF  // Vector (e.g. 220)
+        );
+
+    __apictim_write_command(LAPIC_LVT_TIMER, val);
+}
+
 /*
 PC Speaker Control:
 Port 0x61 is used to control the PC speaker. 
@@ -148,6 +170,8 @@ int apic_timer(void)
 // pois 32 ja esta sendo usado pela redirection table.
 
 // --------------------------------------------------
+// 1 - Program LVT Timer for one‑shot mode 
+// (vector currently 32, you’ll change to 220):
 // Map APIC timer to an interrupt, and by that 
 // enable it in one-shot mode.
     unsigned int val = 
@@ -158,24 +182,32 @@ int apic_timer(void)
             APIC_TIMER_NULL,
             0,
             APIC_TIMER_NULL,
-            0x20  // 32. (Vector) 
+            220  //  (Vector) 
             );
     __apictim_write_command(LAPIC_LVT_TIMER, val);
 
 // --------------------------------------------------
-// Divide Configuration Register, 
-// to divide by 16
+// 2 -Set divide configuration:
+// Divide Configuration Register, to divide by 16
     __apictim_write_command(LAPIC_DIVIDE_TIMER, 0x3);
 
 // --------------------------------------------------
+// 3 - Prepare PIT for sleep (calibration aid):
+// Programs PIT channel 2 to generate a short delay (here, 1/100 sec).
 // Prepare the PIT to sleep for 10ms (10000µs)
 // 1193180/100 Hz
     __pit_prepare_sleep(100);
     //__pit_prepare_sleep(1000);
 
 // == RESET ======================================================
+// 4 - Reset LAPIC timer (Initial Count = 0xFFFFFFFF):
 // Reset APIC Timer (set counter to -1)
+// Starts the LAPIC timer counting down from max.
     __apictim_write_command( LAPIC_INITIAL_COUNT_TIMER, 0xFFFFFFFF );
+
+// 5 - Read Current Count to measure elapsed ticks:
+// This gives you how many ticks elapsed during the PIT sleep. 
+// That’s the calibration step.
 // Right after the RESET
 // Get current counter value.
     apic_timer_ticks = __apictim_read_command(LAPIC_CURRENT_COUNT_TIMER);
@@ -186,13 +218,19 @@ int apic_timer(void)
 
 
 // -- SLEEP ------------------------------------------------
+// 6 - Perform PIT sleep:
+// Actually waits for the PIT one‑shot to expire.
 // Perform PIT-supported sleep
     __pit_perform_sleep();
 
 
 // == STOP ======================================================
-// Stop APIC Timer
+// 7 - Stop LAPIC timer (mask it):
+// Masks the LVT Timer entry.
     __apictim_write_command( LAPIC_LVT_TIMER, (1 << 16) );
+
+// 8 - Read Current Count again:
+// Another calibration sample, printed out.
 // Right after the STOP
 // Get current counter value.
     apic_timer_ticks = __apictim_read_command(LAPIC_CURRENT_COUNT_TIMER);
@@ -204,25 +242,31 @@ int apic_timer(void)
 // ========================================================
 
 // --------------------------------------------------
+// 9 - Reprogram LVT Timer for periodic mode, masked:
 // Finally re-enable timer in periodic mode. But MASKED.
+// Sets up periodic ticks, but masked until you unmask later.
 	val = 
 	    APIC_TIMER_CONFIG_DATA_LVT(
 	        1,  // Periodic mode
-	        1,  // Masked
+	        1,  // Masked = 1
 	        APIC_TIMER_NULL,
 	        APIC_TIMER_NULL,
 	        0,
 	        APIC_TIMER_NULL,
-	        0x20  // 32. (Vector)
+	        220  //  (Vector)
             );
     __apictim_write_command(LAPIC_LVT_TIMER, val);
 
 // --------------------------------------------------
+// 10 - Set divide register again (optional, hardware quirk):
 // Setting divide value register again not needed by the manuals
 // Although I have found buggy hardware that required it
+//  // divide by 128
     __apictim_write_command(LAPIC_DIVIDE_TIMER, 0xa);  // Option: 0x3
 
 // --------------------------------------------------
+// 11 - Load Initial Count for periodic ticks:
+// This is the reload value for periodic mode.
 // Now eax holds appropriate number of ticks, 
 // use it as APIC timer counter initializer.
     apic_timer_ticks = 1000;
