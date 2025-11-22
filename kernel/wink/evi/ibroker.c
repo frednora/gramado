@@ -1789,7 +1789,7 @@ wmRawKeyEvent(
         // Normal.
         
         if (Event_Message == MSG_SYSKEYUP)
-        {   
+        {
             // se liberada teclas de sistema como capslock ligado
             if (capslock_status == FALSE)
             { Event_LongASCIICode = map_abnt2[Keyboard_ScanCode];   goto done; }
@@ -2093,9 +2093,15 @@ done:
             if (alt_status != TRUE)
             {
 
+                // #test
+                // #todo: Create a flag InputTargets.target_tty
+                // It needs to redirect if a tty is connected to another.
+                //tty_queue_putchar( 
+                    //&CONSOLE_TTYS[fg_console].output_queue, 
+                    //(char)__int_ascii_code );
+
                 // Mandaremos teclas de digitação para stdin
                 // somente se um terminal virtual está em foreground.
-
                 // stdin::
                 if (InputTargets.target_stdin == TRUE)
                 {
@@ -2112,14 +2118,6 @@ done:
                 // Maybe we're gonna return here depending on
                 // the input mode. 'Cause we don't wanna send
                 // the data to multiple targets.
-            
-                // #todo
-                // Maybe in this case we can write into the tty.
-                // Using tty_write() or __tty_write().
-                // The function __tty_write() is gonna copy 
-                // the raw buffer to the tty slave.
-                // This way the terminal sends data to the command
-                // connected to him.
             }
         }
 

@@ -692,6 +692,22 @@ fail:
     return (int) -1;
 }
 
+// A tty that belongs to an oen file.
+int 
+sys_tty_read ( 
+    int fd, 
+    char *buffer, 
+    int n )
+{
+    if (fd < 0)
+        goto fail;
+    if ((void*)buffer == NULL)
+        goto fail;
+    return (int) tty_read(fd,buffer,n);
+fail:
+    return (int) -1;
+}
+
 // service 273
 // IN: 
 // fd = indice na lista de arquivos abertos pelo processo.
@@ -776,6 +792,21 @@ fail:
     return (int) -1;
 }
 
+// A tty that belongs to an oen file.
+int 
+sys_tty_write ( 
+    int fd, 
+    char *buffer, 
+    int n )
+{
+    if (fd < 0)
+        goto fail;
+    if ((void*)buffer == NULL)
+        goto fail;
+    return (int) tty_write(fd,buffer,n);
+fail:
+    return (int) -1;
+}
 
 /*
  //#todo

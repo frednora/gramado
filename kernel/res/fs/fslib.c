@@ -1643,24 +1643,21 @@ int __close_imp(int fd)
     pid_t current_process = -1;
     int Done=FALSE;
 
-// ??
-// Can we close this devices?
-
-    /*
-    if (fd == 0 || fd == 1 || fd == 2 )
-    {
-        debug_print("__close_imp: [FIXME] We can't close the standard stream\n");
-        // WHY NOT ???!!
-        return (int) (-1);
-    }
-    */
-
 // Invalid fd
     if ( fd < 0 || fd >= OPEN_MAX )
     {
         debug_print("__close_imp: bad fd\n");
         return (int) (-EBADF);
     }
+
+// Invalid fd
+// Can't close standard streams
+    if (fd == 0)
+        return (int) (-EBADF);
+    if (fd == 1)
+        return (int) (-EBADF);
+    if (fd == 2)
+        return (int) (-EBADF);
 
 // Process
     current_process = (pid_t) get_current_process();

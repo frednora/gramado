@@ -1255,23 +1255,25 @@ void *sci0 (
     //    return (void *) pty_link_by_pid ( (int) arg2, (int) arg3 );
     //}
 
+// Read tty
 // Channel is a file descriptor in the file list 
 // of the current process.
 // IN: fd, buf, count.
     if (number == 272)
     {
-        return (void *) tty_read ( 
+        return (void *) sys_tty_read ( 
                             (unsigned int) arg2,    // channel 
                             (char *)       arg3,    // buf
                             (int)          arg4 );  // nr
     }
 
+// Write tty
 // Channel is a file descriptor in the file list 
 // of the current process.
-// IN: fd, buf, count.
+// IN: fd (channel), buf, count.
     if (number == 273)
     {
-        return (void *) tty_write ( 
+        return (void *) sys_tty_write ( 
                             (unsigned int) arg2,    // channel 
                             (char *)       arg3,    // buf
                             (int)          arg4 );  // nr

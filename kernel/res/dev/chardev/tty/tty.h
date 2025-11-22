@@ -472,10 +472,25 @@ tty_read (
     int n );
 
 int 
+sys_tty_read ( 
+    int fd, 
+    char *buffer, 
+    int n );
+
+
+int 
 tty_write ( 
     int fd, 
     char *buffer, 
     int n );
+
+int 
+sys_tty_write ( 
+    int fd, 
+    char *buffer, 
+    int n );
+
+
 
 int tty_set_output_worker(struct tty_d *tty, int worker_number);
 

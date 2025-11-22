@@ -37,7 +37,7 @@ static int isTimeToQuitCmdLine = FALSE;
 static const char *app1_name = "#ds00.bin";  // In DE/
 //static const char *app1_name = "???.bin";
 //static const char *app2_name = "???.bin";
-static const char *app3_name = "netd.bin"; 
+static const char *app3_name = "@netd.bin"; 
 static const char *app4_name = "net.bin";
 static const char *app5_name = "shell.bin";
 
@@ -366,8 +366,25 @@ static int input_compare_string(void)
         goto exit_cmp;
     }
 
+    //char tty_buffer[256];
     if ( strncmp(prompt,"t1",2) == 0 )
     {
+        //#test
+        // write and read from a tty that belongs to an oen file.
+        //tty_buffer[0] = (char) 'X'; // Inject
+        //sc80(273,1,tty_buffer,5);  // Write to the tty that belongs to stdout.
+        //tty_buffer[0] = (char) 'Y'; // Inject
+        //sc80(272,1,tty_buffer,5);  // Read from the tty that belongs to stdout.
+        //printf("buf: %s\n",tty_buffer);
+
+        // #hack fake address to stdout
+        // ok. its working
+        //int fd01 = (int) open("/dev/tty",0,0);
+        //write(fd01,"Hello",5);
+        //memset(tty_buffer,0,255);
+        //sc80(272,1,tty_buffer,5);  // Read from the tty that belongs to stdout.
+        //printf("buf: %s\n",tty_buffer);
+
         //creat("saved1.txt",0);
         //fd = open("saved1.txt",0,0);
         //close(fd);
@@ -378,6 +395,8 @@ static int input_compare_string(void)
         //ioctl(1,400, 0x00FFDD11); //change virtual console fg color.
         //ioctl(1,402, 0x0011DD11); //change virtual console bg color.
         //ioctl(1,440, 0x0011DD11);  // clear console.
+
+        //close(1);
         goto exit_cmp;
     }
 
@@ -397,7 +416,7 @@ static int input_compare_string(void)
         goto exit_cmp;
     }
 
-    // Testing syscall instruction.
+    // Testing syscall instruction
     if ( strncmp(prompt,"syscall",7) == 0 )
     {
         printf ("syscall: BEFORE\n");

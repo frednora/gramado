@@ -1179,7 +1179,7 @@ static void compareStrings(int fd)
         netd_res = 
             (int) gws_clone_and_execute2(
                       fd, 0,0,0,0,
-                      "netd.bin" );
+                      "@netd.bin" );
         goto exit_cmp;
     }
 
@@ -1454,11 +1454,13 @@ static void compareStrings(int fd)
         goto exit_cmp;
     }
 
+/*
 // =============
 // 't1'
     if ( strncmp(prompt,"t1",2) == 0 ){
         goto exit_cmp;
     }
+*/
 
 //
 // Not a reserved word.
