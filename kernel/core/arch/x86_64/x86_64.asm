@@ -3,7 +3,6 @@
 
 ;extern _Module0EntryPoint
 
-
 ; Type/flags word:
 ; 0xEE00 → Present=1, DPL=3, Type=0xE (interrupt gate).
 ;  + Means: user mode (ring 3) can call this gate (e.g. syscalls).
@@ -26,6 +25,39 @@
 ; + 0x8E00 → hardware IRQs, kernel‑only, interrupts disabled on entry.
 ; + 0xEE00 → syscalls, user‑callable, interrupts disabled on entry.
 ; + 0xEF00 (if you ever use it) → syscalls, user‑callable, interrupts stay enabled.
+
+
+
+
+; ============================================
+; Spurious interrupt handler (vector 0xFF)
+; - Delivered via LAPIC SVR when a spurious condition occurs.
+; - No EOI is required for spurious interrupts.
+; - Keep it minimal: preserve a few registers, optionally log, then iretq.
+; ============================================
+
+; Spurious interrupts (SVR vector, e.g. 0xFF): 
+; These are special. The LAPIC does not set the “in‑service” bit 
+; for spurious interrupts. 
+; → That means no EOI is required. 
+; → If you try to write EOI, it won’t hurt, but it’s unnecessary.
+
+global _spurious_handler
+_spurious_handler:
+    ; Preserve scratch registers (optional, keep minimal)
+    push rax
+    push rcx
+    push rdx
+
+    ; Optionally: increment a counter or emit a debug message here.
+    ; (left empty for safety/minimalism)
+
+    pop rdx
+    pop rcx
+    pop rax
+    iretq
+
+
 
 ; ==================================
 ; Clear Nested Task bit in RFLAGS.
@@ -733,6 +765,13 @@ setup_vectors:
     mov rax,  qword _int199
     mov rbx,  qword 199
     call _setup_system_interrupt   ; 0xEE00
+
+
+; 255 - Spurious interrupt vector (SVR)
+; Handler should just acknowledge and return.
+    mov rax, qword _spurious_handler
+    mov rbx, qword 255
+    call _setup_system_interrupt_hw  ; 0x8E00
 
     ;; ...
 

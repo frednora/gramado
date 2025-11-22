@@ -63,13 +63,13 @@
 struct lapic_info_d  LAPIC;
 
 #define APIC_CONFIG_DATA_LVT(TimerMode,Mask,TriggerMode,Remote,InterruptInput,DeliveryMode,Vector)(\
-(((unsigned int)(TimerMode) &0x3 ) << 17) |\
-(((unsigned int)(Mask) &0x1 ) << 16) |\
-(((unsigned int)(TriggerMode) &0x1 ) << 15) |\
-(((unsigned int)(Remote) &0x1 ) << 14) |\
-(((unsigned int)(InterruptInput) &0x1 ) << 13) |\
-(((unsigned int)(DeliveryMode) &0x7 ) << 8) |\
-((unsigned int)(Vector) &0xff )\
+(((unsigned int)(TimerMode) & 0x3 )      << 17) |\
+(((unsigned int)(Mask) & 0x1 )           << 16) |\
+(((unsigned int)(TriggerMode) & 0x1 )    << 15) |\
+(((unsigned int)(Remote) & 0x1 )         << 14) |\
+(((unsigned int)(InterruptInput) & 0x1 ) << 13) |\
+(((unsigned int)(DeliveryMode) & 0x7 )   << 8)  |\
+((unsigned int)(Vector) & 0xff )\
 )
 
 unsigned int localId=0;
@@ -492,43 +492,219 @@ void enable_apic(void)
 
 // Task Priority Register (TPR), to inhibit softint delivery?
 // Clear task priority to enable all interrupts.
+// Task Priority Register (TPR):
+// Clearing TPR to 0 is correct to allow all interrupts. 
+// Avoid redundant writes; use your local_apic_write_command wrapper consistently.
+
+    // Allow all interrupts by priority (TPR = 0)
+    // Task Priority Register (TPR), to inhibit softint delivery
+    // The low 8 bits (0–7) hold the priority threshold.
     local_apic_write_command(
-        (unsigned short) 0x0080, 
+        (unsigned short) LAPIC_TASK_PRIORITY, 
         (unsigned int) 0 );
 
 //---------------------
 //#test
 //#todo
 
-// #warning: We already did that above.
-//Task Priority Register (TPR), to inhibit softint delivery
-    *(volatile unsigned int*)(LAPIC.lapic_va + LAPIC_TASK_PRIORITY) = 
-        0; //0x20;
+//
+// LVT
+//
+
+// What is the Local Vector Table (LVT)?
+// The Local Vector Table is a set of registers inside 
+// each Local APIC (one per CPU core).
+// Each entry in the LVT controls how a particular 
+// local interrupt source is delivered to the processor.
+// Think of it as a mini routing table for internal LAPIC events,
+// separate from the I/O APIC redirection table 
+// (which handles external device IRQs).
+
+/*
+How many LVT entries exist?
+On a typical x86 LAPIC (xAPIC mode), you’ll find about 6–7 LVT registers:
+LVT Timer → for the LAPIC’s internal timer
+LVT Thermal Sensor → for thermal events (on CPUs that support it)
+LVT Performance Counter → for performance monitoring interrupts
+LVT LINT0 → local interrupt line 0 (often legacy ExtINT input)
+LVT LINT1 → local interrupt line 1 (often NMI input)
+LVT Error → for LAPIC internal error reporting
+(Sometimes extra): LVT for “CMCI” (Corrected Machine Check Interrupt) on newer CPUs
+*/
+
+/*
+Quick notes
+Mask bit: 
+  1 disables the source; 0 enables. 
+  Your current setup keeps all LVT sources masked until your IDT and 
+  handlers are ready.
+Delivery modes:
+  0 = Fixed (normal handler at given vector).
+  4 = NMI (vector field ignored; delivers NMI).
+  7 = ExtINT (bridges legacy PIC external interrupt into LAPIC via LINT0).
+
+When you’re ready:
+  Unmask the LAPIC timer (set Mask=0) after setting divide and initial count, 
+  and ensure an IDT handler exists at 0x20.
+  Decide whether LINT0 should remain masked (typical with IOAPIC routing).
+  Unmask LINT1 for NMIs if desired.
+
+Keep vectors collision-free with your IOAPIC mappings and other local sources.
+*/
+
+//LVT Timer (vector 0x20):  Masked → no timer interrupts yet.
+//LVT Perf Counter (0x21):  Masked → no perf events.
+//LVT LINT0 (0x22, ExtINT): Masked → not accepting legacy external interrupts.
+//LVT LINT1 (0x23, NMI):    Masked → not accepting NMIs.
+//LVT Error (0x24):         Masked → no LAPIC error interrupts.
 
 // Timer interrupt vector, 
 // to disable timer interrupts
-    *(volatile unsigned int*)(LAPIC.lapic_va + LAPIC_LVT_TIMER) = 
-        APIC_CONFIG_DATA_LVT(0,1,0,0,0,APIC_NULL,0x20);
+    //*(volatile unsigned int*)(LAPIC.lapic_va + LAPIC_LVT_TIMER) = 
+       // APIC_CONFIG_DATA_LVT(0,1,0,0,0,APIC_NULL,0x20);
+
+/*
+LVT TIMER (offset LAPIC_LVT_TIMER)
+- Vector:        0x20 (IDT entry to invoke when LAPIC timer fires)
+- DeliveryMode:  0 (Fixed)
+- Mask:          1 (disabled)  --> Timer won't generate interrupts yet
+- TriggerMode:   0 (edge; only relevant for LINT lines; timer ignores)
+- Remote:        0 (remote IRR; not used by timer)
+- Polarity:      0 (active high; N/A to timer)
+- TimerMode:     0 (one-shot; you’ll set divide/initial count later)
+*/
+    local_apic_write_command(
+        (unsigned short) LAPIC_LVT_TIMER,
+        (unsigned int) APIC_CONFIG_DATA_LVT(
+            /*TimerMode*/      0,
+            /*Mask*/           1,
+            /*TriggerMode*/    0,
+            /*Remote*/         0,
+            /*InterruptInput*/ 0,
+            /*DeliveryMode*/   0,
+            /*Vector*/         LVT_TIMER_VECTOR
+        )
+    );
+
+
+
 
 // Performance counter interrupt, 
 // to disable performance counter interrupts
-    *(volatile unsigned int*)(LAPIC.lapic_va + LAPIC_LVT_PERF) = 
-        APIC_CONFIG_DATA_LVT(APIC_NULL,1,0,0,0,0,0x21);
+    //*(volatile unsigned int*)(LAPIC.lapic_va + LAPIC_LVT_PERF) = 
+        //APIC_CONFIG_DATA_LVT(APIC_NULL,1,0,0,0,0,0x21);
+
+/*
+LVT PERFORMANCE COUNTER (offset LAPIC_LVT_PERF)
+- Vector:        0x21
+- DeliveryMode:  0 (Fixed)
+- Mask:          1 (disabled)
+- TriggerMode:   0 (edge; N/A)
+- Remote:        0
+- Polarity:      0
+*/
+    local_apic_write_command(
+        (unsigned short) LAPIC_LVT_PERF,
+        (unsigned int) APIC_CONFIG_DATA_LVT(
+            /*TimerMode*/      0,
+            /*Mask*/           1,
+            /*TriggerMode*/    0,
+            /*Remote*/         0,
+            /*InterruptInput*/ 0,
+            /*DeliveryMode*/   0,
+            /*Vector*/         LVT_PERF_VECTOR
+        )
+    );
+
 
 // Local interrupt 0, 
 // to enable normal external interrupts, Trigger Mode = Level
-    *(volatile unsigned int*)(LAPIC.lapic_va + LAPIC_LVT_LINT0) = 
-        APIC_CONFIG_DATA_LVT(APIC_NULL,1,APIC_NULL,APIC_NULL,1,7,0x22);
+    //*(volatile unsigned int*)(LAPIC.lapic_va + LAPIC_LVT_LINT0) = 
+        //APIC_CONFIG_DATA_LVT(APIC_NULL,1,APIC_NULL,APIC_NULL,1,7,0x22);
+
+/*
+LVT LINT0 (offset LAPIC_LVT_LINT0)
+- Vector:        0x22
+- DeliveryMode:  7 (ExtINT; legacy external interrupt input)
+- Mask:          1 (disabled)  --> Not accepting external interrupts via LINT0 now
+- TriggerMode:   1 (level)
+- Remote:        0 (remote IRR clear)
+- Polarity:      1 (active low)  --> common for legacy ISA lines
+Note: In symmetric I/O mode with IOAPIC, many kernels keep LINT0 masked and route
+external device IRQs via IOAPIC redirection entries instead.
+*/
+    local_apic_write_command(
+        (unsigned short) LAPIC_LVT_LINT0,
+        (unsigned int) APIC_CONFIG_DATA_LVT(
+            /*TimerMode*/      0,
+            /*Mask*/           1,
+            /*TriggerMode*/    1,
+            /*Remote*/         0,
+            /*InterruptInput*/ 1,
+            /*DeliveryMode*/   7,
+            /*Vector*/         LVT_LINT0_VECTOR
+        )
+   );
+
+
 
 // Local interrupt 1, 
 // to enable normal NMI processing
-    *(volatile unsigned int*)(LAPIC.lapic_va + LAPIC_LVT_LINT1) = 
-        APIC_CONFIG_DATA_LVT(APIC_NULL,1,APIC_NULL,APIC_NULL,0,4,0x23);
+    //*(volatile unsigned int*)(LAPIC.lapic_va + LAPIC_LVT_LINT1) = 
+        //APIC_CONFIG_DATA_LVT(APIC_NULL,1,APIC_NULL,APIC_NULL,0,4,0x23);
+
+/*
+LVT LINT1 (offset LAPIC_LVT_LINT1)
+- Vector:        0x23 (ignored for NMI delivery; NMI doesn’t use the vector field)
+- DeliveryMode:  4 (NMI)
+- Mask:          1 (disabled)  --> Not accepting NMIs now
+- TriggerMode:   0 (edge)
+- Remote:        0
+- Polarity:      0 (active high)
+Note: Typically you’d unmask LINT1 for NMI if you plan to handle NMIs.
+*/
+    local_apic_write_command(
+        (unsigned short) LAPIC_LVT_LINT1,
+        (unsigned int) APIC_CONFIG_DATA_LVT(
+            /*TimerMode*/      0,
+            /*Mask*/           1,
+            /*TriggerMode*/    0,
+            /*Remote*/         0,
+            /*InterruptInput*/ 0,
+            /*DeliveryMode*/   4,
+            /*Vector*/         LVT_LINT1_VECTOR
+        )
+    );
+
 
 // Error interrupt, 
 // to disable error interrupts
-    *(volatile unsigned int*)(LAPIC.lapic_va + LAPIC_LVT_ERR) = 
-        APIC_CONFIG_DATA_LVT(APIC_NULL,1,APIC_NULL,APIC_NULL,APIC_NULL,0,0x24);
+    //*(volatile unsigned int*)(LAPIC.lapic_va + LAPIC_LVT_ERR) = 
+        //APIC_CONFIG_DATA_LVT(APIC_NULL,1,APIC_NULL,APIC_NULL,APIC_NULL,0,0x24);
+
+/*
+LVT ERROR (offset LAPIC_LVT_ERR)
+- Vector:        0x24
+- DeliveryMode:  0 (Fixed)
+- Mask:          1 (disabled)  --> No LAPIC error interrupts yet
+- TriggerMode:   0 (edge; N/A)
+- Remote:        0
+- Polarity:      0
+Note: Common to keep masked until you install an error handler; then unmask.
+*/
+    local_apic_write_command(
+        (unsigned short) LAPIC_LVT_ERR,
+        (unsigned int) APIC_CONFIG_DATA_LVT(
+            /*TimerMode*/      0,
+            /*Mask*/           1,
+            /*TriggerMode*/    0,
+            /*Remote*/         0,
+            /*InterruptInput*/ 0,
+            /*DeliveryMode*/   0,
+            /*Vector*/         LVT_ERROR_VECTOR
+        )
+    );
+
 
 /*
 Spurious-Interrupt Vector Register:
@@ -570,10 +746,25 @@ So:
 // LAPIC_SVR = 0x00F0
 // Value = 0x1FF.
 // Interrupt 256 i guess.
+// bit 8 enables LAPIC and vector 0xFF is a safe spurious vector.
+// Consider whether to set bit 12 (EOI broadcast suppression). 
+// Default is broadcast; suppression is useful only 
+// in specific setups (IRR/IRR bridging).
+// 0x00F0 → the SVR register offset inside the LAPIC.
+// 0x100  → bit 8 set → this enables the LAPIC.
+// 0xFF   → the vector number (255) that the LAPIC will deliver 
+//          if a spurious interrupt occurs.
+
+// Important distinction
+// This 0xFF vector is not part of the LVT entries.
+// It’s the special vector defined in the SVR register.
+// You must have an IDT entry at 0xFF, even if the handler 
+// just acknowledges and returns, because the LAPIC may 
+// deliver a spurious interrupt there.
 
     local_apic_write_command (
-        (unsigned short) 0x00F0,  
-        (unsigned int) (  0x100 | 0xFF ) );
+        (unsigned short) 0x00F0,  // // SVR register offset in LAPIC MMIO space
+        (unsigned int) (  0x100 | LAPIC_SPURIOUS_VECTOR ) );  // Enable bit + vector
 
 /*
 //
