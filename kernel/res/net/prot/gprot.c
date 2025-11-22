@@ -112,7 +112,8 @@ int gprot_handle_protocol(char *data, uint16_t s_port, uint16_t d_port)
             (buf + 4),
             "Gramado OS received a g:x request\n");
 
-        ipc_post_message_to_ds( (int) 800800, 0, 0 );
+        if (InputTargets.target_ds_queue)
+            ipc_post_message_to_ds( (int) 800800, 0, 0 );
         NoReply = FALSE;
         goto done;
     }

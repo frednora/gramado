@@ -735,11 +735,6 @@ int keInitialize(int phase)
         current_display = 0;
         current_screen = 0;
 
-        // #todo: Move to evi/?
-        // Enable both input targets for now.
-        // stdin and thread's queue,
-        //input_set_input_targets(TRUE,TRUE);
-
         // see: user.c
         // userInitializeStuff();
 

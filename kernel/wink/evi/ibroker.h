@@ -24,7 +24,10 @@ ksys_console_process_keyboard_input (
     unsigned long long1, 
     unsigned long long2 );
 
-int input_set_input_targets(int stdin_target, int queue_target);
+// Input targets
+int input_enable_this_input_target(int this_one);
+int input_disable_this_input_target(int this_one);
+
 
 int input_process_cad_combination(unsigned long flags);
 

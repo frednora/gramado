@@ -74,6 +74,18 @@
 
 // ...
 
+// Select the default desired input targets
+// It sends the same input to multiple targets,
+// depends on the configurarion.
+// See: 
+// kmain.c   (When we setup the configuration options)
+// ibroker.c (Send input to the targets)
+#define CONFIG_INPUT_TARGET_TTY  0       // #todo: This is work in progress
+#define CONFIG_INPUT_TARGET_STDIN  1     // # working
+#define CONFIG_INPUT_TARGET_DS_QUEUE  1  // # working
+// More? Maybe initprocess is an configuration option.
+// ...
+
 // ------------------------------------------------------
 // lapic/ioapic debug.
 // see: kmain.c, apic.c, ioapic.c.

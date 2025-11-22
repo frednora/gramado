@@ -77,10 +77,28 @@ __consoleProcessKeyboardInput (
 
 static void setup_minimal_ring0_thread(void);
 
+static int
+ibroker_post_message_to_ds ( 
+    int msg, 
+    unsigned long long1, 
+    unsigned long long2 );
 //
 // ================================================
 //
 
+static int
+ibroker_post_message_to_ds ( 
+    int msg, 
+    unsigned long long1, 
+    unsigned long long2 )
+{
+    if (InputTargets.target_ds_queue != TRUE)
+        return (int) -1;
+    if (msg < 0)
+        return (int) -1;
+// Send it to the thread queue of the display server.
+    return (int) ipc_post_message_to_ds(msg,long1,long2);
+}
 
 // Minimal ring 0 thread example
 
@@ -131,40 +149,46 @@ int input_process_cad_combination(unsigned long flags)
 }
 
 // -----------------------------------
-// Selecting the input targets.
-// We can sent input to some targets:
-// + stdin file.
-// + Message queue of the foreground thread.
-// Let's select the valid targets.
-int input_set_input_targets(int stdin_target, int queue_target)
+// Selecting the input targets
+
+int input_enable_this_input_target(int this_one)
 {
-
-// Not initialized
-    if (InputTargets.initialized != TRUE)
+    switch (this_one)
     {
-        // Both
-        InputTargets.target_stdin = TRUE;
-        InputTargets.target_thread_queue = TRUE;
-    
-        InputTargets.initialized = TRUE;
-        return 0;
-    }
+        case INPUT_TARGET_TTY:
+            InputTargets.target_tty = TRUE;
+            break;
+        case INPUT_TARGET_STDIN:
+            InputTargets.target_stdin = TRUE;
+            break;
+        case INPUT_TARGET_DS_QUEUE:
+            InputTargets.target_ds_queue = TRUE;
+            break;
+        default:
+            return (int) -1;
+            break;
+    };
 
-// stdin::
-    if (stdin_target == TRUE){
-        InputTargets.target_stdin = TRUE;
-    }
-    if (stdin_target == FALSE){
-        InputTargets.target_stdin = FALSE;
-    }
+    return 0;
+}
 
-// queue::
-    if (queue_target == TRUE){
-        InputTargets.target_thread_queue = TRUE;
-    }
-    if (queue_target == FALSE){
-        InputTargets.target_thread_queue = FALSE;
-    }
+int input_disable_this_input_target(int this_one)
+{
+    switch (this_one)
+    {
+        case INPUT_TARGET_TTY:
+            InputTargets.target_tty = FALSE;
+            break;
+        case INPUT_TARGET_STDIN:
+            InputTargets.target_stdin = FALSE;
+            break;
+        case INPUT_TARGET_DS_QUEUE:
+            InputTargets.target_ds_queue = FALSE;
+            break;
+        default:
+            return (int) -1;
+            break;
+    };
 
     return 0;
 }
@@ -878,25 +902,25 @@ __ProcessExtendedKeyboardKeyStroke(
     switch (scancode)
     {
         case 0x1D: //pause, r-control
-            //ipc_post_message_to_ds( MSG_INSERT, 0, scancode );
+            //ibroker_post_message_to_ds( MSG_INSERT, 0, scancode );
             break;
         case 0x52: //ins
-            ipc_post_message_to_ds( MSG_INSERT, 0, scancode );
+            ibroker_post_message_to_ds( MSG_INSERT, 0, scancode );
             break;
         case 0x53:  //del
-            ipc_post_message_to_ds( MSG_CLEAR, 0, scancode );
+            ibroker_post_message_to_ds( MSG_CLEAR, 0, scancode );
             break;
         case 0x47:  //home
-            //ipc_post_message_to_ds( MSG_INSERT, 0, scancode );
+            //ibroker_post_message_to_ds( MSG_INSERT, 0, scancode );
             break;
         case 0x49:  //pgup
-            //ipc_post_message_to_ds( MSG_INSERT, 0, scancode );
+            //ibroker_post_message_to_ds( MSG_INSERT, 0, scancode );
             break;
         case 0x51:  //pgdn
-            //ipc_post_message_to_ds( MSG_INSERT, 0, scancode );
+            //ibroker_post_message_to_ds( MSG_INSERT, 0, scancode );
             break;
         case 0x4F:  //end
-            //ipc_post_message_to_ds( MSG_INSERT, 0, scancode );
+            //ibroker_post_message_to_ds( MSG_INSERT, 0, scancode );
             break;
 
         //#bugbug
@@ -905,31 +929,31 @@ __ProcessExtendedKeyboardKeyStroke(
 
         case 0x4D:  //right
             if (ctrl_status == TRUE){
-                ipc_post_message_to_ds( MSG_CONTROL_ARROW_RIGHT, VK_RIGHT, scancode );
+                ibroker_post_message_to_ds( MSG_CONTROL_ARROW_RIGHT, VK_RIGHT, scancode );
                 return 0;
             }
-            //ipc_post_message_to_ds( MSG_KEYDOWN, VK_RIGHT, scancode );
+            //ibroker_post_message_to_ds( MSG_KEYDOWN, VK_RIGHT, scancode );
             break;
         case 0x48:  //up
             if (ctrl_status == TRUE){
-                ipc_post_message_to_ds( MSG_CONTROL_ARROW_UP, VK_UP, scancode );
+                ibroker_post_message_to_ds( MSG_CONTROL_ARROW_UP, VK_UP, scancode );
                 return 0;
             }
-            //ipc_post_message_to_ds( MSG_KEYDOWN, VK_UP, scancode );
+            //ibroker_post_message_to_ds( MSG_KEYDOWN, VK_UP, scancode );
             break;
         case 0x50:  //down
             if (ctrl_status == TRUE){
-                ipc_post_message_to_ds( MSG_CONTROL_ARROW_DOWN, VK_DOWN, scancode );
+                ibroker_post_message_to_ds( MSG_CONTROL_ARROW_DOWN, VK_DOWN, scancode );
                 return 0;
             }
-            //ipc_post_message_to_ds( MSG_KEYDOWN, VK_DOWN, scancode );
+            //ibroker_post_message_to_ds( MSG_KEYDOWN, VK_DOWN, scancode );
             break;
         case 0x4B:  //left
             if (ctrl_status == TRUE){
-                ipc_post_message_to_ds( MSG_CONTROL_ARROW_LEFT, VK_LEFT, scancode );
+                ibroker_post_message_to_ds( MSG_CONTROL_ARROW_LEFT, VK_LEFT, scancode );
                 return 0;
             }
-            //ipc_post_message_to_ds( MSG_KEYDOWN, VK_LEFT, scancode );
+            //ibroker_post_message_to_ds( MSG_KEYDOWN, VK_LEFT, scancode );
             break;
 
         case 0x5D:  //sysmenu (app)
@@ -1115,50 +1139,50 @@ __consoleProcessKeyboardInput (
 
                 // ^a = Start OF Header = 1
                 if (ctrl_status == TRUE && long1 == ASCII_SOH){
-                    ipc_post_message_to_ds( MSG_SELECT_ALL, long1, long2 );
+                    ibroker_post_message_to_ds( MSG_SELECT_ALL, long1, long2 );
                     return 0;
                 }
 
                 // ^c = End Of Text = 3
                 if (ctrl_status == TRUE && long1 == ASCII_ETX){
-                    ipc_post_message_to_ds( MSG_COPY, long1, long2 );
+                    ibroker_post_message_to_ds( MSG_COPY, long1, long2 );
                     return 0;
                 }
 
                 // ^f = Acknowledgement = 6
                 if (ctrl_status == TRUE && long1 == ASCII_ACK){
-                    ipc_post_message_to_ds( MSG_FIND, long1, long2 );
+                    ibroker_post_message_to_ds( MSG_FIND, long1, long2 );
                     return 0;
                 }
 
                 // ^w = End Of Transition Block = 17
                 // Let's close the active window with [control + w]. 
                 if (ctrl_status == TRUE && long1 == ASCII_ETB){
-                    ipc_post_message_to_ds( MSG_CLOSE, long1, long2 );
+                    ibroker_post_message_to_ds( MSG_CLOSE, long1, long2 );
                     return 0;
                 }
 
                 // ^s = Device Control 3 = 19
                 if (ctrl_status == TRUE && long1 == ASCII_DC3){
-                    ipc_post_message_to_ds( MSG_SAVE, long1, long2 );
+                    ibroker_post_message_to_ds( MSG_SAVE, long1, long2 );
                     return 0;
                 }
 
                 // ^v = Synchronous Idle = 22
                 if (ctrl_status == TRUE && long1 == ASCII_SYN){
-                    ipc_post_message_to_ds( MSG_PASTE, long1, long2 );
+                    ibroker_post_message_to_ds( MSG_PASTE, long1, long2 );
                     return 0;
                 }
 
                 // ^x = Cancel = 24
                 if (ctrl_status == TRUE && long1 == ASCII_CAN){
-                    ipc_post_message_to_ds( MSG_CUT, long1, long2 );
+                    ibroker_post_message_to_ds( MSG_CUT, long1, long2 );
                     return 0;
                 }
 
                 // ^z = Substitute - 26
                 if (ctrl_status == TRUE && long1 == ASCII_SUB){
-                    ipc_post_message_to_ds( MSG_UNDO, long1, long2 );
+                    ibroker_post_message_to_ds( MSG_UNDO, long1, long2 );
                     return 0;
                 }
 
@@ -1180,7 +1204,7 @@ __consoleProcessKeyboardInput (
 
                 // #test
                 // NOT SENDING typing chars to the server for now.
-                // ipc_post_message_to_ds( msg, long1, long2 );
+                // ibroker_post_message_to_ds( msg, long1, long2 );
 
                 return 0;
             }
@@ -1249,11 +1273,11 @@ __consoleProcessKeyboardInput (
                     return 0;
                 }
                 if (alt_status == TRUE){
-                    //ipc_post_message_to_ds( (int) 77101, 0, 0 );
+                    //ibroker_post_message_to_ds( (int) 77101, 0, 0 );
                 }
                 if (shift_status == TRUE){
                     jobcontrol_switch_console(0);
-                    //ipc_post_message_to_ds( (int) 88101, 0, 0 );
+                    //ibroker_post_message_to_ds( (int) 88101, 0, 0 );
                 }
                 return 0;
                 break;
@@ -1264,11 +1288,11 @@ __consoleProcessKeyboardInput (
                     return 0;
                 }
                 if (alt_status == TRUE){
-                    //ipc_post_message_to_ds( (int) 77102, 0, 0 );
+                    //ibroker_post_message_to_ds( (int) 77102, 0, 0 );
                 }
                 if (shift_status == TRUE){
                     jobcontrol_switch_console(1);
-                    //ipc_post_message_to_ds( (int) 88102, 0, 0 );
+                    //ibroker_post_message_to_ds( (int) 88102, 0, 0 );
                 }
                 return 0;
                 break;
@@ -1279,11 +1303,11 @@ __consoleProcessKeyboardInput (
                     return 0;
                 }
                 if (alt_status == TRUE){
-                    //ipc_post_message_to_ds( (int) 77103, 0, 0 );
+                    //ibroker_post_message_to_ds( (int) 77103, 0, 0 );
                 }
                 if (shift_status == TRUE){
                     jobcontrol_switch_console(2);
-                    //ipc_post_message_to_ds( (int) 88103, 0, 0 );
+                    //ibroker_post_message_to_ds( (int) 88103, 0, 0 );
                 }
                 return 0;
                 break;
@@ -1296,12 +1320,12 @@ __consoleProcessKeyboardInput (
                 // alt+f4: The vm handle this combination.
                 // We can't use it on vms.
                 if (alt_status == TRUE){
-                    //ipc_post_message_to_ds( (int) 77104, 0, 0 );
+                    //ibroker_post_message_to_ds( (int) 77104, 0, 0 );
                     return 0;
                 }
                 if (shift_status == TRUE){
                     jobcontrol_switch_console(3);
-                    //ipc_post_message_to_ds( (int) 88104, 0, 0 );
+                    //ibroker_post_message_to_ds( (int) 88104, 0, 0 );
                 }
                 return 0;
                 break;
@@ -1310,14 +1334,14 @@ __consoleProcessKeyboardInput (
             case VK_F5:
                 if (ctrl_status == TRUE){
                     //do_launch_app_via_initprocess(4005);
-                    //ipc_post_message_to_ds( 33888, 0, 0 ); //#TEST
+                    //ibroker_post_message_to_ds( 33888, 0, 0 ); //#TEST
                     return 0;
                 }
                 if (alt_status == TRUE){
-                    //ipc_post_message_to_ds( (int) 77105, 0, 0 );
+                    //ibroker_post_message_to_ds( (int) 77105, 0, 0 );
                 }
                 if (shift_status == TRUE){
-                    //ipc_post_message_to_ds( (int) 88105, 0, 0 );
+                    //ibroker_post_message_to_ds( (int) 88105, 0, 0 );
                     //ipc_post_message_to_foreground_thread(
                     //   ??, 1234, 1234 );
                 }
@@ -1332,10 +1356,10 @@ __consoleProcessKeyboardInput (
                     return 0; 
                 }
                 if (alt_status == TRUE){
-                    //ipc_post_message_to_ds( (int) 77106, 0, 0 );
+                    //ibroker_post_message_to_ds( (int) 77106, 0, 0 );
                 }
                 if (shift_status == TRUE){
-                    //ipc_post_message_to_ds( (int) 88106, 0, 0 );
+                    //ibroker_post_message_to_ds( (int) 88106, 0, 0 );
                 }
                 return 0;
                 break;
@@ -1347,10 +1371,10 @@ __consoleProcessKeyboardInput (
                     return 0;
                 }
                 if (alt_status == TRUE){
-                    //ipc_post_message_to_ds( (int) 77107, 0, 0 );
+                    //ibroker_post_message_to_ds( (int) 77107, 0, 0 );
                 }
                 if (shift_status == TRUE){
-                    //ipc_post_message_to_ds( (int) 88107, 0, 0 );
+                    //ibroker_post_message_to_ds( (int) 88107, 0, 0 );
                 }
                 return 0;
                 break;
@@ -1361,12 +1385,12 @@ __consoleProcessKeyboardInput (
                     return 0;
                 }
                 if (alt_status == TRUE){
-                    //ipc_post_message_to_ds( (int) 77108, 0, 0 );
+                    //ibroker_post_message_to_ds( (int) 77108, 0, 0 );
                 }
                 if (shift_status == TRUE){
-                    //ipc_post_message_to_ds( (int) 88108, 0, 0 );
+                    //ibroker_post_message_to_ds( (int) 88108, 0, 0 );
                     // MSG_HOTKEY=8888 | 1 = Hotkey id 1.
-                    ipc_post_message_to_ds( (int) MSG_HOTKEY, 1, 0 );
+                    ibroker_post_message_to_ds( (int) MSG_HOTKEY, 1, 0 );
                 }
                 return 0;
                 break;
@@ -1378,7 +1402,7 @@ __consoleProcessKeyboardInput (
                     return 0;
                 }
                 if (alt_status == TRUE){
-                    //ipc_post_message_to_ds( (int) 77109, 0, 0 );
+                    //ibroker_post_message_to_ds( (int) 77109, 0, 0 );
                 }
                 // [Shift+F9] - Reboot
                 if (shift_status == TRUE){
@@ -1394,13 +1418,13 @@ __consoleProcessKeyboardInput (
                     return 0;
                 }
                 if (alt_status == TRUE){
-                    //ipc_post_message_to_ds( (int) 77110, 0, 0 );
+                    //ibroker_post_message_to_ds( (int) 77110, 0, 0 );
                 }
                 if (shift_status == TRUE){
                     displayInitializeBackground(COLOR_KERNEL_BACKGROUND,TRUE);
                     show_slots();   //See: tlib.c
                     //pages_calc_mem();
-                    //ipc_post_message_to_ds( (int) 88110, 0, 0 );
+                    //ibroker_post_message_to_ds( (int) 88110, 0, 0 );
                     refresh_screen();
                 }
                 return 0;
@@ -1413,7 +1437,7 @@ __consoleProcessKeyboardInput (
                     return 0;
                 }
                 if (alt_status == TRUE){
-                    //ipc_post_message_to_ds( (int) 77111, 0, 0 );
+                    //ibroker_post_message_to_ds( (int) 77111, 0, 0 );
                 }
                 // [Shift+F11] - Safe reboot
                 if (shift_status == TRUE){
@@ -1429,14 +1453,14 @@ __consoleProcessKeyboardInput (
                     return 0;
                 }
                 if (alt_status == TRUE){
-                    //ipc_post_message_to_ds( (int) 77112, 0, 0 );
+                    //ibroker_post_message_to_ds( (int) 77112, 0, 0 );
                 }
 
                 // [SHIFT + F12]
                 // Update all windows and show the mouse pointer.
                 // IN: window, msg code, data1, data2.
                 if (shift_status == TRUE){
-                    ipc_post_message_to_ds( (int) 88112, 0, 0 );
+                    ibroker_post_message_to_ds( (int) 88112, 0, 0 );
                 }
                 return 0;
                 break;
@@ -2096,9 +2120,12 @@ done:
                 // #test
                 // #todo: Create a flag InputTargets.target_tty
                 // It needs to redirect if a tty is connected to another.
-                //tty_queue_putchar( 
-                    //&CONSOLE_TTYS[fg_console].output_queue, 
-                    //(char)__int_ascii_code );
+                if (InputTargets.target_tty == TRUE)
+                {
+                    //tty_queue_putchar( 
+                        //&CONSOLE_TTYS[fg_console].output_queue, 
+                        //(char)__int_ascii_code );
+                }
 
                 // Mandaremos teclas de digitação para stdin
                 // somente se um terminal virtual está em foreground.
@@ -2128,11 +2155,11 @@ done:
         if ( alt_status != TRUE && 
              ctrl_status != TRUE && 
              shift_status != TRUE )
-        {
-            // #todo
-            // Maybe we're gonna send data to the window server
-            // only depending on the input mode. 'Cause we don't wanna
-            // send data to multiple targets.
+        {           
+
+            // ds thread queue
+            if (InputTargets.target_ds_queue == TRUE)
+            {
 
             // ds queue:: 
             // regular keys, not combinations.
@@ -2147,20 +2174,18 @@ done:
             // Sending typed keys to the display server.
             // Remember: We are also sending it to other apps via stdin.
             // #todo: Maybe the display server needs to ignore these keys sometimes.
-            if (InputTargets.target_thread_queue == TRUE)
-            {
-                ipc_post_message_to_ds(
+                
+                // #bugbug
+                // What are the types we're sending here
+                ibroker_post_message_to_ds(
                     Event_Message, 
                     Event_LongASCIICode,
                     Event_LongRawByte );
-            }
-            
-
+        
             // Let's send only the function keys to the display server,
             // not the other ones. In order to be used by the window manager.
             // Make and Break.
-            if (InputTargets.target_thread_queue == TRUE)
-            {
+
                 if (Event_Message == MSG_SYSKEYDOWN || Event_Message == MSG_SYSKEYUP)
                 {
                     switch (Event_LongASCIICode){
@@ -2176,7 +2201,7 @@ done:
                         case VK_F10: 
                         case VK_F11: 
                         case VK_F12:
-                            ipc_post_message_to_ds(
+                            ibroker_post_message_to_ds(
                                 Event_Message, 
                                 Event_LongASCIICode,
                                 Event_LongRawByte );
@@ -2328,7 +2353,7 @@ wmMouseEvent(
         // na mensagem ja postada, ao invés de postar uma nova.
         // O window server ficaria apenas com a posição atual.
 
-        ipc_post_message_to_ds(
+        ibroker_post_message_to_ds(
             event_id, 
             (unsigned long) long1, 
             (unsigned long) long2 );
@@ -2353,7 +2378,7 @@ wmMouseEvent(
     if ( event_id == MSG_MOUSEPRESSED || 
          event_id == MSG_MOUSERELEASED )
     {
-       ipc_post_message_to_ds( event_id, button_number, button_number );
+       ibroker_post_message_to_ds( event_id, button_number, button_number );
        return 0;
     }
 
@@ -2380,7 +2405,7 @@ int wmKeyboardEvent(int event_id, long long1, long long2)
 // What are the valid events?
 // Use switch()
 
-    ipc_post_message_to_ds(
+    ibroker_post_message_to_ds(
             event_id, 
             (unsigned long) long1, 
             (unsigned long) long2 );
@@ -2408,7 +2433,7 @@ int wmTimerEvent(int signature)
 // Master timer.
 // After 1 Sec.
     if ((jiffies % JIFFY_FREQ) == 0){
-        ipc_post_message_to_ds( MSG_TIMER, 1234, jiffies );
+        ibroker_post_message_to_ds( MSG_TIMER, 1234, jiffies );
     }
 
     //return 0;

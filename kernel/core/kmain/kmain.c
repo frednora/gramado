@@ -830,10 +830,31 @@ static int deviceinit(void)
     DDINIT_ps2_early_initialization();
     //DDINIT_ps2(); // (full initialization)
 
-    // #todo: Move to evi/?
-    // Enable both input targets for now.
-    // stdin and thread's queue,
-    input_set_input_targets(TRUE,TRUE);
+// --------------------------
+// Initialize the input targets.
+// Select the default desired input targets
+// See: 
+// config.h input.h input.c ibroker.h ibroker.c
+
+    if (CONFIG_INPUT_TARGET_TTY == 1){
+        input_enable_this_input_target(INPUT_TARGET_TTY);
+    }else{
+        input_disable_this_input_target(INPUT_TARGET_TTY);
+    };
+
+    if (CONFIG_INPUT_TARGET_STDIN == 1){
+        input_enable_this_input_target(INPUT_TARGET_STDIN);
+    }else{
+        input_disable_this_input_target(INPUT_TARGET_STDIN);
+    };
+
+    if (CONFIG_INPUT_TARGET_DS_QUEUE == 1){
+        input_enable_this_input_target(INPUT_TARGET_DS_QUEUE);
+    }else{
+        input_disable_this_input_target(INPUT_TARGET_DS_QUEUE);
+    };
+
+// ...
 
     return 0;
 }
