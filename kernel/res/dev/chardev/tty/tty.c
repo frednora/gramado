@@ -429,6 +429,36 @@ fail:
     return (int) (-1);
 }
 
+// Write into the output queue.
+int __tty_read2(struct tty_d *tty, char *buffer, int nr)
+{
+    if (!tty || tty->magic != TTY_MAGIC) 
+        return -1;
+    if (!buffer || nr <= 0) 
+        return -1;
+
+    int read_count = 0;
+
+    while (read_count < nr) 
+    {
+        // Get one char from the output queue
+        int c = tty_queue_getchar(&tty->output_queue);
+
+        if (c < 0) {
+            // No more chars available in the queue
+            break;
+        }
+
+        buffer[read_count] = (char)c;
+        read_count++;
+    }
+
+    //#debug
+    //printk("__tty_read2: [DONE] %d/%d bytes read\n", read_count, nr);
+
+    return read_count;
+}
+
 /*
  * __tty_write:
  *     Write n bytes to a tty. raw buffer.
@@ -600,7 +630,7 @@ int __tty_write2(struct tty_d *tty, char *buffer, int nr)
     //#debug
     //printk("__tty_write: [DONE] %d/%d bytes written\n", written, nr);
 
-    tty_flush_output_queue_ex(tty);
+    //tty_flush_output_queue_ex(tty);
     return written;
 }
 
@@ -683,10 +713,17 @@ tty_read (
     //     return -1;
 
 // Read from tty device.
+/*
      return (int) __tty_read ( 
                       (struct tty_d *) __tty, 
                       (char *) buffer, 
                       (int) n );
+*/
+
+    return (int) __tty_read2 ( 
+                     (struct tty_d *) __tty, 
+                     (char *) buffer, 
+                     (int) n );
 
 fail:
     return (int) -1;

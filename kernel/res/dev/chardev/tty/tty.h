@@ -455,6 +455,8 @@ __tty_read (
     char *buffer, 
     int nr );
 
+int __tty_read2(struct tty_d *tty, char *buffer, int nr);
+
 // Write into the raw queue.
 int 
 __tty_write ( 
