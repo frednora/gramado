@@ -72,6 +72,10 @@ struct lapic_info_d  LAPIC;
 ((unsigned int)(Vector) & 0xff )\
 )
 
+// #todo:
+// Save the value in the cpu[id].apic_id structure.
+// When a program running on a given core queries the Local APIC ID Register, 
+// it will read back the APIC ID assigned to that core’s LAPIC.
 unsigned int localId=0;
 
 #define APIC_NULL  0

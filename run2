@@ -25,6 +25,7 @@ die(){
 # Order: CPU, RAM, DISK, DEVICES.
 	$QEMU \
 	-smp $GRAMADO_CPUS \
+	-machine pc \
 	-m   $GRAMADO_RAM_SIZE \
 	-hda $GRAMADO_DISK_IMAGE \
 	-serial stdio

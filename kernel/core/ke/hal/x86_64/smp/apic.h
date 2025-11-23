@@ -191,11 +191,11 @@ See: apple opensource
 
 
 // Initialization control.
-// The base address by which each processor accesses
-// its local APIC.
+// The base address by which each processor accesses its local APIC.
 struct lapic_info_d
 {
     int initialized;
+
     unsigned long lapic_va;
     unsigned long lapic_pa; 
     int entry;  // pagedirectory entry.
@@ -204,7 +204,6 @@ struct lapic_info_d
     int local_version;
 };
 extern struct lapic_info_d  LAPIC;
-
 
 // =======================
 

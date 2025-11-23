@@ -660,6 +660,10 @@ static int __test_initialize_ap_processor(int apic_id)
 
     unsigned long BufferSizeInBytes = (2*4096);  // 8KB
 
+//
+// How many processors?
+//
+
     // No APs processors yet
     smp_info.nr_ap_running = 0;
     if (CONFIG_INITIALIZE_SECOND_PROCESSOR == 1)
@@ -793,7 +797,8 @@ static int archinit(void)
             if (CONFIG_INITIALIZE_SECOND_PROCESSOR == 1)
             {
                 // Initialize AP processor.
-                __test_initialize_ap_processor(1);  // APIC ID 1
+                if (g_processor_count >= 2)
+                    __test_initialize_ap_processor(1);  // APIC ID 1
                 //__test_initialize_ap_processor(2); // APIC ID 2
                 // ...
 
