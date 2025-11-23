@@ -278,25 +278,36 @@ int tty_queue_getchar(struct tty_queue *q)
 
 // Small worker for TTY queues.
 // Drop this into tty.c (and declare in tty.h if you want).
-
 // Put a single byte into a tty_queue.
 // Returns 0 on success, -1 if full.
+// IN:
+// q = The target queue
+// c = the char
 int tty_queue_putchar(struct tty_queue *q, char c)
 {
-    if (!q) 
-        return (int) -1;
+    unsigned long next_head = 0;
 
-    unsigned long next_head = (q->head + 1) % q->buffer_size;
+// Validate the target queue.
+    if (!q)
+        goto fail;
+
+// Current head position
+    next_head = (unsigned long) ( (q->head +1) % q->buffer_size );
 
     // Full if advancing head would equal tail
     if (next_head == q->tail) {
-        return (int) -1; // queue full
+        goto fail;  // queue full
     }
 
+// Put into the target queue. Using the old head.
     q->buf[q->head] = c;
+// Increment head
     q->head = next_head;
+
     q->cnt++;
     return 0;
+fail:
+    return (int) -1;
 }
 
 
@@ -611,7 +622,7 @@ fail:
     return (int) (-1);
 }
 
-// Write into the output queue.
+// Write into the output queue
 int __tty_write2(struct tty_d *tty, char *buffer, int nr)
 {
     if (!tty || tty->magic != TTY_MAGIC) 
@@ -620,10 +631,16 @@ int __tty_write2(struct tty_d *tty, char *buffer, int nr)
         return -1;
 
     int written = 0;
-    while (written < nr) {
-        if (tty_queue_putchar(&tty->output_queue, buffer[written]) < 0) {
-            break; // queue full
+    while (written < nr) 
+    {
+        if (tty_queue_putchar(&tty->output_queue, buffer[written]) < 0) 
+        {
+            break;  // queue full
         }
+        // ok
+        // Echo it?
+        //tty_flush(tty);
+
         written++;
     }
 
@@ -976,13 +993,26 @@ struct tty_d *file_tty (file *f)
 }
 
 // Flush the output buffer to the current virtual console
+void tty_flush0(struct tty_d *tty,int console_number)
+{   
+    if ((void*) tty == NULL)
+        return;
+    if (tty->magic != 1234)
+        return;
+    if (console_number<0)
+        return;
+    tty_flush_output_queue(tty,console_number);
+}
+
+// Flush the output buffer to the current virtual console
 void tty_flush(struct tty_d *tty)
 {   
     if ((void*) tty == NULL)
         return;
     if (tty->magic != 1234)
         return;
-    tty_flush_output_queue(tty,fg_console);
+    //tty_flush_output_queue(tty,fg_console);
+    tty_flush0(tty,fg_console);
 }
 
 void tty_start(struct tty_d *tty)

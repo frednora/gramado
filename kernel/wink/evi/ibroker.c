@@ -775,13 +775,14 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 // we're simply getting the tty associated with the file.
 
 
-    struct tty_d *myTTY = (struct tty_d *) &CONSOLE_TTYS[fg_console];
+    struct tty_d *myTTY00 = (struct tty_d *) &CONSOLE_TTYS[0];
+    struct tty_d *myTTY01 = (struct tty_d *) &CONSOLE_TTYS[1];
     if ( kstrncmp( cmdline, "tty", 3 ) == 0 )
     {
         // Select the worker,
         // it determines the destination.
         //tty_set_output_worker(myTTY, TTY_OUTPUT_WORKER_FGCONSOLE);
-        tty_set_output_worker(myTTY, TTY_OUTPUT_WORKER_SERIALPORT);
+        //tty_set_output_worker(myTTY, TTY_OUTPUT_WORKER_SERIALPORT);
 
         //tty_write(1,"Hello",5); // failing
 
@@ -789,9 +790,20 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         //__tty_write (myTTY,"Hello Raw Queue",15);
         //tty_flush_raw_queue(myTTY,fg_console);
 
-        // Output queue
-        __tty_write2 (myTTY,"Hello Raw Queue",15);
-        //tty_flush(myTTY);
+
+        // Console 0
+        __tty_write2 (myTTY00,"Hello myTTY00\n",14);
+        tty_flush(myTTY00);
+
+        // Console 1
+        __tty_write2 (myTTY01,"Hello myTTY01",13);
+        tty_flush(myTTY01);
+
+        // TTY associated with the stdout fp.
+        // #fail
+        //__tty_write2 (stdout->tty,"Hello stdout",12);
+        //tty_flush(stdout->tty);
+
         goto exit_cmp;
     }
 
@@ -1090,11 +1102,10 @@ __consoleProcessKeyboardInput (
                 //return 0;
             //}
 
-            // Le's run the embedded shell in order to 
-            // compare the estrings.
+            // Let's run the embedded shell in order to compare the strings
             if (InputBrokerInfo.shell_flag == TRUE)
             {
-                kinput('\0');  // Finalize
+                kinput('\0');  // Finalize the prompt[]
                 // Parse the string in prompt[].
                 ksys_shell_parse_cmdline(prompt,sizeof(prompt));
                 return 0;
@@ -1119,7 +1130,6 @@ __consoleProcessKeyboardInput (
             // Console: Yes, we're using the embedded kernel console.
             // + Put the char into the prompt[] buffer.
             // + Print the char into the screen using fg_console.
-
             if (InputBrokerInfo.shell_flag == TRUE){
                 consoleInputChar(long1);
                 console_putchar((int) long1, fg_console);
@@ -2130,9 +2140,17 @@ done:
                 // It needs to redirect if a tty is connected to another.
                 if (InputTargets.target_tty == TRUE)
                 {
+                    // Put into the output queue
                     //tty_queue_putchar( 
                         //&CONSOLE_TTYS[fg_console].output_queue, 
                         //(char)__int_ascii_code );
+                    // flush the whole queue
+                    //tty_flush(&CONSOLE_TTYS[fg_console]);
+                    //struct tty_d *myTTY99 = (struct tty_d *) &CONSOLE_TTYS[0];
+                    //char myfakebuffer[2];
+                    //myfakebuffer[0] = __int_ascii_code;
+                    //__tty_write2(myTTY99,myfakebuffer,1);
+                    //tty_flush(myTTY99);
                 }
 
                 // Mandaremos teclas de digitação para stdin

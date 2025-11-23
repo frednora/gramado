@@ -435,6 +435,9 @@ void tty_flush_output_queue_to_stdin( struct tty_d *tty);
 
 void tty_flush_output_queue_ex(struct tty_d *tty);
 
+void tty_flush0(struct tty_d *tty,int console_number);
+void tty_flush(struct tty_d *tty);
+
 int 
 tty_copy_raw_buffer( 
     struct tty_d *tty_to, 
@@ -500,7 +503,6 @@ int tty_reset_termios (struct tty_d *tty);
 
 struct tty_d *file_tty (file *f);
 int tty_delete (struct tty_d *tty);
-void tty_flush(struct tty_d *tty);
 void tty_start (struct tty_d *tty);
 void tty_stop (struct tty_d *tty);
 
