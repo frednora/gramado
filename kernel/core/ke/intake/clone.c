@@ -111,8 +111,7 @@ copy_process_struct(
 // Identificadores
 
 // Process ID
-    Process2->pid = (pid_t) p2->pid;  // PID.  O pid do clone.
-    Process2->ppid = (pid_t) Process1->pid;  // PPID. O parent do clone é o pid do pai. 
+    Process2->ppid = (pid_t) Process1->pid;  // The parent's pid
 
 // Security Access Token
 
@@ -142,6 +141,10 @@ copy_process_struct(
 //
 // pml4
 //
+
+// Page tables
+// For now we clone the kernel’s PML4/PD/PT as a base.
+// Later: implement full user-space page table copy or COW for fork().
 
 // #bugbug
 // Precisamos clonar o diret�rio de p�ginas
@@ -267,20 +270,17 @@ copy_process_struct(
     Process2->inode_cwd  = Process1->inode_cwd;
 
 // =============
-// #IMPORTANTE
-// Herdar todos arquivos.
-// #bugbug: 
-// Lembrando que o fd 1 tem sido usado como dispositivo 
-// console virtual.
-
+// File descriptors
+// Inherit all open files from parent.
+// Note: fd 0/1/2 may be redirected; avoid overwriting unless attaching a TTY.
+// Lembrando que o fd 1 tem sido usado como dispositivo console virtual.
 // #bugbug
 // Imagine um processo que fechou um dos três arquivos e agora
 // vamos clonar sem o fluxo padrão em ordem.
 
     for (i=0; i<NUMBER_OF_FILES; i++)
     {
-        // Copy
-        Process2->Objects[i] = Process1->Objects[i];
+        Process2->Objects[i] = Process1->Objects[i];  // Copy
 
         // Updating the referency counter.
         // ??limits
@@ -295,6 +295,8 @@ copy_process_struct(
 // Standard streams.
 // The same 3 files for all the processes.
 // See: kstdio.c
+// #todo: Consider getting the same files from the parent.
+// it can be configurable too for clone().
     Process2->Objects[0] = (unsigned long) stdin;
     Process2->Objects[1] = (unsigned long) stdout;
     Process2->Objects[2] = (unsigned long) stderr;
@@ -415,12 +417,10 @@ copy_process_struct(
 // ========================
 // flower thread
 
-// Vamos clonar a thread flower do processo pai.
-// obs:
-// Me parece que a fun��o que clona apenas a thread flower 
-// chama-se fork1. #todo
-// #todo: Precisamos copiar todas as threads
-// vamos come�ar pela thread flower.
+// Thread cloning
+// Currently only the flower thread is cloned.
+// TODO: implement cloning of all threads in the process.
+
 // teoriacamente elas precisam ter o mesmo endere�o virtual ...
 // mas est�o em endere�os f�sicos diferentes.
 // #bugbug precisamos clonar a thread.
@@ -466,6 +466,10 @@ fail:
     return (int) Status;
 }
 
+
+// Cloning the current process and executing the clone.
+// This behaves like posix_spawn() today (clone + exec).
+// TODO: add fork() semantics (child returns 0, parent returns child PID).
 
 // Clonning the current process and 
 // executing the clone for the first time.
@@ -1027,6 +1031,10 @@ do_clone:
 // ok This is the va allocated to the stack. Not the canonical address.
     child_thread->context.rsp = 
         (unsigned long) (parent_process->childStack + (CONFIG_RING3_STACK_SIZE_IN_KB*1024) -1);
+
+
+    // #todo: Preparing for fork() suppprt
+    //child_thread->context.rax = 0; // fork: child return
 
     // #debug
     // ok

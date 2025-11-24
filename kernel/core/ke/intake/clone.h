@@ -14,6 +14,17 @@ extern int copy_process_in_progress;
 #define F_CLONE_UNIX_STYLE     0x0010  // fork()
 // ...
 
+/*
+Suggested flags:
+CLONE_VM: Share address space (threads).
+CLONE_FILES: Share file table.
+CLONE_SIGHAND: Share signal handlers.
+CLONE_FS: Share root/cwd.
+CLONE_THREAD: Same tgid, treat as a thread.
+CLONE_VFORK: Parent blocks until child exec/exit (later).
+CLONE_NEW_IMAGE: Load a new image (your current spawn behavior).
+*/
+
 // ==============================================
 
 int 
