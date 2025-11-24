@@ -299,6 +299,26 @@ int strncasecmp(const char *_l, const char *_r, size_t n)
 }
 */
 
+/*
+// Ruby-style
+int
+strncasecmp(p1, p2, len)
+    char *p1;
+    char *p2;
+    int len;
+{
+    for (; len != 0; len--, p1++, p2++) {
+	if (toupper(*p1) != toupper(*p2)) {
+	    return toupper(*p1) - toupper(*p2);
+	}
+	if (*p1 == '\0') {
+	    return 0;
+	}
+    }
+    return 0;
+}
+*/
+
 void *memsetw (void *dst, int val, size_t count)
 {
     unsigned short *temp = (unsigned short *) dst;
@@ -559,6 +579,20 @@ int strcasecmp2(const char* s1, const char* s2)
             return 0;
     }
     return foldcase(*(const unsigned char*)s1) < foldcase(*(const unsigned char*)s2) ? -1 : 1;
+}
+*/
+
+/*
+// Ruby-style
+int
+strcasecmp(p1, p2)
+    char *p1, *p2;
+{
+    for ( ; *p1 && *p2; p1++, p2++) {
+	if (toupper(*p1) != toupper(*p2))
+	    return toupper(*p1) - toupper(*p2);
+    }
+    return strlen(p1) - strlen(p2);
 }
 */
 
@@ -1523,6 +1557,29 @@ void *memmove (void *dest, const void *src, size_t count)
 
     return dest;
 }
+
+/*
+// Ruby-style
+char *
+memmove (dst, src, n)
+     char *dst, *src;
+     int n;
+{
+  char *ret = dst;
+
+  if (src < dst) {
+    src += n;
+    dst += n;
+    while (n--)
+      *--dst = *--src;
+  }
+  else if (dst < src)
+    while (n--)
+      *dst++ = *src++;
+  return ret;
+}
+*/
+
 
 /*
  //linux style 
