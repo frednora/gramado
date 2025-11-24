@@ -1,0 +1,6 @@
+
+ Description:
+ After moving/resizing a WT_OVERLAPPED window,
+ hover/click on its child controls stops working. 
+ The root cause is a bad absolute rectangle update for child windows 
+ inside the client area, which breaks hit testing and relative coordinates.

@@ -5484,10 +5484,8 @@ gwssrv_change_window_position (
                    p->absolute_y +
                    p->rcClient.top +
                    window->top;
-            
-                // #test: 
-                // right and bottom.
-                window->absolute_right  = window->absolute_y + window->width;
+
+                window->absolute_right  = window->absolute_x + window->width;
                 window->absolute_bottom = window->absolute_y + window->height;
             }
         }
