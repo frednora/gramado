@@ -591,6 +591,9 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 // see: x64info.c
     if ( kstrncmp( cmdline, "cpu", 3 ) == 0 ){
         x64_info();
+        //extra
+        if (SchedulerInfo.initialized == TRUE)
+            printk("Scheduler policy: %d\n",SchedulerInfo.policy);
         goto exit_cmp;
     }
 

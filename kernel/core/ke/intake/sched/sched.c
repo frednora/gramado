@@ -674,17 +674,121 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
 // Gradual Rollout: 
 // Consider enabling the new policy only 
 // for specific thread groups or subsystems
+
+// Very simple priority interleaving worker.
+// For now: only put the init thread in all queues.
+// This guarantees at least one runnable thread.
 static tid_t __scheduler_priorityinterleaving(unsigned long sched_flags)
 {
-    // #todo: Not implemented yet
+    struct thread_d *Init;
+    tid_t FirstTID = -1;
 
+    if (SchedulerInfo.initialized != TRUE){
+        panic("__scheduler_priorityinterleaving: Scheduler not initialized\n");
+    }
     if (SchedulerInfo.policy != SCHED_POLICY_PRIORITY_INTERLEAVING)
-    {
         panic("__scheduler_priorityinterleaving: Scheduler policy\n");
+
+// Current stage
+    if (SchedulerInfo.stage > SchedulerInfo.max_stage)
+        SchedulerInfo.stage = 1;
+
+// Get init thread
+    Init = (struct thread_d *) InitThread;
+    if ((void*) Init == NULL || Init->magic != 1234)
+        panic("__scheduler_priorityinterleaving: InitThread validation\n");
+
+//
+// Stage 0 (Preparation)
+//
+
+    if (SchedulerInfo.stage == 0)
+    {
+        FirstTID = Init->tid;
+
+        p1q = p2q = p3q = p4q = p5q = p6q = NULL; 
+
+        // Put init thread in all queues
+        p1q = Init;
+        qlist_set_element(SCHED_P1_QUEUE, p1q);
+        p2q = Init;
+        qlist_set_element(SCHED_P2_QUEUE, p2q);
+        p3q = Init;
+        qlist_set_element(SCHED_P3_QUEUE, p3q);
+        p4q = Init;
+        qlist_set_element(SCHED_P4_QUEUE, p4q);
+        p5q = Init;
+        qlist_set_element(SCHED_P5_QUEUE, p5q);
+        p6q = Init;
+        qlist_set_element(SCHED_P6_QUEUE, p6q);
+        
+        currentq = p1q;
+        currentq->next = NULL;
+
+        // Advance to stage 1
+        SchedulerInfo.stage = 1;
+
+        return (tid_t) FirstTID;
     }
 
-    return (tid_t) -1;
+//
+// Stages 1–6 (Execution)
+// 
+
+    // The task switching walked the old list
+    // and now we need to give him the next list.
+
+// Stage 1..6: execution
+    switch (SchedulerInfo.stage) 
+    {
+        case 1: 
+            currentq = p1q;
+            currentq->next = NULL;
+            SchedulerInfo.stage = 2; 
+            break;
+        case 2: 
+            currentq = p2q; 
+            currentq->next = NULL;
+            SchedulerInfo.stage = 3;
+            break;
+        case 3: 
+            currentq = p3q;
+            currentq->next = NULL;
+            SchedulerInfo.stage = 4;
+            break;
+        case 4: 
+            currentq = p4q; 
+            currentq->next = NULL;
+            SchedulerInfo.stage = 5;
+            break;
+        case 5: 
+            currentq = p5q;
+            currentq->next = NULL; 
+            SchedulerInfo.stage = 6;
+            break;
+        case 6: 
+            currentq = p6q;
+            currentq->next = NULL; 
+            SchedulerInfo.stage = 1;
+            break;
+        // Resets to stage 0 if something goes wrong, 
+        // reconfigures with init thread, and returns.
+        default: 
+            FirstTID = Init->tid;
+            p1q = Init;
+            qlist_set_element(SCHED_P1_QUEUE, p1q);
+            currentq = p1q;
+            currentq->next = NULL;
+            // Next will be 0 for reconfiguration.
+            SchedulerInfo.stage = 0;
+            break;
+    }
+
+// done
+// Always returns the init thread’s TID (currentq->tid).
+    return (tid_t) currentq->tid;
 }
+
 
 // Wrapper for __scheduler_rr(), __scheduler_priorityinterleaving()
 //  or other types.
@@ -718,10 +822,15 @@ tid_t scheduler(void)
 // Select the current policy
 // IN: sched_flags
     if (Policy == SCHED_POLICY_RR){
+        //panic("RR\n");
         first_tid = (tid_t) __scheduler_rr(0);
     } else if (Policy == SCHED_POLICY_PRIORITY_INTERLEAVING){
-        //first_tid = (tid_t) __scheduler_priorityinterleaving(0);
-        panic("scheduler: Policy not supported\n");
+        //panic("QUEUE\n");
+        // #debug 
+        // #ps: The scheduler will not be called by the ts.c 
+        // if the processor has only one thread. It uses the InitThread.
+        first_tid = (tid_t) __scheduler_priorityinterleaving(0);
+        //panic("scheduler: Policy not supported\n");
     } else {
         panic("scheduler: Invalid policy\n");
     };
@@ -934,10 +1043,27 @@ int init_scheduler(unsigned long sched_flags)
 // -------------------------------
 // Scheduler policies
 // See: sched.h
-    SchedulerInfo.policy = SCHED_POLICY_RR;  // Default
-    SchedulerInfo.rr_round_counter = 0;
-    SchedulerInfo.flags = (unsigned long) sched_flags;
 
+// #todo I guess we can create definitions in config.h
+// in order to select the desired policy
+
+    SchedulerInfo.policy = SCHED_POLICY_RR;  // Default
+    //SchedulerInfo.policy = SCHED_POLICY_PRIORITY_INTERLEAVING;
+
+//
+// For rr policy
+//
+    SchedulerInfo.rr_round_counter = 0;
+
+//
+// For queues policy
+//
+
+    SchedulerInfo.stage = 0;       // start at stage 0 (preparation)
+    SchedulerInfo.max_stage = 6;   // you have 6 queues (p1q..p6q)
+
+// ----
+    SchedulerInfo.flags = (unsigned long) sched_flags;
     SchedulerInfo.initialized = TRUE;
     return 0;
 }

@@ -180,8 +180,7 @@ sixth..     ide5, usually PCI, probed
 #define DEFAULT_JIFFY_FREQ    1000
 
 
-// ------------------------------------------------------
-// #todo Scheduling policy?
+// ...
 
 // ------------------------------------------------------
 // Setup runlevel preference

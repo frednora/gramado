@@ -490,8 +490,9 @@ static void earlyinit_Globals(int arch_type)
 // Early initialization.
 // See: 
 // sched.h, sched.c.
-    SchedulerInfo.policy = SCHED_POLICY_RR;
-    SchedulerInfo.flags  = (unsigned long) 0;
+
+    //SchedulerInfo.policy = SCHED_POLICY_RR;
+    //SchedulerInfo.flags  = (unsigned long) 0;
 
     InitThread = NULL;   // thread
     TEInitProcess = NULL;  // thread environment

@@ -1,0 +1,12 @@
+[ (intake) (dispatcher) (scheduler) ]
+
+[ ]          → the big room (CPU execution arena, the managed space where threads live).
+(intake)     → the overarching component, representing the entrance hall where threads are admitted.
+(dispatcher) → the door/guard, handling entry and exit (task switch, spawn, context save/restore).
+(scheduler)  → the dark room inside, rearranging lists and deciding the order of execution.
+
+Intake (Entrance Hall)
+The intake hall is where bandits (threads) are captured and processed before entering the building.
+It’s the gateway: threads arrive here, are checked, and either admitted or released.
+Intake = the subsystem that controls admission into execution.
+

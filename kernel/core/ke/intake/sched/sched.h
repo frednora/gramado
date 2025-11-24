@@ -34,8 +34,23 @@ struct scheduler_info_d
 {
     int initialized;
     int policy;
-    unsigned long rr_round_counter;
     unsigned long flags;
+
+//
+// rr support
+//
+    unsigned long rr_round_counter;
+
+//
+// queues support
+//
+
+// What queue the scheduler is using now.
+// When the queue is empty the scheduler goes to the next stage.
+    unsigned long stage;
+// Max number of stages
+    unsigned long max_stage;
+
 };
 extern struct scheduler_info_d  SchedulerInfo;
 
