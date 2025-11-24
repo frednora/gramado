@@ -71,40 +71,48 @@ extern struct gws_window_d *top_window;     // z-order
 #define WINDOW_LOCKED    1
 #define WINDOW_UNLOCKED  0
 
+
 //
-// Window Style
+// Window Flags
 //
 
+//----------------------
+// State (runtime condition)
+//----------------------
 #define WS_MAXIMIZED    0x0001
 #define WS_MINIMIZED    0x0002  // Iconic
 #define WS_FULLSCREEN   0x0004
-#define WS_STATUSBAR    0x0008  // In the bottom
+#define WS_LOCKED       0x0008  // No input
 
-#define WS_LOCKED              0x0010  // No input
-// 0x0020
-#define WS_CLIP_IN_CLIENTAREA  0x0040
-// 0x0080
+//----------------------
+// Style (design-time components)
+//----------------------
+#define WS_TITLEBAR            0x0100
+#define WS_TITLEBARICON        0x0200
+#define WS_TRANSPARENT         0x0400
+#define WS_STATUSBAR           0x0800  // Bottom bar
+#define WS_HSCROLLBAR          0x1000
+#define WS_VSCROLLBAR          0x2000
+#define WS_RESERVED00          0x4000
+#define WS_CLIP_IN_CLIENTAREA  0x8000
 
-#define WS_TITLEBAR      0x0100
-#define WS_TITLEBARICON  0x0200
-#define WS_TRANSPARENT   0x0400
-// 0x0800
+//----------------------
+// Role / semantic identity (misplaced in WS_)
+//----------------------
+#define WS_APP       0x10000   // wrong: should be window type
+#define WS_DIALOG    0x20000   // wrong: should be window type
+#define WS_TERMINAL  0x40000   // wrong: should be window type
+#define WS_TASKBAR   0x80000   // wrong: should be window type
+#define WS_CHILD     0x100000    // really a type, not a style
 
-#define WS_HSCROLLBAR   0x1000
-#define WS_VSCROLLBAR   0x2000
-#define WS_CHILD        0x4000
-// 0x8000
 
-#define WS_APP       0x10000
-#define WS_DIALOG    0x20000
-#define WS_TERMINAL  0x40000
-#define WS_TASKBAR   0x80000
-
-//----------
-
+//
 // window status
+//
+
 #define WINDOW_STATUS_ACTIVE       1
 #define WINDOW_STATUS_INACTIVE     0
+// ...
 
 
 //window relationship status. (seu status em relação as outras janelas.)
@@ -442,12 +450,19 @@ struct gws_window_d
 // Maybe it's all about dock stuff.
     int gravity;
 
-// tipo? ... (editbox, normal, ...) 
-// Isso pode ser 'int'
-    unsigned long type;
+    unsigned long type;  // Window type
 
-// Window style
+// Style: design-time identity.
+// Defines window type and decorations/features.
     unsigned long style;
+
+// State: runtime condition.
+// Tracks current behavior (minimized, maximized, fullscreen, etc).
+    int state;
+
+// Status: interaction/activation.
+// Indicates focus, active/inactive, and user engagement.
+    int status;
 
 // ===================================
 // Name/label support.
@@ -503,16 +518,6 @@ struct gws_window_d
 // tid é usado para saber qual é a thread associada
 // com a janela que tem o foco de entrada.
     int client_tid;
-
-//
-// Características dessa janela..
-//
-
-// Estado: (Full,Maximized,Minimized...)
-    //int view; 
-    int state;
-// Active, inactive.
-    int status;
 
 // ======================================
 // DOC

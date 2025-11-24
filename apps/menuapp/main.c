@@ -1,4 +1,5 @@
 // main.c
+// Created by Fred Nora.
 
 // rtl
 #include <types.h>
@@ -81,6 +82,10 @@ menuappProcedure(
 
 // Process the event.
     switch (event_type){
+
+        case 0:
+            printf("msg\n");
+            break;
 
         //#todo
         // Update the bar and the list of clients.
@@ -346,12 +351,10 @@ void pump(int fd, int wid)
     if (e->type < 0)
         return;
 
-// Process event.
+// Process event
     int Status = -1;
     Status = 
-        menuappProcedure( 
-            fd, 
-            e->window, e->type, e->long1, e->long2 );
+        menuappProcedure( fd, e->window, e->type, e->long1, e->long2 );
 
     // ...
 }

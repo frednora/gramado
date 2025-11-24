@@ -1160,21 +1160,25 @@ void *doCreateWindow (
 // Receberemos isso via parametro de função.
 // Default is FALSE.
 // We need to know the parent's bg color.
-    int Transparent = FALSE;
+
+// Styles (see: windows.h)
     int Maximized=FALSE;
     int Minimized=FALSE;
     int Fullscreen=FALSE;
-// Bars
-// A title bar é criadas pela função
-// que cria o frame.
-// Title bar buttons. [v] [^] [X] 
-    int MinimizeButton = FALSE;
+    // Status bar?
+    // locked?
+    // clip in client area?
+    // ...
+    int TitleBar = FALSE;
+    // ...
+    int Transparent = FALSE;
+    // is child?
+    //
+    int MinimizeButton = FALSE;  // Controls
     int MaximizeButton = FALSE;
     int CloseButton    = FALSE;
-// Items.
     int Shadow        = FALSE;
     int Background    = FALSE;
-    int TitleBar      = FALSE;
     int Border        = FALSE;  // Usado no edit box, na overlapped.
     int ClientArea    = FALSE;
     int ButtonDown    = FALSE;  // ??
@@ -1182,7 +1186,8 @@ void *doCreateWindow (
     int ButtonSysMenu = FALSE;  // system menu na barra de títulos.
     // ...
 
-// Desktop support.
+
+// Desktop support
     int ParentWindowDesktopId;    //Id do desktop da parent window.
     int WindowDesktopId;          //Id do desktop da janela a ser criada.
 
@@ -1216,8 +1221,8 @@ void *doCreateWindow (
     unsigned int __tmp_color=0;
 
 // Device context
-    unsigned long deviceLeft   = 0;
-    unsigned long deviceTop    = 0;
+    unsigned long deviceLeft = 0;
+    unsigned long deviceTop = 0;
     unsigned long deviceWidth  = (__device_width  & 0xFFFF);
     unsigned long deviceHeight = (__device_height & 0xFFFF);
 
@@ -1263,20 +1268,19 @@ void *doCreateWindow (
 
     //debug_print ("doCreateWindow:\n");
 
-// Style (rop)
-// #todo: 
-// What is this? Explain it better.
+// ROP (Raster Operations)
+// 0 means that there is no ROP. 
+// No blending will be applied.
+// #bugbug: Only 0 is considered solid?
+// No rop flags for now. It depends on the window style.
+    unsigned long __rop_flags=0;
     int is_solid = TRUE;
     if (rop_flags != 0){
         is_solid = FALSE;
     }
 
-// No rop flags for now. It depends on the window style.
-    unsigned long __rop_flags=0;
-
 //---------------------------------------------------------
 // Position
-
     /*
     if (type == WT_OVERLAPPED)
     {
@@ -1288,48 +1292,38 @@ void *doCreateWindow (
         }
     }
     */
-
 //---------------------------------------------------------
 
 //
 // style
 //
 
-// #bugbug
-// maximized, minimized and fullscreen are not style features.
-// move these things to another flag.
-// see: border, captions, scrobar ...
-
-// Maximized
-// #todo:
-// The window occupy the whole desktop working area.
+// Maximized: The window occupies the whole desktop working area.
     if (style & WS_MAXIMIZED){
         Maximized=TRUE;
     }
-// Minimized
-// (Iconic)
+// Minimized: (Iconic)
     if (style & WS_MINIMIZED){
         Minimized=TRUE;
     }
-// Fullscreen
-// Paint only the client area.
+// Fullscreen: The client are occupies the whole screen.
     if (style & WS_FULLSCREEN){
         Fullscreen=TRUE;
     }
 
-    if (style & WS_TRANSPARENT){
+    // ...
+
+    // #wrong
+    // This is what the window is, not what the window has.
+    if (style & WS_TRANSPARENT)
+    {
         Transparent=TRUE;
-        // Get the given flags.
+        // Get the given flags
         __rop_flags = rop_flags;
         //#test #hack
-        if ( __rop_flags == 0 )
+        if (__rop_flags == 0)
             __rop_flags = 20;  //gray
     }
-
-    //int IsTaskbar = FALSE;
-    //if (style & WS_TASKBAR)
-        //IsTaskbar = TRUE;
-
 //---------------------------------------------------------
 
 // Salvar para depois restaurar os valores originais no fim da rotina.
@@ -1377,7 +1371,7 @@ void *doCreateWindow (
 // se for uma janela filha e não tiver uma janela mãe associada a ela, 
 // não permita e encerre a função.
 
-	//if(FlagChild == 1){
+	//if (FlagChild == 1){
 		//if(pWindow = NULL) 
         //    return NULL;
 	//}
@@ -1403,7 +1397,7 @@ void *doCreateWindow (
 	}
  */
 
-// Create the window object.
+// Create the window object
     window = (struct gws_window_d *) __create_window_object();
     if ((void*) window == NULL){
         return NULL;
@@ -1420,32 +1414,30 @@ void *doCreateWindow (
 // Gravity
     window->gravity = DefaultGravity;
 
-// Type
+// Type, style, status and state
     window->type = (unsigned long) type;
-// Style
     window->style = (unsigned long) style;
-// Status (active or inactive)
-// Status do botao e da janela. (int)
     window->status = (int) (status & 0xFFFFFFFF);
+    window->state = (int) view;
+    //window->view = (int) view;
+
+    // ??
     // The 'window status' is used as 'button state'
+    // Status (active or inactive)
+    // Status do botao e da janela. (int)
     int ButtonState = (int) (status & 0xFFFFFFFF);
 
-// View
-// The window state: minimized, maximized.
-    //window->view = (int) view;
-    window->state = (int) view;
-
-// Colors
+// Colors:
+// Background, client-area bg, bg when mouse hover.
     window->bg_color = 
         (unsigned int) FrameColor;
     window->clientarea_bg_color = 
         (unsigned int) ClientAreaColor;
-// Default color for 'when mouse hover'.
     window->bg_color_when_mousehover = 
         (unsigned int) get_color(csiWhenMouseHover);
 
 // buffers
-    
+
     //window->dedicated_buf = NULL; // suspended
 
     window->pwb.initialized = FALSE;
@@ -2557,9 +2549,9 @@ fail:
 
 void *CreateWindow ( 
     unsigned long type, 
-    unsigned long style,
+    unsigned long style,   // style of window
     unsigned long status,  // #test Status do botao, e da janela. 
-    unsigned long state,  // view: min, max ... 
+    unsigned long state,   // view: min, max ... 
     char *title,
     unsigned long x, 
     unsigned long y, 
@@ -2768,17 +2760,17 @@ void *CreateWindow (
         
         __w = 
             (void *) doCreateWindow ( 
-                         WT_SIMPLE, 
-                         style, 
-                         status,  //#test 
-                         state,  // view: min, max ...
-                         (char *) _name,
-                         x, y, width, height, 
-                         (struct gws_window_d *) pWindow, 
-                         desktop_id, 
-                         FrameColor, 
-                         ClientAreaColor, 
-                         (unsigned long) __rop_flags ); 
+                        WT_SIMPLE, 
+                        style, 
+                        status,  //#test 
+                        state,  // view: min, max ...
+                        (char *) _name,
+                        x, y, width, height, 
+                        (struct gws_window_d *) pWindow, 
+                        desktop_id, 
+                        FrameColor, 
+                        ClientAreaColor, 
+                        (unsigned long) __rop_flags ); 
 
         if ((void *) __w == NULL){
             //server_debug_print ("CreateWindow: doCreateWindow fail\n");

@@ -84,17 +84,39 @@ void __init_wm_structure(void);
 #define WINDOW_LOCKED    1
 #define WINDOW_UNLOCKED  0
 
-// window style
-// #bugbug
-// maximized, minimized and fullscreen are not style features.
-// move these things to another flag.
+//
+// Window Flags
+//
 
+//----------------------
+// State (runtime condition)
+//----------------------
 #define WS_MAXIMIZED    0x0001
-#define WS_MINIMIZED    0x0002
+#define WS_MINIMIZED    0x0002  // Iconic
 #define WS_FULLSCREEN   0x0004
-// ...
-#define WS_HSCROLLBAR   0x1000
-#define WS_VSCROLLBAR   0x2000
+#define WS_LOCKED       0x0008  // No input
+
+//----------------------
+// Style (design-time components)
+//----------------------
+#define WS_TITLEBAR            0x0100
+#define WS_TITLEBARICON        0x0200
+#define WS_TRANSPARENT         0x0400
+#define WS_STATUSBAR           0x0800  // Bottom bar
+#define WS_HSCROLLBAR          0x1000
+#define WS_VSCROLLBAR          0x2000
+#define WS_RESERVED00          0x4000
+#define WS_CLIP_IN_CLIENTAREA  0x8000
+
+//----------------------
+// Role / semantic identity (misplaced in WS_)
+//----------------------
+#define WS_APP       0x10000   // wrong: should be window type
+#define WS_DIALOG    0x20000   // wrong: should be window type
+#define WS_TERMINAL  0x40000   // wrong: should be window type
+#define WS_TASKBAR   0x80000   // wrong: should be window type
+#define WS_CHILD     0x100000    // really a type, not a style
+
 
 
 // window status
@@ -446,11 +468,6 @@ struct gws_window_d
 // Event queue.
      //struct gws_event_d *event_queue;
 
-// #todo
-// We need to review that list of flags.
-// We already using some flags.
-    unsigned long style;
-
 // Uma janela de aplicativo
 // poderá ter janelas de aplicativo dentro de sua área de cliente.
     int multiple;
@@ -509,13 +526,16 @@ struct gws_window_d
 // com a janela que tem o foco de entrada.
     int client_tid;
 
-//
-// Características dessa janela..
-//
+// Style: design-time identity.
+// Defines window type and decorations/features.
+    unsigned long style;
 
-    // Estado: (Full,Maximized,Minimized...)
+// State: runtime condition.
+// Tracks current behavior (minimized, maximized, fullscreen, etc).
     int view; 
 
+// Status: interaction/activation.
+// Indicates focus, active/inactive, and user engagement.
     int status;
 
 //

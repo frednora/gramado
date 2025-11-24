@@ -3618,13 +3618,15 @@ struct gws_menu_item_d *gws_create_menu_item (
     //item->color = COLOR_GRAY;
 
 // Create a window for a menu item.
+// The item is a window, it's type is a button,
+// and the style can be a menuitem. #todo
 
     if (menu->window > 0)
     {
         window = 
             (int) gws_create_window ( 
                     fd,
-                    WT_BUTTON,1,1, label,
+                    WT_BUTTON, 1, 1, label,
                     item->x, 
                     item->y, 
                     item->width, 

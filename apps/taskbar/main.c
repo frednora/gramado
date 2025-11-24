@@ -1064,7 +1064,7 @@ static int create_desktop_area(int fd)
     unsigned long w = screen_w;
     unsigned long h = screen_h - TASKBAR_HEIGHT;
 
-    unsigned long style = WS_CHILD;
+    unsigned long style = WS_TRANSPARENT;
 
     unsigned int Color01 = COLOR_DESKTOP;
     unsigned int Color02 = COLOR_DESKTOP;
