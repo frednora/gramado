@@ -757,6 +757,9 @@ redraw_window (
         goto fail;
     }
 
+
+    wm_sync_absolute_dimensions(window);
+
 // =======================
 // shadowUsed
 // A sombra pertence à janela e ao frame.

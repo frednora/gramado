@@ -5109,6 +5109,18 @@ void set_top_window (struct gws_window_d *window)
     top_window = (void*) window;
 }
 
+// Update the absolute dimension for the rectangle of a window 
+// based on its relative dimensions.
+void wm_sync_absolute_dimensions(struct gws_window_d *w) 
+{
+    if (!w || w->magic != 1234) 
+        return;
+// right and bottom
+    w->absolute_right  = w->absolute_x + w->width;
+    w->absolute_bottom = w->absolute_y + w->height;
+}
+
+
 int 
 gws_resize_window ( 
     struct gws_window_d *window, 
@@ -5135,14 +5147,16 @@ gws_resize_window (
         (unsigned long) (y + window->height);
 */
 
-    window->absolute_right  = window->absolute_x + cx;
-    window->absolute_bottom = window->absolute_y + cy;
+    //window->absolute_right  = window->absolute_x + cx;
+    //window->absolute_bottom = window->absolute_y + cy;
 
+/*
 // Só precisa mudar se for diferente.
     if ( window->width == cx && window->height == cy )
     {
         return (int) 0; // ok
     }
+*/
 
 // --------------------------------------------
 // Temos um valor mínimo no caso
@@ -5182,13 +5196,15 @@ gws_resize_window (
     window->width = (unsigned long) cx;
     window->height = (unsigned long) cy;
 
+    wm_sync_absolute_dimensions(window);
+
 // --------------------------------------------
 
 // Muda tambem as dimençoes da titlebar.
 // Muda somente a largura, pois a altura deve continuar a mesma;
     if (window->type == WT_OVERLAPPED)
     {
-            // titlebar
+            // sync titlebar
             if ((void*) window->titlebar != NULL)
             {
                 window->titlebar->width = 
@@ -5259,6 +5275,8 @@ gws_resize_window (
             window->rcClient.width  = window->width  - (window->border_size * 2);
             window->rcClient.height = window->height - (window->titlebar_height + window->border_size);
             */
+
+            // sync client area rectangle 
 
             // width: subtract left and right borders
             window->rcClient.width =

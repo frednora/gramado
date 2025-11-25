@@ -1,13 +1,8 @@
+// main.c
 // DS00.BIN
 // ds00 Display Server.
 // This is a ring3 display server and window manager.
-
-/*
- * File: main.c
- *    Main file for the ds00.
- *    History:
- *        2020 - Created by Fred Nora.
- */
+// 2020 - Created by Fred Nora.
 
 // See:
 // Transformations
@@ -1211,22 +1206,16 @@ int serviceHello(void)
 // Save it as an argument of the window structure.
 int serviceCreateWindow(int client_fd)
 {
-
-// The buffer is a global variable.
-    unsigned long *message_address = (unsigned long *) &__buffer[0];
-// The structure for the standard request.
-    gReq r;
-// Iterator.
+// The buffer is a global variable
+    unsigned long *message_address = (unsigned long *) __buffer;
+    gReq r;  // Standard structure for request
     register int i=0;
-
-// The window been created.
+// The window been created
     struct gws_window_d *Window;
     wid_t wid = (-1);
-
-// The parent window.
+// The parent window
     struct gws_window_d *Parent;
     wid_t pwid = (-1);
-
 // Arguments
     unsigned long x=0;
     unsigned long y=0;
@@ -1247,22 +1236,22 @@ int serviceCreateWindow(int client_fd)
     unsigned long my_style=0;
 
     //#debug
-    //server_debug_print ("serviceCreateWindow:\n");
+    //server_debug_print("serviceCreateWindow:\n");
     //asm("cli");
+
 //
-// Get the arguments.
+// Decode the protocol
 //
 
-// The header.
-// 0,1,2,3
+// The header. (0,1,2,3)
 // wid, msg code, data1, data2;
     r.wid  = message_address[0];
     r.code = message_address[1];
     r.ul2  = message_address[2];  // Window status
     r.ul3  = message_address[3];  // Window state: min, max, ...
-// l,t,w,h
-// These are the outer values.
+// These are the window's outer values.
 // Including the border if it has one.
+// l,t,w,h
     r.ul4 = message_address[4];
     r.ul5 = message_address[5];
     r.ul6 = message_address[6];
@@ -1271,26 +1260,26 @@ int serviceCreateWindow(int client_fd)
     y = (unsigned long) (r.ul5 & 0xFFFF);
     w = (unsigned long) (r.ul6 & 0xFFFF);
     h = (unsigned long) (r.ul7 & 0xFFFF);
-// 8 = Background color.
+// 8 = Background color
     r.ul8 = message_address[8];
-    color        = (unsigned int) (r.ul8 & 0x00FFFFFF); // bg color
+    color        = (unsigned int) (r.ul8 & 0x00FFFFFF);  // bg color
     frame_color  = (unsigned int) color;
     client_color = (unsigned int) color;
 // 9 = type
     r.ul9 = message_address[9];
     type = (unsigned long) (r.ul9 & 0xFFFF);
-// 10 = Parent window ID.
+// 10 = Parent window ID
     r.ul10 = message_address[10]; 
-    pwid = (int) (r.ul10 & 0xFFFF);
+    pwid = (int) (r.ul10 & 0xFFFF);  // #todo: 0xFFFFFFFF
 // 11 = Style
     r.ul11 = message_address[11];  
     my_style = (unsigned long) r.ul11;  // 8 bytes
-// 12 = Client pid
+// 12 = Client PID
     r.ul12 = message_address[12];  // client pid
-    ClientPID = (int) (r.ul12 & 0xFFFF);
-// 13 = Client caller tid
+    ClientPID = (int) (r.ul12 & 0xFFFF);  // #todo: 0xFFFFFFFF
+// 13 = Client TID
     r.ul13 = message_address[13];  // client tid
-    ClientTID = (int) (r.ul13 & 0xFFFF);
+    ClientTID = (int) (r.ul13 & 0xFFFF);  // #todo: 0xFFFFFFFF
 
 // ========================================
 // 14:
@@ -1299,8 +1288,8 @@ int serviceCreateWindow(int client_fd)
 // Do we ha a limit?
 //++
 // String support 
-// Copiando para nossa estrutura local.
-    register int string_off = 14;
+// Copiando para nossa estrutura local
+    const int string_off = 14;
     char *p = (char *) &message_address[string_off];
     memset(r.data, 0, 256);
     for (i=0; i<256; ++i){
@@ -1320,6 +1309,7 @@ int serviceCreateWindow(int client_fd)
     //while(1){}
 
 // Purify
+// Outer values
     x = (x & 0xFFFF);
     y = (y & 0xFFFF);
     w = (w & 0xFFFF);
@@ -1348,8 +1338,8 @@ int serviceCreateWindow(int client_fd)
 // Possivelmente essa primeira aplicaçao 
 // esta usando 'parent_wid = 0', que talvez seja a root window.
 
-// id limits.
-    if (pwid<0 || pwid>=WINDOW_COUNT_MAX)
+// pwid limits
+    if (pwid < 0 || pwid >= WINDOW_COUNT_MAX)
     {
         pwid=0;
         // #debug
@@ -1358,16 +1348,13 @@ int serviceCreateWindow(int client_fd)
     }
 // Structure pointer
     Parent = (struct gws_window_d *) windowList[pwid];
-    if ((void*) Parent == NULL)
-    {
-        // #debug
+    // #debug
+    if ((void*) Parent == NULL){
         printf("serviceCreateWindow: Parent\n");
         exit(1);
     }
-    if (Parent->magic != 1234)
-    {
-        // #debug
-        printf("serviceCreateWindow: Parent validation\n");
+    if (Parent->magic != 1234){
+        printf("serviceCreateWindow: Parent magic\n");
         exit(1);
     }
 
@@ -1437,10 +1424,8 @@ int serviceCreateWindow(int client_fd)
     */
 
 // Colors.
-// We need to respect the theme is the window
-// is Overlapped window.
+// We need to respect the theme is the window is Overlapped window.
 
-    
     /*
     // #test
     if (type == WT_OVERLAPPED){
@@ -1449,15 +1434,6 @@ int serviceCreateWindow(int client_fd)
     }
     */
     
-    //#hack #test
-    if (type == WT_OVERLAPPED)
-    {
-        x = (x+last_dx);
-        y = (y+last_dy);
-        last_dx += 40;
-        last_dy += 40;
-    }
-
 // Calling the wrapper function.
 // This function belongs to the server code, not a library.
 // See: window.c

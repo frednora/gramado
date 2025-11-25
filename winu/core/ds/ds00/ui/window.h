@@ -1084,7 +1084,11 @@ void set_window_with_focus(struct gws_window_d * window);
 struct gws_window_d *get_top_window (void);
 void set_top_window (struct gws_window_d *window);
 
-int get_zorder ( struct gws_window_d *window );
+int get_zorder(struct gws_window_d *window);
+
+// Update the absolute dimension for the rectangle of a window 
+// based on its relative dimensions.
+void wm_sync_absolute_dimensions(struct gws_window_d *w);
 
 int 
 gws_resize_window ( 
