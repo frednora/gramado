@@ -1112,8 +1112,8 @@ fail:
 void *doCreateWindow ( 
     unsigned long type, 
     unsigned long style,
-    unsigned long status,  // #test Status do botao e da janela.
-    unsigned long state,   //view: min, max ... 
+    unsigned long status,
+    unsigned long state,
     char *title, 
     unsigned long x, 
     unsigned long y, 
@@ -1138,10 +1138,11 @@ void *doCreateWindow (
 // #todo
 // We need different colors for the text inside the buttons.
 
-// The window object.
+// The window object
     register struct gws_window_d *window;
     struct gws_window_d *Parent;
 
+// Colors
     unsigned int FrameColor;
     unsigned int ClientAreaColor;
     if (type == WT_OVERLAPPED){
@@ -1153,7 +1154,7 @@ void *doCreateWindow (
     };
 
 //
-// Internal flags.
+// Internal flags
 //
 
 // #todo:
@@ -1648,8 +1649,8 @@ void *doCreateWindow (
 // devem ser os valores para a janela, sem contar o frame, que 
 // inclui as bordas e a barra de títulos.
 
-// Dimensions
-// Passado via argumento.
+// -------------------------------------
+// Dimensions: (Came via function parameters)
     window->width  = (unsigned long) (WindowWidth  & 0xFFFF);
     window->height = (unsigned long) (WindowHeight & 0xFFFF);
 
@@ -1761,16 +1762,23 @@ void *doCreateWindow (
 // Isso só não será válido, se uma flag especial 
 // permitir criar uma janela fora da área de cliente.
 // >> Not clipped by parent.
+
+//
+// -- Absolute position (left and top) --
+//
+
+// Set up absolute position where there is no parent.
     if ((void*) window->parent == NULL)
     {
         window->absolute_x = WindowX;
         window->absolute_y = WindowY;
     }
 
-// Calcula o absoluto
+// Set up absolute position where there is a parent.
 // >> Not clipped by parent.
     if ((void*) window->parent != NULL)
     {
+        // Set up absolute position when the parent is NOT WT_OVERLAPPED
         if (window->parent->type != WT_OVERLAPPED)
         {
             window->absolute_x = 
@@ -1779,6 +1787,7 @@ void *doCreateWindow (
                 (unsigned long) (window->parent->absolute_y + WindowY);
         }
         
+        // Set up absolute position when the parent is WT_OVERLAPPED
         if (window->parent->type == WT_OVERLAPPED)
         {
             // Dentro da área de cliente.
@@ -1802,6 +1811,10 @@ void *doCreateWindow (
             // ?
         }
     }
+
+//
+// -- Absolute dimension. (right and bottom) --
+//
 
 // Right and bottom.
 // >> Not clipped by parent.
@@ -2700,11 +2713,7 @@ void *CreateWindow (
 
         __w = 
             (void *) doCreateWindow ( 
-                        WT_SIMPLE, 
-                        style, 
-                        status, 
-                        state,  // view: min, max ... 
-                        (char *) _name,
+                        WT_SIMPLE, style, status, state, (char *) _name,
                         x, y, width, height, 
                         (struct gws_window_d *) pWindow, 
                         desktop_id, 
@@ -2760,16 +2769,11 @@ void *CreateWindow (
         
         __w = 
             (void *) doCreateWindow ( 
-                        WT_SIMPLE, 
-                        style, 
-                        status,  //#test 
-                        state,  // view: min, max ...
-                        (char *) _name,
+                        WT_SIMPLE, style, status, state, (char *) _name,
                         x, y, width, height, 
                         (struct gws_window_d *) pWindow, 
                         desktop_id, 
-                        FrameColor, 
-                        ClientAreaColor, 
+                        FrameColor, ClientAreaColor, 
                         (unsigned long) __rop_flags ); 
 
         if ((void *) __w == NULL){
@@ -2811,16 +2815,12 @@ void *CreateWindow (
 
         __w = 
             (void *) doCreateWindow ( 
-                         WT_SIMPLE, 
-                         style, 
-                         status, 
-                         state,  // view: min, max ... 
-                         (char *) _name, 
-                         x, y, width, height, 
-                         (struct gws_window_d *) pWindow, 
-                         desktop_id, 
-                         FrameColor, ClientAreaColor, 
-                         (unsigned long) __rop_flags ); 
+                        WT_SIMPLE, style, status, state, (char *) _name, 
+                        x, y, width, height, 
+                        (struct gws_window_d *) pWindow, 
+                        desktop_id, 
+                        FrameColor, ClientAreaColor, 
+                        (unsigned long) __rop_flags ); 
 
         if ((void *) __w == NULL){
             //server_debug_print ("CreateWindow: doCreateWindow fail\n");
@@ -2870,10 +2870,10 @@ void *CreateWindow (
 
         __w = 
             (void *) doCreateWindow ( 
-                        WT_BUTTON,  // type 
-                        style,      // style
-                        status,     // status (Button state)
-                        state,      // view: min, max ...
+                        WT_BUTTON, 
+                        style,
+                        status,  // #bugbug status (Button state)
+                        state,
                         (char *) _name, 
                         x, y, width, height, 
                         (struct gws_window_d *) pWindow, 
@@ -2904,16 +2904,12 @@ void *CreateWindow (
 
         __w = 
             (void *) doCreateWindow ( 
-                         WT_SIMPLE, 
-                         style, 
-                         status, 
-                         state,  // view: min, max ... 
-                         (char *) _name,
-                         x, y, width, height, 
-                         (struct gws_window_d *) pWindow, 
-                         desktop_id, 
-                         FrameColor, ClientAreaColor, 
-                         (unsigned long) __rop_flags );  
+                        WT_SIMPLE, style, status, state, (char *) _name,
+                        x, y, width, height, 
+                        (struct gws_window_d *) pWindow, 
+                        desktop_id, 
+                        FrameColor, ClientAreaColor, 
+                        (unsigned long) __rop_flags );  
 
         if ((void *) __w == NULL){
             //server_debug_print("CreateWindow: doCreateWindow fail\n");
@@ -2925,7 +2921,6 @@ void *CreateWindow (
         __w->enabled = TRUE;
         goto draw_frame;
     }
-
 
 // ---------------------
 // #todo:
@@ -3007,11 +3002,11 @@ draw_frame:
                 (struct gws_window_d *) pWindow,
                 (struct gws_window_d *) __w, 
                 METRICS_BORDER_SIZE,
-                (unsigned int) COLOR_BORDER2,  //COLOR_BLACK,  // border color 1
-                (unsigned int) COLOR_BORDER2,  //COLOR_BLACK,  // border color 2
-                (unsigned int) COLOR_BORDER2,  //COLOR_BLACK,  // border color 3
-                (unsigned int) COLOR_ORNAMENT,  //0x00C3C3C3,   // ornament color 1
-                (unsigned int) COLOR_ORNAMENT,  //0x00C3C3C3,   // ornament color 2
+                (unsigned int) COLOR_BORDER2,   // COLOR_BLACK,  // border color 1
+                (unsigned int) COLOR_BORDER2,   // COLOR_BLACK,  // border color 2
+                (unsigned int) COLOR_BORDER2,   // COLOR_BLACK,  // border color 3
+                (unsigned int) COLOR_ORNAMENT,  // 0x00C3C3C3,   // ornament color 1
+                (unsigned int) COLOR_ORNAMENT,  // 0x00C3C3C3,   // ornament color 2
                 1 );  // style
         }
     }

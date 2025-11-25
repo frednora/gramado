@@ -1434,21 +1434,19 @@ int serviceCreateWindow(int client_fd)
     }
     */
     
-// Calling the wrapper function.
-// This function belongs to the server code, not a library.
-// See: window.c
+// Calling a worker on server to create the window.
+// See: createw.c
+// IN:
+// type, style, status, state, name, 
+// l, t, w, h,
+// parent_ptr, 
+// desktop id, frame color, client area color.
     Window = 
         (struct gws_window_d *) CreateWindow ( 
-                                    type,      // type
-                                    my_style,  // style
-                                    r.ul2,  // Window status 
-                                    r.ul3,  // Window state: min, max, ...
-                                    r.data,    // name
-                                    x, y, w, h,  // l,t,w,h 
-                                    (struct gws_window_d *) Parent,  // parent struct pointer 
-                                    0,               // ?? desktop id
-                                    frame_color,     // frame color.
-                                    client_color );  // client area color.
+                                    type, my_style, r.ul2, r.ul3, r.data,
+                                    x, y, w, h,
+                                    (struct gws_window_d *) Parent, 
+                                    0, frame_color, client_color );
 
     if ((void *) Window == NULL)
     {
@@ -1462,68 +1460,28 @@ int serviceCreateWindow(int client_fd)
     if (wid<0 || wid>=WINDOW_COUNT_MAX)
     {
         //server_debug_print("serviceCreateWindow: on RegisterWindow()\n");
-        next_response[1] = 0;  // msg code.
+        next_response[1] = 0;  // msg code
         goto fail;
     }
 
 //===============================================
-// Save the tid of the client.
+// Save the tid of the client
     Window->client_pid = (pid_t) ClientPID;
     Window->client_tid = (int) ClientTID;
 
+// The client socket id
+    Window->client_fd = (int) client_fd;
+
+// Focus if editbox
     if (Window->type == WT_EDITBOX || 
         Window->type == WT_EDITBOX_MULTIPLE_LINES)
     {
         set_focus(Window);
     }
 
-//===============================================
-// The client fd.
-    Window->client_fd = (int) client_fd;
-
-//===============================================
-
-//
-// Debug
-//
-
-/*
-    // #debug:  Fake name, client tid
-    // #bugbug: 0 for everyone.
-    if (Window->type == WT_OVERLAPPED)
-        itoa( (int) Window->client_tid, Window->titlebar->name );
-*/
-
-//
-// Input queue
-// 
-
-// Initialized the input queue
-
-/*
-    // #deprecated ...
-    // Enviaremos mensagens para a fila na thread
-    // associada a essa janela.
-    // Indicado em client_tid.
-
-    //int i=0;
-    for ( i=0; i<32; ++i )
-    {
-        Window->window_list[i] = 0;
-        Window->msg_list[i]    = 0;
-        Window->long1_list[i]  = 0;
-        Window->long2_list[i]  = 0;
-        Window->long3_list[i]  = 0;
-        Window->long4_list[i]  = 0;
-    };
-    Window->head_pos = 0;
-    Window->tail_pos = 0;
-*/
-//===============================================
-
-// String support.
-// Prepara o nome.
+// ===============================================
 // #test
+// The window name
     register int name_len=0;
     char w_name[64];
     name_len = (int) strlen(Window->name);
@@ -1574,36 +1532,30 @@ int serviceCreateWindow(int client_fd)
         //...
     }
 
-// The client's fd.
-// #todo
-// We need to register the client's fd.
-// It is gonna be used to send replies, just like input events.
-    // Window->client_fd = ?;
-
 // --------------------------------------
+
+//
+// Response
+//
+
 // Building the next response.
-// It will be sent in the socket loop.
-// First let's clean the buffer to avoid
-// the leaking of dirty data.
-// Holy is the Lord.
+// First of all, let's clean the buffer to avoid data leaking.
+
     for (i=0; i<MSG_BUFFER_SIZE; i++)
         __buffer[i] = 0;
     for (i=0; i<32; i++)
         next_response[i] = 0;
 
-// Response: wid, msg code, nothing, nothing.
-// Maybe we can send additional info in the future.
+// Response: [wid, msg code, nothing, nothing]
     next_response[0] = (unsigned long) (wid & 0xFFFFFFFF);
     next_response[1] = SERVER_PACKET_TYPE_REPLY;
     next_response[2] = 0;
     next_response[3] = 0;
-
-// Done
+// Done: Maybe we can send additional info in the future.
     return 0;
-// Fail
+
 fail:
     //server_debug_print("serviceCreateWindow: FAIL\n");
-    //#debug
     //printf("serviceCreateWindow: FAIL\n");
     //exit(0);
     return (int) (-1);
