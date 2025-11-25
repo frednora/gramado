@@ -3527,12 +3527,25 @@ void maximize_window(struct gws_window_d *window)
     {
         return;
     }
-    gws_resize_window( window, 
-        (w -4), 
-        (h -4));
-    gwssrv_change_window_position( window, 
-        (l +2), 
-        (t +2) );
+
+    gws_resize_window( window, (w), (h));
+    gwssrv_change_window_position( window, (l), (t) );
+
+    //gws_resize_window( window, (w -4), (h -4));
+    //gwssrv_change_window_position( window, (l +2), (t +2) );
+
+/*
+    window->width  = (w -4);
+    window->height = (h -4);
+*/
+
+    if (window->type == WT_OVERLAPPED)
+    {
+        window->rcClient.width  = 
+            window->width  - (window->border_size * 2);
+        window->rcClient.height = 
+            window->height - (window->titlebar_height + window->border_size * 2);
+    }
 
 //
 // Redraw and display some windows:

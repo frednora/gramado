@@ -5126,6 +5126,18 @@ gws_resize_window (
     //if(window == __root_window)
         //return -1;
 
+/*
+    window->absolute_x = (unsigned long) x;
+    window->absolute_y = (unsigned long) y;
+    window->absolute_right = 
+        (unsigned long) (x + window->width);
+    window->absolute_bottom = 
+        (unsigned long) (y + window->height);
+*/
+
+    window->absolute_right  = window->absolute_x + cx;
+    window->absolute_bottom = window->absolute_y + cy;
+
 // Só precisa mudar se for diferente.
     if ( window->width == cx && window->height == cy )
     {
@@ -5177,7 +5189,7 @@ gws_resize_window (
     if (window->type == WT_OVERLAPPED)
     {
             // titlebar
-            if ( (void*) window->titlebar != NULL )
+            if ((void*) window->titlebar != NULL)
             {
                 window->titlebar->width = 
                     (window->width - window->border_size - window->border_size );
@@ -5238,6 +5250,24 @@ gws_resize_window (
 
             // client area . (rectangle).
 
+            /*
+            // Update client area rectangle based on new outer size
+            // Left/top only if border/titlebar changed
+            window->rcClient.left   = window->border_size;
+            window->rcClient.top    = window->titlebar_height + window->border_size;
+            
+            window->rcClient.width  = window->width  - (window->border_size * 2);
+            window->rcClient.height = window->height - (window->titlebar_height + window->border_size);
+            */
+
+            // width: subtract left and right borders
+            window->rcClient.width =
+                (unsigned long)(window->width - (window->border_size * 2));
+            // height: subtract top border, bottom border, and titlebar height
+            window->rcClient.height =
+                (unsigned long)(window->height - (window->titlebar_height + window->border_size + window->border_size));
+
+            /*
             // width
             // menos bordas laterais
             window->rcClient.width = 
@@ -5248,6 +5278,7 @@ gws_resize_window (
             //#bugbug: e se a janela for menor que 32?
             window->rcClient.height = 
                 (unsigned long) (window->height -2 -32 -2); 
+            */
     }
 
 // --------------------------------------------
@@ -5342,6 +5373,17 @@ gwssrv_change_window_position (
 
 // absoluto
 
+    window->absolute_x = (unsigned long) x;
+    window->absolute_y = (unsigned long) y;
+    window->absolute_right = 
+        (unsigned long) (x + window->width);
+    window->absolute_bottom = 
+        (unsigned long) (y + window->height);
+
+   // window->absolute_right  = window->absolute_x + window->width;
+   // window->absolute_bottom = window->absolute_y + window->height;
+
+
 // -------------
 
     if (window->type == WT_OVERLAPPED)
@@ -5351,7 +5393,7 @@ gwssrv_change_window_position (
         window->absolute_right = 
             (unsigned long) (x + window->width);
         window->absolute_bottom = 
-            (unsigned long) (y + window->height );
+            (unsigned long) (y + window->height);
     }
 
     if (window->type != WT_OVERLAPPED)
@@ -5488,6 +5530,22 @@ gwssrv_change_window_position (
                 window->absolute_right  = window->absolute_x + window->width;
                 window->absolute_bottom = window->absolute_y + window->height;
             }
+
+            if (p->type == WT_SIMPLE)
+            {
+                window->absolute_x = 
+                   p->absolute_x +
+                   window->left;
+
+                window->absolute_y = 
+                   p->absolute_y +
+                   window->top;
+
+                window->absolute_right  = window->absolute_x + window->width;
+                window->absolute_bottom = window->absolute_y + window->height;
+            }
+
+            // MORE TYPES ...
         }
     }
 

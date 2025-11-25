@@ -1,6 +1,19 @@
 
+
  Description:
- After moving/resizing a WT_OVERLAPPED window,
- hover/click on its child controls stops working. 
- The root cause is a bad absolute rectangle update for child windows 
- inside the client area, which breaks hit testing and relative coordinates.
+ But now you’re pointing out a second layer: when the client app itself 
+ resizes or repositions its child controls in response to a paint message, 
+ the server side may not be recomputing the children’s absolute bounds consistently. 
+ That mismatch will break hit‑testing again, especially for editboxes that grow/shrink.
+
+ When we update the window we also need to update the client area rectangle 
+ properlly before sending the paint message
+
+ it means the first maximize path isn’t finishing all the geometry updates, 
+ but the second maximize click forces a full recompute, so everything lines up and 
+ hit testing works.
+
+
+
+
+
