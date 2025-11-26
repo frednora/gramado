@@ -1,12 +1,13 @@
-
 // sci2.h
+// The definitions for the syscall numbers.
+// Created by Fred Nora
 
-#ifndef __SYSCALLS_SCI2_H
-#define __SYSCALLS_SCI2_H    1
+#ifndef __SCI_SCI2_H
+#define __SCI_SCI2_H    1
 
 // The handler is sci2().
 
-#define SCI2_NULL  SCI_NULL
+#define SCI2_NULL  0
 
 
 // 1 - Set magic (in kernel console)
@@ -16,7 +17,11 @@
 // 5 - Business Logic: fcntl() implementation.
 
 // 18 - Business Logic: read() implementation.
+#define SCI2_SYS_READ   18
+
 // 19 - Business Logic: write() implementation.
+#define SCI2_SYS_WRITE  19
+
 
 // 265 - yield
 // Business Logic: 
@@ -40,6 +45,7 @@
 // 777 - nice
 
 // 900 - copy process
+#define SCI2_COPY_PROCESS  900
 // Business Logic: 
 // Clona e executa o filho dado o nome do filho.
 // O filho inicia sua execução do início da imagem.
@@ -49,13 +55,12 @@
 // IN: file name, parent pid, clone flags.
 // OUT: Child's PID.
 
-// 8000 - Business Logic: ioctl() implementation.
-// See: fs.c
-// IN: fd, request, arg
+// 8000 - sys_ioctl()
+#define SCI2_SYS_IOCTL  8000
 
-// 8001 - Business Logic: fcntl() implementation. 
-// (second time) see: number 5.
-// See: sys.c
+// 8001 - sys_fcntl()
+#define SCI2_SYS_FCNTL  8001
+
 
 // 8003
 // Business Logic: 

@@ -379,8 +379,19 @@
 
 // Kernel layers. (Work in progress)
 #include "../core/kmain/layers.h"
-// Syscalls: (Called by the interrups 0x80, 0x81, 0x82, 0x83).
-#include "../core/kmain/sci/syscalls.h"
+
+// The handlers for the services.
+#include "../core/kmain/sci/sys.h"
+
+// The definitions for the syscall numbers.
+#include "../core/kmain/sci/sci0.h"
+#include "../core/kmain/sci/sci1.h"
+#include "../core/kmain/sci/sci2.h"
+#include "../core/kmain/sci/sci3.h"
+
+// The handlers for the four syscalls.
+#include "../core/kmain/sci/sci.h" 
+
 
 // ==================================
 // ke/

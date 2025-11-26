@@ -9,17 +9,6 @@
 
 #include <kernel.h>
 
-//
-// Internal in sci/.
-//
-
-// Common
-#include "sci.h" 
-// Aliases
-#include "sci0.h"
-#include "sci1.h"
-#include "sci2.h"
-#include "sci3.h"
 
 static unsigned long __default_syscall_counter=0;
 
@@ -284,35 +273,12 @@ void *sci0 (
 // Counting ...
     p->syscalls_counter++;
 
-// What is the number for SCI_EXIT?
-// #todo: Put this in the right spot.
-// exit
-// Marcamos no processo nossa intenção de fechar.
-// Marcamos na thread flower nossa intenção de fechar.
-// #todo: as outras threads do processo.
-// see: sched.c
-    if (number == SCI_EXIT)
-    {
-        debug_print("sci0: SCI_EXIT\n");
-        //p->exit_in_progress = TRUE;
-        
-        // Quando o scheduler passar por ela,
-        // vai pular ela e marca-la como zombie.
-        if ((void*) p->flower != NULL)
-        {
-            if (p->flower->magic == 1234)
-            {
-                p->flower->exit_in_progress = TRUE;
-                p->exit_in_progress = TRUE;
-            }
-        }
-        return NULL;
-    }
+//
+// Switch
+//
 
-// ==== 0 mark ====================================================
-
-    // SCI_NULL
-    if (number == 0)
+// 0
+    if (number == SCI0_NULL)
         return NULL;
 
 // 1 (i/o) Essa rotina pode ser usada por 
@@ -320,7 +286,7 @@ void *sci0 (
 // #todo: This operation needs permition.
 // #todo: Return value.
 // IN: buffer address and lba address.
-    if (number == SCI_READ_LBA)
+    if (number == SCI0_READ_LBA)
     {
         // #todo
         // We need a valid disk id.
@@ -338,7 +304,7 @@ void *sci0 (
 // #todo: This operation needs permition.
 // #todo: Return value.
 // IN: buffer address and lba address.
-    if (number == SCI_WRITE_LBA)
+    if (number == SCI0_WRITE_LBA)
     {
         // #todo
         // We need a valid disk id.
@@ -355,7 +321,7 @@ void *sci0 (
 // Carregar um arquivo do disco para a memória.
 // See: fs/fs.c
 // IN: name, flags, mode
-    if (number == SCI_READ_FILE)
+    if (number == SCI0_READ_FILE)
     {
         //if ( (void*) a2 == NULL )
            //return NULL;
@@ -369,7 +335,7 @@ void *sci0 (
 // Save file.
 // See: fs/fs.c
 // IN: name, size in sectors, size in bytes, adress, flag.
-    if (number == SCI_WRITE_FILE)
+    if (number == SCI0_WRITE_FILE)
     {
         sys_write_file_to_disk ( 
             (char *)        message_address[0],
@@ -382,18 +348,18 @@ void *sci0 (
 
 // 5
 // See: sys.c 
-    if (number == SCI_SYS_VSYNC)
+    if (number == SCI0_SYS_VSYNC)
     {
         sys_vsync();
         return NULL;
     }
 
-// 6 - Put pixel. 
+// 6 - Put pixel
 // Coloca um pixel no backbuffer.
 // Isso pode ser usado por um servidor. 
 // cor, x, y, rop_flags.
 // todo: chamar kgws_backbuffer_putpixel
-    if (number == SCI_BUFFER_PUTPIXEL)
+    if (number == SCI0_BUFFER_PUTPIXEL)
     {
         backbuffer_putpixel ( 
             (unsigned long) a2,  // color
@@ -403,12 +369,12 @@ void *sci0 (
         return NULL;
     }
 
-// 7
+// 7 - SCI0_BUFFER_DRAWCHAR
 
 // 8 
 // #todo: #bugbug: 
 // Aqui precisamos de mais parâmetros.
-    if (number == SCI_BUFFER_DRAWLINE)
+    if (number == SCI0_BUFFER_DRAWLINE)
     {
         backbuffer_draw_horizontal_line ( 
             (unsigned long) a2, 
@@ -428,7 +394,7 @@ void *sci0 (
 // Let create some better services for the display server in ring 0,
 // for performance reasons. Maybe inside a kernel module, not inside
 // the kernel image.
-    if (number == 9)
+    if (number == SCI0_BUFFER_DRAWRECT)
     {
         // debug_print("sci0: [9]\n");
         // IN: l,t,w,h,color,rop flags.
@@ -442,7 +408,7 @@ void *sci0 (
         return NULL;
     }
 
-// 10 - Refresh rectangle.
+// 10 =  Refresh rectangle
 // Region?
     if (number == 10)
     {
@@ -456,41 +422,44 @@ void *sci0 (
         return NULL;
     }
 
-// 11: Schedule to flush the backbuffer into the LFB.
-    if (number == SCI_REFRESHSCREEN){ 
+// 11: 
+// Schedule to flush the backbuffer into the LFB
+// using kernel services.
+    if (number == SCI0_REFRESHSCREEN)
+    {
         invalidate_screen();
         return NULL;
     }
 
-// Reserved.
-// Netword: 12,13,14,15
+// Network (RESERVED)
+// 12,13,14,15
 
-// 16 - open() implementation.
+// 16 - sys_open()
 // see: fs.c
 // IN: pathname, flags, mode
 // OUT: fd
-    if (number == SCI_SYS_OPEN)
+    if (number == SCI0_SYS_OPEN)
     {
-        debug_print("sci0: SCI_SYS_OPEN\n");
+        debug_print("sci0: SCI0_SYS_OPEN\n");
         return (void *) sys_open ( 
                                 (const char *) arg2, 
                                 (int)          arg3, 
                                 (mode_t)       arg4 ); 
     }
 
-// 17 - close() implementation.
+// 17 - sys_close()
 // see: fs.c
 // IN: fd
-    if (number == SCI_SYS_CLOSE)
+    if (number == SCI0_SYS_CLOSE)
     {
-        debug_print ("sci0: SCI_SYS_CLOSE\n");
+        debug_print ("sci0: SCI0_SYS_CLOSE\n");
         return (void *) sys_close((int) arg2);
     }
 
-// 18 - read() implementation.
+// 18 - sys_read()
 // IN: ?
 // See: sys.c
-    if (number == SCI_SYS_READ)
+    if (number == SCI0_SYS_READ)
     {
         return (void *) sys_read ( 
                             (unsigned int) arg2, 
@@ -498,10 +467,10 @@ void *sci0 (
                             (int)          arg4 ); 
     }
 
-// 19 - write() implementation
+// 19 - sys_write()
 // IN: ?
 // See: sys.c
-    if (number == SCI_SYS_WRITE)
+    if (number == SCI0_SYS_WRITE)
     {
         return (void *) sys_write ( 
                             (unsigned int) arg2, 
@@ -511,84 +480,100 @@ void *sci0 (
 
 // == + ==================================================
 
-// Reserved:
-// 20~23 - Buffers support 
-// 24~28 - Surface support 
-// 29 - String stuff
-// 30,31,32 - Putpixel?
-// 33 - free number.
+// Reserved: 20~23 - Buffers support 
+// Reserved: 24~28 - Surface support 
+// Reserved: 29 - String stuff
+// Reserved: 30,31,32 - Putpixel?
+// Reserved: 33 - free number
 
 // 34: Setup cursor position for the current virtual console
-    if (number == SCI_CALI_SET_CURSOR){
+    if (number == SCI0_WINK_SET_CURSOR){
         wink_set_cursor((unsigned long) arg2, (unsigned long) arg3);
         return NULL;
     }
 
 // 35 - free number
-// 36 - #deprecated
-// 37 - #deprecated
-
+// 36 - free number
+// 37 - free number
 
 // 38 - get host name
 // see: kunistd.c
-    if (number == SCI_GETHOSTNAME){
+    if (number == SCI0_GETHOSTNAME){
         return (void *) sys_gethostname((char *) arg2);
     }
 // 39 - set host name 
 // see: kunistd.c
-    if (number == SCI_SETHOSTNAME)
+    if (number == SCI0_SETHOSTNAME)
     {
         // #todo: lenght
         // IN: name. lenght.
         return (void *) sys_sethostname((const char *) arg2,0);
     }
 
-
 // 40 - get user name 
-    if (number == SCI_GETUSERNAME){
+    if (number == SCI0_GETUSERNAME){
         return (void *) sys_getusername((char *) arg2);
     }
 // 41 - Set user name 
-    if (number == SCI_SETUSERNAME){
+    if (number == SCI0_SETUSERNAME){
         return (void *) sys_setusername((const char *) arg2);
     }
 
-// 42 - #deprecated
+// 42 - free
 
 // 43 - Create an empty file.
-// Called by libgws.
 // See: fs.c
-    if (number == 43){
-        return (void *) sys_create_empty_file( (char *) arg2 );
+    if (number == SCI0_CREATE_EMPTY_FILE){
+        return (void *) sys_create_empty_file((char *) arg2);
     }
 
-// 44 - Create an empty directory.
-// Called by libgws.
+// 44 - Create an empty directory
 // See: fs.c
-    if (number == 44){
-        return (void *) sys_create_empty_directory( (char *) arg2 );
+    if (number == SCI0_CREATE_EMPTY_DIRECTORY){
+        return (void *) sys_create_empty_directory((char *) arg2);
     }
 
-// 45 - livre
-// #todo: Usar para manipulação de arquivo ou diretório.
-// 46 - livre
-// 47 - livre
-        // 48 - livre
+// 45 - free
+// 46 - free
+// 47 - free
+// 48 - free
 
-// 49
-// Show system info
+// 49 - Show system info
 // See: sys.c
-    if (number == 49){
+    if (number == SCI0_SHOW_SYSTEM_INFO){
         sys_show_system_info((int) arg2);
         return NULL;
     }
 
 // ...
 
-// 65 - Put a char in the current virtual console.
+// 65 - Put a char in the current virtual console
 // IN: ch, console id.
-    if (number == SCI_KGWS_PUTCHAR){
-        __servicePutChar( (int) arg2, (int) arg3 );
+    if (number == SCI0_KGWS_PUTCHAR){
+        __servicePutChar((int) arg2, (int) arg3);
+        return NULL;
+    }
+
+// What is the number for SCI0_EXIT?
+// Marcamos no processo nossa intenção de fechar.
+// Marcamos na thread flower nossa intenção de fechar.
+// #todo: as outras threads do processo.
+// see: sched.c
+    if (number == SCI0_EXIT)
+    {
+        debug_print("sci0: SCI0_EXIT\n");
+        //p->exit_in_progress = TRUE;
+        
+        // Quando o scheduler passar por ela,
+        // vai pular ela e marca-la como zombie.
+        if ((void*) p->flower != NULL)
+        {
+            if (p->flower->magic == 1234)
+            {
+                p->flower->exit_in_progress = TRUE;
+                p->exit_in_progress = TRUE;
+            }
+        }
         return NULL;
     }
 
@@ -607,17 +592,19 @@ void *sci0 (
 // #todo: 
 // See at the beginning of this routine.
 
-    if (number == SCI_EXIT)
+/*
+// 70 - Exit a thread
+    if (number == SCI0_EXIT)
     {
         panic("sci0: SCI_EXIT\n");
         return NULL;
     }
+*/
 
-// 71 - fork?
+// 71 - sys_fork()
 // See: sys.c
-    if (number == 71)
+    if (number == SCI0_FORK)
     {
-        //panic("sci0: [71] fork()\n");
         debug_print("sci0: [71] fork()\n");
         return (void *) sys_fork();
     }
@@ -630,7 +617,9 @@ void *sci0 (
 // IN:
 // cg (cgroup), initial rip, initial stack, ppid, name
 // #todo: Is it a ring 3 stack address?
-    if (number == SCI_SYS_CREATE_THREAD)
+
+// 72 - Create thread
+    if (number == SCI0_SYS_CREATE_THREAD)
     {
         serial_printk("sci0: [72] Create thread\n");
         return (void *) sys_create_thread (
@@ -664,7 +653,8 @@ void *sci0 (
 // arg3 = process priority
 // arg4 = nothing
 
-    if (number == SCI_SYS_CREATE_PROCESS)
+// 73 - Create process
+    if (number == SCI0_SYS_CREATE_PROCESS)
     {
         serial_printk("sci0: [73] Create process\n");
         return (void *) sys_create_process ( 
@@ -676,13 +666,13 @@ void *sci0 (
                             (unsigned long) RING3 );          // iopl 
     }
 
-// 74,75,76,77,78,79.
+// Reserved 74~79
 
-// 80 - Show current process info.
+// 80 - Show current process info
 // #todo: Mostrar em uma janela própria.
 // #todo: Devemos chamar uma função que 
 // mostre informações apenas do processo atual. 
-    if (number == SCI_CURRENTPROCESSINFO)
+    if (number == SCI0_CURRENTPROCESSINFO)
     {
         show_currentprocess_info();
         return NULL;
@@ -690,11 +680,11 @@ void *sci0 (
 
 // 81: Get parent process id.
 // See: sys.c
-    if (number == SCI_GETPPID){ 
+    if (number == SCI0_GETPPID){ 
         return (void *) sys_getppid();
     }
 
-// 82 - Mostra informações sobre todos os processos.
+// 82 - Show information about all the processes
     if (number == 82){
         show_process_information();
         return NULL;
@@ -709,9 +699,11 @@ void *sci0 (
 // PID veio via argumento.
 // IN: pid, status, option
 // #todo: Change the name to sys_xxxx
-    if (number == SCI_WAIT4PID)
+
+// 83 - Wait for PID
+    if (number == SCI0_WAIT4PID)
     { 
-        debug_print("sci0: [FIXME] SCI_WAIT4PID\n");
+        debug_print("sci0: [FIXME] SCI0_WAIT4PID\n");
         return (void *) do_waitpid( 
                             (pid_t) arg2, 
                             (int *) arg3, 
@@ -720,83 +712,78 @@ void *sci0 (
        //block_for_a_reason ( (int) current_thread, (int) arg2 ); //suspenso
     }
 
-// 84 - livre
+// 84 - free
 
-// 85
-    if (number == SCI_GETPID){
+// 85 - Get current process ID
+    if (number == SCI0_GETPID){
         return (void *) get_current_pid();
    }
 
-// 86 - livre
+// 86 - free
 
-// 87
+// 87 - Get current thread id
     if (number == 87){
         return (void*) current_thread;
     }
 
 // Testa se o processo é válido
 // se for valido retorna 1234
-// testando ...
-    if (number == SCI_88){
+// 88 - Testing process validation?
+    if (number == 88){
         return (void *) processTesting(arg2);
     }
 
-// 89 - livre
+// 89 - free
 
 // ------------------
-// 90~99 Reservado para thread support
+// 90~99 Reserved for thread support
 
-// 94
+// 94 - Start thread
 // #bugbug
 // Why the user has a ponter to the ring0 thread structure?
-    if (number == SCI_STARTTHREAD)
+// REAL (coloca a thread em standby para executar pela primeira vez.)
+    if (number == SCI0_STARTTHREAD)
     {
-        debug_print("sci0: SCI_STARTTHREAD\n");
+        debug_print("sci0: SCI0_STARTTHREAD\n");
         return (void *) core_start_thread((struct thread_d *) arg2);
     }
 
 // ------------------
 
-// #todo:
-// Reserve these for some comon purpose.
 // 100~109: free
 
-// 110
+// 110 - Reboot
 // IN: flags.
 // see: sys.c
     int reb_ret=-1;
-    if (number == SCI_SYS_REBOOT)
+    if (number == SCI0_SYS_REBOOT)
     {
-        debug_print("sci0: SCI_SYS_REBOOT\n");
+        debug_print("sci0: SCI0_SYS_REBOOT\n");
         reb_ret = (int) sys_reboot(0);
         return (void *) (reb_ret & 0xFFFFFFFF);
     }
 
-// 111
-// Get the next system message.
-// IN: User buffer for message elements.
+// 111 - Get system message
+// Get the next system message
+// IN: User buffer for message elements
 // See: msg.c
-    if (number == SCI_SYS_GET_MESSAGE){
+    if (number == SCI0_SYS_GET_MESSAGE){
         return (void *) sys_get_message( (unsigned long) &message_address[0] );
     }
 
-// 112
-// Post message to tid.
-// Asynchronous.
-// IN: tid, message buffer address.
+// 112 - Post message to tid - (Asynchronous)
 // See: msg.c
-    if (number == 112){
+// IN: tid, message buffer address.
+    if (number == SCI0_SYS_POST_MESSAGE_TO_TID)
+    {
         return (void *) sys_post_message_to_tid( 
                             (int) arg2, 
                             (unsigned long) arg3 );
     }
 
-// #todo: Reseve these for a common purpose,
-// just like msg or networking.
-// 113~117: 
-// 118~119: 
+// Reserved (113~117)
 
-// Pop data from network queue.
+// 118 - Pop data from network queue
 // IN: user buffer, buffer lenght.
     if (number == 118){
         return (void*) network_pop_packet( 
@@ -808,17 +795,15 @@ void *sci0 (
     //case 119:
         //break;
 
-// 120
-// Get a message given the index.
+// 120 - Get a message given the index.
 // With restart support.
-    if (number == SCI_SYS_GET_MESSAGE2)
+    if (number == SCI0_SYS_GET_MESSAGE2)
     {
         return (void *) sys_get_message2( 
                 (unsigned long) &message_address[0], arg3, arg4 );
     }
 
-// 121, 122, 123
-
+// 121 - Signal stuff?
 // sys_signal() support.
 // #todo
 // We need to implement the parameters for this function.
@@ -828,14 +813,16 @@ void *sci0 (
         //return (void*) sys_sigaction();
         return NULL;
     }
+// 122 - Signal stuff?
     if (number == 122){
         debug_print("sci0: [122] sys_signal not implemented\n");
         //return (void*) sys_signal();
         return NULL;
     }
 
-// 124 (teste)
-// Defered system procedure call.
+// 123 - free
+
+// 124 - Defered system procedure call.
 // #todo: 
 // Precisamos armazenasr os argumentos em algum lugar.
 // #bugbug: Precisamos criar um request.
@@ -844,30 +831,30 @@ void *sci0 (
         return NULL;
     }
 
-// 125
+// 125 - free
 
-// 126
+// 126 - i/o port in, via ring syscall.
 // Permitindo que drivers e servidores em usermode acessem as portas.
 // #todo: This operation needs permition?
 // #bugbug
 // #todo: 
 // Tem que resolver as questoes de privilegios.
 // IN: bits, port
-    if (number == SCI_PORTSX86_IN)
+    if (number == SCI0_PORTSX86_IN)
     {
         return (void *) portsx86_IN ( 
                             (int) (arg2 & 0xFFFFFFFF), 
                             (unsigned short) (arg3 & 0xFFFF) );
     }
 
-// 127
+// 127 - i/o port out, via ring syscall.
 // Permitindo que drivers e servidores em usermode acessem as portas.
 // #todo: This operation needs permition?
 // #bugbug
 // #todo: 
 // Tem que resolver as questoes de privilegios.
 // IN: bits, port, value
-    if (number == SCI_PORTSX86_OUT)
+    if (number == SCI0_PORTSX86_OUT)
     {
         portsx86_OUT ( 
             (int) arg2, 
@@ -877,10 +864,11 @@ void *sci0 (
     }
 
 // 128~129: free
-// --------
-// 130, 131
 
-// 132 - d_draw_char
+// --------
+// 130~131: free
+
+// 132 - Draw a char
 // Desenha um caractere e pinta o pano de fundo.
 // #todo: We do not have an api routine yet.
 // IN: x, y, c, fg color, bg color
@@ -895,7 +883,7 @@ void *sci0 (
         return NULL;
     }
 
-// 133 - d_drawchar_transparent
+// 133 - Draw a transparent char.
 // Desenha um caractere sem alterar o pano de fundo.
 // IN: x, y, color, c
     if (number == 133)
@@ -910,66 +898,66 @@ void *sci0 (
 
 // 134~137: free
 
-// 138 - Get key state.
+// 138 - Get key state
 // IN: vk.
-    if (number == 138){
+    if (number == SCI0_GET_KEY_STATE){
         return (void *) keyboardGetKeyState((unsigned char) arg2);
     }
 
-// 139
+// 139 - Get scancode
 
 // -----------------
-// 140~149
+// 140~149 (Keyboard stuff?)
+
 // -----------------
 
-// 150~156 User and group support.
+// 150 - Create user
+
+// 151 - 151 - Set current user id
 
 // 152 - get uid
-    if (number == SCI_GETCURRENTUSERID){
+    if (number == SCI0_GETCURRENTUSERID){
         return (void *) current_user; 
     }
 
+// 153 - 
+
 // 154 - get gid
-    if (number == SCI_GETCURRENTGROUPID){
+    if (number == SCI0_GETCURRENTGROUPID){
         return (void *) current_group; 
     }
 
 // 157~159: Security
 
 // 157 - get user session id
-    if (number == SCI_GETCURRENTUSERSESSION)
-    {
+    if (number == SCI0_GETCURRENTUSERSESSION){
         return (void *) current_usersession; 
     }
 
 // 158 - free
 
-// 159 - get current cgroup id
-// #todo: Chnage this name: SCI_GETCURRENTDESKTOP
-    if (number == SCI_GETCURRENTDESKTOP)
-    {
+// 159 - get current cgroup id (#todo: Change name)
+    if (number == SCI0_GETCURRENTDESKTOP){
         return (void *) get_current_cg_id();
     }
 
 // ----------------
-// 160~169: Reserved to network support.
 
-// 161
-// get socket IP
+// 160 - free
+
+// 161 - get socket IP
 // Gramado API socket support. (not libc)
     if (number == 161){
-        return (void *) getSocketIPV4( (struct socket_d *) arg2 );
+        return (void *) getSocketIPV4((struct socket_d *) arg2);
     }
 
-// 162
-// get socket port
+// 162 - get socket port
 // Gramado API socket support. (not libc)
     if (number == 162){
-        return (void *) getSocketPort( (struct socket_d *) arg2 );
+        return (void *) getSocketPort((struct socket_d *) arg2);
     }
 
-// 163
-// update socket  
+// 163 - update socket  
 // retorno 0=ok 1=fail
 // Gramado API socket support. (not libc)
     if (number == 163){
@@ -979,15 +967,18 @@ void *sci0 (
                             (unsigned short)   (arg4 & 0xFFFF) );
     }
 
+// 164~169: free
+
 // ----------------
 
-// 170 - command 'pwd'.
+// 170 - sys_pwd() (Print Working Directory)
+// command 'pwd'.
 // Cada processo tem seu proprio pwd.
 // Essa rotina mostra o pathname usado pelo processo.
 // See: fs.c
 // #test
 // Isso é um teste. Essa chamada não precisa disso.
-    if (number == SCI_PWD)
+    if (number == SCI0_PWD)
     {
         if (is_superuser() == TRUE)
         {
@@ -998,36 +989,35 @@ void *sci0 (
         return NULL;
     }
 
-// 171 - retorna o id do volume atual.
-    if (number == SCI_GETCURRENTVOLUMEID){
+// 171 - Get current volume id
+    if (number == SCI0_GETCURRENTVOLUMEID){
         return (void *) current_volume;
     }
 
-//172 - configura o id do volume atual.
+// 172 - Set current volume id
 //#bugbug: Estamos modificando, sem aplicar nenhum filtro.
-    if (number == SCI_SETCURRENTVOLUMEID){
+    if (number == SCI0_SETCURRENTVOLUMEID){
         current_volume = (int) arg2;
         return NULL;
     }
 
-// 173
+// 173 - List files
 // Lista arquivos de um diretório, dado o número do disco,
 // o numero do volume e o número do diretório,
 // args in: disk id, volume id, directory id
 // See: fs.c
-    if (number == SCI_LISTFILES){
+    if (number == SCI0_LISTFILES){
         fsListFiles( arg2, arg3, arg4 );
         return NULL;
     }
 
-// 174
-    if (number == SCI_SEARCHFILE){
-        debug_print ("sci0: SCI_SEARCHFILE\n");
+// 174 - Search file
+    if (number == SCI0_SEARCHFILE){
+        debug_print ("sci0: SCI0_SEARCHFILE\n");
         return (void *) search_in_dir ( 
                             (const char *) arg2, 
                             (unsigned long)   arg3 );
     }
-
 
 // 175 - 'cd' command support.
 // +Atualiza o pathname na estrutura do processo atual.
@@ -1040,7 +1030,7 @@ void *sci0 (
         return NULL;
     }
 
-// 176
+// 176 - pathname backup string.
 // Remove n nomes de diretório do pathname do processo 
 // indicado no argumento.
 // Copia o nome para a string global.
@@ -1063,41 +1053,45 @@ void *sci0 (
         return NULL;
     }
 
-// 178
+// 178 - Get file size
 // See: sys.c
     if (number == 178){
         return (void *) sys_get_file_size((unsigned char *) arg2);
     }
 
-// 179
+// 179 - free
 
 //----------
-// 180~189: memory support.
-// (Privilegies)
 
-// 184
+// 180~183: Reserved for memory support
+
+// 184 - Getprocess heap pointer
 // Pega o endereço do heap do processo dado seu id.
 // See: process.c
-    if (number == SCI_GETPROCESSHEAPPOINTER)
+    if (number == SCI0_GETPROCESSHEAPPOINTER)
     {
         debug_print("sci0: [184]\n");
         return (void *) GetProcessHeapStart((int) arg2);
     }
 
+// 185~189: Reserved for memory support
+
 //----------
 // 190~199: free
+
+//----------
 // 200~209: free
 
 //----------
 // 210~219: terminal/virtual console support.
 
-//211
-    if (number == SCI_GETCURRENTTERMINAL){
+// 211
+    if (number == SCI0_GETCURRENTTERMINAL){
         return (void *) current_terminal;
     }
 
-//212
-    if (number == SCI_SETCURRENTTERMINAL)
+// 212
+    if (number == SCI0_SETCURRENTTERMINAL)
     {
         // #todo: Permissions.
         current_terminal = (int) arg2;
@@ -1106,35 +1100,40 @@ void *sci0 (
 
 //----------
 
+// 220
+// 221
+// 222
+
 // 223 - Get sys time info.
 // informaçoes variadas sobre o sys time.
     if (number == 223){
         return (void *) get_systime_info((int) arg2);
     }
 
-// 224
-    if (number == SCI_GETTIME){
+// 224 - Get time
+    if (number == SCI0_GETTIME){
         return (void *) hal_get_time();
     }
-// 225
-    if (number == SCI_GETDATE){
+
+// 225 - Get date
+    if (number == SCI0_GETDATE){
         return (void *) hal_get_date();
     }
 
-// 226 - get
+// 226 - Get kernel semaphore
 // Obs: 
 // #todo: 
 // Poderia ser uma chamada para configurar o posicionamento 
 // e outra para configurar as dimensões.
 // #todo: Atomic stuff.
-    if (number == SCI_GET_KERNELSEMAPHORE){
+    if (number == SCI0_GET_KERNELSEMAPHORE){
         return (void *) __spinlock_ipc;
     }
 
 // 227 - close gate
 // Entering critical section.
 // See: process.c
-    if (number == SCI_CLOSE_KERNELSEMAPHORE){
+    if (number == SCI0_CLOSE_KERNELSEMAPHORE){
         process_close_gate(current_process);
         return NULL;
     }
@@ -1146,36 +1145,32 @@ void *sci0 (
 // essa flag. Isso fica mais fácil de lembrar se
 // existir uma flag na estrutura de processo.
 // See: process.c
-    if (number == SCI_OPEN_KERNELSEMAPHORE){
+    if (number == SCI0_OPEN_KERNELSEMAPHORE){
         process_open_gate(current_process);
         return NULL;
     }
 
-// 229
+// 229 - Reserved for semaphore stuff
 
 //---------------------
-// 230~239: Reserved for tty support.
 
-// 236 - get tty id
+// 236 - Get tty id
     if (number == 236){
         return (void *) current_tty;
     }
 
 //---------------------
 
-// 240~249: Reserved for text editing support.
-
-// 240, 241
-    if (number == SCI_GETCURSORX){
+// 240 - 
+    if (number == SCI0_GETCURSORX){
         return (void *) get_cursor_x();
     }
-    if (number == SCI_GETCURSORY){
+
+// 241 - 
+    if (number == SCI0_GETCURSORY){
         return (void *) get_cursor_y();
     }
 
-
-
-// #test
 // 248 - sys_execve()
 // see: kunistd.c in libk/
     if (number == 248)
@@ -1186,21 +1181,16 @@ void *sci0 (
     }
 
 // =====================================
-// (250 ~ 255) - Info support.
 
-// 250
-// Get system metrics.
+// 250 - Get system metrics
 // IN: index
-    if (number == SCI_SYS_GET_SYSTEM_METRICS){
+    if (number == SCI0_SYS_GET_SYSTEM_METRICS){
        return (void *) sys_get_system_metrics((int) arg2);
     }
 
-// == - ==================================================
-
-
 // ==== 260 mark ===================================================
 
-// Outro numero fará esse trabalhao.
+// 260 - sys_read()
     if (number == 260)
     {
         return (void *) sys_read ( 
@@ -1209,7 +1199,7 @@ void *sci0 (
                             (int)          arg4 );
     }
 
-// Outro numero fará esse trabalho.
+// 261 - sys_write()
     if (number == 261)
     {
         return (void *) sys_write ( 
@@ -1218,8 +1208,7 @@ void *sci0 (
                             (int)          arg4 );
     }
 
-
-// read on virtual console!
+// 262 - Console read
 // range: 0 ~ 3
 // chamado por read_VC em ring3.
 // IN: fd, buf, count
@@ -1228,7 +1217,7 @@ void *sci0 (
                             (const void *) arg3, (size_t) arg4 );
     }
 
-// write on virtual console!
+// 263 - Console write
 // range: 0 ~ 3
 // chamado por write_VC em ring3.
 // IN: fd, buf, count
@@ -1237,9 +1226,7 @@ void *sci0 (
                             (const void *) arg3, (size_t) arg4 );
     }
 
-
-
-// 266
+// 266 - Process get tty
 // Pega o número da tty de um processo, dado o pid.
 // process.c
 // IN: PID.
@@ -1255,7 +1242,7 @@ void *sci0 (
     //    return (void *) pty_link_by_pid ( (int) arg2, (int) arg3 );
     //}
 
-// Read tty
+// 272 - sys_tty_read
 // Channel is a file descriptor in the file list 
 // of the current process.
 // IN: fd, buf, count.
@@ -1267,7 +1254,7 @@ void *sci0 (
                             (int)          arg4 );  // nr
     }
 
-// Write tty
+// 273 - sys_tty_write
 // Channel is a file descriptor in the file list 
 // of the current process.
 // IN: fd (channel), buf, count.
@@ -1279,42 +1266,44 @@ void *sci0 (
                             (int)          arg4 );  // nr
     }
 
-// Get current virtual console.
+// 277 - Get current virtual console.
     if (number == 277){
         return (void *) console_get_current_virtual_console();
     }
 
-// Set current cirtual console.
+// 278 - Set current cirtual console.
 // #todo: precisa de privilégio. 
     if (number == 278){
         console_set_current_virtual_console((int) arg2);
         return NULL;
     }
     
-// Returns the current runlevel.
+// 288 - Returns the current runlevel.
     if (number == 288){
         return (void *) core_get_current_runlevel();
     }
 
-// Serial debug print string.
+// 289 - Serial debug printk.
 // See: sys.c
     if ( number == 289 ){
-        return (void *) sys_serial_debug_printk( (char *) arg2 );
+        return (void *) sys_serial_debug_printk((char *) arg2);
     }
 
-// Get memory size.
+// 292 - Get memory size in MB.
     if (number == 292){
         return (void *) core_get_memory_size_mb();
     }
 
+// 293 - Get boot info
 // #bugbug: cuidado.
 // get boot info.
 // See: info.c
 // IN: index to select the info.
-    if ( number == 293 ){
+    if (number == 293){
         return (void *) info_get_boot_info((int) arg2);
     }
 
+// 350 - Initialize system component
 // Inicializar ou reinicializar componentes do sistema
 // depois da inicialização completa do kernel.
 // Isso poderá ser chamado pelo init.bin, pelo shell
@@ -1325,10 +1314,10 @@ void *sci0 (
         return (void *) sys_initialize_component((int) arg2);
     }
 
-// 377 - uname
+// 377 - sys_uname()
 // Get info to fill the utsname structure.
 // See: sys.c
-    if (number == SCI_SYS_UNAME)
+    if (number == SCI0_SYS_UNAME)
 	{
         int_retval = (-EFAULT); //Bad address
         if ((void*) arg2 == NULL){
@@ -1345,18 +1334,19 @@ void *sci0 (
 // #bugbug
 // It crashes the system.
 // Clear the screen.
-    if (number==390)
+    if (number == 390)
     {
         debug_print("sci0: [390]\n");
         //displayInitializeBackground(,COLOR_BLUE,TRUE);
         return NULL;
     }
 
+// 391 - Backbuffer draw rectangle
 // #bugbug: Is it failing when we try to draw the whole screen?
+// debug_print("sci0: [391]\n");
+// IN: l,t,w,h,color,rop flags.
     if (number == 391)
     {
-        // debug_print("sci0: [391]\n");
-        // IN: l,t,w,h,color,rop flags.
         backbuffer_draw_rectangle ( 
             (unsigned long) message_address[0], 
             (unsigned long) message_address[1],
@@ -1372,9 +1362,9 @@ void *sci0 (
 //   arg2 = ring 0 cgroup structure pointer.
 // OUT: 
 //   pid
-    if (number == SCI_GET_DS_PID)
+    if (number == SCI0_GET_DS_PID)
     {
-        debug_print("sci0: SCI_GET_DS_PID\n");
+        debug_print("sci0: SCI0_GET_DS_PID\n");
         cg = (struct cgroup_d *) arg2;
         if ((void *) cg == NULL){
             return NULL;
@@ -1387,8 +1377,7 @@ void *sci0 (
         return NULL;
     }
 
-// 513
-// Register the ring3 display server.
+// 513 - Register the ring3 display server.
 // Set display PID for a given cgroup structure.
 // Register a display server.
 // gramado_ports[11] = ws_pid
@@ -1401,9 +1390,9 @@ void *sci0 (
 // see: network.c
 
     int __ds_ok = FALSE;
-    if (number == SCI_SET_DS_PID)
+    if (number == SCI0_SET_DS_PID)
     {
-        debug_print("sci0: SCI_SET_DS_PID\n");
+        debug_print("sci0: SCI0_SET_DS_PID\n");
 
         __ds_ok = 
             (int) network_register_ring3_display_server(
@@ -1417,20 +1406,18 @@ void *sci0 (
 
 // #deprecated
 // 514 - get wm PID for a given cgroup
-    if (number == SCI_GET_WM_PID){
-        panic("sci0: SCI_GET_WM_PID\n");
+    if (number == SCI0_GET_WM_PID){
+        panic("sci0: SCI0_GET_WM_PID\n");
         return NULL;
     }
 // #deprecated
 // 515 - set wm PID for a given cgroup
-    if (number == SCI_SET_WM_PID){
-        panic("sci0: SCI_SET_WM_PID\n");
+    if (number == SCI0_SET_WM_PID){
+        panic("sci0: SCI0_SET_WM_PID\n");
         return NULL;
     }
 
-
-// 518
-// Register the ring3 browser.
+// 518 - Register the ring3 browser.
 // Set browser PID for a given cgroup structure.
 // Register a display server.
 // gramado_ports[11] = ws_pid
@@ -1455,7 +1442,7 @@ void *sci0 (
         return NULL;
     }   
 
-// The main cgroup.
+// 519 - Get the main cgroup rin 0 pointer.
 // This is used to register system components.
 // #bugbug
 // This is a ring0 pointer.
@@ -1465,7 +1452,7 @@ void *sci0 (
         return (void *) system_cg;
     }
 
-// 521 - set ns PID for a given cgroup
+// 521 - Set ns PID for a given cgroup
 // network server
 // Register a network server.
     if (number == 521)
@@ -1499,10 +1486,10 @@ void *sci0 (
         return (void *) sys_dup3( (int) arg2, (int) arg3, (int) arg4 );
     }
 
-// 603 - lseek support.
+// 603 - sys_lseek()
 // See: kunistd.c
 // IN: fd, offset, whence.
-    if (number == SCI_SYS_LSEEK)
+    if (number == SCI0_SYS_LSEEK)
     {
         return (void *) sys_lseek ( 
                             (int)   arg2, 
@@ -1510,8 +1497,7 @@ void *sci0 (
                             (int)   arg4 );
     }
 
-// 640
-// Lock the taskswtiching.
+// 640 - Lock the taskswtiching.
 // Only the init thread can call this service.
     if (number == 640)
     {
@@ -1521,8 +1507,7 @@ void *sci0 (
         return NULL;
     }
 
-// 641
-// Unlock taskswitching.
+// 641 - Unlock taskswitching.
 // Only the init thread can call this service.
     if (number == 641)
     {
@@ -1532,8 +1517,7 @@ void *sci0 (
         return NULL;
     }
 
-// 642
-// Lock the scheduler.
+// 642 Lock the scheduler.
 // Only the init thread can call this service.
     if (number == 642)
     {
@@ -1543,8 +1527,7 @@ void *sci0 (
         return NULL;
     }
 
-// 643
-// Unlock scheduler.
+// 643 - Unlock scheduler
 // Only the init thread can call this service.
     if (number == 643)
     {
@@ -1554,7 +1537,7 @@ void *sci0 (
         return NULL;
     }
 
-
+// ...
 
 // 770 - Show device list.
     if (number == 770)
@@ -1572,7 +1555,7 @@ void *sci0 (
 
 // 801 - get host name
 // see: kunistd.c
-    if ( number == 801 ){
+    if (number == 801){
         return (void *) sys_gethostname((char *) arg2);
     }
 // 802 - set host name
@@ -1593,6 +1576,7 @@ void *sci0 (
         return (void *) sys_setusername((const char *) arg2); 
     }
 
+// 808 - pts name
 // #todo
 // supporting ptsname libc function
 // get_ptsname
@@ -1603,6 +1587,7 @@ void *sci0 (
                             (char *) arg3, (size_t) arg4 ); 
     }
 
+// 809 - pts name
 // (#bugbug: The same as above?)
 //#todo
 //supporting ptsname_r libc function
@@ -1615,14 +1600,14 @@ void *sci0 (
 
 // 880 - Get process stats given pid
 // IN: pid, index
-    if ( number == 880 ){
-       return (void *) get_process_stats ( (pid_t) arg2, (int) arg3 );
+    if (number == 880){
+       return (void *) get_process_stats( (pid_t) arg2, (int) arg3 );
     }
 
 // 881 - Get thread stats given tid
 // IN: tid, number
-    if ( number == 881 ){
-        return (void *) GetThreadStats ( (int) arg2, (int) arg3 );
+    if (number == 881){
+        return (void *) GetThreadStats( (int) arg2, (int) arg3 );
     }
 
 // 882 - Get process name
@@ -1636,7 +1621,7 @@ void *sci0 (
         return (void *) getthreadname ( (int) arg2, (char *) arg3 );
     }
 
-// 884 - alarm()
+// 884 - sys_alarm()
 // See: sys.c
     if (number == SCI_SYS_ALARM){
         return (void *) sys_alarm((unsigned long) arg2);
@@ -1651,8 +1636,9 @@ void *sci0 (
     }
 
 // 892 - Setup the thread's surface rectangle.
-    if (number == 892){
-        // l,t,w,h
+// l,t,w,h
+    if (number == 892)
+    {
         __setup_surface_rectangle( 
             (unsigned long) message_address[0], 
             (unsigned long) message_address[1],
@@ -1673,23 +1659,26 @@ void *sci0 (
         return NULL;
     }
 
+// 897 - ?? (create rectangle?)
 // Set up and draw the main surface for a thread.
-    if (number == 897){
+    if (number == 897)
+    {
         __service897();
         return NULL;
     }
 
-// 898 - Start the kernel console.
+// 898 - Enter the kernel console. (enable prompt)
     if (number == 898){
         input_enter_kernel_console();
         return NULL;
     }
-// 899 - Exit the kernel console.
+// 899 - Exit the kernel console. (disable prompt)
     if (number == 899){
         input_exit_kernel_console();
         return NULL;
     }
 
+// 913 - Sleep if socket is empty
 // is the socket full?
 // IN: fd
 // OUT: -1= error; FALSE= nao pode ler; TRUE= pode ler.
@@ -1730,7 +1719,6 @@ void *sci0 (
         return NULL;
     }
 
-
 // api - load file (string ???)
 // #todo: Tem que retornar algum identificador para a api.
 // poderia ser um indice na tabela de arquivos abertos pelo processo.
@@ -1740,65 +1728,60 @@ void *sci0 (
     //    return (void *) k_fopen ( (const char *) arg2, "r+" );
     //}
 
-// 4444
-// Show root files system info.
+// 4444 - Show root files system info.
 // Print into the raw kernel console.
     if (number == 4444){
         fs_show_root_fs_info();
         return NULL;
     }
 
-
-
-    //7000 ~ 7020 for network sockets
-
-// 7000 - socket() 
+// 7000 - sys_socket() 
 // See: socket.c
 // family, type, protocol
-    if (number == SCI_SYS_SOCKET){
+    if (number == SCI0_SYS_SOCKET){
         return (void *) sys_socket( (int) arg2, (int) arg3, (int) arg4 );
     }
 
-// 7001 - connect()
+// 7001 - sys_connect()
 // fd, sockaddr struct pointer, addr len.
-    if (number == SCI_SYS_CONNECT){
+    if (number == SCI0_SYS_CONNECT){
         return (void *) sys_connect ( 
                             (int) arg2, 
                             (const struct sockaddr *) arg3,
                             (socklen_t) arg4 );
     }
 
-// 7002 - accept()
+// 7002 - sys_accept()
 // This is the unix standard method.
 // Our major goal is to return the fd for the client socket file.
 // #bugbug: Work in progress.
 // fd, sockaddr struct pointer, addr len pointer.
-    if (number == SCI_SYS_ACCEPT){
+    if (number == SCI0_SYS_ACCEPT){
         return (void *) sys_accept ( 
                             (int) arg2, 
                             (struct sockaddr *) arg3, 
                             (socklen_t *) arg4 ); 
     }
 
-// 7003 - bind()
+// 7003 - sys_bind()
 // fd, sockaddr struct pointer, addr len.
-    if (number == SCI_SYS_BIND){
+    if (number == SCI0_SYS_BIND){
         return (void *) sys_bind ( 
                             (int) arg2, 
                             (const struct sockaddr *) arg3,
                             (socklen_t) arg4 );
     }
 
-// 7004 - listen() support.
+// 7004 - sys_listen()
 // IN: fd, backlog
 // see: 
-    if (number == SCI_SYS_LISTEN){
+    if (number == SCI0_SYS_LISTEN){
         return (void *) sys_listen((int) arg2, (int) arg3);  
     }
 
 // 7005
 
-// 7006
+// 7006 - Set socket gramado port
 // Salvar um pid em uma das portas.
 // IN: gramado port, PID
     if (number == 7006){
@@ -1827,33 +1810,34 @@ void *sci0 (
         return NULL;
     }
 
-// 8000 - ioctl() implementation.
+// 8000 - sys_ioctl()
 // IN: fd, request, arg
 // See: fs.c
-    if (number == SCI_SYS_IOCTL){
+    if (number == SCI0_SYS_IOCTL){
         return (void *) sys_ioctl ( 
                             (int) arg2, 
                             (unsigned long) arg3, 
                             (unsigned long) arg4 );
     }
 
-// 8001 - fcntl()
+// 8001 - sys_fcntl()
 // See: sys.c    
-    if (number == SCI_SYS_FCNTL){
+    if (number == SCI0_SYS_FCNTL){
         return (void *) sys_fcntl ( 
                             (int) arg2, 
                             (int) arg3, 
                             (unsigned long) arg4 );
     }
 
+// 8002 - Setup stdin pointer
 // ?? #bugbug
-// Setup stdin pointer
 // See: kstdio
 // IN: fd
     if (number == 8002){
         return (void *) sys_setup_stdin((int) arg2);
     }
 
+// 9100 - Get system icon
 // Pegando o endereço de um buffer de icone.
 // queremos saber se ele eh compartilhado.
 // shared_buffer_terminal_icon
@@ -1923,6 +1907,15 @@ void *sci1 (
         debug_print("sci1: te validation\n");
         panic("sci1: te validation\n");
     }
+
+
+//
+// Switch
+//
+
+    //if (number == 0)
+        //return NULL;
+
 
 // The display server was not initialized yet.
     if (DisplayServerInfo.initialized != TRUE){
@@ -2054,8 +2047,11 @@ void *sci2 (
     p->syscalls_counter++;
 
 //
-// switch
+// Switch
 //
+
+    //if (number == 0)
+        //return NULL;
 
 // 1 - Set magic (in kernel console)
 // #todo: This operation needs permition?
@@ -2093,7 +2089,7 @@ void *sci2 (
 
 // 18 - read() implementation.
 // See: fs.c
-    if (number == SCI_SYS_READ){
+    if (number == SCI2_SYS_READ){
         return (void *) sys_read( 
                             (unsigned int) arg2, 
                             (char *)       arg3, 
@@ -2102,7 +2098,7 @@ void *sci2 (
 
 // 19 - write() implementation.
 // See: fs.c
-    if (number == SCI_SYS_WRITE){
+    if (number == SCI2_SYS_WRITE){
         return (void *) sys_write ( 
                             (unsigned int) arg2, 
                             (char *)       arg3, 
@@ -2189,7 +2185,6 @@ void *sci2 (
         };
     }
 
-
 // ---------------------------
 // 900 - copy process 
 // For rtl_clone_and_execute().
@@ -2206,9 +2201,9 @@ void *sci2 (
 
     unsigned long clone_flags = (unsigned long) arg3;
     //unsigned long extra = (unsigned long) arg4;
-    if (number == SCI_COPY_PROCESS)
+    if (number == SCI2_COPY_PROCESS)
     {
-        debug_print("sci2: [SCI_COPY_PROCESS] clone and execute\n");
+        debug_print("sci2: [SCI2_COPY_PROCESS] clone and execute\n");
         // #debug
         //printk("sci2: copy_process called by pid{%d}\n",current_process);
         return (void *) copy_process( 
@@ -2284,24 +2279,24 @@ void *sci2 (
         return NULL;
     }
 
-// 8000 - ioctl() implementation.
+// 8000 - sys_ioctl()
 // See: fs.c
 // IN: fd, request, arg
-    if (number == SCI_SYS_IOCTL)
+    if (number == SCI2_SYS_IOCTL)
     {
-        debug_print("sci2: [8000] ioctl\n");
-        //printk("sci2: [8000] ioctl\n");
+        debug_print("sci2: [SCI2_SYS_IOCTL] ioctl\n");
+        //printk("sci2: [SCI2_SYS_IOCTL] ioctl\n");
         return (void *) sys_ioctl ( 
                             (int) arg2, 
                             (unsigned long) arg3, 
                             (unsigned long) arg4 );
     }
 
-// 8001 - fcntl() implementation. 
+// 8001 - sys_fcntl()
 // (second time) see: number 5.
 // See: sys.c
-    if (number == SCI_SYS_FCNTL){
-        debug_print("sci2: [8001] fcntl\n");
+    if (number == SCI2_SYS_FCNTL){
+        debug_print("sci2: [SCI2_SYS_FCNTL] fcntl\n");
         return (void *) sys_fcntl (
                             (int) arg2, 
                             (int) arg3, 
@@ -2771,8 +2766,6 @@ void *sci2 (
         return NULL;
     }
 
-
-
 // 44000
 // #important: We're avoiding the callback support.
 // Callback support.
@@ -2879,6 +2872,13 @@ void *sci3 (
         debug_print("sci3: te validation\n");
         panic("sci3: te validation\n");
     }
+
+//
+// Switch
+//
+
+    //if (number == 0)
+        //return NULL;
 
 // The display server was not initialized yet.
     if (DisplayServerInfo.initialized != TRUE){

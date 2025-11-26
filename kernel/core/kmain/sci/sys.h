@@ -1,4 +1,5 @@
-// syscalls.h
+// sys.h
+// The handlers for the services.
 // Created by Fred Nora.
 
 // See: sci.c.
@@ -9,44 +10,12 @@
 // So, this way we have 3 headers for this purpose.
 // sci0.h, sci1.h and sci2.h 
 
-// #todo
-// We can change these names,
-// Maybe startinng with Syscall_xxx
-
-#ifndef  __SCI_SYSCALLS_H
-#define  __SCI_SYSCALLS_H    1
+#ifndef  __SCI_SYS_H
+#define  __SCI_SYS_H    1
 
 //
 // == prototypes ====
 //
-
-// sci.c
-void *sci0 ( 
-    unsigned long number, 
-    unsigned long arg2, 
-    unsigned long arg3, 
-    unsigned long arg4 );
-
-// sci.c
-void *sci1 ( 
-    unsigned long number, 
-    unsigned long arg2, 
-    unsigned long arg3, 
-    unsigned long arg4 );
-
-// sci.c
-void *sci2 ( 
-    unsigned long number, 
-    unsigned long arg2, 
-    unsigned long arg3, 
-    unsigned long arg4 );
-
-// sci.c
-void *sci3 ( 
-    unsigned long number, 
-    unsigned long arg2, 
-    unsigned long arg3, 
-    unsigned long arg4 );
 
 // --------------------------------
 

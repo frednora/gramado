@@ -1,8 +1,9 @@
-
 // sci1.h
+// The definitions for the syscall numbers.
+// Created by Fred Nora
 
-#ifndef __SYSCALLS_SCI1_H
-#define __SYSCALLS_SCI1_H    1
+#ifndef __SCI_SCI1_H
+#define __SCI_SCI1_H    1
 
 // The handler is sci1().
 
