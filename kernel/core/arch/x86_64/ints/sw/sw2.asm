@@ -51,7 +51,7 @@ _syscall_handler:
 ; Writing to MSRs (Model-Specific Registers)
 ; Before using syscall, configure the entry point for system calls:
 ; Called by head_64.asm.
-sw2_initialize_syscall_support;
+sw2_initialize_syscall_support:
 
 ; #todo
 ; This is not working yet. We got fault number 6.
