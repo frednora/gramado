@@ -1,0 +1,87 @@
+Frame Table (FT) Layout and Thresholds
+
+The Frame Table (FT) is always capped at the 256 MB mark.
+
+--------------------------------------
+
+- Location:
+  Physical memory region reserved between 128 MB and 256 MB.
+  Start: FRAMETABLE_START_PA (0x08000000)
+  End:   FRAMETABLE_END_PA   (0x0F800000)
+
+- Purpose:
+  Provides a pool of 4 KB page frames for demand paging.
+  Tracks total frames, used frames, reserved frames, and availability.
+
+- Initialization rules (based on memorysizeTotal in KB):
+
+  * RAM < 250 MB:
+    - System too small, panic or fail.
+    - No frame table available.
+
+  * RAM ~ 256 MB:
+    - Borderline case (bootloader may report 255 MB).
+    - Frame table region reserved but may be too small to use.
+
+  * RAM ≥ 256 MB:
+    - Frame table active.
+    - End address set to FRAMETABLE_END_PA (just below 256 MB mark).
+    - Size ≈ 128 MB region.
+
+  * RAM ≥ 512 MB:
+    - Same as above (FT capped at 256 MB mark).
+    - Extra memory beyond 256 MB is available for other pools.
+
+  * RAM ≥ 1 GB:
+    - Same as above (FT capped at 256 MB mark).
+    - Frame table does not grow beyond 256 MB.
+    - Larger memory regions can be used for windows pool or backbuffer.
+
+- Frame accounting:
+  * FT.size_in_bytes   = end_pa - start_pa
+  * FT.size_in_kb      = size_in_bytes / 1024
+  * FT.size_in_mb      = size_in_kb / 1024
+  * FT.size_in_frames  = size_in_bytes / 4096
+  * FT.number_of_system_frames = FT_NUMBER_OF_SYSTEM_FRAMES
+  * FT.number_of_user_frames   = FT_NUMBER_OF_USER_FRAMES
+  * FT.number_of_used_frames   = FT_TOTAL_FRAMES
+  * FT.number_of_reserved_frames = size_in_frames - number_of_used_frames
+
+- Status flags:
+  * FT.initialized = TRUE when setup succeeds
+  * FT.used        = TRUE when active
+  * FT.magic       = 1234 (valid marker)
+
+========================================================
+
+
+Frame Table (FT) Limit
+----------------------
+
+- The Frame Table region is reserved between 128 MB and 256 MB.
+  Start: FRAMETABLE_START_PA (0x08000000)
+  End:   FRAMETABLE_END_PA   (0x0F800000)
+
+- Important rule:
+  The FT never exceeds the 256 MB mark.
+  Even if the system has 512 MB, 1 GB, or more RAM,
+  the FT is always capped at the 256 MB boundary.
+
+- Reason:
+  This ensures the frame table stays isolated in a safe,
+  contiguous region of physical memory. It avoids overlap
+  with user pools, windows pool, or large buffers mapped
+  above 256 MB.
+
+- Behavior by RAM size:
+  * < 250 MB → No FT (system too small).
+  * ~256 MB → FT reserved but minimal.
+  * ≥256 MB → FT active, capped at 256 MB.
+  * ≥512 MB → FT still capped at 256 MB, extra RAM used elsewhere.
+  * ≥1 GB   → FT still capped at 256 MB, larger pools/backbuffers
+              mapped above 256 MB.
+
+- Summary:
+  The FT is always between 128 MB and 256 MB.
+  It never grows beyond the 256 MB mark.
+

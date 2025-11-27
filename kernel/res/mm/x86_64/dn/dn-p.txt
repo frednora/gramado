@@ -1,0 +1,67 @@
+
+ Memory map for canonical physical memory:
+
+Let’s walk through how your **physical memory layout** works when 
+the machine has **256 MB installed RAM**, based on the map 
+you shared in `x64gpa.h`. I’ll highlight the key regions and how they’re being used:
+
+
+###  Conventional Memory (0–1 MB)
+- **0x00000000–0x000003FF** → Real Mode Interrupt Vector Table (IVT).  
+- **0x00000400–0x000004FF** → BIOS Data Area (BDA).  
+- **0x00000500–0x00007BFF** → Unused (potential scratch space).  
+- **0x00007C00–0x00007DFF** → Your bootloader.  
+- **0x000A0000–0x000BFFFF** → VGA/Video RAM.  
+- **0x000C0000–0x000FFFFF** → BIOS ROM + shadow areas.  
+
+ This first megabyte is the classic “real mode” space, 
+ with BIOS, video memory, and bootloader.
+
+---
+
+###  Extended Memory (1 MB–16 MB)
+- **0x00100000 (1 MB)** → Kernel base (kernel image, heap, stack).  
+- **0x00200000–0x00E00000 (2–14 MB)** → Reserved for kernel image extension.  
+- **0x01000000 (16 MB)** → Heap pool (2 MB, divided into 64 processes × 32 KB each).  
+- **0x01200000 (18 MB)** → Extra heap 1.  
+- **0x01400000 (20 MB)** → Extra heap 2.  
+- **0x01600000 (22 MB)** → Extra heap 3.  
+- **0x01800000–0x01E00000 (24–30 MB)** → Paged pools (paged memory areas).  
+
+ Up to ~30 MB, you’re carving out kernel + heap + paged pool structures.
+
+---
+
+###  User Space (32 MB–64 MB)
+- **0x02000000 (32 MB)** → User base (Init process).  
+- **0x04000000 (64 MB)** → Backbuffer (2 MB reserved for graphics).  
+
+ This is where user processes start, with a dedicated backbuffer for display.
+
+---
+
+###  Frame Table (128–256 MB)
+- **0x08000000 (128 MB)** → Frame table start.  
+- **0x10000000 (256 MB)** → Frame table end / Windows pool start.  
+
+ Between 128–256 MB, you’re using memory for frame tracking 
+ (page frames, allocator bookkeeping). At the 256 MB mark, 
+ you’ve reserved space for application windows.
+
+---
+
+###  Installed Memory Limit (256 MB system)
+- With **256 MB installed**, your usable physical memory ends at `0x10000000`.  
+- Regions above (512 MB, 1 GB, 2 GB, etc.) are only available if more RAM is installed.  
+
+---
+
+###  Summary for 256 MB system
+- **0–1 MB:     ** BIOS, VGA, bootloader.  
+- **1–16 MB:    ** Kernel + reserved growth.  
+- **16–30 MB:   ** Heap pool + extra heaps + paged pools.  
+- **32–64 MB:   ** User base + backbuffer.  
+- **128–256 MB: ** Frame table + Windows pool.  
+- **>256 MB:    ** Not accessible (unless system has more RAM).  
+
+---

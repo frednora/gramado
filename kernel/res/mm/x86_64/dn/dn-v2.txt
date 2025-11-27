@@ -1,0 +1,24 @@
+
+
+Canonical PA ↔ VA Mapping
+-------------------------
+
+Region            | Physical Address (PA)   | Virtual Address (VA)   | Size   | Notes
+------------------+-------------------------+------------------------+--------+------------------------------
+Ring 0 area       | 0x00000000              | 0x00000000             | 2 MB   | Kernel low memory
+Ring 3 area       | 0x02000000              | 0x0000000000200000     | 2 MB   | Init process base
+Kernel image      | 0x00100000              | 0x30000000             | 2 MB   | Kernel binary region
+Kernel heap       | (inside kernel block)   | 0x30100000–0x301D0000  | ~832KB | Dynamic kernel allocations
+Kernel stack      | (inside kernel block)   | 0x301E0000–0x301FFFF0  | ~128KB | Kernel stack top
+Frontbuffer (LFB) | gSavedLFB (bootloader)  | 0x30200000             | 2 MB   | Screen output
+Backbuffer        | 0x04000000              | 0x30400000             | 2 MB   | Double buffering
+Paged pool        | 0x01800000              | 0x30600000             | 2 MB   | Pageable kernel memory
+Heap pool         | 0x01000000              | 0x30800000             | 2 MB   | Kernel heap pool
+Extra heap 1      | 0x01200000              | 0x30A00000             | 2 MB   | Kernel module heap
+Extra heap 2      | 0x01400000              | 0x30C00000             | 2 MB   | Slab allocator
+Extra heap 3      | 0x01600000              | 0x30E00000             | 2 MB   | Slab allocator
+Windows pool      | 0x10000000              | 0x100000000            | ≥128MB | Application windows (if ≥512MB RAM)
+LAPIC registers   | 0xFEE00000              | 0x31400000             | 4 KB   | Local APIC MMIO
+IOAPIC registers  | 0xFEC00000              | 0x31600000             | 4 KB   | I/O APIC MMIO
+ACPI RSDT/XSDT    | (firmware-discovered)   | 0x31800000             | Var.   | ACPI tables
+

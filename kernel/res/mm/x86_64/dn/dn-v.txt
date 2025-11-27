@@ -1,0 +1,108 @@
+
+ Memory map for canonical virtual memory:
+
+ Canonical virtual address map for initial paging
+
+ # Canonical virtual address map for initial paging
+
+Below is a consolidated view of the virtual addresses your kernel establishes during the main mapping sequence, alongside their physical counterparts, sizes, and access mode. This reflects what is set up by `__initialize_canonical_kernel_pagetables()` and its workers.
+
+## Core regions mapped by the initialization workers
+
+| Region | Virtual address (VA) | Physical address (PA) | Size | Access |
+|---|---|---|---|---|
+| Ring 0 area | 0x00000000 | 0x00000000 (SYSTEM_ORIGIN) | 2 MB | Kernel (RW, Present) |
+| Ring 3 area | 0x0000000000200000 | 0x02000000 (USER_BASE_PA) | 2 MB | User (RW, Present) |
+| Kernel image | 0x0000000030000000 | 0x00100000 (KERNEL_BASE_PA) | 2 MB | Kernel (RW, Present) |
+| Frontbuffer (LFB) | 0x0000000030200000 (FRONTBUFFER_VA) | gSavedLFB (SMALL_frontbuffer_pa) | 2 MB | User (RW, Present) |
+| Backbuffer | 0x0000000030400000 (BACKBUFFER_VA) | 0x04000000 (BACKBUFFER_PA) | 2 MB | User (RW, Present) |
+| Paged pool | 0x0000000030600000 (PAGEDPOOL_VA) | SMALLSYSTEM_PAGEDPOLL_START | 2 MB | User (RW, Present) |
+| Heap pool | 0x0000000030800000 (HEAPPOOL_VA) | SMALLSYSTEM_HEAPPOLL_START | 2 MB | User (RW, Present) |
+| Extra heap 1 | 0x0000000030A00000 (EXTRAHEAP1_VA) | SMALLSYSTEM_EXTRAHEAP1_START | 2 MB | Kernel (RW, Present) |
+| Extra heap 2 | 0x0000000030C00000 (EXTRAHEAP2_VA) | SMALLSYSTEM_EXTRAHEAP2_START | 2 MB | User (RW, Present) |
+| Extra heap 3 | 0x0000000030E00000 (EXTRAHEAP3_VA) | SMALLSYSTEM_EXTRAHEAP3_START | 2 MB | User (RW, Present) |
+
+> Notes:
+> - Frontbuffer PA is provided by the bootloader (VESA LFB), saved in `gSavedLFB`.
+> - “SMALLSYSTEM_*” PA aliases currently resolve to the canonical PA constants in `x64gpa.h` for a 256 MB system.
+> - Each row corresponds to one filled page table mapping a 2 MB region via 512 × 4 KB entries.
+
+---
+
+## Kernel heap and stack virtual layout
+
+- **Kernel heap VA range:**  
+  - Start: 0x30100000  
+  - End: 0x301D0000  
+  - Size: `KERNEL_HEAP_END - KERNEL_HEAP_START`  
+- **Kernel stack VA range:**  
+  - End: 0x301E0000  
+  - Start: 0x301FFFF0  
+  - Size: `KERNEL_STACK_START - KERNEL_STACK_END`
+
+---
+
+## User‑mode canonical virtual layout for the init process
+
+- **Ring 3 base:**  
+  - **Base VA:** 0x00200000  
+  - **Entrypoint VA:** 0x00201000  
+  - **Stack VA (top):** 0x003FFFF0  
+- **Purpose:** Provides a consistent low VA for the init process, with the PA anchored at the 32 MB mark (`USER_BASE_PA`).
+
+---
+
+## Device and system registers (VA aliases)
+
+These are VA targets you’ve defined for MMIO and ACPI structures; they are not part of the initial “2 MB worker” mappings and should be conditionally mapped when the physical resources are discovered.
+
+- **NIC (Intel E1000):**  
+  - **VA:** 0x0000000031200000
+- **Local APIC (LAPIC):**  
+  - **VA:** 0x0000000031400000  
+  - **Typical PA:** 0xFEE00000
+- **I/O APIC:**  
+  - **VA:** 0x0000000031600000  
+  - **Typical PA:** 0xFEC00000
+- **ACPI RSDT/XSDT:**  
+  - **VA:** 0x0000000031800000  
+  - **PA:** Discovered via ACPI scan
+
+> These mappings should be established via dedicated MMIO functions that set proper caching/WT/CD flags (e.g., 0x1B in your helper).
+
+---
+
+## Windows pool and higher VA plans
+
+- **Windows pool start VA:**  
+  - **VA:** 0x0000000100000000 (4 GB mark)  
+  - **PA counterpart:** In your PA map, the windows pool begins at the 256 MB mark (`0x10000000`) when sufficient RAM is available.
+- **Conditional strategy with `memorysizeTotal`:**  
+  - **≥ 256 MB:** Frame table region (128–256 MB).  
+  - **≥ 512 MB:** Consider mapping an additional 32 MB region directly above 256 MB (16 × 2 MB chunks) for experiments or a new pool.  
+  - **≥ 1 GB:** Reserve/expand larger graphical buffers or advanced pools.
+
+---
+
+## Implementation tips for VA⇄PA mapping
+
+- **Identity below 1 MB:** Many early structures use identity mapping (VA == PA). After paging is live, only the workers define the canonical VA ranges.  
+- **Granularity:** Your helpers map 2 MB regions by filling a 512‑entry PT with 4 KB pages; this keeps TLB pressure low during boot.  
+- **Flags discipline:**  
+  - **Kernel regions:** `PAGE_WRITE | PAGE_PRESENT` (no PAGE_USER).  
+  - **User‑visible buffers/pools:** `PAGE_USER | PAGE_WRITE | PAGE_PRESENT`.  
+- **MMIO regions:** Use non‑cacheable/write‑through flags (e.g., 0x1B) and ensure they’re ring‑0 only.
+
+---
+
+## Quick checklist for documentation consistency
+
+- **Ring 0 area:     ** VA 0x0        → PA 0x0, 2 MB, kernel.  
+- **Ring 3 area:     ** VA 0x00200000 → PA 0x02000000, 2 MB, user.  
+- **Kernel image:    ** VA 0x30000000 → PA 0x00100000, 2 MB, kernel.  
+- **Frontbuffer:     ** VA 0x30200000 → PA gSavedLFB, 2 MB, user.  
+- **Backbuffer:      ** VA 0x30400000 → PA 0x04000000, 2 MB, user.  
+- **Paged pool:      ** VA 0x30600000 → PA PAGEDPOOL1_PA, 2 MB, user.  
+- **Heap pool:       ** VA 0x30800000 → PA HEAPPOOL_PA, 2 MB, user.  
+- **Extra heaps 1–3: ** VA 0x30A00000/0x30C00000/0x30E00000 → PA EXTRAHEAP*_PA, 2 MB each, access per worker.
+

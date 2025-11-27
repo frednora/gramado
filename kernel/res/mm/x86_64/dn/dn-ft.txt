@@ -1,0 +1,76 @@
+The frame table
+
+---
+
+##  Functions in `mmft.c`
+
+### **`I_initialize_frame_table(void)`**
+**Purpose:**  
+Initializes the **Frame Table (FT)**, which manages a 
+pool of physical page frames for demand paging. 
+It sets up the start and end physical addresses of the frame table region 
+based on the total detected RAM (`memorysizeTotal`), and 
+calculates metadata such as size, number of frames, and reserved frames.
+
+**Main steps:**
+1. **Dependency check:**  
+   - Requires `MemorySizeInfo.initialized == TRUE`.  
+   - Panics if memory size detection hasn’t run yet.
+
+2. **Defaults:**  
+   - `FT.start_pa = FRAMETABLE_START_PA` (128 MB mark).  
+   - `FT.end_pa = FRAMETABLE_START_PA` initially (no table).
+
+3. **End address decision (based on RAM size):**
+   - If ≥ 1 GB → `FT.end_pa = FRAMETABLE_END_PA` (just below 256 MB mark).  
+   - If ≥ 512 MB → same.  
+   - If ≥ 256 MB → same.  
+   - If < 256 MB → logs alert, may panic (system too small).  
+
+   > Note: On a 256 MB system, the FT region is technically reserved but may be too small to be useful. Your comments note that “the system with 256 MB has no FT.”
+
+4. **Validation checks:**  
+   - Ensures `end_pa > start_pa`.  
+   - Ensures `end_pa ≤ FRAMETABLE_END_PA`.  
+   - Ensures `start_pa` and `end_pa` are non‑zero.  
+
+5. **Size calculations:**  
+   - `FT.size_in_bytes = end_pa - start_pa`.  
+   - `FT.size_in_kb = size_in_bytes / 1024`.  
+   - `FT.size_in_mb = size_in_kb / 1024`.  
+   - `FT.size_in_frames = size_in_bytes / 4096` (each frame = 4 KB).  
+
+6. **Frame counts:**  
+   - `FT.number_of_system_frames` = constant (`FT_NUMBER_OF_SYSTEM_FRAMES`).  
+   - `FT.number_of_user_frames` = constant (`FT_NUMBER_OF_USER_FRAMES`).  
+   - `FT.number_of_used_frames` = constant (`FT_TOTAL_FRAMES`).  
+   - Validates that `size_in_frames > number_of_used_frames`.  
+   - `FT.number_of_reserved_frames = size_in_frames - number_of_used_frames`.  
+
+7. **Finalize:**  
+   - Marks FT as `used = TRUE`, `magic = 1234`, `initialized = TRUE`.  
+   - Returns 0 on success.
+
+---
+
+### **`mmGetFTStartPA(void)`**
+**Purpose:**  
+Returns the physical start address of the frame table (`FT.start_pa`).
+
+---
+
+### **`mmGetFTEndPA(void)`**
+**Purpose:**  
+Returns the physical end address of the frame table (`FT.end_pa`).
+
+---
+
+##  Summary
+- The **Frame Table** lives between **128 MB and 256 MB physical memory**.  
+- It is only initialized if the system has **≥ 256 MB RAM**.  
+- On larger systems (≥ 512 MB, ≥ 1 GB), the FT is capped at the 256 MB mark.  
+- The FT tracks how many 4 KB frames are available, how many are reserved for system use, and how many are free for user allocations.  
+- This structure is the backbone of your **demand paging system**, since it provides the allocator with a pool of frames to hand out on page faults.
+
+---
+

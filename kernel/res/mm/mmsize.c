@@ -3,6 +3,21 @@
 
 #include <kernel.h>
 
+/*
+Global variables tracked
+
+memorysizeBaseMemoryViaCMOS → Base memory reported by CMOS.
+memorysizeBaseMemory → Base memory (KB).
+memorysizeOtherMemory → Shadow memory (≈384 KB).
+memorysizeExtendedMemory → Extended memory above 1 MB.
+memorysizeTotal → Total physical memory (KB).
+memorysizeInstalledPhysicalMemory → Placeholder for installed RAM.
+memorysizeTotalPhysicalMemory → Placeholder for total RAM.
+memorysizeAvailablePhysicalMemory → Placeholder for free RAM.
+memorysizeUsed / memorysizeFree → Used/free RAM counters.
+g_mm_system_type → System type classification (small, medium, large).
+*/
+
 //
 // Memory size support.
 //
@@ -44,10 +59,12 @@ int g_mm_system_type = stNull;
 // Initialize the size of the physical memory
 // and the size of the system based on the memory size.
 // It needs to be before the pagetables initialization.
+// Purpose: 
+// Detects and calculates the amount of physical memory installed, 
+// then classifies the system type (small, medium, large) based on thresholds.
+// Called by mmInitialize() in mm.c.
 int mmsize_initialize(void)
 {
-// Called by mmInitialize() in mm.c.
-
     MemorySizeInfo.initialized = FALSE;
 
 //
