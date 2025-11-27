@@ -4199,10 +4199,18 @@ static int ServerLoop(int launch_tb)
 // This is the main loop.
 // Let's optimize it, because we'll spend most of our time here.
 
+    unsigned long MainLoopIntervalMS;
+    if (CONFIG_MAIN_LOOP_INTERVAL_MS == 0){
+        MainLoopIntervalMS = 16;
+    }else{
+        MainLoopIntervalMS = CONFIG_MAIN_LOOP_INTERVAL_MS;
+    };
+
     unsigned long start_jiffie=0;
     unsigned long end_jiffie=0;
     unsigned long delta_jiffie=0;
     int UseSleep = TRUE;
+
 
     // #ps: We will sleep if a round was less than 16 ms, (60fps).
     // The thread wait until complete the 16 ms.
@@ -4260,12 +4268,12 @@ static int ServerLoop(int launch_tb)
         if (end_jiffie > start_jiffie)
         {
             delta_jiffie = (unsigned long) (end_jiffie - start_jiffie);
-            if (delta_jiffie < 16)
+            if (delta_jiffie < MainLoopIntervalMS)
             {
                 // #test
                 // This function is still in test phase.
                 if (UseSleep == TRUE)
-                    rtl_sleep(16 - delta_jiffie);
+                    rtl_sleep(MainLoopIntervalMS - delta_jiffie);
             }    
         }
     };
