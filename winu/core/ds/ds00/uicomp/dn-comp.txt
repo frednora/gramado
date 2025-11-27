@@ -18,3 +18,15 @@ Present
 Copy the main backbuffer → frontbuffer as usual.
 The component now appears on screen, but its drawing logic was isolated in its own buffer.
 
+
+struct gws_window_d {
+    ...
+    int dirty;
+    struct rect_d damage_rect;
+    int use_damage_tracking; // TRUE for big windows, FALSE for small controls
+};
+
+Here’s how you can balance it:
+Big windows (overlapped, editboxes, terminals) → Use damage_rect to track partial updates (caret blink, text edits, scrolling). → Saves a lot of redraw work.
+Small controls (buttons, icons, checkboxes) → Just mark the whole control as dirty and repaint it fully. → Simpler, avoids unnecessary complexity.
+

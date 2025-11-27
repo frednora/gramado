@@ -8,7 +8,9 @@
 static void __draw_button_mark_by_wid( int wid, int button_number );
 //===================================================================
 
-// Paint the rectangle.
+// Paint a rectangle
+// Lowest-level primitive: fills a rectangle in the backbuffer.
+// Coordinates here are absolute screen coordinates.
 int 
 painterFillWindowRectangle( 
     unsigned long x, 
@@ -427,7 +429,8 @@ fail:
     return (int) -1;
 }
 
-// IN: Titlebar window.
+// Repaints the titlebar background, ornament line, icon, and text.
+// IN: Titlebar window
 int redraw_titlebar_window(struct gws_window_d *window)
 {
     struct gws_window_d *parent;
@@ -579,8 +582,8 @@ int redraw_titlebar_window(struct gws_window_d *window)
     return 0;
 }
 
-// #test
-// IN: Editbox window.
+// Draws text inside single-line or multi-line editboxes.
+// IN: Editbox window
 void redraw_text_for_editbox(struct gws_window_d *window)
 {
     char *p;
@@ -727,9 +730,11 @@ void redraw_text_for_editbox(struct gws_window_d *window)
     }
 }
 
-//------------
-// redraw_window:
-// Let's redraw the window.
+// ------------
+// Central routine that decides what to repaint depending on window type:
+// + WT_BUTTON     > draws button borders + label.
+// + WT_OVERLAPPED > redraws titlebar, borders, client area.
+// + WT_EDITBOX    > redraws borders + text.
 // Called by serviceRedrawWindow().
 // #todo
 // devemos repintar as janelas filhas, caso existam.

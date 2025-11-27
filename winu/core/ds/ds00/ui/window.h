@@ -410,9 +410,8 @@ struct gws_window_d
 // >> Inside dimensions clipped by parent.
     struct gws_rect_d  rcClient;
 
-// Absolute
-// Relativo a tela.
-// Not clipped by parent.
+// Absolute. (Relative to the screen)
+// Not clipped by parent
     unsigned long absolute_x;
     unsigned long absolute_y;
     unsigned long absolute_right;

@@ -2,6 +2,11 @@
 // Basically create and destroy a window.
 // 2019 - Created by Fred Nora.
 
+// Window design:
+// + Absolute coordinates = screen space.
+// + Relative coordinates = parent space.
+// + Client rect = drawable area after decorations.
+
 // #importante
 // O frame de uma janela deve ser parte do Window Manager.
 // #bugbug
@@ -71,6 +76,19 @@ static struct gws_window_d *__create_window_object(void)
     memset( window, 0, sizeof(struct gws_window_d) );
     window->used = TRUE;
     window->magic = 1234;
+
+    // Absolute position relative to the screen (global coordinates).
+    window->absolute_x = 0;
+    window->absolute_y = 0;
+    window->absolute_right = 0;
+    window->absolute_bottom = 0;
+
+    // Position and size relative to the parent window (local coordinates).
+    window->left = 0;
+    window->top = 0;
+    window->width = 0;
+    window->height = 0;
+
     // The window can receive input from kbd and mouse.
     window->enabled = TRUE;
     window->style = 0;
@@ -334,12 +352,13 @@ struct gws_window_d *do_create_titlebar(
 // of the parent.
 
     struct gws_window_d *tbWindow;
-    // The position and the dimensions depends on the
-    // border size.
-    unsigned long TitleBarLeft=0;
-    unsigned long TitleBarTop=0;
-    unsigned long TitleBarWidth=0;
-    unsigned long TitleBarHeight = tb_height;  //#todo metrics
+
+// Titlebar position and size depend on parent’s border and style.
+    unsigned long TitleBarLeft=0; // X offset inside parent
+    unsigned long TitleBarTop=0;  // Y offset inside parent
+    unsigned long TitleBarWidth=0; // Width of titlebar
+    unsigned long TitleBarHeight = tb_height; // Height passed as parameter
+
     // Color and rop.
     unsigned int TitleBarColor = color;
     unsigned long rop=0;
@@ -370,19 +389,16 @@ struct gws_window_d *do_create_titlebar(
 // of the parent.
     //unsigned long BorderSize = parent->border_size;
 
-// #todo: 
-// Different position, depending on the style
-// if the parent is maximized or not.
 // Without border, everything changes.
+// If parent is maximized, titlebar spans full width at (0,0).
     if (IsMaximized == TRUE)
     {
         TitleBarLeft = 0;
         TitleBarTop = 0;
         TitleBarWidth = parent->width;
     }
-// A parent não está maximizada,
-// então considere diminuir a largura, 
-// para incluir as bordas.
+
+// If parent is not maximized, respect border size.
     if (IsMaximized != TRUE)
     {
         TitleBarLeft = parent->border_size;
@@ -719,10 +735,11 @@ doCreateWindowFrame (
         IsFullscreen=TRUE;
     }
 
-// #bugbug
-// Estamos mascarando pois os valores anda corrompendo.
+// Absolute position (left/top)
     window->absolute_x = (window->absolute_x & 0xFFFF);
     window->absolute_y = (window->absolute_y & 0xFFFF);
+
+// (Width/height)
     window->width  = (window->width  & 0xFFFF);
     window->height = (window->height & 0xFFFF);
 
@@ -1068,47 +1085,24 @@ fail:
     return (int) (-1);
 }
 
-/*
- * doCreateWindow:  
- *     Chamada por CreateWindow.
- *     Cria uma janela com base em uma struct. 
- * Retorna o endereço da estrutura 
- * da janela criada, para que possa ser registrada na lista windowList[].
- * Obs: A contagem é feita quando registra a janela.
- * @todo: É necessário definir claramente os conceitos de window e window frame...
- *        A construção dos elementos gráficos precisam de organização e hierarquia.
- * Obs: Essa rotian pode criar tanto uma janela, quanto um frame ou um botão.
- * @todo: Corrigir as dimensões da janela: 
- * *Importante: OS ARGUMENTOS DE DIMENSÕES SÃO PARA O RETÂNGULO QUE FORMA UMA ÁREA
- * QUE INCLUI DA ÁREA DO CLIENTE + BARRA DE FERRAMENTAS + BARRA DE MENU.
- * a barra de títulos faz parte da moldura.
- * O AS DIMENSÕES DO FRAME PODEM SER VARIADOS, DEPENDENDO DO ESTILO DA JANELA.
- * Cria a janela dependendo do tipo:
- * =================================
- * WT_NULL          0 
- * WT_SIMPLE        1
- * WT_EDITBOX       2  // igual simples, mais uma bordinha preta.
- * WT_OVERLAPPED    3  // sobreposta(completa)(barra de titulo + borda +client area)
- * WT_POPUP         4  // um tipo especial de sobreposta,  //usada em dialog ou 
- *                        message box. (com ou sem barra de titulo ou borda)
- * WT_CHECKBOX      5  // Caixa de seleção. Caixa de verificação. Quadradinho.
- * WT_SCROLLBAR     6  // Cria uma scroll bar. Para ser usada como janela filha.
- * CONTINUA ...
- */
-//1  - Tipo de janela (popup,normal,...) 
-//2  - style
-//3  - Estado da janela. (poderia ter vários bits ??)
-//4  - (min, max ...)
-//5  - Título.
-//6  - Deslocamento em relação às margens do Desktop.
-//7  - Deslocamento em relação às margens do Desktop.
-//8  - Largura da janela.
-//9  - Altura da janela.
-//10  - Endereço da estrutura da janela mãe.
-//11 - desktop ID. (# Para levarmos em conta as características de cada desktop).
-//12 - Client Area Color.
-//13 - color (bg) (para janela simples)
-
+// doCreateWindow:
+// Create a new window object and set up its position, size, and frame.
+//
+// IN:
+//   type   - Window type (WT_OVERLAPPED, WT_BUTTON, etc.)
+//   style  - Window style flags (WS_MAXIMIZED, WS_FULLSCREEN, etc.)
+//   status
+//   state
+//   title
+//   x,y    - Position relative to parent (local coordinates)
+//   w,h    - Dimensions (width, height)
+//   pWindow - Pointer to parent window (NULL for root)
+//   desktop id
+//   frame color
+//   client area color
+//   ROP Raster operations 
+// OUT:
+//   Returns pointer to new window structure or NULL on failure.
 void *doCreateWindow ( 
     unsigned long type, 
     unsigned long style,
@@ -1125,20 +1119,6 @@ void *doCreateWindow (
     unsigned int client_color,
     unsigned long rop_flags ) 
 {
-
-// #todo
-// Essa função deve chamar helpers que pintem sem criar objetos
-// gráficos que alocam memória. Dessa forma eles
-// poderão serem reusados nas funções de 'redraw'.
-// #todo: 
-// O argumento style está faltando.
-// Cada tipo de tanela poderá ter vários estilos.
-// Obs: 
-// Podemos ir usando apenas um estilo padrão por enquanto.
-// #todo
-// We need different colors for the text inside the buttons.
-
-// The window object
     register struct gws_window_d *window;
     struct gws_window_d *Parent;
 
@@ -1230,8 +1210,8 @@ void *doCreateWindow (
 // Position and dimension.
 // Passado via argumento.
 // left, top, width, height.
-    unsigned long WindowX = (unsigned long) (x & 0xFFFF);
-    unsigned long WindowY = (unsigned long) (y & 0xFFFF);
+    unsigned long WindowLeft   = (unsigned long) (x & 0xFFFF);
+    unsigned long WindowTop    = (unsigned long) (y & 0xFFFF);
     unsigned long WindowWidth  = (unsigned long) (width  & 0xFFFF);
     unsigned long WindowHeight = (unsigned long) (height & 0xFFFF);
 
@@ -1398,7 +1378,7 @@ void *doCreateWindow (
 	}
  */
 
-// Create the window object
+// Allocate and initialize base window object.
     window = (struct gws_window_d *) __create_window_object();
     if ((void*) window == NULL){
         return NULL;
@@ -1415,12 +1395,19 @@ void *doCreateWindow (
 // Gravity
     window->gravity = DefaultGravity;
 
-// Type, style, status and state
     window->type = (unsigned long) type;
+
+// Style: design-time identity.
+// Defines window type and decorations/features.
     window->style = (unsigned long) style;
-    window->status = (int) (status & 0xFFFFFFFF);
+
+// State: runtime condition.
+// Tracks current behavior (minimized, maximized, fullscreen, etc).
     window->state = (int) view;
-    //window->view = (int) view;
+
+// Status: interaction/activation.
+// Indicates focus, active/inactive, and user engagement.
+    window->status = (int) (status & 0xFFFFFFFF);
 
     // ??
     // The 'window status' is used as 'button state'
@@ -1642,42 +1629,58 @@ void *doCreateWindow (
 //
 
 // #todo:
-// Se for uma janela filha o posicionamento deve ser somado às margens 
-// da área de cliente da janela que será a janela mãe.
+// Se for uma janela filha o posicionamento absoluto 
+// deve ser somado às margens da área de cliente da janela 
+// que será a janela mãe.
 // #bugbug #todo 
 // Esses valores de dimensões recebidos via argumento na verdade 
 // devem ser os valores para a janela, sem contar o frame, que 
 // inclui as bordas e a barra de títulos.
 
-// -------------------------------------
-// Dimensions: (Came via function parameters)
+// -------------------------------
+// Position and dimension handling
+// -------------------------------
+
+// Relative position inside parent.
+// These are local coordinates: 
+// (0,0) means top-left of parent’s client area in WT_OVERLAPPED.
+    window->left   = (unsigned long) (WindowLeft   & 0xFFFF);
+    window->top    = (unsigned long) (WindowTop    & 0xFFFF);
+// Dimensions of the window itself.
     window->width  = (unsigned long) (WindowWidth  & 0xFFFF);
     window->height = (unsigned long) (WindowHeight & 0xFFFF);
 
+// width in chars
 // #todo: We need a variable for char width.
     window->width_in_chars  = 
         (unsigned long) (window->width / 8);   //>>3
+
+// Height in chars
     window->height_in_chars = 
         (unsigned long) (window->height / 8);  //>>3
 
 // =================================
 
 //
-// Window area.
+// Window rectangle (The frame)
 //
 
+// #bugbug: Is this the same of absolute values?
+
+// >>> Absolute values <<<
+// The compositor needs this information
 // #todo: Inside dimensions clipped by parent.
 // Initial configuration for the window rectangle.
 // Relative values. (l,t,w,h)
-    window->rcWindow.left   = (unsigned long) 0;
-    window->rcWindow.top    = (unsigned long) 0;
+    window->rcWindow.left   = (unsigned long) 0; //#todo: absolute
+    window->rcWindow.top    = (unsigned long) 0; //#todo: absolute
     window->rcWindow.width  = (unsigned long) WindowWidth;
     window->rcWindow.height = (unsigned long) WindowHeight;
 
 // =================================
 
 //
-// Client area.
+// Client area rectangle
 //
 
 // #todo:
@@ -1691,10 +1694,13 @@ void *doCreateWindow (
     //clientRect.left = (unsigned long) __BorderSize;
     //clientRect.top  = (unsigned long) __BorderSize;
 
-    // #test
-    clientRect.left = (unsigned long) __BorderSize;
-    clientRect.top  = (unsigned long) 0;
+// >> Relative values <<
 
+// Left
+    clientRect.left = (unsigned long) __BorderSize;
+
+// Top
+    clientRect.top  = (unsigned long) 0;
     if (window->type == WT_OVERLAPPED){
         clientRect.top  = (unsigned long) (__TBHeight + __BorderSize);
     }
@@ -1702,15 +1708,16 @@ void *doCreateWindow (
 // Width and height.
 // width
 // menos bordas laterais
-// height
-// menos bordas superior e inferior
-    // menos a barra de tarefas.
 
     clientRect.width  = 
         (unsigned long) ( 
-            window->width -
-            __BorderSize -
+            window->width - 
+            __BorderSize - 
             __BorderSize );
+
+// height
+// menos bordas superior e inferior
+    // menos a barra de tarefas.
 
     clientRect.height = 
         (unsigned long) ( 
@@ -1730,9 +1737,7 @@ void *doCreateWindow (
     //    clientRect.height -=24;
 
 
-// Saving.
-// Client rectangle:
-// The Client area.
+// Saving client rectangle into the window structure.
 // This is the viewport for some applications, just like browsers.
 // >> Inside dimensions clipped by parent.
     window->rcClient.left   = clientRect.left;
@@ -1750,8 +1755,8 @@ void *doCreateWindow (
 
 // Relative
 // >> Inside dimensions clipped by parent.
-    window->left = WindowX;
-    window->top  = WindowY;
+    //window->left = WindowLeft;
+    //window->top  = WindowTop;
 
 // If we have a parent window.
 // parent + arguments
@@ -1768,13 +1773,15 @@ void *doCreateWindow (
 //
 
 // Set up absolute position where there is no parent.
+// Root window: position is already absolute.
     if ((void*) window->parent == NULL)
     {
-        window->absolute_x = WindowX;
-        window->absolute_y = WindowY;
+        window->absolute_x = WindowLeft;
+        window->absolute_y = WindowTop;
     }
 
-// Set up absolute position where there is a parent.
+// Absolute position on screen.
+// If parent exists, add parent’s absolute position to local offset.
 // >> Not clipped by parent.
     if ((void*) window->parent != NULL)
     {
@@ -1782,9 +1789,9 @@ void *doCreateWindow (
         if (window->parent->type != WT_OVERLAPPED)
         {
             window->absolute_x = 
-                (unsigned long) (window->parent->absolute_x + WindowX);
+                (unsigned long) (window->parent->absolute_x + WindowLeft);
             window->absolute_y = 
-                (unsigned long) (window->parent->absolute_y + WindowY);
+                (unsigned long) (window->parent->absolute_y + WindowTop);
         }
         
         // Set up absolute position when the parent is WT_OVERLAPPED
@@ -1794,35 +1801,30 @@ void *doCreateWindow (
             window->absolute_x = 
                 (unsigned long) ( window->parent->absolute_x + 
                 window->parent->rcClient.left + 
-                WindowX );
+                WindowLeft );
             window->absolute_y = 
                 (unsigned long) ( window->parent->absolute_y +
                 window->parent->rcClient.top + 
-                WindowY );
+                WindowTop );
 
             // Fora da área de cliente.
             if (window->type == WT_TITLEBAR)
             {
                 window->absolute_x = 
-                    (unsigned long) (window->parent->absolute_x + WindowX);
+                    (unsigned long) (window->parent->absolute_x + WindowLeft);
                 window->absolute_y = 
-                    (unsigned long) (window->parent->absolute_y + WindowY);
+                    (unsigned long) (window->parent->absolute_y + WindowTop);
             }
             // ?
         }
     }
 
-//
-// -- Absolute dimension. (right and bottom) --
-//
-
-// Right and bottom.
+// Absolute bottom/right coordinates for clipping and redraw.
 // >> Not clipped by parent.
     window->absolute_right = 
         (unsigned long) (window->absolute_x + window->width);
     window->absolute_bottom = 
         (unsigned long) (window->absolute_y + window->height);
-//--
 
 // Maximized. OK
 // Fit to the desktop working area.
@@ -1830,12 +1832,17 @@ void *doCreateWindow (
     {
         if (WindowManager.initialized == TRUE)
         {
-            window->absolute_x = WindowManager.wa.left;
-            window->absolute_y = WindowManager.wa.top;
+            // Width
             window->width  = WindowManager.wa.width;
             window->height = WindowManager.wa.height;
+            //window->rcWindow.width
+            //window->rcWindow.height
 
-            // Right and bottom.
+            // Absolute left/top
+            window->absolute_x = WindowManager.wa.left;
+            window->absolute_y = WindowManager.wa.top;
+
+            // Absolute right/bottom
             window->absolute_right = 
                 (unsigned long) (window->absolute_x + window->width);
             window->absolute_bottom = 
@@ -1847,24 +1854,24 @@ void *doCreateWindow (
 // Inside dimensions not clipped by parent.
     if (Fullscreen == TRUE)
     {
-        window->absolute_x = fullWindowX;
-        window->absolute_y = fullWindowY;
-        // #todo: Relative? window->left, window->top?
+        // Relative width/height
         window->width = fullWindowWidth;
         window->height = fullWindowHeight;
 
-        // Right and bottom.
+        // Ansolute left/top
+        window->absolute_x = fullWindowX;
+        window->absolute_y = fullWindowY;
+        // Absolute right/bottom
         window->absolute_right = 
             (unsigned long) (window->absolute_x + window->width);
         window->absolute_bottom = 
             (unsigned long) (window->absolute_y + window->height); 
 
+        // Save fullscreen values
         window->full_left   = window->absolute_x;
         window->full_top    = window->absolute_y;
         window->full_width  = window->width;
         window->full_height = window->height;
-
-        // Fullscreen Right and bottom.
         window->full_right  = window->absolute_right;
         window->full_bottom = window->absolute_bottom;
 
@@ -2237,7 +2244,8 @@ void *doCreateWindow (
     Maximized = 0;
     Maximized = (int) is_window_maximized (window);
 
-    if ( Maximized == 1 )
+    // #todo
+    if (Maximized == 1)
     {
         //#debug
         printf("file: createw.c: #debug\n");
@@ -2306,20 +2314,23 @@ void *doCreateWindow (
             }else if (window != keyboard_owner){
                 __tmp_color = xCOLOR_GRAY2;
             }
-
-            painterFillWindowRectangle( 
-                (window->absolute_x +1), (window->absolute_y +1), 
-                (window->width +1 +1), (window->height +1 +1), 
-                __tmp_color, __rop_flags );
-            //#todo
+            // Saving shadow color value
             window->shadow_color = (unsigned int) __tmp_color;
+    
+            // Draw rectangle for the shadow for WT_OVERLAPPED.
+            // #todo: What is the width for the shadow? 
+            // Create variable for this additional area.
+            painterFillWindowRectangle( 
+                (window->absolute_x +1), 
+                (window->absolute_y +1), 
+                (window->width  +1 +1),   // #todo 
+                (window->height +1 +1),   // #todo 
+                __tmp_color, 
+                __rop_flags );
         }
-
-        // E os outros tipos, não tem sombra ??
-        // Os outros tipos devem ter escolha para sombra ou não ??
-        // Flat design pode usar sombra para definir se o botão 
-        // foi pressionado ou não.
-        // ...
+        
+        // #todo
+        // Draw shadow for the other types.
     }
 
 // ===============================================
@@ -2336,7 +2347,7 @@ void *doCreateWindow (
     {
         window->backgroundUsed = TRUE;
 
-        // Select background color.
+        // Select background color for the given type
         switch (type){
             case WT_SIMPLE:
             case WT_TITLEBAR:
@@ -2349,8 +2360,8 @@ void *doCreateWindow (
             case WT_BUTTON:
                 window->bg_color = (unsigned int) FrameColor;
                 break;
+            // #todo: We need a default color for this
             default:
-                // #todo
                 window->bg_color = (unsigned int) COLOR_PINK;
                 break;
         };
@@ -2370,12 +2381,10 @@ void *doCreateWindow (
         // Could we return now if its type is WT_SIMPLE?
     }
 
-
 // #todo
 // Nothing to do here.
     //if (ClientArea == TRUE){
     //}
-
 
 //
 // == Button ====================
@@ -2395,8 +2404,8 @@ void *doCreateWindow (
     if ((unsigned long) type == WT_BUTTON)
     {
         // #ps: ButtonState = window status.
-        switch (ButtonState)
-        {
+        switch (ButtonState){
+
             case BS_FOCUS:
                 //window->focus = TRUE;
                 buttonFocus = TRUE;
@@ -2457,29 +2466,26 @@ void *doCreateWindow (
         // If it doesn't have an icon, so the buttons goes
         // in the center.
         
-        size_t tmp_size = 
-            (size_t) strlen( (const char *) window->name );
-        // #bugbug
-        // The max size also need to respect 
+        size_t tmp_size = (size_t) strlen((const char *) window->name);
+        // #bugbug: The max size also needs to respect 
         // the size of the button's window.
-        if (tmp_size > 64)
-        {
+        if (tmp_size > 64){
             tmp_size=64;
         }
 
-        // It goes in the center.
+        // The label position (left/top)
+        // It goes in the center
         unsigned long l_offset = 
             ( ( (unsigned long) window->width - ( (unsigned long) tmp_size * (unsigned long) FontInitialization.width) ) >> 1 );
         unsigned long t_offset = 
             ( ( (unsigned long) window->height - FontInitialization.height ) >> 1 );
 
-        // #debug: 
-        // Se o botão não tem uma parent window.
+        // #bugbug: The button does not have a parent
         if ((void*) Parent == NULL){
-            //server_debug_print ("doCreateWindow: [WT_BUTTON] Parent NULL\n"); 
+            // #bugbug
         }
 
-        // Paint the button only if it has a parent window.
+        // Paint the button only if it has a parent window
         if ((void*) Parent != NULL)
         {
             // #todo
@@ -2535,11 +2541,21 @@ void *doCreateWindow (
     
     } //button
 
-// Invalidate the window.
-// #todo: Only if it is not minimized.
+//
+// More ...
+//
+
+// #todo
+// Do we have more types to draw here?
+// Checkbox, radio box, etc.
+
+// Invalidate window
+// #todo: Only if it's not minimized
     window->dirty = TRUE;
-// Return the pointer.
+
+// Return the pointer
     return (void *) window;
+
 fail:
     debug_print ("doCreateWindow: Fail\n");
     return NULL;

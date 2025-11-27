@@ -5,6 +5,23 @@
 
 #include "../ds.h"
 
+/*
+// Keeps client rect logic consistent across all window types.
+void update_client_area(struct gws_window_d *w);
+void update_client_area(struct gws_window_d *w) 
+{
+    if ((void*) w == NULL)
+        return;
+    if (w->magic != 1234)
+        return;
+    w->rcClient.left   = w->border_size;
+    w->rcClient.top    = w->border_size + w->titlebar_height;
+    w->rcClient.right  = w->width  - w->border_size;
+    w->rcClient.bottom = w->height - w->border_size - w->statusbar_height;
+}
+*/
+
+
 struct gws_window_d *get_parent_window(struct gws_window_d *w)
 {
     struct gws_window_d *p;
