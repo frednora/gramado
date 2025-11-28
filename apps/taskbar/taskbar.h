@@ -4,6 +4,8 @@
 #ifndef __TASKBAR_H
 #define __TASKBAR_H    1
 
+#include "config.h"
+
 struct icon_info_d
 {
 // The offset in the taskbar.

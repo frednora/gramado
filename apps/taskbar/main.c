@@ -1490,7 +1490,7 @@ int main(int argc, char *argv[])
     // gws_async_command( client_fd, 9, main_window, main_window );
 
 
-// #test:
+// #test:  ??
 // Setup kernel console.
 // Set cursor position on top of the raw window.
 // We're using graphics, but we want to keep the console,
@@ -1522,6 +1522,13 @@ int main(int argc, char *argv[])
 // Event loop
 // Getting input events from the system.
 
+    unsigned long MainLoopIntervalMS;
+    if (CONFIG_MAIN_LOOP_INTERVAL_MS == 0){
+        MainLoopIntervalMS = 16;
+    }else{
+        MainLoopIntervalMS = CONFIG_MAIN_LOOP_INTERVAL_MS;
+    };
+
     unsigned long start_jiffie=0;
     unsigned long end_jiffie=0;
     unsigned long delta_jiffie=0;
@@ -1535,7 +1542,6 @@ int main(int argc, char *argv[])
     // isTimeToQuit =  FALSE;
 
     while (1){
-
         if (isTimeToQuit == TRUE)
             break;
 
@@ -1548,9 +1554,9 @@ int main(int argc, char *argv[])
         {
             delta_jiffie = (unsigned long) (end_jiffie - start_jiffie);
             // Let's sleep if the round was less than 16 ms.
-            if (delta_jiffie < 16){
+            if (delta_jiffie < MainLoopIntervalMS){
                 if (UseSleep == TRUE)
-                    rtl_sleep(16 - delta_jiffie);
+                    rtl_sleep(MainLoopIntervalMS - delta_jiffie);
             }    
         }
     };

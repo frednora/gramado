@@ -110,21 +110,3 @@ unsigned long get_process_heap_pointer(pid_t pid);
 
 #endif    
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
