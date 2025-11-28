@@ -3,37 +3,16 @@
 [bits 16]
 [org 0x20000]
 
+; -- 128 KB mark -----------
+; 0x20000 - Base for the AP
+; 0x28FF0 - Start of 16bit stack
+; 0x29000 - Signature position
+; So we have 64 KB to use (192-128) 
+; -- 192 KB mark -----------
+; 0x00030000 - FAT (Don't touch this thing)
+
 apx86_start:
-    ; Basic 16-bit setup
-    cli                     ; no interrupts during mode switch
-    xor ax, ax
-    mov ds, ax
-    mov es, ax
-    mov ss, ax
-    xor sp, sp
-
-    ; Quick A20 enable via port 0x92 (fast A20)
-    in   al, 0x92
-    or   al, 0000_0010b     ; set A20
-    and  al, 1111_1110b     ; ensure reset bit (bit0) is 0
-    out  0x92, al
-
-    ; Tiny settle
-    jmp short .a20_ok
-.a20_ok:
-
-    ; Point DS to our load segment (org 0x20000 => DS=0x2000)
-    mov ax, 0x2000
-    mov ds, ax
-
-    ; Load GDT (DS:offset)
-    lgdt [gdt_ptr]
-
-    ; Enter protected mode: set PE and far-jump
-    mov eax, cr0
-    or  eax, 1
-    mov cr0, eax
-    jmp CODE_SEL:ap_pm_entry
+    jmp StartCode
 
 ; ---------------- Selectors ----------------
 CODE_SEL equ 0x08
@@ -66,9 +45,60 @@ gdt_ptr:
     dw gdt_end - gdt - 1    ; size
     dd gdt                  ; base (physical address; accessed via DS=0x2000)
 
+StartCode:
+    cli
+    mov ax, 0x2000 
+    mov ss, ax
+    mov sp, 0x8FF0  ; Right before the signature 
+
+    ; Switch to 0x2000 segment to reach 0x29000
+    cld
+    mov ds, ax
+    mov es, ax
+    ;#debug
+    ;mov byte [0x9000], 0xA0   ; writes to physical 0x29000
+    ;mov byte [0x9001], 0xA0
+
+    ; Quick A20 enable via port 0x92 (fast A20)
+    xor ax, ax
+    in   al, 0x92
+    or   al, 0000_0010b     ; set A20
+    and  al, 1111_1110b     ; ensure reset bit (bit0) is 0
+    out  0x92, al
+
+    ; Tiny settle
+    jmp short .a20_ok
+.a20_ok:
+
+    ; Point DS to our load segment (org 0x20000 => DS=0x2000)
+    ; We need this to load the GDT.
+    mov ax, 0x2000
+    mov ds, ax
+
+    ; Load GDT (DS:offset)
+    lgdt [gdt_ptr]
+
+    ; Enter protected mode: set PE and far-jump
+    mov eax, cr0
+    or  eax, 1
+    mov cr0, eax
+
+; Fail
+;    jmp CODE_SEL:ap_pm32_entry
+
+; Force 32-bit far jump encoding (o32 prefix)
+    jmp dword CODE_SEL:ap_pm32_entry
+
+; Far jump with 32-bit offset (o32), 16-bit selector
+; Override: 66 forces a 32-bit offset in 16-bit mode.
+    ;db 0x66, 0xEA
+    ;dd ap_pm32_entry   ; 32-bit offset (little-endian)
+    ;dw CODE_SEL        ; 16-bit selector
+
 ; ---------------- 32-bit protected mode entry ----------------
 [bits 32]
-ap_pm_entry:
+ap_pm32_entry:
+
     ; Load flat data segments
     mov ax, DATA_SEL
     mov ds, ax
@@ -81,13 +111,13 @@ ap_pm_entry:
     mov esp, stack_begin
 
     ; Optional: mark we reached PM
-    mov dword [0x00290000], 0xA0A0A0A0
+    mov dword [0x29000], 0xA0A0A0A0
 
-    ; Minimal idle: enable interrupts so HLT can wake on IPI/timer
-.pm_idle:
-    sti
+; Minimal idle: enable interrupts so HLT can wake on IPI/timer
+SoftPlaceToFall:
+    cli
     hlt
-    jmp .pm_idle
+    jmp SoftPlaceToFall
 
 ; ---------------- Stack buffer ----------------
 stack_size equ (stack_begin - stack_end)

@@ -643,7 +643,7 @@ static int earlyinit(void)
     return 0;
 }
 
-
+// Initializing the AP processor.
 static int __test_initialize_ap_processor(int apic_id)
 {
     // AP base address
@@ -692,6 +692,9 @@ static int __test_initialize_ap_processor(int apic_id)
         Send_STARTUP_IPI_Twice(1);
 
         // Check if we have at least one AP running.
+        // #todo
+        // Well, we don't need to stay in this loop waiting for signature.
+        // We can check it later after the kernel full initialization.
         while (1){
             if (ap_signature_pointer[0] == 0xA0 && 
                 ap_signature_pointer[1] == 0xA0 )
@@ -798,10 +801,15 @@ static int archinit(void)
             if (CONFIG_INITIALIZE_SECOND_PROCESSOR == 1)
             {
                 // Initialize AP processor.
-                if (g_processor_count >= 2)
+                // #bugbug: g_processor_count if faling
+                //if (g_processor_count >= 2)
+                if (smp_info.mptable_number_of_processors >= 2)
+                {
+                    smp_info.nr_ap_running = 0;
                     __test_initialize_ap_processor(1);  // APIC ID 1
                 //__test_initialize_ap_processor(2); // APIC ID 2
                 // ...
+                }
 
                 // #debug
                 //printk(">>>> breakpoint\n");
