@@ -33,7 +33,6 @@ Here's a table summarizing the virtual addresses defined in `x64gva.h`:
 | 0x0000000031400000      | LAPIC Registers                                                                                 | Defined as `LAPIC_VA`                                                                     |
 | 0x0000000031600000      | IOAPIC Registers                                                                                | Defined as `IOAPIC_VA`                                                                    |
 | 0x0000000031800000      | ACPI RSDT                                                                                       | Defined as `RSDT_VA`                                                                      |
-| 0x100000000             | Windows Pool Start Address                                                                      | Defined as `WINDOWS_POOL_START_VA`                                                        |
 
 ### Explanation:
 - **MBR and VBR Addresses (0x600, 0x800)**: Virtual addresses for the Master Boot Record and Volume Boot Records.
@@ -50,7 +49,6 @@ Here's a table summarizing the virtual addresses defined in `x64gva.h`:
 - **NIC Intel E1000 Address (0x0000000031200000)**: Virtual address for the NIC Intel E1000.
 - **LAPIC and IOAPIC Addresses (0x0000000031400000, 0x0000000031600000)**: Virtual addresses for LAPIC and IOAPIC registers.
 - **ACPI RSDT Address (0x0000000031800000)**: Virtual address for the ACPI Root System Description Table.
-- **Windows Pool Start Address (0x100000000)**: Virtual address for the start of the Windows pool.
 
 ==================================================================
 
@@ -83,8 +81,7 @@ the defined virtual addresses:
    - **LAPIC and IOAPIC Addresses (0x0000000031400000, 0x0000000031600000)**: Virtual addresses for LAPIC and IOAPIC registers, essential for handling interrupts in multiprocessor systems.
    - **ACPI RSDT Address (0x0000000031800000)**: Virtual address for the ACPI Root System Description Table, used for power management and hardware configuration.
 
-7. **High Memory Regions:**
-   - **Windows Pool Start Address (0x100000000)**: Virtual address for the start of the Windows pool, reserved for managing window-related data and operations.
+
 
 These virtual addresses are carefully allocated to avoid conflicts and 
 ensure efficient memory management within the kernel and system. 

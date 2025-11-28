@@ -125,11 +125,17 @@
 // Front buffer (LFB) -------------------------------------
 //
 
-
-// 768MB + 2MB mark (VA)
-// Alias
 // Frontbuffer
-// Endereço virtual padrão para o Linear Frame Buffer. (LFB).
+// Linear Frame Buffer (LFB) provided by the VESA BIOS Extensions (VBE).
+// FRONTBUFFER_VA is the Linear Frame Buffer (LFB)
+// provided by VESA BIOS Extensions (VBE).
+// This is the virtual alias for the physical LFB base
+// reported in the VBE mode info block.
+// FRONTBUFFER_VA (VESA LFB) is intentionally user-accessible.
+// Trade-off: ring3 apps can scribble on the screen (visual glitches only).
+// Future: restrict to display server or move to kernel-only compositing.
+// Map with Write-Combining (WC) if supported, else Uncacheable (UC).
+// Always NX (non-executable)
 // 768MB + 2MB mark (VA)
 #define FRONTBUFFER_VA  0x0000000030200000
 #define DEFAULT_LFB_VIRTUALADDRESS  FRONTBUFFER_VA 
@@ -196,46 +202,59 @@
 // 768MB + 16MB mark (VA)
 // 0x0000000031000000
 
+
+//
+// =============================================================
+// Device regions (driver‑reserved virtual slots)
+// =============================================================
+//
+
+// Notes:
+// Device slots (BAR mappings): 
+// RW, NX, UC or WC depending on device 
+// (NIC BARs typically UC; framebuffers often WC).
+
 // -----------------------------------
-// e1000 NIC Intel.
+// Intel E1000 NIC BAR mapping
+// “Driver‑reserved VA; 
+// mapped at runtime to PCI BAR physical address. Use UC, NX.”
+// #todo: Maybe NIC INTEL to another place
+// with all the other devices.
 // 768MB + 18MB mark (VA)
 #define NIC_INTEL_E1000_VA  0x0000000031200000
 
+
+//
+// =============================================================
+// MMIO regions (hardware registers mapped uncached, NX)
+// =============================================================
+//
+
+// MMIO registers: RW, NX, UC, 4 KB pages (no large pages).
+
 // -----------------------------------
-// LAPIC registers
+// Local APIC registers
+// MMIO registers: RW, NX, UC, 4 KB pages (no large pages).
 // 768MB + 20MB mark (VA)
 #define LAPIC_VA            0x0000000031400000
 
 // -----------------------------------
-// IOAPIC registers
+// I/O APIC registers
+// MMIO registers: RW, NX, UC, 4 KB pages (no large pages).
 // 768MB + 22MB mark (VA)
 #define IOAPIC_VA           0x0000000031600000
 
-
 // -----------------------------------
-// ACPI RSDT
+// ACPI tables (RSDT/XSDT, MADT, FADT, etc.)
 // 768MB + 24MB mark (VA)
 // see: x64smp.c and acpi.c
 #define RSDT_VA             0x0000000031800000
 #define XSDT_VA             0x0000000031800000
-
 // #todo
 // We have more tables for ACPI support.
 // MADT FADT
 
-
 //--------------------------------------------
 
-//
-// #todo 1GB VA and above ...
-//
-
-// 
-#define WINDOWS_POOL_START_VA  0x100000000
-
 #endif    
-
-
-
-
 

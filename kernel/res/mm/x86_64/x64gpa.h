@@ -125,72 +125,61 @@
 #define VOLUME2_ROOTDIR_PA  VOLUME2_ROOTDIR_ADDRESS
 
 
-/*
-#bugbug
-0x00007E00 - 0x0009FFFF - Unused" 
-This is not entirely true. 
-The range that is guaranteed to be free is 0x00007E00 - 0x0007FFFF. 
-Above that range you will have the 
-EBDA (usually at 0x0009FC00 - 0x0009FFFF, 
-but I've seen it at 0x00096C00 and other locations as well) and 
-potentially some BIOS code. 
-Some BIOSes have PXE boot code in this range. 
-A conservative approach is to avoid everything above 0x00080000. 
-*/
-
 //
 // == 512 KB ==================================================
 //
+
 
 
 //
 // == 576 KB ==================================================
 //
 
-// #bugbug
-// Em 0x00090000 costumava ter uma pilha?
-// Se o boot ou o kernel usou essa área para pilha,
-// então poderemos ter perdido algum valor 
-// colocado aí pelo BIOS.
+// ============================================================
+// DANGER ZONE: 0x00090000 and above
+//
+// The conventional memory area starting at 0x90000 is NOT guaranteed
+// to be free. Firmware and BIOS often use this region for EBDA,
+// PXE boot code, scratch buffers, or stacks. On some machines,
+// EBDA begins as early as 0x9FC00, but it can vary.
+//
+// Using this region for kernel structures (boot block, page tables,
+// stacks, etc.) is unsafe and may cause unpredictable crashes.
+// A conservative approach is to avoid allocations above 0x80000
+// unless you explicitly detect EBDA size at runtime.
+//
+// See: https://wiki.osdev.org/Memory_Map_(x86)
+// ============================================================
 
-// 'Canonical'
-// O endereço físico e virtual do boot block são o mesmo.
-// Boot block size?
+// #danger
+// Boot block: 
 #define BOOTBLOCK_PA  0x0000000000090000
 
-
-// 'Canonical?'
-// Page Map Level N.
+// #danger
 // pd, pdpt, pml4 for the kernel process.
-// Lembrando que a parte das flags precisa ser '000'
+// Remember: '000' if for flags.
 #define KERNEL_PD_PA    0x000000000009A000  //pml2
 #define KERNEL_PDPT_PA  0x000000000009B000  //pml3
 #define KERNEL_PML4_PA  0x000000000009C000  //pml4
 
+// #test
+// Maybe we can use these for safety
+// PML4: 0x0007D000
+// PDPT: 0x0007E000
+// PD:   0x0007F000
+
 /*
- Older computers typically uses 1 KiB from 0x9FC00 - 0x9FFFF, 
- modern firmware can be found using significantly more. 
- You can determine the size of the EBDA by 
- using BIOS function INT 12h, or by examining 
- the word at 0x413 in the BDA (see below). 
- Both of those methods will tell you how much conventional memory 
- is usable before the EBDA.
- Credits: https://wiki.osdev.org/Memory_Map_(x86)
+ - Older PCs typically reserve only 1 KiB for the EBDA at 0x9FC00–0x9FFFF.
+ - Modern firmware often uses significantly more, overlapping 0x90000–0x9FFFF.
+ - PXE boot code, BIOS scratch buffers, or stacks may also occupy this area.
+See: https://wiki.osdev.org/Memory_Map_(x86)
  */
 
 // #bugbug
-// EBDA address is found here.
-// 0x9FC00
+// 0x9FC00: EBDA address is found here.
 
 // #bugbug
-// Temos uma pilha aqui?
-// O boot loader sujou essa área colocando uma pilha aí?
-// 0x0009FFF0
-
-// #bugbug
-// BM.BIN is using the range 0x00090000 ~ 0x0009FFF0.
-// So, the kernel simply can't trust in values found here.
-// See: bm/sysvar32.inc
+// 0x0009FFF0: Probably bootloader has a stack here.
 
 //
 // == 640 KB ==================================================
@@ -316,6 +305,10 @@ A conservative approach is to avoid everything above 0x00080000.
 // 14
 // 0xE00000
 // Reserved to extend the area for the kernel image
+// #fun: This 2 MB slot is also inside the ISA DMA window (<16 MB).
+// We could dedicate it as a "DMA pool" for legacy-style experiments.
+// Note: real ISA devices often require buffers <1 MB, but this is safe
+// for testing since it's within the 24-bit DMA limit.
 
 //
 // == 16 MB =========================================================
@@ -446,13 +439,7 @@ A conservative approach is to avoid everything above 0x00080000.
 // == 256 MB =========================================================
 //
 
-// 256
-// 0x10000000
-// #ps: 256 MB mark is free to use when we have 512mb of memory or more.
-#define WINDOWS_POOL_START_PA  __256MB_MARK_PA
-
-// Let's put some windows here.
-// 256/2 = 128 application windows.
+// Free area
 
 //
 // == 512 MB =========================================================
