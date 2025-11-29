@@ -663,7 +663,7 @@ void on_mouse_released(void)
                 {
                     // Get old active, deactivate and redraw the old.
                     tmp = (struct gws_window_d *) get_active_window();
-                    unset_active_window();
+                    //unset_active_window();
                     redraw_window(tmp,TRUE);
                     on_update_window(tmp,GWS_Paint);
                     
@@ -2657,8 +2657,7 @@ void set_focus(struct gws_window_d *window)
 
 // Get the keyboard_owner window.
 // Pega o ponteiro da janela com foco de entrada.
-struct gws_window_d *get_focus(void)
-{
+struct gws_window_d *get_focus(void){
     return (struct gws_window_d *) get_window_with_focus();
 }
 
@@ -3021,7 +3020,7 @@ void wm_add_window_to_top(struct gws_window_d *window)
 // ===================================
 // Se exite uma 'primeira da fila'.
     Next = first_window;
-    while ( (void*) Next->next != NULL )
+    while ((void*) Next->next != NULL)
     {
         Next = Next->next;
     };
@@ -3120,7 +3119,7 @@ void wm_remove_window_from_list_and_kill(struct gws_window_d *window)
 
     while(1)
     {
-        if ( (void*) w == NULL ){
+        if ((void*) w == NULL){
             break;
         }
 
@@ -3140,26 +3139,24 @@ void wm_remove_window_from_list_and_kill(struct gws_window_d *window)
         w = w->next;
     };
 }
-
-// ====================
 
 void wm_remove_window_from_list(struct gws_window_d *window)
 {
     struct gws_window_d *w;
     struct gws_window_d *pick_this_one;
 
-    if ( (void*) window == NULL ){
+    if ((void*) window == NULL){
         return;
     }
 
     w = (struct gws_window_d *) first_window;
-    if ( (void*) w == NULL ){
+    if ((void*) w == NULL){
         return;
     }
 
-    while(1)
+    while (1)
     {
-        if ( (void*) w == NULL ){
+        if ((void*) w == NULL){
             break;
         }
 
@@ -3179,7 +3176,6 @@ void wm_remove_window_from_list(struct gws_window_d *window)
         w = w->next;
     };
 }
-
 
 // Inspired on X.
 // l,t           new window position
@@ -3193,13 +3189,12 @@ wm_gravity_translate(
     unsigned int gravity, 
     unsigned long *destl, unsigned long *destt )
 {
-
     switch (gravity) {
 
     // ---------------
     case CenterGravity:
-        *destl = l + w / 2;
-        *destt = t + h / 2;
+        *destl = (l+w) / 2;
+        *destt = (t+h) / 2;
         break;
     // ---------------
     case StaticGravity:
@@ -3208,7 +3203,7 @@ wm_gravity_translate(
         break;
     // ---------------
     case NorthGravity:
-        *destl = l + w / 2;
+        *destl = (l+w) / 2;
         *destt = t;
         break;
 
@@ -3219,7 +3214,7 @@ wm_gravity_translate(
     // ---------------
     case EastGravity:
         *destl = l + w;
-        *destt = t + h / 2;
+        *destt = (t+h) / 2;
         break;
     case SouthEastGravity:
         *destl = l + w;
@@ -3227,7 +3222,7 @@ wm_gravity_translate(
         break;
     // ---------------
     case SouthGravity:
-        *destl = l + w / 2;
+        *destl = (l+w) / 2;
         *destt = t + h;
         break;
     case SouthWestGravity:
@@ -3237,7 +3232,7 @@ wm_gravity_translate(
     // ---------------
     case WestGravity:
         *destl = l;
-        *destt = t + h / 2;
+        *destt = (t+h) / 2;
         break;
     case NorthWestGravity:
     default:
@@ -3399,8 +3394,7 @@ wm_draw_char_into_the_window(
                     window->ip_y--;
                 }
                 
-                if (window->ip_y == 0)
-                {
+                if (window->ip_y == 0){
                     window->ip_y=0;
                 }
                 
@@ -3481,7 +3475,6 @@ wm_draw_char_into_the_window(
         is_abnt2_printable = TRUE;
         goto printable;
     }
-
 
 printable:
 
@@ -3610,7 +3603,6 @@ wm_draw_char_into_the_window2(
     if (is_valid_wt != TRUE)
         return;
 
-
 // Invalid char
     if (ch<0){
         return;
@@ -3653,7 +3645,6 @@ wm_draw_char_into_the_window2(
         is_abnt2_printable = TRUE;
         goto printable;
     }
-
 
 printable:
 
@@ -3744,17 +3735,18 @@ printable:
 // Draw the whole window text buffer.
 void wm_draw_text_buffer(struct gws_window_d *window)
 {
+    register int i=0;
+    size_t BufferSize=0;
+    char ch=0;
+    int iChar=0;
+    char *p;
+
     if ((void*) window == NULL)
         return;
     if (window->magic != 1234)
         return;
 
-    register int i=0;
-    size_t BufferSize=0;
     BufferSize = window->textbuffer_size_in_bytes;
-    char ch=0;
-    int iChar=0;
-    char *p;
 
     if (window->type == WT_EDITBOX_SINGLE_LINE)
     {
@@ -3773,19 +3765,19 @@ void wm_draw_text_buffer(struct gws_window_d *window)
             iChar = (int) (ch & 0xFF);
             
             wm_draw_char_into_the_window2( 
-                window,
-                iChar,
-                COLOR_BLACK );
-            // Next cahr.
-            p++;
+                window, iChar, COLOR_BLACK );
+
+            p++;  // Next char
         };
     }
 
     if (window->type == WT_EDITBOX_MULTIPLE_LINES)
     {
-    }    
-}
+        // ...
+    }
 
+    // ...
+}
 
 // #test: 
 void __switch_active_window(int active_first)
@@ -3797,6 +3789,7 @@ void __switch_active_window(int active_first)
 
     struct gws_window_d *w;
     register int i=0;
+
     w = first_window;
 
     // Update zOrder.
@@ -3818,19 +3811,18 @@ void __switch_active_window(int active_first)
         set_active_window(first_window);
         redraw_window(first_window,TRUE);
         on_update_window(first_window,GWS_Paint);
-    }else{
+    } else {
         set_active_window(last_window);
         redraw_window(last_window,TRUE);
         on_update_window(last_window,GWS_Paint);
     };
 }
 
-
 // Post message:
 // Colocaremos uma mensagem na fila de mensagens
 // da thread associada com a janela indicada via argumento.
 // Coloca em tail.
-
+// Post message to the thread.
 int
 wmPostMessage(
     struct gws_window_d *window,
@@ -3838,8 +3830,6 @@ wmPostMessage(
     unsigned long long1,
     unsigned long long2 )
 {
-// Post message to the thread.
-
     unsigned long message_buffer[8];
 
 // Structure validation
@@ -3912,8 +3902,8 @@ wmPostMessage(
 // ?? Podemos mandar qualquer tipo de mensagem?
     rtl_post_system_message( 
         (int) ClientTID, (unsigned long) MessageBuffer );
-
     return 0;
+
 fail:
     return (int) -1;
 }
@@ -3975,9 +3965,8 @@ static void on_drop(void)
     grab_is_active = FALSE;  //
     is_dragging = FALSE;     //
 
-// Invalid wid.
-    if ( grab_wid < 0 ||
-         grab_wid >= WINDOW_COUNT_MAX )
+// Invalid wid
+    if ( grab_wid < 0 || grab_wid >= WINDOW_COUNT_MAX )
     {
         return;
     }
@@ -4025,9 +4014,7 @@ static void on_drop(void)
 // + Set focus?
 
     gwssrv_change_window_position( 
-        wgrab, 
-        x_when_dropping, 
-        y_when_dropping );
+        wgrab, x_when_dropping, y_when_dropping );
 
 // Redraw everything.
     wm_update_desktop3(wgrab);
@@ -4376,15 +4363,19 @@ fail:
 }
 */
 
-void wm_change_bg_color(unsigned int color, int tile, int fullscreen)
+void 
+wm_change_bg_color(
+    unsigned int color, 
+    int tile, 
+    int fullscreen )
 {
 // Change the custon background color.
     __set_custom_background_color(color);
 
-    if ( (void*) __root_window == NULL ){
+    if ((void*) __root_window == NULL){
         return;
     }
-    if (__root_window->magic!=1234){
+    if (__root_window->magic != 1234){
         return;
     }
 // Change
@@ -4425,8 +4416,7 @@ void wm_enter_fullscreen_mode(void)
     WindowManager.is_fullscreen = TRUE;
 
 // Set the window
-    WindowManager.fullscreen_window = 
-        (struct gws_window_d *) w;
+    WindowManager.fullscreen_window = (struct gws_window_d *) w;
 
 // Update window
     //wm_update_window_by_id(w->id);
@@ -4449,10 +4439,8 @@ void wm_exit_fullscreen_mode(int tile)
 
 // Setup the mouse hover window
     mouse_hover = NULL;
-
 // Set up the mouse owner.    
     mouse_owner = NULL;
-
 // Set the window with focus.
     keyboard_owner = NULL;
 
@@ -4501,7 +4489,6 @@ int gwssrv_initialize_default_color_scheme(void)
 // size: 32 elements.
 // see: 
 // ws.h themes/honey.h
-
 
 // 0
     cs->elements[csiNull] = 0;
@@ -4592,7 +4579,6 @@ int gwssrv_initialize_default_color_scheme(void)
 // Salvando na estrutura padrão para o esquema humility.
     GWSCurrentColorScheme = (void*) cs;
 
-    // OK
     return 0;
 
 fail:
@@ -4741,12 +4727,12 @@ struct gws_window_d *wmCreateRootWindow(unsigned int bg_color)
         
             if ( (void*) CurrentProjection != NULL )
             {
-                 if (CurrentProjection->magic == 1234)
-                 {
-                     if ( CurrentProjection->initialized == TRUE ){
-                         CurrentProjection->dc = (struct dc_d *) gr_dc;
-                     } 
-                 }
+                if (CurrentProjection->magic == 1234)
+                {
+                    if ( CurrentProjection->initialized == TRUE ){
+                        CurrentProjection->dc = (struct dc_d *) gr_dc;
+                    } 
+                }
             }
         }
     }
@@ -4911,25 +4897,22 @@ int dock_window( struct gws_window_d *window, int position )
             break;
     };
 
-
 // Set a new active window.
-// Update all the windows,
-// respecting the position.
+// Update all the windows, respecting the position.
    wm_update_desktop3(window);
 
-// Send a message to the window
-// to repaint the client windows.
+// Send a message to the window to repaint the client windows.
     on_update_window(window,GWS_Paint);
 
-    return 0; 
+    return 0;
+
 fail:
     return (int) -1;
 }
 
+// Dock: Redraw and show.
 void dock_window_by_id(int wid, int position)
 {
-// Redraw and show.
-
     struct gws_window_d *w;
 
 // Redraw and show the root window.
@@ -5001,8 +4984,7 @@ fail:
     return (int) -1;
 }
 
-struct gws_window_d *get_active_window (void)
-{
+struct gws_window_d *get_active_window (void){
     return (struct gws_window_d *) active_window;
 }
 
@@ -5035,7 +5017,8 @@ void set_active_window(struct gws_window_d *window)
 
 void unset_active_window(void)
 {
-    active_window = NULL;
+    // #bugbug: Is it dangerours?
+    //active_window = NULL;
 }
 
 // Pega o ponteiro da janela com foco de entrada.

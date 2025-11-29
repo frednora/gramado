@@ -39,11 +39,10 @@ int clear_window_by_id(int wid, unsigned long flags)
 {
     struct gws_window_d *w;
 
-// wid
+// Validations
     if (wid<0 || wid>=WINDOW_COUNT_MAX){
         goto fail;
     }
-// Structure validation
     w = (void*) windowList[wid];
     if ((void*) w == NULL){
         goto fail;
@@ -58,6 +57,7 @@ int clear_window_by_id(int wid, unsigned long flags)
         goto fail;
     }
 
+// Redraw
     redraw_window(w,flags);
     return 0;
 
@@ -393,11 +393,10 @@ __draw_window_border(
     }
 }
 
+// Paint the controls, but do not show them.
 // IN: Titlebar window.
 int redraw_controls(struct gws_window_d *window)
 {
-// Paint the controls, but do not show them.
-
     struct gws_window_d *tb_window;
     register int wid = -1;
 
@@ -411,20 +410,18 @@ int redraw_controls(struct gws_window_d *window)
 
     tb_window = window;
 
- //#todo
- // Esta funcionando ...
- // mas precisamos considar quando a janela muda de tamanho.
+// #todo
+// Check if its really a taskbar?
 
+// Redraw controls
     wid = (int) tb_window->Controls.minimize_wid;
     redraw_window_by_id(wid,FALSE);
-
     wid = (int) tb_window->Controls.maximize_wid;
     redraw_window_by_id(wid,FALSE);
-
     wid = (int) tb_window->Controls.close_wid;
     redraw_window_by_id(wid,FALSE);
-
     return 0;
+
 fail:
     return (int) -1;
 }
@@ -483,6 +480,10 @@ int redraw_titlebar_window(struct gws_window_d *window)
 //
 // Paint
 //
+
+// Update the absolute right and bottom values 
+// for mouse hit test.
+    wm_sync_absolute_dimensions(tb_window);
 
 // bg
     rectBackbufferDrawRectangle ( 
@@ -762,7 +763,8 @@ redraw_window (
         goto fail;
     }
 
-
+// Update the absolute right and bottom values 
+// for mouse hit test.
     wm_sync_absolute_dimensions(window);
 
 // =======================
@@ -1081,11 +1083,10 @@ int redraw_window_by_id(int wid, unsigned long flags)
 {
     struct gws_window_d *w;
 
-// wid
+// Validations
     if (wid < 0 || wid >= WINDOW_COUNT_MAX){
         goto fail;
     }
-// structure validation
     w = (void*) windowList[wid];
     if ((void*) w == NULL){
         goto fail;
@@ -1093,12 +1094,13 @@ int redraw_window_by_id(int wid, unsigned long flags)
     if (w->magic != 1234){
         goto fail;
     }
+// Redraw
     redraw_window(w,flags);
     return 0;
+
 fail:
     return (int) (-1);
 }
-
 
 void validate_window_by_id(int wid)
 {

@@ -17,20 +17,18 @@
 
 struct gws_display_d
 {
-    int id;  // Display id.
-    // Structure validation
     int used;
     int magic;
+
+    int id;  // Display id
 
 // "host:display" string used on this connect.
     char *display_name;
 
     //int _device_fd;
 
-// Network socket. 
-    int fd;
-// Is someone in critical section? 
-    int lock;
+    int fd;    // Network socket
+    int lock;  // Critical section flag
     int connected;
     int running;
 

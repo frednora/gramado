@@ -4097,8 +4097,7 @@ struct gws_display_d *gws_open_display(const char *display_name)
 // Current display
     gws_set_current_display(Display);
 
-// Navigation.
-    Display->next = NULL;
+    Display->next = NULL;  // Navigation
 
 // Done
 // Return the display structure pointer.
@@ -4171,6 +4170,15 @@ fail:
 
 struct gws_display_d *gws_get_current_display(void)
 {
+    if ((void*) libgwsCurrentDisplay == NULL)
+        return NULL;
+
+    if (libgwsCurrentDisplay->used != TRUE)
+        return NULL;
+
+    if (libgwsCurrentDisplay->magic != 1234)
+        return NULL;
+
     return (struct gws_display_d *) libgwsCurrentDisplay;
 }
 
