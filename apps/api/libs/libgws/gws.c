@@ -4015,13 +4015,23 @@ struct gws_display_d *gws_open_display(const char *display_name)
 // display configurations.
     // Display->_device_fd = ?
 
+/*
     if ((void*)display_name == NULL)
         goto fail;
     if (*display_name == 0)
         goto fail;
+*/
 
-// (1)
-// Create the display structure.
+    if ((void*) display_name == NULL){
+        printf ("gws_open_display: display_name\n");
+        goto fail;
+    }
+    if (*display_name == 0){
+        printf ("gws_open_display: *display_name\n");
+        goto fail;
+    }
+
+// (1) Create the display structure
 
     Display = 
         (struct gws_display_d *) gws_malloc( sizeof(struct gws_display_d) );
@@ -4031,8 +4041,7 @@ struct gws_display_d *gws_open_display(const char *display_name)
         goto fail;
     }
 
-// (2)
-// Create the socket file.
+// (2) Create the socket file
     //client_fd = socket( AF_INET, SOCK_STREAM, 0 );
     client_fd = (int) socket( AF_INET, SOCK_RAW, 0 );
     if (client_fd < 0){
@@ -4050,6 +4059,7 @@ struct gws_display_d *gws_open_display(const char *display_name)
 // #todo:
 // Use a default name if we do not have a given one.
 
+/*
     if ((void*) display_name == NULL){
         printf ("gws_open_display: [FAIL] display_name\n");
         goto fail;
@@ -4058,9 +4068,9 @@ struct gws_display_d *gws_open_display(const char *display_name)
         printf ("gws_open_display: [FAIL] *display_name\n");
         goto fail;
     }
+*/
 
-// (3)
-// Connect to the window server.
+// (3) Connect to the window server
 
     while (TRUE){
         if (connect (client_fd, (void *) &addr_in, addrlen ) < 0){
@@ -4083,7 +4093,7 @@ struct gws_display_d *gws_open_display(const char *display_name)
     Display->screens = NULL;  // Screen list.
 
 // ID
-    Display->id = (int) DisplayID;
+    Display->id = (int) DisplayID; // #todo
 
 // Not running yet.
 // The application sets this flag 
@@ -4099,11 +4109,12 @@ struct gws_display_d *gws_open_display(const char *display_name)
 
     Display->next = NULL;  // Navigation
 
-// Done
-// Return the display structure pointer.
     __gws_clear_msg_buff();
     //rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+
+// Return the display structure pointer
     return (struct gws_display_d *) Display;
+
 fail:
     return NULL;
 }
@@ -4156,14 +4167,13 @@ int gws_set_current_display(struct gws_display_d *display)
     if ((void*) display == NULL){
         goto fail;
     }
-    if ( display->used != TRUE || display->magic != 1234 )
+    if (display->used != TRUE || display->magic != 1234)
     {
         goto fail;
     }
-
-// ok, done.
     libgwsCurrentDisplay = (struct gws_display_d *) display;
     return 0;
+
 fail:
     return (int) -1;
 }

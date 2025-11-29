@@ -107,6 +107,8 @@ unsigned long ipc_broadcast_system_message(
 
 // ----------
 
+// Worker
+void *ipc_get_message(unsigned long ubuf);
 // Service 111.
 // Get a message from the current thread and 
 // put it into the given buffer.

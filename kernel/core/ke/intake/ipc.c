@@ -3,6 +3,9 @@
 // Messages using the circular queue into the thread structure.
 // Created by Fred Nora.
 
+// post = synchronous
+// send = asynchronous
+
 /*
 Summary
 Low-level workers: 
@@ -234,7 +237,7 @@ ipc_post_message_to_tid (
 // Only coalesce for mouse move messages
 // Prevents queue flooding with excessive mouse move events.
 // Reduces input lag: The display server always receives the most recent mouse position.
-//Leaves more room in the queue for other important events (clicks, keypresses, etc).
+// Leaves more room in the queue for other important events (clicks, keypresses, etc).
 // Industry standard: This is the same approach used in major OSes and GUI toolkits.
 // Interpret the message as "the mouse is now at this position."
 
@@ -307,6 +310,7 @@ ipc_post_message_to_tid (
             panic ("ipc_post_message_to_tid: __last_msg validation\n");
         }
 
+        // Make:
         // Now handle coalescing for both regular keys and control+arrow
         if (isMake == TRUE && __last_msg->receiver_tid == (tid_t) dst_tid) 
         {
@@ -321,6 +325,7 @@ ipc_post_message_to_tid (
                 return 0;
             }
         }
+        // Control arrow:
         if (isControlArrow == TRUE && __last_msg->receiver_tid == (tid_t) dst_tid) 
         {
             if (__last_msg->msg == MessageCode) 
@@ -335,7 +340,6 @@ ipc_post_message_to_tid (
     }
 
 // ======================================================
-
 
 //
 // The message
@@ -354,14 +358,12 @@ ipc_post_message_to_tid (
         panic ("ipc_post_message_to_tid: m validation\n");
     }
 
-// --------------------------
 // Standard header
     m->opaque_window = NULL;
     m->msg   = (int) (MessageCode & 0xFFFFFFFF);
     m->long1 = (unsigned long) long1;
     m->long2 = (unsigned long) long2;
 
-// --------------------------
 // Extra payload
     m->long3 = (unsigned long) jiffies;
     m->long4 = (unsigned long) jiffies;
@@ -383,6 +385,11 @@ ipc_post_message_to_tid (
     }
 
     t->isResponder = TRUE;
+
+    // State test
+    //if (t->state == WAITING)
+        //t->state = READY;
+
     return 0;
 
 fail2:
@@ -647,20 +654,8 @@ unsigned long ipc_broadcast_system_message(
     return (unsigned long) long_rv;
 }
 
-
-
-/*
- * sys_get_message:
- *     Get a message from the current thread and 
- * put it into the given buffer.
- *     The message has 6 standard elements.
- */
-// Called by sci.c
-// Service 111.
-// It is called by the applications.
-// It is also used for ipc.
-
-void *sys_get_message(unsigned long ubuf)
+// Worker
+void *ipc_get_message(unsigned long ubuf)
 {
     unsigned long *message_address = (unsigned long *) ubuf;
     register struct thread_d *t;
@@ -669,7 +664,7 @@ void *sys_get_message(unsigned long ubuf)
 // buffer
 // #todo: Check some other invalid address.
     if (ubuf == 0){
-        panic ("sys_get_message: ubuf\n");
+        panic ("ipc_get_message: ubuf\n");
         //return NULL;
     }
 
@@ -681,10 +676,10 @@ void *sys_get_message(unsigned long ubuf)
     }
     t = (void *) threadList[current_thread];
     if ((void *) t == NULL){
-        panic ("sys_get_message: t\n");
+        panic ("ipc_get_message: t\n");
     }
     if (t->used != TRUE || t->magic != 1234){
-        panic ("sys_get_message: t validation\n");
+        panic ("ipc_get_message: t validation\n");
     }
 
 // ===========================================================
@@ -791,6 +786,22 @@ fail0:
     // t->MsgQueueHead = ((t->MsgQueueHead + 1) % MSG_QUEUE_MAX);
     // No message
     return NULL;
+}
+
+// sys_get_message:
+// Service 111.
+// Get a message from the current thread and 
+// put it into the given buffer.
+// The message has 6 standard elements.
+// Called by sci.c
+// It is called by the applications.
+// It is also used for ipc.
+void *sys_get_message(unsigned long ubuf)
+{
+    if (ubuf == 0)
+        panic ("sys_get_message: ubuf\n");
+// Call the worker
+    return (void*) ipc_get_message(ubuf);
 }
 
 // 120
@@ -1002,7 +1013,6 @@ sys_post_message_to_tid(
 
 // Let's notify the scheduler
 // that we need some priority for the receiver in this case.
-
     return 0;
 }
 
