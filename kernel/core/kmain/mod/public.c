@@ -6,7 +6,6 @@
 
 #include <kernel.h>
 
-
 // 0
 void xp_die(void)
 {

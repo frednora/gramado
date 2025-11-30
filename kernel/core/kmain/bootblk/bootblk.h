@@ -1,14 +1,14 @@
 // bootblk.h
 // Created by Fred Nora.
 
-
 #ifndef __KMAIN_BOOTBLK_H
 #define __KMAIN_BOOTBLK_H    1
-
 
 // --------------------------------------
 // The base address of the boot block.
 // virtual = physical.
+// #bugbug
+// It's unsafe using this address.
 #define BootBlockVA    0x0000000000090000
 
 /**********************************
@@ -57,7 +57,6 @@
 
 // ...
 
-
 // Display device support.
 // It came from the boot loader.
 // See: bldisp.c
@@ -89,7 +88,6 @@ struct bootblk_d
     // ...
 };
 extern struct bootblk_d  bootblk;
-
 
 #endif
 

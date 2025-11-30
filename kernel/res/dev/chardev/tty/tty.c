@@ -1408,29 +1408,20 @@ fail:
 // CREATE
 //
 
-/*
- * tty_create: 
- *    Create a tty structure.
- * OUT:
- *     pointer.
- */
-// #test Nope?
-// We are including a pointer to the RIT. raw input thread.
-// This is the flower thread of the window with focus on kgws.
-// See: tty.h
-
+// Create a tty structure.
+// OUT: pointer
 struct tty_d *tty_create(short type, short subtype)
 {
-    file *__file;
     struct tty_d  *__tty;
     char __tmpname[64];
+    file *__file;
     register int i=0;
 
 // #todo
 // The parameters.
 
-// Create structure.
-    __tty = (struct tty_d *) kmalloc( sizeof(struct tty_d) );
+// Create structure
+    __tty = (struct tty_d *) kmalloc(sizeof(struct tty_d));
     if ((void *) __tty == NULL){
         panic ("tty_create: __tty\n");   
     }
@@ -1442,7 +1433,7 @@ struct tty_d *tty_create(short type, short subtype)
     __tty->magic = 1234;
     __tty->initialized = FALSE;
 
-// Clear name info for now.
+// Clear name field
     memset( __tty->name, 0, TTY_NAME_SIZE );
     __tty->Name_len = 0;
 
@@ -1458,10 +1449,7 @@ struct tty_d *tty_create(short type, short subtype)
     __tty->index = (int) (new_tty_index & 0xFFFF);
     new_tty_index++;
 
-//
-// Linked
-//
-
+// Not linked yet
     __tty->link = NULL;
     __tty->is_linked = FALSE;
 
@@ -1516,7 +1504,9 @@ struct tty_d *tty_create(short type, short subtype)
 // YES, We are using buffer.
     __tty->nobuffers = FALSE;
 
-// queues
+//
+// TTY queues
+//
 
 // raw queue
     __tty->raw_queue.cnt = 0;
@@ -1597,9 +1587,8 @@ struct tty_d *tty_create(short type, short subtype)
     if ((void*) newname == NULL){
         panic("tty_create: newname\n");
     }
-// clear buffer
+// Clear buffer and copy name
     memset( newname, 0, TTY_NAME_SIZE );
-// Copy name
     strcpy(newname,__tmpname);
     //memcpy(__tty->name,__tmpname,64);
 
@@ -1608,8 +1597,8 @@ struct tty_d *tty_create(short type, short subtype)
 // de dispositivos.
 // #importante: 
 // Ele precisa de um arquivo 'file'.
-    
-    __file = (file *) kmalloc( sizeof(file) );
+
+    __file = (file *) kmalloc(sizeof(file));
     if ((void *) __file == NULL){
         panic("tty_create: __file\n");
     }
@@ -1664,16 +1653,13 @@ struct tty_d *tty_create(short type, short subtype)
         newname,             // pathname 
         DEVICE_CLASS_CHAR,   // class (char, block, network)
         DEVICE_TYPE_LEGACY,  // type (pci, legacy)
-        NULL,                // Not a pci device.
-        __tty );             // This is a tty device.
+        NULL,                // Not a pci device
+        __tty );             // This is a tty device
 
-// ==========================================
-// last check.
+// Last check
     if ((void *) __tty == NULL){
         panic("tty_create: [FAIL] __tty\n");
     }
-
-// ok
     __tty->initialized = TRUE;
     return (struct tty_d *) __tty;
 }
@@ -1681,4 +1667,3 @@ struct tty_d *tty_create(short type, short subtype)
 //
 // End
 //
-

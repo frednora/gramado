@@ -31,11 +31,9 @@ static int __load_mod_image(const char *image_name);
 // see: I_x64CreateKernelProcess in x64init.c
 // see: control/newm0/
 // Vamos testar um modulo que ja foi carregado previamente?
-
+// Called by input.c
 void test_mod0(void)
 {
-// Called by input.c
-
     unsigned long return_value=0;
     unsigned long fn_table_base=0;
     unsigned long mod_sci=0;
@@ -120,13 +118,12 @@ void *ring0_module_sci(
     return (void*) Value;
 }
 
-// Called by I_x64CreateKernelProcess() in x64init.c
-static int __mod_initialize_first_module(void)
-{
 // Setup the first kernel module.
 // It is not a dynlinked module.
 // This is just a loadable ring0 code with shared symbols.
-
+// Called by I_x64CreateKernelProcess() in x64init.c
+static int __mod_initialize_first_module(void)
+{
     struct kernel_module_d *m;
     int module_id = KMODULE_MOD0;
     unsigned long module_entry_point_va = (unsigned long) XP_MOD0;
@@ -136,7 +133,7 @@ static int __mod_initialize_first_module(void)
     m = (struct kernel_module_d *) kmalloc( sizeof(struct kernel_module_d) );
     if ((void*) m == NULL){
         printk ("__mod_initialize_first_module: m\n");
-        return FALSE;
+        goto fail;
     }
     memset( m, 0, sizeof(struct kernel_module_d) );
 
@@ -182,32 +179,29 @@ static int __mod_initialize_first_module(void)
     m->used = TRUE;
     m->magic = 1234;
     m->initialized = TRUE;
-
 // See: 
 // kernel.h, mod.c
     kernel_mod0 = (struct kernel_module_d *) m; 
-
     return 0;
+
+fail:
+    return (int) -1;
 }
-
-
 
 // #todo
 // Check the information in the elf header.
 // Save some of this information in the process structure. 
 // see: exec_elf.h and process.h
-
+// OUT: 0 = ok | -1 = fail
 static int __load_mod_image(const char *image_name)
 {
-
     int fileret = -1;
 
 // The virtual address for the module image.
 // #warning
 // This is a static address. Why not?
-// Hack me!
-    const unsigned long ImageAddress = 
-        (unsigned long) 0x30A00000;
+// Hack!
+    const unsigned long ImageAddress = (unsigned long) 0x30A00000;
 
 // #bugbug
 // We have a limit for the image size.
@@ -243,7 +237,6 @@ static int __load_mod_image(const char *image_name)
 //    1 = fail 
 //    0 = ok
 
-    
     fileret = 
         (int) fsLoadFile( 
                 VOLUME1_FAT_ADDRESS, 
@@ -264,7 +257,6 @@ static int __load_mod_image(const char *image_name)
                 BUGBUG_IMAGE_SIZE_LIMIT ); 
     */
 
-
     /*
     // Wait for some problem with the AP that was initialized.
     printk("Waiting after load ...\n");
@@ -272,19 +264,14 @@ static int __load_mod_image(const char *image_name)
     while(1){}
     */
 
-
     if (fileret != 0){
         printk("__load_mod_image: on fsLoadFile()\n");
         goto fail;
     }
 
-// OUT: 
-//    -1 = fail 
-//    0 = ok
     return 0;
 
 fail:
-    //refresh_screen(); 
     return (int) -1;
 }
 
@@ -295,10 +282,9 @@ fail:
 
 // Initialize support for loadable kernel modules.
 // Called by x64init.c
+// Called by I_kmain(). Needs to return TRUE.
 int mod_initialize(void)
 {
-// Called by I_kmain(). Needs to return TRUE.
-
     register int i=0;
     int Status = -1;
 
@@ -338,7 +324,6 @@ int mod_initialize(void)
     Status = (int) __mod_initialize_first_module();
     if (Status < 0)
         panic ("__load_mod_image: Couldn't initialize first module\n");
-
 
     return TRUE;
 }

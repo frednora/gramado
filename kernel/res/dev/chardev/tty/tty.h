@@ -89,8 +89,6 @@
 #define O_NLRET(tty)  _O_FLAG((tty),ONLRET)
 #define O_LCUC(tty)   _O_FLAG((tty),OLCUC)
 
-
-
 //
 // Modes
 //
@@ -100,7 +98,6 @@
 // This TTY is using the associated file to transfer data.
 #define TTY_OPERATION_MODE_USING_QUEUE  2000
 // ..
-
 
 //
 // Queue operation modes
@@ -205,20 +202,17 @@ struct tty_d
     char name[TTY_NAME_SIZE];
     size_t Name_len;
 
-// type
+// type of tty
 //#define TTY_TYPE_CONSOLE    1000 (Kernel Console)
 //#define TTY_TYPE_PTY        2000 (Virtual terminal)
 //#define TTY_TYPE_SERIAL     3000 
-
 // ...
-// type of tty
     short type;
 
-// subtype
+// subtype of tty
 //#define TTY_SUBTYPE_PTY_MASTER   100
 //#define TTY_SUBTYPE_PTY_SLAVE    200
 // ...
-// subtype of tty
     short subtype;
 
 // TTY mode.
@@ -292,13 +286,6 @@ struct tty_d
 // Synch and job control.
 // This way the TTY driver can send the input to the forground process.
 
-//
-// == transmition ========
-//
-
-// linked socket?
-    struct tty_d *link;
-    int is_linked;
 
 //
 // == Device info ==================
@@ -333,18 +320,14 @@ struct tty_d
     //tid_t virtual_terminal_tid;
 
 //------------------------------
-
 // #test
 // The winsize structure used in ioctl().
 // see: kioctl.h
     struct winsize_d  winsize;
 
 //------------------------------
-
 // see: ktermios.h
     struct termios_d  termios;
-
-//------------------------------
 
 //
 // Echo support
@@ -411,9 +394,10 @@ struct tty_d
 // Is it a fullscreen console?
     int fullscreen_flag;
 
-// Connections:
-// pty associa a tty 'to' com a tty 'from'.
-// master/slave.
+// Redirection:
+// Master/slave relashionship
+    struct tty_d *link;
+    int is_linked;
 
 // Navigation
     struct tty_d  *next;
@@ -494,8 +478,6 @@ sys_tty_write (
     int fd, 
     char *buffer, 
     int n );
-
-
 
 int tty_set_output_worker(struct tty_d *tty, int worker_number);
 
