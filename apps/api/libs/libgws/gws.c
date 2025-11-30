@@ -18,12 +18,13 @@
 // Library version support.
 // See: gws.h
 struct libgws_version_d  libgwsVersion;
-// Display
+// The current display
 struct gws_display_d *libgws_disp;
 // Event
 struct gws_event_d *CurrentEvent;
 // Strings
 const char *title_when_no_title = "Window";
+// Shared
 char __string_buffer[512];   // dst
 
 // #test
@@ -72,7 +73,7 @@ static int
 __gws_redraw_window_request( int fd, int window, unsigned long flags );
 
 // == Refresh Window ==========================
-static int __gws_refresh_window_request( int fd, int window );
+static int __gws_refresh_window_request(int fd, int window);
 
 // == Create Window ==========================
 static int 
@@ -181,8 +182,7 @@ static void __gws_clear_msg_buff(void)
 // Send request:
 // Setup the parameters and
 // write the data into the file.
-
-static int __gws_get_window_info_request( int fd, int wid )
+static int __gws_get_window_info_request(int fd, int wid)
 {
     int n_writes = 0;
 
@@ -203,7 +203,7 @@ static int __gws_get_window_info_request( int fd, int wid )
     unsigned long *message_buffer = 
         (unsigned long *) libgws_disp->packet; 
 
-// Window ID, msg code, libgws signatures.
+// Window ID, msg code, libgws signatures
     message_buffer[0] = wid;
     message_buffer[1] = GWS_GetWindowInfo;
     message_buffer[2] = (unsigned long) 1234;
@@ -261,7 +261,7 @@ static struct gws_window_info_d *__gws_get_window_info_response(
     window_info->used = FALSE;
     window_info->magic = 0;
 
-// Clear the local buffer and populate it with the incoming data.
+// Clear the local buffer and populate it with the incoming data
     for (i=0; i<512; i++){
         libgws_disp->packet[i] = 0;
     };
@@ -358,8 +358,7 @@ process_response:
         // ok, we got it.
         return (struct gws_window_info_d *) window_info;
     }
-
-// Fall trough.
+// Fall trough
 fail:
     return NULL;
 }
@@ -387,23 +386,21 @@ static int __gws_get_next_event_request(int fd,int wid)
         goto fail;
     if (libgws_disp->magic != 1234)
         goto fail;
-    unsigned long *message_buffer = 
-        (unsigned long *) libgws_disp->packet;
+    unsigned long *message_buffer = (unsigned long *) libgws_disp->packet;
 
-// Clean the main buffer.
+// Clean the main buffer
     for (i=0; i<512; i++){
         libgws_disp->packet[i] = 0;
     };
 
-// Window ID
+// window id, msg code, ...
     message_buffer[0] = (unsigned long) (wid & 0xFFFFFFFF); 
-// Message code
     message_buffer[1] = GWS_GetNextEvent;
     message_buffer[2] = 0;
     message_buffer[3] = 0;
-    //...
-    //message_buffer[4] = 0;
-    //message_buffer[5] = 0;
+    // ...
+    // message_buffer[4] = 0;
+    // message_buffer[5] = 0;
 
 // Write
     n_writes = 
@@ -454,14 +451,12 @@ static struct gws_event_d *__gws_get_next_event_response (
     unsigned long *message_buffer = 
         (unsigned long *) libgws_disp->packet;
 
-// Read
-
-// Clean the local buffer,
-// and then populate with some data.
+// Clean the local buffer and then populate with some data
     for (i=0; i<512; i++){
         libgws_disp->packet[i] = 0;
     };
 
+// Read
     n_reads = 
         (ssize_t) recv ( 
                     fd, 
@@ -501,14 +496,11 @@ static struct gws_event_d *__gws_get_next_event_response (
     };
 
 // crazy fail
-
     //#debug
     //printf ("__gws_get_next_event_response: crazy fail\n"); 
-
     event->type = 0;
     event->used = FALSE;
     event->magic = 0;
-
     return (struct gws_event_d *) event;
 
 process_event:
@@ -558,11 +550,8 @@ process_event:
 
         event->used = TRUE;
         event->magic = 1234;
-
-        // #debug
         //printf ("::: wid=%d msg=%d l1=%d l2=%d \n",
             //event->wid, event->msg, event->long1, event->long2 );
-
         return (struct gws_event_d *) event;
     }
 
@@ -573,7 +562,7 @@ fail0:
     return NULL;
 }
 
-static int __gws_refresh_window_request( int fd, int window )
+static int __gws_refresh_window_request(int fd, int window)
 {
     int n_writes=0;
 
@@ -583,7 +572,7 @@ static int __gws_refresh_window_request( int fd, int window )
     if (fd<0){
         goto fail;
     }
-    if (window<0){
+    if (window < 0){
         goto fail;
     }
 
@@ -691,8 +680,7 @@ __gws_change_window_position_request (
     unsigned long *message_buffer = 
         (unsigned long *) libgws_disp->packet;
 
-
-// Clean the main buffer.
+// Clean the main buffer
     for (i=0; i<512; i++){
         libgws_disp->packet[i] = 0;
     };
@@ -730,7 +718,7 @@ static int __gws_change_window_position_reponse(int fd)
 // #bugbug
 // We can stay in here forever.
 
-    //gws_debug_print ("__gws_change_window_position_reponse: Waiting ...\n");      
+    //gws_debug_print ("__gws_change_window_position_reponse: Waiting\n");      
 
 // Parameter:
     if (fd<0){
@@ -759,7 +747,6 @@ response_loop:
                     sizeof(libgws_disp->packet), 
                     0 );
 
-
     // #danger #bugbug
     // Let's tray again if we read 0 bytes.
     if (n_reads == 0){
@@ -768,9 +755,9 @@ response_loop:
 
     // Se retornou -1 é porque algo está errado com o arquivo.
     if (n_reads < 0){
-        gws_debug_print ("__gws_change_window_position_reponse: recv fail\n");
-        printf          ("__gws_change_window_position_reponse: recv fail\n");
-        printf ("Something is wrong with the socket.\n");
+        gws_debug_print("__gws_change_window_position_reponse: recv fail\n");
+        printf         ("__gws_change_window_position_reponse: recv fail\n");
+        printf ("Something is wrong with the socket\n");
         exit (1);
     }
 
@@ -841,7 +828,7 @@ __gws_resize_window_request (
     unsigned long *message_buffer = 
         (unsigned long *) libgws_disp->packet;
 
-// Clean the main buffer.
+// Clean the main buffer
     for (i=0; i<512; i++){
         libgws_disp->packet[i] = 0;
     };
@@ -933,9 +920,9 @@ response_loop:
     
     // Se retornou -1 é porque algo está errado com o arquivo.
     if (n_reads < 0){
-        gws_debug_print ("__gws_resize_window_reponse: recv fail.\n");
-        printf          ("__gws_resize_window_reponse: recv fail.\n");
-        printf ("Something is wrong with the socket.\n");
+        gws_debug_print ("__gws_resize_window_reponse: recv fail\n");
+        printf          ("__gws_resize_window_reponse: recv fail\n");
+        printf ("Something is wrong with the socket\n");
         exit (1);
     }
 
@@ -1193,7 +1180,7 @@ __gws_drawtext_request (
     unsigned long *message_buffer = 
         (unsigned long *) libgws_disp->packet;
 
-// Clean the main buffer.
+// Clean the main buffer
     for (i=0; i<512; i++){
         libgws_disp->packet[i] = 0;
     };
@@ -1203,7 +1190,7 @@ __gws_drawtext_request (
     message_buffer[1] = GWS_DrawText;
     message_buffer[2] = 0;
     message_buffer[3] = 0;
-// wid, l, t, color.
+// wid, l, t, color
     message_buffer[4] = window_id;
     message_buffer[5] = left;
     message_buffer[6] = top;
@@ -1555,12 +1542,12 @@ __gws_clone_and_execute_request (
         libgws_disp->packet[i] = 0;
     };
 
-// 0, msg code, 0, 0;
+// 0, msg code, 0, 0
     message_buffer[0] = 0;
     message_buffer[1] = 9099;
     message_buffer[2] = 0;
     message_buffer[3] = 0;
-// 4 arguments.
+// 4 arguments
     message_buffer[4] = (unsigned long) arg1;
     message_buffer[5] = (unsigned long) arg2;
     message_buffer[6] = (unsigned long) arg3;
@@ -1861,8 +1848,7 @@ static wid_t __gws_createwindow_response(int fd)
     unsigned long *message_buffer = 
         (unsigned long *) libgws_disp->packet;
 
-// Clean the local buffer,
-// and then populate with some data.
+// Clean the local buffer and then populate with some data
     for (i=0; i<512; i++){
         libgws_disp->packet[i] = 0;
     };
@@ -1912,8 +1898,7 @@ fail:
 // == Functions ===================================
 //
 
-// System call.
-// System interrupt.
+// System interrupt. (syscall)
 void *gws_system_call ( 
     unsigned long a, 
     unsigned long b, 
@@ -2068,12 +2053,12 @@ gws_draw_text (
     for (count=0; count<8; count++){
     req_status = 
         (int) __gws_drawtext_request (
-                  (int) fd,
-                  (int) window,
-                  (unsigned long) x,
-                  (unsigned long) y,
-                  (unsigned int) color,
-                  (const char *) string );
+                (int) fd,
+                (int) window,
+                (unsigned long) x,
+                (unsigned long) y,
+                (unsigned int) color,
+                (const char *) string );
 
     //if (req_status <= 0){
         //goto fail;
@@ -2143,12 +2128,12 @@ gws_set_text (
 // IN: fd, window, x, y, color, string
     req_status = 
         (int) __gws_settext_request (
-                  (int) fd,
-                  (int) window,
-                  (unsigned long) x,
-                  (unsigned long) y,
-                  (unsigned long) (color & 0xFFFFFFFF),
-                  (char *) string );
+                (int) fd,
+                (int) window,
+                (unsigned long) x,
+                (unsigned long) y,
+                (unsigned long) (color & 0xFFFFFFFF),
+                (char *) string );
     if (req_status <= 0){
         goto fail;
     }
@@ -2205,12 +2190,12 @@ gws_get_text (
 // IN: fd, window, x, y, color, string
     req_status = 
         (int) __gws_gettext_request (
-                  (int) fd,
-                  (int) window,
-                  (unsigned long) x,
-                  (unsigned long) y,
-                  (unsigned long) (color & 0xFFFFFFFF),
-                  (char *) string );
+                (int) fd,
+                (int) window,
+                (unsigned long) x,
+                (unsigned long) y,
+                (unsigned long) (color & 0xFFFFFFFF),
+                (char *) string );
     if (req_status<=0){
         goto fail;
     }
@@ -2235,13 +2220,12 @@ gws_get_text (
         goto fail;
     }
 
-// From 'p' to 'where'.
+// Copy from 'p' to 'where'.
+// 'where' is given by the app.
     if ((void*) p != NULL)
     {
-        // O ponteiro dado pelo app.
         if ((void*) where != NULL)
         {
-            // Copy
             for (c=0; c<64; c++)
             {
                 *where = *p;
@@ -2463,7 +2447,7 @@ void gws_clone_and_execute_from_prompt(int fd)
             break;
         }        
 
-        if ( filename_buffer[i] == '.' )
+        if (filename_buffer[i] == '.')
         {
             dotWasFound = TRUE;
             dot_found_in = i;
@@ -2491,7 +2475,7 @@ void gws_clone_and_execute_from_prompt(int fd)
 // entao a estencao e' invalida.
 
     if (dotWasFound == TRUE){
-    if ( filename_buffer[i] == '.' )
+    if (filename_buffer[i] == '.')
     {
         // Ainda nao temos uma extensao valida.
         // Encontramos um ponto,
@@ -3220,27 +3204,38 @@ void gws_invalidate_window(int fd,int wid)
     gws_async_command(fd,13,0,wid);
 }
 
-/*
- * gws_create_window: 
- *     Create a window.
- *     Given it's type.
- */
-// OUT: wid
+// Create a window given it's type
+// IN:
+//     fd - socket
+//     type - Window type
+//     status - Window status
+//     view ?
+//     windowname - Window title
+//     x - Left position
+//     y - Top position
+//     width - Width
+//     height - Height
+//     parentwindow - Parent window id
+//     style - Window style
+//     clientcolor - Color for the client area rectangle
+//     color - Background color
+// OUT: 
+//     wid
 wid_t
 gws_create_window ( 
     int fd,
-    unsigned long type,        //1, Tipo de janela (popup,normal,...)
-    unsigned long status,      //2, Estado da janela.
-    unsigned long view,        //3, (min, max ...)
-    const char *windowname,          //4, Título.                          
-    unsigned long x,           //5, Deslocamento em relação às margens do Desktop.                           
-    unsigned long y,           //6, Deslocamento em relação às margens do Desktop.
-    unsigned long width,       //7, Largura da janela.
-    unsigned long height,      //8, Altura da janela.
-    int parentwindow,          //9, Endereço da estrutura da janela mãe.
-    unsigned long style,       //10. style
-    unsigned int clientcolor,  //11, Cor da área de cliente
-    unsigned int color )       //12, Color (bg) (para janela simples).
+    unsigned long type,
+    unsigned long status,
+    unsigned long view,
+    const char *windowname,                          
+    unsigned long x,                           
+    unsigned long y,
+    unsigned long width,
+    unsigned long height,
+    int parentwindow,
+    unsigned long style,
+    unsigned int clientcolor,
+    unsigned int color )
 {
     int value=0;
     wid_t wid = -1;
@@ -3257,7 +3252,7 @@ gws_create_window (
     if ((void*) windowname == NULL){
         goto fail;
     }
-    if ( *windowname == 0 )
+    if (*windowname == 0)
         goto fail;
 
 //#bugbug: parentwindow?
@@ -3293,8 +3288,7 @@ gws_create_window (
     if (req_status <= 0){
         goto fail;
     }
-
-    // ok, set the sync
+    // Set the sync
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_REQUEST );
 
 // Response
@@ -3335,23 +3329,30 @@ fail:
 }
 
 // Wrapper
+// Create application window
+// IN:
+//     fd - socket
+//     windowname - Window title
+//     x - Left position
+//     y - Top position
+//     width - Window width
+//     height - Window height
 wid_t 
 gws_create_application_window(
     int fd,
-    const char *windowname,         // Título. #todo maybe const char.
-    unsigned long x,          // Deslocamento em relação às margens do Desktop. 
-    unsigned long y,          // Deslocamento em relação às margens do Desktop.
-    unsigned long width,      // Largura da janela.
-    unsigned long height )    // Altura da janela.
+    const char *windowname,
+    unsigned long x, 
+    unsigned long y,
+    unsigned long width,
+    unsigned long height )
 {
-// style: 
-// 0x0001=maximized | 0x0002=minimized | 0x0004=fullscreen | 0x0008 statusbar
-
+    wid_t parent_wid = 0; // Root
     wid_t wid = -1;
     unsigned long type = WT_OVERLAPPED;
     unsigned long status = WINDOW_STATUS_ACTIVE;
     unsigned long view = VIEW_NULL;
-    wid_t parent_wid = 0;
+// style: 
+// 0x0001=maximized | 0x0002=minimized | 0x0004=fullscreen | 0x0008 statusbar
     unsigned long style = 0;
     unsigned int client_color = COLOR_GRAY;
     unsigned int frame_color = COLOR_GRAY;
@@ -3368,18 +3369,19 @@ gws_create_application_window(
 // Create
     wid = 
         (wid_t) gws_create_window ( 
-                  fd,
-                  type,
-                  status,
-                  view,
-                  windowname,
-                  x, y, width, height,
-                  parent_wid,   // No parent
-                  style, 
-                  client_color, 
-                  frame_color );
+                fd,
+                type,
+                status,
+                view,
+                windowname,
+                x, y, width, height,
+                parent_wid,
+                style, 
+                client_color, 
+                frame_color );
 
     return (wid_t) wid;
+
 fail:
     return (wid_t) -1;
 }
@@ -3424,23 +3426,19 @@ void gws_yield_n_times(unsigned long n)
     };
 }
 
-/*
- * gws_create_thread:
- *     Create a thread.
- *     #todo: 
- *     Precisamos uma função que envie mais argumentos.
- *     Essa será uma rotina de baixo nível para pthreads.
- *     Use const char
- */
+// Create a thread
+// #todo: 
+// Precisamos uma função que envie mais argumentos.
+// Essa será uma rotina de baixo nível para pthreads.
+// Use const char
 // OUT:
 // Is it a pointer to the ring0 thread structure?
-
+// #define	SYSTEMCALL_CREATETHREAD     72
 void *gws_create_thread ( 
     unsigned long init_rip, 
     unsigned long init_stack, 
     char *name )
 {
-    //#define	SYSTEMCALL_CREATETHREAD     72
     debug_print ("gws_create_thread:\n");
 
     if (init_rip == 0){
@@ -3460,11 +3458,11 @@ void *gws_create_thread (
         goto fail;
     }
 
+// IN: 
+// service number, RIP, Stack address, name.
+// SYSTEMCALL_CREATETHREAD
 // OUT:
 // Is it a pointer to the ring0 thread structure? Yes.
-// SYSTEMCALL_CREATETHREAD,
-
-    // IN: service number, RIP, Stack address, name.
     return (void *) gws_system_call ( 
                         72,  
                         init_rip, 
@@ -3475,8 +3473,10 @@ fail:
     return NULL;
 }
 
+// Start a thread
 // Put a thread in the STANDBY state for execution for the first time.
 // #ps: This is a ring0 pointer.
+// SYSTEMCALL_STARTTHREAD
 void gws_start_thread (void *thread)
 {
     //unsigned long ret_value=0;
@@ -3491,7 +3491,6 @@ void gws_start_thread (void *thread)
         return;
     }
 
-    //SYSTEMCALL_STARTTHREAD,
     sc80 ( 
         94, 
         (unsigned long) thread, 
@@ -4149,13 +4148,6 @@ struct gws_display_d *gws_open_display(const char *display_name)
 // display configurations.
     // Display->_device_fd = ?
 
-/*
-    if ((void*)display_name == NULL)
-        goto fail;
-    if (*display_name == 0)
-        goto fail;
-*/
-
     if ((void*) display_name == NULL){
         printf ("gws_open_display: display_name\n");
         goto fail;
@@ -4189,30 +4181,13 @@ struct gws_display_d *gws_open_display(const char *display_name)
     Display->lock      = FALSE;
     // ...
 
-// Display name.
-// #todo:
-// Use a default name if we do not have a given one.
-
-/*
-    if ((void*) display_name == NULL){
-        printf ("gws_open_display: [FAIL] display_name\n");
-        goto fail;
-    }
-    if (*display_name == 0){
-        printf ("gws_open_display: [FAIL] *display_name\n");
-        goto fail;
-    }
-*/
-
 // (3) Connect to the window server
-
     while (TRUE){
         if (connect (client_fd, (void *) &addr_in, addrlen ) < 0){
             gws_debug_print("gws_open_display: Connection Failed\n");
             printf         ("gws_open_display: Connection Failed\n");
-        }else{
-            // Connected!
-            break;
+        } else {
+            break;  // Connected
         };
     };
 
@@ -4276,11 +4251,11 @@ void gws_close_display(struct gws_display_d *display)
 // Maybe, destroy the screen structure.
 // ...
 
-// Show display name.
+// Show display name
     if ((void*) display->display_name != NULL)
     {
         // #bugbug: string size?
-        printf("Closing the %s display\n", display->display_name );
+        printf("Closing the %s display\n", display->display_name);
     }
 
 // #todo
@@ -4316,13 +4291,11 @@ struct gws_display_d *gws_get_current_display(void)
 {
     if ((void*) libgws_disp == NULL)
         return NULL;
-
     if (libgws_disp->used != TRUE)
         return NULL;
-
-    if (libgws_disp->magic != 1234)
+    if (libgws_disp->magic != 1234){
         return NULL;
-
+    }
     return (struct gws_display_d *) libgws_disp;
 }
 
