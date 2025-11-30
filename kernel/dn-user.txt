@@ -1,0 +1,19 @@
+Design note for user input/output path.
+Basically: Keyboard, mouse and display.
+
+===================================================
+This represents the journey from the user intention to the task management.
+ User <--> Devices <--> [ I/O Manager <--> User proxy <--> Task Manager ]
+
+===================================================
+ In Gramado, what is the path for i/o?
+
+Keyboard and Mouse:
+  1 - core/arch/x86_64/ints/ for IRQ handler
+  2 - res/dev/chardev/i8042/ for device driver.
+  3 - wink/evi/ibroker.c for input redirection.
+
+Display:
+  res/dev/chardev/console for kernel virtual console.
+  res/dev/chardev/display for video memory support.
+  wink/evi/obroker.c for output redirection.
