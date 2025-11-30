@@ -16,8 +16,9 @@
 // libgws - The client-side library.
 #include <gws.h>
 
-
 #include "menuapp.h"
+
+struct gws_display_d *Display;
 
 // Network ports
 #define PORTS_WS  4040
@@ -420,15 +421,34 @@ static int __initialize_connection(void)
 
 int main(int argc, char *argv[])
 {
+    const char *display_name_string = "display:name.0";
     int client_fd=-1;
 
     //printf("MENUAPP.BIN: Hello\n");
 
+/*
     client_fd = (int) __initialize_connection();
     if (client_fd<0){
         printf("on connection\n");
         return EXIT_FAILURE;
     }
+*/
+
+// ============================
+// Open display.
+// IN: hostname:number.screen_number
+    Display = (struct gws_display_d *) gws_open_display(display_name_string);
+    if ((void*) Display == NULL){
+        printf("menuapp.bin: Display\n");
+        goto fail;
+    }
+// Get client socket.
+    client_fd = (int) Display->fd;
+    if (client_fd <= 0){
+        printf("menuapp.bin: fd\n");
+        goto fail;
+    }
+
 
 //
 // Create main window
@@ -596,4 +616,8 @@ int main(int argc, char *argv[])
 // Done
     printf("menuapp.bin: Test done\n");
     return EXIT_SUCCESS;
+
+fail:
+    printf("menuapp.bin: fail\n");
+    return EXIT_FAILURE;
 }

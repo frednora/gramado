@@ -58,6 +58,7 @@
 // libgws - The client-side library.
 #include <gws.h>
 
+struct gws_display_d *Display;
 
 // network ports.
 #define PORTS_WS  4040
@@ -676,6 +677,8 @@ int main(int argc, char *argv[])
 // #test
 // Testing floating point.
 
+    const char *display_name_string = "display:name.0";
+
 // #config
 
     int ShowCube = FALSE;
@@ -717,6 +720,7 @@ int main(int argc, char *argv[])
     //    sc80(897,0,0,0);
     //}
 
+/*
 //================================
 // Connection.
 // Only connect. Nothing more.
@@ -727,13 +731,30 @@ int main(int argc, char *argv[])
         printf         ("cmdline: __initialization fail\n");
         exit(1);
     }
+//========================================
+*/
 
-// #debug
+// ============================
+// Open display.
+// IN: hostname:number.screen_number
+    Display = (struct gws_display_d *) gws_open_display(display_name_string);
+    if ((void*) Display == NULL){
+        printf("cmdline.bin: Display\n");
+        goto fail;
+    }
+// Get client socket.
+    client_fd = (int) Display->fd;
+    if (client_fd <= 0){
+        printf("cmdline.bin: fd\n");
+        goto fail;
+    }
+
+
+    // #debug
     //printf(":: Entering CMDLINE.BIN pid{%d} fd{%d}\n",
         //getpid(), client_fd);
     //while(1){}
 
-//========================================
 
     /*
     char buf[32];
@@ -1189,6 +1210,9 @@ int main(int argc, char *argv[])
     gws_debug_print ("cmdline: bye :) \n");
     exit(0);
     
+    return 0;
+fail:
+    printf("cmdline.bin: fail\n");
     return 0;
 }
 

@@ -39,6 +39,7 @@
         "input.h": "c",
         "user.h": "c",
         "terminal.h": "c",
-        "limits": "c"
+        "limits": "c",
+        "compiler.h": "c"
     }
 }

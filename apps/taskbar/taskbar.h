@@ -6,6 +6,8 @@
 
 #include "config.h"
 
+extern struct gws_display_d *Display;
+
 struct icon_info_d
 {
 // The offset in the taskbar.

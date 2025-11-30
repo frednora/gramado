@@ -17,6 +17,9 @@
 
 #include "include/terminal.h"
 
+
+struct gws_display_d *Display;
+
 // In DE/
 const char *child_image_name = "#pubsh.bin";
 
@@ -3657,12 +3660,16 @@ int terminal_init(unsigned short flags)
 {
 // Called by main() in main.c
 
+    const char *display_name_string = "display:name.0";
+
+/*
 // Socket address
     struct sockaddr_in  addr_in;
     addr_in.sin_family = AF_INET;
     addr_in.sin_port = PORTS_WS;
     addr_in.sin_addr.s_addr = IP(127,0,0,1);    //ok
     //addr_in.sin_addr.s_addr = IP(127,0,0,9);  //fail
+*/
 
     int client_fd = -1;
     unsigned long w=0;
@@ -3677,6 +3684,7 @@ int terminal_init(unsigned short flags)
     w = gws_get_system_metrics(1);
     h = gws_get_system_metrics(2);
 
+/*
 // --------------
 // Create the socket and save the fd into the terminal structure.
     //client_fd = (int) socket( AF_INET, SOCK_STREAM, 0 );
@@ -3687,6 +3695,7 @@ int terminal_init(unsigned short flags)
        goto fail;
     }
     Terminal.client_fd = (int) client_fd;
+*/
 
     //...
 
@@ -3701,13 +3710,11 @@ int terminal_init(unsigned short flags)
 // então o servidor escreverá em nosso arquivo.
     //printf ("terminal: Connecting to ws via inet ...\n");
 
+/*
     int con_status = -1;
-
     while (1){
-
         con_status = 
             (int) connect(client_fd, (void *) &addr_in, sizeof(addr_in));
-
         if (con_status < 0){
             debug_print ("terminal: Connection Failed\n");
             printf      ("terminal: Connection Failed\n");
@@ -3720,6 +3727,24 @@ int terminal_init(unsigned short flags)
             break; 
         };
     };
+*/
+
+// ============================
+// Open display.
+// IN: hostname:number.screen_number
+    Display = (struct gws_display_d *) gws_open_display(display_name_string);
+    if ((void*) Display == NULL){
+        printf("pubterm.bin: Display\n");
+        goto fail;
+    }
+// Get client socket.
+    client_fd = (int) Display->fd;
+    if (client_fd <= 0){
+        printf("pubterm.bin: fd\n");
+        goto fail;
+    }
+
+    Terminal.client_fd = (int) client_fd;
 
 // Windows: it's global now.
     //int main_window = 0;

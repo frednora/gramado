@@ -30,3 +30,5 @@
 // Client-side library.
 #include <gws.h>
 
+extern struct gws_display_d *Display;
+

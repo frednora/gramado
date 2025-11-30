@@ -28,5 +28,7 @@
 #include "packet.h"
 #include "term0.h"
 
+extern struct gws_display_d *Display;
+
 int terminal_init(unsigned short flags);
 

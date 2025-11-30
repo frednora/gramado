@@ -22,6 +22,9 @@
 // Client-side library.
 #include <gws.h>
 
+
+struct gws_display_d *Display;
+
 #define IP(a, b, c, d) \
     (a << 24 | b << 16 | c << 8 | d)
 
@@ -3726,6 +3729,9 @@ int terminal_init(unsigned short flags)
 {
 // Called by main() in main.c
 
+    const char *display_name_string = "display:name.0";
+
+/*
 // -------------------------
     struct sockaddr_in addr_in;
     addr_in.sin_family = AF_INET;
@@ -3733,6 +3739,7 @@ int terminal_init(unsigned short flags)
     //addr_in.sin_addr.s_addr = IP(127,0,0,9);  //fail
     addr_in.sin_port = __PORTS_DISPLAY_SERVER;
 // -------------------------
+*/
 
     int client_fd = -1;
     unsigned long w=0;
@@ -3749,6 +3756,7 @@ int terminal_init(unsigned short flags)
     h = gws_get_system_metrics(2);
 
 
+/*
 // Socket
 // Create the socket and save the fd into the terminal structure.
     //client_fd = (int) socket( AF_INET, SOCK_STREAM, 0 );
@@ -3760,6 +3768,7 @@ int terminal_init(unsigned short flags)
        exit(1);
     }
     Terminal.client_fd = (int) client_fd;
+*/
 
     //...
 
@@ -3774,8 +3783,8 @@ int terminal_init(unsigned short flags)
 // então o servidor escreverá em nosso arquivo.
     //printf ("terminal: Connecting to ws via inet ...\n");
 
+/*
     int con_status = -1;
-
     while (1){
 
         con_status = 
@@ -3798,6 +3807,24 @@ int terminal_init(unsigned short flags)
             break; 
         };
     };
+*/
+
+// ============================
+// Open display.
+// IN: hostname:number.screen_number
+    Display = (struct gws_display_d *) gws_open_display(display_name_string);
+    if ((void*) Display == NULL){
+        printf("terminal.bin: Display\n");
+        goto fail;
+    }
+// Get client socket.
+    client_fd = (int) Display->fd;
+    if (client_fd <= 0){
+        printf("terminal.bin: fd\n");
+        goto fail;
+    }
+
+    Terminal.client_fd = (int) client_fd;
 
 // Windows: it's global now.
     //int main_window = 0;

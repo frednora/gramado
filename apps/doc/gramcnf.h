@@ -25,6 +25,5 @@
 #include "tree.h" 
 #include "compiler.h" 
 
-
-
+extern struct gws_display_d *Display;
 

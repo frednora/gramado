@@ -37,6 +37,10 @@ struct gws_display_d
     //char *bufptr;  //Output buffer index pointer. 
     //char *bufmax;  //Output buffer maximum+1 address. 
 
+// The message buffer.
+    char packet[512];
+    //unsigned char packet[512];  // Use 'unsigned' instead?
+
 //
 // Screen support.
 //
@@ -58,8 +62,7 @@ struct gws_display_d
 // The current display
 //
 
-//struct gws_display_d *libgwsCurrentDisplay;
-extern struct gws_display_d *libgwsCurrentDisplay;
+extern struct gws_display_d *libgws_disp;
 
 // ================
 

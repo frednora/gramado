@@ -18,6 +18,8 @@
 
 #include "launch.h"
 
+struct gws_display_d *Display;
+
 // Network ports
 #define PORTS_WS  4040
 #define PORTS_NS  4041
@@ -417,15 +419,34 @@ static int __initialize_connection(void)
 
 int main(int argc, char *argv[])
 {
+    const char *display_name_string = "display:name.0";
     int client_fd=-1;
 
     //printf("launch.bin: Hello\n");
 
+/*
     client_fd = (int) __initialize_connection();
     if (client_fd<0){
         printf("on connection\n");
         return EXIT_FAILURE;
     }
+*/
+
+// ============================
+// Open display.
+// IN: hostname:number.screen_number
+    Display = (struct gws_display_d *) gws_open_display(display_name_string);
+    if ((void*) Display == NULL){
+        printf("launch.bin: Display\n");
+        goto fail;
+    }
+// Get client socket.
+    client_fd = (int) Display->fd;
+    if (client_fd <= 0){
+        printf("launch.bin: fd\n");
+        goto fail;
+    }
+
 
 //
 // Create main window
@@ -592,8 +613,11 @@ int main(int argc, char *argv[])
         }
     };
 
-
 // Done
     printf("launch.bin: Test done\n");
     return EXIT_SUCCESS;
+
+fail:
+    printf("launch.bin: fail\n");
+    return EXIT_FAILURE;
 }

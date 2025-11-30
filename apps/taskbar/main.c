@@ -71,6 +71,8 @@
 #define MYGREEN  0x0b6623
 //...
 
+struct gws_display_d *Display;
+
 // #bugbug
 // The display server doesn't know the value we're setting here.
 // So We need to synchronize the value here and the value 
@@ -1099,6 +1101,8 @@ int main(int argc, char *argv[])
 // #test
 // Testing floating point.
 
+    const char *display_name_string = "display:name.0";
+
     /*
     // #debug: Let's crash this application
     int *pf_ptr = NULL;
@@ -1167,12 +1171,32 @@ int main(int argc, char *argv[])
 // Connection
 // Only connect. Nothing more.
 // Create socket and call connect().
+/*
     client_fd = (int) __initialize_connection();
     if (client_fd < 0){
         gws_debug_print("taskbar.bin: __initialize_connection fail\n");
         printf         ("taskbar.bin: __initialize_connection fail\n");
         exit(1);
     }
+*/
+// ============================
+// Open display.
+// IN: hostname:number.screen_number
+    Display = (struct gws_display_d *) gws_open_display(display_name_string);
+    if ((void*) Display == NULL){
+        printf("taskbar.bin: Display\n");
+        exit(1);
+        //goto fail;
+    }
+// Get client socket.
+    client_fd = (int) Display->fd;
+    if (client_fd <= 0){
+        printf("taskbar.bin: fd\n");
+        exit(1);
+        //goto fail;
+    }
+
+
 
 // #debug
     //printf(":: Entering taskbar.bin pid{%d} fd{%d}\n",

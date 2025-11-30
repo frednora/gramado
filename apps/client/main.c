@@ -41,6 +41,8 @@
 // libgws - The client-side library.
 #include <gws.h>
 
+struct gws_display_d *Display;
+
 // Ports
 #define PORTS_WS  4040
 #define PORTS_NS  4041
@@ -105,6 +107,8 @@ int main(int argc, char *argv[])
 // This is a program to setup the display server.
 // ps: The display server need to be is already running.
 
+    const char *display_name_string = "display:name.0";
+
 // #todo
 // We need to grab the parameters,
 // and send messages to the display server 
@@ -130,8 +134,8 @@ int main(int argc, char *argv[])
     }
 */
 
-//================================
-   
+/*
+//================================  
 // Connection.
 // Trying to connect with the window server.
 // Only connect. Nothing more.
@@ -145,8 +149,24 @@ int main(int argc, char *argv[])
         printf         ("gws.bin: Initialization fail\n");
         exit(1);
     }
-
 //========================================
+*/
+
+// ============================
+// Open display.
+// IN: hostname:number.screen_number
+    Display = (struct gws_display_d *) gws_open_display(display_name_string);
+    if ((void*) Display == NULL){
+        printf("client.bin: Display\n");
+        goto fail;
+    }
+// Get client socket.
+    client_fd = (int) Display->fd;
+    if (client_fd <= 0){
+        printf("client.bin: fd\n");
+        goto fail;
+    }
+
 
 //
 // Setup window server based on flags.
@@ -188,6 +208,10 @@ int main(int argc, char *argv[])
     gws_debug_print("gws: bye :)\n");
     printf         ("gws: bye :)\n");
 
+    return 0;
+
+fail:
+    printf ("gws: fail\n");
     return 0;
 }
 

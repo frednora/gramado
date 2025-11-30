@@ -19,6 +19,9 @@
 // The client-side library.
 #include <gws.h>
 
+
+struct gws_display_d *Display;
+
 // Network ports
 #define PORTS_DS  4040  // Display server
 //#define PORTS_NS  4041
@@ -590,12 +593,14 @@ static int do_event_loop(int fd)
 }
 
 
-int main ( int argc, char *argv[] )
+int main(int argc, char *argv[])
 {
+    const char *display_name_string = "display:name.0";
 
 //test
     // doc_viewer(argc,argv);
 
+/*
 // -------------------------------------
 // Connect to the display server at 127.0.0.1:4040
     struct sockaddr_in  addr_in;
@@ -603,6 +608,7 @@ int main ( int argc, char *argv[] )
     addr_in.sin_addr.s_addr = IP(127,0,0,1);
     addr_in.sin_port = PORTS_DS;   
 // -------------------------------------
+*/
 
     int client_fd = -1;
 
@@ -617,26 +623,44 @@ int main ( int argc, char *argv[] )
         exit(1);
     }
 
+/*
 // Create the socket for the client.
-
     //client_fd = socket( AF_INET, SOCK_STREAM, 0 );
     client_fd = socket( AF_INET, SOCK_RAW, 0 );
-    if (client_fd<0)
-    {
+    if (client_fd<0){
        printf ("doc: Couldn't create socket\n");
        exit(1);
     }
+*/
 
-// Connect to the server.
-
+/*
+// Connect to the server
     while (TRUE){
         if (connect(client_fd, (void *) &addr_in, sizeof(addr_in)) < 0){ 
             debug_print("doc: Connection Failed\n"); 
             printf     ("doc: Connection Failed\n"); 
         }else{ break; }; 
     };
+*/
+
+// ============================
+// Open display.
+// IN: hostname:number.screen_number
+    Display = (struct gws_display_d *) gws_open_display(display_name_string);
+    if ((void*) Display == NULL){
+        printf("doc.bin: Display\n");
+        goto fail;
+    }
+// Get client socket.
+    client_fd = (int) Display->fd;
+    if (client_fd <= 0){
+        printf("doc.bin: fd\n");
+        goto fail;
+    }
 
 // ==============================================
+
+
 
 // Internal window list.
     int main_window=0;
@@ -820,16 +844,13 @@ int main ( int argc, char *argv[] )
 
     return (int) do_event_loop(client_fd);
     //return 0;
+
+fail:
+    printf("doc: fail\n");
+    return 0;
 }
 
-
 //
-// End.
+// End
 //
-
-
-
-
-
-
 
