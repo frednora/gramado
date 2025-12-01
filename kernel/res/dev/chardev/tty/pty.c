@@ -23,6 +23,58 @@ Minimal working path
  even before you implement canonical editing or job control.
 */
 
+/*
+Virtual Terminal (VT) → Master side
+This is the kernel‑side endpoint. 
+It’s what your console and input broker feed into. 
+When you type on the keyboard, the broker pushes bytes into the master’s queues.
+
+POSIX Shell (or any child process) → Slave side
+This is the userland endpoint. 
+When the master is linked to the slave, the kernel copies or 
+redirects the master’s output queue into the slave’s input queue.
+*/
+
+/*
+Flow in your architecture
+
+User types in VT (GUI app)
+ VT captures the keystroke event.
+ VT writes the byte into the master PTY.
+
+Master PTY → Slave PTY
+ The kernel links master to slave (tty->link).
+ Bytes written into master’s output queue are copied into slave’s input queue (tty_copy_output_buffer).
+ The shell (slave) can read() and see the input.
+
+Shell writes output
+ Shell writes to its slave TTY.
+ Kernel forwards slave’s output back to master.
+ VT (master) receives the bytes and renders them in the GUI window.
+*/
+
+/*
+If you want to make this concrete, you can:
+ Treat your VT GUI app as a “userland master PTY driver.” It opens /dev/ptyM0 (for example) and sends/receives bytes.
+ The kernel links that master to a slave /dev/ttyS0.
+ The shell attaches to /dev/ttyS0 and runs normally.
+ The kernel handles the redirection between them.
+*/
+
+/*
+Device nodes:
+Master PTY: expose something like /dev/ptyM0, /dev/ptyM1… (character devices).
+Slave PTY:  expose /dev/ttyS0, /dev/ttyS1… (character devices).
+
+ptyM0 (master): exposed for the terminal emulator (VT) to control the session.
+ttyS0 (slave): exposed for the child process (shell) to use as its terminal.
+
+Ah the slave intarects with its device file that represents a 
+virtual terminal, /dev/ttyS0. Well in this case this is the target 
+for printf data ... and the kernel will redirect it to the master and 
+the vt will display the data
+*/
+
 #include <kernel.h>
 
 struct pty_info_d *PTYInfo;

@@ -443,6 +443,7 @@ __tty_read (
     int nr );
 
 int __tty_read2(struct tty_d *tty, char *buffer, int nr);
+int __tty_read3(struct tty_d *tty, char *buffer, int nr);
 
 // Write into the raw queue.
 int 
@@ -453,6 +454,11 @@ __tty_write (
 
 // Write into the output queue.
 int __tty_write2(struct tty_d *tty, char *buffer, int nr);
+
+int __tty_write3(struct tty_d *tty, char *buffer, int nr);
+
+int __tty_read_mode(struct tty_d *tty, char *buffer, int nr, int mode);
+int __tty_write_mode(struct tty_d *tty, char *buffer, int nr, int mode);
 
 int 
 tty_read ( 

@@ -1,6 +1,14 @@
 // tty.c
-// Kernsl-side support for TTYs.
+// Kernel-side support for TTYs.
 // Created by Fred Nora.
+
+// What Canonical Mode Means:
+// Raw mode: 
+//     Every keystroke is delivered immediately to userland.
+// Canonical mode: 
+//     Input is line-buffered. The user types, 
+// edits with backspace, and only when they press Enter (\n) 
+// the line is delivered to the program.
 
 #include <kernel.h>  
 
@@ -51,14 +59,15 @@ int test_tty_copy_raw_buffer(struct tty_d *to, struct tty_d *from)
 
 void tty_flush_raw_queue(struct tty_d *tty, int console_number)
 {
+    char c=0;
+
     if (!tty || tty->magic != TTY_MAGIC)
         return;
-
     struct tty_queue *q = &tty->raw_queue;
 
     while (q->tail != q->head)
     {
-        char c = q->buf[q->tail];
+        c = q->buf[q->tail];
         q->tail = (q->tail + 1) % q->buffer_size;
         if (q->cnt > 0) 
             q->cnt--;
@@ -70,38 +79,41 @@ void tty_flush_raw_queue(struct tty_d *tty, int console_number)
 
 void tty_flush_canonical_queue(struct tty_d *tty, int console_number)
 {
-    if (!tty || tty->magic != TTY_MAGIC) return;
+    char c=0;
 
+    if (!tty || tty->magic != TTY_MAGIC)
+        return;
     struct tty_queue *q = &tty->canonical_queue;
 
     while (q->tail != q->head)
     {
-        char c = q->buf[q->tail];
+        c = q->buf[q->tail];
         q->tail = (q->tail + 1) % q->buffer_size;
         if (q->cnt > 0) q->cnt--;
 
         console_outbyte((int)c, console_number);
-    }
+    };
 }
 
 // Flush the output queue of a TTY.
 // Place this in tty.c and declare in tty.h if needed.
 void tty_flush_output_queue(struct tty_d *tty, int console_number)
 {
+    char c=0;
+
     if (!tty || tty->magic != TTY_MAGIC)
         return;
-
     struct tty_queue *q = &tty->output_queue;
 
     while (q->tail != q->head)
     {
-        char c = q->buf[q->tail];
+        c = q->buf[q->tail];
         q->tail = (q->tail + 1) % q->buffer_size;
         if (q->cnt > 0) q->cnt--;
 
         // Render the character on the console
         console_outbyte((int)c, console_number);
-    }
+    };
 }
 
 void 
@@ -109,11 +121,12 @@ tty_flush_output_queue_to_serial(
     struct tty_d *tty, 
     int port_number )
 {
+    char c=0;
     int FinalChar=0;
 
+// Validate tty pointer
     if (!tty || tty->magic != TTY_MAGIC)
         return;
-
 // Validate port number
     if ( port_number != COM1_PORT && 
          port_number != COM2_PORT &&
@@ -127,35 +140,35 @@ tty_flush_output_queue_to_serial(
 
     while (q->tail != q->head)
     {
-        char c = q->buf[q->tail];
+        c = q->buf[q->tail];
         q->tail = (q->tail + 1) % q->buffer_size;
         if (q->cnt > 0) 
             q->cnt--;
 
         FinalChar = (int) (c & 0xFF);
         //serial_print(port_number,(char)FinalChar);
-        serial_printk("%c",c); // Only on port 0.
-    }
+        serial_printk("%c",c);  // Only on port 0
+    };
 }
 
-void tty_flush_output_queue_to_stdin( struct tty_d *tty)
+void tty_flush_output_queue_to_stdin(struct tty_d *tty)
 {
+    char c=0;
     int FinalChar=0;
 
     if (!tty || tty->magic != TTY_MAGIC)
         return;
-
     struct tty_queue *q = &tty->output_queue;
 
     while (q->tail != q->head)
     {
-        char c = q->buf[q->tail];
+        c = q->buf[q->tail];
         q->tail = (q->tail + 1) % q->buffer_size;
         if (q->cnt > 0) q->cnt--;
 
         FinalChar = (int) (c & 0xFF);
         kstdio_feed_stdin((int) FinalChar);
-    }
+    };
 }
 
 /*
@@ -167,7 +180,7 @@ Handles four cases:
 */
 void tty_flush_output_queue_ex(struct tty_d *tty) 
 {
-    struct tty_d *link; // Redirection for pty master.
+    struct tty_d *link;  // Redirection for pty master.
 
     if (!tty || tty->magic != TTY_MAGIC)
         return;
@@ -201,6 +214,7 @@ void tty_flush_output_queue_ex(struct tty_d *tty)
     }
 }
 
+// Copy raw queue from tty_from to tty_to.
 int 
 tty_copy_raw_buffer( 
     struct tty_d *tty_to, 
@@ -220,15 +234,19 @@ tty_copy_raw_buffer(
     if (tty_from->magic != 1234)
         goto fail;
 
-// Copy
-    for (i=0; i<TTY_BUF_SIZE; i++){
-        tty_to->raw_queue.buf[i] = (char) tty_from->raw_queue.buf[i]; 
+// Copy raw queue from tty_from to tty_to.
+    for (i=0; i<TTY_BUF_SIZE; i++)
+    {
+        tty_to->raw_queue.buf[i] = 
+            (char) tty_from->raw_queue.buf[i]; 
     };
     return (int) i;
+
 fail:
     return (int) -1;
 }
 
+// Copy output queue from tty_from to tty_to.
 int 
 tty_copy_output_buffer( 
     struct tty_d *tty_to, 
@@ -248,7 +266,7 @@ tty_copy_output_buffer(
     if (tty_from->magic != 1234)
         goto fail;
 
-// Copy
+// Copy output queue from tty_from to tty_to.
     for (i=0; i<TTY_BUF_SIZE; i++)
     {
         tty_to->output_queue.buf[i] = 
@@ -263,14 +281,18 @@ fail:
 // Returns the byte (0–255) or -1 if empty.
 int tty_queue_getchar(struct tty_queue *q)
 {
-    if (!q)
-        return (int) -1;
+    char c=0;
 
+// Invalid
+    if (!q){
+        return (int) -1;
+    }
+// Empty queue
     if (q->head == q->tail) {
-        return (int) -1; // queue empty
+        return (int) -1;
     }
 
-    char c = q->buf[q->tail];
+    c = q->buf[q->tail];
     q->tail = (q->tail + 1) % q->buffer_size;
     q->cnt--;
     return (int)(unsigned char)c;
@@ -310,7 +332,6 @@ fail:
     return (int) -1;
 }
 
-
 /*
  * __tty_read:
  *     Read n bytes from a tty. raw buffer.
@@ -320,7 +341,6 @@ fail:
  *     nr     = How many bytes.
  */
 // Called by tty_read.
-
 // Read from the raw queue.
 int 
 __tty_read ( 
@@ -332,6 +352,7 @@ __tty_read (
     char Ldata[TTY_BUF_SIZE];
     char c=0;
     char *b;
+    int rbytes=0;
 
     b = buffer;
 
@@ -366,16 +387,15 @@ __tty_read (
 // então o usuário receberá uma fila somente depois que ele digitar
 // [enter]
 // Get Ldata from the queue.
-// Isso tem o mesmo tamanho
-// da fila de tty.
+// Isso tem o mesmo tamanho da fila de tty.
 
-    int rbytes = nr;
+    rbytes = nr;
+
+// Limits
     if (rbytes <= 0){
         return 0;
     }
-
-// não se pode ler mais que o limite.
-    if (rbytes>TTY_BUF_SIZE){
+    if (rbytes > TTY_BUF_SIZE){
         rbytes=TTY_BUF_SIZE;
     }
 
@@ -415,7 +435,6 @@ __tty_read (
         printk("__tty_read: i <= 0\n");
         return 0;  // 0 byes lidos.
     }
-
     if (i > TTY_BUF_SIZE){
         i = TTY_BUF_SIZE;
     }
@@ -433,7 +452,7 @@ __tty_read (
     printk("TAIL %d\n",tty->raw_queue.tail);
 
 // Retornamos a quantidade de bytes 
-//  que conseguimos ler da buffer raw da tty.
+// que conseguimos ler da buffer raw da tty.
     return (int) i;
 
 fail:
@@ -443,29 +462,56 @@ fail:
 // Write into the output queue.
 int __tty_read2(struct tty_d *tty, char *buffer, int nr)
 {
+    int read_count=0;
+    int c=0;
+
     if (!tty || tty->magic != TTY_MAGIC) 
         return -1;
     if (!buffer || nr <= 0) 
         return -1;
 
-    int read_count = 0;
-
     while (read_count < nr) 
     {
         // Get one char from the output queue
-        int c = tty_queue_getchar(&tty->output_queue);
-
+        c = tty_queue_getchar(&tty->output_queue);
         if (c < 0) {
             // No more chars available in the queue
             break;
         }
-
         buffer[read_count] = (char)c;
         read_count++;
     }
 
     //#debug
     //printk("__tty_read2: [DONE] %d/%d bytes read\n", read_count, nr);
+
+    return (int) read_count;
+}
+
+// Using canonical or raw modes.
+int __tty_read3(struct tty_d *tty, char *buffer, int nr)
+{
+    if (!tty || tty->magic != TTY_MAGIC) return -1;
+    if (!buffer || nr <= 0) return -1;
+
+    int read_count = 0;
+
+    if (tty->termios.c_lflag & ICANON) {
+        // Canonical mode: wait until newline is present
+        while (read_count < nr) {
+            int c = tty_queue_getchar(&tty->canonical_queue);
+            if (c < 0) break;  // queue empty
+            buffer[read_count++] = (char)c;
+            if (c == '\n') break;  // end of line
+        }
+    } else {
+        // Raw mode: return immediately
+        while (read_count < nr) {
+            int c = tty_queue_getchar(&tty->raw_queue);
+            if (c < 0) break;
+            buffer[read_count++] = (char)c;
+        }
+    }
 
     return read_count;
 }
@@ -625,12 +671,13 @@ fail:
 // Write into the output queue
 int __tty_write2(struct tty_d *tty, char *buffer, int nr)
 {
+    int written=0;
+
     if (!tty || tty->magic != TTY_MAGIC) 
         return -1;
     if (!buffer || nr <= 0) 
         return -1;
 
-    int written = 0;
     while (written < nr) 
     {
         if (tty_queue_putchar(&tty->output_queue, buffer[written]) < 0) 
@@ -648,8 +695,96 @@ int __tty_write2(struct tty_d *tty, char *buffer, int nr)
     //printk("__tty_write: [DONE] %d/%d bytes written\n", written, nr);
 
     //tty_flush_output_queue_ex(tty);
+    return (int) written;
+}
+
+// Using canonical or raw modes.
+int __tty_write3(struct tty_d *tty, char *buffer, int nr)
+{
+    if (!tty || tty->magic != TTY_MAGIC) return -1;
+    if (!buffer || nr <= 0) return -1;
+
+    int written = 0;
+    while (written < nr) {
+        char c = buffer[written];
+
+        if (tty->termios.c_lflag & ICANON) {
+            // Canonical mode
+            if (c == '\n') {
+                tty_queue_putchar(&tty->canonical_queue, c);
+                // Deliver the line (flush to output or mark ready)
+                tty_flush_output_queue_ex(tty);
+            } else if (c == tty->termios.c_cc[VERASE]) {
+                // Handle backspace: remove last char if any
+                if (tty->canonical_queue.cnt > 0) {
+                    tty->canonical_queue.head =
+                        (tty->canonical_queue.head - 1 + tty->canonical_queue.buffer_size) %
+                        tty->canonical_queue.buffer_size;
+                    tty->canonical_queue.cnt--;
+                }
+            } else {
+                tty_queue_putchar(&tty->canonical_queue, c);
+            }
+        } else {
+            // Raw mode
+            tty_queue_putchar(&tty->raw_queue, c);
+        }
+
+        written++;
+    }
     return written;
 }
+
+int __tty_read_mode(struct tty_d *tty, char *buffer, int nr, int mode)
+{
+    if (!tty || tty->magic != TTY_MAGIC) return -1;
+    if (!buffer || nr <= 0) return -1;
+
+    int read_count = 0;
+    struct tty_queue *q = (mode == ICANON) ? &tty->canonical_queue : &tty->raw_queue;
+
+    while (read_count < nr) {
+        int c = tty_queue_getchar(q);
+        if (c < 0) break;
+        buffer[read_count++] = (char)c;
+        if ((mode == ICANON) && c == '\n') break;
+    }
+    return read_count;
+}
+
+int __tty_write_mode(struct tty_d *tty, char *buffer, int nr, int mode)
+{
+    if (!tty || tty->magic != TTY_MAGIC) return -1;
+    if (!buffer || nr <= 0) return -1;
+
+    int written = 0;
+    struct tty_queue *q = (mode == ICANON) ? &tty->canonical_queue : &tty->raw_queue;
+
+    while (written < nr) {
+        char c = buffer[written];
+
+        if (mode == ICANON) {
+            if (c == tty->termios.c_cc[VERASE]) {
+                // backspace
+                if (q->cnt > 0) {
+                    q->head = (q->head - 1 + q->buffer_size) % q->buffer_size;
+                    q->cnt--;
+                }
+            } else {
+                tty_queue_putchar(q, c);
+                if (c == '\n') {
+                    // deliver line
+                    tty_flush_output_queue_ex(tty);
+                }
+            }
+        } else {
+            tty_queue_putchar(q, c);
+        }
+        written++;
+    }
+    return written;
+}
+
 
 
 /*
@@ -777,16 +912,15 @@ tty_write (
     file *f;
 
 // Parameters
-    if ( fd < 0 || fd > 31 ){
+    if (fd < 0 || fd > 31){
         return (int) (-EBADF);
     }
-//#todo
-    //if( (void*) buffer == NULL )
-    //{
-    //    return (int) (-EINVAL);
-    //}
-// #todo: 
-// 'n'
+    if ((void*) buffer == NULL){
+        return (int) (-EINVAL);
+    }
+// #todo: 'n'
+    //if (n<0)
+        //return (int) (-EINVAL);
 
 // process
 // vamos pegar o ponteiro do processo
@@ -853,10 +987,13 @@ sys_tty_write (
     char *buffer, 
     int n )
 {
-    if (fd < 0)
-        goto fail;
+    if (fd < 0 || fd > 31){
+        return (int) (-EBADF);
+    }
     if ((void*)buffer == NULL)
         goto fail;
+    //if (n < 0)
+        //goto fail;
     return (int) tty_write(fd,buffer,n);
 fail:
     return (int) -1;
@@ -882,7 +1019,6 @@ tty_change_charset(
     return 0;
 }
 */
-
 
 /*
  //#todo

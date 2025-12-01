@@ -1583,6 +1583,8 @@ fail:
 // que lida com o evento. Mas o plano é apenas
 // colocar os eventos de teclado em um arquivo
 // que poderá ser aberto e lido pelo window server.
+// In wmRawKeyEvent, if not in the embedded shell and 
+// it’s a regular keydown, the ASCII byte is fed to stdin.
 // IN:
 // target thread, raw byte 
 
@@ -2143,6 +2145,9 @@ done:
                 // It needs to redirect if a tty is connected to another.
                 if (InputTargets.target_tty == TRUE)
                 {
+                    //tty_queue_putchar(&target_tty->raw_queue, ascii_char);
+                    //tty_flush_output_queue_ex(target_tty);
+
                     // Put into the output queue
                     //tty_queue_putchar( 
                         //&CONSOLE_TTYS[fg_console].output_queue, 
