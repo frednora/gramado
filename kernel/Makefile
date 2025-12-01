@@ -25,6 +25,7 @@ linkFlags := -m elf_x86_64 \
 -s \
 -x \
 -static \
+-Map=kernel.map \
 -T core/arch/x86_64/link.ld   
 
 #

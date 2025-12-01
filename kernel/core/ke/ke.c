@@ -34,9 +34,6 @@ static unsigned long flush_fps=30;
 // See: link.ld
 static int ImportDataFromLinker = TRUE;
 
-extern unsigned long start_of_kernel_image(void);
-extern unsigned long end_of_kernel_image(void);
-
 extern unsigned long kernel_begin(void);
 extern unsigned long kernel_end(void);
 
@@ -432,9 +429,6 @@ static void __import_data_from_linker(void)
     if (ImportDataFromLinker == TRUE)
     {
         //printk("\n");
- 
-        //KernelImageSize = (start_of_kernel_image - end_of_kernel_image);
-        //printk ("Image Size %d KB \n",KernelImageSize/1024);
 
         //-------------
 
@@ -462,8 +456,7 @@ static void __import_data_from_linker(void)
 
         // Limit 1 MB
         // The kernel image is too long.
-        if ( KernelImage_Size/1024 > 1024 )
-        {
+        if ( KernelImage_Size/1024 > 1024 ){
             panic("Error 0x04: Image size\n");
         }
         

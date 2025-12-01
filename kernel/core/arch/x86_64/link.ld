@@ -1,74 +1,72 @@
 /* 
  * File: link.ld
- *     ld script to make the x86_64 kernel image.
- * History:
- *     2021 - Created by Fred Nora.
- */
-
-/* 
- See: 
- https://wiki.osdev.org/Linker_Scripts
- https://ftp.gnu.org/old-gnu/Manuals/ld-2.9.1/html_chapter/ld_3.html 
- ...
- */
-
-/*
- * 64-bit ELF format for the x86-64 architecture.
- * Base:
- *     0x30000000
- * Entry point: 
- *     0x30001000
- *     Kernel entry point in: 
- *     arch/x86_64/head_64.asm. 
+ *   Linker script to build the x86_64 kernel image.
+ *   Created by Fred Nora.
+ *
+ * Notes:
+ *   - The kernel image is loaded by the bootloader at 0x30000000.
+ *   - Execution begins at 0x30001000 (entry point in head_64.asm).
+ *   - We define symbols to mark the start/end of the whole image,
+ *     and the start/end of each section (.text, .rodata, .data, .bss).
  */
 
 OUTPUT_FORMAT("elf64-x86-64")
-ENTRY(_kernel_begin)
+
+/* Entry point symbol: execution begins here */
+ENTRY(_code_begin)
 
 SECTIONS 
 {
+    /* 
+     * Define the true load base of the kernel image.
+     * This is where the bootloader copies the binary in memory.
+     * We only place a symbol here, no section yet.
+     */
+    . = 0x30000000;
+    _kernel_begin = .;
+
+    /* 
+     * Define the start of the code section (.text).
+     * Execution begins here at 0x30001000.
+     */
     . = 0x30001000;
-    .text 0x30001000:
-    {
-        _start_of_kernel_image = .;
-        _kernel_begin = .;   
-        
-        _code_begin = .;
-        *(.head_x86_64)  *(.text) 
-        _code_end = .; 
+    .text : {
+        _code_begin   = .;          /* Start of code section (Entry point) */
+        *(.head_x86_64)             /* Early assembly startup code */
+        *(.text)                    /* All kernel C functions */
+        _code_end     = .;          /* End of code section */
     }
 
+    /* Read-only data (constants, strings) */
     . = ALIGN(4096);
-    .rodata :
-    {
+    .rodata : {
         _rodata_begin = .;
-        *(.rdata)  *(.rodata) 
-        _rodata_end = .;
+        *(.rdata)
+        *(.rodata)
+        _rodata_end   = .;
     }
 
+    /* Initialized global/static variables */
     . = ALIGN(4096);
-    .data :  
-    { 
+    .data : {
         _data_begin = .;
-        *(.data) 
-        _data_end = .; 
+        *(.data)
+        _data_end   = .;
     }
     
+    /* Uninitialized globals (zeroed at boot) */
     . = ALIGN(4096);
-    .bss : 
-    { 
-        _bss_begin = .; 
-        *(.bss)  *(COMMON)
-        _bss_end = .; 
+    .bss : {
+        _bss_begin = .;
+        *(.bss)
+        *(COMMON)
+        _bss_end   = .;
     }
 
-    _kernel_end = .;
-    _end_of_kernel_image = .; 
+    /* 
+     * End of the kernel image.
+     * This marks the final address after .bss.
+     * Useful for calculating total image size.
+     */
+    _kernel_end        = .;
 }
-
-
-
-
-
-
-

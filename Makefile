@@ -423,6 +423,7 @@ clean-all: clean
 	-rm kernel/*.o
 	-rm kernel/*.BIN
 	-rm -rf kernel/KERNEL.BIN
+	-rm -rf kernel/kernel.map 
 
 # ==================
 # (3) modules/

@@ -1,0 +1,20 @@
+
+Notes on the map file generated during the compilation. (kernel.map)
+
+Merging / Common Symbols
+Shows how the linker resolved duplicate or “common” symbols across object files.
+Global variables that weren’t explicitly placed in sections.
+Useful for spotting global variables and their sizes.
+
+Discarded sections: 
+metadata sections (.note.gnu.property) that the linker threw away.
+
+Memory configuration: 
+shows the origin and length of your memory space.
+Defines the memory origin and length (from your linker script).
+
+Linker Script and Memory Map:
+Shows where each section (.text, .data, .bss, etc.) is placed in memory.
+Lists symbols and functions with their exact addresses.
+The most important part.
+
