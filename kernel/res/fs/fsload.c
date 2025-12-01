@@ -1249,9 +1249,6 @@ int fsLoadFileFromCurrentTargetDir(void)
     //    current_target_dir.name, current_target_dir.current_dir_address );
 
 //++
-    //taskswitch_lock ();
-    //scheduler_lock ();
-
 // IN: 
 // FAT address, dir address, # dir entries, name, 
 // buffer address, buffer size in bytes.
@@ -1263,8 +1260,6 @@ int fsLoadFileFromCurrentTargetDir(void)
                   (const char *) current_target_dir.name,                  // file name 
                   (unsigned long)   current_target_dir.current_dir_address,  // file address
                   (unsigned long) xxxTempFileSize );                                    // #bugbug buffer limit 4KB.
-    //scheduler_unlock ();
-    //taskswitch_unlock ();
 //--
 
     //#debug

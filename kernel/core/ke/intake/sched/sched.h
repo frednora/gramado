@@ -19,8 +19,6 @@ extern struct thread_d  *ev_responder_thread;
 #define LOCKED    0
 #define UNLOCKED  1  
 
-extern unsigned long g_scheduler_status;
-
 /*
  * Scheduling policies
  */
@@ -35,6 +33,8 @@ struct scheduler_info_d
     int initialized;
     int policy;
     unsigned long flags;
+
+    int is_locked;
 
 //
 // rr support
@@ -109,7 +109,7 @@ void sched_cut_round(struct thread_d *last_thread);
 
 void scheduler_lock(void);
 void scheduler_unlock(void);
-unsigned long scheduler_get_status(void);
+int is_scheduler_locked(void);
 
 
 //

@@ -21,15 +21,11 @@
 // in this case, the scheduler can boost the quantum of network 
 // related tasks, not the display server or foreground thread.
 
-
 #include <kernel.h>
 
 // Scheduler main structure.
 // see: sched.h
 struct scheduler_info_d  SchedulerInfo;
-
-//Status do scheduler.
-unsigned long g_scheduler_status = LOCKED;
 
 // Normal priorities
 static struct thread_d  *p1q;  // Lower
@@ -225,18 +221,17 @@ int has_pending_event(struct thread_d *thread)
 
 // Lock scheduler
 void scheduler_lock (void){
-    g_scheduler_status = (unsigned long) LOCKED;
+    SchedulerInfo.is_locked = (int) LOCKED;
 }
 
 // Unlock scheduler
 void scheduler_unlock (void){
-    g_scheduler_status = (unsigned long) UNLOCKED;
+    SchedulerInfo.is_locked = (unsigned long) UNLOCKED;
 }
 
 // Get scheduler status
-unsigned long scheduler_get_status(void)
-{
-    return (unsigned long) g_scheduler_status;
+int is_scheduler_locked(void){
+    return (int) SchedulerInfo.is_locked;
 }
 
 // #test: (Not in use yet)
@@ -884,11 +879,11 @@ tid_t psScheduler(void)
 // #todo: 
 // Talvez haja mais casos onde não se deva trocar a tarefa.
 
-//#bugbug 
-//Porque retornamos 0 ???
-//Scheduler Status. (LOCKED, UNLOCKED).
+// #bugbug 
+// Porque retornamos 0 ???
+// Scheduler Status. (LOCKED, UNLOCKED).
 
-    if (g_scheduler_status == LOCKED){
+    if (SchedulerInfo.is_locked == LOCKED){
         debug_print ("psScheduler: Locked\n");
         goto fail;
     }

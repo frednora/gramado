@@ -4403,23 +4403,17 @@ do_write_file_to_disk (
     // Shortcuts: ! @ # $ %.
 
 //++
-// See: sci/fs/write.c
-    //taskswitch_lock ();
-    //scheduler_lock ();
-
+// See: write.c
     __ret = 
         (int) fsSaveFile ( 
-                  VOLUME1_FAT_ADDRESS, 
-                  TargetDirAddress, 
-                  NumberOfEntries,
-                  (char *) file_name,
-                  (unsigned long) file_size,
-                  (unsigned long) size_in_bytes,
-                  (char *) file_address,
-                  (char) flag );
-
-    //scheduler_unlock ();
-    //taskswitch_unlock ();
+                VOLUME1_FAT_ADDRESS, 
+                TargetDirAddress, 
+                NumberOfEntries,
+                (char *) file_name,
+                (unsigned long) file_size,
+                (unsigned long) size_in_bytes,
+                (char *) file_address,
+                (char) flag );
 //--
 
     return (int) __ret;
