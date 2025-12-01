@@ -21,36 +21,23 @@ static void __task_switch (void);
 // =============================================
 //
 
-/*
- * get_taskswitch_status:
- *     Obtem o status do mecanismo de taskswitch.
- * @todo: Mudar o nome dessa função para taskswitchGetStatus();.
- */
-//#bugbug: Mudar para int.
-unsigned long get_taskswitch_status(void)
-{
+
+// Get the taskswitch status
+unsigned long get_taskswitch_status(void){
     return (unsigned long) task_switch_status;
 }
 
-/*
- * set_taskswitch_status:
- *    Configura o status do mecanismo de task switch.
- *    Se o mecanismo de taskswitch estiver desligado 
- * não ocorrerá a mudança.
- * @todo: Mudar o nome dessa função para taskswitchSetStatus(.);
- */ 
-// #bugbug: Mudar para int.
-void set_taskswitch_status( unsigned long status )
-{
+// Set taskswitch status.
+// No thread switching if its locked.
+void set_taskswitch_status(unsigned long status){
     task_switch_status = (unsigned long) status;
 }
 
-void taskswitch_lock (void){
+void taskswitch_lock(void){
     task_switch_status = (unsigned long) LOCKED;
 }
 
-void taskswitch_unlock (void)
-{
+void taskswitch_unlock(void){
     task_switch_status = (unsigned long) UNLOCKED;
 }
 
@@ -347,9 +334,7 @@ static void __task_switch(void)
 
 // The ts needs to be in an UNLOCKED state.
 
-// Locked?
-// Taskswitch locked? 
-// Return without saving
+// Locked? Return without saving the context.
     if (task_switch_status == LOCKED){
         IncrementDispatcherCount (SELECT_CURRENT_COUNT);
         debug_print ("ts: Locked\n");

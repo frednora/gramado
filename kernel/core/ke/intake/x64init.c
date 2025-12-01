@@ -4,8 +4,9 @@
 #include <kernel.h>
 
 // Task switching support.
-extern void turn_task_switch_on (void);
-extern void x64_clear_nt_flag (void);
+// See: hw2.asm
+extern void turn_task_switch_on(void);
+extern void x64_clear_nt_flag(void);
 
 // private
 static int InitialProcessInitialized = FALSE;

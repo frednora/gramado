@@ -288,7 +288,7 @@ irq0_release:
 ; _turn_task_switch_on:
 ;     + Cria um vetor para o timer, IRQ0.
 ;     + Habilita o funcionamento do mecanismo de taskswitch.
-;       Essa função é chamada em microkernel\cpu\start.c
+; Called by I_x64ExecuteInitialProcess in x64init.c
 ;
 
 global _turn_task_switch_on
@@ -308,7 +308,6 @@ _turn_task_switch_on:
     ret
 
 
-
 ;-------------------------------------------------------------
 ; _turn_task_switch_off:
 ;     Desabilita a IRQ0 responsável por fazer o task switch.
@@ -325,7 +324,4 @@ _turn_task_switch_off:
     ;status do mecanismo de taskswitch.
     mov qword [_task_switch_status], qword 0    ;LOCKED.
     ret
-
-
-
 

@@ -786,20 +786,22 @@ setup_vectors:
 ; using 0x8E00
 ; present, dpl=0, interrupt gate
 
-; 32 - Timer.
-; Iniciamos um timer provisório, depois iniciaremos o definitivo.
-; Recreating this entry in _turn_task_switch_on() in hw2.asm.
+; 32 - Timer
+; This is a provisory handler.
+; We're gonna recreate the handler at the end of the kernel initialization 
+; by calling the worker _turn_task_switch_on in hw2.asm
+
     mov rax,  qword unhandled_irq
     mov rbx,  qword 32
     call _setup_system_interrupt_hw  ; 0x8E00
 
-; 33 - PS2 Keyboard.
-; See: unit1hw.asm
+
+; 33 - PS2 Keyboard
     mov rax,  qword _irq1
     mov rbx,  qword 33
     call _setup_system_interrupt_hw  ; 0x8E00
 
-; 40 - Clock, rtc.
+; 40 - Clock, RTC
     mov rax,  qword unhandled_irq
     mov rbx,  qword 40
     call _setup_system_interrupt_hw  ; 0x8E00
@@ -810,20 +812,18 @@ setup_vectors:
     ;call _setup_system_interrupt
     ;call _setup_system_interrupt_hw  ; 0x8E00
 
-; 44 - PS2 Mouse.
-; See: unit1hw.asm
+; 44 - PS2 Mouse
     mov rax,  qword _irq12
     mov rbx,  qword 44
     call _setup_system_interrupt_hw  ; 0x8E00
 
-; 46 - ide
+; 46 - IDE
 ; irq 14
     mov rax,  qword unhandled_irq
     mov rbx,  qword 46
     call _setup_system_interrupt_hw  ; 0x8E00
 
-
-; 47 - ide
+; 47 - IDE
 ; irq 15
     mov rax,  qword unhandled_irq
     mov rbx,  qword 47
