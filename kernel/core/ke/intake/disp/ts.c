@@ -870,22 +870,26 @@ void tsTaskSwitch(void)
 // Callback
 //
 
-// Permitindo que o assembly chame o callback.
-// Somente quando o processo interrompido for o init.
-    ws_pid = (pid_t) socket_get_gramado_port(GRAMADO_PORT_WS);
-// Se estamos na thread do window server.
-    if (current_process_pid == ws_pid)
+// see: callback.c
+// Return. No taskswitching
+// This is the moment where this routine to setup the assembly variables and 
+// do not make the taskswtiching ... 
+// so at the end of the routine it will check the flags in assembly and to the iretq
+
+
+/*
+// #suspended
+// Here we're in the middle of something 
+// with call backs.
+// We got some interrupt in the middle of a callback.
+    if (CallbackEventInfo.stage == 2)
     {
-        // Se o callback ja foi inicializado 
-        // por uma chamada do window server.
-        // see: callback.c
-        // Return. No taskswitching
-        if (ds_callback_info.ready == TRUE)
-        {
-            prepare_next_ds_callback();
-            return;
-        }
+        prepare_next_callback();
+        // Ready to iretq
+        CallbackEventInfo.stage = 3;
+        return;
     }
+*/
 
 // The task switching routine
     __task_switch();

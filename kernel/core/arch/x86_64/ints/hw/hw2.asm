@@ -61,6 +61,8 @@ extern _contextR15
 
 ; ...
 
+; Flag for the state of callback restorer
+extern _callback_restorer_done
 
 ;------------------------------------------------
 ; Start a routine in ring3.
@@ -84,6 +86,10 @@ extern _contextR15
 
 __doRing3Callback:
 
+    ;int 3
+; Restorer is not done
+    mov qword [_callback_restorer_done], 0
+
     ; Valid only for ring 3.
     mov rax, qword [_contextCS]   ; Get CPL
     and rax, 3                    ; Select 2 bits
@@ -91,14 +97,22 @@ __doRing3Callback:
     cmp rax, 3
     jne .R3Callbackfailed
 
-; Setup the stack frame.
+; Build iretq frame: SS, RSP, RFLAGS, CS, RIP
     push qword [_contextSS]   ; ss
     push qword [_contextRSP]  ; rsp
     push qword 0x3000         ; rflags interrupçoes desabilitadas.
     push qword [_contextCS]   ; cs
-; Get the RIP address.
+
+; Get the RIP address
+; Use the published address: 
+; Read from the exported ring3_callback_address; 
+; do not rely on CallbackEventInfo in assembly.
     mov rbx, qword [_ring3_callback_address]
     push rbx                  ; rip
+
+; Clear the pivot flag before iretq: Enforce one-shot delivery.
+    mov qword [_asmflagDoCallbackAfterCR3], 0
+
 ; Go to the ring3 procedure.
     iretq
 ; ------------------------------
@@ -158,10 +172,10 @@ irq0_release:
 ; Se fosse depois, então saltaríamos para outra tarefa
 ; diferente do window server e usaríamos endereços errados.
     mov rax, qword [_asmflagDoCallbackAfterCR3]
+    and  rax, 0xFFFF
 ; Callback ring3 procedure.
     cmp rax, 0x1234
     je __doRing3Callback
-
 
 ; 64bit
 ; This is a 64bit pointer to the pml4 table.

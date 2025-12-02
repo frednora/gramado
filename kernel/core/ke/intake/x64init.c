@@ -517,7 +517,6 @@ void I_x64ExecuteInitialProcess(void)
     //PROGRESS("::(3)\n");   
     //debug_print("I_x64ExecuteInitialProcess:\n");
 
-    // For real machine
     printk ("I_x64ExecuteInitialProcess:\n");
 
     // #debug
@@ -802,7 +801,7 @@ void I_x64ExecuteInitialProcess(void)
     }
 
     //PROGRESS(":: Go to ring3!\n");
-
+    printk ("GO!\n");
     //printk("go!\n");
     //while(1){}
 

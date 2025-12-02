@@ -12,8 +12,8 @@
 extern _asmflagDoCallbackAfterCR3
 ; Address
 extern _ring3_callback_address
-
-
+; Flag for the state of callback restorer
+extern _callback_restorer_done
 
 ;; ==============================================
 ;; unhandled interrupts
@@ -100,10 +100,14 @@ sw2_initialize_syscall_support:
 global _int198
 _int198:
 
+; #suspended
+    iretq
+
 ; Drop the useless stack frame.
 ; We were in the middle of the timer interrupt,
 ; so, we're gonna use the saved context to release the next thread.
 
+; Drop the software-int frame (ring3 -> ring0 transition)
     pop rax  ; rip
     pop rax  ; cs
     pop rax  ; rflags
@@ -118,8 +122,11 @@ _int198:
 ; Clear the flag and the procedure address.
 ; Desse jeito a rotina de saida não tentará
 ; chamar o callback novamente.
+
+; One-shot: ensure callback state is cleared
     mov qword [_asmflagDoCallbackAfterCR3], 0
     mov qword [_ring3_callback_address], 0
+    mov qword [_callback_restorer_done], 1
 
 ; #bugbug:
 ; Here we're using the release routine that belongs to the irq0
@@ -131,6 +138,8 @@ _int198:
 ; temos que terminal a rotina do timer e
 ; retornarmos para ring 3 com o contexto o ultimo contexto salvo.
 ; que ainda é o window server.
+
+; Resume via the common timer release path
     jmp irq0_release
 
 

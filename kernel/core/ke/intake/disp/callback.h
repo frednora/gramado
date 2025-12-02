@@ -9,54 +9,46 @@ extern unsigned long asmflagDoCallbackAfterCR3;
 //extern unsigned long asmRing3CallbackAddress;
 extern unsigned long ring3_callback_address;
 
-/*
-// #test: This is a work in progress.
-// General callback support for every process.
-struct callback_info_d
+extern unsigned long callback_restorer_done;
+
+
+// Callback event
+// Callback Go No Go moment.
+// It handles the synchronization for the next callback event.
+// It can happen for any ring 3 thread.
+// The thread needs to be in an alertable state (Waiting)
+struct callback_event_d 
 {
-// #todo
+// The structure was initialized by the kernel 
+// during the kernel initialization routine?
+    int initialized;
 
-    int initialized;  // initialized for the first time.
+// The thread that will receive the callback event.
+    tid_t target_tid;
 
-    pid_t pid;
-    tid_t tid;
-    
-    int ready;  // pronto para uso.
-    unsigned long callback_address;
-    unsigned long callback_address_saved;
+// Let's lock it untill the moment everything is ok.
+    int is_locked;
 
-    unsigned long each_n_ms;
-    unsigned long times_per_second;
+// Ready to go?
+    int ready;
+// State 0 - Initialize for the first time.
+    int stage;
+
+// Ring 3 address
+    unsigned long r3_procedure_address;
 };
-*/
-
-// #test: This is a work in progress.
-// Callback support for the display server.
-struct ds_callback_info_d
-{
-    int initialized;  // initialized for the first time.
-    
-    int ready;  // pronto para uso.
-    unsigned long callback_address;
-    unsigned long callback_address_saved;
-
-    unsigned long each_n_ms;
-    unsigned long times_per_second;
-};
-
-//extern int _callback_status;
-//extern unsigned long _callback_address;
-//extern unsigned long _callback_address_saved;
-
-extern struct ds_callback_info_d  ds_callback_info;
+extern struct callback_event_d  CallbackEventInfo;
 
 //
 // ==========================================
 //
 
 
-void setup_callback(unsigned long r3_address, unsigned long ms);
-void prepare_next_ds_callback(void);
+void setup_callback(unsigned long r3_address);
+void prepare_next_callback(void);
+
+
+int callbackReinitialize(void);
 
 //
 // # 

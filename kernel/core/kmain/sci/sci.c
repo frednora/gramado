@@ -2774,42 +2774,56 @@ void *sci2 (
 // arg2 = address
 // arg3 = pid
 // arg4 = signature
-    pid_t ws_pid = -1;
-    unsigned long r3_handler=0;
+
+// #suspended
+// We built good routines for callback support.
+// But we're not gonna use them now ...
+// Remember the restorer interrupt.
     if (number == 44000)
     {
-        // Somente o window server pode chamar esse serviço.
-        ws_pid = (pid_t) socket_get_gramado_port(GRAMADO_PORT_WS);
-        // Checando se caller foi o window server.
-        if (current_process != ws_pid){
-            panic("sci2: [44000] current_process!=ws_pid\n");
-        }
-        // PID
-        if (arg3 != ws_pid){
-            panic("sci2: [44000] Invalid PID\n");
-        }
-        // nao foi inicializado pela inicialização do kenrel.
-        if ( ds_callback_info.initialized != TRUE ){
-            panic("sci2: [44000] callback support Not initialized\n");
-        }
-        // Se ele ja esta pronto para efetuarmos o iretq
-        // é porque tem alguma coisa errada.
-        if ( ds_callback_info.ready == TRUE ){
-            panic("sci2: [44000] called again\n");
-        }
-        // Enable for the first time.
-        // Configuramos o callback em ts.c.
-        r3_handler = (unsigned long) arg2;
- 
-        //arg4: desired ms
-        if (arg4<1 || arg4>1000){
-            printk("sci2: [44000] Invalid ms\n");
-            panic ("sci2: [44000] Invalid ms\n");
-        }
-         //setup_callback( (unsigned long) r3_handler, 16 );
-        setup_callback( (unsigned long) r3_handler, arg4 );
         return NULL;
     }
+
+/*
+    if (number == 44000)
+    {
+        // A thread is setting up the next callback
+        printk("44000 service\n");
+
+        // Not initialized at kernel initialization
+        if (CallbackEventInfo.initialized != TRUE)
+            panic("sci2: [44000] Callback Not initialized\n");
+
+        // The callback event is locked for safety
+        if (CallbackEventInfo.is_locked == TRUE)
+            panic("sci2: [44000] Callback is locked\n");
+
+        // Ready? Something is wrong!
+        // If it's already ready we can't start a setup routine.
+        //if ( CallbackEventInfo.ready == TRUE )
+            //panic("sci2: [44000] Callback fail\n");
+
+        if (callback_restorer_done == 1)
+        {
+            callback_restorer_done = 0;
+            CallbackEventInfo.stage = 1;
+        }
+        // Is it waiting for syscalls?
+        if (CallbackEventInfo.stage != 1){
+            printk("Current stage: %d\n", CallbackEventInfo.stage);
+            panic("sci2: [44000] Not in Stage 1\n");
+        }
+
+        // See: callback.c
+        // IN: r3 handler
+        setup_callback((unsigned long) arg2);
+
+        // New stage: Waiting for the moment where the context is saved.
+        // see: ts.c
+        CallbackEventInfo.stage = 2;
+        return NULL;
+    }
+*/
 
 // Counter
     __default_syscall_counter++;

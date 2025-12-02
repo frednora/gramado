@@ -87,11 +87,23 @@ static int loopSTDIN(void);
 static int loopMenu(void);
 static int loopMenu_ExitGramadoOS(void);
 
-
+static void callback_handler(void);
 //
 // ==============================================================
 //
 
+static void callback_handler(void)
+{
+    printf(">>> Entered ring3 callback handler! <<<\n");
+/*
+    for (;;) {
+        asm volatile("pause");
+    }
+*/
+
+    //printf("Calling the restorer\n");
+    asm ("int $198");
+}
 
 //
 // $
@@ -420,7 +432,7 @@ static int input_compare_string(void)
     if ( strncmp(prompt,"syscall",7) == 0 )
     {
         printf ("syscall: BEFORE\n");
-        asm ("syscall");
+        asm ("syscall \n");
         printf ("syscall: AFTER\n");
         goto exit_cmp;
     }
@@ -468,6 +480,23 @@ static int input_compare_string(void)
         do_hlt();
         goto exit_cmp;
     }
+
+/*
+// #suspended
+    if ( strncmp(prompt,"callback",8) == 0 )
+    {
+        while (1)
+        {
+            sc82(
+                44000,
+                &callback_handler,
+                0,
+                0);
+        };
+        goto exit_cmp;
+    }
+*/
+
 
 /*
 // yes or no.
