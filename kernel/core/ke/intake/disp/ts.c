@@ -452,6 +452,7 @@ static void __task_switch(void)
         // we can process something before planing the next thread.
         __tsOnFinishedExecuting(CurrentThread);
 
+
         // # todo: 
         // Let's do something cool here.
         // Maybe some IPC stuff.
@@ -893,6 +894,49 @@ void tsTaskSwitch(void)
 
 // The task switching routine
     __task_switch();
+
+/*
+My plain now is: 
+The ring 3 handlers stay the same after the installation, 
+there is no reason to change it .. 
+it will be like the window procedure in Windows OS. 
+And the thread will enter into the alertable state in the moment 
+it is safe for the thread.
+*/
+
+/*
+Stable handler: 
+Once a thread installs its ring 3 handler, that address doesn’t need to change. 
+It’s like registering a window proc — the kernel knows where to deliver, and user code doesn’t keep re‑installing it.
+
+Alertable state: 
+The kernel decides when it’s safe to flip the thread into “alertable.” 
+That’s the equivalent of Windows marking a thread as ready to process APCs or messages. You avoid unsafe pivots because the scheduler only publishes callbacks at controlled points (end of task switch, right before iretq).
+
+One‑shot delivery: 
+The alertable flag is consumed when the callback fires, 
+so you don’t get duplicate deliveries. The thread can re‑arm later if it wants more callbacks.
+*/
+
+
+    if ( current_thread < 0 || 
+         current_thread >= THREAD_COUNT_MAX )
+    {
+        printk ("psTaskSwitch: current_thread %d", current_thread); 
+        die();
+    }
+    tid_t target_tid = current_thread;
+    struct thread_d *t;
+    t = (struct thread_d *) threadList[target_tid];
+    if (t->is_alertable == TRUE)
+    {
+        t->is_alertable = FALSE;  //Consume the alertable flag
+        // The flag
+        asmflagDoCallbackAfterCR3 = (unsigned long)(0x1234 & 0xFFFF);
+        // The handler
+        ring3_callback_address = (unsigned long) t->cb_r3_address;
+        t->in_progress = TRUE;
+    }
 }
 
 //

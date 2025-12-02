@@ -2775,14 +2775,6 @@ void *sci2 (
 // arg3 = pid
 // arg4 = signature
 
-// #suspended
-// We built good routines for callback support.
-// But we're not gonna use them now ...
-// Remember the restorer interrupt.
-    if (number == 44000)
-    {
-        return NULL;
-    }
 
 /*
     if (number == 44000)
@@ -2824,6 +2816,61 @@ void *sci2 (
         return NULL;
     }
 */
+
+// We built good routines for callback support.
+// But we're not gonna use them now ...
+// Remember the restorer interrupt.
+    if (number == 44000)
+    {
+        tid_t cb_target_tid = current_thread;
+        if (cb_target_tid < 0 || cb_target_tid >= THREAD_COUNT_MAX)
+            return NULL;
+        t = (struct thread_d *) threadList[cb_target_tid];
+        if ((void*) t == NULL){
+            return NULL;
+        }
+        if (t->used != TRUE){
+            return NULL;
+        }
+        if (t->magic != 1234){
+            return NULL;
+        }
+        // Install the r3 procedure
+        t->cb_r3_address = (unsigned long) arg2;
+        printk("44000: Callback handler installed\n");
+        return NULL;
+    }
+
+// Put the thread into the alertable state.
+    if (number == 44001)
+    {
+       tid_t alertable_target_tid = current_thread;
+        if (alertable_target_tid < 0 || alertable_target_tid >= THREAD_COUNT_MAX)
+            return NULL;
+        t = (struct thread_d *) threadList[alertable_target_tid];
+        if ((void*) t == NULL){
+            return NULL;
+        }
+        if (t->used != TRUE){
+            return NULL;
+        }
+        if (t->magic != 1234){
+            return NULL;
+        }
+        // There is no ring 3 handlers installed yet.
+        if (t->cb_r3_address == 0)
+            return NULL;
+        // #todo
+        // Validate inflight state: 
+        // Reject alertable when a callback delivery is already in progress.
+        // Update this flag after the callback restorer.
+        //if (t->in_progress == TRUE)
+            //return NULL;
+        // Install the r3 procedure
+        t->is_alertable = TRUE;
+        printk("44001: Enter in alertable state\n");
+        return NULL;
+    }
 
 // Counter
     __default_syscall_counter++;

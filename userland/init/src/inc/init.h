@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <rtl/gramado.h>
 
+#include "config.h"
 #include "endpoint.h"
 
 // Internal library (Creating a template)

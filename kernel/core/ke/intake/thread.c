@@ -121,6 +121,13 @@ static void __ps_initialize_thread_common_elements(struct thread_d *t)
 // #remember: t->signal |= 1<<(signal-1);
     t->signal = 0;
     t->umask = 0;
+
+// Callback support
+    t->cb_r3_address = 0;
+    t->is_alertable = FALSE;
+    t->in_progress = FALSE;
+
+
     t->exit_code = 0;
 
     // More ?
@@ -1050,8 +1057,15 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
 
 // Signal
 // Sinais para threads.
-    clone->signal = father->signal;
-    clone->umask = father->umask;
+    //clone->signal = father->signal;
+    //clone->umask = father->umask;
+    clone->signal = 0;
+    clone->umask = 0;
+
+// Callback support
+    clone->cb_r3_address = 0;
+    clone->is_alertable = FALSE;
+    clone->in_progress = FALSE;
 
 // #todo: 
 // Essa parte � dependente da arquitetura i386.

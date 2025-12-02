@@ -37,7 +37,7 @@ struct callback_event_d
 // Ring 3 address
     unsigned long r3_procedure_address;
 };
-extern struct callback_event_d  CallbackEventInfo;
+//extern struct callback_event_d  CallbackEventInfo;
 
 //
 // ==========================================

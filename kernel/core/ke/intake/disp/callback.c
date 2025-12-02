@@ -33,7 +33,7 @@ int _callback_status=FALSE;
 unsigned long _callback_address=0;
 unsigned long _callback_address_saved=0;
 
-struct callback_event_d  CallbackEventInfo;
+//struct callback_event_d  CallbackEventInfo;
 
 
 // =====================================================
@@ -43,7 +43,7 @@ struct callback_event_d  CallbackEventInfo;
 // Also called by DeviceInterface_PIT in pit.c.
 void setup_callback(unsigned long r3_address)
 {
-
+/*
     printk("setup_callback:\n");
 
 // Not initialized at kernel initialization
@@ -64,6 +64,7 @@ void setup_callback(unsigned long r3_address)
 
 // Now we're ready.
     //CallbackEventInfo.ready = TRUE;
+*/
 }
 
 // The moment where the kernel update the variables in assembly ... 
@@ -75,6 +76,7 @@ void setup_callback(unsigned long r3_address)
 // The flow is coherent for your current single-global model.
 void prepare_next_callback(void)
 {
+/*
 // Not ready
     //if (CallbackEventInfo.ready != TRUE)
         //panic("prepare_next_callback: No ready\n");
@@ -113,6 +115,7 @@ void prepare_next_callback(void)
 // Clear the source field;
 // The assembly is using another address, the 'ring3_callback_address'.
     //CallbackEventInfo.r3_procedure_address = 0;
+*/
 }
 
 // Called during the callback restorer
@@ -120,6 +123,7 @@ void prepare_next_callback(void)
 // “reset after use” routine
 int callbackReinitialize(void)
 {
+/*
     if (CallbackEventInfo.initialized != TRUE)
         panic ("callbackReinitialize: Not initialized\n");
 
@@ -137,6 +141,7 @@ int callbackReinitialize(void)
 // Not ready yet
 // Some other routine will update it right after we got a valid ring 3 address
     //CallbackEventInfo.ready = FALSE;
+*/
 
     return 0;
 }
@@ -154,6 +159,8 @@ int callbackReinitialize(void)
 // Called by ke.c
 int callbackInitialize(void)
 {
+
+/*
     if (CallbackEventInfo.initialized == TRUE)
         panic ("callbackInitialize: Already initialized\n");
 
@@ -183,6 +190,7 @@ int callbackInitialize(void)
     CallbackEventInfo.stage = 1;
 
     callback_restorer_done = 0;
+*/
 
     return 0;
 }

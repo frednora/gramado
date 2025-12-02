@@ -762,9 +762,41 @@ struct thread_d
 // id da thread que a thread está esperando morrer.
     int wait4tid;
 
-// Signal support:
+//---------------------------------------
+
+//
+// Signal
+//
+
+// Signal support
+// #todo: We need the sinal handler. (r3 address)
+    unsigned long sig_handlers[32];  // installed via posix standard syscall.
     unsigned long signal;
     unsigned long umask;
+//---------------------------------------
+
+
+//---------------------------------------
+
+//
+// Callback event
+//
+
+// Handler (procedure)
+// The app can install a handler anytime.
+// Service 44000, simply install the handler
+    unsigned long cb_r3_address;
+
+// The thread is in an alertable state
+// The thread enter in the alertable state when it calls
+// a message loop and wait for message for example.
+    int is_alertable;
+
+// The callback is in progress
+// The thread is following the path of: iret --> app --> restorer.
+    int in_progress;
+//---------------------------------------
+
 // Exit:
 // Reason to close the thread.
     int exit_code;

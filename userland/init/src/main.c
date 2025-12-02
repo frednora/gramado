@@ -94,7 +94,8 @@ static void callback_handler(void);
 
 static void callback_handler(void)
 {
-    printf(">>> Entered ring3 callback handler! <<<\n");
+    //printf(">>> Entered ring3 callback handler! <<<\n");
+
 /*
     for (;;) {
         asm volatile("pause");
@@ -482,21 +483,27 @@ static int input_compare_string(void)
     }
 
 /*
-// #suspended
     if ( strncmp(prompt,"callback",8) == 0 )
     {
-        while (1)
-        {
-            sc82(
-                44000,
-                &callback_handler,
-                0,
-                0);
-        };
+        while(1){
+        // Simply install the handler, do not put the thread into the alertable state.
+        sc82( 44000, &callback_handler, 0, 0);
+
+        // Simply put the thread into the alertable state.
+        sc82( 44001, 0, 0, 0);
+        }
         goto exit_cmp;
     }
 */
 
+/*
+    if ( strncmp(prompt,"callback",8) == 0 )
+    {
+        // Put the thread into the alertable state.
+        // The kernel will consume this state, and we will put it again.
+        while(1){ sc82( 44001, 0, 0, 0); }
+    }
+*/
 
 /*
 // yes or no.
@@ -934,6 +941,14 @@ static int loopSTDIN(void)
         }
 
         C = (int) fgetc(stdin);
+        if (C <= 0){
+
+            if (CONFIG_TEST_CALLBACK == 1){
+            // Put the thread into the alertable state.
+            // The kernel will consume this state, and we will put it again.
+            sc82( 44001, 0, 0, 0);
+            }
+        }
         if (C > 0){
             ProcessCharInput(C);
         }
@@ -1177,6 +1192,17 @@ int main( int argc, char **argv)
 //#bugbug: this proces is running in ring0.
     //asm ("cli");
 
+
+//
+// Callback
+//
+
+// Simply install the handler. 
+// It doesn't put the thread into the alertable state.
+
+    if (CONFIG_TEST_CALLBACK == 1){
+        sc82( 44000, &callback_handler, 0, 0);
+    }
 
 // ---------------------------------------------
 // Testing gets_00

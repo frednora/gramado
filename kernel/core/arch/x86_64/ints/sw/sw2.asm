@@ -101,7 +101,7 @@ global _int198
 _int198:
 
 ; #suspended
-    iretq
+;    iretq
 
 ; Drop the useless stack frame.
 ; We were in the middle of the timer interrupt,
@@ -126,7 +126,7 @@ _int198:
 ; One-shot: ensure callback state is cleared
     mov qword [_asmflagDoCallbackAfterCR3], 0
     mov qword [_ring3_callback_address], 0
-    mov qword [_callback_restorer_done], 1
+    ;mov qword [_callback_restorer_done], 1
 
 ; #bugbug:
 ; Here we're using the release routine that belongs to the irq0
