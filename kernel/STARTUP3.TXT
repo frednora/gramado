@@ -1,0 +1,121 @@
+
+Kernel initialization - by Copilot
+
+---
+
+# Kernel Startup Routine — Design Note
+
+## Entry Points
+- **I_kmain()**  
+  - Entry point for the Boot Strap Processor (BSP).  
+  - Called from `head_64.asm` after the assembly bootstrap.  
+  - Invokes `I_initialize_kernel()` to perform staged initialization.  
+
+- **AP_kmain()**  
+  - Entry point for Application Processors (AP).  
+  - APs have a separate initialization routine but eventually synchronize 
+    with the kernel state.  
+
+---
+
+## Initialization Sequence (BSP via `I_initialize_kernel()`)
+
+### [1] earlyinit()
+Purpose: Minimal setup before full runtime support is available.  
+Key steps:
+- **Bootblock setup** (`earlyinit_SetupBootblock`)  
+  - Reads boot information (framebuffer, resolution, memory size, Gramado mode, 
+    disk signature).  
+  - Saves values into global structures (`bootblk`, `gSavedX/Y/BPP`, etc.).  
+- **Globals initialization** (`earlyinit_Globals`)  
+  - Reset scheduler/process/thread globals.  
+  - Initialize spinlocks and I/O control flags.  
+  - Configure screen update frequency.  
+- **Serial debug support** (`earlyinit_Serial`)  
+  - Initialize serial driver (`DDINIT_serial`).  
+  - Enables debug output via serial port.  
+- **Output support** (`earlyinit_OutputSupport`)  
+  - Initialize virtual console structures.  
+  - Limited console functionality (no `printk` yet).  
+
+---
+
+### [2:0] mmInitialize(0) — Memory Phase 0
+- Initialize video support.  
+- Initialize heap and stack support.  
+- Detect and configure memory sizes.  
+
+### [2:1] mmInitialize(1) — Memory Phase 1
+- Initialize frame pool support.  
+- Set up paging infrastructure.  
+- Map static system areas.  
+
+---
+
+### [3:0] keInitialize(0) — Kernel Phase 0
+- Load kernel font.  
+- Initialize background and refresh support.  
+- Display banner and resolution info.  
+- Retrieve Gramado mode and linker data.  
+- Initialize bootloader display device.  
+
+### [3:1] keInitialize(1) — Kernel Phase 1
+- Call `I_x64main` for architecture‑specific initialization.  
+- Perform early PS/2 initialization.  
+
+### [3:2] keInitialize(2) — Kernel Phase 2
+- Initialize background.  
+- Load BMP icons.  
+
+---
+
+### [4] archinit()
+- Probe processor type (`hal_probe_processor_type`).  
+- Initialize SMP support (`x64smp_initialization`).  
+- Enable APIC if supported (`enable_apic`).  
+- Optionally initialize IOAPIC.  
+- If configured, load AP trampoline image and send INIT/STARTUP IPIs 
+  to bring up AP processors.  
+
+---
+
+### [5] deviceinit()
+- Perform early PS/2 controller initialization (`DDINIT_ps2_early_initialization`).  
+- Configure input targets (TTY, STDIN, DS_QUEUE) based on build flags.  
+
+---
+
+### [6] lateinit()
+- Create legacy PTY master/slave (`tty_initialize_legacy_pty`).  
+- Initialize user subsystem (`userInitializeStuff`).  
+- Create root user (`userCreateRootUser`).  
+- Initialize networking (`netInitialize`, e1000 driver already loaded earlier).  
+- Set up `utsname` structure (`__setup_utsname`).  
+- Runlevel switch:  
+  - Optionally enter debug console (`__enter_debug_mode`).  
+  - Otherwise continue to init thread.  
+- Initialize support for loadable kernel modules (`mod_initialize`).  
+- Execute the first ring3 process (`ke_x64ExecuteInitialProcess`).  
+
+---
+
+## Error Handling
+- Defined error codes (0x00–0x05) for initialization failures 
+  (e.g., arch init fail, kernel image too long, memory allocation errors).  
+- Debug mode (`__enter_debug_mode`) halts the system with diagnostic output 
+  if initialization fails.  
+- Final messages (`__print_final_messages`) provide failure status via serial or 
+  console logs.  
+
+---
+
+## Notes
+- **Interrupts**: Deferred until later (possibly by init process).  
+- **Console vs printk**: Early console structures exist, but full `printk` support 
+  comes only after globals and libk initialization.  
+- **AP processors**: Initialization tested via trampoline code and signature area; 
+  currently experimental.  
+- **Networking**: Driver (e1000) initialized early, but full stack setup occurs 
+  in `lateinit`.  
+
+---

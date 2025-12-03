@@ -584,11 +584,11 @@ static void earlyinit_OutputSupport(void)
 }
 
 // :: Level 1 
-static int earlyinit(void)
-{
 // We don't have any print support for now.
 // But here is the moment when we initialize the
 // serial debug support.
+static int earlyinit(void)
+{
 
 // Starting the counter.
     Initialization.current_phase = 0;
@@ -1204,6 +1204,7 @@ fail:
 // This is the first function in C.
 // We don't have any print support yet.
 // See: kernel.h, kmain.h
+// #todo: Maybe we can change this name to BSP_kmain()
 void I_kmain(int arch_type)
 {
     int Status = -1;

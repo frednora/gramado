@@ -1,0 +1,153 @@
+
+The purpose for this design note is to describe the kernel startup routine. 
+
+There are two main functions:
+I_kmain()  - Entrypoint for the BSP processors. 
+AP_kmain() - Entrypoint for the AP processors.
+Both functions call I_initialize_kernel() for the real initialization.
+
+## Kernel initialization
+
+```
+ See: kmain.c
+ The first function for the BSP is I_main, but the real main routine 
+ for all the processors is I_initialize_kernel().
+ The kernel initialization is handled by the function I_initialize_kernel, 
+ which follows these steps:
+```
+
+```
+// ==================================
+// Levels:
+// Functions called by I_initialize_kernel() during the kernel initialization 
+// for the BSP processor. 
+// + [1]   earlyinit()
+// + [2:0] mmInitialize(0)
+// + [2:1] mmInitialize(1)
+// + [3:0] keInitialize(0)
+// + [3:1] keInitialize(1)
+// + [3:2] keInitialize(2)
+// + [4]   archinit()
+// + [5]   deviceinit()
+// + [6]   lateinit()
+// ==================================
+```
+
+
+// ----------------------------------------------------------
+// + [1]   earlyinit()
+
+We don't have any print support for now.
+But here is the moment when we initialize the serial debug support.
+
+Getting critical boot information.
+
+Init globals
+
+Serial debug support.
+
+Initialize the virtual console structures.
+We do not have all the runtime support yet.
+We can't use printk yet.
+#important: 
+We do not have all the runtime support yet.
+We can't use printk yet.
+We only initialized some console structures,
+not the full support for printk functions.
+
+// ----------------------------------------------------------
+
+// + [2:0] mmInitialize(0)
+
+Initialize mm phase 0.
+See: mm.c
++ Initialize video support.
++ Inittialize heap support.
++ Inittialize stack support. 
++ Initialize memory sizes.
+
+
+// + [2:1] mmInitialize(1)
+
+Initialize mm phase 1.
++ Initialize framepoll support.
++ Initializing the paging infrastructure.
+  Mapping all the static system areas.
+
+// ----------------------------------------------------------
+
+// + [3:0] keInitialize(0)
+
+Initialize ke phase 0.
+See: ke.c
++ kernel font.
++ background.
++ refresh support.
++ show banner and resolution info.
++ Check gramado mode and grab data from linker.
++ Initialize bootloader display device.
+
+// + [3:1] keInitialize(1)
+
+Initialize ke phase 1.
++ Calling I_x64main to 
+  initialize a lot of stuff from the current architecture.
++ PS2 early initialization.
+
+// + [3:2] keInitialize(2)
+
+Initialize ke phase 2.
++ Initialize background.
++ Load BMP icons.
+
+// ----------------------------------------------------------
+// + [4]   archinit()
+
++ Probing for processor type.
++ Initializing smp for x64 machines.
+
+// ----------------------------------------------------------
+// + [5]   deviceinit()
+
+Early ps/2 initialization.
+Initializing ps/2 controller.
+
+Initialize the input targets.
+Select the default desired input targets
+See: 
+config.h input.h input.c ibroker.h ibroker.c
+
+// ----------------------------------------------------------
+// + [6]   lateinit()
+
+Creating the legacy pty maste and pty slave.
+
+User info
+Root User
+At this point we already have almost all we need to 
+pass the control to the init process.
+So, lets setup the the user for all the resources we created.
+
+Network support.
+?? At this moment we already initialized the e1000 driver.
+See: net.c
+
+Setup utsname structure.
+
+Runlevel switch:
+Enter into the debug console instead of jumping 
+into the init thread.
+::: Initialization on debug mode
+Initialize the default kernel virtual console.
+It depends on the run_level.
+#bugbug: The interrupts are not initialized,
+it's done via init process?
+See: kgwm.c
+
+Initialize support for loadable kernel modules.
+See: mod.c 
+
+Execute the first ring3 process.
+ireq to init thread.
+See: ke.c
+

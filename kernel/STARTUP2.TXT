@@ -1,0 +1,83 @@
+
+
+Here’s a **clean, plain‑text version** of your kernel startup notes, 
+organized step by step so you can drop it straight into your documentation:
+by Copilot
+
+---
+
+# Kernel Startup Routine
+
+## Entry Points
+- **I_kmain()**: Entry point for the Boot Strap Processor (BSP).  
+- **AP_kmain()**: Entry point for the Application Processors (AP).  
+- Both call **I_initialize_kernel()**, which performs the real initialization.
+
+---
+
+## Kernel Initialization Sequence
+
+### [1] earlyinit()
+- Initialize serial debug support (no `printk` yet).  
+- Gather critical boot information.  
+- Initialize global structures.  
+- Set up basic virtual console structures (limited functionality).  
+
+---
+
+### [2:0] mmInitialize(0) — Memory Phase 0
+- Initialize video support.  
+- Initialize heap support.  
+- Initialize stack support.  
+- Detect and configure memory sizes.  
+
+### [2:1] mmInitialize(1) — Memory Phase 1
+- Initialize frame pool support.  
+- Set up paging infrastructure.  
+- Map all static system areas.  
+
+---
+
+### [3:0] keInitialize(0) — Kernel Phase 0
+- Load kernel font.  
+- Initialize background and refresh support.  
+- Display banner and resolution info.  
+- Check Gramado mode and retrieve linker data.  
+- Initialize bootloader display device.  
+
+### [3:1] keInitialize(1) — Kernel Phase 1
+- Call **I_x64main** for architecture‑specific initialization.  
+- Perform early PS/2 initialization.  
+
+### [3:2] keInitialize(2) — Kernel Phase 2
+- Initialize background.  
+- Load BMP icons.  
+
+---
+
+### [4] archinit()
+- Probe processor type.  
+- Initialize SMP support for x64 machines.  
+
+---
+
+### [5] deviceinit()
+- Perform early PS/2 controller initialization.  
+- Set up input targets.  
+- Select default input targets.  
+
+---
+
+### [6] lateinit()
+- Create legacy PTY master and slave.  
+- Set up user information (root user).  
+- Configure networking (e1000 driver already initialized).  
+- Set up `utsname` structure.  
+- Handle runlevel switch: enter debug console or init thread depending on mode.  
+- Initialize default kernel virtual console (depends on runlevel).  
+- Note: interrupts may be initialized later via the init process.  
+- Initialize support for loadable kernel modules.  
+- Execute the first ring3 process (init thread).  
+
+---
+
