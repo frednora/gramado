@@ -6,9 +6,14 @@
 
 extern unsigned long asmflagDoCallbackAfterCR3;
 
-//extern unsigned long asmRing3CallbackAddress;
+// Context for the function
 extern unsigned long ring3_callback_address;
+extern unsigned long ring3_callback_parm1;
+extern unsigned long ring3_callback_parm2;
+extern unsigned long ring3_callback_parm3;
+extern unsigned long ring3_callback_parm4;
 
+// #suspended
 extern unsigned long callback_restorer_done;
 
 
@@ -43,6 +48,12 @@ struct callback_event_d
 // ==========================================
 //
 
+void 
+setup_callback_parameters(
+    unsigned long param1, 
+    unsigned long param2, 
+    unsigned long param3, 
+    unsigned long param4 ); 
 
 void setup_callback(unsigned long r3_address);
 void prepare_next_callback(void);

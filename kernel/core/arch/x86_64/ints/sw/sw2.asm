@@ -125,8 +125,15 @@ _int198:
 
 ; One-shot: ensure callback state is cleared
     mov qword [_asmflagDoCallbackAfterCR3], 0
+
+; The context for the function (reset for the next callback)
     mov qword [_ring3_callback_address], 0
-    ;mov qword [_callback_restorer_done], 1
+    mov qword [_ring3_callback_parm1], 0
+    mov qword [_ring3_callback_parm2], 0
+    mov qword [_ring3_callback_parm3], 0
+    mov qword [_ring3_callback_parm4], 0
+
+    mov qword [_callback_restorer_done], 1
 
 ; #bugbug:
 ; Here we're using the release routine that belongs to the irq0

@@ -14,8 +14,13 @@
 
 ; Flag
 extern _asmflagDoCallbackAfterCR3
-; Address
+
+; Context for the function
 extern _ring3_callback_address
+extern _ring3_callback_parm1
+extern _ring3_callback_parm2
+extern _ring3_callback_parm3
+extern _ring3_callback_parm4
 
 ; ts
 extern _task_switch_status
@@ -112,6 +117,30 @@ __doRing3Callback:
 
 ; Clear the pivot flag before iretq: Enforce one-shot delivery.
     mov qword [_asmflagDoCallbackAfterCR3], 0
+
+
+; At this moment we already have the stack frame.
+; let's setup the paramaters.
+; Respecting the calling convention.
+
+    mov rax, qword [_ring3_callback_parm1]
+    ;mov rax, qword 1000 ; fake parameter
+    mov rdi, rax 
+
+    mov rax, qword [_ring3_callback_parm2]
+    ;mov rax, qword 2000 ; fake parameter
+    mov rsi, rax 
+
+    mov rax, qword [_ring3_callback_parm3]
+    ;mov rax, qword 3000 ; fake parameter
+    mov rdx, rax 
+
+    mov rax, qword [_ring3_callback_parm4]
+    ;mov rax, qword 4000 ; fake parameter
+    mov rcx, rax 
+
+    ; Clear DF to avoid string op surprises
+    cld
 
 ; Go to the ring3 procedure.
     iretq

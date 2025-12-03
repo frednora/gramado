@@ -2785,47 +2785,6 @@ void *sci2 (
 // arg4 = signature
 
 
-/*
-    if (number == 44000)
-    {
-        // A thread is setting up the next callback
-        printk("44000 service\n");
-
-        // Not initialized at kernel initialization
-        if (CallbackEventInfo.initialized != TRUE)
-            panic("sci2: [44000] Callback Not initialized\n");
-
-        // The callback event is locked for safety
-        if (CallbackEventInfo.is_locked == TRUE)
-            panic("sci2: [44000] Callback is locked\n");
-
-        // Ready? Something is wrong!
-        // If it's already ready we can't start a setup routine.
-        //if ( CallbackEventInfo.ready == TRUE )
-            //panic("sci2: [44000] Callback fail\n");
-
-        if (callback_restorer_done == 1)
-        {
-            callback_restorer_done = 0;
-            CallbackEventInfo.stage = 1;
-        }
-        // Is it waiting for syscalls?
-        if (CallbackEventInfo.stage != 1){
-            printk("Current stage: %d\n", CallbackEventInfo.stage);
-            panic("sci2: [44000] Not in Stage 1\n");
-        }
-
-        // See: callback.c
-        // IN: r3 handler
-        setup_callback((unsigned long) arg2);
-
-        // New stage: Waiting for the moment where the context is saved.
-        // see: ts.c
-        CallbackEventInfo.stage = 2;
-        return NULL;
-    }
-*/
-
 // We built good routines for callback support.
 // But we're not gonna use them now ...
 // Remember the restorer interrupt.

@@ -87,14 +87,32 @@ static int loopSTDIN(void);
 static int loopMenu(void);
 static int loopMenu_ExitGramadoOS(void);
 
-static void callback_handler(void);
+static void 
+callback_handler( 
+    unsigned long param1, 
+    unsigned long param2, 
+    unsigned long param3, 
+    unsigned long param4 );
+
 //
 // ==============================================================
 //
 
-static void callback_handler(void)
+// IN: (ABI) RDI, RSI, RDX, RCX
+static void 
+callback_handler( 
+    unsigned long param1, 
+    unsigned long param2, 
+    unsigned long param3, 
+    unsigned long param4 )
 {
     //printf(">>> Entered ring3 callback handler! <<<\n");
+
+    // #debug: Show parameters
+    printf("callback_handler: p1=(%d) p2=(%d) p3=(%d) p4=(%d)\n",
+        param1, param2, param3, param4 );
+
+    //while(1){ asm ("pause \n"); };
 
 /*
     for (;;) {

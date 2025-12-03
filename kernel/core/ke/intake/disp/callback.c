@@ -25,7 +25,14 @@
 // Globals consumed by assembly; 
 // mark volatile to enforce ordering assumptions
 unsigned long asmflagDoCallbackAfterCR3=0;
+
 unsigned long ring3_callback_address=0;
+unsigned long ring3_callback_parm1=0;
+unsigned long ring3_callback_parm2=0;
+unsigned long ring3_callback_parm3=0;
+unsigned long ring3_callback_parm4=0;
+
+// #suspended
 unsigned long callback_restorer_done=0;
 
 // Not exported to asm.
@@ -37,6 +44,19 @@ unsigned long _callback_address_saved=0;
 
 
 // =====================================================
+
+void 
+setup_callback_parameters(
+    unsigned long param1, 
+    unsigned long param2, 
+    unsigned long param3, 
+    unsigned long param4 ) 
+{
+    ring3_callback_parm1 = (unsigned long) param1;
+    ring3_callback_parm2 = (unsigned long) param2;
+    ring3_callback_parm3 = (unsigned long) param3;
+    ring3_callback_parm4 = (unsigned long) param4;
+}
 
 // service 44000
 // Called by sci.c
