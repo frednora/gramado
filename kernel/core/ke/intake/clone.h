@@ -33,6 +33,13 @@ copy_process_struct(
     struct te_d *p2 );
 
 pid_t 
+copy_process00( 
+    const char *filename, 
+    pid_t pid, 
+    unsigned long clone_flags,
+    unsigned long extra_stuff );
+
+pid_t 
 copy_process( 
     const char *filename, 
     pid_t pid, 

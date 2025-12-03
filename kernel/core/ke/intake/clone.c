@@ -493,10 +493,11 @@ fail:
 // The pid of the clone or fail.
 
 pid_t 
-copy_process( 
+copy_process00( 
     const char *filename, 
     pid_t pid, 
-    unsigned long clone_flags )
+    unsigned long clone_flags,
+    unsigned long extra_stuff )
 {
 
     // #bugbug
@@ -1565,5 +1566,19 @@ fail:
     return (pid_t) (-1);
 }
 
+pid_t 
+copy_process( 
+    const char *filename, 
+    pid_t pid, 
+    unsigned long clone_flags )
+{
+    pid_t rPID = -1;
 
+    rPID = (pid_t) copy_process00(filename,pid,clone_flags,0);
+
+    //if (rPID < 0)
+        //rPID = -1;
+
+    return (pid_t) rPID;
+}
 

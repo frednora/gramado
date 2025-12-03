@@ -2087,7 +2087,6 @@ fail:
     return (int) -1;
 }
 
-
 int rtl_spawn_process(const char *path)
 {
     if ((void *) path == NULL){

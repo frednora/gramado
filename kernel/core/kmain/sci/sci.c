@@ -2193,23 +2193,40 @@ void *sci2 (
 // #bugbug: Isso às vezes falha na máquina real.
 // #todo: Use more arguments.
 // See: intake/clone.c
+
+    // number = syscall number (900)
+    // arg2   = file name (string in userland)
+    // arg3   = clone_flags
+    // arg4   = Nothing?
+
 // IN: 
 //   + file name, 
 //   + parent pid, 
 //   + clone flags.
 // OUT: Child's PID.
 
-    unsigned long clone_flags = (unsigned long) arg3;
-    //unsigned long extra = (unsigned long) arg4;
+    char *c__name = (char *) arg2;
+    pid_t c__parent_pid = (pid_t) current_process;
+    unsigned long c__flags = (unsigned long) arg3;
+    unsigned long c__extra = (unsigned long) arg4;
     if (number == SCI2_COPY_PROCESS)
     {
         debug_print("sci2: [SCI2_COPY_PROCESS] clone and execute\n");
         // #debug
         //printk("sci2: copy_process called by pid{%d}\n",current_process);
+        /*
         return (void *) copy_process( 
-                            (const char *) arg2, 
-                            (pid_t) current_process, 
-                            (unsigned long) clone_flags );
+                            (const char *)  c__name, 
+                            (pid_t)         c__parent_pid, 
+                            (unsigned long) c__flags );
+        */
+
+        // #test
+        return (void *) copy_process00( 
+                            (const char *)  c__name, 
+                            (pid_t)         c__parent_pid, 
+                            (unsigned long) c__flags,
+                            (unsigned long) c__extra );
     }
 
 // ----------------------------------
