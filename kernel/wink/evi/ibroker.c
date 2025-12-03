@@ -342,12 +342,22 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         goto exit_cmp;
     }
 
-// #test
-// bootcnf
-// Saving the config metafile for the boot loader.
+
+//
+// Update metafile for boot configuration.
+//
+
+//Command parsing:
+// boot-m → sets metafile to "M" (show menu).
+// boot-s → sets metafile to "S" (skip menu).
+
+// Temporary buffer for metafile
     char cnf_buffer[512];
 
-    if (kstrncmp(cmdline, "boot-m", 6) == 0)  // Save 'M' (Show menu)
+
+// boot-m:
+// Save 'M' (Show menu)
+    if (kstrncmp(cmdline, "boot-m", 6) == 0)
     {
         printk("Setting boot mode: SHOW MENU\n");
         memset(cnf_buffer, 0, 512);
@@ -358,7 +368,9 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         goto exit_cmp;
     }
 
-    if (kstrncmp(cmdline, "boot-s", 6) == 0)  // Save 'S' (Skip menu)
+// boot-s:
+// Save 'S' (Skip menu)
+    if (kstrncmp(cmdline, "boot-s", 6) == 0)
     {
         printk("Setting boot mode: SKIP MENU\n");
         memset(cnf_buffer, 0, 512);
