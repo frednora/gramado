@@ -287,8 +287,9 @@ void init_globals(void)
     g_profiler_ints_irq14 = 0;
     g_profiler_ints_irq15 = 0;
     // ...
-// Interrupção para serviços do sistema.
-    g_profiler_ints_gde_services = 0;
+
+// Global counter for syscalls
+    g_profiler_ints_syscall_counter = 0;
 
 // User and group.
     current_user  = 0;

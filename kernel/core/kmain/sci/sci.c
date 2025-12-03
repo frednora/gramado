@@ -9,9 +9,7 @@
 
 #include <kernel.h>
 
-
 static unsigned long __default_syscall_counter=0;
-
 
 //
 // == private functions: prototypes =============
@@ -43,7 +41,7 @@ static void __servicePutChar(int c, int console_number)
     if (console_number > 3){
         return;
     }
-    console_putchar( (int) c, console_number );
+    console_putchar((int) c, console_number);
 }
 
 // 897
@@ -76,7 +74,6 @@ static void __service897(void)
     r.dirty = FALSE; 
     r.used = TRUE;
     r.magic = 1234;
-
 
 //  Thread
     myThread = (struct thread_d *) threadList[current_thread];
@@ -189,18 +186,16 @@ static void __invalidate_surface_rectangle(void)
 // =====================================================
 
 // This routine was called by the interrupt handler in x64sc.c.
+// Getting requests from ring3 applications via systemcalls.
+// :: Services in kernel.
 void *sci0 ( 
     unsigned long number, 
     unsigned long arg2, 
     unsigned long arg3, 
     unsigned long arg4 )
 {
-// Getting requests from ring3 applications via systemcalls.
-// :: Services in kernel.
-
-// Thread
-    struct thread_d *t;
-    struct te_d *p;
+    struct thread_d *t;  // thread
+    struct te_d *p;      // thread environment
 
     pid_t current_process = -1;
 // Pointer for cgroup
@@ -213,10 +208,8 @@ void *sci0 (
 	
 	int int_retval = 0;
 
-
-    //?? #deprecated?
-    g_profiler_ints_gde_services++;
-
+    // Global counter for syscalls.
+    g_profiler_ints_syscall_counter++;
 
 // ---------------------------------
 // Thread
@@ -1855,17 +1848,15 @@ void *sci0 (
     return NULL;
 }
 
-
 // This routine was called by the interrupt handler in x64sc.c.
+// Getting requests from ring3 applications via systemcalls.
+// :: Services in mod0.
 void *sci1 ( 
     unsigned long number, 
     unsigned long arg2, 
     unsigned long arg3, 
     unsigned long arg4 )
 {
-// Getting requests from ring3 applications via systemcalls.
-// :: Services in mod0.
-
     struct thread_d *t;  // thread
     struct te_d *te;     // thread environment
 
@@ -1874,6 +1865,8 @@ void *sci1 (
 // thread environment id (fka PID)
     pid_t current_process = (pid_t) get_current_process();
 
+    // Global counter for syscalls.
+    g_profiler_ints_syscall_counter++;
 
 // #test
 // ---------------------------------
@@ -1983,19 +1976,21 @@ fail:
 }
 
 // This routine was called by the interrupt handler in x64sc.c.
+// Getting requests from ring3 applications via systemcalls.
+// :: Services in kernel.
 void *sci2 ( 
     unsigned long number, 
     unsigned long arg2, 
     unsigned long arg3, 
     unsigned long arg4 )
 {
-// Getting requests from ring3 applications via systemcalls.
-// :: Services in kernel.
-
-    struct te_d *p;
-    struct thread_d *t;
+    struct thread_d *t;  // thread
+    struct te_d *p;      // thread environment
 
     pid_t current_process = (pid_t) get_current_process();
+
+    // Global counter for syscalls.
+    g_profiler_ints_syscall_counter++;
 
 // #test
 // ---------------------------------
@@ -2451,7 +2446,6 @@ void *sci2 (
 
 // 10010 - Get the tid of the current thread.
     if (number == 10010){
-        //debug_print("sci2: [10010] GetCurrentTID\n");
         return (void*) GetCurrentTID();
     }
 
@@ -2633,7 +2627,6 @@ void *sci2 (
         return NULL;
     }
 
-
 // Get Init PID
     if (number == 10020){ 
         return (void*) GRAMADO_PID_INIT;
@@ -2716,7 +2709,6 @@ void *sci2 (
 // #test
 // 22007 - Send UDP
 
-
     /*
     // #todo
     // arg2 needs to have a pointer to a table
@@ -2735,7 +2727,6 @@ void *sci2 (
     }
     */
 
-
 // #test
 // 22008 - Send TCP
 
@@ -2744,11 +2735,12 @@ void *sci2 (
 
     if (number == 22009)
     {
+        if ((void*)currentNIC == NULL)
+            return NULL;
         network_send_raw_packet (
             (struct intel_nic_info_d *) currentNIC, 
             (size_t) arg3,          // Frame lenght
             (const char *) arg2 );  // Frame address
-
         return NULL;
     }
 
@@ -2901,26 +2893,29 @@ void *sci2 (
 }
 
 // This routine was called by the interrupt handler in x64sc.c.
+// Getting requests from ring3 applications via systemcalls.
+// :: Services in mod0.
 void *sci3 ( 
     unsigned long number, 
     unsigned long arg2, 
     unsigned long arg3, 
     unsigned long arg4 )
 {
-// Getting requests from ring3 applications via systemcalls.
-// :: Services in mod0.
-
     struct thread_d *t;  // thread
-    struct te_d *te;      // thread environment
+    struct te_d *te;     // thread environment
 
-    debug_print("sci3: [TODO]\n");
+    //debug_print("sci3: [TODO]\n");
 
 // thread environment id (fka PID)
     pid_t current_process = (pid_t) get_current_process();
 
+    // Global counter for syscalls.
+    g_profiler_ints_syscall_counter++;
+
+
 // #test
 // ---------------------------------
-    if ( current_thread<0 || current_thread >= THREAD_COUNT_MAX )
+    if (current_thread<0 || current_thread >= THREAD_COUNT_MAX)
     { 
         return NULL;
     }

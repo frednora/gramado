@@ -14,8 +14,7 @@
 // see: hal.c
 //
 
-//See:  gde_serv.c 
-extern unsigned long g_profiler_ints_gde_services;
+extern unsigned long g_profiler_ints_syscall_counter;
 
 //
 // Legacy hardware interrupts (irqs) (legacy pic)

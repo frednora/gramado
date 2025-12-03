@@ -391,10 +391,9 @@ unsigned long doGetSystemMetrics(int index)
             return (unsigned long) g_profiler_ints_irq15;
             break;
 
-        // Interrupção de serviços do sistema.
-        // #todo: We need a method for this.
+        // Global counter for syscalls.
         case 117:
-            return (unsigned long) g_profiler_ints_gde_services;
+            return (unsigned long) g_profiler_ints_syscall_counter;
             break; 
 
        // PIT

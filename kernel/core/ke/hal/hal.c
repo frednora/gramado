@@ -5,7 +5,6 @@
 
 #include <kernel.h>    
 
-
 //
 // import
 //
@@ -59,10 +58,7 @@ int __breaker_ata2_initialized=0;
 // #todo:
 // Create a structure.
 
-
-//See:  gde_serv.c 
-unsigned long g_profiler_ints_gde_services=0;
-
+unsigned long g_profiler_ints_syscall_counter=0;
 
 //
 // Legacy hardware interrupts (irqs) (legacy pic)
@@ -103,23 +99,19 @@ void hal_io_delay(void)
     io_delay();
 }
 
-unsigned long hal_get_date(void)
-{
+unsigned long hal_get_date(void){
     return (unsigned long) rtc_get_date();
 }
 
-unsigned long hal_get_time(void)
-{
-    return (unsigned long)  rtc_get_time();
+unsigned long hal_get_time(void){
+    return (unsigned long) rtc_get_time();
 }
-
 
 // see: bldisp.c
 void hal_refresh_screen(void)
 {
     bldisp_flush(0);
 }
-
 
 // Monitor vertical sync.
 // See: vsync.c
