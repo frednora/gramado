@@ -37,6 +37,8 @@ all:
 	make -C menuapp/
 	make -C launch/
 
+	make -C power/
+
 # Gramado Desktop Manager
 	make -C gdm/
 
