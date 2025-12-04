@@ -145,29 +145,20 @@ extern unsigned long prompt_pos;
 extern unsigned long prompt_max; 
 extern unsigned long prompt_status;
 
-// =======================================
-// Print char flags. (_outbyte)
-// usada para rotinas de pintura da libC.
-// ou seja, dentro do terminal. 
-//#importante: 
-//  +++ Nao se escreve fora do terminal com printf. +++
-// Como nao se escreve fora no terminal com printf.
-// essa flag so faz sentido dentro de stdio.c
-// Para rotinas de pintura fora do terminal poderemos 
-// usar os dois tipos de draw char.
-// flag usada por _outbyte para decidir
-// se desenha um char transparente ou nao.
 
-// ?
-extern int stdio_terminalmode_flag;
+//extern int stdio_verbosemode_flag;
 
-//verbose mode do kernel.
-//permite que a tela do kernel funcione igual a um 
-//terminal, imprimindo os printfs um abaixo do outro.
-//sempre reiniciando x.
 
-// ?
-extern int stdio_verbosemode_flag;
+// Let's manage some stuff the happens in kstdio
+struct kstdio_info_d 
+{
+// printk works different when printing inside or outside the console.
+    int kstdio_in_terminalmode;
+// It allows the screen works as a terminal,
+// printing string one bellow another.
+    int kstdio_in_verbosemode;
+};
+extern struct kstdio_info_d kstdio_info;
 
 
 /* 

@@ -1145,6 +1145,7 @@ __consoleProcessKeyboardInput (
             // Console: Yes, we're using the embedded kernel console.
             // + Put the char into the prompt[] buffer.
             // + Print the char into the screen using fg_console.
+            // see: chardev/console/console.c
             if (InputBrokerInfo.shell_flag == TRUE){
                 consoleInputChar(long1);
                 console_putchar((int) long1, fg_console);

@@ -862,7 +862,8 @@ static void __ConsoleDraw_Outbyte (int c, int console_number)
 // configuradas na estrutura do terminal atual.
 // Branco no preto é um padrão para terminal.
 
-    if (stdio_terminalmode_flag == 1){
+    if (kstdio_info.kstdio_in_terminalmode == TRUE)
+    {
         // Pinta bg e fg.
         d_draw_char ( screenx, screeny, Ch, fg_color, bg_color );
         return;
@@ -988,7 +989,8 @@ void console_outbyte (int c, int console_number)
             CONSOLE_TTYS[n].cursor_y++;
             // Retornaremos mesmo assim ao início da linha 
             // se estivermos imprimindo no terminal.
-            if ( stdio_terminalmode_flag == 1 ){
+            if (kstdio_info.kstdio_in_terminalmode == TRUE)
+            {
                 CONSOLE_TTYS[n].cursor_x = CONSOLE_TTYS[n].cursor_left;
             } 
 
@@ -996,7 +998,8 @@ void console_outbyte (int c, int console_number)
             // permite que a tela do kernel funcione igual a um 
             // terminal, imprimindo os printk um abaixo do outro.
             // sempre reiniciando x.
-            if (stdio_verbosemode_flag == 1){
+            //if (stdio_verbosemode_flag == 1)
+            if (kstdio_info.kstdio_in_verbosemode == TRUE){
                 CONSOLE_TTYS[n].cursor_x = CONSOLE_TTYS[n].cursor_left;
             } 
 
@@ -1237,7 +1240,7 @@ void console_outbyte2 (int c, int console_number)
             CONSOLE_TTYS[n].cursor_y++;
             // Retornaremos mesmo assim ao início da linha 
             // se estivermos imprimindo no terminal.
-            if ( stdio_terminalmode_flag == 1 ){
+            if (kstdio_info.kstdio_in_terminalmode == TRUE){
                 CONSOLE_TTYS[n].cursor_x = CONSOLE_TTYS[n].cursor_left;
             } 
 
@@ -1245,9 +1248,10 @@ void console_outbyte2 (int c, int console_number)
             // permite que a tela do kernel funcione igual a um 
             // terminal, imprimindo os printk um abaixo do outro.
             // sempre reiniciando x.
-            if (stdio_verbosemode_flag == 1){
+            //if (stdio_verbosemode_flag == 1)
+            if (kstdio_info.kstdio_in_verbosemode == TRUE){
                 CONSOLE_TTYS[n].cursor_x = CONSOLE_TTYS[n].cursor_left;
-            } 
+            }
 
             // Obs: No caso estarmos imprimindo em um editor 
             // então não devemos voltar ao início da linha.
@@ -1414,22 +1418,14 @@ void console_echo(int c, int console_number)
     console_outbyte2(c,console_number);
 }
 
-/*
- * console_putchar:
- *     Put a char into the screen of a virtual console.
- *     pinta no backbuffer e faz refresh apenas do retangulo do char.
- */
-// #importante
-// Colocamos um caractere na tela de um console virtual.
-// #bugbug: 
-// Como essa rotina escreve na memória de vídeo,
-// então precisamos, antes de uma string efetuar a
-// sincronização do retraço vertical e não a cada char.
-
+// Draw and refresh a single char.
+// Draw a char into the screen of a kernel-side virtual console.
+// It draws the char into the backbuffer and 
+// flushs only the char's rectangle into the frontbuffer.
+// #todo: Some vertical retrace synchronization needs to be implemented
+// at the string function, not every char.
 void console_putchar(int c, int console_number)
 {
-// + Draw char.
-// + Refresh char.
 
 // Char info and
 // parameter for refresh worker.
@@ -1439,6 +1435,8 @@ void console_putchar(int c, int console_number)
     unsigned long cHeight = get_char_height();
 
 // Parameter
+    //if (c<0)
+        //return;
     if (console_number < 0)
         return;
     if (console_number >= CONSOLETTYS_COUNT_MAX)
@@ -1450,26 +1448,23 @@ void console_putchar(int c, int console_number)
         panic ("console_putchar: char\n");
     }
 
-// flag on.
-    stdio_terminalmode_flag = TRUE;
+// Flag on
+    kstdio_info.kstdio_in_terminalmode = TRUE;
 
-// Draw the char into the backbuffer and
-// Copy a small rectangle to the framebuffer.
+// Draw the char into the backbuffer
+    console_outbyte((int) c, console_number);
 
-    //if( c != 0)
-    console_outbyte( (int) c, console_number );
-
+// Copy a small rectangle to the framebuffer
 // #danger
 // We will no be able to refresh if the routine above
 // change the cursor position, incrementing or
 // comming back to the start of the line.
-
     x = (unsigned long) (CONSOLE_TTYS[console_number].cursor_x * cWidth);
     y = (unsigned long) (CONSOLE_TTYS[console_number].cursor_y * cHeight);
     refresh_rectangle( x, y, cWidth, cHeight );
 
-// flag off
-    stdio_terminalmode_flag = FALSE; 
+// Flag off
+    kstdio_info.kstdio_in_terminalmode = FALSE;
 }
 
 // Print identation.
@@ -3265,10 +3260,11 @@ int VirtualConsole_early_initialization(void)
     set_up_cursor(0,0);
 
 // #hackhack
-// Esse trabalho não nos pertence, pertence ao stdio,
-// mas funciona.
-    stdio_terminalmode_flag = TRUE;
-    stdio_verbosemode_flag = TRUE;
+// Esse trabalho não nos pertence, pertence ao kstdio, mas funciona.
+    kstdio_info.kstdio_in_terminalmode = TRUE;
+
+    //stdio_verbosemode_flag = TRUE;
+    kstdio_info.kstdio_in_verbosemode = TRUE;
 
     return 0;
 }

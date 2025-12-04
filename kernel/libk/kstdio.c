@@ -56,10 +56,14 @@ unsigned long prompt_pos=0;
 unsigned long prompt_max=0; 
 unsigned long prompt_status=0;
 
+
 // ?
-int stdio_terminalmode_flag=0;
-// ?
-int stdio_verbosemode_flag=0;
+//int stdio_verbosemode_flag=0;
+
+// 
+struct kstdio_info_d  kstdio_info;
+
+
 
 // Global sync stuff.
 // see: kstdio.h
@@ -2334,8 +2338,10 @@ int kstdio_initialize(void)
 
     g_inputmode = INPUT_MODE_MULTIPLE_LINES;
 
-    stdio_terminalmode_flag = TRUE;
-    stdio_verbosemode_flag = TRUE;
+    kstdio_info.kstdio_in_terminalmode = TRUE;
+
+    //stdio_verbosemode_flag = TRUE;
+    kstdio_info.kstdio_in_verbosemode = TRUE;
 
     errno = 0;  // Last registered error
 
