@@ -27,17 +27,17 @@
 
 
 //
-// Core control  kmain/
+// Core control kwrap/
 //
 
-#include "../core/kmain/mode.h"
-#include "../core/kmain/state.h"
-#include "../core/kmain/system.h"
-#include "../core/kmain/klimits2.h"
+#include "../core/kwrap/mode.h"
+#include "../core/kwrap/state.h"
+#include "../core/kwrap/system.h"
+#include "../core/kwrap/klimits2.h"
 
-#include "../core/kmain/globals.h"
+#include "../core/kwrap/globals.h"
 
-#include "../core/kmain/bootblk/bootblk.h"
+#include "../core/kwrap/bootblk/bootblk.h"
 
 // ==================================
 // ke/
@@ -50,14 +50,17 @@
 
 // ===============================
 #include "../core/ke/intake/x64init.h"  // x64 kernel initialization.
-#include "../core/kmain/kmain.h"        // kernel initialization.
+
+// kernel initialization.
+#include "../kmain.h"
+
 
 // ===============================
-// kmain/
-#include "../core/kmain/info.h"
-#include "../core/kmain/request.h"
+// kwrap/
+#include "../core/kwrap/info.h"
+#include "../core/kwrap/request.h"
 
-#include "../core/kmain/debug.h"
+#include "../core/kwrap/debug.h"
 
 // ==================================
 // ke/
@@ -75,7 +78,7 @@
 
 // Kernel objects.
 // Can we move this above the libk? Or after it?
-#include "../core/kmain/kobject.h"
+#include "../core/kwrap/kobject.h"
 
 // libk/
 // Legacy stuff.
@@ -140,7 +143,7 @@
 
 // ==================================
 // virt/
-#include "../core/kmain/virt/hv.h"
+#include "../core/kwrap/virt/hv.h"
 
 // ==========================================
 // hal/arm/
@@ -372,25 +375,25 @@
 #include "../wink/wink.h"
 
 // Reboot system.
-#include "../core/kmain/reboot.h"
+#include "../core/kwrap/reboot.h"
 // Ring 0 kernel modules.
-#include "../core/kmain/mod/mod.h"
-#include "../core/kmain/mod/public.h"
+#include "../core/kwrap/mod/mod.h"
+#include "../core/kwrap/mod/public.h"
 
 // Kernel layers. (Work in progress)
-#include "../core/kmain/layers.h"
+#include "../core/kwrap/layers.h"
 
 // The handlers for the services.
-#include "../core/kmain/sci/sys.h"
+#include "../core/kwrap/sci/sys.h"
 
 // The definitions for the syscall numbers.
-#include "../core/kmain/sci/sci0.h"
-#include "../core/kmain/sci/sci1.h"
-#include "../core/kmain/sci/sci2.h"
-#include "../core/kmain/sci/sci3.h"
+#include "../core/kwrap/sci/sci0.h"
+#include "../core/kwrap/sci/sci1.h"
+#include "../core/kwrap/sci/sci2.h"
+#include "../core/kwrap/sci/sci3.h"
 
 // The handlers for the four syscalls.
-#include "../core/kmain/sci/sci.h" 
+#include "../core/kwrap/sci/sci.h" 
 
 
 // ==================================
@@ -400,12 +403,12 @@
 
 // ==================================
 
-#include "../core/kmain/wrappers.h"
-#include "../core/kmain/panic.h"
+#include "../core/kwrap/wrappers.h"
+#include "../core/kwrap/panic.h"
 
 // cgroups and namespaces
-#include "../core/kmain/cont/cg.h"
-#include "../core/kmain/cont/ns.h"
+#include "../core/kwrap/cont/cg.h"
+#include "../core/kwrap/cont/ns.h"
 
 // Core module.
 // It controls the resorces in res/.

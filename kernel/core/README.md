@@ -7,7 +7,12 @@
 ```
   * arch  - Kernel entry
   * ke    - Top level kernel functions.
+            (Kernel Executive Layer)
+            provides the mechanisms (scheduling, hardware abstraction).
+
   * kmain - Main functions. Wrappers.
+            (Kernel Management Layer)
+            defines the policies (resource limits, namespaces, virtualization).
 ```
 
 ## Pupose

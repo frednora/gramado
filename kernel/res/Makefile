@@ -3,6 +3,9 @@
 all:
 	make -C bus/
 
+# todo
+#	make -C cpu/
+
 	make -C dev/blkdev/
 	make -C dev/chardev/
 	make -C dev/netdev/

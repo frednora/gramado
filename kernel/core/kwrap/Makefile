@@ -1,4 +1,4 @@
-# Compiling kmain/ folder.
+# Compiling kwrap/ folder.
 
 INCLUDE = ../../include
 
@@ -81,8 +81,7 @@ wrappers.o \
 sys.o \
 sci.o \
 mod.o \
-public.o \
-kmain.o    
+public.o    
 
 
 all:
@@ -114,12 +113,12 @@ all:
 	$(CC) -c virt/hv.c  $(KERNEL_INCLUDE) $(CFLAGS) -o hv.o
 
 # kmain
-	$(CC) -c kmain.c   $(KERNEL_INCLUDE) $(CFLAGS) -o kmain.o
+#	$(CC) -c kmain.c   $(KERNEL_INCLUDE) $(CFLAGS) -o kmain.o
 
 # ----------------------------------------------
 # link
-	$(LD) -r -o p1_kmain.o $(OBJS)
-	cp p1_kmain.o ../../
+	$(LD) -r -o p1_kwrap.o $(OBJS)
+	cp p1_kwrap.o ../../
 
 # ----------------------------------------------
 	rm *.o

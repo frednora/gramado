@@ -13,6 +13,13 @@
 # Tools
 include core/arch/x86_64/makeinc
 
+INCLUDE = include
+
+# Internal files
+# Used to build the kernel.
+KERNEL_INCLUDE := -I $(INCLUDE)   
+
+
 linkTarget = KERNEL.BIN
 
 # See: https://linux.die.net/man/1/ld
@@ -98,7 +105,7 @@ MYTEST_CONFIG=n
 # core/ (HOT)
 objects-y := head_64.o 
 objects-y += p1_ke.o  
-objects-y += p1_kmain.o  
+objects-y += p1_kwrap.o  
 
 # ==[Part 02]======================
 # wink/ - Main wrapper for the kernel io system.
@@ -120,6 +127,9 @@ objects-y += p3_fs.o
 # ==[Part 04]======================
 # libk/ (Runtime Library)
 objects-y += p4_libk.o  
+
+objects-y += kmain.o    
+
 
 # test
 # objects-$(MYTEST_CONFIG) += fake_mytest.o
@@ -158,8 +168,14 @@ WhiteZone:
 
 # ----------------
 link-kernel:
+
+# kmain
+	$(CC) -c kmain.c   $(KERNEL_INCLUDE) $(CFLAGS) -o kmain.o
+
 	@echo "Linking: Linking the kernel image ..."
-	$(LD) $(linkFlags) -o $(linkTarget) $(objects-y)    
+	$(LD) $(linkFlags) -o $(linkTarget) $(objects-y)  
+
+
 clean:
 	rm -rf *.o   
 	@echo "~clean"

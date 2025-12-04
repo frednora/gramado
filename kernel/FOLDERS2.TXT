@@ -1,0 +1,118 @@
+
+Here’s a polished **skeleton documentation** you can use as a foundation for your kernel project. 
+It’s structured like a `README.md` or architecture doc, focusing only 
+on the **folders and their purpose** — clean, concise, and developer‑friendly:
+by Copilot
+
+---
+
+# Kernel Project Structure
+
+This document outlines the high‑level directory layout of the kernel and the purpose of each component.
+
+---
+
+## Top-Level Directories
+
+```
+kernel/
+ ├── core/     → Resource manager (execution, orchestration)
+ ├── include/  → Header files (public kernel interfaces)
+ ├── libk/     → Runtime library for ring 0
+ ├── res/      → Resource subsystems (devices, memory, FS, networking)
+ └── wink/     → User-facing interfaces (events, graphics, user API)
+```
+
+- **`core/`**  
+  Contains the kernel’s execution and orchestration logic. Manages resources defined in `res/`.
+
+- **`include/`**  
+  Kernel header files, type definitions, macros, and exported interfaces.
+
+- **`libk/`**  
+  Runtime library for ring 0. Provides low-level utilities (string/memory ops, math, helpers).
+
+- **`res/`**  
+  Resource subsystems: devices, filesystems, memory, networking. Implements the actual resources managed by `core/`.
+
+- **`wink/`**  
+  User interaction layer. Provides event interface (EVI), graphics device interface (GDI), and user subsystem.
+
+---
+
+## Core Subsystem (`core/`)
+
+```
+core/
+ ├── arch/   → Architecture-specific assembly code
+ ├── ke/     → HAL, dispatcher, scheduler
+ └── kwrap/  → Syscall interface, namespaces, cgroups, virtualization, panic/reboot
+```
+
+- **`arch/`**  
+  Hardware‑specific assembly routines (bootstrapping, context switching).
+
+- **`ke/`**  
+  Kernel executive. Abstracts hardware, manages threads, scheduling, and interrupts.
+
+- **`kwrap/`**  
+  Top‑layer wrapper. Provides syscall entry points, namespace/cgroup management, virtualization hooks, and error handling (panic/reboot).
+
+---
+
+## Resource Subsystem (`res/`)
+
+```
+res/
+ ├── bus/   → System buses and interconnects
+ ├── dev/   → Device drivers (block, char, net)
+ ├── fs/    → Filesystem implementations
+ ├── mm/    → Memory management
+ └── net/   → Networking stack
+```
+
+- **`bus/`**  
+  Abstractions for system interconnects (PCI, USB, etc.).
+
+- **`dev/`**  
+  Device drivers: block devices, character devices, and network devices.
+
+- **`fs/`**  
+  Filesystem layers and implementations.
+
+- **`mm/`**  
+  Memory management: allocation, paging, virtual memory.
+
+- **`net/`**  
+  Networking protocols, sockets, and routing.
+
+---
+
+## User Interface Layer (`wink/`)
+
+- **EVI (Event Interface)**  
+  Event handling between kernel and user space.  
+
+- **GDI (Graphics Device Interface)**  
+  Graphics abstraction for user applications.  
+
+- **User**  
+  User‑mode interaction layer (windowing, input handling, etc.).
+
+---
+
+## Support Infrastructure
+
+- **`include/`**  
+  Shared headers and exported kernel interfaces.  
+
+- **`libk/`**  
+  Ring 0 runtime library with utility functions for kernel subsystems.  
+
+---
+
+This skeleton serves as the **map of the kernel project**, 
+helping developers quickly identify where each subsystem lives and its purpose.
+
+---
+
