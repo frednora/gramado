@@ -1,0 +1,78 @@
+
+## Call Path: `console_putchar()` → `bldisp_putpixel0`
+
+Let’s extend the trace **starting at `console_putchar()`**, 
+since that’s often the very first public entry point for 
+printing a character in your kernel. This way we’ll have 
+the full path documented from the highest‑level console API down 
+to the lowest pixel worker.
+
+by Copilot
+
+---
+
+### 1. **Top‑level console API**
+- `console_putchar(int c)`  
+  - Simplest public routine to print a single character.  
+  - Typically wraps `console_outbyte()` (sometimes with `fg_console` as the target).  
+  - Used by higher‑level functions like `printk()` or shell output.
+
+### 2. **Console output routines**
+- `console_outbyte(int c, int console_number)`  
+  - Processes control characters (`\n`, `\r`, `\t`, backspace).  
+  - Updates cursor position, triggers scrolling if needed.  
+  - Calls `__console_outbyte_imp()` for visible characters.  
+- `console_outbyte2(int c, int console_number)`  
+  - Same as above, but refreshes screen after drawing.  
+  - Also funnels into `__console_outbyte_imp()`.
+
+### 3. **Local worker**
+- `__console_outbyte_imp(int c, int console_number)`  
+  - Computes pixel coordinates from cursor position and font size.  
+  - Selects fg/bg colors from console state.  
+  - Calls glyph painter (`char_draw` or `char_draw_transparent`).
+
+### 4. **Glyph painters (char.c)**
+- `char_draw(x, y, c, fgcolor, bgcolor)`  
+  - Iterates over font bitmap, paints fg/bg pixels.  
+- `char_draw_transparent(x, y, color, c)`  
+  - Same, but only paints fg pixels.  
+- Both call `backbuffer_putpixel()` for each pixel.
+
+### 5. **Pixel writer**
+- `backbuffer_putpixel(color, x, y, rop_flags)`  
+  - Writes pixel into backbuffer.  
+  - Abstracts hardware details.  
+  - Delegates to embedded driver.
+
+### 6. **Embedded display driver**
+- `bldisp_putpixel0(color, x, y, rop_flags)`  
+  - Lowest‑level worker.  
+  - Actually touches VRAM / LFB memory.  
+  - Hardware‑specific implementation.
+
+---
+
+##  Documentation Diagram
+
+```text
+console_putchar()
+    └── console_outbyte() / console_outbyte2()
+          └── __console_outbyte_imp()
+                └── char_draw() / char_draw_transparent()
+                      └── backbuffer_putpixel()
+                            └── bldisp_putpixel0()
+```
+
+---
+
+##  Why This Matters
+- Shows the **complete path** from the simplest API (`console_putchar`) 
+  down to the hardware pixel plotter.  
+- Makes it clear that all console output eventually converges into 
+  the same low‑level worker.  
+- Helps future debugging: 
+  if a character doesn’t appear, you can trace from `console_putchar()` down 
+  to `bldisp_putpixel0()`.
+
+---

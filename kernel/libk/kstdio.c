@@ -56,14 +56,8 @@ unsigned long prompt_pos=0;
 unsigned long prompt_max=0; 
 unsigned long prompt_status=0;
 
-
-// ?
-//int stdio_verbosemode_flag=0;
-
-// 
+// Let's manage some stuff the happens in kstdio
 struct kstdio_info_d  kstdio_info;
-
-
 
 // Global sync stuff.
 // see: kstdio.h
@@ -1095,7 +1089,27 @@ kinguio_vsprintf(
     return (int) ( (long) str_tmp - (long) str );
 }
 
-// Print a string.
+/*
+ * kinguio_puts:
+ *   Print a null‑terminated string to the foreground console.
+ *
+ * Behavior:
+ *   - Iterates over each character in the input string.
+ *   - For each character, calls console_outbyte2() to draw and refresh it
+ *     on the active console (fg_console).
+ *   - If the string is NULL or empty, the function returns immediately.
+ *
+ * Parameters:
+ *   str - Pointer to the null‑terminated string to be printed.
+ *
+ * Notes:
+ *   - This is the printing stage in the printk path:
+ *       printk() → kinguio_printf() → kinguio_puts() → console_outbyte2() …
+ *   - Unlike kinguio_vsprintf(), this function does not format; it only
+ *     emits characters to the console.
+ *   - Uses console_outbyte2(), which refreshes the screen after drawing.
+ */
+
 void kinguio_puts(const char* str)
 {
     size_t StringLen=0;
@@ -1107,17 +1121,17 @@ void kinguio_puts(const char* str)
         return;
     }
 
-// String lenght.
+// String lenght
     StringLen = (size_t) strlen(str);
     if (StringLen <= 0)
         return;
 
-// Print chars. 
+// Print chars
     for (i=0; i<StringLen; i++)
     {
         _char = (int) (str[i] & 0xFF);
 
-        // Draw, and refresh a single char.
+        // Draw, and refresh a single char
         console_outbyte2 (_char, fg_console);
 
         // Draw, but not refresh.
@@ -2339,8 +2353,6 @@ int kstdio_initialize(void)
     g_inputmode = INPUT_MODE_MULTIPLE_LINES;
 
     kstdio_info.kstdio_in_terminalmode = TRUE;
-
-    //stdio_verbosemode_flag = TRUE;
     kstdio_info.kstdio_in_verbosemode = TRUE;
 
     errno = 0;  // Last registered error

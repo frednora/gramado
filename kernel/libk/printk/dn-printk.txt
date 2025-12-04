@@ -1,0 +1,87 @@
+
+ printk() path: by Copilot
+
+First of all: printk() is an alias to kinguio_vsprintf()
+
+--------------------------
+printk Path (Top → Screen)
+
+
+kinguio_printf()
+    └── kinguio_puts()
+          └── console_outbyte2()
+                └── __console_outbyte_imp()
+                      └── char_draw() / char_draw_transparent()
+                            └── backbuffer_putpixel()
+                                  └── bldisp_putpixel0()
+
+kinguio_printf(fmt, ...)
+    - Kernel's printf-style function (used by printk).
+    - Prepares a formatted string into a buffer.
+    - If printk_to_serial == TRUE, sends buffer to serial via debug_print_nbytes().
+    - Otherwise, calls kinguio_puts() to print the buffer to the console.
+
+kinguio_puts(const char *str)
+    - Takes a null-terminated string and iterates over each character.
+    - For each character, calls console_outbyte2() to draw and refresh it
+      on the foreground console (fg_console).
+    - This is the bridge between formatted strings and console output.
+
+console_outbyte2(int ch, int console_number)
+    - Console output routine that processes control characters (newline, tab, backspace).
+    - Updates cursor position and triggers scrolling if needed.
+    - Calls __console_outbyte_imp() for visible characters.
+    - Difference from console_outbyte(): it refreshes the screen after drawing.
+
+__console_outbyte_imp(int ch, int console_number)
+    - Local worker for console output.
+    - Computes pixel coordinates from cursor position and font size.
+    - Selects foreground/background colors from console state.
+    - Delegates actual glyph rendering to char_draw() or char_draw_transparent().
+
+char_draw(x, y, c, fgcolor, bgcolor)
+    - Glyph painter: renders a character bitmap into the backbuffer.
+    - Iterates over font bits, painting foreground or background pixels.
+    - Calls backbuffer_putpixel() for each pixel.
+
+char_draw_transparent(x, y, c, fgcolor)
+    - Variant of char_draw() that only paints foreground pixels.
+    - Leaves background untouched (transparent rendering).
+    - Also calls backbuffer_putpixel() for each pixel.
+
+backbuffer_putpixel(color, x, y, rop_flags)
+    - Writes a single pixel into the backbuffer.
+    - Abstracts hardware details, ensuring device-independent pixel plotting.
+    - Delegates to the embedded display driver.
+
+bldisp_putpixel0(color, x, y, rop_flags)
+    - Lowest-level worker in the graphics stack.
+    - Actually touches VRAM / linear frame buffer memory.
+    - Implements hardware-specific pixel plotting.
+
+------------------------------------------------------------
+
+kinguio_printf(fmt, ...)
+    └── kinguio_vsprintf(data_buffer, fmt, ap)
+          └── [formatting only, expands %s, %d, %x, etc. into a string buffer]
+    └── kinguio_puts(data_buffer)
+          └── console_outbyte2(ch, fg_console)   // called for each character in the buffer
+                └── __console_outbyte_imp()
+                      └── char_draw() / char_draw_transparent()
+                            └── backbuffer_putpixel()
+                                  └── bldisp_putpixel0()
+
+
+
+Notes:
+- kinguio_printf() is the kernel’s printf-style function, used by printk().
+- It first formats the string into a buffer using kinguio_vsprintf().
+- Once the buffer is ready, kinguio_puts() iterates over each character.
+- For each character, console_outbyte2() is called to draw and refresh it.
+- __console_outbyte_imp() computes coordinates and colors, then calls the glyph painters.
+- char_draw() paints both foreground and background pixels.
+- char_draw_transparent() paints only foreground pixels (transparent background).
+- backbuffer_putpixel() writes pixels into the backbuffer.
+- bldisp_putpixel0() is the lowest-level worker, performing the actual hardware pixel write.
+- If Initialization.printk_to_serial == TRUE, kinguio_printf() bypasses kinguio_puts()
+  and instead calls debug_print_nbytes() to send output to the serial port.

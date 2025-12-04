@@ -867,7 +867,7 @@ void *sci0 (
 // IN: x, y, c, fg color, bg color
     if (number == 132)
     { 
-        d_draw_char(
+        char_draw(
             (unsigned long)  message_address[0],    // x
             (unsigned long)  message_address[1],    // y 
             (unsigned long)  message_address[2],    // c
@@ -881,7 +881,7 @@ void *sci0 (
 // IN: x, y, color, c
     if (number == 133)
     {
-        d_drawchar_transparent(
+        char_draw_transparent(
             (unsigned long)  message_address[0],   // x
             (unsigned long)  message_address[1],   // y 
             (unsigned long)  message_address[2],   // color

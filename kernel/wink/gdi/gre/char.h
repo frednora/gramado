@@ -16,7 +16,7 @@ void set_char_height (int height);
 int get_char_height (void);
 
 void 
-d_draw_char ( 
+char_draw ( 
     unsigned long x, 
     unsigned long y, 
     unsigned long c,
@@ -24,7 +24,7 @@ d_draw_char (
     unsigned int bgcolor );
 
 void 
-d_drawchar_transparent ( 
+char_draw_transparent ( 
     unsigned long x, 
     unsigned long y, 
     unsigned int color, 

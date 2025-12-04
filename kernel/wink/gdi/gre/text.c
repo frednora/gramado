@@ -41,13 +41,10 @@ draw_string (
     }
     */
 
-    // #bugbug
-    // There is something not good with this routine.
-    
-    for ( Index=0; string[Index] != 0; Index++ )
-    {
-        d_drawchar_transparent ( x, y, color, string[Index] );
-
+// #bugbug
+// There is something not good with this routine.    
+    for (Index=0; string[Index] != 0; Index++){
+        char_draw_transparent ( x, y, color, string[Index] );
         x += cWidth;
     };
 }

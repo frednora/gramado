@@ -82,7 +82,7 @@ static unsigned long console_interrupt_counter=0;
 // == Private functions: Prototypes ======================
 //
 
-static void __ConsoleDraw_Outbyte (int c, int console_number);
+static void __console_outbyte_imp (int c, int console_number);
 
 static void __test_path(void);
 static void __test_tty(void);
@@ -407,15 +407,22 @@ void csi_L (int nr, int console_number)
 */
 }
 
-//============================================
-// console_interrupt:
-// Called by devices that are not block devices.
-// Probably keyboard and serial devices.
-// See: keyboard.c and serial.c
-// Called by DeviceInterface_PS2Keyboard() in ps2kbd.c
-// IN:
-// #todo: Explain the parameters.
-
+/*
+ * console_interrupt:
+ * Handle input events from non-block devices (keyboard, serial, network).
+ *
+ * Parameters:
+ *   target_thread - Thread ID that should receive the event (not always used).
+ *   device_type   - Source device type (keyboard, serial, network).
+ *   data          - Raw input data (e.g., scancode for keyboard).
+ *
+ * Notes:
+ *   - Called by device drivers (e.g., PS/2 keyboard, serial).
+ *   - In keyboard case, forwards raw scancode to window manager.
+ *   - Updates global interrupt counter.
+ *   - Currently ignores invalid thread IDs.
+ *   - Maybe called by DeviceInterface_PS2Keyboard() in ps2kbd.c
+ */
 void 
 console_interrupt(
     int target_thread, 
@@ -505,13 +512,24 @@ int console_get_current_virtual_console(void)
     return (int) fg_console;
 }
 
-// Called by: 
-// __local_ps2kbd_procedure in ps2kbd.c
-// VirtualConsole_initialize in console.c
-// __initialize_virtual_consoles in kstdio.c
-// #todo:
-// maybe we can do somo other configuration here.
-// Change the foreground console.
+/*
+ * jobcontrol_switch_console:
+ * Switch active foreground console to a new virtual console.
+ *
+ * Parameters:
+ *   n - Console index to switch to.
+ *
+ * Behavior:
+ *   - Updates fg_console.
+ *   - Clears screen with console’s bg/fg colors.
+ *   - Displays banner and prompt.
+ *
+ * Notes:
+ *   - Called during initialization and by keyboard shortcuts.
+ *   - Ensures user sees the correct console state.
+ *   - Probably called by: 
+ *     __local_ps2kbd_procedure and __initialize_virtual_consoles
+ */
 
 void jobcontrol_switch_console(int n)
 {
@@ -640,6 +658,25 @@ unsigned long get_fg_color(void)
     return (unsigned long) CONSOLE_TTYS[fg_console].fg_color;
 }
 
+/*
+ * console_scroll_rect:
+ * Scroll the contents of a console’s screen rectangle.
+ *
+ * Parameters:
+ *   console_number - Target console index.
+ *   direction      - Scroll direction (up/down).
+ *
+ * Behavior:
+ *   - Calls scroll_screen_rect() to shift framebuffer contents.
+ *   - Clears the last line with console background color.
+ *   - Restores cursor position and limits after scroll.
+ *   - Refreshes the screen to display changes.
+ *
+ * Notes:
+ *   - Only valid in GUI mode.
+ *   - Currently implemented for fullscreen consoles only.
+ */
+
 int console_scroll_rect(int console_number, int direction)
 {
     register int i=0;
@@ -744,8 +781,8 @@ int console_scroll_rect(int console_number, int direction)
              i < (CONSOLE_TTYS[console_number].cursor_right-1);
              i++ )
        {
-           __ConsoleDraw_Outbyte(' ',console_number);
-           //__ConsoleDraw_Outbyte('.',console_number); 
+           __console_outbyte_imp(' ',console_number);
+           //__console_outbyte_imp('.',console_number); 
        };
     }
 */
@@ -776,22 +813,26 @@ fail:
     return (int) -1;
 }
 
-// worker
-// __ConsoleDraw_Outbyte:
-// Outputs a char on the console device;
-// Low level function to draw the char into the screen.
-// it calls the embedded window server.
-// #test
-// Tentando pegar as dimensões do char.
-// #importante: 
-// Não pode ser 0, pois poderíamos ter divisão por zero.
-// Called by console_outbyte().
+/*
+ * __console_outbyte_imp:
+ *   Private implementation worker for console_outbyte() and console_outbyte2().
+ *   Responsible for drawing a single character into the console’s framebuffer
+ *   at the current cursor position using display driver routines.
+ *
+ * Parameters:
+ *   c              - Character code (ASCII).
+ *   console_number - Target console index.
+ * 
+ * Notes:
+ *   - Delegates pixel rendering to char_draw().
+ *   - Does not handle control characters or scrolling logic.
+ */
 
-static void __ConsoleDraw_Outbyte (int c, int console_number)
+static void __console_outbyte_imp (int c, int console_number)
 {
 // Draw
 // Low level.
-// This routine is gonna call the function d_draw_char()
+// This routine is gonna call the function char_draw()
 // to draw into the screen. this function belongs to the 
 // display device driver.
 // #todo: We need to change the name of this function
@@ -820,7 +861,7 @@ static void __ConsoleDraw_Outbyte (int c, int console_number)
 
     if ( cWidth == 0 || cHeight == 0 )
     {
-        x_panic ("__ConsoleDraw_Outbyte: fail w h");
+        x_panic ("__console_outbyte_imp: fail w h");
     }
 
 // #bugbug
@@ -838,8 +879,8 @@ static void __ConsoleDraw_Outbyte (int c, int console_number)
 
     if (VideoBlock.useGui != TRUE)
     {
-        debug_print ("__ConsoleDraw_Outbyte: kernel in text mode\n");
-        x_panic     ("__ConsoleDraw_Outbyte: kernel in text mode");
+        debug_print ("__console_outbyte_imp: kernel in text mode\n");
+        x_panic     ("__console_outbyte_imp: kernel in text mode");
     }
 
 // Screen position.
@@ -854,7 +895,7 @@ static void __ConsoleDraw_Outbyte (int c, int console_number)
 // Sempre pinte o bg e o fg.
 // see: gre/char.c
 
-    d_draw_char ( screenx, screeny, Ch, fg_color, bg_color );
+    char_draw ( screenx, screeny, Ch, fg_color, bg_color );
 
 /*
 // ## NÃO TRANPARENTE ##
@@ -865,7 +906,7 @@ static void __ConsoleDraw_Outbyte (int c, int console_number)
     if (kstdio_info.kstdio_in_terminalmode == TRUE)
     {
         // Pinta bg e fg.
-        d_draw_char ( screenx, screeny, Ch, fg_color, bg_color );
+        char_draw ( screenx, screeny, Ch, fg_color, bg_color );
         return;
     }
 
@@ -875,20 +916,29 @@ static void __ConsoleDraw_Outbyte (int c, int console_number)
 // Não sabemos o fundo. Vamos selecionar o foreground.     
 
     // Pinta apenas o fg.
-    d_drawchar_transparent ( screenx, screeny, fg_color, Ch );
+    char_draw_transparent ( screenx, screeny, fg_color, Ch );
 */
 
 }
 
 /*
  * console_outbyte:
- *     Trata o caractere a ser imprimido e chama a rotina /_outbyte/
- * para efetivamente colocar o caractere na tela.
- * Essa rotina é chamada pelas funções: /putchar/scroll/.
- * @todo: Colocar no buffer de arquivo.
+ * Process and render a character to the console.
+ *
+ * Parameters:
+ *   c              - Character code (ASCII).
+ *   console_number - Target console index.
+ *
+ * Behavior:
+ *   - Handles control characters: \n, \r, \t, \f, backspace.
+ *   - Updates cursor position and triggers scrolling if needed.
+ *   - Draws visible characters via __console_outbyte_imp() if ECHO is set.
+ *
+ * Notes:
+ *   - Requires console to be initialized.
+ *   - Respects terminal and verbose modes for line handling.
+ *   - Updates prev_char for CR/LF sequence detection.
  */
-// This functions calls __ConsoleDraw_Outbyte to draw
-// the char into the screen.
 
 void console_outbyte (int c, int console_number)
 {
@@ -985,12 +1035,12 @@ void console_outbyte (int c, int console_number)
             }
             CONSOLE_TTYS[n].cursor_y = (CONSOLE_TTYS[n].cursor_bottom -1);
             CONSOLE_TTYS[n].prev_char = Ch;
-        }else{
+        } else {
             CONSOLE_TTYS[n].cursor_y++;
+
             // Retornaremos mesmo assim ao início da linha 
             // se estivermos imprimindo no terminal.
-            if (kstdio_info.kstdio_in_terminalmode == TRUE)
-            {
+            if (kstdio_info.kstdio_in_terminalmode == TRUE){
                 CONSOLE_TTYS[n].cursor_x = CONSOLE_TTYS[n].cursor_left;
             } 
 
@@ -998,7 +1048,6 @@ void console_outbyte (int c, int console_number)
             // permite que a tela do kernel funcione igual a um 
             // terminal, imprimindo os printk um abaixo do outro.
             // sempre reiniciando x.
-            //if (stdio_verbosemode_flag == 1)
             if (kstdio_info.kstdio_in_verbosemode == TRUE){
                 CONSOLE_TTYS[n].cursor_x = CONSOLE_TTYS[n].cursor_left;
             } 
@@ -1131,7 +1180,7 @@ void console_outbyte (int c, int console_number)
 
     tcflag_t c_lflag = (tcflag_t) CONSOLE_TTYS[n].termios.c_lflag;
     if (c_lflag & ECHO){
-        __ConsoleDraw_Outbyte(Ch,n);
+        __console_outbyte_imp(Ch,n);
     }
 
     CONSOLE_TTYS[n].prev_char = Ch;
@@ -1248,7 +1297,6 @@ void console_outbyte2 (int c, int console_number)
             // permite que a tela do kernel funcione igual a um 
             // terminal, imprimindo os printk um abaixo do outro.
             // sempre reiniciando x.
-            //if (stdio_verbosemode_flag == 1)
             if (kstdio_info.kstdio_in_verbosemode == TRUE){
                 CONSOLE_TTYS[n].cursor_x = CONSOLE_TTYS[n].cursor_left;
             }
@@ -1390,7 +1438,7 @@ void console_outbyte2 (int c, int console_number)
 // local modes
     tcflag_t c_lflag = (tcflag_t) CONSOLE_TTYS[n].termios.c_lflag;
     if (c_lflag & ECHO){
-        __ConsoleDraw_Outbyte(Ch,n);
+        __console_outbyte_imp(Ch,n);
     }
 
 // Atualisa o prev.
@@ -3252,18 +3300,15 @@ int VirtualConsole_early_initialization(void)
         //    NULL );  // tty device
     };
 
-// Setup foreground console.
+// Setup foreground console
     jobcontrol_switch_console(0);
 
-// Cursor for the current console.
+// Cursor for the current console
 // See: system.c
     set_up_cursor(0,0);
 
-// #hackhack
-// Esse trabalho não nos pertence, pertence ao kstdio, mas funciona.
+// #hackhack: This configuration belongs to kstdio
     kstdio_info.kstdio_in_terminalmode = TRUE;
-
-    //stdio_verbosemode_flag = TRUE;
     kstdio_info.kstdio_in_verbosemode = TRUE;
 
     return 0;
@@ -3272,9 +3317,3 @@ int VirtualConsole_early_initialization(void)
 //
 // End
 //
-
-
-
-
-
-

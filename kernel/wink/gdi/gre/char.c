@@ -4,36 +4,47 @@
 #include <kernel.h>
 
 
-void set_char_width (int width)
-{
+void set_char_width (int width){
     FontInitialization.width = (int) width;
 }
 
-void set_char_height (int height)
-{
+void set_char_height (int height){
     FontInitialization.height = (int) height;
 }
 
-int get_char_width (void)
-{
+int get_char_width (void){
     return (int) FontInitialization.width;
 }
 
-int get_char_height (void)
-{
+int get_char_height (void){
     return (int) FontInitialization.height;
 }
 
 /*
- * d_draw_char:
- *     Constroi um caractere 8x8 no buffer.
- *     Desenha um caractere e pinta o pano de fundo.
- *     >> no backbuffer.
- */ 
-// Called by __ConsoleOutbyte in console.c
+ * char_draw:
+ *   Render a character glyph into the backbuffer with foreground and 
+ * background colors.
+ *
+ * Parameters:
+ *   x, y     - Pixel coordinates for top-left of glyph.
+ *   c        - Character code (ASCII index into font table).
+ *   fgcolor  - Foreground color (glyph pixels).
+ *   bgcolor  - Background color (empty pixels).
+ *
+ * Behavior:
+ *   - Uses current font settings from FontInitialization.
+ *   - Falls back to BIOS 8x8 font if no font is loaded.
+ *   - Iterates over each bit of the glyph bitmap, painting fg or bg color.
+ *   - Calls backbuffer_putpixel() for each pixel.
+ *
+ * Notes:
+ *   - Called by __console_outbyte_imp() in console.c.
+ *   - Supports multiple font sizes (8x8, 8x16).
+ *   - Always paints both fg and bg (non-transparent).
+ */
 
 void 
-d_draw_char ( 
+char_draw ( 
     unsigned long x, 
     unsigned long y, 
     unsigned long c,
@@ -42,10 +53,8 @@ d_draw_char (
 {
     register int y2=0;
     register int x2=0;
-    // The char.
-    char *work_char;
-    // The mask.
-    unsigned char bit_mask = 0x80;
+    char *work_char;                // The char
+    unsigned char bit_mask = 0x80;  // The mask
 
 /*
  * Get the font pointer.
@@ -157,13 +166,18 @@ d_draw_char (
 }
 
 /*
- * d_drawchar_transparent:
- *     Desenha um caractere sem alterar o pano de fundo.
- *     >> no backbuffer.
+ * char_draw_transparent:
+ *   Render a character glyph into the backbuffer without painting background pixels.
+ *   Useful for overlay text where background must remain visible.
+ *
+ * Parameters:
+ *   x, y    - Pixel coordinates for top-left of glyph.
+ *   color   - Foreground color (glyph pixels).
+ *   c       - Character code (index into font table).
  */
 
 void 
-d_drawchar_transparent ( 
+char_draw_transparent ( 
     unsigned long x, 
     unsigned long y, 
     unsigned int color,   // ? fg_color 
@@ -252,7 +266,7 @@ d_drawchar_transparent (
 // Offset da tabela de chars de altura 8 na ROM.
 
     if (FontInitialization.address == 0){
-        debug_print ("d_drawchar_transparent: [FAIL]FontInitialization.address\n");
+        debug_print ("char_draw_transparent: [FAIL]FontInitialization.address\n");
         return;
     }
 

@@ -145,10 +145,6 @@ extern unsigned long prompt_pos;
 extern unsigned long prompt_max; 
 extern unsigned long prompt_status;
 
-
-//extern int stdio_verbosemode_flag;
-
-
 // Let's manage some stuff the happens in kstdio
 struct kstdio_info_d 
 {
@@ -159,7 +155,6 @@ struct kstdio_info_d
     int kstdio_in_verbosemode;
 };
 extern struct kstdio_info_d kstdio_info;
-
 
 /* 
  * This is fairly grotesque, but pure ANSI code must not inspect the
