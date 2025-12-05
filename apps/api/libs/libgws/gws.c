@@ -3617,6 +3617,10 @@ int gws_window ( int fd, int type )
 // This a good thing when 
 // creating a window manager as a client application.
 // The synchronization is made when we call gws_create_window.
+//
+// Main window    → WT_OVERLAPPED (grandparent, top‑level app window)
+// Menu container → WT_SIMPLE (parent, lightweight grouping box)
+// Menu item      → WT_BUTTON (child, the actual clickable element)
 
 struct gws_menu_d *gws_create_menu (
     int fd,

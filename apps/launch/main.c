@@ -1,4 +1,5 @@
 // main.c
+// Created by Fred Nora.
 
 // rtl
 #include <types.h>
@@ -14,7 +15,6 @@
 #include <rtl/gramado.h>
 // libgws - The client-side library.
 #include <gws.h>
-
 
 #include "launch.h"
 
@@ -58,7 +58,52 @@ launchProcedure(
 void pump(int fd, int wid);
 static int __initialize_connection(void);
 
+static void __paint_worker(int fd);
+static void __close_worker(int fd);
+
 // ====================================
+
+
+// Worker: redraw all children when we receive MSG_PAINT
+static void __paint_worker(int fd)
+{
+    // Redraw the main window
+    gws_redraw_window(fd, main_window, TRUE);
+
+    // Redraw the menu container
+    gws_redraw_window(fd, MyMenuInfo.menu_wid, TRUE);
+
+    // Redraw each menu item
+    gws_redraw_window(fd, MyMenuInfo.item0_wid, TRUE);
+    gws_redraw_window(fd, MyMenuInfo.item1_wid, TRUE);
+    gws_redraw_window(fd, MyMenuInfo.item2_wid, TRUE);
+    gws_redraw_window(fd, MyMenuInfo.item3_wid, TRUE);
+
+    gws_refresh_window (fd, main_window);
+
+    //#todo: Lock the geometry of the main window and the menu container.
+
+    // #debug
+    //printf("Paint worker: refreshed main, menu, and items\n");
+}
+
+// Worker: destroy all windows and exit
+static void __close_worker(int fd)
+{
+    // Destroy children first
+    gws_destroy_window(fd, MyMenuInfo.item0_wid);
+    gws_destroy_window(fd, MyMenuInfo.item1_wid);
+    gws_destroy_window(fd, MyMenuInfo.item2_wid);
+    gws_destroy_window(fd, MyMenuInfo.item3_wid);
+
+    // Destroy the menu container
+    gws_destroy_window(fd, MyMenuInfo.menu_wid);
+
+    // Destroy the main window
+    gws_destroy_window(fd, main_window);
+
+    //printf("Close worker: destroyed all windows\n");
+}
 
 
 // Process event that came from the server.
@@ -84,10 +129,16 @@ launchProcedure(
 // Process the event.
     switch (event_type){
 
+        case 0:
+            printf("msg\n");
+            break;
+
         //#todo
         // Update the bar and the list of clients.
         case MSG_PAINT:
-            printf("launch: MSG_PAINT\n");
+            __paint_worker(fd);   // redraw main, container, items
+            //printf("launch: MSG_PAINT\n");
+
             // #todo
             // We need to update all the clients
             // Create update_clients()
@@ -117,63 +168,17 @@ launchProcedure(
 
         // One button was clicked
         case GWS_MouseClicked:
-            //#debug
-            //printf("taskbar: GWS_MouseClicked\n");
+            //printf("[DEBUG EVENT] type=%d event_window=%d long1=%d long2=%d\n",
+                //event_type, event_window, (int) long1, (int) long2);
 
-            // #debug 
-            //if (long1 == main_window)
-                //printf("taskbar: GWS_MouseClicked\n");
-
-            //if (event_window == NavigationInfo.button00_window)
-            // #ps: Probably the event window is the main window.
-
-            // # Display apps. (recent apps?), maximize.
-            //if (long1 == NavigationInfo.button00_window)
-            //{
-                // witch_side: 1=top, 2=right, 3=bottom, 4=left
-                //gws_dock_active_window(fd,4);
-                //gws_async_command(fd,30,0,0);  // TILE (Update desktop)
-                //gws_async_command(fd,15,0,0); //SET ACTIVE WINDOW BY WID
-                //gws_async_command(fd,1014,0,0); //maximize active window
-
-                /*
-                // #todo: It is working. 
-                // We got to initialize the variables first.
-            
-                //#test: Testing a new worker.
-                tmpNewWID = (int) create_bar_icon(
-                    fd, 
-                    main_window,
-                    0,
-                    (icon_left_limit + icon_counter),  // Left
-                    2,  // Top
-                    32, // Width
-                    28, // Height
-                    "NEW" );
-
-                if (tmpNewWID < 0)
-                    goto fail;
-                gws_refresh_window(fd,tmpNewWID);
-                if (icon_counter<0)
-                    goto fail;
-                if (icon_counter>=32)
-                    goto fail;
-                iconList[icon_counter] = (int) tmpNewWID;
-                icon_counter++;
-
-                printf("done %d\n",tmpNewWID);
-                */
-            //}
-
-            //if (long1 == NavigationInfo.button01_window)
-            //{
-                // witch_side: 1=top, 2=right, 3=bottom, 4=left
-                //gws_dock_active_window(fd,2);
-                //gws_async_command(fd,1011,0,0);
-            //}
-            // #todo: Back
-            //if (long1 == NavigationInfo.button02_window)
-                //gws_async_command(fd,30,0,0);
+            if ((int) long1 == MyMenuInfo.item0_wid)
+                printf("Item 0\n");
+            if ((int) long1 == MyMenuInfo.item1_wid)
+                printf("Item 1\n");
+            if ((int) long1 == MyMenuInfo.item2_wid)
+                printf("Item 2\n");
+            if ((int) long1 == MyMenuInfo.item3_wid)
+                printf("Item 3\n");
             break;
 
         // Add new client. Given the wid.
@@ -210,16 +215,9 @@ launchProcedure(
             */
             break;
 
-        // #bugbug
-        // The taskbar application is the Shell, just like the explorer.exe
-        // in Windows. We can't simply close it.
-        // #todo
-        // It only can happen when in certain situations.
         case MSG_CLOSE:
-            printf("launch: Closing... #bugbug\n");
-            //exit(0);
-            // Let's leave the main loop.
-            isTimeToQuit = TRUE;
+            __close_worker(fd);
+            isTimeToQuit = TRUE;  // Signal to quit the app
             break;
         
         case MSG_COMMAND:
@@ -345,15 +343,12 @@ void pump(int fd, int wid)
     if (e->magic != 1234){
         return;
     }
-    if (e->type < 0)
+    if (e->type <= 0)
         return;
 
-// Process event.
+// Process event
     int Status = -1;
-    Status = 
-        launchProcedure( 
-            fd, 
-            e->window, e->type, e->long1, e->long2 );
+    Status = launchProcedure( fd, e->window, e->type, e->long1, e->long2 );
 
     // ...
 }
@@ -422,15 +417,7 @@ int main(int argc, char *argv[])
     const char *display_name_string = "display:name.0";
     int client_fd=-1;
 
-    //printf("launch.bin: Hello\n");
-
-/*
-    client_fd = (int) __initialize_connection();
-    if (client_fd<0){
-        printf("on connection\n");
-        return EXIT_FAILURE;
-    }
-*/
+    //printf("launch.BIN: Hello\n");
 
 // ============================
 // Open display.
@@ -451,7 +438,7 @@ int main(int argc, char *argv[])
 //
 // Create main window
 //
-    //printf("launch.bin: Create window\n");
+    //printf("launch.BIN: Create window\n");
 
     const char *program_name = "Launch";
 
@@ -491,7 +478,6 @@ int main(int argc, char *argv[])
         client_fd, 
         main_window,   // The app window.
         (struct gws_window_info_d *) &lWi );
-
 
 //
 // Creating the menu
@@ -542,7 +528,7 @@ int main(int argc, char *argv[])
             menu00 );
     if (tmp->window < 0)
         printf("menuitem window fail\n");
-    MyMenuInfo.item0_wid = tmp->window;
+    MyMenuInfo.item1_wid = tmp->window;
 
     tmp = 
         (struct gws_menu_item_d *) gws_create_menu_item (
@@ -552,7 +538,7 @@ int main(int argc, char *argv[])
             menu00 );
     if (tmp->window < 0)
         printf("menuitem window fail\n");
-    MyMenuInfo.item0_wid = tmp->window;
+    MyMenuInfo.item2_wid = tmp->window;
 
     tmp = 
         (struct gws_menu_item_d *) gws_create_menu_item (
@@ -562,7 +548,7 @@ int main(int argc, char *argv[])
             menu00 );
     if (tmp->window < 0)
         printf("menuitem window fail\n");
-    MyMenuInfo.item0_wid = tmp->window;
+    MyMenuInfo.item3_wid = tmp->window;
 
 // Refresh only the menu window
     gws_refresh_window(client_fd,MyMenuInfo.menu_wid);
@@ -571,6 +557,15 @@ int main(int argc, char *argv[])
     //gws_refresh_window(client_fd,main_window);
 
 
+/*
+// The IDs
+    printf("[DEBUG CREATE] main_window=%d\n", main_window);
+    printf("[DEBUG CREATE] menu_wid=%d\n", MyMenuInfo.menu_wid);
+    printf("[DEBUG CREATE] item0_wid=%d\n", MyMenuInfo.item0_wid);
+    printf("[DEBUG CREATE] item1_wid=%d\n", MyMenuInfo.item1_wid);
+    printf("[DEBUG CREATE] item2_wid=%d\n", MyMenuInfo.item2_wid);
+    printf("[DEBUG CREATE] item3_wid=%d\n", MyMenuInfo.item3_wid);
+*/
 
 //
 // Event loop
@@ -614,7 +609,7 @@ int main(int argc, char *argv[])
     };
 
 // Done
-    printf("launch.bin: Test done\n");
+    //printf("launch.bin: Test done\n");
     return EXIT_SUCCESS;
 
 fail:

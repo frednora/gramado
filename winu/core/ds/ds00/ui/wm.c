@@ -550,7 +550,8 @@ void on_mouse_released(void)
 // -------------------------
 // Regular button or quick launch button.
 // Not a control, not the start menu, not the menuitem.
-    struct gws_window_d *p1;  // parent.
+    struct gws_window_d *p1;  // Parent
+    struct gws_window_d *gp;  // Grand-parent
 
     if (mouse_hover->type == WT_BUTTON)
     {
@@ -577,8 +578,7 @@ void on_mouse_released(void)
             // Send to parent. (Overlapped?)
             // A barra de tarefas nao e' overlapped.
             // teremos que mandar mensagens pra ela tambem
-            if ( p1->type == WT_OVERLAPPED || 
-                 p1 == taskbar_window )
+            if ( p1->type == WT_OVERLAPPED || p1 == taskbar_window )
             {
                 // #debug
                 // printf ("server: Sending GWS_MouseClicked\n");
@@ -588,6 +588,26 @@ void on_mouse_released(void)
                     mouse_hover->id, 
                     mouse_hover->id );
             }
+            
+            // --- Quick temporary solution ---
+            // If the parent is WT_SIMPLE, climb one level up
+            if (p1->type == WT_SIMPLE) 
+            {
+                gp = p1->parent;
+                if ((void*) gp != NULL && gp->magic == 1234) 
+                {
+                    if (gp->type == WT_OVERLAPPED) 
+                    {
+                        window_post_message(
+                            gp->id,                // send to grandparent
+                            GWS_MouseClicked,
+                            mouse_hover->id,       // child button ID
+                            mouse_hover->id );
+                        return;
+                    }
+                }
+            }
+
             return;
         }
     }

@@ -61,7 +61,7 @@ static void update_children(int fd)
     gws_change_window_position(fd, shutdown_button, shutdown_x, button_y);
     gws_resize_window(fd, shutdown_button, button_w, button_h);
     gws_redraw_window(fd, shutdown_button, TRUE);
-
+    
     //#debug
     gws_refresh_window (fd, main_window);
 }
