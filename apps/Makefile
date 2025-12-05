@@ -37,7 +37,9 @@ all:
 	make -C menuapp/
 	make -C launch/
 
+# Created by Copilot
 	make -C power/
+	make -C memory/
 
 # Gramado Desktop Manager
 	make -C gdm/

@@ -1,0 +1,309 @@
+// memory_app.c
+// Gramado OS client-side GUI app showing system memory information.
+// Created by Fred Nora (example by Copilot).
+
+// rtl
+#include <types.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <rtl/gramado.h>
+// libgws - The client-side library.
+#include <gws.h>
+
+#include "memory.h" // Optional: define colors or prototypes if you like
+
+// Global display pointer
+struct gws_display_d *Display;
+
+// Window and control IDs
+static int main_window      = -1;
+static int refresh_button   = -1;
+static int close_button     = -1;
+
+// Cached layout info
+static unsigned long cr_left   = 0;
+static unsigned long cr_top    = 0;
+static unsigned long cr_width  = 0;
+static unsigned long cr_height = 0;
+
+// ----------------------------------------------------
+// Helpers
+// ----------------------------------------------------
+
+static void query_client_area(int fd)
+{
+    struct gws_window_info_d wi;
+    gws_get_window_info(fd, main_window, &wi);
+    cr_left   = wi.cr_left;
+    cr_top    = wi.cr_top;
+    cr_width  = wi.cr_width;
+    cr_height = wi.cr_height;
+}
+
+static void draw_label(int fd, int x, int y, const char *text)
+{
+    gws_draw_text(fd, main_window, x, y, COLOR_BLACK, (char *)text);
+}
+
+static void draw_value_line(int fd, int x, int y, const char *label, unsigned long value_kb)
+{
+    char line[128];
+    sprintf(line, "%s: %lu KB", label, value_kb);
+    gws_draw_text(fd, main_window, x, y, COLOR_BLACK, line);
+}
+
+// ----------------------------------------------------
+// Memory metrics
+// ----------------------------------------------------
+
+static void draw_memory_metrics(int fd, int base_x, int base_y, int line_h)
+{
+    unsigned long base   = gws_get_system_metrics(30);
+    unsigned long other  = gws_get_system_metrics(31);
+    unsigned long ext    = gws_get_system_metrics(32);
+    unsigned long total  = gws_get_system_metrics(33);
+    unsigned long used   = gws_get_system_metrics(34);
+    unsigned long free_  = gws_get_system_metrics(35);
+
+    int y = base_y;
+
+    draw_value_line(fd, base_x, y,              "Base",     base);   y += line_h;
+    draw_value_line(fd, base_x, y,              "Other",    other);  y += line_h;
+    draw_value_line(fd, base_x, y,              "Extended", ext);    y += line_h;
+    draw_value_line(fd, base_x, y,              "Total",    total);  y += line_h;
+    draw_value_line(fd, base_x, y,              "Used",     used);   y += line_h;
+    draw_value_line(fd, base_x, y,              "Free",     free_);  y += line_h;
+}
+
+// ----------------------------------------------------
+// Worker: update children on paint
+// ----------------------------------------------------
+
+static void update_children(int fd)
+{
+    query_client_area(fd);
+
+    // Compute responsive control sizes
+    unsigned long button_w = cr_width / 5;
+    unsigned long button_h = cr_height / 10;
+    if (button_h < 32) button_h = 32; // minimum height
+    unsigned long label_y  = 20;
+    unsigned long metrics_x = 20;
+    unsigned long metrics_y = label_y + 30;
+    unsigned long line_h    = 20;
+
+    // Place buttons at bottom-left and bottom-right, centered vertically in bottom band
+    unsigned long bottom_band_y = cr_height - (button_h + 20);
+    unsigned long refresh_x     = (cr_width / 4) - (button_w / 2);
+    unsigned long close_x       = (3 * cr_width / 4) - (button_w / 2);
+    unsigned long buttons_y     = bottom_band_y;
+
+    // Redraw parent background
+    gws_redraw_window(fd, main_window, TRUE);
+
+    // Title/label
+    draw_label(fd, 20, label_y, "System Memory Status:");
+
+    // Metrics block
+    draw_memory_metrics(fd, metrics_x, metrics_y, line_h);
+
+    // Move/resize/redraw buttons
+    gws_change_window_position(fd, refresh_button, refresh_x, buttons_y);
+    gws_resize_window(fd, refresh_button, button_w, button_h);
+    gws_redraw_window(fd, refresh_button, TRUE);
+
+    gws_change_window_position(fd, close_button, close_x, buttons_y);
+    gws_resize_window(fd, close_button, button_w, button_h);
+    gws_redraw_window(fd, close_button, TRUE);
+
+    // Optional: ensure final composite
+    gws_refresh_window(fd, main_window);
+}
+
+// ----------------------------------------------------
+// Procedure: handles events sent by the display server
+// ----------------------------------------------------
+
+static int 
+memoryProcedure(
+    int fd, 
+    int event_window, 
+    int event_type, 
+    unsigned long long1, 
+    unsigned long long2 )
+{
+    if (fd < 0) return -1;
+    if (event_window < 0) return -1;
+    if (event_type < 0) return -1;
+
+    switch (event_type) {
+
+    case 0:
+        // Null/heartbeat event
+        return 0;
+
+    case GWS_MouseClicked:
+        // Child ID comes in long1
+        if ((int)long1 == refresh_button) {
+            // Just trigger a repaint to refresh metrics
+            update_children(fd);
+            return 0;
+        }
+        if ( (int)long1 == close_button ) {
+            gws_destroy_window(fd, refresh_button);
+            gws_destroy_window(fd, close_button);
+            gws_destroy_window(fd, main_window);
+            exit(0);
+        }
+        break;
+
+    case MSG_CLOSE:
+        gws_destroy_window(fd, refresh_button);
+        gws_destroy_window(fd, close_button);
+        gws_destroy_window(fd, main_window);
+        exit(0);
+        break;
+
+    case MSG_PAINT:
+        update_children(fd);
+        return 0;
+
+    default:
+        // Unknown event
+        return -1;
+    };
+
+    return 0;
+}
+
+// ----------------------------------------------------
+// Pump: fetches events from the server and dispatches
+// ----------------------------------------------------
+
+static void pump(int fd)
+{
+    struct gws_event_d event;
+    event.used  = FALSE;
+    event.magic = 0;
+    event.type  = 0;
+
+    struct gws_event_d *e =
+        (struct gws_event_d *) gws_get_next_event(
+            fd, 
+            (int) main_window, 
+            (struct gws_event_d *) &event);
+
+    if ((void*) e == NULL) return;
+    if (e->magic != 1234 || e->used != TRUE) return;
+
+    if (e->type <= 0) return;
+
+    memoryProcedure(fd, e->window, e->type, e->long1, e->long2);
+}
+
+// ----------------------------------------------------
+// Main
+// ----------------------------------------------------
+
+int main(int argc, char *argv[])
+{
+    const char *display_name = "display:name.0";
+    int client_fd = -1;
+
+    // Connect to display server
+    Display = gws_open_display(display_name);
+    if ((void*) Display == NULL) {
+        printf("memory_app: Could not open display\n");
+        return EXIT_FAILURE;
+    }
+
+    client_fd = Display->fd;
+    if (client_fd <= 0) {
+        printf("memory_app: Invalid fd\n");
+        return EXIT_FAILURE;
+    }
+
+    // Screen size
+    unsigned long screen_w = gws_get_system_metrics(1);
+    unsigned long screen_h = gws_get_system_metrics(2);
+
+    // Main window geometry
+    unsigned long win_w = screen_w / 2;
+    unsigned long win_h = screen_h / 2;
+    unsigned long win_x = (screen_w - win_w) / 2;
+    unsigned long win_y = (screen_h - win_h) / 2;
+
+    main_window = gws_create_window(
+        client_fd,
+        WT_OVERLAPPED,
+        WINDOW_STATUS_ACTIVE,
+        VIEW_NULL,
+        "Memory Information",
+        win_x, win_y, win_w, win_h,
+        0,
+        0x0000,
+        COLOR_WHITE,
+        COLOR_GRAY );
+
+    if (main_window < 0) {
+        printf("memory_app: Failed to create main window\n");
+        return EXIT_FAILURE;
+    }
+
+    gws_refresh_window(client_fd, main_window);
+
+    // Initial label (will be redrawn in paint anyway)
+    gws_draw_text(client_fd, main_window, 20, 20, COLOR_BLACK, "System Memory Status:");
+
+    // Query client area for initial layout
+    query_client_area(client_fd);
+
+    // Button baseline sizes
+    unsigned long button_w = cr_width / 5;
+    unsigned long button_h = cr_height / 10;
+    if (button_h < 32) button_h = 32;
+
+    // Initial button positions (will be updated in paint)
+    unsigned long refresh_x = (cr_width / 4) - (button_w / 2);
+    unsigned long close_x   = (3 * cr_width / 4) - (button_w / 2);
+    unsigned long buttons_y = cr_height - (button_h + 20);
+
+    // Create buttons
+    refresh_button = gws_create_window(
+        client_fd,
+        WT_BUTTON,
+        BS_DEFAULT,
+        1,
+        "Refresh",
+        refresh_x, buttons_y,
+        button_w, button_h,
+        main_window, 0,
+        COLOR_GRAY, COLOR_GRAY );
+
+    gws_refresh_window(client_fd, refresh_button);
+
+    close_button = gws_create_window(
+        client_fd,
+        WT_BUTTON,
+        BS_DEFAULT,
+        1,
+        "Close",
+        close_x, buttons_y,
+        button_w, button_h,
+        main_window, 0,
+        COLOR_GRAY, COLOR_GRAY );
+
+    gws_refresh_window(client_fd, close_button);
+
+    gws_set_active(client_fd, main_window);
+    gws_refresh_window(client_fd, main_window);
+
+    // Event loop
+    while (1) {
+        pump(client_fd);
+    }
+
+    return EXIT_SUCCESS;
+}
