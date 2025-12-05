@@ -206,7 +206,6 @@ int rtl_get_key_state(int vk)
     return (int) (value & 0xFFFFFFFF);
 }
 
-
 // #test
 // 2mb shared memory surface.
 // ring3

@@ -229,6 +229,29 @@ gws_default_procedure (
     unsigned long long1, 
     unsigned long long2 );
 
+
+//
+// Dialog box
+//
+
+#define DIALOG_YESNO     1
+#define DIALOG_OK        2
+#define DIALOG_OKCANCEL  3
+
+int gws_dialog_box(int fd, int parent_wid, const char *message, int type);
+
+
+//
+// Message box
+//
+
+#define MSGBOX_INFO     1
+#define MSGBOX_WARNING  2
+#define MSGBOX_ERROR    3
+#define MSGBOX_SUCCESS  4
+
+int gws_message_box(int fd, int parent_wid, const char *message, int type);
+
 //
 // Async request support.
 //

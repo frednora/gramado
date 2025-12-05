@@ -176,9 +176,22 @@ menuappProcedure(
             if ((int) long1 == MyMenuInfo.item1_wid)
                 printf("Item 1\n");
             if ((int) long1 == MyMenuInfo.item2_wid)
-                printf("Item 2\n");
+            {
+                //printf("Item 2\n");
+                gws_message_box(fd, main_window, "My message box",MSGBOX_INFO);
+            }
             if ((int) long1 == MyMenuInfo.item3_wid)
-                printf("Item 3\n");
+            {
+                //printf("Item 3\n");
+                int Result00 = gws_dialog_box(
+                        fd,
+                        main_window,
+                        "My dialog box",
+                        DIALOG_YESNO );
+
+                if (Result00 == 1)
+                    printf("YES\n");
+            }
             break;
 
         // Add new client. Given the wid.

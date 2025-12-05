@@ -4406,7 +4406,6 @@ gws_default_procedure (
     unsigned long long1, 
     unsigned long long2 )
 {
-
     //gws_debug_print ("gws_default_procedure:\n");
 
     if (fd < 0){
@@ -4488,6 +4487,246 @@ gws_default_procedure (
 fail:
     return (int) -1;
 }
+
+
+int gws_dialog_box(int fd, int parent_wid, const char *message, int type)
+{
+    int dialog_wid = -1;
+    int btn1_wid = -1;
+    int btn2_wid = -1;
+    int message_wid = -1;
+    int result = -1;
+
+    unsigned int bg_color  = COLOR_GRAY;
+    unsigned int btn1_color = COLOR_BLUE;
+    unsigned int btn2_color = COLOR_RED;
+    const char *prefix     = "";
+
+// Choose style and prefix based on type
+    switch (type) {
+    case DIALOG_YESNO:
+        bg_color   = COLOR_LIGHTBLUE;
+        btn1_color = COLOR_GREEN;
+        btn2_color = COLOR_RED;
+        prefix     = "[QUESTION] ";
+        break;
+    case DIALOG_OK:
+        bg_color   = COLOR_GREEN;
+        btn1_color = COLOR_BLUE;
+        prefix     = "[CONFIRM] ";
+        break;
+    case DIALOG_OKCANCEL:
+        bg_color   = COLOR_YELLOW;
+        btn1_color = COLOR_BLUE;
+        btn2_color = COLOR_RED;
+        prefix     = "[PROMPT] ";
+        break;
+    }
+
+    // Create simple container
+    dialog_wid = gws_create_window(
+        fd,
+        WT_SIMPLE,
+        WINDOW_STATUS_ACTIVE,
+        VIEW_NULL,
+        "DialogBox",
+        100, 100, 240, 120,
+        parent_wid,
+        0,
+        bg_color,
+        COLOR_WHITE
+    );
+
+    // Optional message label
+    if (message != NULL) {
+        message_wid = gws_create_window(
+            fd,
+            WT_EDITBOX, WINDOW_STATUS_ACTIVE, VIEW_NULL,
+            message,
+            20, 20, 200, 20,
+            dialog_wid,
+            0,
+            COLOR_WHITE,
+            COLOR_WHITE
+        );
+
+        // Build prefix + message safely
+        char buffer[256];
+        memset(buffer, 0, sizeof(buffer));
+        strcat(buffer, prefix);
+        strcat(buffer, message);
+
+        gws_draw_text(fd, message_wid, 4, 4, COLOR_BLACK, buffer);
+    }
+
+// Create buttons depending on type
+    switch (type) {
+    case DIALOG_YESNO:
+        btn1_wid = gws_create_window(fd, WT_BUTTON, WINDOW_STATUS_ACTIVE, VIEW_NULL,
+                                     "Yes", 30, 60, 70, 30,
+                                     dialog_wid, 0, btn1_color, COLOR_WHITE);
+        btn2_wid = gws_create_window(fd, WT_BUTTON, WINDOW_STATUS_ACTIVE, VIEW_NULL,
+                                     "No", 130, 60, 70, 30,
+                                     dialog_wid, 0, btn2_color, COLOR_WHITE);
+        break;
+
+    case DIALOG_OK:
+        btn1_wid = gws_create_window(fd, WT_BUTTON, WINDOW_STATUS_ACTIVE, VIEW_NULL,
+                                     "OK", 85, 60, 70, 30,
+                                     dialog_wid, 0, btn1_color, COLOR_WHITE);
+        break;
+
+    case DIALOG_OKCANCEL:
+        btn1_wid = gws_create_window(fd, WT_BUTTON, WINDOW_STATUS_ACTIVE, VIEW_NULL,
+                                     "OK", 30, 60, 70, 30,
+                                     dialog_wid, 0, btn1_color, COLOR_WHITE);
+        btn2_wid = gws_create_window(fd, WT_BUTTON, WINDOW_STATUS_ACTIVE, VIEW_NULL,
+                                     "Cancel", 130, 60, 70, 30,
+                                     dialog_wid, 0, btn2_color, COLOR_WHITE);
+        break;
+    }
+
+    gws_refresh_window(fd, dialog_wid);
+
+// Event loop: wait until a button is clicked
+    struct gws_event_d Le;
+    struct gws_event_d *e;
+    while (1) {
+        e = (struct gws_event_d *) gws_get_next_event(fd, parent_wid, &Le);
+        if (e == NULL) continue;
+
+        if (e->type == GWS_MouseClicked) {
+            if ((int)e->long1 == btn1_wid) {
+                result = 1; // YES or OK
+                break;
+            }
+            if (btn2_wid > 0 && (int)e->long1 == btn2_wid) {
+                result = 0; // NO or Cancel
+                break;
+            }
+        }
+    }
+
+    // Destroy all windows before returning
+    if (message_wid > 0) 
+        gws_destroy_window(fd, message_wid);
+    if (btn1_wid > 0) 
+        gws_destroy_window(fd, btn1_wid);
+    if (btn2_wid > 0) 
+        gws_destroy_window(fd, btn2_wid);
+    if (dialog_wid > 0) 
+        gws_destroy_window(fd, dialog_wid);
+
+
+    return (int) result;
+}
+
+int gws_message_box(int fd, int parent_wid, const char *message, int type)
+{
+    int dialog_wid   = -1;
+    int message_wid  = -1;
+    int btn_wid      = -1;
+    int result       = -1;
+
+    unsigned int bg_color = COLOR_GRAY;
+    unsigned int btn_color = COLOR_BLUE;
+    const char *prefix     = "";
+
+    // Choose style based on type
+    switch (type) {
+    case MSGBOX_INFO:
+        bg_color = COLOR_LIGHTBLUE;
+        btn_color = COLOR_BLUE;
+        prefix    = "[INFO] ";
+        break;
+    case MSGBOX_WARNING:
+        bg_color = COLOR_YELLOW;
+        btn_color = COLOR_ORANGE;
+        prefix    = "[WARNING] ";
+        break;
+    case MSGBOX_ERROR:
+        bg_color = COLOR_RED;
+        btn_color = COLOR_DARKRED;
+        prefix    = "[ERROR] ";
+        break;
+    case MSGBOX_SUCCESS:
+        bg_color = COLOR_GREEN;
+        btn_color = COLOR_DARKGREEN;
+        prefix    = "[SUCCESS] ";
+        break;
+    }
+
+    // Create simple container
+    dialog_wid = gws_create_window(
+        fd,
+        WT_SIMPLE,
+        WINDOW_STATUS_ACTIVE,
+        VIEW_NULL,
+        "MessageBox",
+        100, 100, 240, 120,
+        parent_wid,
+        0,
+        bg_color,
+        COLOR_WHITE
+    );
+
+// Message label
+    if (message != NULL) {
+        message_wid = gws_create_window(
+            fd,
+            WT_EDITBOX, WINDOW_STATUS_ACTIVE, VIEW_NULL,
+            message,
+            20, 20, 200, 20,
+            dialog_wid,
+            0,
+            COLOR_WHITE,
+            COLOR_WHITE
+        );
+
+        // Draw prefix + message
+        char buffer[256];
+        memset(buffer,0,256);
+        strcat(buffer,prefix);
+        strcat(buffer,message);
+
+        gws_draw_text(fd, message_wid, 4, 4, COLOR_BLACK, buffer);
+    }
+
+    // OK button
+    btn_wid = gws_create_window(
+        fd, WT_BUTTON, WINDOW_STATUS_ACTIVE, VIEW_NULL,
+        "OK", 85, 60, 70, 30,
+        dialog_wid, 0, btn_color, COLOR_WHITE
+    );
+
+    gws_refresh_window(fd, dialog_wid);
+
+// Event loop: wait until OK is clicked
+    struct gws_event_d Le;
+    struct gws_event_d *e;
+    while (1) {
+        e = (struct gws_event_d *) gws_get_next_event(fd, parent_wid, &Le);
+        //if (e == NULL) continue;
+
+        if (e->type == GWS_MouseClicked) {
+            if ((int)e->long1 == btn_wid) {
+                result = 1;
+                break;
+            }
+        }
+    }
+
+    // Destroy all windows before returning
+    if (message_wid > 0)
+        gws_destroy_window(fd, message_wid);
+    if (btn_wid > 0)
+        gws_destroy_window(fd, btn_wid);
+    if (dialog_wid > 0)
+        gws_destroy_window(fd, dialog_wid);
+
+    return result;
+}
+
 
 /*
 // Get thread info given the widnow id.
