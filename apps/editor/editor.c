@@ -63,6 +63,11 @@ static int file_status=FALSE;
 //char file_buffer[512];
 char file_buffer[1024];
 
+// Divide the client area into equal portions horizontally.
+// Used for positioning child windows relative to the main window.
+#define CLIENT_AREA_DIVISIONS 8
+
+
 //
 // Windows
 //
