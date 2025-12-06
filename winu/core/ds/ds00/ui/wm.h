@@ -5,6 +5,19 @@
 #ifndef __UI_WM_H
 #define __UI_WM_H    1
 
+
+struct drag_and_drop_info_d 
+{
+    int is_pressed;
+    int is_dragging;
+
+    unsigned long absolute_target_drop_left;
+    unsigned long absolute_target_drop_top;
+
+    int target_wid;
+};
+extern struct drag_and_drop_info_d  DragAndDropInfo;
+
 struct gws_container_d
 {
     unsigned long left;
@@ -194,9 +207,6 @@ struct gws_windowmanager_d
 extern struct gws_windowmanager_d  WindowManager;
 
 // =========================================
-
-extern int grab_is_active;
-extern int is_dragging;
 
 
 int control_action(int msg, unsigned long long1);

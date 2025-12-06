@@ -616,46 +616,36 @@ long comp_get_mouse_y_position(void)
     return (long) __new_mouse_y;
 }
 
-// #todo
-// We need to put this routine in another file. Maybe painter.c
-// maybe mouse.c
-// #ps: 
-// This is a low level routine. 
-// Associated with the display device driver.
+// TODO:
+// This routine should eventually be moved into a more appropriate file,
+// such as painter.c or mouse.c, since it is directly related to mouse
+// rendering logic.
+//
+// Note:
+// This is a low-level routine that interacts with the display device driver.
+// It draws the mouse pointer directly into the frontbuffer (LFB).
+//
 static void direct_draw_mouse_pointer(void)
 {
-// #todo:
-// + Each window has it's own type of mouse pointer.
-//   so, we need to check on the mouse_hover window's structure
-//   in order to know how to paint the mouse pointer 
-//   for that given window.
-//   See: window->mpp structure.
+    // TODO:
+    // Each window may define its own type of mouse pointer.
+    // We should check the mouse_hover window's structure to determine
+    // how to paint the pointer for that specific window.
+    // See: window->mpp structure.
 
-// The rectangle
+// Default rectangle parameters for the pointer
     unsigned long rectLeft   = __new_mouse_x;
     unsigned long rectTop    = __new_mouse_y;
     unsigned long rectWidth  = 8;
     unsigned long rectHeight = 8;
 
-    unsigned int rectColor = COLOR_RED;
-    unsigned long rectROP = 0;
-
-    //int UseBMPImage= TRUE;
+    unsigned int rectColor = COLOR_RED;  // Default color
+    unsigned long rectROP = 0;           // Raster operation
 
     struct gws_window_d *w;
 
-
-// BMP Image
-    //if (UseBMPImage == TRUE){
-        // #todo
-        // Paint the pointer using a BMP Imange.
-    //}
-
-//
-// Rectangle
-//
-
-// Change maouse pointer parameters.
+// Pointer color:
+// If the hovered window is valid, use its mpp.bg_color
     w = (struct gws_window_d *) get_mousehover();
     if ((void*)w != NULL){
         if (w->magic == 1234){
@@ -663,10 +653,21 @@ static void direct_draw_mouse_pointer(void)
         }
     }
 
-// Printing directly into the LFB.
-// #ps: 
-// This is a low level routine. 
-// Associated with the display device driver.
+// Drag-and-drop visual feedback:
+// Adjust pointer size depending on drag state
+    if (DragAndDropInfo.is_pressed == TRUE)
+    {
+        if (DragAndDropInfo.is_dragging == TRUE){
+            rectWidth  += 8;  // Larger when dragging
+            rectHeight += 8;
+        } else {
+            rectWidth  -= 4;  // Smaller when pressed but not dragging
+            rectHeight -= 4;
+        }
+    }
+
+// Draw the rectangle directly into the frontbuffer (LFB).
+// This bypasses the backbuffer and paints immediately on screen.
 
     frontbuffer_draw_rectangle( 
         (unsigned long) rectLeft, (unsigned long) rectTop, 

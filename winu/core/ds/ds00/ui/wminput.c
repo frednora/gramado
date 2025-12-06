@@ -94,17 +94,23 @@ wmProcessMouseEvent(
         if (gUseMouse != TRUE)
             return;
 
-        // If we already clicked the window
-        // and now we're moving it.
-        // So, now we're dragging it.
-        
-        // O botao esta pressionado.
-        if (grab_is_active == TRUE){
-            is_dragging = TRUE;
-        // O botao nao esta pressionado.
-        } else if (grab_is_active != TRUE){
-            is_dragging = FALSE;
-        };
+        // ok, moving with the button pressed, means that it is dragging,
+
+        // The mouse button is pressed?
+        if (DragAndDropInfo.is_pressed == TRUE) {
+            // We are dragging now
+            DragAndDropInfo.is_dragging = TRUE;
+
+            // Update drop target position
+            DragAndDropInfo.absolute_target_drop_left = x;
+            DragAndDropInfo.absolute_target_drop_top  = y;
+
+            yellow_status("Dragging ...");
+
+        } else {
+            // Not dragging
+            DragAndDropInfo.is_dragging = FALSE;
+        }
 
         // Set flag to erease mouse pointer.
         // Não queremos rastro.
@@ -132,6 +138,17 @@ wmProcessMouseEvent(
 
     if (event_type == GWS_MousePressed)
     {
+        // -- Drag support ----
+
+        // Mark that the button is pressed
+        DragAndDropInfo.is_pressed = TRUE;
+        DragAndDropInfo.is_dragging = FALSE;  // not dragging yet
+        // Save the starting coordinates for tolerance checks
+        DragAndDropInfo.absolute_target_drop_left = x;
+        DragAndDropInfo.absolute_target_drop_top  = y;
+
+        // -- Double click support ----
+
         DoubleClick.is_doubleclick = FALSE;
         DoubleClick.delta = (DoubleClick.current - DoubleClick.last);
         DoubleClick.last = DoubleClick.current; 
@@ -150,7 +167,35 @@ wmProcessMouseEvent(
 // --------------------------------
 /// event type: Mouse released
 // Process and send message.
-    if (event_type == GWS_MouseReleased){
+    if (event_type == GWS_MouseReleased)
+    {
+        // The button is no longer pressed
+        DragAndDropInfo.is_pressed  = FALSE;
+
+        // If we were dragging, this is a drop
+        if (DragAndDropInfo.is_dragging == TRUE) 
+        {
+            // Call the drop worker with the final target position
+            // Skipping it for now
+            //drop_worker(
+                //DragAndDropInfo.absolute_target_drop_left,
+                //DragAndDropInfo.absolute_target_drop_top );
+
+            // Update the yellow bar with drop info
+            yellow_status("Dropped");
+        }
+
+        // Reset dragging flag
+        DragAndDropInfo.is_dragging = FALSE;
+
+        // Reset target window ID
+        DragAndDropInfo.target_wid = -1;
+
+        // Optional: reset cursor size/appearance back to default
+        // __cursor_size = 8;
+
+
+        // Handle any other release logic (focus, click, etc.)
         on_mouse_released();
         return;
     }

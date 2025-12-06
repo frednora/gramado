@@ -5,6 +5,9 @@
 
 #include "../ds.h"
 
+
+struct drag_and_drop_info_d  DragAndDropInfo;
+
 const char *rootwindow_name = "RootWin";
 
 // Double click
@@ -12,12 +15,7 @@ struct double_click_d DoubleClick;
 
 struct maximization_style_d  MaximizationStyle;
 
-// #todo
-// Maybe we need a structure for this.
-// Clicked over a window.
-int grab_is_active=FALSE;
-// Move the mouse without release the button.
-int is_dragging = FALSE;
+
 static int grab_wid = -1;
 
 // Global main structure.
@@ -319,42 +317,23 @@ void on_mouse_pressed(void)
 // -------------------------
 // Title bar
 
-    //struct gws_window_d *p;
-
-    // When we pressed the titlebar,
-    // actually we're grabbing the parent.
+    // The moment where the window becomes the target window for the drag
+    // based on its child that is a titlebar.
     if (mouse_hover->isTitleBar == TRUE)
     {
-        // #suspended
         /*
-        grab_wid = -1; // No grabbed window
-        grab_is_active = FALSE;  // Not yet
-        // We're not dragging yet.
-        // Just clicked. (Not moving yet).
-        is_dragging = FALSE;
-
-        //#wrong
-        //grab_wid = (int) mouse_hover->id;
-        
-        // parent
-        p = (struct gws_window_d *) mouse_hover->parent;
-        if ( (void*) p != NULL )
+        struct gws_window_d *tb_p = (struct gws_window_d *) mouse_hover->parent;
+        if ((void*) tb_p != NULL && tb_p->magic == 1234)
         {
-            // Valid parent. 
-            if (p->magic == 1234)
+            if (tb_p->type == WT_OVERLAPPED)
             {
-                // Binbaquera!
-                // It needs to be an overlapped window
-                // Grab it!
-                if (p->type == WT_OVERLAPPED)
-                {
-                    grab_wid = (int) p->id;
-                    grab_is_active = TRUE;            
-                }
+                // Set the drag target to the parent window
+                DragAndDropInfo.target_wid = (int) tb_p->id;
+                DragAndDropInfo.is_pressed = TRUE;
+                DragAndDropInfo.is_dragging = FALSE; // not yet
             }
         }
         */
-
         return;
     }
 
@@ -627,28 +606,6 @@ void on_mouse_released(void)
     }
     */
 
-//
-// Grabbing a window.
-//
-
-// + We already pressed a window.
-// + We already moved the mouse. (Drag is active).
-// Now it's time to drop it. (Releasing the button).
-// and setting the grab as not active.
-
-// Drop event
-// Release when dragging.
-    if ( grab_is_active == TRUE &&  
-         is_dragging == TRUE &&       
-         grab_wid > 0 )
-    {
-        // #suspended
-        //on_drop();
-        grab_is_active = FALSE;
-        is_dragging = FALSE;
-        grab_wid = -1;
-        return;
-    }
 
     //if(long1==1){ yellow_status("R1"); }
     //if(long1==2){ yellow_status("R2"); wm_update_desktop(TRUE,TRUE); return 0; }
@@ -3979,68 +3936,7 @@ void __probe_tb_button_hover(unsigned long long1, unsigned long long2)
 
 static void on_drop(void)
 {
-    struct gws_window_d *wgrab;
-
-// Drop it
-    grab_is_active = FALSE;  //
-    is_dragging = FALSE;     //
-
-// Invalid wid
-    if ( grab_wid < 0 || grab_wid >= WINDOW_COUNT_MAX )
-    {
-        return;
-    }
-
-// It needs to be an overlapped window.
-    wgrab = (struct gws_window_d *) get_window_from_wid(grab_wid);
-    if ((void*) wgrab == NULL)
-        return;
-    if (wgrab->magic != 1234)
-        return;
-
-// The grabbed window needs to be an Overlapped.
-    if (wgrab->type != WT_OVERLAPPED)
-        return;
-
-// Posição atual do mouse.
-    unsigned long x=0;
-    unsigned long y=0;
-// Posiçao do mouse when dropping.
-    unsigned long x_when_dropping = 0;
-    unsigned long y_when_dropping = 0;
-
-// Pega a posiçao atual.
-    x = (unsigned long) comp_get_mouse_x_position();
-    y = (unsigned long) comp_get_mouse_y_position();
-
-// #bugbug
-// Provisorio
-    x_when_dropping = x;
-    y_when_dropping = y;
-
-// #test
-// Using the relative pointer.
-// (0,0)
-// O posicionamento relativo para janelas overlapped
-// nunca foram atualizados, portanto eh (0,0).
-
-    //x_when_dropping = (unsigned long) wgrab->x_mouse_relative;
-    //y_when_dropping = (unsigned long) wgrab->y_mouse_relative;
-
-// #todo
-// + Put the window in the top of the z-order.
-// + Redraw all the desktop.
-// + Activate the window.
-// + Set focus?
-
-    gwssrv_change_window_position( 
-        wgrab, x_when_dropping, y_when_dropping );
-
-// Redraw everything.
-    wm_update_desktop3(wgrab);
-
-// done:
-    grab_wid = -1;
+    // #todo
     return;
 }
 
@@ -5713,19 +5609,21 @@ void wmInitializeGlobals(void)
     old_x=0;
     old_y=0;
     
-    grab_is_active = FALSE;
-    is_dragging = FALSE;
-    grab_wid = -1;
+    DragAndDropInfo.is_dragging = FALSE;
+    DragAndDropInfo.is_pressed = FALSE;
+    DragAndDropInfo.absolute_target_drop_left = 0;
+    DragAndDropInfo.absolute_target_drop_top = 0;
+    DragAndDropInfo.target_wid = -1;
 
 // Double click support.
-   DoubleClick.last = 0;
-   DoubleClick.current = 0;
-   DoubleClick.speed = DEFAULT_DOUBLE_CLICK_SPEED;
-   DoubleClick.delta = 0;
-   DoubleClick.initialized = TRUE;
+    DoubleClick.last = 0;
+    DoubleClick.current = 0;
+    DoubleClick.speed = DEFAULT_DOUBLE_CLICK_SPEED;
+    DoubleClick.delta = 0;
+    DoubleClick.initialized = TRUE;
 
-   MaximizationStyle.style = 3; // PARTIAL
-   MaximizationStyle.initialized = TRUE;
+    MaximizationStyle.style = 3; // PARTIAL
+    MaximizationStyle.initialized = TRUE;
 }
 
 //

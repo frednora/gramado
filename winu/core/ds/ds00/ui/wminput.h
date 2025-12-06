@@ -5,6 +5,7 @@
 #ifndef __UI_WMINPUT_H
 #define __UI_WMINPUT_H    1
 
+
 // #test (#bugbug)
 #define MSG_MOUSE_DOUBLECLICKED   60
 #define MSG_MOUSE_DRAG            61
