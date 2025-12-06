@@ -259,23 +259,19 @@ struct thread_d
 // so it will not receive keyboard input.
     thread_type_t type;
 
-// If this thread is a virtual terminal or not.
-    int isVirtualTerminal;
-
 // flags:
 // TF_BLOCKED_SENDING - Blocked when trying to send.
 // TF_BLOCKED_RECEIVING - Blocked when trying to receive.
 // ...
     unsigned long flags;
 
+// If this thread is a virtual terminal or not.
+    int isVirtualTerminal;
 
 // The kernel console associated with this thread.
 // 0~3
     int __console_id;
 
-// We are waiting the right time to close a thread.
-// The scheduler will do this job.
-    int exit_in_progress;
 
 // Input model
 // Setup the input model for this thread ...
@@ -345,14 +341,54 @@ struct thread_d
 
     // int isServerThread;
 
-// flag. 
+
+// ---------------------------------
+// Yield::
 // 1 = Sinaliza que a thread está dando a preferência
 // e que deve sair quando for seguro fazer isso.
     int yield_in_progress;
 
-// Sleep
+// ---------------------------------
+// Sleep::
     int sleep_in_progress;
     unsigned long desired_sleep_ms;
+
+// ---------------------------------
+// Callback::
+// During a callback, the thread can't have it's context saved.
+// The callback state is a ghost context. If we save the context,
+// it will overwrite the normal context.
+// The callback is in progress
+// The thread is following the path of: iret --> app --> restorer.
+    int callback_in_progress;
+
+// Handler (procedure)
+// The app can install a handler anytime.
+// Service 44000, simply install the handler
+    unsigned long cb_r3_address;
+
+// The thread is in an alertable state
+// The thread enter in the alertable state when it calls
+// a message loop and wait for message for example.
+    int is_alertable;
+
+// ---------------------------------
+// Signal::
+    int signal_in_progress;
+
+// #todo: We need the sinal handler. (r3 address)
+    unsigned long sig_handlers[32];  // installed via posix standard syscall.
+    unsigned long signal;
+    unsigned long umask;
+
+// ---------------------------------
+// Exit::
+// We are waiting the right time to close a thread.
+// The scheduler will do this job.
+    int exit_in_progress;
+    int exit_code;  // Reason to close the thread
+
+// -------------
 
 // Test
     int _its_my_party_and_ill_cry_if_i_want_to;
@@ -669,12 +705,6 @@ struct thread_d
     struct usession_d *usession;  // user session.
     struct cgroup_d *cg;          // cgroup.
 
-// Callback:
-// The main procedure for a ring 3 application.
-// It is a callback, and the kernel will call this procedure
-// right after a timer interrupt.
-    //unsigned long user_procedure_va;
-
 // #ORDEM:  
 // O que segue é referenciado durante as trocas de mensagens.
 // utilização de canais e IPC.
@@ -763,43 +793,6 @@ struct thread_d
     int wait4tid;
 
 //---------------------------------------
-
-//
-// Signal
-//
-
-// Signal support
-// #todo: We need the sinal handler. (r3 address)
-    unsigned long sig_handlers[32];  // installed via posix standard syscall.
-    unsigned long signal;
-    unsigned long umask;
-//---------------------------------------
-
-
-//---------------------------------------
-
-//
-// Callback event
-//
-
-// Handler (procedure)
-// The app can install a handler anytime.
-// Service 44000, simply install the handler
-    unsigned long cb_r3_address;
-
-// The thread is in an alertable state
-// The thread enter in the alertable state when it calls
-// a message loop and wait for message for example.
-    int is_alertable;
-
-// The callback is in progress
-// The thread is following the path of: iret --> app --> restorer.
-    int in_progress;
-//---------------------------------------
-
-// Exit:
-// Reason to close the thread.
-    int exit_code;
 
 //
 // Context

@@ -935,7 +935,7 @@ so you don’t get duplicate deliveries. The thread can re‑arm later if it wan
         asmflagDoCallbackAfterCR3 = (unsigned long)(0x1234 & 0xFFFF);
         // The handler
         ring3_callback_address = (unsigned long) t->cb_r3_address;
-        t->in_progress = TRUE;
+        t->callback_in_progress = TRUE;
     }
 }
 

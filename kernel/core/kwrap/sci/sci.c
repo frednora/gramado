@@ -2832,7 +2832,7 @@ void *sci2 (
         // Validate inflight state: 
         // Reject alertable when a callback delivery is already in progress.
         // Update this flag after the callback restorer.
-        //if (t->in_progress == TRUE)
+        //if (t->callback_in_progress == TRUE)
             //return NULL;
         // Install the r3 procedure
         t->is_alertable = TRUE;
