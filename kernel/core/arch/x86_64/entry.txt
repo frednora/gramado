@@ -3,8 +3,8 @@ Here is a summary of the kernel startup flow in the frednora/gramado repository:
 
 Assembly Entry Point:
 
-The entry point of the kernel is defined by the _kernel_begin symbol in arch/x86_64/head_64.asm.
-_kernel_begin jumps to the START label.
+The entry point of the kernel is defined by the _kernel_entry_point symbol in arch/x86_64/head_64.asm.
+_kernel_entry_point jumps to the START label.
 START Label:
 
 The START label performs some initial setup, such as saving the boot block address and signature.

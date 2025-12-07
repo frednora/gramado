@@ -87,8 +87,8 @@ extern struct initialization_d  Initialization;
 //
 
 // ::(1)
-// The kernel starts at ke/x86_64/startup/
-// see: '_kernel_begin' in head_64.asm.
+// The kernel starts at ...
+// see: '_kernel_entry_point' in head_64.asm.
 
 // ::(2)
 // First function called by the BSP processor.

@@ -75,7 +75,7 @@ _BlTransferTo64bitKernel:
 ; Isso funciona na maq real.
 ; Jump to the 64bit code in KERNEL.BIN.
 ; It will change the game and we will enter in 64bit long mode.
-; See: _kernel_begin in head_64.asm.
+; See: _kernel_entry_point in head_64.asm.
 ; search for '__HEAD'.
 
 ; Parameters

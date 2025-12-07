@@ -5,7 +5,7 @@ The entry point for the kernel image if found in:
 + arch/arm/head.s for ARM processors.
 + ...
 
-The first function is '_kernel_begin' found in arch/x86_64/head_64.asm. It calls 
+The first function is '_kernel_entry_point' found in arch/x86_64/head_64.asm. It calls 
 the architechture independent initialization in core/kmain/kmain.c called I_main.
 
 

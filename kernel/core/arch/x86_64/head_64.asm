@@ -33,22 +33,25 @@ extern _xp_putchar_in_fgconsole  ; 4 (1 arg)
 ;---------------------------------------------
 
 
-;========================================================
-; _kernel_begin:
-; Entry point.
-; This is the entry point of the 64bit kernel image.
-; The boot loader jumps here in long mode using a 64bit gdt.
-; #todo: 
-; We need to check the bit in CS when the boot loader
-; makes the jump.
-; + The Stack Register (rsp) will be loaded with the 
-;   ring 0 base kernel stack pointer.
+; ============================================================
+; _kernel_entry_point:
+; Entry point for the 64-bit kernel image.
+; Bootloader performs a far jump into long mode with CS set
+; to our 64-bit code descriptor. At this point:
+;   - Paging is active (identity or higher-half mapping).
+;   - RSP is loaded with the kernel stack pointer (ring0).
+;   - EDX contains the magic signature (1234).
+;   - EBX points to the boot block at 0x90000.
+;
+; From here we disable interrupts, clear direction flag,
+; and continue initialization (GDT, IDT, FS/GS bases, etc.).
+; ============================================================
 ; IN:
 ; The boot loader delivers a magic value in edx and
 ; a boot block in 0x90000.
 ; unit 0: Kernel begin.
 ; Jump
-; Th CS stuff.
+; The CS stuff.
 ; Do a proper 64-bit jump. Should not be needed as the ...
 ; jmp EARLY_GDT64.Code:0x30001000 in the boot loader would have sent us ...
 ; out of compatibility mode and into 64-bit mode.
@@ -64,8 +67,8 @@ extern _xp_putchar_in_fgconsole  ; 4 (1 arg)
 ; ecx = 0
 ; edx = 1234       (Signature)
 
-global _kernel_begin 
-_kernel_begin:
+global _kernel_entry_point 
+_kernel_entry_point:
 ; We don't have any print support yet.
 
     cli
@@ -80,12 +83,20 @@ align 4
 FunctionTable:
     %include "fn_table.asm"
 
-; =======================================================
+;; ============================================================
 ;; GDT
+;; Global Descriptor Table (GDT) for 64-bit long mode.
+;; In IA-32e mode, segmentation is mostly disabled:
+;;   - Code/Data descriptors still required for CS/DS/SS loads.
+;;   - Base addresses are ignored (always 0), except FS/GS.
+;;   - Limit fields are ignored (paging enforces protection).
+;; DPL (Descriptor Privilege Level) is encoded in bits 5–6 of
+;; the access byte. Here we define ring0 and ring3 code/data
+;; selectors for kernel and user mode transitions.
 ;; See:
 ;; https://wiki.osdev.org/Setting_Up_Long_Mode
-;; Entry size ?
-;; o dpl são os bits 5 e 6 do access byte.
+;; ============================================================
+
 align 8
 EARLY_GDT64:            ; Global Descriptor Table (64-bit).
 ; 0x00
@@ -143,6 +154,19 @@ EARLY_GDT64:            ; Global Descriptor Table (64-bit).
 align 8
 
 ;; IDT
+
+; ============================================================
+; Interrupt Descriptor Table (IDT) entries in 64-bit mode.
+; Each entry is a 16-byte descriptor:
+;   - Offset (low/mid/high) → handler address
+;   - Selector → code segment (here always kernel code)
+;   - Type/Attr → 0x8E = present, DPL=0, 64-bit interrupt gate
+;
+; By default we fill all 256 vectors with kernel-only gates.
+; This ensures any unexpected interrupt/trap enters ring0 safely.
+; Later, specific handlers will patch these entries with real
+; addresses for exceptions, IRQs, and system calls.
+; ============================================================
 
 ; 0x8E00 = 1000 1110 0000 0000 in binary
 ; + P = 1 (bit 15) → Entry is present/valid
@@ -2594,17 +2618,43 @@ START:
     lgdt [EARLY_GDT64.Pointer]
 
 ; Segment registers:
+
+; ============================================================
+; Initialize FS and GS segment bases (first time).
+;
+; In 64-bit long mode, segmentation is mostly disabled:
+;   - CS, DS, ES, SS all have base=0 and are ignored.
+;   - Only FS and GS retain usable base registers.
+;
+; The kernel (or userland via syscalls) can set FS/GS base
+; using model-specific registers (MSRs IA32_FS_BASE / IA32_GS_BASE)
+; or via WRFSBASE/WRGSBASE instructions (if supported).
+;
+; IMPORTANT:
+;   - The FS/GS base is a *virtual address* inside the process’s
+;     own address space. It is not a separate hardware memory area.
+;   - Each thread gets its own FS/GS base pointing to its private
+;     data (Thread Information Block, TLS block, etc.).
+;   - Example: mov rax, qword ptr fs:[0x30]
+;     → reads from TLS at offset 0x30 relative to the thread’s FS base.
+;
+; Purpose:
+;   - Provides fast access to thread-local storage (TLS).
+;   - Scheduler updates FS/GS when switching threads so each thread
+;     sees its own TLS region while sharing the same process address space.
+; ============================================================
+
 ; See: boot loader for CS initialization.
     mov ax, EARLY_GDT64.Data
     mov ds, ax
     mov es, ax
-    ; Do we need FS and GS in x86_64?
-    mov fs, ax
-    mov gs, ax
-; Early kernel stack. 
-; 64 KB.
+    ; Early kernel stack. (64KB)
     mov ss, ax
     mov rsp,  _EarlyKernelStack
+
+    ; Usable base addres
+    mov fs, ax
+    mov gs, ax
 
 ; LDT
 ; Initialize ldt with a NULL selector.

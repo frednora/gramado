@@ -1,31 +1,23 @@
 
     Main route for KERNEL.BIN:
 
-    The entry point is in arch/x86_64/startup/head_64.asm.
-    The link file is arch/x86_64/startup/link.ld.
+    The entry point is in arch/x86_64/head_64.asm.
+    The link file is arch/x86_64/link.ld.
 
-------------------------------------------
-Steps:
-- 1 - Head
-- 2 - Initialize archtechture
-- 3 - Execute first process
 
-------------------------------------------
-
-:: (1)
-_kernel_begin   head_64.asm
-START           head_64.asm
-
-:: (2)
-I_kmain                kmain.c
-I_init_main            init.c
-kernel_booting         init.c
-zero_initialize_arch   zero.c
-zero_initialize_x64    zero.c
-I_x64main              zero.c
-booting_end            init.c
-
-:: (3)
-I_x64ExecuteInitialProcess  x64init.c
+```
+// ==================================
+// Levels:
+// + [1]   earlyinit()
+// + [2:0] mmInitialize(0)
+// + [2:1] mmInitialize(1)
+// + [3:0] keInitialize(0)
+// + [3:1] keInitialize(1)
+// + [3:2] keInitialize(2)
+// + [4]   archinit()
+// + [5]   deviceinit()
+// + [6]   lateinit()
+// ==================================
+```
 
 
