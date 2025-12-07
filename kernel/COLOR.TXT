@@ -1,0 +1,24 @@
+
+Color scheme:
+
+OS
+│
+├── Inside the Walls - WHITE
+│   ├── R (Execution Hall)  - Red
+│   │     • CPU faults & exceptions
+│   │
+│   ├── P (Peripheral Hall) - Pink
+│   │     • IRQs & device signals
+│   │
+│   └── W (Request Hall)    - White
+│         • syscalls & memory petitions
+│
+└── Outside the Wall - BROW 
+│   ├── cmds/ - Brown
+│   │     • POSIX-like programs
+│   └──   • Utilities, shells
+│
+└── Outside the Wall - BLACK 
+    └── apps/ - Black
+          • Client-side GUI applications
+

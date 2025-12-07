@@ -1,0 +1,48 @@
+===========================================================
+IDT Layout Map (x86_64)
+===========================================================
+
+0–31   : Execution Hall (Red)
+         CPU faults and exceptions
+         Examples: Divide Error, Invalid Opcode, Page Fault, GPF
+
+32–47  : Peripheral Hall (Pink)
+         Legacy PIC / IOAPIC hardware IRQs
+         Examples: Timer (IRQ0), Keyboard (IRQ1), RTC (IRQ8), Mouse (IRQ12),
+                   IDE Primary (IRQ14), IDE Secondary (IRQ15)
+
+48–127 : Reserved / Future use
+         (can be left unassigned or used for custom hardware sources)
+
+128–131: Request Hall (White)
+         Software interrupts / syscalls
+         INT 0x80–0x83 → RequestHall_int128–131
+
+132–197: Reserved / Future use
+         (space for additional syscalls or software events)
+
+198–199: Request Hall (White)
+         Special software interrupts
+         INT 198 → Callback Restorer
+         INT 199 → Enable Interrupts (IOPL drop)
+
+200–219: Reserved / Future use
+         (gap before LAPIC block)
+
+220–225: Peripheral Hall (Pink)
+         LAPIC local sources (LVT block)
+         220 → LAPIC Timer
+         221 → LAPIC Performance Counter
+         222 → LAPIC LINT0 (ExtINT)
+         223 → LAPIC LINT1 (NMI)
+         224 → LAPIC Error
+         225 → LAPIC Thermal Sensor
+
+226–254: Reserved / Future use
+         (optional LAPIC CMCI at 226, others unused)
+
+255     : Peripheral Hall (Pink)
+         Spurious interrupt vector (SVR)
+         Minimal handler, no EOI required
+
+===========================================================

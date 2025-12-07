@@ -1,3 +1,4 @@
+; Request Hall (White)
 ; sw1.asm
 ; This file handles syscall for x86_64 processors.
 ; Creaed by Fred Nora.
@@ -13,7 +14,7 @@ align 16
 
 
 ;------------------------
-; _int128
+; RequestHall_int128
 ;     System Call number 0x80
 ;     >>>> ONLY CALLED FROM USERMODE!
 ;     + It is never called from kernel mode.
@@ -31,8 +32,8 @@ extern _sc80h
 extern _sci0_cpl
 ; Capture context
 align 4  
-global _int128
-_int128:
+global RequestHall_int128
+RequestHall_int128:
 
 ; #ps:
 ; For now We dont need disable interrupts in our syscalls,
@@ -131,7 +132,7 @@ _int128:
 ;--  
 
 ;;-----
-; _int129
+; RequestHall_int129
 ;     System Call number 0x81
 ;     ONLY CALLED FROM USERMODE!
 ;     + It is never called from kernel mode.
@@ -151,8 +152,8 @@ extern _sc81h
 extern _sci1_cpl
 ; Capture context
 align 4  
-global _int129
-_int129:
+global RequestHall_int129
+RequestHall_int129:
 
 ; #ps:
 ; For now We dont need disable interrupts in our syscalls,
@@ -249,7 +250,7 @@ _int129:
 ;--  
 
 ;;-----
-; _int130
+; RequestHall_int130
 ;     System Call number 0x82
 ;     ONLY CALLED FROM USERMODE!
 ;     + It is never called from kernel mode.
@@ -268,8 +269,8 @@ extern _sc82h
 extern _sci2_cpl
 ; Capture context
 align 4  
-global _int130
-_int130:
+global RequestHall_int130
+RequestHall_int130:
 
 ; #ps:
 ; For now We dont need disable interrupts in our syscalls,
@@ -366,7 +367,7 @@ _int130:
 ;--    
 
 ;;-----
-; _int131
+; RequestHall_int131
 ;     System Call number 0x82
 ;     ONLY CALLED FROM USERMODE!
 ;     + It is never called from kernel mode.
@@ -385,8 +386,8 @@ extern _sc83h
 extern _sci3_cpl
 ; Capture context
 align 4  
-global _int131
-_int131:
+global RequestHall_int131
+RequestHall_int131:
 
 ; #ps:
 ; For now We dont need disable interrupts in our syscalls,
@@ -483,64 +484,4 @@ _int131:
 .int131_rip: dq 0
 ;--    
 
-; ====================================
-; int 198 (0xC6) - Callback restorer.
-
-
-; ------------------------------------------------------------
-; _int199 handler – "first interrupt enable"
-;
-; Context:
-; - When the kernel finishes initialization, it jumps to the
-;   first user process (init) using iretq.
-; - At that moment, interrupts are still disabled (IF=0 in RFLAGS).
-; - Without interrupts, the scheduler cannot run and no task
-;   switching will happen.
-;
-; Purpose:
-; - This handler is called once by the init process in user mode.
-; - It modifies the saved RFLAGS so that IF=1 (interrupts enabled).
-; - It also sets IOPL=0, which prevents user programs (ring 3)
-;   from executing privileged instructions like CLI/STI or IN/OUT.
-; - After pushing the corrected frame and executing iretq,
-;   the CPU resumes user mode with interrupts enabled.
-;
-; Result:
-; - From this point on, hardware timer interrupts can fire.
-; - The kernel’s scheduler can preempt tasks and switch between them.
-; - Other user processes do NOT need to call this handler; only
-;   the init process uses it to "unlock" multitasking.
-; ------------------------------------------------------------
-align 4  
-; 0xC7
-global _int199
-_int199:
-    jmp miC7H
-    jmp $
-miC7H:
-; Maskable interrupt
-    pop qword [.frameRIP]
-    pop qword [.frameCS]
-    pop qword [.frameRFLAGS]
-; iopl 0
-; This sets bit 9 (IF) = 1, enabling maskable interrupts.
-; Bits 12–13 (IOPL) are set to 0 here, meaning 
-; only CPL=0 code can execute in/out/cli/sti. 
-; That’s good for security — user mode (ring 3) won’t be able 
-; to mess with hardware directly.
-    mov qword [.frameRFLAGS], 0x0000000000000200
-
-; iopl 3
-; Comment out the alternative 0x0000000000003200, 
-; which would set IOPL=3, allowing user mode to do I/O 
-; not recommended unless you’re deliberately experimenting.
-    ;mov qword [.frameRFLAGS], 0x0000000000003200
-
-    push qword [.frameRFLAGS]
-    push qword [.frameCS]
-    push qword [.frameRIP]
-    iretq
-.frameRIP:     dq 0
-.frameCS:      dq 0
-.frameRFLAGS:  dq 0
 

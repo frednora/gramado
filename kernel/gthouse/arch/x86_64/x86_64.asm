@@ -31,8 +31,8 @@
 extern _local_apic_eoi
 ; ============================================
 ; 0x48 - LAPIC Timer
-global _lapic_timer_handler
-_lapic_timer_handler:
+global PeripheralHall_lapic_timer_handler
+PeripheralHall_lapic_timer_handler:
     push rax
     push rcx
     push rdx
@@ -52,8 +52,8 @@ _lapic_timer_handler:
 
 ; ============================================
 ; 0x49 - Performance Counter
-global _lapic_perf_handler
-_lapic_perf_handler:
+global PeripheralHall_lapic_perf_handler
+PeripheralHall_lapic_perf_handler:
     push rax
     push rcx
     push rdx
@@ -71,8 +71,8 @@ _lapic_perf_handler:
 
 ; ============================================
 ; 0x4A - LINT0 (ExtINT / legacy PIC handoff) — often masked
-global _lapic_lint0_handler
-_lapic_lint0_handler:
+global PeripheralHall_lapic_lint0_handler
+PeripheralHall_lapic_lint0_handler:
     push rax
     push rcx
     push rdx
@@ -91,8 +91,8 @@ _lapic_lint0_handler:
 ; ============================================
 ; 0x4B - LINT1 (NMI)
 ; NMIs are non-maskable. LAPIC may mark in-service; issue EOI to be safe.
-global _lapic_nmi_handler
-_lapic_nmi_handler:
+global PeripheralHall_lapic_nmi_handler
+PeripheralHall_lapic_nmi_handler:
     push rax
     push rcx
     push rdx
@@ -112,8 +112,8 @@ _lapic_nmi_handler:
 
 ; ============================================
 ; 0x4C - LAPIC Error
-global _lapic_error_handler
-_lapic_error_handler:
+global PeripheralHall_lapic_error_handler
+PeripheralHall_lapic_error_handler:
     push rax
     push rcx
     push rdx
@@ -133,8 +133,8 @@ _lapic_error_handler:
 
 ; ============================================
 ; 0x4D - Thermal sensor
-global _lapic_thermal_handler
-_lapic_thermal_handler:
+global PeripheralHall_lapic_thermal_handler
+PeripheralHall_lapic_thermal_handler:
     push rax
     push rcx
     push rdx
@@ -164,8 +164,8 @@ _lapic_thermal_handler:
 ; → That means no EOI is required. 
 ; → If you try to write EOI, it won’t hurt, but it’s unnecessary.
 
-global _spurious_handler
-_spurious_handler:
+global PeripheralHall_spurious_handler
+PeripheralHall_spurious_handler:
     ; Preserve scratch registers (optional, keep minimal)
     push rax
     push rcx
@@ -627,6 +627,12 @@ __address_offset_63_32: dd 0
 ;   but you’ve opened up a way for user code to fake them.
 ;   >>> Good to build the handlers and test them <<<
 
+; ============================================
+; Execution Hall (Red)
+; Fault/Exception IDT Setup
+; Maps CPU faults (0–31) to handlers
+; ============================================
+
 setup_faults:
 ; We're using 0xEE00: (Permissive)
 ; Standard way: 0x8E00 (Restrict to ring 0)
@@ -635,131 +641,131 @@ setup_faults:
     push rbx
 
 ;#0
-    mov rax, qword _fault_N0
+    mov rax, qword ExecutionHall_fault_N0
     mov rbx, qword 0
     call _setup_system_interrupt ; 0xEE00
 ;#1  
-    mov rax, qword _fault_N1
+    mov rax, qword ExecutionHall_fault_N1
     mov rbx, qword 1
     call _setup_system_interrupt ; 0xEE00
 ;#2  
-    mov rax, qword _fault_N2
+    mov rax, qword ExecutionHall_fault_N2
     mov rbx, qword 2
     call _setup_system_interrupt ; 0xEE00
 ;#3  debug
-    mov rax, qword _fault_N3
+    mov rax, qword ExecutionHall_fault_N3
     mov rbx, qword 3
     call _setup_system_interrupt ; 0xEE00
 ;#4  
-    mov rax, qword _fault_N4
+    mov rax, qword ExecutionHall_fault_N4
     mov rbx, qword 4
     call _setup_system_interrupt ; 0xEE00
 ;#5  
-    mov rax, qword _fault_N5
+    mov rax, qword ExecutionHall_fault_N5
     mov rbx, qword 5
     call _setup_system_interrupt ; 0xEE00
 ;#6 - Invalid opcode
-    mov rax, qword _fault_INVALID_OPCODE
+    mov rax, qword ExecutionHall_fault_INVALID_OPCODE
     mov rbx, qword 6
     call _setup_system_interrupt ; 0xEE00
 ;#7  
-    mov rax, qword _fault_N7
+    mov rax, qword ExecutionHall_fault_N7
     mov rbx, qword 7
     call _setup_system_interrupt ; 0xEE00
 ;#8 - double fault
-    mov rax, qword _fault_DOUBLE
+    mov rax, qword ExecutionHall_fault_DOUBLE
     mov rbx, qword 8
     call _setup_system_interrupt ; 0xEE00
 ;#9  
-    mov rax, qword _fault_N9
+    mov rax, qword ExecutionHall_fault_N9
     mov rbx, qword 9
     call _setup_system_interrupt ; 0xEE00
 ;#10  
-    mov rax, qword _fault_N10
+    mov rax, qword ExecutionHall_fault_N10
     mov rbx, qword 10
     call _setup_system_interrupt ; 0xEE00
 ;#11  
-    mov rax, qword _fault_N11
+    mov rax, qword ExecutionHall_fault_N11
     mov rbx, qword 11
     call _setup_system_interrupt ; 0xEE00
 ;#12 - stack
-    mov rax, qword _fault_STACK
+    mov rax, qword ExecutionHall_fault_STACK
     mov rbx, qword 12
     call _setup_system_interrupt ; 0xEE00
 ;#13 - general protection
-    mov rax, qword _fault_GP
+    mov rax, qword ExecutionHall_fault_GP
     mov rbx, qword 13
     call _setup_system_interrupt ; 0xEE00
 ;#14  
-    mov rax, qword _fault_N14
+    mov rax, qword ExecutionHall_fault_N14
     mov rbx, qword 14
     call _setup_system_interrupt ; 0xEE00
 ;#15 
-    mov rax, qword _fault_N15
+    mov rax, qword ExecutionHall_fault_N15
     mov rbx, qword 15
     call _setup_system_interrupt ; 0xEE00
 ;#16 
-    mov rax, qword _fault_N16
+    mov rax, qword ExecutionHall_fault_N16
     mov rbx, qword 16
     call _setup_system_interrupt ; 0xEE00
 ;#17  
-    mov rax, qword _fault_N17
+    mov rax, qword ExecutionHall_fault_N17
     mov rbx, qword 17
     call _setup_system_interrupt ; 0xEE00
 ;#18  
-    mov rax, qword _fault_N18
+    mov rax, qword ExecutionHall_fault_N18
     mov rbx, qword 18
     call _setup_system_interrupt ; 0xEE00
 ;#19 - Intel reserved.
-    mov rax, qword _fault_N19
+    mov rax, qword ExecutionHall_fault_N19
     mov rbx, qword 19
     call _setup_system_interrupt ; 0xEE00
 ;#20 - Intel reserved.
-    mov rax, qword _fault_N20
+    mov rax, qword ExecutionHall_fault_N20
     mov rbx, qword 20
     call _setup_system_interrupt ; 0xEE00
 ;#21 - Intel reserved.
-    mov rax, qword _fault_N21
+    mov rax, qword ExecutionHall_fault_N21
     mov rbx, qword 21
     call _setup_system_interrupt ; 0xEE00
 ;#22 - Intel reserved.
-    mov rax, qword _fault_N22
+    mov rax, qword ExecutionHall_fault_N22
     mov rbx, qword 22
     call _setup_system_interrupt ; 0xEE00
 ;#23 - Intel reserved.
-    mov rax, qword _fault_N23
+    mov rax, qword ExecutionHall_fault_N23
     mov rbx, qword 23
     call _setup_system_interrupt ; 0xEE00
 ;#24 - Intel reserved.
-    mov rax, qword _fault_N24
+    mov rax, qword ExecutionHall_fault_N24
     mov rbx, qword 24
     call _setup_system_interrupt ; 0xEE00
 ;#25 - Intel reserved.
-    mov rax, qword _fault_N25
+    mov rax, qword ExecutionHall_fault_N25
     mov rbx, qword 25
     call _setup_system_interrupt ; 0xEE00
 ;#26 - Intel reserved.
-    mov rax, qword _fault_N26
+    mov rax, qword ExecutionHall_fault_N26
     mov rbx, qword 26
     call _setup_system_interrupt ; 0xEE00
 ;#27 - Intel reserved.
-    mov rax, qword _fault_N27
+    mov rax, qword ExecutionHall_fault_N27
     mov rbx, qword 27
     call _setup_system_interrupt ; 0xEE00
 ;#28 - Intel reserved.
-    mov rax, qword _fault_N28
+    mov rax, qword ExecutionHall_fault_N28
     mov rbx, qword 28
     call _setup_system_interrupt ; 0xEE00
 ;#29 - Intel reserved.
-    mov rax, qword _fault_N29
+    mov rax, qword ExecutionHall_fault_N29
     mov rbx, qword 29
     call _setup_system_interrupt ; 0xEE00
 ;#30 - Intel reserved.
-    mov rax, qword _fault_N30
+    mov rax, qword ExecutionHall_fault_N30
     mov rbx, qword 30
     call _setup_system_interrupt ; 0xEE00
 ;#31 - Intel reserved.
-    mov rax, qword _fault_N31
+    mov rax, qword ExecutionHall_fault_N31
     mov rbx, qword 31
     call _setup_system_interrupt ; 0xEE00
 
@@ -797,7 +803,7 @@ setup_vectors:
 
 
 ; 33 - PS2 Keyboard
-    mov rax,  qword _irq1
+    mov rax,  qword PeripheralHall_irq1
     mov rbx,  qword 33
     call _setup_system_interrupt_hw  ; 0x8E00
 
@@ -813,7 +819,7 @@ setup_vectors:
     ;call _setup_system_interrupt_hw  ; 0x8E00
 
 ; 44 - PS2 Mouse
-    mov rax,  qword _irq12
+    mov rax,  qword PeripheralHall_irq12
     mov rbx,  qword 44
     call _setup_system_interrupt_hw  ; 0x8E00
 
@@ -844,19 +850,19 @@ setup_vectors:
 ; 131 - 0x83
 
 ; 0x80
-    mov rax,  qword _int128
+    mov rax,  qword RequestHall_int128
     mov rbx,  qword 128
     call _setup_system_interrupt ; 0xEE00
 ; 0x81
-    mov rax,  qword _int129
+    mov rax,  qword RequestHall_int129
     mov rbx,  qword 129
     call _setup_system_interrupt  ; 0xEE00 
 ; 0x82
-    mov rax,  qword _int130
+    mov rax,  qword RequestHall_int130
     mov rbx,  qword 130
     call _setup_system_interrupt  ; 0xEE00
 ; 0x83
-    mov rax, qword _int131
+    mov rax, qword RequestHall_int131
     mov rbx, qword 131
     call _setup_system_interrupt  ; 0xEE00
 ; ...
@@ -873,7 +879,7 @@ setup_vectors:
 ; Explain it better.
 ; See: sw2.asm and hw2.asm
 
-    mov rax,  qword _int198
+    mov rax,  qword RequestHall_int198
     mov rbx,  qword 198
     call _setup_system_interrupt  ; 0xEE00 
 
@@ -890,7 +896,7 @@ setup_vectors:
 ; dos processos em ring3, apenas uma vez.
 ; See: sw.asm
 
-    mov rax,  qword _int199
+    mov rax,  qword RequestHall_int199
     mov rbx,  qword 199
     call _setup_system_interrupt   ; 0xEE00
 
@@ -898,32 +904,32 @@ setup_vectors:
 ; === LAPIC local sources (LVT block starting at 220) ===
 
 ; 220 - LAPIC Timer (0xDC)
-    mov rax, qword _lapic_timer_handler
+    mov rax, qword PeripheralHall_lapic_timer_handler
     mov rbx, qword 220
     call _setup_system_interrupt_hw  ; 0x8E00
 
 ; 221 - Performance Counter  (0xDD)
-    mov rax, qword _lapic_perf_handler
+    mov rax, qword PeripheralHall_lapic_perf_handler
     mov rbx, qword 221
     call _setup_system_interrupt_hw  ; 0x8E00
 
 ; 222 - LINT0 (ExtINT) (0xDE)
-    mov rax, qword _lapic_lint0_handler
+    mov rax, qword PeripheralHall_lapic_lint0_handler
     mov rbx, qword 222
     call _setup_system_interrupt_hw  ; 0x8E00
 
 ; 223 - LINT1 (NMI) (0xDF)
-    mov rax, qword _lapic_nmi_handler
+    mov rax, qword PeripheralHall_lapic_nmi_handler
     mov rbx, qword 223
     call _setup_system_interrupt_hw  ; 0x8E00
 
 ; 224 - LAPIC Error (0xE0)
-    mov rax, qword _lapic_error_handler
+    mov rax, qword PeripheralHall_lapic_error_handler
     mov rbx, qword 224
     call _setup_system_interrupt_hw  ; 0x8E00
 
 ; 225 - Thermal sensor 225 (0xE1)
-    mov rax, qword _lapic_thermal_handler
+    mov rax, qword PeripheralHall_lapic_thermal_handler
     mov rbx, qword 225
     call _setup_system_interrupt_hw  ; 0x8E00
 
@@ -931,7 +937,7 @@ setup_vectors:
 
 ; 255 - Spurious interrupt vector (SVR)
 ; Handler should just acknowledge and return.
-    mov rax, qword _spurious_handler
+    mov rax, qword PeripheralHall_spurious_handler
     mov rbx, qword 255
     call _setup_system_interrupt_hw  ; 0x8E00
 
@@ -971,7 +977,7 @@ _asm_nic_create_new_idt_entry:
 ;; #bugbug: não usaremos o endereço enviado pois temos que configurar 
 ;; o EOI e a pilha da rotina de handler.
 
-    mov rax, qword _irq9_nic_handler
+    mov rax, qword PeripheralHall_irq9_nic_handler
     ;mov rax, qword [_nic_idt_entry_new_address]
 
 ; (41) ?

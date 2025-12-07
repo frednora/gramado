@@ -1,3 +1,4 @@
+; Request Hall (White)
 ; sw2.asm
 ; Software interrupts support.
 ; Created by Fred Nora.
@@ -101,8 +102,9 @@ extern _callback_is_restored
 
 ; Callbacl restorer.
 ; int 198 (0xC6)
-global _int198
-_int198:
+align 4  
+global RequestHall_int198
+RequestHall_int198:
 
 ; #suspended
 ;    iretq
@@ -158,4 +160,61 @@ _int198:
 ; Resume via the common timer release path
     jmp irq0_release
 
+
+; ------------------------------------------------------------
+; RequestHall_int199 handler – "first interrupt enable"
+;
+; Context:
+; - When the kernel finishes initialization, it jumps to the
+;   first user process (init) using iretq.
+; - At that moment, interrupts are still disabled (IF=0 in RFLAGS).
+; - Without interrupts, the scheduler cannot run and no task
+;   switching will happen.
+;
+; Purpose:
+; - This handler is called once by the init process in user mode.
+; - It modifies the saved RFLAGS so that IF=1 (interrupts enabled).
+; - It also sets IOPL=0, which prevents user programs (ring 3)
+;   from executing privileged instructions like CLI/STI or IN/OUT.
+; - After pushing the corrected frame and executing iretq,
+;   the CPU resumes user mode with interrupts enabled.
+;
+; Result:
+; - From this point on, hardware timer interrupts can fire.
+; - The kernel’s scheduler can preempt tasks and switch between them.
+; - Other user processes do NOT need to call this handler; only
+;   the init process uses it to "unlock" multitasking.
+; ------------------------------------------------------------
+align 4  
+; 0xC7
+global RequestHall_int199
+RequestHall_int199:
+    jmp miC7H
+    jmp $
+miC7H:
+; Maskable interrupt
+    pop qword [.frameRIP]
+    pop qword [.frameCS]
+    pop qword [.frameRFLAGS]
+; iopl 0
+; This sets bit 9 (IF) = 1, enabling maskable interrupts.
+; Bits 12–13 (IOPL) are set to 0 here, meaning 
+; only CPL=0 code can execute in/out/cli/sti. 
+; That’s good for security — user mode (ring 3) won’t be able 
+; to mess with hardware directly.
+    mov qword [.frameRFLAGS], 0x0000000000000200
+
+; iopl 3
+; Comment out the alternative 0x0000000000003200, 
+; which would set IOPL=3, allowing user mode to do I/O 
+; not recommended unless you’re deliberately experimenting.
+    ;mov qword [.frameRFLAGS], 0x0000000000003200
+
+    push qword [.frameRFLAGS]
+    push qword [.frameCS]
+    push qword [.frameRIP]
+    iretq
+.frameRIP:     dq 0
+.frameCS:      dq 0
+.frameRFLAGS:  dq 0
 

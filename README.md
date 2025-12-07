@@ -360,5 +360,5 @@ The source code uses the MIT License.
 ## Quotes:
 
 ```
-    "Orthodox church"
+    "Gramado"
 ```

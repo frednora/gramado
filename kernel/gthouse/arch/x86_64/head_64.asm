@@ -2549,17 +2549,29 @@ align 4
 align 4
     %include "macro.asm"
 
-;---------------------
-; Interrupções de hardware (irqs) e faults.
+
+; ================================
+; Execution Hall - (RED)
+; Handles CPU faults & exceptions
+; ================================
 align 4
-    %include "ints/hw/hw1.asm"
-    %include "ints/hw/hw2.asm"
-;---------------------
-; visitor
-; Interrupções de software.
+    %include "ints/exec/exec.asm"
+
+; ================================
+; Peripheral Hall - (PINK)
+; Handles IRQs & device signals
+; ================================
 align 4
-    %include "ints/sw/sw1.asm"
-    %include "ints/sw/sw2.asm"
+    %include "ints/per/hw1.asm"
+    %include "ints/per/hw2.asm"
+
+; ================================
+; Request Hall - (WHITE)
+; Handles syscalls & memory petitions
+; ================================
+align 4
+    %include "ints/req/sw1.asm"
+    %include "ints/req/sw2.asm"
 
 ;---------------------
 ; Funções

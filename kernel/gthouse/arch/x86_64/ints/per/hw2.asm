@@ -1,3 +1,4 @@
+; Peripheral Hall (Pink)
 ; hw2.asm
 ; This file handles the traps for the x86_64 processors.
 ; Only hw interrupts.
@@ -338,7 +339,7 @@ global _turn_task_switch_on
 _turn_task_switch_on:
 
     cli 
-    mov rax, qword _irq0        ;definitivo
+    mov rax, qword PeripheralHall_irq0        ;definitivo
     mov rbx, qword 32
     ;call _setup_system_interrupt
     call _setup_system_interrupt_hw  ;#testing 0x8E00
