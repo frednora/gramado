@@ -48,6 +48,8 @@ struct callback_event_d
 // ==========================================
 //
 
+void callback_is_restored(void);
+
 void 
 setup_callback_parameters(
     unsigned long param1, 

@@ -357,6 +357,17 @@ static void __task_switch(void)
 // #todo:
 // Put the tid as an argument.
 
+// #test
+// CAn't save context during a callback. It's because 
+// saving a new context will destroy the older one, necessary
+// during the callback restorer routine.
+// The callback restorer unset this flag telling us that 
+// he is finishing his job and probably the thread
+// will run again in its normal mode.
+    if (CurrentThread->callback_in_progress == TRUE)
+        panic("ts: Cant save context. Callback in progress\n");
+
+// Save
     save_current_context();
     CurrentThread->saved = TRUE;
 

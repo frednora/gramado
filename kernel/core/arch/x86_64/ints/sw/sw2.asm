@@ -95,6 +95,10 @@ sw2_initialize_syscall_support:
 ; restore the context with the idle thread
 ; and restart the ifle thread.
 
+; Call the worker to unset the callback_in_progress flag 
+; into the thread structure.
+extern _callback_is_restored
+
 ; Callbacl restorer.
 ; int 198 (0xC6)
 global _int198
@@ -134,6 +138,11 @@ _int198:
     mov qword [_ring3_callback_parm4], 0
 
     mov qword [_callback_restorer_done], 1
+
+; Call the worker to unset the callback_in_progress flag 
+; into the thread structure.
+; See: callback.c
+    call _callback_is_restored
 
 ; #bugbug:
 ; Here we're using the release routine that belongs to the irq0

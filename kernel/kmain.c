@@ -1012,13 +1012,15 @@ fail:
     return (int) -1;
 }
 
+// Initializes the kernel, create the kernel process,
+// launches the forst ring 0 loadable module, creates the ini process,
+// the first thread for the init process and execute the firs thread.
 // Called by I_kmain during the initialization of the BSP.
 // APs have a different initialization routine.
 // We don't have any print support yet.
 // See: kernel.h, kmain.h
-static int I_initialize_kernel(int arch_type, int processor_number)
-{
 // ==================================
+// This is the sequence of functions called by this function.
 // Levels:
 // + [1]   earlyinit()
 // + [2:0] mmInitialize(0)
@@ -1030,10 +1032,10 @@ static int I_initialize_kernel(int arch_type, int processor_number)
 // + [5]   deviceinit()
 // + [6]   lateinit()
 // ==================================
-
+static int I_initialize_kernel(int arch_type, int processor_number)
+{
     int Status = FALSE;
 
-// -------------------------------
 // Early init
 // We don't have any print support yet.
 // We initialized the serial debug support, and console structures, 
@@ -1178,7 +1180,7 @@ static int I_initialize_kernel(int arch_type, int processor_number)
     //while(1){}
 
 // -------------------------------
-    int late_status = 0;
+    int late_status=0;
     if (Status == TRUE)
     {
         PROGRESS(":: lateinit\n");

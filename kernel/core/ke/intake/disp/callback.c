@@ -45,6 +45,34 @@ unsigned long _callback_address_saved=0;
 
 // =====================================================
 
+// Worker to unset the callback_in_progress flag 
+// into the thread structure.
+// Callback is restored for the current thread.
+// Called by _int198: is sw2.asm
+void callback_is_restored(void)
+{
+    struct thread_d *t;
+
+    if (current_thread<0)
+        return;
+    if (current_thread >= THREAD_COUNT_MAX)
+        return;
+    t = (struct thread_d *) threadList[current_thread];
+    if (t->used != TRUE)
+        return;
+    if (t->magic != 1234)
+        return;
+    if (t->callback_in_progress != TRUE)
+        panic ("callback_is_restored: Not in progress\n");
+
+// It unsets thf flag, and returns to the restorer,
+// 'cause the work is not done yet. It will return to the 
+// ring 3 via iretq.
+    t->callback_in_progress = FALSE;
+// Return to _int198: is sw2.asm.
+}
+
+
 void 
 setup_callback_parameters(
     unsigned long param1, 
