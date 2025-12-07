@@ -6,12 +6,12 @@
 # -----------------------------------------
 # Zone         | Subfolders to compile
 # -----------------------------------------
-# Red   (Hot)  | core/
-# Pink  (Warm) | wink/ and res/
-# White (Cold) | libk/ 
+# Red   (Hot)  | gthouse/core/
+# Pink  (Warm) | gthouse/wink/ and halls/
+# White (Cold) | gthouse/libk/ 
 
 # Tools
-include core/arch/x86_64/makeinc
+include gthouse/arch/x86_64/makeinc
 
 INCLUDE = include
 
@@ -33,7 +33,7 @@ linkFlags := -m elf_x86_64 \
 -x \
 -static \
 -Map=kernel.map \
--T core/arch/x86_64/link.ld   
+-T gthouse/arch/x86_64/link.ld   
 
 #
 # Config
@@ -102,17 +102,17 @@ MYTEST_CONFIG=n
 # I want, but i will not.
 
 # ==[Part 01]======================
-# core/ (HOT)
+# gthouse/core/ (HOT)
 objects-y := head_64.o 
 objects-y += p1_ke.o  
 objects-y += p1_kwrap.o  
 
 # ==[Part 02]======================
-# wink/ - Main wrapper for the kernel io system.
+# gthouse/wink/ - Main wrapper for the kernel io system.
 objects-y += p2_wink.o  
 
 # ==[Part 03]======================
-# res/ - Kernel resources (COLD)
+# halls/ - Kernel resources (COLD)
 # We can create interfaces that belongs to a given cgroup.
 
 objects-y += p3_mm.o  
@@ -125,7 +125,7 @@ objects-y += p3_net.o
 objects-y += p3_fs.o  
 
 # ==[Part 04]======================
-# libk/ (Runtime Library)
+# gthouse/libk/ (Runtime Library)
 objects-y += p4_libk.o  
 
 objects-y += kmain.o    
@@ -147,7 +147,7 @@ clean
 RedZone:
 # Part 01
 	@echo "Compiling: Compiling RedZone"
-	$(Q)$(MAKE) -C core/
+	$(Q)$(MAKE) -C gthouse/
 
 # ----------------
 # Graphical Device Interface and User Interaction Interface.
@@ -155,15 +155,13 @@ RedZone:
 PinkZone:
 # Part 02 and Part 3
 	@echo "Compiling: Compiling PinkZone"
-	$(Q)$(MAKE) -C wink/
-	$(Q)$(MAKE) -C res/
+	$(Q)$(MAKE) -C halls/
 
 # ----------------
-# libk/ (Runtime Library)
+# gthouse/libk/ (Runtime Library)
 WhiteZone:
 # Part 04
 	@echo "Compiling: Compiling WhiteZone"
-	$(Q)$(MAKE) -C libk/
 #   ...
 
 # ----------------
@@ -184,20 +182,18 @@ clean-all:
 	rm -rf *.o   
 	rm -rf *.BIN   
 
-	rm -rf core/*.o   
-	rm -rf res/*.o   
+	rm -rf gthouse/core/*.o   
+	rm -rf halls/*.o   
 
-	rm -rf core/arch/*.o   
-	rm -rf core/clibs/*.o   
-	rm -rf core/ke/*.o   
-	rm -rf core/kmain/*.o   
-	rm -rf core/wink/*.o   
+	rm -rf gthouse/arch/*.o   
+	rm -rf gthouse/libk/*.o   
+	rm -rf gthouse/wink/*.o   
 
-	rm -rf res/bus/*.o   
-	rm -rf res/dev/*.o   
-	rm -rf res/fs/*.o   
-	rm -rf res/mm/*.o   
-	rm -rf res/net/*.o   
+	rm -rf halls/bus/*.o   
+	rm -rf halls/dev/*.o   
+	rm -rf halls/fs/*.o   
+	rm -rf halls/mm/*.o   
+	rm -rf halls/net/*.o   
 
 	@echo "~clean-all"
 

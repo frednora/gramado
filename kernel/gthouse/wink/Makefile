@@ -4,7 +4,7 @@
 # Makefile for the user interaction support.
 # Keyboard, mouse and display.
 
-INCLUDE = ../include
+INCLUDE = ../../include
 
 AS	= as
 LD	= ld
@@ -105,7 +105,7 @@ all:
 
 # link
 	$(LD) -r -o p2_wink.o $(OBJS)
-	cp p2_wink.o ../
+	cp p2_wink.o ../../
 	rm *.o
 
 clean:

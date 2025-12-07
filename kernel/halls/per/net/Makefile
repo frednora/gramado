@@ -1,8 +1,8 @@
-# fs/
-# Compile all the files and create p3_fs.o
-# Makefile for the kernel filesystems.
+# net/
+# Compile all the files and create p3_net.o
+# Makefile for the kernel networking.
 
-INCLUDE = ../../include
+INCLUDE = ../../../include
 
 AS	= as
 LD	= ld
@@ -61,6 +61,7 @@ CFLAGS := \
 # Used to build the kernel.
 KERNEL_INCLUDE := -I $(INCLUDE)
 
+
 # See: https://linux.die.net/man/1/ld
 # -s --strip-all:   Omit all symbol information from the output file.
 # -x --discard-all: Delete all local symbols.
@@ -68,31 +69,44 @@ KERNEL_INCLUDE := -I $(INCLUDE)
 # LDFLAGS := -m elf_x86_64 -static
 LDFLAGS := -m elf_x86_64 -s -x -static  
 
-# Everything is a file.
-OBJS = fslib.o fsbp.o fsload.o fs.o \
-elf.o pipe.o search.o \
-fat16.o    
+OBJS = domain.o inet.o \
+socket.o sockint.o \
+ethernet.o arp.o ipv4.o tcp.o udp.o dhcp.o gprot.o \
+net.o    
 
 all:
 
-	$(CC) -c fslib.c   $(KERNEL_INCLUDE) $(CFLAGS) -o fslib.o
-	$(CC) -c fsbp.c    $(KERNEL_INCLUDE) $(CFLAGS) -o fsbp.o
-	$(CC) -c fsload.c  $(KERNEL_INCLUDE) $(CFLAGS) -o fsload.o
-	$(CC) -c fs.c      $(KERNEL_INCLUDE) $(CFLAGS) -o fs.o
+	$(CC) -c net.c  $(KERNEL_INCLUDE) $(CFLAGS) -o net.o
 
-	$(CC) -c elf.c     $(KERNEL_INCLUDE) $(CFLAGS) -o elf.o
-	$(CC) -c pipe.c    $(KERNEL_INCLUDE) $(CFLAGS) -o pipe.o
-	$(CC) -c search.c  $(KERNEL_INCLUDE) $(CFLAGS) -o search.o
+# network
+	$(CC) -c domain.c   $(KERNEL_INCLUDE) $(CFLAGS) -o domain.o
+	$(CC) -c inet.c     $(KERNEL_INCLUDE) $(CFLAGS) -o inet.o
 
-# fat/
-	$(CC) -c fat/fat16.c  $(KERNEL_INCLUDE) $(CFLAGS) -o fat16.o
+# socket
+	$(CC) -c socket.c   $(KERNEL_INCLUDE) $(CFLAGS) -o socket.o
+	$(CC) -c sockint.c  $(KERNEL_INCLUDE) $(CFLAGS) -o sockint.o
+
+# core protocols
+	$(CC) -c prot/core/ethernet.c  \
+$(KERNEL_INCLUDE) $(CFLAGS) -o ethernet.o
+	$(CC) -c prot/core/arp.c  \
+$(KERNEL_INCLUDE) $(CFLAGS) -o arp.o
+	$(CC) -c prot/core/ipv4.c  \
+$(KERNEL_INCLUDE) $(CFLAGS) -o ipv4.o
+
+# protocols
+	$(CC) -c prot/tcp.c    $(KERNEL_INCLUDE) $(CFLAGS) -o tcp.o
+	$(CC) -c prot/udp.c    $(KERNEL_INCLUDE) $(CFLAGS) -o udp.o
+	$(CC) -c prot/dhcp.c   $(KERNEL_INCLUDE) $(CFLAGS) -o dhcp.o
+	$(CC) -c prot/gprot.c  $(KERNEL_INCLUDE) $(CFLAGS) -o gprot.o
 
 # link
-	$(LD) -r -o p3_fs.o $(OBJS)
-	cp p3_fs.o ../../
+	$(LD) -r -o p3_net.o $(OBJS)
+	cp p3_net.o ../../../
 	rm *.o
 
 clean:
 	rm *.o    
 	
 	
+

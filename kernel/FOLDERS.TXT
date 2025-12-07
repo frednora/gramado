@@ -1,61 +1,37 @@
+Kernel Folder Organization
+--------------------------
 
- The folders for the kernel/
+The kernel source tree is organized into three main areas: the Gatehouse, the Halls, and the Library. 
+This structure is designed to make the entry points, management responsibilities, and shared definitions 
+clear and easy to navigate.
 
-kernel/
- ├── core/     → Resource manager (execution, orchestration)
- ├── include/  → Header files (public kernel interfaces)
- ├── libk/     → Runtime library for ring 0
- ├── res/      → Resource subsystems (devices, memory, FS, networking)
- └── wink/     → User-facing interfaces (events, graphics, user API)
+1. gthouse/ (Gatehouse)
+   - Contains all code related to entering the kernel.
+   - Responsibilities:
+     * Entry point and initialization routines
+     * Syscall and interrupt stubs
+     * High-level kernel wrappers
+     * Shared kernel library (libk)
+     * User interface layer (input events and GDI)
+   - Subfolders:
+     * arch/   : Architecture-specific boot code and interrupt stubs
+     * kwrap/  : Kernel wrappers and abstractions
+     * libk/   : Shared kernel utilities
+     * wink/   : User interface handling (input + graphics)
 
+2. halls/ (Castle Halls)
+   - Contains the main management units of the kernel.
+   - Responsibilities are divided into three halls:
+     * exec/ (CPU Hall)    : Thread management, dispatcher, scheduler, exceptions
+     * req/  (Memory Hall) : Syscalls and memory management (mm/)
+     * per/  (IRQ Hall)    : Peripheral devices and interrupt handling
 
-Roles
-core/:    The “brain” of the kernel. Manages execution, scheduling, and orchestrates resources.
-include/: Kernel headers, shared definitions, and exported symbols.
-libk/:    Low-level runtime library for privileged (ring 0) operations.
-res/:     Concrete resource implementations (devices, filesystems, memory, networking).
-wink/:    User interaction layer — event interface (EVI), graphics device interface (GDI), and user subsystem.
+3. include/ (Castle Library)
+   - Contains headers and shared definitions used across the kernel.
+   - Provides the common interfaces and constants that bind the system together.
 
----------------------------------------------
-Core Subsystem (core/)
-core/
- ├── arch/   → Architecture-specific assembly code
- ├── ke/     → HAL, dispatcher, scheduler
- └── kwrap/  → Syscall interface, namespaces, cgroups, virtualization, panic/reboot
-
-arch/:  Hardware‑specific assembly routines (bootstrapping, context switching).
-ke/:    Kernel executive — abstracts hardware, manages threads, scheduling, interrupts.
-kwrap/: Top‑layer wrapper — syscall entry points, namespace/cgroup management, virtualization hooks, panic/reboot handling.
-
----------------------------------------------
-Resource Subsystem (res/)
-res/
- ├── bus/   → System buses and interconnects
- ├── dev/   → Device drivers (block, char, net)
- ├── fs/    → Filesystem implementations
- ├── mm/    → Memory management
- └── net/   → Networking stack
-
-bus/: Abstractions for PCI, USB, and other interconnects.
-dev/: Drivers for block devices, character devices, and network devices.
-fs/:  Filesystem layers (VFS, ext‑like, FAT‑like, etc.).
-mm/:  Memory allocation, paging, virtual memory.
-net/: Protocol stack, sockets, routing.
-
----------------------------------------------
-Other Components
-
-include/:
-  Kernel headers, macros, type definitions.
-  Provides the interface between subsystems.
-
-libk/:
-  Runtime library for ring 0.
-  Utility functions, string/memory ops, math, debugging helpers.
-
-wink/:
-  EVI (Event Interface): Event handling between kernel and user space.
-  GDI (Graphics Device Interface): Graphics abstraction for user applications.
-  User: User‑mode interaction layer, possibly windowing or input handling.
-
-
+Summary:
+--------
+- All entry paths into the kernel (boot, syscalls, IRQs, ring 0 calls) converge in gthouse/.
+- All management responsibilities are handled inside the appropriate hall (exec, req, per).
+- All shared definitions and interfaces are stored in include/.

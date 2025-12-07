@@ -22,34 +22,33 @@
 
 // -------
 
-//#include "../core/arch/arm/arch.h"
-#include "../core/arch/x86_64/arch.h"
-
+//#include "../gthouse/arch/arm/arch.h"
+#include "../gthouse/arch/x86_64/arch.h"
 
 //
 // Core control kwrap/
 //
 
-#include "../core/kwrap/mode.h"
-#include "../core/kwrap/state.h"
-#include "../core/kwrap/system.h"
-#include "../core/kwrap/klimits2.h"
+#include "../gthouse/kwrap/mode.h"
+#include "../gthouse/kwrap/state.h"
+#include "../gthouse/kwrap/system.h"
+#include "../gthouse/kwrap/klimits2.h"
 
-#include "../core/kwrap/globals.h"
+#include "../gthouse/kwrap/globals.h"
 
-#include "../core/kwrap/bootblk/bootblk.h"
+#include "../gthouse/kwrap/bootblk/bootblk.h"
 
 // ==================================
-// ke/
-#include "../core/ke/intake/sync.h"
+// halls/exec/ke/
+#include "../halls/exec/ke/intake/sync.h"
 
 // ===============================
 // hal/
-#include "../core/ke/hal/x86_64/gwd.h"  // whatch dogs.
-#include "../core/ke/hal/pints.h"       // profiler
+#include "../halls/exec/ke/hal/x86_64/gwd.h"  // whatch dogs.
+#include "../halls/exec/ke/hal/pints.h"       // profiler
 
 // ===============================
-#include "../core/ke/intake/x64init.h"  // x64 kernel initialization.
+#include "../halls/exec/ke/intake/x64init.h"  // x64 kernel initialization.
 
 // kernel initialization.
 #include "../kmain.h"
@@ -57,231 +56,231 @@
 
 // ===============================
 // kwrap/
-#include "../core/kwrap/info.h"
-#include "../core/kwrap/request.h"
+#include "../gthouse/kwrap/info.h"
+#include "../gthouse/kwrap/request.h"
 
-#include "../core/kwrap/debug.h"
+#include "../gthouse/kwrap/debug.h"
 
 // ==================================
-// ke/
+// halls/exec/ke/
 // Gramado configuration.
-#include "../core/ke/hal/jiffies.h"
+#include "../halls/exec/ke/hal/jiffies.h"
 
 // ==================================
 // crt/
 // Libc support.
-#include "../libk/ktypes.h"
-#include "../libk/ktypes2.h"
+#include "../gthouse/libk/ktypes.h"
+#include "../gthouse/libk/ktypes2.h"
 
 // #todo: Move this one above?
-#include "../libk/ascii.h"
+#include "../gthouse/libk/ascii.h"
 
 // Kernel objects.
 // Can we move this above the libk? Or after it?
-#include "../core/kwrap/kobject.h"
+#include "../gthouse/kwrap/kobject.h"
 
-// libk/
+// gthouse/libk/
 // Legacy stuff.
-#include "../libk/kstdarg.h"
-#include "../libk/kerrno.h"
-#include "../libk/kcdefs.h"
-#include "../libk/kstddef.h"
-#include "../libk/klimits.h"
+#include "../gthouse/libk/kstdarg.h"
+#include "../gthouse/libk/kerrno.h"
+#include "../gthouse/libk/kcdefs.h"
+#include "../gthouse/libk/kstddef.h"
+#include "../gthouse/libk/klimits.h"
 
-#include "../libk/kstdio.h"
-#include "../libk/printk/printk.h"
+#include "../gthouse/libk/kstdio.h"
+#include "../gthouse/libk/printk/printk.h"
 
-#include "../libk/kstdlib.h"
-#include "../libk/kstring.h"
-#include "../libk/kctype.h"
-#include "../libk/kiso646.h"
-#include "../libk/ksignal.h"
-#include "../libk/kunistd.h"
-#include "../libk/kfcntl.h"
-#include "../libk/kioctl.h"
-#include "../libk/kioctls.h"
-#include "../libk/ktermios.h"
-#include "../libk/kttydef.h"
+#include "../gthouse/libk/kstdlib.h"
+#include "../gthouse/libk/kstring.h"
+#include "../gthouse/libk/kctype.h"
+#include "../gthouse/libk/kiso646.h"
+#include "../gthouse/libk/ksignal.h"
+#include "../gthouse/libk/kunistd.h"
+#include "../gthouse/libk/kfcntl.h"
+#include "../gthouse/libk/kioctl.h"
+#include "../gthouse/libk/kioctls.h"
+#include "../gthouse/libk/ktermios.h"
+#include "../gthouse/libk/kttydef.h"
 
-#include "../libk/libk.h"
+#include "../gthouse/libk/libk.h"
 
 
 // ==================================
-// ke/
+// halls/exec/ke/
 // Globals. PIDs support.
-#include "../core/ke/intake/kpid.h"
+#include "../halls/exec/ke/intake/kpid.h"
 
 // ==================================
-// mm/
+// req/mm/
 // Memory management.
-#include "../res/mm/mmsize.h"
-#include "../res/mm/x86_64/x64gpa.h"
-#include "../res/mm/x86_64/x64gva.h"
-#include "../res/mm/memmap.h" 
-#include "../res/mm/x86_64/intelmm.h"
-#include "../res/mm/mmblock.h"
-#include "../res/mm/mmusage.h"
-#include "../res/mm/x86_64/x64mm.h"
-#include "../res/mm/slab.h"
-#include "../res/mm/x86_64/paging.h"
-#include "../res/mm/mmft.h"
-#include "../res/mm/mmpool.h"
-#include "../res/mm/mmglobal.h"  // Deve ficar mais acima.
-#include "../res/mm/heap.h"      // Heap pointer support.
-#include "../res/mm/aspace.h"    // Address Space, (data base account).
-#include "../res/mm/bank.h"      // Bank. database
-#include "../res/mm/mm.h"
+#include "../halls/req/mm/mmsize.h"
+#include "../halls/req/mm/x86_64/x64gpa.h"
+#include "../halls/req/mm/x86_64/x64gva.h"
+#include "../halls/req/mm/memmap.h" 
+#include "../halls/req/mm/x86_64/intelmm.h"
+#include "../halls/req/mm/mmblock.h"
+#include "../halls/req/mm/mmusage.h"
+#include "../halls/req/mm/x86_64/x64mm.h"
+#include "../halls/req/mm/slab.h"
+#include "../halls/req/mm/x86_64/paging.h"
+#include "../halls/req/mm/mmft.h"
+#include "../halls/req/mm/mmpool.h"
+#include "../halls/req/mm/mmglobal.h"  // Deve ficar mais acima.
+#include "../halls/req/mm/heap.h"      // Heap pointer support.
+#include "../halls/req/mm/aspace.h"    // Address Space, (data base account).
+#include "../halls/req/mm/bank.h"      // Bank. database
+#include "../halls/req/mm/mm.h"
 
 // ==================================
 // hal/
-#include "../core/ke/hal/x86_64/ports64.h"
-#include "../core/ke/hal/x86_64/cpu.h"
-#include "../core/ke/hal/x86_64/tss.h"
-#include "../core/ke/hal/x86_64/x64gdt.h"
-#include "../core/ke/hal/x86_64/x64.h"
-#include "../core/ke/hal/detect.h"
+#include "../halls/exec/ke/hal/x86_64/ports64.h"
+#include "../halls/exec/ke/hal/x86_64/cpu.h"
+#include "../halls/exec/ke/hal/x86_64/tss.h"
+#include "../halls/exec/ke/hal/x86_64/x64gdt.h"
+#include "../halls/exec/ke/hal/x86_64/x64.h"
+#include "../halls/exec/ke/hal/detect.h"
 
 // ==================================
 // virt/
-#include "../core/kwrap/virt/hv.h"
+#include "../gthouse/kwrap/virt/hv.h"
 
 // ==========================================
 // hal/arm/
-// #include "../core/ke/hal/arm/archhal.h"
+// #include "../halls/exec/ke/hal/arm/archhal.h"
 
 // ==========================================
 // hal/x86_64/
-#include "../core/ke/hal/x86_64/cpuid.h"
-#include "../core/ke/hal/x86_64/up/up.h"
-#include "../core/ke/hal/x86_64/smp/mpfloat.h"
-#include "../core/ke/hal/x86_64/smp/acpi.h"
-#include "../core/ke/hal/x86_64/smp/x64smp.h"
-#include "../core/ke/hal/x86_64/pic.h"
-#include "../core/ke/hal/x86_64/smp/apic.h"
-#include "../core/ke/hal/x86_64/smp/apictim.h"
-#include "../core/ke/hal/x86_64/smp/ioapic.h"
-#include "../core/ke/hal/x86_64/pit.h"
-#include "../core/ke/hal/x86_64/rtc.h"
-#include "../core/ke/hal/x86_64/breaker.h"
-#include "../core/ke/hal/x86_64/archhal.h"
+#include "../halls/exec/ke/hal/x86_64/cpuid.h"
+#include "../halls/exec/ke/hal/x86_64/up/up.h"
+#include "../halls/exec/ke/hal/x86_64/smp/mpfloat.h"
+#include "../halls/exec/ke/hal/x86_64/smp/acpi.h"
+#include "../halls/exec/ke/hal/x86_64/smp/x64smp.h"
+#include "../halls/exec/ke/hal/x86_64/pic.h"
+#include "../halls/exec/ke/hal/x86_64/smp/apic.h"
+#include "../halls/exec/ke/hal/x86_64/smp/apictim.h"
+#include "../halls/exec/ke/hal/x86_64/smp/ioapic.h"
+#include "../halls/exec/ke/hal/x86_64/pit.h"
+#include "../halls/exec/ke/hal/x86_64/rtc.h"
+#include "../halls/exec/ke/hal/x86_64/breaker.h"
+#include "../halls/exec/ke/hal/x86_64/archhal.h"
 
 // ==========================================
 // Architecture-independent HAL interface
-#include "../core/ke/hal/hal.h"
+#include "../halls/exec/ke/hal/hal.h"
 
 // ==================================
-// bus/
+// per/bus/
 // PCI bus.
-#include "../res/bus/pci/pci.h"
-#include "../res/bus/bus.h"
+#include "../halls/per/bus/pci/pci.h"
+#include "../halls/per/bus/bus.h"
 
 // ==================================
-// dev/
+// per/
 // io
-#include "../res/dev/io.h"
+#include "../halls/per/io.h"
 
 // ==================================
-// dev/
+// per/
 // Devices
 // primeiro char, depois block, depois network.
 // tty
-#include "../res/dev/chardev/tty/ttyldisc.h"
-#include "../res/dev/chardev/tty/ttydrv.h"
-#include "../res/dev/chardev/tty/tty.h"
-#include "../res/dev/chardev/tty/pty.h"
+#include "../halls/per/chardev/tty/ttyldisc.h"
+#include "../halls/per/chardev/tty/ttydrv.h"
+#include "../halls/per/chardev/tty/tty.h"
+#include "../halls/per/chardev/tty/pty.h"
 
-#include "../res/dev/chardev/console/console.h"
+#include "../halls/per/chardev/console/console.h"
 
 // hw stuff - display device
 // display device support.
-#include "../res/dev/chardev/display/display.h"
+#include "../halls/per/chardev/display/display.h"
 // bootloader display device
-#include "../res/dev/chardev/display/bldisp/rop.h"
-#include "../res/dev/chardev/display/bldisp/bldisp.h"
-//#include "../res/dev/chardev/display/qemudisp/qemudisp.h"
+#include "../halls/per/chardev/display/bldisp/rop.h"
+#include "../halls/per/chardev/display/bldisp/bldisp.h"
+//#include "../halls/per/chardev/display/qemudisp/qemudisp.h"
 
 // ==================================
-// dev/
-#include "../res/dev/dev00.h"
+// per/
+#include "../halls/per/dev00.h"
 
 // ==================================
-// wink/ 
+// gthouse/wink/ 
 // sw - Graphics Engine
-#include "../wink/gdi/gre/color.h"
-#include "../wink/gdi/gre/font.h"
-#include "../wink/gdi/gre/bg.h"
+#include "../gthouse/wink/gdi/gre/color.h"
+#include "../gthouse/wink/gdi/gre/font.h"
+#include "../gthouse/wink/gdi/gre/bg.h"
 
 // ==================================
-// ke/
+// halls/exec/ke/
 // Can we move this up?
-#include "../core/ke/intake/msgcode.h"
+#include "../halls/exec/ke/intake/msgcode.h"
 
 // ==================================
-// wink/
+// gthouse/wink/
 
-#include "../wink/gdi/gre/pixel.h"
-#include "../wink/gdi/gre/char.h"
-#include "../wink/gdi/gre/text.h"
-#include "../wink/gdi/gre/line.h"
-#include "../wink/gdi/gre/rect.h"
-#include "../wink/gdi/gre/bitblt.h"
-#include "../wink/gdi/gre/gre.h"
+#include "../gthouse/wink/gdi/gre/pixel.h"
+#include "../gthouse/wink/gdi/gre/char.h"
+#include "../gthouse/wink/gdi/gre/text.h"
+#include "../gthouse/wink/gdi/gre/line.h"
+#include "../gthouse/wink/gdi/gre/rect.h"
+#include "../gthouse/wink/gdi/gre/bitblt.h"
+#include "../gthouse/wink/gdi/gre/gre.h"
 
-#include "../wink/gdi/dispsrv.h"
-#include "../wink/gdi/osshell.h"
+#include "../gthouse/wink/gdi/dispsrv.h"
+#include "../gthouse/wink/gdi/osshell.h"
 
-#include "../wink/gdi/gdi.h"
+#include "../gthouse/wink/gdi/gdi.h"
 
 // Event Interface
-#include "../wink/evi/obroker.h"
-#include "../wink/evi/output.h"
-#include "../wink/evi/ibroker.h"
-#include "../wink/evi/input.h"
+#include "../gthouse/wink/evi/obroker.h"
+#include "../gthouse/wink/evi/output.h"
+#include "../gthouse/wink/evi/ibroker.h"
+#include "../gthouse/wink/evi/input.h"
 
 // ===========
 
-#include "../core/ke/intake/disp/callback.h"
+#include "../halls/exec/ke/intake/disp/callback.h"
 
 // ==================================
-// dev/
+// per/
 
 // chardev/
 // Serial port. (COM).
-#include "../res/dev/chardev/serial/serial.h"
+#include "../halls/per/chardev/serial/serial.h"
 
-#include "../res/dev/chardev/vk.h"
-#include "../res/dev/chardev/kbdabnt2.h"
-#include "../res/dev/chardev/kbdmap.h"
+#include "../halls/per/chardev/vk.h"
+#include "../halls/per/chardev/kbdabnt2.h"
+#include "../halls/per/chardev/kbdmap.h"
 
 // i8042 (PS/2)
-#include "../res/dev/chardev/i8042/keyboard.h"
-#include "../res/dev/chardev/i8042/ps2kbd.h"
-#include "../res/dev/chardev/i8042/mouse.h"
-#include "../res/dev/chardev/i8042/ps2mouse.h"
-#include "../res/dev/chardev/i8042/i8042.h"
+#include "../halls/per/chardev/i8042/keyboard.h"
+#include "../halls/per/chardev/i8042/ps2kbd.h"
+#include "../halls/per/chardev/i8042/mouse.h"
+#include "../halls/per/chardev/i8042/ps2mouse.h"
+#include "../halls/per/chardev/i8042/i8042.h"
 
 // blkdev/
 // Block devices
 // ata, sata
-#include "../res/dev/blkdev/ata/ata.h"
-//#include "../res/dev/blkdev/ahci/ahci.h"
+#include "../halls/per/blkdev/ata/ata.h"
+//#include "../halls/per/blkdev/ahci/ahci.h"
 // Storage manager.
-#include "../res/dev/blkdev/storage.h"
+#include "../halls/per/blkdev/storage.h"
 
 // netdev/
 // Network devices
 // primeiro controladoras depois protocolos
 // e1000 - nic intel
-#include "../res/dev/netdev/e1000/e1000.h"
+#include "../halls/per/netdev/e1000/e1000.h"
 
 // ==================================
-// net/ 
+// per/net/ 
 // (network, protocols and socket)
 // network
-#include "../res/net/mac.h"
-#include "../res/net/host.h"
-#include "../res/net/in.h"
-#include "../res/net/un.h"
+#include "../halls/per/net/mac.h"
+#include "../halls/per/net/host.h"
+#include "../halls/per/net/in.h"
+#include "../halls/per/net/un.h"
 
 //
 // Protocols
@@ -291,126 +290,125 @@
 // prot/
 
 // Core protocols
-#include "../res/net/prot/core/ethernet.h"
-#include "../res/net/prot/core/arp.h"
-#include "../res/net/prot/core/ip.h"
+#include "../halls/per/net/prot/core/ethernet.h"
+#include "../halls/per/net/prot/core/arp.h"
+#include "../halls/per/net/prot/core/ip.h"
 // Commom protocols
-#include "../res/net/prot/tcp.h"
-#include "../res/net/prot/udp.h"
-#include "../res/net/prot/dhcp.h" 
-#include "../res/net/prot/gprot.h"
+#include "../halls/per/net/prot/tcp.h"
+#include "../halls/per/net/prot/udp.h"
+#include "../halls/per/net/prot/dhcp.h" 
+#include "../halls/per/net/prot/gprot.h"
 
 
 // Extra protocols
-#include "../res/net/prot/icmp.h" 
+#include "../halls/per/net/prot/icmp.h" 
 
-// net/
+// per/net/
 
 // Network
-#include "../res/net/nports.h"     //(network) Network Ports  (sw)
-#include "../res/net/inet.h"
+#include "../halls/per/net/nports.h"     //(network) Network Ports  (sw)
+#include "../halls/per/net/inet.h"
 
-#include "../res/net/socklib.h"     //
-#include "../res/net/socket.h"      //last always
+#include "../halls/per/net/socklib.h"     //
+#include "../halls/per/net/socket.h"      //last always
 
-#include "../res/net/domain.h"
-#include "../res/net/net.h"     //(network) Gerenciamento de rede.  
+#include "../halls/per/net/domain.h"
+#include "../halls/per/net/net.h"     //(network) Gerenciamento de rede.  
 
 // ----------------------
 // Last:
 // Device interface.
 // Device manager.
-#include "../res/dev/dev.h"
+#include "../halls/per/dev.h"
 
 // ==================================
-// fs/
+// per/fs/
 // File system
 // ----------------------
 // Depois de devices.
 // fs
-#include "../res/fs/path.h"      // path.
+#include "../halls/per/fs/path.h"      // path.
 
-#include "../res/fs/fat/fatlib.h"    // fat16 library.
-#include "../res/fs/fat/fat.h"       // fat16.
+#include "../halls/per/fs/fat/fatlib.h"    // fat16 library.
+#include "../halls/per/fs/fat/fat.h"       // fat16.
 
-#include "../res/fs/inode.h"
-#include "../res/fs/exec_elf.h"
-#include "../res/fs/pipe.h"
-#include "../res/fs/files.h"
-#include "../res/fs/fs.h"
+#include "../halls/per/fs/inode.h"
+#include "../halls/per/fs/exec_elf.h"
+#include "../halls/per/fs/pipe.h"
+#include "../halls/per/fs/files.h"
+#include "../halls/per/fs/fs.h"
 
 // ==================================
-#include "../res/res.h"
+#include "../halls/res.h"
 
 // ==================================
 // intake/
-#include "../core/ke/intake/prio.h"     // Priority
-#include "../core/ke/intake/quantum.h"  // Quantum
-#include "../core/ke/intake/image.h"
-#include "../core/ke/intake/disp/x86_64/x64cont.h"
-#include "../core/ke/intake/disp/ts.h"
-#include "../core/ke/intake/queue.h"
-#include "../core/ke/intake/intake.h"
-#include "../core/ke/intake/disp/spawn.h"
-#include "../core/ke/intake/disp/dispatch.h"
+#include "../halls/exec/ke/intake/prio.h"     // Priority
+#include "../halls/exec/ke/intake/quantum.h"  // Quantum
+#include "../halls/exec/ke/intake/image.h"
+#include "../halls/exec/ke/intake/disp/x86_64/x64cont.h"
+#include "../halls/exec/ke/intake/disp/ts.h"
+#include "../halls/exec/ke/intake/queue.h"
+#include "../halls/exec/ke/intake/intake.h"
+#include "../halls/exec/ke/intake/disp/spawn.h"
+#include "../halls/exec/ke/intake/disp/dispatch.h"
 
-#include "../core/ke/intake/thread.h"
-#include "../core/ke/intake/te.h"
-#include "../core/ke/intake/ithread.h"
-#include "../core/ke/intake/clone.h"
-#include "../core/ke/intake/ipc.h"
+#include "../halls/exec/ke/intake/thread.h"
+#include "../halls/exec/ke/intake/te.h"
+#include "../halls/exec/ke/intake/ithread.h"
+#include "../halls/exec/ke/intake/clone.h"
+#include "../halls/exec/ke/intake/ipc.h"
 
-#include "../core/ke/intake/sched/sched.h"
-#include "../core/ke/intake/sched/schedq.h"
+#include "../halls/exec/ke/intake/sched/sched.h"
+#include "../halls/exec/ke/intake/sched/schedq.h"
 
 // Precisa de todos os componentes de ke/
-#include "../core/ke/ke.h"
+#include "../halls/exec/ke/ke.h"
 
 // ==================================
 // The user interactions
-#include "../wink/user/user.h"
+#include "../gthouse/wink/user/user.h"
 
 // Exporting some wink functions to the other modules
 // inside the base kernel.
-#include "../wink/wink.h"
+#include "../gthouse/wink/wink.h"
 
 // Reboot system.
-#include "../core/kwrap/reboot.h"
+#include "../gthouse/kwrap/reboot.h"
 // Ring 0 kernel modules.
-#include "../core/kwrap/mod/mod.h"
-#include "../core/kwrap/mod/public.h"
+#include "../gthouse/kwrap/mod/mod.h"
+#include "../gthouse/kwrap/mod/public.h"
 
 // Kernel layers. (Work in progress)
-#include "../core/kwrap/layers.h"
+#include "../gthouse/kwrap/layers.h"
 
 // The handlers for the services.
-#include "../core/kwrap/sci/sys.h"
+#include "../gthouse/kwrap/sci/sys.h"
 
 // The definitions for the syscall numbers.
-#include "../core/kwrap/sci/sci0.h"
-#include "../core/kwrap/sci/sci1.h"
-#include "../core/kwrap/sci/sci2.h"
-#include "../core/kwrap/sci/sci3.h"
+#include "../gthouse/kwrap/sci/sci0.h"
+#include "../gthouse/kwrap/sci/sci1.h"
+#include "../gthouse/kwrap/sci/sci2.h"
+#include "../gthouse/kwrap/sci/sci3.h"
 
 // The handlers for the four syscalls.
-#include "../core/kwrap/sci/sci.h" 
-
+#include "../gthouse/kwrap/sci/sci.h" 
 
 // ==================================
 // ke/
 // syscall support
-#include "../core/ke/hal/x86_64/x64sc.h"
+#include "../halls/exec/ke/hal/x86_64/x64sc.h"
 
 // ==================================
 
-#include "../core/kwrap/wrappers.h"
-#include "../core/kwrap/panic.h"
+#include "../gthouse/kwrap/wrappers.h"
+#include "../gthouse/kwrap/panic.h"
 
 // cgroups and namespaces
-#include "../core/kwrap/cont/cg.h"
-#include "../core/kwrap/cont/ns.h"
+#include "../gthouse/kwrap/cont/cg.h"
+#include "../gthouse/kwrap/cont/ns.h"
 
 // Core module.
-// It controls the resorces in res/.
-#include "../core/core.h"
+// It controls the resorces in halls/.
+#include "../gthouse/core.h"
 

@@ -5,7 +5,7 @@
 objTARGET := head_64.o    
 
 # Includes
-KERNEL_INCLUDE   := -I ../../../include 
+KERNEL_INCLUDE   := -I ../../include 
 STARTUP_INCLUDE  := -I startup/ 
 ENTRY_INCLUDE    := -I entry/ 
 INCLUDES := $(KERNEL_INCLUDE) $(STARTUP_INCLUDE) $(ENTRY_INCLUDE) 

@@ -2,7 +2,7 @@
 # Create p4_libk.o kernel module.
 # Highest level component.
 
-INCLUDE = ../include
+INCLUDE = ../../include
 
 AS	= as
 LD	= ld
@@ -86,7 +86,7 @@ all:
 
 # link
 	$(LD) -r -o p4_libk.o $(OBJS)
-	cp p4_libk.o ../
+	cp p4_libk.o ../../
 	rm *.o
 
 clean:

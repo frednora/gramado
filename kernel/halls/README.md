@@ -1,4 +1,4 @@
-# res
+# halls - Halls
 
   The resources. The built-in subsystems.
 

@@ -1,8 +1,9 @@
-# net/
-# Compile all the files and create p3_net.o
-# Makefile for the kernel networking.
+# mm/
+# Compile all the files and create p3_mm.o
+# Makefile for the kernel memory manager.
+# Created by Fred Nora.
 
-INCLUDE = ../../include
+INCLUDE = ../../../include
 
 AS	= as
 LD	= ld
@@ -56,11 +57,9 @@ CFLAGS := \
 	-fno-omit-frame-pointer \
 	-fno-optimize-sibling-calls    
 
-
 # Internal files
 # Used to build the kernel.
 KERNEL_INCLUDE := -I $(INCLUDE)
-
 
 # See: https://linux.die.net/man/1/ld
 # -s --strip-all:   Omit all symbol information from the output file.
@@ -69,44 +68,41 @@ KERNEL_INCLUDE := -I $(INCLUDE)
 # LDFLAGS := -m elf_x86_64 -static
 LDFLAGS := -m elf_x86_64 -s -x -static  
 
-OBJS = domain.o inet.o \
-socket.o sockint.o \
-ethernet.o arp.o ipv4.o tcp.o udp.o dhcp.o gprot.o \
-net.o    
+OBJS = mmsize.o \
+mmusage.o \
+x64mm.o \
+mm.o \
+mminfo.o \
+mmpool.o \
+paging.o \
+slab.o \
+mmrt.o \
+mmft.o    
+
 
 all:
 
-	$(CC) -c net.c  $(KERNEL_INCLUDE) $(CFLAGS) -o net.o
+# arm
 
-# network
-	$(CC) -c domain.c   $(KERNEL_INCLUDE) $(CFLAGS) -o domain.o
-	$(CC) -c inet.c     $(KERNEL_INCLUDE) $(CFLAGS) -o inet.o
+# x86_64
+	$(CC) -c x86_64/x64mm.c   $(KERNEL_INCLUDE) $(CFLAGS) -o x64mm.o
+	$(CC) -c x86_64/paging.c  $(KERNEL_INCLUDE) $(CFLAGS) -o paging.o
 
-# socket
-	$(CC) -c socket.c   $(KERNEL_INCLUDE) $(CFLAGS) -o socket.o
-	$(CC) -c sockint.c  $(KERNEL_INCLUDE) $(CFLAGS) -o sockint.o
-
-# core protocols
-	$(CC) -c prot/core/ethernet.c  \
-$(KERNEL_INCLUDE) $(CFLAGS) -o ethernet.o
-	$(CC) -c prot/core/arp.c  \
-$(KERNEL_INCLUDE) $(CFLAGS) -o arp.o
-	$(CC) -c prot/core/ipv4.c  \
-$(KERNEL_INCLUDE) $(CFLAGS) -o ipv4.o
-
-# protocols
-	$(CC) -c prot/tcp.c    $(KERNEL_INCLUDE) $(CFLAGS) -o tcp.o
-	$(CC) -c prot/udp.c    $(KERNEL_INCLUDE) $(CFLAGS) -o udp.o
-	$(CC) -c prot/dhcp.c   $(KERNEL_INCLUDE) $(CFLAGS) -o dhcp.o
-	$(CC) -c prot/gprot.c  $(KERNEL_INCLUDE) $(CFLAGS) -o gprot.o
+# mm
+	$(CC) -c mmsize.c   $(KERNEL_INCLUDE) $(CFLAGS) -o mmsize.o
+	$(CC) -c mmusage.c  $(KERNEL_INCLUDE) $(CFLAGS) -o mmusage.o
+	$(CC) -c mm.c       $(KERNEL_INCLUDE) $(CFLAGS) -o mm.o
+	$(CC) -c mminfo.c   $(KERNEL_INCLUDE) $(CFLAGS) -o mminfo.o
+	$(CC) -c mmpool.c   $(KERNEL_INCLUDE) $(CFLAGS) -o mmpool.o
+	$(CC) -c slab.c     $(KERNEL_INCLUDE) $(CFLAGS) -o slab.o
+	$(CC) -c mmrt.c     $(KERNEL_INCLUDE) $(CFLAGS) -o mmrt.o
+	$(CC) -c mmft.c     $(KERNEL_INCLUDE) $(CFLAGS) -o mmft.o
 
 # link
-	$(LD) -r -o p3_net.o $(OBJS)
-	cp p3_net.o ../../
+	$(LD) -r -o p3_mm.o $(OBJS)
+	cp p3_mm.o ../../../
 	rm *.o
 
 clean:
 	rm *.o    
 	
-	
-

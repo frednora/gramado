@@ -1,9 +1,8 @@
-# bus/
-# Compile all the files and create p3_bus.o
+# fs/
+# Compile all the files and create p3_fs.o
+# Makefile for the kernel filesystems.
 
-# Makefile for the kernel device drivers.
-
-INCLUDE = ../../include
+INCLUDE = ../../../include
 
 AS	= as
 LD	= ld
@@ -69,30 +68,31 @@ KERNEL_INCLUDE := -I $(INCLUDE)
 # LDFLAGS := -m elf_x86_64 -static
 LDFLAGS := -m elf_x86_64 -s -x -static  
 
-
 # Everything is a file.
-OBJS = pci.o pciinfo.o pciscan.o   
+OBJS = fslib.o fsbp.o fsload.o fs.o \
+elf.o pipe.o search.o \
+fat16.o    
 
 all:
 
-# pci
-	$(CC) -c pci/pci.c      $(KERNEL_INCLUDE) $(CFLAGS) -o pci.o
-	$(CC) -c pci/pciinfo.c  $(KERNEL_INCLUDE) $(CFLAGS) -o pciinfo.o
-	$(CC) -c pci/pciscan.c  $(KERNEL_INCLUDE) $(CFLAGS) -o pciscan.o
+	$(CC) -c fslib.c   $(KERNEL_INCLUDE) $(CFLAGS) -o fslib.o
+	$(CC) -c fsbp.c    $(KERNEL_INCLUDE) $(CFLAGS) -o fsbp.o
+	$(CC) -c fsload.c  $(KERNEL_INCLUDE) $(CFLAGS) -o fsload.o
+	$(CC) -c fs.c      $(KERNEL_INCLUDE) $(CFLAGS) -o fs.o
 
-# usb
-#	$(CC) -c usb/usb.c        $(KERNEL_INCLUDE) $(CFLAGS) -o usb.o
-#	$(CC) -c usb/ehci/ehci.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ehci.o
-#	$(CC) -c usb/uhci/ehci.c  $(KERNEL_INCLUDE) $(CFLAGS) -o uhci.o
-#	$(CC) -c usb/xhci/ehci.c  $(KERNEL_INCLUDE) $(CFLAGS) -o xhci.o
+	$(CC) -c elf.c     $(KERNEL_INCLUDE) $(CFLAGS) -o elf.o
+	$(CC) -c pipe.c    $(KERNEL_INCLUDE) $(CFLAGS) -o pipe.o
+	$(CC) -c search.c  $(KERNEL_INCLUDE) $(CFLAGS) -o search.o
 
-# ...
+# fat/
+	$(CC) -c fat/fat16.c  $(KERNEL_INCLUDE) $(CFLAGS) -o fat16.o
 
 # link
-	$(LD) -r -o p3_bus.o $(OBJS)
-	cp p3_bus.o ../../
+	$(LD) -r -o p3_fs.o $(OBJS)
+	cp p3_fs.o ../../../
 	rm *.o
 
 clean:
 	rm *.o    
-
+	
+	
