@@ -16,7 +16,7 @@ extern _I_kmain
 
 ; See:
 ; kernel.h
-__SYSTEM_BOOTING EQU  1
+LCONFIG_SYSTEM_BOOTING EQU  1
 extern _system_state
 
 
@@ -2608,7 +2608,7 @@ START:
 ; Setup data registers and base kernel stack.
 ; Load a NULL ldt.
 
-    mov rax, qword __SYSTEM_BOOTING
+    mov rax, qword LCONFIG_SYSTEM_BOOTING
     mov qword [_system_state], rax 
 
     xor rax, rax
