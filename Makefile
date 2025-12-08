@@ -110,31 +110,31 @@ build-gramado-os:
 # See: fs/loader.c
 
 #===================================
-# (1) gramboot/boot/ 
+# (1) gramboot/arch/ 
 
 # ::Build the bootloader.
-	@echo "Compiling boot/"
-	@$(MAKE) -C gramboot/boot/
+	@echo "Compiling gramboot/"
+	@$(MAKE) -C gramboot/arch/
 
-	@echo "Installing boot/"
+	@echo "Installing gramboot/"
 
 # Copy the virtual disk into the rootdir.
-	@cp gramboot/boot/GRAMHV.VHD  .
+	@cp gramboot/arch/GRAMHV.VHD  .
 
 # Copy the bootloader into the rootdir.
-	@cp gramboot/boot/x86/bin/BM.BIN      $(BASE)/
-	@cp gramboot/boot/x86/bin/BM2.BIN     $(BASE)/
-	@cp gramboot/boot/x86/bin/BLGRAM.BIN  $(BASE)/
-	@cp gramboot/boot/x86/bin/MBR0.BIN    $(BASE)/
-	@cp gramboot/boot/x86/bin/APX86.BIN   $(BASE)/
+	@cp gramboot/arch/x86/bin/BM.BIN      $(BASE)/
+	@cp gramboot/arch/x86/bin/BM2.BIN     $(BASE)/
+	@cp gramboot/arch/x86/bin/BLGRAM.BIN  $(BASE)/
+	@cp gramboot/arch/x86/bin/MBR0.BIN    $(BASE)/
+	@cp gramboot/arch/x86/bin/APX86.BIN   $(BASE)/
 # Copy the bootloader into the GRAMADO/ directory.
-	@cp gramboot/boot/x86/bin/BM.BIN      $(BASE)/GRAMADO
-	@cp gramboot/boot/x86/bin/BM2.BIN     $(BASE)/GRAMADO
-	@cp gramboot/boot/x86/bin/BLGRAM.BIN  $(BASE)/GRAMADO
-	@cp gramboot/boot/x86/bin/MBR0.BIN    $(BASE)/GRAMADO
+	@cp gramboot/arch/x86/bin/BM.BIN      $(BASE)/GRAMADO
+	@cp gramboot/arch/x86/bin/BM2.BIN     $(BASE)/GRAMADO
+	@cp gramboot/arch/x86/bin/BLGRAM.BIN  $(BASE)/GRAMADO
+	@cp gramboot/arch/x86/bin/MBR0.BIN    $(BASE)/GRAMADO
 
 # Copy the bootloader into the DE/ directory.
-#	@cp gramboot/boot/x86/bin/APX86.BIN   $(BASE)/DE   
+#	@cp gramboot/arch/x86/bin/APX86.BIN   $(BASE)/DE   
 
 #===================================
 # (2) kernel/
@@ -413,13 +413,13 @@ clean-all: clean
 	-rm *.VHD
 	-rm *.ISO
 
-	-rm gramboot/boot/*.VHD 
+	-rm gramboot/arch/*.VHD 
 
 # ==================
-# (1) gramboot/boot/
+# (1) gramboot/arch/
 # Clear boot images
-#	-rm -rf gramboot/boot/arm/bin/*.BIN
-	-rm -rf gramboot/boot/x86/bin/*.BIN
+#	-rm -rf gramboot/arch/arm/bin/*.BIN
+	-rm -rf gramboot/arch/x86/bin/*.BIN
 
 # ==================
 # (2) kernel/

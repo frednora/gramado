@@ -1,5 +1,5 @@
 
 
 all:
-	make -C boot/
+	make -C arch/
 
