@@ -1,0 +1,34 @@
+
+ARM doesn’t have the same staged transition 
+that x86 does (16‑bit real mode → 32‑bit protected mode → 64‑bit long mode).
+
+AArch32 (32-bit state):
+  User mode: least privileged, for applications.
+  System mode: privileged, similar to kernel mode.
+  Supervisor (SVC) mode: for OS calls.
+  IRQ/FIQ modes: for handling interrupts.
+  Abort/Undefined modes: for exceptions.
+  Monitor mode: for TrustZone secure world switching.
+
+AArch64 (64-bit state):
+  EL0: User applications.
+  EL1: Operating system kernel.
+  EL2: Hypervisor (virtualization).
+  EL3: Secure monitor (firmware, TrustZone).
+
+----------------------------------
+ARM
+  Starts in reset state (depends on SoC: either AArch32 or AArch64)
+  No “real mode” → directly runs in whichever execution state the hardware is configured for.
+  If CPU supports AArch64, firmware can boot directly into 64‑bit (EL1/EL2/EL3)
+  No mandatory sequence — the CPU can start in 32‑bit or 64‑bit depending on design
+
+------------------------------------
+ARM Boot Flow
+Reset: CPU begins at a fixed reset vector.
+Execution state:
+  On older ARM cores → starts in AArch32 (32‑bit).
+  On modern ARMv8+ cores → can start directly in AArch64 (64‑bit).
+Firmware/boot ROM: Initializes hardware.
+Bootloader (U‑Boot, UEFI, etc.): Loads the kernel.
+OS kernel: Runs in EL1 (privileged), applications in EL0.

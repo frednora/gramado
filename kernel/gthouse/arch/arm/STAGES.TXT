@@ -1,0 +1,10 @@
+
+Where you are in the bigger ARM picture
+
+Reset vector (ROM code): Already executed by the SoC.
+Your _start: First-stage bootloader, running in AArch64 privileged mode.
+Hardware init: You’re beginning this (UART init). Next steps would be DRAM, timers, etc.
+Second-stage bootloader: Typically loads kernel image into memory.
+Kernel (EL1): OS takes over, sets up virtual memory, drivers, etc.
+User space (EL0): Applications finally run here.
+
