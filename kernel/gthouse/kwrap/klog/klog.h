@@ -1,8 +1,8 @@
-// debug.h
+// klog.h
 // Created by Fred Nora.
 
-#ifndef __GRAMADO_DEBUG_H 
-#define __GRAMADO_DEBUG_H    1
+#ifndef __KLOG_KLOG_H 
+#define __KLOG_KLOG_H    1
 
 // Serial debug support.
 int is_using_serial_debug(void);

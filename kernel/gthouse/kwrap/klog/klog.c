@@ -1,5 +1,5 @@
-// debug.c
-// See: debug.h
+// klog.c
+// See: klog.h
 // Created by Fred Nora.
 
 #include <kernel.h>

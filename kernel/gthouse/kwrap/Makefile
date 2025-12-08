@@ -70,7 +70,7 @@ KERNEL_INCLUDE := -I $(INCLUDE)
 LDFLAGS := -m elf_x86_64 -s -x -static  
 
 OBJS = globals.o bootblk.o \
-debug.o \
+klog.o \
 info.o \
 panic.o \
 reboot.o \
@@ -91,12 +91,12 @@ all:
 	$(CC) -c bootblk/bootblk.c $(KERNEL_INCLUDE) $(CFLAGS) -o bootblk.o
 
 # Overall routines.
-	$(CC) -c debug.c    $(KERNEL_INCLUDE) $(CFLAGS) -o debug.o
-	$(CC) -c info.c     $(KERNEL_INCLUDE) $(CFLAGS) -o info.o
-	$(CC) -c panic.c    $(KERNEL_INCLUDE) $(CFLAGS) -o panic.o  
-	$(CC) -c reboot.c   $(KERNEL_INCLUDE) $(CFLAGS) -o reboot.o
-	$(CC) -c request.c  $(KERNEL_INCLUDE) $(CFLAGS) -o request.o
-	$(CC) -c system.c   $(KERNEL_INCLUDE) $(CFLAGS) -o system.o
+	$(CC) -c klog/klog.c  $(KERNEL_INCLUDE) $(CFLAGS) -o klog.o
+	$(CC) -c info.c       $(KERNEL_INCLUDE) $(CFLAGS) -o info.o
+	$(CC) -c panic.c      $(KERNEL_INCLUDE) $(CFLAGS) -o panic.o  
+	$(CC) -c reboot.c     $(KERNEL_INCLUDE) $(CFLAGS) -o reboot.o
+	$(CC) -c request.c    $(KERNEL_INCLUDE) $(CFLAGS) -o request.o
+	$(CC) -c system.c     $(KERNEL_INCLUDE) $(CFLAGS) -o system.o
 
 # Wrapper functions.
 	$(CC) -c wrappers.c  $(KERNEL_INCLUDE) $(CFLAGS) -o wrappers.o

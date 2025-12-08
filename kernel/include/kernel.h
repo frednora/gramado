@@ -59,7 +59,7 @@
 #include "../gthouse/kwrap/info.h"
 #include "../gthouse/kwrap/request.h"
 
-#include "../gthouse/kwrap/debug.h"
+#include "../gthouse/kwrap/klog/klog.h"
 
 // ==================================
 // halls/exec/ke/
