@@ -1,5 +1,14 @@
-// fs/fsload.c
+// fsload.c
 // Created by Fred Nora.
+
+/*
+Current Limitations
+Only supports FAT16 root directory (512 entries).
+File size checks are basic (buffer overflow prevention).
+No support for subdirectories beyond simple path parsing.
+No caching — FAT is reloaded each time.
+No integration with file structures (clusters aren’t tracked for later writes).
+*/
 
 #include <kernel.h>
 
@@ -13,7 +22,6 @@ __try_to_load_program_from_special_folder(
     unsigned long image_va );
 
 // ------------------
-
 
 // WORKER
 // Called by fsLoadFile
@@ -1319,7 +1327,7 @@ __try_to_load_program_from_special_folder(
 //
 
     // From GRAMADO/
-    if ( *new_filename == '@' ){
+    if (*new_filename == '@'){
         new_filename++;
         fs_fntos((char *) new_filename);
         Status = 
@@ -1329,7 +1337,7 @@ __try_to_load_program_from_special_folder(
                 BUGBUG_IMAGE_SIZE_LIMIT );
 
     // From PROGRAMS/
-    } else if ( *new_filename == '#' ){
+    } else if (*new_filename == '#'){
         new_filename++;
         fs_fntos((char *) new_filename);
         Status = 

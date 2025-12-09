@@ -1,4 +1,4 @@
-// fat/fat16.c
+// fat16.c
 // FAT16 file system support.
 // ring 0.
 // Created by Fred Nora.
@@ -136,10 +136,8 @@ fail:
     return (int) -1;
 }
 
-// #todo: Describe this routine.
-// credits: hoppy os.
-// from 8.3
-// not tested yet.
+// Converts a FAT16 8.3 name into a human‑readable string (FILE.TXT).
+// Credits: Hoppy OS
 void 
 from_FAT_name (
     char *src, 
@@ -211,11 +209,8 @@ from_FAT_name (
     };
 }
 
-// to_FAT_name:
-// #todo: Describe this routine.
-// credits: hoppy os.
-// to 8.3
-// not tested yet.
+// Converts a human string into FAT16 8.3 format (pads with spaces, splits extension).
+// Credits: Hoppy OS
 void 
 to_FAT_name (
     char *src,
@@ -285,6 +280,12 @@ to_FAT_name (
 // #todo
 // is dir_address virtual or physical?
 // Change this name to dir_pa or dir_va.
+
+// fsGetFileSize:
+// Retrieves the size of a file located in the root directory (FAT16).
+// Limitation: Currently only works for root dir entries (512 max).
+// Used by fopen() to validate buffer allocation.
+// Known issue: May fail on real hardware due to string handling quirks.
 
 unsigned long 
 fsGetFileSize ( 

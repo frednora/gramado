@@ -1,4 +1,4 @@
-// fs/search.c
+// search.c
 // Created by Fred Nora.
 
 // #todo
@@ -13,6 +13,15 @@
 // O limite é um arquivo de 512KB.
 // see: fs.h
 unsigned short file_cluster_list[MAX_CLUSTERS]; 
+
+
+/*
+Scans a directory already loaded into memory.
+Compares each 32‑byte entry against the desired filename (FAT16 8.3 format).
+Skips deleted entries (0xE5) and special entries (. and ..).
+Copies the entry name into a local buffer and compares with Name_Desired.
+Returns TRUE if found, -1 if not.
+*/
 
 /*
  * search_in_dir:
