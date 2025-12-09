@@ -358,7 +358,7 @@ static void __task_switch(void)
 // Put the tid as an argument.
 
 // #test
-// CAn't save context during a callback. It's because 
+// Can't save context during a callback. It's because 
 // saving a new context will destroy the older one, necessary
 // during the callback restorer routine.
 // The callback restorer unset this flag telling us that 
@@ -412,7 +412,7 @@ static void __task_switch(void)
 // The thread still have some processing time in its quantum value.
 // Let's return and allow the thread to run for a while.
 
-    if ( CurrentThread->runningCount < CurrentThread->quantum ){
+    if (CurrentThread->runningCount < CurrentThread->quantum){
 
         // Yield in progress. 
         // Esgota o quantum e ela saírá naturalmente
@@ -452,7 +452,7 @@ static void __task_switch(void)
 // check for a new thread in standby, check for signals, etc ...
 // Preempt: >> MOVEMENT 3 (Running --> Ready).
 
-    } else if ( CurrentThread->runningCount >= CurrentThread->quantum ){
+    } else if (CurrentThread->runningCount >= CurrentThread->quantum){
 
         // Is it a ring 0 thread?
         // At this moment if the policy allows,
@@ -538,9 +538,10 @@ ZeroGravity:
 // The counter is telling us that there is only 
 // one thread in the system for uniprocessor.
 // It needs to be the thread marked as init for uniprocessor.
+    /*
     if (UPProcessorBlock.threads_counter == 1)
     {
-        if ( UPProcessorBlock.IdleThread != (void *) InitThread )
+        if (UPProcessorBlock.IdleThread != (void *) InitThread)
         {
             panic("ts: Invalid idle thread for up\n");
         }
@@ -550,6 +551,7 @@ ZeroGravity:
         // currentq->next = NULL;
         goto go_ahead;
     }
+    */
 
 // Pick a thread and break the round?
 // We can do this if a thread was selected as 'ev_responder_thread'.
@@ -871,8 +873,7 @@ void tsTaskSwitch(void)
 // This variable was set at the last release or the last spawn.
 // Global variable.
 
-    if ( current_thread < 0 || 
-         current_thread >= THREAD_COUNT_MAX )
+    if ( current_thread < 0 || current_thread >= THREAD_COUNT_MAX )
     {
         printk ("psTaskSwitch: current_thread %d", current_thread); 
         die();

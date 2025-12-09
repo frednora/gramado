@@ -51,6 +51,8 @@ static tid_t __scheduler_rr(unsigned long sched_flags);
 static tid_t __scheduler_priorityinterleaving(unsigned long sched_flags);
 //...
 
+static struct thread_d *__build_stage_queue(int stage, unsigned long priority);
+
 // =======================================
 
 static void __sched_notify_parent(struct thread_d *thread, int event_number)
@@ -271,6 +273,124 @@ void sched_cut_round(struct thread_d *last_thread)
     Current->next = (struct thread_d *) last_thread;
     last_thread->next = NULL; 
 }
+
+// Build the queue for a given stage.
+// Now: include only READY threads that match the given priority.
+static struct thread_d *__build_stage_queue(int stage, unsigned long priority)
+{
+    //struct thread_d *Idle = (struct thread_d *) UPProcessorBlock.IdleThread;
+    struct thread_d *Idle = (struct thread_d *) InitThread;
+    struct thread_d *TmpThread;
+    struct thread_d *head, *tail;
+    int i=0;
+
+    unsigned long Priority = priority; // #todo: In the future
+    unsigned long target_quantum = QUANTUM_NORMAL_THRESHOLD;
+
+
+// ------------------------------------
+// Decide Init quantum once, based on display server flag
+    if (DisplayServerInfo.initialized == TRUE) {
+        InitThread->quantum = QUANTUM_MIN;   // runtime efficiency
+    } else {
+        InitThread->quantum = QUANTUM_MAX;   // fast boot
+    };
+
+// ------------------------------------
+// Select target quantum for this stage
+
+    switch (priority) {
+        case PRIORITY_P6:  // System High
+            target_quantum = QUANTUM_Q6;
+            break;
+        case PRIORITY_P5:  // System Balance
+            target_quantum = QUANTUM_Q5;
+            break;
+        case PRIORITY_P4:  // System Low
+            target_quantum = QUANTUM_Q4;
+            break;
+        case PRIORITY_P3:  // Normal High
+            target_quantum = QUANTUM_Q3;
+            break;
+        case PRIORITY_P2:  // Normal Balance
+            target_quantum = QUANTUM_Q2;
+            break;
+        case PRIORITY_P1:  // Normal Low
+            target_quantum = QUANTUM_Q1;
+            break;
+        default:
+            target_quantum = QUANTUM_NORMAL_THRESHOLD;
+            break;
+    }
+
+    // Always start with Idle
+    head = Idle;
+    tail = Idle;
+    head->next = NULL;   // clear linkage
+
+    for (i=1; i < THREAD_COUNT_MAX; i++) 
+    {
+        TmpThread = (struct thread_d *) threadList[i];
+        if (TmpThread && TmpThread->used == TRUE && TmpThread->magic == 1234) 
+        {
+            // Filter by priority
+            if (TmpThread->priority == priority)
+            {
+                // For all the READY threads.
+                if (TmpThread->state == READY) 
+                {
+                    // Clear linkage before appending
+                    TmpThread->next = NULL;
+
+                    // Append to this stage queue
+                    tail->next = TmpThread;
+                    tail = TmpThread;
+
+                    // Reset counters
+                    TmpThread->runningCount = 0;
+                    TmpThread->scheduledCount++;
+
+                    // Assign the stage’s target quantum
+                    if (TmpThread != InitThread)
+                        TmpThread->quantum = target_quantum;
+
+                    // #importante
+                    // In the future if the priority selection is enough, 
+                    // we can remove these other filters.
+ 
+                    // Display server: The king king
+                    if (DisplayServerInfo.initialized == TRUE){
+                        if (TmpThread->tid == DisplayServerInfo.tid){
+                            TmpThread->quantum = QUANTUM_MAX;
+                            //Idle->quantum = QUANTUM_Q1;
+                        }
+                    }
+
+                    // Foreground thread: more responsive
+                    if (TmpThread->tid == foreground_thread){
+                        TmpThread->quantum = QUANTUM_MAX;
+                        //Idle->quantum = QUANTUM_Q1;
+                    }
+
+                    // Event responder: immediate responsiveness
+                    if (TmpThread->isResponder == TRUE){
+                        TmpThread->quantum = QUANTUM_MAX;
+                        //Idle->quantum = QUANTUM_Q1;
+                        TmpThread->isResponder = FALSE;  // reset flag after boost
+                    }
+
+                    // ...
+                }
+            }
+        }
+    };
+
+    tail->next = NULL;
+
+// return the head of the built queue
+    return (struct thread_d *) head;
+}
+
 
 //
 // $
@@ -673,6 +793,9 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
 // Very simple priority interleaving worker.
 // For now: only put the init thread in all queues.
 // This guarantees at least one runnable thread.
+// Stage 0 sets up queues with the init thread, and 
+// stages 1–6 walk through each priority queue in turn.
+// Each call advances the scheduler’s stage.
 static tid_t __scheduler_priorityinterleaving(unsigned long sched_flags)
 {
     struct thread_d *Init;
@@ -693,12 +816,22 @@ static tid_t __scheduler_priorityinterleaving(unsigned long sched_flags)
     if ((void*) Init == NULL || Init->magic != 1234)
         panic("__scheduler_priorityinterleaving: InitThread validation\n");
 
+
+
+    // #debug
+    //printk("scheduler: stage={ %d }\n", SchedulerInfo.stage);
+
 //
 // Stage 0 (Preparation)
 //
 
+// Guaranteeing a runnable thread: 
+// By always placing the init thread in all queues, 
+// ensure there’s at least one valid candidate.
+
     if (SchedulerInfo.stage == 0)
     {
+        printk("scheduler: stage={ %d }\n", SchedulerInfo.stage);
         FirstTID = Init->tid;
 
         p1q = p2q = p3q = p4q = p5q = p6q = NULL; 
@@ -736,44 +869,50 @@ static tid_t __scheduler_priorityinterleaving(unsigned long sched_flags)
 // Stage 1..6: execution
     switch (SchedulerInfo.stage) 
     {
-        case 1: 
-            currentq = p1q;
-            currentq->next = NULL;
+        case 1:
+            //printk("scheduler: stage={ %d }\n", SchedulerInfo.stage);
+            p6q = __build_stage_queue(6, PRIORITY_P6);
+            currentq = p6q;
             SchedulerInfo.stage = 2; 
             break;
         case 2: 
-            currentq = p2q; 
-            currentq->next = NULL;
+            //printk("scheduler: stage={ %d }\n", SchedulerInfo.stage);
+            p5q = __build_stage_queue(5, PRIORITY_P5);
+            currentq = p5q;
             SchedulerInfo.stage = 3;
             break;
         case 3: 
-            currentq = p3q;
-            currentq->next = NULL;
+            //printk("scheduler: stage={ %d }\n", SchedulerInfo.stage);
+            p4q = __build_stage_queue(4, PRIORITY_P4);
+            currentq = p4q;
             SchedulerInfo.stage = 4;
             break;
         case 4: 
-            currentq = p4q; 
-            currentq->next = NULL;
+            //printk("scheduler: stage={ %d }\n", SchedulerInfo.stage);
+            p3q = __build_stage_queue(3, PRIORITY_P3);
+            currentq = p3q;
             SchedulerInfo.stage = 5;
             break;
         case 5: 
-            currentq = p5q;
-            currentq->next = NULL; 
+            //printk("scheduler: stage={ %d }\n", SchedulerInfo.stage);
+            p2q = __build_stage_queue(2, PRIORITY_P2);
+            currentq = p2q;
             SchedulerInfo.stage = 6;
             break;
         case 6: 
-            currentq = p6q;
-            currentq->next = NULL; 
+            //printk("scheduler: stage={ %d }\n", SchedulerInfo.stage);
+            p1q = __build_stage_queue(1, PRIORITY_P1);
+            currentq = p1q;
             SchedulerInfo.stage = 1;
             break;
         // Resets to stage 0 if something goes wrong, 
         // reconfigures with init thread, and returns.
-        default: 
+        default:
+            //printk("scheduler: stage={ Default }\n");
             FirstTID = Init->tid;
             p1q = Init;
-            qlist_set_element(SCHED_P1_QUEUE, p1q);
+            //qlist_set_element(SCHED_P1_QUEUE, p1q);
             currentq = p1q;
-            currentq->next = NULL;
             // Next will be 0 for reconfiguration.
             SchedulerInfo.stage = 0;
             break;
@@ -896,6 +1035,7 @@ tid_t psScheduler(void)
 // There is only one thread in the uniprocessor.
 // Put it into the currentq queue.
 // It needs to become the current_thread and return it.
+/*
     if (UPProcessorBlock.threads_counter == 1)
     {
         // #debug
@@ -905,6 +1045,7 @@ tid_t psScheduler(void)
         current_thread = (tid_t) currentq->tid;
         return (tid_t) current_thread;
     }
+*/
 
 // We have more than one thread into the processor,
 // let's squedule it using our routine and return the tid.
