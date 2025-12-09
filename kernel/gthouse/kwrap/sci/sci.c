@@ -1164,6 +1164,11 @@ void *sci0 (
         return (void *) get_cursor_y();
     }
 
+// 247 - sys_pipe()
+    if (number == 247){
+        return (void*) sys_pipe((int*) arg2, (int) arg3);
+    }
+
 // 248 - sys_execve()
 // see: kunistd.c in libk/
     if (number == 248)

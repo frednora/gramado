@@ -1318,10 +1318,10 @@ int close(int fd)
 int pipe2 ( int pipefd[2], int flags )
 {
     return (int) gramado_system_call ( 
-                     247, 
-                     (unsigned long) pipefd, 
-                     (unsigned long) flags, 
-                     (unsigned long) 0 );
+                    247, 
+                    (unsigned long) pipefd, 
+                    (unsigned long) flags, 
+                    (unsigned long) 0 );
 }
 
 int pipe(int pipefd[2])

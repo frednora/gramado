@@ -958,9 +958,13 @@ RegularFile:
 
 // ========================================
 // See: pipe.c
-    //#bugbug: Do not use sys_xxxx use the worker, or another wrapper.
-    if (fp->____object == ObjectTypePipe){
-        return (ssize_t) sys_read_pipe ( (int) fd, (char *) ubuf, (int) count ); 
+
+    if (fp->____object == ObjectTypePipe)
+    {
+        return (ssize_t) file_read_buffer ( 
+                              (file *) fp, 
+                              (char *) ubuf, 
+                              (int) count );
     }
 
 // ======================================================
@@ -1435,9 +1439,13 @@ RegularFile:
 // ======================================================
 // pipe:
 // See: pipe.c
-    //#bugbug: No not use sys_xxx use another wrapper.
-    if (fp->____object == ObjectTypePipe){
-        return (ssize_t) sys_write_pipe ( (int) fd, (char *) ubuf, (int) count ); 
+    if (fp->____object == ObjectTypePipe)
+    {
+        // Using the same routine for regular files.
+        return (ssize_t) file_write_buffer ( 
+                              (file *) fp, 
+                              (char *) ubuf, 
+                              (int) count );
     }
 
     // ...
@@ -1644,7 +1652,7 @@ int __close_imp(int fd)
     int Done=FALSE;
 
 // Invalid fd
-    if ( fd < 0 || fd >= OPEN_MAX )
+    if (fd < 0 || fd >= OPEN_MAX)
     {
         debug_print("__close_imp: bad fd\n");
         return (int) (-EBADF);
@@ -1778,8 +1786,8 @@ int __close_imp(int fd)
 // and return 0.
     if (Done == TRUE)
     {
-        object = NULL;
-        p->Objects[fd] = (unsigned long) 0;
+        object = NULL;  // clear local pointer
+        p->Objects[fd] = (unsigned long) 0;  // clear FD slot in process table
         return 0;
     }
 

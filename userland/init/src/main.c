@@ -645,6 +645,13 @@ static int input_compare_string(void)
         goto exit_cmp;
     }
 
+    // see: rtl.c
+    if (strncmp(prompt,"pipe",4) == 0 )
+    {
+        rtl_test_pipe();
+        goto exit_cmp;
+    }
+
 //==============================
 // Network Server:
 

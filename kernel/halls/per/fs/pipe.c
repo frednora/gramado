@@ -43,10 +43,10 @@ int sys_dup(int oldfd)
         goto fail;
     }
 
-// Get an empty slot.
-    for ( i=3; i< NUMBER_OF_FILES; i++ )
+// Get an empty slot
+    for (i=3; i< NUMBER_OF_FILES; i++)
     {
-        if ( Process->Objects[i] == 0 )
+        if (Process->Objects[i] == 0)
         {
             // reserva.
             //Process->Objects[i] = 216;
@@ -253,23 +253,17 @@ fail:
     return (int) (-1);
 }
 
+
 /*
  * sys_pipe:
- * It creates two structures of stream that point to the same buffer.
- * It has no name.
- * It return two file descriptors.
+ * Create a pipe: two file descriptors that share the same buffer.
+ * One end is for reading, the other for writing.
+ * Service 247
  */
-// #bugbug
-// Maybe we need just one stream and two pointer.
-// So we need to control the reader and the writer.
-// #todo
-// Isso precisa ter duas estruturas de arquivos,
-// dois descritores, mas apenas um buffer.
-
-int sys_pipe( int *pipefd, int flags )
+int sys_pipe(int *pipefd, int flags)
 {
-    file *f1;
-    file *f2;
+    file *f1;  // read end
+    file *f2;  // write end
     struct te_d *Process;
     pid_t current_process = -1;
     register int i=0;
@@ -277,11 +271,13 @@ int sys_pipe( int *pipefd, int flags )
     int slot2 = -1;
 
     debug_print ("sys_pipe:\n");
-       
-    // Why ?    
-    // Reject flags other than O_CLOEXEC.
-    //if ((flags & O_CLOEXEC) != flags)
-    //    return -EINVAL;
+
+    // ------------------------------------------------------------
+    // Optional: validate flags. For now only O_CLOEXEC is allowed.
+    // This is commented out, but shows intent to reject unsupported flags.
+    // ------------------------------------------------------------
+    // if ((flags & O_CLOEXEC) != flags)
+    //     return -EINVAL;
 
     // unsigned long fd_flags = (flags & O_CLOEXEC) ? FD_CLOEXEC : 0;
 
@@ -313,8 +309,14 @@ int sys_pipe( int *pipefd, int flags )
 // pode ser que peguemos os índices reservados.
 // Para evitar, começaremos depois deles.
 
+// ------------------------------------------------------------
+// Find two free slots in the process's file descriptor table.
+// Slots 0,1,2 are reserved (stdin, stdout, stderr).
+// We start searching from slot 3 upwards.
+// ------------------------------------------------------------
+
     // Reserva um slot.
-    for ( i=3; i< OPEN_MAX; i++ )
+    for (i=3; i<OPEN_MAX; i++)
     {
         if (Process->Objects[i] == 0)
         {
@@ -325,7 +327,7 @@ int sys_pipe( int *pipefd, int flags )
     };
 
     // Reserva um slot.
-    for ( i=3; i< OPEN_MAX; i++ )
+    for (i = (slot1+1); i<OPEN_MAX; i++)
     {
         if (Process->Objects[i] == 0)
         {
@@ -335,26 +337,33 @@ int sys_pipe( int *pipefd, int flags )
         }
     };
 
-    // Check slots validation 
+// Check slots validation 
     if (slot1 == -1 || slot2 == -1)
     {
         debug_print("sys_pipe: slots alocation fail\n");
-        // todo: printk
         goto fail;
     }
 
-// Buffer
-    char *buff = (char *) kmalloc(BUFSIZ);
-    if ((void *) buff == NULL)
+// ------------------------------------------------------------
+// Allocate a shared buffer for the pipe.
+// Both ends will point to the same memory region.
+// ------------------------------------------------------------
+
+    char *sh_buff = (char *) kmalloc(BUFSIZ);
+    if ((void *) sh_buff == NULL)
     {
         Process->Objects[slot1] = (unsigned long) 0;
         Process->Objects[slot2] = (unsigned long) 0;
-        debug_print("sys_pipe: buffer fail\n");
+        debug_print("sys_pipe: sh_buff\n");
         goto fail;
     }
 
-// File structures
-     
+// ------------------------------------------------------------
+// Allocate two file structures (f1 and f2).
+// Each represents one end of the pipe.
+// ------------------------------------------------------------
+
+// File structures 
     f1 = (void *) kmalloc(sizeof(file));
     f2 = (void *) kmalloc(sizeof(file));
     if ( (void *) f1 == NULL || 
@@ -365,6 +374,8 @@ int sys_pipe( int *pipefd, int flags )
         debug_print("sys_pipe: structures fail\n");
         goto fail;
     }
+
+// Initialize file structures
 
 // Early validations?
 
@@ -380,6 +391,7 @@ int sys_pipe( int *pipefd, int flags )
     f1->____object = ObjectTypePipe;
     f2->____object = ObjectTypePipe;
 
+// Associate with current process credentials
 // pid, uid, gid.
     f1->pid = (pid_t) current_process;
     f1->uid = (uid_t) current_user;
@@ -394,8 +406,18 @@ int sys_pipe( int *pipefd, int flags )
     f1->sync.sender_pid = (pid_t) -1;
     f1->sync.receiver_pid = (pid_t) -1;
     f1->sync.action = ACTION_NULL;
+
+// ------------------------------------------------------------
+// Synchronization flags: here both ends are marked as
+// readable and writable, but ideally one should be read‑only
+// and the other write‑only.
+// ------------------------------------------------------------
+// #todo
+// f1: read end (can_read = TRUE, can_write = FALSE)
+// f2: write end (can_read = FALSE, can_write = TRUE)
     f1->sync.can_read = TRUE;
     f1->sync.can_write = TRUE;
+
     f1->sync.can_execute = FALSE;
     f1->sync.can_accept = FALSE;
     f1->sync.can_connect = FALSE;
@@ -404,25 +426,38 @@ int sys_pipe( int *pipefd, int flags )
     f2->sync.sender_pid = (pid_t) -1;
     f2->sync.receiver_pid = (pid_t) -1;
     f2->sync.action = ACTION_NULL;
+
+// ------------------------------------------------------------
+// Synchronization flags: here both ends are marked as
+// readable and writable, but ideally one should be read‑only
+// and the other write‑only.
+// ------------------------------------------------------------
+// #todo
+// f1: read end (can_read = TRUE, can_write = FALSE)
+// f2: write end (can_read = FALSE, can_write = TRUE)
     f2->sync.can_read = TRUE;
     f2->sync.can_write = TRUE;
+
     f2->sync.can_execute = FALSE;
     f2->sync.can_accept = FALSE;
     f2->sync.can_connect = FALSE;
 
+// No filename (anonymous pipe)
 // No name for now.
     f1->_tmpfname = NULL;
     f2->_tmpfname = NULL;
 
-// The same buffer
-    f1->_base = buff;
-    f2->_base = buff;
-    f1->_p    = buff;
-    f2->_p    = buff;
+// Both ends share the same buffer
+    f1->_base = sh_buff;
+    f2->_base = sh_buff;
+    f1->_p    = sh_buff;
+    f2->_p    = sh_buff;
 
 // Buffer size.
     f1->_lbfsize = BUFSIZ; 
-    f2->_lbfsize = BUFSIZ; 
+    f2->_lbfsize = BUFSIZ;
+
+// Counters and offsets
 
 // Quanto falta.
     f1->_cnt = f1->_lbfsize;   
@@ -438,9 +473,14 @@ int sys_pipe( int *pipefd, int flags )
     f1->_file = slot1;
     f2->_file = slot2;
 
-// Saving structure.
+// Save file structures into process FD table
     Process->Objects[slot1] = (unsigned long) f1;
     Process->Objects[slot2] = (unsigned long) f2;
+
+
+// ------------------------------------------------------------
+// Return values: pipefd[0] is the read end, pipefd[1] is the write end.
+// ------------------------------------------------------------
 
 // #importante
 // Esse é o retorno esperado.
@@ -464,46 +504,58 @@ fail:
     return (int) (-1);
 }
 
-// #todo:
-int sys_read_pipe( int fd, char *ubuf, int count )
+// Quick pipe read: just call the worker
+int sys_read_pipe(int fd, char *ubuf, int count)
 {
-    debug_print ("sys_read_pipe: TODO\n");
+    debug_print("sys_read_pipe: TODO\n");
 
-// Parameters
-    if (fd<0 || fd>=OPEN_MAX){
-        return (int) (-EBADF);
+    // --- Parameter validation ---
+    if (fd < 0 || fd >= OPEN_MAX) {
+        return (int)(-EBADF);   // invalid file descriptor
     }
-    if ((void*) ubuf == NULL){
-        return (int) (-EINVAL);
+    if ((void*) ubuf == NULL) {
+        return (int)(-EINVAL);  // invalid buffer pointer
     }
-    if (count <= 0)
-        return -1;
+    if (count <= 0) {
+        return -1;              // nothing to read
+    }
 
-// #todo ...
+    // --- Lookup file structure ---
+    file *fp = (file *) get_file_from_fd(fd);
+    if (!fp)
+        return -EBADF;
 
-//fail:
-    return (int) -1;
+    // --- Delegate to worker ---
+    // For ObjectTypePipe, file_read_buffer() just memcpy’s from f->_base
+    return (ssize_t) file_read_buffer(fp, ubuf, count);
 }
 
-// #todo:
-int sys_write_pipe( int fd, char *ubuf, int count )
+// Quick pipe write: just call the worker
+int sys_write_pipe(int fd, char *ubuf, int count)
 {
-    debug_print ("sys_write_pipe: TODO\n");
+    debug_print("sys_write_pipe: TODO\n");
 
-// Parameters
-    if (fd<0 || fd >= OPEN_MAX)
-        return (int) (-EBADF);
-
-    if ((void*) ubuf == NULL)
-        return (int) (-EINVAL);
-    if (count <= 0){
-        return -1;
+    // --- Parameter validation ---
+    if (fd < 0 || fd >= OPEN_MAX) {
+        return (int)(-EBADF);   // invalid file descriptor
+    }
+    if ((void*) ubuf == NULL) {
+        return (int)(-EINVAL);  // invalid buffer pointer
+    }
+    if (count <= 0) {
+        return -1;              // nothing to write
     }
 
-// #todo: ...
+    // --- Lookup file structure ---
+    file *fp = (file *) get_file_from_fd(fd);
+    if (!fp)
+        return -EBADF;
 
-    return -1;
+    // --- Delegate to worker ---
+    // For ObjectTypePipe, file_write_buffer() just memcpy’s into f->_base
+    return (ssize_t) file_write_buffer(fp, ubuf, count);
 }
+
 
 // The pipe is created with buffer in form of
 // packets.

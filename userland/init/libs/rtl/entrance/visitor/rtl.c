@@ -1925,60 +1925,54 @@ int rtl_vector_count (char **vector)
 }
 */
 
-
-
-void rtl_test_pipe (void)
+void rtl_test_pipe(void)
 {
     int pipefd[2];
-    int res=0;
     char buf[512];
-    int nwrite=0;
-    int nread=0;
+    int nwrite, nread;
 
+    printf("rtl_test_pipe:\n");
 
-    printf ("rtl_test_pipe:\n");
-
-    //0 if no error.
-    res = pipe (pipefd);
-    if (res<0){
-        printf("pipe() fail\n");
+    // Create pipe
+    if (pipe(pipefd) < 0) {
+        perror("pipe");
         return;
     }
 
-    printf("PIPES: %d %d\n",pipefd[0], pipefd[1]);
- 
-    // write on pipe 1
-    nwrite = write (pipefd[1], "hello", sizeof ("hello"));
-    if (nwrite<=0){
-        printf("write() fail\n");
+    printf("Pipe created: read=%d write=%d\n", pipefd[0], pipefd[1]);
+
+    // Write to pipe
+    const char *msg = "hello";
+    nwrite = write(pipefd[1], msg, strlen(msg));
+    if (nwrite < 0) {
+        perror("write");
+        close(pipefd[0]);
+        close(pipefd[1]);
         return;
     }
-    // clear buffer.
-    memset (buf, 0, sizeof (buf));
+    printf("Wrote %d bytes: \"%s\"\n", nwrite, msg);
 
-// Read pipe 0.
-    nread = (int) read (
-                      pipefd[0], 
-                      buf, 
-                      sizeof(buf) - 1 );
+    // Clear buffer
+    memset(buf, 0, sizeof(buf));
 
-    if (nread<0){
-        printf("read() fail\n");
+    // Read from pipe
+    nread = read(pipefd[0], buf, sizeof(buf) - 1);
+    if (nread < 0) {
+        perror("read");
+        close(pipefd[0]);
+        close(pipefd[1]);
         return;
     }
-    // finalize the string.  
-    buf[nread] = '\0';
+    buf[nread] = '\0'; // Null-terminate string
 
-    // Close
-    close (pipefd[0]);
-    close (pipefd[1]);
+    printf("Read %d bytes: \"%s\"\n", nread, buf);
 
-    // show buffer.
-    printf("BUFFER={%s}\n",buf);
+    // Close pipe ends
+    close(pipefd[0]);
+    close(pipefd[1]);
 
-    return;
+    printf("rtl_test_pipe finished.\n");
 }
-
 
 // =========================
 // path count

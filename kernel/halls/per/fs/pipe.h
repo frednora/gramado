@@ -1,9 +1,8 @@
 // pipe.h
 // Created by Fred Nora.
 
-// #todo: Use __FS_PIPE_H
-#ifndef ____PIPE_H
-#define ____PIPE_H  1
+#ifndef __FS_PIPE_H
+#define __FS_PIPE_H  1
 
 int 
 pipe_ioctl ( 
@@ -17,9 +16,9 @@ int sys_dup3 (int oldfd, int newfd, int flags);
 
 // POSIX.1-2001, POSIX.1-2008.
 // See: fs.c
-int sys_pipe ( int *pipefd, int flags );
+int sys_pipe (int *pipefd, int flags);
 
-int sys_read_pipe ( int fd, char *ubuf, int count );
-int sys_write_pipe ( int fd, char *ubuf, int count );
+int sys_read_pipe (int fd, char *ubuf, int count);
+int sys_write_pipe (int fd, char *ubuf, int count);
 
 #endif   
