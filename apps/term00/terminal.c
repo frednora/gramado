@@ -48,6 +48,7 @@ static int cursor_y=0;
 // Embedded shell
 // We are using the embedded shell.
 static int isUsingEmbeddedShell=TRUE;
+static int isWaitingForOutput=FALSE;
 
 // #todo: #maybe:
 // Fazer estrutura para gerenciar a sequencia.
@@ -967,7 +968,20 @@ static void __try_execute(int fd)
     write(fileno(stderr), prompt, 80);
 
 // Execute given the filename and the cmdline goes in stdin.
-    rtl_clone_and_execute(filename_buffer);
+
+    //int ChildPID = -1;
+    //ChildPID = (int) rtl_clone_and_execute(filename_buffer);
+    //printf("Child PID: {%d}\n",ChildPID);
+
+    int ChildTID = -1;
+    ChildTID = (int) rtl_clone_and_execute_return_tid(filename_buffer);
+    printf("Child TID: {%d}\n",ChildTID);
+
+// #todo: Check the return.
+    //if (ChildPID < 0)
+        // fail
+
+    //isWaitingForOutput = TRUE;
 
     //#debug
     printf("prompt: {%s}\n",prompt);
@@ -3179,6 +3193,8 @@ static int __input_STDIN(int fd)
         goto fail;
     }
 
+/*
+// We don't need this
 // O kernel seleciona qual será 
 // o arquivo para teclado ps2.
     sc80(
@@ -3186,6 +3202,7 @@ static int __input_STDIN(int fd)
         fileno(new_stdin),
         0,
         0 );
+*/
 
 // Poisiona no início do arquivo.
 // #bugbug: Se fizermos isso, 
@@ -3204,6 +3221,13 @@ static int __input_STDIN(int fd)
             break;
         }
 
+        // Terminal is reading output from the child.
+        if (isWaitingForOutput == TRUE){
+            // ...
+        
+        // Terminal is reading keyboard input from stdin
+        } else {
+
         // + Get bytes from stdin.
         // #bubug
         // Logo apos lermos um ENTER, o terminal vai colocar
@@ -3211,16 +3235,12 @@ static int __input_STDIN(int fd)
         // alguma coisa da linha de comandos usada pelo processo filho.
         // #bubug
         // Estamos lendo dois ENTER seguidos.
-        C = fgetc(new_stdin);
-        if (C > 0)
-        {
-            terminalProcedure( 
-                client_fd,    // socket
-                window_id,    // window ID
-                MSG_KEYDOWN,  // message code
-                C,            // long1 (ascii)
-                C );          // long2 (ascii)
-        }
+            C = fgetc(new_stdin);
+            if (C > 0){
+                // socket, wid, msg, ascii, ascii
+                terminalProcedure( client_fd, window_id, MSG_KEYDOWN, C, C );
+            }
+        };
       
         // + Get system messages from the queue in control thread.
         // System events.
@@ -3383,18 +3403,20 @@ fail:
 static int embedded_shell_run(int fd)
 {
     isUsingEmbeddedShell = TRUE;
+    isWaitingForOutput=FALSE;
     Terminal._mode = TERMINAL_MODE_EMBEDDED;
 
     if (fd<0)
         goto fail;
-    while (1){
+    while (1)
+    {
         if (isUsingEmbeddedShell != TRUE)
             break;
         __input_STDIN(fd);
     };
     return 0;
 fail:
-    return -1;
+    return (int) -1;
 }
 
 // Normal mode

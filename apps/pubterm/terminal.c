@@ -3068,6 +3068,7 @@ static int __input_STDIN(int fd)
         goto fail;
     }
 
+/*
 // O kernel seleciona qual será 
 // o arquivo para teclado ps2.
     sc80(
@@ -3075,6 +3076,7 @@ static int __input_STDIN(int fd)
         fileno(new_stdin),
         0,
         0 );
+*/
 
 // Poisiona no início do arquivo.
 // #bugbug: Se fizermos isso, 

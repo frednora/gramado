@@ -1395,7 +1395,6 @@ do_clone:
 // Either a buffer overflow, alias/overlap, or a copy/deep copy error between the parent and 
 // the cloned child process’s name field.
 
-
 //Summary
 //Only the name is corrupted? It's almost certainly
 //A copy problem,
@@ -1502,7 +1501,6 @@ do_clone:
 
 // priority and quantum.
 
-
 // Threshold
     parent_thread->priority = PRIORITY_NORMAL_THRESHOLD;
     child_thread->priority  = PRIORITY_NORMAL_THRESHOLD;
@@ -1541,6 +1539,13 @@ do_clone:
 // Done
 // Return to the father the child's PID.
     copy_process_in_progress = FALSE;
+
+// #test: Testing the return of a tid.
+// At the end of copy_process00(), in the parent context:
+    if (clone_flags & F_CLONE_RETURN_TID) {
+        return (pid_t) child_thread->tid;
+    }
+    // Return PID
     return (pid_t) child_pid;
 
 fail:

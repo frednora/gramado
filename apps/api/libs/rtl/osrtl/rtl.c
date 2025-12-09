@@ -2116,8 +2116,8 @@ __rtl_clone_and_execute_imp(
     unsigned long ServiceNumber = 900;
 // Address for the image name.
     unsigned long NameAddress;
-// Reserved parameter.
-    unsigned long clone_flags=0;  // (flags for clone_process()).
+// Reserved parameter. (flags for clone_process()).
+    unsigned long clone_flags = flags;
 // Reserved parameter.
     unsigned long long2=0;  // 
     char LocalName[256];
@@ -2189,6 +2189,33 @@ int rtl_spawn_process(const char *path)
 
     return (int) rtl_clone_and_execute((char*)path);
 }
+
+// Return the child thread ID (TID) instead of PID.
+// For now, it calls the low-level implementation and assumes
+// the kernel service has been extended to provide TID.
+int rtl_clone_and_execute_return_tid(const char *name)
+{
+    if ((void*) name == NULL || *name == 0) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    // Ask kernel to return TID
+    //unsigned long flags = F_CLONE_RETURN_TID;
+    const unsigned long flags = 0x0004;
+
+    // Call the low-level implementation
+    int tid = (int) __rtl_clone_and_execute_imp(name, flags);
+
+    if (tid < 0) {
+        errno = -tid;
+        return -1;
+    }
+
+    // Success: return child TID
+    return (int) tid;
+}
+
 
 // get current thread
 // set foreground thread.
