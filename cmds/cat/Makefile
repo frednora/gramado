@@ -1,5 +1,5 @@
 # cat command for Gramado OS.
-#history:
+# history:
 # 2019 - Created by Fred Nora.
 
 VERSION = 0

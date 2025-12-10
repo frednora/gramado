@@ -1,5 +1,5 @@
 // cat - Concatenate files and print on the standard output
-// 2022 - Fred Nora.
+// 2022 - Created by Fred Nora
 // See:
 // https://man7.org/linux/man-pages/man1/cat.1.html
 
@@ -100,34 +100,27 @@ static int process_file(char *file_name)
         goto fail;
     }
 
-//
 // Open
-//
-
     fdRead = (int) open((char *) file_name, 0, "a+");
     if (fdRead < 0){
         printf ("process_file: on open()\n");
         goto fail;
     }
 
-//
-// Read from fd.
-//
-
-    nreads = (int) read( fdRead, buffer, 511 );
+// Read from fd
+// #bugbug: 511 byte file limit
+    nreads = (int) read(fdRead, buffer, 511);
     if (nreads <= 0){
         printf ("cat00: File {%d} failed on read()\n", fdRead);
         goto fail;
     }
 
-//
 // Write
-//
-
 // Write on stdout. If there's no redirection. 
 // Print the whole file into the screen.
 // In this case we don't have any modification flag.
-    nwrites = (int) write( fileno(stdout), buffer, sizeof(buffer) );
+    int fd_output = fileno(stdout);
+    nwrites = (int) write(fd_output, buffer, sizeof(buffer));
     if (nwrites <= 0){
         printf ("cat00: File {%d} failed on write()\n", 
             fileno(stdout) );
@@ -162,6 +155,7 @@ int main(int argc, char *argv[])
     //printf ("cat: Writing on stderr\n");
     //stdout = stderr;
 
+/*
     // #debug
     printf("CAT.BIN: argc %d | argv[0] %s | argv[1] %s", 
         argc,       // Number of parameters
@@ -169,6 +163,7 @@ int main(int argc, char *argv[])
         argv[1] );  // FILE.TXT
     //printf("\n");
     fflush(stderr);
+*/
 
     if (argc <= 1){
         printf("Few parameters\n");
@@ -188,9 +183,11 @@ int main(int argc, char *argv[])
 
 // Probe for some flags.
     int isFlag = FALSE;
-    for (i=1; i<argc; i++)
-    {
+
+    for (i=1; i<argc; i++){
         isFlag = FALSE;
+
+        // -- Is it a flag? -----
 
         if ( strncmp( argv[i], "--help", 6) == 0 ){
             isFlag=TRUE;
@@ -215,11 +212,9 @@ int main(int argc, char *argv[])
             fShowEnds = TRUE;
         }
         
-        //
-        // It's NOT a flag.
-        //
+        // -- Is it a filename? -----
 
-        // Open the file and print the content into the screen.
+        // Open the file and print the content into the screen
         if (isFlag == FALSE)
         {
             if (i >= Max){
@@ -234,6 +229,7 @@ int main(int argc, char *argv[])
 
 done:
     return EXIT_SUCCESS;
+
 fail:
     return EXIT_FAILURE;
 }

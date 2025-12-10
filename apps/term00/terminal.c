@@ -717,25 +717,88 @@ static inline void do_cli(void)
     asm ("cli");
 }
 
+// Testing libc functionalities.
+static void __libc_test(int fd)
+{
+    static int NumberOfFilesToCreate = 8;
+    int file_index=0;
+    char tmp_file_name[64];
+    char index_string_buffer[64];
+
+    if (fd < 0)
+        return;
+
+    //close(0); 
+    //close(1); 
+    //close(2);
+    //#remember: stderr was redirected to stdout.
+    //fclose(stdin); 
+    //fclose(stdout); 
+    //fclose(stderr); 
+
+    //creat( "newfile.txt", 0666 );  // fcntl.c
+    //mkdir( "newdir", 0666 );       // unistd.c
+
+// #test: Cria n files.
+// stress test:
+// O rootdir tem 512 entradas,
+// vai acabar as entradas ou o heap do kernel.
+// # OK. It is working.
+
+    //printf ("Creating {%d} files ...\n",NumberOfFilesToCreate);
+
+    cr();
+    lf();
+    tputstring(fd,"Creating 8 files\n");
+
+    for ( file_index = 0; 
+          file_index < NumberOfFilesToCreate; 
+          file_index++ )
+    {
+        // #debug
+        //printf ("Creating file number {%d}\n",file_index);
+
+        // Crear the buffer for the next name.
+        memset(tmp_file_name,0,64);
+
+        // Set up a custom filename.
+        sprintf( tmp_file_name, "new" );
+        itoa( (int) file_index, index_string_buffer );
+        strcat(tmp_file_name,index_string_buffer);
+        strcat(tmp_file_name,".txt");
+
+        // Create next file using libc.
+        // call open() with the flag O_CREAT.
+        // see: fcntl.c
+        creat( tmp_file_name, 0666 );
+    };
+
+    // ...
+}
+
 // Try to execute the command line in the prompt[].
+// This is called by compareStrings()
 // IN: ?
 static void __try_execute(int fd)
 {
+    register int i=0;
+    char filename_buffer[12];  //8+3+1
+    char *p;
 
 // Limits:
 // + The prompt[] limit is BUFSIZ = 1024;
 // + The limit for the write() operation is 512 for now.
     size_t WriteLimit = 512;
 
-// Parameters:
+// Parameter:
     if (fd<0){
         return;
     }
 
 // Empty buffer
-   if (*prompt == 0){
-       goto fail;
-   }
+    if (*prompt == 0){
+        goto fail;
+    }
 
 // Clone
 // #important:
@@ -790,12 +853,9 @@ static void __try_execute(int fd)
 //Create a method.
 //int rtl_get_first_word_in_a_string(char *buffer_pointer, char *string);
 
-    register int ii=0;
-    char filename_buffer[12]; //8+3+1
-    char *p;
-
 // ---------------
 // Grab the filename in the first word of the cmdline.
+    register int ii=0;
     memset(filename_buffer,0,12);
     p = prompt;
     while (1)
@@ -836,7 +896,6 @@ static void __try_execute(int fd)
 // Parse the filename inside its local buffer.
 //
 
-    register int i=0;
 // Is it a valid extension?
 // Pois podemos executar sem extensão.
     int isValidExt = FALSE;
@@ -1014,7 +1073,6 @@ static void __try_execute(int fd)
     printf("filename_buffer: {%s}\n",filename_buffer);
 
 
-    
     // #todo #test
     // This is a method for the whole routine above.
     // rtl_execute_cmdline(prompt);
@@ -1060,65 +1118,6 @@ fail:
     return;
 }
 
-// Testing libc functionalities.
-static void __libc_test(int fd)
-{
-    static int NumberOfFilesToCreate = 8;
-    int file_index=0;
-    char tmp_file_name[64];
-    char index_string_buffer[64];
-
-    if (fd < 0)
-        return;
-
-    //close(0); 
-    //close(1); 
-    //close(2);
-    //#remember: stderr was redirected to stdout.
-    //fclose(stdin); 
-    //fclose(stdout); 
-    //fclose(stderr); 
-
-    //creat( "newfile.txt", 0666 );  // fcntl.c
-    //mkdir( "newdir", 0666 );       // unistd.c
-
-// #test: Cria n files.
-// stress test:
-// O rootdir tem 512 entradas,
-// vai acabar as entradas ou o heap do kernel.
-// # OK. It is working.
-
-    //printf ("Creating {%d} files ...\n",NumberOfFilesToCreate);
-
-    cr();
-    lf();
-    tputstring(fd,"Creating 8 files\n");
-
-    for ( file_index = 0; 
-          file_index < NumberOfFilesToCreate; 
-          file_index++ )
-    {
-        // #debug
-        //printf ("Creating file number {%d}\n",file_index);
-
-        // Crear the buffer for the next name.
-        memset(tmp_file_name,0,64);
-
-        // Set up a custom filename.
-        sprintf( tmp_file_name, "new" );
-        itoa( (int) file_index, index_string_buffer );
-        strcat(tmp_file_name,index_string_buffer);
-        strcat(tmp_file_name,".txt");
-
-        // Create next file using libc.
-        // call open() with the flag O_CREAT.
-        // see: fcntl.c
-        creat( tmp_file_name, 0666 );
-    };
-
-    // ...
-}
-
 // Compare the string typed into the terminal.
 // Remember, we have an embedded command interpreter.
 static void compareStrings(int fd)
@@ -1128,12 +1127,22 @@ static void compareStrings(int fd)
 // TRUE: Create a process for the command 
 // not found in the embedded list.
 // FALSE: Send the command line to the application.
-    //int CloneAndExecuteNethod1 = FALSE;  // #test: Execute a non-embeded command in a different way 
-    int CloneAndExecuteNethod1 = TRUE;  // Execute a non-embeded command.
+    //int CloneAndExecuteMethod1 = FALSE;  // #test: Execute a non-embeded command in a different way 
+    int CloneAndExecuteMethod1 = TRUE;  // Execute a non-embeded command.
 
     if (fd<0){
         return;
     }
+
+
+//
+// Internal command
+//
+
+// First we check if the first chars are an internal command.
+// If it's not an internal command we try to launch it as 
+// a external program.
+// There is no parser for command line.
 
 // Test kernel module
     unsigned long mod_ret=0;
@@ -1503,7 +1512,7 @@ static void compareStrings(int fd)
 */
 
 //
-// Not a reserved word.
+// Not an internal command. Launch program.
 //
 
 // #todo
@@ -1526,7 +1535,7 @@ static void compareStrings(int fd)
 
     // Create a processs given the command line 
     // saved in input[].
-    if (CloneAndExecuteNethod1 == TRUE){
+    if (CloneAndExecuteMethod1 == TRUE){
         gws_clone_and_execute_from_prompt(fd);
     
     // Sent the command line to the application
@@ -1585,7 +1594,7 @@ static void doAbout(int fd)
     //lf();
 }
 
-// Draw the prompt.
+// Draw the prompt
 static void doPrompt(int fd)
 {
     register int i=0;
@@ -3820,30 +3829,17 @@ static void __initialize_basics(void)
 // This routine will initialize the terminal variables, 
 // create the socket for the application, connect with the display server, 
 // create the main window, create the terminal window and fall into a loop.
-
+// Called by main() in main.c
 int terminal_init(unsigned short flags)
 {
-// Called by main() in main.c
-
     const char *display_name_string = "display:name.0";
-
-/*
-// -------------------------
-    struct sockaddr_in addr_in;
-    addr_in.sin_family = AF_INET;
-    addr_in.sin_addr.s_addr = IP(127,0,0,1);    //ok
-    //addr_in.sin_addr.s_addr = IP(127,0,0,9);  //fail
-    addr_in.sin_port = __PORTS_DISPLAY_SERVER;
-// -------------------------
-*/
-
     int client_fd = -1;
     unsigned long w=0;
     unsigned long h=0;
 
     debug_print ("terminal: Initializing\n");
 
-// Initializing basic variables.
+// Initializing basic variables
     __initialize_basics();
 
 // Device info
@@ -3851,60 +3847,12 @@ int terminal_init(unsigned short flags)
     w = gws_get_system_metrics(1);
     h = gws_get_system_metrics(2);
 
-    /*
-// Socket
-// Create the socket and save the fd into the terminal structure.
-    //client_fd = (int) socket( AF_INET, SOCK_STREAM, 0 );
-    client_fd = (int) socket( AF_INET, SOCK_RAW, 0 );
-    if (client_fd < 0)
-    {
-       debug_print("terminal: on socket()\n");
-       printf     ("terminal: on socket()\n");
-       exit(1);
-    }
-    Terminal.client_fd = (int) client_fd;
-    */
-
     //...
 
     // pid=2 fd=4
     //printf ("TERMINAL.BIN: pid{%d} fd{%d}\n",
     //    Terminal.pid, Terminal.client_fd );
 
-    //while(1){}
-
-// connect
-// Nessa hora colocamos no accept um fd.
-// então o servidor escreverá em nosso arquivo.
-    //printf ("terminal: Connecting to ws via inet ...\n");
-
-/*
-    int con_status = -1;
-    while (1){
-
-        con_status = 
-            (int) connect(client_fd, (void *) &addr_in, sizeof(addr_in));
-
-        if (con_status < 0){
-            debug_print ("terminal: Connection Failed\n");
-            printf      ("terminal: Connection Failed\n");
-            // Nesse caso a conexao pode ter sido recusada 
-            // porque o servidor tem clentes demais.
-            // Vamos esperar para sempre?
-            if (con_status == ECONNREFUSED){
-            }
-
-            // #test
-            // Espere um segundo.
-            //rtl_sleep_until(1000);
-
-        } else {
-            break; 
-        };
-    };
-*/
-
-// ============================
 // Open display.
 // IN: hostname:number.screen_number
     Display = (struct gws_display_d *) gws_open_display(display_name_string);
@@ -3912,13 +3860,12 @@ int terminal_init(unsigned short flags)
         printf("term00.bin: Display\n");
         goto fail;
     }
-// Get client socket.
+// Get client socket
     client_fd = (int) Display->fd;
     if (client_fd <= 0){
         printf("term00.bin: fd\n");
         goto fail;
     }
-
     Terminal.client_fd = (int) client_fd;
 
 // Windows: it's global now.
@@ -3946,10 +3893,8 @@ int terminal_init(unsigned short flags)
 // The surface of this thread.
 // It has the same values of the main window.
     setup_surface_retangle ( 
-        (unsigned long) mwLeft, 
-        (unsigned long) mwTop, 
-        (unsigned long) mwWidth, 
-        (unsigned long) mwHeight );
+        (unsigned long) mwLeft, (unsigned long) mwTop, 
+        (unsigned long) mwWidth, (unsigned long) mwHeight );
 
 // ===================================================
 // main window
@@ -3957,16 +3902,13 @@ int terminal_init(unsigned short flags)
 
     main_window = 
         (int) gws_create_window (
-                  client_fd,
-                  WT_OVERLAPPED, 
-                  WINDOW_STATUS_ACTIVE,  // status
-                  VIEW_NULL,             // view
-                  program_name,
-                  mwLeft, mwTop, mwWidth, mwHeight,
-                  0,
-                  WS_TERMINAL,
-                  mwColor, 
-                  mwColor );
+                client_fd,
+                WT_OVERLAPPED, 
+                WINDOW_STATUS_ACTIVE,  // status
+                VIEW_NULL,             // view
+                program_name,
+                mwLeft, mwTop, mwWidth, mwHeight,
+                0, WS_TERMINAL, mwColor, mwColor );
 
     if (main_window < 0){
         printf("terminal.c: fail on main_window\n");
@@ -4015,10 +3957,10 @@ int terminal_init(unsigned short flags)
         printf("terminal: wi\n");
         exit (1);
     }
-    //IN: fd, wid, window info structure.
+    // IN: fd, wid, window info structure
     gws_get_window_info(
         client_fd, 
-        main_window,   // The app window.
+        main_window,   // The app window
         (struct gws_window_info_d *) wi );
 
     if (wi->used != TRUE){
@@ -4213,10 +4155,18 @@ int terminal_init(unsigned short flags)
 //=================
 */
 
-// Inicializando prompt[].
+// Inicialize prompt[]
+// #bugbug: Maybe its not good.
     input('\0');
-
+// Clear the terminal window
     clear_terminal_client_window(client_fd);
+
+// #todo
+// + Maybe we need to print the banner instead of the prompt.
+// + Maybe we need to start the terminal runnig an application
+//   or a script.
+
+// Draw the prompt string
     doPrompt(client_fd);
 
 // Set active window
