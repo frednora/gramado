@@ -513,10 +513,22 @@ struct gws_window_d
     int client_fd;
 // pid do cliente.
     pid_t client_pid;
+
 // Client's pid and tid.
 // tid é usado para saber qual é a thread associada
 // com a janela que tem o foco de entrada.
+// Keep client_tid immutable as the window’s owner thread.
     int client_tid;
+
+// Nominated child thread if the client 
+// does not wanna be the foreground thread.
+    int delegate_tid;
+// The client says if it wants of not become the foreground thread.
+// 0 = no, 1 = yes
+// 0 = client wants to stay foreground (child runs in background).
+// 1 = client delegates foreground to delegate_tid.
+    int client_delegates_foreground;
+
 
 // ======================================
 // DOC

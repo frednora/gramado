@@ -2618,16 +2618,25 @@ void set_focus(struct gws_window_d *window)
 // ...
 
 // -----------------------------------------
-// ...:
+// ...
+
+// If application itself registers a second TID in its window structure, 
+// then the server can treat that as an explicit option provided by the app.
+// Can't blame the server.
 
 // Set the foreground thread.
 // That's the tid associated with this window.
-    tid = (int) window->client_tid;
-    if (tid < 0){
-        // #bugbug
-        return;
-    }
-    if (SetForeground){
+    if (SetForeground)
+    {
+        if (window->client_delegates_foreground == TRUE){
+            tid = (int) window->delegate_tid;
+        } else {
+            tid = (int) window->client_tid;
+        };
+        
+        if (tid < 0){
+            return;
+        }
         __set_foreground_tid(tid);
     }
 }

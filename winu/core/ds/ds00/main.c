@@ -1469,6 +1469,10 @@ int serviceCreateWindow(int client_fd)
     Window->client_pid = (pid_t) ClientPID;
     Window->client_tid = (int) ClientTID;
 
+// Delegation defaults
+    Window->delegate_tid = -1;                    // no delegate yet
+    Window->client_delegates_foreground = FALSE;  // client stays foreground by default
+
 // The client socket id
     Window->client_fd = (int) client_fd;
 

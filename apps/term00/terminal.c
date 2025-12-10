@@ -977,20 +977,44 @@ static void __try_execute(int fd)
     ChildTID = (int) rtl_clone_and_execute_return_tid(filename_buffer);
     printf("Child TID: {%d}\n",ChildTID);
 
+    //Terminal.child_tid = tid;
+
 // #todo: Check the return.
     //if (ChildPID < 0)
         // fail
 
+// #important:
+// Child TID handling during terminal spawn.
+//
+// 1. We receive the TID of the child process/thread.
+// 2. Save this TID into the window structure inside the display server.
+//    -> Window->delegate_tid = child_tid
+// 3. Update the delegation flag:
+//    -> Window->client_delegates_foreground = TRUE if terminal wants child
+//       to be foreground, FALSE if terminal keeps foreground itself.
+// 4. Meaning:
+//    - Window->client_tid remains immutable (the terminal itself).
+//    - Window->delegate_tid is the nominated child.
+//    - Window->client_delegates_foreground tells the server whether to switch
+//      foreground focus from the terminal to the delegate.
+//
+// This ensures the server knows when to route input/output
+// to the child instead of the terminal.
+// Reminder: 
+// Window->client_tid is immutable, 
+// Window->delegate_tid is dynamic, flag drives focus.
+
+
+// Flag for the moment where the terminal will loop waiting for 
+// the output sent by the client.
     //isWaitingForOutput = TRUE;
 
     //#debug
     printf("prompt: {%s}\n",prompt);
     printf("filename_buffer: {%s}\n",filename_buffer);
 
-    //rtl_clone_and_execute(prompt);
-    //rtl_clone_and_execute("shutdown.bin");
-    // while(1){}
-        
+
+    
     // #todo #test
     // This is a method for the whole routine above.
     // rtl_execute_cmdline(prompt);
