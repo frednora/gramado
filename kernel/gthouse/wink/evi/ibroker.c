@@ -75,6 +75,15 @@ __consoleProcessKeyboardInput (
     unsigned long long1, 
     unsigned long long2 );
 
+// Process input
+// Not in console mode
+static int 
+__ProcessKeyboardInput ( 
+    int msg, 
+    unsigned long long1, 
+    unsigned long long2 );
+
+
 static void setup_minimal_ring0_thread(void);
 
 static int
@@ -887,7 +896,10 @@ fail:
     return (int) -1;
 }
 
-//private
+// If a prefix was found.
+// Combinations
+// It's an extended keyboard key.
+// Send combination keys to the display server.
 static int 
 __ProcessExtendedKeyboardKeyStroke(
     int prefix,
@@ -895,10 +907,6 @@ __ProcessExtendedKeyboardKeyStroke(
     unsigned long vk,
     unsigned long rawbyte )
 {
-// Combinations.
-// ------------------------------------
-// It's an extended keyboard key.
-// Send combination keys to the display server.
 
 /*
  Scancodes:
@@ -1007,7 +1015,6 @@ fail:
     return (int) -1;
 }
 
-
 // -------------------------------
 // __consoleProcessKeyboardInput:
 // #bugbug: We don't wanna call the window server. Not now.
@@ -1042,6 +1049,11 @@ __consoleProcessKeyboardInput (
     char ch_buffer[2];  // char string.
     char buffer[128];   // string buffer
     unsigned long tmp_value=0;
+
+
+// Not here
+    if (InputBrokerInfo.shell_flag != TRUE)
+        return -1;
 
     //debug_print("wmProcedure:\n");
     ksprintf (buffer,"My \x1b[8C string!\n"); 
@@ -1239,6 +1251,7 @@ __consoleProcessKeyboardInput (
 
                 // #test
                 // NOT SENDING typing chars to the server for now.
+                // Actually other routine bellow is also sanding it.
                 // ibroker_post_message_to_ds( msg, long1, long2 );
 
                 return 0;
@@ -1540,6 +1553,458 @@ fail:
     return (unsigned long) long_rv;
 }
 
+// Not in console mode
+static int 
+__ProcessKeyboardInput ( 
+    int msg, 
+    unsigned long long1, 
+    unsigned long long2 )
+{
+// Called by wmKeyEvent().
+
+    int Status = -1;
+    char ch_buffer[2];  // char string.
+    char buffer[128];   // string buffer
+    unsigned long tmp_value=0;
+
+// Not here
+    if (InputBrokerInfo.shell_flag == TRUE)
+        return -1;
+
+    //debug_print("wmProcedure:\n");
+    ksprintf (buffer,"My \x1b[8C string!\n"); 
+
+// ===================================
+// Control:
+//     'Control + ?' belongs to the kernel.
+
+// ===================================
+// Shift:
+//     'Shift + ?' belongs to the window server.
+
+    // Who is the current virtual console?
+    struct tty_d *target_tty;
+
+//
+// tty
+//
+
+    if (fg_console < 0 || fg_console > 3)
+        panic("__ProcessKeyboardInput: fg_console");
+    target_tty = (struct tty_d *) &CONSOLE_TTYS[fg_console];
+    if (target_tty->magic != 1234)
+        panic("__ProcessKeyboardInput: target_tty->magic");
+
+//
+// Dispatcher
+//
+
+    if (msg < 0){
+        debug_print("__ProcessKeyboardInput: msg\n");
+        return (int) -1;
+    }
+
+    switch (msg){
+
+// No mouse message here. Only keyboard.
+    case MSG_MOUSEMOVE:
+    case MSG_MOUSEPRESSED:
+    case MSG_MOUSERELEASED:
+        return (int) -1;
+        break;
+
+// ==============
+// msg: Keyup
+
+    // Nothing for now
+    //case MSG_KEYUP:
+        //return (int) -1;
+        //break;
+
+// ==============
+// msg: Keydown
+    case MSG_KEYDOWN:
+
+        switch (long1){
+
+        case VK_RETURN:
+            break;
+
+         //case 'd':
+         //case 'D':
+         //    if (ctrl_status==TRUE && alt_status==TRUE)
+         //    {
+         //        do_enter_embedded_shell(FALSE);
+         //        return 0;
+         //    }
+         //    break;
+
+        //case VK_TAB: 
+            //printk("TAB\n"); 
+            //break;
+
+        default:
+
+            // Algumas combinações são enviadas para o display server.
+                // nesse caso precisamos mudar o message code.
+                // -----
+                // Caso nenhuma combinação nos interesse,
+                // então enviaremos teclas de digitação, inclusive 
+                // com shift acionado.
+                // >> Não devemos fazer isso caso algum terminal virtual
+                //    esteja em foreground. Pois nesse caso, enviar 
+                //    as teclas de digitação para stdin ja é o suficiente.
+                // #todo: Podemos criar uma flag que diga se a thread 
+                // é um terminal virtual ou não. t->isVirtualTerminal.
+
+                // ^a = Start OF Header = 1
+            if (ctrl_status == TRUE && long1 == ASCII_SOH){
+                    ibroker_post_message_to_ds( MSG_SELECT_ALL, long1, long2 );
+                    return 0;
+            }
+
+                // ^c = End Of Text = 3
+            if (ctrl_status == TRUE && long1 == ASCII_ETX){
+                    ibroker_post_message_to_ds( MSG_COPY, long1, long2 );
+                    return 0;
+            }
+
+                // ^f = Acknowledgement = 6
+            if (ctrl_status == TRUE && long1 == ASCII_ACK){
+                    ibroker_post_message_to_ds( MSG_FIND, long1, long2 );
+                    return 0;
+            }
+
+                // ^w = End Of Transition Block = 17
+                // Let's close the active window with [control + w]. 
+            if (ctrl_status == TRUE && long1 == ASCII_ETB){
+                    ibroker_post_message_to_ds( MSG_CLOSE, long1, long2 );
+                    return 0;
+            }
+
+                // ^s = Device Control 3 = 19
+            if (ctrl_status == TRUE && long1 == ASCII_DC3){
+                    ibroker_post_message_to_ds( MSG_SAVE, long1, long2 );
+                    return 0;
+            }
+
+                // ^v = Synchronous Idle = 22
+            if (ctrl_status == TRUE && long1 == ASCII_SYN){
+                    ibroker_post_message_to_ds( MSG_PASTE, long1, long2 );
+                    return 0;
+            }
+
+                // ^x = Cancel = 24
+            if (ctrl_status == TRUE && long1 == ASCII_CAN){
+                    ibroker_post_message_to_ds( MSG_CUT, long1, long2 );
+                    return 0;
+            }
+
+                // ^z = Substitute - 26
+            if (ctrl_status == TRUE && long1 == ASCII_SUB){
+                    ibroker_post_message_to_ds( MSG_UNDO, long1, long2 );
+                    return 0;
+            }
+
+                // ...
+
+                // [Teclas de digitação] 
+                // (Inclusive com SHIFT)
+                // Enviando teclas de digitação para o display server.
+                // que está imprimindo na janela do tipo editbox 
+                // com foco de entrada.
+                // Mas ao mesmo tempo, a função wmRawkeyEvent pode ja ter
+                // mandado teclas de digitação para stdin antes de chamar
+                // essa rotina.
+
+                // ?? #bugbug
+                // No caso da combinação não ter sido tratada na rotina acima.
+                // Enviamos combinação de [shift + tecla] de digitaçao.
+                // Teclas de digitaçao sao processadas no tratador de keystrokes.
+
+                // #test
+                // NOT SENDING typing chars to the server for now.
+                // Actually other routine bellow is also sanding it.
+                // ibroker_post_message_to_ds( msg, long1, long2 )
+
+            //debug_print ("wmProcedure: done\n");
+            return 0;
+            break;
+        };
+        break;
+
+// ==============
+// msg: Syskeyup
+// liberadas: teclas de funçao
+// syskeyup foi enviado antes pela função que chamou essa função.
+// não existe combinação de tecla de controle e syskeyup.
+    case MSG_SYSKEYUP:
+        // Se nenhum modificador esta acionado,
+        // entao apenas enviamos a tecla de funçao 
+        // para o window server.
+        // Send it to the window server.
+        if( shift_status != TRUE &&
+            ctrl_status != TRUE &&
+            alt_status != TRUE )
+        {
+            return 0;
+        }
+        break;
+
+// ==============
+// msg: Syskeydown
+// Pressionadas: teclas de funçao
+// Se nenhum modificador esta acionado,
+// entao apenas enviamos a tecla de funçao 
+// para o window server.
+// Send it to the window server.
+// #bugbug:
+// Esse tratamento é feito pela rotina que chamou
+// essa rotina. Mas isso também pode ficar aqui.
+        
+    case MSG_SYSKEYDOWN:
+
+        // #??
+        // Não enviamos mensagem caso não seja combinação?
+        if ( shift_status != TRUE && 
+             ctrl_status != TRUE && 
+             alt_status != TRUE )
+        {
+            return 0;
+        }
+
+        // Process a set of combinations.
+        switch (long1){
+
+            // Exibir a surface do console.
+            case VK_F1:
+                if (ctrl_status == TRUE){
+                    // control + shift + F1
+                    // Full ps2 initialization and launch the app.
+                    // #danger: Mouse is not well implemented yet.
+                    if( shift_status == TRUE){
+                        //PS2_initialization();
+                        //do_launch_app_via_initprocess(4001);
+                        return 0;
+                    }
+                    do_launch_app_via_initprocess(4001);  //terminal
+                    return 0;
+                }
+                if (alt_status == TRUE){
+                    //ibroker_post_message_to_ds( (int) 77101, 0, 0 );
+                }
+                if (shift_status == TRUE){
+                    //do_enter_embedded_shell(FALSE);
+                    jobcontrol_switch_console(0);
+                    //ibroker_post_message_to_ds( (int) 88101, 0, 0 );
+                }
+                return 0;
+                break;
+
+            case VK_F2:
+                if (ctrl_status == TRUE){
+                    do_launch_app_via_initprocess(4002);  //editor
+                    return 0;
+                }
+                if (alt_status == TRUE){
+                    //ibroker_post_message_to_ds( (int) 77102, 0, 0 );
+                }
+                if (shift_status == TRUE){
+                    //do_enter_embedded_shell(FALSE);
+                    jobcontrol_switch_console(1);
+                    //ibroker_post_message_to_ds( (int) 88102, 0, 0 );
+                }
+                return 0;
+                break;
+
+            case VK_F3:
+                if (ctrl_status == TRUE){
+                    do_launch_app_via_initprocess(4003);  //doc
+                    return 0;
+                }
+                if (alt_status == TRUE){
+                    //ibroker_post_message_to_ds( (int) 77103, 0, 0 );
+                }
+                if (shift_status == TRUE){
+                    //do_enter_embedded_shell(FALSE);
+                    jobcontrol_switch_console(2);
+                    //ibroker_post_message_to_ds( (int) 88103, 0, 0 );
+                }
+                return 0;
+                break;
+
+            case VK_F4:
+                if (ctrl_status == TRUE){
+                    do_launch_app_via_initprocess(4004);  //#pubterm
+                    return 0;
+                }
+                // alt+f4: The vm handle this combination.
+                // We can't use it on vms.
+                if (alt_status == TRUE){
+                    //ibroker_post_message_to_ds( (int) 77104, 0, 0 );
+                    return 0;
+                }
+                if (shift_status == TRUE){
+                    //do_enter_embedded_shell(FALSE);
+                    jobcontrol_switch_console(3);
+                    //ibroker_post_message_to_ds( (int) 88104, 0, 0 );
+                }
+                return 0;
+                break;
+
+            // Reboot
+            case VK_F5:
+                if (ctrl_status == TRUE){
+                    //do_launch_app_via_initprocess(4005);
+                    //ibroker_post_message_to_ds( 33888, 0, 0 ); //#TEST
+                    return 0;
+                }
+                if (alt_status == TRUE){
+                    //ibroker_post_message_to_ds( (int) 77105, 0, 0 );
+                }
+                if (shift_status == TRUE){
+                    //ibroker_post_message_to_ds( (int) 88105, 0, 0 );
+                    //ipc_post_message_to_foreground_thread(
+                    //   ??, 1234, 1234 );
+                }
+                return 0;
+                break;
+
+            // Send a message to the Init process.
+            // 9216 - Launch the redpill application
+            case VK_F6:
+                if (ctrl_status == TRUE){
+                    // do_launch_app_via_initprocess(4006);
+                    return 0; 
+                }
+                if (alt_status == TRUE){
+                    //ibroker_post_message_to_ds( (int) 77106, 0, 0 );
+                }
+                if (shift_status == TRUE){
+                    //ibroker_post_message_to_ds( (int) 88106, 0, 0 );
+                }
+                return 0;
+                break;
+
+            // Test 1.
+            case VK_F7:
+                if (ctrl_status == TRUE){
+                    //do_launch_app_via_initprocess(4007);
+                    return 0;
+                }
+                if (alt_status == TRUE){
+                    //ibroker_post_message_to_ds( (int) 77107, 0, 0 );
+                }
+                if (shift_status == TRUE){
+                    //ibroker_post_message_to_ds( (int) 88107, 0, 0 );
+                }
+                return 0;
+                break;
+
+            // Test 2.
+            case VK_F8:
+                if (ctrl_status == TRUE){
+                    return 0;
+                }
+                if (alt_status == TRUE){
+                    //ibroker_post_message_to_ds( (int) 77108, 0, 0 );
+                }
+                if (shift_status == TRUE){
+                    //ibroker_post_message_to_ds( (int) 88108, 0, 0 );
+                    // MSG_HOTKEY=8888 | 1 = Hotkey id 1.
+                    ibroker_post_message_to_ds( (int) MSG_HOTKEY, 1, 0 );
+                }
+                return 0;
+                break;
+
+            case VK_F9:
+                // Enter ring0 embedded shell
+                if (ctrl_status == TRUE){
+                    do_enter_embedded_shell(FALSE);
+                    return 0;
+                }
+                if (alt_status == TRUE){
+                    //ibroker_post_message_to_ds( (int) 77109, 0, 0 );
+                }
+                // [Shift+F9] - Reboot
+                if (shift_status == TRUE){
+                    do_reboot(0);
+                }
+                return 0;
+                break;
+
+            case VK_F10:
+                // Exit ring0 embedded shell.
+                if (ctrl_status == TRUE){
+                    do_exit_embedded_shell();
+                    return 0;
+                }
+                if (alt_status == TRUE){
+                    //ibroker_post_message_to_ds( (int) 77110, 0, 0 );
+                }
+                if (shift_status == TRUE){
+                    displayInitializeBackground(COLOR_KERNEL_BACKGROUND,TRUE);
+                    show_slots();   //See: tlib.c
+                    //pages_calc_mem();
+                    //ibroker_post_message_to_ds( (int) 88110, 0, 0 );
+                    //refresh_screen();
+                }
+                return 0;
+                break;
+
+            case VK_F11:
+                // Mostra informaçoes sobre as threads.
+                if (ctrl_status == TRUE){
+                    show_slots();
+                    return 0;
+                }
+                if (alt_status == TRUE){
+                    //ibroker_post_message_to_ds( (int) 77111, 0, 0 );
+                }
+                // [Shift+F11] - Safe reboot
+                if (shift_status == TRUE){
+                   do_reboot(0);
+                }
+                return 0;
+                break;
+
+            case VK_F12:
+                // Mostra informaçoes sobre os processos.
+                if (ctrl_status == TRUE){
+                    show_process_information();
+                    return 0;
+                }
+                if (alt_status == TRUE){
+                    //ibroker_post_message_to_ds( (int) 77112, 0, 0 );
+                }
+
+                // [SHIFT + F12]
+                // Update all windows and show the mouse pointer.
+                // IN: window, msg code, data1, data2.
+                if (shift_status == TRUE){
+                    ibroker_post_message_to_ds( (int) 88112, 0, 0 );
+                }
+                return 0;
+                break;
+
+            default:
+                // nothing
+                return 0;
+            }
+
+// ==============
+    default:
+        return (int) -1;
+        break;
+    };
+
+//unexpected_fail:
+    return (int) -1;
+
+fail:
+    debug_print("__ProcessKeyboardInput: fail\n");
+    return (int) -1;
+}
 
 // ----------------------------------------------
 // wmRawKeyEvent:
@@ -2130,14 +2595,27 @@ done:
 
     int wbytes = 0;  //written bytes.
 
-// --------------------
-// Not in the embedded shell.
-    if (InputBrokerInfo.shell_flag != TRUE)
+// ==========================================
+// Inside the embedded shell.
+// Process and return.
+    if (InputBrokerInfo.shell_flag == TRUE)
     {
-        // STDIN
-        // Only normal keys. For terminal support.
-        if (Event_Message == MSG_KEYDOWN)
-        {
+        Status = 
+            (int) __consoleProcessKeyboardInput(
+                  (int) Event_Message,
+                  (unsigned long) Event_LongASCIICode,
+                  (unsigned long) Event_LongRawByte );
+
+        return (int) Status;
+    }
+
+// ==========================================
+// Not in the embedded shell.
+
+    // STDIN
+    // Only normal keys. For terminal support.
+    if (Event_Message == MSG_KEYDOWN)
+    {
 
             // #bugbug
             // #todo
@@ -2151,14 +2629,14 @@ done:
             //     shift_status != TRUE )
             //if ( alt_status != TRUE &&  
             //     shift_status != TRUE )
-            if (alt_status != TRUE)
-            {
+        if (alt_status != TRUE)
+        {
 
                 // #test
                 // #todo: Create a flag InputTargets.target_tty
                 // It needs to redirect if a tty is connected to another.
-                if (InputTargets.target_tty == TRUE)
-                {
+            if (InputTargets.target_tty == TRUE)
+            {
                     //tty_queue_putchar(&target_tty->raw_queue, ascii_char);
                     //tty_flush_output_queue_ex(target_tty);
 
@@ -2173,41 +2651,42 @@ done:
                     //myfakebuffer[0] = __int_ascii_code;
                     //__tty_write2(myTTY99,myfakebuffer,1);
                     //tty_flush(myTTY99);
-                }
+            }
 
                 // Mandaremos teclas de digitação para stdin
                 // somente se um terminal virtual está em foreground.
                 // stdin::
-                if (InputTargets.target_stdin == TRUE)
-                {
+            if (InputTargets.target_stdin == TRUE)
+            {
                     // #todo
                     // Check if the foreground thread is a terminal virtual.
                     // Do not send bytes to stdin if the foreground thread 
                     // is not a virtual terminal.
                     // In the case that we have more then one virtual terminals,
                     // only one virtual terminal will be able to read from stdin.
-                    wbytes = (int) kstdio_feed_stdin((int) __int_ascii_code);
-                }
+                wbytes = (int) kstdio_feed_stdin((int) __int_ascii_code);
+            }
 
                 // #todo
                 // Maybe we're gonna return here depending on
                 // the input mode. 'Cause we don't wanna send
                 // the data to multiple targets.
-            }
         }
+    } // END KEYDOWN
 
         // NOT COMBINATION
         // Send break and make keys to the window server.
         // Not a combination key, so return 
         // without calling the local procedure.
-        if ( alt_status != TRUE && 
-             ctrl_status != TRUE && 
-             shift_status != TRUE )
-        {           
+        // It returns
+    if ( alt_status != TRUE && 
+         ctrl_status != TRUE && 
+         shift_status != TRUE )
+    {           
 
             // ds thread queue
-            if (InputTargets.target_thread_queue == TRUE)
-            {
+        if (InputTargets.target_thread_queue == TRUE)
+        {
 
             // ds queue:: 
             // regular keys, not combinations.
@@ -2225,54 +2704,42 @@ done:
                 
                 // #bugbug
                 // What are the types we're sending here
-                ibroker_post_message_to_ds(
-                    Event_Message, 
-                    Event_LongASCIICode,
-                    Event_LongRawByte );
+            ibroker_post_message_to_ds(
+                Event_Message, 
+                Event_LongASCIICode,
+                Event_LongRawByte );
         
             // Let's send only the function keys to the display server,
             // not the other ones. In order to be used by the window manager.
             // Make and Break.
 
-                if (Event_Message == MSG_SYSKEYDOWN || Event_Message == MSG_SYSKEYUP)
-                {
-                    switch (Event_LongASCIICode){
-                        case VK_F1: 
-                        case VK_F2: 
-                        case VK_F3: 
-                        case VK_F4:
-                        case VK_F5: 
-                        case VK_F6: 
-                        case VK_F7: 
-                        case VK_F8:
-                        case VK_F9: 
-                        case VK_F10: 
-                        case VK_F11: 
-                        case VK_F12:
-                            ibroker_post_message_to_ds(
-                                Event_Message, 
-                                Event_LongASCIICode,
-                                Event_LongRawByte );
-                            break;
-                    };
-                }
+            if (Event_Message == MSG_SYSKEYDOWN || Event_Message == MSG_SYSKEYUP)
+            {
+                switch (Event_LongASCIICode){
+                    case VK_F1: 
+                    case VK_F2: 
+                    case VK_F3: 
+                    case VK_F4:
+                    case VK_F5: 
+                    case VK_F6: 
+                    case VK_F7: 
+                    case VK_F8:
+                    case VK_F9: 
+                    case VK_F10: 
+                    case VK_F11: 
+                    case VK_F12:
+                        ibroker_post_message_to_ds(
+                            Event_Message, 
+                            Event_LongASCIICode,
+                            Event_LongRawByte );
+                        break;
+                };
             }
-            return 0;
         }
 
-        // ... fall through
-
-    } 
-
-/*
-    // #test
-    // Simply write into the fg console
-    if (InputBrokerInfo.shell_flag == TRUE)
-    {
-        consoleInputChar (long1);
-        console_putchar ( (int) long1, fg_console );
-    }
-*/
+        // Returns when its not a combination
+        return 0;
+    } // END: NOT COMBINATION
 
 // ------------------------------
 // Process the event using the system's window procedures.
@@ -2291,16 +2758,16 @@ done:
 // sim processar algumas combinações, independente dos aplicativos.
 // Como a chamada aos consoles do kernel ou control+alt+del.
 
-
     // #todo
     // When we don't need to process the input?
 
-    // Process keyboard input in both cases,
-    // inside and outside the kernel console.
-    // :: keystrokes when we are in ring0 shell mode.
-    // queue:: (combinations)
+// Process input outside the kernel console.
+// :: keystrokes when we are in ring0 shell mode.
+// queue:: (combinations)
+// #bugbug
+// Here we're outside the console, so we need to call another worker.
     Status = 
-        (int) __consoleProcessKeyboardInput(
+        (int) __ProcessKeyboardInput(
                   (int) Event_Message,
                   (unsigned long) Event_LongASCIICode,
                   (unsigned long) Event_LongRawByte );
