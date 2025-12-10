@@ -82,7 +82,7 @@
 // ibroker.c (Send input to the targets)
 #define CONFIG_INPUT_TARGET_TTY  0       // #todo: This is work in progress
 #define CONFIG_INPUT_TARGET_STDIN  1     // # working
-#define CONFIG_INPUT_TARGET_DS_QUEUE  1  // # working
+#define CONFIG_INPUT_TARGET_THREAD_QUEUE  1  // # working
 // More? Maybe initprocess is an configuration option.
 // ...
 

@@ -47,9 +47,9 @@ struct input_authority_d {
 // Defined in input.c
 extern struct input_authority_d  InputAuthority;
 
-#define INPUT_TARGET_TTY       1000
-#define INPUT_TARGET_STDIN     1001
-#define INPUT_TARGET_DS_QUEUE  1002
+#define INPUT_TARGET_TTY           1000
+#define INPUT_TARGET_STDIN         1001
+#define INPUT_TARGET_THREAD_QUEUE  1002
 // ...
 
 // -----------------------------------
@@ -60,23 +60,15 @@ extern struct input_authority_d  InputAuthority;
 // Let's select the valid targets.
 struct input_targets_d
 {
-// tty
+// The kernel sends input to a TTY.
     int target_tty;
-    //int tty_nr; ?
-
-// The input goes to stdin
+// The kernel sends input to the stdin file.
     int target_stdin;
-
-// The input goes to the thread's queue.
-    int target_ds_queue;
-
-// More? Maybe initprocess is an configuration option.
-// ...
-
+// The kernel sends input to a thread's queue.
+    int target_thread_queue;
 };
 // see: input.c
 extern struct input_targets_d  InputTargets;
-
 
 
 // Basic block of data to handle input events.

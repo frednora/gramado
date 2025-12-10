@@ -92,7 +92,7 @@ ibroker_post_message_to_ds (
     unsigned long long1, 
     unsigned long long2 )
 {
-    if (InputTargets.target_ds_queue != TRUE)
+    if (InputTargets.target_thread_queue != TRUE)
         return (int) -1;
     if (msg < 0)
         return (int) -1;
@@ -161,8 +161,8 @@ int input_enable_this_input_target(int this_one)
         case INPUT_TARGET_STDIN:
             InputTargets.target_stdin = TRUE;
             break;
-        case INPUT_TARGET_DS_QUEUE:
-            InputTargets.target_ds_queue = TRUE;
+        case INPUT_TARGET_THREAD_QUEUE:
+            InputTargets.target_thread_queue = TRUE;
             break;
         default:
             return (int) -1;
@@ -182,8 +182,8 @@ int input_disable_this_input_target(int this_one)
         case INPUT_TARGET_STDIN:
             InputTargets.target_stdin = FALSE;
             break;
-        case INPUT_TARGET_DS_QUEUE:
-            InputTargets.target_ds_queue = FALSE;
+        case INPUT_TARGET_THREAD_QUEUE:
+            InputTargets.target_thread_queue = FALSE;
             break;
         default:
             return (int) -1;
@@ -255,10 +255,10 @@ static void do_launch_app_via_initprocess(int index)
 // We're using KERNEL_MESSAGE_TID to represent the kernel.
 // see: thread.h
 
-    tid_t src_tid = KERNEL_MESSAGE_TID;  // #test
-    tid_t dst_tid = (tid_t) INIT_TID;
+    const tid_t src_tid = (tid_t) KERNEL_MESSAGE_TID;
+    const tid_t dst_tid = (tid_t) INIT_TID;
 
-    if ( index < 4001 || index > 4009 )
+    if (index < 4001 || index > 4009)
     {
         return;
     }
@@ -275,12 +275,13 @@ static void do_launch_app_via_initprocess(int index)
         return;
     }
 
+// Sending a MSG_COMMAND message to the init process.
+// IN: 
+// sender tid, receiver tid, msg, index(4001~4009), 0
     ipc_post_message_to_tid(
-        (tid_t) src_tid,        // sender tid
-        (tid_t) dst_tid,        // receiver tid
-        (int) MSG_COMMAND,      // msg code
-        (unsigned long) index,  // range: 4001~4009
-        0 );
+        (tid_t) src_tid,
+        (tid_t) dst_tid,
+        (int) MSG_COMMAND, (unsigned long) index, 0 );
 }
 
 // Process 'user' command.
@@ -1459,7 +1460,7 @@ __consoleProcessKeyboardInput (
                     show_slots();   //See: tlib.c
                     //pages_calc_mem();
                     //ibroker_post_message_to_ds( (int) 88110, 0, 0 );
-                    refresh_screen();
+                    //refresh_screen();
                 }
                 return 0;
                 break;
@@ -2205,7 +2206,7 @@ done:
         {           
 
             // ds thread queue
-            if (InputTargets.target_ds_queue == TRUE)
+            if (InputTargets.target_thread_queue == TRUE)
             {
 
             // ds queue:: 

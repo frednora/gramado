@@ -866,10 +866,10 @@ static int deviceinit(void)
         input_disable_this_input_target(INPUT_TARGET_STDIN);
     };
 
-    if (CONFIG_INPUT_TARGET_DS_QUEUE == 1){
-        input_enable_this_input_target(INPUT_TARGET_DS_QUEUE);
+    if (CONFIG_INPUT_TARGET_THREAD_QUEUE == 1){
+        input_enable_this_input_target(INPUT_TARGET_THREAD_QUEUE);
     }else{
-        input_disable_this_input_target(INPUT_TARGET_DS_QUEUE);
+        input_disable_this_input_target(INPUT_TARGET_THREAD_QUEUE);
     };
 
 // ...
