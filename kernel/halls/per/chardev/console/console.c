@@ -550,6 +550,26 @@ void jobcontrol_switch_console(int n)
     fg_color = (unsigned int) CONSOLE_TTYS[n].fg_color;
     console_clear_imp( bg_color, fg_color, n );
 
+
+    // Associate stdin with one of the consoles.
+    if ((void*) stdin != NULL){
+        if (stdin->magic == 1234){
+            stdin->tty  = (struct tty_d *) &CONSOLE_TTYS[n];
+        }
+    }
+    // Associate stdin with one of the consoles.
+    if ((void*) stdout != NULL){
+        if (stdout->magic == 1234){
+            stdout->tty  = (struct tty_d *) &CONSOLE_TTYS[n];
+        }
+    }
+    // Associate stdin with one of the consoles.
+    if ((void*) stderr != NULL){
+        if (stderr->magic == 1234){
+            stderr->tty  = (struct tty_d *) &CONSOLE_TTYS[n];
+        }
+    }
+
 // Banner
     wink_show_banner(TRUE);
     consolePrompt();
