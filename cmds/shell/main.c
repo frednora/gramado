@@ -404,7 +404,8 @@ static unsigned long shellProcessPrintableChar(int c)
 // Main
 //
 
-int main(int argc, char *argv[])
+
+int main2(int argc, char *argv[])
 {
     register int i=0;
     int C=0;
@@ -453,6 +454,7 @@ int main(int argc, char *argv[])
     }
 
 // ---------------------------
+
 
 /*
     doLF();
@@ -530,6 +532,50 @@ fail:
     return EXIT_FAILURE;
 }
 
+int main(int argc, char *argv[])
+{
+    int C=0;
 
+    isTimeToQuit = FALSE;
+
+    while (1)
+    {
+        if (isTimeToQuit == TRUE)
+            break;
+
+        // #bugbug
+        // We got a PF when we type a lot of keys.
+        // And sometimes when we type Enter.
+
+        // Reads from fp_input_from_terminal (connector1).
+        C = (int) fgetc(stdin);
+        // Como estamos usando um arquivo regular,
+        // entao o kernel concatena ate chegar no fim do arquivo.
+        if (C == EOF){
+
+            //#debug
+            //printf ("Shell: EOF\n");
+            //rewind(stdin);
+            //exit(0);
+        }
+
+        // Valid char.
+        if (C>0)
+        {
+            // Enter: So, process the command line
+            if (C == VK_RETURN){
+                shellProcessCmdline();
+            // printable chars: So print a regular key.
+            } else if (C >= 0x20 && C <= 0x7F){
+                shellProcessPrintableChar(C);
+            // #todo:
+            // Control keys: (0~0x1F)
+            // See the example in init.bin.
+            };
+        }
+    };
+
+    return 0;
+}
 
 

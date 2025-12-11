@@ -43,8 +43,14 @@ static unsigned int prompt_color = COLOR_GREEN;
 // cursor
 static int cursor_x=0;
 static int cursor_y=0;
+
+// #todo
+// Future Plan: Font Info Request.
+// Getting info from the server.
 #define __CHAR_WIDTH  8
-#define __CHAR_HEIGHT  8
+//#define __CHAR_HEIGHT  8
+#define __CHAR_HEIGHT  16
+
 // Embedded shell
 // We are using the embedded shell.
 static int isUsingEmbeddedShell=TRUE;
@@ -105,9 +111,10 @@ unsigned long smCursorWidth=0;         //3
 unsigned long smCursorHeight=0;        //4
 unsigned long smMousePointerWidth=0;   //5
 unsigned long smMousePointerHeight=0;  //6
-unsigned long smCharWidth=0;           //7
-unsigned long smCharHeight=0;          //8
-//...
+
+unsigned long smCharWidth = __CHAR_WIDTH;           //7
+unsigned long smCharHeight = __CHAR_HEIGHT;          //8
+// ...
 
 //
 // Window limits
@@ -1036,6 +1043,16 @@ static void __try_execute(int fd)
     ChildTID = (int) rtl_clone_and_execute_return_tid(filename_buffer);
     printf("Child TID: {%d}\n",ChildTID);
 
+// #test
+// Delegate a second stdin reader for the foreground thread.
+// Only the foreground thread can change this.
+    sc82(10013,ChildTID,ChildTID,ChildTID);
+
+// Flag for the moment where the terminal will loop waiting for 
+// the output sent by the client.
+    isWaitingForOutput = TRUE;
+
+
     //Terminal.child_tid = tid;
 
 // #todo: Check the return.
@@ -1063,10 +1080,6 @@ static void __try_execute(int fd)
 // Window->client_tid is immutable, 
 // Window->delegate_tid is dynamic, flag drives focus.
 
-
-// Flag for the moment where the terminal will loop waiting for 
-// the output sent by the client.
-    //isWaitingForOutput = TRUE;
 
     //#debug
     printf("prompt: {%s}\n",prompt);
@@ -1598,8 +1611,8 @@ static void doAbout(int fd)
 static void doPrompt(int fd)
 {
     register int i=0;
-    unsigned long CharWidth = 8;
-    unsigned long CharHeight = 8;
+    unsigned long CharWidth = __CHAR_WIDTH;
+    unsigned long CharHeight = __CHAR_HEIGHT;
 
     if(fd<0){
         return;
@@ -1919,8 +1932,8 @@ terminal_write_char (
     int c )
 {
     static char prev=0;
-    unsigned long CharWidth = 8;
-    unsigned long CharHeight = 8;
+    unsigned long CharWidth = __CHAR_WIDTH;
+    unsigned long CharHeight = __CHAR_HEIGHT;
 
     if (FontInfo.initialized == TRUE)
     {
@@ -2990,8 +3003,8 @@ int __terminal_clone_and_execute (char *name)
 void _draw(int fd, int c)
 {
 
-    unsigned long CharWidth = 8;
-    unsigned long CharHeight = 8;
+    unsigned long CharWidth = __CHAR_WIDTH;
+    unsigned long CharHeight = __CHAR_HEIGHT;
 
     if (FontInfo.initialized == TRUE)
     {
@@ -3255,9 +3268,17 @@ static int __input_STDIN(int fd)
         }
 
         // Terminal is reading output from the child.
+        // When set to TRUE, the terminal stops acting as the stdin consumer and 
+        // instead waits for output from the child process.
         if (isWaitingForOutput == TRUE){
-            // ...
-        
+            
+            // #todo: Read the output that comes from the child
+            C = fgetc(stderr);
+            if (C > 0){
+                // socket, wid, msg, ascii, ascii
+                terminalProcedure( client_fd, window_id, MSG_KEYDOWN, C, C );
+            }
+
         // Terminal is reading keyboard input from stdin
         } else {
 
@@ -3579,16 +3600,19 @@ static void terminalInitSystemMetrics(void)
     smMousePointerWidth = gws_get_system_metrics(5);
     smMousePointerHeight = gws_get_system_metrics(6);
 
-// Char width and height.
-    smCharWidth = gws_get_system_metrics(7);
-    smCharHeight = gws_get_system_metrics(8);
+// Char width and height. (from kernel)
+    //smCharWidth = gws_get_system_metrics(7);
+    //smCharHeight = gws_get_system_metrics(8);
+    smCharWidth = __CHAR_WIDTH;
+    smCharHeight = __CHAR_HEIGHT;
+
 
 // Initialize font info based on system metrics,
 // maybe we're gonna change it later,
 // when we get information from the server.
     // __CHAR_WIDTH __CHAR_HEIGHT 
-    FontInfo.width = (unsigned long) smCharWidth;
-    FontInfo.height = (unsigned long) smCharHeight;
+    FontInfo.width = (unsigned long) __CHAR_WIDTH; //smCharWidth;
+    FontInfo.height = (unsigned long) __CHAR_HEIGHT; //smCharHeight;
 
     FontInfo.id = 0;
     FontInfo.initialized = TRUE;
@@ -3639,8 +3663,8 @@ static void terminalInitWindowLimits(void)
     wlFullScreenWidth  = smScreenWidth;
     wlFullScreenHeight = smScreenHeight;
 // Limite de tamanho da janela.
-    wlMinWindowWidth  = (smCharWidth * 80);
-    wlMinWindowHeight = (smCharWidth * 25);
+    wlMinWindowWidth  = (__CHAR_WIDTH * 80); 
+    wlMinWindowHeight = (__CHAR_HEIGHT * 25);  //#bugbug ?
     wlMaxWindowWidth  = wlFullScreenWidth;
     wlMaxWindowHeight = wlFullScreenHeight;
 // Quantidade de linhas e colunas na área de cliente.
@@ -3797,8 +3821,8 @@ static void __initialize_basics(void)
 
 // Font info
     FontInfo.initialized = FALSE;
-    FontInfo.width = 8; //default
-    FontInfo.height = 8; //default
+    FontInfo.width = __CHAR_WIDTH;
+    FontInfo.height = __CHAR_HEIGHT;
     FontInfo.id = 0;  // Fail
 
     __sequence_status=0;
@@ -4049,8 +4073,10 @@ int terminal_init(unsigned short flags)
     Terminal.width = wWidth;
     Terminal.height = wHeight;
 // Width and height in chars.
-    Terminal.width_in_chars  = (unsigned long)((wWidth/8)  & 0xFFFF);
-    Terminal.height_in_chars = (unsigned long)((wHeight/8) & 0xFFFF);
+    Terminal.width_in_chars = 
+        (unsigned long)((wWidth/__CHAR_WIDTH) & 0xFFFF);
+    Terminal.height_in_chars = 
+        (unsigned long)((wHeight/__CHAR_HEIGHT) & 0xFFFF);
 
     Terminal.initialized = TRUE;
 

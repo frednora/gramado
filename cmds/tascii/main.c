@@ -16,6 +16,8 @@ int main(int argc, char *argv[])
     unsigned char number_of_columns = 8;
     unsigned char standard_ascii_max = STANDARD_ASCII_MAX;
 
+    //stdout = stderr;
+
 // #todo
 // Maybe we can get some parameters.
 

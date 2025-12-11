@@ -2484,7 +2484,6 @@ void *sci2 (
             // #debug
             // ok. This is the best case.
             printk("10011: tid=ds | auth=ds\n");
-            //refresh_screen();
         }
 
         // Some process that is not the display server 
@@ -2498,7 +2497,6 @@ void *sci2 (
             // forground thread when the authority is ds.
             // We can use the activation or focus to set up the foreground thread.
             printk("10011: tid!=ds | auth=ds\n");
-            //refresh_screen();
         }
 
         //Change the priority of the old foreground thread?
@@ -2629,6 +2627,26 @@ void *sci2 (
             }
         }
 
+        return NULL;
+    }
+
+// Delegate a second stdin reader for the foreground thread.
+// Only the foreground thread can change this.
+    if (number == 10013)
+    {
+        // The authority is the fg thread
+        if (current_thread != foreground_thread)
+            return NULL;
+        if (foreground_thread < 0 || foreground_thread >= THREAD_COUNT_MAX)
+            return NULL;
+        struct thread_d *fg0000 = 
+            (struct thread_d *) threadList[foreground_thread];
+        if ((void*) fg0000 == NULL)
+            return NULL;
+        if (fg0000->magic != 1234)
+            return NULL;
+        fg0000->stdin_second_reader_tid = (tid_t) (arg2 & 0xFFFFFFFF);
+        special_reader = (tid_t) (arg2 & 0xFFFFFFFF);
         return NULL;
     }
 

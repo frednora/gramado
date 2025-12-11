@@ -230,14 +230,12 @@ void crt0(unsigned long rdi)
     memset(buffer, 0, 512);
 
 // Copy
-// NO focus, we can't read from stdin, let's try stderr.
+// No focus, we can't read from stdin, let's read from stderr.
+// cmds/ programs are reading the cmdline from stderr.
     int n=0;
-    n = read(
-            fileno(stderr),  //fileno(stdin),
-            buffer,
-            512 );
-// finzalize
-   buffer[511] = 0;
+    n = (int) read( fileno(stderr), buffer, 512 );
+
+    buffer[511] = 0;    // finalize
 
     //if(n<=0){
         //#bugbug: We can't do this

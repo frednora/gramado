@@ -291,6 +291,10 @@ struct thread_d
 // #define IM_MESSAGE_INPUT 2
     unsigned int input_mode;
 
+// Delegate a second stdin reader for the foreground thread.
+// Only the foreground thread can change this.
+    tid_t stdin_second_reader_tid;
+
 // Performance/Efficiency mode.
 // PE_MODE_PERFORMANCE
 // PE_MODE_EFFICIENCY

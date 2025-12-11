@@ -1,36 +1,44 @@
-// pubsh.bin
-// This program is called by pubterm.bin.
-// This is a shell application that send data to a 
-// virtual terminal via stdout (actually our stderr).
-// pubsh.bin sends data to pubterm.bin.
-// Created by Fred Nora.
-
+// shell.bin
 // Shell application for Gramado OS.
 // This is gonna run on terminal.bin, sending data 
 // to it via tty. (stderr for now).
 
 // rtl
 #include <types.h>
+//#include <sys/types.h>
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <rtl/gramado.h>
 
 // Internal routines.
-#include "pubsh.h"
+#include "shell.h"
+
+// ================
+// Testing (VGA embedded ring3 driver).
+// libio
+//#include <libio.h>
+#include "vga_test.h"
+//================
 
 int isTimeToQuit=FALSE;
 unsigned long device_width=0;
 unsigned long device_height=0;
 
+FILE *fp_input_from_terminal;
+FILE *fp_output_to_terminal;
+
+
 //======================================
 
-static int compare00(void);
-
 static void shellPrompt(void);
-static int shellCompare(void);  // Compare single word
-static int shellProcessCommandLine(void);  // Process command line
+
+static unsigned long shellCompare(void);
+
+static unsigned long shellProcessCmdline(void);
+static unsigned long shellProcessPrintableChar(int c);
+
 static void doExit(void);
 static void doLF(void);
 
@@ -39,14 +47,9 @@ static void __test_escapesequence(void);
 
 static void __test_escapesequence(void)
 {
-    if ((void*) stdout == NULL){
-        return;
-    }
 
-    //printf("shell.bin: This is the shell command\n");
-    //printf("\n");
-    //printf("\033D");
-    printf("Sending escape sequencies: ");
+    if ( (void*) stdout == NULL )
+        return;
 
     //printf("\n");
     //printf("Testing escape sequence:\n");
@@ -125,7 +128,7 @@ static void shellPrompt(void)
 {
     register int i=0;
 
-// Clean prompt buffer   
+// Clean prompt buffer
     for ( i=0; i<PROMPT_MAX_DEFAULT; i++ ){
         prompt[i] = (char) '\0';
     };
@@ -146,18 +149,34 @@ static void shellPrompt(void)
     //printf("\n");
     //printf("$\n");
 
-
+/*
 // Line feed (unix)
     printf("\033D $ ");
-
     //printf("$ ");
     fflush(stdout);
+
+// Line feed (unix)
+    printf("\033D 2 ");
+    //printf("$ ");
+    fflush(stdout);
+*/
+/*
+    const char *msg1 = "\033D $ ";
+    write(stdout->_file, msg1, strlen(msg1));
+    const char *msg2 = "\033D 2 ";
+    write(stdout->_file, msg2, strlen(msg2));
+*/
+
+    printf("\033D $ \n");
+    //#bugbug: The second does not work
+    //printf("\033D $2 \n");
 }
 
 // local
-static int shellCompare(void)
+static unsigned long shellCompare(void)
 {
-    char *p;  // Local pointer for 'prompt'.
+    unsigned long ret_value=0;
+    char *p;
 
 // The first char.
 // $(NULL)
@@ -167,14 +186,17 @@ static int shellCompare(void)
 
 // Local pointer,
     p = prompt;
-// Invalid pointer
-    if ((void*) p == NULL){
-        printf ("Invalid prompt[]\n");
-        //exit(1);
-        goto fail;
-    }
-// Null string
-    if ( *p == '\0' ){
+
+    //if ((void*) p == NULL)
+    //{
+    //    printf("p \n");
+    //    exit(0);
+    //}
+
+// Null string.
+    if ( *p == '\0' )
+    {
+        //shellInsertLF();
         goto exit_cmp;
     }
 
@@ -190,39 +212,41 @@ do_compare:
     //shellInsertLF();
     //printf("\n");
 
-// esc
 // Let's send 0x00~0x1F to the terminal.
 // Or scape sequencies.
     if ( strncmp ( prompt, "esc", 3 ) == 0 )
     {
         doLF();
+        //printf("shell.bin: This is the shell command\n");
+        //printf("\n");
+        //printf("\033D");
+        printf("Sending escape sequencies: \n");
         __test_escapesequence();
         goto exit_cmp;
     }
 
-// cls
-// #todo: Send escape sequence.
+    // cls
+    // #todo: Send escape sequence.
     if ( strncmp(prompt,"cls",3) == 0 )
     {
         doLF();
         //printf("\033D");
         printf ("~cls");
         //fflush(stdout);
-
         goto exit_cmp;
     }
  
-// about
-// #todo: Create do_banner();
+    // about
+    // #todo: Create do_banner();
     if ( strncmp ( prompt, "about", 5 ) == 0 )
     {
         doLF();
-        printf("pubsh: This is a shell, sending bytes to the terminal.");
+        printf("shell.bin: This is the shell command");
         //fflush(stdout);
         goto exit_cmp;
     }
 
-// getpid
+    // getpid
     int my_pid=0;
     if ( strncmp( prompt, "getpid", 6 ) == 0 )
     {
@@ -232,7 +256,7 @@ do_compare:
         goto exit_cmp;
     }
 
-// getppid
+    // getppid
     int my_ppid=0;
     if ( strncmp( prompt, "getppid", 7 ) == 0 )
     {
@@ -243,7 +267,6 @@ do_compare:
     }
 
 // mm-size (MB)
-// Total memory installed in the machine.
     unsigned long __mm_size_mb = 0;    
     if ( strncmp( prompt, "mm-size", 7 ) == 0 )
     {
@@ -287,15 +310,14 @@ do_compare:
     }
 
 // malloc
-// 32KB.
     void *hBuffer;
     if ( strncmp( prompt, "malloc", 6 ) == 0 )
     {
         doLF();
         printf ("Testing heap: 32KB\n");
-        hBuffer = (void *) malloc(32 * 1024);
+        hBuffer = (void *) malloc( 1024*32 );        // 32 kb
         //...
-        if ((void *) hBuffer == NULL){
+        if ( (void *) hBuffer == NULL ){
             printf("Fail\n");
         }else{
             printf("OK\n");
@@ -310,10 +332,6 @@ do_compare:
 // See: unistd.c
     if ( strncmp( prompt, "sync", 4 ) == 0 )
     {
-        // #bugbug
-        // It can messup with our files,
-        // turning them unreachables.
-
         //printf ("sync: \n");
         sync();
         goto exit_cmp;
@@ -341,10 +359,9 @@ launch_app:
     //rtl_clone_and_execute(prompt);
 
     doLF();
-    printf("SHELL.BIN: Command not found! ");
     //printf ("Command not found\n");
     //printf("\n");
-
+    printf("SHELL.BIN: Command not found! ");
     //fflush(stdout);
 
 // #testando escape sequences.
@@ -353,119 +370,33 @@ launch_app:
     // ...
 
 exit_cmp:
+    ret_value = 0;
+done:
     shellPrompt();
-    return 0;
-fail:
-    return (int) -1;
+    return (unsigned long) ret_value;
 }
 
-
-static int shellProcessCommandLine(void)
+// Wrapper
+static unsigned long shellProcessCmdline(void)
 {
-    return 0;  //#todo
+    return (unsigned long) shellCompare();
 }
 
-
-//#test
-//#define LSH_TOK_DELIM " \t\r\n\a+!:=/.<>;|&" 
-//#define LSH_TOK_DELIM "/;|&" 
-// Good one
-#define LSH_TOK_DELIM " \t\r\n\a" 
-
-#define SPACE " "
-#define TOKENLIST_MAX_DEFAULT 80
-
-static int compare00(void)
+static unsigned long shellProcessPrintableChar(int c)
 {
-    char *tokenList[TOKENLIST_MAX_DEFAULT];
-    char *token;
-    int token_count;	
-    register int i = 0;
+    if (c<0)
+        return 0;
 
-    //unsigned long ret_value;
-    //int q;    //di�logo
-    char *c;
-
-    //?? � um pathname absoluto ou n�o. ??
-    //Ok. isso funcionou.
-    //int absolute; 
-
-
-    //#debug
-    //printf("Original:{%s}\n",prompt);
-
-// Get
-    c = prompt;
-
-    // Empty command line.
-    if (*c == '\0'){
-        goto exit_cmp;
-    }
-
-    // Isso pega a primeira palavra digitada
-	tokenList[0] = strtok( prompt, LSH_TOK_DELIM);
-
-    // Salva a primeira palavra digitada.
-    token = (char *) tokenList[0];
-    i=0;                                  
-
-    while ( token != NULL )
+    if (c >= 0x20 && c <= 0x7F)
     {
-        // Coloca na lista.
-        // Salva a primeira palavra digitada.
-        tokenList[i] = token;
+        // Feed the command line in prompt[], I guess.
+        input(c);
 
-        //Mostra
-        //printf("shellCompare: %s \n", tokenList[i] );
-
-        token = strtok( NULL, LSH_TOK_DELIM );
-
-        // Incrementa o �ndice da lista
-        i++;
-
-        //salvando a contagem.
-        token_count = i;
-    };
-
-    //Finalizando a lista.
-    tokenList[i] = NULL;
-
-    // Zerando o índice do tokenList
-    i=0;
-
-// ------------------------
-// Compare
-
-    if ( strncmp( (char *) tokenList[0], "test", 4 ) == 0 ){
-        printf("~test\n");
-        goto exit_cmp;	
+        // Sending data to the terminal.
+        printf("%c",c);
+        fflush(stdout);
     }
 
-    if ( strncmp( (char *) tokenList[0], "help", 4 ) == 0 )
-    {
-        printf("~help\n");
-        
-        i++;
-        token = (char *) tokenList[i];
-        if (token == NULL){
-            printf("token == NULL\n");
-            goto exit_cmp;
-        }
-
-        if ( strncmp( (char *) tokenList[i], "-a", 2 ) == 0 ){
-            printf("AAAA\n");
-        }
-        if ( strncmp( (char *) tokenList[i], "-b", 2 ) == 0 ){
-            printf("BBBB\n");
-        }
-        printf("help done\n");
-        goto exit_cmp;
-    }
-
-    // ...
-
-exit_cmp:
-    shellPrompt();
     return 0;
 }
 
@@ -473,66 +404,65 @@ exit_cmp:
 // Main
 //
 
-// pubsh.bin
-// This is a shell application that send data to a 
-// virtual terminal via stdout (actually our stderr).
-// pubsh.bin sends data to pubterm.bin.
-
 int main(int argc, char *argv[])
 {
     register int i=0;
     int C=0;
-    const int UseConnectors=TRUE;
-    int connector0_fd = 0;
-    int connector1_fd = 0;
-
     isTimeToQuit = FALSE;
 
-// -----------------------------------
-// (>>> stdin)
-// Standard
-// -----------------------------------
-// (>>> stdout)
-// Still using the kernel console.
-// But we're gonna change it right now.
-// -----------------------------------
-// (>>> stderr)
-// Now we have a new stdout.
-// Now we're gonna send the data to the pubterm.bin
-// that is reading stderr.
+// Shell side:
+// Shell will get the connectors.
 
-/*
-    stdout = stderr;
+// The sell will read data from the terminal using this connector.
+// Shell’s stdin (Terminal writes keyboard input here).
+    int connector1_fd = (int) sc82(902,1,0,0);  
+    if (connector1_fd < 0){
+        goto fail;
+    }
+
+// The sell will send data to the terminal using this connector.
+// Shell’s stdout (Terminal reads output here).
+    int connector0_fd = (int) sc82(902,0,0,0); 
+    if (connector0_fd < 0){
+        goto fail;
+    }
+
+// #important:
+// We gotta send it to stderr.
+// So lets make the redirection.
+
+    int UseConnectors=TRUE;
+
     if (UseConnectors == TRUE)
     {
-        // Get the connector.
-        // #ps: The terminal is doing the same.
-        connector0_fd = (int) sc82(902,0,0,0);
-        //connector1_fd = (int) sc82(902,1,0,0);
+        // Input pointers
+        fp_input_from_terminal = stdin;
+        // Input descriptors
+        fp_input_from_terminal->_file = (int) connector1_fd;
+        // stdin->_file = connector1_fd → Shell reads from connector1.
+        stdin->_file = (int) connector1_fd;
 
-        // The shell is writing on connector 0,
-        // the same connector the terminal is reading from.
+
+        // Output pointers
+        fp_output_to_terminal = stderr;
+        stdout = stderr;
+        // Output descriptors
+        fp_output_to_terminal->_file = (int) connector0_fd;
+        // stdout->_file = connector0_fd → Shell writes to connector0.
         stdout->_file = (int) connector0_fd;
-
-        //#debug
-        //printf("terminal.bin: connector0_fd %d | connector1_fd %d \n",
-        //    connector0_fd, connector1_fd);
-        //while(1){}
     }
-*/
 
-// #test: The terminal is reading this thing
-    stdout = stderr;
+// ---------------------------
 
-// ---------
+/*
     doLF();
-    //printf("");
-    //printf("shell.bin: argc={%d} \n",argc);
+    printf("shell.bin: argc={%d} \n",argc);
     if (argc>0){
         for (i=0; i<argc; i++){
             printf("argv[%d]: %s\n", i, argv[i] );
         };
     }
+*/
 
     shellPrompt();
 
@@ -540,6 +470,9 @@ int main(int argc, char *argv[])
 // Loop: (Input events).
 // Reading from stdin and sending to our new stdout.
 // stderr.
+
+    rewind(fp_input_from_terminal);
+    rewind(fp_output_to_terminal);
 
     while (1){
 
@@ -550,10 +483,14 @@ int main(int argc, char *argv[])
         // We got a PF when we type a lot of keys.
         // And sometimes when we type Enter.
 
-        C = (int) fgetc(stdin);
+        // Reads from fp_input_from_terminal (connector1).
+        C = (int) fgetc(fp_input_from_terminal);
         // Como estamos usando um arquivo regular,
         // entao o kernel concatena ate chegar no fim do arquivo.
         if (C == EOF){
+
+            //#debug
+            //printf ("Shell: EOF\n");
             //rewind(stdin);
             //exit(0);
         }
@@ -561,50 +498,16 @@ int main(int argc, char *argv[])
         // Valid char.
         if (C>0)
         {
-            // [ Enter ]
-            if (C == VK_RETURN)
-            {
-                //printf("%c",'$');
-                //fflush(stdout);
- 
-                //#ps It's working
-                // Compare the first word in prompt[].
-                shellCompare();
-
-                // #todo: Process the command line.
-                //shellProcessCommandLine();
-
-                // #test
-                //compare00();
-            }
-
-            // Printable chars.
-            if (C >= 0x20 && C <= 0x7F)
-            {
-
-                // Feed the command line in 'prompt', i guess.
-                input(C);
-
-                // #debug
-                // O terminal vai imprimir errado.
-                // ok funcionou.
-                //printf("%c", (C+1) ); 
-      
-                printf("%c",C);
-                fflush(stdout);
-                 
-                // + precisamos nos certificar que eh o shell
-                // que esta enviando chars para o terminal
-                // e nao o kernel
-                // + precisamos nos certivicar que o shell esta lendo de um arquivo.
-                // isso eh uma tentativa
-                //if (C == 'q')
-                //{
-                    //printf("%c",'9');
-                    //fflush(stdout);
-                    //exit(0);   //#test
-                //}
-            }
+            // Enter: So, process the command line
+            if (C == VK_RETURN){
+                shellProcessCmdline();
+            // printable chars: So print a regular key.
+            } else if (C >= 0x20 && C <= 0x7F){
+                shellProcessPrintableChar(C);
+            // #todo:
+            // Control keys: (0~0x1F)
+            // See the example in init.bin.
+            };
         }
     };
 
@@ -617,9 +520,16 @@ int main(int argc, char *argv[])
     }
 
 done:
+
     printf("Quit ok ");
     fflush(stdout);
-    return 0;
+
+    return EXIT_SUCCESS;
+
+fail:
+    return EXIT_FAILURE;
 }
+
+
 
 

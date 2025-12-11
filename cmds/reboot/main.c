@@ -34,6 +34,8 @@ int main( int argc, char *argv[] )
     char *env_user;
     unsigned char good=0;
 
+    //stdout = stderr;
+
     // #debug
     //rtl_reboot();
 

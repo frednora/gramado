@@ -13,6 +13,7 @@ unsigned long threadList[THREAD_COUNT_MAX];
 // ------
 tid_t current_thread=0;
 tid_t foreground_thread=0;
+tid_t special_reader=0;
 // ------
 
 // Ponteiro para a idle thread atual

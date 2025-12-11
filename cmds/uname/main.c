@@ -1,4 +1,3 @@
-
 // UNAME.BIN
 // 2022 - Fred Nora.
 
@@ -77,7 +76,7 @@ int main(int argc, char **argv)
     int fMachine=FALSE;
     int fNodeName=FALSE;
 
-    //#test
+    // #test
     // stdout = stderr;
 
 // Get parametes.
@@ -119,10 +118,10 @@ display_info:
         fNodeName=TRUE;
     }
 
-    if (fSysName==TRUE) { printf ("sysname:  %s\n", un.sysname  ); }
-    if (fVersion==TRUE) { printf ("version:  %s\n", un.version  ); }
-    if (fRelease==TRUE) { printf ("release:  %s\n", un.release  ); }
-    if (fMachine==TRUE) { printf ("machine:  %s\n", un.machine  ); }
+    if (fSysName==TRUE) { printf ("sysname:  %s\n", un.sysname ); }
+    if (fVersion==TRUE) { printf ("version:  %s\n", un.version ); }
+    if (fRelease==TRUE) { printf ("release:  %s\n", un.release ); }
+    if (fMachine==TRUE) { printf ("machine:  %s\n", un.machine ); }
     // ...
 
 // The node name

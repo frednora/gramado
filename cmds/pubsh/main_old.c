@@ -501,8 +501,8 @@ int main(int argc, char *argv[])
 // Now we're gonna send the data to the pubterm.bin
 // that is reading stderr.
 
-/*
     stdout = stderr;
+
     if (UseConnectors == TRUE)
     {
         // Get the connector.
@@ -519,10 +519,6 @@ int main(int argc, char *argv[])
         //    connector0_fd, connector1_fd);
         //while(1){}
     }
-*/
-
-// #test: The terminal is reading this thing
-    stdout = stderr;
 
 // ---------
     doLF();
@@ -550,7 +546,7 @@ int main(int argc, char *argv[])
         // We got a PF when we type a lot of keys.
         // And sometimes when we type Enter.
 
-        C = (int) fgetc(stdin);
+        C = fgetc(stdin);
         // Como estamos usando um arquivo regular,
         // entao o kernel concatena ate chegar no fim do arquivo.
         if (C == EOF){

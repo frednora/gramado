@@ -24,9 +24,16 @@ ssize_t sys_read(int fd, const char *ubuf, size_t count)
 // #todo
 // We can implement a better routine for this.
 
-    if (fd == 0){
-        if (current_thread != foreground_thread)
-            return (ssize_t) -EPERM;
+    if (fd == 0) {
+        // If caller is not the foreground thread...
+        if (current_thread != foreground_thread) {
+            // ...and also not the special reader, deny.
+            if (current_thread != special_reader)
+                return (ssize_t) -EPERM;
+            // If it's the special reader, allow.
+        }
+        // If caller == foreground_thread, 
+        // it falls through and is allowed.
     }
 
 // #test

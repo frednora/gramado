@@ -111,7 +111,7 @@ static int process_file(char *file_name)
 // #bugbug: 511 byte file limit
     nreads = (int) read(fdRead, buffer, 511);
     if (nreads <= 0){
-        printf ("cat00: File {%d} failed on read()\n", fdRead);
+        printf ("cat: File {%d} failed on read()\n", fdRead);
         goto fail;
     }
 
@@ -122,7 +122,7 @@ static int process_file(char *file_name)
     int fd_output = fileno(stdout);
     nwrites = (int) write(fd_output, buffer, sizeof(buffer));
     if (nwrites <= 0){
-        printf ("cat00: File {%d} failed on write()\n", 
+        printf ("cat: File {%d} failed on write()\n", 
             fileno(stdout) );
         goto fail;
     }

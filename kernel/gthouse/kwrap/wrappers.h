@@ -48,9 +48,10 @@ extern pid_t criticalsection_pid;
 
 
 // ------
-// See: ps/thread.c
+// See: thread.c
 extern tid_t current_thread;     // Currently having the processing time.
 extern tid_t foreground_thread;  // Input thread.
+extern tid_t special_reader;
 // ------
 
 // Current runlevel. Used in init process.
