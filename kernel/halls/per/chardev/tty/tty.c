@@ -111,8 +111,9 @@ void tty_flush_output_queue(struct tty_d *tty, int console_number)
         q->tail = (q->tail + 1) % q->buffer_size;
         if (q->cnt > 0) q->cnt--;
 
-        // Render the character on the console
-        console_outbyte((int)c, console_number);
+        // Render and refresh the character on the console
+        //console_outbyte((int)c, console_number);
+        console_outbyte2((int)c, console_number);
     };
 }
 
@@ -332,131 +333,28 @@ fail:
     return (int) -1;
 }
 
-/*
- * __tty_read:
- *     Read n bytes from a tty. raw buffer.
- * IN:
- *     tty    = Pointer to tty structure.
- *     buffer = Buffer.
- *     nr     = How many bytes.
- */
-// Called by tty_read.
-// Read from the raw queue.
-int 
-__tty_read ( 
-    struct tty_d *tty, 
-    char *buffer, 
-    int nr )
+ssize_t __tty_read(struct tty_d *tty, char *buf, size_t size)
 {
-    register int i=0;
-    char Ldata[TTY_BUF_SIZE];
-    char c=0;
-    char *b;
-    int rbytes=0;
-
-    b = buffer;
-
-    // #debug
-    printk("__tty_read:\n");
-
-// Parameters:
-    if ((void *) tty == NULL){
-        printk ("__tty_read: tty\n");
-        goto fail;
-    }
-    if ( tty->used != TRUE || tty->magic != 1234 ){
-        printk ("__tty_read: tty validation\n");
-        goto fail;
-    }
-    if ((char *) buffer == NULL){
-        panic ("__tty_read: buffer\n");
-    }
-    if (nr <= 0){
-        printk ("__tty_read: nr\n");
-        goto fail;
-    }
-    //if ( tty->is_blocked == TRUE )
-        //return -1;
-
-// Queue 
-// A leitura nas filas vai depender do modo
-// configurado.
-// Temos basicamente os 'raw' e 'canonical'.
-// ??
-// Lembrando que no modo canônico teremos algum tipo de edição.
-// então o usuário receberá uma fila somente depois que ele digitar
-// [enter]
-// Get Ldata from the queue.
-// Isso tem o mesmo tamanho da fila de tty.
-
-    rbytes = nr;
-
-// Limits
-    if (rbytes <= 0){
+    if ((void*)tty == NULL || (void*)buf == NULL || size == 0)
         return 0;
-    }
-    if (rbytes > TTY_BUF_SIZE){
-        rbytes=TTY_BUF_SIZE;
-    }
 
-    i=0;
-    while (rbytes > 0)
+    struct tty_queue_d *q = &tty->raw_queue;
+
+    ssize_t count = 0;
+
+    while (count < (ssize_t)size)
     {
-        // Empty
-        // Isso acontece também quando a fila esta vazia.
-        if ( tty->raw_queue.head == tty->raw_queue.tail )
-        {
-            printk("__tty_read: tty->raw_queue.head == tty->raw_queue.tail\n");
-            //return 0;
-            return (int) i;  // Quantos bytes conseguimos ler.
-        }
-
-        // Acabou a fila.
-        if ( tty->raw_queue.tail > TTY_BUF_SIZE )
-        {
-            printk("__tty_read: tty->raw_queue.tail > TTY_BUF_SIZE\n");
-            //return 0;
-            return (int) i;  // Quantos bytes conseguimos ler.
-        }
-
-        // Get one char
-        c = tty->raw_queue.buf[ tty->raw_queue.tail ];
-        tty->raw_queue.tail++;  // Next in queue
-        Ldata[i] = c;            // Save into the local Buffer
-        i++;
-        rbytes--;
-        if (rbytes <= 0){
+        int ch = tty_queue_getchar(q);
+        if (ch < 0) {
+            // Queue empty
             break;
         }
-    };
 
-// Quantidade de bytes no buffer local.
-    if (i <= 0){
-        printk("__tty_read: i <= 0\n");
-        return 0;  // 0 byes lidos.
-    }
-    if (i > TTY_BUF_SIZE){
-        i = TTY_BUF_SIZE;
+        buf[count] = (char) ch;
+        count++;
     }
 
-// Send
-// Copiando os bytes de nosso buffer local para
-// o buffer de usuário.
-    memcpy( 
-        (void *) b,           // To (user buffer)
-        (const void *) Ldata, // from (local buffer)
-        i );                  // n bytes lidos
-
-    // #debug
-    printk("__tty_read: [DONE] %d bytes read\n",i);
-    printk("TAIL %d\n",tty->raw_queue.tail);
-
-// Retornamos a quantidade de bytes 
-// que conseguimos ler da buffer raw da tty.
-    return (int) i;
-
-fail:
-    return (int) (-1);
+    return count;
 }
 
 // Write into the output queue.
@@ -516,6 +414,7 @@ int __tty_read3(struct tty_d *tty, char *buffer, int nr)
     return read_count;
 }
 
+
 /*
  * __tty_write:
  *     Write n bytes to a tty. raw buffer.
@@ -527,10 +426,10 @@ int __tty_read3(struct tty_d *tty, char *buffer, int nr)
 // #bugbug
 // ?? Why
 // We are sending a message to a process.
-
+/*
 // Write into the raw queue.
 int 
-__tty_write ( 
+__tty_write_old ( 
     struct tty_d *tty, 
     char *buffer, 
     int nr )
@@ -651,8 +550,8 @@ __tty_write (
 done:
 
     //#debug
-    printk("__tty_write: [DONE] %d bytes written\n",i);
-    printk("HEAD %d\n",tty->raw_queue.head);
+    //printk("__tty_write: [DONE] %d bytes written\n",i);
+    //printk("HEAD %d\n",tty->raw_queue.head);
 
 // Quantidade de bytes que gravamos na tty.
     if (i <= 0){
@@ -667,6 +566,21 @@ fail:
     printk("__tty_write: fail\n");
     return (int) (-1);
 }
+*/
+
+ssize_t __tty_write(struct tty_d *tty, const char *buf, size_t size)
+{
+    if (!tty || !buf || size == 0)
+        return 0;
+
+    struct tty_queue_d *q = &tty->raw_queue;
+    size_t i=0;
+    for (i=0; i < size; i++)
+        tty_queue_putchar(q, buf[i]);
+
+    return size;
+}
+
 
 // Write into the output queue
 int __tty_write2(struct tty_d *tty, char *buffer, int nr)

@@ -3000,7 +3000,8 @@ DDINIT_console(
     // CONSOLE[ConsoleIndex]._fp
     
     // tty name
-    //CONSOLE_TTYS[ConsoleIndex].name[?] 
+    CONSOLE_TTYS[ConsoleIndex].name[0] = 't';
+    CONSOLE_TTYS[ConsoleIndex].name[1] = (char) n;
     CONSOLE_TTYS[ConsoleIndex].Name_len = 0;  //initialized
 
     //#todo: Indice do dispositivo.

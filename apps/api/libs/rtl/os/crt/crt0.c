@@ -1,4 +1,3 @@
-
 // crt0.c
 // Standard crt0 for Gramado OS ring 3 applications.
 

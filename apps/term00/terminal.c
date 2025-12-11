@@ -996,7 +996,7 @@ static void __try_execute(int fd)
 
 // cmdline:
 // Only if the name is a valid name.
-    rewind(stderr);
+    rewind(stdin);
     //off_t v=-1;
     //v=lseek( fileno(stdin), 0, SEEK_SET );
     //if (v!=0){
@@ -1031,7 +1031,7 @@ static void __try_execute(int fd)
     //write(fileno(stdin), prompt, 80);
 // #test: The command program's crt0 will read from stderr
 // because ti doesn't have the focus and cant read from stdin.
-    write(fileno(stderr), prompt, 80);
+    write(fileno(stdin), prompt, 80);
 
 // Execute given the filename and the cmdline goes in stdin.
 
@@ -3273,11 +3273,12 @@ static int __input_STDIN(int fd)
         if (isWaitingForOutput == TRUE){
             
             // #todo: Read the output that comes from the child
-            C = fgetc(stderr);
-            if (C > 0){
+            // Cant read from stderr anymore
+            //C = fgetc(stderr);
+            //if (C > 0){
                 // socket, wid, msg, ascii, ascii
-                terminalProcedure( client_fd, window_id, MSG_KEYDOWN, C, C );
-            }
+                //terminalProcedure( client_fd, window_id, MSG_KEYDOWN, C, C );
+            //}
 
         // Terminal is reading keyboard input from stdin
         } else {
@@ -3861,7 +3862,7 @@ int terminal_init(unsigned short flags)
     unsigned long w=0;
     unsigned long h=0;
 
-    debug_print ("terminal: Initializing\n");
+    //debug_print ("terminal: Initializing\n");
 
 // Initializing basic variables
     __initialize_basics();

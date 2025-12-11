@@ -1,6 +1,5 @@
 // crt0.c
-// Standard crt0 for Gramado OS ring 3 applications.
-
+// Standard crt0 for Gramado OS ring 3 cmds.
 
 #include <types.h>
 #include <stddef.h>
@@ -233,7 +232,7 @@ void crt0(unsigned long rdi)
 // No focus, we can't read from stdin, let's read from stderr.
 // cmds/ programs are reading the cmdline from stderr.
     int n=0;
-    n = (int) read( fileno(stderr), buffer, 512 );
+    n = (int) read( fileno(stdin), buffer, 512 );
 
     buffer[511] = 0;    // finalize
 

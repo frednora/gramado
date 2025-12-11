@@ -1905,12 +1905,46 @@ static void __initialize_stdin(void)
 // fd
     stdin->_file = fd;  //0
 // This is a regular file.
-    stdin->____object = ObjectTypeFile;
+    stdin->____object = ObjectTypeVirtualConsole;
 // sync
     stdin->sync.sender_pid = (pid_t) -1;
     stdin->sync.receiver_pid = (pid_t) -1;
+
+//
+// ------------------------------------------------------------
+//  STDIN — Kernel‑level Permission Flags
+//
+//  These flags control what syscalls are allowed to do with
+//  this file descriptor. They are enforced inside sys_read,
+//  sys_write, sys_connect, sys_accept, etc.
+//
+//  can_read:
+//      TRUE  → sys_read() is permitted.
+//      FALSE → sys_read() fails.
+//
+//  can_write:
+//      TRUE  → sys_write() is permitted.
+//      FALSE → sys_write() fails.
+//              (This is why writing to stdin normally fails
+//               unless sys_setup_stdin() enables it.)
+//
+//  can_execute:
+//      TRUE  → file may be executed (rarely used).
+//
+//  can_accept:
+//      TRUE  → file may accept() connections (sockets only).
+//
+//  can_connect:
+//      TRUE  → file may connect() to remote endpoints.
+//
+//  NOTE:
+//      These are *kernel permissions*. They are independent
+//      of libc flags (__SRD, __SWR). Even if __SWR is set,
+//      sys_write() will still fail unless can_write == TRUE.
+// ------------------------------------------------------------
+
     stdin->sync.can_read = TRUE;
-    stdin->sync.can_write = FALSE;
+    stdin->sync.can_write = TRUE;
     stdin->sync.can_execute = FALSE;
     stdin->sync.can_accept  = FALSE;
     stdin->sync.can_connect = FALSE;
@@ -1991,6 +2025,26 @@ static void __initialize_stdout(void)
 // sync
     stdout->sync.sender_pid = (pid_t) -1;
     stdout->sync.receiver_pid = (pid_t) -1;
+
+//
+// ------------------------------------------------------------
+//  STDOUT — Kernel‑level Permission Flags
+//
+//  Default behavior:
+//      - Readable and writable by userland.
+//      - Bound to a virtual console TTY.
+//      - sys_write(fd=1) always allowed.
+//
+//  can_read:
+//      TRUE  → sys_read() allowed (rarely used).
+//
+//  can_write:
+//      TRUE  → sys_write() allowed (printf, puts, etc.).
+//
+//  can_execute / can_accept / can_connect:
+//      Usually FALSE for stdout.
+// ------------------------------------------------------------
+
     stdout->sync.can_read = TRUE;
     stdout->sync.can_write = TRUE;
     stdout->sync.can_execute = FALSE;
@@ -2060,10 +2114,29 @@ static void __initialize_stderr(void)
 // fd
     stderr->_file = fd;  //2
 // This is a regular file.
-    stderr->____object = ObjectTypeFile;
+    stderr->____object = ObjectTypeVirtualConsole;
 // sync
     stderr->sync.sender_pid = (pid_t) -1;
     stderr->sync.receiver_pid = (pid_t) -1;
+
+//
+// ------------------------------------------------------------
+//  STDERR — Kernel‑level Permission Flags
+//
+//  Default behavior:
+//      - Readable and writable.
+//      - Bound to the same TTY as stdout.
+//      - Used for diagnostics and error messages.
+//
+//  can_read:
+//      TRUE  → sys_read() allowed.
+//
+//  can_write:
+//      TRUE  → sys_write() allowed (fprintf(stderr, ...)).
+//
+//  Other flags (execute, accept, connect) remain FALSE.
+// ------------------------------------------------------------
+
     stderr->sync.can_read    = TRUE;
     stderr->sync.can_write   = TRUE;
     stderr->sync.can_execute = FALSE;
@@ -2226,6 +2299,12 @@ static void __initialize_virtual_consoles(void)
 // Initialize
 // 
 
+    // Local pointer
+    struct tty_d *Lconsole0 = (struct tty_d *) &CONSOLE_TTYS[0];
+    struct tty_d *Lconsole1 = (struct tty_d *) &CONSOLE_TTYS[1];
+    struct tty_d *Lconsole2 = (struct tty_d *) &CONSOLE_TTYS[2];
+    struct tty_d *Lconsole3 = (struct tty_d *) &CONSOLE_TTYS[3];
+
 // #bugbug
 // We have the same loop in console.c
 
@@ -2249,53 +2328,60 @@ static void __initialize_virtual_consoles(void)
 
             if (i == 0)
             {
-                if ((void*) console0_tty != NULL)
+                if ((void*) Lconsole0 != NULL)
                 {
-                    if (console0_tty->magic != 1234){
-                        x_panic("__initialize_virtual_consoles: No console0_tty");
+                    if (Lconsole0->magic != 1234){
+                        x_panic("__initialize_virtual_consoles: No Lconsole0");
                     }
-                    console0_tty->fp = (file *) stdout;
-                    console0_tty->next = NULL;
+                    Lconsole0->fp = (file *) stdout;
+                    Lconsole0->next = NULL;
                 }
             }
 
             if (i == 1)
             {
-                if ((void*) console1_tty != NULL)
+                if ((void*) Lconsole1 != NULL)
                 {
-                    if (console1_tty->magic != 1234){
-                        x_panic("__initialize_virtual_consoles: No console1_tty");
+                    if (Lconsole1->magic != 1234){
+                        x_panic("__initialize_virtual_consoles: No Lconsole1");
                     }
-                    console1_tty->fp = (file *) stdout;
-                    console1_tty->next = NULL;
+                    Lconsole1->fp = (file *) stdout;
+                    Lconsole1->next = NULL;
                 }
             }
 
             if (i == 2)
             {
-                if ((void*) console2_tty != NULL)
+                if ((void*) Lconsole2 != NULL)
                 {
-                    if (console2_tty->magic != 1234){
-                        x_panic("__initialize_virtual_consoles: No console2_tty");
+                    if (Lconsole2->magic != 1234){
+                        x_panic("__initialize_virtual_consoles: No Lconsole2");
                     }
-                    console2_tty->fp = (file *) stdout;
-                    console2_tty->next = NULL;
+                    Lconsole2->fp = (file *) stdout;
+                    Lconsole2->next = NULL;
                 }
             }
 
             if (i == 3)
             {
-                if ((void*) console3_tty != NULL)
+                if ((void*) Lconsole3 != NULL)
                 {
-                    if (console3_tty->magic != 1234){
-                        x_panic("__initialize_virtual_consoles: No console3_tty");
+                    if (Lconsole3->magic != 1234){
+                        x_panic("__initialize_virtual_consoles: No Lconsole3");
                     }
-                    console3_tty->fp = (file *) stdout;
-                    console0_tty->next = NULL;
+                    Lconsole3->fp = (file *) stdout;
+                    Lconsole3->next = NULL;
                 }
             }
         }
     };
+
+// Associate stdin with one of the consoles.
+    stdin->tty  = (struct tty_d *) Lconsole0;
+// Associate stdout with one of the consoles.
+    stdout->tty = (struct tty_d *) Lconsole0;
+// Associate stderr with one of the consoles.
+    stderr->tty = (struct tty_d *) Lconsole0;
 
 // The foreground console
     jobcontrol_switch_console(DEFAULT_CONSOLE);
@@ -2374,6 +2460,8 @@ int kstdio_initialize(void)
     __initialize_stderr();
 
 // Virtual consoles.
+// The standard streams was initialized first because we're
+// gonna need them now.
     __initialize_virtual_consoles();
 
     //PROGRESS("BREAKPOINT\n");

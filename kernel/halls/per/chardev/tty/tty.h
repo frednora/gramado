@@ -262,10 +262,14 @@ struct tty_d
 // receive entire lines, after line editing has been 
 // completed by the user pressing return.
 
-    struct tty_queue raw_queue;        // Raw input buffer.
-    struct tty_queue canonical_queue;  // Canonical buffer.
 
-    struct tty_queue output_queue;     // Output buffer.
+//:: Input queues
+    struct tty_queue raw_queue;        // Raw input buffer. (Raw keystrokes)
+    struct tty_queue canonical_queue;  // Canonical buffer. (Fully processed lines)
+
+//:: Output queue
+    struct tty_queue output_queue;     // Output buffer. (Bytes to display)
+
 
 // What worker this tty wants to use 
 // when writing into output queue.
@@ -435,22 +439,21 @@ tty_copy_output_buffer(
 int tty_queue_putchar(struct tty_queue *q, char c);
 int tty_queue_getchar(struct tty_queue *q);
 
-// Read from the raw queue.
-int 
-__tty_read ( 
-    struct tty_d *tty, 
-    char *buffer, 
-    int nr );
+ssize_t __tty_read(struct tty_d *tty, char *buf, size_t size);
 
 int __tty_read2(struct tty_d *tty, char *buffer, int nr);
 int __tty_read3(struct tty_d *tty, char *buffer, int nr);
 
+/*
 // Write into the raw queue.
 int 
-__tty_write ( 
+__tty_write_old ( 
     struct tty_d *tty, 
     char *buffer, 
     int nr );
+*/
+
+ssize_t __tty_write(struct tty_d *tty, const char *buf, size_t size);
 
 // Write into the output queue.
 int __tty_write2(struct tty_d *tty, char *buffer, int nr);

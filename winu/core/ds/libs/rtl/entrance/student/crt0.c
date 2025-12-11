@@ -1,6 +1,5 @@
-
 // crt0.c
-// Standard crt0 for Gramado OS ring 3 applications.
+// Standard crt0 for Gramado OS for the display server in ring 3.
 
 #include <types.h>
 #include <stddef.h>

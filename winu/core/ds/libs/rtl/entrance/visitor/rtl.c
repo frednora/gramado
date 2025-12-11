@@ -134,9 +134,9 @@ rtl_dispatch_signal_handler (
     unsigned long __p1 = (unsigned long ) param1;
     // ...
 
-    asm volatile ( "movq %1, %%rax;"
-                   "movq %%rax, %0;"
-                   "movq %%rax, %%rdi;"
+    asm volatile ( "movq %1, %%rax \n"
+                   "movq %%rax, %0 \n"
+                   "movq %%rax, %%rdi \n"
                    :"=r"(__Return)  // Output
                    :"r"(__p1)       // Input
                    :"%rax"          // Clobbered register

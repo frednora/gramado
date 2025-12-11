@@ -52,6 +52,7 @@ static int cursor_y=0;
 // Embedded shell
 // We are using the embedded shell.
 static int isUsingEmbeddedShell=TRUE;
+static int isWaitingForOutput=FALSE;
 
 // #todo: #maybe:
 // Fazer estrutura para gerenciar a sequencia.
@@ -936,7 +937,7 @@ static void __try_execute(int fd)
 
 // cmdline:
 // Only if the name is a valid name.
-    rewind(stderr);
+    rewind(stdin);
     //off_t v=-1;
     //v=lseek( fileno(stdin), 0, SEEK_SET );
     //if (v!=0){
@@ -967,7 +968,7 @@ static void __try_execute(int fd)
     if (WriteLimit > 512){
         WriteLimit = 512;
     }
-    write(fileno(stderr), prompt, WriteLimit);
+    write(fileno(stdin), prompt, WriteLimit);
 
     //rtl_clone_and_execute(filename_buffer);
     //rtl_clone_and_execute(prompt);
@@ -981,18 +982,32 @@ static void __try_execute(int fd)
 // clone and execute via ws.
 // four arguments and a string pointer.
 
+/*
     int res = -1;
-
     res = 
         (int) gws_clone_and_execute2(
                   fd,
                   0,0,0,0,
                   filename_buffer );
-
    if (res<0){
        //#debug #todo: do not use printf.
        //printf("gws_clone_and_execute2: fail\n");
    }
+*/
+
+    int ChildTID = -1;
+    ChildTID = (int) rtl_clone_and_execute_return_tid(filename_buffer);
+    printf("Child TID: {%d}\n",ChildTID);
+
+// #test
+// Delegate a second stdin reader for the foreground thread.
+// Only the foreground thread can change this.
+    sc82(10013,ChildTID,ChildTID,ChildTID);
+
+// Flag for the moment where the terminal will loop waiting for 
+// the output sent by the client.
+    isWaitingForOutput = TRUE;
+
 
 // #bugbug
 // breakpoint
@@ -3188,24 +3203,32 @@ static int __input_STDIN(int fd)
             break;
         }
 
-        // + Get bytes from stdin.
-        // #bubug
-        // Logo apos lermos um ENTER, o terminal vai colocar
-        // alguma coisa em stdin. Provavelmente estamos lendo
-        // alguma coisa da linha de comandos usada pelo processo filho.
-        // #bubug
-        // Estamos lendo dois ENTER seguidos.
-        C = fgetc(new_stdin);
-        if (C > 0)
-        {
-            terminalProcedure( 
-                client_fd,    // socket
-                window_id,    // window ID
-                MSG_KEYDOWN,  // message code
-                C,            // long1 (ascii)
-                C );          // long2 (ascii)
+        if (isWaitingForOutput == TRUE){
+
+            // #todo: Cant read from stderr
+
+        } else {
+
+            // + Get bytes from stdin.
+            // #bubug
+            // Logo apos lermos um ENTER, o terminal vai colocar
+            // alguma coisa em stdin. Provavelmente estamos lendo
+            // alguma coisa da linha de comandos usada pelo processo filho.
+            // #bubug
+            // Estamos lendo dois ENTER seguidos.
+            C = fgetc(new_stdin);
+            if (C > 0)
+            {
+                terminalProcedure( 
+                    client_fd,    // socket
+                    window_id,    // window ID
+                    MSG_KEYDOWN,  // message code
+                    C,            // long1 (ascii)
+                    C );          // long2 (ascii)
+            }
+    
         }
-      
+     
         // + Get system messages from the queue in control thread.
         // System events.
         if (fGetSystemEvents == TRUE){
@@ -3337,6 +3360,7 @@ fail:
 static int embedded_shell_run(int fd)
 {
     isUsingEmbeddedShell = TRUE;
+    isWaitingForOutput=FALSE;
     Terminal._mode = TERMINAL_MODE_EMBEDDED;
 
     if (fd<0)
@@ -3727,27 +3751,15 @@ static void __initialize_basics(void)
 // This routine will initialize the terminal variables, 
 // create the socket for the application, connect with the display server, 
 // create the main window, create the terminal window and fall into a loop.
+// Called by main() in main.c
 int terminal_init(unsigned short flags)
 {
-// Called by main() in main.c
-
     const char *display_name_string = "display:name.0";
-
-/*
-// -------------------------
-    struct sockaddr_in addr_in;
-    addr_in.sin_family = AF_INET;
-    addr_in.sin_addr.s_addr = IP(127,0,0,1);    //ok
-    //addr_in.sin_addr.s_addr = IP(127,0,0,9);  //fail
-    addr_in.sin_port = __PORTS_DISPLAY_SERVER;
-// -------------------------
-*/
-
     int client_fd = -1;
     unsigned long w=0;
     unsigned long h=0;
 
-    debug_print ("terminal: Initializing\n");
+    //debug_print ("terminal: Initializing\n");
 
 // Initializing basic variables.
     __initialize_basics();
@@ -3757,21 +3769,6 @@ int terminal_init(unsigned short flags)
     w = gws_get_system_metrics(1);
     h = gws_get_system_metrics(2);
 
-
-/*
-// Socket
-// Create the socket and save the fd into the terminal structure.
-    //client_fd = (int) socket( AF_INET, SOCK_STREAM, 0 );
-    client_fd = (int) socket( AF_INET, SOCK_RAW, 0 );
-    if (client_fd < 0)
-    {
-       debug_print("terminal: on socket()\n");
-       printf     ("terminal: on socket()\n");
-       exit(1);
-    }
-    Terminal.client_fd = (int) client_fd;
-*/
-
     //...
 
     // pid=2 fd=4
@@ -3779,37 +3776,6 @@ int terminal_init(unsigned short flags)
     //    Terminal.pid, Terminal.client_fd );
 
     //while(1){}
-
-// connect
-// Nessa hora colocamos no accept um fd.
-// então o servidor escreverá em nosso arquivo.
-    //printf ("terminal: Connecting to ws via inet ...\n");
-
-/*
-    int con_status = -1;
-    while (1){
-
-        con_status = 
-            (int) connect(client_fd, (void *) &addr_in, sizeof(addr_in));
-
-        if (con_status < 0){
-            debug_print ("terminal: Connection Failed\n");
-            printf      ("terminal: Connection Failed\n");
-            // Nesse caso a conexao pode ter sido recusada 
-            // porque o servidor tem clentes demais.
-            // Vamos esperar para sempre?
-            if (con_status == ECONNREFUSED){
-            }
-
-            // #test
-            // Espere um segundo.
-            //rtl_sleep_until(1000);
-
-        }else{
-            break; 
-        };
-    };
-*/
 
 // ============================
 // Open display.
@@ -4174,12 +4140,14 @@ int terminal_init(unsigned short flags)
     if (InputStatus < 0)
         goto fail;
 
+/*
 // -------------------------
 // Reading from the child.
 // Reading from connector.
     InputStatus = terminal_run(client_fd);
     if (InputStatus < 0)
         goto fail;
+*/
 
 done:
     debug_print("terminal.bin: Bye\n"); 

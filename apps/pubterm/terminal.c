@@ -57,6 +57,7 @@ static int cursor_y=0;
 // Embedded shell
 // We are using the embedded shell.
 static int isUsingEmbeddedShell=TRUE;
+static int isWaitingForOutput=FALSE;
 
 // #todo: #maybe:
 // Fazer estrutura para gerenciar a sequencia.
@@ -896,7 +897,7 @@ static void __try_execute(int fd)
 
 // cmdline:
 // Only if the name is a valid name.
-    rewind(stderr);
+    rewind(stdin);
     //off_t v=-1;
     //v=lseek( fileno(stdin), 0, SEEK_SET );
     //if (v!=0){
@@ -928,7 +929,7 @@ static void __try_execute(int fd)
         WriteLimit = 512;
     }
     //write(fileno(stdin), "dirty", 5);
-    write(fileno(stderr), prompt, WriteLimit);
+    write(fileno(stdin), prompt, WriteLimit);
 
     //rtl_clone_and_execute(filename_buffer);
     //rtl_clone_and_execute(prompt);
@@ -942,6 +943,7 @@ static void __try_execute(int fd)
 // clone and execute via ws.
 // four arguments and a string pointer.
 
+/*
     int res = -1;
 
     //gws_clone_and_execute2(
@@ -959,6 +961,22 @@ static void __try_execute(int fd)
        //#debug #todo: do not use printf.
        //printf("gws_clone_and_execute2: fail\n");
    }
+*/
+
+
+    int ChildTID = -1;
+    ChildTID = (int) rtl_clone_and_execute_return_tid(filename_buffer);
+    printf("Child TID: {%d}\n",ChildTID);
+
+// #test
+// Delegate a second stdin reader for the foreground thread.
+// Only the foreground thread can change this.
+    sc82(10013,ChildTID,ChildTID,ChildTID);
+
+// Flag for the moment where the terminal will loop waiting for 
+// the output sent by the client.
+    isWaitingForOutput = TRUE;
+
 
 // #bugbug
 // breakpoint
@@ -3106,17 +3124,24 @@ static int __input_STDIN(int fd)
             break;
         }
 
-        // VT Interactivity
-        C = (int) fgetc(new_stdin);
-        if (C > 0)
-        {
-            // VT Renderer
-            terminalProcedure( 
-                client_fd,
-                window_id,
-                MSG_KEYDOWN,
-                C,
-                C );
+        if (isWaitingForOutput == TRUE){
+
+            // #todo: Cant read from stderr
+
+        }else{
+
+            // VT Interactivity
+            C = (int) fgetc(new_stdin);
+            if (C > 0)
+            {
+                // VT Renderer
+                terminalProcedure( 
+                    client_fd,
+                    window_id,
+                    MSG_KEYDOWN,
+                    C,
+                    C );
+            }
         }
 
         // Get system events
@@ -3298,6 +3323,7 @@ fail:
 static int embedded_shell_run(int fd)
 {
     isUsingEmbeddedShell = TRUE;
+    isWaitingForOutput=FALSE;
     Terminal._mode = TERMINAL_MODE_EMBEDDED;
 
 // Parameter
@@ -4035,19 +4061,21 @@ int terminal_init(unsigned short flags)
     int InputStatus = -1;
 
 // -------------------------
+// Embedded shell
+    InputStatus = (int) embedded_shell_run(client_fd);
+    if (InputStatus < 0){
+        goto fail;
+    }
+
+/*
+// -------------------------
 // Reading from the child.
 // Reading from connector.
     InputStatus = terminal_run(client_fd);
     if (InputStatus < 0){
         goto fail;
     }
-
-// -------------------------
-// Embedded shell
-    InputStatus = (int) embedded_shell_run(client_fd);
-    if (InputStatus < 0){
-        goto fail;
-    }
+*/
 
 done:
     debug_print("pubterm: Done\n"); 

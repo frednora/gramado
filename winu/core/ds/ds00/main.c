@@ -4090,12 +4090,14 @@ static int ServerLoop(int launch_tb)
     int tb_status = -1;
     if (launch_tb == TRUE)
     {
-        if (server_mode == SERVER_MODE_SERVER){
+        if (server_mode == SERVER_MODE_SERVER)
+        {
+            //printf("ds00: trying to launch taskbar: %s\n", app_taskbar);
             tb_status = (int) rtl_clone_and_execute(app_taskbar);
-            //#todo: Check
+            //printf("ds00: rtl_clone_and_execute(taskbar) returned %d\n", tb_status);
+            //while(1){}
         }
     }
-
 // ------------------------------------
 
 //
@@ -4338,6 +4340,15 @@ int main (int argc, char **argv)
 {
     int Status=-1;
     register int i=0;
+
+/*
+    printf("ds00: entering main(), argc=%d\n", argc);
+    for ( i=0; i < argc; i++) {
+        printf("ds00: argv[%d] = '%s'\n", i, argv[i]);
+    }
+    fflush(stdout);
+    while(1){}
+*/
 
     server_mode = SERVER_MODE_SERVER;
 

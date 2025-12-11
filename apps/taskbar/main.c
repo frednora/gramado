@@ -1096,11 +1096,10 @@ fail:
 
 //==========================================
 // Main
-int main(int argc, char *argv[])
-{
 // #test
 // Testing floating point.
-
+int main(int argc, char *argv[])
+{
     const char *display_name_string = "display:name.0";
 
     /*
@@ -1137,7 +1136,8 @@ int main(int argc, char *argv[])
 
 // hello
     //gws_debug_print ("taskbar.bin: Hello world \n");
-    //printf          ("taskbar.bin: Hello world \n");
+    //printf ("taskbar.bin: Hello world \n");
+    //while(1){}
 
 // interrupts
     //gws_debug_print ("taskbar.bin: Enable interrupts \n");
@@ -1167,20 +1167,8 @@ int main(int argc, char *argv[])
     //    sc80(897,0,0,0);
     //}
 
-//================================
-// Connection
-// Only connect. Nothing more.
-// Create socket and call connect().
-/*
-    client_fd = (int) __initialize_connection();
-    if (client_fd < 0){
-        gws_debug_print("taskbar.bin: __initialize_connection fail\n");
-        printf         ("taskbar.bin: __initialize_connection fail\n");
-        exit(1);
-    }
-*/
 // ============================
-// Open display.
+// Open display
 // IN: hostname:number.screen_number
     Display = (struct gws_display_d *) gws_open_display(display_name_string);
     if ((void*) Display == NULL){
@@ -1195,8 +1183,6 @@ int main(int argc, char *argv[])
         exit(1);
         //goto fail;
     }
-
-
 
 // #debug
     //printf(":: Entering taskbar.bin pid{%d} fd{%d}\n",

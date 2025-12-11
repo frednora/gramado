@@ -652,6 +652,12 @@ static int input_compare_string(void)
         goto exit_cmp;
     }
 
+    if (strncmp(prompt,"stderr",6) == 0 )
+    {
+        write(2,"Writing into stderr\n",19);
+        goto exit_cmp;
+    }
+
 //==============================
 // Network Server:
 
@@ -1125,6 +1131,8 @@ int main( int argc, char **argv)
 
     register int i=0;
 
+    //asm ("int $3 \n");
+
 // --------------------------
 
 // Run the event loop. 
@@ -1209,9 +1217,24 @@ int main( int argc, char **argv)
         };
     }
 
+
+// TEMPORARY: Force CLI mode so we enter the stdin loop
+    fRunCommandLine = TRUE;
+    printf("INIT: [DEBUG] Forcing CLI mode flag\n");
+    fflush(stdout);
+
+/*
+    printf("INIT: Flags received:\n");
+    printf("  server   = %d\n", fRunEventLoop);
+    printf("  headless = %d\n", fHeadlessMode);
+    printf("  cli      = %d\n", fRunCommandLine);
+    printf("  desktop  = %d\n", fRunDesktop);
+    fflush(stdout);
+
     //#debug
-    //printf("int.bin: breakpoint\n");
-    //while(1){}
+    printf("init.bin: breakpoint\n");
+    while(1){}
+*/
 
 //testando se esse codigo esta mesmo em ring3. 
 //#bugbug: this proces is running in ring0.

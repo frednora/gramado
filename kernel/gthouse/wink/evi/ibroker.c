@@ -2664,7 +2664,27 @@ done:
                     // is not a virtual terminal.
                     // In the case that we have more then one virtual terminals,
                     // only one virtual terminal will be able to read from stdin.
-                wbytes = (int) kstdio_feed_stdin((int) __int_ascii_code);
+                //wbytes = (int) kstdio_feed_stdin((int) __int_ascii_code);
+
+                struct tty_d *in_tty = stdin->tty;
+                if ((void*)in_tty != NULL)
+                {
+                    if (in_tty->magic == 1234)
+                    {
+                        //in_tty->raw_queue.buf[0] = 'x';
+                        //in_tty->raw_queue.buf[0] = __int_ascii_code;
+                        // Deliver keystroke to ring 3 via stdin
+                        wbytes = (int) tty_queue_putchar(
+                                &in_tty->raw_queue, 
+                                (char)__int_ascii_code );
+
+                    //printk("IBROKER: injecting '%c' (%d) into stdin TTY %x ('%s')\n",
+                    //    __int_ascii_code,
+                    //    __int_ascii_code,
+                    //    in_tty,
+                    //    in_tty->name );
+                    }
+                }
             }
 
                 // #todo

@@ -691,43 +691,193 @@ __read_imp (
     // #todo: Create thie element in the structure.
     // if( fp->is_directory == TRUE ){}
 
-//==========================================================
-// ::0
-// stdin
-    if (fp->_file == STDIN_FILENO){
-        if (fp->____object == ObjectTypeFile){
-            goto RegularFile;
-        }
-    }
+//
+// ------------------------------------------------------------
+//  READ FROM STDIN  (fd = 0)
+// ------------------------------------------------------------
+//
+//  This block handles read() calls directed at STDIN.
+//
+//  In Gramado, STDIN is typically backed by a Virtual Console
+//  (TTY). Reading from STDIN means pulling characters from the
+//  TTY input subsystem, which may contain:
+//      • real keyboard input,
+//      • injected input (INIT → ds00 → GUI apps),
+//      • PTY‑style redirected input.
+//
+//  Behavior:
+//
+//  1. If STDIN is a Virtual Console (TTY):
+//       - fp->tty must be non‑NULL.
+//       - __tty_read() copies bytes from the TTY input queue
+//         into the user buffer.
+//       - The TTY layer decides blocking vs non‑blocking
+//         behavior and how many bytes are returned.
+//
+//  2. If STDIN is a regular file:
+//       - Fall through to the RegularFile handler.
+//
+//  3. Any other object type is invalid for STDIN reads.
+//
+//  Notes:
+//
+//    • Permission enforcement (sync.can_read) and the foreground
+//      thread restriction are handled earlier in sys_read().
+//
+//    • __tty_read() is the authoritative source of terminal input.
+//      It merges real keyboard events and programmatically injected
+//      input into a single unified queue.
+//
+//    • If fp->tty is NULL, the STDIN stream is misconfigured.
+//
+// ------------------------------------------------------------
 
-//==========================================================
-// ::1
-// stdout
-    if (fp->_file == STDOUT_FILENO){
-        if (fp->____object == ObjectTypeFile){
-            goto RegularFile;
-        }
-        /*
-        // Not tested yet.
-        // If the file is a console.
+    if (fp->_file == STDIN_FILENO){
         if (fp->____object == ObjectTypeVirtualConsole)
         {
-            return (int) console_read ( 
-                            (int) fg_console, 
-                            (const void *) ubuf, 
-                            (size_t) count );
+            if (fp->tty != NULL) 
+            {
+                nbytes = (ssize_t) __tty_read(fp->tty,ubuf,count);
+                return (ssize_t) nbytes;               
+            }
+            if (fp->tty == NULL){
+                //printk("0:: tty null\n");
+                return (ssize_t) -1;
+            }
         }
-        */
-    }
-
-//==========================================================
-// ::2
-// stderr
-    if (fp->_file == STDERR_FILENO){
         if (fp->____object == ObjectTypeFile){
             goto RegularFile;
         }
     }
+
+//
+// ------------------------------------------------------------
+//  READ FROM STDOUT  (fd = 1)
+// ------------------------------------------------------------
+//
+//  This block handles read() calls directed at STDOUT.
+//
+//  In Gramado, STDOUT is normally bound to a Virtual Console
+//  (TTY) and is therefore a write‑only stream. Reading from a
+//  TTY‑backed STDOUT is not supported and will fail, matching
+//  the behavior of UNIX/POSIX systems.
+//
+//  Behavior:
+//
+//  1. If STDOUT is a Virtual Console (TTY):
+//       - fp->tty must be non‑NULL.
+//       - STDOUT is write‑only when attached to a TTY.
+//       - read() returns an error (‑1), since there is no
+//         mechanism to read from the TTY output queue.
+//
+//  2. If STDOUT is a regular file:
+//       - Fall through to the RegularFile handler.
+//       - read() returns data from the file, which is valid
+//         when STDOUT has been redirected (e.g., "cmd > file").
+//
+//  3. Any other object type is invalid for STDOUT reads.
+//
+//  Notes:
+//
+//    • This matches POSIX semantics: reading from a terminal's
+//      stdout stream is undefined and typically fails with
+//      EBADF in user space.
+//
+//    • Redirection makes STDOUT readable because it becomes a
+//      normal file descriptor backed by a file object.
+//
+//    • If fp->tty is NULL, the STDOUT stream is misconfigured.
+//
+// ------------------------------------------------------------
+
+    if (fp->_file == STDOUT_FILENO)
+    {
+        if (fp->____object == ObjectTypeVirtualConsole)
+        {
+            if (fp->tty != NULL) 
+            {
+                // stdout is write-only when bound to a TTY.
+                // Reading from it is not supported.
+                //printk("read(stdout): TTY is write-only\n");
+                return (ssize_t) -1;
+            }
+            if (fp->tty == NULL){
+                //printk("1:: tty null\n");
+                return (ssize_t) -1;
+            }
+        }
+        if (fp->____object == ObjectTypeFile){
+            goto RegularFile;
+        }
+        goto fail;
+    }
+
+//
+// ------------------------------------------------------------
+//  READ FROM STDERR  (fd = 2)
+// ------------------------------------------------------------
+//
+//  This block handles read() calls directed at STDERR.
+//
+//  In Gramado, STDERR is normally bound to a Virtual Console
+//  (TTY) and is therefore a write‑only stream. Reading from a
+//  TTY‑backed STDERR is not supported and will fail, matching
+//  the behavior of UNIX/POSIX systems.
+//
+//  Behavior:
+//
+//  1. If STDERR is a Virtual Console (TTY):
+//       - fp->tty must be non‑NULL.
+//       - STDERR is write‑only when attached to a TTY.
+//       - read() returns an error (‑1), since there is no
+//         mechanism to read from the TTY output queue.
+//
+//  2. If STDERR is a regular file:
+//       - Fall through to the RegularFile handler.
+//       - read() returns data from the file, which is valid
+//         when STDERR has been redirected (e.g., "cmd 2> file").
+//
+//  3. If STDERR is a pipe:
+//       - The pipe read path will handle this case.
+//       - This allows constructs like "cmd 2> >(another_program)".
+//
+//  4. Any other object type is invalid for STDERR reads.
+//
+//  Notes:
+//
+//    • This matches POSIX semantics: reading from a terminal's
+//      stderr stream is undefined and typically fails with
+//      EBADF in user space.
+//
+//    • Redirection makes STDERR readable because it becomes a
+//      normal file descriptor backed by a file object.
+//
+//    • If fp->tty is NULL, the STDERR stream is misconfigured.
+//
+// ------------------------------------------------------------
+
+    if (fp->_file == STDERR_FILENO)
+    {
+        if (fp->____object == ObjectTypeVirtualConsole)
+        {
+            if (fp->tty != NULL)
+            {
+                // stderr is write-only when bound to a TTY.
+                // Reading from it is not supported.
+                //printk("read(stderr): TTY is write-only\n");
+                return (ssize_t) -1;
+            }
+            if (fp->tty == NULL){
+                //printk("2:: tty null\n");
+                return (ssize_t) -1;
+            }
+        }
+        if (fp->____object == ObjectTypeFile){
+            goto RegularFile;
+        }
+        goto fail;
+    }
+
 
 //
 // == Socket file ===========================================
@@ -1146,9 +1296,11 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
         goto fail;
     }
 
-    if (fp->sync.can_write != TRUE){
+    if (fp->sync.can_write != TRUE)
+    {
         debug_print("__write_imp: [PERMISSION] Can NOT write the file\n");
-        printk     ("__write_imp: [PERMISSION] Can NOT write the file\n");
+        printk     ("__write_imp: [PERMISSION] Can NOT write fd={%d} tid={%d}\n", 
+            fd, current_thread );
         goto fail; 
     }
 
@@ -1165,58 +1317,199 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
 // Create thie element in the structure.
     //if( fp->is_directory == TRUE ){}
 
-// =======================================================
-// ::0
-// stdin
-// + Write on regular file.
+//
+// ------------------------------------------------------------
+//  WRITE TO STDIN  (fd = 0)
+// ------------------------------------------------------------
+//
+//  This block handles write() calls directed at STDIN.
+//
+//  In Gramado, STDIN is not strictly read‑only. Certain
+//  components (INIT, display server, PTYs, IPC mechanisms)
+//  legitimately inject data into STDIN. Therefore, write(0,...)
+//  is allowed *if* the underlying file object permits writing.
+//
+//  Behavior:
+//
+//  1. If STDIN is backed by a Virtual Console (TTY):
+//       - fp->tty must be non‑NULL.
+//       - The write is treated as *input injection*.
+//       - Bytes are delivered to the TTY input queue via
+//         __tty_write(), making them appear as if typed by the user.
+//
+//  2. If STDIN is a regular file:
+//       - Fall through to the RegularFile handler.
+//
+//  3. Any other object type is invalid for STDIN writes.
+//
+//  Notes:
+//
+//    • This path is essential for passing command lines from
+//      INIT → display server → GUI apps.
+//
+//    • __tty_write() is the correct backend for injecting input
+//      into the TTY subsystem.
+//
+//    • If fp->tty is NULL, the STDIN stream is misconfigured.
+//
+//    • Permission enforcement (sync.can_write) happens earlier
+//      in __write_imp() before reaching this block.
+//
+// ------------------------------------------------------------
+
     if (fp->_file == STDIN_FILENO)
     {
-        if (fp->____object == ObjectTypeFile){
-            goto RegularFile;
-        }
-        goto fail;
-    }
-
-// =======================================================
-// ::1
-// stdout
-// + Write on console.
-// + Write on regular file.
-// see: console.c
-    if (fp->_file == STDOUT_FILENO)
-    {
-        // If the file is a regular file.
-        if (fp->____object == ObjectTypeFile){
-            goto RegularFile;
-        }
-        // If the file is a console.
         if (fp->____object == ObjectTypeVirtualConsole)
         {
-            // Print it into the serial port.
-            // This flag is valid only for syscalls.
-            if (g_redirect_printk_to_serial_during_syscalls == TRUE){
-                return (int) debug_print_nbytes( 
-                    (const void *) ubuf, 
-                    (size_t) count );
-
-            // Print it into the console.
-            } else {
-                return (int) console_write ( 
-                    (int) fg_console, 
-                    (const void *) ubuf, 
-                    (size_t) count );
+            if (fp->tty != NULL) 
+            {
+                //printk("0:: tty not null\n");
+                nbytes = (ssize_t) __tty_write(fp->tty,ubuf,count);
+                return (ssize_t) nbytes;
+            }
+            if (fp->tty == NULL){
+                printk("0:: tty null\n");
+                return (ssize_t) -1;
             }
         }
-        // ...
+        if (fp->____object == ObjectTypeFile){
+            goto RegularFile;
+        }
         goto fail;
     }
 
-// =======================================================
-// ::2 
-// stderr
-// + Write on regular file.
+//
+// ------------------------------------------------------------
+//  WRITE TO STDOUT  (fd = 1)
+// ------------------------------------------------------------
+//
+//  This block handles write() calls directed at STDOUT.
+//
+//  In Gramado, STDOUT is typically backed by a Virtual Console
+//  (TTY). Writing to STDOUT means sending characters to the
+//  console output subsystem.
+//
+//  Behavior:
+//
+//  1. If STDOUT is a Virtual Console (TTY):
+//       - fp->tty must be non‑NULL.
+//       - __tty_write2() copies the bytes into the TTY output queue.
+//       - output_worker_number selects which output worker will flush.
+//       - tty_flush_output_queue_ex() pushes the queued bytes to the
+//         actual screen (foreground console).
+//
+//  2. If STDOUT is a regular file:
+//       - Fall through to the RegularFile handler.
+//
+//  3. Any other object type is invalid for STDOUT writes.
+//
+//  Notes:
+//
+//    • This is the main path used by printf(), puts(), write(), and
+//      all libc output functions.
+//
+//    • __tty_write2() handles buffering and queueing, while the flush
+//      routine performs the actual rendering to the screen.
+//
+//    • If fp->tty is NULL, the STDOUT stream is misconfigured.
+//
+//    • Permission enforcement (sync.can_write) happens earlier in
+//      __write_imp() before reaching this block.
+//
+// ------------------------------------------------------------
+
+    if (fp->_file == STDOUT_FILENO)
+    {
+        if (fp->____object == ObjectTypeVirtualConsole)
+        {
+            if (fp->tty != NULL) 
+            {
+                //if (g_redirect_printk_to_serial_during_syscalls == TRUE){
+                    //return (int) debug_print_nbytes( 
+                        //(const void *) ubuf, 
+                        //(size_t) count );
+                //} else {
+                    nbytes = (ssize_t) __tty_write2(fp->tty,ubuf,count);
+                    fp->tty->output_worker_number = TTY_OUTPUT_WORKER_FGCONSOLE;
+                    tty_flush_output_queue_ex(fp->tty);
+                    return (ssize_t) nbytes;  
+                //}
+            }
+            if (fp->tty == NULL){
+                //printk("1:: tty null\n");
+                return (ssize_t) -1;
+            }
+        }
+        if (fp->____object == ObjectTypeFile){
+            goto RegularFile;
+        }
+        goto fail;
+    }
+
+//
+// ------------------------------------------------------------
+//  WRITE TO STDERR  (fd = 2)
+// ------------------------------------------------------------
+//
+//  This block handles write() calls directed at STDERR.
+//
+//  In Gramado, STDERR behaves almost exactly like STDOUT, except
+//  that it is traditionally used for diagnostic or error output.
+//  The kernel does not enforce any special formatting here, but
+//  the path is kept separate for compatibility with POSIX and
+//  libc expectations.
+//
+//  Behavior:
+//
+//  1. If STDERR is a Virtual Console (TTY):
+//       - fp->tty must be non‑NULL.
+//       - __tty_write2() queues the bytes into the TTY output buffer.
+//       - output_worker_number selects the foreground console worker.
+//       - tty_flush_output_queue_ex() pushes the queued bytes to the
+//         actual screen immediately.
+//
+//     This ensures that error messages appear even if stdout is
+//     redirected or buffered.
+//
+//  2. If STDERR is a regular file:
+//       - Fall through to the RegularFile handler.
+//
+//  3. Any other object type is invalid for STDERR writes.
+//
+//  Notes:
+//
+//    • STDERR is typically unbuffered in user‑space libc, but the
+//      kernel treats it the same as STDOUT at this level.
+//
+//    • If fp->tty is NULL, the STDERR stream is misconfigured.
+//
+//    • Permission enforcement (sync.can_write) happens earlier in
+//      __write_imp() before reaching this block.
+//
+// ------------------------------------------------------------
+
     if (fp->_file == STDERR_FILENO)
     {
+        if (fp->____object == ObjectTypeVirtualConsole)
+        {
+            if (fp->tty != NULL) 
+            {
+                //if (g_redirect_printk_to_serial_during_syscalls == TRUE){
+                    //return (int) debug_print_nbytes( 
+                        //(const void *) ubuf, 
+                        //(size_t) count );
+                //} else {
+                    nbytes = (ssize_t) __tty_write2(fp->tty,ubuf,count);
+                    fp->tty->output_worker_number = TTY_OUTPUT_WORKER_FGCONSOLE;
+                    tty_flush_output_queue_ex(fp->tty);
+                    return (ssize_t) nbytes;
+                //}
+            }
+            if (fp->tty == NULL){
+                //printk("2:: tty null\n");
+                return (ssize_t) -1;
+            }
+        }
         if (fp->____object == ObjectTypeFile){
             goto RegularFile;
         }

@@ -155,12 +155,34 @@ static int __setup_stdin_cmdline(void)
         goto fail;
     }
 
+/*
+The old way treating stdin as a regular file.
 // Rewind
     k_fseek( stdin, 0, SEEK_SET );
 // Write into the file
     file_write_buffer( stdin, cmdline, 64 );
+*/
 
+// -- stdin is a tty --------
+
+    struct tty_d *in_tty = stdin->tty;
+
+    if ((void*) in_tty == NULL)
+        goto fail;
+
+    if (in_tty->magic != TTY_MAGIC)
+        goto fail;
+
+// push cmdline bytes into the raw queue
+    size_t len = strlen(cmdline);
+    size_t i=0;
+    for (i=0; i < len; i++) {
+        tty_queue_putchar(&in_tty->raw_queue, cmdline[i]);
+    };
+    // simulate Enter, so crt0 / init sees a full line
+    // tty_queue_putchar(&tty->raw_queue, '\n');
     return 0;
+
 fail: 
     return (int) -1;
 }
