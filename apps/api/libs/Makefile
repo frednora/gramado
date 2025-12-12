@@ -15,6 +15,9 @@ all:
 # Using Gramado Protocol
 	make -C libgws/
 
+# toolkit created by Copilot
+	make -C libgwt/
+
 # I/O ports in ring3.
 	make -C libio01/
 

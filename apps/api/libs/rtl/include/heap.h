@@ -1,11 +1,11 @@
 /*
  * File: heap.h
- * Descrição:
- *     O propósito desse header é dar suporte ao gerenciamento de
- * do heap que será usado para a alocação de memória para um programa
+ * Descriï¿½ï¿½o:
+ *     O propï¿½sito desse header ï¿½ dar suporte ao gerenciamento de
+ * do heap que serï¿½ usado para a alocaï¿½ï¿½o de memï¿½ria para um programa
  * em user mode. 
  *     Um suporte oferecido pela biblioteca libC99.
- *     Obs: O kernel poderá usar tanto o heap do processo quanto o heap 
+ *     Obs: O kernel poderï¿½ usar tanto o heap do processo quanto o heap 
  * do desktop ao qual o processo pertence.
  * History:
  *     2016 - Created by Fred Nora.
@@ -32,13 +32,13 @@ extern unsigned long g_heap_pointer;    // Pointer
 extern unsigned long g_available_heap;  // Available 
 
 // see: stdlib.c
-void *Heap;
+extern void *Heap;
 
 //
 // HEAP
 //
 
-// 32KB, provisório.
+// 32KB, provisï¿½rio.
 #define HEAP_BUFFER_SIZE  (32*1024)
 
 

@@ -38,6 +38,7 @@ all:
 # Created by Copilot
 	make -C power/
 	make -C memory/
+	make -C gwtex/
 
 # Gramado Desktop Manager
 	make -C gdm/

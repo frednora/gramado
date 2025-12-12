@@ -2,7 +2,6 @@
 // Gramado OS client-side GUI app with Restart and Shutdown buttons.
 // Created by Fred Nora (example by Copilot).
 
-
 // rtl
 #include <types.h>
 #include <stdio.h>

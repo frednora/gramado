@@ -269,8 +269,10 @@ build-extras:
 
 	@-cp $(APPLICATIONS)/bin/TASKBAR.BIN    $(BASE)/DE
 
-	@-cp $(APPLICATIONS)/bin/POWER.BIN      $(BASE)/DE
-	@-cp $(APPLICATIONS)/bin/MEMORY.BIN     $(BASE)/DE
+# by Copilot
+	@-cp $(APPLICATIONS)/bin/POWER.BIN   $(BASE)/DE
+	@-cp $(APPLICATIONS)/bin/MEMORY.BIN  $(BASE)/DE
+	@-cp $(APPLICATIONS)/bin/GWTEX.BIN   $(BASE)/DE
 
 	@-cp $(APPLICATIONS)/bin/MENUAPP.BIN    $(BASE)/DE
 	@-cp $(APPLICATIONS)/bin/LAUNCH.BIN     $(BASE)/DE

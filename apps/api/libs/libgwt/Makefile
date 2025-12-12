@@ -24,23 +24,19 @@ CFLAGS = -m64 \
 	-s \
 	-Werror=strict-prototypes    
 
-LIBS = -I.  -I ../rtl/include/
+LIB_RTL = -I.  -I ../rtl/include/
+LIB_GWS = -I.  -I ../libgws/include/
 
-myObjects = connect.o rw.o \
-events.o gr.o gws.o    
+myObjects = gwt.o    
 
 .PHONY: all all-c finalize clean
 all: all-c finalize clean
 	@echo "Ok?"
 all-c:
-	gcc -c connect.c  $(CFLAGS) $(LIBS) -o connect.o
-	gcc -c rw.c       $(CFLAGS) $(LIBS) -o rw.o
-	gcc -c events.c   $(CFLAGS) $(LIBS) -o events.o
-	gcc -c gr.c       $(CFLAGS) $(LIBS) -o gr.o
-	gcc -c gws.c      $(CFLAGS) $(LIBS) -o gws.o
+	gcc -c gwt.c $(CFLAGS) $(LIB_RTL) $(LIB_GWS) -o gwt.o
 
 finalize:
-	$(LD) -r -o libgws.o $(myObjects)
+	$(LD) -r -o libgwt.o $(myObjects)
 	-mkdir obj/
 	-cp *.o obj/
 clean:
