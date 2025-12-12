@@ -75,37 +75,45 @@ static unsigned long npar = 0;
 static unsigned long ques = 0;
 static unsigned char attr = 0x07;
 
-
-static unsigned long console_interrupt_counter=0;
-
 //
 // == Private functions: Prototypes ======================
 //
 
-static void __console_outbyte_imp (int c, int console_number);
+// VGA test (#deprecated)
+static void DANGER_VGA_clear_screen(void);
+static void __vga_test1(void);
 
 static void __test_path(void);
 static void __test_tty(void);
-// #todo: Use static modifier.
-void __local_ri(void);
-void csi_J(int par);
 
-void csi_K(int mode);
-void csi_L(int nr, int console_number);
-void csi_M(int nr, int console_number);
+static void __local_ri(void);
 
-void csi_m(void);
+static void 
+__local_gotoxy ( 
+    int new_x, 
+    int new_y, 
+    int console_number );
 
+static void __respond (int console_number);
+static void __local_restore_cur (int console_number);
+static void __local_save_cur (int console_number);
+static void __local_insert_line (int console_number);
+static void __local_insert_char (int console_number);
+static void __local_delete_char(int console_number);
+static void __local_delete_line(int console_number);
 
+// -- CSI workers ----
+static void csi_J(int par);
+static void csi_K(int mode);
+static void csi_L(int nr, int console_number);
+static void csi_M(int nr, int console_number);
+static void csi_m(void);
+static void csi_P (int nr, int console_number);
+static void csi_at (int nr, int console_number);
 
-//
-// VGA test
-//
+static void __console_outbyte_imp (int c, int console_number);
 
-void DANGER_VGA_clear_screen(void);
-void __vga_test1(void);
-
-// =======================
+// =============================================
 
 static void __test_path(void)
 {
@@ -170,13 +178,13 @@ static void __test_path(void)
     }
 }
 
-void __local_ri(void)
+static void __local_ri(void)
 {
     //#todo
 }
 
 // goto xy
-void 
+static void 
 __local_gotoxy ( 
     int new_x, 
     int new_y, 
@@ -212,13 +220,13 @@ __local_gotoxy (
         (unsigned long) (new_y & 0xFFFFFFFF);
 }
 
-void __local_save_cur(int console_number)
+static void __local_save_cur(int console_number)
 {
     saved_x = (int) CONSOLE_TTYS[console_number].cursor_x;
     saved_y = (int) CONSOLE_TTYS[console_number].cursor_y;
 }
 
-void __local_restore_cur(int console_number)
+static void __local_restore_cur(int console_number)
 {
 
 // Parameter:
@@ -234,7 +242,7 @@ void __local_restore_cur(int console_number)
         (unsigned long) (saved_y & 0xFFFF);
 }
 
-void __local_insert_line(int console_number)
+static void __local_insert_line(int console_number)
 {
     int oldtop = 0;
     int oldbottom = 0;
@@ -265,7 +273,7 @@ void __local_insert_line(int console_number)
     CONSOLE_TTYS[console_number].cursor_bottom = oldbottom;
 }
 
-void __local_delete_line(int console_number)
+static void __local_delete_line(int console_number)
 {
     int n=0;
     int oldtop = 0;
@@ -296,7 +304,7 @@ void __local_delete_line(int console_number)
     CONSOLE_TTYS[n].cursor_bottom = oldbottom;
 }
 
-void csi_J(int par)
+static void csi_J(int par)
 {
 
 /*
@@ -342,7 +350,7 @@ void csi_J(int par)
 //         n = 0 → erase from cursor to end of line
 //         n = 1 → erase from start of line to cursor
 //         n = 2 → erase entire line
-void csi_K(int mode)
+static void csi_K(int mode)
 {
     int n = fg_console;
 
@@ -386,7 +394,7 @@ void csi_K(int mode)
     for (col = start; col < end; col++)
     {
         __local_gotoxy(col, y, n);
-        console_outbyte(' ', n);
+        console_outbyte2(' ', n);
     }
 
     // Restore cursor
@@ -398,7 +406,7 @@ void csi_K(int mode)
 //       CSI n L
 //         Insert n blank lines at the cursor row,
 //         pushing existing lines downward.
-void csi_L(int nr, int console_number)
+static void csi_L(int nr, int console_number)
 {
     if (console_number < 0 || console_number >= CONSOLETTYS_COUNT_MAX)
         return;
@@ -417,7 +425,7 @@ void csi_L(int nr, int console_number)
 //       CSI n M
 //         Delete n lines starting at the cursor row,
 //         pulling lines upward.
-void csi_M(int nr, int console_number)
+static void csi_M(int nr, int console_number)
 {
     if (console_number < 0 || console_number >= CONSOLETTYS_COUNT_MAX)
         return;
@@ -440,7 +448,7 @@ void csi_M(int nr, int console_number)
 // Ficaremos com o ultimo atributo. #bugbug ????
 // Set some attributes based on the parameters found.
 // Sets colors and style of the characters.
-void csi_m(void)
+static void csi_m(void)
 {
     register int i=0;
     int max = (int)(npar & 0xFFFFFFFF);
@@ -466,88 +474,99 @@ void csi_m(void)
     };
 }
 
-/*
- * console_interrupt:
- * Handle input events from non-block devices (keyboard, serial, network).
- *
- * Parameters:
- *   target_thread - Thread ID that should receive the event (not always used).
- *   device_type   - Source device type (keyboard, serial, network).
- *   data          - Raw input data (e.g., scancode for keyboard).
- *
- * Notes:
- *   - Called by device drivers (e.g., PS/2 keyboard, serial).
- *   - In keyboard case, forwards raw scancode to window manager.
- *   - Updates global interrupt counter.
- *   - Currently ignores invalid thread IDs.
- *   - Maybe called by DeviceInterface_PS2Keyboard() in ps2kbd.c
- */
-void 
-console_interrupt(
-    int target_thread, 
-    int device_type, 
-    int data )
+static void __respond (int console_number)
 {
-// Devece drivers will call this routine to process the data.
-// The data is a 'char'.
+    char *p = __RESPONSE;
 
-    // # Not in use.
-    tid_t target_tid = (tid_t) target_thread;
+    if (console_number < 0)
+        return;
+    if (console_number >= CONSOLETTYS_COUNT_MAX)
+        return;
+    console_write_string(console_number,p);
+}
 
-    int DeviceType = device_type;
-    int Data = data;
-    int Status=-1;
+// See:
+// https://en.wikipedia.org/wiki/Control_character
+// https://en.wikipedia.org/wiki/C0_and_C1_control_codes#Device_control
 
-    console_interrupt_counter++;
+static void __local_insert_char(int console_number)
+{
+    if (console_number < 0)
+        return;
+    if (console_number >= CONSOLETTYS_COUNT_MAX)
+        return;
+  
+    console_putchar (0x20, console_number);
+}
 
-    // # Not in use.
-    if (target_tid < 0 || target_tid >= THREAD_COUNT_MAX){
-        debug_print ("console_interrupt: target_tid\n");
-        goto fail;
-    }
+static void __local_delete_char(int console_number)
+{
 
-    switch (DeviceType){
+// Parameters:
+    if (console_number < 0)
+        return;
+    if (console_number >= CONSOLETTYS_COUNT_MAX)
+        return;
 
-        // keyboard
-        // data =  raw byte.
-        // See: kgws.c
-        case CONSOLE_DEVICE_KEYBOARD:
-            // debug_print("console_interrupt: Input from keyboard device\n");
-            // In this case the target tid is the window server.
-            // This worker is good for device drivers.
-            // IN: 
-            // scancode (raw byte), prefix.
-            // #bugbug: Where is the prefix?
-            //Status =  (int) wmRawKeyEvent( Data, (int) 0 );
-            //if (Status<0){
-                //goto fail;
-            //}
-            break;
+    console_putchar ( ' ', console_number);
+}
 
-        // COM port
-        case CONSOLE_DEVICE_SERIAL:
-            //debug_print("console_interrupt: Input from serial device\n");
-            break;
- 
-        //network device.
-        case CONSOLE_DEVICE_NETWORK:
-            //debug_print("console_interrupt: Input from network device\n");
-            break;
+// #todo: Explain the parameters.
+static void csi_P (int nr, int console_number)
+{
 
-        // ...
+// Parameters:
+    if (console_number < 0)
+        return;
+    if (console_number >= CONSOLETTYS_COUNT_MAX)
+        return;
 
-        default:
-            debug_print("console_interrupt: Undefined input device\n");
-            goto fail;
-            break;
+    if (nr > CONSOLE_TTYS[console_number].cursor_right -1){
+        nr = CONSOLE_TTYS[console_number].cursor_right -1;
+    } else {
+        if (!nr){
+            nr = 1;
+        }
     };
 
-// done
-    return;
+    if (nr<0){
+        return;
+    }
 
-fail:
-    debug_print ("console_interrupt: Fail\n");
-    return;
+    while (nr--){
+        __local_delete_char(console_number);
+    };
+}
+
+// #todo: Explain the parameters.
+// Move the cursor to a given column.
+// Adding spaces.
+static void csi_at (int nr, int console_number)
+{
+// #bugbug
+// This code is wrong
+
+// Parameters:
+    if (console_number < 0)
+        return;
+    if (console_number >= CONSOLETTYS_COUNT_MAX)
+        return;
+
+    if (nr > CONSOLE_TTYS[console_number].cursor_right -1){
+        nr = CONSOLE_TTYS[console_number].cursor_right -1;
+    }else{
+        if (!nr){
+            nr=1;
+        }
+    };
+
+    if (nr<0){
+        return;
+    }
+
+    while (nr--){
+        __local_insert_char(console_number);
+    };
 }
 
 void console_set_current_virtual_console(int console_number)
@@ -894,7 +913,7 @@ fail:
 
 /*
  * __console_outbyte_imp:
- *   Private implementation worker for console_outbyte() and console_outbyte2().
+ *   Private implementation worker for console_outbyte2().
  *   Responsible for drawing a single character into the console’s framebuffer
  *   at the current cursor position using display driver routines.
  *
@@ -1000,276 +1019,10 @@ static void __console_outbyte_imp (int c, int console_number)
 
 }
 
-/*
- * console_outbyte:
- * Process and render a character to the console.
- *
- * Parameters:
- *   c              - Character code (ASCII).
- *   console_number - Target console index.
- *
- * Behavior:
- *   - Handles control characters: \n, \r, \t, \f, backspace.
- *   - Updates cursor position and triggers scrolling if needed.
- *   - Draws visible characters via __console_outbyte_imp() if ECHO is set.
- *
- * Notes:
- *   - Requires console to be initialized.
- *   - Respects terminal and verbose modes for line handling.
- *   - Updates prev_char for CR/LF sequence detection.
- */
-
-void console_outbyte (int c, int console_number)
-{
-// + Draw char.
-// + Do not refresh char.
-
-    register int Ch = c;
-    int n = (int) console_number;
-
-// char support.
-    unsigned long __cWidth  = gwsGetCurrentFontCharWidth();
-    unsigned long __cHeight = gwsGetCurrentFontCharHeight();
-
-    // #debug
-    // debug_print ("console_outbyte:\n");
-
-    if (n < 0)
-        return;
-    if (n >= CONSOLETTYS_COUNT_MAX)
-        return;
-
-    if ( __cWidth == 0 || 
-         __cHeight == 0 )
-    {
-        x_panic ("console_outbyte: char size");
-    }
-
-// #test
-// Tem momento da inicialização em que esse array de estruturas
-// não funciona, e perdemos a configuração feita
-
-    if (CONSOLE_TTYS[n].initialized != TRUE)
-    {
-        debug_print ("console_outbyte: Console not initialized\n");
-        //x_panic ("console_outbyte: CONSOLE_TTYS");
-        return;
-    }
-
-// Obs:
-// Podemos setar a posição do curso usando método,
-// simulando uma variável protegida.
-
-//checkChar:
-
-    //Opção  
-    //switch ?? 
-
-    // type: 'int'.
-    if (Ch<0)
-        return;
-
-    // form feed - Nova tela.
-    if (Ch == '\f')
-    {
-        CONSOLE_TTYS[n].cursor_y = CONSOLE_TTYS[n].cursor_top;
-        CONSOLE_TTYS[n].cursor_x = CONSOLE_TTYS[n].cursor_left;
-        return;
-    }
-
-// #obs: #m$. 
-// É normal \n retornar sem imprimir nada.
-
-// Início da próxima linha. 
-// not used!!!  "...\r\n";
-
-    if ( Ch == '\n' && CONSOLE_TTYS[n].prev_char == '\r' ) 
-    {
-        // #todo: 
-        // Melhorar esse limite.
-        if (CONSOLE_TTYS[n].cursor_y >= CONSOLE_TTYS[n].cursor_bottom){
-            if (CONSOLE_TTYS[n].fullscreen_flag == TRUE ){
-                console_scroll_rect(n,CONSOLE_SCROLL_DIRECTION_UP);
-            }
-            // Última linha.
-            CONSOLE_TTYS[n].cursor_y = ( CONSOLE_TTYS[n].cursor_bottom -1 );
-            CONSOLE_TTYS[n].prev_char = Ch; 
-        }else{
-            CONSOLE_TTYS[n].cursor_y++;
-            CONSOLE_TTYS[n].cursor_x = CONSOLE_TTYS[n].cursor_left;
-            CONSOLE_TTYS[n].prev_char = Ch;
-        };
-        return;
-    }
-
-// Próxima linha no modo terminal.
-// "...\n"
-
-    if ( Ch == '\n' && CONSOLE_TTYS[n].prev_char != '\r' ) 
-    {
-        // Se o line feed apareceu quando estamos na ultima linha
-        if ( CONSOLE_TTYS[n].cursor_y >= CONSOLE_TTYS[n].cursor_bottom){
-            if (CONSOLE_TTYS[n].fullscreen_flag == TRUE ){
-                console_scroll_rect(n,CONSOLE_SCROLL_DIRECTION_UP);
-            }
-            CONSOLE_TTYS[n].cursor_y = (CONSOLE_TTYS[n].cursor_bottom -1);
-            CONSOLE_TTYS[n].prev_char = Ch;
-        } else {
-            CONSOLE_TTYS[n].cursor_y++;
-
-            // Retornaremos mesmo assim ao início da linha 
-            // se estivermos imprimindo no terminal.
-            if (kstdio_info.kstdio_in_terminalmode == TRUE){
-                CONSOLE_TTYS[n].cursor_x = CONSOLE_TTYS[n].cursor_left;
-            } 
-
-            // Verbose mode do kernel.
-            // permite que a tela do kernel funcione igual a um 
-            // terminal, imprimindo os printk um abaixo do outro.
-            // sempre reiniciando x.
-            if (kstdio_info.kstdio_in_verbosemode == TRUE){
-                CONSOLE_TTYS[n].cursor_x = CONSOLE_TTYS[n].cursor_left;
-            } 
-
-            // Obs: No caso estarmos imprimindo em um editor 
-            // então não devemos voltar ao início da linha.
-
-            CONSOLE_TTYS[n].prev_char = Ch;
-        };
-
-        return;
-    }
-
-// Apenas voltar ao início da linha.
-    if (Ch == '\r')
-    {
-        CONSOLE_TTYS[n].cursor_x = CONSOLE_TTYS[n].cursor_left;
-        CONSOLE_TTYS[n].prev_char = Ch;
-        return; 
-    }
-
-// TAB
-// #todo: Criar a variável 'g_tab_size'.
-    if (Ch == '\t') 
-    {
-        CONSOLE_TTYS[n].cursor_x += (8);
-        CONSOLE_TTYS[n].prev_char = Ch;
-        return; 
-
-        // Não adianta só avançar, tem que apagar o caminho até lá.
-
-		//int tOffset;
-		//tOffset = 8 - ( g_cursor_left % 8 );
-		//while(tOffset--){
-		//	_outbyte(' ');
-		//}
-		//set_up_cursor( g_cursor_x +tOffset, g_cursor_y );
-		//return; 
-    }
-
-// Liberando esse limite.
-// Permitindo os caracteres menores que 32.
-
-    //if( c <  ' '  && c != '\r' && c != '\n' && c != '\t' && c != '\b' )
-    //{
-    //    return;
-    //};
-
-// Space
-// #bugbug 
-// Com isso o ascii 0x20 foi pintado, 
-// mas como todos os bits do char na fonte estão desligados, 
-// então não pinta coisa alguma.
-
-    if (Ch == 0x20)
-    {
-        CONSOLE_TTYS[n].cursor_x++;
-        CONSOLE_TTYS[n].prev_char = Ch;
-        return; 
-    }
-
-// Backspace
-
-    //if ( Ch == '\b' )
-    if (Ch == 0x8) 
-    {
-        if (CONSOLE_TTYS[n].cursor_x > CONSOLE_TTYS[n].cursor_left)
-            CONSOLE_TTYS[n].cursor_x--;
-        // Optionally handle crossing to the previous line.
-        CONSOLE_TTYS[n].prev_char = Ch;
-        return;
-    }
-
-//
-// == Limits ====
-//
-
-//
-// Collision
-//
-
-// Out of screen
-// Sem espaço horizontal.
-    if ( CONSOLE_TTYS[n].cursor_left >= CONSOLE_TTYS[n].cursor_right )
-    {
-        panic ("console_oubyte: l >= r \n");
-    }
-
-// Out of screen
-// Sem espaço vertical.
-    if ( CONSOLE_TTYS[n].cursor_top >= CONSOLE_TTYS[n].cursor_bottom )
-    {
-        panic ("console_oubyte: t >= b \n");
-    }
-
-// Fim da linha.
-// Limites para o número de caracteres numa linha.
-// Voltamos ao inicio da linha e avançamos uma linha.
-// Caso contrario, apenas incrementa a coluna.
-
-    if ( CONSOLE_TTYS[n].cursor_x >= (CONSOLE_TTYS[n].cursor_right -1) ){
-        CONSOLE_TTYS[n].cursor_y++;
-        CONSOLE_TTYS[n].cursor_x = CONSOLE_TTYS[n].cursor_left;
-    }else{
-        CONSOLE_TTYS[n].cursor_x++;
-    };
-
-// Número máximo de linhas. (n pixels por linha.)
-// #bugbug
-// Tem um scroll logo acima que considera um valor
-// de limite diferente desse.
-
-    if ( CONSOLE_TTYS[n].cursor_y >= CONSOLE_TTYS[n].cursor_bottom)  
-    {
-        if (CONSOLE_TTYS[n].fullscreen_flag == TRUE ){
-            console_scroll_rect(n,CONSOLE_SCROLL_DIRECTION_UP);
-        }
-        CONSOLE_TTYS[n].cursor_x = 0;  //CONSOLE_TTYS[n].cursor_left;
-        CONSOLE_TTYS[n].cursor_y = 
-            (CONSOLE_TTYS[n].cursor_bottom -1);
-    }
-
-// Draw:
-// Draw in x*8 | y*8.
-// Only if the echo mode is enabled.
-// Nesse momento imprimiremos os caracteres.
-// Imprime os caracteres normais.
-// Atualisa o prev.
-// local modes
-
-    tcflag_t c_lflag = (tcflag_t) CONSOLE_TTYS[n].termios.c_lflag;
-    if (c_lflag & ECHO){
-        __console_outbyte_imp(Ch,n);
-    }
-
-    CONSOLE_TTYS[n].prev_char = Ch;
-}
-
-void console_outbyte2 (int c, int console_number)
-{
 // + Draw char.
 // + Refresh char.
-
+void console_outbyte2 (int c, int console_number)
+{
     register int Ch = c;
     int n = (int) console_number;
 
@@ -1497,9 +1250,9 @@ void console_outbyte2 (int c, int console_number)
 // Tem um scroll logo acima que considera um valor
 // de limite diferente desse.
 
-    if ( CONSOLE_TTYS[n].cursor_y >= CONSOLE_TTYS[n].cursor_bottom)  
+    if (CONSOLE_TTYS[n].cursor_y >= CONSOLE_TTYS[n].cursor_bottom)  
     {
-        if (CONSOLE_TTYS[n].fullscreen_flag == TRUE ){
+        if (CONSOLE_TTYS[n].fullscreen_flag == TRUE){
             console_scroll_rect(n,CONSOLE_SCROLL_DIRECTION_UP);
         }
         CONSOLE_TTYS[n].cursor_x = 0;  //CONSOLE_TTYS[n].cursor_left;
@@ -1579,7 +1332,7 @@ void console_putchar(int c, int console_number)
     kstdio_info.kstdio_in_terminalmode = TRUE;
 
 // Draw the char into the backbuffer
-    console_outbyte((int) c, console_number);
+    console_outbyte2((int) c, console_number);
 
 // Copy a small rectangle to the framebuffer
 // #danger
@@ -1626,7 +1379,7 @@ int consoleInputChar(int c)
     return (int) kinput(ascii);
 }
 
-void DANGER_VGA_clear_screen(void)
+static void DANGER_VGA_clear_screen(void)
 {
 /*
     unsigned int x=0;
@@ -1652,10 +1405,10 @@ void DANGER_VGA_clear_screen(void)
 */
 
     printk("done\n");
-    refresh_screen();
+    //refresh_screen();
 }
 
-void __vga_test1(void)
+static void __vga_test1(void)
 {
     unsigned char *p = (unsigned char *) 0x000A0000;
     *p = 0x10;
@@ -1759,60 +1512,6 @@ void consolePrompt(void)
     //__EscapeSequenceStage=0;
 }
 
-// __console_write:
-// No escape sequence support.
-ssize_t 
-__console_write ( 
-    int console_number, 
-    const void *buf, 
-    size_t count )
-{
-
-// #todo
-// #bugbug
-// Precisamos checar os limites para o buffer.
-// Não podemos aceitar escrever um numero muito grande
-// de bytes num buffer qualquer, correndo o risco
-// sujarmos alguma área importante.
-
-// Arguments.
-    int n = (int) console_number;
-    char *data = (char *) buf;
-    size_t MaxSize = (size_t) count;
-
-    register size_t i=0;
-    char ch=0; 
-
-// Console number
-    if ( n < 0 || n > 3 )
-    {
-       printk ("__console_write: n\n");
-       goto fail;
-    }
-// Buffer pointer
-    if ( (void *) buf == NULL )
-    {
-        printk ("__console_write: buf\n");
-        goto fail;
-    }
-// Max size.
-    //if (count==0 || count > ?)
-    if (!count){
-        printk ("__console_write: count\n");
-        goto fail;
-    }
-
-// Write string
-    for (i=0; i<MaxSize; i++){
-        console_putchar ( (int) data[i], (int) n );
-    };
-// Return the counter.
-    return (ssize_t) MaxSize;
-fail:
-    refresh_screen();
-    return (ssize_t) (-1);
-}
-
 // console_read:
 // #todo
 // Isso é importante.
@@ -1870,7 +1569,7 @@ fail:
 //
 // For each byte `ch`:
 //
-//   1. It is passed to console_outbyte(), which decides:
+//   1. It is passed to console_outbyte2(), which decides:
 //
 //        • Is this a control character? (\n, \r, \t, \b, \f)
 //        • Is this the ESC byte (0x1B) starting an escape sequence?
@@ -1878,7 +1577,7 @@ fail:
 //        • Is this the final command byte of a CSI sequence?
 //        • Or is this a normal printable character?
 //
-//   2. console_outbyte() then dispatches to the correct worker:
+//   2. console_outbyte2() then dispatches to the correct worker:
 //
 //        • csi_m()   – SGR attributes (colors, bold, reset)
 //        • csi_H()   – Cursor positioning
@@ -1997,7 +1696,7 @@ console_write (
 // ============================================================
 // BYTE‑PROCESSING LOOP (console_write)
 // ------------------------------------------------------------
-// Each byte from the user buffer is fed into console_outbyte(),
+// Each byte from the user buffer is fed into console_outbyte2(),
 // which is responsible for interpreting and dispatching it.
 //
 // For every byte `ch`:
@@ -2038,7 +1737,7 @@ console_write (
 //         - After the worker runs, the escape parser resets
 //
 //   • If `ch` is a PRINTABLE CHARACTER:
-//         - console_outbyte() calls __console_outbyte_imp()
+//         - console_outbyte2() calls __console_outbyte_imp()
 //         - The glyph is drawn at the current cursor position
 //         - Cursor advances automatically
 //
@@ -2486,9 +2185,9 @@ fail:
     return (ssize_t) -1;
 }
 
+// Write a string into a console
 ssize_t console_write_string(int console_number, const char *string)
 {
-// Write a string into a console.
     char *p;
     p = string;
     register size_t i=0;
@@ -2524,101 +2223,6 @@ ssize_t console_write_string(int console_number, const char *string)
 
 fail:
     return (ssize_t) 0;
-}
-
-void __respond (int console_number)
-{
-    char *p = __RESPONSE;
-
-    if (console_number < 0)
-        return;
-    if (console_number >= CONSOLETTYS_COUNT_MAX)
-        return;
-    console_write_string(console_number,p);
-}
-
-// See:
-// https://en.wikipedia.org/wiki/Control_character
-// https://en.wikipedia.org/wiki/C0_and_C1_control_codes#Device_control
-
-void __local_insert_char(int console_number)
-{
-    if (console_number < 0)
-        return;
-    if (console_number >= CONSOLETTYS_COUNT_MAX)
-        return;
-  
-    console_putchar (0x20, console_number);
-}
-
-void __local_delete_char(int console_number)
-{
-
-// Parameters:
-    if (console_number < 0)
-        return;
-    if (console_number >= CONSOLETTYS_COUNT_MAX)
-        return;
-
-    console_putchar ( ' ', console_number);
-}
-
-// #todo: Explain the parameters.
-void csi_P (int nr, int console_number)
-{
-
-// Parameters:
-    if (console_number < 0)
-        return;
-    if (console_number >= CONSOLETTYS_COUNT_MAX)
-        return;
-
-    if (nr > CONSOLE_TTYS[console_number].cursor_right -1){
-        nr = CONSOLE_TTYS[console_number].cursor_right -1;
-    } else {
-        if (!nr){
-            nr = 1;
-        }
-    };
-
-    if (nr<0){
-        return;
-    }
-
-    while (nr--){
-        __local_delete_char(console_number);
-    };
-}
-
-// #todo: Explain the parameters.
-// Move the cursor to a given column.
-// Adding spaces.
-void csi_at (int nr, int console_number)
-{
-// #bugbug
-// This code is wrong
-
-// Parameters:
-    if (console_number < 0)
-        return;
-    if (console_number >= CONSOLETTYS_COUNT_MAX)
-        return;
-
-    if (nr > CONSOLE_TTYS[console_number].cursor_right -1){
-        nr = CONSOLE_TTYS[console_number].cursor_right -1;
-    }else{
-        if (!nr){
-            nr=1;
-        }
-    };
-
-    if (nr<0){
-        return;
-    }
-
-    while (nr--){
-        __local_insert_char(console_number);
-    };
 }
 
 // Console banner:
@@ -2684,6 +2288,85 @@ console_banner(
     printk ("%s %s\n", product_string, build_string);
     // #debug Print gcc version
     // printk("gcc: %d\n",GCC_VERSION);
+}
+
+// Implementation
+int 
+console_clear_imp (
+    unsigned int bg_color, 
+    unsigned int fg_color, 
+    int console_number )
+{
+// Clear a console with the given colors.
+
+    if (VideoBlock.useGui != TRUE){
+        goto fail;
+    }
+
+// Parameters:
+    if (console_number < 0)
+        goto fail;
+    if (console_number >= CONSOLETTYS_COUNT_MAX){
+        goto fail;
+    }
+
+    CONSOLE_TTYS[console_number].bg_color = (unsigned int) bg_color;
+    CONSOLE_TTYS[console_number].fg_color = (unsigned int) fg_color;
+
+// Cursor
+    __local_gotoxy(0,0,console_number);
+
+// Refreshing the whole screen.
+// #todo: Call the faster routine for that job.
+
+// Clear background.
+// #todo:
+// This worker belongs to the display device driver,
+// so we need a name that represents it.
+// ex: display_bg_paint().
+    // IN: color, refresh
+    displayInitializeBackground(bg_color,TRUE);
+    
+    return 0;
+fail:
+    return (int) -1;
+}
+
+// Create a console.
+int console_clear00(int console_number)
+{
+    int ConsoleID = console_number;
+    unsigned int bg_color = COLOR_BLUE; 
+    unsigned int fg_color = COLOR_WHITE;
+
+    if (ConsoleID < 0)
+        goto fail;
+    if (ConsoleID >= CONSOLETTYS_COUNT_MAX){
+        goto fail;
+    }
+    bg_color = (unsigned int) CONSOLE_TTYS[ConsoleID].bg_color; 
+    fg_color = (unsigned int) CONSOLE_TTYS[ConsoleID].fg_color;
+// IN: bg color, fg color, console number.
+    console_clear_imp( bg_color, fg_color, ConsoleID );
+    return 0;
+fail:
+    return (int) -1;
+}
+
+// Create foreground console.
+int console_clear(void)
+{
+    int rv = -1;
+
+    if (fg_console < 0)
+        goto fail;
+    if (fg_console >= CONSOLETTYS_COUNT_MAX)
+        goto fail;
+
+    rv = (int) console_clear00(fg_console);
+    return (int) rv;
+fail:
+    return (int) -1;
 }
 
 // console_ioctl:
@@ -3012,85 +2695,6 @@ console_ioctl (
         break;
     };
 
-fail:
-    return (int) -1;
-}
-
-// Implementation
-int 
-console_clear_imp (
-    unsigned int bg_color, 
-    unsigned int fg_color, 
-    int console_number )
-{
-// Clear a console with the given colors.
-
-    if (VideoBlock.useGui != TRUE){
-        goto fail;
-    }
-
-// Parameters:
-    if (console_number < 0)
-        goto fail;
-    if (console_number >= CONSOLETTYS_COUNT_MAX){
-        goto fail;
-    }
-
-    CONSOLE_TTYS[console_number].bg_color = (unsigned int) bg_color;
-    CONSOLE_TTYS[console_number].fg_color = (unsigned int) fg_color;
-
-// Cursor
-    __local_gotoxy(0,0,console_number);
-
-// Refreshing the whole screen.
-// #todo: Call the faster routine for that job.
-
-// Clear background.
-// #todo:
-// This worker belongs to the display device driver,
-// so we need a name that represents it.
-// ex: display_bg_paint().
-    // IN: color, refresh
-    displayInitializeBackground(bg_color,TRUE);
-    
-    return 0;
-fail:
-    return (int) -1;
-}
-
-// Create a console.
-int console_clear00(int console_number)
-{
-    int ConsoleID = console_number;
-    unsigned int bg_color = COLOR_BLUE; 
-    unsigned int fg_color = COLOR_WHITE;
-
-    if (ConsoleID < 0)
-        goto fail;
-    if (ConsoleID >= CONSOLETTYS_COUNT_MAX){
-        goto fail;
-    }
-    bg_color = (unsigned int) CONSOLE_TTYS[ConsoleID].bg_color; 
-    fg_color = (unsigned int) CONSOLE_TTYS[ConsoleID].fg_color;
-// IN: bg color, fg color, console number.
-    console_clear_imp( bg_color, fg_color, ConsoleID );
-    return 0;
-fail:
-    return (int) -1;
-}
-
-// Create foreground console.
-int console_clear(void)
-{
-    int rv = -1;
-
-    if (fg_console < 0)
-        goto fail;
-    if (fg_console >= CONSOLETTYS_COUNT_MAX)
-        goto fail;
-
-    rv = (int) console_clear00(fg_console);
-    return (int) rv;
 fail:
     return (int) -1;
 }

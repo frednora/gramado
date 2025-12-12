@@ -88,12 +88,6 @@ console_banner(
     const char *build_string, 
     unsigned long banner_flags );
 
-void 
-console_interrupt(
-    int target_thread, 
-    int device_type, 
-    int data );
-
 void console_set_current_virtual_console(int console_number);
 int console_get_current_virtual_console(void);
 void jobcontrol_switch_console(int n);
@@ -121,11 +115,9 @@ int console_scroll_rect(int console_number, int direction);
 // Char
 //
 
-void console_outbyte(int c, int console_number);
 void console_outbyte2(int c, int console_number);
 
 void console_echo(int c, int console_number);
-
 
 void console_putchar ( int c, int console_number );
 void console_print_indent(int indent, int console_number);
@@ -136,30 +128,6 @@ int consoleInputChar( int c );
 //
 
 void consolePrompt (void);
-
-void csi_P (int nr, int console_number);
-void csi_at (int nr, int console_number);
-
-ssize_t 
-__console_write ( 
-    int console_number, 
-    const void *buf, 
-    size_t count );
-
-void __local_delete_char(int console_number);
-void __local_delete_line(int console_number);
-
-void 
-__local_gotoxy ( 
-    int new_x, 
-    int new_y, 
-    int console_number );
-    
-void __local_insert_char (int console_number);
-void __local_insert_line (int console_number);
-void __local_save_cur (int console_number);
-void __local_restore_cur (int console_number);
-void __respond (int console_number);
 
 ssize_t 
 console_read ( 
@@ -176,12 +144,6 @@ console_write (
 ssize_t console_write_string(int console_number, const char *string);
 
 int 
-console_ioctl ( 
-    int fd, 
-    unsigned long request, 
-    unsigned long arg );
-
-int 
 console_clear_imp (
     unsigned int bg_color, 
     unsigned int fg_color, 
@@ -190,7 +152,11 @@ console_clear_imp (
 int console_clear00(int console_number);
 int console_clear(void);
 
-int VirtualConsole_early_initialization(void);
+int 
+console_ioctl ( 
+    int fd, 
+    unsigned long request, 
+    unsigned long arg );
 
 // Device driver initialization.
 // Virtual console
@@ -199,6 +165,8 @@ DDINIT_console(
     int n, 
     unsigned int bg_color, 
     unsigned int fg_color );
+
+int VirtualConsole_early_initialization(void);
 
 #endif    
 

@@ -497,7 +497,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         console_write_string(fg_console, "Testing CSI sequences...\n");
 
         // Start at a known position
-        __local_gotoxy(10, 10, fg_console);
+        //__local_gotoxy(10, 10, fg_console);
         console_write_string(fg_console, "X");
 
         // Cursor Up (A)
@@ -2082,10 +2082,8 @@ fail:
 // Na verdade é 'translate' and 'dispatch'.
 // Cria o evento usando o rawbyte, traduz o raw byte para ascii,
 // e por fim envia para o buffer da tty de teclado e para
-// a thread do processo em foreground. Tudo depende
-// do input mode.
-// Called by console_interrupt() in console.c
-// and by the kdb device driver in ps2kbd.c.
+// a thread do processo em foreground. Tudo depende do input mode.
+// Called by the kdb device driver in ps2kbd.c.
 // Is this the forground thread?
 // #bugbug: Não estamos usando o parâmetro tid.
 // Lembrando que numa interrupção de teclado,

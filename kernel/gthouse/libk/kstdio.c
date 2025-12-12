@@ -402,7 +402,7 @@ int putchar(int ch)
     if (fg_console<0 || fg_console > 3){
         goto fail;
     }
-    console_outbyte( ch, fg_console );
+    console_outbyte2(ch, fg_console);
 
     return (int) ch;
 fail:
@@ -1127,15 +1127,11 @@ void kinguio_puts(const char* str)
         return;
 
 // Print chars
+// Draw, and refresh each a single char
     for (i=0; i<StringLen; i++)
     {
         _char = (int) (str[i] & 0xFF);
-
-        // Draw, and refresh a single char
         console_outbyte2 (_char, fg_console);
-
-        // Draw, but not refresh.
-        //console_outbyte (_char, fg_console);
     };
 }
 
@@ -2390,7 +2386,7 @@ static void __initialize_virtual_consoles(void)
 
 // #test
     //set_up_cursor(0,1);
-    //console_outbyte('x',fg_console);
+    //console_outbyte2('x',fg_console);
     //while(1){}
 }
 
