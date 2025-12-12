@@ -274,12 +274,10 @@ build-extras:
 
 	@-cp $(APPLICATIONS)/bin/MENUAPP.BIN    $(BASE)/DE
 	@-cp $(APPLICATIONS)/bin/LAUNCH.BIN     $(BASE)/DE
-	@-cp $(APPLICATIONS)/bin/TERMINAL.BIN   $(BASE)/DE
 	@-cp $(APPLICATIONS)/bin/TERM00.BIN     $(BASE)/DE
 #@-cp $(APPLICATIONS)/bin/GWS.BIN       $(BASE)/DE
     # Experimental applications
     # These need the '#' prefix.
-	@-cp $(APPLICATIONS)/bin/PUBTERM.BIN  $(BASE)/DE/
 	@-cp $(APPLICATIONS)/bin/DOC.BIN      $(BASE)/DE/
 	@-cp $(APPLICATIONS)/bin/EDITOR.BIN   $(BASE)/DE/
 

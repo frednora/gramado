@@ -1,6 +1,5 @@
+
 // term0.h
-// Support for terminal application.
-// Created by Fred Nora.
 
 #ifndef __TERM0_H
 #define __TERM0_H    1
@@ -335,44 +334,6 @@ typedef enum terminal_api_message_number_d {
 }terminal_api_message_number_t;
 
 //
-// Main struct
-//
-
-#define TERMINAL_MODE_NORMAL    1000
-#define TERMINAL_MODE_EMBEDDED  2000
-
-struct terminal_d
-{
-    int initialized;
-    int client_fd;
-    int main_window_id;
-    int client_window_id;
-    int pid;
-    int uid;
-    int gid;
-
-// 1000 - normal
-// 2000 - embedded
-    int _mode;
-
-    unsigned long left;
-    unsigned long top;
-// In pixels.
-    unsigned long width;
-    unsigned long height;
-// In chars.
-    unsigned long width_in_chars;
-    unsigned long height_in_chars;
-    // ...
-
-    int esc;
-};
-
-// The man structure.
-// see: main.c
-extern struct terminal_d  Terminal;
-
-//
 // System Metrics
 //
 
@@ -521,9 +482,6 @@ int textGetCurrentCol (void);
 
 void move_to( unsigned long x, unsigned long y );
 int pad_to(int count, char *string);
-
-// See: terminal.c
-int terminal_init(unsigned short flags);
 
 #endif   
 

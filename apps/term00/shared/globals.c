@@ -11,9 +11,16 @@
 //#include <stdio.h>
 //#include <unistd.h>
 
-// #ps
-// This thing is including a lot of libc headers too.
-#include "include/terminal.h"
+#include "globals.h"
+
+// Backend
+#include "../core/core.h"
+#include "../core/shell.h"
+
+// Frontend
+#include "../ui/ui.h"
+
+#include "../terminal.h"
 
 // Client-side library.
 #include <gws.h>
@@ -21,6 +28,8 @@
 int saved_argc=0;
 char **saved_argv;
 
+// The main structure.
+struct terminal_d  Terminal;
 
 char pathname_buffer[PATHNAME_LENGHT];
 int pathname_lenght=0;  //tamanho do atual pathname.

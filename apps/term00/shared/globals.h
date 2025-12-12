@@ -1,8 +1,53 @@
 // globals.h
 // Created by Fred Nora.
 
-#ifndef __GLOBALS
-#define __GLOBALS   1
+#ifndef __SHARED_GLOBALS_H
+#define __SHARED_GLOBALS_H    1
+
+
+extern int saved_argc;
+extern char **saved_argv;
+
+
+
+//
+// Main struct
+//
+
+#define TERMINAL_MODE_NORMAL    1000
+#define TERMINAL_MODE_EMBEDDED  2000
+
+struct terminal_d
+{
+    int initialized;
+    int client_fd;
+    int main_window_id;
+    int client_window_id;
+    int pid;
+    int uid;
+    int gid;
+
+// 1000 - normal
+// 2000 - embedded
+    int _mode;
+
+    unsigned long left;
+    unsigned long top;
+// In pixels.
+    unsigned long width;
+    unsigned long height;
+// In chars.
+    unsigned long width_in_chars;
+    unsigned long height_in_chars;
+    // ...
+
+    int esc;
+};
+
+// The man structure.
+// see: main.c
+extern struct terminal_d  Terminal;
+
 
 //
 // pool
@@ -142,35 +187,35 @@ typedef unsigned long  POOLLIST;
 #define PATH_TERMINATOR  '\0'
 
 #define PATHNAME_LENGHT (64)
-char pathname_buffer[PATHNAME_LENGHT];
-int pathname_lenght;  //tamanho do atual pathname.
-int pathname_initilized;
+extern char pathname_buffer[PATHNAME_LENGHT];
+extern int pathname_lenght;  //tamanho do atual pathname.
+extern int pathname_initilized;
 
 //
 // ## filename suppport ##
 //
 
 #define FILENAME_LENGHT (8+3)
-char filename_buffer[FILENAME_LENGHT];
-int filename_lenght; //tamanho do nome de arquivo atual.
-int filename_initilized;
+extern char filename_buffer[FILENAME_LENGHT];
+extern int filename_lenght; //tamanho do nome de arquivo atual.
+extern int filename_initilized;
 
 //...
 
-int EOF_Reached;
+extern int EOF_Reached;
 
-char *current_volume_string;
-int current_volume_id;
+extern char *current_volume_string;
+extern int current_volume_id;
 
 //...
 
-int g_current_disk_id;
-int g_current_volume_id;
-int g_current_workingdirectory_id;  //??
+extern int g_current_disk_id;
+extern int g_current_volume_id;
+extern int g_current_workingdirectory_id;  //??
 
 // a string do diretório de trabalho.
-char current_workingdiretory_string[WORKINGDIRECTORY_STRING_MAX];
-int pwd_initialized;
+extern char current_workingdiretory_string[WORKINGDIRECTORY_STRING_MAX];
+extern int pwd_initialized;
 
 /*
     Fluxo padrão: definido em <stdio.h>
@@ -187,8 +232,8 @@ int pwd_initialized;
 
 // Diretórios para o shell comparar 
 // os comandos com os nomes dos arquivos lá. 
-struct _iobuf  *pwd;
-struct _iobuf  *root;
+extern struct _iobuf  *pwd;
+extern struct _iobuf  *root;
 //...
 
 //usado para salvar um comando atual  
@@ -349,11 +394,11 @@ static unsigned char SPECIALMATH[] = {
 // Files (strings).
 //
 
-static const char bmp1_file_name[] = "BMP1    BMP";
-static const char bmp2_file_name[] = "BMP2    BMP";
-static const char bmp3_file_name[] = "BMP3    BMP";
-static const char bmp4_file_name[] = "BMP4    BMP";
-static const char init_file_name[] = "INIT    TXT";
+//static const char bmp1_file_name[] = "BMP1    BMP";
+//static const char bmp2_file_name[] = "BMP2    BMP";
+//static const char bmp3_file_name[] = "BMP3    BMP";
+//static const char bmp4_file_name[] = "BMP4    BMP";
+//static const char init_file_name[] = "INIT    TXT";
 //... 
 
 //static const char file_bmp1[] = "BMP1.BMP";

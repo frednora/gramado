@@ -17,9 +17,7 @@ all:
 
 # 3
 # Output entity for subsystems
-	make -C  pubterm/
 	make -C  term00/
-	make -C  terminal/
 
 # 4
 # Normal programs.

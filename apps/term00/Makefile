@@ -55,22 +55,27 @@ LIBGWS    = ../api/libs/libgws/include/
 LIBGWSOBJ = ../api/libs/libgws/obj
 
 # Objects
-myObjects = crt0.o main.o globals.o terminal.o rtl.o \
+myObjects = crt0.o globals.o rtl.o \
 ctype.o stdio.o fcntl.o stdlib.o string.o \
 unistd.o termios.o ioctl.o socket.o \
-libgws.o   
-
+libgws.o \
+core.o shell.o ui.o main.o    
 
 .PHONY: all all-c hello-link finalize clean
 
-all: main.o all-c hello-link finalize clean
+all: all-c hello-link finalize clean
 	@echo "Ok?"
-main.o:
-	gcc -c main.c $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I include/ -o main.o
-all-c:
 
-	gcc -c globals.c  $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I include/ -o globals.o
-	gcc -c terminal.c $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I include/ -o terminal.o
+all-c:
+# Shared
+	gcc -c shared/globals.c  $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I include/ -o globals.o
+# Backend
+	gcc -c core/core.c   $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I include/ -o core.o 
+	gcc -c core/shell.c  $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I include/ -o shell.o 
+# Frontend
+	gcc -c ui/ui.c  $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I include/ -o ui.o
+# Main
+	gcc -c main.c   $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I include/ -o main.o 
 
 # Copy
 
