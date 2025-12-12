@@ -6,13 +6,13 @@ This directory contains the code for the base kernel. It builds the image KERNEL
 
 ```
 From lowest to highest:
- + (0) core/arch/
- + (1) core/ke/hal/
- + (2) core/ke/intake/
- + (3) core/ke/main/
- + (4) res/ 
- + (5) winu/
- + (6) libk/
+ + (0) gthouse/arch/
+ + (1) halls/exec/ke/hal/
+ + (2) halls/exec/intake/
+ + (3) gthouse/kwrap/
+ + (4) halls/ 
+ + (5) gthouse/wink/
+ + (6) gthouse/libk/
 ```
 
 ## Kernel initialization
@@ -44,36 +44,29 @@ From lowest to highest:
 ## Folders
 
 ```
-core/:
+gthouse/
+  gthouse/kwrap/ - Main initialization routine and wrappers.
+  gthouse/libk/  - The kernel library.
+  gthouse/wink/  - Interface for the graphics device and the user interaction manager.
+
+halls/ - Kernel resources for containers.
   The core of the kernel; the primary processing unit.
-  core/arch   - Entry point and initialization.
-  core/ke     - Task manager.
-  core/kmain  - Main initialization routine and wrappers.
+  exec/arch   - Entry point and initialization.
+  exec/ke     - Task manager.
 
 include/:
   Main header files for the kernel.
-
-libk/:
-  The kernel library.
-
-res/:
-  Kernel resources for containers.
-
-wink/:
-  Interface for the graphics device and the user interaction manager.
 ```
 
-## About the core/ Folder
+## About the halls/ folder:
+
+```
+The halls/ directory is based on the idea of managing kernel resources used by process groups. All such resources are organized within this folder.
+
+```
+
+## About the halls/exec/ Folder
 
 ```
 This folder primarily contains CPU and process management code.
 ```
-
-## About the res/ folder:
-
-```
-The res/ directory is based on the idea of managing kernel resources used by process groups. All such resources are organized within this folder.
-
-The core/ folder is responsible for controlling access to the resources in res/. The memory management component (mm/) is also considered a resource, so it belongs under res/ rather than as a component of core/.
-```
-      
