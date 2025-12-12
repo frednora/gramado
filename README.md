@@ -22,15 +22,16 @@ Some extra features are:
 > Documentation for this distribution is still under development.
 > Folder names are subject to change.
 
-## The core folders
+## The main folders
 
 ```
-gramboot/  - Pre-kernel stuff. (Boot loader)
-kernel/    - The core kernel components.
-modules/   - Ring 0 loadable kernel modules. Not dynlinked.
-userland/  - Ring 3 init process, unix-like commands,
-             display server and client-side GUI applications.
-           - 3D stuff and experiments.
+gramboot/  - Gramado OS bootloader.
+kernel/    - Gramado OS kernel.
+modules/   - Ring 0 loadable kernel modules. (Not dynlinked).
+userland/  - Init process and more.
+winu/      - Display server.
+apps/      - Ring 3 client-side GUI applications.
+cmds/      - Posix-like commands.
 ```
 
 ## The extra folders
@@ -39,14 +40,6 @@ userland/  - Ring 3 init process, unix-like commands,
 distros/   - Complete distributions are built here.
 docs/      - Documentation.
 tools/     - SDK tools.
-```
-
-## Special folder.
-
-```
-userland/deps/:
-- POSIX commands.
-- Display server and client-side GUI applications.
 ```
 
 ## Key artifacts produced
@@ -72,15 +65,15 @@ modules/
 
 ## Where is the Init Process?
 
-userland/deps/init/
+userland/init/
 
 ## Where is the ring 3 device drivers?
 
-userland/deps/drivers/
+userland/drivers/
 
 ## Where is the ring 3 servers?
 
-userland/deps/servers/
+userland/servers/
 
 ## Where is the display server?
 
@@ -88,11 +81,11 @@ winu/core/ds/ds00/
 
 ## Where are the client-side GUI applications?
 
-userland/gdeps/shell/shell01/
+apps/
 
 ## Where are the POSIX-like command programs?
 
-userland/deps/cmds/
+cmds/
 
 
 > [!IMPORTANT]
@@ -183,7 +176,7 @@ Ring 3 processes can access I/O ports via syscall (for ring 3 drivers only)
 
 ## userland commands.
 
-See deps/ucore/cmds/.
+See cmds/.
 
 ## DE - Desktop Environment
 
