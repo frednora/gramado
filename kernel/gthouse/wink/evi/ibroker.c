@@ -491,6 +491,57 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         goto exit_cmp;
     }
 
+// csi: Test CSI cursor movement and editing commands.
+    if ( kstrncmp(cmdline,"csi",3) == 0 )
+    {
+        console_write_string(fg_console, "Testing CSI sequences...\n");
+
+        // Start at a known position
+        __local_gotoxy(10, 10, fg_console);
+        console_write_string(fg_console, "X");
+
+        // Cursor Up (A)
+        console_write_string(fg_console, "\033[3A");
+        console_write_string(fg_console, "A");
+
+        // Cursor Down (B)
+        console_write_string(fg_console, "\033[2B");
+        console_write_string(fg_console, "B");
+
+        // Cursor Forward (C)
+        console_write_string(fg_console, "\033[5C");
+        console_write_string(fg_console, "C");
+
+        // Cursor Backward (D)
+        console_write_string(fg_console, "\033[3D");
+        console_write_string(fg_console, "D");
+
+        // Erase in Line (K)
+        console_write_string(fg_console, "\nLine before erase...");
+        console_write_string(fg_console, "\033[2K");
+        console_write_string(fg_console, "Line erased with CSI 2 K\n");
+
+        // Insert Line (L)
+        console_write_string(fg_console, "Line 1\n");
+        console_write_string(fg_console, "Line 2\n");
+        console_write_string(fg_console, "Line 3\n");
+        console_write_string(fg_console, "\033[2A");  // Move up 2
+        console_write_string(fg_console, "\033[1L");  // Insert 1 line
+        console_write_string(fg_console, "Inserted line above\n");
+
+        // Delete Line (M)
+        console_write_string(fg_console, "Line A\n");
+        console_write_string(fg_console, "Line B\n");
+        console_write_string(fg_console, "Line C\n");
+        console_write_string(fg_console, "\033[2A");  // Move up 2
+        console_write_string(fg_console, "\033[1M");  // Delete 1 line
+        console_write_string(fg_console, "Deleted line above\n");
+
+        console_write_string(fg_console, "\nCSI test complete.\n");
+
+        goto exit_cmp;
+    }
+
 // see: mod.c
 // Vamos testar um modulo que ja foi carregado previamente?
     if ( kstrncmp(cmdline,"mod0",4) == 0 ){
