@@ -115,7 +115,7 @@ int console_scroll_rect(int console_number, int direction);
 // Char
 //
 
-void console_outbyte2(int c, int console_number);
+void console_outbyte(int c, int console_number);
 
 void console_echo(int c, int console_number);
 

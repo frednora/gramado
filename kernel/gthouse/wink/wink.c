@@ -80,15 +80,14 @@ void wink_refresh_screen(void)
     refresh_screen();
 }
 
+// Draw and refresh a single char in the foreground console
 void wink_putchar_in_fgconsole(unsigned long _char)
 {
     int C = (int) (_char & 0xFF);
 
     //if (fg_console < 0)
         //return;
-
-// Draw and refresh
-    console_outbyte2 ( C, fg_console );
+    console_outbyte(C, fg_console);
 }
 
 // __x_panic_show_message:

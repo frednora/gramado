@@ -402,7 +402,7 @@ int putchar(int ch)
     if (fg_console<0 || fg_console > 3){
         goto fail;
     }
-    console_outbyte2(ch, fg_console);
+    console_outbyte(ch, fg_console);
 
     return (int) ch;
 fail:
@@ -1095,7 +1095,7 @@ kinguio_vsprintf(
  *
  * Behavior:
  *   - Iterates over each character in the input string.
- *   - For each character, calls console_outbyte2() to draw and refresh it
+ *   - For each character, calls console_outbyte() to draw and refresh it
  *     on the active console (fg_console).
  *   - If the string is NULL or empty, the function returns immediately.
  *
@@ -1104,10 +1104,10 @@ kinguio_vsprintf(
  *
  * Notes:
  *   - This is the printing stage in the printk path:
- *       printk() → kinguio_printf() → kinguio_puts() → console_outbyte2() …
+ *       printk() → kinguio_printf() → kinguio_puts() → console_outbyte() …
  *   - Unlike kinguio_vsprintf(), this function does not format; it only
  *     emits characters to the console.
- *   - Uses console_outbyte2(), which refreshes the screen after drawing.
+ *   - Uses console_outbyte(), which refreshes the screen after each char drawing.
  */
 
 void kinguio_puts(const char* str)
@@ -1131,7 +1131,7 @@ void kinguio_puts(const char* str)
     for (i=0; i<StringLen; i++)
     {
         _char = (int) (str[i] & 0xFF);
-        console_outbyte2 (_char, fg_console);
+        console_outbyte(_char, fg_console);
     };
 }
 
@@ -2386,7 +2386,7 @@ static void __initialize_virtual_consoles(void)
 
 // #test
     //set_up_cursor(0,1);
-    //console_outbyte2('x',fg_console);
+    //console_outbyte('x',fg_console);
     //while(1){}
 }
 

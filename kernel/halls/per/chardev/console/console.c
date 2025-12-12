@@ -394,7 +394,7 @@ static void csi_K(int mode)
     for (col = start; col < end; col++)
     {
         __local_gotoxy(col, y, n);
-        console_outbyte2(' ', n);
+        console_outbyte(' ', n);
     }
 
     // Restore cursor
@@ -913,7 +913,7 @@ fail:
 
 /*
  * __console_outbyte_imp:
- *   Private implementation worker for console_outbyte2().
+ *   Private implementation worker for console_outbyte().
  *   Responsible for drawing a single character into the console’s framebuffer
  *   at the current cursor position using display driver routines.
  *
@@ -1021,7 +1021,7 @@ static void __console_outbyte_imp (int c, int console_number)
 
 // + Draw char.
 // + Refresh char.
-void console_outbyte2 (int c, int console_number)
+void console_outbyte (int c, int console_number)
 {
     register int Ch = c;
     int n = (int) console_number;
@@ -1031,17 +1031,16 @@ void console_outbyte2 (int c, int console_number)
     unsigned long __cHeight = gwsGetCurrentFontCharHeight();
 
     // #debug
-    // debug_print ("console_outbyte2:\n");
+    // debug_print ("console_outbyte:\n");
 
     if (n < 0)
         return;
     if (n >= CONSOLETTYS_COUNT_MAX)
         return;
 
-    if ( __cWidth == 0 || 
-         __cHeight == 0 )
+    if ( __cWidth == 0 || __cHeight == 0 )
     {
-        x_panic ("console_outbyte2: char size");
+        x_panic ("console_outbyte: char size");
     }
 
 // #test
@@ -1050,8 +1049,8 @@ void console_outbyte2 (int c, int console_number)
 
     if (CONSOLE_TTYS[n].initialized != TRUE)
     {
-        debug_print ("console_outbyte2: Console not initialized\n");
-        //x_panic ("console_outbyte2: CONSOLE_TTYS");
+        debug_print ("console_outbyte: Console not initialized\n");
+        //x_panic ("console_outbyte: CONSOLE_TTYS");
         return;
     }
 
@@ -1220,14 +1219,14 @@ void console_outbyte2 (int c, int console_number)
 // Sem espaço horizontal.
     if ( CONSOLE_TTYS[n].cursor_left >= CONSOLE_TTYS[n].cursor_right )
     {
-        panic ("console_outbyte2: l >= r \n");
+        panic ("console_outbyte: l >= r \n");
     }
 
 // Out of screen
 // Sem espaço vertical.
     if ( CONSOLE_TTYS[n].cursor_top >= CONSOLE_TTYS[n].cursor_bottom )
     {
-        panic ("console_outbyte2: t >= b \n");
+        panic ("console_outbyte: t >= b \n");
     }
 
     int Increment = FALSE;
@@ -1295,7 +1294,7 @@ void console_echo(int c, int console_number)
         return;
     if (console_number >= CONSOLETTYS_COUNT_MAX)
         return;
-    console_outbyte2(c,console_number);
+    console_outbyte(c,console_number);
 }
 
 // Draw and refresh a single char.
@@ -1332,7 +1331,7 @@ void console_putchar(int c, int console_number)
     kstdio_info.kstdio_in_terminalmode = TRUE;
 
 // Draw the char into the backbuffer
-    console_outbyte2((int) c, console_number);
+    console_outbyte((int) c, console_number);
 
 // Copy a small rectangle to the framebuffer
 // #danger
@@ -1569,7 +1568,7 @@ fail:
 //
 // For each byte `ch`:
 //
-//   1. It is passed to console_outbyte2(), which decides:
+//   1. It is passed to console_outbyte(), which decides:
 //
 //        • Is this a control character? (\n, \r, \t, \b, \f)
 //        • Is this the ESC byte (0x1B) starting an escape sequence?
@@ -1577,7 +1576,7 @@ fail:
 //        • Is this the final command byte of a CSI sequence?
 //        • Or is this a normal printable character?
 //
-//   2. console_outbyte2() then dispatches to the correct worker:
+//   2. console_outbyte() then dispatches to the correct worker:
 //
 //        • csi_m()   – SGR attributes (colors, bold, reset)
 //        • csi_H()   – Cursor positioning
@@ -1696,7 +1695,7 @@ console_write (
 // ============================================================
 // BYTE‑PROCESSING LOOP (console_write)
 // ------------------------------------------------------------
-// Each byte from the user buffer is fed into console_outbyte2(),
+// Each byte from the user buffer is fed into console_outbyte(),
 // which is responsible for interpreting and dispatching it.
 //
 // For every byte `ch`:
@@ -1737,7 +1736,7 @@ console_write (
 //         - After the worker runs, the escape parser resets
 //
 //   • If `ch` is a PRINTABLE CHARACTER:
-//         - console_outbyte2() calls __console_outbyte_imp()
+//         - console_outbyte() calls __console_outbyte_imp()
 //         - The glyph is drawn at the current cursor position
 //         - Cursor advances automatically
 //

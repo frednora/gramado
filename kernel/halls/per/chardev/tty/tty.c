@@ -74,7 +74,7 @@ void tty_flush_raw_queue(struct tty_d *tty, int console_number)
         if (q->cnt > 0){
             q->cnt--;
         }
-        console_outbyte2((int)c, console_number);
+        console_outbyte((int)c, console_number);
     };
 }
 
@@ -93,7 +93,7 @@ void tty_flush_canonical_queue(struct tty_d *tty, int console_number)
         if (q->cnt > 0){
             q->cnt--;
         }
-        console_outbyte2((int)c, console_number);
+        console_outbyte((int)c, console_number);
     };
 }
 
@@ -116,7 +116,7 @@ void tty_flush_output_queue(struct tty_d *tty, int console_number)
         if (q->cnt > 0){
             q->cnt--;
         }
-        console_outbyte2((int)c, console_number);
+        console_outbyte((int)c, console_number);
     };
 }
 

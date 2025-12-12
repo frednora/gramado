@@ -22,7 +22,7 @@ by Copilot
   - Processes control characters (`\n`, `\r`, `\t`, backspace).  
   - Updates cursor position, triggers scrolling if needed.  
   - Calls `__console_outbyte_imp()` for visible characters.  
-- `console_outbyte2(int c, int console_number)`  
+- `console_outbyte(int c, int console_number)`  
   - Same as above, but refreshes screen after drawing.  
   - Also funnels into `__console_outbyte_imp()`.
 
@@ -57,7 +57,7 @@ by Copilot
 
 ```text
 console_putchar()
-    └── console_outbyte() / console_outbyte2()
+    └── console_outbyte() / console_outbyte()
           └── __console_outbyte_imp()
                 └── char_draw() / char_draw_transparent()
                       └── backbuffer_putpixel()
