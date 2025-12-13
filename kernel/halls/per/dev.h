@@ -29,9 +29,69 @@ extern unsigned long nicList[8];
 #define DEVICE_CLASS_BLOCK    2
 #define DEVICE_CLASS_NETWORK  3
 
+/*
 //#test
 #define DEVICE_TYPE_PCI  1
-#define DEVICE_TYPE_LEGACY  2  //ISA?
+#define DEVICE_TYPE_LEGACY  2
+*/
+
+//
+// Device types (subsystem identifiers)
+// ------------------------------------
+// These describe WHAT the device *is*.
+// They are orthogonal to DEVICE_CLASS_* (char, block, network).
+//
+
+// -------------------------
+// Hardware-backed devices
+// -------------------------
+#define DEVICE_TYPE_PCI             1   // PCI/PCIe devices
+#define DEVICE_TYPE_LEGACY          2   // ISA, PS/2, PIT, PIC, RTC, etc.
+#define DEVICE_TYPE_PLATFORM        3   // Non-PCI SoC / chipset devices
+#define DEVICE_TYPE_USB             4   // USB devices (future)
+
+// -------------------------
+// TTY subsystem
+// -------------------------
+#define DEVICE_TYPE_TTY             10  // Virtual consoles, serial TTYs
+#define DEVICE_TYPE_PTY             11  // Pseudo-terminals (master/slave)
+
+// -------------------------
+// Storage subsystem
+// -------------------------
+#define DEVICE_TYPE_ATA             20  // ATA/IDE controllers/devices
+#define DEVICE_TYPE_SATA            21  // AHCI/SATA controllers/devices
+#define DEVICE_TYPE_NVME            22  // NVMe controllers/devices
+#define DEVICE_TYPE_RAMDISK         23  // RAM-backed block devices
+
+// -------------------------
+// Input subsystem
+// -------------------------
+#define DEVICE_TYPE_INPUT           30  // Generic input device
+#define DEVICE_TYPE_KEYBOARD        31  // Keyboard device
+#define DEVICE_TYPE_MOUSE           32  // Mouse device
+#define DEVICE_TYPE_HID             33  // HID-compliant device
+
+// -------------------------
+// Display / GPU subsystem
+// -------------------------
+#define DEVICE_TYPE_FRAMEBUFFER     40  // Linear framebuffer device
+#define DEVICE_TYPE_GPU             41  // GPU / video controller
+
+// -------------------------
+// Network subsystem
+// -------------------------
+#define DEVICE_TYPE_NET             50  // Network interface controller
+#define DEVICE_TYPE_LOOPBACK        51  // Loopback network device
+
+// -------------------------
+// Miscellaneous
+// -------------------------
+#define DEVICE_TYPE_SOUND           60  // Audio devices
+#define DEVICE_TYPE_TIMER           61  // PIT/HPET/APIC timers
+#define DEVICE_TYPE_RTC             62  // Real-time clock
+#define DEVICE_TYPE_RANDOM          63  // /dev/random, /dev/urandom
+
 
 // struct more complete, with a lot of information.
 struct device_class_d 
@@ -158,6 +218,8 @@ file *devmgr_search_in_dev_list(char *path);
 
 struct device_d *devmgr_device_object(void);
 
+/*
+// Old Worker
 int 
 devmgr_register_device ( 
     file *f, 
@@ -166,6 +228,30 @@ devmgr_register_device (
     unsigned char dev_type,
     struct pci_device_d *pci_device,
     struct tty_d *tty_device );
+*/
+
+int 
+devmgr_register_tty_device(
+    file *fp,
+    const char *name,
+    unsigned char dev_class,
+    unsigned char dev_type,
+    struct tty_d *tty );
+
+int 
+devmgr_register_pci_device(
+    file *fp,
+    const char *name,
+    unsigned char dev_class,
+    unsigned char dev_type,
+    struct pci_device_d *pci );
+
+int 
+devmgr_register_legacy_device(
+    file *fp,
+    const char *name,
+    unsigned char dev_class,
+    unsigned char dev_type );
 
 void devInitialize(void);
 

@@ -3068,24 +3068,6 @@ int VirtualConsole_early_initialization(void)
     {
         // IN: console index, bg color, fg color
         DDINIT_console( i, bg_colors[i], fg_colors[i] );
-
-        // #todo
-        // We need to register all the tty devices.
-
-        // #bugbug
-        // At some time in the initialization we're already
-        // linking the console with the 'stdout' file.
-
-        //tmp_tty = (struct tty_d *) &CONSOLE_TTYS[i];
-        
-        // Register tty device.
-        //devmgr_register_device ( 
-        //    (file *) __file,            // #todo: Create file.
-        //    device_name_nonameconsole,  // pathname 
-        //    DEVICE_CLASS_CHAR,          // class (char, block, network)
-        //    DEVICE_TYPE_LEGACY,         // type (pci, legacy
-        //    NULL,    // Not a pci device.
-        //    NULL );  // tty device
     };
 
 // Setup foreground console

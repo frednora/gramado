@@ -1123,6 +1123,25 @@ RegularFile:
         return 0;
     }
 
+// ======================================================
+// Virtual console (TTY). But NOT the standard streams.
+
+    if (fp->____object == ObjectTypeVirtualConsole)
+    {
+        if (fd == STDIN_FILENO || 
+            fd == STDOUT_FILENO || 
+            fd == STDERR_FILENO )
+        {
+            return -1;
+        }
+
+        // Read from that console’s TTY input queue
+        if (fp->tty != NULL){
+            return (ssize_t) __tty_read(fp->tty, ubuf, count);
+        }
+        return -EINVAL; 
+    }
+
 
 // ========================================
 // file system
@@ -1782,6 +1801,29 @@ RegularFile:
     }
 
 // ======================================================
+// Virtual console (TTY). But NOT the standard streams.
+    if (fp->____object == ObjectTypeVirtualConsole)
+    {
+        if (fd == STDIN_FILENO || 
+            fd == STDOUT_FILENO || 
+            fd == STDERR_FILENO )
+        {
+            return -1;
+        }
+
+        // Write into that console’s TTY output queue
+        // Flush to screen (or background buffer)
+        if (fp->tty != NULL)
+        {
+            ssize_t nbytes = __tty_write2(fp->tty, ubuf, count);
+            fp->tty->output_worker_number = TTY_OUTPUT_WORKER_FGCONSOLE;
+            tty_flush_output_queue_ex(fp->tty);
+            return (ssize_t) nbytes;
+        }
+        return -EINVAL;
+    }
+
+// ======================================================
 // File system
     if (fp->____object == ObjectTypeFileSystem){
         printk ("__write_imp: [TODO] trying to write a file system\n");
@@ -1983,6 +2025,9 @@ __open_imp (
                 dev_fd, fp->_file );
             if (fp->____object == ObjectTypeTTY){
                 printk("____object: ObjectTypeTTY\n");
+            }
+            if (fp->____object == ObjectTypeVirtualConsole){
+                printk("____object: ObjectTypeVirtualConsole\n");
             }
             return (int) dev_fd;
         }

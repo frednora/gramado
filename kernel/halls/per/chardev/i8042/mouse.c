@@ -53,20 +53,22 @@ int ps2mouse_initialize_driver(void)
 {
     file *fp;
 
-    fp = (file *) kmalloc( sizeof(file) );
+    fp = (file *) kmalloc(sizeof(file));
     if ((void *) fp == NULL){
         panic("ps2mouse.c: fp\n");
     }
     memset ( fp, 0, sizeof(file) );
     fp->used = TRUE;
     fp->magic = 1234;
-    fp->____object = ObjectTypeFile;
 
+    fp->____object = ObjectTypeLegacyDevice;
     fp->isDevice = TRUE;
+
 // #todo
     fp->dev_major = 0;
     fp->dev_minor = 0;
 
+/*
 // Register the device.
     devmgr_register_device ( 
         (file *) fp, 
@@ -75,6 +77,19 @@ int ps2mouse_initialize_driver(void)
         DEVICE_TYPE_LEGACY,    // type (pci, legacy)
         NULL,                  // Not a pci device.
         NULL );                // Not a tty device. (not for now)
+*/
+
+    int rv = -1;
+    rv = 
+    (int) devmgr_register_legacy_device (
+        (file *) fp, 
+        device_name_ps2mouse,  // name 
+        DEVICE_CLASS_CHAR,     // class (char, block, network)
+        DEVICE_TYPE_LEGACY );  // type (pci, legacy)
+
+    if (rv < 0){
+        panic("ps2mouse.c: devmgr_register_legacy_device fail\n");
+    }
 
     return 0;
 }

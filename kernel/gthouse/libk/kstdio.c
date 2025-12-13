@@ -1902,6 +1902,7 @@ static void __initialize_stdin(void)
     stdin->_file = fd;  //0
 // This is a regular file.
     stdin->____object = ObjectTypeVirtualConsole;
+    stdin->isDevice  = TRUE;
 // sync
     stdin->sync.sender_pid = (pid_t) -1;
     stdin->sync.receiver_pid = (pid_t) -1;
@@ -2016,7 +2017,8 @@ static void __initialize_stdout(void)
 // directly into the virtual console.
 // It is a device.
 
-    stdout->____object = ObjectTypeVirtualConsole; 
+    stdout->____object = ObjectTypeVirtualConsole;
+    stdout->isDevice = TRUE;
 
 // sync
     stdout->sync.sender_pid = (pid_t) -1;
@@ -2111,6 +2113,8 @@ static void __initialize_stderr(void)
     stderr->_file = fd;  //2
 // This is a regular file.
     stderr->____object = ObjectTypeVirtualConsole;
+    stderr->isDevice = TRUE;
+
 // sync
     stderr->sync.sender_pid = (pid_t) -1;
     stderr->sync.receiver_pid = (pid_t) -1;
@@ -2380,7 +2384,7 @@ static void __initialize_virtual_consoles(void)
     stderr->tty = (struct tty_d *) Lconsole0;
 
 // The foreground console
-    jobcontrol_switch_console(DEFAULT_CONSOLE);
+    jobcontrol_switch_console(DEFAULT_CONSOLE); //  Console 0
 // Setup the pointer for the current console
     set_up_cursor(0,0);
 
@@ -2388,6 +2392,152 @@ static void __initialize_virtual_consoles(void)
     //set_up_cursor(0,1);
     //console_outbyte('x',fg_console);
     //while(1){}
+// ============================================================
+
+
+// ============================================================
+// Console 0
+    file *fp0 = kmalloc(sizeof(file));
+    memset(fp0, 0, sizeof(file));
+
+    fp0->used      = TRUE;
+    fp0->magic     = 1234;
+
+    fp0->____object = ObjectTypeVirtualConsole;
+    fp0->isDevice   = TRUE;
+
+    fp0->device     = NULL;   // will be filled by devmgr
+    fp0->dev_major  = 0;
+    fp0->dev_minor  = 0;
+
+    fp0->_flags     = __SRD | __SWR;
+    fp0->_file      = -1;
+
+    fp0->_base      = NULL;
+    fp0->_p         = NULL;
+    fp0->_r         = 0;
+    fp0->_w         = 0;
+    fp0->_lbfsize   = 0;
+
+    fp0->sync.can_read  = TRUE;
+    fp0->sync.can_write = TRUE;
+
+    fp0->inode = NULL;
+
+    devmgr_register_tty_device(
+        fp0,
+        "CONSOLE0",
+        DEVICE_CLASS_CHAR,
+        DEVICE_TYPE_TTY,
+        Lconsole0 );
+
+// ============================================================
+// Console 1
+    file *fp1 = kmalloc(sizeof(file));
+    memset(fp1, 0, sizeof(file));
+
+    fp1->used      = TRUE;
+    fp1->magic     = 1234;
+
+    fp1->____object = ObjectTypeVirtualConsole;
+    fp1->isDevice   = TRUE;
+
+    fp1->device     = NULL;   // will be filled by devmgr
+    fp1->dev_major  = 0;
+    fp1->dev_minor  = 0;
+
+    fp1->_flags     = __SRD | __SWR;
+    fp1->_file      = -1;
+
+    fp1->_base      = NULL;
+    fp1->_p         = NULL;
+    fp1->_r         = 0;
+    fp1->_w         = 0;
+    fp1->_lbfsize   = 0;
+
+    fp1->sync.can_read  = TRUE;
+    fp1->sync.can_write = TRUE;
+
+    fp1->inode = NULL;
+
+    devmgr_register_tty_device(
+        fp1,
+        "CONSOLE1",
+        DEVICE_CLASS_CHAR,
+        DEVICE_TYPE_TTY,
+        Lconsole1 );
+
+// ============================================================
+// Console 2
+    file *fp2 = kmalloc(sizeof(file));
+    memset(fp2, 0, sizeof(file));
+
+    fp2->used      = TRUE;
+    fp2->magic     = 1234;
+
+    fp2->____object = ObjectTypeVirtualConsole;
+    fp2->isDevice   = TRUE;
+
+    fp2->device     = NULL;   // will be filled by devmgr
+    fp2->dev_major  = 0;
+    fp2->dev_minor  = 0;
+
+    fp2->_flags     = __SRD | __SWR;
+    fp2->_file      = -1;
+
+    fp2->_base      = NULL;
+    fp2->_p         = NULL;
+    fp2->_r         = 0;
+    fp2->_w         = 0;
+    fp2->_lbfsize   = 0;
+
+    fp2->sync.can_read  = TRUE;
+    fp2->sync.can_write = TRUE;
+
+    fp2->inode = NULL;
+
+    devmgr_register_tty_device(
+        fp2,
+        "CONSOLE2",
+        DEVICE_CLASS_CHAR,
+        DEVICE_TYPE_TTY,
+        Lconsole2 );
+
+// ============================================================
+// Console 3
+    file *fp3 = kmalloc(sizeof(file));
+    memset(fp3, 0, sizeof(file));
+
+    fp3->used      = TRUE;
+    fp3->magic     = 1234;
+
+    fp3->____object = ObjectTypeVirtualConsole;
+    fp3->isDevice   = TRUE;
+
+    fp3->device     = NULL;   // will be filled by devmgr
+    fp3->dev_major  = 0;
+    fp3->dev_minor  = 0;
+
+    fp3->_flags     = __SRD | __SWR;
+    fp3->_file      = -1;
+
+    fp3->_base      = NULL;
+    fp3->_p         = NULL;
+    fp3->_r         = 0;
+    fp3->_w         = 0;
+    fp3->_lbfsize   = 0;
+
+    fp3->sync.can_read  = TRUE;
+    fp3->sync.can_write = TRUE;
+
+    fp3->inode = NULL;
+
+    devmgr_register_tty_device(
+        fp3,
+        "CONSOLE3",
+        DEVICE_CLASS_CHAR,
+        DEVICE_TYPE_TTY,
+        Lconsole3 );
 }
 
 //

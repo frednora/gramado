@@ -1048,7 +1048,7 @@ static void compareStrings(int fd)
     int child_tid = -1;
     child_tid = (int) terminal_core_launch_from_cmdline(fd, prompt);
     if (child_tid < 0){
-        printf("term00.bin: on terminal_core_launch_from_cmdline()\n");
+        //printf("term00.bin: on terminal_core_launch_from_cmdline()\n");
         return;
     }
 

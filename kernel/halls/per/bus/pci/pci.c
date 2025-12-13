@@ -909,6 +909,7 @@ pciHandleDevice (
 // file structure, device name, class (char,block,network).
 // type (pci, legacy), pci device structure, tty driver struct.
 
+/*
     devmgr_register_device ( 
         (file *) __file,                 // file
         newname,                         // pathname.
@@ -916,6 +917,21 @@ pciHandleDevice (
         (unsigned char) __device_type,   // pci  | legacy
         (struct pci_device_d *) D,       // It's a pci device.
         NULL );                          // It's not a tty device.
+*/
+
+    int rv = -1;
+    rv = 
+    (int) devmgr_register_pci_device(
+        (file *) __file,                 // file
+        (const char *) newname,          // pathname
+        (unsigned char) __device_class,  // char | block | network
+        (unsigned char) __device_type,   // pci | legacy (here: DEVICE_TYPE_PCI)
+        (struct pci_device_d *) D        // It's a pci device
+        );
+
+    if (rv < 0){
+        panic("pciHandleDevice: devmgr_register_pci_device fail\n");
+    }
 
 // 0 = No error.
     return 0;

@@ -52,6 +52,7 @@ typedef enum {
     ObjectTypeRTC,            // rtc controller, clock
     ObjectTypeKeyboard,       // keyboard device.
     ObjectTypeMouse,          // mouse device.
+    ObjectTypeLegacyDevice,   // legacy device. (non pci)
     ObjectTypeComputer,       //
     ObjectTypeCpuRegister,    //
     ObjectTypeGDT,            //

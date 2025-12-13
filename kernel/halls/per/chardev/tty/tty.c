@@ -1698,6 +1698,7 @@ struct tty_d *tty_create(short type, short subtype, const char *devname)
 // #todo
 // Maybe we need a return value here.
 
+/*
     devmgr_register_device ( 
         (file *) __file,       // file 
         (char *) name_to_use,  // pathname 
@@ -1705,6 +1706,20 @@ struct tty_d *tty_create(short type, short subtype, const char *devname)
         DEVICE_TYPE_LEGACY,  // type (pci, legacy)
         NULL,                // Not a pci device
         __tty );             // This is a tty device
+*/
+
+    int rv = -1;
+    rv = 
+    (int) devmgr_register_tty_device ( 
+        (file *) __file,       // file 
+        (char *) name_to_use,  // pathname 
+        DEVICE_CLASS_CHAR,     // class (char, block, network)
+        DEVICE_TYPE_LEGACY,    // type (pci, legacy)
+        __tty );               // This is a tty device
+
+    if (rv < 0){
+        panic("tty_create: devmgr_register_tty_device fail\n");
+    }
 
 // Last check
     if ((void *) __tty == NULL){
