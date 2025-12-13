@@ -336,6 +336,7 @@ fail:
     return (int) -1;
 }
 
+// Reads from the input queue
 ssize_t __tty_read(struct tty_d *tty, char *buf, size_t size)
 {
     if ((void*)tty == NULL || (void*)buf == NULL || size == 0)
@@ -360,7 +361,7 @@ ssize_t __tty_read(struct tty_d *tty, char *buf, size_t size)
     return count;
 }
 
-// Write into the output queue.
+// Reads from the output queue.
 int __tty_read2(struct tty_d *tty, char *buffer, int nr)
 {
     int read_count=0;
@@ -1463,7 +1464,7 @@ fail:
 
 // Create a tty structure.
 // OUT: pointer
-struct tty_d *tty_create(short type, short subtype)
+struct tty_d *tty_create(short type, short subtype, const char *devname)
 {
     struct tty_d  *__tty;
     char __tmpname[64];
@@ -1627,23 +1628,18 @@ struct tty_d *tty_create(short type, short subtype)
 // mount point. 
 // pathname.
 
-// #test
-// Isso é o ponto de montagem.
-    int Index = (int) (__tty->index & 0xFFFF);
-// clear buffer
-    memset( __tmpname, 0, TTY_NAME_SIZE );
-    ksprintf( __tmpname, "TTY%d", Index );
+    // Choose device name
+    const char *name_to_use = devname;
+    char default_name[64];
+    memset(default_name,0,64);
 
-    //size_t NameSize = (size_t) strlen(__tmpname);
-// ----
-    char *newname = (char *) kmalloc(TTY_NAME_SIZE);
-    if ((void*) newname == NULL){
-        panic("tty_create: newname\n");
+    if (devname == NULL)
+    {
+        // Generate default name: TTY0, TTY1, ...
+        static int tty_index = 0;
+        ksprintf(default_name, "TTY%d", tty_index++);
+        name_to_use = default_name;
     }
-// Clear buffer and copy name
-    memset( newname, 0, TTY_NAME_SIZE );
-    strcpy(newname,__tmpname);
-    //memcpy(__tty->name,__tmpname,64);
 
 // File pointer.
 // Agora registra o dispositivo pci na lista genérica
@@ -1656,10 +1652,11 @@ struct tty_d *tty_create(short type, short subtype)
         panic("tty_create: __file\n");
     }
     memset ( __file, 0, sizeof(file) );
+    //__file->_file = -1;  
     __file->used = TRUE;
     __file->magic = 1234;
-    __file->____object = ObjectTypeTTY;
-    __file->isDevice = TRUE;
+    __file->____object = ObjectTypeTTY;  // <<< ---- TTY
+    __file->isDevice = TRUE;             // <<< ---- DEVICE
 // #todo
     __file->dev_major = 0;
     __file->dev_minor = 0;
@@ -1702,8 +1699,8 @@ struct tty_d *tty_create(short type, short subtype)
 // Maybe we need a return value here.
 
     devmgr_register_device ( 
-        (file *) __file,     // file 
-        newname,             // pathname 
+        (file *) __file,       // file 
+        (char *) name_to_use,  // pathname 
         DEVICE_CLASS_CHAR,   // class (char, block, network)
         DEVICE_TYPE_LEGACY,  // type (pci, legacy)
         NULL,                // Not a pci device

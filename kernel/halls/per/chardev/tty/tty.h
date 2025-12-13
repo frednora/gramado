@@ -519,7 +519,7 @@ tty_ioctl (
 // CREATE
 //
 
-struct tty_d *tty_create(short type, short subtype);
+struct tty_d *tty_create(short type, short subtype, const char *devname);
 
 #endif    
 

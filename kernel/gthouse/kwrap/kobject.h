@@ -37,7 +37,6 @@ typedef enum {
     ObjectTypeLine,           //
     ObjectTypePTMX,           // <<<< This file represents a pty multiplexer.  
     ObjectTypeTTY,            //
-    ObjectTypePTY,            //
     ObjectTypeVirtualConsole, //
     ObjectTypeCharDev,        //
     ObjectTypeBlockDev,       //

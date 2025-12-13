@@ -1075,11 +1075,11 @@ void ps_initialize_process_common_elements(struct te_d *p)
 //
 // tty support
 //
-
+    const char *tty_name = "NONAME";
 //++
-// IN: type, subtype
+// IN: type, subtype, name
     p->tty = 
-        (struct tty_d *) tty_create( TTY_TYPE_PTY, TTY_SUBTYPE_UNDEFINED );
+        (struct tty_d *) tty_create( TTY_TYPE_PTY, TTY_SUBTYPE_UNDEFINED, tty_name );
 
     if ((void *) p->tty == NULL){
         panic("ps_initialize_process_common_elements: Couldn't create tty\n");
@@ -1192,9 +1192,10 @@ struct te_d *create_and_initialize_process_object(void)
     new_process->syscalls_counter = 0;
 
 // tty
+    const char *tty_name = "NONAME";
 //++
     new_process->tty = 
-        (struct tty_d *) tty_create( TTY_TYPE_PTY, TTY_SUBTYPE_UNDEFINED );
+        (struct tty_d *) tty_create( TTY_TYPE_PTY, TTY_SUBTYPE_UNDEFINED, tty_name );
     if ((void *) new_process->tty == NULL){
         panic ("create_and_initialize_process_object: tty_create\n");
     }

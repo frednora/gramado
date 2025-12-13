@@ -1091,12 +1091,38 @@ RegularFile:
     }
 
 // ========================================
-// pty () pseudo terminal.
+// PTY (pseudo terminal) read path
+//
+// FULL DUPLEX MODEL:
+//
+// 1) MASTER reads from its output queue
+//    - This is data written by the slave (shell output)
+//
+// 2) SLAVE reads from its input queue
+//    - This is data written by the master (terminal input)
+//
+// Subtypes:
+//    TTY_SUBTYPE_PTY_MASTER  = PTY master endpoint
+//    TTY_SUBTYPE_PTY_SLAVE   = PTY slave endpoint
 
-    if (fp->____object == ObjectTypePTY){
+    if (fp->____object == ObjectTypeTTY)
+    {
         printk ("__read_imp: [TODO] trying to read a PTY device file\n");
+        if ((void*)fp->tty == NULL)
+            return -1;
+
+        // 1) MASTER reads from its output queue
+        if (fp->tty->subtype == TTY_SUBTYPE_PTY_MASTER){
+            return (ssize_t) __tty_read2(fp->tty,ubuf,count);
+        }
+
+        // 2) SLAVE reads from its input queue
+        if (fp->tty->subtype == TTY_SUBTYPE_PTY_SLAVE){
+            return (ssize_t) __tty_read( fp->tty, ubuf, count );
+        }
         return 0;
     }
+
 
 // ========================================
 // file system
@@ -1716,9 +1742,42 @@ RegularFile:
     }
 
 // ======================================================
-// pty () pseudo terminal.
-    if (fp->____object == ObjectTypePTY){
+// PTY (pseudo terminal) write path
+//
+// FULL DUPLEX MODEL:
+//
+// 1) MASTER → SLAVE (terminal input → shell stdin)
+//    - The master writes into the slave's *input queue*
+//    - The slave will later read from its input queue
+//
+// 2) SLAVE → MASTER (shell output → terminal display)
+//    - The slave writes into the master's *output queue*
+//    - The master will later read from its output queue
+//
+// Subtypes:
+//    TTY_SUBTYPE_PTY_MASTER  = PTY master endpoint
+//    TTY_SUBTYPE_PTY_SLAVE   = PTY slave endpoint
+
+    if (fp->____object == ObjectTypeTTY)
+    {
         printk ("__write_imp: [TODO] trying to write a PTY device file\n");
+        if ((void*)fp->tty == NULL)
+            return -1;
+
+        // MASTER → SLAVE (write into slave input queue)
+        if (fp->tty->subtype == TTY_SUBTYPE_PTY_MASTER)
+        {
+            if ((void*)fp->tty->link == NULL)
+                return -1;
+            return (ssize_t) __tty_write(fp->tty->link,ubuf,count);
+        }
+        // SLAVE → MASTER (write into master output queue)
+        if (fp->tty->subtype == TTY_SUBTYPE_PTY_SLAVE)
+        {
+            if ((void*)fp->tty->link == NULL)
+                return -1;
+            return (ssize_t) __tty_write2( fp->tty->link, ubuf, count );
+        }
         return 0;
     }
 
@@ -1798,6 +1857,8 @@ __open_imp (
 
     int value = -1;
     file *fp;
+    struct te_d *p;
+    pid_t current_process = -1;
 
     //debug_print ("__open_imp: $\n");
 
@@ -1809,6 +1870,23 @@ __open_imp (
     }
     if (*pathname == 0){
         return (int) (-EFAULT);
+    }
+
+
+// Process
+    current_process = (pid_t) get_current_process();
+    if (current_process < 0 || current_process >= PROCESS_COUNT_MAX){
+        debug_print("__open_imp: current_process\n");
+        goto fail;
+    }
+    p = (void *) teList[current_process];
+    if ((void *) p == NULL){
+        debug_print("__open_imp: p\n");
+        goto fail;
+    }
+    if ( p->used != TRUE || p->magic != 1234 ){
+        debug_print("__open_imp: p validation\n");
+        goto fail;
     }
 
 // Local copy
@@ -1869,6 +1947,9 @@ __open_imp (
 // Yes, 
 // we have a valid pointer found in the table.
 
+    int dev_fd = -1;
+    int SlotIterator = 0;
+
     if ((void*) fp != NULL)
     {
         if (fp->isDevice == TRUE)
@@ -1878,7 +1959,32 @@ __open_imp (
             // current process structure
             // and return the fd.
             printk("__open_imp: #todo isDevice\n");
-            goto fail;
+
+            // Find a free file descriptor slot
+            for (SlotIterator = 0; SlotIterator < OPEN_MAX; SlotIterator++)
+            {
+                if (p->Objects[SlotIterator] == 0)
+                {
+                    dev_fd = SlotIterator;
+                    break;
+                }
+            }
+            if (dev_fd < 0)
+                return -EMFILE;  // No free descriptors
+
+            // Install the file pointer into the process table
+            fp->_file = (int) dev_fd;
+            p->Objects[dev_fd] = (unsigned long) fp;
+
+            // Optional: track usage
+            fp->fd_counter++;
+
+            printk("__open_imp: device opened, fd=%d fd=%d\n", 
+                dev_fd, fp->_file );
+            if (fp->____object == ObjectTypeTTY){
+                printk("____object: ObjectTypeTTY\n");
+            }
+            return (int) dev_fd;
         }
     }
 

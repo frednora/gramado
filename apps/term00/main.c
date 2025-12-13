@@ -846,7 +846,7 @@ static void compareStrings(int fd)
         goto exit_cmp;
     }
 
-
+/*
 // open1
 // Test open() function.
     if ( strncmp(prompt,"open1",5) == 0 )
@@ -859,6 +859,26 @@ static void compareStrings(int fd)
         open("/DEV/DEV_1234_1111", 0, "a+");
         open("/DEV/DEV_8086_100E", 0, "a+");
         // ...
+        goto exit_cmp;
+    }
+*/
+
+    if (strncmp(prompt, "ptym", 4) == 0)
+    {
+        int fd = open("/DEV/PTYM", 0, "a+");
+        printf("open(/DEV/PTYM) returned fd=%d\n", fd);
+        write(fd, "Hello PTYM\n", 12);
+        goto exit_cmp;
+    }
+
+    char ptys_buffer[64];
+    if (strncmp(prompt, "ptys", 4) == 0)
+    {
+        int fd = open("/DEV/PTYS", 0, "a+");
+        printf("open(/DEV/PTYS) returned fd=%d\n", fd);
+        memset(ptys_buffer, 0, 64);
+        read(fd, ptys_buffer, 64);
+        printf("read: %s\n", ptys_buffer);
         goto exit_cmp;
     }
 

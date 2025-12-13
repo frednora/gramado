@@ -112,22 +112,26 @@ int tty_initialize_legacy_pty(void)
 // Create
 //
 
+    const char *tty_master_name = "PTYM";
+    const char *tty_slave_name  = "PTYS";
 
 // Master
     pty_master = 
-        (struct tty_d *) tty_create( TTY_TYPE_PTY, TTY_SUBTYPE_PTY_MASTER );
+        (struct tty_d *) tty_create( TTY_TYPE_PTY, TTY_SUBTYPE_PTY_MASTER, tty_master_name );
     if ((void *) pty_master == NULL){
         panic("tty_initialize_legacy_tty: pty_master\n");
     }
     tty_start(pty_master);
+    tty_reset_termios(pty_master);
 
 // Slave
     pty_slave = 
-        (struct tty_d *) tty_create( TTY_TYPE_PTY, TTY_SUBTYPE_PTY_SLAVE );
+        (struct tty_d *) tty_create( TTY_TYPE_PTY, TTY_SUBTYPE_PTY_SLAVE, tty_slave_name );
     if ((void *) pty_slave == NULL){
         panic("tty_initialize_legacy_tty: pty_slave\n");
     }
     tty_start(pty_slave);
+    tty_reset_termios(pty_slave);
 
 // Link
     pty_master->link = (struct tty_d *) pty_slave;
