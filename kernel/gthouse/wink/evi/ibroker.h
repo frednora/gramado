@@ -15,6 +15,9 @@ extern struct input_broker_info_d  InputBrokerInfo;
 
 // ==========================
 
+// Send ascii to the tty associated with stdin.
+int ibroker_send_ascii_to_stdin(int ascii_code);
+
 int ksys_shell_parse_cmdline(char *cmdline_address, size_t buffer_size);
 
 // Process input

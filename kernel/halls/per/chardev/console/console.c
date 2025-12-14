@@ -448,30 +448,74 @@ static void csi_M(int nr, int console_number)
 // Ficaremos com o ultimo atributo. #bugbug ????
 // Set some attributes based on the parameters found.
 // Sets colors and style of the characters.
+
+// SGR — Select Graphic Rendition
+// The ANSI escape sequence CSI … m (SGR — Select Graphic Rendition) controls:
+// text attributes (bold, underline, reverse, etc.)
+// foreground color
+// background color
+// ESC[31m     → red foreground
+// ESC[44m     → blue background
+// ESC[0m      → reset
+// ESC[1;33m   → bold yellow
+// ESC[m with no parameters means reset attributes.
+// Parse every parameter stored in the par[] array and update:
+// CONSOLE_TTYS[n].fg_color
+// CONSOLE_TTYS[n].bg_color
+
 static void csi_m(void)
 {
-    register int i=0;
-    int max = (int)(npar & 0xFFFFFFFF);
-    int ivalue=0;
+    int i=0;
+    int p=0;
 
-// #bugbug
-// Check 'npar'
-
-    if (max == 0){
+// If no parameters: reset attributes
+    if (npar == 0) {
+        CONSOLE_TTYS[fg_console].fg_color = CONSOLE_TTYS[fg_console].default_fg_color;
+        CONSOLE_TTYS[fg_console].bg_color = CONSOLE_TTYS[fg_console].default_bg_color;
         return;
     }
 
-    for (i=0; i <= max; i++)
+    for (i=0; i < npar; i++)
     {
-        // Get the parameter value.
-        ivalue = par[0];
-        ivalue = (ivalue & 0xFF);
-        ivalue = k_atoi(&ivalue);
+        p = par[i];  // Get one parameter
 
-        // #todo
-        // Call a worker for each of these parameters.
-        //console_set_parameter(ivalue);
-    };
+        switch (p)
+        {
+            case 0: // reset
+                CONSOLE_TTYS[fg_console].fg_color = CONSOLE_TTYS[fg_console].default_fg_color;
+                CONSOLE_TTYS[fg_console].bg_color = CONSOLE_TTYS[fg_console].default_bg_color;
+                break;
+
+            // foreground 30–37
+            case 30: CONSOLE_TTYS[fg_console].fg_color = COLOR_BLACK;   break;
+            case 31: CONSOLE_TTYS[fg_console].fg_color = COLOR_RED;     break;
+            case 32: CONSOLE_TTYS[fg_console].fg_color = COLOR_GREEN;   break;
+            case 33: CONSOLE_TTYS[fg_console].fg_color = COLOR_YELLOW;  break;
+            case 34: CONSOLE_TTYS[fg_console].fg_color = COLOR_BLUE;    break;
+            case 35: CONSOLE_TTYS[fg_console].fg_color = COLOR_RED;     break;  //COLOR_MAGENTA
+            case 36: CONSOLE_TTYS[fg_console].fg_color = COLOR_CYAN;    break;
+            case 37: CONSOLE_TTYS[fg_console].fg_color = COLOR_WHITE;   break;
+
+            // background 40–47
+            case 40: CONSOLE_TTYS[fg_console].bg_color = COLOR_BLACK;   break;
+            case 41: CONSOLE_TTYS[fg_console].bg_color = COLOR_RED;     break;
+            case 42: CONSOLE_TTYS[fg_console].bg_color = COLOR_GREEN;   break;
+            case 43: CONSOLE_TTYS[fg_console].bg_color = COLOR_YELLOW;  break;
+            case 44: CONSOLE_TTYS[fg_console].bg_color = COLOR_BLUE;    break;
+            case 45: CONSOLE_TTYS[fg_console].bg_color = COLOR_RED;     break;  //COLOR_MAGENTA
+            case 46: CONSOLE_TTYS[fg_console].bg_color = COLOR_CYAN;    break;
+            case 47: CONSOLE_TTYS[fg_console].bg_color = COLOR_WHITE;   break;
+
+            // You can add bold, underline, etc. later
+        }
+    }
+
+// Clear parameters
+    i=0;
+    for (i=0; i < NPAR; i++){
+        par[i] = 0;
+    }
+    npar = 0;
 }
 
 static void __respond (int console_number)
@@ -1775,7 +1819,6 @@ console_write (
                     // Draw and refresh.
                     if (DoEcho == TRUE)
                     {
-
                         // Regular printable
                         if (ch >= 32 && ch <= 127){
                             console_echo(ch,console_number);
@@ -1881,11 +1924,12 @@ console_write (
                 npar=0;
                 //Mudando de estago para checar os parametros.
                 __EscapeSequenceStage=3;  // Next state.
-                
-                //Se o primeiro char apos o '[' for um '?'
+
+                // Se o primeiro char apos o '[' for um '?'
                 // entao vamos para o proximo estagio, mas quebraremos 
-                // par ao for pegar o proximo char.
+                // para o for pegar o proximo char.
                 // Caso contrario vamos para o proximo estago sem pegarmos o proximo char?
+                // 
                 if ( ques = (ch == '?') ) 
                     break;
 
@@ -1906,7 +1950,8 @@ console_write (
                     // Avançamos, mas quebramos para que o for pegue
                     // o proximo char da string.
                     //#bugbug: Não moda de state??
-                    npar++;  break;  
+                    npar++;  
+                    break;  
 
                 // Isso nao eh um delimitador.
                 // Checamos se eh um numero.
@@ -1935,17 +1980,11 @@ console_write (
 
             // Stage 4
             case 4:
-                // #debug
-                //console_putchar ( '@',console_number);
-                //console_putchar ( '4',console_number);
-                //console_putchar ( '\n',console_number);
-
-                // Zerando o marcador de estagio.
-                // Significa que se quebrarmos, vamos voltar para o estagio zero.
-                // No estagio zero estamos fora da escape sequence.
  
+                // Come back to stage 0, for normal chars and escape char.
                 __EscapeSequenceStage=0;
-                
+
+                // 
                 switch (ch){
 
                     // mudamos o cursor e saimos da escape sequence
@@ -2114,19 +2153,17 @@ console_write (
                         __EscapeSequenceStage = 4;
                         break;
 
-                    // FIM.
-                    // Isso marca o fim da escape sequence,
-                    // vamos quebrar e voltar para a string normal.
                     // Essa rotina cheaca os parametros e configura o atributo
                     // de acordo com o ultimo parametro.
+
+                    // End of csi sequence
+                    // SGR — Select Graphic Rendition
                     case 'm': 
-                        //printk ("m found\n");
-                        //csi_m(); // Set some attributes based on the parameters found.
-                        // Limpando o array de parametros.
-                        for ( npar=0; npar<NPAR; npar++ ){ 
-                            par[npar]=0;
-                        };
-                        npar=0;
+
+                        // Change display attributes
+                        csi_m();
+
+                        // Back to stage 0
                         __EscapeSequenceStage = 0;
                         break;
 
@@ -2177,10 +2214,9 @@ console_write (
         };
     };  // FOR 
 
-// done:
     return (ssize_t) StringSize;
+
 fail:
-    //refresh_screen();
     return (ssize_t) -1;
 }
 
@@ -2886,27 +2922,13 @@ DDINIT_console(
     // width in pixels
     // height in pixels.
 
-// Everyone has the same color.
-// White on black.
+// Current colors
     CONSOLE_TTYS[ConsoleIndex].bg_color = bg_color;
     CONSOLE_TTYS[ConsoleIndex].fg_color = fg_color;
+// Default colors
+    CONSOLE_TTYS[ConsoleIndex].default_bg_color = bg_color;
+    CONSOLE_TTYS[ConsoleIndex].default_fg_color = fg_color;
 
-/*
-// Default colors.
-// A different color for each console number.
-    if (ConsoleIndex == 0){
-        CONSOLE_TTYS[ConsoleIndex].fg_color = COLOR_WHITE; 
-    }
-    if (ConsoleIndex == 1){
-        CONSOLE_TTYS[ConsoleIndex].fg_color = COLOR_YELLOW; 
-    }
-    if (ConsoleIndex == 2){
-        CONSOLE_TTYS[ConsoleIndex].fg_color = COLOR_GREEN; 
-    }
-    if (ConsoleIndex == 3){
-        CONSOLE_TTYS[ConsoleIndex].fg_color = COLOR_CYAN; 
-    }
-*/
 
     //#todo
     // Buffers !!!
@@ -3064,9 +3086,8 @@ int VirtualConsole_early_initialization(void)
     fg_colors[3] = (unsigned int) COLOR_YELLOW;
 
 
-    for (i=0; i<CONSOLETTYS_COUNT_MAX; i++)
-    {
-        // IN: console index, bg color, fg color
+// IN: console index, bg color, fg color
+    for (i=0; i<CONSOLETTYS_COUNT_MAX; i++){
         DDINIT_console( i, bg_colors[i], fg_colors[i] );
     };
 

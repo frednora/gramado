@@ -384,16 +384,19 @@ struct tty_d
     char charset_name[CHARSET_NAME_SIZE];
     size_t charset_name_size;
 
-//--------------------------------
+
+// Char support.
+// bg and fg colors.
+    unsigned int bg_color;      // current background color
+    unsigned int fg_color;      // current foreground color
+
+// Default colors for SGR reset (ESC[m)
+    unsigned int default_bg_color;    // default background color
+    unsigned int default_fg_color;    // default foreground color
 
 // Font support
 // see: font.c, char.c
     void *font_address;
-
-// Char support.
-// bg and fg colors.
-    unsigned int bg_color;
-    unsigned int fg_color;
 
 // Is it a fullscreen console?
     int fullscreen_flag;

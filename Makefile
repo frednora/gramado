@@ -235,6 +235,7 @@ build-extras:
 	@-cp $(COMMANDS)/bin/PUBSH.BIN    $(BASE)/DE/
 	@-cp $(COMMANDS)/bin/SHELL.BIN    $(BASE)/GRAMADO/
 	@-cp $(COMMANDS)/bin/SHELL.BIN    $(BASE)/DE/
+	@-cp $(COMMANDS)/bin/SHELL2.BIN   $(BASE)/DE/
 #	@-cp $(COMMANDS)/bin/SHELLZZ.BIN  $(BASE)/GRAMADO/
 #	@-cp $(COMMANDS)/bin/SHELLZZ.BIN  $(BASE)/DE/
 

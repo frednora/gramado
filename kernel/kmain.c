@@ -854,11 +854,14 @@ static int deviceinit(void)
 // See: 
 // config.h input.h input.c ibroker.h ibroker.c
 
+/*
+   //#delete
     if (CONFIG_INPUT_TARGET_TTY == 1){
         input_enable_this_input_target(INPUT_TARGET_TTY);
     }else{
         input_disable_this_input_target(INPUT_TARGET_TTY);
     };
+*/
 
     if (CONFIG_INPUT_TARGET_STDIN == 1){
         input_enable_this_input_target(INPUT_TARGET_STDIN);

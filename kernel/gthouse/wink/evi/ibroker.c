@@ -133,6 +133,33 @@ static void setup_minimal_ring0_thread(void)
     SelectForExecution(t);
 }
 
+// Send ascii to the tty associated with stdin.
+int ibroker_send_ascii_to_stdin(int ascii_code) 
+{
+    size_t wbytes = 0;
+    struct tty_d *target_tty;
+
+    if ((void*)stdin == NULL)
+        return 0;
+    if (stdin->magic != 1234)
+        return 0;
+
+// The tty associated with stdin.
+    target_tty = stdin->tty;
+
+    if ((void*)target_tty == NULL)
+        return 0;
+
+    if (target_tty->magic != 1234)
+        return 0;
+
+// Send the ascii code to the tty associated with stdin.
+// (ascii in this case)
+    wbytes = 
+        (int) tty_queue_putchar( &target_tty->raw_queue, (char) ascii_code );
+
+    return (int) wbytes;
+}
 
 void input_enter_kernel_console(void)
 {
@@ -164,9 +191,6 @@ int input_enable_this_input_target(int this_one)
 {
     switch (this_one)
     {
-        case INPUT_TARGET_TTY:
-            InputTargets.target_tty = TRUE;
-            break;
         case INPUT_TARGET_STDIN:
             InputTargets.target_stdin = TRUE;
             break;
@@ -185,9 +209,6 @@ int input_disable_this_input_target(int this_one)
 {
     switch (this_one)
     {
-        case INPUT_TARGET_TTY:
-            InputTargets.target_tty = FALSE;
-            break;
         case INPUT_TARGET_STDIN:
             InputTargets.target_stdin = FALSE;
             break;
@@ -1187,7 +1208,9 @@ __consoleProcessKeyboardInput (
 
         switch (long1){
 
-        case VK_RETURN:
+        //case VK_RETURN:
+        case '\n':
+        case '\r':
             //if (InputBrokerInfo.shell_flag != TRUE){
                 //wmSendInputToWindowManager(0,MSG_KEYDOWN,long1,long2);
                 //return 0;
@@ -1690,7 +1713,9 @@ __ProcessKeyboardInput (
 
         switch (long1){
 
-        case VK_RETURN:
+        //case VK_RETURN:
+        case '\n':
+        case '\r':
             break;
 
          //case 'd':
@@ -2167,8 +2192,9 @@ wmRawKeyEvent(
 // [event block]
     //struct input_block_d input_block;
     int           Event_Message       = 0;  //arg2 - message number
-    unsigned long Event_LongASCIICode = 0;  //arg3 - ascii code (vk)
+    unsigned long Event_LongVK        = 0;  //arg3 - vk
     unsigned long Event_LongRawByte   = 0;  //arg4 - raw byte
+    unsigned long Event_LongScanCode  = 0;  //arg4 - raw byte
     //===================
 
     int Status = -1;
@@ -2379,10 +2405,10 @@ wmRawKeyEvent(
         {
             // se liberada teclas de sistema como capslock ligado
             if (capslock_status == FALSE)
-            { Event_LongASCIICode = map_abnt2[Keyboard_ScanCode];   goto done; }
+            { Event_LongVK = map_abnt2[Keyboard_ScanCode];   goto done; }
             // se liberada teclas de sistema como capslock desligado
             if (capslock_status == TRUE)
-            { Event_LongASCIICode = shift_abnt2[Keyboard_ScanCode]; goto done; }
+            { Event_LongVK = shift_abnt2[Keyboard_ScanCode]; goto done; }
             // ...
         }
 
@@ -2399,10 +2425,10 @@ wmRawKeyEvent(
         {
             // Minúsculas.
             if (capslock_status == FALSE)
-            { Event_LongASCIICode = map_abnt2[Keyboard_ScanCode];   goto done; }
+            { Event_LongVK = map_abnt2[Keyboard_ScanCode];   goto done; }
             // Maiúsculas.
             if (capslock_status == TRUE)
-            { Event_LongASCIICode = shift_abnt2[Keyboard_ScanCode]; goto done; }
+            { Event_LongVK = shift_abnt2[Keyboard_ScanCode]; goto done; }
             // ...
         }
 
@@ -2540,10 +2566,10 @@ wmRawKeyEvent(
         {   
             // se pressionamos teclas de sistema como capslock ligado
             if (capslock_status == FALSE)
-            { Event_LongASCIICode = map_abnt2[Keyboard_ScanCode];   goto done; }
+            { Event_LongVK = map_abnt2[Keyboard_ScanCode];   goto done; }
             // se pressionamos teclas de sistema como capslock desligado
             if (capslock_status == TRUE || shift_status == TRUE)
-            { Event_LongASCIICode = shift_abnt2[Keyboard_ScanCode]; goto done; }
+            { Event_LongVK = shift_abnt2[Keyboard_ScanCode]; goto done; }
             // ...
         }
 
@@ -2556,28 +2582,28 @@ wmRawKeyEvent(
             // Minúsculas.
             if (capslock_status == FALSE && shift_status == FALSE)
             { 
-                Event_LongASCIICode = map_abnt2[Keyboard_ScanCode];
+                Event_LongVK = map_abnt2[Keyboard_ScanCode];
 
                 // #test
                 // We send a combination event,
                 // and the ascii char.
                 // For stdin we send just the ascii char.
                 if (ctrl_status == TRUE)
-                    Event_LongASCIICode = ctl_abnt2[Keyboard_ScanCode];
+                    Event_LongVK = ctl_abnt2[Keyboard_ScanCode];
 
                 goto done; 
             }
             // Maiúsculas.
             if (capslock_status == TRUE || shift_status == TRUE)
             {
-                Event_LongASCIICode = shift_abnt2[Keyboard_ScanCode];
+                Event_LongVK = shift_abnt2[Keyboard_ScanCode];
 
                 // #test
                 // We send a combination event,
                 // and the ascii char.
                 // For stdin we send just the ascii char.
                 if (ctrl_status == TRUE)
-                    Event_LongASCIICode = ctl_abnt2[Keyboard_ScanCode];
+                    Event_LongVK = ctl_abnt2[Keyboard_ScanCode];
 
                 goto done;
             }
@@ -2602,6 +2628,8 @@ done:
 
     Event_LongRawByte = 
         (unsigned long) (Keyboard_RawByte & 0x000000FF);
+    Event_LongScanCode = 
+        (unsigned long) (Event_LongRawByte & 0x0000007F);
 
 // ------------------------------------
 // It's an extended keyboard key.
@@ -2615,14 +2643,14 @@ done:
             (int) __ProcessExtendedKeyboardKeyStroke(
                 (int) Prefix,
                 (int) Event_Message, 
-                (unsigned long) Event_LongASCIICode,
-                (unsigned long) Event_LongRawByte );
+                (unsigned long) Event_LongVK,
+                (unsigned long) Event_LongScanCode );
         return (int) Status;
     }
 
 // Unmapped scancode
 // It's ok to simply return
-    if (Event_LongASCIICode == 0)
+    if (Event_LongVK == 0)
     {
         return 0;
     }
@@ -2651,8 +2679,12 @@ done:
 // ASCII Codes (0x00~0x7F)
 // Extended ASCII Codes (0x80~0xFF)
 
-    int __int_ascii_code = (int) (Event_LongASCIICode & 0xFF);
-    //int __int_ascii_code = (int) (Event_LongASCIICode & 0x7F);
+    // ASCII for the tty system 
+    int __int_ASCII = (int) (Event_LongVK & 0xFF);
+
+    // Converting RETURN to LF for the tty system.  
+    if (Event_LongVK == VK_RETURN)
+        __int_ASCII = ASCII_LF;  // Line Feed
 
     int wbytes = 0;  //written bytes.
 
@@ -2664,8 +2696,8 @@ done:
         Status = 
             (int) __consoleProcessKeyboardInput(
                   (int) Event_Message,
-                  (unsigned long) Event_LongASCIICode,
-                  (unsigned long) Event_LongRawByte );
+                  (unsigned long) Event_LongVK,
+                  (unsigned long) Event_LongScanCode );
 
         return (int) Status;
     }
@@ -2692,66 +2724,32 @@ done:
             //     shift_status != TRUE )
         if (alt_status != TRUE)
         {
-
-                // #test
-                // #todo: Create a flag InputTargets.target_tty
-                // It needs to redirect if a tty is connected to another.
-            if (InputTargets.target_tty == TRUE)
-            {
-                    //tty_queue_putchar(&target_tty->raw_queue, ascii_char);
-                    //tty_flush_output_queue_ex(target_tty);
-
-                    // Put into the output queue
-                    //tty_queue_putchar( 
-                        //&CONSOLE_TTYS[fg_console].output_queue, 
-                        //(char)__int_ascii_code );
-                    // flush the whole queue
-                    //tty_flush(&CONSOLE_TTYS[fg_console]);
-                    //struct tty_d *myTTY99 = (struct tty_d *) &CONSOLE_TTYS[0];
-                    //char myfakebuffer[2];
-                    //myfakebuffer[0] = __int_ascii_code;
-                    //__tty_write2(myTTY99,myfakebuffer,1);
-                    //tty_flush(myTTY99);
-            }
-
-                // Mandaremos teclas de digitação para stdin
-                // somente se um terminal virtual está em foreground.
-                // stdin::
+            // Send it to the tty associated with stdin.
             if (InputTargets.target_stdin == TRUE)
             {
-                    // #todo
-                    // Check if the foreground thread is a terminal virtual.
-                    // Do not send bytes to stdin if the foreground thread 
-                    // is not a virtual terminal.
-                    // In the case that we have more then one virtual terminals,
-                    // only one virtual terminal will be able to read from stdin.
-                //wbytes = (int) kstdio_feed_stdin((int) __int_ascii_code);
-
+                wbytes = (int) ibroker_send_ascii_to_stdin( (int) __int_ASCII );
+                
+                /*
                 struct tty_d *in_tty = stdin->tty;
                 if ((void*)in_tty != NULL)
                 {
                     if (in_tty->magic == 1234)
                     {
                         //in_tty->raw_queue.buf[0] = 'x';
-                        //in_tty->raw_queue.buf[0] = __int_ascii_code;
+                        //in_tty->raw_queue.buf[0] = __int_ASCII;
                         // Deliver keystroke to ring 3 via stdin
                         wbytes = (int) tty_queue_putchar(
                                 &in_tty->raw_queue, 
-                                (char)__int_ascii_code );
-
-                    //printk("IBROKER: injecting '%c' (%d) into stdin TTY %x ('%s')\n",
-                    //    __int_ascii_code,
-                    //    __int_ascii_code,
-                    //    in_tty,
-                    //    in_tty->name );
+                                (char)__int_ASCII );  // (ascii in this case)
                     }
                 }
+                */
             }
 
-                // #todo
-                // Maybe we're gonna return here depending on
-                // the input mode. 'Cause we don't wanna send
-                // the data to multiple targets.
+            // #todo
+            // Maybe we're gonna return here depending on
+            // the input mode. 'Cause we don't wanna send
+            // the data to multiple targets.
         }
     } // END KEYDOWN
 
@@ -2787,8 +2785,8 @@ done:
                 // What are the types we're sending here
             ibroker_post_message_to_ds(
                 Event_Message, 
-                Event_LongASCIICode,
-                Event_LongRawByte );
+                Event_LongVK,
+                Event_LongScanCode );
         
             // Let's send only the function keys to the display server,
             // not the other ones. In order to be used by the window manager.
@@ -2796,7 +2794,7 @@ done:
 
             if (Event_Message == MSG_SYSKEYDOWN || Event_Message == MSG_SYSKEYUP)
             {
-                switch (Event_LongASCIICode){
+                switch (Event_LongVK){
                     case VK_F1: 
                     case VK_F2: 
                     case VK_F3: 
@@ -2811,8 +2809,8 @@ done:
                     case VK_F12:
                         ibroker_post_message_to_ds(
                             Event_Message, 
-                            Event_LongASCIICode,
-                            Event_LongRawByte );
+                            Event_LongVK,
+                            Event_LongScanCode );
                         break;
                 };
             }
@@ -2850,8 +2848,8 @@ done:
     Status = 
         (int) __ProcessKeyboardInput(
                   (int) Event_Message,
-                  (unsigned long) Event_LongASCIICode,
-                  (unsigned long) Event_LongRawByte );
+                  (unsigned long) Event_LongVK,
+                  (unsigned long) Event_LongScanCode );
 
     return (int) Status;
 

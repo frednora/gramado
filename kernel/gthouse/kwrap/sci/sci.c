@@ -2465,6 +2465,9 @@ void *sci2 (
 
     if (number == 10011)
     {
+        //printk("10011: BEGIN — current_thread=%d arg2=%d\n",
+           //current_thread, arg2);
+
         //debug_print("sci2: [10011] set foreground thread tid\n");
 
         // The permission is ok if the current thread (caller) 
@@ -2509,6 +2512,9 @@ void *sci2 (
         if ((void*) t == NULL){
             return NULL;
         }
+        //printk("10011: thread[%d]: used=%d magic=%d tid=%d state=%d\n",
+           //arg2, t->used, t->magic, t->tid, t->state);
+
         if (t->used != TRUE){
             return NULL;
         }
@@ -2516,13 +2522,18 @@ void *sci2 (
             return NULL;
         }
         // Redundant (Something is very wrong here)
-        if (arg2 != t->tid){
+        if (arg2 != t->tid)
+        {
+            //printk("10011: arg2 != t->tid\n");
             return NULL;
         }
         // Invalid state,
         // We can't give input focus to a thread in zombie state.
-        if (t->state == RUNNING || t->state == READY)
+        //printk("10011: thread state validation 1\n");
+        if (t->state == RUNNING || t->state == READY || t->state == STANDBY)
         {
+            //printk("10011: thread state validation 2\n");
+
             //Giving more credits. But the scheduler will balance
             //it at the and of the round.
             //t->quantum = QUANTUM_FIRST_PLANE;
@@ -2534,6 +2545,7 @@ void *sci2 (
             //t->signal |= 1<<(SIGKILL-1);
 
             foreground_thread = (int) arg2;
+            printk("10011: New foreground thread %d\n",foreground_thread);
 
             // #deprecated
             // it will select the next input reponder.

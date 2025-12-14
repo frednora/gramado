@@ -682,7 +682,8 @@ static int input_compare_string(void)
 // Launch a shell application 
 // This application will interpret the commands and send
 // data to the kernel console in ring0.
-    if ( strncmp(prompt,"shell",5) == 0 )
+    int shell2_tid = -1;
+    if ( strncmp(prompt,"shell2",6) == 0 )
     {
         printf("Launching shell.bin #todo\n");
         do_clear_console();
@@ -691,8 +692,16 @@ static int input_compare_string(void)
         //rtl_clone_and_execute("#pubsh.bin");
         //rtl_clone_and_execute("sh7.bin");
         //rtl_clone_and_execute("shell.bin");
-        //rtl_clone_and_execute("shell2.bin");
+        //rtl_clone_and_execute("#shell2.bin");
         //isTimeToQuitCmdLine = TRUE;
+
+        shell2_tid = (int) rtl_clone_and_execute_return_tid("#shell2.bin");
+        if (shell2_tid > 0){
+            rtl_sleep(2000);  //2sec
+            sc82(10011, shell2_tid, shell2_tid, shell2_tid );
+        }
+        exit(0);
+
         goto exit_cmp;
     }
 
@@ -912,7 +921,7 @@ static int ProcessCharInput(int c)
         goto fail;
 
     // [Enter]
-    if (c == __VK_RETURN){
+    if (c == '\n' || c == '\r'){
         input_process_cmdline();
         return 0;
 

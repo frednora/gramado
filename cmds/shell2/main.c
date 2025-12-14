@@ -1,5 +1,5 @@
 //====================================================
-// shell.bin - Minimal PTY Shell for Gramado OS
+// shell.bin - Minimal STDIN/STDOUT Shell for Gramado OS
 //====================================================
 
 #include <types.h>
@@ -7,40 +7,15 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <termios.h>
-#include <fcntl.h>
-#include <sys/ioctls.h>
-#include <sys/ioctl.h>
-#include <rtl/gramado.h>
 
-#include "shell.h"
+//#include "shell.h"
 
 //====================================================
 // Globals
 //====================================================
 
-int ptys_fd = -1;
-
-// Belongs to the library
-//char prompt[256];
-//int prompt_pos = 0;
-
-//====================================================
-// Initialize PTY slave
-//====================================================
-
-static void shell_initialize_pty(void)
-{
-    ptys_fd = open("/DEV/PTYS", 0, "a+");
-    if (ptys_fd < 0) {
-        printf("shell: failed to open PTYS\n");
-        exit(1);
-    }
-    // #todo: redirect stdin, stdout, stderr
-    //dup2(ptys_fd, 0);
-    //dup2(ptys_fd, 1);
-    //dup2(ptys_fd, 2);
-}
+//static char prompt[256];
+//static int  prompt_pos = 0;
 
 //====================================================
 // Reset prompt buffer
@@ -53,12 +28,12 @@ static void reset_prompt(void)
 }
 
 //====================================================
-// Send prompt to terminal
+// Send prompt to terminal (stdout)
 //====================================================
 
 static void show_prompt(void)
 {
-    write(ptys_fd, "$ ", 2);
+    write(1, "$ ", 2);
 }
 
 //====================================================
@@ -67,18 +42,17 @@ static void show_prompt(void)
 
 static void process_command(void)
 {
-    // Compare commands
     if (strncmp(prompt, "about", 5) == 0) {
-        write(ptys_fd, "shell: minimal PTY shell\n", 26);
+        write(1, "shell: minimal stdin/stdout shell\n", 34);
     }
     else if (strncmp(prompt, "help", 4) == 0) {
-        write(ptys_fd, "shell: commands: about, help\n", 30);
+        write(1, "shell: commands: about, help\n", 30);
     }
     else if (prompt_pos == 0) {
-        // Empty line → do nothing
+        // empty line
     }
     else {
-        write(ptys_fd, "shell: unknown command\n", 24);
+        write(1, "shell: unknown command\n", 24);
     }
 
     reset_prompt();
@@ -86,7 +60,7 @@ static void process_command(void)
 }
 
 //====================================================
-// Worker loop: read from PTYS, echo, accumulate
+// Worker loop: read from stdin, echo, accumulate
 //====================================================
 
 static void shell_worker(void)
@@ -98,21 +72,19 @@ static void shell_worker(void)
 
     while (1)
     {
-        if (read(ptys_fd, buf, 1) > 0)
+        if (read(0, buf, 1) > 0)
         {
             C = (int) buf[0];
 
             // Printable ASCII
             if (C >= 0x20 && C <= 0x7E)
             {
-                // Store in prompt[]
                 if (prompt_pos < sizeof(prompt)-1) {
                     prompt[prompt_pos++] = C;
                     prompt[prompt_pos] = 0;
                 }
 
-                // Echo back
-                write(ptys_fd, &buf[0], 1);
+                write(1, &buf[0], 1);  // echo
             }
 
             // BACKSPACE
@@ -121,14 +93,14 @@ static void shell_worker(void)
                 if (prompt_pos > 0) {
                     prompt_pos--;
                     prompt[prompt_pos] = 0;
-                    write(ptys_fd, "\b \b", 3);
+                    write(1, "\b \b", 3);
                 }
             }
 
             // ENTER
-            else if (C == VK_RETURN)
+            else if (C == '\n' || C == '\r')
             {
-                write(ptys_fd, "\n", 1);
+                write(1, "\n", 1);
                 process_command();
             }
         }
@@ -141,7 +113,7 @@ static void shell_worker(void)
 
 int main(int argc, char *argv[])
 {
-    shell_initialize_pty();
+    printf ("shell2.bin: Hello world!\n");
     reset_prompt();
     shell_worker();
     return 0;

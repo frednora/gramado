@@ -13,7 +13,10 @@ all:
 	make -C pubsh/
 	make -C reboot/
 	make -C sh7/
+
 	make -C shell/
+	make -C shell2/
+
 #	make -C shellxxx/
 #	make -C shellzz/
 	make -C shutdown/

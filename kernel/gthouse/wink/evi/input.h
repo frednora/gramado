@@ -47,22 +47,21 @@ struct input_authority_d {
 // Defined in input.c
 extern struct input_authority_d  InputAuthority;
 
-#define INPUT_TARGET_TTY           1000
 #define INPUT_TARGET_STDIN         1001
 #define INPUT_TARGET_THREAD_QUEUE  1002
+// ...
+
 // ...
 
 // -----------------------------------
 // Input targets:
 // We can sent input to some targets:
-// + stdin file.
+// + ASCII goes to the ttys associated with stdin.
 // + Message queue of the foreground thread.
 // Let's select the valid targets.
 struct input_targets_d
 {
-// The kernel sends input to a TTY.
-    int target_tty;
-// The kernel sends input to the stdin file.
+// The kernel sends input to the tty associated with stdin.
     int target_stdin;
 // The kernel sends input to a thread's queue.
     int target_thread_queue;

@@ -268,7 +268,9 @@ unsigned long kinput(unsigned long ch)
     // +se for modo comando devemos finalizar com zero.
     // +se for modo texto, devemos apenas incluir os caracteres \r \n.
     //case 0x1C:
-    case VK_RETURN:
+    //case VK_RETURN:
+    case '\n':
+    case '\r':
         //modo linha 
         if (g_inputmode == INPUT_MODE_LINE)
         {
@@ -321,7 +323,8 @@ unsigned long kinput(unsigned long ch)
     return 0;
 
 input_done:
-    return VK_RETURN;
+    //return VK_RETURN;
+    return (unsigned long) '\n';
 fail:
     return (unsigned long) 0; 
 }
@@ -2282,6 +2285,8 @@ static void __initialize_virtual_consoles(void)
     unsigned int bg_colors[CONSOLETTYS_COUNT_MAX];
     unsigned int fg_colors[CONSOLETTYS_COUNT_MAX];
 
+//  It sets the current and the default colors for each console.
+
 // Default kernel console
     bg_colors[0] = (unsigned int) COLOR_BLUE;
     fg_colors[0] = (unsigned int) COLOR_WHITE;
@@ -2321,10 +2326,7 @@ static void __initialize_virtual_consoles(void)
         if (CONSOLE_TTYS[i].initialized == FALSE)
         {
             // IN: console index, bg color, fg color
-            DDINIT_console(
-                i,
-                bg_colors[i],
-                fg_colors[i] );
+            DDINIT_console( i, bg_colors[i], fg_colors[i] );
 
             if (i == 0)
             {

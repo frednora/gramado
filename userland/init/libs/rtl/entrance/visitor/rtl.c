@@ -2055,29 +2055,104 @@ void rtl_broken_vessels(void)
 }
 
 // OUT: Child's PID.
-int rtl_clone_and_execute(const char *name)
+static int 
+__rtl_clone_and_execute_imp(
+    const char *name,
+    unsigned long flags )
 {
-    if ((void *) name == NULL){
-        printf ("rtl_clone_and_execute: [FAIL] name\n");
-        goto fail;
-    }
-    if ( *name == 0 ){
-        printf ("rtl_clone_and_execute: [FAIL] *name\n");
-        goto fail;
-    }
+// Worker: Clone and execute implementation.
 
-    //rewind(stdin);
-    //fprintf(stdin,"%s",name);
-    //fprintf(stdin,"One Two Three ...");
+//
+// Parameters
+//
+
+// Service number
+    unsigned long ServiceNumber = 900;
+// Address for the image name.
+    unsigned long NameAddress;
+// Reserved parameter. (flags for clone_process()).
+    unsigned long clone_flags = flags;
+// Reserved parameter.
+    unsigned long long2=0;  // 
+    char LocalName[256];
+
+// Return value.
+    int ret_value=0;
+
+// name
+    if ((void *) name == NULL){
+        printf("rtl_clone_and_execute: [FAIL] name\n");
+        goto fail;
+    }
+    if (*name == 0){
+        printf("rtl_clone_and_execute: [FAIL] *name\n");
+        goto fail;
+    }
+    //NameAddress = (unsigned long) name;
+
+    size_t StringSize = 0;
+    StringSize = (size_t) strlen(name);
+    if (StringSize <= 0)
+        goto fail;
+    if (StringSize > 256)
+        goto fail;
+    memset(LocalName,0,256);
+    sprintf(LocalName,name);
+    NameAddress = (unsigned long) LocalName;
 
 // #todo
 // Parameters vector.
 // Maybe we can provide a default parameters vector.
 // Maybe we can send a raw command line.
 
-    return (int) sc82( 900, (unsigned long) name, 0, 0 );
+    ret_value = 
+        (int) sc82( (unsigned long) ServiceNumber, 
+                    (unsigned long) NameAddress, 
+                    (unsigned long) clone_flags, 
+                    (unsigned long) long2 );
+
+    // Child's PID.
+    return (int) ret_value;
 fail:
     return (int) -1;
+}
+
+int rtl_clone_and_execute(const char *name)
+{
+    unsigned long clone_flags = 0;
+
+    if ((void*) name == NULL)
+        return -1;
+    if (*name == 0)
+        return -1;
+
+    return (int) __rtl_clone_and_execute_imp(name,clone_flags);
+}
+
+// Return the child thread ID (TID) instead of PID.
+// For now, it calls the low-level implementation and assumes
+// the kernel service has been extended to provide TID.
+int rtl_clone_and_execute_return_tid(const char *name)
+{
+    if ((void*) name == NULL || *name == 0) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    // Ask kernel to return TID
+    //unsigned long flags = F_CLONE_RETURN_TID;
+    const unsigned long flags = 0x0004;
+
+    // Call the low-level implementation
+    int tid = (int) __rtl_clone_and_execute_imp(name, flags);
+
+    if (tid < 0) {
+        errno = -tid;
+        return -1;
+    }
+
+    // Success: return child TID
+    return (int) tid;
 }
 
 int rtl_spawn_process(const char *path)

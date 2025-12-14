@@ -275,13 +275,32 @@ wmProcessKeyboardEvent(
         if (window->magic != 1234)
             return 0;
 
+        // long1=ascii code | long2=scan code            
+        if (long1 == VK_RETURN && long2 == 0x1C)
+            yellow_status("long1 = VK_RETURN | long2 = 0x1C scancode");
+
+        // long1=ascii code | long2=scan code
+        // But in our case scancode and virtual key are the same.
+        //if (long1 == '\n' && long2 == 0x1C)
+            //yellow_status("long1 = ASCII LF long2 = 0x1C");
+        //if (long1 == '\n' && long2 == VK_RETURN)
+            //yellow_status("long1 = ASCII LF long2 = VK_RETURN");
+
+        /*
         // Enter?
         if (long1 == VK_RETURN)
         {
+            yellow_status("VK_RETURN");
             on_enter();
             //window->ip_on = FALSE;
             return 0;
         }
+        if (long1 == '\n') yellow_status("ASCII LF");
+        if (long1 == '\r') yellow_status("ASCII CR");
+        */
+
+        //if (long1 == '\n')      yellow_status("long1 = ASCII LF ");
+        //if (long2 == VK_RETURN) yellow_status("long2 = VK_RETURN");
 
         // Print a char into the window with focus.
         // It needs to be an editbox?
