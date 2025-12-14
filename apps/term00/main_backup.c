@@ -248,9 +248,9 @@ static void terminal_initialize_pty(void)
 {
     ptym_fd = open("/DEV/PTYM", 0, "a+");
     if (ptym_fd < 0) {
-        //printf("term00: Failed to open PTYM\n");
+        printf("term00: Failed to open PTYM\n");
     } else {
-        //printf("term00: PTYM opened, fd=%d\n", ptym_fd);
+        printf("term00: PTYM opened, fd=%d\n", ptym_fd);
     }
 }
 
@@ -2689,9 +2689,9 @@ static int __input_STDIN(int fd)
     char chBuffer[4];
 
     while (1){
-        //if (isUsingEmbeddedShell == FALSE){
-            //break;
-        //}
+        if (isUsingEmbeddedShell == FALSE){
+            break;
+        }
 
         // Terminal is reading output from the child.
         // When set to TRUE, the terminal stops acting as the stdin consumer and 
@@ -2733,11 +2733,11 @@ static int __input_STDIN(int fd)
         // alguma coisa da linha de comandos usada pelo processo filho.
         // #bubug
         // Estamos lendo dois ENTER seguidos.
-           // C = fgetc(new_stdin);
-            //if (C > 0){
+            C = fgetc(new_stdin);
+            if (C > 0){
                 // socket, wid, msg, ascii, ascii
-               // terminalProcedure( client_fd, window_id, MSG_KEYDOWN, C, C );
-           // }
+                terminalProcedure( client_fd, window_id, MSG_KEYDOWN, C, C );
+            }
         };
       
         // + Get system messages from the queue in control thread.
@@ -3569,14 +3569,7 @@ int terminal_init(unsigned short flags)
 
 // Open PTYM
     terminal_initialize_pty();
-// launch our shell child
-// It sets the flag isWaitingForOutput to TRUE
-// so the terminal starts reading from the child process.
-    //terminal_core_launch_child("#shell.bin");
-    terminal_core_launch_from_cmdline(client_fd, "#shell.bin");
 
-    // No embedded shell by default.
-    //isUsingEmbeddedShell = FALSE;
 
 // Font info again
 // Based on our corrent viewport
@@ -3647,7 +3640,7 @@ int terminal_init(unsigned short flags)
 //   or a script.
 
 // Draw the prompt string
-    //doPrompt(client_fd);
+    doPrompt(client_fd);
 
 // Set active window
 
@@ -3662,11 +3655,6 @@ int terminal_init(unsigned short flags)
     //#debug
     gws_refresh_window(client_fd, main_window);
 
-
-    while (1){
-        __input_STDIN(client_fd);
-    };
-
 //
 // Be nice
 // 
@@ -3676,25 +3664,21 @@ int terminal_init(unsigned short flags)
 
 // Input loop!
 // local routine.
-    //int InputStatus=-1;
+    int InputStatus=-1;
 
 // -------------------------
 // Embedded shell
 // Reading from stdin
-/*
     InputStatus = (int) embedded_shell_run(client_fd);
     if (InputStatus < 0)
         goto fail;
-*/
 
-/*
 // -------------------------
 // Reading from the child.
 // Reading from connector.
     InputStatus = terminal_run(client_fd);
     if (InputStatus < 0)
         goto fail;
-*/
 
 done:
     debug_print("terminal.bin: Bye\n"); 
