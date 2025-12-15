@@ -171,6 +171,7 @@ int main(int argc, char *argv[])
     return 0;
 }
 */
+
 int main(int argc, char *argv[])
 {
     while (1)
@@ -178,14 +179,16 @@ int main(int argc, char *argv[])
         int c = getc(stdin);
         if (c >= 0)
         {
-            printf("[byte=%d '%c']\n", c, (c >= 32 && c < 127 ? c : '.'));
-            fflush(stdout);
-
-            if (c == '\n')
+            // Process cmdline
+            if (c == '\n'){
                 printf("sh: [enter] received\n");
+            // ECHO: Send char back
+            } else {
+                putc(c,stdout);
+                fflush(stdout);
+            };
         }
     }
-
     return 0;
 }
 
