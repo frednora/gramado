@@ -3748,20 +3748,34 @@ int terminal_init(unsigned short flags)
 
     //write(STDOUT_FILENO, "[dup2 done]\n", 12);
 
+/*
     lseek( fileno(stdin), 0, 1000);
     lseek( fileno(stdout), 0, 1000);
     lseek( fileno(stderr), 0, 1000);
-
     rewind(stdin);
     rewind(stdout);
     rewind(stderr);
+*/
 
 // Launch our shell child
 // It sets the flag isWaitingForOutput to TRUE
 // so the terminal starts reading from the child process.
 
-    const char *fake_cmdline = "#shell.bin";
-    terminal_core_launch_from_cmdline(client_fd,fake_cmdline);
+    //const char *fake_cmdline = "#shell.bin";
+    //terminal_core_launch_from_cmdline(client_fd,fake_cmdline);
+
+// Launch the child, get the tid and delegate the 
+// hability to read from stdin without been the foreground thread.
+    const char *filename = "#shell.bin";
+    int tid = (int) rtl_clone_and_execute_return_tid(filename);
+    if (tid < 0)
+    {
+        // #debug
+        tputstring(client_fd, "term00: shell failed\n");
+        exit(0);
+    }
+// Delegate foreground to the child.
+    sc82(10013, tid, tid, tid);
 
     //rtl_sleep(4000);
 
@@ -3804,7 +3818,7 @@ int terminal_init(unsigned short flags)
             tputstring(client_fd, coolCharBuffer);
         };
 
-        //__get_ds_event( client_fd, main_window );
+        __get_ds_event( client_fd, main_window );
     };
 
 //
@@ -3842,7 +3856,7 @@ done:
 
 fail:
     // #bugbug: This code is running. We're simply avoiding the noise.
-    //printf("term00.bin: Fail :)\n");
+    printf("term00.bin: Fail :)\n");
     return (int) -1;
 }
 
@@ -3933,7 +3947,7 @@ int main(int argc, char *argv[])
     Status = (int) terminal_init(INIT_FLAGS);
     if (Status != 0)
     {
-        //printf("term00 main(): Something is wrong\n");
+        printf("term00 main(): Something is wrong\n");
         //printf("TERM: main() is returning in thread %d\n", 
             //term00_gettid() );
         

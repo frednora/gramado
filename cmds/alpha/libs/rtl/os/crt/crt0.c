@@ -163,7 +163,7 @@ void crt0(unsigned long rdi)
 // Initialize the library.
 //
 
-    write(1, "[CRT0 START]\n", 13);
+    //write(1, "[CRT0 START]\n", 13);
 
 
     // Stage 1
