@@ -240,7 +240,6 @@ static void update_clients(int fd);
 
 // Global or inside Terminal struct
 int ptym_fd = -1;
-int ptys_fd = -1;
 
 //====================================================
 
@@ -254,28 +253,6 @@ static void terminal_initialize_pty(void)
         //printf("term00: PTYM opened, fd=%d\n", ptym_fd);
     }
 }
-
-static void terminal_initialize_ptys_for_the_shell(void)
-{
-    ptys_fd = open("/DEV/PTYS", 0, "a+");
-    if (ptys_fd < 0) {
-        printf("shell: failed to open PTYS\n");
-        exit(1);
-    }
-    // #todo: redirect stdin, stdout, stderr
-    //dup2(ptys_fd, 0);
-    //dup2(ptys_fd, 1);
-    //dup2(ptys_fd, 2);
-
-    dup2(ptys_fd, STDIN_FILENO);
-    dup2(ptys_fd, STDOUT_FILENO);
-    dup2(ptys_fd, STDERR_FILENO);
-    // The shell will use standard stream ... the same the terminal has now
-
-    //if (ptys_fd > STDERR_FILENO)
-        //close(ptys_fd);
-}
-
 
 static void update_clients(int fd)
 {
@@ -2543,13 +2520,6 @@ terminalProcedure (
     if (window<0){return (int) -1;}  // Event window
     if (msg<0)   {return (int) -1;}  // Event type
 
-
-    // Ignore KEYUP events
-    if (msg == MSG_KEYUP || msg == MSG_SYSKEYUP)
-        return 0;
-
-    if (msg == MSG_KEYDOWN)
-        tputstring(fd, "MSG_KEYDOWN\n");
 // ==================
 
     switch (msg){
@@ -2562,8 +2532,6 @@ terminalProcedure (
     case MSG_KEYDOWN:
         switch (long1)
         {
-            //tputstring(fd, "MSG_KEYDOWN\n");
-
             //case 0:
                 //break;
 
@@ -2572,7 +2540,8 @@ terminalProcedure (
                 
                 // When using the embedded shell.
                 // Compare strings.
-                if (isUsingEmbeddedShell == TRUE){
+                if (isUsingEmbeddedShell == TRUE)
+                {
                     //printf ("terminalProcedure; VK_RETURN\n");
                     __on_return_key_pressed(fd);
                     return 0;
@@ -2580,23 +2549,13 @@ terminalProcedure (
 
                 // When not using the embedded shell.
                 // Goto next line.
-                if (isUsingEmbeddedShell == FALSE)
-                {
+                if (isUsingEmbeddedShell == FALSE){
                     cursor_x++;
                     if (cursor_x >= Terminal.width_in_chars)
                     {
                         cursor_x = Terminal.left;
                         cursor_y++;
                     }
-                }
-
-                if (isUsingEmbeddedShell == FALSE)
-                {
-                    // Actually we need to convert VK into ascii.
-                    char toshellBuffer2[4];
-                    toshellBuffer2[0] = (char) '\n';  //10
-                    write(ptym_fd, toshellBuffer2, 1);
-                    return 0;
                 }
 
                 return 0;
@@ -2609,9 +2568,6 @@ terminalProcedure (
                 if (isUsingEmbeddedShell == TRUE){
                     input(long1);
                 }
-                
-                /*
-                // #test: Stop printing
                 // Exibe na área de cliente.
                 // Estando ou não no shell embutido.
                 // Tem suporte a escape sequence.
@@ -2620,24 +2576,12 @@ terminalProcedure (
                     (int) Terminal.client_window_id, 
                     (int) long1, 
                     (int) 1 );
-                */
-
-                // Actually we need to convert VK into ascii.
-                if (isUsingEmbeddedShell == FALSE)
-                {
-                    char toshellBuffer[4];
-                    toshellBuffer[0] = (char) long1;
-                    write(ptym_fd, toshellBuffer, 1);
-                }
 
                 return 0;
                 break;
         };
         break;
 
-    case MSG_KEYUP:
-        return 0;
-        break;
 
     // #bugbug: Not working
     // It's because the terminal is getting input
@@ -3011,29 +2955,6 @@ static void __get_system_event(int fd, int wid)
     msg_code = (int) (RTLEventBuffer[1] & 0xFFFFFFFF);
 
     switch (msg_code){
-
-    case MSG_KEYDOWN:
-
-        //tputstring(fd, "MSG_KEYDOWN\n");
-
-    // ...
-        terminalProcedure ( 
-            fd,   // socket 
-            wid,  // wid 
-            (int) msg_code, 
-            (unsigned long) RTLEventBuffer[2],
-            (unsigned long) RTLEventBuffer[3] );
-
-        RTLEventBuffer[1] = 0;
-        
-        return;
-        break;
-
-    case MSG_KEYUP:
-        return;
-        break;
-
-
     // Accepting only these messages.
     case MSG_CLOSE:
     case MSG_PAINT:
@@ -3648,10 +3569,6 @@ int terminal_init(unsigned short flags)
 
 // Open PTYM
     terminal_initialize_pty();
-// Open PTYS and duplicate it to the standard streams..
-// the shell will use it later.
-    terminal_initialize_ptys_for_the_shell();
-
 // launch our shell child
 // It sets the flag isWaitingForOutput to TRUE
 // so the terminal starts reading from the child process.
@@ -3745,46 +3662,9 @@ int terminal_init(unsigned short flags)
     //#debug
     gws_refresh_window(client_fd, main_window);
 
-/*
+
     while (1){
         __input_STDIN(client_fd);
-    };
-*/
-
-/*
-    char inputBuffer[4];
-    while (1)
-    {
-        rtl_get_event();
-        int msg = RTLEventBuffer[0];
-        if (msg == MSG_KEYDOWN)
-        {
-            int long1 = RTLEventBuffer[1];
-            int long2 = RTLEventBuffer[2];
-            inputBuffer[0] = (char) long1;
-            tputstring(client_fd, inputBuffer);
-        }
-        RTLEventBuffer[0] = 0;
-        RTLEventBuffer[1] = 0;
-        RTLEventBuffer[2] = 0;
-    }
-*/
-
-    isUsingEmbeddedShell = FALSE;
-    char coolCharBuffer[4];
-    while (1)
-    {
-        // Get input from kernel and send it to the shell
-        __get_system_event(client_fd, Terminal.client_window_id);
-
-        // Read what comes from the shell. And print it
-        int ch_read = read(ptym_fd, coolCharBuffer, 1);
-        if ( ch_read > 0 )
-        {
-            tputstring(client_fd, coolCharBuffer);
-            //coolCharBuffer[0] = 0;
-            //coolCharBuffer[1] = 0;
-        }
     };
 
 //

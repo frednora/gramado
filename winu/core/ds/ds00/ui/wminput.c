@@ -337,11 +337,15 @@ wmProcessKeyboardEvent(
         // Enqueue a message into the queue that belongs
         // to the window with focus.
         // The client application is gonna get this message.
+        /*
+        // #bugbug
+        // It duplicates the message sent by the input system.
         wmPostMessage(
             (struct gws_window_d *) window,
             (int) msg,
             (unsigned long) long1,
             (unsigned long) long2);
+        */
 
         return 0;
     }

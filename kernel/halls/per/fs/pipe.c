@@ -12,245 +12,166 @@
 // quando não é super user.
 unsigned int pipe_max_size = 4096;
 
-// Duplicate a file stream.
-// #todo
-// Here is not the place for this function.
-// Move it to rtl.
+
+static struct te_d *get_current_process_struct(void)
+{
+    pid_t current_process = (pid_t) get_current_process();
+    struct te_d *Process = (void *) teList[current_process];
+
+    if ((void *) Process == NULL)
+        return NULL;
+    if (Process->used != TRUE || Process->magic != 1234)
+        return NULL;
+
+    return Process;
+}
+
+
 
 int sys_dup(int oldfd)
 {
-    file *f_old;
-    file *f_new;
     struct te_d *Process;
-    pid_t current_process=-1;
-    register int i=0;
-    int slot = -1;
+    file *fp;
+    int newfd = -1;
+    int i = 0;
 
-// Parameters
-    if ( oldfd < 0 || oldfd >= OPEN_MAX ){
-        return (int) (-EINVAL);
-    }
+    // Validate oldfd range
+    if (oldfd < 0 || oldfd >= OPEN_MAX)
+        return (int) (-EBADF);
 
-// Process
-    current_process = (pid_t) get_current_process();
-    Process = (void *) teList[current_process];
-    if ((void *) Process == NULL){
-        //debug_print("sys_dup: [FAIL]\n");
-        goto fail;
-    }
-    if ( Process->used != TRUE || Process->magic != 1234 ){
-        //debug_print("sys_dup: [FAIL]\n");
-        goto fail;
-    }
+    // Get current process
+    Process = get_current_process_struct();
+    if ((void *) Process == NULL)
+        return (int) (-EBADF);
 
-// Get an empty slot
-    for (i=3; i< NUMBER_OF_FILES; i++)
-    {
-        if (Process->Objects[i] == 0)
-        {
-            // reserva.
-            //Process->Objects[i] = 216;
-            slot = i;
+    // Get old file pointer
+    fp = (file *) Process->Objects[oldfd];
+    if ((void *) fp == NULL)
+        return (int) (-EBADF);
+
+    // Find a free slot
+    for (i = 0; i < OPEN_MAX; i++) {
+        if (Process->Objects[i] == 0) {
+            newfd = i;
             break;
         }
-    };
-
-    // fail
-    if (slot == -1)
-    {
-        Process->Objects[i] = (unsigned long) 0;
-        // #todo
-        // We need a message here.
-        goto fail;
     }
 
-// #todo: 
-// Filtrar oldfd
+    if (newfd < 0)
+        return (int) (-EMFILE);
 
-// Old
-    f_old = (file *) Process->Objects[oldfd];
-    if ((void *) f_old == NULL){
-        Process->Objects[i] = (unsigned long) 0;
-        goto fail;
-    }
+    // Duplicate: point newfd to the same file*
+    Process->Objects[newfd] = (unsigned long) fp;
 
-// New
-    f_new = (void *) kmalloc( sizeof(file) );
-    if ((void *) f_new == NULL){
-        Process->Objects[i] = (unsigned long) 0;
-        // #todo
-        // We need a message here?
-        goto fail;
-    }
-// Early validation?
-    //f_new->used = TRUE;
-    //f_new->magic = 1234;
+    // Increment reference counter in the file structure
+    fp->fd_counter++;
 
-// Herdando
-// So this way they are sharing the same ring0 buffer.
-    f_new->____object = f_old->____object;
-    f_new->_base      = f_old->_base;
-    f_new->_p         = f_old->_p;
-    f_new->_tmpfname  = f_old->_tmpfname;
-    f_new->_lbfsize   = f_old->_lbfsize; 
-    f_new->_cnt       = f_old->_cnt; 
-    f_new->used = TRUE;
-    f_new->magic = 1234;
-    Process->Objects[slot] = (unsigned long) f_new;
-    return (int) slot;
-
-// On success, these system calls return the new file descriptor.  
-// On error, -1 is returned, and errno is set appropriately.
-fail:
-    //errno = ?;
-    return (int) -1;
- }
-
-// #todo
-// Here is not the place for this function.
-// Move it to rtl.
-int sys_dup2(int oldfd, int newfd)
-{
-    file *f_old;
-    file *f_new;
-    struct te_d *Process;
-    pid_t current_process = -1;
-
-    if ( oldfd < 0 || oldfd >= OPEN_MAX )
-        return (int) (-EINVAL);
-
-    if ( newfd < 0 || newfd >= OPEN_MAX )
-        return (int) (-EINVAL);
-
-// Process
-    current_process = (pid_t) get_current_process();
-    Process = (void *) teList[current_process];
-    if ((void *) Process == NULL){
-        //#todo: We need a message here.
-        goto fail;
-    }
-    if ( Process->used != TRUE || Process->magic != 1234 )
-    {
-        goto fail;
-    }
-
-    int slot = newfd;
-    if ( slot == -1 ){
-        Process->Objects[slot] = (unsigned long) 0;
-        goto fail;
-    }
-
-// #todo: 
-// filtrar oldfd
-
-// Old
-    f_old = (file *) Process->Objects[oldfd];
-    if ((void *) f_old == NULL){
-        Process->Objects[slot] = (unsigned long) 0;
-        goto fail;
-    }
-
-// New
-    f_new = (file *) Process->Objects[slot];
-    if ((void *) f_new == NULL){
-        Process->Objects[slot] = (unsigned long) 0;
-        goto fail;
-    }
-    //f_new->used = TRUE;
-    //f_new->magic = 1234;
-
-// Herdado
-// Sharing the same ring 0 buffer.
-    f_new->____object = f_old->____object;
-    f_new->_base      = f_old->_base;
-    f_new->_p         = f_old->_p;
-    f_new->_tmpfname  = f_old->_tmpfname;
-    f_new->_lbfsize   = f_old->_lbfsize; 
-    f_new->_cnt       = f_old->_cnt; 
-    f_new->used = TRUE;
-    f_new->magic = 1234;
-    return (int) slot;
-
-// On success, these system calls return the new file descriptor.  
-// On error, -1 is returned, and errno is set appropriately.
-
-fail:
-	//errno = ?;
-    return (int) -1;
+    return (int) newfd;
 }
 
-// #todo
-// Here is not the place for this function.
-// Move it to rtl.
+int sys_dup2(int oldfd, int newfd)
+{
+    struct te_d *Process;
+    file *fp;
+
+    // Validate ranges
+    if (oldfd < 0 || oldfd >= OPEN_MAX ||
+        newfd < 0 || newfd >= OPEN_MAX)
+        return (int) (-EBADF);
+
+    // Get current process
+    Process = get_current_process_struct();
+    if ((void *) Process == NULL)
+        return (int) (-EBADF);
+
+    // Get old file pointer
+    fp = (file *) Process->Objects[oldfd];
+    if ((void *) fp == NULL)
+        return (int) (-EBADF);
+
+    // POSIX: if oldfd == newfd, just return newfd
+    if (oldfd == newfd)
+        return (int) newfd;
+
+    // If newfd is already open, close it first
+    if (Process->Objects[newfd] != 0) 
+    {
+        file *old_newfp = (file *) Process->Objects[newfd];
+
+        // Decrement reference count and free if needed
+        if (old_newfp != NULL) {
+            old_newfp->fd_counter--;
+            if (old_newfp->fd_counter <= 0) {
+                // last reference: close/free the file structure
+                k_fclose(old_newfp);
+            }
+        }
+
+        Process->Objects[newfd] = 0;
+    }
+
+    // Duplicate: point newfd to the same file*
+    Process->Objects[newfd] = (unsigned long) fp;
+    fp->fd_counter++;
+
+    return (int) newfd;
+}
 
 int sys_dup3(int oldfd, int newfd, int flags)
 {
-    file  *f_old;
-    file  *f_new;
     struct te_d *Process;
-    pid_t current_process = -1;
+    file *fp;
 
-    //#todo: flags.
+    // Validate ranges
+    if (oldfd < 0 || oldfd >= OPEN_MAX ||
+        newfd < 0 || newfd >= OPEN_MAX)
+        return (int) (-EBADF);
 
-    if ( oldfd < 0 || oldfd >= OPEN_MAX )
+    // POSIX: dup3 fails if oldfd == newfd
+    if (oldfd == newfd)
         return (int) (-EINVAL);
 
-    if ( newfd < 0 || newfd >= OPEN_MAX )
-        return (int) (-EINVAL);
+    // Get current process
+    Process = get_current_process_struct();
+    if ((void *) Process == NULL)
+        return (int) (-EBADF);
 
-// Process
-    current_process = (pid_t) get_current_process();
-    Process = (void *) teList[current_process];
-    if ((void *) Process == NULL){
-        goto fail;
-    }
-    if ( Process->used != TRUE || Process->magic != 1234 )
-    {
-        goto fail;
-    }
+    // Get old file pointer
+    fp = (file *) Process->Objects[oldfd];
+    if ((void *) fp == NULL)
+        return (int) (-EBADF);
 
-    int slot = newfd;
-    if ( slot == -1 ) {
-        Process->Objects[slot] = (unsigned long) 0;
-        goto fail;
-    }
+    // If newfd is already open, close it first
+    if (Process->Objects[newfd] != 0) {
+        file *old_newfp = (file *) Process->Objects[newfd];
 
-// #todo: filtrar oldfd
+        if (old_newfp != NULL) {
+            old_newfp->fd_counter--;
+            if (old_newfp->fd_counter <= 0) {
+                k_fclose(old_newfp);
+            }
+        }
 
-// Old
-    f_old = (file *) Process->Objects[oldfd];
-    if ((void *) f_old == NULL){
-        Process->Objects[slot] = (unsigned long) 0;
-        goto fail;
+        Process->Objects[newfd] = 0;
     }
 
-// New
-    f_new = (file *) Process->Objects[slot];
-    if ((void *) f_new == NULL){
-        Process->Objects[slot] = (unsigned long) 0;
-        goto fail;
+    // Duplicate: point newfd to the same file*
+    Process->Objects[newfd] = (unsigned long) fp;
+    fp->fd_counter++;
+
+    /*
+    // #todo
+    // Handle O_CLOEXEC semantics if you want per‑FD CLOEXEC
+    // You currently only have FILE-level flags (_flags).
+    // If you later add a separate per-FD table, move this there.
+    if (flags & O_CLOEXEC) {
+        // This is a bit of a hack: CLOEXEC should be per FD, not per FILE.
+        // But with current design, this at least gives you the semantic.
+        fp->_flags |= FD_CLOEXEC;
     }
-    //f_new->used = TRUE;
-    //f_new->magic = 1234;
+    */
 
-// Herdado
-// Shearing the same ring 0 buffer.
-    f_new->____object = f_old->____object;
-    f_new->_base      = f_old->_base;
-    f_new->_p         = f_old->_p;
-    f_new->_tmpfname  = f_old->_tmpfname;
-    f_new->_lbfsize   = f_old->_lbfsize; 
-    f_new->_cnt       = f_old->_cnt; 
-    f_new->used = TRUE;
-    f_new->magic = 1234;
-    return (int) slot;
-
-// On success, these system calls return the new file descriptor.  
-// On error, -1 is returned, and errno is set appropriately.	
-
-fail:
-	//errno = ?;
-    return (int) (-1);
+    return (int) newfd;
 }
 
 

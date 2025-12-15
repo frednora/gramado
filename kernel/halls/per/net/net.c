@@ -259,6 +259,9 @@ network_register_ring3_display_server(
 // Funtamental for the input system.
     InputAuthority.current_authority = AUTH_DISPLAY_SERVER;
 
+// No more input to the stdin. Terminal reads from another place.
+    ///InputTargets.target_stdin = FALSE;
+
     return TRUE;
 
 fail:

@@ -2859,25 +2859,12 @@ done:
 // #bugbug
 // Here we're outside the console, so we need to call another worker.
 
-
     Status = 
         (int) __ProcessKeyboardInput(
                   (int) Event_Message,
                   (unsigned long) Event_LongVK,
                   (unsigned long) Event_LongScanCode );
 
-/*
-    if (Event_Message == MSG_SYSKEYDOWN)
-    {
-        // Ask init process to launch the terminal
-        if (Event_LongVK == VK_F1 && ctrl_status == TRUE)
-        {
-            do_launch_app_via_initprocess(4001);
-            return 0;
-        }
-
-    }
-*/
 
     return (int) Status;
 

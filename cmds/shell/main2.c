@@ -40,13 +40,6 @@ static void shell_initialize_pty(void)
     //dup2(ptys_fd, 0);
     //dup2(ptys_fd, 1);
     //dup2(ptys_fd, 2);
-    //dup2(ptys_fd, STDIN_FILENO);
-    //dup2(ptys_fd, STDOUT_FILENO);
-    //dup2(ptys_fd, STDERR_FILENO);
-
-    //if (ptys_fd > STDERR_FILENO)
-        //close(ptys_fd);
-
 }
 
 //====================================================
@@ -133,8 +126,7 @@ static void shell_worker(void)
             }
 
             // ENTER
-            //else if (C == VK_RETURN)
-            else if (C == '\n')
+            else if (C == VK_RETURN)
             {
                 write(ptys_fd, "\n", 1);
                 process_command();
@@ -146,46 +138,11 @@ static void shell_worker(void)
 //====================================================
 // main()
 //====================================================
-/*
+
 int main(int argc, char *argv[])
 {
-    //shell_initialize_pty();
-    while(1)
-    {
-        int c = getc(stdin);
-        if (c>0)
-        {
-           printf("%c",c);
-           fflush(stdout);
-
-            //if (c == 'x')
-                //printf("sh: x was received\n");
-
-            if (c == '\n')
-                printf("sh: [enter] received\n");
-        }
-        //printf("shell.bin: Hello using stdout\n");
-    }
-    //reset_prompt();
-    //shell_worker();
+    shell_initialize_pty();
+    reset_prompt();
+    shell_worker();
     return 0;
 }
-*/
-int main(int argc, char *argv[])
-{
-    while (1)
-    {
-        int c = getc(stdin);
-        if (c >= 0)
-        {
-            printf("[byte=%d '%c']\n", c, (c >= 32 && c < 127 ? c : '.'));
-            fflush(stdout);
-
-            if (c == '\n')
-                printf("sh: [enter] received\n");
-        }
-    }
-
-    return 0;
-}
-

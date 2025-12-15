@@ -292,14 +292,17 @@ copy_process_struct(
         }
     };
 
+// #bugbug: NO NOT to this anymore ... child programs needs the father's streams.
 // Standard streams.
 // The same 3 files for all the processes.
 // See: kstdio.c
 // #todo: Consider getting the same files from the parent.
 // it can be configurable too for clone().
+/*
     Process2->Objects[0] = (unsigned long) stdin;
     Process2->Objects[1] = (unsigned long) stdout;
     Process2->Objects[2] = (unsigned long) stderr;
+*/
 
     //Counters
     Process2->read_counter = 0;
