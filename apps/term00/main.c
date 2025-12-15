@@ -275,9 +275,9 @@ static void terminal_initialize_ptys_for_the_shell(void)
     //dup2(ptys_fd, 1);
     //dup2(ptys_fd, 2);
 
-    dup2(ptys_fd, STDIN_FILENO);
-    dup2(ptys_fd, STDOUT_FILENO);
-    dup2(ptys_fd, STDERR_FILENO);
+    //dup2(ptys_fd, STDIN_FILENO);
+    //dup2(ptys_fd, STDOUT_FILENO);
+    //dup2(ptys_fd, STDERR_FILENO);
     // The shell will use standard stream ... the same the terminal has now
 
     //if (ptys_fd > STDERR_FILENO)
@@ -3654,19 +3654,6 @@ int terminal_init(unsigned short flags)
 // only after having the Terminal structure initialized.
     __initializeTerminalComponents();
 
-// Open PTYM
-    terminal_initialize_pty();
-// Open PTYS and duplicate it to the standard streams..
-// the shell will use it later.
-    terminal_initialize_ptys_for_the_shell();
-
-// Launch our shell child
-// It sets the flag isWaitingForOutput to TRUE
-// so the terminal starts reading from the child process.
-
-    const char *fake_cmdline = "#shell.bin";
-
-    terminal_core_launch_from_cmdline(client_fd,fake_cmdline);
 
     // No embedded shell by default.
     //isUsingEmbeddedShell = FALSE;
@@ -3743,41 +3730,57 @@ int terminal_init(unsigned short flags)
     //doPrompt(client_fd);
 
 // Set active window
-
-    //gws_async_command(
-    //     client_fd,
-    //     15, 
-    //     main_window,
-    //     main_window );
-
     gws_set_active( client_fd, main_window );
 
     //#debug
     gws_refresh_window(client_fd, main_window);
 
+
+// Open PTYM
+    terminal_initialize_pty();
+// Open PTYS and duplicate it to the standard streams..
+// the shell will use it later.
+    terminal_initialize_ptys_for_the_shell();
+
+    dup2(ptys_fd, STDIN_FILENO);
+    dup2(ptys_fd, STDOUT_FILENO);
+    dup2(ptys_fd, STDERR_FILENO);
+
+    //write(STDOUT_FILENO, "[dup2 done]\n", 12);
+
+    lseek( fileno(stdin), 0, 1000);
+    lseek( fileno(stdout), 0, 1000);
+    lseek( fileno(stderr), 0, 1000);
+
+    rewind(stdin);
+    rewind(stdout);
+    rewind(stderr);
+
+// Launch our shell child
+// It sets the flag isWaitingForOutput to TRUE
+// so the terminal starts reading from the child process.
+
+    const char *fake_cmdline = "#shell.bin";
+    terminal_core_launch_from_cmdline(client_fd,fake_cmdline);
+
+    //rtl_sleep(4000);
+
 /*
-    while (1){
-        __input_STDIN(client_fd);
-    };
+    char buf[128];
+    ssize_t n = read(ptym_fd, buf, sizeof(buf)-1);
+    if (n > 0) {
+        buf[n] = 0;
+        tputstring(client_fd,"[TERM READ]: ");
+        tputstring(client_fd,buf);
+        tputstring(client_fd,"\n");
+    }
 */
 
 /*
-    char inputBuffer[4];
-    while (1)
-    {
-        rtl_get_event();
-        int msg = RTLEventBuffer[0];
-        if (msg == MSG_KEYDOWN)
-        {
-            int long1 = RTLEventBuffer[1];
-            int long2 = RTLEventBuffer[2];
-            inputBuffer[0] = (char) long1;
-            tputstring(client_fd, inputBuffer);
-        }
-        RTLEventBuffer[0] = 0;
-        RTLEventBuffer[1] = 0;
-        RTLEventBuffer[2] = 0;
-    }
+    Ah i got it ... after the dup2  the terminal operated with the 
+    standard streams 0,1,2 and now all the rules that we created 
+    for tty files do not applies anymore ... 
+    the rules now are the rules for 0,1,2 that were console rules.
 */
 
     isUsingEmbeddedShell = FALSE;

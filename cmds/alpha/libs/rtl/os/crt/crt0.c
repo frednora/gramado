@@ -163,6 +163,9 @@ void crt0(unsigned long rdi)
 // Initialize the library.
 //
 
+    write(1, "[CRT0 START]\n", 13);
+
+
     // Stage 1
     // #debug: put char
     //sc80(65,'1',0,0); 
@@ -226,16 +229,33 @@ void crt0(unsigned long rdi)
 // #test
 // Reading command line from a file.
 
-    char buffer[4096];
+    char buffer[512];
     memset(buffer, 0, 512);
 
 // Copy
 // No focus, we can't read from stdin, let's read from stderr.
 // cmds/ programs are reading the cmdline from stderr.
     int n=0;
+/*
     n = (int) read( fileno(stdin), buffer, 512 );
-
     buffer[511] = 0;    // finalize
+*/
+
+    int c;
+    int pos = 0;
+    while (1) 
+    {
+        c = getc(stdin);
+        if (c == EOF)
+            break;
+        if (c == '\n')
+            break;
+        if (pos >= 511)
+            break;
+        buffer[pos] = (char) c;
+        pos++;
+    }
+    buffer[pos] = 0;
 
     //if(n<=0){
         //#bugbug: We can't do this
@@ -244,15 +264,24 @@ void crt0(unsigned long rdi)
         //fflush(stdout);
     //}
 
-
 // Depois de lido o stdin e colocada a cmdline no buffer local,
 // então é hora de apagarmos os arquivo, para que outro
 // programa consiga usar o arquivo.
 // Tambem atualizaremos a estrutura em ring3.
 // GRAMADO_SEEK_CLEAR = 1000.
 // see in kernel: kunistd.c e kstdio.c.
+/*
     lseek( fileno(stdin), 0, 1000);
     rewind(stdin);
+*/
+
+    //lseek( fileno(stdin), 0, 1000);
+    //lseek( fileno(stdout), 0, 1000);
+    //lseek( fileno(stderr), 0, 1000);
+
+    //rewind(stdin);
+    //rewind(stdout);
+    //rewind(stderr);
 
 /*
     // from shared buffer

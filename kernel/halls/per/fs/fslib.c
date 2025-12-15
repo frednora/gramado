@@ -748,6 +748,9 @@ __read_imp (
         if (fp->____object == ObjectTypeFile){
             goto RegularFile;
         }
+        if (fp->____object == ObjectTypeTTY){
+            goto tty_object;
+        }
     }
 
 //
@@ -808,6 +811,9 @@ __read_imp (
         }
         if (fp->____object == ObjectTypeFile){
             goto RegularFile;
+        }
+        if (fp->____object == ObjectTypeTTY){
+            goto tty_object;
         }
         goto fail;
     }
@@ -874,6 +880,9 @@ __read_imp (
         }
         if (fp->____object == ObjectTypeFile){
             goto RegularFile;
+        }
+        if (fp->____object == ObjectTypeTTY){
+            goto tty_object;
         }
         goto fail;
     }
@@ -1105,6 +1114,7 @@ RegularFile:
 //    TTY_SUBTYPE_PTY_MASTER  = PTY master endpoint
 //    TTY_SUBTYPE_PTY_SLAVE   = PTY slave endpoint
 
+tty_object:
     if (fp->____object == ObjectTypeTTY)
     {
         //printk ("__read_imp: [TODO] trying to read a PTY device file\n");
@@ -1420,6 +1430,9 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
         if (fp->____object == ObjectTypeFile){
             goto RegularFile;
         }
+        if (fp->____object == ObjectTypeTTY){
+            goto tty_object;
+        }
         goto fail;
     }
 
@@ -1487,6 +1500,9 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
         }
         if (fp->____object == ObjectTypeFile){
             goto RegularFile;
+        }
+        if (fp->____object == ObjectTypeTTY){
+            goto tty_object;
         }
         goto fail;
     }
@@ -1557,6 +1573,9 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
         }
         if (fp->____object == ObjectTypeFile){
             goto RegularFile;
+        }
+        if (fp->____object == ObjectTypeTTY){
+            goto tty_object;
         }
         goto fail;
     }
@@ -1776,6 +1795,8 @@ RegularFile:
 // Subtypes:
 //    TTY_SUBTYPE_PTY_MASTER  = PTY master endpoint
 //    TTY_SUBTYPE_PTY_SLAVE   = PTY slave endpoint
+
+tty_object:
 
     if (fp->____object == ObjectTypeTTY)
     {

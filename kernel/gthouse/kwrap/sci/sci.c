@@ -2211,7 +2211,7 @@ void *sci2 (
     unsigned long c__extra = (unsigned long) arg4;
     if (number == SCI2_COPY_PROCESS)
     {
-        debug_print("sci2: [SCI2_COPY_PROCESS] clone and execute\n");
+        //debug_print("sci2: [SCI2_COPY_PROCESS] clone and execute\n");
         // #debug
         //printk("sci2: copy_process called by pid{%d}\n",current_process);
         /*

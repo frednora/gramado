@@ -174,9 +174,22 @@ int main(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
+// The shell must ignore argv[] and 
+// switch to reading commands from stdin,
+// where the cmdline or script is.
+
     int c=0;
 
-    printf ("---- Shell's banner ----\n");
+    //write(1, "[MAIN START]\n", 13);
+
+    //printf ("---- Shell's banner ----\n");
+
+    printf("|argc = %d\n", argc);
+
+    int i=0;
+    for (i = 0; i < argc; i++) {
+        printf("argv[%d] = '%s'\n", i, argv[i]);
+    }
 
     while (1){
         c = getc(stdin);

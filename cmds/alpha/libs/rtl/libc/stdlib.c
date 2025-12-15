@@ -1,6 +1,6 @@
-
 // stdlib.c
 // Standard library.
+// Created by Fred Nora.
 
 #include <types.h>
 #include <errno.h>

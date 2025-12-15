@@ -412,7 +412,23 @@ int terminal_core_launch_from_cmdline(int fd, const char *cmdline)
     //write(fileno(stdin), prompt, 80);
 // #test: The command program's crt0 will read from stderr
 // because ti doesn't have the focus and cant read from stdin.
-    write(fileno(stdin), cmdline, 80);
+    //write(fileno(stdin), cmdline, 80);
+
+//----------------------------
+
+    char clean_buffer[512];
+    memset(clean_buffer, 0, sizeof(clean_buffer));
+
+    size_t len = strlen(cmdline);
+    if (len > sizeof(clean_buffer)-1)
+        len = sizeof(clean_buffer)-1;
+
+    memcpy(clean_buffer, cmdline, len);
+
+    // Now write ONLY the real length
+    write(fileno(stdin), clean_buffer, len);
+
+// -------------------------
 
 // Execute given the filename and the cmdline goes in stdin.
 

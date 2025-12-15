@@ -143,7 +143,7 @@ fsLoadFile (
     int Spc=0;
 
     // #debug:
-    debug_print ("fsLoadFile:\n");
+    //debug_print ("fsLoadFile:\n");
     //printk    ("fsLoadFile:\n");
 
 // Parameters:
@@ -373,7 +373,7 @@ fsLoadFile (
 // Saiu do while. 
 // O arquivo não foi encontrado.
 //__notFound:
-    debug_print("fsLoadFile: File not found\n");
+    //debug_print("fsLoadFile: File not found\n");
     printk     ("fsLoadFile 1: %s not found\n", file_name );  
     goto fail;
 
@@ -1407,12 +1407,10 @@ fs_load_image(
 // Path support
 //
 
-// Loading image from the cwd.
-    if ( path[0] == '.' && 
-         path[1] == '/' )
+// Loading image from the cwd
+    if (path[0] == '.' && path[1] == '/')
     {
-        //debug_print ("fs_load_image: [FIXME] Can't execute from cwd\n");
-        printk      ("fs_load_image: [FIXME] Can't execute from cwd\n");
+        printk("fs_load_image: [FIXME] Can't execute from cwd\n");
         goto fail;
     }
 

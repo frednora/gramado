@@ -935,7 +935,7 @@ do_clone:
 //see: process.c
 
     // #debug
-    debug_print("copy_process: [1] Copying process image and stack\n");
+    //debug_print("copy_process: [1] Copying process image and stack\n");
     //printk   ("copy_process: [1] Copying process image and stack\n");
 
 // Allocating memory for the image and for the stack.
@@ -959,7 +959,7 @@ do_clone:
 // see: process.c
 
     //#debug
-    debug_print("copy_process: [2] Copying process structure\n");
+    //debug_print("copy_process: [2] Copying process structure\n");
     //printk ("copy_process: [2] Copying process structure\n");
 
 // Cloning the process structure.
@@ -994,7 +994,7 @@ do_clone:
 
 // Copy parent thread structure.
 // see: thread.c
-    debug_print("copy_process: [3] Copying thread structure\n");
+    //debug_print("copy_process: [3] Copying thread structure\n");
     child_thread = (struct thread_d *) copy_thread_struct(parent_thread);
     if ((void *) child_thread == NULL){
         panic("copy_process: [FAIL] copy_thread_struct\n");
@@ -1095,7 +1095,7 @@ do_clone:
 // Load image
 //
 
-    debug_print("copy_process: [4] load image\n");
+    //debug_print("copy_process: [4] load image\n");
 
 // Loading the image for the clone into the buffer created for it.
 // IN: name, image va.
