@@ -174,9 +174,12 @@ int main(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
-    while (1)
-    {
-        int c = getc(stdin);
+    int c=0;
+
+    printf ("---- Shell's banner ----\n");
+
+    while (1){
+        c = getc(stdin);
         if (c >= 0)
         {
             // Process cmdline
@@ -189,6 +192,7 @@ int main(int argc, char *argv[])
             };
         }
     }
-    return 0;
+
+    return EXIT_SUCCESS;
 }
 

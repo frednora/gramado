@@ -173,10 +173,11 @@ void crt0(unsigned long rdi)
 // when a new process is initializing. Let's make it 
 // friendly visable.
 
+/*
     debug_print ("+\n");
     debug_print ("++ crt0.c: Initializing (commands/) process\n");
     debug_print ("+\n");
-
+*/
 
 // ------------------------------------
 // Initialize heap support.
@@ -315,12 +316,9 @@ e o crt0 do driver, não ativa.
 
     asm volatile ("int $199");
 
-//
-// Call main().
-//
-
-    // IN: argc, argv.
-    main_ret = (int) main( token_count, tokenList );
+// Call main()
+// IN: argc, argv
+    main_ret = (int) main(token_count, tokenList);
 
 // Check against stdlin.h
     switch (main_ret){

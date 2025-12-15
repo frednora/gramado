@@ -174,10 +174,11 @@ void crt0(unsigned long rdi)
 // when a new process is initializing. Let's make it 
 // friendly visable.
 
+/*
     debug_print ("+\n");
     debug_print ("++ crt0.c: Initializing (ui/shell/) process\n");
     debug_print ("+\n");
-
+*/
 
 // ------------------------------------
 // Initialize heap support.
@@ -265,8 +266,8 @@ void crt0(unsigned long rdi)
 // Transferindo os ponteiros do vetor para o ambiente.
 
     //tokenList[0] = strtok ( &shared_info[0], LSH_TOK_DELIM );
-    tokenList[0] = strtok ( buffer, LSH_TOK_DELIM );
-    
+    tokenList[0] = strtok(buffer,LSH_TOK_DELIM);
+
 // Salva a primeira palavra digitada.
     token = (char *) tokenList[0];
     index=0; 
@@ -313,11 +314,8 @@ e o crt0 do driver, não ativa.
 
     asm volatile ("int $199");
 
-//
-// Call main().
-//
-
-    // IN: argc, argv.
+// Call main()
+// IN: argc, argv
     main_ret = (int) main( token_count, tokenList );
 
 // Check against stdlin.h

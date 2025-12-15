@@ -244,6 +244,14 @@ int ptys_fd = -1;
 
 //====================================================
 
+//static int term00_gettid(void);
+static int term00_gettid(void)
+{
+    unsigned long ul_value=0;
+    ul_value = (unsigned long) sc80(87, 0, 0, 0);
+// 32bit value.
+    return (pid_t) (ul_value & 0xFFFFFFFF);
+};
 
 static void terminal_initialize_pty(void)
 {
@@ -2548,8 +2556,8 @@ terminalProcedure (
     if (msg == MSG_KEYUP || msg == MSG_SYSKEYUP)
         return 0;
 
-    if (msg == MSG_KEYDOWN)
-        tputstring(fd, "MSG_KEYDOWN\n");
+    //if (msg == MSG_KEYDOWN)
+        //tputstring(fd, "MSG_KEYDOWN\n");
 // ==================
 
     switch (msg){
@@ -3652,11 +3660,13 @@ int terminal_init(unsigned short flags)
 // the shell will use it later.
     terminal_initialize_ptys_for_the_shell();
 
-// launch our shell child
+// Launch our shell child
 // It sets the flag isWaitingForOutput to TRUE
 // so the terminal starts reading from the child process.
-    //terminal_core_launch_child("#shell.bin");
-    terminal_core_launch_from_cmdline(client_fd, "#shell.bin");
+
+    const char *fake_cmdline = "#shell.bin";
+
+    terminal_core_launch_from_cmdline(client_fd,fake_cmdline);
 
     // No embedded shell by default.
     //isUsingEmbeddedShell = FALSE;
@@ -3772,19 +3782,26 @@ int terminal_init(unsigned short flags)
 
     isUsingEmbeddedShell = FALSE;
     char coolCharBuffer[4];
-    while (1)
-    {
+    int ch_read=0;
+    while (1){
+
+         // #bugbug
+         // maybe the terminal is printing garbage before the 
+         //loop
+
         // Get input from kernel and send it to the shell
         __get_system_event(client_fd, Terminal.client_window_id);
-
         // Read what comes from the shell. And print it
-        int ch_read = read(ptym_fd, coolCharBuffer, 1);
-        if ( ch_read > 0 )
-        {
+        coolCharBuffer[0] = 0;
+        coolCharBuffer[1] = 0;
+        while(1){
+            ch_read = read(ptym_fd, coolCharBuffer, 1);
+            if (ch_read <= 0)
+                break;
             tputstring(client_fd, coolCharBuffer);
-            //coolCharBuffer[0] = 0;
-            //coolCharBuffer[1] = 0;
-        }
+        };
+
+        //__get_ds_event( client_fd, main_window );
     };
 
 //
@@ -3817,23 +3834,22 @@ int terminal_init(unsigned short flags)
 */
 
 done:
-    debug_print("terminal.bin: Bye\n"); 
-    printf     ("terminal.bin: Bye\n");
+    printf("term00.bin: Bye\n");
     return 0;
+
 fail:
-    debug_print("terminal.bin: Fail\n"); 
-    printf     ("terminal.bin: Fail\n");
+    // #bugbug: This code is running. We're simply avoiding the noise.
+    //printf("term00.bin: Fail :)\n");
     return (int) -1;
 }
 
-
-
-// Main function for the terminal application.
+// Main function for the terminal application
 int main(int argc, char *argv[])
 { 
     int Status = -1;
 
-    debug_print ("terminal.bin:\n");
+    //debug_print ("terminal.bin:\n");
+    //printf("TERM: main() started in thread %d\n", term00_gettid());
 
     saved_argc = argc;
     saved_argv = argv;
@@ -3913,12 +3929,16 @@ int main(int argc, char *argv[])
 
     Status = (int) terminal_init(INIT_FLAGS);
     if (Status != 0)
-        printf("main: Something is wrong\n");
+    {
+        //printf("term00 main(): Something is wrong\n");
+        //printf("TERM: main() is returning in thread %d\n", 
+            //term00_gettid() );
+        
+        // #bugbug: This code is running. We're simply avoiding the noise.
+    }
 
     return 0;
 }
-
-
 
 //
 // End

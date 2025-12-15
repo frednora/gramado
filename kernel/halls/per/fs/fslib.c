@@ -1107,7 +1107,7 @@ RegularFile:
 
     if (fp->____object == ObjectTypeTTY)
     {
-        printk ("__read_imp: [TODO] trying to read a PTY device file\n");
+        //printk ("__read_imp: [TODO] trying to read a PTY device file\n");
         if ((void*)fp->tty == NULL)
             return -1;
 
@@ -1260,16 +1260,16 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
 // Process
 // #todo: There is a helper for that small routine.
     if (current_process < 0 || current_process >= PROCESS_COUNT_MAX){
-        debug_print("__write_imp: current_process\n");
+        //debug_print("__write_imp: current_process\n");
         goto fail;
     }
     p = (void *) teList[current_process];
     if ((void *) p == NULL){
-        debug_print("__write_imp: p\n");
+        //debug_print("__write_imp: p\n");
         goto fail;
     }
     if ( p->used != TRUE || p->magic != 1234 ){
-        debug_print("__write_imp: p validation\n");
+        //debug_print("__write_imp: p validation\n");
         goto fail;
     }
 // #warning
@@ -1329,7 +1329,7 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
     fp = (file *) get_file_from_fd(fd);
     if ((void *) fp == NULL)
     {
-        debug_print("__write_imp: fp not open\n");
+        //debug_print("__write_imp: fp not open\n");
         printk     ("__write_imp: fp not open #hang\n");
         //printk      ("fd{%d} pid{%d}\n",fd,current_process);
         //printk("entry0: %x\n", __P->Objects[0]);
@@ -1343,7 +1343,7 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
 
     if (fp->sync.can_write != TRUE)
     {
-        debug_print("__write_imp: [PERMISSION] Can NOT write the file\n");
+        //debug_print("__write_imp: [PERMISSION] Can NOT write the file\n");
         printk     ("__write_imp: [PERMISSION] Can NOT write fd={%d} tid={%d}\n", 
             fd, current_thread );
         goto fail; 
@@ -1595,7 +1595,7 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
         
         // Can't write.
         if ((fp->_flags & __SWR) == 0){
-            debug_print("__write_imp: [FAIL] flag __SWR \n");
+            //debug_print("__write_imp: [FAIL] flag __SWR \n");
             //yield (current_thread);
             goto fail;
         }
@@ -1610,7 +1610,7 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
         if (fp->socket_buffer_full == TRUE)
         {
             
-            debug_print("__write_imp: [FAIL] can't write on a full buffer\n");
+            //debug_print("__write_imp: [FAIL] can't write on a full buffer\n");
             
             //#debug
             //debug_print("__write_imp: WAKEUP READER\n");
@@ -1652,7 +1652,7 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
 
                 // fail
                 if (nbytes <= 0){
-                    debug_print("__write_imp: [FAIL] file_write_buffer couldn't write on socket \n");
+                    //debug_print("__write_imp: [FAIL] file_write_buffer couldn't write on socket \n");
                     //#todo: Isso pode afetar o desempenho.
                     yield (current_thread);
                     goto fail;
@@ -1706,8 +1706,8 @@ RegularFile:
     {
         // Can't write.
         if ( (fp->_flags & __SWR) == 0){
-             debug_print("__write_imp: [FLAGS] Can't write!\n");
-             return 0;
+            //debug_print("__write_imp: [FLAGS] Can't write!\n");
+            return 0;
         }
 
         // Can write.
@@ -1745,11 +1745,11 @@ RegularFile:
             //fp->tid_waiting = current_thread;
             //fp->_flags |= __SWR;  //pode escrever.
             //scheduler();
-            debug_print ("__write_imp: [FAIL] file_write_buffer fail!\n");
+            //debug_print ("__write_imp: [FAIL] file_write_buffer fail!\n");
             return 0;
         }
  
-        debug_print ("__write_imp: [FAIL] Something is wrong!\n");
+        //debug_print ("__write_imp: [FAIL] Something is wrong!\n");
         return (ssize_t) (-1);
     } //regular file.
 
@@ -1779,7 +1779,7 @@ RegularFile:
 
     if (fp->____object == ObjectTypeTTY)
     {
-        printk ("__write_imp: [TODO] trying to write a PTY device file\n");
+        //printk ("__write_imp: [TODO] trying to write a PTY device file\n");
         if ((void*)fp->tty == NULL)
             return -1;
 

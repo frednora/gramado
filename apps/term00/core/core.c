@@ -133,9 +133,6 @@ void test_tty_support(int fd)
     */
 }
 
-
-
-
 // Launch a child process given a filename.
 // Return TID or -1.
 int terminal_core_launch_child(const char *filename)
@@ -306,7 +303,7 @@ int terminal_core_launch_from_cmdline(int fd, const char *cmdline)
             break;
         }        
 
-        if ( filename_buffer[i] == '.' ){
+        if (filename_buffer[i] == '.'){
             dotWasFound = TRUE;
             break;
         }
@@ -426,7 +423,6 @@ int terminal_core_launch_from_cmdline(int fd, const char *cmdline)
     }
 
     //Terminal.child_tid = tid;
-
 
 // #important:
 // Child TID handling during terminal spawn.

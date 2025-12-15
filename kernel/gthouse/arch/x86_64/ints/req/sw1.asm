@@ -35,6 +35,8 @@ align 4
 global RequestHall_int128
 RequestHall_int128:
 
+    cli 
+
 ; #ps:
 ; For now We dont need disable interrupts in our syscalls,
 ; because all the IDT entries are using EE00,
@@ -155,6 +157,8 @@ align 4
 global RequestHall_int129
 RequestHall_int129:
 
+    cli 
+
 ; #ps:
 ; For now We dont need disable interrupts in our syscalls,
 ; because all the IDT entries are using EE00,
@@ -272,6 +276,8 @@ align 4
 global RequestHall_int130
 RequestHall_int130:
 
+    cli 
+
 ; #ps:
 ; For now We dont need disable interrupts in our syscalls,
 ; because all the IDT entries are using EE00,
@@ -388,6 +394,8 @@ extern _sci3_cpl
 align 4  
 global RequestHall_int131
 RequestHall_int131:
+
+    cli 
 
 ; #ps:
 ; For now We dont need disable interrupts in our syscalls,
