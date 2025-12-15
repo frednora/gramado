@@ -1208,9 +1208,9 @@ __consoleProcessKeyboardInput (
 
         switch (long1){
 
-        //case VK_RETURN:
-        case '\n':
-        case '\r':
+        case VK_RETURN:
+        //case '\n':
+        //case '\r':
             //if (InputBrokerInfo.shell_flag != TRUE){
                 //wmSendInputToWindowManager(0,MSG_KEYDOWN,long1,long2);
                 //return 0;

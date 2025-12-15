@@ -10,7 +10,7 @@
 
 // Current build number
 // Updated by the builder
-#define __CURRENT_BUILD_NUMBER    361
+#define __CURRENT_BUILD_NUMBER    362
 
 // Version
 #define VERSION_MAJOR    0
@@ -21,8 +21,8 @@
 #define VERSION_WORD    0x0008
 // Strings
 #define VERSION_STRING    "0.8"
-#define BUILD_STRING      "361"
-#define BUILD_CODENAME_STRING  "TTY Saga"
+#define BUILD_STRING      "362"
+#define BUILD_CODENAME_STRING  "term00 + shell"
 #define RELEASE_STRING    PRODUCT_TYPE_STRING
 
 #endif  
