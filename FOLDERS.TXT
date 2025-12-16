@@ -1,0 +1,12 @@
+
+Main dependencies
+
+```
+
++ netu/ - (DEP L1) Network server
++ winu/ - (DEP L2) Display server
+
++ apps/ - (DEP L3) Client-side GUI applications
++ cmds/ - (DEP L4) Posix-commands
+
+```

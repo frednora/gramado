@@ -20,42 +20,36 @@ BASE = $(DISTROS)/base00
 # It's because of the close interaction userland
 # with the other subfolders in core/.
 
-
-## =================================
+# =================================
 # Kernel Services: Init process, ring 3 drivers and ring 3 servers.
-USERLAND_L1 = userland
+__DEP_L1 = netu
 
-## =================================
+# =================================
 # Shell Pre-UI: The display server.
 # The infrastruture for the windows.
-DEP_L2_LAST = winu/core
+__DEP_L2 = winu
 # Display servers
-DISPLAY_SERVERS = $(DEP_L2_LAST)/ds
+L2_DS = $(__DEP_L2)/core/ds
 # Display server with embedded 3D demos
-GAMES = $(DEP_L2_LAST)/ds3d
+L2_DS3D = $(__DEP_L2)/core/ds3d
+
+# =================================
+# Client-side GUI applications.
+__DEP_L3 = apps
+L3_APPS = apps
+
+# =================================
+# Posix commands
+__DEP_L4 = cmds
+L4_CMDS = cmds
 
 ## =================================
-# Shell UI: Client-side GUI applications.
-DEP_L3 = apps
-
-# Client-side GUI applications
-APPLICATIONS = apps
-
-## =================================
-# Shell UI: Client-side GUI applications.
-DEP_L4 = cmds
-
-# Unix-like commands
-COMMANDS = cmds
-
-
-## =================================
-# userland extras
-USERLAND_EXTRAS = ulextras
+# (userland extras)
+__DEP_L5 = woods
 # Client-side GUI applications with X library
-ULEXTRAS_X = $(USERLAND_EXTRAS)/xapps
+L5_XAPPS = $(__DEP_L5)/xapps
 # Creating one cpp application just for fun
-ULEXTRAS_CPP00 = $(USERLAND_EXTRAS)/cpp00
+L5_CPP00 = $(__DEP_L5)/cpp00
 
 # Make variables (CC, etc...)
 AS      = as
@@ -93,9 +87,8 @@ clean
 
 	@echo "Done?"
 
-# --------------------------------------
-#::0
-# ~ Step 0: gramado files.
+# ===================================
+#::0 Build Gramado OS
 PHONY := build-gramado-os  
 build-gramado-os:     
 	@echo ":: [] Building VHD, bootloaders and kernel image."
@@ -109,7 +102,6 @@ build-gramado-os:
 # O BL.BIN procura o kernel no diretorio GRAMADO/
 # See: fs/loader.c
 
-#===================================
 # (1) gramboot/arch/ 
 
 # ::Build the bootloader.
@@ -136,7 +128,6 @@ build-gramado-os:
 # Copy the bootloader into the DE/ directory.
 #	@cp gramboot/arch/x86/bin/APX86.BIN   $(BASE)/DE   
 
-#===================================
 # (2) kernel/
 
 # ::Build kernel image.
@@ -150,7 +141,6 @@ build-gramado-os:
 # Create a backup; The bootloder expects this.
 	@cp kernel/KERNEL.BIN  $(BASE)/DE
 
-#===================================
 # (3) modules/
 
 	@echo "Compiling modules/"
@@ -170,143 +160,132 @@ build-gramado-os:
 #	@cp modules/bin/HVMOD1.BIN  $(BASE)/
 #	@cp modules/bin/HVMOD1.BIN  $(BASE)/GRAMADO
 
-# ...
-
-#===================================
-# LEVEL : ucore/
-	@echo "Compiling USERLAND_L1"
-	@$(MAKE) -C $(USERLAND_L1)
-
-	@echo "Installing USERLAND_L1"
+	@$(MAKE) -C init/
 
 # Copy the init process.
-	@cp $(USERLAND_L1)/init/src/bin/INIT.BIN  $(BASE)/
-#	@cp $(USERLAND_L1)/init/src/bin/INIT.BIN  $(BASE)/GRAMADO/
-
-#===================================
-# $(USERLAND_L1)/drivers/ in kernel project
-
-	@-cp $(USERLAND_L1)/drivers/bin/VGAD.BIN  $(BASE)/GRAMADO/
-
-#===================================
-# $(USERLAND_L1)/servers/ in kernel project
-
-	@-cp $(USERLAND_L1)/servers/bin/NET.BIN   $(BASE)/GRAMADO/
-	@-cp $(USERLAND_L1)/servers/bin/NETD.BIN  $(BASE)/GRAMADO/
+	@cp init/src/bin/INIT.BIN  $(BASE)/
 
 	@echo "~build-gramado-os end?"
 
-# --------------------------------------
-# Let's add a bit of shame in the project.
+# ===================================
+#::1
+# Build extras
 PHONY := build-extras
 build-extras:
 
 	@echo "build-extras"
 
-# ==================================
-# LEVEL : Display servers
-	@echo "Compiling DEP_L2_LAST (winu/core/)"
-	@make -C $(DEP_L2_LAST)/
+# __DEP_L1::
 
-	@echo "Installing DEP_L2_LAST (winu/core/)"
+	@echo "Compiling __DEP_L1"
+	@$(MAKE) -C $(__DEP_L1)
 
-	@-cp $(DISPLAY_SERVERS)/ds00/bin/DS00.BIN    $(BASE)/DE
-#@-cp $(DISPLAY_SERVERS)/ds01/bin/DS01.BIN    $(BASE)/DE
+	@echo "Installing __DEP_L1"
+	@-cp $(__DEP_L1)/core/bin/NET.BIN   $(BASE)/GRAMADO/
+	@-cp $(__DEP_L1)/core/bin/NETD.BIN  $(BASE)/GRAMADO/
+
+# __DEP_L2:: Display servers
+	@echo "Compiling __DEP_L2"
+	@make -C $(__DEP_L2)/
+
+	@echo "Installing __DEP_L2"
+
+	@-cp $(L2_DS)/ds00/bin/DS00.BIN    $(BASE)/DE
+#@-cp $(L2_DS)/ds01/bin/DS01.BIN    $(BASE)/DE
 # Display servers with 3D demos.
-	@-cp $(GAMES)/bin/DEMO00.BIN   $(BASE)/DE/
-	@-cp $(GAMES)/bin/DEMO01.BIN   $(BASE)/DE/
+	@-cp $(L2_DS3D)/bin/DEMO00.BIN   $(BASE)/DE/
+	@-cp $(L2_DS3D)/bin/DEMO01.BIN   $(BASE)/DE/
 
+# __DEP_L3::
 # Compiling client-side GUI applications
-	@echo "Compiling DEP_L3 (apps/)"
-	@make -C $(DEP_L3)/
+	@echo "Compiling __DEP_L3"
+	@make -C $(__DEP_L3)/
 
+# __DEP_L4::
 # Compiling Unix-like commands
-	@echo "Compiling DEP_L4 (cmds/)"
-	@make -C $(DEP_L4)/
+	@echo "Compiling __DEP_L4 (cmds/)"
+	@make -C $(__DEP_L4)/
 
 #===================================
 # Install BMPs from cali assets.
-# Copy the $(DEP_L3)/assets/
+# Copy the $(__DEP_L3)/assets/
 # We can't survive without this one.
 	@cp apps/assets/themes/theme01/*.BMP  $(BASE)/DE
 
 # Well consolidated programs.
-	@-cp $(COMMANDS)/bin/PUBSH.BIN    $(BASE)/GRAMADO/
-	@-cp $(COMMANDS)/bin/PUBSH.BIN    $(BASE)/DE/
-	@-cp $(COMMANDS)/bin/SHELL.BIN    $(BASE)/GRAMADO/
-	@-cp $(COMMANDS)/bin/SHELL.BIN    $(BASE)/DE/
-	@-cp $(COMMANDS)/bin/SHELL2.BIN   $(BASE)/DE/
-#	@-cp $(COMMANDS)/bin/SHELLZZ.BIN  $(BASE)/GRAMADO/
-#	@-cp $(COMMANDS)/bin/SHELLZZ.BIN  $(BASE)/DE/
+	@-cp $(L4_CMDS)/bin/PUBSH.BIN    $(BASE)/GRAMADO/
+	@-cp $(L4_CMDS)/bin/PUBSH.BIN    $(BASE)/DE/
+	@-cp $(L4_CMDS)/bin/SHELL.BIN    $(BASE)/GRAMADO/
+	@-cp $(L4_CMDS)/bin/SHELL.BIN    $(BASE)/DE/
+	@-cp $(L4_CMDS)/bin/SHELL2.BIN   $(BASE)/DE/
+#	@-cp $(L4_CMDS)/bin/SHELLZZ.BIN  $(BASE)/GRAMADO/
+#	@-cp $(L4_CMDS)/bin/SHELLZZ.BIN  $(BASE)/DE/
 
 # Experimental programs.
-	@-cp $(COMMANDS)/bin/SH7.BIN        $(BASE)/GRAMADO/
-#	@-cp $(COMMANDS)/bin/SHELLXXX.BIN   $(BASE)/GRAMADO/
-#	@-cp $(COMMANDS)/bin/TASCII.BIN     $(BASE)/GRAMADO/
-#	@-cp $(COMMANDS)/bin/TPRINTF.BIN    $(BASE)/GRAMADO/
-
-#===================================
+	@-cp $(L4_CMDS)/bin/SH7.BIN        $(BASE)/GRAMADO/
+#	@-cp $(L4_CMDS)/bin/SHELLXXX.BIN   $(BASE)/GRAMADO/
+#	@-cp $(L4_CMDS)/bin/TASCII.BIN     $(BASE)/GRAMADO/
+#	@-cp $(L4_CMDS)/bin/TPRINTF.BIN    $(BASE)/GRAMADO/
 
 # Copy well consolidated commands.
-	@-cp $(COMMANDS)/bin/CAT.BIN       $(BASE)/
-	@-cp $(COMMANDS)/bin/CAT00.BIN     $(BASE)/
-	@-cp $(COMMANDS)/bin/REBOOT.BIN    $(BASE)/
-	@-cp $(COMMANDS)/bin/REBOOT.BIN    $(BASE)/GRAMADO/
-	@-cp $(COMMANDS)/bin/SHUTDOWN.BIN  $(BASE)/
-	@-cp $(COMMANDS)/bin/SHUTDOWN.BIN  $(BASE)/GRAMADO/
-	@-cp $(COMMANDS)/bin/UNAME.BIN     $(BASE)/
+	@-cp $(L4_CMDS)/bin/CAT.BIN       $(BASE)/
+	@-cp $(L4_CMDS)/bin/CAT00.BIN     $(BASE)/
+	@-cp $(L4_CMDS)/bin/REBOOT.BIN    $(BASE)/
+	@-cp $(L4_CMDS)/bin/REBOOT.BIN    $(BASE)/GRAMADO/
+	@-cp $(L4_CMDS)/bin/SHUTDOWN.BIN  $(BASE)/
+	@-cp $(L4_CMDS)/bin/SHUTDOWN.BIN  $(BASE)/GRAMADO/
+	@-cp $(L4_CMDS)/bin/UNAME.BIN     $(BASE)/
 
 # Experimental commands.
-#	@-cp $(COMMANDS)/bin/FALSE.BIN      $(BASE)/GRAMADO/
-#	@-cp $(COMMANDS)/bin/TRUE.BIN       $(BASE)/GRAMADO/
-#	@-cp $(COMMANDS)/bin/CMP.BIN       $(BASE)/GRAMADO/
-#	@-cp $(COMMANDS)/bin/SHOWFUN.BIN   $(BASE)/GRAMADO/
-#	@-cp $(COMMANDS)/bin/SUM.BIN       $(BASE)/GRAMADO/
-	@-cp $(COMMANDS)/bin/GRAMCNF.BIN     $(BASE)/
-#@-cp $(COMMANDS)/bin/N9.BIN         $(BASE)/GRAMADO/
-#@-cp $(COMMANDS)/bin/N10.BIN        $(BASE)/GRAMADO/
-#@-cp $(COMMANDS)/bin/N11.BIN        $(BASE)/GRAMADO/
-#@-cp $(COMMANDS)/bin/UDPTEST.BIN  $(BASE)/GRAMADO/
+#	@-cp $(L4_CMDS)/bin/FALSE.BIN      $(BASE)/GRAMADO/
+#	@-cp $(L4_CMDS)/bin/TRUE.BIN       $(BASE)/GRAMADO/
+#	@-cp $(L4_CMDS)/bin/CMP.BIN       $(BASE)/GRAMADO/
+#	@-cp $(L4_CMDS)/bin/SHOWFUN.BIN   $(BASE)/GRAMADO/
+#	@-cp $(L4_CMDS)/bin/SUM.BIN       $(BASE)/GRAMADO/
+	@-cp $(L4_CMDS)/bin/GRAMCNF.BIN     $(BASE)/
+#@-cp $(L4_CMDS)/bin/N9.BIN         $(BASE)/GRAMADO/
+#@-cp $(L4_CMDS)/bin/N10.BIN        $(BASE)/GRAMADO/
+#@-cp $(L4_CMDS)/bin/N11.BIN        $(BASE)/GRAMADO/
+#@-cp $(L4_CMDS)/bin/UDPTEST.BIN  $(BASE)/GRAMADO/
 
-	@-cp $(APPLICATIONS)/bin/TASKBAR.BIN    $(BASE)/DE
+	@-cp $(L3_APPS)/bin/TASKBAR.BIN    $(BASE)/DE
 
 # by Copilot
-	@-cp $(APPLICATIONS)/bin/POWER.BIN   $(BASE)/DE
-	@-cp $(APPLICATIONS)/bin/MEMORY.BIN  $(BASE)/DE
-	@-cp $(APPLICATIONS)/bin/GWTEX.BIN   $(BASE)/DE
+	@-cp $(L3_APPS)/bin/POWER.BIN   $(BASE)/DE
+	@-cp $(L3_APPS)/bin/MEMORY.BIN  $(BASE)/DE
+	@-cp $(L3_APPS)/bin/GWTEX.BIN   $(BASE)/DE
 
-	@-cp $(APPLICATIONS)/bin/MENUAPP.BIN    $(BASE)/DE
-	@-cp $(APPLICATIONS)/bin/LAUNCH.BIN     $(BASE)/DE
-	@-cp $(APPLICATIONS)/bin/TERM00.BIN     $(BASE)/DE
-#@-cp $(APPLICATIONS)/bin/GWS.BIN       $(BASE)/DE
+	@-cp $(L3_APPS)/bin/MENUAPP.BIN    $(BASE)/DE
+	@-cp $(L3_APPS)/bin/LAUNCH.BIN     $(BASE)/DE
+	@-cp $(L3_APPS)/bin/TERM00.BIN     $(BASE)/DE
+#@-cp $(L3_APPS)/bin/GWS.BIN       $(BASE)/DE
     # Experimental applications
     # These need the '#' prefix.
-	@-cp $(APPLICATIONS)/bin/DOC.BIN      $(BASE)/DE/
-	@-cp $(APPLICATIONS)/bin/EDITOR.BIN   $(BASE)/DE/
+	@-cp $(L3_APPS)/bin/DOC.BIN      $(BASE)/DE/
+	@-cp $(L3_APPS)/bin/EDITOR.BIN   $(BASE)/DE/
 
-	@-cp $(APPLICATIONS)/bin/GDM.BIN      $(BASE)/DE/
-	@-cp $(APPLICATIONS)/bin/SETUP.BIN    $(BASE)/DE/
+	@-cp $(L3_APPS)/bin/GDM.BIN      $(BASE)/DE/
+	@-cp $(L3_APPS)/bin/SETUP.BIN    $(BASE)/DE/
 
 # (browser/) browser.
 # Teabox web browser
     # Experimental applications
     # These need the '@' prefix.
-	@-cp $(APPLICATIONS)/bin/TEABOX.BIN  $(BASE)/DE/
-
+	@-cp $(L3_APPS)/bin/TEABOX.BIN  $(BASE)/DE/
 
 # Compiling ulextras stuff
-	@echo "Compiling DEP_L3 (ulextras/)"
-	@make -C $(USERLAND_EXTRAS)/
+	@echo "Compiling __DEP_L5"
+	@make -C $(__DEP_L5)/
 
 # X-like applications
-	@-cp $(ULEXTRAS_X)/bin/XTB.BIN  $(BASE)/DE
+	@-cp $(L5_XAPPS)/bin/XTB.BIN  $(BASE)/DE
 
 # cpp application example
-	@-cp $(ULEXTRAS_CPP00)/bin/CPP00.BIN  $(BASE)/DE
+	@-cp $(L5_CPP00)/bin/CPP00.BIN  $(BASE)/DE
 
 	@echo "~ build-extras"
 
-# --------------------------------------
+# ===================================
 #::2
 # Step 2: $(DISTROS)/gramvd  - Creating the directory to mount the VHD.
 $(DISTROS)/gramvd:
@@ -438,17 +417,18 @@ clean-all: clean
 	-rm -rf modules/bin/*.BIN
 
 # ==================
-# $(USERLAND_L1)/
-
 # Clear INIT.BIN
-	-rm $(USERLAND_L1)/init/src/*.o
-	-rm $(USERLAND_L1)/init/src/*.BIN 
-	-rm $(USERLAND_L1)/init/src/bin/*.BIN 
+	-rm init/src/*.o
+	-rm init/src/*.BIN 
+	-rm init/src/bin/*.BIN 
 
-	-rm $(USERLAND_L1)/servers/netd/client/*.o
-	-rm $(USERLAND_L1)/servers/netd/client/*.BIN
-	-rm $(USERLAND_L1)/servers/netd/server/*.o
-	-rm $(USERLAND_L1)/servers/netd/server/*.BIN 
+# ==================
+# $(__DEP_L1)/
+
+	-rm $(__DEP_L1)/core/netd/client/*.o
+	-rm $(__DEP_L1)/core/netd/client/*.BIN
+	-rm $(__DEP_L1)/core/netd/server/*.o
+	-rm $(__DEP_L1)/core/netd/server/*.BIN 
 
 # ==================
 # Clear the disk cache

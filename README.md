@@ -28,10 +28,20 @@ Some extra features are:
 gramboot/  - Gramado OS bootloader.
 kernel/    - Gramado OS kernel.
 modules/   - Ring 0 loadable kernel modules. (Not dynlinked).
-userland/  - Init process and more.
+init/      - The init process.
 winu/      - Display server.
 apps/      - Ring 3 client-side GUI applications.
 cmds/      - Posix-like commands.
+```
+
+## Main dependencies
+
+```
++ netu/ - (DEP L1) Network server
++ winu/ - (DEP L2) Display server
+
++ apps/ - (DEP L3) Client-side GUI applications
++ cmds/ - (DEP L4) Posix-commands
 ```
 
 ## The extra folders
@@ -65,15 +75,7 @@ modules/
 
 ## Where is the Init Process?
 
-userland/init/
-
-## Where is the ring 3 device drivers?
-
-userland/drivers/
-
-## Where is the ring 3 servers?
-
-userland/servers/
+init/
 
 ## Where is the display server?
 
