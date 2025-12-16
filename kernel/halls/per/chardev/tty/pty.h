@@ -45,19 +45,6 @@
 #define __TTY_PTY_H  1
 
 
-// Lets manage all the pty devices.
-// #todo: Maybe the best place for this is in ptmx.
-struct tty_info_d 
-{
-    int initialized;
-
-    // Pointer to the first element of the list.
-    struct tty_d *pty_first;
-    // Number of element in the list.
-    unsigned int number_of_ptys;
-};
-extern struct pty_info_d *PTYInfo;
-
 
 // Exporting
 extern struct tty_d *legacy_pty_master;

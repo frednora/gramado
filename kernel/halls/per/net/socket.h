@@ -214,17 +214,17 @@ struct socket_d
 // Backlog
 //
 
-// The list of pending connections.
-// Updated by listen().
-    int connections_count;
+// Server‑side child sockets
+    unsigned long pending_server_endpoints[32];
+    int pending_server_count;
+
+// Client‑side child sockets (for local connections)
+    unsigned long pending_client_endpoints[32];
+    int pending_client_count;
+
 // List of sockets.
     int backlog_max;
     int backlog_head;
-    int backlog_tail;
-    unsigned long pending_connections[32];
-// Em que posiçao o ponteiro do socket de cliente esta
-// dentro da fila de conecxoes pendentes no socket do servidor.
-    int client_backlog_pos;
 
 // It indicates that this socket is currently
 // accepting new connections.
@@ -344,6 +344,11 @@ socket_dialog (
 
 int 
 sys_accept (
+    int sockfd, 
+    struct sockaddr *addr, 
+    socklen_t *addrlen );
+int 
+sys_gramado_accept (
     int sockfd, 
     struct sockaddr *addr, 
     socklen_t *addrlen );

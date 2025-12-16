@@ -10,6 +10,10 @@ struct network_initialization_d  NetworkInitialization;
 static unsigned long on_receiving_counter=0;
 static unsigned long on_sending_counter=0;
 
+// See: net.h
+unsigned long connectionList[MAX_CONNECTIONS];
+
+
 // Status para notificações.
 // Podemos ou não notificar os processo sobre os eventos de rede.
 // O shell vai habilitar essa notificação no momento em que

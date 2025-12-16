@@ -5,6 +5,31 @@
 #ifndef  __CONSOLE_H
 #define __CONSOLE_H    1
 
+//
+// Console modes
+//
+
+// The prefix KD_ explicitly stands for Keyboard and Display.
+
+// This is the standard mode for a text console. 
+// In this mode, the kernel's terminal emulator handles character output, 
+// draws glyphs onto the screen, and manages the cursor.
+#define KD_TEXT  1000
+
+// In this mode, an application 
+// (such as an X server or a program using a framebuffer) 
+// takes direct control of the display hardware (the framebuffer). 
+// The kernel's standard text drawing and cursor management are disabled. 
+// Direct Control: 
+// The application has pixel-level control over the display, 
+// bypassing the kernel's text-mode rendering.
+// Ignored Writes: 
+// Standard write() system calls to the virtual terminal 
+// are ignored in this mode; 
+// output must be handled by the application 
+// directly manipulating the display memory.
+#define KD_GRAPHICS  2000 
+
 
 // Main consoles.
 extern struct tty_d  *console0_tty;

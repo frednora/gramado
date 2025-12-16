@@ -22,15 +22,69 @@ static int
 __connect_inet ( 
     int sockfd, 
     const struct sockaddr *addr,
-    socklen_t addrlen );
+    socklen_t addrlen,
+    unsigned long connection_flags );
 
 static int 
 __connect_local ( 
     int sockfd, 
     const struct sockaddr *addr,
-    socklen_t addrlen );
+    socklen_t addrlen,
+    unsigned long connection_flags );
+
+
+static int 
+__accept_imp (
+    int sockfd, 
+    struct sockaddr *addr, 
+    socklen_t *addrlen,
+    unsigned long flags );
+
+static int __listen_imp(int sockfd, int backlog);
 
 // ====================
+
+// New FIFO accept() implementation
+// No circular buffer, no head/tail, no wraparound.
+
+// Local
+struct socket_d *new_accept(struct socket_d *sSocket);
+struct socket_d *new_accept(struct socket_d *sSocket)
+{
+    struct socket_d *cSocket;
+    int i;
+
+    // Validate server socket
+    if (!sSocket || sSocket->magic != 1234)
+        return NULL;
+
+    // No pending clients
+    if (sSocket->pending_client_count <= 0)
+        return NULL;
+
+    // The first client is always at index 0
+    cSocket = (struct socket_d *) sSocket->pending_client_endpoints[0];
+    if (!cSocket)
+        return NULL;
+
+    // Shift the queue left by 1
+    for (i = 1; i < sSocket->pending_client_count; i++)
+    {
+        sSocket->pending_client_endpoints[i-1] =
+            sSocket->pending_client_endpoints[i];
+    }
+
+    // Clear the last slot
+    sSocket->pending_client_endpoints[
+        sSocket->pending_client_count - 1
+    ] = 0;
+
+    // Decrement count
+    sSocket->pending_client_count--;
+
+    return cSocket;
+}
+
 
 /*
  * sys_socket:
@@ -294,11 +348,16 @@ fail:
 // Dessa forma o servido pode escrever nele
 // e o cliente poderá ler.
 
-int 
-sys_accept (
+// The listening socket is being reused as a communication endpoint
+// That is not the standard way. We need to create a new socket 
+// for each client, spetially for remote connections.
+
+static int 
+__accept_imp (
     int sockfd, 
     struct sockaddr *addr, 
-    socklen_t *addrlen )
+    socklen_t *addrlen,
+    unsigned long flags )
 {
 // Service 7002
 
@@ -316,6 +375,8 @@ sys_accept (
     int fdClient = -1;
 // Iterator for the pending connections queue.
     register int i=0;
+
+    unsigned long Flags = flags;
 
 // #debug
     int Verbose=FALSE;
@@ -338,7 +399,7 @@ sys_accept (
 
     fdServer = sockfd;
     if ( fdServer < 0 || fdServer >= OPEN_MAX ){
-        debug_print ("sys_accept: [FAIL] fdServer\n");
+        debug_print ("__accept_imp: [FAIL] fdServer\n");
         return (int) (-EBADF);
     }
 
@@ -349,14 +410,14 @@ sys_accept (
 // Ainda não estamos usando isso.
 
     if ((void *) addr == NULL){
-        printk("sys_accept: addr\n");
+        printk("__accept_imp: addr\n");
         return (int) (-EINVAL);
     }
 // Address validation.
 // It needs to be a ring3 address.
 // #todo: Check agains more limits.
     if (addr < FLOWERTHREAD_BASE){
-        panic("sys_accept: addr is not ring3\n");
+        panic("__accept_imp: addr is not ring3\n");
         //return (int) (-EINVAL);
     }
 
@@ -376,20 +437,20 @@ sys_accept (
 // The accept() was called by the server.
     current_process = (pid_t) get_current_process();
     if ( current_process < 0  || current_process >= PROCESS_COUNT_MAX ){
-        debug_print ("sys_accept: [FAIL] current_process\n");
-        printk      ("sys_accept: [FAIL] current_process\n");
+        debug_print ("__accept_imp: [FAIL] current_process\n");
+        printk      ("__accept_imp: [FAIL] current_process\n");
         goto fail;
     }
 // Server process
     sProcess = (struct te_d *) teList[current_process];
     if ((void *) sProcess == NULL){
-        debug_print ("sys_accept: [FAIL] sProcess\n");
-        printk      ("sys_accept: [FAIL] sProcess\n");
+        debug_print ("__accept_imp: [FAIL] sProcess\n");
+        printk      ("__accept_imp: [FAIL] sProcess\n");
         goto fail;
     }
     if ( sProcess->used != TRUE || sProcess->magic != 1234 ){
-        debug_print ("sys_accept: [FAIL] sProcess validation\n");
-        printk      ("sys_accept: [FAIL] sProcess validation\n");
+        debug_print ("__accept_imp: [FAIL] sProcess validation\n");
+        printk      ("__accept_imp: [FAIL] sProcess validation\n");
         goto fail;
     }
 
@@ -399,13 +460,13 @@ sys_accept (
 
     sFile = (file *) sProcess->Objects[fdServer];
     if ((void *) sFile == NULL){
-        debug_print ("sys_accept: sFile fail\n");
-        printk      ("sys_accept: sFile fail\n");
+        debug_print ("__accept_imp: sFile fail\n");
+        printk      ("__accept_imp: sFile fail\n");
         goto fail;
     }
     if ( sFile->used != TRUE || sFile->magic != 1234 ){
-        debug_print ("sys_accept: [FAIL] sFile validation\n");
-        printk      ("sys_accept: [FAIL] sFile validation\n");
+        debug_print ("__accept_imp: [FAIL] sFile validation\n");
+        printk      ("__accept_imp: [FAIL] sFile validation\n");
         goto fail;
     }
 // Is this file a socket object?
@@ -413,8 +474,8 @@ sys_accept (
         return (int) (-ENOTSOCK);
     }
     if (sFile->sync.can_accept != TRUE){
-        debug_print ("sys_accept: sFile can NOT accept connections\n");
-             printk ("sys_accept: sFile can NOT accept connections\n");
+        debug_print ("__accept_imp: sFile can NOT accept connections\n");
+             printk ("__accept_imp: sFile can NOT accept connections\n");
         goto fail;
     }
 
@@ -423,13 +484,13 @@ sys_accept (
 
     sSocket = (struct socket_d *) sFile->socket;
     if ((void *) sSocket == NULL){
-        debug_print ("sys_accept: [FAIL] sSocket\n");
-        printk      ("sys_accept: [FAIL] sSocket\n");
+        debug_print ("__accept_imp: [FAIL] sSocket\n");
+        printk      ("__accept_imp: [FAIL] sSocket\n");
         goto fail;
     }
     if ( sSocket->used != TRUE || sSocket->magic != 1234 ){
-        debug_print ("sys_accept: [FAIL] sSocket validation\n");
-        printk      ("sys_accept: [FAIL] sSocket validation\n");
+        debug_print ("__accept_imp: [FAIL] sSocket validation\n");
+        printk      ("__accept_imp: [FAIL] sSocket validation\n");
         goto fail;
     }
 
@@ -465,7 +526,7 @@ sys_accept (
     int i=0;
     int max=1;
     //max = s->backlog_max;
-    return (int) s->pending_connections[ s->backlog_pos ];
+    return (int) s->pending_client_endpoints[ s->backlog_pos ];
  */
 
 // O que segue abaixo eh um improviso,
@@ -476,7 +537,7 @@ sys_accept (
         //current_process, addr->sa_family, addrlen  );
 
 // sys_accept deve apenas pegar um fd da lista de conexoes
-// pending_connections[].
+// pending_client_endpoints[].
 // Lembre-se que o fd do cliente estah numa lista em outro processo.
  
 // #test
@@ -542,8 +603,9 @@ sys_accept (
         }
         i = sSocket->backlog_head;
         if ( i<0 || i >= sSocket->backlog_max ){
-            panic("sys_accept: Backlog limits\n");
+            panic("__accept_imp: Backlog limits\n");
         }
+
 
         // Probe for a valid pointer.
         // Ok 
@@ -552,7 +614,7 @@ sys_accept (
         // pela função connect();
         while (i <= sSocket->backlog_max)
         {
-            cSocket = (struct socket_d *) sSocket->pending_connections[i];
+            cSocket = (struct socket_d *) sSocket->pending_client_endpoints[i];
             if ((void*) cSocket != NULL){
                 break;
             }
@@ -565,7 +627,7 @@ sys_accept (
         {
             // #bugbug
             // No clients yet?
-            // debug_print ("sys_accept: [FAIL] cSocket\n");
+            // debug_print ("__accept_imp: [FAIL] cSocket\n");
             
             sSocket->state = SS_CONNECTING;  //anula.
             goto fail;
@@ -578,7 +640,7 @@ sys_accept (
             // check validation
             if ( cSocket->used != TRUE || cSocket->magic != 1234 )
             {
-                debug_print ("sys_accept: [FAIL] cSocket validation\n");
+                debug_print ("__accept_imp: [FAIL] cSocket validation\n");
                 sSocket->state = SS_CONNECTING;  //anula.
                 goto fail;
             }
@@ -615,10 +677,10 @@ sys_accept (
 
             if (Verbose == TRUE)
             {
-                printk("sys_accept: Server's pid {%d}\n",current_process);
-                printk("sys_accept: Server's socket fd {%d}\n",sockfd);
-                printk("sys_accept: Breakpoint\n");
-                refresh_screen();
+                printk("__accept_imp: Server's pid {%d}\n",current_process);
+                printk("__accept_imp: Server's socket fd {%d}\n",sockfd);
+                //printk("__accept_imp: Breakpoint\n");
+                //refresh_screen();
                 while (1){
                     asm (" cli "); 
                     asm (" hlt ");
@@ -629,7 +691,7 @@ sys_accept (
         }
 
         //fail
-        debug_print ("sys_accept: [FAIL] Pending connection\n");
+        debug_print ("__accept_imp: [FAIL] Pending connection\n");
         sSocket->state = SS_CONNECTING;  //anula.
 
         goto fail;
@@ -644,6 +706,40 @@ fail:
     //debug_print ("sys_accept: [FAIL] Something is wrong!\n");
     return (int) -1;
 }
+
+
+int 
+sys_accept (
+    int sockfd, 
+    struct sockaddr *addr, 
+    socklen_t *addrlen )
+{
+    int rv=0;
+
+    // #todo: This is test
+    unsigned long Flags=0;
+
+// Call the implementation
+    rv = (int) __accept_imp( sockfd, addr, addrlen, Flags );
+    return (int) rv;
+}
+
+int 
+sys_gramado_accept (
+    int sockfd, 
+    struct sockaddr *addr, 
+    socklen_t *addrlen )
+{
+    int rv=0;
+
+    // #todo: This is test
+    unsigned long Flags=0;
+
+// Call the implementation
+    rv = (int) __accept_imp( sockfd, addr, addrlen, Flags );
+    return (int) rv;
+}
+
 
 /*
  * sys_bind:
@@ -880,7 +976,8 @@ static int
 __connect_inet ( 
     int sockfd, 
     const struct sockaddr *addr,
-    socklen_t addrlen )
+    socklen_t addrlen,
+    unsigned long connection_flags )
 {
 // Worker, called by sys_connect().
 // AF_INET domains only.
@@ -908,6 +1005,8 @@ __connect_inet (
     struct sockaddr_in *addr_in;
     int Verbose = FALSE;
     register int i=0;
+
+    unsigned long Flags = connection_flags;
 
     unsigned char *given_ip;
 
@@ -1359,33 +1458,31 @@ __OK_new_slot:
 // Essa lista fica na estrutura de socket so servidor, 
 // dessa forma o servidor pode ter mais de uma socket?
 
-    //server_socket->connections_count++;
-    //if(server_socket->connections_count >= server_socket->backlog_max )
+    //server_socket->pending_client_count++;
+    //if(server_socket->pending_client_count >= server_socket->backlog_max )
     //    return ECONNREFUSED;
 
 // Circula
 // #bugbug:
 // Actually we're gonna reject the new connections when the queue is full.
 
+// The insertion index
     int BacklogTail = 0;
 
-    server_socket->backlog_tail++;
-    if (server_socket->backlog_tail >= server_socket->backlog_max)
+    server_socket->pending_client_count++;
+    if (server_socket->pending_client_count >= server_socket->backlog_max)
     {
-        server_socket->backlog_tail = 0;
+        server_socket->pending_client_count = 0;
     }
-    BacklogTail = server_socket->backlog_tail;
+    BacklogTail = server_socket->pending_client_count;
 
 // coloca na fila.
 // Coloca o ponteiro para estrutura de socket
 // na fila de conexões pendentes na estrutura do servidor.
 // Isso será usado pelo accept() para encontrar
 // a estrutura do socket do cliente.
-    server_socket->pending_connections[BacklogTail] = 
+    server_socket->pending_client_endpoints[BacklogTail] = 
         (unsigned long) client_socket;
-
-// Em que posiçao estamos na fila.
-    client_socket->client_backlog_pos = BacklogTail;
 
 // #
 // O cliente está esperando que sua conexão seja aceita pelo servidor.
@@ -1464,7 +1561,8 @@ static int
 __connect_local ( 
     int sockfd, 
     const struct sockaddr *addr,
-    socklen_t addrlen )
+    socklen_t addrlen,
+    unsigned long connection_flags )
 {
 // Worker, called by sys_connect().
 // AF_GRAMADO, AF_UNIX/AF_LOCAL domains only.
@@ -1495,6 +1593,8 @@ __connect_local (
 
     int Verbose = FALSE;
     register int i=0;
+
+    unsigned long Flags = connection_flags;
 
     unsigned char *given_ip;
 
@@ -1854,8 +1954,8 @@ __OK_new_slot:
 // Essa lista fica na estrutura de socket so servidor, 
 // dessa forma o servidor pode ter mais de uma socket?
 
-    //server_socket->connections_count++;
-    //if(server_socket->connections_count >= server_socket->backlog_max )
+    //server_socket->pending_client_count++;
+    //if(server_socket->pending_client_count >= server_socket->backlog_max )
     //    return ECONNREFUSED;
 
 // Circula
@@ -1864,23 +1964,20 @@ __OK_new_slot:
 
     int BacklogTail = 0;
 
-    server_socket->backlog_tail++;
-    if (server_socket->backlog_tail >= server_socket->backlog_max)
+    server_socket->pending_client_count++;
+    if (server_socket->pending_client_count >= server_socket->backlog_max)
     {
-        server_socket->backlog_tail = 0;
+        server_socket->pending_client_count = 0;
     }
-    BacklogTail = server_socket->backlog_tail;
+    BacklogTail = server_socket->pending_client_count;
 
 // coloca na fila.
 // Coloca o ponteiro para estrutura de socket
 // na fila de conexões pendentes na estrutura do servidor.
 // Isso será usado pelo accept() para encontrar
 // a estrutura do socket do cliente.
-    server_socket->pending_connections[BacklogTail] = 
+    server_socket->pending_client_endpoints[BacklogTail] = 
         (unsigned long) client_socket;
-
-// Em que posiçao estamos na fila.
-    client_socket->client_backlog_pos = BacklogTail;
 
 // #
 // O cliente está esperando que sua conexão seja aceita pelo servidor.
@@ -1912,18 +2009,16 @@ fail:
     return (int) -1;
 }
 
-// syscall implementation
+// Service 7001
+// #warning
+// We can have two types of address.
+// One for local and another one for inet.
 int 
 sys_connect ( 
     int sockfd, 
     const struct sockaddr *addr,
     socklen_t addrlen )
 {
-// Service 7001
-// #warning
-// We can have two types of address.
-// One for local and another one for inet.
-
     //unsigned long *limit_address = (unsigned long *) FLOWERTHREAD_BASE;
 
 // fd
@@ -1978,10 +2073,13 @@ sys_connect (
 // #todo
 // see: socket.h and in.h for the structures.
 
+    // #todo: This is a test yet
+    unsigned long ConnectionFlags = 0;
+
     if (IsLocal == TRUE){
-        return (int) __connect_local( sockfd, addr, addrlen );
+        return (int) __connect_local( sockfd, addr, addrlen, ConnectionFlags );
     } else if (IsLocal == FALSE){
-        return (int) __connect_inet( sockfd, addr, addrlen );
+        return (int) __connect_inet( sockfd, addr, addrlen, ConnectionFlags );
     }; 
 
 // Unexpected error
@@ -2078,36 +2176,36 @@ sys_getsockname (
 
 /*
  * sys_listen:
- *     É usado pra dizer que o servidor esta 
- * pronto para receber conecxões e 
- * a quantidade de clientes que podem ser conectados.
+ *     It's used to say that the server ready to accept connections 
+ * and how many connection it accepts.
  */
+// Used by a server to place a stream socket in a passive state, 
+// indicating that it is ready to accept incoming client connection requests.
+// listen() is used on the server side, and 
+// causes a bound TCP socket to enter listening state.
+// Setup how many pending connections.
 // See:
 // https://man7.org/linux/man-pages/man2/listen.2.html
 /*
  The backlog argument defines the maximum length to which the queue of
- pending connections for sockfd may grow.  If a connection request
+ pending connections for sockfd may grow. If a connection request
  arrives when the queue is full, the client may receive an error with
  an indication of ECONNREFUSED or, if the underlying protocol supports
  retransmission, the request may be ignored so that a later reattempt
  at connection succeed.
 */
-// listen() is used on the server side, and 
-// causes a bound TCP socket to enter listening state.
+// SOMAXCONN is the default limit on backlog.
 // IN:
 // sockfd  = The fd of the server's socket.
 // backlog = The server indicates the 'size of the list'.
-
-int sys_listen(int sockfd, int backlog) 
+static int __listen_imp(int sockfd, int backlog) 
 {
-// Service 7004
-// Called by sci.c
+    file *f;
+    int DesiredBacklog=0;
+    struct socket_d  *server_socket;
 
     struct te_d  *p;
     pid_t current_process = -1;
-    file *f;
-    struct socket_d  *s;
-    int Backlog=0;
 
     do_credits_by_tid(current_thread);
 
@@ -2125,28 +2223,6 @@ int sys_listen(int sockfd, int backlog)
         return (int) (-EBADF);
     }
 
-// backlog:
-// The server tell us the the 'size of the list'.
-// Wrong n. Ajusting to default.
-// It can't be bigger than the size of the array.
-// #todo: Use SOCKET_MAX_PENDING_CONNECTIONS
-// SOMAXCONN
-
-    Backlog = backlog;
-    if (Backlog <= 0) { Backlog=1; }
-    if (Backlog >= 32){ Backlog=31; }
-
-// We need to get the socket structure in the process structure.
-// We need to clean the list. Not here. when creating the socket.
-
-/*
-    //int i=0;
-    //for(i=0; i<32; i++) { s->pending_connections[i] = 0;};
-    // Updating the list support.
-    //s->backlog_max = backlog;  //max
-    //s->backlog_pos = 0;        //current 
- */
-
 // ==============================================
     current_process = (pid_t) get_current_process();
     if ( current_process < 0 || current_process >= PROCESS_COUNT_MAX )
@@ -2162,9 +2238,7 @@ int sys_listen(int sockfd, int backlog)
         goto fail;
     }
 
-// file 
-// sender's file
-// Objeto do tipo socket.
+// The server's socket fd opens the fp associated with a socket structure.
     f = (file *) p->Objects[sockfd];
     if ((void *) f == NULL){
         debug_print("sys_listen: f fail\n");
@@ -2179,44 +2253,85 @@ int sys_listen(int sockfd, int backlog)
         return (int) (-ENOTSOCK);
     }
 
-// This is right place for doing this.
-
+// This is right place for doing this?
+// Not ready yet?
     //f->sync.can_accept = TRUE;
 
-// Socket structure.
-// Pega a estrutura de socket associada ao arquivo.
-// socket structure in the senders file.
-
-    //s = (struct socket_d *) p->priv; 
-    s = (struct socket_d *) f->socket;
-    if ((void *) s == NULL){
-        debug_print("sys_listen: s fail\n");
-        printk     ("sys_listen: s fail\n");
+// Get the socket structure associated with the file.
+    server_socket = (struct socket_d *) f->socket;
+    if ((void *) server_socket == NULL){
+        debug_print("sys_listen: server_socket fail\n");
+        printk     ("sys_listen: server_socket fail\n");
         goto fail;
     }
+    server_socket->isAcceptingConnections = FALSE;
 
+    // #todo: Why?
     if (f->socket != p->priv){
         panic("sys_listen: [TEST] f->socket != p->priv\n");
     }
 
-// Updating the socket structure.
-    s->backlog_max = (int) Backlog;
-// This server is accepting new connections.
-    s->isAcceptingConnections = TRUE;
+//
+// Backlog
+//
+
+// The server tell us the the 'size of the list'.
+// Wrong n. Ajusting to default.
+// It can't be bigger than the size of the array.
+// #todo: Use SOCKET_MAX_PENDING_CONNECTIONS
+// SOMAXCONN
+
+    DesiredBacklog = backlog;
+    if (DesiredBacklog <= 0) { DesiredBacklog=1; }
+    if (DesiredBacklog >= 32){ DesiredBacklog=31; }
+
+// The limit of connected clients
+    server_socket->backlog_max = (int) DesiredBacklog;
+ 
+    int i=0;
+    for (i=0; i<32; i++)
+    {
+        server_socket->pending_server_endpoints[i] = 0;
+        server_socket->pending_client_endpoints[i] = 0;
+    };
+    server_socket->pending_server_count = 0;
+    server_socket->pending_client_count = 0;
+
+// This server is now accepting new connections
+    server_socket->isAcceptingConnections = TRUE;
     // ...
 
-    //debug_print ("sys_listen: [TODO] continue...\n");
-    //printk      ("sys_listen: [TODO] continue...\n");
-
     // ...
 
-//fake ok.
     return 0;
 
 fail:
     debug_print("sys_listen: fail\n");
     printk     ("sys_listen: fail\n");
     return (int) -1;
+}
+
+// Service 7004
+// Called by sci.c
+// IN:
+// sockfd  = The fd of the server's socket.
+// backlog = The server indicates the 'size of the list'.
+int sys_listen (int sockfd, int backlog)
+{
+    int rv=0;
+
+// There is a file associated with the server's socket.
+    if ( sockfd < 0 || sockfd >= OPEN_MAX )
+    {
+        debug_print ("sys_listen: sockfd\n");
+        printk      ("sys_listen: sockfd\n");
+        return (int) (-EBADF);
+    }
+
+// Call the implemetation
+    rv = (int) __listen_imp(sockfd, backlog);
+
+    return (int) rv;
 }
 
 // libc shutdown() function.

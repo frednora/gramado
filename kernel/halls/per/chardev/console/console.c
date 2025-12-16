@@ -2785,13 +2785,14 @@ DDINIT_console(
 // Data
 //
 
-    CONSOLE_TTYS[ConsoleIndex].initialized = FALSE;
-
-    // Todo virtual console eh uma tty. Os 4.
     CONSOLE_TTYS[ConsoleIndex].objectType = ObjectTypeTTY;
     CONSOLE_TTYS[ConsoleIndex].objectClass = ObjectClassKernelObject;
     CONSOLE_TTYS[ConsoleIndex].used = TRUE;
     CONSOLE_TTYS[ConsoleIndex].magic = (int) 1234;
+    CONSOLE_TTYS[ConsoleIndex].initialized = FALSE;
+
+// Console mode
+    CONSOLE_TTYS[ConsoleIndex].vc_mode = (int) KD_TEXT;
 
 // Owner tid
 // Uninitialized

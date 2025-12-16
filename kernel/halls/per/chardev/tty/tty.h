@@ -307,6 +307,11 @@ struct tty_d
 // ==  properties ========================
 //
 
+// Virtual console mode
+// Options: KD_TEXT and KD_GRAPHICS
+// See: console.h
+    int vc_mode;
+
 // TTY's operation mode.
     int operation_mode;
 // TTY QUEUE's operation mode.

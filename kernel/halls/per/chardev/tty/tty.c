@@ -1487,6 +1487,9 @@ struct tty_d *tty_create(short type, short subtype, const char *devname)
     __tty->magic = 1234;
     __tty->initialized = FALSE;
 
+// Console mode
+    __tty->vc_mode = (int) KD_TEXT;
+
 // Clear name field
     memset( __tty->name, 0, TTY_NAME_SIZE );
     __tty->Name_len = 0;

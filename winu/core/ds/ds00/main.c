@@ -4048,12 +4048,14 @@ static int ServerLoop(int launch_tb)
     // while(1){}
 
 // Listen
+// Used by a server to place a stream socket in a passive state, 
+// indicating that it is ready to accept incoming client connection requests.
 // Setup how many pending connections.
 // SOMAXCONN is the default limit on backlog.
 // see: sys/socket.h
     int ListenStatus = -1;
     ListenStatus = (int) listen(server_fd,SERVER_BACKLOG);
-    if (ListenStatus<0){
+    if (ListenStatus < 0){
         //#todo
     }
 

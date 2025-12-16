@@ -1,7 +1,6 @@
 // sockint.c
 // Internal routines.
-// workers.
-// Low level routines called by socket.c
+// Low level worker called by socket.c
 // Created by Fred Nora.
 
 #include <kernel.h>
@@ -72,15 +71,13 @@ int socket_set_gramado_port (int port, pid_t pid)
  *     Every process has its own socket structure.
  *     The status is: NOT CONNECTED.
  */
+// see: socket.h
 struct socket_d *create_socket_object(void)
 {
-// Crete the socket structure.
-// see: socket.h
-
     struct socket_d *s;
     register int i=0;
 
-// Create and clean the structure.
+// Create and clean the structure
     s = (void *) kmalloc( sizeof(struct socket_d) );
     if ((void *) s ==  NULL){
         printk("create_socket_object: s\n");
@@ -109,7 +106,6 @@ struct socket_d *create_socket_object(void)
     s->ip_ipv4 = (unsigned int) 0;
     s->port = (unsigned short) 0;
 
-
 // The buffer.
 // The data goes into the stream.
     s->private_file = (file *) 0;
@@ -122,22 +118,23 @@ struct socket_d *create_socket_object(void)
 // Data Offset (4bits) | Reserved (6bits) | Control bits (6bits).
     s->tcp__do_res_flags = 0;
 
-
 // Initializing pointers.
 // We don't want this kinda crash in the real machine.
 
 // It's a pointer to another socket. 
     s->link = NULL;
 
-// The counter
-    s->connections_count = 0;
-
-// max backlog = 32.
-    for (i=0; i<32; i++){
-        s->pending_connections[i] = 0;
+// Backlog (Max is 32)
+    for (i=0; i<32; i++)
+    {
+        s->pending_server_endpoints[i] = 0;
+        s->pending_client_endpoints[i] = 0;
     };
+// The counter
+    s->pending_server_count = 0;
+    s->pending_client_count = 0;
+
     s->backlog_head = 0;   //sai
-    s->backlog_tail = 0;   //entra
     s->backlog_max = 4;    //default 
 
 // Not yet.

@@ -4,6 +4,49 @@
 #ifndef __NET_NETWORK_H
 #define __NET_NETWORK_H    1
 
+
+struct local_connection_d 
+{
+    int used;
+    int magic;
+};
+
+struct udp_connection_d 
+{
+    int used;
+    int magic;
+};
+
+struct tcp_connection_d 
+{
+    int used;
+    int magic;
+};
+
+struct connection_d 
+{
+    int used;
+    int magic;
+
+// The endpoints
+    struct socket_d *server_endpoint;
+    struct socket_d *client_endpoint;
+
+    int type;
+
+// Helpers for extra information
+    struct local_connection_d  *local_conn;
+    struct udp_connection_d    *udp_conn;
+    struct tcp_connection_d    *tcp_conn;
+};
+
+#define MAX_CONNECTIONS  256
+// See: net.c
+extern unsigned long connectionList[MAX_CONNECTIONS];
+
+// ================================================
+
+
 // Used for fast responses
 struct network_saved_d
 {

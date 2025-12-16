@@ -77,7 +77,7 @@ the vt will display the data
 
 #include <kernel.h>
 
-struct pty_info_d *PTYInfo;
+
 
 struct tty_d *legacy_pty_master;
 struct tty_d *legacy_pty_slave;
