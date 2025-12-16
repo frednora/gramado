@@ -15,6 +15,12 @@ void panic( const char *format, ... )
 // Maybe we need to reinitialize the display properties.
     Initialization.kernel_owns_display_device = TRUE;
 
+    if (fg_console < 0 || fg_console > 3)
+        fg_console = DEFAULT_CONSOLE;
+
+// Kernel draws glyphs into the framebuffer
+    CONSOLE_TTYS[fg_console].vc_mode = KD_TEXT;
+
 // Se podemos usar o dispositivo serial para log.
     if (Initialization.is_serial_log_initialized == TRUE)
     {

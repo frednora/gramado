@@ -52,6 +52,38 @@
 #define TTY_FLUSHING         19	/* Flushing to ldisc in progress */
 #define TTY_FLUSHPENDING     20	/* Queued buffer flush pending */
 
+
+
+
+//
+// Console modes
+//
+
+// The prefix KD_ explicitly stands for Keyboard and Display.
+
+// This is the standard mode for a text console. 
+// In this mode, the kernel's terminal emulator handles character output, 
+// draws glyphs onto the screen, and manages the cursor.
+#define KD_TEXT  1000
+
+// In this mode, an application 
+// (such as an X server or a program using a framebuffer) 
+// takes direct control of the display hardware (the framebuffer). 
+// The kernel's standard text drawing and cursor management are disabled. 
+// Direct Control: 
+// The application has pixel-level control over the display, 
+// bypassing the kernel's text-mode rendering.
+// Ignored Writes: 
+// Standard write() system calls to the virtual terminal 
+// are ignored in this mode; 
+// output must be handled by the application 
+// directly manipulating the display memory.
+#define KD_GRAPHICS  2000 
+
+// For tty_ioctl
+#define KDSETMODE   8000
+
+
 // Chars
 // Some special chars from termios
 // used in the tty.

@@ -1445,8 +1445,26 @@ tty_ioctl (
         return 0;
         break;
 
+    // Set console mode
+    case KDSETMODE:
+        switch (arg) {
+        case KD_TEXT:
+            tty->vc_mode = KD_TEXT;
+            /* Optional: notify console driver */
+            // console_set_text_mode(tty);
+            return 0;
+
+        case KD_GRAPHICS:
+            tty->vc_mode = KD_GRAPHICS;
+            /* Optional: notify console driver */
+            // console_set_graphics_mode(tty);
+            return 0;
+        };
+        return 0;
+        break;
+
     default:
-        debug_print ("tty_ioctl: [FAIL] default\n");
+        //debug_print ("tty_ioctl: [FAIL] default\n");
         return (int) (-EINVAL);
         break;
     };
