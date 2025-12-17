@@ -164,6 +164,9 @@ struct socket_d
     int type;      // e.g. SOCK_STREAM, SOCK_DGRAM
     int protocol;  // e.g. IPPROTO_TCP, IPPROTO_UDP
 
+// #test: The new endpoint structure.
+    struct endpoint_d *ep;
+
 // Ownership information.
 // process, user, group.
     pid_t pid;

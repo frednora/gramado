@@ -44,48 +44,6 @@ static int __listen_imp(int sockfd, int backlog);
 
 // ====================
 
-// New FIFO accept() implementation
-// No circular buffer, no head/tail, no wraparound.
-
-// Local
-struct socket_d *new_accept(struct socket_d *sSocket);
-struct socket_d *new_accept(struct socket_d *sSocket)
-{
-    struct socket_d *cSocket;
-    int i;
-
-    // Validate server socket
-    if (!sSocket || sSocket->magic != 1234)
-        return NULL;
-
-    // No pending clients
-    if (sSocket->pending_client_count <= 0)
-        return NULL;
-
-    // The first client is always at index 0
-    cSocket = (struct socket_d *) sSocket->pending_client_endpoints[0];
-    if (!cSocket)
-        return NULL;
-
-    // Shift the queue left by 1
-    for (i = 1; i < sSocket->pending_client_count; i++)
-    {
-        sSocket->pending_client_endpoints[i-1] =
-            sSocket->pending_client_endpoints[i];
-    }
-
-    // Clear the last slot
-    sSocket->pending_client_endpoints[
-        sSocket->pending_client_count - 1
-    ] = 0;
-
-    // Decrement count
-    sSocket->pending_client_count--;
-
-    return cSocket;
-}
-
-
 /*
  * sys_socket:
  * This is the socket() function implementation.
@@ -110,23 +68,25 @@ struct socket_d *new_accept(struct socket_d *sSocket)
 //     fd if ok.
 //     -1 if it fails.
 
+// Service 7000
 int sys_socket( int family, int type, int protocol )
 {
-// Service 7000
 
     //#todo
     // call create_socket(...)
     // it will return a pointer.
 
-// Socket structure
+    struct endpoint_d *ep;
     struct socket_d *__socket;
+
 // Current process
     struct te_d *p;
     pid_t current_process = -1;
+
 // ip:port
 // Used in the socket struture
-    unsigned long _ipv6 = (unsigned long)  0x0000000000000000;
-    unsigned int _ipv4  = (unsigned int)   0x00000000;
+    unsigned long _ipv6  = (unsigned long)  0x0000000000000000;
+    unsigned int _ipv4   = (unsigned int)   0x00000000;
     unsigned short _port = (unsigned short) 0x0000;
     int Verbose = FALSE;
 
@@ -235,44 +195,48 @@ int sys_socket( int family, int type, int protocol )
     __socket->uid = (uid_t) current_user;
     __socket->gid = (gid_t) current_group;
 
-// #bugbug
-// Set the private socket of a process.
-// This is not good. 
-// Some process will create more than one socket?
+// #bugbug: And if a process creates another socket?
     p->priv = (struct socket_d *) __socket;
 
-// Create socket file.
-// #importante
-// As rotinas logo abaixo criarão o arquivo 
-// e retornarão o fd.
-// family
-// Setup the addr.
+// Create the ep object
+    ep = (struct endpoint_d *) create_endpoint_object();
+    if ((void*) ep == NULL)
+        panic("sys_socket: ep\n");
+    if (ep->magic != 1234)
+        panic("sys_socket: ep->magic\n");
+    __socket->ep = ep;
 
+// The workers here will create a file associated with 
+// this new socket and return the fd for the caller.
+// see: sockint.c
     switch (family){
 
-    // see: sockint.c
     case AF_GRAMADO:
         debug_print ("sys_socket: AF_GRAMADO\n");
+        ep->is_remote = FALSE;
+        ep->socket = __socket;
         __socket->connection_type = 1;  // (local connection) (IPC)
         return (int) socket_gramado ( (struct socket_d *) __socket, 
                         AF_GRAMADO, type, protocol );
         break;
 
-    // see: sockint.c
     case AF_UNIX:
     // AF_LOCAL has the same value.
         debug_print ("sys_socket: AF_UNIX\n");
+        ep->is_remote = FALSE;
+        ep->socket = __socket;
         __socket->connection_type = 1;  // (local connection) (IPC)
         return (int) socket_unix ( (struct socket_d *) __socket, 
                         AF_UNIX, type, protocol );
         break;
 
-    // see: sockint.c
     //#bugbug: 
     //talvez precisamos rever sockaddr 
     //para essa função, e usarmos outra estrutura.               
     case AF_INET:
         debug_print ("sys_socket: AF_INET\n");
+        ep->is_remote = FALSE;            // default until connect()
+        ep->socket = __socket;            // Valid for local and remote connection
         __socket->connection_type = 0;
         //__socket->connection_type = 1;  // Local connection.
         // (Remote or local connection)
@@ -1097,10 +1061,10 @@ __connect_inet (
              given_ip[1] == localhost_ipv4[2] &&
              given_ip[0] == localhost_ipv4[3] )
         {
-             in_localhost = TRUE;
-             // #debug
-             //printk("It's the localhost\n");
-             //while(1){}
+            in_localhost = TRUE;
+            // #debug
+            //printk("It's the localhost\n");
+            //while(1){}
         }
         // No, it's not.
         // Try to connect to a different machine.

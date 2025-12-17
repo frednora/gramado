@@ -5,6 +5,23 @@
 #define __NET_NETWORK_H    1
 
 
+// For side_id
+#define CONN_SIDE_LEFT   0
+#define CONN_SIDE_RIGHT  1
+
+// Sides
+// CONN_LCLS → LC | LS
+// CONN_LCRS → LC | RS
+// CONN_LSLC → LS | LC
+// CONN_LSRC → LS | RC
+
+// For case_id
+#define CONN_LCLS   1   // Local Client -> Local Server
+#define CONN_LCRS   2   // Local Client -> Remote Server
+#define CONN_LSLC   3   // Local Server -> Local Client
+#define CONN_LSRC   4   // Local Server -> Remote Client
+
+
 struct remote_endpoint_d 
 {
     struct sockaddr_in addr;
@@ -21,15 +38,17 @@ struct remote_endpoint_d
 
 struct endpoint_d
 {
+    int used;
+    int magic;
+
 // An endpoint belongs to a side, inside a corner of a square.
     int side_id;     // LEFT or RIGHT (0 or 1)
     int case_id;     // which of the 4 square cases (LCLS, LCRS, LSLC, LSRC)
 
     int is_remote;   // ENDPOINT_LOCAL or ENDPOINT_REMOTE
-    struct socket_d *socket;              // valid only if type == LOCAL
+    struct socket_d *socket;
     struct remote_endpoint_d *remote;     // valid only if type == REMOTE
 };
-
 
 struct endpoint_pair_d 
 {
@@ -321,6 +340,9 @@ extern struct network_info_d *NetworkInfo;
 
 // =================================================
 
+struct endpoint_d *create_endpoint_object(void);
+struct endpoint_pair_d *create_endpoint_pair_object(void);
+struct connection_d *create_connection_object(void);
 
 //
 // == Prototypes ====================

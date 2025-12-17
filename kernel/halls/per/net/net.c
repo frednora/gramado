@@ -43,6 +43,80 @@ static void __maximize_ds_priority(pid_t pid);
 
 // ====================================================
 
+
+struct endpoint_d *create_endpoint_object(void)
+{
+    struct endpoint_d *new_ep;
+
+    new_ep = (void *) kmalloc( sizeof(struct endpoint_d) );
+    if ((void *) new_ep ==  NULL){
+        printk("create_endpoint_object: new_ep\n");
+        goto fail;
+    }
+    memset( new_ep, 0, sizeof(struct endpoint_d) );
+    // Validation
+    new_ep->used = TRUE;
+    new_ep->magic = 1234;
+    new_ep->side_id = 0;
+    new_ep->case_id = 0;
+    new_ep->is_remote = FALSE;
+    new_ep->socket = NULL;
+    new_ep->remote = NULL;
+    return (struct endpoint_d *) new_ep;
+
+fail:
+    return NULL;
+};
+
+
+struct endpoint_pair_d *create_endpoint_pair_object(void)
+{
+    struct endpoint_pair_d *new_epp;
+
+    new_epp = (void *) kmalloc( sizeof(struct endpoint_pair_d) );
+    if ((void *) new_epp ==  NULL){
+        printk("create_endpoint_pair_object: new_epp\n");
+        goto fail;
+    }
+    memset( new_epp, 0, sizeof(struct endpoint_pair_d) );
+    // Validation
+    new_epp->used = TRUE;
+    new_epp->magic = 1234;
+    new_epp->case_id = 0;
+    new_epp->left = NULL;
+    new_epp->right = NULL;
+    return (struct endpoint_pair_d *) new_epp;
+
+fail:
+    return NULL;
+};
+
+
+struct connection_d *create_connection_object(void)
+{
+    struct connection_d *new_conn;
+
+    new_conn = (void *) kmalloc( sizeof(struct connection_d) );
+    if ((void *) new_conn ==  NULL){
+        printk("create_connection_object: new_conn\n");
+        goto fail;
+    }
+    memset( new_conn, 0, sizeof(struct connection_d) );
+    // Validation
+    new_conn->used = TRUE;
+    new_conn->magic = 1234;
+    new_conn->ep_pair = NULL;
+    new_conn->type = 0;
+    new_conn->udp_conn = NULL;
+    new_conn->tcp_conn = NULL;
+    return (struct connection_d *) new_conn;
+
+fail:
+    return NULL;
+};
+
+
+
 // Network interface for keyboard input.
 int 
 network_keyboard_event( 
