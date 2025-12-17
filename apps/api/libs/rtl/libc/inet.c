@@ -1,6 +1,6 @@
-
 // inet.c
 // Header in arpha/inet.h
+// Created by Fred Nora.
 
 #include <sys/types.h>
 #include <errno.h>

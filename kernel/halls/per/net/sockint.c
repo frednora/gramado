@@ -1033,7 +1033,7 @@ socket_inet (
 
 // File
 // Create a new file structure and clear the structure.
-    _file = (void *) kmalloc( sizeof(file) );
+    _file = (void *) kmalloc(sizeof(file));
     if ((void *) _file == NULL){
         //Process->Objects[__slot] = (unsigned long) 0;
         printk ("socket_inet: _file fail\n");
@@ -1041,13 +1041,15 @@ socket_inet (
     }
     memset( _file, 0, sizeof(struct file_d) );
 
+// Object type
+    _file->____object = ObjectTypeSocket;
+// Save it into the socket structure
+    sock->private_file = (file *) _file;
+
 // #todo: Use methods to grab these values.
     _file->pid = (pid_t) current_process;
     _file->uid = (uid_t) current_user;
     _file->gid = (gid_t) current_group;
-
-// Object type
-    _file->____object = ObjectTypeSocket;
 
 // sync
 // #todo: Maybe we can use methods for this routine.
@@ -1085,24 +1087,26 @@ socket_inet (
     _file->_w = 0;
     _file->socket_buffer_full = 0;
 
-//
-// Socket
-//
-
-    _file->socket = sock;
-// O arquivo do soquete, o buffer ?
-    sock->private_file = (file *) _file;
-// Salvamos o ponteira para estrutura de soquete
-// na estrutura de processo do processo atual.
-    Process->priv = (void *) sock;
-
 // fd
     _file->_file = __slot;
 // Validation
     _file->used = TRUE;
     _file->magic = 1234;
+
+
+//
+// Socket
+//
+
+    _file->socket = sock;
+
+// Salvamos o ponteira para estrutura de soquete
+// na estrutura de processo do processo atual.
+    Process->priv = (void *) sock;
+
 // Colocando na lista de arquivos abertos no processo.
     Process->Objects[__slot] = (unsigned long) _file;
+
 // OK, return the fd
     return (int) __slot;
 

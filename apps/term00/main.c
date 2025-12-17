@@ -3798,6 +3798,7 @@ int terminal_init(unsigned short flags)
 */
 
     isUsingEmbeddedShell = FALSE;
+
     char coolCharBuffer[4];
     int ch_read=0;
     while (1){
@@ -3808,6 +3809,7 @@ int terminal_init(unsigned short flags)
 
         // Get input from kernel and send it to the shell
         __get_system_event(client_fd, Terminal.client_window_id);
+
         // Read what comes from the shell. And print it
         coolCharBuffer[0] = 0;
         coolCharBuffer[1] = 0;

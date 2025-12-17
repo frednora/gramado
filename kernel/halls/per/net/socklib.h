@@ -10,10 +10,11 @@
 
 // Socket state
 #define SS_NULL           0
-#define SS_UNCONNECTED    1
-#define SS_CONNECTING     2
-#define SS_CONNECTED      3
-#define SS_DISCONNECTING  4
+#define SS_LISTENING      1  // Server
+#define SS_UNCONNECTED    2  // Client
+#define SS_CONNECTING     3
+#define SS_CONNECTED      4
+#define SS_DISCONNECTING  5
 
 // Ports
 #define PORTS_WS  4040  // Window server

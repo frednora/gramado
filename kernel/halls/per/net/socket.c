@@ -127,7 +127,7 @@ int sys_socket( int family, int type, int protocol )
 // Used in the socket struture
     unsigned long _ipv6 = (unsigned long)  0x0000000000000000;
     unsigned int _ipv4  = (unsigned int)   0x00000000;
-    unsigned short port = (unsigned short) 0x0000;
+    unsigned short _port = (unsigned short) 0x0000;
     int Verbose = FALSE;
 
     // #debug
@@ -219,15 +219,15 @@ int sys_socket( int family, int type, int protocol )
     }
 
 // family, type and protocol.
-    __socket->family   = family;
-    __socket->type     = type;
+    __socket->family = family;
+    __socket->type = type;
     __socket->protocol = protocol;
 
+// Initialize with zeros.
+    __socket->ip_ipv6 = (unsigned long) _ipv6;
 // ip:port
-// Initialized with '0'.
-    __socket->ip_ipv6 = (unsigned long)  _ipv6;
-    __socket->ip_ipv4 = (unsigned int)   _ipv4;
-    __socket->port    = (unsigned short) port;
+    __socket->ip_ipv4 = (unsigned int) _ipv4;
+    __socket->port = (unsigned short) _port;
 
 // pid, uid, gid.
 // #todo: Use methods to grab these informations.
@@ -361,18 +361,31 @@ __accept_imp (
 {
 // Service 7002
 
+    //#todo: see: net.h
+    //struct connection_d *our_connection;
+
 // Server process.
     struct te_d *sProcess;
     pid_t current_process = -1;
-// Server socket and client socket.
-    struct socket_d *sSocket;
-    struct socket_d *cSocket;
+
+//  The listening socket
+    struct socket_d *listening_socket;
+// The connection end points (Good for local connections)
+    struct socket_d *ep1_pending_socket; 
+    struct socket_d *ep2_accepted_socket;
+
 // Files for the server and client sockets.
-    file *sFile;
-    file *cFile;   //#todo
+    file *listening_fp;
+// Connection
+    file *ep1_pending_fp;
+    file *ep2_accepted_fp;  //#todo
+
 // File descriptors for the server and client sockets.
-    int fdServer = -1;
-    int fdClient = -1;
+    int listening_fd = -1;
+// Connection
+    //int ep1_pending_fd = -1;
+    //int ep2_pending_fd = -1;
+
 // Iterator for the pending connections queue.
     register int i=0;
 
@@ -397,9 +410,10 @@ __accept_imp (
 // Ao fim devemos retornar o descritor do socket selecionado
 // na lista de conexões pendentes.
 
-    fdServer = sockfd;
-    if ( fdServer < 0 || fdServer >= OPEN_MAX ){
-        debug_print ("__accept_imp: [FAIL] fdServer\n");
+    listening_fd = sockfd;
+    if ( listening_fd < 0 || listening_fd >= OPEN_MAX )
+    {
+        debug_print ("__accept_imp: [FAIL] listening_fd\n");
         return (int) (-EBADF);
     }
 
@@ -458,51 +472,40 @@ __accept_imp (
 // O objeto que se refere ao socket do servidor.
 // The socket is a file and belongs to the process.
 
-    sFile = (file *) sProcess->Objects[fdServer];
-    if ((void *) sFile == NULL){
-        debug_print ("__accept_imp: sFile fail\n");
-        printk      ("__accept_imp: sFile fail\n");
+    listening_fp = (file *) sProcess->Objects[listening_fd];
+    if ((void *) listening_fp == NULL){
+        debug_print ("__accept_imp: listening_fp fail\n");
+        printk      ("__accept_imp: listening_fp fail\n");
         goto fail;
     }
-    if ( sFile->used != TRUE || sFile->magic != 1234 ){
-        debug_print ("__accept_imp: [FAIL] sFile validation\n");
-        printk      ("__accept_imp: [FAIL] sFile validation\n");
+    if ( listening_fp->used != TRUE || listening_fp->magic != 1234 )
+    {
+        printk ("__accept_imp: [FAIL] listening_fp validation\n");
         goto fail;
     }
 // Is this file a socket object?
-    if ( is_socket(sFile) != TRUE ){
+    if ( is_socket(listening_fp) != TRUE ){
         return (int) (-ENOTSOCK);
     }
-    if (sFile->sync.can_accept != TRUE){
-        debug_print ("__accept_imp: sFile can NOT accept connections\n");
-             printk ("__accept_imp: sFile can NOT accept connections\n");
+    if (listening_fp->sync.can_accept != TRUE){
+        debug_print ("__accept_imp: listening_fp can NOT accept connections\n");
+             printk ("__accept_imp: listening_fp can NOT accept connections\n");
         goto fail;
     }
 
 // Get the server's private socket.
 // And check its validation.
 
-    sSocket = (struct socket_d *) sFile->socket;
-    if ((void *) sSocket == NULL){
-        debug_print ("__accept_imp: [FAIL] sSocket\n");
-        printk      ("__accept_imp: [FAIL] sSocket\n");
+    listening_socket = (struct socket_d *) listening_fp->socket;
+    if ((void *) listening_socket == NULL){
+        printk      ("__accept_imp: [FAIL] listening_socket\n");
         goto fail;
     }
-    if ( sSocket->used != TRUE || sSocket->magic != 1234 ){
-        debug_print ("__accept_imp: [FAIL] sSocket validation\n");
-        printk      ("__accept_imp: [FAIL] sSocket validation\n");
+    if ( listening_socket->used != TRUE || listening_socket->magic != 1234 )
+    {
+        printk("__accept_imp: [FAIL] listening_socket validation\n");
         goto fail;
     }
-
-// Isso significa que o cliente chamou connect antes mesmo 
-// do servidor chamar accept ??
-
-/*
-    if (sSocket->state == SS_CONNECTED){
-        printk("sys_accept: [FAIL] socket is already SS_CONNECTED\n");
-        return -1;
-    }
- */
 
 /*
     // #test
@@ -514,20 +517,6 @@ __accept_imp (
     }
  */
 
-// Socket ok!
-// #todo
-// Essa funcao nos enviou o fd do socket do servidor.
-// Agora vamos olhar na lista de conexoes existentes nesse
-// socket e pegarmos um dos fd da lista. Em ordem round robing.
-// Esse fd será o socket do cliente.
-
-/*
-    // get next!
-    int i=0;
-    int max=1;
-    //max = s->backlog_max;
-    return (int) s->pending_client_endpoints[ s->backlog_pos ];
- */
 
 // O que segue abaixo eh um improviso,
 // ja que listen ainda nao funciona
@@ -547,18 +536,6 @@ __accept_imp (
 // Estamos retornando o fd do proprio servidor porque o write() 
 // copia de um socket para o outro. Mas a intençao nao eh essa.
 
-// #bugbug
-// O socket do servidor precisa estar desconectado.
-// Pois cada accept eh cria uma nova conexao.
-
-/*
-    if (sSocket->state == SS_CONNECTED){
-        debug_print ("sys_accept: Already connected!\n");
-        //printk      ("sys_accept: Already connected!\n");
-         //return -1;
-        return (int) fdServer;
-    }
- */
 
 // #todo
 // Na verdade precisamos pegar um da fila.
@@ -580,14 +557,28 @@ __accept_imp (
 // Se o socket ja está conectado ou 
 // esta esperando para se conectar.
 
-    if ( sSocket->state == SS_CONNECTING || 
-         sSocket->state == SS_CONNECTED )
-    {
-        //debug_print ("sys_accept: CONNECTING !\n");
+    int OldState = listening_socket->state;
 
-        //Server socket. Pre-connect.
-        //precisamos mudar no caso de erro no cliente.
-        sSocket->state = SS_CONNECTED;
+// #todo
+// This is the only valid state.
+// The rest cannot call accept()
+    //if (listening_socket->state != SS_LISTENING)
+        //return -EINVAL;
+
+     if ( listening_socket->state == SS_LISTENING ||
+          listening_socket->state == SS_CONNECTING || 
+          listening_socket->state == SS_CONNECTED )
+    {
+
+        //
+        // Indicate that the socket is connected
+        //
+
+        // #todo:
+        // But remember: The server can't use the listening socket for 
+        // the connection. It needs to create a new one.
+
+        listening_socket->state = SS_CONNECTED;
 
         // Se existe outro socket linkado ao socket do servidor.
         // #todo
@@ -597,12 +588,12 @@ __accept_imp (
 
         // Backlog
         // Circula
-        sSocket->backlog_head++;
-        if (sSocket->backlog_head >= sSocket->backlog_max){
-            sSocket->backlog_head=0;
+        listening_socket->backlog_head++;
+        if (listening_socket->backlog_head >= listening_socket->backlog_max){
+            listening_socket->backlog_head=0;
         }
-        i = sSocket->backlog_head;
-        if ( i<0 || i >= sSocket->backlog_max ){
+        i = listening_socket->backlog_head;
+        if ( i<0 || i >= listening_socket->backlog_max ){
             panic("__accept_imp: Backlog limits\n");
         }
 
@@ -612,10 +603,10 @@ __accept_imp (
         // Vamos pegar o ponteiro para estrutura de socket do cliente.
         // Isso foi colocado aqui na estrutura de socket do servidor
         // pela função connect();
-        while (i <= sSocket->backlog_max)
+        while (i <= listening_socket->backlog_max)
         {
-            cSocket = (struct socket_d *) sSocket->pending_client_endpoints[i];
-            if ((void*) cSocket != NULL){
+            ep1_pending_socket = (struct socket_d *) listening_socket->pending_client_endpoints[i];
+            if ((void*) ep1_pending_socket != NULL){
                 break;
             }
             // next
@@ -623,51 +614,51 @@ __accept_imp (
         };
 
         // [NO] - Not valid Client socket
-        if ((void*) cSocket == NULL)
+        if ((void*) ep1_pending_socket == NULL)
         {
             // #bugbug
             // No clients yet?
-            // debug_print ("__accept_imp: [FAIL] cSocket\n");
+            // debug_print ("__accept_imp: [FAIL] ep1_pending_socket\n");
             
-            sSocket->state = SS_CONNECTING;  //anula.
+            listening_socket->state = OldState;  // Back to the old state
             goto fail;
         }
 
         // [YES] - Valid Client socket
         // Vamos nos conectar a ele.
-        if ((void *) cSocket != NULL)
+        if ((void *) ep1_pending_socket != NULL)
         {
             // check validation
-            if ( cSocket->used != TRUE || cSocket->magic != 1234 )
+            if ( ep1_pending_socket->used != TRUE || ep1_pending_socket->magic != 1234 )
             {
-                debug_print ("__accept_imp: [FAIL] cSocket validation\n");
-                sSocket->state = SS_CONNECTING;  //anula.
+                debug_print ("__accept_imp: [FAIL] ep1_pending_socket validation\n");
+                listening_socket->state = OldState;  // Back to the old state
                 goto fail;
             }
 
             // Na verdade o magic indica que eh 
             // uma conexao pendente.
-            if ( cSocket->magic_string[0] == 'C' )
+            if ( ep1_pending_socket->magic_string[0] == 'C' )
             {
                 //debug_print("MAGIC C\n");
-                //printk ("magic: %s\m",cSocket->magic_string);
+                //printk ("magic: %s\m",ep1_pending_socket->magic_string);
             }
 
             //ok: usar isso só para debug
             //debug_print ("sys_accept: done\n");
 
-            cSocket->state = SS_CONNECTED;
+            ep1_pending_socket->state = SS_CONNECTED;
             
             // Pegando o ponteiro da estrutura de arquivo 
             // associada ao socket do cliente.
-            cFile = (file *) cSocket->private_file;
+            ep1_pending_fp = (file *) ep1_pending_socket->private_file;
             // Salvando o ponteiro de estrutura de arquivo 
             // no slot prealocado na inicializacao.
             // Essa é a estrutura de processo do servidor.
             // Essa é a lista de arquivos abertos pelo processo.
-            //sProcess->Objects[ sProcess->_client_sock_fd ] = cFile;
-            sProcess->Objects[31] = (unsigned long) cFile;  //last
-            cFile->_file = 31;
+            //sProcess->Objects[ sProcess->_client_sock_fd ] = ep1_pending_fp;
+            sProcess->Objects[31] = (unsigned long) ep1_pending_fp;  //last
+            ep1_pending_fp->_file = 31;
             
             //debug_print ("sys_accept: done\n");
 
@@ -687,13 +678,12 @@ __accept_imp (
                 };
             }
 
-            return (int) cFile->_file;  // 31 
+            return (int) ep1_pending_fp->_file;  // 31 
         }
 
         //fail
         debug_print ("__accept_imp: [FAIL] Pending connection\n");
-        sSocket->state = SS_CONNECTING;  //anula.
-
+        listening_socket->state = OldState;  // Back to the old state
         goto fail;
     }
 
@@ -706,7 +696,6 @@ fail:
     //debug_print ("sys_accept: [FAIL] Something is wrong!\n");
     return (int) -1;
 }
-
 
 int 
 sys_accept (
@@ -2260,8 +2249,7 @@ static int __listen_imp(int sockfd, int backlog)
 // Get the socket structure associated with the file.
     server_socket = (struct socket_d *) f->socket;
     if ((void *) server_socket == NULL){
-        debug_print("sys_listen: server_socket fail\n");
-        printk     ("sys_listen: server_socket fail\n");
+        printk("sys_listen: server_socket fail\n");
         goto fail;
     }
     server_socket->isAcceptingConnections = FALSE;
@@ -2297,9 +2285,10 @@ static int __listen_imp(int sockfd, int backlog)
     server_socket->pending_server_count = 0;
     server_socket->pending_client_count = 0;
 
+// This server is ready to accept new connections
+    server_socket->state = SS_LISTENING;
 // This server is now accepting new connections
     server_socket->isAcceptingConnections = TRUE;
-    // ...
 
     // ...
 

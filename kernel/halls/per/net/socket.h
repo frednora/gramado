@@ -232,8 +232,10 @@ struct socket_d
     int isAcceptingConnections;
 // Link to the current connection.
     struct socket_d *link;
+
 // States: SOCKET_CONNECTED, SOCKET_NOT_CONNECTED.
     int state;
+
 // flag
 // write() copy the data to the connected socket.
     int conn_copy; 

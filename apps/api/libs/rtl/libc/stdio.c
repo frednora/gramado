@@ -493,7 +493,6 @@ int __fflush (FILE *stream)
     //stream->have_ungotten = false;
     //stream->ungotten = 0;
 
-// done
     return 0;
 }
 
@@ -701,19 +700,16 @@ fail:
 // + Se não acabou então pegamos um byte no buffer.
 // Isso vale para arquivos criados com fopen cujo buffer ja começa vazio.
 // Vamos ler do buffer da stream, em ring3.
-
-int __getc(FILE *stream)
-{
 // Get a byte from a ring3 local buffer.
 // If the buffer is empty, so 
 // refill the buffer using read().
 
+int __getc(FILE *stream)
+{
     register int ch=0;
     int nreads=0;
 
-    if ((void *) stream == NULL)
-    {
-        debug_print("__getc: stream\n");
+    if ((void *) stream == NULL){
         printf     ("__getc: stream\n");
         goto fail;
     }
@@ -741,9 +737,7 @@ int __getc(FILE *stream)
 // Não podemos acessar um ponteiro nulo ... 
 // no caso endereço.
 
-    if ((void*) stream->_p == NULL)
-    {
-        debug_print("__getc: Invalid stream->_p\n");
+    if ((void*) stream->_p == NULL){
         printf     ("__getc: Invalid stream->_p\n");
         goto fail;
     }
@@ -782,24 +776,18 @@ int __getc(FILE *stream)
 // Então vamos encher o buffer NOVAMENTE em ring3 dessa stream
 // e atualizarmos o cnt.
 
-    if ( stream->_cnt <= 0 || stream->_r >= stream->_fsize )
+    if (stream->_cnt <= 0 || stream->_r >= stream->_fsize)
     {
-        //debug_print("__getc: [DEBUG] ring3 buffer is empty\n");
-
-        // Coloque bytes no buffer dessa stream.
+        // Put bytes into the buffer of this stream.
         nreads = (int) ____bfill(stream);
 
-        // Falhou. Não conseguimos ler.
-        // nada no buffer local.
+        // Fail. Nothing into the local buffer.
         if (nreads <= 0)
         {
-            // O buffer não tem dados,
-            // então o tamanho do arquivo é 0. 
+            // No data into the buffer. Size=0.
             stream->_fsize = 0;
-            // Temos todo o espaço disponível.
-            // #bugbug: Actually we have nothing.
+            // All the spece is still availlable.
             stream->_cnt = BUFSIZ;
-            //stream->_cnt = 0;
             
             stream->_p = stream->_base;
             stream->_w = 0;
@@ -845,8 +833,7 @@ int __getc(FILE *stream)
 // #bugbug
 // FAIL!
 
-    debug_print("__getc: [BUGBUG] Unexpected return\n");
-    printf     ("__getc: [BUGBUG] Unexpected return\n");
+    printf("__getc: [BUGBUG] Unexpected return\n");
 
 fail:
     return (int) EOF;
@@ -855,29 +842,17 @@ fail:
 int __putc(int ch, FILE *stream)
 {
 
-// Invalid char
-    //if(ch<0){
-    //    goto fail;
-    //}
-
 // Invalid stream
-    if ((void *) stream == NULL)
-    {
-       debug_print("__putc: stream\n");
-       printf     ("__putc: stream\n");
-       goto fail;
+    if ((void *) stream == NULL){
+        printf("__putc: stream\n");
+        goto fail;
     }
 
-// Se nosso ponteiro de escrita é 
-// maior que o tamanho do buffer.
-// Não podemos escrever além do buffer.
-
+// We can't write beyong the buffer size.
     //if (stream->_w > stream->_lbfsize)
-    if (stream->_w >= BUFSIZ)
-    {
-       debug_print("__putc: [FAIL] Overflow\n");
+    if (stream->_w >= BUFSIZ){
        printf     ("__putc: [FAIL] Overflow\n");
-       stream->_cnt = 0;  // Fim do arquivo.
+       stream->_cnt = 0;  // EOF
        goto fail;
     }
 
@@ -888,12 +863,10 @@ int __putc(int ch, FILE *stream)
 // #test
     //stream->_cnt = ( BUFSIZ - stream->_w ); 
 
-// Overflow
-// Se chegamos ao fim do arquivo.
+// Overflow (Again?)
     if (stream->_w >= BUFSIZ)
     {
-        debug_print("__putc: Overflow 2\n");
-        printf     ("__putc: Overflow 2\n");
+        printf ("__putc: Overflow 2\n");
         stream->_cnt = 0;
         fflush(stream);
         return (int) ch;
@@ -907,8 +880,7 @@ int __putc(int ch, FILE *stream)
 // Então vamos enviar o buffer para o kernel.
 // Assim o kernel vai exibir o buffer no console atual.
 
-    if (ch == '\n')
-    {
+    if (ch == '\n'){
         fflush(stream);
         return (int) ch;
     }
@@ -1115,7 +1087,6 @@ int fclose(FILE *stream)
 // Vamos simplificar pois esta falhando.
 // Mas close ja funciona.
     
-    debug_print ("fclose: [FIXME]\n");
 
 // Check parameters.
     if ((void *) stream == NULL){
@@ -1135,20 +1106,14 @@ int fclose(FILE *stream)
         return EOF;
 */
 
-// Delete the ring 3 structure.
-
-    if ( (void *) stream != NULL )
+// Delete the ring 3 structure
+    if ((void *) stream != NULL)
     {
         stream->_base = NULL;
         stream->_p = NULL;
-
         stream->_flags = 0;
         stream->_cnt = 0;
-
-        // Delete the structure.
-        stream = NULL;
-
-        // ok
+        stream = NULL;  // Delete the structure
         return 0;
     }
 
@@ -1239,7 +1204,6 @@ FILE *fopen ( const char *filename, const char *mode )
 
     __stream->_base = (char *) malloc(BUFSIZ);
     if ((void *) __stream->_base == NULL){
-        debug_print("fopen: stream buffer fail\n");
         printf     ("fopen: stream buffer fail\n");
         // #todo
         // Temos que liberar a memoria da estrutura.
@@ -1482,22 +1446,22 @@ size_t fread (void *ptr, size_t size, size_t n, FILE *fp)
     data = ptr;
 
     if ( (void *) data == NULL ){
-        printf ("fread: ptr \n");
+        printf ("fread: ptr\n");
         return (size_t) -1;
     }
     if (size <= 0){
-        printf ("fread: size \n");
+        printf ("fread: size\n");
         return (size_t) -1;
     }
 // Quantidade inválida.
     if (n <= 0){
-        printf ("fread: n \n");
+        printf ("fread: n\n");
         return (size_t) -1;
     }
 // Se não temos o ponteiro, então não teremos o fd
 // para usarmos em read().
     if ( (void *) fp == NULL ){
-        printf ("fread: fp \n");
+        printf ("fread: fp\n");
         return (size_t) -1;
     }
 
@@ -1652,11 +1616,10 @@ int prompt_putchar ( int c, int con_id )
     return 0;  //??
 } 
 
-
 int prompt_put_string (char *string)
 {
-    if ( (void *) string == NULL ){
-        return -1;
+    if ((void *) string == NULL){
+        return (int) -1;
     }
     sprintf(prompt,(const char *) string);
     return 0;
@@ -1664,8 +1627,8 @@ int prompt_put_string (char *string)
 
 int prompt_strcat (char *string)
 {
-    if ( (void *) string == NULL ){
-        return -1;
+    if ((void *) string == NULL){
+        return (int) -1;
     }
     strcat(prompt,(const char *) string);
     return 0;
@@ -1685,16 +1648,17 @@ int prompt_flush (int con_id)
 // Finalize
     input ('\0');
     len = strlen( (const char *) prompt );
-    sc80 ( 66, (unsigned long) prompt, con_id, len );
-    prompt_clean();
 
+// Syscall
+    sc80 ( 66, (unsigned long) prompt, con_id, len );
+
+    prompt_clean();
     return 0;
 }
 
+// Clear the buffer prompt[], used by input();
 void prompt_clean (void)
 {
-// Clear the buffer prompt[], used by input();
-
     register int i=0;
 
     for ( i=0; i<PROMPT_MAX_DEFAULT; i++ )

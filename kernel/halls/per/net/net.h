@@ -17,27 +17,111 @@ struct udp_connection_d
     int magic;
 };
 
+
+/*
+What belongs in tcp_connection_d
+This structure represents the local TCP state machine 
+for a single connection. It contains everything your kernel needs to:
+track sequence numbers
+manage windows
+handle retransmissions
+maintain timers
+process ACKs
+implement congestion control (later)
+*/
 struct tcp_connection_d 
 {
     int used;
     int magic;
+
+// TCP_LISTEN, TCP_SYN_SENT, TCP_ESTABLISHED, etc.
+    int state;
+
+// Sequence Numbers
+
+    uint32_t snd_una;   // oldest unacknowledged sequence
+    uint32_t snd_nxt;   // next sequence to send
+    uint32_t snd_wnd;   // send window
+    uint32_t iss;       // initial send sequence
+
+    uint32_t rcv_nxt;   // next expected sequence
+    uint32_t rcv_wnd;   // receive window
+    uint32_t irs;       // initial receive sequence
+
+// Buffers
+    void *send_buffer;
+    size_t send_buffer_len;
+    void *recv_buffer;
+    size_t recv_buffer_len;
+
+// Timers
+    uint32_t rto;       // retransmission timeout
+    uint32_t srtt;      // smoothed RTT
+    uint32_t rttvar;    // RTT variance
+    uint32_t last_ack;  // timestamp of last ACK
+    uint32_t last_sent; // timestamp of last sent segment
+
+// Flags and Options
+// TCP options negotiated during handshake:
+    int sack_enabled;
+    int window_scaling;
+    int timestamp_enabled;
+    uint16_t mss;       // maximum segment size
+
+// Congestion Control
+    uint32_t cwnd;      // congestion window
+    uint32_t ssthresh;  // slow start threshold
+
+// Retransmission Tracking
+    int retransmit_count;
+    uint32_t last_retransmit;
 };
+
+struct remote_endpoint_d 
+{
+    struct sockaddr_in addr;
+
+    int protocol;
+
+//
+// tcp
+//
+    int tcp_state;
+    // future: seq numbers, ack numbers, flags, etc.
+};
+
+// connection_d
+// Represents a communication link.
+// Local connections: only local_conn is used.
+// Remote connections: server_endpoint + remote_endpoint describe
+// the local socket and the remote endpoint.
 
 struct connection_d 
 {
     int used;
     int magic;
 
-// The endpoints
-    struct socket_d *server_endpoint;
-    struct socket_d *client_endpoint;
+    int is_local;   // 1 = local IPC, 0 = remote
 
-    int type;
+//
+// Remote connection
+//
 
-// Helpers for extra information
-    struct local_connection_d  *local_conn;
-    struct udp_connection_d    *udp_conn;
-    struct tcp_connection_d    *tcp_conn;
+// Always present for remote connections
+    struct socket_d *server_endpoint;   // local socket
+    struct remote_endpoint_d *remote_endpoint; // remote endpoint info
+
+//
+// Local connection
+//
+
+    // Only used for local IPC
+    struct local_connection_d *local_conn;
+
+    // Protocol-specific info
+    int type;  // LOCAL, UDP, TCP
+    struct udp_connection_d *udp_conn;
+    struct tcp_connection_d *tcp_conn;
 };
 
 #define MAX_CONNECTIONS  256
