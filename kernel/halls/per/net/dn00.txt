@@ -1,0 +1,200 @@
+
+#define CONN_LCLS   1   // Local Client -> Local Server
+#define CONN_LCRS   2   // Local Client -> Remote Server
+#define CONN_LSLC   3   // Local Server -> Local Client
+#define CONN_LSRC   4   // Local Server -> Remote Client
+
+Code	Meaning	
+
+LCLS	Local Client → Local Server	
+LCRS	Local Client → Remote Server	
+LSLC	Local Server → Local Client	
+LSRC	Local Server → Remote Client	
+----------------------------------
+1. LCLS — Local Client, Local Server
+Local IPC. Two sockets inside the same machine.
+
+2. LCRS — Local Client, Remote Server
+Outbound TCP/UDP connection.
+
+3. LSLC — Local Server, Local Client
+This is the same as LCLS, but from the server’s perspective.
+
+4. LSRC — Local Server, Remote Client
+Inbound TCP/UDP connection.
+
+-------------------
+   [ 1 ]                 [ 3 ]
+   LCLS                  LSLC
+   Local Client →        Local Server →
+   Local Server          Local Client
+
+   [ 2 ]                 [ 4 ]
+   LCRS                  LSRC
+   Local Client →        Remote Client →
+   Remote Server         Local Server
+
+
+-------------------
+A triangle
+[ 1 and 3 ,   2 ,   4 ]
+
+
+           (1,3)
+      Local ↔ Local
+        /           \
+       /             \
+   (2) Local→Remote   Remote→Local (4)
+
+Triangle entities:
+A “top” entity (representing local–local communication)
+Two “bottom” entities (representing local→remote and remote→local)
+
+In the triangle we have the top entity and the botton entities. 
+In a square we have the top entities and the botton entities.
+
+
+THE TRIANGLE MODEL
+Triangle = 3 conceptual entities
+In the triangle, you grouped the four cases like this:
+Top: (1 and 3) → Local ↔ Local
+Bottom-left: (2) → Local → Remote
+Bottom-right: (4) → Remote → Local
+
+THE SQUARE MODEL
+Square = 4 conceptual entities
+   [ 1 ]   [ 3 ]
+   [ 2 ]   [ 4 ]
+   [ LCLS ]   [ LSLC ]
+   [ LCRS ]   [ LSRC ]
+Top-left: LCLS
+Local Client → Local Server
+Top-right: LSLC
+Local Server → Local Client
+
+Conceptually: it’s a square
+But in implementation: it collapses into a triangle
+
+========
+
++---------------------------------------------------------------+
+|  [1] LCLS – Local Client → Local Server                       |
+|                                                               |
+|  Entities:                                                    |
+|    socket_d (client)                                          |
+|    socket_d (server accepted socket)                          |
+|    local_connection_d (the link)                              |
+|                                                               |
+|  Mechanism: Local IPC (pure in-kernel link)                   |
++---------------------------------------------------------------+
+|  [3] LSLC – Local Server → Local Client                       |
+|                                                               |
+|  Entities:                                                    |
+|    socket_d (server accepted socket)                          |
+|    socket_d (client)                                          |
+|    local_connection_d (the link)                              |
+|                                                               |
+|  Mechanism: Local IPC (same as LCLS, roles reversed)          |
++---------------------------------------------------------------+
+|  [2] LCRS – Local Client → Remote Server                      |
+|                                                               |
+|  Entities:                                                    |
+|    socket_d (local client)                                    |
+|    remote_endpoint_d (remote server endpoint)                 |
+|    connection_d (relationship object)                         |
+|    tcp_connection_d or udp_connection_d (protocol state)      |
+|                                                               |
+|  Mechanism: Outbound networking (local → remote)              |
++---------------------------------------------------------------+
+|  [4] LSRC – Remote Client → Local Server                      |
+|                                                               |
+|  Entities:                                                    |
+|    remote_endpoint_d (remote client endpoint)                 |
+|    socket_d (local accepted socket)                           |
+|    connection_d (relationship object)                         |
+|    tcp_connection_d or udp_connection_d (protocol state)      |
+|                                                               |
+|  Mechanism: Inbound networking (remote → local)               |
++---------------------------------------------------------------+
+
+
+struct endpoint_d {
+    socket_d *socket;            // NULL for remote endpoints
+    remote_endpoint_d *remote;   // NULL for local endpoints
+};
+
+
+#define ENDPOINT_LOCAL   1
+#define ENDPOINT_REMOTE  2
+
+struct endpoint_d {
+    int type;  // ENDPOINT_LOCAL or ENDPOINT_REMOTE
+
+    // If local:
+    struct socket_d *socket;
+
+    // If remote:
+    struct remote_endpoint_d *remote;
+
+    // Optional: metadata for debugging or tracing
+    int role;  // client or server (optional)
+};
+
+struct endpoint_d
+{
+    int case_id;     // which of the 4 square cases (LCLS, LCRS, LSLC, LSRC)
+    int side_id;     // LEFT or RIGHT (0 or 1)
+    int type;        // ENDPOINT_LOCAL or ENDPOINT_REMOTE
+
+    struct socket_d *socket;              // valid only if type == LOCAL
+    struct remote_endpoint_d *remote;     // valid only if type == REMOTE
+};
+
+This way the concepts forges the creation of the ring 3 apis ... 
+and the apis forges the creation of the routines inside the kernel ... 
+in response to the syscalls.
+
+======================
+
+When creating the endpoint.
+Which case of the square it belongs to
+Which side of that case it represents (left or right endpoint)
+
+The 8 endpoint types (case × side)
+
+
+#define CASE_LCLS   1   // Local Client → Local Server
+#define CASE_LCRS   2   // Local Client → Remote Server
+#define CASE_LSLC   3   // Local Server → Local Client
+#define CASE_LSRC   4   // Remote Client → Local Server
+
+#define SIDE_LEFT   0
+#define SIDE_RIGHT  1
+
+======================================================
+
+
+// Case 1: LCLS
+#define EP_LCLS_LEFT     10   // local client endpoint
+#define EP_LCLS_RIGHT    11   // local server endpoint
+
+// Case 2: LCRS
+#define EP_LCRS_LEFT     20   // local client endpoint
+#define EP_LCRS_RIGHT    21   // remote server endpoint
+
+// Case 3: LSLC
+#define EP_LSLC_LEFT     30   // local server endpoint
+#define EP_LSLC_RIGHT    31   // local client endpoint
+
+// Case 4: LSRC
+#define EP_LSRC_LEFT     40   // remote client endpoint
+#define EP_LSRC_RIGHT    41   // local server endpoint
+
+==========================
+
+endpoint_d *create_endpoint(int case_id, int side_id);
+
+
+
+
+

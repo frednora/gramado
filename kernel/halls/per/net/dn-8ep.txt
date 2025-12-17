@@ -1,0 +1,142 @@
+
+
+------------------------------------------------------------
+BEGIN DOCUMENT
+------------------------------------------------------------
+
+Title: The Eight Endpoint Types and the Unified Connection Model
+
+This document explains the concept of endpoints in the system and 
+how they form a unified and symmetric model for representing all 
+types of connections. The goal is to provide a clear understanding of 
+how any connection can be described using two endpoints, 
+regardless of whether it is local or remote.
+
+1. Introduction
+
+The system uses a simple but powerful abstraction: 
+every connection is always represented as two endpoints. This is written as:
+
+[ endpoint + endpoint ]
+
+This rule applies to all connection types. 
+An endpoint represents one side of a connection. 
+By defining endpoints carefully, the system achieves a unified and 
+symmetric model that eliminates special cases and 
+makes the implementation predictable and easy to maintain.
+
+2. The Four Connection Cases (The Square)
+
+Conceptually, all connections fall into one of four cases. These cases form a square:
+
+Case 1: LCLS – Local Client to Local Server
+Case 2: LCRS – Local Client to Remote Server
+Case 3: LSLC – Local Server to Local Client
+Case 4: LSRC – Remote Client to Local Server
+
+These four cases describe all possible combinations of local and remote participants.
+
+3. Two Sides Per Case
+
+Each case has two sides:
+
+Left endpoint
+Right endpoint
+
+Since there are four cases and each case has two sides, 
+the system defines eight endpoint types:
+
+4 cases × 2 sides = 8 endpoint types
+
+Each endpoint type corresponds to a specific role in the connection.
+
+4. Local vs. Remote Endpoints
+
+Each endpoint is either local or remote.
+
+A local endpoint contains a valid socket.
+A remote endpoint contains a valid remote descriptor.
+
+The rule is simple:
+
+If the endpoint is local, it has a socket.
+If the endpoint is remote, it does not.
+
+This rule applies uniformly across all eight endpoint types.
+
+5. The Eight Endpoint Types
+
+Below is the complete mapping of the eight endpoint types:
+
+Case 1: LCLS (Local Client → Local Server)
+Left endpoint: local client
+Right endpoint: local server
+
+Case 2: LCRS (Local Client → Remote Server)
+Left endpoint: local client
+Right endpoint: remote server
+
+Case 3: LSLC (Local Server → Local Client)
+Left endpoint: local server
+Right endpoint: local client
+
+Case 4: LSRC (Remote Client → Local Server)
+Left endpoint: remote client
+Right endpoint: local server
+
+These eight combinations fully describe every possible endpoint role in the system.
+
+6. The Unified Endpoint Structure
+
+Each endpoint is represented using the same structure. The structure contains:
+
+A type field indicating whether the endpoint is local or remote.
+A socket pointer (valid only for local endpoints).
+A remote descriptor pointer (valid only for remote endpoints).
+
+This creates a symmetric model where both sides of a connection are described in the same way.
+
+7. The Universal Connection Pattern
+
+Regardless of the case, every connection always fits the same pattern:
+
+[ endpoint + endpoint ]
+
+Local-to-local connections become:
+[ local endpoint + local endpoint ]
+
+Local-to-remote connections become:
+[ local endpoint + remote endpoint ]
+
+Remote-to-local connections become:
+[ remote endpoint + local endpoint ]
+
+This symmetry eliminates the need for special-case logic.
+(The triangle shape)
+
+8. Why This Model Is Powerful
+
+The eight endpoint types allow the system to describe any connection with complete precision. Each endpoint carries all the information needed to understand its role:
+
+Whether it is local or remote
+Whether it holds a socket or a remote descriptor
+Which case of the square it belongs to
+Whether it is the left or right side of that case
+
+This model provides clarity, symmetry, and simplicity. Even though there are four conceptual cases, the implementation naturally collapses into three mechanisms:
+
+Local to Local
+Local to Remote
+Remote to Local
+
+The endpoint model makes this collapse automatic and intuitive.
+
+9. Summary
+
+The system represents every connection using two endpoints. There are eight possible endpoint types, derived from the four connection cases and their two sides. Each endpoint clearly identifies its role, and the unified structure ensures that all connections follow the same pattern. This creates a clean, symmetric, and highly precise architecture for managing all connection types.
+
+------------------------------------------------------------
+END DOCUMENT
+------------------------------------------------------------
+
+If you want, I can also generate a shorter version, a more formal spec version, or a version with ASCII diagrams.

@@ -799,6 +799,7 @@ sys_read_file_from_disk (
     int flags, 
     mode_t mode )
 {
+    file *fp;
 
 // Check validation
     if ((void*) file_name == NULL){
@@ -819,11 +820,28 @@ sys_read_file_from_disk (
     // and some extra bytes.
     strncpy(pathname_local_copy,file_name,256);
 
+// #todo
+// Check the pathname validation to return the right int value.
+
 // see: fslib.c
-    return (int) do_read_file_from_disk(
-                    (char *) pathname_local_copy,
-                    (int) flags, 
-                    (mode_t) mode );
+    fp = (file *) do_read_file_from_disk(
+                     (char *) pathname_local_copy,
+                     (int) flags, 
+                     (mode_t) mode );
+
+    if ((void*)fp == NULL)
+        return (int) -1;
+    if (fp->used != TRUE)
+        return (int) -1;
+    if (fp->magic != 1234)
+        return (int) -1;
+    int fd = fp->_file;  // File Descriptor
+    if (fd < 0)
+        return (int) -1;
+    if (fd > 31)
+        return (int) -1;
+
+    return (int) fd;
 }
 
 // Wrapper

@@ -5,11 +5,44 @@
 #define __NET_NETWORK_H    1
 
 
-struct local_connection_d 
+struct remote_endpoint_d 
+{
+    struct sockaddr_in addr;
+
+    int protocol;
+
+//
+// tcp
+//
+    int tcp_state;
+    // future: seq numbers, ack numbers, flags, etc.
+};
+
+
+struct endpoint_d
+{
+// An endpoint belongs to a side, inside a corner of a square.
+    int side_id;     // LEFT or RIGHT (0 or 1)
+    int case_id;     // which of the 4 square cases (LCLS, LCRS, LSLC, LSRC)
+
+    int is_remote;   // ENDPOINT_LOCAL or ENDPOINT_REMOTE
+    struct socket_d *socket;              // valid only if type == LOCAL
+    struct remote_endpoint_d *remote;     // valid only if type == REMOTE
+};
+
+
+struct endpoint_pair_d 
 {
     int used;
     int magic;
+
+// An endpoint pair belongs to a case.
+//  One of the 4 corners of a square.
+    int case_id;
+    struct endpoint_d *left;
+    struct endpoint_d *right;
 };
+
 
 struct udp_connection_d 
 {
@@ -77,18 +110,7 @@ struct tcp_connection_d
     uint32_t last_retransmit;
 };
 
-struct remote_endpoint_d 
-{
-    struct sockaddr_in addr;
-
-    int protocol;
-
-//
-// tcp
-//
-    int tcp_state;
-    // future: seq numbers, ack numbers, flags, etc.
-};
+// ...
 
 // connection_d
 // Represents a communication link.
@@ -101,24 +123,8 @@ struct connection_d
     int used;
     int magic;
 
-    int is_local;   // 1 = local IPC, 0 = remote
+    struct endpoint_pair_d *ep_pair;
 
-//
-// Remote connection
-//
-
-// Always present for remote connections
-    struct socket_d *server_endpoint;   // local socket
-    struct remote_endpoint_d *remote_endpoint; // remote endpoint info
-
-//
-// Local connection
-//
-
-    // Only used for local IPC
-    struct local_connection_d *local_conn;
-
-    // Protocol-specific info
     int type;  // LOCAL, UDP, TCP
     struct udp_connection_d *udp_conn;
     struct tcp_connection_d *tcp_conn;

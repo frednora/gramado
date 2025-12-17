@@ -273,10 +273,24 @@ extern unsigned long syncList[SYNC_COUNT_MAX];
 // Ring 0.
 struct file_d
 {
-    // The 'operation mode'.
-    object_type_t ____object;
+// Structure validation fields.
     int used;
     int magic;
+
+// File descriptor. It belongs to a process. p->Objects[fd].
+    int _file;
+
+// What object is associated with this file.
+    object_type_t ____object;
+
+// The communication domain
+    struct tty_d  *tty;
+    struct socket_d  *socket;
+    struct endpoint_d *ep;
+
+// Other domain
+    struct device_d  *device;
+// ...
 
 // #todo
 // The file is blocked by the system,
@@ -284,10 +298,6 @@ struct file_d
     // int is_blocked;
 
     char *_tmpfname;  
-
-// File descriptor.
-// It belongs to a process. p->Objects[fd].
-    int _file;
 
 // Global index.
 // A estrutura de arquivos aponta para tabela global de 
@@ -314,16 +324,13 @@ struct file_d
     int isDevice;
     short dev_major;  // Driver ID.
     short dev_minor;  // Device ID.
-    struct device_d  *device;
 
-    struct tty_d  *tty;
 
 //
 // Socket
 //
 
     int socket_buffer_full;
-    struct socket_d  *socket;
 
 //
 // Buffer

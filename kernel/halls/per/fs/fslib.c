@@ -2064,26 +2064,24 @@ __open_imp (
 // if the name doesn't have one.
 // This is not what we want for all the cases.
 
-// 
-    value = 
-        (int) do_read_file_from_disk ( 
+    fp = (file *)do_read_file_from_disk ( 
                   (char *) pathname_local_copy, 
                   flags, 
                   mode );
 
-    if (value < 0){
-        goto fail;
-    }
+    if ((void*)fp == NULL)
+        return (int) -1;
+    if (fp->used != TRUE)
+        return (int) -1;
+    if (fp->magic != 1234)
+        return (int) -1;
+    int fd = fp->_file;  // File Descriptor
+    if (fd < 0)
+        return (int) -1;
+    if (fd > 31)
+        return (int) -1;
 
-// The limit is 32.
-// Too many open files.
-
-    if (value > 31){
-        return (int) (-EMFILE);
-    }
-
-// fd
-    return (int) value;
+    return (int) fd;
 
 fail:
     return (int) -1;
@@ -4252,8 +4250,7 @@ fail:
 // IN:
 //   + #todo
 // Worker
-int 
-do_read_file_from_disk ( 
+file *do_read_file_from_disk ( 
     char *file_name, 
     int flags, 
     mode_t mode )
@@ -4281,16 +4278,16 @@ do_read_file_from_disk (
     unsigned long NumberOfEntries = FAT16_ROOT_ENTRIES;
 
 // Parameter:
-    if ((void*) file_name == NULL){
-        return (int) (-EINVAL);
+    if ((void*) file_name == NULL)
+    {
+        //return (int) (-EINVAL);
+        goto fail;
     }
-    if (*file_name == 0){
-        return (int) (-EINVAL);
+    if (*file_name == 0)
+    {
+        //return (int) (-EINVAL);
+        goto fail;
     }
-
-    // #debug
-    // serial_printk ("do_read_file_from_disk: {%s}\n", file_name);
-
 
 // -------------------------------------------
 // Root dir?
@@ -4613,7 +4610,7 @@ __OK:
         {
             printk ("do_read_file_from_disk: File size out of limits\n");
             printk ("%d bytes \n",FileSize);
-            return (-1);
+            goto fail;
         }
         
         // Allocate new buffer.
@@ -4627,7 +4624,7 @@ __OK:
         fp->_base = (char *) kmalloc(buflen);
         if ((void *) fp->_base == NULL){
             printk ("do_read_file_from_disk: Couldn't create a new buffer\n");
-            return -1;             
+            goto fail;          
         }
         memset(fp->_base, 0, buflen);
  
@@ -4642,7 +4639,7 @@ __OK:
     //if (FileSize > 1024*1024)
     //{
     //    printk ("do_read_file_from_disk: File size out of limits\n");
-    //    return -1;
+    //    goto fail;
     //}
 
 // #paranoia.
@@ -4815,10 +4812,11 @@ done:
 // #todo:
 // Here is a good moment to validate the fp structure,
 // not in the beginning of the routine.
-    return (int) fp->_file;
+    // return (int) fp->_file;
+    return fp;
 
 fail:
-    return (int) -1;
+    return NULL;
 }
 
 /*

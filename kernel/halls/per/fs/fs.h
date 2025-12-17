@@ -652,11 +652,13 @@ fsSaveFile (
 //
 
 // Worker
-int 
-do_read_file_from_disk ( 
+// See: fslib.c
+// OUT: fp
+file *do_read_file_from_disk ( 
     char *file_name, 
     int flags, 
     mode_t mode );
+
 // Wrapper
 int 
 sys_read_file_from_disk ( 
