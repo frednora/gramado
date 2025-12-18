@@ -44,18 +44,14 @@ void devmgr_show_device_list(int object_type)
         {
             if ( d->used == TRUE && d->magic == 1234 )
             {
+                //if (d->__type == DEVICE_TYPE_TTY)
+                    //printk ("Dev name={%s}\n",d->name);
+
                 fp = (file *) d->_fp;
                 if ((void*) fp != NULL)
                 {
                     if (fp->____object == object_type)
                     {
-
-                        //#debug
-                        //if ( fp->____object == ObjectTypeTTY )
-                        //    printk ("TTY DEVICE: ");
-                        //if ( fp->____object == ObjectTypePciDevice )
-                        //    printk ("PCI DEVICE: ");
-
                         //#todo: more ...
                         printk("id=%d class=%d type=%d name={%s} mount_point={%s}\n", 
                             d->index, 
@@ -482,7 +478,8 @@ devmgr_register_tty_device(
 // name
 //
 
-    d->name[0] = 0;
+    d->name[0] = 'x';
+    d->name[1] = 0;
     d->Name_len = 0;
 
 // Clear buffer
@@ -510,9 +507,6 @@ devmgr_register_tty_device(
             d->Name_len = NameSize;
         }
 
-        //ksprintf( buf, name );
-        // #todo: Copy n bytes using strncpy.
-        //strcpy( new_mount_point, buf );
         ksprintf( buf, "/DEV/%s", name );
         strcpy( new_mount_point, buf );
     }
@@ -950,9 +944,10 @@ static int __devmgr_init_device_list(void)
 
 void devInitialize(void)
 {
+// Called in x64init.c
     register int i=0;
 
-    debug_print("devInitialize:\n");
+    PROGRESS("devInitialize: <<<< \n");
 
 // Initialize the list of devices.
     __devmgr_init_device_list();

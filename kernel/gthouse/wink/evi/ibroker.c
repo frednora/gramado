@@ -644,6 +644,10 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 // See: devmgr.c
     if ( kstrncmp(cmdline,"device",6) == 0 )
     {
+        //printk("\n");
+        //printk("Devices:\n");
+        //devmgr_show_device_list(0);
+
         printk("\n");
         printk("Legacy Devices:\n");
         devmgr_show_device_list(ObjectTypeLegacyDevice);
@@ -656,10 +660,13 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         printk("TTY Devices:\n");
         devmgr_show_device_list(ObjectTypeTTY);
 
-        // #deprecated?
         printk("\n");
-        printk("Regular FileDevices:\n");
-        devmgr_show_device_list(ObjectTypeFile);
+        printk("Virtual Consoles:\n");
+        devmgr_show_device_list(ObjectTypeVirtualConsole);
+
+        //printk("\n");
+        //printk("Regular FileDevices:\n");
+        //devmgr_show_device_list(ObjectTypeFile);
 
         // ...
 

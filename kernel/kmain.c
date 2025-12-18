@@ -312,6 +312,11 @@ void init_globals(void)
     g_currentvolume_filesystem_type = FS_TYPE_FAT16;
     g_currentvolume_fatbits = (int) 16;
 
+
+// Create the device list for all the devices
+// in our system, including the hal stuff i guess.
+    devInitialize();
+
 // libk/ module.
 // + Initialize srtuctures for the stadard streams.
 // + It uses the global file table.
@@ -990,16 +995,17 @@ static int lateinit(void)
 // ireq to init thread.
 // See: ke.c
 
-    //PROGRESS(":: INITIAL PROCESS\n");
+/*
+    PROGRESS(":: INITIAL PROCESS <<<\n");
 
-    /*
     //#debug
     refresh_screen();
     while (1){ 
         asm volatile ("cli");
         asm volatile ("hlt"); 
     };
-    */
+*/
+
     ok = (int) ke_x64ExecuteInitialProcess();
     if (ok < 0){
         panic ("lateinit: Couldn't launch init process\n");

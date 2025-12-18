@@ -848,7 +848,6 @@ pciHandleDevice (
     // Clear local buffer for tmp name.
     memset( __tmpname, 0, SizeOfTmpNameBuffer );
 
-
 // For some char devices
     if (__device_class == DEVICE_CLASS_CHAR){
 

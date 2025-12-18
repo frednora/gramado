@@ -1135,10 +1135,6 @@ static int I_initKernelComponents(void)
 // See: kmain.c
     init_globals();
 
-// Create the device list for all the devices
-// in our system, including the hal stuff i guess.
-    devInitialize();
-
 // Initialize system HAL.
     Status = halInitialize();
     if (Status != TRUE){

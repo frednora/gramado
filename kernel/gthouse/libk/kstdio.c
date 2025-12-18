@@ -2268,7 +2268,22 @@ static void __initialize_virtual_consoles(void)
 {
     register int i=0;
 
-    PROGRESS("__initialize_virtual_consoles: (second time)\n");
+    struct tty_d *Lconsole0 = (struct tty_d *) &CONSOLE_TTYS[0];
+    struct tty_d *Lconsole1 = (struct tty_d *) &CONSOLE_TTYS[1];
+    struct tty_d *Lconsole2 = (struct tty_d *) &CONSOLE_TTYS[2];
+    struct tty_d *Lconsole3 = (struct tty_d *) &CONSOLE_TTYS[3];
+
+    unsigned int bg_colors[CONSOLETTYS_COUNT_MAX];
+    unsigned int fg_colors[CONSOLETTYS_COUNT_MAX];
+
+    char __tmpname[64];
+
+    const char *con0_name = "CONSOLE0";
+    const char *con1_name = "CONSOLE1";
+    const char *con2_name = "CONSOLE2";
+    const char *con3_name = "CONSOLE3";
+
+    PROGRESS("__initialize_virtual_consoles: (second time) <<<< \n");
 
 // stdout:
 // At this moment we need a valid stdout structure.
@@ -2281,9 +2296,6 @@ static void __initialize_virtual_consoles(void)
 //
 // Setup colors
 //
-
-    unsigned int bg_colors[CONSOLETTYS_COUNT_MAX];
-    unsigned int fg_colors[CONSOLETTYS_COUNT_MAX];
 
 //  It sets the current and the default colors for each console.
 
@@ -2303,12 +2315,6 @@ static void __initialize_virtual_consoles(void)
 //
 // Initialize
 // 
-
-    // Local pointer
-    struct tty_d *Lconsole0 = (struct tty_d *) &CONSOLE_TTYS[0];
-    struct tty_d *Lconsole1 = (struct tty_d *) &CONSOLE_TTYS[1];
-    struct tty_d *Lconsole2 = (struct tty_d *) &CONSOLE_TTYS[2];
-    struct tty_d *Lconsole3 = (struct tty_d *) &CONSOLE_TTYS[3];
 
 // #bugbug
 // We have the same loop in console.c
@@ -2426,9 +2432,12 @@ static void __initialize_virtual_consoles(void)
 
     fp0->inode = NULL;
 
+    memset( __tmpname, 0, 64 );
+    ksprintf(__tmpname, con0_name);
+
     devmgr_register_tty_device(
         fp0,
-        "CONSOLE0",
+        __tmpname,
         DEVICE_CLASS_CHAR,
         DEVICE_TYPE_TTY,
         Lconsole0 );
@@ -2462,9 +2471,12 @@ static void __initialize_virtual_consoles(void)
 
     fp1->inode = NULL;
 
+    memset( __tmpname, 0, 64 );
+    ksprintf(__tmpname, con1_name);
+
     devmgr_register_tty_device(
         fp1,
-        "CONSOLE1",
+        __tmpname,
         DEVICE_CLASS_CHAR,
         DEVICE_TYPE_TTY,
         Lconsole1 );
@@ -2498,9 +2510,12 @@ static void __initialize_virtual_consoles(void)
 
     fp2->inode = NULL;
 
+    memset( __tmpname, 0, 64 );
+    ksprintf(__tmpname, con2_name);
+
     devmgr_register_tty_device(
         fp2,
-        "CONSOLE2",
+        __tmpname,
         DEVICE_CLASS_CHAR,
         DEVICE_TYPE_TTY,
         Lconsole2 );
@@ -2534,12 +2549,20 @@ static void __initialize_virtual_consoles(void)
 
     fp3->inode = NULL;
 
+    memset( __tmpname, 0, 64 );
+    ksprintf(__tmpname, con3_name);
+
     devmgr_register_tty_device(
         fp3,
-        "CONSOLE3",
+        __tmpname,
         DEVICE_CLASS_CHAR,
         DEVICE_TYPE_TTY,
         Lconsole3 );
+
+// #debug
+    //devmgr_show_device_list(ObjectTypeVirtualConsole);
+    //refresh_screen();
+    //while(1){}
 }
 
 //
@@ -2576,7 +2599,7 @@ int kstdio_initialize(void)
 
     kstdio_standard_streams_initialized = FALSE;
 
-    debug_print("kstdio_initialize:\n");
+    PROGRESS("kstdio_initialize:\n");
 
 // ??
 // Input mode

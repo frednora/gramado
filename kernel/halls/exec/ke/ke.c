@@ -8,7 +8,6 @@
 // Imports
 //
 
-
 // ============================
 static unsigned long presence_level=32;
 static unsigned long flush_fps=30;
