@@ -1,6 +1,14 @@
 // ethernet.c
 // Created by Fred Nora.
 
+/*
+Build/send raw Ethernet frames 
+Dispatch received frames to ARP/IP handlers 
+NOT choose which NIC to use 
+NOT decide next hop 
+NOT resolve IP routing
+*/
+
 #include <kernel.h>
 
 

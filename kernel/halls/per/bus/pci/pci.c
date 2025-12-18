@@ -19,6 +19,11 @@
 #define PCI_BAR_64BIT_INDICATOR 2   //10b
 //#define PCI_BAR_XXX_INDICATOR 3   //11b (Indefinido)
 
+// Counter
+static int __pci_display_devices_found = 0;
+static int __pci_block_devices_found = 0;
+static int __pci_nics_found = 0;
+// ...
 
 int pci_supported=FALSE;
 int pciListOffset=0;
@@ -550,13 +555,12 @@ pciHandleDevice (
     unsigned char dev, 
     unsigned char fun )
 {
-    struct pci_device_d *D;
+    struct pci_device_d *pci_dev;
+    unsigned char __device_class=0;  // char, block, network ...
+    unsigned char __device_type = DEVICE_TYPE_PCI;  // pci, legacy ...
+
     int Status = -1;
     uint32_t data=0;
-// char, block, network
-    unsigned char __device_class=0;  // Not defined yet.
-// pci, legacy
-    unsigned char __device_type = DEVICE_TYPE_PCI;
     unsigned char _irq_line=0;
     unsigned char _irq_pin=0;
 // Name support.
@@ -582,34 +586,34 @@ pciHandleDevice (
 // Object: pci device.
 // Structure for pci device.
 
-    D = (void *) kmalloc( sizeof(struct pci_device_d) );
-    if ((void *) D == NULL){
-        panic("pciHandleDevice: D\n");
+    pci_dev = (void *) kmalloc( sizeof(struct pci_device_d) );
+    if ((void *) pci_dev == NULL){
+        panic("pciHandleDevice: pci_dev\n");
     }
-    memset( D, 0, sizeof(struct pci_device_d) );
+    memset( pci_dev, 0, sizeof(struct pci_device_d) );
 
-    D->objectType = ObjectTypePciDevice;
-    D->objectClass = ObjectClassKernelObject;
-    D->used = TRUE;
-    D->magic = 1234;
+    pci_dev->objectType = ObjectTypePciDevice;
+    pci_dev->objectClass = ObjectClassKernelObject;
+    pci_dev->used = TRUE;
+    pci_dev->magic = 1234;
 
 // ID
-    D->id = (int) pciListOffset;
-// Next device.
-    D->next = NULL; 
+    pci_dev->id = (int) pciListOffset;
+// Next device
+    pci_dev->next = NULL; 
 
-// Name string.
-    D->name = pci_device_no_name;
+// Name string
+    pci_dev->name = pci_device_no_name;
 
 // Location inside the pci bus.
 // bus, device, function.
-    D->bus  = (unsigned char) bus;
-    D->dev  = (unsigned char) dev;
-    D->func = (unsigned char) fun;
+    pci_dev->bus  = (unsigned char) bus;
+    pci_dev->dev  = (unsigned char) dev;
+    pci_dev->func = (unsigned char) fun;
 
 // Vendor and device.
-    D->Vendor = (unsigned short) Vendor;
-    D->Device = (unsigned short) Device;
+    pci_dev->Vendor = (unsigned short) Vendor;
+    pci_dev->Device = (unsigned short) Device;
 
     // #debug
     // printk ("$ vendor=%x device=%x \n",D->Vendor, D->Device);
@@ -621,12 +625,11 @@ pciHandleDevice (
 // ou mesmo um nome genérico.
 // #todo: put the correct type.
 
-    data = 
-        (uint32_t) diskReadPCIConfigAddr ( bus, dev, fun, 8 );
+    data = (uint32_t) diskReadPCIConfigAddr( bus, dev, fun, 8 );
 
 // PCI Class and subclass
-    D->classCode = (unsigned char) (data >> 24) & 0xFF;
-    D->subclass  = (unsigned char) (data >> 16) & 0xFF;
+    pci_dev->classCode = (unsigned char) (data >> 24) & 0xFF;
+    pci_dev->subclass  = (unsigned char) (data >> 16) & 0xFF;
 
 // #bugbug: 
 // #test
@@ -637,8 +640,8 @@ pciHandleDevice (
 // IRQ line and IRQ pin
     _irq_line   = (unsigned char) pciGetInterruptLine(bus,dev);
     _irq_pin    = (unsigned char) pciGetInterruptPin(bus,dev);
-    D->irq_line = (unsigned char) _irq_line;
-    D->irq_pin  = (unsigned char) _irq_pin;  //?
+    pci_dev->irq_line = (unsigned char) _irq_line;
+    pci_dev->irq_pin  = (unsigned char) _irq_pin;  //?
 
 // #debug
 // 07d1	D-Link System Inc
@@ -667,28 +670,28 @@ pciHandleDevice (
         
 // Illegal vendor.
 // #todo: Clean the memory.
-    if (D->Vendor == 0xFFFF){
+    if (pci_dev->Vendor == 0xFFFF){
         debug_print ("pciHandleDevice: [BUGBUG] Illegal vendor\n");
-        //D = NULL;
+        //pci_dev = NULL;
         return -1;
     }
 // nvidia
-    if (D->Vendor == 0x10DE){
+    if (pci_dev->Vendor == 0x10DE){
         debug_print ("pciHandleDevice: [TODO] nvidia device found\n");
         __device_class = DEVICE_CLASS_CHAR;
     }
 // VIA
-    if ( D->Vendor == 0x1106 || D->Vendor == 0x1412 ){
+    if ( pci_dev->Vendor == 0x1106 || pci_dev->Vendor == 0x1412 ){
         debug_print ("pciHandleDevice: [TODO] VIA device found\n");
         __device_class = DEVICE_CLASS_CHAR;
     }
 // realtek
-    if ( D->Vendor == 0x10EC || D->Vendor == 0x0BDA ){
+    if ( pci_dev->Vendor == 0x10EC || pci_dev->Vendor == 0x0BDA ){
         debug_print ("pciHandleDevice: [TODO] realtek device found\n");
         __device_class = DEVICE_CLASS_CHAR;
     }
 // logitec
-    if (D->Vendor == 0x046D){
+    if (pci_dev->Vendor == 0x046D){
         debug_print ("pciHandleDevice: [TODO] logitec device found\n");
         __device_class = DEVICE_CLASS_CHAR;
     }
@@ -705,31 +708,31 @@ pciHandleDevice (
     int ValidIntelDevice = FALSE;
 
 // Network device: (Class 3)
-    if (D->classCode == PCI_CLASSCODE_NETWORK)
+    if (pci_dev->classCode == PCI_CLASSCODE_NETWORK)
     {
         // Network device
         __device_class = DEVICE_CLASS_NETWORK;
 
         // Valid vendor
-        if (D->Vendor == 0x8086)
+        if (pci_dev->Vendor == 0x8086)
             ValidIntelVendor = TRUE;
 
         // 82540EM
-        if (D->Device == 0x100E)
+        if (pci_dev->Device == 0x100E)
             ValidIntelDevice = TRUE;
-        if (D->Device == 0x1015)
+        if (pci_dev->Device == 0x1015)
             ValidIntelDevice = TRUE;
 
         // 82543GC
-        if (D->Device == 0x1001)
+        if (pci_dev->Device == 0x1001)
             ValidIntelDevice = TRUE;
-        if (D->Device == 0x1004)
+        if (pci_dev->Device == 0x1004)
             ValidIntelDevice = TRUE;
 
         // 82545EM
-        if (D->Device == 0x100f)
+        if (pci_dev->Device == 0x100f)
             ValidIntelDevice = TRUE;
-        if (D->Device == 0x1011)
+        if (pci_dev->Device == 0x1011)
             ValidIntelDevice = TRUE;
 
 
@@ -745,10 +748,10 @@ pciHandleDevice (
                 // see: e1000hw.c
                 Status = 
                     (int) DDINIT_e1000 ( 
-                        (unsigned char) D->bus, 
-                        (unsigned char) D->dev, 
-                        (unsigned char) D->func, 
-                        (struct pci_device_d *) D );
+                        (unsigned char) pci_dev->bus, 
+                        (unsigned char) pci_dev->dev, 
+                        (unsigned char) pci_dev->func, 
+                        (struct pci_device_d *) pci_dev );
 
                 if (Status != 0){
                     panic ("pciHandleDevice: NIC Intel [0x8086:0x100E]");
@@ -762,38 +765,49 @@ pciHandleDevice (
 // Intel
 // 8086:1237
 // 440FX - 82441FX PMC [Natoma] - Intel Corporation
-    //if ( (D->Vendor == 0x8086)  && 
-         //(D->Device == 0x1237 ) && 
-         //(D->classCode == PCI_CLASSCODE_BRIDGE) )
+    //if ( (pci_dev->Vendor == 0x8086)  && 
+         //(pci_dev->Device == 0x1237 ) && 
+         //(pci_dev->classCode == PCI_CLASSCODE_BRIDGE) )
     //{}
 
 // Intel
 // 8086:7000
 // 82371SB PIIX3 ISA [Natoma/Triton II] - Intel Corporation
-    //if ( (D->Vendor == 0x8086)  && 
-         //(D->Device == 0x7000 ) && 
-         //(D->classCode == PCI_CLASSCODE_BRIDGE) )
+    //if ( (pci_dev->Vendor == 0x8086)  && 
+         //(pci_dev->Device == 0x7000 ) && 
+         //(pci_dev->classCode == PCI_CLASSCODE_BRIDGE) )
     //{}
 
 // Intel
 // Serial controller.
 // Desejamos a subclasse 3 que é usb. 
 
-    if (D->classCode == PCI_CLASSCODE_SERIALBUS)
+    if (pci_dev->classCode == PCI_CLASSCODE_SERIALBUS)
     {
         __device_class = DEVICE_CLASS_CHAR;
-        if ( (D->Vendor == 0x8086) && (D->Device == 0x7000 ) )
+        if ( (pci_dev->Vendor == 0x8086) && (pci_dev->Device == 0x7000) )
         {
             //debug_print ("0x8086:0x7000 found\n");
         }
     }
 
+// For block devices
+    if (pci_dev->classCode == PCI_CLASSCODE_MASS)
+    {
+        __device_class = DEVICE_CLASS_BLOCK;
+    }
+
+    if (pci_dev->classCode == PCI_CLASSCODE_DISPLAY)
+    {
+        __device_class = DEVICE_CLASS_CHAR;
+    }
+
 // qemu
 // #todo
 // Display controller on qemu.
-    //if ( (D->Vendor == 0x1234)  && 
-         //(D->Device == 0x1111 ) && 
-         //(D->classCode == PCI_CLASSCODE_DISPLAY) )
+    //if ( (pci_dev->Vendor == 0x1234)  && 
+         //(pci_dev->Device == 0x1111 ) && 
+         //(pci_dev->classCode == PCI_CLASSCODE_DISPLAY) )
     //{}
 
 // Colocar a estrutura na lista.
@@ -811,7 +825,7 @@ pciHandleDevice (
     }
  
  // Saving into the list for pci devices.
-    pcideviceList[pciListOffset] = (unsigned long) D;
+    pcideviceList[pciListOffset] = (unsigned long) pci_dev;
     pciListOffset++;
 
     // #debug
@@ -833,12 +847,43 @@ pciHandleDevice (
 
     // Clear local buffer for tmp name.
     memset( __tmpname, 0, SizeOfTmpNameBuffer );
-    // Save the tmp name into the local buffer.
-    ksprintf( 
-        (char *) __tmpname, 
-        "DEV_%x_%x", 
-        D->Vendor, 
-        D->Device );
+
+
+// For some char devices
+    if (__device_class == DEVICE_CLASS_CHAR){
+
+        if (pci_dev->classCode == PCI_CLASSCODE_DISPLAY)
+        {
+            // Save the tmp name into the local buffer.
+            ksprintf(__tmpname, "DISPLAY%d", __pci_display_devices_found);
+            __pci_display_devices_found++;
+        }
+
+// For block devices
+    } else if (__device_class == DEVICE_CLASS_BLOCK){
+
+        // Save the tmp name into the local buffer.
+        ksprintf(__tmpname, "SD%d", __pci_block_devices_found);
+        __pci_block_devices_found++;
+
+// For NIC devices
+    } else if (__device_class == DEVICE_CLASS_NETWORK){
+
+        // Save the tmp name into the local buffer.
+        ksprintf(__tmpname, "NIC%d", __pci_nics_found);
+        __pci_nics_found++;
+
+// For other types
+    } else {
+
+        // Save the tmp name into the local buffer.
+        ksprintf( 
+            (char *) __tmpname, 
+            "DEV_%x_%x",  
+            pci_dev->Vendor, 
+            pci_dev->Device );
+    };
+    
 
     size_t SizeOfNewName = 0;
     SizeOfNewName = (size_t) strlen(__tmpname);
@@ -891,7 +936,6 @@ pciHandleDevice (
 // Maybe 'pci' is the 'class' of this device.
 
     __file->____object = ObjectTypePciDevice;
-
     __file->isDevice = TRUE;
 // #todo
     __file->dev_major = 0;
@@ -909,15 +953,7 @@ pciHandleDevice (
 // file structure, device name, class (char,block,network).
 // type (pci, legacy), pci device structure, tty driver struct.
 
-/*
-    devmgr_register_device ( 
-        (file *) __file,                 // file
-        newname,                         // pathname.
-        (unsigned char) __device_class,  // char | block | network
-        (unsigned char) __device_type,   // pci  | legacy
-        (struct pci_device_d *) D,       // It's a pci device.
-        NULL );                          // It's not a tty device.
-*/
+// Registering any found pci device.
 
     int rv = -1;
     rv = 
@@ -926,7 +962,7 @@ pciHandleDevice (
         (const char *) newname,          // pathname
         (unsigned char) __device_class,  // char | block | network
         (unsigned char) __device_type,   // pci | legacy (here: DEVICE_TYPE_PCI)
-        (struct pci_device_d *) D        // It's a pci device
+        (struct pci_device_d *) pci_dev  // It's a pci device
         );
 
     if (rv < 0){
@@ -996,6 +1032,13 @@ int init_pci(void)
 
 // Is PCI supported?
     __is_pci_supported();
+
+// #test: The counter for PCI DISPlAY devices.
+    __pci_display_devices_found = 0;
+// #test: The counter for PCI BLOCK devices.
+    __pci_block_devices_found = 0;
+// #test: The counter for PCI NIC devices.
+    __pci_nics_found = 0;
 
 // #todo: 
 // Colocar esse status na estrutura platform->pci_supported.

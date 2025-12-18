@@ -8,7 +8,6 @@ net/
       |-- core/  # Ethernet, IP, ARP
 
 Also see:
-dev/
  |-- blkdev/
  |-- chardev/
  |-- netdev/   # Network devices (NICs, Wi‑Fi adapters, virtual interfaces).

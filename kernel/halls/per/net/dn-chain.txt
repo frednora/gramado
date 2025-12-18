@@ -1,0 +1,21 @@
+
+Chain of functions to send a packet:
+
+network_send_udp()
+ipv4_send()
+ethernet_send()
+e1000_send()
+e1000hw_send()
+
+
+UDP
+  V
+IP
+  V
+routing + ARP + interface selection
+  V
+net_interface_d (generic)
+  V
+netdev driver (Intel, Realtek, virtio…)
+  V
+hardware
