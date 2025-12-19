@@ -106,6 +106,11 @@ callback_handler(
     unsigned long param3, 
     unsigned long param4 )
 {
+    int current_pid = getpid();
+
+    if (current_pid != Init.pid)
+        printf("callback_handler: Not the same pid\n");
+
     //printf(">>> Entered ring3 callback handler! <<<\n");
 
     // #debug: Show parameters
@@ -120,8 +125,10 @@ callback_handler(
     }
 */
 
+// #test: We dont need this anymore ... the libraryis doing it for us
+// Callback restorer.
     //printf("Calling the restorer\n");
-    asm ("int $198");
+    //asm ("int $198");
 }
 
 //
@@ -515,7 +522,7 @@ static int input_compare_string(void)
 */
 
 /*
-    if ( strncmp(prompt,"callback",8) == 0 )
+    if ( strncmp(prompt,"alert",5) == 0 )
     {
         // Put the thread into the alertable state.
         // The kernel will consume this state, and we will put it again.
@@ -981,12 +988,16 @@ static int loopSTDIN(void)
         }
 
         C = (int) fgetc(stdin);
-        if (C <= 0){
+        if (C <= 0)
+        {
 
-            if (CONFIG_TEST_CALLBACK == 1){
             // Put the thread into the alertable state.
             // The kernel will consume this state, and we will put it again.
-            sc82( 44001, 0, 0, 0);
+
+            if (CONFIG_TEST_CALLBACK == 1)
+            {
+                rtl_enter_alertable_state_for_callback();
+                //sc82( 44001, 0, 0, 0);
             }
         }
         if (C > 0){
@@ -1132,13 +1143,17 @@ static int loopMenu_ExitGramadoOS(void)
 //
 
 // This is the main function for the init process.
+// #todo Get the runlevel value.
 int main( int argc, char **argv)
 {
-
-// #todo
-// Get the runlevel value.
-
     register int i=0;
+
+    Init.initialized = FALSE;
+    Init.pid = (pid_t) getpid();
+
+    Init.argc = (int) argc;
+    Init.is_headless = FALSE;
+    //Init.runlevel = (int) ?;
 
     //asm ("int $3 \n");
 
@@ -1160,11 +1175,6 @@ int main( int argc, char **argv)
 
 // --------------------------
 
-    Init.initialized = FALSE;
-    Init.argc = (int) argc;
-    //Init.runlevel = (int) ?;
-    Init.is_headless = FALSE;
-    Init.pid = (pid_t) getpid();
 
     //#todo
     //printf()
@@ -1257,8 +1267,10 @@ int main( int argc, char **argv)
 // Simply install the handler. 
 // It doesn't put the thread into the alertable state.
 
-    if (CONFIG_TEST_CALLBACK == 1){
-        sc82( 44000, &callback_handler, 0, 0);
+    if (CONFIG_TEST_CALLBACK == 1)
+    {
+        rtl_register_callback_handler(&callback_handler);
+        //sc82( 44000, &callback_handler, 0, 0);
     }
 
 // ---------------------------------------------

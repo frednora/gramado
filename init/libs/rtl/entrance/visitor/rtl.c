@@ -132,6 +132,183 @@ void *sc83 (
 
 // =============================================================
 
+
+struct cb_trampoline_info_d 
+{
+// It was initialized by the library.
+// We have a handler installed on the trampoline.
+    int initialized;
+    int isRunning;
+    int reentrancy_detected;
+
+// Underline for addresses
+    unsigned long __rtl_cb_handler;
+
+    int has_handler;
+};
+struct cb_trampoline_info_d  CBTrampolineInfo;
+
+
+// Fixed trampoline entry: Kernel invokes a single library entry point.
+void __rtl_cb_trampoline( 
+    unsigned long param1, 
+    unsigned long param2, 
+    unsigned long param3, 
+    unsigned long param4 )
+{
+    void (*handler)(unsigned long, unsigned long, unsigned long, unsigned long);
+
+    if (CBTrampolineInfo.isRunning == TRUE)
+        goto on_reentrancy;
+    CBTrampolineInfo.isRunning = TRUE;
+
+// Not initialized
+    if (CBTrampolineInfo.initialized != TRUE){
+        printf("__rtl_cb_trampoline: Not initialized\n");
+        goto restore;
+    }
+
+// No valid handler
+    if (CBTrampolineInfo.has_handler != TRUE)
+        goto restore;
+    if (CBTrampolineInfo.__rtl_cb_handler == 0)
+        goto restore;
+
+// Setup our local caller.
+// Handler indirection: The library decides whether and which user handler runs.
+    handler = (void*) CBTrampolineInfo.__rtl_cb_handler;
+
+// Call the procedure inside the user's program.
+    handler(param1, param2, param3, param4);
+
+// Restore and change the flag to Not running anymore.
+restore:
+    CBTrampolineInfo.isRunning = FALSE;
+    asm ("int $198");
+
+// Restore but keep the flag in the running state.
+on_reentrancy:
+    CBTrampolineInfo.reentrancy_detected = TRUE;
+    asm ("int $198");
+}
+
+
+/**
+ * rtl_enter_alertable_state_for_callback
+ *
+ * Purpose:
+ *   Put the current thread into alertable state so the kernel can deliver
+ *   callbacks to the trampoline previously registered by
+ *   rtl_initialize_callback_support().
+ *
+ * Behavior:
+ *   - Checks if the callback subsystem has been initialized.
+ *   - If not initialized, returns -1 and does not issue the syscall.
+ *   - If initialized, issues sc82(44001, 0, 0, 0) to mark the thread
+ *     as alertable.
+ *
+ * Notes:
+ *   - Must be called after rtl_initialize_callback_support().
+ *   - The thread will only receive callbacks if a handler has been
+ *     registered via rtl_register_callback_handler().
+ *   - This call is per-thread; each thread that wants callbacks must
+ *     enter alertable state individually.
+ *
+ * Returns:
+ *   0 on success, -1 if not initialized.
+ */
+int rtl_enter_alertable_state_for_callback(void)
+{
+    if (CBTrampolineInfo.initialized != TRUE) {
+        printf("rtl_enter_alertable_state_for_callback: subsystem not initialized\n");
+        return -1;
+    }
+
+    sc82(44001, 0, 0, 0);
+    return 0;
+}
+
+
+/**
+ * rtl_register_callback_handler
+ *
+ * Purpose:
+ *   Register a user-defined callback handler function that will be invoked
+ *   whenever the kernel delivers a callback to this thread.
+ *
+ * Parameters:
+ *   new_handler - Address of the handler function in user space.
+ *                 The handler must have the signature:
+ *                 void handler(unsigned long p1,
+ *                              unsigned long p2,
+ *                              unsigned long p3,
+ *                              unsigned long p4);
+ *
+ * Behavior:
+ *   - Stores the handler address in the internal callback state structure.
+ *   - Marks that a valid handler is present.
+ *   - The trampoline will call this handler when a callback arrives.
+ *
+ * Notes:
+ *   - If no handler is registered, callbacks are ignored (restorer is still called).
+ *   - Passing NULL (0) is invalid and returns -1.
+ *   - The handler should be short and non-blocking, since it runs asynchronously.
+ *
+ * Returns:
+ *   0 on success, -1 if new_handler is NULL.
+ */
+
+int rtl_register_callback_handler(unsigned long new_handler)
+{
+    if (new_handler == 0){
+        return (int) -1;
+    }
+    CBTrampolineInfo.__rtl_cb_handler = (unsigned long) new_handler;
+    CBTrampolineInfo.has_handler = TRUE;
+    return 0;
+}
+
+/**
+ * rtl_initialize_callback_support
+ *
+ * Purpose:
+ *   Initialize the ring3 callback subsystem for the current process/thread.
+ *   This function sets up the trampoline entry point and registers it with
+ *   the kernel so that callbacks can be delivered safely into user space.
+ *
+ * Behavior:
+ *   - Clears and resets the internal callback state structure.
+ *   - Registers the fixed trampoline (__rtl_cb_trampoline) with the kernel
+ *     using syscall 44000.
+ *   - Marks the subsystem as initialized.
+ *
+ * Notes:
+ *   - This function MUST be called before any callback handler is registered.
+ *   - It does NOT put the thread into alertable state; that is done separately.
+ *   - Should be called once per thread that wants to receive callbacks.
+ *
+ * Returns:
+ *   0 on success, negative value on error.
+ */
+
+void rtl_initialize_callback_support(void)
+{
+    CBTrampolineInfo.initialized = FALSE;
+    CBTrampolineInfo.isRunning = FALSE;
+    CBTrampolineInfo.reentrancy_detected = FALSE;
+
+// No handler provided yet.
+    CBTrampolineInfo.__rtl_cb_handler = 0;
+    CBTrampolineInfo.has_handler = FALSE;
+
+// Simply register the trampoline.
+// Fixed trampoline entry: Kernel invokes a single library entry point.
+// Do NOT put the tread into alertable state;
+    sc82( 44000, (unsigned long) &__rtl_cb_trampoline, 0, 0);
+    CBTrampolineInfo.initialized = TRUE;
+}
+
+
 /*
 
   // #todo

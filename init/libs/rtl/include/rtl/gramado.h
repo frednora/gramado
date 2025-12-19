@@ -96,6 +96,90 @@ void *sc83 (
 // =====================================================
 
 
+/**
+ * rtl_enter_alertable_state_for_callback
+ *
+ * Purpose:
+ *   Put the current thread into alertable state so the kernel can deliver
+ *   callbacks to the trampoline previously registered by
+ *   rtl_initialize_callback_support().
+ *
+ * Behavior:
+ *   - Checks if the callback subsystem has been initialized.
+ *   - If not initialized, returns -1 and does not issue the syscall.
+ *   - If initialized, issues sc82(44001, 0, 0, 0) to mark the thread
+ *     as alertable.
+ *
+ * Notes:
+ *   - Must be called after rtl_initialize_callback_support().
+ *   - The thread will only receive callbacks if a handler has been
+ *     registered via rtl_register_callback_handler().
+ *   - This call is per-thread; each thread that wants callbacks must
+ *     enter alertable state individually.
+ *
+ * Returns:
+ *   0 on success, -1 if not initialized.
+ */
+int rtl_enter_alertable_state_for_callback(void);
+
+/**
+ * rtl_register_callback_handler
+ *
+ * Purpose:
+ *   Register a user-defined callback handler function that will be invoked
+ *   whenever the kernel delivers a callback to this thread.
+ *
+ * Parameters:
+ *   new_handler - Address of the handler function in user space.
+ *                 The handler must have the signature:
+ *                 void handler(unsigned long p1,
+ *                              unsigned long p2,
+ *                              unsigned long p3,
+ *                              unsigned long p4);
+ *
+ * Behavior:
+ *   - Stores the handler address in the internal callback state structure.
+ *   - Marks that a valid handler is present.
+ *   - The trampoline will call this handler when a callback arrives.
+ *
+ * Notes:
+ *   - If no handler is registered, callbacks are ignored (restorer is still called).
+ *   - Passing NULL (0) is invalid and returns -1.
+ *   - The handler should be short and non-blocking, since it runs asynchronously.
+ *
+ * Returns:
+ *   0 on success, -1 if new_handler is NULL.
+ */
+
+int rtl_register_callback_handler(unsigned long new_handler);
+
+/**
+ * rtl_initialize_callback_support
+ *
+ * Purpose:
+ *   Initialize the ring3 callback subsystem for the current process/thread.
+ *   This function sets up the trampoline entry point and registers it with
+ *   the kernel so that callbacks can be delivered safely into user space.
+ *
+ * Behavior:
+ *   - Clears and resets the internal callback state structure.
+ *   - Registers the fixed trampoline (__rtl_cb_trampoline) with the kernel
+ *     using syscall 44000.
+ *   - Marks the subsystem as initialized.
+ *
+ * Notes:
+ *   - This function MUST be called before any callback handler is registered.
+ *   - It does NOT put the thread into alertable state; that is done separately.
+ *   - Should be called once per thread that wants to receive callbacks.
+ *
+ * Returns:
+ *   0 on success, negative value on error.
+ */
+
+void rtl_initialize_callback_support(void);
+
+
+
 void *rtl_shm_get_2mb_surface(void);
 
 // input mode

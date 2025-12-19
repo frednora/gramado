@@ -174,10 +174,11 @@ void crt0(unsigned long rdi)
 // when a new process is initializing. Let's make it 
 // friendly visable.
 
+/*
     debug_print ("+\n");
     debug_print ("++ crt0.c: Initializing (userland/) process\n");
     debug_print ("+\n");
-
+*/
 
 // Gramado Libc initialization
 // see: rtl.c
@@ -307,8 +308,16 @@ e o crt0 do driver, não ativa.
 
     asm volatile ("int $199");
 
+
+// ---------------------------------------
+// Setup the trampoline for the callback handler.
+// See: rtl.c
+
+    rtl_initialize_callback_support();
+
+
 //
-// Call main().
+// Call main()
 //
 
     // IN: argc, argv.
