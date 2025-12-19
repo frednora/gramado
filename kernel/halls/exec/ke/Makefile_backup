@@ -73,31 +73,27 @@ KERNEL_INCLUDE := -I $(INCLUDE)
 # LDFLAGS := -m elf_x86_64 -static
 LDFLAGS := -m elf_x86_64 -s -x -static  
 
-# Scheduler: (sched/)
-# Decides who gets the CPU. It’s the policy, the arbiter of time.
-# Dispacher: (disp/) 
-# Actually hands over the CPU. It’s the mechanism, the gear teeth grinding.
-OBJS = sched.o schedi.o schedq.o \
-ts.o dispatch.o spawn.o x64cont.o callback.o \
-thread.o tlib.o te.o telib.o ithread.o clone.o \
-pit.o \
-x64sc.o \
-x64fault.o x64smp.o \
-apic.o apictim.o ioapic.o \
-cpu.o \
-cpuid.o \
-mpfloat.o acpi.o \
-detect.o \
+# Everything is a file
+OBJS = thread.o tlib.o te.o telib.o \
+ithread.o clone.o \
 ipc.o \
-ports64.o rtc.o \
 sync.o \
+cpuid.o \
+cpu.o \
+detect.o \
+ke.o \
 archhal.o \
 hal.o \
-x64.o x64info.o x64init.o \
+mpfloat.o acpi.o \
+apic.o apictim.o ioapic.o \
+pit.o ports64.o rtc.o \
+x64.o x64info.o x64init.o x64sc.o x64fault.o x64smp.o \
 queue.o \
-ke.o    
+ts.o dispatch.o spawn.o callback.o x64cont.o \
+sched.o schedi.o schedq.o    
 
 all:
+
 
 # ---------------------
 # intake/  (The MICROKERNEL)

@@ -115,13 +115,15 @@ objects-y += p2_wink.o
 # halls/ - Kernel resources (COLD)
 # We can create interfaces that belongs to a given cgroup.
 
-objects-y += p3_mm.o  
-objects-y += p3_bus.o  
-objects-y += blkdev.o  
-objects-y += chardev.o  
+# The Power Trio
 objects-y += netdev.o  
-objects-y += p3_dev.o  
+objects-y += chardev.o  
+objects-y += blkdev.o  
+
+objects-y += p3_mm.o  
 objects-y += p3_net.o    
+objects-y += p3_bus.o  
+objects-y += p3_dev.o  
 objects-y += p3_fs.o  
 
 # ==[Part 04]======================
