@@ -40,12 +40,13 @@ struct utsname  kernel_utsname;
 
 typedef enum {
     KERNEL_SUBSYSTEM_INVALID,
-    KERNEL_SUBSYSTEM_DEV,  // Device drivers
-    KERNEL_SUBSYSTEM_FS,   // File systems
-    KERNEL_SUBSYSTEM_KE,   // Kernel executive
-    KERNEL_SUBSYSTEM_MM,   // Memory manager
-    KERNEL_SUBSYSTEM_NET,  // Network
-    KERNEL_SUBSYSTEM_USER  // User manager. (um)
+    KERNEL_SUBSYSTEM_KMAIN,  // Main routine
+    KERNEL_SUBSYSTEM_DEV,    // Device drivers
+    KERNEL_SUBSYSTEM_FS,     // File systems
+    KERNEL_SUBSYSTEM_KE,     // Kernel executive
+    KERNEL_SUBSYSTEM_MM,     // Memory manager
+    KERNEL_SUBSYSTEM_NET,    // Network
+    KERNEL_SUBSYSTEM_USER    // User manager. (um)
 }kernel_subsystem_t;
 
 // Local
@@ -148,9 +149,110 @@ static int __test_initialize_ap_processor(int apic_id);
 
 static int I_initialize_kernel(int arch_type, int processor_number);
 
+
+static void panic_at_init(int error_code, kernel_subsystem_t subsystem_id);
+
 //
 // =======================================================
 //
+
+/*
+ * panic_at_init()
+ *
+ * Purpose:
+ *   Specialized panic routine for system initialization failures.
+ *   It is called when a critical error occurs during one of the
+ *   initialization levels (earlyinit, mmInitialize, keInitialize, etc.).
+ *
+ * Behavior:
+ *   - Formats the error code into a short string: "INIT PANIC 0x000000NN".
+ *   - Delegates to x_panic(), which draws a red rectangle at the top
+ *     of the framebuffer and prints the message.
+ *   - Halts the system immediately.
+ *
+ * Context:
+ *   - Used before the kernel virtual console is fully initialized.
+ *   - Provides a guaranteed visual panic message during early boot.
+ *
+ * Example:
+ *   if (mmInitialize(0) != TRUE)
+ *       panic_at_init(Error20_mmPhase0,0);
+ */
+
+// Panic during system initialization.
+// Builds one-line message with function+phase and error code.
+// Logs to serial if available, then halts via x_panic().
+static void panic_at_init(int error_code, kernel_subsystem_t subsystem_id)
+{
+    char msg[64];
+    const char *funcname = "init";
+
+    // Record failing subsystem
+    // #todo: It will be used in the future.
+    __failing_kernel_subsystem = subsystem_id;
+
+    // Map error codes directly here
+    switch (error_code) {
+    case Error10_earlyinit:
+        funcname = "earlyinit";
+        break;
+
+    case Error20_mmPhase0:
+        funcname = "mmInitialize0";
+        break;
+    case Error21_mmPhase1:
+        funcname = "mmInitialize1";
+        break;
+
+    case Error30_kePhase0:
+        funcname = "keInitialize0";
+        break;
+    case Error31_kePhase1:
+        funcname = "keInitialize1";
+        break;
+    case Error32_kePhase2:
+        funcname = "keInitialize2";
+        break;
+
+    case Error40_archinit:
+        funcname = "archinit";
+        break;
+
+    case Error50_deviceinit:
+        funcname = "deviceinit";
+        break;
+
+    case Error60_lateinit:
+        funcname = "lateinit";
+        break;
+
+    case Error90_breakpoint:
+        funcname = "Breakpoint";
+        break;
+
+    default:
+        funcname = "init";
+        break;
+    }
+
+    memset(msg,0,64);
+
+    // Build final message: "PANIC: <func> Error: 0xXX"
+    ksprintf(msg, "%s Error: 0x%x", funcname, (error_code & 0xFF));
+
+    // Serial log first (if available)
+    if (Initialization.is_serial_log_initialized == TRUE) {
+        PROGRESS(msg);
+        PROGRESS("\n");
+    }
+
+    // #todo
+    // If network stack is ready, send packet
+
+    // Last call: framebuffer panic worker (hangs system)
+    x_panic(msg);
+}
+
 
 static void __enter_debug_mode(void)
 {
@@ -1014,11 +1116,10 @@ static int lateinit(void)
         goto fail;
     }
 
-// done:
-    return 0;
+    return TRUE;
 
 fail:
-    return (int) -1;
+    return FALSE;
 }
 
 // Initializes the kernel, create the kernel process,
@@ -1134,10 +1235,8 @@ static int I_initialize_kernel(int arch_type, int processor_number)
     PROGRESS(":: KE PHASE 0\n");
     // [3:0]
     Status = (int) keInitialize(0);
-    if (Status != TRUE){
-        __failing_kernel_subsystem = KERNEL_SUBSYSTEM_KE;
-        goto fail;
-    }
+    if (Status != TRUE)
+        panic_at_init(Error30_kePhase0,KERNEL_SUBSYSTEM_KE);
     Initialization.ke_phase0 = TRUE;
     wink_update_progress_bar(50);
     //while(1){}
@@ -1151,10 +1250,8 @@ static int I_initialize_kernel(int arch_type, int processor_number)
     PROGRESS(":: KE PHASE 1\n");
     // [3:1]
     Status = (int) keInitialize(1);
-    if (Status != TRUE){
-        __failing_kernel_subsystem = KERNEL_SUBSYSTEM_KE;
-        goto fail;
-    }
+    if (Status != TRUE)
+        panic_at_init(Error31_kePhase1,KERNEL_SUBSYSTEM_KE);
     Initialization.ke_phase1 = TRUE;
     wink_update_progress_bar(60);
     //while(1){}
@@ -1166,10 +1263,8 @@ static int I_initialize_kernel(int arch_type, int processor_number)
     PROGRESS(":: KE PHASE 2\n");
     // [3:2]
     Status = (int) keInitialize(2);
-    if (Status != TRUE){
-        __failing_kernel_subsystem = KERNEL_SUBSYSTEM_KE;
-        goto fail;
-    }
+    if (Status != TRUE)
+        panic_at_init(Error32_kePhase2,KERNEL_SUBSYSTEM_KE);
     Initialization.ke_phase2 = TRUE;
     wink_update_progress_bar(70);
     //while(1){}
@@ -1189,14 +1284,13 @@ static int I_initialize_kernel(int arch_type, int processor_number)
     //while(1){}
 
 // -------------------------------
-    int late_status=0;
     if (Status == TRUE)
     {
         PROGRESS(":: lateinit\n");
         // [6]
-        late_status = (int) lateinit();
-        if (late_status < 0)
-            goto fail;
+        Status = (int) lateinit();
+        if (Status != TRUE)
+            panic_at_init(Error60_lateinit,KERNEL_SUBSYSTEM_KMAIN);
     }
 
 // Initialization fail
