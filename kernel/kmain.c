@@ -982,6 +982,10 @@ static int deviceinit(void)
         input_disable_this_input_target(INPUT_TARGET_THREAD_QUEUE);
     };
 
+
+    // #todo
+    // usb_initialize();
+
 // ...
 
     return 0;

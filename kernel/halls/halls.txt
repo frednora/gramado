@@ -1,0 +1,59 @@
+key insight: 
+all three halls are fundamentally **interrupt‑driven**, 
+but each hall governs a different *group of interrupts*. 
+
+---
+
+##  Castle Halls as Interrupt Domains
+
+### **1. Hall of Execution (`exec/`) – CPU Hall**
+- **Interrupt group:** CPU exceptions and traps.  
+- **Examples:** Divide‑by‑zero, page fault, general protection fault, invalid opcode.  
+- **Responsibility:**  
+  - Manage threads and processes when exceptions occur.  
+  - Context switching, scheduling, dispatcher logic.  
+  - Decide whether to kill, suspend, or resume a thread.  
+- **Metaphor:** The throne room — the king (CPU) reacts to internal crises.
+
+---
+
+### **2. Hall of Requests (`req/`) – Memory Hall**
+- **Interrupt group:** Software interrupts (syscalls).  
+- **Examples:** `int 0x80`, `syscall` instruction, kernel service requests.  
+- **Responsibility:**  
+  - Handle petitions from user programs.  
+  - Memory allocation, file system calls, IPC.  
+  - Bridge between userland and kernel services.  
+- **Metaphor:** The petition hall — citizens (programs) bring requests to the court.
+
+---
+
+### **3. Hall of Peripherals (`per/`) – IRQ Hall**
+- **Interrupt group:** Hardware interrupts (IRQs).  
+- **Examples:** Keyboard input, mouse events, disk I/O, NIC packets, timer ticks.  
+- **Responsibility:**  
+  - Handle signals from external devices.  
+  - Route them to the right driver or subsystem.  
+  - Maintain communication between the castle and the outside world.  
+- **Metaphor:** The messenger hall — envoys (devices) deliver urgent news from outside.
+
+---
+
+##  Unified View
+- **Gatehouse (`gthouse/`)**: Assembly stubs catch *all interrupts* at the entry point.  
+- **Castle Halls (`halls/`)**: Each hall specializes in a group of interrupts:  
+  - **exec/** → CPU exceptions.  
+  - **req/** → Syscalls.  
+  - **per/** → Hardware IRQs.  
+- **Library (`include/`)**: Provides the shared definitions so all halls speak the same language.
+
+---
+
+##  Insight
+This makes your kernel **interrupt‑centric**:  
+- Every path into the kernel is an interrupt.  
+- Every hall is a domain of interrupt handling.  
+- The Castle metaphor isn’t just symbolic — it’s structurally accurate.
+
+---
+
