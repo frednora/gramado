@@ -232,7 +232,7 @@ struct user_info_d *CreateUser(char *name, int type);
 
 int userCreateRootUser(void);
 
-int userInitializeStuff(void);
+int user_initialize(void);
 
 #endif    
 

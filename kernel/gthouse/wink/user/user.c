@@ -486,16 +486,6 @@ fail:
     return FALSE;
 }
 
-static int init_logon_manager (void)
-{
-    return 0;
-}
-
-static int init_logoff (int mode)
-{
-    return 0;
-}
-
 // See: gpid.h
 static int register_logoff_process (pid_t pid)
 {
@@ -515,24 +505,41 @@ static int register_logoff_process (pid_t pid)
     return 0;
 }
 
+static int init_logon_manager (void)
+{
+    return 0;
+}
+
+static int init_logoff (int mode)
+{
+    return 0;
+}
+
 //
 // #
 // INITIALIZATION
 //
 
 // session, logon, logoff ...
-int userInitializeStuff(void)
+int user_initialize(void)
 {
-// Called by keInitialize() in ke.c
+    register int u=0;
+    int Status = FALSE;
 
-    debug_print("userInitializeStuff: [TODO FIXME]\n");
+    //debug_print("user_initialize: [TODO FIXME]\n");
 
     current_user = 0;
     // User session and cgroup;
     current_usersession = 0;
     // Initialize user info structure
-    //printk ("userInitializeStuff: init_user_info\n");
+    //printk ("user_initialize: init_user_info\n");
     //init_user_info ();   
+
+// The root user
+// Initialize the user list.
+    for (u=0; u<USER_COUNT_MAX; u++){
+        userList[u] = 0;
+    };
 
 //
 // Security
@@ -544,13 +551,22 @@ int userInitializeStuff(void)
     //init_user_session();
 
 // Initializing the first cgroup
-    printk ("userInitializeStuff: initializing first cgroup\n");   
+    //printk ("user_initialize: initializing first cgroup\n");   
     init_first_cgroup();
 
     init_logon_manager();
     //init_logoff(...);
     //register_logoff_process(...);
 
-    return 0;
+// #test
+// At this point we already have almost all we need to 
+// pass the control to the init process.
+// So, lets setup the the user for all the resources we created.
+
+    Status = (int) userCreateRootUser();
+    if (Status != TRUE)
+        return FALSE;
+
+    return (int) Status;
 }
 

@@ -4933,12 +4933,10 @@ void set_active_window(struct gws_window_d *window)
         return;
     }
 
-// The new active window.
-    active_window = (void*) window;
-// The new keyboard owner
-    keyboard_owner = (void*) window;
-// The new mouse owner.
-    mouse_owner = (void*) window;
+  // Update global pointers
+    active_window  = (void*) window;  // The new active window
+    keyboard_owner = (void*) window;  // The new keyboard owner
+    mouse_owner    = (void*) window;  // The new mouse owner
 }
 
 void unset_active_window(void)

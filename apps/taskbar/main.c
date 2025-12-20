@@ -1,4 +1,5 @@
 // main.c
+// Taskbar as a “User Shell”
 // Main file for taskbar.bin application. (Overview/Explorer)
 // Created by Fred Nora.
 
@@ -780,47 +781,41 @@ tbProcedure(
 
         // 20 = MSG_KEYDOWN
         case MSG_KEYDOWN:
-            /*
-            switch(long1){
-                // keyboard arrows
-                case 0x48: 
-                    goto done; 
+            switch (long1) 
+            {
+                case '<':   // ASCII '<'
+                case ',':
+                    printf("taskbar: [<] pressed  dock left\n");
+                    gws_dock_active_window(fd, 1);   // margin 1 = left
                     break;
-                case 0x4B: 
-                    goto done; 
+
+                case '>':   // ASCII '>'
+                case '.':
+                    printf("taskbar: [>] pressed  dock right\n");
+                    gws_dock_active_window(fd, 2);   // margin 2 = right
                     break;
-                case 0x4D: 
-                    goto done; 
+
+                case 'R':  // Refresh
+                case 'r': 
+                    gws_update_desktop(fd); 
                     break;
-                case 0x50: 
-                    goto done; 
+
+                default:
                     break;
-                
-                case '1':
-                    goto done;
-                    break;
- 
-                case '2': 
-                    goto done;
-                    break;
-                
-                case VK_RETURN:
-                    return 0;
-                    break;
-                
-                // input
-                default:                
-                    break;
-            }
-            */
+            };
             break;
 
         // 22 = MSG_SYSKEYDOWN
         case MSG_SYSKEYDOWN:
             //printf("taskbar: MSG_SYSKEYDOWN\n");
             switch (long1){
-                case VK_F1:  do_launch_app(1);  break;
-                case VK_F2:  do_launch_app(2);  break;
+                case VK_F5: 
+                    printf("taskbar: VK_F5\n");
+                    gws_update_desktop(fd); 
+                    break;
+                //case VK_F2:  do_launch_app(2);  break;
+                //case VK_F1:  do_launch_app(1);  break;
+                //case VK_F2:  do_launch_app(2);  break;
                 // ...
                 //case VK_F5: gws_async_command(fd,30,0,0);    break;
                 //case VK_F6: gws_async_command(fd,1011,0,0);  break;
@@ -883,11 +878,7 @@ void pump(int fd, int wid)
 
 // Process event.
     int Status = -1;
-    Status = 
-        tbProcedure( 
-            fd, 
-            e->window, e->type, e->long1, e->long2 );
-
+    Status = tbProcedure( fd, e->window, e->type, e->long1, e->long2 );
     // ...
 }
 
@@ -1556,8 +1547,23 @@ int main(int argc, char *argv[])
             break;
 
         start_jiffie = (unsigned long) rtl_jiffies();
-        // Get and process event.
+
+        // 1. Pump events from Display Server
         pump(client_fd,main_window);
+
+        // 2. Pump events from Input Broker (system events)
+        if (rtl_get_event() == TRUE)
+        {
+            tbProcedure(
+                client_fd,
+                (int) RTLEventBuffer[0],   // window id
+                (int) RTLEventBuffer[1],   // event type (MSG_SYSKEYDOWN, MSG_SYSKEYUP, etc.)
+                (unsigned long) RTLEventBuffer[2], // VK code
+                (unsigned long) RTLEventBuffer[3]  // scancode
+            );
+            RTLEventBuffer[1] = 0; // clear after dispatch
+        }
+
         end_jiffie = rtl_jiffies();
 
         if (end_jiffie > start_jiffie)
@@ -1635,7 +1641,7 @@ int main(int argc, char *argv[])
     */
  
 // Done:
-    gws_debug_print("taskbar.bin: Exit\n");
+    //gws_debug_print("taskbar.bin: Exit\n");
     return EXIT_SUCCESS;
 }
 

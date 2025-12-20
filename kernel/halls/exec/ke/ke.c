@@ -727,9 +727,6 @@ int keInitialize(int phase)
         current_display = 0;
         current_screen = 0;
 
-        // see: user.c
-        // userInitializeStuff();
-
         // Display server registration support.
         // See: dispsrv.c
         ds_init();

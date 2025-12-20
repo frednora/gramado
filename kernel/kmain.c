@@ -1011,14 +1011,10 @@ static int lateinit(void)
 // -------------------------------------
 
     // see: user.c
-    userInitializeStuff();
-
-// The root user
-// Initialize the user list.
-    register int u=0;
-    for (u=0; u<USER_COUNT_MAX; u++){
-        userList[u] = 0;
-    };
+    int uStatus =  FALSE;
+    uStatus = (int) user_initialize();
+    if (uStatus != TRUE)
+        panic("lateinit: on user_initialize()\n");
 
 /*
  // ok
@@ -1027,16 +1023,6 @@ static int lateinit(void)
     refresh_screen();
     while(1){}
 */
-
-// #test
-// At this point we already have almost all we need to 
-// pass the control to the init process.
-// So, lets setup the the user for all the resources we created.
-    int UserStatus = FALSE;
-    UserStatus = (int) userCreateRootUser();
-    if (UserStatus != TRUE)
-        panic("lateinit: on userCreateRootUser\n");
-
 
 /*
 // ok
