@@ -144,6 +144,24 @@ memoryProcedure(
         // Null/heartbeat event
         return 0;
 
+
+    case MSG_SYSKEYDOWN:
+        switch (long1) {
+        case VK_F5:
+            printf("memory_app: VK_F5  Refresh metrics\n");
+            update_children(fd);
+            return 0;
+        case VK_F12:
+            printf("memory_app: VK_F12  Debug info\n");
+            // maybe dump stats or redraw
+            return 0;
+        case VK_F11:
+            // Should not appear — broker intercepts fullscreen toggle
+            printf("memory_app: VK_F11 (unexpected)\n");
+            return 0;
+        };
+        break;
+
     case GWS_MouseClicked:
         // Child ID comes in long1
         if ((int)long1 == refresh_button) {
@@ -300,10 +318,31 @@ int main(int argc, char *argv[])
     gws_set_active(client_fd, main_window);
     gws_refresh_window(client_fd, main_window);
 
+/*
     // Event loop
     while (1) {
         pump(client_fd);
     }
+*/
+
+    while (1){
+
+    // 1. Pump events from Display Server
+    pump(client_fd);
+
+    // 2. Pump events from Input Broker (system events)
+    if (rtl_get_event() == TRUE)
+    {
+        memoryProcedure(
+            client_fd,
+            (int) RTLEventBuffer[0],   // window id
+            (int) RTLEventBuffer[1],   // event type (MSG_SYSKEYDOWN, MSG_SYSKEYUP, etc.)
+            (unsigned long) RTLEventBuffer[2], // VK code
+            (unsigned long) RTLEventBuffer[3]  // scancode
+        );
+        RTLEventBuffer[1] = 0; // clear after dispatch
+    }
+    };
 
     return EXIT_SUCCESS;
 }

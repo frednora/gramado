@@ -1,0 +1,74 @@
+
+F1  → App (help)
+F2  → App (rename/edit)
+F3  → App (search)
+F4  → App (repeat/properties)
+F5  → App (refresh) → app may call gws_refresh_window()
+F6  → App (navigation) → app may call gws_change_window_position()
+F7  → App (spell check/debug)
+F8  → App (extend selection/debug)
+F9  → App (recalc/build) → app may call gws_resize_window()
+F10 → App (menu/debug) → app may call gws_redraw_window()
+F11 → Broker converts to fullscreen toggle → DS only
+F12 → App (developer tools/save as)
+
+---
+
+Function Key – Typical Owner – Example Use  
+F1           – App           – Help  
+F2           – App           – Rename  
+F3           – App           – Search  
+F4           – App           – ?  
+F5           – App           – Refresh  
+F6–F10       – App           – Navigation, menus  
+F11          – System        – Fullscreen toggle  
+F12          – App           – Developer tools / debug console  
+---
+
+System‑reserved function keys
+F11 → Fullscreen toggle (Windows, macOS, Linux desktops).
+
+Application‑level function keys
+These are delivered directly to the foreground app:
+F1 → Help (almost universal convention).
+F2 → Rename (Windows Explorer, IDEs).
+F3 → Search (browsers, editors).
+F5 → Refresh (web browsers, file explorers, IDEs).
+F4, F7, F8, F9, F10 → vary by app.
+Other F‑keys (F6–F10) → Often app‑specific shortcuts (navigation, menus, etc.).
+F12 → Developer tools (browsers), debug console (IDEs).
+
+-------------------------------------------
+
+Here’s a plain‑text version of the API options grouped for documentation purposes:
+The apps can use them
+
+---
+
+**Window Management APIs**  
+- gws_change_window_position(fd, window, x, y)  
+- gws_resize_window(fd, window, w, h)  
+- gws_redraw_window(fd, window, flags)  
+- gws_refresh_window(fd, window)  
+- gws_refresh_rectangle(fd, left, top, width, height)  
+- gws_destroy_window(fd, window)  
+- gws_createwindow(fd, left, top, width, height, bg_color, type, status, view, style, parent, name)  
+
+**Drawing and Text APIs**  
+- gws_drawchar(fd, window_id, left, top, color, ch)  
+- gws_drawtext(fd, window_id, left, top, color, string)  
+- gws_settext(fd, window_id, left, top, color, string)  
+- gws_gettext(fd, window_id, left, top, color, string)  
+
+**Event Handling APIs**  
+- gws_get_next_event(fd, window_id)  
+
+**Information and Metrics APIs**  
+- gws_get_window_info(fd, window_id)  
+
+**Process Control APIs**  
+- gws_clone_and_execute(fd, arg1, arg2, arg3, arg4, string)  
+
+---
+
+

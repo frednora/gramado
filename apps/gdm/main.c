@@ -401,30 +401,26 @@ gdmProcedure(
     //        printf("MSG_KEYDOWN\n");
     //    break;
 
-    // Sent by the window server.
+
     case MSG_SYSKEYDOWN:
         if (long1 == VK_F1)
         {
             printf ("gdm.bin: MSG_SYSKEYDOWN VK_F1\n");
-            do_done(fd);
             return 0;
         }
         if (long1 == VK_F2)
         {
             printf ("gdm.bin: MSG_SYSKEYDOWN VK_F2\n");
-            do_done(fd);
             return 0;
         }
         if (long1 == VK_F3)
         {
             printf ("gdm.bin: MSG_SYSKEYDOWN VK_F3\n");
-            do_done(fd);
             return 0;
         }
         if (long1 == VK_F4)
         {
             printf ("gdm.bin: MSG_SYSKEYDOWN VK_F4\n");
-            do_done(fd);
             return 0;
         }
         break;
@@ -506,6 +502,7 @@ static void pump(int fd)
     //}
 }
 
+/*
 static void __event_loop(int fd)
 {
     if (fd<0){
@@ -519,6 +516,35 @@ static void __event_loop(int fd)
         pump(fd);
     };
 }
+*/
+
+static void __event_loop(int fd)
+{
+    if (fd<0){
+        printf("__event_loop: fd\n");
+        return;
+    }
+
+    while (1)
+    {
+        // 1. Pump DS events
+        pump(fd);
+
+        // 2. Pump broker events (system events)
+        if (rtl_get_event() == TRUE)
+        {
+            gdmProcedure(
+                fd,
+                (int) RTLEventBuffer[0],
+                (int) RTLEventBuffer[1],
+                (unsigned long) RTLEventBuffer[2],
+                (unsigned long) RTLEventBuffer[3]
+            );
+            RTLEventBuffer[1] = 0;
+        }
+    };
+}
+
 
 int main( int argc, char *argv[] )
 {

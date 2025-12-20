@@ -88,6 +88,23 @@ powerProcedure(
         return 0;
         break;
 
+    case MSG_SYSKEYDOWN:
+        switch (long1) {
+            case VK_F1:
+                printf("PowerApp: VK_F1 → Restart\n");
+                rtl_clone_and_execute("reboot.bin");
+                return 0;
+            case VK_F2:
+                printf("PowerApp: VK_F2 → Shutdown\n");
+                rtl_clone_and_execute("shutdown.bin");
+                return 0;
+            case VK_F11:
+                // Should not appear — broker intercepts fullscreen toggle
+                printf("PowerApp: VK_F11 (unexpected)\n");
+                return 0;
+        };
+        break;
+
     case GWS_MouseClicked:
     /*    
     printf("GWS_MouseClicked:\n");
@@ -305,10 +322,31 @@ shutdown_button = gws_create_window(
     //printf("Restart button id = %d\n", restart_button);
     //printf("Shutdown button id = %d\n", shutdown_button);
 
+/*
     // Event loop
     while (1) {
         pump(client_fd);
     }
+*/
+
+    while (1)
+    {
+        // 1. Pump events from Display Server
+        pump(client_fd);
+
+        // 2. Pump events from Input Broker (system events)
+        if (rtl_get_event() == TRUE)
+        {
+            powerProcedure(
+                client_fd,
+                (int) RTLEventBuffer[0],   // window id
+                (int) RTLEventBuffer[1],   // event type (MSG_SYSKEYDOWN, MSG_SYSKEYUP, etc.)
+                (unsigned long) RTLEventBuffer[2], // VK code
+                (unsigned long) RTLEventBuffer[3]  // scancode
+            );
+            RTLEventBuffer[1] = 0; // clear after dispatch
+        }
+    };
 
     return EXIT_SUCCESS;
 }

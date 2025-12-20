@@ -2160,6 +2160,15 @@ fail:
 // IN:
 // target thread, raw byte 
 
+// Destinations
+// Display server (DS) - for GUI/window management.
+// Foreground app      - for application-level input.
+
+// Foreground apps like (VT) should receive almost all keystrokes, 
+// including control combinations.
+// Display server should only receive global/system-level events 
+// (like focus changes or hotkeys that affect the whole GUI).
+
 int 
 wmRawKeyEvent( 
     unsigned char raw_byte,
@@ -2633,10 +2642,8 @@ wmRawKeyEvent(
 
 done:
 
-    Event_LongRawByte = 
-        (unsigned long) (Keyboard_RawByte & 0x000000FF);
-    Event_LongScanCode = 
-        (unsigned long) (Event_LongRawByte & 0x0000007F);
+    Event_LongRawByte  = (unsigned long) (Keyboard_RawByte  & 0x000000FF);
+    Event_LongScanCode = (unsigned long) (Event_LongRawByte & 0x0000007F);
 
 // ------------------------------------
 // It's an extended keyboard key.
@@ -2698,6 +2705,7 @@ done:
 // ==========================================
 // Inside the embedded shell.
 // Process and return.
+// 1. Embedded shell takes priority
     if (InputBrokerInfo.shell_flag == TRUE)
     {
         Status = 
@@ -2711,135 +2719,20 @@ done:
 
 // ==========================================
 // Not in the embedded shell.
+// Dispatch!
 
-    // STDIN
-    // Only normal keys. For terminal support.
-    if (Event_Message == MSG_KEYDOWN)
+// Is it a combination of not?
+    int isCombination = FALSE;
+    // It is a combination
+    if ( alt_status == TRUE || ctrl_status == TRUE || shift_status == TRUE )
     {
-
-            // #bugbug
-            // #todo
-            // We need to send the ascii representation for
-            // control keys. (0~-x1F)
-            // The applications reading stdin 
-            // can process this ascii chars as commands.
-
-            //if ( alt_status != TRUE && 
-            //     ctrl_status != TRUE && 
-            //     shift_status != TRUE )
-            //if ( alt_status != TRUE &&  
-            //     shift_status != TRUE )
-        if (alt_status != TRUE)
-        {
-            // Send it to the tty associated with stdin.
-            if (InputTargets.target_stdin == TRUE)
-            {
-                wbytes = (int) ibroker_send_ascii_to_stdin( (int) __int_ASCII );
-                
-                /*
-                struct tty_d *in_tty = stdin->tty;
-                if ((void*)in_tty != NULL)
-                {
-                    if (in_tty->magic == 1234)
-                    {
-                        //in_tty->raw_queue.buf[0] = 'x';
-                        //in_tty->raw_queue.buf[0] = __int_ASCII;
-                        // Deliver keystroke to ring 3 via stdin
-                        wbytes = (int) tty_queue_putchar(
-                                &in_tty->raw_queue, 
-                                (char)__int_ASCII );  // (ascii in this case)
-                    }
-                }
-                */
-            }
-
-            // #todo
-            // Maybe we're gonna return here depending on
-            // the input mode. 'Cause we don't wanna send
-            // the data to multiple targets.
-        }
-    } // END KEYDOWN
-
-        // NOT COMBINATION
-        // Send break and make keys to the window server.
-        // Not a combination key, so return 
-        // without calling the local procedure.
-        // It returns
-    if ( alt_status != TRUE && 
-         ctrl_status != TRUE && 
-         shift_status != TRUE )
-    {           
-
-            // ds thread queue
-        if (InputTargets.target_thread_queue == TRUE)
-        {
-
-            // ds queue:: 
-            // regular keys, not combinations.
-    
-            // #test
-            // NOT SENDING typing chars to the display server for now.
-            // Thais is why the ds is not printing the typed chars
-            // in the editbox anymore.
-
-            // #test:
-            // Reativating this.
-            // Sending typed keys to the display server.
-            // Remember: We are also sending it to other apps via stdin.
-            // #todo: Maybe the display server needs to ignore these keys sometimes.
-                
-            // #bugbug
-            // What are the types we're sending here
-            // Existing behavior: send to display server
-            ibroker_post_message_to_ds(
-                Event_Message, Event_LongVK, Event_LongScanCode );
-
-            // The purpose is feed the terminal emulator.
-            // New behavior: duplicate to foreground thread
-
-            // #test: 
-            // Do we have a valid foreground thread?
-            // It's kinda messy when the display server closes a window.
-
-            if ( foreground_thread > 0 && 
-                 foreground_thread < THREAD_COUNT_MAX )
-            {
-                ipc_post_message_to_tid(
-                    (tid_t) KERNEL_MESSAGE_TID, (tid_t) foreground_thread,
-                    Event_Message, Event_LongVK, Event_LongScanCode );
-            }
-
-            // Let's send only the function keys to the display server,
-            // not the other ones. In order to be used by the window manager.
-            // Make and Break.
-
-            if (Event_Message == MSG_SYSKEYDOWN || Event_Message == MSG_SYSKEYUP)
-            {
-                switch (Event_LongVK){
-                    case VK_F1: 
-                    case VK_F2: 
-                    case VK_F3: 
-                    case VK_F4:
-                    case VK_F5: 
-                    case VK_F6: 
-                    case VK_F7: 
-                    case VK_F8:
-                    case VK_F9: 
-                    case VK_F10: 
-                    case VK_F11: 
-                    case VK_F12:
-                        ibroker_post_message_to_ds(
-                            Event_Message, 
-                            Event_LongVK,
-                            Event_LongScanCode );
-                        break;
-                };
-            }
-        }
-
-        // Returns when its not a combination
-        return 0;
-    } // END: NOT COMBINATION
+        isCombination = TRUE;
+    }
+    // It is not a combination. (not necessary)
+    //if ( alt_status != TRUE && ctrl_status != TRUE && shift_status != TRUE )
+    //{
+        //isCombination = TRUE;
+    //}
 
 // ------------------------------
 // Process the event using the system's window procedures.
@@ -2867,27 +2760,139 @@ done:
 // #bugbug
 // Here we're outside the console, so we need to call another worker.
 
-
-    Status = 
-        (int) __ProcessKeyboardInput(
-                  (int) Event_Message,
-                  (unsigned long) Event_LongVK,
-                  (unsigned long) Event_LongScanCode );
-
-/*
-    if (Event_Message == MSG_SYSKEYDOWN)
+// ===================================
+// Combinations
+// 2. Process combinations internally (Ctrl, Alt, Shift)
+    //if ( alt_status == TRUE || ctrl_status == TRUE || shift_status == TRUE )
+    if  (isCombination == TRUE)
     {
-        // Ask init process to launch the terminal
-        if (Event_LongVK == VK_F1 && ctrl_status == TRUE)
+        Status = 
+            (int) __ProcessKeyboardInput(
+                    (int) Event_Message,
+                    (unsigned long) Event_LongVK,
+                    (unsigned long) Event_LongScanCode );
+
+        return (int) Status;
+    }
+
+// ===================================
+// Not a combination
+// Send break and make keys to the window server.
+// Not a combination key, so return 
+// without calling the local procedure.
+// It returns
+// 3. Plain keydown → send outward to valid targets
+    //if ( alt_status != TRUE && ctrl_status != TRUE && shift_status != TRUE )
+    if  (isCombination != TRUE)
+    {   
+        
+        // Send it to the tty associated with stdin.
+        if (InputTargets.target_stdin == TRUE)
         {
-            do_launch_app_via_initprocess(4001);
-            return 0;
+            if (Event_Message == MSG_KEYDOWN){
+                wbytes = (int) ibroker_send_ascii_to_stdin( (int) __int_ASCII );   
+            }
         }
 
-    }
-*/
+            // ds thread queue
+        if (InputTargets.target_thread_queue == TRUE)
+        {
 
-    return (int) Status;
+            // Let's send only the function keys to the display server,
+            // not the other ones. In order to be used by the window manager.
+            // Make and Break.
+
+            if (Event_Message == MSG_SYSKEYDOWN || Event_Message == MSG_SYSKEYUP)
+            {
+                // F11
+                // Intercepted by Broker.
+                // Converted into a fullscreen toggle event.
+                // Sent directly to the Display Server.
+                // Not delivered to apps.
+                if (Event_LongVK == VK_F11)
+                {
+                        ibroker_post_message_to_ds(
+                            Event_Message, 
+                            Event_LongVK,
+                            Event_LongScanCode );
+                    return 0;
+                }
+
+                // F1–F10, F12
+                // Delivered to the foreground app.
+                switch (Event_LongVK){
+                    case VK_F1: 
+                    case VK_F2: 
+                    case VK_F3: 
+                    case VK_F4:
+                    case VK_F5: 
+                    case VK_F6: 
+                    case VK_F7: 
+                    case VK_F8:
+                    case VK_F9: 
+                    case VK_F10: 
+                    case VK_F12:
+                        // Send it to the gui-app if the foreground thread 
+                        // associated with it is valid.
+                        if ( foreground_thread > 0 && foreground_thread < THREAD_COUNT_MAX )
+                        {
+                            ipc_post_message_to_tid(
+                                (tid_t) KERNEL_MESSAGE_TID, 
+                                (tid_t) foreground_thread,
+                                Event_Message, 
+                                Event_LongVK, 
+                                Event_LongScanCode );
+                            return 0;
+                        }
+                        break;
+                    return 0;
+                };
+
+                return 0;
+            }
+
+            // ds queue:: 
+            // regular keys, not combinations.
+    
+            // #test
+            // NOT SENDING typing chars to the display server for now.
+            // Thais is why the ds is not printing the typed chars
+            // in the editbox anymore.
+
+            // #test:
+            // Reativating this.
+            // Sending typed keys to the display server.
+            // Remember: We are also sending it to other apps via stdin.
+            // #todo: Maybe the display server needs to ignore these keys sometimes.
+                
+            // #bugbug
+            // What are the types we're sending here
+            // Existing behavior: send to display server
+
+            // TARGET: DS
+            ibroker_post_message_to_ds(
+                Event_Message, Event_LongVK, Event_LongScanCode );
+
+            // The purpose is feed the terminal emulator.
+            // New behavior: duplicate to foreground thread
+
+            // #test: 
+            // Do we have a valid foreground thread?
+            // It's kinda messy when the display server closes a window.
+
+            // TARGET: GUI APP
+            if ( foreground_thread > 0 && foreground_thread < THREAD_COUNT_MAX )
+            {
+                ipc_post_message_to_tid(
+                    (tid_t) KERNEL_MESSAGE_TID, (tid_t) foreground_thread,
+                    Event_Message, Event_LongVK, Event_LongScanCode );
+            }
+
+        }
+
+        // Returns when its not a combination
+        return 0;
+    } // END: NOT COMBINATION
 
 fail:
     return (int) -1;

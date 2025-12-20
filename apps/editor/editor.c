@@ -392,6 +392,25 @@ editorProcedure(
         //printf("editor: MSG_KEYDOWN\n");
         break;
 
+    case MSG_KEYUP:
+        //printf("editor: MSG_KEYUP\n");
+        break;
+
+    case MSG_SYSKEYDOWN:
+        switch (long1) {
+            case VK_F1:  printf("Editor: VK_F1\n"); break;
+            case VK_F5:  printf("Editor: VK_F5\n"); break;
+            case VK_F12: printf("Editor: VK_F12\n"); break;
+            case VK_F11: printf("Editor: VK_F11 (unexpected)\n"); break;
+            // add more keys as needed
+        }
+        return 0;
+        break;
+
+    case MSG_SYSKEYUP:
+        //printf("editor: MSG_SYSKEYDOWN\n");
+        break;
+
     //36
     case MSG_MOUSERELEASED:
         if ( event_window == addressbar_window ||
@@ -1002,11 +1021,16 @@ int editor_initialize(int argc, char *argv[])
     // Atualiza as coisas em ring3 e ring0.
     rewind(stdin);
 
-    while (1){
+
+/*
+    while (1)
+    {
         if (isTimeToQuit == TRUE)
             break;
 
         // It needs to be the main window for now.
+        // Calls gws_get_next_event() to fetch the next event from the DS.
+        // And dispatch it to the procedure.
         pump( client_fd, main_window );
 
         C = fgetc(stdin);
@@ -1018,6 +1042,30 @@ int editor_initialize(int argc, char *argv[])
                 MSG_KEYDOWN,  // message code
                 C,            // long1 (ascii)
                 C );          // long2 (ascii)
+        }
+
+    };
+*/
+
+    while (1)
+    {
+        if (isTimeToQuit == TRUE)
+            break;
+
+        // 1. Pump events from Display Server
+        pump(client_fd, main_window);
+
+        // 2. Pump events from Input Broker (system events)
+        if (rtl_get_event() == TRUE)
+        {
+            editorProcedure(
+                client_fd,
+                (int) RTLEventBuffer[0],   // window id
+                (int) RTLEventBuffer[1],   // event type (MSG_SYSKEYDOWN, MSG_SYSKEYUP, etc.)
+                (unsigned long) RTLEventBuffer[2], // VK code
+                (unsigned long) RTLEventBuffer[3]  // scancode
+            );
+            RTLEventBuffer[1] = 0;
         }
     };
 

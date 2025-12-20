@@ -243,7 +243,8 @@ xxxProcessEvent (
                 //#debug
                 //printf("init.bin: 4002, from {%d}\n",caller_tid);
                 memset(__filename_local_buffer,0,64);
-                sprintf(__filename_local_buffer,"#term00.bin");
+                //sprintf(__filename_local_buffer,"#gdm.bin");
+                sprintf(__filename_local_buffer,"#power.bin");
                 rtl_clone_and_execute(__filename_local_buffer);
                 break;
             case 4003:  //app3
@@ -256,8 +257,8 @@ xxxProcessEvent (
                 //printf("init.bin: 4003, from {%d}\n",caller_tid);
                 memset(__filename_local_buffer,0,64);
                 //sprintf(__filename_local_buffer,"#doc.bin");
-                //sprintf(__filename_local_buffer,"#teabox.bin");
-                sprintf(__filename_local_buffer,"#term00.bin");
+                //sprintf(__filename_local_buffer,"#doc.bin");
+                sprintf(__filename_local_buffer,"#memory.bin");
                 rtl_clone_and_execute(__filename_local_buffer);
                 break;
             case 4004:  //app4

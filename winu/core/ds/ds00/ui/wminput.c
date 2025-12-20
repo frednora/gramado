@@ -401,16 +401,12 @@ wmProcessKeyboardEvent(
             return 0;
         }
 
-        // Always affect the active window.
-        // F9  = Minimize button
-        // F10 = Maximize button
-        // F11 = Close button
-        // #todo: Explain it better.
-        if (long1 == VK_F9 || 
-            long1 == VK_F10 || 
-            long1 == VK_F11)
-        {
-            control_action(msg,long1);
+        if (long1 == VK_F9)
+            return 0;
+        if (long1 == VK_F10)
+            return 0;
+        if (long1 == VK_F11){
+            yellow_status("VK_F11");
             return 0;
         }
 
@@ -423,6 +419,7 @@ wmProcessKeyboardEvent(
             return 0;
         }
 
+        /*
         // Always affect the window with focus.
         // Enfileirar a mensagem na fila de mensagens
         // da janela com foco de entrada.
@@ -439,6 +436,7 @@ wmProcessKeyboardEvent(
             (int) msg,
             (unsigned long) long1,
             (unsigned long) long2);
+        */
 
         return 0;
     }
@@ -473,18 +471,18 @@ wmProcessKeyboardEvent(
         // atualiza a disposiçao das janelas na tela e
         // mostra a tela.
         if (long1 == VK_F5){
-            wm_update_desktop(TRUE,TRUE);
+            //wm_update_desktop(TRUE,TRUE);
             return 0;
         }
         
         if (long1 == VK_F6){
-            wm_update_desktop2();
+            //wm_update_desktop2();
             return 0;
         }
         
         if (long1 == VK_F7){
             // Preserve the same active window.
-            wm_update_desktop3(last_window);
+            //wm_update_desktop3(last_window);
             return 0;
         }
 
@@ -502,28 +500,30 @@ wmProcessKeyboardEvent(
                 0 );      // long2 = 
             */
 
+            /*
             // Enter fullscreen mode
             if (WindowManager.is_fullscreen != TRUE){
                 wm_enter_fullscreen_mode();
                 return 0;
             }
+            */
+            /*
             // Exit fullscreen mode.
             if (WindowManager.is_fullscreen == TRUE){
                 wm_exit_fullscreen_mode(TRUE);
                 return 0;
             }
+            */
 
             return 0;
         }
 
-        // Liberamos as teclas de funçao relativas aos controles
-        // de janelas.
-        // #todo: Explain it better.
-        if (long1 == VK_F9 || 
-            long1 == VK_F10 || 
-            long1 == VK_F11)
-        {
-            control_action(msg,long1);
+        if (long1 == VK_F9)
+            return 0;
+        if (long1 == VK_F10)
+            return 0;
+        if (long1 == VK_F11){
+            //yellow_status("VK_F11");
             return 0;
         }
 
@@ -531,8 +531,8 @@ wmProcessKeyboardEvent(
         // Testing the yellow dialog.
         if (long1 == VK_F12)
         {
-            YellowDialogInfo.useYellowDialog = TRUE;
-            YellowDialogInfo.display_dialog = TRUE;
+            //YellowDialogInfo.useYellowDialog = TRUE;
+            //YellowDialogInfo.display_dialog = TRUE;
 
             /*
             // #test OK

@@ -16,6 +16,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <packet.h>
+#include <rtl/gramado.h>
 // The client-side library.
 #include <gws.h>
 
@@ -472,6 +473,16 @@ docvProcedure(
 // Events
     switch (event_type){
 
+    case MSG_SYSKEYDOWN:
+        switch (long1) {
+            case VK_F1: printf("doc.bin: VK_F1\n"); break;
+            case VK_F5: printf("doc.bin: VK_F5\n"); break;
+            case VK_F12: printf("doc.bin: VK_F12\n"); break;
+            case VK_F11: printf("doc.bin: VK_F11 (unexpected)\n"); break;
+        }
+        return 0;
+        break;
+
     // Evento de teste.
     case 1000:
         // If the event window is the main window, so
@@ -573,6 +584,7 @@ static int do_event_loop(int fd)
         //if (isTimeToQuit == TRUE)
             //break;
 
+        // 1. Pump events from Display Server
         e = (struct gws_event_d *) gws_get_next_event(
                 fd, 
                 __main_window,
@@ -582,9 +594,21 @@ static int do_event_loop(int fd)
         {
             //if( e->used == TRUE && e->magic == 1234 )
             if (e->magic == 1234){
-                docvProcedure( 
-                    fd, e->window, e->type, e->long1, e->long2 );
+                docvProcedure( fd, e->window, e->type, e->long1, e->long2 );
             }
+        }
+
+        // 2. Pump events from Input Broker (system events)
+        if (rtl_get_event() == TRUE)
+        {
+            docvProcedure(
+                fd,
+                (int) RTLEventBuffer[0],   // window id
+                (int) RTLEventBuffer[1],   // event type (MSG_SYSKEYDOWN, MSG_SYSKEYUP, etc.)
+                (unsigned long) RTLEventBuffer[2], // VK code
+                (unsigned long) RTLEventBuffer[3]  // scancode
+            );
+            RTLEventBuffer[1] = 0; // clear after dispatch
         }
     };
 

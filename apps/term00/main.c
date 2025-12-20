@@ -2647,18 +2647,26 @@ terminalProcedure (
         return 0;
         break;
 
-    // #bugbug: Not working
-    // It's because the terminal is getting input
-    // from file, not from the control thread.
-    //case MSG_SYSKEYDOWN:
-    //    switch(long1){
-    //    case VK_F1: gws_clone_and_execute("browser.bin");  break;
-    //    case VK_F2: gws_clone_and_execute("editor.bin");   break;
-    //    case VK_F3: gws_clone_and_execute("fileman.bin");  break;
-    //    case VK_F4: gws_clone_and_execute("shutdown.bin"); break;
-    //    };
-    //    return 0;
-    //    break;
+    case MSG_SYSKEYDOWN:
+        switch(long1)
+        {
+            case VK_F1:
+                tputstring(fd, "VK_F1\n");
+                break;
+            case VK_F11:
+                tputstring(fd, "VK_F11\n"); // Not expected
+                break;
+            case VK_F12:
+                tputstring(fd, "VK_F12\n");
+                break;
+            // ...
+        };
+        return 0;
+        break;
+
+    case MSG_SYSKEYUP:
+        return 0;
+        break;
 
     // ok. It's working.
     case MSG_PAINT:
@@ -3021,23 +3029,32 @@ static void __get_system_event(int fd, int wid)
     switch (msg_code){
 
     case MSG_KEYDOWN:
-
-        //tputstring(fd, "MSG_KEYDOWN\n");
-
-    // ...
         terminalProcedure ( 
             fd,   // socket 
             wid,  // wid 
             (int) msg_code, 
             (unsigned long) RTLEventBuffer[2],
             (unsigned long) RTLEventBuffer[3] );
-
         RTLEventBuffer[1] = 0;
-        
         return;
         break;
 
     case MSG_KEYUP:
+        return;
+        break;
+
+    case MSG_SYSKEYDOWN:
+        terminalProcedure ( 
+            fd,   // socket 
+            wid,  // wid 
+            (int) msg_code, 
+            (unsigned long) RTLEventBuffer[2],
+            (unsigned long) RTLEventBuffer[3] );
+        RTLEventBuffer[1] = 0;
+        return;
+        break;
+
+    case MSG_SYSKEYUP:
         return;
         break;
 
@@ -3052,6 +3069,7 @@ static void __get_system_event(int fd, int wid)
             (int) msg_code, 
             (unsigned long) RTLEventBuffer[2],
             (unsigned long) RTLEventBuffer[3] );
+        RTLEventBuffer[1] = 0;
         break;
     
     // #test
