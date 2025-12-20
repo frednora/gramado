@@ -242,7 +242,22 @@ static void update_clients(int fd);
 int ptym_fd = -1;
 int ptys_fd = -1;
 
+static void terminal_notify_child_close(void);
+
 //====================================================
+
+// Quick and dirty kill: send ETX and EOT to child
+static void terminal_notify_child_close(void)
+{
+    char etx = 0x03;  // ETX (Ctrl +C)
+    char eot = 0x04;  // EOT (Ctrl +D)
+
+    if (ptym_fd < 0)
+        return;
+    write(ptym_fd, &etx, 1);
+    write(ptym_fd, &eot, 1);
+}
+
 
 //static int term00_gettid(void);
 static int term00_gettid(void)
@@ -2691,13 +2706,18 @@ terminalProcedure (
         }
         break;
 
-    // #todo
-    // Message when the server change the font.
-
     case MSG_CLOSE:
-        printf("terminal.bin: MSG_CLOSE\n");
-        gws_destroy_window(fd,terminal_window);
-        gws_destroy_window(fd,main_window);
+        //printf("term00.bin: MSG_CLOSE\n");
+        tputstring(fd, "term00.bin: MSG_CLOSE\n");
+
+        // Notify the child app with ETX/EOT
+        terminal_notify_child_close();
+
+        // Tear down the terminal windows
+        gws_destroy_window(fd, terminal_window);
+        gws_destroy_window(fd, main_window);
+
+        // Exit the terminal process itself. (quick and dirty)
         exit(0);
         break;
 

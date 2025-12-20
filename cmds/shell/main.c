@@ -139,8 +139,15 @@ static void shell_worker(void)
                 write(ptys_fd, "\n", 1);
                 process_command();
             }
+
+            if (C == 0x03) {  // ETX (Ctrl+C)
+                printf("shell: received ETX, exiting...\n");  break;
+            }
+            if (C == 0x04) {  // EOT (Ctrl+D)
+                printf("shell: received EOT, exiting...\n");  break;
+            }
         }
-    }
+    };
 }
 
 //====================================================
@@ -198,12 +205,19 @@ int main(int argc, char *argv[])
         {
             // Process cmdline
             if (c == '\n'){
-                printf("sh: [enter] received\n");
+                printf("shell: [enter] received\n");
             // ECHO: Send char back
             } else {
                 putc(c,stdout);
                 fflush(stdout);
             };
+
+            if (c == 0x03) {  // ETX (Ctrl+C)
+                printf("shell: received ETX, exiting...\n");  break;
+            }
+            if (c == 0x04) {  // EOT (Ctrl+D)
+                printf("shell: received EOT, exiting...\n");  break;
+            }
         }
     }
 

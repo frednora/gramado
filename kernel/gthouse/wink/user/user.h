@@ -14,19 +14,25 @@ struct usession_d
 {
     object_type_t objectType;
     object_class_t objectClass;
-    struct object_d  *object;
-// SID - Session ID.
-    int id;
     int used;
     int magic;
+
+// SID - Session ID.
+    int id;
+
 // The user in this session.
     uid_t uid;
+
 // Initial process for this session.
     pid_t initial_pid;
+    //tid_t initial_tid;
+
 // The session leader.
 // The leader process for this process.
 // The leader has some privileges in its session.
     pid_t leader_pid;
+    //tid_t leader_tid;
+
 // #todo
 // All the process in this group will be killed when the
 // session ends.
