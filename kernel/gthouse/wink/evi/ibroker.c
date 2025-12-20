@@ -2785,16 +2785,17 @@ done:
     //if ( alt_status != TRUE && ctrl_status != TRUE && shift_status != TRUE )
     if  (isCombination != TRUE)
     {   
-        
+
         // Send it to the tty associated with stdin.
+        // Only the foreground thread can read this.
         if (InputTargets.target_stdin == TRUE)
         {
             if (Event_Message == MSG_KEYDOWN){
-                wbytes = (int) ibroker_send_ascii_to_stdin( (int) __int_ASCII );   
+                wbytes = (int) ibroker_send_ascii_to_stdin((int) __int_ASCII);
             }
         }
 
-            // ds thread queue
+       // ds thread queue
         if (InputTargets.target_thread_queue == TRUE)
         {
 

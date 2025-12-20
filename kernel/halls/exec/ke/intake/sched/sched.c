@@ -730,21 +730,21 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                 // Display server and forground thread needs to be
                 // the most reponsive threads.
 
-                // Threshold for everyone.
-                TmpThread->quantum = QUANTUM_NORMAL_THRESHOLD;
+                // Everyone (2)
+                TmpThread->quantum = QUANTUM_NORMAL_BALANCED;
 
-                // >> INIT
+                // >> INIT (2)
                 if (TmpThread == Idle){
-                    TmpThread->quantum = QUANTUM_NORMAL_THRESHOLD;
+                    TmpThread->quantum = QUANTUM_NORMAL_BALANCED;
                 }
-                // >> FG
+                // >> FG (2)
                 if (TmpThread->tid == foreground_thread){
-                    TmpThread->quantum = QUANTUM_NORMAL_TIME_CRITICAL;
+                    TmpThread->quantum = QUANTUM_NORMAL_BALANCED;
                 }
-                // >> DS
+                // >> DS (5)
                 if (DisplayServerInfo.initialized == TRUE){
                     if (TmpThread->tid == DisplayServerInfo.tid){
-                        TmpThread->quantum = QUANTUM_MAX;
+                        TmpThread->quantum = QUANTUM_SYSTEM_BALANCED;
                     }
                 }
 
@@ -1066,6 +1066,86 @@ unsigned long sched_count_active_threads(void)
 
     return (unsigned long) Counter;
 }
+
+void sched_boost_ds_thread(void)
+{
+    struct thread_d  *t;
+    tid_t target_tid = -1;
+
+    if (DisplayServerInfo.initialized != TRUE)
+        return;
+    
+    target_tid = (tid_t) DisplayServerInfo.tid;
+
+    // Validate thread ID
+    if (target_tid < 0 || target_tid >= THREAD_COUNT_MAX){
+        return;
+    }
+
+    // Get thread object
+    t = (void *) threadList[target_tid];
+    if ((void *) t == NULL){
+        return;
+    }
+
+    // Validate thread structure
+    if (t->used != TRUE || t->magic != 1234){
+        return;
+    }
+
+    // Boost quantum
+    t->quantum = QUANTUM_SYSTEM_TIME_CRITICAL;
+}
+
+// Boost quantum for the foreground thread because of an input event
+void sched_boost_foreground_thread(void)
+{
+    struct thread_d  *t;
+    tid_t target_tid = foreground_thread;
+
+    // Validate thread ID
+    if (target_tid < 0 || target_tid >= THREAD_COUNT_MAX){
+        return;
+    }
+
+    // Get thread object
+    t = (void *) threadList[target_tid];
+    if ((void *) t == NULL){
+        return;
+    }
+
+    // Validate thread structure
+    if (t->used != TRUE || t->magic != 1234){
+        return;
+    }
+
+    // Boost quantum
+    t->quantum = QUANTUM_SYSTEM_TIME_CRITICAL;
+}
+
+// Lower quantum for the current thread because it's not foreground
+void sched_lower_current_thread(void)
+{
+    struct thread_d *t;
+    tid_t target_tid = current_thread;
+
+    // Validate thread ID
+    if (target_tid < 0 || target_tid >= THREAD_COUNT_MAX){
+        return;
+    }
+
+    t = (void *) threadList[target_tid];
+    if ((void *) t == NULL){
+        return;
+    }
+    if (t->used != TRUE || t->magic != 1234){
+        return;
+    }
+
+    // Lower quantum temporarily
+    t->quantum = QUANTUM_NORMAL_THRESHOLD;
+}
+
 
 //
 // $

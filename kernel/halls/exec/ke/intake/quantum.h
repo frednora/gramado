@@ -18,16 +18,15 @@
 #define QUANTUM_Q5  (CONFIG_QUANTUM_MULTIPLIER * 5)
 #define QUANTUM_Q6  (CONFIG_QUANTUM_MULTIPLIER * 6)
 
-//-----------------------------------------
-// Class 1: Normal threashold
-#define QUANTUM_NORMAL_THRESHOLD      QUANTUM_Q1
-// Class 1: Normal time critical
-#define QUANTUM_NORMAL_TIME_CRITICAL  QUANTUM_Q3
-
-// Class 2: Real time threashold
-#define QUANTUM_SYSTEM_THRESHOLD    QUANTUM_Q4
-// Class 2: Real time time critical
-#define QUANTUM_SYSTEM_TIME_CRITICAL    QUANTUM_Q6
+// -----------------------------------------
+// Class 1: 
+#define QUANTUM_NORMAL_THRESHOLD      QUANTUM_Q1  // Normal, threashold
+#define QUANTUM_NORMAL_BALANCED       QUANTUM_Q2  // Normal, balanced
+#define QUANTUM_NORMAL_TIME_CRITICAL  QUANTUM_Q3  // Normal, time critical
+// Class 2: 
+#define QUANTUM_SYSTEM_THRESHOLD        QUANTUM_Q4  // Real time, threashold
+#define QUANTUM_SYSTEM_BALANCED         QUANTUM_Q5  // Real time, balanced
+#define QUANTUM_SYSTEM_TIME_CRITICAL    QUANTUM_Q6  // Real time, time critical
 // -----------------------------------------
 
 #define QUANTUM_MIN    QUANTUM_Q1
