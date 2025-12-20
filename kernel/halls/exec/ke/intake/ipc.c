@@ -145,7 +145,6 @@ ipc_post_message_to_tid2 (
         t->MsgQueueTail = 0;
     }
 
-    t->isResponder = TRUE;
     return 0;
 
 fail2:
@@ -383,8 +382,6 @@ ipc_post_message_to_tid (
     if (t->MsgQueueTail >= MSG_QUEUE_MAX){
         t->MsgQueueTail = 0;
     }
-
-    t->isResponder = TRUE;
 
     // State test
     //if (t->state == WAITING)

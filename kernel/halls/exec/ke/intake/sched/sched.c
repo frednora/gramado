@@ -372,13 +372,6 @@ static struct thread_d *__build_stage_queue(int stage, unsigned long priority)
                         //Idle->quantum = QUANTUM_Q1;
                     }
 
-                    // Event responder: immediate responsiveness
-                    if (TmpThread->isResponder == TRUE){
-                        TmpThread->quantum = QUANTUM_MAX;
-                        //Idle->quantum = QUANTUM_Q1;
-                        TmpThread->isResponder = FALSE;  // reset flag after boost
-                    }
-
                     // ...
                 }
             }
@@ -740,25 +733,19 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                 // Threshold for everyone.
                 TmpThread->quantum = QUANTUM_NORMAL_THRESHOLD;
 
-                // Idle: (Threshold)
+                // >> INIT
                 if (TmpThread == Idle){
                     TmpThread->quantum = QUANTUM_NORMAL_THRESHOLD;
                 }
-                // Foreground thread: (High)(Most responsive)
+                // >> FG
                 if (TmpThread->tid == foreground_thread){
                     TmpThread->quantum = QUANTUM_NORMAL_TIME_CRITICAL;
                 }
-                // Display server: (High)(Most responsive)
+                // >> DS
                 if (DisplayServerInfo.initialized == TRUE){
                     if (TmpThread->tid == DisplayServerInfo.tid){
-                        //TmpThread->quantum = QUANTUM_SYSTEM_TIME_CRITICAL;
                         TmpThread->quantum = QUANTUM_MAX;
                     }
-                }
-                // This thread received an input event.
-                if (TmpThread->isResponder == TRUE){
-                    TmpThread->quantum = QUANTUM_SYSTEM_TIME_CRITICAL;
-                    TmpThread->isResponder = FALSE;
                 }
 
                 // Credits:
