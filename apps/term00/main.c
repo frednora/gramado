@@ -3823,13 +3823,6 @@ int terminal_init(unsigned short flags)
         __get_ds_event( client_fd, main_window );
     };
 
-//
-// Be nice
-// 
-
-    // #test (777)
-    //rtl_broken_vessels();
-
 // Input loop!
 // local routine.
     //int InputStatus=-1;

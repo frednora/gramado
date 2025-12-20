@@ -2792,22 +2792,23 @@ done:
             // What are the types we're sending here
             // Existing behavior: send to display server
             ibroker_post_message_to_ds(
-                Event_Message, 
-                Event_LongVK,
-                Event_LongScanCode );
+                Event_Message, Event_LongVK, Event_LongScanCode );
 
             // The purpose is feed the terminal emulator.
             // New behavior: duplicate to foreground thread
-            //if (Event_Message == MSG_KEYDOWN)
-            //{
-            ipc_post_message_to_tid(
-                (tid_t) KERNEL_MESSAGE_TID,
-                (tid_t) foreground_thread,
-                Event_Message,
-                Event_LongVK,
-                Event_LongScanCode );
-                return 0;
-            //}
+
+            // #test: 
+            // Do we have a valid foreground thread?
+            // It's kinda messy when the display server closes a window.
+
+            if ( foreground_thread > 0 && 
+                 foreground_thread < THREAD_COUNT_MAX )
+            {
+                ipc_post_message_to_tid(
+                    (tid_t) KERNEL_MESSAGE_TID, (tid_t) foreground_thread,
+                    Event_Message, Event_LongVK, Event_LongScanCode );
+            }
+
             // Let's send only the function keys to the display server,
             // not the other ones. In order to be used by the window manager.
             // Make and Break.

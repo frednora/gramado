@@ -3195,6 +3195,7 @@ int destroy_window_by_wid(int wid)
         */
 
         // #test
+        // Send it to the kernel.
         // This thread will not be the foreground thread anymore.
         sc82(10012, window->client_tid, 0, 0);
 
@@ -3301,6 +3302,7 @@ int destroy_window_by_wid(int wid)
     */
 
     // #test
+    // Send it to the kernel.
     // This thread will not be the foreground thread anymore.
     sc82(10012, window->client_tid, 0, 0);
 
@@ -3311,13 +3313,12 @@ int destroy_window_by_wid(int wid)
     if (fRebuildList == TRUE){
         wm_rebuild_list();
     }
-    if (fUpdateDesktop == TRUE)
-    {
-        // IN: tile, show
+    // IN: tile, show
+    if (fUpdateDesktop == TRUE){
         wm_update_desktop(TRUE,TRUE);
     }
-// Done
     return 0;
+
 fail:
     return (int) -1;
 }

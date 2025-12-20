@@ -1086,38 +1086,39 @@ unsigned long sched_count_active_threads(void)
 //
 
 // #test
-// #todo: Explain it better.
-// 777 - kinda nice() 
-void sys_broken_vessels(tid_t tid)
+// 777 - Implementation of rtl_nice() from ring 3 library. 
+void sys_nice(unsigned long decrement)
 {
     struct thread_d  *t;
+    tid_t target_tid = current_thread;
 
-    // #todo
-    // Privilegies
+// #todo: Privilegies
 
-// tid
-    if (tid < 0 || tid >= THREAD_COUNT_MAX){
+    if (decrement == 0)
+        return;
+
+// Thread validation
+    if (target_tid < 0 || target_tid >= THREAD_COUNT_MAX){
         return;
     }
-// structure
-    t = (void *) threadList[tid];
+    t = (void *) threadList[target_tid];
     if ((void *) t == NULL){
         return;
     }
-    if ( t->used != TRUE || t->magic != 1234 ){
+    if (t->used != TRUE || t->magic != 1234){
         return;
     }
 
-// Increase quatum
-    if ( (t->quantum +1) <= t->quantum_limit_max )
-    {
-        t->quantum = (t->quantum +1);
-    }
-// Check limit
-    if ( t->quantum > QUANTUM_MAX )
-    {
-        t->quantum = QUANTUM_MAX;
-    }
+// Drop priority, but not below base_priority
+    unsigned long DesiredPriority = (t->priority - decrement);
+
+// Fix the problem. hahaha
+    if (DesiredPriority < t->base_priority)
+        t->priority = t->base_priority;
+
+// The new priority is ok.
+    if (DesiredPriority >= t->base_priority)
+        t->priority = DesiredPriority;
 }
 
 // #todo: Explain it.

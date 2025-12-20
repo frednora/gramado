@@ -986,10 +986,11 @@ static void on_control_clicked(struct gws_window_d *window)
                             yellow_status("Close window");
                             //printf("Close wid={%d}\n",w2->id);
 
-                            // It is minimized.
+                            // It is minimized
                             if (w2->state == WINDOW_STATE_MINIMIZED)
                                 return;
 
+                            // Post message to the client into the windows queue.
                             window_post_message ( w2->id, GWS_Close, 0, 0 );
                             return;
                         }

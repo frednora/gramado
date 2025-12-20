@@ -2225,9 +2225,8 @@ ssize_t rtl_console_beep(void)
                          1 );
 }
 
-// Raising up the broken to life.
-void rtl_broken_vessels(void)
-{
+// 
+void rtl_nice(void){
     sc82( 777, 0, 0, 0 );
 }
 

@@ -1073,7 +1073,7 @@ int serviceAsyncCommand(void)
     // 90 - Destroy window
     // Destroy a window given the wid.
     // #warning: This routine can't destroy the root window.
-    // see: window.c
+    // see: createw.c
     case ASYNC_REQUEST_DESTROY_WINDOW:
         wid = (int) (data & 0xFFFFFFFF);
         // #debug

@@ -300,7 +300,7 @@ rtl_load_path (
     
 ssize_t rtl_console_beep(void);
 
-void rtl_broken_vessels(void);
+void rtl_nice(void);
 
 // Clone and execute a process.
 // #todo: maybe use 'const char*'

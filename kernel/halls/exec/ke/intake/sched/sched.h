@@ -129,7 +129,7 @@ tid_t psScheduler(void);
 unsigned long sched_count_active_threads(void);
 
 // See: sched.c
-void sys_broken_vessels(tid_t tid);
+void sys_nice(unsigned long decrement);
 void sys_sleep(tid_t tid, unsigned long ms);
 void sys_yield(tid_t tid);
 

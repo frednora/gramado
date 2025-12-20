@@ -2132,11 +2132,25 @@ void *sci2 (
     }
 
 // #test
-// 777 - kinda nice() 
-    if (number == 777){
-        sys_broken_vessels(current_thread);
+// 777 - Implementation of rtl_nice() from ring 3 library. 
+// The real nice() posix sends an increment value.
+// But our sys_nice receives a decrement value.
+// IN: decrement.
+    if (number == 777)
+    {
+        sys_nice(1);
         return NULL;   
     }
+
+/*
+// #todo
+// The implementation of nice() receiving a velue as decrement.
+    if (number == 778)
+    {
+        sys_nice(arg2);
+        return NULL;   
+    }
+*/
 
 // Get process info given an index.
 // Just some few elements.

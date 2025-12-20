@@ -4,7 +4,6 @@
 
 #include "../ds.h"
 
-
 // Worker
 // #todo
 // We can carefully move some routine from wm.c to this file.
