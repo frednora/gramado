@@ -1,0 +1,30 @@
+# x86-64 Canonical Address Space (48-bit mode)
+
+On x86-64 processors, virtual addresses are limited to 48 bits in standard
+4-level paging mode. Although registers are 64 bits wide, only the lower
+48 bits are used for address translation. The upper 16 bits must be a
+sign-extension of bit 47. This rule defines which addresses are valid
+(canonical) and which are invalid (non-canonical).
+
+## Valid Address Ranges
+
+1. User space (low half):
+   0000_0000_0000_0000 → 0000_7FFF_FFFF_FFFF
+   - Provides 128 TB of virtual memory for user processes.
+
+2. Kernel space (high half):
+   FFFF_8000_0000_0000 → FFFF_FFFF_FFFF_FFFF
+   - Provides 128 TB of virtual memory reserved for the kernel.
+
+## Invalid Address Range
+
+- 0000_8000_0000_0000 → FFFF_7FFF_FFFF_FFFF
+- This entire region is non-canonical. Any attempt to use addresses in
+  this range will cause a general protection fault.
+
+## Summary
+
+- Total usable virtual space: 256 TB (128 TB user + 128 TB kernel).
+- Addresses outside the canonical ranges are invalid.
+- The kernel is conventionally placed in the high half, starting at
+  FFFF_8000_0000_0000.
