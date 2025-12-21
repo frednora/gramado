@@ -2587,20 +2587,18 @@ align 4
 DEBUG_START: db "START"
 
 ; =================================================
+; Real start 
+; IN:
+;   ebx = Bootblock base address
+;   edx = Signature value
+
 align 4
 START:
-; #todo
-; We can save some values just for debug purpose.
 
-; -----------------------------------------------
-; Boot block:
-; All the information we got from the boot loader for now.
-; The bootblock has a lot of data.
+    ; Save information that came from the bootloader.
 
-; Save the bootblock address.
-    mov dword [_saved_bootblock_base], ebx
-; Save the signature.
-    mov dword [_magic], edx
+    mov dword [_saved_bootblock_base], ebx  ; Bootblock address
+    mov dword [_magic], edx                 ; Signature value
     ; ...
 
 ; Clear some registers.

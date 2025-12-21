@@ -1,4 +1,4 @@
-# kapi/
+# sci 
 
-Quote:
- * 'There's nothing You don't cover.'
+System Call Interface: This folder implements the higher level routines for the syscall support.
+

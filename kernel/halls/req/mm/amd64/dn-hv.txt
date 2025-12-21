@@ -1,0 +1,10 @@
+
+------------------------
+AMD SVM (VMCB)
+------------------------
+- AMD uses the Virtual Machine Control Block (VMCB).
+- VMCB is simpler and directly accessible by the hypervisor.
+- Layout: Two areas (control area + state save area).
+- Access: Direct memory access.
+- Nested paging: NPT (Nested Page Tables).
+
