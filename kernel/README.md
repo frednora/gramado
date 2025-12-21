@@ -11,10 +11,12 @@ kernel/
  │    ├── kwrap/  # Kernel wrappers (high-level abstractions)
  │    ├── libk/   # Kernel library (shared utilities)
  │    └── wink/   # User interface (input events, GDI)
- ├── halls/       # Castle halls: execution, requests, peripherals
+ |
+ ├── halls/       # Castle halls: execution, peripherals, requests
  │    ├── exec/   # CPU Hall: threads, dispatcher, scheduler, exceptions
  │    ├── per/    # Peripheral Hall: external devices, drivers
  │    └── req/    # Memory Hall: syscalls, memory management (mm/)
+ |
  └── include/     # Castle library: headers, definitions, shared interfaces
 ```
 
