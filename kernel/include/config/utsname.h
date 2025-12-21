@@ -1,4 +1,6 @@
-// File: utsname.h
+// utsname.h
+// 'UNIX Time-Sharing' standard variables.
+// Created by Fred Nora.
 
 #ifndef __GRAMADO_UTSNAME_H
 #define __GRAMADO_UTSNAME_H    1

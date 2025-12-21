@@ -1,5 +1,6 @@
-
 // u.h
+// os name, version, release, machine. node, domain, version, username.
+// Created by Fred Nora.
 
 #ifndef __CONFIG_GRAMADO_U_H 
 #define __CONFIG_GRAMADO_U_H   1

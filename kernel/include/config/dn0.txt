@@ -1,3 +1,0 @@
-
-	public/
-	This folder is for public files.

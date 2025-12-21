@@ -1,4 +1,0 @@
-
-
-	Probably we're not gonna handle the protocol stack 
-	inside the base kernel.
