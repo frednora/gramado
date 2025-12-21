@@ -869,7 +869,11 @@ struct gws_window_d
     unsigned long ev_msg[32];
     unsigned long ev_long1[32];
     unsigned long ev_long2[32];
+// Extra
+    unsigned long ev_long3[32];
+    unsigned long ev_long4[32];
     // ...
+
 // #todo
 // Event queue.
      //struct gws_event_d *event_queue;
@@ -1002,13 +1006,23 @@ wm_draw_char_into_the_window2(
 
 void wm_draw_text_buffer(struct gws_window_d *window);
 
-// Post message to the window. (broadcast)
+// Notify app about an event.
+// Targets: taskbar, maybe window manager (the server has an embedded wm).
+// wid
+// ev type (notification)
+// sub-event
+// client wid
+// client pid 
+// client tid
 int 
-window_post_message_broadcast( 
+window_post_notification( 
     int wid, 
     int event_type, 
     unsigned long long1,
-    unsigned long long2 );
+    unsigned long long2,
+    unsigned long long3,
+    unsigned long long4 );
+
 
 // Post message to the window.
 int 
@@ -1017,6 +1031,15 @@ window_post_message(
     int event_type, 
     unsigned long long1,
     unsigned long long2 );
+
+// Post message to the window. (broadcast)
+int 
+window_post_message_broadcast( 
+    int wid, 
+    int event_type, 
+    unsigned long long1,
+    unsigned long long2 );
+
 
 // Post message to the thread.
 int

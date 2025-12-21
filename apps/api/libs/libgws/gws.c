@@ -279,7 +279,7 @@ static struct gws_window_info_d *__gws_get_window_info_response(
 // We are waiting for a reply. Otherwise it fails.
 
     int msg = (int) message_buffer[1];
-    msg = (msg & 0xFFFF);
+    msg = (msg & 0xFFFFFFFF);
 
     switch (msg){
     case SERVER_PACKET_TYPE_REPLY:
@@ -540,13 +540,13 @@ process_event:
     {
         //printf("__gws_get_next_event_response: WE GOT AN EVENT\n");
     
-        event->window = (int) message_buffer[4];            // window id
-        event->type   = (int) message_buffer[5];            // message code
+        event->window = (int) (message_buffer[4] & 0xFFFFFFFF);  // window id
+        event->type   = (int) (message_buffer[5] & 0xFFFFFFFF);  // message code
         event->long1  = (unsigned long) message_buffer[6];  // long1
         event->long2  = (unsigned long) message_buffer[7];  // long2
 
-        event->window = (int) ( event->window & 0xFFFF );
-        event->type   = (int) ( event->type & 0xFFFF );
+        event->long3  = (unsigned long) message_buffer[8];  // long3
+        event->long4  = (unsigned long) message_buffer[9];  // long4
 
         event->used = TRUE;
         event->magic = 1234;
@@ -1748,7 +1748,7 @@ __gws_createwindow_request (
 // background color
     message_buffer[8] = (unsigned long)(bg_color & 0xFFFFFFFF);
 // type
-    message_buffer[9] = (unsigned long)(type & 0xFFFF);
+    message_buffer[9] = (unsigned long)(type & 0xFFFFFFFF);
 // parent window id.
     message_buffer[10] = parent;
 // #test

@@ -186,6 +186,76 @@ void enable_window(struct gws_window_d *window)
         window->status = BS_DEFAULT;
 }
 
+// Notify app about an event.
+// Targets: taskbar, maybe window manager (the server has an embedded wm).
+// Notify app about an event.
+// Targets: taskbar, maybe window manager (the server has an embedded wm).
+// wid
+// ev type (notification)
+// sub-event
+// client wid
+// client pid 
+// client tid
+int 
+window_post_notification( 
+    int wid, 
+    int event_type, 
+    unsigned long long1,
+    unsigned long long2,
+    unsigned long long3,
+    unsigned long long4 )
+{
+// Low level routine
+
+    struct gws_window_d *w;
+
+// Parameters
+    if (wid < 0)
+        goto fail;
+    if (wid >= WINDOW_COUNT_MAX)
+        goto fail;
+    if (event_type < 0){
+        goto fail;
+    }
+
+// Window
+    w = (void*) windowList[wid];
+    if ((void*) w == NULL)
+        goto fail;
+    if (w->magic != 1234){
+        goto fail;
+    }
+
+//
+// Event
+//
+
+// --- Post event message to window's circular event queue ---
+
+// Get current tail index for the queue
+    register int Tail = (int) w->ev_tail;
+// Fill in event data at the current tail position
+    w->ev_wid[Tail]   = (unsigned long) (wid & 0xFFFFFFFF);        // Window ID
+    w->ev_msg[Tail]   = (unsigned long) (event_type & 0xFFFFFFFF); // Event/message code
+    w->ev_long1[Tail] = (unsigned long) long1; 
+    w->ev_long2[Tail] = (unsigned long) long2; 
+
+    w->ev_long3[Tail] = (unsigned long) long3; 
+    w->ev_long4[Tail] = (unsigned long) long4; 
+
+// Advance the tail index, wrapping around if necessary (circular buffer)
+    w->ev_tail++;
+    if (w->ev_tail >= 32){
+        w->ev_tail=0;
+    }
+
+   return 0;
+
+fail:
+    return (int) -1;
+}
+
+
 /*
 On sending PAINT message to the clients:
 How Mature Systems Mitigate This
@@ -215,6 +285,8 @@ window_post_message(
     unsigned long long1,
     unsigned long long2 )
 {
+// Low level routine
+
     struct gws_window_d *w;
 
 // Parameters
@@ -259,6 +331,7 @@ window_post_message(
 fail:
     return (int) -1;
 }
+
 
 // Post message to the window. (broadcast).
 // Return the number of sent messages.

@@ -70,9 +70,7 @@ struct gws_event_d
 // Determines if the event’s default action can be prevented.
     //int cancelable;
 
-
-
-// Navigation.
+// Navigation
     struct gws_event_d *next;
 };
 extern struct gws_event_d *CurrentEvent;

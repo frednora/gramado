@@ -219,7 +219,7 @@ static void compareStrings(int fd);
 static void testASCIITable(int fd,unsigned long w, unsigned long h);
 static void print_ascii_table(int fd);
 
-static void do_launch_app(int app_number);
+static int do_launch_app(int app_number);
 
 static int 
 tbProcedure(
@@ -508,7 +508,7 @@ static void testASCIITable(int fd,unsigned long w, unsigned long h)
     };
 }
 
-static void do_launch_app(int app_number)
+static int do_launch_app(int app_number)
 {
     int ret_val=-1;
 
@@ -533,15 +533,16 @@ static void do_launch_app(int app_number)
         sprintf(filename,app2_name);
         StringSize = (size_t) strlen(app2_name);
     }else{
-        return;
-    }
+        return -1;
+    };
 
     filename[StringSize] = 0;
-    ret_val = (int) rtl_clone_and_execute(filename);
+    //ret_val = (int) rtl_clone_and_execute(filename);
     //ret_val = (int) rtl_clone_and_execute(app1_name);
+    ret_val = (int) rtl_clone_and_execute_return_tid(filename);
     if (ret_val <= 0){
         printf("Couldn't clone\n");
-        return;
+        return -1;
     }
 
 // Sleep (Good!)
@@ -551,6 +552,8 @@ static void do_launch_app(int app_number)
 
 // Quit the command line.
     //isTimeToQuit = TRUE;
+
+    return (int) ret_val;  // TID
 }
 
 static void print_ascii_table(int fd)
@@ -717,6 +720,11 @@ tbProcedure(
                 //gws_async_command(fd,30,0,0);
             break;
 
+
+
+        //case GWS_ServerNotifyApp:
+            //break;
+
         // Add new client. Given the wid.
         // The server created a client.
         case 99440:
@@ -875,6 +883,21 @@ void pump(int fd, int wid)
     }
     if (e->type < 0)
         return;
+
+
+/*
+    if (e->type == GWS_ServerNotifyApp || e->type == APP_EVENT_CREATED)
+    {
+        // Debug: print full payload before dispatching
+        //printf("Event received:\n");
+        //printf("  Type: %d\n",               e->type);
+        //printf("  Window: %d\n",             e->window); // target wid ok
+        //printf("  long1 (sub-event):  %d\n", e->long1);
+        //printf("  long2 (client wid): %d\n", e->long2);
+        printf("  long3 (client pid): %d\n", e->long3);
+        printf("  long4 (client tid): %d\n", e->long4);
+    }
+*/
 
 // Process event.
     int Status = -1;

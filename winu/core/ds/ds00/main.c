@@ -558,6 +558,7 @@ int serviceNextEvent(void)
     next_response[1] = SERVER_PACKET_TYPE_EVENT;
     next_response[2] = 1234;
     next_response[3] = 5678;
+
 // Index
     Head = (int) (w->ev_head & 0xFFFFFFFF);
 // The message packet: wid, msg=(event type), data1, data2.
@@ -565,6 +566,11 @@ int serviceNextEvent(void)
     next_response[5] = (unsigned long) w->ev_msg[Head];
     next_response[6] = (unsigned long) w->ev_long1[Head];
     next_response[7] = (unsigned long) w->ev_long2[Head];
+
+// Extra
+    next_response[8] = (unsigned long) w->ev_long3[Head];
+    next_response[9] = (unsigned long) w->ev_long4[Head];
+
 // Round it.
     w->ev_head++;
     if (w->ev_head >= 32){
@@ -575,6 +581,9 @@ int serviceNextEvent(void)
     w->ev_msg[Head] = 0;
     w->ev_long1[Head] = 0;
     w->ev_long2[Head] = 0;
+    w->ev_long3[Head] = 0;
+    w->ev_long4[Head] = 0;
+
 // Done
     return 0;
 // Fail
@@ -635,6 +644,11 @@ int serviceNextEvent2(void)
     next_response[5] = (unsigned long) focus_w->ev_msg[Head];
     next_response[6] = (unsigned long) focus_w->ev_long1[Head];
     next_response[7] = (unsigned long) focus_w->ev_long2[Head];
+
+// Extra
+    next_response[8] = (unsigned long) focus_w->ev_long3[Head];
+    next_response[9] = (unsigned long) focus_w->ev_long4[Head];
+
 // Clean
     focus_w->ev_wid[Head] = 0;
     focus_w->ev_msg[Head] = 0;
@@ -1533,7 +1547,28 @@ int serviceCreateWindow(int client_fd)
             while (1){
             };
         }
+
         //...
+
+        if ((void*) taskbar_window != NULL)
+        {
+            if (taskbar_window->magic == 1234)
+            {
+                window_post_notification( 
+                    taskbar_window->id,    // target wid
+                    GWS_ServerNotifyApp,   // msg code
+                    APP_EVENT_CREATED,     // Sub-event 
+                    wid,                   // the window that was created
+                    Window->client_pid,    // creator's pid
+                    Window->client_tid );  // creator's tid
+
+                //printf("Posting notification: target tid=%d msgcode=%d sub=%d wid=%d\n",
+                    //taskbar_window->id, GWS_ServerNotifyApp, APP_EVENT_CREATED,  wid );
+
+                //printf("Posting notification: sub=%d wid=%d pid=%d tid=%d\n",
+                    //APP_EVENT_CREATED, wid, Window->client_pid, Window->client_tid );
+            }
+        }
     }
 
 // --------------------------------------

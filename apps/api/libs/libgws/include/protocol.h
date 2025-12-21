@@ -249,6 +249,15 @@ typedef struct _gRep  gRep;
 // =====================================================
 //--
 
+// The server posting a notification to the app.
+#define GWS_ServerNotifyApp  100000
+// Sub‑codes 
+#define APP_EVENT_CREATED     1001
+#define APP_EVENT_DESTROYED   1002
+#define APP_EVENT_CHANGED     1003
+#define APP_EVENT_INFO        1004
+// ...
+
 #endif    
 
 
