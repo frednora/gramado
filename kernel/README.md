@@ -2,17 +2,20 @@
 
 This directory contains the code for the base kernel. It builds the image KERNEL.BIN.
 
-## Gramado Kernel Hierarchy
+# Folders
 
 ```
-From lowest to highest:
- + (0) gthouse/arch/
- + (1) halls/exec/ke/hal/
- + (2) halls/exec/intake/
- + (3) gthouse/kwrap/
- + (4) halls/ 
- + (5) gthouse/wink/
- + (6) gthouse/libk/
+kernel/
+ ├── gthouse/     # Gatehouse: entry point, stubs, init, wrappers, libk, UI
+ │    ├── arch/   # Architecture-specific boot & interrupt stubs
+ │    ├── kwrap/  # Kernel wrappers (high-level abstractions)
+ │    ├── libk/   # Kernel library (shared utilities)
+ │    └── wink/   # User interface (input events, GDI)
+ ├── halls/       # Castle halls: execution, requests, peripherals
+ │    ├── exec/   # CPU Hall: threads, dispatcher, scheduler, exceptions
+ │    ├── per/    # Peripheral Hall: external devices, drivers
+ │    └── req/    # Memory Hall: syscalls, memory management (mm/)
+ └── include/     # Castle library: headers, definitions, shared interfaces
 ```
 
 ## Kernel initialization
