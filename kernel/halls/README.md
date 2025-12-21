@@ -10,11 +10,10 @@
 
 ## Folders
 
+
 ```
-  * bus   - A place for pci, usb stuff.
-  * dev   - A place dor built-in device drivers.
-  * fs    - Filesystems
-  * mm    - Memory management.
-  * net   - Network management.
-          - Network initialization, socket, domains and protocols.
+ * exec/  - Execution. (threads)
+ * per/   - Peripherals. (devices)
+ * req    - Requests. (memory)
 ```
+

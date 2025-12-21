@@ -1,4 +1,4 @@
-# cpu - CPU as a resource
+# exec - Execution
 
 The cpu portion in core/ke/ is seen as an (Execution Engine) and 
 in res/cpu its seen as a resource, affected by the cgroups and namespace policies.
@@ -19,4 +19,11 @@ In res/cpu/ → Resource
     Frequency scaling and power states.
     Affinity and isolation (pinning tasks to cores).
  + This is the layer where cgroups and namespaces apply policies: quotas, shares, isolation.
+
+## Folders
+
+```
+* kd/ - Kernel Debugger.
+* ke/ - Kernel Executive.
+```
 
