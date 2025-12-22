@@ -33,6 +33,7 @@ void *sys_create_process (
 
 // See: sys.c
 void *sys_create_thread ( 
+    thread_type_t thread_type,
     struct cgroup_d *cg,
     unsigned long initial_rip, 
     unsigned long initial_stack, 

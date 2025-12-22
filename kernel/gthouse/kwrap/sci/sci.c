@@ -616,6 +616,7 @@ void *sci0 (
     {
         serial_printk("sci0: [72] Create thread\n");
         return (void *) sys_create_thread (
+                            THREAD_TYPE_NORMAL,       // type
                             NULL,                     // cg
                             arg2,                     // initial rip
                             arg3,                     // initial stack

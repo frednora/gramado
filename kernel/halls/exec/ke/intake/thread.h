@@ -44,6 +44,13 @@
 #define BACKGROUND_THREAD  1 
 #define FOREGROUND_THREAD  2
 
+// Thread types
+typedef enum {
+    THREAD_TYPE_NULL,
+    THREAD_TYPE_SYSTEM,  // High priority
+    THREAD_TYPE_NORMAL   // Low priority
+}thread_type_t;
+
 
 typedef enum {
 
@@ -91,14 +98,6 @@ typedef enum {
     WAIT_REASON_TRACE           // Waiting for tracing/profiling event
 } thread_wait_reason_t;
 
-
-// Thread types
-typedef enum {
-    THREAD_TYPE_NULL,
-    THREAD_TYPE_SYSTEM,       // High priority
-    THREAD_TYPE_INTERACTIVE,  // Medium priority (first plane)
-    THREAD_TYPE_BATCH,        // Low priority
-}thread_type_t;
 
 /*
 This part is about input redirection ...
@@ -238,6 +237,12 @@ struct thread_d
     int used;
     int magic;
 
+// type:
+// (SYSTEM, INTERACTIVE, BATCH)
+// #todo: If the thread is not interactive,
+// so it will not receive keyboard input.
+    thread_type_t type;
+
 // The thread environment structure. (fka Process)
 // thread->te->pid is returned by getpid().
     struct te_d *te;
@@ -253,17 +258,22 @@ struct thread_d
 // Returned by gettid().
     tid_t tid;
 
-// type:
-// (SYSTEM, INTERACTIVE, BATCH)
-// #todo: If the thread is not interactive,
-// so it will not receive keyboard input.
-    thread_type_t type;
-
 // flags:
 // TF_BLOCKED_SENDING - Blocked when trying to send.
 // TF_BLOCKED_RECEIVING - Blocked when trying to receive.
 // ...
     unsigned long flags;
+
+// Priority support
+    unsigned long base_priority;  // static 
+    unsigned long priority;       // dynamic
+// Can we boost the priority or not?
+    int disable_boost;
+
+// Quantum - Time slice
+    unsigned long quantum_limit_min;
+    unsigned long quantum_limit_max;
+    unsigned long quantum;
 
 // If this thread is a virtual terminal or not.
     int isVirtualTerminal;
@@ -309,28 +319,6 @@ struct thread_d
 // ex: It can't be killed by another process.
 
     int _protected;
-
-// ========================================================
-// ORDEM: 
-// O que segue é referenciado durante o processo de scheduler.
-
-// Priority levels.
-// Used by processes and threads.
-// Classes:
-// 1 ~ 5 = variable.
-// 6 ~ 9 = realtime.
-// variable:
-//     Can be changed on the fly.
-// realtime:
-//     Can't be changed on the fly.
-// # ps:
-// The base priority is never changed. It's used to classify
-// the priority level.
-// The priority can't be changed to a level below the base priority.
-// The base priority is static and the current priority is dynamic.
-
-    unsigned long base_priority;  // static 
-    unsigned long priority;       // dynamic
 
 // flag, Estado atual da tarefa. ( RUNNING, DEAD ... ).
     thread_state_t state;
@@ -568,19 +556,7 @@ struct thread_d
 // O acumulo de creditos gera incremento de quantum.
     unsigned long credits;
 
-// Quantum. 
-// time-slice or quota. 
-// Quantos jiffies a thread pode rodar em um round.
-// Quantidade limite de jiffies que uma thread pode rodar em um round.
-// Limite do quantum quando dado boost. 
-// Ou seja, podemos aumentar o quantum de um thread até esse limite.
-    unsigned long quantum;
-    unsigned long quantum_limit_min;
-    unsigned long quantum_limit_max;
     
-// #todo: Can we boost the credits?
-    //int disable_boost;
-
 // Quantos jiffies a thread ficou no estado e espera para
 // pronta para rodar.
     unsigned long standbyCount;
@@ -936,6 +912,7 @@ void kill_zombie_threads(void);
 //
 
 struct thread_d *create_thread ( 
+    thread_type_t thread_type,
     struct cgroup_d  *cg,
     unsigned long init_rip, 
     unsigned long init_stack, 

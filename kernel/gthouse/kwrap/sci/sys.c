@@ -225,6 +225,7 @@ fail:
 // IN: ?
 // OUT: ?
 void *sys_create_thread ( 
+    thread_type_t thread_type,
     struct cgroup_d *cg,
     unsigned long initial_rip, 
     unsigned long initial_stack, 
@@ -238,6 +239,11 @@ void *sys_create_thread (
     const unsigned int iopl = RING3;
 
     serial_printk("sys_create_thread:\n");
+
+    thread_type_t Type = thread_type;
+
+    if (Type == THREAD_TYPE_NULL)
+        Type == THREAD_TYPE_NORMAL;
 
 // Parameters:
     //if ((void*) cg == NULL){
@@ -274,6 +280,7 @@ void *sys_create_thread (
     
     Thread = 
         (struct thread_d *) create_thread ( 
+                                Type,
                                 cg,           // cgroup  
                                 (unsigned long) initial_rip, 
                                 (unsigned long) initial_stack, 

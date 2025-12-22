@@ -852,6 +852,11 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
               panic("copy_thread_struct: father validation\n");
     }
 
+    thread_type_t FatherType = father->type;
+
+    if (FatherType == THREAD_TYPE_NULL)
+        FatherType = THREAD_TYPE_NORMAL;
+
 // #todo
 // Aqui, na hora de criar o nome, vamos dar
 // um nome personalizado pra não ficar tudo igual.
@@ -910,6 +915,7 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
 
     clone = 
         (struct thread_d *) create_thread ( 
+                                FatherType,
                                 NULL,  
                                 0,  // initial rip 
                                 0,  // initial rsp
@@ -1285,6 +1291,7 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
 // The second one will setup all the machine dependent elements.
 
 struct thread_d *create_thread ( 
+    thread_type_t thread_type,
     struct cgroup_d  *cg,
     unsigned long init_rip, 
     unsigned long init_stack, 
@@ -1359,8 +1366,7 @@ struct thread_d *create_thread (
 
     if ( current_thread < 0 || current_thread >= THREAD_COUNT_MAX )
     {
-        debug_print ("create_thread: current_thread\n");
-        printk      ("create_thread: current_thread\n");
+        printk ("create_thread: current_thread\n");
         goto fail;
     }
 
@@ -1452,12 +1458,39 @@ try_next_slot:
     Thread->name_address = (unsigned long) name;
     strcpy( Thread->__threadname, (const char *) name );
 
-// #todo
-// The parameters needs to provide us this information.
+// Validate type
+    if (thread_type == THREAD_TYPE_SYSTEM){
+        Thread->type = THREAD_TYPE_SYSTEM;
+    } else {
+        Thread->type = THREAD_TYPE_NORMAL;
+    };
 
-    Thread->type = THREAD_TYPE_SYSTEM; 
-    Thread->base_priority = (unsigned long) PRIORITY_SYSTEM_THRESHOLD;  //static
-    Thread->priority      = (unsigned long) PRIORITY_SYSTEM_THRESHOLD;  //dynamic
+//
+// Priority
+//
+
+// Base priority is static.
+// Priority is dynamic.
+// Normal threads starts with boost disabled.
+
+    if (Thread->type == THREAD_TYPE_SYSTEM){
+        Thread->base_priority = (unsigned long) PRIORITY_SYSTEM_BALANCED;
+        Thread->priority = (unsigned long) PRIORITY_SYSTEM_BALANCED;
+        Thread->disable_boost = FALSE;
+    } else {
+        Thread->base_priority = (unsigned long) PRIORITY_NORMAL_BALANCED;
+        Thread->priority = (unsigned long) PRIORITY_NORMAL_BALANCED;
+        Thread->disable_boost = TRUE;
+    };
+
+// Quantum - Time slice
+    Thread->quantum_limit_min = QUANTUM_MIN; 
+    Thread->quantum_limit_max = QUANTUM_MAX; 
+    if (Thread->type == THREAD_TYPE_SYSTEM){
+        Thread->quantum = QUANTUM_SYSTEM_BALANCED;
+    } else {
+        Thread->quantum = QUANTUM_NORMAL_BALANCED;
+    };
 
 // Initializing values.
 // For ring0 stack address we will use the value found in the TSS,
@@ -1540,11 +1573,6 @@ try_next_slot:
 // Credits:
 // O acumulo de creditos gera incremento de quantum.
     Thread->credits = 0;
-
-// Quantum.
-    Thread->quantum           = QUANTUM_NORMAL_THRESHOLD;
-    Thread->quantum_limit_min = QUANTUM_MIN; 
-    Thread->quantum_limit_max = QUANTUM_MAX; 
 
     Thread->standbyCount = 0;
 

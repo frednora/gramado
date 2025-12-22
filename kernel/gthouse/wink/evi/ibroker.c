@@ -117,7 +117,8 @@ static void setup_minimal_ring0_thread(void)
     unsigned long entry_point = (unsigned long) &keEarlyRing0IdleThread;
 
     struct thread_d *t = create_thread(
-        NULL,              // parent process (NULL for kernel)
+        THREAD_TYPE_SYSTEM,  // type
+        NULL,              // cg
         entry_point,       // initial RIP
         stack_base + 4096, // initial RSP (top of stack)
         0,                 // owner PID (0 for kernel)

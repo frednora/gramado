@@ -21,6 +21,7 @@ SECTIONS
      * Define the true load base of the kernel image.
      * This is where the bootloader copies the binary in memory.
      * We only place a symbol here, no section yet.
+     * The 768 MB mark.
      */
     . = 0x30000000;
     _kernel_begin = .;
