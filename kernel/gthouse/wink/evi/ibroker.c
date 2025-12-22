@@ -278,46 +278,43 @@ static void do_exit_embedded_shell(void)
 // Launch an app via init process.
 // Just a small range of messages are accepted.
 // range: 4001~4009
-
+// #important: 
+// Only when we have a registered display server.
+// Can't do it without a valid registered display server
+// The init process will launch a Cliet-side GUI application.
+// #test: 
+// This is a test. 
+// The kernel can't know about this type of application.
 static void do_launch_app_via_initprocess(int index)
 {
+    const tid_t src_tid = (tid_t) __HARDWARE_TID;  // The kernel
+    const tid_t dst_tid = (tid_t) INIT_TID; // The first thread for the init process
+    unsigned long l_index = (index & 0xFFFFFFFF);
 
-// #test
-// We're using KERNEL_MESSAGE_TID to represent the kernel.
-// see: thread.h
-
-    const tid_t src_tid = (tid_t) KERNEL_MESSAGE_TID;
-    const tid_t dst_tid = (tid_t) INIT_TID;
-
-    if (index < 4001 || index > 4009)
+    if (l_index < 4001 || l_index > 4009)
     {
         return;
     }
 
-// #warning
-// We're sending a message to the init tid,
-// but the message is about launching a client-side 
-// gui application. So, we need a window server up and running.
-
-// So, we can consider the init process as a launcher,
-// the same way we have the Overview (taskbar) as a launcher.
-
+// Can't do it without a valid registered display server
     if (DisplayServerInfo.initialized != TRUE){
         return;
     }
 
-// Sending a MSG_COMMAND message to the init process.
-// IN: 
-// sender tid, receiver tid, msg, index(4001~4009), 0
+// Sending a MSG_COMMAND message to the init process
+// IN: sender tid, receiver tid, msg, index(4001~4009), 0
     ipc_post_message_to_tid(
-        (tid_t) src_tid,
-        (tid_t) dst_tid,
-        (int) MSG_COMMAND, (unsigned long) index, 0 );
+        (tid_t) src_tid, (tid_t) dst_tid,
+        (int) MSG_COMMAND, (unsigned long) l_index, 0 );
 }
 
 // Process 'user' command.
+// Print info into the kernel console.
 static void do_user(void)
 {
+    int IsSuper = FALSE;
+    int id = -1;
+
     if ((void*) CurrentUser == NULL)
         return;
     if (CurrentUser->magic != 1234)
@@ -325,15 +322,17 @@ static void do_user(void)
     if (CurrentUser->initialized != TRUE){
         return;
     }
+    id = CurrentUser->userId;
 
 // Print the username.
     printk("Username: {%s}\n",CurrentUser->__username);
 
-// is it really the current user?
-    if ( CurrentUser->userId == current_user )
+// Is it really the current user?
+// Is it the super user?
+    if (id == current_user)
     {
-        // Is it the super user?
-        if ( is_superuser() == TRUE )
+        IsSuper = is_superuser(); 
+        if (IsSuper == TRUE)
             printk("It's super\n");
     }
 }
@@ -364,7 +363,6 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 
 // ==================
 
-
 // about: 
 // Print banner but do not clear the screen (FALSE).
     if ( kstrncmp( cmdline, "about", 5 ) == 0 )
@@ -373,7 +371,6 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         printk("The kernel console\n");
         goto exit_cmp;
     }
-
 
 //
 // Update metafile for boot configuration.
@@ -2839,7 +2836,7 @@ done:
                         if ( foreground_thread > 0 && foreground_thread < THREAD_COUNT_MAX )
                         {
                             ipc_post_message_to_tid(
-                                (tid_t) KERNEL_MESSAGE_TID, 
+                                (tid_t) __HARDWARE_TID, 
                                 (tid_t) foreground_thread,
                                 Event_Message, 
                                 Event_LongVK, 
@@ -2886,7 +2883,7 @@ done:
             if ( foreground_thread > 0 && foreground_thread < THREAD_COUNT_MAX )
             {
                 ipc_post_message_to_tid(
-                    (tid_t) KERNEL_MESSAGE_TID, (tid_t) foreground_thread,
+                    (tid_t) __HARDWARE_TID, (tid_t) foreground_thread,
                     Event_Message, Event_LongVK, Event_LongScanCode );
             }
 

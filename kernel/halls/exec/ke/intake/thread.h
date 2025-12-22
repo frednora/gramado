@@ -11,24 +11,21 @@
 // We're gonna give less privilegies for those threads 
 // equal and above 100. 
 
-// -----------------------------------------
-// The system's thread counter starts here.
-#define SYSTEM_THRESHOLD_TID  0
-#define INIT_TID    SYSTEM_THRESHOLD_TID
-//...
-
-// #test
-// Special TID for kernel messages.
-// Actually this thread doesn't exist.
-#define KERNEL_MESSAGE_TID  99
-
-// -----------------------------------------
-// The user's thread counter starts here.
-#define USER_THRESHOLD_TID    100
-
 
 // --------------------------------
 
+// Thresholds
+#define SYSTEM_THRESHOLD_TID  0
+#define USER_THRESHOLD_TID    100
+
+// The first thread for the Init process
+#define INIT_TID    SYSTEM_THRESHOLD_TID
+
+// The source TID when kernel sends message to a thread
+#define __HARDWARE_TID  (USER_THRESHOLD_TID - 1)
+
+
+// --------------------------------
 #define THREAD_MAGIC  1234  // In use
 #define THREAD_STOCK  4321  // Free for reuse
 //...

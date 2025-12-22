@@ -439,113 +439,71 @@ fail:
     return (int) -1;
 }
 
+// Post message from kernel to the init process
 int
 ipc_post_message_to_init ( 
     int msg, 
     unsigned long long1, 
     unsigned long long2 )
 {
-//  Post msg to the display server's tid.
-
-// #bugbug
-// We can't send messages to the display server
-// when the server was closed.
-// Ex: Right after we close the demo ENG.BIN
-// using control + c.
-// It is because the thread will have an invalid pointer.
-    // #test: KERNEL_MESSAGE_TID
-    tid_t SenderTID = KERNEL_MESSAGE_TID;   // sender tid #todo
-    tid_t ReceiverTID = INIT_TID;  // receiver tid
-
-// Is this a valid destination?
-    if ( ReceiverTID < 0 || 
-         ReceiverTID >= THREAD_COUNT_MAX )
-    {
-        goto fail;
-    }
+    tid_t SenderTID = __HARDWARE_TID;  // sender TID
+    tid_t ReceiverTID = INIT_TID;      // receiver TID
 
     if (msg < 0)
         goto fail;
 
-    //if(msg == MSG_MOUSEMOVE){
-    //    printk ("x:%d y:%d\n",long1, long2);
-    //    refresh_screen();
-    //}
+// Is this a valid destination?
+    if (ReceiverTID < 0 || ReceiverTID >= THREAD_COUNT_MAX)
+    {
+        goto fail;
+    }
 
-// #todo
-// precisamos de uma flag que indique que isso deve ser feito.
-// See: tlib.c
-// IN: tid, window pointer, msgcode, data1, data2.
-
+// Post it
     ipc_post_message_to_tid(
-        (tid_t) SenderTID,  // sender tid
-        (tid_t) ReceiverTID,  // receiver tid
-        (int) msg,
-        (unsigned long) long1,
-        (unsigned long) long2 );
-
+        (tid_t) SenderTID, (tid_t) ReceiverTID,
+        (int) msg, (unsigned long) long1, (unsigned long) long2 );
    return 0;
+
 fail:
     return (int) -1;
 }
 
+// Post message to the first thread of the registered display server
 int
 ipc_post_message_to_ds ( 
     int msg, 
     unsigned long long1, 
     unsigned long long2 )
 {
-//  Post msg to the display server's tid.
+    const tid_t SenderTID = (tid_t) __HARDWARE_TID;  // The kernel
+    tid_t ReceiverTID = -1;  // Not initialized yet
 
-// #bugbug
-// We can't send messages to the display server
-// when the server was closed.
-// Ex: Right after we close the demo ENG.BIN
-// using control + c.
-// It is because the thread will have an invalid pointer.
-    // #test: KERNEL_MESSAGE_TID
-    tid_t SenderTID = 0;   // sender tid #todo
-    tid_t ReceiverTID = -1;  // receiver tid
+    if (msg < 0)
+        goto fail;
 
-// see: dispsrv.h in user/.
+// Get the server's TID
     if (DisplayServerInfo.initialized != TRUE){
         goto fail;
     }
     ReceiverTID = (tid_t) DisplayServerInfo.tid;
-    if ( ReceiverTID < 0 || ReceiverTID >= THREAD_COUNT_MAX )
+    if (ReceiverTID < 0 || ReceiverTID >= THREAD_COUNT_MAX)
     {
         goto fail;
     }
 
-// More credits to the receiver.
+// More credits to the receiver
     do_credits_by_tid(ReceiverTID);
     do_credits_by_tid(ReceiverTID);
 
 // Wake up the server, it sleeps frequently.
-    wakeup_thread(ReceiverTID);
+    //wakeup_thread(ReceiverTID);
 
-// ---------------------
-    if (msg < 0)
-        goto fail;
-
-    //if(msg == MSG_MOUSEMOVE){
-    //    printk ("x:%d y:%d\n",long1, long2);
-    //    refresh_screen();
-    //}
-
-// #todo
-// precisamos de uma flag que indique que isso deve ser feito.
-// See: tlib.c
-// IN: tid, window pointer, msgcode, data1, data2.
-
+// Post it
     ipc_post_message_to_tid(
-        (tid_t) SenderTID,  // sender tid
-        (tid_t) ReceiverTID,  // receiver tid
-        (int) msg,
-        (unsigned long) long1,
-        (unsigned long) long2 );
-
+        (tid_t) SenderTID, (tid_t) ReceiverTID,
+        (int) msg, (unsigned long) long1, (unsigned long) long2 );
    return 0;
+
 fail:
     return (int) -1;
 }
