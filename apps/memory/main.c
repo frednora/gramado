@@ -144,6 +144,23 @@ memoryProcedure(
         // Null/heartbeat event
         return 0;
 
+    case MSG_KEYDOWN:
+        switch (long1){
+
+        case 'R':
+        case 'r':
+            update_children(fd);
+            break;
+
+        case 'C':
+        case 'c':
+            gws_destroy_window(fd, refresh_button);
+            gws_destroy_window(fd, close_button);
+            gws_destroy_window(fd, main_window);
+            exit(0);
+            break;
+        };
+        break;
 
     case MSG_SYSKEYDOWN:
         switch (long1) {

@@ -88,15 +88,40 @@ powerProcedure(
         return 0;
         break;
 
+    case MSG_KEYDOWN:
+        switch (long1){
+
+        case 'R':
+        case 'r':
+            printf("PowerApp: VK_F1 >> Restart\n");
+            rtl_clone_and_execute("reboot.bin");
+            // #todo: Close our windows.
+            exit(0);
+            break;
+
+        case 'S':
+        case 's':
+            printf("PowerApp: VK_F2 >> Shutdown\n");
+            rtl_clone_and_execute("shutdown.bin");
+            // #todo: Close our windows.
+            exit(0);
+            break;
+        };
+        break;
+
     case MSG_SYSKEYDOWN:
         switch (long1) {
             case VK_F1:
-                printf("PowerApp: VK_F1 → Restart\n");
+                printf("PowerApp: VK_F1 >> Restart\n");
                 rtl_clone_and_execute("reboot.bin");
+                // #todo: Close our windows.
+                exit(0);
                 return 0;
             case VK_F2:
-                printf("PowerApp: VK_F2 → Shutdown\n");
+                printf("PowerApp: VK_F2 >> Shutdown\n");
                 rtl_clone_and_execute("shutdown.bin");
+                // #todo: Close our windows.
+                exit(0);
                 return 0;
             case VK_F11:
                 // Should not appear — broker intercepts fullscreen toggle
