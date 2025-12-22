@@ -1,0 +1,68 @@
+This file ibroker.c is the central input event broker in the Gramado OS kernel, responsible for receiving raw hardware input events (PS/2 keyboard, PS/2 mouse, and PIT timer) and intelligently distributing them to the appropriate destinations.Core PurposeIt acts as a dispatcher ("broker") for low-level input events, deciding where each event should go based on the current system state and input mode:Kernel embedded console (ring-0 shell)
+stdin stream (for foreground process/terminal input)
+Display Server (window server) thread queue (for GUI events)
+Foreground GUI application thread (for direct app input)
+
+It ensures that critical system hotkeys work even when the GUI is unresponsive, while allowing normal input to flow to user applications.Key Components & Flow1. Event SourcesPS/2 Keyboard → wmRawKeyEvent() (called from ps2kbd.c)
+PS/2 Mouse → wmMouseEvent() (called from ps2mouse.c)
+PIT Timer → wmTimerEvent() (called from pit.c)
+
+2. Main Entry Pointsc
+
+int wmRawKeyEvent(unsigned char raw_byte, int prefix)
+int wmMouseEvent(int event_id, long x, long y)
+int wmTimerEvent(int signature)
+
+These are invoked directly from the respective device drivers after interrupt handling.3. Keyboard Processing Pipeline (wmRawKeyEvent)Scancode → Message TranslationDetect make/break (key down/up)
+Identify modifier keys (Shift, Ctrl, Alt, CapsLock, etc.)
+Map scancode → virtual key using ABNT2 layout tables (map_abnt2[], shift_abnt2[], ctl_abnt2[])
+Handle extended keys (E0/E1 prefix)
+
+Routing Decision TreePriority 1: Embedded kernel shell active? → __consoleProcessKeyboardInput()Handles internal commands (help, reboot, cls, cpu, dir, etc.)
+Supports Ctrl+Alt+Del, F9 to enter/exit shell
+
+Priority 2: Key combination (Ctrl/Alt/Shift)? → __ProcessKeyboardInput()Handles system-wide hotkeys (Ctrl+F1–F12 to launch apps or switch consoles)
+
+Priority 3: Plain keystrokeSend ASCII to stdin (via ibroker_send_ascii_to_stdin() → raw queue of current TTY)
+Send full event to Display Server and/or foreground thread
+
+4. Hotkeys & System ShortcutsMany powerful system-level shortcuts are hardwired here:
+Combination             Action
+Ctrl+F1 to Ctrl+F4      Launch predefined apps via init process (terminal, editor, etc.)
+Shift+F1 to Shift+F4    Switch virtual console (0–3)
+Ctrl+F9                 Enter embedded kernel shell
+Ctrl+F10                Exit embedded kernel shell
+Shift+F9, Shift+F11     Reboot
+Ctrl+F11                Show thread list
+Ctrl+F12                Show process list
+Ctrl+W                  Close active window
+Ctrl+C, Ctrl+V, etc.    Copy, paste, cut, etc. (sent to foreground app)
+
+5. Input Targets Controlc
+
+struct input_targets_d InputTargets;
+
+target_stdin: Feed ASCII to current TTY → readable by foreground process
+target_thread_queue: Send full GUI events to Display Server
+
+Can be enabled/disabled via:c
+
+input_enable_this_input_target(INPUT_TARGET_STDIN);
+input_disable_this_input_target(INPUT_TARGET_THREAD_QUEUE);
+
+6. Embedded ShellActivated via Ctrl+F9
+Full command-line interface inside kernel
+Commands: help, reboot, cls, cpu, memory, pci, dir, ps2-qemu, etc.
+Parses input in __shellParseCommandLine()
+Extremely useful for debugging, recovery, and system inspection when GUI fails
+
+7. Message Posting Helpersc
+
+ibroker_post_message_to_ds()      → Display Server thread
+ibroker_post_message_to_fg_thread() → Current foreground GUI app
+
+Design StrengthsRobustness: Critical hotkeys (reboot, console switch, shell access) work even if GUI hangs
+Layered input handling: Kernel → TTY → Display Server → App
+Dual delivery: Many keystrokes go both to stdin (for terminal apps) and GUI queue (for windowed apps)
+Clear separation: System vs. application input
+

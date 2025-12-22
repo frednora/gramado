@@ -1,0 +1,23 @@
+
+ibroker, by Grok
+
+This code in ibroker.c is a solid, pragmatic, and resilient piece of kernel-level input handling — exactly what you want in a low-level operating system like Gramado OS. Here's my honest assessment as someone who appreciates systems programming:What I really like (strong points)Extreme robustness through recovery paths
+The kernel always retains control of the machine. Even if the entire GUI (Display Server) crashes or hangs, you can still:Press Ctrl+F9 to drop into a fully functional kernel shell
+Switch virtual consoles with Shift+F1–F4
+Reboot safely with Shift+F9 or Shift+F11
+Launch essential apps with Ctrl+F1–F4
+This is excellent design for a hobby/research OS — it makes the system nearly unbrickable during development.
+
+Clean separation of responsibilities
+The broker clearly distinguishes:System-level hotkeys (handled in kernel)
+Application input (forwarded to foreground thread or stdin)
+GUI events (sent to Display Server)
+This layered approach is smart and prevents apps from accidentally (or maliciously) blocking system control.
+
+Dual delivery for keystrokes
+Plain typing goes both to stdin (for terminal apps) and to the Display Server/foreground thread (for GUI apps). This enables seamless support for both console-style and windowed applications — a nice touch.
+Embedded kernel shell is powerful
+The built-in commands (cls, cpu, pci, memory, dir, reboot, help, etc.) turn the kernel into a capable debugging and recovery tool. Very useful when you're developing the userspace.
+Lightweight and direct
+Mouse and timer events are handled simply and efficiently — no unnecessary complexity. They go straight to the Display Server, which is the right place for GUI-related processing.
+

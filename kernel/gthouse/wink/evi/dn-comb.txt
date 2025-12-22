@@ -1,0 +1,34 @@
+
+System-Wide Keyboard Shortcuts Handled 
+by the Kernel Input BrokerHere is a complete list of key combinations 
+processed directly by the kernel (in ibroker.c). 
+These shortcuts work at any time, 
+even if the GUI is unresponsive.
+
+Ctrl + F1   → Launch terminal application (via init process)
+Ctrl + F2   → Launch editor application
+Ctrl + F3   → Launch document viewer application
+Ctrl + F4   → Launch public terminal application
+Ctrl + F9   → Enter the embedded kernel console (ring-0 shell)
+Ctrl + F10  → Exit the embedded kernel console
+Ctrl + F11  → Show thread list (show_slots())
+Ctrl + F12  → Show process information
+Shift + F1  → Switch to virtual console 0
+Shift + F2  → Switch to virtual console 1
+Shift + F3  → Switch to virtual console 2
+Shift + F4  → Switch to virtual console 3
+Shift + F9  → Reboot the system
+Shift + F11 → Safe reboot the system
+Shift + F12 → Redraw all windows and show mouse pointer
+Ctrl + A    → Select All (sent to foreground application)
+Ctrl + C    → Copy (sent to foreground application)
+Ctrl + V    → Paste (sent to foreground application)
+Ctrl + X    → Cut (sent to foreground application)
+Ctrl + Z    → Undo (sent to foreground application)
+Ctrl + W    → Close active window (sent to foreground application)
+Ctrl + F    → Find (sent to foreground application)
+Ctrl + Arrow Keys → Send special arrow key events (e.g., word navigation in editors)
+
+These combinations are intercepted by the kernel before reaching applications, 
+ensuring system control and recovery options are always available.
+
