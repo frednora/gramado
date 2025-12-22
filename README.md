@@ -25,7 +25,7 @@ Some extra features are:
 ## The main folders
 
 ```
-gramboot/  - Gramado OS bootloader.
+iceboot/  - Gramado OS bootloader.
 kernel/    - Gramado OS kernel.
 modules/   - Ring 0 loadable kernel modules. (Not dynlinked).
 init/      - The init process.
@@ -63,7 +63,7 @@ tools/     - SDK tools.
 
 ## Where is the boot loader?
 
-gramboot/boot/
+iceboot/boot/
 
 ## Where is the kernel?
 

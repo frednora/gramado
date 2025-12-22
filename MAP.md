@@ -5,7 +5,7 @@
 ## Bootloader
 
 ```
-gramboot/arch/x86/bsp/
+iceboot/arch/x86/bsp/
 ```
 
 ## Kernel

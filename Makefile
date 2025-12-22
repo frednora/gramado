@@ -1,4 +1,4 @@
-# It builds the whole opearating system.
+# It builds the whole operating system. 
 
 # License: MIT License
 # Compiling on gcc 11.4.0 (Ubuntu on wsl)
@@ -102,31 +102,31 @@ build-gramado-os:
 # O BL.BIN procura o kernel no diretorio GRAMADO/
 # See: fs/loader.c
 
-# (1) gramboot/arch/ 
+# (1) iceboot/arch/ 
 
 # ::Build the bootloader.
-	@echo "Compiling gramboot/"
-	@$(MAKE) -C gramboot/arch/
+	@echo "Compiling iceboot/"
+	@$(MAKE) -C iceboot/arch/
 
-	@echo "Installing gramboot/"
+	@echo "Installing iceboot/"
 
 # Copy the virtual disk into the rootdir.
-	@cp gramboot/arch/GRAMHV.VHD  .
+	@cp iceboot/arch/GRAMHV.VHD  .
 
 # Copy the bootloader into the rootdir.
-	@cp gramboot/arch/x86/bin/BM.BIN      $(BASE)/
-	@cp gramboot/arch/x86/bin/BM2.BIN     $(BASE)/
-	@cp gramboot/arch/x86/bin/BLGRAM.BIN  $(BASE)/
-	@cp gramboot/arch/x86/bin/MBR0.BIN    $(BASE)/
-	@cp gramboot/arch/x86/bin/APX86.BIN   $(BASE)/
+	@cp iceboot/arch/x86/bin/BM.BIN      $(BASE)/
+	@cp iceboot/arch/x86/bin/BM2.BIN     $(BASE)/
+	@cp iceboot/arch/x86/bin/BLGRAM.BIN  $(BASE)/
+	@cp iceboot/arch/x86/bin/MBR0.BIN    $(BASE)/
+	@cp iceboot/arch/x86/bin/APX86.BIN   $(BASE)/
 # Copy the bootloader into the GRAMADO/ directory.
-	@cp gramboot/arch/x86/bin/BM.BIN      $(BASE)/GRAMADO
-	@cp gramboot/arch/x86/bin/BM2.BIN     $(BASE)/GRAMADO
-	@cp gramboot/arch/x86/bin/BLGRAM.BIN  $(BASE)/GRAMADO
-	@cp gramboot/arch/x86/bin/MBR0.BIN    $(BASE)/GRAMADO
+	@cp iceboot/arch/x86/bin/BM.BIN      $(BASE)/GRAMADO
+	@cp iceboot/arch/x86/bin/BM2.BIN     $(BASE)/GRAMADO
+	@cp iceboot/arch/x86/bin/BLGRAM.BIN  $(BASE)/GRAMADO
+	@cp iceboot/arch/x86/bin/MBR0.BIN    $(BASE)/GRAMADO
 
 # Copy the bootloader into the DE/ directory.
-#	@cp gramboot/arch/x86/bin/APX86.BIN   $(BASE)/DE   
+#	@cp iceboot/arch/x86/bin/APX86.BIN   $(BASE)/DE   
 
 # (2) kernel/
 
@@ -393,13 +393,13 @@ clean-all: clean
 	-rm *.VHD
 	-rm *.ISO
 
-	-rm gramboot/arch/*.VHD 
+	-rm iceboot/arch/*.VHD 
 
 # ==================
-# (1) gramboot/arch/
+# (1) iceboot/arch/
 # Clear boot images
-#	-rm -rf gramboot/arch/arm/bin/*.BIN
-	-rm -rf gramboot/arch/x86/bin/*.BIN
+#	-rm -rf iceboot/arch/arm/bin/*.BIN
+	-rm -rf iceboot/arch/x86/bin/*.BIN
 
 # ==================
 # (2) kernel/

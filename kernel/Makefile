@@ -1,4 +1,5 @@
 # Makefile for the Gramado kernel.
+# Codename: Project Spring/Autumn
 # Created by Fred Nora.
 
 # -----------------------------------------

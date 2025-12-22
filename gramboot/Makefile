@@ -1,5 +1,0 @@
-
-
-all:
-	make -C arch/
-

@@ -147,12 +147,10 @@ void useFrame( int value )
 // min, max, close.
 int do_create_controls(struct gws_window_d *w_titlebar)
 {
-
 // Windows
     struct gws_window_d *w_minimize;
     struct gws_window_d *w_maximize;
     struct gws_window_d *w_close;
-
     //?
     int id = -1;
 
@@ -185,10 +183,10 @@ int do_create_controls(struct gws_window_d *w_titlebar)
 
     unsigned long LastLeft = 0;
 
-    unsigned long TopPadding=1; //2;  // Top margin
-    unsigned long RightPadding=2;  // Right margin
+    unsigned long TopPadding=METRICS_TITLEBAR_CONTROLS_TOPPAD; // Top margin
+    unsigned long RightPadding=METRICS_TITLEBAR_CONTROLS_RIGHTPAD;  // Right margin
     
-    unsigned long SeparatorWidth=1;
+    unsigned long SeparatorWidth=METRICS_TITLEBAR_CONTROLS_SEPARATOR_WIDTH;
 
 // #test
 // #bugbug
