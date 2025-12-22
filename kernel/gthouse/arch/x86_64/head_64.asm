@@ -2595,11 +2595,16 @@ DEBUG_START: db "START"
 align 4
 START:
 
-    ; Save information that came from the bootloader.
+; Save information that came from the bootloader.
+; We're in 64bit. But it is a 32bit address.
 
-    mov dword [_saved_bootblock_base], ebx  ; Bootblock address
-    mov dword [_magic], edx                 ; Signature value
-    ; ...
+    xor r8, r8
+    mov r8d, ebx  ; upper 32 bits of r8 are zeroed automatically
+    mov qword [_saved_bootblock_base], r8  ; Bootblock address
+
+    xor r8, r8
+    mov r8d, edx  ; upper 32 bits of r8 are zeroed automatically
+    mov qword [_magic], r8  ; Signature value
 
 ; Clear some registers.
 ; Load our own 64-bit gdt.
