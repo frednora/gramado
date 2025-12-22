@@ -1,0 +1,84 @@
+
+a **textual visualization** of how the **input broker (`ibroker.c`)** routes events. 
+Think of it like a flowchart written in words, 
+showing all the possible paths an input event can take:
+
+---
+
+# 🎛 Input Broker Flow (Textual Visualization)
+
+### 1. **Event Sources**
+- **Keyboard (PS/2)** → scancodes, ASCII, control combos  
+- **Mouse (PS/2)**    → movement, clicks, scroll  
+- **Timer (PIT)**     → periodic ticks, scheduling events  
+
+---
+
+### 2. **Broker Entry Point**
+- All raw events arrive in the **input broker**.  
+- Broker decides: *where should this event go?*
+
+---
+
+### 3. **Routing Targets**
+- **Display Server Queue** (`ibroker_post_message_to_ds`)  
+  - GUI events (mouse clicks, window focus, arrow docking combos, `[Ctrl+W]` close).  
+- **Foreground App Queue** (`ibroker_post_message_to_fg_thread`)  
+  - Application‑level combos (DC1–DC4, Ctrl+C, Ctrl+Z, etc.).  
+- **STDIN / TTY** (`ibroker_send_ascii_to_stdin`)  
+  - Raw ASCII characters for terminal/console input.  
+- **Kernel Internal Handlers**  
+  - Special combos like CAD (Ctrl+Alt+Del → reboot), entering/exiting embedded shell, launching apps via init process.  
+
+---
+
+### 4. **Keyboard Event Processing**
+- **Normal keys** → ASCII → sent to STDIN/TTY.  
+- **Extended keys (arrows, ins/del/home/end)** → processed in `__ProcessExtendedKeyboardKeyStroke`.  
+  - **Ctrl+Arrow** → sent to **server** for docking.  
+  - Other extended keys → may be sent to server or ignored.  
+- **Control combos**:  
+  - `[Ctrl+W]` → `MSG_CLOSE` → server → forwarded to client.  
+  - `[Ctrl+Q/R/S/T]` → DC1–DC4 → sent to **foreground app**.  
+  - `[Ctrl+C]` → ASCII_ETX → app decides (cancel/copy).  
+  - `[Ctrl+Z]` → ASCII_SUB → app decides (undo/suspend).  
+
+---
+
+### 5. **Mouse Event Processing**
+- Movement, button clicks, scroll → always routed to **server queue**.  
+- Server interprets them as window actions (focus, resize, drag, etc.).  
+
+---
+
+### 6. **Timer Event Processing**
+- PIT ticks → routed internally to **scheduler** or **server** (for GUI refresh).  
+- Can trigger periodic messages like `MSG_TIMER`.  
+
+---
+
+### 7. **Special Cases**
+- **CAD (Ctrl+Alt+Del)** → if allowed, triggers `do_reboot()`.  
+- **Embedded Shell** → enter/exit via broker commands.  
+- **Init Process Launch** → broker sends `MSG_COMMAND` to init thread for app startup.  
+
+---
+
+# 🗂 Summary Table
+
+| Source     | Example Event      | Destination         | Notes |
+|------------|--------------------|---------------------|-------|
+| Keyboard   | ASCII key          | STDIN/TTY           | Console input |
+| Keyboard   | Ctrl+Arrow         | Server Queue        | Dock/Tile windows |
+| Keyboard   | Ctrl+W             | Server → Client     | Close active window |
+| Keyboard   | Ctrl+Q/R/S/T       | Foreground App      | DC1–DC4 (apps decide meaning) |
+| Keyboard   | Ctrl+C / Ctrl+Z    | Foreground App      | Cancel / Undo |
+| Mouse      | Click, move, scroll| Server Queue        | GUI events |
+| Timer      | PIT tick           | Scheduler/Server    | Refresh, scheduling |
+| Special    | CAD (Ctrl+Alt+Del) | Kernel Internal     | Reboot if allowed |
+
+---
+
+This textual visualization shows the **full routing map**: 
+from raw input → broker → server/app/tty/kernel.  
+

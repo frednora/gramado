@@ -1,0 +1,79 @@
+
+wmRawKeyEvent
+wmMouseEvent
+wmTimerEvent
+wmKeyboardEvent
+
+
+Input Event Wrapper Functions in the Gramado Kernel Input BrokerThese four functions are the main entry points for hardware input events in the kernel. They are called directly by low-level device drivers after handling hardware interrupts. Their job is to receive raw events and forward them appropriately (either directly or after some processing).1. wmRawKeyEvent(unsigned char raw_byte, int prefix)Purpose: Primary handler for PS/2 keyboard input.
+Called by: The PS/2 keyboard driver (ps2kbd.c) immediately after a keyboard interrupt.
+What it does:Receives the raw scancode byte and an optional extended-key prefix (E0 or E1).
+Translates the scancode into a message type (keydown, keyup, syskeydown, syskeyup) and a virtual key / ASCII value using the ABNT2 layout.
+Handles modifier keys (Shift, Ctrl, Alt, Caps Lock, etc.).
+Checks for extended keys and routes them separately.
+Decides where the event goes based on system state:If the embedded kernel shell is active → processes commands locally (help, reboot, cls, etc.).
+If a hotkey combination is detected → handles system-wide actions (switch consoles, launch apps, etc.).
+Otherwise → sends ASCII to stdin (for terminal input) and/or full event to the Display Server and foreground application.
+
+Key feature: Ensures critical recovery hotkeys always work, even if the GUI is frozen.
+
+2. wmMouseEvent(int event_id, long long1, long long2)Purpose: Handler for PS/2 mouse input.
+Called by: The PS/2 mouse driver (ps2mouse.c) after parsing a mouse data packet.
+What it does:Receives the event type (mouse move, button press, button release) and coordinates/button info.
+Applies basic screen boundary limits to coordinates.
+Directly posts the appropriate message (MSG_MOUSEMOVE, MSG_MOUSEPRESSED, MSG_MOUSERELEASED) to the Display Server thread queue.
+
+Key feature: Very lightweight — no complex routing; all mouse events go straight to the window/server GUI system.
+
+3. wmTimerEvent(int signature)Purpose: Handler for timer ticks from the Programmable Interval Timer (PIT).
+Called by: The PIT driver (pit.c) on each timer interrupt.
+What it does:Validates the call signature.
+Periodically (approximately once per second, based on jiffies) posts a MSG_TIMER message to the Display Server.
+May perform other periodic housekeeping in the future.
+
+Key feature: Provides a simple heartbeat/clock signal to the GUI system without heavy processing.
+
+4. wmKeyboardEvent(int event_id, long long1, long long2)Purpose: Direct keyboard event posting (bypasses full processing).
+Called by: External or special code paths that already have a formatted keyboard event.
+What it does:Performs minimal validation.
+Immediately posts the provided event message and parameters directly to the Display Server thread queue.
+
+Key feature: Acts as a fast-path shortcut for pre-processed or synthetic keyboard events.
+
+SummaryThese functions form the root of all user input in Gramado OS:wmRawKeyEvent is the most complex (full translation and smart routing).
+wmMouseEvent and wmTimerEvent are simple forwarders.
+wmKeyboardEvent is a direct bypass.
+
+Together they ensure that raw hardware events are safely and intelligently delivered to either the kernel (for recovery/system control) or the user-facing GUI system.
+
+
+Device Drivers
+│
+├── PS/2 Keyboard → wmRawKeyEvent(raw_byte, prefix)
+│   │
+│   ├── (extended key?) → __ProcessExtendedKeyboardKeyStroke()
+│   │
+│   ├── (shell active?) → __consoleProcessKeyboardInput()
+│   │       (handles commands like help, reboot, cls, cpu, dir, etc.)
+│   │
+│   ├── (combination Ctrl/Alt/Shift?) → __ProcessKeyboardInput()
+│   │       (handles Ctrl+F1–F12, Ctrl+W, Ctrl+C/V, etc.)
+│   │
+│   └── (plain key) 
+│       ├── send ASCII → stdin (TTY raw queue)
+│       └── post event → Display Server + Foreground Thread
+│
+├── PS/2 Mouse → wmMouseEvent(event_id, x, y)
+│   │
+│   ├── mouse move → post MSG_MOUSEMOVE → Display Server
+│   │
+│   └── button press/release → post button msg → Display Server
+│
+├── PIT Timer → wmTimerEvent(signature)
+│   │
+│   └── (every ~1 sec) → post MSG_TIMER → Display Server
+│
+└── Direct → wmKeyboardEvent(event_id, long1, long2)
+    │
+    └── post event directly → Display Server
+
