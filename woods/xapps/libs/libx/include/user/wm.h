@@ -112,10 +112,10 @@
 #define MSG_MOUSE_DROP            62
 //...
 
-
+#define MSG_HOTKEY 88
 
 //  terminal commands
-#define MSG_TERMINALCOMMAND      100
+//#define MSG_TERMINALCOMMAND      100
 
 //
 // Socket messages
@@ -156,9 +156,6 @@
 #define MSG_GWS_QUIT    4080
 
 // drain input 8080
-
-#define MSG_HOTKEY 8888
-
 // switch focus 9090
 // refresh dirty rectangles 9091
 // update desktop 9092

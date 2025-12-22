@@ -166,6 +166,7 @@ typedef struct _gRep  gRep;
 #define GWS_ControlArrowLeft    82
 #define GWS_ControlArrowRight   83
 
+#define GWS_HotKey  88
 
 // =======================================
 // Protocol request constants
@@ -216,8 +217,6 @@ typedef struct _gRep  gRep;
 
 #define GWS_DrainInput    8080
 // ...
-
-#define GWS_HotKey  8888
 
 // #test
 #define GWS_SwitchFocus    9090

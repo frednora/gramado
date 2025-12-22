@@ -5,6 +5,10 @@
 // the display server (libgws/gramland)
 // 2023 - Created by Fred Nora.
 
+// #todo
+// This file is the ABI contract: 
+// Both kernel and userland apps must agree on these codes.
+
 #ifndef __INTAKE_MSGCODE_H
 #define __INTAKE_MSGCODE_H    1
 
@@ -13,6 +17,7 @@
 //
 
 #define MSG_NULL  0 
+
  
 // --- Window-related messages (1 - 19) ---
 #define MSG_CREATE        1
@@ -119,38 +124,26 @@
 // control+s
 #define MSG_SAVE    72
 
+#define MSG_DC1  76  // ^q
+#define MSG_DC2  77  // ^r
+#define MSG_DC3  78  // ^s   (#bugbug: Same as MSG_SAVE)
+#define MSG_DC4  79  // ^t
+
+
 // --- Arrow keys (Control operations) ---
 #define MSG_CONTROL_ARROW_UP     80
 #define MSG_CONTROL_ARROW_DOWN   81
 #define MSG_CONTROL_ARROW_LEFT   82
 #define MSG_CONTROL_ARROW_RIGHT  83
 
-// --------------------------
-// #deprecated
-// (Delete these messages)
-//  Terminal commands
-#define MSG_TERMINALCOMMAND      100
-#define TERMINALCOMMAND_PRINTCHAR 1000
-//#define TERMINALCOMMAND_PRINT??? 1001
-// --------------------------
-
-// --- Scroll messages ---
-// The event number will be delivered in long1.
-#define MSG_HSCROLL  2000
-#define MSG_VSCROLL  2001
+#define MSG_HOTKEY  88
 
 // --- Parent Notification ---
 // Notify parent about important events occurring in a child.
-#define MSG_NOTIFY_PARENT  4000
+#define MSG_NOTIFY_PARENT  89
 
-// --- Hotkey messages ---
-#define MSG_HOTKEY  8888  //??
-
-// ...
-
-// #todo
-// Check the gramland/libgws protocol,
-// maybe we have some more messages in common.
+// #test
+// System messages has the range of [0~99]
 
 #endif   
 

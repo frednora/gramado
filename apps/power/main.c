@@ -23,11 +23,19 @@
 // Global display pointer
 struct gws_display_d *Display;
 
+
 // Window IDs
-static int main_window = -1;
-static int restart_button = -1;
+static int main_window     = -1;
+static int restart_button  = -1;
 static int shutdown_button = -1;
 
+// Default responder (button to trigger on Enter)
+static int default_responder = -1;
+
+static void trigger_default_responder(int fd);
+
+
+// =====================================================
 
 
 static void update_children(int fd)
@@ -65,6 +73,18 @@ static void update_children(int fd)
     gws_refresh_window (fd, main_window);
 }
 
+static void trigger_default_responder(int fd) 
+{
+    if (default_responder == restart_button) {
+        printf("PowerApp: Enter >> Restart\n");
+        rtl_clone_and_execute("reboot.bin");
+        exit(0);
+    } else if (default_responder == shutdown_button) {
+        printf("PowerApp: Enter >> Shutdown\n");
+        rtl_clone_and_execute("shutdown.bin");
+        exit(0);
+    }
+}
 
 // ----------------------------------------------------
 // Procedure: handles events sent by the display server
@@ -90,6 +110,10 @@ powerProcedure(
 
     case MSG_KEYDOWN:
         switch (long1){
+
+        case VK_RETURN:
+            trigger_default_responder(fd);
+            break;
 
         case 'R':
         case 'r':
@@ -338,21 +362,15 @@ shutdown_button = gws_create_window(
     //#debug
     gws_refresh_window (client_fd, shutdown_button);
 
+// Set default responder (choose one) 
+    default_responder = restart_button; // Enter will trigger Restart
 
+// Main window: Activate and show.
     gws_set_active( client_fd, main_window );
-
-    // Show main window
     gws_refresh_window(client_fd, main_window);
 
     //printf("Restart button id = %d\n", restart_button);
     //printf("Shutdown button id = %d\n", shutdown_button);
-
-/*
-    // Event loop
-    while (1) {
-        pump(client_fd);
-    }
-*/
 
     while (1)
     {
@@ -362,13 +380,13 @@ shutdown_button = gws_create_window(
         // 2. Pump events from Input Broker (system events)
         if (rtl_get_event() == TRUE)
         {
+            // IN: wid, event type, VK, scancode.
             powerProcedure(
                 client_fd,
-                (int) RTLEventBuffer[0],   // window id
-                (int) RTLEventBuffer[1],   // event type (MSG_SYSKEYDOWN, MSG_SYSKEYUP, etc.)
-                (unsigned long) RTLEventBuffer[2], // VK code
-                (unsigned long) RTLEventBuffer[3]  // scancode
-            );
+                (int) RTLEventBuffer[0],
+                (int) RTLEventBuffer[1],
+                (unsigned long) RTLEventBuffer[2],
+                (unsigned long) RTLEventBuffer[3] );
             RTLEventBuffer[1] = 0; // clear after dispatch
         }
     };

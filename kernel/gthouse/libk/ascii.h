@@ -181,5 +181,3 @@ not granted by other DCs.
 
 #endif    
 
-
-

@@ -828,7 +828,7 @@ int wmInputReader(void)
 
     int IsCombination=FALSE;
 
-//NextEvent:
+// NextEvent:
 
     //status = (int) rtl_get_event();
     //if (status != TRUE)
@@ -860,6 +860,11 @@ ProcessEvent:
     long2 = (unsigned long) RTLEventBuffer[3];
 // #test
     long3 = (unsigned long) RTLEventBuffer[4];  //jiffie
+
+// Limit
+// #ps: System messages has the range of [0~99]
+    if (msg >= 100)
+        goto fail;
 
 // Is it time to use the yellow dialog?
     if (YellowDialogInfo.useYellowDialog == TRUE){
@@ -959,10 +964,11 @@ ProcessEvent:
 // Muidas estruturas aindapossuem valores que estão condizentes
 // com a resolução antiga e precisa ser atualizados.
 
-    if (msg == 800300){
-        printf("[800300] w=%d h=%d\n", long1, long2);
-        return 0;
-    }
+    // #deprecated
+    //if (msg == 800300){
+        //printf("[800300] w=%d h=%d\n", long1, long2);
+        //return 0;
+    //}
 
 // #test: [Control + w] also generate GWS_Close message.
 // Close with the active window.
@@ -993,8 +999,9 @@ ProcessEvent:
 
     // The kernel received a gprot message 
     // and redirected it to us.
-    if (msg == 800800)
-        yellow_status("ds00: 800800");
+    // #deprecated
+    //if (msg == 800800)
+        //yellow_status("ds00: 800800");
 
 //Unknown:
     return 0;
@@ -1042,6 +1049,7 @@ fail:
 // entregues pelo gramado.
 // Called by main.c
 
+// Getting system events
 int wmInputReader2(void)
 {
 // Getting input events from the event queue
@@ -1078,6 +1086,11 @@ int wmInputReader2(void)
             e.msg   = (int)           RTLEventBuffer[1];
             e.long1 = (unsigned long) RTLEventBuffer[2];
             e.long2 = (unsigned long) RTLEventBuffer[3];
+
+            // Limit
+            // #ps: System messages has the range of [0~99]
+            if (e.msg >= 100)
+                return 0;
 
             // MOUSE events
             // Calling procedure.
@@ -1117,12 +1130,12 @@ int wmInputReader2(void)
                 
                 // Hot key id.
                 // Activate the window associated with the given ID.
-                if (e.long1 == 1){
-                    yellow_status ("GWS_Hotkey 1\n");
-                }
-                if (e.long1 == 2){
-                    yellow_status ("GWS_Hotkey 2\n");
-                }
+                //if (e.long1 == 1){
+                //    yellow_status ("GWS_Hotkey 1\n");
+                //}
+                //if (e.long1 == 2){
+                //    yellow_status ("GWS_Hotkey 2\n");
+                //}
                 // ...
             }
 

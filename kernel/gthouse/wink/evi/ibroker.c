@@ -91,6 +91,13 @@ ibroker_post_message_to_ds (
     int msg, 
     unsigned long long1, 
     unsigned long long2 );
+
+static int
+ibroker_post_message_to_fg_thread ( 
+    int msg, 
+    unsigned long long1, 
+    unsigned long long2 );
+
 //
 // ================================================
 //
@@ -109,8 +116,36 @@ ibroker_post_message_to_ds (
     return (int) ipc_post_message_to_ds(msg,long1,long2);
 }
 
-// Minimal ring 0 thread example
+static int
+ibroker_post_message_to_fg_thread ( 
+    int msg, 
+    unsigned long long1, 
+    unsigned long long2 )
+{
+    int rv=-1;
 
+    if (msg < 0)
+        return (int) -1;
+
+// TARGET: GUI APP
+
+    // Also to init thread
+    if (foreground_thread < 0)
+        return (int) -1;
+    if (foreground_thread >= THREAD_COUNT_MAX)
+        return (int) -1;
+
+// Send it
+    rv = 
+    (int) ipc_post_message_to_tid(
+            (tid_t) __HARDWARE_TID, 
+            (tid_t) foreground_thread,
+            msg, long1, long2 );
+
+    return (int) rv;
+}
+
+// Minimal ring 0 thread example
 static void setup_minimal_ring0_thread(void)
 {
     unsigned long stack_base = (unsigned long) kmalloc(4096);
@@ -1276,51 +1311,111 @@ __consoleProcessKeyboardInput (
                 // é um terminal virtual ou não. t->isVirtualTerminal.
 
                 // ^a = Start OF Header = 1
-                if (ctrl_status == TRUE && long1 == ASCII_SOH){
-                    ibroker_post_message_to_ds( MSG_SELECT_ALL, long1, long2 );
+                if (ctrl_status == TRUE && long1 == ASCII_SOH)
+                {
+                    //ibroker_post_message_to_ds( MSG_SELECT_ALL, long1, long2 );
+                    // TARGET: GUI APP
+                    ibroker_post_message_to_fg_thread(
+                        MSG_SELECT_ALL, long1, long2);                    
+
                     return 0;
                 }
 
                 // ^c = End Of Text = 3
-                if (ctrl_status == TRUE && long1 == ASCII_ETX){
-                    ibroker_post_message_to_ds( MSG_COPY, long1, long2 );
+                if (ctrl_status == TRUE && long1 == ASCII_ETX)
+                {
+                    //ibroker_post_message_to_ds( MSG_COPY, long1, long2 );
+                    ibroker_post_message_to_fg_thread(
+                        MSG_COPY, long1, long2);                    
+
                     return 0;
                 }
 
                 // ^f = Acknowledgement = 6
-                if (ctrl_status == TRUE && long1 == ASCII_ACK){
-                    ibroker_post_message_to_ds( MSG_FIND, long1, long2 );
+                if (ctrl_status == TRUE && long1 == ASCII_ACK)
+                {
+                    //ibroker_post_message_to_ds( MSG_FIND, long1, long2 );
+                    ibroker_post_message_to_fg_thread(
+                        MSG_FIND, long1, long2);                    
+
                     return 0;
                 }
 
                 // ^w = End Of Transition Block = 17
                 // Let's close the active window with [control + w]. 
-                if (ctrl_status == TRUE && long1 == ASCII_ETB){
-                    ibroker_post_message_to_ds( MSG_CLOSE, long1, long2 );
+                if (ctrl_status == TRUE && long1 == ASCII_ETB)
+                {
+                    //ibroker_post_message_to_ds( MSG_CLOSE, long1, long2 );
+                    ibroker_post_message_to_fg_thread(
+                        MSG_CLOSE, long1, long2);                    
+
                     return 0;
                 }
 
-                // ^s = Device Control 3 = 19
-                if (ctrl_status == TRUE && long1 == ASCII_DC3){
-                    ibroker_post_message_to_ds( MSG_SAVE, long1, long2 );
+                // ^q = Device Control 1 = 0x11
+                if (ctrl_status == TRUE && long1 == ASCII_DC1)
+                {
+                    //ibroker_post_message_to_ds( MSG_DC1, long1, long2 );
+                    ibroker_post_message_to_fg_thread(
+                        MSG_DC1, long1, long2);                    
+                    return 0;
+                }
+                // ^r = Device Control 2 = 0x12
+                if (ctrl_status == TRUE && long1 == ASCII_DC2)
+                {
+                    //ibroker_post_message_to_ds( MSG_DC2, long1, long2 );
+                    ibroker_post_message_to_fg_thread(
+                        MSG_DC2, long1, long2);                    
+
+                    return 0;
+                }
+                // ^s = Device Control 3 = 0x13
+                // Some apps can use it as SAVE.
+                if (ctrl_status == TRUE && long1 == ASCII_DC3)
+                {
+                    //ibroker_post_message_to_ds( MSG_DC3, long1, long2 );
+                    ibroker_post_message_to_fg_thread(
+                        MSG_DC3, long1, long2);                    
+
+                    return 0;
+                }
+                // ^t = Device Control 4 = 0x14
+                if (ctrl_status == TRUE && long1 == ASCII_DC4)
+                {
+                    //ibroker_post_message_to_ds( MSG_DC4, long1, long2 );
+                    ibroker_post_message_to_fg_thread(
+                        MSG_DC4, long1, long2);                    
+
                     return 0;
                 }
 
                 // ^v = Synchronous Idle = 22
-                if (ctrl_status == TRUE && long1 == ASCII_SYN){
-                    ibroker_post_message_to_ds( MSG_PASTE, long1, long2 );
+                if (ctrl_status == TRUE && long1 == ASCII_SYN)
+                {
+                    //ibroker_post_message_to_ds( MSG_PASTE, long1, long2 );
+                    ibroker_post_message_to_fg_thread(
+                        MSG_PASTE, long1, long2);                
+
                     return 0;
                 }
 
                 // ^x = Cancel = 24
-                if (ctrl_status == TRUE && long1 == ASCII_CAN){
-                    ibroker_post_message_to_ds( MSG_CUT, long1, long2 );
+                if (ctrl_status == TRUE && long1 == ASCII_CAN)
+                {
+                    //ibroker_post_message_to_ds( MSG_CUT, long1, long2 );
+                    ibroker_post_message_to_fg_thread(
+                        MSG_CUT, long1, long2);                
+
                     return 0;
                 }
 
                 // ^z = Substitute - 26
-                if (ctrl_status == TRUE && long1 == ASCII_SUB){
-                    ibroker_post_message_to_ds( MSG_UNDO, long1, long2 );
+                if (ctrl_status == TRUE && long1 == ASCII_SUB)
+                {
+                    //ibroker_post_message_to_ds( MSG_UNDO, long1, long2 );
+                    ibroker_post_message_to_fg_thread(
+                        MSG_UNDO, long1, long2);
+
                     return 0;
                 }
 
@@ -1528,7 +1623,7 @@ __consoleProcessKeyboardInput (
                 }
                 if (shift_status == TRUE){
                     //ibroker_post_message_to_ds( (int) 88108, 0, 0 );
-                    // MSG_HOTKEY=8888 | 1 = Hotkey id 1.
+                    // MSG_HOTKEY=88 | 1 = Hotkey id 1.
                     ibroker_post_message_to_ds( (int) MSG_HOTKEY, 1, 0 );
                 }
                 return 0;
@@ -1750,53 +1845,107 @@ __ProcessKeyboardInput (
                 // #todo: Podemos criar uma flag que diga se a thread 
                 // é um terminal virtual ou não. t->isVirtualTerminal.
 
-                // ^a = Start OF Header = 1
-            if (ctrl_status == TRUE && long1 == ASCII_SOH){
-                    ibroker_post_message_to_ds( MSG_SELECT_ALL, long1, long2 );
-                    return 0;
+            // ^a = Start OF Header = 1
+            if (ctrl_status == TRUE && long1 == ASCII_SOH)
+            {
+                //ibroker_post_message_to_ds( MSG_SELECT_ALL, long1, long2 );
+                ibroker_post_message_to_fg_thread(
+                    MSG_SELECT_ALL, long1, long2);
+                return 0;
             }
 
-                // ^c = End Of Text = 3
-            if (ctrl_status == TRUE && long1 == ASCII_ETX){
-                    ibroker_post_message_to_ds( MSG_COPY, long1, long2 );
-                    return 0;
+            // ^c = End Of Text = 3
+            if (ctrl_status == TRUE && long1 == ASCII_ETX)
+            {
+                //ibroker_post_message_to_ds( MSG_COPY, long1, long2 );
+                ibroker_post_message_to_fg_thread(
+                    MSG_COPY, long1, long2);
+                return 0;
             }
 
-                // ^f = Acknowledgement = 6
-            if (ctrl_status == TRUE && long1 == ASCII_ACK){
-                    ibroker_post_message_to_ds( MSG_FIND, long1, long2 );
-                    return 0;
+            // ^f = Acknowledgement = 6
+            if (ctrl_status == TRUE && long1 == ASCII_ACK)
+            {
+                //ibroker_post_message_to_ds( MSG_FIND, long1, long2 );
+                ibroker_post_message_to_fg_thread(
+                    MSG_FIND, long1, long2);
+
+                return 0;
             }
 
-                // ^w = End Of Transition Block = 17
-                // Let's close the active window with [control + w]. 
-            if (ctrl_status == TRUE && long1 == ASCII_ETB){
-                    ibroker_post_message_to_ds( MSG_CLOSE, long1, long2 );
-                    return 0;
+            // ^w = End Of Transition Block = 17
+            // Let's close the active window with [control + w]. 
+            if (ctrl_status == TRUE && long1 == ASCII_ETB)
+            {
+                //ibroker_post_message_to_ds( MSG_CLOSE, long1, long2 );
+                ibroker_post_message_to_fg_thread(
+                    MSG_CLOSE, long1, long2);
+                return 0;
             }
 
-                // ^s = Device Control 3 = 19
-            if (ctrl_status == TRUE && long1 == ASCII_DC3){
-                    ibroker_post_message_to_ds( MSG_SAVE, long1, long2 );
-                    return 0;
+            // ^q = Device Control 1 = 0x11
+            if (ctrl_status == TRUE && long1 == ASCII_DC1)
+            {
+                //ibroker_post_message_to_ds( MSG_DC1, long1, long2 );
+                ibroker_post_message_to_fg_thread(
+                    MSG_DC1, long1, long2);
+
+                return 0;
+            }
+            // ^r = Device Control 2 = 0x12
+            if (ctrl_status == TRUE && long1 == ASCII_DC2)
+            {
+                //ibroker_post_message_to_ds( MSG_DC2, long1, long2 );
+                ibroker_post_message_to_fg_thread(
+                    MSG_DC2, long1, long2);
+
+                return 0;
+            }
+            // ^s = Device Control 3 = 0x13
+            // Some apps can use it as SAVE.
+            if (ctrl_status == TRUE && long1 == ASCII_DC3)
+            {
+                //ibroker_post_message_to_ds( MSG_DC3, long1, long2 );
+                ibroker_post_message_to_fg_thread(
+                    MSG_DC3, long1, long2);
+
+                return 0;
+            }
+            // ^t = Device Control 4 = 0x14
+            if (ctrl_status == TRUE && long1 == ASCII_DC4)
+            {
+                //ibroker_post_message_to_ds( MSG_DC4, long1, long2 );
+                ibroker_post_message_to_fg_thread(
+                    MSG_DC4, long1, long2);
+                return 0;
             }
 
                 // ^v = Synchronous Idle = 22
-            if (ctrl_status == TRUE && long1 == ASCII_SYN){
-                    ibroker_post_message_to_ds( MSG_PASTE, long1, long2 );
-                    return 0;
+            if (ctrl_status == TRUE && long1 == ASCII_SYN)
+            {
+                //ibroker_post_message_to_ds( MSG_PASTE, long1, long2 );
+                ibroker_post_message_to_fg_thread(
+                    MSG_PASTE, long1, long2);
+
+                return 0;
             }
 
-                // ^x = Cancel = 24
-            if (ctrl_status == TRUE && long1 == ASCII_CAN){
-                    ibroker_post_message_to_ds( MSG_CUT, long1, long2 );
-                    return 0;
+            // ^x = Cancel = 24
+            if (ctrl_status == TRUE && long1 == ASCII_CAN)
+            {
+                //ibroker_post_message_to_ds( MSG_CUT, long1, long2 );
+                ibroker_post_message_to_fg_thread(
+                    MSG_CUT, long1, long2);
+                return 0;
             }
 
-                // ^z = Substitute - 26
-            if (ctrl_status == TRUE && long1 == ASCII_SUB){
-                    ibroker_post_message_to_ds( MSG_UNDO, long1, long2 );
-                    return 0;
+            // ^z = Substitute - 26
+            if (ctrl_status == TRUE && long1 == ASCII_SUB)
+            {
+                //ibroker_post_message_to_ds( MSG_UNDO, long1, long2 );
+                ibroker_post_message_to_fg_thread(
+                    MSG_UNDO, long1, long2);
+                return 0;
             }
 
                 // ...
@@ -2004,7 +2153,7 @@ __ProcessKeyboardInput (
                 }
                 if (shift_status == TRUE){
                     //ibroker_post_message_to_ds( (int) 88108, 0, 0 );
-                    // MSG_HOTKEY=8888 | 1 = Hotkey id 1.
+                    // MSG_HOTKEY=88 | 1 = Hotkey id 1.
                     ibroker_post_message_to_ds( (int) MSG_HOTKEY, 1, 0 );
                 }
                 return 0;
@@ -2875,18 +3024,9 @@ done:
             // The purpose is feed the terminal emulator.
             // New behavior: duplicate to foreground thread
 
-            // #test: 
-            // Do we have a valid foreground thread?
-            // It's kinda messy when the display server closes a window.
-
             // TARGET: GUI APP
-            if ( foreground_thread > 0 && foreground_thread < THREAD_COUNT_MAX )
-            {
-                ipc_post_message_to_tid(
-                    (tid_t) __HARDWARE_TID, (tid_t) foreground_thread,
-                    Event_Message, Event_LongVK, Event_LongScanCode );
-            }
-
+            ibroker_post_message_to_fg_thread(
+                Event_Message, Event_LongVK, Event_LongScanCode);
         }
 
         // Returns when its not a combination

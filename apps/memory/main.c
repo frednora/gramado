@@ -22,15 +22,22 @@ static int main_window      = -1;
 static int refresh_button   = -1;
 static int close_button     = -1;
 
+// Global default responder 
+static int default_responder = -1;
+
 // Cached layout info
 static unsigned long cr_left   = 0;
 static unsigned long cr_top    = 0;
 static unsigned long cr_width  = 0;
 static unsigned long cr_height = 0;
 
+
+static void trigger_default_responder(int fd);
+
 // ----------------------------------------------------
 // Helpers
 // ----------------------------------------------------
+
 
 static void query_client_area(int fd)
 {
@@ -122,6 +129,18 @@ static void update_children(int fd)
     gws_refresh_window(fd, main_window);
 }
 
+static void trigger_default_responder(int fd) 
+{
+    if (default_responder == refresh_button) {
+        update_children(fd);
+    } else if (default_responder == close_button) {
+        gws_destroy_window(fd, refresh_button);
+        gws_destroy_window(fd, close_button);
+        gws_destroy_window(fd, main_window);
+        exit(0);
+    }
+}
+
 // ----------------------------------------------------
 // Procedure: handles events sent by the display server
 // ----------------------------------------------------
@@ -144,23 +163,26 @@ memoryProcedure(
         // Null/heartbeat event
         return 0;
 
-    case MSG_KEYDOWN:
-        switch (long1){
-
-        case 'R':
-        case 'r':
-            update_children(fd);
-            break;
-
-        case 'C':
-        case 'c':
-            gws_destroy_window(fd, refresh_button);
-            gws_destroy_window(fd, close_button);
-            gws_destroy_window(fd, main_window);
-            exit(0);
-            break;
-        };
+case MSG_KEYDOWN:
+    switch (long1) {
+    case VK_RETURN:  // Enter key
+        trigger_default_responder(fd);
         break;
+
+    case 'R':
+    case 'r':
+        update_children(fd);
+        break;
+
+    case 'C':
+    case 'c':
+        gws_destroy_window(fd, refresh_button);
+        gws_destroy_window(fd, close_button);
+        gws_destroy_window(fd, main_window);
+        exit(0);
+        break;
+    }
+    break;
 
     case MSG_SYSKEYDOWN:
         switch (long1) {
@@ -305,7 +327,8 @@ int main(int argc, char *argv[])
     unsigned long close_x   = (3 * cr_width / 4) - (button_w / 2);
     unsigned long buttons_y = cr_height - (button_h + 20);
 
-    // Create buttons
+// Create buttons
+
     refresh_button = gws_create_window(
         client_fd,
         WT_BUTTON,
@@ -332,15 +355,15 @@ int main(int argc, char *argv[])
 
     gws_refresh_window(client_fd, close_button);
 
+// Default responder
+    default_responder = refresh_button;
+
+// Main window
     gws_set_active(client_fd, main_window);
     gws_refresh_window(client_fd, main_window);
 
-/*
-    // Event loop
-    while (1) {
-        pump(client_fd);
-    }
-*/
+
+// Event loop
 
     while (1){
 

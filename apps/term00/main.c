@@ -25,6 +25,14 @@
 // Client-side library.
 #include <gws.h>
 
+/*
+// #test: These are sent by the system
+#define __MSG_DC1  76  // ^q
+#define __MSG_DC2  77  // ^r
+#define __MSG_DC3  78  // ^s   (#bugbug: Same as MSG_SAVE)
+#define __MSG_DC4  79  // ^t
+*/
+
 // Program name
 static const char *program_name = "TERM00";
 struct gws_display_d *Display;
@@ -2577,6 +2585,20 @@ terminalProcedure (
 
     switch (msg){
 
+    case MSG_DC1:
+        tputstring(fd, "MSG_DC1\n");
+        break;
+    case MSG_DC2:
+        tputstring(fd, "MSG_DC2\n");
+        break;
+    case MSG_DC3:
+        tputstring(fd, "MSG_DC3\n");
+        break;
+    case MSG_DC4:
+        tputstring(fd, "MSG_DC4\n");
+        break;
+        
+
     //case MSG_QUIT:
     //case 4080:
         //exit(0);
@@ -2658,9 +2680,9 @@ terminalProcedure (
         };
         break;
 
-    case MSG_KEYUP:
-        return 0;
-        break;
+    //case MSG_KEYUP:
+        //return 0;
+        //break;
 
     case MSG_SYSKEYDOWN:
         switch(long1)
@@ -3046,6 +3068,10 @@ static void __get_system_event(int fd, int wid)
 // Dispatch
     msg_code = (int) (RTLEventBuffer[1] & 0xFFFFFFFF);
 
+// Valid range for system events [0~99]
+    if (msg_code >= 100)
+        return;
+
     switch (msg_code){
 
     case MSG_KEYDOWN:
@@ -3079,6 +3105,20 @@ static void __get_system_event(int fd, int wid)
         break;
 
 
+    case MSG_DC1:
+    case MSG_DC2:
+    case MSG_DC3:
+    case MSG_DC4:
+        terminalProcedure ( 
+            fd,   // socket 
+            wid,  // wid 
+            (int) msg_code, 
+            (unsigned long) RTLEventBuffer[2],
+            (unsigned long) RTLEventBuffer[3] );
+        RTLEventBuffer[1] = 0;
+        return;
+        break;
+
     // Accepting only these messages.
     case MSG_CLOSE:
     case MSG_PAINT:
@@ -3096,20 +3136,22 @@ static void __get_system_event(int fd, int wid)
     // The parent (we) was notified when
     // some important event happened with the child.
     // MSG_NOTIFY_PARENT
-    case 4000:
+    case 89:
         cr();
         lf();
         tputstring(fd,"terminal.bin: #test Notify parent");    
         break;
 
+    // #deprecated: Out of range for system messages.
     // #test
     // In this test, some routine sent a message to the 
     // init process and then the init process responded it.
-    case 44888:
-       cr();
-       lf();
-       tputstring(fd,"terminal.bin: 44888 Received");   
-       break;
+    //case 44888:
+       //cr();
+       //lf();
+       //tputstring(fd,"terminal.bin: 44888 Received");   
+       //break;
+
     default:
         break;
     };

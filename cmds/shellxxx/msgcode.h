@@ -128,23 +128,21 @@
 #define MSG_CONTROL_ARROW_LEFT   82
 #define MSG_CONTROL_ARROW_RIGHT  83
 
+// Hotkey
+#define MSG_HOTKEY  88
+
 
 //  Terminal commands
-#define MSG_TERMINALCOMMAND      100
-#define TERMINALCOMMAND_PRINTCHAR 1000
+//#define MSG_TERMINALCOMMAND      100
+//#define TERMINALCOMMAND_PRINTCHAR 1000
 //#define TERMINALCOMMAND_PRINT??? 1001
 //...
 
 // Scroll
 // o evento de rolagem aconteceu ...
 // O número do evento será entregue em long1.
-#define MSG_HSCROLL  2000
-#define MSG_VSCROLL  2001
-
-// ??
-// Hotkey
-#define MSG_HOTKEY  8888
-
+//#define MSG_HSCROLL  2000
+//#define MSG_VSCROLL  2001
 
 // ...
 

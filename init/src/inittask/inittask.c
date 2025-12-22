@@ -279,23 +279,27 @@ xxxProcessEvent (
         };
         break;
 
+// Out of range for system messages
 // 'Hello' received. Let's respond it.
     case 44888:
         do_hello(caller_tid);
         break;
 
+// Out of range for system messages
 // ds00 display server is telling us that 
 // it was initialized and running.
     case 44900:
         is_ds_running = TRUE;
         break;
 
+// Out of range for system messages
 // ds00 display server is telling us that 
 // it is shutting down.
     case 44901:
         is_ds_running = FALSE;
         break;
 
+// Out of range for system messages
 // Reboot receive.
 // #warning
 // Who can send us this message? Only the kernel?
@@ -309,7 +313,6 @@ xxxProcessEvent (
 
 // #warning
 // Who can send us this message?
-
     case __MSG_CLOSE:
         // Not the kernel
         if (caller_tid != 99){
@@ -380,20 +383,23 @@ static int xxxEventLoopSystemEvents(void)
         // more events into the queue.
         if ( rtl_get_event() == TRUE )
         {
-            // Get caller's tid.
-            Caller.tid = (int) ( RTLEventBuffer[8] & 0xFFFF );
+            if (RTLEventBuffer[1] < 100)
+            {
+                // Get caller's tid.
+                Caller.tid = (int) ( RTLEventBuffer[8] & 0xFFFF );
 
-            // Dispatch.
-            xxxProcessEvent ( 
-                (void*) RTLEventBuffer[0], 
-                RTLEventBuffer[1],  // msg code.
-                RTLEventBuffer[2], 
-                RTLEventBuffer[3],
-                Caller.tid );
+                // Dispatch.
+                xxxProcessEvent ( 
+                    (void*) RTLEventBuffer[0], 
+                    RTLEventBuffer[1],  // msg code.
+                    RTLEventBuffer[2], 
+                    RTLEventBuffer[3],
+                    Caller.tid );
 
-            // #test
-            //rtl_yield();
-            //Caller.tid = -1;
+                    // #test
+                    //rtl_yield();
+                    //Caller.tid = -1;
+            }
         }
 
         if (NoReply == FALSE){

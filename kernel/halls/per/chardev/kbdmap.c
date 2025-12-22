@@ -308,12 +308,11 @@ ASCII_US,     //12   ^_
 034,          //14
 '\177',       //15
 
-// No spot 17 colocamos o valor 17 (ASCII_DC1).
-ASCII_DC1,    //16  ^Q
+ASCII_DC1,    //16  ^Q  DC1
 ASCII_ETB,    //17  ^W
 ASCII_ENQ,    //18  ^E  
-ASCII_SO,     //19  ^R
-ASCII_DC4,    //20  ^T
+ASCII_DC2,    //19  ^R  DC2
+ASCII_DC4,    //20  ^T  DC4
 ASCII_EM,     //21  ^Y
 ASCII_NAK,    //22  ^U
 ASCII_HT,     //23  ^I
@@ -326,7 +325,7 @@ CTL,          //29
 
 // No spot 31 comocamos o valor 31 (ASCII_SOH)
 ASCII_SOH,    //30 ^A
-ASCII_DC3,    //31 ^S
+ASCII_DC3,    //31 ^S  DC3
 ASCII_EOT,    //32 ^D
 ASCII_ACK,    //33 ^F
 ASCII_BEL,    //34 ^G

@@ -174,11 +174,18 @@ typedef struct _gRep  gRep;
 // control+s
 #define GWS_Save    72
 
+// #test: These are sent by the system
+#define GWS_DC1  76  // ^q
+#define GWS_DC2  77  // ^r
+#define GWS_DC3  78  // ^s   (#bugbug: Same as MSG_SAVE)
+#define GWS_DC4  79  // ^t
+
 #define GWS_ControlArrowUp      80
 #define GWS_ControlArrowDown    81
 #define GWS_ControlArrowLeft    82
 #define GWS_ControlArrowRight   83
 
+#define GWS_HotKey  88
 
 // =======================================
 // Protocol request constants
@@ -229,8 +236,6 @@ typedef struct _gRep  gRep;
 
 #define GWS_DrainInput    8080
 // ...
-
-#define GWS_HotKey  8888
 
 // #test
 #define GWS_SwitchFocus    9090

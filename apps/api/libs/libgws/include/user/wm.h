@@ -35,7 +35,7 @@
 // see:
 // globals.h in gwssrv.bin
 
-// usdo pelo window manager
+// usado pelo window manager
 #define GWS_SETFOCUS2     18
 #define GWS_GETFOCUS2     19
 
@@ -112,10 +112,30 @@
 #define MSG_MOUSE_DROP            62
 //...
 
+// control+a
+// Seleciona todos os elementos.
+#define MSG_SELECT_ALL    70
+
+// control+f
+#define __MSG_SEARCH    71
+#define MSG_SEARCH    __MSG_SEARCH
+#define MSG_FIND      __MSG_SEARCH
+
+// control+s
+#define MSG_SAVE    72
+
+
+#define MSG_DC1  76  // ^q
+#define MSG_DC2  77  // ^r
+#define MSG_DC3  78  // ^s   (#bugbug: Same as MSG_SAVE)
+#define MSG_DC4  79  // ^t
+
+
+#define MSG_HOTKEY 88
 
 
 //  terminal commands
-#define MSG_TERMINALCOMMAND      100
+//#define MSG_TERMINALCOMMAND      100
 
 //
 // Socket messages
@@ -157,7 +177,6 @@
 
 // drain input 8080
 
-#define MSG_HOTKEY 8888
 
 // switch focus 9090
 // refresh dirty rectangles 9091
