@@ -124,6 +124,8 @@
 // control+s
 #define MSG_SAVE    72
 
+#define MSG_ENABLE_MOUSE  75
+
 #define MSG_DC1  76  // ^q
 #define MSG_DC2  77  // ^r
 #define MSG_DC3  78  // ^s   (#bugbug: Same as MSG_SAVE)

@@ -24,7 +24,8 @@ inline int is_combination(int msg_code)
     case GWS_SelectAll:
     case GWS_Find:
     case GWS_Save:
-    case 88112:
+    case 88112: // old Enable mouse
+    case 75:  // Enable mouse
         return TRUE;
         break;
     //...
@@ -777,7 +778,8 @@ int wmProcessCombinationEvent(int msg_code)
 // + Enable mouse.
 // + Change bg color.
     // #define SHIFT_F12  88112 
-    if (msg_code == 88112)
+    //if (msg_code == 88112)
+    if (msg_code == 75)
     {
         yellow_status("Shift + F12: Enable mouse");
         // Calling the kernel to make the full ps2 initialization.

@@ -3903,6 +3903,36 @@ int terminal_init(unsigned short flags)
         __get_ds_event( client_fd, main_window );
     };
 
+
+/*
+    char coolCharBuffer[256];
+    int ch_read=0;
+    while (1){
+
+         // #bugbug
+         // maybe the terminal is printing garbage before the 
+         //loop
+
+        // Get input from kernel and send it to the shell
+        __get_system_event(client_fd, Terminal.client_window_id);
+
+        // Read what comes from the shell. And print it
+        coolCharBuffer[0] = 0;
+        coolCharBuffer[1] = 0;
+        while(1){
+            //memset(coolCharBuffer,0,256);
+            ch_read = read(ptym_fd, coolCharBuffer, 256);
+            if (ch_read <= 0)
+                break;
+            // Null-terminate for safety if you want to treat it as a string 
+            coolCharBuffer[ch_read] = '\0';
+            tputstring(client_fd, coolCharBuffer);
+        };
+
+        __get_ds_event( client_fd, main_window );
+    };
+*/
+
 // Input loop!
 // local routine.
     //int InputStatus=-1;

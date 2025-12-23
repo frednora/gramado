@@ -1693,8 +1693,10 @@ __consoleProcessKeyboardInput (
                 // [SHIFT + F12]
                 // Update all windows and show the mouse pointer.
                 // IN: window, msg code, data1, data2.
+                // 88112 is invalid ... we need to send a n less than 100.
                 if (shift_status == TRUE){
-                    ibroker_post_message_to_ds( (int) 88112, 0, 0 );
+                    //ibroker_post_message_to_ds( (int) 88112, 0, 0 );
+                    ibroker_post_message_to_ds( (int) 75, 0, 0 );
                 }
                 return 0;
                 break;
@@ -2224,7 +2226,8 @@ __ProcessKeyboardInput (
                 // Update all windows and show the mouse pointer.
                 // IN: window, msg code, data1, data2.
                 if (shift_status == TRUE){
-                    ibroker_post_message_to_ds( (int) 88112, 0, 0 );
+                    //ibroker_post_message_to_ds( (int) 88112, 0, 0 );
+                    ibroker_post_message_to_ds( (int) 75, 0, 0 );
                 }
                 return 0;
                 break;
