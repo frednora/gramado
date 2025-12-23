@@ -272,14 +272,6 @@ struct thread_d
     unsigned long quantum_limit_max;
     unsigned long quantum;
 
-// If this thread is a virtual terminal or not.
-    int isVirtualTerminal;
-
-// The kernel console associated with this thread.
-// 0~3
-    int __console_id;
-
-
 // Input model
 // Setup the input model for this thread ...
 // So the kernel will know where are the places
@@ -560,8 +552,9 @@ struct thread_d
     unsigned long standbyCount_ms;
 
 // Quantos jiffies ela está rodando antes de parar.
-    unsigned long runningCount; 
-    unsigned long runningCount_ms; 
+    unsigned long runningCount;
+    unsigned long runningCount_ms;
+
 
 // obs: 
 // ??

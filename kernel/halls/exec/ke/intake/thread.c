@@ -63,8 +63,6 @@ static void __ps_initialize_thread_common_elements(struct thread_d *t)
 
     t->objectType = ObjectTypeThread;
     t->objectClass = ObjectClassKernelObject;
-// If this thread is a virtual terminal or not
-    t->isVirtualTerminal = FALSE;
 
 //
 // == Wait support ==================
@@ -947,10 +945,6 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
     clone->priority      = father->priority;
 
 
-// The kernel console associated with this thread.
-// 0~3
-    clone->__console_id = (int) father->__console_id;
-
 //
 // Input
 //
@@ -1498,10 +1492,6 @@ try_next_slot:
     Thread->HeapSize = 0;
     Thread->StackStart = 0;
     Thread->StackSize = 0;
-
-// The kernel console associated with this thread.
-// 0~3
-    Thread->__console_id = (int) CONSOLE0;
 
 // Paging
     Thread->pml4_VA  = (unsigned long ) Process->pml4_VA;

@@ -1308,7 +1308,7 @@ __consoleProcessKeyboardInput (
                 //    esteja em foreground. Pois nesse caso, enviar 
                 //    as teclas de digitação para stdin ja é o suficiente.
                 // #todo: Podemos criar uma flag que diga se a thread 
-                // é um terminal virtual ou não. t->isVirtualTerminal.
+                // é um terminal virtual ou não.
 
                 // ^a = Start OF Header = 1
                 if (ctrl_status == TRUE && long1 == ASCII_SOH)
@@ -1843,7 +1843,7 @@ __ProcessKeyboardInput (
                 //    esteja em foreground. Pois nesse caso, enviar 
                 //    as teclas de digitação para stdin ja é o suficiente.
                 // #todo: Podemos criar uma flag que diga se a thread 
-                // é um terminal virtual ou não. t->isVirtualTerminal.
+                // é um terminal virtual ou não.
 
             // ^a = Start OF Header = 1
             if (ctrl_status == TRUE && long1 == ASCII_SOH)

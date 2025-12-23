@@ -39,7 +39,9 @@ struct scheduler_info_d
 //
 // rr support
 //
-    unsigned long rr_round_counter;
+
+    unsigned long rr_round_counter;  // How many orunds.
+    int rr_ready_threads_in_round;  // Ready threads in this round.
 
 //
 // queues support

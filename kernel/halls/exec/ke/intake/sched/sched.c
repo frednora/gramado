@@ -53,7 +53,33 @@ static tid_t __scheduler_priorityinterleaving(unsigned long sched_flags);
 
 static struct thread_d *__build_stage_queue(int stage, unsigned long priority);
 
+static void sched_quick_and_dirty_load_balancer(void);
+
 // =======================================
+
+// Quick and dirty load balancer
+// No parameters, uses global SchedulerInfo.
+// If ready count > 3, lower InitThread quantum.
+static void sched_quick_and_dirty_load_balancer(void)
+{
+    int ReadyCount = SchedulerInfo.rr_ready_threads_in_round;
+
+    // Safety: make sure InitThread is valid
+    if ((void*) InitThread == NULL)
+        return;
+    if (InitThread->used != TRUE || InitThread->magic != 1234)
+        return;
+
+    // Check the current ready count
+    if (ReadyCount > 3) {
+        // Lower the quantum for the init thread
+        InitThread->quantum = QUANTUM_NORMAL_THRESHOLD;
+    } else {
+        // Restore balanced quantum when load is light
+        InitThread->quantum = QUANTUM_NORMAL_BALANCED;
+    }
+}
+
 
 static void __sched_notify_parent(struct thread_d *thread, int event_number)
 {
@@ -421,6 +447,25 @@ static struct thread_d *__build_stage_queue(int stage, unsigned long priority)
 // da CPU, reduzindo o consumo de energia.
 // OUT: next tid.
 
+/*/
+For each thread:
+
+ + Exit in progress: 
+   Marks it as ZOMBIE, invalidates foreground thread if needed, skips scheduling.
+
+ + WAITING: 
+   Checks alarms and wakeup jiffies; if time has passed, moves it to READY.
+
+ + ZOMBIE: 
+   Cleans up, unregisters display server if needed, prevents killing InitThread.
+
+ + READY: 
+   Appends to the round-robin queue (p1q->next), resets counters, 
+   increments scheduledCount, balances priority, sets quantum, 
+   applies special rules for foreground and display server threads, 
+   adjusts quantum if credits are high.
+*/
+
 static tid_t __scheduler_rr(unsigned long sched_flags)
 { 
 // + Build the p1q queue.
@@ -550,6 +595,8 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
     static int Start = (INIT_TID +1);
     static int Max = THREAD_COUNT_MAX;
 
+    int ReadCounter=0;  // Number of READY threads scheduled
+
 // This loop builds the queue of READY threads.
 // Threads in other state will be checked and the 
 // structure will be updated properlly. For example: 
@@ -611,6 +658,10 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
             // and not putting waiting threads into the round.
             // Alarm and wakeup.
             // A thread esta esperando.
+            // #bugbug: The wakeup check (jiffies >= wake_jiffy) is 
+            // only evaluated when the scheduler runs. That means wakeups 
+            // aren’t real-time — threads may oversleep until the 
+            // next scheduling tick.
             if ( TmpThread->used == TRUE && 
                  TmpThread->magic == 1234 && 
                  TmpThread->state == WAITING )
@@ -647,6 +698,8 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
 
             // =============================
             // :: ZOMBIE
+            // #todo: That’s fine, but you might want a dedicated reaper/collector 
+            // to free resources instead of doing it inline.
             if ( TmpThread->used == TRUE && 
                  TmpThread->magic == 1234 && 
                  TmpThread->state == ZOMBIE )
@@ -755,9 +808,14 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                     TmpThread->quantum = (TmpThread->quantum + 1);
                     TmpThread->credits = 0;
                 }
+
+                ReadCounter++;
             }
         }
     };
+
+    SchedulerInfo.rr_ready_threads_in_round = ReadCounter;
+    sched_quick_and_dirty_load_balancer();
 
 // Finalizing the list.
 // This way we need to re-scheduler at the end of each round.
@@ -1258,6 +1316,7 @@ int init_scheduler(unsigned long sched_flags)
 // For rr policy
 //
     SchedulerInfo.rr_round_counter = 0;
+    SchedulerInfo.rr_ready_threads_in_round = 0;
 
 //
 // For queues policy
