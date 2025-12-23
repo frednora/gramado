@@ -790,17 +790,29 @@ int editor_initialize(int argc, char *argv[])
     cursor_x_max = ((w_width/8)  -1);
     cursor_y_max = ((w_height/8) -1);
 
-// Create main window.
+// >> Style: design-time identity. (unsigned long)
+// Defines window type and decorations/features.
+    unsigned long mw_style = WS_NULL;
+
+// >> Status: interaction/activation. (int)
+// Indicates focus, active/inactive, and user engagement.
+    unsigned long mw_status = WINDOW_STATUS_ACTIVE;
+
+// >> State: runtime condition. (int)
+// Tracks current behavior (minimized, maximized, fullscreen, etc).
+    unsigned long mw_state = WINDOW_STATE_NULL;
+
+// Create main window
     main_window = 
         (int) gws_create_window (
                   client_fd,
-                  WT_OVERLAPPED,  // type 
-                  WINDOW_STATUS_ACTIVE,  // status 
-                  VIEW_NULL,             // view
+                  WT_OVERLAPPED,
+                  mw_status, 
+                  mw_state,
                   program_name, 
                   w_left, w_top, w_width, w_height,
-                  0, 
-                  0x0000, 
+                  0,   // Parent wid
+                  mw_style, 
                   client_area_color,
                   frame_color );
 

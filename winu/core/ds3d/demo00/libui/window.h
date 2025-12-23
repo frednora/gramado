@@ -1,15 +1,10 @@
-/*
- * File: window.h
- * History:
- *     2020 - Created by Fred Nora.
- */
+// window.h
+// 2020 - Created by Fred Nora.
 
 #ifndef __LIBUI_WINDOW_H
 #define __LIBUI_WINDOW_H    1
 
-
 #include "../event.h"
-
 
 // ===============================================================
 
@@ -61,13 +56,6 @@ int __has_wallpaper(void);
 void __init_wm_structure(void);
 
 
-//apresentação.
-#define VIEW_NULL      0
-#define VIEW_FULL      1000
-#define VIEW_MAXIMIZED 1001
-#define VIEW_MINIMIZED 1002
-#define VIEW_NORMAL    1003 //Normal (restaurada)
-// ...
 
 // Button state
 #define BS_NULL      0 
@@ -88,13 +76,21 @@ void __init_wm_structure(void);
 // Window Flags
 //
 
+// ==============================================================
+// >> Style: design-time identity. (unsigned long)
+// Defines window type and decorations/features.
+
+#define WS_NULL  0x0000
+
 //----------------------
-// State (runtime condition)
+// Style (design-time components)
 //----------------------
-#define WS_MAXIMIZED    0x0001
-#define WS_MINIMIZED    0x0002  // Iconic
-#define WS_FULLSCREEN   0x0004
-#define WS_LOCKED       0x0008  // No input
+
+// #todo: Reserved values
+#define WS_RES1    0x0001
+#define WS_RES2    0x0002
+#define WS_RES3    0x0004
+#define WS_RES4    0x0008
 
 //----------------------
 // Style (design-time components)
@@ -118,10 +114,21 @@ void __init_wm_structure(void);
 #define WS_CHILD     0x100000    // really a type, not a style
 
 
-
-// window status
+// ==============================================================
+// >> Status: interaction/activation. (int)
+// Indicates focus, active/inactive, and user engagement.
 #define WINDOW_STATUS_ACTIVE       1
 #define WINDOW_STATUS_INACTIVE     0
+
+
+// ==============================================================
+// >> State: runtime condition. (int)
+// Tracks current behavior (minimized, maximized, fullscreen, etc).
+#define WINDOW_STATE_NULL       0
+#define WINDOW_STATE_FULL       1000
+#define WINDOW_STATE_MAXIMIZED  1001
+#define WINDOW_STATE_MINIMIZED  1002
+#define WINDOW_STATE_NORMAL     1003  //Normal (restaurada)
 
 
 //window relationship status. (seu status em relação as outras janelas.)
@@ -532,7 +539,7 @@ struct gws_window_d
 
 // State: runtime condition.
 // Tracks current behavior (minimized, maximized, fullscreen, etc).
-    int view; 
+    int state; 
 
 // Status: interaction/activation.
 // Indicates focus, active/inactive, and user engagement.
@@ -1341,7 +1348,7 @@ int flush_window_by_id(int wid);
 void *xxxCreateSurfaceWindow( 
     unsigned long type,        // 1, Tipo de janela (popup,normal,...)
     unsigned long status,      // 2, Estado da janela (ativa ou nao)
-    unsigned long view,        // 3, (min, max ...)
+    unsigned long state,        // 3, (min, max ...)
     char *windowname,          // 4, Título. 
     unsigned long x,           // 5, Deslocamento em relação às margens do Desktop. 
     unsigned long y,           // 6, Deslocamento em relação às margens do Desktop.
@@ -1394,7 +1401,7 @@ void *doCreateWindow (
     unsigned long type, 
     unsigned long style,
     unsigned long status, 
-    unsigned long view, 
+    unsigned long state, 
     char *windowname, 
     unsigned long x, 
     unsigned long y, 
@@ -1414,7 +1421,7 @@ void *CreateWindow (
     unsigned long type,
     unsigned long style, 
     unsigned long status, 
-    unsigned long view, 
+    unsigned long state, 
     char *windowname, 
     unsigned long x, 
     unsigned long y, 

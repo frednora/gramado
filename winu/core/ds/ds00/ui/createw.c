@@ -337,6 +337,7 @@ fail:
 }
 
 // Create titlebar and controls.
+// It respects the border size of the parent.
 struct gws_window_d *do_create_titlebar(
     struct gws_window_d *parent,
     unsigned long tb_height,
@@ -346,9 +347,6 @@ struct gws_window_d *do_create_titlebar(
     int icon_id,
     int has_string )
 {
-// Respect the border size
-// of the parent.
-
     struct gws_window_d *tbWindow;
 
 // Titlebar position and size depend on parent’s border and style.
@@ -376,8 +374,9 @@ struct gws_window_d *do_create_titlebar(
 // If Overlapped and maximized, create a titlebar is different,
 // it goes on top of screen and the window has no borders.
     int IsMaximized=FALSE;
+
     if (parent->type == WT_OVERLAPPED &&
-        parent->style == WS_MAXIMIZED )
+        parent->state == WINDOW_STATE_NULL )
     {
         IsMaximized=TRUE;
     }
@@ -517,13 +516,17 @@ struct gws_window_d *do_create_titlebar(
     parent->frame.ornament_color1   = OrnamentColor1;
     parent->titlebar_ornament_color = OrnamentColor1;
 
-    painterFillWindowRectangle(
-        tbWindow->absolute_x, 
-        ( (tbWindow->absolute_y) + (tbWindow->height) - METRICS_TITLEBAR_ORNAMENT_SIZE ),  
-        tbWindow->width, 
-        OrnamentHeight, 
-        OrnamentColor1, 
-        0 );  // rop_flags no rop in this case?
+    unsigned long r0_left   = tbWindow->absolute_x;
+    unsigned long r0_top    = ( (tbWindow->absolute_y) + (tbWindow->height) - METRICS_TITLEBAR_ORNAMENT_SIZE );
+    unsigned long r0_width  = tbWindow->width;
+    unsigned long r0_height = OrnamentHeight;
+    unsigned long r0_color  = OrnamentColor1;
+    unsigned long r0_rop    = 0;
+
+// Draw rectangle
+// IN: l, t, w, h, color, rop
+    painterFillWindowRectangle( 
+        r0_left, r0_top, r0_width, r0_height, r0_color, r0_rop );
 
 //----------------------
 // String
@@ -724,12 +727,13 @@ doCreateWindowFrame (
 
 // Uma overlapped maximizada não tem borda.
     int IsMaximized = FALSE;
-    if (window->style & WS_MAXIMIZED){
+    if (window->state == WINDOW_STATE_MAXIMIZED)
+    {
         IsMaximized=TRUE;
     }
 // Uma overlapped maximizada não tem borda.
     int IsFullscreen = FALSE;
-    if (window->style & WS_FULLSCREEN){
+    if (window->state == WINDOW_STATE_FULL){
         IsFullscreen=TRUE;
     }
 
@@ -781,7 +785,8 @@ doCreateWindowFrame (
         // Quando a overlapped esta em fullscreen,
         // então não usamos title bar,
         // nem bordas.
-        if (window->style & WS_FULLSCREEN)
+
+        if (window->state == WINDOW_STATE_FULL)
         {
             //useFrame=FALSE;
             useTitleBar=FALSE;
@@ -789,6 +794,7 @@ doCreateWindowFrame (
             useIcon=FALSE;
             useBorder=FALSE;
         }
+        
         if (window->style & WS_STATUSBAR){
             useStatusBar=TRUE;
         }
@@ -1088,7 +1094,7 @@ fail:
 //
 // IN:
 //   type   - Window type (WT_OVERLAPPED, WT_BUTTON, etc.)
-//   style  - Window style flags (WS_MAXIMIZED, WS_FULLSCREEN, etc.)
+//   style  - Window style 
 //   status
 //   state
 //   title
@@ -1278,15 +1284,17 @@ void *doCreateWindow (
 //
 
 // Maximized: The window occupies the whole desktop working area.
-    if (style & WS_MAXIMIZED){
+    if (state == WINDOW_STATE_MAXIMIZED)
+    {
         Maximized=TRUE;
     }
 // Minimized: (Iconic)
-    if (style & WS_MINIMIZED){
+    if (state == WINDOW_STATE_MINIMIZED)
+    {
         Minimized=TRUE;
     }
 // Fullscreen: The client are occupies the whole screen.
-    if (style & WS_FULLSCREEN){
+    if (state == WINDOW_STATE_FULL){
         Fullscreen=TRUE;
     }
 
@@ -1401,7 +1409,7 @@ void *doCreateWindow (
 
 // State: runtime condition.
 // Tracks current behavior (minimized, maximized, fullscreen, etc).
-    window->state = (int) view;
+    window->state = (int) state;
 
 // Status: interaction/activation.
 // Indicates focus, active/inactive, and user engagement.
@@ -1481,9 +1489,7 @@ void *doCreateWindow (
 
 // Lock or unlock the window.
     //window->locked = FALSE;
-    //if (style & WS_LOCKED){
-    //    window->locked = TRUE;
-    //}
+
 // Can't lock,
 // We need permitions to do our work.
     //window->locked = FALSE;
@@ -2617,21 +2623,14 @@ void *CreateWindow (
         ClientAreaColor = (unsigned int) client_color;
     };
 
-    /*
-    // #debug
-    int mystate = (status & 0xFFFFFFFF);
-    if (mystate == BS_PRESS){
-        printf("BS_PRESS\n"); exit(0);
+/*
+// #hack No full screen allowd for now.
+    if (state == WINDOW_STATE_FULL)
+    {
+        printf("server: Invalid WINDOW_STATE_FULL\n");
+        exit(0);
     }
-    */
-
-    /*
-    // #debug
-    int myview = (view & 0xFFFFFFFF);
-    if (myview == WINDOW_STATE_MAXIMIZED){
-        printf("WINDOW_STATE_MAXIMIZED\n"); exit(0);
-    }
-    */
+*/
 
 // =================
 // name
@@ -2712,10 +2711,6 @@ void *CreateWindow (
     //if ( (void*) windowname == NULL ){}
     //if ( *windowname == 0 ){}
 
-    //if (style & WS_MAXIMIZED){
-    //    printf("MAX 1\n"); 
-    //}
-
 // ============================
 // Types with frame.
 
@@ -2794,12 +2789,6 @@ void *CreateWindow (
             //server_debug_print ("CreateWindow: doCreateWindow fail\n");
             goto fail;
         }
-
-        //if (__w->style & WS_MAXIMIZED){
-        //    printf("MAX2\n"); 
-        //}
-        //printf ("overlapped: breakpoint\n");
-        //while(1){}
 
         // Pintamos simples, mas a tipagem será overlapped.
         __w->type = WT_OVERLAPPED;
@@ -3003,7 +2992,43 @@ draw_frame:
 // style.
 // #todo: We need the style dependent variables for these colors.
 
-// #todo: use color scheme here.
+// Border size
+    unsigned long BorderSize = METRICS_BORDER_SIZE;
+
+// Border colors.
+    unsigned int bc_1 = COLOR_BORDER2;
+    unsigned int bc_2 = COLOR_BORDER2;
+    unsigned int bc_3 = COLOR_BORDER2;
+
+// Ornament colors
+    unsigned int oc_1 = COLOR_ORNAMENT_FG;
+    unsigned int oc_2 = COLOR_ORNAMENT_FG;
+
+// Frame style
+    int FrameStyle = 1;
+
+// ----
+    // App's frame window
+    if (type == WT_OVERLAPPED)
+    {
+        if (__w->status == WINDOW_STATUS_ACTIVE)
+        {
+            oc_1 = COLOR_ORNAMENT_FG;
+            oc_2 = COLOR_ORNAMENT_FG;
+        } else {
+            oc_1 = COLOR_ORNAMENT_BG;
+            oc_2 = COLOR_ORNAMENT_BG;
+        }
+    }
+
+// IN:
+// pwindow, 
+// window, 
+// border size,
+// border color 1, border color 2, border color 3,
+// ornament color 1, ornament color 2, ornament color 3,
+// style
+
     if ( type == WT_OVERLAPPED || 
          type == WT_EDITBOX_SINGLE_LINE || 
          type == WT_EDITBOX_MULTIPLE_LINES || 
@@ -3015,13 +3040,10 @@ draw_frame:
             doCreateWindowFrame ( 
                 (struct gws_window_d *) pWindow,
                 (struct gws_window_d *) __w, 
-                METRICS_BORDER_SIZE,
-                (unsigned int) COLOR_BORDER2,   // COLOR_BLACK,  // border color 1
-                (unsigned int) COLOR_BORDER2,   // COLOR_BLACK,  // border color 2
-                (unsigned int) COLOR_BORDER2,   // COLOR_BLACK,  // border color 3
-                (unsigned int) COLOR_ORNAMENT,  // 0x00C3C3C3,   // ornament color 1
-                (unsigned int) COLOR_ORNAMENT,  // 0x00C3C3C3,   // ornament color 2
-                1 );  // style
+                BorderSize,
+                (unsigned int) bc_1, (unsigned int) bc_2, (unsigned int) bc_3,
+                (unsigned int) oc_1, (unsigned int) oc_2,
+                FrameStyle );
         }
     }
 

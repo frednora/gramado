@@ -1,10 +1,7 @@
-/*
- * File: window.c 
- *      Creates a window.
- *      It's part of the gws project.
- * History:
- *     2019 - Created by Fred Nora.
- */
+// window.c 
+// Create a window.
+// Created by Fred Nora.
+
 // #importante
 // O frame de uma janela deve ser parte do Window Manager.
 // #bugbug
@@ -135,7 +132,7 @@ void useFrame( int value )
 void *xxxCreateSurfaceWindow( 
     unsigned long type,        // 1, Tipo de janela (popup,normal,...)
     unsigned long status,      // 2, Estado da janela (ativa ou nao)
-    unsigned long view,        // 3, (min, max ...)
+    unsigned long state,       // 3, (min, max ...)
     char *windowname,          // 4, Título. 
     unsigned long x,           // 5, Deslocamento em relação às margens do Desktop. 
     unsigned long y,           // 6, Deslocamento em relação às margens do Desktop.
@@ -164,7 +161,7 @@ void *xxxCreateSurfaceWindow(
 
 	message_buffer[0]  = (unsigned long) type;
 	message_buffer[1]  = (unsigned long) status;
-	message_buffer[2]  = (unsigned long) view;
+	message_buffer[2]  = (unsigned long) state;
 	message_buffer[3]  = (unsigned long) windowname;
 	message_buffer[4]  = (unsigned long) x;
 	message_buffer[5]  = (unsigned long) y;
@@ -321,7 +318,7 @@ static struct gws_window_d *__create_window_object(void)
 //1  - Tipo de janela (popup,normal,...) 
 //2  - style
 //3  - Estado da janela. (poderia ter vários bits ??)
-//4  - (min, max ...)
+//4  - state (min, max ...)
 //5  - Título.
 //6  - Deslocamento em relação às margens do Desktop.
 //7  - Deslocamento em relação às margens do Desktop.
@@ -336,7 +333,7 @@ void *doCreateWindow (
     unsigned long type, 
     unsigned long style,
     unsigned long status, 
-    unsigned long view, 
+    unsigned long state, 
     char *windowname, 
     unsigned long x, 
     unsigned long y, 
@@ -496,17 +493,20 @@ void *doCreateWindow (
 // Maximized
 // #todo:
 // The window occupy the whole desktop working area.
-    if (style & WS_MAXIMIZED){
+    if (state == WINDOW_STATE_MAXIMIZED)
+    {
         Maximized=TRUE;
     }
 // Minimized
 // (Iconic)
-    if (style & WS_MINIMIZED){
+    if (state == WINDOW_STATE_MINIMIZED)
+    {
         Minimized=TRUE;
     }
 // Fullscreen
 // Paint only the client area.
-    if (style & WS_FULLSCREEN){
+    if (state == WINDOW_STATE_FULL)
+    {
         Fullscreen=TRUE;
     }
 
@@ -617,8 +617,8 @@ void *doCreateWindow (
     window->is_solid = (int) is_solid;
     window->rop = (unsigned long) rop_flags;
 
-    window->status = (int) (status & 0xFFFFFFFF );
-    window->view   = (int) view;
+    window->status = (int) (status & 0xFFFFFFFF);
+    window->state  = (int) (state & 0xFFFFFFFF);
     window->focus  = FALSE;
     window->dirty  = FALSE;  // Validate
     window->locked = FALSE;
@@ -1248,8 +1248,8 @@ void *doCreateWindow (
 
     //if(DedicatedBuffer == 1){};
 
-// Se o view for igual NULL talvez signifique não pintar.
-    if (window->view == VIEW_NULL)
+// Se o state for igual NULL talvez signifique não pintar.
+    if (window->state == WINDOW_STATE_NULL)
     {
         //#bugbug: fail.
         //window->show = 0;
@@ -1655,7 +1655,7 @@ void *CreateWindow (
     unsigned long type, 
     unsigned long style,
     unsigned long status, 
-    unsigned long view, 
+    unsigned long state, 
     char *windowname, 
     unsigned long x, 
     unsigned long y, 
@@ -1739,7 +1739,7 @@ void *CreateWindow (
 //2. depois criamos o frame. que decide se vai ter barra de títulos ou nao.
 
     /*
-    __w = (void *) CreateWindow ( type, status, view, (char *) windowname, 
+    __w = (void *) CreateWindow ( type, status, state, (char *) windowname, 
                            x, y, width, height, 
                            (struct window_d *) pWindow, desktopid, clientcolor, color );  
     */
@@ -1791,7 +1791,7 @@ void *CreateWindow (
 
         __w = 
             (void *) doCreateWindow ( 
-                         WT_SIMPLE, style, status, view, (char *) name_local_copy,
+                         WT_SIMPLE, style, status, state, (char *) name_local_copy,
                          x, y, width, height, 
                          (struct gws_window_d *) pWindow, 
                          desktopid, 
@@ -1829,7 +1829,7 @@ void *CreateWindow (
 
         __w = 
             (void *) doCreateWindow ( 
-                         WT_SIMPLE, 0, status, view, (char *) name_local_copy, 
+                         WT_SIMPLE, 0, status, state, (char *) name_local_copy, 
                          x, y, width, height, 
                          (struct gws_window_d *) pWindow, 
                          desktopid, 
@@ -1866,7 +1866,7 @@ void *CreateWindow (
 
         __w = 
             (void *) doCreateWindow ( 
-                         WT_BUTTON, 0, status, view, (char *) name_local_copy, 
+                         WT_BUTTON, 0, status, state, (char *) name_local_copy, 
                          x, y, width, height, 
                          (struct gws_window_d *) pWindow, 
                          desktopid, 
@@ -1895,7 +1895,7 @@ void *CreateWindow (
 
         __w = 
             (void *) doCreateWindow ( 
-                         WT_SIMPLE, 0, status, view, (char *) name_local_copy,
+                         WT_SIMPLE, 0, status, state, (char *) name_local_copy,
                          x, y, width, height, 
                          (struct gws_window_d *) pWindow, 
                          desktopid, 

@@ -3533,6 +3533,7 @@ int terminal_init(unsigned short flags)
 
 // ===================================================
 // main window
+// #bugbug: These values for style were deprecated, it belongs to state now.
 // style: 0x0001=maximized | 0x0002=minimized | 0x0004=fullscreen
 
     main_window = 
@@ -3540,10 +3541,12 @@ int terminal_init(unsigned short flags)
                 client_fd,
                 WT_OVERLAPPED, 
                 WINDOW_STATUS_ACTIVE,  // status
-                VIEW_NULL,             // view
+                WINDOW_STATE_NULL,     // state
                 program_name,
                 mwLeft, mwTop, mwWidth, mwHeight,
-                0, WS_TERMINAL, mwColor, mwColor );
+                0, 
+                WS_TERMINAL,  // Style 
+                mwColor, mwColor );
 
     if (main_window < 0){
         printf("terminal.c: fail on main_window\n");

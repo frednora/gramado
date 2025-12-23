@@ -713,7 +713,8 @@ int main(int argc, char *argv[])
 
     const char *app_name = "DOC";
 
-// style: 
+// style:
+// #bugbug: These values for style were deprecated, it belongs to state now.
 // 0x0001=maximized | 0x0002=minimized | 0x0004=fullscreen | 0x0008 statusbar
 
     main_window = 
@@ -721,11 +722,11 @@ int main(int argc, char *argv[])
                   client_fd,
                   WT_OVERLAPPED, 
                   WINDOW_STATUS_ACTIVE,  // status
-                  VIEW_NULL,             // view
+                  WINDOW_STATE_NULL,     // state
                   app_name,
                   viewwindowx, viewwindowy, w_width, w_height,
                   0, 
-                  0x0000,
+                  0x0000,  // Style
                   COLOR_GRAY, COLOR_GRAY );
 
     if (main_window < 0){

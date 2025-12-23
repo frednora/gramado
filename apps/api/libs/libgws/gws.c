@@ -86,7 +86,7 @@ __gws_createwindow_request (
     unsigned int bg_color,
     unsigned long type,
     unsigned long status,
-    unsigned long view,
+    unsigned long state,
     unsigned long style,
     unsigned long parent,
     const char *name );
@@ -1699,7 +1699,7 @@ __gws_createwindow_request (
     unsigned int bg_color,
     unsigned long type,
     unsigned long status,
-    unsigned long view,
+    unsigned long state,
     unsigned long style,
     unsigned long parent,
     const char *name )
@@ -1737,7 +1737,7 @@ __gws_createwindow_request (
     message_buffer[0] = 0;
     message_buffer[1] = GWS_CreateWindow;
     message_buffer[2] = status;
-    message_buffer[3] = view;
+    message_buffer[3] = state;
 // l,t,w,h
 // These are the outer values.
 // Including the border if it has one.
@@ -3209,7 +3209,7 @@ void gws_invalidate_window(int fd,int wid)
 //     fd - socket
 //     type - Window type
 //     status - Window status
-//     view ?
+//     state
 //     windowname - Window title
 //     x - Left position
 //     y - Top position
@@ -3226,7 +3226,7 @@ gws_create_window (
     int fd,
     unsigned long type,
     unsigned long status,
-    unsigned long view,
+    unsigned long state,
     const char *windowname,                          
     unsigned long x,                           
     unsigned long y,
@@ -3280,7 +3280,7 @@ gws_create_window (
                 color, 
                 type, 
                 status,
-                view,
+                state,
                 style, 
                 parentwindow, 
                 (const char *) windowname );
@@ -3348,9 +3348,9 @@ gws_create_application_window(
 {
     wid_t parent_wid = 0; // Root
     wid_t wid = -1;
-    unsigned long type = WT_OVERLAPPED;
+    unsigned long type   = WT_OVERLAPPED;
     unsigned long status = WINDOW_STATUS_ACTIVE;
-    unsigned long view = VIEW_NULL;
+    unsigned long state  = WINDOW_STATE_NULL;
 // style: 
 // 0x0001=maximized | 0x0002=minimized | 0x0004=fullscreen | 0x0008 statusbar
     unsigned long style = 0;
@@ -3372,7 +3372,7 @@ gws_create_application_window(
                 fd,
                 type,
                 status,
-                view,
+                state,
                 windowname,
                 x, y, width, height,
                 parent_wid,
@@ -4528,7 +4528,7 @@ int gws_dialog_box(int fd, int parent_wid, const char *message, int type)
         fd,
         WT_SIMPLE,
         WINDOW_STATUS_ACTIVE,
-        VIEW_NULL,
+        WINDOW_STATE_NULL,
         "DialogBox",
         100, 100, 240, 120,
         parent_wid,
@@ -4541,7 +4541,7 @@ int gws_dialog_box(int fd, int parent_wid, const char *message, int type)
     if (message != NULL) {
         message_wid = gws_create_window(
             fd,
-            WT_EDITBOX, WINDOW_STATUS_ACTIVE, VIEW_NULL,
+            WT_EDITBOX, WINDOW_STATUS_ACTIVE, WINDOW_STATE_NULL,
             message,
             20, 20, 200, 20,
             dialog_wid,
@@ -4562,25 +4562,25 @@ int gws_dialog_box(int fd, int parent_wid, const char *message, int type)
 // Create buttons depending on type
     switch (type) {
     case DIALOG_YESNO:
-        btn1_wid = gws_create_window(fd, WT_BUTTON, WINDOW_STATUS_ACTIVE, VIEW_NULL,
+        btn1_wid = gws_create_window(fd, WT_BUTTON, WINDOW_STATUS_ACTIVE, WINDOW_STATE_NULL,
                                      "Yes", 30, 60, 70, 30,
                                      dialog_wid, 0, btn1_color, COLOR_WHITE);
-        btn2_wid = gws_create_window(fd, WT_BUTTON, WINDOW_STATUS_ACTIVE, VIEW_NULL,
+        btn2_wid = gws_create_window(fd, WT_BUTTON, WINDOW_STATUS_ACTIVE, WINDOW_STATE_NULL,
                                      "No", 130, 60, 70, 30,
                                      dialog_wid, 0, btn2_color, COLOR_WHITE);
         break;
 
     case DIALOG_OK:
-        btn1_wid = gws_create_window(fd, WT_BUTTON, WINDOW_STATUS_ACTIVE, VIEW_NULL,
+        btn1_wid = gws_create_window(fd, WT_BUTTON, WINDOW_STATUS_ACTIVE, WINDOW_STATE_NULL,
                                      "OK", 85, 60, 70, 30,
                                      dialog_wid, 0, btn1_color, COLOR_WHITE);
         break;
 
     case DIALOG_OKCANCEL:
-        btn1_wid = gws_create_window(fd, WT_BUTTON, WINDOW_STATUS_ACTIVE, VIEW_NULL,
+        btn1_wid = gws_create_window(fd, WT_BUTTON, WINDOW_STATUS_ACTIVE, WINDOW_STATE_NULL,
                                      "OK", 30, 60, 70, 30,
                                      dialog_wid, 0, btn1_color, COLOR_WHITE);
-        btn2_wid = gws_create_window(fd, WT_BUTTON, WINDOW_STATUS_ACTIVE, VIEW_NULL,
+        btn2_wid = gws_create_window(fd, WT_BUTTON, WINDOW_STATUS_ACTIVE, WINDOW_STATE_NULL,
                                      "Cancel", 130, 60, 70, 30,
                                      dialog_wid, 0, btn2_color, COLOR_WHITE);
         break;
@@ -4661,7 +4661,7 @@ int gws_message_box(int fd, int parent_wid, const char *message, int type)
         fd,
         WT_SIMPLE,
         WINDOW_STATUS_ACTIVE,
-        VIEW_NULL,
+        WINDOW_STATE_NULL,
         "MessageBox",
         100, 100, 240, 120,
         parent_wid,
@@ -4674,7 +4674,7 @@ int gws_message_box(int fd, int parent_wid, const char *message, int type)
     if (message != NULL) {
         message_wid = gws_create_window(
             fd,
-            WT_EDITBOX, WINDOW_STATUS_ACTIVE, VIEW_NULL,
+            WT_EDITBOX, WINDOW_STATUS_ACTIVE, WINDOW_STATE_NULL,
             message,
             20, 20, 200, 20,
             dialog_wid,
@@ -4694,7 +4694,7 @@ int gws_message_box(int fd, int parent_wid, const char *message, int type)
 
     // OK button
     btn_wid = gws_create_window(
-        fd, WT_BUTTON, WINDOW_STATUS_ACTIVE, VIEW_NULL,
+        fd, WT_BUTTON, WINDOW_STATUS_ACTIVE, WINDOW_STATE_NULL,
         "OK", 85, 60, 70, 30,
         dialog_wid, 0, btn_color, COLOR_WHITE
     );

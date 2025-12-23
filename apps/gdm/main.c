@@ -657,24 +657,17 @@ int main( int argc, char *argv[] )
     cursor_x_max = (int) (((gdm_width/8)  -1) & 0xFFFFFFFF);
     cursor_y_max = (int) (((gdm_height/8) -1) & 0xFFFFFFFF);
 
-// Creating the main window.
-// style: 
-// 0x0001=maximized 
-// 0x0002=minimized 
-// 0x0004=fullscreen
-// 0x0008 = use statusbar
-// ...
 
     main_window = 
         (int) gws_create_window (
                 client_fd,
                 WT_OVERLAPPED, 
                 WINDOW_STATUS_ACTIVE,  // status 
-                VIEW_NULL,             // view
+                WINDOW_STATE_NULL,             // state
                 program_name, 
                 gdm_x, gdm_y, gdm_width, gdm_height,
                 0, 
-                0x0000,  
+                0x0000,  // style
                 COLOR_RED,   // #todo: client bg. Not implemented. 
                 COLOR_GRAY );
 

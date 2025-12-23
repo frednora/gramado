@@ -31,24 +31,7 @@ extern struct gws_window_d *top_window;     // z-order
 // ...
 #define ICON_ID_DEFAULT  ICON_ID_APP
 
-// #test w->view
-#define VIEW_NULL       0
-#define VIEW_FULL       1000
-#define VIEW_MAXIMIZED  1001
-#define VIEW_MINIMIZED  1002
-#define VIEW_NORMAL     1003  //Normal (restaurada)
-// ...
 
-// -------------------
-// Aliases
-#define WINDOW_STATE_NULL  VIEW_NULL
-#define WINDOW_STATE_FULL  VIEW_FULL
-//The window is maximized.
-#define WINDOW_STATE_MAXIMIZED  VIEW_MAXIMIZED
-//The window is minimized.
-#define WINDOW_STATE_MINIMIZED  VIEW_MINIMIZED
-//The window is restored.
-#define WINDOW_STATE_NORMAL     VIEW_NORMAL 
 // -------------------
 
 // Button styles (int)
@@ -76,13 +59,21 @@ extern struct gws_window_d *top_window;     // z-order
 // Window Flags
 //
 
+// ==============================================================
+// >> Style: design-time identity. (unsigned long)
+// Defines window type and decorations/features.
+
+#define WS_NULL  0x0000
+
 //----------------------
-// State (runtime condition)
+// Style (design-time components)
 //----------------------
-#define WS_MAXIMIZED    0x0001
-#define WS_MINIMIZED    0x0002  // Iconic
-#define WS_FULLSCREEN   0x0004
-#define WS_LOCKED       0x0008  // No input
+
+// #todo: Reserved values
+#define WS_RES1    0x0001
+#define WS_RES2    0x0002
+#define WS_RES3    0x0004
+#define WS_RES4    0x0008
 
 //----------------------
 // Style (design-time components)
@@ -106,14 +97,24 @@ extern struct gws_window_d *top_window;     // z-order
 #define WS_CHILD     0x100000    // really a type, not a style
 
 
-//
-// window status
-//
-
+// ==============================================================
+// >> Status: interaction/activation. (int)
+// Indicates focus, active/inactive, and user engagement.
 #define WINDOW_STATUS_ACTIVE       1
 #define WINDOW_STATUS_INACTIVE     0
-// ...
 
+// ==============================================================
+// >> State: runtime condition. (int)
+// Tracks current behavior (minimized, maximized, fullscreen, etc).
+#define WINDOW_STATE_NULL       0
+#define WINDOW_STATE_FULL       1000
+#define WINDOW_STATE_MAXIMIZED  1001
+#define WINDOW_STATE_MINIMIZED  1002
+#define WINDOW_STATE_NORMAL     1003  //Normal (restaurada)
+
+
+
+// ==============================================================
 
 //window relationship status. (seu status em relação as outras janelas.)
 //Obs: tem uma estreita ligação com o status da thread que está trabalahndo com ela 
@@ -451,17 +452,17 @@ struct gws_window_d
 
     unsigned long type;  // Window type
 
-// Style: design-time identity.
+// >> Style: design-time identity.
 // Defines window type and decorations/features.
     unsigned long style;
 
-// State: runtime condition.
-// Tracks current behavior (minimized, maximized, fullscreen, etc).
-    int state;
-
-// Status: interaction/activation.
+// >> Status: interaction/activation.
 // Indicates focus, active/inactive, and user engagement.
     int status;
+
+// >> State: runtime condition.
+// Tracks current behavior (minimized, maximized, fullscreen, etc).
+    int state;
 
 // ===================================
 // Name/label support.

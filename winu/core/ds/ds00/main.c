@@ -1247,7 +1247,10 @@ int serviceCreateWindow(int client_fd)
     int ClientTID = -1;
     unsigned int frame_color = COLOR_WINDOW;
     unsigned int client_color = COLOR_WINDOW;
+
     unsigned long my_style=0;
+    unsigned long my_status=0;
+    unsigned long my_state=0;
 
     //#debug
     //server_debug_print("serviceCreateWindow:\n");
@@ -1263,6 +1266,10 @@ int serviceCreateWindow(int client_fd)
     r.code = message_address[1];
     r.ul2  = message_address[2];  // Window status
     r.ul3  = message_address[3];  // Window state: min, max, ...
+
+    my_status = (unsigned long) (r.ul2 & 0xFFFFFFFF);
+    my_state  = (unsigned long) (r.ul3 & 0xFFFFFFFF);
+
 // These are the window's outer values.
 // Including the border if it has one.
 // l,t,w,h
@@ -1451,13 +1458,17 @@ int serviceCreateWindow(int client_fd)
 // Calling a worker on server to create the window.
 // See: createw.c
 // IN:
-// type, style, status, state, name, 
+// type, 
+// style, status, state, 
+// name, 
 // l, t, w, h,
 // parent_ptr, 
 // desktop id, frame color, client area color.
     Window = 
         (struct gws_window_d *) CreateWindow ( 
-                                    type, my_style, r.ul2, r.ul3, r.data,
+                                    type, 
+                                    my_style, my_status, my_state, 
+                                    r.data,
                                     x, y, w, h,
                                     (struct gws_window_d *) Parent, 
                                     0, frame_color, client_color );

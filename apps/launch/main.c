@@ -447,11 +447,11 @@ int main(int argc, char *argv[])
                   client_fd,
                   WT_OVERLAPPED, 
                   WINDOW_STATUS_ACTIVE,  // status
-                  VIEW_NULL,             // view
+                  WINDOW_STATE_NULL,     // state
                   program_name,
                   20, 20, 200, 300,
                   0,
-                  0x0000,   // style?
+                  0x0000,   // style
                   COLOR_WINDOW, 
                   COLOR_WINDOW );
 

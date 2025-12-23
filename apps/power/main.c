@@ -268,12 +268,12 @@ int main(int argc, char *argv[])
     main_window = gws_create_window(
         client_fd,
         WT_OVERLAPPED,
-        WINDOW_STATUS_ACTIVE,
-        VIEW_NULL,
+        WINDOW_STATUS_ACTIVE,  //status
+        WINDOW_STATE_NULL,  //state
         "Power Manager",
         win_x, win_y, win_w, win_h,
         0,
-        0x0000,
+        0x0000,  // style
         COLOR_WHITE,
         COLOR_GRAY );
 
