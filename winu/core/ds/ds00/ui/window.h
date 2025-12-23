@@ -756,15 +756,17 @@ struct gws_window_d
 // What if we set as TRUE more than one flat at the same time?
 
     int isTitleBar;
-    int isIcon;
-    int isControl;
+    int isStatusBar;
+    int isTaskBar;
+    // ...
     int isMenu;
     int isMenuItem;
+    // ...
+    int isIcon;
+    int isControl;
     int isButton;
     int isEditBox;
     int isCheckBox;
-    int isStatusBar;
-    int isTaskBar;
     // ...
 
 //
