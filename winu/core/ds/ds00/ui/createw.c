@@ -229,8 +229,6 @@ int do_create_controls(struct gws_window_d *w_titlebar)
 
     w_minimize->type = WT_BUTTON;
     w_minimize->isMinimizeControl = TRUE;
-    w_minimize->bg_color_when_mousehover = 
-        (unsigned int) get_color(csiWhenMouseHoverMinimizeControl);
 
     id = (int) RegisterWindow(w_minimize);
     if (id<0){
@@ -274,9 +272,6 @@ int do_create_controls(struct gws_window_d *w_titlebar)
 
     w_maximize->type = WT_BUTTON;
     w_maximize->isMaximizeControl = TRUE;
-    w_maximize->bg_color_when_mousehover = 
-        (unsigned int) get_color(csiWhenMouseHoverMaximizeControl);
-
     id = RegisterWindow(w_maximize);
     if (id<0){
         //server_debug_print ("xxx: Couldn't register w_maximize\n");
@@ -318,9 +313,6 @@ int do_create_controls(struct gws_window_d *w_titlebar)
 
     w_close->type = WT_BUTTON;
     w_close->isCloseControl = TRUE;
-    w_close->bg_color_when_mousehover = 
-        (unsigned int) get_color(csiWhenMouseHoverCloseControl);
-
     id = RegisterWindow(w_close);
     if (id<0){
         //server_debug_print ("xxx: Couldn't register w_close\n");
@@ -510,9 +502,6 @@ struct gws_window_d *do_create_titlebar(
 
     unsigned int OrnamentColor1 = ornament_color;
     unsigned long OrnamentHeight = METRICS_TITLEBAR_ORNAMENT_SIZE;
-    if (IsMaximized == TRUE){
-        OrnamentHeight = 1;
-    }
     parent->frame.ornament_color1   = OrnamentColor1;
     parent->titlebar_ornament_color = OrnamentColor1;
 
@@ -990,7 +979,6 @@ doCreateWindowFrame (
         // Status bar
         // (In the bottom)
         // #todo: It turns the client area smaller.
-        //if (window->style & WS_STATUSBAR)
         if (useStatusBar == TRUE)
         {
             //#debug
@@ -1300,8 +1288,8 @@ void *doCreateWindow (
 
     // ...
 
-    // #wrong
-    // This is what the window is, not what the window has.
+
+
     if (style & WS_TRANSPARENT)
     {
         Transparent=TRUE;
@@ -1407,6 +1395,17 @@ void *doCreateWindow (
 // Defines window type and decorations/features.
     window->style = (unsigned long) style;
 
+    // Identity checks
+    if (style & WS_MENU)
+        window->isMenu = TRUE;
+
+    if (style & WS_MENUITEM)
+       window->isMenuItem = TRUE;
+
+    //if (style & (WS_DESKTOPICON | WS_BARICON | WS_TRAYICON | WS_BUTTONICON))
+       //window->isIcon = TRUE;
+
+
 // State: runtime condition.
 // Tracks current behavior (minimized, maximized, fullscreen, etc).
     window->state = (int) state;
@@ -1427,8 +1426,6 @@ void *doCreateWindow (
         (unsigned int) FrameColor;
     window->clientarea_bg_color = 
         (unsigned int) ClientAreaColor;
-    window->bg_color_when_mousehover = 
-        (unsigned int) get_color(csiWhenMouseHover);
 
 // buffers
 

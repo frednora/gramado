@@ -766,14 +766,24 @@ static void on_mouse_hover(struct gws_window_d *window)
 // Flag
     window->is_mouse_hover = TRUE;
 
-// Visual efect
+
     if (window->type == WT_BUTTON)
     {
         window->status = BS_HOVER;
-        // Using the color that belongs to this window.
-        window->bg_color = 
-            (unsigned int) window->bg_color_when_mousehover;
-        redraw_window(window,TRUE);
+
+        if (window->isMinimizeControl == TRUE){
+            window->bg_color = (unsigned int) get_color(csiWhenMouseHoverMinimizeControl);
+        } else if (window->isMaximizeControl == TRUE){
+            window->bg_color = (unsigned int) get_color(csiWhenMouseHoverMaximizeControl);
+        } else if (window->isCloseControl == TRUE) {
+            window->bg_color = (unsigned int) get_color(csiWhenMouseHoverCloseControl);
+        } else if (window->isMenuItem == TRUE){ 
+            window->bg_color = (unsigned int) get_color(csiWhenMouseHoverMenuItem);
+        } else {
+            window->bg_color = (unsigned int) get_color(csiWhenMouseHover);
+        };
+
+        redraw_window(window, TRUE);
     }
 
 // Visual efect
@@ -4464,7 +4474,7 @@ int gwssrv_initialize_default_color_scheme(void)
 // 14 - Terminal font.
     cs->elements[csiTerminalFontColor] = HONEY_COLOR_TERMINALFONT;
 
-// 15 - Button.
+// 15 - Button. (Normal and when the mouse leave)
     cs->elements[csiButton] = HONEY_COLOR_BUTTON;
 
 // 16 - Window border.
@@ -4493,7 +4503,11 @@ int gwssrv_initialize_default_color_scheme(void)
     cs->elements[csiWhenMouseHoverCloseControl] = 
         HONEY_COLOR_BG_ONMOUSEHOVER_CLO_CONTROL;
 
-// 23 - Textbar text color
+// 23
+    cs->elements[csiWhenMouseHoverMenuItem] = 
+        HONEY_COLOR_BG_ONMOUSEHOVER_MENUITEM;
+
+// 24 - Textbar text color
     cs->elements[csiTaskBarTextColor] = xCOLOR_GRAY2;
 
     // ...

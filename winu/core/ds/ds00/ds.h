@@ -29,7 +29,6 @@ extern int server_mode;  // DEMO ...
 #include "api/async.h"
 #include "z8server/globals.h"
 #include "ui/colors.h"
-#include "ui/themes/humility.h"
 #include "ui/themes/honey.h"
 
 // #imported

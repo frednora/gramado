@@ -85,32 +85,72 @@ void __init_wm_structure(void);
 // Style (design-time components)
 //----------------------
 
-// #todo: Reserved values
-#define WS_RES1    0x0001
-#define WS_RES2    0x0002
-#define WS_RES3    0x0004
-#define WS_RES4    0x0008
+//----------------------
+// Fundamental characteristics (lowest block)
+//----------------------
+// Universal traits that apply to any window.
+#define WS_VISIBLE     0x0001   // window is visible
+#define WS_ENABLED     0x0002   // window can receive input
+#define WS_FOCUSABLE   0x0004   // window can take focus
+#define WS_BORDERLESS  0x0008   // window has no border/frame
 
 //----------------------
-// Style (design-time components)
+// Characteristics (design-time traits)
 //----------------------
-#define WS_TITLEBAR            0x0100
-#define WS_TITLEBARICON        0x0200
-#define WS_TRANSPARENT         0x0400
-#define WS_STATUSBAR           0x0800  // Bottom bar
-#define WS_HSCROLLBAR          0x1000
-#define WS_VSCROLLBAR          0x2000
-#define WS_RESERVED00          0x4000
-#define WS_CLIP_IN_CLIENTAREA  0x8000
+// Behavioral traits that define how the window interacts or renders.
+#define WS_TRANSPARENT         0x0100   // window background transparency
+#define WS_CLIP_IN_CLIENTAREA  0x0200   // clip drawing inside client rect
+#define WS_RESIZABLE           0x0400   // user can resize window
+#define WS_MOVABLE             0x0800   // user can drag/move window
+#define WS_FOCUSABLE           0x1000   // can receive focus
+#define WS_MODAL               0x2000   // blocks interaction with parent
+#define WS_TOPMOST             0x4000   // stays above other windows
+#define WS_FULLSCREENABLE      0x8000   // can toggle fullscreen
+
 
 //----------------------
 // Role / semantic identity (misplaced in WS_)
 //----------------------
-#define WS_APP       0x10000   // wrong: should be window type
-#define WS_DIALOG    0x20000   // wrong: should be window type
-#define WS_TERMINAL  0x40000   // wrong: should be window type
-#define WS_TASKBAR   0x80000   // wrong: should be window type
-#define WS_CHILD     0x100000    // really a type, not a style
+// Defines the semantic type of the window
+#define WS_APP       0x10000
+#define WS_DIALOG    0x20000 
+#define WS_TERMINAL  0x40000
+#define WS_CHILD     0x80000
+
+// #define WS_res     0x100000
+// #define WS_res     0x200000
+// #define WS_res     0x400000
+// #define WS_res     0x800000
+
+// Flags for menu containers and items.
+
+// Menu system
+#define WS_MENU       0x1000000   // window is a menu container
+#define WS_MENUITEM   0x2000000   // window is a menu item (child of a menu)
+//#define WS_  0x4000000  // res
+//#define WS_  0x8000000  // res
+
+#define WS_MENUITEM_CHECKBOX  0x10000000
+#define WS_MENUITEM_RADIO     0x20000000
+//#define WS_  0x40000000  // res
+//#define WS_  0x80000000  // res
+
+// Bars (structural components)
+#define WS_TITLEBAR       0x10000000   // Top bar with title + controls
+#define WS_MENUBAR        0x20000000   // Horizontal bar with menus
+#define WS_TOOLBAR        0x40000000   // Quick-access buttons/icons
+#define WS_BArRes00_NEW   0x80000000 
+#define WS_STATUSBAR    0x100000000  // Bottom info bar
+#define WS_TASKBAR      0x200000000  // System-level bar at screen bottom
+#define WS_HSCROLLBAR   0x400000000  // 
+#define WS_VSCROLLBAR   0x800000000  // 
+
+// Icons (contexts)
+// Flags for icon placement contexts.
+#define WS_DESKTOPICON  0x1000000000   // desktop-level icon
+#define WS_BARICON      0x2000000000   // icons inside bars
+#define WS_TRAYICON     0x4000000000   // system tray/notification icons
+#define WS_BUTTONICON   0x8000000000   // icons inside buttons/controls
 
 
 // ==============================================================

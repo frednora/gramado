@@ -3676,7 +3676,10 @@ struct gws_menu_d *gws_create_menu (
                 menu->y,  //Deslocamento em relação a janela mãe. 
                 width, 
                 height,
-                parent, 0, color, color );
+                parent, 
+                WS_MENU, 
+                color, 
+                color );
 
     if (window <= 0)
     {
@@ -3757,7 +3760,9 @@ struct gws_menu_item_d *gws_create_menu_item (
                     item->width, 
                     item->height,
                     menu->window,  // #bugbug 
-                    0, COLOR_GRAY, COLOR_GRAY );
+                    WS_MENUITEM, 
+                    COLOR_GRAY, 
+                    COLOR_GRAY );
 
         //debug
         //gws_draw_char (

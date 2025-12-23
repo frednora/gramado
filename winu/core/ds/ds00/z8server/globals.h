@@ -165,14 +165,14 @@ typedef enum {
 
     csiTitleBarTextColor,  // 18
 
-// Mouse hover
+// Bg color when mouse hover
+    csiWhenMouseHover,                 // 19
+    csiWhenMouseHoverMinimizeControl,  // 20
+    csiWhenMouseHoverMaximizeControl,  // 21
+    csiWhenMouseHoverCloseControl,     // 22
+    csiWhenMouseHoverMenuItem,         // 23
 
-    csiWhenMouseHover,     // 19 bg when mouse hover
-    csiWhenMouseHoverMinimizeControl, // 20
-    csiWhenMouseHoverMaximizeControl, // 21
-    csiWhenMouseHoverCloseControl, //22
-    
-    csiTaskBarTextColor   // 23: Color for text in the taskbar.
+    csiTaskBarTextColor   // 24: Color for text in the taskbar.
 
     //...
     //@todo: focus,

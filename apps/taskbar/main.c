@@ -1026,9 +1026,7 @@ static int create_icons_on_desktop(int fd)
     unsigned long w = (w0 -4);
     unsigned long h = (h0 -4);
 
-    // #todo
-    // Create the style WS_DESKTOPICON
-    unsigned long style = WS_TITLEBARICON;
+    unsigned long style = WS_DESKTOPICON;
 
     // #test (Local for now)
     int iconID = -1;
