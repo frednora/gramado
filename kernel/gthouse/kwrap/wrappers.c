@@ -76,9 +76,18 @@ void *core_alloc_shared_ring3_pages(pid_t pid, int number_of_bytes)
     return (void *) allocPages(number_of_pages);
 }
 
-int core_get_current_runlevel(void)
+int wrappers_get_current_runlevel(void)
 {
-    return (int) current_runlevel;
+    return (int) runlevel;
+}
+
+void wrappers_set_current_runlevel(int desired_runlevel)
+{
+    if (desired_runlevel < 0)
+        return;
+    if (desired_runlevel > 6)
+        return;
+    runlevel = desired_runlevel;
 }
 
 unsigned long core_get_memory_size_mb(void)

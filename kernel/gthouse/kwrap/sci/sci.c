@@ -1277,9 +1277,13 @@ void *sci0 (
         return NULL;
     }
     
-// 288 - Returns the current runlevel.
-    if (number == 288){
-        return (void *) core_get_current_runlevel();
+// 288 - Returns the current runlevel
+// Permission: Maybe it can be done only by the init process.
+    if (number == 288)
+    {
+        //if (current_thread != INIT_TID)
+            //return (void*) (-1);
+        return (void *) wrappers_get_current_runlevel();
     }
 
 // 289 - Serial debug printk.

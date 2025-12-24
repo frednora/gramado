@@ -54,9 +54,6 @@ extern tid_t foreground_thread;  // Input thread.
 extern tid_t special_reader;
 // ------
 
-// Current runlevel. Used in init process.
-extern int current_runlevel;
-
 // Organização dos discos.
 extern int current_disk;
 extern int current_volume;
@@ -196,7 +193,11 @@ void core_spawn_thread_by_tid(tid_t tid);
 //--------------------
 unsigned long core_get_system_metrics(int index);
 int core_start_thread(struct thread_d *thread);
-int core_get_current_runlevel(void);
+
+// Runlevel
+int wrappers_get_current_runlevel(void);
+void wrappers_set_current_runlevel(int desired_runlevel);
+
 unsigned long core_get_memory_size_mb(void);
 void *core_alloc_shared_ring3_pages(pid_t pid, int number_of_bytes);
 

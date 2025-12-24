@@ -114,31 +114,40 @@ extern int    opterr, optind, optopt;
 #define  _PC_CHOWN_RESTRICTED  9  /* chown restricted or not */
  
 
-/* 
- Process IDentifier 
- posix.  
- */
 
-
-#ifndef __UID_T
-#define __UID_T 
-typedef int uid_t;
-#endif 
-
+// Process identifier
 #ifndef __PID_T
 #define __PID_T 
-typedef int pid_t;
+typedef int  pid_t;
 #endif
 
+// Thread identifier
+#ifndef __TID_T
+#define __TID_T 
+typedef int  tid_t;
+#endif
+
+// User identifier
+#ifndef __UID_T
+#define __UID_T 
+typedef int  uid_t;
+#endif 
+
+// Group identifier
 #ifndef __GID_T
 #define __GID_T 
-typedef int gid_t;
+typedef int  gid_t;
 #endif
 
 
+//
+// == Prototypes =====================================================
+//
 
+pid_t fork(void);
+pid_t vfork(void);
 
-int execv (const char *path, char *const argv[] );
+int execv(const char *path, char *const argv[]);
 
 int 
 execve ( 
@@ -146,24 +155,27 @@ execve (
     char *const argv[], 
     char *const envp[] );  
 
+int execvp (const char *file, char *const argv[]);
 
+int 
+execvpe ( 
+    const char *file, 
+    char *const argv[],
+    char *const envp[] );
 
-void exit (int status);
-
-
-pid_t fork (void);
-pid_t vfork(void);
-
+int nice(int inc);
+int pause(void);
+unsigned int sleep(unsigned int seconds);      
+void _exit (int status); 
+void exit(int status);
 
 // uid
 int setuid(uid_t uid);
 uid_t getuid(void);
 
-
 // gid
 int setgid(gid_t gid);
 gid_t getgid(void);
-
 
 // euid
 int seteuid(uid_t euid);
@@ -179,80 +191,64 @@ gid_t getegid(void);
 pid_t getpid(void);
 
 //ppid
-pid_t getppid (void);
-
+pid_t getppid(void);
 
 int gettid(void);
 
+int dup(int oldfd);
+int dup2(int oldfd, int newfd);
+int dup3(int oldfd, int newfd, int flags);
 
-int dup (int oldfd);
-int dup2 (int oldfd, int newfd);
-int dup3 (int oldfd, int newfd, int flags);
-
-// nice - change process priority
-int nice (int inc);
-
-int pause (void);
-
-
-//SVr4, BSD, POSIX.1-2001.
+// SVr4, BSD, POSIX.1-2001.
 int mkdir (const char *pathname, mode_t mode);
 
-//rmdir - delete a	directory
+// rmdir - delete a	directory
 // SVr4, 4.3BSD, POSIX.1-2001.
-int rmdir (const char *pathname);
+int rmdir(const char *pathname);
 
-//link - make a new name for a file
+// link - make a new name for a file
 // SVr4, 4.3BSD, POSIX.1-2001 (but see NOTES).
-int link (const char *oldpath, const char *newpath);
+int link(const char *oldpath, const char *newpath);
 
-//unlink, unlinkat - delete a name and possibly the file it refers to
+// unlink, unlinkat - delete a name and possibly the file it refers to
 // unlink(): SVr4, 4.3BSD, POSIX.1-2001, POSIX.1-2008.
 int unlink(const char *pathname);
 
-
-//sysconf - get configuration information at run time
-//  POSIX.1-2001.
-long sysconf (int name);
-
+// sysconf - get configuration information at run time
+// POSIX.1-2001.
+long sysconf(int name);
 
 // fsync,  fdatasync  -  synchronize  a  file's in-core state with storage device
-//4.3BSD, POSIX.1-2001.
-int fsync (int fd);
-int fdatasync (int fd);
+// 4.3BSD, POSIX.1-2001.
+int fsync(int fd);
+int fdatasync(int fd);
 
-
-//fpathconf, pathconf - get configuration values for files
-//POSIX.1-2001.
-//#todo
-//https://www.mkssoftware.com/docs/man3/pathconf.3.asp
-long fpathconf (int fildes, int name);
-long pathconf (const char *pathname, int name);
-
-
-
-//SVr4, 4.3BSD, POSIX.1-2001.
-int close (int fd);
-
+// fpathconf, pathconf - get configuration values for files
+// POSIX.1-2001.
+// #todo
+// https://www.mkssoftware.com/docs/man3/pathconf.3.asp
+long fpathconf(int fildes, int name);
+long pathconf(const char *pathname, int name);
 
 //
 // pipe
 //
 
-//POSIX.1-2001, POSIX.1-2008.
-int pipe2 ( int pipefd[2], int flags );
-int pipe ( int pipefd[2] );
-
-
+// POSIX.1-2001, POSIX.1-2008.
+int pipe(int pipefd[2]);
+int pipe2(int pipefd[2], int flags);
 
 //
 // tty
 //
 
-
 // tty from open file list.
-ssize_t write_tty (int fd, const void *buf, size_t count);
-ssize_t read_tty (int fd, const void *buf, size_t count);
+ssize_t write_tty(int fd, const void *buf, size_t count);
+ssize_t read_tty(int fd, const void *buf, size_t count);
+
+char *ttyname(int fd);
+int ttyname_r(int fd, char *buf, size_t buflen);
+int isatty(int fd);
 
 //
 // VC
@@ -260,17 +256,18 @@ ssize_t read_tty (int fd, const void *buf, size_t count);
 
 // on virtual console!
 // range: 0 ~ 3
-ssize_t read_VC (int fd, const void *buf, size_t count);
-ssize_t write_VC (int fd, const void *buf, size_t count);
+ssize_t read_VC(int fd, const void *buf, size_t count);
+ssize_t write_VC(int fd, const void *buf, size_t count);
 
+// Read and write from an open file.
+ssize_t read(int fd, const void *buf, size_t count);
+ssize_t write(int fd, const void *buf, size_t count);
 
-// Usam a lista de arquivos abertos do processo. p->Streams[i]
-ssize_t read (int fd, const void *buf, size_t count);
-ssize_t write (int fd, const void *buf, size_t count);
-
+// SVr4, 4.3BSD, POSIX.1-2001.
+int close(int fd);
 
 // See: http://man7.org/linux/man-pages/man2/pwrite.2.html
-ssize_t pread (int fd, void *buf, size_t count, off_t offset);
+ssize_t pread(int fd, void *buf, size_t count, off_t offset);
 
 ssize_t 
 pwrite (
@@ -279,29 +276,21 @@ pwrite (
     size_t count, 
     off_t offset );
 
-
-
-int truncate (const char *path, off_t length);
-int ftruncate (int fd, off_t length); 
-
+int truncate(const char *path, off_t length);
+int ftruncate(int fd, off_t length); 
 
 char *getlogin (void);
 int setlogin(const char *name);
 char *__gethostname (void);
 
-
-//See: http://man7.org/linux/man-pages/man2/sethostname.2.html
-int gethostname (char *name, size_t len);
-int sethostname (const char *name, size_t len);
-int getusername (char *name, size_t len);
-int setusername (const char *name, size_t len);
-
-
-char *ttyname(int fd);
-int ttyname_r(int fd, char *buf, size_t buflen);
-int isatty(int fd);
-
-              
+// hostname
+// See: http://man7.org/linux/man-pages/man2/sethostname.2.html
+int gethostname(char *name, size_t len);
+int sethostname(const char *name, size_t len);
+// username
+int getusername(char *name, size_t len);
+int setusername(const char *name, size_t len);
+           
 int getopt (int argc, char * const argv[], const char *optstring);
 
 // See:
@@ -310,44 +299,23 @@ unsigned int alarm(unsigned int seconds);
 
 int brk(void *addr);
 
-
-int execvp (const char *file, char *const argv[]);
-
-int 
-execvpe ( 
-    const char *file, 
-    char *const argv[],
-    char *const envp[] );
-
-
 int chdir(const char *path);
 int fchdir(int fd);
-
 
 void sync(void);
 int syncfs(int fd); 
 
-unsigned int sleep(unsigned int seconds);      
-
-
-void _exit (int status); 
-
-
 void swab_w (const short *from, short *to, ssize_t n);
 void swab (const void *from, void *to, ssize_t n);
-
 
 off_t lseek(int fd, off_t offset, int whence);
 off_t tell(int fildes);
 
-
 int access (const char *pathname, int mode);
-
 
 int chown (const char *pathname, uid_t owner, gid_t group);
 int fchown (int fd, uid_t owner, gid_t group);
 int lchown (const char *pathname, uid_t owner, gid_t group);
-
 
 // Compare
 // Not tested yet.
@@ -359,7 +327,6 @@ int getlin (char s[]);
 
 int eq (char *a, char *b);
 
-
 pid_t 
 xxx_todo_int133 ( 
     unsigned long ax, 
@@ -367,56 +334,40 @@ xxx_todo_int133 (
     unsigned long cx, 
     unsigned long dx );
 
-
-
 pid_t tcgetpgrp ( int fd);
 int tcsetpgrp (int fd, pid_t pgrp);
 
-
 int setpgid(pid_t pid, pid_t pgid);
 pid_t getpgid(pid_t pid); 
-
 
 /* System V version */
 int setpgrp(void);
 /* POSIX.1 version */
 pid_t getpgrp(void);
 
-
 /* BSD version */
 int bsd_setpgrp(pid_t pid, pid_t pgid);
 /* BSD version */
 pid_t bsd_getpgrp(pid_t pid); 
 
-
 char *getcwd(char *buf, size_t size);
 char *getwd(char *buf);
 char *get_current_dir_name(void);
 
+// Count occurrences of a char
+int StrOcc(unsigned char *src, int ch);
 
-//Count occurrences of a char.
-int 
-StrOcc (
-    unsigned char *src, 
-    int ch );
-
-
-//Point to 1st occurrence of marker set in str.
+// Point to 1st occurrence of marker set in str.
 unsigned char *StrFirstOcc (
     unsigned char *src,
     unsigned char *marker );
 
-
-//Point to last occurrence of market set in str.
+// Point to last occurrence of market set in str.
 unsigned char *StrLastOcc (
     unsigned char *src,
     unsigned char *marker );
 
-
-
 int getdtablesize(void);
 
 #endif /* _UNISTD_H */
-
-
 

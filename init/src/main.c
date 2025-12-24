@@ -1148,14 +1148,60 @@ int main( int argc, char **argv)
 {
     register int i=0;
 
+    const char *cmd_reboot = "reboot.bin";
+    const char *cmd_shutdown = "shutdown.bin";
+
     Init.initialized = FALSE;
     Init.pid = (pid_t) getpid();
 
     Init.argc = (int) argc;
     Init.is_headless = FALSE;
-    //Init.runlevel = (int) ?;
 
-    //asm ("int $3 \n");
+// Get the runlevel value from the kernel
+    unsigned long Value = (unsigned long) sc80(288, 0, 0, 0);
+    Init.__runlevel = (int) (Value & 0xFF); 
+    Init.__selected_option = 0;
+
+    // #debug
+    // printf("Runlevel: %d\n", Init.__runlevel);
+
+    switch (Init.__runlevel){
+
+        case __RUNLEVEL_HALT:
+            rtl_clone_and_execute(cmd_shutdown);
+            exit(0);
+            break;
+
+        case __RUNLEVEL_SINGLE_USER:
+            Init.__selected_option = 1001;
+            break;
+
+        case __RUNLEVEL_MULTI_USER:
+            Init.__selected_option = 1001;
+            break;
+
+        case __RUNLEVEL_FULL_MULT_USER:
+            Init.__selected_option = 1001;
+            break;
+
+        case __RUNLEVEL_CUSTOM:
+            Init.__selected_option = 1001;
+            break;
+
+        case __RUNLEVEL_GRAPHICAL:
+            Init.__selected_option = 1004;
+            break;
+
+        case __RUNLEVEL_REBOOT:
+            rtl_clone_and_execute(cmd_reboot);
+            break;
+        default:
+            break;
+    };
+
+// #debug
+    // while(1){  asm (" pause \n");  };
+    // asm ("int $3 \n");
 
 // --------------------------
 

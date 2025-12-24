@@ -61,7 +61,7 @@ int current_user=0;
 int current_group=0; 
 
 // Current runlevel. Used in init process.
-int current_runlevel=0;
+int runlevel=0;
 
 // Organização dos discos.
 int current_disk=0;

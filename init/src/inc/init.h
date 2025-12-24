@@ -19,22 +19,50 @@
 #include "../inittask/inittask.h"
 
 
+/*
+Standard Linux Runlevels (0-6)
+0 (Halt): Shuts down the system.
+1 (Single-User Mode): Minimal services, for maintenance or recovery.
+2 (Multi-User, No Network): Multi-user mode, but without network services.
+3 (Full Multi-User): Standard command-line interface (CLI) mode with networking.
+4 (Custom): Unused by default, can be defined by the user.
+5 (Graphical): Similar to runlevel 3 but with a graphical user interface (GUI).
+6 (Reboot): Reboots the system.
+*/
+
+#define __RUNLEVEL_HALT  0
+#define __RUNLEVEL_SINGLE_USER  1
+#define __RUNLEVEL_MULTI_USER  2
+#define __RUNLEVEL_FULL_MULT_USER  3
+#define __RUNLEVEL_CUSTOM  4
+#define __RUNLEVEL_GRAPHICAL  5
+#define __RUNLEVEL_REBOOT  6
+
 struct init_d
 {
-// This structure is initialized.
-    int initialized;
-// Save the argc.
-    int argc;
-// Save the runlevel value.
-    int runlevel;
-// Running in headless mode.
-    int is_headless;
-// Save the pid.
+    int initialized;  // Structure validation
     pid_t pid;
-// Unlock kernel features.
+    tid_t tid;
+
+// Save the current runlevel
+// syscall: 288
+    int __runlevel;
+
+// Options:
+// + 1001 - cli (embedded shell)
+// + 1002 - shell direct with the kernel console
+// + 1003 - operate as a server with system messages
+// + 1004 - launch display server
+    int __selected_option;
+
+    int argc;         // Save argc from main
+
+    int is_headless;  // Headless mode
+
+// It's necessary to nnlock some kernel features like 
+// taskswitching and scheduling
     int taskswitching_unlocked;
     int scheduler_unlocked;
-
 };
 extern struct init_d  Init;
 

@@ -1309,7 +1309,15 @@ void I_kmain(int arch_type)
 // Initialize variable that makes sense only for the BSP,
 // Because APs do not call I_kmain.
 
+
+// System state.
+// It guides the initialization.
     system_state = SYSTEM_PREINIT;
+
+// Runlevel
+// Used by init system.
+// See: config.h
+    wrappers_set_current_runlevel(CONFIG_CURRENT_RUNLEVEL);
 
 // Product type.
 // see: config/product.h

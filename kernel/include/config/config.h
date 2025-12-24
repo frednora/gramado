@@ -182,18 +182,27 @@ sixth..     ide5, usually PCI, probed
 
 // ...
 
-// ------------------------------------------------------
-// Setup runlevel preference
-// Where are the types defines?
-// See:
-// core/init.c
-// 5 Start the system normally with appropriate 
-// display manager (with GUI) 
-// Same as runlevel 3 + display manager.
-// Full multi-user graphical mode. 
-// #define DEFAULT_RUNLEVEL  0
-#define DEFAULT_RUNLEVEL  5
 
+/*
+Standard Linux Runlevels (0-6)
+0 (Halt): Shuts down the system.
+1 (Single-User Mode): Minimal services, for maintenance or recovery.
+2 (Multi-User, No Network): Multi-user mode, but without network services.
+3 (Full Multi-User): Standard command-line interface (CLI) mode with networking.
+4 (Custom): Unused by default, can be defined by the user.
+5 (Graphical): Similar to runlevel 3 but with a graphical user interface (GUI).
+6 (Reboot): Reboots the system.
+*/
+
+#define __RUNLEVEL_HALT  0
+#define __RUNLEVEL_SINGLE_USER  1
+#define __RUNLEVEL_MULTI_USER  2
+#define __RUNLEVEL_FULL_MULT_USER  3
+#define __RUNLEVEL_CUSTOM  4
+#define __RUNLEVEL_GRAPHICAL  5
+#define __RUNLEVEL_REBOOT  6
+
+#define CONFIG_CURRENT_RUNLEVEL  __RUNLEVEL_MULTI_USER
 
 // ==================================================
 // ## breack points ##

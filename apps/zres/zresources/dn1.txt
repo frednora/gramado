@@ -1,3 +1,0 @@
-	fit the screen to monitor.
-
-	See: underscan and overscan.

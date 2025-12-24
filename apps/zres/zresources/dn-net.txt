@@ -1,4 +1,0 @@
-
-
-    Gramado Edge.
-    UI for network applications.

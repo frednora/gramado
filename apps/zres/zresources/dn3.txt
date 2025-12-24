@@ -1,7 +1,0 @@
-
-	Aurora - Gramado Window Server
-
-	aurora/client    -    GWS.BIN
-	aurora/server    -    GWSSRV.BIN
-
-

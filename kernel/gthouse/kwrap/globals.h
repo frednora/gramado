@@ -31,6 +31,11 @@
 //#define LOBYTE(w) ((char)(((unsigned long )(w)) & 0xff))
 //#define HIBYTE(w) ((char)((((unsigned long)(w)) >> 8) & 0xff))
 
+// ===================================================
+
+
+// Current runlevel. Used in init process.
+extern int runlevel;
 
 // ===================================================
 
