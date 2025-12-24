@@ -4419,12 +4419,13 @@ int gwssrv_initialize_default_color_scheme(void)
     cs->initialized=FALSE;
     cs->id = 0;
     cs->name = "Honey";
-    cs->style = 0;
+
+    cs->style = STYLE_HONEY;
+    cs->is_dark = TRUE;
 
 // Colors
 // size: 32 elements.
-// see: 
-// ws.h themes/honey.h
+// see: globals.h themes/honey.h
 
 // 0
     cs->elements[csiNull] = 0;

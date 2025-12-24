@@ -16,7 +16,8 @@ struct gws_window_d *do_create_titlebar(
     unsigned int ornament_color,
     int has_icon,
     int icon_id,
-    int has_string );
+    int has_string,
+    unsigned long string_color );
 
 // #important: 
 // O frame de uma janela deve fazer parte do window manager

@@ -337,7 +337,8 @@ struct gws_window_d *do_create_titlebar(
     unsigned int ornament_color,
     int has_icon,
     int icon_id,
-    int has_string )
+    int has_string,
+    unsigned long string_color )
 {
     struct gws_window_d *tbWindow;
 
@@ -347,8 +348,9 @@ struct gws_window_d *do_create_titlebar(
     unsigned long TitleBarWidth=0; // Width of titlebar
     unsigned long TitleBarHeight = tb_height; // Height passed as parameter
 
-    // Color and rop.
+    // Colors
     unsigned int TitleBarColor = color;
+    unsigned int StringColor = string_color;
     unsigned long rop=0;
     //unsigned long rop= 0x20;
     int useIcon = FALSE;
@@ -561,14 +563,16 @@ struct gws_window_d *do_create_titlebar(
 // #bugbug: Use 'const char *'
 
     tbWindow->name = (char *) strdup((const char *) parent->name);
-    if ((void*) tbWindow->name == NULL){
+    if ((void*) tbWindow->name == NULL)
+    {
+        // #todo: Recover
         printf("do_create_titlebar: Invalid name\n");
         return NULL;
     }
 
     unsigned long sL=0;
     unsigned long sT=0;
-    unsigned int sColor = (unsigned int) parent->titlebar_text_color;
+    //unsigned int sColor = (unsigned int) parent->titlebar_text_color;
     if (useTitleString == TRUE)
     {
         // Saving relative position.
@@ -576,7 +580,7 @@ struct gws_window_d *do_create_titlebar(
         parent->titlebar_text_top = StringTopPad;
         sL = (unsigned long) ((tbWindow->absolute_x) + StringLeftPad);
         sT = (unsigned long) ((tbWindow->absolute_y) + StringTopPad);
-        grDrawString ( sL, sT, sColor, tbWindow->name );
+        grDrawString ( sL, sT, StringColor, tbWindow->name );
     }
 
 // ---------------------------------
@@ -675,9 +679,9 @@ doCreateWindowFrame (
     unsigned long TitleBarHeight = 
         METRICS_TITLEBAR_DEFAULT_HEIGHT;
 
-// Titlebar color for active window
-    unsigned int TitleBarColor = 
-        (unsigned int) get_color(csiActiveWindowTitleBar);
+// Titlebar colors for active window
+    unsigned int TitleBarColor = (unsigned int) get_color(csiActiveWindowTitleBar);
+    unsigned int TitleBarStringColor = (unsigned int) get_color(csiTitleBarTextColor);
 
     int icon_id = ICON_ID_APP;  // Default
 
@@ -952,7 +956,8 @@ doCreateWindowFrame (
                     OrnamentColor1,
                     useIcon,
                     icon_id,
-                    useTitleString );
+                    useTitleString,
+                    TitleBarStringColor );
 
             // Register window
             id = (int) RegisterWindow(tbWindow);
@@ -1124,6 +1129,17 @@ void *doCreateWindow (
         FrameColor = (unsigned int) frame_color;
         ClientAreaColor = (unsigned int) client_color;
     };
+
+
+    int isDarkTheme = FALSE;
+    if ((void *) GWSCurrentColorScheme != NULL)
+    {
+        if (GWSCurrentColorScheme->magic == 1234)
+        {
+            if (GWSCurrentColorScheme->is_dark == TRUE)
+                isDarkTheme = TRUE;
+        }
+    }
 
 //
 // Internal flags
@@ -2507,9 +2523,13 @@ void *doCreateWindow (
                 (unsigned int) buttonBorderColor2_light,
                 (unsigned int) buttonBorder_outercolor );
 
-            //#todo: Use the color scheme.
-            window->label_color_when_selected = xCOLOR_GRAY1;
-            window->label_color_when_not_selected = xCOLOR_BLACK;
+            window->label_color_when_not_selected = (unsigned int) get_color(csiSystemFontColor);
+            if (isDarkTheme == TRUE){
+                window->label_color_when_selected = COLOR_WHITE;
+            } else {
+                window->label_color_when_selected = xCOLOR_GRAY1;
+            }
+
 
             // Setup the label's properties.
             if (buttonSelected == TRUE){

@@ -181,37 +181,35 @@ typedef enum {
 }ColorSchemeIndex;  
 
 
+#define STYLE_HONEY    1001
+#define STYLE_HONEY2    1002
+// ...
+
 /*
  * gws_color_scheme_d:
  *     Estrutura para esquema de cores. 
  *     O esquema de cores se aplica ao servidor 
- * de recursos gráficos. GWS.
+ *     de recursos gráficos (GWS).
  */ 
 struct gws_color_scheme_d
 {
-    int used;
-    int magic;
+    int used;        // Flag: 1 if this scheme is in use, 0 if not
+    int magic;       // Magic number for validation/debugging
 
-    int id;
-    int initialized;
+    int id;          // Unique identifier for this color scheme
+    int initialized; // Flag: 1 if initialized, 0 if not
 
-    char *name; 
+    char *name;      // Human-readable name of the scheme (e.g. "Honey", "Dark")
 
-// Marcador de estilo de design para o padrão de cores.
-// Cada estilo pode invocar por si um padrão de cores 
-// ou o padrão de cores por si pode representar um estilo.
-    int style;
+    int style;       // Design style marker (theme family or variant)
+    int is_dark; // 1 = dark theme, 0 = light theme
 
-// Cada índice desse array representará um elemento gráfico,
-// Os valores no array são cores 
-// correspondentes aos elementos gráficos indicados pelos índices.
-
+    // Cada índice desse array representa um elemento gráfico.
+    // Os valores no array são cores correspondentes aos elementos
+    // gráficos indicados pelos índices em ColorSchemeIndex.
     unsigned int elements[32];
-    //color_t elements[32];
 
-    //...
-
-// Navigation
+    // Ponteiro para o próximo esquema de cores (lista encadeada).
     struct gws_color_scheme_d *next;
 };
 
