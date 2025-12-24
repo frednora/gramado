@@ -131,71 +131,54 @@ extern char *screen_number;
 /*
  * ColorSchemeIndex:
  *     csi - color scheme index. 
- *     Enumerando os elementos gráficos.
+ *     Enumerando os elementos gráficos
  *     O esquema de cores se aplica ao servidor 
- *     de recursos gráficos (GWS).
+ * de recursos gráficos. GWS.
  */
 typedef enum {
 
-    // General
-    csiNull,                    // No color / undefined
-    csiDesktop,                 // Desktop background
+    csiNull,                    //0
+    csiDesktop,                 //1 área de trabalho.
 
-    // Windows
-    csiWindow,                  // Generic window fill
-    csiWindowBackground,        // Window background area
-    csiWindowBorder,            // Generic window border
-    csiWWFBorder,               // Window with focus border
-    csiActiveWindowBorder,      // Active window border
-    csiInactiveWindowBorder,    // Inactive window border
-    csiShadow,                  // Drop shadow color for elevated windows
-    csiResizeHandle,            // Color for resize grips
+    //window
+    csiWindow,                  //2
+    csiWindowBackground,        //3
+    csiActiveWindowBorder,      //4
+    csiInactiveWindowBorder,    //5
 
-    // Bars
-    csiTitleBar,                // Menu bar
-    csiMenuBar,                 // Menu bar
-    csiToolBar,                 // Toolbar background
-    csiScrollBar,               // Scroll bar
-    csiStatusBar,               // Status bar
-    csiTaskBar,                 // Task bar
+    //bar
+    csiActiveWindowTitleBar,    //6
+    csiInactiveWindowTitleBar,  //7
+    csiMenuBar,                 //8
+    csiScrollBar,               //9
+    csiStatusBar,               //10
+    csiTaskBar,                 //11
 
-    // Titlebars
-    csiTitleBarTextColor,       // Text color in titlebar
-    csiActiveWindowTitleBar,    // Active window titlebar
-    csiInactiveWindowTitleBar,  // Inactive window titlebar
-
-    // Progressbar
-    csiProgressBarBackground,   // Progress bar track
-    csiProgressBarForeground,   // Progress bar fill
-
-    // Taskbars
-    csiTaskBarTextColor,        // Text color in taskbar
-
-// Dialogs / Messages
-    csiMessageBox,              // Message box background
-    csiDialogBox,               // Dialog box background
-    csiAlertBox,                // Alert/warning dialog background
-    csiSuccessBox,              // Success/confirmation dialog background
-
-// Fonts
-    csiSystemFontColor,         // System font (default text)
-    csiTerminalFontColor,       // Terminal font (console text)
+    csiMessageBox,              //12
+    csiSystemFontColor,         //13 BLACK
+    csiTerminalFontColor,       //14 WHITE
     
-// Controls
-    csiButton,                  // Button background
-    csiCheckBox,                // Checkbox background
-    csiRadioButton,             // Radio button background
-    csiSlider,                  // Slider track
-    csiInputBox,                // Text input background
+    csiButton,   // 15
 
-// Mouse Hover Effects
-    csiWhenMouseHover,                 // Generic hover background
-    csiWhenMouseHoverMinimizeControl,  // Hover on minimize control
-    csiWhenMouseHoverMaximizeControl,  // Hover on maximize control
-    csiWhenMouseHoverCloseControl,     // Hover on close control
-    csiWhenMouseHoverMenuItem          // Hover on menu item
+    csiWindowBorder,  // 16 window border
+    csiWWFBorder,     // 17 window with focus border.
 
-} ColorSchemeIndex;  
+    csiTitleBarTextColor,  // 18
+
+// Bg color when mouse hover
+    csiWhenMouseHover,                 // 19
+    csiWhenMouseHoverMinimizeControl,  // 20
+    csiWhenMouseHoverMaximizeControl,  // 21
+    csiWhenMouseHoverCloseControl,     // 22
+    csiWhenMouseHoverMenuItem,         // 23
+
+    csiTaskBarTextColor   // 24: Color for text in the taskbar.
+
+    //...
+    //@todo: focus,
+    //@todo: Window 'shadow' (black??)
+
+}ColorSchemeIndex;  
 
 
 /*

@@ -4422,61 +4422,93 @@ int gwssrv_initialize_default_color_scheme(void)
     cs->style = 0;
 
 // Colors
-// see: globals.h and themes/honey.h
+// size: 32 elements.
+// see: 
+// ws.h themes/honey.h
 
-// #todo #bugbug Overflow
-// >>> CHECK THE LIMITS <<<
-// Maybe we can expand this
-
-// General
+// 0
     cs->elements[csiNull] = 0;
+
+// 1 - Screen background. (Wallpaper)
     cs->elements[csiDesktop] = HONEY_COLOR_BACKGROUND;
 
-// Windows
+// 2 - Window
     cs->elements[csiWindow] = HONEY_COLOR_WINDOW;
+
+// 3 - Window background
     cs->elements[csiWindowBackground] = HONEY_COLOR_WINDOW_BACKGROUND;
-    cs->elements[csiWindowBorder] = HONEY_COLOR_WINDOW_BORDER;
-    cs->elements[csiWWFBorder] = HONEY_COLOR_WWF_BORDER;
+
+// 4 - Border for active window.
     cs->elements[csiActiveWindowBorder] = HONEY_COLOR_ACTIVE_WINDOW_BORDER;
+
+// 5 - Border for inactive window.
     cs->elements[csiInactiveWindowBorder] = 
         HONEY_COLOR_INACTIVE_WINDOW_BORDER;
 
-// Bars
-    cs->elements[csiMenuBar] = HONEY_COLOR_MENUBAR;
-    cs->elements[csiScrollBar] = HONEY_COLOR_SCROLLBAR;
-    cs->elements[csiStatusBar] = HONEY_COLOR_STATUSBAR;
-    cs->elements[csiTaskBar] = HONEY_COLOR_TASKBAR;
-
-// Titlebars
-    cs->elements[csiTitleBarTextColor] = HONEY_COLOR_TITLEBAR_TEXT;
+// 6 - Titlebar for active window.
     cs->elements[csiActiveWindowTitleBar] = 
         HONEY_COLOR_ACTIVE_WINDOW_TITLEBAR;
+
+// 7 - Titlebar for inactive window.
     cs->elements[csiInactiveWindowTitleBar] = 
         HONEY_COLOR_INACTIVE_WINDOW_TITLEBAR;
 
-// Taskbars
-    cs->elements[csiTaskBarTextColor] = xCOLOR_GRAY2;
+// 8 - Menubar
+    cs->elements[csiMenuBar] = HONEY_COLOR_MENUBAR;
 
-// Dialogs / Messages
+// 9 - Scrollbar 
+    cs->elements[csiScrollBar] = HONEY_COLOR_SCROLLBAR;
+
+// 10 - Statusbar
+    cs->elements[csiStatusBar] = HONEY_COLOR_STATUSBAR;
+
+// 11 - Taskbar
+    cs->elements[csiTaskBar] = HONEY_COLOR_TASKBAR;
+
+// 12 - Messagebox
     cs->elements[csiMessageBox] = HONEY_COLOR_MESSAGEBOX;
 
-// Fonts
+// 13 - System font. (Not a good name!)
     cs->elements[csiSystemFontColor] = HONEY_COLOR_SYSTEMFONT;
+
+// 14 - Terminal font.
     cs->elements[csiTerminalFontColor] = HONEY_COLOR_TERMINALFONT;
 
-// Controls
+// 15 - Button. (Normal and when the mouse leave)
     cs->elements[csiButton] = HONEY_COLOR_BUTTON;
 
-// Mouse Hover Effects
+// 16 - Window border.
+    cs->elements[csiWindowBorder] = HONEY_COLOR_WINDOW_BORDER;
+
+// 17 - wwf border
+    cs->elements[csiWWFBorder] = HONEY_COLOR_WWF_BORDER;
+
+// 18 - Titlebar text color.
+    cs->elements[csiTitleBarTextColor] = HONEY_COLOR_TITLEBAR_TEXT;
+
+//
+// Mouse hover
+//
+
+// 19 - When mousehover. (default color)
     cs->elements[csiWhenMouseHover] = HONEY_COLOR_BG_ONMOUSEHOVER;
+
+// 20 -
     cs->elements[csiWhenMouseHoverMinimizeControl] = 
         HONEY_COLOR_BG_ONMOUSEHOVER_MIN_CONTROL;
+// 21 -
     cs->elements[csiWhenMouseHoverMaximizeControl] = 
         HONEY_COLOR_BG_ONMOUSEHOVER_MAX_CONTROL;
+// 22 -
     cs->elements[csiWhenMouseHoverCloseControl] = 
         HONEY_COLOR_BG_ONMOUSEHOVER_CLO_CONTROL;
+
+// 23
     cs->elements[csiWhenMouseHoverMenuItem] = 
         HONEY_COLOR_BG_ONMOUSEHOVER_MENUITEM;
+
+// 24 - Textbar text color
+    cs->elements[csiTaskBarTextColor] = xCOLOR_GRAY2;
 
     // ...
 
