@@ -364,43 +364,22 @@ struct gws_window_d *do_create_titlebar(
 // Get parameter.
     useIcon = has_icon;
 
-// Overlapped + maximized.
-// If Overlapped and maximized, create a titlebar is different,
-// it goes on top of screen and the window has no borders.
-    int IsMaximized=FALSE;
+// Overlapped + fullscreen or maximized: no border offset. 
+    const int is_fullscreen = (parent->state == WINDOW_STATE_FULL); 
+    const int is_maximized = (parent->state == WINDOW_STATE_MAXIMIZED);
 
-    if (parent->type == WT_OVERLAPPED &&
-        parent->state == WINDOW_STATE_NULL )
+// Use parent->border_size (must be set in doCreateWindowFrame before this call) 
+    unsigned long b = parent->border_size;
+
+    TitleBarLeft  = b;
+    TitleBarTop   = b;
+    TitleBarWidth = parent->width - (2 * b);
+
+    if (is_fullscreen || is_maximized) 
     {
-        IsMaximized=TRUE;
-    }
-
-// border size.
-// Respect the border size
-// of the parent.
-    //unsigned long BorderSize = parent->border_size;
-
-// Without border, everything changes.
-// If parent is maximized, titlebar spans full width at (0,0).
-    if (IsMaximized == TRUE)
-    {
-        TitleBarLeft = 0;
-        TitleBarTop = 0;
+        TitleBarLeft  = 0;
+        TitleBarTop   = 0;
         TitleBarWidth = parent->width;
-    }
-
-// If parent is not maximized, respect border size.
-    if (IsMaximized != TRUE)
-    {
-        TitleBarLeft = parent->border_size;
-        TitleBarTop  = parent->border_size;
-        // border size can't be '0'.
-        //if (parent->border_size==0){
-        //    printf ("bsize%d\n",parent->border_size);
-        //    while(1){}
-        //}
-        TitleBarWidth = 
-            (parent->width - parent->border_size - parent->border_size);
     }
 
     // Saving
@@ -668,13 +647,16 @@ doCreateWindowFrame (
     int Type=0;
 // Border size
     unsigned long BorderSize = (border_size & 0xFFFF);
+
 // Border color
     unsigned int BorderColor1 = border_color1;  // top/left
     unsigned int BorderColor2 = border_color2;  // right/bottom
     unsigned int BorderColor3 = border_color3;
+
 // Ornament color
     unsigned int OrnamentColor1 = ornament_color1;
     unsigned int OrnamentColor2 = ornament_color2;
+
 // Title bar height
     unsigned long TitleBarHeight = 
         METRICS_TITLEBAR_DEFAULT_HEIGHT;
@@ -717,6 +699,11 @@ doCreateWindowFrame (
     if (window->used != TRUE || window->magic != 1234){
         goto fail;
     }
+
+// Save border colors setted by the caller
+    window->border_color1 = (unsigned int) BorderColor1;
+    window->border_color2 = (unsigned int) BorderColor2;
+
 
 // Uma overlapped maximizada não tem borda.
     int IsMaximized = FALSE;
@@ -826,28 +813,25 @@ doCreateWindowFrame (
         // dentro da função __draw_window_border().
         // ou passar tudo via argumento.
         // ou criar uma rotina para mudar as caracteristicas da borda.
-         
-        // Se tiver o foco.
+
+        // If it has the input focus.
+        // Respecting the colors received via parameter
         if (window == keyboard_owner){
-            BorderColor1 = (unsigned int) get_color(csiWWFBorder);
-            BorderColor2 = (unsigned int) get_color(csiWWFBorder);
-            BorderSize = 2;  //#todo: worker
-        }else if (window != keyboard_owner){
-            BorderColor1 = (unsigned int) get_color(csiWindowBorder);
-            BorderColor2 = (unsigned int) get_color(csiWindowBorder);
-            BorderSize = 1;  //#todo: worker
+            BorderSize = 2;
+        } else if (window != keyboard_owner){
+            BorderSize = 1;
         };
-        
+
         window->border_size = 0;
         window->borderUsed = FALSE;
-        if (useBorder == TRUE){
-            window->border_color1 = (unsigned int) BorderColor1;
-            window->border_color2 = (unsigned int) BorderColor2;
+        //if (useBorder == TRUE){
+            //window->border_color1 = (unsigned int) BorderColor1;
+            //window->border_color2 = (unsigned int) BorderColor2;
             window->border_size = BorderSize;
             window->borderUsed = TRUE;
-        }
+        //}
 
-        // Draw the border of an edit box.
+        // Draw the border of an edit box
         __draw_window_border(parent,window);
         return 0;
     }
@@ -901,8 +885,8 @@ doCreateWindowFrame (
             //WindowManager.fullscreen_window = window;
             
             window->borderUsed = FALSE;
+            // Only paint in the case of nor maximized and not full
             __draw_window_border(parent,window);
-            // Now we have a border size.
         }
 
         // #important:
@@ -1119,6 +1103,8 @@ void *doCreateWindow (
     register struct gws_window_d *window;
     struct gws_window_d *Parent;
 
+    int fChild = FALSE;
+
 // Colors
     unsigned int FrameColor;
     unsigned int ClientAreaColor;
@@ -1304,7 +1290,8 @@ void *doCreateWindow (
 
     // ...
 
-
+    if (style & WS_CHILD)
+        fChild = TRUE;
 
     if (style & WS_TRANSPARENT)
     {
@@ -2038,17 +2025,12 @@ void *doCreateWindow (
     // Simple window. (Sem barra de títulos).
     case WT_SIMPLE:
     case WT_TITLEBAR:
+
+        // #important: Set the taskbar created by the user.
         if (window->style & WS_TASKBAR)
         {
             window->isTaskBar = TRUE;
-            
-            // #important
-            // Set the taskbar created by the user.
             taskbar_window = window;
-            // No more access to the embedded taskbar.
-            //TaskBar.initialized = FALSE;
-            // No more access to the QuickLaunch resources.
-            //QuickLaunch.initialized = FALSE;
         }
         window->ip_device = IP_DEVICE_NULL;
         window->frame.used = FALSE;
@@ -2059,7 +2041,6 @@ void *doCreateWindow (
 
     // Edit box. (Simples + borda preta).
     // Editbox não tem sombra, tem bordas.
-    //case WT_EDITBOX:
     case WT_EDITBOX_SINGLE_LINE:
     case WT_EDITBOX_MULTIPLE_LINES:
         window->ip_device = IP_DEVICE_KEYBOARD;
@@ -2306,30 +2287,20 @@ void *doCreateWindow (
 // ========
 // 1
 
+    // #todo: Use color scheme
     if (Shadow == TRUE)
     {
         window->shadowUsed = TRUE;
 
-        //CurrentColorScheme->elements[??]
-
-        //@todo: 
-        // ?? Se tiver barra de rolagem a largura da 
-        // sombra deve ser maior. ?? Não ...
-        //if()
-
-        // @todo: Adicionar a largura das bordas verticais 
-        // e barra de rolagem se tiver.
-        // @todo: Adicionar as larguras das 
-        // bordas horizontais e da barra de títulos.
-        // Cinza escuro.  CurrentColorScheme->elements[??] 
-        // @TODO: criar elemento sombra no esquema. 
-
+        // Overlapped window
         if ((unsigned long) type == WT_OVERLAPPED)
         {
             if (window == keyboard_owner){
                 __tmp_color = xCOLOR_GRAY1;
-            }else if (window != keyboard_owner){
+                //__tmp_color = (unsigned int) get_color(csiActiveWindowBorder);
+            } else if (window != keyboard_owner){
                 __tmp_color = xCOLOR_GRAY2;
+                //__tmp_color = (unsigned int) get_color(csiInactiveWindowBorder);
             }
             // Saving shadow color value
             window->shadow_color = (unsigned int) __tmp_color;
@@ -2613,6 +2584,9 @@ void *CreateWindow (
     unsigned int client_color ) 
 {
    register struct gws_window_d *__w;
+
+   int fChild = FALSE;
+
    unsigned long __rop_flags=0;
 // This function is able to create some few 
 // kinds of windows for now:
@@ -2639,6 +2613,10 @@ void *CreateWindow (
         FrameColor = (unsigned int) frame_color;
         ClientAreaColor = (unsigned int) client_color;
     };
+
+// Is it a child window?
+    if (style & WS_CHILD)
+        fChild = TRUE;
 
 /*
 // #hack No full screen allowd for now.
@@ -2697,6 +2675,7 @@ void *CreateWindow (
         ValidType=TRUE;
         break;
     };
+
     // The application can't create a titlebar alone.
     // It is only for internal use.
     if (type == WT_TITLEBAR){
@@ -3025,7 +3004,53 @@ draw_frame:
     int FrameStyle = 1;
 
 // ----
-    // App's frame window
+
+/*
+// Border colors for all the types depending on the focus.
+    if (__w == keyboard_owner){
+        bc_1 = (unsigned int) get_color(csiWWFBorder);
+        bc_2 = (unsigned int) get_color(csiWWFBorder);
+        //bc_3 = (unsigned int) get_color(csiWWFBorder);
+    } else if (__w == active_window) { 
+        // Active top-level window 
+        bc_1 = get_color(csiActiveWindowBorder); 
+        bc_2 = get_color(csiActiveWindowBorder);
+    } else if (__w != keyboard_owner){
+        bc_1 = (unsigned int) get_color(csiWindowBorder);
+        bc_2 = (unsigned int) get_color(csiWindowBorder);
+        //bc_3 = (unsigned int) get_color(csiWWFBorder);
+    };
+*/
+
+    int isKeyboardOwner = FALSE;   // wwf
+    int isActiveWindow = FALSE;    // active
+
+    if (__w == keyboard_owner)
+        isKeyboardOwner = TRUE;
+    if (__w == active_window)
+        isActiveWindow = TRUE;
+
+// Its a wwf
+    if (isKeyboardOwner == TRUE){
+        bc_1 = (unsigned int) get_color(csiWWFBorder);
+        bc_2 = (unsigned int) get_color(csiWWFBorder);
+    } else {
+        bc_1 = (unsigned int) get_color(csiWindowBorder);
+        bc_2 = (unsigned int) get_color(csiWindowBorder);
+    }
+
+// Its an active window.
+// Active window override
+// We will not use the colors for wwf anymore,
+// Now we will use the colors for active window.
+    if (isActiveWindow == TRUE)
+    {
+        bc_1 = get_color(csiActiveWindowBorder); 
+        bc_2 = get_color(csiActiveWindowBorder);
+    }
+
+
+// Ornament color for Overlapped window
     if (type == WT_OVERLAPPED)
     {
         if (__w->status == WINDOW_STATUS_ACTIVE)

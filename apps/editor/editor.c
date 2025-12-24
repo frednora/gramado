@@ -792,7 +792,7 @@ int editor_initialize(int argc, char *argv[])
 
 // >> Style: design-time identity. (unsigned long)
 // Defines window type and decorations/features.
-    unsigned long mw_style = WS_NULL;
+    unsigned long mw_style = WS_APP;
 
 // >> Status: interaction/activation. (int)
 // Indicates focus, active/inactive, and user engagement.
@@ -872,7 +872,7 @@ int editor_initialize(int argc, char *argv[])
                 WT_EDITBOX, 1, 1, bar1_string,
                 ab_l, ab_t, ab_w, ab_h,
                 main_window, 
-                0, 
+                WS_CHILD, 
                 COLOR_WHITE, COLOR_WHITE );
 
     if (addressbar_window < 0){
@@ -922,7 +922,9 @@ int editor_initialize(int argc, char *argv[])
                   4,                       //t
                   (( lWi.cr_width/8 )*1), 
                   24,
-                  main_window, 0, COLOR_GRAY, COLOR_GRAY );
+                  main_window, 
+                  WS_CHILD, 
+                  COLOR_GRAY, COLOR_GRAY );
 
     if (savebutton_window < 0){
         printf("editor.bin: savebutton_window failed\n");
@@ -994,7 +996,7 @@ int editor_initialize(int argc, char *argv[])
                 client_fd,
                 WT_EDITBOX_MULTIPLE_LINES, 1, 1, cw_string,
                 cw_left, cw_top, cw_width, cw_height,
-                main_window, 0, COLOR_WHITE, COLOR_WHITE );
+                main_window, WS_CHILD, COLOR_WHITE, COLOR_WHITE );
 
     if (client_window < 0){
         printf("editor.bin: client_window failed\n");

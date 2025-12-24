@@ -112,10 +112,10 @@ void __init_wm_structure(void);
 // Role / semantic identity (misplaced in WS_)
 //----------------------
 // Defines the semantic type of the window
-#define WS_APP       0x10000
-#define WS_DIALOG    0x20000 
-#define WS_TERMINAL  0x40000
-#define WS_CHILD     0x80000
+#define WS_APP       0x10000  // Marks the main/root window of an app
+#define WS_CHILD     0x20000  // Marks child windows (must have parent)
+#define WS_DIALOG    0x40000  // Dialog windows (special popup style)
+#define WS_TERMINAL  0x80000  // Terminal windows (special role)
 
 // #define WS_res     0x100000
 // #define WS_res     0x200000

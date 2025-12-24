@@ -631,7 +631,6 @@ int gwsInitGUI(void)
 
     // Pointer, id and color. 
     struct gws_window_d  *rw;
-    wid_t rw_wid = -1;
     unsigned int rw_color = (unsigned int) get_color(csiDesktop);
 
     rw = (struct gws_window_d *) wmCreateRootWindow(rw_color);
@@ -646,13 +645,20 @@ int gwsInitGUI(void)
         exit(1);
     }
 
+
 // Register
+    wid_t rw_wid = -1;
     rw_wid = RegisterWindow(rw);
     if (rw_wid<0 || rw_wid >= WINDOW_COUNT_MAX){
         debug_print("gwsInitGUI: Couldn't register rw\n");
         printf     ("gwsInitGUI: Couldn't register rw\n");
         exit(1);
     }
+
+/*
+    printf("rw_wid=%d\n",rw_wid);
+    while(1){}
+*/
 
 // ==============
 

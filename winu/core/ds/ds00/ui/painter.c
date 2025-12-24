@@ -250,6 +250,7 @@ __draw_window_border(
     struct gws_window_d *window )
 {
 // + We dont have a border size yet.
+// Repecting the color in the strucure
 
     if ((void*) parent == NULL){
         return;
@@ -1011,6 +1012,20 @@ redraw_window (
              window->type == WT_EDITBOX_SINGLE_LINE ||
              window->type == WT_EDITBOX_MULTIPLE_LINES )
         {
+
+            // Its a wwf
+            if (window == keyboard_owner){
+                window->border_color1 = (unsigned int) get_color(csiWWFBorder);
+                window->border_color2 = (unsigned int) get_color(csiWWFBorder);
+            } else {
+                window->border_color1 = (unsigned int) get_color(csiWindowBorder);
+                window->border_color2 = (unsigned int) get_color(csiWindowBorder);
+            }
+
+            if (window == active_window){
+                window->border_color1 = get_color(csiActiveWindowBorder); 
+                window->border_color2 = get_color(csiActiveWindowBorder);
+            }
             __draw_window_border(window->parent, window);
         }
 

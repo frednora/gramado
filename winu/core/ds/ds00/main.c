@@ -1252,6 +1252,9 @@ int serviceCreateWindow(int client_fd)
     unsigned long my_status=0;
     unsigned long my_state=0;
 
+    int fCanCreateMainwindow = FALSE;
+    int fChild = FALSE;
+
     //#debug
     //server_debug_print("serviceCreateWindow:\n");
     //asm("cli");
@@ -1454,7 +1457,38 @@ int serviceCreateWindow(int client_fd)
         client_color = (unsigned int) get_color(csiWindow);
     }
     */
-    
+
+// Can create main window?
+// Allowed parent IDs:
+// + 0                   → bootstrap slot (before root is fully defined).
+// + __root_window->id   → canonical root (usually 1).
+// + Any other parent ID → invalid.
+
+    if (my_style & WS_APP)
+    {
+        if (pwid == 0)
+            fCanCreateMainwindow = TRUE;
+        if (pwid == __root_window->id)
+            fCanCreateMainwindow = TRUE;
+
+        if (fCanCreateMainwindow != TRUE){
+            return -1;
+        }
+    }
+
+// Is it a child window?
+    if (my_style & WS_CHILD)
+        fChild = TRUE;
+
+// A child window can't have an invalid parent
+    if (fChild == TRUE)
+    {
+        if ((void*)Parent == NULL)
+            return -1;
+        if (Parent->magic != 1234)
+            return -1;
+    }
+
 // Calling a worker on server to create the window.
 // See: createw.c
 // IN:

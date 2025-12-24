@@ -1,4 +1,3 @@
-
 // File: wt.h
 // This header should be included by including "gws.h".
 
