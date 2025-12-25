@@ -131,45 +131,20 @@ irq12_MOUSE (void)
     wait_then_write(0x64,0xAE);
 
 
-// ++
-// =====================================
-// #test: Switch task
-// #ps: The task switching needs to be the last part of the routine.
-// The only route is switching to the foreground thread.
-
-    if (CONFIG_TASK_SWITCH_DURING_PS2_MOUSE_INTERRUPT == 0)
-        return;
-
-    struct thread_d *CurrentThread;
-    struct thread_d *TargetThread;
-
+/*
+// #debug: 
+// Tracing if some interrupt happens when the thread is in an invalid state.
 // Current ------
+    struct thread_d *CurrentThread;
     if (current_thread < 0 || current_thread >= THREAD_COUNT_MAX)
         return;
     CurrentThread = (struct thread_d *) threadList[current_thread];
     if (CurrentThread->magic != 1234)
         return;
-    save_current_context();
-    CurrentThread->saved = TRUE;
+    // It needs to be in a running state
+    if (CurrentThread->state != RUNNING && CurrentThread->state != READY)
+        panic ("M");
+*/
 
-// Target ------
-    if (foreground_thread < 0 || foreground_thread >= THREAD_COUNT_MAX)
-    {
-        TargetThread = CurrentThread;
-        goto restore_target;
-    }
-    TargetThread = (struct thread_d *) threadList[foreground_thread];
-    if (TargetThread->magic != 1234)
-    {
-        TargetThread = CurrentThread;
-        goto restore_target;
-    }
-
-restore_target:
-    TargetThread->saved = FALSE;
-    restore_current_context();  // update cr3.
-
-// =====================================
-// --
 }
 

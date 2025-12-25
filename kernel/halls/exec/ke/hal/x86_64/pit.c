@@ -219,10 +219,6 @@ irq0_TIMER (void)
         irq12_MOUSE();
     }
 
-// Compile‑time flag check
-    if (CONFIG_TASK_SWITCH_DURING_IRQ0 == 0)
-        return;
-
 // OEI?
 // The key idea is that sometimes the spawn routine 
 // (when creating a new thread during the timer interrupt) must send the EOI itself, 
