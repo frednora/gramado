@@ -41,8 +41,8 @@ void ps2mouse_poll(void)
 
     if (PS2Mouse.initialized != TRUE)
         return;
-    if (PS2Mouse.irq_is_working == TRUE)
-        return;
+    //if (PS2Mouse.irq_is_working == TRUE)
+        //return;
     if (PS2Mouse.use_polling == TRUE){
         irq12_MOUSE();
     }
@@ -117,7 +117,6 @@ irq12_MOUSE (void)
     PS2Mouse.irq_is_working = TRUE;
     PS2Mouse.last_jiffy = (unsigned long) get_systime_totalticks();
 
-
 // When called during the IRQ
     if (PS2Mouse.use_polling != TRUE){
         //return;
@@ -130,5 +129,47 @@ irq12_MOUSE (void)
     wait_then_write(0x64,0xAD);
     DeviceInterface_PS2Mouse();
     wait_then_write(0x64,0xAE);
+
+
+// ++
+// =====================================
+// #test: Switch task
+// #ps: The task switching needs to be the last part of the routine.
+// The only route is switching to the foreground thread.
+
+    if (CONFIG_TASK_SWITCH_DURING_PS2_MOUSE_INTERRUPT == 0)
+        return;
+
+    struct thread_d *CurrentThread;
+    struct thread_d *TargetThread;
+
+// Current ------
+    if (current_thread < 0 || current_thread >= THREAD_COUNT_MAX)
+        return;
+    CurrentThread = (struct thread_d *) threadList[current_thread];
+    if (CurrentThread->magic != 1234)
+        return;
+    save_current_context();
+    CurrentThread->saved = TRUE;
+
+// Target ------
+    if (foreground_thread < 0 || foreground_thread >= THREAD_COUNT_MAX)
+    {
+        TargetThread = CurrentThread;
+        goto restore_target;
+    }
+    TargetThread = (struct thread_d *) threadList[foreground_thread];
+    if (TargetThread->magic != 1234)
+    {
+        TargetThread = CurrentThread;
+        goto restore_target;
+    }
+
+restore_target:
+    TargetThread->saved = FALSE;
+    restore_current_context();  // update cr3.
+
+// =====================================
+// --
 }
 

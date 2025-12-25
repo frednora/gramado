@@ -186,19 +186,6 @@ struct ps2_d
 {
     int used;
     int magic;
-    
-    // #hackhack
-    // Use pooling or not.
-    // TRUE, FALSE
-    // :: 
-    // Maybe something is wrong with the 
-    // USB/PS2 emulation microcode in my real machine.
-    // Maybe the 'interrupts' is not working in the 
-    // 32 bit protected mode. 
-    // Maybe we can use 'pooling' to aboid this issue. 
-    // Just like in Temple OS.
-    // ps: Some other OSs are facing the same problem.
-    int pooling;
 
     //flags: TRUE or FALSE,
     int keyboard_initialized;

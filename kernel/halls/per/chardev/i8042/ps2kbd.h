@@ -115,13 +115,14 @@ struct ps2_keyboard_d
 {
     object_type_t objectType;
     object_class_t objectClass;
+    keyboard_type_t type;
     file *fp;
     int initialized;
-    int irq_is_working;
-    int use_polling;
-    unsigned long last_jiffy;
 
-    keyboard_type_t type;
+    int use_polling;
+
+    unsigned long last_jiffy;
+    int irq_is_working;
 
     // #todo
     // int control_fd;

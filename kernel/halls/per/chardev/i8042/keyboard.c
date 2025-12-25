@@ -42,8 +42,8 @@ void ps2kbd_poll(void)
 {
     if (PS2Keyboard.initialized != TRUE)
         return;
-    if (PS2Keyboard.irq_is_working == TRUE)
-        return;
+    //if (PS2Keyboard.irq_is_working == TRUE)
+        //return;
     if (PS2Keyboard.use_polling == TRUE){
         irq1_KEYBOARD();
     }
@@ -133,7 +133,47 @@ irq1_KEYBOARD (void)
     if (PS2.mouse_initialized == TRUE){
         wait_then_write(0x64,0xA8);
     }
+
+
+// ++
+// =====================================
+// #test: Switch task
+// #ps: The task switching needs to be the last part of the routine.
+// The only route is switching to the foreground thread.
+
+    if (CONFIG_TASK_SWITCH_DURING_PS2_KEYBOARD_INTERRUPT == 0)
+        return;
+
+    struct thread_d *CurrentThread;
+    struct thread_d *TargetThread;
+
+// Current ------
+    if (current_thread < 0 || current_thread >= THREAD_COUNT_MAX)
+        return;
+    CurrentThread = (struct thread_d *) threadList[current_thread];
+    if (CurrentThread->magic != 1234)
+        return;
+    save_current_context();
+    CurrentThread->saved = TRUE;
+
+// Target ------
+    if (foreground_thread < 0 || foreground_thread >= THREAD_COUNT_MAX)
+    {
+        TargetThread = CurrentThread;
+        goto restore_target;
+    }
+    TargetThread = (struct thread_d *) threadList[foreground_thread];
+    if (TargetThread->magic != 1234)
+    {
+        TargetThread = CurrentThread;
+        goto restore_target;
+    }
+
+restore_target:
+    TargetThread->saved = FALSE;
+    restore_current_context();  // update cr3.
+
+// =====================================
+// --
 }
-
-
 

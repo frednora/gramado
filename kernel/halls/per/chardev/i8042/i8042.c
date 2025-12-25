@@ -209,16 +209,8 @@ int DDINIT_ps2(void)
     for (i=0; i<100; i++){
         in8(0x60);
     };
-
-    if (CONFIG_USE_POOLING_FOR_PS2 == TRUE){
-        PS2.pooling = TRUE;
-    } else {
-        PS2.pooling = FALSE;
-    };
-
     PS2.used = TRUE;
     PS2.magic = 1234;
-
     return 0;
 }
 
@@ -265,16 +257,8 @@ int DDINIT_ps2_early_initialization(void)
     for (i=0; i<100; i++){
         in8(0x60);
     };
-
-    if (CONFIG_USE_POOLING_FOR_PS2 == TRUE){
-        PS2.pooling = TRUE;
-    } else {
-        PS2.pooling = FALSE;
-    };
-
     PS2.used = TRUE;
     PS2.magic = 1234;
-
     return 0;
 }
 

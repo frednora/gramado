@@ -68,11 +68,23 @@
 // >>>>  This is a test yet. <<<<
 // >>>>  It may not work! Be careful! <<<<
 
-#define CONFIG_USE_POOLING_FOR_PS2  0
 #define CONFIG_USE_POOLING_FOR_PS2_KEYBOARD  0
 #define CONFIG_USE_POOLING_FOR_PS2_MOUSE  0
 
-// ...
+
+//
+// Task switching
+//
+
+// #test:
+// Only if we have another option like: Local APIC Timer or HPET.
+//#define CONFIG_TASK_SWITCH_DURING_IRQ0  0
+
+// #test: Making taskswitching during the keyboard/mouse interrupt.
+// The only route is switching to the foreground thread.
+#define CONFIG_TASK_SWITCH_DURING_PS2_KEYBOARD_INTERRUPT  0
+#define CONFIG_TASK_SWITCH_DURING_PS2_MOUSE_INTERRUPT  0
+
 
 // Select the default desired input targets
 // It sends the same input to multiple targets,
