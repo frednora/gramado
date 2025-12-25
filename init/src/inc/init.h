@@ -19,6 +19,9 @@
 #include "../inittask/inittask.h"
 
 
+#define EnvironmentWinuCore   4000
+#define EnvironmentWinuHeavy  4001
+
 /*
 Standard Linux Runlevels (0-6)
 0 (Halt): Shuts down the system.
@@ -54,6 +57,10 @@ struct init_d
 // + 1003 - operate as a server with system messages
 // + 1004 - launch display server
     int __selected_option;
+
+// Winu Core: ds00
+// Winu Heavy: demo00 and demo01
+    int environment;
 
     int argc;         // Save argc from main
 

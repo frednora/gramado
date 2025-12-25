@@ -228,11 +228,17 @@ xxxProcessEvent (
                 if (caller_tid != 99){
                     break;
                 }
-                //#debug
-                //printf("init.bin: 4001, from {%d}\n",caller_tid);
-                memset(__filename_local_buffer,0,64);
-                sprintf(__filename_local_buffer,"#term00.bin");
-                rtl_clone_and_execute(__filename_local_buffer);
+
+                // Valid only for Winu Core environment
+                if (Init.environment == EnvironmentWinuCore)
+                {
+                    //#debug
+                    //printf("init.bin: 4001, from {%d}\n",caller_tid);
+                    memset(__filename_local_buffer,0,64);
+                    sprintf(__filename_local_buffer,"#term00.bin");
+                    rtl_clone_and_execute(__filename_local_buffer);
+                    return 0;
+                }
                 break;
             case 4002:  //app2
                 // This is a special tid used by the kernel.
@@ -240,12 +246,18 @@ xxxProcessEvent (
                 if (caller_tid != 99){
                     break;
                 }
-                //#debug
-                //printf("init.bin: 4002, from {%d}\n",caller_tid);
-                memset(__filename_local_buffer,0,64);
-                sprintf(__filename_local_buffer,"#launch.bin");
-                //sprintf(__filename_local_buffer,"#power.bin");
-                rtl_clone_and_execute(__filename_local_buffer);
+
+                // Valid only for Winu Core environment
+                if (Init.environment == EnvironmentWinuCore)
+                {
+                    //#debug
+                    //printf("init.bin: 4002, from {%d}\n",caller_tid);
+                    memset(__filename_local_buffer,0,64);
+                    sprintf(__filename_local_buffer,"#launch.bin");
+                    //sprintf(__filename_local_buffer,"#power.bin");
+                    rtl_clone_and_execute(__filename_local_buffer);
+                    return 0;
+                }
                 break;
             case 4003:  //app3
                 // This is a special tid used by the kernel.
@@ -253,12 +265,18 @@ xxxProcessEvent (
                 if (caller_tid != 99){
                     break;
                 }
-                //#debug
-                //printf("init.bin: 4003, from {%d}\n",caller_tid);
-                memset(__filename_local_buffer,0,64);
-                sprintf(__filename_local_buffer,"#menuapp.bin");
-                //sprintf(__filename_local_buffer,"#memory.bin");
-                rtl_clone_and_execute(__filename_local_buffer);
+
+                // Valid only for Winu Core environment
+                if (Init.environment == EnvironmentWinuCore)
+                {
+                    //#debug
+                    //printf("init.bin: 4003, from {%d}\n",caller_tid);
+                    memset(__filename_local_buffer,0,64);
+                    sprintf(__filename_local_buffer,"#menuapp.bin");
+                    //sprintf(__filename_local_buffer,"#memory.bin");
+                    rtl_clone_and_execute(__filename_local_buffer);
+                    return 0;
+                }
                 break;
             case 4004:  //app4
                 // This is a special tid used by the kernel.
@@ -266,11 +284,28 @@ xxxProcessEvent (
                 if (caller_tid != 99){
                     break;
                 }
-                //#debug
-                //printf("init.bin: 4004, from {%d}\n",caller_tid);
-                memset(__filename_local_buffer,0,64);
-                sprintf(__filename_local_buffer,"#editor.bin");
-                rtl_clone_and_execute(__filename_local_buffer);
+
+                // Valid only for Winu Core environment
+                if (Init.environment == EnvironmentWinuCore)
+                {
+                    //#debug
+                    //printf("init.bin: 4004, from {%d}\n",caller_tid);
+                    memset(__filename_local_buffer,0,64);
+                    sprintf(__filename_local_buffer,"#editor.bin");
+                    rtl_clone_and_execute(__filename_local_buffer);
+                    return 0;
+                }
+                // #test
+                // Launching a special app that demo00 or demo01 can handle with
+                if (Init.environment == EnvironmentWinuHeavy)
+                {
+                    //#debug
+                    //printf("init.bin: 4004, from {%d}\n",caller_tid);
+                    memset(__filename_local_buffer,0,64);
+                    sprintf(__filename_local_buffer,"#gws.bin");
+                    rtl_clone_and_execute(__filename_local_buffer);
+                    return 0;
+                }
                 break;
             // ...
             default:

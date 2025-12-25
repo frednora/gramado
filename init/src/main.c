@@ -35,7 +35,6 @@ int InvalidLauncher = FALSE;
 static int isTimeToQuitCmdLine = FALSE;
 
 static const char *app1_name = "#ds00.bin";  // In DE/
-//static const char *app1_name = "???.bin";
 //static const char *app2_name = "???.bin";
 static const char *app3_name = "@netd.bin"; 
 static const char *app4_name = "net.bin";
@@ -282,27 +281,23 @@ static void do_launch_de(void)
 // and the same doesn't happen when we use the version in libgws.
 // But init process cant use libgws.
 
-// Launch
+// Launch ds00
     //ret_val = (int) rtl_clone_and_execute(filename);
     ret_val = (int) rtl_clone_and_execute(app1_name);
     if (ret_val <= 0){
         printf("Couldn't clone\n");
         return;
     }
-
-    //while(1){}
+    Init.environment = EnvironmentWinuCore;
 
     //printf("pid=%d\n",ret_val);
+    //while(1){}
 
-// #warning: 
-// Quit the command line. Not the process.
-// #todo: This name is not good.
-    isTimeToQuitCmdLine = TRUE;
-
-// Sleep (Good!)
-    //sc82( 266, 8000, 8000, 8000 );
-    //rtl_sleep_until(2000);
+// Sleep in ms
     rtl_sleep(2000);
+
+// Quit the command line interface
+    isTimeToQuitCmdLine = TRUE;
 }
 
 static void do_launch_de2(void)
@@ -314,12 +309,18 @@ static void do_launch_de2(void)
 // Sending cmdline via stdin
     rewind(stdin);
     write( fileno(stdin), cmdline1, strlen(cmdline1) );
-// Launch new process.
+
+// Launch new process. ds00
     ret_val = (int) rtl_clone_and_execute(app1_name);
     if (ret_val<=0){
         printf("Couldn't clone\n");
         return;
     }
+    Init.environment = EnvironmentWinuCore;
+
+// Sleep in ms
+    rtl_sleep(2000);
+
 // Launch new process.
     ret_val = (int) rtl_clone_and_execute("#term00.bin");
     if (ret_val<=0){
@@ -327,10 +328,7 @@ static void do_launch_de2(void)
         return;
     }
 
-// Sleep (Good!)
-    //sc82( 266, 8000, 8000, 8000 );
-    //printf("pid=%d\n",ret_val);
-// Quit the command line.
+// Quit the command line interface
     isTimeToQuitCmdLine = TRUE;
 }
 
@@ -339,20 +337,22 @@ static void do_launch_list(void)
 // Raw and ugly set of programs.
 
     rtl_clone_and_execute(app1_name);
+    Init.environment = EnvironmentWinuCore;
+// Sleep in ms
+    rtl_sleep(2000);
+
+
     rtl_clone_and_execute("#taskbar.bin");
     rtl_clone_and_execute("#term00.bin");
     //rtl_clone_and_execute("#editor.bin");
     //rtl_clone_and_execute("#browser.bin");
     //rtl_clone_and_execute("#fileman.bin");
 
-// #
-// Quit the command line.
-// It's too much faster if we do not quit.
-// But we need to quit and start listening for messages.
+// Quit the command line interface
     isTimeToQuitCmdLine = TRUE;
 }
 
-// Initialize Winu graphics subsystem.
+// Initialize Winu subsystem
 static int do_init_winu(void)
 {
     do_launch_de();
@@ -587,36 +587,26 @@ static int input_compare_string(void)
 
 // Initialize the display server.
     if ( strncmp(prompt,"ws",2) == 0 ){
-        //printf ("~WS\n");
-        //rtl_clone_and_execute(app1_name);
-        //do_launch_de();
         do_init_winu();
         goto exit_cmp;
     }
 // Initialize the display server and quit the command line.
     if ( strncmp(prompt,"wsq",3) == 0 ){
-        //printf ("~WSQ\n");
-        //do_launch_de();
         do_init_winu();
         goto exit_cmp;
     }
 // Initialize the display server, the terminal and 
 // quit the command line.
     if ( strncmp(prompt,"wsq2",4) == 0 ){
-        //printf ("~WSQ2\n");
         do_launch_de2();
         goto exit_cmp;
     }
 
     if ( strncmp(prompt,"boot",4) == 0 ){
-        //printf ("~BOOT\n");
-        //do_launch_de();
         do_init_winu();
         goto exit_cmp;
     }
     if ( strncmp(prompt,"gramado",7) == 0 ){
-        //printf ("~GRAMADO\n");
-        //do_launch_de();
         do_init_winu();
         goto exit_cmp;
     }
@@ -626,6 +616,17 @@ static int input_compare_string(void)
     if ( strncmp(prompt,"winu",4) == 0 ){
         do_init_winu();
         goto exit_cmp;
+    }
+
+    if (strncmp(prompt,"win",3) == 0)
+    { 
+        do_launch_de();
+        goto exit_cmp; 
+    }
+    if (strncmp(prompt,"WIN",3) == 0)
+    { 
+        do_launch_de();
+        goto exit_cmp; 
     }
 
 // #test
@@ -743,6 +744,7 @@ static int input_compare_string(void)
         printf ("Launch demo00.bin\n");
         do_clear_console();
         rtl_clone_and_execute("#demo00.bin");
+        Init.environment = EnvironmentWinuHeavy;
         isTimeToQuitCmdLine = TRUE;
         goto exit_cmp;
     }
@@ -751,6 +753,7 @@ static int input_compare_string(void)
         printf ("Launch demo01.bin\n");
         do_clear_console();
         rtl_clone_and_execute("#demo01.bin");
+        Init.environment = EnvironmentWinuHeavy;
         isTimeToQuitCmdLine = TRUE;
         goto exit_cmp;
     }
@@ -761,19 +764,9 @@ static int input_compare_string(void)
         printf ("Launch demo00.bin\n");
         do_clear_console();
         rtl_clone_and_execute("#demo00.bin");
+        Init.environment = EnvironmentWinuHeavy;
         isTimeToQuitCmdLine = TRUE;
         goto exit_cmp;
-    }
-
-    if (strncmp(prompt,"win",3) == 0)
-    { 
-        do_launch_de();
-        goto exit_cmp; 
-    }
-    if (strncmp(prompt,"WIN",3) == 0)
-    { 
-        do_launch_de();
-        goto exit_cmp; 
     }
 
 /*
@@ -1161,6 +1154,10 @@ int main( int argc, char **argv)
     unsigned long Value = (unsigned long) sc80(288, 0, 0, 0);
     Init.__runlevel = (int) (Value & 0xFF); 
     Init.__selected_option = 0;
+
+// Set the default.
+// It changes if the user launch demo00 or demo01 instead of ds00.
+    Init.environment = EnvironmentWinuCore;
 
     // #debug
     // printf("Runlevel: %d\n", Init.__runlevel);

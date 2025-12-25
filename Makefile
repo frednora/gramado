@@ -263,20 +263,15 @@ build-extras:
 	@-cp $(L3_APPS)/bin/MENUAPP.BIN    $(BASE)/DE
 	@-cp $(L3_APPS)/bin/LAUNCH.BIN     $(BASE)/DE
 	@-cp $(L3_APPS)/bin/TERM00.BIN     $(BASE)/DE
-#@-cp $(L3_APPS)/bin/GWS.BIN       $(BASE)/DE
+
+
     # Experimental applications
     # These need the '#' prefix.
 	@-cp $(L3_APPS)/bin/DOC.BIN      $(BASE)/DE/
 	@-cp $(L3_APPS)/bin/EDITOR.BIN   $(BASE)/DE/
-
 	@-cp $(L3_APPS)/bin/GDM.BIN      $(BASE)/DE/
 	@-cp $(L3_APPS)/bin/SETUP.BIN    $(BASE)/DE/
-
-# (browser/) browser.
-# Teabox web browser
-    # Experimental applications
-    # These need the '@' prefix.
-	@-cp $(L3_APPS)/bin/TEABOX.BIN  $(BASE)/DE/
+	@-cp $(L3_APPS)/bin/GWS.BIN      $(BASE)/DE/
 
 # Compiling ulextras stuff
 	@echo "Compiling __DEP_L5"
