@@ -28,10 +28,12 @@ __DEP_L1 = netu
 # Shell Pre-UI: The display server.
 # The infrastruture for the windows.
 __DEP_L2 = winu
+
 # Display servers
 L2_DS = $(__DEP_L2)/core/ds
+
 # Display server with embedded 3D demos
-L2_DS3D = $(__DEP_L2)/core/ds3d
+L2_DS3D = $(__DEP_L2)/heavy/ds3d
 
 # =================================
 # Client-side GUI applications.
@@ -190,8 +192,11 @@ build-extras:
 
 	@echo "Installing __DEP_L2"
 
+# Winu Core
+# Display server
 	@-cp $(L2_DS)/ds00/bin/DS00.BIN    $(BASE)/DE
-#@-cp $(L2_DS)/ds01/bin/DS01.BIN    $(BASE)/DE
+
+# Winu Heavy
 # Display servers with 3D demos.
 	@-cp $(L2_DS3D)/bin/DEMO00.BIN   $(BASE)/DE/
 	@-cp $(L2_DS3D)/bin/DEMO01.BIN   $(BASE)/DE/

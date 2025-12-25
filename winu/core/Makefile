@@ -4,7 +4,6 @@
 all:
 # Display server and libraries
 	make -C ds/
-	make -C ds3d/
 
 clean:
 # Display server and libraries
@@ -15,4 +14,3 @@ clean-all:
 # Display server and libraries
 	-rm ds/ds00/*.o
 	-rm ds/ds00/bin/*.BIN
-	-rm ds3d/bin/*.BIN 

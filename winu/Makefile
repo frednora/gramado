@@ -3,6 +3,8 @@
 
 all:
 	make -C core/
+	make -C heavy/
+
 clean:
 	-rm -f *.o
 	-rm -f bin/*.BIN
