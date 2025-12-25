@@ -180,19 +180,24 @@ void pit_speaker_off (void)
 
 
 
-
-
 /*
  * irq0_TIMER:
- *     Chama o handler do kernel que está no kernel base.
- * #todo: Observar alguns procedimentos antes de chamar a rotina.
+ *   Timer interrupt handler (IRQ0).
+ *   Called by PeripheralHall_irq0 in hw1.asm.
+ *
+ *   Responsibilities:
+ *   - Update timer logic and system counters (via DeviceInterface_PIT).
+ *   - Drive periodic scheduling (tsTaskSwitch).
+ *   - Optionally poll PS/2 keyboard/mouse if configured.
+ *   - Handle special EOI cases when spawning threads inside the PIT handler.
+ *
+ *   Notes:
+ *   - PIT latch reset: bit 7 of port 0x61 (system control port B).
+ *     (Maybe it's not done in our implementation yet)
+ *   - EOI handling: normally done in the assembly epilogue,
+ *     but if a spawn occurs here, the spawn routine must send EOI itself.
  */
-// Called by:
-// _irq0 in hw.asm
-// It is up to the interrupt service routine to reset the latch. 
-// It does that by setting bit 7 of port 0x61 (system control port B).
 
-// Timer and taskswitching
 __VOID_IRQ 
 irq0_TIMER (void)
 {
@@ -200,8 +205,11 @@ irq0_TIMER (void)
 // Calling the timer routine.
     DeviceInterface_PIT();
 
-// 1000 times per second
-// Pooling given the configuration
+// Polling mode: 
+// If PS/2 devices are configured for polling, 
+// manually invoke their handlers here. 
+// (1000 times per second).
+
     int keyboard_pooling_status = (int) i8042_IsPS2KeyboardPooling();
     int mouse_pooling_status = (int) i8042_IsPS2MousePooling(); 
     if (keyboard_pooling_status == TRUE){
@@ -211,30 +219,41 @@ irq0_TIMER (void)
         irq12_MOUSE();
     }
 
-// Calling the taskswitching routine.
-// See: ps/disp/ts.c
-// #todo #bugbug
-// nesse momento pode acontecer que teremos que
-// efetuar spawn de uma thread que esta em standby,
-// O nosso contexto ja estara salvo quando formos efetuar
-// o spawn, mas precisamos avisar a rotina de spawn
-// que precisamos realizar o EOI pois estamos num handler de pit.
+// Compile‑time flag check
+    if (CONFIG_TASK_SWITCH_DURING_IRQ0 == 0)
+        return;
 
-// The spawn routine need to make an eoi for pit interrupt.
-// Tell the spawn routine that we need an eoi.
-// In the case of spawning a new thread.
+// OEI?
+// The key idea is that sometimes the spawn routine 
+// (when creating a new thread during the timer interrupt) must send the EOI itself, 
+// because you’re still inside the PIT handler. Other times, 
+// the assembly epilogue will send the EOI automatically when returning from the interrupt.
+
+
+// --- Task switching and spawn handling --- 
+// 
+// At this point we may need to spawn a new thread that was in standby. 
+// Because we are still inside the PIT interrupt handler, the spawn routine 
+// must know whether it is responsible for sending the EOI (End Of Interrupt). 
+// 
+// If a spawn occurs here, the context is already saved, but we must flag 
+// that the spawn routine should issue the EOI for IRQ0 before returning. 
+// Otherwise, the assembly epilogue will send the EOI automatically.
+// Calling the taskswitching routine.
+// See: disp/ts.c
+
+// Tell spawn routine: "we are inside PIT handler, you must EOI"
     spawn_set_eoi_state();
 
-// The task swithing
-// For now the context is saved only on global variables.
-// That is the moment when the context will be 
-// saved into the thread structure.
+// Perform the actual task switch.
+// For now the context is saved only on global variables. That is the moment 
+// when the context will be saved into the thread structure.
 // See: disp/ts.c
     tsTaskSwitch();
 
-// The spawn routine do not need to make a eoi.
-// Tell the spawn routine that we do not need eoi anymore.
-// The assembly routine will do that for us when returning.
+// Reset the EOI state flag. 
+// After task switching, the spawn routine no longer needs to send EOI. 
+// The assembly return sequence will handle EOI for us.
     spawn_reset_eoi_state();
 }
 

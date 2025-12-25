@@ -258,6 +258,10 @@ PeripheralHall_irq0:
 
 ; Timer and taskswitching
 ; See: pit.c
+; #ps: This service was implemented in pit.c, 
+; but it doesn't need to be this way. Because the interrupt that 
+; calls this interrupt handler can be other than pit, 
+; it can be local apic timer or hpet for example.
 
     call _irq0_TIMER
 
