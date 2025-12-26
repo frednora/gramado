@@ -153,7 +153,17 @@ struct pf_info_d
 
 struct deferred_d 
 {
+
+// == Yield support ====
+// 1 = Sinaliza que a thread está dando a preferência e que 
+// deve sair quando for seguro fazer isso.
+    int yield_in_progress;
+
+// == Sleep support ====
     int sleep_in_progress;
+    unsigned long desired_sleep_ms;
+
+
 };
 
 /*
@@ -311,14 +321,15 @@ struct thread_d
 // Yield::
 // 1 = Sinaliza que a thread está dando a preferência
 // e que deve sair quando for seguro fazer isso.
-    int yield_in_progress;
+    //int yield_in_progress;
 
 // ---------------------------------
 // Sleep::
     //int sleep_in_progress;
-    unsigned long desired_sleep_ms;
+    //unsigned long desired_sleep_ms;
 
 // #test
+// Yield, Sleep ...
     struct deferred_d  Deferred;
 
 // ---------------------------------

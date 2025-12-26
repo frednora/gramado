@@ -118,7 +118,7 @@ static void __ps_initialize_thread_common_elements(struct thread_d *t)
 
 // ----------------------------------------
 // Yield
-    t->yield_in_progress = FALSE;
+    t->Deferred.yield_in_progress = FALSE;
 
 // ----------------------------------------
 // Sleep
@@ -1060,11 +1060,11 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
     clone->scheduledCount = 0; 
 
     // Yield
-    clone->yield_in_progress = FALSE;
+    clone->Deferred.yield_in_progress = FALSE;
 
     // Sleep
     clone->Deferred.sleep_in_progress = FALSE;
-    clone->desired_sleep_ms = 0;
+    clone->Deferred.desired_sleep_ms = 0;
 
     // Wait
     clone->has_pending_event = FALSE;
@@ -1579,11 +1579,11 @@ try_next_slot:
     Thread->blocked_limit = QUANTUM_MAX;
 
     // Yield
-    Thread->yield_in_progress = FALSE;
+    Thread->Deferred.yield_in_progress = FALSE;
 
     // Sleep
     Thread->Deferred.sleep_in_progress = FALSE;
-    Thread->desired_sleep_ms = 0;
+    Thread->Deferred.desired_sleep_ms = 0;
 
     // Wait
     Thread->has_pending_event = FALSE;

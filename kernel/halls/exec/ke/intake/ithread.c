@@ -177,16 +177,16 @@ struct thread_d *create_init_thread(void)
     t->initial_time_ms = get_systime_ms();
     t->total_time_ms   = 0;
 
-// Signal
+    // Signal
     t->signal = 0;
     t->umask  = 0;
 
     // Yield
-    t->yield_in_progress = FALSE;
+    t->Deferred.yield_in_progress = FALSE;
 
     // Sleep
     t->Deferred.sleep_in_progress = FALSE;
-    t->desired_sleep_ms = 0;
+    t->Deferred.desired_sleep_ms = 0;
 
     // Wait
     t->has_pending_event = FALSE;

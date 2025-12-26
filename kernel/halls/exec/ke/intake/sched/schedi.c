@@ -734,11 +734,11 @@ void yield (tid_t tid)
     if ((void *) t == NULL){
         return;
     }
-    if ( t->used != TRUE || t->magic != 1234 ){
+    if (t->used != TRUE || t->magic != 1234){
         return;
     }
-// Set the flag.
-    t->yield_in_progress = TRUE;
+
+    t->Deferred.yield_in_progress = TRUE;  // Set the flag
 }
 
 // Called by __task_switch() in ts.c
@@ -801,8 +801,10 @@ void sleep(tid_t tid, unsigned long ms)
 // #todo
 // This is the type of feature that can be used 
 // in the sys_select() implementation.
+
+// Sleep support
     t->Deferred.sleep_in_progress = TRUE;
-    t->desired_sleep_ms = ms;
+    t->Deferred.desired_sleep_ms = ms;
 }
 
 

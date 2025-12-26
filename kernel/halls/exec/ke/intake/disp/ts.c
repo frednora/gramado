@@ -421,10 +421,10 @@ static void __task_switch(void)
 
         // :: yield
         if ( CurrentThread->state == RUNNING && 
-             CurrentThread->yield_in_progress == TRUE )
+             CurrentThread->Deferred.yield_in_progress == TRUE )
         {
             CurrentThread->runningCount = CurrentThread->quantum;  // Esgoto
-            CurrentThread->yield_in_progress = FALSE;
+            CurrentThread->Deferred.yield_in_progress = FALSE;
         }
 
         // :: sleep
@@ -436,7 +436,7 @@ static void __task_switch(void)
             // set waiting
             sleep_until(
                 CurrentThread->tid, 
-                CurrentThread->desired_sleep_ms );
+                CurrentThread->Deferred.desired_sleep_ms );
             CurrentThread->Deferred.sleep_in_progress = FALSE;
             //printk ("ts: Status=%d\n",CurrentThread->state);
         }
