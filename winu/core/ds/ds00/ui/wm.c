@@ -4637,14 +4637,8 @@ struct gws_window_d *wmCreateRootWindow(unsigned int bg_color)
     w->magic = 1234;
 
 // Buffers
-
-    //w->dedicated_buf = NULL;   // #suspended
-    w->pwb.initialized = FALSE;  // Not for root for now.
-
-
-    w->back_buf = NULL;
-    w->front_buf = NULL;
     w->depth_buf = NULL;
+
 // Device contexts
     w->window_dc = NULL;
     w->client_dc = NULL;

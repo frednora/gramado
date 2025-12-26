@@ -249,43 +249,33 @@ extern int use_vsync;
 #define VSYNC_NO   0
 
 
-// Indexes to screens.
-#define MAX_SCREENS    4 
-#define SCREEN_FRONTBUFFER     0  // VRAM
-#define SCREEN_BACKBUFFER      1  // RAM
-//#define SCREEN_BACKBUFFER2   2
-//#define SCREEN_BACKBUFFER3   3
-
-
-struct offscreen_window_d
-{
-    int initialized;
-
-// This is an offscreen buffer for a window.
-    int wid;  // The Window ID.
-    pid_t pid;  // The client's PID.
-
-// The paint is done, let's flush it into the backbuffer.
-    int _dirty;
-
-    // ...
-};
+// Indexes to canvases
+#define CANVAS_COUNT_MAX    4
+#define CANVAS_FRONTBUFFER     0  // VRAM
+#define CANVAS_BACKBUFFER      1  // RAM
 
 // Each window needs to have an index for one of this structurea.
 // This way the display server will know the information about 
 // the window's canvas.
-struct screen_information_d
+struct canvas_information_d
 {
-    int initialized;
-    unsigned long base_address;
+    int initialized;       // Safety first
 
-// When this screen belongs to an offscreen window.
-// It will be used by the compositor to build the desktop scene.
-    struct offscreen_window_d  OffscreeWindow;
+    unsigned long width;   // buffer width in pixels
+    unsigned long height;  // buffer height in pixels
 
-    // ...
+    unsigned long bpp;     // bytes per pixel (4 or 3)
+    unsigned long pitch;   // bytes per row (width * bytes_per_pixel)
+
+    void *base;            // pointer to buffer memory
+
+    struct gws_window_d *owner_window;
+
 };
-extern struct screen_information_d  screens[MAX_SCREENS];
+
+extern unsigned long canvasList[CANVAS_COUNT_MAX];
+
+
 
 /*
 struct vid_d

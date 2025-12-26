@@ -433,10 +433,52 @@ struct gws_window_d
     int id;
     //int wid;
 
-// Offscreen canvas?
-// The information about the area where this window paints.
-// The compositor needs this to build the final desktop scene.
-    struct screen_information_d  s_canvas;
+// #test
+// ==============================
+// Canvas pointers inside the window structure
+// Each window can have one mandatory canvas (main client area)
+// plus optional small canvases for specific components.
+// These optional canvases are useful for experimenting with
+// offscreen buffers in a lightweight way before scaling up
+// to full-window canvases.
+
+// Main drawing surface (client area)
+// This is the primary canvas where the window's content is rendered.
+    struct canvas_information_d *main_canvas;
+
+// Small experimental canvases for components
+// These are optional and can be allocated only when needed.
+// They allow you to test offscreen buffer routines with
+// smaller memory blocks and isolated UI elements.
+
+// Titlebar: text + window controls (close, minimize, maximize)
+    // struct canvas_information_d *titlebar_canvas;
+
+// Button: individual button surface
+    // struct canvas_information_d *button_canvas;
+
+// Scrollbar: vertical/horizontal strip
+    // struct canvas_information_d *scrollbar_canvas;
+
+// Statusbar: bottom strip for messages
+    // struct canvas_information_d *statusbar_canvas;
+
+// Icon: small glyph or image
+    // struct canvas_information_d *icon_canvas;
+
+// Shared spare buffer.
+    // struct canvas_information_d *shared_spare_buffer;
+
+// ...
+
+
+// z-buffer for this window.
+// #test: sometimes the whole screen 
+// do not have a depth buffer, but we can have
+// a depth buffer for some windows.
+// big one: 800x600x24bpp = 1875 KB.
+// We do not have this memory yet.
+    unsigned int *depth_buf;
 
 // The input status.
 // If the window is disable, it can't receive input from keyboard or mouse.
@@ -774,35 +816,6 @@ struct gws_window_d
     int isEditBox;
     int isCheckBox;
     // ...
-
-//
-// == Buffers =========================================
-//
-
-   // #test
-   // This is a test. Not implemented yet.
-
-// Buffer.
-// DedicatedBuffer
-// DedicatedBuffer --> LFB.
-// Endereço de memória onde a janela foi pintada.
-// Obs: Toda janela deve ter seu próprio buffer de pintura para poder 
-// passar a janela direto de seu próprio buffer para o LFB, sem passar 
-// pelo Backbuffer.
-
-    //void *dedicated_buf;  //Qual buffer dedicado a janela usa.
-    struct per_window_backbuffer_d  pwb;  // Per-window buffer.
-
-    void *back_buf;       //Qual backbuffer a janela usa.
-    void *front_buf;      //Qual frontbuffer a janela usa. (LFB).	
-
-// z-buffer for this window.
-// #test: sometimes the whole screen 
-// do not have a depth buffer, but we can have
-// a depth buffer for some windows.
-// big one: 800x600x24bpp = 1875 KB.
-// We do not have this memory yet.
-    unsigned int *depth_buf;
 
 // ==================================================
 // z-order

@@ -9,6 +9,26 @@
 //extern int __compose_lock;
 
 
+// Structure to describe a clipping region for a buffer
+struct spare_buffer_clip_info_d 
+{
+    int initialized;       // Safety first
+
+    unsigned long width;   // buffer width in pixels
+    unsigned long height;  // buffer height in pixels
+
+    unsigned long bpp;     // bytes per pixel (4 or 3)
+    unsigned long pitch;   // bytes per row (width * bytes_per_pixel)
+
+    void *base;            // pointer to buffer memory
+};
+extern struct spare_buffer_clip_info_d  SpareBufferClipInfo;
+
+// Spare buffer
+extern char *spare_128kb_buffer_p;
+
+
+
 struct compositor_d
 {
     int used;
@@ -32,29 +52,17 @@ struct compositor_d
 extern struct compositor_d  Compositor;
 
 
-// Structure to describe a clipping region for a buffer
-struct spare_buffer_clip_info_d 
-{
-    int initialized;       // Safety first
-
-    unsigned long width;   // buffer width in pixels
-    unsigned long height;  // buffer height in pixels
-
-    unsigned long bpp;     // bytes per pixel (4 or 3)
-    unsigned long pitch;   // bytes per row (width * bytes_per_pixel)
-
-    void *base;            // pointer to buffer memory
-};
-extern struct spare_buffer_clip_info_d  SpareBufferClipInfo;
-
-// Spare buffer
-extern char *spare_128kb_buffer_p;
+//
+// ===================================================
+//
 
 // Initialize the spare buffer clipping info
-void setup_spare_buffer_clip(unsigned long width,
-                             unsigned long height,
-                             unsigned long bpp,
-                             void *base);
+void 
+setup_spare_buffer_clip(
+    unsigned long width,
+    unsigned long height,
+    unsigned long bpp,
+    void *base );
 
 void *comp_create_slab_spare_128kb_buffer(size_t size_in_kb);
 

@@ -1,0 +1,49 @@
+ROADMAP: Spare Buffer Handling in comp.c
+----------------------------------------
+
+1. setup_spare_buffer_clip(width, height, bpp, base)
+   - Initializes the SpareBufferClipInfo structure.
+   - Sets dimensions, pitch, base pointer, and marks it as initialized.
+   - Foundation for clipping and pixel operations in the spare buffer.
+
+2. comp_create_slab_spare_128kb_buffer(size_in_kb)
+   - Allocates a region at the end of the backbuffer (spare area).
+   - Checks if requested size fits into spare space.
+   - Sets up SpareBufferClipInfo for this region.
+   - Returns pointer to the spare buffer or NULL if insufficient space.
+
+3. compCreateCanvasUsingSpareBuffer()
+   - Creates a small test canvas using the spare buffer.
+   - Stores pointer globally in spare_128kb_buffer_p.
+   - Optionally draws a test pattern into the buffer for validation.
+
+4. spare_putpixel0(color, x, y, rop)
+   - Draws a pixel into the spare buffer with clipping checks.
+   - Ensures coordinates are within width/height.
+   - Uses putpixel0 with SpareBufferClipInfo.base as target.
+
+5. comp_draw_into_spare_buffer()
+   - Test routine to draw a few pixels into the spare buffer.
+   - Demonstrates clipping and pixel placement.
+   - Useful for validating spare buffer drawing logic.
+
+6. comp_test_spare_buffer()
+   - Copies bytes from spare buffer into the backbuffer (top-left corner).
+   - Simple byte-by-byte copy for testing.
+   - Confirms that spare buffer content can be transferred to visible area.
+
+7. comp_blit_spare_to_backbuffer(dst_x, dst_y, width, height)
+   - Blits a rectangle from spare buffer (source at 0,0) into backbuffer at given coordinates.
+   - Uses __refresh_rectangle1 for efficient block copy.
+   - More advanced than comp_test_spare_buffer (supports arbitrary destination).
+
+8. Integration in comp_display_desktop_components()
+   - Calls comp_blit_spare_to_backbuffer as a test (e.g., blitting 10x10 block at 100,100).
+   - Refreshes rectangle to show spare buffer content on screen.
+   - Demonstrates how spare buffer can be composed into final frame.
+
+----------------------------------------
+FUTURE USE:
+- Each window can have its own offscreen buffer (like the spare buffer).
+- Compositor will blend these buffers into the backbuffer based on z-order.
+- Enables transparency, animations, and per-window redraw without touching global backbuffer.

@@ -325,47 +325,76 @@ static int __gwssrv_init_globals(void)
         exit(1);
     }
 
-// ==============================
+// ============================== 
+// Initialize the buffers for the canvases 
+// Our global list will hold only two canvases for now: 
+// - Frontbuffer (LFB, video memory) 
+// - Backbuffer (RAM staging area) 
+// All other canvases will be linked directly to window structures. 
 
-//
-// == buffers ======================================
-//
-
-// Let's setup the screens[i].
-// 0=frontbuffer and 1=backbuffer.
-// Clear the list of pointers.
-// Setup pointers.
-
-    for (i=0; i<MAX_SCREENS; ++i)
-    { 
-        screens[i].initialized = FALSE;
-        screens[i].base_address = 0; 
-
-        // The screen belongs to an offscreen window.
-        screens[i].OffscreeWindow.initialized = FALSE;
-        screens[i].OffscreeWindow.pid = -1;
-        screens[i].OffscreeWindow.wid = -1;
-        screens[i].OffscreeWindow._dirty = FALSE;
+// Clear the list of pointers. 
+// Each entry in canvasList[] is a simple address (unsigned long), 
+// not a direct struct pointer. We reset them to zero here.
+    for (i=0; i<CANVAS_COUNT_MAX; i++){
+        canvasList[i] = 0;
     };
 
-// The frontbuffer.
-    screens[SCREEN_FRONTBUFFER].base_address = 
-        (unsigned long) ____FRONTBUFFER_VA;
-
-// The backbuffer.
-// This is where the desktop scene will be composed
-// using all the offscreen canvas that belongs to the clients.
-// We can register the pointer for the 
-// application's canvas into the screens[] array fo structure.
-    screens[SCREEN_BACKBUFFER].base_address = 
-        (unsigned long) ____BACKBUFFER_VA;
-
-    if ( screens[SCREEN_FRONTBUFFER].base_address == 0 || 
-         screens[SCREEN_BACKBUFFER].base_address == 0 )
-    {
-        printf ("gwssrv_init_globals: screens\n");
-        exit(1);
+// ------------------------------------- 
+// Create the first canvas: FRONTBUFFER 
+// This represents the linear frame buffer (LFB) in video memory. 
+// It is the final destination for pixels that appear on screen.
+    struct canvas_information_d *ci_frontbuffer;
+    ci_frontbuffer = (void*) malloc( sizeof(struct canvas_information_d) );
+    if ((void*) ci_frontbuffer == NULL){
+        printf("on ci_frontbuffer\n");
+        exit(0);
     }
+// Fill geometry and memory fields
+    ci_frontbuffer->width = __device_width;
+    ci_frontbuffer->height = __device_height;
+    ci_frontbuffer->bpp = __device_bpp;        // Byte Per Pixel
+    ci_frontbuffer->pitch = (unsigned long) (__device_width * __device_bpp);
+
+// Base address points directly to the hardware LFB
+    ci_frontbuffer->base = (void*) ____FRONTBUFFER_VA;
+// No owner window: this is a system-level canvas
+    ci_frontbuffer->owner_window = NULL;
+
+    ci_frontbuffer->initialized = TRUE;
+// Save the address into the global list
+    canvasList[CANVAS_FRONTBUFFER] = (unsigned long) ci_frontbuffer;
+
+
+// ------------------------------------- 
+// Create the second canvas: BACKBUFFER 
+// This is a RAM buffer used as a staging area. 
+// The compositor paints into the backbuffer first, 
+// then copies its content into the frontbuffer.
+    struct canvas_information_d *ci_backbuffer;
+    ci_backbuffer = (void*) malloc( sizeof(struct canvas_information_d) );
+    if ((void*) ci_backbuffer == NULL){
+        printf("on ci_backbuffer\n");
+        exit(0);
+    }
+
+// Fill geometry and memory fields
+    ci_backbuffer->width = __device_width;
+    ci_backbuffer->height = __device_height;
+    ci_backbuffer->bpp = __device_bpp;        // Byte Per Pixel
+    ci_backbuffer->pitch = (unsigned long) (__device_width * __device_bpp);
+
+// Base address points to the RAM backbuffer
+    ci_backbuffer->base = (void*) ____BACKBUFFER_VA;
+
+// No owner window: this is also a system-level canvas
+    ci_backbuffer->owner_window = NULL;
+
+    ci_backbuffer->initialized = TRUE;
+
+// Save the address into the global list
+    canvasList[CANVAS_BACKBUFFER] = (unsigned long) ci_backbuffer;
+
+// -------------------------
 
 // Flags for refresh
     refresh_device_screen_flag = FALSE;    
@@ -379,8 +408,6 @@ static int __gwssrv_init_globals(void)
         printf("gwssrv_init_globals: Color scheme\n");
         exit(1);
     }
-
-    
 
     //...
 

@@ -3,10 +3,18 @@
 // into the backbuffer and display it into the frontbuffer.
 // Created by Fred Nora.
 
+// In this routines all the windows are drawn into the backbuffer and 
+// the backbuffer is copyed to the front buffer. But i am introducing 
+// the idea of having a small offscreen area where i am testing the 
+// features necessary to have a full compositor with offscreen areas for windows.
+// The called: Per-window offscreen buffers (canvases)
+
 // comp.c:
 // stays focused on buffer management, composition, and flush logic.
 
 #include "../ds.h"
+
+
 
 // It manages the compositor behavior.
 struct compositor_d  Compositor;
@@ -52,23 +60,25 @@ static void direct_draw_mouse_pointer(void);
 // trocar o nome dessa systemcall.
 // refresh screen será associado à refresh all windows.
 // Initialize the spare buffer clipping info
-void setup_spare_buffer_clip(unsigned long width,
-                             unsigned long height,
-                             unsigned long bpp,
-                             void *base)
+void 
+setup_spare_buffer_clip(
+    unsigned long width,
+    unsigned long height,
+    unsigned long bpp,
+    void *base )
 {
     // Mark as not initialized until all fields are set
     SpareBufferClipInfo.initialized = 0;
 
-    SpareBufferClipInfo.width  = width;
-    SpareBufferClipInfo.height = height;
-    SpareBufferClipInfo.bpp    = bpp;
+    SpareBufferClipInfo.width  = (unsigned long) width;
+    SpareBufferClipInfo.height = (unsigned long) height;
+    SpareBufferClipInfo.bpp    = (unsigned long) bpp;
 
     // Calculate pitch: width * bytes per pixel
-    SpareBufferClipInfo.pitch  = width * bpp;
+    SpareBufferClipInfo.pitch = (unsigned long) (width * bpp);
 
     // Base pointer to buffer memory
-    SpareBufferClipInfo.base   = base;
+    SpareBufferClipInfo.base = (unsigned long) base;
 
     // Now mark as initialized
     SpareBufferClipInfo.initialized = 1;
@@ -152,12 +162,13 @@ void *comp_create_slab_spare_128kb_buffer(size_t size_in_kb)
 
         SpareBufferClipInfo.initialized = TRUE;
         // -------------------------------------------
-
         return (void*) addr;
+
     } else {
         SpareBufferClipInfo.initialized = FALSE;
         return NULL;
     }
+
 // fail
     SpareBufferClipInfo.initialized = FALSE;
     return NULL;
@@ -337,108 +348,6 @@ fail:
 void flush_frame(void)
 {
     wm_flush_screen();
-}
-
-/*
- * reactRefreshDirtyWindows: 
- */
-// Called by wmReactToPaintEvents().
-// O compositor deve ser chamado para compor um frame 
-// logo após uma intervenção do painter, que reaje às
-// ações do usuário.
-// Ele não deve ser chamado X vezes por segundo.
-// Quem deve ser chamado X vezes por segundo é a rotina 
-// de refresh, que vai efetuar refresh dos retângulos sujos e
-// dependendo da ação do compositor, o refresh pode ser da tela toda.
-// Refresh
-// Lookup the main window list.
-// #todo: This is very slow. We need a linked list.
-// Get next
-// It is a valid window and
-// it is a dirty window.
-// Flush the window's rectangle and invalidate the window.
-// see: rect.c
-
-void reactRefreshDirtyWindows(void)
-{
-// Called by compose.
-// + We need to encapsulate the variables used by this routine
-//   to prevent about concorrent access problems.
-
-// #bugbug
-// This is not a effitient way of doing this.
-// We got to refresh folowind the bottom top order.
-// + If we refreshed the background window, so,we dont
-//   need to refresh any other window when we're not using 
-//   individual buffer for the windows in the compositor.
-
-    register int i=0;
-
-// The component.
-// It's a window, but we don't care about its type.
-// All we need to do is refreshing the window's rectangle.
-
-    struct gws_window_d *w;
-
-    int fOnlyValidate = FALSE;
-
-// Is the root window a valid window
-
-// Get the window pointer, refresh the windows retangle via KGWS and 
-// validate the window.
-    for (i=0; i<WINDOW_COUNT_MAX; ++i)
-    {
-        w = (struct gws_window_d *) windowList[i];
-        if ((void*) w != NULL)
-        {
-            if ( w->used == TRUE && w->magic == 1234 )
-            {
-                if (w->dirty == TRUE)
-                {
-
-                    // If the root window was refreshed,
-                    // there is no need to refresh any other window,
-                    // so, lets simply validate them.
-                    if (fOnlyValidate != TRUE)
-                    {
-                        gws_refresh_rectangle ( 
-                            w->absolute_x, 
-                            w->absolute_y, 
-                            w->width, 
-                            w->height );
-                    }
-
-                    // Validate the window we refreshed.
-                    validate_window(w);
-                    // The window was the root.
-                    // There is no need to refresh anyother
-                    // #bugbug: But they are still marked as dirty.
-                    // For now, we're gonna refresh them in the next round,
-                    // but we can simple validate all the rest.
-                    if (w == __root_window)
-                    {
-                        // Continue the loop,
-                        // but now we will only validate the windows, not refresh.
-                        fOnlyValidate = TRUE;
-                    }
-                }
-            }
-        }
-    };
-}
-
-// wmReactToPaintEvents:
-// Refresh only the components that was changed by the painter.
-// #todo
-// Maybe in the future we can react to 
-// changes in other components than windows.
-void wmReactToPaintEvents(void)
-{
-    // Refresh only the components that was changed by the painter.
-    // It means that we're reacting to all the paint events.
-    reactRefreshDirtyWindows();
-
-    // ...
 }
 
 // gws_show_window_rect:
@@ -723,6 +632,104 @@ void __display_mouse_cursor(void)
 // It uses the new values.
     direct_draw_mouse_pointer();
 //------ 
+}
+
+
+// reactRefreshDirtyWindows: 
+// Called by wmReactToPaintEvents().
+// O compositor deve ser chamado para compor um frame 
+// logo após uma intervenção do painter, que reaje às
+// ações do usuário.
+// Ele não deve ser chamado X vezes por segundo.
+// Quem deve ser chamado X vezes por segundo é a rotina 
+// de refresh, que vai efetuar refresh dos retângulos sujos e
+// dependendo da ação do compositor, o refresh pode ser da tela toda.
+// Refresh
+// Lookup the main window list.
+// #todo: This is very slow. We need a linked list.
+// Get next
+// It is a valid window and
+// it is a dirty window.
+// Flush the window's rectangle and invalidate the window.
+// see: rect.c
+// + We need to encapsulate the variables used by this routine
+//   to prevent about concorrent access problems.
+// #bugbug
+// This is not a effitient way of doing this.
+// We got to refresh folowind the bottom top order.
+// + If we refreshed the background window, so,we dont
+//   need to refresh any other window when we're not using 
+//   individual buffer for the windows in the compositor.
+
+void reactRefreshDirtyWindows(void)
+{
+// Called by wmReactToPaintEvents();
+    register int i=0;
+
+// The component.
+// It's a window, but we don't care about its type.
+// All we need to do is refreshing the window's rectangle.
+
+    struct gws_window_d *w;
+
+    int fOnlyValidate = FALSE;
+
+// Is the root window a valid window
+
+// Get the window pointer, refresh the windows retangle via KGWS and 
+// validate the window.
+    for (i=0; i<WINDOW_COUNT_MAX; ++i)
+    {
+        w = (struct gws_window_d *) windowList[i];
+        if ((void*) w != NULL)
+        {
+            if (w->used == TRUE && w->magic == 1234)
+            {
+                if (w->dirty == TRUE)
+                {
+                    // If the root window was refreshed,
+                    // there is no need to refresh any other window,
+                    // so, lets simply validate them.
+
+                    if (fOnlyValidate != TRUE)
+                    {
+                        gws_refresh_rectangle ( 
+                            w->absolute_x,  w->absolute_y, 
+                            w->width, w->height );
+                    }
+
+                    // Validate the window we refreshed.
+                    validate_window(w);
+
+                    // The window was the root.
+                    // There is no need to refresh anyother
+                    // #bugbug: But they are still marked as dirty.
+                    // For now, we're gonna refresh them in the next round,
+                    // but we can simple validate all the rest.
+                    // Continue the loop,
+                    // but now we will only validate the windows, not refresh.
+                    if (w == __root_window){
+                        fOnlyValidate = TRUE;
+                    }
+                }
+            }
+        }
+    };
+}
+
+// wmReactToPaintEvents:
+// Called by comp_display_desktop_components();
+// Refresh only the components that was changed by the painter.
+// #todo
+// Maybe in the future we can react to 
+// changes in other components than windows.
+void wmReactToPaintEvents(void)
+{
+    // Refresh only the components that was changed by the painter.
+    // It means that we're reacting to all the paint events.
+    reactRefreshDirtyWindows();
+
+    // ...
 }
 
 // Flush

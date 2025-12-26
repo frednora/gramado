@@ -1387,18 +1387,9 @@ void *doCreateWindow (
         (unsigned int) ClientAreaColor;
 
 // buffers
-
-    //window->dedicated_buf = NULL; // suspended
-
-    window->pwb.initialized = FALSE;
-
-    window->back_buf = NULL;
-    window->front_buf = NULL;
     window->depth_buf = NULL;
-    //window->DedicatedBuffer = 
-    //    (void*) windowCreateDedicatedBuffer(window);
-    //window->BackBuffer = (void *) g_backbuffer_va;
-    //window->FrontBuffer = (void *) g_frontbuffer_pa;
+
+
 // Device contexts
 // #todo:
 // We can create our own device contexts.
