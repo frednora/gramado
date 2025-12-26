@@ -619,6 +619,7 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
             {
                 // Vira zombie e não sera selecionada para o proximo round
                 // se não for a idle thread nem a init thread.
+                // Can't be the init thread (Idle) in this case.
                 if (TmpThread->Deferred.exit_in_progress == TRUE)
                 {
                     if (TmpThread != Idle)
@@ -654,6 +655,7 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
 
             // =============================
             // :: WAITING
+            // WAITING threads are checked against alarms/wakeups.
             // Wake up some threads, given them a chance. 
             // and not putting waiting threads into the round.
             // Alarm and wakeup.
@@ -698,6 +700,7 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
 
             // =============================
             // :: ZOMBIE
+            // ZOMBIE threads are cleaned up.
             // #todo: That’s fine, but you might want a dedicated reaper/collector 
             // to free resources instead of doing it inline.
             if ( TmpThread->used == TRUE && 
@@ -742,6 +745,7 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
 
             // =============================
             // :: READY
+            // READY threads are appended to the new round queue.
             // Schedule regular ready threads.
             // + Check the credits.
             // + Set the quantum.

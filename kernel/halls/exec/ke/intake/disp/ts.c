@@ -419,7 +419,7 @@ static void __task_switch(void)
         // no próximo tick.
         // Revertemos a flag acionada em schedi.c.
 
-        // :: yield
+        // :: yield - Force quantum end.
         if ( CurrentThread->state == RUNNING && 
              CurrentThread->Deferred.yield_in_progress == TRUE )
         {
@@ -427,7 +427,7 @@ static void __task_switch(void)
             CurrentThread->Deferred.yield_in_progress = FALSE;
         }
 
-        // :: sleep
+        // :: sleep - Mark thread WAITING until wake_jiffy.
         if ( CurrentThread->state == RUNNING && 
              CurrentThread->Deferred.sleep_in_progress == TRUE )
         {

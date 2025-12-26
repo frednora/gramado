@@ -326,6 +326,7 @@ struct thread_d
 // Yield, Sleep, Exit ...
     struct deferred_d  Deferred;
 
+
 // ---------------------------------
 // Callback::
 // During a callback, the thread can't have it's context saved.
