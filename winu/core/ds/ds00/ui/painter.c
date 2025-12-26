@@ -1016,15 +1016,18 @@ redraw_window (
             // Its a wwf
             if (window == keyboard_owner){
                 window->border_color1 = (unsigned int) get_color(csiWWFBorder);
-                window->border_color2 = (unsigned int) get_color(csiWWFBorder);
+                window->border_color2 = (unsigned int) HONEY_COLOR_BORDER_DARK_WWF;  //get_color(csiWWFBorder);
             } else {
                 window->border_color1 = (unsigned int) get_color(csiWindowBorder);
-                window->border_color2 = (unsigned int) get_color(csiWindowBorder);
+                window->border_color2 = (unsigned int) HONEY_COLOR_BORDER_DARK_NOFOCUS; //get_color(csiWindowBorder);
             }
 
+            // Border Color 1 = top/left      (Light)
+            // Border Color 2 = right/bottom  (Dark)
+
             if (window == active_window){
-                window->border_color1 = get_color(csiActiveWindowBorder); 
-                window->border_color2 = get_color(csiActiveWindowBorder);
+                window->border_color1 = HONEY_COLOR_BORDER_LIGHT_ACTIVE;  //get_color(csiActiveWindowBorder); 
+                window->border_color2 = HONEY_COLOR_BORDER_DARK_ACTIVE;  //get_color(csiActiveWindowBorder);
             }
             __draw_window_border(window->parent, window);
         }

@@ -1666,7 +1666,7 @@ void *doCreateWindow (
 // =================================
 
 //
-// Window rectangle (The frame)
+// 
 //
 
 // #bugbug: Is this the same of absolute values?
@@ -1682,6 +1682,13 @@ void *doCreateWindow (
     window->rcWindow.height = (unsigned long) WindowHeight;
 
 // =================================
+
+// Local pad variables for client area calculation
+    unsigned int pad_left   = METRICS_CLIENTAREA_LEFTPAD;
+    unsigned int pad_top    = METRICS_CLIENTAREA_TOPPAD;
+    unsigned int pad_right  = METRICS_CLIENTAREA_RIGHTPAD;
+    unsigned int pad_bottom = METRICS_CLIENTAREA_BOTTOMPAD;
+
 
 //
 // Client area rectangle
@@ -1701,34 +1708,33 @@ void *doCreateWindow (
 // >> Relative values <<
 
 // Left
-    clientRect.left = (unsigned long) __BorderSize;
+    clientRect.left = (unsigned long) (__BorderSize + pad_left);
 
 // Top
-    clientRect.top  = (unsigned long) 0;
+    //clientRect.top  = (unsigned long) 0;
     if (window->type == WT_OVERLAPPED){
-        clientRect.top  = (unsigned long) (__TBHeight + __BorderSize);
+        clientRect.top  = (unsigned long) (__TBHeight + (__BorderSize + pad_top));
+    } else {
+        clientRect.top  = (unsigned long) (__BorderSize + pad_top);
+        //or
+        //clientRect.top  = (unsigned long) 0;
     }
 
 // Width and height.
 // width
 // menos bordas laterais
 
-    clientRect.width  = 
-        (unsigned long) ( 
-            window->width - 
-            __BorderSize - 
-            __BorderSize );
+    clientRect.width = 
+        (unsigned long) ( window->width - (__BorderSize * 2) - 
+        (pad_left + pad_right) );
 
 // height
 // menos bordas superior e inferior
     // menos a barra de tarefas.
 
     clientRect.height = 
-        (unsigned long) ( 
-            window->height -
-            __BorderSize -
-            __TBHeight -
-            __BorderSize); 
+        (unsigned long) ( window->height - (__BorderSize * 2) - 
+        (pad_top + pad_bottom) - __TBHeight ); 
 
 // If we have scrollbars.
 // #todo: Diminuimos as dimensões se o style
@@ -3030,13 +3036,17 @@ draw_frame:
     if (__w == active_window)
         isActiveWindow = TRUE;
 
+
+// Border Color 1 = top/left      (Light)
+// Border Color 2 = right/bottom  (Dark)
+
 // Its a wwf
     if (isKeyboardOwner == TRUE){
         bc_1 = (unsigned int) get_color(csiWWFBorder);
-        bc_2 = (unsigned int) get_color(csiWWFBorder);
+        bc_2 = (unsigned int) HONEY_COLOR_BORDER_DARK_WWF; //get_color(csiWWFBorder);
     } else {
         bc_1 = (unsigned int) get_color(csiWindowBorder);
-        bc_2 = (unsigned int) get_color(csiWindowBorder);
+        bc_2 = (unsigned int) HONEY_COLOR_BORDER_DARK_NOFOCUS;  //get_color(csiWindowBorder);
     }
 
 // Its an active window.
@@ -3045,8 +3055,8 @@ draw_frame:
 // Now we will use the colors for active window.
     if (isActiveWindow == TRUE)
     {
-        bc_1 = get_color(csiActiveWindowBorder); 
-        bc_2 = get_color(csiActiveWindowBorder);
+        bc_1 = HONEY_COLOR_BORDER_LIGHT_ACTIVE;  //get_color(csiActiveWindowBorder); 
+        bc_2 = HONEY_COLOR_BORDER_DARK_ACTIVE;   //get_color(csiActiveWindowBorder);
     }
 
 

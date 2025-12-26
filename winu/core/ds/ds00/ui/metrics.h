@@ -106,6 +106,18 @@
 // Maximum characters per line
 #define METRICS_MAX_CHARS_PER_LINE  256
 
+
+
+// ====================================================== 
+// Client Area Padding Metrics 
+// ======================================================
+
+// Standard padding between border and client area
+#define METRICS_CLIENTAREA_LEFTPAD   4
+#define METRICS_CLIENTAREA_TOPPAD    4
+#define METRICS_CLIENTAREA_RIGHTPAD  4
+#define METRICS_CLIENTAREA_BOTTOMPAD 4
+
 // ...
 
 // ====================================================== 

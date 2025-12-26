@@ -5052,6 +5052,13 @@ gws_resize_window (
     struct gws_window_d *tmp_window;
     int tmp_wid = -1;
 
+
+// Local pads (from metrics.h) 
+    unsigned int pad_left = METRICS_CLIENTAREA_LEFTPAD; 
+    unsigned int pad_top = METRICS_CLIENTAREA_TOPPAD; 
+    unsigned int pad_right = METRICS_CLIENTAREA_RIGHTPAD; 
+    unsigned int pad_bottom = METRICS_CLIENTAREA_BOTTOMPAD;
+
     if ((void *) window == NULL){
         return (int) -1;
     }
@@ -5186,39 +5193,20 @@ gws_resize_window (
 
             }
 
-            // client area . (rectangle).
-
-            /*
-            // Update client area rectangle based on new outer size
-            // Left/top only if border/titlebar changed
-            window->rcClient.left   = window->border_size;
-            window->rcClient.top    = window->titlebar_height + window->border_size;
-            
-            window->rcClient.width  = window->width  - (window->border_size * 2);
-            window->rcClient.height = window->height - (window->titlebar_height + window->border_size);
-            */
-
             // sync client area rectangle 
+
+            // Doesn't change.
+            //window->rcClient.left
+            //window->rcClient.top
 
             // width: subtract left and right borders
             window->rcClient.width =
-                (unsigned long)(window->width - (window->border_size * 2));
+                (unsigned long)(window->width - (window->border_size * 2) - 
+                (pad_left + pad_right));
             // height: subtract top border, bottom border, and titlebar height
             window->rcClient.height =
-                (unsigned long)(window->height - (window->titlebar_height + window->border_size + window->border_size));
-
-            /*
-            // width
-            // menos bordas laterais
-            window->rcClient.width = 
-                (unsigned long) (window->width -2 -2 );
-            // height
-            // menos bordas superior e inferior
-            // menos a barra de tarefas.
-            //#bugbug: e se a janela for menor que 32?
-            window->rcClient.height = 
-                (unsigned long) (window->height -2 -32 -2); 
-            */
+                (unsigned long)(window->height - (window->border_size * 2) - 
+                (pad_top + pad_bottom) - (window->titlebar_height ));
     }
 
 // --------------------------------------------
