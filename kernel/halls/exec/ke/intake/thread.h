@@ -163,6 +163,12 @@ struct deferred_d
     int sleep_in_progress;
     unsigned long desired_sleep_ms;
 
+// ---------------------------------
+// Exit::
+// We are waiting the right time to close a thread.
+// The scheduler will do this job.
+    int exit_in_progress;
+    int exit_code;  // Reason to close the thread
 
 };
 
@@ -316,20 +322,8 @@ struct thread_d
 
     // int isServerThread;
 
-
-// ---------------------------------
-// Yield::
-// 1 = Sinaliza que a thread está dando a preferência
-// e que deve sair quando for seguro fazer isso.
-    //int yield_in_progress;
-
-// ---------------------------------
-// Sleep::
-    //int sleep_in_progress;
-    //unsigned long desired_sleep_ms;
-
 // #test
-// Yield, Sleep ...
+// Yield, Sleep, Exit ...
     struct deferred_d  Deferred;
 
 // ---------------------------------
@@ -360,20 +354,13 @@ struct thread_d
     unsigned long signal;
     unsigned long umask;
 
-// ---------------------------------
-// Exit::
-// We are waiting the right time to close a thread.
-// The scheduler will do this job.
-    int exit_in_progress;
-    int exit_code;  // Reason to close the thread
-
 // -------------
 
 // Test
     int _its_my_party_and_ill_cry_if_i_want_to;
 
 //
-// Wait support.
+// Wait support
 //
 
 // The thread needs priority to respont to an event.

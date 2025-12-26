@@ -124,6 +124,11 @@ static void __ps_initialize_thread_common_elements(struct thread_d *t)
 // Sleep
     t->Deferred.sleep_in_progress = FALSE;
 
+// -------------------------
+// Exit
+    t->Deferred.exit_in_progress = FALSE;
+    t->Deferred.exit_code=0;
+
 // ----------------------------------------
 // Callback support
     t->callback_in_progress = FALSE;
@@ -139,10 +144,6 @@ static void __ps_initialize_thread_common_elements(struct thread_d *t)
 // #remember: t->signal |= 1<<(signal-1);
     t->signal = 0;
     t->umask = 0;
-
-// -------------------------
-    t->exit_in_progress = FALSE;
-    t->exit_code=0;
 
 // ------------------
     // More ?
@@ -800,7 +801,7 @@ int exit_thread(tid_t tid)
 // Lembrando que se deixarmos no estado ZOMBIE o 
 // deadthread collector vai destruir a estrutura.
 // Let the scheduler put this thread in the ZOMBIE state.
-    Thread->exit_in_progress = TRUE;
+    Thread->Deferred.exit_in_progress = TRUE;
     //Thread->state = ZOMBIE;
     return 0;
 
@@ -1230,7 +1231,8 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
 //herdar o quantum do processo.
 //herdar a afinidade do processo.(cpu affinity) 
 
-    clone->exit_code = father->exit_code;
+// #bugbug: why?
+    clone->Deferred.exit_code = father->Deferred.exit_code;
 
 //
 // #debug

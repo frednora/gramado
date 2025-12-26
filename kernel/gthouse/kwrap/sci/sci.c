@@ -563,7 +563,7 @@ void *sci0 (
         {
             if (p->flower->magic == 1234)
             {
-                p->flower->exit_in_progress = TRUE;
+                p->flower->Deferred.exit_in_progress = TRUE;
                 p->exit_in_progress = TRUE;
             }
         }

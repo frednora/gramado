@@ -619,7 +619,7 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
             {
                 // Vira zombie e não sera selecionada para o proximo round
                 // se não for a idle thread nem a init thread.
-                if (TmpThread->exit_in_progress == TRUE)
+                if (TmpThread->Deferred.exit_in_progress == TRUE)
                 {
                     if (TmpThread != Idle)
                     {

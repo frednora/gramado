@@ -69,8 +69,6 @@ struct thread_d *create_init_thread(void)
     t->link = NULL;
     t->is_linked = FALSE;
 
-    t->exit_in_progress = FALSE;
-
 // Local name.
     t->name_address = (unsigned long) ThreadName; 
 // Execution plane.
@@ -187,6 +185,8 @@ struct thread_d *create_init_thread(void)
     // Sleep
     t->Deferred.sleep_in_progress = FALSE;
     t->Deferred.desired_sleep_ms = 0;
+
+    t->Deferred.exit_in_progress = FALSE;
 
     // Wait
     t->has_pending_event = FALSE;
