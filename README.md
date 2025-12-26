@@ -184,8 +184,7 @@ See cmds/.
 
 This is a screenshot of the desktop environment running on top of the kernel.
 You can find code in the gdeps/ folder.
-![Screenshot](https://raw.githubusercontent.com/seekbalance/screenshots/main/gramado-8.png)
-
+![Screenshot](https://raw.githubusercontent.com/seekbalance/screenshots/main/gramado-9.png)
 
 ## Gramado API 
 
