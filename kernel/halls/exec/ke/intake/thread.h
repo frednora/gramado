@@ -96,29 +96,6 @@ typedef enum {
 } thread_wait_reason_t;
 
 
-/*
-This part is about input redirection ...
-What is the place where i need to send the 
-input that came from the hardware?
-If the input model is an unix-like stuff, 
-so i need to send the input to a file and 
-an application will read this file.
-if the input model is windows-like, 
-so i will send the input to an event queue in the raw input thread.
-*/
-
-/*
- // #suspenso. Vamos usar as flags em 't->input_flags'
-typedef enum {
-    THREAD_INPUTMODEL_NULL,      // Not defined.
-    THREAD_INPUTMODEL_KERNEL,    // Kernel thread running in ring0.
-    THREAD_INPUTMODEL_COMMAND,   // Command running on console or terminal.
-    THREAD_INPUTMODEL_UNIXLIKE,  // Send the input to a file.
-    THREAD_INPUTMODEL_KGWS,      // Running on Setup environment and using kgws.
-    THREAD_INPUTMODEL_LOADABLEWINDOWSERVER   // Using the current loadable window server.
-}thread_inputmodel_t;
-*/
-
 // #todo
 // t->input_mode
 // Do not process anything ...
@@ -127,6 +104,57 @@ typedef enum {
 // Kernel process the raw input
 // and post the standard kernel input message.
 #define IM_MESSAGE_INPUT  2
+
+
+
+// Input model
+// t->input_flags
+// Com essa flag o kernel deve enviar input de teclado
+// para stdin.
+#define INPUT_MODEL_STDIN         1
+// Com essa flag o kernel deve enviar input para
+// a fila de mensagens na current thread.
+#define INPUT_MODEL_MESSAGEQUEUE  2
+
+// Thread flags.
+// t->flags:
+#define TF_BLOCKED_SENDING      0x1000
+#define TF_BLOCKED_RECEIVING    0x2000
+// ...
+
+
+struct thread_transition_counter_d
+{
+    unsigned long to_supervisor;
+    unsigned long to_user;
+};
+
+
+// Page fault information
+struct pf_info_d
+{
+// This thread is in a PF interrupt routine.
+    int in_pf;
+// Let's count the number of pf.
+    unsigned int pf_counter;
+};
+
+// --------------------------------
+
+// Performance/Efficiency mode.
+// PE_MODE_PERFORMANCE
+// PE_MODE_EFFICIENCY
+#define PE_MODE_PERFORMANCE  1000
+#define PE_MODE_EFFICIENCY   2000
+
+// --------------------------------
+
+#define MSG_QUEUE_MAX  64
+
+struct deferred_d 
+{
+    int sleep_in_progress;
+};
 
 /*
 Earth-bound States (Thread Creation and Termination)
@@ -179,52 +207,8 @@ typedef enum {
     RUNNING,      // 5 - Thread is currently running.
     WAITING,      // 6 - Thread is waiting.
     BLOCKED       // 7 - Thread is blocked by an event.
-}thread_state_t;
+} thread_state_t;
 
-
-// Input model
-// t->input_flags
-// Com essa flag o kernel deve enviar input de teclado
-// para stdin.
-#define INPUT_MODEL_STDIN         1
-// Com essa flag o kernel deve enviar input para
-// a fila de mensagens na current thread.
-#define INPUT_MODEL_MESSAGEQUEUE  2
-
-// Thread flags.
-// t->flags:
-#define TF_BLOCKED_SENDING      0x1000
-#define TF_BLOCKED_RECEIVING    0x2000
-// ...
-
-
-struct thread_transition_counter_d
-{
-    unsigned long to_supervisor;
-    unsigned long to_user;
-};
-
-
-// Page fault information
-struct pf_info_d
-{
-// This thread is in a PF interrupt routine.
-    int in_pf;
-// Let's count the number of pf.
-    unsigned int pf_counter;
-};
-
-// --------------------------------
-
-// Performance/Efficiency mode.
-// PE_MODE_PERFORMANCE
-// PE_MODE_EFFICIENCY
-#define PE_MODE_PERFORMANCE  1000
-#define PE_MODE_EFFICIENCY   2000
-
-// --------------------------------
-
-#define MSG_QUEUE_MAX  64
 
 // The thread structure
 struct thread_d 
@@ -331,8 +315,11 @@ struct thread_d
 
 // ---------------------------------
 // Sleep::
-    int sleep_in_progress;
+    //int sleep_in_progress;
     unsigned long desired_sleep_ms;
+
+// #test
+    struct deferred_d  Deferred;
 
 // ---------------------------------
 // Callback::

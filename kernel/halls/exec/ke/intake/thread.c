@@ -122,7 +122,7 @@ static void __ps_initialize_thread_common_elements(struct thread_d *t)
 
 // ----------------------------------------
 // Sleep
-    t->sleep_in_progress = FALSE;
+    t->Deferred.sleep_in_progress = FALSE;
 
 // ----------------------------------------
 // Callback support
@@ -1063,7 +1063,7 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
     clone->yield_in_progress = FALSE;
 
     // Sleep
-    clone->sleep_in_progress = FALSE;
+    clone->Deferred.sleep_in_progress = FALSE;
     clone->desired_sleep_ms = 0;
 
     // Wait
@@ -1582,7 +1582,7 @@ try_next_slot:
     Thread->yield_in_progress = FALSE;
 
     // Sleep
-    Thread->sleep_in_progress = FALSE;
+    Thread->Deferred.sleep_in_progress = FALSE;
     Thread->desired_sleep_ms = 0;
 
     // Wait

@@ -185,7 +185,7 @@ struct thread_d *create_init_thread(void)
     t->yield_in_progress = FALSE;
 
     // Sleep
-    t->sleep_in_progress = FALSE;
+    t->Deferred.sleep_in_progress = FALSE;
     t->desired_sleep_ms = 0;
 
     // Wait

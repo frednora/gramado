@@ -801,7 +801,7 @@ void sleep(tid_t tid, unsigned long ms)
 // #todo
 // This is the type of feature that can be used 
 // in the sys_select() implementation.
-    t->sleep_in_progress = TRUE;
+    t->Deferred.sleep_in_progress = TRUE;
     t->desired_sleep_ms = ms;
 }
 

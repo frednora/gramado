@@ -429,7 +429,7 @@ static void __task_switch(void)
 
         // :: sleep
         if ( CurrentThread->state == RUNNING && 
-             CurrentThread->sleep_in_progress == TRUE )
+             CurrentThread->Deferred.sleep_in_progress == TRUE )
         {
             //printk ("ts: Do sleep until\n");
             CurrentThread->runningCount = CurrentThread->quantum;  // Esgoto
@@ -437,7 +437,7 @@ static void __task_switch(void)
             sleep_until(
                 CurrentThread->tid, 
                 CurrentThread->desired_sleep_ms );
-            CurrentThread->sleep_in_progress = FALSE;
+            CurrentThread->Deferred.sleep_in_progress = FALSE;
             //printk ("ts: Status=%d\n",CurrentThread->state);
         }
 
