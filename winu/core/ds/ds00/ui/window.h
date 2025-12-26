@@ -414,6 +414,15 @@ struct per_window_backbuffer_d
     unsigned long size_in_kb;
 };
 
+
+struct border_info_d
+{
+    unsigned int border_color1;  // top/left
+    unsigned int border_color2;  // right/bottom
+    unsigned long border_size;
+    int border_style;
+};
+
 // Server-side window object
 struct gws_window_d 
 {
@@ -673,10 +682,7 @@ struct gws_window_d
 // ================
 // 5 - Borders
 
-    unsigned int border_color1;  // top/left
-    unsigned int border_color2;  // right/bottom
-    unsigned long border_size;
-    int border_style;
+    struct border_info_d Border;
     int borderUsed;
 
 // ================

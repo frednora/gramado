@@ -25,14 +25,17 @@
 #define HONEY_COLOR_BORDER_LIGHT_INACTIVE  0x00D0D0D0   // light gray (top/left)
 #define HONEY_COLOR_BORDER_DARK_INACTIVE   0x00303030   // charcoal gray (bottom/right)
 
+// #test
+//#define HONEY_COLOR_BORDER_LIGHT_WWF     COLOR_YELLOW   // silver highlight (top/left)
+//#define HONEY_COLOR_BORDER_DARK_WWF      COLOR_RED   // deep gray shadow (bottom/right)
 
 // WWF (keyboard owner, but not active)
-#define HONEY_COLOR_BORDER_LIGHT_WWF     0x00E8E8E8   // silver highlight (top/left)
-#define HONEY_COLOR_BORDER_DARK_WWF      0x00484848   // deep gray shadow (bottom/right)
+#define HONEY_COLOR_BORDER_LIGHT_WWF     0x00F4F4F4  //0x00E8E8E8   // silver highlight (top/left)
+#define HONEY_COLOR_BORDER_DARK_WWF      0x00101010  //0x00484848   // deep gray shadow (bottom/right)
 
 // Inactive (no focus, not WWF)
-#define HONEY_COLOR_BORDER_LIGHT_NOFOCUS 0x00C0C0C0   // muted light gray (top/left)
-#define HONEY_COLOR_BORDER_DARK_NOFOCUS  0x00202020   // dark charcoal (bottom/right)
+#define HONEY_COLOR_BORDER_LIGHT_NOFOCUS 0x00A4A4A4   // muted light gray (top/left)
+#define HONEY_COLOR_BORDER_DARK_NOFOCUS  0x00707070   // dark charcoal (bottom/right)
 
 
 // Controls

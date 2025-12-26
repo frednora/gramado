@@ -1754,9 +1754,6 @@ static void wm_tile(void)
         // Vertical: It means 2 lines of windows.
         if (WindowManager.vertical == TRUE)
         {
-            // For titlebar color support. It's NOT the active window.
-            w->border_size = 1;
-
             // Resize
             // Width: The width of the working area divided by the number of windows.
             // Height: The height of the working area less 24 divided by 2.
@@ -1784,9 +1781,6 @@ static void wm_tile(void)
             // It occupies the left half of the working area.
             if (i == cnt-1)
             {
-                // For titlebar color support. It's the active window.
-                w->border_size = 2;
-
                 active_window  = (void*) w;  // Active window
                 keyboard_owner = (void*) w;  // Window with focus.
                 last_window    = (void*) w;  // Top
@@ -1818,9 +1812,6 @@ static void wm_tile(void)
         // Horizontal: It means 2 columns of windows.
         if (WindowManager.vertical == FALSE)
         {
-            // For titlebar color support. It's NOT the active window.
-            w->border_size = 1;
-
             // Resize
             // Width:  Half of the width of our working area.
             // Height: The height of the working area less 24, 
@@ -1851,7 +1842,7 @@ static void wm_tile(void)
             if (i == cnt-1)
             {
                 // For titlebar color support. It's the active window.
-                w->border_size = 2;
+                //w->Border.border_size = 2;
 
                 active_window  = (void*) w;  // Active window
                 keyboard_owner = (void*) w;  // Window with focus.
@@ -2417,7 +2408,7 @@ update_window (
     {
         // #test
         // for titlebar color support.
-        window->border_size = 2;
+        //window->Border.border_size = 2;
         keyboard_owner = (void*) window;
         last_window    = (void*) window;
         top_window     = (void*) window;  //z-order: top window.
@@ -5137,7 +5128,7 @@ gws_resize_window (
             if ((void*) window->titlebar != NULL)
             {
                 window->titlebar->width = 
-                    (window->width - window->border_size - window->border_size );
+                    (window->width - window->Border.border_size - window->Border.border_size );
 
                 // ============
                 // minimize
@@ -5201,11 +5192,11 @@ gws_resize_window (
 
             // width: subtract left and right borders
             window->rcClient.width =
-                (unsigned long)(window->width - (window->border_size * 2) - 
+                (unsigned long)(window->width - (window->Border.border_size * 2) - 
                 (pad_left + pad_right));
             // height: subtract top border, bottom border, and titlebar height
             window->rcClient.height =
-                (unsigned long)(window->height - (window->border_size * 2) - 
+                (unsigned long)(window->height - (window->Border.border_size * 2) - 
                 (pad_top + pad_bottom) - (window->titlebar_height ));
     }
 
@@ -5358,9 +5349,9 @@ gwssrv_change_window_position (
         if ( (void*) window->titlebar != NULL )
         {
             window->titlebar->absolute_x = 
-                ( window->absolute_x + window->border_size );
+                ( window->absolute_x + window->Border.border_size );
             window->titlebar->absolute_y = 
-                ( window->absolute_y  + window->border_size );
+                ( window->absolute_y  + window->Border.border_size );
 
             // Controls 
             if (window->titlebar->Controls.initialized == TRUE)

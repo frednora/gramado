@@ -259,18 +259,6 @@ __draw_window_border(
         return;
     }
 
-// #todo
-// Is it possitle to test the validation here?
-
-// --------------------
-// + We dont have a border size yet.
-// Define border size.
-    if (window == active_window){
-        window->border_size = 2;
-    }else if (window != active_window){
-        window->border_size = 1;
-    };
-
 // ----------
 // Overlapped
     if (window->type == WT_OVERLAPPED)
@@ -288,35 +276,35 @@ __draw_window_border(
             parent->absolute_x + window->left, 
             parent->absolute_y + window->top, 
             window->width, 
-            window->border_size, 
-            window->border_color1, 
+            window->Border.border_size, 
+            window->Border.border_color1, 
             TRUE, 
             0 );
         // left
         rectBackbufferDrawRectangle( 
             parent->absolute_x + window->left, 
             parent->absolute_y + window->top, 
-            window->border_size, 
+            window->Border.border_size, 
             window->height, 
-            window->border_color1, 
+            window->Border.border_color1, 
             TRUE,
             0 );
         // right
         rectBackbufferDrawRectangle( 
-            (parent->absolute_x + window->left + window->width - window->border_size), 
+            (parent->absolute_x + window->left + window->width - window->Border.border_size), 
             (parent->absolute_y + window->top), 
-            window->border_size, 
+            window->Border.border_size, 
             window->height, 
-            window->border_color2, 
+            window->Border.border_color2, 
             TRUE,
             0 );
         // bottom
         rectBackbufferDrawRectangle ( 
             (parent->absolute_x + window->left), 
-            (parent->absolute_y + window->top + window->height - window->border_size), 
+            (parent->absolute_y + window->top + window->height - window->Border.border_size), 
             window->width, 
-            window->border_size, 
-            window->border_color2, 
+            window->Border.border_size, 
+            window->Border.border_color2, 
             TRUE,
             0 );
     
@@ -333,54 +321,41 @@ __draw_window_border(
 // Editbox
     if ( window->type == WT_EDITBOX || 
          window->type == WT_EDITBOX_MULTIPLE_LINES )
-    {
-        // border size:
-        // #todo: it can't be hardcoded,
-        // We're gonna have themes.
-        if (window == keyboard_owner){
-            window->border_size=2;
-            window->border_color1 = COLOR_BLACK;   //#test
-            window->border_color2 = COLOR_BLACK;   //#test
-        } else if (window != keyboard_owner){
-            window->border_size=1;
-            window->border_color1 = COLOR_GRAY;   //#test
-            window->border_color2 = COLOR_GRAY;   //#test
-        }
-
+    {       
         // top
         rectBackbufferDrawRectangle( 
             window->absolute_x, 
             window->absolute_y, 
             window->width,         // w
-            window->border_size,   // h
-            window->border_color1, // color
+            window->Border.border_size,   // h
+            window->Border.border_color1, // color
             TRUE,                  // fill?
             0 );                   // rop
         // left
         rectBackbufferDrawRectangle( 
             window->absolute_x, 
             window->absolute_y, 
-            window->border_size,    // w 
+            window->Border.border_size,    // w 
             window->height,         // h
-            window->border_color1,  // color
+            window->Border.border_color1,  // color
             TRUE,                   // fill?
             0 );                    // rop
         // right
         rectBackbufferDrawRectangle( 
-            (window->absolute_x + window->width - window->border_size), 
+            (window->absolute_x + window->width - window->Border.border_size), 
             window->absolute_y,  
-            window->border_size,  // w 
+            window->Border.border_size,  // w 
             window->height,       // h
-            window->border_color2,  // color
+            window->Border.border_color2,  // color
             TRUE,                   // fill
             0 );                    // rop
         // bottom
         rectBackbufferDrawRectangle ( 
             window->absolute_x, 
-            (window->absolute_y + window->height - window->border_size), 
+            (window->absolute_y + window->height - window->Border.border_size), 
             window->width,           // w
-            window->border_size,     // h
-            window->border_color2,   // color
+            window->Border.border_size,     // h
+            window->Border.border_color2,   // color
             TRUE,                    // fill
             0 );                     // rop
         
@@ -1008,26 +983,43 @@ redraw_window (
 
         // Borders: 
         // Let's repaint the borders for some types.
-        if ( window->type == WT_OVERLAPPED ||
-             window->type == WT_EDITBOX_SINGLE_LINE ||
-             window->type == WT_EDITBOX_MULTIPLE_LINES )
+        // Normal windows
+        // Border Color 1 = top/left      (Light)
+        // Border Color 2 = right/bottom  (Dark)
+        if (window->type == WT_OVERLAPPED)
         {
-
-            // Its a wwf
-            if (window == keyboard_owner){
-                window->border_color1 = (unsigned int) get_color(csiWWFBorder);
-                window->border_color2 = (unsigned int) HONEY_COLOR_BORDER_DARK_WWF;  //get_color(csiWWFBorder);
+            if (window == active_window){
+                window->Border.border_color1 = HONEY_COLOR_BORDER_LIGHT_ACTIVE;  //get_color(csiActiveWindowBorder); 
+                window->Border.border_color2 = HONEY_COLOR_BORDER_DARK_ACTIVE;  //get_color(csiActiveWindowBorder);
             } else {
-                window->border_color1 = (unsigned int) get_color(csiWindowBorder);
-                window->border_color2 = (unsigned int) HONEY_COLOR_BORDER_DARK_NOFOCUS; //get_color(csiWindowBorder);
+                window->Border.border_color1 = HONEY_COLOR_BORDER_LIGHT_INACTIVE;  //get_color(csiActiveWindowBorder); 
+                window->Border.border_color2 = HONEY_COLOR_BORDER_DARK_INACTIVE;  //get_color(csiActiveWindowBorder);
+
+                // Its a wwf
+                if (window == keyboard_owner){
+                    window->Border.border_color1 = (unsigned int) HONEY_COLOR_BORDER_LIGHT_WWF;  //get_color(csiWWFBorder);
+                    window->Border.border_color2 = (unsigned int) HONEY_COLOR_BORDER_DARK_WWF;  //get_color(csiWWFBorder);
+                } else {
+                    window->Border.border_color1 = (unsigned int) HONEY_COLOR_BORDER_DARK_WWF; //get_color(csiWindowBorder);
+                    window->Border.border_color2 = (unsigned int) HONEY_COLOR_BORDER_DARK_NOFOCUS; //get_color(csiWindowBorder);
+                }
             }
 
-            // Border Color 1 = top/left      (Light)
-            // Border Color 2 = right/bottom  (Dark)
+            __draw_window_border(window->parent, window);
+        }
 
-            if (window == active_window){
-                window->border_color1 = HONEY_COLOR_BORDER_LIGHT_ACTIVE;  //get_color(csiActiveWindowBorder); 
-                window->border_color2 = HONEY_COLOR_BORDER_DARK_ACTIVE;  //get_color(csiActiveWindowBorder);
+        // Border Color 1 = top/left      (Dark)
+        // Border Color 2 = right/bottom  (Light)
+        if (window->type == WT_EDITBOX_SINGLE_LINE || window->type == WT_EDITBOX_MULTIPLE_LINES)
+        {
+            // focus
+            if (window == keyboard_owner){
+                window->Border.border_color1 = (unsigned int) HONEY_COLOR_BORDER_DARK_WWF;  //get_color(csiWWFBorder);
+                window->Border.border_color2 = (unsigned int) HONEY_COLOR_BORDER_LIGHT_WWF;  //get_color(csiWWFBorder);
+            // no focus
+            } else {
+                window->Border.border_color1 = (unsigned int) HONEY_COLOR_BORDER_DARK_NOFOCUS; //get_color(csiWindowBorder);
+                window->Border.border_color2 = (unsigned int) HONEY_COLOR_BORDER_LIGHT_NOFOCUS; //get_color(csiWindowBorder);
             }
             __draw_window_border(window->parent, window);
         }

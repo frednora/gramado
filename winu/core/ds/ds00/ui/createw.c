@@ -369,7 +369,7 @@ struct gws_window_d *do_create_titlebar(
     const int is_maximized = (parent->state == WINDOW_STATE_MAXIMIZED);
 
 // Use parent->border_size (must be set in doCreateWindowFrame before this call) 
-    unsigned long b = parent->border_size;
+    unsigned long b = parent->Border.border_size;
 
     TitleBarLeft  = b;
     TitleBarTop   = b;
@@ -645,6 +645,7 @@ doCreateWindowFrame (
     struct gws_window_d  *sbWindow;
     int id=-1;  //usado pra registrar janelas filhas.
     int Type=0;
+
 // Border size
     unsigned long BorderSize = (border_size & 0xFFFF);
 
@@ -701,9 +702,8 @@ doCreateWindowFrame (
     }
 
 // Save border colors setted by the caller
-    window->border_color1 = (unsigned int) BorderColor1;
-    window->border_color2 = (unsigned int) BorderColor2;
-
+    window->Border.border_color1 = (unsigned int) BorderColor1;
+    window->Border.border_color2 = (unsigned int) BorderColor2;
 
 // Uma overlapped maximizada não tem borda.
     int IsMaximized = FALSE;
@@ -803,34 +803,8 @@ doCreateWindowFrame (
     if ( Type == WT_EDITBOX_SINGLE_LINE || 
          Type == WT_EDITBOX_MULTIPLE_LINES )
     {
-
-        // #todo
-        // The window structure has a element for border size
-        // and a flag to indicate that border is used.
-        // It also has a border style.
-
-        // #todo: Essa rotina de cores deve ir para
-        // dentro da função __draw_window_border().
-        // ou passar tudo via argumento.
-        // ou criar uma rotina para mudar as caracteristicas da borda.
-
-        // If it has the input focus.
-        // Respecting the colors received via parameter
-        if (window == keyboard_owner){
-            BorderSize = 2;
-        } else if (window != keyboard_owner){
-            BorderSize = 1;
-        };
-
-        window->border_size = 0;
-        window->borderUsed = FALSE;
-        //if (useBorder == TRUE){
-            //window->border_color1 = (unsigned int) BorderColor1;
-            //window->border_color2 = (unsigned int) BorderColor2;
-            window->border_size = BorderSize;
-            window->borderUsed = TRUE;
-        //}
-
+        window->Border.border_size = BorderSize;
+        window->borderUsed = TRUE;
         // Draw the border of an edit box
         __draw_window_border(parent,window);
         return 0;
@@ -856,24 +830,6 @@ doCreateWindowFrame (
         // and a flag to indicate that border is used.
         // It also has a border style.
 
-        // Se tiver o foco.
-        //if (window->focus == TRUE){
-        //    BorderColor1 = (unsigned int) get_color(csiWWFBorder);
-        //    BorderColor2 = (unsigned int) get_color(csiWWFBorder);
-        //}else{
-        //    BorderColor1 = (unsigned int) get_color(csiWindowBorder);
-        //    BorderColor2 = (unsigned int) get_color(csiWindowBorder);
-        //};
-
-        //window->border_size = 0;
-        //window->borderUsed = FALSE;
-        //if (useBorder==TRUE){
-            //window->border_color1 = (unsigned int) BorderColor1;
-            //window->border_color2 = (unsigned int) BorderColor2;
-            //window->border_size   = BorderSize;
-        //    window->borderUsed    = TRUE;
-        //}
-
         // Quatro bordas de uma janela overlapped.
         // Uma overlapped maximizada não tem bordas.
         window->borderUsed = FALSE;
@@ -892,7 +848,7 @@ doCreateWindowFrame (
         // #important:
         // The border in an overlapped window will affect
         // the top position of the client area rectangle.
-        window->rcClient.top += window->border_size;
+        window->rcClient.top += window->Border.border_size;
 
         //
         // Title bar
@@ -1455,20 +1411,20 @@ void *doCreateWindow (
     //window->dirty  = FALSE;  // Validate
     //window->locked = FALSE;
 
-// Initializing border stuff
-// #todo: use get_color(x)
-    window->border_color1 = COLOR_WHITE;
-    window->border_color2 = COLOR_WHITE;
-    window->border_size = 2;
-    window->border_style = 0;
+// == Border =============================
+// Initializing border info for the first time.
+    window->Border.border_color1 = HONEY_COLOR_BORDER_LIGHT_NOFOCUS;
+    window->Border.border_color2 = HONEY_COLOR_BORDER_DARK_NOFOCUS;
+    window->Border.border_size = METRICS_BORDER_SIZE;
+    window->Border.border_style = 0;
+
+// Is it used or not?
     window->borderUsed = FALSE;
     // ## na verdade isse será trabalhado logo abaixo.
-    if (window->type == WT_OVERLAPPED)
-    {
+    if (window->type == WT_OVERLAPPED){
         window->borderUsed = TRUE;
-        window->border_style = 1;  // Minimum
     }
-    unsigned long __BorderSize = window->border_size;
+    unsigned long __BorderSize = window->Border.border_size;
 
 // Title bar height.
 // #todo: use metrics.
@@ -1701,9 +1657,6 @@ void *doCreateWindow (
 
 // Left margin and top margin.
 // The top margin changes if we have a bar.
-
-    //clientRect.left = (unsigned long) __BorderSize;
-    //clientRect.top  = (unsigned long) __BorderSize;
 
 // >> Relative values <<
 
@@ -2015,7 +1968,7 @@ void *doCreateWindow (
     window->shadow_style     = 0;
     window->background_style = 0;
     window->titlebar_style   = 0;
-    window->border_style     = 0;
+    window->Border.border_style     = 0;
     window->menubar_style    = 0;
     window->toolbar_style    = 0;
     window->clientarea_style = 0;
@@ -3037,26 +2990,43 @@ draw_frame:
         isActiveWindow = TRUE;
 
 
+// == Normal windows =================================
 // Border Color 1 = top/left      (Light)
 // Border Color 2 = right/bottom  (Dark)
 
-// Its a wwf
-    if (isKeyboardOwner == TRUE){
-        bc_1 = (unsigned int) get_color(csiWWFBorder);
-        bc_2 = (unsigned int) HONEY_COLOR_BORDER_DARK_WWF; //get_color(csiWWFBorder);
-    } else {
-        bc_1 = (unsigned int) get_color(csiWindowBorder);
-        bc_2 = (unsigned int) HONEY_COLOR_BORDER_DARK_NOFOCUS;  //get_color(csiWindowBorder);
-    }
-
-// Its an active window.
-// Active window override
-// We will not use the colors for wwf anymore,
-// Now we will use the colors for active window.
-    if (isActiveWindow == TRUE)
-    {
+    if (isActiveWindow == TRUE){
         bc_1 = HONEY_COLOR_BORDER_LIGHT_ACTIVE;  //get_color(csiActiveWindowBorder); 
         bc_2 = HONEY_COLOR_BORDER_DARK_ACTIVE;   //get_color(csiActiveWindowBorder);
+    } else {
+        bc_1 = HONEY_COLOR_BORDER_LIGHT_INACTIVE;  //get_color(csiActiveWindowBorder); 
+        bc_2 = HONEY_COLOR_BORDER_DARK_INACTIVE;   //get_color(csiActiveWindowBorder);
+        // Its a wwf
+        if (isKeyboardOwner == TRUE){
+            bc_1 = (unsigned int) HONEY_COLOR_BORDER_LIGHT_WWF;  //get_color(csiWWFBorder);
+            bc_2 = (unsigned int) HONEY_COLOR_BORDER_DARK_WWF; //get_color(csiWWFBorder);
+        } else {
+            bc_1 = (unsigned int) HONEY_COLOR_BORDER_LIGHT_NOFOCUS;  //get_color(csiWindowBorder);
+            bc_2 = (unsigned int) HONEY_COLOR_BORDER_DARK_NOFOCUS;  //get_color(csiWindowBorder);
+        }
+    }
+
+// == Editbox windows =================================
+// Border Color 1 = top/left      (Dark)
+// Border Color 2 = right/bottom  (Light)
+
+    if (type == WT_EDITBOX_SINGLE_LINE || type == WT_EDITBOX_MULTIPLE_LINES)
+    {
+        // focus
+        // Border Color 1 = top/left      (Dark)
+        // Border Color 2 = right/bottom  (Light)
+        if (isKeyboardOwner == TRUE){
+            bc_1 = (unsigned int) HONEY_COLOR_BORDER_DARK_WWF; //get_color(csiWWFBorder);
+            bc_2 = (unsigned int) HONEY_COLOR_BORDER_LIGHT_WWF;  //get_color(csiWWFBorder);
+        // no focus
+        } else {
+            bc_1 = (unsigned int) HONEY_COLOR_BORDER_DARK_NOFOCUS;  //get_color(csiWindowBorder);
+            bc_2 = (unsigned int) HONEY_COLOR_BORDER_LIGHT_NOFOCUS;  //get_color(csiWindowBorder);
+        }
     }
 
 
@@ -3626,9 +3596,9 @@ void maximize_window(struct gws_window_d *window)
     if (window->type == WT_OVERLAPPED)
     {
         window->rcClient.width  = 
-            window->width  - (window->border_size * 2);
+            window->width  - (window->Border.border_size * 2);
         window->rcClient.height = 
-            window->height - (window->titlebar_height + window->border_size * 2);
+            window->height - (window->titlebar_height + window->Border.border_size * 2);
     }
 
 //

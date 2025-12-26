@@ -16,10 +16,10 @@
 #define METRICS_ICON_LEFT    METRICS_ICON_LEFTPAD
 #define METRICS_ICON_TOP     METRICS_ICON_TOPPAD
 
-// Border thickness for overlapped windows 
-// (applications can override if needed)
-#define METRICS_BORDER_SIZE  3
-
+// Border thickness
+// #important: Do not mess with this thing,
+// other components depends on this for calculations.
+#define METRICS_BORDER_SIZE  2
 
 // ====================================================== 
 // Taskbar Metrics 
