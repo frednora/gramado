@@ -1,0 +1,6 @@
+
+The core issue
+  If you block waiting for system IPC messages, you might miss socket data.
+  If you block on sockets, you might miss system IPC events.
+  If you poll both, you waste CPU and lose the benefit of your new blocking mechanism.
+

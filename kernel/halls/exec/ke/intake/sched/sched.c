@@ -617,6 +617,39 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
             // Exit in progress
             if (TmpThread->magic == 1234)
             {
+                // The thread has an event from the server.
+                // Wake up it, if possible
+                if (TmpThread->msgctl.has_event_from_ds == TRUE)
+                {
+                    printk("msgctl: Unblocking thread for ds event...\n");
+                    if (TmpThread->state == WAITING || TmpThread->state == BLOCKED)
+                    {
+                        thread_wait_reason_t Reason = TmpThread->wait_reason;
+                        switch (Reason){
+                        case WAIT_REASON_YIELD:
+                        case WAIT_REASON_PREEMPTED:
+                        case WAIT_REASON_PRIORITY_BOOST:
+                        case WAIT_REASON_BLOCKED:  // Generic
+                        case WAIT_REASON_LOOP:     // Empty msg queue
+                            do_thread_ready(TmpThread->tid);
+                            TmpThread->wait_reason = WAIT_REASON_NULL;
+                            break;
+                        };
+                    }
+                    TmpThread->msgctl.has_event_from_ds = FALSE;
+                    continue;
+                }
+
+                // We already setted the reason in ipc.c
+                if (TmpThread->msgctl.block_in_progress == TRUE)
+                {
+                    printk("msgctl: Blocking...\n");
+                    do_thread_blocked(TmpThread->tid);
+                    TmpThread->wait_reason = WAIT_REASON_LOOP; //Waiting for message
+                    TmpThread->msgctl.block_in_progress = FALSE;
+                    continue;
+                }
+
                 // Vira zombie e não sera selecionada para o proximo round
                 // se não for a idle thread nem a init thread.
                 // Can't be the init thread (Idle) in this case.

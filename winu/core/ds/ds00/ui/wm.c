@@ -566,6 +566,11 @@ void on_mouse_released(void)
                     GWS_MouseClicked, 
                     mouse_hover->id, 
                     mouse_hover->id );
+
+                // #test
+                // Sending a notification to the kernel, saying the thread has
+                // an event from the server. Good opportonity to wakeup the thread if necessary.
+                wmNotifyKernel(p1, 8000, 8000);
             }
             
             // --- Quick temporary solution ---
@@ -582,6 +587,11 @@ void on_mouse_released(void)
                             GWS_MouseClicked,
                             mouse_hover->id,       // child button ID
                             mouse_hover->id );
+
+                        // #test
+                        // Sending a notification to the kernel, saying the thread has
+                        // an event from the server. Good opportonity to wakeup the thread if necessary.
+                        wmNotifyKernel(gp, 8000, 8000);
                         return;
                     }
                 }
@@ -1002,6 +1012,12 @@ static void on_control_clicked(struct gws_window_d *window)
 
                             // Post message to the client into the windows queue.
                             window_post_message ( w2->id, GWS_Close, 0, 0 );
+
+                            // #test
+                            // Sending a notification to the kernel, saying the thread has
+                            // an event from the server. Good opportonity to wakeup the thread if necessary.
+                            wmNotifyKernel(w2, 8000, 8000);
+
                             return;
                         }
                     }
@@ -1133,6 +1149,11 @@ on_update_window(
 
 // Post message
     window_post_message( w->id, event_type, 0, 0 );
+
+    // #test
+    // Sending a notification to the kernel, saying the thread has
+    // an event from the server. Good opportonity to wakeup the thread if necessary.
+    wmNotifyKernel(w, 8000, 8000);
 }
 
 
@@ -2313,8 +2334,14 @@ done:
 // ----------------
 // Send message only to the top window.
     if ((void*) active_window != NULL){
-        if (active_window->magic == 1234){
+        if (active_window->magic == 1234)
+        {
             window_post_message( active_window->id, GWS_Paint, 0, 0 );
+
+            // #test
+            // Sending a notification to the kernel, saying the thread has
+            // an event from the server. Good opportonity to wakeup the thread if necessary.
+            wmNotifyKernel(active_window, 8000, 8000);
         }
     }
 }
@@ -3929,6 +3956,66 @@ wmPostMessage(
 fail:
     return (int) -1;
 }
+
+// Notify the kernel on an event on the tid related with the window.
+// The target tid is the tid related with the window.
+// In: 
+// + window pointer (where we get the target tid)
+// + event number
+// + extra data (sub command)
+int
+wmNotifyKernel(
+    struct gws_window_d *window,
+    int event_number,
+    unsigned long long1 )
+{
+    int target_tid = -1;
+
+// Structure validation
+    if ((void*) window == NULL){
+        goto fail;
+    }
+    if (window->used != TRUE){
+        goto fail;
+    }
+    if (window->magic != 1234){
+        goto fail;
+    }
+
+// No messages to root window.
+    if (window == __root_window)
+        goto fail;
+
+// Message code validation
+    if (event_number < 0){
+        goto fail;
+    }
+
+// Invalid client tid.
+    if (window->client_tid < 0){
+        goto fail;
+    }
+    target_tid = (int) window->client_tid;
+
+// Quick and dirty kernel notification
+// IN:
+// + sycall number
+// + target tid
+// + event number
+// + sub event value
+    sc80(
+        (unsigned long) 911, 
+        (unsigned long) (target_tid   & 0xFFFFFFFF), 
+        (unsigned long) (event_number & 0xFFFFFFFF), 
+        (unsigned long) long1 );
+
+    return 0;
+
+fail:
+    return (int) -1;
+}
+
+
 
 
 /*

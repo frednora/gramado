@@ -56,10 +56,10 @@ __ps_setup_x64_context (
 // Worker
 static void __ps_initialize_thread_common_elements(struct thread_d *t)
 {
+// #ps: Not cheching the pointer
+
     register int i=0;
     struct msg_d  *tmp;
-
-// #ps: Not cheching the pointer
 
     t->objectType = ObjectTypeThread;
     t->objectClass = ObjectClassKernelObject;
@@ -114,6 +114,12 @@ static void __ps_initialize_thread_common_elements(struct thread_d *t)
         // Coloca o ponteiro que criamos na lista de ponteiros.
         t->MsgQueue[i] = (unsigned long) tmp;
     };
+
+// Message control
+    t->msgctl.block_on_empty = FALSE;
+    t->msgctl.block_in_progress = FALSE;
+    t->msgctl.miss_count = 0;
+    t->msgctl.has_event_from_ds = FALSE;
 // ===================================
 
 // ----------------------------------------
@@ -752,6 +758,101 @@ int thread_profiler(int service)
 // a thread rodou durante o período.
 
     return -1;
+}
+
+// sci0: Service 911
+int sys_notify_event(tid_t caller_tid, tid_t target_tid, int event_number)
+{
+    struct thread_d *target_thread;
+    int fIsDisplayServer = FALSE;
+
+// -----------------------------------------------------
+// Caller
+    if (target_tid < 0 || target_tid >= THREAD_COUNT_MAX)
+        return -1;
+    target_thread = (struct thread_d *) threadList[target_tid];
+    if ((void*)target_thread == NULL)
+        return -1;
+    if (target_thread->magic != 1234)
+        return -1;
+
+
+// Is caller the display sever?
+    if (DisplayServerInfo.initialized == TRUE)
+    {
+        if (DisplayServerInfo.tid == caller_tid)
+            fIsDisplayServer = TRUE;
+    }
+
+// Option
+    switch (event_number){
+
+    // Block on empty
+    case 8000:
+        printk("sys_notify_event: 8000\n");
+        if (fIsDisplayServer == TRUE)
+            target_thread->msgctl.has_event_from_ds = TRUE;
+        break;
+    // Do not block on empty
+    case 8001:
+        if (fIsDisplayServer == TRUE)
+            target_thread->msgctl.has_event_from_ds = FALSE;
+        break;
+
+    default:
+        return -1;
+        break;
+    };
+
+    return 0;
+}
+
+// sci0: Service 912
+int sys_msgctl(tid_t caller_tid, int option)
+{
+    struct thread_d *caller_thread;
+    int fIsDisplayServer = FALSE;
+
+// -----------------------------------------------------
+// Caller
+    if (caller_tid != current_thread)
+        return -1;
+    if (caller_tid < 0 || caller_tid >= THREAD_COUNT_MAX)
+        return -1;
+    caller_thread = (struct thread_d *) threadList[caller_tid];
+    if ((void*)caller_thread == NULL)
+        return -1;
+    if (caller_thread->magic != 1234)
+        return -1;
+
+/*
+// Is it the display sever?
+    if (DisplayServerInfo.initialized == TRUE)
+    {
+        if (DisplayServerInfo.tid == caller_tid)
+            fIsDisplayServer = TRUE;
+    }
+*/
+
+// Option
+    switch (option){
+
+    // Block on empty
+    case 1000:
+        printk("sys_msgctl: 1000\n");
+        caller_thread->msgctl.block_on_empty = TRUE;
+        break;
+    // Do not block on empty
+    case 1001:
+        caller_thread->msgctl.block_on_empty = FALSE;
+        break;
+
+    default:
+        return -1;
+        break;
+    };
+
+    return 0;
 }
 
 /*

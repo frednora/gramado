@@ -1681,6 +1681,33 @@ void *sci0 (
         return NULL;
     }
 
+
+// A thread wants to configure if it will block on
+// empty message queue or not.
+// See: thread.c
+// IN:
+// + caller tid
+// + target tid
+// + event number.
+    if (number == 911)
+    {
+        return (void*) sys_notify_event( 
+            (tid_t) current_thread,
+            (tid_t) (arg2 & 0xFFFFFFFF), 
+            (int)   (arg3 & 0xFFFFFFFF) );
+    }
+
+// A thread wants to configure if it will block on
+// empty message queue or not.
+// See: thread.c
+// IN:
+// + caller tid
+// + option number
+    if (number == 912){
+        return (void*) sys_msgctl( 
+            (tid_t) current_thread, (int) (arg2 & 0xFFFFFFFF) );
+    }
+
 // 913 - Sleep if socket is empty
 // is the socket full?
 // IN: fd

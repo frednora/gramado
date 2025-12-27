@@ -362,7 +362,7 @@ int main(int argc, char *argv[])
     gws_set_active(client_fd, main_window);
     gws_refresh_window(client_fd, main_window);
 
-
+// ================================
 // Event loop
 
     while (1){

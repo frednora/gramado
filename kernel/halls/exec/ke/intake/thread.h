@@ -73,8 +73,8 @@ typedef enum {
 
 // Scheduling / Preemption
 // 3:: Performance. Scheduling/preemption decides CPU fairness.
-    WAIT_REASON_PREEMPTED,      // Preempted by a higher-priority thread
     WAIT_REASON_YIELD,          // Voluntarily yielded CPU, waiting to be rescheduled
+    WAIT_REASON_PREEMPTED,      // Preempted by a higher-priority thread
     WAIT_REASON_PRIORITY_BOOST, // Waiting for priority adjustment/boost
 
 // I/O / External Events
@@ -170,6 +170,21 @@ struct deferred_d
     int exit_in_progress;
     int exit_code;  // Reason to close the thread
 
+};
+
+// Message Control structure
+// Preferences when using the message system
+struct msgctl_d 
+{
+    int block_in_progress;
+    int block_on_empty;
+    // ...
+
+// Counter for invalid or null messages
+    int miss_count;
+
+// Notifications
+    int has_event_from_ds;
 };
 
 /*
@@ -730,6 +745,9 @@ struct thread_d
     // Saving the position for the last input.
     //int MsgLastMessageIndex;
 
+// Select the preferences when using the messages abouve.
+    struct msgctl_d  msgctl;
+
 // ====================================================
 
 // #test
@@ -841,6 +859,9 @@ thread_get_profiler_percentage (struct thread_d *thread);
 
 void thread_show_profiler_info(void);
 int thread_profiler(int service);
+
+int sys_notify_event(tid_t caller_tid, tid_t target_tid, int event_number);
+int sys_msgctl(tid_t caller_tid, int option);
 
 int 
 link_two_threads( 

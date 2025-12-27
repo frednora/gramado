@@ -982,7 +982,12 @@ ProcessEvent:
             if (active_window->magic == 1234)
             {
                 yellow_status("Close window");
-                window_post_message ( active_window->id, GWS_Close, 0, 0 );        
+                window_post_message ( active_window->id, GWS_Close, 0, 0 );
+
+                // #test
+                // Sending a notification to the kernel, saying the thread has
+                // an event from the server. Good opportonity to wakeup the thread if necessary.
+                wmNotifyKernel(active_window, 8000, 8000);
             }
         }
     }

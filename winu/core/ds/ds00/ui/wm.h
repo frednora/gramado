@@ -252,6 +252,27 @@ void wm_enter_fullscreen_mode(void);
 void wm_exit_fullscreen_mode(int tile);
 
 
+// Post message to the thread.
+int
+wmPostMessage(
+    struct gws_window_d *window,
+    int msg,
+    unsigned long long1,
+    unsigned long long2 );
+
+// Notify the kernel on an event on the tid related with the window.
+// The target tid is the tid related with the window.
+// In: 
+// + window pointer (where we get the target tid)
+// + event number
+// + extra data (sub command)
+int
+wmNotifyKernel(
+    struct gws_window_d *window,
+    int event_number,
+    unsigned long long1 );
+
+
 // Add a window on top of the list of childs.
 void 
 wm_add_child_window(

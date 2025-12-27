@@ -3609,6 +3609,10 @@ void maximize_window(struct gws_window_d *window)
     redraw_window(taskbar_window,TRUE);
     window_post_message( taskbar_window->id, GWS_Paint, 0, 0 );
 
+    // Notify kernel to wake up the target thread if it is necessary
+    wmNotifyKernel(taskbar_window,8000,8000);
+
+
 // Our window
 // Set focus
 // Redraw and show window
@@ -3619,6 +3623,9 @@ void maximize_window(struct gws_window_d *window)
 // Send message to the app to repaint all the childs.
     int target_wid = window->id;
     window_post_message( target_wid, GWS_Paint, 0, 0 );
+
+    // Notify kernel to wake up the target thread if it is necessary
+    wmNotifyKernel(window,8000,8000);
 }
 
 // #test

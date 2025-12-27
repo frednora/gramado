@@ -77,6 +77,26 @@ ipc_post_message_to_tid2 (
         panic("ipc_post_message_to_tid2: t->tid != dst_tid\n");
     }
 
+
+// Wakeup target thread
+    thread_wait_reason_t Reason = t->wait_reason;
+
+    if (t->state == WAITING || t->state == BLOCKED)
+    {
+        // Check the reasons
+        switch (Reason)
+        {
+            case WAIT_REASON_YIELD:
+            case WAIT_REASON_PREEMPTED:
+            case WAIT_REASON_PRIORITY_BOOST:
+            case WAIT_REASON_BLOCKED:  // Generic
+            case WAIT_REASON_LOOP:     // Empty msg queue
+                printk("ipc: Unblocking ...\n");
+                do_thread_ready(dst_tid);
+                break;
+        };        
+    }
+
 //
 // This thread needs a timeout.
 //
@@ -167,6 +187,8 @@ fail:
 // IN: tid, window, message code, ascii code, raw byte.
 // Post message.
 // Async
+// Starvation risk: If malicious or buggy code keeps sending invalid messages, 
+// threads may repeatedly hit this path and block unnecessarily.
 int
 ipc_post_message_to_tid ( 
     tid_t sender_tid,
@@ -210,6 +232,26 @@ ipc_post_message_to_tid (
     }
     if (t->tid != dst_tid){
         panic("ipc_post_message_to_tid: t->tid != dst_tid\n");
+    }
+
+
+// Wakeup target thread
+    thread_wait_reason_t Reason = t->wait_reason;
+
+    if (t->state == WAITING || t->state == BLOCKED)
+    {
+        // Check the reasons
+        switch (Reason)
+        {
+            case WAIT_REASON_YIELD:
+            case WAIT_REASON_PREEMPTED:
+            case WAIT_REASON_PRIORITY_BOOST:
+            case WAIT_REASON_BLOCKED:  // Generic
+            case WAIT_REASON_LOOP:     // Empty msg queue
+                printk("ipc: Unblocking ...\n");
+                do_thread_ready(dst_tid);
+                break;
+        };        
     }
 
 // #test
@@ -615,6 +657,8 @@ void *ipc_get_message(unsigned long ubuf)
     unsigned long *message_address = (unsigned long *) ubuf;
     register struct thread_d *t;
     register struct msg_d *m;
+    int fBlockOnEmpty = FALSE;
+    int fEmpty = FALSE;
 
 // buffer
 // #todo: Check some other invalid address.
@@ -637,10 +681,13 @@ void *ipc_get_message(unsigned long ubuf)
         panic ("ipc_get_message: t validation\n");
     }
 
-// ===========================================================
-// usando a fila de mensagens com estrutura.
+    // The thread wants to block on empty queue
+    if (t->msgctl.block_on_empty == TRUE)
+        fBlockOnEmpty = TRUE;
 
-// Get the next head pointer.
+// ===========================================================
+
+// Get the next head pointer
     m = (struct msg_d *) t->MsgQueue[ t->MsgQueueHead ];
     if ((void*) m == NULL){
         goto fail0;
@@ -650,12 +697,17 @@ void *ipc_get_message(unsigned long ubuf)
     }
 
 // Invalid message code
-    if (m->msg <= 0){
-        goto fail0;
+    if (m->msg <= 0)
+    {
+        t->msgctl.miss_count++;
+        fEmpty = TRUE;
+        goto fail;
     }
 
-// ---------------------------------
-// Get standard header
+// --------------------------------
+// We got a valid message code
+
+    // Get standard header
     message_address[0] = (unsigned long) m->opaque_window;
     message_address[1] = (unsigned long) (m->msg & 0xFFFFFFFF);
     message_address[2] = (unsigned long) m->long1;
@@ -729,10 +781,29 @@ void *ipc_get_message(unsigned long ubuf)
     return (void *) 1;
 
 fail0:
-    // Invalid message pointer.
-    if ((void*) t == NULL){
+    // Invalid message pointer
+    if ((void*) m == NULL)
+    {
         return NULL;
     }
+fail:
+
+    // Block on empty
+    if (fBlockOnEmpty == TRUE && fEmpty == TRUE)
+    {
+        // Deferred block
+        if (t->msgctl.block_on_empty == TRUE)
+        {
+            // Two rounds
+            //if ( t->msgctl.miss_count > (MSG_QUEUE_MAX * 2) )
+            if ( t->msgctl.miss_count > (MSG_QUEUE_MAX + 4) )
+            {
+                t->msgctl.block_in_progress = TRUE;
+                t->msgctl.miss_count = 0;
+            }
+        }
+    }
+
     // End of queue. Round it.
     t->MsgQueueHead++;
     if (t->MsgQueueHead >= MSG_QUEUE_MAX){
@@ -753,6 +824,8 @@ fail0:
 // It is also used for ipc.
 void *sys_get_message(unsigned long ubuf)
 {
+// walks the circular queue slot by slot, consuming messages in order.
+
     if (ubuf == 0)
         panic ("sys_get_message: ubuf\n");
 // Call the worker
@@ -769,9 +842,13 @@ void *sys_get_message2(
     int index, 
     int restart)
 {
+// fetches a message by explicit index (with optional restart).
+
     unsigned long *message_address = (unsigned long *) ubuf;
     register struct thread_d *t;
     register struct msg_d *m;
+    int fBlockOnEmpty = FALSE;
+    int fEmpty = FALSE;
 
 // buffer
 // #todo: Check some other invalid address.
@@ -796,8 +873,12 @@ void *sys_get_message2(
         panic ("sys_get_message2: t validation\n");
     }
 
-// Get the index.
-    if( index<0 || index >= MSG_QUEUE_MAX){
+    // The thread wants to block on empty queue
+    if (t->msgctl.block_on_empty == TRUE)
+        fBlockOnEmpty = TRUE;
+
+// Get the index
+    if(index<0 || index >= MSG_QUEUE_MAX){
         goto fail0;
     }
     t->MsgQueueHead = (int) (index & 0xFFFFFFFF);
@@ -814,8 +895,10 @@ void *sys_get_message2(
         goto fail0;
     }
 
-// Invalid message code.
-    if (m->msg <= 0){
+// Invalid message code
+    if (m->msg <= 0)
+    {
+        fEmpty = TRUE;
         goto fail0;
     }
 
@@ -890,12 +973,23 @@ void *sys_get_message2(
     return (void *) 1;
 
 // Is it a valid thread pointer?
-fail0:
 // No message.
 // round
-    if ((void*) t == NULL){
+fail0:
+    // Invalid message pointer
+    if ((void*) m == NULL){
         return NULL;
     }
+fail:
+
+    // Block on empty
+    if (fBlockOnEmpty == TRUE && fEmpty == TRUE)
+    {
+        // Deferred block
+        if (t->msgctl.block_on_empty == TRUE)
+            t->msgctl.block_in_progress = TRUE;
+    }
+
     if (restart == TRUE)
     {
         if ((void*) t != NULL){

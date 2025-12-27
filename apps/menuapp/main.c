@@ -594,6 +594,8 @@ int main(int argc, char *argv[])
     unsigned long delta_jiffie=0;
     int UseSleep = TRUE;
 
+// ================================
+// Loop
 // #ps: We will sleep if a round was less than 16 ms, (60fps).
 // The thread wait until complete the 16 ms.
 // #bugbug: Valid only if the timer fires 1000 times a second.
@@ -607,7 +609,7 @@ int main(int argc, char *argv[])
             break;
 
         start_jiffie = (unsigned long) rtl_jiffies();
-        // Get and process event.
+        // Get and process events from the server.
         pump(client_fd,main_window);
         end_jiffie = rtl_jiffies();
 

@@ -1127,14 +1127,6 @@ window_post_message_broadcast(
     unsigned long long2 );
 
 
-// Post message to the thread.
-int
-wmPostMessage(
-    struct gws_window_d *window,
-    int msg,
-    unsigned long long1,
-    unsigned long long2 );
-
 struct gws_client_d *wintoclient(int wid); //#todo: not teste yet
 void show_client_list(int tag); //#todo: notworking
 void show_client( struct gws_client_d *c, int tag );

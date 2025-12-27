@@ -366,6 +366,11 @@ window_post_message_broadcast(
                     target_wid = (int) wReceiver->id;
                     window_post_message( 
                         target_wid, event_type, long1, long2 );
+                    
+
+                    // Notify kernel to wake up the target thread if it is necessary
+                    wmNotifyKernel(wReceiver,8000,8000);
+
                     Counter++;
                 }
             }
