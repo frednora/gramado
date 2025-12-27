@@ -182,6 +182,7 @@ menuappProcedure(
                 rv = 
                     (int) gws_message_box(fd, main_window, "My message box",MSGBOX_INFO);
                 printf ("Return value = %d\n",rv);
+                __paint_worker(fd);
             }
             if ((int) long1 == MyMenuInfo.item3_wid)
             {
@@ -194,6 +195,8 @@ menuappProcedure(
                     printf("YES\n");
                 if (rv == 0)
                     printf("NO\n");
+
+                __paint_worker(fd);
             }
             break;
 

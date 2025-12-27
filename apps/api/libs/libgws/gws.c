@@ -4536,6 +4536,21 @@ int gws_dialog_box(int fd, int parent_wid, const char *message, int type)
     int fInvalidParentWindow = FALSE;
     int fClose = FALSE;
 
+    unsigned long dialog_l = 0;
+    unsigned long dialog_t = 0;
+    unsigned long dialog_w = 0;
+    unsigned long dialog_h = 0;
+    unsigned long screen_w = gws_get_system_metrics(1);
+    unsigned long screen_h = gws_get_system_metrics(2);
+
+// Desired dialog size 
+
+    dialog_w = 240; 
+    dialog_h = 120; 
+    // Center coordinates 
+    dialog_l = (screen_w - dialog_w) / 2; 
+    dialog_t = (screen_h - dialog_h) / 2;
+
 // Parameters validation
 // Make sure we don't proceed with invalid inputs.
     if (fd < 0)
@@ -4619,7 +4634,7 @@ int gws_dialog_box(int fd, int parent_wid, const char *message, int type)
         WINDOW_STATUS_ACTIVE,
         WINDOW_STATE_NULL,
         "DialogBox",
-        100, 100, 240, 120,
+        dialog_l, dialog_t, dialog_w, dialog_h,
         __pw_wid,
         0,
         bg_color,
@@ -4783,8 +4798,23 @@ int gws_message_box(int fd, int parent_wid, const char *message, int type)
     int Type = type;
     int __pw_wid = parent_wid;
     int fInvalidParentWindow = FALSE;
-
     int fClose = FALSE;
+
+    unsigned long dialog_l = 0;
+    unsigned long dialog_t = 0;
+    unsigned long dialog_w = 0;
+    unsigned long dialog_h = 0;
+    unsigned long screen_w = gws_get_system_metrics(1);
+    unsigned long screen_h = gws_get_system_metrics(2);
+
+// Desired dialog size 
+
+    dialog_w = 240; 
+    dialog_h = 120; 
+    // Center coordinates 
+    dialog_l = (screen_w - dialog_w) / 2; 
+    dialog_t = (screen_h - dialog_h) / 2;
+
 
 // Parameters validation
 // Make sure we don't proceed with invalid inputs.
@@ -4871,7 +4901,7 @@ int gws_message_box(int fd, int parent_wid, const char *message, int type)
         WINDOW_STATUS_ACTIVE,
         WINDOW_STATE_NULL,
         "MessageBox",
-        100, 100, 240, 120,
+        dialog_l, dialog_t, dialog_w, dialog_h,
         __pw_wid,
         0,
         bg_color,
