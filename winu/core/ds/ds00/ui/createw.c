@@ -905,6 +905,8 @@ doCreateWindowFrame (
                 //server_debug_print ("doCreateWindowFrame: Couldn't register window\n");
                 goto fail;
             }
+            // Add it to the list of childs
+            wm_add_child_window(parent,tbWindow);
 
             // #important:
             // The Titlebar in an overlapped window will affect
@@ -996,11 +998,13 @@ doCreateWindowFrame (
             sbWindow->isStatusBar = TRUE;
             window->statusbar = (struct gws_window_d *) sbWindow;  // Window pointer.
             // Register window
-            id = (int) RegisterWindow(tbWindow);
+            id = (int) RegisterWindow(sbWindow);
             if (id<0){
                 //server_debug_print ("doCreateWindowFrame: Couldn't register window\n");
                 goto fail;
             }
+            // Add it to the list of childs
+            wm_add_child_window(parent,sbWindow);
         }
 
         return 0;  // OK

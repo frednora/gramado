@@ -1523,6 +1523,26 @@ int serviceCreateWindow(int client_fd)
         goto fail;
     }
 
+// Add it to the list of childs
+// These are the types we want to put into the list.
+    switch (Window->type){
+    case WT_SIMPLE:
+    case WT_OVERLAPPED:
+    case WT_EDITBOX_SINGLE_LINE:
+    case WT_EDITBOX_MULTIPLE_LINES:
+    case WT_BUTTON:
+    case WT_ICON:
+    case WT_CHECKBOX:
+    case WT_SCROLLBAR:
+        if (fChild == TRUE || (Window->style & WS_CHILD))
+            wm_add_child_window(Parent,Window);
+        break;
+    default:
+        //printf("main.c: on Window->type\n");
+        break;
+    };
+
+
 //===============================================
 // Save the tid of the client
     Window->client_pid = (pid_t) ClientPID;

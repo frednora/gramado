@@ -253,7 +253,10 @@ void wm_exit_fullscreen_mode(int tile);
 
 
 // Add a window on top of the list of childs.
-void wm_add_childwindow(struct gws_window_d *parent, struct gws_window_d *window);
+void 
+wm_add_child_window(
+    struct gws_window_d *parent, 
+    struct gws_window_d *window );
 
 // list support
 // not tested yet

@@ -964,10 +964,15 @@ struct gws_window_d
 
 // The owner
     struct gws_window_d  *parent;
-// We need to redraw all the child windows.
+
+// child_list - for structural children inside a parent window 
+// (buttons, edit boxes, toolbars, etc.).
     struct gws_window_d  *child_list;
-// Brother or sister with at least 'one' parent in common.
+
+// subling_list - for application-level siblings, i.e. windows that 
+// share the same parent (usually the root window or desktop).
     struct gws_window_d *subling_list;
+
 // Navigation
     struct gws_window_d  *prev;
     struct gws_window_d  *next;
