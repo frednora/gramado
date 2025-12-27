@@ -4493,6 +4493,30 @@ fail:
     return (int) -1;
 }
 
+// ======================================================
+// gws_dialog_box()
+// Create and show a modal dialog box with buttons.
+//
+// Parameters:
+//   fd        - Connection to the display server.
+//   parent    - Parent window ID (the app window).
+//   string    - Text to display inside the dialog.
+//   type      - Dialog type (YESNO, OKCANCEL, etc.).
+//
+// Flow:
+//   1. Build a request packet with GWS_DialogBox code.
+//   2. Send it to the display server.
+//   3. The server creates a new window styled as a dialog box.
+//   4. The server draws the box with the given text and buttons.
+//   5. The user clicks a button (YES/NO).
+//   6. The server sends back a reply with the result:
+//        - 1 for YES
+//        - 0 for NO
+//   7. The client can act based on the return value.
+//
+// Return:
+//   Integer result depending on which button was pressed.
+// ======================================================
 
 int gws_dialog_box(int fd, int parent_wid, const char *message, int type)
 {
@@ -4506,6 +4530,32 @@ int gws_dialog_box(int fd, int parent_wid, const char *message, int type)
     unsigned int btn1_color = COLOR_BLUE;
     unsigned int btn2_color = COLOR_RED;
     const char *prefix     = "";
+
+    int Type = type;
+    int __pw_wid = parent_wid;
+    int fInvalidParentWindow = FALSE;
+    int fClose = FALSE;
+
+// Parameters validation
+// Make sure we don't proceed with invalid inputs.
+    if (fd < 0)
+        return -1;   // Invalid socket descriptor: can't talk to the server.
+
+    if (parent_wid <= 0)
+    {
+        __pw_wid = -1;
+        fInvalidParentWindow = TRUE;
+    }
+
+    if ((void*) message == NULL)
+        return -1;   // Null pointer: no message string provided.
+
+    if (*message == 0)
+        return -1;   // Empty string: nothing to display in the box.
+
+    if (type < 0)
+        return -1;   // Invalid type: must be one of MSGBOX_INFO, MSGBOX_WARNING, MSGBOX_ERROR.
+
 
 // Choose style and prefix based on type
     switch (type) {
@@ -4526,21 +4576,58 @@ int gws_dialog_box(int fd, int parent_wid, const char *message, int type)
         btn2_color = COLOR_RED;
         prefix     = "[PROMPT] ";
         break;
+    default:
+        Type = DIALOG_YESNO;
+        bg_color   = COLOR_LIGHTBLUE;
+        btn1_color = COLOR_GREEN;
+        btn2_color = COLOR_RED;
+        prefix     = "[QUESTION] ";
+        break;
     }
 
-    // Create simple container
-    dialog_wid = gws_create_window(
+//
+// Create parent window if its needed
+//
+
+// If no parent window is provided, create a small application window
+// in the top-left corner of the screen to serve as the parent.
+    if (fInvalidParentWindow == TRUE) 
+    {
+        __pw_wid = (int) gws_create_window(
+            fd,
+            WT_OVERLAPPED,             // simple overlapped window
+            WINDOW_STATUS_ACTIVE,
+            WINDOW_STATE_NULL,
+            "DBOX",                    // title
+            10, 10, 160, 120,          // x, y, width, height
+            0,                         // no parent
+            0x0000,                    // style
+            COLOR_WINDOW,              // background
+            COLOR_WINDOW               // border
+        );
+
+        if (__pw_wid < 0) {
+            //printf("gws_message_box: failed to create stub parent window\n");
+            return -1;
+        }
+    }
+
+// Create simple container
+    dialog_wid = (int) gws_create_window(
         fd,
         WT_SIMPLE,
         WINDOW_STATUS_ACTIVE,
         WINDOW_STATE_NULL,
         "DialogBox",
         100, 100, 240, 120,
-        parent_wid,
+        __pw_wid,
         0,
         bg_color,
         COLOR_WHITE
     );
+
+    if (dialog_wid < 0)
+        return -1;
 
     // Optional message label
     if (message != NULL) {
@@ -4594,25 +4681,39 @@ int gws_dialog_box(int fd, int parent_wid, const char *message, int type)
     gws_refresh_window(fd, dialog_wid);
 
 // Event loop: wait until a button is clicked
+// #todo: Add keyboard shortcuts (Enter/Esc) to close the dialog 
+// without a mouse click.
     struct gws_event_d Le;
     struct gws_event_d *e;
-    while (1) {
-        e = (struct gws_event_d *) gws_get_next_event(fd, parent_wid, &Le);
+
+    while (1) 
+    {
+        e = (struct gws_event_d *) gws_get_next_event(fd, __pw_wid, &Le);
         if (e == NULL) continue;
 
-        if (e->type == GWS_MouseClicked) {
-            if ((int)e->long1 == btn1_wid) {
+        if (e->type == GWS_MouseClicked) 
+        {
+            if ((int) e->long1 == btn1_wid) {
                 result = 1; // YES or OK
                 break;
             }
-            if (btn2_wid > 0 && (int)e->long1 == btn2_wid) {
+            if (btn2_wid > 0 && (int) e->long1 == btn2_wid) {
                 result = 0; // NO or Cancel
                 break;
             }
         }
-    }
 
-    // Destroy all windows before returning
+        if (e->type == MSG_CLOSE) { 
+            result = -1; 
+            fClose = TRUE; 
+            break; 
+        }
+
+        // Enter?
+    };
+
+// Destroy all windows before returning
+
     if (message_wid > 0) 
         gws_destroy_window(fd, message_wid);
     if (btn1_wid > 0) 
@@ -4622,9 +4723,51 @@ int gws_dialog_box(int fd, int parent_wid, const char *message, int type)
     if (dialog_wid > 0) 
         gws_destroy_window(fd, dialog_wid);
 
+    // If the parent was auto-created by the API, destroy it too
+    if (fInvalidParentWindow == TRUE)
+    {
+        if (__pw_wid > 0)
+            gws_destroy_window(fd, __pw_wid);
+    }
 
+    gws_update_desktop(fd);
+
+    if (fClose == TRUE){
+        if (fInvalidParentWindow == TRUE)
+            exit(0);
+    }
+
+// Get the result
     return (int) result;
 }
+
+// ======================================================
+// gws_message_box()
+// Create and show a modal message box.
+//
+// Parameters:
+//   fd        - Connection to the display server.
+//   parent    - Parent window ID (the app window).
+//   string    - Text to display inside the box.
+//   type      - Style/type of message box (INFO, WARNING, ERROR).
+//
+// Flow:
+//   1. Build a request packet with GWS_MessageBox code.
+//   2. Send it to the display server.
+//   3. The server creates a new window styled as a message box.
+//   4. The server draws the box with the given text and an "OK" button.
+//   5. The client enters a modal loop waiting for events.
+//   6. When the user clicks the "OK" button, the event loop detects
+//      the button's window ID and sets result = 1.
+//   7. The loop breaks and the function returns.
+//
+// Return:
+//   Integer result:
+//     - 1 → User acknowledged the box (clicked "OK").
+//     - -1 → Error creating or handling the box.
+//   (Unlike dialog boxes with multiple choices, the message box
+//    only has one outcome: "OK".)
+// ======================================================
 
 int gws_message_box(int fd, int parent_wid, const char *message, int type)
 {
@@ -4637,7 +4780,34 @@ int gws_message_box(int fd, int parent_wid, const char *message, int type)
     unsigned int btn_color = COLOR_BLUE;
     const char *prefix     = "";
 
-    // Choose style based on type
+    int Type = type;
+    int __pw_wid = parent_wid;
+    int fInvalidParentWindow = FALSE;
+
+    int fClose = FALSE;
+
+// Parameters validation
+// Make sure we don't proceed with invalid inputs.
+    if (fd < 0)
+        return -1;   // Invalid socket descriptor: can't talk to the server.
+
+    if (parent_wid <= 0)
+    {
+        __pw_wid = -1;
+        fInvalidParentWindow = TRUE;
+    }
+
+    if ((void*) message == NULL)
+        return -1;   // Null pointer: no message string provided.
+
+    if (*message == 0)
+        return -1;   // Empty string: nothing to display in the box.
+
+    if (type < 0)
+        return -1;   // Invalid type: must be one of MSGBOX_INFO, MSGBOX_WARNING, MSGBOX_ERROR.
+
+
+// Choose style based on type
     switch (type) {
     case MSGBOX_INFO:
         bg_color = COLOR_LIGHTBLUE;
@@ -4659,25 +4829,60 @@ int gws_message_box(int fd, int parent_wid, const char *message, int type)
         btn_color = COLOR_DARKGREEN;
         prefix    = "[SUCCESS] ";
         break;
+    default:
+        Type = MSGBOX_INFO;
+        bg_color = COLOR_LIGHTBLUE;
+        btn_color = COLOR_BLUE;
+        prefix    = "[INFO] ";
+        break;
+    }
+
+//
+// Create parent window if its needed
+//
+
+// If no parent window is provided, create a small application window
+// in the top-left corner of the screen to serve as the parent.
+    if (fInvalidParentWindow == TRUE) 
+    {
+        __pw_wid = (int) gws_create_window(
+            fd,
+            WT_OVERLAPPED,             // simple overlapped window
+            WINDOW_STATUS_ACTIVE,
+            WINDOW_STATE_NULL,
+            "MBOX",                    // title
+            10, 10, 160, 120,          // x, y, width, height
+            0,                         // no parent
+            0x0000,                    // style
+            COLOR_WINDOW,              // background
+            COLOR_WINDOW               // border
+        );
+
+        if (__pw_wid < 0) {
+            //printf("gws_message_box: failed to create stub parent window\n");
+            return -1;
+        }
     }
 
     // Create simple container
-    dialog_wid = gws_create_window(
+    dialog_wid = (int) gws_create_window(
         fd,
         WT_SIMPLE,
         WINDOW_STATUS_ACTIVE,
         WINDOW_STATE_NULL,
         "MessageBox",
         100, 100, 240, 120,
-        parent_wid,
+        __pw_wid,
         0,
         bg_color,
-        COLOR_WHITE
-    );
+        COLOR_WHITE );
+
+    if (dialog_wid < 0)
+        return -1;
 
 // Message label
     if (message != NULL) {
-        message_wid = gws_create_window(
+        message_wid = (int) gws_create_window(
             fd,
             WT_EDITBOX, WINDOW_STATUS_ACTIVE, WINDOW_STATE_NULL,
             message,
@@ -4698,7 +4903,7 @@ int gws_message_box(int fd, int parent_wid, const char *message, int type)
     }
 
     // OK button
-    btn_wid = gws_create_window(
+    btn_wid = (int) gws_create_window(
         fd, WT_BUTTON, WINDOW_STATUS_ACTIVE, WINDOW_STATE_NULL,
         "OK", 85, 60, 70, 30,
         dialog_wid, 0, btn_color, COLOR_WHITE
@@ -4707,29 +4912,60 @@ int gws_message_box(int fd, int parent_wid, const char *message, int type)
     gws_refresh_window(fd, dialog_wid);
 
 // Event loop: wait until OK is clicked
+// #todo: Add keyboard shortcuts (Enter/Esc) to close the dialog 
+// without a mouse click.
+
     struct gws_event_d Le;
     struct gws_event_d *e;
-    while (1) {
-        e = (struct gws_event_d *) gws_get_next_event(fd, parent_wid, &Le);
+    while (1) 
+    {
+        e = (struct gws_event_d *) gws_get_next_event(fd, __pw_wid, &Le);
         //if (e == NULL) continue;
 
-        if (e->type == GWS_MouseClicked) {
-            if ((int)e->long1 == btn_wid) {
-                result = 1;
+        if (e->type == GWS_MouseClicked)
+        {
+            if ((int) e->long1 == btn_wid) {
+                result = 1;  // OK
                 break;
             }
         }
-    }
 
-    // Destroy all windows before returning
+        if (e->type == MSG_CLOSE){
+            result = -1;
+            fClose = TRUE;
+            break;
+        }
+
+        // Enter?
+    };
+
+// Destroy all windows before returning
+
     if (message_wid > 0)
         gws_destroy_window(fd, message_wid);
+
     if (btn_wid > 0)
         gws_destroy_window(fd, btn_wid);
+
     if (dialog_wid > 0)
         gws_destroy_window(fd, dialog_wid);
 
-    return result;
+    // If the parent was auto-created by the API, destroy it too
+    if (fInvalidParentWindow == TRUE)
+    {
+        if (__pw_wid > 0)
+            gws_destroy_window(fd, __pw_wid);
+    }
+
+    gws_update_desktop(fd);
+
+    if (fClose == TRUE){
+        if (fInvalidParentWindow == TRUE)
+            exit(0);
+    }
+
+// Get the result
+    return (int) result;
 }
 
 

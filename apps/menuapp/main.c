@@ -105,8 +105,7 @@ static void __close_worker(int fd)
     //printf("Close worker: destroyed all windows\n");
 }
 
-
-// Process event that came from the server.
+// Process events
 static int 
 menuappProcedure(
     int fd, 
@@ -117,6 +116,8 @@ menuappProcedure(
 {
     int f12Status = -1;
     int tmpNewWID = -1;
+
+    int rv = -1;  // Return value
 
 // Parameters:
     if (fd < 0){
@@ -178,19 +179,21 @@ menuappProcedure(
             if ((int) long1 == MyMenuInfo.item2_wid)
             {
                 //printf("Item 2\n");
-                gws_message_box(fd, main_window, "My message box",MSGBOX_INFO);
+                rv = 
+                    (int) gws_message_box(fd, main_window, "My message box",MSGBOX_INFO);
+                printf ("Return value = %d\n",rv);
             }
             if ((int) long1 == MyMenuInfo.item3_wid)
             {
                 //printf("Item 3\n");
-                int Result00 = gws_dialog_box(
-                        fd,
-                        main_window,
-                        "My dialog box",
-                        DIALOG_YESNO );
+                rv = 
+                    (int) gws_dialog_box(
+                           fd, main_window, "My dialog box", DIALOG_YESNO );
 
-                if (Result00 == 1)
+                if (rv == 1)
                     printf("YES\n");
+                if (rv == 0)
+                    printf("NO\n");
             }
             break;
 
@@ -290,18 +293,19 @@ menuappProcedure(
 
         // 22 = MSG_SYSKEYDOWN
         case MSG_SYSKEYDOWN:
-            //printf("taskbar: MSG_SYSKEYDOWN\n");
             switch (long1){
-                case VK_F1:  
-                    //do_launch_app(1);  
+                case VK_F1:
+                    printf("My F1\n"); 
                     break;
-                case VK_F2:  
-                    //do_launch_app(2);  
+                case VK_F2:
+                    printf("My F2\n"); 
                     break;
-                // ...
-                //case VK_F5: gws_async_command(fd,30,0,0);    break;
-                //case VK_F6: gws_async_command(fd,1011,0,0);  break;
-                //case VK_F7: gws_async_command(fd,30,0,0);    break;
+                case VK_F3:
+                    printf("My F3\n"); 
+                    break;
+                case VK_F4:
+                    printf("My F4\n"); 
+                    break;
                 default:
                     break;
             };
@@ -519,10 +523,11 @@ int main(int argc, char *argv[])
 //
 
     struct gws_menu_item_d *tmp;
+// Labels
     const char *tmp_label0 = "Menu item 0";
     const char *tmp_label1 = "Menu item 1";
-    const char *tmp_label2 = "Menu item 2";
-    const char *tmp_label3 = "Menu item 3";
+    const char *tmp_label2 = "Message Box";
+    const char *tmp_label3 = "Dialog Box";
 
     tmp = 
         (struct gws_menu_item_d *) gws_create_menu_item (
@@ -585,6 +590,23 @@ int main(int argc, char *argv[])
 // Event loop
 //
 
+
+/*
+// ================================
+// #test
+// Lets setup if we want to block on empty queue or not
+// #todo: Create msgctl() api
+
+    int rv = -1;
+    rv = (int) sc80( 912, 1000, 1000, 1000 );  // Yes
+    //rv = (int) sc80( 912, 1001, 1001, 1001 );  // No
+    if (rv < 0){
+        printf ("on sc80:912\n");
+        exit(0);
+    }
+*/
+
+
 // =======================
 // Event loop
 // Getting input events from the system.
@@ -608,10 +630,27 @@ int main(int argc, char *argv[])
         if (isTimeToQuit == TRUE)
             break;
 
+        // ----
         start_jiffie = (unsigned long) rtl_jiffies();
-        // Get and process events from the server.
+
+        // 1. Pump events from Display Server
         pump(client_fd,main_window);
+
+        // 2. Pump events from Input Broker (system events)
+        if (rtl_get_event() == TRUE)
+        {
+            menuappProcedure (
+                client_fd,
+                (int) RTLEventBuffer[0],   // window id
+                (int) RTLEventBuffer[1],   // event type (MSG_SYSKEYDOWN, MSG_SYSKEYUP, etc.)
+                (unsigned long) RTLEventBuffer[2], // VK code
+                (unsigned long) RTLEventBuffer[3]  // scancode
+            );
+            RTLEventBuffer[1] = 0; // clear after dispatch
+        }
+
         end_jiffie = rtl_jiffies();
+        // ----
 
         if (end_jiffie > start_jiffie)
         {

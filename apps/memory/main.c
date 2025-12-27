@@ -365,6 +365,21 @@ int main(int argc, char *argv[])
 // ================================
 // Event loop
 
+/*
+// ================================
+// #test
+// Lets setup if we want to block on empty queue or not
+// #todo: Create msgctl() api
+
+    int rv = -1;
+    rv = (int) sc80( 912, 1000, 1000, 1000 );  // Yes
+    //rv = (int) sc80( 912, 1001, 1001, 1001 );  // No
+    if (rv < 0){
+        printf ("on sc80:912\n");
+        exit(0);
+    }
+*/
+
     while (1){
 
     // 1. Pump events from Display Server

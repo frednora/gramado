@@ -105,8 +105,7 @@ static void __close_worker(int fd)
     //printf("Close worker: destroyed all windows\n");
 }
 
-
-// Process event that came from the server.
+// Process events
 static int 
 launchProcedure(
     int fd, 
@@ -277,18 +276,19 @@ launchProcedure(
 
         // 22 = MSG_SYSKEYDOWN
         case MSG_SYSKEYDOWN:
-            //printf("taskbar: MSG_SYSKEYDOWN\n");
             switch (long1){
-                case VK_F1:  
-                    //do_launch_app(1);  
+                case VK_F1:
+                    printf("My F1\n"); 
                     break;
-                case VK_F2:  
-                    //do_launch_app(2);  
+                case VK_F2:
+                    printf("My F2\n"); 
                     break;
-                // ...
-                //case VK_F5: gws_async_command(fd,30,0,0);    break;
-                //case VK_F6: gws_async_command(fd,1011,0,0);  break;
-                //case VK_F7: gws_async_command(fd,30,0,0);    break;
+                case VK_F3:
+                    printf("My F3\n"); 
+                    break;
+                case VK_F4:
+                    printf("My F4\n"); 
+                    break;
                 default:
                     break;
             };
@@ -571,6 +571,22 @@ int main(int argc, char *argv[])
 // Event loop
 //
 
+
+/*
+// ================================
+// #test
+// Lets setup if we want to block on empty queue or not
+// #todo: Create msgctl() api
+
+    int rv = -1;
+    rv = (int) sc80( 912, 1000, 1000, 1000 );  // Yes
+    //rv = (int) sc80( 912, 1001, 1001, 1001 );  // No
+    if (rv < 0){
+        printf ("on sc80:912\n");
+        exit(0);
+    }
+*/
+
 // =======================
 // Event loop
 // Getting input events from the system.
@@ -592,10 +608,27 @@ int main(int argc, char *argv[])
         if (isTimeToQuit == TRUE)
             break;
 
+        // ----
         start_jiffie = (unsigned long) rtl_jiffies();
-        // Get and process event.
+        
+        // 1. Pump events from Display Server
         pump(client_fd,main_window);
+
+        // 2. Pump events from Input Broker (system events)
+        if (rtl_get_event() == TRUE)
+        {
+            launchProcedure (
+                client_fd,
+                (int) RTLEventBuffer[0],   // window id
+                (int) RTLEventBuffer[1],   // event type (MSG_SYSKEYDOWN, MSG_SYSKEYUP, etc.)
+                (unsigned long) RTLEventBuffer[2], // VK code
+                (unsigned long) RTLEventBuffer[3]  // scancode
+            );
+            RTLEventBuffer[1] = 0; // clear after dispatch
+        }
+
         end_jiffie = rtl_jiffies();
+        // ----
 
         if (end_jiffie > start_jiffie)
         {

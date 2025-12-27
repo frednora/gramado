@@ -255,15 +255,16 @@ build-extras:
 
 	@-cp $(L3_APPS)/bin/TASKBAR.BIN    $(BASE)/DE
 
-# by Copilot
-	@-cp $(L3_APPS)/bin/POWER.BIN   $(BASE)/DE
-	@-cp $(L3_APPS)/bin/MEMORY.BIN  $(BASE)/DE
-	@-cp $(L3_APPS)/bin/GWTEX.BIN   $(BASE)/DE
-
-	@-cp $(L3_APPS)/bin/MENUAPP.BIN    $(BASE)/DE
-	@-cp $(L3_APPS)/bin/LAUNCH.BIN     $(BASE)/DE
 	@-cp $(L3_APPS)/bin/TERM00.BIN     $(BASE)/DE
 
+# by Copilot
+	@-cp $(L3_APPS)/bin/GWTEST.BIN   $(BASE)/DE
+	@-cp $(L3_APPS)/bin/LAUNCH.BIN   $(BASE)/DE
+	@-cp $(L3_APPS)/bin/MENUAPP.BIN  $(BASE)/DE
+	@-cp $(L3_APPS)/bin/POWER.BIN    $(BASE)/DE
+	@-cp $(L3_APPS)/bin/MEMORY.BIN   $(BASE)/DE
+	@-cp $(L3_APPS)/bin/DBOX.BIN     $(BASE)/DE
+	@-cp $(L3_APPS)/bin/MBOX.BIN     $(BASE)/DE
 
     # Experimental applications
     # These need the '#' prefix.

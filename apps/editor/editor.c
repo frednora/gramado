@@ -1037,28 +1037,18 @@ int editor_initialize(int argc, char *argv[])
 
 
 /*
-    while (1)
-    {
-        if (isTimeToQuit == TRUE)
-            break;
+// ================================
+// #test
+// Lets setup if we want to block on empty queue or not
+// #todo: Create msgctl() api
 
-        // It needs to be the main window for now.
-        // Calls gws_get_next_event() to fetch the next event from the DS.
-        // And dispatch it to the procedure.
-        pump( client_fd, main_window );
-
-        C = fgetc(stdin);
-        if (C > 0)
-        {
-            editorProcedure ( 
-                client_fd,    // socket
-                client_window,    // window ID
-                MSG_KEYDOWN,  // message code
-                C,            // long1 (ascii)
-                C );          // long2 (ascii)
-        }
-
-    };
+    int rv = -1;
+    rv = (int) sc80( 912, 1000, 1000, 1000 );  // Yes
+    //rv = (int) sc80( 912, 1001, 1001, 1001 );  // No
+    if (rv < 0){
+        printf ("on sc80:912\n");
+        exit(0);
+    }
 */
 
     while (1)
@@ -1082,6 +1072,31 @@ int editor_initialize(int argc, char *argv[])
             RTLEventBuffer[1] = 0;
         }
     };
+
+/*
+    while (1)
+    {
+        if (isTimeToQuit == TRUE)
+            break;
+
+        // It needs to be the main window for now.
+        // Calls gws_get_next_event() to fetch the next event from the DS.
+        // And dispatch it to the procedure.
+        pump( client_fd, main_window );
+
+        C = fgetc(stdin);
+        if (C > 0)
+        {
+            editorProcedure ( 
+                client_fd,    // socket
+                client_window,    // window ID
+                MSG_KEYDOWN,  // message code
+                C,            // long1 (ascii)
+                C );          // long2 (ascii)
+        }
+
+    };
+*/
 
 // ===========================================
 

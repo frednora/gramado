@@ -94,10 +94,10 @@ all-c:
 	cp $(LIBGWTOBJ)/libgwt.o .
 
 hello-link:
-	ld $(linkFlags) -o GWTEX.BIN $(myObjects)    
+	ld $(linkFlags) -o GWTEST.BIN $(myObjects)    
 finalize:
-	cp GWTEX.BIN  ../bin
+	cp GWTEST.BIN  ../bin
 clean:
 	-rm *.o
-	-rm GWTEX.BIN 
+	-rm GWTEST.BIN 
 	

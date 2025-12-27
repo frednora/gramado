@@ -3880,29 +3880,29 @@ int terminal_init(unsigned short flags)
     the rules now are the rules for 0,1,2 that were console rules.
 */
 
+    // #bugbug
+    // maybe the terminal is printing garbage before the loop
+
     isUsingEmbeddedShell = FALSE;
 
     char coolCharBuffer[4];
     int ch_read=0;
     while (1){
 
-         // #bugbug
-         // maybe the terminal is printing garbage before the 
-         //loop
-
-        // Get input from kernel and send it to the shell
+        // 1. Pump events from Input Broker (system events)
         __get_system_event(client_fd, Terminal.client_window_id);
 
-        // Read what comes from the shell. And print it
+        // 2. Read what comes from the shell and print it
         coolCharBuffer[0] = 0;
         coolCharBuffer[1] = 0;
-        while(1){
-            ch_read = read(ptym_fd, coolCharBuffer, 1);
+        while (1){
+            ch_read = (int) read(ptym_fd, coolCharBuffer, 1);
             if (ch_read <= 0)
                 break;
             tputstring(client_fd, coolCharBuffer);
         };
 
+        // 3. Pump events from Display Server
         __get_ds_event( client_fd, main_window );
     };
 

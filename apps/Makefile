@@ -31,14 +31,15 @@ all:
 
 # 6
 
-# test
-	make -C menuapp/
+# Apps created by Copilot
+	make -C gwtest/
 	make -C launch/
-
-# Created by Copilot
+	make -C menuapp/
 	make -C power/
 	make -C memory/
-	make -C gwtex/
+	make -C dbox/
+	make -C mbox/
+
 
 # Gramado Desktop Manager
 	make -C gdm/

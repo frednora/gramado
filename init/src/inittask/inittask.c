@@ -253,7 +253,8 @@ xxxProcessEvent (
                     //#debug
                     //printf("init.bin: 4002, from {%d}\n",caller_tid);
                     memset(__filename_local_buffer,0,64);
-                    sprintf(__filename_local_buffer,"#launch.bin");
+                    sprintf(__filename_local_buffer,"#dbox.bin");
+                    //sprintf(__filename_local_buffer,"#launch.bin");
                     //sprintf(__filename_local_buffer,"#power.bin");
                     rtl_clone_and_execute(__filename_local_buffer);
                     return 0;
@@ -272,7 +273,8 @@ xxxProcessEvent (
                     //#debug
                     //printf("init.bin: 4003, from {%d}\n",caller_tid);
                     memset(__filename_local_buffer,0,64);
-                    sprintf(__filename_local_buffer,"#menuapp.bin");
+                    sprintf(__filename_local_buffer,"#mbox.bin");
+                    //sprintf(__filename_local_buffer,"#menuapp.bin");
                     //sprintf(__filename_local_buffer,"#memory.bin");
                     rtl_clone_and_execute(__filename_local_buffer);
                     return 0;

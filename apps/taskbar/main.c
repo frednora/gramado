@@ -1545,6 +1545,7 @@ int main(int argc, char *argv[])
 // Getting input events from the system.
 
 
+/*
 // ================================
 // #test
 // Lets setup if we want to block on empty queue or not
@@ -1557,7 +1558,7 @@ int main(int argc, char *argv[])
         printf ("on sc80:912\n");
         exit(0);
     }
-
+*/
 
     unsigned long MainLoopIntervalMS;
     if (CONFIG_MAIN_LOOP_INTERVAL_MS == 0){
