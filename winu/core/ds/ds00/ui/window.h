@@ -172,6 +172,21 @@ extern unsigned long windows_count;
 
 extern int show_fps_window;
 
+
+// Docking states
+#define DOCK_NONE         0   // Free-floating, restored
+#define DOCK_LEFT         1   // Left half of the screen
+#define DOCK_RIGHT        2   // Right half of the screen
+#define DOCK_TOP          3   // Top half of the screen
+#define DOCK_BOTTOM       4   // Bottom half of the screen
+#define DOCK_TOPLEFT      5   // Top-left quarter
+#define DOCK_TOPRIGHT     6   // Top-right quarter
+#define DOCK_BOTTOMLEFT   7   // Bottom-left quarter
+#define DOCK_BOTTOMRIGHT  8   // Bottom-right quarter
+#define DOCK_MAXIMIZED    9   // Fullscreen/maximized
+#define DOCK_MINIMIZED    10  // Minimized to taskbar
+
+
 /*
 // #deprecated
 // Structure for button object.
@@ -535,10 +550,17 @@ struct gws_window_d
     //unsigned long client_area_width;
     //unsigned long client_area_height;
 
-// #todo
-// Explain this feature.
+
+// Current docking state (DOCK_LEFT, DOCK_RIGHT, etc.) 
+    int dock_state; 
+
+// Anchor rule (North, Center, South, etc.)
 // Maybe it's all about dock stuff.
-    int gravity;
+// In window systems, “gravity” usually means how a window reacts 
+// when its parent or the screen changes. 
+// Window Gravity: 
+// Defines how a window’s position should adjust when its parent resizes or when docking occurs.
+    int gravity; 
 
     unsigned long type;  // Window type
 

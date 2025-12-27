@@ -3168,11 +3168,39 @@ void wm_remove_window_from_list(struct gws_window_d *window)
     };
 }
 
-// Inspired on X.
+
+// classic X11 gravity model 
+// In window systems, “gravity” usually means how a window reacts 
+// when its parent or the screen changes. 
+// Window Gravity: 
+// Defines how a window’s position should adjust when its parent resizes or when docking occurs.
 // l,t           new window position
 // w,h           width, height
 // oldl,  oldt   old window position
 // destl, destt  new position. (relative to gravity)
+
+/*
+What Your Function Does
+
+Inputs:
+  + l, t, w, h - new parent rectangle (left, top, width, height).
+  + oldl, oldt - old child position.
+  + gravity    - enum specifying anchor point.
+
+Outputs:
+  + destl, destt - new child position based on gravity.
+
+Cases:
+  + CenterGravity - anchors to the center.
+  + StaticGravity - keeps old position.
+  + NorthGravity  - top edge, horizontally centered.
+  + SouthGravity  - bottom edge, horizontally centered.
+  + EastGravity / WestGravity - side edges, vertically centered.
+  + Corner gravities (NorthEast, SouthEast, SouthWest, NorthWest) - snap to corners.
+*/
+
+// The position of the child inside the parent depending on the position of the parent.
+
 void
 wm_gravity_translate(
     unsigned long l, unsigned long t, unsigned long w, unsigned long h, 
@@ -3186,6 +3214,9 @@ wm_gravity_translate(
     case CenterGravity:
         *destl = (l+w) / 2;
         *destt = (t+h) / 2;
+        // #todo
+        //*destl = l + (w - child_w)/2; 
+        //*destt = t + (h - child_h)/2;
         break;
     // ---------------
     case StaticGravity:
