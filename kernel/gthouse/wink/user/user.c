@@ -75,13 +75,20 @@ int init_first_cgroup(void)
     cg->magic = 1234;
     //todo: object
     cg_counter = 1;
-    cg->__display_server_pid = (pid_t) -1;
-    cg->__network_server_pid = (pid_t) -1;
-// Registrando na lista
+
+    //
+    // The system services
+    //
+
+    cg->service_display_server.pid  = (pid_t) -1;
+    cg->service_network_server.pid  = (pid_t) -1;
+    cg->service_osshell.pid         = (pid_t) -1;
+    cg->service_default_browser.pid = (pid_t) -1;
+    // ...
+
+    // Registrando na lista
     cgroupList[0] = (unsigned long) cg;
-
     set_current_cgroup(cg);
-
     return 0;
 }
 

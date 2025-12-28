@@ -221,22 +221,21 @@ static void __maximize_ds_priority(pid_t pid)
 
 }
 
-int 
-network_register_ring3_osshell(
-    struct cgroup_d *cg,
-    pid_t caller_pid )
-{
-    return -1;
-}
 
-int 
-network_register_ring3_network_server(
-    struct cgroup_d *cg,
-    pid_t caller_pid )
-{
-    return -1;
-}
+//
+// Register main system components
+//
 
+// + Display server
+// + Network server
+// + OS Shell (explorer/taskbar)
+// + Default browser
+// ...
+
+
+// -------------------------------------------
+// Display server: (Service: sci0 513)
+// Register display server into a given valid cgroup.
 // Register display server into a given valid cgroup.
 // Called by sci.c
 // See: dispsrv.h
@@ -299,7 +298,7 @@ network_register_ring3_display_server(
 
 // Saving the display server PID into the cgroup structure.
 // Register_ws_process(current_process);
-    cg->__display_server_pid = (pid_t) current_process;
+    cg->service_display_server.pid = (pid_t) current_process;
 
 // #todo
 // Maybe this method belongs to the sys_bind() routine.
@@ -345,9 +344,33 @@ network_register_ring3_display_server(
 fail:
     return (int) -1;
 }
-
 //---
 
+
+// -------------------------------------------
+// Network server:
+// (Server)
+int 
+network_register_ring3_network_server(
+    struct cgroup_d *cg,
+    pid_t caller_pid )
+{
+    return -1;
+}
+
+// -------------------------------------------
+// OS Shell (explorer/taskbar)
+
+int 
+network_register_ring3_osshell(
+    struct cgroup_d *cg,
+    pid_t caller_pid )
+{
+    return -1;
+}
+
+// -------------------------------------------
+// Default browser: (service: sc0 518)
 // Register browser into a given valid cgroup.
 int 
 network_register_ring3_browser(
@@ -406,7 +429,7 @@ network_register_ring3_browser(
 
 // Saving the browser PID into the cgroup structure.
 // Register_ws_process(current_process);
-    cg->__browser_pid = (pid_t) current_process;
+    cg->service_default_browser.pid = (pid_t) current_process;
 
 // #todo
 // Maybe this method belongs to the sys_bind() routine.

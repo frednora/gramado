@@ -8,6 +8,18 @@
 #ifndef __CONT_CG_H
 #define __CONT_CG_H    1
 
+
+// It's used when registering some programs as system services.
+// They are registered in a cgroup.
+struct cg_system_service_d
+{
+    pid_t pid;
+    //tid_t tid;
+
+    // uid?
+    // ...
+};
+
 // ===================================================
 // cgroup
 // cgroups is all about resources management.
@@ -33,14 +45,14 @@ struct cgroup_d
 
     uid_t uid;
 
-// Main PIDs
-    pid_t __osshell_pid;          // OS Shell (Explorer/taksbar)
-    pid_t __display_server_pid;   // display server
-    pid_t __network_server_pid;   // network server
-    // ...
+//
+// MAIN SYSTEM COMPONENTS
+//
 
-// Extra PIDs
-    pid_t __browser_pid;   // main browser?
+    struct cg_system_service_d  service_display_server;
+    struct cg_system_service_d  service_network_server;
+    struct cg_system_service_d  service_osshell;
+    struct cg_system_service_d  service_default_browser;
     // ...
 
 // Navigation

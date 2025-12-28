@@ -1374,12 +1374,13 @@ void *sci0 (
         }
         if ( cg->used == TRUE && cg->magic == 1234 )
         {
-            return (void *) cg->__display_server_pid; 
+            return (void *) cg->service_display_server.pid; 
         }        
         // It means pid=0.
         return NULL;
     }
 
+// --------------------------------------------
 // 513 - Register the ring3 display server.
 // Set display PID for a given cgroup structure.
 // Register a display server.
@@ -1420,6 +1421,7 @@ void *sci0 (
         return NULL;
     }
 
+// --------------------------------------------
 // 518 - Register the ring3 browser.
 // Set browser PID for a given cgroup structure.
 // Register a display server.
@@ -1445,6 +1447,7 @@ void *sci0 (
         return NULL;
     }   
 
+// --------------------------------------------
 // 519 - Get the main cgroup rin 0 pointer.
 // This is used to register system components.
 // #bugbug
@@ -1455,6 +1458,7 @@ void *sci0 (
         return (void *) system_cg;
     }
 
+// --------------------------------------------------
 // 521 - Set ns PID for a given cgroup
 // network server
 // Register a network server.
@@ -1463,9 +1467,9 @@ void *sci0 (
         cg = (struct cgroup_d *) arg2;
         if ((void *) cg != NULL)
         {
-            if ( cg->used == TRUE && cg->magic == 1234 )
+            if (cg->used == TRUE && cg->magic == 1234)
             {
-                cg->__network_server_pid = (pid_t) arg3;
+                cg->service_network_server.pid = (pid_t) arg3;
                 socket_set_gramado_port(
                     GRAMADO_PORT_NS,
                     (pid_t) current_process );
