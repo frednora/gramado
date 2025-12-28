@@ -5,11 +5,19 @@
 #ifndef ____KERNEL_CONFIG_H
 #define ____KERNEL_CONFIG_H    1
 
-// #bugbug
-// see: process.c
+// #bugbug #important
 // #todo: We really need to fix up this limits.
-#define CONFIG_IMAGESIZE_LIMIT_IN_KB  408  //405  400
-//...
+// Current critical sizes:
+// kernel = 423KB
+// ds00   = 225KB
+// see: distros/base00/DE/
+// -------------
+// see: 
+//  + intake/te.c
+//  + fs/fsload.c  
+#define CONFIG_IMAGESIZE_LIMIT_IN_KB  408  // 400+
+// ...
+
 
 // See: head_64.asm, x64.c and tss.h
 //#define CONFIG_RING0_STACK_SIZE_IN_KB    8
