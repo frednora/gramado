@@ -42,8 +42,10 @@ void input_exit_kernel_console(void);
 //
 
 int 
-wmRawKeyEvent(
-    unsigned char raw_byte,
+wmRawKeyEvent( 
+    unsigned char raw_byte_0,
+    unsigned char raw_byte_1,
+    unsigned char raw_byte_2,
     int prefix );
 
 int wmMouseEvent(int event_id,long long1, long long2);

@@ -7,8 +7,13 @@
 
 // see: ps2kbd.h
 struct ps2_keyboard_d  PS2Keyboard;
-static int __prefix=0;
 unsigned char ps2kbd_led_status=0;
+
+static int __prefix=0;
+
+#define REPORT_MAX 7   // enough for Pause/Break
+unsigned char Report[REPORT_MAX];
+int reportIndex = 0;
 
 //
 // == private functions: prototypes ================
@@ -17,6 +22,14 @@ unsigned char ps2kbd_led_status=0;
 static void keyboard_init_lock_keys(void);
 static void keyboard_init_modifier_keys(void);
 // ...
+
+
+static void 
+__ps2kbd_interpret_and_dispatch(
+    unsigned char b0,
+    unsigned char b1,
+    unsigned char b2,
+    unsigned char prefix );
 
 // =========================
 
@@ -229,6 +242,49 @@ void i8042_keyboard_expect_ack (void)
     //return 0;
 }
 
+static void 
+__ps2kbd_interpret_and_dispatch(
+    unsigned char b0,
+    unsigned char b1,
+    unsigned char b2,
+    unsigned char prefix )
+{
+    unsigned char raw_code_0 = b0;
+    unsigned char raw_code_1 = b1;
+    unsigned char raw_code_2 = b2;
+
+    switch (prefix)
+    {
+
+        // No prefix
+        case 0x00:
+            wmRawKeyEvent(raw_code_0, 0, 0, prefix);
+            break;
+
+        // We gotta send 2 or 3 bytes
+        case 0xE0:
+            // #todo: The worker will accept 3 bytes
+            if (raw_code_1 == 0xF0) {
+                // Break sequence: E0 F0 xx
+                wmRawKeyEvent(raw_code_0, raw_code_1, raw_code_2, prefix);
+            } else {
+                // Make sequence: E0 xx 
+                // Clear the third byte since it's not used
+                wmRawKeyEvent(raw_code_0, raw_code_1, 0, prefix);
+            }
+            break;
+
+        // We gotta send 3 bytes
+        case 0xE1:
+            // #todo: The worker will accept 3 bytes
+            wmRawKeyEvent(raw_code_0, raw_code_1, raw_code_2, prefix);
+            break;
+
+        default:
+            // Oh boy!
+            break;
+    };
+}
 
 /*
  * DeviceInterface_PS2Keyboard:
@@ -281,6 +337,8 @@ void i8042_keyboard_expect_ack (void)
 
 void DeviceInterface_PS2Keyboard(void)
 {
+    int fSequenceFinished = FALSE;
+
 // Make/Break code.
     unsigned char __raw=0;
     unsigned char val=0;
@@ -291,6 +349,8 @@ void DeviceInterface_PS2Keyboard(void)
 
     unsigned char status;
     int is_mouse_device;
+
+    reportIndex = 0;
 
 // OK. The buffer is FULL.
 // Get more than one byte
@@ -410,37 +470,180 @@ void DeviceInterface_PS2Keyboard(void)
 
 CheckByte:
 
+
+    Report[reportIndex] = (char) __raw;
+
 // Check prefix for extended keyboard sequence.
 // Or normal bytes.
 
-    if (__raw == 0xE0){
-        __prefix = (int) (__raw & 0x000000FF);
-        goto done;
-    } else if (__raw == 0xE1){
-        __prefix = (int) (__raw & 0x000000FF);
-        goto done;
-    } else {
+// Many emulators (including QEMU, Bochs, VirtualBox) don’t 
+// generate the full sequence correctly. Some only send the 
+// first three bytes (E1 1D 45), some send nothing at all, and 
+// some treat Pause as “not implemented.”
+// On real hardware, you’ll always see the full 6‑byte sequence.
+// On QEMU, you often won’t.
 
-    // Process the normal byte
-    // >>> Posting the message into the windows server queue.
-    //NormalByte:
+/*
+Scancode reference for extended keys (ABNT2, PS/2 Set 2)
 
-    // #opçao
-    // Apenas enfileira os raw bytes e nao processa.
-        //if ( flag ...
-           // put_rawbyte(__raw)
+pause/break = make: E1 1D 45, break: E1 9D C5
+insert      = make: E0 52,    break: E0 F0 52
+delete      = make: E0 53,    break: E0 F0 53
+home        = make: E0 47,    break: E0 F0 47
+end         = make: E0 4F,    break: E0 F0 4F
+page up     = make: E0 49,    break: E0 F0 49
+page down   = make: E0 51,    break: E0 F0 51
+arrow up    = make: E0 48,    break: E0 F0 48
+arrow down  = make: E0 50,    break: E0 F0 50
+arrow left  = make: E0 4B,    break: E0 F0 4B
+arrow right = make: E0 4D,    break: E0 F0 4D
+right ctrl  = make: E0 1D,    break: E0 F0 1D
+altgr       = make: E0 38,    break: E0 F0 38
+sys menu    = make: E0 5D,    break: E0 F0 5D
+*/
 
-    // The routine bellow is always posting to the display server.
-    // see:
-    // user/input.c
-    // input.c is working as a middle-agent capable of handle
-    // abnt2 devices.
-    // IN: tid, scancode, prefix.
-        wmRawKeyEvent( (unsigned char) __raw, (int) (__prefix & 0xFF) );
-        __prefix=0;  // Clean the mess after used it.
+
+    // 0xE0 - Extended (1) prefix
+    // #todo: If the first byte was 0xE0, the next byte is stored in Report[1].
+    // 2 bytes for make and 3 bytes for break
+    // Extended (0xE0):
+    // + If second byte != 0xF0 >>> dispatch after 2 bytes (make).
+    // + If second byte  = 0xF0 >>> wait for third byte, then dispatch (break).
+    if (Report[0] == 0xE0){
+    printk("[kbd] 0xE0 prefix detected (reportIndex=%d)\n", reportIndex);
+
+        if (reportIndex == 0)
+            fSequenceFinished = FALSE;
+
+        // ---- If its a 2 bytes, we send them, otherwise we wait for the next -----
+
+        // 0xE0 XX
+        // At reportIndex == 1 → dispatch make if not F0.
+        if (reportIndex == 1)
+        {
+            // Not a break, so its a make
+            // But, in qemu, Release: often just E0 xx again, with no F0 in the middle.
+            if (Report[1] != 0xF0){
+                printk("[kbd] 0xE0 prefix detected [Not 0xF0] (reportIndex=%d)\n", reportIndex);
+                __ps2kbd_interpret_and_dispatch(Report[0], Report[1], 0, Report[0]); 
+                fSequenceFinished = TRUE;
+            }
+            // Not a break, so its a make
+            // its not the end of sequence yet ... lets wait the next byte.
+            if (Report[1] == 0xF0)
+            {
+                //printk("[kbd] 0xE0 prefix detected [0xF0] (reportIndex=%d)\n", reportIndex);
+                fSequenceFinished = FALSE;
+            }
+        }
+
+        // ---- the last byte, we send the sequence, otherwise its a byg -------------
+
+        // 0xE0 ** XX
+        // At reportIndex == 2 → dispatch break if Report[1] == F0.
+        if (reportIndex == 2)
+        {
+            // If the last was a break sign
+            if (Report[1] == 0xF0){
+                __ps2kbd_interpret_and_dispatch(Report[0], Report[1], Report[2], Report[0]); 
+                fSequenceFinished = TRUE;
+            }
+            // #bugbug: If the last was a break sign. Oh boy!
+            if (Report[1] != 0xF0){
+                fSequenceFinished = TRUE;
+            }
+        }
+
+    // 0xE1 - Extended (2) prefix (used for Pause/Break and a few rare sequences)
+    // #todo: If the first byte was 0xE1, the driver expects two more bytes.
+    // It stores them in Report[1] and Report[2].
+    // The first three (E1 1D 45) are the “make” sequence.
+    // The next three (E1 9D C5) are the “break” sequence.
+    // 3 bytes for make and 3 bytes for break
+    // Extended‑2 (0xE1):
+    // + If sequence is E1 1D 45 >>> Pause make, but you correctly keep accumulating 
+    //   because you know more bytes are coming.
+    // + If sequence is E1 9D C5 >>> Pause break, dispatch after 6 bytes.
+    // + If it’s not E1 1D 45, you dispatch after 3 bytes (generic extended‑2).
+    } else if (Report[0] == 0xE1){
+    //printk("[kbd] 0xE1 prefix detected (reportIndex=%d)\n", reportIndex);
+
+        // ------------ Pause/Break make (press) ----------
+        // E1 1D 45
+
+        if (reportIndex == 0)
+            fSequenceFinished = FALSE;
+
+        if (reportIndex == 1)
+        {
+            // We are in the second byte of pause/break key sequence (E1 1D 45)
+            if (Report[1] == 0x1D)
+                fSequenceFinished = FALSE;
+        }
+
+        if (reportIndex == 2)
+        {
+            // We are in the 3rd byte of pause/break key sequence (E1 1D 45)
+            // The sequence is not finished, because we have more 3 bytes.
+            if (Report[2] == 0x45){
+                __ps2kbd_interpret_and_dispatch(Report[0], Report[1], Report[2], Report[0]);
+                fSequenceFinished = FALSE;
+            }
+            if (Report[2] != 0x45){
+                __ps2kbd_interpret_and_dispatch(Report[0], Report[1], Report[2], Report[0]); 
+                fSequenceFinished = TRUE;  
+            }
+        }
+
+        // ------------ Pause/Break break (release): ----------
+        // E1 9D C5
+
+        if (reportIndex == 3)
+        {
+            // We starts the release sequence of pause/break key
+            if (Report[3] == 0xE1)
+                fSequenceFinished = FALSE;
+        }
+        if (reportIndex == 4)
+        {
+            // We starts the release sequence of pause/break key
+            if (Report[4] == 0x9D)
+                fSequenceFinished = FALSE;
+        }
+        if (reportIndex == 5)
+        {
+            // We starts the release sequence of pause/break key
+            if (Report[5] == 0xC5){
+                if (Report[3] == 0xE1 && Report[4] == 0x9D && Report[5] == 0xC5){
+                    __ps2kbd_interpret_and_dispatch(Report[3], Report[4], Report[5], Report[0]);
+                }
+                fSequenceFinished = TRUE;  
+            }
+        }
+
+    // Regular case
+    // Normal keys:
+    // Single byte (xx) → dispatch immediately.
+    } else if (Report[0] != 0xE0 && Report[0] != 0xE1) {
+        
+        // Normal single‑byte case 
+        if (reportIndex == 0)
+        {
+            // Prefix 0
+            __ps2kbd_interpret_and_dispatch(Report[0], 0, 0, 0);
+            //wmRawKeyEvent(Report[0], 0, 0, 0);
+            fSequenceFinished = TRUE;
+        }
     };
 
-    };  // WHILE ends.
+        reportIndex++;
+        if (reportIndex >= REPORT_MAX) {
+            reportIndex = 0;
+        }
+
+        if (fSequenceFinished == TRUE)
+            reportIndex = 0;
+    };  // WHILE ends
 
 done:
     return;

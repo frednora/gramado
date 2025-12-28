@@ -1058,81 +1058,88 @@ __ProcessExtendedKeyboardKeyStroke(
     //printk("sc={%x}\n",scancode);
     //refresh_screen();
 
+
+    if (vk == VK_PAUSE)
+    {
+        if (msg == MSG_SYSKEYDOWN)
+            printk("VK_PAUSE down\n");
+        if (msg == MSG_SYSKEYUP)
+            printk("VK_PAUSE up\n");
+    }
+
     if (rawbyte >= 0xFF){
         goto fail;
     }
-
     unsigned long scancode = (unsigned long) (rawbyte & 0x7F);
 
-    //if (msg < 0)
-        //goto fail;
-
-    switch (scancode)
+    switch (msg)
     {
-        case 0x1D: //pause, r-control
-            //ibroker_post_message_to_ds( MSG_INSERT, 0, scancode );
-            break;
-        case 0x52: //ins
-            ibroker_post_message_to_ds( MSG_INSERT, 0, scancode );
-            break;
-        case 0x53:  //del
-            ibroker_post_message_to_ds( MSG_CLEAR, 0, scancode );
-            break;
-        case 0x47:  //home
-            //ibroker_post_message_to_ds( MSG_INSERT, 0, scancode );
-            break;
-        case 0x49:  //pgup
-            //ibroker_post_message_to_ds( MSG_INSERT, 0, scancode );
-            break;
-        case 0x51:  //pgdn
-            //ibroker_post_message_to_ds( MSG_INSERT, 0, scancode );
-            break;
-        case 0x4F:  //end
-            //ibroker_post_message_to_ds( MSG_INSERT, 0, scancode );
+        case MSG_SYSKEYDOWN:
+            if (scancode == 0x4D)  // right
+            {
+                if (ctrl_status == TRUE){
+                    ibroker_post_message_to_ds( MSG_CONTROL_ARROW_RIGHT, VK_RIGHT, scancode );
+                    return 0;
+                }
+            }
+            if (scancode == 0x48)  // up
+            {
+                if (ctrl_status == TRUE){
+                    ibroker_post_message_to_ds( MSG_CONTROL_ARROW_UP, VK_UP, scancode );
+                    return 0;
+                }
+            }
+            if (scancode == 0x50)  // down
+            {
+                if (ctrl_status == TRUE){
+                    ibroker_post_message_to_ds( MSG_CONTROL_ARROW_DOWN, VK_DOWN, scancode );
+                    return 0;
+                }
+            }
+            if (scancode == 0x4B)  // left
+            {
+                if (ctrl_status == TRUE){
+                    ibroker_post_message_to_ds( MSG_CONTROL_ARROW_LEFT, VK_LEFT, scancode );
+                    return 0;
+                }
+            }
+            // #todo
+            // Insert	            E0 52	E0 D2	0x52
+            // Delete	            E0 53	E0 D3	0x53
+            // Home	                E0 47	E0 C7	0x47
+            // End	                E0 4F	E0 CF	0x4F
+            // Page Up	            E0 49	E0 C9	0x49
+            // Page Down	        E0 51	E0 D1	0x51
+            // Right Alt / AltGr	E0 38	E0 B8	0x38
+            // SysMenu / App key	E0 5D	E0 DD	0x5D
             break;
 
-        //#bugbug
-        //Suspenso o keydown e arrow
-        //pois atrapalha as teclas de digitação.
-
-        case 0x4D:  //right
-            if (ctrl_status == TRUE){
-                ibroker_post_message_to_ds( MSG_CONTROL_ARROW_RIGHT, VK_RIGHT, scancode );
-                return 0;
-            }
-            //ibroker_post_message_to_ds( MSG_KEYDOWN, VK_RIGHT, scancode );
-            break;
-        case 0x48:  //up
-            if (ctrl_status == TRUE){
-                ibroker_post_message_to_ds( MSG_CONTROL_ARROW_UP, VK_UP, scancode );
-                return 0;
-            }
-            //ibroker_post_message_to_ds( MSG_KEYDOWN, VK_UP, scancode );
-            break;
-        case 0x50:  //down
-            if (ctrl_status == TRUE){
-                ibroker_post_message_to_ds( MSG_CONTROL_ARROW_DOWN, VK_DOWN, scancode );
-                return 0;
-            }
-            //ibroker_post_message_to_ds( MSG_KEYDOWN, VK_DOWN, scancode );
-            break;
-        case 0x4B:  //left
-            if (ctrl_status == TRUE){
-                ibroker_post_message_to_ds( MSG_CONTROL_ARROW_LEFT, VK_LEFT, scancode );
-                return 0;
-            }
-            //ibroker_post_message_to_ds( MSG_KEYDOWN, VK_LEFT, scancode );
+        case MSG_SYSKEYUP:
+            //if (scancode == 0x4D)
+            //{
+            //    if (ctrl_status == TRUE){
+            //        ibroker_post_message_to_ds( MSG_CONTROL_ARROW_RIGHT, VK_RIGHT, scancode );
+            //        return 0;
+            //    }
+            //}
             break;
 
-        case 0x5D:  //sysmenu (app)
-            break;
-        case 0x38:  //altgr
-            break;
-
-        // ...
         default:
             break;
     };
+
+
+/*
+        case 0x1D: //pause, r-control
+        case 0x52: //ins
+        case 0x53:  //del
+        case 0x47:  //home
+        case 0x49:  //pgup
+        case 0x51:  //pgdn
+        case 0x4F:  //end
+        case 0x5D:  //sysmenu (app)
+        case 0x38:  //altgr
+*/
 
     return 0;
 fail:
@@ -2321,7 +2328,9 @@ fail:
 
 int 
 wmRawKeyEvent( 
-    unsigned char raw_byte,
+    unsigned char raw_byte_0,
+    unsigned char raw_byte_1,
+    unsigned char raw_byte_2,
     int prefix )
 {
 // Called by DeviceInterface_PS2Keyboard() in ps2kbd.c.
@@ -2401,7 +2410,7 @@ wmRawKeyEvent(
 // O driver pegou o scancode e passou para a disciplina de linha 
 // através de parâmetro.
 
-    Keyboard_RawByte = raw_byte;
+    Keyboard_RawByte = raw_byte_0;
 
 /*
 // #test
@@ -2801,14 +2810,46 @@ done:
 // #todo: 
 // Extended-key prefix handling must happen 
 // before you reject zero-mapped scancodes.
+
+    int fPause = FALSE;
+    int is_break = FALSE;
+
+    // Pause make (press): E1 1D 45
+    if (raw_byte_0 == 0xE1 && raw_byte_1 == 0x1D && raw_byte_2 == 0x45)
+    {
+        Event_Message = MSG_SYSKEYDOWN;
+        Event_LongVK = VK_PAUSE;
+        Event_LongRawByte = 0;
+        fPause = TRUE;
+    }
+    // Pause break (release): E1 9D C5
+    if (raw_byte_0 == 0xE1 && raw_byte_1 == 0x9D && raw_byte_2 == 0xC5)
+    {
+        Event_Message = MSG_SYSKEYUP;
+        Event_LongVK = VK_PAUSE;
+        Event_LongRawByte = 0;
+        fPause = TRUE;
+    }
+
     if (Prefix == 0xE0 || Prefix== 0xE1)
     {
+        if (fPause != TRUE)
+        {
+            is_break = (raw_byte_1 & 0x80) ? TRUE : FALSE;
+            if (is_break == TRUE){
+                Event_Message = MSG_SYSKEYUP;
+            } else {
+                Event_Message = MSG_SYSKEYDOWN;
+            }
+            Event_LongVK       = raw_byte_1;
+            Event_LongRawByte  = raw_byte_1;
+        }
         Status = 
             (int) __ProcessExtendedKeyboardKeyStroke(
                 (int) Prefix,
                 (int) Event_Message, 
                 (unsigned long) Event_LongVK,
-                (unsigned long) Event_LongScanCode );
+                (unsigned long) Event_LongRawByte );
         return (int) Status;
     }
 
