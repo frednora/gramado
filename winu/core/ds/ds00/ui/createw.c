@@ -28,11 +28,6 @@
 #define BUTTON_MIN_WIDTH    8
 #define BUTTON_MIN_HEIGHT   8
 
-static int config_use_transparency=FALSE;
-
-unsigned long windows_count=0;
-
-int show_fps_window = FALSE;
 
 // Habilitando/desabilitando globalmente 
 // alguns componentes da janela.
@@ -64,49 +59,36 @@ static struct gws_window_d *__create_window_object(void);
 // =====================================
 //
 
-// Create window structure
-static struct gws_window_d *__create_window_object(void)
+/*
+int this_type_has_a_title(int window_type);
+int this_type_has_a_title(int window_type)
 {
-    struct gws_window_d *window;
-
-    window = (void *) malloc( sizeof(struct gws_window_d) );
-    if ((void *) window == NULL){
-        return NULL;
+    if (type == WT_OVERLAPPED){
+        return TRUE;
     }
-    memset( window, 0, sizeof(struct gws_window_d) );
-    window->used = TRUE;
-    window->magic = 1234;
-
-    // Absolute position relative to the screen (global coordinates).
-    window->absolute_x = 0;
-    window->absolute_y = 0;
-    window->absolute_right = 0;
-    window->absolute_bottom = 0;
-
-    // Position and size relative to the parent window (local coordinates).
-    window->left = 0;
-    window->top = 0;
-    window->width = 0;
-    window->height = 0;
-
-    // The window can receive input from kbd and mouse.
-    window->enabled = TRUE;
-    window->style = 0;
-    // Validate. This way the compositor can't redraw it.
-    window->dirty = FALSE;
-    
-    return (struct gws_window_d *) window;
+    return FALSE;
 }
+*/
 
-void gws_enable_transparence(void)
+/*
+int this_type_can_become_active(int window_type);
+int this_type_can_become_active(int window_type)
 {
-    config_use_transparency=TRUE;
+    if (type == WT_OVERLAPPED){
+        return TRUE;
+    }
+    return FALSE;
 }
+*/
 
-void gws_disable_transparence(void)
+/*
+// #todo
+// Get the handle given the wid.
+struct gws_window_d *get_window_object(int wid);
+struct gws_window_d *get_window_object(int wid)
 {
-    config_use_transparency=FALSE;
 }
+*/
 
 // #todo
 // Essas rotina serão chamada pelo request assincrono sem resposta.
@@ -142,6 +124,259 @@ void useFrame( int value )
     gUseFrame = FALSE;
 }
 */
+
+
+int destroy_window_by_wid(int wid)
+{
+    struct gws_window_d *window;
+    struct gws_window_d *tmpw;
+    int fRebuildList = FALSE;
+    int fUpdateDesktop = FALSE;
+    register int i=0;
+
+// Parameter
+    if (wid < 0){
+        goto fail;
+    }
+    if (wid >= WINDOW_COUNT_MAX){
+        goto fail;
+    }
+
+// Window structure.
+    window = (struct gws_window_d *) get_window_from_wid(wid);
+    if ((void*) window == NULL)
+        goto fail;
+    if (window->magic != 1234)
+        goto fail;
+
+// We can't destroy the root window.
+// #todo
+// The shutdown routine weill destroy it manually.
+    if (window == __root_window){
+        goto fail;
+    }
+
+// --------------------------------------
+// Not an overlapped window.
+
+    if (window->type != WT_OVERLAPPED)
+    {
+        if ( window->isMinimizeControl == TRUE ||
+             window->isMaximizeControl == TRUE ||
+             window->isCloseControl == TRUE )
+        {
+            // #todo:
+            // Yes, we also need to destroy this kind of window.
+            goto fail;
+        }
+
+        // Remove it from the list
+        for (i=0; i<WINDOW_COUNT_MAX; i++)
+        {
+            tmpw = (void*) windowList[i];
+            if (tmpw == window)
+                windowList[i] = 0;
+        };
+        // Why not?!
+        // windowList[window->id] = 0;
+
+        /*
+        // #test
+        if (window == keyboard_owner)
+            keyboard_owner = taskbar_window;
+        if (window == mouse_owner)
+            mouse_owner = taskbar_window;
+
+        set_focus(taskbar_window);
+        __set_foreground_tid(taskbar_window->client_tid);
+        */
+
+        // #test
+        // Send it to the kernel.
+        // This thread will not be the foreground thread anymore.
+        sc82(10012, window->client_tid, 0, 0);
+
+        window->magic = 0;
+        window->used = FALSE;
+        window = NULL;
+
+        return 0;
+    }
+
+// --------------------------------------
+// Overlapped
+// In this case we need to rebuild the list of window frames 
+// and update the desktop.
+    if (window->type == WT_OVERLAPPED)
+    {
+        fRebuildList = TRUE;
+        fUpdateDesktop = TRUE;
+    }
+
+// ---------------
+// Titlebar
+// Get the WIDs for the controls and 
+// destroy the titlebar window.
+    int wid_min = -1;
+    int wid_max = -1;
+    int wid_clo = -1;
+    tmpw = (void *) window->titlebar;
+    if ((void*) tmpw != NULL)
+    {
+        if (tmpw->magic == 1234)
+        {
+            // Get wids.
+            wid_min = (int) tmpw->Controls.minimize_wid;
+            wid_max = (int) tmpw->Controls.maximize_wid;
+            wid_clo = (int) tmpw->Controls.close_wid;
+            // Destroy titlebar window.
+            tmpw->magic = 0;
+            tmpw->used = FALSE;
+            tmpw = NULL;
+        }
+    }
+// ---------------
+// Destroy min control
+    tmpw = (struct gws_window_d *) get_window_from_wid(wid_min);
+    if ((void*) tmpw != NULL)
+    {
+        if (tmpw->magic == 1234)
+        {
+            tmpw->magic = 0;
+            tmpw->used = FALSE;
+            tmpw = NULL;
+        }
+    }
+// ---------------
+// Destroy max control
+    tmpw = (struct gws_window_d *) get_window_from_wid(wid_max);
+    if ((void*) tmpw != NULL)
+    {
+        if (tmpw->magic == 1234)
+        {
+            tmpw->magic = 0;
+            tmpw->used = FALSE;
+            tmpw = NULL;
+        }
+    }
+// ---------------
+// Destroy clo control
+    tmpw = (struct gws_window_d *) get_window_from_wid(wid_clo);
+    if ((void*) tmpw != NULL)
+    {
+        if (tmpw->magic == 1234)
+        {
+            tmpw->magic = 0;
+            tmpw->used = FALSE;
+            tmpw = NULL;
+        }
+    }
+// ---------------
+// Destroy the overlapped window.
+// #todo
+// + Destroy the child list.
+// +...
+
+    // Remove it from the list
+    for (i=0; i<WINDOW_COUNT_MAX; i++)
+    {
+        tmpw = (void*) windowList[i];
+        if (tmpw == window)
+            windowList[i] = 0;
+    };
+    // Why not?!
+    // windowList[window->id] = 0;
+
+    /*
+    // #test
+    if (window == keyboard_owner)
+        keyboard_owner = taskbar_window;
+    if (window == mouse_owner)
+        mouse_owner = taskbar_window;
+
+    set_focus(taskbar_window);
+    __set_foreground_tid(taskbar_window->client_tid);
+    */
+
+    // #test
+    // Send it to the kernel.
+    // This thread will not be the foreground thread anymore.
+    sc82(10012, window->client_tid, 0, 0);
+
+    window->magic = 0;
+    window->used = FALSE;
+    window = NULL;
+
+    if (fRebuildList == TRUE){
+        wm_rebuild_list();
+    }
+    // IN: tile, show
+    if (fUpdateDesktop == TRUE){
+        wm_update_desktop(TRUE,TRUE);
+    }
+    return 0;
+
+fail:
+    return (int) -1;
+}
+
+void DestroyAllWindows(void)
+{
+    register int i=0;
+    struct gws_window_d *tmp;
+    int wid = -1;
+
+    for (i=0; i<WINDOW_COUNT_MAX; i++)
+    {
+        tmp = (void*) windowList[i];
+        if (tmp != NULL)
+        {
+            if (tmp->used == TRUE)
+            {
+                if (tmp->magic == 1234)
+                {
+                    wid = (int) tmp->id;
+                    destroy_window_by_wid(wid);
+                }
+            }
+        }
+    };
+}
+
+// Create window structure
+static struct gws_window_d *__create_window_object(void)
+{
+    struct gws_window_d *window;
+
+    window = (void *) malloc( sizeof(struct gws_window_d) );
+    if ((void *) window == NULL){
+        return NULL;
+    }
+    memset( window, 0, sizeof(struct gws_window_d) );
+    window->used = TRUE;
+    window->magic = 1234;
+
+    // Absolute position relative to the screen (global coordinates).
+    window->absolute_x = 0;
+    window->absolute_y = 0;
+    window->absolute_right = 0;
+    window->absolute_bottom = 0;
+
+    // Position and size relative to the parent window (local coordinates).
+    window->left = 0;
+    window->top = 0;
+    window->width = 0;
+    window->height = 0;
+
+    // The window can receive input from kbd and mouse.
+    window->enabled = TRUE;
+    window->style = 0;
+    // Validate. This way the compositor can't redraw it.
+    window->dirty = FALSE;
+    
+    return (struct gws_window_d *) window;
+}
+
 
 // Create the controls given the titlebar.
 // min, max, close.
@@ -2600,7 +2835,9 @@ void *CreateWindow (
 
 // See:
 // config.h, main.c
-    if (config_use_transparency == TRUE)
+// see: window.c
+    int HasTransparence = window_has_transparence();
+    if (HasTransparence == TRUE)
     {
         __rop_flags = 1;       // or
         //__rop_flags = 2;     // and
@@ -3164,564 +3401,6 @@ int RegisterWindow(struct gws_window_d *window)
 fail:
     //server_debug_print("No more slots\n");
     return (int) (-1);
-}
-
-int destroy_window_by_wid(int wid)
-{
-    struct gws_window_d *window;
-    struct gws_window_d *tmpw;
-    int fRebuildList = FALSE;
-    int fUpdateDesktop = FALSE;
-    register int i=0;
-
-// Parameter
-    if (wid < 0){
-        goto fail;
-    }
-    if (wid >= WINDOW_COUNT_MAX){
-        goto fail;
-    }
-
-// Window structure.
-    window = (struct gws_window_d *) get_window_from_wid(wid);
-    if ((void*) window == NULL)
-        goto fail;
-    if (window->magic != 1234)
-        goto fail;
-
-// We can't destroy the root window.
-// #todo
-// The shutdown routine weill destroy it manually.
-    if (window == __root_window){
-        goto fail;
-    }
-
-// --------------------------------------
-// Not an overlapped window.
-
-    if (window->type != WT_OVERLAPPED)
-    {
-        if ( window->isMinimizeControl == TRUE ||
-             window->isMaximizeControl == TRUE ||
-             window->isCloseControl == TRUE )
-        {
-            // #todo:
-            // Yes, we also need to destroy this kind of window.
-            goto fail;
-        }
-
-        // Remove it from the list
-        for (i=0; i<WINDOW_COUNT_MAX; i++)
-        {
-            tmpw = (void*) windowList[i];
-            if (tmpw == window)
-                windowList[i] = 0;
-        };
-        // Why not?!
-        // windowList[window->id] = 0;
-
-        /*
-        // #test
-        if (window == keyboard_owner)
-            keyboard_owner = taskbar_window;
-        if (window == mouse_owner)
-            mouse_owner = taskbar_window;
-
-        set_focus(taskbar_window);
-        __set_foreground_tid(taskbar_window->client_tid);
-        */
-
-        // #test
-        // Send it to the kernel.
-        // This thread will not be the foreground thread anymore.
-        sc82(10012, window->client_tid, 0, 0);
-
-        window->magic = 0;
-        window->used = FALSE;
-        window = NULL;
-
-        return 0;
-    }
-
-// --------------------------------------
-// Overlapped
-// In this case we need to rebuild the list of window frames 
-// and update the desktop.
-    if (window->type == WT_OVERLAPPED)
-    {
-        fRebuildList = TRUE;
-        fUpdateDesktop = TRUE;
-    }
-
-// ---------------
-// Titlebar
-// Get the WIDs for the controls and 
-// destroy the titlebar window.
-    int wid_min = -1;
-    int wid_max = -1;
-    int wid_clo = -1;
-    tmpw = (void *) window->titlebar;
-    if ((void*) tmpw != NULL)
-    {
-        if (tmpw->magic == 1234)
-        {
-            // Get wids.
-            wid_min = (int) tmpw->Controls.minimize_wid;
-            wid_max = (int) tmpw->Controls.maximize_wid;
-            wid_clo = (int) tmpw->Controls.close_wid;
-            // Destroy titlebar window.
-            tmpw->magic = 0;
-            tmpw->used = FALSE;
-            tmpw = NULL;
-        }
-    }
-// ---------------
-// Destroy min control
-    tmpw = (struct gws_window_d *) get_window_from_wid(wid_min);
-    if ((void*) tmpw != NULL)
-    {
-        if (tmpw->magic == 1234)
-        {
-            tmpw->magic = 0;
-            tmpw->used = FALSE;
-            tmpw = NULL;
-        }
-    }
-// ---------------
-// Destroy max control
-    tmpw = (struct gws_window_d *) get_window_from_wid(wid_max);
-    if ((void*) tmpw != NULL)
-    {
-        if (tmpw->magic == 1234)
-        {
-            tmpw->magic = 0;
-            tmpw->used = FALSE;
-            tmpw = NULL;
-        }
-    }
-// ---------------
-// Destroy clo control
-    tmpw = (struct gws_window_d *) get_window_from_wid(wid_clo);
-    if ((void*) tmpw != NULL)
-    {
-        if (tmpw->magic == 1234)
-        {
-            tmpw->magic = 0;
-            tmpw->used = FALSE;
-            tmpw = NULL;
-        }
-    }
-// ---------------
-// Destroy the overlapped window.
-// #todo
-// + Destroy the child list.
-// +...
-
-    // Remove it from the list
-    for (i=0; i<WINDOW_COUNT_MAX; i++)
-    {
-        tmpw = (void*) windowList[i];
-        if (tmpw == window)
-            windowList[i] = 0;
-    };
-    // Why not?!
-    // windowList[window->id] = 0;
-
-    /*
-    // #test
-    if (window == keyboard_owner)
-        keyboard_owner = taskbar_window;
-    if (window == mouse_owner)
-        mouse_owner = taskbar_window;
-
-    set_focus(taskbar_window);
-    __set_foreground_tid(taskbar_window->client_tid);
-    */
-
-    // #test
-    // Send it to the kernel.
-    // This thread will not be the foreground thread anymore.
-    sc82(10012, window->client_tid, 0, 0);
-
-    window->magic = 0;
-    window->used = FALSE;
-    window = NULL;
-
-    if (fRebuildList == TRUE){
-        wm_rebuild_list();
-    }
-    // IN: tile, show
-    if (fUpdateDesktop == TRUE){
-        wm_update_desktop(TRUE,TRUE);
-    }
-    return 0;
-
-fail:
-    return (int) -1;
-}
-
-void DestroyAllWindows(void)
-{
-    register int i=0;
-    struct gws_window_d *tmp;
-    int wid = -1;
-
-    for (i=0; i<WINDOW_COUNT_MAX; i++)
-    {
-        tmp = (void*) windowList[i];
-        if (tmp != NULL)
-        {
-            if (tmp->used == TRUE)
-            {
-                if (tmp->magic == 1234)
-                {
-                    wid = (int) tmp->id;
-                    destroy_window_by_wid(wid);
-                }
-            }
-        }
-    };
-}
-
-void MinimizeAllWindows(void)
-{
-    register int i=0;
-    struct gws_window_d *tmp;
-    int wid = -1;
-
-    for (i=0; i<WINDOW_COUNT_MAX; i++)
-    {
-        tmp = (void*) windowList[i];
-        if (tmp != NULL)
-        {
-            if (tmp->used == TRUE)
-            {
-                if (tmp->magic == 1234)
-                {
-                    if (tmp->type == WT_OVERLAPPED)
-                    {
-                        tmp->state = WINDOW_STATE_MINIMIZED;
-                        //tmp->enabled = FALSE;
-                    }
-                }
-            }
-        }
-    };
-}
-
-void MaximizeAllWindows(void)
-{
-    register int i=0;
-    struct gws_window_d *tmp;
-    int wid = -1;
-
-    for (i=0; i<WINDOW_COUNT_MAX; i++)
-    {
-        tmp = (void*) windowList[i];
-        if (tmp != NULL)
-        {
-            if (tmp->used == TRUE)
-            {
-                if (tmp->magic == 1234)
-                {
-                    if (tmp->type == WT_OVERLAPPED)
-                    {
-                        tmp->state = WINDOW_STATE_MAXIMIZED;
-                        //tmp->enabled = TRUE;
-                    }
-                }
-            }
-        }
-    };
-}
-
-void RestoreAllWindows(void)
-{
-// Back to normal state
-
-    register int i=0;
-    struct gws_window_d *tmp;
-    int wid = -1;
-
-    for (i=0; i<WINDOW_COUNT_MAX; i++)
-    {
-        tmp = (void*) windowList[i];
-        if (tmp != NULL)
-        {
-            if (tmp->used == TRUE)
-            {
-                if (tmp->magic == 1234)
-                {
-                    if (tmp->type == WT_OVERLAPPED)
-                    {
-                        tmp->state = WINDOW_STATE_NORMAL;
-                        //tmp->enabled = TRUE;
-                    }
-                }
-            }
-        }
-    };
-}
-
-/*
-int this_type_has_a_title(int window_type);
-int this_type_has_a_title(int window_type)
-{
-    if (type == WT_OVERLAPPED){
-        return TRUE;
-    }
-    return FALSE;
-}
-*/
-
-/*
-int this_type_can_become_active(int window_type);
-int this_type_can_become_active(int window_type)
-{
-    if (type == WT_OVERLAPPED){
-        return TRUE;
-    }
-    return FALSE;
-}
-*/
-
-/*
-// #todo
-// Get the handle given the wid.
-struct gws_window_d *get_window_object(int wid);
-struct gws_window_d *get_window_object(int wid)
-{
-}
-*/
-
-
-void maximize_window(struct gws_window_d *window)
-{
-
-// Parameter:
-    if ((void*)window == NULL)
-        return;
-    if (window->magic != 1234){
-        return;
-    }
-
-// We only maximize application windows.
-    if (window->type != WT_OVERLAPPED)
-        return;
-
-// Can't maximize root or taskbar
-// They are not overlapped, but anyway.
-    if (window == __root_window)
-        return;
-    if (window == taskbar_window)
-        return;
-
-// Enable input for overlapped window.
-    window->enabled = TRUE;
-
-// Maximize it.
-    change_window_state( window, WINDOW_STATE_MAXIMIZED );
-
-// Initialization: 
-// Using the working area by default.
-    unsigned long l = WindowManager.wa.left;
-    unsigned long t = WindowManager.wa.top;
-    unsigned long w = WindowManager.wa.width;
-    unsigned long h = WindowManager.wa.height;
-
-    if (MaximizationStyle.initialized != TRUE)
-    {
-        //MaximizationStyle.style = 1;  // full
-        //MaximizationStyle.style = 2;  // partial 00
-        MaximizationStyle.style = 3;  // partial 01
-        MaximizationStyle.initialized = TRUE;
-    }
-
-    // Based on style
-    int Style = MaximizationStyle.style;
-    switch (Style)
-    {
-        // full
-        case 1:
-            l = WindowManager.wa.left;
-            t = WindowManager.wa.top;
-            w = WindowManager.wa.width;
-            h = WindowManager.wa.height;
-            break;
-        // partial 01
-        case 2:
-            l = (WindowManager.wa.left + 24);
-            t = (WindowManager.wa.top  + 24);
-            w = (WindowManager.wa.width  -24 -24);
-            h = (WindowManager.wa.height -24 -24);
-            break;
-        // partial 02
-        case 3:
-            l = (WindowManager.wa.left);
-            t = (WindowManager.wa.top);
-            w = (WindowManager.wa.width);
-            h = (WindowManager.wa.height -24);
-            break;
-        // full
-        default:
-            l = WindowManager.wa.left;
-            t = WindowManager.wa.top;
-            w = WindowManager.wa.width;
-            h = WindowManager.wa.height;
-            break;
-    };
-
-// --------------
-    if ( w == 0 || h == 0 )
-    {
-        return;
-    }
-
-    gws_resize_window( window, (w), (h));
-    gwssrv_change_window_position( window, (l), (t) );
-
-    //gws_resize_window( window, (w -4), (h -4));
-    //gwssrv_change_window_position( window, (l +2), (t +2) );
-
-/*
-    window->width  = (w -4);
-    window->height = (h -4);
-*/
-
-    if (window->type == WT_OVERLAPPED)
-    {
-        window->rcClient.width  = 
-            window->width  - (window->Border.border_size * 2);
-        window->rcClient.height = 
-            window->height - (window->titlebar_height + window->Border.border_size * 2);
-    }
-
-//
-// Redraw and display some windows:
-// Root window, taskbar and the maximized window.
-//
-
-// Root
-    redraw_window(__root_window,TRUE);
-
-// Taskbar
-// Send message to the app to repaint all the childs.
-    redraw_window(taskbar_window,TRUE);
-    window_post_message( taskbar_window->id, GWS_Paint, 0, 0 );
-
-    // Notify kernel to wake up the target thread if it is necessary
-    wmNotifyKernel(taskbar_window,8000,8000);
-
-
-// Our window
-// Set focus
-// Redraw and show window
-
-    set_focus(window);
-    redraw_window(window,TRUE);
-
-// Send message to the app to repaint all the childs.
-    int target_wid = window->id;
-    window_post_message( target_wid, GWS_Paint, 0, 0 );
-
-    // Notify kernel to wake up the target thread if it is necessary
-    wmNotifyKernel(window,8000,8000);
-}
-
-// #test
-// Minimize a window
-// #ps: We do not have support for iconic window yet.
-void minimize_window(struct gws_window_d *window)
-{
-
-// Parameter:
-    if ((void*)window == NULL)
-        return;
-    if (window->magic != 1234){
-        return;
-    }
-
-// We only minimize application windows.
-    if (window->type != WT_OVERLAPPED)
-        return;
-
-// The minimized window can't receive input.
-// The iconic window that belongs to the minimized window
-// will be able to receive input.
-// To restore this window, we need to do it via the iconic window.
-    window->enabled = FALSE;
-
-// Minimize it.
-    change_window_state( window, WINDOW_STATE_MINIMIZED );
-
-// Maybe we're still the active window,
-// even minimized.
-    //if (window == active_window)
-    // ...
-
-// Focus?
-// Is the wwf one of our childs?
-// Change the falg to 'not receiving input'.
-    struct gws_window_d *wwf;
-    wwf = (struct gws_window_d *) keyboard_owner;
-    if ((void*) wwf != NULL)
-    {
-        if (wwf->magic == 1234)
-        {
-            if (wwf->parent == window){
-                wwf->enabled = FALSE; // Can't receive input anymore.
-            }
-        }
-    }
-
-// Update the desktop respecting the current zorder.
-    wm_update_desktop2();
-}
-
-// window_initialize:
-// Initialize the window support.
-// Called by gwsInitGUI() in gws.c.
-int window_initialize(void)
-{
-    register int i=0;
-
-// see: window.h
-    windows_count = 0;
-
-// Basic windows.
-// At this moment we didn't create any window yet.
-
-// Active window
-    active_window = NULL;
-// Input
-    keyboard_owner = NULL;
-    mouse_owner = NULL;
-// Stack
-    first_window = NULL;
-    last_window = NULL;
-    top_window = NULL;
-
-    //...
-    show_fps_window = FALSE;
-
-// Window list
-    for (i=0; i<WINDOW_COUNT_MAX; ++i){
-        windowList[i] = 0;
-    };
-
-// z order list
-// #bugbug
-// z-order is gonna be a linked list.
-    for (i=0; i<ZORDER_MAX; ++i){
-        zList[i] = 0;
-    };
-
-    // ...
-
-    return 0;
-
-//fail:
-    //return (int) -1;
 }
 
 //

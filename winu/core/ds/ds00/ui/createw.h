@@ -5,6 +5,9 @@
 #define __UI_CREATEW_H    1
 
 
+int destroy_window_by_wid(int wid);
+void DestroyAllWindows(void);
+
 // Controls
 int do_create_controls(struct gws_window_d *w_titlebar);
 
@@ -85,6 +88,7 @@ void *CreateWindow (
     unsigned int client_color ); 
 
 
+int RegisterWindow(struct gws_window_d *window);
 
 #endif  
 

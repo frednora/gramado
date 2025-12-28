@@ -5,6 +5,12 @@
 
 #include "../ds.h"
 
+unsigned long windows_count=0;
+int show_fps_window = FALSE;
+
+static int __config_use_transparency=FALSE;
+
+
 /*
 // Keeps client rect logic consistent across all window types.
 void update_client_area(struct gws_window_d *w);
@@ -20,6 +26,18 @@ void update_client_area(struct gws_window_d *w)
     w->rcClient.bottom = w->height - w->border_size - w->statusbar_height;
 }
 */
+
+void gws_enable_transparence(void){
+    __config_use_transparency=TRUE;
+}
+void gws_disable_transparence(void){
+    __config_use_transparency=FALSE;
+}
+
+
+int window_has_transparence(void){
+    return (int) __config_use_transparency;
+}
 
 
 struct gws_window_d *get_parent_window(struct gws_window_d *w)
@@ -380,5 +398,307 @@ window_post_message_broadcast(
     return (int) Counter;
 fail:
     return (int) -1;
+}
+
+// #test
+// Minimize a window
+// #ps: We do not have support for iconic window yet.
+void minimize_window(struct gws_window_d *window)
+{
+
+// Parameter:
+    if ((void*)window == NULL)
+        return;
+    if (window->magic != 1234){
+        return;
+    }
+
+// We only minimize application windows.
+    if (window->type != WT_OVERLAPPED)
+        return;
+
+// The minimized window can't receive input.
+// The iconic window that belongs to the minimized window
+// will be able to receive input.
+// To restore this window, we need to do it via the iconic window.
+    window->enabled = FALSE;
+
+// Minimize it.
+    change_window_state( window, WINDOW_STATE_MINIMIZED );
+
+// Maybe we're still the active window,
+// even minimized.
+    //if (window == active_window)
+    // ...
+
+// Focus?
+// Is the wwf one of our childs?
+// Change the falg to 'not receiving input'.
+    struct gws_window_d *wwf;
+    wwf = (struct gws_window_d *) keyboard_owner;
+    if ((void*) wwf != NULL)
+    {
+        if (wwf->magic == 1234)
+        {
+            if (wwf->parent == window){
+                wwf->enabled = FALSE; // Can't receive input anymore.
+            }
+        }
+    }
+
+// Update the desktop respecting the current zorder.
+    wm_update_desktop2();
+}
+
+void MinimizeAllWindows(void)
+{
+    register int i=0;
+    struct gws_window_d *tmp;
+    int wid = -1;
+
+    for (i=0; i<WINDOW_COUNT_MAX; i++)
+    {
+        tmp = (void*) windowList[i];
+        if (tmp != NULL)
+        {
+            if (tmp->used == TRUE)
+            {
+                if (tmp->magic == 1234)
+                {
+                    if (tmp->type == WT_OVERLAPPED)
+                    {
+                        tmp->state = WINDOW_STATE_MINIMIZED;
+                        //tmp->enabled = FALSE;
+                    }
+                }
+            }
+        }
+    };
+}
+
+void maximize_window(struct gws_window_d *window)
+{
+
+// Parameter:
+    if ((void*)window == NULL)
+        return;
+    if (window->magic != 1234){
+        return;
+    }
+
+// We only maximize application windows.
+    if (window->type != WT_OVERLAPPED)
+        return;
+
+// Can't maximize root or taskbar
+// They are not overlapped, but anyway.
+    if (window == __root_window)
+        return;
+    if (window == taskbar_window)
+        return;
+
+// Enable input for overlapped window.
+    window->enabled = TRUE;
+
+// Maximize it.
+    change_window_state( window, WINDOW_STATE_MAXIMIZED );
+
+// Initialization: 
+// Using the working area by default.
+    unsigned long l = WindowManager.wa.left;
+    unsigned long t = WindowManager.wa.top;
+    unsigned long w = WindowManager.wa.width;
+    unsigned long h = WindowManager.wa.height;
+
+    if (MaximizationStyle.initialized != TRUE)
+    {
+        //MaximizationStyle.style = 1;  // full
+        //MaximizationStyle.style = 2;  // partial 00
+        MaximizationStyle.style = 3;  // partial 01
+        MaximizationStyle.initialized = TRUE;
+    }
+
+    // Based on style
+    int Style = MaximizationStyle.style;
+    switch (Style)
+    {
+        // full
+        case 1:
+            l = WindowManager.wa.left;
+            t = WindowManager.wa.top;
+            w = WindowManager.wa.width;
+            h = WindowManager.wa.height;
+            break;
+        // partial 01
+        case 2:
+            l = (WindowManager.wa.left + 24);
+            t = (WindowManager.wa.top  + 24);
+            w = (WindowManager.wa.width  -24 -24);
+            h = (WindowManager.wa.height -24 -24);
+            break;
+        // partial 02
+        case 3:
+            l = (WindowManager.wa.left);
+            t = (WindowManager.wa.top);
+            w = (WindowManager.wa.width);
+            h = (WindowManager.wa.height -24);
+            break;
+        // full
+        default:
+            l = WindowManager.wa.left;
+            t = WindowManager.wa.top;
+            w = WindowManager.wa.width;
+            h = WindowManager.wa.height;
+            break;
+    };
+
+// --------------
+    if ( w == 0 || h == 0 )
+    {
+        return;
+    }
+
+    gws_resize_window( window, (w), (h));
+    gwssrv_change_window_position( window, (l), (t) );
+
+    //gws_resize_window( window, (w -4), (h -4));
+    //gwssrv_change_window_position( window, (l +2), (t +2) );
+
+/*
+    window->width  = (w -4);
+    window->height = (h -4);
+*/
+
+    if (window->type == WT_OVERLAPPED)
+    {
+        window->rcClient.width  = 
+            window->width  - (window->Border.border_size * 2);
+        window->rcClient.height = 
+            window->height - (window->titlebar_height + window->Border.border_size * 2);
+    }
+
+//
+// Redraw and display some windows:
+// Root window, taskbar and the maximized window.
+//
+
+// Root
+    redraw_window(__root_window,TRUE);
+
+// Taskbar
+// Send message to the app to repaint all the childs.
+    redraw_window(taskbar_window,TRUE);
+    window_post_message( taskbar_window->id, GWS_Paint, 0, 0 );
+
+    // Notify kernel to wake up the target thread if it is necessary
+    wmNotifyKernel(taskbar_window,8000,8000);
+
+
+// Our window
+// Set focus
+// Redraw and show window
+
+    set_focus(window);
+    redraw_window(window,TRUE);
+
+// Send message to the app to repaint all the childs.
+    int target_wid = window->id;
+    window_post_message( target_wid, GWS_Paint, 0, 0 );
+
+    // Notify kernel to wake up the target thread if it is necessary
+    wmNotifyKernel(window,8000,8000);
+}
+
+void MaximizeAllWindows(void)
+{
+    register int i=0;
+    struct gws_window_d *tmp;
+    int wid = -1;
+
+    for (i=0; i<WINDOW_COUNT_MAX; i++)
+    {
+        tmp = (void*) windowList[i];
+        if (tmp != NULL)
+        {
+            if (tmp->used == TRUE)
+            {
+                if (tmp->magic == 1234)
+                {
+                    if (tmp->type == WT_OVERLAPPED)
+                    {
+                        tmp->state = WINDOW_STATE_MAXIMIZED;
+                        //tmp->enabled = TRUE;
+                    }
+                }
+            }
+        }
+    };
+}
+
+void RestoreAllWindows(void)
+{
+// Back to normal state
+
+    register int i=0;
+    struct gws_window_d *tmp;
+    int wid = -1;
+
+    for (i=0; i<WINDOW_COUNT_MAX; i++)
+    {
+        tmp = (void*) windowList[i];
+        if (tmp != NULL)
+        {
+            if (tmp->used == TRUE)
+            {
+                if (tmp->magic == 1234)
+                {
+                    if (tmp->type == WT_OVERLAPPED)
+                    {
+                        tmp->state = WINDOW_STATE_NORMAL;
+                        //tmp->enabled = TRUE;
+                    }
+                }
+            }
+        }
+    };
+}
+
+// Initialize the window support.
+int window_initialize(void)
+{
+    register int i=0;
+
+    // see: window.h
+    windows_count = 0;
+
+    //...
+    show_fps_window = FALSE;
+
+
+// Basic windows.
+// At this moment we didn't create any window yet.
+
+// Active window
+    active_window = NULL;
+// Input
+    keyboard_owner = NULL;
+    mouse_owner = NULL;
+// Stack
+    first_window = NULL;
+    last_window = NULL;
+    top_window = NULL;
+
+
+// Window list
+    for (i=0; i<WINDOW_COUNT_MAX; ++i){
+        windowList[i] = 0;
+    };
+
+// z-order is gonna be a linked list.
+    for (i=0; i<ZORDER_MAX; ++i){
+        zList[i] = 0;
+    };
+
+    return 0;   //ok
 }
 

@@ -1040,6 +1040,12 @@ unsigned long zList[ZORDER_MAX];
 // == prototypes ===========================
 //
 
+// Transparence
+void gws_enable_transparence(void);
+void gws_disable_transparence(void);
+
+int window_has_transparence(void);
+
 //
 // WM suppport
 //
@@ -1073,10 +1079,6 @@ void wm_change_bg_color(unsigned int color, int tile, int fullscreen);
 
 void set_mouseover(struct gws_window_d *window);
 struct gws_window_d *get_mousehover(void);
-
-// Transparence
-void gws_enable_transparence(void);
-void gws_disable_transparence(void);
 
 void 
 wm_draw_char_into_the_window(
@@ -1150,13 +1152,14 @@ void reset_zorder(void);
 struct gws_window_d *wmCreateRootWindow(unsigned int bg_color);
 
 
-int RegisterWindow(struct gws_window_d *window);
-
-int destroy_window_by_wid(int wid);
-void DestroyAllWindows(void);
+void minimize_window(struct gws_window_d *window);
 void MinimizeAllWindows(void);
+
+void maximize_window(struct gws_window_d *window);
 void MaximizeAllWindows(void);
+
 void RestoreAllWindows(void);
+
 
 struct gws_window_d *get_window_from_wid(int wid);
 
@@ -1170,8 +1173,7 @@ void enable_window(struct gws_window_d *window);
 void disable_window(struct gws_window_d *window);
 
 void change_window_state(struct gws_window_d *window, int state);
-void maximize_window(struct gws_window_d *window);
-void minimize_window(struct gws_window_d *window);
+
 
 
 int dock_window( struct gws_window_d *window, int position );
