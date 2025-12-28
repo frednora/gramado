@@ -66,7 +66,8 @@ __ProcessExtendedKeyboardKeyStroke(
     int prefix,
     int msg, 
     unsigned long vk,
-    unsigned long rawbyte );
+    unsigned long rawbyte,
+    unsigned long scancode );
 
 // Process input
 static int 
@@ -1029,7 +1030,8 @@ __ProcessExtendedKeyboardKeyStroke(
     int prefix,
     int msg, 
     unsigned long vk,
-    unsigned long rawbyte )
+    unsigned long rawbyte,
+    unsigned long scancode )
 {
 
 /*
@@ -1067,39 +1069,42 @@ __ProcessExtendedKeyboardKeyStroke(
             printk("VK_PAUSE up\n");
     }
 
+    // unsigned long
     if (rawbyte >= 0xFF){
         goto fail;
     }
-    unsigned long scancode = (unsigned long) (rawbyte & 0x7F);
+
+    //unsigned long ScanCode = (unsigned long) (rawbyte & 0x7F);
+    unsigned long ScanCode = (unsigned long) scancode;
 
     switch (msg)
     {
         case MSG_SYSKEYDOWN:
-            if (scancode == 0x4D)  // right
+            if (ScanCode == 0x4D)  // right
             {
                 if (ctrl_status == TRUE){
-                    ibroker_post_message_to_ds( MSG_CONTROL_ARROW_RIGHT, VK_RIGHT, scancode );
+                    ibroker_post_message_to_ds( MSG_CONTROL_ARROW_RIGHT, VK_RIGHT, ScanCode );
                     return 0;
                 }
             }
-            if (scancode == 0x48)  // up
+            if (ScanCode == 0x48)  // up
             {
                 if (ctrl_status == TRUE){
-                    ibroker_post_message_to_ds( MSG_CONTROL_ARROW_UP, VK_UP, scancode );
+                    ibroker_post_message_to_ds( MSG_CONTROL_ARROW_UP, VK_UP, ScanCode );
                     return 0;
                 }
             }
-            if (scancode == 0x50)  // down
+            if (ScanCode == 0x50)  // down
             {
                 if (ctrl_status == TRUE){
-                    ibroker_post_message_to_ds( MSG_CONTROL_ARROW_DOWN, VK_DOWN, scancode );
+                    ibroker_post_message_to_ds( MSG_CONTROL_ARROW_DOWN, VK_DOWN, ScanCode );
                     return 0;
                 }
             }
-            if (scancode == 0x4B)  // left
+            if (ScanCode == 0x4B)  // left
             {
                 if (ctrl_status == TRUE){
-                    ibroker_post_message_to_ds( MSG_CONTROL_ARROW_LEFT, VK_LEFT, scancode );
+                    ibroker_post_message_to_ds( MSG_CONTROL_ARROW_LEFT, VK_LEFT, ScanCode );
                     return 0;
                 }
             }
@@ -1115,10 +1120,10 @@ __ProcessExtendedKeyboardKeyStroke(
             break;
 
         case MSG_SYSKEYUP:
-            //if (scancode == 0x4D)
+            //if (ScanCode == 0x4D)
             //{
             //    if (ctrl_status == TRUE){
-            //        ibroker_post_message_to_ds( MSG_CONTROL_ARROW_RIGHT, VK_RIGHT, scancode );
+            //        ibroker_post_message_to_ds( MSG_CONTROL_ARROW_RIGHT, VK_RIGHT, ScanCode );
             //        return 0;
             //    }
             //}
@@ -2843,13 +2848,15 @@ done:
             }
             Event_LongVK       = raw_byte_1;
             Event_LongRawByte  = raw_byte_1;
+            Event_LongScanCode = (unsigned long) (raw_byte_1 & 0x0000007F);
         }
         Status = 
             (int) __ProcessExtendedKeyboardKeyStroke(
                 (int) Prefix,
                 (int) Event_Message, 
                 (unsigned long) Event_LongVK,
-                (unsigned long) Event_LongRawByte );
+                (unsigned long) Event_LongRawByte,
+                (unsigned long) Event_LongScanCode );
         return (int) Status;
     }
 
