@@ -390,10 +390,16 @@ editorProcedure(
 
     case MSG_KEYDOWN:
         //printf("editor: MSG_KEYDOWN\n");
+        switch (long1) {
+            case VK_RETURN: printf("Editor: MSG_KEYDOWN VK_RETURN\n"); break;
+        };
         break;
 
     case MSG_KEYUP:
         //printf("editor: MSG_KEYUP\n");
+         switch (long1) {
+            case VK_RETURN: printf("Editor: MSG_KEYUP VK_RETURN\n"); break;
+        };
         break;
 
     case MSG_SYSKEYDOWN:

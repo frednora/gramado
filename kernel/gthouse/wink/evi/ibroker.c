@@ -1105,6 +1105,22 @@ sys menu    = make: E0 5D,    break: E0 F0 5D
     {
         case MSG_SYSKEYDOWN:
         //printk("broker: MSG_SYSKEYDOWN sc=%d\n",ScanCode);
+
+            // Right [ENTER]
+            // qemu: It sends 0xE0 0x9C for both press and release, without the F0 break prefix.
+            if (ScanCode == 0x1C || ScanCode == 0x1A)
+            {
+                if (ctrl_status == TRUE){
+                    return 0;
+                } else {
+                    // #importante
+                    // Translating it from MSG_SYSKEYDOWN to MSG_KEYDOWN
+                    ibroker_post_message_to_fg_thread( MSG_KEYDOWN, VK_RETURN, ScanCode );
+                    return 0;
+                }
+            }
+
+
             if (ScanCode == 0x4D)  // right
             {
                 if (ctrl_status == TRUE){
@@ -1204,6 +1220,21 @@ sys menu    = make: E0 5D,    break: E0 F0 5D
 
         case MSG_SYSKEYUP:
         //printk("broker: MSG_SYSKEYUP sc=%d\n",ScanCode);
+
+            // Right [ENTER]
+            // qemu: It sends 0xE0 0x9C for both press and release, without the F0 break prefix.
+            if (ScanCode == 0x1C || ScanCode == 0x1A)
+            {
+                if (ctrl_status == TRUE){
+                    return 0;
+                } else {
+                    // #importante
+                    // Translating it from MSG_SYSKEYUP to MSG_KEYUP
+                    ibroker_post_message_to_fg_thread( MSG_KEYUP, VK_RETURN, ScanCode );
+                    return 0;
+                }
+            }
+
 
             if (ScanCode == 0x4D)  // right
             {
