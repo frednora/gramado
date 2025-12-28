@@ -1056,6 +1056,25 @@ __ProcessExtendedKeyboardKeyStroke(
  altgr     = 0x38 | 0xB8
  */
 
+/*
+Scancode reference for extended keys (ABNT2, PS/2 Set 2)
+
+pause/break = make: E1 1D 45, break: E1 9D C5
+insert      = make: E0 52,    break: E0 F0 52
+delete      = make: E0 53,    break: E0 F0 53
+home        = make: E0 47,    break: E0 F0 47
+end         = make: E0 4F,    break: E0 F0 4F
+page up     = make: E0 49,    break: E0 F0 49
+page down   = make: E0 51,    break: E0 F0 51
+arrow up    = make: E0 48,    break: E0 F0 48
+arrow down  = make: E0 50,    break: E0 F0 50
+arrow left  = make: E0 4B,    break: E0 F0 4B
+arrow right = make: E0 4D,    break: E0 F0 4D
+right ctrl  = make: E0 1D,    break: E0 F0 1D
+altgr       = make: E0 38,    break: E0 F0 38
+sys menu    = make: E0 5D,    break: E0 F0 5D
+*/
+
     //printk("kgwm.c: #todo Extended keyboard\n");
     //printk("sc={%x}\n",scancode);
     //refresh_screen();
@@ -1085,12 +1104,18 @@ __ProcessExtendedKeyboardKeyStroke(
                 if (ctrl_status == TRUE){
                     ibroker_post_message_to_ds( MSG_CONTROL_ARROW_RIGHT, VK_RIGHT, ScanCode );
                     return 0;
+                } else {
+                    ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_ARROW_RIGHT, ScanCode );
+                    return 0;
                 }
             }
             if (ScanCode == 0x48)  // up
             {
                 if (ctrl_status == TRUE){
                     ibroker_post_message_to_ds( MSG_CONTROL_ARROW_UP, VK_UP, ScanCode );
+                    return 0;
+                } else {
+                    ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_ARROW_UP, ScanCode );
                     return 0;
                 }
             }
@@ -1099,6 +1124,9 @@ __ProcessExtendedKeyboardKeyStroke(
                 if (ctrl_status == TRUE){
                     ibroker_post_message_to_ds( MSG_CONTROL_ARROW_DOWN, VK_DOWN, ScanCode );
                     return 0;
+                } else {
+                    ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_ARROW_DOWN, ScanCode );                    
+                    return 0;
                 }
             }
             if (ScanCode == 0x4B)  // left
@@ -1106,17 +1134,66 @@ __ProcessExtendedKeyboardKeyStroke(
                 if (ctrl_status == TRUE){
                     ibroker_post_message_to_ds( MSG_CONTROL_ARROW_LEFT, VK_LEFT, ScanCode );
                     return 0;
+                } else {
+                    ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_ARROW_LEFT, ScanCode );
+                    return 0;
                 }
             }
-            // #todo
-            // Insert	            E0 52	E0 D2	0x52
-            // Delete	            E0 53	E0 D3	0x53
-            // Home	                E0 47	E0 C7	0x47
-            // End	                E0 4F	E0 CF	0x4F
-            // Page Up	            E0 49	E0 C9	0x49
-            // Page Down	        E0 51	E0 D1	0x51
+            // Insert - E0 52	E0 D2	0x52
+            if (ScanCode == 0x52)  // Insert
+            {
+                ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_INSERT, ScanCode );
+                return 0;
+            }
+            // Delete - E0 53	E0 D3	0x53
+            if (ScanCode == 0x53)  // Delete
+            {
+                ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_DELETE, ScanCode );
+                return 0;
+            }
+            // Home - E0 47  E0 C7  0x47
+            if (ScanCode == 0x47)  // Home
+            {
+                ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_HOME, ScanCode );
+                return 0;
+            }
+            // End - E0 4F	E0 CF	0x4F
+            if (ScanCode == 0x4F)  // End
+            {
+                ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_END, ScanCode );
+                return 0;
+            }
+            // Page Up - E0 49	E0 C9	0x49
+            if (ScanCode == 0x49)  // Page up
+            {
+                ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_PAGEUP, ScanCode );
+                return 0;
+            }
+            // Page Down - E0 51	E0 D1	0x51
+            if (ScanCode == 0x51)  // page down
+            {
+                ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_PAGEDOWN, ScanCode );
+                return 0;
+            }
+            // right ctrl  = make: E0 1D,    break: E0 F0 1D
+            if (ScanCode == 0x1D)  // Right ctrl
+            {
+                ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_RCONTROL, ScanCode );
+                return 0;
+            }
             // Right Alt / AltGr	E0 38	E0 B8	0x38
+            if (ScanCode == 0x38)  // Right alt (altgr)
+            {
+                ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_ALTGR, ScanCode );
+                return 0;
+            }
             // SysMenu / App key	E0 5D	E0 DD	0x5D
+            if (ScanCode == 0x5D)  // Sys menu (app)
+            {
+                ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_APPS, ScanCode );
+                return 0;
+            }
+
             break;
 
         case MSG_SYSKEYUP:
