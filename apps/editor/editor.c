@@ -424,7 +424,25 @@ editorProcedure(
         break;
 
     case MSG_SYSKEYUP:
-        //printf("editor: MSG_SYSKEYDOWN\n");
+        switch (long1) {
+            // 
+            case VK_INSERT:  printf("Editor: VK_INSERT up\n"); break;
+            case VK_DELETE:  printf("Editor: VK_DELETE up\n"); break;
+            case VK_HOME:  printf("Editor: VK_HOME up\n"); break;
+            case VK_END:  printf("Editor: VK_END up\n"); break;
+            case 0x49:  printf("Editor: 0x49 VK_PAGEUP up \n"); break;
+            case 0x51:  printf("Editor: 0x51 VK_PAGEDOWN up \n"); break;
+            case VK_RCONTROL:  printf("Editor: VK_RCONTROL up \n"); break;
+            case VK_ALTGR:  printf("Editor: VK_ALTGR up \n"); break;
+            case VK_APPS:  printf("Editor: VK_APPS up \n"); break;
+
+            //
+            case VK_ARROW_RIGHT:  printf("Editor: VK_ARROW_RIGHT up\n"); break;
+            case VK_ARROW_UP:  printf("Editor: VK_ARROW_UP up \n"); break;
+            case VK_ARROW_DOWN:  printf("Editor: VK_ARROW_DOWN up \n"); break;
+            case VK_ARROW_LEFT:  printf("Editor: VK_ARROW_LEFT up \n"); break;
+        }
+        return 0;
         break;
 
     //36
