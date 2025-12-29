@@ -3051,7 +3051,9 @@ int VirtualConsole_early_initialization(void)
 // Initialize the input broker.
 // No embedded shell for now.
 // No input in prompt[].
-    ibroker_initialize();
+// IN: phase number = 0.
+    ibroker_initialize(0);
+
 // Initialize the output broker.
     obroker_initialize();
 

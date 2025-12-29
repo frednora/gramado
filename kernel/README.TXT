@@ -97,3 +97,25 @@ Exceptions / Traps
 
 --------------------------------------------------
 
+--------------------------------------------
+There are two personas: the program and the user.
+And there are two houses.
+
+Persona 1: The Program (House of Applications)
+ + CPU
+ + MEMORY
+ + DISK 
+Other components here:
+ GPU (when used for computation, not display)
+
+
+Persona 2: The User (House of Users)
+ + KEYBOARD 
+ + MOUSE 
+ + DISPLAY 
+Other components here:
+  Touchpad → input device, same category as mouse
+  Touchscreen → hybrid input/output, but still user‑facing
+  Audio (speakers, microphone) → user interaction layer
+  Game controllers, joysticks, haptics → all user‑centric I/O
+

@@ -1,15 +1,17 @@
-// kbdmap.c
-// ring0 keymap support.
-// It's working fine.
-// #todo: Check the same thing in the ring3 window server.
+// mapabnt2.c
+// Ring0 keymap support for abnt2 keyboards.
+// Created by Fred Nora.
 
 #include <kernel.h>
 
 // ---------------------------------
-// lowercase
-// NORMAL ABNT2.
-// obs: 
-// Isso pode ser carregável para várias configurações de teclado.
+// map_abnt2[]
+// Normal (lowercase) ABNT2 keymap.
+// Used when no modifiers are active.
+// Converts raw scancodes into ASCII characters or VK codes.
+// Examples: 'a', '1', 'ç', Enter, arrows.
+// This is the default lookup table.
+
 unsigned char map_abnt2[ABNT2_CHARMAP_SIZE] = {
  0,      //Scancode 0.
  033,    //1  (Esc). (\e)
@@ -150,11 +152,13 @@ VK_F24,  //135
 };
 
 // ---------------------------------------
-// uppercase
-// maiúsculas
-// SHIFT ABNT2.
-// +Combinação com shift pressionado.
-// +Com capslock acionado.
+// shift_abnt2[]
+// Shifted (uppercase) ABNT2 keymap.
+// Used when Shift or CapsLock is active.
+// Provides uppercase letters and shifted symbols.
+// Examples: 'A', '!', '@', 'Ç', ':', '?'
+// This table ensures proper output when modifiers are pressed.
+
 unsigned char shift_abnt2[ABNT2_CHARMAP_SIZE] = {
 0, 
 033,   // "
@@ -287,8 +291,13 @@ VK_ABNT2_DELETE,  //',',    //83 abnt2(,)
 };
 
 // ------------------------------
-// control + key
-// CONTROL ABNT2.
+// ctl_abnt2[]
+// Control ABNT2 keymap.
+// Used when Ctrl is active.
+// Maps scancodes to ASCII control characters (0x01–0x1F).
+// Examples: Ctrl+A → SOH, Ctrl+C → ETX, Ctrl+Z → SUB.
+// Enables terminal shortcuts and kernel shell commands.
+
 unsigned char ctl_abnt2[ABNT2_CHARMAP_SIZE] = {
 
 0,     //0

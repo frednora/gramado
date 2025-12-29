@@ -933,7 +933,12 @@ static int archinit(void)
 
 static int deviceinit(void)
 {
-        // ================================
+
+// IN: phase number = 1.
+// Chose the keyboad maps
+    ibroker_initialize(1);
+
+    // ================================
         // Early ps/2 initialization.
         // Initializing ps/2 controller.
         // #todo: 

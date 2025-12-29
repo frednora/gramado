@@ -1,7 +1,5 @@
-/*
- * File: kbdabnt2.h 
- * Brazilian (pt-br) abnt2 keyboard support.
- */
+// kbdmaps.h
+// Created by Fred Nora.
 
 #ifndef __KBD_KBDABNT2_H
 #define __KBD_KBDABNT2_H    1

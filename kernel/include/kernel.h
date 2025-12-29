@@ -249,8 +249,9 @@
 #include "../halls/uhalls/chardev/serial/serial.h"
 
 #include "../halls/uhalls/chardev/vk.h"
-#include "../halls/uhalls/chardev/kbdabnt2.h"
-#include "../halls/uhalls/chardev/kbdmap.h"
+#include "../halls/uhalls/chardev/kbdmaps/kbdmaps.h"
+#include "../halls/uhalls/chardev/kbdmaps/ptbr/mapabnt2.h"
+// ...
 
 // i8042 (PS/2)
 #include "../halls/uhalls/chardev/i8042/keyboard.h"

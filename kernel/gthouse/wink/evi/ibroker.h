@@ -15,6 +15,14 @@ extern struct input_broker_info_d  InputBrokerInfo;
 
 // ==========================
 
+
+void 
+ibroker_set_keymap(
+    unsigned char *p_normal,
+    unsigned char *p_shift,
+    unsigned char *p_ctrl,
+    unsigned char *p_altgr );
+
 // Send ascii to the tty associated with stdin.
 int ibroker_send_ascii_to_stdin(int ascii_code);
 
@@ -52,7 +60,7 @@ int wmMouseEvent(int event_id,long long1, long long2);
 int wmKeyboardEvent(int event_id,long long1, long long2);
 int wmTimerEvent(int signature);
 
-int ibroker_initialize(void);
+int ibroker_initialize(int phase);
 
 #endif 
 

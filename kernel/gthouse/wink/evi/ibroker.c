@@ -26,6 +26,18 @@ Its responsibilities are to distribute (or "broker") these events to the correct
 
 #include <kernel.h>
 
+
+// ---------------------------------------------
+// Active keymap pointers
+// These point to the currently selected layout tables.
+// By default they are NULL until ibroker_set_keymap() is called.
+
+unsigned char *keymap_normal  = NULL;
+unsigned char *keymap_shift   = NULL;
+unsigned char *keymap_ctrl    = NULL;
+unsigned char *keymap_altgr   = NULL; // optional
+
+
 // Keyboard support
 //#define KEYBOARD_KEY_PRESSED  0x80
 #define KEYBOARD_KEY_MASK  0x7F
@@ -144,6 +156,25 @@ ibroker_post_message_to_fg_thread (
             msg, long1, long2 );
 
     return (int) rv;
+}
+
+
+// ---------------------------------------------
+// Plug in a layout
+// IN: addresses of normal, shift, ctrl, and altgr tables.
+// Example: set_keymap(abnt2_normal, abnt2_shift, abnt2_ctrl, abnt2_altgr);
+
+void 
+ibroker_set_keymap(
+    unsigned char *p_normal,
+    unsigned char *p_shift,
+    unsigned char *p_ctrl,
+    unsigned char *p_altgr )
+{
+    keymap_normal = p_normal;
+    keymap_shift  = p_shift;
+    keymap_ctrl   = p_ctrl;
+    keymap_altgr  = p_altgr;
 }
 
 // Minimal ring 0 thread example
@@ -2787,10 +2818,10 @@ wmRawKeyEvent(
         {
             // se liberada teclas de sistema como capslock ligado
             if (capslock_status == FALSE)
-            { Event_LongVK = map_abnt2[Keyboard_ScanCode];   goto done; }
+            { Event_LongVK = keymap_normal[Keyboard_ScanCode];   goto done; }
             // se liberada teclas de sistema como capslock desligado
             if (capslock_status == TRUE)
-            { Event_LongVK = shift_abnt2[Keyboard_ScanCode]; goto done; }
+            { Event_LongVK = keymap_shift[Keyboard_ScanCode]; goto done; }
             // ...
         }
 
@@ -2801,16 +2832,16 @@ wmRawKeyEvent(
         // Nenhuma tecla de modificação ligada.
 
         // #bugbug: some chars are not working
-        // for shift_abnt2[]
+        // for keymap_shift[]
         // See: include/user/kbdabnt2.h
         if (Event_Message == MSG_KEYUP)
         {
             // Minúsculas.
             if (capslock_status == FALSE)
-            { Event_LongVK = map_abnt2[Keyboard_ScanCode];   goto done; }
+            { Event_LongVK = keymap_normal[Keyboard_ScanCode];   goto done; }
             // Maiúsculas.
             if (capslock_status == TRUE)
-            { Event_LongVK = shift_abnt2[Keyboard_ScanCode]; goto done; }
+            { Event_LongVK = keymap_shift[Keyboard_ScanCode]; goto done; }
             // ...
         }
 
@@ -2948,10 +2979,10 @@ wmRawKeyEvent(
         {   
             // se pressionamos teclas de sistema como capslock ligado
             if (capslock_status == FALSE)
-            { Event_LongVK = map_abnt2[Keyboard_ScanCode];   goto done; }
+            { Event_LongVK = keymap_normal[Keyboard_ScanCode];   goto done; }
             // se pressionamos teclas de sistema como capslock desligado
             if (capslock_status == TRUE || shift_status == TRUE)
-            { Event_LongVK = shift_abnt2[Keyboard_ScanCode]; goto done; }
+            { Event_LongVK = keymap_shift[Keyboard_ScanCode]; goto done; }
             // ...
         }
 
@@ -2964,28 +2995,28 @@ wmRawKeyEvent(
             // Minúsculas.
             if (capslock_status == FALSE && shift_status == FALSE)
             { 
-                Event_LongVK = map_abnt2[Keyboard_ScanCode];
+                Event_LongVK = keymap_normal[Keyboard_ScanCode];
 
                 // #test
                 // We send a combination event,
                 // and the ascii char.
                 // For stdin we send just the ascii char.
                 if (ctrl_status == TRUE)
-                    Event_LongVK = ctl_abnt2[Keyboard_ScanCode];
+                    Event_LongVK = keymap_ctrl[Keyboard_ScanCode];
 
                 goto done; 
             }
             // Maiúsculas.
             if (capslock_status == TRUE || shift_status == TRUE)
             {
-                Event_LongVK = shift_abnt2[Keyboard_ScanCode];
+                Event_LongVK = keymap_shift[Keyboard_ScanCode];
 
                 // #test
                 // We send a combination event,
                 // and the ascii char.
                 // For stdin we send just the ascii char.
                 if (ctrl_status == TRUE)
-                    Event_LongVK = ctl_abnt2[Keyboard_ScanCode];
+                    Event_LongVK = keymap_ctrl[Keyboard_ScanCode];
 
                 goto done;
             }
@@ -3515,9 +3546,25 @@ fail:
     return (int) -1;
 }
 
-int ibroker_initialize(void)
+int ibroker_initialize(int phase)
 {
-    InputBrokerInfo.shell_flag = FALSE;
-    InputBrokerInfo.initialized = TRUE;
+    if (phase == 0){
+        InputBrokerInfo.shell_flag = FALSE;
+        InputBrokerInfo.initialized = TRUE;
+    } else if (phase == 1){
+
+        printk("Setup keymaps\n");
+
+        // Setup the keymaps
+        ibroker_set_keymap(
+            (unsigned char *) map_abnt2,    // Normal
+            (unsigned char *) shift_abnt2,  // Shift
+            (unsigned char *) ctl_abnt2,    // Control
+            NULL );  // altgr
+
+        //panic ("breakpoint");
+    };
+
     return 0;
 }
+
