@@ -27,10 +27,8 @@
 #define VK_FINAL    0x18
 #define VK_HANJA    0x19
 #define VK_KANJI    0x19
-// #test
 // #define VK_CCEDILHA 0x19
-#define VK_ACENTO_AGUDO 0x1A  //26 //0xb4 abnt	
-#define VK_ACENTO_GRAVE 0x1A  //26  //0x60	abnt
+
 #define VK_ESCAPE      0x1B  //27 
 #define VK_RETURN      0x1C  //28  //13    //Return.
 #define VK_CONVERT	   0x1C  //??
@@ -100,6 +98,10 @@
 #define VK_CONTROL_MENU 0x5D  //93
 #define VK_ACENTO_CIRCUNFLEXO 0x5E  //abnt
 #define VK_SLEEP     0x5F
+
+#define VK_GRAVE_ACCENT  0x60   // 96, grave accent `
+#define VK_ACENTO_GRAVE  0x60   // 96, grave accent `
+
 #define VK_NUMPAD0  0x60
 #define VK_NUMPAD1  0x61
 #define VK_NUMPAD2  0x62
@@ -158,6 +160,10 @@
 #define VK_MEDIA_PREV_TRACK  0xB1
 #define VK_MEDIA_STOP  0xB2
 #define VK_MEDIA_PLAY_PAUSE 0xB3
+
+#define VK_ACENTO_AGUDO  0xB4   // 180 acute accent ´
+#define VK_ACUTE_ACCENT  0xB4   // 180 acute accent ´
+
 #define VK_LAUNCH_MAIL  0xB4
 #define VK_LAUNCH_MEDIA_SELECT  0xB5
 #define VK_LAUNCH_APP1  0xB6

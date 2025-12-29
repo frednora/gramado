@@ -39,7 +39,7 @@ unsigned char map_abnt2[ABNT2_CHARMAP_SIZE] = {
  'i',
  'o',
  'p',          //25
- 239, // #todo: use [´] //'$',  //239   //26  VK_ACENTO_AGUDO acento agudo (00b4 @) dead_acute dead_grave
+ VK_ACUTE_ACCENT,  //vk=180, sc=26
  '[',          //27   bracketleft   braceleft
  VK_RETURN,    //28 [Enter].
  VK_LCONTROL,  //29 ms right control. ??

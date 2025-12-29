@@ -196,7 +196,8 @@ grBackbufferDrawCharTransparent (
     int Char = (int) (ch & 0xFF);
     //int CharWidth;
     //int CharHeight;
-    char *work_char_p;
+
+    unsigned char *work_char_p;
     unsigned char bit_mask = 0x80;
 //loop
     register int y2=0;

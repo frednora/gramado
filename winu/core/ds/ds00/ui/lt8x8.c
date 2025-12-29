@@ -1,3 +1,7 @@
+// lt8x8 font.
+// Losethos font.
+// Inverted order.
+// Credits: Terry Davis. (Public Domain license)
 
 #include "../ds.h"
 

@@ -91,6 +91,8 @@ fontSetInfo(
 
 void fontSetCurrentFontIndex(int index)
 {
+    if (index < 0)
+        return;
     FontInitialization.index_for_current_font = index;
 }
 

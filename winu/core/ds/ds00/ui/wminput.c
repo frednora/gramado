@@ -4,10 +4,34 @@
 
 #include "../ds.h"
 
+int dead_key_in_progress = FALSE;
+int current_dead_key=0;
+
+// Check if a character is a vowel (lowercase or uppercase)
+int is_vowel(char ch)
+{
+    switch (ch) 
+    {
+        case 'a': 
+        case 'e': 
+        case 'i': 
+        case 'o': 
+        case 'u':
+        case 'A': 
+        case 'E': 
+        case 'I': 
+        case 'O': 
+        case 'U':
+            return TRUE;
+        default:
+            return FALSE;
+    }
+}
+
 // Worker
 // #todo
 // We can carefully move some routine from wm.c to this file.
-inline int is_combination(int msg_code)
+int is_combination(int msg_code)
 {
     if (msg_code<0)
         return FALSE;
@@ -232,6 +256,11 @@ wmProcessKeyboardEvent(
     //char name_buffer[64];
     int wid = -1;
 
+// 8bit
+    unsigned char Current_8BIT_Char = (unsigned char) (long1 & 0xFF);
+
+    int IsVowel = FALSE;
+
 // #todo
     unsigned int fg_color = (unsigned int) get_color(csiSystemFontColor);
     //unsigned int bg_color = (unsigned int) get_color(csiSystemFontColor);
@@ -328,6 +357,30 @@ wmProcessKeyboardEvent(
                 window, (int) long1, fg_color );        
         }
         */
+
+        IsVowel = (int) is_vowel(Current_8BIT_Char);
+        //
+        if (IsVowel == TRUE){
+            // Check if we have a pending dead key.
+            if (dead_key_in_progress == TRUE)
+            {
+                // something
+            }
+        }
+
+
+        if ( Current_8BIT_Char == '\'' ||  // acute
+             Current_8BIT_Char == '~'  ||  // tilde
+             Current_8BIT_Char == '^'  ||  // circumflex
+             Current_8BIT_Char == '\"')    // trema
+        {
+            dead_key_in_progress = TRUE;
+            current_dead_key = (int) (Current_8BIT_Char & 0xFF);
+
+            yellow_status("Dead key");
+            
+            return 0; // don’t print yet
+        }
 
         // The is the window with focus.
         // See: wm.c
@@ -829,6 +882,7 @@ int wmInputReader(void)
     // #todo: Get the button numberfor mouse clicks.
 
     int IsCombination=FALSE;
+    int IsDeadKey=FALSE;
 
 // NextEvent:
 

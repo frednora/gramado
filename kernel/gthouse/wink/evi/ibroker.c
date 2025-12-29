@@ -2018,6 +2018,7 @@ __ProcessKeyboardInput (
     // Who is the current virtual console?
     struct tty_d *target_tty;
 
+
 //
 // tty
 //
@@ -2640,7 +2641,6 @@ wmRawKeyEvent(
     //    debug_print("wmKeyEvent: tid\n");
     //    return (int) (-1);
     //}
-
 
 // =============
 // Step1
@@ -3300,6 +3300,10 @@ done:
             // #bugbug
             // What are the types we're sending here
             // Existing behavior: send to display server
+
+
+            // #debug
+            //printk("vk=%d sc=%d\n",Event_LongVK,Event_LongScanCode);
 
             // TARGET: DS
             ibroker_post_message_to_ds(
