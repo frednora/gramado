@@ -27,6 +27,14 @@ struct fat_d  *bootvolume_fat;
 // Checar se essa 'e a quantidade limite de 
 // entradas que podemos acessar na fat.
 // Ou e' apenas o limite da lista.
+
+// Cluster chain buffer for FAT16 files.
+// Helps you read the file’s contents by tracking which clusters to load.
+// 65,536 bytes total. 32,768 slots. (The list has 32KB)
+// Option 1: Increase the Static Array Size
+// Option 2: Use Larger Cluster Sizes
+// Option 3: Dynamic Allocation
+// Option 4: Hybrid Approach
 unsigned short fat16ClustersToSave[CLUSTERS_TO_SAVE_MAX];
 
 

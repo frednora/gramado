@@ -1,0 +1,45 @@
+
+
+Sketching out a namespace taxonomy
+
+_core     - Core kernel logic.
+_wrappers - Glue functions.
+_DDINIT - Device Driver Initialization
+_devmgr - Device manager.
+-sched - Scheduler functions.
+_ts    - Task switch routines.
+_mm    - Memory management.
+_ke    - Kernel executive (execution unit)
+_net     - Networking subsystem.
+_network - Networking subsystem.
+_fs    - Filesystem support.
+_wink  - wink sybsystem. (Wrappers for keyboard, mouse and display)
+_ksys  - Kernel‑internal syscalls. Used when the kernel itself invokes syscall‑like routines (internal API).
+_sys   - System call wrappers
+
+
+------------------------
+
+# IRQ Handler Naming Plan
+
+_irq0_TIMER
+_irq1_KEYBOARD
+_irq8_RTC
+_irq_SHARED0
+_irq_SHARED1
+_irq_SHARED2
+_irq_SHARED3
+_irq12_MOUSE
+_irq14_PRIMARY_IDE
+_irq15_SECONDARY_IDE
+
+
+
+
+
+
+
+
+
+
+

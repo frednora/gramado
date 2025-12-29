@@ -3,22 +3,31 @@
 all:
 
 
-# Origin: cpu
-	make -C exec/ke/
+#
+# app halls
+#
 
-# Origin: irq
-	make -C per/blkdev/
-	make -C per/chardev/
-	make -C per/netdev/
-	make -C per/fs/
-	make -C per/net/
-	make -C per/bus/
-	make -C per/
+# -- cpu --------------------
+    # Origin: cpu
+	make -C apphalls/exec/ke/
+# -- memory --------------------
+    # Origin: memory
+	make -C apphalls/req/mm/
+# -- disk --------------------
+    # Origin: irq
+	make -C apphalls/per/blkdev/
+	make -C apphalls/per/netdev/
+	make -C apphalls/per/fs/
+	make -C apphalls/per/net/
+	make -C apphalls/per/bus/
+	make -C apphalls/per/
 
-# Origin: memory
-	make -C req/mm/
+#
+# user halls
+#
 
-# ...
+# ------------------------------------
+	make -C uhalls/chardev/
 
 clean:
 # ...

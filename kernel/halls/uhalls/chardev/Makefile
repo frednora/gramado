@@ -1,6 +1,6 @@
-# fs/
-# Compile all the files and create p3_fs.o
-# Makefile for the kernel filesystems.
+# Compile all the files and create chardev.o
+# Makefile for the kernel device drivers.
+
 
 INCLUDE = ../../../include
 
@@ -68,31 +68,46 @@ KERNEL_INCLUDE := -I $(INCLUDE)
 # LDFLAGS := -m elf_x86_64 -static
 LDFLAGS := -m elf_x86_64 -s -x -static  
 
+
 # Everything is a file.
-OBJS = fslib.o fsbp.o fsload.o fs.o \
-elf.o pipe.o search.o \
-fat16.o    
+OBJS = \
+bldisp.o display.o \
+tty.o console.o pty.o \
+i8042.o kbdmap.o ps2kbd.o ps2mouse.o keyboard.o mouse.o \
+serial.o    
 
 all:
 
-	$(CC) -c fslib.c   $(KERNEL_INCLUDE) $(CFLAGS) -o fslib.o
-	$(CC) -c fsbp.c    $(KERNEL_INCLUDE) $(CFLAGS) -o fsbp.o
-	$(CC) -c fsload.c  $(KERNEL_INCLUDE) $(CFLAGS) -o fsload.o
-	$(CC) -c fs.c      $(KERNEL_INCLUDE) $(CFLAGS) -o fs.o
 
-	$(CC) -c elf.c     $(KERNEL_INCLUDE) $(CFLAGS) -o elf.o
-	$(CC) -c pipe.c    $(KERNEL_INCLUDE) $(CFLAGS) -o pipe.o
-	$(CC) -c search.c  $(KERNEL_INCLUDE) $(CFLAGS) -o search.o
+# bl display device
+	$(CC) -c display/bldisp/bldisp.c  $(KERNEL_INCLUDE) $(CFLAGS) -o bldisp.o
+#$(CC) -c display/qemudisp/qemudisp.c  $(KERNEL_INCLUDE) $(CFLAGS) -o qemudisp.o
+	$(CC) -c display/display.c  $(KERNEL_INCLUDE) $(CFLAGS) -o display.o
 
-# fat/
-	$(CC) -c fat/fat16.c  $(KERNEL_INCLUDE) $(CFLAGS) -o fat16.o
+# Keyboard map.
+	$(CC) -c kbdmap.c   $(KERNEL_INCLUDE) $(CFLAGS) -o kbdmap.o
+
+# i8042 (PS/2)
+	$(CC) -c i8042/i8042.c    $(KERNEL_INCLUDE) $(CFLAGS) -o i8042.o
+	$(CC) -c i8042/keyboard.c $(KERNEL_INCLUDE) $(CFLAGS) -o keyboard.o
+	$(CC) -c i8042/mouse.c    $(KERNEL_INCLUDE) $(CFLAGS) -o mouse.o
+	$(CC) -c i8042/ps2kbd.c   $(KERNEL_INCLUDE) $(CFLAGS) -o ps2kbd.o
+	$(CC) -c i8042/ps2mouse.c $(KERNEL_INCLUDE) $(CFLAGS) -o ps2mouse.o
+
+# serial
+	$(CC) -c serial/serial.c  $(KERNEL_INCLUDE) $(CFLAGS) -o serial.o
+# tty
+	$(CC) -c tty/tty.c      $(KERNEL_INCLUDE) $(CFLAGS) -o tty.o
+	$(CC) -c tty/pty.c      $(KERNEL_INCLUDE) $(CFLAGS) -o pty.o
+
+	$(CC) -c console/console.c  $(KERNEL_INCLUDE) $(CFLAGS) -o console.o 
+
 
 # link
-	$(LD) -r -o p3_fs.o $(OBJS)
-	cp p3_fs.o ../../../
+	$(LD) -r -o chardev.o $(OBJS)
+	cp chardev.o  ../../../
 	rm *.o
 
 clean:
 	rm *.o    
-	
-	
+

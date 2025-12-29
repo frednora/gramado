@@ -1,9 +1,9 @@
-# mm/
-# Compile all the files and create p3_mm.o
-# Makefile for the kernel memory manager.
-# Created by Fred Nora.
+# dev/
+# Compile all the files and create ar_dev.o
+# Makefile for the kernel device drivers.
 
-INCLUDE = ../../../include
+
+INCLUDE = ../../../../include
 
 AS	= as
 LD	= ld
@@ -57,6 +57,7 @@ CFLAGS := \
 	-fno-omit-frame-pointer \
 	-fno-optimize-sibling-calls    
 
+
 # Internal files
 # Used to build the kernel.
 KERNEL_INCLUDE := -I $(INCLUDE)
@@ -68,41 +69,29 @@ KERNEL_INCLUDE := -I $(INCLUDE)
 # LDFLAGS := -m elf_x86_64 -static
 LDFLAGS := -m elf_x86_64 -s -x -static  
 
-OBJS = mmsize.o \
-mmusage.o \
-x64mm.o \
-mm.o \
-mminfo.o \
-mmpool.o \
-paging.o \
-slab.o \
-mmrt.o \
-mmft.o    
+
+# Everything is a file.
+OBJS = \
+e1000hw.o e1000.o    
 
 
 all:
 
-# arm
+# e100
+# ...
 
-# x86_64
-	$(CC) -c x86_64/x64mm.c   $(KERNEL_INCLUDE) $(CFLAGS) -o x64mm.o
-	$(CC) -c x86_64/paging.c  $(KERNEL_INCLUDE) $(CFLAGS) -o paging.o
+# e1000
+	$(CC) -c e1000/e1000hw.c  $(KERNEL_INCLUDE) $(CFLAGS) -o e1000hw.o 
+	$(CC) -c e1000/e1000.c    $(KERNEL_INCLUDE) $(CFLAGS) -o e1000.o 
 
-# mm
-	$(CC) -c mmsize.c   $(KERNEL_INCLUDE) $(CFLAGS) -o mmsize.o
-	$(CC) -c mmusage.c  $(KERNEL_INCLUDE) $(CFLAGS) -o mmusage.o
-	$(CC) -c mm.c       $(KERNEL_INCLUDE) $(CFLAGS) -o mm.o
-	$(CC) -c mminfo.c   $(KERNEL_INCLUDE) $(CFLAGS) -o mminfo.o
-	$(CC) -c mmpool.c   $(KERNEL_INCLUDE) $(CFLAGS) -o mmpool.o
-	$(CC) -c slab.c     $(KERNEL_INCLUDE) $(CFLAGS) -o slab.o
-	$(CC) -c mmrt.c     $(KERNEL_INCLUDE) $(CFLAGS) -o mmrt.o
-	$(CC) -c mmft.c     $(KERNEL_INCLUDE) $(CFLAGS) -o mmft.o
+# rtl81xx
+# ...
 
 # link
-	$(LD) -r -o p3_mm.o $(OBJS)
-	cp p3_mm.o ../../../
+	$(LD) -r -o netdev.o $(OBJS)
+	cp netdev.o ../../../../
 	rm *.o
 
 clean:
 	rm *.o    
-	
+

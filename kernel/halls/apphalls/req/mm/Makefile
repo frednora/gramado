@@ -1,9 +1,9 @@
-# bus/
-# Compile all the files and create p3_bus.o
+# mm/
+# Compile all the files and create p3_mm.o
+# Makefile for the kernel memory manager.
+# Created by Fred Nora.
 
-# Makefile for the kernel device drivers.
-
-INCLUDE = ../../../include
+INCLUDE = ../../../../include
 
 AS	= as
 LD	= ld
@@ -57,7 +57,6 @@ CFLAGS := \
 	-fno-omit-frame-pointer \
 	-fno-optimize-sibling-calls    
 
-
 # Internal files
 # Used to build the kernel.
 KERNEL_INCLUDE := -I $(INCLUDE)
@@ -69,30 +68,41 @@ KERNEL_INCLUDE := -I $(INCLUDE)
 # LDFLAGS := -m elf_x86_64 -static
 LDFLAGS := -m elf_x86_64 -s -x -static  
 
+OBJS = mmsize.o \
+mmusage.o \
+x64mm.o \
+mm.o \
+mminfo.o \
+mmpool.o \
+paging.o \
+slab.o \
+mmrt.o \
+mmft.o    
 
-# Everything is a file.
-OBJS = pci.o pciinfo.o pciscan.o   
 
 all:
 
-# pci
-	$(CC) -c pci/pci.c      $(KERNEL_INCLUDE) $(CFLAGS) -o pci.o
-	$(CC) -c pci/pciinfo.c  $(KERNEL_INCLUDE) $(CFLAGS) -o pciinfo.o
-	$(CC) -c pci/pciscan.c  $(KERNEL_INCLUDE) $(CFLAGS) -o pciscan.o
+# arm
 
-# usb
-#	$(CC) -c usb/usb.c        $(KERNEL_INCLUDE) $(CFLAGS) -o usb.o
-#	$(CC) -c usb/ehci/ehci.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ehci.o
-#	$(CC) -c usb/uhci/ehci.c  $(KERNEL_INCLUDE) $(CFLAGS) -o uhci.o
-#	$(CC) -c usb/xhci/ehci.c  $(KERNEL_INCLUDE) $(CFLAGS) -o xhci.o
+# x86_64
+	$(CC) -c x86_64/x64mm.c   $(KERNEL_INCLUDE) $(CFLAGS) -o x64mm.o
+	$(CC) -c x86_64/paging.c  $(KERNEL_INCLUDE) $(CFLAGS) -o paging.o
 
-# ...
+# mm
+	$(CC) -c mmsize.c   $(KERNEL_INCLUDE) $(CFLAGS) -o mmsize.o
+	$(CC) -c mmusage.c  $(KERNEL_INCLUDE) $(CFLAGS) -o mmusage.o
+	$(CC) -c mm.c       $(KERNEL_INCLUDE) $(CFLAGS) -o mm.o
+	$(CC) -c mminfo.c   $(KERNEL_INCLUDE) $(CFLAGS) -o mminfo.o
+	$(CC) -c mmpool.c   $(KERNEL_INCLUDE) $(CFLAGS) -o mmpool.o
+	$(CC) -c slab.c     $(KERNEL_INCLUDE) $(CFLAGS) -o slab.o
+	$(CC) -c mmrt.c     $(KERNEL_INCLUDE) $(CFLAGS) -o mmrt.o
+	$(CC) -c mmft.c     $(KERNEL_INCLUDE) $(CFLAGS) -o mmft.o
 
 # link
-	$(LD) -r -o p3_bus.o $(OBJS)
-	cp p3_bus.o ../../../
+	$(LD) -r -o p3_mm.o $(OBJS)
+	cp p3_mm.o ../../../../
 	rm *.o
 
 clean:
 	rm *.o    
-
+	

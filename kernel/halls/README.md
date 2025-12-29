@@ -11,9 +11,15 @@
 ## Folders
 
 
+``` 
+ Application interaction
+ * apphalls/exec/  - Execution. (threads)
+ * apphalls/per/   - Peripherals. (devices)
+ * apphalls/req    - Requests. (memory)
 ```
- * exec/  - Execution. (threads)
- * per/   - Peripherals. (devices)
- * req    - Requests. (memory)
+
+```
+ User interaction
+ * uhalls/chardev/ - (Keyboard, mouse, display)
 ```
 

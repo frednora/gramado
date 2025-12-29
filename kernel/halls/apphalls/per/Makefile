@@ -1,6 +1,7 @@
-# net/
-# Compile all the files and create p3_net.o
-# Makefile for the kernel networking.
+# dev/
+# Compile all the files and create p3_dev.o
+# Makefile for the kernel device drivers.
+
 
 INCLUDE = ../../../include
 
@@ -61,7 +62,6 @@ CFLAGS := \
 # Used to build the kernel.
 KERNEL_INCLUDE := -I $(INCLUDE)
 
-
 # See: https://linux.die.net/man/1/ld
 # -s --strip-all:   Omit all symbol information from the output file.
 # -x --discard-all: Delete all local symbols.
@@ -69,44 +69,22 @@ KERNEL_INCLUDE := -I $(INCLUDE)
 # LDFLAGS := -m elf_x86_64 -static
 LDFLAGS := -m elf_x86_64 -s -x -static  
 
-OBJS = domain.o inet.o \
-socket.o sockint.o \
-ethernet.o arp.o ipv4.o tcp.o udp.o dhcp.o gprot.o \
-net.o    
+
+# Everything is a file.
+OBJS = \
+dev.o io.o    
 
 all:
 
-	$(CC) -c net.c  $(KERNEL_INCLUDE) $(CFLAGS) -o net.o
-
-# network
-	$(CC) -c domain.c   $(KERNEL_INCLUDE) $(CFLAGS) -o domain.o
-	$(CC) -c inet.c     $(KERNEL_INCLUDE) $(CFLAGS) -o inet.o
-
-# socket
-	$(CC) -c socket.c   $(KERNEL_INCLUDE) $(CFLAGS) -o socket.o
-	$(CC) -c sockint.c  $(KERNEL_INCLUDE) $(CFLAGS) -o sockint.o
-
-# core protocols
-	$(CC) -c prot/core/ethernet.c  \
-$(KERNEL_INCLUDE) $(CFLAGS) -o ethernet.o
-	$(CC) -c prot/core/arp.c  \
-$(KERNEL_INCLUDE) $(CFLAGS) -o arp.o
-	$(CC) -c prot/core/ipv4.c  \
-$(KERNEL_INCLUDE) $(CFLAGS) -o ipv4.o
-
-# protocols
-	$(CC) -c prot/tcp.c    $(KERNEL_INCLUDE) $(CFLAGS) -o tcp.o
-	$(CC) -c prot/udp.c    $(KERNEL_INCLUDE) $(CFLAGS) -o udp.o
-	$(CC) -c prot/dhcp.c   $(KERNEL_INCLUDE) $(CFLAGS) -o dhcp.o
-	$(CC) -c prot/gprot.c  $(KERNEL_INCLUDE) $(CFLAGS) -o gprot.o
+# i/o
+	$(CC) -c dev.c   $(KERNEL_INCLUDE) $(CFLAGS) -o dev.o 
+	$(CC) -c io.c       $(KERNEL_INCLUDE) $(CFLAGS) -o io.o
 
 # link
-	$(LD) -r -o p3_net.o $(OBJS)
-	cp p3_net.o ../../../
+	$(LD) -r -o p3_dev.o $(OBJS)
+	cp p3_dev.o ../../../
 	rm *.o
 
 clean:
 	rm *.o    
-	
-	
 

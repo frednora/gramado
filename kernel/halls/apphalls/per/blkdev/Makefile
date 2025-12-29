@@ -1,9 +1,12 @@
-# dev/
-# Compile all the files and create ar_dev.o
-# Makefile for the kernel device drivers.
+# blkdev/ 
+# Module for block devices.
+# This module is used by the kernel to support block devices.
+# AHCI devices, ATA devices and storage interface.
+# Compile all the files and create blkdev.o
 
+targetFile = blkdev.o
 
-INCLUDE = ../../../include
+INCLUDE = ../../../../include
 
 AS	= as
 LD	= ld
@@ -20,7 +23,6 @@ PYTHON	= python
 PYTHON2	= python2
 PYTHON3	= python3
 RUBY	= ruby
-
 
 # test: gramado 64bit
 # See: https://gcc.gnu.org/onlinedocs/gcc/Code-Gen-Options.html
@@ -69,44 +71,34 @@ KERNEL_INCLUDE := -I $(INCLUDE)
 # LDFLAGS := -m elf_x86_64 -static
 LDFLAGS := -m elf_x86_64 -s -x -static  
 
-
 # Everything is a file.
 OBJS = \
-bldisp.o display.o \
-tty.o console.o pty.o \
-i8042.o kbdmap.o ps2kbd.o ps2mouse.o keyboard.o mouse.o \
-serial.o    
+ata.o atadma.o atahdd.o atainfo.o atairq.o atapci.o \
+disk_r.o disk_w.o storage.o    
 
 all:
 
+# AHCI
+#	$(CC) -c ahci/ahci.c      $(KERNEL_INCLUDE) $(CFLAGS) -o ahci.o 
+#	$(CC) -c ahci/ahciinfo.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ahciinfo.o 
+#	$(CC) -c ahci/ahcipci.c   $(KERNEL_INCLUDE) $(CFLAGS) -o ahcipci.o 
 
-# bl display device
-	$(CC) -c display/bldisp/bldisp.c  $(KERNEL_INCLUDE) $(CFLAGS) -o bldisp.o
-#$(CC) -c display/qemudisp/qemudisp.c  $(KERNEL_INCLUDE) $(CFLAGS) -o qemudisp.o
-	$(CC) -c display/display.c  $(KERNEL_INCLUDE) $(CFLAGS) -o display.o
+# ATA
+	$(CC) -c ata/ata.c     $(KERNEL_INCLUDE) $(CFLAGS) -o ata.o 
+	$(CC) -c ata/atadma.c  $(KERNEL_INCLUDE) $(CFLAGS) -o atadma.o 
+	$(CC) -c ata/atahdd.c  $(KERNEL_INCLUDE) $(CFLAGS) -o atahdd.o 
+	$(CC) -c ata/atainfo.c $(KERNEL_INCLUDE) $(CFLAGS) -o atainfo.o 
+	$(CC) -c ata/atairq.c  $(KERNEL_INCLUDE) $(CFLAGS) -o atairq.o 
+	$(CC) -c ata/atapci.c  $(KERNEL_INCLUDE) $(CFLAGS) -o atapci.o 
+	$(CC) -c ata/disk_r.c  $(KERNEL_INCLUDE) $(CFLAGS) -o disk_r.o
+	$(CC) -c ata/disk_w.c  $(KERNEL_INCLUDE) $(CFLAGS) -o disk_w.o
 
-# Keyboard map.
-	$(CC) -c kbdmap.c   $(KERNEL_INCLUDE) $(CFLAGS) -o kbdmap.o
-
-# i8042 (PS/2)
-	$(CC) -c i8042/i8042.c    $(KERNEL_INCLUDE) $(CFLAGS) -o i8042.o
-	$(CC) -c i8042/keyboard.c $(KERNEL_INCLUDE) $(CFLAGS) -o keyboard.o
-	$(CC) -c i8042/mouse.c    $(KERNEL_INCLUDE) $(CFLAGS) -o mouse.o
-	$(CC) -c i8042/ps2kbd.c   $(KERNEL_INCLUDE) $(CFLAGS) -o ps2kbd.o
-	$(CC) -c i8042/ps2mouse.c $(KERNEL_INCLUDE) $(CFLAGS) -o ps2mouse.o
-
-# serial
-	$(CC) -c serial/serial.c  $(KERNEL_INCLUDE) $(CFLAGS) -o serial.o
-# tty
-	$(CC) -c tty/tty.c      $(KERNEL_INCLUDE) $(CFLAGS) -o tty.o
-	$(CC) -c tty/pty.c      $(KERNEL_INCLUDE) $(CFLAGS) -o pty.o
-
-	$(CC) -c console/console.c  $(KERNEL_INCLUDE) $(CFLAGS) -o console.o 
-
+# storage
+	$(CC) -c storage.c $(KERNEL_INCLUDE) $(CFLAGS) -o storage.o 
 
 # link
-	$(LD) -r -o chardev.o $(OBJS)
-	cp chardev.o  ../../../
+	$(LD) -r -o $(targetFile) $(OBJS)
+	cp $(targetFile)  ../../../../
 	rm *.o
 
 clean:

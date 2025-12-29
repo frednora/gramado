@@ -13,7 +13,8 @@
 // ------------------
 // with 8 pages we have 8 directories for 1024 entries each dir.
 
-//unsigned long fs_buffers[8];
+// These are directory buffers, used when walking through a pathname.
+// Helps you find the file by walking directories.
 unsigned long fs_buffers[FS_N_BUFFERS];
 
 //see: fs.h
@@ -3839,8 +3840,7 @@ fsSaveFile (
         if (fat[c] == 0)
         {
             // number of sectors
-            // Encontrado todos os espaços livres 
-            // que o arquivo precisa.
+            // Encontrado todos os espaços livres que o arquivo precisa.
             // Marca o fim.
             // #importante: 
             // Se der certo, saímos do loop.

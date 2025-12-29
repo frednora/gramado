@@ -1,12 +1,8 @@
-# blkdev/ 
-# Module for block devices.
-# This module is used by the kernel to support block devices.
-# AHCI devices, ATA devices and storage interface.
-# Compile all the files and create blkdev.o
+# fs/
+# Compile all the files and create p3_fs.o
+# Makefile for the kernel filesystems.
 
-targetFile = blkdev.o
-
-INCLUDE = ../../../include
+INCLUDE = ../../../../include
 
 AS	= as
 LD	= ld
@@ -23,6 +19,7 @@ PYTHON	= python
 PYTHON2	= python2
 PYTHON3	= python3
 RUBY	= ruby
+
 
 # test: gramado 64bit
 # See: https://gcc.gnu.org/onlinedocs/gcc/Code-Gen-Options.html
@@ -72,35 +69,30 @@ KERNEL_INCLUDE := -I $(INCLUDE)
 LDFLAGS := -m elf_x86_64 -s -x -static  
 
 # Everything is a file.
-OBJS = \
-ata.o atadma.o atahdd.o atainfo.o atairq.o atapci.o \
-disk_r.o disk_w.o storage.o    
+OBJS = fslib.o fsbp.o fsload.o fs.o \
+elf.o pipe.o search.o \
+fat16.o    
 
 all:
 
-# AHCI
-#	$(CC) -c ahci/ahci.c      $(KERNEL_INCLUDE) $(CFLAGS) -o ahci.o 
-#	$(CC) -c ahci/ahciinfo.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ahciinfo.o 
-#	$(CC) -c ahci/ahcipci.c   $(KERNEL_INCLUDE) $(CFLAGS) -o ahcipci.o 
+	$(CC) -c fslib.c   $(KERNEL_INCLUDE) $(CFLAGS) -o fslib.o
+	$(CC) -c fsbp.c    $(KERNEL_INCLUDE) $(CFLAGS) -o fsbp.o
+	$(CC) -c fsload.c  $(KERNEL_INCLUDE) $(CFLAGS) -o fsload.o
+	$(CC) -c fs.c      $(KERNEL_INCLUDE) $(CFLAGS) -o fs.o
 
-# ATA
-	$(CC) -c ata/ata.c     $(KERNEL_INCLUDE) $(CFLAGS) -o ata.o 
-	$(CC) -c ata/atadma.c  $(KERNEL_INCLUDE) $(CFLAGS) -o atadma.o 
-	$(CC) -c ata/atahdd.c  $(KERNEL_INCLUDE) $(CFLAGS) -o atahdd.o 
-	$(CC) -c ata/atainfo.c $(KERNEL_INCLUDE) $(CFLAGS) -o atainfo.o 
-	$(CC) -c ata/atairq.c  $(KERNEL_INCLUDE) $(CFLAGS) -o atairq.o 
-	$(CC) -c ata/atapci.c  $(KERNEL_INCLUDE) $(CFLAGS) -o atapci.o 
-	$(CC) -c ata/disk_r.c  $(KERNEL_INCLUDE) $(CFLAGS) -o disk_r.o
-	$(CC) -c ata/disk_w.c  $(KERNEL_INCLUDE) $(CFLAGS) -o disk_w.o
+	$(CC) -c elf.c     $(KERNEL_INCLUDE) $(CFLAGS) -o elf.o
+	$(CC) -c pipe.c    $(KERNEL_INCLUDE) $(CFLAGS) -o pipe.o
+	$(CC) -c search.c  $(KERNEL_INCLUDE) $(CFLAGS) -o search.o
 
-# storage
-	$(CC) -c storage.c $(KERNEL_INCLUDE) $(CFLAGS) -o storage.o 
+# fat/
+	$(CC) -c fat/fat16.c  $(KERNEL_INCLUDE) $(CFLAGS) -o fat16.o
 
 # link
-	$(LD) -r -o $(targetFile) $(OBJS)
-	cp $(targetFile)  ../../../
+	$(LD) -r -o p3_fs.o $(OBJS)
+	cp p3_fs.o ../../../../
 	rm *.o
 
 clean:
 	rm *.o    
-
+	
+	

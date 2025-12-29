@@ -8,7 +8,7 @@
 # It handles the process stuff.
 # It also handles the system initialization,
 
-INCLUDE = ../../../include
+INCLUDE = ../../../../include
 
 AS	= as
 LD	= ld
@@ -177,7 +177,7 @@ all:
 
 # link
 	$(LD) -r -o p1_ke.o $(OBJS)
-	cp p1_ke.o ../../../
+	cp p1_ke.o ../../../../
 	rm *.o
 
 clean:

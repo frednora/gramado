@@ -1,9 +1,9 @@
-# dev/
-# Compile all the files and create p3_dev.o
+# bus/
+# Compile all the files and create p3_bus.o
+
 # Makefile for the kernel device drivers.
 
-
-INCLUDE = ../../include
+INCLUDE = ../../../../include
 
 AS	= as
 LD	= ld
@@ -71,18 +71,26 @@ LDFLAGS := -m elf_x86_64 -s -x -static
 
 
 # Everything is a file.
-OBJS = \
-dev.o io.o    
+OBJS = pci.o pciinfo.o pciscan.o   
 
 all:
 
-# i/o
-	$(CC) -c dev.c   $(KERNEL_INCLUDE) $(CFLAGS) -o dev.o 
-	$(CC) -c io.c       $(KERNEL_INCLUDE) $(CFLAGS) -o io.o
+# pci
+	$(CC) -c pci/pci.c      $(KERNEL_INCLUDE) $(CFLAGS) -o pci.o
+	$(CC) -c pci/pciinfo.c  $(KERNEL_INCLUDE) $(CFLAGS) -o pciinfo.o
+	$(CC) -c pci/pciscan.c  $(KERNEL_INCLUDE) $(CFLAGS) -o pciscan.o
+
+# usb
+#	$(CC) -c usb/usb.c        $(KERNEL_INCLUDE) $(CFLAGS) -o usb.o
+#	$(CC) -c usb/ehci/ehci.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ehci.o
+#	$(CC) -c usb/uhci/ehci.c  $(KERNEL_INCLUDE) $(CFLAGS) -o uhci.o
+#	$(CC) -c usb/xhci/ehci.c  $(KERNEL_INCLUDE) $(CFLAGS) -o xhci.o
+
+# ...
 
 # link
-	$(LD) -r -o p3_dev.o $(OBJS)
-	cp p3_dev.o ../../
+	$(LD) -r -o p3_bus.o $(OBJS)
+	cp p3_bus.o ../../../../
 	rm *.o
 
 clean:
