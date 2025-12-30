@@ -32,10 +32,11 @@ Its responsibilities are to distribute (or "broker") these events to the correct
 // These point to the currently selected layout tables.
 // By default they are NULL until ibroker_set_keymap() is called.
 
-unsigned char *keymap_normal  = NULL;
-unsigned char *keymap_shift   = NULL;
-unsigned char *keymap_ctrl    = NULL;
-unsigned char *keymap_altgr   = NULL; // optional
+unsigned char *keymap_normal   = NULL;
+unsigned char *keymap_shift    = NULL;
+unsigned char *keymap_ctrl     = NULL;
+unsigned char *keymap_altgr    = NULL;
+unsigned char *keymap_extended = NULL; // new
 
 
 // Keyboard support
@@ -169,12 +170,14 @@ ibroker_set_keymap(
     unsigned char *p_normal,
     unsigned char *p_shift,
     unsigned char *p_ctrl,
-    unsigned char *p_altgr )
+    unsigned char *p_altgr,
+    unsigned char *p_extended )
 {
-    keymap_normal = p_normal;
-    keymap_shift  = p_shift;
-    keymap_ctrl   = p_ctrl;
-    keymap_altgr  = p_altgr;
+    keymap_normal   = p_normal;
+    keymap_shift    = p_shift;
+    keymap_ctrl     = p_ctrl;
+    keymap_altgr    = p_altgr;
+    keymap_extended = p_extended; // new
 }
 
 // Minimal ring 0 thread example
@@ -1107,16 +1110,15 @@ sys menu    = make: E0 5D,    break: E0 F0 5D
 */
 
     //printk("kgwm.c: #todo Extended keyboard\n");
-    //printk("sc={%x}\n",scancode);
-    //refresh_screen();
+    printk("vk={%x} rc={%x} sc={%x}\n", vk, rawbyte, scancode );
 
 
-    if (vk == VK_PAUSE)
+    if (vk == VK_PAUSEBREAK)
     {
         if (msg == MSG_SYSKEYDOWN)
-            printk("VK_PAUSE down\n");
+            printk("VK_PAUSEBREAK down\n");
         if (msg == MSG_SYSKEYUP)
-            printk("VK_PAUSE up\n");
+            printk("VK_PAUSEBREAK up\n");
     }
 
     // unsigned long
@@ -1139,7 +1141,8 @@ sys menu    = make: E0 5D,    break: E0 F0 5D
 
             // Right [ENTER]
             // qemu: It sends 0xE0 0x9C for both press and release, without the F0 break prefix.
-            if (ScanCode == 0x1C || ScanCode == 0x1A)
+            //if (ScanCode == 0x1C || ScanCode == 0x1A)
+            if (vk == VK_RETURN)
             {
                 if (ctrl_status == TRUE){
                     return 0;
@@ -1152,40 +1155,44 @@ sys menu    = make: E0 5D,    break: E0 F0 5D
             }
 
 
-            if (ScanCode == 0x4D)  // right
+            //if (ScanCode == 0x4D)  // right
+            if (vk == VK_ARROW_RIGHT)
             {
                 if (ctrl_status == TRUE){
-                    ibroker_post_message_to_ds( MSG_CONTROL_ARROW_RIGHT, VK_RIGHT, ScanCode );
+                    ibroker_post_message_to_ds( MSG_CONTROL_ARROW_RIGHT, VK_ARROW_RIGHT, ScanCode );
                     return 0;
                 } else {
                     ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_ARROW_RIGHT, ScanCode );
                     return 0;
                 }
             }
-            if (ScanCode == 0x48)  // up
+            //if (ScanCode == 0x48)  // up
+            if (vk == VK_ARROW_UP)
             {
                 if (ctrl_status == TRUE){
-                    ibroker_post_message_to_ds( MSG_CONTROL_ARROW_UP, VK_UP, ScanCode );
+                    ibroker_post_message_to_ds( MSG_CONTROL_ARROW_UP, VK_ARROW_UP, ScanCode );
                     return 0;
                 } else {
                     ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_ARROW_UP, ScanCode );
                     return 0;
                 }
             }
-            if (ScanCode == 0x50)  // down
+            //if (ScanCode == 0x50)  // down
+            if (vk == VK_ARROW_DOWN)
             {
                 if (ctrl_status == TRUE){
-                    ibroker_post_message_to_ds( MSG_CONTROL_ARROW_DOWN, VK_DOWN, ScanCode );
+                    ibroker_post_message_to_ds( MSG_CONTROL_ARROW_DOWN, VK_ARROW_DOWN, ScanCode );
                     return 0;
                 } else {
                     ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_ARROW_DOWN, ScanCode );                    
                     return 0;
                 }
             }
-            if (ScanCode == 0x4B)  // left
+            //if (ScanCode == 0x4B)  // left
+            if (vk == VK_ARROW_LEFT)
             {
                 if (ctrl_status == TRUE){
-                    ibroker_post_message_to_ds( MSG_CONTROL_ARROW_LEFT, VK_LEFT, ScanCode );
+                    ibroker_post_message_to_ds( MSG_CONTROL_ARROW_LEFT, VK_ARROW_LEFT, ScanCode );
                     return 0;
                 } else {
                     ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_ARROW_LEFT, ScanCode );
@@ -1193,55 +1200,65 @@ sys menu    = make: E0 5D,    break: E0 F0 5D
                 }
             }
             // Insert - E0 52	E0 D2	0x52
-            if (ScanCode == 0x52)  // Insert
+            //if (ScanCode == 0x52)  // Insert
+            if (vk == VK_INSERT)  // Insert
             {
+                printk("Posting VK_INSERT\n");
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_INSERT, ScanCode );
                 return 0;
             }
             // Delete - E0 53	E0 D3	0x53
-            if (ScanCode == 0x53)  // Delete
+            //if (ScanCode == 0x53)  // Delete
+            if (vk == VK_DELETE)
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_DELETE, ScanCode );
                 return 0;
             }
             // Home - E0 47  E0 C7  0x47
-            if (ScanCode == 0x47)  // Home
+            //if (ScanCode == 0x47)  // Home
+            if (vk == VK_HOME) 
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_HOME, ScanCode );
                 return 0;
             }
             // End - E0 4F	E0 CF	0x4F
-            if (ScanCode == 0x4F)  // End
+            //if (ScanCode == 0x4F)  // End
+            if (vk == VK_END)
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_END, ScanCode );
                 return 0;
             }
             // Page Up - E0 49	E0 C9	0x49
-            if (ScanCode == 0x49)  // Page up
+            //if (ScanCode == 0x49)  // Page up
+            if (vk == VK_PAGEUP)
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_PAGEUP, ScanCode );
                 return 0;
             }
             // Page Down - E0 51	E0 D1	0x51
-            if (ScanCode == 0x51)  // page down
+            //if (ScanCode == 0x51)  // page down
+            if (vk == VK_PAGEDOWN)
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_PAGEDOWN, ScanCode );
                 return 0;
             }
             // right ctrl  = make: E0 1D,    break: E0 F0 1D
-            if (ScanCode == 0x1D)  // Right ctrl
+            //if (ScanCode == 0x1D)  // Right ctrl
+            if (vk == VK_RCONTROL)
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_RCONTROL, ScanCode );
                 return 0;
             }
             // Right Alt / AltGr	E0 38	E0 B8	0x38
-            if (ScanCode == 0x38)  // Right alt (altgr)
+            //if (ScanCode == 0x38)  // Right alt (altgr)
+            if (vk == VK_ALTGR)
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_ALTGR, ScanCode );
                 return 0;
             }
             // SysMenu / App key	E0 5D	E0 DD	0x5D
-            if (ScanCode == 0x5D)  // Sys menu (app)
+            //if (ScanCode == 0x5D)  // Sys menu (app)
+            if (vk == VK_APPS)
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_APPS, ScanCode );
                 return 0;
@@ -1254,7 +1271,8 @@ sys menu    = make: E0 5D,    break: E0 F0 5D
 
             // Right [ENTER]
             // qemu: It sends 0xE0 0x9C for both press and release, without the F0 break prefix.
-            if (ScanCode == 0x1C || ScanCode == 0x1A)
+            //if (ScanCode == 0x1C || ScanCode == 0x1A)
+            if (vk == VK_RETURN)
             {
                 if (ctrl_status == TRUE){
                     return 0;
@@ -1266,8 +1284,8 @@ sys menu    = make: E0 5D,    break: E0 F0 5D
                 }
             }
 
-
-            if (ScanCode == 0x4D)  // right
+            //if (ScanCode == 0x4D)  // right
+            if (vk == VK_ARROW_RIGHT)
             {
                 if (ctrl_status == TRUE){
                     return 0;
@@ -1276,7 +1294,8 @@ sys menu    = make: E0 5D,    break: E0 F0 5D
                     return 0;
                 }
             }
-            if (ScanCode == 0x48)  // up
+            //if (ScanCode == 0x48)  // up
+            if (vk == VK_ARROW_UP)
             {
                 if (ctrl_status == TRUE){
                     return 0;
@@ -1285,7 +1304,8 @@ sys menu    = make: E0 5D,    break: E0 F0 5D
                     return 0;
                 }
             }
-            if (ScanCode == 0x50)  // down
+            //if (ScanCode == 0x50)  // down
+            if (vk == VK_ARROW_DOWN)
             {
                 if (ctrl_status == TRUE){
                     return 0;
@@ -1294,7 +1314,8 @@ sys menu    = make: E0 5D,    break: E0 F0 5D
                     return 0;
                 }
             }
-            if (ScanCode == 0x4B)  // left
+            //if (ScanCode == 0x4B)  // left
+            if (vk == VK_ARROW_LEFT)
             {
                 if (ctrl_status == TRUE){
                     return 0;
@@ -1306,55 +1327,67 @@ sys menu    = make: E0 5D,    break: E0 F0 5D
 
 
             // Insert - E0 52	E0 D2	0x52
-            if (ScanCode == 0x52)  // Insert
+            //if (ScanCode == 0x52)  // Insert
+            if (vk == VK_INSERT)
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYUP, VK_INSERT, ScanCode );
                 return 0;
             }
             // Delete - E0 53	E0 D3	0x53
-            if (ScanCode == 0x53)  // Delete
+            //if (ScanCode == 0x53)  // Delete
+            if (vk == VK_DELETE)
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYUP, VK_DELETE, ScanCode );
                 return 0;
             }
             // Home - E0 47  E0 C7  0x47
-            if (ScanCode == 0x47)  // Home
+            //if (ScanCode == 0x47)  // Home
+            if (vk == VK_HOME)
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYUP, VK_HOME, ScanCode );
                 return 0;
             }
             // End - E0 4F	E0 CF	0x4F
-            if (ScanCode == 0x4F)  // End
+            //if (ScanCode == 0x4F)  // End
+            if (vk == VK_END)
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYUP, VK_END, ScanCode );
                 return 0;
             }
             // Page Up - E0 49	E0 C9	0x49
-            if (ScanCode == 0x49)  // Page up
+            //if (ScanCode == 0x49)  // Page up
+            if (vk == VK_PAGEUP)
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYUP, VK_PAGEUP, ScanCode );
                 return 0;
             }
             // Page Down - E0 51	E0 D1	0x51
-            if (ScanCode == 0x51)  // page down
+            //if (ScanCode == 0x51)  // page down
+            if (vk == VK_PAGEDOWN)
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYUP, VK_PAGEDOWN, ScanCode );
                 return 0;
             }
+
+
             // right ctrl  = make: E0 1D,    break: E0 F0 1D
-            if (ScanCode == 0x1D)  // Right ctrl
+            //if (ScanCode == 0x1D)  // Right ctrl
+            if (vk == VK_RCONTROL)
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYUP, VK_RCONTROL, ScanCode );
                 return 0;
             }
             // Right Alt / AltGr	E0 38	E0 B8	0x38
-            if (ScanCode == 0x38)  // Right alt (altgr)
+            //if (ScanCode == 0x38)  // Right alt (altgr)
+            if (vk == VK_ALTGR)
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYUP, VK_ALTGR, ScanCode );
                 return 0;
             }
+
             // SysMenu / App key	E0 5D	E0 DD	0x5D
-            if (ScanCode == 0x5D)  // Sys menu (app)
+            //if (ScanCode == 0x5D)  // Sys menu (app)
+            if (vk == VK_APPS)
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYUP, VK_APPS, ScanCode );
                 return 0;
@@ -2724,6 +2757,7 @@ wmRawKeyEvent(
 // Um bit sinaliza o break, 
 // que representa que a tecla foi liberada.
 
+
     // Released: Yes, it's a break.
     if ( (Keyboard_RawByte & BREAK_MASK) != 0 ){
         fBreak = TRUE;
@@ -2732,6 +2766,7 @@ wmRawKeyEvent(
     if ( (Keyboard_RawByte & BREAK_MASK) == 0 ){
         fBreak = FALSE;
     }
+
 
 // ================================================
 // Released: Yes, it's a break.
@@ -2909,7 +2944,7 @@ wmRawKeyEvent(
 
             // caps lock keydown
             // muda o status do capslock não importa o anterior.
-            case VK_CAPITAL:
+            case VK_CAPSLOCK:  //case VK_CAPITAL: 
                 if (capslock_status == FALSE){ 
                     capslock_status = TRUE; 
                     Event_Message = MSG_SYSKEYDOWN; 
@@ -3069,7 +3104,7 @@ done:
     if (raw_byte_0 == 0xE1 && raw_byte_1 == 0x1D && raw_byte_2 == 0x45)
     {
         Event_Message = MSG_SYSKEYDOWN;
-        Event_LongVK = VK_PAUSE;
+        Event_LongVK = VK_PAUSEBREAK;  //VK_PAUSE;
         Event_LongRawByte = 0;
         fPause = TRUE;
     }
@@ -3077,13 +3112,16 @@ done:
     if (raw_byte_0 == 0xE1 && raw_byte_1 == 0x9D && raw_byte_2 == 0xC5)
     {
         Event_Message = MSG_SYSKEYUP;
-        Event_LongVK = VK_PAUSE;
+        Event_LongVK = VK_PAUSEBREAK;  //VK_PAUSE;
         Event_LongRawByte = 0;
         fPause = TRUE;
     }
 
+// For extended keys the raw byte is not the first anymore.
+// Lets check the is_break condition against the second byte now.
     if (Prefix == 0xE0 || Prefix== 0xE1)
     {
+        // Not a pause/break key
         if (fPause != TRUE)
         {
             is_break = (raw_byte_1 & 0x80) ? TRUE : FALSE;
@@ -3092,10 +3130,15 @@ done:
             } else {
                 Event_Message = MSG_SYSKEYDOWN;
             }
-            Event_LongVK       = raw_byte_1;
             Event_LongRawByte  = raw_byte_1;
             Event_LongScanCode = (unsigned long) (raw_byte_1 & 0x0000007F);
+            Event_LongVK       = keymap_extended[Event_LongScanCode];  // Extended key map
         }
+
+        printk("Before: vk={%x} rc={%x} sc={%x}\n", 
+            Event_LongVK, Event_LongRawByte, Event_LongScanCode );
+
+
         Status = 
             (int) __ProcessExtendedKeyboardKeyStroke(
                 (int) Prefix,
@@ -3574,10 +3617,12 @@ int ibroker_initialize(int phase)
 
         // Setup the keymaps
         ibroker_set_keymap(
-            (unsigned char *) map_abnt2,    // Normal
-            (unsigned char *) shift_abnt2,  // Shift
-            (unsigned char *) ctl_abnt2,    // Control
-            NULL );  // altgr
+            (unsigned char *) map_abnt2,       // Normal
+            (unsigned char *) shift_abnt2,     // Shift
+            (unsigned char *) ctl_abnt2,       // Control
+            NULL,                              // Altgr
+            (unsigned char *) extended_abnt2  // Extended
+        );
 
         //panic ("breakpoint");
     };

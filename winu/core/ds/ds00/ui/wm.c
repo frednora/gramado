@@ -3424,7 +3424,7 @@ wm_draw_char_into_the_window(
 // (control=0x0E)
 // #todo: 
 // Isso tem que voltar apagando.
-    if (ch == VK_BACK)
+    if (ch == VK_BACKSPACE)
     {
         if (window->ip_x > 0){
             window->ip_x--;

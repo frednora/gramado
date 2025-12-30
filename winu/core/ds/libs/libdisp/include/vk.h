@@ -8,50 +8,43 @@
 #ifndef ____VK_H
 #define ____VK_H    1
 
-// Control characters and system keys (0x00–0x2F)
+// ASCII control codes
+#define VK_NUL   0x00  // Null
+#define VK_SOH   0x01  // Start of Heading
+#define VK_STX   0x02  // Start of Text
+#define VK_ETX   0x03  // End of Text
+#define VK_EOT   0x04  // End of Transmission
+#define VK_ENQ   0x05  // Enquiry
+#define VK_ACK   0x06  // Acknowledge
+#define VK_BEL   0x07  // Bell
+#define VK_BS    0x08  // Backspace
+#define VK_HT    0x09  // Horizontal Tab
+#define VK_LF    0x0A  // Line Feed
+#define VK_VT    0x0B  // Vertical Tab
+#define VK_FF    0x0C  // Form Feed
+#define VK_CR    0x0D  // Carriage Return
+#define VK_SO    0x0E  // Shift Out
+#define VK_SI    0x0F  // Shift In
+#define VK_DLE   0x10  // Data Link Escape
+#define VK_DC1   0x11  // Device Control 1
+#define VK_DC2   0x12  // Device Control 2
+#define VK_DC3   0x13  // Device Control 3
+#define VK_DC4   0x14  // Device Control 4
+#define VK_NAK   0x15  // Negative Acknowledge
+#define VK_SYN   0x16  // Synchronous Idle
+#define VK_ETB   0x17  // End of Transmission Block
+#define VK_CAN   0x18  // Cancel
+#define VK_EM    0x19  // End of Medium
+#define VK_SUB   0x1A  // Substitute
+#define VK_ESC   0x1B  // Escape
+#define VK_FS    0x1C  // File Separator
+#define VK_GS    0x1D  // Group Separator
+#define VK_RS    0x1E  // Record Separator
+#define VK_US    0x1F  // Unit Separator
 
-// ASCII control overlaps
-#define VK_NULL        0x00  // Null
-#define VK_START       0x01  // SOH (Start of Heading)
-#define VK_SOH         0x01
-#define VK_STX         0x02  // Start of Text
-#define VK_ETX         0x03  // End of Text
-#define VK_EOT         0x04  // End of Transmission
-#define VK_ENQ         0x05  // Enquiry
-#define VK_ACK         0x06  // Acknowledge
-#define VK_BEL         0x07  // Bell
-#define VK_BACK        0x08  // Backspace
-#define VK_TAB         0x09  // Horizontal Tab
-#define VK_LINEFEED    0x0A  // Line Feed
-#define VK_VTAB        0x0B  // Vertical Tab
-#define VK_FF          0x0C  // Form Feed
-#define VK_RETURN      0x0D  // Carriage Return (Enter)
-#define VK_SHIFT_OUT   0x0E  // SO
-#define VK_SHIFT_IN    0x0F  // SI
-
-// Windows control keys (mapped in low range)
-#define VK_SHIFT       0x10  // Shift
-#define VK_CONTROL     0x11  // Ctrl
-#define VK_MENU        0x12  // Alt
-#define VK_PAUSE       0x13  // Pause/Break
-#define VK_CAPITAL     0x14  // Caps Lock
-#define VK_ESCAPE      0x1B  // Escape
 #define VK_SPACE       0x20  // Space
-#define VK_PRIOR       0x21  // Page Up
-#define VK_NEXT        0x22  // Page Down
-#define VK_END         0x23  // End
-#define VK_HOME        0x24  // Home
-#define VK_LEFT        0x25  // Arrow Left
-#define VK_UP          0x26  // Arrow Up
-#define VK_RIGHT       0x27  // Arrow Right
-#define VK_DOWN        0x28  // Arrow Down
-#define VK_SELECT      0x29  // Select
-#define VK_PRINT       0x2A  // Print
-#define VK_EXECUTE     0x2B  // Execute
-#define VK_SNAPSHOT    0x2C  // Print Screen
-#define VK_INSERT      0x2D  // Insert
-#define VK_DELETE      0x2E  // Delete
-#define VK_HELP        0x2F  // Help
+
+#define VK_DEL   0x7F  // Delete
 
 
 // Digits 0–9 (ASCII codes)
@@ -219,6 +212,7 @@
 // Right-side control keys (0xD0 block)
 #define VK_BACKSPACE  0xD0  // Backspace
 #define VK_ENTER      0xD1  // Enter
+#define VK_RETURN     VK_ENTER
 #define VK_RSHIFT     0xD2  // Right Shift
 #define VK_RCONTROL   0xD3  // Right Control
 #define VK_APPS       0xD4  // Application/Menu key

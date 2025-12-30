@@ -15,13 +15,13 @@ extern struct input_broker_info_d  InputBrokerInfo;
 
 // ==========================
 
-
 void 
 ibroker_set_keymap(
     unsigned char *p_normal,
     unsigned char *p_shift,
     unsigned char *p_ctrl,
-    unsigned char *p_altgr );
+    unsigned char *p_altgr,
+    unsigned char *p_extended );
 
 // Send ascii to the tty associated with stdin.
 int ibroker_send_ascii_to_stdin(int ascii_code);

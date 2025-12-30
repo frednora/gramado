@@ -403,6 +403,8 @@ editorProcedure(
         break;
 
     case MSG_SYSKEYDOWN:
+        //printf("editor: MSG_SYSKEYDOWN %x\n",long1 );
+        //printf("editor: VK_INSERT value %x\n",VK_INSERT );
         switch (long1) {
             case VK_F1:  printf("Editor: VK_F1\n"); break;
             case VK_F5:  printf("Editor: VK_F5\n"); break;
@@ -414,8 +416,8 @@ editorProcedure(
             case VK_DELETE:  printf("Editor: VK_DELETE\n"); break;
             case VK_HOME:  printf("Editor: VK_HOME\n"); break;
             case VK_END:  printf("Editor: VK_END\n"); break;
-            case 0x49:  printf("Editor: 0x49 VK_PAGEUP \n"); break;
-            case 0x51:  printf("Editor: 0x51 VK_PAGEDOWN \n"); break;
+            case VK_PAGEUP:  printf("Editor: 0x49 VK_PAGEUP \n"); break;
+            case VK_PAGEDOWN:  printf("Editor: 0x51 VK_PAGEDOWN \n"); break;
             case VK_RCONTROL:  printf("Editor: VK_RCONTROL \n"); break;
             case VK_ALTGR:  printf("Editor: VK_ALTGR \n"); break;
             case VK_APPS:  printf("Editor: VK_APPS \n"); break;
@@ -436,8 +438,8 @@ editorProcedure(
             case VK_DELETE:  printf("Editor: VK_DELETE up\n"); break;
             case VK_HOME:  printf("Editor: VK_HOME up\n"); break;
             case VK_END:  printf("Editor: VK_END up\n"); break;
-            case 0x49:  printf("Editor: 0x49 VK_PAGEUP up \n"); break;
-            case 0x51:  printf("Editor: 0x51 VK_PAGEDOWN up \n"); break;
+            case VK_PAGEUP:  printf("Editor: 0x49 VK_PAGEUP up \n"); break;
+            case VK_PAGEDOWN:  printf("Editor: 0x51 VK_PAGEDOWN up \n"); break;
             case VK_RCONTROL:  printf("Editor: VK_RCONTROL up \n"); break;
             case VK_ALTGR:  printf("Editor: VK_ALTGR up \n"); break;
             case VK_APPS:  printf("Editor: VK_APPS up \n"); break;
