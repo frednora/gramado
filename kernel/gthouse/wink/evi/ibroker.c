@@ -1055,10 +1055,7 @@ fail:
     return (int) -1;
 }
 
-// If a prefix was found.
-// Combinations
-// It's an extended keyboard key.
-// Send combination keys to the display server.
+// Process key strokes for extended keyboard
 static int 
 __ProcessExtendedKeyboardKeyStroke(
     int prefix,
@@ -1067,52 +1064,17 @@ __ProcessExtendedKeyboardKeyStroke(
     unsigned long rawbyte,
     unsigned long scancode )
 {
+    unsigned long ScanCode = (unsigned long) scancode;
 
-/*
- Scancodes:
- Notebook acer, abnt2. ubuntu.
- see: vk.h and kbdabnt2.h.
+    // #debug
+    // printk("vk={%x} rc={%x} sc={%x}\n", vk, rawbyte, scancode);
 
-             down | up
- pause     = 0x1D | 0x9D
- ins       = 0x52 | 0xD2
- del       = 0x53 | 0xD3
- home      = 0x47 | 0xC7
- pgup      = 0x49 | 0xC9
- pgdn      = 0x51 | 0xD1
- end       = 0x4F | 0xCF
- right     = 0x4D | 0xCD
- up        = 0x48 | 0xC8
- down      = 0x50 | 0xD0
- left      = 0x4B | 0xCB
- r-control = 0x1D | 0x9D
- sys menu  = 0x5D | 0xDD
- altgr     = 0x38 | 0xB8
- */
+    // unsigned long
+    if (rawbyte >= 0xFF){
+        goto fail;
+    }
 
-/*
-Scancode reference for extended keys (ABNT2, PS/2 Set 2)
-
-pause/break = make: E1 1D 45, break: E1 9D C5
-insert      = make: E0 52,    break: E0 F0 52
-delete      = make: E0 53,    break: E0 F0 53
-home        = make: E0 47,    break: E0 F0 47
-end         = make: E0 4F,    break: E0 F0 4F
-page up     = make: E0 49,    break: E0 F0 49
-page down   = make: E0 51,    break: E0 F0 51
-arrow up    = make: E0 48,    break: E0 F0 48
-arrow down  = make: E0 50,    break: E0 F0 50
-arrow left  = make: E0 4B,    break: E0 F0 4B
-arrow right = make: E0 4D,    break: E0 F0 4D
-right ctrl  = make: E0 1D,    break: E0 F0 1D
-altgr       = make: E0 38,    break: E0 F0 38
-sys menu    = make: E0 5D,    break: E0 F0 5D
-*/
-
-    //printk("kgwm.c: #todo Extended keyboard\n");
-    printk("vk={%x} rc={%x} sc={%x}\n", vk, rawbyte, scancode );
-
-
+// Pause/break support
     if (vk == VK_PAUSEBREAK)
     {
         if (msg == MSG_SYSKEYDOWN)
@@ -1120,15 +1082,6 @@ sys menu    = make: E0 5D,    break: E0 F0 5D
         if (msg == MSG_SYSKEYUP)
             printk("VK_PAUSEBREAK up\n");
     }
-
-    // unsigned long
-    if (rawbyte >= 0xFF){
-        goto fail;
-    }
-
-    //unsigned long ScanCode = (unsigned long) (rawbyte & 0x7F);
-    unsigned long ScanCode = (unsigned long) scancode;
-
 
 // ================================================================
 // ########  The app receiving all the keys is editor.bin #########
@@ -1139,23 +1092,17 @@ sys menu    = make: E0 5D,    break: E0 F0 5D
         case MSG_SYSKEYDOWN:
         //printk("broker: MSG_SYSKEYDOWN sc=%d\n",ScanCode);
 
-            // Right [ENTER]
-            // qemu: It sends 0xE0 0x9C for both press and release, without the F0 break prefix.
-            //if (ScanCode == 0x1C || ScanCode == 0x1A)
+            // Right ENTER
             if (vk == VK_RETURN)
             {
                 if (ctrl_status == TRUE){
                     return 0;
                 } else {
-                    // #importante
-                    // Translating it from MSG_SYSKEYDOWN to MSG_KEYDOWN
                     ibroker_post_message_to_fg_thread( MSG_KEYDOWN, VK_RETURN, ScanCode );
                     return 0;
                 }
             }
 
-
-            //if (ScanCode == 0x4D)  // right
             if (vk == VK_ARROW_RIGHT)
             {
                 if (ctrl_status == TRUE){
@@ -1166,7 +1113,7 @@ sys menu    = make: E0 5D,    break: E0 F0 5D
                     return 0;
                 }
             }
-            //if (ScanCode == 0x48)  // up
+
             if (vk == VK_ARROW_UP)
             {
                 if (ctrl_status == TRUE){
@@ -1177,7 +1124,7 @@ sys menu    = make: E0 5D,    break: E0 F0 5D
                     return 0;
                 }
             }
-            //if (ScanCode == 0x50)  // down
+
             if (vk == VK_ARROW_DOWN)
             {
                 if (ctrl_status == TRUE){
@@ -1188,7 +1135,7 @@ sys menu    = make: E0 5D,    break: E0 F0 5D
                     return 0;
                 }
             }
-            //if (ScanCode == 0x4B)  // left
+
             if (vk == VK_ARROW_LEFT)
             {
                 if (ctrl_status == TRUE){
@@ -1199,65 +1146,58 @@ sys menu    = make: E0 5D,    break: E0 F0 5D
                     return 0;
                 }
             }
+
             // Insert - E0 52	E0 D2	0x52
-            //if (ScanCode == 0x52)  // Insert
-            if (vk == VK_INSERT)  // Insert
+            if (vk == VK_INSERT)
             {
                 printk("Posting VK_INSERT\n");
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_INSERT, ScanCode );
                 return 0;
             }
+
             // Delete - E0 53	E0 D3	0x53
-            //if (ScanCode == 0x53)  // Delete
             if (vk == VK_DELETE)
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_DELETE, ScanCode );
                 return 0;
             }
             // Home - E0 47  E0 C7  0x47
-            //if (ScanCode == 0x47)  // Home
             if (vk == VK_HOME) 
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_HOME, ScanCode );
                 return 0;
             }
             // End - E0 4F	E0 CF	0x4F
-            //if (ScanCode == 0x4F)  // End
             if (vk == VK_END)
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_END, ScanCode );
                 return 0;
             }
             // Page Up - E0 49	E0 C9	0x49
-            //if (ScanCode == 0x49)  // Page up
             if (vk == VK_PAGEUP)
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_PAGEUP, ScanCode );
                 return 0;
             }
             // Page Down - E0 51	E0 D1	0x51
-            //if (ScanCode == 0x51)  // page down
             if (vk == VK_PAGEDOWN)
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_PAGEDOWN, ScanCode );
                 return 0;
             }
             // right ctrl  = make: E0 1D,    break: E0 F0 1D
-            //if (ScanCode == 0x1D)  // Right ctrl
             if (vk == VK_RCONTROL)
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_RCONTROL, ScanCode );
                 return 0;
             }
             // Right Alt / AltGr	E0 38	E0 B8	0x38
-            //if (ScanCode == 0x38)  // Right alt (altgr)
             if (vk == VK_ALTGR)
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_ALTGR, ScanCode );
                 return 0;
             }
             // SysMenu / App key	E0 5D	E0 DD	0x5D
-            //if (ScanCode == 0x5D)  // Sys menu (app)
             if (vk == VK_APPS)
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_APPS, ScanCode );
@@ -1269,22 +1209,17 @@ sys menu    = make: E0 5D,    break: E0 F0 5D
         case MSG_SYSKEYUP:
         //printk("broker: MSG_SYSKEYUP sc=%d\n",ScanCode);
 
-            // Right [ENTER]
-            // qemu: It sends 0xE0 0x9C for both press and release, without the F0 break prefix.
-            //if (ScanCode == 0x1C || ScanCode == 0x1A)
+            // Right ENTER
             if (vk == VK_RETURN)
             {
                 if (ctrl_status == TRUE){
                     return 0;
                 } else {
-                    // #importante
-                    // Translating it from MSG_SYSKEYUP to MSG_KEYUP
                     ibroker_post_message_to_fg_thread( MSG_KEYUP, VK_RETURN, ScanCode );
                     return 0;
                 }
             }
 
-            //if (ScanCode == 0x4D)  // right
             if (vk == VK_ARROW_RIGHT)
             {
                 if (ctrl_status == TRUE){
@@ -1294,7 +1229,7 @@ sys menu    = make: E0 5D,    break: E0 F0 5D
                     return 0;
                 }
             }
-            //if (ScanCode == 0x48)  // up
+
             if (vk == VK_ARROW_UP)
             {
                 if (ctrl_status == TRUE){
@@ -1304,7 +1239,7 @@ sys menu    = make: E0 5D,    break: E0 F0 5D
                     return 0;
                 }
             }
-            //if (ScanCode == 0x50)  // down
+
             if (vk == VK_ARROW_DOWN)
             {
                 if (ctrl_status == TRUE){
@@ -1314,7 +1249,7 @@ sys menu    = make: E0 5D,    break: E0 F0 5D
                     return 0;
                 }
             }
-            //if (ScanCode == 0x4B)  // left
+
             if (vk == VK_ARROW_LEFT)
             {
                 if (ctrl_status == TRUE){
@@ -1325,60 +1260,50 @@ sys menu    = make: E0 5D,    break: E0 F0 5D
                 }
             }
 
-
             // Insert - E0 52	E0 D2	0x52
-            //if (ScanCode == 0x52)  // Insert
             if (vk == VK_INSERT)
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYUP, VK_INSERT, ScanCode );
                 return 0;
             }
             // Delete - E0 53	E0 D3	0x53
-            //if (ScanCode == 0x53)  // Delete
             if (vk == VK_DELETE)
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYUP, VK_DELETE, ScanCode );
                 return 0;
             }
             // Home - E0 47  E0 C7  0x47
-            //if (ScanCode == 0x47)  // Home
             if (vk == VK_HOME)
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYUP, VK_HOME, ScanCode );
                 return 0;
             }
             // End - E0 4F	E0 CF	0x4F
-            //if (ScanCode == 0x4F)  // End
             if (vk == VK_END)
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYUP, VK_END, ScanCode );
                 return 0;
             }
             // Page Up - E0 49	E0 C9	0x49
-            //if (ScanCode == 0x49)  // Page up
             if (vk == VK_PAGEUP)
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYUP, VK_PAGEUP, ScanCode );
                 return 0;
             }
             // Page Down - E0 51	E0 D1	0x51
-            //if (ScanCode == 0x51)  // page down
             if (vk == VK_PAGEDOWN)
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYUP, VK_PAGEDOWN, ScanCode );
                 return 0;
             }
 
-
             // right ctrl  = make: E0 1D,    break: E0 F0 1D
-            //if (ScanCode == 0x1D)  // Right ctrl
             if (vk == VK_RCONTROL)
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYUP, VK_RCONTROL, ScanCode );
                 return 0;
             }
             // Right Alt / AltGr	E0 38	E0 B8	0x38
-            //if (ScanCode == 0x38)  // Right alt (altgr)
             if (vk == VK_ALTGR)
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYUP, VK_ALTGR, ScanCode );
@@ -1386,33 +1311,18 @@ sys menu    = make: E0 5D,    break: E0 F0 5D
             }
 
             // SysMenu / App key	E0 5D	E0 DD	0x5D
-            //if (ScanCode == 0x5D)  // Sys menu (app)
             if (vk == VK_APPS)
             {
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYUP, VK_APPS, ScanCode );
                 return 0;
             }
-
             break;
 
         default:
             break;
     };
-
-
-/*
-        case 0x1D: //pause, r-control
-        case 0x52: //ins
-        case 0x53:  //del
-        case 0x47:  //home
-        case 0x49:  //pgup
-        case 0x51:  //pgdn
-        case 0x4F:  //end
-        case 0x5D:  //sysmenu (app)
-        case 0x38:  //altgr
-*/
-
     return 0;
+
 fail:
     return (int) -1;
 }
@@ -2700,58 +2610,6 @@ wmRawKeyEvent(
         goto fail;
     }
 
-// #todo
-// The last byte was a prefix
-    //if( __has_e0_prefix == 1 )
-        //goto GotE0;
-
-// #todo
-// The last byte was a prefix
-    //if(__has_e1_prefix == 1 )
-        //goto GotE1;
-
-//
-// Debug
-//
-
-// ++
-// ===================
-
-    // #debug.
-    // Show the scancode if the flag is enabled.
-    // Talvez isso nem seja necess'ario.
-    
-    // #hackhack
-    // Variable not initialized yet.
-
-    /*
-    scStatus = FALSE;
-    if (scStatus == TRUE){
-        printk ("raw byte {%d,%x} \n", 
-            Keyboard_RawByte, Keyboard_RawByte );
-    }
-    */
-
-// ===================
-// --
-
-// #todo
-// Enable these shortcuts
-// Se temos a flag ou não
-    //if ( Keyboard_RawByte > 0x7F )
-         //goto key_released;
-    //if ( Keyboard_RawByte < 0x7F )
-         //goto key_pressed;
-
-// ==========
-// Step 2
-// Tratar as mensagens.
-// Traduzir rawbyte em evento.
-
-// #test
-    //int isDown=0;
-    //isDown = !(Keyboard_RawByte & 0x80);
-
 // ================================================
 // Make or Break?
 // Um bit sinaliza o break, 
@@ -2773,23 +2631,16 @@ wmRawKeyEvent(
 
     if (fBreak == TRUE)
     {
-        // Desativando o bit de paridade caso esteja ligado.
         Keyboard_ScanCode = Keyboard_RawByte;
+        // Clear the parity bit
         Keyboard_ScanCode &= KEYBOARD_KEY_MASK;
-
-        // Configurando se é do sistema ou não.
-        // #todo: 
-        // Aqui podemos chamar uma rotina interna que faça essa checagem.
-        // Os primeiros 'case' é quando libera tecla do sistema.
-        // O case 'default' é pra quando libera tecla que não é do sistema.
 
         unsigned char vk0 = keymap_normal[Keyboard_ScanCode];
 
-        // switch (Keyboard_ScanCode)
         switch (vk0)
         {
 
-            // Shift released.
+            // Shift released
             case VK_LSHIFT:
             case VK_RSHIFT:
                 shift_status = FALSE;  
@@ -2799,7 +2650,6 @@ wmRawKeyEvent(
             // Control released
             case VK_LCONTROL:
             case VK_RCONTROL:
-                //printk("VK_LCONTROL up\n");
                 ctrl_status = FALSE;  
                 Event_Message = MSG_SYSKEYUP;
                 break;
@@ -2864,7 +2714,6 @@ wmRawKeyEvent(
             // ...
         }
 
-        // ----------------------
         // Analiza: 
         // Se for tecla normal, pega o mapa de caracteres apropriado.
         // minúscula
@@ -2872,7 +2721,7 @@ wmRawKeyEvent(
 
         // #bugbug: some chars are not working
         // for keymap_shift[]
-        // See: include/user/kbdabnt2.h
+        // See: kbdabnt2.h
         if (Event_Message == MSG_KEYUP)
         {
             // Minúsculas.
@@ -2894,45 +2743,36 @@ wmRawKeyEvent(
     if (fBreak != TRUE)
     {
         Keyboard_ScanCode = Keyboard_RawByte;
-        Keyboard_ScanCode &= KEYBOARD_KEY_MASK; //Desativando o bit de paridade caso esteja ligado.
-
-        // O Último bit é zero para key press.
-        // Checando se é a tecla pressionada é o sistema ou não.
-        // #todo: 
-        // Aqui podemos chamar uma rotina interna que faça essa checagem.
+        // Clear the parity bit
+        Keyboard_ScanCode &= KEYBOARD_KEY_MASK; 
 
         unsigned char vk1 = keymap_normal[Keyboard_ScanCode];
 
-        //switch (Keyboard_ScanCode)
         switch (vk1)
         {
-
-            // Shift pressed.
+            // Shift pressed
             case VK_LSHIFT:
             case VK_RSHIFT:
-                //printk("VK_LSHIFT down\n");
                 shift_status = TRUE;
                 Event_Message = MSG_SYSKEYDOWN;
                 break;
 
-            // Control pressed.
+            // Control pressed
             case VK_LCONTROL:
             case VK_RCONTROL:
-                //printk("VK_LCONTROL down\n");
                 ctrl_status = TRUE;
                 Event_Message = MSG_SYSKEYDOWN;
                 break;
 
-            // Winkey pressed.
+            // Winkey pressed
             case VK_LWIN:
             case VK_RWIN:
                 winkey_status = TRUE; 
                 Event_Message = MSG_SYSKEYDOWN;
                 break;
 
-            // Alt pressed.
-            case VK_LALT: //case VK_LMENU:
-            //case VK_RMENU:
+            // Left alt pressed
+            case VK_LALT:
                 alt_status = TRUE;
                 Event_Message = MSG_SYSKEYDOWN;
                 break;
@@ -2944,7 +2784,7 @@ wmRawKeyEvent(
 
             // caps lock keydown
             // muda o status do capslock não importa o anterior.
-            case VK_CAPSLOCK:  //case VK_CAPITAL: 
+            case VK_CAPSLOCK:
                 if (capslock_status == FALSE){ 
                     capslock_status = TRUE; 
                     Event_Message = MSG_SYSKEYDOWN; 
@@ -3079,16 +2919,13 @@ wmRawKeyEvent(
 // Done
 // Para finalizar, vamos enviar a mensagem para fila certa.
 // Fixing the rawbyte to fit in the message arg.
-// See: kgwm.c
 
 done:
 
     Event_LongRawByte  = (unsigned long) (Keyboard_RawByte  & 0x000000FF);
     Event_LongScanCode = (unsigned long) (Event_LongRawByte & 0x0000007F);
 
-
     //printk("raw=%d sc=%d\n",Event_LongRawByte,Event_LongScanCode);
-
 
 // ------------------------------------
 // It's an extended keyboard key.
@@ -3104,7 +2941,7 @@ done:
     if (raw_byte_0 == 0xE1 && raw_byte_1 == 0x1D && raw_byte_2 == 0x45)
     {
         Event_Message = MSG_SYSKEYDOWN;
-        Event_LongVK = VK_PAUSEBREAK;  //VK_PAUSE;
+        Event_LongVK = VK_PAUSEBREAK;
         Event_LongRawByte = 0;
         fPause = TRUE;
     }
@@ -3112,7 +2949,7 @@ done:
     if (raw_byte_0 == 0xE1 && raw_byte_1 == 0x9D && raw_byte_2 == 0xC5)
     {
         Event_Message = MSG_SYSKEYUP;
-        Event_LongVK = VK_PAUSEBREAK;  //VK_PAUSE;
+        Event_LongVK = VK_PAUSEBREAK;
         Event_LongRawByte = 0;
         fPause = TRUE;
     }
@@ -3132,12 +2969,13 @@ done:
             }
             Event_LongRawByte  = raw_byte_1;
             Event_LongScanCode = (unsigned long) (raw_byte_1 & 0x0000007F);
-            Event_LongVK       = keymap_extended[Event_LongScanCode];  // Extended key map
+            // Get the vk from the kbdmap for extended keyboards
+            Event_LongVK       = keymap_extended[Event_LongScanCode]; 
         }
 
-        printk("Before: vk={%x} rc={%x} sc={%x}\n", 
-            Event_LongVK, Event_LongRawByte, Event_LongScanCode );
-
+        // #debug
+        //printk("Before: vk={%x} rc={%x} sc={%x}\n", 
+            //Event_LongVK, Event_LongRawByte, Event_LongScanCode );
 
         Status = 
             (int) __ProcessExtendedKeyboardKeyStroke(
