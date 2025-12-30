@@ -2748,7 +2748,10 @@ wmRawKeyEvent(
         // Os primeiros 'case' é quando libera tecla do sistema.
         // O case 'default' é pra quando libera tecla que não é do sistema.
 
-        switch (Keyboard_ScanCode)
+        unsigned char vk0 = keymap_normal[Keyboard_ScanCode];
+
+        // switch (Keyboard_ScanCode)
+        switch (vk0)
         {
 
             // Shift released.
@@ -2758,9 +2761,10 @@ wmRawKeyEvent(
                 Event_Message = MSG_SYSKEYUP;
                 break;
 
-            // Control released.
+            // Control released
             case VK_LCONTROL:
             case VK_RCONTROL:
+                //printk("VK_LCONTROL up\n");
                 ctrl_status = FALSE;  
                 Event_Message = MSG_SYSKEYUP;
                 break;
@@ -2773,7 +2777,7 @@ wmRawKeyEvent(
                 break;
                 
             // Alt released
-            case VK_LMENU:
+            case VK_LALT:  //case VK_LMENU:
             //case VK_RMENU:
                 alt_status = FALSE;  
                 Event_Message = MSG_SYSKEYUP;
@@ -2781,7 +2785,7 @@ wmRawKeyEvent(
 
             // Control menu.
             // Application menu.
-            case VK_CONTROL_MENU:
+            case VK_APPS:  //case VK_CONTROL_MENU:
                 //controlmenu_status = 0; //#todo
                 Event_Message = MSG_SYSKEYUP;
                 break;
@@ -2862,12 +2866,16 @@ wmRawKeyEvent(
         // #todo: 
         // Aqui podemos chamar uma rotina interna que faça essa checagem.
 
-        switch (Keyboard_ScanCode)
+        unsigned char vk1 = keymap_normal[Keyboard_ScanCode];
+
+        //switch (Keyboard_ScanCode)
+        switch (vk1)
         {
 
             // Shift pressed.
             case VK_LSHIFT:
             case VK_RSHIFT:
+                //printk("VK_LSHIFT down\n");
                 shift_status = TRUE;
                 Event_Message = MSG_SYSKEYDOWN;
                 break;
@@ -2875,6 +2883,7 @@ wmRawKeyEvent(
             // Control pressed.
             case VK_LCONTROL:
             case VK_RCONTROL:
+                //printk("VK_LCONTROL down\n");
                 ctrl_status = TRUE;
                 Event_Message = MSG_SYSKEYDOWN;
                 break;
@@ -2887,7 +2896,7 @@ wmRawKeyEvent(
                 break;
 
             // Alt pressed.
-            case VK_LMENU:
+            case VK_LALT: //case VK_LMENU:
             //case VK_RMENU:
                 alt_status = TRUE;
                 Event_Message = MSG_SYSKEYDOWN;
@@ -2934,7 +2943,7 @@ wmRawKeyEvent(
 
             // Scroll Lock.
             // Muda o status do numlock não importa o anterior.
-            case VK_SCROLL:
+            case VK_SCROLLLOCK:  //case VK_SCROLL:
                 if (scrolllock_status == FALSE){  
                     scrolllock_status = TRUE;
                     Event_Message = MSG_SYSKEYDOWN;
@@ -3041,6 +3050,10 @@ done:
 
     Event_LongRawByte  = (unsigned long) (Keyboard_RawByte  & 0x000000FF);
     Event_LongScanCode = (unsigned long) (Event_LongRawByte & 0x0000007F);
+
+
+    //printk("raw=%d sc=%d\n",Event_LongRawByte,Event_LongScanCode);
+
 
 // ------------------------------------
 // It's an extended keyboard key.

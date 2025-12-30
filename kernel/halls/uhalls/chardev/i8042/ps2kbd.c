@@ -126,16 +126,16 @@ unsigned long keyboardGetKeyState(int vk)
     }
 
     switch (Lvk){
-    case VK_LSHIFT:    State = shift_status;       break;
-    case VK_LCONTROL:  State = ctrl_status;        break;
-    case VK_LWIN:      State = winkey_status;      break;
-    case VK_LMENU:     State = alt_status;         break;
-    case VK_RWIN:      State = winkey_status;      break;
-    case VK_RCONTROL:  State = ctrl_status;        break;
-    case VK_RSHIFT:    State = shift_status;       break;
-    case VK_CAPITAL:   State = capslock_status;    break;
-    case VK_NUMLOCK:   State = numlock_status;     break;
-    case VK_SCROLL:    State = scrolllock_status;  break;
+    case VK_LSHIFT:      State = shift_status;       break;
+    case VK_LCONTROL:    State = ctrl_status;        break;
+    case VK_LWIN:        State = winkey_status;      break;
+    case VK_LALT:        State = alt_status;         break;
+    case VK_RWIN:        State = winkey_status;      break;
+    case VK_RCONTROL:    State = ctrl_status;        break;
+    case VK_RSHIFT:      State = shift_status;       break;
+    case VK_CAPITAL:     State = capslock_status;    break;
+    case VK_NUMLOCK:     State = numlock_status;     break;
+    case VK_SCROLLLOCK:  State = scrolllock_status;  break;
     // ...
     default:
         return 0;

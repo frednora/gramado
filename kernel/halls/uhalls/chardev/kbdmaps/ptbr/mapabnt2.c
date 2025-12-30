@@ -39,10 +39,10 @@ unsigned char map_abnt2[ABNT2_CHARMAP_SIZE] = {
  'i',
  'o',
  'p',          //25
- VK_ACUTE_ACCENT,  //vk=180, sc=26
+VK_ACUTE,  //VK_ACUTE_ACCENT,  //vk=180, sc=26
  '[',          //27   bracketleft   braceleft
- VK_RETURN,    //28 [Enter].
- VK_LCONTROL,  //29 ms right control. ??
+VK_RETURN,    //28 [Enter].
+VK_LCONTROL,  //29 ms right control. ??
  'a',          //30 (O a minúsculo é 30 em abnt 2).
  's',          //31
  'd',          //32
@@ -83,7 +83,7 @@ unsigned char map_abnt2[ABNT2_CHARMAP_SIZE] = {
  VK_F9,        //67 F9.(abnt)
  VK_F10,       //68 F10.(abnt)
  VK_PAUSE,      //69 abnt2=(PAUSE). (num lock) abnt2=VK_NUMLOCK,
- VK_SCROLL,     //70 abnt2(Scroll Lock) abnt2=break.
+ VK_SCROLLLOCK, //VK_SCROLL,     //70 abnt2(Scroll Lock) abnt2=break.
  VK_HOME,      //'7',    //71 abnt2=(7). abnt2=home
  VK_ARROW_UP,  //'8',    //72       >>> (8). abnt2=up
  VK_PAGEUP,  //'9',    //73       (9). abnt2=pgup
@@ -95,8 +95,8 @@ unsigned char map_abnt2[ABNT2_CHARMAP_SIZE] = {
  VK_END,  //'1',    //79       (1). abnt2=end  
  VK_ARROW_DOWN,  //'2',    //80       >>> (2). abnt2=down
  VK_PAGEDOWN,  //'3',    //81       (3). abnt2=pgdn (q).     
- VK_ABNT2_INSERT,  //'0',    //82       (0). abnt2=Ins
- VK_ABNT2_DELETE,  //VK_DELETE_TECLADONUMERICO,    //83 abnt2=(,) abnt2=(Num DEL) (abnt).(´)
+ VK_INSERT, //VK_ABNT2_INSERT,  //'0',    //82       (0). abnt2=Ins
+ VK_DELETE,  //VK_ABNT2_DELETE,  //VK_DELETE_TECLADONUMERICO,    //83 abnt2=(,) abnt2=(Num DEL) (abnt).(´)
 VK_PRINT,   //84 abnt2=(SysRq) PRINT SCREEN E sys req (abnt).
 '.',        //85
 '\\',       //86 abnt2=(\). abnt2=(help) backslash  bar
@@ -106,7 +106,7 @@ VK_F12,     //88 abnt2=(F12).
 VK_F14,     //90
 VK_LWIN,               //91 abnt2=(Left Windows)  (right WinKey) ([).
 VK_RWIN,               //92 abnt2=(Right Windows) (left WinKey) (\).
-VK_CONTROL_MENU,       //93 abnt2=(Application). CONTROL MENU, (]).
+VK_APPS, //VK_CONTROL_MENU,       //93 abnt2=(Application). CONTROL MENU, (]).
 VK_F18,       // 94
 VK_F19,       // 95
 '`',          // 96 (0) (`)Acento grave.(enter)
@@ -114,8 +114,8 @@ VK_LCONTROL,  // 97 (1) (a) Minúscula. control
 '/',          // 98 (2) (/) KP_Divide
 VK_F23,       // 99 (3) VoidSymbol  
 VK_ALTGR,     //100 (4) AltGr
-VK_BREAK,     //101 (5) 0xE9
-VK_FIND,      //102 (6) (\).
+'b',  //VK_BREAK,     //101 (5) 0xE9
+'f',  //VK_FIND,      //102 (6) (\).
 VK_UP,        //103 (7)
 VK_PRIOR,     //104 (8)
 VK_LEFT,      //105 (9) 0xED
@@ -124,7 +124,7 @@ VK_SELECT,    //107 +
 VK_DOWN,      //108 RETURN.
 VK_NEXT,      //109 -
 VK_INSERT,    // 
-VK_REMOVE,    //111 (/). 0xF3
+'r', //VK_REMOVE,    //111 (/). 0xF3
 VK_F1,   //112 (F1). MACRO
 VK_F2,   //113 (F2) F13
 VK_F3,   //114 (F3) F14
@@ -242,8 +242,8 @@ VK_ARROW_RIGHT,  //'6',    //77
 VK_END,  //'1',    //79
 VK_ARROW_DOWN,  //'2',    //80
 VK_PAGEDOWN,  //'3',    //81
-VK_ABNT2_INSERT,  //'0',    //82
-VK_ABNT2_DELETE,  //',',    //83 abnt2(,)
+VK_INSERT, //VK_ABNT2_INSERT,  //'0',    //82
+VK_DELETE, //VK_ABNT2_DELETE,  //',',    //83 abnt2(,)
 0,      //84
 0,      //85
 '|',    //86 abnt2(|)
