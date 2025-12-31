@@ -30,8 +30,6 @@
 // Error: 0x05 - Memory allocation for Display device structure.
 // ...
 
-
-
 #include <kernel.h>
 
 // see: utsname.h
@@ -304,16 +302,23 @@ static void __print_final_messages(void)
 // to setup this structure and 
 // and read the information from it.
 // see: sys_uname() in sys.c
+
 static void __setup_utsname(void)
 {
-    memset( &kernel_utsname, 0, sizeof(struct utsname) );
+    memset(&kernel_utsname, 0, sizeof(struct utsname));
 
-    ksprintf( kernel_utsname.sysname,    UTS_SYSNAME );
-    ksprintf( kernel_utsname.version,    VERSION_NAME );
-    ksprintf( kernel_utsname.release,    RELEASE_NAME );
-    ksprintf( kernel_utsname.machine,    MACHINE_NAME );
-    ksprintf( kernel_utsname.nodename,   UTS_NODENAME );
-    ksprintf( kernel_utsname.domainname, UTS_DOMAINNAME );
+    // OS name
+    ksprintf(kernel_utsname.sysname,    OS_NAME);       // "Gramado"
+    // Release type (Hypervisor, Server, Desktop, etc.)
+    ksprintf(kernel_utsname.release,    RELEASE_NAME);  // "Hypervisor"
+    // Version string (from version.h)
+    ksprintf(kernel_utsname.version,    VERSION_NAME);  // "0.8"
+    // Machine architecture
+    ksprintf(kernel_utsname.machine,    MACHINE_NAME);  // "x86_64"
+    // Hostname / node name
+    ksprintf(kernel_utsname.nodename,   NODE_NAME);     // e.g. "gramado-host"
+    // Domain name
+    ksprintf(kernel_utsname.domainname, DOMAIN_NAME);   // "DOMAIN-NAME"
 }
 
 // == Idle thread in ring 0  ===============

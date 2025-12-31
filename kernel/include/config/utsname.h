@@ -24,26 +24,13 @@
 
 /* Structure describing the system and machine.  */
 
-struct utsname_d
-{
-    /* Name of the implementation of the operating system.  */
-    char sysname[_UTSNAME_LENGTH];
-    /* Current version level of this release.  */
-    char version[_UTSNAME_LENGTH];  
-    /* Current release level of this implementation.  */
-    char release[_UTSNAME_LENGTH]; 
-
-    /* Name of the hardware type the system is running on.  */
-    char machine[_UTSNAME_LENGTH]; 
-    /* Name of this node on the network.  */
+struct utsname_d { 
+    char sysname[_UTSNAME_LENGTH]; 
     char nodename[_UTSNAME_LENGTH]; 
-
-    /* Name of the domain of this node on the network.  */ 
-    /* NIS or YP domain name */
-    
-    //#ifdef _GNU_SOURCE
+    char release[_UTSNAME_LENGTH]; 
+    char version[_UTSNAME_LENGTH]; 
+    char machine[_UTSNAME_LENGTH]; 
     char domainname[_UTSNAME_LENGTH]; 
-    //#endif
 };
 #define utsname  utsname_d
 
