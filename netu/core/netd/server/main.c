@@ -30,6 +30,9 @@
 
 #include <gnsint.h>
 
+// Saving the sytem information provided by uname()
+static struct utsname  netd_utsname;
+
 // static int __saved_sync_id = -1;
 
 
@@ -113,10 +116,24 @@ static int ServerLoop(void);
 // Initialization
 static void ServerInitializeGlobals(void);
 static int ServerInitialization(void);
+static int __initialize_system_info(void);
+
 
 //
 // ===============================
 //
+
+
+// Initialize system info once at startup
+static int __initialize_system_info(void)
+{
+    if (uname(&netd_utsname) < 0) {
+        // If uname fails, return error
+        return -1;
+    }
+    // No printing here — just cache the values
+    return 0;
+}
 
 
 //char *
@@ -213,25 +230,33 @@ ip_calculate_checksum(void *ip)
 }
 */
 
-// Action
 void serviceHello(void)
 {
-    //printf("\n");
     printf("netd: [1000] Hello from Gramado Network Server!\n");
+
+    // Print cached system info (test)
+    printf("sysname:  %s\n", netd_utsname.sysname);
+    printf("nodename: %s\n", netd_utsname.nodename);
+    printf("release:  %s\n", netd_utsname.release);
+    printf("version:  %s\n", netd_utsname.version);
+    printf("machine:  %s\n", netd_utsname.machine);
+
     next_response[0] = 0;  //wid
-    next_response[1] = SERVER_PACKET_TYPE_REPLY; // The response is a reply. 
+    next_response[1] = SERVER_PACKET_TYPE_REPLY; 
     next_response[2] = 0;
     next_response[3] = 0;
     NoReply = FALSE;
     rtl_yield();
 }
 
+
 // Action
 int serviceInitializeNetwork(void)
 {
+    // #ps deprecated?
     // Ring0 routine to initialize network infrastructure.
     // #remember: At this moment we are in the user app memory space.
-    gramado_system_call(968,0,0,0);
+    // gramado_system_call(968,0,0,0);
     return 0;
 }
 
@@ -854,11 +879,10 @@ static int ServerLoop(void)
     int bind_status = -1;
     register int i=0;
     int _status = -1;
-    //int InitializeFirstClient = TRUE;
-    int InitializeFirstClient = FALSE;
-     
-    //unsigned long w=0;
-    //unsigned long h=0;
+
+
+    int InitializeFirstClient = TRUE;
+
 
 // Sincronizaçao provisoria
 // vamos precisar disso antes de tudo;
@@ -917,9 +941,14 @@ static int ServerLoop(void)
         ServerYield();
     };
 
+
 //
 // == Accept =====================================
 //
+
+// #important
+// Information is fetched from the kernel on demand, 
+// triggered by client requests. 
 
 // Messages sent via sockets.
 // Mensagens enviadas pelos clientes via socket.
@@ -996,6 +1025,8 @@ static void ServerInitializeGlobals(void)
 
 static int ServerInitialization(void)
 {
+    int Status = -1;
+
     // debug
     printf("\n");
     printf("NETD.BIN: Initializing\n");
@@ -1003,6 +1034,12 @@ static int ServerInitialization(void)
 // Initialize global variables.
     ServerInitializeGlobals();
     //...
+
+// Cache uname info for future use 
+    printf("Getting system information\n");
+    Status = (int) __initialize_system_info();
+    if (Status < 0)
+        return (int) -1;
 
     return 0;
 }
@@ -1053,6 +1090,7 @@ int main (int argc, char **argv)
         goto fail;
 
 // Request loop
+    printf("Start listening ...\n");
     Status = (int) ServerLoop();
     if (Status == 0)
     {

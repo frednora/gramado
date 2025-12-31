@@ -10,10 +10,14 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/socket.h>
+
+#include <sys/utsname.h>
+
 // rtl
 #include <net/if_arp.h>
 #include <netinet/udp.h>
 #include <netinet/tcp.h>
+
 // for sync
 #include <rtl/gramado.h>
 
