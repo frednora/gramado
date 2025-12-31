@@ -39,7 +39,7 @@ all:
 	make -C memory/
 	make -C dbox/
 	make -C mbox/
-
+	make -C sysinfo/
 
 # Gramado Desktop Manager
 	make -C gdm/

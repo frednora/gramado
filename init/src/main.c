@@ -695,21 +695,29 @@ static int input_compare_string(void)
     {
         printf("Launching shell.bin #todo\n");
         do_clear_console();
-        // #todo
-        // Let's create a shell command able to run in this environment.
-        //rtl_clone_and_execute("#pubsh.bin");
-        //rtl_clone_and_execute("sh7.bin");
-        //rtl_clone_and_execute("shell.bin");
-        //rtl_clone_and_execute("#shell2.bin");
-        //isTimeToQuitCmdLine = TRUE;
-
         shell2_tid = (int) rtl_clone_and_execute_return_tid("#shell2.bin");
         if (shell2_tid > 0){
             rtl_sleep(2000);  //2sec
-            sc82(10011, shell2_tid, shell2_tid, shell2_tid );
+            sc82(10011, shell2_tid, shell2_tid, shell2_tid);
         }
         exit(0);
+        //isTimeToQuitCmdLine = TRUE;
+        goto exit_cmp;
+    }
 
+// #test
+    int uname_tid = -1;
+    if ( strncmp(prompt,"uname",5) == 0 )
+    {
+        printf("Launching uname.bin\n");
+        do_clear_console();
+        uname_tid = (int) rtl_clone_and_execute_return_tid("uname.bin");
+        if (uname_tid > 0){
+            rtl_sleep(2000);  //2sec
+            sc82(10011, uname_tid, uname_tid, uname_tid);
+        }
+        exit(0);
+        //isTimeToQuitCmdLine = TRUE;
         goto exit_cmp;
     }
 

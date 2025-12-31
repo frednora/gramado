@@ -69,7 +69,9 @@ int main(int argc, char **argv)
     struct utsname  un;
     register int i=0;
 // Flags
-    int fAll=FALSE;
+
+    int fAll = TRUE; //FALSE;
+
     int fSysName=FALSE;
     int fVersion=FALSE;
     int fRelease=FALSE;

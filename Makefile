@@ -265,6 +265,7 @@ build-extras:
 	@-cp $(L3_APPS)/bin/MEMORY.BIN   $(BASE)/DE
 	@-cp $(L3_APPS)/bin/DBOX.BIN     $(BASE)/DE
 	@-cp $(L3_APPS)/bin/MBOX.BIN     $(BASE)/DE
+	@-cp $(L3_APPS)/bin/SYSINFO.BIN  $(BASE)/DE
 
     # Experimental applications
     # These need the '#' prefix.
