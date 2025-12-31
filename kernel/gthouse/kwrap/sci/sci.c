@@ -2830,18 +2830,24 @@ void *sci2 (
     }
 
 //--------------
-
 // #test
-// 22010 -
+// 22010 
 
+//--------------
 // 22011 - PS2 full initialization
+// Depending on the current virtualization.
 // see: hv.c
-    if (number == 22011){
-        hv_ps2_full_initialization();
+    if (number == 22011)
+    {
+        // Checking the virtualization
+        // hv_ps2_full_initialization();
+
+        // Without checking the virtualization.
+        DDINIT_ps2();
         return NULL;
     }
 
-// #deprecated.
+// #deprecated
 // shared memory 2mb surface.
 // ring 3.
     if (number == 22777)

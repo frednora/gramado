@@ -168,11 +168,10 @@ void i8042_reboot_via_keyboard(void)
 // PS2 full initialization
 // kbd and mouse
 // This is called during the kernel initialization.
-int DDINIT_ps2(void)
-{
 // Called by hv_ps2_full_initialization in hv.c
 // Called by I_x64main in x64init.c
-
+int DDINIT_ps2(void)
+{
     unsigned int i=0;
 
     PROGRESS("DDINIT_ps2:\n");
@@ -182,10 +181,12 @@ int DDINIT_ps2(void)
 //
 
 // Initialize the driver.
+    //PROGRESS("DDINIT_ps2: kbd driver\n");
     ps2kbd_initialize_driver();
 
 // Initialize the device
 // Port 1: Keyboard
+    //PROGRESS("DDINIT_ps2: kbd device\n");
     ps2kbd_initialize_device();
     PS2.keyboard_initialized = TRUE;
 
@@ -196,10 +197,12 @@ int DDINIT_ps2(void)
 //
 
 // Initialize the driver.
+    //PROGRESS("DDINIT_ps2: mouse driver\n");
     ps2mouse_initialize_driver();
 
 // Initialize the device.
 // Port 2: Mouse
+    //PROGRESS("DDINIT_ps2: mouse device\n");
     ps2mouse_initialize_device();
     PS2.mouse_initialized = TRUE;
 

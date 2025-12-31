@@ -676,7 +676,6 @@ fail:
 }
 
 
-
 // #todo: 
 // We need a file structure and the function ps2kbd_ioctl();
 void ps2kbd_initialize_device (void)
@@ -693,8 +692,8 @@ void ps2kbd_initialize_device (void)
     // ...
 
 // Enable keyboard port
-    wait_then_write(I8042_STATUS, 0xae);
-    i8042_keyboard_expect_ack();
+// #ps: Do not expect ACK after controller command. Only from device. 
+    wait_then_write(I8042_STATUS, 0xAE);
 
     __prefix=0;
 

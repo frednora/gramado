@@ -686,6 +686,7 @@ void ps2mouse_initialize_device(void)
     unsigned char device_id=0;
 
     debug_print ("ps2mouse_initialize_device:\n");
+    //printk ("ps2mouse_initialize_device:\n");
 
     PS2Mouse.initialized = FALSE;
     PS2Mouse.irq_is_working = FALSE;
@@ -752,8 +753,8 @@ void ps2mouse_initialize_device(void)
 // 0xA9 Check Mouse InterfaceReturns 0, if OK
 
 // Enable mouse
+// #ps: Do not expect ACK after controller command. Only from device. 
     wait_then_write(0x64,0xA8);
-    i8042_mouse_expect_ack();
 
 // ========================================
 // Reset

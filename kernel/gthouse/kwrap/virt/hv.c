@@ -155,14 +155,15 @@ int isQEMU(void)
 }
 
 // Wrapper
-int hv_is_qemu(void)
-{
+int hv_is_qemu(void){
     return (int) isQEMU();
 }
 
 // Enable ps2 keyboard and mouse.
+// Initialize it only for qemu.
 void hv_ps2_full_initialization(void)
 {
+    int status = -1;
     int fInitialize = FALSE;
 
     if (HVInfo.initialized != TRUE)
@@ -186,7 +187,6 @@ void hv_ps2_full_initialization(void)
     // ...
 
 // Do
-    int status = -1;
     if (fInitialize == TRUE)
     {
         status = (int) DDINIT_ps2();

@@ -749,6 +749,13 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         goto exit_cmp;
     }
 
+// full initialization of PS2 kbd/mouse interface.
+    if ( kstrncmp( cmdline, "ps2-full", 8) == 0){
+        printk("~full ps2 initialization\n");
+        DDINIT_ps2();
+        goto exit_cmp;
+    }
+
 // user:
     if ( kstrncmp( cmdline, "user", 4 ) == 0 ){
         do_user();
@@ -1150,7 +1157,6 @@ __ProcessExtendedKeyboardKeyStroke(
             // Insert - E0 52	E0 D2	0x52
             if (vk == VK_INSERT)
             {
-                printk("Posting VK_INSERT\n");
                 ibroker_post_message_to_fg_thread( MSG_SYSKEYDOWN, VK_INSERT, ScanCode );
                 return 0;
             }
@@ -2615,7 +2621,6 @@ wmRawKeyEvent(
 // Um bit sinaliza o break, 
 // que representa que a tecla foi liberada.
 
-
     // Released: Yes, it's a break.
     if ( (Keyboard_RawByte & BREAK_MASK) != 0 ){
         fBreak = TRUE;
@@ -3310,12 +3315,12 @@ wmMouseEvent(
         // O window server ficaria apenas com a posição atual.
 
         ibroker_post_message_to_ds(
-            event_id, 
-            (unsigned long) long1, 
-            (unsigned long) long2 );
+            event_id, (unsigned long) long1, (unsigned long) long2 );
 
         // #test
         // Improve the performance of the display server.
+
+        //printk("Move %d %d\n", long1, long2);
 
         return 0;
     }
