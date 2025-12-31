@@ -1938,6 +1938,40 @@ fail:
     return (unsigned long) long_rv;
 }
 
+// Check if a scancode maps to an extended VK.
+// Uses keymap_extended[] to resolve scancode -> VK.
+// Returns TRUE if the VK is one of the extended keys.
+int is_extended_key(unsigned char scancode)
+{
+    if (keymap_extended == NULL)
+        return FALSE;
+
+    // Resolve scancode into VK using extended keymap
+    unsigned char vk = keymap_extended[scancode];
+
+    switch (vk)
+    {
+        case VK_INSERT:
+        case VK_DELETE:
+        case VK_HOME:
+        case VK_END:
+        case VK_PAGEUP:
+        case VK_PAGEDOWN:
+        case VK_ARROW_UP:
+        case VK_ARROW_DOWN:
+        case VK_ARROW_LEFT:
+        case VK_ARROW_RIGHT:
+        case VK_RCONTROL:
+        case VK_ALTGR:
+        case VK_APPS:
+        //case VK_PAUSEBREAK:  // handled specially, but still extended
+            return TRUE;
+            break;
+    }
+
+    return FALSE;
+}
+
 // Not in console mode
 static int 
 __ProcessKeyboardInput ( 
@@ -2517,16 +2551,23 @@ fail:
 // Display server should only receive global/system-level events 
 // (like focus changes or hotkeys that affect the whole GUI).
 
+// Called by DeviceInterface_PS2Keyboard() in ps2kbd.c.
+// Right after the ps2 keyboard interrupt handler.
+// Post keyboard event to the current foreground thread.
+
 int 
 wmRawKeyEvent( 
     unsigned char raw_byte_0,
     unsigned char raw_byte_1,
     unsigned char raw_byte_2,
-    int prefix )
+    unsigned char raw_prefix )
 {
-// Called by DeviceInterface_PS2Keyboard() in ps2kbd.c.
-// Right after the ps2 keyboard interrupt handler.
-// Post keyboard event to the current foreground thread.
+    // Saving the values into a structure for future use.
+    struct keyboard_raw_data_d raw_data;
+    raw_data.raw0   = (unsigned char) raw_byte_0;
+    raw_data.raw1   = (unsigned char) raw_byte_1;
+    raw_data.raw2   = (unsigned char) raw_byte_2;
+    raw_data.prefix = (unsigned char) raw_prefix;
 
 // Who is the current virtual console?
     struct tty_d *target_tty;
@@ -2538,7 +2579,60 @@ wmRawKeyEvent(
 // Sometimes we're sending data to multiple targets.
 // Maybe its gonna depend on the input mode.
 
-    int Prefix = (int) (prefix & 0xFF);
+    unsigned char __sc = (raw_data.raw0 & KEYBOARD_KEY_MASK);
+    int Prefix = (int) (raw_data.prefix & 0xFF);
+
+// Prefix 0x00 ?
+// For normal keys and
+// For extended keys in Virtualbox, that doesn't use prefix.
+// Let's check if it is extended keys and fake the prefix for 
+// the use in the rest of the routine.
+
+    // Is it extended key?
+    int isExtendedKey = FALSE;
+    if (Prefix == 0xE0)
+        isExtendedKey = TRUE;
+    if (Prefix == 0xE1)
+        isExtendedKey = TRUE;
+// #hack
+// It's because Virtualbox is fancy enough to send 
+// an extended keyboard value without a prefix.
+    if (Prefix == 0x00)
+    {
+        isExtendedKey = FALSE;
+        isExtendedKey = (int) is_extended_key(__sc);
+
+        if (isExtendedKey == TRUE)
+        {
+            // Fake the raw values for the rest of this routine
+            raw_data.raw0 = 0xE0;         // The raw0 is the prefix now
+            raw_data.raw1 = raw_byte_0;   // The key didn't have a prefix.
+            raw_data.raw2 = raw_byte_1;
+    
+            // Fake the prefix for the rest of this routine
+            raw_data.prefix = 0xE0;
+            Prefix = 0xE0;
+        }
+
+        // Special case. 
+        // Its saying that its and extended key with the prefix 0x00.
+        // QEMU / KVM / Bochs (and real hardware): uses prefixes
+        // VirtualBox: Often flattens extended keys, dropping the 0xE0 prefix.
+        // #ps: In Gramado right control is not extended
+        // when the prefix is 0x00. (prefix 0x00 is an anomally.)
+        unsigned char _vk = keymap_extended[__sc];
+        if (_vk == VK_LCONTROL ||  _vk == VK_RCONTROL)
+        {
+            isExtendedKey = FALSE;
+                
+            raw_data.raw0 = raw_byte_0;         // The raw0 is the prefix now
+            raw_data.raw1 = raw_byte_1;   // The key didn't have a prefix.
+            raw_data.raw2 = raw_byte_2;
+            
+            raw_data.prefix = 0x00;
+            Prefix = 0x00;
+        }
+    }
 
 // Step 0 
 // Declarações de variáveis.
@@ -2600,20 +2694,9 @@ wmRawKeyEvent(
 // O driver pegou o scancode e passou para a disciplina de linha 
 // através de parâmetro.
 
-    Keyboard_RawByte = raw_byte_0;
-
-/*
-// #test
-// prefix
-    if (KEY_E0 true)
-        wordKeyboard_RawByte |= 0xE000;
-    if (KEY_E1 true)
-        wordKeyboard_RawByte |= 0xE100;
-*/
-
-
-    //if ( Keyboard_RawByte == 0 )
-        //goto fail;
+    Keyboard_RawByte = raw_data.raw0;
+    if (isExtendedKey == TRUE)
+        Keyboard_RawByte = raw_data.raw1;
 
     if (Keyboard_RawByte == 0xFF){
         goto fail;
@@ -2633,13 +2716,14 @@ wmRawKeyEvent(
         fBreak = FALSE;
     }
 
-
 // ================================================
 // Released: Yes, it's a break.
 
-    if (fBreak == TRUE)
+    if (fBreak == TRUE && isExtendedKey == FALSE)
     {
-        Keyboard_ScanCode = Keyboard_RawByte;
+        //Keyboard_ScanCode = Keyboard_RawByte;
+        Keyboard_ScanCode = raw_byte_0;
+
         // Clear the parity bit
         Keyboard_ScanCode &= KEYBOARD_KEY_MASK;
 
@@ -2658,6 +2742,7 @@ wmRawKeyEvent(
             // Control released
             case VK_LCONTROL:
             case VK_RCONTROL:
+                //printk("VK_LCONTROL up\n");
                 ctrl_status = FALSE;  
                 Event_Message = MSG_SYSKEYUP;
                 break;
@@ -2748,9 +2833,10 @@ wmRawKeyEvent(
 // ================================================
 // Pressed: It's not a break, it's a make.
 
-    if (fBreak != TRUE)
+    if (fBreak != TRUE && isExtendedKey == FALSE)
     {
-        Keyboard_ScanCode = Keyboard_RawByte;
+        //Keyboard_ScanCode = Keyboard_RawByte;
+        Keyboard_ScanCode = raw_byte_0;
         // Clear the parity bit
         Keyboard_ScanCode &= KEYBOARD_KEY_MASK; 
 
@@ -2768,6 +2854,7 @@ wmRawKeyEvent(
             // Control pressed
             case VK_LCONTROL:
             case VK_RCONTROL:
+                //printk("VK_LCONTROL down\n");
                 ctrl_status = TRUE;
                 Event_Message = MSG_SYSKEYDOWN;
                 break;
@@ -2946,7 +3033,9 @@ done:
     int is_break = FALSE;
 
     // Pause make (press): E1 1D 45
-    if (raw_byte_0 == 0xE1 && raw_byte_1 == 0x1D && raw_byte_2 == 0x45)
+    if ( raw_data.raw0 == 0xE1 && 
+         raw_data.raw1 == 0x1D && 
+         raw_data.raw2 == 0x45)
     {
         Event_Message = MSG_SYSKEYDOWN;
         Event_LongVK = VK_PAUSEBREAK;
@@ -2954,7 +3043,10 @@ done:
         fPause = TRUE;
     }
     // Pause break (release): E1 9D C5
-    if (raw_byte_0 == 0xE1 && raw_byte_1 == 0x9D && raw_byte_2 == 0xC5)
+    if (
+         raw_data.raw0 == 0xE1 && 
+         raw_data.raw1 == 0x9D && 
+         raw_data.raw2 == 0xC5)
     {
         Event_Message = MSG_SYSKEYUP;
         Event_LongVK = VK_PAUSEBREAK;
@@ -2969,21 +3061,21 @@ done:
         // Not a pause/break key
         if (fPause != TRUE)
         {
-            is_break = (raw_byte_1 & 0x80) ? TRUE : FALSE;
+            is_break = ( raw_data.raw1 & 0x80) ? TRUE : FALSE;
             if (is_break == TRUE){
                 Event_Message = MSG_SYSKEYUP;
             } else {
                 Event_Message = MSG_SYSKEYDOWN;
             }
-            Event_LongRawByte  = raw_byte_1;
-            Event_LongScanCode = (unsigned long) (raw_byte_1 & 0x0000007F);
+            Event_LongRawByte  =  raw_data.raw1;
+            Event_LongScanCode = (unsigned long) ( raw_data.raw1 & 0x0000007F);
             // Get the vk from the kbdmap for extended keyboards
             Event_LongVK       = keymap_extended[Event_LongScanCode]; 
         }
 
         // #debug
-        //printk("Before: vk={%x} rc={%x} sc={%x}\n", 
-            //Event_LongVK, Event_LongRawByte, Event_LongScanCode );
+        //printk("Before: pref=%x rc={%x} sc={%x} vk={%x}\n", 
+            //Prefix, Event_LongRawByte, Event_LongScanCode, Event_LongVK );
 
         Status = 
             (int) __ProcessExtendedKeyboardKeyStroke(

@@ -255,10 +255,11 @@ __ps2kbd_interpret_and_dispatch(
 
     switch (prefix)
     {
-
-        // No prefix
+        // Prefix 0x00
+        // For normal keys and
+        // For extended keys in Virtualbox, that doesn't use prefix.
         case 0x00:
-            wmRawKeyEvent(raw_code_0, 0, 0, prefix);
+            wmRawKeyEvent( raw_code_0, 0x00, 0x00, 0x00 );
             break;
 
         // We gotta send 2 or 3 bytes
@@ -270,7 +271,7 @@ __ps2kbd_interpret_and_dispatch(
             } else {
                 // Make sequence: E0 xx 
                 // Clear the third byte since it's not used
-                wmRawKeyEvent(raw_code_0, raw_code_1, 0, prefix);
+                wmRawKeyEvent(raw_code_0, raw_code_1, 0x00, prefix);
             }
             break;
 
@@ -281,7 +282,6 @@ __ps2kbd_interpret_and_dispatch(
             break;
 
         default:
-            // Oh boy!
             break;
     };
 }
@@ -525,7 +525,7 @@ sys menu    = make: E0 5D,    break: E0 F0 5D
             // But, in qemu, Release: often just E0 xx again, with no F0 in the middle.
             if (Report[1] != 0xF0){
                 //printk("[kbd] 0xE0 prefix detected [Not 0xF0] (reportIndex=%d)\n", reportIndex);
-                __ps2kbd_interpret_and_dispatch(Report[0], Report[1], 0, Report[0]);
+                __ps2kbd_interpret_and_dispatch(Report[0], Report[1], 0x00, 0xE0);
                 fSequenceFinished = TRUE;
             }
             // Not a break, so its a make
@@ -544,7 +544,7 @@ sys menu    = make: E0 5D,    break: E0 F0 5D
         {
             // If the last was a break sign
             if (Report[1] == 0xF0){
-                __ps2kbd_interpret_and_dispatch(Report[0], Report[1], Report[2], Report[0]); 
+                __ps2kbd_interpret_and_dispatch(Report[0], Report[1], Report[2], 0xE0); 
                 fSequenceFinished = TRUE;
             }
             // #bugbug: If the last was a break sign. Oh boy!
@@ -585,11 +585,11 @@ sys menu    = make: E0 5D,    break: E0 F0 5D
             // We are in the 3rd byte of pause/break key sequence (E1 1D 45)
             // The sequence is not finished, because we have more 3 bytes.
             if (Report[2] == 0x45){
-                __ps2kbd_interpret_and_dispatch(Report[0], Report[1], Report[2], Report[0]);
+                __ps2kbd_interpret_and_dispatch(Report[0], Report[1], Report[2], 0xE1);
                 fSequenceFinished = FALSE;
             }
             if (Report[2] != 0x45){
-                __ps2kbd_interpret_and_dispatch(Report[0], Report[1], Report[2], Report[0]); 
+                __ps2kbd_interpret_and_dispatch(Report[0], Report[1], Report[2], 0xE1); 
                 fSequenceFinished = TRUE;  
             }
         }
@@ -614,7 +614,7 @@ sys menu    = make: E0 5D,    break: E0 F0 5D
             // We starts the release sequence of pause/break key
             if (Report[5] == 0xC5){
                 if (Report[3] == 0xE1 && Report[4] == 0x9D && Report[5] == 0xC5){
-                    __ps2kbd_interpret_and_dispatch(Report[3], Report[4], Report[5], Report[0]);
+                    __ps2kbd_interpret_and_dispatch(Report[3], Report[4], Report[5], 0xE1);
                 }
                 fSequenceFinished = TRUE;  
             }
@@ -626,11 +626,8 @@ sys menu    = make: E0 5D,    break: E0 F0 5D
     } else if (Report[0] != 0xE0 && Report[0] != 0xE1) {
         
         // Normal single‑byte case 
-        if (reportIndex == 0)
-        {
-            // Prefix 0
-            __ps2kbd_interpret_and_dispatch(Report[0], 0, 0, 0);
-            //wmRawKeyEvent(Report[0], 0, 0, 0);
+        if (reportIndex == 0){
+            __ps2kbd_interpret_and_dispatch(Report[0], 0x00, 0x00, 0x00);
             fSequenceFinished = TRUE;
         }
     };
@@ -642,6 +639,7 @@ sys menu    = make: E0 5D,    break: E0 F0 5D
 
         if (fSequenceFinished == TRUE)
             reportIndex = 0;
+
     };  // WHILE ends
 
 done:

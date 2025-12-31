@@ -5,6 +5,18 @@
 #define __EVI_IBROKER_H    1
 
 
+struct keyboard_raw_data_d 
+{
+// Raw data
+    unsigned char raw0;       // first raw byte (scancode or prefix)
+    unsigned char raw1;       // second raw byte (optional: break marker 0xF0, or part of Pause)
+    unsigned char raw2;       // third raw byte (optional: Pause/Break continuation)
+
+// Facilitator
+    unsigned char prefix;     // facilitator: 0x00, 0xE0, 0xE1 (real or injected)
+};
+
+
 struct input_broker_info_d 
 {
     int initialized;
@@ -54,7 +66,7 @@ wmRawKeyEvent(
     unsigned char raw_byte_0,
     unsigned char raw_byte_1,
     unsigned char raw_byte_2,
-    int prefix );
+    unsigned char raw_prefix );
 
 int wmMouseEvent(int event_id,long long1, long long2);
 int wmKeyboardEvent(int event_id,long long1, long long2);
