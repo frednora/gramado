@@ -1076,6 +1076,9 @@ __ProcessExtendedKeyboardKeyStroke(
     // #debug
     // printk("vk={%x} rc={%x} sc={%x}\n", vk, rawbyte, scancode);
 
+    //printk("Extended key: prefix=%x msg=%d vk=%x raw=%x sc=%x\n",
+       //prefix, msg, vk, rawbyte, scancode);
+
     // unsigned long
     if (rawbyte >= 0xFF){
         goto fail;
@@ -2991,6 +2994,75 @@ done:
                 (unsigned long) Event_LongScanCode );
         return (int) Status;
     }
+
+    // #debug
+    //printk("Prefix=%d vk={%x} rc={%x} sc={%x}\n", 
+        //Prefix, Event_LongVK, Event_LongRawByte, Event_LongScanCode );
+
+/*
+// #todo
+// This orutine is working fine for Virtualbox ...
+// But its a message. We need some elegant solution.
+// #ps: Virtualbox do not use the right prefix in the case of 
+// extended keyboard ... the prefix is 0.
+// ++
+// ========================================================
+// #hackhack
+// Extended keyboard for Virtualbox
+
+    int vb_fPause = FALSE;
+    int vb_is_break = FALSE;
+
+    int           vb_Prefix = 0;
+    int           vb_Event_Message      = 0;  //arg2 - message number
+    unsigned long vb_Event_LongVK       = 0;  //arg3 - vk
+    unsigned long vb_Event_LongRawByte  = 0;  //arg4 - raw byte
+    unsigned long vb_Event_LongScanCode = 0;  //arg4 - raw byte
+
+    // Pause make (press): E1 1D 45
+    if (raw_byte_1 == 0x1D && raw_byte_2 == 0x45)
+    {
+        vb_Event_Message = MSG_SYSKEYDOWN;
+        vb_Event_LongVK = VK_PAUSEBREAK;
+        vb_Event_LongRawByte = 0;
+        vb_fPause = TRUE;
+    }
+    // Pause break (release): E1 9D C5
+    if (raw_byte_1 == 0x9D && raw_byte_2 == 0xC5)
+    {
+        vb_Event_Message = MSG_SYSKEYUP;
+        vb_Event_LongVK = VK_PAUSEBREAK;
+        vb_Event_LongRawByte = 0;
+        vb_fPause = TRUE;
+    }
+
+    // Not a pause/break key
+    // In the context of virtuabox
+    if (vb_fPause != TRUE)
+    {
+        vb_is_break = (raw_byte_1 & 0x80) ? TRUE : FALSE;
+        if (vb_is_break == TRUE){
+            vb_Event_Message = MSG_SYSKEYUP;
+        } else {
+            vb_Event_Message = MSG_SYSKEYDOWN;
+        }
+        vb_Event_LongRawByte  = raw_byte_1;
+        vb_Event_LongScanCode = (unsigned long) (raw_byte_1 & 0x0000007F);
+        // Get the vk from the kbdmap for extended keyboards
+        vb_Event_LongVK       = keymap_extended[vb_Event_LongScanCode]; 
+    }
+
+    Status = 
+        (int) __ProcessExtendedKeyboardKeyStroke(
+            (int) 0xE0,
+            (int) vb_Event_Message, 
+            (unsigned long) vb_Event_LongVK,
+            (unsigned long) vb_Event_LongRawByte,
+            (unsigned long) vb_Event_LongScanCode );
+// ===============================================================
+// --
+*/
+
 
 // Unmapped scancode
 // It's ok to simply return

@@ -525,13 +525,12 @@ sys menu    = make: E0 5D,    break: E0 F0 5D
             // But, in qemu, Release: often just E0 xx again, with no F0 in the middle.
             if (Report[1] != 0xF0){
                 //printk("[kbd] 0xE0 prefix detected [Not 0xF0] (reportIndex=%d)\n", reportIndex);
-                __ps2kbd_interpret_and_dispatch(Report[0], Report[1], 0, Report[0]); 
+                __ps2kbd_interpret_and_dispatch(Report[0], Report[1], 0, Report[0]);
                 fSequenceFinished = TRUE;
             }
             // Not a break, so its a make
             // its not the end of sequence yet ... lets wait the next byte.
-            if (Report[1] == 0xF0)
-            {
+            if (Report[1] == 0xF0){
                 //printk("[kbd] 0xE0 prefix detected [0xF0] (reportIndex=%d)\n", reportIndex);
                 fSequenceFinished = FALSE;
             }
