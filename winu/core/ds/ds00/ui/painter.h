@@ -18,9 +18,10 @@ painterFillWindowRectangle(
 void 
 __draw_button_borders(
     struct gws_window_d *w,
-    unsigned int color1,
-    unsigned int color2_dark,
-    unsigned int color2_light,
+    unsigned int tl_2,  // tl 2 inner (light)
+    unsigned int tl_1,  // tl 1 most inner (lighter)
+    unsigned int br_2,  // br 2 inner (dark)
+    unsigned int br_1,  // br 1 most inner (light) 
     unsigned int outer_color );
 
 //worker: no checks

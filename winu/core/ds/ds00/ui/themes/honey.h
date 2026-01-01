@@ -87,8 +87,6 @@
 #define HONEY_COLOR_BUTTON_FOCUS_BG     0x00A9CCE3   // soft sky blue (matches active titlebar)
 #define HONEY_COLOR_BUTTON_FOCUS_BORDER 0x005A8AC6   // vibrant blue border
 
-
-
 // Progress state (button is busy/working)
 #define HONEY_COLOR_BUTTON_PROGRESS_BG        0x00808080   // medium neutral gray background
 #define HONEY_COLOR_BUTTON_PROGRESS_BORDER 0x00808080   // same neutral gray border
@@ -96,6 +94,70 @@
 #define HONEY_COLOR_BUTTON_PROGRESS_BORDER_2  0x00404040   // darker gray bottom/right
 #define HONEY_COLOR_BUTTON_PROGRESS_BORDER_LIGHT 0x00C0C0C0 // soft highlight
 #define HONEY_COLOR_BUTTON_PROGRESS_BORDER_OUTER 0x00606060 // outer neutral gray
+
+
+#define HONEY_COLOR_BUTTON_FOCUS_BORDER_1  0x007AA9E6  // light sky blue
+#define HONEY_COLOR_BUTTON_FOCUS_BORDER_2_light 0x007AA9E6
+#define HONEY_COLOR_BUTTON_FOCUS_BORDER_2 COLOR_BLUE
+
+//#define HONEY_COLOR_BUTTON_BORDER_OUTER_XPSTYLE  0x00316AC5  // XP marine blue
+//#define HONEY_COLOR_BUTTON_BORDER_OUTER_XPSTYLE  0x002A5CAA  // deep marine blue
+#define HONEY_COLOR_BUTTON_BORDER_OUTER_XPSTYLE  0x00191970  // Midnight Blue
+
+
+
+// Button border colors using tl/br notation
+// tl_2 = top/left inner highlight
+// tl_1 = top/left most inner highlight
+// br_2 = bottom/right inner shadow
+// br_1 = bottom/right most inner highlight
+// outer = outer frame
+
+// Default state (raised button)
+// The same as BS_RELEASED
+#define HONEY_COLOR_BUTTON_DEFAULT_TL2     COLOR_WHITE
+#define HONEY_COLOR_BUTTON_DEFAULT_TL1     COLOR_WHITE
+#define HONEY_COLOR_BUTTON_DEFAULT_BR2     xCOLOR_GRAY1
+#define HONEY_COLOR_BUTTON_DEFAULT_BR1     xCOLOR_GRAY5
+#define HONEY_COLOR_BUTTON_DEFAULT_OUTER   COLOR_BLACK
+
+// Hover state
+#define HONEY_COLOR_BUTTON_HOVER_TL2       COLOR_WHITE
+#define HONEY_COLOR_BUTTON_HOVER_TL1       COLOR_WHITE
+#define HONEY_COLOR_BUTTON_HOVER_BR2       xCOLOR_GRAY1
+#define HONEY_COLOR_BUTTON_HOVER_BR1       xCOLOR_GRAY5
+//#define HONEY_COLOR_BUTTON_HOVER_OUTER     COLOR_BLACK
+#define HONEY_COLOR_BUTTON_HOVER_OUTER     0x00191970
+
+// Pressed state (sunken look)
+#define HONEY_COLOR_BUTTON_PRESSED_TL2     xCOLOR_GRAY2
+#define HONEY_COLOR_BUTTON_PRESSED_TL1     xCOLOR_GRAY2
+#define HONEY_COLOR_BUTTON_PRESSED_BR2     COLOR_WHITE
+#define HONEY_COLOR_BUTTON_PRESSED_BR1     xCOLOR_GRAY5
+#define HONEY_COLOR_BUTTON_PRESSED_OUTER   COLOR_BLACK
+
+// Disabled state
+#define HONEY_COLOR_BUTTON_DISABLED_TL2    COLOR_GRAY
+#define HONEY_COLOR_BUTTON_DISABLED_TL1    COLOR_GRAY
+#define HONEY_COLOR_BUTTON_DISABLED_BR2    COLOR_GRAY
+#define HONEY_COLOR_BUTTON_DISABLED_BR1    xCOLOR_GRAY5
+#define HONEY_COLOR_BUTTON_DISABLED_OUTER  xCOLOR_GRAY2
+
+// Focus state (keyboard focus / first responder)
+// Focused button (shine effect)
+#define HONEY_COLOR_BUTTON_FOCUS_TL2       0x005A8AC6 
+#define HONEY_COLOR_BUTTON_FOCUS_TL1       0x005A8AC6 
+#define HONEY_COLOR_BUTTON_FOCUS_BR2       0x005A8AC6 
+#define HONEY_COLOR_BUTTON_FOCUS_BR1       xCOLOR_GRAY5 
+#define HONEY_COLOR_BUTTON_FOCUS_OUTER     0x00191970 
+
+
+// Progress state (busy/working)
+#define HONEY_COLOR_BUTTON_PROGRESS_TL2    HONEY_COLOR_BUTTON_PROGRESS_BORDER_1   // lighter gray
+#define HONEY_COLOR_BUTTON_PROGRESS_TL1    HONEY_COLOR_BUTTON_PROGRESS_BORDER_LIGHT // soft highlight
+#define HONEY_COLOR_BUTTON_PROGRESS_BR2    HONEY_COLOR_BUTTON_PROGRESS_BORDER_2   // darker gray
+#define HONEY_COLOR_BUTTON_PROGRESS_BR1    HONEY_COLOR_BUTTON_PROGRESS_BORDER_LIGHT // soft highlight
+#define HONEY_COLOR_BUTTON_PROGRESS_OUTER  HONEY_COLOR_BUTTON_PROGRESS_BORDER_OUTER
 
 
 #endif   

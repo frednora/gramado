@@ -1429,10 +1429,14 @@ void *doCreateWindow (
 
 // Style
 // Button suport
-    unsigned int buttonBorderColor1=0;
-    unsigned int buttonBorderColor2=0;
-    unsigned int buttonBorderColor2_light=0;
-    unsigned int buttonBorder_outercolor=0;  //Essa cor muda de acordo com o foco 
+
+// #test: renaming
+    unsigned int buttonBorder_tl2_color=0;  // tl2 inner
+    unsigned int buttonBorder_tl1_color=0;  // tl1 most inner
+    unsigned int buttonBorder_br2_color=0;       // br2 inner
+    unsigned int buttonBorder_br1_color=0;   // br1 most inner
+    unsigned int buttonBorder_outer_color=0;  //Essa cor muda de acordo com o foco 
+
 
     //debug_print ("doCreateWindow:\n");
 
@@ -2618,47 +2622,54 @@ void *doCreateWindow (
 
             // It’s the state when the button has keyboard focus (first responder).
             case BS_FOCUS:
-                buttonBorderColor1       = COLOR_BLUE;
-                buttonBorderColor2       = COLOR_BLUE;
-                buttonBorderColor2_light = xCOLOR_GRAY5;
-                buttonBorder_outercolor  = HONEY_COLOR_BUTTON_FOCUS_BORDER;  //COLOR_BLUE;
+                buttonBorder_tl2_color   = HONEY_COLOR_BUTTON_FOCUS_TL2;
+                buttonBorder_tl1_color   = HONEY_COLOR_BUTTON_FOCUS_TL1;
+                buttonBorder_br2_color   = HONEY_COLOR_BUTTON_FOCUS_BR2;
+                buttonBorder_br1_color   = HONEY_COLOR_BUTTON_FOCUS_BR1;
+                buttonBorder_outer_color = HONEY_COLOR_BUTTON_FOCUS_OUTER;
                 break;
 
             case BS_PRESSED:
                 //printf("BS_PRESSED\n"); exit(0);
-                buttonBorderColor1       = xCOLOR_GRAY1; 
-                buttonBorderColor2       = COLOR_WHITE;
-                buttonBorderColor2_light = xCOLOR_GRAY5; 
-                buttonBorder_outercolor  = COLOR_BLACK;
+                buttonBorder_tl2_color   = HONEY_COLOR_BUTTON_PRESSED_TL2; 
+                buttonBorder_tl1_color   = HONEY_COLOR_BUTTON_PRESSED_TL1; 
+                buttonBorder_br2_color   = HONEY_COLOR_BUTTON_PRESSED_BR2;
+                buttonBorder_br1_color   = HONEY_COLOR_BUTTON_PRESSED_BR1; 
+                buttonBorder_outer_color = HONEY_COLOR_BUTTON_PRESSED_OUTER;
                 break;
 
             case BS_HOVER:
-                buttonBorderColor1       = COLOR_WHITE; 
-                buttonBorderColor2       = xCOLOR_GRAY1;
-                buttonBorderColor2_light = xCOLOR_GRAY5; 
-                buttonBorder_outercolor  = COLOR_BLACK;
+                buttonBorder_tl2_color   = HONEY_COLOR_BUTTON_HOVER_TL2; 
+                buttonBorder_tl1_color   = HONEY_COLOR_BUTTON_HOVER_TL1; 
+                buttonBorder_br2_color   = HONEY_COLOR_BUTTON_HOVER_BR2;
+                buttonBorder_br1_color   = HONEY_COLOR_BUTTON_HOVER_BR1; 
+                buttonBorder_outer_color = HONEY_COLOR_BUTTON_HOVER_OUTER;
                 break;
-        
+
             case BS_DISABLED:
-                buttonBorderColor1       = xCOLOR_GRAY2;
-                buttonBorderColor2       = xCOLOR_GRAY3;
-                buttonBorderColor2_light = xCOLOR_GRAY4;
-                buttonBorder_outercolor  = xCOLOR_GRAY4;
+                buttonBorder_tl2_color   = HONEY_COLOR_BUTTON_DISABLED_TL2;
+                buttonBorder_tl1_color   = HONEY_COLOR_BUTTON_DISABLED_TL1;
+                buttonBorder_br2_color   = HONEY_COLOR_BUTTON_DISABLED_BR2;
+                buttonBorder_br1_color   = HONEY_COLOR_BUTTON_DISABLED_BR1;
+                buttonBorder_outer_color = HONEY_COLOR_BUTTON_DISABLED_OUTER;
                 break;
 
             case BS_PROGRESS:
-                buttonBorderColor1 = HONEY_COLOR_BUTTON_PROGRESS_BORDER_1;  //COLOR_GRAY;
-                buttonBorderColor2 = HONEY_COLOR_BUTTON_PROGRESS_BORDER_2; //COLOR_GRAY;
-                buttonBorderColor2_light = HONEY_COLOR_BUTTON_PROGRESS_BORDER_LIGHT; //COLOR_GRAY;
-                buttonBorder_outercolor  = HONEY_COLOR_BUTTON_PROGRESS_BORDER_OUTER;
+                buttonBorder_tl2_color   = HONEY_COLOR_BUTTON_PROGRESS_TL2;
+                buttonBorder_tl1_color   = HONEY_COLOR_BUTTON_PROGRESS_TL1;
+                buttonBorder_br2_color   = HONEY_COLOR_BUTTON_PROGRESS_BR2;
+                buttonBorder_br1_color   = HONEY_COLOR_BUTTON_PROGRESS_BR1;
+                buttonBorder_outer_color = HONEY_COLOR_BUTTON_PROGRESS_OUTER;
                 break;
 
+            // The same as BS_RELEASED
             case BS_DEFAULT:
             default: 
-                buttonBorderColor1       = COLOR_WHITE;   // left/top
-                buttonBorderColor2       = xCOLOR_GRAY1;  // right/bottom
-                buttonBorderColor2_light = xCOLOR_GRAY5;
-                buttonBorder_outercolor  = COLOR_BLACK;
+                buttonBorder_tl2_color   = HONEY_COLOR_BUTTON_DEFAULT_TL2; 
+                buttonBorder_tl1_color   = HONEY_COLOR_BUTTON_DEFAULT_TL1;
+                buttonBorder_br2_color   = HONEY_COLOR_BUTTON_DEFAULT_BR2;
+                buttonBorder_br1_color   = HONEY_COLOR_BUTTON_DEFAULT_BR1;
+                buttonBorder_outer_color = HONEY_COLOR_BUTTON_DEFAULT_OUTER;
                 break;
         };
 
@@ -2708,11 +2719,12 @@ void *doCreateWindow (
             // We can register these colors inside the windows structure.
             __draw_button_borders(
                 (struct gws_window_d *) window,
-                (unsigned int) buttonBorderColor1,
-                (unsigned int) buttonBorderColor2,
-                (unsigned int) buttonBorderColor2_light,
-                (unsigned int) buttonBorder_outercolor );
-           
+                (unsigned int) buttonBorder_tl2_color,        // tl 2 inner
+                (unsigned int) buttonBorder_tl1_color,        // tl 1 most inner
+                (unsigned int) buttonBorder_br2_color,        // br 2 inner
+                (unsigned int) buttonBorder_br1_color,  // br 1 most inner
+                (unsigned int) buttonBorder_outer_color );
+
 
             if (isDarkTheme == TRUE) {
                 // Dark theme

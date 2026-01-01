@@ -96,23 +96,113 @@ static void __draw_button_mark_by_wid( int wid, int button_number )
         COLOR_RED, TRUE, 0 );
 }
 
-// WORKER
-// Paint button borders.
+
+// __draw_button_borders
+// Paints the beveled 3D border around a button window.
+// Parameters:
+//   w            - target button window (position and size come from this struct)
+//   color1       - highlight color for top/left inner edges
+//   color2_dark  - shadow color for right/bottom inner edges
+//   color2_light - secondary highlight for right/bottom (softens shadow)
+//   outer_color  - outermost frame color (defines button boundary)
+// 
+// Drawing order:
+//   Top/Left: outer_color → color1 → color1
+//   Right/Bottom: outer_color → color2_dark → color2_light
+// 
+// This layering simulates light and shadow, giving the button a 3D beveled look.
 // Called by doCreateWindow
-// >>> No checks
-// IN: window, color, color, color, color.
-// color1: (left, top)
-// color2-dark: (right, bottom)
-// color2-light
-// outer_color
-// #check
 // This routine is calling the kernel to paint the rectangle.
+
+/*
+Button border layering (raised state, top view):
+
+   ┌─────────────────────────────────┐
+   │  Top edge                       │
+   │   outer_color                   │ ← Outermost frame
+   │   color1 (highlight #1)         │ ← Inner highlight
+   │   color1 (highlight #2)         │ ← Inner highlight (deeper)
+   ├─────────────────────────────────┤
+   │                                 │
+   │   Button client area            │
+   │                                 │
+   ├─────────────────────────────────┤
+   │  Bottom edge                    │
+   │   color2_light (soft highlight) │ ← Inner bevel
+   │   color2_dark  (shadow)         │ ← Shadow line
+   │   outer_color                   │ ← Outermost frame (last)
+   └─────────────────────────────────┘
+
+Left edge layering:
+   outer_color → color1 → color1
+
+Right edge layering:
+   color2_light → color2_dark → outer_color
+
+Summary:
+- outer_color   = outermost border (all sides, drawn last on bottom/right)
+- color1        = highlight (top/left, drawn twice for depth)
+- color2_dark   = shadow (right/bottom, middle layer)
+- color2_light  = inner bevel highlight (right/bottom, first layer)
+*/
+
+/*
+Button border layering (raised state):
+
+Top/Left edges:
+   outer_color  →  color1  →  color1
+   (frame)         (highlight #1)   (highlight #2)
+
+Right/Bottom edges:
+   color2_light  →  color2_dark  →  outer_color
+   (inner bevel)     (shadow)        (frame, drawn last)
+
+Summary:
+- outer_color   = outermost frame line
+- color1        = highlight, drawn twice on top/left for depth
+- color2_light  = inner bevel highlight on right/bottom
+- color2_dark   = shadow line on right/bottom
+*/
+
+
+/*
+tl_2 - top left inner
+tl_1 - top left most inner
+br_1 - bottom right most inner 
+br_2 - bottom right inner 
+*/
+
+/*
+Button border layering (raised state):
+
+Top/Left edges:
+   outer_color  →  tl_2 (color1)  →  tl_1 (color1)
+   - outer_color = outer frame
+   - tl_2        = top/left inner highlight
+   - tl_1        = top/left most inner highlight
+
+Right/Bottom edges:
+   br_1 (color2_light)  →  br_2 (color2_dark)  →  outer_color
+   - br_1 = bottom/right most inner highlight
+   - br_2 = bottom/right inner shadow
+   - outer_color = outer frame (drawn last)
+*/
+
+/*
+tl_2 → top/left inner highlight
+tl_1 → top/left most inner highlight
+br_2 → bottom/right inner shadow
+br_1 → bottom/right most inner highlight
+outer_color → outer frame
+*/
+
 void 
 __draw_button_borders(
     struct gws_window_d *w,
-    unsigned int color1,
-    unsigned int color2_dark,
-    unsigned int color2_light,
+    unsigned int tl_2,  // tl 2 inner (light)
+    unsigned int tl_1,  // tl 1 most inner (lighter)
+    unsigned int br_2,  // br 2 inner (dark)
+    unsigned int br_1,  // br 1 most inner (light) 
     unsigned int outer_color )
 {
 // #test
@@ -145,46 +235,46 @@ __draw_button_borders(
 // -------------------------------
 // :: Top
 // top, top+1, top+2
-    rectBackbufferDrawRectangle ( 
+    rectBackbufferDrawRectangle (   // outer
         w->absolute_x+1, 
         w->absolute_y, 
         w->width-2,
         BorderSize, 
         outer_color, TRUE,0 );
-    rectBackbufferDrawRectangle ( 
+    rectBackbufferDrawRectangle (   // tl 2   inner
         w->absolute_x+1, 
         w->absolute_y+1, 
         w->width-2, 
         BorderSize, 
-        color1, TRUE,0 );
-    rectBackbufferDrawRectangle ( 
+        tl_2, TRUE,0 );
+    rectBackbufferDrawRectangle (   // tl 1  most inner
         w->absolute_x+1+1, 
         w->absolute_y+1+1,
         w->width-4, 
         BorderSize, 
-        color1, TRUE,0 );
+        tl_1, TRUE,0 );
 
 // -------------------------------
 // :: Left
 // left, left+1, left+2
-    rectBackbufferDrawRectangle ( 
+    rectBackbufferDrawRectangle (    // outer
         w->absolute_x, 
         w->absolute_y+1, 
         BorderSize, 
         w->height-2,
         outer_color, TRUE,0 );
-    rectBackbufferDrawRectangle ( 
+    rectBackbufferDrawRectangle (    // tl 2   inner
         w->absolute_x+1, 
         w->absolute_y+1, 
         BorderSize, 
         w->height-2,
-        color1, TRUE,0 );
-    rectBackbufferDrawRectangle ( 
+        tl_2, TRUE,0 );
+    rectBackbufferDrawRectangle (    // tl 1  most inner
         w->absolute_x+1+1, 
         w->absolute_y+1+1, 
         BorderSize, 
         w->height-4,
-        color1, TRUE,0 );
+        tl_1, TRUE,0 );
 
 
 //  
@@ -197,46 +287,46 @@ __draw_button_borders(
 // -------------------------------
 // :: Right
 // right-3, right-2, right-1
-    rectBackbufferDrawRectangle ( 
+    rectBackbufferDrawRectangle (           // outer
         ((w->absolute_x) + (w->width) -1), 
         w->absolute_y+1, 
         BorderSize, 
         w->height-2, 
         outer_color, TRUE, 0 );
-    rectBackbufferDrawRectangle ( 
+    rectBackbufferDrawRectangle (              // br 2 inner
         ((w->absolute_x) + (w->width) -2), 
         w->absolute_y+1, 
         BorderSize, 
         w->height-2, 
-        color2_dark, TRUE, 0 );
-    rectBackbufferDrawRectangle ( 
+        br_2, TRUE, 0 );
+    rectBackbufferDrawRectangle (               // br 1 most inner
         ((w->absolute_x) + (w->width) -3), 
         w->absolute_y+1+1, 
         BorderSize, 
         w->height-4, 
-        color2_light, TRUE, 0 );
+        br_1, TRUE, 0 );
 
 // -------------------------------
 // :: Bottom
 // bottom-1, bottom-2, bottom-3
-    rectBackbufferDrawRectangle ( 
+    rectBackbufferDrawRectangle (        // outer
         w->absolute_x+1, 
         ((w->absolute_y) + (w->height) -1),  
         w->width-2, 
         BorderSize, 
         outer_color, TRUE, 0 );
-    rectBackbufferDrawRectangle ( 
+    rectBackbufferDrawRectangle (           // br 2 inner
         w->absolute_x+1, 
         ((w->absolute_y) + (w->height) -2),  
         w->width-2, 
         BorderSize, 
-        color2_dark, TRUE, 0 );
-    rectBackbufferDrawRectangle ( 
+        br_2, TRUE, 0 );
+    rectBackbufferDrawRectangle (            // br 1 most inner
         w->absolute_x+1+1, 
         ((w->absolute_y) + (w->height) -3),  
         w->width-4, 
         BorderSize, 
-        color2_light, TRUE, 0 );
+        br_1, TRUE, 0 );
 }
 
 // worker:
@@ -373,18 +463,38 @@ __draw_window_border(
 // IN: Titlebar window.
 int redraw_controls(struct gws_window_d *window)
 {
+    //struct gws_window_d *parent;
     struct gws_window_d *tb_window;
     register int wid = -1;
 
-// Validation
+// -- Title bar -------------------------------
     if ((void*) window == NULL){
         goto fail;
     }
     if (window->magic != 1234){
         goto fail;
     }
-
     tb_window = window;
+
+/*
+// -- Title bar's parent -----------------------
+    parent = (struct gws_window_d *) tb_window->parent;
+    if ( (void*) parent == NULL )
+        return -1;
+    if (parent->magic != 1234)
+        return -1;
+
+    if (parent == active_window)
+    {
+    }
+    if (parent != active_window)
+    {
+    }
+*/
+
+// #todo:
+// We gotta change the state of the controls based on the
+// parent window state. And switchback when the parent changes its state.
 
 // #todo
 // Check if its really a taskbar?
@@ -410,25 +520,25 @@ int redraw_titlebar_window(struct gws_window_d *window)
     struct gws_window_d *tb_window;
     unsigned long rop=0;
 
-// Validation
+// -- Title bar -------------------------------
     if ( (void*) window == NULL )
         return -1;
     if (window->magic != 1234)
         return -1;
-
     tb_window = (struct gws_window_d *) window;
 
-// Parent stuff
+// -- Title bar's parent -----------------------
     parent = (struct gws_window_d *) tb_window->parent;
     if ( (void*) parent == NULL )
         return -1;
     if (parent->magic != 1234)
         return -1;
 
+// ?? #bugbug
     rop = (unsigned long) parent->rop;
 
 // ------------------
-// Parent is active.
+// Parent is active
     if (parent == active_window)
     {
         tb_window->bg_color = 
@@ -440,7 +550,7 @@ int redraw_titlebar_window(struct gws_window_d *window)
     }
 
 // ------------------
-// Parent is NOT active.
+// Parent is NOT active
     if (parent != active_window)
     {
         tb_window->bg_color = 
@@ -517,10 +627,8 @@ int redraw_titlebar_window(struct gws_window_d *window)
 
     unsigned long sL=0;
     unsigned long sT=0;
-    unsigned int sColor = 
-        (unsigned int) parent->titlebar_text_color;
+    unsigned int sColor = (unsigned int) parent->titlebar_text_color;
 
-    
     int useTitleString = TRUE; //#HACK
     if (useTitleString == TRUE)
     {
@@ -531,28 +639,16 @@ int redraw_titlebar_window(struct gws_window_d *window)
         sT = 
             (unsigned long) 
             ( tb_window->absolute_y + parent->titlebar_text_top);
-
-        /*
-        // #debug
-        // It shows the height of the parent window. (Overlapped).
-        char new_name[64];
-        int __h = (int) (parent->height & 0xFFFFFFFF);
-        memset(new_name,0,64);
-        itoa ( (int) __h, new_name );
-        size_t __s = strlen(new_name);
-        new_name[__s] = 0;
-        grDrawString ( sL, sT, sColor, new_name );
-        */
         
         if ((void*) tb_window->name != NULL){
             grDrawString ( sL, sT, sColor, tb_window->name );
         }
     }
 
-
 // Invalidate
     window->dirty = TRUE;
 
+// Redraw the controls in the titlebar
 // IN: titlebar
     redraw_controls(window); 
 
@@ -825,13 +921,16 @@ redraw_window (
 
     int ButtonState = BS_DEFAULT;
 
-    //Termina de desenhar o botão, mas não é frame
-    //é só o botão...
-    //caso o botão tenha algum frame, será alguma borda extra.
+// #test: renaming
+    unsigned int buttonBorder_tl2_color   = HONEY_COLOR_BUTTON_DEFAULT_TL2;  // tl2 inner
+    unsigned int buttonBorder_tl1_color   = HONEY_COLOR_BUTTON_DEFAULT_TL1;  // tl1 most inner
+    unsigned int buttonBorder_br2_color   = HONEY_COLOR_BUTTON_DEFAULT_BR2;  // br2 inner
+    unsigned int buttonBorder_br1_color   = HONEY_COLOR_BUTTON_DEFAULT_BR1;  // br1 most inner
+    unsigned int buttonBorder_outer_color = HONEY_COLOR_BUTTON_DEFAULT_OUTER;
+
+// Label
     unsigned int label_color = COLOR_BLACK;
-    // Change to 'button_border1' and 'button_border2'
-    unsigned int border1 = COLOR_GRAY;
-    unsigned int border2 = COLOR_GRAY;
+
 
     if (window->type == WT_BUTTON)
     {
@@ -843,38 +942,56 @@ redraw_window (
         // Atualiza algumas características da janela.
         switch (ButtonState)
         {
+            // It’s the state when the button has keyboard focus (first responder).
             case BS_FOCUS:
-                border1 = COLOR_BLUE;
-                border2 = COLOR_BLUE;
+                buttonBorder_tl2_color   = HONEY_COLOR_BUTTON_FOCUS_TL2;
+                buttonBorder_tl1_color   = HONEY_COLOR_BUTTON_FOCUS_TL1;
+                buttonBorder_br2_color   = HONEY_COLOR_BUTTON_FOCUS_BR2;
+                buttonBorder_br1_color   = HONEY_COLOR_BUTTON_FOCUS_BR1;
+                buttonBorder_outer_color = HONEY_COLOR_BUTTON_FOCUS_OUTER;
                 break;
 
             case BS_PRESSED:
-                border1 = xCOLOR_GRAY1;  //GWS_COLOR_BUTTONSHADOW3;
-                border2 = COLOR_WHITE;   //GWS_COLOR_BUTTONHIGHLIGHT3;
+                //printf("BS_PRESSED\n"); exit(0);
+                buttonBorder_tl2_color   = HONEY_COLOR_BUTTON_PRESSED_TL2; 
+                buttonBorder_tl1_color   = HONEY_COLOR_BUTTON_PRESSED_TL1; 
+                buttonBorder_br2_color   = HONEY_COLOR_BUTTON_PRESSED_BR2;
+                buttonBorder_br1_color   = HONEY_COLOR_BUTTON_PRESSED_BR1; 
+                buttonBorder_outer_color = HONEY_COLOR_BUTTON_PRESSED_OUTER;
                 break;
 
             case BS_HOVER:
-                //border1 = COLOR_YELLOW;  //#test
-                //border2 = COLOR_YELLOW;  //#test
-                border1 = COLOR_WHITE;    //GWS_COLOR_BUTTONHIGHLIGHT3;
-                border2 = xCOLOR_GRAY1;   //GWS_COLOR_BUTTONSHADOW3;
+                buttonBorder_tl2_color   = HONEY_COLOR_BUTTON_HOVER_TL2; 
+                buttonBorder_tl1_color   = HONEY_COLOR_BUTTON_HOVER_TL1; 
+                buttonBorder_br2_color   = HONEY_COLOR_BUTTON_HOVER_BR2;
+                buttonBorder_br1_color   = HONEY_COLOR_BUTTON_HOVER_BR1; 
+                buttonBorder_outer_color = HONEY_COLOR_BUTTON_HOVER_OUTER;
                 break;
 
             case BS_DISABLED:
-                border1 = COLOR_GRAY;
-                border2 = COLOR_GRAY;
+                buttonBorder_tl2_color   = HONEY_COLOR_BUTTON_DISABLED_TL2;
+                buttonBorder_tl1_color   = HONEY_COLOR_BUTTON_DISABLED_TL1;
+                buttonBorder_br2_color   = HONEY_COLOR_BUTTON_DISABLED_BR2;
+                buttonBorder_br1_color   = HONEY_COLOR_BUTTON_DISABLED_BR1;
+                buttonBorder_outer_color = HONEY_COLOR_BUTTON_DISABLED_OUTER;
                 break;
 
-            //?
             case BS_PROGRESS:
-                border1 = COLOR_GRAY;
-                border2 = COLOR_GRAY;
+                buttonBorder_tl2_color   = HONEY_COLOR_BUTTON_PROGRESS_TL2;
+                buttonBorder_tl1_color   = HONEY_COLOR_BUTTON_PROGRESS_TL1;
+                buttonBorder_br2_color   = HONEY_COLOR_BUTTON_PROGRESS_BR2;
+                buttonBorder_br1_color   = HONEY_COLOR_BUTTON_PROGRESS_BR1;
+                buttonBorder_outer_color = HONEY_COLOR_BUTTON_PROGRESS_OUTER;
                 break;
 
+            // The same as BS_RELEASED
             case BS_DEFAULT:
             default: 
-                border1 = COLOR_WHITE;    //GWS_COLOR_BUTTONHIGHLIGHT3;
-                border2 = xCOLOR_GRAY1;   //GWS_COLOR_BUTTONSHADOW3;
+                buttonBorder_tl2_color   = HONEY_COLOR_BUTTON_DEFAULT_TL2; 
+                buttonBorder_tl1_color   = HONEY_COLOR_BUTTON_DEFAULT_TL1;
+                buttonBorder_br2_color   = HONEY_COLOR_BUTTON_DEFAULT_BR2;
+                buttonBorder_br1_color   = HONEY_COLOR_BUTTON_DEFAULT_BR1;
+                buttonBorder_outer_color = HONEY_COLOR_BUTTON_DEFAULT_OUTER;
                 break;
         };
 
@@ -893,16 +1010,14 @@ redraw_window (
             ( ( (unsigned long) window->height - FontInitialization.height ) >> 1 );
 
 
-        // redraw the button border.
-        // #todo:
-        // as cores vao depender do etado do botao.
-        // #todo: veja como foi feito na hora da criaçao do botao.
+        // Redraw the button border
         __draw_button_borders(
             (struct gws_window_d *) window,
-            (unsigned int) border1,        // color1: (left and top)
-            (unsigned int) border2,        // color2-dark: (right and bottom)
-            (unsigned int) xCOLOR_GRAY5,   // color2-light
-            (unsigned int) COLOR_BLACK );  // outter color
+            (unsigned int) buttonBorder_tl2_color,  // tl 2 inner
+            (unsigned int) buttonBorder_tl1_color,  // tl 1 most inner
+            (unsigned int) buttonBorder_br2_color,  // br 2 inner
+            (unsigned int) buttonBorder_br1_color,   // br 1 most inner
+            (unsigned int) buttonBorder_outer_color );  // outter color
 
         // Button label
         //server_debug_print ("redraw_window: [FIXME] Button label\n"); 
@@ -969,7 +1084,7 @@ redraw_window (
                     // #warning: Not recursive. 
                     // Paint, but do not show them.
                     // It also redraw the controls.
-                    redraw_titlebar_window( window->titlebar );
+                    redraw_titlebar_window(window->titlebar);
                 }
             }
         }
