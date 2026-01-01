@@ -25,16 +25,12 @@
 // Counting variables support.
 //
 
+// Base frequency
 #define PIT_DEV_FREQ  1193182
 
-// Hz
-// see: jiffies.h
-#define HZ                JIFFY_FREQ
-#define PIT_HZ            JIFFY_FREQ
-#define DEFAULT_PIT_FREQ  JIFFY_FREQ
 
 // Tranca
-// #define LATCH (1193182/HZ)
+// #define LATCH  (1193182/HZ)
 
 struct pit_info_d
 {
@@ -46,19 +42,8 @@ struct pit_info_d
 //see: pit.c
 extern struct pit_info_d  PITInfo;
 
-
-// see: pit.c
-// total ticks
+// Total ticks (PIT frequency)
 extern unsigned long jiffies;
-// por quantos segundos o sistema esta rodando
-// jiffies/sys_time_hz
-extern unsigned long seconds;
-// Por quantos ms o sistema esta rodando.
-extern unsigned long sys_time_ms;
-
-// pit frequency
-// See: system.c
-extern unsigned long sys_time_hz;
 
 //
 // Profiler set support.
@@ -185,27 +170,21 @@ unsigned long timerList[32];
 // == prototypes ===========================
 //
 
+unsigned long get_ticks(void);
+unsigned long get_seconds(void);
+unsigned long get_milliseconds(void);
+unsigned long get_hz(void);
+unsigned long now(void);
+
 void DeviceInterface_PIT(void); 
 void timerInit8253(unsigned int freq);
 
 void set_timeout(unsigned long ticks);
 unsigned long get_timeout(void);
 
-void set_systime_hz(unsigned long hz);
-unsigned long get_systime_hz(void);
-
-unsigned long get_systime_ms(void);
-
-unsigned long get_systime_totalticks(void);
-
 unsigned long get_systime_info(int n);
 
 int new_timer_id(void);
-
-void timerEnableTextCursor(void);
-void timerDisableTextCursor(void);
-
-unsigned long now(void);
 
 void pit_sleep(unsigned long ms);
 

@@ -7,7 +7,6 @@
 // Chicago OS, Italo Matias.
 // ...
 
-
 /*
 Key steps involved:
 
@@ -1056,20 +1055,19 @@ fail:
  */
 // Isso é chamado pelo assembly.
 
+// >> The interrupt handler
 __VOID_IRQ 
 irq_E1000(void)
 {
-// >> The interrupt handler.
-
-// Is the driver initialized?
+    // Is the driver initialized?
     if (e1000_initialized != TRUE){
         return;
     }
 
-// Time in ticks.
-    gE1000InputTime = (unsigned long) get_systime_totalticks();
+    // Time in ticks
+    gE1000InputTime = (unsigned long) get_ticks();
 
-// Call the handler.
+    // Call the handler
     DeviceInterface_e1000();
 }
 

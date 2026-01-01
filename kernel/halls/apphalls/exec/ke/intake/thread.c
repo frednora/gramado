@@ -691,11 +691,7 @@ int thread_profiler(int service)
         panic ("thread_profiler: __current validation\n");
     }
 
-    //unsigned long __total_ticks;
-    //__total_ticks = (unsigned long) get_systime_totalticks();
-
 // Service
-
     switch (service)
     {
         // Increment current thread.
@@ -1698,7 +1694,7 @@ try_next_slot:
 // Not used now. But it works fine.
     Thread->ticks_remaining = 1000; 
 
-    Thread->initial_time_ms = get_systime_ms();
+    Thread->initial_time_ms = get_milliseconds();
     Thread->total_time_ms = 0;
 
 // ===================================

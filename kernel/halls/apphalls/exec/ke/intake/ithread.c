@@ -172,7 +172,7 @@ struct thread_d *create_init_thread(void)
 
     t->ticks_remaining = 1000;
 
-    t->initial_time_ms = get_systime_ms();
+    t->initial_time_ms = get_milliseconds();
     t->total_time_ms   = 0;
 
     // Signal

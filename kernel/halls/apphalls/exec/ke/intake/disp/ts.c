@@ -316,17 +316,21 @@ static void __task_switch(void)
 // == Counting =================================
 //
 
-// Increment total ticks
+// Counts total ticks this thread has been scheduled
     CurrentThread->step++;
-// Total time in ms.
+
+// Total runtime in ms for this thread
     CurrentThread->total_time_ms = 
-        (unsigned long) CurrentThread->total_time_ms + (DEFAULT_PIT_FREQ/sys_time_hz);
+        (unsigned long) (CurrentThread->step * 1000) / JIFFY_FREQ;
 
 // Increment tick counter for the current quantum
+// Purpose: How many ticks the thread has consumed in its current quantum (time slice).
     CurrentThread->runningCount++;
-// How many ticks in this quantum given in ms
+
+// How long (in milliseconds) the thread has run during its current quantum (time slice).
+// Convert ticks to ms for this quantum 
     CurrentThread->runningCount_ms = 
-        (unsigned long) CurrentThread->runningCount_ms + (DEFAULT_PIT_FREQ/sys_time_hz);
+        (CurrentThread->runningCount * 1000) / JIFFY_FREQ;
 
 //
 // -----------------------------------------

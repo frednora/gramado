@@ -399,31 +399,25 @@ unsigned long doGetSystemMetrics(int index)
        // PIT
        // See: hal/pit.h
 
-       // jiffies.
-       // total ticks
-       // #todo: We need a method for this.
+       // Get ticks running
        case 118:
-           return (unsigned long) jiffies;
+           return (unsigned long) get_ticks();
            break;
 
-       // seconds
-       // por quantos segundos o sistema esta rodando
-       // jiffies/sys_time_hz
-       // #todo: We need a method for this.
+       // Get systine in seconds
        case 119:
-           return (unsigned long) seconds;
+           return (unsigned long) get_seconds();
            break;
 
-       // Por quantos ms o sistema esta rodando.
-       // #todo: We need a method for this.
+       // Get systime in ms
        case 120:
-           return (unsigned long) sys_time_ms;
+           return (unsigned long) get_milliseconds();
            break;
 
-       // pit frequency
-       // #todo: We need a method for this.
+       // How many ticks per second.
+       // (PIT frequency)
        case 121:
-           return (unsigned long) sys_time_hz;
+           return (unsigned long) get_hz();
            break;
 
         // ...

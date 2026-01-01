@@ -117,7 +117,7 @@ irq1_KEYBOARD (void)
         return;
     }
     PS2Keyboard.irq_is_working = TRUE;
-    PS2Keyboard.last_jiffy = (unsigned long) get_systime_totalticks();
+    PS2Keyboard.last_jiffy = (unsigned long) get_ticks();
 
 // When calling during the IRQ
     if (PS2Keyboard.use_polling != TRUE){

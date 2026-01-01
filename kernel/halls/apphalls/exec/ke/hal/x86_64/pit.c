@@ -6,6 +6,10 @@
 // https://wiki.osdev.org/Programmable_Interval_Timer
 // https://en.wikipedia.org/wiki/Intel_8253
 
+
+#include <kernel.h>  
+
+
 /*
 I/O port     Usage
 0x40         Channel 0 data port (read/write)
@@ -46,78 +50,68 @@ Bits         Usage
  */
 
 
-
-#include <kernel.h>  
-
 // see: pit.h
 struct pit_info_d  PITInfo;
 
-// Total ticks. Global.
-unsigned long jiffies=0;
-// por quantos segundos o sistema esta rodando
-// jiffies/sys_time_hz
-unsigned long seconds=0;
-// Por quantos ms o sistema esta rodando.
-unsigned long sys_time_ms=0;
+// Global tick counter (jiffies)
+// This is the authority for PIT timer.
+// No drift: 
+// You don’t risk one counter being updated incorrectly while another stays correct.
+// Clarity: 
+// Anyone reading the code sees that time is always derived from ticks.
+// Flexibility: 
+// Works for any timer frequency without special cases.
+// Maintainability: 
+// Less state to reset or synchronize in your scheduler.
 
-
-/*
-struct master_timer_d
-{
-    int initialized;
-    pid_t pid;
-    unsigned long callback_address;
-};
-struct master_timer_d  MasterTimer;
-*/
-
-
-//Contador de ticks.
-//unsigned long timerTicks;
-
-//??  
-//int timerColor;
-
-//??
-//unsigned long timerLine;
-
-//??
-//unsigned long timerIdleState;
-
-//??
-//int timerLock;
-
-//??
-//int timerError;
-
-// #deprecated
-// Text cursor
-static int timerShowTextCursor = FALSE;
-
-
-//??
-//unsigned long timerCountSeconds;  //Count Seconds.
-//...
+unsigned long jiffies=0;  // Total ticks
 
 //
 // == Private functions: prototypes ===================
 //
 
-static int timerTimer(void);
+static int __timerTimer(void);
+
+// =================================================
+
+// Return how many ticks running.
+unsigned long get_ticks(void)
+{
+    return (unsigned long) jiffies;
+} 
+
+// Returns the number of whole seconds since the first timer interrupt.
+unsigned long get_seconds(void) 
+{
+    unsigned long sc = (jiffies / DEFAULT_JIFFY_FREQ);
+    return sc;
+}
+
+// Returns the total number of milliseconds since the first timer interrupt.
+unsigned long get_milliseconds(void)
+{
+    unsigned long ms = (unsigned long) ((jiffies * 1000) / DEFAULT_JIFFY_FREQ);
+    return ms;
+}
+
+// How many ticks per second.
+unsigned long get_hz(void)
+{
+    return (unsigned long) DEFAULT_JIFFY_FREQ;
+}
+
+// systime in ms
+unsigned long now(void){
+    return (unsigned long) get_milliseconds();
+}
 
 // =============================
 
-static int timerTimer(void)
+static int __timerTimer(void)
 {
 // Total ticks
     jiffies = 0;
-// Por quantos segundos o sistema esta rodando
-// jiffies/sys_time_hz
-    seconds = 0; 
-// Por quantos ms o sistema esta rodando.
-    sys_time_ms = 0; 
-// Pit frequency
-    sys_time_hz = 0;
+
     UpdateScreenFlag = FALSE;
 // Profiler
     profiler_ticks_count = 0;
@@ -171,13 +165,6 @@ void pit_speaker_off (void)
     tmp = in8(0x61) & 0xFC;
     out8 (0x61, tmp);
 }
-
-
-
-
-
-
-
 
 
 /*
@@ -388,8 +375,7 @@ void timerInit8253 (unsigned int freq)
 // MSB
     out8 ( 0x40, (unsigned char)(period >> 8) & 0xFF );
     io_delay();
-// GLOBAL VARIABLE.
-    set_systime_hz(freq);
+
     PITInfo.initialized = TRUE;
 
     // #debug
@@ -413,30 +399,6 @@ unsigned long get_timeout (void)
     return (unsigned long) time_out;
 }
 
-void set_systime_hz(unsigned long hz)
-{
-    sys_time_hz = hz;
-}
-
-// systime hz
-unsigned long get_systime_hz (void)
-{
-    return (unsigned long) sys_time_hz;
-}
-
-// systime in ms
-unsigned long get_systime_ms(void)
-{
-    return (unsigned long) sys_time_ms;
-}
-
-// get_systime_totalticks:
-unsigned long get_systime_totalticks(void)
-{
-    return (unsigned long) jiffies;
-}
-
-
 /*
  * get_systime_info:
  */
@@ -447,9 +409,9 @@ unsigned long get_systime_totalticks(void)
 unsigned long get_systime_info(int n)
 {
     switch (n){
-    case 1: return (unsigned long) get_systime_hz();          break;
-    case 2: return (unsigned long) get_systime_ms();          break;
-    case 3: return (unsigned long) get_systime_totalticks();  break;
+    case 1: return (unsigned long) get_hz();            break;
+    case 2: return (unsigned long) get_milliseconds();  break;
+    case 3: return (unsigned long) get_ticks();         break;
     // ...
     default:  
         return (unsigned long) 0;  
@@ -475,22 +437,6 @@ int new_timer_id(void)
     };
 // fail
     return (int) -1;
-}
-
-void timerEnableTextCursor (void)
-{
-    timerShowTextCursor = TRUE;
-}
-
-void timerDisableTextCursor (void)
-{
-    timerShowTextCursor = FALSE;
-}
-
-// systime in ms
-unsigned long now(void)
-{
-    return (unsigned long) get_systime_ms();
 }
 
 // fake
@@ -526,7 +472,7 @@ int timerInit(void)
     // g_driver_timer_initialized = FALSE;
 // Breaker
     __breaker_timer_initialized = FALSE;
-    timerTimer();
+    __timerTimer();
     for ( i=0; i<32; i++ ){
         timerList[i] = (unsigned long) 0;
     }
@@ -587,18 +533,17 @@ int early_timer_init (void)
     //g_driver_timer_initialized = FALSE;
 // Breaker
     __breaker_timer_initialized = FALSE;
-    timerTimer();
+    __timerTimer();
     for (i=0; i<32; i++){
         timerList[i] = (unsigned long) 0;
     };
 
 // == Hz ============================================
 // Setup the controller.
-// Let's setup the variable sys_time_hz.
 // And setup the controler.
 // We can use the default variable. 
 // See: config.h
-    timerInit8253(HZ);
+    timerInit8253(JIFFY_FREQ);
 
 // Timeout
     set_timeout(0);
@@ -672,14 +617,11 @@ struct timer_d *create_timer (
         return NULL;
     }
 
-// limits
-// limite de 1 tick.
-
-    // ms
-    if (ms < (JIFFY_FREQ/sys_time_hz) )
+// Ajust minimum
+    if (ms == 0)
     {
-        printk ("create_timer: Ajust ms\n");
-        ms = (JIFFY_FREQ/sys_time_hz);
+        //ms = 1;
+        return NULL;
     }
 
     // type
@@ -719,8 +661,9 @@ struct timer_d *create_timer (
             Timer->magic = 1234;
             Timer->id = ID;
 
-            // ms/(ms por tick)
-            Timer->initial_count_down = (unsigned long) ( ms / (JIFFY_FREQ/sys_time_hz) );
+            // #bugbug
+            Timer->initial_count_down = ms;
+            // #bugbug
             Timer->count_down = Timer->initial_count_down;
 
             //1 = one shot 
@@ -743,15 +686,13 @@ struct timer_d *create_timer (
 
     // #debug
     debug_print("create_timer: done\n");
-    refresh_screen();
+    printk("create_timer: done\n");
 
     return (struct timer_d *) Timer;
 
 fail:
-    debug_print("create_timer: [FAIL]\n");
-    printk     ("create_timer: [FAIL]\n");
-    refresh_screen();
+    debug_print("create_timer: FAIL\n");
+    printk     ("create_timer: FAIL\n");
     return NULL;
 }
-
 

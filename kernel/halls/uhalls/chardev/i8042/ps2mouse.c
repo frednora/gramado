@@ -541,7 +541,7 @@ void DeviceInterface_PS2Mouse(void)
         return;
 // =============================================
 
-    PS2Mouse.last_jiffy = (unsigned long) get_systime_totalticks();
+    PS2Mouse.last_jiffy = (unsigned long) get_ticks();
 
 // Get the byte
     _byte = (unsigned char) in8(0x60);
