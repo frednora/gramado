@@ -569,7 +569,8 @@ struct gws_window_d
     unsigned long style;
 
 // >> Status: interaction/activation.
-// Indicates focus, active/inactive, and user engagement.
+// Overlapped windows → status means active/inactive.
+// Button windows → status is being reused as button state.
     int status;
 
 // >> State: runtime condition.

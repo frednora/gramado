@@ -1612,11 +1612,21 @@ void *doCreateWindow (
 // Indicates focus, active/inactive, and user engagement.
     window->status = (int) (status & 0xFFFFFFFF);
 
-    // ??
-    // The 'window status' is used as 'button state'
-    // Status (active or inactive)
-    // Status do botao e da janela. (int)
-    int ButtonState = (int) (status & 0xFFFFFFFF);
+// -------------------------------------------------------------
+// #bugbug
+// ButtonState assignment
+// For windows of type WT_BUTTON, we interpret the generic
+// 'status' field as a button state (BS_DEFAULT, BS_HOVER, etc.).
+// For other window types (e.g. overlapped), 'status' continues
+// to mean activation (WINDOW_STATUS_ACTIVE / INACTIVE).
+// This conditional ensures we only treat 'status' as a button
+// state when the window is actually a button.
+// -------------------------------------------------------------
+
+     int ButtonState = BS_NULL;
+     if (type == WT_BUTTON){
+        ButtonState = (int) (status & 0xFFFFFFFF);
+     }
 
 // Colors:
 // Background, client-area bg, bg when mouse hover.
@@ -2689,7 +2699,6 @@ void *doCreateWindow (
             } else {
                 window->label_color_when_selected = xCOLOR_GRAY1;
             }
-
 
             // Setup the label's properties.
             if (buttonSelected == TRUE){
