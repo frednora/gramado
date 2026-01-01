@@ -161,7 +161,7 @@ void __button_released(int wid)
     {
         return;
     }
-    set_status_by_id( wid, BS_RELEASED );
+    set_status_by_id(wid, BS_RELEASED);
 // Redraw
     redraw_window_by_id(wid,TRUE);
 }
@@ -4533,7 +4533,8 @@ int gwssrv_initialize_default_color_scheme(void)
     cs->name = "Honey";
 
     cs->style = STYLE_HONEY;
-    cs->is_dark = TRUE;
+    //cs->is_dark = TRUE;
+    cs->is_dark = FALSE;
 
 // Colors
 // size: 32 elements.

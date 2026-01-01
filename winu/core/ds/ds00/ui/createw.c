@@ -1429,8 +1429,6 @@ void *doCreateWindow (
 
 // Style
 // Button suport
-    int buttonFocus    = FALSE;
-    int buttonSelected = FALSE;
     unsigned int buttonBorderColor1=0;
     unsigned int buttonBorderColor2=0;
     unsigned int buttonBorderColor2_light=0;
@@ -2553,6 +2551,31 @@ void *doCreateWindow (
                 break;
         };
 
+        if (type == WT_BUTTON)
+        {
+            switch (ButtonState){
+            case BS_DISABLED:
+                window->bg_color = (unsigned int) HONEY_COLOR_BUTTON_DISABLED;
+                break;
+            // It’s the state when the button has keyboard focus (first responder).
+            case BS_FOCUS:
+                window->bg_color = (unsigned int) HONEY_COLOR_BUTTON_FOCUS_BG;
+                break;
+            case BS_HOVER:  //HONEY_COLOR_BUTTON_HOVER
+                window->bg_color = (unsigned int) get_color(csiWhenMouseHover);
+                break;
+            case BS_PRESSED:
+                window->bg_color = (unsigned int) HONEY_COLOR_BUTTON_PRESSED;
+                break;
+            case BS_PROGRESS:
+                window->bg_color = (unsigned int) HONEY_COLOR_BUTTON_PROGRESS_BG;
+                break;
+            case BS_RELEASED: // Default  HONEY_COLOR_BUTTON_DEFAULT
+                window->bg_color = (unsigned int) get_color(csiButton);
+                break;
+            };
+        }
+
         // Paint the background.
         // This routine is calling the kernel to paint the rectangle.
         // Absolute values.
@@ -2593,18 +2616,16 @@ void *doCreateWindow (
         // #ps: ButtonState = window status.
         switch (ButtonState){
 
+            // It’s the state when the button has keyboard focus (first responder).
             case BS_FOCUS:
-                //window->focus = TRUE;
-                buttonFocus = TRUE;
                 buttonBorderColor1       = COLOR_BLUE;
                 buttonBorderColor2       = COLOR_BLUE;
                 buttonBorderColor2_light = xCOLOR_GRAY5;
-                buttonBorder_outercolor  = COLOR_BLUE;
+                buttonBorder_outercolor  = HONEY_COLOR_BUTTON_FOCUS_BORDER;  //COLOR_BLUE;
                 break;
 
-            case BS_PRESS:
-                //printf("BS_PRESS\n"); exit(0);
-                buttonSelected = TRUE;
+            case BS_PRESSED:
+                //printf("BS_PRESSED\n"); exit(0);
                 buttonBorderColor1       = xCOLOR_GRAY1; 
                 buttonBorderColor2       = COLOR_WHITE;
                 buttonBorderColor2_light = xCOLOR_GRAY5; 
@@ -2617,24 +2638,23 @@ void *doCreateWindow (
                 buttonBorderColor2_light = xCOLOR_GRAY5; 
                 buttonBorder_outercolor  = COLOR_BLACK;
                 break;
-                    
+        
             case BS_DISABLED:
-                buttonFocus = FALSE;
-                buttonBorderColor1 = COLOR_GRAY;
-                buttonBorderColor2 = COLOR_GRAY;
-                buttonBorder_outercolor  = COLOR_GRAY;
+                buttonBorderColor1       = xCOLOR_GRAY2;
+                buttonBorderColor2       = xCOLOR_GRAY3;
+                buttonBorderColor2_light = xCOLOR_GRAY4;
+                buttonBorder_outercolor  = xCOLOR_GRAY4;
                 break;
 
             case BS_PROGRESS:
-                buttonBorderColor1 = COLOR_GRAY;
-                buttonBorderColor2 = COLOR_GRAY;
-                buttonBorder_outercolor  = COLOR_GRAY;
+                buttonBorderColor1 = HONEY_COLOR_BUTTON_PROGRESS_BORDER_1;  //COLOR_GRAY;
+                buttonBorderColor2 = HONEY_COLOR_BUTTON_PROGRESS_BORDER_2; //COLOR_GRAY;
+                buttonBorderColor2_light = HONEY_COLOR_BUTTON_PROGRESS_BORDER_LIGHT; //COLOR_GRAY;
+                buttonBorder_outercolor  = HONEY_COLOR_BUTTON_PROGRESS_BORDER_OUTER;
                 break;
 
             case BS_DEFAULT:
             default: 
-                buttonFocus = FALSE;
-                buttonSelected = FALSE;
                 buttonBorderColor1       = COLOR_WHITE;   // left/top
                 buttonBorderColor2       = xCOLOR_GRAY1;  // right/bottom
                 buttonBorderColor2_light = xCOLOR_GRAY5;
@@ -2692,21 +2712,23 @@ void *doCreateWindow (
                 (unsigned int) buttonBorderColor2,
                 (unsigned int) buttonBorderColor2_light,
                 (unsigned int) buttonBorder_outercolor );
+           
 
-            window->label_color_when_not_selected = (unsigned int) get_color(csiSystemFontColor);
-            if (isDarkTheme == TRUE){
-                window->label_color_when_selected = COLOR_WHITE;
+            if (isDarkTheme == TRUE) {
+                // Dark theme
+                window->label_color_when_not_selected = HONEY_COLOR_LABEL_BASELINE_DARK;  //COLOR_RED;    // baseline
+                window->label_color_when_selected     = HONEY_COLOR_LABEL_SELECTED_DARK;  //COLOR_BLUE;   // highlight
             } else {
-                window->label_color_when_selected = xCOLOR_GRAY1;
+                // Light theme
+                window->label_color_when_not_selected = HONEY_COLOR_LABEL_BASELINE_LIGHT; //COLOR_GREEN;  // baseline
+                window->label_color_when_selected     = HONEY_COLOR_LABEL_SELECTED_LIGHT;  //COLOR_YELLOW; // highlight
             }
 
-            // Setup the label's properties.
-            if (buttonSelected == TRUE){
-                label_color = window->label_color_when_selected;  
-            }
-            if (buttonSelected == FALSE){
-                label_color = window->label_color_when_not_selected;  
-            }
+            label_color = window->label_color_when_not_selected;
+            if (ButtonState == BS_PRESSED)
+                label_color = window->label_color_when_selected;
+            // ...
+
             // Draw the label's string.
             // The label is the window's name.
             grDrawString ( 

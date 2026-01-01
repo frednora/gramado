@@ -37,10 +37,6 @@
 #define HONEY_COLOR_BORDER_LIGHT_NOFOCUS 0x00A4A4A4   // muted light gray (top/left)
 #define HONEY_COLOR_BORDER_DARK_NOFOCUS  0x00707070   // dark charcoal (bottom/right)
 
-
-// Controls
-#define HONEY_COLOR_BUTTON  0x00d4d0c8 
-
 // Box
 #define HONEY_COLOR_MESSAGEBOX  0x00404040 
 #define HONEY_COLOR_DIALOGBOX   0x00404040 
@@ -66,6 +62,41 @@
 #define HONEY_COLOR_BG_ONMOUSEHOVER_MAX_CONTROL 0x0073A9C2   // steel blue
 #define HONEY_COLOR_BG_ONMOUSEHOVER_CLO_CONTROL 0x00B22222   // firebrick red
 #define HONEY_COLOR_BG_ONMOUSEHOVER_MENUITEM    0x00FFD580   // warm honey gold
+
+
+// Controls
+#define HONEY_COLOR_BUTTON  0x00d4d0c8 
+
+// Button states
+#define HONEY_COLOR_BUTTON_DEFAULT   HONEY_COLOR_BUTTON
+#define HONEY_COLOR_BUTTON_HOVER     HONEY_COLOR_BG_ONMOUSEHOVER
+#define HONEY_COLOR_BUTTON_PRESSED   0x005A8AC6   // vibrant blue (matches active border)
+#define HONEY_COLOR_BUTTON_DISABLED  0x00A0A0A0   // muted gray
+#define HONEY_COLOR_BUTTON_FOCUS     COLOR_BLUE   // focus highlight
+#define HONEY_COLOR_BUTTON_PROGRESS  0x00808080   // neutral gray (progress indicator)
+
+// Light theme (Honey)
+#define HONEY_COLOR_LABEL_BASELINE_LIGHT   0x00000000   // black text, high contrast on light button
+#define HONEY_COLOR_LABEL_SELECTED_LIGHT  0x008B4513  // saddle brown
+
+// Dark theme (Honey)
+#define HONEY_COLOR_LABEL_BASELINE_DARK    0x00FFFFFF   // white text, readable on dark background
+#define HONEY_COLOR_LABEL_SELECTED_DARK    0x00A9CCE3   // soft sky blue highlight (matches active titlebar)
+
+// Button with focus
+#define HONEY_COLOR_BUTTON_FOCUS_BG     0x00A9CCE3   // soft sky blue (matches active titlebar)
+#define HONEY_COLOR_BUTTON_FOCUS_BORDER 0x005A8AC6   // vibrant blue border
+
+
+
+// Progress state (button is busy/working)
+#define HONEY_COLOR_BUTTON_PROGRESS_BG        0x00808080   // medium neutral gray background
+#define HONEY_COLOR_BUTTON_PROGRESS_BORDER 0x00808080   // same neutral gray border
+#define HONEY_COLOR_BUTTON_PROGRESS_BORDER_1  0x00A0A0A0   // lighter gray top/left
+#define HONEY_COLOR_BUTTON_PROGRESS_BORDER_2  0x00404040   // darker gray bottom/right
+#define HONEY_COLOR_BUTTON_PROGRESS_BORDER_LIGHT 0x00C0C0C0 // soft highlight
+#define HONEY_COLOR_BUTTON_PROGRESS_BORDER_OUTER 0x00606060 // outer neutral gray
+
 
 #endif   
 

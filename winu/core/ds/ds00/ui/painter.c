@@ -828,8 +828,6 @@ redraw_window (
     //Termina de desenhar o botão, mas não é frame
     //é só o botão...
     //caso o botão tenha algum frame, será alguma borda extra.
-    int Focus=0;    //(precisa de borda)
-    int Selected=0;   
     unsigned int label_color = COLOR_BLACK;
     // Change to 'button_border1' and 'button_border2'
     unsigned int border1 = COLOR_GRAY;
@@ -850,9 +848,7 @@ redraw_window (
                 border2 = COLOR_BLUE;
                 break;
 
-            //case BS_PRESS:
             case BS_PRESSED:
-                Selected = 1;
                 border1 = xCOLOR_GRAY1;  //GWS_COLOR_BUTTONSHADOW3;
                 border2 = COLOR_WHITE;   //GWS_COLOR_BUTTONHIGHLIGHT3;
                 break;
@@ -877,7 +873,6 @@ redraw_window (
 
             case BS_DEFAULT:
             default: 
-                Selected = 0;
                 border1 = COLOR_WHITE;    //GWS_COLOR_BUTTONHIGHLIGHT3;
                 border2 = xCOLOR_GRAY1;   //GWS_COLOR_BUTTONSHADOW3;
                 break;
@@ -912,12 +907,10 @@ redraw_window (
         // Button label
         //server_debug_print ("redraw_window: [FIXME] Button label\n"); 
 
-        if (Selected == TRUE){
+        label_color = window->label_color_when_not_selected;
+        if (ButtonState == BS_PRESSED)
             label_color = window->label_color_when_selected;
-        }
-        if (Selected == FALSE){
-            label_color = window->label_color_when_not_selected;
-        }
+
         // Redraw the label's string.
         // The label is the window's name.
         grDrawString ( 
