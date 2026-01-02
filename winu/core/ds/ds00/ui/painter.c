@@ -334,13 +334,24 @@ __draw_button_borders(
 // >> no checks
 // #check
 // This routine is calling the kernel to paint the rectangle.
+
 void 
 __draw_window_border( 
     struct gws_window_d *parent, 
-    struct gws_window_d *window )
+    struct gws_window_d *window,
+    unsigned long rop_top,
+    unsigned long rop_left,
+    unsigned long rop_right,
+    unsigned long rop_bottom )
 {
-// + We dont have a border size yet.
-// Repecting the color in the strucure
+// + Repecting the color in the strucure
+// border color 1 - left/top
+// border color 2 - bottom/right
+
+    unsigned long __rop_top = rop_top;  // top
+    unsigned long __rop_left = rop_left;  // left
+    unsigned long __rop_right = rop_right;  // right
+    unsigned long __rop_bottom = rop_bottom;  // bottom
 
     if ((void*) parent == NULL){
         return;
@@ -361,6 +372,8 @@ __draw_window_border(
         // Absolute values.
         // Relative to the screen.
 
+        // -- top/left (color 1) -----
+
         // top
         rectBackbufferDrawRectangle( 
             parent->absolute_x + window->left, 
@@ -369,7 +382,7 @@ __draw_window_border(
             window->Border.border_size, 
             window->Border.border_color1, 
             TRUE, 
-            0 );
+            __rop_top );
         // left
         rectBackbufferDrawRectangle( 
             parent->absolute_x + window->left, 
@@ -378,7 +391,10 @@ __draw_window_border(
             window->height, 
             window->Border.border_color1, 
             TRUE,
-            0 );
+            __rop_left );
+
+        // -- right/bottom (color 2) -----
+
         // right
         rectBackbufferDrawRectangle( 
             (parent->absolute_x + window->left + window->width - window->Border.border_size), 
@@ -387,7 +403,7 @@ __draw_window_border(
             window->height, 
             window->Border.border_color2, 
             TRUE,
-            0 );
+            __rop_right );
         // bottom
         rectBackbufferDrawRectangle ( 
             (parent->absolute_x + window->left), 
@@ -396,7 +412,7 @@ __draw_window_border(
             window->Border.border_size, 
             window->Border.border_color2, 
             TRUE,
-            0 );
+            __rop_bottom );
     
         // #test
         // Subtract border size.
@@ -411,43 +427,48 @@ __draw_window_border(
 // Editbox
     if ( window->type == WT_EDITBOX || 
          window->type == WT_EDITBOX_MULTIPLE_LINES )
-    {       
+    { 
+        // -- top/left (color 1) -----
+ 
         // top
         rectBackbufferDrawRectangle( 
             window->absolute_x, 
             window->absolute_y, 
-            window->width,         // w
-            window->Border.border_size,   // h
-            window->Border.border_color1, // color
-            TRUE,                  // fill?
-            0 );                   // rop
+            window->width,                 // w
+            window->Border.border_size,    // h
+            window->Border.border_color1,  // color
+            TRUE,                          // fill?
+            __rop_top );                           // rop
         // left
         rectBackbufferDrawRectangle( 
             window->absolute_x, 
             window->absolute_y, 
             window->Border.border_size,    // w 
-            window->height,         // h
+            window->height,                // h
             window->Border.border_color1,  // color
-            TRUE,                   // fill?
-            0 );                    // rop
+            TRUE,                          // fill?
+            __rop_left );                           // rop
+
+        // -- right/bottom (color 2) -----
+
         // right
         rectBackbufferDrawRectangle( 
             (window->absolute_x + window->width - window->Border.border_size), 
             window->absolute_y,  
-            window->Border.border_size,  // w 
-            window->height,       // h
+            window->Border.border_size,    // w 
+            window->height,                // h
             window->Border.border_color2,  // color
-            TRUE,                   // fill
-            0 );                    // rop
+            TRUE,                          // fill
+            __rop_right );                           // rop
         // bottom
         rectBackbufferDrawRectangle ( 
             window->absolute_x, 
             (window->absolute_y + window->height - window->Border.border_size), 
-            window->width,           // w
-            window->Border.border_size,     // h
-            window->Border.border_color2,   // color
-            TRUE,                    // fill
-            0 );                     // rop
+            window->width,                 // w
+            window->Border.border_size,    // h
+            window->Border.border_color2,  // color
+            TRUE,                          // fill
+            __rop_bottom );                           // rop
         
         // #test
         // Subtract border size.
@@ -518,7 +539,6 @@ int redraw_titlebar_window(struct gws_window_d *window)
 {
     struct gws_window_d *parent;
     struct gws_window_d *tb_window;
-    unsigned long rop=0;
 
 // -- Title bar -------------------------------
     if ( (void*) window == NULL )
@@ -533,9 +553,6 @@ int redraw_titlebar_window(struct gws_window_d *window)
         return -1;
     if (parent->magic != 1234)
         return -1;
-
-// ?? #bugbug
-    rop = (unsigned long) parent->rop;
 
 // ------------------
 // Parent is active
@@ -579,7 +596,7 @@ int redraw_titlebar_window(struct gws_window_d *window)
         tb_window->height, 
         tb_window->bg_color, 
         TRUE,   // fill
-        (unsigned long) rop );  // rop for this window
+        (unsigned long) tb_window->rop_bg );  // rop for this window
 
 // Ornament
     rectBackbufferDrawRectangle ( 
@@ -589,7 +606,7 @@ int redraw_titlebar_window(struct gws_window_d *window)
         METRICS_TITLEBAR_ORNAMENT_SIZE, 
         parent->titlebar_ornament_color, 
         TRUE,  // fill
-        (unsigned long) rop );  // rop_flags
+        (unsigned long) tb_window->rop_ornament );  // rop_flags
 
 // --------------------
 // Icon
@@ -819,6 +836,20 @@ redraw_window (
     unsigned long flags )
 {
 
+// #test
+// Define default ROPs for each component 
+// Later, We're gonna get the values saved into the window structure.
+
+    unsigned long __rop_bg=ROP_COPY;  // Windows bg
+    unsigned long __rop_shadow=ROP_COPY;  // Windows bg
+    unsigned long __rop_ornament = ROP_COPY;
+
+    // Windows borders
+    unsigned long __rop_top_border=ROP_COPY;  // 
+    unsigned long __rop_left_border=ROP_COPY;  // 
+    unsigned long __rop_right_border=ROP_COPY;  // 
+    unsigned long __rop_bottom_border=ROP_COPY;  // 
+
 // #todo
 // When redrawing an WT_OVERLAPPED window,
 // we can't redraw the frame if the window is in fullscreen mode.
@@ -833,6 +864,21 @@ redraw_window (
     if (window->used!=TRUE || window->magic!=1234){
         goto fail;
     }
+
+
+// ROP
+// Getting the saved rop values
+
+    __rop_bg     = window->rop_bg;  // Windows bg
+    __rop_shadow = window->rop_shadow;  // Windows bg
+    __rop_ornament = window->rop_ornament;  // Windows ornament
+
+    // Windows borders
+    __rop_top_border    = window->rop_top_border;  // 
+    __rop_left_border   = window->rop_left_border;  // 
+    __rop_right_border  = window->rop_right_border;  // 
+    __rop_bottom_border = window->rop_bottom_border;  // 
+
 
 // Update the absolute right and bottom values 
 // for mouse hit test.
@@ -879,7 +925,7 @@ redraw_window (
                 (window->height +1 +1), 
                 __tmp_color, 
                 TRUE,     // fill?
-                (unsigned long) window->rop );  // #todo: rop operations for this window.
+                (unsigned long) __rop_shadow );   // rop for its shadow
         }
     }
 
@@ -903,7 +949,7 @@ redraw_window (
                 window->height, 
                 window->bg_color, 
                 TRUE,  //fill
-                (unsigned long) window->rop );   // ROP for this window.
+                (unsigned long) __rop_bg );   // ROP for this window bg
 
         // All done for WT_SIMPLE type.
         if (window->type == WT_SIMPLE){
@@ -1112,7 +1158,12 @@ redraw_window (
                 }
             }
 
-            __draw_window_border(window->parent, window);
+            __draw_window_border(
+                window->parent, window,
+                __rop_top_border, 
+                __rop_left_border, 
+                __rop_right_border, 
+                __rop_bottom_border );
         }
 
         // Border Color 1 = top/left      (Dark)
@@ -1128,7 +1179,12 @@ redraw_window (
                 window->Border.border_color1 = (unsigned int) HONEY_COLOR_BORDER_DARK_NOFOCUS; //get_color(csiWindowBorder);
                 window->Border.border_color2 = (unsigned int) HONEY_COLOR_BORDER_LIGHT_NOFOCUS; //get_color(csiWindowBorder);
             }
-            __draw_window_border(window->parent, window);
+            __draw_window_border(
+                window->parent, window,
+                __rop_top_border, 
+                __rop_left_border, 
+                __rop_right_border, 
+                __rop_bottom_border );
         }
 
         // Text

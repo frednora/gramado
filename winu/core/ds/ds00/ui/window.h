@@ -603,7 +603,16 @@ struct gws_window_d
 // associated with this window.
 
     int is_solid;
-    unsigned long rop;
+
+// Normal window
+    unsigned long rop_bg;
+    unsigned long rop_shadow;
+    unsigned long rop_ornament;
+// its borders
+    unsigned long rop_top_border;  // top
+    unsigned long rop_left_border;  // left
+    unsigned long rop_right_border;  // right
+    unsigned long rop_bottom_border;  // bottom
 
 // Hierarquia. 
 // parent->level + 1;

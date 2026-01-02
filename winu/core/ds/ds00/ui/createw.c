@@ -371,9 +371,19 @@ static struct gws_window_d *__create_window_object(void)
     // The window can receive input from kbd and mouse.
     window->enabled = TRUE;
     window->style = 0;
+
     // Validate. This way the compositor can't redraw it.
     window->dirty = FALSE;
-    
+
+    window->rop_bg           = THEME_ROP_WINDOW_BACKGROUND;
+    window->rop_shadow       = THEME_ROP_WINDOW_SHADOW;
+    window->rop_ornament     = THEME_ROP_WINDOW_ORNAMENT;
+
+    window->rop_top_border   = THEME_ROP_TOP_BORDER;
+    window->rop_left_border  = THEME_ROP_LETF_BORDER;
+    window->rop_right_border = THEME_ROP_RIGHT_BORDER;
+    window->rop_bottom_border= THEME_ROP_BOTTOM_BORDER;
+
     return (struct gws_window_d *) window;
 }
 
@@ -586,8 +596,7 @@ struct gws_window_d *do_create_titlebar(
     // Colors
     unsigned int TitleBarColor = color;
     unsigned int StringColor = string_color;
-    unsigned long rop=0;
-    //unsigned long rop= 0x20;
+
     int useIcon = FALSE;
 
 // Parameters:
@@ -625,8 +634,6 @@ struct gws_window_d *do_create_titlebar(
         (unsigned int) get_color(csiTitleBarTextColor);
     // ...
 
-    rop = (unsigned long) parent->rop;
-
 //-----------
 
 // #important: 
@@ -645,7 +652,7 @@ struct gws_window_d *do_create_titlebar(
                 0, 
                 TitleBarColor,  //frame 
                 TitleBarColor,  //client
-                (unsigned long) rop );   // rop_flags from the parent 
+                (unsigned long) 0 );   // rop_flags from the parent 
 
     if ((void *) tbWindow == NULL){
         //server_debug_print ("do_create_titlebar: tbWindow\n");
@@ -903,10 +910,24 @@ doCreateWindowFrame (
 
     int icon_id = ICON_ID_APP;  // Default
 
-    //unsigned long X = (x & 0xFFFF);
-    //unsigned long Y = (y & 0xFFFF);
-    //unsigned long Width = (width & 0xFFFF);
-    //unsigned long Height = (height & 0xFFFF);
+// #test
+// Define default ROPs for each component 
+// Later, We're gonna get the values saved into the window structure.
+
+    unsigned long __rop_bg=ROP_COPY;  // Windows bg
+    unsigned long __rop_shadow=ROP_COPY;  // Windows bg
+    unsigned long __rop_ornament=ROP_COPY;  // Windows ornament
+
+    // Windows borders
+    unsigned long __rop_top_border=ROP_COPY;  // 
+    unsigned long __rop_left_border=ROP_COPY;  // 
+    unsigned long __rop_right_border=ROP_COPY;  // 
+    unsigned long __rop_bottom_border=ROP_COPY;  // 
+
+// Components for the frame of overlapped windows.
+    unsigned long __rop_titlebar = THEME_ROP_TITLEBAR; 
+    unsigned long __rop_controls = THEME_ROP_CONTROLS; 
+    unsigned long __rop_statusbar = THEME_ROP_STATUSBAR;
 
 // #todo
 // Se estamos minimizados ou a janela mãe está minimizada,
@@ -918,7 +939,7 @@ doCreateWindowFrame (
 // Cada elemento da frame que incluimos, incrementa
 // o w.top do retângulo da área de cliente.
 
-// check parent
+// ---- check parent ---------------
     if ((void*) parent == NULL){
         //server_debug_print ("doCreateWindowFrame: [FAIL] parent\n");
         goto fail;
@@ -927,7 +948,7 @@ doCreateWindowFrame (
         goto fail;
     }
 
-// check window
+// ---- check window ---------------
     if ((void*) window == NULL){
         //server_debug_print ("doCreateWindowFrame: [FAIL] window\n");
         goto fail;
@@ -939,6 +960,19 @@ doCreateWindowFrame (
 // Save border colors setted by the caller
     window->Border.border_color1 = (unsigned int) BorderColor1;
     window->Border.border_color2 = (unsigned int) BorderColor2;
+
+// ROP
+// Getting the saved rop values
+
+    __rop_bg     = window->rop_bg;  // Windows bg
+    __rop_shadow = window->rop_shadow;  // Windows bg
+    __rop_ornament = window->rop_ornament;  // Windows ornament 
+
+    // Windows borders
+    __rop_top_border    = window->rop_top_border;  // 
+    __rop_left_border   = window->rop_left_border;  // 
+    __rop_right_border  = window->rop_right_border;  // 
+    __rop_bottom_border = window->rop_bottom_border;  // 
 
 // Uma overlapped maximizada não tem borda.
     int IsMaximized = FALSE;
@@ -1041,7 +1075,13 @@ doCreateWindowFrame (
         window->Border.border_size = BorderSize;
         window->borderUsed = TRUE;
         // Draw the border of an edit box
-        __draw_window_border(parent,window);
+        __draw_window_border(
+            parent, window,
+            __rop_top_border,
+            __rop_left_border,
+            __rop_right_border,
+            __rop_bottom_border );
+
         return 0;
     }
 
@@ -1076,8 +1116,14 @@ doCreateWindowFrame (
             //WindowManager.fullscreen_window = window;
             
             window->borderUsed = FALSE;
+
             // Only paint in the case of nor maximized and not full
-            __draw_window_border(parent,window);
+            __draw_window_border(
+                parent, window,
+                __rop_top_border,
+                __rop_left_border,
+                __rop_right_border,
+                __rop_bottom_border );
         }
 
         // #important:
@@ -1219,7 +1265,7 @@ doCreateWindowFrame (
                              0, 
                              window->statusbar_color,  //frame
                              window->statusbar_color,  //client
-                             (unsigned long) window->rop );   // rop_flags  
+                             (unsigned long) __rop_statusbar );  // rop bg 
             
             // Depois de pintarmos a status bar, caso o estilo exija,
             // então devemos atualizar a altura da área de cliente.
@@ -1251,7 +1297,13 @@ doCreateWindowFrame (
     if (Type == WT_ICON)
     {
         window->borderUsed = TRUE;
-        __draw_window_border(parent,window);
+        __draw_window_border(
+            parent, window,
+            __rop_top_border,
+            __rop_left_border,
+            __rop_right_border,
+            __rop_bottom_border );
+
         //printf("border\n"); while(1){}
         return 0;
     }
@@ -1293,7 +1345,7 @@ void *doCreateWindow (
     int desktop_id, 
     unsigned int frame_color, 
     unsigned int client_color,
-    unsigned long rop_flags ) 
+    unsigned long rop_bg ) 
 {
     register struct gws_window_d *window;
     struct gws_window_d *Parent;
@@ -1445,11 +1497,7 @@ void *doCreateWindow (
 // No blending will be applied.
 // #bugbug: Only 0 is considered solid?
 // No rop flags for now. It depends on the window style.
-    unsigned long __rop_flags=0;
     int is_solid = TRUE;
-    if (rop_flags != 0){
-        is_solid = FALSE;
-    }
 
 //---------------------------------------------------------
 // Position
@@ -1493,12 +1541,9 @@ void *doCreateWindow (
     if (style & WS_TRANSPARENT)
     {
         Transparent=TRUE;
-        // Get the given flags
-        __rop_flags = rop_flags;
-        //#test #hack
-        if (__rop_flags == 0)
-            __rop_flags = 20;  //gray
+        // apply rop here?
     }
+
 //---------------------------------------------------------
 
 // Salvar para depois restaurar os valores originais no fim da rotina.
@@ -1646,8 +1691,14 @@ void *doCreateWindow (
 // We can create our own device contexts.
     window->window_dc = NULL;
     window->client_dc = NULL;
+
+    if (window->rop_bg != ROP_COPY){
+        is_solid = FALSE;
+    }
     window->is_solid = (int) is_solid;
-    window->rop = (unsigned long) rop_flags;
+
+// Save rop values for this window
+
     //window->focus  = FALSE;
     // We already validated it when we create the object.
     //window->dirty  = FALSE;  // Validate
@@ -2509,13 +2560,14 @@ void *doCreateWindow (
             // Draw rectangle for the shadow for WT_OVERLAPPED.
             // #todo: What is the width for the shadow? 
             // Create variable for this additional area.
+
             painterFillWindowRectangle( 
                 (window->absolute_x +1), 
                 (window->absolute_y +1), 
                 (window->width  +1 +1),   // #todo 
                 (window->height +1 +1),   // #todo 
                 __tmp_color, 
-                __rop_flags );
+                window->rop_shadow );
         }
         
         // #todo
@@ -2589,8 +2641,8 @@ void *doCreateWindow (
             window->width, 
             window->height, 
             window->bg_color, 
-            __rop_flags );
-    
+            window->rop_bg );
+
         // #todo
         // Could we return now if its type is WT_SIMPLE?
     }
@@ -2820,6 +2872,7 @@ void *CreateWindow (
    int fChild = FALSE;
 
    unsigned long __rop_flags=0;
+
 // This function is able to create some few 
 // kinds of windows for now:
 // overlapped, editbox, button and simple.
@@ -2879,6 +2932,7 @@ void *CreateWindow (
 // See:
 // config.h, main.c
 // see: window.c
+/*
     int HasTransparence = window_has_transparence();
     if (HasTransparence == TRUE)
     {
@@ -2891,6 +2945,8 @@ void *CreateWindow (
         //__rop_flags = 20;    // gray 
         //__rop_flags = 21;    // no red
     }
+*/
+    //__rop_flags = ROP_BRIGHTEN;
 
 // #todo: 
 // Colocar mascara nos valores passados via parâmetro.

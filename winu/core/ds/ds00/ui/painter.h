@@ -24,11 +24,17 @@ __draw_button_borders(
     unsigned int br_1,  // br 1 most inner (light) 
     unsigned int outer_color );
 
-//worker: no checks
+
+// worker: no checks
 void 
 __draw_window_border( 
     struct gws_window_d *parent, 
-    struct gws_window_d *window );
+    struct gws_window_d *window,
+    unsigned long rop_top,
+    unsigned long rop_left,
+    unsigned long rop_right,
+    unsigned long rop_bottom );
+
 
 void begin_paint(struct gws_window_d *window);
 void end_paint(struct gws_window_d *window);

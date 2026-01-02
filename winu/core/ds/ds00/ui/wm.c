@@ -4786,7 +4786,8 @@ struct gws_window_d *wmCreateRootWindow(unsigned int bg_color)
     }
 
     w->is_solid = TRUE;
-    w->rop = 0;
+    w->rop_bg = ROP_COPY;
+
 // Setup the surface in ring0
     setup_surface_rectangle(left,top,width,height);
 // invalidate the surface in ring0.

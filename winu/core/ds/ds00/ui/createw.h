@@ -61,7 +61,7 @@ void *doCreateWindow (
     int desktop_id, 
     unsigned int frame_color, 
     unsigned int client_color,
-    unsigned long rop_flags );
+    unsigned long rop_bg );
 
 
 //
