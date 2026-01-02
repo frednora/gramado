@@ -478,6 +478,16 @@ void MinimizeAllWindows(void)
 
 void maximize_window(struct gws_window_d *window)
 {
+    unsigned long l = 50;
+    unsigned long t = 50;
+    unsigned long w = 50;
+    unsigned long h = 50;
+    int Style=0;
+// Local padding values 
+    const unsigned long PAD_FULL_LEFT = 0; 
+    const unsigned long PAD_FULL_TOP = 0; 
+    const unsigned long PAD_PARTIAL = 24; // used in style 2 
+    const unsigned long PAD_BOTTOM = 24; // used in style 3
 
 // Parameter:
     if ((void*)window == NULL)
@@ -486,29 +496,28 @@ void maximize_window(struct gws_window_d *window)
         return;
     }
 
-// We only maximize application windows.
-    if (window->type != WT_OVERLAPPED)
-        return;
-
 // Can't maximize root or taskbar
-// They are not overlapped, but anyway.
     if (window == __root_window)
         return;
     if (window == taskbar_window)
         return;
+// We only maximize application windows
+    if (window->type != WT_OVERLAPPED)
+        return;
 
-// Enable input for overlapped window.
+// Enable input for overlapped window
     window->enabled = TRUE;
 
-// Maximize it.
+// Maximize it
     change_window_state( window, WINDOW_STATE_MAXIMIZED );
 
-// Initialization: 
-// Using the working area by default.
-    unsigned long l = WindowManager.wa.left;
-    unsigned long t = WindowManager.wa.top;
-    unsigned long w = WindowManager.wa.width;
-    unsigned long h = WindowManager.wa.height;
+// Initialization using the working area by default
+    if (WindowManager.initialized != TRUE)
+        return;
+    l = WindowManager.wa.left;
+    t = WindowManager.wa.top;
+    w = WindowManager.wa.width;
+    h = WindowManager.wa.height;
 
     if (MaximizationStyle.initialized != TRUE)
     {
@@ -519,29 +528,29 @@ void maximize_window(struct gws_window_d *window)
     }
 
     // Based on style
-    int Style = MaximizationStyle.style;
+    Style = MaximizationStyle.style;
     switch (Style)
     {
         // full
         case 1:
-            l = WindowManager.wa.left;
-            t = WindowManager.wa.top;
+            l = WindowManager.wa.left + PAD_FULL_LEFT;
+            t = WindowManager.wa.top  + PAD_FULL_TOP;
             w = WindowManager.wa.width;
             h = WindowManager.wa.height;
             break;
         // partial 01
         case 2:
-            l = (WindowManager.wa.left + 24);
-            t = (WindowManager.wa.top  + 24);
-            w = (WindowManager.wa.width  -24 -24);
-            h = (WindowManager.wa.height -24 -24);
+            l = (WindowManager.wa.left   + PAD_PARTIAL);
+            t = (WindowManager.wa.top    + PAD_PARTIAL);
+            w = (WindowManager.wa.width  - (PAD_PARTIAL * 2));
+            h = (WindowManager.wa.height - (PAD_PARTIAL * 2));
             break;
         // partial 02
         case 3:
             l = (WindowManager.wa.left);
             t = (WindowManager.wa.top);
             w = (WindowManager.wa.width);
-            h = (WindowManager.wa.height -24);
+            h = (WindowManager.wa.height - PAD_BOTTOM);
             break;
         // full
         default:
@@ -553,7 +562,8 @@ void maximize_window(struct gws_window_d *window)
     };
 
 // --------------
-    if ( w == 0 || h == 0 )
+
+    if (w == 0 || h == 0)
     {
         return;
     }
@@ -592,7 +602,6 @@ void maximize_window(struct gws_window_d *window)
 
     // Notify kernel to wake up the target thread if it is necessary
     wmNotifyKernel(taskbar_window,8000,8000);
-
 
 // Our window
 // Set focus
