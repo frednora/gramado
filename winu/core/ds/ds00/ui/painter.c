@@ -594,8 +594,8 @@ int redraw_titlebar_window(struct gws_window_d *window)
 // --------------------
 // Icon
 
-    int icon_id = 
-        (int) parent->frame.titlebar_icon_id;
+    int useIcon = parent->titlebarHasIcon;
+    int icon_id = (int) parent->frame.titlebar_icon_id;
 
 // Decode the bmp that is in a buffer
 // and display it directly into the framebuffer. 
@@ -606,7 +606,6 @@ int redraw_titlebar_window(struct gws_window_d *window)
     unsigned long iWidth = 16;
 
     //#hack #todo
-    int useIcon = parent->titlebarHasIcon;
     if (useIcon == TRUE)
     {
         iL = (unsigned long) (tb_window->absolute_x + METRICS_ICON_LEFTPAD);
