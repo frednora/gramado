@@ -172,10 +172,20 @@ struct deferred_d
 
 };
 
+
+// input_flags bit definitions
+#define THREAD_WANTS_TAB   0x00000001  // Deliver TAB directly to thread
+#define THREAD_WANTS_ESC   0x00000002  // Deliver ESC directly to thread
+// ...
+
 // Message Control structure
 // Preferences when using the message system
 struct msgctl_d 
 {
+
+// THREAD_WANTS_TAB | THREAD_WANTS_ESC ...
+    unsigned long input_flags;
+
     int block_in_progress;
     int block_on_empty;
     // ...

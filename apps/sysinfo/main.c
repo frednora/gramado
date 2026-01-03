@@ -242,15 +242,25 @@ systemProcedure(
 
         // #test
         case VK_TAB: 
-            //printf("TAB\n");
-            switch_responder(fd);
+            printf("app: TAB received\n");
+            //switch_responder(fd);
             break;
         }
         break;
 
     case MSG_SYSKEYDOWN:
-        if (long1 == VK_F5) update_children(fd);
-        if (long1 == VK_F12) printf("system_info_app: Debug info\n");
+        switch (long1){
+        case VK_F5:  update_children(fd);  break; 
+        case VK_F12:  printf("system_info_app: Debug info\n");  break;
+        //
+        case VK_ARROW_RIGHT:  printf("Editor: VK_ARROW_RIGHT \n"); break;
+        case VK_ARROW_UP:  printf("Editor: VK_ARROW_UP \n"); break;
+        case VK_ARROW_DOWN:  printf("Editor: VK_ARROW_DOWN \n"); break;
+        case VK_ARROW_LEFT:
+            printf("Editor: VK_ARROW_LEFT \n"); 
+            switch_responder(fd);
+            break;
+        };
         break;
 
     case GWS_MouseClicked:

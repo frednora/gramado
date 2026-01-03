@@ -843,6 +843,14 @@ int sys_msgctl(tid_t caller_tid, int option)
         caller_thread->msgctl.block_on_empty = FALSE;
         break;
 
+    // Input flags 
+    case 2000: // Want TAB 
+        caller_thread->msgctl.input_flags |= THREAD_WANTS_TAB; 
+        break; 
+    case 2001: // Clear TAB 
+        caller_thread->msgctl.input_flags &= ~THREAD_WANTS_TAB;
+        break;
+
     default:
         return -1;
         break;

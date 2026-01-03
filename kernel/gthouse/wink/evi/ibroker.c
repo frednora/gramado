@@ -136,17 +136,50 @@ ibroker_post_message_to_fg_thread (
     unsigned long long1, 
     unsigned long long2 )
 {
+    struct thread_d *fg_thread;
     int rv=-1;
 
     if (msg < 0)
         return (int) -1;
 
 // TARGET: GUI APP
+// Also to init thread
 
-    // Also to init thread
+// ---- Thread validation -----------------
     if (foreground_thread < 0)
         return (int) -1;
     if (foreground_thread >= THREAD_COUNT_MAX)
+        return (int) -1;
+    fg_thread = (struct thread_d *) threadList[foreground_thread];
+    if ((void*) fg_thread == NULL)
+        return -1;
+    if (fg_thread->magic != 1234)
+        return -1;
+
+// ---- Message validation -----------------
+    int SendIt = TRUE;
+
+    if (msg == MSG_KEYDOWN) 
+    {
+        switch (long1) {
+        case VK_TAB:
+            SendIt = FALSE;
+            if (fg_thread->msgctl.input_flags & THREAD_WANTS_TAB)
+                SendIt = TRUE;
+            break;
+
+        //case VK_ESCAPE:
+            //SendIt = FALSE;
+            //if (fg_thread->msgctl.input_flags & THREAD_WANTS_ESC)
+                //SendIt = TRUE;
+            //break;
+
+        // #todo: Add more keys (F1..F12, arrows, etc.)
+        };
+    }
+
+// Do not send it
+    if (SendIt != TRUE)
         return (int) -1;
 
 // Send it
@@ -3276,6 +3309,9 @@ done:
 // without calling the local procedure.
 // It returns
 // 3. Plain keydown → send outward to valid targets
+
+    int fOnlyForTheServer = FALSE;
+
     //if ( alt_status != TRUE && ctrl_status != TRUE && shift_status != TRUE )
     if  (isCombination != TRUE)
     {   
@@ -3306,10 +3342,10 @@ done:
                 // Not delivered to apps.
                 if (Event_LongVK == VK_F11)
                 {
-                        ibroker_post_message_to_ds(
-                            Event_Message, 
-                            Event_LongVK,
-                            Event_LongScanCode );
+                    ibroker_post_message_to_ds(
+                        Event_Message, 
+                        Event_LongVK,
+                        Event_LongScanCode );
                     return 0;
                 }
 
@@ -3364,9 +3400,18 @@ done:
             // What are the types we're sending here
             // Existing behavior: send to display server
 
-
             // #debug
             //printk("vk=%d sc=%d\n",Event_LongVK,Event_LongScanCode);
+
+            if (Event_Message == MSG_KEYDOWN || Event_Message == MSG_KEYUP)
+            {
+                // Send tab only to the server
+                //if (Event_LongVK == VK_TAB)
+                    //fOnlyForTheServer = TRUE;
+                
+                // ...
+            }
+
 
             // TARGET: DS
             ibroker_post_message_to_ds(
@@ -3376,8 +3421,12 @@ done:
             // New behavior: duplicate to foreground thread
 
             // TARGET: GUI APP
-            ibroker_post_message_to_fg_thread(
-                Event_Message, Event_LongVK, Event_LongScanCode);
+            if (fOnlyForTheServer != TRUE){
+                ibroker_post_message_to_fg_thread(
+                    Event_Message, 
+                    Event_LongVK, 
+                    Event_LongScanCode );
+            }
         }
 
         // Returns when its not a combination
