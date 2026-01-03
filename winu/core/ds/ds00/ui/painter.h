@@ -5,6 +5,24 @@
 #define __UI_PAINTER_H    1
 
 
+void validate_window(struct gws_window_d *window);
+void validate_window_by_id(int wid);
+void begin_paint(struct gws_window_d *window);
+
+
+void invalidate_window (struct gws_window_d *window);
+void invalidate_window_by_id(int wid);
+
+void invalidate_root_window(void);
+void invalidate_titlebar(struct gws_window_d *pwindow);
+void invalidate_menubar(struct gws_window_d *pwindow);
+void invalidate_toolbar(struct gws_window_d *pwindow);
+void invalidate_scrollbar(struct gws_window_d *pwindow);
+void invalidate_statusbar(struct gws_window_d *pwindow);
+void invalidate_taskbar_window(void);
+
+void end_paint(struct gws_window_d *window);
+
 int 
 painterFillWindowRectangle( 
     unsigned long x, 
@@ -35,40 +53,23 @@ __draw_window_border(
     unsigned long rop_right,
     unsigned long rop_bottom );
 
-
-void begin_paint(struct gws_window_d *window);
-void end_paint(struct gws_window_d *window);
-
-int clear_window_by_id(int wid, unsigned long flags);
-
-void invalidate_root_window(void);
-void invalidate_taskbar_window(void);
-void invalidate_window (struct gws_window_d *window);
-void invalidate_window_by_id(int wid);
-
-void invalidate_titlebar(struct gws_window_d *pwindow);
-void invalidate_menubar(struct gws_window_d *pwindow);
-void invalidate_toolbar(struct gws_window_d *pwindow);
-void invalidate_scrollbar(struct gws_window_d *pwindow);
-void invalidate_statusbar(struct gws_window_d *pwindow);
+void redraw_text_for_editbox(struct gws_window_d *window);
 
 int redraw_controls(struct gws_window_d *window);
 int redraw_titlebar_window(struct gws_window_d *window);
 
-void redraw_text_for_editbox(struct gws_window_d *window);
 int 
 redraw_window (
     struct gws_window_d *window, 
     unsigned long flags ); 
+
 int redraw_window_by_id(int wid, unsigned long flags);
 
-void validate_window(struct gws_window_d *window);
-void validate_window_by_id(int wid);
+int clear_window_by_id(int wid, unsigned long flags);
 
 void wm_flush_rectangle(struct gws_rect_d *rect);
-void wm_flush_screen(void);
 void wm_flush_window(struct gws_window_d *window);
-
+void wm_flush_screen(void);
 
 #endif    
 

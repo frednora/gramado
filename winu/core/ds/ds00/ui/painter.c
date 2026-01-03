@@ -8,6 +8,177 @@
 static void __draw_button_mark_by_wid( int wid, int button_number );
 //===================================================================
 
+// validate
+void validate_window (struct gws_window_d *window)
+{
+    if ((void*) window != NULL)
+    {
+        if ( window->used == TRUE && window->magic == 1234 )
+        {
+            window->dirty = FALSE;
+        }
+    }
+}
+
+void validate_window_by_id(int wid)
+{
+    struct gws_window_d *w;
+
+// #todo: 
+// Chamar o metodo de validação de janela.
+
+// wid
+    if (wid < 0 || wid >= WINDOW_COUNT_MAX){
+        return;
+    }
+// Window structure
+    w = (struct gws_window_d *) windowList[wid];
+    if ((void*) w == NULL){
+        return;
+    }
+    if (w->used != TRUE){
+        return;
+    }
+    if (w->magic != 1234){
+        return;
+    }
+    validate_window(w);    
+}
+
+void begin_paint(struct gws_window_d *window)
+{
+    if ((void*) window == NULL){
+        return;
+    }
+    validate_window(window);
+}
+
+// Invalidate
+void invalidate_window (struct gws_window_d *window)
+{
+    if ((void*) window != NULL)
+    {
+        if ( window->used == TRUE && window->magic == 1234 )
+        {
+            window->dirty = TRUE;
+        }
+    }
+}
+
+void invalidate_window_by_id(int wid)
+{
+    struct gws_window_d *w;
+
+// #todo: 
+// Chamar o metodo de validação de janela.
+
+// wid
+    if (wid < 0 || wid >= WINDOW_COUNT_MAX){
+        return;
+    }
+// Window structure
+    w = (struct gws_window_d *) windowList[wid];
+    if ((void*) w == NULL){
+        return;
+    }
+    if (w->used != TRUE){
+        return;
+    }
+    if (w->magic != 1234){
+        return;
+    }
+    invalidate_window(w);    
+}
+
+void invalidate_root_window(void)
+{
+    invalidate_window ((struct gws_window_d *) __root_window);
+}
+
+// Invalidate the titlebar window of a given pwindow.
+void invalidate_titlebar(struct gws_window_d *pwindow)
+{
+    if ((void*) pwindow == NULL)
+        return;
+    if (pwindow->used != TRUE)
+        return;
+    if (pwindow->magic != 1234)
+        return;
+    if (pwindow->type != WT_OVERLAPPED)
+        return;
+    invalidate_window(pwindow->titlebar);
+}
+
+// Invalidate the menubar window of a given pwindow.
+void invalidate_menubar(struct gws_window_d *pwindow)
+{
+    if ((void*) pwindow == NULL)
+        return;
+    if (pwindow->used != TRUE)
+        return;
+    if (pwindow->magic != 1234)
+        return;
+    if (pwindow->type != WT_OVERLAPPED)
+        return;
+    invalidate_window(pwindow->menubar);
+}
+
+// Invalidate the toolbar window of a given pwindow.
+void invalidate_toolbar(struct gws_window_d *pwindow)
+{
+    if ((void*) pwindow == NULL)
+        return;
+    if (pwindow->used != TRUE)
+        return;
+    if (pwindow->magic != 1234)
+        return;
+    if (pwindow->type != WT_OVERLAPPED)
+        return;
+    invalidate_window(pwindow->toolbar);
+}
+
+// Invalidate the scrollbar window of a given pwindow.
+void invalidate_scrollbar(struct gws_window_d *pwindow)
+{
+    if ((void*) pwindow == NULL)
+        return;
+    if (pwindow->used != TRUE)
+        return;
+    if (pwindow->magic != 1234)
+        return;
+    if (pwindow->type != WT_OVERLAPPED)
+        return;
+    invalidate_window(pwindow->scrollbar);
+}
+
+// Invalidate the statusbar window of a given pwindow.
+void invalidate_statusbar(struct gws_window_d *pwindow)
+{
+    if ((void*) pwindow == NULL)
+        return;
+    if (pwindow->used != TRUE)
+        return;
+    if (pwindow->magic != 1234)
+        return;
+    if (pwindow->type != WT_OVERLAPPED)
+        return;
+    invalidate_window(pwindow->statusbar);
+}
+
+
+void invalidate_taskbar_window(void)
+{
+    //invalidate_window ( (struct gws_window_d *) taskbar_window );
+}
+
+void end_paint(struct gws_window_d *window)
+{
+    if ((void*) window == NULL){
+        return;
+    }
+    invalidate_window(window);
+}
+
 // Paint a rectangle
 // Lowest-level primitive: fills a rectangle in the backbuffer.
 // Coordinates here are absolute screen coordinates.
@@ -27,42 +198,6 @@ painterFillWindowRectangle(
         rop_flags );
 
     return 0; 
-}
-
-// Clear the window
-// Repaint it using the default background color.
-// Only valid for WT_SIMPLE.
-// #todo
-// A transparent window inherits its parent's background 
-// for this operation.
-int clear_window_by_id(int wid, unsigned long flags)
-{
-    struct gws_window_d *w;
-
-// Validations
-    if (wid<0 || wid>=WINDOW_COUNT_MAX){
-        goto fail;
-    }
-    w = (void*) windowList[wid];
-    if ((void*) w == NULL){
-        goto fail;
-    }
-    if (w->magic != 1234){
-        goto fail;
-    }
-
-// #todo
-// Maybe we can clear more types of window.
-    if (w->type != WT_SIMPLE){
-        goto fail;
-    }
-
-// Redraw
-    redraw_window(w,flags);
-    return 0;
-
-fail:
-    return (int) -1;
 }
 
 // pinta um retangulo no botao
@@ -480,6 +615,154 @@ __draw_window_border(
     }
 }
 
+// Draws text inside single-line or multi-line editboxes.
+// IN: Editbox window
+void redraw_text_for_editbox(struct gws_window_d *window)
+{
+    char *p;
+    register int i=0;
+
+// Prepare the caret string (underscore in this case)
+    char caret_string[2];
+    caret_string[0] = '_';    // Or use '|' or whatever symbol you prefer for caret
+    caret_string[1] = 0x00;
+
+// Choose the caret color (e.g., black)
+    unsigned int caret_color = COLOR_BLACK;
+
+    if ((void*)window == NULL)
+        return;
+    if (window->magic != 1234)
+        return;
+    if ( window->type != WT_EDITBOX_SINGLE_LINE &&
+         window->type != WT_EDITBOX_MULTIPLE_LINES )
+    {
+        return;
+    }
+// No text
+    if ((void*) window->window_text == NULL)
+    {
+        //window->textbuffer_size_in_bytes = 0;
+        //window->text_size_in_bytes = 0;
+        return;
+    }
+
+// Get the base
+    p = window->window_text;
+
+// Total chars
+    int total_chars = window->text_size_in_bytes;
+    if (total_chars <= 0)
+        total_chars = 0;
+
+    unsigned int font_width  = FontInitialization.width  ? FontInitialization.width  : 8;
+    unsigned int font_height = FontInitialization.height ? FontInitialization.height : 8;
+
+// Chars per line.
+    //int chars_per_line = (window->width - 16) / font_width; // 8px margin left/right
+    int chars_per_line = (int) (window->width_in_chars & 0xFFFFFFFF);
+    if (chars_per_line < 1) 
+        chars_per_line = 1;
+    if (chars_per_line > METRICS_MAX_CHARS_PER_LINE) 
+        chars_per_line = METRICS_MAX_CHARS_PER_LINE;
+
+// Chars per column.
+    //int max_lines = (window->height - 16) / font_height; // 8px margin top/bottom
+    int max_lines = (int) (window->height_in_chars & 0xFFFFFFFF);
+    if (max_lines < 1) 
+        max_lines = 1;
+
+// -------------------------------------------------------
+// Draw the string into the window for single line
+    if ( window->type == WT_EDITBOX_SINGLE_LINE )
+    {
+       // Only print up to chars_per_line
+        char line_buffer00[chars_per_line + 1];
+        memset(line_buffer00, 0, sizeof(line_buffer00));
+        int to_copy = (total_chars > chars_per_line) ? chars_per_line : total_chars;
+        // Copy
+        memcpy(line_buffer00, p, to_copy);
+        line_buffer00[to_copy] = 0;
+        // Draw
+        grDrawString ( 
+            (window->absolute_x + METRICS_EDITBOX_MARGIN_LEFT), 
+            (window->absolute_y + METRICS_EDITBOX_MARGIN_TOP), 
+            COLOR_BLACK, 
+            line_buffer00 );
+
+        /*
+        // #todo: Update the input pointer position in chars.
+        // and draw it at the end of the line.
+        window->ip_x = 0;
+        window->ip_y = 0;
+        // Draw the caret at the input pointer position (in chars, not pixels)
+        dtextDrawText2(
+            window,
+            window->ip_x *8,
+            window->ip_y *8,  
+            caret_color,
+            caret_string,
+            TRUE );
+        */
+
+        return;
+    }
+
+// -------------------------------------
+// Let's print multiple lines.
+// Draw the string into the window for single line
+    int line = 0;
+    int col = 0;
+    char line_buffer[chars_per_line + 1];
+    memset(line_buffer, 0, sizeof(line_buffer));
+
+    for ( i=0; 
+          i < total_chars && line < max_lines; 
+          i++ )
+    {
+        char c = p[i];  // Get
+
+        if (c == '\n' || col == chars_per_line) 
+        {
+            // Print current line
+            line_buffer[col] = 0;
+            grDrawString(
+                window->absolute_x + METRICS_EDITBOX_MARGIN_LEFT,
+                window->absolute_y + METRICS_EDITBOX_MARGIN_TOP + line * font_height,
+                COLOR_BLACK,
+                line_buffer
+            );
+            line++;
+            col = 0;
+            memset(line_buffer, 0, sizeof(line_buffer));
+
+            if (c == '\n')
+                continue; // do not add '\n' to buffer
+        }
+
+        // Fill the buffer
+        if ( line < max_lines && 
+             col < chars_per_line && 
+             c != '\n' ) 
+        {
+            line_buffer[col++] = c;
+        }
+    };
+
+    // Print remaining chars if any
+    if ( col > 0 && 
+         line < max_lines ) 
+    {
+        line_buffer[col] = 0;
+        grDrawString(
+            window->absolute_x + METRICS_EDITBOX_MARGIN_LEFT,
+            window->absolute_y + METRICS_EDITBOX_MARGIN_TOP + line * font_height,
+            COLOR_BLACK,
+            line_buffer
+        );
+    }
+}
+
 // Paint the controls, but do not show them.
 // IN: Titlebar window.
 int redraw_controls(struct gws_window_d *window)
@@ -671,154 +954,6 @@ int redraw_titlebar_window(struct gws_window_d *window)
     return 0;
 }
 
-// Draws text inside single-line or multi-line editboxes.
-// IN: Editbox window
-void redraw_text_for_editbox(struct gws_window_d *window)
-{
-    char *p;
-    register int i=0;
-
-// Prepare the caret string (underscore in this case)
-    char caret_string[2];
-    caret_string[0] = '_';    // Or use '|' or whatever symbol you prefer for caret
-    caret_string[1] = 0x00;
-
-// Choose the caret color (e.g., black)
-    unsigned int caret_color = COLOR_BLACK;
-
-    if ((void*)window == NULL)
-        return;
-    if (window->magic != 1234)
-        return;
-    if ( window->type != WT_EDITBOX_SINGLE_LINE &&
-         window->type != WT_EDITBOX_MULTIPLE_LINES )
-    {
-        return;
-    }
-// No text
-    if ((void*) window->window_text == NULL)
-    {
-        //window->textbuffer_size_in_bytes = 0;
-        //window->text_size_in_bytes = 0;
-        return;
-    }
-
-// Get the base
-    p = window->window_text;
-
-// Total chars
-    int total_chars = window->text_size_in_bytes;
-    if (total_chars <= 0)
-        total_chars = 0;
-
-    unsigned int font_width  = FontInitialization.width  ? FontInitialization.width  : 8;
-    unsigned int font_height = FontInitialization.height ? FontInitialization.height : 8;
-
-// Chars per line.
-    //int chars_per_line = (window->width - 16) / font_width; // 8px margin left/right
-    int chars_per_line = (int) (window->width_in_chars & 0xFFFFFFFF);
-    if (chars_per_line < 1) 
-        chars_per_line = 1;
-    if (chars_per_line > METRICS_MAX_CHARS_PER_LINE) 
-        chars_per_line = METRICS_MAX_CHARS_PER_LINE;
-
-// Chars per column.
-    //int max_lines = (window->height - 16) / font_height; // 8px margin top/bottom
-    int max_lines = (int) (window->height_in_chars & 0xFFFFFFFF);
-    if (max_lines < 1) 
-        max_lines = 1;
-
-// -------------------------------------------------------
-// Draw the string into the window for single line
-    if ( window->type == WT_EDITBOX_SINGLE_LINE )
-    {
-       // Only print up to chars_per_line
-        char line_buffer00[chars_per_line + 1];
-        memset(line_buffer00, 0, sizeof(line_buffer00));
-        int to_copy = (total_chars > chars_per_line) ? chars_per_line : total_chars;
-        // Copy
-        memcpy(line_buffer00, p, to_copy);
-        line_buffer00[to_copy] = 0;
-        // Draw
-        grDrawString ( 
-            (window->absolute_x + METRICS_EDITBOX_MARGIN_LEFT), 
-            (window->absolute_y + METRICS_EDITBOX_MARGIN_TOP), 
-            COLOR_BLACK, 
-            line_buffer00 );
-
-        /*
-        // #todo: Update the input pointer position in chars.
-        // and draw it at the end of the line.
-        window->ip_x = 0;
-        window->ip_y = 0;
-        // Draw the caret at the input pointer position (in chars, not pixels)
-        dtextDrawText2(
-            window,
-            window->ip_x *8,
-            window->ip_y *8,  
-            caret_color,
-            caret_string,
-            TRUE );
-        */
-
-        return;
-    }
-
-// -------------------------------------
-// Let's print multiple lines.
-// Draw the string into the window for single line
-    int line = 0;
-    int col = 0;
-    char line_buffer[chars_per_line + 1];
-    memset(line_buffer, 0, sizeof(line_buffer));
-
-    for ( i=0; 
-          i < total_chars && line < max_lines; 
-          i++ )
-    {
-        char c = p[i];  // Get
-
-        if (c == '\n' || col == chars_per_line) 
-        {
-            // Print current line
-            line_buffer[col] = 0;
-            grDrawString(
-                window->absolute_x + METRICS_EDITBOX_MARGIN_LEFT,
-                window->absolute_y + METRICS_EDITBOX_MARGIN_TOP + line * font_height,
-                COLOR_BLACK,
-                line_buffer
-            );
-            line++;
-            col = 0;
-            memset(line_buffer, 0, sizeof(line_buffer));
-
-            if (c == '\n')
-                continue; // do not add '\n' to buffer
-        }
-
-        // Fill the buffer
-        if ( line < max_lines && 
-             col < chars_per_line && 
-             c != '\n' ) 
-        {
-            line_buffer[col++] = c;
-        }
-    };
-
-    // Print remaining chars if any
-    if ( col > 0 && 
-         line < max_lines ) 
-    {
-        line_buffer[col] = 0;
-        grDrawString(
-            window->absolute_x + METRICS_EDITBOX_MARGIN_LEFT,
-            window->absolute_y + METRICS_EDITBOX_MARGIN_TOP + line * font_height,
-            COLOR_BLACK,
-            line_buffer
-        );
-    }
-}
-
 // ------------
 // Central routine that decides what to repaint depending on window type:
 // + WT_BUTTON     > draws button borders + label.
@@ -868,17 +1003,17 @@ redraw_window (
 
 // ROP
 // Getting the saved rop values
+// Respect the ROP added during the creation phase
 
-    __rop_bg     = window->rop_bg;  // Windows bg
-    __rop_shadow = window->rop_shadow;  // Windows bg
-    __rop_ornament = window->rop_ornament;  // Windows ornament
+    __rop_bg       = window->rop_bg;
+    __rop_shadow   = window->rop_shadow;
+    __rop_ornament = window->rop_ornament;
 
     // Windows borders
-    __rop_top_border    = window->rop_top_border;  // 
-    __rop_left_border   = window->rop_left_border;  // 
-    __rop_right_border  = window->rop_right_border;  // 
-    __rop_bottom_border = window->rop_bottom_border;  // 
-
+    __rop_top_border    = window->rop_top_border; 
+    __rop_left_border   = window->rop_left_border; 
+    __rop_right_border  = window->rop_right_border; 
+    __rop_bottom_border = window->rop_bottom_border;
 
 // Update the absolute right and bottom values 
 // for mouse hit test.
@@ -917,7 +1052,8 @@ redraw_window (
                 __tmp_color = xCOLOR_GRAY2;
             }
 
-            // Shadow rectangle.
+            // Shadow rectangle
+            // Respect the ROP added during the creation phase
             rectBackbufferDrawRectangle ( 
                 (window->absolute_x +1), 
                 (window->absolute_y +1), 
@@ -925,7 +1061,7 @@ redraw_window (
                 (window->height +1 +1), 
                 __tmp_color, 
                 TRUE,     // fill?
-                (unsigned long) __rop_shadow );   // rop for its shadow
+                (unsigned long) window->rop_shadow ); 
         }
     }
 
@@ -938,21 +1074,11 @@ redraw_window (
 // à sua janela mãe. Já uma overlapped pode ser relativo a janela 
 // gui->main ou relativo à janela mãe.
 
-// Background rectangle.
+// Background rectangle
     if (window->backgroundUsed == TRUE)
     {
-        /*
-        if (window->type == WT_BUTTON)
-        {
-            if (window->style & WS_TRANSPARENT)
-            {
-                if (THEME_USE_TRANSPARENCE_IN_BUTTON == 1)
-                    __rop_bg = ROP_XOR;
-            }
-        }
-        */
-
-        // Redraw the background rectangle.
+        // Redraw the background rectangle
+        // Respect the ROP added during the creation phase
         rectBackbufferDrawRectangle ( 
                 window->absolute_x, 
                 window->absolute_y, 
@@ -960,9 +1086,9 @@ redraw_window (
                 window->height, 
                 window->bg_color, 
                 TRUE,  //fill
-                (unsigned long) __rop_bg );   // ROP for this window bg
+                (unsigned long) window->rop_bg );
 
-        // All done for WT_SIMPLE type.
+        // All done for WT_SIMPLE type
         if (window->type == WT_SIMPLE){
             goto done;
         }
@@ -1287,159 +1413,40 @@ fail:
     return (int) (-1);
 }
 
-void validate_window_by_id(int wid)
+// Clear the window
+// Repaint it using the default background color.
+// Only valid for WT_SIMPLE.
+// #todo
+// A transparent window inherits its parent's background 
+// for this operation.
+int clear_window_by_id(int wid, unsigned long flags)
 {
     struct gws_window_d *w;
 
-// #todo: 
-// Chamar o metodo de validação de janela.
-
-// wid
-    if (wid < 0 || wid >= WINDOW_COUNT_MAX){
-        return;
+// Validations
+    if (wid<0 || wid>=WINDOW_COUNT_MAX){
+        goto fail;
     }
-// Window structure
-    w = (struct gws_window_d *) windowList[wid];
+    w = (void*) windowList[wid];
     if ((void*) w == NULL){
-        return;
-    }
-    if (w->used != TRUE){
-        return;
+        goto fail;
     }
     if (w->magic != 1234){
-        return;
+        goto fail;
     }
-    validate_window(w);    
-}
 
-// validate
-void validate_window (struct gws_window_d *window)
-{
-    if ((void*) window != NULL)
-    {
-        if ( window->used == TRUE && window->magic == 1234 )
-        {
-            window->dirty = FALSE;
-        }
+// #todo
+// Maybe we can clear more types of window.
+    if (w->type != WT_SIMPLE){
+        goto fail;
     }
-}
 
+// Redraw
+    redraw_window(w,flags);
+    return 0;
 
-void invalidate_window_by_id(int wid)
-{
-    struct gws_window_d *w;
-
-// #todo: 
-// Chamar o metodo de validação de janela.
-
-// wid
-    if (wid < 0 || wid >= WINDOW_COUNT_MAX){
-        return;
-    }
-// Window structure
-    w = (struct gws_window_d *) windowList[wid];
-    if ((void*) w == NULL){
-        return;
-    }
-    if (w->used != TRUE){
-        return;
-    }
-    if (w->magic != 1234){
-        return;
-    }
-    invalidate_window(w);    
-}
-
-// Invalidate
-void invalidate_window (struct gws_window_d *window)
-{
-    if ((void*) window != NULL)
-    {
-        if ( window->used == TRUE && window->magic == 1234 )
-        {
-            window->dirty = TRUE;
-        }
-    }
-}
-
-// Invalidate the titlebar window of a given pwindow.
-void invalidate_titlebar(struct gws_window_d *pwindow)
-{
-    if ((void*) pwindow == NULL)
-        return;
-    if (pwindow->used != TRUE)
-        return;
-    if (pwindow->magic != 1234)
-        return;
-    if (pwindow->type != WT_OVERLAPPED)
-        return;
-    invalidate_window(pwindow->titlebar);
-}
-
-// Invalidate the menubar window of a given pwindow.
-void invalidate_menubar(struct gws_window_d *pwindow)
-{
-    if ((void*) pwindow == NULL)
-        return;
-    if (pwindow->used != TRUE)
-        return;
-    if (pwindow->magic != 1234)
-        return;
-    if (pwindow->type != WT_OVERLAPPED)
-        return;
-    invalidate_window(pwindow->menubar);
-}
-
-// Invalidate the toolbar window of a given pwindow.
-void invalidate_toolbar(struct gws_window_d *pwindow)
-{
-    if ((void*) pwindow == NULL)
-        return;
-    if (pwindow->used != TRUE)
-        return;
-    if (pwindow->magic != 1234)
-        return;
-    if (pwindow->type != WT_OVERLAPPED)
-        return;
-    invalidate_window(pwindow->toolbar);
-}
-
-// Invalidate the scrollbar window of a given pwindow.
-void invalidate_scrollbar(struct gws_window_d *pwindow)
-{
-    if ((void*) pwindow == NULL)
-        return;
-    if (pwindow->used != TRUE)
-        return;
-    if (pwindow->magic != 1234)
-        return;
-    if (pwindow->type != WT_OVERLAPPED)
-        return;
-    invalidate_window(pwindow->scrollbar);
-}
-
-// Invalidate the statusbar window of a given pwindow.
-void invalidate_statusbar(struct gws_window_d *pwindow)
-{
-    if ((void*) pwindow == NULL)
-        return;
-    if (pwindow->used != TRUE)
-        return;
-    if (pwindow->magic != 1234)
-        return;
-    if (pwindow->type != WT_OVERLAPPED)
-        return;
-    invalidate_window(pwindow->statusbar);
-}
-
-void invalidate_root_window(void)
-{
-    invalidate_window ((struct gws_window_d *) __root_window);
-}
-
-void invalidate_taskbar_window(void)
-{
-    //invalidate_window ( (struct gws_window_d *) taskbar_window );
+fail:
+    return (int) -1;
 }
 
 // (Output port)
@@ -1452,11 +1459,6 @@ void wm_flush_rectangle(struct gws_rect_d *rect)
         return;
     }
     gwssrv_refresh_this_rect(rect);
-}
-
-void wm_flush_screen(void)
-{
-    gwssrv_show_backbuffer();
 }
 
 void wm_flush_window(struct gws_window_d *window)
@@ -1473,19 +1475,7 @@ void wm_flush_window(struct gws_window_d *window)
     gws_show_window_rect(window);
 }
 
-void begin_paint(struct gws_window_d *window)
+void wm_flush_screen(void)
 {
-    if ((void*) window == NULL){
-        return;
-    }
-    validate_window(window);
+    gwssrv_show_backbuffer();
 }
-
-void end_paint(struct gws_window_d *window)
-{
-    if ((void*) window == NULL){
-        return;
-    }
-    invalidate_window(window);
-}
-
