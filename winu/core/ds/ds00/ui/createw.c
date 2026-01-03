@@ -641,9 +641,19 @@ struct gws_window_d *do_create_titlebar(
 // lembre-se estamos relativos à area de cliente
 // da janela mão, seja ela de qual tipo for.
 
+    unsigned long MyStyle = 0;
+
+    if (THEME_USE_TRANSPARENCE_IN_TITLEBAR == 1){
+        MyStyle |= WS_TRANSPARENT;
+    } else {
+    }
+
     tbWindow = 
        (void *) doCreateWindow ( 
-                WT_TITLEBAR, 0, 1, 1, "TitleBar", 
+                WT_TITLEBAR, 
+                MyStyle, 
+                1, 
+                1, "TitleBar", 
                 TitleBarLeft, 
                 TitleBarTop, 
                 TitleBarWidth, 
@@ -964,8 +974,8 @@ doCreateWindowFrame (
 // ROP
 // Getting the saved rop values
 
-    __rop_bg     = window->rop_bg;  // Windows bg
-    __rop_shadow = window->rop_shadow;  // Windows bg
+    __rop_bg       = window->rop_bg;  // Windows bg
+    __rop_shadow   = window->rop_shadow;  // Windows bg
     __rop_ornament = window->rop_ornament;  // Windows ornament 
 
     // Windows borders
@@ -1697,6 +1707,87 @@ void *doCreateWindow (
     }
     window->is_solid = (int) is_solid;
 
+// #test
+// ===================================================================
+// Overide the default configuration
+
+    switch (window->type){
+    case WT_OVERLAPPED:
+        window->rop_shadow        = THEME_ROP_WINDOW_SHADOW;
+        window->rop_bg            = THEME_ROP_WINDOW_BACKGROUND;
+        window->rop_ornament      = THEME_ROP_WINDOW_ORNAMENT;
+        window->rop_top_border    = THEME_ROP_TOP_BORDER;
+        window->rop_left_border   = THEME_ROP_LETF_BORDER;
+        window->rop_right_border  = THEME_ROP_RIGHT_BORDER; 
+        window->rop_bottom_border = THEME_ROP_BOTTOM_BORDER;
+        break;
+
+    case WT_BUTTON:
+    case WT_ICON:
+        window->rop_shadow = THEME_ROP_WINDOW_SHADOW;
+        if (window->style & WS_TRANSPARENT){
+            window->rop_shadow = ROP_XOR;
+        }
+        window->rop_bg     = THEME_ROP_WINDOW_BACKGROUND;
+        if (window->style & WS_TRANSPARENT){
+            window->rop_bg = ROP_XOR;
+        }
+        window->rop_ornament      = THEME_ROP_WINDOW_ORNAMENT;
+        window->rop_top_border    = THEME_ROP_TOP_BORDER;
+        window->rop_left_border   = THEME_ROP_LETF_BORDER;
+        window->rop_right_border  = THEME_ROP_RIGHT_BORDER; 
+        window->rop_bottom_border = THEME_ROP_BOTTOM_BORDER;
+        break;
+
+    case WT_EDITBOX_SINGLE_LINE:
+    case WT_EDITBOX_MULTIPLE_LINES:
+        window->rop_shadow        = THEME_ROP_WINDOW_SHADOW;
+        window->rop_bg            = THEME_ROP_WINDOW_BACKGROUND;
+        window->rop_ornament      = THEME_ROP_WINDOW_ORNAMENT;
+        window->rop_top_border    = THEME_ROP_TOP_BORDER;
+        window->rop_left_border   = THEME_ROP_LETF_BORDER;
+        window->rop_right_border  = THEME_ROP_RIGHT_BORDER; 
+        window->rop_bottom_border = THEME_ROP_BOTTOM_BORDER;
+    break;
+
+    case WT_SIMPLE:
+        window->rop_shadow = THEME_ROP_WINDOW_SHADOW;
+        if (window->style & WS_TRANSPARENT){
+            window->rop_shadow = ROP_XOR;
+        }
+        window->rop_bg     = THEME_ROP_WINDOW_BACKGROUND;
+        if (window->style & WS_TRANSPARENT){
+            window->rop_bg = ROP_XOR;
+        }
+        window->rop_ornament      = THEME_ROP_WINDOW_ORNAMENT;
+        window->rop_top_border    = THEME_ROP_TOP_BORDER;
+        window->rop_left_border   = THEME_ROP_LETF_BORDER;
+        window->rop_right_border  = THEME_ROP_RIGHT_BORDER; 
+        window->rop_bottom_border = THEME_ROP_BOTTOM_BORDER;
+        break;
+
+    case WT_TITLEBAR:
+        window->rop_shadow = THEME_ROP_WINDOW_SHADOW;
+        if (window->style & WS_TRANSPARENT){
+            window->rop_shadow = ROP_KEEP_DST; //ROP_XOR;
+        }
+        window->rop_bg     = THEME_ROP_WINDOW_BACKGROUND;
+        if (window->style & WS_TRANSPARENT){
+            window->rop_bg = ROP_KEEP_DST; //ROP_XOR;
+        }
+        window->rop_ornament      = THEME_ROP_WINDOW_ORNAMENT;
+        window->rop_top_border    = THEME_ROP_TOP_BORDER;
+        window->rop_left_border   = THEME_ROP_LETF_BORDER;
+        window->rop_right_border  = THEME_ROP_RIGHT_BORDER; 
+        window->rop_bottom_border = THEME_ROP_BOTTOM_BORDER;
+        break;
+
+
+    default:
+        break;
+}
+// ===================================================================
+
 // Save rop values for this window
 
     //window->focus  = FALSE;
@@ -2261,7 +2352,7 @@ void *doCreateWindow (
     window->shadow_style     = 0;
     window->background_style = 0;
     window->titlebar_style   = 0;
-    window->Border.border_style     = 0;
+    window->Border.border_style = 0;
     window->menubar_style    = 0;
     window->toolbar_style    = 0;
     window->clientarea_style = 0;
@@ -2641,7 +2732,7 @@ void *doCreateWindow (
             window->width, 
             window->height, 
             window->bg_color, 
-            window->rop_bg );
+            window->rop_bg );  // #bugbug: Invalid value in the structure
 
         // #todo
         // Could we return now if its type is WT_SIMPLE?
@@ -3061,7 +3152,11 @@ void *CreateWindow (
         // #debug:  Fake name: The parent id.
         // #bugbug: 0 for everyone.
         // itoa( (int) pWindow->id, _name );
-        
+
+        if (THEME_USE_TRANSPARENCE_IN_WINDOW_BG == 1){
+            style |= WS_TRANSPARENT;
+        }
+
         __w = 
             (void *) doCreateWindow ( 
                         WT_SIMPLE, style, status, state, (char *) _name,
@@ -3101,6 +3196,10 @@ void *CreateWindow (
 
         if (width < EDITBOX_MIN_WIDTH)  { width=EDITBOX_MIN_WIDTH; }
         if (height < EDITBOX_MIN_HEIGHT){ height=EDITBOX_MIN_HEIGHT; }
+
+        if (THEME_USE_TRANSPARENCE_IN_EDITBOX == 1){
+            style |= WS_TRANSPARENT;
+        }
 
         __w = 
             (void *) doCreateWindow ( 
@@ -3156,6 +3255,10 @@ void *CreateWindow (
 
         if (width < BUTTON_MIN_WIDTH)  { width=BUTTON_MIN_WIDTH; }
         if (height < BUTTON_MIN_HEIGHT){ height=BUTTON_MIN_HEIGHT; }
+
+        if (THEME_USE_TRANSPARENCE_IN_BUTTON == 1){
+            style |= WS_TRANSPARENT;
+        }
 
         __w = 
             (void *) doCreateWindow ( 

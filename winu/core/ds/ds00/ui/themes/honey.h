@@ -162,8 +162,8 @@
 
 // Default ROP assignments for theme elements
 
-#define THEME_ROP_WINDOW_BACKGROUND  ROP_COPY
 #define THEME_ROP_WINDOW_SHADOW      ROP_COPY
+#define THEME_ROP_WINDOW_BACKGROUND  ROP_COPY
 #define THEME_ROP_WINDOW_ORNAMENT    ROP_COPY
 
 #define THEME_ROP_TOP_BORDER     ROP_COPY
@@ -175,6 +175,16 @@
 #define THEME_ROP_CONTROLS    ROP_COPY
 
 #define THEME_ROP_STATUSBAR    ROP_COPY
+
+// CONFIG
+// Set the flag to activate the 'transparence' for the component
+// >> Only during the creation for now ...
+// We gotta do the same for redraw
+#define THEME_USE_TRANSPARENCE_IN_SHADOW     0   // 0 = opaque, 1 = transparent
+#define THEME_USE_TRANSPARENCE_IN_WINDOW_BG  0   // 0 = opaque, 1 = transparent
+#define THEME_USE_TRANSPARENCE_IN_TITLEBAR   0
+#define THEME_USE_TRANSPARENCE_IN_BUTTON     0
+#define THEME_USE_TRANSPARENCE_IN_EDITBOX    0
 
 #endif   
 

@@ -941,6 +941,17 @@ redraw_window (
 // Background rectangle.
     if (window->backgroundUsed == TRUE)
     {
+        /*
+        if (window->type == WT_BUTTON)
+        {
+            if (window->style & WS_TRANSPARENT)
+            {
+                if (THEME_USE_TRANSPARENCE_IN_BUTTON == 1)
+                    __rop_bg = ROP_XOR;
+            }
+        }
+        */
+
         // Redraw the background rectangle.
         rectBackbufferDrawRectangle ( 
                 window->absolute_x, 
@@ -979,6 +990,7 @@ redraw_window (
 
     if (window->type == WT_BUTTON)
     {
+
         ButtonState = (int) (window->status & 0xFFFFFFFF);
  
         //if ( (void*) window->parent == NULL )
