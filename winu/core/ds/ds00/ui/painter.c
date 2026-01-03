@@ -1077,6 +1077,23 @@ redraw_window (
 // Background rectangle
     if (window->backgroundUsed == TRUE)
     {
+        if (window->type == WT_BUTTON)
+        {
+            int lButtonState00 = (int) (window->status & 0xFFFFFFFF);
+
+            if (lButtonState00 == BS_DEFAULT)
+                window->bg_color = (unsigned int) HONEY_COLOR_BUTTON_DEFAULT;
+
+            if (lButtonState00 == BS_FOCUS)
+                window->bg_color = (unsigned int) HONEY_COLOR_BUTTON_FOCUS_BG;
+
+            if (lButtonState00 == BS_DISABLED)
+                window->bg_color = (unsigned int) HONEY_COLOR_BUTTON_DISABLED;
+            
+            // #todo We have more state to cover
+            // ...  
+        }
+
         // Redraw the background rectangle
         // Respect the ROP added during the creation phase
         rectBackbufferDrawRectangle ( 

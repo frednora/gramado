@@ -391,14 +391,18 @@ editorProcedure(
     case MSG_KEYDOWN:
         //printf("editor: MSG_KEYDOWN\n");
         switch (long1) {
-            case VK_RETURN: printf("Editor: MSG_KEYDOWN VK_RETURN\n"); break;
+            case VK_RETURN: 
+                printf("Editor: MSG_KEYDOWN VK_RETURN\n"); 
+                break;
         };
         break;
 
     case MSG_KEYUP:
         //printf("editor: MSG_KEYUP\n");
          switch (long1) {
-            case VK_RETURN: printf("Editor: MSG_KEYUP VK_RETURN\n"); break;
+            case VK_RETURN: 
+                printf("Editor: MSG_KEYUP VK_RETURN\n");
+                break;
         };
         break;
 
@@ -832,10 +836,6 @@ int editor_initialize(int argc, char *argv[])
     cursor_x_max = ((w_width/8)  -1);
     cursor_y_max = ((w_height/8) -1);
 
-// >> Style: design-time identity. (unsigned long)
-// Defines window type and decorations/features.
-    unsigned long mw_style = WS_APP;
-
 // >> Status: interaction/activation. (int)
 // Indicates focus, active/inactive, and user engagement.
     unsigned long mw_status = WINDOW_STATUS_ACTIVE;
@@ -843,6 +843,10 @@ int editor_initialize(int argc, char *argv[])
 // >> State: runtime condition. (int)
 // Tracks current behavior (minimized, maximized, fullscreen, etc).
     unsigned long mw_state = WINDOW_STATE_NULL;
+
+// >> Style: design-time identity. (unsigned long)
+// Defines window type and decorations/features.
+    unsigned long mw_style = WS_APP;
 
 // Create main window
     main_window = 
@@ -862,11 +866,9 @@ int editor_initialize(int argc, char *argv[])
         printf("editor.bin: main_window failed\n");
         goto fail;
     }
-
-    //#debug
     gws_refresh_window(client_fd, main_window);
 
-// Label.
+// Label
 // Text inside the main window.
 // Right below the title bar.
 // Right above the client window.
@@ -883,8 +885,7 @@ int editor_initialize(int argc, char *argv[])
         (unsigned long) text1_color,
         text1_string );
 
-    //#debug
-    gws_refresh_window(client_fd, main_window);
+    //gws_refresh_window(client_fd, main_window);
 // -----------------------------
 
     // Local.
@@ -922,8 +923,7 @@ int editor_initialize(int argc, char *argv[])
         goto fail;
     }
 
-    //#debug
-    gws_refresh_window(client_fd, addressbar_window);
+    //gws_refresh_window(client_fd, addressbar_window);
 
 
 // Text inside the address bar.
@@ -937,8 +937,7 @@ int editor_initialize(int argc, char *argv[])
             (unsigned long) COLOR_BLACK,
             text2_string );
     }
-    //#debug
-    gws_refresh_window (client_fd, addressbar_window);
+    //gws_refresh_window (client_fd, addressbar_window);
 
 // Save
     cwAddressBar.l = (( lWi.cr_width/8 )*2);
@@ -972,15 +971,13 @@ int editor_initialize(int argc, char *argv[])
         printf("editor.bin: savebutton_window failed\n");
         goto fail;
     }
-    //#debug
-    gws_refresh_window (client_fd, savebutton_window);
+    //gws_refresh_window (client_fd, savebutton_window);
 
 // Save button
     cwButton.l = (( lWi.cr_width/8 )*7) -4;
     cwButton.t = 4;
     cwButton.w = (( lWi.cr_width/8 )*1);
     cwButton.h = 24;
-
 
 //
 // == Client window =======================
@@ -996,7 +993,6 @@ int editor_initialize(int argc, char *argv[])
 // and the server will save it into the text buffer 
 // in the window structure.
 
-
 /*
 
  // #todo: Get the client window's info.
@@ -1004,8 +1000,7 @@ int editor_initialize(int argc, char *argv[])
 
     struct gws_window_info_d *wi;
     wi = (void*) malloc( sizeof( struct gws_window_info_d ) );
-    if( (void*) wi == NULL )
-    {
+    if ( (void*) wi == NULL ){
         printf("terminal: wi\n");
         while(1){}
     }

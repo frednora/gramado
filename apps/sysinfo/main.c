@@ -13,10 +13,12 @@
 
 // Globals
 struct gws_display_d *Display;
+
 static int main_window    = -1;
 static int refresh_button = -1;
 static int close_button   = -1;
 static int default_responder = -1;
+
 
 // Cached client area
 static unsigned long cr_left   = 0;
@@ -24,11 +26,33 @@ static unsigned long cr_top    = 0;
 static unsigned long cr_width  = 0;
 static unsigned long cr_height = 0;
 
+
+static void query_client_area(int fd);
+static void draw_label(int fd, int x, int y, const char *label, const char *value);
+static void draw_system_info(int fd, int base_x, int base_y, int line_h);
+static void update_children(int fd);
+static void set_default_responder(int wid);
+static void trigger_default_responder(int fd);
+static void switch_responder(int fd);
+
+static void exitProgram(int fd);
+
+static int 
+systemProcedure(
+    int fd, 
+    int event_window, 
+    int event_type,
+    unsigned long long1, 
+    unsigned long long2 );
+
+static void pump(int fd);
+
 // ----------------------------------------------------
 // Helpers
 // ----------------------------------------------------
 
-static void query_client_area(int fd) {
+static void query_client_area(int fd) 
+{
     struct gws_window_info_d wi;
     gws_get_window_info(fd, main_window, &wi);
     cr_left   = wi.cr_left;
@@ -37,13 +61,15 @@ static void query_client_area(int fd) {
     cr_height = wi.cr_height;
 }
 
-static void draw_label(int fd, int x, int y, const char *label, const char *value) {
+static void draw_label(int fd, int x, int y, const char *label, const char *value) 
+{
     char line[256];
     sprintf(line, "%s: %s", label, value);
     gws_draw_text(fd, main_window, x, y, COLOR_BLACK, line);
 }
 
-static void draw_system_info(int fd, int base_x, int base_y, int line_h) {
+static void draw_system_info(int fd, int base_x, int base_y, int line_h) 
+{
     struct utsname un;
     uname(&un);
 
@@ -78,12 +104,14 @@ static void draw_system_info(int fd, int base_x, int base_y, int line_h) {
 // Worker: update children on paint
 // ----------------------------------------------------
 
-static void update_children(int fd) {
+static void update_children(int fd) 
+{
     query_client_area(fd);
 
     unsigned long button_w = cr_width / 5;
     unsigned long button_h = cr_height / 10;
-    if (button_h < 32) button_h = 32;
+    if (button_h < 32)
+        button_h = 32;
 
     unsigned long label_y   = 20;
     unsigned long metrics_x = 20;
@@ -95,52 +123,128 @@ static void update_children(int fd) {
     unsigned long close_x       = (3 * cr_width / 4) - (button_w / 2);
     unsigned long buttons_y     = bottom_band_y;
 
+
+// Redraw raw main window (first time)
     gws_redraw_window(fd, main_window, TRUE);
 
-    gws_draw_text(fd, main_window, 20, label_y, COLOR_BLACK, "System Information:");
+// Redraw main label
+    gws_draw_text(
+        fd, 
+        main_window, 
+        20, label_y, 
+        COLOR_BLACK, "System Information:");
 
+// ?
     draw_system_info(fd, metrics_x, metrics_y, line_h);
 
+// Change refresh button
     gws_change_window_position(fd, refresh_button, refresh_x, buttons_y);
     gws_resize_window(fd, refresh_button, button_w, button_h);
-    gws_redraw_window(fd, refresh_button, TRUE);
+    gws_redraw_window(fd, refresh_button, FALSE);
+    //gws_redraw_window(fd, refresh_button, TRUE);
 
+//  Change close button
     gws_change_window_position(fd, close_button, close_x, buttons_y);
     gws_resize_window(fd, close_button, button_w, button_h);
-    gws_redraw_window(fd, close_button, TRUE);
+    gws_redraw_window(fd, close_button, FALSE);
+    //gws_redraw_window(fd, close_button, TRUE);
 
+// Refresh main window (again)
     gws_refresh_window(fd, main_window);
 }
 
-static void trigger_default_responder(int fd) {
+static void set_default_responder(int wid)
+{
+    if (wid < 0)
+        return;
+    default_responder = wid;
+}
+
+static void trigger_default_responder(int fd) 
+{
     if (default_responder == refresh_button) {
         update_children(fd);
     } else if (default_responder == close_button) {
-        gws_destroy_window(fd, refresh_button);
-        gws_destroy_window(fd, close_button);
-        gws_destroy_window(fd, main_window);
-        exit(0);
+
+        exitProgram(fd);
+        //gws_destroy_window(fd, refresh_button);
+        //gws_destroy_window(fd, close_button);
+        //gws_destroy_window(fd, main_window);
+        //exit(0);
     }
+}
+
+// Toggle between refresh_button and close_button
+static void switch_responder(int fd)
+{
+    if (default_responder == refresh_button) {
+        set_default_responder(close_button);
+        gws_set_focus(fd, close_button);
+    } else {
+        set_default_responder(refresh_button);
+        gws_set_focus(fd, refresh_button);
+    }
+}
+
+static void exitProgram(int fd)
+{
+    if (fd<0)
+        return;
+    gws_destroy_window(fd, refresh_button);
+    gws_destroy_window(fd, close_button);
+    gws_destroy_window(fd, main_window);
+    exit(0);
 }
 
 // ----------------------------------------------------
 // Procedure: handles events
 // ----------------------------------------------------
 
-static int systemProcedure(int fd, int event_window, int event_type,
-                           unsigned long long1, unsigned long long2) {
-    if (fd < 0 || event_window < 0 || event_type < 0) return -1;
+static int 
+systemProcedure(
+    int fd, 
+    int event_window, 
+    int event_type,
+    unsigned long long1, 
+    unsigned long long2 ) 
+{
+    if (fd < 0 || event_window < 0 || event_type < 0)
+    {
+        return -1;
+    }
 
-    switch (event_type) {
+    switch (event_type) 
+    {
+
     case MSG_KEYDOWN:
         switch (long1) {
-        case VK_RETURN: trigger_default_responder(fd); break;
-        case 'R': case 'r': update_children(fd); break;
-        case 'C': case 'c':
-            gws_destroy_window(fd, refresh_button);
-            gws_destroy_window(fd, close_button);
-            gws_destroy_window(fd, main_window);
-            exit(0);
+
+        // First responder
+        case VK_RETURN: 
+            trigger_default_responder(fd); 
+            break;
+
+        // Refresh
+        case 'R': 
+        case 'r': 
+            update_children(fd); 
+            break;
+
+        // Cancel
+        case 'C': 
+        case 'c':
+            exitProgram(fd);
+            //gws_destroy_window(fd, refresh_button);
+            //gws_destroy_window(fd, close_button);
+            //gws_destroy_window(fd, main_window);
+            //exit(0);
+            break;
+
+        // #test
+        case VK_TAB: 
+            //printf("TAB\n");
+            switch_responder(fd);
+            break;
         }
         break;
 
@@ -151,19 +255,22 @@ static int systemProcedure(int fd, int event_window, int event_type,
 
     case GWS_MouseClicked:
         if ((int)long1 == refresh_button) update_children(fd);
-        if ((int)long1 == close_button) {
-            gws_destroy_window(fd, refresh_button);
-            gws_destroy_window(fd, close_button);
-            gws_destroy_window(fd, main_window);
-            exit(0);
+        if ((int)long1 == close_button) 
+        {
+            exitProgram(fd);
+            //gws_destroy_window(fd, refresh_button);
+            //gws_destroy_window(fd, close_button);
+            //gws_destroy_window(fd, main_window);
+            //exit(0);
         }
         break;
 
     case MSG_CLOSE:
-        gws_destroy_window(fd, refresh_button);
-        gws_destroy_window(fd, close_button);
-        gws_destroy_window(fd, main_window);
-        exit(0);
+        exitProgram(fd);
+        //gws_destroy_window(fd, refresh_button);
+        //gws_destroy_window(fd, close_button);
+        //gws_destroy_window(fd, main_window);
+        //exit(0);
         break;
 
     case MSG_PAINT:
@@ -177,7 +284,8 @@ static int systemProcedure(int fd, int event_window, int event_type,
 // Pump
 // ----------------------------------------------------
 
-static void pump(int fd) {
+static void pump(int fd) 
+{
     struct gws_event_d event;
     struct gws_event_d *e =
         (struct gws_event_d *) gws_get_next_event(fd, main_window, &event);
@@ -192,11 +300,15 @@ static void pump(int fd) {
 // Main
 // ----------------------------------------------------
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) 
+{
+
+    // Display
     Display = gws_open_display("display:name.0");
     if (!Display) return EXIT_FAILURE;
     int fd = Display->fd;
 
+    // Screen
     unsigned long screen_w = gws_get_system_metrics(1);
     unsigned long screen_h = gws_get_system_metrics(2);
     //unsigned long win_w = screen_w / 2;
@@ -206,13 +318,33 @@ int main(int argc, char *argv[]) {
     unsigned long win_x = (screen_w - win_w) / 2;
     unsigned long win_y = (screen_h - win_h) / 2;
 
-    main_window = gws_create_window(fd, WT_OVERLAPPED,
-        WINDOW_STATUS_ACTIVE, WINDOW_STATE_NULL,
-        "System Information", win_x, win_y, win_w, win_h,
-        0, 0x0000, COLOR_WHITE, COLOR_GRAY);
+// Main window
 
+    main_window = 
+    gws_create_window(
+        fd, 
+        WT_OVERLAPPED,            // Window type
+        WINDOW_STATUS_ACTIVE,     // Window status / button state
+        WINDOW_STATE_NULL,        // Window state
+        "System Information", 
+        win_x, win_y, win_w, win_h,
+        WS_APP,   // Window style
+        0x0000, COLOR_WHITE, COLOR_GRAY );
+
+    if (main_window < 0){
+        printf("on main_window\n");
+        exit(0);
+    }
     gws_refresh_window(fd, main_window);
+
+//-----------------------------
+
     query_client_area(fd);
+
+
+//
+// Buttons
+//
 
     // Buttons
     unsigned long button_w = cr_width / 5;
@@ -222,16 +354,21 @@ int main(int argc, char *argv[]) {
     unsigned long close_x   = (3 * cr_width / 4) - (button_w / 2);
     unsigned long buttons_y = cr_height - (button_h + 20);
 
+    unsigned long ButtonState = BS_DEFAULT;
+        //BS_FOCUS;  //BS_DEFAULT,  //BS_PROGRESS, //BS_HOVER, //BS_PRESSED, //BS_DISABLED, 
+
     refresh_button = 
         gws_create_window(
             fd, 
-            WT_BUTTON, 
-            BS_DEFAULT,  //BS_PROGRESS, //BS_FOCUS,  //BS_HOVER, //BS_PRESSED, //BS_DISABLED,  
-            1,
+            WT_BUTTON,    // Window type
+            ButtonState,  // Window status / Button state
+            1,            // Window state
             "Refresh", 
             refresh_x, buttons_y, button_w, button_h,
-            main_window, 0, COLOR_GRAY, COLOR_GRAY);
-    gws_refresh_window(fd, refresh_button);
+            main_window, 
+            0,  // No style 
+            COLOR_GRAY, COLOR_GRAY);
+    //gws_refresh_window(fd, refresh_button);
 
     // Create Close button
     close_button = gws_create_window(
@@ -242,14 +379,21 @@ int main(int argc, char *argv[]) {
         "Close",
         close_x, buttons_y, button_w, button_h,
         main_window, 0, COLOR_GRAY, COLOR_GRAY );
-    gws_refresh_window(fd, close_button);
+    //gws_refresh_window(fd, close_button);
 
 
     // Default responder
-    default_responder = refresh_button;
+    //set_default_responder(refresh_button);
+    //default_responder = refresh_button;
 
-    // Main window active
+
+    set_default_responder(refresh_button);
+
+// Main window active
     gws_set_active(fd, main_window);
+    gws_set_focus(fd, refresh_button);
+
+// Refresh. (again)
     gws_refresh_window(fd, main_window);
 
     // ================================

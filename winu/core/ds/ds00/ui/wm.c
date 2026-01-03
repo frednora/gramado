@@ -2560,6 +2560,10 @@ void set_focus(struct gws_window_d *window)
 
 // Save
     old_owner_kbd_owner = keyboard_owner;
+
+
+
+
 // Set
     //keyboard_owner = (void*) window;
 // Parent
@@ -2614,7 +2618,9 @@ void set_focus(struct gws_window_d *window)
         // Setup apparence and draw.
 
         // The 'window status' is used as 'button state'
-        if (window->type == WT_BUTTON){
+        if (window->type == WT_BUTTON)
+        {
+            // This way doring the redraw, the bg and the borders will be different.
             window->status = BS_FOCUS;
         }
         redraw_window(window,TRUE);
@@ -2627,9 +2633,20 @@ void set_focus(struct gws_window_d *window)
         {
             if (old_owner_kbd_owner->magic == 1234)
             {
+
+                // Changine
+
+                // Old was editbox
                 if ( old_owner_kbd_owner->type == WT_EDITBOX ||
                      old_owner_kbd_owner->type == WT_EDITBOX_MULTIPLE_LINES )
                 {
+                    redraw_window(old_owner_kbd_owner,TRUE);
+                }
+
+                // Old was button
+                if (old_owner_kbd_owner->type == WT_BUTTON)
+                {
+                    window->status = BS_DEFAULT;  // Button status
                     redraw_window(old_owner_kbd_owner,TRUE);
                 }
             }

@@ -39,7 +39,6 @@ int window_has_transparence(void){
     return (int) __config_use_transparency;
 }
 
-
 struct gws_window_d *get_parent_window(struct gws_window_d *w)
 {
     struct gws_window_d *p;
