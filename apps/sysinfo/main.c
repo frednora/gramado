@@ -364,14 +364,13 @@ int main(int argc, char *argv[])
     unsigned long close_x   = (3 * cr_width / 4) - (button_w / 2);
     unsigned long buttons_y = cr_height - (button_h + 20);
 
-    unsigned long ButtonState = BS_DEFAULT;
-        //BS_FOCUS;  //BS_DEFAULT,  //BS_PROGRESS, //BS_HOVER, //BS_PRESSED, //BS_DISABLED, 
 
+// Create Refresh button
     refresh_button = 
         gws_create_window(
             fd, 
             WT_BUTTON,    // Window type
-            ButtonState,  // Window status / Button state
+            BS_DEFAULT,   // Window status / Button state
             1,            // Window state
             "Refresh", 
             refresh_x, buttons_y, button_w, button_h,
@@ -380,7 +379,7 @@ int main(int argc, char *argv[])
             COLOR_GRAY, COLOR_GRAY);
     //gws_refresh_window(fd, refresh_button);
 
-    // Create Close button
+// Create Close button
     close_button = gws_create_window(
         fd,
         WT_BUTTON,
@@ -391,21 +390,16 @@ int main(int argc, char *argv[])
         main_window, 0, COLOR_GRAY, COLOR_GRAY );
     //gws_refresh_window(fd, close_button);
 
-
-    // Default responder
-    //set_default_responder(refresh_button);
-    //default_responder = refresh_button;
-
-
+// Default responder
     set_default_responder(refresh_button);
+    //set_default_responder(close_button);
 
 // Main window active
     gws_set_active(fd, main_window);
-    gws_set_focus(fd, refresh_button);
+   gws_set_focus(fd, refresh_button);
 
 // Refresh. (again)
     gws_refresh_window(fd, main_window);
-
 
 /*
 // ================================

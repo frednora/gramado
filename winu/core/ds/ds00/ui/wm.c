@@ -2533,11 +2533,17 @@ void __set_foreground_tid(int tid)
     sc82 ( 10011, tid, tid, tid );
 }
 
-// Set the keyboard_owner window.
+// Updates the keyboard owner and foreground thread.
 void set_focus(struct gws_window_d *window)
 {
-    struct gws_window_d *old_owner_kbd_owner;
-    struct gws_window_d *p;  // Parent window.
+
+// Target
+    struct gws_window_d *target;
+    struct gws_window_d *p;  // Parent window
+
+// Old
+    struct gws_window_d *old;
+
     int tid = -1;
     int SetForeground=FALSE;
 
@@ -2552,118 +2558,132 @@ void set_focus(struct gws_window_d *window)
         return;
     }
 
-// We alredy have the focus.
-    if (window == keyboard_owner){
-        window->enabled = TRUE;  // We can receive input again.
-        return;
+    // We need to redraw windows 
+    // only after the reactivation of the parent
+    int RedrawParent = FALSE;
+    int RedrawOld = FALSE;
+    int RedrawTarget = FALSE;
+
+// ======================================================
+// old
+
+    int IsOldValid = TRUE;
+
+    // Get current keyboard owner
+    old = keyboard_owner;
+
+    if ((void *) old == NULL)
+        IsOldValid = FALSE;
+    if (old->magic != 1234)
+        IsOldValid = FALSE;
+
+    // Unset focus
+    if (IsOldValid == TRUE)
+    {
+        // Now we have a valid old focus
+        if (old->type == WT_BUTTON){
+            old->status = BS_DEFAULT;
+        }
+        RedrawOld = TRUE;
     }
 
-// Save
-    old_owner_kbd_owner = keyboard_owner;
+// ======================================================
+// new
 
+// Get the target window
+    target = window;
 
-
-
-// Set
-    //keyboard_owner = (void*) window;
 // Parent
-    p = (void*) window->parent;
-
-// -----------------------------------------
-// EDIT BOX:
-// Redraw it with a new style.
-// The routine will need to know if 
-// we're the keyboard owner to select the style.
-// IN: window, show
-    if ( window->type == WT_SIMPLE ||
-         window->type == WT_EDITBOX || 
-         window->type == WT_EDITBOX_MULTIPLE_LINES || 
-         window->type == WT_BUTTON )
+    int IsParentValid = FALSE;
+    int IsParentActive = FALSE;
+    p = (void*) target->parent;
+    // Is parent valid?
+    if ((void*) p != NULL)
     {
-        // The new owner:
-        // Update the keyboard owner.
-        // Repaint the new owner that has the focus.
-        // Now the new owner has focus and it will ne painted
-        // with a different style.
+        if (p->magic == 1234)
+            IsParentValid = TRUE;
+    }
+    // Is parent active?
+    if (p == active_window)
+        IsParentActive = TRUE;
+    if (p->type != WT_OVERLAPPED)
+        IsParentActive = FALSE;
 
-        // #test: 
-        // Set the parent as the active window.
-        if (p != NULL)
+// The old was invalid
+    struct gws_window_d *child_list;
+
+// Target
+    if ( target->type == WT_SIMPLE ||
+         target->type == WT_EDITBOX || 
+         target->type == WT_EDITBOX_MULTIPLE_LINES || 
+         target->type == WT_BUTTON )
+    {
+        target->enabled = TRUE;
+        if (target->type == WT_BUTTON){
+            target->status = BS_FOCUS;
+        }
+
+        if (IsParentActive != TRUE)
         {
-            if (p->magic == 1234)
-            {
-                if (p != active_window)
-                {
-                    if (p->type == WT_OVERLAPPED)
-                    {
-                        set_active_window(p);
-
-                        // #bugbug
-                        // Put it in top/first
-                        // will mess up the tiling when we press F5.
-                        //set_top_window(p);
-                        //set_first_window(p);
-
-                        redraw_window(p,TRUE);
-                    }
-                }
-            }
+            set_active_window(p);
+            RedrawParent = TRUE;
         }
 
         // Set the keyboard owner
-        keyboard_owner = (void*) window;
+        keyboard_owner = (void*) target;
         // Set the mouse owner
-        mouse_owner = (void*) window;
+        mouse_owner = (void*) target;
 
-        // Setup apparence and draw.
+        target->enabled = TRUE;
+        RedrawTarget = TRUE;
 
-        // The 'window status' is used as 'button state'
-        if (window->type == WT_BUTTON)
+        /*
+        if (IsParentValid == TRUE)
         {
-            // This way doring the redraw, the bg and the borders will be different.
-            window->status = BS_FOCUS;
-        }
-        redraw_window(window,TRUE);
-
-        // The old owner
-        // Repaint the old owner.
-        // Now the old owner has no focus and it will ne painted
-        // with a different style.
-        if ((void*) old_owner_kbd_owner != NULL)
-        {
-            if (old_owner_kbd_owner->magic == 1234)
+            // #todo: Activate?
+            child_list = p->child_list;
+            while ((void*) child_list != TRUE)
             {
-
-                // Changine
-
-                // Old was editbox
-                if ( old_owner_kbd_owner->type == WT_EDITBOX ||
-                     old_owner_kbd_owner->type == WT_EDITBOX_MULTIPLE_LINES )
+                if (child_list->magic == 1234)
                 {
-                    redraw_window(old_owner_kbd_owner,TRUE);
+                    // #todo: Not for overlapped window.
+                    //redraw_window(child_list,TRUE);
                 }
+                // Get next child window
+                child_list = child_list->child_list;
+            };
+        }
+        */
+        
+        // Redraw the old and the target
 
-                // Old was button
-                if (old_owner_kbd_owner->type == WT_BUTTON)
-                {
-                    window->status = BS_DEFAULT;  // Button status
-                    redraw_window(old_owner_kbd_owner,TRUE);
-                }
+        // Redraw old
+        if (RedrawOld == TRUE)
+        {
+            if ( old->type == WT_BUTTON ||
+                 old->type == WT_EDITBOX_SINGLE_LINE || 
+                 old->type == WT_EDITBOX_MULTIPLE_LINES ||
+                 old->type == WT_ICON )
+            {
+                redraw_window(old,TRUE);
             }
         }
 
-        window->enabled = TRUE; // Now we can receive input again.
+        // Redraw target
+        if (RedrawTarget == TRUE)
+        {
+            if ( target->type == WT_BUTTON ||
+                 target->type == WT_EDITBOX_SINGLE_LINE || 
+                 target->type == WT_EDITBOX_MULTIPLE_LINES ||
+                 target->type == WT_ICON )
+            {
+                redraw_window(target,TRUE);
+            }
+        }
+
         SetForeground = TRUE;
     }
 
-// -----------------------------------------
-// BUTTON:
-// Buttons also need to be repainted with a different style.
-// This new style tell us that the button is the first responter
-// in the case of user pressing the [ENTER] key.
-// ...
-
-// -----------------------------------------
 // ...
 
 // If application itself registers a second TID in its window structure, 
@@ -2674,12 +2694,12 @@ void set_focus(struct gws_window_d *window)
 // That's the tid associated with this window.
     if (SetForeground)
     {
-        if (window->client_delegates_foreground == TRUE){
-            tid = (int) window->delegate_tid;
+        if (target->client_delegates_foreground == TRUE){
+            tid = (int) target->delegate_tid;
         } else {
-            tid = (int) window->client_tid;
+            tid = (int) target->client_tid;
         };
-        
+
         if (tid < 0){
             return;
         }
@@ -5067,6 +5087,8 @@ void set_active_window(struct gws_window_d *window)
     if (window->magic!=1234){
         return;
     }
+    if (window->type != WT_OVERLAPPED)
+        return;
 
 // Is it already the active window.
     if (window == active_window){
