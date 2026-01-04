@@ -634,6 +634,22 @@ struct rtl_event_d *rtl_next_event (void)
     return (struct rtl_event_d *) &rtlEvent;
 }
 
+// Configure some message system behaviour.
+// Using service 912.
+int rtl_msgctl(unsigned long option, unsigned long extra_value)
+{
+    int rv = -1;
+
+    rv = 
+    (int) sc80(
+        912,          // syscall number
+        option,       // option      (service number)
+        extra_value,  // extra value (sub-service)
+        0 );          // subservice
+
+    return (int) rv;
+}
+
 
 // P (Proberen) testar.
 // Pega o valor do spinlock principal.

@@ -390,9 +390,13 @@ editorProcedure(
 
     case MSG_KEYDOWN:
         //printf("editor: MSG_KEYDOWN\n");
-        switch (long1) {
+        switch (long1) 
+        {
             case VK_RETURN: 
                 printf("Editor: MSG_KEYDOWN VK_RETURN\n"); 
+                break;
+            case VK_TAB:
+                printf("editor.bin: VK_TAB received\n");
                 break;
         };
         break;
@@ -1071,6 +1075,10 @@ int editor_initialize(int argc, char *argv[])
     lseek( fileno(stdin), 0, 1000);
     // Atualiza as coisas em ring3 e ring0.
     rewind(stdin);
+
+
+// Lets say to the kernel that we want to receive the TAB event.
+    rtl_msgctl(2000,2000);
 
 
 /*

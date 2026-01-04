@@ -1408,7 +1408,7 @@ int main( int argc, char **argv)
         goto ServerLoop;
 
 // Next priority: Headless mode.
-// see: msgloop.c
+// see: inittask.c
     } else if (fHeadlessMode) {
         Init.is_headless = TRUE;
         msgloop_RunServer_HeadlessMode();
@@ -1474,7 +1474,7 @@ ServerLoop:
 // Idle thread loop.
 // Now the init process enters in 'server mode'.
 // Getting system messages from it's queue in the control thread.
-// See: msgloop.c
+// See: inittask.c
     int eventloop_status = -1;
     if (fRunEventLoop == TRUE){
         eventloop_status = (int) msgloop_RunServer();

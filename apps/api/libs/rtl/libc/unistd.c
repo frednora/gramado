@@ -1,10 +1,6 @@
-/*
- * File: unistd.c
- *     Unix standard.
- *     ... and maybe posix stuff.
- * History:
- *     2019 - Created by Fred Nora.
- */
+// unistd.c
+// Unix standard and maybe posix stuff.
+// 2019 - Created by Fred Nora.
 
 #include <sys/types.h>  
 #include <errno.h>
@@ -645,6 +641,16 @@ pid_t getppid(void)
 // 32bit value.
     return (pid_t) (ul_value & 0xFFFFFFFF);
 }
+
+// tid_t
+int gettid(void)
+{
+    unsigned long ul_value=0;
+    //ul_value = (unsigned long) gramado_system_call(87, 0, 0, 0);
+    ul_value = (unsigned long) sc80(87, 0, 0, 0);
+// 32bit value
+    return (pid_t) (ul_value & 0xFFFFFFFF);
+};
 
 /*
 Get terminal foreground process group.

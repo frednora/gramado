@@ -1,28 +1,16 @@
-/*
- * File: unistd.h
- *
- *     Standard symbolic constants and types.
- *
- * History:
- *     2018 - Created by Fred Nora.
- *     2020 - New functions.
- */
- 
+// unistd.h
+// Standard symbolic constants and types.
+// 2018 - Created by Fred Nora.
 
 #ifndef _UNISTD_H
 #define _UNISTD_H 
 
-
 #include <sys/types.h>
 
-
 // The <unistd.h> header shall declare the following external variables:
-
 extern char **environ;
 extern char  *optarg;
 extern int    opterr, optind, optopt;
-
-
 
 /*
  In the C and C++ programming languages, unistd.h is the name 
@@ -178,15 +166,14 @@ uid_t geteuid (void);
 int setegid(gid_t egid);
 gid_t getegid(void);
 
-
 // pid
 pid_t getpid (void);
 
-//ppid
+// ppid
 pid_t getppid (void);
 
-
-
+// tid
+int gettid(void);
 
 int dup (int oldfd);
 int dup2 (int oldfd, int newfd);
@@ -196,7 +183,6 @@ int dup3 (int oldfd, int newfd, int flags);
 int nice (int inc);
 
 int pause (void);
-
 
 //SVr4, BSD, POSIX.1-2001.
 int mkdir (const char *pathname, mode_t mode);

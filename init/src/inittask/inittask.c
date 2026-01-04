@@ -518,8 +518,8 @@ int msgloop_RunServer(void)
         printf("msgloop_RunServer: Loop failed\n");
         goto fail;
     }
-    // It's time o quit the init process.
-    return 0;
+    return 0;  // ok, return to main().
+
 fail:
     return (int) -1;
 }

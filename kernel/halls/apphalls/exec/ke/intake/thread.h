@@ -871,7 +871,7 @@ void thread_show_profiler_info(void);
 int thread_profiler(int service);
 
 int sys_notify_event(tid_t caller_tid, tid_t target_tid, int event_number);
-int sys_msgctl(tid_t caller_tid, int option);
+int sys_msgctl(tid_t caller_tid, int option, int extra_value);
 
 int 
 link_two_threads( 

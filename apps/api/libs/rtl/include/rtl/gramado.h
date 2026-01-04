@@ -1,4 +1,3 @@
-
 // gramado.h
 // gramado system calls.
 // #bugbug: It is not properly stub routines,
@@ -163,6 +162,10 @@ int rtl_get_event(void);
 
 int xxxScanApplicationQueue2(int index, int restart);
 int rtl_get_event2(int index, int restart);
+
+// Configure some message system behaviour.
+// Using service 912.
+int rtl_msgctl(unsigned long option, unsigned long extra_value);
 
 // ===========================================================
 

@@ -406,8 +406,22 @@ int main(int argc, char *argv[])
 // Refresh. (again)
     gws_refresh_window(fd, main_window);
 
-    // ================================
-    // Event loop
+
+/*
+// ================================
+// Lets say to the kernel that we want to receive the TAB event.
+    sc80(
+        912,    // syscall number
+        2000,   // option
+        2000,   // extra values
+        0  );   // not used
+*/
+// Lets say to the kernel that we want to receive the TAB event.
+    // rtl_msgctl(2000,2000);
+
+// ================================
+// Event loop
+
     while (1) {
         // 1. Pump events from Display Server
         pump(fd);

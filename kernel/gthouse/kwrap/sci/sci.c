@@ -1707,9 +1707,12 @@ void *sci0 (
 // IN:
 // + caller tid
 // + option number
+// + extra value number
     if (number == 912){
         return (void*) sys_msgctl( 
-            (tid_t) current_thread, (int) (arg2 & 0xFFFFFFFF) );
+            (tid_t) current_thread, 
+            (int) (arg2 & 0xFFFFFFFF),
+            (int) (arg3 & 0xFFFFFFFF) );
     }
 
 // 913 - Sleep if socket is empty

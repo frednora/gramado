@@ -804,10 +804,19 @@ int sys_notify_event(tid_t caller_tid, tid_t target_tid, int event_number)
 }
 
 // sci0: Service 912
-int sys_msgctl(tid_t caller_tid, int option)
+// IN:
+// + caller tid
+// + option number
+// + extra value number
+
+int sys_msgctl(tid_t caller_tid, int option, int extra_value)
 {
     struct thread_d *caller_thread;
     int fIsDisplayServer = FALSE;
+
+
+    // #debug
+    //printk("sys_msgctl: %d\n", option);
 
 // -----------------------------------------------------
 // Caller
@@ -844,7 +853,12 @@ int sys_msgctl(tid_t caller_tid, int option)
         break;
 
     // Input flags 
+
+// By setting THREAD_WANTS_TAB, you’re telling the kernel: 
+// “Don’t consume TAB at the display server level — deliver it directly 
+// to this thread’s input queue.”
     case 2000: // Want TAB 
+        printk("sys_msgctl: 2000\n");
         caller_thread->msgctl.input_flags |= THREAD_WANTS_TAB; 
         break; 
     case 2001: // Clear TAB 

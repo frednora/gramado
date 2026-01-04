@@ -60,6 +60,9 @@ static void sched_quick_and_dirty_load_balancer(void);
 // Quick and dirty load balancer
 // No parameters, uses global SchedulerInfo.
 // If ready count > 3, lower InitThread quantum.
+// When the system is bootstrapping into ring 3 (user mode), 
+// the InitThread is the very first process that sets up the environment. 
+// At that moment, it really does need full attention.
 static void sched_quick_and_dirty_load_balancer(void)
 {
     int ReadyCount = SchedulerInfo.rr_ready_threads_in_round;
@@ -79,7 +82,6 @@ static void sched_quick_and_dirty_load_balancer(void)
         InitThread->quantum = QUANTUM_NORMAL_BALANCED;
     }
 }
-
 
 static void __sched_notify_parent(struct thread_d *thread, int event_number)
 {
@@ -465,12 +467,19 @@ For each thread:
    applies special rules for foreground and display server threads, 
    adjusts quantum if credits are high.
 */
+// + Build the p1q queue.
+// + Setup p1q as the currentq, used by the task switcher.
+// 
+// Steps:
+// + Initialization checks
+// + Idle thread setup
+// + Queue construction
+// + Thread state handling
+// + Quantum balancing
+// + Counters and statistics
 
 static tid_t __scheduler_rr(unsigned long sched_flags)
 { 
-// + Build the p1q queue.
-// + Setup p1q as the currentq, used by the task switcher.
-
     struct thread_d *TmpThread;
 
     struct thread_d *Idle;
@@ -586,7 +595,7 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
         panic("sched: Idle->tid != INIT_TID\n");
 
 // Wake up init thread.
-    do_thread_ready(TmpThread->tid);
+    do_thread_ready(Idle->tid);
     //if (jiffies >= Idle->wake_jiffy)
         //do_thread_ready(TmpThread->tid);
 
