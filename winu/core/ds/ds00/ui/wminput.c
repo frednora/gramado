@@ -328,8 +328,8 @@ wmProcessKeyboardEvent(
         if (long1 == '\r') yellow_status("ASCII CR");
         */
 
-        //if (long1 == '\n')      yellow_status("long1 = ASCII LF ");
-        //if (long2 == VK_RETURN) yellow_status("long2 = VK_RETURN");
+        if (long1 == VK_TAB) 
+            yellow_status("long1 = VK_TAB");
 
         // Print a char into the window with focus.
         // It needs to be an editbox?

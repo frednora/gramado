@@ -112,6 +112,12 @@ ibroker_post_message_to_fg_thread (
     unsigned long long1, 
     unsigned long long2 );
 
+static int
+ibroker_app_wants_event(
+    int tid,
+    int msg,
+    unsigned long vk );
+
 //
 // ================================================
 //
@@ -162,6 +168,8 @@ ibroker_post_message_to_fg_thread (
     if (msg == MSG_KEYDOWN) 
     {
         switch (long1) {
+        // The problem is: 
+        // TAB can end up being delivered to both the display server and the foreground app.
         case VK_TAB:
             SendIt = FALSE;
             if (fg_thread->msgctl.input_flags & THREAD_WANTS_TAB)
@@ -192,6 +200,56 @@ ibroker_post_message_to_fg_thread (
     return (int) rv;
 }
 
+// Check if the foreground app wants this event.
+// Returns TRUE if the app has requested it, FALSE otherwise.
+static int
+ibroker_app_wants_event(
+    int tid,
+    int msg,
+    unsigned long vk )
+{
+    struct thread_d *fg_thread;
+
+    if (msg < 0)
+        return FALSE;
+
+    // Validate foreground thread
+    if (tid < 0 || tid >= THREAD_COUNT_MAX)
+        return FALSE;
+
+    fg_thread = (struct thread_d *) threadList[tid];
+    if ((void*) fg_thread == NULL)
+        return FALSE;
+    if (fg_thread->magic != 1234)
+        return FALSE;
+
+
+// Only check key events for now
+    if (msg == MSG_KEYDOWN) 
+    {
+        switch (vk) {
+        case VK_TAB:
+            if (fg_thread->msgctl.input_flags & THREAD_WANTS_TAB)
+                return TRUE;
+            return FALSE;
+            break;
+
+        //case VK_ESCAPE:
+            //return (fg_thread->msgctl.input_flags & THREAD_WANTS_ESC) ? TRUE : FALSE;
+            //break;
+
+        // Add more keys here (F1..F12, arrows, etc.)
+        }
+    }
+
+/*
+    if (msg == MSG_KEYUP)
+    {
+    }
+*/ 
+
+    return FALSE;
+}
 
 // ---------------------------------------------
 // Plug in a layout
@@ -3310,8 +3368,6 @@ done:
 // It returns
 // 3. Plain keydown → send outward to valid targets
 
-    int fOnlyForTheServer = FALSE;
-
     //if ( alt_status != TRUE && ctrl_status != TRUE && shift_status != TRUE )
     if  (isCombination != TRUE)
     {   
@@ -3403,30 +3459,43 @@ done:
             // #debug
             //printk("vk=%d sc=%d\n",Event_LongVK,Event_LongScanCode);
 
-            if (Event_Message == MSG_KEYDOWN || Event_Message == MSG_KEYUP)
+            // Special tratment for tab key
+            if (Event_LongVK == VK_TAB)
             {
-                // Send tab only to the server
-                //if (Event_LongVK == VK_TAB)
-                    //fOnlyForTheServer = TRUE;
+                int ItWantsTAB = FALSE;
+                ItWantsTAB = 
+                    (int) ibroker_app_wants_event( 
+                        foreground_thread, MSG_KEYDOWN, VK_TAB );
+                if (ItWantsTAB == TRUE)
+                {
+                    // TARGET: GUI APP
+                    ibroker_post_message_to_fg_thread(
+                        Event_Message, 
+                        Event_LongVK, 
+                        Event_LongScanCode );
                 
-                // ...
+                    // Return in the case of TAB events.
+                    // This way we do not send it to the server too.
+                    return 0;
+                }
+
+                // TARGET: DS
+                ibroker_post_message_to_ds(
+                    Event_Message, Event_LongVK, Event_LongScanCode );
+                return 0;
             }
 
+            // For the other events we're still sending for both, app and server.
+
+            // TARGET: GUI APP
+            ibroker_post_message_to_fg_thread(
+                Event_Message, 
+                Event_LongVK, 
+                Event_LongScanCode );
 
             // TARGET: DS
             ibroker_post_message_to_ds(
                 Event_Message, Event_LongVK, Event_LongScanCode );
-
-            // The purpose is feed the terminal emulator.
-            // New behavior: duplicate to foreground thread
-
-            // TARGET: GUI APP
-            if (fOnlyForTheServer != TRUE){
-                ibroker_post_message_to_fg_thread(
-                    Event_Message, 
-                    Event_LongVK, 
-                    Event_LongScanCode );
-            }
         }
 
         // Returns when its not a combination
