@@ -383,7 +383,7 @@ network_send_arp(
     //e1000_send( currentNIC, ARP_TOTAL_SIZE, frame );
     // #test
     // Creating a sender for ethernet packet.
-    ethernet_send( currentNIC, ARP_TOTAL_SIZE, frame );
+    ethernet_send( ARP_TOTAL_SIZE, frame );
 
 // #test
     //kfree(eh);

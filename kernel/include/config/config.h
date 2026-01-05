@@ -1,5 +1,6 @@
 // config.h
 // Config for the Gramado kernel only. Not the whole system.
+// #ps: Do not change anything if you don't know what your are doing.
 // Created by Fred Nora.
 
 #ifndef ____KERNEL_CONFIG_H
@@ -66,7 +67,9 @@
 // Use 'legacy' acceleration on Virtualbox, NOT the Hyper-v acceleration.
 // That was the reason for the issues in DHCP dialog.
 // #todo: See 'Core isolation' in network/firewall configuration.
-#define USE_E1000          0 
+// This device driver is working fine on virtualbox with PIIX3.
+// see: pci.c, e1000hw.c
+#define USE_E1000    0
 
 // #test: Pooling PS2 Keyboard and Mouse.
 // Use pooling instead of interrupts for ps2 devices.
@@ -96,7 +99,7 @@
 // ------------------------------------------------------
 // lapic/ioapic debug.
 // see: kmain.c, apic.c, ioapic.c.
-#define USE_SMP        1
+#define USE_SMP    1
 // #test
 // This is a test yet.
 // >> It works only on Virtualbox using ICH9 chipset. <<

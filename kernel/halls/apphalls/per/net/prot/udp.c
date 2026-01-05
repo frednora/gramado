@@ -605,8 +605,8 @@ network_send_udp (
 // It's because ethernet_send() will put the given data into 
 // the right place.
 
-// Send frame via NIC.
-    ethernet_send( currentNIC, FRAME_SIZE, frame );
+// Send frame via current NIC
+    ethernet_send( FRAME_SIZE, frame );
 
 // #debug
 // Send frame to myself.

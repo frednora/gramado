@@ -133,7 +133,7 @@ ipv4_send (
                  data_lenght );
 
 // Send
-    Status = (int) ethernet_send( currentNIC, FRAME_SIZE, addr );
+    Status = (int) ethernet_send( FRAME_SIZE, addr );
     if (Status<0){
         goto fail;
     }

@@ -17,36 +17,70 @@ NOT resolve IP routing
 // Sending a raw packet.
 // #bugbug
 // For now we're sending it only for intel e1000 nic device.
+// #test #todo
+// device‑agnostic
+// Debugging is easier: 
+// you can start printing interface state (name, MAC, IP) whenever you send, 
+// which helps confirm the stack is using the right interface.
+
 int 
 ethernet_send(
-    struct intel_nic_info_d *dev, 
     size_t len, 
     const char *data )
 {
 
 // #todo
-// NIC Intel device structure.
-    if ((void *) dev == NULL){
-        printk("ethernet_send: dev\n");
-        goto fail;
+// We are wiring the Ethernet layer into the network interface abstraction.
+
+// Grab the current interface 
+    struct net_interface_d *iface;
+
+    iface = CurrentNetworkInterface;
+
+// #test #debug
+    if ((void*)iface == NULL){
+        printk("Invalid interface pointer\n");
     }
+    if (iface->magic != 1234)
+        printk("Invalid interface\n");
+    if (iface->initialized != TRUE)
+        printk("Interface not initialized\n");
 
 // Telling to the network manager that we're gonna send something 
 // a a nic device driver.
 // see: network.c
     network_on_sending();
 
-// Send frame via NIC.
-// IN: nic, frame size, frame pointer.
-    e1000_send( dev, len, data );
+// ========================================
 
-// done:
+    int UseIntel = TRUE;
+    struct intel_nic_info_d *nic_intel;
+    // ...
+
+    if (UseIntel == TRUE)
+    {
+        nic_intel = currentNIC;
+        if ((void *) nic_intel == NULL)
+        {
+            printk("ethernet_send: nic_intel\n");
+            goto fail;
+        }
+        
+        // Send frame via NIC.
+        // IN: nic, frame size, frame pointer.
+        e1000_send( nic_intel, len, data );
+    }
+
+    // #todo: Other devices
+    //if (...){
+    //}
+
+// Done
     return 0;
 
 fail:
     return (int) -1;
 }
-
 
 // Called when sending some raw packet.
 // #ps: We do NOT send, we're called by the sending routines.

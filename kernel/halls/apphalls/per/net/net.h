@@ -435,7 +435,6 @@ void network_test_NIC(void);
 
 void 
 network_send_raw_packet (
-    struct intel_nic_info_d *dev, 
     size_t frame_len, 
     const char *frame_address );
 

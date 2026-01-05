@@ -102,10 +102,8 @@ struct ether_header
 
 int 
 ethernet_send(
-    struct intel_nic_info_d *dev, 
     size_t len, 
     const char *data );
-
 
 int ethernet_on_sending (void);
 

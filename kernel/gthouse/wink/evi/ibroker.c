@@ -659,6 +659,20 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         goto exit_cmp;
     }
 
+    // net-on (same as term00)
+    if ( kstrncmp(cmdline,"net-on",6) == 0 )
+    {
+        networkUnlock();
+        network_initialize_dhcp();
+        goto exit_cmp;
+    }
+    // net-off (same as term00)
+    if ( kstrncmp(cmdline,"net-off",7) == 0 )
+    {
+        networkLock();
+        goto exit_cmp;
+    }
+
 
 // string: Testing string functions.
     if ( kstrncmp(cmdline,"string",6) == 0 )

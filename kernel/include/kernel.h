@@ -307,6 +307,7 @@
 // apphalls/per/net/
 
 // Network
+
 #include "../halls/apphalls/per/net/nports.h"     //(network) Network Ports  (sw)
 #include "../halls/apphalls/per/net/inet.h"
 
@@ -314,6 +315,8 @@
 #include "../halls/apphalls/per/net/socket.h"      //last always
 
 #include "../halls/apphalls/per/net/domain.h"
+
+#include "../halls/apphalls/per/net/ifconfig/netif.h"  // Network interface
 #include "../halls/apphalls/per/net/net.h"     //(network) Gerenciamento de rede.  
 
 // ----------------------

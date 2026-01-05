@@ -2823,10 +2823,9 @@ void *sci2 (
 
     if (number == 22009)
     {
-        if ((void*)currentNIC == NULL)
-            return NULL;
+        //if ((void*)currentNIC == NULL)
+            //return NULL;
         network_send_raw_packet (
-            (struct intel_nic_info_d *) currentNIC, 
             (size_t) arg3,          // Frame lenght
             (const char *) arg2 );  // Frame address
         return NULL;

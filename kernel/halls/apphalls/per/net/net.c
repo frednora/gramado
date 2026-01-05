@@ -586,18 +586,10 @@ void network_test_NIC(void)
 
 void 
 network_send_raw_packet (
-    struct intel_nic_info_d *dev, 
     size_t frame_len, 
     const char *frame_address ) 
 {
-    struct intel_nic_info_d *nic_intel;
-    nic_intel = dev;
 
-// dev
-    if ((void*) nic_intel == NULL)
-       return;
-    if (nic_intel->magic != 1234)
-        return;
 // frame_len
     if (frame_len<0)
         return;
@@ -615,7 +607,7 @@ network_send_raw_packet (
     //e1000_send( nic_intel, frame_len, frame_address );
     // #test
     // Creating a sender for ethernet packet.
-    ethernet_send( nic_intel, frame_len, frame_address );
+    ethernet_send( frame_len, frame_address );
 }
 
 // IN:
@@ -1280,6 +1272,18 @@ int netInitialize(void)
 
 // Initialize the ARP table
     arp_initialize_arp_table();
+
+
+// =====================================
+// #test: 
+// Initializing the network interface structure. (first time ever)
+// #ps: 
+// We also have to call netif_update() to update the structure
+// for the current network interface. Probably when initializing 
+// the DHCP support.
+
+    netif_initialize();
+
 
 // ...
 

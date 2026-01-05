@@ -542,12 +542,10 @@ static void __is_pci_supported(void)
 // --
 }
 
-/*
- * pciHandleDevice
- *    Registra um dispositivo encontrado na sondagem. 
- *    Inicializa em alguns casos.
- */
-// Called by pci_setup_devices() in pciscan.c
+// pciHandleDevice:
+// Register a device found during the probing phase.
+// In some cases the device is also initialized.
+// Called by pciscan_probe_devices() in pciscan.c
 
 int 
 pciHandleDevice ( 
@@ -740,12 +738,12 @@ pciHandleDevice (
         {
             //debug_print ("pciHandleDevice: [0x8086:0x100E] e1000 found\n");
 
-            // Se a configuração decidiu usar o E1000.
-            // see: kernel/config.h
+            // Use or not the NIC device?
+            // see: config.h
+            // This device driver is working fine on virtualbox with PIIX3.
+            // see: e1000hw.c
             if (USE_E1000 == TRUE)
             {
-                // This thing is working fine on virtualbox with piix3.
-                // see: e1000hw.c
                 Status = 
                     (int) DDINIT_e1000 ( 
                         (unsigned char) pci_dev->bus, 
@@ -791,16 +789,14 @@ pciHandleDevice (
         }
     }
 
-// For block devices
-    if (pci_dev->classCode == PCI_CLASSCODE_MASS)
-    {
+// Get class code
+    if (pci_dev->classCode == PCI_CLASSCODE_MASS){
         __device_class = DEVICE_CLASS_BLOCK;
     }
-
-    if (pci_dev->classCode == PCI_CLASSCODE_DISPLAY)
-    {
+    if (pci_dev->classCode == PCI_CLASSCODE_DISPLAY){
         __device_class = DEVICE_CLASS_CHAR;
     }
+    // ...
 
 // qemu
 // #todo
@@ -810,29 +806,20 @@ pciHandleDevice (
          //(pci_dev->classCode == PCI_CLASSCODE_DISPLAY) )
     //{}
 
-// Colocar a estrutura na lista.
-// #todo: Limits
-// #bugbug: limite determinado ... 
-// precisa de variável.
-
-    if ( pciListOffset<0 || pciListOffset >= PCI_DEVICE_LIST_SIZE ){ 
-        // #bugbug
-        // Suspendendo isso porque esta sujando muito a tela
-        // na maquina real.
-        //debug_print ("pciHandleDevice: [FAIL] No more slots!\n");
-        printk ("pciHandleDevice: [FAIL] No more slots!\n");
+// Index limits
+// #bugbug: It makes a lot of noise in real machines
+    if ( pciListOffset < 0 || 
+         pciListOffset >= PCI_DEVICE_LIST_SIZE )
+    { 
+        printk ("pciHandleDevice: [FAIL] No more slots\n");
         return (int) (-1);
-    }
- 
- // Saving into the list for pci devices.
+    } 
+ // Saving into the list for pci devices
     pcideviceList[pciListOffset] = (unsigned long) pci_dev;
     pciListOffset++;
 
-    // #debug
-    //printk("$");
-
 // =============================================================
-// Register the device structure.
+// Register the device structure
 
 //
 // Name
@@ -965,10 +952,10 @@ pciHandleDevice (
         );
 
     if (rv < 0){
-        panic("pciHandleDevice: devmgr_register_pci_device fail\n");
+        panic("pciHandleDevice: on devmgr_register_pci_device()\n");
     }
 
-// 0 = No error.
+// 0 = No error
     return 0;
 fail:
     return (int) -1;

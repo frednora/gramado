@@ -3,7 +3,7 @@
 // ata handshake.
 // write command and read status.
 // History:
-// + Original version Created by Nelson Cole, Sirius OS, BSD license.
+// + Original version Created by Nelson Cole, Sirius OS, (BSD license).
 // + Document created by Fred Nora.
 // + Changed many times by Fred Nora.
 
@@ -13,7 +13,6 @@
 #include <kernel.h>
 
 int g_ata_driver_initialized=FALSE;
-
 int ATAFlag=0;
 
 static unsigned short *ata_devinfo_buffer;
@@ -22,10 +21,8 @@ static unsigned short *ata_devinfo_buffer;
 unsigned char ata_record_dev=0;
 unsigned char ata_record_channel=0;
 
-
 // The current port information
 struct ata_current_port_d  ATACurrentPort;
-
 
 // base address 
 // BAR0 is the start of the I/O ports used by the primary channel.
@@ -58,7 +55,6 @@ struct ata_device_d *current_sd;
 // List for storage devices.
 // see: ata.h
 struct ata_device_d *ready_queue_dev;
-
 
 
 //
@@ -99,8 +95,8 @@ static void __local_io_delay(void)
 static void __ata_pio_read( int p, void *buffer, int bytes )
 {
     asm volatile  (\
-        "cld;\
-        rep; insw"::"D"(buffer),\
+        "cld \n\
+        rep\n insw"::"D"(buffer),\
         "d"(ata_port[p].cmd_block_base_address + ATA_REG_DATA),\
         "c"(bytes/2) );
 }
@@ -111,8 +107,8 @@ static void __ata_pio_read( int p, void *buffer, int bytes )
 static void __ata_pio_write( int p, void *buffer, int bytes )
 {
     asm volatile  (\
-        "cld;\
-        rep; outsw"::"S"(buffer),\
+        "cld \n\
+        rep\n outsw"::"S"(buffer),\
         "d"(ata_port[p].cmd_block_base_address + ATA_REG_DATA),\
         "c"(bytes/2) );
 }
@@ -351,8 +347,8 @@ inline void atapi_pio_read ( int p, void *buffer, uint32_t bytes )
     }
 
     asm volatile  (\
-        "cld;\
-        rep; insw"::"D"(buffer),\
+        "cld\n\
+        rep\n insw"::"D"(buffer),\
         "d"(ata_port[p].cmd_block_base_address + ATA_REG_DATA),\
         "c"(bytes/2) );
 }
@@ -1598,6 +1594,8 @@ static int __ata_initialize(int ataflag)
 // The default ATA port.
 // See: config.h
 
+// #todo
+// There is a moment where we don't need the default value anymore.
     ata_set_boottime_ide_port_index(__CONFIG_DEFAULT_ATA_PORT);
     ata_set_current_ide_port_index(__CONFIG_DEFAULT_ATA_PORT);
 
