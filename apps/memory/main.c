@@ -32,6 +32,8 @@ static unsigned long cr_width  = 0;
 static unsigned long cr_height = 0;
 
 
+static void set_default_responder(int wid);
+static void switch_responder(int fd);
 static void trigger_default_responder(int fd);
 
 // ----------------------------------------------------
@@ -129,6 +131,23 @@ static void update_children(int fd)
     gws_refresh_window(fd, main_window);
 }
 
+static void set_default_responder(int wid)
+{
+    if (wid >= 0)
+        default_responder = wid;
+}
+
+static void switch_responder(int fd)
+{
+    if (default_responder == refresh_button) {
+        set_default_responder(close_button);
+        gws_set_focus(fd, close_button);
+    } else {
+        set_default_responder(refresh_button);
+        gws_set_focus(fd, refresh_button);
+    }
+}
+
 static void trigger_default_responder(int fd) 
 {
     if (default_responder == refresh_button) {
@@ -190,14 +209,27 @@ case MSG_KEYDOWN:
             printf("memory_app: VK_F5  Refresh metrics\n");
             update_children(fd);
             return 0;
+            break;
+
         case VK_F12:
             printf("memory_app: VK_F12  Debug info\n");
             // maybe dump stats or redraw
             return 0;
+            break;
+
         case VK_F11:
             // Should not appear — broker intercepts fullscreen toggle
             printf("memory_app: VK_F11 (unexpected)\n");
             return 0;
+            break;
+        //
+        case VK_ARROW_RIGHT:  printf("Editor: VK_ARROW_RIGHT \n"); break;
+        case VK_ARROW_UP:     printf("Editor: VK_ARROW_UP \n");    break;
+        case VK_ARROW_DOWN:   printf("Editor: VK_ARROW_DOWN \n");  break;
+        case VK_ARROW_LEFT:
+            printf("Editor: VK_ARROW_LEFT \n"); 
+            switch_responder(fd);
+            break;
         };
         break;
 
@@ -356,7 +388,7 @@ int main(int argc, char *argv[])
     gws_refresh_window(client_fd, close_button);
 
 // Default responder
-    default_responder = refresh_button;
+    set_default_responder(refresh_button);
 
 // Main window
     gws_set_active(client_fd, main_window);

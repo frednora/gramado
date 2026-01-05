@@ -328,8 +328,14 @@ wmProcessKeyboardEvent(
         if (long1 == '\r') yellow_status("ASCII CR");
         */
 
-        if (long1 == VK_TAB) 
+        if (long1 == VK_TAB)
+        {
+            // #debug
             yellow_status("long1 = VK_TAB");
+        
+            // #test
+            // wm_cycle_focus();
+        }
 
         // Print a char into the window with focus.
         // It needs to be an editbox?
@@ -385,7 +391,7 @@ wmProcessKeyboardEvent(
         // The is the window with focus.
         // See: wm.c
         wm_draw_char_into_the_window( window, (int) long1, fg_color );
-        
+
         // The is the window with focus.
         // Enqueue a message into the queue that belongs
         // to the window with focus.

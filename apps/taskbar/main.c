@@ -146,6 +146,7 @@ struct tb_client_d clientList[CLIENT_COUNT_MAX];
 static int main_window = -1;
 static int desktop_window = -1;
 // ...
+static int default_responder = -1;
 
 static int isTimeToQuit=FALSE;
 
@@ -213,7 +214,7 @@ const char *app2_name = "#editor.bin";
 
 static void __test_gr(int fd);
 
-static int __initialize_connection(void);
+//static int __initialize_connection(void);
 static void doPrompt(int fd);
 static void compareStrings(int fd);
 static void testASCIITable(int fd,unsigned long w, unsigned long h);
@@ -257,13 +258,46 @@ static int draw_separator(int fd);
 static int create_icons_on_desktop(int fd);
 static int create_desktop_area(int fd);
 
+
+static void set_default_responder(int wid);
+static void trigger_default_responder(int fd);
+static void switch_responder(int fd);
+
 //==================================
+
+static void set_default_responder(int wid)
+{
+    if (wid >= 0)
+        default_responder = wid;
+}
+
+static void trigger_default_responder(int fd)
+{
+    if (default_responder == NavigationInfo.button00_window) {
+        gws_dock_active_window(fd, 4); // dock left
+    } else if (default_responder == NavigationInfo.button01_window) {
+        gws_dock_active_window(fd, 2); // dock right
+    }
+}
+
+static void switch_responder(int fd)
+{
+    if (default_responder == NavigationInfo.button00_window) {
+        set_default_responder(NavigationInfo.button01_window);
+        gws_set_focus(fd, NavigationInfo.button01_window);
+    } else {
+        set_default_responder(NavigationInfo.button00_window);
+        gws_set_focus(fd, NavigationInfo.button00_window);
+    }
+}
+
 
 // initialize via AF_GRAMADO.
 // Ainda nao podemos mudar isso para a lib, pois precisamos
 // do suporte as rotinas de socket e as definiçoes.
 // tem que incluir mais coisa na lib.
 
+/*
 static int __initialize_connection(void)
 {
 
@@ -318,6 +352,7 @@ static int __initialize_connection(void)
 
     return (int) client_fd;
 }
+*/
 
 static void doPrompt(int fd)
 {
@@ -791,6 +826,10 @@ tbProcedure(
         case MSG_KEYDOWN:
             switch (long1) 
             {
+                case VK_RETURN:
+                    trigger_default_responder(fd);
+                    break;
+
                 case '<':   // ASCII '<'
                 case ',':
                     printf("taskbar: [<] pressed  dock left\n");
@@ -828,6 +867,15 @@ tbProcedure(
                 //case VK_F5: gws_async_command(fd,30,0,0);    break;
                 //case VK_F6: gws_async_command(fd,1011,0,0);  break;
                 //case VK_F7: gws_async_command(fd,30,0,0);    break;
+
+                //
+                case VK_ARROW_RIGHT:  printf("taskbar: VK_ARROW_RIGHT \n"); break;
+                case VK_ARROW_UP:     printf("taskbar: VK_ARROW_UP \n"); break;
+                case VK_ARROW_DOWN:   printf("taskbar: VK_ARROW_DOWN \n"); break;
+                case VK_ARROW_LEFT:
+                    printf("taskbar: VK_ARROW_LEFT \n"); 
+                    switch_responder(fd);
+                    break;
                 default:
                     break;
             };
@@ -1543,6 +1591,13 @@ int main(int argc, char *argv[])
 // =======================
 // Event loop
 // Getting input events from the system.
+
+    // Select the first reponder, it will not affect the
+    // apparence of the button.
+    set_default_responder(NavigationInfo.button00_window);
+
+    // Do not set focus now, it changes the apparence
+    // gws_set_focus(client_fd, NavigationInfo.button00_window);
 
 
 /*

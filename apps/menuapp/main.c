@@ -43,6 +43,8 @@ struct my_menu_info_d
 struct my_menu_info_d MyMenuInfo;
 
 static int main_window = -1;
+
+
 static int isTimeToQuit=FALSE;
 
 // ====================================

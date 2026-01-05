@@ -32,6 +32,8 @@ static int shutdown_button = -1;
 // Default responder (button to trigger on Enter)
 static int default_responder = -1;
 
+static void set_default_responder(int wid);
+static void switch_responder(int fd);
 static void trigger_default_responder(int fd);
 
 
@@ -71,6 +73,24 @@ static void update_children(int fd)
     
     //#debug
     gws_refresh_window (fd, main_window);
+}
+
+
+static void set_default_responder(int wid)
+{
+    if (wid >= 0)
+        default_responder = wid;
+}
+
+static void switch_responder(int fd)
+{
+    if (default_responder == restart_button) {
+        set_default_responder(shutdown_button);
+        gws_set_focus(fd, shutdown_button);
+    } else {
+        set_default_responder(restart_button);
+        gws_set_focus(fd, restart_button);
+    }
 }
 
 static void trigger_default_responder(int fd) 
@@ -151,6 +171,17 @@ powerProcedure(
                 // Should not appear — broker intercepts fullscreen toggle
                 printf("PowerApp: VK_F11 (unexpected)\n");
                 return 0;
+
+            case VK_ARROW_LEFT: 
+            case VK_ARROW_RIGHT: 
+                switch_responder(fd); 
+                break;
+
+            // reserved for future
+            case VK_ARROW_UP: 
+            case VK_ARROW_DOWN: 
+                printf("PowerApp: Arrow up/down pressed (no action yet)\n"); 
+                break;
         };
         break;
 

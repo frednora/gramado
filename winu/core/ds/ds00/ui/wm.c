@@ -2713,6 +2713,83 @@ struct gws_window_d *get_focus(void){
     return (struct gws_window_d *) get_window_with_focus();
 }
 
+// Called by wminput.c when receiving a tab event.
+void wm_cycle_focus(void)
+{
+    struct gws_window_d *wwf;     // Old wwf
+    struct gws_window_d *parent;  // The wwf's parent
+    struct gws_window_d *old;     // Save the old wwf
+    struct gws_window_d *target;  // Next wwf
+
+// Current window with focus
+    wwf = (struct gws_window_d *) get_focus();
+    if ((void*) wwf == NULL)
+        return;
+    if (wwf->magic != 1234)
+        return;
+    if (wwf->type == WT_OVERLAPPED)
+        return;
+
+// Save old wwf
+// Reset old focus visual state: 
+// Set old->status = BS_DEFAULT and redraw it, 
+// so the highlight disappears.
+
+    old = wwf;
+    int Type = (int) (old->type & 0xFFFFFFFF);
+
+    switch (Type)
+    {
+        case WT_BUTTON:
+        case WT_EDITBOX_SINGLE_LINE:
+        case WT_EDITBOX_MULTIPLE_LINES:
+            if (Type == WT_BUTTON)
+                old->status = BS_DEFAULT;  // Window status/ Button state
+            redraw_window(old, TRUE);
+            break;
+    };
+
+// The parent
+// Is it an application window?
+    parent = wwf->parent;
+    if ((void*) parent == NULL)
+        return;
+    if (parent->magic != 1234)
+        return;
+    if (parent->type != WT_OVERLAPPED)
+        return;
+
+// Walk the list of childs and update the visul effect.
+// Set new focus visual state: you set target->status = BS_FOCUS and redraw, 
+// so the highlight appears.
+
+// Get the head of child list.
+// We need to navegate using the '->next',
+// its because '->subling_list' will be used only for application windows
+    target = parent->child_list;
+    if (target == old)
+        target = target->next;
+
+    while (target != NULL)
+    {
+        // Valid window
+        if (target->magic == 1234)
+        {
+            if (target->type == WT_BUTTON || 
+                target->type == WT_EDITBOX_SINGLE_LINE || 
+                target->type == WT_EDITBOX_MULTIPLE_LINES )
+            {
+                target->status = BS_FOCUS;
+                redraw_window(target,TRUE);
+                break;  // Donw
+            }
+            target = target->next;  // Get next
+            if (target == old)
+                target = target->next;
+        }
+    }
+}
+
 // O mouse está sobre essa janela.
 void set_mouseover(struct gws_window_d *window)
 {
