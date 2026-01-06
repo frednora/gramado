@@ -504,13 +504,14 @@ struct gws_window_d
 
 // The window frame
 // Top frame has: title bar, tool bar, menu bar ...
-    int is_frameless;
     struct windowframe_d  frame;
+    int is_frameless;
 
 // The frame's rectangle
 // #bugbug: Is it relative or absolute?
     struct gws_rect_d  rcWindow;
-// The Client area.
+
+// The Client area
 // This is the viewport for some applications, just like browsers.
 // >> Inside dimensions clipped by parent.
     struct gws_rect_d  rcClient;
@@ -531,26 +532,25 @@ struct gws_window_d
     unsigned long width;
     unsigned long height;
 
+// Minimum dimensions for application windows.
+// Ensures controls remain visible when shrinking.
+    unsigned long min_width;   // Minimum allowed width in pixels
+    unsigned long min_height;  // Minimum allowed height in pixels
+
 // Margins and dimensions when this window is in fullscreen mode.
 // #todo: Maybe we can use a structure for that.
 // Inside dimensions not clipped by parent.
+
+    // l,t,w,h
     unsigned long full_left;
     unsigned long full_top;
     unsigned long full_width;
     unsigned long full_height;
+    // r,b
     unsigned long full_right; 
     unsigned long full_bottom;
 
-    // #todo    
-    //unsigned long border_color;
-    //unsigned long border_width;
-
-    // Cliente area in chars.
-    //unsigned long client_area_width;
-    //unsigned long client_area_height;
-
-
-// Current docking state (DOCK_LEFT, DOCK_RIGHT, etc.) 
+// Current docking state (DOCK_LEFT, DOCK_RIGHT, etc.)
     int dock_state; 
 
 // Anchor rule (North, Center, South, etc.)
@@ -651,7 +651,6 @@ struct gws_window_d
 // 1 = client delegates foreground to delegate_tid.
     int client_delegates_foreground;
 
-
 // ======================================
 // DOC
     char *window_doc;
@@ -749,33 +748,38 @@ struct gws_window_d
 // ================
 // 4 - Controls
 
-    int controlsUsed;
     struct windowcontrols_d  Controls;
+    int controlsUsed;
 
 // ================
 // 5 - Borders
 
-    struct border_info_d Border;
+    struct border_info_d  Border;
     int borderUsed;
 
 // ================
 // 6 - Menubar
 
+    // The bar's window
     struct gws_window_d *menubar;
-    struct gws_menu_d  *barMenu;      // Menu da barra de menu.
+    int menubarUsed; 
     unsigned int menubar_color;
     unsigned long menubar_height;
     int menubar_style;
-    int menubarUsed; 
+
+    // The menu
+    struct gws_menu_d  *barMenu;
 
 // ================
 // 7 - Toolbar
 
-    struct gws_window_d *toolbar;
+    // The bar's window
+    struct gws_window_d  *toolbar;
+    int toolbarUsed;
     unsigned int toolbar_color;
     unsigned long toolbar_height;
     int toolbar_style;
-    int toolbarUsed;
+
 
 // ================
 // 8 - Client area.
@@ -791,31 +795,34 @@ struct gws_window_d
 // vertical scrollbar
 // The wm will call the window server to create this kind of control.
 
+    // The bar's window
     struct gws_window_d *scrollbar;
-    struct gws_window_d *scrollbar_button1;
-    struct gws_window_d *scrollbar_button2;
-    struct gws_window_d *scrollbar_button3;
-    unsigned int scrollbar_color;
-    int isScrollBarButton1;
-    int isScrollBarButton2;
-    int isScrollBarButton3;
     unsigned long scrollbar_height;
-    // int scrollbarOrientation;  //horizontal or vertical
+    unsigned int scrollbar_color;
     int scrollbar_style;
+    // int scrollbarOrientation;  // horizontal or vertical
     int scrollbarUsed;
+
+    // Scrollbar's controls
+    struct gws_window_d *scrollbar_button1;
+    int isScrollBarButton1;
+    struct gws_window_d *scrollbar_button2;
+    int isScrollBarButton2;
+    struct gws_window_d *scrollbar_button3;
+    int isScrollBarButton3;
 
 // ================
 // 10 - Statusbar
 
-    struct gws_window_d *statusbar;
+    struct gws_window_d  *statusbar;
+    int statusbarUsed;
     unsigned int statusbar_color;
     unsigned long statusbar_height;
     int statusbar_style;
-    int statusbarUsed;
     // ...
 
-// =========================================================
-// Context menu. It belongs to a window.
+// ====================================
+// Context menu. It belongs to a window
     struct gws_menu_d *contextmenu;
 
 //==================================
@@ -896,7 +903,6 @@ struct gws_window_d
 // HANDLE_STATUS_OPEN ou HANDLE_STATUS_CLOSE
     //int handle_status;
 
-
 //
 // == Input pointer =========================================
 //
@@ -952,7 +958,8 @@ struct gws_window_d
 
 // Single event
     struct gws_event_d  single_event;
-// Event list.
+
+// Event list
     int ev_head;
     int ev_tail;
     unsigned long ev_wid[32];
@@ -988,21 +995,23 @@ struct gws_window_d
 
 // We have an associated window when we are minimized.
 // Maybe only the overlapped window can have this iconic window.
-    struct gws_window_d *_iconic;
 // Telling to the world that this is an icon window,
 // and we belongs to an overlapped window.
+    struct gws_window_d  *_iconic;
     int is_iconic;
 
-// The owner
+// The parent window
     struct gws_window_d  *parent;
 
 // child_list - for structural children inside a parent window 
 // (buttons, edit boxes, toolbars, etc.).
+// #ps: This pointer points to the first child, bat they are linked
+// via '->next' chain.
     struct gws_window_d  *child_list;
 
 // subling_list - for application-level siblings, i.e. windows that 
 // share the same parent (usually the root window or desktop).
-    struct gws_window_d *subling_list;
+    struct gws_window_d  *subling_list;
 
 // Navigation
     struct gws_window_d  *prev;

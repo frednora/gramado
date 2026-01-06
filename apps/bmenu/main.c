@@ -43,7 +43,6 @@ static void update_children(int fd)
     unsigned long restart_x  = (wi.cr_width / 4) - (button_w / 2);
     unsigned long shutdown_x = (3 * wi.cr_width / 4) - (button_w / 2);
 
-
     // Redraw label text
     gws_draw_text(
         fd,

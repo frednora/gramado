@@ -34,7 +34,6 @@ void gws_disable_transparence(void){
     __config_use_transparency=FALSE;
 }
 
-
 int window_has_transparence(void){
     return (int) __config_use_transparency;
 }

@@ -10,30 +10,21 @@
 // General UI Metrics 
 // ======================================================
 
-// Icon padding inside the titlebar
-#define METRICS_ICON_LEFTPAD 4
-#define METRICS_ICON_TOPPAD 3
-#define METRICS_ICON_LEFT    METRICS_ICON_LEFTPAD
-#define METRICS_ICON_TOP     METRICS_ICON_TOPPAD
-
 // Border thickness
 // #important: Do not mess with this thing,
 // other components depends on this for calculations.
 #define METRICS_BORDER_SIZE  2
-
-// ====================================================== 
-// Taskbar Metrics 
-// ======================================================
-
-// Default taskbar height 
-// 32 = (20 + padding adjustments)
-#define METRICS_TASKBAR_DEFAULT_HEIGHT  32
 
 
 // ====================================================== 
 // Titlebar Metrics 
 // ======================================================
 
+// Icon padding inside the titlebar
+#define METRICS_ICON_LEFTPAD 4
+#define METRICS_ICON_TOPPAD 3
+#define METRICS_ICON_LEFT    METRICS_ICON_LEFTPAD
+#define METRICS_ICON_TOP     METRICS_ICON_TOPPAD
 
 // Default titlebar height 
 // Controls and ornament sizes are derived from this
@@ -82,17 +73,26 @@
 
 
 
+// Control area width = 3 * titlebar height + padding
+#define METRICS_TITLEBAR_CONTROLS_AREA_WIDTH \
+    ((METRICS_TITLEBAR_DEFAULT_HEIGHT * 3) + \
+     METRICS_TITLEBAR_CONTROLS_RIGHTPAD + METRICS_TITLEBAR_CONTROLS_SEPARATOR_WIDTH)
+
+#define METRICS_TITLEBAR_CONTROLS_AREA_HEIGHT \
+    (METRICS_TITLEBAR_DEFAULT_HEIGHT - __gap_BT_TB)
+
+// ====================================================== 
+// Taskbar Metrics 
+// ======================================================
+
+// Default taskbar height 
+// 32 = (20 + padding adjustments)
+#define METRICS_TASKBAR_DEFAULT_HEIGHT  32
+
+
 // ====================================================== 
 // Application Window Metrics 
 // ======================================================
-
-// Minimum window dimensions (not child windows) 
-// Derived from control button size for consistency
-
-#define METRICS_DEFAULT_MINIMUM_WINDOW_WIDTH \
-    (METRICS_TITLEBAR_CONTROLS_DEFAULT_WIDTH*5)
-#define METRICS_DEFAULT_MINIMUM_WINDOW_HEIGHT \
-    (METRICS_TITLEBAR_CONTROLS_DEFAULT_HEIGHT*3)
 
 
 // ====================================================== 
@@ -119,6 +119,19 @@
 #define METRICS_CLIENTAREA_BOTTOMPAD 4
 
 // ...
+
+
+// Minimum size for the window based on the title bar elements.
+// Control button size is derived from titlebar height
+#define METRICS_DEFAULT_MINIMUM_WINDOW_WIDTH  \
+    (METRICS_ICON_LEFTPAD + METRICS_TITLEBAR_CONTROLS_AREA_WIDTH)
+
+// Minimum window height (not child windows)
+// Derived from titlebar height + ornament + padding
+#define METRICS_DEFAULT_MINIMUM_WINDOW_HEIGHT \
+    (METRICS_TITLEBAR_DEFAULT_HEIGHT + METRICS_TITLEBAR_ORNAMENT_SIZE + \
+     METRICS_CLIENTAREA_TOPPAD + METRICS_CLIENTAREA_BOTTOMPAD)
+
 
 // ====================================================== 
 // End of Metrics 

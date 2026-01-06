@@ -5276,13 +5276,13 @@ gws_resize_window (
     struct gws_window_d *tmp_window;
     int tmp_wid = -1;
 
-
 // Local pads (from metrics.h) 
     unsigned int pad_left = METRICS_CLIENTAREA_LEFTPAD; 
     unsigned int pad_top = METRICS_CLIENTAREA_TOPPAD; 
     unsigned int pad_right = METRICS_CLIENTAREA_RIGHTPAD; 
     unsigned int pad_bottom = METRICS_CLIENTAREA_BOTTOMPAD;
 
+// Parameters:
     if ((void *) window == NULL){
         return (int) -1;
     }

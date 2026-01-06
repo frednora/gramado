@@ -368,6 +368,19 @@ static struct gws_window_d *__create_window_object(void)
     window->width = 0;
     window->height = 0;
 
+    // Minimuns
+    window->min_width = METRICS_DEFAULT_MINIMUM_WINDOW_WIDTH;
+    window->min_height = METRICS_DEFAULT_MINIMUM_WINDOW_HEIGHT;
+
+    // l,t,w,h
+    window->full_left = 0;
+    window->full_top = 0;
+    window->full_width = 0;
+    window->full_height = 0;
+    // r,b
+    window->full_right = 0;
+    window->full_bottom = 0;
+
     // The window can receive input from kbd and mouse.
     window->enabled = TRUE;
     window->style = 0;
@@ -1465,6 +1478,17 @@ void *doCreateWindow (
     unsigned long WindowTop    = (unsigned long) (y & 0xFFFF);
     unsigned long WindowWidth  = (unsigned long) (width  & 0xFFFF);
     unsigned long WindowHeight = (unsigned long) (height & 0xFFFF);
+
+
+// Quick and dirty ajustment
+// We still needs to register the limits into the structure
+    if (type == WT_OVERLAPPED)
+    {
+        if (WindowWidth < METRICS_DEFAULT_MINIMUM_WINDOW_WIDTH)
+            WindowWidth = METRICS_DEFAULT_MINIMUM_WINDOW_WIDTH;
+        if (WindowHeight < METRICS_DEFAULT_MINIMUM_WINDOW_HEIGHT)
+            WindowHeight = METRICS_DEFAULT_MINIMUM_WINDOW_HEIGHT;
+    }
 
 // #todo: right and bottom.
 
