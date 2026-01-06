@@ -27,6 +27,9 @@ extern struct input_broker_info_d  InputBrokerInfo;
 
 // ==========================
 
+// Kernel-side syscall wrapper
+unsigned long sys_change_boot_menu_option(unsigned long value);
+
 void 
 ibroker_set_keymap(
     unsigned char *p_normal,

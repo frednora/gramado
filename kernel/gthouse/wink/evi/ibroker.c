@@ -118,9 +118,71 @@ ibroker_app_wants_event(
     int msg,
     unsigned long vk );
 
+
+static void ibroker_handle_boot_mode(char mode);
+
 //
 // ================================================
 //
+
+// Worker for boot mode commands
+static void ibroker_handle_boot_mode(char mode)
+{
+    char cnf_buffer[512];
+
+    if (mode != 'M' && mode != 'S') {
+        printk("Invalid boot mode\n");
+        return;
+    }
+
+    memset(cnf_buffer, 0, sizeof(cnf_buffer));
+    cnf_buffer[0] = mode;   // 'M' = Show menu, 'S' = Skip menu
+    memcpy(&cnf_buffer[1], "CNF", 3);  // Signature
+
+    // Save metafile to sectors 2 and 3
+    fs_store_boot_metafile(cnf_buffer, 1, 1);
+    fs_store_boot_metafile(cnf_buffer, 2, 1);
+
+    if (mode == 'M')
+        printk("Setting boot mode: SHOW MENU\n");
+    else
+        printk("Setting boot mode: SKIP MENU\n");
+}
+
+/*
+ * sys_change_boot_menu_option()
+ *
+ * System call wrapper to change the boot menu option.
+ * Receives one of two values as parameter:
+ *   1000 → set boot mode to SHOW MENU ('M')
+ *   1001 → set boot mode to SKIP MENU ('S')
+ *
+ * Internally delegates to ibroker_handle_boot_mode() to update
+ * the boot metafile and persist the configuration.
+ *
+ * Returns 0 on success, -1 on invalid parameter.
+ */
+
+unsigned long sys_change_boot_menu_option(unsigned long value)
+{
+    switch (value) {
+        case 1000:  // Show menu
+            ibroker_handle_boot_mode('M');
+            break;
+
+        case 1001:  // Skip menu
+            ibroker_handle_boot_mode('S');
+            break;
+
+        default:
+            // Invalid parameter
+            return (unsigned long) -1;
+    };
+
+    return 0; // success
+}
+
+
 
 static int
 ibroker_post_message_to_ds ( 
@@ -542,19 +604,22 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 // boot-s → sets metafile to "S" (skip menu).
 
 // Temporary buffer for metafile
-    char cnf_buffer[512];
-
+    // char cnf_buffer[512];
 
 // boot-m:
 // Save 'M' (Show menu)
     if (kstrncmp(cmdline, "boot-m", 6) == 0)
     {
+        /*
         printk("Setting boot mode: SHOW MENU\n");
         memset(cnf_buffer, 0, 512);
         cnf_buffer[0] = 'M';  // Boot mode
         memcpy(&cnf_buffer[1], "CNF", 3);  // Signature
         fs_store_boot_metafile(cnf_buffer, 1, 1);  // Save to sector 2
         fs_store_boot_metafile(cnf_buffer, 2, 1);  // Save to sector 3
+        */
+
+        ibroker_handle_boot_mode('M');
         goto exit_cmp;
     }
 
@@ -562,12 +627,16 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 // Save 'S' (Skip menu)
     if (kstrncmp(cmdline, "boot-s", 6) == 0)
     {
+        /*
         printk("Setting boot mode: SKIP MENU\n");
         memset(cnf_buffer, 0, 512);
         cnf_buffer[0] = 'S';  // Boot mode
         memcpy(&cnf_buffer[1], "CNF", 3);  // Signature
         fs_store_boot_metafile(cnf_buffer, 1, 1);  // Save to sector 2
         fs_store_boot_metafile(cnf_buffer, 2, 1);  // Save to sector 3
+        */
+
+        ibroker_handle_boot_mode('S');
         goto exit_cmp;
     }
 

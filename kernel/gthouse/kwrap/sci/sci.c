@@ -1306,6 +1306,24 @@ void *sci0 (
         return (void *) info_get_boot_info((int) arg2);
     }
 
+//
+/*
+ * sys_change_boot_menu_option()
+ *
+ * System call wrapper to change the boot menu option.
+ * Receives one of two values as parameter:
+ *   1000 → set boot mode to SHOW MENU ('M')
+ *   1001 → set boot mode to SKIP MENU ('S')
+ *
+ * Internally delegates to ibroker_handle_boot_mode() to update
+ * the boot metafile and persist the configuration.
+ *
+ * Returns 0 on success, -1 on invalid parameter.
+ */
+    if (number == 294){
+        return (void*) sys_change_boot_menu_option(arg2);
+    }
+
 // 350 - Initialize system component
 // Inicializar ou reinicializar componentes do sistema
 // depois da inicialização completa do kernel.
