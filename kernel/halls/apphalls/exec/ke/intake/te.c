@@ -1,5 +1,5 @@
 // te.c
-// Thread Environment (Process)
+// Thread Environment (fka Process)
 // Created by Fred Nora.
 
 #include <kernel.h>
@@ -59,7 +59,12 @@ static pid_t caller_process_id=0;
 struct te_d  *TEKernelProcess;  // Kernel process
 struct te_d  *TEInitProcess;    // Init process
 
-//==============================================
+// ==============================================
+
+// Worker for create_process.
+static void __initialize_process_common_elements(struct te_d *p);
+
+// ==============================================
 
 
 int destroy_process_structure(struct te_d *process)
@@ -975,14 +980,13 @@ int alloc_memory_for_image_and_stack(struct te_d *process)
 
 // Worker for create_process.
 // Do not check parameters validation.
-void ps_initialize_process_common_elements(struct te_d *p)
-{
 // Called by create_process().
-
+static void __initialize_process_common_elements(struct te_d *p)
+{
     register int i=0;
 
-    //if( (void*) p == NULL )
-        //return;
+    if ((void*) p == NULL)
+        return;
 
     p->objectType = ObjectTypeProcess;
     p->objectClass = ObjectClassKernelObject;
@@ -1010,8 +1014,9 @@ void ps_initialize_process_common_elements(struct te_d *p)
 // Threads
 //
 
-// The flower thread
+// The flower thread (The first thread)
     p->flower = NULL;
+
 // List of threads.
     p->threadListHead = NULL;
 // Absolute pathname and relative pathname.
@@ -1044,18 +1049,18 @@ void ps_initialize_process_common_elements(struct te_d *p)
 // #todo: We need a flag.
 // #todo: Melhorar esse nome.
 
-    if (kstdio_standard_streams_initialized != TRUE ){
-        panic ("ps_initialize_process_common_elements: [ERROR] Standard stream is not initialized\n");
+    if (kstdio_standard_streams_initialized != TRUE){
+        panic ("__initialize_process_common_elements: Standard stream is not initialized\n");
     }
 // Check standard streams.
     if ((void *) stdin == NULL){
-        panic("ps_initialize_process_common_elements: stdin\n");
+        panic("__initialize_process_common_elements: stdin\n");
     }
     if ((void *) stdout == NULL){
-        panic("ps_initialize_process_common_elements: stdout\n");
+        panic("__initialize_process_common_elements: stdout\n");
     }
     if ((void *) stderr == NULL){
-        panic("ps_initialize_process_common_elements: stderr\n");
+        panic("__initialize_process_common_elements: stderr\n");
     }
 
 // Objects[]
@@ -1082,7 +1087,7 @@ void ps_initialize_process_common_elements(struct te_d *p)
         (struct tty_d *) tty_create( TTY_TYPE_PTY, TTY_SUBTYPE_UNDEFINED, tty_name );
 
     if ((void *) p->tty == NULL){
-        panic("ps_initialize_process_common_elements: Couldn't create tty\n");
+        panic("__initialize_process_common_elements: Couldn't create tty\n");
     }
     tty_start(p->tty);
 //--
@@ -1092,29 +1097,18 @@ void ps_initialize_process_common_elements(struct te_d *p)
     return;
 }
 
-/*
- * processObject:
- *     Cria uma estrutura do tipo processo, mas não inicializada.
- *     #todo: Criar a mesma rotina para threads e janelas.
- */
-// OUT:
-// Pointer to a new structure.
-// NULL if it fails.
-
+// Create process object - (Thread Environment)
 struct te_d *processObject(void)
 {
-    struct te_d *p;
+    struct te_d *p_obj;
 
-    p = (void *) kmalloc(sizeof(struct te_d));
-    if ((void *) p == NULL){
+    p_obj = (void *) kmalloc(sizeof(struct te_d));
+    if ((void *) p_obj == NULL){
         return NULL;
     }
-    memset( p, 0, sizeof(struct te_d) );
+    memset( p_obj, 0, sizeof(struct te_d) );
 
-// #todo
-// Maybe we can clean up the structure
-// or initialize some basic elements.
-    return (struct te_d *) p;
+    return (struct te_d *) p_obj;
 }
 
 //
@@ -1122,21 +1116,18 @@ struct te_d *processObject(void)
 // CREATE OBJECT
 //
 
+// Called by clone_process() in clone.c
 // OUT: process struture pointer.
 struct te_d *create_and_initialize_process_object(void)
 {
-// Called by clone_process() in clone.c
-//...
-
     pid_t NewPID = (pid_t) (-1);  //fail
     struct te_d  *new_process;
     register int i=0;
 
-// Process structure.
+// Process structure
     new_process = (struct te_d *) processObject();
     if ((void *) new_process == NULL){
-        debug_print("create_and_initialize_process_object: [FAIL] new_process\n");
-        printk     ("create_and_initialize_process_object: [FAIL] new_process\n");
+        printk ("create_and_initialize_process_object: new_process\n");
         goto fail;
     }
 
@@ -1360,15 +1351,17 @@ struct te_d *create_process (
     //    processNewPID = (int) GRAMADO_PID_BASE;
     //}
 
-// Process
-    Process = (void *) kmalloc(sizeof(struct te_d));
+// ---- Create process object -------------------------------
+
+    Process = (void *) processObject();
     if ((void *) Process == NULL){
         panic("create_process: Process\n");
     }
-    memset( Process, 0, sizeof(struct te_d) );
+    Process->type = PROCESS_TYPE_NULL;  // #todo
+    Process->state = PROCESS_CREATED;
 
 // Initializing the elements common for all types of processes
-    ps_initialize_process_common_elements((struct te_d *) Process);
+    __initialize_process_common_elements((struct te_d *) Process);
 
 // ====================
 // get_next:
@@ -1396,7 +1389,6 @@ struct te_d *create_process (
 
     Process->pid = (pid_t) PID; 
     Process->ppid = (pid_t) ppid;
-
 
 // ------------
 // Name
@@ -1747,7 +1739,7 @@ struct te_d *create_process (
     teList[PID] = (unsigned long) Process;
 // #todo
     // last_created = PID;
-    Process->state = INITIALIZED;
+    Process->state = PROCESS_INITIALIZED;
 // Validation.
     Process->used = TRUE;
     Process->magic = PROCESS_MAGIC;

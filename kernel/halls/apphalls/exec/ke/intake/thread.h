@@ -238,18 +238,23 @@ Conceptual Difference
  + Space: (READY, RUNNING, WAITING, BLOCKED)
 */
 typedef enum {
-// Earth states (lifecycle-related states)
-    INITIALIZED,  // 0 - The context and parameters were created.
-    STANDBY,      // 1 - Ready to run for the first time.
-    ZOMBIE,       // 2 - Execution terminated.
-    DEAD,         // 3 - Deleted. Now we can delete the object.
-// Space states (execution-related states)
-    READY,        // 4 - Thread is ready to run again.
-    RUNNING,      // 5 - Thread is currently running.
-    WAITING,      // 6 - Thread is waiting.
-    BLOCKED       // 7 - Thread is blocked by an event.
-} thread_state_t;
 
+// The thread was create, but the structure is not 
+// fully initialized yet.
+    THREAD_STATE_CREATED,
+
+// Earth states (lifecycle-related states)
+    INITIALIZED,  // 1 - The context and parameters were created.
+    STANDBY,      // 2 - Ready to run for the first time.
+    ZOMBIE,       // 3 - Execution terminated.
+    DEAD,         // 4 - Deleted. Now we can delete the object.
+
+// Space states (execution-related states)
+    READY,        // 5 - Thread is ready to run again.
+    RUNNING,      // 6 - Thread is currently running.
+    WAITING,      // 7 - Thread is waiting.
+    BLOCKED       // 8 - Thread is blocked by an event.
+} thread_state_t;
 
 // The thread structure
 struct thread_d 
@@ -266,7 +271,8 @@ struct thread_d
     thread_type_t type;
 
 // The thread environment structure. (fka Process)
-// thread->te->pid is returned by getpid().
+// The thread->te->pid ID is returned by getpid().
+// It needs to be the same of tgid.
     struct te_d *te;
 
 // Thread Group ID (thread environment id)
@@ -821,6 +827,8 @@ extern unsigned long threadList[THREAD_COUNT_MAX];
 // == prototypes ===========================
 //
 
+// Create thread object
+struct thread_d *threadObject(void);
 
 // From tlib.c
 void show_slot(tid_t tid);

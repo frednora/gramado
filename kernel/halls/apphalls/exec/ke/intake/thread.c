@@ -53,6 +53,20 @@ __ps_setup_x64_context (
 // =========================================================
 //
 
+// Create thread object
+struct thread_d *threadObject(void)
+{
+    struct thread_d *t_obj;
+
+    t_obj = (void *) kmalloc(sizeof(struct thread_d));
+    if ((void *) t_obj == NULL){
+        return NULL;
+    }
+    memset( t_obj, 0, sizeof(struct thread_d) );
+
+    return (struct thread_d *) t_obj;
+}
+
 // Worker
 static void __ps_initialize_thread_common_elements(struct thread_d *t)
 {
@@ -1511,14 +1525,19 @@ struct thread_d *create_thread (
 // Thread
 //
 
-// Alocando memória para a estrutura da thread.
-// Obs: Estamos alocando memória dentro do heap do kernel.
-
-    Thread = (void *) kmalloc(sizeof(struct thread_d));
+// Create thread structure
+    Thread = (void *) threadObject(); 
     if ((void *) Thread == NULL){
         panic("create_thread: Thread\n");
     }
-    memset( Thread, 0, sizeof(struct thread_d) );
+
+// #todo
+// Is it a valid type?
+    Thread->type = thread_type;
+
+// The thread was create, but the structure is not 
+// fully initialized yet.
+    Thread->state = THREAD_STATE_CREATED;
 
 // Initializing the common basic elements. (Local worker)
     __ps_initialize_thread_common_elements((struct thread_d *) Thread);

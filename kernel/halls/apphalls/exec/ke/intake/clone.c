@@ -131,8 +131,9 @@ copy_process_struct(
     Process2->used = Process1->used;
     Process2->magic = Process1->magic;
 
-// State of process
+// Process state
     Process2->state = Process1->state;
+
 // Plano de execução.
     Process2->plane = Process1->plane;
     //Process->name_address = NULL;

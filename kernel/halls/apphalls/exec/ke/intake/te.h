@@ -1,5 +1,5 @@
 // te.h
-// Thread Environment (Process)
+// Thread Environment (fka Process)
 // Created by Fred Nora.
 
 #ifndef __INTAKE_TE_H
@@ -76,7 +76,8 @@ typedef enum {
 //Deslocamento default do in�cio da pilha em rela��o ao in�cio do kernel. #bugbug
 #define UPROCESS_DEFAULT_STACK_OFFSET 0x2000   
 //Base default da pilha do processo.
-#define UPROCESS_DEFAULT_STACK_BASE ( UPROCESS_PROCESS_LIMIT - UPROCESS_DEFAULT_STACK_OFFSET )  
+#define UPROCESS_DEFAULT_STACK_BASE  \
+    (UPROCESS_PROCESS_LIMIT - UPROCESS_DEFAULT_STACK_OFFSET)  
 //Tamanho da pilha do processo.   
 #define UPROCESS_DEFAULT_STACK_SIZE  0x2000    
 
@@ -90,14 +91,12 @@ typedef enum {
 #define CLONE_THREAD    1
 // ...
 
-
+// Thread types
 typedef enum {
     PROCESS_TYPE_NULL,
-    PROCESS_TYPE_SYSTEM,       // high priority
-    PROCESS_TYPE_INTERACTIVE,  // medium priority
-    PROCESS_TYPE_BATCH,        // low priority
+    PROCESS_TYPE_SYSTEM,  // High priority
+    PROCESS_TYPE_NORMAL   // Low priority
 }process_type_t;
-
 
 /*
  * process_state_t
@@ -246,7 +245,12 @@ struct te_d
     pid_t pid;  // 'thread environment id'
 // Parent Process IDentifier 
     ppid_t ppid;
+
+
 // Process Group IDentifier.
+// #todo: This is the same as (Application ID)
+// It's because an application has multiple processes.
+
     pgid_t pgid;
 
 //
@@ -333,8 +337,8 @@ struct te_d
 // if it is protected. ex: It can't be killed by another process.
     int _protected;
 
-// State.
-// flag ?
+// Process state
+// See the enum above
     process_state_t state; 
 
 
@@ -936,6 +940,9 @@ extern unsigned long teList[PROCESS_COUNT_MAX];
 // == Prototypes =====================================================
 //
 
+// Create process object - (Thread Environment)
+struct te_d *processObject(void);
+
 int destroy_process_structure(struct te_d *process);
 int gc_process_structure(struct te_d *process);
 
@@ -999,10 +1006,6 @@ int process_get_tty (pid_t pid);
 
 int alloc_memory_for_image_and_stack(struct te_d *process);
 
-// Worker for create_process.
-void ps_initialize_process_common_elements(struct te_d *p);
-
-struct te_d *processObject (void);
 
 //
 // $
