@@ -27,12 +27,17 @@ static void switch_responder(int fd);
 static void trigger_default_responder(int fd);
 static void exitApplication(int fd);
 
+static void update_childrens(int fd);
+
 // =====================================
 
-/*
-static void update_children(int fd);
-static void update_children(int fd)
+
+static void update_childrens(int fd)
 {
+
+    if (fd<0)
+        return;
+
     struct gws_window_info_d wi;
     gws_get_window_info(fd, main_window, &wi);
 
@@ -40,31 +45,31 @@ static void update_children(int fd)
     unsigned long button_h = wi.cr_height / 8;
     unsigned long button_y = (wi.cr_height - button_h) / 2;
 
-    unsigned long restart_x  = (wi.cr_width / 4) - (button_w / 2);
-    unsigned long shutdown_x = (3 * wi.cr_width / 4) - (button_w / 2);
+    unsigned long show_x  = (wi.cr_width / 4) - (button_w / 2);
+    unsigned long skip_x = (3 * wi.cr_width / 4) - (button_w / 2);
 
     // Redraw label text
-    gws_draw_text(
-        fd,
-        main_window,
-        20, 20,
+     gws_draw_text(
+        fd, 
+        main_window, 
+        20, 20, 
         COLOR_BLACK,
-        "Choose an action:"
+        "Choose boot option:" 
     );
 
     // Move and redraw buttons
-    gws_change_window_position(fd, restart_button, restart_x, button_y);
-    gws_resize_window(fd, restart_button, button_w, button_h);
-    gws_redraw_window(fd, restart_button, TRUE);
+    gws_change_window_position(fd, show_button, show_x, button_y);
+    gws_resize_window(fd, show_button, button_w, button_h);
+    gws_redraw_window(fd, show_button, TRUE);
 
-    gws_change_window_position(fd, shutdown_button, shutdown_x, button_y);
-    gws_resize_window(fd, shutdown_button, button_w, button_h);
-    gws_redraw_window(fd, shutdown_button, TRUE);
+    gws_change_window_position(fd, skip_button, skip_x, button_y);
+    gws_resize_window(fd, skip_button, button_w, button_h);
+    gws_redraw_window(fd, skip_button, TRUE);
     
-    //#debug
+    // Show it
     gws_refresh_window (fd, main_window);
 }
-*/
+
 
 static void set_default_responder(int wid)
 {
@@ -178,10 +183,7 @@ static int bootmenuProcedure(
         break;
 
     case MSG_PAINT:
-        // #todo
-        // Create the worker update_clients()
-        // gws_draw_text(fd, main_window, 20, 20, COLOR_BLACK,
-                      //"Choose boot option:");
+        update_childrens(fd);
         return 0;
     };
 
