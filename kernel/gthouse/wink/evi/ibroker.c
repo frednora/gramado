@@ -182,8 +182,7 @@ unsigned long sys_change_boot_menu_option(unsigned long value)
     return 0; // success
 }
 
-
-
+// Post an event to the Display Server's thread
 static int
 ibroker_post_message_to_ds ( 
     int msg, 
@@ -198,6 +197,7 @@ ibroker_post_message_to_ds (
     return (int) ipc_post_message_to_ds(msg,long1,long2);
 }
 
+// Post an event to the foreground thread
 static int
 ibroker_post_message_to_fg_thread ( 
     int msg, 
@@ -497,7 +497,6 @@ static void do_exit_embedded_shell(void)
     InputBrokerInfo.shell_flag = FALSE;
 }
 
-// local
 // Launch an app via init process.
 // Just a small range of messages are accepted.
 // range: 4001~4009
@@ -510,25 +509,38 @@ static void do_exit_embedded_shell(void)
 // The kernel can't know about this type of application.
 static void do_launch_app_via_initprocess(int index)
 {
-    const tid_t src_tid = (tid_t) __HARDWARE_TID;  // The kernel
-    const tid_t dst_tid = (tid_t) INIT_TID; // The first thread for the init process
-    unsigned long l_index = (index & 0xFFFFFFFF);
 
-    if (l_index < 4001 || l_index > 4009)
+// Kernel is the sender and init process is the receiver
+    const tid_t src_tid = (tid_t) __HARDWARE_TID;
+    const tid_t dst_tid = (tid_t) INIT_TID;
+
+// This is an index that selects what app the 
+// init process needs to launch.
+    unsigned long AppIndex = (index & 0xFFFFFFFF);
+
+// Invalid app index
+    if (AppIndex < 4001 || AppIndex > 4009)
     {
         return;
     }
 
 // Can't do it without a valid registered display server
+// It's because the app is a client-side GUI application
     if (DisplayServerInfo.initialized != TRUE){
         return;
     }
 
+// Force unblocking
+    // do_thread_ready(dst_tid);
+
 // Sending a MSG_COMMAND message to the init process
 // IN: sender tid, receiver tid, msg, index(4001~4009), 0
     ipc_post_message_to_tid(
-        (tid_t) src_tid, (tid_t) dst_tid,
-        (int) MSG_COMMAND, (unsigned long) l_index, 0 );
+        (tid_t) src_tid, 
+        (tid_t) dst_tid,
+        (int) MSG_COMMAND, 
+        (unsigned long) AppIndex, 
+        0 );
 }
 
 // Process 'user' command.

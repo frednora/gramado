@@ -61,10 +61,13 @@ ipc_post_message_to_tid2 (
     }
 
 // tid
-    if ( dst_tid < 0 || dst_tid >= THREAD_COUNT_MAX ){
+    if ( dst_tid < 0 || 
+         dst_tid >= THREAD_COUNT_MAX )
+    {
         panic("ipc_post_message_to_tid2: dst_tid\n");
         //goto fail;
     }
+
 // structure
     t = (struct thread_d *) threadList[dst_tid];
     if ((void *) t == NULL){
@@ -123,8 +126,6 @@ ipc_post_message_to_tid2 (
 // The message
 //
 
-
-// ==========================================================
 // Vamos colocar essa mensagem na outra fila de mensagens.
 // Essa nova fila sera a única fila no futuro.
 
@@ -137,14 +138,12 @@ ipc_post_message_to_tid2 (
         panic ("ipc_post_message_to_tid2: m validation\n");
     }
 
-// -------------------------
 // Standard header
     m->opaque_window = NULL;
     m->msg   = (int) (MessageCode & 0xFFFFFFFF);
     m->long1 = (unsigned long) long1;
     m->long2 = (unsigned long) long2;
 
-// -------------------------
 // Extras payload
     m->long3 = (unsigned long) long3;
     m->long4 = (unsigned long) long4;
@@ -179,8 +178,6 @@ fail:
     return (int) -1;
 }
 
-
-// ------------------------------------
 // ipc_post_message_to_tid:
 // #bugbug
 // long1 and long2 will mask to single byte.
@@ -203,7 +200,7 @@ ipc_post_message_to_tid (
 // Talvez isso deva ser permitido somente para mensagens de input vindas
 // dos device drivers.
 
-// Target thread.
+// Target thread
     struct thread_d *t;
     struct msg_d *m;
     int MessageCode=0;
@@ -212,35 +209,38 @@ ipc_post_message_to_tid (
     tid_t src_tid = (tid_t) (sender_tid & 0xFFFF);
     tid_t dst_tid = (tid_t) (receiver_tid & 0xFFFF);
 
-// Message code.
+// Message code
     MessageCode = (int) (msg & 0xFFFFFFFF);
     if (MessageCode <= 0){
         goto fail;
     }
-// tid
-    if ( dst_tid < 0 || dst_tid >= THREAD_COUNT_MAX ){
+
+// Destination TID
+    if ( dst_tid < 0 || 
+         dst_tid >= THREAD_COUNT_MAX )
+    {
         panic("ipc_post_message_to_tid: dst_tid\n");
         //goto fail;
     }
+
 // structure
     t = (struct thread_d *) threadList[dst_tid];
     if ((void *) t == NULL){
         panic ("ipc_post_message_to_tid: t\n");
     }
-    if ( t->used != TRUE || t->magic != 1234 ){
+    if (t->used != TRUE || t->magic != 1234){
         panic("ipc_post_message_to_tid: t validation\n");
     }
     if (t->tid != dst_tid){
         panic("ipc_post_message_to_tid: t->tid != dst_tid\n");
     }
 
-
 // Wakeup target thread
     thread_wait_reason_t Reason = t->wait_reason;
 
+// Check the reasons
     if (t->state == WAITING || t->state == BLOCKED)
     {
-        // Check the reasons
         switch (Reason)
         {
             case WAIT_REASON_YIELD:
@@ -248,6 +248,7 @@ ipc_post_message_to_tid (
             case WAIT_REASON_PRIORITY_BOOST:
             case WAIT_REASON_BLOCKED:  // Generic
             case WAIT_REASON_LOOP:     // Empty msg queue
+                // #debug
                 printk("ipc: Unblocking ...\n");
                 do_thread_ready(dst_tid);
                 break;
@@ -320,8 +321,10 @@ ipc_post_message_to_tid (
 // Interpret the message as "the key is currently held down, and has repeated N times."
 
     int isMake = FALSE;
-    int isControlArrow =  FALSE;
-    switch (MessageCode) {
+    int isControlArrow = FALSE;
+
+    switch (MessageCode){
+
     case MSG_KEYDOWN:
         // Handle keydown (with repeat count logic)
         isMake = TRUE;
@@ -335,8 +338,8 @@ ipc_post_message_to_tid (
         isControlArrow = TRUE;
         break;
 
+    // Other messages
     default:
-        // Other messages
         break;
     };
 
@@ -386,16 +389,15 @@ ipc_post_message_to_tid (
 // The message
 //
 
-// ==========================================================
 // Vamos colocar essa mensagem na outra fila de mensagens.
 // Essa nova fila sera a única fila no futuro.
 
-// Get the pointer for the next entry.
+// Get the pointer for the next entry
     m = (struct msg_d *) t->MsgQueue[ t->MsgQueueTail ];
     if ((void*) m == NULL){
         panic ("ipc_post_message_to_tid: m\n");
     }
-    if ( m->used != TRUE || m->magic != 1234 ){
+    if (m->used != TRUE || m->magic != 1234){
         panic ("ipc_post_message_to_tid: m validation\n");
     }
 
@@ -425,10 +427,6 @@ ipc_post_message_to_tid (
         t->MsgQueueTail = 0;
     }
 
-    // State test
-    //if (t->state == WAITING)
-        //t->state = READY;
-
     return 0;
 
 fail2:
@@ -443,18 +441,23 @@ fail:
     return (int) -1;
 }
 
-// Post message to the foreground thread.
+// Post message to the foreground thread
 int
 ipc_post_message_to_foreground_thread ( 
     int msg, 
     unsigned long long1, 
     unsigned long long2 )
 {
-    int RetValue=0;
-// #todo: 
-// Sender?
-    tid_t SenderTID = 0;
+// Kernel is the sender and init process is the receiver
+    tid_t SenderTID = __HARDWARE_TID;
     tid_t ReceiverTID = foreground_thread;
+
+    int RetValue=0;
+
+// Parameter:
+    if (msg < 0){
+        goto fail;
+    }
 
 // Target thread
     if ( ReceiverTID < 0 || 
@@ -463,17 +466,13 @@ ipc_post_message_to_foreground_thread (
         goto fail;
     }
  
- // Parameter:
-    if (msg < 0){
-        goto fail;
-    }
-
-    RetValue = (int) ipc_post_message_to_tid(
-                     (tid_t) SenderTID, 
-                     (tid_t) ReceiverTID,
-                     (int) msg, 
-                     (unsigned long) long1,
-                     (unsigned long) long2 );
+    RetValue = 
+    (int) ipc_post_message_to_tid(
+            (tid_t) SenderTID, 
+            (tid_t) ReceiverTID,
+            (int) msg, 
+            (unsigned long) long1,
+            (unsigned long) long2 );
 
     return (int) RetValue;
 
@@ -488,22 +487,33 @@ ipc_post_message_to_init (
     unsigned long long1, 
     unsigned long long2 )
 {
-    tid_t SenderTID = __HARDWARE_TID;  // sender TID
-    tid_t ReceiverTID = INIT_TID;      // receiver TID
 
+// Kernel is the sender and init thread is the receiver
+    tid_t SenderTID = __HARDWARE_TID;
+    tid_t ReceiverTID = INIT_TID;
+
+// Parameter:
     if (msg < 0)
         goto fail;
 
 // Is this a valid destination?
-    if (ReceiverTID < 0 || ReceiverTID >= THREAD_COUNT_MAX)
+    if ( ReceiverTID < 0 || 
+         ReceiverTID >= THREAD_COUNT_MAX )
     {
         goto fail;
     }
 
+// Force unblocking
+    // do_thread_ready(ReceiverTID);
+
 // Post it
     ipc_post_message_to_tid(
-        (tid_t) SenderTID, (tid_t) ReceiverTID,
-        (int) msg, (unsigned long) long1, (unsigned long) long2 );
+        (tid_t) SenderTID, 
+        (tid_t) ReceiverTID,
+        (int) msg, 
+        (unsigned long) long1, 
+        (unsigned long) long2 );
+
    return 0;
 
 fail:
@@ -517,18 +527,24 @@ ipc_post_message_to_ds (
     unsigned long long1, 
     unsigned long long2 )
 {
-    const tid_t SenderTID = (tid_t) __HARDWARE_TID;  // The kernel
+
+// Kernel is the sender and display server is the receiver
+    const tid_t SenderTID = (tid_t) __HARDWARE_TID;
     tid_t ReceiverTID = -1;  // Not initialized yet
 
+// Parameter:
     if (msg < 0)
         goto fail;
 
-// Get the server's TID
+// Server is not running
     if (DisplayServerInfo.initialized != TRUE){
         goto fail;
     }
+
+// Get the server's TID
     ReceiverTID = (tid_t) DisplayServerInfo.tid;
-    if (ReceiverTID < 0 || ReceiverTID >= THREAD_COUNT_MAX)
+    if ( ReceiverTID < 0 || 
+         ReceiverTID >= THREAD_COUNT_MAX )
     {
         goto fail;
     }
@@ -537,13 +553,19 @@ ipc_post_message_to_ds (
     do_credits_by_tid(ReceiverTID);
     do_credits_by_tid(ReceiverTID);
 
-// Wake up the server, it sleeps frequently.
-    //wakeup_thread(ReceiverTID);
+// Force unblocking
+// Wake up the server, it sleeps frequently
+    // wakeup_thread(ReceiverTID);
+    // do_thread_ready(ReceiverTID);
 
 // Post it
-    ipc_post_message_to_tid(
-        (tid_t) SenderTID, (tid_t) ReceiverTID,
-        (int) msg, (unsigned long) long1, (unsigned long) long2 );
+    ipc_post_message_to_tid (
+        (tid_t) SenderTID, 
+        (tid_t) ReceiverTID,
+        (int) msg, 
+        (unsigned long) long1, 
+        (unsigned long) long2 );
+
    return 0;
 
 fail:
@@ -553,15 +575,17 @@ fail:
 // Wrapper for different types of input events.
 // Posting these events to the thread, 
 // not processing internally.
-int ipc_post_input_event_to_ds(int event_id, long long1, long long2)
+int 
+ipc_post_input_event_to_ds( 
+    int event_id, 
+    long long1, 
+    long long2 )
 {
     unsigned long button_number=0;
 
+// Parameter:
     if (event_id < 0)
         goto fail;
-
-
-
 
     switch (event_id)
     {
@@ -570,6 +594,7 @@ int ipc_post_input_event_to_ds(int event_id, long long1, long long2)
             ipc_post_message_to_ds( event_id, long1, long2 );
             return 0;
             break;
+
         case MSG_MOUSEPRESSED:
         case MSG_MOUSERELEASED:
             button_number = (unsigned long) (long1 & 0xFFFF);
@@ -585,10 +610,10 @@ int ipc_post_input_event_to_ds(int event_id, long long1, long long2)
             break;
 
         // Timer
+        // Here we don't know about the frequency this worker is called.
+        // It's up to the caller.
         case MSG_TIMER:
-            if ( (jiffies % JIFFY_FREQ) == 0 ){
-                ipc_post_message_to_ds( MSG_TIMER, 1234, jiffies );
-            }   
+            ipc_post_message_to_ds( MSG_TIMER, 1234, jiffies );   
             break;
 
         default:
@@ -603,7 +628,8 @@ fail:
 // #todo
 // Broadcast system message to all the threads.
 // IN: Buffer
-unsigned long ipc_broadcast_system_message(
+unsigned long 
+ipc_broadcast_system_message(
     tid_t sender_tid,
     int msg, 
     unsigned long long1, 
@@ -630,8 +656,7 @@ unsigned long ipc_broadcast_system_message(
             {
                 dst_tid = (tid_t) t->tid;  // Receiver
 
-                // IN:
-                // sender, receiver,msg,l1,l2,l3,l4
+                // IN: sender,receiver,msg,l1,l2,l3,l4
                 rv = 
                 (int) ipc_post_message_to_tid2(
                         src_tid,  // Sender 
@@ -647,7 +672,7 @@ unsigned long ipc_broadcast_system_message(
 
     unsigned long long_rv = (unsigned long) (Counter & 0xFFFFFFFF);
 
-// Return the number of posted messages.
+// Return the number of posted messages
     return (unsigned long) long_rv;
 }
 
