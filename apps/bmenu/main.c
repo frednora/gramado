@@ -113,7 +113,8 @@ static void exitApplication(int fd)
 // ----------------------------------------------------
 // Procedure: handles events sent by the display server
 // ----------------------------------------------------
-static int bootmenuProcedure(
+static int 
+bootmenuProcedure(
     int fd, int event_window, int event_type,
     unsigned long long1, unsigned long long2 )
 {

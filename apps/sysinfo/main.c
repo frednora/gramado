@@ -234,10 +234,6 @@ systemProcedure(
         case 'C': 
         case 'c':
             exitProgram(fd);
-            //gws_destroy_window(fd, refresh_button);
-            //gws_destroy_window(fd, close_button);
-            //gws_destroy_window(fd, main_window);
-            //exit(0);
             break;
 
         // #test
@@ -264,23 +260,15 @@ systemProcedure(
         break;
 
     case GWS_MouseClicked:
-        if ((int)long1 == refresh_button) update_children(fd);
-        if ((int)long1 == close_button) 
-        {
+        if ((int)long1 == refresh_button)
+            update_children(fd);
+        if ((int)long1 == close_button){
             exitProgram(fd);
-            //gws_destroy_window(fd, refresh_button);
-            //gws_destroy_window(fd, close_button);
-            //gws_destroy_window(fd, main_window);
-            //exit(0);
         }
         break;
 
     case MSG_CLOSE:
         exitProgram(fd);
-        //gws_destroy_window(fd, refresh_button);
-        //gws_destroy_window(fd, close_button);
-        //gws_destroy_window(fd, main_window);
-        //exit(0);
         break;
 
     case MSG_PAINT:

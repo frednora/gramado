@@ -2743,6 +2743,28 @@ terminalProcedure (
         exit(0);
         break;
 
+
+    //case GWS_Undo:  // [control + z] (Undo)
+        //break;
+    //case GWS_Cut:   // [control + x] (Cut)
+        //break;
+
+    // #test
+    // [Control + c] can be used to kill the child,
+    // we alread have the child's tid.
+    //case GWS_Copy:  // [control + c] (Copy)
+        //break;
+
+    //case GWS_Paste:  // [control + v] (Paste)
+        //break;
+    //case GWS_SelectAll:  // [control + a] (Select all)
+        //break;
+    //case GWS_Find:  // [control + f] (Find)
+        //printf("term00.bin: GWS_Find\n");
+        //break;
+    //case GWS_Save:  // [control + s] (Save?)
+        //break;
+
     default:
         return 0;
         break;

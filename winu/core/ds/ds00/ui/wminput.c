@@ -788,19 +788,6 @@ int wmProcessCombinationEvent(int msg_code)
         return 0;
     }
 
-/*
-// ===============================
-// #todo
-// Control + w
-// Close the active window.
-    if (msg_code == GWS_XXXXX)
-    {
-        yellow_status("Control + w");
-        // #todo: Close the active window.
-        return 0;
-    }
-*/
-
 // ===============================
 // [control + arrow keys]
 

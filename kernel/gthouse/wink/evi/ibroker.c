@@ -1696,31 +1696,24 @@ __consoleProcessKeyboardInput (
                 // ^a = Start OF Header = 1
                 if (ctrl_status == TRUE && long1 == ASCII_SOH)
                 {
-                    //ibroker_post_message_to_ds( MSG_SELECT_ALL, long1, long2 );
-                    // TARGET: GUI APP
                     ibroker_post_message_to_fg_thread(
-                        MSG_SELECT_ALL, long1, long2);                    
-
+                        MSG_SELECT_ALL, long1, long2);
                     return 0;
                 }
 
                 // ^c = End Of Text = 3
                 if (ctrl_status == TRUE && long1 == ASCII_ETX)
                 {
-                    //ibroker_post_message_to_ds( MSG_COPY, long1, long2 );
                     ibroker_post_message_to_fg_thread(
-                        MSG_COPY, long1, long2);                    
-
+                        MSG_COPY, long1, long2);
                     return 0;
                 }
 
                 // ^f = Acknowledgement = 6
                 if (ctrl_status == TRUE && long1 == ASCII_ACK)
                 {
-                    //ibroker_post_message_to_ds( MSG_FIND, long1, long2 );
                     ibroker_post_message_to_fg_thread(
-                        MSG_FIND, long1, long2);                    
-
+                        MSG_FIND, long1, long2);
                     return 0;
                 }
 
@@ -1728,17 +1721,14 @@ __consoleProcessKeyboardInput (
                 // Let's close the active window with [control + w]. 
                 if (ctrl_status == TRUE && long1 == ASCII_ETB)
                 {
-                    //ibroker_post_message_to_ds( MSG_CLOSE, long1, long2 );
                     ibroker_post_message_to_fg_thread(
-                        MSG_CLOSE, long1, long2);                    
-
+                        MSG_CLOSE, long1, long2);
                     return 0;
                 }
 
                 // ^q = Device Control 1 = 0x11
                 if (ctrl_status == TRUE && long1 == ASCII_DC1)
                 {
-                    //ibroker_post_message_to_ds( MSG_DC1, long1, long2 );
                     ibroker_post_message_to_fg_thread(
                         MSG_DC1, long1, long2);                    
                     return 0;
@@ -1746,59 +1736,47 @@ __consoleProcessKeyboardInput (
                 // ^r = Device Control 2 = 0x12
                 if (ctrl_status == TRUE && long1 == ASCII_DC2)
                 {
-                    //ibroker_post_message_to_ds( MSG_DC2, long1, long2 );
                     ibroker_post_message_to_fg_thread(
-                        MSG_DC2, long1, long2);                    
-
+                        MSG_DC2, long1, long2);
                     return 0;
                 }
                 // ^s = Device Control 3 = 0x13
                 // Some apps can use it as SAVE.
                 if (ctrl_status == TRUE && long1 == ASCII_DC3)
                 {
-                    //ibroker_post_message_to_ds( MSG_DC3, long1, long2 );
                     ibroker_post_message_to_fg_thread(
-                        MSG_DC3, long1, long2);                    
-
+                        MSG_DC3, long1, long2);
                     return 0;
                 }
                 // ^t = Device Control 4 = 0x14
                 if (ctrl_status == TRUE && long1 == ASCII_DC4)
                 {
-                    //ibroker_post_message_to_ds( MSG_DC4, long1, long2 );
                     ibroker_post_message_to_fg_thread(
-                        MSG_DC4, long1, long2);                    
-
+                        MSG_DC4, long1, long2);
                     return 0;
                 }
 
                 // ^v = Synchronous Idle = 22
                 if (ctrl_status == TRUE && long1 == ASCII_SYN)
                 {
-                    //ibroker_post_message_to_ds( MSG_PASTE, long1, long2 );
                     ibroker_post_message_to_fg_thread(
-                        MSG_PASTE, long1, long2);                
-
+                        MSG_PASTE, long1, long2);
                     return 0;
                 }
 
                 // ^x = Cancel = 24
                 if (ctrl_status == TRUE && long1 == ASCII_CAN)
                 {
-                    //ibroker_post_message_to_ds( MSG_CUT, long1, long2 );
                     ibroker_post_message_to_fg_thread(
-                        MSG_CUT, long1, long2);                
-
+                        MSG_CUT, long1, long2);
                     return 0;
                 }
 
                 // ^z = Substitute - 26
                 if (ctrl_status == TRUE && long1 == ASCII_SUB)
                 {
-                    //ibroker_post_message_to_ds( MSG_UNDO, long1, long2 );
                     ibroker_post_message_to_fg_thread(
                         MSG_UNDO, long1, long2);
-
                     return 0;
                 }
 
@@ -1825,8 +1803,6 @@ __consoleProcessKeyboardInput (
 
                 return 0;
             }
-
-            //debug_print ("wmProcedure: done\n");
             return 0;
             break;
         };
