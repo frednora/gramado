@@ -1964,51 +1964,43 @@ void wm_update_active_window(void)
     wm_update_window_by_id(wid);
 }
 
-// Repinta todas as janelas seguindo a ordem da lista
-// que está em last_window.
-// No teste isso é chamado pelo kernel através do handler.
-// Mas também será usado por rotinas internas.
+//
+// Sequence fo redrawing:
+// + The rootwindow.
+// + The linked list of windows. Starting with the first_window.
+//   (only Overlapped)
+// + The taskbar.
+//
+// IN: tile or not, refresh or not.
 void wm_update_desktop(int tile, int show)
 {
+    register int i=0;
+
     struct gws_window_d *w;  // tmp
-// Lion: Last of the stack.
-    struct gws_window_d *l;
+    struct gws_window_d *l;  // Last of the stack
 
     WindowManager.is_fullscreen = FALSE;
 
-// #test
+// Tile the windows.
 // Starting with the first window of the list,
 // create a stack o windows in the top/left corner of the screen.
-// #todo: 
-// Maybe we use an argument here. A set of flags.
-    if (tile)
+// #todo: Maybe we need to use some arguments here. A set of flags.
+
+    if (tile == TRUE)
     {
-        if (WindowManager.mode == WM_MODE_TILED)
-        {
+        if (WindowManager.mode == WM_MODE_TILED){
             wm_tile();
-            // Ok, now we have the pointers
-            // for the main windows. (first, last, active ...).
         }
     }
 
+// =========================================
+// Redraw all the windows from bottom to top
+// Ok, now we have the pointers for the main windows. 
+// (first, last, active ...)
+
+// ===========================================
 // Redraw root window, but do not show it yet.
     redraw_window(__root_window,FALSE);
-
-// #test
-// Testing zoom.
-// ======================================
-
-/*
- // #ok: It's working
-    bmp_decode_system_icon0(
-        4,  //Index
-        8,  // x
-        8,  // y
-        TRUE,  // show
-        4 // zoom factor
-        );
-    while(1){}
-*/
 
 // ======================================
 // Redraw the whole stack of windows,
@@ -2017,30 +2009,26 @@ void wm_update_desktop(int tile, int show)
 // Set the last window in the stack as the active window.
 // Set focus on the last window of the stack. 
 
-// Lamb
     w = (struct gws_window_d *) first_window;
 
 // --------------
 // 0 windows.
 // Invalid first window.
+// We already redrawed the root window, simply flush it 
+// and go to draw the taskbar and refres the whole screen.
+
+    int InvalidFirstWindow = FALSE;
+
     if ((void*)w == NULL)
-    {
-        first_window = NULL;
-        flush_window(__root_window);
-        // Go to the end to draw the taskbar.
-        goto end;
-        return;
-    }
-// --------------
-// 0 windows.
-// Invalid first window.
+        InvalidFirstWindow = TRUE;
     if (w->magic != 1234)
+        InvalidFirstWindow = TRUE;
+
+    if (InvalidFirstWindow == TRUE)
     {
         first_window = NULL;
         flush_window(__root_window);
-        // Go to the end to draw the taskbar.
         goto end;
-        return;
     }
 
 // The Lamb is the Lion.
@@ -2058,11 +2046,10 @@ void wm_update_desktop(int tile, int show)
             break; 
         }
 
-        // Valid pointer.
+        // Valid pointer
         if ((void*) w != NULL)
         {
-            // Only overlapped windows.
-            // Applications.
+            // Only overlapped windows. (Applications)
             if (w->type == WT_OVERLAPPED)
             {
                 // Redraw, but do no show it.
@@ -2094,14 +2081,14 @@ void wm_update_desktop(int tile, int show)
     set_active_window(l);
 
 // -------------------------------------------
+// #test
 // All the childs of l, 
 // will have the same zIndex as l.
-    register int i=0;
     struct gws_window_d *tmp;
     for (i=0; i<WINDOW_COUNT_MAX; i++)
     {
         tmp = (struct gws_window_d *) windowList[i];
-        if ( (void*) tmp != NULL )
+        if ((void*) tmp != NULL)
         {
             if (tmp->magic == 1234)
             {
@@ -2118,6 +2105,7 @@ void wm_update_desktop(int tile, int show)
 // Update the taskbar at the bottom of the screen,
 // but do not show it yet.
 // Print the name of the active window.
+
     char *aw_name;
 
     // Valid last window.
@@ -2132,20 +2120,17 @@ void wm_update_desktop(int tile, int show)
         }
     }
 
-    // Inalid last window.
+// Inalid last window.
     if ((void*) l == NULL)
     {
         last_window = NULL;
         flush_window(__root_window);
         goto end;
-        return;
     }
 
     yellowstatus0("Gramado",FALSE);
 
-// ------------------
-// Show
-// Shows the whole screen
+// Show the whole screen
     if (show){
         flush_window(__root_window);
     }
@@ -2157,14 +2142,16 @@ void wm_update_desktop(int tile, int show)
 // #todo:
 // We can create a worker to this routine.
     w = (struct gws_window_d *) first_window;
+
     while (1){
         // End of the list?
         if ((void*) w == NULL)
             break;
         if (w->type == WT_OVERLAPPED)
         {
-            w->dirty == FALSE;  // Validate
-            if ( (void*) w->titlebar != NULL )
+            // If the window has a valid titlebar,
+            // Validate the titlebar and its ocntrols.
+            if ((void*) w->titlebar != NULL)
             {
                 w->titlebar->dirty = FALSE;
                 validate_window_by_id(
@@ -2174,6 +2161,9 @@ void wm_update_desktop(int tile, int show)
                 validate_window_by_id(
                     w->titlebar->Controls.close_wid );
             }
+
+            // Validate the window
+            w->dirty = FALSE;
         }
         w = w->next;
     };    
@@ -2181,26 +2171,17 @@ void wm_update_desktop(int tile, int show)
 
 end:
 
-//------------------------
-// Show the taskbar created by the user.
+// ------------------------
+// + Redraw and show the taskbar
+// + Send message to uodate the clients of the taskbar
+
     if ((void*)taskbar_window != NULL)
     {
-        //redraw_window(taskbar_window,FALSE);
         redraw_window(taskbar_window,TRUE);
-        // #todo: Send message to update the client area of tb.
         on_update_window(taskbar_window,GWS_Paint);
     }
 
-// #test
-// #debug
-// envia paint pra todo mundo.
-// naquela janela assim saberemos quais janelas estao pegando input ainda.
-// #bugbug: segunda mensagem de paint.
-// >>> Isso eh muito legal.
-//     pois atualiza todas janelas quando em tile mode
-//     e mostra qual nao esta pegando eventos.
-
-// Send Paint message to all clients.
+// Send Paint message to all clients. (Overlapped only)
 // IN: wid, msgcode, data1, data2
     window_post_message_broadcast( 0, GWS_Paint, 0, 0 );
 }
@@ -2235,20 +2216,18 @@ void  wm_update_desktop2(void)
         {
             if (w->type == WT_OVERLAPPED)
             {
-                if (w->state != WINDOW_STATE_MINIMIZED){
+                if (w->state != WINDOW_STATE_MINIMIZED)
+                {
                     redraw_window(w,FALSE);
                     //on_update_window(w,GWS_Paint);
                 }
             }
         }
-        // Next window from the list.
+        // Next window from the list
         w = (struct gws_window_d *) w->next;
     };
 
 done:
-
-    //#debug
-    //yellowstatus0("Gramado",FALSE);
 
 // The taskbar created by the user.
 // Redraw it and send message to update the client area.
@@ -2279,17 +2258,21 @@ done:
         // #todo
         // We need to create a worker, where it will validate all the childrens
         // when we calidate an overlapped window.
-        if (w->type == WT_OVERLAPPED){
-            w->dirty == FALSE;  // Validate overlapped
-            
-            if ((void*) w->titlebar != NULL){
-                w->titlebar->dirty = FALSE;  // Validate tittle bar
-                
+        if (w->type == WT_OVERLAPPED)
+        {
+            // If it has a valid titlebar,
+            // validate it and all its controls.
+            if ((void*) w->titlebar != NULL)
+            {
+                // Validate tittle bar
+                w->titlebar->dirty = FALSE;    
                 // Validate the controls
                 validate_window_by_id(w->titlebar->Controls.minimize_wid);
                 validate_window_by_id(w->titlebar->Controls.maximize_wid);
                 validate_window_by_id(w->titlebar->Controls.close_wid);
             }
+            // Validate window
+            w->dirty == FALSE;
         }
         w = w->next;
     };    
@@ -2302,29 +2285,32 @@ done:
     //window_post_message_broadcast( 0, GWS_Paint, 0, 0 );
 
 // ----------------
+// The active window.
 // Send message only to the top window.
-    if ((void*) active_window != NULL){
+// Sending a notification to the kernel, saying the thread has
+// an event from the server. Good opportonity to wakeup 
+// the thread if necessary.
+
+    if ((void*) active_window != NULL)
+    {
         if (active_window->magic == 1234)
         {
             window_post_message( active_window->id, GWS_Paint, 0, 0 );
-
-            // #test
-            // Sending a notification to the kernel, saying the thread has
-            // an event from the server. Good opportonity to wakeup the thread if necessary.
             wmNotifyKernel(active_window, 8000, 8000);
         }
     }
 }
 
-void wm_update_desktop3(struct gws_window_d *new_active_window)
-{
 // Set the top/active window and
 // redraw the desktop respecting the list.
 // We need to rebuild the list.
+void wm_update_desktop3(struct gws_window_d *new_active_window)
+{
+    // WindowManager.is_fullscreen = FALSE;
 
-    if ((void*) new_active_window == NULL)
+    if ((void*) new_active_window == NULL){
         return;
-
+    }
     if (new_active_window == last_window)
         goto done;
 
@@ -2534,7 +2520,7 @@ void __set_foreground_tid(int tid)
     sc82 ( 10011, tid, tid, tid );
 }
 
-// Updates the keyboard owner and foreground thread.
+// Updates the keyboard owner and foreground thread
 void set_focus(struct gws_window_d *window)
 {
 
@@ -2593,6 +2579,17 @@ void set_focus(struct gws_window_d *window)
 
 // Get the target window
     target = window;
+
+/*
+// If it's the taskbar
+    if (target == taskbar_window)
+    {
+        if (target->isTaskBar == TRUE)
+        {
+        }
+    }
+*/
+
 
 // Parent
     int IsParentValid = FALSE;
@@ -5160,11 +5157,13 @@ struct gws_window_d *get_active_window (void){
     return (struct gws_window_d *) active_window;
 }
 
-void set_active_window(struct gws_window_d *window)
-{
+// Activate window
 // #bugbug
 // Can we active the root window?
 // The root window is WT_SIMPLE.
+// taskbar is simple?
+void set_active_window(struct gws_window_d *window)
+{
 
 // Parameter
     if ((void*) window == NULL){
@@ -5173,10 +5172,18 @@ void set_active_window(struct gws_window_d *window)
     if (window->magic!=1234){
         return;
     }
+
+    // #test
+    // Let's activate also the taskbar window
+    //if (window == taskbar_window)
+        //goto go_ahead;
+
     if (window->type != WT_OVERLAPPED)
         return;
 
-// Is it already the active window.
+go_ahead:
+
+// Is it already the active window
     if (window == active_window){
         return;
     }

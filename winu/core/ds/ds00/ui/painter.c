@@ -1106,14 +1106,12 @@ redraw_window (
                 (unsigned long) window->rop_bg );
 
         // All done for WT_SIMPLE type
-        if (window->type == WT_SIMPLE){
+        if ( window->type == WT_SIMPLE ||
+             window->type == WT_TITLEBAR )
+        {
             goto done;
         }
     }
-
-//
-// botao ==========================================
-//
 
 // =======================
 // WT_BUTTON
@@ -1130,13 +1128,12 @@ redraw_window (
 // Label
     unsigned int label_color = COLOR_BLACK;
 
-
     if (window->type == WT_BUTTON)
     {
 
         ButtonState = (int) (window->status & 0xFFFFFFFF);
  
-        //if ( (void*) window->parent == NULL )
+        //if ((void*) window->parent == NULL)
             //printf("redraw_window: [FAIL] window->parent\n");
 
         // Atualiza algumas características da janela.
