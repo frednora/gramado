@@ -1095,64 +1095,34 @@ void on_doubleclick(void)
     // ...
 }
 
-// Post a message into the window with focus message queue.
-// #todo: We need a worker for posting messages into the queues.
-// Do we already have one?
+// + post message
+// + Notify kernel
 static void 
 on_update_window(
     struct gws_window_d *window, 
     int event_type )
 {
-// Post a message to the window with focus.
-
-// Window with focus.
     struct gws_window_d *w;
-    register int Tail=0;
 
-// Error. Nothing to do.
-    if (event_type<0){
+// Window validation
+    w = (struct gws_window_d *) window;
+    if ( (void*) w == NULL ){
         return;
     }
-
-    //w = (struct gws_window_d *) get_focus();
-    w = (struct gws_window_d *) window;
-    if ( (void*) w==NULL ){ return; }
-    if (w->magic != 1234) { return; }
-
-// Update window structure.
-// #?? We are using a single event.
-// But maybe we can use a queue, just like the 
-// messages in the thread structure.
-
-    // No more single events
-    //w->single_event.wid   = w->id;
-    //w->single_event.msg   = event_type;
-    //w->single_event.long1 = 0;
-    //w->single_event.long2 = 0;
-    //w->single_event.has_event = TRUE;
-    //w->single_event.has_event = FALSE;
-
-/*
-// ---------------
-// Post message
-    Tail = (int) w->ev_tail;
-    w->ev_wid[Tail]   = (unsigned long) (w->id & 0xFFFFFFFF);
-    w->ev_msg[Tail]   = (unsigned long) (event_type & 0xFFFFFFFF);
-    w->ev_long1[Tail] = (unsigned long) 0; 
-    w->ev_long2[Tail] = (unsigned long) 0;
-    w->ev_tail++;
-    if (w->ev_tail >= 32){
-        w->ev_tail=0;
+    if (w->magic != 1234){
+        return;
     }
-// ---------------
- */
+// Invalid event type
+    if (event_type < 0){
+        return;
+    }
 
 // Post message
     window_post_message( w->id, event_type, 0, 0 );
 
-    // #test
-    // Sending a notification to the kernel, saying the thread has
-    // an event from the server. Good opportonity to wakeup the thread if necessary.
+// #test
+// Sending a notification to the kernel, saying the thread has
+// an event from the server. Good opportonity to wakeup the thread if necessary.
     wmNotifyKernel(w, 8000, 8000);
 }
 
@@ -2398,87 +2368,118 @@ void show_desktop(void)
     wm_update_desktop2();
 }
 
-// Here we're gonna redraw the given window
-// and invalidate it.
+// Only WT_OVERLAPPED type
+// #ps: It doesn't refresh if the tile parameter is FALSE.
+// #todo: This routine is confuse. It needs a better descrption here.
+// Routine:
+// + Redraw the given window
+// + Invalidate it
+//
+// IN: window, tile or not
 int 
 update_window ( 
     struct gws_window_d *window, 
     unsigned long flags )
 {
-// Only WT_OVERLAPPED.
-
     int ret_val=0;
     //unsigned long fullWidth = 0;
     //unsigned long fullHeight = 0;
 
+    int ActivateWindow = TRUE;
 
+    // #bugbug: No not set focus on application window.
+    // int SetFocus = TRUE;
+
+// Parameters:
     if ((void*) window == NULL)
-        return -1;
+        goto fail;
     if (window->magic != 1234)
-        return -1;
+        goto fail;
+    
+// Only this type
     if (window->type != WT_OVERLAPPED){
-        return -1;
+        goto fail;
     }
 
     //ret_val = (int) redraw_window(window,flags);
 // Paint the childs of the window with focus.
 //    on_update_window(window,GWS_Paint);
 
-// #test
-// Empilhando verticalmente.
+
+// Window manager validation
     if (WindowManager.initialized != TRUE){
-        return -1;
+        goto fail;
     }
 
-// Fullscreen?
+// The window manager is in full screen.
+// This is window needs to have 
+// the position and dimension for fullscreen
+// #todo: For now we are prepering the window for 
+// a maximized visual.
     if (WindowManager.is_fullscreen == TRUE)
     {
-        // #test
-        // for titlebar color support.
-        //window->Border.border_size = 2;
+        // The keyboard and mouse owner
         keyboard_owner = (void*) window;
+        mouse_owner    = (void*) window;
+
+        // Mouser hover
+        // mouse_hover = NULL;
+
+        // z-order top and last window
+        top_window     = (void*) window;
         last_window    = (void*) window;
-        top_window     = (void*) window;  //z-order: top window.
+
+        // #test: Border for titlebar color support.
+        //window->Border.border_size = 2;
+
+        // #todo
+        // The purpose is extend the client are for all the 
+        // screen dimension.
 
         // #bugbug
-        // At the moment we'ew using a notification
-        // bar above the working area.
-        // So, let's use only the working area.
-        // But the purpose the expose only the client area
-        // of the window.
+        // But for now we're using the working area,
+        // excluding the taskbar and the notification bar abouve it.
 
         //fullWidth  = gws_get_device_width();
         //fullHeight = gws_get_device_height();
 
-        //#bugbug: resize first, always.
+        // Resize first
         gws_resize_window(
             window,
             WindowManager.wa.width -4,
-            WindowManager.wa.height  -4);
+            WindowManager.wa.height -4 );
+
+        // Change position
         gwssrv_change_window_position(
             window,
             WindowManager.wa.left +2,
-            WindowManager.wa.top +2);
+            WindowManager.wa.top +2 );
     }
 
-    //keyboard_owner = (void *) window;
-    //last_window    = (void *) window;
-    //top_window     = (void *) window;
+    if (ActivateWindow == TRUE)
+        set_active_window(window);
 
-    set_active_window(window);
-    set_focus(window);
+    // #bugbug: No not set focus on application window.
+    //if (SetFocus == TRUE)
+        //set_focus(window);
 
+// Tile or not?
+
+    // Redraw and paint the childs of the window with focus.
     if (flags == TRUE){
         redraw_window(window,TRUE);
-        // Paint the childs of the window with focus.
         on_update_window(window,GWS_Paint);
+    // Only redraw it.
     } else {
         redraw_window(window,FALSE);
     }
-    //redraw_window(window,FALSE);
+
+// Invalidate?
     //invalidate_window(window);
 
     return (int) ret_val;
+fail:
+    return (int) -1;
 }
 
 // #todo
@@ -4212,8 +4213,11 @@ wm_hit_test_00(
     if (WindowManager.initialized!=TRUE){
         return;
     }
-    if (WindowManager.is_fullscreen==TRUE){
-        return;
+
+// #test
+// Restriction when in fullscreen mode
+    if (WindowManager.is_fullscreen == TRUE){
+        //return;
     }
 
     //printf("long1=%d long2=%d\n",long1, long2);
@@ -4222,9 +4226,10 @@ wm_hit_test_00(
 
     for (i=0; i<max; i++){
 
-    // Get a pointer for a window.
+    // Get a pointer for a window
     w = (struct gws_window_d *) windowList[i];
-    // If this is a valid pointer.
+
+    // If this is a valid pointer
     if ((void*) w != NULL)
     {
         if (w->magic == 1234)
@@ -4557,7 +4562,13 @@ wm_change_bg_color(
     };
 }
 
-// Enter fullscreen.
+// Enter fullscreen mode
+// #todo
+// 1 - Resize the target window
+// 2 - Taskbar handling
+// 3 - Working area update
+// 4 - Notification bar / overlays
+// 5 - Input routing
 void wm_enter_fullscreen_mode(void)
 {
     struct gws_window_d *w;
@@ -4566,32 +4577,30 @@ void wm_enter_fullscreen_mode(void)
         return;
     }
 
-// active window
-    //w = (struct gws_window_d *) last_window;
+// Get the active window
     w = (struct gws_window_d *) get_active_window();
     if ((void*) w == NULL)
         return;
     if (w->magic != 1234)
         return;
 
-// Set flag
+// Set the window and the flag
+    WindowManager.fullscreen_window = (struct gws_window_d *) w;
     WindowManager.is_fullscreen = TRUE;
 
-// Set the window
-    WindowManager.fullscreen_window = (struct gws_window_d *) w;
-
 // Update window
-    //wm_update_window_by_id(w->id);
     update_window(w,TRUE);
 
-// Setup the mouse hover window
+// New keyboard and mouse owner
+    keyboard_owner = w;
+    mouse_owner = w;
+
+// Update mouse hover
+// #todo: Mayber we can reset the mouse position
     mouse_hover = NULL;
-// Set up the mouse owner.    
-    mouse_owner = NULL;
-// Set the window with focus.
-    keyboard_owner = NULL;
 }
 
+// Exit fullscreen mode
 void wm_exit_fullscreen_mode(int tile)
 {
     if (WindowManager.initialized != TRUE){

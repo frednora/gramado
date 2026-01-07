@@ -463,6 +463,7 @@ void mouse_at(void)
 // Compare the mouse position (__new_mouse_x and__new_mouse_y)
 // against the mouse_hover window. 
 
+    // For a valid mousehover window
     if ((void*) mouse_hover != NULL)
     {
         if (mouse_hover->magic == 1234)
@@ -490,9 +491,12 @@ void mouse_at(void)
 // #bugbug
 // We gotta check window inside window.
 
+    // Find a new mousehover window
     for (i=0; i<WINDOW_COUNT_MAX; i++)
     {
+        // Target
         new_hover_window = (void*) windowList[i];
+
         if ((void*) new_hover_window != NULL)
         {
             if (new_hover_window->magic == 1234)
@@ -506,7 +510,6 @@ void mouse_at(void)
                     if (new_hover_window != __root_window)
                     {
                         mouse_hover = (void *) new_hover_window;
-                        //redraw_window(w,TRUE);
                         return;
                     }
                 }

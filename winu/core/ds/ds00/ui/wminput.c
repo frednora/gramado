@@ -411,244 +411,83 @@ wmProcessKeyboardEvent(
 
 // ================================
 // event type: keyup
-    if (msg == GWS_KeyUp)
-    {
-        // Nothing for now.
+
+    if (msg == GWS_KeyUp){
+        // Nothing for now
     }
 
 // ================================
 // event type: syskeydown
+
+    // The only key expected by the server is VK_F11
     if (msg == GWS_SysKeyDown)
     {
-        // Se pressionamos alguma tecla de funçao.
-        // Cada tecla de funçao aciona um botao da barra de tarefas.
+        //if (long1 == VK_F8)
+            //return 0;
+        //if (long1 == VK_F9)
+            //return 0;
+        //if (long1 == VK_F10)
+            //return 0;
 
-        // Alaways affect the active window.
-        // #test: Sometimes it is the taskbar, sometimes not.
-        if (long1 == VK_F1 ||
-            long1 == VK_F2 ||
-            long1 == VK_F3 ||
-            long1 == VK_F4 )
+        // This is the only function key expected by the kernel
+        if (long1 == VK_F11)
         {
-            /*
-            if ((void*)active_window != NULL)
+            // yellow_status("VK_F11 down");
+
+            // Enter fullscreen mode
+            if (WindowManager.is_fullscreen != TRUE)
             {
-                if (active_window->magic == 1234){
-                    wid = (int) active_window->id;
-                    window_post_message( wid, GWS_SysKeyDown, long1, long1 );
-                }
+                wm_enter_fullscreen_mode();
+                return 0;
             }
-            */
-            return 0;
-        }
 
-        // Always affect the active window.
-        // #test: Sometimes it is the taskbar, sometimes not.
-        if (long1 == VK_F5 ||
-            long1 == VK_F6 ||
-            long1 == VK_F7 ||
-            long1 == VK_F8 )
-        {
-            /*
-            if ((void*)active_window != NULL)
+            // Exit fullscreen mode
+            // IN: tile or not
+            if (WindowManager.is_fullscreen == TRUE)
             {
-                if (active_window->magic == 1234){
-                    wid = (int) active_window->id;
-                    window_post_message( wid, GWS_SysKeyDown, long1, long1 );
-                }
+                wm_exit_fullscreen_mode(TRUE);
+                return 0;
             }
-            */
+
             return 0;
         }
 
-        if (long1 == VK_F9)
-            return 0;
-        if (long1 == VK_F10)
-            return 0;
-        if (long1 == VK_F11){
-            yellow_status("VK_F11");
-            return 0;
-        }
-
-        // #todo
-        // Testing the yellow dialog.
-        if (long1 == VK_F12)
-        {
-            //YellowDialogInfo.useYellowDialog = TRUE;
-            //YellowDialogInfo.display_dialog = TRUE;
-            return 0;
-        }
-
-        /*
-        // Always affect the window with focus.
-        // Enfileirar a mensagem na fila de mensagens
-        // da janela com foco de entrada.
-        // O cliente vai querer ler isso.
-        // We need the keyboard_owner.
-        window = (struct gws_window_d *) get_focus();
-        if ((void*) window == NULL)
-            return 0;
-        if (window->magic != 1234)
-            return 0;
-        // Post
-        wmPostMessage(
-            (struct gws_window_d *) window,
-            (int) msg,
-            (unsigned long) long1,
-            (unsigned long) long2);
-        */
+        //if (long1 == VK_F12)
+            //return 0;
 
         return 0;
     }
 
 // ================================
 // event type: syskeyup
+
+    // The only key expected by the server is VK_F11.
     if (msg == GWS_SysKeyUp)
     {
-        // Se liberamos alguma das 4 teclas de funçao.
-        // Cada tecla lança um processo filho diferente,
-        // todos pre-definidos aqui.
+        //if (long1 == VK_F8)
+            //return 0;
+        //if (long1 == VK_F9)
+            //return 0;
+        //if (long1 == VK_F10)
+            //return 0;
+        //if (long1 == VK_F11)
+            //return 0;
+        //if (long1 == VK_F12)
+            //return 0;
 
-        if (long1 == VK_F1)
-        {
-            return 0;
-        }
-        if (long1 == VK_F2)
-        {
-            return 0;
-        }
-        if (long1 == VK_F3)
-        {
-            return 0;
-        }
-        if (long1 == VK_F4)
-        {
-            return 0;
-        }
-
-        // F5 = Update desktop.
-        // Muda o status dos botoes da quick launch area,
-        // atualiza a disposiçao das janelas na tela e
-        // mostra a tela.
-        if (long1 == VK_F5){
-            //wm_update_desktop(TRUE,TRUE);
-            return 0;
-        }
-        
-        if (long1 == VK_F6){
-            //wm_update_desktop2();
-            return 0;
-        }
-        
-        if (long1 == VK_F7){
-            // Preserve the same active window.
-            //wm_update_desktop3(last_window);
-            return 0;
-        }
-
-        // F6 = Entra ou sai do modo fullscreen.
-        if (long1 == VK_F8)
-        {
-
-            /*
-            //#debug
-            wm_tile();
-            window_post_message_broadcast( 
-                0,           // wid = Ignored
-                GWS_Paint,   // msg = msg code
-                0,        // long1 = 
-                0 );      // long2 = 
-            */
-
-            /*
-            // Enter fullscreen mode
-            if (WindowManager.is_fullscreen != TRUE){
-                wm_enter_fullscreen_mode();
-                return 0;
-            }
-            */
-            /*
-            // Exit fullscreen mode.
-            if (WindowManager.is_fullscreen == TRUE){
-                wm_exit_fullscreen_mode(TRUE);
-                return 0;
-            }
-            */
-
-            return 0;
-        }
-
-        if (long1 == VK_F9)
-            return 0;
-        if (long1 == VK_F10)
-            return 0;
-        if (long1 == VK_F11){
-            //yellow_status("VK_F11");
-            return 0;
-        }
-
-        // #todo
-        // Testing the yellow dialog.
-        if (long1 == VK_F12)
-        {
-            //YellowDialogInfo.useYellowDialog = TRUE;
-            //YellowDialogInfo.display_dialog = TRUE;
-
-            /*
-            // #test OK
-            // Testing the copying of a rectangle.
-            // Valid only inside the backbuffer.
-            __refresh_rectangle1( 
-                400, 200,  // w and h
-                10, 10, ____BACKBUFFER_VA,      // Destination
-                100, 100, ____BACKBUFFER_VA );  // Source
-            wm_flush_window(__root_window);     // Flush screen
-            */
-
-            /*
-            // #test  OK
-            // Testing the bitblt() routine
-            // #important
-            // The copy area is the width and height of the destine.
-            struct gws_rect_d r1;
-            r1.left = 10;
-            r1.top = 10;
-            r1.width = 100;     // copy width
-            r1.height = 100;    // copy height
-            struct gws_rect_d r2;
-            r2.left = 200;
-            r2.top = 200;
-            r2.width = 200;
-            r2.height = 200;
-
-            bitblt00 (
-                &r1,  // destination rect
-                &r2,  // source rect   
-                ____BACKBUFFER_VA,         // dst base buffer
-                ____BACKBUFFER_VA,         // src base buffer
-               0,                          // rop
-               0 );                        // op
-            wm_flush_window(__root_window);     // Flush screen
-            */
-
-            return 0;
-        }
-        
-        // Nothing?
-        
         return 0;
     }
 
-// ====================================
-// #todo: More keyboard event types?
+    // More message codes ...
 
-// Not a valid msg
-// #todo: Maybe a differet return value.
     return 0;
 }
 
-// Timer events.
-void wmProcessTimerEvent(unsigned long long1, unsigned long long2)
+// Process timer events
+void 
+wmProcessTimerEvent(
+    unsigned long long1, 
+    unsigned long long2 )
 {
     struct gws_window_d *window;
 

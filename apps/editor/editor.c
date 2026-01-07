@@ -416,16 +416,22 @@ editorProcedure(
         switch (long1) {
             case VK_F1:  printf("Editor: VK_F1\n"); break;
             case VK_F5:  printf("Editor: VK_F5\n"); break;
-            case VK_F12: printf("Editor: VK_F12\n"); break;
-            case VK_F11: printf("Editor: VK_F11 (unexpected)\n"); break;
+            // Unexpected
+            // The kernel needs to send it to the server.
+            case VK_F11:
+                printf("Editor: VK_F11 (unexpected)\n");
+                break;
+            case VK_F12: 
+                printf("Editor: VK_F12\n");
+                break;
 
             // 
             case VK_INSERT:  printf("Editor: VK_INSERT\n"); break;
             case VK_DELETE:  printf("Editor: VK_DELETE\n"); break;
             case VK_HOME:  printf("Editor: VK_HOME\n"); break;
             case VK_END:  printf("Editor: VK_END\n"); break;
-            case VK_PAGEUP:  printf("Editor: 0x49 VK_PAGEUP \n"); break;
-            case VK_PAGEDOWN:  printf("Editor: 0x51 VK_PAGEDOWN \n"); break;
+            case VK_PAGEUP:  printf("Editor: VK_PAGEUP \n"); break;
+            case VK_PAGEDOWN:  printf("Editor: VK_PAGEDOWN \n"); break;
             case VK_RCONTROL:  printf("Editor: VK_RCONTROL \n"); break;
             case VK_ALTGR:  printf("Editor: VK_ALTGR \n"); break;
             case VK_APPS:  printf("Editor: VK_APPS \n"); break;
