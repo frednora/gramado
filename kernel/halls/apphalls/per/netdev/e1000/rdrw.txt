@@ -1,0 +1,15 @@
+ Worker Routines in the Intel e1000 Driver
+ Read and write from the NIC.
+
+1) irq_E1000
+2) DeviceInterface_e1000
+3) __e1000hw_service_procedure
+   + __e1000_on_transmit
+   + __e1000_on_receive
+
+
+-----------------------------------------------
++ __e1000_on_receive(): Called right after the receiving event.
+
+-----------------------------------------------
++ __e1000_on_transmit(): Called right after the transmiting event.

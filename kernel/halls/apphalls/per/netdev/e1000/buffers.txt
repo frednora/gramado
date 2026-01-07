@@ -1,0 +1,59 @@
+
+ Buffers used by e1000 Intel NIC device driver:
+
+-------------------------------------
+Set 1 – Hardware/DMA Descriptors
+
+legacy_rx_descs[]  
+The receive descriptor ring. 
+Each entry holds the physical address of an RX buffer, its length, and status bits. 
+The NIC hardware uses this to DMA incoming frames.
+
+legacy_tx_descs[]  
+The transmit descriptor ring. 
+Each entry holds the physical address of a TX buffer, its length, and 
+control/status bits. The NIC hardware uses this to DMA outgoing frames.
+
+-------------------------------------
+Set 2 – Kernel/Driver Virtual Buffers
+
+rx_buffers_virt[]  
+Array of virtual addresses mapped to the RX buffers. 
+The kernel/driver uses these pointers to access the contents of received frames 
+after the NIC has filled them.
+
+tx_buffers_virt[]  
+Array of virtual addresses mapped to the TX buffers. 
+The kernel/driver writes outgoing frame data here 
+before handing it off to the NIC via the transmit descriptors.
+
+-------------------------------------
+#ps:
+
+rx_buffers_virt and tx_buffers_virt are the ring buffers ... 
+the place where the NIC puts the data via DMA
+
+rx_buffers_virt[]  
+This is the receive ring buffer in virtual memory.
+
+tx_buffers_virt[]  
+This is the transmit ring buffer in virtual memory.
+
+-------------------------------------
+So in short:
+
+Descriptors (legacy_rx_descs, legacy_tx_descs):
+    hardware-facing, physical addresses for DMA.
+
+Buffers (rx_buffers_virt, tx_buffers_virt):
+   software-facing, virtual addresses for the kernel to read/write frame data.
+
+-------------------------------------
+You we have:
+
+Hardware/DMA descriptors (legacy_rx_descs, legacy_tx_descs):
+    physical addresses, status bits, used by the NIC engine.
+
+Kernel/driver virtual buffers (rx_buffers_virt, tx_buffers_virt):
+   virtual addresses, used by your kernel to actually read/write frame data.
+

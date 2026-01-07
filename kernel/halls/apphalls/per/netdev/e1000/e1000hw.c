@@ -42,6 +42,11 @@ static unsigned long e1000_rx_counter=0;
 
 static void __e1000_on_transmit(void);
 static void __e1000_on_receive(void);
+
+static int
+__e1000hw_service_procedure (
+    struct intel_nic_info_d *dev );
+
 // NIC device handler.
 static void DeviceInterface_e1000(void);
 
@@ -762,6 +767,19 @@ __mapping_nic1_device_address(
     return (int) mm_map_2mb_region(pa,va);
 }
 
+// Action after the transmission event
+// Updates counters when TX completes.
+// We receive an interrupt telling us that
+// the transmission is completed. So, here we simply
+// update the counters.
+static void __e1000_on_transmit(void)
+{
+    // printk ("__e1000_on_transmit: Transmit completed\n");
+    e1000_tx_counter++;
+    networkUpdateCounter(1);
+}
+
+// Worker for sending
 int 
 e1000hw_send(
     struct intel_nic_info_d *dev, 
@@ -835,18 +853,9 @@ fail:
     return (int) -1;
 }
 
-// We receive an interrupt telling us that
-// the transmission is completed. So, here we simply
-// update the counters.
-static void __e1000_on_transmit(void)
-{
-    // printk ("__e1000_on_transmit: Transmit completed\n");
-    e1000_tx_counter++;
-    networkUpdateCounter(1);
-}
-
-// Worker:
-// Called by DeviceInterface_e1000().
+// Action after the receiving event
+// Drains RX descriptors, fetches frames, and 
+// hands them to the network stack.
 // Frame size?
 // + The standard Ethernet (IEEE 802.3) frame size is 1,518 bytes.
 // + Ethernet header (14 bytes).
@@ -934,22 +943,20 @@ static void __e1000_on_receive(void)
     };
 }
 
-static void DeviceInterface_e1000(void)
+// Procedure called by the DeviceInterface_e1000() 
+// interrupt handler
+static int
+__e1000hw_service_procedure(
+    struct intel_nic_info_d *dev )
 {
-// Called by the irq_E1000().
-
+    struct intel_nic_info_d *target_dev;
     uint32_t InterruptCause=0;
 
-// The current NIC.
-// (Intel structure?)
-// #bugbug:
-// We still don't have a pointer for the current device.
-// and this structure represents only an Intel device.
-
-    if ((void*) currentNIC == NULL)
-        panic("DeviceInterface_e1000: currentNIC\n");
-    if (currentNIC->magic != 1234)
-        panic("DeviceInterface_e1000: currentNIC validation\n");
+    target_dev = dev;
+    if ((void*) target_dev == NULL)
+        panic("__e1000hw_service_procedure: target_dev\n");
+    if (target_dev->magic != 1234)
+        panic("__e1000hw_service_procedure: target_dev validation\n");
 
 // Status
 // 0xC0 - Interrupt Cause Read Register
@@ -972,14 +979,14 @@ static void DeviceInterface_e1000(void)
 // 0xD0 - IMS - Interrupt Mask Set/Read register.
 // Without this, the card may spam interrupts.
 // bit 0 - TXDW - Sets mask for Transmit Descriptor Written Back.
-    __E1000WriteCommand( currentNIC, 0xD0, 1 );
+    __E1000WriteCommand( target_dev, 0xD0, 1 );
 
 // Status
 // ICR - Interrupt Cause Read register.
-    InterruptCause = (uint32_t) __E1000ReadCommand( currentNIC, 0xC0 );
-    //__E1000WriteCommand( currentNIC, 0xC0, InterruptCause );
+    InterruptCause = (uint32_t) __E1000ReadCommand( target_dev, 0xC0 );
+    //__E1000WriteCommand( target_dev, 0xC0, InterruptCause );
 // Clear all the bits.
-    __E1000WriteCommand( currentNIC, 0xC0, 0xffffffff );
+    __E1000WriteCommand( target_dev, 0xC0, 0xffffffff );
 
 //
 // Check the interrupt cause in ICR.
@@ -998,15 +1005,15 @@ static void DeviceInterface_e1000(void)
     // 0x02
     // INTERRUPT_TXQE
     } else if (InterruptCause & 0x02){
-        printk("DeviceInterface_e1000: Transmit queue empty!\n");
+        printk("__e1000hw_service_procedure: Transmit queue empty\n");
         goto done;
 
     // 0x04 - Linkup
     // INTERRUPT_LSC
     // Start link.
     } else if (InterruptCause & 0x04){
-        printk("DeviceInterface_e1000: Start link\n");
-        __e1000_linkup(currentNIC);
+        printk("__e1000hw_service_procedure: Start link\n");
+        __e1000_linkup(target_dev);
         goto done;
 
     // 0x80 - Reveive.
@@ -1017,17 +1024,17 @@ static void DeviceInterface_e1000(void)
 
     // INTERRUPT_RXDMT0
     } else if (InterruptCause & 0x10){
-        printk("DeviceInterface_e1000: Good threshold!\n");
+        printk("__e1000hw_service_procedure: Good threshold\n");
         goto done;
 
     // ??
     // INTERRUPT_SRPD
     } else if (InterruptCause & 0x8000){
-        printk ("DeviceInterface_e1000: status = 0x8000\n");
+        printk ("__e1000hw_service_procedure: status = 0x8000\n");
         goto done;
 
     } else {
-        printk("DeviceInterface_e1000: Unknown interrupt cause {%x}\n",
+        printk("__e1000hw_service_procedure: Unknown interrupt cause {%x}\n",
             InterruptCause);
         goto fail;
     };
@@ -1035,9 +1042,30 @@ static void DeviceInterface_e1000(void)
 done:
 // Clear all the bits.
 // Write 1b, clear the bit.
-    // __E1000WriteCommand( currentNIC, 0xC0, 0xffffffff );
-    return;
+    // __E1000WriteCommand( target_dev, 0xC0, 0xffffffff );
+    return 0;
 fail:
+    return (int) -1;
+}
+
+// Interrupt handler
+static void DeviceInterface_e1000(void)
+{
+    struct intel_nic_info_d *target_dev;
+    int rv = -1;
+
+// The current NIC.
+// (Intel structure?)
+// #bugbug:
+// We still don't have a pointer for the current device.
+// and this structure represents only an Intel device.
+
+    target_dev = currentNIC;
+    if ((void*) target_dev == NULL)
+        return;
+
+    rv = (int) __e1000hw_service_procedure(target_dev);
+
     return;
 }
 
