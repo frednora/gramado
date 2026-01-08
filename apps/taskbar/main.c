@@ -1321,21 +1321,36 @@ int main(int argc, char *argv[])
 // Window
 //
 
-// Create the main window. The frame for the taskbar application.
+// Create the main window. 
+// The frame for the taskbar application.
+ 
+    // Original
     unsigned long tb_l = 0;
     unsigned long tb_t = h - TASKBAR_HEIGHT;
     unsigned long tb_w = w;
     unsigned long tb_h = TASKBAR_HEIGHT;
+
+/*
+    // #test
+    unsigned long TestHeight = 400;
+    unsigned long tb_l = 0;
+    unsigned long tb_t = h - TestHeight;
+    unsigned long tb_w = w;
+    unsigned long tb_h = TestHeight;
+*/
 
     unsigned long style = WS_TASKBAR;
 
     main_window = 
         (int) gws_create_window (
                 client_fd,
-                WT_SIMPLE, 1, 1, program_name,
+                WT_SIMPLE,  // type 
+                1,          // status
+                1,          // state
+                program_name,
                 tb_l, tb_t, tb_w, tb_h,
                 0, 
-                style, 
+                style,      // style
                 HONEY_COLOR_TASKBAR, HONEY_COLOR_TASKBAR );
 
     if (main_window < 0){
@@ -1598,7 +1613,6 @@ int main(int argc, char *argv[])
 
     // Do not set focus now, it changes the apparence
     // gws_set_focus(client_fd, NavigationInfo.button00_window);
-
 
 /*
 // ================================

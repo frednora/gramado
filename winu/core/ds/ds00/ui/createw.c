@@ -2398,6 +2398,27 @@ void *doCreateWindow (
         {
             window->isTaskBar = TRUE;
             taskbar_window = window;
+
+            // #test:
+            // ---- Update Working Area --------------------------------
+            if (WindowManager.initialized == TRUE)
+            {
+                // #bugbug: Valid only for taskbars at bottom fo the screen.
+                WindowManager.wa.left   = 0;
+                WindowManager.wa.top    = 0;
+                WindowManager.wa.width  = deviceWidth;
+                WindowManager.wa.height = window->top; 
+
+                //printf ("window: l=%d t=%d w=%d h=%d\n",
+                    //window->left, window->top, window->width, window->height );
+
+                //printf ("device: w=%d h=%d\n", deviceWidth, deviceHeight );
+
+                //printf ("taskbar: w=%d h=%d\n",
+                    //WindowManager.wa.width, WindowManager.wa.height );
+
+                //while(1){}
+            }
         }
         window->ip_device = IP_DEVICE_NULL;
         window->frame.used = FALSE;
@@ -3158,16 +3179,33 @@ void *CreateWindow (
             // Fit into the working area.
             if (WindowManager.mode == 1)
             {
-                // #bugbug: 
-                // Estamos confiando nos valores. 
-                /*
-                 //#suspended #debug
-                x      = WindowManager.wa.left;
-                y      = WindowManager.wa.top;
-                width  = WindowManager.wa.width;
-                height = WindowManager.wa.height;
-                */
             }
+            // #test
+            // Clipping agains the working area.
+
+            unsigned long wa_top    = WindowManager.wa.top;
+            unsigned long wa_bottom = 
+                (WindowManager.wa.top + WindowManager.wa.height);
+
+            // Clamp top edge
+            if (y < wa_top) {
+                y = wa_top;
+            }
+
+            // Clamp bottom edge
+            if ((y + height) > wa_bottom) 
+            {
+                // If the window is taller than the working area, shrink it
+                if (height > WindowManager.wa.height) {
+                    height = (WindowManager.wa.height -28);
+                    y = wa_top;
+                } else {
+                    // Otherwise, push it up so it fits
+                    y = wa_bottom - height;
+                }
+            }
+
+            //...
         }
 
         if (width < OVERLAPPED_MIN_WIDTH)  { width=OVERLAPPED_MIN_WIDTH; }

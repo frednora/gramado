@@ -248,6 +248,7 @@ int main(int argc, char *argv[])
         win_y = 4;
     }
 
+// Main window
     main_window = gws_create_window(
         client_fd, WT_OVERLAPPED,
         WINDOW_STATUS_ACTIVE, WINDOW_STATE_NULL,
@@ -263,12 +264,25 @@ int main(int argc, char *argv[])
     gws_draw_text(client_fd, main_window, 20, 20,
                   COLOR_BLACK, "Choose boot option:");
 
-    unsigned long button_w = win_w / 4;
-    unsigned long button_h = win_h / 8;
-    unsigned long button_y = (win_h - button_h) / 2;
 
-    unsigned long show_x = (win_w / 4) - (button_w / 2);
-    unsigned long skip_x = (3 * win_w / 4) - (button_w / 2);
+// Getting information about the client area,
+    struct gws_window_info_d wi;
+    gws_get_window_info(client_fd, main_window, &wi);
+
+    // Considering the client area's dimension
+
+    unsigned long button_w = wi.cr_width / 4;
+    unsigned long button_h = wi.cr_height / 8;
+// Enforce minimums 
+    if (button_w < 80) 
+        button_w = 80; 
+    if (button_h < 24) 
+        button_h = 24;
+    unsigned long button_y = (wi.cr_height - button_h) / 2;
+
+    unsigned long show_x = (wi.cr_width / 4) - (button_w / 2);
+    unsigned long skip_x = (3 * wi.cr_width / 4) - (button_w / 2);
+
 
     show_button = gws_create_window(
         client_fd, WT_BUTTON, BS_DEFAULT, 1,

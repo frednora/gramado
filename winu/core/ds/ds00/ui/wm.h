@@ -125,6 +125,7 @@ struct gws_windowmanager_d
     int initialized;
 
 // Info for the areas.
+// #bugbug: We are using a container as working area dimensions.
     struct wa_info_d     wa_info;
     struct swamp_info_d  swamp_info;
 
