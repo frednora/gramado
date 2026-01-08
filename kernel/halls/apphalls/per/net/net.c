@@ -794,7 +794,7 @@ int network_on_sending (void)
 // Purpose: 
 //  + Save incoming payloads into a shared circular buffer (nb_rx_11888).
 // Operation:
-//  + Copy payload from protocol handler into nb_rx_11888.buffers[tail].
+//  + Copy payload from protocol handler into nb_rx_11888.payload_ptr[tail].
 //  + Mark slot as full.
 //  + Advance receive_tail (wrap around at 32).
 //
@@ -870,7 +870,7 @@ network_push_packet(
     }
 
 // Get the destination buffer
-    dst_buffer = (void*) nb_rx_11888.buffers[tail];
+    dst_buffer = (void*) nb_rx_11888.payload_ptr[tail];
 // Copy
     if ((void*)dst_buffer != NULL)
     {
@@ -974,7 +974,7 @@ network_pop_packet (
         return 0;
 
 // Get the source buffer.
-    src_buffer = (void*) nb_rx_11888.buffers[head];
+    src_buffer = (void*) nb_rx_11888.payload_ptr[head];
 // Copy
     if ((void*)src_buffer != NULL)
     {
@@ -1220,7 +1220,11 @@ int netInitialize(void)
             printk("on tmp_buffer_address\n");
             goto fail;
         }
-        nb_rx_11888.buffers[i] = (unsigned long) tmp_buffer_address;
+
+        // Clear the page to avoid stale data
+        // memset(tmp_buffer_address, 0, PAGE_SIZE);
+
+        nb_rx_11888.payload_ptr[i] = (unsigned long) tmp_buffer_address;
         nb_rx_11888.is_full[i] = FALSE;  //EMPTY
     };
     nb_rx_11888.receive_tail=0;
@@ -1235,8 +1239,7 @@ int netInitialize(void)
 // See: host.h
     //debug_print ("networkInit: HostInfo\n");
 
-    HostInfo = 
-        (struct host_info_d *) kmalloc( sizeof(struct host_info_d) ); 
+    HostInfo = (struct host_info_d *) kmalloc(sizeof(struct host_info_d));
     if ((void *) HostInfo == NULL){
         printk("on HostInfo\n");
         goto fail;
@@ -1250,9 +1253,9 @@ int netInitialize(void)
     //HostInfo->__hostname[0] = 'h';
     //HostInfo->hostName_len = (size_t) HOST_NAME_MAX;
 
-    ksprintf(HostInfo->__hostname,"gramado");
+    ksprintf(HostInfo->__hostname, "gramado");
     HostInfo->hostName_len = (size_t) strlen("gramado");
-    if ( HostInfo->hostName_len >= HOST_NAME_MAX )
+    if (HostInfo->hostName_len >= HOST_NAME_MAX)
     {
         printk("on hostname\n");
         goto fail;
@@ -1260,6 +1263,7 @@ int netInitialize(void)
 
 // Version
     HostInfo->hostVersion = NULL;
+
 // #todo
 // Call some helpers to get these values.
 // Maybe the init process needs to setup these values.
@@ -1267,12 +1271,13 @@ int netInitialize(void)
     HostInfo->hostVersionMajor    = 0;
     HostInfo->hostVersionMinor    = 0;
     HostInfo->hostVersionRevision = 0;
+
 // #todo
 // Where is this information?
     HostInfo->hostArchitecture = 0;
+
     HostInfo->used = TRUE;
     HostInfo->magic = 1234;
-
     NetworkInfo->host_info = (void*) HostInfo;
 
 // =====================================
@@ -1292,9 +1297,8 @@ int netInitialize(void)
     }
     CurrentSocket = (struct socket_d *) LocalHostHTTPSocket;
 
-// =====================================
-// Initializes the socket list.
 
+// Initializes the socket list
     socket_init();
 
 // Status
@@ -1307,13 +1311,9 @@ int netInitialize(void)
 
     networkSetStatus(TRUE);
 
-//
-// Lock
-//
-
-// The ring3 application will unlock it.
+// Lock:
+// Locking. The ring3 application will unlock it
     NetworkInitialization.locked = TRUE;
-
 
 // =====================================
 // domain
@@ -1331,15 +1331,12 @@ int netInitialize(void)
         goto fail;
     }
 
-// =====================================
-// arp cache
-
+// ARP cache:
 // Initialize the ARP table
     arp_initialize_arp_table();
 
-
 // =====================================
-// #test: 
+// #test: (Network Interface)
 // Initializing the network interface structure. (first time ever)
 // #ps: 
 // We also have to call netif_update() to update the structure
@@ -1348,15 +1345,13 @@ int netInitialize(void)
 
     netif_initialize();
 
+    // ...
 
-// ...
-
-// done
     return 0;
 
 fail:
     // #debug
-    // For now we cant's fail on the network initialization.
+    // For now we can't fail on the network initialization.
     panic("netInitialize: Fail\n");
     return (int) -1;
 }

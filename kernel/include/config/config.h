@@ -71,6 +71,7 @@
 // see: pci.c, e1000hw.c
 #define USE_E1000    0
 
+
 // #test: Pooling PS2 Keyboard and Mouse.
 // Use pooling instead of interrupts for ps2 devices.
 // Good for real machines that lacks interrupts in long mode,

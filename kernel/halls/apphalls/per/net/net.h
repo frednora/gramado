@@ -235,8 +235,12 @@ struct network_buffer_d
 // Receive
     int receive_tail;
     int receive_head;
+
 // Pointers
-    unsigned long buffers[32];
+// It is an array of pointers to payload memory blocks, 
+// each entry is a base address of a payload buffer.
+    unsigned long payload_ptr[32];
+
 // O status de cada buffer, se ele está vazio ou não.
     int is_full[32];
 };
