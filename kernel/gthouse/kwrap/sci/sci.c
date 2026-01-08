@@ -777,17 +777,42 @@ void *sci0 (
 
 // Reserved (113~117)
 
-// 118 - Pop data from network queue
+
+// ============================================================
+// Service 118: sys_network_push_packet
+// ------------------------------------------------------------
+// Perspective: Ring 3 (user process)
+// This syscall allows a user process to *push* data into the
+// kernel's network receive buffer. 
+// Normally, packets are pushed by the NIC/UDP handler, but this
+// syscall is useful for testing and injecting data directly
+// into the queue from user space.
+// ------------------------------------------------------------
 // IN: user buffer, buffer lenght.
     if (number == 118){
-        return (void*) network_pop_packet( 
+        return (void*) sys_network_push_packet ( 
                            (unsigned long) &message_address[0], 
                            (int) arg3 );
     }
 
-// Push data into the network queue?
-    //case 119:
-        //break;
+
+// ============================================================
+// Service 119: sys_network_pop_packet
+// ------------------------------------------------------------
+// Perspective: Ring 3 (user process)
+// This syscall allows a user process to *pop* (dequeue) data
+// from the kernel's network receive buffer.
+// This is the normal consumer path: packets that were enqueued
+// by the UDP handler (or by sys_network_push_packet for testing)
+// can be fetched by the process here.
+// ------------------------------------------------------------
+// IN: user buffer, buffer lenght.
+    if (number == 119){
+        return (void*) sys_network_pop_packet ( 
+                           (unsigned long) &message_address[0], 
+                           (int) arg3 );
+    }
+
 
 // 120 - Get a message given the index.
 // With restart support.

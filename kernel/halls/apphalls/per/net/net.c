@@ -23,8 +23,11 @@ int notification_status=FALSE;
 // Usado por esse módulo.
 file *____network_file;
 
-// See: network.h
-struct network_buffer_d  NETWORK_BUFFER;
+// Network buffer 11888 (system port)
+// This is a static queue of buffers for 
+// the system port 11888 using UDP
+// See: net.h
+struct network_buffer_d  nb_rx_11888;
 
 struct host_info_d *HostInfo;
 struct network_info_d *NetworkInfo;
@@ -788,6 +791,14 @@ int network_on_sending (void)
 // Isso é usado pelo driver de dispositivo
 // pra salvar o conteúdo que veio da rede em
 // um buffer que pode ser lido pelos aplicativos.
+// Purpose: 
+//  + Save incoming payloads into a shared circular buffer (nb_rx_11888).
+// Operation:
+//  + Copy payload from protocol handler into nb_rx_11888.buffers[tail].
+//  + Mark slot as full.
+//  + Advance receive_tail (wrap around at 32).
+//
+
 int 
 network_push_packet( 
     void *src_buffer, 
@@ -801,7 +812,7 @@ network_push_packet(
     void *dst_buffer;
     int tail=0;
 
-    printk ("--------------------- >>>> PUSH\n");
+    printk ("    >>>>    PUSH\n");
 
 // Check args
     if ((void*) src_buffer == NULL){
@@ -817,16 +828,16 @@ network_push_packet(
         //return -1;
     }
 
-    if (NETWORK_BUFFER.initialized != TRUE){
-        panic ("network_push_packet: Shared buffers not initialized\n");
+    if (nb_rx_11888.initialized != TRUE){
+        panic ("network_push_packet: buffers not initialized\n");
     }
 
-    tail = (int) NETWORK_BUFFER.receive_tail;
+    tail = (int) nb_rx_11888.receive_tail;
 
-    //circula.
-    NETWORK_BUFFER.receive_tail++;
-    if (NETWORK_BUFFER.receive_tail >= 32){
-        NETWORK_BUFFER.receive_tail=0;
+    // Round
+    nb_rx_11888.receive_tail++;
+    if (nb_rx_11888.receive_tail >= 32){
+        nb_rx_11888.receive_tail=0;
     }
 
 // #todo
@@ -847,7 +858,7 @@ network_push_packet(
 // Check buffer status.
 // Se o buffer está cheio é porque ele não foi consumido.
 // Vamos sobrepor?
-    int buffer_status = NETWORK_BUFFER.is_full[tail];
+    int buffer_status = nb_rx_11888.is_full[tail];
     if (buffer_status == TRUE)
     {
         // #bugbug
@@ -858,19 +869,19 @@ network_push_packet(
         // refresh_screen();
     }
 
-// Get the destination buffer.
-    dst_buffer = (void*) NETWORK_BUFFER.buffers[tail];
+// Get the destination buffer
+    dst_buffer = (void*) nb_rx_11888.buffers[tail];
 // Copy
     if ((void*)dst_buffer != NULL)
     {
         memcpy( 
-            dst_buffer,   // Data coes to the list.
+            dst_buffer,   // Data goes to the list.
             src_buffer,   // Data comes from the device. 
             len );        // Lenght.
     } 
 
 // Avisamos que esse buffer está cheio.
-    NETWORK_BUFFER.is_full[tail] = TRUE;
+    nb_rx_11888.is_full[tail] = TRUE;
 
     //printk("network_buffer_in: ok\n");
     //refresh_screen();
@@ -881,12 +892,20 @@ fail:
     return (int) -1;
 }
 
-
 // network_pop_packet:
 // out: (Do buffer head para o buffer indicado)
 // Isso é usado pelos aplicativos
 // para pegarem os conteúdos salvos nos buffers.
 // Daí os aplicativos interpretam os protocolos.
+// Purpose: 
+// + Let applications or servers retrieve packets from the queue.
+// Operation:
+// + Read from nb_rx_11888.receive_head.
+// + Copy data into user buffer.
+// + Mark slot as empty.
+// + Advance receive_head (wrap around at 32).
+//
+
 int 
 network_pop_packet ( 
     void *u_buffer,   // User buffer to get the data. 
@@ -899,7 +918,7 @@ network_pop_packet (
 // queue filled by the NIC devices.
 // It doesn't open any device to get data.
 
-    //printk (" ---------- >>>> POP\n");
+    printk ("    >>>>    POP\n");
 
     int head=0;
     void *src_buffer;
@@ -907,7 +926,7 @@ network_pop_packet (
     //debug_print("network_pop_packet:\n");
 
 // check args
-    if ( (void*) u_buffer == NULL ){
+    if ((void*) u_buffer == NULL){
         panic ("network_pop_packet: [FAIL] u_buffer\n");
     }
 
@@ -922,19 +941,19 @@ network_pop_packet (
         //return -1;
     }
 
-    if (NETWORK_BUFFER.initialized != TRUE){
+    if (nb_rx_11888.initialized != TRUE){
         panic ("network_pop_packet: Shared buffers not initialized\n");
     }
 
 // Vamos pegar um numero de buffer para enviarmos o pacote.
 // o kernel vai retirar do head ... 
 // o que foi colocado pelo aplicativo em tail.
-    head = (int) NETWORK_BUFFER.receive_head;
+    head = (int) nb_rx_11888.receive_head;
 
 // circula.
-    NETWORK_BUFFER.receive_head++;
-    if (NETWORK_BUFFER.receive_head >= 32){
-        NETWORK_BUFFER.receive_head=0;
+    nb_rx_11888.receive_head++;
+    if (nb_rx_11888.receive_head >= 32){
+        nb_rx_11888.receive_head=0;
     }
 
 // #todo
@@ -951,11 +970,11 @@ network_pop_packet (
     }
 
 // Is the buffer full?
-    if ( NETWORK_BUFFER.is_full[head] != TRUE )
+    if ( nb_rx_11888.is_full[head] != TRUE )
         return 0;
 
 // Get the source buffer.
-    src_buffer = (void*) NETWORK_BUFFER.buffers[head];
+    src_buffer = (void*) nb_rx_11888.buffers[head];
 // Copy
     if ((void*)src_buffer != NULL)
     {
@@ -965,7 +984,7 @@ network_pop_packet (
             len );      // Lenght.
     
         // Now this buffer is empty.
-        NETWORK_BUFFER.is_full[head] = FALSE;
+        nb_rx_11888.is_full[head] = FALSE;
     }
 
     //printk("network_buffer_in: ok\n");
@@ -976,6 +995,50 @@ network_pop_packet (
 fail:
    return (int) -1;
 }
+
+// ============================================================
+// Service 118: sys_network_push_packet
+// ------------------------------------------------------------
+// Perspective: Ring 3 (user process)
+// This syscall allows a user process to *push* data into the
+// kernel's network receive buffer. 
+// Normally, packets are pushed by the NIC/UDP handler, but this
+// syscall is useful for testing and injecting data directly
+// into the queue from user space.
+// ------------------------------------------------------------
+unsigned long sys_network_push_packet(void *u_buffer, int len)
+{
+    int int_rv = 0;
+    if ((void*) u_buffer == NULL)
+        return -1;
+
+    // Enqueue user-provided data into the kernel's RX queue
+    int_rv = (int) network_push_packet(u_buffer, len);
+
+    return (unsigned long) (int_rv & 0xFFFFFFFF);
+}
+
+// ============================================================
+// Service 119: sys_network_pop_packet
+// ------------------------------------------------------------
+// Perspective: Ring 3 (user process)
+// This syscall allows a user process to *pop* (dequeue) data
+// from the kernel's network receive buffer.
+// This is the normal consumer path: packets that were enqueued
+// by the UDP handler (or by sys_network_push_packet for testing)
+// can be fetched by the process here.
+// ------------------------------------------------------------
+unsigned long sys_network_pop_packet(void *u_buffer, int len)
+{
+    if ((void*) u_buffer == NULL)
+        return -1;
+
+    // Dequeue data from the kernel's RX queue into user buffer
+    int int_rv = network_pop_packet(u_buffer, len);
+
+    return (unsigned long) (int_rv & 0xFFFFFFFF);
+}
+
 
 void networkSetStatus (int status)
 {
@@ -1128,7 +1191,8 @@ int netInitialize(void)
 //======================================
 
 
-//======================================
+// ======================================
+// Network buffer 11888 (system port)
 // 32 buffers:
 
 // buffers:
@@ -1139,7 +1203,13 @@ int netInitialize(void)
 // #fixme
 // Provavelmente esse alocador ainda nao funciona.
 
-    NETWORK_BUFFER.initialized = FALSE;
+    nb_rx_11888.used = TRUE;
+    nb_rx_11888.magic = 1234;
+    nb_rx_11888.initialized = FALSE;
+
+    nb_rx_11888.port = (uint16_t) 11888;  // UDP System port
+    //nb_rx_11888.protocol = #todo UDP
+    // nb_rx_11888.socket = NULL;
 
 // =====================================
 // receive buffers
@@ -1150,21 +1220,15 @@ int netInitialize(void)
             printk("on tmp_buffer_address\n");
             goto fail;
         }
-        NETWORK_BUFFER.buffers[i] = (unsigned long) tmp_buffer_address;
-        NETWORK_BUFFER.is_full[i] = FALSE;  //EMPTY
+        nb_rx_11888.buffers[i] = (unsigned long) tmp_buffer_address;
+        nb_rx_11888.is_full[i] = FALSE;  //EMPTY
     };
-    NETWORK_BUFFER.receive_tail=0;
-    NETWORK_BUFFER.receive_head=0;
+    nb_rx_11888.receive_tail=0;
+    nb_rx_11888.receive_head=0;
 // ========================================
 
-// =====================================
-// send buffers
-// Maybe not!
-// =====================================
-
-
 // flag
-    NETWORK_BUFFER.initialized = TRUE;
+    nb_rx_11888.initialized = TRUE;
 
 // =====================================
 // Host info struct. 

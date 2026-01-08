@@ -93,6 +93,9 @@ callback_handler(
     unsigned long param3, 
     unsigned long param4 );
 
+
+static void worker_nb_test(void);
+
 //
 // ==============================================================
 //
@@ -128,6 +131,35 @@ callback_handler(
 // Callback restorer.
     //printf("Calling the restorer\n");
     //asm ("int $198");
+}
+
+
+// worker_nb_test:
+// Ring3 worker that continuously polls the kernel's RX queue
+// via syscall 119 (sys_network_pop_packet).
+// This is a quick test harness: it prints any UDP payloads
+// enqueued by the kernel (e.g. port 11888).
+// Not a production socket API, just a debug consumer.
+
+static void worker_nb_test(void)
+{
+    char buf[512];
+    int n;
+
+    printf ("Start listening from 11888\n");
+
+    while (1) {
+        // syscall: service 119 = sys_network_pop_packet
+        n = sc80(119, buf, sizeof(buf), 0);
+
+        if (n > 0) {
+            buf[n] = '\0';  // ensure null-terminated
+            printf("worker_nb_test: got %d bytes: {%s}\n", n, buf);
+        } else {
+            // nothing available, yield or sleep
+            // rtl_sleep(8000);  // 8ms pause
+        }
+    }
 }
 
 //
@@ -657,6 +689,13 @@ static int input_compare_string(void)
     if (strncmp(prompt,"pipe",4) == 0 )
     {
         rtl_test_pipe();
+        goto exit_cmp;
+    }
+
+    // Local worker for polling data from a network buffer
+    if (strncmp(prompt,"nb-test",7) == 0 )
+    {
+        worker_nb_test();
         goto exit_cmp;
     }
 

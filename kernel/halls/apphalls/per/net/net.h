@@ -219,17 +219,30 @@ extern struct nic_device_d *CurrentNICDevice;
 
 struct network_buffer_d
 {
+    int used;
+    int magic;
     int initialized;
+
+// Port number this queue is bound to 
+    uint16_t port;
+
+// Protocol type (UDP, TCP, etc.) 
+    int protocol;
+
+// Associated socket object 
+    struct socket_d *socket;
+
 // Receive
     int receive_tail;
     int receive_head;
-//  pointers.
+// Pointers
     unsigned long buffers[32];
 // O status de cada buffer, se ele está vazio ou não.
     int is_full[32];
 };
-// See: network.c
-extern struct network_buffer_d  NETWORK_BUFFER;
+// See: net.c
+// Network buffer 11888 (system port)
+extern struct network_buffer_d  nb_rx_11888;
 
 //========================================================
 
@@ -455,6 +468,12 @@ int network_on_sending (void);
 // Push and Pop data.
 int network_push_packet( void *src_buffer, int len );
 int network_pop_packet( void *u_buffer, int len );
+
+// Service 118
+unsigned long sys_network_push_packet(void *u_buffer, int len);
+// Service 119
+unsigned long sys_network_pop_packet(void *u_buffer, int len);
+
 
 void networkSetStatus(int status);
 int networkGetStatus(void);

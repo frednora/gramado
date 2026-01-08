@@ -1,6 +1,33 @@
 // udp.c
 // Created by Fred Nora.
 
+// #todo
+// Send/Receive UDP from https://tcpbin.org/
+
+/*
+ Considerations:
+ NAT/Firewall: Your router must allow outbound UDP to port 40000 and return traffic.
+ Gateway MAC: Use your LAN gateway’s MAC address as the target MAC so the packet is routed out.
+ Testing: If you don’t see replies, try first from a Linux host with nc -u to confirm connectivity.
+*/
+
+/*
+# Using netcat (Linux/Unix)
+echo -n "Hello World" | nc -u -w1 34.230.40.69 40000
+*/
+
+/*
+network_send_udp(
+    my_ip,                  // your source IP
+    (uint8_t[]){34,230,40,69}, // target IP
+    target_mac,             // gateway MAC (your router)
+    11888,                  // source port
+    40000,                  // destination port
+    "Hello from Gramado!",  // payload
+    64                      // length
+);
+*/
+
 #include <kernel.h>
 
 /*
@@ -753,8 +780,8 @@ network_handle_udp(
 // What kind of data we're pushing into these buffers?
 // Is it the raw frame only? Or only UDP?
 // see: network.c
-    //int PushIntoTheQueue = TRUE;
-    int PushIntoTheQueue = FALSE;
+    int PushIntoTheQueue = TRUE;
+    //int PushIntoTheQueue = FALSE;
 
     int NoReply = TRUE;
 
@@ -767,9 +794,17 @@ network_handle_udp(
         // This is just a test. Actually we're gonna put
         // into the queue all kind of frames, not just
         // the udp's payloads.
+        // It's currently the only route for delivering UDP payloads 
+        // to the rest of the OS.
         if (PushIntoTheQueue == TRUE){
-            // #test
-            network_push_packet( udp_payload, 512 );
+
+            // #ps: It's working.
+            // A ring 3 process (init) can read it via syscall,
+            // service 119.
+            if (dport == 11888){
+                network_push_packet( udp_payload, 512 );  // #test
+            }
+
         } else {
 
             // Print the message for these ports.
