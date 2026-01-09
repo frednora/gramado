@@ -73,10 +73,11 @@ libc-header:
 
 ifeq ($(TARGETOS),gramado)
 
-# student
-	$(CC) -c entrance/student/crt0.c  $(CFLAGS) $(LIBS) -o crt0.o
-# visitor
-	$(CC) -c entrance/visitor/rtl.c  $(CFLAGS) $(LIBS) -o rtl.o
+# crt0 - C library initialization
+	$(CC) -c crt0/crt0.c  $(CFLAGS) $(LIBS) -o crt0.o
+
+# crt - Wrapper
+	$(CC) -c crt/rtl.c  $(CFLAGS) $(LIBS) -o rtl.o
 
 endif  
 
