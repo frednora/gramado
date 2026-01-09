@@ -492,15 +492,13 @@ int main(int argc, char *argv[])
 
     //printf("MENUAPP.BIN: Create menu\n");
 
-    struct gws_menu_d *menu00;
     struct gws_window_info_d lWi;
+    struct gws_menu_d *menu00;
 
 // Get info about the main window.
 // IN: fd, wid, window info structure.
     gws_get_window_info(
-        client_fd, 
-        main_window,   // The app window.
-        (struct gws_window_info_d *) &lWi );
+        client_fd, main_window, (struct gws_window_info_d *) &lWi );
 
 //
 // Creating the menu

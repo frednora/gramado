@@ -173,10 +173,8 @@ static void update_clients(int fd)
 
 // Get info about the main window.
 // IN: fd, wid, window info structure.
-    gws_get_window_info(
-        fd, 
-        main_window,   // The app window.
-        (struct gws_window_info_d *) &lWi );
+    gws_get_window_info( 
+        fd, main_window, (struct gws_window_info_d *) &lWi );
 
 // ------------------------
 // Text
@@ -790,10 +788,10 @@ int editor_initialize(int argc, char *argv[])
         printf("editor.bin: Display\n");
         goto fail;
     }
-// Get client socket.
+// Get client socket
     client_fd = (int) Display->fd;
     if (client_fd <= 0){
-        printf("editor.bin: fd\n");
+        printf("editor.bin: client_fd\n");
         goto fail;
     }
 
@@ -910,14 +908,13 @@ int editor_initialize(int argc, char *argv[])
     //gws_refresh_window(client_fd, main_window);
 // -----------------------------
 
-    // Local.
-    struct gws_window_info_d  lWi;
+    struct gws_window_info_d  lWi;  // Local
 
 // Get info about the main window.
 // IN: fd, wid, window info structure.
     gws_get_window_info(
         client_fd, 
-        main_window,   // The app window.
+        main_window,
         (struct gws_window_info_d *) &lWi );
 
 // Address bar - (edit box)

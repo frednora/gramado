@@ -324,17 +324,18 @@ int main(int argc, char *argv[])
     unsigned long win_x = (screen_w - win_w) / 2;
     unsigned long win_y = (screen_h - win_h) / 2;
 
-    main_window = gws_create_window(
-        client_fd,
-        WT_OVERLAPPED,
-        WINDOW_STATUS_ACTIVE,  // status
-        WINDOW_STATE_NULL,  // state
-        "Memory Information",
-        win_x, win_y, win_w, win_h,
-        0,
-        0x0000,  // style
-        COLOR_WHITE,
-        COLOR_GRAY );
+    main_window = 
+        (int) gws_create_window(
+            client_fd,
+            WT_OVERLAPPED,         // type
+            WINDOW_STATUS_ACTIVE,  // status
+            WINDOW_STATE_NULL,     // state
+            "Memory Information",
+            win_x, win_y, win_w, win_h,
+            0,
+            0x0000,  // style
+            COLOR_WHITE, 
+            COLOR_GRAY );
 
     if (main_window < 0) {
         printf("memory_app: Failed to create main window\n");
@@ -343,16 +344,20 @@ int main(int argc, char *argv[])
 
     gws_refresh_window(client_fd, main_window);
 
-    // Initial label (will be redrawn in paint anyway)
-    gws_draw_text(client_fd, main_window, 20, 20, COLOR_BLACK, "System Memory Status:");
+// -- CLient Area ---------------------
 
-    // Query client area for initial layout
+// Query client area for initial layout
     query_client_area(client_fd);
+
+    // Initial label (will be redrawn in paint anyway)
+    gws_draw_text( client_fd, main_window, 
+        20, 20, COLOR_BLACK, "System Memory Status:");
 
     // Button baseline sizes
     unsigned long button_w = cr_width / 5;
     unsigned long button_h = cr_height / 10;
-    if (button_h < 32) button_h = 32;
+    if (button_h < 32)
+        button_h = 32;
 
     // Initial button positions (will be updated in paint)
     unsigned long refresh_x = (cr_width / 4) - (button_w / 2);
@@ -361,29 +366,35 @@ int main(int argc, char *argv[])
 
 // Create buttons
 
-    refresh_button = gws_create_window(
-        client_fd,
-        WT_BUTTON,
-        BS_DEFAULT,
-        1,
-        "Refresh",
-        refresh_x, buttons_y,
-        button_w, button_h,
-        main_window, 0,
-        COLOR_GRAY, COLOR_GRAY );
+    // Refresh button
+    refresh_button = 
+        (int) gws_create_window(
+            client_fd,
+            WT_BUTTON,
+            BS_DEFAULT,
+            1,
+            "Refresh",
+            refresh_x, buttons_y, button_w, button_h,
+            main_window, 
+            0,
+            COLOR_GRAY, 
+            COLOR_GRAY );
 
     gws_refresh_window(client_fd, refresh_button);
 
-    close_button = gws_create_window(
-        client_fd,
-        WT_BUTTON,
-        BS_DEFAULT,
-        1,
-        "Close",
-        close_x, buttons_y,
-        button_w, button_h,
-        main_window, 0,
-        COLOR_GRAY, COLOR_GRAY );
+    // Close button
+    close_button = 
+        (int) gws_create_window(
+            client_fd,
+            WT_BUTTON,
+            BS_DEFAULT,
+            1,
+            "Close",
+            close_x, buttons_y, button_w, button_h,
+            main_window, 
+            0,
+            COLOR_GRAY, 
+            COLOR_GRAY );
 
     gws_refresh_window(client_fd, close_button);
 
