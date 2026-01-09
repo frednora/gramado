@@ -319,15 +319,18 @@ int main(int argc, char *argv[])
 // Main window
 
     main_window = 
-    gws_create_window(
+    (int) gws_create_window(
         fd, 
-        WT_OVERLAPPED,            // Window type
-        WINDOW_STATUS_ACTIVE,     // Window status / button state
-        WINDOW_STATE_NULL,        // Window state
+        WT_OVERLAPPED,         // Window type
+        WINDOW_STATUS_ACTIVE,  // Window status (active,inactive) / button state
+        WINDOW_STATE_NORMAL,   // Window state (min,max, normal)
         "System Information", 
         win_x, win_y, win_w, win_h,
+        0,        // Parent window (wid)
         WS_APP,   // Window style
-        0x0000, COLOR_WHITE, COLOR_GRAY );
+        COLOR_WINDOW,  // Client area color (unused for overlapped) 
+        COLOR_WINDOW   // bg color (unused for overlapped)
+    );
 
     if (main_window < 0){
         printf("on main_window\n");

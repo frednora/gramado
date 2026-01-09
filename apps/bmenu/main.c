@@ -249,25 +249,34 @@ int main(int argc, char *argv[])
     }
 
 // Main window
-    main_window = gws_create_window(
-        client_fd, WT_OVERLAPPED,
-        WINDOW_STATUS_ACTIVE, WINDOW_STATE_NULL,
+
+    main_window = 
+    (int) gws_create_window(
+        client_fd, 
+        WT_OVERLAPPED,
+        WINDOW_STATUS_ACTIVE,  // Window status (active/inactive) 
+        WINDOW_STATE_NORMAL,   // Window state (min, max, normal)
         "Boot Menu Manager",
         win_x, win_y, win_w, win_h,
-        0, 0x0000, COLOR_WHITE, COLOR_GRAY );
+        0,         // Parent window
+        0x0000,    // Window style
+        COLOR_WHITE,   // Client area color (unused for overlapped)
+        COLOR_GRAY     // bg color (unused for overlapped)
+    );
 
     if (main_window < 0) {
-        printf("bootmenu_app: Failed to create main window\n");
+        printf("bmenu: on creating main_window\n");
         return EXIT_FAILURE;
     }
 
-    gws_draw_text(client_fd, main_window, 20, 20,
-                  COLOR_BLACK, "Choose boot option:");
-
-
-// Getting information about the client area,
+// Getting information about the client area
     struct gws_window_info_d wi;
     gws_get_window_info(client_fd, main_window, &wi);
+
+
+    gws_draw_text(
+        client_fd, main_window, 
+        20, 20, COLOR_BLACK, "Choose boot option:");
 
     // Considering the client area's dimension
 
@@ -284,14 +293,16 @@ int main(int argc, char *argv[])
     unsigned long skip_x = (3 * wi.cr_width / 4) - (button_w / 2);
 
 
+    // Create button
     show_button = gws_create_window(
-        client_fd, WT_BUTTON, BS_DEFAULT, 1,
+        client_fd, WT_BUTTON, BS_DEFAULT, WINDOW_STATE_NULL,
         "Show Menu",
         show_x, button_y, button_w, button_h,
         main_window, 0, COLOR_GRAY, COLOR_GRAY );
 
+    // Create button
     skip_button = gws_create_window(
-        client_fd, WT_BUTTON, BS_DEFAULT, 1,
+        client_fd, WT_BUTTON, BS_DEFAULT, WINDOW_STATE_NULL,
         "Skip Menu",
         skip_x, button_y, button_w, button_h,
         main_window, 0, COLOR_GRAY, COLOR_GRAY );
