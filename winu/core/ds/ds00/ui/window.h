@@ -138,6 +138,7 @@ extern struct gws_window_d *top_window;     // z-order
 // ==============================================================
 // >> Status: interaction/activation. (int)
 // Indicates focus, active/inactive, and user engagement.
+// Valid only for application windows. (Overlapped windows)
 #define WINDOW_STATUS_ACTIVE       1
 #define WINDOW_STATUS_INACTIVE     0
 

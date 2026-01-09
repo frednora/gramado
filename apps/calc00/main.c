@@ -519,7 +519,7 @@ int main(int argc, char *argv[])
     unsigned long display_h = btn_h;
     unsigned long display_y = margin;
   
-
+/*
     // Create display window
     display_window = 
         gws_create_window(
@@ -530,8 +530,27 @@ int main(int argc, char *argv[])
         cr_width - (2 * margin), 
         display_h,
         main_window, WS_CHILD, COLOR_WHITE, COLOR_WHITE);
+*/
 
-    
+
+    // Create display window
+    display_window = 
+        gws_create_window(
+        fd, 
+        WT_SIMPLE,            // type
+        1,                    // Window status - (active, inactive) (Overlapped only)
+        WINDOW_STATE_NORMAL,  // Window state - (min, max ...)
+        "Calc", 
+        margin, 
+        display_y, 
+        cr_width - (2 * margin), 
+        display_h,
+        main_window, 
+        WS_CHILD,     // style - (bit flags)
+        COLOR_BLACK,          // Client area color
+        COLOR_SOFT_WHITE      // bg color
+    );
+
     // Button grid
     unsigned long grid_y = display_y + display_h + margin;
     

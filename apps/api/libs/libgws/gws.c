@@ -3208,15 +3208,15 @@ void gws_invalidate_window(int fd,int wid)
 // IN:
 //     fd - socket
 //     type - Window type
-//     status - Window status
-//     state
+//     status - Window status - (active, inactive)
+//     state - Window state - (min, max ...)
 //     windowname - Window title
 //     x - Left position
 //     y - Top position
 //     width - Width
 //     height - Height
 //     parentwindow - Parent window id
-//     style - Window style
+//     style - Window style - (bit flags)
 //     clientcolor - Color for the client area rectangle
 //     color - Background color
 // OUT: 

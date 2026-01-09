@@ -1,4 +1,3 @@
-
 // colors.h
 // Client-side colors.
 
@@ -42,18 +41,18 @@
 #define COLOR_LTGRAY     0xC0C0C0
 #define COLOR_GRAY       0x808080 
 
-// Black
-//50%   #808080
-//45%   #737373
-//40%   #666666
-//35%   #595959
-//30%   #4d4d4d
-//25%   #404040
-//20%   #333333
-//15%   #262626
-//10%   #1a1a1a
-//5%    #0d0d0d
-//0%    #000000
+// Black scale
+// 50%  #808080
+// 45%  #737373
+// 40%  #666666
+// 35%  #595959
+// 30%  #4d4d4d
+// 25%  #404040
+// 20%  #333333
+// 15%  #262626
+// 10%  #1a1a1a
+//  5%  #0d0d0d
+//  0%  #000000
 
 // w2k-like system colors.
 #define COLOR_TEST_0  0x8080FF  // COLOR_BACKGROUND
@@ -381,6 +380,7 @@
 
 // White
 #define SOFT_WHITE  0x00FFFBF0
+#define COLOR_SOFT_WHITE  0x00FFFBF0
 
 #endif    
 
