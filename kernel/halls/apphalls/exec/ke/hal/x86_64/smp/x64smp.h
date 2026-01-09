@@ -9,12 +9,8 @@
 // https://www.cheesecake.org/sac/smp.html
 // https://en.wikipedia.org/wiki/Symmetric_multiprocessing
 
-
 #ifndef __SMP_X64SMP_H
 #define __SMP_X64SMP_H    1
-
-
-//----------------------------------------------------
 
 #define LAPIC_DEFAULT_ADDRESS  0xFEE00000
 
@@ -113,8 +109,6 @@ extern struct smp_info_d  smp_info;
 // prototypes ==========
 //
 
-
-// See: x64smp.c
 void x64smp_show_info(void);
 int x64smp_initialization(void);
 
@@ -123,5 +117,4 @@ int x64smp_initialization(void);
 //
 // End
 //
-
 

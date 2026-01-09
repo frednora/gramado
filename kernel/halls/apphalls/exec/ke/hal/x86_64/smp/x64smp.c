@@ -79,10 +79,6 @@ PackageOP | PkgLength | NumElements |
 struct smp_info_d  smp_info;
 
 
-
-// ------------------------------------
-
-
 //
 // ======================================================
 //
@@ -106,22 +102,12 @@ void x64smp_show_info(void)
     if (smp_info.probe_via_mp_failed == TRUE)
         printk("Probe via MP failed\n");
 
-
-    printk("Number of processors: %d\n",
-        smp_info.mptable_number_of_processors );
-
-    printk("NR AP running: %d\n",
-        smp_info.nr_ap_running );
-
-    printk("PIC disabled: %d\n",
-        smp_info.bsp_pic_is_disabled );
-
-    printk("Using LACPI: %d\n",
-        smp_info.bsp_is_using_lapic );
-
-// ...
+    printk("NR processors: %d\n", smp_info.mptable_number_of_processors);
+    printk("NR AP running: %d\n", smp_info.nr_ap_running);
+    printk("PIC disabled:  %d\n", smp_info.bsp_pic_is_disabled);
+    printk("Using LAPIC:   %d\n", smp_info.bsp_is_using_lapic);
+    // ...
 }
-
 
 //
 // $
@@ -131,16 +117,16 @@ void x64smp_show_info(void)
 // Probe for smp support and initialize lapic.
 // see:
 // https://wiki.osdev.org/SMP
-int x64smp_initialization(void)
-{
+
 // Called I_kmain() in kmain.c
 // Probing if smp is supported.
 // + Via ACPI.
 // + Via MP. And then initialize lapic.
-
 // #important:
 // In Virtual we only find the processors when using ICH9, not in PIIX3.
 
+int x64smp_initialization(void)
+{
     int smp_status = FALSE;  // fail
 
     smp_info.initialized = FALSE;
@@ -232,7 +218,7 @@ int x64smp_initialization(void)
 // It works on qemu and qemu/kvm.
 // It doesn't work on Virtualbox. (Table not found).
 
-    printk("\n");
+    //printk("\n");
     printk("\n");
     printk("== SMP VIA MP ===================\n");
 

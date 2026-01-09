@@ -23,8 +23,7 @@ all:
 # MBR (backup version)
 # Create backup for MBR 0.
 	@echo "Building MBR0.BIN"
-#	@$(NASM) x86/ap/apx86.asm   -o APX86.BIN
-	@$(NASM) x86/ap/ap2_x86.asm -o APX86.BIN
+	@$(NASM) x86/ap/ap_x86.asm -o APX86.BIN
 # ...
 	@echo "Copying APX86.BIN"
 	@-cp APX86.BIN  x86/bin/

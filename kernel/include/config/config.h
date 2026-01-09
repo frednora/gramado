@@ -67,7 +67,7 @@
 // Use 'legacy' acceleration on Virtualbox, NOT the Hyper-v acceleration.
 // That was the reason for the issues in DHCP dialog.
 // #todo: See 'Core isolation' in network/firewall configuration.
-// This device driver is working fine on virtualbox with PIIX3.
+// >> It works only on Virtualbox using PIIX3 chipset. <<
 // see: pci.c, e1000hw.c
 #define USE_E1000    0
 
@@ -96,6 +96,7 @@
 #define CONFIG_INPUT_TARGET_THREAD_QUEUE  1  // # working
 // More? Maybe initprocess is an configuration option.
 // ...
+
 
 // ------------------------------------------------------
 // lapic/ioapic debug.

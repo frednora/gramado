@@ -809,14 +809,24 @@ static int __test_initialize_ap_processor(int apic_id)
         // Well, we don't need to stay in this loop waiting for signature.
         // We can check it later after the kernel full initialization.
         while (1){
-            if (ap_signature_pointer[0] == 0xA0 && 
-                ap_signature_pointer[1] == 0xA0 )
+            if (ap_signature_pointer[0] == 0x64 && 
+                ap_signature_pointer[1] == 0x64 )
             {
-                printk("AP is running!\n");
+                printk("AP is running in 64bit!\n");
                 // Our first AP processor is running
                 smp_info.nr_ap_running = 1;
                 break;
             }
+            /*
+            if (ap_signature_pointer[0] == 0xA0 && 
+                ap_signature_pointer[1] == 0xA0 )
+            {
+                printk("AP is running in 32bit!\n");
+                // Our first AP processor is running
+                smp_info.nr_ap_running = 1;
+                break;
+            }
+            */
         };
 
         // #debug

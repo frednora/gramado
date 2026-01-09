@@ -1,5 +1,9 @@
 ; AP trampoline: real mode -> quick A20 -> minimal GDT -> protected mode -> 32-bit entry
 ; NASM syntax
+
+; This is switching to long mode.
+; Its running fine in Virtualbox with ICH9 chipset.
+
 [bits 16]
 [org 0x20000]
 
@@ -15,23 +19,44 @@ apx86_start:
     jmp StartCode
 
 ; ---------------- Selectors ----------------
-CODE_SEL equ 0x08
-DATA_SEL equ 0x10
+CODE_SEL     equ 0x08
+DATA_SEL     equ 0x10
+CODE64_SEL   equ 0x18
+DATA64_SEL   equ 0x20
+; ...
 
 ; ---------------- GDT ----------------
 align 8
 gdt:
     dq 0                    ; null
 
-    ; Code: base=0, limit=0xFFFFF, access=0x9A, flags=0xCF (4KiB gran, 32-bit)
-    dw 0xFFFF               ; limit low
-    dw 0x0000               ; base low
-    db 0x00                 ; base mid
-    db 0x9A                 ; access
-    db 0xCF                 ; granularity (limit high=0xF + flags)
-    db 0x00                 ; base high
+    ; 32-bit code: base=0, limit=0xFFFFF, access=0x9A, flags=0xCF
+    dw 0xFFFF
+    dw 0x0000
+    db 0x00
+    db 0x9A
+    db 0xCF
+    db 0x00
 
-    ; Data: base=0, limit=0xFFFFF, access=0x92, flags=0xCF
+    ; 32-bit data: base=0, limit=0xFFFFF, access=0x92, flags=0xCF
+    dw 0xFFFF
+    dw 0x0000
+    db 0x00
+    db 0x92
+    db 0xCF
+    db 0x00
+
+    ; 64-bit code: base=0, limit=0xFFFFF, access=0x9A, flags=0x2F (L=1, D=0, G=1)
+    dw 0xFFFF
+    dw 0x0000
+    db 0x00
+    db 0x9A
+    db 0x2F
+    db 0x00
+
+    ; 64-bit-compatible data: writable data segment
+    ; Long mode ignores base/limit for addressing, but SS must be valid.
+    ; access=0x92 (present, writable), flags=0xCF (G=1; D bit ignored in long mode)
     dw 0xFFFF
     dw 0x0000
     db 0x00
@@ -42,8 +67,10 @@ gdt:
 gdt_end:
 
 gdt_ptr:
-    dw gdt_end - gdt - 1    ; size
-    dd gdt                  ; base (physical address; accessed via DS=0x2000)
+    dw gdt_end - gdt - 1
+    dd gdt
+
+;=========================================================
 
 StartCode:
     cli
@@ -108,20 +135,83 @@ ap_pm32_entry:
     mov ss, ax
 
     ; Set stack to the TOP of the buffer
-    mov esp, stack_begin
+    ;mov esp, stack_begin
 
     ; Optional: mark we reached PM
     mov dword [0x29000], 0xA0A0A0A0
 
-; Minimal idle: enable interrupts so HLT can wake on IPI/timer
+;; =============================================================================
+
+;[bits 32]
+
+PML4_PHYS     EQU  0x000000000009C000
+IA32_EFER     EQU  0xC0000080
+EFER_LME_BIT  EQU  (1 << 8)
+
+
+;ap_pm32_entry:
+switch_to_long_mode:
+
+    ; Load flat data segments (as you already do)
+    mov ax, DATA_SEL
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
+
+    ; 1) Load CR3 with shared PML4 physical address
+    mov eax, PML4_PHYS
+    mov cr3, eax
+
+    ; 2) Enable PAE
+    mov eax, cr4
+    or  eax, (1 << 5)          ; CR4.PAE
+    mov cr4, eax
+
+    ; 3) Set EFER.LME
+    mov ecx, IA32_EFER
+    rdmsr
+    or  eax, EFER_LME_BIT
+    wrmsr
+
+    ; 4) Enable paging (CR0.PG)
+    mov eax, cr0
+    or  eax, (1 << 31)         ; CR0.PG
+    mov cr0, eax
+
+    ; 5) Far jump to 64-bit code segment to activate long mode
+    ; dword because it is still in 32bit mode.
+    jmp dword CODE64_SEL:ap_long_entry
+
+[bits 64]
+
+ap_long_entry:
+
+    xor rax, rax
+
+    mov ax, DATA64_SEL
+    mov ds, ax
+    mov es, ax
+    ;mov fs, ax
+    ;mov gs, ax
+    mov ss, ax
+
+    ; Optional: mark we reached long mode
+    mov dword [0x29000], 0x64646464
+
+    jmp SoftPlaceToFall
+    jmp $
+
 SoftPlaceToFall:
     cli
     hlt
     jmp SoftPlaceToFall
 
 ; ---------------- Stack buffer ----------------
-stack_size equ (stack_begin - stack_end)
-align 16
-stack_end:
+stack_size equ  (stack64_begin - stack64_end)
+align 8
+stack64_end:
     times (1024 * 2) db 0       ; 2 KiB stack space
-stack_begin:
+stack64_begin:
+
