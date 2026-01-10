@@ -84,6 +84,10 @@ int serviceChangeWindowPosition(void);
 // Refresh a rectangle
 int serviceRefreshRectangle(void);
 
+// 2022:
+// Draw a rectangle inside a window, into the backbuffer.
+int serviceDrawRectangle(void);
+
 // 2030 ?
 // When a client send us an event
 int serviceClientEvent(void);

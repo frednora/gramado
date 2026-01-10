@@ -69,6 +69,19 @@ gws_refresh_retangle (
     unsigned long width, 
     unsigned long height );
 
+// Draw a rectangle inside a window, into the backbuffer.
+int 
+gws_draw_rectangle (
+    int fd, 
+    unsigned long x, 
+    unsigned long y, 
+    unsigned long width, 
+    unsigned long height, 
+    unsigned int color,
+    int fill,
+    unsigned long rop );
+
+
 //
 // Surface support
 //

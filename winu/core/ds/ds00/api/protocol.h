@@ -205,6 +205,7 @@ typedef struct _gRep  gRep;
 // All the standar messages, just like MSG_SYSKEYUP ...
 // There are some old messages below 369.
 #define GWS_GetInputMessage        369
+
 #define GWS_Hello                 1000
 #define GWS_CreateWindow          1001
 #define GWS_BackbufferPutPixel    1002
@@ -216,11 +217,14 @@ typedef struct _gRep  gRep;
 #define GWS_ResizeWindow          1008
 #define GWS_ChangeWindowPosition  1009
 
+
 #define GWS_BackbufferPutPixel2   2000
 #define GWS_Disconnect            2010
 #define GWS_RefreshScreen         2020
 #define GWS_RefreshRectangle      2021
 
+// Draw a rectangle inside a window, into the backbuffer.
+#define GWS_DrawRectangle          2022
 
 //#define GWS_GetSendEvent          2030  // send event #
 #define GWS_GetNextEvent          2031

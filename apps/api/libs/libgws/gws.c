@@ -3155,7 +3155,7 @@ gws_refresh_retangle (
     };
 
 // A sincronização nos diz que já temos um reply.
-    Response = (int) __gws_refresh_rectangle_response (fd);  
+    Response = (int) __gws_refresh_rectangle_response(fd);  
     __gws_clear_msg_buff();
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
     return (int) Response;
@@ -3164,6 +3164,27 @@ fail:
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
     return (int) -1;
 }
+
+// Draw a rectangle inside a window, into the backbuffer.
+int 
+gws_draw_rectangle (
+    int fd, 
+    unsigned long x, 
+    unsigned long y, 
+    unsigned long width, 
+    unsigned long height, 
+    unsigned int color,
+    int fill,
+    unsigned long rop )
+{
+    // #todo
+    // This is a work in progress.
+    // We already have some implementation in server side.
+    // It will be kinda following the same steps of the 
+    // one the refreshes a rectangle
+    return (int) -1;
+}
+
 
 // Atualiza o retângulo da surface da thread.
 void 

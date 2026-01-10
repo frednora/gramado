@@ -2028,12 +2028,14 @@ int serviceRedrawWindow(void)
 }
 
 // 2021
+// Refresh a rectangle.
 // Flush a given area into the framebuffer.
+// #ps: 
+// The refresh rectangle is acting Not inside a given window. 
+// It has access to the whole screen.
+
 int serviceRefreshRectangle(void)
 {
-// Business Logic:
-// Refresh a rectangle.
-
     unsigned long *message_address = (unsigned long *) &__buffer[0];
     unsigned long left=0;
     unsigned long top=0;
@@ -2043,13 +2045,8 @@ int serviceRefreshRectangle(void)
 // Check all the header.
     unsigned long msg_code = message_address[1];
 
-    // #debug
-    // debug_print("serviceRefreshRectangle:\n");
-    // asm("cli");
-
-    if( msg_code != GWS_RefreshRectangle ){
+    if (msg_code != GWS_RefreshRectangle){
         goto fail;
-        //return -1;
     }
 
 // #todo
@@ -2076,8 +2073,68 @@ int serviceRefreshRectangle(void)
     return 0;
 fail:
     debug_print("serviceRefreshRectangle: fail\n");
-    //asm("sti");
-    return -1;
+    return (int) -1;
+}
+
+// 2022:
+// Draw a rectangle inside a window, into the backbuffer.
+int serviceDrawRectangle(void)
+{
+    unsigned long *message_address = (unsigned long *) &__buffer[0];
+    unsigned long left=0;
+    unsigned long top=0;
+    unsigned long width=0;
+    unsigned long height=0;
+
+    int window_id = message_address[0];  // window id 
+    window_id = (int) (window_id & 0xFFFFFFFF);
+
+// #todo
+// Check all the header.
+    unsigned long msg_code = message_address[1];
+
+    if (msg_code != GWS_DrawRectangle){
+        goto fail;
+    }
+
+// #todo
+// Check if the message code is right.
+// l,t,w,h
+    left   = message_address[4];
+    top    = message_address[5];
+    width  = message_address[6];
+    height = message_address[7];
+    left   = (left   & 0xFFFF);
+    top    = (top    & 0xFFFF);
+    width  = (width  & 0xFFFF);
+    height = (height & 0xFFFF);
+
+    // #todo
+    // Get the rest of the parameters from here.
+    //message_address[8] → color
+    //message_address[9] → fill flag (0 = outline, 1 = filled)
+    //message_address[10] → rop (raster operation mode)
+
+// #todo
+// We also need these other parameters.
+    unsigned int __color = COLOR_PINK;
+    int __fill = TRUE;  // Not empty
+    unsigned long __rop = 0;
+
+// See: rect.c
+    rectBackbufferDrawRectangle ( 
+        left, top, width, height, 
+        (unsigned int) __color,
+        (int) __fill,
+        (unsigned long) __rop );
+
+    next_response[0] = 0;
+    next_response[1] = SERVER_PACKET_TYPE_REPLY;  // msg code
+
+    return 0;
+fail:
+    debug_print("serviceDrawRectangle: fail\n");
+    return (int) -1;
 }
 
 // 1006
@@ -3126,6 +3183,14 @@ dsProcedure (
     // Refresh a rectangle.
     case GWS_RefreshRectangle:
         serviceRefreshRectangle();
+        NoReply = FALSE;
+        break;
+
+    // 2022:
+    // Draw a rectangle inside a window, into the backbuffer.
+    case GWS_DrawRectangle:
+        yellow_status("GWS_DrawRectangle");
+        serviceDrawRectangle();
         NoReply = FALSE;
         break;
 

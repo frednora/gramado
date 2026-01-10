@@ -197,6 +197,15 @@ ap_long_entry:
     ;mov gs, ax
     mov ss, ax
 
+    ; Point RSP to the top of your stack buffer
+    ;lea rsp, [stack64_begin]
+    ;and rsp, -16        ; ensure 16-byte alignment
+
+    ;xor rax, rax 
+    ;mov rax, qword stack64_begin 
+    ;mov rsp, rax 
+
+
     ; Optional: mark we reached long mode
     mov dword [0x29000], 0x64646464
 

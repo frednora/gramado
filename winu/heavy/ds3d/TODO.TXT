@@ -1,0 +1,15 @@
+
+#todo: 
+Draw into a canvas and let another process put the content
+inside the client area of regular client-side GUI application.
+
+We have a 3D demo drawing into the backbuffer now, but in the future 
+the rendering can be redirected into an offscreen canvas. This offscreen canvas 
+will act as a separate memory buffer where complex graphics are drawn. 
+Another process, such as the compositor or a GUI application, will then 
+be able to embed this canvas inside the client area of a regular window. 
+
+This approach allows us to keep the window system safe and isolated, 
+while still enabling powerful rendering routines for demos, games, or 
+even browser engines.
+
