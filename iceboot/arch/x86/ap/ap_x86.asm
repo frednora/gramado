@@ -160,67 +160,85 @@ switch_to_long_mode:
     mov gs, ax
     mov ss, ax
 
-    ; 1) Load CR3 with shared PML4 physical address
+
+    ; 1) Enable PAE
+    mov eax, cr4
+    ;or  eax, (1 << 5)          ; CR4.PAE
+    or  eax, 0x20	
+    mov cr4, eax
+
+    ; 2) Load CR3 with shared PML4 physical address
     mov eax, PML4_PHYS
     mov cr3, eax
 
-    ; 2) Enable PAE
-    mov eax, cr4
-    or  eax, (1 << 5)          ; CR4.PAE
-    mov cr4, eax
-
     ; 3) Set EFER.LME
-    mov ecx, IA32_EFER
+
+    ;mov ecx, IA32_EFER
+    ;rdmsr
+    ;or  eax, EFER_LME_BIT
+    ;wrmsr
+
+    mov 	ecx, 0xC0000080
     rdmsr
-    or  eax, EFER_LME_BIT
+    or 	    eax, 0x100
+    mov 	edx, 0
     wrmsr
+
+
+; cr3
+; Flush
+
+    mov EAX, CR3  
+    ; nop
+    mov CR3, EAX
+
 
     ; 4) Enable paging (CR0.PG)
     mov eax, cr0
-    or  eax, (1 << 31)         ; CR0.PG
+    ;or  eax, (1 << 31)         ; CR0.PG
+    or	    eax, 0x80000001  ;0x80000000
     mov cr0, eax
+
+    ;lgdt [gdt_ptr]
 
     ; 5) Far jump to 64-bit code segment to activate long mode
     ; dword because it is still in 32bit mode.
     jmp dword CODE64_SEL:ap_long_entry
 
 [bits 64]
-
 ap_long_entry:
 
     xor rax, rax
 
+    ; Load valid data selectors
     mov ax, DATA64_SEL
     mov ds, ax
     mov es, ax
-    ;mov fs, ax
-    ;mov gs, ax
     mov ss, ax
 
-    ; Point RSP to the top of your stack buffer
+    ; Set a known-good 64-bit stack (label immediate, not memory)
     ;lea rsp, [stack64_begin]
-    ;and rsp, -16        ; ensure 16-byte alignment
+    ;and rsp, -16
 
-    ;xor rax, rax 
-    ;mov rax, qword stack64_begin 
-    ;mov rsp, rax 
+    mov rax, 0x12345678FEFEFEFE
+    mov rbx, 0x12345678FEFEFEFE
+    cmp rax, rbx
+   jne Fail
 
-
-    ; Optional: mark we reached long mode
+    ; Success marker (ensure 0x29000 is mapped)
     mov dword [0x29000], 0x64646464
-
-    jmp SoftPlaceToFall
-    jmp $
-
 SoftPlaceToFall:
     cli
     hlt
     jmp SoftPlaceToFall
 
-; ---------------- Stack buffer ----------------
-stack_size equ  (stack64_begin - stack64_end)
+Fail:
+    mov dword [0x29000], 0x63636363
+    jmp SoftPlaceToFall
+
 align 8
 stack64_end:
-    times (1024 * 2) db 0       ; 2 KiB stack space
+    times (1024 * 2) db 0
 stack64_begin:
+
 

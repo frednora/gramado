@@ -37,177 +37,82 @@ extern void BlTransferTo64bitKernel(void);
 
 // ======================================================
 
+// Internal helpers
 static void load_pml4_table(void *phy_addr);
 static void enable_PAE(void);
 static void enable_paging(void);
 
 // ======================================================
 
-// Set up cr3 register.
+// Load CR3 with the physical address of the PML4 table.
 static void load_pml4_table(void *phy_addr)
 {
     asm volatile (" movl %0, %%cr3 " :: "r" (phy_addr) );
 }
 
-// --------------------------
-// PAE (Physical Address Extensions): (Bit 5 in cr4).
-// When PAE is enabled, the page table entries are extended 
-// from 32 bits to 64 bits, allowing for a 36-bit physical address space. 
-// Allows 32-bit operating systems to utilize more physical memory, 
-// a feature commonly found in x86-64 architectures
+// Enable PAE (Physical Address Extension).
 static void enable_PAE(void)
 {
-// Bit 5 in cr4.
-
-    asm volatile ( " movl %%cr4, %%eax; "
-                   " orl $0x20, %%eax;  "
+    asm volatile ( " movl %%cr4, %%eax  \n"
+                   " orl $0x20, %%eax   \n"     // Set bit 5 (PAE)
                    " movl %%eax, %%cr4  " :: );
 }
 
-// Enable paging.
-// Enabling paging is actually very simple. 
-// All that is needed is to load CR3 with the address of the page directory and 
-// to set the paging (PG) and protection (PE) bits of CR0.
-// # In our case we are already in Protected Mode.
-// Just need to change the (PG) bit.
+// Enable paging (CR0.PG). 
+// Assumes we are already in protected mode.
 static void enable_paging(void)
 {
-// Bit 31 in cr0.
-
-    asm volatile ( " movl %%cr0, %%eax;      "
-                   " orl $0x80000000, %%eax; "
-                   " movl %%eax, %%cr0       " :: );
+    asm volatile ( " movl %%cr0, %%eax  \n"
+                   " orl $0x80000000, %%eax  \n"  // Set bit 31 (PG)
+                   " movl %%eax, %%cr0  " :: );
 }
 
-/*
- * SetUpPaging:
- *     Mapping.
- * In this function:
- *     (Phase 1) Endere�os da mem�ria f�sicas acess�veis em Kernel Mode. 
- *     (Phase 2) Inicializando o diret�rio.
- *     (Phase 3) Cria tabelas de p�ginas e coloca o ponteiro de cada uma 
- * delas na sua respectiva entrada de diret�rio.
- *     (Phase 4) CRIANDO OUTROS DIRET�RIOS
- * @diretorio:
- *   boot_pd0 = 0x9C000.
- *   Page directory do kernel.
- * Obs: Esse diret�rio criado ser� usado pelas primeiros processos durante
- * essa fase de constru��o do sistema. O ideal � um diret�rio por processo.
- *      Toda vez que o Kernel inicia a execu��o de um processo, ele deve 
- * carregar o endere�o do diret�rio do processo em CR3. Por enquanto s� tem 
- * um diret�rio criado e todos os processos est�o definindo o diret�rio do
- * Kernel como sendo seu pr�prio. Ou seja, eles podem usar as mesmas tabelas
- * de p�ginas que o processo kernel usa. O problema � que com isso os 
- * processos precisam ter endere�o virtual diferentes. Quando cada processo
- * tiver seu pr�prio diret�rio ent�o eles poder�o ter o mesmo endere�o virtual.
- * @todo: Esses endere�os precisam ser registrados em vari�veis globais ou
- * dentro de uma estrutura para serem passados para o Kernel.
- * Obs: Essa deve ser uma interface que chama as rotinas de configura��o de 
- * pagina��o. (Mapeamento). 
- * Obs: 
- * Essa configura��o inicial feita no Boot Loader, n�o impede o Kernel de 
- * refazer as configura��es b�sicas de pagina��o. O fato � que o kernel ser� o 
- * gerenciador de p�ginas de mem�ria. O que n�o impede de haver 
- * gerenciamento um user mode.
- * History:
- *     2015 - Created by Fred Nora.
- */
+// ------------------------------------------------------ 
+// SetUpPaging: 
+// - Builds initial page tables for kernel and basic regions. 
+//   We are building table to the used by the 64bit kernel. So
+//   we're using 64bit addresses.
+// - Enables PAE and loads CR3 with PML4. 
+// - Sets EFER.LME via MSR to prepare for long mode. 
+// - Transfers execution to 64-bit kernel entry. 
+//   This routine does not return.
 // Called by bl_main in main.c
+// ------------------------------------------------------
 
 void SetUpPaging(void)
 {
-// 64bit.
-// + Setup pages.
-// + Transfer execution to the kernel.
-// This routine does not return.
-
     register unsigned int i=0;
 
-// 9 9 9 9 12
-// Agora as tabelas possuem 512 entradas,
-// pois � isso o que d� pra ter com apenas 9 bits.
-// Agora o addr de cada tabela � de 52 bits, os outros 12 bits s�o reservados.
-// Antes cada entrada era de 4 bytes, agora � de 8 bytes.
-// Nesse caso a tabela continua do mesmo tamanho, mas agora com 512 entradas de 8
-
-// (Phase 1) 
-// Endere�os da mem�ria f�sicas acess�veis em Kernel Mode.
-
-//
-// Kernel.
-//
-
-// Address. para os 2 primeiros mega da mem�ria fisica.
-// Base, 0x100000, para o kernel que come�a no primeiro mega.
-    unsigned long kernel_address = 0;           //In�cio da mem�ria RAM.                
-    unsigned long kernel_base = KERNEL_BASE;    //In�cio da imagem do kernel.    
-
-//
-// (Phase 2) 
-// Some physical addresses.
-//
-
-// User, 0x00400000.
-    unsigned long user_address = USER_BASE;
-// VGA, Phy=0x000B8000.
-    unsigned long vga_address = VM_BASE;   
-// VESA LFB, we get this via boot loader.
-    unsigned long lfb_address  = (unsigned long) g_lbf_pa;
-// Backbuffer: Physical address for the backbuffer.
-// 16MB mark. (16*1024*1024) = 0x01000000.
-    unsigned long buff_address  = (unsigned long) 0x01000000; 
-
-// DIRECTORY:
-// Diret�rios de p�ginas.
-// Esse valor � salvo em cr3. Cada diret�rio tem seu endere�o.
-// Esse diret�rio, configurado aqui no Boot Loader � o mesmo usado 
-// pelo Kernel.
-// Obs: 
-// A id�ia � que os diret�rio sejam criados em ordem decrescente.
-// Os espa�os entre os diret�rio ser�o preenchidos com p�ginas 
-// avulsas. Depois, no kernel, haver� �rea de aloca��o para 
-// diret�rios e p�ginas.
-// Teste:
-// Criando diret�rios para os primeiros processos do sistema. 
-// (antes de 32MB).
-// Obs: Essa �rea onde est�o os diret�rios � uma �rea desprotegiada ainda.
-// Obs: O kernel est� reconfigurando e usando outro endere�o para o 
-// diret�rio de p�ginas.
-// @todo: Alertar o kernel sobre esses endere�os de diret�rios.
+    // Physical base addresses
+    unsigned long kernel_address = 0;            // Start of RAM 
+    unsigned long kernel_base    = KERNEL_BASE;  // Kernel image base (0x100000)
+    unsigned long user_address   = USER_BASE;    // User space base (0x00400000)
+    unsigned long vga_address    = VM_BASE;      // Legacy VGA text buffer (0x000B8000)
+    unsigned long lfb_address    = (unsigned long) g_lbf_pa;    // VESA LFB
+    unsigned long buff_address   = (unsigned long) 0x01000000;  // Backbuffer (16 MB mark)
 
 // =====================================
+// Page table hierarchy
+//
 // PML4, PDPT, PD, PT
 // PML4 - Page Map Level 4
 // PDPT - Page Directory Pointer Table
 // PD   - Page Directory
 // PT   - Page Table
+//
 
-    // level 4
-    unsigned long *boot_pml4 = (unsigned long *) (0x01000000 - 0x00700000);
-    // level 3
-    unsigned long *boot_pdpt = (unsigned long *) (0x01000000 - 0x00800000);
-    // level 2
-    unsigned long *boot_pd0  = (unsigned long *) (0x01000000 - 0x00900000);
-    // level 1
-    // A lot of page tables in the level 1.
+    unsigned long *boot_pml4 = (unsigned long *) (0x01000000 - 0x00700000);  // level 4
+    unsigned long *boot_pdpt = (unsigned long *) (0x01000000 - 0x00800000);  // level 3
+    unsigned long *boot_pd0  = (unsigned long *) (0x01000000 - 0x00900000);  // level 2
+    // level 1: A lot of page tables in the level 1.
 
-// TABLES: 
-// Tabelas de p�ginas.
-// Uma tabela para cada �rea de mem�ria que se deseja usar.
-// Usando endere�os decrescentes.
-// ptKM  - First 2MB.
-// ptKM2 - The kernel image.
-// ptUM  - User mode area for application. (Not used yet)
-// ptVGA - Legacy VGA memory.
-// ptLFB - Linear Frame Buffer. (Front buffer)
-// ptBACKBUFFER - The backbuffer.
-
-    unsigned long *ptKM  = (unsigned long *) 0x0008F000;
-    unsigned long *ptKM2 = (unsigned long *) 0x0008E000;
-    unsigned long *ptUM  = (unsigned long *) 0x0008D000;
-    unsigned long *ptVGA = (unsigned long *) 0x0008C000;
-    unsigned long *ptLFB = (unsigned long *) 0x0008B000;
-    unsigned long *ptBACKBUFFER = (unsigned long *) 0x0008A000;
+    // Individual page tables (level 1)
+    unsigned long *ptKM =         (unsigned long *) 0x0008F000;  // First 2 MB
+    unsigned long *ptKM2 =        (unsigned long *) 0x0008E000;  // Kernel image
+    unsigned long *ptUM =         (unsigned long *) 0x0008D000;  // User space
+    unsigned long *ptVGA =        (unsigned long *) 0x0008C000;  // VGA text buffer
+    unsigned long *ptLFB =        (unsigned long *) 0x0008B000;  // Linear Frame Buffer
+    unsigned long *ptBACKBUFFER = (unsigned long *) 0x0008A000;  // Backbuffer
     // ...
 
 //
@@ -236,11 +141,15 @@ void SetUpPaging(void)
     };
 
 // ============================
+
+// Link PD into PDPT
 // Pointing the 'page directory' address 
 // at the first entry in the 'page directory pointer table'.
     boot_pdpt[0*2]   = (unsigned long) &boot_pd0[0];
     boot_pdpt[0*2]   = (unsigned long) boot_pdpt[0*2] | 3;
     boot_pdpt[0*2+1] = 0; 
+
+// Link PDPT into PML4
 // Pointing the 'page directory pointer table' address 
 // at the first entry in the 'boot_pml4'.
     boot_pml4[0*2]   = (unsigned long) &boot_pdpt[0];
@@ -457,28 +366,16 @@ Entry_386:
 // PAE
 //
 
-    //#debug
-    //printf ("SetUpPaging: enable_PAE\n");
-    //refresh_screen();
-
+    // Enable PAE
     enable_PAE();
-
-    //#debug
-    //refresh_screen();
-    //while(1){}
 
 //
 // CR3
 //
 
-// Point cr3 to boot_pml4.
-    
-    //#debug
-    //printf ("SetUpPaging: load_pml4_table\n");
-    //refresh_screen();
-
+    // Load CR3 with PML4
+    // Point cr3 to boot_pml4.
     unsigned long pml4_address = (unsigned long) &boot_pml4[0];
-
     load_pml4_table( (unsigned long) pml4_address );
 
 //
@@ -489,12 +386,10 @@ Entry_386:
     //printf ("SetUpPaging: cpuSetMSR\n");
     //refresh_screen();
 
-// #todo
-// long mode exige uma configura��o usando msr.
-
     //int msrStatus = FALSE;
     //msrStatus = cpuHasMSR();
 
+    // Enable Long Mode via EFER.LME
     //IN: MSR, LO, HI
     cpuSetMSR( 0xC0000080, 0x100, 0 );
 
@@ -534,6 +429,7 @@ Entry_386:
     //while(1){}
 
 // Go to kernel
+// Transfer control to 64-bit kernel entry
 // See: transfer.inc
 
     BlTransferTo64bitKernel();
@@ -541,8 +437,8 @@ Entry_386:
 // Hang:
 // Not reached
     while (1){
-        asm ("cli");
-        asm ("hlt");
+        asm ("cli ");
+        asm ("hlt ");
     };
 }
 

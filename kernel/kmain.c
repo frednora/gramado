@@ -812,7 +812,7 @@ static int __test_initialize_ap_processor(int apic_id)
             if (ap_signature_pointer[0] == 0x64 && 
                 ap_signature_pointer[1] == 0x64 )
             {
-                printk("AP is running in 64bit!\n");
+                printk("kernel: AP is running in 64bit\n");
                 // Our first AP processor is running
                 smp_info.nr_ap_running = 1;
                 break;
@@ -827,6 +827,13 @@ static int __test_initialize_ap_processor(int apic_id)
                 break;
             }
             */
+            if (ap_signature_pointer[0] == 0x63 && 
+                ap_signature_pointer[1] == 0x63 )
+            {
+                panic("kernel: AP Coudn't enter in long mode\n");
+                //asm ("cli \n");
+                //asm ("hlt \n");
+            }
         };
 
         // #debug
