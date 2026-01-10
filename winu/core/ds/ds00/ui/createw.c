@@ -1937,11 +1937,15 @@ void *doCreateWindow (
 
 // ===================================
 // Sublings
+
     //window->subling_list = NULL;
 
 // ===================================
 // Childs
-    window->child_list = NULL;
+
+    // The head for a child list
+    // Navigate using ->next
+    window->child_head = NULL;
 
 // ===================================
 // #todo: 

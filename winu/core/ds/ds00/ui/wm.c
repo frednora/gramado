@@ -2608,7 +2608,7 @@ void set_focus(struct gws_window_d *window)
         IsParentActive = FALSE;
 
 // The old was invalid
-    struct gws_window_d *child_list;
+    //struct gws_window_d *head;
 
 // Target
     if ( target->type == WT_SIMPLE ||
@@ -2639,16 +2639,16 @@ void set_focus(struct gws_window_d *window)
         if (IsParentValid == TRUE)
         {
             // #todo: Activate?
-            child_list = p->child_list;
-            while ((void*) child_list != TRUE)
+            head = p->child_head;
+            while ((void*) head != TRUE)
             {
-                if (child_list->magic == 1234)
+                if (head->magic == 1234)
                 {
                     // #todo: Not for overlapped window.
-                    //redraw_window(child_list,TRUE);
+                    //redraw_window(head,TRUE);
                 }
                 // Get next child window
-                child_list = child_list->child_list;
+                head = head->next;
             };
         }
         */
@@ -2764,7 +2764,7 @@ void wm_cycle_focus(void)
 // Get the head of child list.
 // We need to navegate using the '->next',
 // its because '->subling_list' will be used only for application windows
-    target = parent->child_list;
+    target = parent->child_head;
     if (target == old)
         target = target->next;
 
@@ -3008,7 +3008,7 @@ wm_add_child_window(
 // #todo
 // NOT TESTED YET !!!
 
-    struct gws_window_d  *tmp;
+    struct gws_window_d  *tmp_w;
 
 // ========================
     //if( window == __root_window )
@@ -3051,18 +3051,27 @@ wm_add_child_window(
 
 // ===================================
 
-    tmp = parent;
-    while ( (void*) tmp->child_list != NULL )
+// No items into the child list
+    if ((void *) parent->child_head == NULL)
     {
-        tmp = tmp->child_list;
+        parent->child_head = window;
+        window->next = NULL;
+        return;
+    }
+
+    tmp_w = parent->child_head;
+    while (1)
+    {
+        if ((void*) tmp_w->next == NULL)
+        {
+            // Now the window is the next in queue
+            // The child doesn't have a child yet
+            tmp_w->next = window;
+            window->next = NULL;
+            break;
+        }
+        tmp_w = tmp_w->next;
     };
-
-// Agora somos a última da fila.
-    tmp->child_list = (struct gws_window_d *) window;
-
-done:
-    // The child doesn't have a child yet.
-    window->child_list = NULL;
 }
 
 void wm_add_window_to_bottom(struct gws_window_d *window)

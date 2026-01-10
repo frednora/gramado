@@ -1004,11 +1004,11 @@ struct gws_window_d
 // The parent window
     struct gws_window_d  *parent;
 
-// child_list - for structural children inside a parent window 
+// child list - for structural children inside a parent window 
 // (buttons, edit boxes, toolbars, etc.).
 // #ps: This pointer points to the first child, bat they are linked
 // via '->next' chain.
-    struct gws_window_d  *child_list;
+    struct gws_window_d  *child_head;
 
 // subling_list - for application-level siblings, i.e. windows that 
 // share the same parent (usually the root window or desktop).
