@@ -73,6 +73,7 @@ gws_refresh_retangle (
 int 
 gws_draw_rectangle (
     int fd, 
+    int wid,
     unsigned long x, 
     unsigned long y, 
     unsigned long width, 

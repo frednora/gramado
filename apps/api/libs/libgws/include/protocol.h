@@ -211,7 +211,12 @@ typedef struct _gRep  gRep;
 #define GWS_BackbufferPutPixel2   2000
 #define GWS_Disconnect            2010
 #define GWS_RefreshScreen         2020
+
 #define GWS_RefreshRectangle      2021
+// Draw a rectangle inside a window, into the backbuffer.
+#define GWS_DrawRectangle          2022
+
+
 //#define GWS_GetSendEvent          2030  // send event #
 
 // The server will return an event from the its client's event queue.

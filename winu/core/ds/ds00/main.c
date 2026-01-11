@@ -2078,16 +2078,41 @@ fail:
 
 // 2022:
 // Draw a rectangle inside a window, into the backbuffer.
+// ======================================================
+// Message buffer layout for GWS_DrawRectangle
+// ------------------------------------------------------
+// message_address[0] : Window ID (wid)
+// message_address[1] : Message code (must be GWS_DrawRectangle)
+// message_address[2] : Reserved / extension (unused here)
+// message_address[3] : Reserved / extension (unused here)
+
+// message_address[4] : Relative left (x) inside client area
+// message_address[5] : Relative top (y) inside client area
+// message_address[6] : Width of rectangle
+// message_address[7] : Height of rectangle
+
+// message_address[8] : Color (ARGB / RGB depending on mode)
+// message_address[9] : Fill flag (0 = outline, 1 = filled)
+// message_address[10]: ROP (raster operation mode)
+// ------------------------------------------------------
+// Notes:
+// - Coordinates [4],[5] are relative to the window’s client area.
+// - Server converts them to absolute screen coords using
+//   window->absolute_x + window->rcClient.left/top.
+// - Width/height are clipped against the client rect.
+// - Color/fill/rop are passed directly to rectBackbufferDrawRectangle().
+// ======================================================
+
 int serviceDrawRectangle(void)
 {
     unsigned long *message_address = (unsigned long *) &__buffer[0];
-    unsigned long left=0;
-    unsigned long top=0;
+
+    unsigned long rel_left=0;
+    unsigned long rel_top=0;
     unsigned long width=0;
     unsigned long height=0;
 
-    int window_id = message_address[0];  // window id 
-    window_id = (int) (window_id & 0xFFFFFFFF);
+    int wid = message_address[0];  // window id 
 
 // #todo
 // Check all the header.
@@ -2099,31 +2124,72 @@ int serviceDrawRectangle(void)
 
 // #todo
 // Check if the message code is right.
-// l,t,w,h
-    left   = message_address[4];
-    top    = message_address[5];
-    width  = message_address[6];
-    height = message_address[7];
-    left   = (left   & 0xFFFF);
-    top    = (top    & 0xFFFF);
-    width  = (width  & 0xFFFF);
-    height = (height & 0xFFFF);
 
-    // #todo
-    // Get the rest of the parameters from here.
-    //message_address[8] → color
-    //message_address[9] → fill flag (0 = outline, 1 = filled)
-    //message_address[10] → rop (raster operation mode)
+// Geometry: l, t, w, h
+         rel_left   = message_address[4];
+         rel_top    = message_address[5];
+             width  = message_address[6];
+             height = message_address[7];
 
-// #todo
-// We also need these other parameters.
-    unsigned int __color = COLOR_PINK;
-    int __fill = TRUE;  // Not empty
-    unsigned long __rop = 0;
+         rel_left   = (rel_left   & 0xFFFF);
+         rel_top    = (rel_top    & 0xFFFF);
+             width  = (width  & 0xFFFF);
+             height = (height & 0xFFFF);
+
+// Extra parameters 
+    unsigned int __color = 
+         (unsigned int)(message_address[8]  & 0xFFFFFFFF); 
+    int __fill = 
+                  (int)(message_address[9]  & 0xFFFFFFFF); 
+    unsigned long __rop = 
+        (unsigned long)(message_address[10] & 0xFFFFFFFF);
+
+
+// Window
+    struct gws_window_d *window;
+    wid = (int) (wid & 0xFFFFFFFF);
+    if (wid < 0 || wid >= WINDOW_COUNT_MAX)
+        goto fail;
+    window = (struct gws_window_d *) windowList[wid];
+    if ((void*)window == NULL)
+        goto fail;
+    if (window->magic != 1234)
+        goto fail;
+
+
+// Clipping
+// Calculating the absolute values for the rectangle
+// given the absolute values for the window and 
+// the relative values for the client area.
+
+    // Absolute left
+    unsigned long abs_left = 
+        (window->absolute_x + window->rcClient.left + rel_left);
+
+    // Absolute top
+    unsigned long abs_top  = 
+        (window->absolute_y + window->rcClient.top + rel_top);
+
+// Real clipping
+
+    // Horizontal
+    unsigned long available_w = 
+        (window->absolute_x + window->rcClient.right) - abs_left;
+    if (width > available_w)
+        width = available_w;
+
+    // Vertical
+    unsigned long available_h = 
+        (window->absolute_y + window->rcClient.bottom) - abs_top;
+    if (height > available_h)
+        height = available_h;
 
 // See: rect.c
     rectBackbufferDrawRectangle ( 
-        left, top, width, height, 
+        abs_left, 
+        abs_top, 
+        width, 
+        height, 
         (unsigned int) __color,
         (int) __fill,
         (unsigned long) __rop );
@@ -3189,7 +3255,7 @@ dsProcedure (
     // 2022:
     // Draw a rectangle inside a window, into the backbuffer.
     case GWS_DrawRectangle:
-        yellow_status("GWS_DrawRectangle");
+        //yellow_status("GWS_DrawRectangle");
         serviceDrawRectangle();
         NoReply = FALSE;
         break;

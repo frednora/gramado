@@ -28,6 +28,11 @@ static unsigned long cr_height = 0;
 
 
 static void query_client_area(int fd);
+
+static void test_draw_rects_in_client_area(int fd);
+static void test_draw_rects_in_client_area2(int fd);
+static void test_draw_rects_in_client_area3(int fd);
+
 static void draw_label(int fd, int x, int y, const char *label, const char *value);
 static void draw_system_info(int fd, int base_x, int base_y, int line_h);
 static void update_children(int fd);
@@ -59,6 +64,435 @@ static void query_client_area(int fd)
     cr_top    = wi.cr_top;
     cr_width  = wi.cr_width;
     cr_height = wi.cr_height;
+}
+
+/*
+// original
+static void test_draw_rects_in_client_area(int fd)
+{
+    query_client_area(fd);
+
+    unsigned long rect_w = 20;
+    unsigned long rect_h = 20;
+
+    // Top-left (red)
+    gws_draw_rectangle(fd, main_window,
+        0, 0, rect_w, rect_h,
+        0x00FF0000, TRUE, 0);
+
+    // Top-right (green)
+    gws_draw_rectangle(fd, main_window,
+        cr_width - rect_w, 0, rect_w, rect_h,
+        0x0000FF00, TRUE, 0);
+
+    // Bottom-left (blue outline)
+    gws_draw_rectangle(fd, main_window,
+        0, cr_height - rect_h, rect_w, rect_h,
+        0x000000FF, FALSE, 0);
+
+    // Bottom-right (yellow)
+    gws_draw_rectangle(fd, main_window,
+        cr_width - rect_w, cr_height - rect_h,
+        rect_w, rect_h,
+        0x00FFFF00, TRUE, 0);
+
+    gws_refresh_window(fd, main_window);
+}
+*/
+
+static void test_draw_rects_in_client_area(int fd)
+{
+    query_client_area(fd);
+
+    // Small "pixel" size - feel free to change!
+    const int PIXEL = 18;
+    const int GAP   = 2;   // small spacing between pixels (optional)
+
+    // Center the artwork roughly
+    int art_width  = 16 * (PIXEL + GAP);
+    int art_height = 16 * (PIXEL + GAP);
+    
+    int start_x = (cr_width  - art_width)  / 2;
+    int start_y = (cr_height - art_height) / 2 - 40;  // a bit higher
+
+    // Clear client area first (optional but recommended)
+    gws_draw_rectangle(fd, main_window,
+        0, 0, cr_width, cr_height,
+        COLOR_WHITE, TRUE, 0);
+
+    // ─────────────────────────────────────────────────────────────
+    // Very simple 16×16 pixel art examples - pick one or mix them!
+    // ─────────────────────────────────────────────────────────────
+
+    // Option 1: Classic smiley face
+    /*
+    const char* smiley[16] = {
+        "                ",
+        "     ..    ..   ",
+        "    .##.  .##.  ",
+        "    .########.  ",
+        "     .######.   ",
+        "      .####.    ",
+        "                ",
+        "   .          . ",
+        "  .##.      .##.",
+        "  .############.",
+        "   .##########. ",
+        "    .########.  ",
+        "     ........   ",
+        "                ",
+        "                ",
+        "                "
+    };
+    */
+
+    // Option 2: Heart (uncomment to use instead)
+    /*
+    const char* heart[16] = {
+        "      ..  ..      ",
+        "    .####.####.   ",
+        "   .###########.  ",
+        "   .###########.  ",
+        "    .#########.   ",
+        "     .#######.    ",
+        "      .#####.     ",
+        "       .###.      ",
+        "        .#.       ",
+        "         .        ",
+        "                  ",
+        "                  ",
+        "                  ",
+        "                  ",
+        "                  ",
+        "                  "
+    };
+    */
+
+    // Option 3: Tiny ghost (cute one)
+    
+    const char* ghost[16] = {
+        "      ......      ",
+        "    .########.    ",
+        "   .##########.   ",
+        "  .####.##.####.  ",
+        "  .############.  ",
+        "  .############.  ",
+        "  .###.####.###.  ",
+        "   .##########.   ",
+        "    .########.    ",
+        "     .######.     ",
+        "      ......      ",
+        "     . .  . .     ",
+        "    .   ..   .    ",
+        "                  ",
+        "                  ",
+        "                  "
+    };
+    
+
+    // Pick which art you want to draw (change the name here)
+   // const char** art = smiley;   // ← change to heart or ghost to try others
+   // const char** art = heart;   // ← change to heart or ghost to try others
+    const char** art = ghost;   // ← change to heart or ghost to try others
+
+    // ─── Draw the pixel art ───────────────────────────────────────
+    int row=0;
+    int col=0;
+
+    for (row = 0; row < 16; row++)
+    {
+        for (col = 0; col < 16; col++)
+        {
+            if (art[row][col] == ' ') continue;
+
+            int px = start_x + col * (PIXEL + GAP);
+            int py = start_y + row * (PIXEL + GAP);
+
+            unsigned long color;
+
+            // You can make different characters = different colors
+            switch(art[row][col])
+            {
+                case '#':  color = 0xFF3366CC; break;  // nice blue
+                case '.':  color = 0xFFFFD700; break;  // gold/yellow
+                default:   color = COLOR_BLACK; break;
+            }
+
+            gws_draw_rectangle(fd, main_window,
+                px, py, PIXEL, PIXEL,
+                color, TRUE, 0);
+        }
+    }
+
+    // Optional: little message under the art
+    gws_draw_text(fd, main_window,
+        start_x + 20,
+        start_y + art_height + 30,
+        COLOR_BLACK,
+        "Have a nice day!  ^_^");
+
+    // Final refresh
+    gws_refresh_window(fd, main_window);
+}
+
+
+static void test_draw_rects_in_client_area2(int fd)
+{
+    query_client_area(fd);
+
+    // Pixel size - smaller than before, but still chunky/big-pixel style
+    const int PIXEL = 12;
+    const int GAP   = 1;   // almost no gap - more solid look
+
+    // 24×32 rocket art (taller to fit flame nicely)
+    const int ART_W = 24;
+    const int ART_H = 32;
+
+    int art_width  = ART_W * (PIXEL + GAP);
+    int art_height = ART_H * (PIXEL + GAP);
+
+    int start_x = (cr_width  - art_width)  / 2;
+    int start_y = (cr_height - art_height) / 2 - 30;  // little bit higher
+
+    // Background - clean dark space feel
+    gws_draw_rectangle(fd, main_window,
+        0, 0, cr_width, cr_height,
+        0x00112233, TRUE, 0);   // very dark blue-black
+
+    // ─────────────────────────────────────────────────────────────
+    //     Falcon 9 / Starship inspired rocket pixel art (24×32)
+    // ─────────────────────────────────────────────────────────────
+    const char* rocket[32] = {
+        "                        ", // 0
+        "           ##           ",
+        "          ####          ",
+        "         ######         ",
+        "         ######         ",
+        "        ########        ", // 5
+        "       ##########       ",
+        "       ##########       ",
+        "      ############      ",
+        "      ############      ",
+        "     ##############     ", // 10
+        "     ##############     ",
+        "    ################    ",
+        "    ################    ",
+        "   ##################   ",
+        "   ##################   ", // 15
+        "  ####################  ",
+        "  ####################  ",
+        " ###################### ",
+        " ###################### ",
+        "########################", // 20
+        "########################",
+        "########################",
+        "########################",
+        "########################",
+        "########################", // 25
+        "           ##           ",
+        "          ####          ",
+        "         ######         ",
+        "        ########        ",
+        "       ##########       ", // 30
+        "      ############      ",
+        "     ##############     "
+    };
+
+    // ─── Draw the rocket ──────────────────────────────────────────
+    int row=0;
+    int col=0;
+
+    for (row = 0; row < ART_H; row++)
+    {
+        for (col = 0; col < ART_W; col++)
+        {
+            char c = rocket[row][col];
+            if (c == ' ') continue;
+
+            int px = start_x + col * (PIXEL + GAP);
+            int py = start_y + row * (PIXEL + GAP);
+
+            unsigned long color;
+
+            // Color choices - Starship/Falcon vibe
+            if (row < 8) {
+                color = 0xFFBBBBBB;           // silver/steel top
+            }
+            else if (row < 22) {
+                color = 0xFF444488;           // dark stainless steel body
+            }
+            else if (row < 26) {
+                color = 0xFF222244;           // darker lower section
+            }
+            else {
+                // Flames!
+                if ((row + col) % 3 == 0)
+                    color = 0xFFFF6600;       // bright orange
+                else if ((row + col) % 3 == 1)
+                    color = 0xFFFFAA00;       // yellow-orange
+                else
+                    color = 0xFFFF4400;       // deep orange-red
+            }
+
+            gws_draw_rectangle(fd, main_window,
+                px, py, PIXEL, PIXEL,
+                color, TRUE, 0);
+        }
+    }
+
+    // Little text under the rocket
+    gws_draw_text(fd, main_window,
+        start_x + 30,
+        start_y + art_height + 30,
+        0xFFDDDDDD,
+        "To Mars & Beyond!  🚀");
+
+    gws_draw_text(fd, main_window,
+        start_x + 60,
+        start_y + art_height + 55,
+        0xFFFFAA00,
+        "Elon's rocket");
+
+    // Final refresh
+    gws_refresh_window(fd, main_window);
+}
+
+static void test_draw_rects_in_client_area3(int fd)
+{
+    query_client_area(fd);
+
+    // Smaller but still chunky "big pixels"
+    const int PIXEL = 9;
+    const int GAP   = 1;
+
+    // Rocket size: 21 wide × 38 tall (good balance)
+    const int ART_W = 21;
+    const int ART_H = 38;
+
+    int art_width  = ART_W * (PIXEL + GAP);
+    int art_height = ART_H * (PIXEL + GAP);
+
+    int start_x = (cr_width  - art_width)  / 2;
+    int start_y = (cr_height - art_height) / 2 - 50;  // shifted up a bit
+
+    // Dark space background
+    gws_draw_rectangle(fd, main_window,
+        0, 0, cr_width, cr_height,
+        0x00081420, TRUE, 0);   // very dark navy-black
+
+    // ─────────────────────────────────────────────────────────────
+    //     Compact cute rocket / Starship style (21×38)
+    // ─────────────────────────────────────────────────────────────
+    const char* rocket[38] = {
+        "         ###         ",  // 0 - nose cone tip
+        "        #####        ",
+        "       #######       ",
+        "      #########      ",
+        "     ###########     ",
+        "    #############    ",  // 5
+        "   ###############   ",
+        "  #################  ",
+        " ################### ",
+        "#####################",
+        "#####################",  // 10 - top of payload/crew section
+        "#####   #####   #####",
+        "#####   #####   #####",
+        "#####################",
+        "#####################",
+        "#####################",  // 15 - main body start
+        "#####################",
+        "#####################",
+        "#####################",
+        "#####################",
+        "#####################",  // 20
+        "#####################",
+        "#####################",
+        "#####################",
+        "#####################",
+        "#####################",  // 25 - lower body
+        "#####################",
+        "        #####        ",  // engine section transition
+        "       #######       ",
+        "      #########      ",
+        "     ###########     ",  // 30 - engines + flame base
+        "    #############    ",
+        "   ###############   ",
+        "  ####  ###  ####    ",  // flame variation
+        " ###   #####   ###   ",
+        " ##   #######   ##   ",  // 35
+        "     #########       ",
+        "      #######        ",
+        "       #####         "
+    };
+
+    // ─── Draw the rocket ──────────────────────────────────────────
+    int row=0;
+    int col=0;
+    for (row = 0; row < ART_H; row++)
+    {
+        for (col = 0; col < ART_W; col++)
+        {
+            if (rocket[row][col] == ' ') continue;
+
+            int px = start_x + col * (PIXEL + GAP);
+            int py = start_y + row * (PIXEL + GAP);
+
+            unsigned long color;
+
+            // Coloring logic
+            if (row <= 9) {
+                // Nose / fairing - bright steel
+                color = 0xFFCCDDEE;
+            }
+            else if (row <= 26) {
+                // Main body - stainless steel look
+                if ((row + col) % 12 < 3)
+                    color = 0xFFAAAAAA;     // slight shine bands
+                else
+                    color = 0xFF888899;
+            }
+            else if (row <= 29) {
+                // Engine mount area - darker
+                color = 0xFF444466;
+            }
+            else {
+                // Flames - animated feel with variation
+                int phase = (row + col * 2) % 6;
+                if (phase == 0 || phase == 5) color = 0xFFFF5500;   // deep orange
+                else if (phase == 1 || phase == 4) color = 0xFFFF8800;
+                else if (phase == 2 || phase == 3) color = 0xFFFFDD44; // yellow core
+            }
+
+            gws_draw_rectangle(fd, main_window,
+                px, py, PIXEL, PIXEL,
+                color, TRUE, 0);
+        }
+    }
+
+    // Small Gramado "G" logo at the bottom of the rocket
+    gws_draw_rectangle(fd, main_window,
+        start_x + 7*(PIXEL+GAP), start_y + 24*(PIXEL+GAP),
+        7*(PIXEL+GAP), 9*(PIXEL+GAP), 0xFF222244, TRUE, 0);
+
+    gws_draw_rectangle(fd, main_window,
+        start_x + 8*(PIXEL+GAP), start_y + 25*(PIXEL+GAP),
+        5*(PIXEL+GAP), 7*(PIXEL+GAP), 0xFF88AAFF, TRUE, 0);
+
+    // Texts
+    gws_draw_text(fd, main_window,
+        start_x - 10,
+        start_y + art_height + 30,
+        0xFFCCDDFF,
+        "Gramado OS Rocket v0.1");
+
+    gws_draw_text(fd, main_window,
+        start_x + 30,
+        start_y + art_height + 55,
+        0xFFFFFF88,
+        "To the stars!  ✧");
+
+    // Final refresh
+    gws_refresh_window(fd, main_window);
 }
 
 static void draw_label(int fd, int x, int y, const char *label, const char *value) 
@@ -246,7 +680,14 @@ systemProcedure(
 
     case MSG_SYSKEYDOWN:
         switch (long1){
-        case VK_F5:  update_children(fd);  break; 
+        case VK_F2:
+            //test_draw_rects_in_client_area(fd);
+            //test_draw_rects_in_client_area2(fd);
+            test_draw_rects_in_client_area3(fd);
+            break;
+        case VK_F5:
+            update_children(fd);
+            break; 
         case VK_F12:  printf("system_info_app: Debug info\n");  break;
         //
         case VK_ARROW_RIGHT:  printf("Editor: VK_ARROW_RIGHT \n"); break;
@@ -380,6 +821,21 @@ int main(int argc, char *argv[])
         close_x, buttons_y, button_w, button_h,
         main_window, 0, COLOR_GRAY, COLOR_GRAY );
     //gws_refresh_window(fd, close_button);
+
+
+/*
+// =========================================
+// #test: Testing new API
+// Draw a rectangle inside a window, into the backbuffer.
+    gws_draw_rectangle (
+        fd, 
+        main_window,
+        20, 20, 20, 20,  // l, t, w, h 
+        0x00FF0000,      // color
+        TRUE,            // Fill or not
+         0 );            // rop
+// =========================================
+*/
 
 // Default responder
     set_default_responder(refresh_button);

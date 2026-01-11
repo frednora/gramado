@@ -92,7 +92,7 @@ __gws_createwindow_request (
     const char *name );
 static wid_t __gws_createwindow_response(int fd);
 
-// == refresh rectangle
+// == refresh rectangle ====================
 static int 
 __gws_refresh_rectangle_request (
     int fd,
@@ -101,6 +101,22 @@ __gws_refresh_rectangle_request (
     unsigned long width,
     unsigned long height );
 static int __gws_refresh_rectangle_response(int fd);
+
+
+// == draw rectangle ====================
+static int 
+__gws_draw_rectangle_request (
+    int fd,
+    int wid,
+    unsigned long left,
+    unsigned long top,
+    unsigned long width,
+    unsigned long height,
+    unsigned int color,
+    int fill,
+    unsigned long rop );
+static int __gws_draw_rectangle_response(int fd);
+
 
 // == Draw Char ==========================
 static int 
@@ -967,7 +983,7 @@ fail:
     return (int) -1;
 }
 
-// == rectangle ========
+// == refresh rectangle ========
 
 static int 
 __gws_refresh_rectangle_request (
@@ -1078,6 +1094,129 @@ static int __gws_refresh_rectangle_response(int fd)
 fail:
     return (int) -1;
 }
+
+// ==== draw rectangle ================================================
+
+static int 
+__gws_draw_rectangle_request (
+    int fd,
+    int wid,
+    unsigned long left,
+    unsigned long top,
+    unsigned long width,
+    unsigned long height,
+    unsigned int color,
+    int fill,
+    unsigned long rop )
+{
+    int n_writes = 0;
+
+    if (fd<0){
+        goto fail;
+    }
+    if (wid<0){
+        goto fail;
+    }
+
+    if ((void*) libgws_disp == NULL)
+        goto fail;
+    if (libgws_disp->magic != 1234)
+        goto fail;
+    unsigned long *message_buffer = 
+        (unsigned long *) libgws_disp->packet;
+
+// wid, message code, 0, 0.
+    message_buffer[0] = (unsigned long) (wid & 0xFFFFFFFF);    // wid
+    message_buffer[1] = (unsigned long) GWS_DrawRectangle;  // msgcode
+    message_buffer[2] = (unsigned long) 0;
+    message_buffer[3] = (unsigned long) 0;
+
+// l, t, w, h.
+    message_buffer[4] = (unsigned long) (left   & 0xFFFF); 
+    message_buffer[5] = (unsigned long) (top    & 0xFFFF); 
+    message_buffer[6] = (unsigned long) (width  & 0xFFFF); 
+    message_buffer[7] = (unsigned long) (height & 0xFFFF); 
+
+// More?
+    message_buffer[8]  = (unsigned long) (color & 0xFFFFFFFF); 
+    message_buffer[9]  = (unsigned long) (fill  & 0xFFFFFFFF); 
+    message_buffer[10] = (unsigned long) rop; 
+    // ...
+
+// Write
+    n_writes = 
+        (int) send ( 
+                fd, 
+                libgws_disp->packet, 
+                sizeof(libgws_disp->packet), 
+                0 );
+    if (n_writes <= 0){
+        goto fail;
+    }
+    return (int) n_writes;
+
+fail:
+    return (int) -1;
+}
+
+// Response
+// A sincronização nos diz que já temos um reply.
+static int __gws_draw_rectangle_response(int fd)
+{
+    register int i=0;
+    ssize_t n_reads=0;
+
+    //gws_debug_print ("__gws_draw_rectangle_response: rd\n");      
+
+    if (fd<0){
+        goto fail;
+    }
+
+    if ((void*) libgws_disp == NULL)
+        goto fail;
+    if (libgws_disp->magic != 1234)
+        goto fail;
+    unsigned long *message_buffer = 
+        (unsigned long *) libgws_disp->packet;
+
+// Clean the local buffer,
+// and then populate with some data.
+    for (i=0; i<512; i++){
+        libgws_disp->packet[i] = 0;
+    };
+
+// Read
+    n_reads = 
+        (ssize_t) recv( 
+                    fd, 
+                    libgws_disp->packet, 
+                    sizeof(libgws_disp->packet), 
+                    0 );
+    if (n_reads <= 0){
+        goto fail;
+    }
+
+// Get the message sent by the server.
+
+    int msg   = (int) message_buffer[1];
+    int value = (int) message_buffer[2];
+
+    switch (msg){
+        case SERVER_PACKET_TYPE_REPLY:
+            return (int) value;
+            break;
+        //case SERVER_PACKET_TYPE_REQUEST:
+        //case SERVER_PACKET_TYPE_EVENT:
+        //case SERVER_PACKET_TYPE_ERROR:
+        default:
+            goto fail;
+            break; 
+    };
+
+fail:
+    return (int) -1;
+}
+//============================================
 
 static int 
 __gws_drawchar_request (
@@ -3169,6 +3308,7 @@ fail:
 int 
 gws_draw_rectangle (
     int fd, 
+    int wid,
     unsigned long x, 
     unsigned long y, 
     unsigned long width, 
@@ -3177,11 +3317,54 @@ gws_draw_rectangle (
     int fill,
     unsigned long rop )
 {
-    // #todo
-    // This is a work in progress.
-    // We already have some implementation in server side.
-    // It will be kinda following the same steps of the 
-    // one the refreshes a rectangle
+    int Response=0;
+    int Value=0;
+    int req_status=-1;
+
+    if (fd<0){
+        goto fail;
+    }
+    if (wid < 0)
+        goto fail;
+
+// Request
+// IN: relative values
+    req_status = 
+        (int) __gws_draw_rectangle_request (
+                (int) fd,
+                (int) wid,
+                (unsigned long) x, 
+                (unsigned long) y,
+                (unsigned long) width, 
+                (unsigned long) height,
+                 (unsigned int) color,
+                          (int) fill,
+                (unsigned long) rop );
+
+    if (req_status <= 0){
+        goto fail;
+    }
+    rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_REQUEST );
+
+// Response
+// Waiting to read the response.
+    //gws_debug_print("gws_refresh_retangle: response\n");
+    while (1){
+        Value = rtl_get_file_sync( fd, SYNC_REQUEST_GET_ACTION );
+        //if (Value == ACTION_REQUEST){}
+        if (Value == ACTION_REPLY) { break; }
+        if (Value == ACTION_ERROR) { goto fail; }
+        if (Value == ACTION_NULL)  { goto fail; }  //no reponse. (syncronous)
+    };
+
+// A sincronização nos diz que já temos um reply.
+    Response = (int) __gws_draw_rectangle_response(fd);  
+    __gws_clear_msg_buff();
+    rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    return (int) Response;
+fail:
+    __gws_clear_msg_buff();
+    rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
     return (int) -1;
 }
 
