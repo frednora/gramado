@@ -1534,8 +1534,9 @@ int serviceCreateWindow(int client_fd)
     case WT_ICON:
     case WT_CHECKBOX:
     case WT_SCROLLBAR:
-        if (fChild == TRUE || (Window->style & WS_CHILD))
+        if (fChild == TRUE || (Window->style & WS_CHILD)){
             wm_add_child_window(Parent,Window);
+        }
         break;
     default:
         //printf("main.c: on Window->type\n");
@@ -1637,6 +1638,21 @@ int serviceCreateWindow(int client_fd)
     }
 
 // --------------------------------------
+
+    /*
+    // #todo: Testing workers.
+    if (Window->type == WT_OVERLAPPED)
+    {
+        // #test: Testing the worker.
+        rectBackbufferDrawHorizontalLineInsideWindow(
+            Window->id, 10, 20, 200, COLOR_BLUE, 0, 1); 
+        wm_flush_window(Window);
+        rectBackbufferDrawHorizontalLineInsideWindow(
+            Window->id, 10, 22, 200, COLOR_RED, 0, 2); 
+        while(1){}
+    }
+    */
+
 
 //
 // Response
@@ -2144,64 +2160,25 @@ int serviceDrawRectangle(void)
     unsigned long __rop = 
         (unsigned long)(message_address[10] & 0xFFFFFFFF);
 
-
-// Window
-    struct gws_window_d *window;
-    wid = (int) (wid & 0xFFFFFFFF);
-    if (wid < 0 || wid >= WINDOW_COUNT_MAX)
-        goto fail;
-    window = (struct gws_window_d *) windowList[wid];
-    if ((void*)window == NULL)
-        goto fail;
-    if (window->magic != 1234)
-        goto fail;
-
-
-// Clipping
-// Calculating the absolute values for the rectangle
-// given the absolute values for the window and 
-// the relative values for the client area.
-
-    // Absolute left
-    unsigned long abs_left = 
-        (window->absolute_x + window->rcClient.left + rel_left);
-
-    // Absolute top
-    unsigned long abs_top  = 
-        (window->absolute_y + window->rcClient.top + rel_top);
-
-// Real clipping
-
-    // Horizontal
-    unsigned long available_w = 
-        (window->absolute_x + window->rcClient.right) - abs_left;
-    if (width > available_w)
-        width = available_w;
-
-    // Vertical
-    unsigned long available_h = 
-        (window->absolute_y + window->rcClient.bottom) - abs_top;
-    if (height > available_h)
-        height = available_h;
-
+// Draw inside a window
 // See: rect.c
-    rectBackbufferDrawRectangle ( 
-        abs_left, 
-        abs_top, 
-        width, 
-        height, 
+    rectBackbufferDrawRectangleInsideWindow ( 
+        wid,
+        rel_left, rel_top, width, height, 
         (unsigned int) __color,
         (int) __fill,
         (unsigned long) __rop );
 
+    // Prepare the response
     next_response[0] = 0;
     next_response[1] = SERVER_PACKET_TYPE_REPLY;  // msg code
-
     return 0;
+
 fail:
     debug_print("serviceDrawRectangle: fail\n");
     return (int) -1;
 }
+
 
 // 1006
 // Flush a given window into the backbuffer.
@@ -4424,6 +4401,7 @@ static int ServerLoop(int launch_tb)
     demoTriangle();
     demoCurve();
     */
+
 
 // Telling the Init thread that the display server is running.
 // IN: Init process'a TID, message code, signature1, signature2

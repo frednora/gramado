@@ -1728,6 +1728,86 @@ rectBackbufferDrawRectangle (
         UseKernelPainter );
 }
 
+// Worker
+void 
+rectBackbufferDrawRectangleInsideWindow (
+    int wid, 
+    unsigned long x, 
+    unsigned long y, 
+    unsigned long width, 
+    unsigned long height, 
+    unsigned int color,
+    int fill,
+    unsigned long rop )
+{
+    struct gws_window_d *window;
+    unsigned long rel_left = x;
+    unsigned long rel_top  = y;
+
+// Window
+    wid = (int) (wid & 0xFFFFFFFF);
+    if (wid < 0 || wid >= WINDOW_COUNT_MAX)
+        return;
+    window = (struct gws_window_d *) windowList[wid];
+    if ((void*)window == NULL)
+        return;
+    if (window->magic != 1234)
+        return;
+    // Only overlapped windows have a client area
+    if (window->type != WT_OVERLAPPED) {
+        return;
+    }
+
+// Clipping
+// Calculating the absolute values for the rectangle
+// given the absolute values for the window and 
+// the relative values for the client area.
+
+    // Absolute left
+    unsigned long abs_left = 
+        (window->absolute_x + window->rcClient.left + rel_left);
+
+    // Absolute top
+    unsigned long abs_top  = 
+        (window->absolute_y + window->rcClient.top + rel_top);
+
+// Real clipping
+
+
+    // #todo  TODO TODO
+
+    // #bugbug: Let's do not use these values, probably createw.c 
+    // is not initialiaing it right (right and bottom are wrong)
+
+    // Horizontal
+    unsigned long available_w = 
+        (window->absolute_x + window->rcClient.right) - abs_left;
+    if (width > available_w)
+        width = available_w;
+
+    // Vertical
+    unsigned long available_h = 
+        (window->absolute_y + window->rcClient.bottom) - abs_top;
+    if (height > available_h)
+        height = available_h;
+
+// Draw
+// See: rect.c
+    rectBackbufferDrawRectangle ( 
+        abs_left, 
+        abs_top, 
+        width, 
+        height, 
+        (unsigned int) color,
+        (int) fill,
+        (unsigned long) rop );
+
+
+// Optional: refresh immediately 
+    //if (Show == TRUE)
+        //gws_refresh_rectangle(abs_left, abs_top, width, height);
+}
+
 // #todo
 // The structure needs to have all the information
 // we need to redraw the given rectangle.

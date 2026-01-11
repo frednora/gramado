@@ -278,6 +278,81 @@ frontbuffer_draw_horizontal_line (
     };
 }
 
+// Worker: draw a horizontal line inside the client area of a given window
+void 
+rectBackbufferDrawHorizontalLineInsideWindow(
+    int wid,
+    unsigned long x1,     // relative start x
+    unsigned long y,      // relative y
+    unsigned long x2,     // relative end x
+    unsigned int color,
+    unsigned long rop_flags,
+    int back_or_front )
+{
+    struct gws_window_d *window;
+
+    // Validate window
+    wid = (int) (wid & 0xFFFFFFFF);
+    if (wid < 0 || wid >= WINDOW_COUNT_MAX)
+        return;
+    window = (struct gws_window_d *) windowList[wid];
+    if ((void*)window == NULL)
+        return;
+    if (window->magic != 1234)
+        return;
+    // Only overlapped windows have a client area
+    if (window->type != WT_OVERLAPPED) {
+        return;
+    }
+
+
+    unsigned long client_left = window->absolute_x + window->rcClient.left; 
+    unsigned long client_top = window->absolute_y + window->rcClient.top; 
+
+    // #bugbug: Let's do not use these values, probably createw.c 
+    // is not initialiaing it right
+    //unsigned long client_right = window->absolute_x + window->rcClient.right; 
+    //unsigned long client_bottom = window->absolute_y + window->rcClient.bottom; 
+    unsigned long client_right = client_left + window->rcClient.width; 
+    unsigned long client_bottom = client_top + window->rcClient.height;
+
+    unsigned long abs_x1 = client_left + x1; 
+    unsigned long abs_x2 = client_left + x2; 
+    unsigned long abs_y = client_top + y;
+
+// -----------------------------------------------
+// Nothing to draw
+    if (abs_x1 > abs_x2) 
+        return;
+
+// Available areas 
+    unsigned long available_w = client_right - abs_x1; 
+    unsigned long available_h = client_bottom - abs_y;
+    unsigned long width = abs_x2 - abs_x1;
+
+    /*
+    //#todo
+    if (width > available_w)
+    {
+        abs_x2
+        width = available_w;
+    }
+
+    if (height > available_h)
+        height = available_h;
+    */
+
+// -----------------------------------------------
+// Choose buffer 
+    if (back_or_front == 1) { 
+        backbuffer_draw_horizontal_line(abs_x1, abs_y, abs_x2, color, rop_flags); 
+    } 
+    if (back_or_front == 2) {
+        frontbuffer_draw_horizontal_line(abs_x1, abs_y, abs_x2, color, rop_flags); 
+    }
+}
+
+
 //
 // End
 //

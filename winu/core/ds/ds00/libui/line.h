@@ -50,6 +50,18 @@ frontbuffer_draw_horizontal_line (
     unsigned int color,
     unsigned long rop_flags );
 
+
+// Worker: draw a horizontal line inside the client area of a given window
+void 
+rectBackbufferDrawHorizontalLineInsideWindow(
+    int wid,
+    unsigned long x1,     // relative start x
+    unsigned long y,      // relative y
+    unsigned long x2,     // relative end x
+    unsigned int color,
+    unsigned long rop_flags,
+    int back_or_front );
+
 #endif    
 
 //

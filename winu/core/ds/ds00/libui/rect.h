@@ -166,6 +166,18 @@ rectBackbufferDrawRectangle (
     int fill,
     unsigned long rop_flags );
 
+void 
+rectBackbufferDrawRectangleInsideWindow (
+    int wid, 
+    unsigned long x, 
+    unsigned long y, 
+    unsigned long width, 
+    unsigned long height, 
+    unsigned int color,
+    int fill,
+    unsigned long rop );
+
+
 int update_rectangle(struct gws_rect_d *rect);
 
 int
