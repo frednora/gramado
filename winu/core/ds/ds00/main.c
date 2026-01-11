@@ -1645,14 +1645,13 @@ int serviceCreateWindow(int client_fd)
     {
         // #test: Testing the worker.
         rectBackbufferDrawHorizontalLineInsideWindow(
-            Window->id, 10, 20, 200, COLOR_BLUE, 0, 1); 
+            Window->id, 10, 20, 1000, COLOR_BLUE, 0, 1); 
         wm_flush_window(Window);
         rectBackbufferDrawHorizontalLineInsideWindow(
-            Window->id, 10, 22, 200, COLOR_RED, 0, 2); 
+            Window->id, 10, 40, 200, COLOR_RED, 0, 2); 
         while(1){}
     }
     */
-
 
 //
 // Response
@@ -2159,6 +2158,9 @@ int serviceDrawRectangle(void)
                   (int)(message_address[9]  & 0xFFFFFFFF); 
     unsigned long __rop = 
         (unsigned long)(message_address[10] & 0xFFFFFFFF);
+
+
+    //printf("serviceDrawRectangle:\n");
 
 // Draw inside a window
 // See: rect.c

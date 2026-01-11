@@ -146,11 +146,8 @@ inflate_rect (
 
     rect->left   -= cx;
     rect->top    -= cy;
-    rect->right  += cx;
-    rect->bottom += cy;
-
-    rect->width  = (rect->right  - rect->left);
-    rect->height = (rect->bottom - rect->top);
+    rect->width  += cx;
+    rect->height += cy;
 }
 
 // #todo: Explain
@@ -172,19 +169,13 @@ copy_inflate_rect (
 // todo: fazer isso em duas etapas.
     rectDest->left   = rectSrc->left   -= cx;
     rectDest->top    = rectSrc->top    -= cy;
-    rectDest->right  = rectSrc->right  += cx;
-    rectDest->bottom = rectSrc->bottom += cy;
-
-// Update width and height
-    rectSrc->width   = (rectSrc->right   - rectSrc->left);
-    rectSrc->height  = (rectSrc->bottom  - rectSrc->top);
-    rectDest->width  = (rectDest->right  - rectDest->left);
-    rectDest->height = (rectDest->bottom - rectDest->top);
+    rectDest->width  = rectSrc->width  += cx;
+    rectDest->height = rectSrc->height += cy;
 }
 
 // ??
 // #todo: Comment what is happening here.
-// Move
+// Move <<<
 void 
 offset_rect ( 
     struct gws_rect_d *rect, 
@@ -198,12 +189,8 @@ offset_rect (
 // offset rect
     rect->left   += cx;
     rect->top    += cy;
-    rect->right  += cx;
-    rect->bottom += cy;
-
-// update width and height
-    rect->width  = (rect->right  - rect->left);
-    rect->height = (rect->bottom - rect->top);
+    rect->width  += cx;
+    rect->height += cy;
 }
 
 // ??
@@ -225,14 +212,8 @@ copy_offset_rect (
 // offset and copy the rect.
     rectDest->left   = rectSrc->left   += cx;
     rectDest->top    = rectSrc->top    += cy;
-    rectDest->right  = rectSrc->right  += cx;
-    rectDest->bottom = rectSrc->bottom += cy;
-
-// update width and height
-    rectSrc->width   = (rectSrc->right  - rectSrc->left);
-    rectSrc->height  = (rectSrc->bottom - rectSrc->top);
-    rectDest->width  = (rectDest->right  - rectDest->left);
-    rectDest->height = (rectDest->bottom - rectDest->top);
+    rectDest->width  = rectSrc->width  += cx;
+    rectDest->height = rectSrc->height += cy;
 }
 
 // ??
@@ -247,8 +228,8 @@ int rect_validate_size(struct gws_rect_d *rect)
         return (int) -1;
     }
 
-    if ((rect->left >= rect->right) || 
-        (rect->top  >= rect->bottom))
+    if ((rect->width <= 0) || 
+        (rect->height <= 0))
     {
         return FALSE;
     }
@@ -325,9 +306,11 @@ rect_contains_vertically (
         return (int) -1;
     }
 
+    unsigned long bottom = rect->top + rect->height;
+
     // ta dentro
     if ( y >= rect->top &&
-         y <= rect->bottom )
+         y <= bottom )
     {
         return TRUE;
     }
@@ -345,9 +328,11 @@ rect_contains_horizontally (
         return (int) -1;
     }
 
+    unsigned long right = rect->left + rect->width;
+
     // ta dentro
     if ( x >= rect->left &&
-         x <= rect->right )
+         x <= right )
     {
         return TRUE;
     }
@@ -378,6 +363,7 @@ rect_set_top (
     rect->top = value;
 }
 
+// #deprecated
 void 
 rect_set_right ( 
     struct gws_rect_d *rect, 
@@ -386,9 +372,10 @@ rect_set_right (
     if ((void *) rect == NULL){
         return;
     }
-    rect->right = value;
+    printf ("rect_set_right: #deprecated\n");
 }
 
+// #deprecated
 void 
 rect_set_bottom ( 
     struct gws_rect_d *rect, 
@@ -397,7 +384,7 @@ rect_set_bottom (
     if ((void *) rect == NULL){
         return;
     }
-    rect->bottom = value;
+    printf ("rect_set_bottom: #deprecated\n");
 }
 
 // #todo
@@ -1333,8 +1320,8 @@ __drawrectangle0(
     ClippingRect.width  = (unsigned long) (deviceWidth  & 0xFFFF);
     ClippingRect.height = (unsigned long) (deviceHeight & 0xFFFF);
 
-    ClippingRect.right  = (ClippingRect.left + ClippingRect.width);
-    ClippingRect.bottom = (ClippingRect.top + ClippingRect.height);
+    //ClippingRect.right  = (ClippingRect.left + ClippingRect.width);
+    //ClippingRect.bottom = (ClippingRect.top + ClippingRect.height);
 
 // #debug
 // Provisório
@@ -1349,31 +1336,31 @@ __drawrectangle0(
         return;
     }
 
+    /*
     if ( ClippingRect.right > 800 ){
         //server_debug_print("__drawrectangle0: right");
         return;
     }
+    */
 
+    /*
     if ( ClippingRect.bottom > 600 ){
         //server_debug_print("__drawrectangle0: bottom");
         return;
     }
+    */
  
 //
 // == Target rectangle ================
 //
 
     Rect.bg_color = (unsigned int) Color;
+
 // Dimensions
-    Rect.x = 0;
-    Rect.y = 0;
-    Rect.width  = (Width  & 0xFFFF);
-    Rect.height = (Height & 0xFFFF);
-// Margins
     Rect.left   = (X & 0xFFFF);
     Rect.top    = (Y & 0xFFFF);
-    Rect.right  = (unsigned long) (Rect.left + Rect.width);
-    Rect.bottom = (unsigned long) (Rect.top  + Rect.height); 
+    Rect.width  = (Width  & 0xFFFF);
+    Rect.height = (Height & 0xFFFF);
 
 //
 // Clipping
@@ -1393,8 +1380,8 @@ __drawrectangle0(
 
     if ( Rect.left   < ClippingRect.left   ){ Rect.left   = ClippingRect.left;   }
     if ( Rect.top    < ClippingRect.top    ){ Rect.top    = ClippingRect.top;    }
-    if ( Rect.right  > ClippingRect.right  ){ Rect.right  = ClippingRect.right;  }
-    if ( Rect.bottom > ClippingRect.bottom ){ Rect.bottom = ClippingRect.bottom; }
+    if ( Rect.width  > ClippingRect.width  ){ Rect.width  = ClippingRect.width;  }
+    if ( Rect.height > ClippingRect.height ){ Rect.height = ClippingRect.height; }
 
 // Draw
 // Draw lines on backbuffer.
@@ -1411,17 +1398,19 @@ __drawrectangle0(
 // 1=backbuffer
 // 2=frontbuffer
 
+    unsigned long myright = Rect.left + Rect.width;
+
     while (1)
     {
         // 1=backbuffer
         if ( back_or_front == 1 ){
             backbuffer_draw_horizontal_line ( 
-                Rect.left, Y, Rect.right, Rect.bg_color, rop_flags );
+                Rect.left, Y, myright, Rect.bg_color, rop_flags );
         }
         // 2=backbuffer
         if ( back_or_front == 2 ){
             frontbuffer_draw_horizontal_line ( 
-                Rect.left, Y, Rect.right, Rect.bg_color, rop_flags );
+                Rect.left, Y, myright, Rect.bg_color, rop_flags );
         }
 
         Y++;
@@ -1432,7 +1421,8 @@ __drawrectangle0(
         
         if (UseClipping == TRUE)
         {
-            if (Y > ClippingRect.bottom){
+            if (Y > (ClippingRect.top + ClippingRect.height))
+            {
                 break;
             }
         }
@@ -1517,8 +1507,8 @@ rectBackbufferDrawRectangle0 (
     rect.width  = (unsigned long) (width  & 0xFFFF);
     rect.height = (unsigned long) (height & 0xFFFF);
 // Margins
-    rect.right  = (unsigned long) (rect.left + rect.width);
-    rect.bottom = (unsigned long) (rect.top  + rect.height); 
+    //rect.right  = (unsigned long) (rect.left + rect.width);
+    //rect.bottom = (unsigned long) (rect.top  + rect.height); 
     rect.bg_color = (unsigned int)(color & 0xFFFFFF);
 
 //
@@ -1528,21 +1518,25 @@ rectBackbufferDrawRectangle0 (
 // #bugbug
 // O início não pode ser depois do fim.
 
-    if (rect.left > rect.right)
+    unsigned long __right  = (unsigned long) (rect.left + rect.width);
+    unsigned long __bottom = (unsigned long) (rect.top  + rect.height); 
+
+
+    if (rect.left > __right)
     {
-        debug_print("rectBackbufferDrawRectangle0: [FAIL] left > right\n");
+        debug_print("rectBackbufferDrawRectangle0: [FAIL] left > __right\n");
         //#debug
         printf ("rectBackbufferDrawRectangle0: l:%d r:%d\n",
-            rect.left,rect.right);
+            rect.left, __right );
         exit(0);
         return; 
     }
-    if ( rect.top > rect.bottom )
+    if ( rect.top > __bottom )
     { 
-        debug_print("rectBackbufferDrawRectangle0: [FAIL] top  > bottom\n");
+        debug_print("rectBackbufferDrawRectangle0: [FAIL] top  > __bottom\n");
         //#debug
         printf ("rectBackbufferDrawRectangle0: t:%d b:%d\n",
-            rect.top,rect.bottom);
+            rect.top, __bottom);
         exit(0);
         return; 
     }
@@ -1671,7 +1665,8 @@ rectBackbufferDrawRectangle0 (
     while (number_of_lines--)
     {
         // last line?
-        if (rect.top >= rect.bottom){
+        if (rect.top >= __bottom)
+        {
             break;
         }
         // End of the device screen?
@@ -1681,7 +1676,7 @@ rectBackbufferDrawRectangle0 (
         // Draw horizontal line
         // see: line.c
         grBackbufferDrawHorizontalLine ( 
-            rect.left, rect.top, rect.right, 
+            rect.left, rect.top, __right, 
             (unsigned int) rect.bg_color );
         // Next line
         rect.top++;
@@ -1773,23 +1768,26 @@ rectBackbufferDrawRectangleInsideWindow (
 
 // Real clipping
 
-
-    // #todo  TODO TODO
-
-    // #bugbug: Let's do not use these values, probably createw.c 
-    // is not initialiaing it right (right and bottom are wrong)
-
     // Horizontal
     unsigned long available_w = 
-        (window->absolute_x + window->rcClient.right) - abs_left;
+        (window->absolute_x + window->rcClient.width) - abs_left;
     if (width > available_w)
         width = available_w;
 
     // Vertical
     unsigned long available_h = 
-        (window->absolute_y + window->rcClient.bottom) - abs_top;
+        (window->absolute_y + window->rcClient.height) - abs_top;
     if (height > available_h)
         height = available_h;
+
+/*
+    printf("abs_left=%d abs_top=%d w=%d b=%d\n",
+        abs_left, 
+        abs_top,
+        width, 
+        height );
+    while(1){}
+*/
 
 // Draw
 // See: rect.c
@@ -1801,7 +1799,6 @@ rectBackbufferDrawRectangleInsideWindow (
         (unsigned int) color,
         (int) fill,
         (unsigned long) rop );
-
 
 // Optional: refresh immediately 
     //if (Show == TRUE)

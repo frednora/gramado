@@ -311,8 +311,6 @@ rectBackbufferDrawHorizontalLineInsideWindow(
 
     // #bugbug: Let's do not use these values, probably createw.c 
     // is not initialiaing it right
-    //unsigned long client_right = window->absolute_x + window->rcClient.right; 
-    //unsigned long client_bottom = window->absolute_y + window->rcClient.bottom; 
     unsigned long client_right = client_left + window->rcClient.width; 
     unsigned long client_bottom = client_top + window->rcClient.height;
 
@@ -321,26 +319,31 @@ rectBackbufferDrawHorizontalLineInsideWindow(
     unsigned long abs_y = client_top + y;
 
 // -----------------------------------------------
+
+    if (abs_x1 < client_left)
+        abs_x1 = client_left; 
+
+    if (abs_y < client_top)
+        abs_y = client_top; 
+
+
 // Nothing to draw
     if (abs_x1 > abs_x2) 
         return;
 
 // Available areas 
     unsigned long available_w = client_right - abs_x1; 
-    unsigned long available_h = client_bottom - abs_y;
+    //unsigned long available_h = client_bottom - abs_y;
     unsigned long width = abs_x2 - abs_x1;
 
-    /*
     //#todo
     if (width > available_w)
     {
-        abs_x2
-        width = available_w;
+        abs_x2 = (abs_x1 + available_w);
     }
 
-    if (height > available_h)
-        height = available_h;
-    */
+    if (abs_y > client_bottom)
+        return;
 
 // -----------------------------------------------
 // Choose buffer 
