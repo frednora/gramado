@@ -569,20 +569,38 @@ void maximize_window(struct gws_window_d *window)
     gws_resize_window( window, (w), (h));
     gwssrv_change_window_position( window, (l), (t) );
 
-    //gws_resize_window( window, (w -4), (h -4));
-    //gwssrv_change_window_position( window, (l +2), (t +2) );
+// Local pad variables for client area calculation
+    unsigned int pad_left   = METRICS_CLIENTAREA_LEFTPAD;
+    unsigned int pad_top    = METRICS_CLIENTAREA_TOPPAD;
+    unsigned int pad_right  = METRICS_CLIENTAREA_RIGHTPAD;
+    unsigned int pad_bottom = METRICS_CLIENTAREA_BOTTOMPAD;
 
-/*
-    window->width  = (w -4);
-    window->height = (h -4);
-*/
-
+// The client area
     if (window->type == WT_OVERLAPPED)
     {
-        window->rcClient.width  = 
-            window->width  - (window->Border.border_size * 2);
+
+        // Left for the client area - (didn't change)
+        //window->rcClient.left
+        
+        // Top for the client area - (didn't change)
+        //window->rcClient.top
+
+        // Width for the client area
+        window->rcClient.width = 
+            (unsigned long) ( 
+            window->width - 
+            (window->Border.border_size * 2) - 
+            (pad_left + pad_right) 
+        );
+
+        // Height for the client area
         window->rcClient.height = 
-            window->height - (window->titlebar_height + window->Border.border_size * 2);
+            (unsigned long) ( 
+            window->height - 
+            (window->Border.border_size * 2) - 
+            (pad_top + pad_bottom) - 
+            window->titlebar_height 
+        );
     }
 
 //

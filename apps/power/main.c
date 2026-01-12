@@ -47,6 +47,7 @@ static void update_children(int fd)
 
     unsigned long button_w = wi.cr_width / 4;
     unsigned long button_h = wi.cr_height / 8;
+
     unsigned long button_y = (wi.cr_height - button_h) / 2;
 
     unsigned long restart_x  = (wi.cr_width / 4) - (button_w / 2);

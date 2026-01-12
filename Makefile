@@ -268,6 +268,8 @@ build-extras:
 	@-cp $(L3_APPS)/bin/SYSINFO.BIN  $(BASE)/DE
 	@-cp $(L3_APPS)/bin/BMENU.BIN    $(BASE)/DE
 	@-cp $(L3_APPS)/bin/CALC00.BIN   $(BASE)/DE
+	@-cp $(L3_APPS)/bin/DRAW.BIN     $(BASE)/DE
+
 
     # Experimental applications
     # These need the '#' prefix.

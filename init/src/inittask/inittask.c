@@ -254,10 +254,11 @@ xxxProcessEvent (
                     //printf("init.bin: 4002, from {%d}\n",caller_tid);
                     memset(__filename_local_buffer,0,64);
                     //sprintf(__filename_local_buffer,"#calc00.bin");
-                    sprintf(__filename_local_buffer,"#bmenu.bin");
+                    //sprintf(__filename_local_buffer,"#bmenu.bin");
                     //sprintf(__filename_local_buffer,"#dbox.bin");
                     //sprintf(__filename_local_buffer,"#launch.bin");
                     //sprintf(__filename_local_buffer,"#power.bin");
+                    sprintf(__filename_local_buffer,"#draw.bin");
                     rtl_clone_and_execute(__filename_local_buffer);
                     return 0;
                 }

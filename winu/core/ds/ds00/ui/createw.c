@@ -1189,6 +1189,8 @@ doCreateWindowFrame (
             if (window->style & WS_TERMINAL) 
                 icon_id = ICON_ID_TERMINAL;
 
+            window->titlebar_height = TitleBarHeight;
+
             // IN: 
             // parent, border size, height, color, ornament color,
             //  use icon, use string.
@@ -1445,15 +1447,6 @@ void *doCreateWindow (
     struct gws_window_d *windowButton4;
     struct gws_window_d *windowButton5;
     struct gws_window_d *windowButton6;
-
-// Structs.
-	//struct desktop_d *Desktop;  //suspenso.
-
-// The client rectangle.
-// Isso é uma estrutura local para gerenciarmos o retangulo
-// da área de cliente.
-// Depois temos que copiar os valores para window->rcClient
-    struct gws_rect_d  clientRect;
 
 // Border
 // #
@@ -2031,94 +2024,87 @@ void *doCreateWindow (
     window->height_in_chars = 
         (unsigned long) (window->height / 8);  //>>3
 
+
 // =================================
+// Window area
 
-//
-// 
-//
 
-// #bugbug: Is this the same of absolute values?
-
-// >>> Absolute values <<<
-// The compositor needs this information
-// #todo: Inside dimensions clipped by parent.
-// Initial configuration for the window rectangle.
-// Relative values. (l,t,w,h)
-    window->rcWindow.left   = (unsigned long) 0; //#todo: absolute
-    window->rcWindow.top    = (unsigned long) 0; //#todo: absolute
+   // Relative to the window values
+    window->rcWindow.left   = (unsigned long) 0;
+    window->rcWindow.top    = (unsigned long) 0;
     window->rcWindow.width  = (unsigned long) WindowWidth;
     window->rcWindow.height = (unsigned long) WindowHeight;
 
 // =================================
+// Client area
 
-// Local pad variables for client area calculation
+    // Local pad variables for client area calculation
     unsigned int pad_left   = METRICS_CLIENTAREA_LEFTPAD;
     unsigned int pad_top    = METRICS_CLIENTAREA_TOPPAD;
     unsigned int pad_right  = METRICS_CLIENTAREA_RIGHTPAD;
     unsigned int pad_bottom = METRICS_CLIENTAREA_BOTTOMPAD;
 
-
-//
-// Client area rectangle
-//
-
-// #todo:
-// We need a variable for border size in the structure.
-// #todo:
-// We need a variable for title bar height.
-
-// Left margin and top margin.
-// The top margin changes if we have a bar.
+    // tmporary
+    struct gws_rect_d  crTmp;
 
 // >> Relative values <<
 
 // Left
-    clientRect.left = (unsigned long) (__BorderSize + pad_left);
+    crTmp.left = (unsigned long) (__BorderSize + pad_left);
 
 // Top
-    //clientRect.top  = (unsigned long) 0;
+    //crTmp.top  = (unsigned long) 0;
     if (window->type == WT_OVERLAPPED){
-        clientRect.top  = (unsigned long) (__TBHeight + (__BorderSize + pad_top));
+        crTmp.top  = (unsigned long) (__TBHeight + (__BorderSize + pad_top));
     } else {
-        clientRect.top  = (unsigned long) (__BorderSize + pad_top);
+        crTmp.top  = (unsigned long) (__BorderSize + pad_top);
         //or
-        //clientRect.top  = (unsigned long) 0;
+        //crTmp.top  = (unsigned long) 0;
     }
 
-// Width and height.
-// width
-// menos bordas laterais
+// Width for the client area
+    crTmp.width = 
+        (unsigned long) ( 
+            window->width - 
+            (__BorderSize * 2) - 
+            (pad_left + pad_right) 
+        );
 
-    clientRect.width = 
-        (unsigned long) ( window->width - (__BorderSize * 2) - 
-        (pad_left + pad_right) );
+// Height for the client area
 
-// height
-// menos bordas superior e inferior
-    // menos a barra de tarefas.
+    unsigned long tbheight;
+    if (window->type == WT_OVERLAPPED){
+        tbheight = __TBHeight;
+        window->titlebar_height = __TBHeight;
+    } else {
+        tbheight = 0;
+    }
 
-    clientRect.height = 
-        (unsigned long) ( window->height - (__BorderSize * 2) - 
-        (pad_top + pad_bottom) - __TBHeight ); 
+    crTmp.height = 
+        (unsigned long) ( 
+            window->height - 
+            (__BorderSize * 2) - 
+            (pad_top + pad_bottom) - 
+            tbheight 
+        ); 
 
 // If we have scrollbars.
 // #todo: Diminuimos as dimensões se o style
 // indicar que temos scrollbars.
     //if (window->style & WS_VSCROLLBAR)
-    //    clientRect.width -= 24;
+    //    crTmp.width -= 24;
     //if (window->style & WS_HSCROLLBAR)
-    //    clientRect.height -=24;
+    //    crTmp.height -=24;
     //if (window->style & WS_STATUSBAR)
-    //    clientRect.height -=24;
-
+    //    crTmp.height -=24;
 
 // Saving client rectangle into the window structure.
 // This is the viewport for some applications, just like browsers.
 // >> Inside dimensions clipped by parent.
-    window->rcClient.left   = clientRect.left;
-    window->rcClient.top    = clientRect.top;
-    window->rcClient.width  = clientRect.width;
-    window->rcClient.height = clientRect.height;
+    window->rcClient.left   = (unsigned long) crTmp.left;
+    window->rcClient.top    = (unsigned long) crTmp.top;
+    window->rcClient.width  = (unsigned long) crTmp.width;
+    window->rcClient.height = (unsigned long) crTmp.height;
 
 // =================================
 //++
@@ -2210,8 +2196,6 @@ void *doCreateWindow (
             // Width
             window->width  = WindowManager.wa.width;
             window->height = WindowManager.wa.height;
-            //window->rcWindow.width
-            //window->rcWindow.height
 
             // Absolute left/top
             window->absolute_x = WindowManager.wa.left;

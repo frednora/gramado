@@ -42,6 +42,8 @@ all:
 	make -C sysinfo/
 	make -C bmenu/
 	make -C calc00/
+	make -C draw/
+
 
 # Gramado Desktop Manager
 	make -C gdm/

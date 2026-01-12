@@ -1,24 +1,18 @@
-// main.c - sysinfo.bin application
-// Gramado OS client-side GUI app showing system information.
-// Similar architecture to memory_app.c
+// main.c - drawapp.bin application
+// Gramado OS client-side GUI app for drawing cool pixel art things.
 
 #include <types.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/utsname.h>
 #include <rtl/gramado.h>
 #include <gws.h>
 
 // Globals
 struct gws_display_d *Display;
 
-static int main_window    = -1;
-static int refresh_button = -1;
-static int close_button   = -1;
-static int default_responder = -1;
-
+static int main_window = -1;
 
 // Cached client area
 static unsigned long cr_left   = 0;
@@ -26,19 +20,16 @@ static unsigned long cr_top    = 0;
 static unsigned long cr_width  = 0;
 static unsigned long cr_height = 0;
 
+// Current drawing mode (0: ghost, 1: big rocket, 2: detailed rocket)
+static int current_mode = 0;
 
 static void query_client_area(int fd);
 
-static void test_draw_rects_in_client_area(int fd);
-static void test_draw_rects_in_client_area2(int fd);
-static void test_draw_rects_in_client_area3(int fd);
+static void draw_ghost(int fd);
+static void draw_big_rocket(int fd);
+static void draw_detailed_rocket(int fd);
 
-static void draw_label(int fd, int x, int y, const char *label, const char *value);
-static void draw_system_info(int fd, int base_x, int base_y, int line_h);
-static void update_children(int fd);
-static void set_default_responder(int wid);
-static void trigger_default_responder(int fd);
-static void switch_responder(int fd);
+static void draw_current_art(int fd);
 
 static void exitProgram(int fd);
 
@@ -61,10 +52,7 @@ static void query_client_area(int fd)
     struct gws_window_info_d wi;
     gws_get_window_info(fd, main_window, &wi);
 
-    // These values are relative,
-    // #todo: Use 0,0 for left/top
-    //cr_left   = wi.cr_left;
-    //cr_top    = wi.cr_top;
+    // #importante: 'Cause the values are relative
     cr_left   = 0;
     cr_top    = 0;
 
@@ -72,12 +60,12 @@ static void query_client_area(int fd)
     cr_height = wi.cr_height;
 }
 
-static void test_draw_rects_in_client_area(int fd)
+static void draw_ghost(int fd)
 {
     query_client_area(fd);
 
     // Small "pixel" size - feel free to change!
-    const int PIXEL = 18;
+    const int PIXEL = 8; //18;
     const int GAP   = 2;   // small spacing between pixels (optional)
 
     // Center the artwork roughly
@@ -85,7 +73,6 @@ static void test_draw_rects_in_client_area(int fd)
     int art_height = 16 * (PIXEL + GAP);
     
     int start_x = (cr_width  - art_width)  / 2;
-    //int start_y = (cr_height - art_height) / 2 - 40;  // a bit higher
     int start_y = (cr_height - art_height) / 2;
 
     // Clear client area first (optional but recommended)
@@ -93,56 +80,6 @@ static void test_draw_rects_in_client_area(int fd)
         0, 0, cr_width, cr_height,
         COLOR_WHITE, TRUE, 0);
 
-    // ─────────────────────────────────────────────────────────────
-    // Very simple 16×16 pixel art examples - pick one or mix them!
-    // ─────────────────────────────────────────────────────────────
-
-    // Option 1: Classic smiley face
-    /*
-    const char* smiley[16] = {
-        "                ",
-        "     ..    ..   ",
-        "    .##.  .##.  ",
-        "    .########.  ",
-        "     .######.   ",
-        "      .####.    ",
-        "                ",
-        "   .          . ",
-        "  .##.      .##.",
-        "  .############.",
-        "   .##########. ",
-        "    .########.  ",
-        "     ........   ",
-        "                ",
-        "                ",
-        "                "
-    };
-    */
-
-    // Option 2: Heart (uncomment to use instead)
-    /*
-    const char* heart[16] = {
-        "      ..  ..      ",
-        "    .####.####.   ",
-        "   .###########.  ",
-        "   .###########.  ",
-        "    .#########.   ",
-        "     .#######.    ",
-        "      .#####.     ",
-        "       .###.      ",
-        "        .#.       ",
-        "         .        ",
-        "                  ",
-        "                  ",
-        "                  ",
-        "                  ",
-        "                  ",
-        "                  "
-    };
-    */
-
-    // Option 3: Tiny ghost (cute one)
-    
     const char* ghost[16] = {
         "      ......      ",
         "    .########.    ",
@@ -161,12 +98,6 @@ static void test_draw_rects_in_client_area(int fd)
         "                  ",
         "                  "
     };
-    
-
-    // Pick which art you want to draw (change the name here)
-   // const char** art = smiley;   // ← change to heart or ghost to try others
-   // const char** art = heart;   // ← change to heart or ghost to try others
-    const char** art = ghost;   // ← change to heart or ghost to try others
 
     // ─── Draw the pixel art ───────────────────────────────────────
     int row=0;
@@ -176,7 +107,7 @@ static void test_draw_rects_in_client_area(int fd)
     {
         for (col = 0; col < 16; col++)
         {
-            if (art[row][col] == ' ') continue;
+            if (ghost[row][col] == ' ') continue;
 
             int px = start_x + col * (PIXEL + GAP);
             int py = start_y + row * (PIXEL + GAP);
@@ -184,7 +115,7 @@ static void test_draw_rects_in_client_area(int fd)
             unsigned long color;
 
             // You can make different characters = different colors
-            switch(art[row][col])
+            switch(ghost[row][col])
             {
                 case '#':  color = 0xFF3366CC; break;  // nice blue
                 case '.':  color = 0xFFFFD700; break;  // gold/yellow
@@ -208,13 +139,12 @@ static void test_draw_rects_in_client_area(int fd)
     gws_refresh_window(fd, main_window);
 }
 
-
-static void test_draw_rects_in_client_area2(int fd)
+static void draw_big_rocket(int fd)
 {
     query_client_area(fd);
 
     // Pixel size - smaller than before, but still chunky/big-pixel style
-    const int PIXEL = 12;
+    const int PIXEL = 8; //12;
     const int GAP   = 1;   // almost no gap - more solid look
 
     // 24×32 rocket art (taller to fit flame nicely)
@@ -225,7 +155,6 @@ static void test_draw_rects_in_client_area2(int fd)
     int art_height = ART_H * (PIXEL + GAP);
 
     int start_x = (cr_width  - art_width)  / 2;
-    //int start_y = (cr_height - art_height) / 2 - 30;  // little bit higher
     int start_y = (cr_height - art_height) / 2;  // little bit higher
 
     // Background - clean dark space feel
@@ -319,7 +248,7 @@ static void test_draw_rects_in_client_area2(int fd)
         start_x + 30,
         start_y + art_height + 30,
         0xFFDDDDDD,
-        "To Mars & Beyond!  🚀");
+        "To Mars & Beyond! ");
 
     gws_draw_text(fd, main_window,
         start_x + 60,
@@ -331,7 +260,7 @@ static void test_draw_rects_in_client_area2(int fd)
     gws_refresh_window(fd, main_window);
 }
 
-static void test_draw_rects_in_client_area3(int fd)
+static void draw_detailed_rocket(int fd)
 {
     query_client_area(fd);
 
@@ -470,137 +399,28 @@ static void test_draw_rects_in_client_area3(int fd)
     gws_refresh_window(fd, main_window);
 }
 
-static void draw_label(int fd, int x, int y, const char *label, const char *value) 
+static void draw_current_art(int fd)
 {
-    char line[256];
-    sprintf(line, "%s: %s", label, value);
-    gws_draw_text(fd, main_window, x, y, COLOR_BLACK, line);
-}
-
-static void draw_system_info(int fd, int base_x, int base_y, int line_h) 
-{
-    struct utsname un;
-    uname(&un);
-
-    unsigned long screen_w = gws_get_system_metrics(1);
-    unsigned long screen_h = gws_get_system_metrics(2);
-    unsigned long total_mem = gws_get_system_metrics(33);
-    unsigned long used_mem  = gws_get_system_metrics(34);
-    unsigned long free_mem  = gws_get_system_metrics(35);
-
-    int y = base_y;
-
-    draw_label(fd, base_x, y, "System",   un.sysname);   y += line_h;
-    draw_label(fd, base_x, y, "Release",  un.release);   y += line_h;
-    draw_label(fd, base_x, y, "Version",  un.version);   y += line_h;
-    draw_label(fd, base_x, y, "Machine",  un.machine);   y += line_h;
-    draw_label(fd, base_x, y, "Node",     un.nodename);  y += line_h;
-    draw_label(fd, base_x, y, "Domain",   un.domainname);y += line_h;
-
-    char buf[64];
-    sprintf(buf, "%lux%lu", screen_w, screen_h);
-    draw_label(fd, base_x, y, "Screen", buf); y += line_h;
-
-    sprintf(buf, "%lu KB", total_mem);
-    draw_label(fd, base_x, y, "Total Memory", buf); y += line_h;
-    sprintf(buf, "%lu KB", used_mem);
-    draw_label(fd, base_x, y, "Used Memory", buf); y += line_h;
-    sprintf(buf, "%lu KB", free_mem);
-    draw_label(fd, base_x, y, "Free Memory", buf); y += line_h;
-}
-
-// ----------------------------------------------------
-// Worker: update children on paint
-// ----------------------------------------------------
-
-static void update_children(int fd) 
-{
-    query_client_area(fd);
-
-    unsigned long button_w = cr_width / 5;
-    unsigned long button_h = cr_height / 10;
-    if (button_h < 32)
-        button_h = 32;
-
-    unsigned long label_y   = 20;
-    unsigned long metrics_x = 20;
-    unsigned long metrics_y = label_y + 30;
-    unsigned long line_h    = 20;
-
-    unsigned long bottom_band_y = cr_height - (button_h + 20);
-    unsigned long refresh_x     = (cr_width / 4) - (button_w / 2);
-    unsigned long close_x       = (3 * cr_width / 4) - (button_w / 2);
-    unsigned long buttons_y     = bottom_band_y;
-
-
-// Redraw raw main window (first time)
-    gws_redraw_window(fd, main_window, TRUE);
-
-// Redraw main label
-    gws_draw_text(
-        fd, 
-        main_window, 
-        20, label_y, 
-        COLOR_BLACK, "System Information:");
-
-// ?
-    draw_system_info(fd, metrics_x, metrics_y, line_h);
-
-// Change refresh button
-    gws_change_window_position(fd, refresh_button, refresh_x, buttons_y);
-    gws_resize_window(fd, refresh_button, button_w, button_h);
-    gws_redraw_window(fd, refresh_button, FALSE);
-    //gws_redraw_window(fd, refresh_button, TRUE);
-
-//  Change close button
-    gws_change_window_position(fd, close_button, close_x, buttons_y);
-    gws_resize_window(fd, close_button, button_w, button_h);
-    gws_redraw_window(fd, close_button, FALSE);
-    //gws_redraw_window(fd, close_button, TRUE);
-
-// Refresh main window (again)
-    gws_refresh_window(fd, main_window);
-}
-
-static void set_default_responder(int wid)
-{
-    if (wid < 0)
-        return;
-    default_responder = wid;
-}
-
-static void trigger_default_responder(int fd) 
-{
-    if (default_responder == refresh_button) {
-        update_children(fd);
-    } else if (default_responder == close_button) {
-
-        exitProgram(fd);
-        //gws_destroy_window(fd, refresh_button);
-        //gws_destroy_window(fd, close_button);
-        //gws_destroy_window(fd, main_window);
-        //exit(0);
-    }
-}
-
-// Toggle between refresh_button and close_button
-static void switch_responder(int fd)
-{
-    if (default_responder == refresh_button) {
-        set_default_responder(close_button);
-        gws_set_focus(fd, close_button);
-    } else {
-        set_default_responder(refresh_button);
-        gws_set_focus(fd, refresh_button);
+    switch (current_mode) {
+        case 0:
+            draw_ghost(fd);
+            break;
+        case 1:
+            draw_big_rocket(fd);
+            break;
+        case 2:
+            draw_detailed_rocket(fd);
+            break;
+        default:
+            draw_ghost(fd);
+            break;
     }
 }
 
 static void exitProgram(int fd)
 {
-    if (fd<0)
+    if (fd < 0)
         return;
-    gws_destroy_window(fd, refresh_button);
-    gws_destroy_window(fd, close_button);
     gws_destroy_window(fd, main_window);
     exit(0);
 }
@@ -624,63 +444,36 @@ systemProcedure(
 
     switch (event_type) 
     {
-
     case MSG_KEYDOWN:
         switch (long1) {
-
-        // First responder
-        case VK_RETURN: 
-            trigger_default_responder(fd); 
+        case '1': 
+            current_mode = 0;
+            draw_current_art(fd);
             break;
-
-        // Refresh
-        case 'R': 
-        case 'r': 
-            update_children(fd); 
+        case '2': 
+            current_mode = 1;
+            draw_current_art(fd);
             break;
-
-        // Cancel
-        case 'C': 
-        case 'c':
+        case '3': 
+            current_mode = 2;
+            draw_current_art(fd);
+            break;
+        case 'Q': 
+        case 'q':
             exitProgram(fd);
-            break;
-
-        // #test
-        case VK_TAB: 
-            printf("app: TAB received\n");
-            //switch_responder(fd);
             break;
         }
         break;
 
     case MSG_SYSKEYDOWN:
         switch (long1){
-        case VK_F2:
-            //test_draw_rects_in_client_area(fd);
-            //test_draw_rects_in_client_area2(fd);
-            test_draw_rects_in_client_area3(fd);
-            break;
         case VK_F5:
-            update_children(fd);
+            draw_current_art(fd);
             break; 
-        case VK_F12:  printf("system_info_app: Debug info\n");  break;
-        //
-        case VK_ARROW_RIGHT:  printf("Editor: VK_ARROW_RIGHT \n"); break;
-        case VK_ARROW_UP:     printf("Editor: VK_ARROW_UP \n");    break;
-        case VK_ARROW_DOWN:   printf("Editor: VK_ARROW_DOWN \n");  break;
-        case VK_ARROW_LEFT:
-            printf("Editor: VK_ARROW_LEFT \n"); 
-            switch_responder(fd);
+        case VK_F12:  
+            printf("draw_app: Debug info\n");  
             break;
         };
-        break;
-
-    case GWS_MouseClicked:
-        if ((int)long1 == refresh_button)
-            update_children(fd);
-        if ((int)long1 == close_button){
-            exitProgram(fd);
-        }
         break;
 
     case MSG_CLOSE:
@@ -688,7 +481,7 @@ systemProcedure(
         break;
 
     case MSG_PAINT:
-        update_children(fd);
+        draw_current_art(fd);
         break;
     }
     return 0;
@@ -716,7 +509,6 @@ static void pump(int fd)
 
 int main(int argc, char *argv[]) 
 {
-
     // Display
     Display = gws_open_display("display:name.0");
     if (!Display) return EXIT_FAILURE;
@@ -725,22 +517,19 @@ int main(int argc, char *argv[])
     // Screen
     unsigned long screen_w = gws_get_system_metrics(1);
     unsigned long screen_h = gws_get_system_metrics(2);
-    //unsigned long win_w = screen_w / 2;
-    //unsigned long win_h = screen_h / 2;
     unsigned long win_w = (screen_w * 7) / 10;
     unsigned long win_h = (screen_h * 7) / 10;
     unsigned long win_x = (screen_w - win_w) / 2;
     unsigned long win_y = (screen_h - win_h) / 2;
 
 // Main window
-
     main_window = 
     (int) gws_create_window(
         fd, 
         WT_OVERLAPPED,         // Window type
         WINDOW_STATUS_ACTIVE,  // Window status (active,inactive) / button state
         WINDOW_STATE_NORMAL,   // Window state (min,max, normal)
-        "System Information", 
+        "Draw App", 
         win_x, win_y, win_w, win_h,
         0,        // Parent window (wid)
         WS_APP,   // Window style
@@ -752,95 +541,23 @@ int main(int argc, char *argv[])
         printf("on main_window\n");
         exit(0);
     }
-    gws_refresh_window(fd, main_window);
-
-//-----------------------------
-
-    query_client_area(fd);
-
-
-//
-// Buttons
-//
-
-    // Buttons
-    unsigned long button_w = cr_width / 5;
-    unsigned long button_h = cr_height / 10;
-    if (button_h < 32) 
-        button_h = 32;
-
-    unsigned long refresh_x = (cr_width / 4) - (button_w / 2);
-    unsigned long close_x   = (3 * cr_width / 4) - (button_w / 2);
-
-    unsigned long buttons_y = cr_height - (button_h *2);
-
-
-// Create Refresh button
-    refresh_button = 
-        gws_create_window(
-            fd, 
-            WT_BUTTON,    // Window type
-            BS_DEFAULT,   // Window status / Button state
-            1,            // Window state
-            "Refresh", 
-            refresh_x, buttons_y, button_w, button_h,
-            main_window, 
-            0,  // No style 
-            COLOR_GRAY, COLOR_GRAY);
-    //gws_refresh_window(fd, refresh_button);
-
-// Create Close button
-    close_button = gws_create_window(
-        fd,
-        WT_BUTTON,
-        BS_DEFAULT,
-        1,
-        "Close",
-        close_x, buttons_y, button_w, button_h,
-        main_window, 0, COLOR_GRAY, COLOR_GRAY );
-    //gws_refresh_window(fd, close_button);
-
-
-/*
-// =========================================
-// #test: Testing new API
-// Draw a rectangle inside a window, into the backbuffer.
-    gws_draw_rectangle (
-        fd, 
-        main_window,
-        20, 20, 20, 20,  // l, t, w, h 
-        0x00FF0000,      // color
-        TRUE,            // Fill or not
-         0 );            // rop
-// =========================================
-*/
-
-// Default responder
-    set_default_responder(refresh_button);
-    //set_default_responder(close_button);
 
 // Main window active
     gws_set_active(fd, main_window);
-   gws_set_focus(fd, refresh_button);
+    //gws_set_focus(fd, main_window);
 
-// Refresh. (again)
     gws_refresh_window(fd, main_window);
 
-/*
-// ================================
-// Lets say to the kernel that we want to receive the TAB event.
-    sc80(
-        912,    // syscall number
-        2000,   // option
-        2000,   // extra values
-        0  );   // not used
-*/
-// Lets say to the kernel that we want to receive the TAB event.
-    // rtl_msgctl(2000,2000);
+//
+// Draw art
+//
 
-// ================================
+    query_client_area(fd);
+
+// Initial draw
+    draw_current_art(fd);
+
 // Event loop
-
     while (1) {
         // 1. Pump events from Display Server
         pump(fd);

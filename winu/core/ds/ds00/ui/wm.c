@@ -5291,7 +5291,6 @@ void wm_sync_absolute_dimensions(struct gws_window_d *w)
     w->absolute_bottom = w->absolute_y + w->height;
 }
 
-
 int 
 gws_resize_window ( 
     struct gws_window_d *window, 
@@ -5442,21 +5441,30 @@ gws_resize_window (
 
             }
 
-            // sync client area rectangle 
+        // sync client area rectangle 
 
-            // Doesn't change.
-            //window->rcClient.left
-            //window->rcClient.top
+        // Doesn't change.
+        //window->rcClient.left
+        //window->rcClient.top
 
-            // width: subtract left and right borders
-            window->rcClient.width =
-                (unsigned long)(window->width - (window->Border.border_size * 2) - 
-                (pad_left + pad_right));
-            // height: subtract top border, bottom border, and titlebar height
-            window->rcClient.height =
-                (unsigned long)(window->height - (window->Border.border_size * 2) - 
-                (pad_top + pad_bottom) - (window->titlebar_height ));
+        // Width for the client area
+        window->rcClient.width =
+            (unsigned long)(
+                window->width - 
+                (window->Border.border_size * 2) - 
+                (pad_left + pad_right)
+            );
+
+        // Height for the client area
+        window->rcClient.height =
+            (unsigned long)(
+                window->height - 
+                (window->Border.border_size * 2) - 
+                (pad_top + pad_bottom) - 
+                window->titlebar_height
+            );
     }
+//     unsigned long __TBHeight = METRICS_TITLEBAR_DEFAULT_HEIGHT;
 
 // --------------------------------------------
 // Text on edit box.
