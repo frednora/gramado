@@ -7,7 +7,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <rtl/gramado.h>
 
 //#include "shell.h"
 
@@ -43,49 +42,14 @@ static void show_prompt(void)
 
 static void process_command(void)
 {
-    char *argv[16];   // up to 16 args
-    int argc = 0;
-
-    // Tokenize input line
-    char *token = strtok(prompt, " \t");
-    while (token != NULL && argc < 16) {
-        argv[argc++] = token;
-        token = strtok(NULL, " \t");
-    }
-    argv[argc] = NULL; // terminate list
-
-    if (argc == 0) {
-        // empty line
-        reset_prompt();
-        show_prompt();
-        return;
-    }
-
-    // Built-in commands
-    if (strcmp(argv[0], "about") == 0) {
+    if (strncmp(prompt, "about", 5) == 0) {
         write(1, "shell: minimal stdin/stdout shell\n", 34);
     }
-    else if (strcmp(argv[0], "help") == 0) {
-        write(1, "shell: commands: about, help, run\n", 34);
+    else if (strncmp(prompt, "help", 4) == 0) {
+        write(1, "shell: commands: about, help\n", 30);
     }
-    else if (strcmp(argv[0], "run") == 0 && argc > 1) {
-    char __filename_local_buffer[64];
-    memset(__filename_local_buffer, 0, sizeof(__filename_local_buffer));
-
-    // Copy argument safely
-    strncpy(__filename_local_buffer, argv[1], sizeof(__filename_local_buffer)-1);
-
-    // Trim trailing newline or spaces
-    size_t len = strlen(__filename_local_buffer);
-    while (len > 0 && 
-          (__filename_local_buffer[len-1] == '\n' || 
-           __filename_local_buffer[len-1] == '\r' || 
-           __filename_local_buffer[len-1] == ' ')) {
-        __filename_local_buffer[--len] = '\0';
-    }
-
-    // Now call Gramado's launcher
-    rtl_clone_and_execute(__filename_local_buffer);
+    else if (prompt_pos == 0) {
+        // empty line
     }
     else {
         write(1, "shell: unknown command\n", 24);
