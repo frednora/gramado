@@ -1053,6 +1053,22 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         goto exit_cmp;
     }
 
+// Simple test for heap allocation, free, and reuse.
+// Allocates memory, frees it, and reuses it in a loop.
+    if ( kstrncmp(cmdline,"mm-reuse",8) == 0 ){
+
+        // Test heap reuse
+        test_heap_reuse();
+
+        // Debug print heap state
+        // mmblock_debug_print();
+
+        // Testing the %p format specifier.
+        // printk("mm-reuse: Pointer: {%p}\n",cmdline);
+        goto exit_cmp;
+    }
+
+
 // path:
 // Test the use of 'pathnames' with multiple levels.
 // #test: This test will allocate some pages

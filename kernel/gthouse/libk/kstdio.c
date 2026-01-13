@@ -1062,10 +1062,19 @@ kinguio_vsprintf(
                 str_tmp = _vsputs_r(str_tmp,buffer);
                 break;
 
+            // %p
+            // Pointer type: typically printed as hexadecimal.
+            case 'p':
+                // Pointer: treat as unsigned long and print in hexadecimal.
+                lu = (unsigned long) va_arg (ap, void*);
+                kinguio_utoa(lu, buffer, 16);
+                str_tmp = _vsputs_r(str_tmp,"0x");
+                str_tmp  = _vsputs_r(str_tmp,buffer);
+                break;
+
             // %f: Print a floating-point number.
             //case 'f':
                 //break;
-
 
             // Default: If an unknown specifier is met, output a literal "%%".
             default:

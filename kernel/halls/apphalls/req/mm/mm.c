@@ -653,6 +653,49 @@ unsigned long heapReuseMemory(unsigned long size, int cleanup)
     return (unsigned long) reuse->userArea;
 }
 
+// Simple test for heap allocation, free, and reuse.
+// Allocates memory, frees it, and reuses it in a loop.
+void test_heap_reuse(void)
+{
+    int i;
+    int Max = 8;  //100
+    void *p;
+
+    printk("\n=== heap reuse test start ===\n");
+
+    // Allocate a block with kmalloc (wrapper for heapAllocateMemory).
+    p = (void *) kmalloc(64);
+    if (p == NULL) {
+        printk("kmalloc failed\n");
+        return;
+    }
+    printk("Allocated block at %x\n", p);
+
+    // Loop: free and reuse the same block.
+    for (i = 0; i < Max; i++) 
+    {
+        printk("\nIteration %d\n", i);
+
+        // Free the block.
+        kfree(p);
+        printk("Freed block at %x\n", p);
+
+        // Try to reuse it.
+        void *reuse = (void *) heapReuseMemory(64, TRUE);
+        if (reuse == NULL) {
+            printk("Reuse failed\n");
+            break;
+        }
+        printk("Reused block at %x\n", reuse);
+
+        // Debug print heap state
+        // mmblock_debug_print();
+    };
+
+    printk("\n=== heap reuse test end ===\n");
+}
+
+
 // Print the state of all mmblocks in the kernel heap.
 // Useful for debugging allocations, frees, and reuse.
 void mmblock_debug_print(void)
@@ -669,9 +712,9 @@ void mmblock_debug_print(void)
             continue;
 
         printk("Block %d:\n", i);
-        printk("  Header=0x%lx Size=%lu\n", b->Header, b->headerSize);
-        printk("  UserArea=0x%lx Size=%lu\n", b->userArea, b->userareaSize);
-        printk("  Footer=0x%lx\n", b->Footer);
+        printk("  Header=0x%x Size=%d\n", b->Header, b->headerSize);
+        printk("  UserArea=0x%x Size=%d\n", b->userArea, b->userareaSize);
+        printk("  Footer=0x%x\n", b->Footer);
 
         printk("  Id=%d Used=%d Free=%d Magic=%d\n",
             b->Id, b->Used, b->Free, b->Magic);
@@ -680,7 +723,7 @@ void mmblock_debug_print(void)
 
         // Optional: show linkage if you migrate to linked list
         if (b->Next != NULL)
-            printk("  Next=0x%p\n", b->Next);
+            printk("  Next=0x%x\n", b->Next);
 
         printk("\n");
     };

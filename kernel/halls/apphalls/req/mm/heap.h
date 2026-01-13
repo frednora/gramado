@@ -107,6 +107,10 @@ void heapFreeMemory(void *ptr);
 // Returns user area pointer or 0 if none available.
 unsigned long heapReuseMemory(unsigned long size, int cleanup);
 
+// Simple test for heap allocation, free, and reuse.
+// Allocates memory, frees it, and reuses it in a loop.
+void test_heap_reuse(void);
+
 // Print the state of all mmblocks in the kernel heap.
 // Useful for debugging allocations, frees, and reuse.
 void mmblock_debug_print(void);
