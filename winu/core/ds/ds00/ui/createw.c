@@ -2106,6 +2106,18 @@ void *doCreateWindow (
     window->rcClient.width  = (unsigned long) crTmp.width;
     window->rcClient.height = (unsigned long) crTmp.height;
 
+    /*
+    if (window->type == WT_OVERLAPPED)
+    {
+        printf ("Client area: %d %d %d %d \n",
+        window->rcClient.left,
+        window->rcClient.top,
+        window->rcClient.width,
+        window->rcClient.height );
+        while(1){}
+    }
+    */
+
 // =================================
 //++
 // Margens.

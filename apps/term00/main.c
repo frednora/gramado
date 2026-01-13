@@ -466,7 +466,14 @@ static void __winmax(int fd)
 
 // The terminal window. (client area)
 // Change position, resize and redraw the window.
-    gws_change_window_position(fd,client_wid,wi->cr_left,wi->cr_top);
+    
+    //gws_change_window_position(fd,client_wid,wi->cr_left,wi->cr_top);
+    // Always in 0,0
+    gws_change_window_position(
+        fd, client_wid, 
+        0,
+        0 );
+
     gws_resize_window(fd, client_wid, wi->cr_width, wi->cr_height );
     gws_redraw_window(fd, client_wid, TRUE );
 }
@@ -537,7 +544,13 @@ static void __winmin(int fd)
 
 // The terminal window. (client area)
 // Change position, resize and redraw the window.
-    gws_change_window_position(fd,client_wid,wi->cr_left,wi->cr_top);
+
+    // Always in 0,0
+    //gws_change_window_position(fd,client_wid,wi->cr_left,wi->cr_top);
+    gws_change_window_position(
+        fd, client_wid, 
+        0,
+        0 );
     gws_resize_window(fd, client_wid, wi->cr_width, wi->cr_height );
     gws_redraw_window(fd, client_wid, TRUE );
 }
@@ -3555,8 +3568,6 @@ int terminal_init(unsigned short flags)
 
 // ===================================================
 // main window
-// #bugbug: These values for style were deprecated, it belongs to state now.
-// style: 0x0001=maximized | 0x0002=minimized | 0x0004=fullscreen
 
     main_window = 
         (int) gws_create_window (
@@ -3567,7 +3578,7 @@ int terminal_init(unsigned short flags)
                 program_name,
                 mwLeft, mwTop, mwWidth, mwHeight,
                 0, 
-                WS_TERMINAL,  // Style 
+                WS_APP | WS_TERMINAL,  // Style 
                 mwColor, mwColor );
 
     if (main_window < 0){
@@ -3600,7 +3611,7 @@ int terminal_init(unsigned short flags)
     // cause a client will be drawed inside the client area.
     unsigned long wLeft   = 0;
     unsigned long wTop    = 0;
-    unsigned long wWidth  =  mwWidth >> 1;
+    unsigned long wWidth  = mwWidth >> 1;
     unsigned long wHeight =  mwHeight >> 1;
 
     unsigned int wColor = (unsigned int) bg_color;
@@ -3609,52 +3620,59 @@ int terminal_init(unsigned short flags)
 // We're gonna need this to fit the terminal window
 // into the client area of the main window.
 
+    /*
     // #test: Now it's a global thing.
     //struct gws_window_info_d *wi;
-    
     wi = (void*) malloc( sizeof(struct gws_window_info_d) );
     if ((void*) wi == NULL){
         printf("terminal: wi\n");
         exit (1);
     }
+    */
+
+    struct gws_window_info_d lWi;
+
     // IN: fd, wid, window info structure
     gws_get_window_info(
         client_fd, 
         main_window,   // The app window
-        (struct gws_window_info_d *) wi );
+        (struct gws_window_info_d *) &lWi );
 
-    if (wi->used != TRUE){
-        printf("terminal: wi->used\n");
+    if (lWi.used != TRUE){
+        printf("terminal: lWi.used\n");
         exit (1);
     }
-    if (wi->magic != 1234){
-        printf("terminal: wi->magic\n");
+    if (lWi.magic != 1234){
+        printf("terminal: lWi.magic\n");
         exit (1);
     }
 
 // Setting new values for the client window.
 
+// #ps:
+// Left/top has values, but we use 0,0 for client area.
+
 // Não pode ser maior que o dispositivo.
-    if (wi->cr_left >= w){
-        printf("terminal: wi->cr_left\n");
+    if (lWi.cr_left >= w){
+        printf("terminal: lWi.cr_left\n");
         exit (1);
     }
 
 // Não pode ser maior que o dispositivo.
-    if (wi->cr_top >= h){
-        printf("terminal: wi->cr_top\n");
+    if (lWi.cr_top >= h){
+        printf("terminal: lWi.cr_top\n");
         exit (1);
     }
 
 // Não pode ser maior que o dispositivo.
-    if (wi->cr_width == 0 || wi->cr_width > w){
-        printf("terminal: wi->cr_width\n");
+    if (lWi.cr_width == 0 || lWi.cr_width > w){
+        printf("terminal: lWi.cr_width\n");
         exit (1);
     }
 
 // Não pode ser maior que o dispositivo.
-    if (wi->cr_height == 0 || wi->cr_height > h){
-        printf("terminal: wi->height\n");
+    if (lWi.cr_height == 0 || lWi.cr_height > h){
+        printf("terminal: lWi.height\n");
         exit (1);
     }
 
@@ -3672,21 +3690,21 @@ int terminal_init(unsigned short flags)
 // So, we simply need to know the width and height,
 // cause a client will be drawed inside the client area.
 
+// Left/top always in 0,0 for client area.
     wLeft   = 0;
     wTop    = 0;
-    wWidth  = wi->cr_width;
-    wHeight = wi->cr_height;
+    wWidth  = lWi.cr_width;
+    wHeight = lWi.cr_height;
 
-// Create terminal window.
+// Create terminal window
     terminal_window = 
         (int) gws_create_window (
                   client_fd,
                   WT_SIMPLE, 1, 1, cw_string,
                   wLeft, wTop, wWidth, wHeight,
                   main_window,
-                  0x0000,
-                  COLOR_BLACK,
-                  COLOR_BLACK );
+                  WS_CHILD,
+                  COLOR_BLACK, COLOR_BLACK );
 
     if (terminal_window < 0){
         printf("terminal: fail on terminal_window\n");
@@ -3695,6 +3713,11 @@ int terminal_init(unsigned short flags)
     Terminal.client_window_id = terminal_window;
     //#debug
     gws_refresh_window(client_fd, terminal_window);
+
+
+    // #bugbug
+    // its not returning the right client area values.
+    // while(1){}
 
     Terminal._mode = 0;
 
