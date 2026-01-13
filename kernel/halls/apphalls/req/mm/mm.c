@@ -103,6 +103,10 @@ static unsigned long mm_prev_pointer=0;
 static int __init_kernel_heap(void);
 static int __init_kernel_stack(void);
 
+
+// Local worker
+static struct mmblock_d *__find_reusable_block(unsigned long size);
+
 // ----------------------------
 
 
@@ -532,6 +536,13 @@ fail:
 // mmblock_d structure reusable.
 // #todo: We can clean up the user area.
 
+/*
+Right now, the allocator is linear:
+ + Allocations move the heap pointer forward.
+ + Freed memory isn’t reclaimed, only marked as reusable.
+ + Eventually, the heap will exhaust unless you implement reuse or expansion.
+*/
+
 void heapFreeMemory(void *ptr)
 {
     struct mmblock_d *block_header;
@@ -579,6 +590,104 @@ void heapFreeMemory(void *ptr)
     block_header->Used = TRUE;   // Still valid, but now reusable.
     block_header->Magic = 4321;  // Set magic to indicate reusable.
 }
+
+
+// Local worker
+// Called by heapReuseMemory().
+// Find a reusable mmblock_d that can satisfy the requested size.
+// Returns pointer to mmblock_d or NULL if none found.
+static struct mmblock_d *__find_reusable_block(unsigned long size)
+{
+    struct mmblock_d *b;
+    int i=0;
+    int Max = mmblockCount;
+
+    if (size == 0)
+        return NULL;
+
+    for (i=1; i <= Max; i++) 
+    {
+        b = (struct mmblock_d *) mmblockList[i];
+        if ((void *) b == NULL)
+            continue;
+
+        if (b->Used == TRUE && b->Magic == 4321) 
+        {
+            if (b->userareaSize >= size) {
+                return b; // Found reusable block
+            }
+        }
+    }
+    return NULL;
+}
+
+// #test
+// Try to allocate by reusing a freed block.
+// Returns user area pointer or 0 if none available.
+unsigned long heapReuseMemory(unsigned long size, int cleanup)
+{
+    struct mmblock_d *reuse;
+
+    if (size == 0){
+        size = 8;
+    }
+
+    reuse = (struct mmblock_d *) __find_reusable_block(size);
+    if (reuse == NULL)
+        return 0; // No reusable block found
+
+    // Do NOT change size or footer.
+    // Just mark the block as allocated again.
+    reuse->Free  = FALSE;
+    reuse->Used  = TRUE;
+    reuse->Magic = 1234;  // Mark as allocated again
+
+// Optional: clear user area for safety
+    if (cleanup == TRUE){
+        memset(
+            (void *) reuse->userArea, 
+            0, 
+            reuse->userareaSize);
+    }
+
+    return (unsigned long) reuse->userArea;
+}
+
+// Print the state of all mmblocks in the kernel heap.
+// Useful for debugging allocations, frees, and reuse.
+void mmblock_debug_print(void)
+{
+    struct mmblock_d *b;
+    int i=0;
+
+    printk("\n--- mmblock debug dump ---\n");
+
+    for (i=1; i <= mmblockCount; i++) 
+    {
+        b = (struct mmblock_d *) mmblockList[i];
+        if ((void *) b == NULL)
+            continue;
+
+        printk("Block %d:\n", i);
+        printk("  Header=0x%lx Size=%lu\n", b->Header, b->headerSize);
+        printk("  UserArea=0x%lx Size=%lu\n", b->userArea, b->userareaSize);
+        printk("  Footer=0x%lx\n", b->Footer);
+
+        printk("  Id=%d Used=%d Free=%d Magic=%d\n",
+            b->Id, b->Used, b->Free, b->Magic);
+
+        printk("  pid=%d tid=%d\n", b->pid, b->tid);
+
+        // Optional: show linkage if you migrate to linked list
+        if (b->Next != NULL)
+            printk("  Next=0x%p\n", b->Next);
+
+        printk("\n");
+    };
+
+    printk("--- end of mmblock dump ---\n");
+}
+
 
 // get_process_heap_pointer:
 // ?? Pega o 'heap pointer' do heap de um processo. ??

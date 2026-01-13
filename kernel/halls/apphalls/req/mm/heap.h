@@ -101,6 +101,16 @@ extern unsigned long heapList[HEAP_COUNT_MAX];
 unsigned long heapAllocateMemory(unsigned long size);
 void heapFreeMemory(void *ptr);
 
+
+// #test
+// Try to allocate by reusing a freed block.
+// Returns user area pointer or 0 if none available.
+unsigned long heapReuseMemory(unsigned long size, int cleanup);
+
+// Print the state of all mmblocks in the kernel heap.
+// Useful for debugging allocations, frees, and reuse.
+void mmblock_debug_print(void);
+
 struct heap_d *memory_create_new_heap ( 
     unsigned long start_va, 
     unsigned long size );
