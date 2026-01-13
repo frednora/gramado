@@ -527,9 +527,10 @@ static void update_children(int fd)
     unsigned long metrics_y = label_y + 30;
     unsigned long line_h    = 20;
 
-    unsigned long bottom_band_y = cr_height - (button_h + 20);
     unsigned long refresh_x     = (cr_width / 4) - (button_w / 2);
     unsigned long close_x       = (3 * cr_width / 4) - (button_w / 2);
+
+    unsigned long bottom_band_y = cr_height - (button_h*2);
     unsigned long buttons_y     = bottom_band_y;
 
 
