@@ -1,8 +1,46 @@
 // x64fault.c
-// Handling Exceptions and Faults
+// Handling Exceptions: (Faults, Traps and Aborts) for x86_64
 // Created by Fred Nora.
 
 #include <kernel.h>
+
+/*
+Intel Exceptions Overview
+
+The IDT (Interrupt Descriptor Table) has 256 entries.
+The first 32 vectors (0–31) are reserved for CPU exceptions.
+
+Exceptions are classified as:
+ + Faults: Correctable conditions (e.g., page fault).
+ + Traps: Reported immediately after the instruction.
+ + Aborts: Severe, unrecoverable errors
+*/
+
+/*
+Floating-Point Related Exceptions
+
+Vector 0: 
+#DE – Divide Error
+Raised when integer or floating-point division by zero occurs.
+
+Vector 7: 
+#NM – Device Not Available
+Raised when floating-point or SIMD instructions are executed but the FPU/SIMD unit is disabled.
+
+Vector 16: 
+#MF – x87 Floating-Point Error
+Raised when the x87 FPU detects an error 
+(e.g., divide-by-zero, invalid operation, overflow, underflow, precision loss, denormal operand).
+
+Vector 19: 
+#XM – SIMD Floating-Point Exception
+Raised for SSE/SSE2/SIMD instructions when floating-point errors occur 
+(similar conditions as x87 but for vectorized ops).
+*/
+
+
+// --------------------------
+
 
 static int __kill_faulty_current_process(void);
 
@@ -326,6 +364,9 @@ void x64_all_faults(unsigned long number)
         // podemos simplesmente fechar o aplicativo.
         // Se ocorrer em cpl 0, terminamos o sistema.
         // Se ocorrer em cpl 3, terminamos o processo.
+
+        // #DE – Divide Error
+        // Raised when integer or floating-point division by zero occurs.
         case 0: 
             x_panic("x64_all_faults: 0"); 
             break;
@@ -372,13 +413,14 @@ void x64_all_faults(unsigned long number)
             x_panic("x64_all_faults: 6");
             break;
 
-        // Device Not Available
-        // Math co-processor not available.
+        // #NM – Device Not Available
+        // Raised when floating-point or SIMD instructions are executed but 
+        // the FPU/SIMD unit is disabled. Or not available.
         case 7: 
             x_panic("x64_all_faults: 7 - No 80387");
             break;
 
-        // Double fault.
+        // Double fault
         case 8:
             x_panic("x64_all_faults: 8 - DOUBLE");
             break;
@@ -430,7 +472,9 @@ void x64_all_faults(unsigned long number)
             x_panic("x64_all_faults: 15 - Intel reserved");
             break;
 
-        // x87 Floating-Point Exception
+        // #MF – x87 Floating-Point Error
+        // Raised when the x87 FPU detects an error 
+        // (e.g., divide-by-zero, invalid operation, overflow, underflow, precision loss, denormal operand).
         // Co-processor error on 486 and above.
         case 16:
             x_panic("x64_all_faults: 16 - Coprocessor error");
@@ -449,8 +493,13 @@ void x64_all_faults(unsigned long number)
         // Intel reserved faults
         // 19~31
 
-        // 19 - SIMD Floating-Point Exception
-        case 19: x_panic("x64_all_faults: 19"); break;
+        // #XM – SIMD Floating-Point Exception
+        // Raised for SSE/SSE2/SIMD instructions when floating-point errors occur 
+        // (similar conditions as x87 but for vectorized ops).
+        case 19:
+            x_panic("x64_all_faults: 19 - SIMD Floating-Point Exception");
+            break;
+
         // 20 - Virtualization Exception
         case 20: x_panic("x64_all_faults: 20"); break;
         // 21 - Control Protection Exception
