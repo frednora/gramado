@@ -38,6 +38,17 @@ Raised for SSE/SSE2/SIMD instructions when floating-point errors occur
 (similar conditions as x87 but for vectorized ops).
 */
 
+/*
+Types of Floating-Point Errors
+
+The floating-point unit (FPU) and SIMD units can signal:
+ + Invalid Operation: e.g., sqrt of a negative number.
+ + Divide-by-Zero: denominator = 0.
+ + Overflow: result too large to represent.
+ + Underflow: result too small (close to zero).
+ + Precision Loss (Inexact Result): rounding errors.
+ + Denormal Operand: operand too small, treated as denormalized.
+*/
 
 // --------------------------
 
@@ -62,20 +73,23 @@ static int __kill_faulty_current_process(void);
 // Not valid for kernel process or init process.
 static int __kill_faulty_current_process(void)
 {
-    struct thread_d *t;
+    // The process
     struct te_d *p;
     pid_t pid = -1;
+
+    // The thread.
+    // But the process may have more than one thread.
+    struct thread_d *t;
     tid_t tid = -1;
 
     int isKernel = FALSE;
     int isInit = FALSE;
 
-// The current process and the current thread.
+// The current process and the current thread
     pid = (pid_t) get_current_process();
     tid = (tid_t) current_thread;
 
 // Process validation
-
     if (pid<0 || pid >= PROCESS_COUNT_MAX)
     {
         goto fail;
@@ -99,12 +113,8 @@ static int __kill_faulty_current_process(void)
 // Process validation
 // We can't close the Kernel process or the Init process.
     p = (void*) teList[pid];
-    if (p->used != TRUE){
-        goto fail;
-    }
-    if (p->magic != 1234){
-        goto fail;
-    }
+    if (p->used  != TRUE){ goto fail; }
+    if (p->magic != 1234){ goto fail; }
 
 // The thread environment structure for the Kernel Process.
     if (p == TEKernelProcess){
@@ -134,25 +144,18 @@ static int __kill_faulty_current_process(void)
 
 // Thread validation
 // We can't close the Init thread.
-
     t = (void*) threadList[tid];
-    if (t->used != TRUE){
-        goto fail;
-    }
-    if (t->magic != 1234){
-        goto fail;
-    }
+    if (t->used  != TRUE){ goto fail; }
+    if (t->magic != 1234){ goto fail; }
+
 // Init thread
     if (t == InitThread){
         goto fail;
     }
 
-// Destroy the thread structure.
+// Destroy the thread structure and the process structure
     destroy_thread_structure(t);
-
-// Destroy the process structure.
     destroy_process_structure(p);
-
     return 0;
 
 fail:
