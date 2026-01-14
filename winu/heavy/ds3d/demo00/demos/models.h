@@ -24,6 +24,10 @@ struct cube_model_d
     struct gr_vecF3D_d vecs[32];
     unsigned int colors[32];
 
+// Sequence of vertices in order to build the faces (triangles).
+// It needs 12 triangles to build a cube.
+    int sequence[3*16];
+
     float fThetaAngle;
     float hposition;  //horisontal position
     float vposition;  //vertical position

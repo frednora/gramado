@@ -3816,6 +3816,7 @@ static int on_execute(void)
             // Draw the scene for the current demo
             // IN: draw terrain, second counter
             demoFlyingCube(FALSE,sec);
+            //demoFlyingCube(TRUE,sec);
             //demoCat();
             //demoTriangle();
             //demoCurve();

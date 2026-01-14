@@ -53,23 +53,29 @@ static void __drawTerrain(struct cube_model_d *cube, float fElapsedTime)
 // No rotation. Small translation in positive z.
 
     char string0[16];
+
 // Matrices
     struct gr_mat4x4_d  matRotX;
     struct gr_mat4x4_d  matRotY;
-    struct gr_mat4x4_d  matRotZ; 
+    struct gr_mat4x4_d  matRotZ;
+
 // Triangles
     struct gr_triangleF3D_d  tri;            // triângulo original.
     struct gr_triangleF3D_d  triRotatedX; 
     struct gr_triangleF3D_d  triRotatedXY;
     struct gr_triangleF3D_d  triRotatedXYZ;
 
-    int sequence[3*16];  //cube
     int cull=FALSE;
-    register int i=0;  //loop
+
     int nTriangles=12;
+
+    //int sequence[3*16];  //cube
+    int sequence_off=0;  // offset in sequence[]
+    int v_index=0;       // vertex index
+
+// Loop iterators
+    register int i=0;
     int j=0;
-    int off=0;
-    int v=0;
 
 // ---------
 // Initialize 4x4 matrices.
@@ -131,6 +137,7 @@ static void __drawTerrain(struct cube_model_d *cube, float fElapsedTime)
 	matRotZ.m[2][2] = (float) 1.0f;
 	matRotZ.m[3][3] = (float) 1.0f;
 
+/*
 // 12 triangles.
 // Order: north, top, south, bottom, east, west.
 // clockwise
@@ -146,6 +153,30 @@ static void __drawTerrain(struct cube_model_d *cube, float fElapsedTime)
     sequence[27] = (int) 2; sequence[28] = (int) 6; sequence[29] = (int) 4; //f 2 6 4 // east top      n  
     sequence[30] = (int) 7; sequence[31] = (int) 1; sequence[32] = (int) 3; //f 7 1 3 // west bottom   n
     sequence[33] = (int) 7; sequence[34] = (int) 3; sequence[35] = (int) 5; //f 7 3 5 // west top      s 
+*/
+
+/*
+// The seqeunce values.
+// These are the 12 faces in order.
+     int seq[36] = { 
+        1,2,4, 1,4,3, // north 
+        3,4,6, 3,6,5, // top 
+        5,6,8, 5,8,7, // south 
+        7,8,2, 7,2,1, // bottom 
+        2,8,6, 2,6,4, // east 
+        7,1,3, 7,3,5  // west 
+        };
+*/
+
+/*
+    int seq_i=0;
+    int seq_max = 12 * 3;
+    for (seq_i = 0; seq_i < seq_max; seq_i++) 
+    { 
+        cube->sequence[seq_i] = seq[seq_i]; 
+    };
+*/
+
 
 // ---------
 // #test
@@ -161,28 +192,27 @@ static void __drawTerrain(struct cube_model_d *cube, float fElapsedTime)
     {
         cull=FALSE;
 
-        off = (int) ((i-1)*3);
+        sequence_off = (int) ((i-1)*3);
         
-        v = (int) sequence[off+0];
-        tri.p[0].x = (float) cube->vecs[v].x;
-        tri.p[0].y = (float) cube->vecs[v].y;
-        tri.p[0].z = (float) cube->vecs[v].z;
+        v_index = (int) cube->sequence[sequence_off+0];
+        tri.p[0].x = (float) cube->vecs[v_index].x;
+        tri.p[0].y = (float) cube->vecs[v_index].y;
+        tri.p[0].z = (float) cube->vecs[v_index].z;
         tri.p[0].color = COLOR_PINK;
-        if(i >= 1 && i <= 12){
+        if (i >= 1 && i <= 12){
             tri.p[0].color = cube->colors[i-1];  // rectangle color
         }
-        v = (int) sequence[off+1];
-        tri.p[1].x = (float) cube->vecs[v].x;
-        tri.p[1].y = (float) cube->vecs[v].y;
-        tri.p[1].z = (float) cube->vecs[v].z;
+        v_index = (int) cube->sequence[sequence_off+1];
+        tri.p[1].x = (float) cube->vecs[v_index].x;
+        tri.p[1].y = (float) cube->vecs[v_index].y;
+        tri.p[1].z = (float) cube->vecs[v_index].z;
         tri.p[1].color = COLOR_WHITE;  // not used
 
-        v = (int) sequence[off+2];
-        tri.p[2].x = (float) cube->vecs[v].x;
-        tri.p[2].y = (float) cube->vecs[v].y;
-        tri.p[2].z = (float) cube->vecs[v].z;
+        v_index = (int) cube->sequence[sequence_off+2];
+        tri.p[2].x = (float) cube->vecs[v_index].x;
+        tri.p[2].y = (float) cube->vecs[v_index].y;
+        tri.p[2].z = (float) cube->vecs[v_index].z;
         tri.p[2].color = COLOR_WHITE;  // not used
-
 
         //-----------------------------    
         // Rotate in X-Axis
@@ -371,24 +401,30 @@ static void __drawTerrain(struct cube_model_d *cube, float fElapsedTime)
 static void __drawFlyingCube(struct cube_model_d *cube, float vel)
 {
     char string0[16];
+
 // Matrices
     struct gr_mat4x4_d  matRotX;
     struct gr_mat4x4_d  matRotY;
     struct gr_mat4x4_d  matRotZ; 
+
 // Triangles
     struct gr_triangleF3D_d  tri;            // Original triangle.
     struct gr_triangleF3D_d  triRotatedX;    // Rotate in X
     struct gr_triangleF3D_d  triRotatedXY;   // Rotate in Y
     struct gr_triangleF3D_d  triRotatedXYZ;  // Rotate in Z (Projected)
 
-    int sequence[3*16];  //cube
     int cull=FALSE;
-    register int i=0;  //loop
     int nTriangles=12;
-    int j=0;
-    int off=0;
-    int v=0;
+
+// Sequence support
+    int sequence_off=0;  // Offset inside sequence[]
+    int v_index=0; // Vertex index for the cube vectors.
+
 // ---------
+
+// Loop iterators
+    register int i=0;
+    int j=0;
 
 // Initialize 4x4 matrices.
 // see: gprim.h
@@ -479,6 +515,7 @@ static void __drawFlyingCube(struct cube_model_d *cube, float vel)
 // Order: north, top, south, bottom, east, west.
 // Clockwise
 
+/*
 // We are selecting the vectors for each surface,
     sequence[0]  = (int) 1; sequence[1]  = (int) 2;  sequence[2] = (int) 4;  //f 1 2 4 // north bottom  n
     sequence[3]  = (int) 1; sequence[4]  = (int) 4;  sequence[5] = (int) 3;  //f 1 4 3 // north top     n
@@ -492,6 +529,29 @@ static void __drawFlyingCube(struct cube_model_d *cube, float vel)
     sequence[27] = (int) 2; sequence[28] = (int) 6; sequence[29] = (int) 4;  //f 2 6 4 // east top      n  
     sequence[30] = (int) 7; sequence[31] = (int) 1; sequence[32] = (int) 3;  //f 7 1 3 // west bottom   n
     sequence[33] = (int) 7; sequence[34] = (int) 3; sequence[35] = (int) 5;  //f 7 3 5 // west top      s 
+*/
+
+/*
+// The seqeunce values.
+// These are the 12 faces in order.
+     int seq[36] = { 
+        1,2,4, 1,4,3, // north 
+        3,4,6, 3,6,5, // top 
+        5,6,8, 5,8,7, // south 
+        7,8,2, 7,2,1, // bottom 
+        2,8,6, 2,6,4, // east 
+        7,1,3, 7,3,5  // west 
+        };
+*/
+
+/*
+    int seq_i=0;
+    int seq_max = 12 * 3;
+    for (seq_i = 0; seq_i < seq_max; seq_i++) 
+    { 
+        cube->sequence[seq_i] = seq[seq_i]; 
+    };
+*/
 
 // ---------
 // #test
@@ -508,30 +568,30 @@ static void __drawFlyingCube(struct cube_model_d *cube, float vel)
         cull=FALSE;
 
         // Jumping three offsets each time.
-        off = (int) ((i-1)*3);
+        sequence_off = (int) ((i-1)*3);
         
         // Build the vector 0.
-        v = (int) sequence[off+0];  // Get the vertice index.
-        tri.p[0].x = (float) cube->vecs[v].x;
-        tri.p[0].y = (float) cube->vecs[v].y;
-        tri.p[0].z = (float) cube->vecs[v].z;
+        v_index = (int) cube->sequence[sequence_off +0];  // Get the vertice index.
+        tri.p[0].x = (float) cube->vecs[v_index].x;
+        tri.p[0].y = (float) cube->vecs[v_index].y;
+        tri.p[0].z = (float) cube->vecs[v_index].z;
         tri.p[0].color = COLOR_PINK;
         if (i >= 1 && i <= 12){
             tri.p[0].color = cube->colors[i-1];  // rectangle color
         }
 
         // Build the vector 1.
-        v = (int) sequence[off+1];  // Get the vertice index.
-        tri.p[1].x = (float) cube->vecs[v].x;
-        tri.p[1].y = (float) cube->vecs[v].y;
-        tri.p[1].z = (float) cube->vecs[v].z;
+        v_index = (int) cube->sequence[sequence_off +1];  // Get the vertice index.
+        tri.p[1].x = (float) cube->vecs[v_index].x;
+        tri.p[1].y = (float) cube->vecs[v_index].y;
+        tri.p[1].z = (float) cube->vecs[v_index].z;
         tri.p[1].color = COLOR_WHITE;  // not used
 
         // Build the vector 2.
-        v = (int) sequence[off+2];  // Get the vertice index.
-        tri.p[2].x = (float) cube->vecs[v].x;
-        tri.p[2].y = (float) cube->vecs[v].y;
-        tri.p[2].z = (float) cube->vecs[v].z;
+        v_index = (int) cube->sequence[sequence_off +2];  // Get the vertice index.
+        tri.p[2].x = (float) cube->vecs[v_index].x;
+        tri.p[2].y = (float) cube->vecs[v_index].y;
+        tri.p[2].z = (float) cube->vecs[v_index].z;
         tri.p[2].color = COLOR_WHITE;  // not used
 
         // Now we have a triangle. A face.
@@ -847,6 +907,10 @@ void FlyingCubeMove(int number, int direction, float value)
 // given all the dots of this model.
 // We need to create a function that will draw 3D cubes.
 
+// Define cube geometry
+// You store 8 vertices (cube->vecs) and 12 triangles (faces split into two triangles each).
+// The sequence[] array maps which vertices form each triangle.
+
 void demoFlyingCube(int draw_terrain,unsigned long sec)
 {
 // The function on_execute() in main.c initilizes this demos
@@ -937,6 +1001,30 @@ void demoFlyingCubeSetup(void)
 // Cube1
     register int i=0;
 
+
+// The seqeunce values.
+// These are the 12 faces in order.
+     int seq[36] = { 
+        1,2,4, 1,4,3, // north 
+        3,4,6, 3,6,5, // top 
+        5,6,8, 5,8,7, // south 
+        7,8,2, 7,2,1, // bottom 
+        2,8,6, 2,6,4, // east 
+        7,1,3, 7,3,5  // west 
+        };
+
+    int seq_i=0;
+    int seq_max = 12 * 3;
+
+/*
+    for (seq_i = 0; seq_i < seq_max; seq_i++) 
+    { 
+        cube->sequence[seq_i] = seq[seq_i]; 
+    };
+*/
+
+
+
 /*
     for (i=0; i<8; i++){
         cube_x[i] = (float) 0.0f;
@@ -961,7 +1049,7 @@ void demoFlyingCubeSetup(void)
         }
 
         // Create terrain
-        if (count==0){
+        if (count == 0){
             terrain = (struct cube_model_d *) cube;
         }
 
@@ -1020,7 +1108,7 @@ void demoFlyingCubeSetup(void)
         do {
             if (Counter > 8)
                 break;
-            const char *temp = scan00_scanline(nextLine, &vertex);
+            const char *temp = scan00_read_vector_from_line(nextLine, &vertex);
             // Process (print) the current vertex.
             //printf("Parsed Vertex: x = %f, y = %f, z = %f\n",
                 //vertex.x, vertex.y, vertex.z);
@@ -1059,6 +1147,11 @@ void demoFlyingCubeSetup(void)
         cube->vecs[8].x = (float)  0.2f;  cube->vecs[8].y = (float) -0.2f;  cube->vecs[8].z = (float) -0.2f;
         */
 
+        for (seq_i = 0; seq_i < seq_max; seq_i++) 
+        { 
+            cube->sequence[seq_i] = seq[seq_i]; 
+        };
+
         // 12 faces, 12 colors.
         cube->colors[0] = GRCOLOR_LIGHTYELLOW;
         cube->colors[1] = GRCOLOR_LIGHTMAGENTA;
@@ -1095,8 +1188,7 @@ void demoFlyingCubeSetup(void)
         // Initializing.
         // Cada cubo tem uma aceleração diferente.
         // Então, com o passar do tempo,
-        // cada cubo tera um incremento diferente
-        // na sua velocidade.
+        // cada cubo tera um incremento diferente na sua velocidade.
         cube->v = (float) count * 0.00001f;
         cube->t = (float) 1.0f;
         cube->a = (float) cube->v / cube->t;
@@ -1127,7 +1219,6 @@ void demoFlyingCubeSetup(void)
         //terrain->model_distance = (float) 0.0f;
 
         // 12 faces, 12 colors.
-
         terrain->colors[0] = GRCOLOR_DARKWHITE;
         terrain->colors[1] = GRCOLOR_DARKWHITE;
         terrain->colors[2] = GRCOLOR_DARKWHITE;
@@ -1140,6 +1231,7 @@ void demoFlyingCubeSetup(void)
         terrain->colors[9] = GRCOLOR_DARKWHITE;
         terrain->colors[10] = GRCOLOR_DARKWHITE;
         terrain->colors[11] = GRCOLOR_DARKWHITE;
+
 
         // z translation support.
         terrain->model_initial_distance = 

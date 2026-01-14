@@ -13,25 +13,25 @@ double __pow0000(double __x, double __y);
 
 // ==============================================================
 
-
+// Internal
 double __pow0000(double __x, double __y)
 {
     double RetValue = 0.0;
     asm volatile (
-        "fyl2x;"
-        "fld %%st;"
-        "frndint;"
-        "fsub %%st, %%st(1);"
-        "fxch;"
-        "fchs;"
-        "f2xm1;"
-        "fld1;"
-        "faddp;"
-        "fxch;"
-        "fld1;"
-        "fscale;"
-        "fstp %%st(1);"
-        "fmulp;" : "=t"(RetValue) : "0"(__x),"u"(__y) : "st(1)" );
+        "fyl2x \n"
+        "fld %%st \n"
+        "frndint \n"
+        "fsub %%st, %%st(1) \n"
+        "fxch \n"
+        "fchs \n"
+        "f2xm1 \n"
+        "fld1 \n"
+        "faddp \n"
+        "fxch \n"
+        "fld1 \n"
+        "fscale \n"
+        "fstp %%st(1) \n"
+        "fmulp \n" : "=t"(RetValue) : "0"(__x),"u"(__y) : "st(1)" );
 
     return (double) RetValue;
 }
@@ -117,7 +117,7 @@ float scan00_custom_read_float(const char **strPtr)
 }
 
 // Modified function: it now returns a pointer into the string after the newline.
-const char * scan00_scanline(const char *line_ptr, struct gr_vecF3D_d *return_v)
+const char * scan00_read_vector_from_line(const char *line_ptr, struct gr_vecF3D_d *return_v)
 {
     // 'ptr' will traverse the string.
     const char *ptr = line_ptr;

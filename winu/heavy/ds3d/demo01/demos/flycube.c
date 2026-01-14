@@ -1017,7 +1017,7 @@ void demoFlyingCubeSetup(void)
         do {
             if (Counter > 8)
                 break;
-            const char *temp = scan00_scanline(nextLine, &vertex);
+            const char *temp = scan00_read_vector_from_line(nextLine, &vertex);
             // Process (print) the current vertex.
             //printf("Parsed Vertex: x = %f, y = %f, z = %f\n",
                 //vertex.x, vertex.y, vertex.z);
