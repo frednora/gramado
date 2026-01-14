@@ -3711,13 +3711,18 @@ int terminal_init(unsigned short flags)
         exit(1);
     }
     Terminal.client_window_id = terminal_window;
+
+    // #debug
+    //gws_draw_rectangle(client_fd, main_window,
+        //0, 0, wWidth, wHeight,
+        //COLOR_WHITE, TRUE, 0);
+
     //#debug
     gws_refresh_window(client_fd, terminal_window);
 
-
     // #bugbug
-    // its not returning the right client area values.
-    // while(1){}
+    // Its not returning the right client area values.
+    //while(1){}
 
     Terminal._mode = 0;
 

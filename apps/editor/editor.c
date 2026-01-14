@@ -932,7 +932,7 @@ int editor_initialize(int argc, char *argv[])
         (int) gws_create_window (
                 client_fd,
                 WT_EDITBOX, 1, 1, bar1_string,
-                ab_l, ab_t, ab_w, ab_h,
+                ab_l, ab_t, ab_w, ab_h,  //0, 0, lWi.cr_width, lWi.cr_height,   
                 main_window, 
                 WS_CHILD, 
                 COLOR_WHITE, COLOR_WHITE );
@@ -943,7 +943,7 @@ int editor_initialize(int argc, char *argv[])
     }
 
     //gws_refresh_window(client_fd, addressbar_window);
-
+    //while(1){}
 
 // Text inside the address bar.
     if (addressbar_window > 0)

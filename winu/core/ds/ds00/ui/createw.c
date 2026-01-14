@@ -1152,7 +1152,9 @@ doCreateWindowFrame (
         // #important:
         // The border in an overlapped window will affect
         // the top position of the client area rectangle.
-        window->rcClient.top += window->Border.border_size;
+        //window->rcClient.top += window->Border.border_size;
+        window->rcClient.top    += window->Border.border_size;
+        window->rcClient.height -= window->Border.border_size;
 
         //
         // Title bar
@@ -1220,6 +1222,7 @@ doCreateWindowFrame (
             // Depois de pintarmos a titlebar,
             // temos que atualizar o top da área de cliente.
             window->rcClient.top += window->titlebar_height;
+            window->rcClient.height -= window->titlebar_height;
         }  //--use title bar.
         // ooooooooooooooooooooooooooooooooooooooooooooooo
 
@@ -1372,6 +1375,12 @@ void *doCreateWindow (
     unsigned int client_color,
     unsigned long rop_bg ) 
 {
+
+// #important
+// This function do not create a WT_OVERLAPPED window.
+// The caller builds this window creating the WT_SIMPLE window
+// and then converting it to WT_OVERLAPPED before creating the frame.
+
     register struct gws_window_d *window;
     struct gws_window_d *Parent;
 
@@ -1380,14 +1389,22 @@ void *doCreateWindow (
 // Colors
     unsigned int FrameColor;
     unsigned int ClientAreaColor;
-    if (type == WT_OVERLAPPED){
-        FrameColor = (unsigned int) get_color(csiWindow);
-        ClientAreaColor = (unsigned int) get_color(csiWindow);
-    }else{
-        FrameColor = (unsigned int) frame_color;
-        ClientAreaColor = (unsigned int) client_color;
-    };
 
+// #important
+// This function do not create a WT_OVERLAPPED window.
+// The caller builds this window creating the WT_SIMPLE window
+// and then converting it to WT_OVERLAPPED before creating the frame.
+
+    if (type == WT_OVERLAPPED)
+    {
+        printf ("doCreateWindow: [ERROR] This function do not create WT_OVERLAPPED windows\n");
+        //#debug
+        exit(0); 
+    }
+
+// Colors
+    FrameColor = (unsigned int) frame_color;
+    ClientAreaColor = (unsigned int) client_color;
 
     int isDarkTheme = FALSE;
     if ((void *) GWSCurrentColorScheme != NULL)
@@ -1472,17 +1489,6 @@ void *doCreateWindow (
     unsigned long WindowWidth  = (unsigned long) (width  & 0xFFFF);
     unsigned long WindowHeight = (unsigned long) (height & 0xFFFF);
 
-
-// Quick and dirty ajustment
-// We still needs to register the limits into the structure
-    if (type == WT_OVERLAPPED)
-    {
-        if (WindowWidth < METRICS_DEFAULT_MINIMUM_WINDOW_WIDTH)
-            WindowWidth = METRICS_DEFAULT_MINIMUM_WINDOW_WIDTH;
-        if (WindowHeight < METRICS_DEFAULT_MINIMUM_WINDOW_HEIGHT)
-            WindowHeight = METRICS_DEFAULT_MINIMUM_WINDOW_HEIGHT;
-    }
-
 // #todo: right and bottom.
 
 // Full ?
@@ -1512,10 +1518,9 @@ void *doCreateWindow (
 // #test: renaming
     unsigned int buttonBorder_tl2_color=0;  // tl2 inner
     unsigned int buttonBorder_tl1_color=0;  // tl1 most inner
-    unsigned int buttonBorder_br2_color=0;       // br2 inner
-    unsigned int buttonBorder_br1_color=0;   // br1 most inner
+    unsigned int buttonBorder_br2_color=0;  // br2 inner
+    unsigned int buttonBorder_br1_color=0;  // br1 most inner
     unsigned int buttonBorder_outer_color=0;  //Essa cor muda de acordo com o foco 
-
 
     //debug_print ("doCreateWindow:\n");
 
@@ -1525,21 +1530,6 @@ void *doCreateWindow (
 // #bugbug: Only 0 is considered solid?
 // No rop flags for now. It depends on the window style.
     int is_solid = TRUE;
-
-//---------------------------------------------------------
-// Position
-    /*
-    if (type == WT_OVERLAPPED)
-    {
-        if (WindowX > (deviceWidth/4)){
-            WindowX = (deviceWidth/8);
-        }
-        if (WindowY > (deviceHeight/4)){
-            WindowY = (deviceHeight/8);
-        }
-    }
-    */
-//---------------------------------------------------------
 
 //
 // style
@@ -1644,13 +1634,14 @@ void *doCreateWindow (
 	}
  */
 
-// Allocate and initialize base window object.
+// Allocate and initialize base window object
     window = (struct gws_window_d *) __create_window_object();
     if ((void*) window == NULL){
         return NULL;
     }
 
-// Window class. #test
+// #test
+// Window class
     window->window_class.ownerClass = gws_WindowOwnerClassNull;
     window->window_class.kernelClass = gws_KernelWindowClassNull;
     window->window_class.serverClass = gws_ServerWindowClassNull;
@@ -1676,7 +1667,6 @@ void *doCreateWindow (
 
     //if (style & (WS_DESKTOPICON | WS_BARICON | WS_TRAYICON | WS_BUTTONICON))
        //window->isIcon = TRUE;
-
 
 // State: runtime condition.
 // Tracks current behavior (minimized, maximized, fullscreen, etc).
@@ -1729,15 +1719,6 @@ void *doCreateWindow (
 // Overide the default configuration
 
     switch (window->type){
-    case WT_OVERLAPPED:
-        window->rop_shadow        = THEME_ROP_WINDOW_SHADOW;
-        window->rop_bg            = THEME_ROP_WINDOW_BACKGROUND;
-        window->rop_ornament      = THEME_ROP_WINDOW_ORNAMENT;
-        window->rop_top_border    = THEME_ROP_TOP_BORDER;
-        window->rop_left_border   = THEME_ROP_LETF_BORDER;
-        window->rop_right_border  = THEME_ROP_RIGHT_BORDER; 
-        window->rop_bottom_border = THEME_ROP_BOTTOM_BORDER;
-        break;
 
     case WT_BUTTON:
     case WT_ICON:
@@ -1799,7 +1780,6 @@ void *doCreateWindow (
         window->rop_bottom_border = THEME_ROP_BOTTOM_BORDER;
         break;
 
-
     default:
         break;
 }
@@ -1821,17 +1801,14 @@ void *doCreateWindow (
 
 // Is it used or not?
     window->borderUsed = FALSE;
-    // ## na verdade isse será trabalhado logo abaixo.
-    if (window->type == WT_OVERLAPPED){
-        window->borderUsed = TRUE;
-    }
+
     unsigned long __BorderSize = window->Border.border_size;
 
-// Title bar height.
-// #todo: use metrics.
+// == Title Bar =============================
+// Titlebar height.
     unsigned long __TBHeight = METRICS_TITLEBAR_DEFAULT_HEIGHT;
 
-// Event queue
+// == Event Queue =============================
     register int e=0;
     static int Max=32;
     for (e=0; e<Max; e++)
@@ -1887,11 +1864,10 @@ void *doCreateWindow (
     window->mpp.bg_color = 
         (unsigned int) (COLOR_BEIGE + rand());
 
-// ===================================
-
-// Id
+// == wid =================================
 // We will get an id when we register the window.
 // #bugbug: So, we can't use the id in this routine yet.
+
     window->id = -1;
 
 // ===================================
@@ -1953,43 +1929,6 @@ void *doCreateWindow (
     //window->wProcedure = NULL;  //Estrutura.
 
 //
-// == Status ============================
-//
-
-// Qual é o status da janela, se ela é a janela ativa ou não.
-// ?? Devemos definir quais são os status possíveis da janela.
-
-//
-// Window status - (Not a button)
-// 
-
-    if (window->type == WT_OVERLAPPED)
-    {
-        // Active 
-        if (window->status == WINDOW_STATUS_ACTIVE)
-        { 
-            set_active_window(window); 
-            //window->active = WINDOW_STATUS_ACTIVE;
-            //window->status = (unsigned long) WINDOW_STATUS_ACTIVE;
-            window->relationship_status = 
-                (unsigned long) WINDOW_REALATIONSHIPSTATUS_FOREGROUND; 
-            //#todo
-            //window->z = 0;  //z_order_get_free_slot()
-           //...
-        }
-        // Inactive
-        if (window->status == WINDOW_STATUS_INACTIVE)
-        { 
-            //window->active = WINDOW_STATUS_INACTIVE;
-            window->relationship_status = 
-                (unsigned long) WINDOW_REALATIONSHIPSTATUS_BACKGROUND;
-            //todo
-            //window->z = 0; //z_order_get_free_slot()
-            //...
-        }
-    }
-
-//
 // == Margins and dimensions ======================
 //
 
@@ -2028,7 +1967,6 @@ void *doCreateWindow (
 // =================================
 // Window area
 
-
    // Relative to the window values
     window->rcWindow.left   = (unsigned long) 0;
     window->rcWindow.top    = (unsigned long) 0;
@@ -2044,23 +1982,15 @@ void *doCreateWindow (
     unsigned int pad_right  = METRICS_CLIENTAREA_RIGHTPAD;
     unsigned int pad_bottom = METRICS_CLIENTAREA_BOTTOMPAD;
 
-    // tmporary
+    // Temporary
+    // >> Relative values <<
     struct gws_rect_d  crTmp;
-
-// >> Relative values <<
 
 // Left
     crTmp.left = (unsigned long) (__BorderSize + pad_left);
 
 // Top
-    //crTmp.top  = (unsigned long) 0;
-    if (window->type == WT_OVERLAPPED){
-        crTmp.top  = (unsigned long) (__TBHeight + (__BorderSize + pad_top));
-    } else {
-        crTmp.top  = (unsigned long) (__BorderSize + pad_top);
-        //or
-        //crTmp.top  = (unsigned long) 0;
-    }
+    crTmp.top  = (unsigned long) (__BorderSize + pad_top);
 
 // Width for the client area
     crTmp.width = 
@@ -2071,15 +2001,7 @@ void *doCreateWindow (
         );
 
 // Height for the client area
-
-    unsigned long tbheight;
-    if (window->type == WT_OVERLAPPED){
-        tbheight = __TBHeight;
-        window->titlebar_height = __TBHeight;
-    } else {
-        tbheight = 0;
-    }
-
+    unsigned long tbheight = 0;
     crTmp.height = 
         (unsigned long) ( 
             window->height - 
@@ -2105,18 +2027,6 @@ void *doCreateWindow (
     window->rcClient.top    = (unsigned long) crTmp.top;
     window->rcClient.width  = (unsigned long) crTmp.width;
     window->rcClient.height = (unsigned long) crTmp.height;
-
-    /*
-    if (window->type == WT_OVERLAPPED)
-    {
-        printf ("Client area: %d %d %d %d \n",
-        window->rcClient.left,
-        window->rcClient.top,
-        window->rcClient.width,
-        window->rcClient.height );
-        while(1){}
-    }
-    */
 
 // =================================
 //++
@@ -2439,31 +2349,6 @@ void *doCreateWindow (
         window->background_style = 0;
         break;
 
-    // Overlapped. (completa, para aplicativos).
-    // Sombra, bg, título + borda, cliente area ...
-    // #obs: Teremos recursividade para desenhar outras partes.
-    // + Sempre tem barra de títulos.
-    // + Sempre tem borda.
-    case WT_OVERLAPPED:
-        window->ip_device = IP_DEVICE_NULL;
-        window->frame.used = TRUE;
-        // Internal flag.
-        Shadow         = TRUE;
-        Background     = TRUE;
-        ClientArea     = TRUE;
-        MinimizeButton = TRUE;  //Depends on the style.
-        MaximizeButton = TRUE;  //Depends on the style.
-        CloseButton    = TRUE;  //Depends on the style.
-        // Always.
-        window->shadowUsed     = TRUE;
-        window->backgroundUsed = TRUE;
-        window->titlebarUsed   = TRUE;
-        window->controlsUsed   = TRUE;
-        window->borderUsed     = TRUE;
-        window->clientareaUsed = TRUE;
-        window->background_style = 0;
-        break;
-
     // Popup. (um tipo de overlapped mais simples).
     case WT_POPUP:
         window->ip_device = IP_DEVICE_NULL;
@@ -2568,7 +2453,6 @@ void *doCreateWindow (
 // de pintura ter acesso ao buffer dedicado.
 
     //if(DedicatedBuffer == 1){};
-
 
 // Se o view for igual NULL talvez signifique não pintar.
 // The window state: minimized, maximized.
@@ -2678,34 +2562,7 @@ void *doCreateWindow (
     // #todo: Use color scheme
     if (Shadow == TRUE)
     {
-        window->shadowUsed = TRUE;
-
-        // Overlapped window
-        if ((unsigned long) type == WT_OVERLAPPED)
-        {
-            if (window == keyboard_owner){
-                __tmp_color = xCOLOR_GRAY1;
-                //__tmp_color = (unsigned int) get_color(csiActiveWindowBorder);
-            } else if (window != keyboard_owner){
-                __tmp_color = xCOLOR_GRAY2;
-                //__tmp_color = (unsigned int) get_color(csiInactiveWindowBorder);
-            }
-            // Saving shadow color value
-            window->shadow_color = (unsigned int) __tmp_color;
-    
-            // Draw rectangle for the shadow for WT_OVERLAPPED.
-            // #todo: What is the width for the shadow? 
-            // Create variable for this additional area.
-
-            painterFillWindowRectangle( 
-                (window->absolute_x +1), 
-                (window->absolute_y +1), 
-                (window->width  +1 +1),   // #todo 
-                (window->height +1 +1),   // #todo 
-                __tmp_color, 
-                window->rop_shadow );
-        }
-        
+        window->shadowUsed = TRUE;        
         // #todo
         // Draw shadow for the other types.
     }
@@ -2726,9 +2583,9 @@ void *doCreateWindow (
 
         // Select background color for the given type
         switch (type){
+
             case WT_SIMPLE:
             case WT_TITLEBAR:
-            case WT_OVERLAPPED:
             case WT_POPUP:
             case WT_EDITBOX:
             case WT_EDITBOX_MULTIPLE_LINES:
@@ -3164,6 +3021,9 @@ void *CreateWindow (
 
 // ====
 // 3 - Overlapped
+// Lifecycle: Application windows start as WT_SIMPLE in CreateWindow,
+// then converted to WT_OVERLAPPED before frame creation.
+
     if (type == WT_OVERLAPPED)
     {
         //server_debug_print ("CreateWindow: WT_OVERLAPPED\n");

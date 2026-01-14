@@ -1556,6 +1556,7 @@ int serviceCreateWindow(int client_fd)
 // The client socket id
     Window->client_fd = (int) client_fd;
 
+// #bugbug: Why?
 // Focus if editbox
     if (Window->type == WT_EDITBOX || 
         Window->type == WT_EDITBOX_MULTIPLE_LINES)

@@ -1770,13 +1770,13 @@ rectBackbufferDrawRectangleInsideWindow (
 
     // Horizontal
     unsigned long available_w = 
-        (window->absolute_x + window->rcClient.width) - abs_left;
+        (window->absolute_x + window->rcClient.left + window->rcClient.width) - abs_left;
     if (width > available_w)
         width = available_w;
 
     // Vertical
     unsigned long available_h = 
-        (window->absolute_y + window->rcClient.height) - abs_top;
+        (window->absolute_y + window->rcClient.top + window->rcClient.height) - abs_top;
     if (height > available_h)
         height = available_h;
 
