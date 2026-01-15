@@ -2,6 +2,12 @@
 // Some other routines for windows.
 // Created by Fred Nora.
 
+// #todo:
+// Event coalescing: Merge multiple paint requests into one, so you don’t 
+// flood queues with redundant redraws.
+
+// #todo 
+// Create a request to get multiple events from the event queue in a single call.
 
 #include "../ds.h"
 
