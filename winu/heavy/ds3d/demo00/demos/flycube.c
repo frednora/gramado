@@ -155,28 +155,6 @@ static void __drawTerrain(struct cube_model_d *cube, float fElapsedTime)
     sequence[33] = (int) 7; sequence[34] = (int) 3; sequence[35] = (int) 5; //f 7 3 5 // west top      s 
 */
 
-/*
-// The seqeunce values.
-// These are the 12 faces in order.
-     int seq[36] = { 
-        1,2,4, 1,4,3, // north 
-        3,4,6, 3,6,5, // top 
-        5,6,8, 5,8,7, // south 
-        7,8,2, 7,2,1, // bottom 
-        2,8,6, 2,6,4, // east 
-        7,1,3, 7,3,5  // west 
-        };
-*/
-
-/*
-    int seq_i=0;
-    int seq_max = 12 * 3;
-    for (seq_i = 0; seq_i < seq_max; seq_i++) 
-    { 
-        cube->sequence[seq_i] = seq[seq_i]; 
-    };
-*/
-
 
 // ---------
 // #test
@@ -374,23 +352,25 @@ static void __drawTerrain(struct cube_model_d *cube, float fElapsedTime)
         // uma rotina 2D de rasterização.
         // Isso será feito pela rotina de contrução de triangulos.
         int fFillTriangle = TRUE;
-        if ( (void*) __root_window != NULL )
+
+        // The 'image space'.
+        // Our image space is not 1:1:1
+        // It's something like 2:2:1000
+        // No z normalization
+        // #bugbug
+        // We have a scale factor do x and y.
+        // But we do not have a scale factor for z.
+        // So, z can be any vallur between 0.01f and 1000.0f.
+
+        if (cull == FALSE)
         {
-            if (cull == FALSE)
+            if ((void*) __root_window != NULL)
             {
-                // The 'image space'.
-                // Our image space is not 1:1:1
-                // It's something like 2:2:1000
-                // No z normalization
-                // #bugbug
-                // We have a scale factor do x and y.
-                // But we do not have a scale factor for z.
-                // So, z can be any vallur between 0.01f and 1000.0f.
                 plotTriangleF(
                     (struct gws_window_d *) __root_window, 
                     (struct gr_triangleF3D_d *) &triRotatedXYZ,
                     fFillTriangle,
-                    0 ); 
+                    0 );
             }
         }
     };
@@ -531,27 +511,6 @@ static void __drawFlyingCube(struct cube_model_d *cube, float vel)
     sequence[33] = (int) 7; sequence[34] = (int) 3; sequence[35] = (int) 5;  //f 7 3 5 // west top      s 
 */
 
-/*
-// The seqeunce values.
-// These are the 12 faces in order.
-     int seq[36] = { 
-        1,2,4, 1,4,3, // north 
-        3,4,6, 3,6,5, // top 
-        5,6,8, 5,8,7, // south 
-        7,8,2, 7,2,1, // bottom 
-        2,8,6, 2,6,4, // east 
-        7,1,3, 7,3,5  // west 
-        };
-*/
-
-/*
-    int seq_i=0;
-    int seq_max = 12 * 3;
-    for (seq_i = 0; seq_i < seq_max; seq_i++) 
-    { 
-        cube->sequence[seq_i] = seq[seq_i]; 
-    };
-*/
 
 // ---------
 // #test
@@ -838,13 +797,16 @@ static void __drawFlyingCube(struct cube_model_d *cube, float vel)
             // So, z can be any vallur between 0.01f and 1000.0f.
             // #todo
             // Maybe this function can accept more parameters.
-            if ( (void*) __root_window != NULL )
+            if ((void*) __root_window != NULL)
             {
+
+
                 plotTriangleF(
                     (struct gws_window_d *) __root_window, 
                     (struct gr_triangleF3D_d *) &triRotatedXYZ,
                     fFillTriangle,
                     0 );
+
             }
         }
 
@@ -1015,14 +977,6 @@ void demoFlyingCubeSetup(void)
 
     int seq_i=0;
     int seq_max = 12 * 3;
-
-/*
-    for (seq_i = 0; seq_i < seq_max; seq_i++) 
-    { 
-        cube->sequence[seq_i] = seq[seq_i]; 
-    };
-*/
-
 
 
 /*
