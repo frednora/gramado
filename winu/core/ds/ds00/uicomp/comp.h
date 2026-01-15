@@ -126,7 +126,8 @@ long comp_get_mouse_x_position(void);
 long comp_get_mouse_y_position(void);
 void comp_set_mouse_position(long x, long y);
 void comp_initialize_mouse(void);
-void mouse_at(void);
+
+struct gws_window_d *mouse_at(void);
 
 // Sinaliza que precisamos apagar o ponteiro do mouse,
 // copiando o conteudo do backbuffer no LFB.

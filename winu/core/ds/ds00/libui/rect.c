@@ -55,6 +55,122 @@ __refresh_rectangle0 (
 
 // ====================
 
+
+// #todo
+// Do not check the validation.
+// We need a prefix that tell us that 
+// we will no check the validation os the addresses
+
+static void *__rect_memcpy32 ( 
+    void *v_dst, 
+    const void *v_src, 
+    unsigned long c )
+{
+
+// Copiaremos 32bit por vez.
+    unsigned int *src = (unsigned int *) v_src;
+    unsigned int *dst = (unsigned int *) v_dst;
+    register unsigned long Copy = c;
+    //const char *src = v_src;
+    //char *dst = v_dst;
+
+// Simple, byte oriented memcpy.
+    while (Copy--){
+        *dst++ = *src++;
+    };
+
+    return (void *) v_dst;
+}
+
+//
+// Core Rectangle Object
+//
+
+
+// Create a rectangle object
+struct gws_rect_d *rectangleObject(void)
+{
+    struct gws_rect_d *rect;
+
+    rect = (struct gws_rect_d *) malloc( sizeof(struct gws_rect_d) );
+    if ((void*) rect == NULL){
+        return NULL;
+    }
+    memset( rect, 0, sizeof(struct gws_rect_d) );
+
+// paranoia
+
+    rect->used = TRUE;
+    rect->magic = 1234;
+
+    rect->window = NULL;
+
+    rect->left = 0;
+    rect->top = 0;
+    rect->width = 0;
+    rect->height = 0;
+
+    rect->bg_color = COLOR_BLACK;
+    rect->is_filled = TRUE;
+    rect->rop = 0;
+
+    rect->dirty = FALSE;
+    rect->next = NULL;
+
+    return (struct gws_rect_d *) rect;
+}
+
+int
+set_rect ( 
+    struct gws_rect_d *rect, 
+    unsigned long left, 
+    unsigned long top,
+    unsigned long width,
+    unsigned long height )
+{
+    if ((void *) rect == NULL){
+        return FALSE;
+    }
+    rect->left = left;
+    rect->top = top;
+    rect->width = width;
+    rect->height = height;
+    return TRUE;
+}
+
+void rect_set_left ( struct gws_rect_d *rect,  unsigned long value )
+{
+    if ((void *) rect == NULL){
+        return;
+    }
+    rect->left = value;
+}
+
+void rect_set_top ( struct gws_rect_d *rect, unsigned long value )
+{
+    if ((void *) rect == NULL){
+        return;
+    }
+    rect->top = value;
+}
+
+void rect_set_width ( struct gws_rect_d *rect, unsigned long value )
+{
+    if ((void *) rect == NULL){
+        return;
+    }
+    rect->width = value;
+}
+
+void rect_set_height ( struct gws_rect_d *rect, unsigned long value )
+{
+    if ((void *) rect == NULL){
+        return;
+    }
+    rect->height = value;
+}
+
+
 /*
 void invalidate_rectangle( struct gws_rect_d *rect );
 void invalidate_rectangle( struct gws_rect_d *rect )
@@ -110,28 +226,10 @@ static inline int rect_intersect(const struct gws_rect_d *r1, const struct gws_r
 }
 */
 
-int
-set_rect ( 
-    struct gws_rect_d *rect, 
-    unsigned long left, 
-    unsigned long top,
-    unsigned long width,
-    unsigned long height )
-{
-    if ((void *) rect == NULL){
-        return FALSE;
-    }
 
-// ?? relative
-    rect->left = left;
-    rect->top = top;
-    rect->width = width;
-    rect->height = height;
-    // #text
-    // rect->is_empty = TRUE;
-
-    return TRUE;
-}
+//
+// Geometry Manipulation
+//
 
 // See: window.h
 void 
@@ -216,6 +314,12 @@ copy_offset_rect (
     rectDest->height = rectSrc->height += cy;
 }
 
+
+//
+// Validation helpers
+//
+
+
 // ??
 // #todo: Comment what is happening here.
 // Checando alguma falha nos valores.
@@ -267,15 +371,15 @@ int is_rect_null(struct gws_rect_d *rect)
     return FALSE;
 }
 
-int is_rect_empty(struct gws_rect_d *rect)
+int is_rect_filled(struct gws_rect_d *rect)
 {
     if ((void*) rect == NULL){
         return (int) -1;
     }
-    if (rect->is_empty == TRUE){
+    if (rect->is_filled == TRUE){
         return (int) TRUE;
     }
-    rect->is_empty = FALSE;
+    rect->is_filled = FALSE;
 
     return FALSE;
 }
@@ -296,6 +400,10 @@ int is_rect_dirty(struct gws_rect_d *rect)
     //false
     return FALSE;
 }
+
+//
+// Containment and Intersection
+//
 
 int 
 rect_contains_vertically ( 
@@ -341,77 +449,6 @@ rect_contains_horizontally (
     return FALSE;
 }
 
-void 
-rect_set_left ( 
-    struct gws_rect_d *rect, 
-    unsigned long value )
-{
-    if ((void *) rect == NULL){
-        return;
-    }
-    rect->left = value;
-}
-
-void 
-rect_set_top ( 
-    struct gws_rect_d *rect, 
-    unsigned long value )
-{
-    if ((void *) rect == NULL){
-        return;
-    }
-    rect->top = value;
-}
-
-// #deprecated
-void 
-rect_set_right ( 
-    struct gws_rect_d *rect, 
-    unsigned long value )
-{
-    if ((void *) rect == NULL){
-        return;
-    }
-    printf ("rect_set_right: #deprecated\n");
-}
-
-// #deprecated
-void 
-rect_set_bottom ( 
-    struct gws_rect_d *rect, 
-    unsigned long value )
-{
-    if ((void *) rect == NULL){
-        return;
-    }
-    printf ("rect_set_bottom: #deprecated\n");
-}
-
-// #todo
-// Do not check the validation.
-// We need a prefix that tell us that 
-// we will no check the validation os the addresses
-
-static void *__rect_memcpy32 ( 
-    void *v_dst, 
-    const void *v_src, 
-    unsigned long c )
-{
-
-// Copiaremos 32bit por vez.
-    unsigned int *src = (unsigned int *) v_src;
-    unsigned int *dst = (unsigned int *) v_dst;
-    register unsigned long Copy = c;
-    //const char *src = v_src;
-    //char *dst = v_dst;
-
-// Simple, byte oriented memcpy.
-    while (Copy--){
-        *dst++ = *src++;
-    };
-
-    return (void *) v_dst;
-}
 
 // Flush the rectangle into the framebuffer.
 // Here we are flushing the content of a given
@@ -1562,9 +1599,9 @@ rectBackbufferDrawRectangle0 (
 
 // Empty
     if (fill == TRUE){
-        rect.is_empty = FALSE;
+        rect.is_filled = FALSE;
     } else if (fill == FALSE){
-        rect.is_empty = TRUE;
+        rect.is_filled = TRUE;
     };
 
 /*
@@ -1724,7 +1761,10 @@ rectBackbufferDrawRectangle (
 }
 
 // Worker
-void 
+// Called by serviceDrawRectangle() in main.c
+// Draw a rectangle inside a window's client area.
+// It doesn't create a rectangle object. Just draw it. (No structure)
+void
 rectBackbufferDrawRectangleInsideWindow (
     int wid, 
     unsigned long x, 
@@ -1835,7 +1875,7 @@ int update_rectangle(struct gws_rect_d *rect)
 
     Color = (unsigned int) (rect->bg_color & 0xFFFFFFFF); 
     rop = (unsigned long) rect->rop;
-    fill = TRUE; // rect->is_empty;
+    fill = TRUE; // rect->is_filled;
 
 
 // Paint it into the backbuffer. (No return value)

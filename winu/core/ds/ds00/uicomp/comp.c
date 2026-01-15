@@ -451,11 +451,11 @@ void DoWeNeedToEraseMousePointer(int value)
 // Compare the global variables for mouse pointer 
 // against the windows dimensions to find the perfect match.
 // mouse_hover is the pointer for the window with the mouse pointer.
-void mouse_at(void)
-{
 // Compare the mouse position (__new_mouse_x and__new_mouse_y)
 // against the windows. 
 
+struct gws_window_d *mouse_at(void)
+{
     struct gws_window_d *new_hover_window;
     register int i=0;
 
@@ -471,14 +471,15 @@ void mouse_at(void)
             if ( __new_mouse_x > mouse_hover->absolute_x &&
                  __new_mouse_x < mouse_hover->absolute_right &&
                  __new_mouse_y > mouse_hover->absolute_y &&
-                 __new_mouse_y > mouse_hover->absolute_bottom )
+                 __new_mouse_y < mouse_hover->absolute_bottom )
             {
                 // Not the root
                 if (mouse_hover != __root_window)
                 {
                     //mouse_hover = (void *) w;
                     //redraw_window(w,TRUE);
-                    return;
+
+                    return (struct gws_window_d *) mouse_hover;
                 }
             }
         }
@@ -504,18 +505,21 @@ void mouse_at(void)
                 if ( __new_mouse_x > new_hover_window->absolute_x &&
                      __new_mouse_x < new_hover_window->absolute_right &&
                      __new_mouse_y > new_hover_window->absolute_y &&
-                     __new_mouse_y > new_hover_window->absolute_bottom )
+                     __new_mouse_y < new_hover_window->absolute_bottom )
                 {
                     // Not the root. So accept this hover window.
                     if (new_hover_window != __root_window)
                     {
                         mouse_hover = (void *) new_hover_window;
-                        return;
+
+                        return (struct gws_window_d *) mouse_hover;
                     }
                 }
             }
         }
     };
+
+    return NULL;  // No hit
 }
 
 long comp_get_mouse_x_position(void)

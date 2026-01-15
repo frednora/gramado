@@ -2119,6 +2119,7 @@ fail:
 // - Color/fill/rop are passed directly to rectBackbufferDrawRectangle().
 // ======================================================
 
+// It is a drawer only, not a rectangle object creator.
 int serviceDrawRectangle(void)
 {
     unsigned long *message_address = (unsigned long *) &__buffer[0];
