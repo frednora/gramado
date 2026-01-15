@@ -73,6 +73,7 @@ unsigned char context_fpu_buffer[512];
 void save_current_context (void)
 {
     struct thread_d  *t;
+    register int i=0;
 
     // Context
     unsigned long *contextss  = (unsigned long *) &contextSS;
@@ -168,11 +169,9 @@ void save_current_context (void)
 // Save fpu stuff.
 // #ps 
 // Byte by byte. We can do that in a better way.
-    register int i=0;
     for (i=0; i<512; i++){
         t->context.fpu_buffer[i] = (unsigned char) context_fpu_buffer[i];
     };
-
 
 // 
 // -- cpl --------
@@ -198,7 +197,7 @@ void save_current_context (void)
 // Ja temos o valor do current process nesse momento?
     //pid_t current_process = (pid_t) get_current_process();
     
-    if( cpl != 0 && cpl != 1 && cpl != 2 && cpl != 3 )
+    if ( cpl != 0 && cpl != 1 && cpl != 2 && cpl != 3 )
     {
         panic("save_current_context: cpl\n");
     }
@@ -232,8 +231,8 @@ void save_current_context (void)
 // Vamos analisar o que acabamos de capturar e
 // configurar seu destino daqui pra frente.
 
-//done:
     return;
+
 fail1:
     show_process_information();
 fail0:
@@ -256,6 +255,7 @@ fail0:
 void restore_current_context (void)
 {
     struct thread_d  *t;
+    register int i=0;
 
     // Context
     unsigned long *contextss  = (unsigned long *) &contextSS;
@@ -339,7 +339,6 @@ void restore_current_context (void)
 // Restore
 // #ps 
 // Byte by byte. We can do that in a better way.
-    register int i=0;
     for (i=0; i<512; i++){
         context_fpu_buffer[i] = (unsigned char) t->context.fpu_buffer[i];
     };
@@ -355,11 +354,10 @@ void restore_current_context (void)
 
 // Restore CR3 and flush TLB.
     load_pml4_table((unsigned long) t->pml4_PA);
-// #bugbug: rever isso.
     asm ("movq %cr3, %rax");
     asm ("movq %rax, %cr3");
-//done:
     return;
+
 fail1:
     show_process_information(); 
 fail0:
@@ -373,42 +371,37 @@ int contextCheckThreadRing3Context(int tid)
 {
     struct thread_d  *t;
 
-    if ( tid < 0 || tid >= THREAD_COUNT_MAX ){
+    if (tid < 0 || tid >= THREAD_COUNT_MAX){
         return FALSE;
     }
     t = (void *) threadList[tid]; 
     if ((void *) t == NULL){
         return FALSE;
     }
-    if ( t->used != TRUE || t->magic != 1234 ){
+    if (t->used != TRUE || t->magic != 1234){
         debug_print("contextCheckThreadRing3Context: validation\n");
         return FALSE;
     }
 
-//
-// cpl
-//
-
-    if (t->cpl != RING3)
+    // cpl
+    if (t->cpl != RING3){
         panic("contextCheckThreadRing3Context: cpl\n");
+    }
 
-//
 // iopl
-//
-
 // For now we only accept ring 3 threads with weak protection
 
     if (t->rflags_initial_iopl != 3){
         debug_print("contextCheckThreadRing3Context: rflags_initial_iopl\n");
         return FALSE;
     }
-
     if (t->rflags_current_iopl != 3){
         debug_print("contextCheckThreadRing3Context: rflags_current_iopl\n");
         return FALSE;
     }
 
-// Segment
+// code segment
+// #todo: use some defined value.
     if (t->context.cs != 0x1B) {
         debug_print("contextCheckThreadRing3Context: segments fail\n");
         return FALSE; 

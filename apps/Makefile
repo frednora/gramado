@@ -1,58 +1,40 @@
 # shell01
 # Client-side GUI applications.
+# Desktop environment.
 
 all:
-# Order of importance
 
-# 1
-# API: 
-# Libraries and toolkits.
+# 1 - Libraries
 	make -C api/
 
-# 2
-# Taskbar
-# "The explorer": desktop, taskbar, launcher, filemanager ...
-# For now it is only a taskbar.
-	make -C taskbar/
-
-# 3
-# Output entity for subsystems
+# 2 - DE core applications.
+	make -C  taskbar/
+	make -C  gdm/
 	make -C  term00/
 
-# 4
-# Normal programs.
-	make -C client/
-	make -C cmdline/
-	make -C doc/
-	make -C editor/
+# 2 - DE Utilities
+	make -C  doc/
+	make -C  editor/
+	make -C  memory/
+	make -C  power/
+	make -C  setup/
+	make -C  sysinfo/
 
-# 5
-
-
-# 6
-
-# Apps created by Copilot
-	make -C gwtest/
-	make -C launch/
-	make -C menuapp/
-	make -C power/
-	make -C memory/
-	make -C dbox/
-	make -C mbox/
-	make -C sysinfo/
-	make -C bmenu/
-	make -C calc00/
-	make -C draw/
-
-
-# Gramado Desktop Manager
-	make -C gdm/
-
-# Setup program to install the o.s.
-	make -C setup/
+# 3 - Experiments
+	make -C  bmenu/
+	make -C  calc00/
+	make -C  client/
+	make -C  cmdline/
+	make -C  dbox/
+	make -C  draw/
+	make -C  gwtest/
+	make -C  launch/
+	make -C  mbox/
+	make -C  menuapp/
 
 clean:
 	-rm bin/*.BIN
+
 clean-all:
 	#-rm -f api/libs/libcpp/obj/*.o
 	-rm -f api/libs/libdisp/obj/*.o

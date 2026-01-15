@@ -75,10 +75,17 @@ static int f1=FALSE;
 static int f2=FALSE;
 static int f3=FALSE;
 static int f4=FALSE;
-static int fLaunchDM=FALSE;  // Launch the default display manager.
-static int fLaunchTB=FALSE;  // Launch the default taskbar application.
-//static int fLaunchTerminal=FALSE;  // Launch the default terminal.
+static int fLaunchTerminal=FALSE;  // Launch the default terminal.
+static int fLaunchDM=FALSE;        // Launch the default display manager.
+static int fLaunchTB=FALSE;        // Launch the default taskbar application.
 //...
+
+#define FIRST_CLIENT_NULL               0     // No client
+#define FIRST_CLIENT_TERMINAL           1000  // Launch terminal
+#define FIRST_CLIENT_DISPLAY_MANAGER    1001  // Launch Gramado Display Manager
+#define FIRST_CLIENT_TASKBAR            1002  // Launch Taskbar
+static int first_client_id = FIRST_CLIENT_NULL;
+
 
 // -------------------------------------
 // Default values given by the main() routine.
@@ -212,7 +219,7 @@ static void __initialize_kernel_module(void);
 static int ServerInitialization(void);
 
 // Game loop
-static int ServerLoop(int launch_tb);
+static int ServerLoop(int client_index);
 
 //
 // == Functions ======================================================
@@ -4169,9 +4176,9 @@ fail:
  *       It depends on the type of message found in the socket we readed.
  */
 // IN:
-// dm = Launch the default Display Manager.
+// client_index
 // ...
-static int ServerLoop(int launch_tb)
+static int ServerLoop(int client_index)
 {
 
 //==================
@@ -4301,17 +4308,31 @@ static int ServerLoop(int launch_tb)
 // ainda nao esta lidando bem com a inicializaçao de aplicaçoes
 // com muitas janelas filhas.
 
-    int tb_status = -1;
-    if (launch_tb == TRUE)
+    int LaunchStatus = -1;
+
+    if (server_mode == SERVER_MODE_SERVER)
     {
-        if (server_mode == SERVER_MODE_SERVER)
-        {
-            //printf("ds00: trying to launch taskbar: %s\n", app_taskbar);
-            tb_status = (int) rtl_clone_and_execute(app_taskbar);
-            //printf("ds00: rtl_clone_and_execute(taskbar) returned %d\n", tb_status);
-            //while(1){}
-        }
+        switch (client_index){
+        
+        case FIRST_CLIENT_TERMINAL:
+            //LaunchStatus = (int) rtl_clone_and_execute(app_terminal);
+            break;
+
+        case FIRST_CLIENT_DISPLAY_MANAGER:
+            //LaunchStatus = (int) rtl_clone_and_execute(app_taskbar);
+            break;
+
+        case FIRST_CLIENT_TASKBAR:
+            LaunchStatus = (int) rtl_clone_and_execute(app_taskbar);
+            break;
+
+        case FIRST_CLIENT_NULL:
+        default:
+            LaunchStatus = (int) rtl_clone_and_execute(app_taskbar);
+            break;
+        };
     }
+
 // ------------------------------------
 
 //
@@ -4584,20 +4605,25 @@ int main (int argc, char **argv)
             if ( strncmp( argv[i], "-4", 2 ) == 0 )
                 f4=TRUE;
 
-            // Launches the default Display Manager.
-            //if ( strncmp( argv[i], "--dm", 4 ) == 0 ){
-            //    fLaunchDM=TRUE;
-            //}
-            // Launches the default taskbar.
+
+            // What is the first client to be launched?
+
+            // Launches the default Terminal
+            if ( strncmp( argv[i], "--term", 4 ) == 0 ){
+                fLaunchTerminal=TRUE;
+            }
+
+            // Launches the default Display Manager
+            if ( strncmp( argv[i], "--dm", 4 ) == 0 ){
+                fLaunchDM=TRUE;
+            }
+
+            // Launches the default taskbar
             if ( strncmp( argv[i], "--tb", 4 ) == 0 ){
                 fLaunchTB=TRUE;
             }
 
-            // #todo
-            // Launches the default Terminal.
-            //if ( strncmp( argv[i], "--term", 4 ) == 0 ){
-            //    fLaunchTerminal=TRUE;
-            //}
+            // ...
         };
     }
 
@@ -4618,6 +4644,24 @@ int main (int argc, char **argv)
     printf("Breakpoint\n");
     exit(0);
 */
+
+
+// Decide the first client to be launched.
+// Selecting the last active option.
+// it follows the order of priority.
+    first_client_id = FIRST_CLIENT_NULL;  // default
+    // Taskbar
+    if (fLaunchTB == TRUE){
+        first_client_id = FIRST_CLIENT_TASKBAR;
+    }
+    // Display manager
+    if (fLaunchDM == TRUE){
+        first_client_id = FIRST_CLIENT_DISPLAY_MANAGER;
+    }
+    // Terminal
+    if (fLaunchTerminal == TRUE){
+        first_client_id = FIRST_CLIENT_TERMINAL;
+    }
 
 
 // Callback support.
@@ -4685,7 +4729,7 @@ int main (int argc, char **argv)
     };
 */
 
-    Status = (int) ServerLoop(fLaunchTB);
+    Status = (int) ServerLoop( first_client_id );
     if (Status != 0){
         goto fail;
     }

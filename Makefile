@@ -253,31 +253,35 @@ build-extras:
 #@-cp $(L4_CMDS)/bin/N11.BIN        $(BASE)/GRAMADO/
 #@-cp $(L4_CMDS)/bin/UDPTEST.BIN  $(BASE)/GRAMADO/
 
-	@-cp $(L3_APPS)/bin/TASKBAR.BIN    $(BASE)/DE
+# These need the '#' prefix.
 
-	@-cp $(L3_APPS)/bin/TERM00.BIN     $(BASE)/DE
+# DE core applications.
+	@-cp $(L3_APPS)/bin/TASKBAR.BIN  $(BASE)/DE/
+	@-cp $(L3_APPS)/bin/GDM.BIN      $(BASE)/DE/
+	@-cp $(L3_APPS)/bin/TERM00.BIN   $(BASE)/DE/
 
-# by Copilot
-	@-cp $(L3_APPS)/bin/GWTEST.BIN   $(BASE)/DE
-	@-cp $(L3_APPS)/bin/LAUNCH.BIN   $(BASE)/DE
-	@-cp $(L3_APPS)/bin/MENUAPP.BIN  $(BASE)/DE
-	@-cp $(L3_APPS)/bin/POWER.BIN    $(BASE)/DE
-	@-cp $(L3_APPS)/bin/MEMORY.BIN   $(BASE)/DE
-	@-cp $(L3_APPS)/bin/DBOX.BIN     $(BASE)/DE
-	@-cp $(L3_APPS)/bin/MBOX.BIN     $(BASE)/DE
-	@-cp $(L3_APPS)/bin/SYSINFO.BIN  $(BASE)/DE
-	@-cp $(L3_APPS)/bin/BMENU.BIN    $(BASE)/DE
-	@-cp $(L3_APPS)/bin/CALC00.BIN   $(BASE)/DE
-	@-cp $(L3_APPS)/bin/DRAW.BIN     $(BASE)/DE
-
-
-    # Experimental applications
-    # These need the '#' prefix.
+# DE Utilities.
 	@-cp $(L3_APPS)/bin/DOC.BIN      $(BASE)/DE/
 	@-cp $(L3_APPS)/bin/EDITOR.BIN   $(BASE)/DE/
-	@-cp $(L3_APPS)/bin/GDM.BIN      $(BASE)/DE/
+	@-cp $(L3_APPS)/bin/MEMORY.BIN   $(BASE)/DE/
+	@-cp $(L3_APPS)/bin/POWER.BIN    $(BASE)/DE/
 	@-cp $(L3_APPS)/bin/SETUP.BIN    $(BASE)/DE/
+	@-cp $(L3_APPS)/bin/SYSINFO.BIN  $(BASE)/DE/
+
+# Experimental applications.
+	@-cp $(L3_APPS)/bin/BMENU.BIN    $(BASE)/DE/
+	@-cp $(L3_APPS)/bin/CALC00.BIN   $(BASE)/DE/
+	@-cp $(L3_APPS)/bin/DBOX.BIN     $(BASE)/DE/
+	@-cp $(L3_APPS)/bin/DRAW.BIN     $(BASE)/DE/
+	@-cp $(L3_APPS)/bin/GWTEST.BIN   $(BASE)/DE/
+	@-cp $(L3_APPS)/bin/LAUNCH.BIN   $(BASE)/DE/
+	@-cp $(L3_APPS)/bin/MBOX.BIN     $(BASE)/DE/
+	@-cp $(L3_APPS)/bin/MENUAPP.BIN  $(BASE)/DE/
+
+
+# Other applications.
 	@-cp $(L3_APPS)/bin/GWS.BIN      $(BASE)/DE/
+
 
 # Compiling ulextras stuff
 	@echo "Compiling __DEP_L5"
