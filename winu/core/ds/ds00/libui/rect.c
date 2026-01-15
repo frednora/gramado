@@ -1815,7 +1815,10 @@ int update_rectangle(struct gws_rect_d *rect)
     unsigned long Top=0;
     unsigned long Width=0;
     unsigned long Height=0;
+
     unsigned int Color=0;
+    unsigned long rop=0;
+    int fill=TRUE;
 
 // Parameters:
     if ((void*) rect == NULL){
@@ -1828,23 +1831,27 @@ int update_rectangle(struct gws_rect_d *rect)
     Left   = (unsigned long) (rect->left   & 0xFFFF); 
     Top    = (unsigned long) (rect->top    & 0xFFFF); 
     Width  = (unsigned long) (rect->width  & 0xFFFF); 
-    Height = (unsigned long) (rect->height & 0xFFFF); 
-    Color = 
-        (unsigned int) (rect->bg_color & 0xFFFFFFFF); 
+    Height = (unsigned long) (rect->height & 0xFFFF);
 
-// Paint it into the backbuffer.
-// no return
+    Color = (unsigned int) (rect->bg_color & 0xFFFFFFFF); 
+    rop = (unsigned long) rect->rop;
+    fill = TRUE; // rect->is_empty;
+
+
+// Paint it into the backbuffer. (No return value)
     rectBackbufferDrawRectangle ( 
-        (unsigned long) Left,     // left
-        (unsigned long) Top,      // top
-        (unsigned long) Width,    // width
-        (unsigned long) Height,   // height
-        (unsigned int) Color,     // color
-        (int) TRUE,               // fill it?
-        (unsigned long) 0 );      // rop_flags
-// Invalidate rectangle.
-    rect->dirty = TRUE;
+        (unsigned long) Left, 
+        (unsigned long) Top,
+        (unsigned long) Width,
+        (unsigned long) Height,
+        (unsigned int) Color,
+        (int) fill,               // fill it or not?
+        (unsigned long) rop 
+    );
+
+    rect->dirty = TRUE;  // Invalidate rectangle
     return 0;
+
 fail:
     return (int) -1;
 }
