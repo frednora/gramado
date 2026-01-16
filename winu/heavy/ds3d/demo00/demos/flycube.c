@@ -755,6 +755,9 @@ static void __drawFlyingCube(struct cube_model_d *cube, float vel)
 
         // Dot product.
         // Normal 'vezes' a distancia entre um dado vetor e a camera.
+        // Dot product with camera direction
+        // When the dot product is less than 0 it means that points to opposite directions ... 
+        // maybe its the major rule.
         float tmp = 
              (float) (
              normal.x * (triRotatedXYZ.p[0].x - CurrentCameraF.position.x) + 
