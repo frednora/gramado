@@ -2356,8 +2356,7 @@ int rtl_focus_on_this_thread(void)
     return (int) tid;
 }
 
-int rtl_focus_on_me(void)
-{
+int rtl_focus_on_me(void){
     return (int) rtl_focus_on_this_thread();
 }
 

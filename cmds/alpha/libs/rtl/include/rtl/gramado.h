@@ -319,6 +319,12 @@ void rtl_nice(void);
 // Clone and execute a process.
 int rtl_clone_and_execute(const char *name);
 
+// Return the child thread ID (TID) instead of PID.
+// For now, it calls the low-level implementation and assumes
+// the kernel service has been extended to provide TID.
+int rtl_clone_and_execute_return_tid(const char *name);
+
+
 int rtl_spawn_process( const char *path );
 
 // get current thread

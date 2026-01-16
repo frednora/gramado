@@ -264,6 +264,11 @@ void crt0(unsigned long rdi)
         //fflush(stdout);
     //}
 
+    // After reading stdin into buffer
+    // Debug: show exactly what was read
+    //printf("crt0: raw stdin buffer = [%s]\n", buffer);
+    //fflush(stdout);
+
 // Depois de lido o stdin e colocada a cmdline no buffer local,
 // então é hora de apagarmos os arquivo, para que outro
 // programa consiga usar o arquivo.
