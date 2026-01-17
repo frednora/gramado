@@ -1,5 +1,5 @@
 //====================================================
-// shell.bin - Minimal STDIN/STDOUT Shell for Gramado OS
+// shell2.bin - Minimal STDIN/STDOUT Shell for Gramado OS
 //====================================================
 
 #include <types.h>
@@ -74,10 +74,10 @@ static void process_run_command(const char *cmdline)
 
     // Report result
     if (tid < 0) {
-        write(STDOUT_FILENO, "shell: failed to launch\n", 24);
+        write(STDOUT_FILENO, "shell2: failed to launch\n", 24);
     } else {
         char msg[64];
-        sprintf(msg, "shell: launched tid=%d\n", tid);
+        sprintf(msg, "shell2: launched tid=%d\n", tid);
         write(STDOUT_FILENO, msg, strlen(msg));
 
         rtl_sleep(2000);  //2sec
@@ -115,10 +115,10 @@ static void process_command(void)
 
     // Built-in commands
     if (strcmp(argv[0], "about") == 0) {
-        write(1, "shell: minimal stdin/stdout shell\n", 34);
+        write(1, "shell2: minimal stdin/stdout shell\n", 34);
     }
     else if (strcmp(argv[0], "help") == 0) {
-        write(1, "shell: commands: about, help, run\n", 34);
+        write(1, "shell2: commands: about, help, run\n", 34);
 
     }
     else if (strcmp(argv[0], "run") == 0 && argc > 1) {
@@ -160,7 +160,7 @@ static void process_command(void)
         rtl_clone_and_execute(__filename_local_buffer);
     }
     else {
-        write(1, "shell: unknown command\n", 24);
+        write(1, "shell2: unknown command\n", 24);
     }
 
     reset_prompt();

@@ -276,6 +276,7 @@ static int term00_gettid(void)
     return (pid_t) (ul_value & 0xFFFFFFFF);
 };
 
+// Open PTYM
 static void terminal_initialize_pty(void)
 {
     ptym_fd = open("/DEV/PTYM", 0, "a+");
@@ -286,6 +287,7 @@ static void terminal_initialize_pty(void)
     }
 }
 
+// Open PTYS
 static void terminal_initialize_ptys_for_the_shell(void)
 {
     ptys_fd = open("/DEV/PTYS", 0, "a+");
@@ -3871,13 +3873,13 @@ int terminal_init(unsigned short flags)
 
 // Open PTYM
     terminal_initialize_pty();
-// Open PTYS and duplicate it to the standard streams..
-// the shell will use it later.
-    terminal_initialize_ptys_for_the_shell();
 
-    dup2(ptys_fd, STDIN_FILENO);
-    dup2(ptys_fd, STDOUT_FILENO);
-    dup2(ptys_fd, STDERR_FILENO);
+// Open PTYS
+    terminal_initialize_ptys_for_the_shell();
+// Duplicate it to the standard streams the shell will use it later.
+    dup2(ptys_fd,  STDIN_FILENO);  // replaces the shell’s stdin with the PTY slave.
+    dup2(ptys_fd, STDOUT_FILENO);  // replaces the shell’s stdout with the PTY slave.
+    dup2(ptys_fd, STDERR_FILENO);  // replaces the shell’s stderr with the PTY slave.
 
     //write(STDOUT_FILENO, "[dup2 done]\n", 12);
 
@@ -3901,16 +3903,15 @@ int terminal_init(unsigned short flags)
 // hability to read from stdin without been the foreground thread.
     const char *filename = "#shell.bin";
     int tid = (int) rtl_clone_and_execute_return_tid(filename);
-    if (tid < 0)
-    {
-        // #debug
+    if (tid < 0){
         tputstring(client_fd, "term00: shell failed\n");
         exit(0);
     }
-// Delegate foreground to the child.
-    sc82(10013, tid, tid, tid);
-
     //rtl_sleep(4000);
+// Delegate foreground to the child
+// Delegate a second stdin reader for the foreground thread.
+// Only the foreground thread can change this.
+    sc82(10013, tid, tid, tid);
 
 /*
     char buf[128];
