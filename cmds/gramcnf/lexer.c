@@ -546,6 +546,11 @@ again:
                 keyword_found = KWRETURN;
                 return (int) TK_KEYWORD;
             }
+            if ( strncmp( real_token_buffer, "exit", 4 ) == 0 )
+            {
+                keyword_found = KWEXIT;
+                return (int) TK_KEYWORD;
+            }
             if ( strncmp( real_token_buffer, "switch", 6 ) == 0 )
             {
                 keyword_found = KWSWITCH;
@@ -554,6 +559,11 @@ again:
             if ( strncmp( real_token_buffer, "case", 4 ) == 0 )
             {
                 keyword_found = KWCASE;
+                return (int) TK_KEYWORD;
+            }
+            if ( strncmp( real_token_buffer, "break", 5 ) == 0 )
+            {
+                keyword_found = KWBREAK;
                 return (int) TK_KEYWORD;
             }
             if ( strncmp( real_token_buffer, "default", 7 ) == 0 )
@@ -647,7 +657,7 @@ again:
                         if ( isxdigit(c) == 0 )
                         {
                             *p = 0;
-                             ungetc( c, finput );
+                            ungetc( c, finput );
                             //fim
                             value = TK_CONSTANT;
                             //constant_type_found = //#todo tem que contar. 
@@ -829,7 +839,7 @@ again:
                     case '>':  c = TK_RSHIFT;  goto combine;
                 };
 
-            }else if ((c == '-') && (c1 == '>')) {
+            } else if ((c == '-') && (c1 == '>')) {
                 value = TK_POINTSAT; 
                 goto done; 
             };

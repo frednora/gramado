@@ -74,6 +74,9 @@ static int parse_do(int token);
 static int parse_for(int token);
 static int parse_if(int token);
 static int parse_return(int token, int *return_value);
+static int parse_exit(int token);
+static int parse_break(int token);
+
 static unsigned long parse_sizeof(int token);
 static int parse_while(int token);
 //static int parse_number(int olen);
@@ -968,6 +971,92 @@ do_separator:
 done:
    return c;
 }
+
+// OUT: TK_SEPARATOR
+static int parse_exit(int token)
+{
+    int c = 0;
+
+    if (token != TK_KEYWORD || keyword_found != KWEXIT) {
+        printf("parse_exit: token error\n");
+        exit(1);
+    }
+
+    printf("parse_exit: exit statement at line %d\n", lexer_currentline);
+
+    // Signal to stop parsing
+    //running = 0;
+
+    // Emit assembly or marker
+    strcat(TEXT, ";[EXIT]\n");
+    strcat(TEXT, "  ; program requested exit\n");
+
+    // Now consume the next token, expecting ';'
+    c = yylex();
+
+    int NoSemicolon = FALSE;
+    
+    if (c != TK_SEPARATOR){
+        NoSemicolon = TRUE;
+    }
+
+    if ( strncmp( (char *) real_token_buffer, ";", 1 ) != 0 )
+    {
+        NoSemicolon = TRUE;
+    }
+
+    if (NoSemicolon){
+        printf("parse_exit: Error: ';' expected after exit (line %d)\n",
+            lexer_currentline);
+        exit(1);
+    }
+
+    return TK_SEPARATOR;
+}
+
+// OUT: TK_SEPARATOR
+static int parse_break(int token)
+{
+    int c = 0;
+
+    if (token != TK_KEYWORD || keyword_found != KWBREAK) {
+        printf("parse_break: token error\n");
+        exit(1);
+    }
+
+    printf("parse_break: break statement at line %d\n", lexer_currentline);
+
+    // Signal to stop parsing
+    //running = 0;
+
+    // Emit assembly or marker
+    strcat(TEXT, ";[BREAK]\n");
+    strcat(TEXT, "  ; program requested break\n");
+
+    // Now consume the next token, expecting ';'
+    c = yylex();
+
+    int NoSemicolon = FALSE;
+    
+    if (c != TK_SEPARATOR){
+        NoSemicolon = TRUE;
+    }
+
+    if ( strncmp( (char *) real_token_buffer, ";", 1 ) != 0 )
+    {
+        NoSemicolon = TRUE;
+    }
+
+    if (NoSemicolon){
+        printf("parse_exit: Error: ';' expected after exit (line %d)\n",
+            lexer_currentline);
+        exit(1);
+    }
+
+    return TK_SEPARATOR;
+}
+
+
 
 // Parse 'sizeof' statement.
 static unsigned long parse_sizeof(int token)
@@ -2278,6 +2367,55 @@ int parse(int dump_output)
                         }
 
                         //-------------------------
+                        // STMT: 'exit'.
+                        if (keyword_found == KWEXIT)
+                        {
+                            int kwexit_return = 0;
+                            kwexit_return = (int) parse_exit(TK_KEYWORD);
+                            // Expected: ';'.
+                            if (kwexit_return != TK_SEPARATOR)
+                            {
+                                printf ("State3: TK_KEYWORD TK_SEPARATOR fail\n");
+                                exit (1);
+                            }
+                            metadata[meta_index].return_value = (unsigned int) 0;
+                            metadata[meta_index].initialized = TRUE;
+                            metadata[meta_index].id = (int) meta_index;                            
+                            meta_index++;
+                            if (meta_index >= 32){
+                                printf("meta_index limits\n");
+                                exit(0);
+                            }
+                            State = 0;
+                            running = 0; 
+                            break;
+                        }
+
+                        //-------------------------
+                        // STMT: 'break'.
+                        if (keyword_found == KWBREAK)
+                        {
+                            int kwbreak_return = 0;
+                            kwbreak_return = (int) parse_break(TK_KEYWORD);
+                            // Expected: ';'.
+                            if (kwbreak_return != TK_SEPARATOR)
+                            {
+                                printf ("State3: TK_KEYWORD TK_SEPARATOR fail\n");
+                                exit (1);
+                            }
+                            metadata[meta_index].return_value = (unsigned int) 0;
+                            metadata[meta_index].initialized = TRUE;
+                            metadata[meta_index].id = (int) meta_index;                            
+                            meta_index++;
+                            if (meta_index >= 32){
+                                printf("meta_index limits\n");
+                                exit(0);
+                            }
+                            State = 1;
+                            break;
+                        }
+
+                        //-------------------------
                         // STMT: 'goto'.
                         // #todo: 
                         // + Pegamos o pŕoximo token.
@@ -2470,10 +2608,10 @@ debug_output:
     printf ("number of lines: %d \n", lexer_currentline );
 */
 
-    // goto parse_exit;
+    // goto __parse_exit;
 
 // OK, done!
-parse_exit:
+__parse_exit:
     printf("parse: Done\n");
     return 0;
 syntax:

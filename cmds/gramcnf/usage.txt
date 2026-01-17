@@ -2,8 +2,7 @@
 Usage:
 This is how a regular command looks like.
 
-    $ gramcnf -o test1.cnf  --stats  
     $ gramcnf -o theme1.cnf --stats  
+    $ gramcnf -o test1.cnf  --stats  
     $ gramcnf -o #theme2.cnf --stats  
-
 

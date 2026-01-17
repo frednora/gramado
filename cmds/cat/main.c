@@ -155,6 +155,7 @@ int main(int argc, char *argv[])
     //printf ("cat: Writing on stderr\n");
     //stdout = stderr;
 
+/*
     // #debug
     printf("CAT.BIN: argc %d | argv[0] %s | argv[1] %s \n", 
         argc,       // Number of parameters
@@ -162,6 +163,7 @@ int main(int argc, char *argv[])
         argv[1] );  // FILE.TXT
     // printf("\n");
     // fflush(stderr);
+*/
 
     if (argc <= 1){
         printf("Few parameters\n");

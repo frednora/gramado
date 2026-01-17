@@ -1,10 +1,12 @@
 
 box One 
 [
-    meta meta1(){ name("background-color");     content("green");      return 1 + 2; }
-    meta meta2(){ name("window-color");         content("white");      return 1 + 2; }
-    meta meta3(){ name("titlebar-color");       content("blue");       return 1 + 2; }
-    meta meta4(){ name("titlebar-text-color");  content("white");      return 1 + 2; }
+    meta meta1(){ name("background-color");     content("green");      break; }
+    meta meta2(){ name("window-color");         content("white");      break; }
+    meta meta3(){ name("titlebar-color");       content("blue");       break; }
+    meta meta4(){ name("titlebar-text-color");  content("white");      break; }
+
+// Now we can use break, exit and return.
 
 meta meta5()
 {

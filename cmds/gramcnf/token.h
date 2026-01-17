@@ -26,9 +26,8 @@ typedef enum {
     KWVOLATILE,
     KWSIGNED,
     KWUNSIGNED,
-// switch/case/default
-// #todo: break.
-    KWSWITCH, KWCASE, KWDEFAULT,
+// switch/case/break/default
+    KWSWITCH, KWCASE, KWBREAK, KWDEFAULT,
 //  if/else
     KWIF, KWELSE,
 //  do/while
@@ -42,6 +41,7 @@ typedef enum {
     KWSIZEOF,
     KWGOTO,
     KWRETURN,
+    KWEXIT,
     // ...
 }keywords_t;
 
@@ -209,12 +209,15 @@ extern char *SPECIALLIST[TLIMIT];
 #define TOKEN_DO     "do"
 #define TOKEN_WHILE  "while"
 #define TOKEN_FOR      "for"
+
 #define TOKEN_SWITCH   "switch"
 #define TOKEN_CASE     "case"
+#define TOKEN_BREAK    "break"
 #define TOKEN_DEFAULT  "default"
-#define TOKEN_BREAK     "break"
+
 #define TOKEN_CONTINUE  "continue"
 #define TOKEN_RETURN "return"
+#define TOKEN_EXIT "exit"
 #define TOKEN_GOTO "goto"
 #define TOKEN_ASM "asm"
 #define TOKEN_VOLATILE "volatile"
