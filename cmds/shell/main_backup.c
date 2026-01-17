@@ -12,11 +12,6 @@
 //#include "shell.h"
 
 
-static int __fd_input = -1;
-static int __fd_stdout = -1;
-static int __fd_stderr = -1;
-
-
 static void process_run_command(const char *cmdline);
 
 // ====================================================
@@ -44,30 +39,7 @@ static void reset_prompt(void)
 
 static void show_prompt(void)
 {
-    write(__fd_stdout, "$ ", 2);
-}
-
-// Worker: read from a given fd and forward to shell's stdout (terminal).
-static void pipe_worker(int fd_read)
-{
-    char buf[256];
-    int n;
-
-    if (fd_read < 0)
-        return;
-
-    memset(buf, 0, sizeof(buf));
-
-    while (1)
-    {
-        n = read(fd_read, buf, sizeof(buf));
-        if (n > 0) 
-        {
-            write(__fd_stdout, buf, n);  // forward to terminal
-            memset(buf, 0, sizeof(buf));
-        }
-        // optional: add a small sleep/yield here to avoid busy looping
-    }
+    write(1, "$ ", 2);
 }
 
 
@@ -92,22 +64,6 @@ static void process_run_command(const char *cmdline)
     if (token != NULL) {
         strncpy(filename, token, sizeof(filename)-1);
     }
-
-// Create a pipe
-// fd[0] → read end (for the next child’s stdin).
-// fd[1] → write end (for the current child’s stdout).
-
-    int fd[2];
-    pipe(fd);
-
-// Prepare child’s standard streams
-// stdin: the child will consume input from the pipe’s read end.
-// stdout: the child’s normal output goes into the pipe’s write end.
-// stderr: error messages also go into the same pipe’s write end.
-
-    dup2(fd[0], STDIN_FILENO);   // child reads from pipe
-    dup2(fd[1], STDOUT_FILENO);  // child writes into pipe
-    dup2(fd[1], STDERR_FILENO);  // child writes into pipe
 
 // #bugbug
 // Feed stdin with the full command line
@@ -141,18 +97,15 @@ Now the two children are connected directly through the pipe.
 
     // Report result
     if (tid < 0) {
-        write(__fd_stdout, "shell: failed to launch\n", 24);
+        write(STDOUT_FILENO, "shell: failed to launch\n", 24);
     } else {
         char msg[64];
         sprintf(msg, "shell: launched tid=%d\n", tid);
-        write(__fd_stdout, msg, strlen(msg));
+        write(STDOUT_FILENO, msg, strlen(msg));
 
         rtl_sleep(2000);  //2sec
-
         // Tell the kernel the child is now foreground 
-        // sc82 (10011,tid,tid,tid);
-
-        pipe_worker(fd[0]);  // Read from the pipe
+        sc82 (10011,tid,tid,tid);
 
         // Exit the shell right after a positive launch 
         exit(0);
@@ -176,20 +129,19 @@ static void process_command(void)
     }
     argv[argc] = NULL; // terminate list
 
-    if (argc == 0) 
-    {
+    if (argc == 0) {
         // empty line
-        //reset_prompt();
-        //show_prompt();
+        reset_prompt();
+        show_prompt();
         return;
     }
 
     // Built-in commands
     if (strcmp(argv[0], "about") == 0) {
-        write(__fd_stdout, "shell: minimal stdin/stdout shell\n", 34);
+        write(1, "shell: minimal stdin/stdout shell\n", 34);
     }
     else if (strcmp(argv[0], "help") == 0) {
-        write(__fd_stdout, "shell: commands: about, help, run\n", 34);
+        write(1, "shell: commands: about, help, run\n", 34);
 
     }
     else if (strcmp(argv[0], "run") == 0 && argc > 1) {
@@ -231,11 +183,11 @@ static void process_command(void)
         rtl_clone_and_execute(__filename_local_buffer);
     }
     else {
-        write(__fd_stdout, "shell: unknown command\n", 24);
+        write(1, "shell: unknown command\n", 24);
     }
 
-    //reset_prompt();
-    //show_prompt();
+    reset_prompt();
+    show_prompt();
 }
 
 //====================================================
@@ -244,26 +196,16 @@ static void process_command(void)
 
 static void shell_worker(void)
 {
-    // Char support
-    char char_buf[1];
+    char buf[1];
     int C = 0;
 
-// parameters:
-    if (__fd_input < 0) {
-        return;
-    }
-    if (__fd_stdout < 0) {
-        return;
-    }
-
-    reset_prompt();
     show_prompt();
 
     while (1)
     {
-        if (read( __fd_input, char_buf, 1 ) > 0)
+        if (read(0, buf, 1) > 0)
         {
-            C = (int) char_buf[0];
+            C = (int) buf[0];
 
             // Printable ASCII
             if (C >= 0x20 && C <= 0x7E)
@@ -273,7 +215,7 @@ static void shell_worker(void)
                     prompt[prompt_pos] = 0;
                 }
 
-                write( __fd_stdout, &char_buf[0], 1 );  // echo
+                write(1, &buf[0], 1);  // echo
             }
 
             // BACKSPACE
@@ -282,17 +224,15 @@ static void shell_worker(void)
                 if (prompt_pos > 0) {
                     prompt_pos--;
                     prompt[prompt_pos] = 0;
-                    write( __fd_stdout, "\b \b", 3 );
+                    write(1, "\b \b", 3);
                 }
             }
 
             // ENTER
             else if (C == '\n' || C == '\r')
             {
-                write( __fd_stdout, "\n", 1 );
+                write(1, "\n", 1);
                 process_command();
-                reset_prompt();
-                show_prompt();
             }
         }
     }
@@ -304,11 +244,8 @@ static void shell_worker(void)
 
 int main(int argc, char *argv[])
 {
-    __fd_input  = dup(STDIN_FILENO );
-    __fd_stdout = dup(STDOUT_FILENO);
-    __fd_stderr = dup(STDERR_FILENO);
-
+    printf ("shell.bin: Hello world!\n");
     reset_prompt();
     shell_worker();
-    return EXIT_SUCCESS;
+    return 0;
 }
