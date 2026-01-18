@@ -52,6 +52,8 @@ static void pipe_worker(int fd_read)
 {
     char buf[256];
     int n;
+    int c;
+    int i=0;
 
     if (fd_read < 0)
         return;
@@ -63,13 +65,16 @@ static void pipe_worker(int fd_read)
         n = read(fd_read, buf, sizeof(buf));
         if (n > 0) 
         {
-            write(__fd_stdout, buf, n);  // forward to terminal
+            for (i = 0; i < n; i++) 
+            {
+                c = (int) buf[i];
+                if (c != 0)
+                    write(__fd_stdout, &c, 1);  // forward to terminal
+            }
             memset(buf, 0, sizeof(buf));
         }
-        // optional: add a small sleep/yield here to avoid busy looping
-    }
+    };
 }
-
 
 //====================================================
 // Local worker: run a command line, feed stdin, launch child

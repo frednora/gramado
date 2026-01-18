@@ -266,7 +266,7 @@ void crt0(unsigned long rdi)
 
     // After reading stdin into buffer
     // Debug: show exactly what was read
-    //printf("crt0: raw stdin buffer = [%s]\n", buffer);
+    printf("crt0: raw stdin buffer = [%s]\n", buffer);
     //fflush(stdout);
 
 // Depois de lido o stdin e colocada a cmdline no buffer local,

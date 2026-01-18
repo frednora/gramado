@@ -4,6 +4,18 @@
 #ifndef __FS_PIPE_H
 #define __FS_PIPE_H  1
 
+// It will be included into the file structure.
+struct pipe_info_d 
+{
+    char *base;       // shared buffer
+    int buffer_size;  // buffer size (BUFSIZ)
+    int counter;      // occupancy (bytes currently in pipe)
+
+    int write_pos;  // write offset
+    int read_pos;   // read offset
+};
+
+
 int 
 pipe_ioctl ( 
     int fd, 

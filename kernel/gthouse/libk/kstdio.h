@@ -414,6 +414,14 @@ struct file_d
     //struct thread_d *waiting;
     int tid_waiting;
 
+
+    // #test: suspended
+    // struct file_d  *link;
+
+// Pipe support
+// See: pipe.h
+    struct pipe_info_d *pipe_info;  // shared pipe state
+
 // Navigation?
     struct file_d  *next;
 };

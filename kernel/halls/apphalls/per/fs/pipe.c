@@ -378,6 +378,10 @@ int sys_pipe(int *pipefd, int flags)
     f1->_lbfsize = BUFSIZ; 
     f2->_lbfsize = BUFSIZ;
 
+    // size
+    f1->_fsize = 0;
+    f2->_fsize = 0;
+
 // Counters and offsets
 
 // Quanto falta.
@@ -416,8 +420,29 @@ int sys_pipe(int *pipefd, int flags)
     //#debug
     //printk ("sys_pipe: %d %d\n",slot1,slot2);
 
+    // Link both pointers #suspended
+    //f1->link = f2;
+    //f2->link = f1;
+
+// Pipe info structure
+
+    struct pipe_info_d *pi;
+    pi = (struct pipe_info_d *) kmalloc( sizeof(struct pipe_info_d) );
+    if ( (void *) pi == NULL ){
+        goto fail;
+    }
+    // Initialize pipe info
+    pi->base = sh_buff;
+    pi->buffer_size = BUFSIZ;
+    pi->counter = 0;
+    pi->read_pos = 0;
+    pi->write_pos = 0;
+
+    f1->pipe_info = pi;
+    f2->pipe_info = pi;
+
 // OK
-    debug_print("sys_pipe: done\n");
+    //debug_print("sys_pipe: done\n");
     return 0;
 
 fail:
@@ -425,440 +450,93 @@ fail:
     return (int) (-1);
 }
 
-// Read from pipe buffer
-int file_read_pipe_buffer( file *f, char *buffer, int len )
+int file_read_pipe_buffer(file *f, char *buffer, int len)
 {
+    if (!f || f->____object != ObjectTypePipe) return -EBADF;
+    if (f->used != TRUE || f->magic != 1234)   return -EBADF;
+    if (!buffer || len <= 0)                   return -EINVAL;
 
-    char *p;
-    int Count=0;
+    if ((void*) f->pipe_info == NULL)
+        return -EBADF;
 
-    p = buffer;
-// #test
-    Count = (int) (len & 0xFFFF);
+    int Count = 0;
+    char *p = buffer;
 
-// Check file
-    if ((void *) f == NULL){
-        printk ("file_read_pipe_buffer: f\n");
-        goto fail;
-    }
-    if ( f->used != TRUE || f->magic != 1234 ){
-        printk ("file_read_pipe_buffer: f validation\n");
-        goto fail;
-    }
-// Check buffer
-    if ((void *) p == NULL){
-        printk ("file_read_pipe_buffer: p\n");
-        goto fail;
-    }
-// nada para ler.
-    if (Count <= 0){
-        printk ("file_read_pipe_buffer: Count <= 0\n");
-        goto fail;
-    }
-// Chech len
-// #bugbug: Isso é provisório
-// A quantidade que desejamos ler é menor que o tamanho do buffer.
-// Estamos lendo do início do arquivo?
-    if (Count > f->_lbfsize){
-        printk ("file_read_pipe_buffer: Count > f->_lbfsize\n");
-        goto fail;
-    }
+    while (len > 0) {
 
-    //if ( Count > f->_fsize ){
-        //printk ("file_read_pipe_buffer: Count > f->_fsize\n");
-    //    Count = f->_fsize;
-    //    goto fail;
-    //}
-
-/*
-// stdin
-    if( f->_file == 0 )
-    {
-        if( f->_lbfsize != PROMPT_SIZE)
+        // Nothing to read?
+        if (f->pipe_info->counter <= 0) 
         {
-           printk ("file_read_pipe_buffer: [FAIL] Wrong size for stdin _lbfsize\n");
-           goto fail;
-        }
-    }
- */
-
-    if (f->____object != ObjectTypePipe)
-        return -1;
-
-    // Copy from pipe buffer to user buffer
-
-    if ( f->____object == ObjectTypePipe )
-    {
-        // Nothing to read
-        if (f->_fsize <= 0){
-            return 0;
+            f->pipe_info->counter = 0;
+            break; // stop reading, pipe empty
         }
 
-        // Se o buffer tem tamanho 0.
-        if (f->_lbfsize <= 0){
-            printk ("file_read_pipe_buffer: _lbfsize is 0\n");
-            goto fail;
-        }
+        // Wrap around
+        if (f->pipe_info->read_pos >= f->pipe_info->buffer_size)
+            f->pipe_info->read_pos = 0;
 
-        // Se o tamanho do buffer for maior que o padrão.
-        // #todo: O buffer pdoerá ser maior que isso no futuro.
-        //if ( f->_lbfsize > BUFSIZ ){
-        //    printk ("file_read_pipe_buffer: _lbfsize\n");
-        //    goto fail;
-        //}
+        // Copy one byte
+        *p = f->pipe_info->base[ f->pipe_info->read_pos ];
+        f->pipe_info->read_pos++;
+        f->pipe_info->counter--;
+        Count++;
 
-        // #test: Limite provisorio
-        if (f->_lbfsize > (8*1024)){
-            printk ("file_read_pipe_buffer: _lbfsize bigger than 8KB\n");
-            goto fail;
-        }
-
-        // Não podemos ler antes do início do arquivo.
-        if ( f->_r < 0 ){
-            f->_r = 0;
-            printk ("file_read_pipe_buffer: f->_r = 0\n");
-            goto fail;
-        }
-
-        // Nao leremos depois do fim do arquivo.
-        if ( f->_r >= BUFSIZ )
-        {
-            //#debug: provisorio
-            //printk ("file_read_pipe_buffer: f->_r > f->_lbfsize\n");
-            //goto fail;
-            //debug_print("file_read_pipe_buffer: f->_r > f->_lbfsize\n");
-            //f->_r = f->_lbfsize;
-            //f->_w = f->_lbfsize;
-            //f->_p = (f->_base + f->_lbfsize);
-            //f->_cnt = 0;
-            //return EOF;
-
-            f->_r = 0;
-        }
-
-        // Empty pipe
-        // Nothing to read
-        // No problem for the first read.
-        if (f->_r == f->_w)
-        {
-            return 0;
-        }
-
-        // Se o offset de leitura for maior que
-        // o offset de escrita, então temos que esperar.
-        // #bugbug: mas talvez isso não seja assim para pipe.
-        /*
-        if (f->_r >= f->_w)
-        {
-            // EOF
-            //printk ("file_read_pipe_buffer: #debug f->_r > f->_w\n");
-
-            f->_r = f->_w;
-
-            //f->_p = (f->_base + f->_r);
-            // You also can write now.
-            // But i can still read.
-            //f->_flags = __SWR;
-            return 0;
-        }
-        */
-
-        // Se a quantidade que desejamos ler
-        // é maior que o espaço que temos.
-        // # Isso ja foi feito logo acima.
-        /*
-        if (Count > f->_lbfsize)
-        {
-            //printk ("file_read_pipe_buffer: Count > f->_lbfsize\n");
-            //goto fail;
-
-            //printk ("file_read_pipe_buffer: [FAIL] local_len limits\n");
-            //goto fail;
-        
-            //#test #bugbug
-            // leia tudo então. hahaha
-            Count = (f->_lbfsize - 1);
-        }
-        */
-
-        // Se o tanto que queremos ler é maior
-        // que o que nos resta da buffer,
-        // então vamos ler apenas o resto do buffer.
-
-        // #bugbug: Isso esta errado. #delete
-
-        // So podemos ler ate limite de bytes disponíveis 
-        // no buffer.
-        //if (Count > f->_cnt)
-        //{
-            //printk ("file_read_pipe_buffer: local_len > f->_cnt\n");
-            //goto fail;
-            //Count = f->_cnt;
-        //}
- 
-        /*
-        // 
-        int delta = (f->_w - f->_r);
-
-        // nada para ler.
-        // pois o ponteiro de escrita e o de leitura sao iguais,
-        if (delta == 0){
-            // 0 bytes lidos
-            //printk ("delta=0\n");
-            return 0;
-        }
-        */
- 
-        // #delta
-        // Se o tanto que queremos ler
-        // é maior que o tanto que foi efetivamente escrito,
-        // então leremos somente o que foi escrito.
-        // se a diferença entra o ponteiro de escrita e o ponteiro
-        // de leitura for menor que a quantidade que queremos ler.
-        // Se queremos ler mais do que foi escrito.
-        // entao vamos ler apenas o que foi escrito.
-        /*
-        if (Count > delta){
-            Count = delta;
-        }
-        */
-
-        // Atualizando o ponteiro de trabalho.
-        // Vamos ler daqui.
-        // A partir do offset de leitura.
-        f->_p = (f->_base + f->_r);
-
-        // read
-
-        //#debug
-        if (Count <= 0){
-            printk ("file_read_pipe_buffer: Count <= 0 SECOND\n");
-            goto fail;
-            //printk("local_len\n");
-            //return -1;
-        }
-
-        // Copy from the address pointed by the file structure
-        // to a given ring3 or ring0 buffer.
-        // The file structure has the limit of BUFSIZ.
-        memcpy (
-            (void *) buffer, 
-            (const void *) f->_p, 
-            Count ); 
-
-        // Atualizamos o ponteiro de trabalho
-        f->_p = (f->_p + Count);
-
-        // Atualizamos o offset de leitura.
-        // Ele é usado em relação à base.
-        // #bugbug: Talvez essa leitura e escrita devesse ser em relação
-        // ao ponteiro de trabalho.
-        f->_r = (f->_r + Count);
-
-        /*
-        if ( f->_r > f->_w ){
-            f->_r = f->_w;
-        }
-        */
-
-        f->_fsize -= Count;
-
-        // You also can write now.
-        // But i can still read.
-        f->_flags |= __SWR;
-        f->sync.can_write = TRUE;
-
-        return (int) Count;
+        p++;
+        len--;
     }
 
-fail:
-    return EOF;
+    f->_flags = __SWR;          // now writable
+    f->sync.can_write = TRUE;
+
+    if (Count > 0)
+        printk("file_read_pipe_buffer: read %d bytes\n", Count);
+
+    return Count;
 }
 
-// Write to pipe buffer
-int file_write_pipe_buffer( file *f, char *buffer, int len )
+int file_write_pipe_buffer(file *f, char *buffer, int len)
 {
-    char *p;
+    if (!f || f->____object != ObjectTypePipe) return -EBADF;
+    if (f->used != TRUE || f->magic != 1234)   return -EBADF;
+    if (!buffer || len <= 0)                   return -EINVAL;
 
-// #todo:
-// p = buffer; → but you never use p (you use buffer directly in memcpy)
-    p = buffer;
+    if ((void*) f->pipe_info == NULL)
+        return -EBADF;
 
-    // debug_print ("file_write_pipe_buffer:\n");
+    int Count = 0;
+    char *p = buffer;
 
-// File validation
-    if ((void *) f == NULL){
-        printk ("file_write_pipe_buffer: f\n");
-        goto fail;
-    }
-    // #todo: Check used and magic.
-    //if (f->magic != 1234)
-        //return -1;
-
-    if ((void *) p == NULL){
-        printk ("file_write_pipe_buffer: p\n");
-        goto fail;
-    }
-
-// Tentando escrever mais do que cabe no arquivo.
-    if (len >= BUFSIZ){
-        printk ("file_write_pipe_buffer: len >= BUFSIZ\n");
-        goto fail;
-    }
-
-//
-// Copy
-//
-    if (f->____object != ObjectTypePipe)
-        return -1;
-
-    if ( f->____object == ObjectTypePipe )
+    while (len > 0) 
     {
-        // #bugbug
-        // Temos que ter um limite aqui ... !!!
-        // #todo
-
-        // Full. block it.
-        if (f->_fsize >= f->_lbfsize){
-            return -EAGAIN; // full
-        }
-
-        // se o tamanho do buffer for maior que o padrao.
-        if (f->_lbfsize > BUFSIZ){
-            printk ("file_write_pipe_buffer: _lbfsize\n");
-            goto fail;
-        }
-
-        // Come back to the beginning of the buffer.
-        if (f->_w >= BUFSIZ){
-            f->_w = 0;
-        }
-
-        // Buffer full, block it.
-        // No problems at first write.
-        if (f->_w == f->_r)
+        // Full?
+        if (f->pipe_info->counter >= f->pipe_info->buffer_size)
         {
-            if (f->_fsize != 0)
-                return 0;
-        }
-    
-        if (f->_w < 0)
-        {
-            f->_p = f->_base;
-            f->_w = 0;
-            f->_r = 0;
-            f->_cnt = f->_lbfsize;
-            return EOF;
+            break; // stop writing, pipe full
         }
 
-        // Se o offset de escrita ultrapassa os limites.
-        /*
-        if (f->_w >= BUFSIZ)
-        {
-            //#bugbug
-            debug_print("file_write_pipe_buffer: f->_w >= BUFSIZ\n");
-            printk     ("file_write_pipe_buffer: f->_w >= BUFSIZ\n");
-            f->_w = BUFSIZ;
-            f->_cnt = 0;
-            return EOF;
-        }
-        */
+        // Wrap around
+        if (f->pipe_info->write_pos >= f->pipe_info->buffer_size)
+            f->pipe_info->write_pos = 0;
 
-        // recalculando quanto espaço temos.
-        //f->_cnt = (f->_lbfsize - f->_w);
+        // Copy one byte
+        f->pipe_info->base[ f->pipe_info->write_pos ] = *p;
+        f->pipe_info->write_pos++;
+        f->pipe_info->counter++;
+        Count++;
 
-        // Se a quantidade que temos ultrapassa os limites.
-
-        // fim do arquivo.
-        /*
-        if (f->_cnt < 0)
-        {
-            f->_cnt = 0;
-            f->_w = f->_lbfsize;
-            f->_r = f->_lbfsize;
-            f->_p = (f->_base + f->_w);
-            return EOF;
-        }
-        */
-
-        // Inicio do arquivo
-        /*
-        if (f->_cnt > f->_lbfsize)
-        {
-            printk ("file_write_pipe_buffer: _cnt\n");
-            f->_cnt = f->_lbfsize;
-            f->_p = f->_base;
-            f->_w = 0;
-            f->_r = 0;
-        }
-        */
-
-        if (len < 0){
-            return (int) -1;
-        }
-
-        /*
-        // Se o que desejamos escrever é maior que o espaço que temos.
-        if (len > f->_cnt)
-        {
-            // Estamos no fim do arquivo
-            if ( f->_cnt <= 0 )
-            {
-                f->_w = f->_lbfsize;
-                f->_r = f->_lbfsize;
-                f->_p = f->_base + f->_lbfsize;
-                f->_cnt = 0;
-                return (int) -1;
-            }
-
-            // Só podemos escrever esse tanto.
-            if ( f->_cnt > 0 ){
-                len = f->_cnt; 
-            }
-        }
-        */
-
-        // write.
-        // Se o offset de escrita é menor que o offset de leitura.
-        // Então adiantaremos o offset de escrita.
-        // pois nao devemos tocar no offset de leitura.
-        if (f->_w < f->_r)
-        {
-            f->_w = f->_r;
-            f->_cnt = ( f->_lbfsize - f->_w );
-        }
-
-        // Update the pointer
-        f->_p = (f->_base + f->_w);
-
-        // Write it, using the pointer
-        memcpy( (void *) f->_p, (const void *) buffer, len ); 
-    
-        // Update the pointer
-        f->_p = (f->_p + len);
-
-        // Update the offset for writing
-        f->_w = (f->_w + len);
-    
-        // Atualizamos o quanto nos falta.
-        //f->_cnt = (f->_cnt - len);
-        f->_fsize += len;
-
-        // You can read now.
-        f->_flags = __SRD;
-        f->sync.can_read = TRUE;
-
-        //debug_print ("file_write_pipe_buffer: ok, done\n");
-
-        // Retornamos a quantidade escrita no buffer.
-        return (int) len;
+        p++;
+        len--;
     }
 
-// Unknown type
-fail:
-    //printk ("file_write_pipe_buffer: fail\n");
-    return EOF;
+    f->_flags = __SRD;          // now readable
+    f->sync.can_read = TRUE;
+
+    if (Count > 0)
+        printk("file_write_pipe_buffer: wrote %d bytes\n", Count);
+
+    return Count;
 }
+
 
 
 // Quick pipe read: just call the worker
