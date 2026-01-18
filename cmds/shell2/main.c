@@ -87,6 +87,8 @@ static void process_run_command(const char *cmdline, int use_pipes)
     if (tid < 0) {
         write(STDOUT_FILENO, "shell2: failed to launch\n", 24);
     } else {
+
+        // #debug
         char msg[64];
         sprintf(msg, "shell2: launched tid=%d\n", tid);
         write(STDOUT_FILENO, msg, strlen(msg));
@@ -119,8 +121,8 @@ static void process_command(void)
 
     if (argc == 0) {
         // empty line
-        reset_prompt();
-        show_prompt();
+        //reset_prompt();
+        //show_prompt();
         return;
     }
 

@@ -177,6 +177,7 @@ Now the two children are connected directly through the pipe.
         write(__fd_stdout, "shell: failed to launch\n", 24);
     } else {
 
+        // #debug
         char msg[64];
         sprintf(msg, "shell: launched tid=%d\n", tid);
         write(__fd_stdout, msg, strlen(msg));
