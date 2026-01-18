@@ -521,17 +521,19 @@ int file_read_pipe_buffer( file *f, char *buffer, int len )
         }
 
         // Nao leremos depois do fim do arquivo.
-        if ( f->_r > f->_lbfsize )
+        if ( f->_r >= BUFSIZ )
         {
             //#debug: provisorio
-            printk ("file_read_pipe_buffer: f->_r > f->_lbfsize\n");
-            goto fail;
+            //printk ("file_read_pipe_buffer: f->_r > f->_lbfsize\n");
+            //goto fail;
             //debug_print("file_read_pipe_buffer: f->_r > f->_lbfsize\n");
             //f->_r = f->_lbfsize;
             //f->_w = f->_lbfsize;
             //f->_p = (f->_base + f->_lbfsize);
             //f->_cnt = 0;
             //return EOF;
+
+            f->_r = 0;
         }
 
         // Empty pipe
@@ -728,7 +730,7 @@ int file_write_pipe_buffer( file *f, char *buffer, int len )
         }
 
         // Come back to the beginning of the buffer.
-        if (f->_w > BUFSIZ){
+        if (f->_w >= BUFSIZ){
             f->_w = 0;
         }
 
