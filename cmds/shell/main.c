@@ -101,16 +101,24 @@ static void process_run_command(const char *cmdline)
 // Create a pipe
 // fd[0] → read end (for the next child’s stdin).
 // fd[1] → write end (for the current child’s stdout).
+// Same buffer, but two structure pointer.
+// It has a shared substructure for pipe info.
 
     int fd[2];
     pipe(fd);
+
+
+    write(fd[1], cmdline, strlen(cmdline));
+    write(fd[1], "\n", 1);
 
 // Prepare child’s standard streams
 // stdin: the child will consume input from the pipe’s read end.
 // stdout: the child’s normal output goes into the pipe’s write end.
 // stderr: error messages also go into the same pipe’s write end.
 
+// Child’s stdin is the pipe’s read end.
     dup2(fd[0], STDIN_FILENO);   // child reads from pipe
+// Child’s stdout/stderr are the pipe’s write end.
     dup2(fd[1], STDOUT_FILENO);  // child writes into pipe
     dup2(fd[1], STDERR_FILENO);  // child writes into pipe
 
@@ -121,8 +129,13 @@ static void process_run_command(const char *cmdline)
 // if we feed stdin here, the terminal will read it and 
 // the child will not get it.
 
-    write(STDIN_FILENO, cmdline, strlen(cmdline));
-    write(STDIN_FILENO, "\n", 1);
+    //write(STDIN_FILENO, cmdline, strlen(cmdline));
+    //write(STDIN_FILENO, "\n", 1);
+
+// Feed stdin with the full command line
+    //write(STDOUT_FILENO, cmdline, strlen(cmdline));
+    //write(STDOUT_FILENO, "\n", 1);
+
 
 /*
 How it works in a normal shell
@@ -148,6 +161,7 @@ Now the two children are connected directly through the pipe.
     if (tid < 0) {
         write(__fd_stdout, "shell: failed to launch\n", 24);
     } else {
+
         char msg[64];
         sprintf(msg, "shell: launched tid=%d\n", tid);
         write(__fd_stdout, msg, strlen(msg));
@@ -155,7 +169,7 @@ Now the two children are connected directly through the pipe.
         rtl_sleep(2000);  //2sec
 
         // Tell the kernel the child is now foreground 
-        // sc82 (10011,tid,tid,tid);
+        sc82 (10011,tid,tid,tid);
 
         pipe_worker(fd[0]);  // Read from the pipe
 

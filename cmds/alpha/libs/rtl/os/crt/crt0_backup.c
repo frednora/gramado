@@ -241,7 +241,6 @@ void crt0(unsigned long rdi)
     buffer[511] = 0;    // finalize
 */
 
-/*
     int c;
     int pos = 0;
     while (1) 
@@ -260,15 +259,6 @@ void crt0(unsigned long rdi)
         }
     };
     buffer[pos] = 0;
-*/
-
-    n = 0;
-    n = read(STDIN_FILENO, buffer, sizeof(buffer)-1);
-    if (n > 0) {
-        buffer[n] = '\0';
-        //printf("crt0: raw stdin buffer = [%s]\n", buffer);
-    }
-    buffer[n] = '\0';
 
     //if(n<=0){
         //#bugbug: We can't do this
@@ -279,7 +269,7 @@ void crt0(unsigned long rdi)
 
     // After reading stdin into buffer
     // Debug: show exactly what was read
-    // printf("crt0: raw stdin buffer = [%s]\n", buffer);
+    printf("crt0: raw stdin buffer = [%s]\n", buffer);
     //fflush(stdout);
 
 // Depois de lido o stdin e colocada a cmdline no buffer local,

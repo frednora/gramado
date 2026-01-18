@@ -143,6 +143,31 @@ static void __clear_buffer(void)
         buffer[i] = 0;
 }
 
+
+// Test worker: read from stdin, write to stdout/stderr
+void test_streams_worker(void)
+{
+    char buf[512];
+    int n;
+
+    // 1. Write something into stdout (pipe write end)
+    const char *msg_out = "Worker: writing to stdout\n";
+    write(STDOUT_FILENO, msg_out, strlen(msg_out));
+
+    // 2. Write something into stderr (pipe write end)
+    const char *msg_err = "Worker: writing to stderr\n";
+    write(STDERR_FILENO, msg_err, strlen(msg_err));
+
+    // 3. Try to read from stdin (pipe read end)
+    n = read(STDIN_FILENO, buf, sizeof(buf)-1);
+    if (n > 0) {
+        buf[n] = '\0';
+        printf("Worker: read from stdin: [%s]\n", buf);
+    } else {
+        printf("Worker: stdin read returned %d\n", n);
+    }
+}
+
 int main(int argc, char *argv[])
 {
     register int i=0;
@@ -155,6 +180,7 @@ int main(int argc, char *argv[])
     //printf ("cat: Writing on stderr\n");
     //stdout = stderr;
 
+/*
     // #debug
     printf("CAT.BIN: argc %d | argv[0] %s | argv[1] %s \n", 
         argc,       // Number of parameters
@@ -162,6 +188,10 @@ int main(int argc, char *argv[])
         argv[1] );  // FILE.TXT
     // printf("\n");
     // fflush(stderr);
+*/
+
+
+    //test_streams_worker();
 
 
     if (argc <= 1){
