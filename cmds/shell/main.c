@@ -165,6 +165,7 @@ Now the two children are connected directly through the pipe.
 */
 
     if (use_pipes != TRUE){
+        // Inject cmdline: The kernel passes it to the child.
         sc82(44010, cmdline, cmdline, cmdline);
     }
 

@@ -11,8 +11,15 @@
 
 //#include "shell.h"
 
+static int __no_pipes = TRUE;
 
-static void process_run_command(const char *cmdline);
+static int __fd_input = -1;
+static int __fd_stdout = -1;
+static int __fd_stderr = -1;
+
+
+
+static void process_run_command(const char *cmdline, int use_pipes);
 
 // ====================================================
 
@@ -47,7 +54,7 @@ static void show_prompt(void)
 // Local worker: run a command line, feed stdin, launch child
 //====================================================
 
-static void process_run_command(const char *cmdline)
+static void process_run_command(const char *cmdline, int use_pipes)
 {
     if (cmdline == NULL || *cmdline == '\0')
         return;
@@ -66,8 +73,12 @@ static void process_run_command(const char *cmdline)
     }
 
     // Feed stdin with the full command line
-    write(STDIN_FILENO, cmdline, strlen(cmdline));
-    write(STDIN_FILENO, "\n", 1);
+    //write(STDIN_FILENO, cmdline, strlen(cmdline));
+    //write(STDIN_FILENO, "\n", 1);
+
+    // #bugbug: Not working here in shell2
+    // Inject cmdline: The kernel passes it to the child.
+    sc82(44010, cmdline, cmdline, cmdline);
 
     // Launch child with just the filename
     int tid = rtl_clone_and_execute_return_tid(filename);
@@ -137,7 +148,7 @@ static void process_command(void)
         }
 
         // Call the worker
-        process_run_command(cmdline);
+        process_run_command(cmdline, FALSE);
     }
     else if (strcmp(argv[0], "run2") == 0 && argc > 1) {
         char __filename_local_buffer[64];
@@ -163,8 +174,8 @@ static void process_command(void)
         write(1, "shell2: unknown command\n", 24);
     }
 
-    reset_prompt();
-    show_prompt();
+    //reset_prompt();
+    //show_prompt();
 }
 
 //====================================================
@@ -210,6 +221,8 @@ static void shell_worker(void)
             {
                 write(1, "\n", 1);
                 process_command();
+                reset_prompt();
+                show_prompt();
             }
         }
     }
@@ -221,6 +234,12 @@ static void shell_worker(void)
 
 int main(int argc, char *argv[])
 {
+    __no_pipes = TRUE;  // No pipes needed for now
+
+    __fd_input  = STDIN_FILENO;
+    __fd_stdout = STDOUT_FILENO;
+    __fd_stderr = STDERR_FILENO;
+
     printf ("shell2.bin: Hello world!\n");
     reset_prompt();
     shell_worker();

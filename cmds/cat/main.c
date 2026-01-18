@@ -180,6 +180,7 @@ int main(int argc, char *argv[])
     //printf ("cat: Writing on stderr\n");
     //stdout = stderr;
 
+
 /*
     // #debug
     printf("CAT.BIN: argc %d | argv[0] %s | argv[1] %s \n", 
@@ -189,7 +190,6 @@ int main(int argc, char *argv[])
     // printf("\n");
     // fflush(stderr);
 */
-
 
     //test_streams_worker();
 
