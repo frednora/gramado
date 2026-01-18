@@ -18,6 +18,10 @@ int sys_dup3 (int oldfd, int newfd, int flags);
 // See: fs.c
 int sys_pipe (int *pipefd, int flags);
 
+int file_read_pipe_buffer( file *f, char *buffer, int len );
+int file_write_pipe_buffer( file *f, char *buffer, int len );
+
+
 int sys_read_pipe (int fd, char *ubuf, int count);
 int sys_write_pipe (int fd, char *ubuf, int count);
 

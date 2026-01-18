@@ -349,9 +349,12 @@ struct file_d
 // The buffer size,
 // 0 or -_bf._size, for inline putc 
     int _lbfsize;
-// #todo: file size.
+
 // #test
+// + Total file size on disk for regular files.
+// + Total pipe size for pipes.
     int _fsize;
+
 // Number of available characters in buffer.
     int   _cnt;
 // The buffer (at least 1 byte, if !NULL)

@@ -165,10 +165,15 @@ int file_read_buffer( file *f, char *buffer, int len )
 // Não concatenaremos
 // You also can write now.
 // But i can still read.
-    if (f->____object == ObjectTypePipe){
-        memcpy ( (void *) buffer, (const void *) f->_base, Count );
-        f->_flags |= __SWR;
-        return (int) Count;
+    if (f->____object == ObjectTypePipe)
+    {
+        // #backup: Old implementation
+        // memcpy ( (void *) buffer, (const void *) f->_base, Count );
+        // f->_flags |= __SWR;
+        // return (int) Count;
+
+        // #test: New implementation
+        return (int) file_read_pipe_buffer(f, buffer, Count);
     }
 
 // =================================
@@ -356,6 +361,9 @@ file_write_buffer (
     int len )
 {
     char *p;
+
+// #todo:
+// p = string; → but you never use p (you use string directly in memcpy)
     p = string;
 
     // debug_print ("file_write_buffer:\n");
@@ -394,9 +402,14 @@ file_write_buffer (
 
 // Pipe file.
 // não concatenaremos
-    if (f->____object == ObjectTypePipe){
-        memcpy( (void *) f->_base, (const void *) string, len );
-        return (int) len;
+    if (f->____object == ObjectTypePipe)
+    {
+        // #backup: Old implementation
+        // memcpy( (void *) f->_base, (const void *) string, len );
+        // return (int) len;
+
+        // #test: New implementation
+        return (int) file_write_pipe_buffer(f, string, len);
     }
 
 // Regular file, TTY file, IO Buffer file.
