@@ -11,13 +11,14 @@
 
 //#include "shell.h"
 
+static int __no_pipes = TRUE;
 
 static int __fd_input = -1;
 static int __fd_stdout = -1;
 static int __fd_stderr = -1;
 
 
-static void process_run_command(const char *cmdline);
+static void process_run_command(const char *cmdline, int use_pipes);
 
 // ====================================================
 
@@ -80,7 +81,7 @@ static void pipe_worker(int fd_read)
 // Local worker: run a command line, feed stdin, launch child
 //====================================================
 
-static void process_run_command(const char *cmdline)
+static void process_run_command(const char *cmdline, int use_pipes)
 {
     if (cmdline == NULL || *cmdline == '\0')
         return;
@@ -105,22 +106,32 @@ static void process_run_command(const char *cmdline)
 // It has a shared substructure for pipe info.
 
     int fd[2];
-    pipe(fd);
 
 
-    write(fd[1], cmdline, strlen(cmdline));
-    write(fd[1], "\n", 1);
+    if (use_pipes == TRUE)
+    {
+        pipe(fd);
+
+        // #bugbug
+        // Put the command line into the pipe
+        write(fd[1], cmdline, strlen(cmdline));
+        write(fd[1], "\n", 1);
+    }
+
 
 // Prepare child’s standard streams
 // stdin: the child will consume input from the pipe’s read end.
 // stdout: the child’s normal output goes into the pipe’s write end.
 // stderr: error messages also go into the same pipe’s write end.
 
-// Child’s stdin is the pipe’s read end.
-    dup2(fd[0], STDIN_FILENO);   // child reads from pipe
-// Child’s stdout/stderr are the pipe’s write end.
-    dup2(fd[1], STDOUT_FILENO);  // child writes into pipe
-    dup2(fd[1], STDERR_FILENO);  // child writes into pipe
+    if (use_pipes == TRUE)
+    {
+        // Child’s stdin is the pipe’s read end.
+        dup2(fd[0], STDIN_FILENO);   // child reads from pipe
+        // Child’s stdout/stderr are the pipe’s write end.
+        dup2(fd[1], STDOUT_FILENO);  // child writes into pipe
+        dup2(fd[1], STDERR_FILENO);  // child writes into pipe
+    }
 
 // #bugbug
 // Feed stdin with the full command line
@@ -135,7 +146,6 @@ static void process_run_command(const char *cmdline)
 // Feed stdin with the full command line
     //write(STDOUT_FILENO, cmdline, strlen(cmdline));
     //write(STDOUT_FILENO, "\n", 1);
-
 
 /*
 How it works in a normal shell
@@ -154,6 +164,10 @@ For the right child (grep foo):
 Now the two children are connected directly through the pipe.
 */
 
+    if (use_pipes != TRUE){
+        sc82(44010, cmdline, cmdline, cmdline);
+    }
+
     // Launch child with just the filename
     int tid = rtl_clone_and_execute_return_tid(filename);
 
@@ -169,9 +183,11 @@ Now the two children are connected directly through the pipe.
         rtl_sleep(2000);  //2sec
 
         // Tell the kernel the child is now foreground 
-        sc82 (10011,tid,tid,tid);
+        // sc82 (10011,tid,tid,tid);
 
-        pipe_worker(fd[0]);  // Read from the pipe
+        if (use_pipes == TRUE){
+            pipe_worker(fd[0]);  // Read from the pipe
+        }
 
         // Exit the shell right after a positive launch 
         exit(0);
@@ -227,7 +243,7 @@ static void process_command(void)
         }
 
         // Call the worker
-        process_run_command(cmdline);
+        process_run_command(cmdline, FALSE);
     }
     else if (strcmp(argv[0], "run2") == 0 && argc > 1) {
         char __filename_local_buffer[64];
@@ -323,6 +339,8 @@ static void shell_worker(void)
 
 int main(int argc, char *argv[])
 {
+    __no_pipes = TRUE;  // No pipes needed for now
+
     __fd_input  = dup(STDIN_FILENO );
     __fd_stdout = dup(STDOUT_FILENO);
     __fd_stderr = dup(STDERR_FILENO);

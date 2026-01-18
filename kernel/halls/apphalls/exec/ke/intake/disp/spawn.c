@@ -485,7 +485,6 @@ static void __spawn_thread_by_tid_imp(tid_t tid)
     //if ( target_thread->cpl == RING2 )
     //    panic("spawn_thread: ring2\n");
 
-
 // ===================
 // ring 3
     

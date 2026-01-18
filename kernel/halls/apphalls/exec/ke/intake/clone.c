@@ -1499,6 +1499,27 @@ do_clone:
     child_process->processName_len = 
         k_strnlen(child_process->__processname2, sizeof(child_process->__processname2));
 
+
+
+
+//
+// cmdline
+//
+
+// Copy the full cmdline buffer
+    if (parent_thread->has_cmdline == TRUE)
+    { 
+        strncpy(
+            child_thread->cmdline, 
+            parent_thread->cmdline, 
+            sizeof(parent_thread->cmdline)-1 
+        );
+        child_thread->cmdline[511] = 0; // ensure termination
+        child_thread->has_cmdline = TRUE;
+    } else { 
+        child_thread->has_cmdline = FALSE; 
+    }
+
 //
 // Balance 
 //

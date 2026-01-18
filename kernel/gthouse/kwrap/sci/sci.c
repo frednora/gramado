@@ -2976,6 +2976,66 @@ void *sci2 (
         return NULL;
     }
 
+// Inject a cmdline into the thread structure 
+// for sharing it with the child.
+    if (number == 44010)
+    {
+        current_thread;
+        if (current_thread < 0 || current_thread >= THREAD_COUNT_MAX)
+            return NULL;
+        t = (struct thread_d *) threadList[current_thread];
+        if ((void*) t == NULL){
+            return NULL;
+        }
+        if (t->used != TRUE){
+            return NULL;
+        }
+        if (t->magic != 1234){
+            return NULL;
+        }
+
+        // Copy from userbuffer
+        memset(t->cmdline,0,512-1);
+        if (arg2 != 0){
+            strncpy(t->cmdline, arg2, 512-1);
+            t->cmdline[511] = '\0'; // ensure null termination
+        }
+        t->has_cmdline = TRUE;  // set flag
+
+        return NULL;
+    }
+
+// Read a cmdline from the thread structure.
+// Probably shared by the father
+    if (number == 44011)
+    {
+        current_thread;
+        if (current_thread < 0 || current_thread >= THREAD_COUNT_MAX)
+            return NULL;
+        t = (struct thread_d *) threadList[current_thread];
+        if ((void*) t == NULL){
+            return NULL;
+        }
+        if (t->used != TRUE){
+            return NULL;
+        }
+        if (t->magic != 1234){
+            return NULL;
+        }
+
+        if (t->has_cmdline != TRUE)
+            return NULL;
+
+        // Copy to userbuffer 
+        char *p_ubuf = (char *) arg2;       
+        if (p_ubuf != 0){
+            strncpy(p_ubuf, t->cmdline, 512-1);
+            p_ubuf[511] = 0;
+        }
+        return NULL;
+    }
+
+
 // Counter
     __default_syscall_counter++;
 

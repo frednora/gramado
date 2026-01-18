@@ -277,6 +277,10 @@ void crt0(unsigned long rdi)
         //fflush(stdout);
     //}
 
+// Overriding only if there is some cmdline for us.
+    sc82(44011,buffer,buffer,buffer);
+    buffer[n] = '\0';
+
     // After reading stdin into buffer
     // Debug: show exactly what was read
     // printf("crt0: raw stdin buffer = [%s]\n", buffer);

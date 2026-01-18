@@ -292,6 +292,12 @@ struct thread_d
 // ...
     unsigned long flags;
 
+
+// Used to share a cmdline between father and child.
+    char cmdline[512]; 
+    int has_cmdline;
+
+
 // Priority support
     unsigned long base_priority;  // static 
     unsigned long priority;       // dynamic
