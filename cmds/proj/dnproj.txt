@@ -1,0 +1,49 @@
+Notes on projecton:
+
+  y/r = sin(angle)
+  x/r = cos(angle) 
+  y = r * sin(angle)
+  x = r * cos(angle)
+
+=============================
+Using radius=1
+
+  y/1 = sin(angle)
+  x/1 = cos(angle) 
+  y = 1 * sin(angle)
+  x = 1 * cos(angle)
+
+=============================
+We have a point (x, y, z)
+
+Projection is related with the correlation:
+x' = x/z
+y' = y/z
+
+Projection from 3D space (x, y, z) onto a 
+2D plane using what’s called perspective projection.
+
+In perspective projection, the farther away 
+the point (larger z), the smaller its projected coordinates.
+
+x' = x/z
+y' = y/z
+
+Both the unit circle trigonometry and the 3D-to-2D projection rely on the same geometric principle: ratios of lengths relative to a reference distance.
+
+In both cases, the actual coordinates are normalized by a reference measure:
+ + Circle: normalized by radius r.
+ + Projection: normalized by depth z.
+
+This normalization produces dimensionless ratios (sine, cosine, or projected coordinates) that describe geometry in a simplified way.
+
+==============
+Aspect Ratio 
+
+AR = width/height
+
+x' = x/(z*AR)
+y' = y/z
+
+If AR > 1 (wide screen), x' is compressed horizontally.
+If AR < 1 (tall screen), x' is stretched horizontally.
