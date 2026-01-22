@@ -405,12 +405,11 @@ static struct gws_window_d *__create_window_object(void)
 // min, max, close.
 int do_create_controls(struct gws_window_d *w_titlebar)
 {
-// Windows
     struct gws_window_d *w_minimize;
     struct gws_window_d *w_maximize;
     struct gws_window_d *w_close;
-    //?
-    int id = -1;
+
+    int id = -1;      // ?
 
 // Colors for the button
     unsigned int bg_color = (unsigned int) get_color(csiButton);
@@ -474,23 +473,19 @@ int do_create_controls(struct gws_window_d *w_titlebar)
             w_titlebar, 0, bg_color, bg_color );
 
     if ((void *) w_minimize == NULL){
-        //server_debug_print ("xx: minimize fail \n");
         goto fail;
     }
     if (w_minimize->magic != 1234){
         goto fail;
     }
-    w_minimize->isControl = TRUE;
-
-    w_minimize->left_offset = 
-        (unsigned long) (w_titlebar->width - LastLeft);
-
     w_minimize->type = WT_BUTTON;
+    w_minimize->isControl = TRUE;
     w_minimize->isMinimizeControl = TRUE;
+
+    w_minimize->left_offset = (unsigned long) (w_titlebar->width - LastLeft);
 
     id = (int) RegisterWindow(w_minimize);
     if (id<0){
-        //server_debug_print("xxx: Couldn't register w_minimize\n");
         goto fail;
     }
     w_titlebar->Controls.minimize_wid = (int) id;
@@ -517,22 +512,19 @@ int do_create_controls(struct gws_window_d *w_titlebar)
             w_titlebar, 0, bg_color, bg_color );
 
     if ((void *) w_maximize == NULL){
-        //server_debug_print ("xx: w_maximize fail \n");
         goto fail;
     }
-    if (w_maximize->magic!=1234){
+    if (w_maximize->magic != 1234){
         goto fail;
     }
-    w_maximize->isControl = TRUE;
-    
-    w_maximize->left_offset = 
-        (unsigned long) (w_titlebar->width - LastLeft);
-
     w_maximize->type = WT_BUTTON;
+    w_maximize->isControl = TRUE;
     w_maximize->isMaximizeControl = TRUE;
+
+    w_maximize->left_offset = (unsigned long) (w_titlebar->width - LastLeft);
+
     id = RegisterWindow(w_maximize);
     if (id<0){
-        //server_debug_print ("xxx: Couldn't register w_maximize\n");
         goto fail;
     }
     w_titlebar->Controls.maximize_wid = (int) id;
@@ -558,30 +550,26 @@ int do_create_controls(struct gws_window_d *w_titlebar)
             w_titlebar, 0, bg_color, bg_color );
 
     if ((void *) w_close == NULL){
-        //server_debug_print ("xx: w_close fail \n");
         goto fail;
     }
-    if (w_close->magic!=1234){
+    if (w_close->magic != 1234){
         goto fail;
     }
-    w_close->isControl = TRUE;
-    
-    w_close->left_offset = 
-        (unsigned long) (w_titlebar->width - LastLeft);
-
     w_close->type = WT_BUTTON;
+    w_close->isControl = TRUE;
     w_close->isCloseControl = TRUE;
+
+    w_close->left_offset = (unsigned long) (w_titlebar->width - LastLeft);
+
     id = RegisterWindow(w_close);
     if (id<0){
-        //server_debug_print ("xxx: Couldn't register w_close\n");
         goto fail;
     }
     w_titlebar->Controls.close_wid = (int) id;
 
     w_titlebar->Controls.initialized = TRUE;
-
-// Done
     return 0;
+
 fail:
     return (int) -1;
 }
