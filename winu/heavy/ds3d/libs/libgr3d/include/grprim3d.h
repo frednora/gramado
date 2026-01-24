@@ -52,5 +52,12 @@ struct gr_mat4x4_d
     float m[4][4];
 };
 
+/*
+struct gr_vecF4D_d {
+    float x, y, z, w;
+    unsigned int color;
+};
+*/
+
 #endif    
 

@@ -1,6 +1,6 @@
 // libgr3d.c
 // Support for 3D routines.
-// sing float values.
+// Using float values.
 // Created by Fred Nora.
 
 /*

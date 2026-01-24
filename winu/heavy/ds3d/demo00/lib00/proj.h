@@ -110,6 +110,32 @@ gwsDepthRange(
     int minZ, 
     int maxZ);
 
+
+
+void 
+workerModelTransform(
+    struct gr_vecF3D_d *in,
+    struct gr_vecF3D_d *out,
+    struct gr_mat4x4_d *modelMatrix);
+
+void 
+workerViewTransform(
+    struct gr_vecF3D_d *in,
+    struct gr_vecF3D_d *out,
+    struct gr_mat4x4_d *viewMatrix);
+
+void 
+workerProjection(
+    struct gr_vecF3D_d *in,
+    struct gr_vecF3D_d *out,
+    struct gr_mat4x4_d *projMatrix);
+
+void 
+workerViewportTransform(
+    struct gr_vecF3D_d *in,
+    int *screenX, int *screenY,
+    int screenWidth, int screenHeight);
+
 // ======================================================
 // Using float.
 

@@ -63,6 +63,19 @@ int coisolibgr=0;
 // _x, _y: Input coordinates in view space.
 // _hotspotx, _hotspoty: The center of the screen in screen coordinates.
 
+// Instead of using a homogeneous 4×4 projection matrix with floats, 
+// it’s doing a hand‑made oblique projection (Cavalier‑style):
+
+// Why This Is “Oblique Projection”
+// This is exactly the Cavalier/Cabinet trick:
+// 𝑋 = ℎ𝑜𝑡𝑠𝑝𝑜𝑡𝑥 + 𝑥 + 𝑘𝑥 ⋅ 𝑧
+// 𝑌 = ℎ𝑜𝑡𝑠𝑝𝑜𝑡𝑦 − 𝑦 + 𝑘𝑦 ⋅ 𝑧
+// with 𝑘𝑥, 𝑘𝑦 chosen as ±1 depending on handedness.
+// It does not shrink objects with distance (no perspective divide).
+// Z is just a diagonal offset, so cubes look “slanted” but not smaller when far away.
+// This is why it feels like a 2.5D engine rather than full 3D.
+// #ps: The shrink is done by the caller when still using floting point.
+
 int 
 libgr_transform_to_screespace(
     int *res_x, int *res_y,

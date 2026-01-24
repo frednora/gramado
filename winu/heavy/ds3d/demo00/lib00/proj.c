@@ -119,8 +119,70 @@ gwsDepthRange(
     gr_depth_range(CurrentProjection,minZ,maxZ);
 }
 
+// Model Transform
+// Applies local object transforms (rotation, translation, scaling).
+void 
+workerModelTransform(
+    struct gr_vecF3D_d *in,
+    struct gr_vecF3D_d *out,
+    struct gr_mat4x4_d *modelMatrix)
+{
+    gr_MultiplyMatrixVector(in, out, modelMatrix);
+}
+
+
+// View Transform (Camera LookAt)
+// Builds a view matrix from camera position, target, and up vector.
+
+void 
+workerViewTransform(
+    struct gr_vecF3D_d *in,
+    struct gr_vecF3D_d *out,
+    struct gr_mat4x4_d *viewMatrix)
+{
+    gr_MultiplyMatrixVector(in, out, viewMatrix);
+}
+
+
+// Projection (Perspective)
+// Applies perspective shrink and aspect ratio correction.
+void 
+workerProjection(
+    struct gr_vecF3D_d *in,
+    struct gr_vecF3D_d *out,
+    struct gr_mat4x4_d *projMatrix)
+{
+    gr_MultiplyMatrixVector(in, out, projMatrix);
+    // Perspective divide is already inside gr_MultiplyMatrixVector
+}
+
+// Viewport Transform
+// Maps normalized device coordinates (NDC) into screen coordinates.
+void 
+workerViewportTransform(
+    struct gr_vecF3D_d *in,
+    int *screenX, int *screenY,
+    int screenWidth, int screenHeight)
+{
+    *screenX = (int)((in->x + 1.0f) * 0.5f * screenWidth);
+    *screenY = (int)((1.0f - in->y) * 0.5f * screenHeight);
+}
+
+
 // ======================================================
 // Using float.
+
+/*
+Pipeline
+ + Model transform: object → world.
+ + View transform: world → camera (using cameraF.viewMatrix).
+ + Projection transform: camera → clip space (using cameraF.projection->matProj).
+ + Viewport transform: clip space → screen coordinates.
+ + Rasterizer: fillTriangle0.
+*/
+
+// A complete pipeline is: 
+// model → view → projection → viewport → rasterization. 
 
 int 
 grInitializeProjection(
@@ -183,11 +245,17 @@ grInitializeProjection(
     matProj.m[1][1] = (float) fFovRad;
     // #todo: Here we are normalizing the z values.
     // The purpose is using values in a range of 0~1.
-    matProj.m[2][2] = (float) (fFar / (fFar - fNear));
+    //matProj.m[2][2] = (float) (fFar / (fFar - fNear));
+    // #test: This is how its done in other conventional engines.
+     matProj.m[2][2] = (fFar + fNear) / (fFar - fNear);
+
     //#bugbug: Talvez os 2 abaixo estão invertidos.
     matProj.m[2][3] = (float) 1.0f;
-    matProj.m[3][2] = (float) ((-fFar * fNear) / (fFar - fNear));
-    
+
+    //matProj.m[3][2] = (float) ((-fFar * fNear) / (fFar - fNear));
+    // #test: This is how its done in other conventional engines.
+     matProj.m[3][2] = (-2 * fFar * fNear) / (fFar - fNear);
+
     matProj.m[3][3] = (float) 0.0f;
 
     CurrentProjectionF.initialized = TRUE;
