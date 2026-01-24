@@ -55,6 +55,11 @@ static const char *default_window_name = "Untitled window";
 
 static struct gws_window_d *__create_window_object(void);
 
+// Create the controls given the titlebar.
+// min, max, close.
+static int __do_create_controls(struct gws_window_d *w_titlebar);
+
+
 //
 // =====================================
 //
@@ -403,7 +408,7 @@ static struct gws_window_d *__create_window_object(void)
 
 // Create the controls given the titlebar.
 // min, max, close.
-int do_create_controls(struct gws_window_d *w_titlebar)
+static int __do_create_controls(struct gws_window_d *w_titlebar)
 {
     struct gws_window_d *w_minimize;
     struct gws_window_d *w_maximize;
@@ -749,7 +754,8 @@ struct gws_window_d *do_create_titlebar(
 // Draw rectangle
 // IN: l, t, w, h, color, rop
     painterFillWindowRectangle( 
-        r0_left, r0_top, r0_width, r0_height, r0_color, r0_rop );
+        r0_left, r0_top, r0_width, r0_height, 
+        r0_color, r0_rop );
 
 //----------------------
 // String
@@ -776,8 +782,9 @@ struct gws_window_d *do_create_titlebar(
     }
 
 // --------------------------------------
-// Top PAD.
+// String support
 
+// Top pad for the string
     StringTopPad = 
         ( ( (unsigned long) tbWindow->height - FontInitialization.height ) >> 1 );
 
@@ -804,35 +811,36 @@ struct gws_window_d *do_create_titlebar(
 
     unsigned long sL=0;
     unsigned long sT=0;
-    //unsigned int sColor = (unsigned int) parent->titlebar_text_color;
+    parent->titlebar_text_left = 0;
+    parent->titlebar_text_top = 0;
     if (useTitleString == TRUE)
     {
-        // Saving relative position.
-        parent->titlebar_text_left = StringLeftPad;
-        parent->titlebar_text_top = StringTopPad;
         sL = (unsigned long) ((tbWindow->absolute_x) + StringLeftPad);
         sT = (unsigned long) ((tbWindow->absolute_y) + StringTopPad);
         grDrawString ( sL, sT, StringColor, tbWindow->name );
+
+        // Saving relative position
+        parent->titlebar_text_left = StringLeftPad;
+        parent->titlebar_text_top = StringTopPad;
     }
 
 // ---------------------------------
-// Controls
+// Controls:
+// Invalidade all the controls only if they were created
     int controls_ok = FALSE;
-    controls_ok = (int) do_create_controls(tbWindow);
-    // Only if we created the controls.
-    if (controls_ok == 0){
-        // Invalidade all the controls.
+    controls_ok = (int) __do_create_controls(tbWindow);
+    if (controls_ok == 0)
+    {
         invalidate_window_by_id(tbWindow->Controls.minimize_wid);
         invalidate_window_by_id(tbWindow->Controls.maximize_wid);
         invalidate_window_by_id(tbWindow->Controls.close_wid);
     }
 
-    // Invalidate the tb window.
-    tbWindow->dirty = TRUE;
-
-// Now the parent has a valid ponter to the titlebar.
+// Now the parent has a valid ponter to the titlebar
     parent->titlebar = (struct gws_window_d *) tbWindow;
 
+// Invalidate the tb window and return its pointer
+    tbWindow->dirty = TRUE;
     return (struct gws_window_d *) tbWindow;
 }
 

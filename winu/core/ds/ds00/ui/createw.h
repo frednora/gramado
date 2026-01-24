@@ -8,9 +8,6 @@
 int destroy_window_by_wid(int wid);
 void DestroyAllWindows(void);
 
-// Controls
-int do_create_controls(struct gws_window_d *w_titlebar);
-
 // Title bar
 struct gws_window_d *do_create_titlebar(
     struct gws_window_d *parent,
