@@ -2213,7 +2213,7 @@ rtl_clone_and_execute_return_tid_ex(
         return -1;
     }
 // cmdline validation
-    if ((void*) name == NULL || *name == 0) 
+    if ((void*) cmdline == NULL || *cmdline == 0) 
     {
         useCmdline = FALSE;
     }
