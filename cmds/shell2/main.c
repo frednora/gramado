@@ -76,12 +76,21 @@ static void process_run_command(const char *cmdline, int use_pipes)
     //write(STDIN_FILENO, cmdline, strlen(cmdline));
     //write(STDIN_FILENO, "\n", 1);
 
-    // #bugbug: Not working here in shell2
+/*
+    // #backup: Old way. (it's working)
     // Inject cmdline: The kernel passes it to the child.
     sc82(44010, cmdline, cmdline, cmdline);
-
     // Launch child with just the filename
     int tid = rtl_clone_and_execute_return_tid(filename);
+*/
+
+    // #test
+    // It passes the cmdline, clone it and return the child's tid.
+    int tid = 
+        rtl_clone_and_execute_return_tid_ex (
+            filename, 
+            cmdline 
+        );
 
     // Report result
     if (tid < 0) {

@@ -164,13 +164,35 @@ For the right child (grep foo):
 Now the two children are connected directly through the pipe.
 */
 
+/*
+    // #backup: Old way. (it's working)
+
     if (use_pipes != TRUE){
         // Inject cmdline: The kernel passes it to the child.
         sc82(44010, cmdline, cmdline, cmdline);
     }
-
     // Launch child with just the filename
     int tid = rtl_clone_and_execute_return_tid(filename);
+
+*/
+
+    int tid = -1;
+
+    if (use_pipes != TRUE)
+    {
+        // #test
+        // It passes the cmdline, clone it and return the child's tid.
+        tid = 
+            rtl_clone_and_execute_return_tid_ex (
+                filename, cmdline );
+    }
+
+    if (use_pipes == TRUE)
+    {
+        // Launch child with just the filename
+        tid = rtl_clone_and_execute_return_tid(filename);
+    }
+   
 
     // Report result
     if (tid < 0) {
