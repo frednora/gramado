@@ -110,8 +110,6 @@ extern struct vga_info_d  VGAInfo;
 // =====================================================
 //
 
-int vgad_main(void);
-
 
 #endif   
 

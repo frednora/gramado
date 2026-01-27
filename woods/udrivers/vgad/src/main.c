@@ -446,9 +446,12 @@ static void serial_write_char (char data);
 
 // vga
 static void write_registers(int mode_index);
-void VGA_clear_screen(void);
+static void VGA_clear_screen(void);
 
-int vga_initialize(int mode_number);
+// Initialization
+static int vga_initialize(int mode_number);
+static int vgad_main(void);
+
 // ============================================================
 
 
@@ -601,10 +604,8 @@ fail:
 }
 
 
-/**
-* Clears the VGA screen
-*/
-void VGA_clear_screen(void)
+// Clears the VGA screen
+static void VGA_clear_screen(void)
 {
 
 // #bugbug
@@ -632,8 +633,7 @@ void VGA_clear_screen(void)
 
 
 /*
- * ------------------------------------------------------------------
- * VGA_init:
+ * vga_initialize:
  *     320x200x256.
  *     Note here the vga struct must have 
  *     the width 320 and 
@@ -641,12 +641,11 @@ void VGA_clear_screen(void)
  *    color mode is 256.
  */
 
-int vga_initialize(int mode_number)
+static int vga_initialize(int mode_number)
 {
-    printf ("VGA_init:\n");
+    printf ("vga_initialize:\n");
 
     VGAInfo.initialized = FALSE;
-
 
 // #bugbug
 // We can't write on this address from ring3.
@@ -693,11 +692,8 @@ fail:
 
 
 // ======================================================
-// main
-
-int vgad_main(void)
+static int vgad_main(void)
 {
-
     char *env_host;
     char *env_user;
     unsigned char good=0;
@@ -864,4 +860,15 @@ via_rtl:
     return (int) (-1);
 }
 
+
+
+int main(int argc, char *argv[])
+{
+    // #todo
+    // Command line
+
+    vgad_main();
+
+    return 0;
+}
 

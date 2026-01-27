@@ -1,0 +1,98 @@
+Why Resolution Change Is Hard
+
+VGA vs. SVGA:
+Standard VGA only supports a handful of fixed modes (like 320×200×256 and 640×480×16).
+Anything beyond that (e.g., 800×600, 1024×768) requires SuperVGA extensions or 
+VESA BIOS Extensions (VBE).
+The code is correct for VGA, but VirtualBox/QEMU often emulate SVGA devices 
+that don’t fully honor raw VGA register programming.
+
+CRTC timing registers:
+These are very sensitive. If the values don’t match the monitor’s expected timings, 
+you’ll get garbled output or no change at all.
+That’s why your 640×480 mode sometimes only changes height to 300 in VBox. 
+It’s partially accepting the timings but not fully.
+
+
+DAC state
+You mention the DAC is “undefined.” 
+That’s true: you need to program the palette (ports 0x3C8/0x3C9) 
+if you want correct colors in 256‑color modes.
+
+Suggestions for Next Steps:
+Testing: Stick to mode 13h (320×200×256) first—it’s the most reliable across emulators. 
+Once that works, expand to mode 12h (640×480×16).
+
+Debugging: Use serial output (like you already do) to confirm register writes. 
+Sometimes emulators silently ignore invalid values.
+
+Considerations:
+VGA being very rigid (only a few modes).
+Emulators often emulating SVGA/VBE instead of raw VGA.
+Ring 3 restrictions on direct framebuffer access.
+
+-------------------------------------------------------------
+
+Horizontal timing (CRTC 0x00–0x05)  
+These registers control how many character clocks per line. 
+If you set them correctly, the width changes.
+
+Vertical timing (CRTC 0x06–0x16)  
+These control scanlines per frame. 
+If they don’t match the overflow bits or maximum scanline register, 
+the emulator ignores them.
+
+Protect bit (CRTC index 0x11)  
+You correctly unlock it, but if the emulator doesn’t fully emulate raw VGA, 
+some registers remain “sticky” and don’t apply.
+
+Miscellaneous Output Register (0x3C2)  
+This selects the clock source. 
+If the clock doesn’t match the horizontal/vertical timings, 
+one dimension may update while the other stays locked.
+
+
+---------------------------------------------
+
+Emulator Behavior:
+
+VirtualBox (VBoxVGA): 
+It partially honors VGA register programming, but often clamps to “safe” values. 
+That’s why you saw height go to 300 but width stayed fixed.
+
+QEMU (stdvga/VMSVGA): 
+These devices expect VBE calls instead of raw VGA register pokes. 
+They ignore unsupported timing combinations.
+
+--------------------------------------
+What You Can Try
+
+Stick to known VGA modes
+  Mode 13h (320×200×256)
+  Mode 12h (640×480×16)
+  These are guaranteed to work because the emulator has them hardcoded.
+
+Check overflow bits
+  Vertical total, retrace, and display end often exceed 8 bits.
+  You need to set the Overflow Register (CRTC 0x07) correctly, or the height won’t apply.
+
+Match clock source
+  For 320×200, use 0x63 in Misc Output.
+  For 640×480, use 0xE3.
+  If you mismatch, one dimension updates but the other doesn’t.
+
+Palette/DAC setup
+  Even if resolution changes, colors may look wrong unless you initialize the DAC.
+
+--------------------------------------
+Bottom Line
+You’re seeing width or height change independently because:
+
+VGA timing registers are very sensitive.
+
+Emulators only partially honor raw VGA programming.
+
+Overflow bits and clock source must match exactly.
+
+If you want both width and height to change together, focus on mode 13h (320×200×256) first — it’s the most reliable. 
+For higher resolutions, you’ll need VBE rather than raw VGA registers.

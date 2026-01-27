@@ -1,0 +1,6 @@
+
+#todo
+
+The program needs to send a notification to the display server.
+Telling that the resolution has changed.
+The kernel also needs to be notified.

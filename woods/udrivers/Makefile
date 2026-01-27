@@ -8,8 +8,7 @@ all:
 	make -C libs/
 #	make -C toolkits/
 
-#	make -C vgad/client/
-	make -C vgad/server/
+	make -C vgad/src/
 # ...
 
 clean:

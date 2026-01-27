@@ -12,7 +12,7 @@ linkTarget = VGAD.BIN
 # LDFLAGS := -m elf_x86_64 -static
 # LDFLAGS := -m elf_x86_64 -s -x -static  
 linkFlags  = -m elf_x86_64 \
--s -x -static -T ../link.ld
+-s -x -static -T ../../link.ld
 
 
 VERSION = 0
@@ -43,7 +43,7 @@ LIBIO    = ../../libs/libio01/include/
 LIBIOOBJ = ../../libs/libio01/obj
 
 #Objects
-myObjects = crt0.o main.o vgad.o rtl.o \
+myObjects = crt0.o main.o rtl.o \
 ctype.o stdio.o stdlib.o string.o \
 unistd.o termios.o ioctl.o fcntl.o libio.o    
 
@@ -55,8 +55,6 @@ all: main.o all-c jackpot-link finalize clean
 main.o:
 	gcc  -c  main.c  $(CFLAGS) -I $(LIBC) -I $(LIBIO) -o main.o
 all-c:
-
-	gcc  -c vgad.c  $(CFLAGS) -I $(LIBC) -I $(LIBIO) -o vgad.o
 
 	cp $(LIBCOBJ)/crt0.o   .
 	cp $(LIBCOBJ)/rtl.o  .
