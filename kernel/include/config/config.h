@@ -268,7 +268,15 @@ Standard Linux Runlevels (0-6)
 
 #define CONFIG_QUANTUM_MULTIPLIER  __QUANTUM_MULTIPLIER  
 
+/*
+ * Scheduling policies
+ */
 
+#define __SCHED_POLICY_RR    0
+#define __SCHED_POLICY_PRIORITY_INTERLEAVING  1  // Queues
+// ...
+#define CONFIG_CURRENT_SCHEDULING_POLICY  \
+    __SCHED_POLICY_RR
 
 #endif 
 

@@ -21,10 +21,16 @@ extern struct thread_d  *ev_responder_thread;
 
 /*
  * Scheduling policies
+ * see: config.h
  */
 
-#define SCHED_POLICY_RR    0
-#define SCHED_POLICY_PRIORITY_INTERLEAVING  1  // Queues
+#define SCHED_POLICY_RR  \
+    __SCHED_POLICY_RR
+
+// Queues
+#define SCHED_POLICY_PRIORITY_INTERLEAVING  \
+    __SCHED_POLICY_PRIORITY_INTERLEAVING
+
 // ...
 
 // Scheduler information
@@ -68,6 +74,9 @@ struct thread_d *get_next_on_queue_or_the_init_thread(struct thread_d *q);
 struct thread_d *get_ev_responter(void);
 int set_ev_responder(struct thread_d *thread);
 int has_pending_event(struct thread_d *thread);
+
+
+void sched_show_info(void);
 
 //
 // In schedi.c

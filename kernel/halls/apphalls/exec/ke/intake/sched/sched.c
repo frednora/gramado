@@ -41,6 +41,9 @@ static struct thread_d  *p6q;  // Higher
 int g_use_event_responder=TRUE;
 struct thread_d *ev_responder_thread;
 
+// Global counters 
+unsigned long stage_selection_count[6+1];
+
 //
 // == Private functions: prototypes =============
 //
@@ -249,6 +252,20 @@ int has_pending_event(struct thread_d *thread)
     return FALSE;
 }
 
+void sched_show_info(void)
+{
+    int i=0;
+    for (i=0; i<=6; i++)
+    {
+        // Stages
+        printk("[sched] Stage %d selected %d times\n", 
+            i, 
+            stage_selection_count[i] );
+    };
+
+    // ...
+}
+
 // Lock scheduler
 void scheduler_lock (void){
     SchedulerInfo.is_locked = (int) LOCKED;
@@ -315,6 +332,9 @@ static struct thread_d *__build_stage_queue(int stage, unsigned long priority)
     unsigned long Priority = priority; // #todo: In the future
     unsigned long target_quantum = QUANTUM_NORMAL_THRESHOLD;
 
+
+    if (stage > 0 && stage <= 6)
+        stage_selection_count[stage] = stage_selection_count[stage] + 1;
 
 // ------------------------------------
 // Decide Init quantum once, based on display server flag
@@ -386,19 +406,29 @@ static struct thread_d *__build_stage_queue(int stage, unsigned long priority)
                     // In the future if the priority selection is enough, 
                     // we can remove these other filters.
  
+                    
+                    /*
                     // Display server: The king king
-                    if (DisplayServerInfo.initialized == TRUE){
-                        if (TmpThread->tid == DisplayServerInfo.tid){
-                            TmpThread->quantum = QUANTUM_MAX;
+                    if (DisplayServerInfo.initialized == TRUE)
+                    {
+                        if (TmpThread->tid == DisplayServerInfo.tid)
+                        {
+                            //printk("ds: priority %d\n",priority);
+                            //while(1){}
+                            TmpThread->quantum = QUANTUM_MAX;  //*3
                             //Idle->quantum = QUANTUM_Q1;
                         }
                     }
+                    */
 
+
+                    /*
                     // Foreground thread: more responsive
                     if (TmpThread->tid == foreground_thread){
                         TmpThread->quantum = QUANTUM_MAX;
                         //Idle->quantum = QUANTUM_Q1;
                     }
+                    */
 
                     // ...
                 }
@@ -552,7 +582,8 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
 // thread flower do processo init.
 // INIT_TID = SYSTEM_THRESHOLD_TID.
 
-    if (FirstTID != SYSTEM_THRESHOLD_TID){
+    //if (FirstTID != SYSTEM_THRESHOLD_TID)
+    if (FirstTID != INIT_TID){
         panic("__scheduler_rr: FirstTID\n");
     }
 
@@ -599,12 +630,11 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
     //if (jiffies >= Idle->wake_jiffy)
         //do_thread_ready(TmpThread->tid);
 
-// Começa a pegar da thread 1, porque a 0 ja pegamos.
-    //int Start = (Idle->tid + 1);
+// Start from init+1, because init we already got.
     static int Start = (INIT_TID +1);
     static int Max = THREAD_COUNT_MAX;
 
-    int ReadCounter=0;  // Number of READY threads scheduled
+    int ReadyCounter=0;  // Number of READY threads scheduled
 
 // This loop builds the queue of READY threads.
 // Threads in other state will be checked and the 
@@ -855,12 +885,12 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                     TmpThread->credits = 0;
                 }
 
-                ReadCounter++;
+                ReadyCounter++;
             }
         }
     };
 
-    SchedulerInfo.rr_ready_threads_in_round = ReadCounter;
+    SchedulerInfo.rr_ready_threads_in_round = ReadyCounter;
     sched_quick_and_dirty_load_balancer();
 
 // Finalizing the list.
@@ -898,7 +928,8 @@ static tid_t __scheduler_priorityinterleaving(unsigned long sched_flags)
     if (SchedulerInfo.policy != SCHED_POLICY_PRIORITY_INTERLEAVING)
         panic("__scheduler_priorityinterleaving: Scheduler policy\n");
 
-// Current stage
+// Current stage. 
+// Round it if necessary.
     if (SchedulerInfo.stage > SchedulerInfo.max_stage)
         SchedulerInfo.stage = 1;
 
@@ -906,7 +937,6 @@ static tid_t __scheduler_priorityinterleaving(unsigned long sched_flags)
     Init = (struct thread_d *) InitThread;
     if ((void*) Init == NULL || Init->magic != 1234)
         panic("__scheduler_priorityinterleaving: InitThread validation\n");
-
 
 
     // #debug
@@ -944,6 +974,9 @@ static tid_t __scheduler_priorityinterleaving(unsigned long sched_flags)
         currentq = p1q;
         currentq->next = NULL;
 
+        // Counter
+        stage_selection_count[0] = stage_selection_count[0] + 1;
+
         // Advance to stage 1
         SchedulerInfo.stage = 1;
 
@@ -966,46 +999,55 @@ static tid_t __scheduler_priorityinterleaving(unsigned long sched_flags)
             currentq = p6q;
             SchedulerInfo.stage = 2; 
             break;
+
         case 2: 
             //printk("scheduler: stage={ %d }\n", SchedulerInfo.stage);
             p5q = __build_stage_queue(5, PRIORITY_P5);
             currentq = p5q;
             SchedulerInfo.stage = 3;
             break;
+
         case 3: 
             //printk("scheduler: stage={ %d }\n", SchedulerInfo.stage);
             p4q = __build_stage_queue(4, PRIORITY_P4);
             currentq = p4q;
             SchedulerInfo.stage = 4;
             break;
+
         case 4: 
             //printk("scheduler: stage={ %d }\n", SchedulerInfo.stage);
             p3q = __build_stage_queue(3, PRIORITY_P3);
             currentq = p3q;
             SchedulerInfo.stage = 5;
             break;
+
         case 5: 
             //printk("scheduler: stage={ %d }\n", SchedulerInfo.stage);
             p2q = __build_stage_queue(2, PRIORITY_P2);
             currentq = p2q;
             SchedulerInfo.stage = 6;
             break;
+
         case 6: 
             //printk("scheduler: stage={ %d }\n", SchedulerInfo.stage);
             p1q = __build_stage_queue(1, PRIORITY_P1);
             currentq = p1q;
             SchedulerInfo.stage = 1;
             break;
+
         // Resets to stage 0 if something goes wrong, 
         // reconfigures with init thread, and returns.
         default:
             //printk("scheduler: stage={ Default }\n");
             FirstTID = Init->tid;
             p1q = Init;
+            p1q->next = NULL;
             //qlist_set_element(SCHED_P1_QUEUE, p1q);
             currentq = p1q;
             // Next will be 0 for reconfiguration.
             SchedulerInfo.stage = 0;
+
+            return (tid_t) currentq->tid;
             break;
     }
 
@@ -1035,7 +1077,9 @@ tid_t scheduler(void)
         panic("scheduler: system_state\n");
     }
     system_state = SYSTEM_SCHEDULING;
+
 // Thread counter
+// #todo: We are still in Uni-Processor mode.
     if (UPProcessorBlock.threads_counter == 0){
         panic("scheduler: UPProcessorBlock.threads_counter == 0\n");
     }
@@ -1046,16 +1090,19 @@ tid_t scheduler(void)
 
 // Select the current policy
 // IN: sched_flags
+
     if (Policy == SCHED_POLICY_RR){
-        //panic("RR\n");
+
         first_tid = (tid_t) __scheduler_rr(0);
+
     } else if (Policy == SCHED_POLICY_PRIORITY_INTERLEAVING){
-        //panic("QUEUE\n");
+
         // #debug 
         // #ps: The scheduler will not be called by the ts.c 
         // if the processor has only one thread. It uses the InitThread.
+
         first_tid = (tid_t) __scheduler_priorityinterleaving(0);
-        //panic("scheduler: Policy not supported\n");
+
     } else {
         panic("scheduler: Invalid policy\n");
     };
@@ -1350,13 +1397,14 @@ int init_scheduler(unsigned long sched_flags)
 
 // -------------------------------
 // Scheduler policies
-// See: sched.h
+// See: config.h, sched.h
 
 // #todo I guess we can create definitions in config.h
 // in order to select the desired policy
 
-    SchedulerInfo.policy = SCHED_POLICY_RR;  // Default
+    //SchedulerInfo.policy = SCHED_POLICY_RR;  // Default
     //SchedulerInfo.policy = SCHED_POLICY_PRIORITY_INTERLEAVING;
+    SchedulerInfo.policy = CONFIG_CURRENT_SCHEDULING_POLICY;
 
 //
 // For rr policy
@@ -1367,9 +1415,18 @@ int init_scheduler(unsigned long sched_flags)
 //
 // For queues policy
 //
-
     SchedulerInfo.stage = 0;       // start at stage 0 (preparation)
     SchedulerInfo.max_stage = 6;   // you have 6 queues (p1q..p6q)
+
+// Couter.
+// Counting how many times each stage was selected.
+    stage_selection_count[0] = 0;
+    stage_selection_count[1] = 0;
+    stage_selection_count[2] = 0;
+    stage_selection_count[3] = 0;
+    stage_selection_count[4] = 0;
+    stage_selection_count[5] = 0;
+    stage_selection_count[6] = 0;
 
 // ----
     SchedulerInfo.flags = (unsigned long) sched_flags;

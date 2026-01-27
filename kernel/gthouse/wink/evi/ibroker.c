@@ -961,6 +961,13 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         goto exit_cmp;
     }
 
+// sched:
+    if ( kstrncmp( cmdline, "sched", 5 ) == 0 )
+    {
+        sched_show_info();
+        goto exit_cmp;
+    }
+
 // cpu: Display cpu info.
 // see: x64info.c
     if ( kstrncmp( cmdline, "cpu", 3 ) == 0 ){

@@ -609,11 +609,19 @@ ZeroGravity:
     }
 
 // ----------------------------------------
-// End of round. 
+// End of round or end of queue.
 // Rebuild the linked list and get the current thread.
-    if ((void *) currentq->next == NULL){
+
+    // Round‑Robin Policy: End of round.
+    // Priority Interleaving Policy: 
+    // End of queue = end of stage, not round.
+    if ((void *) currentq->next == NULL)
+    {
         current_thread = (tid_t) psScheduler();
-        goto go_ahead;
+        // Avoiding the risk of bouncing back into ZeroGravity or 
+        // looping forever.
+        goto dispatch_current;
+        //goto go_ahead;
     }
 
 /*
@@ -720,8 +728,12 @@ dispatch_current:
     }
 
 // Not ready?
-    if (TargetThread->state != READY){
-        panic ("ts-dispatch_current: Not ready\n");
+    if (TargetThread->state != READY)
+    {
+        //panic ("ts-dispatch_current: Not ready\n");
+        TargetThread = InitThread;
+        TargetThread->state = READY;
+        TargetThread->next = NULL;
     }
 
     // #todo
