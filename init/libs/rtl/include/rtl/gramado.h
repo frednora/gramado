@@ -388,6 +388,16 @@ int rtl_clone_and_execute(const char *name);
 // the kernel service has been extended to provide TID.
 int rtl_clone_and_execute_return_tid(const char *name);
 
+// Return the child thread ID (TID) instead of PID.
+// For now, it calls the low-level implementation and assumes
+// the kernel service has been extended to provide TID.
+int 
+rtl_clone_and_execute_return_tid_ex(
+    const char *name,
+    const char *cmdline );
+
+
+
 int rtl_spawn_process(const char *path);
 
 // get current thread
