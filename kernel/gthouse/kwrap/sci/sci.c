@@ -1078,7 +1078,10 @@ void *sci0 (
         return (void *) sys_get_file_size((unsigned char *) arg2);
     }
 
-// 179 - free
+// 179 - Get file descriptor table size.
+    if (number == 179){
+        return (void *) sys_getdtablesize();
+    }
 
 //----------
 

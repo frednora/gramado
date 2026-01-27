@@ -1,28 +1,16 @@
-/*
- * File: unistd.h
- *
- *     Standard symbolic constants and types.
- *
- * History:
- *     2018 - Created by Fred Nora.
- *     2020 - New functions.
- */
- 
+// unistd.h
+// Standard symbolic constants and types.
+// Created by Fred Nora.
 
-#ifndef _UNISTD_H
-#define _UNISTD_H 
-
+#ifndef __UNISTD_H
+#define __UNISTD_H 
 
 #include <sys/types.h>
 
-
 // The <unistd.h> header shall declare the following external variables:
-
 extern char **environ;
 extern char  *optarg;
 extern int    opterr, optind, optopt;
-
-
 
 /*
  In the C and C++ programming languages, unistd.h is the name 
@@ -53,7 +41,6 @@ extern int    opterr, optind, optopt;
 #define  STDERR_FILENO  2	/* standard error file descriptor */
 
 
-
 /*
  //See: include/_types.h 
 #ifndef  ssize_t
@@ -81,18 +68,15 @@ extern int    opterr, optind, optopt;
 #define  SEEK_CUR  1  /* offset is relative to current position */
 #define  SEEK_END  2  /* offset is relative to end of file */
 
-
 //#todo kkk
 /* This value is required by POSIX Table 2-10. */
 //#define _POSIX_VERSION 199009L	/* which standard is being conformed to */
-
 
 /*bsd*/
 #define  F_ULOCK  0
 #define  F_LOCK   1
 #define  F_TLOCK  2
 #define  F_TEST   3
-
  
 /* MINIX 3 */ 
 /* The following relate to configurable system variables. POSIX Table 4-2. */
@@ -110,7 +94,6 @@ extern int    opterr, optind, optopt;
 #define  _SC_PAGESIZE        11
 #define  _SC_PAGE_SIZE       _SC_PAGESIZE
 
-
 /* MINIX 3 */ 
 /* The following relate to configurable pathname variables. POSIX Table 5-2. */
 #define  _PC_LINK_MAX          1  /* link count */
@@ -123,12 +106,10 @@ extern int    opterr, optind, optopt;
 #define  _PC_VDISABLE          8  /* tty disable */
 #define  _PC_CHOWN_RESTRICTED  9  /* chown restricted or not */
  
-
 /* 
  Process IDentifier 
  posix.  
  */
-
 
 #ifndef __UID_T
 #define __UID_T 
@@ -146,9 +127,11 @@ typedef int gid_t;
 #endif
 
 
+//
+// == Prototypes ============================================
+//
 
-
-int execv (const char *path, char *const argv[] );
+int execv(const char *path, char *const argv[]);
 
 int 
 execve ( 
@@ -156,49 +139,38 @@ execve (
     char *const argv[], 
     char *const envp[] );  
 
-
-pid_t fork (void);
+pid_t fork(void);
 pid_t vfork(void);
 
 // uid
-int setuid ( uid_t uid );
-uid_t getuid (void);
-
+int setuid(uid_t uid);
+uid_t getuid(void);
 
 // gid
 int setgid(gid_t gid);
-gid_t getgid (void);
-
+gid_t getgid(void);
 
 // euid
 int seteuid(uid_t euid);
-uid_t geteuid (void); 
+uid_t geteuid(void); 
 
 // egid
 int setegid(gid_t egid);
 gid_t getegid(void);
 
+pid_t getpid(void);
+pid_t getppid(void);
 
-// pid
-pid_t getpid (void);
-
-//ppid
-pid_t getppid (void);
-
-
-
-
-int dup (int oldfd);
-int dup2 (int oldfd, int newfd);
-int dup3 (int oldfd, int newfd, int flags);
+int dup(int oldfd);
+int dup2(int oldfd, int newfd);
+int dup3(int oldfd, int newfd, int flags);
 
 // nice - change process priority
-int nice (int inc);
+int nice(int inc);
 
 int pause (void);
 
-
-//SVr4, BSD, POSIX.1-2001.
+// SVr4, BSD, POSIX.1-2001.
 int mkdir (const char *pathname, mode_t mode);
 
 //rmdir - delete a	directory
@@ -213,17 +185,14 @@ int link (const char *oldpath, const char *newpath);
 // unlink(): SVr4, 4.3BSD, POSIX.1-2001, POSIX.1-2008.
 int unlink(const char *pathname);
 
-
 //sysconf - get configuration information at run time
 //  POSIX.1-2001.
 long sysconf (int name);
-
 
 // fsync,  fdatasync  -  synchronize  a  file's in-core state with storage device
 //4.3BSD, POSIX.1-2001.
 int fsync (int fd);
 int fdatasync (int fd);
-
 
 //fpathconf, pathconf - get configuration values for files
 //POSIX.1-2001.
@@ -233,9 +202,10 @@ long fpathconf (int fildes, int name);
 long pathconf (const char *pathname, int name);
 
 
-
 //SVr4, 4.3BSD, POSIX.1-2001.
 int close (int fd);
+
+
 
 
 //
@@ -414,7 +384,5 @@ unsigned char *StrLastOcc (
 
 int getdtablesize(void);
 
-#endif /* _UNISTD_H */
-
-
+#endif  /* __UNISTD_H */
 

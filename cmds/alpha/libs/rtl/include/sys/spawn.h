@@ -1,10 +1,9 @@
-
-
 // sys/spawn.h
-  
+// The structures and defines.
+// Created by Fred Nora  
 
-#ifndef _SYS_SPAWN_H_
-#define _SYS_SPAWN_H_
+#ifndef __SYS_SPAWN_H
+#define __SYS_SPAWN_H
 
 
 #include <sys/sched.h>
@@ -12,17 +11,17 @@
 
 struct posix_spawnattr 
 {
-	short			sa_flags;
-	pid_t			sa_pgroup;
-	
-	//#todo
-	struct sched_param	sa_schedparam;
-	
-	int			    sa_schedpolicy;
-	
-	//#todo
-	//sigset_t		sa_sigdefault;
-	//sigset_t		sa_sigmask;
+    short sa_flags;
+    pid_t sa_pgroup;
+
+    // #todo
+    struct sched_param  sa_schedparam;
+
+    int sa_schedpolicy;
+
+    //#todo
+    //sigset_t sa_sigdefault;
+    //sigset_t sa_sigmask;
 };
 
 enum fae_action 
@@ -32,12 +31,15 @@ enum fae_action
     FAE_CLOSE 
 };
 
-
-typedef struct posix_spawn_file_actions_entry {
+// #ugly
+typedef struct posix_spawn_file_actions_entry 
+{
 	enum fae_action fae_action;
 
 	int fae_fildes;
+
 	union {
+
 		struct {
 			char *path;
 #define fae_path	fae_data.open.path
@@ -46,18 +48,21 @@ typedef struct posix_spawn_file_actions_entry {
 			mode_t mode;
 #define fae_mode	fae_data.open.mode
 		} open;
+
 		struct {
 			int newfildes;
 #define fae_newfildes	fae_data.dup2.newfildes
 		} dup2;
+
 	} fae_data;
+
 } posix_spawn_file_actions_entry_t;
 
 
 struct posix_spawn_file_actions 
 {
-    unsigned int size;	/* size of fae array */
-    unsigned int len;	/* how many slots are used */
+    unsigned int size;  // size of fae array
+    unsigned int len;	// how many slots are used
 
     posix_spawn_file_actions_entry_t *fae;
 };
@@ -75,6 +80,7 @@ typedef struct posix_spawn_file_actions  posix_spawn_file_actions_t;
 
 
 #ifdef _NETBSD_SOURCE
+
 /*
  * With this flag set, the kernel part of posix_spawn will not try to
  * maximize parallelism, but instead the parent will wait for the child
@@ -89,12 +95,9 @@ typedef struct posix_spawn_file_actions  posix_spawn_file_actions_t;
  * process. Our test cases deal with both behaviours in the general
  * case, but request the POSIX_SPAWN_RETURNERROR for some tests.
  */
-#define POSIX_SPAWN_RETURNERROR		0x40
+#define POSIX_SPAWN_RETURNERROR  0x40
+
 #endif
 
-#endif    //_SYS_SPAWN_H_    
-
-
-
-
+#endif    // __SYS_SPAWN_H    
 

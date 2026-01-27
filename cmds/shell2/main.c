@@ -252,6 +252,7 @@ int main(int argc, char *argv[])
     __fd_stderr = STDERR_FILENO;
 
     printf ("shell2.bin: Hello world!\n");
+    printf ("table size: %d\n", getdtablesize());
     reset_prompt();
     shell_worker();
     return 0;

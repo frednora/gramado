@@ -83,12 +83,13 @@ extern int g_inputmode;
 // The macro yields the maximum number of files that the target 
 // environment permits to be simultaneously open 
 // (including stderr, stdin, and stdout).
-// See: limits.h
+// See: klimits2.h
 
 #define FOPEN_MAX          GRAMADO_FOPEN_MAX
 #define NUMBER_OF_FILES    GRAMADO_FOPEN_MAX
 #define _NFILE             GRAMADO_FOPEN_MAX
 #define NR_OPEN            GRAMADO_FOPEN_MAX
+#define RLIMIT_NOFILE      GRAMADO_FOPEN_MAX
 
 //BUFFER
 //_IOFBF, _IOLBF and _IONBF
@@ -557,6 +558,7 @@ static __inline int bsd__sputc (int _c, FILE *_p)
 //
 // == prototypes ============================
 //
+
 
 int is_socket(file *f);
 int is_virtual_console(file *f);

@@ -2762,7 +2762,8 @@ posix_spawn (
 {
     int value = (-1);
 
-    debug_print ("posix_spawn: [FIXME] It's a work in progress.\n"); 
+    // debug_print ("posix_spawn: [FIXME] It's a work in progress.\n"); 
+    printf ("posix_spawn: #todo\n");
 
     if ((void*) path == NULL){
         errno=EINVAL;
@@ -2793,7 +2794,9 @@ posix_spawnp (
     char *const argv[], 
     char *const envp[] )
 {
-    debug_print ("posix_spawnp: [FIXME] It's a work in progress.\n"); 
+    //debug_print ("posix_spawnp: [FIXME] It's a work in progress.\n"); 
+    printf ("posix_spawnp: #todo\n");
+
     return (int) sc80 ( 900, (unsigned long) file, 0, 0 );
 }
 
@@ -2970,14 +2973,13 @@ spawnveg(
     return (int) value;
 }
 
-
-// #todo
-// get file descriptor table size
+// Get file descriptor table size
 // See: https://www.man7.org/linux/man-pages/man2/getdtablesize.2.html
 int getdtablesize(void)
 {
-    debug_print ("getdtablesize: [TODO] not implemented yet\n"); 
-    return -1;
+    int rv = -1;
+    rv = (int) sc80(179,0,0,0);
+    return (int) rv;
 }
 
 

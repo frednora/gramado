@@ -36,6 +36,9 @@ typedef int  tgid_t;
 // Prototypes ======================
 //
 
+// See: kstdio.h and klimits2.h
+int sys_getdtablesize(void);
+
 // sys_execve:
 // This is a work in progress.
 int 

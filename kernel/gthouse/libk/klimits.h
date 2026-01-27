@@ -1,7 +1,9 @@
 // klimits.h 
 // It defines some limits in the libc.
 // ring 0.
+// See: klimits2.h
 // 2005 - Created by Fred Nora.
+
 
 #ifndef ____LIMITS_H
 #define ____LIMITS_H    1

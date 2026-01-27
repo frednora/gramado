@@ -4,6 +4,11 @@
 #include <kernel.h>
 
 
+// 179 - Get file descriptor table size.
+// See: kstdio.h and klimits2.h
+int sys_getdtablesize(void){
+    return (int) RLIMIT_NOFILE;
+}
 
 // execve:
 // This is a work in progress.

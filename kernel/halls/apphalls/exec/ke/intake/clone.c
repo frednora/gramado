@@ -25,6 +25,8 @@ char __local_process_name[64] = {0};
 // Cloning the process structure.
 // It will also copies the flower thread.
 // #todo: It depends on the childs personality.
+// The clone starts fresh at the program’s entry point. That makes it 
+// behave more like posix_spawn() (clone + exec) than fork().
 // Called by clone_process at clone.c
 // IN:
 // p1 = atual.

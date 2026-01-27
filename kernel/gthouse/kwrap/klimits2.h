@@ -1,5 +1,5 @@
 
-// klimits.h
+// klimits2.h
 // Gramado limits.
 
 #ifndef __GRAMADO_LIMITS
