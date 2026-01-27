@@ -381,6 +381,22 @@ static struct thread_d *__build_stage_queue(int stage, unsigned long priority)
         TmpThread = (struct thread_d *) threadList[i];
         if (TmpThread && TmpThread->used == TRUE && TmpThread->magic == 1234) 
         {
+
+            // --- NEW: Wake-up check for WAITING threads --- 
+            if (TmpThread->state == WAITING) 
+            { 
+                // Alarm check 
+                if (jiffies > TmpThread->alarm) { 
+                    TmpThread->alarm = 0; 
+                    // #todo: signal handling 
+                } 
+                // Wake-up check 
+                if (jiffies >= TmpThread->wake_jiffy) { 
+                    do_thread_ready(TmpThread->tid); 
+                    TmpThread->wake_jiffy = 0; // reset 
+                } 
+            }
+
             // Filter by priority
             if (TmpThread->priority == priority)
             {
@@ -401,34 +417,6 @@ static struct thread_d *__build_stage_queue(int stage, unsigned long priority)
                     // Assign the stage’s target quantum
                     if (TmpThread != InitThread)
                         TmpThread->quantum = target_quantum;
-
-                    // #importante
-                    // In the future if the priority selection is enough, 
-                    // we can remove these other filters.
- 
-                    
-                    /*
-                    // Display server: The king king
-                    if (DisplayServerInfo.initialized == TRUE)
-                    {
-                        if (TmpThread->tid == DisplayServerInfo.tid)
-                        {
-                            //printk("ds: priority %d\n",priority);
-                            //while(1){}
-                            TmpThread->quantum = QUANTUM_MAX;  //*3
-                            //Idle->quantum = QUANTUM_Q1;
-                        }
-                    }
-                    */
-
-
-                    /*
-                    // Foreground thread: more responsive
-                    if (TmpThread->tid == foreground_thread){
-                        TmpThread->quantum = QUANTUM_MAX;
-                        //Idle->quantum = QUANTUM_Q1;
-                    }
-                    */
 
                     // ...
                 }
