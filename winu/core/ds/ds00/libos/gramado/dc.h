@@ -44,11 +44,16 @@ struct dc_d
 
     unsigned long flags;
 
-// hw info
-    // in pixels.
+// hw info:
+
+    // In pixels
     unsigned long device_width;
     unsigned long device_height;
-    unsigned long bpp;
+    unsigned long bpp;  // Bytes Per Pixel
+
+    // #todo:
+    // unsigned long pitch; // bytes per line.
+
 
     unsigned long absolute_x;
     unsigned long absolute_y;

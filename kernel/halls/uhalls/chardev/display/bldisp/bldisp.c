@@ -322,13 +322,25 @@ void bldisp_vsync(void)
 
 int 
 bldisp_putpixel0 ( 
+    struct dc_d *dc,
     unsigned int  _color,
     unsigned long _x, 
     unsigned long _y, 
-    unsigned long _rop_flags,
-    unsigned long buffer_va )
+    unsigned long _rop_flags )
 {
-    unsigned char *where = (unsigned char *) buffer_va;
+
+// Validate context
+    if (!dc || dc->initialized != TRUE || !dc->data)
+        return -1;
+
+// Local copies from dc
+    //unsigned char *where = (unsigned char *) buffer_va;
+    unsigned char *dc_where = dc->data;
+    unsigned long dc_width   = dc->device_width;
+    unsigned long dc_height  = dc->device_height;
+    unsigned long dc_bpp     = dc->bpp;    // bytes per pixel
+    unsigned long dc_pitch   = dc->pitch;  // bytes per row
+
     unsigned int Color = (unsigned int) (_color & 0xFFFFFFFF);
 // ----------------------------
 // A cor passada via argumento.
@@ -345,15 +357,24 @@ bldisp_putpixel0 (
 // Positions
     int x = (int) (_x & 0xFFFF);
     int y = (int) (_y & 0xFFFF);
+
+
+    //if (x >= dc_width || y >= dc_height)
+        //return -1;
+
 // 3 = 24 bpp
 // 2 = 16 bpp
 // ...
     int bytes_count=0;
 
 // Buffer address validation.
+/*
     if (buffer_va == 0){
-        panic("putpixel0: buffer_va\n");
+        panic("bldisp_putpixel0: buffer_va\n");
     }
+*/
+    if ((void*) dc_where == NULL)
+        panic ("bldisp_putpixel0: dc_where");
 
 //
 // bpp
@@ -363,7 +384,9 @@ bldisp_putpixel0 (
 // This is a global variable.
 // Esse valor foi herdado do bootloader.
 
-    switch (gSavedBPP){
+    //switch (gSavedBPP)
+    switch (dc_bpp)
+    {
     case 32:  bytes_count=4;  break;
     case 24:  bytes_count=3;  break;
     //#testando
@@ -376,14 +399,15 @@ bldisp_putpixel0 (
     default:
         //#todo: Do we have panic ar this moment?
         //panic ("putpixel0: gSavedBPP\n");
-        debug_print_string("putpixel0: gSavedBPP\n");
+        debug_print_string("bldisp_putpixel0: dc_bpp\n");
         while(1){}
         break;
     };
 
 // #importante
 // Pegamos a largura do dispositivo.
-    int width = (int) (gSavedX & 0xFFFF);
+    //int width = (int) (gSavedX & 0xFFFF);
+    int width = (int) (dc_width & 0xFFFF);
     width = (int) (width & 0xFFFF);
 
     int offset=0;
@@ -413,10 +437,11 @@ bldisp_putpixel0 (
 // A cor que estava no framebuffer.
     unsigned char b2, g2, r2, a2;
 // Get yhe color.
-    b2 = where[offset];
-    g2 = where[offset +1];
-    r2 = where[offset +2];
-    if (gSavedBPP == 32){ a2 = where[offset +3]; };
+    b2 = dc_where[offset];
+    g2 = dc_where[offset +1];
+    r2 = dc_where[offset +2];
+    //if (gSavedBPP == 32){ a2 = dc_where[offset +3]; };
+    if (dc_bpp == 32){ a2 = dc_where[offset +3]; };
 
 // ------------------------------
 // A cor transformada.
@@ -725,10 +750,11 @@ bldisp_putpixel0 (
 
 // ----------------------------
 // BGR and A
-    where[offset]    = b3;
-    where[offset +1] = g3;
-    where[offset +2] = r3;
-    if (gSavedBPP == 32){ where[offset +3] = a3; };
+    dc_where[offset]    = b3;
+    dc_where[offset +1] = g3;
+    dc_where[offset +2] = r3;
+    //if (gSavedBPP == 32){ where[offset +3] = a3; };
+    if (dc_bpp == 32){ dc_where[offset +3] = a3; };
 
 // Number of changed pixels.
     return (int) 1;
@@ -1074,9 +1100,13 @@ int DDINIT_bldisp(void)
 
     PROGRESS("DDINIT_bldisp:\n");
 
+//
+// Hardware context
+//
+
 // Memory allocation for Display device structure.
     bl_display_device = 
-        (struct display_device_d *) kmalloc( sizeof(struct display_device_d) ); 
+        (struct display_device_d *) kmalloc( sizeof(struct display_device_d) );
     if ((void*) bl_display_device == NULL){
         x_panic ("Error: 0x05");
     }
@@ -1136,6 +1166,46 @@ int DDINIT_bldisp(void)
 
 
     Initialization.is_bldisp_initialized = TRUE;
+
+
+//
+// Drawing context
+//
+
+// See: 
+// display.h and display.c
+
+    // Backbuffer Device Context
+    dc_backbuffer = (struct dc_d *) kmalloc( sizeof(struct dc_d) );
+    if ((void*) dc_backbuffer == NULL){
+        x_panic ("Error: 0x05 dc_backbuffer");
+    }
+    memset ( dc_backbuffer, 0, sizeof(struct dc_d) );
+    // Import values from bl_display_device
+    dc_backbuffer->device_width  = bl_display_device->framebuffer_width;
+    dc_backbuffer->device_height = bl_display_device->framebuffer_height;
+    dc_backbuffer->bpp           = bl_display_device->framebuffer_bpp;
+    dc_backbuffer->pitch         = bl_display_device->framebuffer_pitch;
+    dc_backbuffer->data = (unsigned char*) BACKBUFFER_VA;
+    dc_backbuffer->used = TRUE;
+    dc_backbuffer->magic = 1234;
+    dc_backbuffer->initialized = TRUE;
+
+    // Frontbuffer Device Context
+    dc_frontbuffer = (struct dc_d *) kmalloc( sizeof(struct dc_d) );
+    if ((void*) dc_frontbuffer == NULL){
+        x_panic ("Error: 0x05 dc_frontbuffer");
+    }
+    memset ( dc_frontbuffer, 0, sizeof(struct dc_d) );
+    // Import values from bl_display_device
+    dc_frontbuffer->device_width  = bl_display_device->framebuffer_width;
+    dc_frontbuffer->device_height = bl_display_device->framebuffer_height;
+    dc_frontbuffer->bpp           = bl_display_device->framebuffer_bpp;
+    dc_frontbuffer->pitch         = bl_display_device->framebuffer_pitch;
+    dc_frontbuffer->data = (unsigned char*) FRONTBUFFER_VA;
+    dc_frontbuffer->used = TRUE;
+    dc_frontbuffer->magic = 1234;
+    dc_frontbuffer->initialized = TRUE;
 
     return 0;
 }

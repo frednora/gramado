@@ -115,12 +115,11 @@ void bldisp_vsync(void);
 
 int 
 bldisp_putpixel0 ( 
+    struct dc_d *dc,
     unsigned int  _color,
     unsigned long _x, 
     unsigned long _y, 
-    unsigned long _rop_flags,
-    unsigned long buffer_va );
-
+    unsigned long _rop_flags );
 
 // The whole screen is dirty.
 // It can be flushed into the framebuffer.

@@ -192,6 +192,9 @@
 #include "../halls/uhalls/chardev/console/console.h"
 
 // hw stuff - display device
+
+#include "../halls/uhalls/chardev/display/dc.h"
+
 // display device support.
 #include "../halls/uhalls/chardev/display/display.h"
 // bootloader display device

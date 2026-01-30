@@ -12,6 +12,10 @@
 
 #include <kernel.h>
 
+
+// ===================================================
+
+
 int 
 backbuffer_putpixel ( 
     unsigned int  _color,
@@ -27,12 +31,17 @@ backbuffer_putpixel (
 // #todo
 // It depends on the current display device device driver.
 // see: bldisp.c
+/*
     return (int ) bldisp_putpixel0(
         _color,
         _x,
         _y,
         _rop_flags,
         BACKBUFFER_VA );
+*/
+
+    // #test: using decive context
+    return (int) bldisp_putpixel0(dc_backbuffer, _color, _x, _y, _rop_flags);
 }
 
 int 
@@ -50,11 +59,17 @@ frontbuffer_putpixel (
 // #todo
 // It depends on the current display device device driver.
 // see: bldisp.c
+
+    /*
     return (int) bldisp_putpixel0(
         _color,
         _x,
         _y,
         _rop_flags,
         FRONTBUFFER_VA );
+    */
+
+    // #test: using decive context
+    return (int) bldisp_putpixel0(dc_frontbuffer, _color, _x, _y, _rop_flags);
 }
 
