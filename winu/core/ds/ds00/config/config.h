@@ -24,6 +24,7 @@
 
 // Call a kernel service to draw rectangles.
 // see: rect.c
+// #test: It also work withour using the kernel.
 #define USE_KERNEL_TO_DRAW_RECTANGLES  1
 
 #define CONFIG_TEST_SPARE_BUFFER  0
