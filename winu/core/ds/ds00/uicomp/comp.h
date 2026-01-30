@@ -27,7 +27,7 @@ extern struct spare_buffer_clip_info_d  SpareBufferClipInfo;
 // Spare buffer
 extern char *spare_128kb_buffer_p;
 
-
+extern struct dc00_d *spare_dc00;
 
 struct compositor_d
 {

@@ -23,6 +23,8 @@ struct compositor_d  Compositor;
 struct spare_buffer_clip_info_d  SpareBufferClipInfo;
 char *spare_128kb_buffer_p;
 
+struct dc00_d *spare_dc00;
+
 // #todo
 // Create some configuration globals here
 // int gUseSomething = TRUE;
@@ -67,6 +69,9 @@ setup_spare_buffer_clip(
     unsigned long bpp,
     void *base )
 {
+
+    // #bugbug: Not used yet.
+/*
     // Mark as not initialized until all fields are set
     SpareBufferClipInfo.initialized = 0;
 
@@ -82,6 +87,7 @@ setup_spare_buffer_clip(
 
     // Now mark as initialized
     SpareBufferClipInfo.initialized = 1;
+*/
 }
 
 
@@ -128,6 +134,8 @@ void *comp_create_slab_spare_128kb_buffer(size_t size_in_kb)
 // If you ever change resolution or bpp, recompute the spare size before writing.
     unsigned long DeviceWidth  = (unsigned long) server_get_system_metrics(1);
     unsigned long DeviceHeight = (unsigned long) server_get_system_metrics(2);
+
+    // Bits per pixel
     unsigned long DeviceBPP    = (unsigned long) server_get_system_metrics(9);
 
 // Backbuffer Address
@@ -137,7 +145,7 @@ void *comp_create_slab_spare_128kb_buffer(size_t size_in_kb)
     unsigned long TotalBackbufferInBytes = (2*1024*1024);  // 2 MB
 
 // Backbuffer visible area. (Screen size)
-    unsigned long Pitch = (DeviceWidth * DeviceBPP);
+    unsigned long Pitch = (DeviceWidth * (DeviceBPP/8));
     unsigned long BackbufferSizeInBytes = (DeviceHeight * Pitch);
     unsigned long BackbufferSizeInKB = (BackbufferSizeInBytes/1024);
 
@@ -145,6 +153,9 @@ void *comp_create_slab_spare_128kb_buffer(size_t size_in_kb)
     unsigned long TotalSpareInBytes = (TotalBackbufferInBytes - BackbufferSizeInBytes);
     unsigned long TotalSpareInKB = (TotalSpareInBytes / 1024);
     unsigned long addr;
+
+    struct dc00_d *tmp_dc00;
+
 
     if (TotalSpareInKB > size_in_kb){
         addr = (unsigned long) BackbufferAddress + BackbufferSizeInBytes;
@@ -156,21 +167,45 @@ void *comp_create_slab_spare_128kb_buffer(size_t size_in_kb)
         SpareBufferClipInfo.pitch  = Pitch;      // Same of the device
 
         SpareBufferClipInfo.width  = DeviceWidth;   // align with OS-supported width
-        SpareBufferClipInfo.height = (TotalSpareInBytes/Pitch);
+        SpareBufferClipInfo.height = (TotalSpareInBytes/Pitch); 
 
         SpareBufferClipInfo.base   = (void*) addr;
 
         SpareBufferClipInfo.initialized = TRUE;
         // -------------------------------------------
+
+        tmp_dc00 = 
+            (void *) libgd_create_dc (
+                SpareBufferClipInfo.base,
+                SpareBufferClipInfo.width,
+                SpareBufferClipInfo.height,
+                SpareBufferClipInfo.bpp      // bits per pixel
+             );
+
+        // Saving
+        spare_dc00 = tmp_dc00;
+        if ((void*)spare_dc00 == NULL)
+        {
+            spare_dc00 = NULL;
+            return NULL;
+        }
+        if (spare_dc00->magic != 1234)
+        {
+            spare_dc00 = NULL;
+            return NULL;
+        }
+
         return (void*) addr;
 
     } else {
         SpareBufferClipInfo.initialized = FALSE;
+        spare_dc00 = NULL;
         return NULL;
     }
 
 // fail
     SpareBufferClipInfo.initialized = FALSE;
+    spare_dc00 = NULL;
     return NULL;
 }
 
@@ -234,18 +269,36 @@ spare_putpixel0(
     if ((void*) SpareBufferClipInfo.base == NULL)
         return;
 
-// Draw
+// Draw it
+
+/*
+   // #deprecated method
     putpixel0(
         color, 
         x, y, 
         rop, 
         (unsigned long) SpareBufferClipInfo.base );
+*/
+
+    if (!spare_dc00) 
+        return;
+
+// #test: New method with dc.
+    putpixel0(
+        spare_dc00,
+        color, 
+        x, 
+        y, 
+        rop );
 }
 
 // Test drawing directly into the spare buffer using putpixel0.
 // Only draws pixels, does not blit or refresh.
 void comp_draw_into_spare_buffer(void)
 {
+
+    //if (!spare_dc00) 
+       // return;
 
 /*
 // Old test without clipping

@@ -72,7 +72,7 @@ int screen_is_dirty=0;
 unsigned long gSavedLFB=0;
 unsigned long gSavedX=0;
 unsigned long gSavedY=0;
-unsigned long gSavedBPP=0;
+unsigned long gSavedBPP=0;  // bits per pixel
 
 
 // Private variables.
@@ -334,11 +334,10 @@ bldisp_putpixel0 (
         return -1;
 
 // Local copies from dc
-    //unsigned char *where = (unsigned char *) buffer_va;
     unsigned char *dc_where = dc->data;
     unsigned long dc_width   = dc->device_width;
     unsigned long dc_height  = dc->device_height;
-    unsigned long dc_bpp     = dc->bpp;    // bytes per pixel
+    unsigned long dc_bpp     = dc->bpp;    // bits per pixel
     unsigned long dc_pitch   = dc->pitch;  // bytes per row
 
     unsigned int Color = (unsigned int) (_color & 0xFFFFFFFF);
@@ -384,7 +383,7 @@ bldisp_putpixel0 (
 // This is a global variable.
 // Esse valor foi herdado do bootloader.
 
-    //switch (gSavedBPP)
+    // Bits per pixel
     switch (dc_bpp)
     {
     case 32:  bytes_count=4;  break;
@@ -1130,9 +1129,13 @@ int DDINIT_bldisp(void)
         (unsigned long) bootblk.deviceWidth;
     bl_display_device->framebuffer_height = 
         (unsigned long) bootblk.deviceHeight;
+    // bits per pixel
     bl_display_device->framebuffer_bpp = 
         (unsigned long) bootblk.bpp;
+
+
 // Pitch
+// Get bytes per pixel then multiply by the width.
 // Ex: ((32/8)*800)
     bl_display_device->framebuffer_pitch = 
         (unsigned long) ( (bootblk.bpp/8) * bootblk.deviceWidth);
@@ -1184,7 +1187,7 @@ int DDINIT_bldisp(void)
     // Import values from bl_display_device
     dc_backbuffer->device_width  = bl_display_device->framebuffer_width;
     dc_backbuffer->device_height = bl_display_device->framebuffer_height;
-    dc_backbuffer->bpp           = bl_display_device->framebuffer_bpp;
+    dc_backbuffer->bpp           = bl_display_device->framebuffer_bpp; // bits per pixel
     dc_backbuffer->pitch         = bl_display_device->framebuffer_pitch;
     dc_backbuffer->data = (unsigned char*) BACKBUFFER_VA;
     dc_backbuffer->used = TRUE;
@@ -1200,7 +1203,7 @@ int DDINIT_bldisp(void)
     // Import values from bl_display_device
     dc_frontbuffer->device_width  = bl_display_device->framebuffer_width;
     dc_frontbuffer->device_height = bl_display_device->framebuffer_height;
-    dc_frontbuffer->bpp           = bl_display_device->framebuffer_bpp;
+    dc_frontbuffer->bpp           = bl_display_device->framebuffer_bpp; // bits per pixel
     dc_frontbuffer->pitch         = bl_display_device->framebuffer_pitch;
     dc_frontbuffer->data = (unsigned char*) FRONTBUFFER_VA;
     dc_frontbuffer->used = TRUE;

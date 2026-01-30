@@ -39,8 +39,78 @@ static unsigned long libgd_SavedBPP=0;
 static unsigned long libgd_device_width=0;
 static unsigned long libgd_device_height=0;
 static unsigned long libgd_device_bpp=0;
+static unsigned long libgd_device_pitch=0;
 
-// ----------------------------------
+// Device context
+static struct dc00_d *libgd_dc_backbuffer;
+static struct dc00_d *libgd_dc_frontbuffer;
+
+// ===================================================
+
+
+
+// Create a new device context for a given buffer.
+// Parameters:
+//   base   - pointer to buffer memory
+//   width  - width in pixels
+//   height - height in pixels
+//   bpp    - bits per pixel (e.g. 32, 24, 16)
+//
+// Returns:
+//   pointer to a new dc00_d, or NULL on failure.
+struct dc00_d *libgd_create_dc(unsigned char *base,
+                               unsigned long width,
+                               unsigned long height,
+                               unsigned long bpp)
+{
+    if (!base || width == 0 || height == 0 || bpp == 0)
+        return NULL;
+
+    struct dc00_d *dc = malloc(sizeof(struct dc00_d));
+    if (!dc) return NULL;
+
+    memset(dc, 0, sizeof(struct dc00_d));
+
+    dc->data         = base;
+    dc->device_width = width;
+    dc->device_height= height;
+    dc->bpp          = bpp;                  // bits per pixel
+    dc->pitch        = width * (bpp / 8);    // bytes per row
+    //dc->next         = NULL;
+
+    dc->used        = TRUE;
+    dc->magic       = 1234;
+    dc->initialized = TRUE;
+
+    return dc;
+}
+
+
+// Get the pointer for the backbufer dc.
+struct dc00_d *libgd_get_backbuffer_dc(void)
+{
+    if ((void *) libgd_dc_backbuffer == NULL)
+        return NULL;
+    if (libgd_dc_backbuffer->magic != 1234)
+        return NULL;
+    if (libgd_dc_backbuffer->initialized != TRUE)
+        return NULL;
+
+    return (struct dc00_d *) libgd_dc_backbuffer;
+}
+
+// Get the pointer for the frontbufer dc.
+struct dc00_d *libgd_get_frontbuffer_dc(void)
+{
+    if ((void *) libgd_dc_frontbuffer == NULL)
+        return NULL;
+    if (libgd_dc_frontbuffer->magic != 1234)
+        return NULL;
+    if (libgd_dc_frontbuffer->initialized != TRUE)
+        return NULL;
+
+    return (struct dc00_d *) libgd_dc_frontbuffer;
+}
 
 
 /*
@@ -504,17 +574,29 @@ fail:
 
 int
 putpixel0 ( 
+    struct dc00_d *dc,
     unsigned int  _color,
     unsigned long _x, 
     unsigned long _y, 
-    unsigned long _rop_flags,
-    unsigned long buffer_va )
+    unsigned long _rop_flags )
 {
 // #todo: Return the number of changed pixels.
 
+// Validate context
+    if (!dc || dc->initialized != TRUE || !dc->data)
+        return -1;
+
+// Local copies from dc
+    unsigned char *dc_where = dc->data;
+    unsigned long dc_width   = dc->device_width;
+    unsigned long dc_height  = dc->device_height;
+    unsigned long dc_bpp     = dc->bpp;    // bits per pixel.
+    unsigned long dc_pitch   = dc->pitch;  // bytes per row
+
 // The address where we're gonna put the data into.
 // #todo: It needs to be a valid ring3 address.
-    unsigned char *where = (unsigned char *) buffer_va;
+    //unsigned char *where = (unsigned char *) buffer_va;
+
 // The pixel color.
     unsigned int Color = (unsigned int) (_color & 0xFFFFFFFF);
 // The four elements of a color.
@@ -531,22 +613,38 @@ putpixel0 (
 // 2 = 16 bpp
 // ...
     int bytes_count=0;
-    int bpp   = (int) libgd_SavedBPP;           // get from globals.
-    int width = (int) (libgd_SavedX & 0xFFFF);  // device width
+
+    // bits per pixel
+    //int bpp   = (int) libgd_SavedBPP;  // get from globals.
+    int bpp   = (int) dc_bpp;            // get from dc
+
+    //int width = (int) (libgd_SavedX & 0xFFFF);  // device width
+    int width = (int) (dc_width & 0xFFFF);  // device width from dc
+
 // Positions
     int offset=0;   // the offset of the pixel into the buffer.
 
     int x = (int) (_x & 0xFFFF);
     int y = (int) (_y & 0xFFFF);
 
+    //if (x < 0 || y < 0) return -1;
+    //if (x >= (int)dc_width || y >= (int)dc_height) return -1;
+
+
 // Buffer address validation.
 // The address where we're gonna put the data into.
 // #todo: It needs to be a valid ring3 address.
+/*
     if (buffer_va == 0){
         //panic("putpixel0: buffer_va\n");
         //server_debug_print("putpixel0: buffer_va\n");
         return 0;  // 0 changed pixels.
     }
+*/
+
+    // #test
+    if ((void *) dc_where == NULL)
+        return -1;
 
 // Split: bgra
     b = (Color & 0xFF);
@@ -558,6 +656,8 @@ putpixel0 (
 // #danger
 // This is a global variable.
 // Esse valor foi herdado do bootloader.
+
+    // Bits per pixel ... lets convert ir in bytes per pixel.
     switch (bpp){
     case 32:  bytes_count=4;  break;
     case 24:  bytes_count=3;  break;
@@ -606,10 +706,10 @@ putpixel0 (
 // A cor encontrada no buffer.
     unsigned char b2, g2, r2, a2;
 // get
-    b2 = where[offset];
-    g2 = where[offset +1];
-    r2 = where[offset +2];
-    if (bpp == 32){ a2 = where[offset +3]; };
+    b2 = dc_where[offset];
+    g2 = dc_where[offset +1];
+    r2 = dc_where[offset +2];
+    if (bpp == 32){ a2 = dc_where[offset +3]; };
 // ------------------------------------------
 // A cor transformada.
 // A cor a ser gravada.
@@ -920,10 +1020,10 @@ putpixel0 (
 // 
 
 // BGR and A
-    where[offset]    = b3;
-    where[offset +1] = g3;
-    where[offset +2] = r3;
-    if (bpp == 32){ where[offset +3] = a3; };
+    dc_where[offset]    = b3;
+    dc_where[offset +1] = g3;
+    dc_where[offset +2] = r3;
+    if (bpp == 32){ dc_where[offset +3] = a3; };
 
 // Return the number of changed pixels.
     return (int) 1;
@@ -936,9 +1036,16 @@ backbuffer_putpixel (
     unsigned long _y, 
     unsigned long _rop_flags )
 {
-    unsigned long buffer = (unsigned long) libgd_BACKBUFFER_VA;
+    if (!libgd_dc_backbuffer)
+        return;
+
+    //unsigned long buffer = (unsigned long) libgd_BACKBUFFER_VA;
+
 // Putpixel at the given buffer address
-    putpixel0( _color, _x, _y, _rop_flags, buffer );
+    //putpixel0( _color, _x, _y, _rop_flags, buffer );
+
+    // #test: New worker with dc.
+    putpixel0(libgd_dc_backbuffer, _color, _x, _y, _rop_flags);
 }
 
 void 
@@ -948,9 +1055,15 @@ frontbuffer_putpixel (
     unsigned long _y, 
     unsigned long _rop_flags )
 {
-    unsigned long buffer = (unsigned long) libgd_FRONTBUFFER_VA;
+    if (!libgd_dc_frontbuffer)
+        return;
+
+    //unsigned long buffer = (unsigned long) libgd_FRONTBUFFER_VA;
 // Putpixel at the given buffer address
-    putpixel0( _color, _x, _y, _rop_flags, buffer );
+    //putpixel0( _color, _x, _y, _rop_flags, buffer );
+
+    // #test: New worker with dc.
+    putpixel0(libgd_dc_frontbuffer, _color, _x, _y, _rop_flags);
 }
 
 // IN: 
@@ -1063,6 +1176,12 @@ int libgd_initialize(void)
     libgd_SavedY   = (unsigned long) libgd_device_height;
     libgd_SavedBPP = (unsigned long) libgd_device_bpp;
 
+// Pitch
+// Get bytes per pixel then multiply by the width.
+
+    libgd_device_pitch = 
+        (unsigned long) ((libgd_device_bpp/8) * libgd_device_width);
+
 
 // Backbuffer and frontbuffer.
     if ( libgd_FRONTBUFFER_VA == 0 || libgd_BACKBUFFER_VA == 0 )
@@ -1079,6 +1198,53 @@ int libgd_initialize(void)
         printf("libgd_initialize: w, h and bpp\n");
         goto fail;
     }
+
+//
+// Device context
+//
+
+// The drawing context. 
+// Thats is not a structure for hardware device driver.
+
+    // Backbuffer
+    libgd_dc_backbuffer = (void *) malloc(sizeof(struct dc00_d));
+    if ((void*)libgd_dc_backbuffer == NULL){
+        printf("libgd_initialize: libgd_dc_backbuffer\n");
+        goto fail; 
+    }
+    memset ( libgd_dc_backbuffer, 0, sizeof(struct dc00_d) );
+    libgd_dc_backbuffer->device_width  = libgd_device_width;
+    libgd_dc_backbuffer->device_height = libgd_device_height;
+    // Bits per pixel
+    libgd_dc_backbuffer->bpp = libgd_device_bpp; 
+    libgd_dc_backbuffer->pitch = libgd_device_pitch;
+    libgd_dc_backbuffer->data = (unsigned char*) libgd_BACKBUFFER_VA;
+    //libgd_dc_backbuffer->next = NULL;
+    libgd_dc_backbuffer->used = TRUE;
+    libgd_dc_backbuffer->magic = 1234;
+    libgd_dc_backbuffer->initialized = TRUE;
+
+
+
+    // Frontbuffer
+    libgd_dc_frontbuffer = malloc(sizeof(struct dc00_d));
+    if ((void*)libgd_dc_frontbuffer == NULL){
+        printf("libgd_initialize: libgd_dc_frontbuffer\n");
+        goto fail; 
+    }
+    memset ( libgd_dc_frontbuffer, 0, sizeof(struct dc00_d) );
+
+    libgd_dc_frontbuffer->device_width  = libgd_device_width;
+    libgd_dc_frontbuffer->device_height = libgd_device_height;
+    // bits per pixel.
+    libgd_dc_frontbuffer->bpp = libgd_device_bpp;
+    libgd_dc_frontbuffer->pitch = libgd_device_pitch;
+    libgd_dc_frontbuffer->data = (unsigned char*) libgd_FRONTBUFFER_VA;
+    //libgd_dc_frontbuffer->next = NULL;
+    libgd_dc_frontbuffer->used = TRUE;
+    libgd_dc_frontbuffer->magic = 1234;
+    libgd_dc_frontbuffer->initialized = TRUE;
+
 
     return 0;
 fail:
