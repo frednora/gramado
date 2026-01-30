@@ -1,0 +1,21 @@
+
+----------------------------------------------
+1. Regular Client-Side GUI Apps
+2. Canvas-Based / Self-Rendering Apps
+
+----------------------------------------------
+Architecture Philosophy:
+
+Userland Utilities
+ + cmds/
+
+Stable Backbone (Polished & Consistent)
+ + winu/core/
+ + apps/api/
+
+Experimental Labs (Flexible & Diverse)
+ + winu/heavy/
+ + woods/
+
+
+
