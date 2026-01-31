@@ -253,24 +253,26 @@ extern int use_vsync;
 #define CANVAS_COUNT_MAX    4
 #define CANVAS_FRONTBUFFER     0  // VRAM
 #define CANVAS_BACKBUFFER      1  // RAM
+#define CANVAS_SPAREBUFFER     2  // spare buffer
 
 // Each window needs to have an index for one of this structurea.
 // This way the display server will know the information about 
 // the window's canvas.
 struct canvas_information_d
 {
+    int used;
+    int magic;
     int initialized;       // Safety first
 
     unsigned long width;   // buffer width in pixels
     unsigned long height;  // buffer height in pixels
+    unsigned long bpp;     // bits per pixel
 
-    unsigned long bpp;     // bytes per pixel (4 or 3)
     unsigned long pitch;   // bytes per row (width * bytes_per_pixel)
 
     void *base;            // pointer to buffer memory
 
     struct gws_window_d *owner_window;
-
 };
 
 extern unsigned long canvasList[CANVAS_COUNT_MAX];

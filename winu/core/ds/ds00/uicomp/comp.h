@@ -80,6 +80,21 @@ void comp_blit_spare_to_backbuffer(
     int dst_x, int dst_y,
     int width, int height );
 
+void 
+comp_blit_canvas_to_canvas_imp(
+    struct canvas_information_d *src_canvas,
+    struct canvas_information_d *dst_canvas,
+    int dst_x, int dst_y,
+    int width, int height );
+
+void 
+comp_blit_canvas_to_canvas(
+    int id_src_canvas,
+    int id_dst_canvas,
+    int dst_x, int dst_y,
+    int width, int height );
+
+
 // Flush the window's rectangle
 int gws_show_window_rect(struct gws_window_d *window);
 

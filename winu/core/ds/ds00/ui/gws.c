@@ -352,14 +352,18 @@ static int __gwssrv_init_globals(void)
 // Fill geometry and memory fields
     ci_frontbuffer->width = __device_width;
     ci_frontbuffer->height = __device_height;
-    ci_frontbuffer->bpp = __device_bpp;        // Byte Per Pixel
-    ci_frontbuffer->pitch = (unsigned long) (__device_width * __device_bpp);
+    ci_frontbuffer->bpp = __device_bpp;  // Bits Per Pixel
+
+    ci_frontbuffer->pitch = 
+        (unsigned long) (__device_width * (__device_bpp/8));
 
 // Base address points directly to the hardware LFB
     ci_frontbuffer->base = (void*) ____FRONTBUFFER_VA;
 // No owner window: this is a system-level canvas
     ci_frontbuffer->owner_window = NULL;
 
+    ci_frontbuffer->used = TRUE;
+    ci_frontbuffer->magic = 1234;
     ci_frontbuffer->initialized = TRUE;
 // Save the address into the global list
     canvasList[CANVAS_FRONTBUFFER] = (unsigned long) ci_frontbuffer;
@@ -380,8 +384,10 @@ static int __gwssrv_init_globals(void)
 // Fill geometry and memory fields
     ci_backbuffer->width = __device_width;
     ci_backbuffer->height = __device_height;
-    ci_backbuffer->bpp = __device_bpp;        // Byte Per Pixel
-    ci_backbuffer->pitch = (unsigned long) (__device_width * __device_bpp);
+    ci_backbuffer->bpp = __device_bpp;  // Bits Per Pixel
+
+    ci_backbuffer->pitch = 
+        (unsigned long) (__device_width * (__device_bpp/8));
 
 // Base address points to the RAM backbuffer
     ci_backbuffer->base = (void*) ____BACKBUFFER_VA;
@@ -389,6 +395,8 @@ static int __gwssrv_init_globals(void)
 // No owner window: this is also a system-level canvas
     ci_backbuffer->owner_window = NULL;
 
+    ci_backbuffer->used = TRUE;
+    ci_backbuffer->magic = 1234;
     ci_backbuffer->initialized = TRUE;
 
 // Save the address into the global list

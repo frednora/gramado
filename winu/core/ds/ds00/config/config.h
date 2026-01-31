@@ -29,6 +29,7 @@
 
 #define CONFIG_TEST_SPARE_BUFFER  0
 
+
 // Target interval (in milliseconds) for each iteration of the main loop.
 // The main loop is responsible for orchestrating all core tasks:
 // - Processing requests from the client-side GUI application

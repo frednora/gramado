@@ -144,8 +144,11 @@ void *comp_create_slab_spare_128kb_buffer(size_t size_in_kb)
 // #bugbug: Constant for now. This is gonna change.
     unsigned long TotalBackbufferInBytes = (2*1024*1024);  // 2 MB
 
+// Pitch
 // Backbuffer visible area. (Screen size)
-    unsigned long Pitch = (DeviceWidth * (DeviceBPP/8));
+    unsigned long Pitch = 
+        (DeviceWidth * (DeviceBPP/8));
+
     unsigned long BackbufferSizeInBytes = (DeviceHeight * Pitch);
     unsigned long BackbufferSizeInKB = (BackbufferSizeInBytes/1024);
 
@@ -227,6 +230,31 @@ void *compCreateCanvasUsingSpareBuffer(void)
     }
 
     spare_128kb_buffer_p = b;
+
+// ------------------------------------------------------
+// Create canvas object for the spare buffer 
+    struct canvas_information_d *ci_sparebuffer;
+    ci_sparebuffer = (void*) malloc(sizeof(struct canvas_information_d));
+    if ((void*) ci_sparebuffer == NULL){
+        printf("compCreateCanvasUsingSpareBuffer: malloc failed\n"); 
+        return NULL; 
+    }
+    ci_sparebuffer->width = SpareBufferClipInfo.width; 
+    ci_sparebuffer->height = SpareBufferClipInfo.height; 
+    ci_sparebuffer->bpp = SpareBufferClipInfo.bpp; 
+    ci_sparebuffer->pitch = SpareBufferClipInfo.pitch; 
+    ci_sparebuffer->base = (void*) spare_128kb_buffer_p; 
+
+    // It belongs to the root window for now.
+    ci_sparebuffer->owner_window = __root_window; 
+    ci_sparebuffer->used = TRUE;
+    ci_sparebuffer->magic = 1234;
+    ci_sparebuffer->initialized = TRUE;
+
+// Save into global list 
+    canvasList[CANVAS_SPAREBUFFER] = (unsigned long) ci_sparebuffer;
+
+// -----------------------------------------------------
 
 // Draw something early.
 // First: draw a test pattern into the spare buffer
@@ -361,6 +389,75 @@ void comp_blit_spare_to_backbuffer(
     );
 }
 
+// #test
+// Blit from one canvas into another.
+// src_canvas: source canvas (offscreen, spare, window, etc.)
+// dst_canvas: destination canvas (backbuffer, frontbuffer, etc.)
+void 
+comp_blit_canvas_to_canvas_imp(
+    struct canvas_information_d *src_canvas,
+    struct canvas_information_d *dst_canvas,
+    int dst_x, int dst_y,
+    int width, int height )
+{
+
+// Validation
+    if ((void*) src_canvas == NULL || (void*) dst_canvas == NULL)
+        return;
+    if (src_canvas->used != TRUE || dst_canvas->used != TRUE)
+        return;
+    if (src_canvas->magic != 1234 || dst_canvas->magic != 1234)
+        return;
+    if (src_canvas->initialized != TRUE || dst_canvas->initialized != TRUE)
+        return;
+    if (src_canvas->base == NULL || dst_canvas->base == NULL)
+        return;
+
+    // Copy rectangle from source canvas (always top-left for now)
+    __refresh_rectangle1(
+        width, height,
+        dst_x, dst_y, (unsigned long) dst_canvas->base,   // destination
+        0, 0, (unsigned long) src_canvas->base            // source
+    );
+}
+
+// #test
+// Given the indexes
+void 
+comp_blit_canvas_to_canvas(
+    int id_src_canvas,
+    int id_dst_canvas,
+    int dst_x, int dst_y,
+    int width, int height )
+{
+    struct canvas_information_d *src;
+    struct canvas_information_d *dst;
+
+// We have few canvases for now.
+    if (id_src_canvas < 0 || id_src_canvas >= 4)
+        return;
+    if (id_dst_canvas < 0 || id_dst_canvas >= 4)
+        return;
+    // #todo: More filters.
+
+    src = (struct canvas_information_d *) canvasList[id_src_canvas];
+    if ((void *) src == NULL)
+        return;
+    if (src->magic != 1234)
+        return;
+
+    dst = (struct canvas_information_d *) canvasList[id_dst_canvas];
+    if ((void *) dst == NULL)
+        return;
+    if (dst->magic != 1234)
+        return;
+
+    comp_blit_canvas_to_canvas_imp(
+        (struct canvas_information_d *) src,
+        (struct canvas_information_d *) dst,
+        dst_x, dst_y, width, height 
+    );
+}
 
 // ??
 // Using the kernel to show the backbuffer.
@@ -834,6 +931,25 @@ void comp_display_desktop_components(void)
         //comp_test_spare_buffer();
         comp_blit_spare_to_backbuffer(100, 100,10,10);
         gws_refresh_rectangle ( 100, 100, 10, 10 );
+        //---------
+
+        //---------
+        // #test >>> backbuffer
+        comp_blit_canvas_to_canvas(
+            CANVAS_SPAREBUFFER,   // source
+            CANVAS_BACKBUFFER,    // destination
+            200, 200,             // destination position
+            10, 10 );                // width, height
+        gws_refresh_rectangle(200, 200, 10, 10);
+        //---------
+
+        //---------
+        // #test >>> frontbuffer
+        comp_blit_canvas_to_canvas(
+            CANVAS_SPAREBUFFER,   // source
+            CANVAS_FRONTBUFFER,    // destination
+            300, 100,             // destination position
+            10, 10 );                // width, height
         //---------
     }
 
