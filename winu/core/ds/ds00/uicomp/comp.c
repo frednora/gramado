@@ -9,6 +9,13 @@
 // features necessary to have a full compositor with offscreen areas for windows.
 // The called: Per-window offscreen buffers (canvases)
 
+/*
+Pipeline:
+ 1. DCs for drawing → isolated painting into canvases.
+ 2. Canvas‑to‑canvas blits → flexible composition, like brush strokes.
+ 3. Backbuffer → frontbuffer flush → final presentation.
+*/
+
 // comp.c:
 // stays focused on buffer management, composition, and flush logic.
 
