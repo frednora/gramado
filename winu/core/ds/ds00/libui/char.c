@@ -124,26 +124,6 @@ DrawBorder(
     };
 }
 
-int char_initialize(void)
-{
-// Called by gwsInitGUI() in gws.c.
-
-    CharInitialization.initialized = FALSE;
-
-// Char width and height.
-    CharInitialization.width = DEFAULT_FONT_WIDTH;
-    CharInitialization.height = DEFAULT_FONT_HEIGHT;
-
-    if (FontInitialization.initialized != TRUE)
-    {
-        FontInitialization.width = DEFAULT_FONT_WIDTH;
-        FontInitialization.height = DEFAULT_FONT_HEIGHT;
-    }
-
-    CharInitialization.initialized = TRUE;
-    return 0;
-}
-
 // Constrói um caractere transparente 8x8 no buffer.
 void 
 charBackbufferCharBlt ( 
@@ -348,6 +328,7 @@ fail:
  *     Constrói um caractere no backbuffer.
  *     Desenha um caractere e pinta o pano de fundo.
  */ 
+
 void 
 grBackbufferDrawChar ( 
     unsigned long x, 
@@ -360,6 +341,8 @@ grBackbufferDrawChar (
     register int x2=0;
     char *work_char; 
     unsigned char bit_mask = 0x80;
+
+    unsigned long rop=0;
 
 /*
  Get the font pointer.
@@ -407,7 +390,7 @@ grBackbufferDrawChar (
                 *work_char & bit_mask ? fgcolor: bgcolor, 
                 (x + x2), 
                 y,
-                (unsigned long) 0 );
+                (unsigned long) rop );
 
             bit_mask = (bit_mask >> 1); 
         };
@@ -417,6 +400,116 @@ grBackbufferDrawChar (
         work_char++; 
     };
 }
+
+// Draw char into a given device context.
+void 
+dc_drawchar (
+    struct dc00_d *dc, 
+    unsigned long x, 
+    unsigned long y,  
+    unsigned long c,
+    unsigned int fgcolor,
+    unsigned int bgcolor,
+    unsigned long rop )
+{
+    register int y2=0;
+    register int x2=0;
+    char *work_char; 
+    unsigned char bit_mask = 0x80;
+
+    if ((void *)dc == NULL)
+        return;
+    if (dc->magic != 1234)
+        return;
+
+/*
+ Get the font pointer.
+ #todo:
+ usar variavel g8x8fontAddress.	 
+ + Criar e usar uma estrutura para fonte.
+ + Usar o ponteiro para a fonte atual que foi carregada.
+ + Criar um switch para o tamanho da fonte.
+   isso deveria estar na inicialização do módulo char.
+ */
+ 
+    if ( FontInitialization.address == 0 ||  
+         FontInitialization.width <= 0 || 
+         FontInitialization.height <= 0 )
+    {
+        printf ("dc_drawchar: initialization fail\n");
+        while(1){}
+    }
+
+// Tentando pintar um espaço em branco.
+// Nas rotinas da biblioteca gráfica, quando encontram
+//um espaço(32), nem manda para cá, apenas incrementam o cursor.
+
+// O caractere sendo trabalhado.
+// Offset da tabela de chars de altura 8 na ROM.
+
+    work_char = 
+        (void *) FontInitialization.address + (c * FontInitialization.height);
+
+// Draw:
+// Draw a char using a ring3 routine.
+// #todo
+// Some flag for modification here?
+// Put pixel.
+// A cor varia de acordo com a mascara de bit.
+
+    for ( y2=0; y2 < FontInitialization.height; y2++ )
+    {
+        bit_mask = 0x80;
+
+        for ( x2=0; x2 < FontInitialization.width; x2++ )
+        {
+            /*
+            // IN: color, x, y, rop
+            libdisp_backbuffer_putpixel ( 
+                *work_char & bit_mask ? fgcolor: bgcolor, 
+                (x + x2), 
+                y,
+                (unsigned long) 0 );
+            */
+
+            // #test: New method with dc.
+            // IN: dc, color, x, y, rop
+            putpixel0(
+                dc,
+                *work_char & bit_mask ? fgcolor: bgcolor, 
+                (x + x2), 
+                y, 
+                rop );
+
+            bit_mask = (bit_mask >> 1); 
+        };
+
+        // Próxima linha da (y) linhas do caractere.
+        y++; 
+        work_char++; 
+    };
+}
+
+int char_initialize(void)
+{
+// Called by gwsInitGUI() in gws.c.
+
+    CharInitialization.initialized = FALSE;
+
+// Char width and height.
+    CharInitialization.width = DEFAULT_FONT_WIDTH;
+    CharInitialization.height = DEFAULT_FONT_HEIGHT;
+
+    if (FontInitialization.initialized != TRUE)
+    {
+        FontInitialization.width = DEFAULT_FONT_WIDTH;
+        FontInitialization.height = DEFAULT_FONT_HEIGHT;
+    }
+
+    CharInitialization.initialized = TRUE;
+    return 0;
+}
+
 
 //
 // End

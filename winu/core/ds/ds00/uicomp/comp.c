@@ -133,7 +133,6 @@ setup_spare_buffer_clip(
 // decide whether to copy/blit the buffer into the global backbuffer.
 void *comp_create_slab_spare_128kb_buffer(size_t size_in_kb)
 {
-
     SpareBufferClipInfo.initialized = FALSE;
 
 // Device info
@@ -226,12 +225,15 @@ void *comp_create_slab_spare_128kb_buffer(size_t size_in_kb)
 // Its job is purely to check flags 
 // (dirty, show_when_creating, redraw, etc.) and 
 // decide whether to copy/blit the buffer into the global backbuffer.
-void *compCreateCanvasUsingSpareBuffer(void)
+
+struct canvas_information_d *compCreateCanvasUsingSpareBuffer(void)
 {
     void *b;
-    // 10x10
-    size_t WindowSizeInBytes = 10*4*10;
-    b = (void *) comp_create_slab_spare_128kb_buffer(WindowSizeInBytes);
+
+    // 10*4*10 is ok.
+    // 64 is ok.
+    size_t WindowSizeInKB = 64; 
+    b = (void *) comp_create_slab_spare_128kb_buffer(WindowSizeInKB);
     if ((void*) b == NULL){
         return NULL;
     }
@@ -265,14 +267,17 @@ void *compCreateCanvasUsingSpareBuffer(void)
 
 // Draw something early.
 // First: draw a test pattern into the spare buffer
-    if (CONFIG_TEST_SPARE_BUFFER == 1){
+    if (CONFIG_TEST_SPARE_BUFFER == 1)
+    {
         comp_draw_into_spare_buffer();
+
+        // #debug:
+        // Draw something early.
+        // Draw a red pixel at (0,0) inside the spare buffer
+        // putpixel0(0xFFFF0000, 0, 0, ROP_COPY, (unsigned long) b);
     }
 
-// Draw something early.
-    // Draw a red pixel at (0,0) inside the spare buffer
-    //putpixel0(0xFFFF0000, 0, 0, ROP_COPY, (unsigned long) b);
-    return (void *) b;
+    return (struct canvas_information_d *) ci_sparebuffer;
 };
 
 // Draw a pixel into the spare buffer. Using clipping.
@@ -352,6 +357,10 @@ void comp_draw_into_spare_buffer(void)
     spare_putpixel0(0xFFFF0000, 9, 0, ROP_COPY);
     spare_putpixel0(0xFFFF0000, 9, 9, ROP_COPY);
     spare_putpixel0(0xFFFF0000, 0, 9, ROP_COPY);
+
+    // #test
+    dc_drawchar(spare_dc00, 10, 10, 'H', COLOR_YELLOW, COLOR_BLUE, ROP_COPY);
+    dc_drawchar(spare_dc00, 18, 10, 'i', COLOR_YELLOW, COLOR_BLUE, ROP_COPY);
 
 /*
     spare_putpixel0(
@@ -936,10 +945,12 @@ void comp_display_desktop_components(void)
         // Copy bytes from the spare buffer to the 
         // top left corner of the screen.
         //comp_test_spare_buffer();
-        comp_blit_spare_to_backbuffer(100, 100,10,10);
-        gws_refresh_rectangle ( 100, 100, 10, 10 );
+        // ok
+        //comp_blit_spare_to_backbuffer(100, 100,10,10);
+        //gws_refresh_rectangle ( 100, 100, 10, 10 );
         //---------
 
+        /*
         //---------
         // #test >>> backbuffer
         comp_blit_canvas_to_canvas(
@@ -949,7 +960,9 @@ void comp_display_desktop_components(void)
             10, 10 );                // width, height
         gws_refresh_rectangle(200, 200, 10, 10);
         //---------
+        */
 
+        /*
         //---------
         // #test >>> frontbuffer
         comp_blit_canvas_to_canvas(
@@ -957,6 +970,23 @@ void comp_display_desktop_components(void)
             CANVAS_FRONTBUFFER,    // destination
             300, 100,             // destination position
             10, 10 );                // width, height
+        //---------
+        */
+
+        //---------
+        // #test >>> frontbuffer
+        if ((void*) spare_dc00 != NULL)
+        {
+            if (spare_dc00->magic == 1234)
+            {
+                comp_blit_canvas_to_canvas(
+                    CANVAS_SPAREBUFFER,    // source
+                    CANVAS_FRONTBUFFER,    // destination
+                    20, 20,                // destination position
+                    spare_dc00->device_width >> 1,     // width 
+                    spare_dc00->device_height >> 1 );  // height  
+            }
+        }
         //---------
     }
 
@@ -1084,7 +1114,6 @@ void comp_set_mouse_position(long x, long y)
 // + Initialize mouse support.
 int compInitializeCompositor(void)
 {
-
     Compositor.initialized = FALSE;
 
     Compositor.counter = 0;
@@ -1121,9 +1150,10 @@ This was the first experiment in order to have a future
 // -------------------------
     if (CONFIG_TEST_SPARE_BUFFER == 1)
     {
-        spare_128kb_buffer_p = (void *) compCreateCanvasUsingSpareBuffer();
-        if ((void*) spare_128kb_buffer_p == NULL){
-            printf("comp.c: on compCreateCanvasUsingSpareBuffer()\n");
+        struct canvas_information_d *ci_tmp;
+        ci_tmp = (void *) compCreateCanvasUsingSpareBuffer();
+        if ((void*) ci_tmp == NULL){
+            printf("comp.c: ci_tmp\n");
             exit(1);
         }
     }

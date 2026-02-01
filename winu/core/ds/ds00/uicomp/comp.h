@@ -66,7 +66,8 @@ setup_spare_buffer_clip(
 
 void *comp_create_slab_spare_128kb_buffer(size_t size_in_kb);
 
-void *compCreateCanvasUsingSpareBuffer(void);
+struct canvas_information_d *compCreateCanvasUsingSpareBuffer(void);
+
 void 
 spare_putpixel0(
     unsigned int color, 

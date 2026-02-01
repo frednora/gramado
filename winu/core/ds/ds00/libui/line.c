@@ -163,10 +163,8 @@ void test_draw_line2(void)
 }
 
 
-/* 
- * grBackbufferDrawHorizontalLine:
- *     Draw a horizontal line on backbuffer. 
- */
+// grBackbufferDrawHorizontalLine:
+// Draw a horizontal line on backbuffer. 
 // It's using the ring3 routine.
 // See libdisp.c for 'put pixel'.
 void 
@@ -180,8 +178,6 @@ grBackbufferDrawHorizontalLine (
     unsigned int __x2 = (unsigned int) (x2 & 0xFFFFFFFF);
     unsigned int __y  = (unsigned int) (y  & 0xFFFFFFFF);
     unsigned long __rop = 0;
-
-    //debug_print("Line\n");
 
     unsigned long deviceWidth  = gws_get_device_width();
     //unsigned long deviceHeight = gws_get_device_height();

@@ -73,6 +73,17 @@ grBackbufferDrawChar (
     unsigned int fgcolor,
     unsigned int bgcolor );
 
+// Draw char into a given device context.
+void 
+dc_drawchar (
+    struct dc00_d *dc, 
+    unsigned long x, 
+    unsigned long y,  
+    unsigned long c,
+    unsigned int fgcolor,
+    unsigned int bgcolor,
+    unsigned long rop );
+
 int char_initialize(void);
 
 #endif
