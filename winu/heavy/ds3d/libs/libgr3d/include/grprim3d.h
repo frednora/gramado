@@ -23,6 +23,21 @@ struct gr_vecF3D_d
     unsigned int color;
 };
 
+// Face definition from OBJ file.
+// Stores indices into the vertex, texture, and normal arrays.
+// Later these indices are resolved into actual vectors/triangles.
+struct gr_face_d
+{
+    //int used;
+    //int magic;
+    int initialized;
+
+    int vi[3];  // vertex indices (OBJ is 1-based, so subtract 1 when using)
+    //int t[3];  // texture indices (optional, can be 0 if unused)
+    //int n[3];  // normal indices (optional, can be 0 if unused)
+};
+
+
 // float 3D triangle
 struct gr_triangleF3D_d
 {

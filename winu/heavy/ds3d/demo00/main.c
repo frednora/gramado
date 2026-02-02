@@ -3775,9 +3775,9 @@ static int on_execute(void)
                 //gwssrv_debug_print("gwssrv: accept returned FAIL\n");
             //}
 
-            //#debug
+            // #debug
             if (newconn == ____saved_server_fd){
-                printf(": Invalid connection\n");
+                printf("demo00: Invalid connection\n");
                 goto fail;
             }
             //close(newconn);

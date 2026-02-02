@@ -15,18 +15,19 @@ extern struct cat_model_d  CatModel;   // Cat model 0.
 
 // -----------------------------------------
 //  Flying cube.
+// 12 triangles.
+// 6 faces.
 struct cube_model_d
 {
-// 6 faces.
-// 12 triangles.
+    // We don't need 32 vectors. But its ok.
+    struct gr_vecF3D_d vecs[128]; //32
+    int vertex_count; // how many faces are stored
 
-// We don't need 32 vectors.
-    struct gr_vecF3D_d vecs[32];
-    unsigned int colors[32];
+    // Faces (12 triangles for a cube) 
+    struct gr_face_d faces[128]; // (16+1) each face has vi[3] indices 
+    int face_count; // how many faces are stored
 
-// Sequence of vertices in order to build the faces (triangles).
-// It needs 12 triangles to build a cube.
-    int sequence[3*16];
+    unsigned int colors[128]; //32 #bugbug: colors needs to fit the number of faces.
 
     float fThetaAngle;
     float hposition;  //horisontal position
@@ -37,12 +38,10 @@ struct cube_model_d
     float model_distance;          // Current z position
     float model_distance_delta;    // Variarion in z position 
 
-// Acceletarion: How fast the velocity changes.
-    float a;
-// Velocity:
-    float v;
-// Time:
-    float t;
+    // Motion parameters
+    float a;  // Acceletarion: How fast the velocity changes.
+    float v;  // Velocity:
+    float t;  // Time:
 };
 
 extern struct cube_model_d *terrain;

@@ -39,6 +39,68 @@ double __pow0000(double __x, double __y)
 }
 
 // =========================================
+/*
+int scan00_custom_read_int(const char **strPtr)
+{
+    const char *s = *strPtr;
+
+    // Skip whitespace
+    while (*s && isspace((unsigned char)*s))
+        s++;
+
+    // Optional sign
+    int sign = 1;
+    if (*s == '-') { 
+        sign = -1; 
+        s++; }
+    else if (*s == '+') { 
+        s++; 
+    }
+
+    // Build integer
+    long result = 0;
+    while (*s && isdigit((unsigned char)*s)) 
+    {
+        result = result * 10 + (*s - '0');
+        s++;
+    }
+
+    *strPtr = s;
+
+    return (int)(sign * result);
+}
+*/
+
+int scan00_custom_read_int(const char **strPtr)
+{
+    const char *s = *strPtr;
+
+    // Skip whitespace
+    while (*s && isspace((unsigned char)*s))
+        s++;
+
+    // Optional sign
+    int sign = 1;
+    if (*s == '-') { sign = -1; s++; }
+    else if (*s == '+') { s++; }
+
+    // Copy digits into a small buffer
+    char buf[32];
+    int len = 0;
+    while (*s && isdigit((unsigned char)*s) && len < (int)(sizeof(buf)-1)) {
+        buf[len++] = *s;
+        s++;
+    }
+    buf[len] = '\0';
+
+    // Convert with atoi
+    int value = atoi(buf) * sign;
+
+    // Advance pointer
+    *strPtr = s;
+    return value;
+}
+
 
 /**
  * scan00_custom_read_float - Parses a floating-point number from a string.
@@ -121,10 +183,16 @@ float scan00_custom_read_float(const char **strPtr)
 // Its real purpose is to parse a line containing a vertex definition (v x y z) and 
 // return a 3D vector.
 // Modified function: it now returns a pointer into the string after the newline.
-const char * scan00_read_vector_from_line(const char *line_ptr, struct gr_vecF3D_d *return_v)
+const char *scan00_read_element_from_line(
+    const char *line_ptr, 
+    struct obj_element_d *elem )
 {
     // 'ptr' will traverse the string.
     const char *ptr = line_ptr;
+
+    if ((void*) elem == NULL)
+        return NULL;
+    elem->initialized = FALSE;
 
     // Skip any whitespace before the identifier.
     while (*ptr && isspace((unsigned char)*ptr))
@@ -134,38 +202,89 @@ const char * scan00_read_vector_from_line(const char *line_ptr, struct gr_vecF3D
     if (*ptr == '\0')
         return NULL;
 
-    // Skip the initial identifier ("v") if it's present.
-    if (*ptr == 'v') {
+// =======================================
+// Handle vertex lines ("v")
+    if (*ptr == 'v') 
+    {
+        // Skip the initial identifier ("v") if it's present.
         ptr++;
+
+        // Skip any whitespace after the identifier.
+        while (*ptr && isspace((unsigned char)*ptr))
+            ptr++;
+
+        // Fill the new structure instead of an external pointer
+        elem->type = OBJ_ELEMENT_TYPE_VECTOR; 
+
+        // Parse three floats and store them in the structure.
+        elem->vertex.x = scan00_custom_read_float(&ptr);
+        elem->vertex.y = scan00_custom_read_float(&ptr);
+        elem->vertex.z = scan00_custom_read_float(&ptr);
+
+        // Debug output: print the parsed coordinates.
+        //printf("Parsed Vertex Coordinates:\n");
+        //printf("x = %f\n", (double)return_v->x);
+        //printf("y = %f\n", (double)return_v->y);
+        //printf("z = %f\n", (double)return_v->z);
+
+        // #test: default color
+        elem->vertex.color = COLOR_WHITE;
+
+        elem->initialized = TRUE;
+
+        // Advance 'ptr' to the end of the current line.
+        while (*ptr && *ptr != '\n')
+            ptr++;
+
+        // If a newline is found, move one character beyond it.
+        if (*ptr == '\n')
+            ptr++;
+
+        // If we've reached the end of the string, return NULL.
+        if (*ptr == '\0')
+            return NULL;
+
+        // Otherwise, return the pointer to the next line's start.
+        return ptr;
+    };
+
+// =======================================
+// Handle face lines ("f")
+    if (*ptr == 'f') 
+    {
+        // Skip the initial identifier ("f") if it's present.
+        ptr++;
+
+        // Skip any whitespace after the identifier.
+        while (*ptr && isspace((unsigned char)*ptr))
+            ptr++;
+
+        elem->type = OBJ_ELEMENT_TYPE_FACE;
+
+        // Parse three integers
+        elem->face.vi[0] = scan00_custom_read_int(&ptr);
+        elem->face.vi[1] = scan00_custom_read_int(&ptr);
+        elem->face.vi[2] = scan00_custom_read_int(&ptr);
+
+        //printf ("f: %d %d %d \n",
+            //elem->face.vi[0], elem->face.vi[1], elem->face.vi[2] );
+
+        //while(1){}
+
+        elem->initialized = TRUE;
+
+        // Advance to end of line
+        while (*ptr && *ptr != '\n') 
+            ptr++;
+        if (*ptr == '\n') 
+            ptr++;
+        if (*ptr == '\0') 
+            return NULL;
+
+        return ptr;
     }
 
-    // Skip any whitespace after the identifier.
-    while (*ptr && isspace((unsigned char)*ptr))
-        ptr++;
-    
-    // Parse three floats and store them in the structure.
-    return_v->x = scan00_custom_read_float(&ptr);
-    return_v->y = scan00_custom_read_float(&ptr);
-    return_v->z = scan00_custom_read_float(&ptr);
 
-    // Debug output: print the parsed coordinates.
-    //printf("Parsed Vertex Coordinates:\n");
-    //printf("x = %f\n", (double)return_v->x);
-    //printf("y = %f\n", (double)return_v->y);
-    //printf("z = %f\n", (double)return_v->z);
-
-    // Advance 'ptr' to the end of the current line.
-    while (*ptr && *ptr != '\n')
-        ptr++;
-
-    // If a newline is found, move one character beyond it.
-    if (*ptr == '\n')
-        ptr++;
-
-    // If we've reached the end of the string, return NULL.
-    if (*ptr == '\0')
-        return NULL;
-
-    // Otherwise, return the pointer to the next line's start.
-    return ptr;
+    return NULL;
 }
+
