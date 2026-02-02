@@ -202,6 +202,25 @@ const char *scan00_read_element_from_line(
     if (*ptr == '\0')
         return NULL;
 
+
+// =======================================
+// Handle comment lines ("#")
+// When the line starts with comment
+    if (*ptr == '#')
+    {
+        // Skip until end of line
+        while (*ptr && *ptr != '\n')
+            ptr++;
+        if (*ptr == '\n')
+            ptr++;
+        if (*ptr == '\0')
+            return NULL;
+
+        // Comments are ignored, return pointer to next line
+        return ptr;
+    }
+
+
 // =======================================
 // Handle vertex lines ("v")
     if (*ptr == 'v') 

@@ -509,12 +509,16 @@ static void __drawFlyingCube(struct cube_model_d *cube, float vel)
         tri.p[2] = cube->vecs[i2];
 
         // Assign colors if desired 
-        tri.p[0].color = COLOR_PINK; 
-        if (i >= 1 && i <= 12){
-            tri.p[0].color = cube->colors[i-1];
-        } 
-        tri.p[1].color = COLOR_WHITE; 
-        tri.p[2].color = COLOR_WHITE;
+        //tri.p[0].color = COLOR_PINK; 
+        //if (i >= 1 && i <= 12){
+            //tri.p[0].color = cube->colors[i-1];
+        //} 
+        //tri.p[1].color = COLOR_WHITE; 
+        //tri.p[2].color = COLOR_WHITE;
+
+        tri.p[0].color = cube->colors[i-1];
+        tri.p[1].color = cube->colors[i-1];
+        tri.p[2].color = cube->colors[i-1];
 
         // Now we have a triangle. A face.
 
@@ -1019,6 +1023,7 @@ void demoFlyingCubeSetup(void)
         //const char *cubeData = (char *) demosReadFileIntoBuffer("cube03.txt");
         //const char *cubeData = (char *) demosReadFileIntoBuffer("obj00.txt");
         //const char *cubeData = (char *) demosReadFileIntoBuffer("obj01.txt");
+        //const char *cubeData = (char *) demosReadFileIntoBuffer("obj02.txt");
         const char *cubeData = (char *) demosReadFileIntoBuffer("obj02.txt");
         // ...
         if ((void*)cubeData == NULL){
@@ -1123,6 +1128,30 @@ void demoFlyingCubeSetup(void)
         cube->colors[9] = GRCOLOR_LIGHTBLACK;
         cube->colors[10] = GRCOLOR_LIGHTBLUE;
         cube->colors[11] = GRCOLOR_LIGHTGREEN;
+
+
+        int it=0;
+
+        // Head (faces 0–11)
+        for (it=0; it<12; it++) cube->colors[it] = COLOR_RED;
+
+        // Torso (faces 12–23)
+        for (it=12; it<24; it++) cube->colors[it] = COLOR_GREEN;
+
+        // Left leg (faces 24–35)
+        for (it=24; it<36; it++) cube->colors[it] = COLOR_BLUE;
+
+        // Right leg (faces 36–47)
+        for (it=36; it<48; it++) cube->colors[it] = COLOR_BLUE;
+
+        // more 2 cubes is too much for a file with 1KB limitation.
+
+        // Left arm (faces 48–59) (Not implemented)
+        for (it=48; it<60; it++) cube->colors[it] = COLOR_ORANGE;
+
+        // Right arm (faces 60–71) (Not implemented)
+        for (it=60; it<72; it++) cube->colors[it] = COLOR_PURPLE;
+
 
         // All the cubes.
         cube->model_initial_distance = 
