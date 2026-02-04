@@ -1,5 +1,6 @@
 // wm.h
-
+// Headers for window manager.
+// Created by Fred Nora.
 
 #ifndef __UI_WM_H
 #define __UI_WM_H    1

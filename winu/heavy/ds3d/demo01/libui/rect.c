@@ -1219,21 +1219,14 @@ __drawrectangle0(
     //gwssrv_debug_print("__drawrectangle0: Done\n");
 }
 
-
-
-
-/*
- * rectBackbufferDrawRectangle: (API)
- *     Draw a rectangle on backbuffer. 
- */
-
+// rectBackbufferDrawRectangle0:
+// Draw a rectangle on backbuffer. 
 // #todo
 // At this moment, no structure ware invalidated.
 // So, the caller needs to specify a rect structure,
 // this way we can invalidated it.
-// use_kgws?
-// TRUE = use kgws.
-// FALSE = do not use kgws. #bugbug
+// IN:
+// use_kgws = Use workers in ring0 or not.
 
 void 
 rectBackbufferDrawRectangle0 ( 
@@ -1271,19 +1264,17 @@ rectBackbufferDrawRectangle0 (
     unsigned long device_h = (unsigned long) gws_get_device_height();
     device_w = (unsigned long) (device_w & 0xFFFF);
     device_h = (unsigned long) (device_h & 0xFFFF);
+
 // #provisório
 // limites do dispositivo
-    if(device_w > 800)
-    {
+    if (device_w > 800){
         debug_print("rectBackbufferDrawRectangle0: [FAIL] device_w\n");
         return; 
     }
-    if(device_h > 600)
-    {
+    if (device_h > 600){
         debug_print("rectBackbufferDrawRectangle0: [FAIL] device_h\n");
         return; 
     }
-
 
 // set values
 
@@ -1297,7 +1288,6 @@ rectBackbufferDrawRectangle0 (
     rect.bottom = (unsigned long) (rect.top  + rect.height); 
 
     rect.bg_color = (unsigned int)(color & 0xFFFFFF);
-
 
 //
 // Fail
@@ -1329,7 +1319,6 @@ rectBackbufferDrawRectangle0 (
         return; 
     }
 
-
 // Clip
 
     // se a largura for maior que largura do dispositivo.
@@ -1345,7 +1334,6 @@ rectBackbufferDrawRectangle0 (
         debug_print("rectBackbufferDrawRectangle0: [FAIL] rect.height > device_h\n");
         return;
     }
-
 
 // limits
 // Se for maior que o espaço que sobre, 
@@ -1363,8 +1351,6 @@ rectBackbufferDrawRectangle0 (
         //debug_print("rectBackbufferDrawRectangle0: [AJUST] rect.height\n");
     }
 
-
-
 // check
     if ( rect.right > device_w )
     {
@@ -1377,13 +1363,10 @@ rectBackbufferDrawRectangle0 (
         return;
     }
 
-
 // empty
-
-    if ( fill == FALSE ){
+    if (fill == FALSE){
         rect.is_empty = TRUE;
     }
-
 
     /*
 
@@ -1426,8 +1409,7 @@ rectBackbufferDrawRectangle0 (
     */
 
 // fill
-    
-    if ( fill == TRUE ){
+    if (fill == TRUE){
         rect.is_empty = FALSE;
     }
 
@@ -1436,15 +1418,15 @@ rectBackbufferDrawRectangle0 (
 // Draw lines on backbuffer.
 // Invalidate the rectangle.
 
-    if ( DrawRectangleUsingKGWS == TRUE )
+    if (DrawRectangleUsingKGWS == TRUE)
     {
-         //debug_print("rectBackbufferDrawRectangle0: Using R0\n");
-         __draw_rectangle_via_kgws (
-             rect.left, rect.top, rect.width, rect.height,
-             rect.bg_color,
-             rop_flags );
-         rect.dirty = TRUE;
-         goto done;
+        //debug_print("rectBackbufferDrawRectangle0: Using R0\n");
+        __draw_rectangle_via_kgws (
+            rect.left, rect.top, rect.width, rect.height,
+            rect.bg_color,
+            rop_flags );
+        rect.dirty = TRUE;
+        goto done;
     }
 
 //===============================================================

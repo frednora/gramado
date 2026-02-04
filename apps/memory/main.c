@@ -1,4 +1,4 @@
-// memory_app.c
+// main.c
 // Gramado OS client-side GUI app showing system memory information.
 // Created by Fred Nora (example by Copilot).
 
@@ -233,11 +233,11 @@ case MSG_KEYDOWN:
             return 0;
             break;
         //
-        case VK_ARROW_RIGHT:  printf("Editor: VK_ARROW_RIGHT \n"); break;
-        case VK_ARROW_UP:     printf("Editor: VK_ARROW_UP \n");    break;
-        case VK_ARROW_DOWN:   printf("Editor: VK_ARROW_DOWN \n");  break;
+        case VK_ARROW_RIGHT:  printf("memory: VK_ARROW_RIGHT \n"); break;
+        case VK_ARROW_UP:     printf("memory: VK_ARROW_UP \n");    break;
+        case VK_ARROW_DOWN:   printf("memory: VK_ARROW_DOWN \n");  break;
         case VK_ARROW_LEFT:
-            printf("Editor: VK_ARROW_LEFT \n"); 
+            printf("memory: VK_ARROW_LEFT \n"); 
             switch_responder(fd);
             break;
         };

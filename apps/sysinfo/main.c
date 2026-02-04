@@ -666,11 +666,11 @@ systemProcedure(
             break; 
         case VK_F12:  printf("system_info_app: Debug info\n");  break;
         //
-        case VK_ARROW_RIGHT:  printf("Editor: VK_ARROW_RIGHT \n"); break;
-        case VK_ARROW_UP:     printf("Editor: VK_ARROW_UP \n");    break;
-        case VK_ARROW_DOWN:   printf("Editor: VK_ARROW_DOWN \n");  break;
+        case VK_ARROW_RIGHT:  printf("sysinfo: VK_ARROW_RIGHT \n"); break;
+        case VK_ARROW_UP:     printf("sysinfo: VK_ARROW_UP \n");    break;
+        case VK_ARROW_DOWN:   printf("sysinfo: VK_ARROW_DOWN \n");  break;
         case VK_ARROW_LEFT:
-            printf("Editor: VK_ARROW_LEFT \n"); 
+            printf("sysinfo: VK_ARROW_LEFT \n"); 
             switch_responder(fd);
             break;
         };

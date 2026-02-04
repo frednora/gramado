@@ -1,5 +1,5 @@
 // window.h
-// Created by Fred Nora.
+// 2020 - Created by Fred Nora.
 
 #ifndef __LIBUI_WINDOW_H
 #define __LIBUI_WINDOW_H    1
@@ -56,6 +56,7 @@ int __has_wallpaper(void);
 void __init_wm_structure(void);
 
 
+
 // Button state
 #define BS_NULL      0 
 #define BS_DEFAULT   1
@@ -106,7 +107,6 @@ void __init_wm_structure(void);
 #define WS_MODAL               0x2000   // blocks interaction with parent
 #define WS_TOPMOST             0x4000   // stays above other windows
 #define WS_FULLSCREENABLE      0x8000   // can toggle fullscreen
-
 
 //----------------------
 // Role / semantic identity (misplaced in WS_)
@@ -169,7 +169,6 @@ void __init_wm_structure(void);
 #define WINDOW_STATE_MINIMIZED  1002
 #define WINDOW_STATE_NORMAL     1003  //Normal (restaurada)
 
-// =========================================================
 
 //window relationship status. (seu status em relação as outras janelas.)
 //Obs: tem uma estreita ligação com o status da thread que está trabalahndo com ela 
@@ -579,7 +578,7 @@ struct gws_window_d
 
 // State: runtime condition.
 // Tracks current behavior (minimized, maximized, fullscreen, etc).
-    int state;
+    int state; 
 
 // Status: interaction/activation.
 // Indicates focus, active/inactive, and user engagement.

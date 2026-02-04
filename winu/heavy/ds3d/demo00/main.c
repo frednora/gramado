@@ -3365,10 +3365,17 @@ static int on_execute(void)
     addrlen = sizeof(server_address);
 //==================
 
-    //int ShowDemo=FALSE;
-    int ShowDemo=TRUE;
-    int flagUseClient = FALSE;
-    //int flagUseClient = TRUE;
+    // Flags
+    int ShowDemo = TRUE;
+    int DrawDesktopDuringDemo = FALSE;
+    int DrawYellowStatusDuringDemo = FALSE;
+
+    int UseSleep = TRUE;
+    int flagUseClient = FALSE; //TRUE;
+    // ...
+    IsTimeToQuit = FALSE;
+    IsAcceptingConnections = TRUE;
+
     int UseCompositor = TRUE;  // #debug flags
 
     // files.
@@ -3383,8 +3390,6 @@ static int on_execute(void)
     char buf[32];
     int CanRead = -1;
 
-    IsTimeToQuit = FALSE;
-    IsAcceptingConnections = TRUE;
 // #test: 
 // Transparence.
     //gws_enable_transparence();
@@ -3624,11 +3629,10 @@ static int on_execute(void)
 // Client
 //
 
-    if (flagUseClient == TRUE)
-    {
-        //debug_print ("gwssrc: Calling client $\n");
-        //rtl_clone_and_execute("terminal.bin");
+    if (flagUseClient == TRUE){
+        rtl_clone_and_execute("#terminal.bin");
     }
+
 
 //
 // =======================================
@@ -3701,26 +3705,20 @@ static int on_execute(void)
     unsigned long end_jiffie=0;
     unsigned long delta_jiffie=0;
 
-    // Flags
-    int UseSleep = TRUE;
-    int DrawDesktop = FALSE;
-    int DrawYellowStatus = TRUE;
-    // ...
-
 // Draw the desktop before the demos?
 // see: config.h
     if (CONFIG_DRAW_DESKTOP == 1){
-        DrawDesktop = TRUE;
+        DrawDesktopDuringDemo = TRUE;
     } else {
-        DrawDesktop = FALSE;
+        DrawDesktopDuringDemo = FALSE;
     }
 
 // Draw the yellow status bar after the demo
 // see: config.h
     if (CONFIG_DRAW_YELLOW_STATUS == 1){
-        DrawYellowStatus = TRUE;
+        DrawYellowStatusDuringDemo = TRUE;
     } else {
-        DrawYellowStatus = FALSE;
+        DrawYellowStatusDuringDemo = FALSE;
     }
 
     // Initialize counters.
@@ -3808,7 +3806,7 @@ static int on_execute(void)
             // Draw desktop?
             // Draw, but do not refresh.
             // IN: tile, show
-            if (DrawDesktop){
+            if (DrawDesktopDuringDemo){
                 wm_update_desktop(TRUE,FALSE);
             }
 
@@ -3846,7 +3844,7 @@ static int on_execute(void)
             }
 
             // Draw yellow bar with the info.
-            if (DrawYellowStatus){
+            if (DrawYellowStatusDuringDemo){
                 yellowstatus0(buf_fps,FALSE);
             }
 

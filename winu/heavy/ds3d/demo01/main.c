@@ -189,16 +189,20 @@ static int serviceGetWindowInfo(void);
 
 static void serviceCloneAndExecute(void);
 
+static unsigned long callback_counter=0;
+static inline void do_restorer(void);
+void callback1(void);
+
+static int test_printf(void);
+
 // ===============================================
 
-static unsigned long callback_counter=0;
 
-static inline void do_restorer(void);
 static inline void do_restorer(void)
 {
     asm ("int $198");
 }
-void callback1(void);
+
 void callback1(void)
 {
     //printf("WS: Callback\n");
@@ -3177,6 +3181,55 @@ servicelineBackbufferDrawHorizontalLine (void)
 
 //======================================
 
+// ==================================================
+// Testing the feature of printing long numbers with printf.
+
+// Example main function to test printing of 64-bit numbers.
+static int test_printf(void) 
+{
+    // Define a 64-bit number. For this example, we use an unsigned long,
+    // since your custom printf expects 64-bit values for the %lx and %lu specifiers.
+    //unsigned long testValue = 0x123456789ABCDEF0UL;
+    unsigned long testValue = 0x123456789ABCDEF0;
+
+    // Print a header message indicating what we're testing.
+    // This uses your custom printf which ultimately calls kinguio_vsprintf.
+    printf("Testing 64-bit number printing features:\n");
+
+    // Print the test value in hexadecimal.
+    // The format specifier "%lx" triggers the custom code path:
+    //   - 'l' sets the type64bit flag to TRUE.
+    //   - 'x' causes the number to be converted to a hexadecimal string.
+    printf("Hexadecimal: %lx\n", testValue);
+
+    // Print the test value in unsigned integer (decimal) format.
+    // The format specifier "%lu" similarly uses the 64-bit conversion path.
+    printf("Unsigned integer: %lu\n", testValue);
+
+    return 0;
+}
+
+// yield thread
+// #todo: delete this. We already have the library routine.
+void gwssrv_yield(void)
+{
+    sc82(265,0,0,0);
+}
+
+void gwssrv_quit(void)
+{
+    IsTimeToQuit = TRUE;
+}
+
+/*
+ // We can't do this in ring 3.
+static inline void __outb(uint16_t port, uint8_t val)
+{
+    asm volatile ( "outb %0, %1" : : "a"(val), "Nd"(port) );
+}
+*/
+
+
 //#ugly
 char *gwssrv_get_version(void)
 {
@@ -3312,10 +3365,17 @@ static int on_execute(void)
     addrlen = sizeof(server_address);
 //==================
 
-    //int ShowDemo=FALSE;
-    int ShowDemo=TRUE;
-    int flagUseClient = FALSE;
-    //int flagUseClient = TRUE;
+    // Flags
+    int ShowDemo = TRUE;
+    int DrawDesktopDuringDemo = FALSE;
+    int DrawYellowStatusDuringDemo = FALSE;
+
+    int UseSleep = TRUE;
+    int flagUseClient = FALSE; //TRUE;
+    // ...
+    IsTimeToQuit = FALSE;
+    IsAcceptingConnections = TRUE;
+
     int UseCompositor = TRUE;  // #debug flags
 
     // files.
@@ -3330,8 +3390,6 @@ static int on_execute(void)
     char buf[32];
     int CanRead = -1;
 
-    IsTimeToQuit = FALSE;
-    IsAcceptingConnections = TRUE;
 // #test: 
 // Transparence.
     //gws_enable_transparence();
@@ -3462,12 +3520,12 @@ static int on_execute(void)
     //printf ("fd: %d\n", serverClient->fd);
     //while(1){}
 
-// Bind:
+// Bind
     bind_status = 
         (int) bind (
-                  server_fd, 
-                  (struct sockaddr *) &server_address, 
-                  addrlen );
+                server_fd, 
+                (struct sockaddr *) &server_address, 
+                addrlen );
 
     if (bind_status < 0){
         printf ("demo00: on bind()\n");
@@ -3490,7 +3548,8 @@ static int on_execute(void)
 // Pois nosso accept() ainda eh pouco eficiente.
 
 // #test: This application do not need any connection.
-    listen(server_fd,4);
+    //listen(server_fd,4);
+    listen(server_fd,5);
 
 // Init Hot
 // The graphics interface.
@@ -3510,20 +3569,22 @@ static int on_execute(void)
 
 // ===============
 
-// No root window.
+// Missing root window
     if ((void*) WindowManager.root == NULL){
         printf("demo00: WindowManager.root fail\n");
         goto fail;
     }
-// No taskbar.
+// Missing taskbar window
     if ((void*) WindowManager.taskbar == NULL)
     {
         printf("demo00: WindowManager.taskbar fail\n");
         goto fail;
     }
 
-// The working area.
-    
+//
+// The working area
+//
+
     WindowManager.wa_left = 0;
     WindowManager.wa_top = 0;
 // #danger
@@ -3554,8 +3615,7 @@ static int on_execute(void)
 // Child
 
     /*
-    if ( display_server->launch_first_client == TRUE )
-    {
+    if (display_server->launch_first_client == TRUE){
         // #bugbug
         // We can't use this function in ring0.
     }
@@ -3565,16 +3625,14 @@ static int on_execute(void)
     //printf ("fd: %d\n", serverClient->fd);
     //while(1){}
 
-
 //
 // Client
 //
 
-    if (flagUseClient == TRUE)
-    {
-        //debug_print ("gwssrc: Calling client $\n");
-        //rtl_clone_and_execute("terminal.bin");
+    if (flagUseClient == TRUE){
+        rtl_clone_and_execute("#terminal.bin");
     }
+
 
 //
 // =======================================
@@ -3615,6 +3673,10 @@ static int on_execute(void)
 // Loop
 //
 
+// #ps
+// This is a full 3D game loop.
+// Getting input events and drawing and displaying the scene.
+
 // Set foreground thread.
 // Get events scanning a queue in the foreground queue.
 // + Accept connection from a client.
@@ -3639,31 +3701,25 @@ static int on_execute(void)
     display_server->status = STATUS_RUNNING;
     display_server->initialized = TRUE;
 
-
+// Jiffie
     unsigned long end_jiffie=0;
     unsigned long delta_jiffie=0;
 
-    // Flags
-    int UseSleep = TRUE;
-    int DrawDesktop = FALSE;
-    int DrawYellowStatus = TRUE;
-    // ...
 // Draw the desktop before the demos?
 // see: config.h
     if (CONFIG_DRAW_DESKTOP == 1){
-        DrawDesktop = TRUE;
+        DrawDesktopDuringDemo = TRUE;
     } else {
-        DrawDesktop = FALSE;
+        DrawDesktopDuringDemo = FALSE;
     }
 
 // Draw the yellow status bar after the demo
 // see: config.h
     if (CONFIG_DRAW_YELLOW_STATUS == 1){
-        DrawYellowStatus = TRUE;
+        DrawYellowStatusDuringDemo = TRUE;
     } else {
-        DrawYellowStatus = FALSE;
+        DrawYellowStatusDuringDemo = FALSE;
     }
-
 
     // Initialize counters.
     accumulatedDeltaTick=0;
@@ -3680,11 +3736,11 @@ static int on_execute(void)
     //demoTriangle();
     //while(1){}
 
+    // ==============================================
+    // >>> Setup the current demo
     // see: demos.c
     if (ShowDemo)
     {
-        // ==============================================
-        // >>> Setup the current demo
         demoFlyingCubeSetup();
         //cat00SetupDemo();
         //tri00SetupDemo();
@@ -3696,15 +3752,17 @@ static int on_execute(void)
         gBeginTick = (unsigned long) rtl_jiffies();
         if (IsTimeToQuit == TRUE){ break; }
 
+        // Pump system events.
         // See: wm.c
         wmInputReader();
 
         if (IsAcceptingConnections == TRUE)
         {
-            newconn = (int) accept( 
-                ____saved_server_fd,
-                (struct sockaddr *) &server_address, 
-                (socklen_t *) addrlen );
+            newconn = 
+               (int) accept( 
+                    ____saved_server_fd,
+                    (struct sockaddr *) &server_address, 
+                    (socklen_t *) addrlen );
 
             // sys_accept() pega na fila e coloca em fd=31.
             if (newconn == 31){
@@ -3715,9 +3773,9 @@ static int on_execute(void)
                 //gwssrv_debug_print("gwssrv: accept returned FAIL\n");
             //}
 
-            //#debug
+            // #debug
             if (newconn == ____saved_server_fd){
-                printf(": Invalid connection\n");
+                printf("demo00: Invalid connection\n");
                 goto fail;
             }
             //close(newconn);
@@ -3746,8 +3804,9 @@ static int on_execute(void)
             gramado_clear_surface(NULL,COLOR_BLACK);  //clear surface
 
             // Draw desktop?
-            // IN: tile,show
-            if (DrawDesktop){
+            // Draw, but do not refresh.
+            // IN: tile, show
+            if (DrawDesktopDuringDemo){
                 wm_update_desktop(TRUE,FALSE);
             }
 
@@ -3755,10 +3814,13 @@ static int on_execute(void)
             // Draw the scene for the current demo
             // IN: draw terrain, second counter
             demoFlyingCube(FALSE,sec);
+            //demoFlyingCube(TRUE,sec);
             //demoCat();
             //demoTriangle();
             //demoCurve();
             // ...
+
+            //noraDrawingStuff(); // loop
 
             // At this moment we already painted the whole scene
             // for your demo. Let's print the bar on top of it.
@@ -3782,7 +3844,7 @@ static int on_execute(void)
             }
 
             // Draw yellow bar with the info.
-            if (DrawYellowStatus){
+            if (DrawYellowStatusDuringDemo){
                 yellowstatus0(buf_fps,FALSE);
             }
 
@@ -3811,7 +3873,7 @@ static int on_execute(void)
                 }
             }
         }
-    };
+    };  // while ends
 
 // =======================================
 
@@ -3840,57 +3902,6 @@ static int on_execute(void)
 fail:
     return (int) -1;
 }
-
-// yield thread.
-// #todo: delete this. We already have the library routine.
-void gwssrv_yield(void)
-{
-    sc82(265,0,0,0);
-}
-
-void gwssrv_quit(void)
-{
-    IsTimeToQuit = TRUE;
-}
-
-/*
- // We can't do this in ring 3.
-static inline void __outb(uint16_t port, uint8_t val)
-{
-    asm volatile ( "outb %0, %1" : : "a"(val), "Nd"(port) );
-}
-*/
-
-
-// ==================================================
-// Testing the feature of printing long numbers with printf.
-
-// Example main function to test printing of 64-bit numbers.
-static int test_printf(void);
-static int test_printf(void) 
-{
-    // Define a 64-bit number. For this example, we use an unsigned long,
-    // since your custom printf expects 64-bit values for the %lx and %lu specifiers.
-    //unsigned long testValue = 0x123456789ABCDEF0UL;
-    unsigned long testValue = 0x123456789ABCDEF0;
-
-    // Print a header message indicating what we're testing.
-    // This uses your custom printf which ultimately calls kinguio_vsprintf.
-    printf("Testing 64-bit number printing features:\n");
-
-    // Print the test value in hexadecimal.
-    // The format specifier "%lx" triggers the custom code path:
-    //   - 'l' sets the type64bit flag to TRUE.
-    //   - 'x' causes the number to be converted to a hexadecimal string.
-    printf("Hexadecimal: %lx\n", testValue);
-
-    // Print the test value in unsigned integer (decimal) format.
-    // The format specifier "%lu" similarly uses the 64-bit conversion path.
-    printf("Unsigned integer: %lu\n", testValue);
-
-    return 0;
-}
-
 
 // Gramado game engine.
 // main: entry point

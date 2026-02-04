@@ -2401,8 +2401,8 @@ plotPixelF(
 // o valor tem que ser menor que 800/2 
 // ou menor que 600/2.
 
-    int final_x = (int) ( x0 & 0xFFFFFFFF);
-    int final_y = (int) ( y0 & 0xFFFFFFFF);
+    int final_x = (int) (x0 & 0xFFFFFFFF);
+    int final_y = (int) (y0 & 0xFFFFFFFF);
     //int final_z = (int) 0;
     unsigned int final_color = (unsigned int) vec->color;
 
@@ -3000,7 +3000,8 @@ void noraDrawingStuff(void)
 {
     register int x=0;
     register int y=0;
-    unsigned int color = COLOR_BLACK;
+    //unsigned int color = COLOR_BLACK;
+    unsigned int color = COLOR_WHITE;
 
 // Colunas.
     for (x=0; x<SavedX; x++)
@@ -3030,6 +3031,10 @@ void noraDrawingStuff3 (int x, int y, int z)
     register int _x=0;
     register int _y=0;
     register int _z = z;
+
+    //unsigned int color = COLOR_BLACK;
+    //unsigned int color = COLOR_WHITE;
+
 
     int limitX = (SavedX >> 1);
     int limitY = (SavedY >> 1);
@@ -3604,6 +3609,9 @@ int servicepixelBackBufferPutpixel(void)
 
     return 0;
 }
+
+
+
 
 //
 // End

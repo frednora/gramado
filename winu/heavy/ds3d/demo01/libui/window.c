@@ -1,7 +1,10 @@
-// window.c 
-// Create a window.
-// Created by Fred Nora.
-
+/*
+ * File: window.c 
+ *      Creates a window.
+ *      It's part of the gws project.
+ * History:
+ *     2019 - Created by Fred Nora.
+ */
 // #importante
 // O frame de uma janela deve ser parte do Window Manager.
 // #bugbug
@@ -315,19 +318,20 @@ static struct gws_window_d *__create_window_object(void)
  * WT_SCROLLBAR     6  // Cria uma scroll bar. Para ser usada como janela filha.
  * CONTINUA ...
  */
-//1  - Tipo de janela (popup,normal,...) 
-//2  - style
-//3  - Estado da janela. (poderia ter vários bits ??)
-//4  - state (min, max ...)
-//5  - Título.
-//6  - Deslocamento em relação às margens do Desktop.
-//7  - Deslocamento em relação às margens do Desktop.
-//8  - Largura da janela.
-//9  - Altura da janela.
-//10  - Endereço da estrutura da janela mãe.
-//11 - desktop ID. (# Para levarmos em conta as características de cada desktop).
-//12 - Client Area Color.
-//13 - color (bg) (para janela simples)
+// Type (popup,normal,...) 
+// Style
+// Status. Estado da janela. (poderia ter vários bits ??)
+// State (min, max ...)
+// Name
+// Left
+// Top
+// Width
+// Height
+// Parent window
+// Desktop ID.
+// Background color for the frame window
+// Background color for the client area
+// Value for ROP operation.
 
 void *doCreateWindow ( 
     unsigned long type, 
@@ -347,21 +351,7 @@ void *doCreateWindow (
 {
 
 // #todo
-// Essa função deve chamar helpers que pintem sem criar objetos
-// gráficos que alocam memória. Dessa forma eles
-// poderão serem reusados nas funções de 'redraw'.
-// #todo: 
-// O argumento style está faltando.
-// Cada tipo de tanela poderá ter vários estilos.
-// Obs: 
-// Podemos ir usando apenas um estilo padrão por enquanto.
-
-// #todo:
-// Receberemos isso via parametro de função.
-// Default is FALSE.
-// We need to know the parent's bg color.
-    //int Transparent = FALSE;
-    //int Transparent = TRUE;
+// This function needs to call reusable workers.
 
     int Maximized=0;
     int Minimized=0;
@@ -477,6 +467,14 @@ void *doCreateWindow (
 
     //debug_print ("doCreateWindow:\n");
 
+// #todo
+// Transparence.
+// Maybe it's related with the ROP value.
+    //int Transparent = FALSE;
+    //int Transparent = TRUE;
+
+// #bugbug
+// Actually we have a lot of ROP operations.
     int is_solid = TRUE;
     if (rop_flags != 0){
         is_solid = FALSE;
@@ -591,8 +589,14 @@ void *doCreateWindow (
         return NULL;
     }
 
-// The type
-    window->type = (unsigned long) type;
+// Type, style, status and state
+    window->type   = (unsigned long) type;
+    window->style  = (unsigned long) style;
+    window->status = (int) (status & 0xFFFFFFFF);
+    window->state  = (int) state;
+
+    window->rop = (unsigned long) rop_flags;
+    window->is_solid = (int) is_solid;
 
 // buffers:
 
@@ -611,22 +615,13 @@ void *doCreateWindow (
     window->window_dc = NULL;
     window->client_dc = NULL;
 
-// A lot of flags
-    window->style = (unsigned long) style;
-
-    window->is_solid = (int) is_solid;
-    window->rop = (unsigned long) rop_flags;
-
-    window->status = (int) (status & 0xFFFFFFFF);
-    window->state  = (int) (state & 0xFFFFFFFF);
     window->focus  = FALSE;
     window->dirty  = FALSE;  // Validate
     window->locked = FALSE;
 
 // Event queue.
     register int e=0;
-    for (e=0; e<32; e++)
-    {
+    for (e=0; e<32; e++){
         window->ev_wid[e]=0;
         window->ev_msg[e]=0;
         window->ev_long1[e]=0;
@@ -659,23 +654,23 @@ void *doCreateWindow (
     window->ip_pixel_y = 0;
 // ===================================
 
-// Id.
-// We will get an id when we register the window.
-
-    window->id = -1;
+// ID: We will get an ID when we register the window.
+    window->id = (int) -1;
 
 // Name
 // This is just a pointer.
 // Do we have a finalized string?
 // #todo: What is the size?
 
+    const char *default_name = "Default";
+
     if ((void*) windowname == NULL){
-        debug_print("doCreateWindow: Invalid windowname\n");
-    }
-    if (*windowname == 0){
-        debug_print ("doCreateWindow: Invalid *windowname\n");
-    }
-    window->name = (char *) windowname;
+        window->name = (char *) default_name;    
+    } else if (*windowname == 0){
+        window->name = (char *) default_name;
+    } else {
+        window->name = (char *) windowname;
+    };
 
 // ===================================
 // Parent window
@@ -732,7 +727,6 @@ void *doCreateWindow (
         //window->z = 0; //z_order_get_free_slot()
         //...
     }
-
 
 //
 // == Margins and dimensions ======================
@@ -813,25 +807,21 @@ void *doCreateWindow (
 // se formos overlapped e tivermos uma. 
 // Ou modificar o top depois de criarmos a barra de títulos.
 
-
 // left
-    clientRect.left = (unsigned long) 2;  // + borda da esq
 // top
+// borda + barra.
+// width
+// menos bordas laterais
+// height
+// menos bordas superior e inferior
+// menos a barra de tarefas.
+    clientRect.left = (unsigned long) 2;  // + borda da esq
     clientRect.top  = (unsigned long) 2;  // + borda superior 
-    // borda + barra.
     if (window->type == WT_OVERLAPPED){
         clientRect.top  = (unsigned long) 2+32;
     }
-// width
-// menos bordas laterais
-    clientRect.width  = 
-        (unsigned long) (window->width -2 -2 );
-// height
-// menos bordas superior e inferior
-    // menos a barra de tarefas.
-    clientRect.height = 
-        (unsigned long) (window->height -2 -32 -2); 
-
+    clientRect.width  = (unsigned long) (window->width -2 -2 );
+    clientRect.height = (unsigned long) (window->height -2 -32 -2); 
 
 // If we have scrollbars.
 // #todo: Diminuimos as dimensões se o style
@@ -1005,14 +995,12 @@ void *doCreateWindow (
     window->isButton  = 0;
     window->isEditBox = 0;
 
-
 // Context menu: right click
 // ou clicando no icone.
     window->contextmenu  = NULL;
 
 // menu na menubar.
     window->barMenu      = NULL;
-
 
 // Selected menu item.
 // Caso a janela seja um ítem de menu.
@@ -1026,7 +1014,6 @@ void *doCreateWindow (
     window->show   = TRUE; //Inicialmente presumimos que precisamos mostrar essa janela.
     // Continua ...
 
-
 // Abaixo, elementos referenciados com menor frequência.
 
     //window->desktop = NULL; //@todo: Definir à qual desktop a janela perence.
@@ -1036,11 +1023,7 @@ void *doCreateWindow (
 
     //window->linkedlist = NULL;
 
-//
 // Navigation
-//
-
-// Prev e next.
     window->prev = (void *) Parent;
     window->next = NULL;
 
@@ -1098,9 +1081,8 @@ void *doCreateWindow (
     window->scrollbar_style  = 0;
     window->statusbar_style  = 0;
 
-// Elements
-// Selecting the elements given the type.
-// Each type has it's own elements.
+// Elements: 
+// Selecting the elements given the type. Each type has it's own elements.
 
     switch (type){
 
@@ -1347,7 +1329,6 @@ void *doCreateWindow (
     }
     */
 
-
 // =================================
 // #Shadow
 // A sombra pertence à janela e ao frame.
@@ -1391,8 +1372,8 @@ void *doCreateWindow (
                 // #check
                 // This routine is calling the kernel to paint the rectangle.
                 rectBackbufferDrawRectangle ( 
-                    (window->absolute_x +1),     (window->absolute_y +1), 
-                    (window->width +1 +1), (window->height +1 +1), 
+                    (window->absolute_x +1), (window->absolute_y +1), 
+                    (window->width +1 +1),   (window->height +1 +1), 
                     __tmp_color, TRUE, rop_flags );
             }
 
@@ -1401,8 +1382,8 @@ void *doCreateWindow (
                 // #check
                 // This routine is calling the kernel to paint the rectangle.
                 rectBackbufferDrawRectangle ( 
-                    (window->absolute_x +1),     (window->absolute_y +1), 
-                    (window->width +1 +1), (window->height +1 +1), 
+                    (window->absolute_x +1), (window->absolute_y +1), 
+                    (window->width +1 +1),   (window->height +1 +1), 
                     __tmp_color, TRUE, rop_flags );
             }
 
@@ -1429,6 +1410,8 @@ void *doCreateWindow (
 
     if (Background == TRUE)
     {
+        // rop_flags = 10; #test
+
         window->backgroundUsed = TRUE;
 
         // Select background color.
@@ -1478,8 +1461,8 @@ void *doCreateWindow (
             // #check
             // This routine is calling the kernel to paint the rectangle.
             rectBackbufferDrawRectangle ( 
-                    window->absolute_x, window->absolute_y, window->width, window->height, 
-                    window->bg_color, TRUE, rop_flags );
+                window->absolute_x, window->absolute_y, window->width, window->height, 
+                window->bg_color, TRUE, rop_flags );
         }
 
         // Draw the background if we have a parent window.
@@ -1565,22 +1548,22 @@ void *doCreateWindow (
         };
 
         // Label support.
-        size_t tmp_size = (size_t) strlen ( (const char *) windowname );
-        if (tmp_size>64){
-            tmp_size=64;
+        size_t tmp_size = (size_t) strlen((const char *) windowname);
+        if (tmp_size > 64){
+            tmp_size = 64;
         }
         unsigned long offset = 
             ( ( (unsigned long) window->width - ( (unsigned long) tmp_size * (unsigned long) gcharWidth) ) >> 1 );
 
         // #debug: 
         // Se o botão não tem uma parent window.
-        if ( (void*) Parent == NULL ){
+        if ((void*) Parent == NULL){
             gwssrv_debug_print ("doCreateWindow: [WT_BUTTON] Parent NULL\n"); 
         }
 
         // Se o botão tem uma parent window.
         // Paint button
-        if ( (void*) Parent != NULL )
+        if ((void*) Parent != NULL)
         {
             // #todo
             // Esses valores precisam estar na estrutura para
@@ -1598,15 +1581,14 @@ void *doCreateWindow (
                 (unsigned int) buttonBorderColor2_light,
                 (unsigned int) buttonBorder_outercolor );
 
-            // Button label
-
+            // Button label: Selected
             if (buttonSelected == TRUE){
                 grDrawString ( 
                     (window->absolute_x) +offset, 
                     (window->absolute_y) +8, 
                     COLOR_WHITE, window->name );
             }
-
+            // Button label: Not selected
             if (buttonSelected == FALSE){
                 grDrawString ( 
                     (window->absolute_x) +offset,  
@@ -1634,23 +1616,14 @@ fail:
     return NULL;
 }
 
-
 // CreateWindow:
-// It creates a window.
-// Essa será a função que atenderá a chamada a
-// esse é o serviço de criação da janela.
-// talvez ampliaremos o número de argumentos
-// #todo
-// Precisamos de uma estrutura de janela que fique aqui
-// no servidor.
-// Não podemos usar a estrutura de janela da api.
+// Top level function to create a window.
+// It will calle the workers.
+// #todo: Maybe we can create another version of this function 
+// called CreateWindow2 with more parameters.
 // #todo: change name to 'const char *'
 // Called by serviceCreateWindow() in main.c.
-// #test
-// Uma janela que é cliente, será criada
-// com deslocamento relativo à area de cliente.
-// Para criar janelas filhas com deslocamento relativo
-// a janela do aplicativo, tem que ativar uma flag.
+
 void *CreateWindow ( 
     unsigned long type, 
     unsigned long style,
@@ -1668,8 +1641,7 @@ void *CreateWindow (
 {
    struct gws_window_d  *__w;
 
-// #test:
-// rop
+// #test: Testing ROP values applied in all the windows.
    unsigned long __rop_flags=0;
 
 // This function is able to create some few 
@@ -1693,6 +1665,9 @@ void *CreateWindow (
     strcpy(name_local_copy,windowname);
 // =================
 
+/*
+// #todo:
+// Make this configuration based on window style.
 // See:
 // config.h, main.c
     if (config_use_transparency == TRUE)
@@ -1706,6 +1681,7 @@ void *CreateWindow (
         //__rop_flags = 20;  // gray 
         //__rop_flags = 21;  // no red
     }
+*/
 
 // #todo:
 // Colocar mascara nos valores passados via parâmetro.
@@ -1728,11 +1704,9 @@ void *CreateWindow (
         break;
     };
 
-    if (ValidType == FALSE)
-    {
+    if (ValidType == FALSE){
         gwssrv_debug_print("CreateWindow: Invalid type\n");
         goto fail;
-        //return NULL;
     }
 
 //1. Começamos criando uma janela simples
@@ -1791,7 +1765,9 @@ void *CreateWindow (
 
         __w = 
             (void *) doCreateWindow ( 
-                         WT_SIMPLE, style, status, state, (char *) name_local_copy,
+                         WT_SIMPLE, 
+                         style, status, state, 
+                         (char *) name_local_copy,
                          x, y, width, height, 
                          (struct gws_window_d *) pWindow, 
                          desktopid, 
@@ -1829,7 +1805,9 @@ void *CreateWindow (
 
         __w = 
             (void *) doCreateWindow ( 
-                         WT_SIMPLE, 0, status, state, (char *) name_local_copy, 
+                         WT_SIMPLE, 
+                         0, status, state,
+                         (char *) name_local_copy, 
                          x, y, width, height, 
                          (struct gws_window_d *) pWindow, 
                          desktopid, 
@@ -1866,7 +1844,9 @@ void *CreateWindow (
 
         __w = 
             (void *) doCreateWindow ( 
-                         WT_BUTTON, 0, status, state, (char *) name_local_copy, 
+                         WT_BUTTON, 
+                         0, status, state, 
+                         (char *) name_local_copy, 
                          x, y, width, height, 
                          (struct gws_window_d *) pWindow, 
                          desktopid, 
@@ -1893,9 +1873,13 @@ void *CreateWindow (
     {
         //gwssrv_debug_print ("CreateWindow: WT_SIMPLE \n");
 
+        // __rop_flags = 0x01; // #test
+
         __w = 
             (void *) doCreateWindow ( 
-                         WT_SIMPLE, 0, status, state, (char *) name_local_copy,
+                         WT_SIMPLE, 
+                         0, status, state, 
+                         (char *) name_local_copy,
                          x, y, width, height, 
                          (struct gws_window_d *) pWindow, 
                          desktopid, 
