@@ -2,10 +2,8 @@
 // Definitions and structures used by the fs code.
 // Created by Fred Nora.
 
-// #todo: Change to __FAT_FATLIB_H 
-#ifndef  __FAT_LIB_H
-#define  __FAT_LIB_H    1
-
+#ifndef  __FAT_FATLIB_H
+#define  __FAT_FATLIB_H    1
 
 // definições, variáveios, estruturas e protótipos
 // específicos para o sistema de arquivos fat16.
@@ -25,7 +23,6 @@
 #define FAT_FILE_FLAG_FILE            0x20
 #define FAT_FILE_FLAG_DEVICE          0x40   
 #define FAT_FILE_FLAG_RESERVED        0x80
-
 
 //
 // FAT definitions.
@@ -107,11 +104,10 @@ extern int g_fat_cache_saved;
 extern int g_fat_cache_loaded;
 
 
-//#define CLUSTERS_TO_SAVE_MAX  (8*1024) //#bugbug
 #define CLUSTERS_TO_SAVE_MAX  (32*1024)
+// #todo: Increase it
 // see: fat16.c
 extern unsigned short fat16ClustersToSave[CLUSTERS_TO_SAVE_MAX];
-
 
 
 //
@@ -186,8 +182,6 @@ Optional flags that indicates case information of the SFN.
     unsigned int FileSize; 
 };  
 
-
-
 // Um arquivo pode usar ate 21 entradas.
 // 256 ?
 //#define MAX_LFN_CHARACTERS  260
@@ -212,6 +206,4 @@ struct fat16_lfn_directory_entry_d
 };
 
 #endif    
-
-
 

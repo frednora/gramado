@@ -54,6 +54,9 @@ void test_fat16_find_volume_info(void)
 // This is a test.
 // No not call this routine yet.
 
+    char name_buffer[16];
+    register int i=0;
+
     vol_label_directory_entry = 
         (void*) kmalloc( sizeof(struct fat16_directory_entry_d) );
     if ((void*) vol_label_directory_entry == NULL){
@@ -77,16 +80,14 @@ void test_fat16_find_volume_info(void)
     if (status != 0)
         goto fail;
  
-// Put the name into a local buffer.
-    char name_buffer[16];
-    memset(name_buffer, 0, 16);
 
-    register int i=0;
+    // Clear local buffer and put the name into it    
+    memset(name_buffer, 0, 16);
     for (i=0; i<(8+3); i++){
         name_buffer[i] = vol_label_directory_entry->FileName[i];
     };
 
-// Show info:    
+// Show info
     printk("Disk name: {%s}\n",name_buffer);
     return;
 
@@ -189,13 +190,15 @@ from_FAT_name (
 
 // dirty.
 // pra saber o tamanho da extensao, excluindo os espaços.
-    for (j=10; j>=8 && src[j]==0x20; j--)
+    for ( j=10; 
+          j >= 8 && src[j] == 0x20; 
+          j-- )
     {
-        // Nothing.
+        // Nothing
     };
     
     //
-    if (j==7) {
+    if (j == 7) {
     
         if (k == 1){
            dst[k]=0;
@@ -237,7 +240,7 @@ to_FAT_name (
         strcpy(dst,src);
         i=1;
  
-    // Regular file.
+    // Regular file
     } else {
 
         ptr = src;
@@ -332,7 +335,7 @@ fsGetFileSize (
 //via argumento.
 //...
 
-    debug_print ("fsGetFileSize: $\n");
+    // debug_print ("fsGetFileSize: $\n");
 
     if ((void*) file_name == NULL){
         printk("fsGetFileSize: [ERROR] file_name\n");
@@ -409,7 +412,7 @@ fsGetFileSize (
         panic ("fsGetFileSize: [FAIL] No root file system!\n");
     }else{
 
-        // Setores por cluster.
+        // Setores por cluster
         Spc = root->spc;
         if (Spc <= 0){ panic ("fsGetFileSize: [FAIL] spc\n"); }
 
@@ -421,7 +424,9 @@ fsGetFileSize (
         // diretórios e entradas.
 
         max = root->dir_entries;
-        if (max <= 0){ panic ("fsGetFileSize: [FAIL] max root entries\n"); }
+        if (max <= 0){ 
+            panic ("fsGetFileSize: [FAIL] max root entries\n");
+        }
 
         // More?! 
         // ...
@@ -451,7 +456,6 @@ fsGetFileSize (
 
 // file name limit.
 // Se o tamanho da string falhou, vamos ajustar.
-
     size_t szFileName = (size_t) strlen(file_name); 
     if (szFileName > 11){
         printk ("fsGetFileSize: [FIXME] name size fail %d\n", szFileName );   
@@ -545,36 +549,33 @@ fsFAT16ListFiles (
     unsigned short *dir_address, 
     int            number_of_entries )
 {
-// Iterator
     register int i=0;
-// Offset
-    int j=0;  
-// Max number of entries.
-    int Max = number_of_entries;
-// 8.3
-    char NameString[12];
-// Buffer
+    int j=0;  // Offset
+    int Max = number_of_entries;  // Max number of entries
+    char NameString[12];  // 8.3 name
+    // Buffer
     unsigned short *shortBuffer = (unsigned short *) dir_address;
     unsigned char  *charBuffer  = (unsigned char *)  dir_address;
 
-    if ( (void *) dir_name == NULL ){
-        printk ("fsFAT16ListFiles: [FAIL] dir_name\n");
+// Parameter:
+    if ((void *) dir_name == NULL){
+        printk ("fsFAT16ListFiles: dir_name\n");
         goto fail;
     }
-
-    if ( *dir_name == 0 ){
-        printk ("fsFAT16ListFiles: [FAIL] *dir_name\n");
+    if (*dir_name == 0){
+        printk ("fsFAT16ListFiles: *dir_name\n");
         goto fail;
     }
+    // #todo: dir_address parameter
 
-// banner message.
+// banner message
 // #bugbug
 // Missing string finalization.
         
     // printk ("fsFAT16ListFiles: Listing names in [%s]\n\n", 
     //        dir_name );
             
-// Number of entries.
+// Number of entries
     if (number_of_entries <= 0){
         debug_print ("fsFAT16ListFiles: number_of_entries\n");
         goto fail;
@@ -623,10 +624,10 @@ fail:
     printk ("fsFAT16ListFiles: Fail\n");
 }
 
-
 // #todo
 // Change the return type to 'int' and
 // remove all the messages. Maybe.
+// + Initializes the bootvolume_fat structure.
 void fat16_init_fat_structure(void)
 {
     debug_print ("fs_init_fat: [TODO]\n");
@@ -677,13 +678,13 @@ void fat16_init_fat_structure(void)
 // Is this the virtual address of the
 // start of the fat table?
 
-    if ( bootvolume_fat->fat_address == 0 ){
+    if (bootvolume_fat->fat_address == 0){
         panic ("fs_init_fat: bootvolume_fat->fat_address\n");
     }
 
 // #bugbug: 
 // Is it int ?
-    if ( bootvolume_fat->type <= 0 ){
+    if (bootvolume_fat->type <= 0){
         panic ("fs_init_fat: fat->type\n");
     }
 
@@ -691,18 +692,13 @@ void fat16_init_fat_structure(void)
 
     // ...
 
-    bootvolume_fat->initialized = TRUE;
     bootvolume_fat->used = TRUE;
     bootvolume_fat->magic = 1234;
-
-// #bugbug
-// Tem que passar esse ponteiro para algum lugar.
-    //return;
+    bootvolume_fat->initialized = TRUE;
 }
 
-// helper function to handle fat cache status.
-void fs_fat16_cache_not_saved(void)
-{
+// Helper function to handle fat cache status
+void fs_fat16_cache_not_saved(void){
     g_fat_cache_saved = FAT_CACHE_NOT_SAVED;
 }
 
@@ -711,17 +707,17 @@ int fs_save_fat16_cache(void)
     debug_print("fs_save_fat16_cache: Saving FAT cache\n");
 
     if (g_fat_cache_saved != FAT_CACHE_NOT_SAVED){
-        return -1;
+        return (int) -1;
     }
 
 // #todo: Change this name.
-// see: dev/disk_w.c
+// see: disk_w.c
     fs_save_fat(
         VOLUME1_FAT_ADDRESS,
         VOLUME1_FAT_LBA,
         VOLUME1_FAT_SIZE );
-    g_fat_cache_saved = FAT_CACHE_SAVED;
 
+    g_fat_cache_saved = FAT_CACHE_SAVED;
     return 0;
 }
 

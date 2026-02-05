@@ -27,8 +27,8 @@ int elfCheckSignature(unsigned long address)
         goto fail;
     }
 
-// ok
     return 0;
+
 fail:
     return (int) -1;
 }

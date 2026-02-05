@@ -4,6 +4,9 @@
 
 #include <kernel.h>
 
+
+struct target_dir_d  current_target_dir;
+
 ssize_t sys_read(int fd, const char *ubuf, size_t count)
 {
     if (fd<0){
@@ -1064,6 +1067,8 @@ fail:
 // Called by I_initKernelComponents() in x64init.c
 int fsInitialize(void)
 {
+    // #ps: Not a local worker.
+    // Change name?
     // see: fslib.c.
     __fs_initialize_imp();
 

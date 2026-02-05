@@ -6,7 +6,6 @@
 #ifndef __FS_FS_H
 #define __FS_FS_H    1
 
-
 //
 // FILES ?
 //
@@ -81,10 +80,6 @@ struct dev_dir_entry_d
 
 struct dev_dir_entry_d  dev_dir[32];
 
-int fs_initialize_dev_dir(void);
-
-// =================
-
 
 //
 // == pwd =============================
@@ -104,8 +99,6 @@ struct cwd_d
 };
 
 extern struct cwd_d  CWD;
-
-
 
 // -----------------
 
@@ -161,11 +154,9 @@ extern struct cwd_d  CWD;
 #define  FS_SYSTEMWORKINGDIRECTORY_ID   2
 #define  FS_UNKNOWNWORKINGDIRECTORY_ID  (-1)
 
-
 //
 //  == Variables =================================
 //
-
 
 //
 // == Search path ================================
@@ -187,14 +178,11 @@ extern struct cwd_d  CWD;
 // but by Version 3 Unix the directory was too large and /usr/bin, 
 // and a search path, became part of the operating system.
 
-
 extern unsigned long search_path_dir_address;
 extern unsigned long search_path_dir_entries;
 
-
 // ?? - Contagem de diretórios.
 //int dirCount;  
-
 
 // List of clusters. 
 // Usado na rotina de carregamento de arquivo.
@@ -203,7 +191,6 @@ extern unsigned long search_path_dir_entries;
 //#define MAX_CLUSTERS  1024
 #define MAX_CLUSTERS  2048
 extern unsigned short file_cluster_list[MAX_CLUSTERS]; 
-
 
 //
 // == Structures ====================================
@@ -227,26 +214,24 @@ struct target_dir_d
 {
     int used;
     int magic;
+    int initialized;
 
     // Buffer where the directory was loaded.
     unsigned long current_dir_address;
 
-//ponteiro para a string do caminho
-    //char *pwd_string;  
+    char name[32]; // 8.3 format
 
-    //file name 8.3 (11 bytes;)
-    char name[32];
+    // ponteiro para a string do caminho
+    //char *pwd_string;  
 
     // ??
     // The number of entries ?
 
     // ...
-    
-    int initialized;
 };
+// See: fs.c
+extern struct target_dir_d  current_target_dir;
 
-struct target_dir_d current_target_dir;
- 
 // links para arquivos ou diretórios 
 // dentro do mesmo sistema de arquivos. 
 
@@ -257,7 +242,6 @@ struct hardlink_d
     //..
 };
 
-
 // links para arquivos e diretórios em 
 // volumes espalhados por vários discos. 
 struct softlink_d
@@ -266,7 +250,6 @@ struct softlink_d
     int magic;
     //..
 };
-
 
 /*
  * dir_d:
@@ -306,29 +289,23 @@ struct dir_d
     struct dir_d *next;
 };
 
-
-/*
- * filesystem_d:
- *     Informações sobre um sistema de arquivos.
- */
-
+// File system info
 struct filesystem_d
 {
-    object_type_t  objectType;
+    object_type_t objectType;
     object_class_t objectClass;
-
     int used;
     int magic;
 
-//#todo: int id;
+    //#todo: int id;
 
     int type;
     char *name;
-// Sectors per cluster.
+// Sectors per cluster
     int spc; 
-// Number of entries in the root dir.
+// Number of entries in the root dir
     int dir_entries;
-// Size of the entry in bytes.
+// Size of the entry in bytes
     int entry_size; 
 
 // The whole filesystem size.
@@ -380,7 +357,6 @@ struct filesystem_d
 // See: fs.h
 extern struct filesystem_d  *root;
 // ...
-
 
 //
 // == file context ===========================================
@@ -440,13 +416,14 @@ struct file_context_d
 };
 
 
-
 //
 // == prototypes =====================================
 //
 
-int file_read_buffer( file *f, char *buffer, int len );
-int file_write_buffer( file *f, char *string, int len );
+int fs_initialize_dev_dir(void);
+
+int file_read_buffer(file *f, char *buffer, int len);
+int file_write_buffer(file *f, char *string, int len);
 
 // Implementations
 ssize_t __read_imp(int fd, char *ubuf, size_t count);
@@ -471,7 +448,6 @@ sys_open(
     int flags, 
     mode_t mode );
 int sys_close(int fd);
-
 
 int sys_fcntl( int fd, int cmd, unsigned long arg );
 int sys_ioctl( int fd, unsigned long request, unsigned long arg );
@@ -559,7 +535,6 @@ fs_store_boot_metafile (
     unsigned long size_in_sectors );
 
 
-
 // MBR
 void fs_load_mbr(unsigned long mbr_address);
 
@@ -581,7 +556,6 @@ fs_load_rootdir(
 void fsbp_initialize_fat(void);
 // For boot partition
 int fsbp_initialize_bp_directories(void);
-
 
 void 
 fatWriteCluster ( 
@@ -646,9 +620,8 @@ fsSaveFile (
     char *file_address,
     char flag );
 
-
 //
-// Read from disk.
+// Read from disk
 //
 
 // Worker
@@ -731,13 +704,15 @@ fs_load_path (
 
 int fsLoadFileFromCurrentTargetDir(void);
 
-int fs_load_image( const char *filename, unsigned long image_va );
+int 
+fs_load_image(
+    const char *filename, 
+    unsigned long image_va );
 
-void fs_init_structures (void);
+void fs_init_structures(void);
 
-int __fs_initialize_imp(void);
+int __fs_initialize_imp(void);  // #ps: Global worker for now. 
 int fsInitialize(void);
 
 #endif    
-
 

@@ -2,8 +2,8 @@
 // Main structure and function prototypes
 // used by the fs subsystem.
 
-#ifndef  __FAT_H
-#define  __FAT_H    1
+#ifndef  __FAT_FAT_H
+#define  __FAT_FAT_H    1
 
 // fat16 structure.
 struct fat_d
@@ -13,17 +13,15 @@ struct fat_d
     int initialized;
     int type;
 
-    unsigned long fat_address;      // endereço da fat  
+    unsigned long fat_address;    // Address for FAT  
 
-    unsigned long fat_first_lba;    // first lba
-    unsigned long fat_last_lba;     // last lba
+    unsigned long fat_first_lba;  // First LBA
+    unsigned long fat_last_lba;   // last LBA
 
-// size in sectors.
-    unsigned long fat_size_in_sectors;
-// Tamanho da tabela dado em bytes.
-    unsigned long size_in_bytes;
-// Tamanho da tabela dado em kbytes.
-    unsigned long size_in_kb;
+// FAT sizes:
+    unsigned long fat_size_in_sectors;  // Size in sectors
+    unsigned long size_in_bytes;        // Size in bytes
+    unsigned long size_in_kb;           // Size in KB
 
     //...
     
@@ -45,7 +43,6 @@ struct system_fat_d
     // ...
 };
 extern struct system_fat_d  bpFAT;
-
 
 extern struct fat16_directory_entry_d *vol_label_directory_entry;
 
@@ -83,5 +80,3 @@ void fat16_init_fat_structure(void);
 int fat16Init(void);
 
 #endif    
-
-

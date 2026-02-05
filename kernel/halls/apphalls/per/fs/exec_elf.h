@@ -45,13 +45,11 @@
  * formerly known as "elf_abi.h".
  */
 
-#ifndef _SYS_EXEC_ELF_H_
-#define _SYS_EXEC_ELF_H_    1
-
+#ifndef __FS_EXEC_ELF_H
+#define __FS_EXEC_ELF_H    1
 
 //#include <sys/types.h>
 //#include <machine/exec.h>
-
 
 // See: types.h
 
@@ -75,16 +73,12 @@ typedef __uint16_t  Elf32_Half;   /* Unsigned medium integer */
 
 //typedef __uint16_t	Elf64_Half;
 
-
-
-
 /*
  * e_ident[] identification indexes
  * See http://www.sco.com/developers/gabi/latest/ch4.eheader.html
  */
 
 // Offsets for the identification section.
-
 
 #define EI_MAG0  0  // 0x7F
 #define EI_MAG1  1  // 'E'
@@ -113,7 +107,6 @@ typedef __uint16_t  Elf32_Half;   /* Unsigned medium integer */
 #define EI_PAD    9
 
 // ===================================
-
 
 /* e_ident[] magic number */
 
@@ -162,7 +155,6 @@ typedef __uint16_t  Elf32_Half;   /* Unsigned medium integer */
 //#define ELFOSABI_GRAMADO32    0x32
 //#define ELFOSABI_GRAMADO64    0x64
 
-
 #define ELF_NIDENT    16
 
 // See:
@@ -174,7 +166,7 @@ typedef __uint16_t  Elf32_Half;   /* Unsigned medium integer */
 struct elf_header_64bit_d
 {
 
-// ELF Identification.
+// ELF Identification
     unsigned char e_ident[ELF_NIDENT];  //16bytes
 
 // Object file type
@@ -244,7 +236,6 @@ struct elf_header_64bit_d
 #define ET_LOPROC  0xff00  // reserved range for processor
 #define ET_HIPROC  0xffff  // specific e_type
 
-
 /* e_machine */
 #define EM_NONE   0  // No Machine
 #define EM_M32    1  // AT&T WE 32100
@@ -291,7 +282,6 @@ struct elf_header_64bit_d
 // Magic for e_phnum: 
 // get real value from sh_info of first section header
 #define PN_XNUM  0xffff
-
 
 /* Section Header for 64bit */
 // See:
@@ -351,7 +341,6 @@ struct elf_section_header_64bit_d
 };
 
 
-
 /* Special Section Indexes */
 #define SHN_UNDEF           0		/* undefined */
 #define SHN_LORESERVE  0xff00		/* lower bounds of reserved indexes */
@@ -361,7 +350,6 @@ struct elf_section_header_64bit_d
 #define SHN_COMMON     0xfff2		/* common symbol */
 #define SHN_XINDEX     0xffff		/* Escape -- index stored elsewhere. */
 #define SHN_HIRESERVE  0xffff		/* upper bounds of reserved indexes */
-
 
 /* sh_type */
 #define SHT_NULL		0	/* inactive */
@@ -440,19 +428,15 @@ struct elf_section_header_64bit_d
 #define SHF_MASKPROC          0xf0000000	/* reserved bits for processor */
                                             /*  specific section attributes */
 
-
-/* Symbol Table Entry for 32bit */
+// Symbol Table Entry for 32bit
 typedef struct elf32_sym {
-
-    Elf32_Word     st_name;   /* name - index into string table */
-    Elf32_Addr     st_value;  /* symbol value */
-    Elf32_Word     st_size;   /* symbol size */
-    unsigned char  st_info;   /* type and binding */
-    unsigned char  st_other;  /* 0 - no defined meaning */
-    Elf32_Half     st_shndx;  /* section header index */
-
+    Elf32_Word     st_name;   // name - index into string table
+    Elf32_Addr     st_value;  // symbol value
+    Elf32_Word     st_size;   // symbol size
+    unsigned char  st_info;   // type and binding
+    unsigned char  st_other;  // 0 - no defined meaning
+    Elf32_Half     st_shndx;  // section header index
 } Elf32_Sym;
-
 
 /* Symbol table index */
 #define  STN_UNDEF    0    /* undefined */
@@ -466,8 +450,6 @@ typedef struct elf32_sym {
 //#define ELF64_ST_BIND(x)    ((x) >> 4)
 //#define ELF64_ST_TYPE(x)    (((unsigned int) x) & 0xf)
 //#define ELF64_ST_INFO(b,t)  (((b) << 4) + ((t) & 0xf))
-
-
 
 /* Symbol Binding - ELF32_ST_BIND - st_info */
 #define STB_LOCAL   0		/* Local symbol */
@@ -519,12 +501,9 @@ typedef struct {
 #define ELF32_R_TYPE(i)      ((unsigned char) (i))
 #define ELF32_R_INFO(s,t)    (((s) << 8) + (unsigned char)(t))
 
-
-
 //#define	ELF64_R_SYM(info)	((info) >> 32)
 //#define	ELF64_R_TYPE(info)	((info) & 0xFFFFFFFF)
 //#define ELF64_R_INFO(s,t) 	(((s) << 32) + (__uint32_t)(t))
-
 
 /*
 //The 64-bit MIPS ELF ABI uses a slightly different relocation format
@@ -541,8 +520,6 @@ typedef struct {
 #define	ELF64_R_INFO(s,t)	(((__uint64_t)swap32(t) << 32) + (__uint32_t)(s))
 #endif    //__mips64__ && __MIPSEL__
 */
-
-
 
 // See:
 // https://en.wikipedia.org/wiki/Executable_and_Linkable_Format
@@ -585,8 +562,6 @@ struct elf_program_header_64bit_d
     unsigned long p_align;  // 8 bytes
 };
 
-
-
 /* Segment types - p_type */
 #define PT_NULL     0	/* unused */
 #define PT_LOAD     1	/* loadable segment */
@@ -617,7 +592,6 @@ struct elf_program_header_64bit_d
                                  /*  specific segment flags */
 
 
-
 /* Dynamic structure for 32bit */
 typedef struct {
 
@@ -629,7 +603,6 @@ typedef struct {
     } d_un;
 
 } Elf32_Dyn;
-
 
 
 /* Dynamic Array Tags - d_tag */
@@ -702,28 +675,19 @@ typedef struct {
 #define DF_1_NODUMP	0x00001000
 #define DF_1_CONLFAT	0x00002000
 
-
-/*
- * Note header
- */
+// Note header
 typedef struct {
     Elf32_Word n_namesz;
     Elf32_Word n_descsz;
     Elf32_Word n_type;
 } Elf32_Nhdr;
 
-
-
-
-/*
- * Note Definitions
- */
+// Note Definitions
 typedef struct {
     Elf32_Word namesz;
     Elf32_Word descsz;
     Elf32_Word type;
 } Elf32_Note;
-
 
 
 /* Values for n_type. */
@@ -790,7 +754,6 @@ struct elfcore_procinfo {
     uint32_t	cpi_svgid;	/* saved group ID */
     int8_t		cpi_name[32];	/* copy of pr->ps_comm */
 };
-
 
 
 /*
@@ -932,16 +895,14 @@ int	exec_elf_makecmds(struct proc *, struct exec_package *);
 #endif    //_KERNEL
 */
 
-#define ELF_TARG_VER	1	/* The ver for which this code is intended */
-
+// The ver for which this code is intended
+#define ELF_TARG_VER	1
 
 //
 // == prototypes =============
 //
 
-int elfCheckSignature( unsigned long address );
+int elfCheckSignature(unsigned long address);
 
-
-#endif /* _SYS_EXEC_ELF_H_ */
-
+#endif  
 
