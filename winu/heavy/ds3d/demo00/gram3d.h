@@ -1,9 +1,9 @@
-
 // gram3d.h 
+// Main header for the demo.
 // Created by Fred Nora.
 
-// ...
 extern int current_mode;
+
 
 #define STATUS_RUNNING    1   
 
@@ -20,16 +20,11 @@ extern int current_mode;
 #include <unistd.h>
 #include <sys/socket.h>
 #include <rtl/gramado.h>
-
-//#test
 #include <math.h>
 
 #include "config.h"
-
 #include "protocol.h"
-
 #include "globals.h"
-
 #include "colors.h"
 #include "nc2.h"   //nelson cole 2 font. 8x8
 
@@ -46,9 +41,7 @@ extern int current_mode;
 #include "libui/window.h"
 #include "libui/bmp.h"
 
-
 #include "xxxinput.h"   //#test
-
 
 // h:0.0
 #include "screen.h"   // X-like
@@ -84,7 +77,7 @@ extern int current_mode;
 #include "demos/scan00.h"
 
 // Demos
-#include "demos/flycube.h"
+#include "demos/humanoid.h"
 #include "demos/cat00.h"
 #include "demos/polygon.h"
 #include "demos/tri00.h"

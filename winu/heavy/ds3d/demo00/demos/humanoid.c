@@ -1,16 +1,11 @@
-// demos.c
-// A place for demos.
+// humanoid.c
+// Humanoid demo.
 // Created by Fred Nora.
 
 #include "../gram3d.h"
 
-// for open()
-//#include <fcntl.h>
-//#include <unistd.h>
-
 
 static int game_update_taskbar=TRUE;
-
 static int hits=0;
 
 // For the demo.
@@ -802,14 +797,18 @@ static void __drawEnemy(struct humanoid_model_d *model, float vel)
 }
 
 // Control + arrow key
-void FlyingCubeMove(int number, int direction, float value)
+// It moves a given model.
+// In: model id, direction, value.
+void demoHumanoidMoveCharacter(int number, int direction, float value)
 {
     struct humanoid_model_d *model;
 
+// Model ID
     if (number < 0)
         return;
     if (number >= MODEL_MAX)
         return;
+// Model structure
     model = (struct humanoid_model_d *) models[number];
     if ((void*) model == NULL)
         return;
@@ -860,11 +859,10 @@ void FlyingCubeMove(int number, int direction, float value)
 // Define cube geometry
 // You store 8 vertices (cube->vecs) and 12 triangles (faces split into two triangles each).
 
-void demoFlyingCube(unsigned long sec)
+void demoHumanoidDrawScene(unsigned long sec)
 {
 // The function on_execute() in main.c initilizes this demos
-// and spins into a loop calling this function to draw
-// all the scene.
+// and spins into a loop calling this function to draw all the scene.
 // #todo: It means that of this demo was not initialized,
 // we need to abort this function.
 
@@ -878,12 +876,12 @@ void demoFlyingCube(unsigned long sec)
 // Moved to the main loop of the server.
     //unsigned long gBeginTick = rtl_jiffies();
 
-
+// Draw the main character
+// Humanoid number 0.
     __drawMainCharacter(main_character,0.0f);
 
-//- Loop ------------------------------
-// Draw all the models.
-// (12*7) triangles.
+// Draw all the enemies
+// 1~n humanoids.
     register int n=1; // main_character =0
     while (1){
 
@@ -939,7 +937,7 @@ void demoFlyingCube(unsigned long sec)
 //Index 0 → main_character (the player).
 //Index 1–7 → enemies (other humanoids).
 
-void demoFlyingCubeSetup(void)
+void demoHumanoidSetup(void)
 {
 // This is called once.
 
@@ -983,7 +981,7 @@ void demoFlyingCubeSetup(void)
     {
         model = (void*) malloc( sizeof(struct humanoid_model_d) );
         if ((void*) model == NULL){
-            printf("model\n");
+            printf("demoHumanoidSetup: model\n");
             exit(1);
         }
 
@@ -1181,14 +1179,31 @@ void demoFlyingCubeSetup(void)
     if ( (void*) main_character != NULL )
     {
 
-        main_character->colors[0] = COLOR_BLUE;
-        main_character->colors[1] = COLOR_BLUE;
-        main_character->colors[2] = COLOR_BLUE;
+        //main_character->colors[0] = COLOR_BLUE;
+        //main_character->colors[1] = COLOR_BLUE;
+        //main_character->colors[2] = COLOR_BLUE;
 
-        // int it;
-        //for (it = 0; it < main_character->face_count; it++) {
-        //    main_character->colors[it] = COLOR_BLUE;
-        //}
+        int iter=0;
+
+        // Head (faces 0–11)
+        for (iter=0; iter<12; iter++) main_character->colors[iter] = COLOR_BLUE;
+
+        // Torso (faces 12–23)
+        for (iter=12; iter<24; iter++) main_character->colors[iter] = COLOR_PINK;
+
+        // Left leg (faces 24–35)
+        for (iter=24; iter<36; iter++) main_character->colors[iter] = COLOR_PURPLE;
+
+        // Right leg (faces 36–47)
+        for (iter=36; iter<48; iter++) main_character->colors[iter] = COLOR_PURPLE;
+
+        // more 2 models is too much for a file with 1KB limitation.
+
+        // Left arm (faces 48–59) (Not implemented)
+        for (iter=48; iter<60; iter++) main_character->colors[iter] = COLOR_ORANGE;
+
+        // Right arm (faces 60–71) (Not implemented)
+        for (iter=60; iter<72; iter++) main_character->colors[iter] = COLOR_PURPLE;
 
 
         // All the models.

@@ -3752,9 +3752,10 @@ static int on_execute(void)
     // ==============================================
     // >>> Setup the current demo
     // see: demos.c
+    // Each demos has its own file.
     if (ShowDemo == TRUE)
     {
-        demoFlyingCubeSetup();
+        demoHumanoidSetup();
         //cat00SetupDemo();
         //tri00SetupDemo();
         //curve00SetupDemo();
@@ -3827,7 +3828,7 @@ static int on_execute(void)
             // ===================================
             // Draw the scene for the current demo
             // IN: draw terrain, second counter
-            demoFlyingCube(sec);
+            demoHumanoidDrawScene(sec);
             //demoCat();
             //demoTriangle();
             //demoCurve();

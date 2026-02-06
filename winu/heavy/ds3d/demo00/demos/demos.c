@@ -30,6 +30,9 @@ static char model_file_buffer[512];
 // Process key combinations only for demos 
 int demos_on_combination(int msg_code)
 {
+    int char_id = 0;  // Target char
+    int direction = 0;
+    float value = 0.2f;  //0.08f;
 
     // #todo
     // Return is the demo is not running
@@ -45,25 +48,21 @@ int demos_on_combination(int msg_code)
 // Control + arrows
 //
 
-    if (msg_code == GWS_ControlArrowLeft){
-        FlyingCubeMove(0,1,(float) 0.08f);  //left
-        return 0;
-    }
-    if (msg_code == GWS_ControlArrowRight){
-        FlyingCubeMove(0,2,(float) 0.08f); //right
-        return 0;
-    }
-    if (msg_code == GWS_ControlArrowUp){
-        FlyingCubeMove(0,3,(float) 0.08f); //front
-        return 0;
-    }
-    if (msg_code == GWS_ControlArrowDown){
-        FlyingCubeMove(0,4,(float) 0.08f); //back
-        return 0;
-    }
+    switch (msg_code){
+    case GWS_ControlArrowLeft:   direction = DIRECTION_LEFT;  break;
+    case GWS_ControlArrowRight:  direction = DIRECTION_RIGHT; break;
+    case GWS_ControlArrowUp:     direction = DIRECTION_FRONT; break;
+    case GWS_ControlArrowDown:   direction = DIRECTION_BACK;  break;
+    default:
+        goto fail;
+        break;
+    };
+
+    demoHumanoidMoveCharacter( char_id, direction, (float) value );
+    return 0;
 
 fail:
-    return -1;
+    return (int) -1;
 }
 
 // Function to read entire file into buffer using open()

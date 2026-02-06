@@ -158,17 +158,17 @@ line.o rect.o window.o button.o bmp.o
 	$(CC)  -c demos/demos.c   $(user_ccflags) $(CINCLUDES) -o demos.o
 	$(CC)  -c demos/models.c  $(user_ccflags) $(CINCLUDES) -o models.o
 # Demos
-	$(CC)  -c demos/flycube.c  $(user_ccflags) $(CINCLUDES) -o flycube.o
-	$(CC)  -c demos/cat00.c    $(user_ccflags) $(CINCLUDES) -o cat00.o
-	$(CC)  -c demos/polygon.c  $(user_ccflags) $(CINCLUDES) -o polygon.o
-	$(CC)  -c demos/tri00.c    $(user_ccflags) $(CINCLUDES) -o tri00.o
-	$(CC)  -c demos/lin00.c    $(user_ccflags) $(CINCLUDES) -o lin00.o
-	$(CC)  -c demos/curve00.c  $(user_ccflags) $(CINCLUDES) -o curve00.o
+	$(CC)  -c demos/humanoid.c  $(user_ccflags) $(CINCLUDES) -o humanoid.o
+	$(CC)  -c demos/cat00.c     $(user_ccflags) $(CINCLUDES) -o cat00.o
+	$(CC)  -c demos/polygon.c   $(user_ccflags) $(CINCLUDES) -o polygon.o
+	$(CC)  -c demos/tri00.c     $(user_ccflags) $(CINCLUDES) -o tri00.o
+	$(CC)  -c demos/lin00.c     $(user_ccflags) $(CINCLUDES) -o lin00.o
+	$(CC)  -c demos/curve00.c   $(user_ccflags) $(CINCLUDES) -o curve00.o
 
 
 	$(LD) -r -o archive_fx.o \
 grprim.o camera.o world.o proj.o sprite.o surface.o \
-demos.o models.o flycube.o cat00.o polygon.o tri00.o lin00.o curve00.o    
+demos.o models.o humanoid.o cat00.o polygon.o tri00.o lin00.o curve00.o    
 
 #extra
 	$(CC)  -c  xxxinput.c  $(user_ccflags) $(CINCLUDES) -o xxxinput.o

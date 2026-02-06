@@ -1,7 +1,6 @@
 // demos.h
 // Commom for all demos.
 
-
 #ifndef __DEMOS_DEMOS_H
 #define __DEMOS_DEMOS_H    1
 
@@ -14,6 +13,10 @@ extern struct gws_window_d *__demo_window;
 // Global counter used by the demos.
 extern unsigned long gBeginTick;
 
+#define DIRECTION_LEFT   1
+#define DIRECTION_RIGHT  2
+#define DIRECTION_FRONT  3
+#define DIRECTION_BACK   4
 
 // =====================================
 
