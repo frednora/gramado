@@ -17,6 +17,9 @@ extern unsigned long gBeginTick;
 
 // =====================================
 
+// Process key combinations only for demos 
+int demos_on_combination(int msg_code);
+
 char *demosReadFileIntoBuffer(const char *filename);
 
 struct gws_window_d *__create_demo_window (

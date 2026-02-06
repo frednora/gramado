@@ -26,6 +26,46 @@ static char model_file_buffer[512];
 
 // ===================================
 
+
+// Process key combinations only for demos 
+int demos_on_combination(int msg_code)
+{
+
+    // #todo
+    // Return is the demo is not running
+
+    if (gamestate != GS_LEVEL)
+        goto fail;
+
+// Parameters:
+    if (msg_code < 0)
+        goto fail;
+
+//
+// Control + arrows
+//
+
+    if (msg_code == GWS_ControlArrowLeft){
+        FlyingCubeMove(0,1,(float) 0.08f);  //left
+        return 0;
+    }
+    if (msg_code == GWS_ControlArrowRight){
+        FlyingCubeMove(0,2,(float) 0.08f); //right
+        return 0;
+    }
+    if (msg_code == GWS_ControlArrowUp){
+        FlyingCubeMove(0,3,(float) 0.08f); //front
+        return 0;
+    }
+    if (msg_code == GWS_ControlArrowDown){
+        FlyingCubeMove(0,4,(float) 0.08f); //back
+        return 0;
+    }
+
+fail:
+    return -1;
+}
+
 // Function to read entire file into buffer using open()
 // # Limited size. 512 bytes
 char *demosReadFileIntoBuffer(const char *filename) 

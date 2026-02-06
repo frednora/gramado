@@ -3675,22 +3675,22 @@ static int on_combination(int msg_code)
 
     if (msg_code == GWS_ControlArrowUp){
         //dock_active_window(1);
-        FlyingCubeMove(0,4,(float) 0.08f); //back
+        //FlyingCubeMove(0,4,(float) 0.08f); //back
         return 0;
     }
     if (msg_code == GWS_ControlArrowRight){
         //dock_active_window(2);
-        FlyingCubeMove(0,1,(float) 0.08f);  //left
+        //FlyingCubeMove(0,1,(float) 0.08f);  //left
         return 0;
     }
     if (msg_code == GWS_ControlArrowDown){
         //dock_active_window(3);
-        FlyingCubeMove(0,3,(float) 0.08f); //front
+        //FlyingCubeMove(0,3,(float) 0.08f); //front
         return 0;
     }
     if (msg_code == GWS_ControlArrowLeft){
         //dock_active_window(4); 
-        FlyingCubeMove(0,2,(float) 0.08f); //right
+        //FlyingCubeMove(0,2,(float) 0.08f); //right
         return 0;
     }
 
@@ -3877,7 +3877,9 @@ new_event:
 
 // Is it a combination?
     IsCombination = (int) is_combination(msg);
-    if (IsCombination){
+    if (IsCombination)
+    {
+        demos_on_combination(msg);
         on_combination(msg);
     }
 
@@ -4038,7 +4040,7 @@ int wmInputReader2(void)
               //dock_active_window(2);
               //IN: cube number, position, amount
               //FlyingCubeMove(0,2,(float) 0.08f); //right
-              FlyingCubeMove(0,1,(float) 0.08f);  //left
+              //FlyingCubeMove(0,1,(float) 0.08f);  //left
               return 0; 
             }
             //Control arrow up
@@ -4047,7 +4049,7 @@ int wmInputReader2(void)
               //printf("ws: Control up\n"); 
               //dock_active_window(1);
               //FlyingCubeMove(0,3,(float) 0.08f); //front
-              FlyingCubeMove(0,4,(float) 0.08f); //back
+              //FlyingCubeMove(0,4,(float) 0.08f); //back
               return 0; 
             }
             //Control arrow down
@@ -4056,7 +4058,7 @@ int wmInputReader2(void)
               //printf("ws: Control down\n");
               //dock_active_window(3);
               //FlyingCubeMove(0,4,(float) 0.08f); //back
-              FlyingCubeMove(0,3,(float) 0.08f); //front
+              //FlyingCubeMove(0,3,(float) 0.08f); //front
               return 0;
             }
             //Control arrow left
@@ -4066,7 +4068,7 @@ int wmInputReader2(void)
               //dock_active_window(4);
               //IN: cube number, position, amount 
               //FlyingCubeMove(0,1,(float) 0.08f);  //left
-              FlyingCubeMove(0,2,(float) 0.08f); //right
+              //FlyingCubeMove(0,2,(float) 0.08f); //right
               return 0; 
             }
 

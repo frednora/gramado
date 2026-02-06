@@ -14,8 +14,8 @@ static int game_update_taskbar=TRUE;
 static int hits=0;
 
 // For the demo.
-#define CUBE_MAX  8
-unsigned long cubes[CUBE_MAX];
+#define MODEL_MAX  8
+unsigned long models[MODEL_MAX];
 
 // local
 /*
@@ -40,15 +40,15 @@ static int __r[4][4] = {
 */
 
 
-static void __drawTerrain(struct cube_model_d *cube, float fElapsedTime);
-static void __drawFlyingCube(struct cube_model_d *cube, float vel);
+static void __drawMainCharacter(struct humanoid_model_d *model, float fElapsedTime);
+static void __drawEnemy(struct humanoid_model_d *model, float vel);
 
 
 //======================
 
 
 
-static void __drawTerrain(struct cube_model_d *cube, float fElapsedTime)
+static void __drawMainCharacter(struct humanoid_model_d *model, float fElapsedTime)
 {
 // No rotation. Small translation in positive z.
 
@@ -86,14 +86,14 @@ static void __drawTerrain(struct cube_model_d *cube, float fElapsedTime)
     };
 
 // ---------
-    if( (void*) cube == NULL ){
+    if( (void*) model == NULL ){
         return;
     }
 
 // Building the transformation matrices.
 // O angulo muda com o passar do tempo.
-    //cube->fThetaAngle = (float) (cube->fThetaAngle + fElapsedTime);
-    //cube->fThetaAngle = (float) (cube->fThetaAngle + 1.0f * fElapsedTime);
+    //model->fThetaAngle = (float) (model->fThetaAngle + fElapsedTime);
+    //model->fThetaAngle = (float) (model->fThetaAngle + 1.0f * fElapsedTime);
 
 //------------------------------------------------
 // Rotation X
@@ -103,10 +103,10 @@ static void __drawTerrain(struct cube_model_d *cube, float fElapsedTime)
 //|  0   cos(θ)  -sin(θ) |
 //|  0   sin(θ)   cos(θ) |
 	matRotX.m[0][0] = (float) 1.0f;
-	matRotX.m[1][1] = (float) cosf(cube->fThetaAngle * 0.5f);
-	matRotX.m[1][2] = (float) -sinf(cube->fThetaAngle * 0.5f);
-	matRotX.m[2][1] = (float) sinf(cube->fThetaAngle * 0.5f);
-	matRotX.m[2][2] = (float) cosf(cube->fThetaAngle * 0.5f);
+	matRotX.m[1][1] = (float) cosf(model->fThetaAngle * 0.5f);
+	matRotX.m[1][2] = (float) -sinf(model->fThetaAngle * 0.5f);
+	matRotX.m[2][1] = (float) sinf(model->fThetaAngle * 0.5f);
+	matRotX.m[2][2] = (float) cosf(model->fThetaAngle * 0.5f);
 	matRotX.m[3][3] = (float) 1.0f;
 //------------------------------------------------
 // Rotation Y
@@ -150,28 +150,32 @@ static void __drawTerrain(struct cube_model_d *cube, float fElapsedTime)
 
     //cull=FALSE;
 
-    nTriangles = cube->face_count;
+    nTriangles = model->face_count;
     for (i=1; i <= nTriangles; i++)
     {
         cull=FALSE;
 
         // Grab indices directly from the face 
-        int i0 = cube->faces[i].vi[0]; 
-        int i1 = cube->faces[i].vi[1]; 
-        int i2 = cube->faces[i].vi[2];
+        int i0 = model->faces[i].vi[0]; 
+        int i1 = model->faces[i].vi[1]; 
+        int i2 = model->faces[i].vi[2];
 
         // Build triangle 
-        tri.p[0] = cube->vecs[i0]; 
-        tri.p[1] = cube->vecs[i1]; 
-        tri.p[2] = cube->vecs[i2];
+        tri.p[0] = model->vecs[i0]; 
+        tri.p[1] = model->vecs[i1]; 
+        tri.p[2] = model->vecs[i2];
 
         // Assign colors if desired 
-        tri.p[0].color = COLOR_PINK; 
-        if (i >= 1 && i <= 12){
-            tri.p[0].color = cube->colors[i-1];
-        } 
-        tri.p[1].color = COLOR_WHITE; 
-        tri.p[2].color = COLOR_WHITE;
+        //tri.p[0].color = COLOR_PINK; 
+        //if (i >= 1 && i <= 12){
+        //    tri.p[0].color = model->colors[i-1];
+        //} 
+        //tri.p[1].color = COLOR_WHITE; 
+        //tri.p[2].color = COLOR_WHITE;
+
+        tri.p[0].color = model->colors[i-1];
+        tri.p[1].color = model->colors[i-1];
+        tri.p[2].color = model->colors[i-1];
 
 
         //-----------------------------    
@@ -225,18 +229,18 @@ static void __drawTerrain(struct cube_model_d *cube, float fElapsedTime)
         triRotatedXYZ.p[2].color = tri.p[2].color;
 
 
-        // Translate in z. (terrain)
+        // Translate in z. (main_character)
 
         // Increment distance
         //cube->model_distance = (float) (cube->model_distance + 0.00005f);
-        cube->model_distance = 
+        model->model_distance = 
             (float) ( 
-                cube->model_distance + 
-                cube->model_distance_delta );
+                model->model_distance + 
+                model->model_distance_delta );
         
         // Restart distance
-        if (cube->model_distance > 14.0f){
-            cube->model_distance = (float) 0.8f;
+        if (model->model_distance > 14.0f){
+            model->model_distance = (float) 0.8f;
             //hits++;
             //memset(string0,0,16);  //clear
             //itoa(hits,string0);
@@ -247,37 +251,37 @@ static void __drawTerrain(struct cube_model_d *cube, float fElapsedTime)
         triRotatedXYZ.p[0].z =
             (float) (
             triRotatedXYZ.p[0].z + 
-            cube->model_initial_distance +
-            cube->model_distance ); 
+            model->model_initial_distance +
+            model->model_distance ); 
         triRotatedXYZ.p[1].z = 
             (float) (
             triRotatedXYZ.p[1].z + 
-            cube->model_initial_distance +
-            cube->model_distance ); 
+            model->model_initial_distance +
+            model->model_distance ); 
 
         triRotatedXYZ.p[2].z = 
             (float) (
             triRotatedXYZ.p[2].z + 
-            cube->model_initial_distance +
-            cube->model_distance ); 
+            model->model_initial_distance +
+            model->model_distance ); 
 
         // Translate in x.
         // left or right
 
         triRotatedXYZ.p[0].x = 
-            (float) (triRotatedXYZ.p[0].x + cube->hposition); 
+            (float) (triRotatedXYZ.p[0].x + model->hposition); 
         triRotatedXYZ.p[1].x = 
-            (float) (triRotatedXYZ.p[1].x + cube->hposition); 
+            (float) (triRotatedXYZ.p[1].x + model->hposition); 
         triRotatedXYZ.p[2].x = 
-            (float) (triRotatedXYZ.p[2].x + cube->hposition); 
+            (float) (triRotatedXYZ.p[2].x + model->hposition); 
 
         // translate in y
         triRotatedXYZ.p[0].y = 
-            (float) (triRotatedXYZ.p[0].y + cube->vposition); 
+            (float) (triRotatedXYZ.p[0].y + model->vposition); 
         triRotatedXYZ.p[1].y = 
-            (float) (triRotatedXYZ.p[1].y + cube->vposition); 
+            (float) (triRotatedXYZ.p[1].y + model->vposition); 
         triRotatedXYZ.p[2].y = 
-            (float) (triRotatedXYZ.p[2].y + cube->vposition); 
+            (float) (triRotatedXYZ.p[2].y + model->vposition); 
 
         //----------------------------------------------------
         // Use Cross-Product to get surface normal
@@ -368,7 +372,7 @@ static void __drawTerrain(struct cube_model_d *cube, float fElapsedTime)
 // 3 top-front-left
 // 4 top-front-right
 
-static void __drawFlyingCube(struct cube_model_d *cube, float vel)
+static void __drawEnemy(struct humanoid_model_d *model, float vel)
 {
     char string0[16];
 
@@ -405,23 +409,23 @@ static void __drawFlyingCube(struct cube_model_d *cube, float vel)
 
 // ---------
 
-    if ((void*) cube == NULL){
+    if ((void*) model == NULL){
         return;
     }
 
 // Building the transformation matrices.
 
     //#todo
-    //if( (float) fElapsedTime != (float) cube->t ){
-    //   fElapsedTime = (float) cube->t;
+    //if( (float) fElapsedTime != (float) model->t ){
+    //   fElapsedTime = (float) model->t;
     //}
 
-    //float vel = (float) cube->a * (float) cube->t; 
+    //float vel = (float) model->a * (float) model->t; 
     //float vel = (float) 1.0f * fElapsedTime;
 
-    cube->fThetaAngle = (float) (cube->fThetaAngle + (float) vel);
-    //cube->fThetaAngle = (float) (cube->fThetaAngle + (float) 1.0f * fElapsedTime);
-    //cube->fThetaAngle = (float) (cube->fThetaAngle + 1.0f * fElapsedTime);
+    model->fThetaAngle = (float) (model->fThetaAngle + (float) vel);
+    //model->fThetaAngle = (float) (model->fThetaAngle + (float) 1.0f * fElapsedTime);
+    //model->fThetaAngle = (float) (model->fThetaAngle + 1.0f * fElapsedTime);
 
 // ?
 // Generating the matrices.
@@ -437,10 +441,10 @@ static void __drawFlyingCube(struct cube_model_d *cube, float vel)
 //|  0   cos(θ)  -sin(θ) |
 //|  0   sin(θ)   cos(θ) |
     matRotX.m[0][0] = (float) 1.0f;
-    matRotX.m[1][1] = (float) cosf(cube->fThetaAngle * 0.5f);
-    matRotX.m[1][2] = (float) -sinf(cube->fThetaAngle * 0.5f);
-    matRotX.m[2][1] = (float) sinf(cube->fThetaAngle * 0.5f);
-    matRotX.m[2][2] = (float) cosf(cube->fThetaAngle * 0.5f);
+    matRotX.m[1][1] = (float) cosf(model->fThetaAngle * 0.5f);
+    matRotX.m[1][2] = (float) -sinf(model->fThetaAngle * 0.5f);
+    matRotX.m[2][1] = (float) sinf(model->fThetaAngle * 0.5f);
+    matRotX.m[2][2] = (float) cosf(model->fThetaAngle * 0.5f);
     matRotX.m[3][3] = (float) 1.0f;
 //------------------------------------------------
 // Rotation Y
@@ -493,32 +497,32 @@ static void __drawFlyingCube(struct cube_model_d *cube, float vel)
 // A cube has 6 faces and 12 triangles.
 // 1~12
 
-    nTriangles = cube->face_count;
+    nTriangles = model->face_count;
     for (i=1; i <= nTriangles; i++)
     {
         cull=FALSE;
 
         // Grab indices directly from the face 
-        int i0 = cube->faces[i].vi[0]; 
-        int i1 = cube->faces[i].vi[1]; 
-        int i2 = cube->faces[i].vi[2];
+        int i0 = model->faces[i].vi[0]; 
+        int i1 = model->faces[i].vi[1]; 
+        int i2 = model->faces[i].vi[2];
 
         // Build triangle 
-        tri.p[0] = cube->vecs[i0]; 
-        tri.p[1] = cube->vecs[i1]; 
-        tri.p[2] = cube->vecs[i2];
+        tri.p[0] = model->vecs[i0]; 
+        tri.p[1] = model->vecs[i1]; 
+        tri.p[2] = model->vecs[i2];
 
         // Assign colors if desired 
         //tri.p[0].color = COLOR_PINK; 
         //if (i >= 1 && i <= 12){
-            //tri.p[0].color = cube->colors[i-1];
+            //tri.p[0].color = model->colors[i-1];
         //} 
         //tri.p[1].color = COLOR_WHITE; 
         //tri.p[2].color = COLOR_WHITE;
 
-        tri.p[0].color = cube->colors[i-1];
-        tri.p[1].color = cube->colors[i-1];
-        tri.p[2].color = cube->colors[i-1];
+        tri.p[0].color = model->colors[i-1];
+        tri.p[1].color = model->colors[i-1];
+        tri.p[2].color = model->colors[i-1];
 
         // Now we have a triangle. A face.
 
@@ -577,20 +581,20 @@ static void __drawFlyingCube(struct cube_model_d *cube, float vel)
         // Translate in z. (move)
 
         // Increment distance
-        //cube->model_distance = (float) (cube->model_distance + 0.00005f);
-        cube->model_distance = 
+        //model->model_distance = (float) (model->model_distance + 0.00005f);
+        model->model_distance = 
             (float) ( 
-                cube->model_distance + 
-                cube->model_distance_delta );
+                model->model_distance + 
+                model->model_distance_delta );
 
-        // #test: Because each cube has it's own delta.
-        // Increment distance if we have a terrain.
-        // if ((void*)terrain != NULL)
-        //    cube->model_distance = (float) terrain->model_distance;
+        // #test: Because each model has it's own delta.
+        // Increment distance if we have a main_character.
+        // if ((void*)main_character != NULL)
+        //    model->model_distance = (float) main_character->model_distance;
 
         // Restart distance if we reached the limit in the z-axis.
-        if (cube->model_distance > 14.0f){
-            cube->model_distance = (float) 0.8f;
+        if (model->model_distance > 14.0f){
+            model->model_distance = (float) 0.8f;
             //hits++;
             //memset(string0,0,16);  //clear
             //itoa(hits,string0);
@@ -604,59 +608,75 @@ static void __drawFlyingCube(struct cube_model_d *cube, float vel)
         triRotatedXYZ.p[0].z =
             (float) (
             triRotatedXYZ.p[0].z + 
-            cube->model_initial_distance + 
-            cube->model_distance ); 
+            model->model_initial_distance + 
+            model->model_distance ); 
         triRotatedXYZ.p[1].z = 
             (float) (
             triRotatedXYZ.p[1].z + 
-            cube->model_initial_distance +
-            cube->model_distance );
+            model->model_initial_distance +
+            model->model_distance );
         triRotatedXYZ.p[2].z = 
             (float) (
             triRotatedXYZ.p[2].z + 
-            cube->model_initial_distance +
-            cube->model_distance ); 
+            model->model_initial_distance +
+            model->model_distance ); 
 
         // Translate in x.
         // left or right
 
         //triRotatedXYZ.p[0].x = 
-        //    (float) (triRotatedXYZ.p[0].x + cube->hposition); 
+        //    (float) (triRotatedXYZ.p[0].x + model->hposition); 
         //triRotatedXYZ.p[1].x = 
-        //    (float) (triRotatedXYZ.p[1].x + cube->hposition); 
+        //    (float) (triRotatedXYZ.p[1].x + model->hposition); 
         //triRotatedXYZ.p[2].x = 
-        //    (float) (triRotatedXYZ.p[2].x + cube->hposition); 
+        //    (float) (triRotatedXYZ.p[2].x + model->hposition); 
 
         // -x-------
         // Translate the triangle in x based in the terrain x position.
         // From the center, not from the top/left corner.
         // Because our 3D int engine assumes that.
 
-        if ( (void*) terrain != NULL )
+        /*
+        if ( (void*) main_character != NULL )
         {
             triRotatedXYZ.p[0].x = 
-                (float) (triRotatedXYZ.p[0].x + terrain->hposition + cube->hposition); 
+                (float) (triRotatedXYZ.p[0].x + main_character->hposition + model->hposition); 
             triRotatedXYZ.p[1].x = 
-                (float) (triRotatedXYZ.p[1].x + terrain->hposition + cube->hposition); 
+                (float) (triRotatedXYZ.p[1].x + main_character->hposition + model->hposition); 
             triRotatedXYZ.p[2].x = 
-                (float) (triRotatedXYZ.p[2].x + terrain->hposition + cube->hposition); 
+                (float) (triRotatedXYZ.p[2].x + main_character->hposition + model->hposition); 
         }
+        */
+            triRotatedXYZ.p[0].x = 
+                (float) (triRotatedXYZ.p[0].x + model->hposition); 
+            triRotatedXYZ.p[1].x = 
+                (float) (triRotatedXYZ.p[1].x + model->hposition); 
+            triRotatedXYZ.p[2].x = 
+                (float) (triRotatedXYZ.p[2].x + model->hposition); 
 
         // -y-------
-        // Translate the triangle in y based in the terrain y position.
+        // Translate the triangle in y based in the main_character y position.
         // Coloca o cubo no chão do terreno.
         // From the center, not from the top/left corner.
         // Because our 3D int engine assumes that.
 
-        if ( (void*) terrain != NULL )
+        /*
+        if ( (void*) main_character != NULL )
         {
             triRotatedXYZ.p[0].y = 
-                (float) (triRotatedXYZ.p[0].y + terrain->vposition + cube->vposition); 
+                (float) (triRotatedXYZ.p[0].y + main_character->vposition + model->vposition); 
             triRotatedXYZ.p[1].y = 
-                (float) (triRotatedXYZ.p[1].y + terrain->vposition + cube->vposition); 
+                (float) (triRotatedXYZ.p[1].y + main_character->vposition + model->vposition); 
             triRotatedXYZ.p[2].y = 
-                (float) (triRotatedXYZ.p[2].y + terrain->vposition + cube->vposition); 
+                (float) (triRotatedXYZ.p[2].y + main_character->vposition + model->vposition); 
         }
+        */
+            triRotatedXYZ.p[0].y = 
+                (float) (triRotatedXYZ.p[0].y + model->vposition); 
+            triRotatedXYZ.p[1].y = 
+                (float) (triRotatedXYZ.p[1].y + model->vposition); 
+            triRotatedXYZ.p[2].y = 
+                (float) (triRotatedXYZ.p[2].y + model->vposition); 
 
         // ----------------------------------------------------
         // backface culling:
@@ -784,32 +804,32 @@ static void __drawFlyingCube(struct cube_model_d *cube, float vel)
 // Control + arrow key
 void FlyingCubeMove(int number, int direction, float value)
 {
-    struct cube_model_d *cube;
+    struct humanoid_model_d *model;
 
     if (number < 0)
         return;
-    if (number >= CUBE_MAX)
+    if (number >= MODEL_MAX)
         return;
-    cube = (struct cube_model_d *) cubes[number];
-    if ((void*) cube == NULL)
+    model = (struct humanoid_model_d *) models[number];
+    if ((void*) model == NULL)
         return;
 
 // Move model
     // left
     if (direction == 1){
-        cube->hposition = (float) (cube->hposition - value); 
+        model->hposition = (float) (model->hposition - value); 
     }
     // right
     if (direction == 2){
-        cube->hposition = (float) (cube->hposition + value); 
+        model->hposition = (float) (model->hposition + value); 
     }
     // front
     if (direction == 3){
-        cube->model_distance = (float) (cube->model_distance + value); 
+        model->model_distance = (float) (model->model_distance + value); 
     }
     // back
     if (direction == 4){
-        cube->model_distance = (float) (cube->model_distance - value); 
+        model->model_distance = (float) (model->model_distance - value); 
     }
 
 /*
@@ -830,17 +850,17 @@ void FlyingCubeMove(int number, int direction, float value)
 // + Clear the surface 
 // + Draw the frame.
 //   background.
-//   (terrain + 7 cubes).
+//   (main_character + 7 models).
 //   It means 12*8 triangles.
 // #todo:
 // We're drawing the cube based on a static model
 // given all the dots of this model.
-// We need to create a function that will draw 3D cubes.
+// We need to create a function that will draw 3D models.
 
 // Define cube geometry
 // You store 8 vertices (cube->vecs) and 12 triangles (faces split into two triangles each).
 
-void demoFlyingCube(int draw_terrain,unsigned long sec)
+void demoFlyingCube(unsigned long sec)
 {
 // The function on_execute() in main.c initilizes this demos
 // and spins into a loop calling this function to draw
@@ -848,7 +868,7 @@ void demoFlyingCube(int draw_terrain,unsigned long sec)
 // #todo: It means that of this demo was not initialized,
 // we need to abort this function.
 
-    struct cube_model_d *tmp_cube;
+    struct humanoid_model_d *enemy;
 
     // #todo
     // This demo was initialized before calling this drawing routine?
@@ -859,28 +879,22 @@ void demoFlyingCube(int draw_terrain,unsigned long sec)
     //unsigned long gBeginTick = rtl_jiffies();
 
 
-// -------------------------
-// Draw terrain.
-// No rotation. Small translation in positive z.
-// 12 triangles.
-    if (draw_terrain == TRUE){
-        __drawTerrain(terrain,0.0f);
-    }
+    __drawMainCharacter(main_character,0.0f);
 
 //- Loop ------------------------------
-// Draw all the cubes.
+// Draw all the models.
 // (12*7) triangles.
-    register int n=1; // terrain =0
+    register int n=1; // main_character =0
     while (1){
 
-        if (n >= CUBE_MAX){
+        if (n >= MODEL_MAX){
             break;
         }
 
         // Get a pointer for the next cube.
-        tmp_cube = (struct cube_model_d *) cubes[n];
-        if ((void*) tmp_cube == NULL){
-            //printf("tmp_cube\n");
+        enemy = (struct humanoid_model_d *) models[n];
+        if ((void*) enemy == NULL){
+            //printf("enemy\n");
             //exit(1);
             break;
         }
@@ -894,14 +908,14 @@ void demoFlyingCube(int draw_terrain,unsigned long sec)
         // Então, com o passar do tempo,
         // cada cubo tera um incremento diferente na sua velocidade.
 
-        if (tmp_cube != NULL)
+        if (enemy != NULL)
         {
-            tmp_cube->t = (float) tmp_cube->t + (float) sec * 0.1f;
-            tmp_cube->v = (float) tmp_cube->t * tmp_cube->a;  
+            enemy->t = (float) enemy->t + (float) sec * 0.1f;
+            enemy->v = (float) enemy->t * enemy->a;  
             
-            __drawFlyingCube( 
-                (struct cube_model_d *) tmp_cube,
-                (float) tmp_cube->v );
+            __drawEnemy( 
+                (struct humanoid_model_d *) enemy,
+                (float) enemy->v );
         }
 
         n++;
@@ -921,12 +935,16 @@ void demoFlyingCube(int draw_terrain,unsigned long sec)
 // it's because we still don't have a function to read floating point data from
 // a file. In the future we will have the model into a file and read it using our new function.
 //
+
+//Index 0 → main_character (the player).
+//Index 1–7 → enemies (other humanoids).
+
 void demoFlyingCubeSetup(void)
 {
 // This is called once.
 
 // first cube
-    struct cube_model_d *cube;
+    struct humanoid_model_d *model;
 // Cube1
     register int i=0;
 
@@ -954,34 +972,34 @@ void demoFlyingCubeSetup(void)
 */
 
 // Clear the list.
-    for (i=0; i<CUBE_MAX; i++){
-        cubes[i] = (unsigned long) 0;
+    for (i=0; i<MODEL_MAX; i++){
+        models[i] = (unsigned long) 0;
     };
 
     int count=0;
     int rand1=0;
     
-    for (count=0; count<CUBE_MAX; count++)
+    for (count=0; count<MODEL_MAX; count++)
     {
-        cube = (void*) malloc( sizeof(struct cube_model_d) );
-        if ((void*) cube == NULL){
-            printf("cube\n");
+        model = (void*) malloc( sizeof(struct humanoid_model_d) );
+        if ((void*) model == NULL){
+            printf("model\n");
             exit(1);
         }
 
         // Create terrain
         if (count == 0){
-            terrain = (struct cube_model_d *) cube;
+            main_character = (struct humanoid_model_d *) model;
         }
 
-        cube->fThetaAngle = (float) 0.0f;
+        model->fThetaAngle = (float) 0.0f;
                 
         // Initialize vectors.
         for (i=0; i<32; i++)
         {
-            cube->vecs[i].x = (float) 0.0f;
-            cube->vecs[i].y = (float) 0.0f;
-            cube->vecs[i].z = (float) 0.0f;
+            model->vecs[i].x = (float) 0.0f;
+            model->vecs[i].y = (float) 0.0f;
+            model->vecs[i].z = (float) 0.0f;
         };
 
     
@@ -1050,17 +1068,17 @@ void demoFlyingCubeSetup(void)
             {
                 if (elem.type == OBJ_ELEMENT_TYPE_VECTOR)
                 {
-                    cube->vecs[VertexCounter].x = (float) elem.vertex.x;
-                    cube->vecs[VertexCounter].y = (float) elem.vertex.y;
-                    cube->vecs[VertexCounter].z = (float) elem.vertex.z;
+                    model->vecs[VertexCounter].x = (float) elem.vertex.x;
+                    model->vecs[VertexCounter].y = (float) elem.vertex.y;
+                    model->vecs[VertexCounter].z = (float) elem.vertex.z;
                     VertexCounter++;
                 }
                 else if (elem.type == OBJ_ELEMENT_TYPE_FACE)
                 {
-                    cube->faces[FaceCounter].vi[0] = elem.face.vi[0];
-                    cube->faces[FaceCounter].vi[1] = elem.face.vi[1];
-                    cube->faces[FaceCounter].vi[2] = elem.face.vi[2];
-                    //cube->face_count++; //#bugbug: It was naver initialized.
+                    model->faces[FaceCounter].vi[0] = elem.face.vi[0];
+                    model->faces[FaceCounter].vi[1] = elem.face.vi[1];
+                    model->faces[FaceCounter].vi[2] = elem.face.vi[2];
+                    //model->face_count++; //#bugbug: It was naver initialized.
                     FaceCounter++;
                 }
                 // ...
@@ -1071,10 +1089,10 @@ void demoFlyingCubeSetup(void)
         } while (nextLine != NULL);
 
         // Register totals at the end
-        cube->vertex_count = VertexCounter - 1; // subtract wasted slot
-        cube->face_count = FaceCounter - 1;
+        model->vertex_count = VertexCounter - 1; // subtract wasted slot
+        model->face_count = FaceCounter - 1;
 
-        //printf ("v: %d  f: %d\n", cube->vertex_count, cube->face_count );
+        //printf ("v: %d  f: %d\n", model->vertex_count, model->face_count );
         //refresh_screen();
         //while(1){}
 
@@ -1084,9 +1102,9 @@ void demoFlyingCubeSetup(void)
         for (it=1; it<(16+1); it++)
         {
             printf ("f: %d %d %d \n",
-                cube->faces[it].vi[0], 
-                cube->faces[it].vi[1], 
-                cube->faces[it].vi[2] );
+                model->faces[it].vi[0], 
+                model->faces[it].vi[1], 
+                model->faces[it].vi[2] );
         }
         printf ("break point\n");
         refresh_screen();
@@ -1094,149 +1112,106 @@ void demoFlyingCubeSetup(void)
         */
         // -------------------------------------------------------
 
-        // The model for a regular cube.
+        // The model for a regular model.
         // #todo: >> Load this from a file.
         // #todo: Maybe import these values from an array.
         // see: arrayFakeFile[]
 
-        // Here we're creating the vectors for our cube.
+        // Here we're creating the vectors for our model.
         // During the drawing phase we're gonna select vectors to create the triangles.
         // We have two triangles per surface,
-
-        /*
-        cube->vecs[1].x = (float) -0.2f;  cube->vecs[1].y = (float) -0.2f;  cube->vecs[1].z = (float) 0.2f;
-        cube->vecs[2].x = (float)  0.2f;  cube->vecs[2].y = (float) -0.2f;  cube->vecs[2].z = (float) 0.2f;
-        cube->vecs[3].x = (float) -0.2f;  cube->vecs[3].y = (float)  0.2f;  cube->vecs[3].z = (float) 0.2f;
-        cube->vecs[4].x = (float)  0.2f;  cube->vecs[4].y = (float)  0.2f;  cube->vecs[4].z = (float) 0.2f;
-
-        cube->vecs[5].x = (float) -0.2f;  cube->vecs[5].y = (float)  0.2f;  cube->vecs[5].z = (float) -0.2f;
-        cube->vecs[6].x = (float)  0.2f;  cube->vecs[6].y = (float)  0.2f;  cube->vecs[6].z = (float) -0.2f;
-        cube->vecs[7].x = (float) -0.2f;  cube->vecs[7].y = (float) -0.2f;  cube->vecs[7].z = (float) -0.2f;
-        cube->vecs[8].x = (float)  0.2f;  cube->vecs[8].y = (float) -0.2f;  cube->vecs[8].z = (float) -0.2f;
-        */
-
-        // 12 faces, 12 colors.
-        cube->colors[0] = GRCOLOR_LIGHTYELLOW;
-        cube->colors[1] = GRCOLOR_LIGHTMAGENTA;
-        cube->colors[2] = GRCOLOR_DARKBLUE;
-        cube->colors[3] = GRCOLOR_DARKGREEN;
-        cube->colors[4] = GRCOLOR_DARKRED;
-        cube->colors[5] = GRCOLOR_DARKCYAN;
-        cube->colors[6] = GRCOLOR_DARKMAGENTA;
-        cube->colors[7] = GRCOLOR_DARKYELLOW;
-        cube->colors[8] = COLOR_ORANGE;  //GRCOLOR_DARKWHITE;
-        cube->colors[9] = GRCOLOR_LIGHTBLACK;
-        cube->colors[10] = GRCOLOR_LIGHTBLUE;
-        cube->colors[11] = GRCOLOR_LIGHTGREEN;
-
 
         int it=0;
 
         // Head (faces 0–11)
-        for (it=0; it<12; it++) cube->colors[it] = COLOR_RED;
+        for (it=0; it<12; it++) model->colors[it] = COLOR_RED;
 
         // Torso (faces 12–23)
-        for (it=12; it<24; it++) cube->colors[it] = COLOR_GREEN;
+        for (it=12; it<24; it++) model->colors[it] = COLOR_GREEN;
 
         // Left leg (faces 24–35)
-        for (it=24; it<36; it++) cube->colors[it] = COLOR_BLUE;
+        for (it=24; it<36; it++) model->colors[it] = COLOR_BLUE;
 
         // Right leg (faces 36–47)
-        for (it=36; it<48; it++) cube->colors[it] = COLOR_BLUE;
+        for (it=36; it<48; it++) model->colors[it] = COLOR_BLUE;
 
-        // more 2 cubes is too much for a file with 1KB limitation.
+        // more 2 models is too much for a file with 1KB limitation.
 
         // Left arm (faces 48–59) (Not implemented)
-        for (it=48; it<60; it++) cube->colors[it] = COLOR_ORANGE;
+        for (it=48; it<60; it++) model->colors[it] = COLOR_ORANGE;
 
         // Right arm (faces 60–71) (Not implemented)
-        for (it=60; it<72; it++) cube->colors[it] = COLOR_PURPLE;
+        for (it=60; it<72; it++) model->colors[it] = COLOR_PURPLE;
 
 
-        // All the cubes.
-        cube->model_initial_distance = 
+        // All the models.
+        model->model_initial_distance = 
             (float) DEFAULT_CUBE_INITIAL_Z_POSITION;
             //(float) 8.0f;
-        cube->model_distance = (float) 0.0f;
-        cube->model_distance_delta = 
+        model->model_distance = (float) 0.0f;
+        model->model_distance_delta = 
             (float) DEFAULT_CUBE_INITIAL_DELTA_Z;
             //(float) 0.00005f;
 
         // left or right
         //srand(count);
         //rand1 = (rand() % 25);
-        //cube->hposition = (float) 0.0f;
-        cube->hposition = (float) -2.0f + (float) 0.8f * (float) count;
-        //cube->hposition = (float) -1.5f + (float) 0.4f * (float) rand1;
-        //cube->hposition = (float) 0.0f;
+        //model->hposition = (float) 0.0f;
+        model->hposition = (float) -2.0f + (float) 0.8f * (float) count;
+        //model->hposition = (float) -1.5f + (float) 0.4f * (float) rand1;
+        //model->hposition = (float) 0.0f;
 
-        cube->vposition = (float) 0.0f;
+        model->vposition = (float) 0.0f;
         
         // Initializing.
         // Cada cubo tem uma aceleração diferente.
         // Então, com o passar do tempo,
         // cada cubo tera um incremento diferente na sua velocidade.
-        cube->v = (float) count * 0.00001f;
-        cube->t = (float) 1.0f;
-        cube->a = (float) cube->v / cube->t;
+        model->v = (float) count * 0.00001f;
+        model->t = (float) 1.0f;
+        model->a = (float) model->v / model->t;
         // v = a*t;
 
-        // Save the cube pointer.
-        cubes[count] = (unsigned long) cube;
+        // Save the model pointer.
+        models[count] = (unsigned long) model;
     };
 
 // Terrain
 // Special values for the terrain.
-
-    if ( (void*) terrain != NULL )
+    if ( (void*) main_character != NULL )
     {
 
-        // The model for the terrain.
-        // #todo: Load this from a file.
+        main_character->colors[0] = COLOR_BLUE;
+        main_character->colors[1] = COLOR_BLUE;
+        main_character->colors[2] = COLOR_BLUE;
 
-        terrain->vecs[1].x = (float) -80.0f;  terrain->vecs[1].y = (float) -0.12f;  terrain->vecs[1].z = (float) 8.0f;
-        terrain->vecs[2].x = (float)  80.0f;  terrain->vecs[2].y = (float) -0.12f;  terrain->vecs[2].z = (float) 8.0f;
-        terrain->vecs[3].x = (float) -80.0f;  terrain->vecs[3].y = (float)  0.12f;  terrain->vecs[3].z = (float) 8.0f;
-        terrain->vecs[4].x = (float)  80.0f;  terrain->vecs[4].y = (float)  0.12f;  terrain->vecs[4].z = (float) 8.0f;
-        terrain->vecs[5].x = (float) -80.0f;  terrain->vecs[5].y = (float)  0.12f;  terrain->vecs[5].z = (float) -0.8f;
-        terrain->vecs[6].x = (float)  80.0f;  terrain->vecs[6].y = (float)  0.12f;  terrain->vecs[6].z = (float) -0.8f;
-        terrain->vecs[7].x = (float) -80.0f;  terrain->vecs[7].y = (float) -0.12f;  terrain->vecs[7].z = (float) -0.8f;
-        terrain->vecs[8].x = (float)  80.0f;  terrain->vecs[8].y = (float) -0.12f;  terrain->vecs[8].z = (float) -0.8f;
-        //terrain->model_initial_distance = (float) 8.0f;
-        //terrain->model_distance = (float) 0.0f;
-
-        // 12 faces, 12 colors.
-        terrain->colors[0] = GRCOLOR_DARKWHITE;
-        terrain->colors[1] = GRCOLOR_DARKWHITE;
-        terrain->colors[2] = GRCOLOR_DARKWHITE;
-        terrain->colors[3] = GRCOLOR_DARKWHITE;
-        terrain->colors[4] = GRCOLOR_DARKWHITE;
-        terrain->colors[5] = GRCOLOR_DARKWHITE;
-        terrain->colors[6] = GRCOLOR_DARKWHITE;
-        terrain->colors[7] = GRCOLOR_DARKWHITE;
-        terrain->colors[8] = GRCOLOR_DARKWHITE;
-        terrain->colors[9] = GRCOLOR_DARKWHITE;
-        terrain->colors[10] = GRCOLOR_DARKWHITE;
-        terrain->colors[11] = GRCOLOR_DARKWHITE;
+        // int it;
+        //for (it = 0; it < main_character->face_count; it++) {
+        //    main_character->colors[it] = COLOR_BLUE;
+        //}
 
 
-        // z translation support.
-        terrain->model_initial_distance = 
-            (float) DEFAULT_TERRAIN_INITIAL_Z_POSITION;
-            //(float) 4.0f;
-        terrain->model_distance = (float) 0.0f;
-        terrain->model_distance_delta = 
-            (float) DEFAULT_TERRAIN_INITIAL_DELTA_Z;
+        // All the models.
+        main_character->model_initial_distance = 
+            (float) DEFAULT_CUBE_INITIAL_Z_POSITION;
+            //(float) 8.0f;
+        main_character->model_distance = (float) 0.0f;
+        main_character->model_distance_delta = 
+            (float) DEFAULT_CUBE_INITIAL_DELTA_Z;
             //(float) 0.00005f;
 
-        terrain->hposition = (float)  0.0f;
-        terrain->vposition = (float) -3.0f;
+
+        main_character->hposition = (float)  0.0f;
+        main_character->vposition = (float) -3.0f; //slightly lower
 
         // Initializing.
-        //terrain->a = (float) 1.0f;
-        terrain->v = (float) 0.0001f;
-        terrain->t = (float) 0.0001f;  //0.01f;
-        terrain->a = (float) terrain->v / terrain->t;
+        // Cada cubo tem uma aceleração diferente.
+        // Então, com o passar do tempo,
+        // cada cubo tera um incremento diferente na sua velocidade.
+        main_character->v = (float) count * 0.00001f;
+        main_character->t = (float) 1.0f;
+        main_character->a = (float) main_character->v / main_character->t;
+        // v = a*t;
     }
 
 //----------------

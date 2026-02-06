@@ -1,6 +1,5 @@
-
 // globals.h
-
+// Created by Fred Nora.
 
 #ifndef __GWSSRV_GLOBALS_H
 #define __GWSSRV_GLOBALS_H   1
@@ -247,6 +246,28 @@ struct vid_d
 struct vid_d vidConfig;
 */
 
+//
+// Game support
+//
+
+/*
+gamestate: 
+  generally tracks the high-level mode of the game 
+  (e.g., are we in the menu, playing a level, or watching a demo?).
+gameaction:
+  determines what action the engine should perform next 
+  (e.g., loading a level, saving, or quitting). 
+*/
+
+#define GS_NULL  0
+#define GS_LEVEL         1  // actively playing a level.
+#define GS_INTERMISSION  2  // between levels.
+#define GS_FINALE        3  // endgame text/graphics.
+#define GS_DEMOSCREEN    4  // demo playback or title screen.
+#define GS_DESKTOP       5  // no demo at all.
+
+extern int gamestate;
+extern int gameaction;
 
 //
 // == Prototypes ===================================================

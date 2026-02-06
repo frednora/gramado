@@ -13,11 +13,7 @@ struct cat_model_d
 extern struct cat_model_d  CatModel;   // Cat model 0.
 
 
-// -----------------------------------------
-//  Flying cube.
-// 12 triangles.
-// 6 faces.
-struct cube_model_d
+struct humanoid_model_d
 {
     // We don't need 32 vectors. But its ok.
     struct gr_vecF3D_d vecs[128]; //32
@@ -44,7 +40,7 @@ struct cube_model_d
     float t;  // Time:
 };
 
-extern struct cube_model_d *terrain;
+extern struct humanoid_model_d *main_character;
 
 #define DEFAULT_CUBE_INITIAL_Z_POSITION     (5.0f)  //(8.0f)
 #define DEFAULT_TERRAIN_INITIAL_Z_POSITION  (4.0f)

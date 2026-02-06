@@ -6,7 +6,7 @@
 struct cat_model_d  CatModel;
 
 // The terrain is a cube.
-struct cube_model_d *terrain;
+struct humanoid_model_d *main_character;
 
 
 //---------------------------------------------------------------

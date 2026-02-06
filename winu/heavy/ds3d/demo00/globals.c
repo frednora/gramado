@@ -42,9 +42,11 @@ struct gui_d  *gui;
 
 int use_vsync=FALSE;
 
+//
+// Game support
+//
+
+int gamestate = GS_NULL;
+int gameaction = 0;
 
 // unsigned long gws_pallete_16[16];
-
-
-
-

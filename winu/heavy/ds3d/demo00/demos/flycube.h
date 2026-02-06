@@ -10,7 +10,7 @@ void FlyingCubeMove(int number, int direction, float value);
 
 // Draw a single frame.
 // This is called by the gameloop.
-void demoFlyingCube(int draw_terrain,unsigned long sec);
+void demoFlyingCube(unsigned long sec);
 
 //
 // #
