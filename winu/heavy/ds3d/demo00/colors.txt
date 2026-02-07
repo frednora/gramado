@@ -1,0 +1,50 @@
+
+---
+
+** Pastel World Palette**
+
+**Canvas / Background**  
+- Pastel Sky Blue (#A7C7E7)  
+- Soft Lavender Mist (#D8BFD8)  
+- Pale Peach Glow (#FFDAB9)  
+- Mint Whisper (#C1E1C1)  
+
+Soft sky-like light blue-gray (most classic anime/manga feeling)
+#E0F0FF or #D6E8FF or #B3D9FF
+
+Very pale desaturated cyan / mint-blue (modern clean anime look)
+#E8F5FF or #DDF2FF or #C5E8F0
+
+Almost-white warm off-white / very pale cream (manga chapter feeling)
+#F8F6F2 or #FAF8F5 or #FFF8F0 (tiny bit of yellow warmth)
+
+Gentle lavender-gray / very pale purple-gray (dreamy / emotional tone)
+#F0E8FF or #E8E0FF or #E5DFFF
+
+Subtle warm gray / light taupe-gray (retro 80s–90s anime vibe)
+#F0EDE8 or #E8E3DC or #E0D8D0
+
+
+**Hero (Main Character)**  
+- Head: Pastel Sky Blue (#A7C7E7)  
+- Torso: Pastel Lemon Yellow (#FFFACD)  
+- Legs: Pastel Pink (#FFD1DC)
+
+**Enemies**  
+- Head: Pastel Red (#FFB6B6)  
+- Torso: Pastel Purple (#CBAACB)  
+- Legs: Pastel Orange (#FFD8B1)
+
+**Static Models (Terrain / Props)**  
+- Head: Pastel Mint Green (#A1E1A1) (#C1E1C1)  
+- Torso: Pastel Beige (#F5F5DC)  
+- Legs: Pastel Gray (#D3D3D3)
+
+---
+
+This gives you a **cohesive pastel world**:  
+- The **canvas** feels dreamy and soft.  
+- The **hero** pops with cheerful pastel blue/yellow/pink.  
+- The **enemies** are distinct but softened with red/purple/orange.  
+- The **static models** blend naturally with mint/beige/gray.  
+

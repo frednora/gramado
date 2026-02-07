@@ -3815,8 +3815,8 @@ static int on_execute(void)
 
             // -------------------------
             // Clear canvas.
-            //demoClearWA(COLOR_BLACK);               //clear surface
-            gramado_clear_surface(NULL,COLOR_BLACK);  //clear surface
+            //demoClearWA(COLOR_BLACK);            //clear surface
+            gramado_clear_surface(NULL,0xF8F6F2);  //clear surface
 
             // Draw desktop?
             // Draw, but do not refresh.
@@ -3824,6 +3824,8 @@ static int on_execute(void)
             if (DrawDesktopDuringDemo){
                 wm_update_desktop(TRUE,FALSE);
             }
+
+            demoUpdate();
 
             // ===================================
             // Draw the scene for the current demo

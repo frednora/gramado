@@ -8,9 +8,13 @@
 static int game_update_taskbar=TRUE;
 static int hits=0;
 
-// For the demo.
+
 #define MODEL_MAX  8
 unsigned long models[MODEL_MAX];
+
+#define STATIC_MODEL_MAX  8
+unsigned long static_models[STATIC_MODEL_MAX];
+
 
 // local
 /*
@@ -35,15 +39,16 @@ static int __r[4][4] = {
 */
 
 
-static void __drawMainCharacter(struct humanoid_model_d *model, float fElapsedTime);
-static void __drawEnemy(struct humanoid_model_d *model, float vel);
 
+static void __drawHumanoidModel(struct humanoid_model_d *model, float fElapsedTime);
+static void __drawEnemy(struct humanoid_model_d *model, float vel);
+static void __drawMainCharacter(struct humanoid_model_d *model, float fElapsedTime);
+static void __drawEnemy00(struct humanoid_model_d *model, float fElapsedTime);
+static void __drawStaticModel(struct humanoid_model_d *model);
 
 //======================
 
-
-
-static void __drawMainCharacter(struct humanoid_model_d *model, float fElapsedTime)
+static void __drawHumanoidModel(struct humanoid_model_d *model, float fElapsedTime)
 {
 // No rotation. Small translation in positive z.
 
@@ -226,57 +231,83 @@ static void __drawMainCharacter(struct humanoid_model_d *model, float fElapsedTi
 
         // Translate in z. (main_character)
 
+        /*
         // Increment distance
-        //cube->model_distance = (float) (cube->model_distance + 0.00005f);
-        model->model_distance = 
+        //cube->origin_z = (float) (cube->origin_z + 0.00005f);
+        model->origin_z = 
             (float) ( 
-                model->model_distance + 
-                model->model_distance_delta );
-        
+                model->origin_z + 
+                model->delta_z );
+        */
+  
+
+        /*
+        // #ps: Old hardcoded value.
         // Restart distance
-        if (model->model_distance > 14.0f){
-            model->model_distance = (float) 0.8f;
+        if (model->origin_z > 14.0f)
+        {
+            model->origin_z = (float) 0.8f;
             //hits++;
             //memset(string0,0,16);  //clear
             //itoa(hits,string0);
             //wm_Update_TaskBar((char *)string0,FALSE);
             //wm_Update_TaskBar("hit",FALSE);
         }
+        */
+
+
+        // #test
+        // Testing the structure for world information.
+        // Restart distance using world limits
+        
+        /*
+        if (model->origin_z > current_world_3d->z_size)
+        {
+            model->origin_z = 0.8f;  // restart
+        }
+        */
+
+        /*
+        // Check the transformed z of one vertex (or all three)
+        if (triRotatedXYZ.p[0].z > current_world_3d->z_size ||
+            triRotatedXYZ.p[1].z > current_world_3d->z_size ||
+            triRotatedXYZ.p[2].z > current_world_3d->z_size)
+        {
+            model->origin_z = 0.8f;  // restart
+        }
+        */
 
         triRotatedXYZ.p[0].z =
             (float) (
             triRotatedXYZ.p[0].z + 
-            model->model_initial_distance +
-            model->model_distance ); 
+            model->origin_z ); 
         triRotatedXYZ.p[1].z = 
             (float) (
             triRotatedXYZ.p[1].z + 
-            model->model_initial_distance +
-            model->model_distance ); 
+            model->origin_z ); 
 
         triRotatedXYZ.p[2].z = 
             (float) (
             triRotatedXYZ.p[2].z + 
-            model->model_initial_distance +
-            model->model_distance ); 
+            model->origin_z ); 
 
         // Translate in x.
         // left or right
 
         triRotatedXYZ.p[0].x = 
-            (float) (triRotatedXYZ.p[0].x + model->hposition); 
+            (float) (triRotatedXYZ.p[0].x + model->origin_x); 
         triRotatedXYZ.p[1].x = 
-            (float) (triRotatedXYZ.p[1].x + model->hposition); 
+            (float) (triRotatedXYZ.p[1].x + model->origin_x); 
         triRotatedXYZ.p[2].x = 
-            (float) (triRotatedXYZ.p[2].x + model->hposition); 
+            (float) (triRotatedXYZ.p[2].x + model->origin_x); 
 
         // translate in y
         triRotatedXYZ.p[0].y = 
-            (float) (triRotatedXYZ.p[0].y + model->vposition); 
+            (float) (triRotatedXYZ.p[0].y + model->origin_y); 
         triRotatedXYZ.p[1].y = 
-            (float) (triRotatedXYZ.p[1].y + model->vposition); 
+            (float) (triRotatedXYZ.p[1].y + model->origin_y); 
         triRotatedXYZ.p[2].y = 
-            (float) (triRotatedXYZ.p[2].y + model->vposition); 
+            (float) (triRotatedXYZ.p[2].y + model->origin_y); 
 
         //----------------------------------------------------
         // Use Cross-Product to get surface normal
@@ -576,26 +607,48 @@ static void __drawEnemy(struct humanoid_model_d *model, float vel)
         // Translate in z. (move)
 
         // Increment distance
-        //model->model_distance = (float) (model->model_distance + 0.00005f);
-        model->model_distance = 
+        //model->origin_z = (float) (model->origin_z + 0.00005f);
+        model->origin_z = 
             (float) ( 
-                model->model_distance + 
-                model->model_distance_delta );
+                model->origin_z + 
+                model->delta_z );
 
         // #test: Because each model has it's own delta.
         // Increment distance if we have a main_character.
         // if ((void*)main_character != NULL)
-        //    model->model_distance = (float) main_character->model_distance;
+        //    model->origin_z = (float) main_character->origin_z;
 
+        /*
         // Restart distance if we reached the limit in the z-axis.
-        if (model->model_distance > 14.0f){
-            model->model_distance = (float) 0.8f;
+        if (model->origin_z > 14.0f){
+            model->origin_z = (float) 0.8f;
             //hits++;
             //memset(string0,0,16);  //clear
             //itoa(hits,string0);
             //wm_Update_TaskBar((char *)string0,FALSE);
             //wm_Update_TaskBar("hit",FALSE);
         }
+        */
+
+        // #test
+        // Testing the structure for world information.
+        // Restart distance using world limits
+
+        if (model->origin_z > current_world_3d->z_size)
+        {
+            model->origin_z = 0.8f;  // restart
+        }
+
+        /*
+        // Check the transformed z of one vertex (or all three)
+        if (triRotatedXYZ.p[0].z > current_world_3d->z_size ||
+            triRotatedXYZ.p[1].z > current_world_3d->z_size ||
+            triRotatedXYZ.p[2].z > current_world_3d->z_size)
+        {
+            model->origin_z = 0.8f;  // restart
+        }
+        */
+
 
         // Change the z values in the triangle,
         // based on the the new z model position.
@@ -603,28 +656,26 @@ static void __drawEnemy(struct humanoid_model_d *model, float vel)
         triRotatedXYZ.p[0].z =
             (float) (
             triRotatedXYZ.p[0].z + 
-            model->model_initial_distance + 
-            model->model_distance ); 
+            model->origin_z ); 
         triRotatedXYZ.p[1].z = 
             (float) (
             triRotatedXYZ.p[1].z + 
-            model->model_initial_distance +
-            model->model_distance );
+            model->origin_z );
         triRotatedXYZ.p[2].z = 
             (float) (
             triRotatedXYZ.p[2].z + 
-            model->model_initial_distance +
-            model->model_distance ); 
+            model->origin_z ); 
+
 
         // Translate in x.
         // left or right
 
         //triRotatedXYZ.p[0].x = 
-        //    (float) (triRotatedXYZ.p[0].x + model->hposition); 
+        //    (float) (triRotatedXYZ.p[0].x + model->origin_x); 
         //triRotatedXYZ.p[1].x = 
-        //    (float) (triRotatedXYZ.p[1].x + model->hposition); 
+        //    (float) (triRotatedXYZ.p[1].x + model->origin_x); 
         //triRotatedXYZ.p[2].x = 
-        //    (float) (triRotatedXYZ.p[2].x + model->hposition); 
+        //    (float) (triRotatedXYZ.p[2].x + model->origin_x); 
 
         // -x-------
         // Translate the triangle in x based in the terrain x position.
@@ -635,19 +686,19 @@ static void __drawEnemy(struct humanoid_model_d *model, float vel)
         if ( (void*) main_character != NULL )
         {
             triRotatedXYZ.p[0].x = 
-                (float) (triRotatedXYZ.p[0].x + main_character->hposition + model->hposition); 
+                (float) (triRotatedXYZ.p[0].x + main_character->origin_x + model->origin_x); 
             triRotatedXYZ.p[1].x = 
-                (float) (triRotatedXYZ.p[1].x + main_character->hposition + model->hposition); 
+                (float) (triRotatedXYZ.p[1].x + main_character->origin_x + model->origin_x); 
             triRotatedXYZ.p[2].x = 
-                (float) (triRotatedXYZ.p[2].x + main_character->hposition + model->hposition); 
+                (float) (triRotatedXYZ.p[2].x + main_character->origin_x + model->origin_x); 
         }
         */
             triRotatedXYZ.p[0].x = 
-                (float) (triRotatedXYZ.p[0].x + model->hposition); 
+                (float) (triRotatedXYZ.p[0].x + model->origin_x); 
             triRotatedXYZ.p[1].x = 
-                (float) (triRotatedXYZ.p[1].x + model->hposition); 
+                (float) (triRotatedXYZ.p[1].x + model->origin_x); 
             triRotatedXYZ.p[2].x = 
-                (float) (triRotatedXYZ.p[2].x + model->hposition); 
+                (float) (triRotatedXYZ.p[2].x + model->origin_x); 
 
         // -y-------
         // Translate the triangle in y based in the main_character y position.
@@ -659,19 +710,19 @@ static void __drawEnemy(struct humanoid_model_d *model, float vel)
         if ( (void*) main_character != NULL )
         {
             triRotatedXYZ.p[0].y = 
-                (float) (triRotatedXYZ.p[0].y + main_character->vposition + model->vposition); 
+                (float) (triRotatedXYZ.p[0].y + main_character->origin_y + model->origin_y); 
             triRotatedXYZ.p[1].y = 
-                (float) (triRotatedXYZ.p[1].y + main_character->vposition + model->vposition); 
+                (float) (triRotatedXYZ.p[1].y + main_character->origin_y + model->origin_y); 
             triRotatedXYZ.p[2].y = 
-                (float) (triRotatedXYZ.p[2].y + main_character->vposition + model->vposition); 
+                (float) (triRotatedXYZ.p[2].y + main_character->origin_y + model->origin_y); 
         }
         */
             triRotatedXYZ.p[0].y = 
-                (float) (triRotatedXYZ.p[0].y + model->vposition); 
+                (float) (triRotatedXYZ.p[0].y + model->origin_y); 
             triRotatedXYZ.p[1].y = 
-                (float) (triRotatedXYZ.p[1].y + model->vposition); 
+                (float) (triRotatedXYZ.p[1].y + model->origin_y); 
             triRotatedXYZ.p[2].y = 
-                (float) (triRotatedXYZ.p[2].y + model->vposition); 
+                (float) (triRotatedXYZ.p[2].y + model->origin_y); 
 
         // ----------------------------------------------------
         // backface culling:
@@ -796,6 +847,39 @@ static void __drawEnemy(struct humanoid_model_d *model, float vel)
     };  // loop: Number of triangles.
 }
 
+static void __drawMainCharacter(struct humanoid_model_d *model, float fElapsedTime)
+{
+    __drawHumanoidModel(
+        (struct humanoid_model_d *) model,
+        (float) fElapsedTime );
+}
+
+static void __drawEnemy00(struct humanoid_model_d *model, float fElapsedTime)
+{
+    if (!model) 
+        return;
+
+    __drawHumanoidModel(
+        (struct humanoid_model_d *) model,
+        (float) fElapsedTime );
+}
+
+static void __drawStaticModel(struct humanoid_model_d *model)
+{
+    if (!model) 
+        return;
+
+    //model->origin_z = 0.0f;
+
+    // Force no movement
+    //model->delta_z = 0.0f;
+
+    // Draw with the worker
+    __drawHumanoidModel(model, 0.0f);
+}
+
+
+
 // Control + arrow key
 // It moves a given model.
 // In: model id, direction, value.
@@ -816,19 +900,19 @@ void demoHumanoidMoveCharacter(int number, int direction, float value)
 // Move model
     // left
     if (direction == 1){
-        model->hposition = (float) (model->hposition - value); 
+        model->origin_x = (float) (model->origin_x - value); 
     }
     // right
     if (direction == 2){
-        model->hposition = (float) (model->hposition + value); 
+        model->origin_x = (float) (model->origin_x + value); 
     }
     // front
     if (direction == 3){
-        model->model_distance = (float) (model->model_distance + value); 
+        model->origin_z = (float) (model->origin_z + value); 
     }
     // back
     if (direction == 4){
-        model->model_distance = (float) (model->model_distance - value); 
+        model->origin_z = (float) (model->origin_z - value); 
     }
 
 /*
@@ -878,7 +962,22 @@ void demoHumanoidDrawScene(unsigned long sec)
 
 // Draw the main character
 // Humanoid number 0.
-    __drawMainCharacter(main_character,0.0f);
+    __drawMainCharacter(main_character, 0.0f);
+
+
+// Static scenery 
+    int i=0;
+    struct humanoid_model_d *s_model;
+    for (i = 0; i < STATIC_MODEL_MAX; i++) 
+    {
+        // Pick one
+        s_model = (struct humanoid_model_d*) static_models[i]; 
+        if (s_model != NULL) 
+        {
+            __drawStaticModel(s_model); 
+            //__drawHumanoidModel(s_model, 0.0f); 
+        } 
+    };
 
 // Draw all the enemies
 // 1~n humanoids.
@@ -910,17 +1009,53 @@ void demoHumanoidDrawScene(unsigned long sec)
         {
             enemy->t = (float) enemy->t + (float) sec * 0.1f;
             enemy->v = (float) enemy->t * enemy->a;  
-            
-            __drawEnemy( 
+
+            //__drawEnemy( 
+            //    (struct humanoid_model_d *) enemy,
+            //    (float) enemy->v );
+
+            __drawEnemy00( 
                 (struct humanoid_model_d *) enemy,
                 (float) enemy->v );
+
         }
 
         n++;
     };
+
+/*
+// Static buildings 
+    for (int i = 0; i < building_count; i++) { 
+        __drawHumanoidModel(building_models[i], fElapsedTime); 
+    }
+*/
+
 }
 
+void demoUpdate(void)
+{
+    int i=0;
+    struct humanoid_model_d *model;
 
+    // Update only static models
+    // Not the hero
+    for (i = 1; i < MODEL_MAX; i++) 
+    {
+        model = (struct humanoid_model_d *) models[i];
+        if (!model) continue;
+
+        // Apply deltas
+        model->origin_x += model->delta_x;
+        model->origin_y += model->delta_y;
+        model->origin_z += model->delta_z;
+
+        // Optional: reset if they go out of bounds
+        if (model->origin_z > current_world_3d->z_size) 
+        {
+            model->origin_z = DEFAULT_CUBE_INITIAL_Z_POSITION;
+        }
+    }
+}
 
 //
 // #
@@ -943,6 +1078,8 @@ void demoHumanoidSetup(void)
 
 // first cube
     struct humanoid_model_d *model;
+    struct humanoid_model_d *s_model;  // static model
+
 // Cube1
     register int i=0;
 
@@ -973,10 +1110,16 @@ void demoHumanoidSetup(void)
     for (i=0; i<MODEL_MAX; i++){
         models[i] = (unsigned long) 0;
     };
+    for (i=0; i<STATIC_MODEL_MAX; i++){
+        static_models[i] = (unsigned long) 0;
+    };
 
     int count=0;
     int rand1=0;
-    
+
+// ==========================================================
+// enemies
+
     for (count=0; count<MODEL_MAX; count++)
     {
         model = (void*) malloc( sizeof(struct humanoid_model_d) );
@@ -992,8 +1135,9 @@ void demoHumanoidSetup(void)
 
         model->fThetaAngle = (float) 0.0f;
                 
-        // Initialize vectors.
-        for (i=0; i<32; i++)
+        // Initialize vectors
+        //for (i=0; i<32; i++)
+        for (i=0; i<128; i++)
         {
             model->vecs[i].x = (float) 0.0f;
             model->vecs[i].y = (float) 0.0f;
@@ -1122,16 +1266,16 @@ void demoHumanoidSetup(void)
         int it=0;
 
         // Head (faces 0–11)
-        for (it=0; it<12; it++) model->colors[it] = COLOR_RED;
+        for (it=0; it<12; it++) model->colors[it] = 0xFFB6B6; //COLOR_RED;
 
         // Torso (faces 12–23)
-        for (it=12; it<24; it++) model->colors[it] = COLOR_GREEN;
+        for (it=12; it<24; it++) model->colors[it] = 0xCBAACB; //COLOR_GREEN;
 
         // Left leg (faces 24–35)
-        for (it=24; it<36; it++) model->colors[it] = COLOR_BLUE;
+        for (it=24; it<36; it++) model->colors[it] = 0xFFD8B1; //COLOR_BLUE;
 
         // Right leg (faces 36–47)
-        for (it=36; it<48; it++) model->colors[it] = COLOR_BLUE;
+        for (it=36; it<48; it++) model->colors[it] = 0xFFD8B1; //COLOR_BLUE;
 
         // more 2 models is too much for a file with 1KB limitation.
 
@@ -1141,25 +1285,17 @@ void demoHumanoidSetup(void)
         // Right arm (faces 60–71) (Not implemented)
         for (it=60; it<72; it++) model->colors[it] = COLOR_PURPLE;
 
+    
+        model->origin_x = 
+            (float) -3.0f + (float) 0.8f * (float) count; // spread across X axis
+        model->origin_y = (float) 0.0f;
+        model->origin_z = (float) DEFAULT_CUBE_INITIAL_Z_POSITION; 
 
-        // All the models.
-        model->model_initial_distance = 
-            (float) DEFAULT_CUBE_INITIAL_Z_POSITION;
-            //(float) 8.0f;
-        model->model_distance = (float) 0.0f;
-        model->model_distance_delta = 
-            (float) DEFAULT_CUBE_INITIAL_DELTA_Z;
-            //(float) 0.00005f;
+        // Translations ...
+        model->delta_x = (float) 0.0f; 
+        model->delta_y = (float) 0.0f; 
+        model->delta_z = (float) DEFAULT_CUBE_INITIAL_DELTA_Z + 1.0f;
 
-        // left or right
-        //srand(count);
-        //rand1 = (rand() % 25);
-        //model->hposition = (float) 0.0f;
-        model->hposition = (float) -2.0f + (float) 0.8f * (float) count;
-        //model->hposition = (float) -1.5f + (float) 0.4f * (float) rand1;
-        //model->hposition = (float) 0.0f;
-
-        model->vposition = (float) 0.0f;
         
         // Initializing.
         // Cada cubo tem uma aceleração diferente.
@@ -1174,28 +1310,218 @@ void demoHumanoidSetup(void)
         models[count] = (unsigned long) model;
     };
 
-// Terrain
-// Special values for the terrain.
+// =======================================================================
+// Static models
+
+    for (count=0; count<STATIC_MODEL_MAX; count++)
+    {
+        s_model = (void*) malloc( sizeof(struct humanoid_model_d) );
+        if ((void*) s_model == NULL){
+            printf("demoHumanoidSetup: s_model\n");
+            exit(1);
+        }
+
+        // Create terrain
+        //if (count == 0){
+        //    main_character = (struct humanoid_model_d *) s_model;
+        //}
+
+
+        s_model->fThetaAngle = (float) 0.0f;
+       
+        // Initialize vectors
+        //for (i=0; i<32; i++)
+        for (i=0; i<128; i++)
+        {
+            s_model->vecs[i].x = (float) 0.0f;
+            s_model->vecs[i].y = (float) 0.0f;
+            s_model->vecs[i].z = (float) 0.0f;
+        };
+
+    
+        // -- Test -----------------------------------------------------
+        struct obj_element_d elem;
+        //struct gr_vecF3D_d vertex;
+        // Multi-line string containing vertex data.
+        //const char *cubeData = "v 1.0 2.0 3.0 \n v 4.0 5.0 6.0 \n v 7.0 8.0 9.0 \n";
+        
+        /*
+        // Original
+        const char *cubeData =
+            "v -0.2 -0.2  0.2\n"
+            "v  0.2 -0.2  0.2\n"
+            "v -0.2  0.2  0.2\n"
+            "v  0.2  0.2  0.2\n"
+            "v -0.2  0.2 -0.2\n"
+            "v  0.2  0.2 -0.2\n"
+            "v -0.2 -0.2 -0.2\n"
+            "v  0.2 -0.2 -0.2\n";
+        */
+
+        /*
+        // "tapered" or truncated-pyramid shape using eight vertices.
+        // Same Vertex Count & Order. Different Geometry.
+        const char *cubeData =
+            "v -0.3 -0.2 0.3\n"   // Vertex 1: bottom front left (expanded base)
+            "v 0.3 -0.2 0.3\n"    // Vertex 2: bottom front right (expanded base)
+            "v -0.1 0.2 0.2\n"    // Vertex 3: top front left (contracted top)
+            "v 0.1 0.2 0.2\n"     // Vertex 4: top front right (contracted top)
+            "v -0.1 0.2 -0.2\n"   // Vertex 5: top back left (contracted top)
+            "v 0.1 0.2 -0.2\n"    // Vertex 6: top back right (contracted top)
+            "v -0.3 -0.2 -0.3\n"  // Vertex 7: bottom back left (expanded base)
+            "v 0.3 -0.2 -0.3\n";  // Vertex 8: bottom back right (expanded base)
+        */
+
+        //const char *cubeData = (char *) demosReadFileIntoBuffer("cube.txt");
+        //const char *cubeData = (char *) demosReadFileIntoBuffer("cube02.txt");
+        //const char *cubeData = (char *) demosReadFileIntoBuffer("cube03.txt");
+        //const char *cubeData = (char *) demosReadFileIntoBuffer("obj00.txt");
+        //const char *cubeData = (char *) demosReadFileIntoBuffer("obj01.txt");
+        //const char *cubeData = (char *) demosReadFileIntoBuffer("obj02.txt");
+        const char *cubeData = (char *) demosReadFileIntoBuffer("obj02.txt");
+        // ...
+        if ((void*)cubeData == NULL){
+            printf("on demosReadFileIntoBuffer()\n");
+            exit(0);
+        }
+        const char *nextLine = cubeData;
+
+        int VertexCounter = 1; 
+        int FaceCounter = 1;
+        do {
+            //if (VertexCounter > 8)
+                //break;
+            const char *temp = 
+                scan00_read_element_from_line(
+                    nextLine, 
+                    (struct obj_element_d *) &elem );
+            // Process (print) the current vertex.
+            //printf("Parsed Vertex: x = %f, y = %f, z = %f\n",
+                //vertex.x, vertex.y, vertex.z);
+            
+            // Populate
+            if (elem.initialized == TRUE)
+            {
+                if (elem.type == OBJ_ELEMENT_TYPE_VECTOR)
+                {
+                    s_model->vecs[VertexCounter].x = (float) elem.vertex.x;
+                    s_model->vecs[VertexCounter].y = (float) elem.vertex.y;
+                    s_model->vecs[VertexCounter].z = (float) elem.vertex.z;
+                    VertexCounter++;
+                }
+                else if (elem.type == OBJ_ELEMENT_TYPE_FACE)
+                {
+                    s_model->faces[FaceCounter].vi[0] = elem.face.vi[0];
+                    s_model->faces[FaceCounter].vi[1] = elem.face.vi[1];
+                    s_model->faces[FaceCounter].vi[2] = elem.face.vi[2];
+                    //model->face_count++; //#bugbug: It was naver initialized.
+                    FaceCounter++;
+                }
+                // ...
+            }
+
+            nextLine = temp;
+
+        } while (nextLine != NULL);
+
+        // Register totals at the end
+        s_model->vertex_count = VertexCounter - 1; // subtract wasted slot
+        s_model->face_count = FaceCounter - 1;
+
+        //printf ("v: %d  f: %d\n", model->vertex_count, model->face_count );
+        //refresh_screen();
+        //while(1){}
+
+        /*
+        int it=0;
+        //for (it=0; it<FaceCounter; it++)
+        for (it=1; it<(16+1); it++)
+        {
+            printf ("f: %d %d %d \n",
+                model->faces[it].vi[0], 
+                model->faces[it].vi[1], 
+                model->faces[it].vi[2] );
+        }
+        printf ("break point\n");
+        refresh_screen();
+        while(1){}
+        */
+        // -------------------------------------------------------
+
+        // The model for a regular model.
+        // #todo: >> Load this from a file.
+        // #todo: Maybe import these values from an array.
+        // see: arrayFakeFile[]
+
+        // Here we're creating the vectors for our model.
+        // During the drawing phase we're gonna select vectors to create the triangles.
+        // We have two triangles per surface,
+
+        int it=0;
+
+        // Head (faces 0–11)
+        for (it=0; it<12; it++) s_model->colors[it] = 0xC1E1C1; //COLOR_RED;
+
+        // Torso (faces 12–23)
+        for (it=12; it<24; it++) s_model->colors[it] = 0xF5F5DC; //COLOR_GREEN;
+
+        // Left leg (faces 24–35)
+        for (it=24; it<36; it++) s_model->colors[it] = 0xD3D3D3; //COLOR_BLUE;
+
+        // Right leg (faces 36–47)
+        for (it=36; it<48; it++) s_model->colors[it] = 0xD3D3D3; //COLOR_BLUE;
+
+        // more 2 models is too much for a file with 1KB limitation.
+
+        // Left arm (faces 48–59) (Not implemented)
+        for (it=48; it<60; it++) s_model->colors[it] = COLOR_ORANGE;
+
+        // Right arm (faces 60–71) (Not implemented)
+        for (it=60; it<72; it++) s_model->colors[it] = COLOR_PURPLE;
+
+        s_model->origin_x = 
+            (float) -3.0f + (float) 0.8f * (float) count; // spread across X axis
+        s_model->origin_y = (float) -1.2f;
+        s_model->origin_z = 
+            (float) DEFAULT_CUBE_INITIAL_Z_POSITION + (8.0f * count); 
+
+        // Translations ...
+        s_model->delta_x = (float) 0.0f;
+        s_model->delta_y = (float) 0.0f;
+        s_model->delta_z = (float) 0.0f; 
+
+        // Initializing.
+        // Cada cubo tem uma aceleração diferente.
+        // Então, com o passar do tempo,
+        // cada cubo tera um incremento diferente na sua velocidade.
+        s_model->v = (float) count * 0.00001f;
+        s_model->t = (float) 1.0f;
+        s_model->a = (float) s_model->v / s_model->t;
+        // v = a*t;
+
+        // Save the model pointer.
+        static_models[count] = (unsigned long) s_model;
+    };
+
+
+// ========================================================================
+// Hero
+// Special values for the hero.
     if ( (void*) main_character != NULL )
     {
-
-        //main_character->colors[0] = COLOR_BLUE;
-        //main_character->colors[1] = COLOR_BLUE;
-        //main_character->colors[2] = COLOR_BLUE;
-
         int iter=0;
 
         // Head (faces 0–11)
-        for (iter=0; iter<12; iter++) main_character->colors[iter] = COLOR_BLUE;
+        for (iter=0; iter<12; iter++) main_character->colors[iter] = 0xA7C7E7; //COLOR_BLUE;
 
         // Torso (faces 12–23)
-        for (iter=12; iter<24; iter++) main_character->colors[iter] = COLOR_PINK;
+        for (iter=12; iter<24; iter++) main_character->colors[iter] = 0xFFFACD; //COLOR_PINK;
 
         // Left leg (faces 24–35)
-        for (iter=24; iter<36; iter++) main_character->colors[iter] = COLOR_PURPLE;
+        for (iter=24; iter<36; iter++) main_character->colors[iter] = 0xFFD1DC; //COLOR_PURPLE;
 
         // Right leg (faces 36–47)
-        for (iter=36; iter<48; iter++) main_character->colors[iter] = COLOR_PURPLE;
+        for (iter=36; iter<48; iter++) main_character->colors[iter] = 0xFFD1DC; //COLOR_PURPLE;
 
         // more 2 models is too much for a file with 1KB limitation.
 
@@ -1206,18 +1532,14 @@ void demoHumanoidSetup(void)
         for (iter=60; iter<72; iter++) main_character->colors[iter] = COLOR_PURPLE;
 
 
-        // All the models.
-        main_character->model_initial_distance = 
-            (float) DEFAULT_CUBE_INITIAL_Z_POSITION;
-            //(float) 8.0f;
-        main_character->model_distance = (float) 0.0f;
-        main_character->model_distance_delta = 
-            (float) DEFAULT_CUBE_INITIAL_DELTA_Z;
-            //(float) 0.00005f;
+        main_character->origin_x = (float)  0.0f;  // center horizontally
+        main_character->origin_y = (float) -3.0f;  // slightly lower (ground level)
+        main_character->origin_z = (float) (float) DEFAULT_CUBE_INITIAL_Z_POSITION + 1.0f;  // visible depth
 
-
-        main_character->hposition = (float)  0.0f;
-        main_character->vposition = (float) -3.0f; //slightly lower
+        // Translations
+        main_character->delta_x = (float) 0.0f;
+        main_character->delta_y = (float) 0.0f;
+        main_character->delta_z = (float) DEFAULT_CUBE_INITIAL_DELTA_Z;
 
         // Initializing.
         // Cada cubo tem uma aceleração diferente.
@@ -1234,5 +1556,21 @@ void demoHumanoidSetup(void)
     //demoClearWA(COLOR_BLACK);
     //wm_Update_TaskBar("Hello",TRUE);
     game_update_taskbar = FALSE;
+
+
+//
+// World
+//
+
+    if ((void *) current_world_3d == NULL)
+    {
+        printf("current_world_3d\n");
+        exit(0);
+    }
+    if (current_world_3d->magic != 1234)
+    {
+        printf("current_world_3d magic\n");
+        exit(0);
+    }
 }
 

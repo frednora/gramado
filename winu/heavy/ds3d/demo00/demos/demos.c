@@ -32,7 +32,7 @@ int demos_on_combination(int msg_code)
 {
     int char_id = 0;  // Target char
     int direction = 0;
-    float value = 0.2f;  //0.08f;
+    float value = 0.4f;  //0.2f;  //0.08f;
 
     // #todo
     // Return is the demo is not running

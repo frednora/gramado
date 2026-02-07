@@ -12,6 +12,9 @@ void demoHumanoidMoveCharacter(int number, int direction, float value);
 // This is called by the gameloop.
 void demoHumanoidDrawScene(unsigned long sec);
 
+
+void demoUpdate(void);
+
 //
 // #
 // INITIALIZATION
