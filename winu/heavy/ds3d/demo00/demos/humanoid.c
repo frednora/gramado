@@ -278,18 +278,11 @@ static void __drawHumanoidModel(struct humanoid_model_d *model, float fElapsedTi
         */
 
         triRotatedXYZ.p[0].z =
-            (float) (
-            triRotatedXYZ.p[0].z + 
-            model->origin_z ); 
+            (float) ( triRotatedXYZ.p[0].z + model->origin_z ); 
         triRotatedXYZ.p[1].z = 
-            (float) (
-            triRotatedXYZ.p[1].z + 
-            model->origin_z ); 
-
+            (float) ( triRotatedXYZ.p[1].z + model->origin_z ); 
         triRotatedXYZ.p[2].z = 
-            (float) (
-            triRotatedXYZ.p[2].z + 
-            model->origin_z ); 
+            (float) ( triRotatedXYZ.p[2].z + model->origin_z ); 
 
         // Translate in x.
         // left or right
@@ -1321,16 +1314,9 @@ void demoHumanoidSetup(void)
             exit(1);
         }
 
-        // Create terrain
-        //if (count == 0){
-        //    main_character = (struct humanoid_model_d *) s_model;
-        //}
-
-
         s_model->fThetaAngle = (float) 0.0f;
        
         // Initialize vectors
-        //for (i=0; i<32; i++)
         for (i=0; i<128; i++)
         {
             s_model->vecs[i].x = (float) 0.0f;
@@ -1482,8 +1468,9 @@ void demoHumanoidSetup(void)
         s_model->origin_x = 
             (float) -3.0f + (float) 0.8f * (float) count; // spread across X axis
         s_model->origin_y = (float) -1.2f;
+        float factor = (float) count;
         s_model->origin_z = 
-            (float) DEFAULT_CUBE_INITIAL_Z_POSITION + (8.0f * count); 
+            (float) DEFAULT_CUBE_INITIAL_Z_POSITION + (8.0f * factor); 
 
         // Translations ...
         s_model->delta_x = (float) 0.0f;

@@ -187,12 +187,23 @@ const char *scan00_read_element_from_line(
     const char *line_ptr, 
     struct obj_element_d *elem )
 {
+
+// #bugbug
+// The parser cant handle comments. It fails.
+// Do not use comments for now!
+
+// But there is still a small problem: 
+// this code only skips the comment if the line 
+// starts with # right after whitespace.
+
+
     // 'ptr' will traverse the string.
     const char *ptr = line_ptr;
 
     if ((void*) elem == NULL)
         return NULL;
     elem->initialized = FALSE;
+
 
     // Skip any whitespace before the identifier.
     while (*ptr && isspace((unsigned char)*ptr))
@@ -204,8 +215,38 @@ const char *scan00_read_element_from_line(
 
 
 // =======================================
+// Skip comments and empty lines
+
+/*
+    while (*ptr && (isspace((unsigned char)*ptr) || *ptr == '#'))
+    {
+        if (*ptr == '#')
+        {
+            // Skip until end of line
+            while (*ptr && *ptr != '\n')
+                ptr++;
+        }
+        else
+        {
+            // Skip whitespace
+            ptr++;
+        }
+    }
+
+    if (*ptr == '\0' || *ptr == '\n')
+    {
+        // End of string or just newline → move to next line if possible
+        if (*ptr == '\n') ptr++;
+        return (*ptr != '\0') ? ptr : NULL;
+    }
+*/
+
+
+// =======================================
 // Handle comment lines ("#")
 // When the line starts with comment
+/*
+    // #wrong
     if (*ptr == '#')
     {
         // Skip until end of line
@@ -219,7 +260,7 @@ const char *scan00_read_element_from_line(
         // Comments are ignored, return pointer to next line
         return ptr;
     }
-
+*/
 
 // =======================================
 // Handle vertex lines ("v")
