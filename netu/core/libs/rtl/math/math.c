@@ -10,25 +10,36 @@
 
 // See:
 // https://man7.org/linux/man-pages/man3/log.3.html
-double log(double x)
+double log(double x) 
 {
-    return (double) 0.0;
+    double ret;
+    const double ln2 = 0.69314718055994530942; // ln(2)
+    asm volatile (
+        "fld1 \n"        // push 1.0
+        "fldl %1 \n"     // push x
+        "fyl2x \n"       // compute log2(x)
+        "fldl %2 \n"     // push ln(2)
+        "fmulp \n"       // multiply log2(x) * ln(2)
+        : "=t"(ret)
+        : "m"(x), "m"(ln2)
+    );
+    return ret;
 }
-float logf(float x)
-{
-    return (float) 0.0f;
+float logf(float x){
+    return (float)log((double)x);
 }
 
+double fabs(double x) 
+{
+    double ret;
+    asm("fabs" : "=t"(ret) : "0"(x));
 
-double fabs(double x)
-{
-    return (double) 0.0;
-}
-float fabsf(float x)
-{
-    return (float) 0.0f;
+    return (double) ret;
 }
 
+float fabsf(float x){
+    return (float) fabs((double)x);
+}
 
 // see:
 // https://linux.die.net/man/3/fmin
@@ -55,17 +66,22 @@ float fmaxf(float x, float y)
 
 // See:
 // https://linux.die.net/man/3/modf
-double modf(double x, double *iptr)
+double modf(double x, double *iptr) 
 {
-    return (double) 0.0;
+    long long i = (long long)x;   // truncate
+    *iptr = (double) i;
+
+    return (double) (x - *iptr);
 }
 
 // See:
 // https://linux.die.net/man/3/modf
-float modff(float x, float *iptr)
-{
-    return (double) 0.0f;
+float modff(float x, float *iptr) {
+    int i = (int)x;   // truncate
+    *iptr = (float)i;
+    return x - *iptr;
 }
+
 
 //
 // sin, cos, tan
@@ -74,15 +90,20 @@ float modff(float x, float *iptr)
 
 double sin(double __x)
 {
-    return 0;
+    double ret;
+    asm("fsin" : "=t"(ret) : "0"(__x));
+    return ret;
 }
 double cos(double __x)
 {
-    return 0;
+    double ret;
+    asm("fcos" : "=t"(ret) : "0"(__x));
+    return ret;
 }
-double tan(double __x)
-{
-	return (double) ( sin(__x) / cos(__x) );
+double tan(double __x) {
+    double ret;
+    asm("fptan\n" : "=t"(ret) : "0"(__x) : "st(1)");
+    return ret;
 }
 
 //------------------------------
@@ -117,19 +138,31 @@ double cossec00(double x)
 //
 
 // Returns the arcsine of x.
+// Returns the arcsine of x using atan identity.
 double asin(double __x)
 {
-    return 0;
+    // asin(x) = atan(__x / sqrt(1 - __x*__x))
+    return atan(__x / sqrt(1.0 - __x * __x));
 }
 // Returns the arccosine of x.
+// Returns the arccosine of x using atan identity.
 double acos(double __x)
 {
-    return 0;
+    if (__x == 1.0) {
+        return 0.0;  // arccos(1) = 0
+    }
+    if (__x == -1.0) {
+        return GRAMADO_PI;  // arccos(-1) = π
+    }
+
+    return atan( sqrt(1.0 - __x * __x) / __x );
 }
 // Returns the arctangent of x.
 double atan(double __x)
 {
-    return 0;
+    double ret;
+    asm("fld1\n" "fldl %1\n" "fpatan\n" : "=t"(ret) : "m"(__x));
+    return ret;
 }
 
 
@@ -137,20 +170,21 @@ double atan(double __x)
 // integer value which is 
 // less than or equal to given number.
 // (rounds down the given number.)
-double floor(double __x)
+double floor(double __x) 
 {
-    return 0;
+    long long i = (long long)__x;
+    return (__x < i) ? (double)(i - 1) : (double)i;
 }
 
 // It returns the 
 // smallest integer value 
 // greater than or equal to x. 
 // (rounds up the given number.)
-double ceil(double __x)
+double ceil(double __x) 
 {
-    return 0;
+    long long i = (long long) __x;
+    return (__x > i) ? (double)(i + 1) : (double)i;
 }
-
 
 // #todo
 // x to power of y
@@ -158,20 +192,20 @@ double pow(double __x, double __y)
 {
     double RetValue = 0.0;
     asm volatile (
-        "fyl2x;"
-        "fld %%st;"
-        "frndint;"
-        "fsub %%st, %%st(1);"
-        "fxch;"
-        "fchs;"
-        "f2xm1;"
-        "fld1;"
-        "faddp;"
-        "fxch;"
-        "fld1;"
-        "fscale;"
-        "fstp %%st(1);"
-        "fmulp;" : "=t"(RetValue) : "0"(__x),"u"(__y) : "st(1)" );
+        "fyl2x \n"
+        "fld %%st \n"
+        "frndint \n"
+        "fsub %%st, %%st(1) \n"
+        "fxch \n"
+        "fchs \n"
+        "f2xm1 \n"
+        "fld1 \n"
+        "faddp \n"
+        "fxch \n"
+        "fld1 \n"
+        "fscale \n"
+        "fstp %%st(1) \n"
+        "fmulp \n" : "=t"(RetValue) : "0"(__x),"u"(__y) : "st(1)" );
 
     return (double) RetValue;
 }
@@ -187,15 +221,14 @@ double sqrt(double __x)
     double Value=0;
 
     asm volatile (
-        "finit;"
-        "fldl %1;"  // st(0) => st(1), st(0) = x. FLDL means load double float
-        "fsqrt;"    // st(0) = square root st(0)
+        "finit \n"
+        "fldl %1 \n"  // st(0) => st(1), st(0) = x. FLDL means load double float
+        "fsqrt \n"    // st(0) = square root st(0)
         : "=t"(Value) 
         : "m"(__x) );
 //OUT:
     return (double) Value;
 }
-
  
 // -----------------------------
 
@@ -314,7 +347,7 @@ double pow00(double x, double y)
 
 double exp(double x)
 {
-	return (double) pow(GRAMADO_E, x);
+    return (double) pow(GRAMADO_E, x);
 }
 
 // -------------------------------
@@ -377,7 +410,6 @@ float cossecf00(float x)
 }
 
 
-
 // #test
 float neutral_element_of_add(void)
 {
@@ -390,4 +422,49 @@ float neutral_element_of_mul(void)
 {
     float ret = 1.0f;
     return (float) ret;
+}
+
+/*
+ * double_ne - Compare two double-precision floating point numbers.
+ *
+ * Parameters:
+ *   n1 - first double value
+ *   n2 - second double value
+ *
+ * Returns:
+ *   1 if the two numbers are NOT equal
+ *   0 if the two numbers are equal
+ *
+ * Notes:
+ *   In C, the '!=' operator returns 1 (true) if the values differ,
+ *   and 0 (false) if they are equal. We explicitly return that result
+ *   as an int to make the function portable and predictable.
+ */
+int double_ne(double n1, double n2) 
+{
+    return (int) (n1 != n2);
+}
+
+/*
+ * isnan - Check if a double-precision floating point value is NaN.
+ *
+ * Parameters:
+ *   n - the double value to test
+ *
+ * Returns:
+ *   1 if the value is NaN (Not a Number)
+ *   0 if the value is a valid number (including +inf or -inf)
+ *
+ * Notes:
+ *   According to the IEEE 754 floating-point standard:
+ *     - NaN is the ONLY value that is not equal to itself.
+ *     - For all other values (finite numbers, +inf, -inf),
+ *       the comparison (n == n) is true.
+ *
+ *   Therefore, we can detect NaN by checking if (n != n).
+ *   If true, then 'n' must be NaN.
+ */
+int isnan(double n)
+{
+    return (int) (n != n);
 }
