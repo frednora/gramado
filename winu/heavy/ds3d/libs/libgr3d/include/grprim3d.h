@@ -60,12 +60,17 @@ struct gr_rectangleF3D_d
 };
 
 
-// Matrix structure using float.
-struct gr_mat4x4_d
-{
-    // Not initialized.
+
+struct gr_mat2x2_d {
+    float m[2][2];
+};
+struct gr_mat3x3_d {
+    float m[3][3];
+};
+struct gr_mat4x4_d {
     float m[4][4];
 };
+
 
 /*
 struct gr_vecF4D_d {

@@ -50,15 +50,6 @@ gr_rotate_z(
 
 int grInit(void);
 
-//
-// projection
-//
-
-//extern struct gr_mat4x4_d matProj;
-
-
-
-
 void 
 gwsViewport(
     int topleft_x, 
