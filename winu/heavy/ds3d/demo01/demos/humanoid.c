@@ -828,6 +828,20 @@ static void __drawEnemy(struct humanoid_model_d *model, float vel)
                     fFillTriangle,
                     0 );
 
+
+                /*
+                // #test: Not working yet
+                struct gr_vecF3D_d testv;
+                testv.x = 1.0f;
+                testv.y = 1.0f;
+                testv.z = 5.0f;
+                testv.color = COLOR_RED;
+                plotPixelF(
+                    (struct gws_window_d *) __root_window,
+                    (struct gr_vecF3D_d*) &testv,
+                    0 );
+                */
+
             }
         }
 

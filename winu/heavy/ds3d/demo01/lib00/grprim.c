@@ -2391,6 +2391,14 @@ plotPixelF(
         scale_factor = (float) 2.00f;
     }
 
+    
+    if (vec->z != 0.0f)
+    {
+        vec->z = (float) (vec->z * scale_factor);
+        vec->x = (float) (vec->x / vec->z);
+        vec->y = (float) (vec->y / vec->z);
+    }
+
     // Ex: (0.5 * 0.75 * 0.5 * 800) = 150
     // Ex: (0.5 * 0.75 * 0.5 * 600) = 112.5
     long x0 = (long) (vec->x *ar * scale_factor * (float) window_width);
@@ -2399,6 +2407,7 @@ plotPixelF(
     //long y1 = (long) (t->p[1].y     * scale_factor * (float) window_height);
     //long x2 = (long) (t->p[2].x *ar * scale_factor * (float) window_width);
     //long y2 = (long) (t->p[2].y     * scale_factor * (float) window_height);
+    //long z0=0;
 
 // Final rectangle. Using 'int'.
 // Considerando o hotspot no centro,
@@ -2407,7 +2416,7 @@ plotPixelF(
 
     int final_x = (int) (x0 & 0xFFFFFFFF);
     int final_y = (int) (y0 & 0xFFFFFFFF);
-    //int final_z = (int) 0;
+    int final_z = (int) 0;
     unsigned int final_color = (unsigned int) vec->color;
 
     //final_triangle.p[0].x = (int) ( x0 & 0xFFFFFFFF);
@@ -2451,6 +2460,7 @@ plotPixelF(
     //                   HotSpotX, HotSpotY, 0 );
     //}
 
+/*
 // Plot 2d pixel usiing top/left 0:0.
 // IN: color, x, y, rop.
     grPlot2D( 
@@ -2458,14 +2468,13 @@ plotPixelF(
         (int) final_x, 
         (int) final_y, 
         (unsigned long) rop );
+*/
 
+// Delegate to the integer worker 
 // Return pixel counter.
-    //return (int) npixels;
-    return 1;
+    return (int) grPlot0(window, final_z, final_x, final_y, final_color, rop);
 }
 //------------------
-
-
 
 // Polyline
 // O segundo ponto da linha 
