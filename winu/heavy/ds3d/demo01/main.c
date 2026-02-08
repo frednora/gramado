@@ -3736,18 +3736,33 @@ static int on_execute(void)
     //demoTriangle();
     //while(1){}
 
+
+    // Initialize the game state.
+    // See: globals.h
+    gamestate = GS_LEVEL;
+
+    switch (gamestate)
+    {
+        case GS_LEVEL:
+            ShowDemo = TRUE;
+            break;
+        //... 
+    };
+
     // ==============================================
     // >>> Setup the current demo
     // see: demos.c
-    if (ShowDemo)
+    // Each demos has its own file.
+    if (ShowDemo == TRUE)
     {
-        demoFlyingCubeSetup();
+        demoHumanoidSetup();
         //cat00SetupDemo();
         //tri00SetupDemo();
         //curve00SetupDemo();
         // ...
     }
 
+    // input > update > render > sleep
     while (running == TRUE){
         gBeginTick = (unsigned long) rtl_jiffies();
         if (IsTimeToQuit == TRUE){ break; }
@@ -3800,8 +3815,8 @@ static int on_execute(void)
 
             // -------------------------
             // Clear canvas.
-            //demoClearWA(COLOR_BLACK);               //clear surface
-            gramado_clear_surface(NULL,COLOR_BLACK);  //clear surface
+            //demoClearWA(COLOR_BLACK);            //clear surface
+            gramado_clear_surface(NULL,0xF8F6F2);  //clear surface
 
             // Draw desktop?
             // Draw, but do not refresh.
@@ -3810,11 +3825,12 @@ static int on_execute(void)
                 wm_update_desktop(TRUE,FALSE);
             }
 
+            demoUpdate();
+
             // ===================================
             // Draw the scene for the current demo
             // IN: draw terrain, second counter
-            demoFlyingCube(FALSE,sec);
-            //demoFlyingCube(TRUE,sec);
+            demoHumanoidDrawScene(sec);
             //demoCat();
             //demoTriangle();
             //demoCurve();
@@ -3855,7 +3871,7 @@ static int on_execute(void)
             // Flush the backbuffer into the framebuffer.
             gramado_flush_surface(NULL);
 
-
+            /*
             // Wait or not?
             if (end_jiffie > gBeginTick)
             {   
@@ -3872,7 +3888,27 @@ static int on_execute(void)
                     }
                 }
             }
+            */
         }
+
+        // Wait or not?
+        // (the sleep logic) 
+        if (end_jiffie > gBeginTick)
+        {   
+            // 60 times per second.
+            if (delta_jiffie < 16)
+            {
+                // #test
+                // This function is still in test phase.
+                if (UseSleep == TRUE)
+                {
+                    rtl_sleep(16 - delta_jiffie);
+                        // Add the time we were waiting.
+                    accumulatedDeltaTick += (16 - delta_jiffie);
+                }
+            }
+        }
+
     };  // while ends
 
 // =======================================
@@ -3909,6 +3945,8 @@ fail:
 int main(int argc, char **argv)
 {
     int Status = -1;
+
+    gamestate = GS_NULL;
 
 // #todo
 // Parse the parameters and select the flags.

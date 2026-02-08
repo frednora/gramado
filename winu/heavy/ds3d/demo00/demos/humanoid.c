@@ -180,45 +180,45 @@ static void __drawHumanoidModel(struct humanoid_model_d *model, float fElapsedTi
 
         //-----------------------------    
         // Rotate in X-Axis
-        gr_MultiplyMatrixVector(
+        gr_MultiplyAndProjectVector(
             (struct gr_vecF3D_d *) &tri.p[0], 
             (struct gr_vecF3D_d *) &triRotatedX.p[0], 
             (struct gr_mat4x4_d *) &matRotX);
-        gr_MultiplyMatrixVector(
+        gr_MultiplyAndProjectVector(
             (struct gr_vecF3D_d *) &tri.p[1], 
             (struct gr_vecF3D_d *) &triRotatedX.p[1], 
             (struct gr_mat4x4_d *) &matRotX);
-        gr_MultiplyMatrixVector(
+        gr_MultiplyAndProjectVector(
             (struct gr_vecF3D_d *) &tri.p[2], 
             (struct gr_vecF3D_d *) &triRotatedX.p[2], 
             (struct gr_mat4x4_d *) &matRotX);
 
         //-----------------------------    
         // Rotate in Y-Axis
-        gr_MultiplyMatrixVector(
+        gr_MultiplyAndProjectVector(
             (struct gr_vecF3D_d *) &triRotatedX.p[0], 
             (struct gr_vecF3D_d *) &triRotatedXY.p[0], 
             (struct gr_mat4x4_d *) &matRotY);
-        gr_MultiplyMatrixVector(
+        gr_MultiplyAndProjectVector(
             (struct gr_vecF3D_d *) &triRotatedX.p[1], 
             (struct gr_vecF3D_d *) &triRotatedXY.p[1], 
             (struct gr_mat4x4_d *) &matRotY);
-        gr_MultiplyMatrixVector(
+        gr_MultiplyAndProjectVector(
             (struct gr_vecF3D_d *) &triRotatedX.p[2], 
             (struct gr_vecF3D_d *) &triRotatedXY.p[2], 
             (struct gr_mat4x4_d *) &matRotY);
 
         //-----------------------------    
         // Rotate in Z-Axis
-        gr_MultiplyMatrixVector(
+        gr_MultiplyAndProjectVector(
             (struct gr_vecF3D_d *) &triRotatedXY.p[0], 
             (struct gr_vecF3D_d *) &triRotatedXYZ.p[0], 
             (struct gr_mat4x4_d *) &matRotZ);
-        gr_MultiplyMatrixVector(
+        gr_MultiplyAndProjectVector(
             (struct gr_vecF3D_d *) &triRotatedXY.p[1], 
             (struct gr_vecF3D_d *) &triRotatedXYZ.p[1], 
             (struct gr_mat4x4_d *) &matRotZ);
-        gr_MultiplyMatrixVector(
+        gr_MultiplyAndProjectVector(
             (struct gr_vecF3D_d *) &triRotatedXY.p[2], 
             (struct gr_vecF3D_d *) &triRotatedXYZ.p[2], 
             (struct gr_mat4x4_d *) &matRotZ);
@@ -547,45 +547,45 @@ static void __drawEnemy(struct humanoid_model_d *model, float vel)
 
         //-----------------------------
         // Rotate in X-Axis
-        gr_MultiplyMatrixVector(
+        gr_MultiplyAndProjectVector(
             (struct gr_vecF3D_d *) &tri.p[0], 
             (struct gr_vecF3D_d *) &triRotatedX.p[0], 
             (struct gr_mat4x4_d *) &matRotX);
-        gr_MultiplyMatrixVector(
+        gr_MultiplyAndProjectVector(
             (struct gr_vecF3D_d *) &tri.p[1], 
             (struct gr_vecF3D_d *) &triRotatedX.p[1], 
             (struct gr_mat4x4_d *) &matRotX);
-        gr_MultiplyMatrixVector(
+        gr_MultiplyAndProjectVector(
             (struct gr_vecF3D_d *) &tri.p[2], 
             (struct gr_vecF3D_d *) &triRotatedX.p[2], 
             (struct gr_mat4x4_d *) &matRotX);
 
         //-----------------------------
         // Rotate in Y-Axis
-        gr_MultiplyMatrixVector(
+        gr_MultiplyAndProjectVector(
             (struct gr_vecF3D_d *) &triRotatedX.p[0], 
             (struct gr_vecF3D_d *) &triRotatedXY.p[0], 
             (struct gr_mat4x4_d *) &matRotY);
-        gr_MultiplyMatrixVector(
+        gr_MultiplyAndProjectVector(
             (struct gr_vecF3D_d *) &triRotatedX.p[1], 
             (struct gr_vecF3D_d *) &triRotatedXY.p[1], 
             (struct gr_mat4x4_d *) &matRotY);
-        gr_MultiplyMatrixVector(
+        gr_MultiplyAndProjectVector(
             (struct gr_vecF3D_d *) &triRotatedX.p[2], 
             (struct gr_vecF3D_d *) &triRotatedXY.p[2], 
             (struct gr_mat4x4_d *) &matRotY);
 
         //-----------------------------
         // Rotate in Z-Axis
-        gr_MultiplyMatrixVector(
+        gr_MultiplyAndProjectVector(
             (struct gr_vecF3D_d *) &triRotatedXY.p[0], 
             (struct gr_vecF3D_d *) &triRotatedXYZ.p[0], 
             (struct gr_mat4x4_d *) &matRotZ);
-        gr_MultiplyMatrixVector(
+        gr_MultiplyAndProjectVector(
             (struct gr_vecF3D_d *) &triRotatedXY.p[1], 
             (struct gr_vecF3D_d *) &triRotatedXYZ.p[1], 
             (struct gr_mat4x4_d *) &matRotZ);
-        gr_MultiplyMatrixVector(
+        gr_MultiplyAndProjectVector(
             (struct gr_vecF3D_d *) &triRotatedXY.p[2], 
             (struct gr_vecF3D_d *) &triRotatedXYZ.p[2], 
             (struct gr_mat4x4_d *) &matRotZ);
@@ -602,9 +602,7 @@ static void __drawEnemy(struct humanoid_model_d *model, float vel)
         // Increment distance
         //model->origin_z = (float) (model->origin_z + 0.00005f);
         model->origin_z = 
-            (float) ( 
-                model->origin_z + 
-                model->delta_z );
+            (float) ( model->origin_z + model->delta_z );
 
         // #test: Because each model has it's own delta.
         // Increment distance if we have a main_character.
@@ -647,18 +645,11 @@ static void __drawEnemy(struct humanoid_model_d *model, float vel)
         // based on the the new z model position.
 
         triRotatedXYZ.p[0].z =
-            (float) (
-            triRotatedXYZ.p[0].z + 
-            model->origin_z ); 
+            (float) (triRotatedXYZ.p[0].z + model->origin_z ); 
         triRotatedXYZ.p[1].z = 
-            (float) (
-            triRotatedXYZ.p[1].z + 
-            model->origin_z );
+            (float) (triRotatedXYZ.p[1].z + model->origin_z );
         triRotatedXYZ.p[2].z = 
-            (float) (
-            triRotatedXYZ.p[2].z + 
-            model->origin_z ); 
-
+            (float) (triRotatedXYZ.p[2].z + model->origin_z ); 
 
         // Translate in x.
         // left or right
@@ -738,7 +729,7 @@ static void __drawEnemy(struct humanoid_model_d *model, float vel)
         line2.y = (float) triRotatedXYZ.p[2].y - triRotatedXYZ.p[0].y;
         line2.z = (float) triRotatedXYZ.p[2].z - triRotatedXYZ.p[0].z;
 
-        // Normalize.
+        // Normalize
         normal.x = (float) (line1.y * line2.z - line1.z * line2.y);
         normal.y = (float) (line1.z * line2.x - line1.x * line2.z);
         normal.z = (float) (line1.x * line2.y - line1.y * line2.x);
@@ -751,6 +742,9 @@ static void __drawEnemy(struct humanoid_model_d *model, float vel)
                           normal.z*normal.z ) );
 
         // Divide por um valor comum entre eles.
+        // It is not shrinking the model. 
+        // It’s a different kind of normalization:
+        // This doesn’t change the vector’s direction — only its magnitude.
         normal.x = (float) (normal.x/l); 
         normal.y = (float) (normal.y/l); 
         normal.z = (float) (normal.z/l);

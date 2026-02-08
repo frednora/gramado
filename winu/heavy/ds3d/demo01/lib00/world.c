@@ -5,8 +5,36 @@
 
 
 struct gr_world_d  *CurrentWorld;
+struct gr_word3d_d  *current_world_3d;
+
+static int __world3d_initialize(void);
 
 // =====================================================
+
+static int __world3d_initialize(void) 
+{
+    struct gr_word3d_d *w;
+
+    w = (void *) malloc( sizeof(struct gr_word3d_d) );
+    if (w == NULL) {
+        printf("world3d_initialize: fail\n");
+        goto fail;
+    }
+
+    w->x_size = (float) 200.0f;
+    w->y_size = (float) 200.0f;
+    w->z_size = (float) 200.0f;
+
+    w->used = TRUE;
+    w->magic = 1234;
+    w->initialized = TRUE;
+
+    current_world_3d = w;
+    return 0;
+fail:
+    return (int) -1;
+}
+
 
 int world_initialize(void)
 {
@@ -31,6 +59,17 @@ int world_initialize(void)
     CurrentWorld->magic = 1234;
     CurrentWorld->initialized = TRUE;
 
+
+//
+// 3D world using floating point.
+//
+    int status = -1;
+    status = __world3d_initialize();
+    if (status<0)
+    {
+        printf("on __world3d_initialize\n");
+        exit(0);
+    }
     return 0;
 }
 

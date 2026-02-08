@@ -106,7 +106,8 @@ struct exception {
 #define TLOSS      5
 #define PLOSS      6
 
-// Function declarations.
+// =========================================================
+// Function declarations
 
 // Logarithms
 double log(double x);

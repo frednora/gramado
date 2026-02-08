@@ -13,11 +13,7 @@ struct cat_model_d
 extern struct cat_model_d  CatModel;   // Cat model 0.
 
 
-// -----------------------------------------
-//  Flying cube.
-// 12 triangles.
-// 6 faces.
-struct cube_model_d
+struct humanoid_model_d
 {
     // We don't need 32 vectors. But its ok.
     struct gr_vecF3D_d vecs[128]; //32
@@ -30,13 +26,18 @@ struct cube_model_d
     unsigned int colors[128]; //32 #bugbug: colors needs to fit the number of faces.
 
     float fThetaAngle;
-    float hposition;  //horisontal position
-    float vposition;  //vertical position
 
-// z translation
-    float model_initial_distance;  // Initial z position (never change)
-    float model_distance;          // Current z position
-    float model_distance_delta;    // Variarion in z position 
+// World origin 
+
+// Translation offsets
+    float origin_x;  //hposition;  //horisontal position
+    float origin_y;  //vposition;  //vertical position
+    float origin_z;  //model_distance;  // Current z position
+
+// Motion deltas (per-frame changes) 
+    float delta_x; // change in x per frame 
+    float delta_y; // change in y per frame 
+    float delta_z; // change in z per frame
 
     // Motion parameters
     float a;  // Acceletarion: How fast the velocity changes.
@@ -44,13 +45,10 @@ struct cube_model_d
     float t;  // Time:
 };
 
-extern struct cube_model_d *terrain;
+extern struct humanoid_model_d *main_character;
 
-#define DEFAULT_CUBE_INITIAL_Z_POSITION     (5.0f)  //(8.0f)
-#define DEFAULT_TERRAIN_INITIAL_Z_POSITION  (4.0f)
-
-#define DEFAULT_CUBE_INITIAL_DELTA_Z    (0.005f)    //(0.00005f)
-#define DEFAULT_TERRAIN_INITIAL_DELTA_Z (0.00002f)  //(0.00005f)
+#define DEFAULT_CUBE_INITIAL_Z_POSITION  (5.0f)
+#define DEFAULT_CUBE_INITIAL_DELTA_Z     (0.005f)
 
 
 // -----------------------------------------

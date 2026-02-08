@@ -6,7 +6,7 @@
 /*
 // Functions found here:
 
-gr_MultiplyMatrixVector:
+gr_MultiplyAndProjectVector:
 transforms a 3D vector by a 4x4 matrix, handling translation and perspective division.
 
 grVectorCrossProduct:
@@ -23,9 +23,80 @@ is used for intersection tests (like in ray tracing) to check if a quadratic equ
 
 int libgr_dummy=0;
 
+
+// gr_ProjectVector
+// Applies perspective divide only.
+// Multiplies input vector by the 4th column of the matrix to compute w,
+// then divides output coordinates by w.
+// Inputs:
+//   i - input vector (x, y, z), assumes w = 1
+//   o - output vector (already multiplied by matrix, before projection)
+//   m - 4x4 transformation matrix
+// Output:
+//   o - normalized vector after perspective divide
+void 
+gr_ProjectVector(
+    struct gr_vecF3D_d *i, 
+    struct gr_vecF3D_d *o, 
+    struct gr_mat4x4_d *m )
+{
+    // Compute homogeneous coordinate w
+    float w = 
+        (float)(
+        i->x * m->m[0][3] + 
+        i->y * m->m[1][3] + 
+        i->z * m->m[2][3] + 
+        1.0f * m->m[3][3] );
+
+    // Perspective divide
+    if (w != 0.0f)
+    {
+        o->x = o->x / w;
+        o->y = o->y / w;
+        o->z = o->z / w;
+    }
+}
+
+
+// Multiply the input vector by the matrix to get the transformed coordinates.
+// The last row/column handle translation and perspective divide.
+// Output is calculated as:
+// o.x = i.x * m00 + i.y * m10 + i.z * m20 + m30
+
+void 
+gr_MultiplyVector (
+    struct gr_vecF3D_d *i, 
+    struct gr_vecF3D_d *o, 
+    struct gr_mat4x4_d *m )
+{
+    o->x = 
+        (float) (
+        i->x * m->m[0][0] + 
+        i->y * m->m[1][0] + 
+        i->z * m->m[2][0] + 
+        m->m[3][0] );
+
+    o->y = 
+        (float) (
+        i->x * m->m[0][1] + 
+        i->y * m->m[1][1] + 
+        i->z * m->m[2][1] + 
+        m->m[3][1] );
+    
+    o->z = 
+        (float) (
+        i->x * m->m[0][2] + 
+        i->y * m->m[1][2] + 
+        i->z * m->m[2][2] + 
+        m->m[3][2] );
+}
+
+
+
+
 // =============================================
 
-// gr_MultiplyMatrixVector
+// gr_MultiplyAndProjectVector
 // Multiplies a 3D vector by a 4x4 transformation matrix.
 // This is commonly used for transformations like rotation, scaling, translation, and 
 // projection in 3D graphics.
@@ -34,8 +105,12 @@ int libgr_dummy=0;
 //   o - output vector (result of transformation)
 //   m - 4x4 transformation matrix
 // #ps: Normalized.
+
+// Here is where the perspective divide happens.
+// Matrix multiplication + perspective divide.
+
 void 
-gr_MultiplyMatrixVector(
+gr_MultiplyAndProjectVector (
     struct gr_vecF3D_d *i, 
     struct gr_vecF3D_d *o, 
     struct gr_mat4x4_d *m )
@@ -66,15 +141,34 @@ gr_MultiplyMatrixVector(
         i->z * m->m[2][2] + 
         m->m[3][2] );
 
-    // Compute the homogeneous coordinate w
+// This dot product gives you the homogeneous coordinate w.
+// Dividing (x, y, z) by w afterwards is the perspective divide.
+// That’s what makes distant objects shrink correctly in perspective projection.
+
+// Compute the homogeneous coordinate w.
+// The result is the homogeneous coordinate w, which encodes 
+// how far the point is from the camera in projective space.
+//  dot product?
+
+// In perspective projection matrices, w grows with distance. 
+// Nearby points have small w, far points have large w.
+
     float w = 
         (float) (
         i->x * m->m[0][3] + 
         i->y * m->m[1][3] + 
         i->z * m->m[2][3] + 
-        m->m[3][3] );
+        1.0f * m->m[3][3] );
 
 // Normalization
+// Normalize by dividing by w.
+// This step converts the coordinates from homogeneous space back into 3D space.
+// Dividing by w applies the perspective divide:
+// Points farther away (large w) shrink toward the center of the screen.
+// Points closer (small w) stay larger.
+// This is what creates depth perception — 
+// objects look smaller as they move away from the camera.
+
 // If w is not 1.0, normalize the result to convert from homogeneous coordinates to 3D space
 // This ensures that distant objects shrink properly, creating depth perception.
 // Key Takeaway
@@ -82,6 +176,7 @@ gr_MultiplyMatrixVector(
 // meaning they wouldn’t correctly scale with distance. The division by 𝑤 ensures proper 
 // perspective distortion, making your 3D scene visually correct.
 
+// Perspective divide (the shrinking happens here)
     if (w != 0.0f)
     {
         o->x = (float) (o->x / w); 

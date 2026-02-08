@@ -26,6 +26,45 @@ static char model_file_buffer[512];
 
 // ===================================
 
+
+// Process key combinations only for demos 
+int demos_on_combination(int msg_code)
+{
+    int char_id = 0;  // Target char
+    int direction = 0;
+    float value = 0.4f;  //0.2f;  //0.08f;
+
+    // #todo
+    // Return is the demo is not running
+
+    if (gamestate != GS_LEVEL)
+        goto fail;
+
+// Parameters:
+    if (msg_code < 0)
+        goto fail;
+
+//
+// Control + arrows
+//
+
+    switch (msg_code){
+    case GWS_ControlArrowLeft:   direction = DIRECTION_LEFT;  break;
+    case GWS_ControlArrowRight:  direction = DIRECTION_RIGHT; break;
+    case GWS_ControlArrowUp:     direction = DIRECTION_FRONT; break;
+    case GWS_ControlArrowDown:   direction = DIRECTION_BACK;  break;
+    default:
+        goto fail;
+        break;
+    };
+
+    demoHumanoidMoveCharacter( char_id, direction, (float) value );
+    return 0;
+
+fail:
+    return (int) -1;
+}
+
 // Function to read entire file into buffer using open()
 // # Limited size. 512 bytes
 char *demosReadFileIntoBuffer(const char *filename) 

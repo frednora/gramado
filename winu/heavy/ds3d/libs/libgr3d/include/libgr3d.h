@@ -5,7 +5,7 @@
 /*
 // Functions found here:
 
-gr_MultiplyMatrixVector:
+gr_MultiplyAndProjectVector:
 transforms a 3D vector by a 4x4 matrix, handling translation and perspective division.
 
 grVectorCrossProduct:
@@ -32,10 +32,23 @@ extern int libgr_dummy;
 //
 
 void 
-gr_MultiplyMatrixVector(
+gr_ProjectVector(
     struct gr_vecF3D_d *i, 
     struct gr_vecF3D_d *o, 
     struct gr_mat4x4_d *m );
+
+void 
+gr_MultiplyVector (
+    struct gr_vecF3D_d *i, 
+    struct gr_vecF3D_d *o, 
+    struct gr_mat4x4_d *m );
+
+void 
+gr_MultiplyAndProjectVector(
+    struct gr_vecF3D_d *i, 
+    struct gr_vecF3D_d *o, 
+    struct gr_mat4x4_d *m );
+
 
 struct gr_vecF3D_d *grVectorCrossProduct(
     struct gr_vecF3D_d *v1, 

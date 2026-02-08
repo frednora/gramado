@@ -8,7 +8,7 @@
 // has its own matrix, and they can be combined by multiplying matrices together.
 
 // To rotate a triangle, we create a rotation matrix (e.g., matRotX for X axis)
-// and then multiply each vertex (a 3D vector) by this matrix using gr_MultiplyMatrixVector.
+// and then multiply each vertex (a 3D vector) by this matrix using gr_MultiplyAndProjectVector.
 // The result is that the triangle is rotated in 3D space.
 
 // 3D rendering uses several matrix types:
@@ -24,7 +24,7 @@
  * - Matrices are constructed for each transform and applied to object vertices.
  * - The math is handled in libgr3d.c, and used here for manipulating 3D objects.
  * - Typical transform order: Model (object), then View (camera), then Projection (screen).
- * - Use gr_MultiplyMatrixVector to apply a matrix to a vector.
+ * - Use gr_MultiplyAndProjectVector to apply a matrix to a vector.
  */
 
 #include "../gram3d.h"
@@ -592,6 +592,10 @@ grPlot2D (
 // clipping window far: Far window.
 // x,y,z
 // color
+
+// Clipping
+// grPlot0() enforces zNear and zFar.
+// This normalizes depth so only triangles within the view frustum are kept.
 
 int 
 grPlot0 ( 
@@ -3096,7 +3100,7 @@ matrix_multiply_2x3 (
 // out_tri: rotated triangle (result)
 //
 // Internally, constructs a rotation matrix (matRotX), then multiplies
-// each vertex of the triangle by this matrix (using gr_MultiplyMatrixVector).
+// each vertex of the triangle by this matrix (using gr_MultiplyAndProjectVector).
 int 
 gr_rotate_x(
     struct gr_triangleF3D_d *in_tri,
@@ -3135,15 +3139,15 @@ gr_rotate_x(
 // Multiply each vertex of the triangle by the rotation matrix.
 // This rotates the triangle in 3D space.
 
-    gr_MultiplyMatrixVector(
+    gr_MultiplyAndProjectVector(
         (struct gr_vecF3D_d *) &in_tri->p[0], 
         (struct gr_vecF3D_d *) &out_tri->p[0], 
         &matRotX );
-    gr_MultiplyMatrixVector(
+    gr_MultiplyAndProjectVector(
         (struct gr_vecF3D_d *) &in_tri->p[1], 
         (struct gr_vecF3D_d *) &out_tri->p[1], 
         &matRotX );
-    gr_MultiplyMatrixVector(
+    gr_MultiplyAndProjectVector(
         (struct gr_vecF3D_d *) &in_tri->p[2], 
         (struct gr_vecF3D_d *) &out_tri->p[2], 
         &matRotX );
@@ -3182,15 +3186,15 @@ gr_rotate_y(
 
 //-----------------------------    
 // Rotate in Y-Axis
-    gr_MultiplyMatrixVector(
+    gr_MultiplyAndProjectVector(
         (struct gr_vecF3D_d *) &in_tri->p[0], 
         (struct gr_vecF3D_d *) &out_tri->p[0], 
         &matRotY);
-    gr_MultiplyMatrixVector(
+    gr_MultiplyAndProjectVector(
         (struct gr_vecF3D_d *) &in_tri->p[1], 
         (struct gr_vecF3D_d *) &out_tri->p[1], 
         &matRotY);
-    gr_MultiplyMatrixVector(
+    gr_MultiplyAndProjectVector(
         (struct gr_vecF3D_d *) &in_tri->p[2], 
         (struct gr_vecF3D_d *) &out_tri->p[2], 
         &matRotY);
@@ -3232,15 +3236,15 @@ gr_rotate_z(
 // os 3 vetores foram modificados.
 //-----------------------------    
 // Rotate in Z-Axis
-    gr_MultiplyMatrixVector(
+    gr_MultiplyAndProjectVector(
         (struct gr_vecF3D_d *) &in_tri->p[0], 
         (struct gr_vecF3D_d *) &out_tri->p[0], 
         &matRotZ);
-    gr_MultiplyMatrixVector(
+    gr_MultiplyAndProjectVector(
         (struct gr_vecF3D_d *) &in_tri->p[1], 
         (struct gr_vecF3D_d *) &out_tri->p[1], 
         &matRotZ);
-    gr_MultiplyMatrixVector(
+    gr_MultiplyAndProjectVector(
         (struct gr_vecF3D_d *) &in_tri->p[2], 
         (struct gr_vecF3D_d *) &out_tri->p[2], 
         &matRotZ);

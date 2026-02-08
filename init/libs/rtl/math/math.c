@@ -347,7 +347,7 @@ double pow00(double x, double y)
 
 double exp(double x)
 {
-	return (double) pow(GRAMADO_E, x);
+    return (double) pow(GRAMADO_E, x);
 }
 
 // -------------------------------
@@ -408,7 +408,6 @@ float cossecf00(float x)
 {
     return (float) (1/sinf(x));
 }
-
 
 
 // #test
