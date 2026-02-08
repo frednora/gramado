@@ -229,6 +229,13 @@ double sqrt(double __x)
 //OUT:
     return (double) Value;
 }
+
+float sqrtf(float x)
+{
+// float x → promoted to double. No dirty values. hahaha
+    return (float) sqrt((double)x);
+}
+
  
 // -----------------------------
 

@@ -156,6 +156,7 @@ double ceil(double __x);
 // Power and root
 double pow(double __x, double __y);
 double sqrt(double __x);
+float sqrtf(float x);
 
 // Extra integer/float power helpers (nonstandard)
 long power0(long x, unsigned int n);
