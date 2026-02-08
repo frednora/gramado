@@ -179,3 +179,27 @@ dtextDrawText2 (
     }
 }
 
+void 
+DrawStringBlock(
+    int wid,
+    unsigned long x,
+    unsigned long y,
+    unsigned int color,
+    const char *str,
+    int scale )
+{
+    int advance = FontInitialization.width * scale;
+    unsigned long cx = x;
+
+    while (*str)
+    {
+        if (*str == ' ') {
+            cx += advance;          // or advance / 2 for tighter word spacing
+        } else {
+            grDrawCharBlockStyleInsideWindow(wid, cx, y, color, *str, scale, 0);
+            cx += advance;
+        }
+        str++;
+    }
+}
+

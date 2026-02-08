@@ -35,6 +35,15 @@ dtextDrawText2 (
     int flush );
 //---
 
+void 
+DrawStringBlock(
+    int wid,
+    unsigned long x,
+    unsigned long y,
+    unsigned int color,
+    const char *str,
+    int scale );
+
 
 #endif    
 

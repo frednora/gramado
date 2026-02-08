@@ -38,11 +38,8 @@ charBackbufferCharBlt (
     unsigned long color, 
     unsigned long c );
 
-/*
- * drawchar_transparent:
- *     Desenha um caractere sem alterar o pano de fundo.
- */
 
+// Draw a char but don't change the background color
 void 
 grBackbufferDrawCharTransparent ( 
     unsigned long x, 
@@ -50,7 +47,7 @@ grBackbufferDrawCharTransparent (
     unsigned int color, 
     int ch );
 
-// Given a pointer for the font base address.
+// Given a pointer for the font base address
 void 
 grBackbufferDrawCharTransparent2 ( 
     unsigned long x, 
@@ -59,12 +56,7 @@ grBackbufferDrawCharTransparent2 (
     int ch,
     char *stock_address );
 
-/*
- * draw_char:
- *     Constrói um caractere 8x8 (configurável) no buffer.
- *     Desenha um caractere e pinta o pano de fundo.
- */ 
-
+// Draw a char and change the background color
 void 
 grBackbufferDrawChar ( 
     unsigned long x, 
@@ -73,7 +65,7 @@ grBackbufferDrawChar (
     unsigned int fgcolor,
     unsigned int bgcolor );
 
-// Draw char into a given device context.
+// Draw char into a given device context
 void 
 dc_drawchar (
     struct dc00_d *dc, 
@@ -82,6 +74,36 @@ dc_drawchar (
     unsigned long c,
     unsigned int fgcolor,
     unsigned int bgcolor,
+    unsigned long rop );
+
+void
+dc_drawchar_block_style(
+    struct dc00_d  *dc,
+    unsigned long   x,
+    unsigned long   y,
+    unsigned long   c,
+    unsigned int    fgcolor,
+    unsigned int    bgcolor,
+    unsigned long   rop,
+    int             scale,
+    int             opaque_mode );
+
+void
+grBackbufferDrawCharBlockStyle(
+    unsigned long x,          // top-left in screen space
+    unsigned long y,
+    unsigned int  fgcolor,
+    int           ch,         // character code
+    int           scale);      // 1 = classic 8×8, 2 = 16×16 blocks, etc.
+
+void
+grDrawCharBlockStyleInsideWindow(
+    int           wid,
+    unsigned long rel_x,
+    unsigned long rel_y,
+    unsigned int  fgcolor,
+    int           ch,
+    int           scale,
     unsigned long rop );
 
 int char_initialize(void);

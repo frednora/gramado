@@ -1645,6 +1645,70 @@ int serviceCreateWindow(int client_fd)
         }
     }
 
+
+// #test
+// Testing char using rectangles. 
+
+/*
+    if (Window->type == WT_OVERLAPPED)
+    {
+
+        int scale = 6; //4;
+        int char_advance = FontInitialization.width * scale;   // usually 8 * scale = 32
+
+        int cursor_x = 40;   // starting x inside client area — feel free to adjust
+        int cursor_y = 60;
+
+
+        grDrawCharBlockStyleInsideWindow(
+            Window->id, cursor_x, cursor_y, COLOR_YELLOW, 'K', scale, 0);
+        cursor_x += char_advance;
+
+        grDrawCharBlockStyleInsideWindow(
+            Window->id, cursor_x, cursor_y, COLOR_YELLOW, 'E', scale, 0);
+        cursor_x += char_advance;
+
+        grDrawCharBlockStyleInsideWindow(
+            Window->id, cursor_x, cursor_y, COLOR_YELLOW, 'R', scale, 0);
+        cursor_x += char_advance;
+
+        grDrawCharBlockStyleInsideWindow(
+            Window->id, cursor_x, cursor_y, COLOR_YELLOW, 'N', scale, 0);
+        cursor_x += char_advance;
+
+        grDrawCharBlockStyleInsideWindow(
+            Window->id, cursor_x, cursor_y, COLOR_YELLOW, 'E', scale, 0);
+        cursor_x += char_advance;
+
+        grDrawCharBlockStyleInsideWindow(
+            Window->id, cursor_x, cursor_y, COLOR_YELLOW, 'L', scale, 0);
+        cursor_x += char_advance;
+
+
+        grDrawCharBlockStyleInsideWindow(
+            Window->id, cursor_x, cursor_y, COLOR_YELLOW, 'D', scale, 0);
+        cursor_x += char_advance;
+        grDrawCharBlockStyleInsideWindow(
+            Window->id, cursor_x, cursor_y, COLOR_YELLOW, 'E', scale, 0);
+        cursor_x += char_advance;
+        grDrawCharBlockStyleInsideWindow(
+            Window->id, cursor_x, cursor_y, COLOR_YELLOW, 'V', scale, 0);
+        cursor_x += char_advance;
+ 
+        // Optional: add a bit of extra spacing between words if you want
+        // cursor_x += char_advance / 2;   // half char extra space
+
+
+        DrawStringBlock(
+            Window->id, 20, 20, COLOR_YELLOW, "Gramado OS", 7);
+
+        //gws_refresh_rectangle(40, 60, cursor_x - 40 + 20, 50);  // refresh the whole text area
+
+        flush_window(Window);
+        while(1){}
+    }
+*/
+
 // --------------------------------------
 
     /*
@@ -4426,7 +4490,6 @@ static int ServerLoop(int client_index)
     demoTriangle();
     demoCurve();
     */
-
 
 // Telling the Init thread that the display server is running.
 // IN: Init process'a TID, message code, signature1, signature2
