@@ -1,4 +1,5 @@
 // char.h
+// Created by Fred Nora.
 
 #ifndef __LIB00_CHAR_H
 #define __LIB00_CHAR_H  1
@@ -10,16 +11,8 @@ extern int gcharHeight;
 
 // =========================================
 
-void
-DrawBorder( 
-    unsigned long l, 
-    unsigned long r, 
-    unsigned long t, 
-    unsigned long b,
-    int solid );
-
-void charSetCharWidth ( int width );
-void charSetCharHeight ( int height );
+void charSetCharWidth (int width);
+void charSetCharHeight (int height);
 int charGetCharWidth (void);
 int charGetCharHeight (void);
 

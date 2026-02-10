@@ -17,17 +17,8 @@ extern struct char_initialization_d  CharInitialization;
 
 // ========================================
 
-
-void
-DrawBorder( 
-    unsigned long l, 
-    unsigned long r, 
-    unsigned long t, 
-    unsigned long b,
-    int solid );
-
-void charSetCharWidth ( int width );
-void charSetCharHeight ( int height );
+void charSetCharWidth (int width);
+void charSetCharHeight (int height);
 int charGetCharWidth (void);
 int charGetCharHeight (void);
 
@@ -37,7 +28,6 @@ charBackbufferCharBlt (
     unsigned long y, 
     unsigned long color, 
     unsigned long c );
-
 
 // Draw a char but don't change the background color
 void 
