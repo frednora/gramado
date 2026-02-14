@@ -25,6 +25,10 @@ struct dc_d
     int magic;
     int initialized;
 
+// #test
+// Low level component for device context support.
+    struct dccanvas_d  *dc_canvas;
+
 // Buffer ?
     unsigned char *data;
 

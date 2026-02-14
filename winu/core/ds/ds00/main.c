@@ -1649,7 +1649,7 @@ int serviceCreateWindow(int client_fd)
 // #test
 // Testing char using rectangles. 
 
-/*
+    /*
     if (Window->type == WT_OVERLAPPED)
     {
 
@@ -1658,7 +1658,6 @@ int serviceCreateWindow(int client_fd)
 
         int cursor_x = 40;   // starting x inside client area — feel free to adjust
         int cursor_y = 60;
-
 
         grDrawCharBlockStyleInsideWindow(
             Window->id, cursor_x, cursor_y, COLOR_YELLOW, 'K', scale, 0);
@@ -1698,16 +1697,19 @@ int serviceCreateWindow(int client_fd)
         // Optional: add a bit of extra spacing between words if you want
         // cursor_x += char_advance / 2;   // half char extra space
 
-
-        DrawStringBlock(
-            Window->id, 20, 20, COLOR_YELLOW, "Gramado OS", 7);
-
-        //gws_refresh_rectangle(40, 60, cursor_x - 40 + 20, 50);  // refresh the whole text area
-
         flush_window(Window);
         while(1){}
     }
-*/
+    */
+
+    /*
+    if (Window->type == WT_OVERLAPPED)
+    {
+        DrawStringBlock(Window->id, 20, 20, COLOR_YELLOW, "Gramado OS", 7);
+        flush_window(Window);
+        while(1){}
+    }
+    */
 
 // --------------------------------------
 

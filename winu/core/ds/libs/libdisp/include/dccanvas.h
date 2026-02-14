@@ -4,7 +4,7 @@
 #define __LIBDISP_DCCANVAS_H  1 
 
 
-//struct dc00_d 
+// Low level component for device context support.
 struct dccanvas_d 
 {
     int used;

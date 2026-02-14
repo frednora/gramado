@@ -566,17 +566,35 @@ int gwsInitGUI(void)
 // This is the default device context structure.
 
 // dc object
-
     gr_dc = (struct dc_d *) malloc( sizeof(struct dc_d) );
     if ((void*) gr_dc == NULL){
         printf("gwsInitGUI: Couldn't create default dc\n");
         exit(1);
     }
     memset ( gr_dc, 0, sizeof(struct dc_d) );
-
     gr_dc->used = TRUE;
     gr_dc->magic = 1234;
     gr_dc->initialized = FALSE;
+
+// dcc object
+    struct dccanvas_d *dcc;
+    dcc = (struct dccanvas_d *) malloc( sizeof(struct dccanvas_d) );
+    if ((void*) dcc == NULL){
+        printf("gwsInitGUI: Couldn't create default dcc\n");
+        exit(1);
+    }
+    memset ( dcc, 0, sizeof(struct dccanvas_d) );
+    // hardware info: w, h, bpp
+    dcc->device_width  = DeviceScreen->width;
+    dcc->device_height = DeviceScreen->height;
+    dcc->bpp           = DeviceScreen->bpp;
+    // #bugbug: pitch is missing
+    dcc->data = NULL;
+    dcc->used = TRUE;
+    dcc->magic = 1234;
+    dcc->initialized = FALSE;
+    gr_dc->dc_canvas = dcc;
+
     
 // display and screen.
     gr_dc->display = (struct gws_display_d *) CurrentDisplay;
@@ -591,6 +609,7 @@ int gwsInitGUI(void)
     gr_dc->device_width = DeviceScreen->width;
     gr_dc->device_height = DeviceScreen->height;
     gr_dc->bpp = DeviceScreen->bpp;
+    // #bugbug: pitch is missing
 
     // virtual window
     gr_dc->absolute_x = 0;
