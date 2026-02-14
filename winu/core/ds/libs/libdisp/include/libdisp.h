@@ -12,25 +12,7 @@
 #include "vk.h"       // # view input events
 #include "lt8x8.h"
 #include "rop.h"
-
-
-struct dc00_d 
-{
-    int used;
-    int magic;
-    int initialized;
-
-    unsigned char *data;       // pointer to framebuffer or backbuffer
-
-// Hardware information
-    unsigned long device_width;
-    unsigned long device_height;
-    unsigned long bpp;         // bytes per pixel
-    unsigned long pitch;       // bytes per row
-
-// Navigation
-    //struct dc00_d *next;
-};
+#include "dccanvas.h"
 
 
 // ===================================================
@@ -44,16 +26,15 @@ struct dc00_d
 //   bpp    - bits per pixel (e.g. 32, 24, 16)
 //
 // Returns:
-//   pointer to a new dc00_d, or NULL on failure.
-struct dc00_d *libgd_create_dc(unsigned char *base,
+//   pointer to a new dccanvas_d, or NULL on failure.
+struct dccanvas_d *libgd_create_dc(unsigned char *base,
                                unsigned long width,
                                unsigned long height,
                                unsigned long bpp);
 
 // Getters for default contexts
-struct dc00_d *libgd_get_backbuffer_dc(void);
-struct dc00_d *libgd_get_frontbuffer_dc(void);
-
+struct dccanvas_d *libgd_get_backbuffer_dc(void);
+struct dccanvas_d *libgd_get_frontbuffer_dc(void);
 
 
 /*
@@ -97,7 +78,7 @@ fb_BackBufferPutpixel (
 
 int
 putpixel0 ( 
-    struct dc00_d *dc,
+    struct dccanvas_d *dc,
     unsigned int  _color,
     unsigned long _x, 
     unsigned long _y, 

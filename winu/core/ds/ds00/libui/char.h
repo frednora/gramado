@@ -55,10 +55,10 @@ grBackbufferDrawChar (
     unsigned int fgcolor,
     unsigned int bgcolor );
 
-// Draw char into a given device context
+// Draw char into a given device context canvas
 void 
 dc_drawchar (
-    struct dc00_d *dc, 
+    struct dccanvas_d *dc, 
     unsigned long x, 
     unsigned long y,  
     unsigned long c,
@@ -68,7 +68,7 @@ dc_drawchar (
 
 void
 dc_drawchar_block_style(
-    struct dc00_d  *dc,
+    struct dccanvas_d  *dc,
     unsigned long   x,
     unsigned long   y,
     unsigned long   c,

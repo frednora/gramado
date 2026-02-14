@@ -42,11 +42,10 @@ static unsigned long libgd_device_bpp=0;
 static unsigned long libgd_device_pitch=0;
 
 // Device context
-static struct dc00_d *libgd_dc_backbuffer;
-static struct dc00_d *libgd_dc_frontbuffer;
+static struct dccanvas_d *libgd_dc_backbuffer;
+static struct dccanvas_d *libgd_dc_frontbuffer;
 
 // ===================================================
-
 
 
 // Create a new device context for a given buffer.
@@ -57,8 +56,8 @@ static struct dc00_d *libgd_dc_frontbuffer;
 //   bpp    - bits per pixel (e.g. 32, 24, 16)
 //
 // Returns:
-//   pointer to a new dc00_d, or NULL on failure.
-struct dc00_d *libgd_create_dc(unsigned char *base,
+//   pointer to a new dccanvas_d, or NULL on failure.
+struct dccanvas_d *libgd_create_dc(unsigned char *base,
                                unsigned long width,
                                unsigned long height,
                                unsigned long bpp)
@@ -66,10 +65,11 @@ struct dc00_d *libgd_create_dc(unsigned char *base,
     if (!base || width == 0 || height == 0 || bpp == 0)
         return NULL;
 
-    struct dc00_d *dc = malloc(sizeof(struct dc00_d));
-    if (!dc) return NULL;
+    struct dccanvas_d *dc = malloc(sizeof(struct dccanvas_d));
+    if (!dc) 
+        return NULL;
 
-    memset(dc, 0, sizeof(struct dc00_d));
+    memset(dc, 0, sizeof(struct dccanvas_d));
 
     dc->data         = base;
     dc->device_width = width;
@@ -85,9 +85,8 @@ struct dc00_d *libgd_create_dc(unsigned char *base,
     return dc;
 }
 
-
-// Get the pointer for the backbufer dc.
-struct dc00_d *libgd_get_backbuffer_dc(void)
+// Get the pointer for the backbufer dc
+struct dccanvas_d *libgd_get_backbuffer_dc(void)
 {
     if ((void *) libgd_dc_backbuffer == NULL)
         return NULL;
@@ -96,11 +95,11 @@ struct dc00_d *libgd_get_backbuffer_dc(void)
     if (libgd_dc_backbuffer->initialized != TRUE)
         return NULL;
 
-    return (struct dc00_d *) libgd_dc_backbuffer;
+    return (struct dccanvas_d *) libgd_dc_backbuffer;
 }
 
-// Get the pointer for the frontbufer dc.
-struct dc00_d *libgd_get_frontbuffer_dc(void)
+// Get the pointer for the frontbufer dc
+struct dccanvas_d *libgd_get_frontbuffer_dc(void)
 {
     if ((void *) libgd_dc_frontbuffer == NULL)
         return NULL;
@@ -109,7 +108,7 @@ struct dc00_d *libgd_get_frontbuffer_dc(void)
     if (libgd_dc_frontbuffer->initialized != TRUE)
         return NULL;
 
-    return (struct dc00_d *) libgd_dc_frontbuffer;
+    return (struct dccanvas_d *) libgd_dc_frontbuffer;
 }
 
 
@@ -574,7 +573,7 @@ fail:
 
 int
 putpixel0 ( 
-    struct dc00_d *dc,
+    struct dccanvas_d *dc,
     unsigned int  _color,
     unsigned long _x, 
     unsigned long _y, 
@@ -1207,12 +1206,12 @@ int libgd_initialize(void)
 // Thats is not a structure for hardware device driver.
 
     // Backbuffer
-    libgd_dc_backbuffer = (void *) malloc(sizeof(struct dc00_d));
+    libgd_dc_backbuffer = (void *) malloc(sizeof(struct dccanvas_d));
     if ((void*)libgd_dc_backbuffer == NULL){
         printf("libgd_initialize: libgd_dc_backbuffer\n");
         goto fail; 
     }
-    memset ( libgd_dc_backbuffer, 0, sizeof(struct dc00_d) );
+    memset ( libgd_dc_backbuffer, 0, sizeof(struct dccanvas_d) );
     libgd_dc_backbuffer->device_width  = libgd_device_width;
     libgd_dc_backbuffer->device_height = libgd_device_height;
     // Bits per pixel
@@ -1227,12 +1226,12 @@ int libgd_initialize(void)
 
 
     // Frontbuffer
-    libgd_dc_frontbuffer = malloc(sizeof(struct dc00_d));
+    libgd_dc_frontbuffer = malloc(sizeof(struct dccanvas_d));
     if ((void*)libgd_dc_frontbuffer == NULL){
         printf("libgd_initialize: libgd_dc_frontbuffer\n");
         goto fail; 
     }
-    memset ( libgd_dc_frontbuffer, 0, sizeof(struct dc00_d) );
+    memset ( libgd_dc_frontbuffer, 0, sizeof(struct dccanvas_d) );
 
     libgd_dc_frontbuffer->device_width  = libgd_device_width;
     libgd_dc_frontbuffer->device_height = libgd_device_height;

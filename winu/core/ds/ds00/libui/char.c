@@ -275,7 +275,7 @@ grBackbufferDrawChar (
 // Draw char into a given device context
 void 
 dc_drawchar (
-    struct dc00_d *dc, 
+    struct dccanvas_d *dc, 
     unsigned long x, 
     unsigned long y,  
     unsigned long c,
@@ -372,7 +372,7 @@ dc_drawchar (
 // - Fewer draw operations when scale > 1 (especially useful if putpixel0 is expensive)
 //
 // IN:
-//     dc       - pointer to device context (struct dc00_d *)
+//     dc       - pointer to device context (struct dccanvas_d *)
 //     x        - left position in DC coordinates
 //     y        - top position in DC coordinates
 //     c        - character code (ascii / byte)
@@ -389,7 +389,7 @@ dc_drawchar (
 //
 void
 dc_drawchar_block_style(
-    struct dc00_d  *dc,
+    struct dccanvas_d  *dc,
     unsigned long   x,
     unsigned long   y,
     unsigned long   c,

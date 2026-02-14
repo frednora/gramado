@@ -30,7 +30,7 @@ struct compositor_d  Compositor;
 struct spare_buffer_clip_info_d  SpareBufferClipInfo;
 char *spare_128kb_buffer_p;
 
-struct dc00_d *spare_dc00;
+struct dccanvas_d *spare_dccanvas;
 
 // #todo
 // Create some configuration globals here
@@ -163,7 +163,7 @@ void *comp_create_slab_spare_128kb_buffer(size_t size_in_kb)
     unsigned long TotalSpareInKB = (TotalSpareInBytes / 1024);
     unsigned long addr;
 
-    struct dc00_d *tmp_dc00;
+    struct dccanvas_d *tmp_dccanvas;
 
 
     if (TotalSpareInKB > size_in_kb){
@@ -183,7 +183,7 @@ void *comp_create_slab_spare_128kb_buffer(size_t size_in_kb)
         SpareBufferClipInfo.initialized = TRUE;
         // -------------------------------------------
 
-        tmp_dc00 = 
+        tmp_dccanvas = 
             (void *) libgd_create_dc (
                 SpareBufferClipInfo.base,
                 SpareBufferClipInfo.width,
@@ -192,15 +192,15 @@ void *comp_create_slab_spare_128kb_buffer(size_t size_in_kb)
              );
 
         // Saving
-        spare_dc00 = tmp_dc00;
-        if ((void*)spare_dc00 == NULL)
+        spare_dccanvas = tmp_dccanvas;
+        if ((void*)spare_dccanvas == NULL)
         {
-            spare_dc00 = NULL;
+            spare_dccanvas = NULL;
             return NULL;
         }
-        if (spare_dc00->magic != 1234)
+        if (spare_dccanvas->magic != 1234)
         {
-            spare_dc00 = NULL;
+            spare_dccanvas = NULL;
             return NULL;
         }
 
@@ -208,13 +208,13 @@ void *comp_create_slab_spare_128kb_buffer(size_t size_in_kb)
 
     } else {
         SpareBufferClipInfo.initialized = FALSE;
-        spare_dc00 = NULL;
+        spare_dccanvas = NULL;
         return NULL;
     }
 
 // fail
     SpareBufferClipInfo.initialized = FALSE;
-    spare_dc00 = NULL;
+    spare_dccanvas = NULL;
     return NULL;
 }
 
@@ -320,12 +320,12 @@ spare_putpixel0(
         (unsigned long) SpareBufferClipInfo.base );
 */
 
-    if (!spare_dc00) 
+    if (!spare_dccanvas) 
         return;
 
 // #test: New method with dc.
     putpixel0(
-        spare_dc00,
+        spare_dccanvas,
         color, 
         x, 
         y, 
@@ -337,7 +337,7 @@ spare_putpixel0(
 void comp_draw_into_spare_buffer(void)
 {
 
-    //if (!spare_dc00) 
+    //if (!spare_dccanvas) 
        // return;
 
 /*
@@ -359,8 +359,8 @@ void comp_draw_into_spare_buffer(void)
     spare_putpixel0(0xFFFF0000, 0, 9, ROP_COPY);
 
     // #test
-    dc_drawchar(spare_dc00, 10, 10, 'H', COLOR_YELLOW, COLOR_BLUE, ROP_COPY);
-    dc_drawchar(spare_dc00, 18, 10, 'i', COLOR_YELLOW, COLOR_BLUE, ROP_COPY);
+    dc_drawchar(spare_dccanvas, 10, 10, 'H', COLOR_YELLOW, COLOR_BLUE, ROP_COPY);
+    dc_drawchar(spare_dccanvas, 18, 10, 'i', COLOR_YELLOW, COLOR_BLUE, ROP_COPY);
 
 /*
     spare_putpixel0(
@@ -975,16 +975,16 @@ void comp_display_desktop_components(void)
 
         //---------
         // #test >>> frontbuffer
-        if ((void*) spare_dc00 != NULL)
+        if ((void*) spare_dccanvas != NULL)
         {
-            if (spare_dc00->magic == 1234)
+            if (spare_dccanvas->magic == 1234)
             {
                 comp_blit_canvas_to_canvas(
                     CANVAS_SPAREBUFFER,    // source
                     CANVAS_FRONTBUFFER,    // destination
                     20, 20,                // destination position
-                    spare_dc00->device_width >> 1,     // width 
-                    spare_dc00->device_height >> 1 );  // height  
+                    spare_dccanvas->device_width >> 1,     // width 
+                    spare_dccanvas->device_height >> 1 );  // height  
             }
         }
         //---------
