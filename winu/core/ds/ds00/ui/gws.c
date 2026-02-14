@@ -600,22 +600,15 @@ int gwsInitGUI(void)
     gr_dc->display = (struct gws_display_d *) CurrentDisplay;
 
     //buffers
-    gr_dc->data = NULL;
     gr_dc->depth_buf = NULL;
 
     gr_dc->flags = 0;
 
-    // hardware info: w,h,bpp
-    gr_dc->device_width = DeviceScreen->width;
-    gr_dc->device_height = DeviceScreen->height;
-    gr_dc->bpp = DeviceScreen->bpp;
-    // #bugbug: pitch is missing
-
     // virtual window
     gr_dc->absolute_x = 0;
     gr_dc->absolute_y = 0;
-    gr_dc->width  = gr_dc->device_width;
-    gr_dc->height = gr_dc->device_height;
+    gr_dc->width  = gr_dc->dc_canvas->device_width;
+    gr_dc->height = gr_dc->dc_canvas->device_height;
 
     gr_dc->hotspot_x = DeviceScreen->hotspot_x;
     gr_dc->hotspot_y = DeviceScreen->hotspot_y;

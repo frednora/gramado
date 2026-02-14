@@ -29,9 +29,6 @@ struct dc_d
 // Low level component for device context support.
     struct dccanvas_d  *dc_canvas;
 
-// Buffer ?
-    unsigned char *data;
-
 // z-buffer
 // Esse é o z-buffer da tela toda 
 // do dispositivo sendo descrito aqui.
@@ -47,16 +44,6 @@ struct dc_d
     struct gws_display_d *display;
 
     unsigned long flags;
-
-// hw info:
-
-    // In pixels
-    unsigned long device_width;
-    unsigned long device_height;
-    unsigned long bpp;  // Bytes Per Pixel
-
-    // #todo:
-    // unsigned long pitch; // bytes per line.
 
 
     unsigned long absolute_x;
