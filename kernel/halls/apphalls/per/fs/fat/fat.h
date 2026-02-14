@@ -1,9 +1,20 @@
 // fat.h
-// Main structure and function prototypes
-// used by the fs subsystem.
+// Main structure and function prototypes used by the fs subsystem.
+// Created by Fred Nora.
 
 #ifndef  __FAT_FAT_H
 #define  __FAT_FAT_H    1
+
+/*
+FAT12/FAT16:
+The root directory is located in a fixed position right after the FAT, 
+with a maximum size defined in the BPB.
+
+FAT32:
+The root directory is treated as a normal directory, located by 
+the 'Root Cluster' field in the BPB, and can grow dynamically.
+*/
+
 
 // fat16 structure.
 struct fat_d

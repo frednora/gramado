@@ -5,10 +5,17 @@
 #ifndef  __FAT_FATLIB_H
 #define  __FAT_FATLIB_H    1
 
-// definições, variáveios, estruturas e protótipos
-// específicos para o sistema de arquivos fat16.
-// Isolando pra talvez tirarmos isso do kernel.
-// fat16 é o sistema da partição de boot apenas.
+
+/*
+FAT12/FAT16:
+The root directory is located in a fixed position right after the FAT, 
+with a maximum size defined in the BPB.
+
+FAT32:
+The root directory is treated as a normal directory, located by 
+the 'Root Cluster' field in the BPB, and can grow dynamically.
+*/
+
 
 // fat16 file attributes.
 // See:
@@ -16,7 +23,7 @@
 
 #define FAT_FILE_FLAG_READ            0x01
 #define FAT_FILE_FLAG_HIDDEN          0x02
-#define FAT_FILE_FLAG_SYSTEM          0x04   //HARDWARE.
+#define FAT_FILE_FLAG_SYSTEM          0x04   // HARDWARE
 #define FAT_FILE_FLAG_VOLUME_LABEL    0x08
 
 #define FAT_FILE_FLAG_DIRECTORY       0x10
@@ -37,9 +44,12 @@
 //#define FAT32_CLUSTER_MASK              0x0FFFFFFF
 //#define FAT32_LINK_TERMINATOR           0x0FFFFFFF
 
-#define FAT12_MASK  0x00000fff  /* mask for 12 bit cluster numbers */
-#define FAT16_MASK  0x0000ffff  /* mask for 16 bit cluster numbers */
-#define FAT32_MASK  0x0fffffff  /* mask for FAT32 cluster numbers */
+
+// Masks for cluster numbers in FAT12, FAT16, and FAT32 file systems
+#define FAT12_MASK  0x00000fff 
+#define FAT16_MASK  0x0000ffff 
+#define FAT32_MASK  0x0fffffff 
+
 
 #define FAT16_CLUSTER_AVAILABLE    0x0000
 #define FAT16_CLUSTER_RESERVED     0xfff0
@@ -172,13 +182,13 @@ Optional flags that indicates case information of the SFN.
 // Always zero on the FAT12/16 volume.
 // For fat32 
     unsigned short Reserved2;
-// Modification time.
+// Modification time
     unsigned short LastWriteTime;  
-// Modification date.
+// Modification date
     unsigned short LastWriteDate;  
 // (First Cluster Low)
     unsigned short StartingCluster; 
-// File size. 
+// File size
     unsigned int FileSize; 
 };  
 
