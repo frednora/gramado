@@ -1,6 +1,13 @@
+
+Interrupt-Centric Kernel
+
 key insight: 
-all three halls are fundamentally **interrupt‑driven**, 
+
+All three halls are fundamentally **interrupt‑driven**, 
 but each hall governs a different *group of interrupts*. 
+
+apphalls: application-driven interrupts.
+uhalls:   user-driven interrupts.
 
 ---
 
@@ -20,6 +27,7 @@ but each hall governs a different *group of interrupts*.
 ### **2. Hall of Requests (`req/`) – Memory Hall**
 - **Interrupt group:** Software interrupts (syscalls).  
 - **Examples:** `int 0x80`, `syscall` instruction, kernel service requests.  
+  A request is an interrupt instruction inside the program in memory.
 - **Responsibility:**  
   - Handle petitions from user programs.  
   - Memory allocation, file system calls, IPC.  
@@ -50,7 +58,7 @@ but each hall governs a different *group of interrupts*.
 ---
 
 ##  Insight
-This makes your kernel **interrupt‑centric**:  
+This makes the kernel **interrupt‑centric**:  
 - Every path into the kernel is an interrupt.  
 - Every hall is a domain of interrupt handling.  
 - The Castle metaphor isn’t just symbolic — it’s structurally accurate.

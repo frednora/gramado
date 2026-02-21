@@ -1,8 +1,11 @@
 
+Personas (Houses/halls)
+
 --------------------------------------------
 There are two personas: the program and the user.
 And there are two houses.
 
+---------------------------------------------
 Persona 1: The Program (House of Applications)
  + CPU
  + MEMORY
@@ -10,7 +13,7 @@ Persona 1: The Program (House of Applications)
 Other components here:
  GPU (when used for computation, not display)
 
-
+---------------------------------------------
 Persona 2: The User (House of Users)
  + KEYBOARD 
  + MOUSE 
@@ -20,7 +23,6 @@ Other components here:
   Touchscreen → hybrid input/output, but still user‑facing
   Audio (speakers, microphone) → user interaction layer
   Game controllers, joysticks, haptics → all user‑centric I/O
-
 
 
 Sketching out a namespace taxonomy
@@ -55,18 +57,5 @@ _irq_SHARED3
 _irq12_MOUSE
 _irq14_PRIMARY_IDE
 _irq15_SECONDARY_IDE
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
