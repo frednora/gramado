@@ -196,60 +196,30 @@ extern unsigned short file_cluster_list[MAX_CLUSTERS];
 // == Structures ====================================
 //
 
-/*
- * Obs: Dentro do kernel base somente teremos primitivas
- *      Operações complexas devem ir para servidores utilitários.
- * Descrição:
- *     Header para o File System Manager. (FSM)
- *     File system header for kernel file management.
- *     Inicialmente suporte ao sistema de arquivos FAT16.
- *     Posteriormente suporte aos sistemas FAT12, FAT32, EXT2.
- * History:
- *     2014 - Created by Fred Nora.
- */
-//suporte ao diretório alvo que desejamos acessar.
-//com base em um pathname passado via argumento.
-
+// Support for the target directory that we want to access.
+// Facility to load files from a target directory.
 struct target_dir_d
 {
     int used;
     int magic;
     int initialized;
 
-    // Buffer where the directory was loaded.
+    // Buffer where the directory was loaded
     unsigned long current_dir_address;
 
-    char name[32]; // 8.3 format
+    // The name of the directory. (format 8.3)
+    char name[32];
 
     // ponteiro para a string do caminho
     //char *pwd_string;  
 
     // ??
-    // The number of entries ?
+    // The number of entries?
 
     // ...
 };
 // See: fs.c
 extern struct target_dir_d  current_target_dir;
-
-// links para arquivos ou diretórios 
-// dentro do mesmo sistema de arquivos. 
-
-struct hardlink_d
-{
-    int used;
-    int magic;
-    //..
-};
-
-// links para arquivos e diretórios em 
-// volumes espalhados por vários discos. 
-struct softlink_d
-{
-    int used;
-    int magic;
-    //..
-};
 
 /*
  * dir_d:
