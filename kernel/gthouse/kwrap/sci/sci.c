@@ -1031,11 +1031,12 @@ void *sci0 (
     }
 
 // 174 - Search file
+// OUT: TRUE or FALSE
     if (number == SCI0_SEARCHFILE){
         debug_print ("sci0: SCI0_SEARCHFILE\n");
         return (void *) search_in_dir ( 
                             (const char *) arg2, 
-                            (unsigned long)   arg3 );
+                            (unsigned long) arg3 );
     }
 
 // 175 - 'cd' command support.

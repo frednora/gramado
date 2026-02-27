@@ -70,8 +70,9 @@ IN:
     buffer               = Where to load the file. The pre-allocated buffer.
     buffer_size_in_bytes = Maximum buffer size.
 OUT: 
-    1=fail 
-    0=ok.
+    0 = ok
+    -1 = fail 
+
  */
 // #bugbug
 // Essa rotina somente consegue pegar o tamanho do arquivo
@@ -583,12 +584,14 @@ __loop_next_entry:
     goto __loop_next_entry;
 
 fail:
-    debug_print("fsLoadFile: fail\n");
-    printk     ("fsLoadFile: [FAIL] file={%s}\n", file_name );
+    printk ("fsLoadFile: [FAIL] file={%s}\n", file_name );
     return (int) -1;
 }
 
 // Not tested yet
+// OUT:
+// 0 = OK
+// -1 = FAIL
 int 
 fsLoadFile2 ( 
     struct file_context_d *fc, 
@@ -599,20 +602,21 @@ fsLoadFile2 (
 // File context
     if ((void*) fc == NULL){
         debug_print("fsLoadFile2: fc\n"); 
-        return 0;
+        goto fail;
     }
 
 // File name
     if ((void*) file_name == NULL){
         debug_print("fsLoadFile2: file_name\n"); 
-        return 0;
+        goto fail;
     }
     if (*file_name == 0){
         debug_print("fsLoadFile2: *file_name\n"); 
-        return 0;
+        goto fail;
     }
     fc->file_name = file_name;
 
+// Load file
     rv = 
         (int) fsLoadFile ( 
             (unsigned long)   fc->fat_address,
@@ -623,6 +627,9 @@ fsLoadFile2 (
             (unsigned long)   fc->buffer_limit );
 
     return (int) rv;
+
+fail:
+    return (int) -1;
 }
 
 // -------------------------------------
@@ -632,6 +639,9 @@ fsLoadFile2 (
 // + program_name: Program name.
 // + buffer: Pre-allocated buffer.
 // + buffer_size_in_bytes: Buffer size in bytes.
+// OUT:
+// 0 = OK
+// -1 = FAIL
 int 
 fsLoadProgramFromGRAMADO (
     char *program_name,
@@ -708,6 +718,9 @@ fail:
 // + program_name: Program name.
 // + buffer: Pre-allocated buffer.
 // + buffer_size_in_bytes: Buffer size in bytes.
+// OUT:
+// 0 = OK
+// -1 = FAIL
 int 
 fsLoadProgramFromDE (
     char *program_name,
@@ -796,13 +809,13 @@ fail:
 // Carregou um arquivo com 3 niveis.
 // See:
 // sys_load_path() and service 4004.
-//    0 ---> ok.
-// != 0 ---> fail
 // #todo
 // is address virtual or physical?
 // Change this name to pa or va.
 // Change to buffer_size_in_bytes ?
-
+// OUT:
+// 0 = OK
+// -1 = FAIL
 int 
 fs_load_path ( 
     const char *path, 
@@ -1198,8 +1211,7 @@ fs_load_path (
     };   
 
 fail:
-    debug_print("fs_load_path: fail\n");
-    printk     ("fs_load_path: fail\n");
+    printk ("fs_load_path: fail\n");
     return (int) (-1);
 }
 
@@ -1368,6 +1380,9 @@ fail:
 // Limits:
 // Remember: This function is already able to load 
 // executables with 400KB or more, just like ds00.
+// OUT:
+// 0 = OK
+// -1 = FAIL
 int 
 fs_load_image( 
     const char *filename, 
@@ -1454,15 +1469,13 @@ __search:
 
     fs_fntos((char *) name);
 
-    Status = (int) search_in_dir(name,dir_va);
-    if (Status == 1){ 
-        goto __found; 
+    Status = (int) search_in_dir(name, dir_va);
+    if (Status != TRUE){
+        printk ("fs_load_image: File not found\n");
+        goto fail;
     }
-    printk ("fs_load_image: [FAIL] File not found!\n");
-    goto fail;
 
-// :)
-// The file was found into the directory.
+// The file was found into the directory
 __found:
 
 // ============================

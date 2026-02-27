@@ -4409,13 +4409,14 @@ EndOfShortcuts:
 // #bugbug: Então 'cat' não deve chamar essa função.
 
     Status = (int) search_in_dir(file_name,TargetDirAddress);
-// Found.
+
+// Found
     if (Status == TRUE){
         goto __go;
     }
 
-// Not found.
-// Let's create it if the flags tell us to do that.
+// Not found
+// Let's create it if the flags tell us to do that
     if (Status != TRUE)
     {
         //#debug

@@ -15,6 +15,16 @@
 unsigned short file_cluster_list[MAX_CLUSTERS]; 
 
 
+// =================================================
+
+static int 
+__search_in_dir_imp ( 
+    const char *file_name, 
+    unsigned long dir_address );
+
+// =================================================
+
+
 /*
 Scans a directory already loaded into memory.
 Compares each 32‑byte entry against the desired filename (FAT16 8.3 format).
@@ -44,18 +54,17 @@ Returns TRUE if found, -1 if not.
 // + Address of the directory.
 // ---------------
 // OUT:
-// 1 = Found.
+// TRUE  = Found
+// FALSE = Not found or error
 
-int 
-search_in_dir ( 
+static int 
+__search_in_dir_imp ( 
     const char *file_name, 
     unsigned long dir_address )
 {
-    int Status = -1;
-// Deslocamento do dir.
-    register int i=0;
-// Deslocamento no nome.
-    int j=0;
+    int Status = FALSE;
+    register int i=0;  // Deslocamento do dir
+    int j=0;           // Deslocamento no nome
 // Número máximo de entradas no diretório.
 // #todo: O número de entradas poderia ser passado via argumento.
     unsigned long NumberOfEntries = 512;
@@ -78,22 +87,22 @@ search_in_dir (
 // letras etão com '0' e não espaços.
     size_t stringSize=0;
 
-    debug_print ("search_in_dir: $\n");
+    // debug_print ("__search_in_dir_imp: $\n");
 
 // File name
     if ((void*) file_name == NULL){
-        printk ("search_in_dir: file_name\n");
+        printk ("__search_in_dir_imp: file_name\n");
         goto fail;
     }
     if (*file_name == 0){
-        printk ("search_in_dir: *file_name\n");
+        printk ("__search_in_dir_imp: *file_name\n");
         goto fail;
     }
 
 // The address where the directory is.
 // #todo: Explain it better.
     if (dir_address == 0){
-        printk ("search_in_dir: dir_address\n");
+        printk ("__search_in_dir_imp: dir_address\n");
         goto fail;
     }
 
@@ -114,7 +123,7 @@ search_in_dir (
 // the whole commant line to this routine.
 // We need only the filename.
     if (stringSize > 11){
-        printk ("search_in_dir: [ERROR] Wrong name size. {%d}\n", 
+        printk ("__search_in_dir_imp: [ERROR] Wrong name size. {%d}\n", 
             stringSize);
         printk ("filename: %s\n",file_name);
         goto fail;
@@ -171,7 +180,7 @@ search_in_dir (
 // #todo
 // Can't search for a filename that starts with a '/'.
     if (*file_name == '/'){
-        printk ("search_in_dir: Invalid char in file name\n");
+        printk ("__search_in_dir_imp: Invalid char in file name\n");
         goto fail;
     }
 
@@ -213,9 +222,11 @@ search_in_dir (
             if (Status == 0)
             {
                 // #debug
-                debug_print("search_in_dir: Found\n");
-                // printk ("search_in_dir: Found\n");
+                debug_print("__search_in_dir_imp: Found\n");
+                // printk ("__search_in_dir_imp: Found\n");
                 // *index_return = j;
+
+                // ok, found
                 return (int) TRUE; 
             }
             // Nothing
@@ -225,12 +236,38 @@ search_in_dir (
     };
 
 fail:
-    //debug_print("search_in_dir: Not found\n");
-    printk("search_in_dir: Not found %s\n",Name_Desired);
-    // return FALSE;
-    return (int) -1;
+    printk("__search_in_dir_imp: Not found %s\n", Name_Desired);
+    // Fail. Not found.
+    return FALSE;
 }
 
+// OUT:
+// TRUE  = Found
+// FALSE = Not found or error
+int 
+search_in_dir ( 
+    const char *file_name, 
+    unsigned long dir_address )
+{
+
+// File name
+    if ((void*) file_name == NULL){
+        printk ("search_in_dir: file_name\n");
+        goto fail;
+    }
+    if (*file_name == 0){
+        printk ("search_in_dir: *file_name\n");
+        goto fail;
+    }
+    return (int) __search_in_dir_imp(file_name, dir_address);
+
+fail:
+    return (int) FALSE;
+}
+
+// OUT:
+// TRUE  = Found
+// FALSE = Not found or error
 int search_in_root(const char *file_name)
 {
     unsigned long dir_va = VOLUME1_ROOTDIR_ADDRESS;
@@ -246,10 +283,12 @@ int search_in_root(const char *file_name)
         debug_print("search_in_root: *file_name\n");
         goto fail;
     }
-// IN: filename, dir address
-    return (int) search_in_dir(file_name,dir_va);
+
+    // IN: filename, dir address
+    return (int) search_in_dir(file_name, dir_va);
+
 fail:
-    return (int) -1;
+    return FALSE;
 }
 
 /*
@@ -357,20 +396,18 @@ fail:
 
 // Wrapper
 // Only in root dir.
+// OUT: TRUE or FALSE
 int fsSearchFileInRoot(const char *file_name)
 {
-    //debug_print ("fsSearchFileInRoot:\n");
-
-// Parameter:
     if ((void *) file_name == NULL){
         goto fail;
     }
     //if (*file_name == 0)
         //goto fail;
-
     return (int) search_in_root(file_name);
+
 fail:
-    return (int) -1;
+    return (int) FALSE;
 }
 
 /*
