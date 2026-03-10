@@ -1,9 +1,6 @@
-/*
- * File: kmain.h
- *     Initialization support.
- * History:
- *     2015 - Created by Fred Nora.
- */
+// kmain.h
+// Kernel initialization support
+// 2015 - Created by Fred Nora.
 
 #ifndef __KMAIN_H
 #define __KMAIN_H    1

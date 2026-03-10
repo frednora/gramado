@@ -3,8 +3,8 @@
 // Environment: ring 0.
 // Created by Fred Nora.
 
-#ifndef __GRAMK_GRE_H
-#define __GRAMK_GRE_H    1
+#ifndef __GRE_GRE_H
+#define __GRE_GRE_H    1
 
 
 //===========================
@@ -12,6 +12,10 @@
 // 
 // Window type
 //
+
+// Why we are dealing with window types in the ring 0 graphics engine?
+// It's bacause we will implement some window management functions 
+// in the ring 0 graphics engine.
 
 #define WT_NULL          0 
 #define WT_SIMPLE        1
@@ -44,46 +48,19 @@
 // Window status
 #define WINDOW_STATUS_ACTIVE       1
 #define WINDOW_STATUS_INACTIVE     0
-//...
+// ...
 
-/* rgba */
+// RGBA tag
 struct tagRGBA
 {
-    object_type_t  objectType;
+    object_type_t objectType;
     object_class_t objectClass;
+
+// RGBA
    char red;
    char green;
    char blue;
    char alpha;
-};
-
-//--------------------------------------
-
-// Isso pode ser útil principalmente
-// para passar um retângulo de um ambiente para outro.
-// É muito mais didático que a figura do retângulo como objeto.
-struct surface_d
-{
-    int used;
-    int magic;
-// Surface ID.
-    int surface_id;
-    struct rect_d rect;
-// How many bytes?
-    size_t size_in_bytes;
-    int bpp;
-    unsigned long width;
-    unsigned long pitch;
-    unsigned long height;
-
-// Window ID.
-// This window owns this surface.
-// The wid provided by the window server.
-    int owner_wid;
-
-    int dirty;
-
-    struct surface_d *next;
 };
 
 //--------------------------------------
@@ -92,50 +69,47 @@ struct surface_d
 // foram carregados.
 // queremos saber se o endereço alocado eh compartilhado ...
 // para o window server usar ... entao chamaremos de sharedbufferIcon.
-// see: kgwm.c
+// see: gre.c
 
 // Icon cache structure.
-// see: kgwm.c
+// see: gre.c
 struct icon_cache_d
 {
     int initialized;
     size_t size_in_bytes;
-// Pointers to shared memory.
-    void *app;  //1
+
+// Pointers to shared memory
+    void *app;        // 1
     void *file; 
     void *folder;
     void *terminal;
-    void *cursor;  //5
+    void *cursor;     // 5
+    // ...
 };
 extern struct icon_cache_d  icon_cache;
 
-
-// gui:
-// 2015 - Created by Fred Nora.
+// High level GUI structure.
+// General information about the ring 0 GUI subsystem.
 struct gui_d
 {
     int initialized;
 
-// redraw
-// Flag para repintar todas as janelas.
-// #todo: #bugbug, Isso parece estranho. Cada janela
-// está pintada em seu buffer dedicado e fica por conta de
-// cada janela decidir se repinta ou não apenas ela.
-
+// #todo: 
+// It indicated that we gotta repaint some components.
+// (Not defined yet)
     int redraw;
 
-// refresh
-// Flag para enviar do backbuffer para a memória de video.
-// Seguindo uma lista linkada, copiaremos o conteúdo do buffer
-// dedicado de cada janela da lista no LFB. Primeiro é Backbuffer
-// que é o buffer da janela principal, que funcionará como
-// Head da lista.
-
+// #todo: 
+// It indicated that we gotta flush into the LFB some components.
+// (Not defined yet)
     int refresh;
 
 // Security
+// User information
     struct usession_d  *user_session;
-// #todo: cgroup spport
+
+// #todo: 
+// cgroup spport
     // struct cgroup_d  *cgroup;
 };
 extern struct gui_d  *gui; 
@@ -170,16 +144,18 @@ extern int textcursorStatus;
 extern unsigned long g_mousepointer_x;
 extern unsigned long g_mousepointer_y;
 
-//===========================
-
-#define grMIN2(a, b)  (((a) < (b)) ? (a) : (b))
-#define grMAX2(a, b)  (((a) > (b)) ? (a) : (b))
-#define grMIN3(x,y,z)     (x < y  ? (x < z ? x : z) : (y < z ? y : z))
-#define grMAX3(x,y,z)     ( (x>y) ? ((x>z)?x:z)     : ((y>z)?y:z) )
-
 //  Compositor
 extern int DemoFlag;
 extern int UpdateScreenFlag;
+
+// ===========================
+
+// Macros used in the graphics engine.
+#define grMIN2(a, b)     (((a) < (b)) ? (a) : (b))
+#define grMAX2(a, b)     (((a) > (b)) ? (a) : (b))
+#define grMIN3(x,y,z)    (x < y  ? (x < z ? x : z) : (y < z ? y : z))
+#define grMAX3(x,y,z)    ( (x>y) ? ((x>z)?x:z)     : ((y>z)?y:z) )
+
 
 //
 // == prototypes =====================================
@@ -242,6 +218,4 @@ int greLoadGramadoIcons(void);
 int gre_initialize(void);
 
 #endif   
-
-
 

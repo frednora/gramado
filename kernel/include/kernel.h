@@ -50,7 +50,7 @@
 // ===============================
 #include "../halls/apphalls/exec/ke/intake/x64init.h"  // x64 kernel initialization.
 
-// kernel initialization.
+// kernel initialization
 #include "../kmain.h"
 
 
@@ -227,6 +227,7 @@
 #include "../gthouse/wink/gdi/gre/line.h"
 #include "../gthouse/wink/gdi/gre/rect.h"
 #include "../gthouse/wink/gdi/gre/bitblt.h"
+#include "../gthouse/wink/gdi/gre/surface.h"
 #include "../gthouse/wink/gdi/gre/gre.h"
 
 #include "../gthouse/wink/gdi/dispsrv.h"

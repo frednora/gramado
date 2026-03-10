@@ -79,7 +79,7 @@ static int __gre_initialize_globals(void);
 
 void kgws_enable(void)
 {
-    debug_print("kgws_enable: Enable KGWS\n");
+    //debug_print("kgws_enable: Enable KGWS\n");
          printk("kgws_enable: Enable KGWS\n");
 
     // Sending event messages to the thread associated with the wwf.
@@ -90,7 +90,7 @@ void kgws_enable(void)
 
 void kgws_disable(void)
 {
-    debug_print("kgws_disable:\n");
+    //debug_print("kgws_disable:\n");
          printk("kgws_disable:\n");
 
     displayInitializeBackground(COLOR_RED,TRUE);
