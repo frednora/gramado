@@ -26,21 +26,19 @@ __virtual_to_physical (
 
 
 // PAE and PGE
-// inline?
 void __enable_pae(void)
 {
     // PAE and PGE.
-    asm volatile ( " movq %%cr4, %%rax; "
-                   " orl $0x20,  %%eax; "
+    asm volatile ( " movq %%cr4, %%rax \n "
+                   " orl $0x20,  %%eax \n " 
                    " movq %%rax, %%cr4  " :: );
 }
 
-// inline?
 void x64mm_enable_paging(void)
 {
     // Only paging.
-    asm volatile (" movq %%cr0, %%rax;      "
-                  " orl $0x80000000, %%eax; "
+    asm volatile (" movq %%cr0, %%rax      \n "
+                  " orl $0x80000000, %%eax \n "
                   " movq %%rax, %%cr0       " :: );
 }
 
@@ -56,9 +54,9 @@ void x64mm_load_pml4_table(unsigned long phy_addr)
     asm volatile ("movq %0, %%cr3"::"r"(phy_addr));
 }
 
+// Refresh
 void x64mm_refresh_cr3(void)
 {
-    // Refresh
     asm volatile ("movq %cr3, %rax");
     asm volatile ("movq %rax, %cr3");
 }
@@ -113,6 +111,8 @@ __virtual_to_physical (
         printk("d=%d\n",d); //directory
         printk("t=%d\n",t); //page table
         printk("o=%d\n",o); //offset 4096 bytes limit
+
+        // #hang
         refresh_screen();
         while (1){
         };

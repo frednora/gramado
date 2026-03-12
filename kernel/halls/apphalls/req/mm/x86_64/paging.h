@@ -1,10 +1,8 @@
 // paging.h
 // Paging for x86_64 machines.
-// Created by Fred Nora.
-
-// Heder for supporting the creation of the 
+// Header for supporting the creation of the 
 // main system's page tables by paging.c
-
+// Created by Fred Nora.
 
 #ifndef __X86_64_PAGING_H
 #define __X86_64_PAGING_H    1
@@ -63,15 +61,17 @@
 #define PAGE_AVAIL   0xE00
 
 // Meaning: This combination ensures the page is present and writable.
-#define PAGE_PRESENT_WRITE       ( PAGE_WRITE | PAGE_PRESENT )
+#define PAGE_PRESENT_WRITE  \
+    ( PAGE_WRITE | PAGE_PRESENT )
 
 // Meaning: Here, the page is marked as present, writable, and accessible from user space.
-#define PAGE_PRESENT_WRITE_USER  ( PAGE_USER | PAGE_WRITE | PAGE_PRESENT )
+#define PAGE_PRESENT_WRITE_USER  \
+    ( PAGE_USER | PAGE_WRITE | PAGE_PRESENT )
 
 // Meaning: This likely represents the default protection for 
 // kernel pages—present and writable but 
 // intentionally not marked as accessible to user mode (since it lacks PAGE_USER).
-#define PAGE_KERNEL_PGPROT       (PAGE_PRESENT_WRITE)
+#define PAGE_KERNEL_PGPROT    (PAGE_PRESENT_WRITE)
 
 
 // Physical Address Bits (Bits 12–51): 

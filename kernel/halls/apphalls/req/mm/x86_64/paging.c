@@ -725,15 +725,20 @@ static void __mmSetupMemoryUsage(void)
 
 }
 
-// Checar se a estrutura de página é nula
-// This is very ugly
+// Is it a valid structure?
 int isValidPageStruct(struct page_d *p)
 {
-    return (p == NULL) ? TRUE : FALSE;
+    if ((void*) p == NULL)
+        return FALSE;
+
+    if (p->used == TRUE && p->magic == 1234)
+        return TRUE;
+
+    return FALSE;
 }
 
-// Selecionar a página como livre.
-void freePage (struct page_d *p)
+// Mark the page as free
+void freePage(struct page_d *p)
 {
     if ((void*) p == NULL)
     {
@@ -748,7 +753,7 @@ void freePage (struct page_d *p)
     }
 }
 
-// Selecionar a pagina como nao livre.
+// Mark the page as not free
 void notfreePage(struct page_d *p)
 {
     if ((void*) p == NULL)
@@ -1075,6 +1080,9 @@ static void __initialize_canonical_physical_regions(void)
 
 static void __initialize_ring0area(void)
 {
+    // #ps: In this case virtual and physical addresses are the same.
+    unsigned long target_pd_va = (unsigned long) KERNEL_PD_PA;
+
     unsigned long *pt_ring0area = 
         (unsigned long *) get_table_pointer_va();  //PAGETABLE_RING0AREA; 
 
@@ -1120,7 +1128,7 @@ static void __initialize_ring0area(void)
 // As flags usadas em todas as entradas da pagetable
 // e na entrada do diretório de páginas.
     mm_fill_page_table( 
-        (unsigned long) KERNEL_PD_PA,       // pd 
+        (unsigned long) target_pd_va,       // pd 
         (int) pdindex,                      // entry
         (unsigned long) &pt_ring0area[0],   // pt
         (unsigned long) kerneladdress_pa,   // region base
@@ -1154,6 +1162,9 @@ static void __initialize_ring3area(void)
 // #todo
 // Pra que essa area esta sendo usada?
 
+    // #ps: In this case virtual and physical addresses are the same.
+    unsigned long target_pd_va = (unsigned long) KERNEL_PD_PA;
+
     unsigned long *pt_ring3area = 
         (unsigned long *) get_table_pointer_va();
 
@@ -1185,7 +1196,7 @@ static void __initialize_ring3area(void)
 // As flags usadas em todas as entradas da pagetable
 // e na entrada do diretório de páginas.
     mm_fill_page_table( 
-        (unsigned long) KERNEL_PD_PA,      // pd 
+        (unsigned long) target_pd_va,      // pd 
         (int) pdindex,                     // entry
         (unsigned long) &pt_ring3area[0],  // pt
         (unsigned long) useraddress_pa,    // region base
@@ -1212,6 +1223,9 @@ static void __initialize_ring3area(void)
 
 static void __initialize_kernelimage_region(void)
 {
+    // #ps: In this case virtual and physical addresses are the same.
+    unsigned long target_pd_va = (unsigned long) KERNEL_PD_PA;
+
     unsigned long *pt_kernelimage = 
         (unsigned long *) get_table_pointer_va();  //PAGETABLE_KERNELIMAGE; 
 
@@ -1250,7 +1264,7 @@ static void __initialize_kernelimage_region(void)
 // As flags usadas em todas as entradas da pagetable
 // e na entrada do diretório de páginas.
     mm_fill_page_table( 
-        (unsigned long) KERNEL_PD_PA,        // pd 
+        (unsigned long) target_pd_va,        // pd 
         (int) pdindex,                       // entry
         (unsigned long) &pt_kernelimage[0],  // pt
         (unsigned long) kernelimage_pa,      // region base
@@ -1280,6 +1294,8 @@ static void __initialize_kernelimage_region(void)
 
 static void __initialize_frontbuffer(void)
 {
+    // #ps: In this case virtual and physical addresses are the same.
+    unsigned long target_pd_va = (unsigned long) KERNEL_PD_PA;
 
 // The pagetable for the frontbuffer.
 // #warning: 
@@ -1322,7 +1338,7 @@ static void __initialize_frontbuffer(void)
 // e na entrada do diretório de páginas.
 
     mm_fill_page_table( 
-        (unsigned long) KERNEL_PD_PA,        // pd 
+        (unsigned long) target_pd_va,        // pd 
         (int) pdindex,                       // entry
         (unsigned long) &pt_frontbuffer[0],  // pt
         (unsigned long) framebuffer_pa,      // region base
@@ -1351,12 +1367,13 @@ static void __initialize_frontbuffer(void)
 //  + Apontamos a pagetable para uma entrada do diretório do kernel.
 //
 
-static void __initialize_backbuffer(void)
-{
 // Mapping the backbuffer.
 // see: BACKBUFFER_PA in x64gpa.h
 // see: BACKBUFFER_VA in x64gva.h
-
+static void __initialize_backbuffer(void)
+{
+    // #ps: In this case virtual and physical addresses are the same.
+    unsigned long target_pd_va = (unsigned long) KERNEL_PD_PA;
 
 // The pagetable for the backbuffer.
 // #warning: 
@@ -1400,7 +1417,7 @@ static void __initialize_backbuffer(void)
 // The display server is gonna need this.
 
     mm_fill_page_table( 
-        (unsigned long) KERNEL_PD_PA,       // pd 
+        (unsigned long) target_pd_va,       // pd 
         (int) pdindex,                      // entry
         (unsigned long) &pt_backbuffer[0],  // pt
         (unsigned long) backbuffer_pa,      // region base
@@ -1420,6 +1437,9 @@ static void __initialize_backbuffer(void)
 
 static void __initialize_pagedpool(void)
 {
+    // #ps: In this case virtual and physical addresses are the same.
+    unsigned long target_pd_va = (unsigned long) KERNEL_PD_PA;
+
     unsigned long *pt_pagedpool = 
         (unsigned long *) get_table_pointer_va();  //PAGETABLE_PAGEDPOOL;
 
@@ -1450,74 +1470,11 @@ static void __initialize_pagedpool(void)
 // As flags usadas em todas as entradas da pagetable
 // e na entrada do diretório de páginas.
     mm_fill_page_table( 
-        (unsigned long) KERNEL_PD_PA,      // pd 
+        (unsigned long) target_pd_va,      // pd 
         (int) pdindex,                     // entry
         (unsigned long) &pt_pagedpool[0],  // pt
         (unsigned long) pagedpool_pa,      // region base 
         (unsigned long) ( PAGE_USER | PAGE_WRITE | PAGE_PRESENT ) );  // flags=7
-}
-
-// ---------------------------
-// mm_map_2mb_region:
-// OUT: 0=OK -1=FAIL.
-int 
-mm_map_2mb_region(
-    unsigned long pa,
-    unsigned long va)
-{
-// + Only ring 0.
-// + Only in the kernel's main page directory.
-// ---------------------------
-// Flags: = 0x1B
-// 10=cache desable 
-// 8= Write-Through 
-// 0x002 = Writeable 
-// 0x001 = Present
-// 0001 1011
-
-// #todo
-// We can create another version of this function,
-// but with flags into parameters.
-
-    unsigned long _pa = (unsigned long) pa;
-    unsigned long _va = (unsigned long) va;
-
-// pt
-// 0x00088000
-    unsigned long *_pt = (unsigned long *) get_table_pointer_va();
-    if ((void*) _pt == NULL){
-        goto fail;
-    }
-
-// pd index:
-    int pdindex = (int) X64_GET_PDE_INDEX(_va);
-    if (pdindex < 0)
-        goto fail;
-    if (pdindex >= 512)
-        goto fail;
-
-// Flags:
-// 10=cache desable 
-// 8= Write-Through 
-// 0x002 = Writeable 
-// 0x001 = Present
-// 0001 1011
-    unsigned long flags = (unsigned long) 0x1B;
-
-// + Only ring 0.
-// + Only in the kernel's main page directory.
-
-    mm_fill_page_table( 
-        (unsigned long) KERNEL_PD_PA,  // pd 
-        (int) pdindex,                 // entry
-        (unsigned long) &_pt[0],       // pt
-        (unsigned long) _pa,           // region base
-        (unsigned long) flags );       // flags=1b
-
-//ok
-    return 0;
-fail:
-    return (int) -1;
 }
 
 // local worker
@@ -1540,6 +1497,9 @@ fail:
 
 static void __initialize_heappool(void)
 {
+    // #ps: In this case virtual and physical addresses are the same.
+    unsigned long target_pd_va = (unsigned long) KERNEL_PD_PA;
+
 // The pagetable.
     unsigned long *pt_heappool = 
         (unsigned long *) get_table_pointer_va();  //PAGETABLE_HEAPPOOL; 
@@ -1579,7 +1539,7 @@ static void __initialize_heappool(void)
 // As flags usadas em todas as entradas da pagetable
 // e na entrada do diretório de páginas.
     mm_fill_page_table( 
-        (unsigned long) KERNEL_PD_PA,     // pd 
+        (unsigned long) target_pd_va,     // pd 
         (int) pdindex,                    // entry
         (unsigned long) &pt_heappool[0],  // pt
         (unsigned long) heappool_pa,      // region base
@@ -1595,6 +1555,9 @@ static void __initialize_heappool(void)
 
 static void __initialize_extraheap1(void)
 {
+    // #ps: In this case virtual and physical addresses are the same.
+    unsigned long target_pd_va = (unsigned long) KERNEL_PD_PA;
+
     unsigned long *pt_extraheap1 = 
         (unsigned long *) get_table_pointer_va();
 
@@ -1620,7 +1583,7 @@ static void __initialize_extraheap1(void)
 // As flags usadas em todas as entradas da pagetable
 // e na entrada do diretório de páginas.
     mm_fill_page_table( 
-        (unsigned long) KERNEL_PD_PA,       // pd 
+        (unsigned long) target_pd_va,       // pd 
         (int) pdindex,                      // entry
         (unsigned long) &pt_extraheap1[0],  // pt
         (unsigned long) extraheap1_pa,      // region base
@@ -1634,6 +1597,9 @@ static void __initialize_extraheap1(void)
 // used by the slab allocator.
 static void __initialize_extraheap2(void)
 {
+    // #ps: In this case virtual and physical addresses are the same.
+    unsigned long target_pd_va = (unsigned long) KERNEL_PD_PA;
+
     unsigned long *pt_extraheap2 = 
         (unsigned long *) get_table_pointer_va();
 
@@ -1660,7 +1626,7 @@ static void __initialize_extraheap2(void)
 // As flags usadas em todas as entradas da pagetable
 // e na entrada do diretório de páginas.
     mm_fill_page_table( 
-      (unsigned long) KERNEL_PD_PA,       // pd 
+      (unsigned long) target_pd_va,       // pd 
       (int) pdindex,                      // entry
       (unsigned long) &pt_extraheap2[0],  // pt
       (unsigned long) extraheap2_pa,      // region base
@@ -1673,6 +1639,9 @@ static void __initialize_extraheap2(void)
 // used by the slab allocator.
 static void __initialize_extraheap3(void)
 {
+    // #ps: In this case virtual and physical addresses are the same.
+    unsigned long target_pd_va = (unsigned long) KERNEL_PD_PA;
+
     unsigned long *pt_extraheap3 = 
         (unsigned long *) get_table_pointer_va();
 
@@ -1692,13 +1661,79 @@ static void __initialize_extraheap3(void)
     g_extraheap3_size = (1024 * 2);  
 
     mm_fill_page_table( 
-        (unsigned long) KERNEL_PD_PA,       // pd 
+        (unsigned long) target_pd_va,       // pd 
         (int) pdindex,                      // entry
         (unsigned long) &pt_extraheap3[0],  // pt
         (unsigned long) extraheap3_pa,      // region base
         (unsigned long) ( PAGE_USER | PAGE_WRITE | PAGE_PRESENT ) );  // flags=7
 
     g_extraheap3_initialized = TRUE;
+}
+
+// ---------------------------
+// mm_map_2mb_region:
+// OUT: 0=OK -1=FAIL.
+int 
+mm_map_2mb_region(
+    unsigned long pa,
+    unsigned long va)
+{
+// + Only ring 0.
+// + Only in the kernel's main page directory.
+// ---------------------------
+// Flags: = 0x1B
+// 10=cache desable 
+// 8= Write-Through 
+// 0x002 = Writeable 
+// 0x001 = Present
+// 0001 1011
+
+// #todo
+// We can create another version of this function,
+// but with flags into parameters.
+
+    unsigned long _pa = (unsigned long) pa;
+    unsigned long _va = (unsigned long) va;
+
+    // #ps: In this case virtual and physical addresses are the same.
+    unsigned long target_pd_va = (unsigned long) KERNEL_PD_PA;
+
+// pt
+// 0x00088000
+    unsigned long *_pt = (unsigned long *) get_table_pointer_va();
+    if ((void*) _pt == NULL){
+        goto fail;
+    }
+
+// pd index:
+    int pdindex = (int) X64_GET_PDE_INDEX(_va);
+    if (pdindex < 0)
+        goto fail;
+    if (pdindex >= 512)
+        goto fail;
+
+// Flags:
+// 10=cache desable 
+// 8= Write-Through 
+// 0x002 = Writeable 
+// 0x001 = Present
+// 0001 1011
+    unsigned long flags = (unsigned long) 0x1B;
+
+// + Only ring 0.
+// + Only in the kernel's main page directory.
+
+    mm_fill_page_table( 
+        (unsigned long) target_pd_va,  // pd 
+        (int) pdindex,                 // entry
+        (unsigned long) &_pt[0],       // pt
+        (unsigned long) _pa,           // region base
+        (unsigned long) flags );       // flags=1b
+
+    return 0;  // ok
+
+fail:
+    return (int) -1;
 }
 
 // PAGE TABLES.
@@ -1819,15 +1854,12 @@ int pagesInitializePaging(void)
 {
     register unsigned int i=0;
 
-    //if( serial_debug == TRUE )
-        //debug_print("pagesInitializePaging:\n");
+    //debug_print("pagesInitializePaging:\n");
 
-// local worker:
-// RAM usage management.
+// RAM usage management
     __initialize_ram_usage_varables();
 
-// local worker:
-// Default physical regions.
+// Default physical regions
     __initialize_canonical_physical_regions();
 
 // =========================================================
@@ -1835,7 +1867,8 @@ int pagesInitializePaging(void)
 //
 // pml4
 //
-    // 0x0009C000 = Kernel pml4
+
+// 0x0009C000 = Kernel pml4
 // 9 9 9 9 12
 // Agora as tabelas possuem 512 entradas,
 // pois é isso o que dá pra ter com apenas 9 bits.
@@ -1852,22 +1885,23 @@ int pagesInitializePaging(void)
 // PT   - Page Table
 
 
-// Isso porque endereço físico e virtual são igual abaixo de 1 mb.
 // 0x0009C000va = 0x0009C000pa
+// This is because physical and virtual address 
+// are the same below 1 MB.
 // See: x64gpa.h
 
     gKernelPML4Address = (unsigned long) KERNEL_PML4_VA;
 
 // See: x64gva.h
+// level 4: 0x000000000009C000
+// level 3: 0x000000000009B000
+// level 2: 0x000000000009A000
+// level 1: There is a lot of page tables for level 1
 
-    // level 4: 0x000000000009C000
     unsigned long *kernel_pml4  = (unsigned long *) KERNEL_PML4_PA;
-    // level 3: 0x000000000009B000
     unsigned long *kernel_pdpt0 = (unsigned long *) KERNEL_PDPT_PA;
-    // level 2: 0x000000000009A000
     unsigned long *kernel_pd0   = (unsigned long *) KERNEL_PD_PA;
-    // level 1
-    // A lot of page tables in level 1.
+
 
 //
 // Saving the data
@@ -1990,17 +2024,18 @@ int pagesInitializePaging(void)
     kernel_pml4[0] = 
         (unsigned long) ( kernel_pml4[0] | PAGE_USER | PAGE_WRITE | PAGE_PRESENT );
 
-// local worker: 
-// Initialize kernel page tables.
+
+// Initialize kernel page tables
+
     __initialize_canonical_kernel_pagetables();
 
-    if (memorysizeTotal == 0){
+    if (memorysizeTotal == 0)
+    {
         debug_print ("pagesInitializePaging: [FIXME] We need the memorysizeTotal\n");
-        //while(1){}
+        
+        // #bugbug: Verbose is not available yet.
+        // while(1){}
     }
-    //debug_print ("pagesInitializePaging: [DEBUG] memorysizeTotal is not zero\n");
-    //while(1){}
-
 
 // ------
 // Initialize frame table.
@@ -2030,7 +2065,7 @@ int pagesInitializePaging(void)
 // ==============================================
 
 // ---- Last thing ----
-// local worker: Setup memory usage.
+// Setup memory usage.
 // This moment we're gonna know how much memory was mapped
 // and how much memory we still have available.
     __mmSetupMemoryUsage();
@@ -2061,7 +2096,8 @@ int pagesInitializePaging(void)
 // Esse é um ponteiro para uma região da memória
 // abaixo de 1MB.
 
-    load_pml4_table( (void *) &kernel_pml4[0] );
+    //load_pml4_table( (void *) &kernel_pml4[0] );
+    load_pml4_table(kernel_mm_data.pml4_pa);
 
 //-----------------------------------------------------
 
@@ -2083,7 +2119,6 @@ int pagesInitializePaging(void)
 // + If overflow.
     //size_t _size_in_kb=0;
     //size_t _size_in_bytes=0;
-
 
 /*
 // Clear the extraheap 1
@@ -2137,10 +2172,8 @@ int pagesInitializePaging(void)
     //    asm ("cli");
     //}
 
-//done:
-    //debug_print("pagesInitializePaging: done\n");
-// OK
-    return 0;
+    return 0;  // OK
+
 fail:
     return (int) -1;
 }

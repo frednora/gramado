@@ -6,6 +6,15 @@
 // Na maquina real, o processo clone esta recebendo
 // o mesmo pid do processo pai. Mas no qemu esta funcionando bem.
 
+/*
+Clone the page tables:
+At the start of copy_process00, it calls CloneKernelPML4() to give 
+the child process its own PML4.
+Then attaches the parent’s PDPT0 and PD0 to the child.
+This means the child inherits the kernel mappings and 
+the parent’s user mappings, but has its own top‑level PML4 entry.
+*/
+
 #include <kernel.h> 
 
 int copy_process_in_progress=FALSE;
