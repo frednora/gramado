@@ -33,6 +33,7 @@ backbuffer_putpixel (
         return (int) -1;
     if (dc_backbuffer->magic != 1234)
         return (int) -1;
+
     return (int) bldisp_putpixel0(dc_backbuffer, _color, _x, _y, _rop_flags);
 }
 

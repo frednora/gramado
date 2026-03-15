@@ -221,17 +221,15 @@ __drawrectangle0(
             }
         }
 
-        // Decrementa o contador.
-        internal_height--;
+        internal_height--;  // Decrement counter
         if (internal_height == 0){
             break;
         }
     };
 
-// Invalidate
-    Rect.dirty = TRUE;
-
+    Rect.dirty = TRUE;  // Invalidate
     return (int) npixels;
+
 fail:
     return 0;
 }
@@ -289,7 +287,8 @@ frontbuffer_draw_rectangle(
 // de apenas 2MB de backbuffer mapeados.
 // Pois nao queremos escrever em área não mapeada.
 //
-
+// Copy a rectangle.
+// Given the addresses of the buffers.
 static void 
 __refresh_rectangle0 ( 
     unsigned long x, 
@@ -299,10 +298,6 @@ __refresh_rectangle0 (
     unsigned long buffer_dest,
     unsigned long buffer_src )
 {
-// Copy a rectangle.
-// Given the addresses of the buffers.
-
-    //#debug
     // debug_print("__refresh_rectangle0: (Ring 0)\n");
 
 // #todo
@@ -339,8 +334,7 @@ __refresh_rectangle0 (
     unsigned long deviceHeight = (unsigned long) screenGetHeight();
     if ( deviceWidth == 0 || deviceHeight == 0 )
     {
-        debug_print ("refresh_rectangle: w h\n");
-        panic       ("refresh_rectangle: w h\n");
+        panic ("__refresh_rectangle0: w h\n");
     }
 
 // Internal
@@ -370,7 +364,7 @@ __refresh_rectangle0 (
             break;
         // ... #todo
         default:
-            panic("refresh_rectangle: gSavedBPP\n");
+            panic("__refresh_rectangle0: gSavedBPP\n");
             break;
     };
 
@@ -527,14 +521,16 @@ refresh_rectangle (
     long i=0;
     long count=2000000;
 
-    if (RefreshFlash==TRUE)
+    // Draw directly into the LFB
+    if (RefreshFlash == TRUE)
     {
-        // Draw directly into the lfb.
         frontbuffer_draw_rectangle( 
             x, y, width, height, 
             COLOR_YELLOW, 0 );
-         // Wait ...
-         for (i=0; i<count; i++){};
+        // Wait ...
+        for (i=0; i<count; i++)
+        {
+        };
     }
 // =====================
 
@@ -544,10 +540,8 @@ refresh_rectangle (
         BACKBUFFER_ADDRESS );  // src
 }
 
-/*
- * scroll_screen_rect:
- *     Scroll a rectangle. ?
- */
+// scroll_screen_rect:
+// Scroll a rectangle?
 // Helper function to scroll routine.
 // Called by console_scroll_rect() in tty/console.c
 // Only for full screen console.
@@ -588,6 +582,7 @@ void scroll_screen_rect (void)
     line_size = (unsigned int) deviceWidth; 
     lines     = (unsigned int) deviceHeight;
 
+    // Bits per pixel
     switch (gSavedBPP){
     case 32: bytes_count = 4; break;
     case 24: bytes_count = 3; break;
@@ -622,7 +617,8 @@ void scroll_screen_rect (void)
         // #todo: Create a variable for 'pitch' and use streigh reduction
         count = ((line_size * bytes_count) / 4); 
         // count = (internal_pitch>>2);  // #todo: Use this one.
-        for ( i=0; i < lines; i++ ){
+        for (i=0; i<lines; i++)
+        {
             memcpy32 (Dest,Src,count);
             Src  += (deviceWidth * bytes_count);
             Dest += (deviceWidth * bytes_count);
