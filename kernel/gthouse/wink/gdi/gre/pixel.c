@@ -15,7 +15,13 @@
 
 // ===================================================
 
-
+// Putpixel at the given buffer address.
+// Return the number of changed pixels.
+// #todo:
+// Maybe here is a good place for blending operations.
+// It depends on the current display device device driver.
+// see: bldisp.c
+// #test: using decive context
 int 
 backbuffer_putpixel ( 
     unsigned int  _color,
@@ -23,27 +29,20 @@ backbuffer_putpixel (
     unsigned long _y, 
     unsigned long _rop_flags )
 {
+    if ((void*) dc_backbuffer == NULL)
+        return (int) -1;
+    if (dc_backbuffer->magic != 1234)
+        return (int) -1;
+    return (int) bldisp_putpixel0(dc_backbuffer, _color, _x, _y, _rop_flags);
+}
+
 // Putpixel at the given buffer address.
 // Return the number of changed pixels.
 // #todo:
 // Maybe here is a good place for blending operations.
-
-// #todo
 // It depends on the current display device device driver.
 // see: bldisp.c
-/*
-    return (int ) bldisp_putpixel0(
-        _color,
-        _x,
-        _y,
-        _rop_flags,
-        BACKBUFFER_VA );
-*/
-
-    // #test: using decive context
-    return (int) bldisp_putpixel0(dc_backbuffer, _color, _x, _y, _rop_flags);
-}
-
+// #test: using decive context
 int 
 frontbuffer_putpixel ( 
     unsigned int  _color,
@@ -51,25 +50,11 @@ frontbuffer_putpixel (
     unsigned long _y, 
     unsigned long _rop_flags )
 {
-// Putpixel at the given buffer address.
-// Return the number of changed pixels.
-// #todo:
-// Maybe here is a good place for blending operations.
+    if ((void*) dc_frontbuffer == NULL)
+        return (int) -1;
+    if (dc_frontbuffer->magic != 1234)
+        return (int) -1;
 
-// #todo
-// It depends on the current display device device driver.
-// see: bldisp.c
-
-    /*
-    return (int) bldisp_putpixel0(
-        _color,
-        _x,
-        _y,
-        _rop_flags,
-        FRONTBUFFER_VA );
-    */
-
-    // #test: using decive context
     return (int) bldisp_putpixel0(dc_frontbuffer, _color, _x, _y, _rop_flags);
 }
 
