@@ -240,6 +240,7 @@ xxxProcessEvent (
                     return 0;
                 }
                 break;
+
             case 4002:  //app2
                 // This is a special tid used by the kernel.
                 // This thread doesn't exist.
@@ -257,12 +258,13 @@ xxxProcessEvent (
                     //sprintf(__filename_local_buffer,"#bmenu.bin");
                     //sprintf(__filename_local_buffer,"#dbox.bin");
                     //sprintf(__filename_local_buffer,"#launch.bin");
-                    //sprintf(__filename_local_buffer,"#power.bin");
-                    sprintf(__filename_local_buffer,"#draw.bin");
+                    sprintf(__filename_local_buffer,"#power.bin");
+                    //sprintf(__filename_local_buffer,"#draw.bin");
                     rtl_clone_and_execute(__filename_local_buffer);
                     return 0;
                 }
                 break;
+
             case 4003:  //app3
                 // This is a special tid used by the kernel.
                 // This thread doesn't exist.
@@ -284,6 +286,7 @@ xxxProcessEvent (
                     return 0;
                 }
                 break;
+
             case 4004:  //app4
                 // This is a special tid used by the kernel.
                 // This thread doesn't exist.
@@ -315,6 +318,7 @@ xxxProcessEvent (
                     return 0;
                 }
                 break;
+
             // ...
             default:
                 break;
