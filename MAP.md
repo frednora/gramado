@@ -5,7 +5,7 @@
 ## Bootloader
 
 ```
-iceboot/arch/x86/bsp/
+boot/arch/x86/bsp/
 ```
 
 ## Kernel

@@ -1,4 +1,4 @@
-# iceboot - The bootloader
+# boot - The bootloader
 
 Some OS main components that are not the kernel image itself.
 

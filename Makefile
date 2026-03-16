@@ -104,31 +104,31 @@ build-gramado-os:
 # O BL.BIN procura o kernel no diretorio GRAMADO/
 # See: fs/loader.c
 
-# (1) iceboot/arch/ 
+# (1) boot/arch/ 
 
 # ::Build the bootloader.
-	@echo "Compiling iceboot/"
-	@$(MAKE) -C iceboot/arch/
+	@echo "Compiling boot/"
+	@$(MAKE) -C boot/arch/
 
-	@echo "Installing iceboot/"
+	@echo "Installing boot/"
 
 # Copy the virtual disk into the rootdir.
-	@cp iceboot/arch/GRAMHV.VHD  .
+	@cp boot/arch/GRAMHV.VHD  .
 
 # Copy the bootloader into the rootdir.
-	@cp iceboot/arch/x86/bin/BM.BIN      $(BASE)/
-	@cp iceboot/arch/x86/bin/BM2.BIN     $(BASE)/
-	@cp iceboot/arch/x86/bin/BLGRAM.BIN  $(BASE)/
-	@cp iceboot/arch/x86/bin/MBR0.BIN    $(BASE)/
-	@cp iceboot/arch/x86/bin/APX86.BIN   $(BASE)/
+	@cp boot/arch/x86/bin/BM.BIN      $(BASE)/
+	@cp boot/arch/x86/bin/BM2.BIN     $(BASE)/
+	@cp boot/arch/x86/bin/BLGRAM.BIN  $(BASE)/
+	@cp boot/arch/x86/bin/MBR0.BIN    $(BASE)/
+	@cp boot/arch/x86/bin/APX86.BIN   $(BASE)/
 # Copy the bootloader into the GRAMADO/ directory.
-	@cp iceboot/arch/x86/bin/BM.BIN      $(BASE)/GRAMADO
-	@cp iceboot/arch/x86/bin/BM2.BIN     $(BASE)/GRAMADO
-	@cp iceboot/arch/x86/bin/BLGRAM.BIN  $(BASE)/GRAMADO
-	@cp iceboot/arch/x86/bin/MBR0.BIN    $(BASE)/GRAMADO
+	@cp boot/arch/x86/bin/BM.BIN      $(BASE)/GRAMADO
+	@cp boot/arch/x86/bin/BM2.BIN     $(BASE)/GRAMADO
+	@cp boot/arch/x86/bin/BLGRAM.BIN  $(BASE)/GRAMADO
+	@cp boot/arch/x86/bin/MBR0.BIN    $(BASE)/GRAMADO
 
 # Copy the bootloader into the DE/ directory.
-#	@cp iceboot/arch/x86/bin/APX86.BIN   $(BASE)/DE   
+#	@cp boot/arch/x86/bin/APX86.BIN   $(BASE)/DE   
 
 # (2) kernel/
 
@@ -403,13 +403,13 @@ clean-all: clean
 	-rm *.VHD
 	-rm *.ISO
 
-	-rm iceboot/arch/*.VHD 
+	-rm boot/arch/*.VHD 
 
 # ==================
-# (1) iceboot/arch/
+# (1) boot/arch/
 # Clear boot images
-#	-rm -rf iceboot/arch/arm/bin/*.BIN
-	-rm -rf iceboot/arch/x86/bin/*.BIN
+#	-rm -rf boot/arch/arm/bin/*.BIN
+	-rm -rf boot/arch/x86/bin/*.BIN
 
 # ==================
 # (2) kernel/

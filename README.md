@@ -25,13 +25,13 @@ Some extra features are:
 ## The main folders
 
 ```
-iceboot/  - Gramado OS bootloader.
-kernel/    - Gramado OS kernel.
-modules/   - Ring 0 loadable kernel modules. (Not dynlinked).
-init/      - The init process.
-winu/      - Display server.
-apps/      - Ring 3 client-side GUI applications.
-cmds/      - Posix-like commands.
+boot/     - Gramado OS bootloader.
+kernel/   - Gramado OS kernel.
+modules/  - Ring 0 loadable kernel modules. (Not dynlinked).
+init/     - The init process.
+winu/     - Display server.
+apps/     - Ring 3 client-side GUI applications.
+cmds/     - Posix-like commands.
 ```
 
 ## Main dependencies
@@ -63,7 +63,7 @@ tools/     - SDK tools.
 
 ## Where is the boot loader?
 
-iceboot/boot/
+boot/
 
 ## Where is the kernel?
 
