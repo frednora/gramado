@@ -71,7 +71,7 @@ LDFLAGS := -m elf_x86_64 -s -x -static
 
 # Everything is a file.
 OBJS = dispsrv.o \
-pixel.o line.o rect.o bitblt.o bg.o font.o char.o text.o gre.o gdi.o \
+surface.o pixel.o line.o rect.o bitblt.o bg.o font.o char.o text.o gre.o gdi.o \
 obroker.o output.o ibroker.o input.o \
 osshell.o user.o \
 wink.o    
@@ -82,6 +82,7 @@ all:
 	$(CC) -c gdi/dispsrv.c     $(KERNEL_INCLUDE) $(CFLAGS) -o dispsrv.o
 
 # gre - Graphics Engine interface.
+	$(CC) -c gdi/gre/surface.c  $(KERNEL_INCLUDE) $(CFLAGS) -o surface.o
 	$(CC) -c gdi/gre/pixel.c   $(KERNEL_INCLUDE) $(CFLAGS) -o pixel.o
 	$(CC) -c gdi/gre/line.c    $(KERNEL_INCLUDE) $(CFLAGS) -o line.o
 	$(CC) -c gdi/gre/rect.c    $(KERNEL_INCLUDE) $(CFLAGS) -o rect.o
