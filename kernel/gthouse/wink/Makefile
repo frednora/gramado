@@ -70,12 +70,16 @@ KERNEL_INCLUDE := -I $(INCLUDE)
 LDFLAGS := -m elf_x86_64 -s -x -static  
 
 # Everything is a file.
-OBJS = pixel.o line.o rect.o bitblt.o bg.o font.o char.o text.o gre.o \
+OBJS = dispsrv.o \
+pixel.o line.o rect.o bitblt.o bg.o font.o char.o text.o gre.o gdi.o \
 obroker.o output.o ibroker.o input.o \
-dispsrv.o osshell.o user.o \
+osshell.o user.o \
 wink.o    
 
 all:
+
+# The display server support
+	$(CC) -c gdi/dispsrv.c     $(KERNEL_INCLUDE) $(CFLAGS) -o dispsrv.o
 
 # gre - Graphics Engine interface.
 	$(CC) -c gdi/gre/pixel.c   $(KERNEL_INCLUDE) $(CFLAGS) -o pixel.o
@@ -88,16 +92,19 @@ all:
 	$(CC) -c gdi/gre/text.c    $(KERNEL_INCLUDE) $(CFLAGS) -o text.o
 	$(CC) -c gdi/gre/gre.c     $(KERNEL_INCLUDE) $(CFLAGS) -o gre.o
 
-# gdi - Graphical device interface.
-	$(CC) -c gdi/dispsrv.c  $(KERNEL_INCLUDE) $(CFLAGS) -o dispsrv.o
+# gdi - Interface
+	$(CC) -c gdi/gdi.c     $(KERNEL_INCLUDE) $(CFLAGS) -o gdi.o
+
+# osshell support
 	$(CC) -c gdi/osshell.c  $(KERNEL_INCLUDE) $(CFLAGS) -o osshell.o
 
-# user - User interaction interface.
+# evi - Event interface.
 	$(CC) -c evi/obroker.c  $(KERNEL_INCLUDE) $(CFLAGS) -o obroker.o
 	$(CC) -c evi/output.c   $(KERNEL_INCLUDE) $(CFLAGS) -o output.o
 	$(CC) -c evi/ibroker.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ibroker.o
 	$(CC) -c evi/input.c    $(KERNEL_INCLUDE) $(CFLAGS) -o input.o
 
+# user - User interaction interface.
 	$(CC) -c user/user.c      $(KERNEL_INCLUDE) $(CFLAGS) -o user.o
 
 # Wrapper for all the interfaces in this module

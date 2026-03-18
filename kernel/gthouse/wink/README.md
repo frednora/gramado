@@ -10,7 +10,7 @@ on these two subsystems.
 ex: /dev/ev/
 ex: /dev/gd/
 
-evi  - [Input support]  Event Interface,.
+evi  - [Input support]  Event Interface.
 gdi  - [Output support] Graphics device interface.
 user - User configuration.
 
