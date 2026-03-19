@@ -2354,15 +2354,15 @@ console_clear_imp (
 // Refreshing the whole screen.
 // #todo: Call the faster routine for that job.
 
-// Clear background.
+// Clear background
 // #todo:
 // This worker belongs to the display device driver,
 // so we need a name that represents it.
-// ex: display_bg_paint().
-    // IN: color, refresh
-    displayInitializeBackground(bg_color,TRUE);
+// IN: color, refresh
+    bg_initialize(bg_color,TRUE);
     
     return 0;
+
 fail:
     return (int) -1;
 }

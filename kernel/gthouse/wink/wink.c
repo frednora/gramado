@@ -209,12 +209,10 @@ void wink_initialize_default_kernel_font(void)
     font_initialize();
 }
 
-// see:
-// gre/bg.c
+// see: bg.c
 void wink_initialize_background(void)
 {
-    displayInitializeBackground(COLOR_KERNEL_BACKGROUND,TRUE);
-    //PROGRESS("wink_initialize_background: ok\n");
+    bg_initialize(COLOR_KERNEL_BACKGROUND,TRUE);
 }
 
 // See: 

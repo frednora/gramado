@@ -88,12 +88,12 @@ void kgws_enable(void)
     EnableKGWS = TRUE;
 }
 
+// #todo: Explain it better
 void kgws_disable(void)
 {
-    //debug_print("kgws_disable:\n");
-         printk("kgws_disable:\n");
+    printk("kgws_disable:\n");
 
-    displayInitializeBackground(COLOR_RED,TRUE);
+    bg_initialize(COLOR_RED,TRUE);
 
     // Using unix-like TTY mode for input.
     // using the stdin.

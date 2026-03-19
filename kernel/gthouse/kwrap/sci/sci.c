@@ -1387,7 +1387,7 @@ void *sci0 (
     if (number == 390)
     {
         debug_print("sci0: [390]\n");
-        //displayInitializeBackground(,COLOR_BLUE,TRUE);
+        // bg_initialize(,COLOR_BLUE,TRUE);
         return NULL;
     }
 

@@ -860,7 +860,7 @@ int bldispScreenInit(void)
 
 // Background (Second time).
 // Lets do this in the late initialization?
-    displayInitializeBackground( COLOR_KERNEL_BACKGROUND, TRUE );
+    bg_initialize( COLOR_KERNEL_BACKGROUND, TRUE );
 
     return 0;
 }

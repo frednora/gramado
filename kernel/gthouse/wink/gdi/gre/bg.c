@@ -8,7 +8,7 @@ struct bg_info_d  background_info;
 
 // -------------------------------------
 
-static void __displayPaintBackground(unsigned int color, int show);
+static void __bg_paint(unsigned int color, int show);
 
 // -------------------------------------
 
@@ -17,7 +17,7 @@ static void __displayPaintBackground(unsigned int color, int show);
 // Called by kmain()
 // Where? backbuffer?
 // Draw a rectangle into the backbuffer.
-static void __displayPaintBackground(unsigned int color, int show)
+static void __bg_paint(unsigned int color, int show)
 {
     unsigned long deviceWidth  = (unsigned long) screenGetWidth();
     unsigned long deviceHeight = (unsigned long) screenGetHeight();
@@ -36,7 +36,6 @@ static void __displayPaintBackground(unsigned int color, int show)
     if (show == TRUE)
         refresh_screen();
 
-
 // Save
     background_info.bg_color = color;
 
@@ -47,13 +46,13 @@ static void __displayPaintBackground(unsigned int color, int show)
         background_info.paint_cnt++;
     }
 
-//#debug
-    //debug_print ("backgroundDraw: done\n");
+    // #debug
+    // debug_print ("backgroundDraw: done\n");
 }
 
-int displayInitializeBackground(unsigned int color,int show)
+int bg_initialize(unsigned int color,int show)
 {
-    __displayPaintBackground((unsigned int) color,show);
+    __bg_paint((unsigned int) color,show);
 
 // Cursor.
 // #bugbug: This routine is not working at this time.

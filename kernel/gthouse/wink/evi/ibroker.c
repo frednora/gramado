@@ -2036,8 +2036,9 @@ __consoleProcessKeyboardInput (
                 if (alt_status == TRUE){
                     //ibroker_post_message_to_ds( (int) 77110, 0, 0 );
                 }
-                if (shift_status == TRUE){
-                    displayInitializeBackground(COLOR_KERNEL_BACKGROUND,TRUE);
+                if (shift_status == TRUE)
+                {
+                    bg_initialize(COLOR_KERNEL_BACKGROUND,TRUE);
                     show_slots();   //See: tlib.c
                     //pages_calc_mem();
                     //ibroker_post_message_to_ds( (int) 88110, 0, 0 );
@@ -2603,8 +2604,9 @@ __ProcessKeyboardInput (
                 if (alt_status == TRUE){
                     //ibroker_post_message_to_ds( (int) 77110, 0, 0 );
                 }
-                if (shift_status == TRUE){
-                    displayInitializeBackground(COLOR_KERNEL_BACKGROUND,TRUE);
+                if (shift_status == TRUE)
+                {
+                    bg_initialize(COLOR_KERNEL_BACKGROUND,TRUE);
                     show_slots();   //See: tlib.c
                     //pages_calc_mem();
                     //ibroker_post_message_to_ds( (int) 88110, 0, 0 );

@@ -1,4 +1,3 @@
-
 // bg.h
 // Screen background support.
 // Maybe wallpaper support.
@@ -20,7 +19,7 @@ extern struct bg_info_d  background_info;
 // Prototypes ===========================
 //
 
-int displayInitializeBackground(unsigned int color,int show);
+int bg_initialize(unsigned int color,int show);
 
 #endif    
 
