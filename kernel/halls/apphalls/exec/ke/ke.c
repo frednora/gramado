@@ -495,8 +495,13 @@ int keIsQemu(void)
     return (int) isQEMU();
 }
 
+// #todo
+// Explain this.
+// We gotta permission to do that.
 int keCloseInitProcess(void)
 {
+    tid_t SenderTID = 0;  // ?
+    tid_t TargetTID = -1;  // Undefined
 
     if ((void*) InitThread == NULL){
         goto fail;
@@ -504,20 +509,19 @@ int keCloseInitProcess(void)
     if (InitThread->magic != 1234){
         goto fail;
     }
+    TargetTID = (int) InitThread->tid;
 
     // #debug
     printk("#test: Sending CLOSE to init.bin\n");
     refresh_screen();
 
 // Send
+// IN: SenderTID, TargetTID, msg code, long1, long2
     ipc_post_message_to_tid(
-        (tid_t) 0,                //sender tid. #todo
-        (tid_t) InitThread->tid,  //receiver tid.
-        (int) MSG_CLOSE,          //msg code
-        0,
-        0 );
+        (tid_t) SenderTID, (tid_t) TargetTID, (int) MSG_CLOSE, 0, 0 );
 
     return 0;
+
 fail:
     return (int) -1;
 }

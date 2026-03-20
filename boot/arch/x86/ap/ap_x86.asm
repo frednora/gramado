@@ -1,8 +1,9 @@
-; AP trampoline: real mode -> quick A20 -> minimal GDT -> protected mode -> 32-bit entry
+; AP trampoline: 
+; real mode -> quick A20 -> minimal GDT -> protected mode -> 32-bit entry -> long mode
 ; NASM syntax
-
 ; This is switching to long mode.
 ; Its running fine in Virtualbox with ICH9 chipset.
+; Created by Fred Nora.
 
 [bits 16]
 [org 0x20000]
@@ -161,17 +162,17 @@ switch_to_long_mode:
     mov ss, ax
 
 
-    ; 1) Enable PAE
+; 1) Enable PAE
     mov eax, cr4
-    ;or  eax, (1 << 5)          ; CR4.PAE
+    ;or  eax, (1 << 5)    ; CR4.PAE
     or  eax, 0x20	
     mov cr4, eax
 
-    ; 2) Load CR3 with shared PML4 physical address
+; 2) Load CR3 with shared PML4 physical address
     mov eax, PML4_PHYS
     mov cr3, eax
 
-    ; 3) Set EFER.LME
+; 3) Set EFER.LME
 
     ;mov ecx, IA32_EFER
     ;rdmsr
@@ -184,25 +185,20 @@ switch_to_long_mode:
     mov 	edx, 0
     wrmsr
 
-
-; cr3
-; Flush
-
+    ; cr3 Flush
     mov EAX, CR3  
     ; nop
     mov CR3, EAX
 
 
-    ; 4) Enable paging (CR0.PG)
+; 4) Enable paging (CR0.PG)
     mov eax, cr0
-    ;or  eax, (1 << 31)         ; CR0.PG
-    or	    eax, 0x80000001  ;0x80000000
+    ;or  eax, (1 << 31)    ; CR0.PG
+    or  eax, 0x80000001    ;0x80000000
     mov cr0, eax
 
-    ;lgdt [gdt_ptr]
-
-    ; 5) Far jump to 64-bit code segment to activate long mode
-    ; dword because it is still in 32bit mode.
+; 5) Far jump to 64-bit code segment to activate long mode
+; dword because it is still in 32bit mode.
     jmp dword CODE64_SEL:ap_long_entry
 
 [bits 64]
@@ -223,10 +219,11 @@ ap_long_entry:
     mov rax, 0x12345678FEFEFEFE
     mov rbx, 0x12345678FEFEFEFE
     cmp rax, rbx
-   jne Fail
+    jne Fail
 
     ; Success marker (ensure 0x29000 is mapped)
     mov dword [0x29000], 0x64646464
+
 SoftPlaceToFall:
     cli
     hlt

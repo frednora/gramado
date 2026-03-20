@@ -4,14 +4,15 @@
 #ifndef __KE_KE_H
 #define __KE_KE_H    1
 
-
-unsigned long keGetSystemMetrics(int index);
 void keDie(void);
 void keSoftDie(void);
+int keReboot(void);
+
+unsigned long keGetSystemMetrics(int index);
+
 int keIsQemu(void);
 
 int keCloseInitProcess(void);
-int keReboot(void);
 
 // Called by main to execute the first process.
 int ke_x64ExecuteInitialProcess(void);
