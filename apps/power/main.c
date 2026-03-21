@@ -42,7 +42,9 @@ static void trigger_default_responder(int fd);
 
 static void update_children(int fd)
 {
-    struct gws_window_info_d wi;
+    struct gws_window_info_d  wi;
+
+    // Get window info
     gws_get_window_info(fd, main_window, &wi);
 
     unsigned long button_w = wi.cr_width / 4;
@@ -53,17 +55,14 @@ static void update_children(int fd)
     unsigned long restart_x  = (wi.cr_width / 4) - (button_w / 2);
     unsigned long shutdown_x = (3 * wi.cr_width / 4) - (button_w / 2);
 
-
     // Redraw label text
     gws_draw_text(
-        fd,
-        main_window,
-        20, 20,
-        COLOR_BLACK,
+        fd, main_window, 20, 20, COLOR_BLACK,
         "Choose an action:"
     );
 
-    // Move and redraw buttons
+// Move and redraw buttons
+
     gws_change_window_position(fd, restart_button, restart_x, button_y);
     gws_resize_window(fd, restart_button, button_w, button_h);
     gws_redraw_window(fd, restart_button, TRUE);
@@ -72,10 +71,9 @@ static void update_children(int fd)
     gws_resize_window(fd, shutdown_button, button_w, button_h);
     gws_redraw_window(fd, shutdown_button, TRUE);
     
-    //#debug
+// Refresh main window
     gws_refresh_window (fd, main_window);
 }
-
 
 static void set_default_responder(int wid)
 {
@@ -118,14 +116,24 @@ powerProcedure(
     unsigned long long1, 
     unsigned long long2 )
 {
-    if (fd < 0) return -1;
-    if (event_window < 0) return -1;
-    if (event_type < 0) return -1;
+    if (fd < 0)
+        return (int) -1;
+
+    if (event_window < 0)
+        return (int) -1;
+    if (event_type < 0)
+        return (int) -1;
 
     switch (event_type) {
 
+    // Null event
     case 0:
-        // Null event
+        return 0;
+        break;
+
+    // Redraw child windows
+    case MSG_PAINT:
+        update_children(fd);
         return 0;
         break;
 
@@ -187,31 +195,33 @@ powerProcedure(
         break;
 
     case GWS_MouseClicked:
-    /*    
-    printf("GWS_MouseClicked:\n");
+        /*    
+        printf("GWS_MouseClicked:\n");
         //printf("MouseClicked event_window = %d\n", event_window);
-    // Debug dump of all parameters
-    printf("[DEBUG] Event received:\n");
-    printf("  fd          = %d\n", fd);
-    printf("  event_window= %d\n", event_window);
-    printf("  event_type  = %d\n", event_type);
-    printf("  long1       = %lu\n", long1);
-    printf("  long2       = %lu\n", long2);
-    */
+        // Debug dump of all parameters
+        printf("[DEBUG] Event received:\n");
+        printf("  fd          = %d\n", fd);
+        printf("  event_window= %d\n", event_window);
+        printf("  event_type  = %d\n", event_type);
+        printf("  long1       = %lu\n", long1);
+        printf("  long2       = %lu\n", long2);
+        */
 
-    // Use long1 as the clicked child window ID
-    if ((int)long1 == restart_button) {
-        printf("Restart button clicked\n");
-        rtl_clone_and_execute("reboot.bin");
-        return 0;
-    }
+        // Use long1 as the clicked child window ID
+        if ((int)long1 == restart_button)
+        {
+            printf("Restart button clicked\n");
+            rtl_clone_and_execute("reboot.bin");
+            return 0;
+        }
 
-    if ((int)long1 == shutdown_button) {
-        printf("Shutdown button clicked\n");
-        rtl_clone_and_execute("shutdown.bin");
-        return 0;
-    }
-    
+        if ((int)long1 == shutdown_button)
+        {
+            printf("Shutdown button clicked\n");
+            rtl_clone_and_execute("shutdown.bin");
+            return 0;
+        }
+
         //printf("GWS_MouseClicked: done\n");
         break;
 
@@ -223,18 +233,14 @@ powerProcedure(
         exit(0);
         break;
 
-    case MSG_PAINT:
-        update_children(fd);
-        return 0;
-        break;
-
+    // Unknown event
     default:
-        // Unknown event
         return -1;
         break;
     };
 
-    return -1;
+// Fail
+    return (int) -1;
 }
 
 // ----------------------------------------------------

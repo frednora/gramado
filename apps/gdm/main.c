@@ -138,8 +138,7 @@ static int __init_globals(void);
 
 static void update_clients(int fd)
 {
-    // Local
-    struct gws_window_info_d lWi;
+    struct gws_window_info_d  lWi;  // Local
 
     if (fd<0){
         return;
@@ -158,10 +157,8 @@ static void update_clients(int fd)
     cwBar1.t = 4;
     cwBar1.w = (( lWi.cr_width/8 )*2);
     cwBar1.h = 24;
-    gws_change_window_position( 
-        fd, bar1_window, cwBar1.l, cwBar1.t );
-    gws_resize_window(
-        fd, bar1_window, cwBar1.w, cwBar1.h );
+    gws_change_window_position( fd, bar1_window, cwBar1.l, cwBar1.t );
+    gws_resize_window( fd, bar1_window, cwBar1.w, cwBar1.h );
 
 // ---------------------------------------------
 // cwButton1
@@ -180,10 +177,8 @@ static void update_clients(int fd)
     cwBar2.t = (4 +(24) +4);
     cwBar2.w = (( lWi.cr_width/8 )*2);
     cwBar2.h = 24;
-    gws_change_window_position( 
-        fd, bar2_window, cwBar2.l, cwBar2.t );
-    gws_resize_window(
-        fd, bar2_window, cwBar2.w, cwBar2.h );
+    gws_change_window_position( fd, bar2_window, cwBar2.l, cwBar2.t );
+    gws_resize_window( fd, bar2_window, cwBar2.w, cwBar2.h );
 
 // ---------------------------------------------
 // cwButton2
@@ -198,7 +193,6 @@ static void update_clients(int fd)
 
 // ----------
 
-    // Original
     gws_set_focus(fd, bar2_window);
 
     //#test

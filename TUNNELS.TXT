@@ -1,0 +1,20 @@
+
+
+the tunnels are the glue that connects the apps
+
+in this case the devices are just parts for the communication engine.
+that’s the essence of your model. Devices aren’t 
+“special external things” anymore; they’re just components inside the communication engine, treated like peers in the tunnels.
+
+
+apps/
++ tunnels/
+  + boot/
+  + kernel/
+  + module1/
+  + driver1/
+  + api00/
++ app01/
++ app02/
++ app03/
+...

@@ -164,7 +164,7 @@ static void editorShutdown(int fd)
 
 static void update_clients(int fd)
 {
-    struct gws_window_info_d lWi;
+    struct gws_window_info_d  lWi;
 
 // Parameter
     if (fd<0){
@@ -210,7 +210,6 @@ static void update_clients(int fd)
         addressbar_window,
         cwAddressBar.w,
         cwAddressBar.h );
-
     gws_redraw_window(fd, addressbar_window, TRUE);
 
 //---------------------------------------------
@@ -229,7 +228,6 @@ static void update_clients(int fd)
         savebutton_window,
         cwButton.w,
         cwButton.h );
-
     gws_redraw_window(fd, savebutton_window, TRUE);
 
 //-----------------------
@@ -380,10 +378,23 @@ editorProcedure(
 // Events
     switch (event_type){
 
+    // Null event
     case 0:
-        //#debug
-        //printf("EDITOR: Null event!\n");
         return 0;
+        break;
+
+    // If the event window is the main window, redraw all client windows.
+    case MSG_PAINT:
+        if (event_window == main_window)
+        {
+            // Update the text for address bar.
+            __test_text(fd,addressbar_window);
+            // Update the text for the client window.
+            __test_text(fd,client_window);
+            // Redraw the client windows.
+            update_clients(fd);
+            return 0;
+        }
         break;
 
     case MSG_KEYDOWN:
@@ -485,19 +496,6 @@ editorProcedure(
     case GWS_MouseClicked:
         printf("editor: GWS_MouseClicked\n");
         return 0;
-        break;
-
-    // Repainting all the client windows.
-    // If the event window is the main window, so
-    // redraw everyone.
-    case MSG_PAINT:
-        if (event_window == main_window)
-        {
-            __test_text(fd,addressbar_window);
-            __test_text(fd,client_window);
-            update_clients(fd);
-            return 0;
-        }
         break;
 
     case MSG_CLOSE:

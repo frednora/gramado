@@ -309,13 +309,11 @@ static void terminal_initialize_ptys_for_the_shell(void)
         //close(ptys_fd);
 }
 
-
+// Redraw and refresh the client windows
 static void update_clients(int fd)
 {
-    // Terminal window
-    int wid = Terminal.client_window_id;
-    // Local
-    struct gws_window_info_d lWi;
+    int wid = Terminal.client_window_id;  // Terminal window
+    struct gws_window_info_d  lWi;  // Local
 
     if (fd<0){
         return;
@@ -329,7 +327,7 @@ static void update_clients(int fd)
 // IN: fd, wid, window info structure.
     gws_get_window_info(
         fd, 
-        main_window,   // The app window.
+        main_window,   // The app window
         (struct gws_window_info_d *) &lWi );
 
     unsigned long l = 0;
@@ -340,16 +338,9 @@ static void update_clients(int fd)
     if (wid < 0)
         return;
 
-    gws_change_window_position( 
-        fd,
-        wid,  // Terminal window
-        l,
-        t );
-    gws_resize_window(
-        fd,
-        wid,  // Terminal window
-        w,
-        h );
+    // Change position, resize and redraw the window. (terminal window)
+    gws_change_window_position( fd, wid, l, t );
+    gws_resize_window( fd, wid, w, h );
 
 // #todo: 
 // We need a list o clients. maybe clients[i]
@@ -360,7 +351,7 @@ static void update_clients(int fd)
     gws_redraw_window(fd, wid, TRUE);
 
 // ------------------------------------------------
-// Update some font info based on our new viewport.
+// Update some font info based on our new viewport
 
 // Update information in Terminal structure
 
@@ -436,7 +427,7 @@ static void __winmax(int fd)
                   // The server needs to respect the working area.
                   h = (h -40);
 
-    if(fd<0){
+    if (fd<0){
         return;
     }
 // Change position, resize and redraw the window.
@@ -456,7 +447,7 @@ static void __winmax(int fd)
         wid,
         (struct gws_window_info_d *) wi );
     if (wi->used != TRUE){ return; }
-    if (wi->magic!=1234) { return; }
+    if (wi->magic != 1234){ return; }
 
 // Show info:
 // Frame: l,t,w,h
@@ -471,13 +462,10 @@ static void __winmax(int fd)
     
     //gws_change_window_position(fd,client_wid,wi->cr_left,wi->cr_top);
     // Always in 0,0
-    gws_change_window_position(
-        fd, client_wid, 
-        0,
-        0 );
 
-    gws_resize_window(fd, client_wid, wi->cr_width, wi->cr_height );
-    gws_redraw_window(fd, client_wid, TRUE );
+    gws_change_window_position( fd, client_wid, 0, 0 );
+    gws_resize_window(fd, client_wid, wi->cr_width, wi->cr_height);
+    gws_redraw_window(fd, client_wid, TRUE);
 }
 
 // Minimize application window.
@@ -2585,10 +2573,11 @@ terminalProcedure (
     unsigned long long1, 
     unsigned long long2 )
 {
-    if (fd<0)    {return (int) -1;}
+    if (fd<0){
+        return (int) -1;
+    }
     if (window<0){return (int) -1;}  // Event window
     if (msg<0)   {return (int) -1;}  // Event type
-
 
     // Ignore KEYUP events
     if (msg == MSG_KEYUP || msg == MSG_SYSKEYUP)
@@ -2599,6 +2588,18 @@ terminalProcedure (
 // ==================
 
     switch (msg){
+
+    // Redraw child windows
+    case MSG_PAINT:
+        if (window == main_window)
+        {
+            // Updating the terminal window
+            update_clients(fd);
+            if (Terminal._mode == TERMINAL_MODE_EMBEDDED)
+                doPrompt(fd);
+            return 0;
+        }
+        break;
 
     case MSG_DC1:
         tputstring(fd, "MSG_DC1\n");
@@ -2612,7 +2613,6 @@ terminalProcedure (
     case MSG_DC4:
         tputstring(fd, "MSG_DC4\n");
         break;
-        
 
     //case MSG_QUIT:
     //case 4080:
@@ -2720,28 +2720,6 @@ terminalProcedure (
         return 0;
         break;
 
-    // ok. It's working.
-    case MSG_PAINT:
-        //printf ("terminal.bin: MSG_PAINT\n");
-        //clear_terminal_client_window(fd);
-        //doPrompt(fd);
-       
-        // #test
-        // Trying to redraw the terminal window inside the
-        // client are of the application window.
-        // #todo: Take the editor.bin routine as an example for this.
-        if (window == main_window)
-        {
-            // #debug
-            //printf("terminal.bin: [MSG_PAINT]\n");
-
-            // Updating the terminal window
-            update_clients(fd);
-            if (Terminal._mode == TERMINAL_MODE_EMBEDDED)
-                doPrompt(fd);
-            return 0;
-        }
-        break;
 
     case MSG_CLOSE:
         //printf("term00.bin: MSG_CLOSE\n");
