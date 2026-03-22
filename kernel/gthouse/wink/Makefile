@@ -71,10 +71,12 @@ LDFLAGS := -m elf_x86_64 -s -x -static
 
 # Everything is a file.
 OBJS = dispsrv.o \
-surface.o pixel.o line.o rect.o bitblt.o bg.o font.o char.o text.o gre.o gdi.o \
+surface.o pixel.o line.o rect.o bitblt.o bg.o font.o char.o text.o \
+gre.o wproxy.o gdi.o \
 obroker.o output.o ibroker.o input.o \
 osshell.o user.o \
 wink.o    
+
 
 all:
 
@@ -92,6 +94,8 @@ all:
 	$(CC) -c gdi/gre/char.c    $(KERNEL_INCLUDE) $(CFLAGS) -o char.o
 	$(CC) -c gdi/gre/text.c    $(KERNEL_INCLUDE) $(CFLAGS) -o text.o
 	$(CC) -c gdi/gre/gre.c     $(KERNEL_INCLUDE) $(CFLAGS) -o gre.o
+
+	$(CC) -c gdi/wproxy.c  $(KERNEL_INCLUDE) $(CFLAGS) -o wproxy.o
 
 # gdi - Interface
 	$(CC) -c gdi/gdi.c     $(KERNEL_INCLUDE) $(CFLAGS) -o gdi.o

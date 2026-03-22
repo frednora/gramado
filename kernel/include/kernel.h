@@ -233,6 +233,7 @@
 #include "../gthouse/wink/gdi/dispsrv.h"
 #include "../gthouse/wink/gdi/osshell.h"
 
+#include "../gthouse/wink/gdi/wproxy.h"
 #include "../gthouse/wink/gdi/gdi.h"
 
 // Event Interface
