@@ -4,21 +4,19 @@
 // other components of the base kernel.
 // Created by Fred Nora.
 
-#ifndef __GRAMK_GRAMK_H
-#define __GRAMK_GRAMK_H    1
+#ifndef __WINK_WINK_H
+#define __WINK_WINK_H    1
 
 extern int config_use_progressbar;
 
-void winkRefreshScreen(void);
-
 void 
-winkDrawString ( 
+wink_draw_string ( 
     unsigned long x,
     unsigned long y,
     unsigned int color,
     const char *string );
 
-int winkLoadGramadoIcons(void);
+int wink_load_gramado_icons(void);
 
 
 void wink_update_progress_bar(unsigned long percent);

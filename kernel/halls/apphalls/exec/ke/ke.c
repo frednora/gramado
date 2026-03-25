@@ -152,7 +152,7 @@ void schedulerUpdateScreen(void)
         0, 0, deviceWidth, 24, COLOR_KERNEL_BACKGROUND, 0 );
     ksprintf(data,"  FPS %d       ",fps);
     data[12]=0;
-    winkDrawString(0,8,COLOR_YELLOW,data);
+    wink_draw_string(0,8,COLOR_YELLOW,data);
     refresh_rectangle ( 0, 0, deviceWidth, 24 );
 //=========================
 */
@@ -746,9 +746,9 @@ int keInitialize(int phase)
         //while(1){}
         // Clear the screen again.
         wink_initialize_background();
-        // Loading .BMP icon images.
-        //PROGRESS("::(2)(?) Icons\n"); 
-        winkLoadGramadoIcons();
+
+        // Loading .BMP icon images
+        wink_load_gramado_icons();
 
         // ==========================
         // Network support.

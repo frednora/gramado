@@ -14,15 +14,9 @@ static void __x_panic_show_message(const char *final_string, unsigned long flags
 
 // =============================================
 
-// see: bldisp.c
-void winkRefreshScreen(void)
-{
-    bldisp_flush(0);
-}
 
-// Wrapper
 void 
-winkDrawString ( 
+wink_draw_string ( 
     unsigned long x,
     unsigned long y,
     unsigned int color,
@@ -35,10 +29,9 @@ winkDrawString (
     draw_string(x, y, color, string);
 }
 
-// winkLoadGramadoIcons: Wrapper
 // Load some .BMP system icons into the memory.
 // It's a part of the window system's initialization.
-int winkLoadGramadoIcons(void)
+int wink_load_gramado_icons(void)
 {
     return (int) greLoadGramadoIcons();
 }
@@ -138,8 +131,7 @@ static void __x_panic_show_message(const char *final_string, unsigned long flags
         draw_string(s2_left, s2_top, s2_color, final_string);
     }
 
-// Flush
-    refresh_screen();
+    refresh_screen();  // Flush
 }
 
 // Print the string into a box and halt carefully.

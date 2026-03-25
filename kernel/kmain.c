@@ -345,13 +345,15 @@ void keEarlyRing0IdleThread (void)
     }
     */
 Loop:
-// acende
+
+    // acende
     //backbuffer_draw_rectangle( 0, 0, deviceWidth, 28, COLOR_KERNEL_BACKGROUND );
-    //winkDrawString(8,8,COLOR_YELLOW," Gramado Operating System ");
+    //wink_draw_string(8,8,COLOR_YELLOW," Gramado Operating System ");
     //refresh_screen();
+
 // relax
-    asm ("sti");
-    asm ("hlt");
+    asm (" sti ");
+    asm (" hlt ");
 // apaga
     //backbuffer_draw_rectangle( 0, 0, deviceWidth, 28, COLOR_KERNEL_BACKGROUND );
     //backbuffer_draw_rectangle( 0, 0, deviceWidth, deviceHeight, COLOR_KERNEL_BACKGROUND );  //#bug
@@ -827,12 +829,11 @@ static int __test_initialize_ap_processor(int apic_id)
                 break;
             }
             */
+
             if (ap_signature_pointer[0] == 0x63 && 
                 ap_signature_pointer[1] == 0x63 )
             {
                 panic("kernel: AP Coudn't enter in long mode\n");
-                //asm ("cli \n");
-                //asm ("hlt \n");
             }
         };
 

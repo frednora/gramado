@@ -94,7 +94,7 @@ Levels:
 - `ds_init()` – Initializes display server registration.  
 - `callbackInitialize()` – Sets up callback support.  
 - `wink_initialize_background()` – Clears background again.  
-- `winkLoadGramadoIcons()` – Loads BMP icons.  
+- `wink_load_gramado_icons()` – Loads BMP icons.  
 **Purpose:** Graphics and GUI support, desktop structures, display server callbacks.
 
 ---
