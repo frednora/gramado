@@ -80,6 +80,12 @@ wink.o
 
 all:
 
+# evi - Event interface.
+	$(CC) -c evi/obroker.c  $(KERNEL_INCLUDE) $(CFLAGS) -o obroker.o
+	$(CC) -c evi/output.c   $(KERNEL_INCLUDE) $(CFLAGS) -o output.o
+	$(CC) -c evi/ibroker.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ibroker.o
+	$(CC) -c evi/input.c    $(KERNEL_INCLUDE) $(CFLAGS) -o input.o
+
 # The display server support
 	$(CC) -c gdi/dispsrv.c     $(KERNEL_INCLUDE) $(CFLAGS) -o dispsrv.o
 
@@ -102,12 +108,6 @@ all:
 
 # osshell support
 	$(CC) -c gdi/osshell.c  $(KERNEL_INCLUDE) $(CFLAGS) -o osshell.o
-
-# evi - Event interface.
-	$(CC) -c evi/obroker.c  $(KERNEL_INCLUDE) $(CFLAGS) -o obroker.o
-	$(CC) -c evi/output.c   $(KERNEL_INCLUDE) $(CFLAGS) -o output.o
-	$(CC) -c evi/ibroker.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ibroker.o
-	$(CC) -c evi/input.c    $(KERNEL_INCLUDE) $(CFLAGS) -o input.o
 
 # user - User interaction interface.
 	$(CC) -c user/user.c      $(KERNEL_INCLUDE) $(CFLAGS) -o user.o

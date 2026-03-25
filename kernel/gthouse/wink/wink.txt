@@ -1,2 +1,8 @@
- The Graphical Device Interface and 
- The User Interaction Interface.
+
+The User Interaction Interface.
+The wink/ module is all about the user interaction. 
+Mainly graphical and input operations.
+
+evi/  - Event Interface. For i/o events.
+gdi/  - Graphical Device Interface. Mainly output.
+user/ - User interface.

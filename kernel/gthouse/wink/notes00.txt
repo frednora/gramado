@@ -1,5 +1,4 @@
-
-I/O on Windows OS:
+I/O on Windows OS (old versions):
 
 win32k.sys: 
 The core driver running in ring 0 (kernel mode), 

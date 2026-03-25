@@ -7,48 +7,8 @@
 #define __GRE_GRE_H    1
 
 
-//===========================
+// ===========================
 
-// 
-// Window type
-//
-
-// Why we are dealing with window types in the ring 0 graphics engine?
-// It's bacause we will implement some window management functions 
-// in the ring 0 graphics engine.
-
-#define WT_NULL          0 
-#define WT_SIMPLE        1
-// Igual simples, mais uma bordinha preta.
-#define WT_EDITBOX       2
-// Sobreposta (completa)(barra de titulo + borda +client area). 
-#define WT_OVERLAPPED    3  
-// Um tipo especial de sobreposta, usada em dialog ou message box. 
-// (com ou sem barra de titulo ou borda)
-#define WT_POPUP         4
-// Caixa de seleção. Caixa de verificação. 
-// Quadradinho.  
-#define WT_CHECKBOX      5
-// Cria uma scroll bar. 
-// Para ser usada como janela filha.  
-#define WT_SCROLLBAR     6  
-#define WT_EDITBOX_MULTIPLE_LINES 7
-#define WT_BUTTON        8   
-#define WT_STATUSBAR     9
-// Pequeno retângulo com uma imagem bmp e talvez texto.
-#define WT_ICON          10
-#define WT_TITLEBAR 11
-//... 
-
-// window style
-#define WINDOW_STYLE_FLOATING  1000
-#define WINDOW_STYLE_DOCKING   2000
-//...
-
-// Window status
-#define WINDOW_STATUS_ACTIVE       1
-#define WINDOW_STATUS_INACTIVE     0
-// ...
 
 // RGBA tag
 struct tagRGBA
