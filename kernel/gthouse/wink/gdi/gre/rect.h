@@ -2,35 +2,27 @@
 // Headers for rectangle support.
 // Created by Fred Nora.
 
-
 #ifndef __GRE_RECT_H
 #define __GRE_RECT_H    1
 
-/*
- * rect_d:
- *     Estrutura para gerenciamento de retângulos.
- *     Um retângulo pertence à uma janela.
- */
-// #todo
-// Usar isso para lidar com dirty rectangles.
 
+// Structure for rectangle management.
 struct rect_d 
 {
-    object_type_t  objectType;
+    object_type_t objectType;
     object_class_t objectClass;
     int used;
     int magic;
 
-// Invalidate
-// Sujo de tinta.
-// If the rectangle is dirty, so it needs to be flushed into 
-// the framebuffer.
-// When we draw a window it needs to be invalidated.
+    // unsiged int ?
+    int flag;
+
+// We can invalidade the rectangle setting this flag.
+// If the rectangle is dirty, it means that 
+// it needs to be flushed to the LFB.
     int dirty;
 
-    int flag;
-// Estilo de design
-    int style;
+    int style;  // ?
 
 //dimensoes
     unsigned long x;
@@ -47,7 +39,6 @@ struct rect_d
     unsigned long right;
     unsigned long bottom;
 
-    // 32 bit
     unsigned int bg_color; 
 
     struct rect_d *next;

@@ -3,8 +3,8 @@
 // ring 0.
 // Created by Fred Nora.
 
-#ifndef  __FONTS_H
-#define  __FONTS_H    1
+#ifndef  __GRE_FONT_H
+#define  __GRE_FONT_H    1
 
 // Fontes: 
 // Endereços das fonts presentes no CMOS BIOS. 

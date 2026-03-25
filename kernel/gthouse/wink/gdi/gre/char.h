@@ -1,7 +1,6 @@
 // char.h
 // Created by Fred Nora.
 
-
 #ifndef __GRE_CHAR_H
 #define __GRE_CHAR_H    1
 

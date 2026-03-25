@@ -79,8 +79,7 @@ static int __gre_initialize_globals(void);
 
 void kgws_enable(void)
 {
-    //debug_print("kgws_enable: Enable KGWS\n");
-         printk("kgws_enable: Enable KGWS\n");
+    printk("kgws_enable:\n");
 
     // Sending event messages to the thread associated with the wwf.
     //current_input_mode = INPUT_MODE_SETUP;
@@ -112,8 +111,9 @@ int fib (int n)
     int a=0;
     int b=0;
 
-    if (Copy <= 1){ return Copy; }
-    
+    if (Copy <= 1){
+        return Copy;
+    }
     a = fib(Copy - 1); 
     b = fib(Copy - 2);
 
@@ -127,10 +127,7 @@ int fib (int n)
  *      Plot into a normalized screen. kinda.
  *      #new: Plotting into a clipping window.
  */
-// low level plot.
-// History:
-//     2020 - Created by Fred Nora.
-// window ?
+// Low level plot
 // Essa rotina pode pintar em qualquer posição 
 // da tela do dispositivo. 
 // Com origem no centro da tela.
@@ -370,17 +367,14 @@ draw:
         return -1;
     }
 
-// Fail 
-
+// Fail
     return (-1);
 }
 
-/*
- * plotLine3d: 
- */
-// Bresenham in 3D
+// plotLine3d: 
+// Bresenham in 3D.
+// #todo:
 // The algorithm could be extended to three (or more) dimensions.
-
 void 
 plotLine3d (
     int x0, int y0, int z0, 
@@ -425,7 +419,7 @@ rectangleZ (
     // #todo
     // Check validation
     // if (left<0 ...
-    
+
     // cima
     plotLine3d ( left, top,  z, right, top, z, color );
     // baixo
@@ -487,12 +481,8 @@ plotCircleZ (
     } while (x < 0);
 }
 
-/*
- * noraDrawingStuff3: 
- *    Lot of dots in the right place. (prime stuff)
- *    2020 - Created by Fred Nora. 
- */
-
+// noraDrawingStuff3: 
+// Lot of dots in the right place. (prime stuff)
 void noraDrawingStuff3 (int x, int y, int z)
 {
     register int _x=0;
@@ -502,7 +492,7 @@ void noraDrawingStuff3 (int x, int y, int z)
     int limitX = (gSavedX >> 1);
     int limitY = (gSavedY >> 1);
 
-    // colunas.
+    // colunas
     for (_x=x; _x<limitX; _x++)    
     {
         for (_y=y; _y<limitY; _y++)
@@ -778,22 +768,19 @@ int greLoadGramadoIcons(void)
     icon_cache.initialized = TRUE;
     return 0;
 
+// #test
+// PANIC: We don't wanna continue without icons for now.
 fail:
     icon_cache.initialized = FALSE;
-
-    // #test
-    // PANIC: We don't wanna continue without icons for now.
     panic ("greLoadGramadoIcons: Fail\n");
-
     return (int) -1;
 }
 
 
+// Called by gre_initialize().
 static int __gre_initialize_globals(void)
 {
-// Called by gre_initialize().
-
-// Device
+    // Device
     unsigned long deviceWidth  = (unsigned long) screenGetWidth();
     unsigned long deviceHeight = (unsigned long) screenGetHeight();
     if ( deviceWidth == 0 || deviceHeight == 0 )

@@ -6,7 +6,6 @@
 // The input system can send system messages 
 // direct to this component.
 
-
 #ifndef __GDI_DISPSRV_H
 #define __GDI_DISPSRV_H    1
 

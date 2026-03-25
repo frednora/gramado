@@ -126,15 +126,3 @@ int font_initialize(void)
 // End
 //
 
-
-
-
-
-
-
-
-
-
-
-
-

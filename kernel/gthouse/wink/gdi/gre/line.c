@@ -14,10 +14,10 @@ extern unsigned long SavedX;
 extern unsigned long SavedY;
 extern unsigned long SavedBPP; 
 
-/*
- * backbuffer_draw_horizontal_line:
- *     Draw a horizontal line on backbuffer. 
- */
+
+// backbuffer_draw_horizontal_line:
+// Draw a horizontal line on backbuffer.
+// Return the number of changed pixels.
 int 
 backbuffer_draw_horizontal_line ( 
     unsigned long x1,
@@ -26,7 +26,6 @@ backbuffer_draw_horizontal_line (
     unsigned int color,
     unsigned long rop_flags )
 {
-// Return the number of changed pixels.
 
 // #todo
 // Maybe we need checking some limits here.
@@ -51,6 +50,7 @@ backbuffer_draw_horizontal_line (
     return (int) n;
 }
 
+// Return the number of changed pixels.
 int 
 frontbuffer_draw_horizontal_line ( 
     unsigned long x1,
@@ -59,7 +59,6 @@ frontbuffer_draw_horizontal_line (
     unsigned int color,
     unsigned long rop_flags )
 {
-// Return the number of changed pixels.
 
 // #todo
 // Maybe we need checking some limits here.

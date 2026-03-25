@@ -52,5 +52,10 @@ struct wproxy_d
     // ...
 };
 
+
+// ======================
+
+struct wproxy_d *wproxyCreateObject(void);
+
 #endif    
 
