@@ -188,7 +188,7 @@ You can find code in the gdeps/ folder.
 
 ## Gramado API 
 
-You can find the API to create client-side GUI application in gdeps/.
+You can find the API to create client-side GUI applications in apps/.
 
 ## Demos
 
