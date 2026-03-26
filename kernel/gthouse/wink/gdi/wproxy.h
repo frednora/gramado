@@ -58,6 +58,8 @@ struct wproxy_d
 // ======================
 
 struct wproxy_d *wproxyCreateObject(void);
+char *wproxy_create_data_buffer(struct wproxy_d *wproxy, int size);
+char *wproxy_get_data_buffer(struct wproxy_d *wproxy);
 int wproxy_draw(struct wproxy_d *wproxy, int back_or_front);
 int wproxy_redraw(struct wproxy_d *wproxy, int back_or_front);
 

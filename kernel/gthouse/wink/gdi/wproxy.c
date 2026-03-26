@@ -26,6 +26,46 @@ struct wproxy_d *wproxyCreateObject(void)
     return (struct wproxy_d *) wproxy;
 }
 
+// #test:
+// Create a data buffer for the window proxy.
+// This is used for off-screen rendering.
+// #todo This is a work in progress.
+char *wproxy_create_data_buffer(struct wproxy_d *wproxy, int size)
+{
+    if ((void *) wproxy == NULL){
+        goto fail;
+    }
+    if (wproxy->used != TRUE || wproxy->magic != 1234){
+        goto fail;
+    }
+
+    wproxy->data = (char *) kmalloc(size);
+    if ((void *) wproxy->data == NULL){
+        goto fail;
+    }
+    wproxy->data_size = size;
+
+    return (char *) wproxy->data;
+fail:
+    return NULL;
+}
+
+// #test:
+// #todo This is a work in progress.
+char *wproxy_get_data_buffer(struct wproxy_d *wproxy)
+{
+    if ((void *) wproxy == NULL){
+        goto fail;
+    }
+    if (wproxy->used != TRUE || wproxy->magic != 1234){
+        goto fail;
+    }
+    return (char *) wproxy->data;
+fail:
+    return NULL;
+}
+
+
 // Worker: Draw the window using the wproxy structure.
 static int __wproxy_draw0(struct wproxy_d *wproxy, int back_or_front)
 {
