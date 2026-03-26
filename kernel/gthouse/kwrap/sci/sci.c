@@ -2285,6 +2285,41 @@ void *sci2 (
         };
     }
 
+// #test
+// 850 - Create a wproxy object.
+// #todo
+// This is a work in progress.
+    if (number == 850)
+    {
+        struct wproxy_d *tmp_wproxy;
+        tmp_wproxy = (struct wproxy_d *) wproxyCreateObject();
+        if ((void*) tmp_wproxy == NULL) {
+            return NULL;
+        }
+        tmp_wproxy->used = TRUE;
+        tmp_wproxy->magic = 1234;
+
+        // Invalid index.
+        if (arg2 < 0)
+            return NULL;
+    
+        // Save the index for the window object.
+        // tmp_wproxy->wid = (int) arg2;
+        tmp_wproxy->wid = (int) -1;  // Invalid index
+
+        // #todo
+        // Maybe we can save the pointer into a list.
+        // Create wproxyList[]?
+
+        // Return the ring 0 pointer for the wproxy object.
+        // return (void *) tmp_wproxy;
+
+        // or Return the index for the wproxy object
+        // inside the wproxyList[] list.
+        return (void *) tmp_wproxy->wid;
+    }
+
+
 // ---------------------------
 // 900 - copy process 
 // For rtl_clone_and_execute().

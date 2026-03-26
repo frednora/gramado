@@ -36,6 +36,8 @@ struct wproxy_d
     unsigned long w;
     unsigned long h;
 
+    unsigned int color;
+
 // The data buffer for the window. 
 // It is used to store the pixel data of the window in the case of 
 // off-screen rendering. 
@@ -56,6 +58,8 @@ struct wproxy_d
 // ======================
 
 struct wproxy_d *wproxyCreateObject(void);
+int wproxy_draw(struct wproxy_d *wproxy, int back_or_front);
+int wproxy_redraw(struct wproxy_d *wproxy, int back_or_front);
 
 #endif    
 
