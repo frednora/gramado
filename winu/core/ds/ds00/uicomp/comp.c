@@ -37,7 +37,14 @@ struct dccanvas_d *spare_dccanvas;
 // int gUseSomething = TRUE;
 // ...
 
+// Mouse hover
 extern struct gws_window_d *mouse_hover;
+// The limits for the mouse pointer.
+// Normally it's the screen size (root window),
+// but it can be the client area of an application window 
+// when the mouse is captured by an application window.
+extern struct gws_window_d *cursor_clip;
+
 
 //old
 static long __old_mouse_x=0;
@@ -1046,7 +1053,6 @@ void refresh_subwidnows( struct gws_window_d *w )
 }
 */
 
-
 // Initialize the mouse support.
 // global
 // #temporary:
@@ -1058,6 +1064,13 @@ void comp_initialize_mouse(void)
     unsigned long w = gws_get_device_width();
     unsigned long h = gws_get_device_height();
 
+
+// #test
+// Initializing the cursor clipping region with the root window.
+    if ((void*) __root_window != NULL){
+        cursor_clip = __root_window;
+    }
+
     if (w>=0 && w<=800)
         hotspotx = (w >> 1);
     if (h>=0 && h<=800)
@@ -1068,6 +1081,7 @@ void comp_initialize_mouse(void)
     __old_mouse_y = hotspoty;
     __new_mouse_x = hotspotx;
     __new_mouse_y = hotspoty;
+
 
     __mouse_initialized = TRUE; 
 

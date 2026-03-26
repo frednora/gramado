@@ -42,6 +42,14 @@ struct gws_window_d *keyboard_owner;
 struct gws_window_d *mouse_owner;  // captured
 // Mouse hover.
 struct gws_window_d *mouse_hover;  // hover
+// The limits for the mouse pointer.
+// Normally it's the screen size (root window),
+// but it can be the client area of an application window 
+// when the mouse is captured by an application window.
+// #important: 
+// Actually it needs to be confined to the clent area,
+// not the whole window.
+struct gws_window_d *cursor_clip;
 
 //
 // Taskbar
