@@ -1372,21 +1372,18 @@ int serviceCreateWindow(int client_fd)
 // pwid limits
     if (pwid < 0 || pwid >= WINDOW_COUNT_MAX)
     {
-        pwid=0;
-        // #debug
-        printf("serviceCreateWindow: pwid\n");
-        exit(1);
+        // printf("serviceCreateWindow: pwid\n");
+        goto fail;
     }
 // Structure pointer
     Parent = (struct gws_window_d *) windowList[pwid];
-    // #debug
     if ((void*) Parent == NULL){
-        printf("serviceCreateWindow: Parent\n");
-        exit(1);
+        // printf("serviceCreateWindow: Parent\n");
+        goto fail;
     }
     if (Parent->magic != 1234){
-        printf("serviceCreateWindow: Parent magic\n");
-        exit(1);
+        // printf("serviceCreateWindow: Parent magic\n");
+        goto fail;
     }
 
 /*
@@ -1479,7 +1476,7 @@ int serviceCreateWindow(int client_fd)
             fCanCreateMainwindow = TRUE;
 
         if (fCanCreateMainwindow != TRUE){
-            return -1;
+            goto fail;
         }
     }
 
@@ -1490,10 +1487,10 @@ int serviceCreateWindow(int client_fd)
 // A child window can't have an invalid parent
     if (fChild == TRUE)
     {
-        if ((void*)Parent == NULL)
-            return -1;
+        if ((void*) Parent == NULL)
+            goto fail;
         if (Parent->magic != 1234)
-            return -1;
+            goto fail;
     }
 
 // Calling a worker on server to create the window.
@@ -1645,7 +1642,6 @@ int serviceCreateWindow(int client_fd)
         }
     }
 
-
 // #test
 // Testing char using rectangles. 
 
@@ -1748,9 +1744,7 @@ int serviceCreateWindow(int client_fd)
     return 0;
 
 fail:
-    //server_debug_print("serviceCreateWindow: FAIL\n");
-    //printf("serviceCreateWindow: FAIL\n");
-    //exit(0);
+    // printf("serviceCreateWindow: FAIL\n");
     return (int) (-1);
 }
 
@@ -3147,12 +3141,8 @@ dsProcedure (
     unsigned long long1, 
     unsigned long long2 )
 {
-// Route:
-// This is the main route. It connects the request with 
-// the controller action and the action handles the data.
-
-    int Status=0;  //ok
-    //int my_pid = -1;
+    int Status = 0;  // ok
+    int rv = -1;     // return value from service routines.
 
     // #debug
     //debug_print ("dsProcedure\n");
@@ -3195,11 +3185,13 @@ dsProcedure (
 
     // 1001
     // + Service: Create a window.
-    // + Response: Return the window ID.
+    // + Response: In success, return the window ID.
     case GWS_CreateWindow:
-        serviceCreateWindow(client_fd);
+        rv = (int) serviceCreateWindow(client_fd);
         NoReply = FALSE;
-        break; 
+        if (rv<0)
+            goto fail;
+        break;
 
     // 1002: 
     // Paint a pixel in the backbuffer.
@@ -3431,6 +3423,7 @@ dsProcedure (
     }
 // Done
     return (int) Status;
+
 fail:
     return (int) -1;
 }
