@@ -1,5 +1,8 @@
 
  Function wm_hit_test_2():
 
+#todo:
  + The hit-testing for menu window and menuitem window.
  + The hit-testing for child of child. (recursion).
+ + We are not changing the hover window pointer 
+   when the mouse hovers the titlebar.

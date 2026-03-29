@@ -4282,9 +4282,12 @@ wm_hit_test_2(
             c00 = c00->next; // walk siblings
         };
 
-        on_mouse_leave(mouse_hover);  // repinte a antiga
-        mouse_hover = hover;
-        on_mouse_hover(hover);            // repinte a nova
+        if (hover != mouse_hover)
+        {
+            on_mouse_leave(mouse_hover);  // repinte a antiga
+            mouse_hover = hover;
+            on_mouse_hover(hover);            // repinte a nova
+        }
 
         // Update relative mouse pointer
         hover->x_mouse_relative = 
@@ -4389,9 +4392,12 @@ wm_hit_test_2(
         {
             if (insideTitleBarControl == TRUE)
             {
-                on_mouse_leave(mouse_hover);
-                mouse_hover = hover;
-                on_mouse_hover(hover);
+                if (hover != mouse_hover)
+                {
+                    on_mouse_leave(mouse_hover);
+                    mouse_hover = hover;
+                    on_mouse_hover(hover);
+                }
 
                 // Update relative mouse pointer
                 hover->x_mouse_relative = (unsigned long)(long1 - hover->absolute_x);
@@ -4428,9 +4434,12 @@ wm_hit_test_2(
             c = c->next; // walk siblings
         };
 
-        on_mouse_leave(mouse_hover);
-        mouse_hover = hover;
-        on_mouse_hover(hover);
+        if (hover != mouse_hover)
+        {
+            on_mouse_leave(mouse_hover);
+            mouse_hover = hover;
+            on_mouse_hover(hover);
+        }
 
         // Update relative mouse pointer
         hover->x_mouse_relative = (unsigned long)(long1 - hover->absolute_x);
