@@ -386,9 +386,8 @@ int main(int argc, char *argv[])
             "Refresh",
             refresh_x, buttons_y, button_w, button_h,
             main_window, 
-            0,
-            COLOR_GRAY, 
-            COLOR_GRAY );
+            WS_CHILD,
+            COLOR_GRAY, COLOR_GRAY );
 
     gws_refresh_window(client_fd, refresh_button);
 
@@ -402,9 +401,8 @@ int main(int argc, char *argv[])
             "Close",
             close_x, buttons_y, button_w, button_h,
             main_window, 
-            0,
-            COLOR_GRAY, 
-            COLOR_GRAY );
+            WS_CHILD,
+            COLOR_GRAY, COLOR_GRAY );
 
     gws_refresh_window(client_fd, close_button);
 

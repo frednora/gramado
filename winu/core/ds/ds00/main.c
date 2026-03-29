@@ -1547,6 +1547,9 @@ int serviceCreateWindow(int client_fd)
         break;
     };
 
+    if (Parent->isTaskBar == TRUE)
+        wm_add_child_window(Parent,Window);
+
 
 //===============================================
 // Save the tid of the client

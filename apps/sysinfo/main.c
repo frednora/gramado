@@ -26,6 +26,7 @@ static unsigned long cr_top    = 0;
 static unsigned long cr_width  = 0;
 static unsigned long cr_height = 0;
 
+// -------------------------
 
 static void query_client_area(int fd);
 
@@ -65,9 +66,8 @@ static void query_client_area(int fd)
     // #todo: Use 0,0 for left/top
     //cr_left   = wi.cr_left;
     //cr_top    = wi.cr_top;
-    cr_left   = 0;
-    cr_top    = 0;
-
+    cr_left = 0;
+    cr_top = 0;
     cr_width  = wi.cr_width;
     cr_height = wi.cr_height;
 }
@@ -78,7 +78,7 @@ static void test_draw_rects_in_client_area(int fd)
 
     // Small "pixel" size - feel free to change!
     const int PIXEL = 18;
-    const int GAP   = 2;   // small spacing between pixels (optional)
+    const int GAP = 2;   // small spacing between pixels (optional)
 
     // Center the artwork roughly
     int art_width  = 16 * (PIXEL + GAP);
@@ -778,7 +778,7 @@ int main(int argc, char *argv[])
 
 // Create Refresh button
     refresh_button = 
-        gws_create_window(
+        (int) gws_create_window(
             fd, 
             WT_BUTTON,    // Window type
             BS_DEFAULT,   // Window status / Button state
@@ -786,21 +786,23 @@ int main(int argc, char *argv[])
             "Refresh", 
             refresh_x, buttons_y, button_w, button_h,
             main_window, 
-            0,  // No style 
+            WS_CHILD,
             COLOR_GRAY, COLOR_GRAY);
     //gws_refresh_window(fd, refresh_button);
 
 // Create Close button
-    close_button = gws_create_window(
+    close_button = 
+    (int) gws_create_window(
         fd,
         WT_BUTTON,
         BS_DEFAULT,
         1,
         "Close",
         close_x, buttons_y, button_w, button_h,
-        main_window, 0, COLOR_GRAY, COLOR_GRAY );
+        main_window, 
+        WS_CHILD, 
+        COLOR_GRAY, COLOR_GRAY );
     //gws_refresh_window(fd, close_button);
-
 
 /*
 // =========================================
@@ -821,7 +823,7 @@ int main(int argc, char *argv[])
     //set_default_responder(close_button);
 
 // Main window active
-    gws_set_active(fd, main_window);
+   gws_set_active(fd, main_window);
    gws_set_focus(fd, refresh_button);
 
 // Refresh. (again)

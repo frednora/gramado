@@ -303,17 +303,17 @@ int main(int argc, char *argv[])
     unsigned long win_x = (screen_w - win_w) / 2;
     unsigned long win_y = (screen_h - win_h) / 2;
 
-    main_window = gws_create_window(
-        client_fd,
-        WT_OVERLAPPED,
-        WINDOW_STATUS_ACTIVE,  //status
-        WINDOW_STATE_NULL,  //state
-        "Power Manager",
-        win_x, win_y, win_w, win_h,
-        0,
-        0x0000,  // style
-        COLOR_WHITE,
-        COLOR_GRAY );
+    main_window = 
+        (int) gws_create_window(
+                client_fd,
+                WT_OVERLAPPED,
+                WINDOW_STATUS_ACTIVE,  //status
+                WINDOW_STATE_NULL,  //state
+                "Power Manager",
+                win_x, win_y, win_w, win_h,
+                0,
+                0x0000,  // style
+                COLOR_WHITE, COLOR_GRAY );
 
     if (main_window < 0) {
         printf("power_app: Failed to create main window\n");
@@ -323,16 +323,11 @@ int main(int argc, char *argv[])
     //#debug
     gws_refresh_window(client_fd, main_window);
 
-//
 // Text
-//
-
     gws_draw_text(
         client_fd,
         main_window,
-        20, 20,                // position
-        COLOR_BLACK,
-        "Choose an action:"    // label
+        20, 20, COLOR_BLACK, "Choose an action:" 
     );
 
     //#debug
@@ -345,7 +340,6 @@ int main(int argc, char *argv[])
         main_window,
         (struct gws_window_info_d *) &wi );
 
-
 //
 // Support for button positions and dimensions
 //
@@ -357,7 +351,6 @@ int main(int argc, char *argv[])
     unsigned long restart_x  = (wi.cr_width / 4) - (button_w / 2);
     unsigned long shutdown_x = (3 * wi.cr_width / 4) - (button_w / 2);
 
-
 //
 // Button (Restart)
 //
@@ -366,36 +359,38 @@ int main(int argc, char *argv[])
 // wi.cr_left, wi.cr_top, wi.cr_width, wi.cr_height
 // which describe the client area rectangle of the main window.
 
-restart_button = gws_create_window(
-    client_fd,
-    WT_BUTTON,
-    BS_DEFAULT,
-    1,
-    "Restart",
-    restart_x, button_y,
-    button_w, button_h,
-    main_window, 0,
-    COLOR_GRAY, COLOR_GRAY );
+    restart_button = 
+        (int) gws_create_window(
+            client_fd,
+            WT_BUTTON,
+            BS_DEFAULT,
+            1,
+            "Restart",
+            restart_x, button_y,
+            button_w, button_h,
+            main_window, 
+            WS_CHILD,
+           COLOR_GRAY, COLOR_GRAY );
 
     //#debug
     gws_refresh_window (client_fd, restart_button);
-
 
 //
 // Button (Shutdown)
 //
 
-
-shutdown_button = gws_create_window(
-    client_fd,
-    WT_BUTTON,
-    BS_DEFAULT,
-    1,
-    "Shutdown",
-    shutdown_x, button_y,
-    button_w, button_h,
-    main_window, 0,
-    COLOR_GRAY, COLOR_GRAY );
+    shutdown_button = 
+        (int) gws_create_window(
+            client_fd,
+            WT_BUTTON,
+            BS_DEFAULT,
+            1,
+            "Shutdown",
+            shutdown_x, button_y,
+            button_w, button_h,
+            main_window, 
+            WS_CHILD,
+            COLOR_GRAY, COLOR_GRAY );
 
     //#debug
     gws_refresh_window (client_fd, shutdown_button);

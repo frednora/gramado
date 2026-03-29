@@ -971,18 +971,18 @@ int editor_initialize(int argc, char *argv[])
 // Create save button window.
     savebutton_window = 
         (int) gws_create_window ( 
-                  client_fd,
-                  WT_BUTTON,
-                  BS_DEFAULT,  // window status or button state
-                  1,
-                  b1_string,
-                  (( lWi.cr_width/8 )*6),  //l 
-                  4,                       //t
-                  (( lWi.cr_width/8 )*1), 
-                  24,
-                  main_window, 
-                  WS_CHILD, 
-                  COLOR_GRAY, COLOR_GRAY );
+                client_fd,
+                WT_BUTTON,
+                BS_DEFAULT,  // window status or button state
+                1,
+                b1_string,
+                (( lWi.cr_width/8 )*6),  //l 
+                4,                       //t
+                (( lWi.cr_width/8 )*1), 
+                24,
+                main_window, 
+                WS_CHILD, 
+                COLOR_GRAY, COLOR_GRAY );
 
     if (savebutton_window < 0){
         printf("editor.bin: savebutton_window failed\n");

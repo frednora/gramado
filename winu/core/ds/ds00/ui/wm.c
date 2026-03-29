@@ -3034,10 +3034,26 @@ wm_add_child_window(
     if (parent->magic != 1234){
         return;
     }
+
+
 // Type validation for parent window.
-    if (parent->type != WT_OVERLAPPED){
+/*
+    if (parent->type != WT_OVERLAPPED)
+    {
         return;
     }
+*/
+
+// ---------------
+// #test
+
+    int ValidParentType = FALSE;
+    if (parent->type == WT_OVERLAPPED)
+        ValidParentType = TRUE;
+    if (parent->isTaskBar == TRUE)
+        ValidParentType = TRUE;
+    if (ValidParentType != TRUE)
+        return;
 
 // ========================
 // CHILD:: Structure validation
@@ -4201,7 +4217,238 @@ static void on_drop(void)
     return;
 }
 
-// local
+// #test
+/*
+1 Taskbar check
+2 Overlapped windows list
+2.5. Titlebar controls check
+3 Children inside client area
+4 Fallback to root
+*/
+void 
+wm_hit_test_2(
+    unsigned long long1, 
+    unsigned long long2 )
+{
+    struct gws_window_d *hover = NULL;
+    int insideTaskbar = FALSE;
+
+    if (WindowManager.initialized != TRUE){
+        return;
+    }
+
+// #test
+// Restriction when in fullscreen mode
+    if (WindowManager.is_fullscreen == TRUE){
+        //return;
+    }
+
+// ---------------------------------------------
+// 1. Taskbar first
+    if (taskbar_window != NULL && taskbar_window->magic == 1234)
+    {
+        if (long1 >= taskbar_window->absolute_x &&
+            long1 <= taskbar_window->absolute_right &&
+            long2 >= taskbar_window->absolute_y &&
+            long2 <= taskbar_window->absolute_bottom)
+        {
+            hover = taskbar_window;
+            insideTaskbar = TRUE;
+        }
+    }
+
+    int insideTaskbarChild = FALSE;
+
+    // Save result
+    if (hover != NULL) 
+    {
+        struct gws_window_d *c00 = hover->child_head;
+        while (c00 != NULL) 
+        {
+            if (c00->magic == 1234) 
+            {
+                if (long1 >= c00->absolute_x && 
+                    long1 <= c00->absolute_right &&
+                    long2 >= c00->absolute_y && 
+                    long2 <= c00->absolute_bottom)
+                {
+                    // overwrite hover with child
+                    hover = c00;
+                    insideTaskbarChild = TRUE;
+                    insideTaskbar = FALSE; // child of taskbar, not taskbar itself
+                    break;
+                }
+            }
+            c00 = c00->next; // walk siblings
+        };
+
+        on_mouse_leave(mouse_hover);  // repinte a antiga
+        mouse_hover = hover;
+        on_mouse_hover(hover);            // repinte a nova
+
+        // Update relative mouse pointer
+        hover->x_mouse_relative = 
+            (unsigned long) (long1 - hover->absolute_x);
+        hover->y_mouse_relative = 
+            (unsigned long) (long2 - hover->absolute_y);
+
+        return;
+    }
+
+// ---------------------------------------------
+// 2. Overlapped windows via list
+    struct gws_window_d *w = first_window;
+    //int insideAppWindow = FALSE;
+    hover = NULL;
+
+    while (w != NULL) 
+    {
+        if (w->magic == 1234 && w->type == WT_OVERLAPPED) 
+        {
+            if (long1 >= w->absolute_x && 
+                long1 <= w->absolute_right &&
+                long2 >= w->absolute_y && 
+                long2 <= w->absolute_bottom)
+            {
+                // Save this match, but keep going
+                hover = w;
+
+                // Save this match, but keep going
+                //break; // stop at the first match
+
+                //insideAppWindow = TRUE;
+            }
+        }
+        w = w->next; // walk forward in the list
+    };
+
+// ---------------------------------------------
+// 2.5. Titlebar controls check
+    struct gws_window_d *tb = NULL;
+    struct gws_window_d *min = NULL;
+    struct gws_window_d *max = NULL;
+    struct gws_window_d *clo = NULL;
+    int insideTitleBarControl = FALSE;
+
+    if ((void*)hover != NULL)
+    {
+        if ( hover->magic == 1234 && hover->type == WT_OVERLAPPED)
+        {
+            tb = hover->titlebar;   // Get titlebar
+            if (tb != NULL && tb->magic == 1234)
+            {
+
+                min = get_window_from_wid(tb->Controls.minimize_wid);
+                if (min->magic == 1234) 
+                {
+                    if (long1 >= min->absolute_x && 
+                        long1 <= min->absolute_right &&
+                        long2 >= min->absolute_y && 
+                        long2 <= min->absolute_bottom)
+                    {
+                        // overwrite hover with child
+                        hover = min;
+                        insideTitleBarControl = TRUE;
+                    }
+                }
+
+                max = get_window_from_wid(tb->Controls.maximize_wid);
+                if (max->magic == 1234) 
+                {
+                    if (long1 >= max->absolute_x && 
+                        long1 <= max->absolute_right &&
+                        long2 >= max->absolute_y && 
+                        long2 <= max->absolute_bottom)
+                    {
+                        // overwrite hover with child
+                        hover = max;
+                        insideTitleBarControl = TRUE;
+                    }
+                }
+
+                clo = get_window_from_wid(tb->Controls.close_wid);
+                if (clo->magic == 1234) 
+                {
+                    if (long1 >= clo->absolute_x && 
+                        long1 <= clo->absolute_right &&
+                        long2 >= clo->absolute_y && 
+                        long2 <= clo->absolute_bottom)
+                    {
+                        // overwrite hover with child
+                        hover = clo;
+                        insideTitleBarControl = TRUE;
+                    }
+                }
+            }
+        }
+    }
+
+    if (hover != NULL)
+    {
+        if (hover->magic == 1234)
+        {
+            if (insideTitleBarControl == TRUE)
+            {
+                on_mouse_leave(mouse_hover);
+                mouse_hover = hover;
+                on_mouse_hover(hover);
+
+                // Update relative mouse pointer
+                hover->x_mouse_relative = (unsigned long)(long1 - hover->absolute_x);
+                hover->y_mouse_relative = (unsigned long)(long2 - hover->absolute_y);       
+
+                return;
+            }
+        }
+    }
+
+// ---------------------------------------------
+// 3) Check children of this overlapped window,
+// of use the one we found in the previous step as hover.
+    //int insideChild = FALSE;
+
+    if (hover != NULL) 
+    {
+        struct gws_window_d *c = hover->child_head;
+        while (c != NULL) 
+        {
+            if (c->magic == 1234) 
+            {
+                if (long1 >= c->absolute_x && 
+                    long1 <= c->absolute_right &&
+                    long2 >= c->absolute_y && 
+                    long2 <= c->absolute_bottom)
+                {
+                    // overwrite hover with child
+                    hover = c;
+                    //insideChild = TRUE;
+                    break;
+                }
+            }
+            c = c->next; // walk siblings
+        };
+
+        on_mouse_leave(mouse_hover);
+        mouse_hover = hover;
+        on_mouse_hover(hover);
+
+        // Update relative mouse pointer
+        hover->x_mouse_relative = (unsigned long)(long1 - hover->absolute_x);
+        hover->y_mouse_relative = (unsigned long)(long2 - hover->absolute_y);       
+
+        return;
+    }
+
+// ---------------------------------------------
+// fail?
+
+    on_mouse_leave(mouse_hover);  // repinte a antiga
+
+    // Later: add overlapped windows and children checks here.
+    // For now, fallback to root if nothing matched.
+    mouse_hover = __root_window;
+}
+
 // Se o mouse esta passando sobre alguma janela de alguns tipos.
 // #todo:
 // Implementation Considerations
@@ -4224,7 +4471,7 @@ wm_hit_test_00(
     struct gws_window_d *w;
     struct gws_window_d *p;
 
-    if (WindowManager.initialized!=TRUE){
+    if (WindowManager.initialized != TRUE){
         return;
     }
 

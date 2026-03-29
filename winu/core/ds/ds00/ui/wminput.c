@@ -151,7 +151,9 @@ wmProcessMouseEvent(
 
         // Check the window we are inside of and 
         // update the mouse_hover pointer.
-        wm_hit_test_00(saved_x,saved_y);
+
+        //wm_hit_test_00(saved_x,saved_y); // original
+        wm_hit_test_2(saved_x,saved_y); // #test
 
         return;
     }

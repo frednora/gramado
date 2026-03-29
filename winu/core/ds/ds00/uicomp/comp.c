@@ -627,8 +627,17 @@ void DoWeNeedToEraseMousePointer(int value)
 // Compare the mouse position (__new_mouse_x and__new_mouse_y)
 // against the windows. 
 
+// #todo: 
+// Order:  taskbar --> app window --> children
+
+// #os
+// Our new hit-testing is in wm.c.
+// See wm_hit_test_00().
+
 struct gws_window_d *mouse_at(void)
 {
+// #deprecated
+
     struct gws_window_d *new_hover_window;
     register int i=0;
 
