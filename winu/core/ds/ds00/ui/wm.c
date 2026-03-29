@@ -4465,6 +4465,12 @@ wm_hit_test_00(
 // Check if the mouse is hover a window, given the coordenates.
 // Well. Not valid in fullscreen for now.
 
+// #deprecated
+// Our new hit-testing is in wm.c.
+// See wm_hit_test_2().
+
+/*
+
     int Status=0;
     register int i=0;
     int max = WINDOW_COUNT_MAX;  // All the windows in the global list.
@@ -4579,6 +4585,9 @@ wm_hit_test_00(
 // This ensures that the previous hover state is canceled and 
 // that the root window becomes the default hover target.
     mouse_hover = (void*) __root_window;
+
+*/
+
 }
 
 unsigned long wmGetLastInputJiffie(int update)

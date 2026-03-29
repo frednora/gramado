@@ -5019,7 +5019,6 @@ int gws_message_box(int fd, int parent_wid, const char *message, int type)
     dialog_l = (screen_w - dialog_w) / 2; 
     dialog_t = (screen_h - dialog_h) / 2;
 
-
 // Parameters validation
 // Make sure we don't proceed with invalid inputs.
     if (fd < 0)

@@ -630,13 +630,14 @@ void DoWeNeedToEraseMousePointer(int value)
 // #todo: 
 // Order:  taskbar --> app window --> children
 
-// #os
-// Our new hit-testing is in wm.c.
-// See wm_hit_test_00().
 
 struct gws_window_d *mouse_at(void)
 {
 // #deprecated
+// Our new hit-testing is in wm.c.
+// See wm_hit_test_2().
+
+/*
 
     struct gws_window_d *new_hover_window;
     register int i=0;
@@ -700,6 +701,8 @@ struct gws_window_d *mouse_at(void)
             }
         }
     };
+
+*/
 
     return NULL;  // No hit
 }
