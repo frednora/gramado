@@ -1,0 +1,4 @@
+
+ Chrome. aka frame.
+ It's that non-client area outside the client-area. Just like the taskbar,
+ controls, borders. all the thing that can be handled by the OS, not by the app.
