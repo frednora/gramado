@@ -146,15 +146,10 @@ static char vsync_inb(int port);
 
 // ============================
 
-void update_mouse_position(unsigned long x, unsigned long y)
-{
-    __new_mouse_x = x;
-    __new_mouse_y = y;
-}
 
 // Sinaliza que precisamos apagar o ponteiro do mouse,
 // copiando o conteudo do backbuffer no LFB.
-void DoWeNeedToEraseMousePointer(int value)
+void bldisp_do_we_need_to_erase_mouse_pointer(int value)
 {
     if ( value != FALSE && 
          value != TRUE )
@@ -164,9 +159,15 @@ void DoWeNeedToEraseMousePointer(int value)
     __clear_mousebox = (int) value;
 }
 
+void bldisp_update_mouse_position(unsigned long x, unsigned long y)
+{
+    __new_mouse_x = x;
+    __new_mouse_y = y;
+}
+
 // + Apaga o cursor antigo, copiando o conteudo do backbuffer
 // + Pinta o novo cursor diretamente no lfb.
-void __display_mouse_cursor(void)
+void bldisp_display_mouse_cursor(void)
 {
     unsigned long rWidth = 16;
     unsigned long rHeight = 16;
@@ -203,7 +204,7 @@ void __display_mouse_cursor(void)
             __old_mouse_x, __old_mouse_y, rWidth, rHeight
         );
         
-        //DoWeNeedToEraseMousePointer(FALSE);
+        //bldisp_do_we_need_to_erase_mouse_pointer(FALSE);
     }
 
 // save

@@ -3695,8 +3695,8 @@ wmMouseEvent(
         // see: bldisp.c
         if (use_kernelside_mouse_drawing == TRUE)
         {
-            update_mouse_position(long1, long2);
-            __display_mouse_cursor();
+            bldisp_update_mouse_position(long1, long2);
+            bldisp_display_mouse_cursor();
         }
 
         // #test

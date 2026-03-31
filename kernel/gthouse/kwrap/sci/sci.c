@@ -2290,7 +2290,7 @@ void *sci2 (
 // Draw the mouse cursor reusing the old position.
     if (number == 820)
     {
-        __display_mouse_cursor();
+        bldisp_display_mouse_cursor();
         return NULL; 
     }
 
