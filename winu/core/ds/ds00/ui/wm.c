@@ -4405,6 +4405,38 @@ wm_hit_test_2(
 
                 return;
             }
+
+            // If it was not inside a control,
+            // it probably is inside the titlebar or 
+            // something else.
+            if (insideTitleBarControl != TRUE)
+            {
+                tb = hover->titlebar;   // Get titlebar
+                if (tb != NULL && tb->magic == 1234)
+                {
+                    if (long1 >= tb->absolute_x && 
+                        long1 <= tb->absolute_right &&
+                        long2 >= tb->absolute_y && 
+                        long2 <= tb->absolute_bottom)
+                    {
+                        // overwrite hover with child
+                        // Now we are inside the titlebar, but not in a control.
+                        hover = tb;
+                    
+                        if (hover != mouse_hover)
+                        {
+                            on_mouse_leave(mouse_hover);
+                            mouse_hover = hover;
+                            on_mouse_hover(hover);
+                        }
+
+                        // Update relative mouse pointer
+                        hover->x_mouse_relative = (unsigned long)(long1 - hover->absolute_x);
+                        hover->y_mouse_relative = (unsigned long)(long2 - hover->absolute_y);       
+                        return;
+                    }
+                }
+            }
         }
     }
 
