@@ -3,6 +3,7 @@ all:
 
 #	make -C libcpp/
 
+# Client-side library for the Display server.
 	make -C libdisp/
 
 # Graphics support (Server-side?)

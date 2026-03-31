@@ -318,15 +318,6 @@ spare_putpixel0(
 
 // Draw it
 
-/*
-   // #deprecated method
-    putpixel0(
-        color, 
-        x, y, 
-        rop, 
-        (unsigned long) SpareBufferClipInfo.base );
-*/
-
     if (!spare_dccanvas) 
         return;
 

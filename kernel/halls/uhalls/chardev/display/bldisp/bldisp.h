@@ -110,6 +110,14 @@ extern struct display_device_d *bl_display_device;
 
 // ----------------------
 
+// ++
+// Mouse support
+void update_mouse_position(unsigned long x, unsigned long y);
+void DoWeNeedToEraseMousePointer(int value);
+void __display_mouse_cursor(void);
+// --
+
+
 void bldisp_flush(unsigned long flags);
 void bldisp_vsync(void);
 

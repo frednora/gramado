@@ -5,6 +5,12 @@
 // Here we gonna call the routines in the device driver.
 // It is an abstraction.
 
+/*
+#include "include/vk.h"       // # view input events
+#include "include/lt8x8.h"
+#include "include/rop.h"
+*/
+
 #include "include/libdisp.h"
 
 //
@@ -16,20 +22,94 @@
 
 static int libgd_current_mode=0;
 
-// #ordem
-// hardware, software
+// Backbuffer - Dark Zone
 static unsigned long libgd_BACKBUFFER_VA=0;
+// Frontbuffer (LFB) - Light Zone
 static unsigned long libgd_FRONTBUFFER_VA=0;
+
+// #test: 
+// Addresses used by the frontbuffer
+// struct libgd_frontbuffer_info_d  FrontbufferInfo;
+
 // Saving
 static unsigned long libgd_SavedX=0;
 static unsigned long libgd_SavedY=0;
 static unsigned long libgd_SavedBPP=0; 
-// helper.
+// Helper
 static unsigned long libgd_device_width=0;
 static unsigned long libgd_device_height=0;
 static unsigned long libgd_device_bpp=0;
+static unsigned long libgd_device_pitch=0;
 
-// ----------------------------------
+// Device context
+static struct dccanvas_d *libgd_dc_backbuffer;
+static struct dccanvas_d *libgd_dc_frontbuffer;
+
+// ===================================================
+
+
+// Create a new device context for a given buffer.
+// Parameters:
+//   base   - pointer to buffer memory
+//   width  - width in pixels
+//   height - height in pixels
+//   bpp    - bits per pixel (e.g. 32, 24, 16)
+//
+// Returns:
+//   pointer to a new dccanvas_d, or NULL on failure.
+struct dccanvas_d *libgd_create_dc(unsigned char *base,
+                               unsigned long width,
+                               unsigned long height,
+                               unsigned long bpp)
+{
+    if (!base || width == 0 || height == 0 || bpp == 0)
+        return NULL;
+
+    struct dccanvas_d *dc = malloc(sizeof(struct dccanvas_d));
+    if (!dc) 
+        return NULL;
+
+    memset(dc, 0, sizeof(struct dccanvas_d));
+
+    dc->data         = base;
+    dc->device_width = width;
+    dc->device_height= height;
+    dc->bpp          = bpp;                  // bits per pixel
+    dc->pitch        = width * (bpp / 8);    // bytes per row
+    //dc->next         = NULL;
+
+    dc->used        = TRUE;
+    dc->magic       = 1234;
+    dc->initialized = TRUE;
+
+    return dc;
+}
+
+// Get the pointer for the backbufer dc
+struct dccanvas_d *libgd_get_backbuffer_dc(void)
+{
+    if ((void *) libgd_dc_backbuffer == NULL)
+        return NULL;
+    if (libgd_dc_backbuffer->magic != 1234)
+        return NULL;
+    if (libgd_dc_backbuffer->initialized != TRUE)
+        return NULL;
+
+    return (struct dccanvas_d *) libgd_dc_backbuffer;
+}
+
+// Get the pointer for the frontbufer dc
+struct dccanvas_d *libgd_get_frontbuffer_dc(void)
+{
+    if ((void *) libgd_dc_frontbuffer == NULL)
+        return NULL;
+    if (libgd_dc_frontbuffer->magic != 1234)
+        return NULL;
+    if (libgd_dc_frontbuffer->initialized != TRUE)
+        return NULL;
+
+    return (struct dccanvas_d *) libgd_dc_frontbuffer;
+}
 
 
 /*
@@ -82,52 +162,6 @@ libgd_put_pixel(
 }
 */
 
-// Initialize the library.
-int libgd_initialize(void)
-{
-    libgd_current_mode = gwssrv_get_system_metrics(130);
-    if (libgd_current_mode < 0){
-        printf("libgd_initialize: [FAIL] libgd_current_mode\n");
-        goto fail;
-    }
-
-// Buffers
-    libgd_FRONTBUFFER_VA = (unsigned long) rtl_get_system_metrics(11);
-    libgd_BACKBUFFER_VA  = (unsigned long) rtl_get_system_metrics(12);
-// Screen
-// Width, Height and Bits Per Pixel.
-    libgd_device_width  = (unsigned long) gwssrv_get_system_metrics(1);
-    libgd_device_height = (unsigned long) gwssrv_get_system_metrics(2);
-    libgd_device_bpp    = (unsigned long) gwssrv_get_system_metrics(9);
-// Saving
-    libgd_SavedX   = (unsigned long) libgd_device_width;
-    libgd_SavedY   = (unsigned long) libgd_device_height;
-    libgd_SavedBPP = (unsigned long) libgd_device_bpp;
-
-
-// Backbuffer and frontbuffer.
-    if ( libgd_FRONTBUFFER_VA == 0 || libgd_BACKBUFFER_VA == 0 )
-    {
-        printf("libgd_initialize: Buffers\n");
-        goto fail;
-    }
-
-// Width, Height and Bits Per Pixel.
-    if ( libgd_device_width == 0 || 
-         libgd_device_height == 0 || 
-         libgd_device_bpp == 0 )
-    {
-        printf("libgd_initialize: w, h and bpp\n");
-        goto fail;
-    }
-
-
-    return 0;
-fail:
-    exit(1);
-    return (int) -1;
-}
-
 // Plot pixel into the raster.
 // The origin is top/left of the viewport. (0,0).
 int 
@@ -139,25 +173,44 @@ libdisp_backbuffer_putpixel (
 {
 // #todo: Return the number of changed pixels.
 
-// Clipping
-    if(x<0){ return 0; }
-    if(y<0){ return 0; }
+    int ret_value=0;
+// The base address for the target backbuffer.
+    unsigned long target_buffer = 
+        libgd_BACKBUFFER_VA;
 
+// Clipping
+// #bugbug:
+// And the other limits?
+    if (x<0){
+        return 0;
+    }
+    if (y<0){
+        return 0;
+    }
 
     //if (x > 200 && x < 600)
     //    rop = 1;
 
+    //if (target_buffer == 0)
+        //return 0;
 
-// #bugbug: We don't have rop in this routine.
+
 // IN: color, x, y, rop, target buffer.
-    return (int) fb_BackBufferPutpixel( 
-                     color, x, y, rop, libgd_BACKBUFFER_VA );
+    ret_value = 
+        (int) fb_BackBufferPutpixel( 
+                  color, 
+                  x, 
+                  y, 
+                  rop, 
+                  target_buffer );
 
 // #test: This routine has rop support.
 // #bugbug: These two routines are using different types
 // in the parameters.
     //return (int) putpixel0( 
-    //                 color, x, y, rop, libgd_BACKBUFFER_VA );
+    //                 color, x, y, rop, target_buffer );
+
+    return (int) ret_value;
 }
 
 // ## putpixel: 
@@ -174,7 +227,8 @@ grBackBufferPutpixel2 (
 {
     if (x<0){ return -1; }
     if (y<0){ return -1; }
-    return (int) sc80 ( 6, color, x, y );
+// Service number 6.
+    return (int) gramado_system_call ( 6, color, x, y );
 }
 
 /*
@@ -256,7 +310,7 @@ fb_BackBufferPutpixel (
     b = (color & 0xFF);
     g = (color & 0xFF00)   >> 8;
     r = (color & 0xFF0000) >> 16;
-    a = (color >> 24) + 1;
+    a = (color >> 24) & 0xFF;
 
     int Operation = (int) (rop & 0xFF);
 
@@ -270,8 +324,8 @@ fb_BackBufferPutpixel (
     if ( x >= deviceWidth ) { goto fail; }
     if ( y >= deviceHeight ){ goto fail; }
 // Purify
-    x = ( x & 0xFFFF);
-    y = ( y & 0xFFFF);
+    x = (x & 0xFFFF);
+    y = (y & 0xFFFF);
 
 // bpp
 // #danger
@@ -298,14 +352,14 @@ fb_BackBufferPutpixel (
     unsigned long pitch=0; 
 
     // #todo: Return the number of changed pixels. '0'
-    if (bytes_count!=3 && bytes_count!=4 )
+    if (bytes_count != 3 && bytes_count != 4)
         goto fail;
 
-    if (bytes_count==3){
+    if (bytes_count == 3){
         pitch = (unsigned long) (deviceWidth*bytes_count);
         tmpOffset = (unsigned long) ( (pitch*y) + (x*bytes_count) );
     }
-    if (bytes_count==4){
+    if (bytes_count == 4){
         pitch = (unsigned long) (deviceWidth<<2);
         tmpOffset = (unsigned long) ( (pitch*y) + (x<<2) );
     }
@@ -481,6 +535,22 @@ fail:
 
 /*
  * putpixel0:
+ *   Write a pixel into a backbuffer using a raster operation (ROP).
+ *   The server (kgws) can access the backbuffer but not the frontbuffer,
+ *   so it must use the video driver dialog for display.
+ *
+ * Parameters:
+ *   _color     - Source color (BGRA)
+ *   _x, _y     - Pixel coordinates
+ *   _rop_flags - ROP code (low byte)
+ *   buffer_va  - Virtual address of the backbuffer
+ *
+ * Returns:
+ *   Number of pixels changed (currently always 1, or 0 on error).
+ */
+
+/*
+ * putpixel0:
  *     O servidor kgws pode acessar um buffer. Mas não tem acesso
  * ao frontbuffer. Para isso ele precisa usasr o diálogo do driver 
  * de vídeo.
@@ -495,20 +565,37 @@ fail:
 // b,   g,  r,  a = Color from parameter.
 // b2, g2, r2, a2 = Color from backbuffer.
 // b3, g3, r3, a3 = Color to be stored.
+// Performance
+// Direct memory writes are fine for now, but later you might want:
+//  + Inline assembly for speed.
+//  + SIMD operations for batch pixel effects.
+//  + Double-buffering strategies (swap back/front).
 
 int
 putpixel0 ( 
+    struct dccanvas_d *dc,
     unsigned int  _color,
     unsigned long _x, 
     unsigned long _y, 
-    unsigned long _rop_flags,
-    unsigned long buffer_va )
+    unsigned long _rop_flags )
 {
 // #todo: Return the number of changed pixels.
 
+// Validate context
+    if (!dc || dc->initialized != TRUE || !dc->data)
+        return -1;
+
+// Local copies from dc
+    unsigned char *dc_where = dc->data;
+    unsigned long dc_width   = dc->device_width;
+    unsigned long dc_height  = dc->device_height;
+    unsigned long dc_bpp     = dc->bpp;    // bits per pixel.
+    unsigned long dc_pitch   = dc->pitch;  // bytes per row
+
 // The address where we're gonna put the data into.
 // #todo: It needs to be a valid ring3 address.
-    unsigned char *where = (unsigned char *) buffer_va;
+    //unsigned char *where = (unsigned char *) buffer_va;
+
 // The pixel color.
     unsigned int Color = (unsigned int) (_color & 0xFFFFFFFF);
 // The four elements of a color.
@@ -525,33 +612,51 @@ putpixel0 (
 // 2 = 16 bpp
 // ...
     int bytes_count=0;
-    int bpp   = (int) libgd_SavedBPP;           // get from globals.
-    int width = (int) (libgd_SavedX & 0xFFFF);  // device width
+
+    // bits per pixel
+    //int bpp   = (int) libgd_SavedBPP;  // get from globals.
+    int bpp   = (int) dc_bpp;            // get from dc
+
+    //int width = (int) (libgd_SavedX & 0xFFFF);  // device width
+    int width = (int) (dc_width & 0xFFFF);  // device width from dc
+
 // Positions
     int offset=0;   // the offset of the pixel into the buffer.
 
     int x = (int) (_x & 0xFFFF);
     int y = (int) (_y & 0xFFFF);
 
+    //if (x < 0 || y < 0) return -1;
+    //if (x >= (int)dc_width || y >= (int)dc_height) return -1;
+
+
 // Buffer address validation.
 // The address where we're gonna put the data into.
 // #todo: It needs to be a valid ring3 address.
+/*
     if (buffer_va == 0){
         //panic("putpixel0: buffer_va\n");
-        gwssrv_debug_print("putpixel0: buffer_va\n");
+        //server_debug_print("putpixel0: buffer_va\n");
         return 0;  // 0 changed pixels.
     }
+*/
+
+    // #test
+    if ((void *) dc_where == NULL)
+        return -1;
 
 // Split: bgra
     b = (Color & 0xFF);
     g = (Color & 0xFF00) >> 8;
     r = (Color & 0xFF0000) >> 16;
-    a = (Color >> 24) + 1;
+    a = (Color >> 24) & 0xFF;
 
 // bpp
 // #danger
 // This is a global variable.
 // Esse valor foi herdado do bootloader.
+
+    // Bits per pixel ... lets convert ir in bytes per pixel.
     switch (bpp){
     case 32:  bytes_count=4;  break;
     case 24:  bytes_count=3;  break;
@@ -563,7 +668,7 @@ putpixel0 (
     //    bytes_count = 1;
     //    break;
     default:
-        gwssrv_debug_print("putpixel0: bpp\n");
+        //server_debug_print("putpixel0: bpp\n");
         printf            ("putpixel0: bpp\n");
         exit(1);
         while(1){}
@@ -594,14 +699,16 @@ putpixel0 (
 // == Modify ==============================
 //
 
+// ROP (Raster Operations)
+
 // ------------------------------------------
 // A cor encontrada no buffer.
     unsigned char b2, g2, r2, a2;
 // get
-    b2 = where[offset];
-    g2 = where[offset +1];
-    r2 = where[offset +2];
-    if (bpp == 32){ a2 = where[offset +3]; };
+    b2 = dc_where[offset];
+    g2 = dc_where[offset +1];
+    r2 = dc_where[offset +2];
+    if (bpp == 32){ a2 = dc_where[offset +3]; };
 // ------------------------------------------
 // A cor transformada.
 // A cor a ser gravada.
@@ -609,12 +716,13 @@ putpixel0 (
 // ------------
 // 0 = Sem modificação
 // A cor a ser registrada é a mesma enviada por argumento.
-    if (Operation == 0){
+// ROP_COPY?
+    if (Operation == ROP_COPY){
         r3=r;  g3=g;  b3=b;  a3=a;
     }
 // ------------
 // 1 = or
-    if (Operation == 1)
+    if (Operation == ROP_OR)
     {
         r3 = (r2 | r);
         g3 = (g2 | g);
@@ -623,7 +731,7 @@ putpixel0 (
     }
 // ------------
 // 2 = and
-    if (Operation == 2)
+    if (Operation == ROP_AND)
     {
         r3 = (r2 & r);
         g3 = (g2 & g);
@@ -632,16 +740,26 @@ putpixel0 (
     }
 // ------------
 // 3 = xor
-    if (Operation == 3)
+    if (Operation == ROP_XOR)
     {
         r3 = (r2 ^ r);
         g3 = (g2 ^ g);
         b3 = (b2 ^ b);
         a3 = a2;
     }
+// -------------------------
+// 4 - nand? #text
+    if (Operation == ROP_NAND)
+    {
+        r3 = (unsigned char) ~(r2 & r);
+        g3 = (unsigned char) ~(g2 & g);
+        b3 = (unsigned char) ~(b2 & b);
+        a3 = a2;
+    }
+
 // ------------
 // 10 - red
-    if (Operation == 10)
+    if (Operation == ROP_LESS_RED)
     {
         r3 = (r2 & 0xFE);
         g3 = g2;
@@ -650,7 +768,7 @@ putpixel0 (
     }
 // ------------
 // 11 - green
-    if (Operation == 11)
+    if (Operation == ROP_LESS_GREEN)
     {
         r3 = r2;
         g3 = (g2 & 0xFE);
@@ -659,25 +777,26 @@ putpixel0 (
     }
 // ------------
 // 12 - blue
-    if (Operation == 12)
+    if (Operation == ROP_LESS_BLUE)
     {
         r3 = r2;
         g3 = g2;
         b3 = (b2 & 0xFE); 
         a3 = a2;
     }
+
 // ------------
 // 20 - gray
-    if (Operation == 20)
+    if (Operation == ROP_GRAY_MASK)
     {
         r3 = (r2 & 0x80);
         g3 = (g2 & 0x80);
         b3 = (b2 & 0x80);
         a3 = a2;
     }
-// ------------
-// 21 - gray
-    if (Operation == 21)
+// -------------------------
+// 21 - no red 
+    if (Operation == ROP_REMOVE_RED)
     {
         r3 = (r2 & 0x00);
         g3 = (g2 & 0xFF);
@@ -687,33 +806,223 @@ putpixel0 (
 
 // luminosity
 // Gray: luminosity = R*0.3 + G*0.59 + B *0.11
-
-/*
- // #test
- // This is a test yet.
     unsigned char common_gray=0;
-    if ( Operation == 22 )
+    if (Operation == ROP_GRAY_LUMA)
     {
-        r3 = ((r2 * 30 )/100);
-        g3 = ((g2 * 59 )/100);
-        b3 = ((b2 * 11 )/100);
-        common_gray = (unsigned char) (r3+g3+b3);
-        r3=(unsigned char)common_gray;
-        g3=(unsigned char)common_gray;
-        b3=(unsigned char)common_gray;
+        common_gray = 
+            (unsigned char)(((r2 * 30) + (g2 * 59) + (b2 * 11)) / 100);
+
+        r3 = common_gray;
+        g3 = common_gray;
+        b3 = common_gray;
+        a3 = a2;
+
+        // #todo
+        //common_gray = (unsigned char)((r2 * 77 + g2 * 150 + b2 * 29) >> 8);
+        //r3 = g3 = b3 = common_gray;
+        //a3 = a2;
+    }
+
+// ------------
+// 30 - alpha blend (SRC over DST)
+
+    unsigned char myA=0;
+    unsigned char invA=0;
+    if (Operation == ROP_ALPHA)
+    {
+        myA  = a;                        // Source alpha (0–255)
+        invA = (unsigned char)(255 - myA);
+
+        // Blend each channel: out = (src * A + dst * (255 - A)) / 255
+        r3 = (unsigned char)((r * myA + r2 * invA) / 255);
+        g3 = (unsigned char)((g * myA + g2 * invA) / 255);
+        b3 = (unsigned char)((b * myA + b2 * invA) / 255);
+
+        // Alpha channel policy:
+        // Option 1: keep destination alpha
+        a3 = a2;
+
+        // Option 2: compute blended alpha
+        // a3 = (unsigned char)(myA + ((a2 * invA) / 255));
+    }
+
+// ------------
+// 31 - Invert (invert destination color channels)
+    if (Operation == ROP_INVERT)
+    {
+        // Each channel becomes 255 - dstChannel
+        r3 = (unsigned char)(255 - r2);
+        g3 = (unsigned char)(255 - g2);
+        b3 = (unsigned char)(255 - b2);
+
+        // Alpha channel policy: keep destination alpha
         a3 = a2;
     }
-*/
+
+// ------------
+// 32 - Additive blend
+// Combine source and destination color channels by simple addition.
+// Each channel result is clamped to 255 to avoid overflow.
+// This produces a "lighten" or "glow" effect, often used for
+// additive blending in graphics pipelines.
+// Alpha channel is not blended here; we preserve the destination alpha.
+    int __rt = 0;
+    int __gt = 0;
+    int __bt = 0;
+
+    if (Operation == ROP_ADD)
+    {
+        __rt = r2 + r;   // add red channels
+        __gt = g2 + g;   // add green channels
+        __bt = b2 + b;   // add blue channels
+
+        // Clamp each channel to the valid 0–255 range
+        r3 = (unsigned char)(__rt > 255 ? 255 : __rt);
+        g3 = (unsigned char)(__gt > 255 ? 255 : __gt);
+        b3 = (unsigned char)(__bt > 255 ? 255 : __bt);
+
+        // Alpha channel policy: keep destination alpha unchanged
+        a3 = a2;
+    }
+
+// ------------
+// 33 - Multiply (darken/tint effect)
+// Each channel is multiplied by the source channel and scaled back to 0–255.
+// Formula: out = (src * dst) / 255
+// This produces a darker result unless one of the channels is 255.
+// Alpha channel is preserved from the destination.
+    if (Operation == ROP_MULTIPLY)
+    {
+        r3 = (unsigned char)((r2 * r) / 255);
+        g3 = (unsigned char)((g2 * g) / 255);
+        b3 = (unsigned char)((b2 * b) / 255);
+
+        // Alpha channel policy: keep destination alpha unchanged
+        a3 = a2;
+    }
+
+// 34
+// This is useful for skipping writes in a controlled way.
+    if (Operation == ROP_KEEP_DST)
+    {
+        r3 = r2; g3 = g2; b3 = b2; a3 = a2;
+    }
+
+// 35
+// Take the source color but halve its intensity:
+    if (Operation == ROP_HALF_SRC)
+    {
+        r3 = r >> 1;
+        g3 = g >> 1;
+        b3 = b >> 1;
+        a3 = a;
+    }
+
+// 36
+// 36 - Half destination (dim dst channels by 50%)
+    if (Operation == ROP_HALF_DST)
+    {
+        r3 = r2 >> 1;
+        g3 = g2 >> 1;
+        b3 = b2 >> 1;
+        a3 = a2;
+    }
+
+// 37
+// Quick way to get a “lighten” effect:
+    if (Operation == ROP_MAX)
+    {
+        r3 = (r > r2 ? r : r2);
+        g3 = (g > g2 ? g : g2);
+        b3 = (b > b2 ? b : b2);
+        a3 = a2;
+    }
+
+// 38
+// Opposite of max, gives a “darken” effect:
+// ------------
+// 38 - Min (darken effect)
+// Each channel takes the minimum of src and dst.
+// Produces a darker result by keeping the lower intensity.
+// Alpha channel preserved from destination.
+    if (Operation == ROP_MIN)
+    {
+        r3 = (r < r2 ? r : r2);
+        g3 = (g < g2 ? g : g2);
+        b3 = (b < b2 ? b : b2);
+        a3 = a2;
+   }
+
+// ------------
+// 39 - Negate (bitwise NOT of destination channels)
+    if (Operation == ROP_NEGATE)
+    {
+        r3 = (unsigned char)(~r2);
+        g3 = (unsigned char)(~g2);
+        b3 = (unsigned char)(~b2);
+
+        // Alpha channel policy: keep destination alpha unchanged
+        a3 = a2;
+    }
+
+// ------------
+// 40 - Average (src + dst) / 2
+// Each channel is averaged between source and destination.
+// Produces a mid‑tone blend of the two colors.
+// Alpha channel preserved from destination.
+    if (Operation == ROP_AVERAGE)
+    {
+        r3 = (unsigned char)((r + r2) >> 1);
+        g3 = (unsigned char)((g + g2) >> 1);
+        b3 = (unsigned char)((b + b2) >> 1);
+        a3 = a2;
+    }
+
+// ------------
+// 41 - Difference (abs(src - dst))
+// Each channel is the absolute difference between source and destination.
+// Produces a high‑contrast effect where colors differ.
+// Alpha channel preserved from destination.
+    if (Operation == ROP_DIFF)
+    {
+        r3 = (unsigned char)( (r > r2) ? (r - r2) : (r2 - r) );
+        g3 = (unsigned char)( (g > g2) ? (g - g2) : (g2 - g) );
+        b3 = (unsigned char)( (b > b2) ? (b - b2) : (b2 - b) );
+        a3 = a2;
+    }
+
+// ------------
+// 42 - Brighten (dst + 64, clamped)
+// Adds a fixed value to each destination channel.
+// Produces a lighter/brighter effect.
+// Alpha channel preserved from destination.
+    int addVal = 64; // tweak as needed
+    int my_rt = 0;
+    int my_gt = 0;
+    int my_bt = 0;
+    if (Operation == ROP_BRIGHTEN)
+    {
+        addVal = 64; // tweak as needed
+        my_rt = r2 + addVal;
+        my_gt = g2 + addVal;
+        my_bt = b2 + addVal;
+
+        r3 = (unsigned char)(my_rt > 255 ? 255 : my_rt);
+        g3 = (unsigned char)(my_gt > 255 ? 255 : my_gt);
+        b3 = (unsigned char)(my_bt > 255 ? 255 : my_bt);
+        a3 = a2;
+    }
+
 
 //
 // == Register =====================
 // 
 
 // BGR and A
-    where[offset]    = b3;
-    where[offset +1] = g3;
-    where[offset +2] = r3;
-    if (bpp == 32){ where[offset +3] = a3; };
+    dc_where[offset]    = b3;
+    dc_where[offset +1] = g3;
+    dc_where[offset +2] = r3;
+    if (bpp == 32){ dc_where[offset +3] = a3; };
 
 // Return the number of changed pixels.
     return (int) 1;
@@ -726,17 +1035,18 @@ backbuffer_putpixel (
     unsigned long _y, 
     unsigned long _rop_flags )
 {
-    unsigned long buffer = (unsigned long) libgd_BACKBUFFER_VA;
-// Putpixel at the given buffer address.
-    putpixel0(
-        _color,
-        _x,
-        _y,
-        _rop_flags,
-        buffer );
+    if (!libgd_dc_backbuffer)
+        return;
+
+    //unsigned long buffer = (unsigned long) libgd_BACKBUFFER_VA;
+
+// Putpixel at the given buffer address
+    //putpixel0( _color, _x, _y, _rop_flags, buffer );
+
+    // #test: New worker with dc.
+    putpixel0(libgd_dc_backbuffer, _color, _x, _y, _rop_flags);
 }
 
-// #todo: Not tested yet.
 void 
 frontbuffer_putpixel ( 
     unsigned int  _color,
@@ -744,16 +1054,19 @@ frontbuffer_putpixel (
     unsigned long _y, 
     unsigned long _rop_flags )
 {
-    unsigned long buffer = (unsigned long) libgd_FRONTBUFFER_VA;
-// Putpixel at the given buffer address.
-    putpixel0(
-        _color,
-        _x,
-        _y,
-        _rop_flags,
-        buffer );
+    if (!libgd_dc_frontbuffer)
+        return;
+
+    //unsigned long buffer = (unsigned long) libgd_FRONTBUFFER_VA;
+// Putpixel at the given buffer address
+    //putpixel0( _color, _x, _y, _rop_flags, buffer );
+
+    // #test: New worker with dc.
+    putpixel0(libgd_dc_frontbuffer, _color, _x, _y, _rop_flags);
 }
 
+// IN: 
+// back_or_front: 1=back | 2=front
 int 
 libgd_putpixel ( 
     unsigned int color, 
@@ -762,8 +1075,6 @@ libgd_putpixel (
     unsigned long rop,
     int back_or_front )
 {
-// 1=back | 2=front
-
     if (back_or_front ==1){
         backbuffer_putpixel(color,x,y,rop);
         return 0;
@@ -772,14 +1083,13 @@ libgd_putpixel (
         frontbuffer_putpixel(color,x,y,rop);
         return 0;
     }
-
-    return -1;
+    return (int) -1;
 }
 
 //============
 
-// Get the color value given the position.
-unsigned int grBackBufferGetPixelColor( int x, int y )
+// Get the color value given the position
+unsigned int grBackBufferGetPixelColor(int x, int y)
 {
     unsigned char *where = (unsigned char *) libgd_BACKBUFFER_VA;
 // 3 = 24 bpp
@@ -830,6 +1140,198 @@ unsigned int grBackBufferGetPixelColor( int x, int y )
 
 // Return the color value.
     return (unsigned int) ColorBuffer;
+}
+
+/*
+// #todo
+// Draw char into a given device context
+void 
+dc_drawchar (
+    struct dccanvas_d *dc, 
+    unsigned long x, 
+    unsigned long y,  
+    unsigned long c,
+    unsigned int fgcolor,
+    unsigned int bgcolor,
+    unsigned long rop )
+{
+    register int y2=0;
+    register int x2=0;
+    char *work_char; 
+    unsigned char bit_mask = 0x80;
+
+    if ((void *)dc == NULL)
+        return;
+    if (dc->magic != 1234)
+        return;
+
+
+// Get the font pointer.
+// #todo:
+// usar variavel g8x8fontAddress.	 
+// + Criar e usar uma estrutura para fonte.
+// + Usar o ponteiro para a fonte atual que foi carregada.
+// + Criar um switch para o tamanho da fonte.
+//   isso deveria estar na inicialização do módulo char.
+ 
+ 
+    if ( FontInitialization.address == 0 ||  
+         FontInitialization.width <= 0 || 
+         FontInitialization.height <= 0 )
+    {
+        printf ("dc_drawchar: initialization fail\n");
+        while(1){}
+    }
+
+// Tentando pintar um espaço em branco.
+// Nas rotinas da biblioteca gráfica, quando encontram
+//um espaço(32), nem manda para cá, apenas incrementam o cursor.
+
+// O caractere sendo trabalhado.
+// Offset da tabela de chars de altura 8 na ROM.
+
+    work_char = 
+        (void *) FontInitialization.address + (c * FontInitialization.height);
+
+// Draw:
+// Draw a char using a ring3 routine.
+// #todo
+// Some flag for modification here?
+// Put pixel.
+// A cor varia de acordo com a mascara de bit.
+
+    for ( y2=0; y2 < FontInitialization.height; y2++ )
+    {
+        bit_mask = 0x80;
+
+        for ( x2=0; x2 < FontInitialization.width; x2++ )
+        {
+
+            // #test: New method with dc.
+            // IN: dc, color, x, y, rop
+            putpixel0(
+                dc,
+                *work_char & bit_mask ? fgcolor: bgcolor, 
+                (x + x2), 
+                y, 
+                rop );
+
+            bit_mask = (bit_mask >> 1); 
+        };
+
+        // Próxima linha da (y) linhas do caractere.
+        y++; 
+        work_char++; 
+    };
+}
+*/
+
+//
+// #
+// INITIALIZATION 
+//
+
+// Initialize the libgd library
+int libgd_initialize(void)
+{
+
+// Get current mode
+// Gramado mode
+// get gramado mode.
+// jail, p1, home, p2, castle ...
+    libgd_current_mode = server_get_system_metrics(130);
+    if (libgd_current_mode < 0){
+        printf("libgd_initialize: [FAIL] libgd_current_mode\n");
+        goto fail;
+    }
+
+// Get backbuffer and frontbuffer virtual addresses
+    libgd_BACKBUFFER_VA  = (unsigned long) rtl_get_system_metrics(12);
+    libgd_FRONTBUFFER_VA = (unsigned long) rtl_get_system_metrics(11);
+
+// Screen
+// Width, Height and Bits Per Pixel.
+    libgd_device_width  = (unsigned long) server_get_system_metrics(1);
+    libgd_device_height = (unsigned long) server_get_system_metrics(2);
+    libgd_device_bpp    = (unsigned long) server_get_system_metrics(9);
+// Saving
+    libgd_SavedX   = (unsigned long) libgd_device_width;
+    libgd_SavedY   = (unsigned long) libgd_device_height;
+    libgd_SavedBPP = (unsigned long) libgd_device_bpp;
+
+// Pitch
+// Get bytes per pixel then multiply by the width.
+
+    libgd_device_pitch = 
+        (unsigned long) ((libgd_device_bpp/8) * libgd_device_width);
+
+
+// Backbuffer and frontbuffer.
+    if ( libgd_FRONTBUFFER_VA == 0 || libgd_BACKBUFFER_VA == 0 )
+    {
+        printf("libgd_initialize: Buffers\n");
+        goto fail;
+    }
+
+// Width, Height and Bits Per Pixel.
+    if ( libgd_device_width == 0 || 
+         libgd_device_height == 0 || 
+         libgd_device_bpp == 0 )
+    {
+        printf("libgd_initialize: w, h and bpp\n");
+        goto fail;
+    }
+
+//
+// Device context
+//
+
+// The drawing context. 
+// Thats is not a structure for hardware device driver.
+
+    // Backbuffer
+    libgd_dc_backbuffer = (void *) malloc(sizeof(struct dccanvas_d));
+    if ((void*)libgd_dc_backbuffer == NULL){
+        printf("libgd_initialize: libgd_dc_backbuffer\n");
+        goto fail; 
+    }
+    memset ( libgd_dc_backbuffer, 0, sizeof(struct dccanvas_d) );
+    libgd_dc_backbuffer->device_width  = libgd_device_width;
+    libgd_dc_backbuffer->device_height = libgd_device_height;
+    // Bits per pixel
+    libgd_dc_backbuffer->bpp = libgd_device_bpp; 
+    libgd_dc_backbuffer->pitch = libgd_device_pitch;
+    libgd_dc_backbuffer->data = (unsigned char*) libgd_BACKBUFFER_VA;
+    //libgd_dc_backbuffer->next = NULL;
+    libgd_dc_backbuffer->used = TRUE;
+    libgd_dc_backbuffer->magic = 1234;
+    libgd_dc_backbuffer->initialized = TRUE;
+
+
+
+    // Frontbuffer
+    libgd_dc_frontbuffer = malloc(sizeof(struct dccanvas_d));
+    if ((void*)libgd_dc_frontbuffer == NULL){
+        printf("libgd_initialize: libgd_dc_frontbuffer\n");
+        goto fail; 
+    }
+    memset ( libgd_dc_frontbuffer, 0, sizeof(struct dccanvas_d) );
+
+    libgd_dc_frontbuffer->device_width  = libgd_device_width;
+    libgd_dc_frontbuffer->device_height = libgd_device_height;
+    // bits per pixel.
+    libgd_dc_frontbuffer->bpp = libgd_device_bpp;
+    libgd_dc_frontbuffer->pitch = libgd_device_pitch;
+    libgd_dc_frontbuffer->data = (unsigned char*) libgd_FRONTBUFFER_VA;
+    //libgd_dc_frontbuffer->next = NULL;
+    libgd_dc_frontbuffer->used = TRUE;
+    libgd_dc_frontbuffer->magic = 1234;
+    libgd_dc_frontbuffer->initialized = TRUE;
+
+
+    return 0;
+fail:
+    return (int) -1;
 }
 
 //
