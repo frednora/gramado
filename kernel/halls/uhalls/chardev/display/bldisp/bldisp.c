@@ -202,7 +202,8 @@ void __display_mouse_cursor(void)
         refresh_rectangle (
             __old_mouse_x, __old_mouse_y, rWidth, rHeight
         );
-        DoWeNeedToEraseMousePointer(FALSE);
+        
+        //DoWeNeedToEraseMousePointer(FALSE);
     }
 
 // save
@@ -1302,6 +1303,24 @@ int DDINIT_bldisp(void)
     dc_frontbuffer->used = TRUE;
     dc_frontbuffer->magic = 1234;
     dc_frontbuffer->initialized = TRUE;
+
+
+// ===============================
+// #test
+
+// Apaga mouse pointer.
+// Let's clear the area where the mouse was painted.
+// Flushing the area from backbuffer to LFB.
+// It erases the pointer in the screen.
+    __clear_mousebox =  TRUE;
+
+    // old
+    __old_mouse_x=0;
+    __old_mouse_y=0;
+    // current
+    __new_mouse_x=0;
+    __new_mouse_y=0;
+
 
     return 0;
 }

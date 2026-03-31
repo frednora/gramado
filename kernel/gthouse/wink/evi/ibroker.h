@@ -22,11 +22,20 @@ struct input_broker_info_d
 {
     int initialized;
     int shell_flag;
+
+    //#test
+    int use_kernelside_mouse_drawing;
+
     // ...
 };
 extern struct input_broker_info_d  InputBrokerInfo;
 
 // ==========================
+
+// Mouse support
+void ibroker_use_kernelside_mouse_drawing(int flag);
+int ibroker_get_kernelside_mouse_drawing_status(void);
+
 
 // Kernel-side syscall wrapper
 unsigned long sys_change_boot_menu_option(unsigned long value);

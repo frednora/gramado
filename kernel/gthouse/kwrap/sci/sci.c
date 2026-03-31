@@ -2285,6 +2285,15 @@ void *sci2 (
         };
     }
 
+
+// #test
+// Draw the mouse cursor reusing the old position.
+    if (number == 820)
+    {
+        __display_mouse_cursor();
+        return NULL; 
+    }
+
 // #test
 // 850 - Create a wproxy object.
 // #todo

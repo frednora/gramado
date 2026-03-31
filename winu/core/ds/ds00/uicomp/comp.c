@@ -1001,7 +1001,8 @@ void comp_display_desktop_components(void)
     }
 
 // Show the mouse cursor in the screen.
-    if (gUseMouse == TRUE){
+    if (gUseMouse == TRUE)
+    {
         __display_mouse_cursor();
     }
 

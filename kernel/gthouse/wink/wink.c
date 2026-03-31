@@ -251,5 +251,3 @@ void wink_set_cursor(unsigned long x, unsigned long y)
     set_up_cursor((unsigned long) x, (unsigned long) y);
 }
 
-// #bugbug
-// winkInitialize() was implemented in user.c

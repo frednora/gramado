@@ -3660,6 +3660,9 @@ wmMouseEvent(
 // ====================================
 // mouse move events:
 
+    int use_kernelside_mouse_drawing = FALSE;
+    use_kernelside_mouse_drawing = (int) ibroker_get_kernelside_mouse_drawing_status();
+
     //#debug
     //printk ("w:%d h:%d\n",deviceWidth, deviceHeight);
     //printk ("x:%d y:%d\n",long1, long2);
@@ -3684,6 +3687,17 @@ wmMouseEvent(
         if (long2 < 1){ long2=1; }
         if (long1 >= deviceWidth) { long1 = (deviceWidth-1);  }
         if (long2 >= deviceHeight){ long2 = (deviceHeight-1); }
+
+
+        // #test
+        // Displaying the mouse pointer using 
+        // kernel-side drawing routines.
+        // see: bldisp.c
+        if (use_kernelside_mouse_drawing == TRUE)
+        {
+            update_mouse_position(long1, long2);
+            __display_mouse_cursor();
+        }
 
         // #test
         // No caso de MSG_MOUSEMOVE, podemos checar se
@@ -3827,6 +3841,21 @@ fail:
     return (int) -1;
 }
 
+void ibroker_use_kernelside_mouse_drawing(int flag)
+{
+    if (flag == TRUE)
+    {
+        InputBrokerInfo.use_kernelside_mouse_drawing = TRUE;
+    } else {
+        InputBrokerInfo.use_kernelside_mouse_drawing = FALSE;
+    }
+}
+
+// API
+int ibroker_get_kernelside_mouse_drawing_status(void){
+    return (int) InputBrokerInfo.use_kernelside_mouse_drawing;
+}
+
 int ibroker_initialize(int phase)
 {
     if (phase == 0){
@@ -3847,6 +3876,15 @@ int ibroker_initialize(int phase)
 
         //panic ("breakpoint");
     };
+
+
+// #test
+// Mouse support
+// Set flag
+    //ibroker_use_kernelside_mouse_drawing(TRUE);
+    ibroker_use_kernelside_mouse_drawing(FALSE);
+
+    // ...
 
     return 0;
 }
