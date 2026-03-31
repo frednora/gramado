@@ -238,6 +238,7 @@ static void __maximize_ds_priority(pid_t pid)
 
 // -------------------------------------------
 // Display server: (Service: sci0 513)
+// 513 - SYS_SET_DS_PID
 // Register display server into a given valid cgroup.
 // Register display server into a given valid cgroup.
 // Called by sci.c
@@ -247,8 +248,6 @@ network_register_ring3_display_server(
     struct cgroup_d *cg,
     pid_t caller_pid )
 {
-// 513 - SYS_SET_DS_PID
-// Syscall implementation.
 
     // #todo:
     // Maybe we can move the workers for this job from here to dispsrv.c.
@@ -258,10 +257,16 @@ network_register_ring3_display_server(
     pid_t current_process = (pid_t) -1;
     struct thread_d *t;
 
-// Parameter: cgroup
+// Parameters: 
+
+    // cgroup
     if ((void*) cg == NULL)
         goto fail;
     if (cg->magic != 1234)
+        goto fail;
+    
+    // caller pid
+    if (caller_pid < 0 || caller_pid >= PROCESS_COUNT_MAX)
         goto fail;
 
 //
@@ -288,6 +293,7 @@ network_register_ring3_display_server(
 // Save
 //
 
+// The current display device:
 // The bootloader dislay device.
 // Is it the current display device?
 // Register new owner for this display device.

@@ -36,8 +36,9 @@ int registerDS(void)
 // == cgroup ==================
 //
 
-    // cgroup 
-    // Getting pointer for the current cgroup.
+// cgroup 
+// Getting pointer for the current cgroup.
+// #ps: This is a ring0 pointer.
     __p_cgroup = (void *) gramado_system_call (519,0,0,0);
     if ((void *) __p_cgroup == NULL)
     {
@@ -45,52 +46,63 @@ int registerDS(void)
         gwssrv_debug_print ("registerDS: [FAIL] __p_cgroup\n");
         printf             ("registerDS: [FAIL] __p_cgroup\n");
         exit(1);
-        
-        return (int) (-1);
+
+        goto fail;
     }
 
 //
 // == Register =====================
 //
 
-    // PID
-    // Get the PID of the server.
+// PID
+// Get the PID of the server.
     __pid = (int) getpid();
-    if ( __pid < 0 )
+    if (__pid < 0)
     {
         // #debug
         gwssrv_debug_print ("registerDS: [FAIL] __pid\n");
         printf             ("registerDS: [FAIL] __pid\n");
         exit(1);
 
-        return (int) (-1);
+        goto fail;
     }
 
+// Register:
 // Register this PID of the display server into the cgroup structure.
 // #todo
 // #bugbug
 // We need to check the return value.
-// int Status = -1;
+    int RegStatus = FALSE;
 
-    gramado_system_call ( 
+    RegStatus = 
+    (int) gramado_system_call ( 
         513, 
         __p_cgroup, 
         __pid, 
         __pid );
 
-    // flag.
-    __ds_registered = TRUE;
+    if (RegStatus != TRUE)
+    {
+        __ds_registered = FALSE;
 
-    // O = OK.
-    return 0;
+        // #debug
+        gwssrv_debug_print ("registerDS: [FAIL] RegStatus\n");
+        printf             ("registerDS: [FAIL] RegStatus\n");
+        exit(1);
+
+        goto fail;
+    }
+
+// Done
+    __ds_registered = TRUE;  // Set flag
+    return 0;  // OK
+
+fail:
+    __ds_registered = FALSE;
+    return (int) (-1);
 }
 
-
 //
-// End.
+// End
 //
-
-
-
-
 

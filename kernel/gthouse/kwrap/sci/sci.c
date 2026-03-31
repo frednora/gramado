@@ -1438,7 +1438,7 @@ void *sci0 (
 // IN: 
 // cgroup, 
 // caller pid.
-// see: network.c
+// see: net.c
 
     int __ds_ok = FALSE;
     if (number == SCI0_SET_DS_PID)

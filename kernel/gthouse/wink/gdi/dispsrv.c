@@ -25,6 +25,8 @@ struct ds_info_d  DisplayServerInfo;
 
 // Setup DisplayServerInfo global structure.
 // See: dispsrv.h
+// IN:
+// + pid - The display server PID. (owner of the display device)
 int dispsrv_setup_ds_info(pid_t pid)
 {
     struct te_d *p;
@@ -94,8 +96,7 @@ int dispsrv_setup_ds_info(pid_t pid)
     p->token.sgid = (gid_t) GID_DEFAULT;  // saved
 
     DisplayServerInfo.initialized = TRUE;
-// OK
-    return 0;
+    return 0; // OK
 fail:
     return (int) -1;
 }
