@@ -1250,13 +1250,11 @@ int editor_initialize(int argc, char *argv[])
 //=================================
 */
 
-
-// exit
-    //close (client_fd);
-    debug_print("editor: bye\n"); 
-    printf     ("editor: bye\n");
-
+// Done
+    //close(client_fd);
+    printf("editor: exit 0\n");
     return EXIT_SUCCESS;
+
 fail:
     return EXIT_FAILURE;
 }

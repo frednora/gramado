@@ -1,8 +1,5 @@
 # EDITOR.BIN
 # Created by Fred Nora.
-#todo:
-#fazer um makefile pra compilar o shell
-#obs: #bugbug tem que arrumas as coisas aqui.
 
 VERSION = 0
 PATCHLEVEL = 0
@@ -53,10 +50,12 @@ LIBGWS    = ../api/libs/libgws/include/
 LIBGWSOBJ = ../api/libs/libgws/obj
 
 # Objects
-myObjects = crt0.o main.o editor.o globals.o rtl.o \
+myObjects = crt0.o globals.o rtl.o \
 ctype.o stdio.o fcntl.o stdlib.o string.o unistd.o termios.o \
 ioctl.o socket.o \
-libgws.o   
+libgws.o \
+editor.o main.o    
+
 
 .PHONY: all all-c hello-link finalize clean
 

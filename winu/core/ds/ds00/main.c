@@ -869,18 +869,15 @@ int serviceAsyncCommand(void)
  
     switch (request_id){
 
-    // 1 =  Exit GWS
-    // Shutdown the server.
+    // 1 =  Exit GWS. (Shutdown the server)
     case ASYNC_REQUEST_EXIT:
-        //server_debug_print("serviceAsyncCommand: [1] Exit\n");
-        printf            ("serviceAsyncCommand: [1] Exit\n");
+        printf ("serviceAsyncCommand: [1] Exit\n");
         server_quit();
         goto done;
         break;
 
     // 2 - Hello
     case ASYNC_REQUEST_HELLO2:
-        //server_debug_print ("serviceAsyncCommand: [2] hello\n");
         printf("HELLO 2\n");
         //exit(0);
         //return 0;
@@ -888,7 +885,6 @@ int serviceAsyncCommand(void)
 
     // 3 - Hello
     case ASYNC_REQUEST_HELLO3:
-        //server_debug_print ("serviceAsyncCommand: [3] hello\n");
         printf("HELLO 3\n");
         //exit(0);
         //return 0;
@@ -898,9 +894,8 @@ int serviceAsyncCommand(void)
     // 4 - Start animation
     // See: demos.c
     case ASYNC_REQUEST_START_ANIMATION:
-        //server_debug_print("serviceAsyncCommand: [4]\n");
-        if (os_mode == GRAMADO_JAIL){
-            //server_debug_print("serviceAsyncCommand: [request 4] demo\n"); 
+        if (os_mode == GRAMADO_JAIL)
+        {
             demos_startup_animation(subrequest_id);
             gwssrv_show_backbuffer();
             goto done;
@@ -922,7 +917,6 @@ int serviceAsyncCommand(void)
 
     // 6 - Setup if we will show or not the 'fps window'.
     case ASYNC_REQUEST_FPS_FLAG:
-        //server_debug_print ("serviceAsyncCommand: [6]\n");
         if (subrequest_id == TRUE){ show_fps_window = TRUE;  goto done; }
         if (subrequest_id != TRUE){ show_fps_window = FALSE; goto done; }
         //show_fps_window = FALSE;
@@ -933,7 +927,6 @@ int serviceAsyncCommand(void)
     // #suspended: o wm fica no ws por enquanto.
     // Register wm pid
     case 7:
-        //server_debug_print ("serviceAsyncCommand: [7] Register wm pid\n");
         //printf ("serviceAsyncCommand: [7] [BREAKPOINT] Register wm pid\n");
         //____saved_wm_magic_pid = (int) data;
         //exit(0);
@@ -958,7 +951,6 @@ int serviceAsyncCommand(void)
 
     // 9 - Set focus
     case ASYNC_REQUEST_SET_FOCUS_BY_WID:
-        // server_debug_print ("serviceAsyncCommand: [9]\n");
         if (data<0){
             goto done;
         }
@@ -1110,7 +1102,7 @@ int serviceAsyncCommand(void)
         break;
     */
 
-    // Dock window
+    // Dock window given the wid and the side.
     // see: wm.c
     // IN:
     // request_id = dock operation (92)
@@ -1120,6 +1112,7 @@ int serviceAsyncCommand(void)
         // dock_window_by_id(wid,subrequest_id);
         break;
     
+    // Dock the active window
     case 93:
         // IN: position
         dock_active_window(subrequest_id);
