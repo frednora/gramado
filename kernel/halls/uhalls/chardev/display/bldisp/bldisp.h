@@ -5,6 +5,20 @@
 #ifndef __BLDISP_BLDISP_H
 #define __BLDISP_BLDISP_H    1
 
+// The info about the display device driver.
+struct bldisp_info_d
+{
+    int used;
+	int magic;
+	int initialized;
+
+	//#todo
+	// Version, revision, etc.
+	// name, etc ...
+};
+extern struct bldisp_info_d  bldisp_info;
+
+
 // See:
 // http://www.brokenthorn.com/Resources/OSDevVid2.html
 /*

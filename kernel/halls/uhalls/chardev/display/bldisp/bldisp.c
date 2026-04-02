@@ -50,6 +50,9 @@ See:
 
 #include <kernel.h>
 
+struct bldisp_info_d  bldisp_info;
+
+
 // Screen sizes and bpp.
 unsigned long g_device_screen_width=0;
 unsigned long g_device_screen_height=0;
@@ -1188,10 +1191,9 @@ int Video_initialize(void)
 // DDINIT_bldisp:
 // Device driver initialization
 // Initialize the device driver for the bootloader display device.
+// Called by keInitialize() in ke.c.
 int DDINIT_bldisp(void)
 {
-// Called by keInitialize() in ke.c.
-
     PROGRESS("DDINIT_bldisp:\n");
 
 //
@@ -1322,6 +1324,14 @@ int DDINIT_bldisp(void)
     __new_mouse_x=0;
     __new_mouse_y=0;
 
+
+    
+// #test
+// Initialize structure
+    bldisp_info.used = TRUE;
+    bldisp_info.magic = 1234;
+    bldisp_info.initialized = TRUE;
+    // ...
 
     return 0;
 }
