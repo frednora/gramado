@@ -216,8 +216,7 @@ ipc_post_message_to_tid (
     }
 
 // Destination TID
-    if ( dst_tid < 0 || 
-         dst_tid >= THREAD_COUNT_MAX )
+    if ( dst_tid < 0 || dst_tid >= THREAD_COUNT_MAX )
     {
         panic("ipc_post_message_to_tid: dst_tid\n");
         //goto fail;
@@ -249,7 +248,7 @@ ipc_post_message_to_tid (
             case WAIT_REASON_BLOCKED:  // Generic
             case WAIT_REASON_LOOP:     // Empty msg queue
                 // #debug
-                printk("ipc: Unblocking ...\n");
+                printk("ipc: Unblocking %d\n", dst_tid);
                 do_thread_ready(dst_tid);
                 break;
         };        
@@ -325,16 +324,16 @@ ipc_post_message_to_tid (
 
     switch (MessageCode){
 
+    // Handle keydown (with repeat count logic)
     case MSG_KEYDOWN:
-        // Handle keydown (with repeat count logic)
         isMake = TRUE;
         break;
 
+    // Handle Control+Arrow key (with repeat count logic)
     case MSG_CONTROL_ARROW_UP:
     case MSG_CONTROL_ARROW_DOWN:
     case MSG_CONTROL_ARROW_LEFT:
     case MSG_CONTROL_ARROW_RIGHT:
-        // Handle Control+Arrow key (with repeat count logic)
         isControlArrow = TRUE;
         break;
 
@@ -403,7 +402,7 @@ ipc_post_message_to_tid (
 
 // Standard header
     m->opaque_window = NULL;
-    m->msg   = (int) (MessageCode & 0xFFFFFFFF);
+    m->msg = (int) (MessageCode & 0xFFFFFFFF);
     m->long1 = (unsigned long) long1;
     m->long2 = (unsigned long) long2;
 
@@ -411,7 +410,6 @@ ipc_post_message_to_tid (
     m->long3 = (unsigned long) jiffies;
     m->long4 = (unsigned long) jiffies;
 
-// --------------------------
 // Identification field
     m->sender_tid   = (tid_t) src_tid; 
     m->receiver_tid = (tid_t) dst_tid;

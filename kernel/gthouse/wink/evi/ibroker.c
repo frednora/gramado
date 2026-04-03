@@ -57,7 +57,6 @@ static int CAD_is_allowed = TRUE;
 // see: input.h
 struct input_targets_d  InputTargets;
 
-
 struct input_broker_info_d  InputBrokerInfo;
 
 //
@@ -147,6 +146,21 @@ static void ibroker_handle_boot_mode(char mode)
         printk("Setting boot mode: SHOW MENU\n");
     else
         printk("Setting boot mode: SKIP MENU\n");
+}
+
+void ibroker_use_kernelside_mouse_drawing(int flag)
+{
+    if (flag == TRUE)
+    {
+        InputBrokerInfo.use_kernelside_mouse_drawing = TRUE;
+    } else {
+        InputBrokerInfo.use_kernelside_mouse_drawing = FALSE;
+    }
+}
+
+// API
+int ibroker_get_kernelside_mouse_drawing_status(void){
+    return (int) InputBrokerInfo.use_kernelside_mouse_drawing;
 }
 
 /*
@@ -264,6 +278,8 @@ ibroker_post_message_to_fg_thread (
 
 // Check if the foreground app wants this event.
 // Returns TRUE if the app has requested it, FALSE otherwise.
+// This function is the keypoint, where it checks 
+// if the current event is desired by the thread or not.
 static int
 ibroker_app_wants_event(
     int tid,
@@ -285,7 +301,6 @@ ibroker_app_wants_event(
     if (fg_thread->magic != 1234)
         return FALSE;
 
-
 // Only check key events for now
     if (msg == MSG_KEYDOWN) 
     {
@@ -296,9 +311,12 @@ ibroker_app_wants_event(
             return FALSE;
             break;
 
-        //case VK_ESCAPE:
-            //return (fg_thread->msgctl.input_flags & THREAD_WANTS_ESC) ? TRUE : FALSE;
-            //break;
+        // #test
+        case VK_ESCAPE:
+            if (fg_thread->msgctl.input_flags & THREAD_WANTS_ESC)
+                return TRUE;
+            return FALSE;
+            break;
 
         // Add more keys here (F1..F12, arrows, etc.)
         }
@@ -408,9 +426,7 @@ int input_process_cad_combination(unsigned long flags)
     return (int) -1;
 }
 
-// -----------------------------------
 // Selecting the input targets
-
 int input_enable_this_input_target(int this_one)
 {
     switch (this_one)
@@ -3466,7 +3482,7 @@ done:
 
     //if ( alt_status != TRUE && ctrl_status != TRUE && shift_status != TRUE )
     if  (isCombination != TRUE)
-    {   
+    {
 
         // Send it to the tty associated with stdin.
         // Only the foreground thread can read this.
@@ -3581,6 +3597,30 @@ done:
                 return 0;
             }
 
+            // #test
+            // 0x1B is the scancode for the ESCAPE key for now, not VK_SCAPE.
+            // if (Event_LongVK == 0x1B || Event_LongVK == VK_ESCAPE)
+            if (Event_LongVK == 0x1B)
+            {
+                printk("ibroker: Testing 0x1B \n");
+
+                int ItWantsEsc = FALSE;
+                ItWantsEsc = 
+                    (int) ibroker_app_wants_event( 
+                        foreground_thread, MSG_KEYDOWN, VK_ESCAPE );
+
+                if (ItWantsEsc == TRUE)
+                {
+                    // TARGET: GUI APP
+                    ibroker_post_message_to_fg_thread(
+                        Event_Message, 
+                        VK_ESCAPE,  //Event_LongVK, 
+                        Event_LongScanCode );
+                }
+
+                return 0;
+            }
+
             // For the other events we're still sending for both, app and server.
 
             // TARGET: GUI APP
@@ -3661,7 +3701,8 @@ wmMouseEvent(
 // mouse move events:
 
     int use_kernelside_mouse_drawing = FALSE;
-    use_kernelside_mouse_drawing = (int) ibroker_get_kernelside_mouse_drawing_status();
+    use_kernelside_mouse_drawing = 
+        (int) ibroker_get_kernelside_mouse_drawing_status();
 
     //#debug
     //printk ("w:%d h:%d\n",deviceWidth, deviceHeight);
@@ -3841,21 +3882,6 @@ fail:
     return (int) -1;
 }
 
-void ibroker_use_kernelside_mouse_drawing(int flag)
-{
-    if (flag == TRUE)
-    {
-        InputBrokerInfo.use_kernelside_mouse_drawing = TRUE;
-    } else {
-        InputBrokerInfo.use_kernelside_mouse_drawing = FALSE;
-    }
-}
-
-// API
-int ibroker_get_kernelside_mouse_drawing_status(void){
-    return (int) InputBrokerInfo.use_kernelside_mouse_drawing;
-}
-
 int ibroker_initialize(int phase)
 {
     if (phase == 0){
@@ -3871,7 +3897,7 @@ int ibroker_initialize(int phase)
             (unsigned char *) shift_abnt2,     // Shift
             (unsigned char *) ctl_abnt2,       // Control
             NULL,                              // Altgr
-            (unsigned char *) extended_abnt2  // Extended
+            (unsigned char *) extended_abnt2   // Extended
         );
 
         //panic ("breakpoint");

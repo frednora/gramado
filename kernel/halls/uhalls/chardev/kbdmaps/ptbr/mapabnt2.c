@@ -15,8 +15,8 @@
 unsigned char map_abnt2[ABNT2_CHARMAP_SIZE] = {
 
 // 0x00 ~ 0x0F
- 0,    // 0x00
- 033,  // 0x01
+ 0,    // 0x00 
+ 0x1B,  //033,  // 0x01 VK_ESCAPE?
  '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', VK_BACKSPACE, 
  VK_TAB,
 
@@ -141,7 +141,7 @@ unsigned char shift_abnt2[ABNT2_CHARMAP_SIZE] = {
 
 // 0x00 ~ 0x0F
 0, 
-033, 
+0x1B,  //033, VK_ESCAPE 
 '!', '@', '#', '$', '%', 
 168,  // Trema ?
 '&', '*', '(',  ')', '_', '+', 
@@ -247,7 +247,7 @@ unsigned char ctl_abnt2[ABNT2_CHARMAP_SIZE] = {
 
 // 0x00 ~ 0x0F
 0, 
-033,
+0x1B,  //033, VK_ESCAPE 
 '!', 
 000,
 '#', '$', '%',
@@ -269,7 +269,7 @@ ASCII_NAK,    // ^U
 ASCII_HT,     // ^I
 ASCII_SI,     // ^O
 ASCII_DLE,    // ^P
-033,          //
+0x1B,  //033,          //VK_ESCAPE 
 ASCII_ESC,    // ^[
 '\r',         //
 CTL,          //
@@ -336,7 +336,7 @@ ASCII_FS,
 0,
 0,
 0,
-033,
+0x1B, //033, VK_ESCAPE 
 '7', '4', '1',
 0, 
 NUM|L, 
@@ -374,7 +374,7 @@ unsigned char extended_abnt2[ABNT2_CHARMAP_SIZE] = {
 0, 0, 0, 0, 0, 
 0, 0, 0, 0, 0, 
 VK_RETURN, // 0x1A
-0, // 0x1B
+0, // 0x1B VK_ESCAPE 
 VK_RETURN, // 0x1C
 VK_RCONTROL,   // 0x1D
 0, 

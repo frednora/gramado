@@ -407,6 +407,9 @@ editorProcedure(
             case VK_TAB:
                 printf("editor.bin: VK_TAB received\n");
                 break;
+            case VK_ESCAPE:
+                printf("editor.bin: VK_ESCAPE received\n");
+                break;
         };
         break;
 
@@ -1089,9 +1092,12 @@ int editor_initialize(int argc, char *argv[])
     // Atualiza as coisas em ring3 e ring0.
     rewind(stdin);
 
-
+// #test
+// IN: service number, sub-service.
 // Lets say to the kernel that we want to receive the TAB event.
     rtl_msgctl(2000,2000);
+// Lets say to the kernel that we want to receive the ESCAPE event.
+    rtl_msgctl(2002,2002);
 
 
 /*

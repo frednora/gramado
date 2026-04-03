@@ -828,7 +828,6 @@ int sys_msgctl(tid_t caller_tid, int option, int extra_value)
     struct thread_d *caller_thread;
     int fIsDisplayServer = FALSE;
 
-
     // #debug
     //printk("sys_msgctl: %d\n", option);
 
@@ -866,18 +865,32 @@ int sys_msgctl(tid_t caller_tid, int option, int extra_value)
         caller_thread->msgctl.block_on_empty = FALSE;
         break;
 
-    // Input flags 
+    // ...
+
+//
+// Input flags 
+//
 
 // By setting THREAD_WANTS_TAB, you’re telling the kernel: 
 // “Don’t consume TAB at the display server level — deliver it directly 
 // to this thread’s input queue.”
-    case 2000: // Want TAB 
-        printk("sys_msgctl: 2000\n");
+    case 2000:  // The app wants to receive the TAB key as input.
+        //printk("sys_msgctl: 2000\n");
         caller_thread->msgctl.input_flags |= THREAD_WANTS_TAB; 
         break; 
-    case 2001: // Clear TAB 
+    case 2001:  // The app does not want to receive the TAB key as input.
         caller_thread->msgctl.input_flags &= ~THREAD_WANTS_TAB;
         break;
+
+    case 2002:  // The app wants to receive the ESCAPE key as input.
+        //printk("sys_msgctl: 2002\n");
+        caller_thread->msgctl.input_flags |= THREAD_WANTS_ESC; 
+        break; 
+    case 2003:  // The app does not want to receive the ESCAPE key as input.
+        caller_thread->msgctl.input_flags &= ~THREAD_WANTS_ESC;
+        break;
+
+    // ...
 
     default:
         return -1;

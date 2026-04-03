@@ -18,6 +18,7 @@
 #define SYSTEM_THRESHOLD_TID  0
 #define USER_THRESHOLD_TID    100
 
+
 // The first thread for the Init process
 #define INIT_TID    SYSTEM_THRESHOLD_TID
 
@@ -106,7 +107,6 @@ typedef enum {
 #define IM_MESSAGE_INPUT  2
 
 
-
 // Input model
 // t->input_flags
 // Com essa flag o kernel deve enviar input de teclado
@@ -133,9 +133,9 @@ struct thread_transition_counter_d
 // Page fault information
 struct pf_info_d
 {
-// This thread is in a PF interrupt routine.
+// This thread is in a PF interrupt routine
     int in_pf;
-// Let's count the number of pf.
+// Let's count the number of pf
     unsigned int pf_counter;
 };
 
@@ -151,6 +151,8 @@ struct pf_info_d
 
 #define MSG_QUEUE_MAX  64
 
+// #todo:
+// Explain the prupose of this structure
 struct deferred_d 
 {
 
@@ -292,11 +294,9 @@ struct thread_d
 // ...
     unsigned long flags;
 
-
 // Used to share a cmdline between father and child.
     char cmdline[512]; 
     int has_cmdline;
-
 
 // Priority support
     unsigned long base_priority;  // static 
@@ -363,7 +363,6 @@ struct thread_d
 // Yield, Sleep, Exit ...
     struct deferred_d  Deferred;
 
-
 // ---------------------------------
 // Callback::
 // During a callback, the thread can't have it's context saved.
@@ -401,10 +400,10 @@ struct thread_d
 // Wait support
 //
 
-// The thread needs priority to respont to an event.
+// The thread needs priority to respont to an event
     int has_pending_event;
 
-// The thread is waiting for a reason.
+// The thread is waiting for a reason
     thread_wait_reason_t wait_reason;
 
 // Deadlock support
@@ -464,6 +463,9 @@ struct thread_d
 // == pml4 =======================================
 //
 
+// #todo:
+// We can have a structure for these addresses
+
 // #todo
 // COLOCAR O DIRETÓRIO DE PÁGINAS QUE A THREAD USA, 
 // ISSO AJUDA NA HORA DO TASKSWITCH.
@@ -478,8 +480,7 @@ struct thread_d
     unsigned long pd0_VA;
     unsigned long pd0_PA;
 
-
-// Page Fault information.
+// Page Fault information
     struct pf_info_d  PF;
 
 // cpl
@@ -500,6 +501,9 @@ struct thread_d
 // ========================================================
 // ORDEM: 
 // O que segue é referenciado durante o processo de dispatch.
+
+// #todo:
+// We can have a struture for these values
 
 // Heap and Stack
 // #todo: Is it a virtual address?
@@ -544,6 +548,9 @@ struct thread_d
 // waiting_jiffie: Time when the thread started to wait.
 // blocked_jiffie: Time when blocked.
 // zombie_jiffie:  Time when the thread became a zombie.
+
+// #todo:
+// We can have a structure for these values
 
     unsigned long initial_jiffy;
     unsigned long ready_jiffy;
