@@ -108,6 +108,56 @@ libgd_putpixel (
 
 unsigned int grBackBufferGetPixelColor( int x, int y );
 
+
+// backbuffer_draw_horizontal_line:
+// Draw a horizontal line on backbuffer. 
+void 
+backbuffer_draw_horizontal_line ( 
+    unsigned long x1,
+    unsigned long y, 
+    unsigned long x2, 
+    unsigned int color,
+    unsigned long rop_flags );
+
+void 
+frontbuffer_draw_horizontal_line ( 
+    unsigned long x1,
+    unsigned long y, 
+    unsigned long x2, 
+    unsigned int color,
+    unsigned long rop_flags );
+
+
+// #todo
+// Draw char into a given device context
+void 
+dc_drawchar (
+    struct dccanvas_d *dc, 
+    unsigned long x, 
+    unsigned long y,  
+    unsigned long c,
+    unsigned int fgcolor,
+    unsigned int bgcolor,
+    unsigned long rop );
+
+void 
+drawchar (
+    unsigned long x, 
+    unsigned long y,  
+    unsigned long c,
+    unsigned int fgcolor,
+    unsigned int bgcolor,
+    unsigned long rop );
+
+void 
+drawstring(
+    unsigned long x, 
+    unsigned long y, 
+    const char *s, 
+    unsigned int fg, 
+    unsigned int bg, 
+    unsigned long rop );
+
 //
 // #
 // INITIALIZATION 

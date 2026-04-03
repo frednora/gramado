@@ -257,6 +257,26 @@ static void update_clients(int fd)
         cwText.h );
     //gws_set_focus(fd,client_window);
     gws_redraw_window(fd, client_window, TRUE);
+
+
+//
+// Testing libdisp client-side library
+//
+
+/*
+    // #ps:
+    // Not inside the client area yet
+
+    // frontbuffer_putpixel(0x0000FF, 10, 12, 0);
+    //drawchar(20, 20, 'A', 0xFFFFFF, 0x000000, 0);
+
+    drawstring(
+        60, 40, "Hello, World!", 0xFFFF00, 0x000000, 0);
+    gws_refresh_window(fd, main_window);
+    frontbuffer_draw_horizontal_line( 
+        0, cwText.w, cwText.w, 0xFF0000, 0 );
+*/
+
 }
 
 static int editor_init_globals(void)
@@ -414,14 +434,20 @@ editorProcedure(
             case VK_TAB:
                 printf("editor.bin: VK_TAB received\n");
                 break;
+
             case VK_ESCAPE:
                 printf("editor.bin: VK_ESCAPE received\n");
 
                 // #test: Testing libdisp library.
                 // Draw it (frontbuffer)
-                frontbuffer_putpixel( 0xFF0000, 10, 11, 0 );
-                frontbuffer_putpixel( 0x00FF00, 10, 12, 0 );
-                frontbuffer_putpixel( 0x0000FF, 10, 13, 0 );
+                //frontbuffer_putpixel( 0xFF0000, 10, 11, 0 );
+                //frontbuffer_putpixel( 0x00FF00, 10, 12, 0 );
+                //frontbuffer_putpixel( 0x0000FF, 10, 13, 0 );
+
+                // drawchar(20, 20, 'E', 0xFFFFFF, 0x000000, 0);
+
+                //frontbuffer_draw_horizontal_line( 10, 15, 100, 0xFF0000, 0 );
+
                 break;
         };
         break;
