@@ -37,8 +37,15 @@
 //#include <arpa/inet.h>
 #include <sys/socket.h>
 #include <rtl/gramado.h>
-// The client-side library.
+
+// The client-side library
 #include <gws.h>
+
+// #test
+// The client-side library
+#include <libdisp.h>
+
+
 // Internal
 #include <packet.h>
 
@@ -409,6 +416,12 @@ editorProcedure(
                 break;
             case VK_ESCAPE:
                 printf("editor.bin: VK_ESCAPE received\n");
+
+                // #test: Testing libdisp library.
+                // Draw it (frontbuffer)
+                frontbuffer_putpixel( 0xFF0000, 10, 11, 0 );
+                frontbuffer_putpixel( 0x00FF00, 10, 12, 0 );
+                frontbuffer_putpixel( 0x0000FF, 10, 13, 0 );
                 break;
         };
         break;

@@ -11,6 +11,16 @@
 #include "include/rop.h"
 */
 
+
+// rtl
+#include <types.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <heap.h>
+//#include <sys/socket.h>
+#include <rtl/gramado.h>
+
 #include "include/libdisp.h"
 
 //
@@ -227,8 +237,10 @@ grBackBufferPutpixel2 (
 {
     if (x<0){ return -1; }
     if (y<0){ return -1; }
-// Service number 6.
-    return (int) gramado_system_call ( 6, color, x, y );
+
+// Service number 6
+    //return (int) gramado_system_call ( 6, color, x, y );
+    return (int) sc80( 6, color, x, y );
 }
 
 /*
@@ -1239,7 +1251,9 @@ int libgd_initialize(void)
 // Gramado mode
 // get gramado mode.
 // jail, p1, home, p2, castle ...
-    libgd_current_mode = server_get_system_metrics(130);
+    
+    //libgd_current_mode = server_get_system_metrics(130);
+    libgd_current_mode = rtl_get_system_metrics(130);
     if (libgd_current_mode < 0){
         printf("libgd_initialize: [FAIL] libgd_current_mode\n");
         goto fail;
@@ -1251,9 +1265,9 @@ int libgd_initialize(void)
 
 // Screen
 // Width, Height and Bits Per Pixel.
-    libgd_device_width  = (unsigned long) server_get_system_metrics(1);
-    libgd_device_height = (unsigned long) server_get_system_metrics(2);
-    libgd_device_bpp    = (unsigned long) server_get_system_metrics(9);
+    libgd_device_width  = (unsigned long) rtl_get_system_metrics(1);
+    libgd_device_height = (unsigned long) rtl_get_system_metrics(2);
+    libgd_device_bpp    = (unsigned long) rtl_get_system_metrics(9);
 // Saving
     libgd_SavedX   = (unsigned long) libgd_device_width;
     libgd_SavedY   = (unsigned long) libgd_device_height;

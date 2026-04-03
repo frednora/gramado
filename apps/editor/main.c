@@ -16,8 +16,14 @@
 //#include <arpa/inet.h>
 #include <sys/socket.h>
 #include <rtl/gramado.h>
-// The client-side library.
+
+// The client-side library
 #include <gws.h>
+
+// #test
+// The client-side library
+#include <libdisp.h>
+
 // Internal
 #include <packet.h>
 
@@ -27,8 +33,37 @@
 
 int main(int argc, char *argv[])
 {
+    int status = -1;
+
     //if (argc < 0)
         // return EXIT_FAILURE;
+
+
+    status = (int) libgd_initialize();
+    if (status < 0){
+        printf("editor: libgd_initialize fail\n");
+        exit(1);
+    }
+
+
+// #test
+// Drawing a pixel using the libdisp library.
+
+    struct dccanvas_d *dc;
+    dc = (struct dccanvas_d *) libgd_get_backbuffer_dc();
+    if ((void*)dc == NULL){
+        printf("editor: libgd_get_backbuffer_dc fail\n");
+        exit(1);
+    }
+
+/*
+    // Draw it (backbuffer)
+    putpixel0 ( dc, 0xFF0000, 10, 10, 0 );
+
+    // Draw it (frontbuffer)
+    frontbuffer_putpixel( 0x00FF00, 20, 20, 0 );
+*/
+
     return (int) editor_initialize(argc,argv);
 }
 

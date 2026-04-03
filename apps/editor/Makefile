@@ -43,17 +43,23 @@ CFLAGS += -fno-pie
 CFLAGS += -fno-omit-frame-pointer
 CFLAGS += -fno-optimize-sibling-calls    
 
-# API
+# rtl
 LIBC      = ../api/libs/rtl/include/
 LIBCOBJ   = ../api/libs/rtl/obj
+
+# libgws - (Using the server-side services)
 LIBGWS    = ../api/libs/libgws/include/
 LIBGWSOBJ = ../api/libs/libgws/obj
+
+# libdisp - Client-side services
+LIBDISP    = ../api/libs/libdisp/include/
+LIBDISPOBJ = ../api/libs/libdisp/obj
 
 # Objects
 myObjects = crt0.o globals.o rtl.o \
 ctype.o stdio.o fcntl.o stdlib.o string.o unistd.o termios.o \
 ioctl.o socket.o \
-libgws.o \
+libgws.o libdisp.o \
 editor.o main.o    
 
 
@@ -63,9 +69,10 @@ all: main.o all-c hello-link finalize clean
 	@echo "Ok?"
 
 main.o:
-	gcc  -c  main.c     $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I include/ -o main.o
-	gcc  -c  editor.c   $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I include/ -o editor.o
-	gcc  -c  globals.c  $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I include/ -o globals.o
+	gcc -c main.c     $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I $(LIBDISP) -I include/ -o main.o
+	gcc -c editor.c   $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I $(LIBDISP) -I include/ -o editor.o
+	gcc -c globals.c  $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I $(LIBDISP) -I include/ -o globals.o
+
 all-c:
 
 	cp $(LIBCOBJ)/crt0.o   .
@@ -84,6 +91,9 @@ all-c:
 
 # libgws
 	cp $(LIBGWSOBJ)/libgws.o .
+
+# libdisp
+	cp $(LIBDISPOBJ)/libdisp.o .
 
 hello-link:
 	ld $(linkFlags) -o EDITOR.BIN $(myObjects)    

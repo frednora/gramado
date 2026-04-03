@@ -1,4 +1,4 @@
-// libgd.h
+// libdisp.h
 // Graphics device library.
 // Created by Fred Nora.
 

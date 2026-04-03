@@ -1,5 +1,5 @@
 
-# Client-side library for gws window server.
+# Client-side library
 # 2020 - Created by Fred Nora.
 # todo: Link all togheter in a single object file .o.
 
