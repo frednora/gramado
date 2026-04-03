@@ -158,6 +158,24 @@ drawstring(
     unsigned int bg, 
     unsigned long rop );
 
+void 
+rect_refresh_rectangle_via_kernel(
+    unsigned long x, 
+    unsigned long y, 
+    unsigned long width, 
+    unsigned long height );
+
+void 
+rectBackbufferDrawRectangle0 ( 
+    unsigned long x, 
+    unsigned long y, 
+    unsigned long width, 
+    unsigned long height, 
+    unsigned int color,
+    int fill,
+    unsigned long rop_flags,
+    int use_kgws );
+
 //
 // #
 // INITIALIZATION 

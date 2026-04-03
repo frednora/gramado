@@ -2701,6 +2701,52 @@ struct font_initialization_d
 struct font_initialization_d  FontInitialization;
 // ===================================================
 
+// Structure for a rectangle.
+// A rectangle belongs to a window.
+struct libdisp_rect_d 
+{
+    int used;
+    int magic;
+
+    // struct libdisp_window_d *window;
+
+    unsigned long left;
+    unsigned long top;
+    unsigned long width;
+    unsigned long height;
+
+    unsigned int bg_color;  // color
+    int is_filled;          // filled or not
+    unsigned long rop;      // raster operation
+
+    //unsigned int flags;      // Reserved for future use
+
+    int dirty;  // Validation
+
+    struct libdisp_rect_d *next;
+};
+
+//======================================
+// Calling kgws in the kernel.
+// Using the kgws to refresh the rectangle.
+static void 
+__kgws_adapter_refresh_rectangle ( 
+    unsigned long x, 
+    unsigned long y, 
+    unsigned long width, 
+    unsigned long height );
+
+static void 
+__draw_rectangle_via_kgws ( 
+    unsigned long x, 
+    unsigned long y, 
+    unsigned long width, 
+    unsigned long height,
+    unsigned int color,
+    unsigned long rop_flags );
+
+// ===================================================
+
 
 // Create a new device context for a given buffer.
 // Parameters:
@@ -3981,6 +4027,334 @@ drawstring(
         s++;
     }
 }
+
+//======================================
+// Calling kgws in the kernel.
+// Using the kgws to refresh the rectangle.
+static void 
+__kgws_adapter_refresh_rectangle ( 
+    unsigned long x, 
+    unsigned long y, 
+    unsigned long width, 
+    unsigned long height )
+{
+    static unsigned long buffer[5];
+
+    buffer[0] = (unsigned long) x;
+    buffer[1] = (unsigned long) y;
+    buffer[2] = (unsigned long) (width  & 0xFFFF);
+    buffer[3] = (unsigned long) (height & 0xFFFF);
+    buffer[4] = 0; 
+
+    //gramado_system_call ( 10, (unsigned long) buffer, 0, 0 );
+    sc80 ( 10, (unsigned long) buffer, 0, 0 );
+}
+
+void 
+rect_refresh_rectangle_via_kernel(
+    unsigned long x, 
+    unsigned long y, 
+    unsigned long width, 
+    unsigned long height )
+{
+    __kgws_adapter_refresh_rectangle(x, y, width, height);
+}
+
+//======================================
+// Local worker.
+// Calling kgws in the kernel.
+// Using the kgws to draw the rectangle.
+// #todo
+// At this moment, no structure ware invalidated.
+// So, the caller needs to specify a rect structure,
+// this way we can invalidated it.
+// IN: l, t, w, h, bg color, rop flags.
+static void 
+__draw_rectangle_via_kgws ( 
+    unsigned long x, 
+    unsigned long y, 
+    unsigned long width, 
+    unsigned long height,
+    unsigned int color,
+    unsigned long rop_flags )
+{
+    static unsigned long Buffer[6];
+
+// Set parameters.
+    Buffer[0] = (unsigned long) x;
+    Buffer[1] = (unsigned long) y;
+    Buffer[2] = (unsigned long) (width  & 0xFFFF);
+    Buffer[3] = (unsigned long) (height & 0xFFFF);
+    Buffer[4] = (unsigned long) (color & 0xFFFFFFFF);
+    Buffer[5] = (unsigned long) rop_flags;
+
+// Syscall 0x80, service 9.
+// Refresh rectangle using the kernel services.
+    //gramado_system_call ( 9, (unsigned long) Buffer, 0, 0 );
+    sc80 ( 9, (unsigned long) Buffer, 0, 0 );
+}
+
+
+/*
+ * rectBackbufferDrawRectangle0: (API)
+ *     Draw a rectangle on backbuffer. 
+ */
+// #todo
+// At this moment, no structure ware invalidated.
+// So, the caller needs to specify a rect structure,
+// this way we can invalidated it.
+// use_kgws?
+// TRUE = use kgws.
+// FALSE = do not use kgws. #bugbug
+
+void 
+rectBackbufferDrawRectangle0 ( 
+    unsigned long x, 
+    unsigned long y, 
+    unsigned long width, 
+    unsigned long height, 
+    unsigned int color,
+    int fill,
+    unsigned long rop_flags,
+    int use_kgws )
+{
+
+//
+// flag
+//
+
+// The rectangle can be painted by the kgws inside the base kernel.
+// #todo
+// Let's include this flag into the function's parameters.
+// #bugbug
+// The ws routine is not working everytime we call it.
+
+    // #important: Flag.
+    // Draw rectangle using the kernel painter.
+    int fDrawRectangleUsingKGWS = (int) use_kgws;
+    //int fDrawRectangleUsingKGWS = FALSE;  // #test
+    //int fDrawRectangleUsingKGWS = TRUE;   // #test
+
+    struct libdisp_rect_d rect;
+
+    // debug_print("rectBackbufferDrawRectangle0: :(\n");
+
+// device:
+
+    //unsigned long device_w = (unsigned long) gws_get_device_width();
+    //unsigned long device_h = (unsigned long) gws_get_device_height();
+
+    unsigned long device_w  = (unsigned long) rtl_get_system_metrics(1);
+    unsigned long device_h = (unsigned long) rtl_get_system_metrics(2);
+    //unsigned long __device_bpp    = (unsigned long) rtl_get_system_metrics(9);
+
+    device_w = (unsigned long) (device_w & 0xFFFF);
+    device_h = (unsigned long) (device_h & 0xFFFF);
+// #provisório
+// limites do dispositivo
+    if (device_w > 800){
+        debug_print("rectBackbufferDrawRectangle0: [FAIL] device_w\n");
+        return; 
+    }
+    if (device_h > 600){
+        debug_print("rectBackbufferDrawRectangle0: [FAIL] device_h\n");
+        return; 
+    }
+
+// Set values
+    rect.left   = (unsigned long) (x      & 0xFFFF);
+    rect.top    = (unsigned long) (y      & 0xFFFF);
+    rect.width  = (unsigned long) (width  & 0xFFFF);
+    rect.height = (unsigned long) (height & 0xFFFF);
+// Margins
+    //rect.right  = (unsigned long) (rect.left + rect.width);
+    //rect.bottom = (unsigned long) (rect.top  + rect.height); 
+    rect.bg_color = (unsigned int)(color & 0xFFFFFF);
+
+//
+// Checks
+//
+
+// #bugbug
+// O início não pode ser depois do fim.
+
+    unsigned long __right  = (unsigned long) (rect.left + rect.width);
+    unsigned long __bottom = (unsigned long) (rect.top  + rect.height); 
+
+
+    if (rect.left > __right)
+    {
+        debug_print("rectBackbufferDrawRectangle0: [FAIL] left > __right\n");
+        //#debug
+        printf ("rectBackbufferDrawRectangle0: l:%d r:%d\n",
+            rect.left, __right );
+        exit(0);
+        return; 
+    }
+    if ( rect.top > __bottom )
+    { 
+        debug_print("rectBackbufferDrawRectangle0: [FAIL] top  > __bottom\n");
+        //#debug
+        printf ("rectBackbufferDrawRectangle0: t:%d b:%d\n",
+            rect.top, __bottom);
+        exit(0);
+        return; 
+    }
+
+// Clip
+
+// Se a largura for maior que largura do dispositivo.
+    if (rect.width > device_w){
+        rect.width = (unsigned long) device_w;
+        //debug_print("rectBackbufferDrawRectangle0: [FAIL] rect.width > device_w\n");
+        //return;
+    }
+// Se a altura for maior que altura do dispositivo.
+    if (rect.height > device_h){
+        rect.height = (unsigned long) device_h;
+        //debug_print("rectBackbufferDrawRectangle0: [FAIL] rect.height > device_h\n");
+        //return;
+    }
+
+// Limits
+// Se for maior que o espaço que sobra, 
+// então será igual ao espaço que sobra.
+
+// Empty
+    if (fill == TRUE){
+        rect.is_filled = FALSE;
+    } else if (fill == FALSE){
+        rect.is_filled = TRUE;
+    };
+
+/*
+// #todo
+// Desenhar as bordas com linhas
+// ou com retangulos
+
+    if (fill==0)
+    {
+            //  ____
+            // |
+            //
+            
+            //board1, borda de cima e esquerda.
+            rectBackbufferDrawRectangle ( 
+                window->left, window->top,
+                window->width, 1, 
+                color, 1 );
+            rectBackbufferDrawRectangle ( 
+                window->left, window->top, 
+                1, window->height,
+                color, 1 );
+
+            //  
+            //  ____|
+            //
+
+            //board2, borda direita e baixo.
+            rectBackbufferDrawRectangle ( 
+                 ((window->left) + (window->width) -1), window->top, 
+                 1, window->height, 
+                 color, 1 );
+            rectBackbufferDrawRectangle ( 
+                 window->left, ( (window->top) + (window->height) -1 ),  
+                 window->width, 1, 
+                 color, 1 );
+          
+        return;
+    }
+*/
+
+// Draw:
+// Drawing in the kernel using kgws.
+// Draw lines on backbuffer.
+// Invalidate the rectangle.
+
+    if (fDrawRectangleUsingKGWS == TRUE)
+    {
+        // debug_print("rectBackbufferDrawRectangle0: Using R0");
+        // IN: l,t,w,h,bg color, rop flags.
+        __draw_rectangle_via_kgws (
+            rect.left, rect.top, rect.width, rect.height,
+            rect.bg_color, rop_flags );
+        rect.dirty = TRUE;
+        return;
+    }
+
+//===============================================================
+// Draw:
+// Draw the rectangle 
+// using the routine here in the display server.
+
+/*
+// Clip
+    if ( rect.width > device_w )
+        rect.width = (unsigned long) device_w;
+    if ( rect.height > device_h )
+        rect.height = (unsigned long) device_h;
+*/
+
+/*
+// Fail
+    if ( rect.left > rect.width  ){ 
+        debug_print("rectBackbufferDrawRectangle0: [FAIL] rect.left > rect.width\n");
+        return; 
+    }
+    if ( rect.top  > rect.height ){ 
+        debug_print("rectBackbufferDrawRectangle0: [FAIL] rect.top  > rect.height\n");
+        return; 
+    }
+*/
+
+    //#debug
+    //printf ("w=%d h=%d l=%d t=%d \n",
+        //rect.width, rect.height, rect.left, rect.top );
+    //exit(1);
+    //asm ("int $3");
+
+// ===============================
+// Draw lines on backbuffer.
+// It's using the ws routine.
+    register unsigned long number_of_lines=0;
+    number_of_lines = (unsigned long) rect.height;
+
+// #todo
+// Test this one for painting using the ring 3 ws.
+// backbuffer_draw_horizontal_line(...)
+    while (number_of_lines--)
+    {
+        // last line?
+        if (rect.top >= __bottom)
+        {
+            break;
+        }
+        // End of the device screen?
+        if (rect.top >= device_h){
+            break;
+        }
+
+        // Draw horizontal line
+        // see: line.c
+        //grBackbufferDrawHorizontalLine ( 
+            //rect.left, rect.top, __right, 
+            //(unsigned int) rect.bg_color );
+
+		backbuffer_draw_horizontal_line ( 
+			rect.left, rect.top, __right, 
+			(unsigned int) rect.bg_color, rop_flags );
+
+        // Next line
+        rect.top++;
+    };
+
+// Invalidate
+    rect.dirty = TRUE;
+done:
+    return;
+}
+
+
 
 
 

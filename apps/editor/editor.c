@@ -267,14 +267,23 @@ static void update_clients(int fd)
     // #ps:
     // Not inside the client area yet
 
-    // frontbuffer_putpixel(0x0000FF, 10, 12, 0);
-    //drawchar(20, 20, 'A', 0xFFFFFF, 0x000000, 0);
+    // Create a rectangle
+    rectBackbufferDrawRectangle0 (
+        10, 10, 200, 100, 
+        0xFF0000, 1, 0, FALSE );
+
+    drawchar(12, 12, 'A', 0xFFFFFF, 0x000000, 0);
 
     drawstring(
-        60, 40, "Hello, World!", 0xFFFF00, 0x000000, 0);
+        20, 20, "Hello, World!", 0xFFFF00, 0x000000, 0);
     gws_refresh_window(fd, main_window);
     frontbuffer_draw_horizontal_line( 
         0, cwText.w, cwText.w, 0xFF0000, 0 );
+
+    rect_refresh_rectangle_via_kernel( 
+        10, 10, 200, 100 );
+
+    frontbuffer_putpixel(0x0000FF, 30, 30, 0);
 */
 
 }
