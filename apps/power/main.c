@@ -307,9 +307,9 @@ int main(int argc, char *argv[])
 // Library initialization
 
     int status = -1;
-    status = (int) libgd_initialize();
+    status = (int) libgui_initialize();
     if (status < 0){
-        printf("power_app: libgd_initialize fail\n");
+        printf("power_app: libgui_initialize fail\n");
         exit(1);
     }
 

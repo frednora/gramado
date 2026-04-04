@@ -178,8 +178,8 @@ libgui_backbuffer_draw_rectangle0(
 // INITIALIZATION 
 //
 
-// Initialize the libgd library
-int libgd_initialize(void);
+// Initialize the libgui library
+int libgui_initialize(void);
 
 #endif    
 

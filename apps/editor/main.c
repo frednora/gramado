@@ -38,9 +38,9 @@ int main(int argc, char *argv[])
     //if (argc < 0)
         // return EXIT_FAILURE;
 
-    status = (int) libgd_initialize();
+    status = (int) libgui_initialize();
     if (status < 0){
-        printf("editor: libgd_initialize fail\n");
+        printf("editor: libgui_initialize fail\n");
         exit(1);
     }
 

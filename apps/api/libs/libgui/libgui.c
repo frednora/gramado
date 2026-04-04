@@ -4364,7 +4364,7 @@ done:
 //
 
 // Initialize the libgd library
-int libgd_initialize(void)
+int libgui_initialize(void)
 {
 
 // Get current mode
@@ -4375,7 +4375,7 @@ int libgd_initialize(void)
     //libgd_current_mode = server_get_system_metrics(130);
     libgd_current_mode = rtl_get_system_metrics(130);
     if (libgd_current_mode < 0){
-        printf("libgd_initialize: [FAIL] libgd_current_mode\n");
+        printf("libgui_initialize: [FAIL] libgd_current_mode\n");
         goto fail;
     }
 
@@ -4403,7 +4403,7 @@ int libgd_initialize(void)
 // Backbuffer and frontbuffer.
     if ( libgd_FRONTBUFFER_VA == 0 || libgd_BACKBUFFER_VA == 0 )
     {
-        printf("libgd_initialize: Buffers\n");
+        printf("libgui_initialize: Buffers\n");
         goto fail;
     }
 
@@ -4412,7 +4412,7 @@ int libgd_initialize(void)
          libgd_device_height == 0 || 
          libgd_device_bpp == 0 )
     {
-        printf("libgd_initialize: w, h and bpp\n");
+        printf("libgui_initialize: w, h and bpp\n");
         goto fail;
     }
 
@@ -4426,7 +4426,7 @@ int libgd_initialize(void)
     // Backbuffer
     libgd_dc_backbuffer = (void *) malloc(sizeof(struct dccanvas_d));
     if ((void*)libgd_dc_backbuffer == NULL){
-        printf("libgd_initialize: libgd_dc_backbuffer\n");
+        printf("libgui_initialize: libgd_dc_backbuffer\n");
         goto fail; 
     }
     memset ( libgd_dc_backbuffer, 0, sizeof(struct dccanvas_d) );
@@ -4446,7 +4446,7 @@ int libgd_initialize(void)
     // Frontbuffer
     libgd_dc_frontbuffer = malloc(sizeof(struct dccanvas_d));
     if ((void*)libgd_dc_frontbuffer == NULL){
-        printf("libgd_initialize: libgd_dc_frontbuffer\n");
+        printf("libgui_initialize: libgd_dc_frontbuffer\n");
         goto fail; 
     }
     memset ( libgd_dc_frontbuffer, 0, sizeof(struct dccanvas_d) );
