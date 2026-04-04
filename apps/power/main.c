@@ -14,8 +14,14 @@
 //#include <arpa/inet.h>
 #include <sys/socket.h>
 #include <rtl/gramado.h>
-// libgws - The client-side library.
+
+
+// The client-side library
 #include <gws.h>
+
+// #test
+// The client-side library
+#include <libdisp.h>
 
 #include "power.h"
 
@@ -297,7 +303,18 @@ int main(int argc, char *argv[])
     unsigned long screen_w = gws_get_system_metrics(1);
     unsigned long screen_h = gws_get_system_metrics(2);
 
-    // Main window
+// =========================================
+// Library initialization
+
+    int status = -1;
+    status = (int) libgd_initialize();
+    if (status < 0){
+        printf("power_app: libgd_initialize fail\n");
+        exit(1);
+    }
+
+// =========================================
+// Main window
     unsigned long win_w = screen_w / 2;
     unsigned long win_h = screen_h / 2;
     unsigned long win_x = (screen_w - win_w) / 2;
@@ -339,6 +356,32 @@ int main(int argc, char *argv[])
         client_fd,
         main_window,
         (struct gws_window_info_d *) &wi );
+
+
+// ============================================================
+
+// Bottom half rectangle in main window
+unsigned long rect_x = wi.left + wi.cr_left;
+unsigned long rect_y = wi.top + wi.cr_top + (wi.cr_height / 2);
+unsigned long rect_w = wi.cr_width;
+unsigned long rect_h = wi.cr_height / 2;
+
+rectBackbufferDrawRectangle0(
+    rect_x, rect_y, rect_w, rect_h,
+    0x00FF00,   // bright green for visibility
+    1, 0, FALSE
+);
+
+// Refresh to show it
+rect_refresh_rectangle_via_kernel(
+    wi.left + rect_x,
+    wi.top  + rect_y,
+    rect_w,
+    rect_h
+);
+
+// ============================================================
+
 
 //
 // Support for button positions and dimensions

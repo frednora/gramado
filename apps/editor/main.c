@@ -38,16 +38,11 @@ int main(int argc, char *argv[])
     //if (argc < 0)
         // return EXIT_FAILURE;
 
-
     status = (int) libgd_initialize();
     if (status < 0){
         printf("editor: libgd_initialize fail\n");
         exit(1);
     }
-
-
-// #test
-// Drawing a pixel using the libdisp library.
 
     struct dccanvas_d *dc;
     dc = (struct dccanvas_d *) libgd_get_backbuffer_dc();
@@ -55,6 +50,9 @@ int main(int argc, char *argv[])
         printf("editor: libgd_get_backbuffer_dc fail\n");
         exit(1);
     }
+
+// #test
+// Drawing a pixel using the libdisp library.
 
 /*
     // Draw it (backbuffer)
