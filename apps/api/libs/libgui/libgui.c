@@ -30,30 +30,30 @@
 // The application/server is gonna need methods
 // to get all these values.
 
-static int libgd_current_mode=0;
+static int libgui_current_mode=0;
 
 // Backbuffer - Dark Zone
-static unsigned long libgd_BACKBUFFER_VA=0;
+static unsigned long libgui_BACKBUFFER_VA=0;
 // Frontbuffer (LFB) - Light Zone
-static unsigned long libgd_FRONTBUFFER_VA=0;
+static unsigned long libgui_FRONTBUFFER_VA=0;
 
 // #test: 
 // Addresses used by the frontbuffer
-// struct libgd_frontbuffer_info_d  FrontbufferInfo;
+// struct libgui_frontbuffer_info_d  FrontbufferInfo;
 
 // Saving
-static unsigned long libgd_SavedX=0;
-static unsigned long libgd_SavedY=0;
-static unsigned long libgd_SavedBPP=0; 
+static unsigned long libgui_SavedX=0;
+static unsigned long libgui_SavedY=0;
+static unsigned long libgui_SavedBPP=0; 
 // Helper
-static unsigned long libgd_device_width=0;
-static unsigned long libgd_device_height=0;
-static unsigned long libgd_device_bpp=0;
-static unsigned long libgd_device_pitch=0;
+static unsigned long libgui_device_width=0;
+static unsigned long libgui_device_height=0;
+static unsigned long libgui_device_bpp=0;
+static unsigned long libgui_device_pitch=0;
 
 // Device context
-static struct dccanvas_d *libgd_dc_backbuffer;
-static struct dccanvas_d *libgd_dc_frontbuffer;
+static struct dccanvas_d *libgui_dc_backbuffer;
+static struct dccanvas_d *libgui_dc_frontbuffer;
 
 
 // ====================================================
@@ -61,6 +61,7 @@ static struct dccanvas_d *libgd_dc_frontbuffer;
 // fnt8x8.c
 // >>> Provisory <<<
 // Probably from linux. GPL linux;
+// #todo: pick one from MIT or BSD.
 
 // #include "../ds.h"
 
@@ -2662,15 +2663,15 @@ unsigned char font_lin8x8[FONTDATAMAX] = {
 #define DEFAULT_FONT_HEIGHT  8
 
 
-struct char_initialization_d
+struct libgui_char_initialization_d
 {
     int initialized;
 
     int width;
     int height;
 };
-//extern struct char_initialization_d  CharInitialization;
-struct char_initialization_d  CharInitialization;
+//extern struct libgui_char_initialization_d  CharInitialization;
+struct libgui_char_initialization_d  CharInitialization;
 
 static int char_initialize(void);
 
@@ -2680,7 +2681,7 @@ static int char_initialize(void);
 // Font
 //
 
-struct font_info_d
+struct libgui_font_info_d
 {
     int initialized;
     int font_id;
@@ -2689,7 +2690,7 @@ struct font_info_d
     unsigned long height;
 };
 
-struct font_initialization_d
+struct libgui_font_initialization_d
 {
     int initialized;
     unsigned long address;
@@ -2697,13 +2698,13 @@ struct font_initialization_d
     unsigned long height;
     int index_for_current_font;
 };
-//extern struct font_initialization_d  FontInitialization;
-struct font_initialization_d  FontInitialization;
+//extern struct libgui_font_initialization_d  FontInitialization;
+struct libgui_font_initialization_d  FontInitialization;
 // ===================================================
 
 // Structure for a rectangle.
 // A rectangle belongs to a window.
-struct libdisp_rect_d 
+struct libgui_rect_d 
 {
     int used;
     int magic;
@@ -2723,7 +2724,7 @@ struct libdisp_rect_d
 
     int dirty;  // Validation
 
-    struct libdisp_rect_d *next;
+    struct libgui_rect_d *next;
 };
 
 //======================================
@@ -2788,27 +2789,27 @@ struct dccanvas_d *libgui_create_dc(unsigned char *base,
 // Get the pointer for the backbufer dc
 struct dccanvas_d *libgui_get_backbuffer_dc(void)
 {
-    if ((void *) libgd_dc_backbuffer == NULL)
+    if ((void *) libgui_dc_backbuffer == NULL)
         return NULL;
-    if (libgd_dc_backbuffer->magic != 1234)
+    if (libgui_dc_backbuffer->magic != 1234)
         return NULL;
-    if (libgd_dc_backbuffer->initialized != TRUE)
+    if (libgui_dc_backbuffer->initialized != TRUE)
         return NULL;
 
-    return (struct dccanvas_d *) libgd_dc_backbuffer;
+    return (struct dccanvas_d *) libgui_dc_backbuffer;
 }
 
 // Get the pointer for the frontbufer dc
 struct dccanvas_d *libgui_get_frontbuffer_dc(void)
 {
-    if ((void *) libgd_dc_frontbuffer == NULL)
+    if ((void *) libgui_dc_frontbuffer == NULL)
         return NULL;
-    if (libgd_dc_frontbuffer->magic != 1234)
+    if (libgui_dc_frontbuffer->magic != 1234)
         return NULL;
-    if (libgd_dc_frontbuffer->initialized != TRUE)
+    if (libgui_dc_frontbuffer->initialized != TRUE)
         return NULL;
 
-    return (struct dccanvas_d *) libgd_dc_frontbuffer;
+    return (struct dccanvas_d *) libgui_dc_frontbuffer;
 }
 
 
@@ -2876,7 +2877,7 @@ libgui_backbuffer_putpixel3 (
     int ret_value=0;
 // The base address for the target backbuffer.
     unsigned long target_buffer = 
-        libgd_BACKBUFFER_VA;
+        libgui_BACKBUFFER_VA;
 
 // Clipping
 // #bugbug:
@@ -2982,14 +2983,14 @@ libgui_fb_backbuffer_putpixel (
 // #bugbug
 // The lib needs to be already initialized.
 
-    unsigned char *where = (unsigned char *) libgd_BACKBUFFER_VA;
+    unsigned char *where = (unsigned char *) libgui_BACKBUFFER_VA;
     //unsigned char *where = (unsigned char *) buffer_va;
 
 // Device context
     unsigned long deviceLeft   = 0;
     unsigned long deviceTop    = 0;
-    unsigned long deviceWidth  = (libgd_device_width  & 0xFFFF );
-    unsigned long deviceHeight = (libgd_device_height & 0xFFFF );
+    unsigned long deviceWidth  = (libgui_device_width  & 0xFFFF );
+    unsigned long deviceHeight = (libgui_device_height & 0xFFFF );
     // #todo
     // Precismos considerar o limite do backbuffer.
     // Então teremos um Offset máximo.
@@ -3033,20 +3034,20 @@ libgui_fb_backbuffer_putpixel (
 // #danger
 // Esse valor foi herdado do bootloader.
 
-    switch (libgd_SavedBPP){
+    switch (libgui_SavedBPP){
         case 32:  bytes_count = 4;  break;
         case 24:  bytes_count = 3;  break;
         //case 16:  bytes_count = 2;  break;
         //case 8:   bytes_count = 1;  break;
         default:
-            printf("libgui_fb_backbuffer_putpixel: [ERROR] libgd_SavedBPP\n");
+            printf("libgui_fb_backbuffer_putpixel: [ERROR] libgui_SavedBPP\n");
             goto fail;
             break;
     };
 
 // #importante
 // Pegamos a largura do dispositivo.
-    //width = (int) libgd_SavedX; 
+    //width = (int) libgui_SavedX; 
 
 // unsigned long
 // Nao pode ser maior que 2MB.
@@ -3109,7 +3110,7 @@ libgui_fb_backbuffer_putpixel (
     b2 = where[Offset];
     g2 = where[Offset +1];
     r2 = where[Offset +2];
-    if ( libgd_SavedBPP == 32 ){ a2 = where[Offset +3]; };
+    if ( libgui_SavedBPP == 32 ){ a2 = where[Offset +3]; };
 
 // ------------------------------------------
 // A cor transformada.
@@ -3226,7 +3227,7 @@ libgui_fb_backbuffer_putpixel (
     where[Offset]    = b3;
     where[Offset +1] = g3;
     where[Offset +2] = r3;
-    if (libgd_SavedBPP == 32){ where[Offset +3] = a3; };
+    if (libgui_SavedBPP == 32){ where[Offset +3] = a3; };
 
 // Return the number of changed pixels. '1'.
     return (int) 1;
@@ -3316,10 +3317,10 @@ libgui_putpixel0 (
     int bytes_count=0;
 
     // bits per pixel
-    //int bpp   = (int) libgd_SavedBPP;  // get from globals.
+    //int bpp   = (int) libgui_SavedBPP;  // get from globals.
     int bpp   = (int) dc_bpp;            // get from dc
 
-    //int width = (int) (libgd_SavedX & 0xFFFF);  // device width
+    //int width = (int) (libgui_SavedX & 0xFFFF);  // device width
     int width = (int) (dc_width & 0xFFFF);  // device width from dc
 
 // Positions
@@ -3737,16 +3738,16 @@ libgui_backbuffer_putpixel (
     unsigned long _y, 
     unsigned long _rop_flags )
 {
-    if (!libgd_dc_backbuffer)
+    if (!libgui_dc_backbuffer)
         return;
 
-    //unsigned long buffer = (unsigned long) libgd_BACKBUFFER_VA;
+    //unsigned long buffer = (unsigned long) libgui_BACKBUFFER_VA;
 
 // Putpixel at the given buffer address
     //libgui_putpixel0( _color, _x, _y, _rop_flags, buffer );
 
     // #test: New worker with dc.
-    libgui_putpixel0(libgd_dc_backbuffer, _color, _x, _y, _rop_flags);
+    libgui_putpixel0(libgui_dc_backbuffer, _color, _x, _y, _rop_flags);
 }
 
 void 
@@ -3756,15 +3757,15 @@ libgui_frontbuffer_putpixel (
     unsigned long _y, 
     unsigned long _rop_flags )
 {
-    if (!libgd_dc_frontbuffer)
+    if (!libgui_dc_frontbuffer)
         return;
 
-    //unsigned long buffer = (unsigned long) libgd_FRONTBUFFER_VA;
+    //unsigned long buffer = (unsigned long) libgui_FRONTBUFFER_VA;
 // Putpixel at the given buffer address
     //libgui_putpixel0( _color, _x, _y, _rop_flags, buffer );
 
     // #test: New worker with dc.
-    libgui_putpixel0(libgd_dc_frontbuffer, _color, _x, _y, _rop_flags);
+    libgui_putpixel0(libgui_dc_frontbuffer, _color, _x, _y, _rop_flags);
 }
 
 // IN: 
@@ -3793,7 +3794,7 @@ libgui_putpixel (
 // Get the color value given the position
 unsigned int libgui_backbuffer_getpixelcolor(int x, int y)
 {
-    unsigned char *where = (unsigned char *) libgd_BACKBUFFER_VA;
+    unsigned char *where = (unsigned char *) libgui_BACKBUFFER_VA;
 // 3 = 24 bpp
     int bytes_count=0;
 
@@ -3807,20 +3808,20 @@ unsigned int libgui_backbuffer_getpixelcolor(int x, int y)
 // bpp
 // #danger
 // Esse valor foi herdado do bootloader.
-    switch (libgd_SavedBPP){
+    switch (libgui_SavedBPP){
     case 32:  bytes_count = 4;  break;
     case 24:  bytes_count = 3;  break;
     //case 16:  bytes_count = 2;  break;
     //case 8:   bytes_count = 1;  break;
     default:
-        printf("libgui_backbuffer_getpixelcolor: [ERROR] libgd_SavedBPP\n");
-        //panic ("libgui_backbuffer_getpixelcolor: libgd_SavedBPP");
+        printf("libgui_backbuffer_getpixelcolor: [ERROR] libgui_SavedBPP\n");
+        //panic ("libgui_backbuffer_getpixelcolor: libgui_SavedBPP");
         break;
     };
 
 // #importante
 // Pegamos a largura do dispositivo.
-    int width = (int) libgd_SavedX;
+    int width = (int) libgui_SavedX;
 // Offset
     int offset = (int) ( (bytes_count*width*y) + (bytes_count*x) );
 // bgra
@@ -3829,7 +3830,7 @@ unsigned int libgui_backbuffer_getpixelcolor(int x, int y)
     b = where[offset];
     g = where[offset +1];
     r = where[offset +2];
-    if ( libgd_SavedBPP == 32 ){
+    if ( libgui_SavedBPP == 32 ){
         a = where[offset +3];
     };
 // The buffer.
@@ -4001,10 +4002,10 @@ libgui_drawchar (
     unsigned int bgcolor,
     unsigned long rop )
 {
-    if (!libgd_dc_backbuffer)
+    if (!libgui_dc_backbuffer)
         return;
 
-    libgui_drawchar_dc(libgd_dc_backbuffer, x, y, c, fgcolor, bgcolor, rop);
+    libgui_drawchar_dc(libgui_dc_backbuffer, x, y, c, fgcolor, bgcolor, rop);
 }
 
 void 
@@ -4135,7 +4136,7 @@ libgui_backbuffer_draw_rectangle0 (
     //int fDrawRectangleUsingKGWS = FALSE;  // #test
     //int fDrawRectangleUsingKGWS = TRUE;   // #test
 
-    struct libdisp_rect_d rect;
+    struct libgui_rect_d rect;
 
     // debug_print("libgui_backbuffer_draw_rectangle0: :(\n");
 
@@ -4372,45 +4373,45 @@ int libgui_initialize(void)
 // get gramado mode.
 // jail, p1, home, p2, castle ...
     
-    //libgd_current_mode = server_get_system_metrics(130);
-    libgd_current_mode = rtl_get_system_metrics(130);
-    if (libgd_current_mode < 0){
-        printf("libgui_initialize: [FAIL] libgd_current_mode\n");
+    //libgui_current_mode = server_get_system_metrics(130);
+    libgui_current_mode = rtl_get_system_metrics(130);
+    if (libgui_current_mode < 0){
+        printf("libgui_initialize: [FAIL] libgui_current_mode\n");
         goto fail;
     }
 
 // Get backbuffer and frontbuffer virtual addresses
-    libgd_BACKBUFFER_VA  = (unsigned long) rtl_get_system_metrics(12);
-    libgd_FRONTBUFFER_VA = (unsigned long) rtl_get_system_metrics(11);
+    libgui_BACKBUFFER_VA  = (unsigned long) rtl_get_system_metrics(12);
+    libgui_FRONTBUFFER_VA = (unsigned long) rtl_get_system_metrics(11);
 
 // Screen
 // Width, Height and Bits Per Pixel.
-    libgd_device_width  = (unsigned long) rtl_get_system_metrics(1);
-    libgd_device_height = (unsigned long) rtl_get_system_metrics(2);
-    libgd_device_bpp    = (unsigned long) rtl_get_system_metrics(9);
+    libgui_device_width  = (unsigned long) rtl_get_system_metrics(1);
+    libgui_device_height = (unsigned long) rtl_get_system_metrics(2);
+    libgui_device_bpp    = (unsigned long) rtl_get_system_metrics(9);
 // Saving
-    libgd_SavedX   = (unsigned long) libgd_device_width;
-    libgd_SavedY   = (unsigned long) libgd_device_height;
-    libgd_SavedBPP = (unsigned long) libgd_device_bpp;
+    libgui_SavedX   = (unsigned long) libgui_device_width;
+    libgui_SavedY   = (unsigned long) libgui_device_height;
+    libgui_SavedBPP = (unsigned long) libgui_device_bpp;
 
 // Pitch
 // Get bytes per pixel then multiply by the width.
 
-    libgd_device_pitch = 
-        (unsigned long) ((libgd_device_bpp/8) * libgd_device_width);
+    libgui_device_pitch = 
+        (unsigned long) ((libgui_device_bpp/8) * libgui_device_width);
 
 
 // Backbuffer and frontbuffer.
-    if ( libgd_FRONTBUFFER_VA == 0 || libgd_BACKBUFFER_VA == 0 )
+    if ( libgui_FRONTBUFFER_VA == 0 || libgui_BACKBUFFER_VA == 0 )
     {
         printf("libgui_initialize: Buffers\n");
         goto fail;
     }
 
 // Width, Height and Bits Per Pixel.
-    if ( libgd_device_width == 0 || 
-         libgd_device_height == 0 || 
-         libgd_device_bpp == 0 )
+    if ( libgui_device_width == 0 || 
+         libgui_device_height == 0 || 
+         libgui_device_bpp == 0 )
     {
         printf("libgui_initialize: w, h and bpp\n");
         goto fail;
@@ -4424,43 +4425,43 @@ int libgui_initialize(void)
 // Thats is not a structure for hardware device driver.
 
     // Backbuffer
-    libgd_dc_backbuffer = (void *) malloc(sizeof(struct dccanvas_d));
-    if ((void*)libgd_dc_backbuffer == NULL){
-        printf("libgui_initialize: libgd_dc_backbuffer\n");
+    libgui_dc_backbuffer = (void *) malloc(sizeof(struct dccanvas_d));
+    if ((void*)libgui_dc_backbuffer == NULL){
+        printf("libgui_initialize: libgui_dc_backbuffer\n");
         goto fail; 
     }
-    memset ( libgd_dc_backbuffer, 0, sizeof(struct dccanvas_d) );
-    libgd_dc_backbuffer->device_width  = libgd_device_width;
-    libgd_dc_backbuffer->device_height = libgd_device_height;
+    memset ( libgui_dc_backbuffer, 0, sizeof(struct dccanvas_d) );
+    libgui_dc_backbuffer->device_width  = libgui_device_width;
+    libgui_dc_backbuffer->device_height = libgui_device_height;
     // Bits per pixel
-    libgd_dc_backbuffer->bpp = libgd_device_bpp; 
-    libgd_dc_backbuffer->pitch = libgd_device_pitch;
-    libgd_dc_backbuffer->data = (unsigned char*) libgd_BACKBUFFER_VA;
-    //libgd_dc_backbuffer->next = NULL;
-    libgd_dc_backbuffer->used = TRUE;
-    libgd_dc_backbuffer->magic = 1234;
-    libgd_dc_backbuffer->initialized = TRUE;
+    libgui_dc_backbuffer->bpp = libgui_device_bpp; 
+    libgui_dc_backbuffer->pitch = libgui_device_pitch;
+    libgui_dc_backbuffer->data = (unsigned char*) libgui_BACKBUFFER_VA;
+    //libgui_dc_backbuffer->next = NULL;
+    libgui_dc_backbuffer->used = TRUE;
+    libgui_dc_backbuffer->magic = 1234;
+    libgui_dc_backbuffer->initialized = TRUE;
 
 
 
     // Frontbuffer
-    libgd_dc_frontbuffer = malloc(sizeof(struct dccanvas_d));
-    if ((void*)libgd_dc_frontbuffer == NULL){
-        printf("libgui_initialize: libgd_dc_frontbuffer\n");
+    libgui_dc_frontbuffer = malloc(sizeof(struct dccanvas_d));
+    if ((void*)libgui_dc_frontbuffer == NULL){
+        printf("libgui_initialize: libgui_dc_frontbuffer\n");
         goto fail; 
     }
-    memset ( libgd_dc_frontbuffer, 0, sizeof(struct dccanvas_d) );
+    memset ( libgui_dc_frontbuffer, 0, sizeof(struct dccanvas_d) );
 
-    libgd_dc_frontbuffer->device_width  = libgd_device_width;
-    libgd_dc_frontbuffer->device_height = libgd_device_height;
+    libgui_dc_frontbuffer->device_width  = libgui_device_width;
+    libgui_dc_frontbuffer->device_height = libgui_device_height;
     // bits per pixel.
-    libgd_dc_frontbuffer->bpp = libgd_device_bpp;
-    libgd_dc_frontbuffer->pitch = libgd_device_pitch;
-    libgd_dc_frontbuffer->data = (unsigned char*) libgd_FRONTBUFFER_VA;
-    //libgd_dc_frontbuffer->next = NULL;
-    libgd_dc_frontbuffer->used = TRUE;
-    libgd_dc_frontbuffer->magic = 1234;
-    libgd_dc_frontbuffer->initialized = TRUE;
+    libgui_dc_frontbuffer->bpp = libgui_device_bpp;
+    libgui_dc_frontbuffer->pitch = libgui_device_pitch;
+    libgui_dc_frontbuffer->data = (unsigned char*) libgui_FRONTBUFFER_VA;
+    //libgui_dc_frontbuffer->next = NULL;
+    libgui_dc_frontbuffer->used = TRUE;
+    libgui_dc_frontbuffer->magic = 1234;
+    libgui_dc_frontbuffer->initialized = TRUE;
 
 
 // 

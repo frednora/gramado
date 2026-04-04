@@ -37,7 +37,7 @@ struct dccanvas_d *libgui_get_frontbuffer_dc(void);
 /*
 // #test: 
 // Addresses used by the frontbuffer
-struct libgd_frontbuffer_info_d 
+struct libgui_frontbuffer_info_d 
 {
     int initialized;
 
@@ -47,7 +47,7 @@ struct libgd_frontbuffer_info_d
     unsigned long frontbuffer_visible_area_begin_va;
     unsigned long frontbuffer_visible_area_end_va;
 };
-extern struct libgd_frontbuffer_info_d  FrontbufferInfo;
+extern struct libgui_frontbuffer_info_d  FrontbufferInfo;
 */
 
 int 
