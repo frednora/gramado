@@ -24,14 +24,14 @@
 //
 // Returns:
 //   pointer to a new dccanvas_d, or NULL on failure.
-struct dccanvas_d *libgd_create_dc(unsigned char *base,
+struct dccanvas_d *libgui_create_dc(unsigned char *base,
                                unsigned long width,
                                unsigned long height,
                                unsigned long bpp);
 
 // Getters for default contexts
-struct dccanvas_d *libgd_get_backbuffer_dc(void);
-struct dccanvas_d *libgd_get_frontbuffer_dc(void);
+struct dccanvas_d *libgui_get_backbuffer_dc(void);
+struct dccanvas_d *libgui_get_frontbuffer_dc(void);
 
 
 /*
@@ -51,14 +51,14 @@ extern struct libgd_frontbuffer_info_d  FrontbufferInfo;
 */
 
 int 
-libdisp_backbuffer_putpixel ( 
+libgui_backbuffer_putpixel3 ( 
     unsigned int color, 
     int x, 
     int y,
     unsigned long rop );
 
 int 
-grBackBufferPutpixel2 ( 
+libgui_backbuffer_putpixel2 ( 
     unsigned int color, 
     int x, 
     int y );
@@ -66,7 +66,7 @@ grBackBufferPutpixel2 (
 // put pixel
 // low level.
 int 
-fb_BackBufferPutpixel ( 
+libgui_fb_backbuffer_putpixel ( 
     unsigned int color, 
     int x, 
     int y,
@@ -74,7 +74,7 @@ fb_BackBufferPutpixel (
     unsigned long buffer_va );
 
 int
-putpixel0 ( 
+libgui_putpixel0 ( 
     struct dccanvas_d *dc,
     unsigned int  _color,
     unsigned long _x, 
@@ -82,34 +82,34 @@ putpixel0 (
     unsigned long _rop_flags );
 
 void 
-backbuffer_putpixel ( 
+libgui_backbuffer_putpixel ( 
     unsigned int  _color,
     unsigned long _x, 
     unsigned long _y, 
     unsigned long _rop_flags );
 
 void 
-frontbuffer_putpixel ( 
+libgui_frontbuffer_putpixel ( 
     unsigned int  _color,
     unsigned long _x, 
     unsigned long _y, 
     unsigned long _rop_flags );
 
 int 
-libgd_putpixel ( 
+libgui_putpixel ( 
     unsigned int color, 
     int x, 
     int y,
     unsigned long rop,
     int back_or_front );
 
-unsigned int grBackBufferGetPixelColor( int x, int y );
+unsigned int libgui_backbuffer_getpixelcolor( int x, int y );
 
 
-// backbuffer_draw_horizontal_line:
+// libgui_backbuffer_draw_horizontal_line:
 // Draw a horizontal line on backbuffer. 
 void 
-backbuffer_draw_horizontal_line ( 
+libgui_backbuffer_draw_horizontal_line ( 
     unsigned long x1,
     unsigned long y, 
     unsigned long x2, 
@@ -117,7 +117,7 @@ backbuffer_draw_horizontal_line (
     unsigned long rop_flags );
 
 void 
-frontbuffer_draw_horizontal_line ( 
+libgui_frontbuffer_draw_horizontal_line ( 
     unsigned long x1,
     unsigned long y, 
     unsigned long x2, 

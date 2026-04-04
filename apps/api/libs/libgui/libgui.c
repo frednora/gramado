@@ -2757,7 +2757,7 @@ __draw_rectangle_via_kgws (
 //
 // Returns:
 //   pointer to a new dccanvas_d, or NULL on failure.
-struct dccanvas_d *libgd_create_dc(unsigned char *base,
+struct dccanvas_d *libgui_create_dc(unsigned char *base,
                                unsigned long width,
                                unsigned long height,
                                unsigned long bpp)
@@ -2786,7 +2786,7 @@ struct dccanvas_d *libgd_create_dc(unsigned char *base,
 }
 
 // Get the pointer for the backbufer dc
-struct dccanvas_d *libgd_get_backbuffer_dc(void)
+struct dccanvas_d *libgui_get_backbuffer_dc(void)
 {
     if ((void *) libgd_dc_backbuffer == NULL)
         return NULL;
@@ -2799,7 +2799,7 @@ struct dccanvas_d *libgd_get_backbuffer_dc(void)
 }
 
 // Get the pointer for the frontbufer dc
-struct dccanvas_d *libgd_get_frontbuffer_dc(void)
+struct dccanvas_d *libgui_get_frontbuffer_dc(void)
 {
     if ((void *) libgd_dc_frontbuffer == NULL)
         return NULL;
@@ -2865,7 +2865,7 @@ libgd_put_pixel(
 // Plot pixel into the raster.
 // The origin is top/left of the viewport. (0,0).
 int 
-libdisp_backbuffer_putpixel ( 
+libgui_backbuffer_putpixel3 ( 
     unsigned int color, 
     int x, 
     int y,
@@ -2897,7 +2897,7 @@ libdisp_backbuffer_putpixel (
 
 // IN: color, x, y, rop, target buffer.
     ret_value = 
-        (int) fb_BackBufferPutpixel( 
+        (int) libgui_fb_backbuffer_putpixel( 
                   color, 
                   x, 
                   y, 
@@ -2907,7 +2907,7 @@ libdisp_backbuffer_putpixel (
 // #test: This routine has rop support.
 // #bugbug: These two routines are using different types
 // in the parameters.
-    //return (int) putpixel0( 
+    //return (int) libgui_putpixel0( 
     //                 color, x, y, rop, target_buffer );
 
     return (int) ret_value;
@@ -2920,7 +2920,7 @@ libdisp_backbuffer_putpixel (
 // Slow!
 
 int 
-grBackBufferPutpixel2 ( 
+libgui_backbuffer_putpixel2 ( 
     unsigned int color, 
     int x, 
     int y )
@@ -2934,7 +2934,7 @@ grBackBufferPutpixel2 (
 }
 
 /*
- * fb_BackBufferPutpixel:
+ * libgui_fb_backbuffer_putpixel:
  *     Put pixel in the device screen.
  */
 // #??
@@ -2969,7 +2969,7 @@ grBackBufferPutpixel2 (
 // b3, g3, r3, a3 = Color to be stored.
 
 int 
-fb_BackBufferPutpixel ( 
+libgui_fb_backbuffer_putpixel ( 
     unsigned int color, 
     int x, 
     int y,
@@ -3039,7 +3039,7 @@ fb_BackBufferPutpixel (
         //case 16:  bytes_count = 2;  break;
         //case 8:   bytes_count = 1;  break;
         default:
-            printf("fb_BackBufferPutpixel: [ERROR] libgd_SavedBPP\n");
+            printf("libgui_fb_backbuffer_putpixel: [ERROR] libgd_SavedBPP\n");
             goto fail;
             break;
     };
@@ -3070,7 +3070,7 @@ fb_BackBufferPutpixel (
 // Debug
     if (tmpOffset >= MaxOffset)
     {
-        printf ("fb_BackBufferPutpixel: MaxOffset\n");
+        printf ("libgui_fb_backbuffer_putpixel: MaxOffset\n");
         //printf ("tmpOffset=%x\n",tmpOffset);
         //printf ("x=%d\n",x);
         //printf ("y=%d\n",y);
@@ -3236,7 +3236,7 @@ fail:
 }
 
 /*
- * putpixel0:
+ * libgui_putpixel0:
  *   Write a pixel into a backbuffer using a raster operation (ROP).
  *   The server (kgws) can access the backbuffer but not the frontbuffer,
  *   so it must use the video driver dialog for display.
@@ -3252,7 +3252,7 @@ fail:
  */
 
 /*
- * putpixel0:
+ * libgui_putpixel0:
  *     O servidor kgws pode acessar um buffer. Mas não tem acesso
  * ao frontbuffer. Para isso ele precisa usasr o diálogo do driver 
  * de vídeo.
@@ -3274,7 +3274,7 @@ fail:
 //  + Double-buffering strategies (swap back/front).
 
 int
-putpixel0 ( 
+libgui_putpixel0 ( 
     struct dccanvas_d *dc,
     unsigned int  _color,
     unsigned long _x, 
@@ -3337,8 +3337,8 @@ putpixel0 (
 // #todo: It needs to be a valid ring3 address.
 /*
     if (buffer_va == 0){
-        //panic("putpixel0: buffer_va\n");
-        //server_debug_print("putpixel0: buffer_va\n");
+        //panic("libgui_putpixel0: buffer_va\n");
+        //server_debug_print("libgui_putpixel0: buffer_va\n");
         return 0;  // 0 changed pixels.
     }
 */
@@ -3370,8 +3370,8 @@ putpixel0 (
     //    bytes_count = 1;
     //    break;
     default:
-        //server_debug_print("putpixel0: bpp\n");
-        printf            ("putpixel0: bpp\n");
+        //server_debug_print("libgui_putpixel0: bpp\n");
+        printf            ("libgui_putpixel0: bpp\n");
         exit(1);
         while(1){}
         break;
@@ -3731,7 +3731,7 @@ putpixel0 (
 }
 
 void 
-backbuffer_putpixel ( 
+libgui_backbuffer_putpixel ( 
     unsigned int  _color,
     unsigned long _x, 
     unsigned long _y, 
@@ -3743,14 +3743,14 @@ backbuffer_putpixel (
     //unsigned long buffer = (unsigned long) libgd_BACKBUFFER_VA;
 
 // Putpixel at the given buffer address
-    //putpixel0( _color, _x, _y, _rop_flags, buffer );
+    //libgui_putpixel0( _color, _x, _y, _rop_flags, buffer );
 
     // #test: New worker with dc.
-    putpixel0(libgd_dc_backbuffer, _color, _x, _y, _rop_flags);
+    libgui_putpixel0(libgd_dc_backbuffer, _color, _x, _y, _rop_flags);
 }
 
 void 
-frontbuffer_putpixel ( 
+libgui_frontbuffer_putpixel ( 
     unsigned int  _color,
     unsigned long _x, 
     unsigned long _y, 
@@ -3761,16 +3761,16 @@ frontbuffer_putpixel (
 
     //unsigned long buffer = (unsigned long) libgd_FRONTBUFFER_VA;
 // Putpixel at the given buffer address
-    //putpixel0( _color, _x, _y, _rop_flags, buffer );
+    //libgui_putpixel0( _color, _x, _y, _rop_flags, buffer );
 
     // #test: New worker with dc.
-    putpixel0(libgd_dc_frontbuffer, _color, _x, _y, _rop_flags);
+    libgui_putpixel0(libgd_dc_frontbuffer, _color, _x, _y, _rop_flags);
 }
 
 // IN: 
 // back_or_front: 1=back | 2=front
 int 
-libgd_putpixel ( 
+libgui_putpixel ( 
     unsigned int color, 
     int x, 
     int y,
@@ -3778,11 +3778,11 @@ libgd_putpixel (
     int back_or_front )
 {
     if (back_or_front ==1){
-        backbuffer_putpixel(color,x,y,rop);
+        libgui_backbuffer_putpixel(color,x,y,rop);
         return 0;
     }
     if (back_or_front == 2){
-        frontbuffer_putpixel(color,x,y,rop);
+        libgui_frontbuffer_putpixel(color,x,y,rop);
         return 0;
     }
     return (int) -1;
@@ -3791,7 +3791,7 @@ libgd_putpixel (
 //============
 
 // Get the color value given the position
-unsigned int grBackBufferGetPixelColor(int x, int y)
+unsigned int libgui_backbuffer_getpixelcolor(int x, int y)
 {
     unsigned char *where = (unsigned char *) libgd_BACKBUFFER_VA;
 // 3 = 24 bpp
@@ -3813,8 +3813,8 @@ unsigned int grBackBufferGetPixelColor(int x, int y)
     //case 16:  bytes_count = 2;  break;
     //case 8:   bytes_count = 1;  break;
     default:
-        printf("grBackBufferGetPixelColor: [ERROR] libgd_SavedBPP\n");
-        //panic ("grBackBufferGetPixelColor: libgd_SavedBPP");
+        printf("libgui_backbuffer_getpixelcolor: [ERROR] libgd_SavedBPP\n");
+        //panic ("libgui_backbuffer_getpixelcolor: libgd_SavedBPP");
         break;
     };
 
@@ -3844,10 +3844,10 @@ unsigned int grBackBufferGetPixelColor(int x, int y)
     return (unsigned int) ColorBuffer;
 }
 
-// backbuffer_draw_horizontal_line:
+// libgui_backbuffer_draw_horizontal_line:
 // Draw a horizontal line on backbuffer. 
 void 
-backbuffer_draw_horizontal_line ( 
+libgui_backbuffer_draw_horizontal_line ( 
     unsigned long x1,
     unsigned long y, 
     unsigned long x2, 
@@ -3861,13 +3861,13 @@ backbuffer_draw_horizontal_line (
     }
 // IN: color, x, y, rop flags
     while (x1 < x2){
-        backbuffer_putpixel( color, x1, y, rop_flags ); 
+        libgui_backbuffer_putpixel( color, x1, y, rop_flags ); 
         x1++;
     };
 }
 
 void 
-frontbuffer_draw_horizontal_line ( 
+libgui_frontbuffer_draw_horizontal_line ( 
     unsigned long x1,
     unsigned long y, 
     unsigned long x2, 
@@ -3881,7 +3881,7 @@ frontbuffer_draw_horizontal_line (
     }
 // IN: color, x, y, rop flags.
     while (x1 < x2){
-        frontbuffer_putpixel( color, x1, y, rop_flags );
+        libgui_frontbuffer_putpixel( color, x1, y, rop_flags );
         x1++;
     };
 }
@@ -3976,7 +3976,7 @@ libgui_drawchar_dc (
 
             // #test: New method with dc.
             // IN: dc, color, x, y, rop
-            putpixel0(
+            libgui_putpixel0(
                 dc,
                 *work_char & bit_mask ? fgcolor: bgcolor, 
                 (x + x2), 
@@ -4321,7 +4321,7 @@ libgui_backbuffer_draw_rectangle0 (
 
 // #todo
 // Test this one for painting using the ring 3 ws.
-// backbuffer_draw_horizontal_line(...)
+// libgui_backbuffer_draw_horizontal_line(...)
     while (number_of_lines--)
     {
         // last line?
@@ -4340,7 +4340,7 @@ libgui_backbuffer_draw_rectangle0 (
             //rect.left, rect.top, __right, 
             //(unsigned int) rect.bg_color );
 
-		backbuffer_draw_horizontal_line ( 
+		libgui_backbuffer_draw_horizontal_line ( 
 			rect.left, rect.top, __right, 
 			(unsigned int) rect.bg_color, rop_flags );
 

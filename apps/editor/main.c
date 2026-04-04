@@ -45,9 +45,9 @@ int main(int argc, char *argv[])
     }
 
     struct dccanvas_d *dc;
-    dc = (struct dccanvas_d *) libgd_get_backbuffer_dc();
+    dc = (struct dccanvas_d *) libgui_get_backbuffer_dc();
     if ((void*)dc == NULL){
-        printf("editor: libgd_get_backbuffer_dc fail\n");
+        printf("editor: libgui_get_backbuffer_dc fail\n");
         exit(1);
     }
 
@@ -56,10 +56,10 @@ int main(int argc, char *argv[])
 
 /*
     // Draw it (backbuffer)
-    putpixel0 ( dc, 0xFF0000, 10, 10, 0 );
+    libgui_putpixel0 ( dc, 0xFF0000, 10, 10, 0 );
 
     // Draw it (frontbuffer)
-    frontbuffer_putpixel( 0x00FF00, 20, 20, 0 );
+    libgui_frontbuffer_putpixel( 0x00FF00, 20, 20, 0 );
 */
 
     return (int) editor_initialize(argc,argv);

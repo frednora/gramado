@@ -309,10 +309,10 @@ static void update_clients(int fd)
 
     //gws_refresh_window(fd, main_window);
 
-    frontbuffer_draw_horizontal_line( 
+    libgui_frontbuffer_draw_horizontal_line( 
         rc_left, rc_top +12, rc_width, 0xFF0000, 0 );
 
-    frontbuffer_putpixel(0x0000FF, rc_left +20, rc_top +20, 0);
+    libgui_frontbuffer_putpixel(0x0000FF, rc_left +20, rc_top +20, 0);
 */
 
     //gws_refresh_window(fd, main_window);
@@ -479,13 +479,13 @@ editorProcedure(
 
                 // #test: Testing libdisp library.
                 // Draw it (frontbuffer)
-                //frontbuffer_putpixel( 0xFF0000, 10, 11, 0 );
-                //frontbuffer_putpixel( 0x00FF00, 10, 12, 0 );
-                //frontbuffer_putpixel( 0x0000FF, 10, 13, 0 );
+                //libgui_frontbuffer_putpixel( 0xFF0000, 10, 11, 0 );
+                //libgui_frontbuffer_putpixel( 0x00FF00, 10, 12, 0 );
+                //libgui_frontbuffer_putpixel( 0x0000FF, 10, 13, 0 );
 
                 // libgui_drawchar(20, 20, 'E', 0xFFFFFF, 0x000000, 0);
 
-                //frontbuffer_draw_horizontal_line( 10, 15, 100, 0xFF0000, 0 );
+                //libgui_frontbuffer_draw_horizontal_line( 10, 15, 100, 0xFF0000, 0 );
 
                 break;
         };
