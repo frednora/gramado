@@ -22,7 +22,7 @@
 
 // #test
 // The client-side library
-#include <libdisp.h>
+#include <libgui.h>
 
 // Internal
 #include <packet.h>

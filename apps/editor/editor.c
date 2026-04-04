@@ -43,7 +43,7 @@
 
 // #test
 // The client-side library
-#include <libdisp.h>
+#include <libgui.h>
 
 
 // Internal
@@ -288,7 +288,7 @@ static void update_clients(int fd)
     unsigned long rc_height = 100; //lWi.cr_height;
 
     // Create a rectangle
-    rectBackbufferDrawRectangle0(
+    libgui_backbuffer_draw_rectangle0(
         rc_left,   // absolute X origin of client area
         rc_top,    // absolute Y origin of client area
         rc_width,             // client area width

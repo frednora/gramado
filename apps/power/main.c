@@ -1,4 +1,4 @@
-// power_app.c
+// main.c
 // Gramado OS client-side GUI app with Restart and Shutdown buttons.
 // Created by Fred Nora (example by Copilot).
 
@@ -21,7 +21,7 @@
 
 // #test
 // The client-side library
-#include <libdisp.h>
+#include <libgui.h>
 
 #include "power.h"
 
@@ -360,25 +360,25 @@ int main(int argc, char *argv[])
 
 // ============================================================
 
-// Bottom half rectangle in main window
-unsigned long rect_x = wi.left + wi.cr_left;
-unsigned long rect_y = wi.top + wi.cr_top + (wi.cr_height / 2);
-unsigned long rect_w = wi.cr_width;
-unsigned long rect_h = wi.cr_height / 2;
+    // Bottom half rectangle in main window
+    unsigned long rect_x = wi.left + wi.cr_left;
+    unsigned long rect_y = wi.top + wi.cr_top;
+    unsigned long rect_w = wi.cr_width;
+    unsigned long rect_h = wi.cr_height >> 1; // half height
 
-rectBackbufferDrawRectangle0(
-    rect_x, rect_y, rect_w, rect_h,
-    0x00FF00,   // bright green for visibility
-    1, 0, FALSE
-);
+    libgui_backbuffer_draw_rectangle0(
+        rect_x, rect_y, rect_w, rect_h,
+        0x00FF00,   // bright green for visibility
+        1, 0, FALSE
+    );
 
-// Refresh to show it
-rect_refresh_rectangle_via_kernel(
-    wi.left + rect_x,
-    wi.top  + rect_y,
-    rect_w,
-    rect_h
-);
+    // Refresh to show it
+    rect_refresh_rectangle_via_kernel(
+        wi.left + rect_x,
+        wi.top  + rect_y,
+        rect_w,
+        rect_h
+    );
 
 // ============================================================
 

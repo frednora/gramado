@@ -1,4 +1,4 @@
-// libdisp.c 
+// libgui.c 
 // These are display device routines.
 // #todo
 // The goal here is building a graphics library interface.
@@ -21,7 +21,7 @@
 //#include <sys/socket.h>
 #include <rtl/gramado.h>
 
-#include "include/libdisp.h"
+#include "include/libgui.h"
 
 //
 // private
@@ -4096,7 +4096,7 @@ __draw_rectangle_via_kgws (
 
 
 /*
- * rectBackbufferDrawRectangle0: (API)
+ * libgui_backbuffer_draw_rectangle0: (API)
  *     Draw a rectangle on backbuffer. 
  */
 // #todo
@@ -4108,7 +4108,7 @@ __draw_rectangle_via_kgws (
 // FALSE = do not use kgws. #bugbug
 
 void 
-rectBackbufferDrawRectangle0 ( 
+libgui_backbuffer_draw_rectangle0 ( 
     unsigned long x, 
     unsigned long y, 
     unsigned long width, 
@@ -4137,7 +4137,7 @@ rectBackbufferDrawRectangle0 (
 
     struct libdisp_rect_d rect;
 
-    // debug_print("rectBackbufferDrawRectangle0: :(\n");
+    // debug_print("libgui_backbuffer_draw_rectangle0: :(\n");
 
 // device:
 
@@ -4153,11 +4153,11 @@ rectBackbufferDrawRectangle0 (
 // #provisório
 // limites do dispositivo
     if (device_w > 800){
-        debug_print("rectBackbufferDrawRectangle0: [FAIL] device_w\n");
+        debug_print("libgui_backbuffer_draw_rectangle0: [FAIL] device_w\n");
         return; 
     }
     if (device_h > 600){
-        debug_print("rectBackbufferDrawRectangle0: [FAIL] device_h\n");
+        debug_print("libgui_backbuffer_draw_rectangle0: [FAIL] device_h\n");
         return; 
     }
 
@@ -4184,18 +4184,18 @@ rectBackbufferDrawRectangle0 (
 
     if (rect.left > __right)
     {
-        debug_print("rectBackbufferDrawRectangle0: [FAIL] left > __right\n");
+        debug_print("libgui_backbuffer_draw_rectangle0: [FAIL] left > __right\n");
         //#debug
-        printf ("rectBackbufferDrawRectangle0: l:%d r:%d\n",
+        printf ("libgui_backbuffer_draw_rectangle0: l:%d r:%d\n",
             rect.left, __right );
         exit(0);
         return; 
     }
     if ( rect.top > __bottom )
     { 
-        debug_print("rectBackbufferDrawRectangle0: [FAIL] top  > __bottom\n");
+        debug_print("libgui_backbuffer_draw_rectangle0: [FAIL] top  > __bottom\n");
         //#debug
-        printf ("rectBackbufferDrawRectangle0: t:%d b:%d\n",
+        printf ("libgui_backbuffer_draw_rectangle0: t:%d b:%d\n",
             rect.top, __bottom);
         exit(0);
         return; 
@@ -4206,13 +4206,13 @@ rectBackbufferDrawRectangle0 (
 // Se a largura for maior que largura do dispositivo.
     if (rect.width > device_w){
         rect.width = (unsigned long) device_w;
-        //debug_print("rectBackbufferDrawRectangle0: [FAIL] rect.width > device_w\n");
+        //debug_print("libgui_backbuffer_draw_rectangle0: [FAIL] rect.width > device_w\n");
         //return;
     }
 // Se a altura for maior que altura do dispositivo.
     if (rect.height > device_h){
         rect.height = (unsigned long) device_h;
-        //debug_print("rectBackbufferDrawRectangle0: [FAIL] rect.height > device_h\n");
+        //debug_print("libgui_backbuffer_draw_rectangle0: [FAIL] rect.height > device_h\n");
         //return;
     }
 
@@ -4273,7 +4273,7 @@ rectBackbufferDrawRectangle0 (
 
     if (fDrawRectangleUsingKGWS == TRUE)
     {
-        // debug_print("rectBackbufferDrawRectangle0: Using R0");
+        // debug_print("libgui_backbuffer_draw_rectangle0: Using R0");
         // IN: l,t,w,h,bg color, rop flags.
         __draw_rectangle_via_kgws (
             rect.left, rect.top, rect.width, rect.height,
@@ -4298,11 +4298,11 @@ rectBackbufferDrawRectangle0 (
 /*
 // Fail
     if ( rect.left > rect.width  ){ 
-        debug_print("rectBackbufferDrawRectangle0: [FAIL] rect.left > rect.width\n");
+        debug_print("libgui_backbuffer_draw_rectangle0: [FAIL] rect.left > rect.width\n");
         return; 
     }
     if ( rect.top  > rect.height ){ 
-        debug_print("rectBackbufferDrawRectangle0: [FAIL] rect.top  > rect.height\n");
+        debug_print("libgui_backbuffer_draw_rectangle0: [FAIL] rect.top  > rect.height\n");
         return; 
     }
 */

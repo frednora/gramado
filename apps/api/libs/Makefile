@@ -3,13 +3,14 @@ all:
 
 #	make -C libcpp/
 
-# Client-side library for the Display server.
-	make -C libdisp/
 
 # Graphics support (Server-side?)
 	make -C libgr/
 # 3D Graphics support (Server-side?)
 	make -C libgr3d/
+
+# Client-side library for primitive drawing routines.
+	make -C libgui/
 
 # Gramado Window System
 # Client-side library for the Display server.

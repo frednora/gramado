@@ -1,10 +1,9 @@
-// libdisp.h
+// libgui.h
 // Graphics device library.
 // Created by Fred Nora.
 
-#ifndef __LIBDISP_H
-#define __LIBDISP_H  1
-
+#ifndef __LIBGUI_LIBGUI_H
+#define __LIBGUI_LIBGUI_H  1
 
 #include <types.h>
 #include <stddef.h>
@@ -14,9 +13,7 @@
 #include "rop.h"
 #include "dccanvas.h"
 
-
 // ===================================================
-
 
 // Create a new device context for a given buffer.
 // Parameters:
@@ -166,7 +163,7 @@ rect_refresh_rectangle_via_kernel(
     unsigned long height );
 
 void 
-rectBackbufferDrawRectangle0 ( 
+libgui_backbuffer_draw_rectangle0(
     unsigned long x, 
     unsigned long y, 
     unsigned long width, 

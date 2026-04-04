@@ -53,9 +53,9 @@ LIBCOBJ   = ../api/libs/rtl/obj
 LIBGWS    = ../api/libs/libgws/include/
 LIBGWSOBJ = ../api/libs/libgws/obj
 
-# libdisp - Client-side services
-LIBDISP    = ../api/libs/libdisp/include/
-LIBDISPOBJ = ../api/libs/libdisp/obj
+# libgui - Client-side services
+LIBGUI    = ../api/libs/libgui/include/
+LIBGUIOBJ = ../api/libs/libgui/obj
 
 
 
@@ -64,7 +64,7 @@ myObjects = crt0.o rtl.o \
 ctype.o stdio.o fcntl.o stdlib.o string.o unistd.o termios.o ioctl.o \
 socket.o \
 math.o \
-libgws.o libdisp.o \
+libgws.o libgui.o \
 main.o    
 
 
@@ -73,7 +73,7 @@ main.o
 all: main.o all-c hello-link finalize clean
 	@echo "Ok?"
 main.o:
-	gcc -c main.c $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I $(LIBDISP) -o main.o
+	gcc -c main.c $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I $(LIBGUI) -o main.o
 
 all-c:
 
@@ -97,8 +97,8 @@ all-c:
 # libgws
 	cp $(LIBGWSOBJ)/libgws.o .
 
-# libdisp
-	cp $(LIBDISPOBJ)/libdisp.o .
+# libgui
+	cp $(LIBGUIOBJ)/libgui.o .
 
 hello-link:
 	ld $(linkFlags) -o POWER.BIN $(myObjects)    
