@@ -3913,7 +3913,7 @@ static int char_initialize(void)
 // #todo
 // Draw char into a given device context
 void 
-dc_drawchar (
+libgui_drawchar_dc (
     struct dccanvas_d *dc, 
     unsigned long x, 
     unsigned long y,  
@@ -3946,7 +3946,7 @@ dc_drawchar (
          FontInitialization.width <= 0 || 
          FontInitialization.height <= 0 )
     {
-        printf ("dc_drawchar: initialization fail\n");
+        printf ("libgui_drawchar_dc: initialization fail\n");
         while(1){}
     }
 
@@ -3993,7 +3993,7 @@ dc_drawchar (
 }
 
 void 
-drawchar (
+libgui_drawchar (
     unsigned long x, 
     unsigned long y,  
     unsigned long c,
@@ -4004,11 +4004,11 @@ drawchar (
     if (!libgd_dc_backbuffer)
         return;
 
-    dc_drawchar(libgd_dc_backbuffer, x, y, c, fgcolor, bgcolor, rop);
+    libgui_drawchar_dc(libgd_dc_backbuffer, x, y, c, fgcolor, bgcolor, rop);
 }
 
 void 
-drawstring(
+libgui_drawstring(
     unsigned long x, 
     unsigned long y, 
     const char *s, 
@@ -4022,7 +4022,7 @@ drawstring(
         width = FontInitialization.width;
 
     while (*s) {
-        drawchar(x, y, *s, fg, bg, rop);
+        libgui_drawchar(x, y, *s, fg, bg, rop);
         x += width; // advance by font width
         s++;
     }
@@ -4051,7 +4051,7 @@ __kgws_adapter_refresh_rectangle (
 }
 
 void 
-rect_refresh_rectangle_via_kernel(
+libgui_refresh_rectangle_via_kernel(
     unsigned long x, 
     unsigned long y, 
     unsigned long width, 

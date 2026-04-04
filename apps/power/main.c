@@ -373,7 +373,7 @@ int main(int argc, char *argv[])
     );
 
     // Refresh to show it
-    rect_refresh_rectangle_via_kernel(
+    libgui_refresh_rectangle_via_kernel(
         wi.left + rect_x,
         wi.top  + rect_y,
         rect_w,

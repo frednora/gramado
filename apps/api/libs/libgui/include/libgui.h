@@ -128,7 +128,7 @@ frontbuffer_draw_horizontal_line (
 // #todo
 // Draw char into a given device context
 void 
-dc_drawchar (
+libgui_drawchar_dc (
     struct dccanvas_d *dc, 
     unsigned long x, 
     unsigned long y,  
@@ -138,7 +138,7 @@ dc_drawchar (
     unsigned long rop );
 
 void 
-drawchar (
+libgui_drawchar (
     unsigned long x, 
     unsigned long y,  
     unsigned long c,
@@ -147,7 +147,7 @@ drawchar (
     unsigned long rop );
 
 void 
-drawstring(
+libgui_drawstring(
     unsigned long x, 
     unsigned long y, 
     const char *s, 
@@ -156,7 +156,7 @@ drawstring(
     unsigned long rop );
 
 void 
-rect_refresh_rectangle_via_kernel(
+libgui_refresh_rectangle_via_kernel(
     unsigned long x, 
     unsigned long y, 
     unsigned long width, 

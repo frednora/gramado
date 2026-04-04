@@ -199,12 +199,12 @@ static void update_clients(int fd)
         (unsigned long) text1_color,
         text1_string );
     */
-    drawstring(
+    libgui_drawstring(
         lWi.left + lWi.cr_left + text1_l, 
         lWi.top  + lWi.cr_top  + text1_t, 
         text1_string, text1_color, 0xFFFFFF, 0);
 
-    rect_refresh_rectangle_via_kernel( 
+    libgui_refresh_rectangle_via_kernel( 
         lWi.left + lWi.cr_left + text1_l, 
         lWi.top  + lWi.cr_top  + text1_t, 
         8*strlen(text1_string), 
@@ -298,13 +298,13 @@ static void update_clients(int fd)
     );
 
 
-    drawchar(
+    libgui_drawchar(
         rc_left, rc_top, 'A', 0xFFFFFF, 0x000000, 0);
 
-    drawstring(
+    libgui_drawstring(
         rc_left +10, rc_top +10, "Hello, World!", 0xFFFF00, 0x000000, 0);
 
-    rect_refresh_rectangle_via_kernel( 
+    libgui_refresh_rectangle_via_kernel( 
         rc_left, rc_top, rc_width, rc_height );
 
     //gws_refresh_window(fd, main_window);
@@ -483,7 +483,7 @@ editorProcedure(
                 //frontbuffer_putpixel( 0x00FF00, 10, 12, 0 );
                 //frontbuffer_putpixel( 0x0000FF, 10, 13, 0 );
 
-                // drawchar(20, 20, 'E', 0xFFFFFF, 0x000000, 0);
+                // libgui_drawchar(20, 20, 'E', 0xFFFFFF, 0x000000, 0);
 
                 //frontbuffer_draw_horizontal_line( 10, 15, 100, 0xFF0000, 0 );
 
