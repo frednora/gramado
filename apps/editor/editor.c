@@ -190,6 +190,7 @@ static void update_clients(int fd)
     text1_l = 2;
     text1_t = 4 + (24/3);
     text1_color = COLOR_BLACK;
+    /*
     gws_draw_text (
         (int) fd,
         (int) main_window,
@@ -197,6 +198,17 @@ static void update_clients(int fd)
         (unsigned long) text1_t,
         (unsigned long) text1_color,
         text1_string );
+    */
+    drawstring(
+        lWi.left + lWi.cr_left + text1_l, 
+        lWi.top  + lWi.cr_top  + text1_t, 
+        text1_string, text1_color, 0xFFFFFF, 0);
+
+    rect_refresh_rectangle_via_kernel( 
+        lWi.left + lWi.cr_left + text1_l, 
+        lWi.top  + lWi.cr_top  + text1_t, 
+        8*strlen(text1_string), 
+        16 ); 
 
 // ---------------------------------------------
 // Address bar
@@ -263,29 +275,47 @@ static void update_clients(int fd)
 // Testing libdisp client-side library
 //
 
-/*
+    //printf("Left: %d, Top: %d\n", 
+       // lWi.cr_left, lWi.cr_top);
+
     // #ps:
     // Not inside the client area yet
 
-    // Create a rectangle
-    rectBackbufferDrawRectangle0 (
-        10, 10, 200, 100, 
-        0xFF0000, 1, 0, FALSE );
+/*
+    unsigned long rc_left = lWi.left + lWi.cr_left;
+    unsigned long rc_top  = lWi.top  + lWi.cr_top;
+    unsigned long rc_width  = 100; //lWi.cr_width;
+    unsigned long rc_height = 100; //lWi.cr_height;
 
-    drawchar(12, 12, 'A', 0xFFFFFF, 0x000000, 0);
+    // Create a rectangle
+    rectBackbufferDrawRectangle0(
+        rc_left,   // absolute X origin of client area
+        rc_top,    // absolute Y origin of client area
+        rc_width,             // client area width
+        rc_height,            // client area height
+        0xFFFF00,                 // color
+        1, 0, FALSE               // style flags
+    );
+
+
+    drawchar(
+        rc_left, rc_top, 'A', 0xFFFFFF, 0x000000, 0);
 
     drawstring(
-        20, 20, "Hello, World!", 0xFFFF00, 0x000000, 0);
-    gws_refresh_window(fd, main_window);
-    frontbuffer_draw_horizontal_line( 
-        0, cwText.w, cwText.w, 0xFF0000, 0 );
+        rc_left +10, rc_top +10, "Hello, World!", 0xFFFF00, 0x000000, 0);
 
     rect_refresh_rectangle_via_kernel( 
-        10, 10, 200, 100 );
+        rc_left, rc_top, rc_width, rc_height );
 
-    frontbuffer_putpixel(0x0000FF, 30, 30, 0);
+    //gws_refresh_window(fd, main_window);
+
+    frontbuffer_draw_horizontal_line( 
+        rc_left, rc_top +12, rc_width, 0xFF0000, 0 );
+
+    frontbuffer_putpixel(0x0000FF, rc_left +20, rc_top +20, 0);
 */
 
+    //gws_refresh_window(fd, main_window);
 }
 
 static int editor_init_globals(void)
