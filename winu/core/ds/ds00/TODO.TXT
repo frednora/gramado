@@ -1,8 +1,17 @@
 
- Function wm_hit_test_2():
+ Function wm_hit_test_2(): (ok, good)
 
 #todo:
  + The hit-testing for menu window and menuitem window.
  + The hit-testing for child of child. (recursion).
  + We are not changing the hover window pointer 
    when the mouse hovers the titlebar.
+
+
+------------------------------
+Window procedure?
+A window can have a window procedure in client-side or 
+in server-side.
+#todo: We alread have it in client-side, now we can create it 
+for the server-side. Or a default procedure in client-side too.
+

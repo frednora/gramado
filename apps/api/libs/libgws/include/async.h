@@ -1,12 +1,11 @@
-// async.h - (server-side)
-// Indexes used for asynchronous requests to the display server.
-// It supports the service: serviceAsyncCommand() in main.c
+// async.h - (client-side)
+// It supports the function: gws_async_command() in gws.c
 // + Request numbers.
 // + Sub-request numbers.
 // Created by Fred Nora.
 
-#ifndef __API_ASYNC_H
-#define __API_ASYNC_H    1
+#ifndef __LIBGWS_ASYNC_H
+#define __LIBGWS_ASYNC_H    1
 
 // Shutdown the server.
 #define ASYNC_REQUEST_EXIT  1

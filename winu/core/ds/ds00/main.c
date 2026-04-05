@@ -1107,18 +1107,18 @@ int serviceAsyncCommand(void)
     // IN:
     // request_id = dock operation (92)
     // subrequest_id = witch side?
-    case 92:
+    case ASYNC_REQUEST_DOCK_WINDOW:  //92:
         // #todo: Not tested yet. This is a work in progress.
         // dock_window_by_id(wid,subrequest_id);
         break;
     
     // Dock the active window
-    case 93:
+    case ASYNC_REQUEST_DOCK_ACTIVE_WINDOW:  //93:
         // IN: position
         dock_active_window(subrequest_id);
         break;
 
-    // 1000 - Put a pixel into the backbuffer.
+    // 1000 - Put a pixel into the backbuffer
     // IN: color, x, y, rop
     // #todo: Explain it better.
     case ASYNC_REQUEST_PUT_PIXEL:
@@ -1132,27 +1132,27 @@ int serviceAsyncCommand(void)
         break;
 
     //
-    case 1010:
+    case ASYNC_REQUEST_DESTROY_ALL_WINDOWS:  // 1010:
         DestroyAllWindows();
         break;
 
     //
-    case 1011:
+    case ASYNC_REQUEST_MINIMIZE_ALL_WINDOWS:  //1011:
         MinimizeAllWindows();
         break;
 
     //
-    case 1012:
+    case ASYNC_REQUEST_MAXIMIZE_ALL_WINDOWS:  //1012:
         MaximizeAllWindows();
         break;
 
     //
-    case 1013:
+    case ASYNC_REQUEST_RESTORE_ALL_WINDOWS:  //1013:
         RestoreAllWindows();
         break;
 
     //
-    case 1014:
+    case ASYNC_REQUEST_MAXIMIZE_ACTIVE_WINDOWS:  //1014:
         if ((void*) active_window != NULL)
             maximize_window(active_window);
         break;

@@ -26,6 +26,8 @@
 // Read and write from socket.
 #include "base/rw.h"
 #include "base/connect.h"
+// For asynch requests.
+#include "async.h" 
 // The lingws protocol.
 #include "protocol.h"
 #include "grambase.h"

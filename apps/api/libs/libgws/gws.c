@@ -2860,16 +2860,19 @@ void gws_reboot(int fd)
     if (fd<0){
         return;
     }
-    gws_async_command(fd,89,0,0);
+    // 89
+    gws_async_command(fd,ASYNC_REQUEST_REBOOT,0,0);
 }
 
-// Poweroff via ws.
+// Poweroff via display server.
+// It launches the shutdown application.
 void gws_shutdown(int fd)
 {
     if (fd<0){
         return;
     }
-    gws_async_command(fd,22,0,0);
+    // 22
+    gws_async_command(fd,ASYNC_REQUEST_LAUNCH_SHUTDOWN,0,0);
 }
 
 // #todo: Explain it better.
@@ -2878,6 +2881,7 @@ void gws_update_desktop(int fd)
     if (fd<0){
         return;
     }
+    // 11 - #todo: We gotta work in server-side.
     gws_async_command(fd,11,0,0);
 }
 
@@ -3405,7 +3409,8 @@ void gws_invalidate_window(int fd,int wid)
     if (wid<0){
         return;
     }
-    gws_async_command(fd,13,0,wid);
+    // 13
+    gws_async_command(fd,ASYNC_REQUEST_INVALIDATE_WINDOW_BY_WID,0,wid);
 }
 
 // Create a window given it's type
@@ -4070,7 +4075,8 @@ void gws_destroy_window(int fd, wid_t wid)
         return;
     }
 // IN: fd, request, sub-request, data.
-    gws_async_command( fd, 90, 0, wid );
+// 90
+    gws_async_command( fd, ASYNC_REQUEST_DESTROY_WINDOW, 0, wid );
 }
 
 void gws_set_active(int fd, wid_t wid)
@@ -4078,7 +4084,8 @@ void gws_set_active(int fd, wid_t wid)
     if (fd<0) { return; }
     if (wid<0){ return; }
 // IN: fd, request, sub-request, data.
-    gws_async_command( fd, 15, 0, wid );
+// 15
+    gws_async_command( fd, ASYNC_REQUEST_SET_ACTIVE_WINDOW_BY_WID, 0, wid );
 }
 
 // Set focus
@@ -4088,7 +4095,8 @@ void gws_set_focus(int fd, wid_t wid)
     if (fd<0) { return; }
     if (wid<0){ return; }
 // IN: fd, request, sub-request, data.
-    gws_async_command( fd, 9, 0, wid );
+// 9
+    gws_async_command( fd, ASYNC_REQUEST_SET_FOCUS_BY_WID, 0, wid );
 }
 
 // Clear the window
@@ -4100,7 +4108,8 @@ void gws_clear_window(int fd, wid_t wid)
     if (fd<0) { return; }
     if (wid<0){ return; }
 // IN: fd, request, sub-request, data.
-    gws_async_command( fd, 14, 0, wid );
+// 14
+    gws_async_command( fd, ASYNC_REQUEST_CLEAR_WINDOW_BY_WID, 0, wid );
 }
 
 // witch_side: 1=top, 2=right, 3=bottom, 4=left
@@ -4110,7 +4119,8 @@ void gws_dock_window(int fd, wid_t wid, int witch_side)
     if (wid<0){ return; }
 // IN: fd, request, sub-request, data.
 // witch_side: 1=top, 2=right, 3=bottom, 4=left
-    gws_async_command( fd, 92, witch_side, wid );
+// 92
+    gws_async_command( fd, ASYNC_REQUEST_DOCK_WINDOW, witch_side, wid );
 }
 
 // witch_side: 1=top, 2=right, 3=bottom, 4=left
@@ -4120,7 +4130,8 @@ void gws_dock_active_window(int fd, int witch_side)
     //if (witch_side<0){ return; }
 // IN: fd, request, sub-request, data.
 // witch_side: 1=top, 2=right, 3=bottom, 4=left
-    gws_async_command( fd, 93, witch_side, 0 );
+// 93
+    gws_async_command( fd, ASYNC_REQUEST_DOCK_ACTIVE_WINDOW, witch_side, 0 );
 }
 
 // Send async request.
@@ -4327,6 +4338,9 @@ void gws_send_wm_magic( int fd, int pid )
 {
     if (fd<0) { return; }
     if (pid<0){ return; }
+
+// #todo: Not implemented yet in server side.
+// 7
     gws_async_command(fd,7,0,pid);
 }
 
