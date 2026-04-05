@@ -287,5 +287,12 @@ gws_async_command2 (
     unsigned long data3,
     unsigned long data4 );
 
+void
+gws_post_request ( 
+    int fd, 
+    unsigned long request,
+    unsigned long sub_request,
+    unsigned long data );
+
 #endif  
 

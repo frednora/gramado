@@ -4329,6 +4329,16 @@ fail:
     return; 
 }
 
+void
+gws_post_request ( 
+    int fd, 
+    unsigned long request,
+    unsigned long sub_request,
+    unsigned long data )
+{
+    gws_async_command ( fd, request, sub_request, data ); 
+}
+
 // #test
 // No response
 // Sending the wm's pid to the ds.
