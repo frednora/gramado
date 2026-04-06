@@ -339,6 +339,10 @@ struct thread_d
 // Surface
     struct rect_d *surface_rect;
 
+// #test
+// see: wproxy.c
+    struct wproxy_d *wproxy;
+
 // #todo
 // Other process can't take some actions on this thread
 // if it is protected. 

@@ -37,5 +37,7 @@ void wink_initialize_video(void);
 void wink_initialize_virtual_consoles(void);
 void wink_set_cursor(unsigned long x, unsigned long y);
 
+void wink_use_windowing_system(void);
+
 #endif  
 

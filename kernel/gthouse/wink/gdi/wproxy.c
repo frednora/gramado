@@ -5,25 +5,112 @@
 
 #include <kernel.h>
 
-static int __wproxy_draw0(struct wproxy_d *wproxy, int back_or_front);
+
+// List of window proxy objects.
+struct wproxy_d *wproxy_head;
+
+// Add the window proxy to the list of window proxy objects.
+static int __wproxy_add_to_list(struct wproxy_d *wproxy);
+static int __wproxy_drawframe0(struct wproxy_d *wproxy, int back_or_front);
 
 
 // ==============================
 
-// Create a window proxy object.
+// Add the window proxy to the list of window proxy objects.
+static int __wproxy_add_to_list(struct wproxy_d *wproxy)
+{
+    if ((void *) wproxy == NULL){
+        goto fail;
+    }
+    if (wproxy->used != TRUE || wproxy->magic != 1234){
+        goto fail;
+    }
+
+    struct wproxy_d *w;
+
+// Empty list
+    w = (struct wproxy_d *) wproxy_head;
+    if (w == NULL)
+    {
+        wproxy_head = wproxy;
+        wproxy_head->next = NULL;
+        return (int) 0;
+    }
+
+    while (1)
+    {
+        if (w == NULL)
+            break;
+
+        if (w != NULL)
+        {
+            if (w->next == NULL)
+            {
+                w->next = wproxy;
+                wproxy->next = NULL;
+                return (int) 0;
+            }
+            w = w->next;
+        }
+    };
+
+fail:
+    return (int) -1;
+};
+
+// Create a window proxy object and add it into the list.
 struct wproxy_d *wproxyCreateObject(void)
 {
     struct wproxy_d *wproxy;
+    int status = -1;
 
     wproxy = (struct wproxy_d *) kmalloc (sizeof(struct wproxy_d));
     if ((void *) wproxy == NULL){
-        return NULL;
+        goto fail;
     }
-
     wproxy->used = TRUE;
     wproxy->magic = 1234;
 
+    status = (int) __wproxy_add_to_list(wproxy);
+    if (status != 0){
+        goto fail;
+    }
     return (struct wproxy_d *) wproxy;
+fail:
+    return NULL;
+}
+
+// Create a window proxy object and initialize it with the given parameters.
+struct wproxy_d *wproxy_create0(
+    unsigned long l, 
+    unsigned long t, 
+    unsigned long w, 
+    unsigned long h, 
+    unsigned int color)
+{
+    struct wproxy_d *wproxy;
+
+    wproxy = wproxyCreateObject();
+    if ((void *) wproxy == NULL){
+        goto fail;
+    }
+
+// Frame/chrome
+    wproxy->l = l;
+    wproxy->t = t;
+    wproxy->w = w;
+    wproxy->h = h;
+    wproxy->color = color;
+
+// Client area
+    wproxy->ca_l = l;
+    wproxy->ca_t = t;
+    wproxy->ca_w = w;
+    wproxy->ca_h = h;
+
+    return (struct wproxy_d *) wproxy;
+fail:
+    return NULL;
 }
 
 // #test:
@@ -67,7 +154,7 @@ fail:
 
 
 // Worker: Draw the window using the wproxy structure.
-static int __wproxy_draw0(struct wproxy_d *wproxy, int back_or_front)
+static int __wproxy_drawframe0(struct wproxy_d *wproxy, int back_or_front)
 {
     if ((void *) wproxy == NULL){
         goto fail;
@@ -110,7 +197,7 @@ fail:
 }
 
 // Draw
-int wproxy_draw(struct wproxy_d *wproxy, int back_or_front)
+int wproxy_drawframe(struct wproxy_d *wproxy, int back_or_front)
 {
     if ((void *) wproxy == NULL){
         goto fail;
@@ -118,19 +205,111 @@ int wproxy_draw(struct wproxy_d *wproxy, int back_or_front)
     if (wproxy->used != TRUE || wproxy->magic != 1234){
         goto fail;
     }
-    return (int) __wproxy_draw0(wproxy, back_or_front);    
+    return (int) __wproxy_drawframe0(wproxy, back_or_front);    
 fail:
     return (int) -1;
 }
 
 // Redraw
-int wproxy_redraw(struct wproxy_d *wproxy, int back_or_front)
+int wproxy_redrawframe(struct wproxy_d *wproxy, int back_or_front)
 {
     if ((void *) wproxy == NULL){
         goto fail;
     }
-    return (int) wproxy_draw(wproxy, back_or_front);
+    return (int) wproxy_drawframe(wproxy, back_or_front);
 fail:
     return (int) -1;
+}
+
+// Is it inside the frame?
+int wproxy_is_inside_frame(struct wproxy_d *wproxy, unsigned long x, unsigned long y)
+{
+    if ((void *) wproxy == NULL){
+        goto fail;
+    }
+    if (wproxy->used != TRUE || wproxy->magic != 1234){
+        goto fail;
+    }
+
+    // Is it inside the frame?
+    if ( x >= wproxy->l && 
+         x <= (wproxy->l + wproxy->w) &&
+         y >= wproxy->t &&
+         y <= (wproxy->t + wproxy->h) )
+    {
+        return TRUE;
+    }
+fail:
+    return FALSE;
+}
+
+// Is it inside the client area?
+int 
+wproxy_is_inside_client_area(
+    struct wproxy_d *wproxy, 
+    unsigned long x, 
+    unsigned long y )
+{
+    if ((void *) wproxy == NULL){
+        goto fail;
+    }
+    if (wproxy->used != TRUE || wproxy->magic != 1234){
+        goto fail;
+    }
+
+    // Is it inside the client area?
+    if ( x >= wproxy->ca_l && 
+         x <= (wproxy->ca_l + wproxy->ca_w) &&
+         y >= wproxy->ca_t &&
+         y <= (wproxy->ca_t + wproxy->ca_h) )
+    {
+        return TRUE;
+    }
+    return FALSE;
+fail:
+    return FALSE;
+}
+
+void wproxy_test0(unsigned long x, unsigned long y)
+{
+    struct wproxy_d *wproxy;
+
+    wproxy = 
+    (struct wproxy_d *) wproxy_create0(
+        x, y, 40, 40, COLOR_PINK );
+
+    if ((void *) wproxy == NULL)
+        return;
+
+    // Draw it in the front buffer
+    wproxy_drawframe(wproxy, 2);
+}
+
+// #test
+// Lets use the information in the fg thread structure
+// to draw a rectangle.
+void wproxy_test2(unsigned long x, unsigned long y)
+{
+    struct thread_d *t;
+
+    if (foreground_thread < 0)
+        return;
+    if (foreground_thread >= THREAD_COUNT_MAX)
+        return;
+    t = (struct thread_d *) threadList[foreground_thread];
+    if ((void *) t == NULL)
+        return;
+    if (t->used != TRUE || t->magic != 1234)
+        return;
+
+    struct wproxy_d *wproxy;
+    wproxy = (struct wproxy_d *) t->wproxy;
+    if ((void *) wproxy == NULL)
+        return;
+    if (wproxy->used != TRUE || wproxy->magic != 1234)
+        return;
+
+    // draw it in the front buffer
+    wproxy_drawframe(wproxy, 2);
 }
 

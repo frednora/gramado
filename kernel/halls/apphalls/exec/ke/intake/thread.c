@@ -165,6 +165,15 @@ static void __ps_initialize_thread_common_elements(struct thread_d *t)
     t->signal = 0;
     t->umask = 0;
 
+
+
+// ------------------
+// #test: 
+// wproxy support
+    // t->wproxy = NULL;
+    //t->wproxy = (struct wproxy_d *) wproxyCreateObject();
+    t->wproxy = (struct wproxy_d *) wproxy_create0(0, 0, 100, 100, COLOR_BLUE);
+
 // ------------------
     // More ?
 }

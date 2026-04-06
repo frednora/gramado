@@ -1771,6 +1771,16 @@ void *sci0 (
         return (void *) sys_sleep_if_socket_is_empty(arg2);
     }
 
+
+// 940 - Use wink windowing system
+// See: wink.c
+    if (number == 940)
+    {
+        wink_use_windowing_system();
+        return NULL;
+    }
+    // ...
+
 // get screen window.
 // #todo. checar validade
     //if ( number == 955 ){  return (void *) gui->screen;  } 

@@ -201,6 +201,7 @@ powerProcedure(
         break;
 
     case GWS_MouseClicked:
+        //printf("GWS_MouseClicked:\n");
         /*    
         printf("GWS_MouseClicked:\n");
         //printf("MouseClicked event_window = %d\n", event_window);
@@ -231,6 +232,10 @@ powerProcedure(
         //printf("GWS_MouseClicked: done\n");
         break;
 
+    case MSG_MOUSERELEASED:
+        printf("MSG_MOUSERELEASED:\n");
+        break;
+
     case MSG_CLOSE:
         gws_destroy_window(fd, restart_button);
         gws_destroy_window(fd, shutdown_button);
@@ -238,6 +243,7 @@ powerProcedure(
         printf("PowerApp: Window closed\n");
         exit(0);
         break;
+
 
     // Unknown event
     default:

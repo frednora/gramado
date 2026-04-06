@@ -526,14 +526,11 @@ static int input_compare_string(void)
         do_cli();
         goto exit_cmp;
     }
-
     if ( strncmp(prompt,"sti",3) == 0 ){
         do_sti();
         goto exit_cmp;
     }
-
-// hlt:
-// gp fault
+    // hlt: (Generate gp fault)
     if ( strncmp(prompt,"hlt",3) == 0 ){
         do_hlt();
         goto exit_cmp;
@@ -589,9 +586,7 @@ static int input_compare_string(void)
     {
         //#test
         InstanceID = rtl_instance_id();
-
-        //printf ("INIT.BIN: This is the first user application\n");
-        printf ("INIT.BIN: This is the first user application. instance={%x}\n",
+        printf ("init: This is the first user application. instance={%x}\n",
             InstanceID );
 
         goto exit_cmp;
@@ -615,7 +610,21 @@ static int input_compare_string(void)
     }
 
 //==============================
-// Window Server:
+// wink: Windowing system in kernel side.
+
+    if (strncmp(prompt,"wink",4) == 0 )
+    {
+        printf("wink: ~\n");
+        rtl_use_wink_windowing_system();
+        // Calling the kernel to make the full ps2 initialization.
+        // #todo: Create a wrapper fot that syscall.
+        // #todo: Allow only the ws pid to make this call.
+        sc82 ( 22011, 0, 0, 0 );
+        goto exit_cmp;
+    }
+
+//==============================
+// Windowing System: (display server)
 
 // Initialize the display server.
     if ( strncmp(prompt,"ws",2) == 0 ){

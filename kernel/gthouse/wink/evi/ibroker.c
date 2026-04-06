@@ -59,6 +59,9 @@ struct input_targets_d  InputTargets;
 
 struct input_broker_info_d  InputBrokerInfo;
 
+static unsigned long mouse_x = 0;
+static unsigned long mouse_y = 0;
+
 //
 // ================================================
 //
@@ -3692,6 +3695,7 @@ wmMouseEvent(
     if (system_state != SYSTEM_RUNNING)
         goto fail;
 
+
 // Parameters:
     if (event_id < 0){
         goto fail;
@@ -3729,6 +3733,8 @@ wmMouseEvent(
         if (long1 >= deviceWidth) { long1 = (deviceWidth-1);  }
         if (long2 >= deviceHeight){ long2 = (deviceHeight-1); }
 
+        mouse_x = (unsigned long) long1;
+        mouse_y = (unsigned long) long2;
 
         // #test
         // Displaying the mouse pointer using 
@@ -3738,6 +3744,7 @@ wmMouseEvent(
         {
             bldisp_update_mouse_position(long1, long2);
             bldisp_display_mouse_cursor();
+            return 0;
         }
 
         // #test
@@ -3772,8 +3779,32 @@ wmMouseEvent(
     if ( event_id == MSG_MOUSEPRESSED || 
          event_id == MSG_MOUSERELEASED )
     {
-       ibroker_post_message_to_ds( event_id, button_number, button_number );
-       return 0;
+        if (use_kernelside_mouse_drawing == TRUE)
+        {
+
+            if (event_id == MSG_MOUSERELEASED)
+            {
+                // #test: Create a window and draw it into the front buffer.
+                // wproxy_test0(mouse_x, mouse_y);
+                wproxy_test2(mouse_x, mouse_y);
+
+                // #test: Send mouse button events to the foreground thread.
+                // TARGET: GUI APP
+                // Sending it to the fg thread. Actually we gotta 
+                // send it to the thread associated
+                // with the window that is under the mouse pointer.
+                ibroker_post_message_to_fg_thread(
+                    event_id, // Event_Message, 
+                    button_number, // Event_LongVK, 
+                    button_number // Event_LongScanCode 
+                );
+            }
+
+            return 0;
+        }
+
+        ibroker_post_message_to_ds( event_id, button_number, button_number );
+        return 0;
     }
 
 done:

@@ -1068,7 +1068,6 @@ void comp_initialize_mouse(void)
     unsigned long w = gws_get_device_width();
     unsigned long h = gws_get_device_height();
 
-
 // #test
 // Initializing the cursor clipping region with the root window.
     if ((void*) __root_window != NULL){

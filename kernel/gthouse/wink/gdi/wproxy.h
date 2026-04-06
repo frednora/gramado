@@ -27,14 +27,30 @@ struct wproxy_d
     int used;
     int magic;
 
+// This is the thread id of the thread that owns the window.
+// This is the target thread for sending messages when the 
+// hit-test is successful.
+    tid_t tid;
+
 // The same id used in the display server. 
 // It is used to identify the window in the display server.
     int wid;
 
+//  Window frame
     unsigned long l;
     unsigned long t;
     unsigned long w;
     unsigned long h;
+
+// Client area
+// This is the client area of a window.
+// If we're not inside a client area, 
+// we send message to the display server to do the hit-test.
+// This way the server check agains the frame/chrome area.
+    unsigned long ca_l;
+    unsigned long ca_t;
+    unsigned long ca_w;
+    unsigned long ca_h;
 
     unsigned int color;
 
@@ -54,14 +70,42 @@ struct wproxy_d
     // ...
 };
 
+extern struct wproxy_d *wproxy_head;  // List of window proxy objects.
+
 
 // ======================
 
+
 struct wproxy_d *wproxyCreateObject(void);
+
+
+struct wproxy_d *wproxy_create0(
+    unsigned long l, 
+    unsigned long t, 
+    unsigned long w, 
+    unsigned long h, 
+    unsigned int color);
+
+
 char *wproxy_create_data_buffer(struct wproxy_d *wproxy, int size);
 char *wproxy_get_data_buffer(struct wproxy_d *wproxy);
-int wproxy_draw(struct wproxy_d *wproxy, int back_or_front);
-int wproxy_redraw(struct wproxy_d *wproxy, int back_or_front);
+
+// Draw frame
+int wproxy_drawframe(struct wproxy_d *wproxy, int back_or_front);
+int wproxy_redrawframe(struct wproxy_d *wproxy, int back_or_front);
+
+// Is it inside the frame?
+int wproxy_is_inside_frame(struct wproxy_d *wproxy, unsigned long x, unsigned long y);
+
+// Is it inside the client area?
+int 
+wproxy_is_inside_client_area(
+    struct wproxy_d *wproxy, 
+    unsigned long x, 
+    unsigned long y );
+
+void wproxy_test0(unsigned long x, unsigned long y);
+void wproxy_test2(unsigned long x, unsigned long y);
 
 #endif    
 

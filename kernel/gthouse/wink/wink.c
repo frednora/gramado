@@ -251,3 +251,8 @@ void wink_set_cursor(unsigned long x, unsigned long y)
     set_up_cursor((unsigned long) x, (unsigned long) y);
 }
 
+void wink_use_windowing_system(void)
+{
+    ibroker_use_kernelside_mouse_drawing(TRUE);
+}
+
