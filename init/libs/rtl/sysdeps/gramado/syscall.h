@@ -22,7 +22,13 @@
 #define	SYSTEMCALL_BUFFER_DRAWCHAR      7
 #define	SYSTEMCALL_BUFFER_DRAWLINE      8
 #define	SYSTEMCALL_BUFFER_DRAWRECT      9
-#define	SYSTEMCALL_BUFFER_CREATEWINDOW  10
+
+// #deprecated
+//#define	SYSTEMCALL_BUFFER_CREATEWINDOW  10
+
+// 10 - Refresh rectangle
+#define	SYSTEMCALL_REFRESH_RECTANGLE  10
+
 #define	SYSTEMCALL_REFRESHSCREEN        11
 
 // Network (reserved)
@@ -101,10 +107,15 @@
 // Client area
 #define	SYSTEMCALL_SET_CLIENT_AREA    46
 
-// Create Window support
-#define	SYSTEMCALL_CREATEWINDOW0  47 // envia argumentos de controle. 
-#define	SYSTEMCALL_CREATEWINDOW1  48 // envia argumentos de posicionamento.
-#define	SYSTEMCALL_CREATEWINDOW2  49 // envia argumentos de dimensões.
+// (wproxy)
+#define	SYSTEMCALL_CREATE_WPROXY 47
+#define	SYSTEMCALL_UPDATE_WPROXY_PARAMETERS 48 
+
+// #deprecated
+// #define	SYSTEMCALL_CREATEWINDOW2  49 
+
+// Show system info
+#define	SYSTEMCALL_SHOWSYSTEMINFO  49 
 
 //
 // (50~59) Window suppot, manipulação de janelas.

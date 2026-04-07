@@ -403,10 +403,10 @@ void *sci0 (
 
 // 10 =  Refresh rectangle
 // Region?
+// debug_print("sci0: [10]\n");
+// IN: l,t,w,h
     if (number == 10)
     {
-        // debug_print("sci0: [10]\n");
-        // IN: l,t,w,h
         refresh_rectangle ( 
             (unsigned long) message_address[0], 
             (unsigned long) message_address[1],
@@ -418,9 +418,11 @@ void *sci0 (
 // 11: 
 // Schedule to flush the backbuffer into the LFB
 // using kernel services.
+// #todo: We can do it right here.
     if (number == SCI0_REFRESHSCREEN)
     {
-        invalidate_screen();
+        //invalidate_screen();
+        refresh_screen();
         return NULL;
     }
 
@@ -528,8 +530,34 @@ void *sci0 (
 
 // 45 - free
 // 46 - free
-// 47 - free
-// 48 - free
+
+// 47 - Create wproxy support
+// Create a wproxy.
+// #ps: Not associated with a thread.
+    if (number == 47)
+    {
+        unsigned int wproxy_Color = 
+            (unsigned int) (message_address[4] & 0xFFFFFF); 
+        
+        // Create a wproxy.
+        // #ps: Not associated with a thread.
+        wproxy_create0(
+            (unsigned long) message_address[0],
+            (unsigned long) message_address[1],
+            (unsigned long) message_address[2],
+            (unsigned long) message_address[3],
+            (unsigned int) wproxy_Color );
+
+        return NULL;
+    }
+
+// 48 - Change parameters for the wproxy associated with the thread.
+// Update the parameters for the wproxy associated with this thread.
+    if (number == 48)
+    {
+        // #todo: This is a work in progress.
+        return NULL;
+    }
 
 // 49 - Show system info
 // See: sys.c
@@ -884,8 +912,13 @@ void *sci0 (
 
 // 128~129: free
 
-// --------
-// 130~131: free
+
+// 130 - Draw text
+    if (number == 130){
+        return NULL;
+    }
+
+// 131: free
 
 // 132 - Draw a char
 // Desenha um caractere e pinta o pano de fundo.

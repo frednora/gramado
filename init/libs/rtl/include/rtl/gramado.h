@@ -315,6 +315,23 @@ rtl_draw_text (
     unsigned long color, 
     char *string );
 
+int 
+rtl_create_wproxy ( 
+    unsigned long left, 
+    unsigned long top, 
+    unsigned long width, 
+    unsigned long height, 
+    unsigned long color );
+
+// Update the parameters for the wproxy associated with this thread.
+int 
+rtl_update_wproxy_parameters ( 
+    unsigned long left, 
+    unsigned long top, 
+    unsigned long width, 
+    unsigned long height, 
+    unsigned long color );
+
 char *rtl_get_next_token_in_a_string(
     char *buf,           // Input string pointer. 
     char *w,             // Output token string pointer.

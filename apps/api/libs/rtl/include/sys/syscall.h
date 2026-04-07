@@ -9,12 +9,12 @@
 
 
 #ifdef __GRAMADO
-#include <sysdeps/gramado/syscall.h>
+#include <osrtl/gramado/syscall.h>
 #endif
 
 
 #ifdef __LINUX
-#include <sysdeps/linux/syscall.h>
+#include <osrtl/linux/syscall.h>
 #endif
 
 

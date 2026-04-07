@@ -517,7 +517,6 @@ unsigned long rtl_to_ulong (long ch)
 // Maybe a boolian 'int' for TRUE or FALSE.
 unsigned long rtl_get_system_message(unsigned long message_buffer)
 {
-// (Input port).
 // #todo: Handle the return value.
     //unsigned long res=0;
     if (message_buffer == 0){
@@ -1077,34 +1076,89 @@ rtl_draw_text (
     msg[7] = (unsigned long) 0; 
 
     return (int) gramado_system_call ( 
-                     SYSTEMCALL_DRAWTEXT, 
+                    SYSTEMCALL_DRAWTEXT, 
                     (unsigned long) &msg[0], 
                     (unsigned long) &msg[0], 
                     (unsigned long) &msg[0] );
 }
 
-/*
- * rtl_show_backbuffer:
- *     Refresh Screen.
- *     Passa o conteúdo do backbuffer para o lfb. 
- */
-void rtl_show_backbuffer (void)
+// 
+int 
+rtl_create_wproxy ( 
+    unsigned long left, 
+    unsigned long top, 
+    unsigned long width, 
+    unsigned long height, 
+    unsigned long color )
 {
+    unsigned long msg[8];
 
+// #todo:
+// This is a work in progress. (We need more parameters)
+    msg[0] = (unsigned long) left;
+    msg[1] = (unsigned long) top;
+    msg[2] = (unsigned long) width;
+    msg[3] = (unsigned long) height;
+    msg[4] = (unsigned long) color;
+    msg[5] = (unsigned long) 0;
+    msg[6] = (unsigned long) 0;
+    msg[7] = (unsigned long) 0; 
+
+    // 47 - SYSTEMCALL_CREATE_WPROXY
+    return (int) gramado_system_call ( 
+                    SYSTEMCALL_CREATE_WPROXY, 
+                    (unsigned long) &msg[0], 
+                    (unsigned long) &msg[0], 
+                    (unsigned long) &msg[0] );
+}
+
+// Update the parameters for the wproxy associated with this thread.
+int 
+rtl_update_wproxy_parameters ( 
+    unsigned long left, 
+    unsigned long top, 
+    unsigned long width, 
+    unsigned long height, 
+    unsigned long color )
+{
+    unsigned long msg[8];
+
+// #todo:
+// This is a work in progress. (We need more parameters)
+    msg[0] = (unsigned long) left;
+    msg[1] = (unsigned long) top;
+    msg[2] = (unsigned long) width;
+    msg[3] = (unsigned long) height;
+    msg[4] = (unsigned long) color;
+    msg[5] = (unsigned long) 0;
+    msg[6] = (unsigned long) 0;
+    msg[7] = (unsigned long) 0; 
+
+    // 47 - SYSTEMCALL_UPDATE_WPROXY_PARAMETERS
+    return (int) gramado_system_call ( 
+                    SYSTEMCALL_UPDATE_WPROXY_PARAMETERS, 
+                    (unsigned long) &msg[0], 
+                    (unsigned long) &msg[0], 
+                    (unsigned long) &msg[0] );
+}
+
+
+
+
+
+// Flush backbuffer into the LFB.
 // #todo
 // trocar o nome dessa systemcall.
 // refresh screen será associado à refresh all windows.
-    
+
+void rtl_show_backbuffer (void)
+{
+    // #bugbug ?    
     gramado_system_call ( SYSTEMCALL_REFRESHSCREEN, 0, 0, 0 );
 }
 
 
-/*
- * rtl_get_system_metrics:
- *     Obtem informações sobre dimensões e posicionamentos. 
- *     #importante
- */
-
+// Get system metrics
 unsigned long rtl_get_system_metrics (int index)
 {
     //if (index<0){
