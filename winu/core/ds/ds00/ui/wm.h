@@ -126,7 +126,11 @@ struct gws_windowmanager_d
 
 // Info for the areas.
 // #bugbug: We are using a container as working area dimensions.
-    struct wa_info_d     wa_info;
+
+// The working area
+    struct wa_info_d  wa_info;
+
+// #bugbug: What is this?
     struct swamp_info_d  swamp_info;
 
     struct gws_wm_config_d  Config;

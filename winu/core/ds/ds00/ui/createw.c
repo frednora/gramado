@@ -1645,9 +1645,6 @@ void *doCreateWindow (
     window->window_class.procedure_is_server_side = 0;
     window->window_class.procedure = 0;
 
-// Gravity
-    window->gravity = DefaultGravity;
-
     window->type = (unsigned long) type;
 
 // Style: design-time identity.
@@ -1671,6 +1668,20 @@ void *doCreateWindow (
 // Status: interaction/activation.
 // Indicates focus, active/inactive, and user engagement.
     window->status = (int) (status & 0xFFFFFFFF);
+
+// Gravity
+    window->gravity = DefaultGravity;
+
+
+// #test
+// Confituration for the Non-Client Area
+    window->ConfigNonClientArea.useHitTesting = TRUE;
+    window->ConfigNonClientArea.allowDrawing = TRUE;
+
+// #test
+// Confituration for the Client Area
+    window->ConfigClientArea.useHitTesting = TRUE;
+    window->ConfigClientArea.allowDrawing = TRUE;
 
 // -------------------------------------------------------------
 // #bugbug

@@ -446,6 +446,32 @@ struct border_info_d
     int border_style;
 };
 
+// #test
+// Server‑centric defaults: 
+// If useHitTesting = TRUE and allowDrawing = TRUE, 
+// the display server continues to manage drawing and hit‑testing for that area.
+// Client‑centric overrides: 
+// If either flag is set to FALSE, 
+// the server backs off, and the client library (or the app itself) 
+// takes over responsibility.
+
+// Configuration for the non-client area
+struct ConfigNonClientArea_d 
+{
+    int useHitTesting;   // TRUE/FALSE
+    int allowDrawing;    // toggle server chrome drawing
+    // future: flags for resizing, caption buttons, etc.
+};
+
+// Configuration for the client area
+struct ConfigClientArea_d 
+{
+    int useHitTesting;   // TRUE/FALSE
+    int allowDrawing;    // maybe toggle server-side drawing
+    // future: flags for input filtering, gestures, etc.
+};
+
+
 // Server-side window object
 struct gws_window_d 
 {
@@ -506,6 +532,12 @@ struct gws_window_d
 // The input status.
 // If the window is disable, it can't receive input from keyboard or mouse.
     int enabled;
+
+// Configuration for the non-client area
+    struct ConfigNonClientArea_d  ConfigNonClientArea; 
+
+// Configuration for the client area
+    struct ConfigClientArea_d  ConfigClientArea;
 
     // In the window stack we have two major components:
     // + The frame (top frame and bottom frame).
