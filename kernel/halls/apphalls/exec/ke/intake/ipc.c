@@ -274,6 +274,12 @@ ipc_post_message_to_tid (
         set_ev_responder(t);
     }
 
+    if (MessageCode == MSG_MOUSEMOVE)
+    {
+        t->quantum = QUANTUM_MAX * 2;
+        t->state = READY;
+    }
+
 // ======================================================
 // Only coalesce for mouse move messages
 // Prevents queue flooding with excessive mouse move events.
@@ -308,6 +314,7 @@ ipc_post_message_to_tid (
             // ...
             last_msg->sender_tid   = (tid_t) src_tid; 
             last_msg->receiver_tid = (tid_t) dst_tid;
+
             return 0; // Do NOT advance MsgQueueTail, since we didn't add a new message
         }
     }

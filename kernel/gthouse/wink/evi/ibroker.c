@@ -3744,6 +3744,12 @@ wmMouseEvent(
         {
             bldisp_update_mouse_position(long1, long2);
             bldisp_display_mouse_cursor();
+
+            // #test
+            // Sending mouse move to the app
+            ibroker_post_message_to_fg_thread(
+                event_id, (unsigned long) long1, (unsigned long) long2 );
+
             return 0;
         }
 
@@ -3756,6 +3762,11 @@ wmMouseEvent(
 
         ibroker_post_message_to_ds(
             event_id, (unsigned long) long1, (unsigned long) long2 );
+
+        // #test
+        // Sending mouse move to the app
+        //ibroker_post_message_to_fg_thread(
+            //event_id, (unsigned long) long1, (unsigned long) long2 );
 
         // #test
         // Improve the performance of the display server.

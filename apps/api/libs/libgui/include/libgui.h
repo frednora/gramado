@@ -173,6 +173,19 @@ libgui_backbuffer_draw_rectangle0(
     unsigned long rop_flags,
     int use_kgws );
 
+void 
+libgui_frontbuffer_draw_rectangle0 ( 
+    unsigned long x, 
+    unsigned long y, 
+    unsigned long width, 
+    unsigned long height, 
+    unsigned int color,
+    int fill,
+    unsigned long rop_flags );
+
+void libgui_set_mouse_pointer(unsigned long x, unsigned long y);
+void libgui_update_mouse_pointer(void);
+
 //
 // #
 // INITIALIZATION 

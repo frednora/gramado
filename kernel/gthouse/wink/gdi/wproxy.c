@@ -309,6 +309,9 @@ void wproxy_test2(unsigned long x, unsigned long y)
     if (wproxy->used != TRUE || wproxy->magic != 1234)
         return;
 
+    // #ps: it already has a color defined.
+    // wproxy->color = COLOR_WHITE;
+
     // draw it in the front buffer
     wproxy_drawframe(wproxy, 2);
 }

@@ -1324,8 +1324,6 @@ int DDINIT_bldisp(void)
     __new_mouse_x=0;
     __new_mouse_y=0;
 
-
-    
 // #test
 // Initialize structure
     bldisp_info.used = TRUE;
