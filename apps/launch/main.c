@@ -601,6 +601,8 @@ int main(int argc, char *argv[])
 // #bugbug: Valid only if the timer fires 1000 times a second.
 // It gives the opportunities for other threads to run a bit more.
 
+    int nSysMsg = 0;
+
     isTimeToQuit =  FALSE;
 
     while (1){
@@ -615,6 +617,7 @@ int main(int argc, char *argv[])
         pump(client_fd,main_window);
 
         // 2. Pump events from Input Broker (system events)
+        for (nSysMsg=0; nSysMsg<32; nSysMsg++){
         if (rtl_get_event() == TRUE)
         {
             launchProcedure (
@@ -626,6 +629,7 @@ int main(int argc, char *argv[])
             );
             RTLEventBuffer[1] = 0; // clear after dispatch
         }
+        };
 
         end_jiffie = rtl_jiffies();
         // ----

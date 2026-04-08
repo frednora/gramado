@@ -1193,6 +1193,8 @@ int editor_initialize(int argc, char *argv[])
     }
 */
 
+    int nSysMsg = 0;
+
     while (1)
     {
         if (isTimeToQuit == TRUE)
@@ -1202,6 +1204,7 @@ int editor_initialize(int argc, char *argv[])
         pump(client_fd, main_window);
 
         // 2. Pump events from Input Broker (system events)
+        for (nSysMsg=0; nSysMsg<32; nSysMsg++){
         if (rtl_get_event() == TRUE)
         {
             editorProcedure(
@@ -1213,6 +1216,7 @@ int editor_initialize(int argc, char *argv[])
             );
             RTLEventBuffer[1] = 0;
         }
+        };
     };
 
 /*

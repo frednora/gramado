@@ -4511,8 +4511,7 @@ static int ServerLoop(int client_index)
     // #ps: We will sleep if a round was less than 16 ms, (60fps).
     // The thread wait until complete the 16 ms.
     // #bugbug: Valid only if the timer fires 1000 times a second.
-    // It gives the opportunities for other threads to run a
-    // a bit more.
+    // It gives the opportunities for other threads to run a bit more.
     while (running == TRUE){
         start_jiffie = (unsigned long) rtl_jiffies();
         if (IsTimeToQuit == TRUE){ break; };

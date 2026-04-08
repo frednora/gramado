@@ -755,7 +755,15 @@ tbProcedure(
                 //gws_async_command(fd,30,0,0);
             break;
 
+        // #test
+        case MSG_MOUSERELEASED:
+            printf("taskbar: MSG_MOUSERELEASED:\n");
+            break;
 
+        // #test
+        case MSG_MOUSEMOVE:
+            printf("%d %d\n", long1, long2);
+            break;
 
         //case GWS_ServerNotifyApp:
             //break;
@@ -1648,6 +1656,8 @@ int main(int argc, char *argv[])
 
     // isTimeToQuit =  FALSE;
 
+    int nSysMsg = 0;
+
     while (1){
         if (isTimeToQuit == TRUE)
             break;
@@ -1655,20 +1665,26 @@ int main(int argc, char *argv[])
         start_jiffie = (unsigned long) rtl_jiffies();
 
         // 1. Pump events from Display Server
+        // #bugbug:
+        // This pump is very slow, affecting the responsivity
+        // for the other pump that gets events from the system.
         pump(client_fd,main_window);
 
         // 2. Pump events from Input Broker (system events)
-        if (rtl_get_event() == TRUE)
+        for (nSysMsg=0; nSysMsg<32; nSysMsg++)
         {
-            tbProcedure(
-                client_fd,
-                (int) RTLEventBuffer[0],   // window id
-                (int) RTLEventBuffer[1],   // event type (MSG_SYSKEYDOWN, MSG_SYSKEYUP, etc.)
-                (unsigned long) RTLEventBuffer[2], // VK code
-                (unsigned long) RTLEventBuffer[3]  // scancode
-            );
-            RTLEventBuffer[1] = 0; // clear after dispatch
-        }
+            if (rtl_get_event() == TRUE)
+            {
+                tbProcedure(
+                    client_fd,
+                    (int) RTLEventBuffer[0],   // window id
+                    (int) RTLEventBuffer[1],   // event type (MSG_SYSKEYDOWN, MSG_SYSKEYUP, etc.)
+                    (unsigned long) RTLEventBuffer[2], // VK code
+                    (unsigned long) RTLEventBuffer[3]  // scancode
+                    );
+                RTLEventBuffer[1] = 0; // clear after dispatch
+            };
+        };
 
         end_jiffie = rtl_jiffies();
 

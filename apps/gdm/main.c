@@ -534,12 +534,15 @@ static void __event_loop(int fd)
     }
 */
 
+    int nSysMsg = 0;
+
     while (1)
     {
         // 1. Pump DS events
         pump(fd);
 
         // 2. Pump broker events (system events)
+        for (nSysMsg=0; nSysMsg<32; nSysMsg++){
         if (rtl_get_event() == TRUE)
         {
             gdmProcedure(
@@ -551,6 +554,7 @@ static void __event_loop(int fd)
             );
             RTLEventBuffer[1] = 0;
         }
+        };
     };
 }
 

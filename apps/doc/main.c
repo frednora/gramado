@@ -596,6 +596,8 @@ static int do_event_loop(int fd)
 // Call the local window procedure 
 // if a valid event was found.
 
+    int nSysMsg = 0;
+
     while (1)
     {
         //if (isTimeToQuit == TRUE)
@@ -616,6 +618,7 @@ static int do_event_loop(int fd)
         }
 
         // 2. Pump events from Input Broker (system events)
+        for (nSysMsg=0; nSysMsg<32; nSysMsg++){
         if (rtl_get_event() == TRUE)
         {
             docvProcedure(
@@ -627,6 +630,7 @@ static int do_event_loop(int fd)
             );
             RTLEventBuffer[1] = 0; // clear after dispatch
         }
+        };
     };
 
 // Exit application withou error.

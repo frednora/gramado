@@ -3076,7 +3076,7 @@ static void __get_system_event(int fd, int wid)
         //return;
     //}
 
-// Get one single event.
+// Get one single event
     if ( rtl_get_event() != TRUE )
         return;
 
@@ -3914,12 +3914,16 @@ int terminal_init(unsigned short flags)
 
     isUsingEmbeddedShell = FALSE;
 
+    int nSysMsg = 0;
+
     char coolCharBuffer[4];
     int ch_read=0;
     while (1){
 
         // 1. Pump events from Input Broker (system events)
-        __get_system_event(client_fd, Terminal.client_window_id);
+        for (nSysMsg=0; nSysMsg<32; nSysMsg++){
+            __get_system_event(client_fd, Terminal.client_window_id);
+        };
 
         // 2. Read what comes from the shell and print it
         coolCharBuffer[0] = 0;

@@ -856,12 +856,14 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                 }
                 // >> FG (2)
                 if (TmpThread->tid == foreground_thread){
+                    //TmpThread->quantum = QUANTUM_SYSTEM_BALANCED;
                     TmpThread->quantum = QUANTUM_NORMAL_BALANCED;
                 }
                 // >> DS (5)
                 if (DisplayServerInfo.initialized == TRUE){
                     if (TmpThread->tid == DisplayServerInfo.tid){
                         TmpThread->quantum = QUANTUM_SYSTEM_BALANCED;
+                        //TmpThread->quantum = QUANTUM_NORMAL_BALANCED;
                     }
                 }
 

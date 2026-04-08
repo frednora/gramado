@@ -844,11 +844,14 @@ int main(int argc, char *argv[])
 // ================================
 // Event loop
 
+    int nSysMsg = 0;
+
     while (1) {
         // 1. Pump events from Display Server
         pump(fd);
 
         // 2. Pump events from Input Broker (system events)
+        for (nSysMsg=0; nSysMsg<32; nSysMsg++){
         if (rtl_get_event() == TRUE) {
             systemProcedure(
                 fd,
@@ -859,7 +862,8 @@ int main(int argc, char *argv[])
             );
             RTLEventBuffer[1] = 0; // clear after dispatch
         }
-    }
+        };
+    };
 
     return EXIT_SUCCESS;
 }
