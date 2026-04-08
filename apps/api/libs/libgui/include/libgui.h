@@ -184,7 +184,6 @@ libgui_frontbuffer_draw_rectangle0 (
     unsigned long rop_flags );
 
 void libgui_set_mouse_pointer(unsigned long x, unsigned long y);
-void libgui_update_mouse_pointer(void);
 
 //
 // #

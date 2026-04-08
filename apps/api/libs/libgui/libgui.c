@@ -4630,28 +4630,6 @@ void libgui_set_mouse_pointer(unsigned long x, unsigned long y)
     __new_mouse_y = y;
 }
 
-void libgui_update_mouse_pointer(void)
-{
-	unsigned long CursorWidth = 8;
-	unsigned long CursorHeight = 8;
-	unsigned int CursorColor = 0x00FFFF;
-
-	// Refresh rectangle
-	libgui_refresh_rectangle_via_kernel(
-		__old_mouse_x, __old_mouse_y, CursorWidth, CursorHeight
-	);
-
-    __old_mouse_x = __new_mouse_x;
-    __old_mouse_y = __new_mouse_y;
-
-	// Draw frontbuffer rectangle
-    libgui_frontbuffer_draw_rectangle0(
-        __new_mouse_x, __new_mouse_y, CursorWidth, CursorHeight,
-        CursorColor,
-        1, 0
-	);
-}
-
 //
 // #
 // INITIALIZATION 

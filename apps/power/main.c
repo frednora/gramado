@@ -239,17 +239,6 @@ powerProcedure(
 
     // #test
     case MSG_MOUSEMOVE:
-        /*
-        libgui_set_mouse_pointer(
-            long1, long2
-        );
-        libgui_update_mouse_pointer();
-        */
-        /*
-        libgui_frontbuffer_putpixel(
-            COLOR_BLUE, long1, long2, 0
-        );
-        */
         // printf("%d %d\n", long1, long2);
         break;
 
