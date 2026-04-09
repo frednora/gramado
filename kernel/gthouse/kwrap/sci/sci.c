@@ -555,7 +555,16 @@ void *sci0 (
 // Update the parameters for the wproxy associated with this thread.
     if (number == 48)
     {
-        // #todo: This is a work in progress.
+        // Update the values for wproxy given the owner's tid.
+        wproxy_set_parameters_given_tid(
+            (tid_t) (message_address[0] & 0xFFFFFFFF),   // tid
+            (unsigned long) message_address[1],
+            (unsigned long) message_address[2],
+            (unsigned long) message_address[3],
+            (unsigned long) message_address[4]
+
+        );
+ 
         return NULL;
     }
 

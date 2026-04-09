@@ -79,6 +79,22 @@ static void update_children(int fd)
     
 // Refresh main window
     gws_refresh_window (fd, main_window);
+
+/*
+// #test
+// Update the wproxy structure that belongs to this thread.
+
+    unsigned long m[8];
+    int mytid = gettid();
+    m[0] = (unsigned long) (mytid & 0xFFFFFFFF);
+    m[1] = wi.left;  //win_x;
+    m[2] = wi.top;  // win_y;
+    m[3] = wi.width;  // win_w;
+    m[4] = wi.height;  // win_h;
+
+    sc80( 48, &m[0], &m[0], &m[0] );
+*/
+
 }
 
 static void set_default_responder(int wid)
@@ -239,7 +255,7 @@ powerProcedure(
 
     // #test
     case MSG_MOUSEMOVE:
-        printf("%d %d\n", long1, long2);
+        //printf("%d %d\n", long1, long2);
         break;
 
     case MSG_CLOSE:
@@ -351,6 +367,19 @@ int main(int argc, char *argv[])
 
     //#debug
     gws_refresh_window(client_fd, main_window);
+
+// #test
+// Update the wproxy structure that belongs to this thread.
+    unsigned long m[8];
+    int mytid = gettid();
+    m[0] = (unsigned long) (mytid & 0xFFFFFFFF);
+    m[1] = win_x;
+    m[2] = win_y;
+    m[3] = win_w;
+    m[4] = win_h;
+    sc80( 48, &m[0], &m[0], &m[0] );
+
+// =============================
 
 // Text
     gws_draw_text(

@@ -1390,7 +1390,7 @@ int main(int argc, char *argv[])
 
     int ShowCube = FALSE;
     int launchChild = TRUE;
-    int useDesktop = TRUE;
+    int useDesktop = FALSE;  //TRUE;
     // ...
     int client_fd = -1;
 

@@ -321,3 +321,46 @@ void wproxy_test2(unsigned long x, unsigned long y)
     wproxy_drawframe(wproxy, 2);
 }
 
+// Update the values for wproxy given the owner's tid.
+void 
+wproxy_set_parameters_given_tid(
+    tid_t tid, 
+    unsigned long l, 
+    unsigned long t,
+    unsigned long w,
+    unsigned long h )
+{
+    struct thread_d *target_thread;
+
+    if (tid < 0)
+        return;
+    if (tid >= THREAD_COUNT_MAX)
+        return;
+    target_thread = (struct thread_d *) threadList[tid];
+    if ((void *) target_thread == NULL)
+        return;
+    if (target_thread->used != TRUE || target_thread->magic != 1234)
+        return;
+
+// Get the wproxy that belongs to the cureground thread
+    struct wproxy_d *wproxy;
+    wproxy = (struct wproxy_d *) target_thread->wproxy;
+    if ((void *) wproxy == NULL)
+        return;
+    if (wproxy->used != TRUE || wproxy->magic != 1234)
+        return;
+
+// Change the color
+    // wproxy->color = COLOR_WHITE;
+
+// Change values
+    wproxy->l = l;
+    wproxy->t = t;
+    wproxy->w = w;
+    wproxy->h = h;
+
+    // #todo: Client area?
+
+}
+
+

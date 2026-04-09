@@ -107,5 +107,14 @@ wproxy_is_inside_client_area(
 void wproxy_test0(unsigned long x, unsigned long y);
 void wproxy_test2(unsigned long x, unsigned long y);
 
+// Update the values for wproxy given the owner's tid.
+void 
+wproxy_set_parameters_given_tid(
+    tid_t tid, 
+    unsigned long l, 
+    unsigned long t,
+    unsigned long w,
+    unsigned long h );
+
 #endif    
 

@@ -60,6 +60,25 @@ static void query_client_area(int fd)
 static void draw_label(int fd, int x, int y, const char *text)
 {
     gws_draw_text(fd, main_window, x, y, COLOR_BLACK, (char *)text);
+
+    // #todo
+    // First we need to include the lingui and initialize it.
+
+/*
+    if (text == NULL) 
+        return;
+
+    // Transform relative coords into client area absolute coords
+    int abs_x = cr_left + x;
+    int abs_y = cr_top  + y;
+
+    // Draw string directly into backbuffer
+    libgui_drawstring(
+        abs_x, 
+        abs_y, 
+        text, COLOR_BLACK, 0xFFFFFF, 0 );
+*/
+
 }
 
 static void draw_value_line(int fd, int x, int y, const char *label, unsigned long value_kb)
@@ -120,7 +139,7 @@ static void update_children(int fd)
     unsigned long buttons_y     = bottom_band_y;
 
     // Redraw parent background
-    gws_redraw_window(fd, main_window, TRUE);
+    // gws_redraw_window(fd, main_window, TRUE);
 
     // Title/label
     draw_label(fd, 20, label_y, "System Memory Status:");
@@ -353,6 +372,18 @@ int main(int argc, char *argv[])
     }
 
     gws_refresh_window(client_fd, main_window);
+
+// #test
+// Update the wproxy structure that belongs to this thread.
+    unsigned long m[8];
+    int mytid = gettid();
+    m[0] = (unsigned long) (mytid & 0xFFFFFFFF);
+    m[1] = win_x;
+    m[2] = win_y;
+    m[3] = win_w;
+    m[4] = win_h;
+    sc80( 48, &m[0], &m[0], &m[0] );
+
 
 // -- CLient Area ---------------------
 
