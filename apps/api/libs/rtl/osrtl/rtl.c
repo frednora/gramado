@@ -2,7 +2,7 @@
  * File: rtl.c 
  * Low level code used by all the rtl files.
  * Environment:
- *     Ring3, Gramado userland/.
+ *     Ring3, Low level routines for client-side GUI applications.
  * Created by Fred Nora.
  */
 
@@ -14,11 +14,11 @@
 // + We have some workers doing some services here in ring 3.
 
 // ----------------------
-// Functions to exetute the syscalls via interrupts.
-//   + 0x80 - gramado_system_call()
+// Functions to exetute the syscalls via interrupts
 //   + 0x80 - sc80()
 //   + 0x81 - sc81()
 //   + 0x82 - sc82()
+//   + 0x83 - sc83()
 
 #include <stdio.h>
 #include <types.h> 
@@ -118,7 +118,6 @@ void *sc83 (
     return (void *) __Ret; 
 }
 
-
 // =============================================================
 
 int 
@@ -135,18 +134,15 @@ rtl_is_either_this_or_that(
 // Get the byte from the given offset.
     p = (str + offset);
     ch = *p;
+
 // Is either?
-    if ( ch == __this || 
-         ch == __that )
+    if ( ch == __this || ch == __that )
     {
         return TRUE;
     }
 
     return FALSE;
 }
-
-
-
 
 
 /*
@@ -206,7 +202,6 @@ int gramado_open_device(char *string)
 }
 */
 
-// Input port.
 int rtl_get_key_state(int vk)
 {
     unsigned long value=0;
@@ -222,7 +217,6 @@ int rtl_get_key_state(int vk)
 
     return (int) (value & 0xFFFFFFFF);
 }
-
 
 // #test
 // 2mb shared memory surface.
@@ -240,8 +234,6 @@ void *rtl_shm_get_2mb_surface(void)
     printf("rtl_shm_get_2mb_surface: Deprecated\n");
     return NULL;
 }
-
-
 
 // ==========================================
 // Exit on fail
@@ -359,7 +351,7 @@ unsigned long rtl_to_ulong (long ch)
 // Maybe a boolian 'int' for TRUE or FALSE.
 unsigned long rtl_get_system_message(unsigned long message_buffer)
 {
-// (Input port).
+
 // #todo: Handle the return value.
     //unsigned long res=0;
     if (message_buffer == 0){
@@ -380,7 +372,7 @@ rtl_get_system_message2(
     int index,
     int restart)
 {
-// (Input port).
+
     if (message_buffer == 0){
         return 0;
     }
@@ -425,8 +417,6 @@ rtl_post_system_message(
     return 0;
 }
 
-//====================================================
-
 void 
 rtl_post_to_tid(
     int tid, 
@@ -434,7 +424,6 @@ rtl_post_to_tid(
     unsigned long long1, 
     unsigned long long2 )
 {
-// Send async hello. 44888.
     unsigned long message_buffer[32];
     int target_tid = tid;
     unsigned long msg = (unsigned long) (msg_code & 0xFFFFFFFF);
@@ -454,17 +443,12 @@ rtl_post_to_tid(
     message_buffer[4] = 0;  // Receiver
     message_buffer[5] = 0;  // Sender
 
-// ---------------------------------
 // Post
 // Add the message into the queue. In tail.
 // IN: tid, message buffer address
     rtl_post_system_message( 
-        (int) target_tid, 
-        (unsigned long) message_buffer );
+        (int) target_tid, (unsigned long) message_buffer );
 }
-
-
-
 
 //=====================================
 
@@ -490,9 +474,7 @@ int xxxScanApplicationQueue(void)
     rtl_exit_critical_section(); 
 
 // Check if it is a valid event.
-
-// No, we do not have an event. 
-// Just clear.
+// No, we do not have an event. Just clear.
     if (RTLEventBuffer[1] == 0)
     {
         for (i=0; i<32; i++){

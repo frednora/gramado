@@ -51,8 +51,14 @@
 //#include <arpa/inet.h>
 #include <sys/socket.h>
 #include <rtl/gramado.h>
+
 // libgws - The client-side library.
 #include <gws.h>
+
+// #test
+// The client-side library
+#include <libgui.h>
+
 
 #include "taskbar.h"
 
@@ -116,7 +122,11 @@ struct taskbar_info_d
     int initialized;
     int inUse;
     int style;
-    // ...
+
+    unsigned long left;
+    unsigned long top;
+    unsigned long width;
+    unsigned long height;
 };
 struct taskbar_info_d  TaskbarInfo;
 
@@ -188,6 +198,10 @@ static int icon_left_limit = 80; // Limit in pixels.
 // Icon list
 int iconList[32];
 
+
+struct icon_info_d MyButton;
+static int __hover_icon_id = -1;
+
 //
 // Strings
 //
@@ -203,7 +217,8 @@ const char *buttom00_label = "<";  // Navigation
 const char *buttom01_label = ">";  // Navigation
 const char *buttom02_label = "[]";  // Purpose?
 
-const char *app1_name = "#terminal.bin";
+//const char *app1_name = "#term00.bin";
+const char *app1_name = "#power.bin";
 const char *app2_name = "#editor.bin";
 
 //static const char *cmdline1 = "gramland -1 -2 -3 --tb";
@@ -221,6 +236,9 @@ static void testASCIITable(int fd,unsigned long w, unsigned long h);
 static void print_ascii_table(int fd);
 
 static int do_launch_app(int app_number);
+
+static void on_button_clicked(int id);
+static int __hit_test_icon(unsigned long mx, unsigned long my);
 
 static int 
 tbProcedure(
@@ -253,7 +271,19 @@ create_bar_icon(
     unsigned long height,
     char *label );
 
+static int 
+draw_bar_button(
+    unsigned long left,
+    unsigned long top,
+    unsigned long width,
+    unsigned long height,
+    const char *label,
+    unsigned int fg_color,
+    unsigned int bg_color,
+    int show );
+
 static int draw_separator(int fd);
+static int draw_separator2(void);
 
 static int create_icons_on_desktop(int fd);
 static int create_desktop_area(int fd);
@@ -640,6 +670,55 @@ updateStatusBar(
    // gws_draw_char ( fd, status_window, (w/30)  * 3, (8), COLOR_YELLOW, second_number );
 }
 
+// Handle click events for components
+static void on_button_clicked(int id)
+{
+    if (id < 0)
+        return;
+
+    switch (id)
+    {
+        case 1:  // MyButton.icon_id
+            printf("Button %d clicked!\n", id);
+            // Example: launch an app
+            do_launch_app(1);
+            break;
+
+        // Future buttons/icons
+        case 2:
+            printf("Button %d clicked!\n", id);
+            do_launch_app(2);
+            break;
+
+        default:
+            printf("Unknown button clicked: %d\n", id);
+            break;
+    }
+}
+
+
+// #todo
+// In the future it will be a function inside the library
+// that check against the standard list of components.
+static int __hit_test_icon(unsigned long mx, unsigned long my) 
+{
+
+// #test
+// For now we only check agains our button.
+    if ( mx >= MyButton.left && 
+         mx <= MyButton.left + MyButton.width &&
+         my >= MyButton.top  && 
+         my <= MyButton.top + MyButton.height )
+    {
+        return (int) MyButton.icon_id;
+    }
+
+    // ...
+
+    return (int) -1;
+}
+
+
 // Process event that came from the server.
 static int 
 tbProcedure(
@@ -660,6 +739,8 @@ tbProcedure(
         goto fail;
     }
 
+    int IconId = -1;
+
 // Process the event.
     switch (event_type){
 
@@ -671,10 +752,21 @@ tbProcedure(
             // We need to update all the clients
             // Create update_clients()
             gws_redraw_window(fd, main_window, TRUE);
-            gws_redraw_window(fd, NavigationInfo.button00_window, TRUE);
-            gws_redraw_window(fd, NavigationInfo.button01_window, TRUE);
+            //gws_redraw_window(fd, NavigationInfo.button00_window, TRUE);
+            //gws_redraw_window(fd, NavigationInfo.button01_window, TRUE);
             //gws_redraw_window(fd, NavigationInfo.button02_window, TRUE);
-            draw_separator(fd);
+            // #test
+            // New component. (using libgui)
+            draw_bar_button(
+                MyButton.left, 
+                MyButton.top,
+                MyButton.width, 
+                MyButton.height, 
+                "App", COLOR_BLACK, COLOR_GRAY, TRUE );
+
+            //draw_separator(fd);
+            draw_separator2();
+
             //#test
             //#todo
             //gws_redraw_window(fd, iconList[0], TRUE);
@@ -758,11 +850,21 @@ tbProcedure(
         // #test
         case MSG_MOUSERELEASED:
             printf("taskbar: MSG_MOUSERELEASED:\n");
+            if (__hover_icon_id == MyButton.icon_id)
+            {
+                printf("Bingo! \n");
+                on_button_clicked(__hover_icon_id);
+            }
             break;
 
         // #test
         case MSG_MOUSEMOVE:
-            printf("%d %d\n", long1, long2);
+            //printf("%d %d\n", long1, long2);
+            IconId = (int) __hit_test_icon(long1, long2);
+            if (IconId > 0)
+                __hover_icon_id = IconId;
+            if (IconId <= 0)
+                __hover_icon_id = -1;
             break;
 
         //case GWS_ServerNotifyApp:
@@ -973,6 +1075,12 @@ static void __initialize_client_list(void)
         clientList[i].icon_info.wid = -1;
         clientList[i].icon_info.icon_id = -1;
         clientList[i].icon_info.state = 0;
+
+        // Icon info
+        clientList[i].icon_info.left = 0;
+        clientList[i].icon_info.top = 0;
+        clientList[i].icon_info.width = 0;
+        clientList[i].icon_info.height = 0;
     };
 }
 
@@ -1025,6 +1133,38 @@ fail:
     return (int) -1;
 }
 
+static int 
+draw_bar_button(
+    unsigned long left,
+    unsigned long top,
+    unsigned long width,
+    unsigned long height,
+    const char *label,
+    unsigned int fg_color,
+    unsigned int bg_color,
+    int show )
+{
+    // Draw the button background
+    libgui_backbuffer_draw_rectangle0(
+        left, top, width, height,
+        bg_color,
+        1, 0, FALSE
+    );
+
+    // Draw the label string inside
+    libgui_drawstring(
+        left + 4, top + 4, label,
+        fg_color, bg_color, 0
+    );
+
+// Refresh to show it
+    if (show == TRUE)
+        libgui_refresh_rectangle_via_kernel(left, top, width, height);
+
+    return 0;
+}
+
+
 // Draw a separator in the navigation bar.
 static int draw_separator(int fd)
 {
@@ -1056,6 +1196,53 @@ static int draw_separator(int fd)
 fail:
     return (int) -1;
 }
+
+// Draw a separator in the navigation bar.
+static int draw_separator2(void)
+{
+    unsigned long sLeft = TaskbarInfo.left +4 +32 +4;  //2 +84 +84;
+    unsigned long sTop  = TaskbarInfo.top + 8;  //8;
+    //const char *SeparatorString = "|";
+    unsigned int SeparatorColor = COLOR_GRAY;
+
+// Parameter:
+    //if (fd<0)
+        //goto fail;
+
+// Filters
+    //if (main_window<0)
+        //goto fail;
+    if (NavigationInfo.useSeparator != TRUE)
+        goto fail;
+
+// Draw it in the pre-defined position.
+/*
+    gws_draw_text (
+        (int) fd,
+        (int) main_window,
+        (unsigned long) sLeft,
+        (unsigned long) sTop,
+        (unsigned int) SeparatorColor,
+        SeparatorString );
+*/
+
+// Draw it using the libgui library
+    libgui_backbuffer_draw_rectangle0(
+        sLeft, sTop, 2, 16,
+        SeparatorColor,
+        1, 0, FALSE
+    );
+
+    // Refresh to show it
+    libgui_refresh_rectangle_via_kernel(
+        sLeft, sTop, 2, 16
+    );
+    return 0;
+
+fail:
+    return (int) -1;
+}
+
 
 static int create_icons_on_desktop(int fd)
 {
@@ -1185,6 +1372,17 @@ int main(int argc, char *argv[])
     int useDesktop = FALSE; //TRUE;
     // ...
     int client_fd = -1;
+
+// --------------------------------
+// Initialize the library
+    int status = -1;
+    status = (int) libgui_initialize();
+    if (status < 0){
+        printf("taskbar: libgui_initialize fail\n");
+        exit(1);
+    }
+
+// --------------------------------
 
     isTimeToQuit=FALSE;
 
@@ -1349,6 +1547,13 @@ int main(int argc, char *argv[])
 
     unsigned long style = WS_TASKBAR;
 
+    TaskbarInfo.left = tb_l;
+    TaskbarInfo.top = tb_t;
+    TaskbarInfo.width = tb_w;
+    TaskbarInfo.height = tb_h;
+
+    //TaskbarInfo.style = style;
+
     main_window = 
         (int) gws_create_window (
                 client_fd,
@@ -1362,17 +1567,18 @@ int main(int argc, char *argv[])
                 HONEY_COLOR_TASKBAR, HONEY_COLOR_TASKBAR );
 
     if (main_window < 0){
-        printf ("taskbar.bin: main_window\n");
+        printf ("taskbar: main_window\n");
         exit(1);
     }
     gws_set_active( client_fd, main_window );
 
-    // #test: Show the window early.
+    // #test: Show the window early
     gws_refresh_window(client_fd, main_window);
 
 // ========================
 // Create button based on the taskbar dimensions
 
+    /*
     NavigationInfo.button00_window = 
     (int) create_bar_icon (
         client_fd,
@@ -1383,10 +1589,12 @@ int main(int argc, char *argv[])
         (8*10),   // 8 chars width. 
         tb_h -2,
         buttom00_label );
+    */
 
 // ========================
 // Create button based on the taskbar dimensions
 
+    /*
     NavigationInfo.button01_window = 
     (int) create_bar_icon (
         client_fd,
@@ -1394,9 +1602,10 @@ int main(int argc, char *argv[])
         0, // Icon ID
         2 +84,  // Left
         2,      // Top
-        (8*10),   // 8 chars width. 
+        (8*10),   // 8 chars width
         tb_h -2,
         buttom01_label );
+    */
 
 // ========================
 // Create button based on the taskbar dimensions.
@@ -1414,12 +1623,42 @@ int main(int argc, char *argv[])
         buttom02_label );
     */
 
+
+//
+// Create and draw the new component
+//
+
+// #test
+// Create new component.
+    MyButton.icon_id = 1;  // #test
+    MyButton.wid     = -1;   // not a server window, just client-side
+    MyButton.left    = TaskbarInfo.left + 4;
+    MyButton.top     = TaskbarInfo.top + 4;
+    MyButton.width   = 32;
+    MyButton.height  = 24;
+    MyButton.state   = 0;    // 0 = normal, 1 = hover, 2 = pressed
+
+    __hover_icon_id = -1; // Invalidate.
+
+// Draw the new component (using lingui)
+    draw_bar_button(
+        MyButton.left, 
+        MyButton.top,
+        MyButton.width, 
+        MyButton.height, 
+        "App", 
+        COLOR_BLACK, 
+        COLOR_GRAY,
+        TRUE );
+
 // ========================
 // Create separator
 
-    draw_separator(client_fd);
+    //draw_separator(client_fd);
+    draw_separator2();
 
 /*
+// Onde separator
     gws_draw_text (
         (int) client_fd,
         (int) main_window,

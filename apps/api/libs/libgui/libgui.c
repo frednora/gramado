@@ -4020,8 +4020,8 @@ libgui_drawstring(
     unsigned long x, 
     unsigned long y, 
     const char *s, 
-    unsigned int fg, 
-    unsigned int bg, 
+    unsigned int fg,  // color
+    unsigned int bg,  // color
     unsigned long rop )
 {
     int CharWidth = 8;  // #todo

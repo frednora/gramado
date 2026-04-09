@@ -302,6 +302,7 @@ void wproxy_test2(unsigned long x, unsigned long y)
     if (t->used != TRUE || t->magic != 1234)
         return;
 
+// Get the wproxy that belongs to the cureground thread
     struct wproxy_d *wproxy;
     wproxy = (struct wproxy_d *) t->wproxy;
     if ((void *) wproxy == NULL)
@@ -309,8 +310,12 @@ void wproxy_test2(unsigned long x, unsigned long y)
     if (wproxy->used != TRUE || wproxy->magic != 1234)
         return;
 
-    // #ps: it already has a color defined.
+// Change the color
     // wproxy->color = COLOR_WHITE;
+
+// Change the position
+    wproxy->l = x;
+    wproxy->t = y;
 
     // draw it in the front buffer
     wproxy_drawframe(wproxy, 2);
