@@ -154,7 +154,7 @@ struct tb_client_d clientList[CLIENT_COUNT_MAX];
 //
 
 static int main_window = -1;
-static int desktop_window = -1;
+//static int desktop_window = -1;
 // ...
 static int default_responder = -1;
 
@@ -1254,10 +1254,11 @@ static int create_icons_on_desktop(int fd)
 
     if (fd<0)
         goto fail;
-    if (desktop_window<0)
-        goto fail;
 
-    int ParentWID = desktop_window;
+    //if (desktop_window<0)
+        //goto fail;
+
+    //int ParentWID = desktop_window;
 
 
     // grid item
@@ -1277,21 +1278,32 @@ static int create_icons_on_desktop(int fd)
 // #todo
 // We need a routine to create and populate the grid.
 
-    for (i=0; i<Max; i++){
-    t = (h0*i);
-    iconID = 
-        (int) gws_create_window (
+    for (i=0; i<Max; i++)
+    {
+        t = (h0*i);
+
+
+        /*
+        iconID = 
+            (int) gws_create_window (
                 fd,
                 WT_ICON, 1, 1, "IconXX",
                 l, t, w, h,
                 ParentWID, 
                 style, 
                 COLOR_WHITE, COLOR_WHITE );
+        */
 
-    if (iconID < 0){
-        printf ("taskbar.bin: iconID\n");
-        exit(1);
-    } 
+        libgui_backbuffer_draw_rectangle0(
+            l, t, w, h,
+            COLOR_GRAY, 1, 0, FALSE);
+
+        iconID = i;
+
+        if (iconID < 0){
+            printf ("taskbar: iconID\n");
+            exit(1);
+        } 
     };
 
     return 0;
@@ -1323,9 +1335,10 @@ static int create_desktop_area(int fd)
 
     unsigned long style = WS_TRANSPARENT;
 
-    unsigned int Color01 = COLOR_DESKTOP;
+    unsigned int Color01 = COLOR_WHITE; //COLOR_DESKTOP;
     unsigned int Color02 = COLOR_DESKTOP;
 
+    /*
     desktop_window = 
         (int) gws_create_window (
                 fd,
@@ -1339,9 +1352,17 @@ static int create_desktop_area(int fd)
         printf ("taskbar.bin: desktop_window\n");
         exit(1);
     } 
+    */
+
+    libgui_backbuffer_draw_rectangle0(
+        l, t, w, h,
+        Color01, 1, 0, FALSE);
 
     create_icons_on_desktop(fd);
-    gws_refresh_window(fd, desktop_window);
+    
+    //gws_refresh_window(fd, desktop_window);
+    libgui_refresh_rectangle_via_kernel(l, t, w, h);
+    
     return 0;
 
 fail:
@@ -1369,7 +1390,7 @@ int main(int argc, char *argv[])
 
     int ShowCube = FALSE;
     int launchChild = TRUE;
-    int useDesktop = FALSE; //TRUE;
+    int useDesktop = TRUE;
     // ...
     int client_fd = -1;
 
