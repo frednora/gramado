@@ -93,7 +93,7 @@ CINCLUDES += -I .
 
 
 # Objects
-myObjects = crt0.o main.o rtl.o
+myObjects = crt0.o rtl.o
 
 myObjects += ctype.o stdio.o stdlib.o string.o conio.o socket.o signal.o unistd.o \
 termios.o ioctl.o fcntl.o
@@ -106,23 +106,39 @@ myObjects += libui.o
 myObjects += ui.o
 myObjects += uicomp.o
 
-myObjects += z8server.o    
+myObjects += libds.o    
+
+myObjects += ds.o
+
+myObjects += main.o
 
 .PHONY: all all-c gws-link finalize clean
 
 all: main.o all-c gws-link finalize clean
 	@echo "Ok?"
+
 main.o:
+
+# main file
 	$(CC) -c main.c $(CFLAGS) $(CINCLUDES) -o main.o
+
+# display server module
+	$(CC) -c ds.c $(CFLAGS) $(CINCLUDES) -o ds.o
+
 all-c:
 
+# system deps
 	make -C libos/
-	make -C libui/
 
+# window manager and drawing routines
+	make -C libui/
 	make -C ui/
+
+# desktop composition (core component)
 	make -C uicomp/
 
-	make -C z8server/
+# display server routines
+	make -C libds/
 
 gws-link:
 

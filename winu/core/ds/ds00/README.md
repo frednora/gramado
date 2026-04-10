@@ -11,6 +11,39 @@ This is the main display server for Gramado OS.
 ```
 
 ```
+Main parts:
++ Display server
++ Window manager
++ Compositor
+
+To compose the final desktop frame there are two models:
++ Composited model
++ Non-composited mode
+
+```
+
+```
+Files and folders for the main parts:
+
++ Display server:
+  ds.c, ds.h, libds/
+
++ Window manager:
+  ui/wm.c, ui/wm.h,
+
++ Compositor:
+  uicomp/comp.c, uicomp/comp.h
+
+To compose the final desktop frame there are two models:
++ Composited model
++ Non-composited mode
+
+```
+
+
+
+
+```
   DS00 is a 'Display Server'. A display server provides a way for the applications to draw 
   in the display device, and receive input events from keyboard and mouse devices. 
   The display server needs to access the display device driver to touch 

@@ -27,7 +27,7 @@ extern int server_mode;  // DEMO ...
 #include "config/config.h"
 #include "api/protocol.h"
 #include "api/async.h"
-#include "z8server/globals.h"
+#include "libds/globals.h"
 #include "ui/colors.h"
 #include "ui/themes/honey.h"
 
@@ -111,9 +111,8 @@ extern int server_mode;  // DEMO ...
 
 // Client structure.
 // O proprio servidor poderia ser o cliente 0??
-#include "z8server/client.h"
-
-#include "z8server/shutdown.h"
+#include "libds/client.h"
+#include "libds/shutdown.h"
 
 // Device Context.
 // This is the structure that is gonna be used by the
@@ -240,6 +239,8 @@ unsigned long gws_get_device_height(void);
 void gwssrv_broadcast_close(void);
 
 void ServerShutdown(int server_fd);
+
+int ds_main (int argc, char **argv);
 
 //
 // End

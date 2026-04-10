@@ -108,8 +108,8 @@ all-c:
 gws-link:
 #	$(LD) $(linkFlags) -o $(linkTarget) $(myObjects)
 # link
-	$(LD) -r -o z8server.o $(myObjects)
-	cp z8server.o ../
+	$(LD) -r -o libds.o $(myObjects)
+	cp libds.o ../
 	rm *.o
 
 finalize:
