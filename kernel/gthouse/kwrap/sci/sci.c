@@ -542,6 +542,7 @@ void *sci0 (
         // Create a wproxy.
         // #ps: Not associated with a thread.
         wproxy_create0(
+            (tid_t) current_thread,
             (unsigned long) message_address[0],
             (unsigned long) message_address[1],
             (unsigned long) message_address[2],

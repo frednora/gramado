@@ -1596,6 +1596,22 @@ int main(int argc, char *argv[])
     // #test: Show the window early
     gws_refresh_window(client_fd, main_window);
 
+// =============================
+
+// #test
+// Update the wproxy structure that belongs to this thread.
+    unsigned long m[8];
+    int mytid = gettid();
+    m[0] = (unsigned long) (mytid & 0xFFFFFFFF);
+    m[1] = TaskbarInfo.left;
+    m[2] = TaskbarInfo.top;
+    m[3] = TaskbarInfo.width;
+    m[4] = TaskbarInfo.height;
+    sc80( 48, &m[0], &m[0], &m[0] );
+
+// =============================
+
+
 // ========================
 // Create button based on the taskbar dimensions
 

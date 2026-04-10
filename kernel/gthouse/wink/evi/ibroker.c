@@ -3745,10 +3745,31 @@ wmMouseEvent(
             bldisp_update_mouse_position(long1, long2);
             bldisp_display_mouse_cursor();
 
+            // Hit-testing
+            // #todo:
+            // It tells us what is the wproxy window the mouse is onto.
+            // The thread associated with this wproxy window receives 
+            // the message.
+            wproxy_hit_test00(long1, long2);
+
             // #test
             // Sending mouse move to the app
-            ibroker_post_message_to_fg_thread(
-                event_id, (unsigned long) long1, (unsigned long) long2 );
+            //ibroker_post_message_to_fg_thread(
+                //event_id, (unsigned long) long1, (unsigned long) long2 );
+
+            // #test
+            // Send it to the target app
+            if (wproxy_hover != NULL)
+            {
+                if (wproxy_hover->magic == 1234)
+                {
+                    //printk("send mouse move %d\n", wproxy_hover->tid);
+                    ipc_post_message_to_tid(
+                        (tid_t) __HARDWARE_TID, 
+                        (tid_t) wproxy_hover->tid,
+                        event_id, (unsigned long) long1, (unsigned long) long2 );
+                }
+            }
 
             return 0;
         }
@@ -3797,8 +3818,9 @@ wmMouseEvent(
             {
                 // #test: Create a window and draw it into the front buffer.
                 // wproxy_test0(mouse_x, mouse_y);
-                wproxy_test2(mouse_x, mouse_y);
+                // wproxy_test2(mouse_x, mouse_y);
 
+                /*
                 // #test: Send mouse button events to the foreground thread.
                 // TARGET: GUI APP
                 // Sending it to the fg thread. Actually we gotta 
@@ -3809,6 +3831,24 @@ wmMouseEvent(
                     button_number, // Event_LongVK, 
                     button_number // Event_LongScanCode 
                 );
+                */
+
+                // #test
+                // Send it to the target app
+                if (wproxy_hover != NULL)
+                {
+                    if (wproxy_hover->magic == 1234)
+                    {
+                        //printk("send mouse release %d\n",wproxy_hover->tid);
+                        ipc_post_message_to_tid(
+                            (tid_t) __HARDWARE_TID, 
+                            (tid_t) wproxy_hover->tid,
+                            event_id, 
+                            (unsigned long) button_number, 
+                            (unsigned long) button_number );
+                    }
+                }
+
             }
 
             return 0;

@@ -1224,12 +1224,15 @@ int serviceCreateWindow(int client_fd)
     unsigned long *message_address = (unsigned long *) __buffer;
     gReq r;  // Standard structure for request
     register int i=0;
+
 // The window been created
     struct gws_window_d *Window;
     wid_t wid = (-1);
+
 // The parent window
     struct gws_window_d *Parent;
     wid_t pwid = (-1);
+
 // Arguments
     unsigned long x=0;
     unsigned long y=0;

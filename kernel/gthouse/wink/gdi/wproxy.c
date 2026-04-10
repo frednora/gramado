@@ -8,6 +8,8 @@
 
 // List of window proxy objects.
 struct wproxy_d *wproxy_head;
+struct wproxy_d *wproxy_hover;
+// ...
 
 // Add the window proxy to the list of window proxy objects.
 static int __wproxy_add_to_list(struct wproxy_d *wproxy);
@@ -58,6 +60,54 @@ fail:
     return (int) -1;
 };
 
+
+void wproxy_hit_test00(unsigned long x, unsigned long y)
+{
+    struct wproxy_d *hover = NULL;
+    struct wproxy_d *w = NULL;
+
+// #todo:
+// Taskbar first.
+// We gotta register the taskbar in kernel-side too.
+
+// The list
+    hover = NULL;
+    w = (struct wproxy_d *) wproxy_head;
+
+    unsigned long Left = 0;
+    unsigned long Top = 0;
+    unsigned long Right = 0;
+    unsigned long Bottom = 0;
+
+    while (w != NULL)
+    {
+        if (w->magic == 1234)
+        {
+            // Frame/chrome
+            Left   = w->l;
+            Top    = w->t;
+            Right  = (w->l + w->w);
+            Bottom = (w->t + w->h);
+
+            // Check against the frame/chrome.
+            if ( x >= Left && x <= Right &&
+                 y >= Top  && y <= Bottom )
+            {
+                hover = w;
+
+                // #debug: visual effect
+                //__wproxy_drawframe0(hover, 2);
+            }
+        }
+        w = w->next; // walk forward in the list
+    };
+
+// New hover
+    if (hover != wproxy_hover)
+        wproxy_hover = hover;
+}
+
+
 // Create a window proxy object and add it into the list.
 struct wproxy_d *wproxyCreateObject(void)
 {
@@ -82,6 +132,7 @@ fail:
 
 // Create a window proxy object and initialize it with the given parameters.
 struct wproxy_d *wproxy_create0(
+    tid_t tid,
     unsigned long l, 
     unsigned long t, 
     unsigned long w, 
@@ -89,6 +140,11 @@ struct wproxy_d *wproxy_create0(
     unsigned int color)
 {
     struct wproxy_d *wproxy;
+
+    if (tid < 0)
+        return NULL;
+    if (tid >= THREAD_COUNT_MAX)
+        return NULL;
 
     wproxy = wproxyCreateObject();
     if ((void *) wproxy == NULL){
@@ -107,6 +163,8 @@ struct wproxy_d *wproxy_create0(
     wproxy->ca_t = t;
     wproxy->ca_w = w;
     wproxy->ca_h = h;
+
+    wproxy->tid = (tid_t) tid;
 
     return (struct wproxy_d *) wproxy;
 fail:
@@ -273,10 +331,11 @@ fail:
 void wproxy_test0(unsigned long x, unsigned long y)
 {
     struct wproxy_d *wproxy;
+    tid_t TargetTID = 0;
 
     wproxy = 
     (struct wproxy_d *) wproxy_create0(
-        x, y, 40, 40, COLOR_PINK );
+        TargetTID, x, y, 40, 40, COLOR_PINK );
 
     if ((void *) wproxy == NULL)
         return;

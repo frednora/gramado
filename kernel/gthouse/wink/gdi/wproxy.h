@@ -71,15 +71,18 @@ struct wproxy_d
 };
 
 extern struct wproxy_d *wproxy_head;  // List of window proxy objects.
-
+extern struct wproxy_d *wproxy_hover;  // mouse hover
+// ...
 
 // ======================
 
+void wproxy_hit_test00(unsigned long x, unsigned long y);
 
 struct wproxy_d *wproxyCreateObject(void);
 
 
 struct wproxy_d *wproxy_create0(
+    tid_t tid,
     unsigned long l, 
     unsigned long t, 
     unsigned long w, 

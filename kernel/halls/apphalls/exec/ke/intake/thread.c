@@ -166,14 +166,6 @@ static void __ps_initialize_thread_common_elements(struct thread_d *t)
     t->umask = 0;
 
 
-
-// ------------------
-// #test: 
-// wproxy support
-    // t->wproxy = NULL;
-    //t->wproxy = (struct wproxy_d *) wproxyCreateObject();
-    t->wproxy = (struct wproxy_d *) wproxy_create0(0, 0, 100, 100, COLOR_BLUE);
-
 // ------------------
     // More ?
 }
@@ -1608,6 +1600,17 @@ try_next_slot:
 // Belongs to this thread environment (process)
     Thread->te = (void *) Process;    // thread environment structure.
     Thread->tgid = (tgid_t) ProcessID;  // PID
+
+
+// =====================================
+// #test: 
+// wproxy support
+    // t->wproxy = NULL;
+    //t->wproxy = (struct wproxy_d *) wproxyCreateObject();
+    Thread->wproxy = 
+        (struct wproxy_d *) wproxy_create0(Thread->tid, 0, 0, 100, 100, COLOR_BLUE);
+// =====================================
+
 
 // Thread name
 // #test 64 bytes max.

@@ -5788,7 +5788,6 @@ gws_resize_window (
 // Update it in kernel-side if its an overlapped window.
 // Update the wproxy structure that belongs to this thread.
     unsigned long m[8];
-
    if (window->type == WT_OVERLAPPED)
    {
        m[0] = (unsigned long) (window->client_tid & 0xFFFFFFFF);
@@ -6054,6 +6053,22 @@ gwssrv_change_window_position (
             // MORE TYPES ...
         }
     }
+
+
+// #test
+// Update it in kernel-side if its an overlapped window.
+// Update the wproxy structure that belongs to this thread.
+    unsigned long m[8];
+   if (window->type == WT_OVERLAPPED)
+   {
+       m[0] = (unsigned long) (window->client_tid & 0xFFFFFFFF);
+       m[1] = window->left;  //win_x;
+       m[2] = window->top;  // win_y;
+       m[3] = window->width;  // win_w;
+       m[4] = window->height;  // win_h;
+       sc80( 48, &m[0], &m[0], &m[0] );
+   }
+
 
 // #bugbug
 // Precisa mesmo pinta toda vez que mudar a posiçao?
