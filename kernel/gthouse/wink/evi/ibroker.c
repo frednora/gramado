@@ -3725,6 +3725,10 @@ wmMouseEvent(
 // para a arquitetura de 64bit.
 // IN: window pointer, event id, x, y.
 
+    // The relative values
+    unsigned long rel_long1 = 0;
+    unsigned long rel_long2 = 0;
+
     if (event_id == MSG_MOUSEMOVE)
     {
         // Limits
@@ -3757,17 +3761,30 @@ wmMouseEvent(
             //ibroker_post_message_to_fg_thread(
                 //event_id, (unsigned long) long1, (unsigned long) long2 );
 
+            // Client area hit → send to the app (relative coordinates).
+            // Non‑client area hit → send to the server (absolute coordinates).
+
             // #test
             // Send it to the target app
             if (wproxy_hover != NULL)
             {
                 if (wproxy_hover->magic == 1234)
                 {
+                    rel_long1 = long1 - wproxy_hover->l;
+                    rel_long2 = long2 - wproxy_hover->t;
+
+                    // Sending relative values.
+                    // #todo
+                    // Maybe i am gonna send the non-client area to the server 
+                    // that is already prepered to handle absolute values.
                     //printk("send mouse move %d\n", wproxy_hover->tid);
                     ipc_post_message_to_tid(
                         (tid_t) __HARDWARE_TID, 
                         (tid_t) wproxy_hover->tid,
-                        event_id, (unsigned long) long1, (unsigned long) long2 );
+                        event_id, 
+                        (unsigned long) rel_long1, 
+                        (unsigned long) rel_long2 
+                    );
                 }
             }
 

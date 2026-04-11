@@ -22,10 +22,15 @@ struct icon_info_d
 // This is the window id that represents the icon.
     int wid;
 
-    unsigned long left;
-    unsigned long top;
+// Absolute values
+    unsigned long absolute_left;
+    unsigned long absolute_top;
     unsigned long width; 
     unsigned long height;
+
+// Relative values
+    unsigned long left;
+    unsigned long top;
 
 // The state of the icon, it also represents
 // the state of the client application.

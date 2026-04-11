@@ -238,7 +238,7 @@ static void print_ascii_table(int fd);
 static int do_launch_app(int app_number);
 
 static void on_button_clicked(int id);
-static int __hit_test_icon(unsigned long mx, unsigned long my);
+static int __hit_test_icon(unsigned long rel_mx, unsigned long rel_my);
 
 static int 
 tbProcedure(
@@ -700,15 +700,16 @@ static void on_button_clicked(int id)
 // #todo
 // In the future it will be a function inside the library
 // that check against the standard list of components.
-static int __hit_test_icon(unsigned long mx, unsigned long my) 
+static int __hit_test_icon(unsigned long rel_mx, unsigned long rel_my) 
 {
 
 // #test
-// For now we only check agains our button.
-    if ( mx >= MyButton.left && 
-         mx <= MyButton.left + MyButton.width &&
-         my >= MyButton.top  && 
-         my <= MyButton.top + MyButton.height )
+// For now we only check against our button.
+// Let's use the relative values for that.
+    if ( rel_mx >= MyButton.left && 
+         rel_mx <= MyButton.left + MyButton.width &&
+         rel_my >= MyButton.top  && 
+         rel_my <= MyButton.top + MyButton.height )
     {
         return (int) MyButton.icon_id;
     }
@@ -757,9 +758,11 @@ tbProcedure(
             //gws_redraw_window(fd, NavigationInfo.button02_window, TRUE);
             // #test
             // New component. (using libgui)
+
+            // Ddraw using absolute values
             draw_bar_button(
-                MyButton.left, 
-                MyButton.top,
+                MyButton.absolute_left, 
+                MyButton.absolute_top,
                 MyButton.width, 
                 MyButton.height, 
                 "App", COLOR_BLACK, COLOR_GRAY, TRUE );
@@ -1669,18 +1672,26 @@ int main(int argc, char *argv[])
 // Create new component.
     MyButton.icon_id = 1;  // #test
     MyButton.wid     = -1;   // not a server window, just client-side
-    MyButton.left    = TaskbarInfo.left + 4;
-    MyButton.top     = TaskbarInfo.top + 4;
+
+    // Absolute values
+    MyButton.absolute_left = TaskbarInfo.left + 4;
+    MyButton.absolute_top  = TaskbarInfo.top + 4;
+
+    // Relative values
+    MyButton.left    = 4;
+    MyButton.top     = 4;
     MyButton.width   = 32;
     MyButton.height  = 24;
+
     MyButton.state   = 0;    // 0 = normal, 1 = hover, 2 = pressed
 
     __hover_icon_id = -1; // Invalidate.
 
 // Draw the new component (using lingui)
+// Using absolute values
     draw_bar_button(
-        MyButton.left, 
-        MyButton.top,
+        MyButton.absolute_left, 
+        MyButton.absolute_top,
         MyButton.width, 
         MyButton.height, 
         "App", 
