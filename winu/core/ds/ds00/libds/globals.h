@@ -24,6 +24,7 @@ extern int server_mode;
 
 extern int gUseCallback;
 extern int gUseMouse;
+extern int gDisplayMousePointer;
 
 //
 // == buffer ===============================================

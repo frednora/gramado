@@ -43,6 +43,7 @@ int refresh_valid_screen_flag=FALSE;
 int gUseCallback=TRUE;
 
 int gUseMouse=FALSE;
+int gDisplayMousePointer=FALSE;
 
 // #ordem
 // hardware, software

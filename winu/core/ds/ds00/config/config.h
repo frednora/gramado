@@ -22,6 +22,9 @@
 #define CONFIG_USE_TILE  1
 
 
+#define CONFIG_DISPLAY_MOUSEPOINTER 0
+
+
 // Call a kernel service to draw rectangles.
 // see: rect.c
 // #test: It also work withour using the kernel.

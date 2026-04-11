@@ -862,7 +862,7 @@ tbProcedure(
 
         // #test
         case MSG_MOUSEMOVE:
-            printf("%d %d\n", long1, long2);
+            //printf("%d %d\n", long1, long2);
             IconId = (int) __hit_test_icon(long1, long2);
             if (IconId > 0)
                 __hover_icon_id = IconId;

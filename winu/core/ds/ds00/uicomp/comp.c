@@ -780,8 +780,12 @@ void __display_mouse_cursor(void)
         return;
     if (display_server->initialized != TRUE)
         return;
+
 // Mouse not initialized yet.
     if (gUseMouse != TRUE)
+        return;
+
+    if (gDisplayMousePointer != TRUE)
         return;
 
 // #todo Limits
@@ -938,8 +942,10 @@ void comp_display_desktop_components(void)
         // #bugbug
         // #todo: 
         // We miss the cursor here before refreshing the whole screen.
-        if (gUseMouse == TRUE){
-            __display_mouse_cursor();
+        if (gUseMouse == TRUE)
+        {
+            if (gDisplayMousePointer == TRUE)
+                __display_mouse_cursor();
         }
         validate();
         return;
@@ -1003,7 +1009,8 @@ void comp_display_desktop_components(void)
 // Show the mouse cursor in the screen.
     if (gUseMouse == TRUE)
     {
-        __display_mouse_cursor();
+        if (gDisplayMousePointer == TRUE)
+            __display_mouse_cursor();
     }
 
 // Validate the whole screen.

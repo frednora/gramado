@@ -679,8 +679,14 @@ int wmProcessCombinationEvent(int msg_code)
         // #todo: Create a wrapper fot that syscall.
         // #todo: Allow only the ws pid to make this call.
         sc82 ( 22011, 0, 0, 0 );
+
         // Enable the use of mouse here in the server.
         gUseMouse = TRUE;
+
+        // Erase and draw the mouse pointer.
+        gDisplayMousePointer = FALSE;
+        if (CONFIG_DISPLAY_MOUSEPOINTER == 1)
+            gDisplayMousePointer = TRUE;
         return 0;
     }
 
