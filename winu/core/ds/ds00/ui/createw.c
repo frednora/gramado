@@ -2837,20 +2837,13 @@ fail:
     return NULL;
 }
 
-/*
- * CreateWindow:
- *     It creates a window
- */
-// Essa será a função que atenderá a chamada a
-// esse é o serviço de criação da janela.
-// talvez ampliaremos o número de argumentos
-// #todo: change name to 'const char *'
-// Called by serviceCreateWindow() in main.c.
-// #test
-// Uma janela que é cliente, será criada
-// com deslocamento relativo à area de cliente.
-// Para criar janelas filhas com deslocamento relativo
-// a janela do aplicativo, tem que ativar uma flag.
+
+// CreateWindow:
+// This is the main function for creating windows.
+// This worker is called by the display server to create a window 
+// when the dispatcher calls the serviceCreateWindow() sevice in main.c.
+// It also can be called internally by the server.
+// A child window will have its position relative to the parent window's client area.
 
 void *CreateWindow ( 
     unsigned long type, 
