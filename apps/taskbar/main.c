@@ -1599,6 +1599,11 @@ int main(int argc, char *argv[])
     // #test: Show the window early
     gws_refresh_window(client_fd, main_window);
 
+
+// =============================
+// Set this thread and its wproxy as the system shell. The taskbar.
+    sc80(46, 0, 0, 0);
+
 // =============================
 
 // #test
@@ -1621,8 +1626,6 @@ int main(int argc, char *argv[])
     m[8] = TaskbarInfo.height;
 
     sc80( 48, &m[0], &m[0], &m[0] );
-
-// =============================
 
 
 // ========================

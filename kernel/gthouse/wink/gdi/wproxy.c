@@ -8,8 +8,12 @@
 
 // List of window proxy objects.
 struct wproxy_d *wproxy_head;
+// The window proxy that is under the mouse cursor.
 struct wproxy_d *wproxy_hover;
+// Shell window proxy. It is the taskbar.
+struct wproxy_d *wproxy_shell;
 // ...
+
 
 // Add the window proxy to the list of window proxy objects.
 static int __wproxy_add_to_list(struct wproxy_d *wproxy);
@@ -69,19 +73,46 @@ void wproxy_hit_test00(unsigned long x, unsigned long y)
     struct wproxy_d *hover = NULL;
     struct wproxy_d *w = NULL;
 
+    unsigned long Left = 0;
+    unsigned long Top = 0;
+    unsigned long Right = 0;
+    unsigned long Bottom = 0;
+
 // #todo:
 // Taskbar first.
 // We gotta register the taskbar in kernel-side too.
 
 // The list
     hover = NULL;
+
+// ----------------------------------------------
+// Start with the system shell. The taskbar.
+    w = (struct wproxy_d *) wproxy_shell;
+    if (w != NULL)
+    {
+        if (w->magic == 1234)
+        {
+            // Taskbar has no frame/chrome, only client area.
+
+            // These are the values for the frame.
+            Left   = w->l;
+            Top    = w->t;
+            Right  = (w->l + w->w);
+            Bottom = (w->t + w->h);
+
+            if ( x >= Left && x <= Right &&
+                 y >= Top  && y <= Bottom )
+            {
+                wproxy_hover = w;
+                w->hit_area = HIT_CLIENT;  // Inside client area
+                return;
+            }
+        }
+    }
+
+// ----------------------------------------------
+// Walk the list of window proxy objects and check against the mouse cursor.
     w = (struct wproxy_d *) wproxy_head;
-
-    unsigned long Left = 0;
-    unsigned long Top = 0;
-    unsigned long Right = 0;
-    unsigned long Bottom = 0;
-
     while (w != NULL)
     {
         if (w->magic == 1234)
@@ -138,6 +169,7 @@ struct wproxy_d *wproxyCreateObject(void)
     }
     wproxy->used = TRUE;
     wproxy->magic = 1234;
+    wproxy->has_frame = TRUE;  // By default, assume it has a frame/chrome.
 
     status = (int) __wproxy_add_to_list(wproxy);
     if (status != 0){
@@ -146,6 +178,50 @@ struct wproxy_d *wproxyCreateObject(void)
     return (struct wproxy_d *) wproxy;
 fail:
     return NULL;
+}
+
+// The current thread has a wproxy window that is 
+// the system shell. (The taskbar).
+// It has no frame/chrome, only client area.
+int wproxy_set_shell(tid_t tid)
+{
+    struct thread_d *t;
+    struct wproxy_d *wproxy;
+
+// parameter:
+    if (tid <0 || tid >= THREAD_COUNT_MAX)
+        goto fail;
+    t = (struct thread_d *) threadList[tid];
+    if ((void *) t == NULL)
+        goto fail;
+    if (t->used != TRUE){
+        goto fail;
+    }
+    if (t->magic != 1234){
+        goto fail;
+    }
+
+// wproxy
+    wproxy = (struct wproxy_d *) t->wproxy;
+    if ((void *) wproxy == NULL){
+        goto fail;
+    }
+    if (wproxy->used != TRUE){
+        goto fail;
+    }
+    if (wproxy->magic != 1234){
+        goto fail;
+    }
+
+// Set the shell window proxy. The taskbar is the shell.
+    wproxy_shell = wproxy;
+    wproxy_shell->has_frame = FALSE;  // No frame/chrome, only client area.
+    return (int) 0;
+
+    // ...
+
+fail:
+    return (int) -1;
 }
 
 // Create a window proxy object and initialize it with the given parameters.

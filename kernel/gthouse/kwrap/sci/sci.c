@@ -529,7 +529,11 @@ void *sci0 (
     }
 
 // 45 - free
-// 46 - free
+
+// 46 - Setup who will be the system shell wproxy. The taskbar.
+    if (number == 46){
+        return (void*) wproxy_set_shell( (tid_t) current_thread );
+    }
 
 // 47 - Create wproxy support
 // Create a wproxy.

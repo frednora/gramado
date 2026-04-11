@@ -57,6 +57,8 @@ struct wproxy_d
 
 // Hit area
     int hit_area;
+// Has frame/chrome?
+    int has_frame;
 
     unsigned int color;
 
@@ -86,6 +88,8 @@ void wproxy_hit_test00(unsigned long x, unsigned long y);
 
 struct wproxy_d *wproxyCreateObject(void);
 
+
+int wproxy_set_shell(tid_t tid);
 
 struct wproxy_d *wproxy_create0(
     tid_t tid,
