@@ -3811,8 +3811,10 @@ wmMouseEvent(
         // na mensagem ja postada, ao invés de postar uma nova.
         // O window server ficaria apenas com a posição atual.
 
-        ibroker_post_message_to_ds(
-            event_id, (unsigned long) long1, (unsigned long) long2 );
+        if (use_kernelside_mouse_drawing != TRUE){
+            ibroker_post_message_to_ds(
+                event_id, (unsigned long) long1, (unsigned long) long2 );
+        }
 
         // #test
         // Sending mouse move to the app
@@ -3844,8 +3846,8 @@ wmMouseEvent(
         if (use_kernelside_mouse_drawing == TRUE)
         {
 
-            if (event_id == MSG_MOUSERELEASED)
-            {
+            //if (event_id == MSG_MOUSERELEASED)
+            //{
                 // #test: Create a window and draw it into the front buffer.
                 // wproxy_test0(mouse_x, mouse_y);
                 // wproxy_test2(mouse_x, mouse_y);
@@ -3869,22 +3871,38 @@ wmMouseEvent(
                 {
                     if (wproxy_hover->magic == 1234)
                     {
-                        //printk("send mouse release %d\n",wproxy_hover->tid);
-                        ipc_post_message_to_tid(
-                            (tid_t) __HARDWARE_TID, 
-                            (tid_t) wproxy_hover->tid,
-                            event_id, 
-                            (unsigned long) button_number, 
-                            (unsigned long) button_number );
+                        // Inside the frame, send message to the server.
+                        if (wproxy_hover->hit_area == HIT_FRAME)
+                        {
+                            ibroker_post_message_to_ds( 
+                                event_id, 
+                                button_number, 
+                                button_number );
+                            return 0;
+                        }
+
+                        // Inside the client area, send message to the app.
+                        if (wproxy_hover->hit_area == HIT_CLIENT)
+                        {
+
+                            //printk("send mouse release %d\n",wproxy_hover->tid);
+                            ipc_post_message_to_tid(
+                                (tid_t) __HARDWARE_TID, 
+                                (tid_t) wproxy_hover->tid,
+                                event_id, 
+                                (unsigned long) button_number, 
+                                (unsigned long) button_number );
+                        
+                            return 0;
+                        }
                     }
                 }
-
-            }
+            //}
 
             return 0;
         }
 
-        ibroker_post_message_to_ds( event_id, button_number, button_number );
+        //ibroker_post_message_to_ds( event_id, button_number, button_number );
         return 0;
     }
 
