@@ -79,22 +79,6 @@ static void update_children(int fd)
     
 // Refresh main window
     gws_refresh_window (fd, main_window);
-
-/*
-// #test
-// Update the wproxy structure that belongs to this thread.
-
-    unsigned long m[8];
-    int mytid = gettid();
-    m[0] = (unsigned long) (mytid & 0xFFFFFFFF);
-    m[1] = wi.left;  //win_x;
-    m[2] = wi.top;  // win_y;
-    m[3] = wi.width;  // win_w;
-    m[4] = wi.height;  // win_h;
-
-    sc80( 48, &m[0], &m[0], &m[0] );
-*/
-
 }
 
 static void set_default_responder(int wid)
@@ -368,17 +352,6 @@ int main(int argc, char *argv[])
     //#debug
     gws_refresh_window(client_fd, main_window);
 
-// #test
-// Update the wproxy structure that belongs to this thread.
-    unsigned long m[8];
-    int mytid = gettid();
-    m[0] = (unsigned long) (mytid & 0xFFFFFFFF);
-    m[1] = win_x;
-    m[2] = win_y;
-    m[3] = win_w;
-    m[4] = win_h;
-    sc80( 48, &m[0], &m[0], &m[0] );
-
 // =============================
 
 // Text
@@ -397,6 +370,29 @@ int main(int argc, char *argv[])
         client_fd,
         main_window,
         (struct gws_window_info_d *) &wi );
+
+
+// ============================================================
+// #test
+// Update the wproxy structure that belongs to this thread.
+
+    unsigned long m[10];
+    int mytid = gettid();
+    m[0] = (unsigned long) (mytid & 0xFFFFFFFF);
+
+    // Frame/chrome rectangle
+    m[1] = wi.left;
+    m[2] = wi.top;
+    m[3] = wi.width;
+    m[4] = wi.height;
+
+    // Client area rectangle
+    m[5] = wi.cr_left;
+    m[6] = wi.cr_top;
+    m[7] = wi.cr_width;
+    m[8] = wi.cr_height;
+
+    sc80( 48, &m[0], &m[0], &m[0] );
 
 
 // ============================================================

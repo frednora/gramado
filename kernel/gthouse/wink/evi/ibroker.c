@@ -3770,21 +3770,34 @@ wmMouseEvent(
             {
                 if (wproxy_hover->magic == 1234)
                 {
-                    rel_long1 = long1 - wproxy_hover->l;
-                    rel_long2 = long2 - wproxy_hover->t;
+                    // Inside the frame, send absolute values.
+                    if (wproxy_hover->hit_area == HIT_FRAME){
 
-                    // Sending relative values.
-                    // #todo
-                    // Maybe i am gonna send the non-client area to the server 
-                    // that is already prepered to handle absolute values.
-                    //printk("send mouse move %d\n", wproxy_hover->tid);
-                    ipc_post_message_to_tid(
-                        (tid_t) __HARDWARE_TID, 
-                        (tid_t) wproxy_hover->tid,
-                        event_id, 
-                        (unsigned long) rel_long1, 
-                        (unsigned long) rel_long2 
-                    );
+                        printk("frame\n");
+                        ibroker_post_message_to_ds(
+                            event_id, 
+                            (unsigned long) long1, 
+                            (unsigned long) long2 );
+                        return 0;
+
+                    // Inside the client area, send relative values.
+                    } else if (wproxy_hover->hit_area == HIT_CLIENT) {
+
+                        rel_long1 = long1 - wproxy_hover->ca_l;
+                        rel_long2 = long2 - wproxy_hover->ca_t;
+                        printk("client\n");
+                        ipc_post_message_to_tid(
+                            (tid_t) __HARDWARE_TID, 
+                            (tid_t) wproxy_hover->tid,
+                            event_id, 
+                            (unsigned long) rel_long1, 
+                            (unsigned long) rel_long2 );
+                        return 0;
+
+                    } else {
+                        // Abort?
+                        return 0;
+                    };
                 }
             }
 

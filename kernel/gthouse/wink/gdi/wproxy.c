@@ -60,7 +60,10 @@ fail:
     return (int) -1;
 };
 
-
+// Check against the list of window proxy objects and 
+// return the one that is under the mouse cursor.
+// It also says if the mouse is over the frame/chrome or 
+// the client area of the window.
 void wproxy_hit_test00(unsigned long x, unsigned long y)
 {
     struct wproxy_d *hover = NULL;
@@ -94,6 +97,21 @@ void wproxy_hit_test00(unsigned long x, unsigned long y)
                  y >= Top  && y <= Bottom )
             {
                 hover = w;
+
+                w->hit_area = HIT_FRAME;  // Inside frame/chrome
+
+                // Client area
+                Left   = w->l + w->ca_l;
+                Top    = w->t + w->ca_t;
+                Right  = w->l + (w->ca_l + w->ca_w);
+                Bottom = w->t + (w->ca_t + w->ca_h);
+
+                if ( x >= Left && x <= Right &&
+                     y >= Top  && y <= Bottom )
+                {
+                    printk("hit: client area\n");
+                    w->hit_area = HIT_CLIENT;  // Inside client area
+                }
 
                 // #debug: visual effect
                 //__wproxy_drawframe0(hover, 2);
@@ -387,7 +405,11 @@ wproxy_set_parameters_given_tid(
     unsigned long l, 
     unsigned long t,
     unsigned long w,
-    unsigned long h )
+    unsigned long h,
+    unsigned long ca_l, 
+    unsigned long ca_t,
+    unsigned long ca_w,
+    unsigned long ca_h )
 {
     struct thread_d *target_thread;
 
@@ -418,8 +440,12 @@ wproxy_set_parameters_given_tid(
     wproxy->w = w;
     wproxy->h = h;
 
-    // #todo: Client area?
+    wproxy->ca_l = ca_l;
+    wproxy->ca_t = ca_t;
+    wproxy->ca_w = ca_w;
+    wproxy->ca_h = ca_h;
 
+    // #todo: Client area?
 }
 
 

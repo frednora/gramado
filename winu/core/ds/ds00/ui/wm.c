@@ -5787,14 +5787,34 @@ gws_resize_window (
 // #test
 // Update it in kernel-side if its an overlapped window.
 // Update the wproxy structure that belongs to this thread.
-    unsigned long m[8];
-   if (window->type == WT_OVERLAPPED)
+    unsigned long m[10];
+
+   //if (window->type == WT_OVERLAPPED)
+   if (window->type == WT_OVERLAPPED || window == taskbar_window)
    {
        m[0] = (unsigned long) (window->client_tid & 0xFFFFFFFF);
-       m[1] = window->left;  //win_x;
-       m[2] = window->top;  // win_y;
-       m[3] = window->width;  // win_w;
-       m[4] = window->height;  // win_h;
+
+       // Frame/chrome rectangle
+       m[1] = window->absolute_x;
+       m[2] = window->absolute_y;
+       m[3] = window->width;
+       m[4] = window->height;
+
+       // Client area rectangle for overlapped window
+       m[5] = window->rcClient.left;
+       m[6] = window->rcClient.top;
+       m[7] = window->rcClient.width;
+       m[8] = window->rcClient.height;
+
+       // Client area rectangle for taskbar window
+       if (window == taskbar_window)
+       {
+           m[5] = 0;
+           m[6] = 0;
+           m[7] = window->width;
+           m[8] = window->height;
+       }
+
        sc80( 48, &m[0], &m[0], &m[0] );
    }
 
@@ -5901,19 +5921,35 @@ gwssrv_change_window_position (
             (unsigned long) (y + window->height);
     }
 
+    // For the other types of windows, we need to check if they have a parent.
+    // But not for taskbar window, because it is a special case.
     if (window->type != WT_OVERLAPPED)
     {
-        p = window->parent;
-        if ( (void*) p != NULL )
+        if (window == taskbar_window)
         {
-            if (p->magic == 1234)
+            window->absolute_x = (unsigned long) x;
+            window->absolute_y = (unsigned long) y;
+            window->absolute_right = 
+                (unsigned long) (x + window->width);
+            window->absolute_bottom = 
+                (unsigned long) (y + window->height);
+            return 0;
+        }
+
+        if (window != taskbar_window)
+        {
+            p = window->parent;
+            if ((void*) p != NULL)
             {
-                window->absolute_x = (unsigned long) (p->absolute_x + x);
-                window->absolute_y = (unsigned long) (p->absolute_y + y);
-                window->absolute_right = 
-                    (unsigned long) (window->absolute_x + window->width);
-                window->absolute_bottom = 
-                    (unsigned long) (window->absolute_y + window->height );
+                if (p->magic == 1234)
+                {
+                    window->absolute_x = (unsigned long) (p->absolute_x + x);
+                    window->absolute_y = (unsigned long) (p->absolute_y + y);
+                    window->absolute_right = 
+                        (unsigned long) (window->absolute_x + window->width);
+                    window->absolute_bottom = 
+                        (unsigned long) (window->absolute_y + window->height );
+                }
             }
         }
     }
@@ -6058,14 +6094,33 @@ gwssrv_change_window_position (
 // #test
 // Update it in kernel-side if its an overlapped window.
 // Update the wproxy structure that belongs to this thread.
-    unsigned long m[8];
-   if (window->type == WT_OVERLAPPED)
+    unsigned long m[10];
+   //if (window->type == WT_OVERLAPPED)
+   if (window->type == WT_OVERLAPPED || window == taskbar_window)
    {
        m[0] = (unsigned long) (window->client_tid & 0xFFFFFFFF);
-       m[1] = window->left;  //win_x;
-       m[2] = window->top;  // win_y;
-       m[3] = window->width;  // win_w;
-       m[4] = window->height;  // win_h;
+
+       // Frame/chrome rectangle
+       m[1] = window->absolute_x;
+       m[2] = window->absolute_y;
+       m[3] = window->width;
+       m[4] = window->height;
+
+       // Client area rectangle for overlapped window
+       m[5] = window->rcClient.left;
+       m[6] = window->rcClient.top;
+       m[7] = window->rcClient.width;
+       m[8] = window->rcClient.height;
+
+       // Client area rectangle for taskbar window
+       if (window == taskbar_window)
+       {
+           m[5] = 0;
+           m[6] = 0;
+           m[7] = window->width;
+           m[8] = window->height;
+       }
+
        sc80( 48, &m[0], &m[0], &m[0] );
    }
 

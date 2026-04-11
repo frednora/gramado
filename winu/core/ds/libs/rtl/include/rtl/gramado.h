@@ -336,6 +336,7 @@ int rtl_swap64(long *x, long *y);
 
 long rtl_round_up(long num_to_round, long multiple);
 
+int rtl_use_wink_windowing_system(void);
 
 #endif
 

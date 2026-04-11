@@ -21,6 +21,9 @@
 // in the display server. Probably at the same moment we create 
 // the window in the display server, we create the wproxy structure.
 
+#define HIT_NONE       0
+#define HIT_FRAME      1   // Non-client area (chrome, borders, titlebar)
+#define HIT_CLIENT     2   // Client area
 
 struct wproxy_d 
 {
@@ -51,6 +54,9 @@ struct wproxy_d
     unsigned long ca_t;
     unsigned long ca_w;
     unsigned long ca_h;
+
+// Hit area
+    int hit_area;
 
     unsigned int color;
 
@@ -117,7 +123,11 @@ wproxy_set_parameters_given_tid(
     unsigned long l, 
     unsigned long t,
     unsigned long w,
-    unsigned long h );
+    unsigned long h,
+    unsigned long ca_l, 
+    unsigned long ca_t,
+    unsigned long ca_w,
+    unsigned long ca_h );
 
 #endif    
 

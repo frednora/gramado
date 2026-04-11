@@ -862,7 +862,7 @@ tbProcedure(
 
         // #test
         case MSG_MOUSEMOVE:
-            //printf("%d %d\n", long1, long2);
+            printf("%d %d\n", long1, long2);
             IconId = (int) __hit_test_icon(long1, long2);
             if (IconId > 0)
                 __hover_icon_id = IconId;
@@ -1603,13 +1603,23 @@ int main(int argc, char *argv[])
 
 // #test
 // Update the wproxy structure that belongs to this thread.
-    unsigned long m[8];
+    unsigned long m[10];
     int mytid = gettid();
+
     m[0] = (unsigned long) (mytid & 0xFFFFFFFF);
+
+    // Frame/chrome rectangle
     m[1] = TaskbarInfo.left;
     m[2] = TaskbarInfo.top;
     m[3] = TaskbarInfo.width;
     m[4] = TaskbarInfo.height;
+
+    // Client area rectangle
+    m[5] = TaskbarInfo.left;
+    m[6] = TaskbarInfo.top;
+    m[7] = TaskbarInfo.width;
+    m[8] = TaskbarInfo.height;
+
     sc80( 48, &m[0], &m[0], &m[0] );
 
 // =============================

@@ -559,11 +559,14 @@ void *sci0 (
         // Update the values for wproxy given the owner's tid.
         wproxy_set_parameters_given_tid(
             (tid_t) (message_address[0] & 0xFFFFFFFF),   // tid
-            (unsigned long) message_address[1],
-            (unsigned long) message_address[2],
-            (unsigned long) message_address[3],
-            (unsigned long) message_address[4]
-
+            (unsigned long) message_address[1],  // l
+            (unsigned long) message_address[2],  // t
+            (unsigned long) message_address[3],  // w
+            (unsigned long) message_address[4],  // h
+            (unsigned long) message_address[5],  // ca_l
+            (unsigned long) message_address[6],  // ca_t
+            (unsigned long) message_address[7],  // ca_w
+            (unsigned long) message_address[8]   // ca_h
         );
  
         return NULL;

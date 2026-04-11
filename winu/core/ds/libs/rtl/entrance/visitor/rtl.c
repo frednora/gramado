@@ -2437,3 +2437,12 @@ long rtl_round_up(long num_to_round, long multiple)
     return (long) Result;
 }
 
+// OUT: 0=ok, -1=fail.
+int rtl_use_wink_windowing_system(void)
+{
+    sc80( 940, 0, 0, 0 );
+    return 0;
+}
+
+
+

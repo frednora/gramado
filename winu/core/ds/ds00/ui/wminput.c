@@ -670,6 +670,11 @@ int wmProcessCombinationEvent(int msg_code)
     if (msg_code == 75)
     {
         yellow_status("Shift + F12: Enable mouse");
+
+        // Enable the use of the wink windowing system.
+        // Routines in kernel-side.
+        rtl_use_wink_windowing_system();
+
         // Calling the kernel to make the full ps2 initialization.
         // #todo: Create a wrapper fot that syscall.
         // #todo: Allow only the ws pid to make this call.
