@@ -790,6 +790,7 @@ tbProcedure(
             break;
 
         // One button was clicked
+        // Sent by the server?
         case GWS_MouseClicked:
             //#debug
             //printf("taskbar: GWS_MouseClicked\n");
@@ -851,11 +852,23 @@ tbProcedure(
             break;
 
         // #test
-        case MSG_MOUSERELEASED:
-            printf("taskbar: MSG_MOUSERELEASED:\n");
+        case MSG_MOUSEPRESSED:
+            //printf("taskbar: MSG_MOUSEPRESSED:\n");
             if (__hover_icon_id == MyButton.icon_id)
             {
-                printf("Bingo! \n");
+                printf("taskbar: Button pressed\n");
+                // #todo: on button pressed
+                // on_button_clicked(__hover_icon_id);
+            }
+            break;
+
+        // #test
+        case MSG_MOUSERELEASED:
+            //printf("taskbar: MSG_MOUSERELEASED:\n");
+            if (__hover_icon_id == MyButton.icon_id)
+            {
+                printf("taskbar: Button released\n");
+                // #todo: on button released
                 on_button_clicked(__hover_icon_id);
             }
             break;

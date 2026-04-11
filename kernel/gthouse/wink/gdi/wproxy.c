@@ -140,7 +140,7 @@ void wproxy_hit_test00(unsigned long x, unsigned long y)
                 if ( x >= Left && x <= Right &&
                      y >= Top  && y <= Bottom )
                 {
-                    printk("hit: client area\n");
+                    //printk("hit: client area\n");
                     w->hit_area = HIT_CLIENT;  // Inside client area
                 }
 

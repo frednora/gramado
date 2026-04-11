@@ -3773,7 +3773,7 @@ wmMouseEvent(
                     // Inside the frame, send absolute values.
                     if (wproxy_hover->hit_area == HIT_FRAME){
 
-                        printk("frame\n");
+                        //printk("frame\n");
                         ibroker_post_message_to_ds(
                             event_id, 
                             (unsigned long) long1, 
@@ -3785,7 +3785,7 @@ wmMouseEvent(
 
                         rel_long1 = long1 - wproxy_hover->ca_l;
                         rel_long2 = long2 - wproxy_hover->ca_t;
-                        printk("client\n");
+                        //printk("client\n");
                         ipc_post_message_to_tid(
                             (tid_t) __HARDWARE_TID, 
                             (tid_t) wproxy_hover->tid,
