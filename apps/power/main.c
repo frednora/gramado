@@ -307,7 +307,7 @@ int main(int argc, char *argv[])
 
     client_fd = Display->fd;
     if (client_fd <= 0) {
-        printf("power_app: Invalid fd\n");
+        printf("power: Invalid fd\n");
         return EXIT_FAILURE;
     }
 

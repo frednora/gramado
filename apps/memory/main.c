@@ -9,8 +9,14 @@
 #include <string.h>
 #include <unistd.h>
 #include <rtl/gramado.h>
+
 // libgws - The client-side library.
 #include <gws.h>
+
+// #test
+// The client-side library
+#include <libgui.h>
+
 
 #include "memory.h" // Optional: define colors or prototypes if you like
 
@@ -346,6 +352,17 @@ int main(int argc, char *argv[])
     // Screen size
     unsigned long screen_w = gws_get_system_metrics(1);
     unsigned long screen_h = gws_get_system_metrics(2);
+
+
+// =========================================
+// Library initialization
+
+    int status = -1;
+    status = (int) libgui_initialize();
+    if (status < 0){
+        printf("memory: libgui_initialize fail\n");
+        exit(1);
+    }
 
     // Main window geometry
     unsigned long win_w = screen_w / 2;
