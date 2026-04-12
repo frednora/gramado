@@ -901,7 +901,7 @@ doCreateWindowFrame (
 // Overlapped.
 // Janela de aplicativos.
 
-// Title bar and status bar.
+// Title bar and status bar
     struct gws_window_d  *tbWindow;
     struct gws_window_d  *sbWindow;
     int id=-1;  //usado pra registrar janelas filhas.
@@ -924,8 +924,10 @@ doCreateWindowFrame (
         METRICS_TITLEBAR_DEFAULT_HEIGHT;
 
 // Titlebar colors for active window
-    unsigned int TitleBarColor = (unsigned int) get_color(csiActiveWindowTitleBar);
-    unsigned int TitleBarStringColor = (unsigned int) get_color(csiTitleBarTextColor);
+    unsigned int TitleBarColor = 
+        (unsigned int) get_color(csiActiveWindowTitleBar);
+    unsigned int TitleBarStringColor = 
+        (unsigned int) get_color(csiTitleBarTextColor);
 
     int icon_id = ICON_ID_APP;  // Default
 
@@ -993,13 +995,13 @@ doCreateWindowFrame (
     __rop_right_border  = window->rop_right_border;  // 
     __rop_bottom_border = window->rop_bottom_border;  // 
 
-// Uma overlapped maximizada não tem borda.
+// Is it a maximized window?
     int IsMaximized = FALSE;
-    if (window->state == WINDOW_STATE_MAXIMIZED)
-    {
+    if (window->state == WINDOW_STATE_MAXIMIZED){
         IsMaximized=TRUE;
     }
-// Uma overlapped maximizada não tem borda.
+
+// is it a fullscreen window?
     int IsFullscreen = FALSE;
     if (window->state == WINDOW_STATE_FULL){
         IsFullscreen=TRUE;
@@ -1078,10 +1080,9 @@ doCreateWindowFrame (
     //default: break;
     };
 
-    if (useFrame == FALSE)
-    {
+// Check if we need to create the frame for this window
+    if (useFrame == FALSE){
         window->is_frameless = TRUE;
-        //server_debug_print ("doCreateWindowFrame: [ERROR] This type does not use a frame.\n");
         goto fail;
     }
 
@@ -1101,19 +1102,33 @@ doCreateWindowFrame (
             __rop_right_border,
             __rop_bottom_border );
 
+        // When we draw the border for editbox windows 
+        // we need to update the client area rectangle.
+        window->rcClient.top    += window->Border.border_size;
+        window->rcClient.left   += window->Border.border_size;
+        window->rcClient.width  -= window->Border.border_size;
+        window->rcClient.height -= window->Border.border_size;
+
         return 0;
     }
 
 // ===============================================
 // Overlapped?
-// Draw border, titlebar and status bar.
+// + Draw border, titlebar and status bar.
+// + Update the client area rectangle.
+
 // #todo:
 // String right não pode ser maior que 'last left' button.
 
     if (Type == WT_OVERLAPPED)
     {
+
+        //
+        // Border
+        //
+
         // #todo
-        // Maybe we nned border size and padding size.
+        // Maybe we need border size and padding size.
         
         // Consistente para overlapped.
         //BorderSize = METRICS_BORDER_SIZE;
@@ -1124,33 +1139,33 @@ doCreateWindowFrame (
         // and a flag to indicate that border is used.
         // It also has a border style.
 
-        // Quatro bordas de uma janela overlapped.
-        // Uma overlapped maximizada não tem bordas.
+        // Not using border yet
         window->borderUsed = FALSE;
-        
-        if ( IsMaximized == FALSE && 
-             IsFullscreen == FALSE)
-        {
-            //WindowManager.is_fullscreen = TRUE;
-            //WindowManager.fullscreen_window = window;
-            
-            window->borderUsed = FALSE;
 
-            // Only paint in the case of nor maximized and not full
+        // Normal case:
+        // The window is not maximized and not in fullscreen,
+        // so we need to draw the border and the title bar.
+        if (IsMaximized == FALSE && IsFullscreen == FALSE)
+        {
+            window->borderUsed = TRUE;
+            //WindowManager.is_fullscreen = FALSE;
+            //WindowManager.fullscreen_window = window;
+
+            // Draw border
             __draw_window_border(
                 parent, window,
                 __rop_top_border,
                 __rop_left_border,
                 __rop_right_border,
                 __rop_bottom_border );
-        }
 
-        // #important:
-        // The border in an overlapped window will affect
-        // the top position of the client area rectangle.
-        //window->rcClient.top += window->Border.border_size;
-        window->rcClient.top    += window->Border.border_size;
-        window->rcClient.height -= window->Border.border_size;
+            // When we draw the border for overlapped windows 
+            // we need to update the client area rectangle.
+            window->rcClient.top    += window->Border.border_size;
+            window->rcClient.left   += window->Border.border_size;
+            window->rcClient.width  -= window->Border.border_size;
+            window->rcClient.height -= window->Border.border_size;
+        }
 
         //
         // Title bar
@@ -1160,21 +1175,8 @@ doCreateWindowFrame (
         // The window structure has a flag to indicate that
         // we are using titlebar.
         // It also has a title bar style.
-        // Based on this style, we can setup some
-        // ornaments for this title bar.
-        // #todo
-        // Simple title bar.
-        // We're gonna have a wm inside the display server.
-        // The title bar will be very simple.
-        // We're gonna have a client area.
-        // #bugbug
-        // Isso vai depender da resolução da tela.
-        // Um tamanho fixo pode fica muito fino em uma resolução alta
-        // e muito largo em uma resolução muito baixa.
-        
-        // Title bar
-        // Se a janela overlapped tem uma title bar.
-        // #todo: Essa janela foi registrada?
+        // Based on this style, we can setup some ornaments.
+
         if (useTitleBar == TRUE)
         {
             // This is a application window.
@@ -1189,9 +1191,8 @@ doCreateWindowFrame (
 
             window->titlebar_height = TitleBarHeight;
 
-            // IN: 
-            // parent, border size, height, color, ornament color,
-            //  use icon, use string.
+            // IN: parent, border size, height, color, ornament color,
+            // use icon, use string.
             tbWindow = 
                 (struct gws_window_d *) do_create_titlebar(
                     window,
@@ -1212,31 +1213,20 @@ doCreateWindowFrame (
             // Add it to the list of childs
             wm_add_child_window(parent,tbWindow);
 
-            // #important:
-            // The Titlebar in an overlapped window will affect
-            // the top position of the client area rectangle.
-            // Depois de pintarmos a titlebar,
-            // temos que atualizar o top da área de cliente.
-            window->rcClient.top += window->titlebar_height;
+            // Update the client area rectangle after drawing the title bar
+            window->rcClient.top    += window->titlebar_height;
             window->rcClient.height -= window->titlebar_height;
-        }  //--use title bar.
-        // ooooooooooooooooooooooooooooooooooooooooooooooo
+        }
 
-        // #todo:
-        // nessa hora podemos pintar a barra de menu, se o style
-        // da janela assim quiser. Depois disso precisaremos
-        // atualizar o top da área de cliente.
-        //window->rcClient.top += window->titlebar_height;
 
+        //
         // Status bar
+        //
+
         // (In the bottom)
         // #todo: It turns the client area smaller.
         if (useStatusBar == TRUE)
         {
-            //#debug
-            //printf ("sb\n");
-            //while(1){}
-
             // #todo
             // Move these variables to the start of the routine.
             unsigned long sbLeft=0;
@@ -1328,11 +1318,20 @@ doCreateWindowFrame (
             __rop_right_border,
             __rop_bottom_border );
 
-        //printf("border\n"); while(1){}
+        // When we draw the border for icons windows 
+        // we need to update the client area rectangle.
+        window->rcClient.top    += window->Border.border_size;
+        window->rcClient.left   += window->Border.border_size;
+        window->rcClient.width  -= window->Border.border_size;
+        window->rcClient.height -= window->Border.border_size;
+
         return 0;
     }
 
+// Nothing to draw, but nothing failed. 
+// We just have a frameless window type.
     return 0;
+
 fail:
     return (int) (-1);
 }
@@ -1972,16 +1971,14 @@ void *doCreateWindow (
 
 
 // =================================
-// Window area
-
-   // Relative to the window values
+// Client area: Initializing using the window dimensions.
     window->rcWindow.left   = (unsigned long) 0;
     window->rcWindow.top    = (unsigned long) 0;
     window->rcWindow.width  = (unsigned long) WindowWidth;
     window->rcWindow.height = (unsigned long) WindowHeight;
 
 // =================================
-// Client area
+// Client area: Updating using padding values.
 
     // Local pad variables for client area calculation
     unsigned int pad_left   = METRICS_CLIENTAREA_LEFTPAD;
@@ -3025,9 +3022,7 @@ void *CreateWindow (
 // then converted to WT_OVERLAPPED before frame creation.
 
     if (type == WT_OVERLAPPED)
-    {
-        //server_debug_print ("CreateWindow: WT_OVERLAPPED\n");
-        
+    { 
         // #test
         // #todo: precisamos de um request que selecione
         // o modo de operação do window manager.
@@ -3043,7 +3038,7 @@ void *CreateWindow (
             // #test
             // Clipping agains the working area.
 
-            unsigned long wa_top    = WindowManager.wa.top;
+            unsigned long wa_top = WindowManager.wa.top;
             unsigned long wa_bottom = 
                 (WindowManager.wa.top + WindowManager.wa.height);
 
@@ -3093,8 +3088,7 @@ void *CreateWindow (
             goto fail;
         }
 
-        // Pintamos simples, mas a tipagem será overlapped.
-        __w->type = WT_OVERLAPPED;
+        __w->type = WT_OVERLAPPED; // Change the type back to overlapped
         //__w->locked = FALSE;
         __w->enabled = TRUE;
 
@@ -3268,7 +3262,6 @@ void *CreateWindow (
 // == Draw frame ===============================
 //
 
-draw_frame:
 // (Borders for the frame)
 // We already have the shadow and 
 // the background for the frame.
@@ -3278,72 +3271,47 @@ draw_frame:
 // Porém tem algumas coisas que o display server faz,
 // como as bordas de um editbox.
 
-    if ((void*) __w == NULL){
-        //server_debug_print ("CreateWindow.draw_frame: __w\n");
-        goto fail;
-    }
-    if (__w->magic != 1234){
-        //server_debug_print ("CreateWindow.draw_frame: __w->magic\n");
-        goto fail;
-    }
-
 // #importante:
 // DESENHA O FRAME DOS TIPOS QUE PRECISAM DE FRAME.
 // OVERLAPED, EDITBOX, CHECKBOX ...
 
-// draw frame.
-// #todo:
-// Nessa hora essa rotina podera criar a barra de títulos.
-// o wm poderá chamar a rotina de criar frame.
-// See: wm.c
-// IN: 
-// parent window, target window,
-// border size, border color1, border color2, bordercolor3,
-// ornament color1, ornament color2, 
-// style.
-// #todo: We need the style dependent variables for these colors.
+// Draw the frame/chrome for the window.
+// The called non-client area.
+draw_frame:
 
-// Border size
+    // Invalid pointer
+    if ((void*) __w == NULL){
+        goto fail;
+    }
+    if (__w->magic != 1234){
+        goto fail;
+    }
+
+//
+// Setup the parameters for the frame drawing routine
+//
+
+    // Border size
     unsigned long BorderSize = METRICS_BORDER_SIZE;
-
-// Border colors.
+    // Border colors
     unsigned int bc_1 = COLOR_BORDER2;
     unsigned int bc_2 = COLOR_BORDER2;
     unsigned int bc_3 = COLOR_BORDER2;
-
-// Ornament colors
+    // Ornament colors
     unsigned int oc_1 = COLOR_ORNAMENT_FG;
     unsigned int oc_2 = COLOR_ORNAMENT_FG;
-
-// Frame style
+    // Frame style
     int FrameStyle = 1;
+    int isActiveWindow = FALSE;  // Active?
+    int isKeyboardOwner = FALSE;  // wwf?
 
-// ----
-
-/*
-// Border colors for all the types depending on the focus.
-    if (__w == keyboard_owner){
-        bc_1 = (unsigned int) get_color(csiWWFBorder);
-        bc_2 = (unsigned int) get_color(csiWWFBorder);
-        //bc_3 = (unsigned int) get_color(csiWWFBorder);
-    } else if (__w == active_window) { 
-        // Active top-level window 
-        bc_1 = get_color(csiActiveWindowBorder); 
-        bc_2 = get_color(csiActiveWindowBorder);
-    } else if (__w != keyboard_owner){
-        bc_1 = (unsigned int) get_color(csiWindowBorder);
-        bc_2 = (unsigned int) get_color(csiWindowBorder);
-        //bc_3 = (unsigned int) get_color(csiWWFBorder);
-    };
-*/
-
-    int isKeyboardOwner = FALSE;   // wwf
-    int isActiveWindow = FALSE;    // active
-
-    if (__w == keyboard_owner)
-        isKeyboardOwner = TRUE;
+// Is it the active window?
     if (__w == active_window)
         isActiveWindow = TRUE;
+
+// Is it the keyboard owner? (wwf)
+    if (__w == keyboard_owner)
+        isKeyboardOwner = TRUE;
 
 
 // == Normal windows =================================
@@ -3384,7 +3352,6 @@ draw_frame:
             bc_2 = (unsigned int) HONEY_COLOR_BORDER_LIGHT_NOFOCUS;  //get_color(csiWindowBorder);
         }
     }
-
 
 // Ornament color for Overlapped window
     if (type == WT_OVERLAPPED)
@@ -3475,8 +3442,8 @@ draw_frame:
 // Only at the end of this routine.
     __w->dirty = TRUE;
     return (void *) __w;
+
 fail:
-    //server_debug_print ("CreateWindow: Fail\n");
     return NULL;
 }
 
