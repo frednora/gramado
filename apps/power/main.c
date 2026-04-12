@@ -51,14 +51,15 @@ struct button_info_d
 // (running, minimized, etc.).
     int state;
 };
-struct button_info_d  MyButton;
+static struct button_info_d  MyButton_Restart;
+static struct button_info_d  MyButton_Shutdown;
 
 static int __hover_button_id = -1; // Invalidate.
 
 // Window IDs
 static int main_window     = -1;
-static int restart_button  = -1;
-static int shutdown_button = -1;
+// static int restart_button  = -1;
+// static int shutdown_button = -1;
 
 // Default responder (button to trigger on Enter)
 static int default_responder = -1;
@@ -82,16 +83,16 @@ static void on_button_clicked(int id)
 
     switch (id)
     {
-        case 1:  // MyButton.icon_id
+        case 1:  // MyButton_Restart.icon_id
             printf("Button %d clicked!\n", id);
-            // Example: launch an app
-            //do_launch_app(1);
+            rtl_clone_and_execute("reboot.bin");
+            exit(0);
             break;
 
-        // Future buttons/icons
-        case 2:
+        case 2:  // MyButton_Shutdown.icon_id
             printf("Button %d clicked!\n", id);
-            //do_launch_app(2);
+            rtl_clone_and_execute("shutdown.bin");
+            exit(0);
             break;
 
         default:
@@ -104,12 +105,23 @@ static void on_button_clicked(int id)
 // Hit-test for our fake button in PowerApp
 static int __hit_test_button(unsigned long rel_mx, unsigned long rel_my) 
 {
-    if ( rel_mx >= MyButton.left && 
-         rel_mx <= MyButton.left + MyButton.width &&
-         rel_my >= MyButton.top  && 
-         rel_my <= MyButton.top + MyButton.height )
+
+// Button Restart
+    if ( rel_mx >= MyButton_Restart.left && 
+         rel_mx <= MyButton_Restart.left + MyButton_Restart.width &&
+         rel_my >= MyButton_Restart.top  && 
+         rel_my <= MyButton_Restart.top + MyButton_Restart.height )
     {
-        return (int) MyButton.button_id;
+        return (int) MyButton_Restart.button_id;
+    }
+
+// Button Shutdown
+    if ( rel_mx >= MyButton_Shutdown.left && 
+         rel_mx <= MyButton_Shutdown.left + MyButton_Shutdown.width &&
+         rel_my >= MyButton_Shutdown.top  && 
+         rel_my <= MyButton_Shutdown.top + MyButton_Shutdown.height )
+    {
+        return (int) MyButton_Shutdown.button_id;
     }
 
     // ...
@@ -133,51 +145,133 @@ static void update_children(int fd)
     unsigned long restart_x  = (wi.cr_width / 4) - (button_w / 2);
     unsigned long shutdown_x = (3 * wi.cr_width / 4) - (button_w / 2);
 
+
+// Move and redraw buttons
+
+/*
+    gws_change_window_position(fd, restart_button, restart_x, button_y);
+    gws_resize_window(fd, restart_button, button_w, button_h);
+    gws_redraw_window(fd, restart_button, TRUE);
+*/
+
+/*
+    gws_change_window_position(fd, shutdown_button, shutdown_x, button_y);
+    gws_resize_window(fd, shutdown_button, button_w, button_h);
+    gws_redraw_window(fd, shutdown_button, TRUE);
+*/
+
+// Refresh main window
+    // gws_refresh_window (fd, main_window);
+
+//------------------------------------------
+// #test
+
+/*
     // Redraw label text
     gws_draw_text(
         fd, main_window, 20, 20, COLOR_BLACK,
         "Choose an action:"
     );
+*/
 
-// Move and redraw buttons
+    // Draw the label string inside
+    const char *label_chose = "Choose an action: ";
+    libgui_drawstring(
+        wi.left + wi.cr_left +20, 
+        wi.top + wi.cr_top +20, 
+        label_chose,
+        COLOR_BLACK, COLOR_GRAY, 0
+    );
 
-    gws_change_window_position(fd, restart_button, restart_x, button_y);
-    gws_resize_window(fd, restart_button, button_w, button_h);
-    gws_redraw_window(fd, restart_button, TRUE);
+//
+// Support for button positions and dimensions
+//
 
-    gws_change_window_position(fd, shutdown_button, shutdown_x, button_y);
-    gws_resize_window(fd, shutdown_button, button_w, button_h);
-    gws_redraw_window(fd, shutdown_button, TRUE);
-    
-// Refresh main window
-    gws_refresh_window (fd, main_window);
-
-// #test
+// -------------------------------------------------
+// Draw restart button
 
     // Relative values
-    MyButton.left = 4;
-    MyButton.top  = 4;
+    MyButton_Restart.left = restart_x; // 4;
+    MyButton_Restart.top  = button_y;  // 4;
 
     // Update absolute values.
-    MyButton.absolute_left = wi.left + wi.cr_left + MyButton.left;
-    MyButton.absolute_top = wi.top + wi.cr_top + MyButton.top;
+    MyButton_Restart.absolute_left = wi.left + wi.cr_left + MyButton_Restart.left;
+    MyButton_Restart.absolute_top = wi.top + wi.cr_top + MyButton_Restart.top;
 
 // Draw the fake button
     libgui_backbuffer_draw_rectangle0(
-        MyButton.absolute_left, 
-        MyButton.absolute_top, 
-        MyButton.width, 
-        MyButton.height,
-        0x00FF00,   // bright green for visibility
+        MyButton_Restart.absolute_left, 
+        MyButton_Restart.absolute_top, 
+        MyButton_Restart.width, 
+        MyButton_Restart.height,
+        xCOLOR_GRAY2, 
         1, 0, FALSE
+    );
+
+    // Draw the label string inside
+    const char *label_restart = "RESTART";
+    libgui_drawstring(
+        MyButton_Restart.absolute_left +4, 
+        MyButton_Restart.absolute_top +4, 
+        label_restart,
+        COLOR_BLACK, COLOR_GRAY, 0
+    );
+
+
+// Refresh to show it
+    libgui_refresh_rectangle_via_kernel(
+        MyButton_Restart.absolute_left, 
+        MyButton_Restart.absolute_top, 
+        MyButton_Restart.width, 
+        MyButton_Restart.height
+    );
+
+
+// -------------------------------------------------
+// Draw shutdown button
+
+    // Relative values
+    MyButton_Shutdown.left = shutdown_x; // 4;
+    MyButton_Shutdown.top  = button_y;  // 4;
+
+    // Update absolute values.
+    MyButton_Shutdown.absolute_left = wi.left + wi.cr_left + MyButton_Shutdown.left;
+    MyButton_Shutdown.absolute_top = wi.top + wi.cr_top + MyButton_Shutdown.top;
+
+// Draw the fake button
+    libgui_backbuffer_draw_rectangle0(
+        MyButton_Shutdown.absolute_left, 
+        MyButton_Shutdown.absolute_top, 
+        MyButton_Shutdown.width, 
+        MyButton_Shutdown.height,
+        xCOLOR_GRAY2,
+        1, 0, FALSE
+    );
+
+    // Draw the label string inside
+    const char *label_shutdown = "SHUTDOWN";
+    libgui_drawstring(
+        MyButton_Shutdown.absolute_left +4, 
+        MyButton_Shutdown.absolute_top +4, 
+        label_shutdown,
+        COLOR_BLACK, COLOR_GRAY, 0
     );
 
 // Refresh to show it
     libgui_refresh_rectangle_via_kernel(
-        MyButton.absolute_left, 
-        MyButton.absolute_top, 
-        MyButton.width, 
-        MyButton.height
+        MyButton_Shutdown.absolute_left, 
+        MyButton_Shutdown.absolute_top, 
+        MyButton_Shutdown.width, 
+        MyButton_Shutdown.height
+    );
+
+// #test
+// Refresh the whole client window.
+    libgui_refresh_rectangle_via_kernel(
+        wi.left + wi.cr_left, 
+        wi.top  + wi.cr_top, 
+        wi.cr_width, 
+        wi.cr_height
     );
 }
 
@@ -189,6 +283,7 @@ static void set_default_responder(int wid)
 
 static void switch_responder(int fd)
 {
+/*
     if (default_responder == restart_button) {
         set_default_responder(shutdown_button);
         gws_set_focus(fd, shutdown_button);
@@ -196,10 +291,12 @@ static void switch_responder(int fd)
         set_default_responder(restart_button);
         gws_set_focus(fd, restart_button);
     }
+*/
 }
 
 static void trigger_default_responder(int fd) 
 {
+/*
     if (default_responder == restart_button) {
         printf("PowerApp: Enter >> Restart\n");
         rtl_clone_and_execute("reboot.bin");
@@ -209,6 +306,7 @@ static void trigger_default_responder(int fd)
         rtl_clone_and_execute("shutdown.bin");
         exit(0);
     }
+*/
 }
 
 // ----------------------------------------------------
@@ -249,7 +347,7 @@ powerProcedure(
         switch (long1){
 
         case VK_RETURN:
-            trigger_default_responder(fd);
+            //trigger_default_responder(fd);
             break;
 
         case 'R':
@@ -316,6 +414,7 @@ powerProcedure(
         printf("  long2       = %lu\n", long2);
         */
 
+        /*
         // Use long1 as the clicked child window ID
         if ((int)long1 == restart_button)
         {
@@ -323,13 +422,16 @@ powerProcedure(
             rtl_clone_and_execute("reboot.bin");
             return 0;
         }
+        */
 
+        /*
         if ((int)long1 == shutdown_button)
         {
             printf("Shutdown button clicked\n");
             rtl_clone_and_execute("shutdown.bin");
             return 0;
         }
+        */
 
         //printf("GWS_MouseClicked: done\n");
         break;
@@ -347,32 +449,19 @@ powerProcedure(
             __hover_button_id = -1;
         break;
 
-        // #test
         case MSG_MOUSEPRESSED:
             //printf("power: MSG_MOUSEPRESSED:\n");
-            if (__hover_button_id == MyButton.button_id)
-            {
-                printf("power: Button pressed\n");
-                // #todo: on button pressed
-                // on_button_clicked(__hover_button_id);
-            }
             break;
 
-        // #test
         case MSG_MOUSERELEASED:
-            printf("power: MSG_MOUSERELEASED:\n");
-            if (__hover_button_id == MyButton.button_id)
-            {
-                printf("power: Button released\n");
-                // #todo: on button released
-                on_button_clicked(__hover_button_id);
-            }
+            printf("power: Button released: %d\n", __hover_button_id);
+            //printf("power: MSG_MOUSERELEASED:\n");
+            on_button_clicked(__hover_button_id);
             break;
-
 
     case MSG_CLOSE:
-        gws_destroy_window(fd, restart_button);
-        gws_destroy_window(fd, shutdown_button);
+        //gws_destroy_window(fd, restart_button);
+        //gws_destroy_window(fd, shutdown_button);
         gws_destroy_window(fd, main_window);
         printf("PowerApp: Window closed\n");
         exit(0);
@@ -482,12 +571,6 @@ int main(int argc, char *argv[])
 
 // =============================
 
-// Text
-    gws_draw_text(
-        client_fd,
-        main_window,
-        20, 20, COLOR_BLACK, "Choose an action:" 
-    );
 
     //#debug
     //gws_refresh_window(client_fd, main_window);
@@ -525,43 +608,26 @@ int main(int argc, char *argv[])
 
 // ============================================================
 
-    MyButton.button_id = 1;   // arbitrary ID
-    // MyButton.wid     = main_window; // parent window ID
+// Text
+/*
+    gws_draw_text(
+        client_fd,
+        main_window,
+        20, 20, COLOR_BLACK, "Choose an action:" 
+    );
+*/
 
-    // Relative values
-    MyButton.left = 4;
-    MyButton.top  = 4;
-
-    // Absolute coordinates (relative to screen)
-    MyButton.absolute_left = wi.left + wi.cr_left + MyButton.left;
-    MyButton.absolute_top  = wi.top + wi.cr_top + MyButton.top;
-    MyButton.width         = 32;
-    MyButton.height        = 24;
-
-
-    // Initial state
-    // MyButton.state = 0;
-
-// Draw the fake button
-    libgui_backbuffer_draw_rectangle0(
-        MyButton.absolute_left, 
-        MyButton.absolute_top, 
-        MyButton.width, 
-        MyButton.height,
-        0x00FF00,   // bright green for visibility
-        1, 0, FALSE
+    // Draw the label string inside
+    const char *label_chose = "Choose an action: ";
+    libgui_drawstring(
+        wi.left + wi.cr_left +20, 
+        wi.top + wi.cr_top +20, 
+        label_chose,
+        COLOR_BLACK, COLOR_GRAY, 0
     );
 
-// Refresh to show it
-    libgui_refresh_rectangle_via_kernel(
-        MyButton.absolute_left, 
-        MyButton.absolute_top, 
-        MyButton.width, 
-        MyButton.height
-    );
 
 // ============================================================
-
 
 //
 // Support for button positions and dimensions
@@ -574,6 +640,100 @@ int main(int argc, char *argv[])
     unsigned long restart_x  = (wi.cr_width / 4) - (button_w / 2);
     unsigned long shutdown_x = (3 * wi.cr_width / 4) - (button_w / 2);
 
+// ============================================================
+// Create restart button
+
+    MyButton_Restart.button_id = 1;   // arbitrary ID
+    // MyButton_Restart.wid     = main_window; // parent window ID
+
+    // Relative values
+    MyButton_Restart.left = restart_x; //4;
+    MyButton_Restart.top  = button_y; //4;
+
+    // Absolute coordinates (relative to screen)
+    MyButton_Restart.absolute_left = wi.left + wi.cr_left + MyButton_Restart.left;
+    MyButton_Restart.absolute_top  = wi.top + wi.cr_top + MyButton_Restart.top;
+    MyButton_Restart.width         = button_w; //32;
+    MyButton_Restart.height        = button_h; //24;
+
+    // Initial state
+    // MyButton_Restart.state = 0;
+
+// Draw the fake button
+    libgui_backbuffer_draw_rectangle0(
+        MyButton_Restart.absolute_left, 
+        MyButton_Restart.absolute_top, 
+        MyButton_Restart.width, 
+        MyButton_Restart.height,
+        xCOLOR_GRAY2, 
+        1, 0, FALSE
+    );
+
+    // Draw the label string inside
+    const char *label_restart = "RESTART";
+    libgui_drawstring(
+        MyButton_Restart.absolute_left +4, 
+        MyButton_Restart.absolute_top +4, 
+        label_restart,
+        COLOR_BLACK, COLOR_GRAY, 0
+    );
+
+// Refresh to show it
+    libgui_refresh_rectangle_via_kernel(
+        MyButton_Restart.absolute_left, 
+        MyButton_Restart.absolute_top, 
+        MyButton_Restart.width, 
+        MyButton_Restart.height
+    );
+
+// ============================================================
+// Create shutdown button
+
+    MyButton_Shutdown.button_id = 2;   // arbitrary ID
+    // MyButton_Shutdown.wid     = main_window; // parent window ID
+
+    // Relative values
+    MyButton_Shutdown.left = shutdown_x; //4;
+    MyButton_Shutdown.top  = button_y; //4;
+
+    // Absolute coordinates (relative to screen)
+    MyButton_Shutdown.absolute_left = wi.left + wi.cr_left + MyButton_Shutdown.left;
+    MyButton_Shutdown.absolute_top  = wi.top + wi.cr_top + MyButton_Shutdown.top;
+    MyButton_Shutdown.width         = button_w; //32;
+    MyButton_Shutdown.height        = button_h; //24;
+
+    // Initial state
+    // MyButton_Shutdown.state = 0;
+
+// Draw the fake button
+    libgui_backbuffer_draw_rectangle0(
+        MyButton_Shutdown.absolute_left, 
+        MyButton_Shutdown.absolute_top, 
+        MyButton_Shutdown.width, 
+        MyButton_Shutdown.height,
+        xCOLOR_GRAY2, 
+        1, 0, FALSE
+    );
+
+    // Draw the label string inside
+    const char *label_shutdown = "SHUTDOWN";
+    libgui_drawstring(
+        MyButton_Shutdown.absolute_left +4, 
+        MyButton_Shutdown.absolute_top +4, 
+        label_shutdown,
+        COLOR_BLACK, COLOR_GRAY, 0
+    );
+
+// Refresh to show it
+    libgui_refresh_rectangle_via_kernel(
+        MyButton_Shutdown.absolute_left, 
+        MyButton_Shutdown.absolute_top, 
+        MyButton_Shutdown.width, 
+        MyButton_Shutdown.height
+    );
+
+// ---------------------
+
 //
 // Button (Restart)
 //
@@ -582,6 +742,7 @@ int main(int argc, char *argv[])
 // wi.cr_left, wi.cr_top, wi.cr_width, wi.cr_height
 // which describe the client area rectangle of the main window.
 
+/*
     restart_button = 
         (int) gws_create_window(
             client_fd,
@@ -595,13 +756,15 @@ int main(int argc, char *argv[])
             WS_CHILD,
            COLOR_GRAY, COLOR_GRAY );
 
-    //#debug
     gws_refresh_window (client_fd, restart_button);
+*/
 
 //
 // Button (Shutdown)
 //
 
+
+/*
     shutdown_button = 
         (int) gws_create_window(
             client_fd,
@@ -615,11 +778,11 @@ int main(int argc, char *argv[])
             WS_CHILD,
             COLOR_GRAY, COLOR_GRAY );
 
-    //#debug
     gws_refresh_window (client_fd, shutdown_button);
+*/
 
 // Set default responder (choose one) 
-    default_responder = restart_button; // Enter will trigger Restart
+    //default_responder = restart_button; // Enter will trigger Restart
 
 // Main window: Activate and show.
     gws_set_active( client_fd, main_window );
