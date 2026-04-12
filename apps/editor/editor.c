@@ -559,6 +559,7 @@ editorProcedure(
 
     //36
     case MSG_MOUSERELEASED:
+        printf("editor: MSG_MOUSERELEASED:\n");
         if ( event_window == addressbar_window ||
              event_window == client_window )
         {
@@ -987,14 +988,38 @@ int editor_initialize(int argc, char *argv[])
     //gws_refresh_window(client_fd, main_window);
 // -----------------------------
 
-    struct gws_window_info_d  lWi;  // Local
-
 // Get info about the main window.
 // IN: fd, wid, window info structure.
+
+    struct gws_window_info_d  lWi;  // Local
     gws_get_window_info(
         client_fd, 
         main_window,
         (struct gws_window_info_d *) &lWi );
+
+
+// ============================================================
+// #test
+// Update the wproxy structure that belongs to this thread.
+
+    unsigned long m[10];
+    int mytid = gettid();
+    m[0] = (unsigned long) (mytid & 0xFFFFFFFF);
+
+    // Frame/chrome rectangle
+    m[1] = lWi.left;
+    m[2] = lWi.top;
+    m[3] = lWi.width;
+    m[4] = lWi.height;
+
+    // Client area rectangle
+    m[5] = lWi.cr_left;
+    m[6] = lWi.cr_top;
+    m[7] = lWi.cr_width;
+    m[8] = lWi.cr_height;
+
+    sc80( 48, &m[0], &m[0], &m[0] );
+
 
 // Address bar - (edit box)
 // Inside the main window.
