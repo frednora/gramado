@@ -1702,12 +1702,12 @@ int main(int argc, char *argv[])
     // Absolute values
     MyButton.absolute_left = TaskbarInfo.left + 4;
     MyButton.absolute_top  = TaskbarInfo.top + 4;
+    MyButton.width   = 32;
+    MyButton.height  = 24;
 
     // Relative values
     MyButton.left    = 4;
     MyButton.top     = 4;
-    MyButton.width   = 32;
-    MyButton.height  = 24;
 
     MyButton.state   = 0;    // 0 = normal, 1 = hover, 2 = pressed
 

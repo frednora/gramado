@@ -29,6 +29,32 @@
 struct gws_display_d *Display;
 
 
+struct button_info_d
+{
+    int button_id;
+
+// This is the window id that represents the icon.
+    int wid;
+
+// Absolute values
+    unsigned long absolute_left;
+    unsigned long absolute_top;
+    unsigned long width; 
+    unsigned long height;
+
+// Relative values
+    unsigned long left;
+    unsigned long top;
+
+// The state of the icon, it also represents
+// the state of the client application.
+// (running, minimized, etc.).
+    int state;
+};
+struct button_info_d  MyButton;
+
+static int __hover_button_id = -1; // Invalidate.
+
 // Window IDs
 static int main_window     = -1;
 static int restart_button  = -1;
@@ -41,8 +67,55 @@ static void set_default_responder(int wid);
 static void switch_responder(int fd);
 static void trigger_default_responder(int fd);
 
+static void on_button_clicked(int id);
+static int __hit_test_button(unsigned long rel_mx, unsigned long rel_my);
+static void update_children(int fd);
 
 // =====================================================
+
+
+// Handle click events for components
+static void on_button_clicked(int id)
+{
+    if (id < 0)
+        return;
+
+    switch (id)
+    {
+        case 1:  // MyButton.icon_id
+            printf("Button %d clicked!\n", id);
+            // Example: launch an app
+            //do_launch_app(1);
+            break;
+
+        // Future buttons/icons
+        case 2:
+            printf("Button %d clicked!\n", id);
+            //do_launch_app(2);
+            break;
+
+        default:
+            printf("Unknown button clicked: %d\n", id);
+            break;
+    };
+}
+
+
+// Hit-test for our fake button in PowerApp
+static int __hit_test_button(unsigned long rel_mx, unsigned long rel_my) 
+{
+    if ( rel_mx >= MyButton.left && 
+         rel_mx <= MyButton.left + MyButton.width &&
+         rel_my >= MyButton.top  && 
+         rel_my <= MyButton.top + MyButton.height )
+    {
+        return (int) MyButton.button_id;
+    }
+
+    // ...
+
+    return -1;
+}
 
 
 static void update_children(int fd)
@@ -78,6 +151,34 @@ static void update_children(int fd)
     
 // Refresh main window
     gws_refresh_window (fd, main_window);
+
+// #test
+
+    // Relative values
+    MyButton.left = 4;
+    MyButton.top  = 4;
+
+    // Update absolute values.
+    MyButton.absolute_left = wi.left + wi.cr_left + MyButton.left;
+    MyButton.absolute_top = wi.top + wi.cr_top + MyButton.top;
+
+// Draw the fake button
+    libgui_backbuffer_draw_rectangle0(
+        MyButton.absolute_left, 
+        MyButton.absolute_top, 
+        MyButton.width, 
+        MyButton.height,
+        0x00FF00,   // bright green for visibility
+        1, 0, FALSE
+    );
+
+// Refresh to show it
+    libgui_refresh_rectangle_via_kernel(
+        MyButton.absolute_left, 
+        MyButton.absolute_top, 
+        MyButton.width, 
+        MyButton.height
+    );
 }
 
 static void set_default_responder(int wid)
@@ -121,6 +222,8 @@ powerProcedure(
     unsigned long long1, 
     unsigned long long2 )
 {
+    int ButtonId = -1;
+
     if (fd < 0)
         return (int) -1;
 
@@ -232,14 +335,40 @@ powerProcedure(
         break;
 
     // #test
-    case MSG_MOUSERELEASED:
-        printf("power: MSG_MOUSERELEASED:\n");
+    case MSG_MOUSEMOVE:
+        // #bugbug
+        // Kernel is sending us absolute values
+        // instead of relative values.
+        //printf("%d %d\n", long1, long2);
+        ButtonId = (int) __hit_test_button(long1, long2);
+        if (ButtonId > 0)
+            __hover_button_id = ButtonId;
+        if (ButtonId <= 0)
+            __hover_button_id = -1;
         break;
 
-    // #test
-    case MSG_MOUSEMOVE:
-        //printf("%d %d\n", long1, long2);
-        break;
+        // #test
+        case MSG_MOUSEPRESSED:
+            //printf("power: MSG_MOUSEPRESSED:\n");
+            if (__hover_button_id == MyButton.button_id)
+            {
+                printf("power: Button pressed\n");
+                // #todo: on button pressed
+                // on_button_clicked(__hover_button_id);
+            }
+            break;
+
+        // #test
+        case MSG_MOUSERELEASED:
+            printf("power: MSG_MOUSERELEASED:\n");
+            if (__hover_button_id == MyButton.button_id)
+            {
+                printf("power: Button released\n");
+                // #todo: on button released
+                on_button_clicked(__hover_button_id);
+            }
+            break;
+
 
     case MSG_CLOSE:
         gws_destroy_window(fd, restart_button);
@@ -396,24 +525,39 @@ int main(int argc, char *argv[])
 
 // ============================================================
 
-    // Bottom half rectangle in main window
-    unsigned long rect_x = wi.left + wi.cr_left;
-    unsigned long rect_y = wi.top + wi.cr_top;
-    unsigned long rect_w = wi.cr_width;
-    unsigned long rect_h = wi.cr_height >> 1; // half height
+    MyButton.button_id = 1;   // arbitrary ID
+    // MyButton.wid     = main_window; // parent window ID
 
+    // Relative values
+    MyButton.left = 4;
+    MyButton.top  = 4;
+
+    // Absolute coordinates (relative to screen)
+    MyButton.absolute_left = wi.left + wi.cr_left + MyButton.left;
+    MyButton.absolute_top  = wi.top + wi.cr_top + MyButton.top;
+    MyButton.width         = 32;
+    MyButton.height        = 24;
+
+
+    // Initial state
+    // MyButton.state = 0;
+
+// Draw the fake button
     libgui_backbuffer_draw_rectangle0(
-        rect_x, rect_y, rect_w, rect_h,
+        MyButton.absolute_left, 
+        MyButton.absolute_top, 
+        MyButton.width, 
+        MyButton.height,
         0x00FF00,   // bright green for visibility
         1, 0, FALSE
     );
 
-    // Refresh to show it
+// Refresh to show it
     libgui_refresh_rectangle_via_kernel(
-        wi.left + rect_x,
-        wi.top  + rect_y,
-        rect_w,
-        rect_h
+        MyButton.absolute_left, 
+        MyButton.absolute_top, 
+        MyButton.width, 
+        MyButton.height
     );
 
 // ============================================================

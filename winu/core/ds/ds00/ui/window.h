@@ -455,15 +455,19 @@ struct border_info_d
 // the server backs off, and the client library (or the app itself) 
 // takes over responsibility.
 
-// Configuration for the non-client area
+// Configuration for the non-client area. (frame/chrome)
+// Purpose: describes the chrome (frame, titlebar, caption buttons, borders).
 struct ConfigNonClientArea_d 
 {
     int useHitTesting;   // TRUE/FALSE
     int allowDrawing;    // toggle server chrome drawing
     // future: flags for resizing, caption buttons, etc.
+
+    // expandArea: allow the app to extend the non‑client area into the client 
 };
 
 // Configuration for the client area
+// Purpose: describes the drawable region for the app.
 struct ConfigClientArea_d 
 {
     int useHitTesting;   // TRUE/FALSE
@@ -533,15 +537,15 @@ struct gws_window_d
 // If the window is disable, it can't receive input from keyboard or mouse.
     int enabled;
 
-// Configuration for the non-client area
+// In the window stack we have two major components:
+// + The frame/chrome.
+// + The Client area.
+
+// Configuration for the non-client area. (frame/chrome)
     struct ConfigNonClientArea_d  ConfigNonClientArea; 
 
 // Configuration for the client area
     struct ConfigClientArea_d  ConfigClientArea;
-
-    // In the window stack we have two major components:
-    // + The frame (top frame and bottom frame).
-    // + The Client area.
 
 // The window frame
 // Top frame has: title bar, tool bar, menu bar ...
@@ -549,12 +553,11 @@ struct gws_window_d
     int is_frameless;
 
 // The frame's rectangle
-// #bugbug: Is it relative or absolute?
     struct gws_rect_d  rcWindow;
 
 // The Client area
-// This is the viewport for some applications, just like browsers.
-// >> Inside dimensions clipped by parent.
+// It uses relative values.
+// This is the viewport for some applications.
     struct gws_rect_d  rcClient;
 
 // Absolute. (Relative to the screen)
@@ -611,6 +614,7 @@ struct gws_window_d
 // >> Status: interaction/activation.
 // Overlapped windows → status means active/inactive.
 // Button windows → status is being reused as button state.
+// #bugbug: maybe we can use the other element in the case of button windows.
     int status;
 
 // >> State: runtime condition.
@@ -620,30 +624,32 @@ struct gws_window_d
 // ===================================
 // Name/label support.
     char *name;
-// Label: If the window is a button.
     unsigned int label_color_when_selected;
     unsigned int label_color_when_not_selected;
     //unsigned int label_color_when_disabled;
+    // ...
 
-// Uma janela de aplicativo
-// poderá ter janelas de aplicativo dentro de sua área de cliente.
-    int multiple;
+// multiple?
+// Can a top‑level application window 
+// host other application windows inside its client area?
+// With multiple = TRUE, you’re saying: “This client area can contain other full application windows, not just controls.”
+    // int allowEmbeddedApps; // TRUE if client area can host app windows
 
 // Invalidate a window.
 // The whole window needs to be flushed into the framebuffer.
     int dirty;
 
-// Se tem o foco de entrada ou não.
-// Isso faz a janela ser pintada ou repintada 
-// contendo o indicador de foco.
-
 // 1=solid | 0=transparent
-// Solid means that the color is opaque, 
-// there is no transparence at all.
-// Transparent means that it has a rop 
-// associated with this window.
+// solid: 
+// Solid means that the color is opaque, there is no transparence at all.
+// transparent:
+// Transparent means that it has a rop associated with this window.
 
     int is_solid;
+
+//
+// ROP
+//
 
 // Normal window
     unsigned long rop_bg;
@@ -654,19 +660,6 @@ struct gws_window_d
     unsigned long rop_left_border;  // left
     unsigned long rop_right_border;  // right
     unsigned long rop_bottom_border;  // bottom
-
-// Hierarquia. 
-// parent->level + 1;
-// Não é z-order?
-// Criamos a janela sempre um level acima do level da sua parent.
-// Is the index in a list o childs?
-// The top-level windows are exactly the direct 
-// subwindows of the root window.
-    int level;
-
-// #todo: use this when
-// rebuilding some window list.
-    // int zorder_index;
 
 // #importante
 // Para sabermos quem receberá o reply no caso de eventos.
@@ -809,7 +802,7 @@ struct gws_window_d
     int menubar_style;
 
     // The menu
-    struct gws_menu_d  *barMenu;
+    struct gws_menu_d  *menu00;
 
 // ================
 // 7 - Toolbar
@@ -820,7 +813,6 @@ struct gws_window_d
     unsigned int toolbar_color;
     unsigned long toolbar_height;
     int toolbar_style;
-
 
 // ================
 // 8 - Client area.
@@ -901,6 +893,15 @@ struct gws_window_d
 // Ordem na pilha de janelas do eixo z.
 // A janela mais ao topo é a janela foreground.
     int zIndex;
+
+// Hierarquia. 
+// parent->level + 1;
+// Não é z-order.
+// Criamos a janela sempre um level acima do level da sua parent.
+// Is the index in a list o childs?
+// The top-level windows are exactly the direct 
+// subwindows of the root window.
+    int level;
 
 // ==================================================
 // Desktop support.

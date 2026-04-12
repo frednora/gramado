@@ -2225,8 +2225,8 @@ void *doCreateWindow (
 // ou clicando no icone.
     window->contextmenu = NULL;
 
-// menu na menubar
-    window->barMenu = NULL;
+// Menu na menubar
+    window->menu00 = NULL;
 
 // Selected menu item.
 // Caso a janela seja um ítem de menu.
@@ -2858,9 +2858,7 @@ void *CreateWindow (
     unsigned int client_color ) 
 {
    register struct gws_window_d *__w;
-
    int fChild = FALSE;
-
    unsigned long __rop_flags=0;
 
 // This function is able to create some few 
@@ -2868,8 +2866,6 @@ void *CreateWindow (
 // overlapped, editbox, button and simple.
     int ValidType=FALSE;
     size_t text_size = 0;
-
-    //server_debug_print ("CreateWindow:\n");
 
 // The color for the frame and client area.
 // If the window is overlapped or button
@@ -2903,8 +2899,7 @@ void *CreateWindow (
 */
 
 // =================
-// name
-// Duplicate
+// name: Duplicate
     char *_name;
     _name = (void*) malloc(256);
     if ((void*) _name == NULL){
@@ -2994,8 +2989,6 @@ void *CreateWindow (
 // 1 - Simple
     if (type == WT_SIMPLE)
     {
-        //server_debug_print ("CreateWindow: WT_SIMPLE \n");
-
         __w = 
             (void *) doCreateWindow ( 
                         WT_SIMPLE, style, status, state, (char *) _name,
@@ -3006,10 +2999,8 @@ void *CreateWindow (
                         (unsigned long) __rop_flags );  
 
         if ((void *) __w == NULL){
-            //server_debug_print ("CreateWindow: doCreateWindow fail\n");
             goto fail;
         }
-
         __w->type = WT_SIMPLE;
         //__w->locked = FALSE;
         __w->enabled = TRUE;
@@ -3087,7 +3078,6 @@ void *CreateWindow (
             //server_debug_print ("CreateWindow: doCreateWindow fail\n");
             goto fail;
         }
-
         __w->type = WT_OVERLAPPED; // Change the type back to overlapped
         //__w->locked = FALSE;
         __w->enabled = TRUE;
@@ -3106,9 +3096,7 @@ void *CreateWindow (
     if ( type == WT_EDITBOX_SINGLE_LINE || 
          type == WT_EDITBOX_MULTIPLE_LINES )
     {
-        //server_debug_print ("CreateWindow: WT_EDITBOX WT_EDITBOX_MULTIPLE_LINES \n");
-
-        //if ( (void*) pWindow == NULL ){ return NULL; }
+        //if ((void*) pWindow == NULL){ return NULL; }
 
         if (width < EDITBOX_MIN_WIDTH)  { width=EDITBOX_MIN_WIDTH; }
         if (height < EDITBOX_MIN_HEIGHT){ height=EDITBOX_MIN_HEIGHT; }
@@ -3127,7 +3115,6 @@ void *CreateWindow (
                         (unsigned long) __rop_flags ); 
 
         if ((void *) __w == NULL){
-            //server_debug_print ("CreateWindow: doCreateWindow fail\n");
             goto fail;
         }
 
@@ -3164,10 +3151,8 @@ void *CreateWindow (
 // 8 - button
 // Podemos usar o esquema padrão de cores ...
     if (type == WT_BUTTON)
-    {
-        //server_debug_print ("CreateWindow: WT_BUTTON \n");
-      
-        //if ( (void*) pWindow == NULL ){ return NULL; }
+    {     
+        //if ((void*) pWindow == NULL){ return NULL; }
 
         if (width < BUTTON_MIN_WIDTH)  { width=BUTTON_MIN_WIDTH; }
         if (height < BUTTON_MIN_HEIGHT){ height=BUTTON_MIN_HEIGHT; }
@@ -3208,8 +3193,6 @@ void *CreateWindow (
 
     if (type == WT_ICON)
     {
-        //server_debug_print ("CreateWindow: WT_ICON\n");
-
         __w = 
             (void *) doCreateWindow ( 
                         WT_SIMPLE, style, status, state, (char *) _name,
@@ -3459,7 +3442,6 @@ int RegisterWindow(struct gws_window_d *window)
 
 // Parameter
     if ((void *) window == NULL){
-        //gws_debug_print ("RegisterWindow: window struct\n");
         goto fail;
     }
 // #todo ?
@@ -3488,9 +3470,10 @@ int RegisterWindow(struct gws_window_d *window)
             return (int) Slot;
         }
     };
-// After the loop.
+    // After the loop
+    // Fail
+
 fail:
-    //server_debug_print("No more slots\n");
     return (int) (-1);
 }
 

@@ -80,6 +80,7 @@ struct wproxy_d
 
 extern struct wproxy_d *wproxy_head;  // List of window proxy objects.
 extern struct wproxy_d *wproxy_hover;  // mouse hover
+extern struct wproxy_d *wproxy_shell;  // The shell window proxy. The taskbar is the shell. 
 // ...
 
 // ======================

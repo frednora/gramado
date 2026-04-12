@@ -3783,8 +3783,19 @@ wmMouseEvent(
                     // Inside the client area, send relative values.
                     } else if (wproxy_hover->hit_area == HIT_CLIENT) {
 
-                        rel_long1 = long1 - wproxy_hover->ca_l;
-                        rel_long2 = long2 - wproxy_hover->ca_t;
+                        // Good for regular apps
+                        // For regular app windows, the correct relative calculation is this.
+                        rel_long1 = long1 - (wproxy_hover->l + wproxy_hover->ca_l);
+                        rel_long2 = long2 - (wproxy_hover->t + wproxy_hover->ca_t);
+
+                        // #hack
+                        if (wproxy_hover == wproxy_shell)
+                        {
+                            // Good for taskbar
+                            rel_long1 = long1 - wproxy_hover->ca_l;
+                            rel_long2 = long2 - wproxy_hover->ca_t;
+                        }
+
                         //printk("client\n");
                         ipc_post_message_to_tid(
                             (tid_t) __HARDWARE_TID, 
