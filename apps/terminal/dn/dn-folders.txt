@@ -1,0 +1,25 @@
+//
+// Project structure overview
+//
+// The project is organized into three main folders,
+// each with a clear and distinct responsibility:
+//
+// 1) shared/
+//    Contains global state, shared data structures,
+//    and common definitions used by both the UI and the core.
+//
+// 2) core/
+//    Implements the backend logic of the terminal,
+//    including command execution, shell behavior,
+//    system interaction, and non‑UI processing.
+//
+// 3) ui/
+//    Contains all frontend and rendering code,
+//    including drawing routines, window management,
+//    cursor handling, and visual presentation.
+//
+// This separation keeps the architecture modular,
+// avoids circular dependencies, and makes the codebase
+// easier to maintain and evolve.
+//
+

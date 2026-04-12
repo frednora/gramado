@@ -1,0 +1,16 @@
+
+   terminal->thread->tty.
+   
+   Cada instancia de terminal esta associa com uma tty.
+   
+   Um terminal tem uma thread de controle e essa thread de controle
+   esta associada a uma tty.
+   
+   Enviar dados pra uma tty significa enviar dados para um dado terminal
+   entao uma outra thread ou o kernel pode se comunicar com um dado terminal
+   simplesmente enviando dados para a tty associada ao terminal ou envair
+   mensagens na fila de mensagens da thread de controle do terminal.
+
+   ps: Um multiplexer pode criar associar duas ttys.
+   dessa forma pode existir uma conexao e troca de mensagens entre
+   dispositivos e terminal ou entre comandos e terminal

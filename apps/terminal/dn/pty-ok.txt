@@ -1,0 +1,42 @@
+1. The terminal creates a PTY master (ptym) and 
+   a PTY slave (ptys) pair.
+
+2. The terminal duplicates the PTY slave file descriptor 
+   into stdin, stdout, and stderr for the child process.
+
+3. The terminal forks and launches the shell, 
+   which inherits the PTY slave as its standard streams.
+
+4. The shell reads user input from its standard input (the PTY slave) and 
+   writes output to its standard output.
+
+5. The terminal receives keyboard events from 
+    the message system (kernel → terminal) and 
+    writes the corresponding bytes into ptym.
+
+6. The shell’s output appears on ptym, and 
+   the terminal reads from ptym to display text on the screen.
+
+This creates a full duplex communication channel: 
+    terminal → ptym → shell, and 
+    shell → ptym → terminal.
+
+===========================================================
+pt-br:
+
+1. O terminal cria um par de PTY: o master (ptym) e o slave (ptys).
+2. O terminal duplica o descritor do PTY slave para 
+   stdin, stdout e stderr do processo filho.
+3. O terminal executa o shell, que herda o PTY slave como 
+   seus fluxos padrão.
+4. O shell lê a entrada do usuário a partir 
+   de sua entrada padrão (o PTY slave) e 
+   escreve a saída em sua saída padrão.
+5. O terminal recebe eventos de teclado 
+   do sistema de mensagens (kernel → terminal) e 
+   envia os bytes correspondentes para o ptym.
+6. A saída do shell aparece no ptym, e 
+   o terminal lê do ptym para exibir o texto na tela.
+Isso cria um canal de comunicação full‑duplex: 
+ terminal → ptym → shell, e 
+ shell → ptym → terminal.

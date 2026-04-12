@@ -1,0 +1,194 @@
+Fred, this is a great question — and the good news is that your code already *naturally* splits into two conceptual halves. You can almost draw a line through the file and separate:
+
+- **UI/UX (Terminal Emulator Frontend)**  
+- **Core (Process/PTY/Execution Backend)**  
+
+Below I’ll give you a clean, structured classification of which functions belong to each side based on their responsibilities.
+
+---
+
+# ✅ **Functions That Belong in the CORE (backend)**  
+These are the functions that deal with:
+
+- Executing child programs  
+- Managing stdin/stdout  
+- Handling shell commands  
+- Delegating foreground  
+- Communicating with the OS kernel  
+- Handling system messages that relate to child processes  
+- Anything that is not visual  
+
+### ✅ **Execution & Process Management**
+These absolutely belong in the core:
+
+- `__try_execute()`  
+- `compareStrings()`  
+- `embedded_shell_run()`  
+- `terminal_run()`  
+- `__input_STDIN()`  
+- `__input_from_connector()`  
+- `__send_to_child()`  
+- `terminal_poweroff_machine()`  
+- `__libc_test()` (file creation, stress tests — backend)  
+- `__test_ioctl()` (console/tty manipulation)  
+- `__test_post_async_hello()` (IPC with init)  
+
+### ✅ **Foreground Delegation / Child TID Handling**
+Inside `__try_execute()` you have logic like:
+
+```
+sc82(10013,ChildTID,ChildTID,ChildTID);
+isWaitingForOutput = TRUE;
+```
+
+This belongs in the core.
+
+### ✅ **Command Parsing**
+Everything related to parsing the prompt and extracting the filename:
+
+- filename extraction  
+- extension validation  
+- writing to stdin  
+- preparing command line  
+
+These are backend responsibilities.
+
+### ✅ **System Event Handling (non‑UI)**
+- `__get_system_event()`  
+- `__get_ds_event()`  
+
+These handle OS‑level events, not UI drawing.
+
+---
+
+# ✅ **Functions That Belong in the UI/UX (frontend)**  
+These functions deal with:
+
+- Drawing  
+- Window management  
+- Cursor positioning  
+- Colors  
+- Layout  
+- Font metrics  
+- Scrollback  
+- Resizing  
+- User interaction  
+
+### ✅ **Window & Display Management**
+- `update_clients()`  
+- `clear_terminal_client_window()`  
+- `__winmax()`  
+- `__winmin()`  
+- `__test_gws()`  
+- `__test_winfo()`  
+
+These are purely GUI operations.
+
+### ✅ **Cursor, Colors, Layout**
+- `doPrompt()`  
+- `doHelp()`  
+- `doAbout()`  
+- `cr()` / `lf()` / `tputstring()` (if they exist elsewhere)  
+- Anything that draws text or moves the cursor  
+
+### ✅ **Terminal Initialization**
+- `__initialize_basics()`  
+- `__initializeTerminalComponents()`  
+- `terminalInitWindowPosition()`  
+- `terminalInitWindowSizes()`  
+- `terminalInitWindowLimits()`  
+- `terminalInitSystemMetrics()`  
+
+These configure the visual terminal environment.
+
+### ✅ **Font & Metrics**
+- Anything involving `FontInfo`  
+- Anything involving `Terminal.width_in_chars` or `height_in_chars`  
+
+### ✅ **Scrollback / Screen Buffer**
+- `LINES[]`  
+- `lineList[]`  
+- `screenbufferList[]`  
+- `screen_buffer_x/y`  
+- `textTopRow`, `textBottomRow`, `textWheelDelta`  
+
+These are UI responsibilities.
+
+---
+
+# ✅ **Functions That Are Mixed (Should Be Split)**  
+Some functions currently mix UI and core logic. These should be refactored:
+
+### ⚠️ `terminalProcedure()`
+This handles messages from the display server *and* sometimes interacts with child processes.  
+It should be split into:
+
+- `terminal_ui_message_handler()`  
+- `terminal_core_message_handler()`  
+
+### ⚠️ `compareStrings()`
+This function mixes:
+
+- UI commands (`help`, `about`, `clear`)  
+- Core commands (executing binaries)
+
+It should be split into:
+
+- `terminal_builtin_commands()` (UI)  
+- `terminal_execute_external()` (core)
+
+---
+
+# ✅ **Summary Table**
+
+| Category | Functions | Goes To |
+|---------|-----------|---------|
+| **Child execution** | `__try_execute`, `compareStrings`, `embedded_shell_run`, `terminal_run` | ✅ Core |
+| **Input/output to child** | `__input_STDIN`, `__input_from_connector`, `__send_to_child` | ✅ Core |
+| **Foreground delegation** | inside `__try_execute` | ✅ Core |
+| **System events** | `__get_system_event`, `__get_ds_event` | ✅ Core |
+| **Window management** | `update_clients`, `__winmax`, `__winmin`, `clear_terminal_client_window`, `__test_gws`, `__test_winfo` | ✅ UI |
+| **Drawing & cursor** | `doPrompt`, `doHelp`, `doAbout`, cursor_x/y, colors | ✅ UI |
+| **Initialization** | `__initialize_*`, `terminalInit*` | ✅ UI |
+| **Scrollback & buffers** | `LINES[]`, `screen_buffer_*`, `textTopRow` | ✅ UI |
+| **Testing** | `__libc_test`, `__test_ioctl`, `__test_post_async_hello` | ✅ Core |
+
+---
+
+# 🎯 Final Recommendation
+
+Your terminal should become two modules:
+
+## ✅ **terminal_core.c**
+Handles:
+- Child process execution  
+- PTY/pipe communication  
+- Command parsing  
+- Foreground delegation  
+- System events  
+- Kernel IPC  
+
+## ✅ **terminal_ui.c**
+Handles:
+- Window creation  
+- Drawing text  
+- Cursor movement  
+- Scrollback  
+- Colors  
+- Font metrics  
+- Resize handling  
+- Built‑in UI commands  
+
+This will make your terminal **cleaner, more maintainable, and easier to extend** — especially when you add a real PTY layer or a full ANSI parser.
+
+---
+
+If you want, I can help you:
+
+✅ Design the directory structure  
+✅ Split the code cleanly  
+✅ Create a message protocol between UI and core  
+✅ Build a PTY subsystem  
+✅ Refactor the current file into two modules  
+
+Just tell me which direction you want to go next.

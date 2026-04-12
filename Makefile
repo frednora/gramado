@@ -256,9 +256,10 @@ build-extras:
 # These need the '#' prefix.
 
 # DE core applications.
-	@-cp $(L3_APPS)/bin/TASKBAR.BIN  $(BASE)/DE/
-	@-cp $(L3_APPS)/bin/GDM.BIN      $(BASE)/DE/
-	@-cp $(L3_APPS)/bin/TERM00.BIN   $(BASE)/DE/
+	@-cp $(L3_APPS)/bin/TASKBAR.BIN   $(BASE)/DE/
+	@-cp $(L3_APPS)/bin/GDM.BIN       $(BASE)/DE/
+	@-cp $(L3_APPS)/bin/TERM00.BIN    $(BASE)/DE/
+	@-cp $(L3_APPS)/bin/TERMINAL.BIN  $(BASE)/DE/
 
 # DE Utilities.
 	@-cp $(L3_APPS)/bin/DOC.BIN      $(BASE)/DE/
