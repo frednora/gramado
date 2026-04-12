@@ -475,10 +475,10 @@ cmdlineProcedure (
             switch (long1){
 
                 // 1~4
-                case VK_F1: gws_clone_and_execute("editor.bin");   break;
-                case VK_F2: gws_clone_and_execute("gwm.bin");      break;
-                case VK_F3: gws_clone_and_execute("fileman.bin");  break;
-                case VK_F4: gws_clone_and_execute("terminal.bin"); break;
+                case VK_F1: gws_clone_and_execute("#editor.bin");   break;
+                case VK_F2: gws_clone_and_execute("#gwm.bin");      break;
+                case VK_F3: gws_clone_and_execute("#doc.bin");  break;
+                case VK_F4: gws_clone_and_execute("#term00.bin"); break;
 
                 // 4~8
                 //case VK_F5: gws_clone_and_execute("browser.bin"); break;

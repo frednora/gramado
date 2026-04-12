@@ -1,4 +1,4 @@
-# GWTEX App
+# gwtest
 # 2025 - Created by Fred Nora (example by Copilot).
 
 VERSION = 0

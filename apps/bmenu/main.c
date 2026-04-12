@@ -31,10 +31,8 @@ static void update_childrens(int fd);
 
 // =====================================
 
-
 static void update_childrens(int fd)
 {
-
     if (fd<0)
         return;
 

@@ -90,8 +90,6 @@ all-c:
 	cp $(LIBCOBJ)/termios.o  .
 	cp $(LIBCOBJ)/ioctl.o  .
 	cp $(LIBCOBJ)/socket.o  .
-
-#test
 	cp $(LIBCOBJ)/math.o  .
 
 # libgws
