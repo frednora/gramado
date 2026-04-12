@@ -15,7 +15,6 @@
 #include <sys/socket.h>
 #include <rtl/gramado.h>
 
-
 // The client-side library
 #include <gws.h>
 

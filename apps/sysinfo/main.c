@@ -9,7 +9,15 @@
 #include <unistd.h>
 #include <sys/utsname.h>
 #include <rtl/gramado.h>
+
+// The client-side library
 #include <gws.h>
+
+// #test
+// The client-side library
+#include <libgui.h>
+
+
 
 // Globals
 struct gws_display_d *Display;
@@ -19,6 +27,12 @@ static int refresh_button = -1;
 static int close_button   = -1;
 static int default_responder = -1;
 
+
+// Cached frame/chrome area
+static unsigned long frame_left   = 0;
+static unsigned long frame_top    = 0;
+static unsigned long frame_width  = 0;
+static unsigned long frame_height = 0;
 
 // Cached client area
 static unsigned long cr_left   = 0;
@@ -62,12 +76,17 @@ static void query_client_area(int fd)
     struct gws_window_info_d wi;
     gws_get_window_info(fd, main_window, &wi);
 
-    // These values are relative,
-    // #todo: Use 0,0 for left/top
-    //cr_left   = wi.cr_left;
-    //cr_top    = wi.cr_top;
-    cr_left = 0;
-    cr_top = 0;
+// Cached frame/chrome area
+    frame_left   = wi.left;
+    frame_top    = wi.top;
+    frame_width  = wi.width;
+    frame_height = wi.height;
+
+// Cached client area
+    //cr_left = 0;
+    //cr_top = 0;
+    cr_left   = wi.cr_left;
+    cr_top    = wi.cr_top;
     cr_width  = wi.cr_width;
     cr_height = wi.cr_height;
 }
@@ -535,7 +554,7 @@ static void update_children(int fd)
 
 
 // Redraw raw main window (first time)
-    gws_redraw_window(fd, main_window, TRUE);
+    // gws_redraw_window(fd, main_window, TRUE);
 
 // Redraw main label
     gws_draw_text(
@@ -684,6 +703,10 @@ systemProcedure(
         }
         break;
 
+    case MSG_MOUSERELEASED:
+        printf("sysinfo: Mouse released\n");
+        break;
+
     case MSG_CLOSE:
         exitProgram(fd);
         break;
@@ -726,6 +749,18 @@ int main(int argc, char *argv[])
     // Screen
     unsigned long screen_w = gws_get_system_metrics(1);
     unsigned long screen_h = gws_get_system_metrics(2);
+
+// =========================================
+// Library initialization
+
+    int status = -1;
+    status = (int) libgui_initialize();
+    if (status < 0){
+        printf("power_app: libgui_initialize fail\n");
+        exit(1);
+    }
+
+
     //unsigned long win_w = screen_w / 2;
     //unsigned long win_h = screen_h / 2;
     unsigned long win_w = (screen_w * 7) / 10;
@@ -758,6 +793,29 @@ int main(int argc, char *argv[])
 //-----------------------------
 
     query_client_area(fd);
+
+
+// ============================================================
+// #test
+// Update the wproxy structure that belongs to this thread.
+
+    unsigned long m[10];
+    int mytid = gettid();
+    m[0] = (unsigned long) (mytid & 0xFFFFFFFF);
+
+    // Frame/chrome rectangle
+    m[1] = frame_left;
+    m[2] = frame_top;
+    m[3] = frame_width;
+    m[4] = frame_height;
+
+    // Client area rectangle
+    m[5] = cr_left;
+    m[6] = cr_top;
+    m[7] = cr_width;
+    m[8] = cr_height;
+
+    sc80( 48, &m[0], &m[0], &m[0] );
 
 
 //
