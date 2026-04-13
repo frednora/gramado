@@ -310,6 +310,38 @@ int main(int argc, char *argv[])
     gws_set_active(client_fd, main_window);
     gws_refresh_window(client_fd, main_window);
 
+
+// ============================================================
+// #test
+// Update the wproxy structure that belongs to this thread.
+
+/*
+    unsigned long m[10];
+    int mytid = gettid();
+    m[0] = (unsigned long) (mytid & 0xFFFFFFFF);
+
+    // Frame/chrome rectangle
+    m[1] = wi.left;
+    m[2] = wi.top;
+    m[3] = wi.width;
+    m[4] = wi.height;
+
+    // Client area rectangle
+    m[5] = wi.cr_left;
+    m[6] = wi.cr_top;
+    m[7] = wi.cr_width;
+    m[8] = wi.cr_height;
+
+    sc80( 48, &m[0], &m[0], &m[0] );
+*/
+
+//
+// #test: Expand non-client area.
+//
+
+    //sc80( 45, 0, 0, 0 );  // Expand non-client area (for testing)
+
+
     while (1) {
         pump(client_fd);
         if (rtl_get_event() == TRUE) {

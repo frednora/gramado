@@ -56,9 +56,19 @@ struct wproxy_d
     unsigned long ca_h;
 
 // Hit area
+// What was the area reached by the hit-test?
     int hit_area;
+
 // Has frame/chrome?
     int has_frame;
+
+// Expanded non-client area.
+// When set, the app does not receive mouse events.
+// All mouse events (even inside the client area) are sent to the display server
+// for hit-testing. This preserves the old "server authority" style of apps,
+// similar to X11, but can be disabled for modern client-side drawing.
+    int expanded_nonclient_area;
+
 
     unsigned int color;
 
@@ -91,6 +101,8 @@ struct wproxy_d *wproxyCreateObject(void);
 
 
 int wproxy_set_shell(tid_t tid);
+
+int wproxy_set_expanded_nonclient_area(tid_t tid);
 
 struct wproxy_d *wproxy_create0(
     tid_t tid,

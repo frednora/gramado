@@ -142,6 +142,8 @@ void wproxy_hit_test00(unsigned long x, unsigned long y)
                 {
                     //printk("hit: client area\n");
                     w->hit_area = HIT_CLIENT;  // Inside client area
+                    if (w->expanded_nonclient_area == TRUE)
+                        w->hit_area = HIT_FRAME;  // Inside frame/chrome 
                 }
 
                 // #debug: visual effect
@@ -223,6 +225,51 @@ int wproxy_set_shell(tid_t tid)
 fail:
     return (int) -1;
 }
+
+// Expanded non-client area.
+// When set, the app does not receive mouse events.
+// All mouse events (even inside the client area) are sent to the display server
+// for hit-testing. This preserves the old "server authority" style of apps,
+// similar to X11, but can be disabled for modern client-side drawing.
+
+int wproxy_set_expanded_nonclient_area(tid_t tid)
+{
+    struct thread_d *t;
+    struct wproxy_d *wproxy;
+
+// parameter:
+    if (tid <0 || tid >= THREAD_COUNT_MAX)
+        goto fail;
+    t = (struct thread_d *) threadList[tid];
+    if ((void *) t == NULL)
+        goto fail;
+    if (t->used != TRUE){
+        goto fail;
+    }
+    if (t->magic != 1234){
+        goto fail;
+    }
+
+// wproxy
+    wproxy = (struct wproxy_d *) t->wproxy;
+    if ((void *) wproxy == NULL){
+        goto fail;
+    }
+    if (wproxy->used != TRUE){
+        goto fail;
+    }
+    if (wproxy->magic != 1234){
+        goto fail;
+    }
+
+// Expand the non-client area.
+    wproxy->expanded_nonclient_area = TRUE;
+    return (int) 0;
+
+fail:
+    return (int) -1;
+}
+
 
 // Create a window proxy object and initialize it with the given parameters.
 struct wproxy_d *wproxy_create0(

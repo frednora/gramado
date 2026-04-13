@@ -528,7 +528,15 @@ void *sci0 (
         return (void *) sys_create_empty_directory((char *) arg2);
     }
 
-// 45 - free
+// 45:
+// Expanded non-client area.
+// When set, the app does not receive mouse events.
+// All mouse events (even inside the client area) are sent to the display server
+// for hit-testing. This preserves the old "server authority" style of apps,
+// similar to X11, but can be disabled for modern client-side drawing.
+    if (number == 45){
+        return (void*) wproxy_set_expanded_nonclient_area( (tid_t) current_thread );
+    }
 
 // 46 - Setup who will be the system shell wproxy. The taskbar.
     if (number == 46){

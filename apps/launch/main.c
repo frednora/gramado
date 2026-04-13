@@ -479,6 +479,39 @@ int main(int argc, char *argv[])
         main_window,   // The app window.
         (struct gws_window_info_d *) &lWi );
 
+
+
+// ============================================================
+// #test
+// Update the wproxy structure that belongs to this thread.
+
+/*
+    unsigned long m[10];
+    int mytid = gettid();
+    m[0] = (unsigned long) (mytid & 0xFFFFFFFF);
+
+    // Frame/chrome rectangle
+    m[1] = lWi.left;
+    m[2] = lWi.top;
+    m[3] = lWi.width;
+    m[4] = lWi.height;
+
+    // Client area rectangle
+    m[5] = lWi.cr_left;
+    m[6] = lWi.cr_top;
+    m[7] = lWi.cr_width;
+    m[8] = lWi.cr_height;
+
+    sc80( 48, &m[0], &m[0], &m[0] );
+*/
+
+//
+// #test: Expand non-client area.
+//
+
+    //sc80( 45, 0, 0, 0 );  // Expand non-client area (for testing)
+
+
 //
 // Creating the menu
 //
