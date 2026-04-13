@@ -218,9 +218,10 @@ const char *buttom01_label = ">";  // Navigation
 const char *buttom02_label = "[]";  // Purpose?
 
 //const char *app1_name = "#term00.bin";
-const char *app1_name = "#power.bin";
-//const char *app1_name = "#bmenu.bin";
+//const char *app1_name = "#power.bin";
+const char *app1_name = "#draw.bin";
 const char *app2_name = "#editor.bin";
+
 
 //static const char *cmdline1 = "gramland -1 -2 -3 --tb";
 

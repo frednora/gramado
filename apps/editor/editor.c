@@ -75,6 +75,32 @@ char file_buffer[1024];
 #define CLIENT_AREA_DIVISIONS 8
 
 
+struct button_info_d
+{
+    int button_id;
+
+// This is the window id that represents the icon.
+    int wid;
+
+// Absolute values
+    unsigned long absolute_left;
+    unsigned long absolute_top;
+    unsigned long width; 
+    unsigned long height;
+
+// Relative values
+    unsigned long left;
+    unsigned long top;
+
+// The state of the icon, it also represents
+// the state of the client application.
+// (running, minimized, etc.).
+    int state;
+};
+static struct button_info_d  MyButton_Save;
+
+
+
 //
 // Windows
 //
@@ -82,7 +108,7 @@ char file_buffer[1024];
 // private
 static int main_window = -1;
 static int addressbar_window = -1;
-static int savebutton_window = -1;
+// static int savebutton_window = -1;
 static int client_window = -1; // #bugbug: Sometimes we can't delete this window.
 // ...
 
@@ -94,7 +120,7 @@ struct child_window_d
     unsigned long h;
 };
 struct child_window_d cwAddressBar;
-struct child_window_d cwButton;
+//struct child_window_d cwButton;
 struct child_window_d cwText;
 
 // #todo
@@ -164,7 +190,7 @@ static void editorShutdown(int fd)
         return;
 
     gws_destroy_window(fd,client_window);   // #bugbug: sometimes we can't delete this window.
-    gws_destroy_window(fd,savebutton_window);
+    //gws_destroy_window(fd,savebutton_window);
     gws_destroy_window(fd,addressbar_window);
     gws_destroy_window(fd,main_window);
 }
@@ -231,6 +257,7 @@ static void update_clients(int fd)
         cwAddressBar.h );
     gws_redraw_window(fd, addressbar_window, TRUE);
 
+/*
 //---------------------------------------------
 // Save button
     cwButton.l = (( lWi.cr_width/8 )*7) -4;
@@ -248,6 +275,53 @@ static void update_clients(int fd)
         cwButton.w,
         cwButton.h );
     gws_redraw_window(fd, savebutton_window, TRUE);
+*/
+
+// ============================================================
+// Create restart button
+
+    MyButton_Save.button_id = 1;   // arbitrary ID
+    // MyButton_Save.wid     = main_window; // parent window ID
+
+    // Relative values
+    MyButton_Save.left = (( lWi.cr_width/8 )*6); //4;
+    MyButton_Save.top  = 4;
+
+    // Absolute coordinates (relative to screen)
+    MyButton_Save.absolute_left = lWi.left + lWi.cr_left + MyButton_Save.left;
+    MyButton_Save.absolute_top  = lWi.top + lWi.cr_top + MyButton_Save.top;
+    MyButton_Save.width         = (( lWi.cr_width/8 )*1);
+    MyButton_Save.height        = 24;
+
+    // Initial state
+    // MyButton_Save.state = 0;
+
+// Draw the fake button
+    libgui_backbuffer_draw_rectangle0(
+        MyButton_Save.absolute_left, 
+        MyButton_Save.absolute_top, 
+        MyButton_Save.width, 
+        MyButton_Save.height,
+        xCOLOR_GRAY2, 
+        1, 0, FALSE
+    );
+
+    // Draw the label string inside
+    const char *label_save = "SAVE";
+    libgui_drawstring(
+        MyButton_Save.absolute_left +4, 
+        MyButton_Save.absolute_top +4, 
+        label_save,
+        COLOR_BLACK, COLOR_GRAY, 0
+    );
+
+// Refresh to show it
+    libgui_refresh_rectangle_via_kernel(
+        MyButton_Save.absolute_left, 
+        MyButton_Save.absolute_top, 
+        MyButton_Save.width, 
+        MyButton_Save.height
+    );
 
 //-----------------------
 // The client window where we type the text.
@@ -838,7 +912,7 @@ int editor_initialize(int argc, char *argv[])
 // Initialize WIDs.
     main_window = -1;
     addressbar_window = -1;
-    savebutton_window = -1;
+    //savebutton_window = -1;
     client_window = -1;
 // Cursor
     cursor_x = 0;
@@ -973,6 +1047,7 @@ int editor_initialize(int argc, char *argv[])
 // Right below the title bar.
 // Right above the client window.
 
+/*
     text1_l = 2;
     text1_t = 4 + (24/3);
     text1_color = COLOR_BLACK;
@@ -984,6 +1059,7 @@ int editor_initialize(int argc, char *argv[])
         (unsigned long) text1_t,
         (unsigned long) text1_color,
         text1_string );
+*/
 
     //gws_refresh_window(client_fd, main_window);
 // -----------------------------
@@ -996,6 +1072,21 @@ int editor_initialize(int argc, char *argv[])
         client_fd, 
         main_window,
         (struct gws_window_info_d *) &lWi );
+
+    text1_l = 2;
+    text1_t = 4 + (24/3);
+    text1_color = COLOR_BLACK;
+
+    libgui_drawstring(
+        lWi.left + lWi.cr_left + text1_l, 
+        lWi.top  + lWi.cr_top  + text1_t, 
+        text1_string, text1_color, 0xFFFFFF, 0);
+
+    libgui_refresh_rectangle_via_kernel( 
+        lWi.left + lWi.cr_left + text1_l, 
+        lWi.top  + lWi.cr_top  + text1_t, 
+        8*strlen(text1_string), 
+        16 ); 
 
 
 // ============================================================
@@ -1019,6 +1110,13 @@ int editor_initialize(int argc, char *argv[])
     m[8] = lWi.cr_height;
 
     sc80( 48, &m[0], &m[0], &m[0] );
+
+
+//
+// #test: Expand non-client area.
+//
+
+    // sc80( 45, 0, 0, 0 );  // Expand non-client area (for testing)
 
 
 // Address bar - (edit box)
@@ -1074,6 +1172,7 @@ int editor_initialize(int argc, char *argv[])
     // #test
     // The 'button state' is the same of window status.
 
+/*
 // Create save button window.
     savebutton_window = 
         (int) gws_create_window ( 
@@ -1101,6 +1200,55 @@ int editor_initialize(int argc, char *argv[])
     cwButton.t = 4;
     cwButton.w = (( lWi.cr_width/8 )*1);
     cwButton.h = 24;
+*/
+
+// ============================================================
+// Create restart button
+
+    MyButton_Save.button_id = 1;   // arbitrary ID
+    // MyButton_Save.wid     = main_window; // parent window ID
+
+    // Relative values
+    MyButton_Save.left = (( lWi.cr_width/8 )*6); //4;
+    MyButton_Save.top  = 4;
+
+    // Absolute coordinates (relative to screen)
+    MyButton_Save.absolute_left = lWi.left + lWi.cr_left + MyButton_Save.left;
+    MyButton_Save.absolute_top  = lWi.top + lWi.cr_top + MyButton_Save.top;
+    MyButton_Save.width         = (( lWi.cr_width/8 )*1);
+    MyButton_Save.height        = 24;
+
+    // Initial state
+    // MyButton_Save.state = 0;
+
+// Draw the fake button
+    libgui_backbuffer_draw_rectangle0(
+        MyButton_Save.absolute_left, 
+        MyButton_Save.absolute_top, 
+        MyButton_Save.width, 
+        MyButton_Save.height,
+        xCOLOR_GRAY2, 
+        1, 0, FALSE
+    );
+
+    // Draw the label string inside
+    const char *label_save = "SAVE";
+    libgui_drawstring(
+        MyButton_Save.absolute_left +4, 
+        MyButton_Save.absolute_top +4, 
+        label_save,
+        COLOR_BLACK, COLOR_GRAY, 0
+    );
+
+// Refresh to show it
+    libgui_refresh_rectangle_via_kernel(
+        MyButton_Save.absolute_left, 
+        MyButton_Save.absolute_top, 
+        MyButton_Save.width, 
+        MyButton_Save.height
+    );
+
+
 
 //
 // == Client window =======================

@@ -4234,7 +4234,11 @@ wm_hit_test_2(
     struct gws_window_d *hover = NULL;
     int insideTaskbar = FALSE;
 
-    if (WindowManager.initialized != TRUE){
+    //printf("hover\n");
+
+    if (WindowManager.initialized != TRUE)
+    {
+        //printf("wm_hit_test_2: not initialized\n");
         return;
     }
 
@@ -4287,7 +4291,7 @@ wm_hit_test_2(
         {
             on_mouse_leave(mouse_hover);  // repinte a antiga
             mouse_hover = hover;
-            on_mouse_hover(hover);            // repinte a nova
+            on_mouse_hover(hover);        // repinte a nova
         }
 
         // Update relative mouse pointer
@@ -4334,6 +4338,7 @@ wm_hit_test_2(
     struct gws_window_d *clo = NULL;
     int insideTitleBarControl = FALSE;
 
+    // titlebar controls check
     if ((void*)hover != NULL)
     {
         if ( hover->magic == 1234 && hover->type == WT_OVERLAPPED)
@@ -4342,6 +4347,7 @@ wm_hit_test_2(
             if (tb != NULL && tb->magic == 1234)
             {
 
+                // min
                 min = get_window_from_wid(tb->Controls.minimize_wid);
                 if (min->magic == 1234) 
                 {
@@ -4356,6 +4362,7 @@ wm_hit_test_2(
                     }
                 }
 
+                // max
                 max = get_window_from_wid(tb->Controls.maximize_wid);
                 if (max->magic == 1234) 
                 {
@@ -4370,6 +4377,7 @@ wm_hit_test_2(
                     }
                 }
 
+                // clo
                 clo = get_window_from_wid(tb->Controls.close_wid);
                 if (clo->magic == 1234) 
                 {
@@ -4387,10 +4395,12 @@ wm_hit_test_2(
         }
     }
 
+    // inside titlebar or titlebar control?
     if (hover != NULL)
     {
         if (hover->magic == 1234)
         {
+            // inside titlebar control?
             if (insideTitleBarControl == TRUE)
             {
                 if (hover != mouse_hover)
@@ -4407,9 +4417,9 @@ wm_hit_test_2(
                 return;
             }
 
+            // inside titlebar but not in a control?
             // If it was not inside a control,
-            // it probably is inside the titlebar or 
-            // something else.
+            // it probably is inside the titlebar or something else.
             if (insideTitleBarControl != TRUE)
             {
                 tb = hover->titlebar;   // Get titlebar
@@ -4446,6 +4456,7 @@ wm_hit_test_2(
 // of use the one we found in the previous step as hover.
     //int insideChild = FALSE;
 
+    // list of children of the hovered window
     if (hover != NULL) 
     {
         struct gws_window_d *c = hover->child_head;
@@ -4469,10 +4480,12 @@ wm_hit_test_2(
 
         if (hover != mouse_hover)
         {
+            //printf("hover :)\n");
             on_mouse_leave(mouse_hover);
             mouse_hover = hover;
             on_mouse_hover(hover);
         }
+        //printf("hover ?\n");
 
         // Update relative mouse pointer
         hover->x_mouse_relative = (unsigned long)(long1 - hover->absolute_x);
