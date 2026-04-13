@@ -2303,6 +2303,7 @@ done:
     {
         if (active_window->magic == 1234)
         {
+            //if (active_window->state != WINDOW_STATE_MINIMIZED)
             window_post_message( active_window->id, GWS_Paint, 0, 0 );
             wmNotifyKernel(active_window, 8000, 8000);
         }

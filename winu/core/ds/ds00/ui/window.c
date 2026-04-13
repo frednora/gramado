@@ -427,13 +427,21 @@ void minimize_window(struct gws_window_d *window)
 // To restore this window, we need to do it via the iconic window.
     window->enabled = FALSE;
 
-// Minimize it.
+// Minimize it
     change_window_state( window, WINDOW_STATE_MINIMIZED );
 
-// Maybe we're still the active window,
-// even minimized.
-    //if (window == active_window)
-    // ...
+// If we are minimizing the active window,
+// we need to change the active window to the taskbar or root.
+/*
+    if (window == active_window) 
+    {
+        // Option 1: clear active window
+        active_window = NULL;
+
+        // Option 2: reassign to taskbar or root
+        //active_window = taskbar_window; 
+    }
+*/
 
 // Focus?
 // Is the wwf one of our childs?
@@ -450,7 +458,7 @@ void minimize_window(struct gws_window_d *window)
         }
     }
 
-// Update the desktop respecting the current zorder.
+// Update the desktop respecting the current zorder
     wm_update_desktop2();
 }
 
