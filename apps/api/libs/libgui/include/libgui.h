@@ -183,6 +183,23 @@ libgui_frontbuffer_draw_rectangle0 (
     int fill,
     unsigned long rop_flags );
 
+
+void
+libgui_BackbufferDrawCharBlockStyle(
+    unsigned long x,          // top-left in screen space
+    unsigned long y,
+    unsigned int  fgcolor,
+    int           ch,         // character code
+    int           scale);      // 1 = classic 8×8, 2 = 16×16 blocks, etc.
+
+void 
+libgui_drawstringblock(
+    unsigned long x,
+    unsigned long y,
+    unsigned int color,
+    const char *str,
+    int scale );
+
 void libgui_set_mouse_pointer(unsigned long x, unsigned long y);
 
 //

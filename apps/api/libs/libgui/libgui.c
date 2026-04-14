@@ -4624,6 +4624,93 @@ done:
     return;
 }
 
+void
+libgui_BackbufferDrawCharBlockStyle(
+    unsigned long x,          // top-left in screen space
+    unsigned long y,
+    unsigned int  fgcolor,
+    int           ch,         // character code
+    int           scale)      // 1 = classic 8×8, 2 = 16×16 blocks, etc.
+{
+
+    // #test: NOT TESTED YET
+
+    if (scale < 1) scale = 1;
+
+    if (!FontInitialization.initialized || FontInitialization.address == 0)
+        return;
+
+    int char_index = (int)(ch & 0xFF);
+    unsigned char *glyph = 
+        (unsigned char *)FontInitialization.address + (char_index * FontInitialization.height);
+
+    int row;
+    int col;
+
+    for (row = 0; row < FontInitialization.height; row++)
+    {
+        unsigned char bits = glyph[row];
+
+        for (col = 0; col < FontInitialization.width; col++)
+        {
+            if (bits & (0x80 >> col))
+            {
+                unsigned long bx = x + (col * scale);
+                unsigned long by = y + (row * scale);
+
+				/*
+                rectBackbufferDrawRectangle(
+                    bx, by,
+                    scale, scale,           // block size
+                    fgcolor,
+                    TRUE,                   // filled = TRUE
+                    0                       // rop normal
+                );
+				*/
+
+                libgui_backbuffer_draw_rectangle0 ( 
+					bx, by,
+					scale, scale,           // block size
+					fgcolor,
+					TRUE,                   // filled = TRUE
+					0,                      // rop normal
+					FALSE                   // use kgws = FALSE
+				 );
+
+            }
+        }
+    }
+}
+
+void 
+libgui_drawstringblock(
+    unsigned long x,
+    unsigned long y,
+    unsigned int color,
+    const char *str,
+    int scale )
+{
+    int advance = FontInitialization.width * scale;
+    unsigned long cx = x;
+
+    while (*str)
+    {
+        if (*str == ' ') {
+            cx += advance;          // or advance / 2 for tighter word spacing
+        } else {
+            //grDrawCharBlockStyleInsideWindow(wid, cx, y, color, *str, scale, 0);
+            libgui_BackbufferDrawCharBlockStyle(cx, y, color, *str, scale);
+			cx += advance;
+        }
+        str++;
+    }
+}
+
+
+
+
+
+
 void libgui_set_mouse_pointer(unsigned long x, unsigned long y)
 {
     __new_mouse_x = x;

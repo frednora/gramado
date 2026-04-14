@@ -11,7 +11,7 @@
 #include <gws.h>
 #include <libgui.h>
 
-// Globals
+// Globals (same as before)
 struct gws_display_d *Display;
 
 static int main_window = -1;
@@ -25,6 +25,9 @@ static unsigned long cr_left   = 0;
 static unsigned long cr_top    = 0;
 static unsigned long cr_width  = 0;
 static unsigned long cr_height = 0;
+
+// Game state (kept for compatibility)
+static int current_mode = 0;
 
 // Prototypes
 static void query_client_area(int fd);
@@ -66,13 +69,14 @@ static void query_client_area(int fd)
 static void init_game(int fd)
 {
     query_client_area(fd);
+    // No monkey needed now
 }
 
 static void draw_big_text(int fd)
 {
     query_client_area(fd);
 
-    // Background
+    // Background - ok
     libgui_backbuffer_draw_rectangle0(
         frame_left + cr_left, 
         frame_top  + cr_top, 
@@ -80,29 +84,29 @@ static void draw_big_text(int fd)
         cr_height,
         0xFF1C2F1C, 1, 0, FALSE);
 
-    // Big centered text
+    // Big centered text using block style (few rectangles per char)
     libgui_drawstringblock(
-        frame_left + (cr_width / 2) - 200,
-        frame_top  + (cr_height / 3) - 20,
-        0xFFFFEE88,
+        frame_left + ((cr_width / 2) - 180),   // x
+        frame_top  + (cr_height / 3),          // y
+        0xFFFFEE88,             // color
         "GRAMADO OS", 
-        4);
+        4);                     // scale = 4 → big chunky letters
 
     libgui_drawstringblock(
-        frame_left + (cr_width / 2) - 220,
-        frame_top  + (cr_height / 3) + 70,
+        frame_left + ((cr_width / 2) - 200), 
+        frame_top  + (cr_height / 3) + 80,
         0xFF88FFCC,
         "BIG TEXT DEMO",
         3);
 
-    // Instructions
+    // Small instruction
     libgui_drawstring(
         frame_left + 40, 
-        frame_top  + (cr_height - 50),
+        frame_top  + (cr_height - 60),
         "PRESS Q TO QUIT   F5 TO REDRAW",
         0xFFAAAAAA, 0xFF1C2F1C, 0);
 
-    // Refresh the whole client area
+    // Refresh
     libgui_refresh_rectangle_via_kernel(
         frame_left + cr_left, 
         frame_top  + cr_top, 
@@ -121,7 +125,7 @@ static void draw_current_art(int fd)
 }
 
 // ----------------------------------------------------
-// Event handling
+// Procedure & pump (exactly the same as your working version)
 // ----------------------------------------------------
 
 static void exitProgram(int fd)
@@ -182,7 +186,7 @@ static void pump(int fd)
 }
 
 // ----------------------------------------------------
-// Main
+// Main (exactly your original structure)
 // ----------------------------------------------------
 
 int main(int argc, char *argv[]) 
@@ -244,10 +248,11 @@ int main(int argc, char *argv[])
             }
         }
 
+        //update_physics();     // keep it for future compatibility
         draw_current_art(fd);
+
         rtl_sleep(16);
     }
 
     return EXIT_SUCCESS;
 }
-
