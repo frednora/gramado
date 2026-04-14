@@ -129,7 +129,7 @@ static void update_physics(void)
 
 static void draw_monkey_sprite(int fd, int base_x, int base_y)
 {
-    const int PIXEL = 2; //5
+    const int PIXEL = 4; //5
     const int GAP   = 1;
 
     // 32×40 classic 8-bit monkey (head, ears, eyes, mouth, body, arms, legs)
