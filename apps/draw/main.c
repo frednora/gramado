@@ -85,13 +85,15 @@ static void query_client_area(int fd)
     cr_height = wi.cr_height;
 }
 
+
 static void init_game(int fd)
 {
     query_client_area(fd);
 
-    // Center the monkey on the ground
-    monkey_x = (cr_width / 2) - 80;                    // roughly centered
-    monkey_y = cr_height - 180;                        // standing on the "ground"
+// Changed: Monkey now starts in the upper area of the screen
+    monkey_x = (cr_width / 2) - 80;           // keep centered horizontally
+    monkey_y = (cr_height / 4) + 40;          // upper area (about 1/4 from the top)
+
     monkey_vel_y = 0;
     is_jumping = FALSE;
     score = 0;
@@ -104,10 +106,10 @@ static void init_game(int fd)
 
 static void update_physics(void)
 {
-    // Simple gravity
-    const int GRAVITY = 2;
-    const int GROUND_Y = (int)cr_height - 160;   // adjust if you change sprite size
+    const int GRAVITY = 4;  // stronger gravity for better feel
+    const int GROUND_Y = (int)cr_height - 150;   // adjusted for upper start
 
+    // Always apply gravity
     monkey_vel_y += GRAVITY;
     monkey_y += monkey_vel_y;
 
@@ -119,27 +121,28 @@ static void update_physics(void)
         is_jumping = FALSE;
     }
 
-    // Keep monkey inside client area
+    // Keep monkey inside bounds
     if (monkey_x < 20) monkey_x = 20;
     if (monkey_x > (int)cr_width - 180) monkey_x = (int)cr_width - 180;
 }
 
+
 static void draw_monkey_sprite(int fd, int base_x, int base_y)
 {
-    const int PIXEL = 5;
+    const int PIXEL = 2; //5
     const int GAP   = 1;
 
     // 32×40 classic 8-bit monkey (head, ears, eyes, mouth, body, arms, legs)
     const char* sprite[40] = {
-        "           ########           ", // 0
+        "           #########          ", // 0
         "        ################      ",
         "      ####################    ",
-        "     ######################   ",
-        "    ########################  ",
-        "   ########################## ", // 5
+        "     #######################  ",
+        "    ######################### ",
+        "   ###########################", // 5
         "  ############################",
-        " ##############################",
-        "############################## ",
+        " #############################",
+        "##############################",
         "##############################", // 9  head
         "####                    ####  ", // 10 ears
         "####                    ####  ",
@@ -158,27 +161,27 @@ static void draw_monkey_sprite(int fd, int base_x, int base_y)
         "    ########################  ",
         "   ########################## ", // 25
         "  ############################",
-        " ##############################",
-        "############################## ",
-        "   #####              #####   ", // 29 arms
-        "  ######            ######    ",
-        " ######              ######   ",
-        "######                ######  ", // 32
-        "   #####              #####   ", // 33 legs
+        " #############################",
+        "### ###################### ###",
+        "    #####           #####     ", // 29 legs start
+        "   ######            ######   ",
+        "  ######              ######  ",
+        " ######                ###### ", // 32
+        "   #####              #####   ", // 33 knees
         "    #####            #####    ",
         "     #####          #####     ",
         "      #####        #####      ",
         "       #####      #####       ", // 37
         "        #####    #####        ",
-        "         ############         ",
-        "          ##########          "
+        "         ##### ######         ",
+        "          #### #####          "
     };
 
     int row = 0;
     int col = 0;
     for (row = 0; row < 40; row++)
     {
-        for (col = 0; col < 32; col++)
+        for (col = 0; col < 30; col++)
         {
             char c = sprite[row][col];
             if (c == ' ') continue;
@@ -189,12 +192,19 @@ static void draw_monkey_sprite(int fd, int base_x, int base_y)
             unsigned long color = (c == '#') ? 
                 ((row < 20) ? 0xFFBE7F4A : 0xFFAC6E3F) : 0xFF111111;
 
+            // Clipping to client area (optional, but good practice)
+            if (
+                ((frame_top  + cr_top  + py) + PIXEL) < (frame_top + frame_height -8)
+               )
+            {
             libgui_backbuffer_draw_rectangle0(
                 frame_left + cr_left + px, 
                 frame_top  + cr_top  + py, 
                 PIXEL, PIXEL,
-                color, 1, 0, FALSE
-            );
+                color, 1, 0, FALSE );
+
+            }
+
         }
     }
 
@@ -209,9 +219,10 @@ static void draw_monkey_sprite(int fd, int base_x, int base_y)
     libgui_backbuffer_draw_rectangle0(frame_left + cr_left + base_x + 13*(PIXEL+GAP), frame_top + cr_top + base_y + 18*(PIXEL+GAP), PIXEL*6, PIXEL, 0xFF111111, 1, 0, FALSE);
 }
 
+
 static void draw_game_scene(int fd)
 {
-    query_client_area(fd);
+    // query_client_area(fd);
 
     // Background (jungle green)
     libgui_backbuffer_draw_rectangle0(
@@ -263,14 +274,28 @@ static void draw_game_scene(int fd)
     // Score and instructions
     char score_text[64];
     sprintf(score_text, "Score: %d / 3", score);
-    gws_draw_text(fd, main_window, 30, 30, 0xFFFFFF88, score_text);
+    //gws_draw_text(fd, main_window, 30, 30, 0xFFFFFF88, score_text);
+    libgui_drawstring(
+        frame_left + cr_left + 30, 
+        frame_top  + cr_top  + 30, 
+        score_text, 0xFFFFFF88, 0xFF1C2F1C, 0);
 
-    gws_draw_text(fd, main_window, 30, 60, 0xFF88FF99, "A/D = Move   SPACE = Jump   Q = Quit");
+    //gws_draw_text(fd, main_window, 30, 60, 0xFF88FF99, "A/D = Move   SPACE = Jump   Q = Quit");
+    libgui_drawstring(
+        frame_left + cr_left + 30, 
+        frame_top  + cr_top  + 60, 
+        "A/D = Move   SPACE = Jump   Q = Quit", 0xFF88FF99, 0xFF1C2F1C, 0);
 
     // Check win condition
     if (score >= 3)
     {
-        gws_draw_text(fd, main_window, (cr_width/2)-120, (cr_height/2)-20, 0xFFFFFF00, "YOU WIN! All bananas collected!");
+        //gws_draw_text(fd, main_window, 
+            //(cr_width/2)-120, (cr_height/2)-20, 0xFFFFFF00, 
+            //"YOU WIN! All bananas collected!");
+        libgui_drawstring(
+            frame_left + ((cr_width/2)-120), 
+            frame_top  + ((cr_height/2)-20), 
+            "YOU WIN! All bananas collected!", 0xFFFFFF00, 0xFF1C2F1C, 0);
     }
 
     // Refresh everything in one kernel call (fast client-side path)
@@ -296,7 +321,8 @@ static void draw_current_art(int fd)   // kept the original name for compatibili
 
 static void exitProgram(int fd)
 {
-    if (fd < 0) return;
+    if (fd < 0) 
+        return;
     gws_destroy_window(fd, main_window);
     exit(0);
 }
@@ -317,21 +343,27 @@ systemProcedure(
     case MSG_KEYDOWN:
         switch (long1)
         {
-        case 'A': case 'a': monkey_x -= 18; break;           // left
-        case 'D': case 'd': monkey_x += 18; break;           // right
+        case 'A': case 'a': 
+            monkey_x -= 18; 
+            break;
+        case 'D': case 'd': 
+            monkey_x += 18; 
+            break;
         case ' ': 
             if (!is_jumping)
             {
-                monkey_vel_y = -22;   // jump strength
+                monkey_vel_y = -28;  //-24;   // stronger jump (feels better)
                 is_jumping = TRUE;
             }
             break;
+
         case 'Q': case 'q':
             exitProgram(fd);
             break;
         }
-        update_physics();               // apply gravity after movement
-        draw_current_art(fd);           // redraw immediately
+        
+        // IMPORTANT: Only redraw after input, but gravity runs every frame
+        draw_current_art(fd);
         break;
 
     case MSG_SYSKEYDOWN:
@@ -351,6 +383,7 @@ systemProcedure(
         break;
 
     case MSG_PAINT:
+        query_client_area(fd);
         draw_current_art(fd);
         break;
     }
@@ -434,6 +467,7 @@ int main(int argc, char *argv[])
 
     // Event loop (exactly as before)
     while (1) {
+
         pump(fd);
 
         for (nSysMsg = 0; nSysMsg < 32; nSysMsg++){
@@ -447,13 +481,18 @@ int main(int argc, char *argv[])
                 );
                 RTLEventBuffer[1] = 0;
             }
-        }
+        };
 
         // Very light continuous update (gravity & redraw) so the monkey falls naturally
         // This keeps the game "alive" even without key presses
-        update_physics();
+        //update_physics();
         // Only redraw when needed to avoid unnecessary CPU usage
         // (you can remove the counter if you want smoother animation)
+
+        // Continuous physics and redraw
+        update_physics();
+        draw_current_art(fd);
+        //rtl_sleep(16);   // smooth falling and jumping
     };
 
     return EXIT_SUCCESS;
