@@ -126,7 +126,7 @@ Gramado OS Kernel is 64bit image running in ring 0.
 GramadoOS is a 64-bit graphical operating system, featuring a bootloader, kernel, and a desktop environment. This is the first distribution created using the Gramado OS kernel.
 
 This image shows the first process that runs after the kernel initialization.
-![Screenshot](https://raw.githubusercontent.com/seekbalance/screenshots/main/kernel-01.png)
+![Screenshot](https://raw.githubusercontent.com/noraside/screenshots/main/kernel-01.png)
 
 You can install a desktop environment on top of the kernel. The default desktop environment is located in the gdeps/ folder.
 
@@ -184,7 +184,7 @@ See cmds/.
 
 This is a screenshot of the desktop environment running on top of the kernel.
 You can find code in the gdeps/ folder.
-![Screenshot](https://raw.githubusercontent.com/seekbalance/screenshots/main/gramado-9.png)
+![Screenshot](https://raw.githubusercontent.com/noraside/screenshots/main/gramado-9.png)
 
 ## Gramado API 
 
@@ -194,7 +194,7 @@ You can find the API to create client-side GUI applications in apps/.
 
 This is a screenshot of 3D demo running on top of the kernel.
 You can find code in the zde/aurora/ folder.
-![Screenshot](https://raw.githubusercontent.com/seekbalance/screenshots/main/gramado-3.png)
+![Screenshot](https://raw.githubusercontent.com/noraside/screenshots/main/gramado-3.png)
 
 ## The source code.
 
