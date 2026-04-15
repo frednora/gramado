@@ -6,12 +6,16 @@
 
 // We need 2 asm statement inside a block {} to fill
 // a single structure.
+
+// Structure for meta nodes.
 struct metadata_d
 {
+// Status
     int initialized;
-
 // Identification
     int id;
+
+// meta=""
     char meta_tag[64];
     size_t tag_size;
 
@@ -28,6 +32,24 @@ struct metadata_d
     unsigned int return_value;
 };
 extern struct metadata_d  metadata[32];
+
+/*
+// Structure for box nodes.
+// Each box node has a bunch of metadata nodes.
+struct box_node_d 
+{
+    int initialized;
+    int id;
+
+// Meta nodes support.
+// #todo:
+// We need a pointer for a list of meta nodes,
+// because each box node can have a variable number of meta nodes.
+    int meta_count;
+
+    struct box_node_d *next;
+}
+*/
 
 // Contador para não estourar a lista. 
 extern int keyword_count; 

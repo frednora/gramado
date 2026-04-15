@@ -2082,7 +2082,7 @@ int parse(int dump_output)
                             
                             if (type_found == TMETA)
                             {
-                                memset(metadata[meta_index].meta_tag, 0,64);
+                                memset(metadata[meta_index].meta_tag, 0, 64);
                                 string_size = (size_t) strlen(real_token_buffer);
                                 if (string_size <= 0){
                                     printf("ERROR: tag size min\n");
@@ -2614,10 +2614,11 @@ debug_output:
 __parse_exit:
     printf("parse: Done\n");
     return 0;
+
 syntax:
-    printf("parse: Systax error in line %d\n", 
-        lexer_currentline );
+    printf("parse: Systax error in line %d\n", lexer_currentline );
     exit(1);
+
 hang:
     printf("parse: *hang\n");
     while (1){
