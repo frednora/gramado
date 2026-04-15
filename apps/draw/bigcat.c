@@ -1,10 +1,14 @@
-// main.c - menu.bin
-// Gramado OS - Simple Big Letter Menu / Selector
+// main.c - bigcat.bin
+// Gramado OS - File viewer with big block letters
 
 #include <types.h>
-#include <stdio.h>
+#include <sys/types.h>
+#include <stddef.h>
+#include <errno.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <rtl/gramado.h>
 
@@ -26,22 +30,14 @@ static unsigned long cr_top    = 0;
 static unsigned long cr_width  = 0;
 static unsigned long cr_height = 0;
 
-// Menu state
-#define MENU_ITEMS 5
-static const char* menu_options[MENU_ITEMS] = {
-    "Start Game",
-    "Load File",
-    "Settings",
-    "About",
-    "Exit"
-};
-
-static int selected = 0;   // currently highlighted item
+// Buffer for file content
+#define MAX_FILE_SIZE  (32 * 1024)   // 32KB - safe for hobby OS
+static char file_buffer[MAX_FILE_SIZE];
 
 // Prototypes
 static void query_client_area(int fd);
-static void draw_big_menu(int fd);
-static void init_menu(int fd);
+static void draw_big_file(int fd);
+static void init_viewer(int fd, char *filename);
 
 static void exitProgram(int fd);
 
@@ -74,13 +70,38 @@ static void query_client_area(int fd)
     cr_height = wi.cr_height;
 }
 
-static void init_menu(int fd)
+static void init_viewer(int fd, char *filename)
 {
     query_client_area(fd);
-    selected = 0;
+
+    if (filename == NULL || *filename == 0)
+    {
+        strcpy(file_buffer, "No file specified.\nUsage: bigcat <filename>");
+        return;
+    }
+
+    // Clear buffer
+    memset(file_buffer, 0, MAX_FILE_SIZE);
+
+    //int f = open(filename, O_RDONLY);
+    int f = (int) open((char *) filename, 0, "a+");
+    if (f < 0)
+    {
+        snprintf(file_buffer, MAX_FILE_SIZE-1, 
+            "Could not open file:\n%s", filename);
+        return;
+    }
+
+    int n = read(f, file_buffer, MAX_FILE_SIZE-1);
+    close(f);
+
+    if (n < 0)
+        strcpy(file_buffer, "Error reading file.");
+    else
+        file_buffer[n] = '\0';
 }
 
-static void draw_big_menu(int fd)
+static void draw_big_file(int fd)
 {
     query_client_area(fd);
 
@@ -94,31 +115,36 @@ static void draw_big_menu(int fd)
 
     // Title
     libgui_drawstring(
-        frame_left + 60, 
-        frame_top  + 50,  //frame_top  + 40,
-        "GRAMADO OS MENU",
+        frame_left + 40, 
+        frame_top  + 30,
+        "BIG FILE VIEWER",
         0xFF88FFAA, 0xFF1C2F1C, 0);
 
-    // Draw menu items with big block letters
-    int i;
-    unsigned int color;
-    for (i = 0; i < MENU_ITEMS; i++)
+    // Big block text content
+    if (file_buffer[0] != '\0')
     {
-        color = (i == selected) ? 0xFFFFFF00 : 0xFFCCCCCC;
-
         libgui_drawstringblock(
-            frame_left + 100,
-            frame_top  + 120 + (i * 50), //frame_top  + 120 + (i * 70),
-            color,
-            menu_options[i],
-            3);                     // big chunky letters
+            frame_left + 40,
+            frame_top  + 90,
+            0xFFFFFFCC,
+            file_buffer,
+            2);                     // scale 2 = good readability
+    }
+    else
+    {
+        libgui_drawstringblock(
+            frame_left + 80,
+            frame_top  + 120,
+            0xFF888888,
+            "(empty file)",
+            2);
     }
 
-    // Instructions at bottom
+    // Instructions
     libgui_drawstring(
-        frame_left + 60, 
-        frame_top  + (cr_height - 10),  //frame_top  + (cr_height - 60),
-        "UP/DOWN = Navigate    ENTER = Select    Q = Quit",
+        frame_left + 40, 
+        frame_top  + (cr_height - 50),
+        "Q = Quit   F5 = Redraw",
         0xFFAAAAAA, 0xFF1C2F1C, 0);
 
     // Refresh
@@ -131,7 +157,7 @@ static void draw_big_menu(int fd)
 
 static void draw_game_scene(int fd)
 {
-    draw_big_menu(fd);
+    draw_big_file(fd);
 }
 
 static void draw_current_art(int fd)
@@ -140,7 +166,7 @@ static void draw_current_art(int fd)
 }
 
 // ----------------------------------------------------
-// Event handling
+// Event handling (same style as before)
 // ----------------------------------------------------
 
 static void exitProgram(int fd)
@@ -166,15 +192,6 @@ systemProcedure(
     case MSG_KEYDOWN:
         switch (long1)
         {
-        case VK_RETURN:
-        case '\n':     // Enter key
-        case '\r':
-            // For now, just show which option was selected
-            printf("Selected: %s\n", menu_options[selected]);
-            if (selected == 4) {   // Exit option
-                exitProgram(fd);
-            }
-            break;
         case 'Q': case 'q':
             exitProgram(fd);
             break;
@@ -183,20 +200,8 @@ systemProcedure(
         break;
 
     case MSG_SYSKEYDOWN:
-        if (long1 == VK_F5){
+        if (long1 == VK_F5)
             draw_current_art(fd);
-            break;
-        }
-
-        switch (long1) {
-        case VK_ARROW_UP:
-            if (selected > 0) selected--;
-            break;
-        case VK_ARROW_DOWN:
-            if (selected < MENU_ITEMS - 1) selected++;
-            break;
-        };
-
         break;
 
     case MSG_CLOSE:
@@ -225,7 +230,7 @@ static void pump(int fd)
 // Main
 // ----------------------------------------------------
 
-int main(int argc, char *argv[]) 
+int main(int argc, char *argv[])
 {
     Display = gws_open_display("display:name.0");
     if (!Display) return EXIT_FAILURE;
@@ -233,7 +238,7 @@ int main(int argc, char *argv[])
 
     int status = (int) libgui_initialize();
     if (status < 0){
-        printf("menu: libgui_initialize fail\n");
+        printf("bigcat: libgui_initialize fail\n");
         exit(1);
     }
 
@@ -246,7 +251,7 @@ int main(int argc, char *argv[])
 
     main_window = (int) gws_create_window(
         fd, WT_OVERLAPPED, WINDOW_STATUS_ACTIVE, WINDOW_STATE_NORMAL,
-        "Menu", win_x, win_y, win_w, win_h, 0, WS_APP, COLOR_WINDOW, COLOR_WINDOW);
+        "BigCat", win_x, win_y, win_w, win_h, 0, WS_APP, COLOR_WINDOW, COLOR_WINDOW);
 
     if (main_window < 0){
         printf("on main_window\n");
@@ -265,7 +270,12 @@ int main(int argc, char *argv[])
     m[5] = cr_left;    m[6] = cr_top;    m[7] = cr_width;    m[8] = cr_height;
     sc80(48, &m[0], &m[0], &m[0]);
 
-    init_menu(fd);
+    // Use first argument as filename
+    if (argc > 1)
+        init_viewer(fd, argv[1]);
+    else
+        init_viewer(fd, NULL);
+
     draw_current_art(fd);
 
     int nSysMsg = 0;
@@ -285,7 +295,7 @@ int main(int argc, char *argv[])
         }
 
         draw_current_art(fd);
-        //rtl_sleep(16);
+        rtl_sleep(16);
     }
 
     return EXIT_SUCCESS;

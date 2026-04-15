@@ -1,5 +1,5 @@
-// main.c - menu.bin
-// Gramado OS - Simple Big Letter Menu / Selector
+// main.c - textdemo.bin
+// Gramado OS client-side GUI app: Big Text Demo using block font
 
 #include <types.h>
 #include <stdio.h>
@@ -26,22 +26,11 @@ static unsigned long cr_top    = 0;
 static unsigned long cr_width  = 0;
 static unsigned long cr_height = 0;
 
-// Menu state
-#define MENU_ITEMS 5
-static const char* menu_options[MENU_ITEMS] = {
-    "Start Game",
-    "Load File",
-    "Settings",
-    "About",
-    "Exit"
-};
-
-static int selected = 0;   // currently highlighted item
-
 // Prototypes
 static void query_client_area(int fd);
-static void draw_big_menu(int fd);
-static void init_menu(int fd);
+static void draw_big_text(int fd);
+static void draw_game_scene(int fd);
+static void init_game(int fd);
 
 static void exitProgram(int fd);
 
@@ -74,13 +63,12 @@ static void query_client_area(int fd)
     cr_height = wi.cr_height;
 }
 
-static void init_menu(int fd)
+static void init_game(int fd)
 {
     query_client_area(fd);
-    selected = 0;
 }
 
-static void draw_big_menu(int fd)
+static void draw_big_text(int fd)
 {
     query_client_area(fd);
 
@@ -92,36 +80,29 @@ static void draw_big_menu(int fd)
         cr_height,
         0xFF1C2F1C, 1, 0, FALSE);
 
-    // Title
+    // Big centered text
+    libgui_drawstringblock(
+        frame_left + (cr_width / 2) - 200,
+        frame_top  + (cr_height / 3) - 20,
+        0xFFFFEE88,
+        "GRAMADO OS", 
+        4);
+
+    libgui_drawstringblock(
+        frame_left + (cr_width / 2) - 220,
+        frame_top  + (cr_height / 3) + 70,
+        0xFF88FFCC,
+        "BIG TEXT DEMO",
+        3);
+
+    // Instructions
     libgui_drawstring(
-        frame_left + 60, 
-        frame_top  + 50,  //frame_top  + 40,
-        "GRAMADO OS MENU",
-        0xFF88FFAA, 0xFF1C2F1C, 0);
-
-    // Draw menu items with big block letters
-    int i;
-    unsigned int color;
-    for (i = 0; i < MENU_ITEMS; i++)
-    {
-        color = (i == selected) ? 0xFFFFFF00 : 0xFFCCCCCC;
-
-        libgui_drawstringblock(
-            frame_left + 100,
-            frame_top  + 120 + (i * 50), //frame_top  + 120 + (i * 70),
-            color,
-            menu_options[i],
-            3);                     // big chunky letters
-    }
-
-    // Instructions at bottom
-    libgui_drawstring(
-        frame_left + 60, 
-        frame_top  + (cr_height - 10),  //frame_top  + (cr_height - 60),
-        "UP/DOWN = Navigate    ENTER = Select    Q = Quit",
+        frame_left + 40, 
+        frame_top  + (cr_height - 50),
+        "PRESS Q TO QUIT   F5 TO REDRAW",
         0xFFAAAAAA, 0xFF1C2F1C, 0);
 
-    // Refresh
+    // Refresh the whole client area
     libgui_refresh_rectangle_via_kernel(
         frame_left + cr_left, 
         frame_top  + cr_top, 
@@ -131,7 +112,7 @@ static void draw_big_menu(int fd)
 
 static void draw_game_scene(int fd)
 {
-    draw_big_menu(fd);
+    draw_big_text(fd);
 }
 
 static void draw_current_art(int fd)
@@ -166,15 +147,6 @@ systemProcedure(
     case MSG_KEYDOWN:
         switch (long1)
         {
-        case VK_RETURN:
-        case '\n':     // Enter key
-        case '\r':
-            // For now, just show which option was selected
-            printf("Selected: %s\n", menu_options[selected]);
-            if (selected == 4) {   // Exit option
-                exitProgram(fd);
-            }
-            break;
         case 'Q': case 'q':
             exitProgram(fd);
             break;
@@ -183,20 +155,8 @@ systemProcedure(
         break;
 
     case MSG_SYSKEYDOWN:
-        if (long1 == VK_F5){
+        if (long1 == VK_F5)
             draw_current_art(fd);
-            break;
-        }
-
-        switch (long1) {
-        case VK_ARROW_UP:
-            if (selected > 0) selected--;
-            break;
-        case VK_ARROW_DOWN:
-            if (selected < MENU_ITEMS - 1) selected++;
-            break;
-        };
-
         break;
 
     case MSG_CLOSE:
@@ -233,7 +193,7 @@ int main(int argc, char *argv[])
 
     int status = (int) libgui_initialize();
     if (status < 0){
-        printf("menu: libgui_initialize fail\n");
+        printf("textdemo: libgui_initialize fail\n");
         exit(1);
     }
 
@@ -246,7 +206,7 @@ int main(int argc, char *argv[])
 
     main_window = (int) gws_create_window(
         fd, WT_OVERLAPPED, WINDOW_STATUS_ACTIVE, WINDOW_STATE_NORMAL,
-        "Menu", win_x, win_y, win_w, win_h, 0, WS_APP, COLOR_WINDOW, COLOR_WINDOW);
+        "Draw App", win_x, win_y, win_w, win_h, 0, WS_APP, COLOR_WINDOW, COLOR_WINDOW);
 
     if (main_window < 0){
         printf("on main_window\n");
@@ -265,7 +225,7 @@ int main(int argc, char *argv[])
     m[5] = cr_left;    m[6] = cr_top;    m[7] = cr_width;    m[8] = cr_height;
     sc80(48, &m[0], &m[0], &m[0]);
 
-    init_menu(fd);
+    init_game(fd);
     draw_current_art(fd);
 
     int nSysMsg = 0;
@@ -285,8 +245,9 @@ int main(int argc, char *argv[])
         }
 
         draw_current_art(fd);
-        //rtl_sleep(16);
+        rtl_sleep(16);
     }
 
     return EXIT_SUCCESS;
 }
+

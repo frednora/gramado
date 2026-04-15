@@ -1,5 +1,5 @@
-// main.c - menu.bin
-// Gramado OS - Simple Big Letter Menu / Selector
+// main.c - editor.bin
+// Gramado OS - Simple Big Text Editor using block font
 
 #include <types.h>
 #include <stdio.h>
@@ -26,22 +26,16 @@ static unsigned long cr_top    = 0;
 static unsigned long cr_width  = 0;
 static unsigned long cr_height = 0;
 
-// Menu state
-#define MENU_ITEMS 5
-static const char* menu_options[MENU_ITEMS] = {
-    "Start Game",
-    "Load File",
-    "Settings",
-    "About",
-    "Exit"
-};
-
-static int selected = 0;   // currently highlighted item
+// Editor state
+#define MAX_LINE 128
+static char text_line[MAX_LINE] = {0};
+static int cursor_pos = 0;
+static int blink = 0;          // for cursor blink
 
 // Prototypes
 static void query_client_area(int fd);
-static void draw_big_menu(int fd);
-static void init_menu(int fd);
+static void draw_editor(int fd);
+static void init_editor(int fd);
 
 static void exitProgram(int fd);
 
@@ -74,13 +68,14 @@ static void query_client_area(int fd)
     cr_height = wi.cr_height;
 }
 
-static void init_menu(int fd)
+static void init_editor(int fd)
 {
     query_client_area(fd);
-    selected = 0;
+    strcpy(text_line, "Hello Gramado!");
+    cursor_pos = strlen(text_line);
 }
 
-static void draw_big_menu(int fd)
+static void draw_editor(int fd)
 {
     query_client_area(fd);
 
@@ -94,31 +89,35 @@ static void draw_big_menu(int fd)
 
     // Title
     libgui_drawstring(
-        frame_left + 60, 
-        frame_top  + 50,  //frame_top  + 40,
-        "GRAMADO OS MENU",
+        frame_left + 30, 
+        frame_top  + 30,
+        "SIMPLE BIG TEXT EDITOR",
         0xFF88FFAA, 0xFF1C2F1C, 0);
 
-    // Draw menu items with big block letters
-    int i;
-    unsigned int color;
-    for (i = 0; i < MENU_ITEMS; i++)
-    {
-        color = (i == selected) ? 0xFFFFFF00 : 0xFFCCCCCC;
+    // Draw the big editable line
+    libgui_drawstringblock(
+        frame_left + 60,
+        frame_top  + (cr_height / 3),
+        0xFFFFFFBB,
+        text_line,
+        3);                     // big block letters
 
-        libgui_drawstringblock(
-            frame_left + 100,
-            frame_top  + 120 + (i * 50), //frame_top  + 120 + (i * 70),
-            color,
-            menu_options[i],
-            3);                     // big chunky letters
+    // Cursor (blinking)
+    if (blink < 15)   // simple blink effect
+    {
+        int cursor_x = 60 + (cursor_pos * 3 * 8);   // approximate position
+        libgui_backbuffer_draw_rectangle0(
+            frame_left + cursor_x,
+            frame_top  + (cr_height / 3),
+            8, 24,                  // cursor size
+            0xFFFFFF00, 1, 0, FALSE);
     }
 
-    // Instructions at bottom
+    // Instructions
     libgui_drawstring(
-        frame_left + 60, 
-        frame_top  + (cr_height - 10),  //frame_top  + (cr_height - 60),
-        "UP/DOWN = Navigate    ENTER = Select    Q = Quit",
+        frame_left + 40, 
+        frame_top  + (cr_height - 60),
+        "TYPE TO EDIT   BACKSPACE   Q = QUIT   F5 = REDRAW",
         0xFFAAAAAA, 0xFF1C2F1C, 0);
 
     // Refresh
@@ -127,11 +126,13 @@ static void draw_big_menu(int fd)
         frame_top  + cr_top, 
         cr_width, 
         cr_height);
+
+    blink = (blink + 1) % 30;   // simple blink counter
 }
 
 static void draw_game_scene(int fd)
 {
-    draw_big_menu(fd);
+    draw_editor(fd);
 }
 
 static void draw_current_art(int fd)
@@ -164,39 +165,33 @@ systemProcedure(
     switch (event_type) 
     {
     case MSG_KEYDOWN:
-        switch (long1)
+        if (long1 >= 32 && long1 < 127)        // printable characters
         {
-        case VK_RETURN:
-        case '\n':     // Enter key
-        case '\r':
-            // For now, just show which option was selected
-            printf("Selected: %s\n", menu_options[selected]);
-            if (selected == 4) {   // Exit option
-                exitProgram(fd);
+            if (cursor_pos < MAX_LINE - 1)
+            {
+                text_line[cursor_pos] = (char)long1;
+                cursor_pos++;
+                text_line[cursor_pos] = '\0';
             }
-            break;
-        case 'Q': case 'q':
+        }
+        else if (long1 == 8 || long1 == 127)   // Backspace
+        {
+            if (cursor_pos > 0)
+            {
+                cursor_pos--;
+                text_line[cursor_pos] = '\0';
+            }
+        }
+        else if (long1 == 'Q' || long1 == 'q')
+        {
             exitProgram(fd);
-            break;
         }
         draw_current_art(fd);
         break;
 
     case MSG_SYSKEYDOWN:
-        if (long1 == VK_F5){
+        if (long1 == VK_F5)
             draw_current_art(fd);
-            break;
-        }
-
-        switch (long1) {
-        case VK_ARROW_UP:
-            if (selected > 0) selected--;
-            break;
-        case VK_ARROW_DOWN:
-            if (selected < MENU_ITEMS - 1) selected++;
-            break;
-        };
-
         break;
 
     case MSG_CLOSE:
@@ -233,7 +228,7 @@ int main(int argc, char *argv[])
 
     int status = (int) libgui_initialize();
     if (status < 0){
-        printf("menu: libgui_initialize fail\n");
+        printf("editor: libgui_initialize fail\n");
         exit(1);
     }
 
@@ -246,7 +241,7 @@ int main(int argc, char *argv[])
 
     main_window = (int) gws_create_window(
         fd, WT_OVERLAPPED, WINDOW_STATUS_ACTIVE, WINDOW_STATE_NORMAL,
-        "Menu", win_x, win_y, win_w, win_h, 0, WS_APP, COLOR_WINDOW, COLOR_WINDOW);
+        "Editor", win_x, win_y, win_w, win_h, 0, WS_APP, COLOR_WINDOW, COLOR_WINDOW);
 
     if (main_window < 0){
         printf("on main_window\n");
@@ -265,7 +260,7 @@ int main(int argc, char *argv[])
     m[5] = cr_left;    m[6] = cr_top;    m[7] = cr_width;    m[8] = cr_height;
     sc80(48, &m[0], &m[0], &m[0]);
 
-    init_menu(fd);
+    init_editor(fd);
     draw_current_art(fd);
 
     int nSysMsg = 0;
@@ -285,8 +280,9 @@ int main(int argc, char *argv[])
         }
 
         draw_current_art(fd);
-        //rtl_sleep(16);
+        rtl_sleep(16);
     }
 
     return EXIT_SUCCESS;
 }
+
