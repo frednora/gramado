@@ -3820,7 +3820,7 @@ int wmInputReader(void)
     int status=0;
 
     register long i=0;
-    long extra_attempts=10;
+    //long extra_attempts=10;
 
     // Input event structure
     int msg=0;
@@ -3828,7 +3828,9 @@ int wmInputReader(void)
     unsigned long long2=0;
 
     int IsCombination=FALSE;
+    int nSysMsg = 0;
 
+/*
     status = (int) rtl_get_event();
     if (status != TRUE)
     {
@@ -3840,6 +3842,15 @@ int wmInputReader(void)
         };
         goto fail;
     }
+*/
+
+    for (nSysMsg=0; nSysMsg<32; nSysMsg++)
+    {
+        status = (int) rtl_get_event();
+        if (status == TRUE)
+            goto new_event;
+    };
+    goto fail;
 
 new_event:
     msg = (int) (RTLEventBuffer[1] & 0xFFFFFFFF);

@@ -536,8 +536,8 @@ int serviceNextEvent(void)
 //
 
     // Get the window id
-    int wid = (int) ( message_address[0] & 0xFFFFFFFF );
-    if (wid<0 || wid>=WINDOW_COUNT_MAX)
+    int wid = (int) (message_address[0] & 0xFFFFFFFF);
+    if (wid < 0 || wid >= WINDOW_COUNT_MAX)
     {
         //#debug
         //printf("Invalid wid\n");
@@ -545,7 +545,6 @@ int serviceNextEvent(void)
         goto fail;
     }
     // Get the pointer
-    //#old focus_w = (struct gws_window_d *) get_focus();    
     w = (void *) windowList[wid];
     if ((void*) w == NULL){
         goto fail;
@@ -555,8 +554,7 @@ int serviceNextEvent(void)
     }
 
 // Building the next response.
-// It will be sent in the socket loop.
-// Lets clean it.
+// It will be sent in the socket loop. Lets clean it.
     for (i=0; i<32; i++)
         next_response[i] = 0;
 
@@ -573,26 +571,23 @@ int serviceNextEvent(void)
     next_response[5] = (unsigned long) w->ev_msg[Head];
     next_response[6] = (unsigned long) w->ev_long1[Head];
     next_response[7] = (unsigned long) w->ev_long2[Head];
-
 // Extra
     next_response[8] = (unsigned long) w->ev_long3[Head];
     next_response[9] = (unsigned long) w->ev_long4[Head];
 
-// Round it.
+// It advances the queue head, clears the slot, and returns.
     w->ev_head++;
     if (w->ev_head >= 32){
-        w->ev_head=0;
+        w->ev_head = 0;
     }
-// Clean it.
     w->ev_wid[Head] = 0;
     w->ev_msg[Head] = 0;
     w->ev_long1[Head] = 0;
     w->ev_long2[Head] = 0;
     w->ev_long3[Head] = 0;
     w->ev_long4[Head] = 0;
+    return 0;  // Done
 
-// Done
-    return 0;
 // Fail
 fail:
     return (int) (-1);

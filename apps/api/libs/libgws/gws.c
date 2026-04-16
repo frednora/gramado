@@ -3104,6 +3104,16 @@ struct gws_event_d *gws_get_next_event(
 
 // Response
 // Waiting to read the response.
+// This part is polling the kernel for the synchronization flag 
+// into the socket file.
+// #bugbug:
+// This is essentially busy‑waiting,
+// it burns CPU cycles and increases latency.
+// Why it’s problematic?
+// Latency: The client can’t proceed until the server wakes and sets the flag.
+// CPU usage: The loop runs continuously, wasting cycles.
+// Responsiveness: The app feels sluggish because it’s blocked in this loop.
+
     while (TRUE){
         Value = 
         (unsigned long) rtl_get_file_sync( fd, SYNC_REQUEST_GET_ACTION );
@@ -3112,9 +3122,13 @@ struct gws_event_d *gws_get_next_event(
         if (Value == ACTION_ERROR){
             goto fail;
         }
+
+        // #test
+        // It gives more processing time to the server to do its job.
+        rtl_yield();
     };
 
-    e = (struct gws_event_d *) __gws_get_next_event_response (fd,event);
+    e = (struct gws_event_d *) __gws_get_next_event_response(fd,event);
     if ((void*) e == NULL){
         debug_print("gws_get_next_event: fail\n");
         // #todo: goto fail;
@@ -3449,7 +3463,7 @@ gws_create_window (
     int value=0;
     wid_t wid = -1;
     //char *Name;
-    int req_status=-1;
+    int req_status = -1;
 
     //gws_debug_print("gws_create_window:\n");
 

@@ -457,6 +457,12 @@ powerProcedure(
         printf("power: Button released: %d\n", __hover_button_id);
         //printf("power: MSG_MOUSERELEASED:\n");
         on_button_clicked(__hover_button_id);
+
+        // #test: Testing the activation
+        // We gotta do this only when the window is not active
+        //gws_set_active( fd, main_window );
+        //gws_refresh_window (fd, main_window);
+
         break;
 
     case MSG_CLOSE:
@@ -491,19 +497,16 @@ static void pump(int fd)
     //event.long2 = 0;
 
     struct gws_event_d *e;
+    e = (struct gws_event_d *) gws_get_next_event(
+        fd, (int) main_window, (struct gws_event_d *) &event );
 
-    e = 
-    (struct gws_event_d *) gws_get_next_event(
-        fd, 
-        (int) main_window, 
-        (struct gws_event_d *) &event);
-
-    if ((void*) e == NULL) return;
+    if ((void*) e == NULL)
+        return;
     if (e->magic != 1234 || e->used != TRUE) 
         return;
-
     if (e->type <= 0)
         return;
+
     powerProcedure(fd, e->window, e->type, e->long1, e->long2);
 }
 

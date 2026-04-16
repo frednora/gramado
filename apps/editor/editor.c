@@ -226,16 +226,16 @@ static void on_button_clicked(int id)
 
     switch (id)
     {
-        case 1:  // MyButton_Restart.icon_id
+        case 1:  // Save button
             printf("Button %d clicked!\n", id);
-            rtl_clone_and_execute("reboot.bin");
-            exit(0);
+            //rtl_clone_and_execute("reboot.bin");
+            //exit(0);
             break;
 
         case 2:  // MyButton_Shutdown.icon_id
             printf("Button %d clicked!\n", id);
-            rtl_clone_and_execute("shutdown.bin");
-            exit(0);
+            //rtl_clone_and_execute("shutdown.bin");
+            //exit(0);
             break;
 
         default:
@@ -711,6 +711,12 @@ editorProcedure(
         printf("editor: Button released: %d\n", __hover_button_id);
         //printf("editor: MSG_MOUSERELEASED:\n");
         on_button_clicked(__hover_button_id);
+
+            // #test: Testing the activation
+        // We gotta do this only when the window is not active
+        //gws_set_active( fd, main_window );
+        //gws_refresh_window (fd, main_window);
+
         break;
 
 
