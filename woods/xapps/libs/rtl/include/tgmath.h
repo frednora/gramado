@@ -1,8 +1,0 @@
-
-
-//tgmath.h
-
-
-// Funções matemáticas.
-
-

@@ -48,8 +48,7 @@ L4_CMDS = cmds
 ## =================================
 # (userland extras)
 __DEP_L5 = woods
-# Client-side GUI applications with X library
-L5_XAPPS = $(__DEP_L5)/xapps
+
 # Creating one cpp application just for fun
 L5_CPP00 = $(__DEP_L5)/cpp00
 
@@ -287,9 +286,6 @@ build-extras:
 # Compiling ulextras stuff
 	@echo "Compiling __DEP_L5"
 	@make -C $(__DEP_L5)/
-
-# X-like applications
-	@-cp $(L5_XAPPS)/bin/XTB.BIN  $(BASE)/DE
 
 # cpp application example
 	@-cp $(L5_CPP00)/bin/CPP00.BIN  $(BASE)/DE
