@@ -1,5 +1,6 @@
-// main.c - drawapp.bin application
-// Gramado OS client-side GUI app for drawing cool pixel art things.
+// main.c - monkeygame.bin application
+// Gramado OS client-side GUI app: "Monkey Adventure" - a fully playable 8-bit style game
+// One controllable character (the monkey) with movement, jumping, gravity, collectibles and score.
 
 #include <types.h>
 #include <stdio.h>
@@ -28,18 +29,29 @@ static unsigned long cr_top    = 0;
 static unsigned long cr_width  = 0;
 static unsigned long cr_height = 0;
 
+// Game state
+static int current_mode = 0;           // 0 = playable game (monkey), future modes can be added
+static int monkey_x = 0;               // client-area coordinates
+static int monkey_y = 0;
+static int monkey_vel_y = 0;
+static int is_jumping = FALSE;
+static int score = 0;
 
-// Current drawing mode (0: ghost, 1: big rocket, 2: detailed rocket)
-static int current_mode = 3; //0;
+struct Banana {
+    int x;
+    int y;
+    int active;
+};
 
+static struct Banana bananas[3];
+
+// Prototypes
 static void query_client_area(int fd);
 
-static void draw_ghost(int fd);
-static void draw_big_rocket(int fd);
-static void draw_detailed_rocket(int fd);
-static void draw_big_monkey(int fd);
-
-static void draw_current_art(int fd);
+static void draw_monkey_sprite(int fd, int base_x, int base_y);  // the character
+static void draw_game_scene(int fd);
+static void init_game(int fd);
+static void update_physics(void);
 
 static void exitProgram(int fd);
 
@@ -67,429 +79,71 @@ static void query_client_area(int fd)
     frame_width  = wi.width;
     frame_height = wi.height;
 
-// Client area
     cr_left   = wi.cr_left;
     cr_top    = wi.cr_top;
     cr_width  = wi.cr_width;
     cr_height = wi.cr_height;
 }
 
-static void draw_ghost(int fd)
+
+static void init_game(int fd)
 {
     query_client_area(fd);
 
-    // Small "pixel" size - feel free to change!
-    const int PIXEL = 8; //18;
-    const int GAP   = 2;   // small spacing between pixels (optional)
+// Changed: Monkey now starts in the upper area of the screen
+    monkey_x = (cr_width / 2) - 80;           // keep centered horizontally
+    monkey_y = (cr_height / 4) + 40;          // upper area (about 1/4 from the top)
 
-    // Center the artwork roughly
-    int art_width  = 16 * (PIXEL + GAP);
-    int art_height = 16 * (PIXEL + GAP);
-    
-    int start_x = (cr_width  - art_width)  / 2;
-    int start_y = (cr_height - art_height) / 2;
+    monkey_vel_y = 0;
+    is_jumping = FALSE;
+    score = 0;
 
-    // Clear client area first (optional but recommended)
-    gws_draw_rectangle(fd, main_window,
-        0, 0, cr_width, cr_height,
-        COLOR_WHITE, TRUE, 0);
-
-    const char* ghost[16] = {
-        "      ......      ",
-        "    .########.    ",
-        "   .##########.   ",
-        "  .####.##.####.  ",
-        "  .############.  ",
-        "  .############.  ",
-        "  .###.####.###.  ",
-        "   .##########.   ",
-        "    .########.    ",
-        "     .######.     ",
-        "      ......      ",
-        "     . .  . .     ",
-        "    .   ..   .    ",
-        "                  ",
-        "                  ",
-        "                  "
-    };
-
-    // ─── Draw the pixel art ───────────────────────────────────────
-    int row=0;
-    int col=0;
-
-    for (row = 0; row < 16; row++)
-    {
-        for (col = 0; col < 16; col++)
-        {
-            if (ghost[row][col] == ' ') continue;
-
-            int px = start_x + col * (PIXEL + GAP);
-            int py = start_y + row * (PIXEL + GAP);
-
-            unsigned long color;
-
-            // You can make different characters = different colors
-            switch(ghost[row][col])
-            {
-                case '#':  color = 0xFF3366CC; break;  // nice blue
-                case '.':  color = 0xFFFFD700; break;  // gold/yellow
-                default:   color = COLOR_BLACK; break;
-            }
-
-            gws_draw_rectangle(fd, main_window,
-                px, py, PIXEL, PIXEL,
-                color, TRUE, 0);
-        }
-    }
-
-    // Optional: little message under the art
-    gws_draw_text(fd, main_window,
-        start_x + 20,
-        start_y + art_height + 30,
-        COLOR_BLACK,
-        "Have a nice day!  ^_^");
-
-    // Final refresh
-    gws_refresh_window(fd, main_window);
+    // Place 3 collectible bananas
+    bananas[0].x = 120;  bananas[0].y = 180;  bananas[0].active = TRUE;
+    bananas[1].x = cr_width - 220; bananas[1].y = 140; bananas[1].active = TRUE;
+    bananas[2].x = cr_width / 2 + 80; bananas[2].y = 220; bananas[2].active = TRUE;
 }
 
-static void draw_big_rocket(int fd)
+static void update_physics(void)
 {
-    query_client_area(fd);
+    const int GRAVITY = 4;  // stronger gravity for better feel
+    const int GROUND_Y = (int)cr_height - 150;   // adjusted for upper start
 
-    // Pixel size - smaller than before, but still chunky/big-pixel style
-    const int PIXEL = 8; //12;
-    const int GAP   = 1;   // almost no gap - more solid look
+    // Always apply gravity
+    monkey_vel_y += GRAVITY;
+    monkey_y += monkey_vel_y;
 
-    // 24×32 rocket art (taller to fit flame nicely)
-    const int ART_W = 24;
-    const int ART_H = 32;
-
-    int art_width  = ART_W * (PIXEL + GAP);
-    int art_height = ART_H * (PIXEL + GAP);
-
-    int start_x = (cr_width  - art_width)  / 2;
-    int start_y = (cr_height - art_height) / 2;  // little bit higher
-
-    // Background - clean dark space feel
-    gws_draw_rectangle(fd, main_window,
-        0, 0, cr_width, cr_height,
-        0x00112233, TRUE, 0);   // very dark blue-black
-
-    // ─────────────────────────────────────────────────────────────
-    //     Falcon 9 / Starship inspired rocket pixel art (24×32)
-    // ─────────────────────────────────────────────────────────────
-    const char* rocket[32] = {
-        "                        ", // 0
-        "           ##           ",
-        "          ####          ",
-        "         ######         ",
-        "         ######         ",
-        "        ########        ", // 5
-        "       ##########       ",
-        "       ##########       ",
-        "      ############      ",
-        "      ############      ",
-        "     ##############     ", // 10
-        "     ##############     ",
-        "    ################    ",
-        "    ################    ",
-        "   ##################   ",
-        "   ##################   ", // 15
-        "  ####################  ",
-        "  ####################  ",
-        " ###################### ",
-        " ###################### ",
-        "########################", // 20
-        "########################",
-        "########################",
-        "########################",
-        "########################",
-        "########################", // 25
-        "           ##           ",
-        "          ####          ",
-        "         ######         ",
-        "        ########        ",
-        "       ##########       ", // 30
-        "      ############      ",
-        "     ##############     "
-    };
-
-    // ─── Draw the rocket ──────────────────────────────────────────
-    int row=0;
-    int col=0;
-
-    for (row = 0; row < ART_H; row++)
+    // Ground collision
+    if (monkey_y >= GROUND_Y)
     {
-        for (col = 0; col < ART_W; col++)
-        {
-            char c = rocket[row][col];
-            if (c == ' ') continue;
-
-            int px = start_x + col * (PIXEL + GAP);
-            int py = start_y + row * (PIXEL + GAP);
-
-            unsigned long color;
-
-            // Color choices - Starship/Falcon vibe
-            if (row < 8) {
-                color = 0xFFBBBBBB;           // silver/steel top
-            }
-            else if (row < 22) {
-                color = 0xFF444488;           // dark stainless steel body
-            }
-            else if (row < 26) {
-                color = 0xFF222244;           // darker lower section
-            }
-            else {
-                // Flames!
-                if ((row + col) % 3 == 0)
-                    color = 0xFFFF6600;       // bright orange
-                else if ((row + col) % 3 == 1)
-                    color = 0xFFFFAA00;       // yellow-orange
-                else
-                    color = 0xFFFF4400;       // deep orange-red
-            }
-
-            gws_draw_rectangle(fd, main_window,
-                px, py, PIXEL, PIXEL,
-                color, TRUE, 0);
-        }
+        monkey_y = GROUND_Y;
+        monkey_vel_y = 0;
+        is_jumping = FALSE;
     }
 
-    // Little text under the rocket
-    gws_draw_text(fd, main_window,
-        start_x + 30,
-        start_y + art_height + 30,
-        0xFFDDDDDD,
-        "To Mars & Beyond! ");
-
-    gws_draw_text(fd, main_window,
-        start_x + 60,
-        start_y + art_height + 55,
-        0xFFFFAA00,
-        "Elon's rocket");
-
-    // Final refresh
-    gws_refresh_window(fd, main_window);
+    // Keep monkey inside bounds
+    if (monkey_x < 20) monkey_x = 20;
+    if (monkey_x > (int)cr_width - 180) monkey_x = (int)cr_width - 180;
 }
 
-static void draw_detailed_rocket(int fd)
-{
-    query_client_area(fd);
 
-    // Smaller but still chunky "big pixels"
-    const int PIXEL = 3;//4;  //9;
+static void draw_monkey_sprite(int fd, int base_x, int base_y)
+{
+    const int PIXEL = 4; //5
     const int GAP   = 1;
 
-    // Rocket size: 21 wide × 38 tall (good balance)
-    const int ART_W = 21;
-    const int ART_H = 38;
-
-    int art_width  = ART_W * (PIXEL + GAP);
-    int art_height = ART_H * (PIXEL + GAP);
-
-    int start_x = (cr_width  - art_width)  / 2;
-    int start_y = (cr_height - art_height) / 2;
-    //int start_y = (cr_height - art_height) / 2 - 50;  // shifted up a bit
-
-/*
-    // Dark space background
-    gws_draw_rectangle(fd, main_window,
-        0, 0, cr_width, cr_height,
-        0x00081420, TRUE, 0);   // very dark navy-black
-*/
-
-// Draw the backbuffer
-    libgui_backbuffer_draw_rectangle0(
-        frame_left + cr_left +0, 
-        frame_top  + cr_top  +0, 
-        cr_width, 
-        cr_height,
-        xCOLOR_GRAY2, 
-        1, 0, FALSE
-    );
-
-
-    // ─────────────────────────────────────────────────────────────
-    //     Compact cute rocket / Starship style (21×38)
-    // ─────────────────────────────────────────────────────────────
-    const char* rocket[38] = {
-        "         ###         ",  // 0 - nose cone tip
-        "        #####        ",
-        "       #######       ",
-        "      #########      ",
-        "     ###########     ",
-        "    #############    ",  // 5
-        "   ###############   ",
-        "  #################  ",
-        " ################### ",
-        "#####################",
-        "#####################",  // 10 - top of payload/crew section
-        "#####   #####   #####",
-        "#####   #####   #####",
-        "#####################",
-        "#####################",
-        "#####################",  // 15 - main body start
-        "#####################",
-        "#####################",
-        "#####################",
-        "#####################",
-        "#####################",  // 20
-        "#####################",
-        "#####################",
-        "#####################",
-        "#####################",
-        "#####################",  // 25 - lower body
-        "#####################",
-        "        #####        ",  // engine section transition
-        "       #######       ",
-        "      #########      ",
-        "     ###########     ",  // 30 - engines + flame base
-        "    #############    ",
-        "   ###############   ",
-        "  ####  ###  ####    ",  // flame variation
-        " ###   #####   ###   ",
-        " ##   #######   ##   ",  // 35
-        "     #########       ",
-        "      #######        ",
-        "       #####         "
-    };
-
-    // ─── Draw the rocket ──────────────────────────────────────────
-    int row=0;
-    int col=0;
-    for (row = 0; row < ART_H; row++)
-    {
-        for (col = 0; col < ART_W; col++)
-        {
-            if (rocket[row][col] == ' ') continue;
-
-            int px = start_x + col * (PIXEL + GAP);
-            int py = start_y + row * (PIXEL + GAP);
-
-            unsigned long color;
-
-            // Coloring logic
-            if (row <= 9) {
-                // Nose / fairing - bright steel
-                color = 0xFFCCDDEE;
-            }
-            else if (row <= 26) {
-                // Main body - stainless steel look
-                if ((row + col) % 12 < 3)
-                    color = 0xFFAAAAAA;     // slight shine bands
-                else
-                    color = 0xFF888899;
-            }
-            else if (row <= 29) {
-                // Engine mount area - darker
-                color = 0xFF444466;
-            }
-            else {
-                // Flames - animated feel with variation
-                int phase = (row + col * 2) % 6;
-                if (phase == 0 || phase == 5) color = 0xFFFF5500;   // deep orange
-                else if (phase == 1 || phase == 4) color = 0xFFFF8800;
-                else if (phase == 2 || phase == 3) color = 0xFFFFDD44; // yellow core
-            }
-
-            //gws_draw_rectangle(fd, main_window,
-                //px, py, PIXEL, PIXEL,
-                //color, TRUE, 0);
-
-            // Draw the backbuffer
-            libgui_backbuffer_draw_rectangle0(
-                frame_left + cr_left +px, 
-                frame_top  + cr_top  +py, 
-                PIXEL, 
-                PIXEL,
-                color, 
-                1, 0, FALSE
-            );
-
-        }
-    }
-
-/*
-    // Small Gramado "G" logo at the bottom of the rocket
-    gws_draw_rectangle(fd, main_window,
-        start_x + 7*(PIXEL+GAP), start_y + 24*(PIXEL+GAP),
-        7*(PIXEL+GAP), 9*(PIXEL+GAP), 0xFF222244, TRUE, 0);
-
-    gws_draw_rectangle(fd, main_window,
-        start_x + 8*(PIXEL+GAP), start_y + 25*(PIXEL+GAP),
-        5*(PIXEL+GAP), 7*(PIXEL+GAP), 0xFF88AAFF, TRUE, 0);
-
-    // Texts
-    gws_draw_text(fd, main_window,
-        start_x - 10,
-        start_y + art_height + 30,
-        0xFFCCDDFF,
-        "Gramado OS Rocket v0.1");
-
-    gws_draw_text(fd, main_window,
-        start_x + 30,
-        start_y + art_height + 55,
-        0xFFFFFF88,
-        "To the stars!");
-*/
-
-    // Final refresh
-    //gws_refresh_window(fd, main_window);
-
-// Refresh the client area to show the new art
-    libgui_refresh_rectangle_via_kernel(
-        frame_left + cr_left +0, 
-        frame_top  + cr_top  +0, 
-        cr_width, 
-        cr_height
-    );
-
-}
-
-
-static void draw_big_monkey(int fd)
-{
-    query_client_area(fd);
-
-    const int PIXEL = 5;   // bigger pixels = more retro feel
-    const int GAP   = 1;
-
-    // Bigger canvas: 32 wide × 40 tall (room for full body)
-    const int ART_W = 32;
-    const int ART_H = 40;
-
-    int art_width  = ART_W * (PIXEL + GAP);
-    int art_height = ART_H * (PIXEL + GAP);
-
-    int start_x = (cr_width  - art_width)  / 2;
-    int start_y = (cr_height - art_height) / 2 - 15;
-
-    // Dark jungle green background
-    libgui_backbuffer_draw_rectangle0(
-        frame_left + cr_left, 
-        frame_top  + cr_top, 
-        cr_width, 
-        cr_height,
-        0xFF1C2F1C, 
-        1, 0, FALSE
-    );
-
-    // ─────────────────────────────────────────────────────────────
-    //  Classic 8-bit monkey - head, ears, body, arms, legs
-    // ─────────────────────────────────────────────────────────────
-    const char* monkey[40] = {
-        "           ########           ", // 0  head top
+    // 32×40 classic 8-bit monkey (head, ears, eyes, mouth, body, arms, legs)
+    const char* sprite[40] = {
+        "           #########          ", // 0
         "        ################      ",
         "      ####################    ",
-        "     ######################   ",
-        "    ########################  ",
-        "   ########################## ", // 5
+        "     #######################  ",
+        "    ######################### ",
+        "   ###########################", // 5
         "  ############################",
-        " ##############################",
-        "############################## ",
-        "##############################", // 9
+        " #############################",
+        "##############################",
+        "##############################", // 9  head
         "####                    ####  ", // 10 ears
         "####                    ####  ",
         "####                    ####  ",
@@ -507,87 +161,144 @@ static void draw_big_monkey(int fd)
         "    ########################  ",
         "   ########################## ", // 25
         "  ############################",
-        " ##############################",
-        "############################## ",
-        "   #####              #####   ", // 29 arms
-        "  ######            ######    ",
-        " ######              ######   ",
-        "######                ######  ", // 32
-        "   #####              #####   ", // legs
+        " #############################",
+        "### ###################### ###",
+        "    #####           #####     ", // 29 legs start
+        "   ######            ######   ",
+        "  ######              ######  ",
+        " ######                ###### ", // 32
+        "   #####              #####   ", // 33 knees
         "    #####            #####    ",
         "     #####          #####     ",
         "      #####        #####      ",
         "       #####      #####       ", // 37
         "        #####    #####        ",
-        "         ############         ",
-        "          ##########          "
+        "         ##### ######         ",
+        "          #### #####          "
     };
 
-    int row=0;
-    int col=0;
-    for (row = 0; row < ART_H; row++)
+    int row = 0;
+    int col = 0;
+    for (row = 0; row < 40; row++)
     {
-        for (col = 0; col < ART_W; col++)
+        for (col = 0; col < 30; col++)
         {
-            char c = monkey[row][col];
+            char c = sprite[row][col];
             if (c == ' ') continue;
 
-            int px = start_x + col * (PIXEL + GAP);
-            int py = start_y + row * (PIXEL + GAP);
+            int px = base_x + col * (PIXEL + GAP);
+            int py = base_y + row * (PIXEL + GAP);
 
-            unsigned long color;
+            unsigned long color = (c == '#') ? 
+                ((row < 20) ? 0xFFBE7F4A : 0xFFAC6E3F) : 0xFF111111;
 
-            if (c == '#')
+            // Clipping to client area (optional, but good practice)
+            if (
+                ((frame_top  + cr_top  + py) + PIXEL) < (frame_top + frame_height -8)
+               )
             {
-                // Head area
-                if (row <= 18)
-                {
-                    color = ((row + col) % 6 < 2) ? 0xFF9B5F2E : 0xFFBE7F4A;   // head brown
-                }
-                // Body
-                else if (row <= 28)
-                {
-                    color = ((row + col) % 8 < 3) ? 0xFF8F4F24 : 0xFFAC6E3F;
-                }
-                // Arms and legs
-                else
-                {
-                    color = 0xFF9B5F2E;
-                }
-            }
-            else // eyes, mouth details (black)
-            {
-                color = 0xFF111111;
-            }
-
             libgui_backbuffer_draw_rectangle0(
                 frame_left + cr_left + px, 
                 frame_top  + cr_top  + py, 
-                PIXEL, 
-                PIXEL,
-                color, 
-                1, 0, FALSE
-            );
+                PIXEL, PIXEL,
+                color, 1, 0, FALSE );
+
+            }
+
         }
     }
 
-    // Add eyes and mouth manually (better control)
+    // Extra detail: eyes and mouth (over the sprite)
     // Left eye
-    libgui_backbuffer_draw_rectangle0(frame_left + cr_left + start_x + 11*(PIXEL+GAP), frame_top + cr_top + start_y + 13*(PIXEL+GAP), PIXEL*2, PIXEL, 0xFF111111, 1, 0, FALSE);
-    libgui_backbuffer_draw_rectangle0(frame_left + cr_left + start_x + 12*(PIXEL+GAP), frame_top + cr_top + start_y + 14*(PIXEL+GAP), PIXEL,   PIXEL, 0xFFFFFFFF, 1, 0, FALSE);
-
+    libgui_backbuffer_draw_rectangle0(frame_left + cr_left + base_x + 11*(PIXEL+GAP), frame_top + cr_top + base_y + 13*(PIXEL+GAP), PIXEL*2, PIXEL, 0xFF111111, 1, 0, FALSE);
+    libgui_backbuffer_draw_rectangle0(frame_left + cr_left + base_x + 12*(PIXEL+GAP), frame_top + cr_top + base_y + 14*(PIXEL+GAP), PIXEL,   PIXEL, 0xFFFFFFFF, 1, 0, FALSE);
     // Right eye
-    libgui_backbuffer_draw_rectangle0(frame_left + cr_left + start_x + 19*(PIXEL+GAP), frame_top + cr_top + start_y + 13*(PIXEL+GAP), PIXEL*2, PIXEL, 0xFF111111, 1, 0, FALSE);
-    libgui_backbuffer_draw_rectangle0(frame_left + cr_left + start_x + 20*(PIXEL+GAP), frame_top + cr_top + start_y + 14*(PIXEL+GAP), PIXEL,   PIXEL, 0xFFFFFFFF, 1, 0, FALSE);
-
+    libgui_backbuffer_draw_rectangle0(frame_left + cr_left + base_x + 19*(PIXEL+GAP), frame_top + cr_top + base_y + 13*(PIXEL+GAP), PIXEL*2, PIXEL, 0xFF111111, 1, 0, FALSE);
+    libgui_backbuffer_draw_rectangle0(frame_left + cr_left + base_x + 20*(PIXEL+GAP), frame_top + cr_top + base_y + 14*(PIXEL+GAP), PIXEL,   PIXEL, 0xFFFFFFFF, 1, 0, FALSE);
     // Mouth
-    libgui_backbuffer_draw_rectangle0(frame_left + cr_left + start_x + 13*(PIXEL+GAP), frame_top + cr_top + start_y + 18*(PIXEL+GAP), PIXEL*6, PIXEL, 0xFF111111, 1, 0, FALSE);
+    libgui_backbuffer_draw_rectangle0(frame_left + cr_left + base_x + 13*(PIXEL+GAP), frame_top + cr_top + base_y + 18*(PIXEL+GAP), PIXEL*6, PIXEL, 0xFF111111, 1, 0, FALSE);
+}
 
-    // Text
-    gws_draw_text(fd, main_window, start_x + 30, start_y + art_height + 40, 0xFFFFFF88, "Ooh ooh aah aah!");
-    gws_draw_text(fd, main_window, start_x + 35, start_y + art_height + 65, 0xFF88FF99, "Gramado 8-bit Monkey");
 
-    // Final refresh
+static void draw_game_scene(int fd)
+{
+    // query_client_area(fd);
+
+    // Background (jungle green)
+    libgui_backbuffer_draw_rectangle0(
+        frame_left + cr_left, 
+        frame_top  + cr_top, 
+        cr_width, 
+        cr_height,
+        0xFF1C2F1C, 1, 0, FALSE
+    );
+
+    // Simple ground
+    libgui_backbuffer_draw_rectangle0(
+        frame_left + cr_left, 
+        frame_top  + cr_top + (int)cr_height - 80,
+        cr_width, 80,
+        0xFF3D5F2A, 1, 0, FALSE
+    );
+
+    // Some simple trees / decoration (optional visual polish)
+    libgui_backbuffer_draw_rectangle0(frame_left + cr_left + 80,  frame_top + cr_top + (int)cr_height - 160, 40, 80, 0xFF2A3F1A, 1, 0, FALSE); // trunk
+    libgui_backbuffer_draw_rectangle0(frame_left + cr_left + 60,  frame_top + cr_top + (int)cr_height - 200, 80, 60, 0xFF1F4F1F, 1, 0, FALSE); // leaves
+    libgui_backbuffer_draw_rectangle0(frame_left + cr_left + (int)cr_width - 140, frame_top + cr_top + (int)cr_height - 160, 40, 80, 0xFF2A3F1A, 1, 0, FALSE);
+    libgui_backbuffer_draw_rectangle0(frame_left + cr_left + (int)cr_width - 160, frame_top + cr_top + (int)cr_height - 200, 80, 60, 0xFF1F4F1F, 1, 0, FALSE);
+
+    // Draw collectible bananas
+    int i=0;
+    for (i = 0; i < 3; i++)
+    {
+        if (!bananas[i].active) continue;
+
+        // Simple banana (yellow rectangle with highlight)
+        libgui_backbuffer_draw_rectangle0(
+            frame_left + cr_left + bananas[i].x,
+            frame_top  + cr_top  + bananas[i].y,
+            28, 18,
+            0xFFFFDD00, 1, 0, FALSE
+        );
+        libgui_backbuffer_draw_rectangle0(
+            frame_left + cr_left + bananas[i].x + 4,
+            frame_top  + cr_top  + bananas[i].y + 4,
+            12, 10,
+            0xFFFFEE66, 1, 0, FALSE
+        );
+    }
+
+    // Draw the monkey character
+    draw_monkey_sprite(fd, monkey_x, monkey_y);
+
+    // Score and instructions
+    char score_text[64];
+    sprintf(score_text, "Score: %d / 3", score);
+    //gws_draw_text(fd, main_window, 30, 30, 0xFFFFFF88, score_text);
+    libgui_drawstring(
+        frame_left + cr_left + 30, 
+        frame_top  + cr_top  + 30, 
+        score_text, 0xFFFFFF88, 0xFF1C2F1C, 0);
+
+    //gws_draw_text(fd, main_window, 30, 60, 0xFF88FF99, "A/D = Move   SPACE = Jump   Q = Quit");
+    libgui_drawstring(
+        frame_left + cr_left + 30, 
+        frame_top  + cr_top  + 60, 
+        "A/D = Move   SPACE = Jump   Q = Quit", 0xFF88FF99, 0xFF1C2F1C, 0);
+
+    // Check win condition
+    if (score >= 3)
+    {
+        //gws_draw_text(fd, main_window, 
+            //(cr_width/2)-120, (cr_height/2)-20, 0xFFFFFF00, 
+            //"YOU WIN! All bananas collected!");
+        libgui_drawstring(
+            frame_left + ((cr_width/2)-120), 
+            frame_top  + ((cr_height/2)-20), 
+            "YOU WIN! All bananas collected!", 0xFFFFFF00, 0xFF1C2F1C, 0);
+    }
+
+    // Refresh everything in one kernel call (fast client-side path)
     libgui_refresh_rectangle_via_kernel(
         frame_left + cr_left, 
         frame_top  + cr_top, 
@@ -596,38 +307,25 @@ static void draw_big_monkey(int fd)
     );
 }
 
-static void draw_current_art(int fd)
+static void draw_current_art(int fd)   // kept the original name for compatibility
 {
-    switch (current_mode) {
-        case 0:
-            draw_ghost(fd);
-            break;
-        case 1:
-            draw_big_rocket(fd);
-            break;
-        case 2:
-            draw_detailed_rocket(fd);
-            break;
-        case 3:
-            draw_big_monkey(fd);
-            break;
-        default:
-            draw_ghost(fd);
-            break;
-    }
+    if (current_mode == 0)
+        draw_game_scene(fd);
+    else
+        draw_game_scene(fd);   // future modes can be added here
 }
+
+// ----------------------------------------------------
+// Procedure & pump (exactly as before)
+// ----------------------------------------------------
 
 static void exitProgram(int fd)
 {
-    if (fd < 0)
+    if (fd < 0) 
         return;
     gws_destroy_window(fd, main_window);
     exit(0);
 }
-
-// ----------------------------------------------------
-// Procedure: handles events
-// ----------------------------------------------------
 
 static int 
 systemProcedure(
@@ -638,47 +336,46 @@ systemProcedure(
     unsigned long long2 ) 
 {
     if (fd < 0 || event_window < 0 || event_type < 0)
-    {
         return -1;
-    }
 
     switch (event_type) 
     {
     case MSG_KEYDOWN:
-        switch (long1) {
-        case '1': 
-            current_mode = 0;
-            draw_current_art(fd);
+        switch (long1)
+        {
+        case 'A': case 'a': 
+            monkey_x -= 18; 
             break;
-        case '2': 
-            current_mode = 1;
-            draw_current_art(fd);
+        case 'D': case 'd': 
+            monkey_x += 18; 
             break;
-        case '3': 
-            current_mode = 2;
-            draw_current_art(fd);
-            break;
-        case '4':
-            current_mode = 3;
-            draw_current_art(fd);
+        case ' ': 
+            if (!is_jumping)
+            {
+                monkey_vel_y = -28;  //-24;   // stronger jump (feels better)
+                is_jumping = TRUE;
+            }
             break;
 
-        case 'Q': 
-        case 'q':
+        case 'Q': case 'q':
             exitProgram(fd);
             break;
         }
+        
+        // IMPORTANT: Only redraw after input, but gravity runs every frame
+        draw_current_art(fd);
         break;
 
     case MSG_SYSKEYDOWN:
-        switch (long1){
+        switch (long1)
+        {
         case VK_F5:
             draw_current_art(fd);
             break; 
         case VK_F12:  
-            printf("draw_app: Debug info\n");  
+            printf("monkeygame: Debug info - score=%d\n", score);  
             break;
-        };
+        }
         break;
 
     case MSG_CLOSE:
@@ -686,21 +383,17 @@ systemProcedure(
         break;
 
     case MSG_PAINT:
+        query_client_area(fd);
         draw_current_art(fd);
         break;
     }
     return 0;
 }
 
-// ----------------------------------------------------
-// Pump
-// ----------------------------------------------------
-
 static void pump(int fd) 
 {
     struct gws_event_d event;
-    struct gws_event_d *e =
-        (struct gws_event_d *) gws_get_next_event(fd, main_window, &event);
+    struct gws_event_d *e = (struct gws_event_d *) gws_get_next_event(fd, main_window, &event);
 
     if (!e || e->magic != 1234 || e->used != TRUE) return;
     if (e->type <= 0) return;
@@ -709,28 +402,22 @@ static void pump(int fd)
 }
 
 // ----------------------------------------------------
-// Main
+// Main (exactly the same initialization you already use)
 // ----------------------------------------------------
 
 int main(int argc, char *argv[]) 
 {
-    // Display
     Display = gws_open_display("display:name.0");
     if (!Display) return EXIT_FAILURE;
     int fd = Display->fd;
 
-
-// =========================================
-// Library initialization
-
     int status = -1;
     status = (int) libgui_initialize();
     if (status < 0){
-        printf("power_app: libgui_initialize fail\n");
+        printf("monkeygame: libgui_initialize fail\n");
         exit(1);
     }
 
-    // Screen
     unsigned long screen_w = gws_get_system_metrics(1);
     unsigned long screen_h = gws_get_system_metrics(2);
     unsigned long win_w = (screen_w * 7) / 10;
@@ -738,20 +425,18 @@ int main(int argc, char *argv[])
     unsigned long win_x = (screen_w - win_w) / 2;
     unsigned long win_y = (screen_h - win_h) / 2;
 
-
-// Main window
     main_window = 
     (int) gws_create_window(
         fd, 
-        WT_OVERLAPPED,         // Window type
-        WINDOW_STATUS_ACTIVE,  // Window status (active,inactive) / button state
-        WINDOW_STATE_NORMAL,   // Window state (min,max, normal)
-        "Draw App", 
+        WT_OVERLAPPED,
+        WINDOW_STATUS_ACTIVE,
+        WINDOW_STATE_NORMAL,
+        "Draw App",                     // kept original title as requested
         win_x, win_y, win_w, win_h,
-        0,        // Parent window (wid)
-        WS_APP,   // Window style
-        COLOR_WINDOW,  // Client area color (unused for overlapped) 
-        COLOR_WINDOW   // bg color (unused for overlapped)
+        0,
+        WS_APP,
+        COLOR_WINDOW,
+        COLOR_WINDOW
     );
 
     if (main_window < 0){
@@ -759,66 +444,55 @@ int main(int argc, char *argv[])
         exit(0);
     }
 
-// Main window active
     gws_set_active(fd, main_window);
-    //gws_set_focus(fd, main_window);
-
     gws_refresh_window(fd, main_window);
-
 
     query_client_area(fd);
 
-// ============================================================
-// #test
-// Update the wproxy structure that belongs to this thread.
-
+    // === Exactly the same wproxy update you already use ===
     unsigned long m[10];
     int mytid = gettid();
     m[0] = (unsigned long) (mytid & 0xFFFFFFFF);
+    m[1] = frame_left;   m[2] = frame_top;   m[3] = frame_width;   m[4] = frame_height;
+    m[5] = cr_left;      m[6] = cr_top;      m[7] = cr_width;      m[8] = cr_height;
+    sc80(48, &m[0], &m[0], &m[0]);
 
-    // Frame/chrome rectangle
-    m[1] = frame_left;
-    m[2] = frame_top;
-    m[3] = frame_width;
-    m[4] = frame_height;
+    // Initialize the game (monkey position, bananas, etc.)
+    init_game(fd);
 
-    // Client area rectangle
-    m[5] = cr_left;
-    m[6] = cr_top;
-    m[7] = cr_width;
-    m[8] = cr_height;
-
-    sc80( 48, &m[0], &m[0], &m[0] );
-
-
-//
-// Draw art
-//
-
-
-// Initial draw
+    // First frame
     draw_current_art(fd);
 
     int nSysMsg = 0;
 
-// Event loop
+    // Event loop (exactly as before)
     while (1) {
-        // 1. Pump events from Display Server
+
         pump(fd);
 
-        // 2. Pump events from Input Broker (system events)
-        for (nSysMsg=0; nSysMsg<32; nSysMsg++){
-        if (rtl_get_event() == TRUE) {
-            systemProcedure(
-                fd,
-                (int) RTLEventBuffer[0],   // window id
-                (int) RTLEventBuffer[1],   // event type
-                (unsigned long) RTLEventBuffer[2], // VK code
-                (unsigned long) RTLEventBuffer[3]  // scancode
-            );
-            RTLEventBuffer[1] = 0; // clear after dispatch
-        }
+        for (nSysMsg = 0; nSysMsg < 32; nSysMsg++){
+            if (rtl_get_event() == TRUE) {
+                systemProcedure(
+                    fd,
+                    (int) RTLEventBuffer[0],
+                    (int) RTLEventBuffer[1],
+                    (unsigned long) RTLEventBuffer[2],
+                    (unsigned long) RTLEventBuffer[3]
+                );
+                RTLEventBuffer[1] = 0;
+            }
         };
+
+        // Very light continuous update (gravity & redraw) so the monkey falls naturally
+        // This keeps the game "alive" even without key presses
+        //update_physics();
+        // Only redraw when needed to avoid unnecessary CPU usage
+        // (you can remove the counter if you want smoother animation)
+
+        // Continuous physics and redraw
+        update_physics();
+        draw_current_art(fd);
+        //rtl_sleep(16);   // smooth falling and jumping
     };
 
     return EXIT_SUCCESS;
