@@ -61,6 +61,8 @@ static int main_window     = -1;
 // static int restart_button  = -1;
 // static int shutdown_button = -1;
 
+static int __paint_is_needed = FALSE;
+
 // Default responder (button to trigger on Enter)
 static int default_responder = -1;
 
@@ -146,7 +148,11 @@ static void update_children(int fd)
     unsigned long shutdown_x = (3 * wi.cr_width / 4) - (button_w / 2);
 
 
+
 // Move and redraw buttons
+
+    //if (__paint_is_needed != TRUE)
+        //return;
 
 /*
     gws_change_window_position(fd, restart_button, restart_x, button_y);
@@ -830,7 +836,7 @@ int main(int argc, char *argv[])
                 (int) RTLEventBuffer[1],
                 (unsigned long) RTLEventBuffer[2],
                 (unsigned long) RTLEventBuffer[3] );
-            RTLEventBuffer[1] = 0; // clear after dispatch
+            RTLEventBuffer[1] = 0;  // Clear after dispatch
         }
         };
     };
