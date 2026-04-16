@@ -201,6 +201,11 @@ switch_to_long_mode:
 ; dword because it is still in 32bit mode.
     jmp dword CODE64_SEL:ap_long_entry
 
+; #test
+; #bugbug
+; Jumping directly to the BSP kernel
+    ;jmp dword CODE64_SEL:0x30001000
+
 [bits 64]
 ap_long_entry:
 
@@ -224,14 +229,45 @@ ap_long_entry:
     ; Success marker (ensure 0x29000 is mapped)
     mov dword [0x29000], 0x64646464
 
+
+; #test:
+; Let's jump inside the BSP kernel.
+   ; xor rax, rax
+   ; xor rbx, rbx
+   ; mov rax, 0x12345678FEFEFEFE
+    ;mov rbx, 0x30001000
+    ;push 0x30001000
+    ;push CODE64_SEL
+    ;ret
+    ;jmp CODE64_SEL:rbx
+
+    ; Load far pointer and jump
+    ;jmp far [far_ptr]
+
+    ;mov al, byte 'x'
+    ;push CODE64_SEL
+    ;push qword 0x0000000030001000
+    ;retf
+
+    ;mov rbx, 0x0000000030001000
+    ;mov rbx, 0x101000
+    ;call rbx
+
 SoftPlaceToFall:
     cli
     hlt
     jmp SoftPlaceToFall
-
+    
 Fail:
     mov dword [0x29000], 0x63636363
     jmp SoftPlaceToFall
+
+
+; Define a far pointer structure: 64-bit offset + 16-bit selector
+;section .data
+;far_ptr:
+    ;dq 0x0000000030001000   ; 64-bit offset (target RIP)
+    ;dw CODE64_SEL           ; 16-bit code segment selector
 
 align 8
 stack64_end:

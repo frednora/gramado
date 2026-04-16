@@ -2582,6 +2582,13 @@ align 4
 align 4
     %include "x86_64.asm"
 
+; #test
+align 4
+____AP_START:
+    cli 
+    hlt 
+    jmp ____AP_START 
+
 ; Startup routine called by the entry point.
 align 4
 DEBUG_START: db "START"
@@ -2594,6 +2601,11 @@ DEBUG_START: db "START"
 
 align 4
 START:
+
+; If an AP processor is entering here.
+    ;cmp rax, 0x12345678FEFEFEFE
+	;cmp bl, byte 'x'
+	;je ____AP_START
 
 ; Save information that came from the bootloader.
 ; We're in 64bit. But it is a 32bit address.
