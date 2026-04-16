@@ -449,15 +449,15 @@ powerProcedure(
             __hover_button_id = -1;
         break;
 
-        case MSG_MOUSEPRESSED:
-            //printf("power: MSG_MOUSEPRESSED:\n");
-            break;
+    case MSG_MOUSEPRESSED:
+        //printf("power: MSG_MOUSEPRESSED:\n");
+        break;
 
-        case MSG_MOUSERELEASED:
-            printf("power: Button released: %d\n", __hover_button_id);
-            //printf("power: MSG_MOUSERELEASED:\n");
-            on_button_clicked(__hover_button_id);
-            break;
+    case MSG_MOUSERELEASED:
+        printf("power: Button released: %d\n", __hover_button_id);
+        //printf("power: MSG_MOUSERELEASED:\n");
+        on_button_clicked(__hover_button_id);
+        break;
 
     case MSG_CLOSE:
         //gws_destroy_window(fd, restart_button);

@@ -99,7 +99,7 @@ struct button_info_d
 };
 static struct button_info_d  MyButton_Save;
 
-
+static int __hover_button_id = -1;
 
 //
 // Windows
@@ -161,6 +161,9 @@ static const char *text2_string = "TEXT.TXT";
 // =====================================
 // Prototypes
 
+static int __hit_test_button(unsigned long rel_mx, unsigned long rel_my);
+static void on_button_clicked(int id);
+
 static void editorShutdown(int fd);
 
 static void update_clients(int fd);
@@ -170,6 +173,7 @@ static int editor_init_globals(void);
 
 static void __test_text(int fd, int wid);
 static void __test_load_file(int socket, int wid);
+
 
 static int 
 editorProcedure(
@@ -183,6 +187,63 @@ void pump(int fd, int wid);
 
 // =====================================
 // Functions
+
+
+// Hit-test for our fake button in PowerApp
+static int __hit_test_button(unsigned long rel_mx, unsigned long rel_my) 
+{
+
+// Button Restart
+    if ( rel_mx >= MyButton_Save.left && 
+         rel_mx <= MyButton_Save.left + MyButton_Save.width &&
+         rel_my >= MyButton_Save.top  && 
+         rel_my <= MyButton_Save.top + MyButton_Save.height )
+    {
+        return (int) MyButton_Save.button_id;
+    }
+
+/*
+// Button Shutdown
+    if ( rel_mx >= MyButton_Shutdown.left && 
+         rel_mx <= MyButton_Shutdown.left + MyButton_Shutdown.width &&
+         rel_my >= MyButton_Shutdown.top  && 
+         rel_my <= MyButton_Shutdown.top + MyButton_Shutdown.height )
+    {
+        return (int) MyButton_Shutdown.button_id;
+    }
+*/
+
+    // ...
+
+    return -1;
+}
+
+// Handle click events for components
+static void on_button_clicked(int id)
+{
+    if (id < 0)
+        return;
+
+    switch (id)
+    {
+        case 1:  // MyButton_Restart.icon_id
+            printf("Button %d clicked!\n", id);
+            rtl_clone_and_execute("reboot.bin");
+            exit(0);
+            break;
+
+        case 2:  // MyButton_Shutdown.icon_id
+            printf("Button %d clicked!\n", id);
+            rtl_clone_and_execute("shutdown.bin");
+            exit(0);
+            break;
+
+        default:
+            printf("Unknown button clicked: %d\n", id);
+            break;
+    };
+}
+
 
 static void editorShutdown(int fd)
 {
@@ -502,7 +563,9 @@ editorProcedure(
     unsigned long long1, 
     unsigned long long2 )
 {
-// dispatch a service
+
+
+    int ButtonId = -1;
 
 // Parameters
     if (fd<0){
@@ -631,22 +694,25 @@ editorProcedure(
         return 0;
         break;
 
-    //36
+    // #test
+    case MSG_MOUSEMOVE:
+        // #bugbug
+        // Kernel is sending us absolute values
+        // instead of relative values.
+        //printf("%d %d\n", long1, long2);
+        ButtonId = (int) __hit_test_button(long1, long2);
+        if (ButtonId > 0)
+            __hover_button_id = ButtonId;
+        if (ButtonId <= 0)
+            __hover_button_id = -1;
+        break; 
+
     case MSG_MOUSERELEASED:
-        printf("editor: MSG_MOUSERELEASED:\n");
-        if ( event_window == addressbar_window ||
-             event_window == client_window )
-        {
-            //printf("editor.bin: MSG_MOUSERELEASED\n");
-            //gws_redraw_window(fd, event_window, TRUE);
-            return 0;
-        }
-
-        //if (event_window == savebutton_window)
-            //printf("editor: Button released\n");
-
-        return 0;
+        printf("editor: Button released: %d\n", __hover_button_id);
+        //printf("editor: MSG_MOUSERELEASED:\n");
+        on_button_clicked(__hover_button_id);
         break;
+
 
     // Mouse clicked on a button.
     case GWS_MouseClicked:
