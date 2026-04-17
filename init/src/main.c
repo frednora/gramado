@@ -804,6 +804,8 @@ static int input_compare_string(void)
         isTimeToQuitCmdLine = TRUE;
         goto exit_cmp;
     }
+
+/*
     // DEMO01.BIN
     if ( strncmp(prompt,"demo01",6) == 0 ){
         printf ("Launch demo01.bin\n");
@@ -813,6 +815,8 @@ static int input_compare_string(void)
         isTimeToQuitCmdLine = TRUE;
         goto exit_cmp;
     }
+*/
+
     // ...
     // eng.bin
     // This is here for retro-compatibility.

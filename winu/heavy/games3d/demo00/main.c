@@ -3356,13 +3356,26 @@ static int InitHot(void)
 
 static int on_execute(void)
 {
+    int IsServer = FALSE;
+
+    if (CONFIG_IS_IT_A_SERVER == 1){
+        IsServer = TRUE;
+    } else {
+        IsServer = FALSE;
+    };
+
+
 //==================
     struct sockaddr server_address;
     socklen_t addrlen;
-    server_address.sa_family = AF_GRAMADO;
-    server_address.sa_data[0] = 'd';  // Display server
-    server_address.sa_data[1] = 's';
-    addrlen = sizeof(server_address);
+
+    if (IsServer == TRUE)
+    {
+        server_address.sa_family = AF_GRAMADO;
+        server_address.sa_data[0] = 'd';  // Display server
+        server_address.sa_data[1] = 's';
+        addrlen = sizeof(server_address);
+    }
 //==================
 
     // Flags
@@ -3374,7 +3387,13 @@ static int on_execute(void)
     int flagUseClient = FALSE; //TRUE;
     // ...
     IsTimeToQuit = FALSE;
-    IsAcceptingConnections = TRUE;
+
+// Is it accepting connections?
+    if (CONFIG_IS_ACCEPTING_CONNECTIONS == 1){
+        IsAcceptingConnections = TRUE;
+    } else {
+        IsAcceptingConnections = FALSE;
+    };
 
     int UseCompositor = TRUE;  // #debug flags
 
@@ -3466,12 +3485,16 @@ static int on_execute(void)
 // mais de um display server.
 // See: connect.c
 
-    _status = (int) registerDS();
-    if (_status < 0){
-        printf ("demo00: Couldn't register the server\n");
-        goto fail;
+    display_server->registration_status = FALSE;
+    if (IsServer == TRUE)
+    {
+        _status = (int) registerDS();
+        if (_status < 0){
+            printf ("demo00: Couldn't register the server\n");
+            goto fail;
+        }
+        display_server->registration_status = TRUE;
     }
-    display_server->registration_status = TRUE;
 
 // #bugbug: Suspended.
 // Setup callback
@@ -3499,6 +3522,11 @@ static int on_execute(void)
 // Aqui nos podemos criar vários sockets que serão usados
 // pelo servidor.
 // ex: CreateWellKnownSockets ();
+
+// ++++
+// Connections ++
+    if (IsServer == TRUE)
+    {
 
 // Socket: Creating the socket for the server.
     server_fd = (int) socket(AF_GRAMADO, SOCK_STREAM, 0);
@@ -3550,6 +3578,10 @@ static int on_execute(void)
 // #test: This application do not need any connection.
     //listen(server_fd,4);
     listen(server_fd,5);
+
+    }
+// ----
+// Connections --
 
 // Init Hot
 // The graphics interface.
@@ -3771,8 +3803,8 @@ static int on_execute(void)
         // See: wm.c
         wmInputReader();
 
-        if (IsAcceptingConnections == TRUE)
-        {
+        if (IsServer == TRUE){
+        if (IsAcceptingConnections == TRUE){
             newconn = 
                (int) accept( 
                     ____saved_server_fd,
@@ -3794,6 +3826,7 @@ static int on_execute(void)
                 goto fail;
             }
             //close(newconn);
+        }
         }
 
         // Not accepeting
@@ -3929,8 +3962,10 @@ static int on_execute(void)
 // ...
 
 // Close the server's fd.
+    if (IsServer == TRUE){
     if (server_fd > 0){
         close(server_fd);
+    }
     }
 
 // Return to main()

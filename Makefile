@@ -33,7 +33,7 @@ __DEP_L2 = winu
 L2_DS = $(__DEP_L2)/core/ds
 
 # Display server with embedded 3D demos
-L2_DS3D = $(__DEP_L2)/heavy/ds3d
+L2_DEMO_3D_GAME = $(__DEP_L2)/heavy/games3d
 
 # =================================
 # Client-side GUI applications.
@@ -196,9 +196,10 @@ build-extras:
 	@-cp $(L2_DS)/ds00/bin/DS00.BIN    $(BASE)/DE
 
 # Winu Heavy
-# Display servers with 3D demos.
-	@-cp $(L2_DS3D)/bin/DEMO00.BIN   $(BASE)/DE/
-	@-cp $(L2_DS3D)/bin/DEMO01.BIN   $(BASE)/DE/
+# 3D game demos
+	@-cp $(L2_DEMO_3D_GAME)/bin/DEMO00.BIN   $(BASE)/DE/
+#	@-cp $(L2_DEMO_3D_GAME)/bin/DEMO01.BIN   $(BASE)/DE/
+# ...
 
 # __DEP_L3::
 # Compiling client-side GUI applications

@@ -519,7 +519,6 @@ int serviceClientEvent(void)
 // que pertencem ao cliente que chamou esse serviço.
 int serviceNextEvent(void)
 {
-// Business Logic:
 // Get an event from the queue in a given window.
 
 // #test

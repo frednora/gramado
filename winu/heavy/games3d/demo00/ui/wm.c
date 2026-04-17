@@ -3421,6 +3421,20 @@ wmProcedure (
 
     case GWS_KeyDown:
 
+        switch (long1){
+        case 'a': 
+            //printf("left\n"); 
+            //demoHumanoidMoveCharacter( char_id, direction, (float) value );
+            demoHumanoidMoveCharacter( 0, 1, (float) 0.4f );
+            return 0;
+            break;
+        case 'd': 
+            //printf("right\n"); 
+            demoHumanoidMoveCharacter( 0, 2, (float) 0.4f );
+            return 0;
+            break;
+        };
+
         // Imprime o char na janela indicada.
         // Essa é a janela com foco de entrada.
         //if( pre_print === TRUE)
