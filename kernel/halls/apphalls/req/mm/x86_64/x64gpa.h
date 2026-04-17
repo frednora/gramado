@@ -96,6 +96,7 @@
 // #imortant:
 // AP tranpoline code area.
 #define ____DANGER_TRAMPOLINE_CODE_BASE  0x20000
+#define ____DANGER_TRAMPOLINE_SHARED_AREA  (0x20000 + 0x100)
 #define ____DANGER_TRAMPOLINE_CODE_SIGNATURE_AREA  0x29000
 
 //

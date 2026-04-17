@@ -5,8 +5,13 @@
 ; Its running fine in Virtualbox with ICH9 chipset.
 ; Created by Fred Nora.
 
+
 [bits 16]
+; Loading: The BSP copies the trampoline binary into physical address 0x20000.
 [org 0x20000]
+;[org 0]
+; Assembly: With [org 0], NASM treats the first instruction as offset 0. 
+; So labels like StartCode are small offsets (IP values).
 
 ; -- 128 KB mark -----------
 ; 0x20000 - Base for the AP
@@ -16,8 +21,72 @@
 ; -- 192 KB mark -----------
 ; 0x00030000 - FAT (Don't touch this thing)
 
-apx86_start:
-    jmp StartCode
+
+apx86_start: 
+
+    cli
+    mov ax, 0x2000 
+    mov ss, ax
+    mov sp, 0x8FF0  ; Right before the signature 
+
+    ; Switch to 0x2000 segment to reach 0x29000
+    cld
+    mov ds, ax
+    mov es, ax
+    ;#debug
+    ;mov byte [0x9000], 0xA0   ; writes to physical 0x29000
+    ;mov byte [0x9001], 0xA0
+
+    ; Quick A20 enable via port 0x92 (fast A20)
+    xor ax, ax
+    in   al, 0x92
+    or   al, 0000_0010b     ; set A20
+    and  al, 1111_1110b     ; ensure reset bit (bit0) is 0
+    out  0x92, al
+
+    ; Tiny settle
+    jmp short .a20_ok
+.a20_ok:
+
+    ; Point DS to our load segment (org 0x20000 => DS=0x2000)
+    ; We need this to load the GDT.
+    mov ax, 0x2000
+    mov ds, ax
+
+    ; Load GDT (DS:offset)
+    lgdt [gdt_ptr]
+
+    ; Enter protected mode: set PE and far-jump
+    mov eax, cr0
+    or  eax, 1
+    mov cr0, eax
+
+; Fail
+;    jmp CODE_SEL:ap_pm32_entry
+
+; Far jump with 32-bit offset (o32), 16-bit selector
+; Override: 66 forces a 32-bit offset in 16-bit mode.
+    ;db 0x66, 0xEA
+    ;dd ap_pm32_entry   ; 32-bit offset (little-endian)
+    ;dw CODE_SEL        ; 16-bit selector
+
+; Force 32-bit far jump encoding (o32 prefix)
+    jmp dword CODE_SEL:ap_pm32_entry
+
+;
+; ==================================================
+;
+
+    times 0x100 - ($-$$) db 0
+shared_area:
+    dq 0  ; The address for the AP's entry point in BSP.
+    dq 0  ; todo
+    dq 0  ; todo
+    dq 0  ; todo
+
+;
+; ==================================================
+;
 
 ; ---------------- Selectors ----------------
 CODE_SEL     equ 0x08
@@ -71,57 +140,9 @@ gdt_ptr:
     dw gdt_end - gdt - 1
     dd gdt
 
-;=========================================================
-
-StartCode:
-    cli
-    mov ax, 0x2000 
-    mov ss, ax
-    mov sp, 0x8FF0  ; Right before the signature 
-
-    ; Switch to 0x2000 segment to reach 0x29000
-    cld
-    mov ds, ax
-    mov es, ax
-    ;#debug
-    ;mov byte [0x9000], 0xA0   ; writes to physical 0x29000
-    ;mov byte [0x9001], 0xA0
-
-    ; Quick A20 enable via port 0x92 (fast A20)
-    xor ax, ax
-    in   al, 0x92
-    or   al, 0000_0010b     ; set A20
-    and  al, 1111_1110b     ; ensure reset bit (bit0) is 0
-    out  0x92, al
-
-    ; Tiny settle
-    jmp short .a20_ok
-.a20_ok:
-
-    ; Point DS to our load segment (org 0x20000 => DS=0x2000)
-    ; We need this to load the GDT.
-    mov ax, 0x2000
-    mov ds, ax
-
-    ; Load GDT (DS:offset)
-    lgdt [gdt_ptr]
-
-    ; Enter protected mode: set PE and far-jump
-    mov eax, cr0
-    or  eax, 1
-    mov cr0, eax
-
-; Fail
-;    jmp CODE_SEL:ap_pm32_entry
-
-; Force 32-bit far jump encoding (o32 prefix)
-    jmp dword CODE_SEL:ap_pm32_entry
-
-; Far jump with 32-bit offset (o32), 16-bit selector
-; Override: 66 forces a 32-bit offset in 16-bit mode.
-    ;db 0x66, 0xEA
-    ;dd ap_pm32_entry   ; 32-bit offset (little-endian)
-    ;dw CODE_SEL        ; 16-bit selector
+;
+; ==================================================
+;
 
 ; ---------------- 32-bit protected mode entry ----------------
 [bits 32]
@@ -197,14 +218,14 @@ switch_to_long_mode:
     or  eax, 0x80000001    ;0x80000000
     mov cr0, eax
 
+
 ; 5) Far jump to 64-bit code segment to activate long mode
 ; dword because it is still in 32bit mode.
     jmp dword CODE64_SEL:ap_long_entry
 
-; #test
-; #bugbug
-; Jumping directly to the BSP kernel
-    ;jmp dword CODE64_SEL:0x30001000
+;
+; ==================================================
+;
 
 [bits 64]
 ap_long_entry:
@@ -229,29 +250,9 @@ ap_long_entry:
     ; Success marker (ensure 0x29000 is mapped)
     mov dword [0x29000], 0x64646464
 
-
-; #test:
-; Let's jump inside the BSP kernel.
-   ; xor rax, rax
-   ; xor rbx, rbx
-   ; mov rax, 0x12345678FEFEFEFE
-    ;mov rbx, 0x30001000
-    ;push 0x30001000
-    ;push CODE64_SEL
-    ;ret
-    ;jmp CODE64_SEL:rbx
-
-    ; Load far pointer and jump
-    ;jmp far [far_ptr]
-
-    ;mov al, byte 'x'
-    ;push CODE64_SEL
-    ;push qword 0x0000000030001000
-    ;retf
-
-    ;mov rbx, 0x0000000030001000
-    ;mov rbx, 0x101000
-    ;call rbx
+    ; jump into C code (should never return)
+    mov rbx, qword [shared_area]
+	jmp rbx       ; Transfer control to the C entrypoint
 
 SoftPlaceToFall:
     cli

@@ -154,6 +154,37 @@ static void panic_at_init(int error_code, kernel_subsystem_t subsystem_id);
 // =======================================================
 //
 
+// void ap_entry_point00(void);
+void ap_entry_point00(void)
+{
+// The entry point for the APs.
+
+    asm ("cli");
+
+    while(1)
+    {
+
+        // #bugbug
+        // When the AP is running the BSP slows down.
+        // We gotta use sti hlt in loops inside the AP.
+        // But we need to setup the interrup vectors before that.
+
+        //printk("AP inside the BSP\n");
+        // asm ("cli");
+
+        // #test
+        // Drawing rectangles
+        frontbuffer_draw_rectangle(
+            0, 0, 32, 32, 
+            COLOR_RED, 0 
+        );
+
+        asm (" pause ");
+        asm (" hlt ");
+    }
+}
+
+
 /*
  * panic_at_init()
  *
@@ -703,7 +734,6 @@ static void earlyinit_OutputSupport(void)
 // serial debug support.
 static int earlyinit(void)
 {
-
 // Starting the counter.
     Initialization.current_phase = 0;
 
@@ -776,6 +806,10 @@ static int __test_initialize_ap_processor(int apic_id)
 
     unsigned long BufferSizeInBytes = (2*4096);  // 8KB
 
+
+    unsigned long *ap_shmm = (unsigned long *) ____DANGER_TRAMPOLINE_SHARED_AREA;
+
+
 //
 // How many processors?
 //
@@ -796,6 +830,11 @@ static int __test_initialize_ap_processor(int apic_id)
             "APX86   BIN", // AP image file name 
             (unsigned long) ____DANGER_TRAMPOLINE_CODE_BASE, // Address
             BufferSizeInBytes );
+
+        // #important
+        // Updating information inside the shared area.
+        printk("Updating shared area ...\n");
+        ap_shmm[0] = (unsigned long) &ap_entry_point00; 
 
         // (Step 2)
         printk("Sending INIT IPI ...\n");
