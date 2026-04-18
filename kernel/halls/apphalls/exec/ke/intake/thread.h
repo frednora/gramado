@@ -827,7 +827,6 @@ struct thread_d
 
 // See: thread.c
 extern struct thread_d  *InitThread;
-extern struct thread_d  *ClonedThread;
 
 
 // Maximum number of kernel threads in the system.

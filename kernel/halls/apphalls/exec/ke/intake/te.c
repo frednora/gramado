@@ -4,9 +4,14 @@
 
 #include <kernel.h>
 
+
 // List of all processes
 // Global list for all the Thread Environment structures.
 unsigned long teList[PROCESS_COUNT_MAX];
+
+// The 'thread environment' structure.
+struct te_d  *TEKernelProcess;  // Kernel process
+struct te_d  *TEInitProcess;    // Init process
 
 
 // See: kpid.h
@@ -50,14 +55,8 @@ pid_t criticalsection_pid=0;
 // current pid
 //
 
-// PRIVATE
 static pid_t __current_pid = (pid_t) (-1);  //fail
-
-static pid_t caller_process_id=0;
-
-// The 'thread environment' structure.
-struct te_d  *TEKernelProcess;  // Kernel process
-struct te_d  *TEInitProcess;    // Init process
+static pid_t caller_process_id = 0;
 
 // ==============================================
 

@@ -55,14 +55,10 @@ const char *init_image_name = "INIT    BIN";
 //
 
 static int __setup_stdin_cmdline(void);
-
 static int I_initKernelComponents(void);
-
 static int I_x64CreateKernelProcess(void);
-
 static int I_x64CreateInitialProcess(void);
 static int __load_initbin_image(void);
-
 static int I_x64CreateTID0(void);
 
 // =========================================

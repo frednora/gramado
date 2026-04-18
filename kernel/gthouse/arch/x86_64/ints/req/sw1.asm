@@ -35,6 +35,10 @@ align 4
 global RequestHall_int128
 RequestHall_int128:
 
+; Systemcall from 64-bit mode.
+; It's not called from kernel-mode.
+; It's executed with the interrupts disabled.
+
     cli 
 
 ; #ps:
@@ -94,7 +98,13 @@ RequestHall_int128:
 
     fxsave [__sw_local_fpu_buffer]
 
-    call _sc80h
+    ; Get the address for the service handler
+    mov r10, qword _sc80h
+    call r10
+    ;call _sc80h
+
+; ------------------
+; .sc80_exit:
 
     fxrstor [__sw_local_fpu_buffer]
 
@@ -125,6 +135,7 @@ RequestHall_int128:
 
     mov rax, qword [.int128Ret] 
 
+; Restore the stack frame and exit to user mode
     push qword [.int128_cs]      ; cs
     push qword [.int128_rip]     ; rip
     iretq
@@ -156,6 +167,10 @@ extern _sci1_cpl
 align 4  
 global RequestHall_int129
 RequestHall_int129:
+
+; Systemcall from 64-bit mode.
+; It's not called from kernel-mode.
+; It's executed with the interrupts disabled.
 
     cli 
 
@@ -215,7 +230,11 @@ RequestHall_int129:
 
     fxsave [__sw_local_fpu_buffer]
 
-    call _sc81h
+    mov r10, qword _sc81h
+    call r10
+    ;call _sc81h
+
+;.sc81h_exit:
 
     fxrstor [__sw_local_fpu_buffer]
     mov qword [.int129Ret], rax 
@@ -245,6 +264,7 @@ RequestHall_int129:
 
     mov rax, qword [.int129Ret] 
 
+; Restore the stack frame and exit to user mode
     push qword [.int129_cs]      ; cs
     push qword [.int129_rip]     ; rip
     iretq
@@ -275,6 +295,10 @@ extern _sci2_cpl
 align 4  
 global RequestHall_int130
 RequestHall_int130:
+
+; Systemcall from 64-bit mode.
+; It's not called from kernel-mode.
+; It's executed with the interrupts disabled.
 
     cli 
 
@@ -334,7 +358,11 @@ RequestHall_int130:
 
     fxsave [__sw_local_fpu_buffer]
 
-    call _sc82h
+    mov r10, qword _sc82h
+    call r10
+    ;call _sc82h
+
+;.sc82h_exit:
 
     fxrstor [__sw_local_fpu_buffer]
     mov qword [.int130Ret], rax 
@@ -364,6 +392,7 @@ RequestHall_int130:
 
     mov rax, qword [.int130Ret] 
 
+; Restore the stack frame and exit to user mode
     push qword [.int130_cs]      ; cs
     push qword [.int130_rip]     ; rip
     iretq
@@ -394,6 +423,10 @@ extern _sci3_cpl
 align 4  
 global RequestHall_int131
 RequestHall_int131:
+
+; Systemcall from 64-bit mode.
+; It's not called from kernel-mode.
+; It's executed with the interrupts disabled.
 
     cli 
 
@@ -453,7 +486,11 @@ RequestHall_int131:
 
     fxsave [__sw_local_fpu_buffer]
 
-    call _sc83h
+    mov r10, qword _sc83h
+    call r10
+    ; call _sc83h
+
+;.sc83h_exit:
 
 ; ----------------------
     fxrstor [__sw_local_fpu_buffer]
@@ -484,6 +521,7 @@ RequestHall_int131:
 
     mov rax, qword [.int131Ret] 
 
+; Restore the stack frame and exit to user mode
     push qword [.int131_cs]      ; cs
     push qword [.int131_rip]     ; rip
     iretq

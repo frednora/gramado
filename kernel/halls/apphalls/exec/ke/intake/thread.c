@@ -3,8 +3,11 @@
 
 #include <kernel.h>
 
-// List of all threads.
+// List of all threads
 unsigned long threadList[THREAD_COUNT_MAX];
+
+
+struct thread_d  *InitThread;  // The thread for the Init Process
 
 //
 // The current thread global variable.
@@ -15,24 +18,6 @@ tid_t current_thread=0;
 tid_t foreground_thread=0;
 tid_t special_reader=0;
 // ------
-
-// Ponteiro para a idle thread atual
-// Sempre que mudar a idle thread devemos usar esse ponteiro
-// para mostrar qual será a nova idle thread.
-// Cada idle thread pode prestar um serviço diferente, como o
-// gerenciamento de energia.
-//struct thread_d  *____IDLE;
-
-// The flower thread of the window sever kernel module.
-// The ring 0 thread. tid0
-//struct thread_d  *tid0_thread;
-
-// Essa é a thread flower do processo init2.bin
-// É o primeiro processo em ring3.
-// Idle Thread. TID=0    
-struct thread_d  *InitThread;
-// Ponteiro para a thread usada na hora da clonagem de processos.
-struct thread_d  *ClonedThread;
 
 //
 // == Private functions: Prototypes ================
@@ -1082,10 +1067,6 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
 //
 // Saving ...
 //
-    // Saving.
-    // See: thread.h
-
-    ClonedThread = clone;
 
 // Type, base priority and priority.
     clone->type  = father->type; 
