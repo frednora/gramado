@@ -1,4 +1,3 @@
-# commands
+# cmds
 
-Posix-like commands for Gramado OS.
-
+    Prosix-like commands that runs inside the virtual terminal or via kernel console.
