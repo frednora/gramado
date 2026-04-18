@@ -60,7 +60,9 @@
 #include <kernel.h>
 
 // Initialization control.
-struct lapic_info_d  LAPIC;
+struct lapic_info_d lapic_info[NR_CPUS];
+struct lapic_info_d  BSP_LAPIC;
+
 
 #define APIC_CONFIG_DATA_LVT(TimerMode,Mask,TriggerMode,Remote,InterruptInput,DeliveryMode,Vector)(\
 (((unsigned int)(TimerMode) & 0x3 )      << 17) |\
@@ -112,20 +114,20 @@ void flush_cashes(void)
 // Definir porta 70h usada nesse arquivo. ??
 static unsigned int local_apic_read_command(unsigned short addr)
 {
-    if ((void *) LAPIC.lapic_va == NULL){
-        panic("local_apic_read_command: LAPIC.lapic_va\n");
+    if ((void *) BSP_LAPIC.lapic_va == NULL){
+        panic("local_apic_read_command: BSP_LAPIC.lapic_va\n");
     }
 
-    return *( (volatile unsigned int *)(LAPIC.lapic_va + addr) );
+    return *( (volatile unsigned int *)(BSP_LAPIC.lapic_va + addr) );
 }
 
 static void local_apic_write_command(unsigned short addr,unsigned int val)
 {
-    if ((void *) LAPIC.lapic_va == NULL){
-        panic("local_apic_write_command: LAPIC.lapic_va\n");
+    if ((void *) BSP_LAPIC.lapic_va == NULL){
+        panic("local_apic_write_command: BSP_LAPIC.lapic_va\n");
     }
 
-    *( (volatile unsigned int *)(LAPIC.lapic_va + addr) ) = val;
+    *( (volatile unsigned int *)(BSP_LAPIC.lapic_va + addr) ) = val;
 }
 
 // Get local apic id.
@@ -245,117 +247,6 @@ inline void invalidate_cache_flush(void)
 }
 */
 
-// =================
-
-// #bugbug
-// This routine used a lot of hardcoded addresses.
-// PAGETABLE_RES5, LAPIC_VA, PD_ENTRY_LAPIC, KERNEL_PD_PA.
-int lapic_initializing(unsigned long lapic_pa)
-{
-// >> Called in x64smp.c
-// Setup BSP's local APIC.
-
-    printk("lapic_initializing: \n");
-
-    LAPIC.initialized = FALSE;
-
-// Invalid address.
-// 0xFEE00000
-// see: x64gpa.h
-    if (lapic_pa != __LAPIC_PA)
-    {
-        LAPIC.initialized = FALSE;
-        //panic("lapic_initializing: lapic_pa\n");
-        printk("lapic_initializing: lapic_pa\n");
-        goto fail;
-    }
-
-// #todo
-// Do we have apic support in this processor?
-    //if (has_apic() != TRUE)
-        //panic("lapic_initializing: APIC not supported\n");
-
-// ===================
-// Mapping
-
-// page table
-// Isso serve pra pegarmos um endereço físico
-// que servira de base para criarmos uma pagetable.
-// Mas endereço físico e virtual são iguais nessa região.
-// Identidade 1:1.
-    unsigned long *pt_lapic = (unsigned long *) get_table_pointer_va();
-
-// -------------
-// pa
-    LAPIC.lapic_pa = (unsigned long) (lapic_pa & 0xFFFFFFFF);
-// -------------
-// va
-// see: x64gva.h
-    LAPIC.lapic_va = (unsigned long) LAPIC_VA;
-
-// -------------------------------------
-// Mapping area for registers.
-
-    int map_status = -1;
-    map_status = (int) mm_map_2mb_region( LAPIC.lapic_pa, LAPIC.lapic_va );
-    if (map_status != 0)
-        panic("lapic_initializing: on mm_map_2mb_region()\n");
-
-//==========================================
-
-// flush tlb
-// #bugbug
-// Maybe we need to call a method for that.
-
-    asm ("movq %cr3, %rax");
-    asm ("movq %rax, %cr3");
-
-//=====================================
-
-// Let's get some information about the BSP LAPIC.
-
-// Check values into the registers:
-// see: 
-// https://wiki.osdev.org/APIC#Local_APIC_registers
-
-// ---------------
-// ID
-    int localid = (int) local_apic_get_id();
-    LAPIC.local_id = (int) (localid & 0xFF);
-    //printk("localid: %d\n",LAPIC.local_id);
-
-// ---------------
-// Version
-// 8bits
-// 10H~15H
-    int localversion = (int) local_apic_get_version();
-    LAPIC.local_version = (int) (localversion & 0xFF);
-    //printk("localversion: %xH\n", LAPIC.local_version);
-
-//=====================================
-// Destination Format Register (DFR)
-// Value after reset, flat mode
-// depois de invalidar o pic?
-    //*(volatile unsigned int*)(LAPIC.lapic_va + ?) = 0xFFFFFFFF; 
-// Logical Destination Register (LDR)
-// All cpus use logical id 1
-    //*(volatile unsigned int*)(LAPIC.lapic_va + ?) = 0x01000000; 
-    //*(volatile unsigned int*)(LAPIC.lapic_va + 0x20) = 8;
-
-// Print:
-    printk("ID: %d | VERSION: %xH\n",
-        LAPIC.local_id,
-        LAPIC.local_version );
-
-    // #hackhack
-    // This is just a test for now.
-    LAPIC.initialized = TRUE;
-
-    return TRUE;
-fail:
-    //LAPIC.initialized = FALSE;
-    return FALSE;
-}
 
 //
 // ======================================================
@@ -439,28 +330,181 @@ unsigned long cpu_get_apic_base(void)
     return (unsigned long) APIC_base_address;
 }
 
+/*
+ # SIPI Sequence 
+ 
+void APIC::wakeupSequence(U32 apicId, U8 pvect);
+void APIC::wakeupSequence(U32 apicId, U8 pvect)
+{
+                ICRHigh hreg = {
+				.destField = apicId
+		};
+ 
+		ICRLow lreg(DeliveryMode::INIT, Level::Deassert, TriggerMode::Edge);
+ 
+		xAPICDriver::write(APIC_REGISTER_ICR_HIGH, hreg.value);
+		xAPICDriver::write(APIC_REGISTER_ICR_LOW, lreg.value);
+ 
+		lreg.vectorNo = pvect;
+		lreg.delvMode = DeliveryMode::StartUp;
+ 
+		Dbg("APBoot: Wakeup sequence following...");
+ 
+		xAPICDriver::write(APIC_REGISTER_ICR_HIGH, hreg.value);
+		xAPICDriver::write(APIC_REGISTER_ICR_LOW, lreg.value);
+}
+*/ 
+
+// NOTE: ICRLow and ICRHigh are types in the Silcos kernel. If your code uses direct bit
+// manipulations you must replace some code with bit operations.
+
+void local_apic_send_init(unsigned int apic_id)
+{
+// Send one time.
+// Respect the order: 
+// First 0x310 then 0x300.
+
+// High (0x310)
+    local_apic_write_command(
+        LAPIC_ICR_HIGH, 
+        (apic_id << 24) );
+
+// Low (0x300)
+// (No vector? vector 0?)
+    local_apic_write_command(
+        LAPIC_ICR_LOW,
+        ICR_INIT | 
+        ICR_PHYSICAL | 
+        ICR_ASSERT | 
+        ICR_EDGE | 
+        ICR_NO_SHORTHAND );
+
+// Loop
+    while ( local_apic_read_command(LAPIC_ICR_LOW) & ICR_SEND_PENDING )
+    {
+        asm volatile ("pause");
+    };
+}
+
+
+// ex: vector={0x08} =  address={0x8000}
+void 
+local_apic_send_startup(
+    unsigned int apic_id, 
+    unsigned int vector )
+{
+// Send one time.
+// Respect the order: 
+// First 0x310 then 0x300.
+
+    //#todo
+    //vector = (vector & 0xFF);
+
+// High (0x310)
+    local_apic_write_command(
+        LAPIC_ICR_HIGH, 
+        (apic_id << 24) );
+
+// Low (0x300)
+    local_apic_write_command(
+        LAPIC_ICR_LOW,
+        vector | 
+        ICR_STARTUP | 
+        ICR_PHYSICAL | 
+        ICR_ASSERT | 
+        ICR_EDGE | 
+        ICR_NO_SHORTHAND );
+
+// Loop
+    while ( local_apic_read_command(LAPIC_ICR_LOW) & ICR_SEND_PENDING )
+    {
+        asm volatile ("pause ");
+    }
+}
+
+// Send INIT IPI
+void Send_INIT_IPI_Once(unsigned int apic_id)
+{
+// One single time.
+    local_apic_write_command(0x280, 0);  // Clear APIC errors.
+    local_apic_send_init(apic_id);
+    mdelay(100); // wait 10 msec
+}
+
+// Send STARTUP IPI (twice)
+// + What the function does
+// + Loops twice, sending a STARTUP IPI to the target APIC ID.
+// + Clears the Error Status Register (0x280) before each send.
+// + Uses vector 0x08 → trampoline at 0x8000.
+// + Waits 200 ms between sends.
+void Send_STARTUP_IPI_Twice(unsigned int apic_id)
+{
+// Twice
+
+    unsigned int vector_number = 0x8;
+    long i=0;
+    for (i=0; i<2; i++)
+    {
+        local_apic_write_command(0x280, 0);  // Clear APIC errors.
+        local_apic_send_startup(apic_id, vector_number);
+        mdelay(200); // wait 200 msec
+    };
+}
+
+static void __apic_disable_legacy_pic(void)
+{
+// Legacy PIC mask all off.
+
+    printk("apic_disable_legacy_pic:\n");
+
+// Envia ICW1 reset
+    out8(0x20,0x11);	// reset PIC 1
+    out8(0xA0,0x11);	// reset PIC 2
+// Envia ICW2 start novo PIC 1 e 2
+    out8(0x21,0x20);	// PIC 1 localiza no IDT 39-32 
+    out8(0xA1,0x28);	// PIC 2 localiza no IDT 47-40
+// Envia ICW3
+    out8(0x21,0x04);	// IRQ2 conexao em cascata com o PIC 2
+    out8(0xA1,0x02);
+// Envia ICW4
+    out8(0x21,0x01);
+    out8(0xA1,0x01);
+// OCW1
+// Desabilita todas as interrupcoes
+    out8(0x21,0xFF);
+    out8(0xA1,0xFF);
+}
+
+// =================
+
+
 // #todo: 
 // #danger !!!
 /* Section 11.4.1 of 3rd volume of Intel SDM recommends 
   mapping the base address page as strong uncacheable 
   for correct APIC operation. */
-void enable_apic(void)
+// IN:
+// cpu_id - Id for the processor structure.
+void apic_setup_registers(int cpu_id)
 {
 // Called by I_kmain() in main.c.
+// + Setup apic
+// + Enable global apic
+// + Setup apic timer
 
 // #todo
 // We need to setup a lot of registers 
 // before enabling the apic.
 
-    printk("enable_apic:\n");
+    printk("apic_setup_registers: Processor n={%d}\n", cpu_id);
 
 // #todo
 // Do we have apic support in this processor?
     //if (has_apic() != TRUE)
-        //panic("enable_apic: APIC not supported\n");
+        //panic("apic_setup_registers: APIC not supported\n");
 
-    if (LAPIC.initialized != TRUE)
-        panic("enable_apic: LAPIC not initialized\n");
+    if (BSP_LAPIC.initialized != TRUE)
+        panic("apic_setup_registers: BSP_LAPIC not initialized\n");
 
 // Hardware enable the Local APIC if it wasn't enabled.
 // Went to the end of this routine.
@@ -473,10 +517,15 @@ void enable_apic(void)
     __apic_disable_legacy_pic();
 
 
+//
+// Setup APIC
+//
+
 // Destination Format Register (DFR)
+// Value after reset, flat mode.
 // LAPIC_DFR
 // Logical Destination Mode
-    // Flat mode
+// Flat mode
     local_apic_write_command(
         (unsigned short) 0x00e0, 
         (unsigned int) 0xffffffff);
@@ -489,6 +538,10 @@ void enable_apic(void)
         (unsigned short) 0x00d0, 
         (unsigned int) 0x01000000);
 
+
+	// Local APIC ID Register
+    // LAPIC_APIC_ID
+	//*(volatile unsigned int*)(lapicbase + APIC_ID) = APIC_ID_0 << 24;
 
     localId = local_apic_get_id();
 
@@ -517,8 +570,8 @@ Task Priority Register (TPR)
     + Higher‑priority interrupts are still delivered.
 */
 
-// Allow all interrupts by priority (TPR = 0)
 // Task Priority Register (TPR), to inhibit softint delivery
+// Allow all interrupts by priority (TPR = 0)
     local_apic_write_command(
         (unsigned short) LAPIC_TASK_PRIORITY, 
         (unsigned int) 0 );
@@ -605,6 +658,7 @@ LVT TIMER (offset LAPIC_LVT_TIMER)
 // Timer: Lets each CPU generate its own periodic interrupts 
 // without relying on PIT/HPET. Essential for SMP scheduling
 
+// Timer interrupt vector, to disable timer interrupts
     local_apic_write_command(
         (unsigned short) LAPIC_LVT_TIMER,
         (unsigned int) APIC_CONFIG_DATA_LVT(
@@ -628,6 +682,8 @@ LVT PERFORMANCE COUNTER (offset LAPIC_LVT_PERF)
 - Remote:        0
 - Polarity:      0
 */
+
+// Performance counter interrupt, to disable performance counter interrupts
     local_apic_write_command(
         (unsigned short) LAPIC_LVT_PERF,
         (unsigned int) APIC_CONFIG_DATA_LVT(
@@ -653,6 +709,8 @@ LVT LINT0 (offset LAPIC_LVT_LINT0)
 Note: In symmetric I/O mode with IOAPIC, many kernels keep LINT0 masked and route
 external device IRQs via IOAPIC redirection entries instead.
 */
+
+// Local interrupt 0, to enable normal external interrupts, Trigger Mode = Level
     local_apic_write_command(
         (unsigned short) LAPIC_LVT_LINT0,
         (unsigned int) APIC_CONFIG_DATA_LVT(
@@ -677,6 +735,8 @@ LVT LINT1 (offset LAPIC_LVT_LINT1)
 - Polarity:      0 (active high)
 Note: Typically you’d unmask LINT1 for NMI if you plan to handle NMIs.
 */
+
+// Local interrupt 1, to enable normal NMI processing
     local_apic_write_command(
         (unsigned short) LAPIC_LVT_LINT1,
         (unsigned int) APIC_CONFIG_DATA_LVT(
@@ -701,6 +761,8 @@ LVT ERROR (offset LAPIC_LVT_ERR)
 - Polarity:      0
 Note: Common to keep masked until you install an error handler; then unmask.
 */
+
+// Error interrupt, to disable error interrupts
     local_apic_write_command(
         (unsigned short) LAPIC_LVT_ERR,
         (unsigned int) APIC_CONFIG_DATA_LVT(
@@ -771,9 +833,16 @@ So:
 // just acknowledges and returns, because the LAPIC may 
 // deliver a spurious interrupt there.
 
+// Spurious interrupt Vector Register, to enable the APIC and set
+// spurious vector to 255
     local_apic_write_command (
         (unsigned short) 0x00F0,  // // SVR register offset in LAPIC MMIO space
         (unsigned int) (  0x100 | LAPIC_SPURIOUS_VECTOR ) );  // Enable bit + vector
+
+
+//
+// Global enable
+//
 
 /*
 //
@@ -785,7 +854,10 @@ So:
 
 // Hardware enable the Local APIC if it wasn't enabled.
 // Enable APIC by setting up the bit 11.
-    cpu_set_apic_base( cpu_get_apic_base() );
+    cpu_set_apic_base( 
+        cpu_get_apic_base() 
+    );
+
 
 /*
  // #debug
@@ -795,7 +867,7 @@ So:
 
 /*
     printk("Setup APIC Timer 0 ...\\\\\n");
-    apic_timer(lapicbase);
+    apictim_initialize(lapicbase);
 */
 // see: apictim.c
 
@@ -803,156 +875,131 @@ So:
 // e o timer precisa mudar o vetor 
 // pois 32 ja esta sendo usado pela redirection table.
 
-    apic_timer();
-
-    //printk("apic_timer: breakpoint\n");
+// Setup apic timer
+    apictim_initialize();
+    //printk("apictim_initialize: breakpoint\n");
     //while(1){}
 }
 
-/*
- # SIPI Sequence 
- 
-void APIC::wakeupSequence(U32 apicId, U8 pvect);
-void APIC::wakeupSequence(U32 apicId, U8 pvect)
+
+// #bugbug
+// This routine used a lot of hardcoded addresses.
+// PAGETABLE_RES5, LAPIC_VA, PD_ENTRY_LAPIC, KERNEL_PD_PA.
+// IN:
+// lapic_pa - ?
+// cpu_id - Id for the processor structure.
+int lapic_initializing(unsigned long lapic_pa, int cpu_id)
 {
-                ICRHigh hreg = {
-				.destField = apicId
-		};
- 
-		ICRLow lreg(DeliveryMode::INIT, Level::Deassert, TriggerMode::Edge);
- 
-		xAPICDriver::write(APIC_REGISTER_ICR_HIGH, hreg.value);
-		xAPICDriver::write(APIC_REGISTER_ICR_LOW, lreg.value);
- 
-		lreg.vectorNo = pvect;
-		lreg.delvMode = DeliveryMode::StartUp;
- 
-		Dbg("APBoot: Wakeup sequence following...");
- 
-		xAPICDriver::write(APIC_REGISTER_ICR_HIGH, hreg.value);
-		xAPICDriver::write(APIC_REGISTER_ICR_LOW, lreg.value);
-}
-*/ 
+// >> Called in x64smp.c
+// Setup BSP's local APIC.
+// That routine maps the LAPIC registers, reads the ID/version, and 
+// marks BSP_LAPIC.initialized = TRUE.
+// It's necessary for the routines that interact with the APIC via registers.
+// + Map memory for the registers
+// + Setup the initialization flag
 
-// NOTE: ICRLow and ICRHigh are types in the Silcos kernel. If your code uses direct bit
-// manipulations you must replace some code with bit operations.
+    printk("lapic_initializing: Processor n={%d}\n", cpu_id);
 
-void local_apic_send_init(unsigned int apic_id)
-{
-// Send one time.
-// Respect the order: 
-// First 0x310 then 0x300.
+    BSP_LAPIC.initialized = FALSE;
 
-// High (0x310)
-    local_apic_write_command(
-        LAPIC_ICR_HIGH, 
-        (apic_id << 24) );
-
-// Low (0x300)
-// (No vector? vector 0?)
-    local_apic_write_command(
-        LAPIC_ICR_LOW,
-        ICR_INIT | 
-        ICR_PHYSICAL | 
-        ICR_ASSERT | 
-        ICR_EDGE | 
-        ICR_NO_SHORTHAND );
-
-// Loop
-    while ( local_apic_read_command(LAPIC_ICR_LOW) & ICR_SEND_PENDING )
+// Invalid address.
+// 0xFEE00000
+// see: x64gpa.h
+    if (lapic_pa != __LAPIC_PA)
     {
-        asm volatile ("pause;");
-    };
-}
-
-
-// ex: vector={0x08} =  address={0x8000}
-void 
-local_apic_send_startup(
-    unsigned int apic_id, 
-    unsigned int vector )
-{
-// Send one time.
-// Respect the order: 
-// First 0x310 then 0x300.
-
-    //#todo
-    //vector = (vector & 0xFF);
-
-// High (0x310)
-    local_apic_write_command(
-        LAPIC_ICR_HIGH, 
-        (apic_id << 24) );
-
-// Low (0x300)
-    local_apic_write_command(
-        LAPIC_ICR_LOW,
-        vector | 
-        ICR_STARTUP | 
-        ICR_PHYSICAL | 
-        ICR_ASSERT | 
-        ICR_EDGE | 
-        ICR_NO_SHORTHAND );
-
-// Loop
-    while ( local_apic_read_command(LAPIC_ICR_LOW) & ICR_SEND_PENDING )
-    {
-        asm volatile ("pause;");
+        BSP_LAPIC.initialized = FALSE;
+        //panic("lapic_initializing: lapic_pa\n");
+        printk("lapic_initializing: lapic_pa\n");
+        goto fail;
     }
+
+// #todo
+// Do we have apic support in this processor?
+    //if (has_apic() != TRUE)
+        //panic("lapic_initializing: APIC not supported\n");
+
+// ===================
+// Mapping
+
+// page table
+// Isso serve pra pegarmos um endereço físico
+// que servira de base para criarmos uma pagetable.
+// Mas endereço físico e virtual são iguais nessa região.
+// Identidade 1:1.
+    unsigned long *pt_lapic = (unsigned long *) get_table_pointer_va();
+
+// -------------
+// pa
+    BSP_LAPIC.lapic_pa = (unsigned long) (lapic_pa & 0xFFFFFFFF);
+// -------------
+// va
+// see: x64gva.h
+    BSP_LAPIC.lapic_va = (unsigned long) LAPIC_VA;
+
+// -------------------------------------
+// Mapping area for registers.
+
+    int map_status = -1;
+    map_status = (int) mm_map_2mb_region( BSP_LAPIC.lapic_pa, BSP_LAPIC.lapic_va );
+    if (map_status != 0)
+        panic("lapic_initializing: on mm_map_2mb_region()\n");
+
+//==========================================
+
+// flush tlb
+// #bugbug
+// Maybe we need to call a method for that.
+
+    asm ("movq %cr3, %rax");
+    asm ("movq %rax, %cr3");
+
+//=====================================
+
+// Let's get some information about the BSP LAPIC.
+
+// Check values into the registers:
+// see: 
+// https://wiki.osdev.org/APIC#Local_APIC_registers
+
+// ---------------
+// ID
+    int localid = (int) local_apic_get_id();
+    BSP_LAPIC.local_id = (int) (localid & 0xFF);
+    //printk("localid: %d\n",BSP_LAPIC.local_id);
+
+// ---------------
+// Version
+// 8bits
+// 10H~15H
+    int localversion = (int) local_apic_get_version();
+    BSP_LAPIC.local_version = (int) (localversion & 0xFF);
+    //printk("localversion: %xH\n", BSP_LAPIC.local_version);
+
+//=====================================
+// Destination Format Register (DFR)
+// Value after reset, flat mode
+// depois de invalidar o pic?
+    //*(volatile unsigned int*)(BSP_LAPIC.lapic_va + ?) = 0xFFFFFFFF; 
+// Logical Destination Register (LDR)
+// All cpus use logical id 1
+    //*(volatile unsigned int*)(BSP_LAPIC.lapic_va + ?) = 0x01000000; 
+    //*(volatile unsigned int*)(BSP_LAPIC.lapic_va + 0x20) = 8;
+
+// Print:
+    printk("ID: %d | VERSION: %xH\n",
+        BSP_LAPIC.local_id,
+        BSP_LAPIC.local_version );
+
+    // #hackhack
+    // This is just a test for now.
+    BSP_LAPIC.initialized = TRUE;
+
+    return TRUE;
+fail:
+    //BSP_LAPIC.initialized = FALSE;
+    return FALSE;
 }
 
-// Send INIT IPI
-void Send_INIT_IPI_Once(unsigned int apic_id)
-{
-// One single time.
-    local_apic_write_command(0x280, 0);  // Clear APIC errors.
-    local_apic_send_init(apic_id);
-    mdelay(100); // wait 10 msec
-}
-
-// Send STARTUP IPI (twice)
-// + What the function does
-// + Loops twice, sending a STARTUP IPI to the target APIC ID.
-// + Clears the Error Status Register (0x280) before each send.
-// + Uses vector 0x08 → trampoline at 0x8000.
-// + Waits 200 ms between sends.
-void Send_STARTUP_IPI_Twice(unsigned int apic_id)
-{
-// Twice
-
-    unsigned int vector_number = 0x8;
-    long i=0;
-    for (i=0; i<2; i++)
-    {
-        local_apic_write_command(0x280, 0);  // Clear APIC errors.
-        local_apic_send_startup(apic_id, vector_number);
-        mdelay(200); // wait 200 msec
-    };
-}
-
-static void __apic_disable_legacy_pic(void)
-{
-// Legacy PIC mask all off.
-
-    printk("apic_disable_legacy_pic:\n");
-
-// Envia ICW1 reset
-    out8(0x20,0x11);	// reset PIC 1
-    out8(0xA0,0x11);	// reset PIC 2
-// Envia ICW2 start novo PIC 1 e 2
-    out8(0x21,0x20);	// PIC 1 localiza no IDT 39-32 
-    out8(0xA1,0x28);	// PIC 2 localiza no IDT 47-40
-// Envia ICW3
-    out8(0x21,0x04);	// IRQ2 conexao em cascata com o PIC 2
-    out8(0xA1,0x02);
-// Envia ICW4
-    out8(0x21,0x01);
-    out8(0xA1,0x01);
-// OCW1
-// Desabilita todas as interrupcoes
-    out8(0x21,0xFF);
-    out8(0xA1,0xFF);
-}
 
 //
 // End

@@ -160,7 +160,7 @@ struct entry_io_apic_d
 
 
 
-int __x64_probe_smp_via_mptable(void);
+int mptable_probe(void);
 
 
 #endif   

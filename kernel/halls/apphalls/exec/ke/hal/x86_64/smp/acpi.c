@@ -569,7 +569,7 @@ int acpi_probe(void)
         fadt->h.Signature[3] );
 
     // #debug
-    refresh_screen();
+    //refresh_screen();
     //while(1){}
 
     return TRUE;

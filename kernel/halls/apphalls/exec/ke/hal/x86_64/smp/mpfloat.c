@@ -44,10 +44,10 @@ struct mp_configuration_table_d *MPConfigurationTable;
 
 // It works on qemu and qemu/kvm.
 // It doesn't work on Virtualbox. (Table not found).
-int __x64_probe_smp_via_mptable(void)
+int mptable_probe(void)
 {
-// Probe using the MP Floating Point structure.
 // Called by x64_initialize_smp().
+// Probe using the MP Floating Point structure.
 // + Find the processor entries using the MP Floating point table.
 // + Initialize local apic.
 
@@ -73,11 +73,11 @@ int __x64_probe_smp_via_mptable(void)
 // At this point we gotta have a lot of information
 // in the structure 'processor'.
     if ((void*) processor == NULL){
-        panic("__x64_probe_smp_via_mptable: processor\n");
+        panic("mptable_probe: processor\n");
     }
 // Is APIC supported?
     if (processor->hasAPIC != TRUE){
-        panic("__x64_probe_smp_via_mptable: No APIC\n");
+        panic("mptable_probe: No APIC\n");
     }
 
 // Probe ebda address at bda base.
@@ -121,7 +121,7 @@ int __x64_probe_smp_via_mptable(void)
 
 // Signature not found.
     if (mp_found != TRUE){
-        printk("__x64_probe_smp_via_mptable: MP table wasn't found!\n");
+        printk("mptable_probe: MP table wasn't found!\n");
         goto fail;
     }
 
@@ -459,7 +459,7 @@ Assignment  |    4 |      8 | One entry per system interrupt source.
 
 // smp done.
     smp_info.initialized = TRUE;
-    printk("__x64_probe_smp_via_mptable: done\n");
+    printk("mptable_probe: done\n");
 
 
     // #debug
@@ -467,9 +467,9 @@ Assignment  |    4 |      8 | One entry per system interrupt source.
     //refresh_screen();
     //while(1){};
 
-
     // g_smp_initialized = TRUE;
     return TRUE;
+
 fail:
     g_smp_initialized = FALSE;
     smp_info.initialized = FALSE;

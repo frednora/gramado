@@ -229,10 +229,10 @@ static int __ioapic_initialize_redirection_table(int maximum_redirection)
         panic("__ioapic_initialize_redirection_table: Max\n");
 
 
-    if (LAPIC.initialized != TRUE)
-        panic("__ioapic_initialize_redirection_table: It depends on LAPIC.initialized\n");
+    if (BSP_LAPIC.initialized != TRUE)
+        panic("__ioapic_initialize_redirection_table: It depends on BSP_LAPIC.initialized\n");
 
-    unsigned int id = (unsigned int) LAPIC.local_id;
+    unsigned int id = (unsigned int) BSP_LAPIC.local_id;
 
 // --------------------------
 // Install 24 entries
@@ -302,9 +302,9 @@ static int __setup_ioapic(void)
 
 // -------------------------
 // Set the id of the lapic.
-    if (LAPIC.initialized != TRUE)
-        panic("__setup_ioapic: It depends on LAPIC.initialized\n");
-    unsigned int id = (unsigned int) LAPIC.local_id;
+    if (BSP_LAPIC.initialized != TRUE)
+        panic("__setup_ioapic: It depends on BSP_LAPIC.initialized\n");
+    unsigned int id = (unsigned int) BSP_LAPIC.local_id;
     write_ioapic_register(IO_APIC_ID,id);
 
 // -------------------------
@@ -320,15 +320,15 @@ static int __setup_ioapic(void)
 }
 
 // Initialize IOAPIC once — this is BSP’s job, not repeated per AP.
-void enable_ioapic(void)
+void ioapic_initialize(void)
 {
 // Called by I_kmain() in kmain.c.
 
     printk("enable_ioapic:\n");
 
 // It depends on LAPIC.
-    if (LAPIC.initialized != TRUE)
-        panic ("enable_ioapic: It depends on LAPIC.initialized\n");
+    if (BSP_LAPIC.initialized != TRUE)
+        panic ("enable_ioapic: It depends on BSP_LAPIC.initialized\n");
 
 // Not initialized yet.
     IOAPIC.initialized = FALSE;

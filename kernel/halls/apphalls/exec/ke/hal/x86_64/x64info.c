@@ -127,10 +127,10 @@ void __show_cpu_intel_parameters(void)
     }
 
 // LAPIC
-    if(LAPIC.initialized == TRUE){
-        printk("LAPIC.lapic_pa %x \n",LAPIC.lapic_pa);
-        printk("LAPIC.lapic_va %x \n",LAPIC.lapic_va);
-        printk("LAPIC.local_id %d \n",LAPIC.local_id);
+    if(BSP_LAPIC.initialized == TRUE){
+        printk("BSP_LAPIC.lapic_pa %x \n",BSP_LAPIC.lapic_pa);
+        printk("BSP_LAPIC.lapic_va %x \n",BSP_LAPIC.lapic_va);
+        printk("BSP_LAPIC.local_id %d \n",BSP_LAPIC.local_id);
     }else{
         printk("[ERROR] LAPIC not initialized\n");
     };

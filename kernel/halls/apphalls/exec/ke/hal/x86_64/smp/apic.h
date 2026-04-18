@@ -203,7 +203,12 @@ struct lapic_info_d
     int local_id;
     int local_version;
 };
-extern struct lapic_info_d  LAPIC;
+
+// #bugbug: Limited number for now.
+#define NR_CPUS 8   // or detect dynamically
+// One structure per processor
+extern struct lapic_info_d lapic_info[NR_CPUS];
+extern struct lapic_info_d BSP_LAPIC;
 
 // =======================
 
@@ -214,16 +219,16 @@ int has_apic (void);
 void cpu_set_apic_base(unsigned long apic);
 unsigned long cpu_get_apic_base(void); 
 
-int lapic_initializing(unsigned long lapic_pa);
-
-
-void enable_apic(void); 
 
 
 void local_apic_send_init(unsigned int apic_id);
 void local_apic_send_startup(unsigned int apic_id, unsigned int vector);
 void Send_INIT_IPI_Once(unsigned int apic_id);
 void Send_STARTUP_IPI_Twice(unsigned int apic_id);
+
+
+void apic_setup_registers(int cpu_id);
+int lapic_initializing(unsigned long lapic_pa, int cpu_id);
 
 #endif    //____APIC_H
 

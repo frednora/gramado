@@ -66,7 +66,7 @@ struct __IOAPIC_REDIR_TBL
 int ioapic_masked(int n);
 int ioapic_umasked(int n);
 
-void enable_ioapic(void);
+void ioapic_initialize(void);
 
 #endif   
 

@@ -118,7 +118,6 @@ void x64smp_show_info(void)
 // see:
 // https://wiki.osdev.org/SMP
 
-// Called I_kmain() in kmain.c
 // Probing if smp is supported.
 // + Via ACPI.
 // + Via MP. And then initialize lapic.
@@ -127,31 +126,20 @@ void x64smp_show_info(void)
 
 int x64smp_initialization(void)
 {
+// Called archinit() in kmain.c
+
     int smp_status = FALSE;  // fail
+    unsigned long LAPIC_address_via_acpi = 0;
+    unsigned long LAPIC_address_via_mptable = 0;
 
     smp_info.initialized = FALSE;
     smp_info.probe_via = 0;
 
-//
-// The SMP support.
-//
-
-    //PROGRESS("x64smp_initialization:\n");
-
-    // #debug
+// The SMP support
     printk("\n");
     printk("---- SMP START ----\n");
-
     printk("x64smp_initialization:\n");
 
-// ----------------------
-// ACPI
-
-// Setup the desired mode.
-// #test: But for now the initialization is just getting some information 
-// using both methods, ACPI and MP Tables.
-
-    smp_info.probe_via = SMP_VIA_ACPI;
 
 //
 // == ACPI ===========================================================
@@ -160,55 +148,29 @@ int x64smp_initialization(void)
     printk("\n");
     printk("== SMP VIA ACPI ===================\n");
 
+// Setup the desired mode.
+// #test: But for now the initialization is just getting some information 
+// using both methods, ACPI and MP Tables.
 // Using the ACPI tables.
 // See: acpi.c
+    smp_info.probe_via = SMP_VIA_ACPI;
     smp_status = (int) acpi_probe();
 
-    // #bugbug
-    // We gotta find this table and check the elements.
-    //printk("ACPI: Breakpoint\n");
-    //refresh_screen();
-    //while(1){}
-
-    // ACPI OK.
+    // ACPI OK
     if (smp_status == TRUE){
-
-        // If the LAPIC is not initialized
-        if (LAPIC.initialized != TRUE)
-        {
-            // #todo
-            // Disable PIC for BSP.
-
-            // Enable LAPIC for BSP.
-            // see: apic.c
-            // 0xFEE00000
-            lapic_initializing(LAPIC_DEFAULT_ADDRESS);
-            if (LAPIC.initialized == TRUE){
-                printk("x64smp_initialization: lapic initialization ok\n");
-            }else if (LAPIC.initialized != TRUE){
-                printk("x64smp_initialization: lapic initialization fail\n");
-            };
-        }
-
+        // Save out final lapic address
+        LAPIC_address_via_acpi = (unsigned long) LAPIC_DEFAULT_ADDRESS;
     } else {
-
         smp_info.probe_via_acpi_failed = TRUE;
         printk("x64smp_initialization: [x64_probe_smp_via_acpi] failed\n");
-        //refresh_screen();
-        
-        // ok for now lets try MP.
-        //while(1){}
     };
-
-    // #debug
-    //#breakpoint
-    //printk("x64smp.c Breakpoint\n");
-    //refresh_screen();
-    //while (1){ asm("hlt"); };
 
 //
 // == MP ===========================================================
 //
+
+    printk("\n");
+    printk("== SMP VIA MP ===================\n");
 
 // ----------------------
 // MP Table
@@ -218,40 +180,21 @@ int x64smp_initialization(void)
 // It works on qemu and qemu/kvm.
 // It doesn't work on Virtualbox. (Table not found).
 
-    //printk("\n");
-    printk("\n");
-    printk("== SMP VIA MP ===================\n");
-
     smp_info.probe_via = SMP_VIA_MP_TABLE;
-    smp_status = (int) __x64_probe_smp_via_mptable();
+    smp_status = (int) mptable_probe();
 
     if (smp_status == TRUE){
 
-        // If the LAPIC is not initialized
-        if (LAPIC.initialized != TRUE)
+        if ((void*) MPConfigurationTable != NULL)
         {
-            // We need a valid address,
-            // this time we get the value from the MP table.
-
-            // Initialize LAPIC based on the address we found before.
-            if ((void*) MPConfigurationTable != NULL)
+            if (MPConfigurationTable->lapic_address != 0)
             {
-                if (MPConfigurationTable->lapic_address != 0)
-                {
-                    // #todo
-                    // Disable PIC for BSP.
-
-                    // Enable LAPIC for BSP.
-                    // see: apic.c
-                    lapic_initializing( MPConfigurationTable->lapic_address );
-                    if (LAPIC.initialized == TRUE){
-                        printk("??: lapic initialization ok\n");
-                    }else if (LAPIC.initialized != TRUE){
-                        printk("??: lapic initialization fail\n");
-                    };
-                }
+                // Save out final lapic address
+                LAPIC_address_via_mptable = 
+                    (unsigned long) MPConfigurationTable->lapic_address;
             }
         }
+
     } else {
         smp_info.probe_via_mp_failed = TRUE;
         printk("x64smp_initialization: [__x64_probe_smp_via_mptable] failed\n");
@@ -260,19 +203,42 @@ int x64smp_initialization(void)
     printk("---- SMP END ----\n");
     printk("\n");
 
-    // #debug
-    // #breakpoint
-    //x64smp_show_info();
-    //while (1){ asm("hlt"); };
 
-    // #debug
-    //#breakpoint
-    //printk("x64smp.c Breakpoint\n");
-    //refresh_screen();
-    //while (1){ asm("hlt"); };
+//
+// LAPIC initialization
+//
 
-    return (int) smp_status;
+// It was not possible to find the address.
+// Can't initialize LAPIC.
+
+    // If probed via mptable
+    if (smp_info.probe_via == SMP_VIA_MP_TABLE){
+        if (LAPIC_address_via_mptable == 0)
+            goto fail;    
+        lapic_initializing(LAPIC_address_via_mptable,0);
+
+    // If probed via acpi
+    } else {
+        if (LAPIC_address_via_acpi == 0)
+            goto fail;    
+        lapic_initializing(LAPIC_address_via_acpi,0);
+    };
+
+// Check the lapix initialization status
+    if (BSP_LAPIC.initialized == TRUE){
+        printk("x64smp_initialization: lapic initialization ok\n");
+        return TRUE;
+    } else if (BSP_LAPIC.initialized != TRUE){
+        printk("x64smp_initialization: lapic initialization fail\n");
+        return FALSE;
+    }
+
+    return FALSE;
+
+fail:
+    return FALSE;
 }
+
 
 /*
 // #todo

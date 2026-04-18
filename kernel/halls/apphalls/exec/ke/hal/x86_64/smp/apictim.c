@@ -110,20 +110,20 @@ static void __pit_perform_sleep(void)
 // Definir porta 70h usada nesse arquivo. ??
 static unsigned int __apictim_read_command(unsigned short addr)
 {
-    if( (void *) LAPIC.lapic_va == NULL ){
-        panic("__apictim_read_command: LAPIC.lapic_va\n");
+    if( (void *) BSP_LAPIC.lapic_va == NULL ){
+        panic("__apictim_read_command: BSP_LAPIC.lapic_va\n");
     }
 
-    return *( (volatile unsigned int *)(LAPIC.lapic_va + addr));
+    return *( (volatile unsigned int *)(BSP_LAPIC.lapic_va + addr));
 }
 
 static void __apictim_write_command(unsigned short addr,unsigned int val)
 {
-    if( (void *) LAPIC.lapic_va == NULL ){
-        panic("__apictim_write_command: LAPIC.lapic_va\n");
+    if( (void *) BSP_LAPIC.lapic_va == NULL ){
+        panic("__apictim_write_command: BSP_LAPIC.lapic_va\n");
     }
 
-    *( (volatile unsigned int *)(LAPIC.lapic_va + addr)) = val;
+    *( (volatile unsigned int *)(BSP_LAPIC.lapic_va + addr)) = val;
 }
 
 void apic_initial_count_timer(int value)
@@ -161,9 +161,10 @@ void apic_timer_masked(void)
 // INITIALIZATION
 //
 
-int apic_timer(void)
+// Initialize apic timer
+int apictim_initialize(void)
 {
-// Called by enable_apic() in apic.c.
+// Called by apic_initialize() in apic.c.
 
 // #todo #bugbug
 // e o timer precisa mudar o vetor 

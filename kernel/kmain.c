@@ -926,53 +926,53 @@ static int archinit(void)
     int smp_status = FALSE;
     int processor_type = -1;
 
-    if (USE_SMP == 1)
+    if (CONFIG_USE_SMP == 1)
     {
+        // 1) - Processor probe
         processor_type = (int) hal_probe_processor_type();
-        if ( processor_type == Processor_AMD ||
-             processor_type == Processor_INTEL )
+        if ( processor_type == Processor_AMD || processor_type == Processor_INTEL )
         {
             // #test
             // Testing the function serial_printk(),
             // it sends a formated string to the serial port.
             // #ok, it is working at this part, not in the
             // beginning of the routine.
-            serial_printk("archinit: processor_type {%d}\n",
-                processor_type );
+            serial_printk("archinit: processor_type {%d}\n", processor_type );
 
-            // k2_ke/x86_64/x64smp.c
+            // 2) - SMP initialization
             // Probe for smp support and initialize lapic.
+            // see: apphalls/exec/ke/hal/x86_64/smp/x64smp.c
             smp_status = (int) x64smp_initialization();
             //if (smp_status != TRUE)
                 //panic("smp\n");
 
             // #warning: See the flags in config.h
 
-            // >> ENABLE APIC
+            // 3) - Enable APIC
             // Lets enable the apic, only if smp is supported.
             // #warning
             // This routine is gonna disable the legacy PIC.
             // see: apic.c
-            if (ENABLE_APIC == 1)
+            if (CONFIG_INITIALIZE_APIC == 1)
             {
                 // Enable apic and timer
-                if (LAPIC.initialized == TRUE)
-                    enable_apic();
-                //printk("kmain: breakpoint on enable_apic()\n");
+                if (BSP_LAPIC.initialized == TRUE)
+                    apic_setup_registers(0);  // #todo: id in parameter.
+                //printk("kmain: breakpoint on apic_setup_registers()\n");
                 //while(1){}
             }
 
-            // >> ENABLE IOAPIC
+            // 4) - Enable IOAPIC
             // #todo
             // Setup ioapic.
             // see: ioapic.c
-            //if (ENABLE_IOAPIC == 1)
+            //if (CONFIG_INITIALIZE_IOAPIC == 1)
             //{
                 // #todo
                 // Isso configura o timer ...
                 // e o timer precisa mudar o vetor 
                 // pois 32 ja esta sendo usado pela redirection table.
-                //enable_ioapic();
+                //ioapic_initialize();
             //}
 
             // #debug
@@ -980,6 +980,7 @@ static int archinit(void)
             // see: x64info.c
             //x64_info();
 
+            // 5) - AP startup
             if (CONFIG_INITIALIZE_SECOND_PROCESSOR == 1)
             {
                 // Initialize AP processor.
