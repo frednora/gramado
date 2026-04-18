@@ -227,13 +227,12 @@ _gdt_flush:
 
 ;=================================================
 ; setup_idt:
-;     Configura a IDT.
-;     Dado o endereço da IDT, 
-;     preenche todos os vetores, 
-;     apontando para um só endereço. 'unhandled_int'.
-;     See: sw.asm
-;     called by xxxhead.asm
-;     See: sw.asm
+; Configura a IDT.
+; Dado o endereço da IDT, preenche todos os vetores, 
+; apontando para um só endereço. 'unhandled_int'.
+; See: sw.asm
+; called by xxxhead.asm
+; See: sw.asm
 ;
 ; 0xEE00 - (present, dpl=3, interrupt gate) (disable interrupts)
 ;

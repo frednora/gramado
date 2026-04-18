@@ -154,34 +154,46 @@ static void panic_at_init(int error_code, kernel_subsystem_t subsystem_id);
 // =======================================================
 //
 
+// The early initialization in Assembly
+// See: head_64.asm
+extern void asm_AP_early_initialization(void);
+
 // void ap_entry_point00(void);
 void ap_entry_point00(void)
 {
 // The entry point for the APs.
+    int i=0;
 
     asm ("cli");
 
-    while(1)
+// Make some very basic initialization,
+// just like the GDT.
+    //asm_AP_early_initialization();
+
+
+/*
+    // #test
+    // Drawing rectangles
+    unsigned int Color = COLOR_BLACK;
+    int Counter = 0;
+    while (1)
     {
+        Counter++;
+        Color = COLOR_YELLOW;
+        if (Counter % 2 == 0)
+            Color = COLOR_RED;
 
-        // #bugbug
-        // When the AP is running the BSP slows down.
-        // We gotta use sti hlt in loops inside the AP.
-        // But we need to setup the interrup vectors before that.
+        for (i=0; i< 1000; i++){
+            frontbuffer_draw_rectangle( i, i, 16, 16, Color, 0 );
+        };
+    };
+*/
 
-        //printk("AP inside the BSP\n");
-        // asm ("cli");
-
-        // #test
-        // Drawing rectangles
-        frontbuffer_draw_rectangle(
-            0, 0, 32, 32, 
-            COLOR_RED, 0 
-        );
-
-        asm (" pause ");
+AP_die:
+    while (1){
+        asm (" cli ");
         asm (" hlt ");
-    }
+    };
 }
 
 

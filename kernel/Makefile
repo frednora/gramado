@@ -185,18 +185,20 @@ clean-all:
 	rm -rf *.o   
 	rm -rf *.BIN   
 
-	rm -rf gthouse/core/*.o   
+	rm -rf gthouse/*.o   
 	rm -rf halls/*.o   
 
 	rm -rf gthouse/arch/*.o   
+	rm -rf gthouse/kwrap/*.o   
 	rm -rf gthouse/libk/*.o   
 	rm -rf gthouse/wink/*.o   
 
-	rm -rf halls/bus/*.o   
-	rm -rf halls/dev/*.o   
-	rm -rf halls/fs/*.o   
-	rm -rf halls/mm/*.o   
-	rm -rf halls/net/*.o   
+	rm -rf halls/apphalls/exec/*.o   
+	rm -rf halls/apphalls/per/*.o   
+	rm -rf halls/apphalls/req/*.o   
+
+	rm -rf halls/uhalls/chardev/*.o   
+
 
 	@echo "~clean-all"
 

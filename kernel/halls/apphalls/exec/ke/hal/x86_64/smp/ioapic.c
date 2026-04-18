@@ -319,6 +319,7 @@ static int __setup_ioapic(void)
     return 0;
 }
 
+// Initialize IOAPIC once — this is BSP’s job, not repeated per AP.
 void enable_ioapic(void)
 {
 // Called by I_kmain() in kmain.c.

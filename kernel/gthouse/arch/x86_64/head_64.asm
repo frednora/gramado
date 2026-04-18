@@ -2582,13 +2582,6 @@ align 4
 align 4
     %include "x86_64.asm"
 
-; #test
-align 4
-____AP_START:
-    cli 
-    hlt 
-    jmp ____AP_START 
-
 ; Startup routine called by the entry point.
 align 4
 DEBUG_START: db "START"
@@ -2601,11 +2594,6 @@ DEBUG_START: db "START"
 
 align 4
 START:
-
-; If an AP processor is entering here.
-    ;cmp rax, 0x12345678FEFEFEFE
-	;cmp bl, byte 'x'
-	;je ____AP_START
 
 ; Save information that came from the bootloader.
 ; We're in 64bit. But it is a 32bit address.
@@ -2810,6 +2798,7 @@ START:
     mov rdi, rax    ; First argument.
     ; ...
 
+
 ; Call I_kmain() function in kmain.c
 ; See: core/kmain/kmain.c
     call _I_kmain
@@ -2817,6 +2806,65 @@ dieLoop:
     cli
     hlt
     jmp dieLoop
+
+
+;===================================================
+; AP initialization
+; Called right after the entrypoint in C.
+; See: ap_entry_point00() in main.c
+global _asm_AP_early_initialization
+_asm_AP_early_initialization:
+
+; Clear interrupts and direction flag
+    cli
+    cld
+
+    xor rax, rax
+    xor rbx, rbx
+    xor rcx, rcx
+    xor rdx, rdx
+
+    mov  r8, rax
+    mov  r9, rax
+    mov r10, rax
+    mov r11, rax
+    mov r12, rax
+    mov r13, rax
+    mov r14, rax
+    mov r15, rax
+
+; Clear registers
+; RBP, RSI, RDI.
+    ;xor rax, rax
+    ;mov rbp, rax
+    ;mov rsi, rax
+    ;mov rdi, rax
+
+    ;lgdt [EARLY_GDT64.Pointer]
+
+    ;mov ax, EARLY_GDT64.Data
+    ;mov ds, ax
+    ;mov es, ax
+    ;mov ss, ax
+	; fs and gd are not used
+    ;mov fs, ax
+    ;mov gs, ax
+
+; Load a clean stack
+; #bugbug: It's crashing at this moment
+; We can't change the stack during a function call or the return will fail.
+    ;mov rsp, [_EarlySharedAPStack]   ; pointer provided by BSP
+    ;mov rbp, rsp               ; optional, set frame base
+
+
+; LDT
+; Initialize ldt with a NULL selector.
+    ;xor rax, rax
+    ;lldt ax
+
+; Return to C entry point
+    ret
+
 
 ;===================================================
 ; DATA: 
@@ -2844,13 +2892,22 @@ _bss_start:
     ;db 0xAA
 
 
-; Stack usada pelo kernel
+; Stack usada pelo BSP 
 ; 64 KB.
 global _EarlyKernelStackEnd
 _EarlyKernelStackEnd:
     resb (64*1024)
 global _EarlyKernelStack
 _EarlyKernelStack:
+
+
+; Stack usada pelo BSP 
+; 64 KB.
+;global _EarlySharedAPStackEnd
+;_EarlySharedAPStackEnd:
+;    resb (64*1024)
+;global _EarlySharedAPStack
+;_EarlySharedAPStack:
 
 
 ; See: x64.c and tss.h
