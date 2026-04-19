@@ -244,6 +244,10 @@ extern struct lapic_info_d BSP_LAPIC;
 
 // =======================
 
+extern int apic_SPINLOCK;
+
+
+
 // Handler for the lapic timer (test)
 void apic_TimerHandler0000(void);
 

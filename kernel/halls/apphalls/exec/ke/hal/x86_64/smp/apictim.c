@@ -281,7 +281,9 @@ int apictim_initialize(void)
 // It still needs the sti instruction
 // #bugbug: maybe its unsafe to do this here 
 // it needs to be at the end of the kernel initialization.
-    // apic_timer_umasked();
+    if (CONFIG_UNMASK_APICTIMER == 1)
+        apic_timer_umasked();
+    apic_SPINLOCK = FALSE;  // Unlocked
 
     return 0;
 }

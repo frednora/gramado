@@ -123,6 +123,7 @@ unsigned long saved_bootblock_base=0;
 
 // ================================
 
+
 //
 // == Private functions: Prototypes ========
 //
@@ -170,24 +171,23 @@ void ap_entry_point00(void)
 // just like the GDT.
     //asm_AP_early_initialization();
 
-/*
+
     // #test
     // Drawing rectangles
     unsigned int Color = COLOR_BLACK;
     int Counter = 0;
-    while (1)
-    {
+    while (1){
+        while (apic_SPINLOCK == TRUE){ asm ("pause \n"); };
+
         Counter++;
         Color = COLOR_YELLOW;
         if (Counter % 2 == 0)
             Color = COLOR_RED;
 
         for (i=0; i< 1000; i++){
-            frontbuffer_draw_rectangle( i, i, 16, 16, Color, 0 );
+            frontbuffer_draw_rectangle( 0, i, 16, 16, Color, 0 );
         };
     };
-*/
-
 
 AP_die:
     while (1){

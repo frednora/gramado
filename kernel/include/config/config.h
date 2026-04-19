@@ -108,6 +108,7 @@
 // # set to 1 to test it.
 #define CONFIG_INITIALIZE_SECOND_PROCESSOR  0
 #define CONFIG_INITIALIZE_APIC    0  // Enable apic and timer
+#define CONFIG_UNMASK_APICTIMER   0 
 #define CONFIG_INITIALIZE_IOAPIC  0
 // ...
 

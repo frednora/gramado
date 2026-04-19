@@ -454,7 +454,7 @@ RequestHall_int131:
     push r13
     push r14
     push r15
-    
+
     ;push ds
     ;push es
     push fs

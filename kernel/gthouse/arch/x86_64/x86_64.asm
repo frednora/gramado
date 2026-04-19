@@ -27,6 +27,13 @@
 ; + 0xEF00 (if you ever use it) → syscalls, user‑callable, interrupts stay enabled.
 
 
+align 16
+__sw_local_fpu_buffer_apic_timer:
+    times 512 db 0
+align 16
+
+
+
 ; See: apic.c
 extern _local_apic_eoi
 extern _apic_TimerHandler0000
@@ -34,10 +41,32 @@ extern _apic_TimerHandler0000
 ; 0x48 - LAPIC Timer
 global PeripheralHall_lapic_timer_handler
 PeripheralHall_lapic_timer_handler:
+
+    cli
     push rax
+    push rbx
     push rcx
     push rdx
+    push rsi
+    push rdi
+    push rbp
+    push r8
+    push r9
     push r10
+    push r11
+    push r12
+    push r13
+    push r14
+    push r15
+
+    ;push ds
+    ;push es
+    push fs
+    push gs
+    push rsp
+    pushfq
+
+    fxsave [__sw_local_fpu_buffer_apic_timer]
 
     ; Debug notification (optional)
     ;mov al, 'T'
@@ -49,12 +78,34 @@ PeripheralHall_lapic_timer_handler:
     call r10
 
     ; Call the C routine to write EOI
-    ; call _local_apic_eoi
+    call _local_apic_eoi
 
+    fxrstor [__sw_local_fpu_buffer_apic_timer]
+
+    popfq
+    pop rsp
+    pop gs
+    pop fs
+    ;pop es
+    ;pop ds
+
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop r11
     pop r10
+    pop r9
+    pop r8
+    pop rbp
+    pop rdi
+    pop rsi
     pop rdx
     pop rcx
+    pop rbx
     pop rax
+
+    sti
     iretq
 
 ; ============================================

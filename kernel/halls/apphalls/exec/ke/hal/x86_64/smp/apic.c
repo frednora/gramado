@@ -82,6 +82,10 @@ unsigned int localId=0;
 
 #define APIC_NULL  0
 
+
+int apic_SPINLOCK = FALSE;
+
+
 //
 // == private functions: prototypes =====================
 //
@@ -112,16 +116,29 @@ void flush_cashes(void)
 // Handler for the lapic timer (test)
 void apic_TimerHandler0000(void)
 {
-    /*
-    printk("apic_TimerHandler0000\n");
-    while(1){
-        asm ("hlt \n");
-    };
-    */
+    int i=0;
 
-    printk("apic_TimerHandler0000\n");
-    //frontbuffer_draw_rectangle( 0, 0, 16, 16, COLOR_BLUE, 0 );
-    local_apic_eoi();
+    apic_SPINLOCK = TRUE; // Lock
+
+    // #test
+    // Drawing rectangles
+    unsigned int Color = COLOR_BLACK;
+    int Counter = 0;
+    for (i=0; i< 1000; i++)
+    {
+        Counter++;
+        Color = COLOR_WHITE;
+        if (Counter % 2 == 0)
+            Color = COLOR_BLACK;
+
+        for (i=0; i< 1000; i++){
+            frontbuffer_draw_rectangle( i, 0, 16, 16, Color, 0 );
+        };
+    };
+
+    // printk("apic_TimerHandler0000\n");
+    //local_apic_eoi();
+    apic_SPINLOCK = FALSE;  // Unlocked
 }
 
 // #todo: 
