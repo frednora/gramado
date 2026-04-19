@@ -1,0 +1,73 @@
+
+----------------------------
+Correct organization:
+
++ Keep PIC IRQs in 0x20–0x2F if you want compatibility with the standard IDT layout.
++ Move LAPIC local sources (Timer, Perf, LINT0, LINT1, Error) to a higher, 
+  unused vector range (e.g. 0x30–0x34 or 0xF0–0xF4).
++ Keep Spurious interrupt at 0xFF.
++ Keep APIC Timer at 0xDC (220) as you already did — that avoids collision.
++ SIPI vectors (0x08, 0x20) are temporary and don’t need to be reserved in the permanent IDT.
+
+----------------------------
+
+=== Recommended Interrupt Vector Layout ===
+
+Legacy PIC (remapped to avoid CPU exceptions):
+0x20–0x27 → PIC1 IRQs (Timer, Keyboard, Cascade, COM ports, Floppy, LPT1)
+0x28–0x2F → PIC2 IRQs (RTC, ACPI, NICs, Mouse, FPU, ATA controllers)
+
+Local APIC (LVT entries - move away from PIC range):
+0x30 (48)  → LAPIC Timer (instead of 0x20)
+0x31 (49)  → LAPIC Performance Counter
+0x32 (50)  → LAPIC LINT0 (ExtINT input)
+0x33 (51)  → LAPIC LINT1 (NMI input)
+0x34 (52)  → LAPIC Error interrupt
+0xFF (255) → Spurious Interrupt Vector (SVR register, enabled)
+
+APIC Timer (calibration + periodic mode):
+0xDC (220) → LAPIC Timer vector (one‑shot calibration, then periodic mode)
+
+Startup IPI (AP bootstrap - temporary use only):
+0x20 (32) → SIPI vector when trampoline base = 0x20000
+0x08 (8)  → SIPI vector when trampoline base = 0x8000
+
+=== Notes ===
+- Keep PIC IRQs in 0x20–0x2F to match the IDT and standard OS expectations.
+- Relocate LAPIC local sources to 0x30–0x34 (or another free block) to avoid overlap.
+- APIC Timer remains at 0xDC (220) for periodic scheduling ticks.
+- SIPI vectors (0x08, 0x20) are temporary bootstrap addresses, not permanent IDT entries.
+
+================================================================
+
+Let’s clear up the Startup IPI vectors because they behave 
+differently than the LAPIC LVT or IOAPIC redirection table entries:
+
+=== Startup IPI (AP bootstrap) ===
+
+Purpose:
+- Used only during Application Processor (AP) startup in SMP systems.
+- The BSP (Bootstrap Processor) sends INIT + SIPI IPIs to wake APs.
+- The "vector" field in the SIPI is not an interrupt vector in the IDT.
+- Instead, it encodes the physical page (vector × 4KB) where the AP begins execution.
+
+Examples:
+- Vector 0x08 → AP starts at physical address 0x8000.
+- Vector 0x20 → AP starts at physical address 0x20000.
+
+Key Distinction:
+- SIPI vector ≠ interrupt vector.
+- It does not configure an entry in the IDT or LAPIC LVT.
+- It is only a bootstrap address for the AP’s trampoline code.
+
+Overlap Concern:
+- Even though SIPI uses the numeric value "0x20," it is not the same as the LAPIC Timer vector 0x20.
+- They are separate mechanisms:
+   • LAPIC LVT vector → permanent interrupt routing into the IDT.
+   • SIPI vector → temporary startup address for AP bootstrap.
+
+After AP startup:
+- The SIPI vector is no longer relevant.
+- APs run normal code and use the standard IDT/LAPIC vectors.
+
+

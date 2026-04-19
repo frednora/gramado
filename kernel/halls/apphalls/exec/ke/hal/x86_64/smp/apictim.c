@@ -165,6 +165,8 @@ void apic_timer_masked(void)
 int apictim_initialize(void)
 {
 // Called by apic_initialize() in apic.c.
+// + make a test using one shot mode
+// + setup for periodic mode
 
 // #todo #bugbug
 // e o timer precisa mudar o vetor 
@@ -183,7 +185,7 @@ int apictim_initialize(void)
             APIC_TIMER_NULL,
             0,
             APIC_TIMER_NULL,
-            220  //  (Vector) 
+            LVT_TIMER_VECTOR   //220  //  (Vector) 
             );
     __apictim_write_command(LAPIC_LVT_TIMER, val);
 
@@ -254,7 +256,7 @@ int apictim_initialize(void)
 	        APIC_TIMER_NULL,
 	        0,
 	        APIC_TIMER_NULL,
-	        220  //  (Vector)
+	        LVT_TIMER_VECTOR  //220  //  (Vector)
             );
     __apictim_write_command(LAPIC_LVT_TIMER, val);
 
@@ -272,6 +274,14 @@ int apictim_initialize(void)
 // use it as APIC timer counter initializer.
     apic_timer_ticks = 1000;
     __apictim_write_command(LAPIC_INITIAL_COUNT_TIMER, apic_timer_ticks);
+
+
+// #test
+// Unmask the apic timer.
+// It still needs the sti instruction
+// #bugbug: maybe its unsafe to do this here 
+// it needs to be at the end of the kernel initialization.
+    // apic_timer_umasked();
 
     return 0;
 }

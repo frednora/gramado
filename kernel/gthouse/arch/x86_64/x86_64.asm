@@ -29,6 +29,7 @@
 
 ; See: apic.c
 extern _local_apic_eoi
+extern _apic_TimerHandler0000
 ; ============================================
 ; 0x48 - LAPIC Timer
 global PeripheralHall_lapic_timer_handler
@@ -36,15 +37,21 @@ PeripheralHall_lapic_timer_handler:
     push rax
     push rcx
     push rdx
+    push r10
 
     ; Debug notification (optional)
-    mov al, 'T'
-    mov dx, 0x3F8
-    out dx, al
+    ;mov al, 'T'
+    ;mov dx, 0x3F8
+    ;out dx, al
+
+    ; #ps: This routine calls the EIO.
+    mov r10, qword _apic_TimerHandler0000
+    call r10
 
     ; Call the C routine to write EOI
-    call _local_apic_eoi
+    ; call _local_apic_eoi
 
+    pop r10
     pop rdx
     pop rcx
     pop rax
@@ -173,6 +180,8 @@ PeripheralHall_spurious_handler:
 
     ; Optionally: increment a counter or emit a debug message here.
     ; (left empty for safety/minimalism)
+
+    ; That means no EOI is required.
 
     pop rdx
     pop rcx
@@ -901,6 +910,10 @@ setup_vectors:
 
 
 ; === LAPIC local sources (LVT block starting at 220) ===
+
+
+; 220–225
+; (0xDC–0xE1) 
 
 ; 220 - LAPIC Timer (0xDC)
     mov rax, qword PeripheralHall_lapic_timer_handler

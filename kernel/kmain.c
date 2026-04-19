@@ -170,7 +170,6 @@ void ap_entry_point00(void)
 // just like the GDT.
     //asm_AP_early_initialization();
 
-
 /*
     // #test
     // Drawing rectangles
@@ -188,6 +187,7 @@ void ap_entry_point00(void)
         };
     };
 */
+
 
 AP_die:
     while (1){

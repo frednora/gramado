@@ -1,0 +1,20 @@
+PIC IRQs (legacy, remapped):
+0x20–0x27 → PIC1 IRQs (Timer, Keyboard, Cascade, COM ports, Floppy, LPT1)
+0x28–0x2F → PIC2 IRQs (RTC, ACPI, NICs, Mouse, FPU, ATA controllers)
+
+LAPIC Local Vectors (new block):
+0x30 → LAPIC Timer
+0x31 → LAPIC Performance Counter
+0x32 → LAPIC LINT0 (ExtINT)
+0x33 → LAPIC LINT1 (NMI)
+0x34 → LAPIC Error
+0x35 → LAPIC Thermal (if supported)
+0x36 → LAPIC CMCI (if supported)
+0xFF → Spurious Interrupt Vector
+
+APIC Timer (calibration/periodic):
+0xDC → LAPIC Timer (used for scheduling ticks)
+
+Startup IPI (temporary bootstrap):
+0x20 → SIPI vector (AP trampoline @0x20000)
+0x08 → SIPI vector (AP trampoline @0x8000)

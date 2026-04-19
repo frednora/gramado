@@ -72,6 +72,7 @@ losethos os - Adam1a.HPP.
 #define LAPIC_ICR_LOW      0x300
 #define LAPIC_ICR_HIGH     0x310
 
+
 #define LAPIC_LVT_TIMER    0x320
 #define LAPIC_LVT_THERMAL  0x330
 #define LAPIC_LVT_PERF     0x340
@@ -122,7 +123,11 @@ losethos os - Adam1a.HPP.
 #define ICR_ALL_EXCLUDING_SELF          0x000c0000
 
 
+//
+// Vectors
+//
 
+/*
 // LAPIC Local Vector Table interrupt vectors
 #define LVT_TIMER_VECTOR       0x20   // LAPIC timer interrupt
 #define LVT_PERF_VECTOR        0x21   // Performance counter interrupt
@@ -136,6 +141,33 @@ losethos os - Adam1a.HPP.
 // Not part of the LVT; separate register at offset 0xF0.
 // Bit 8 enables LAPIC, low byte defines spurious vector.
 #define LAPIC_SPURIOUS_VECTOR  0xFF
+*/
+
+
+//
+// Vectors
+//
+
+// 220–225
+// (0xDC–0xE1) 
+
+// LAPIC Local Vector Table interrupt vectors
+#define LVT_TIMER_VECTOR       0xDC  //0x30   // LAPIC timer interrupt
+#define LVT_PERF_VECTOR        0xDD  //0x31   // Performance counter interrupt
+#define LVT_LINT0_VECTOR       0xDE  //0x32   // Local interrupt line 0 (ExtINT)
+#define LVT_LINT1_VECTOR       0xDF  //0x33   // Local interrupt line 1 (NMI)
+#define LVT_ERROR_VECTOR       0xE0  //0x34   // LAPIC error interrupt
+#define LVT_THERMAL_VECTOR     0xE1  //0x35   // Thermal sensor (if supported)
+#define LVT_CMCI_VECTOR        0xE2  //0x36   // Corrected Machine Check (newer CPUs)
+
+//#define LVT_MY_TIMER  220
+
+// LAPIC Spurious Interrupt Vector Register (SVR)
+// Not part of the LVT; separate register at offset 0xF0.
+// Bit 8 enables LAPIC, low byte defines spurious vector.
+#define LAPIC_SPURIOUS_VECTOR  0xFF
+
+
 
 
 // ====================
@@ -211,6 +243,9 @@ extern struct lapic_info_d lapic_info[NR_CPUS];
 extern struct lapic_info_d BSP_LAPIC;
 
 // =======================
+
+// Handler for the lapic timer (test)
+void apic_TimerHandler0000(void);
 
 void local_apic_eoi(void);
 

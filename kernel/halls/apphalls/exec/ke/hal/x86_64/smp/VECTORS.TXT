@@ -1,0 +1,163 @@
+=== Interrupt Vectors Configured During SMP/APIC Initialization ===
+
+
+Local APIC (LVT entries):
+Configured in apic_setup_registers():
+- 0x20 (32)  → LAPIC Timer (masked initially)
+- 0x21 (33)  → LAPIC Performance Counter (masked)
+- 0x22 (34)  → LAPIC LINT0 (ExtINT, masked)
+- 0x23 (35)  → LAPIC LINT1 (NMI, masked)
+- 0x24 (36)  → LAPIC Error interrupt (masked)
+- 0xFF (255) → Spurious Interrupt Vector (enabled, LAPIC global enable)
+
+APIC Timer (calibration and periodic mode):
+APIC Timer (apictim.c):
+- 0xDC (220) → LAPIC Timer vector
+   • Step 1: one‑shot mode (calibration, unmasked)
+   • Step 9: periodic mode (masked until explicitly unmasked)
+
+Startup IPI (AP bootstrap):
+Configured in __test_initialize_ap_processor() and local_apic_send_startup():
+- 0x20 (32) → SIPI vector when trampoline base = 0x20000
+- 0x08 (8)  → SIPI vector when trampoline base = 0x8000
+(Both are possible depending on configuration.)
+
+Legacy PIC (disabled after APIC enable):
+In __apic_disable_legacy_pic():
+- 0x20–0x27 → PIC1 IRQs (remapped, then masked)
+- 0x28–0x2F → PIC2 IRQs (remapped, then masked)
+
+=== Summary ===
+Active vectors after initialization:
+- 0xFF → Spurious interrupt handler
+- 0xDC (220) → LAPIC timer (once unmasked)
+- 0x08 / 0x20 → SIPI vectors for AP startup
+
+All other vectors (0x20–0x24, legacy PIC ranges) are 
+configured but remain masked/disabled until explicitly enabled.
+
+
+========================================================
+
+=== Interrupt Vector Summary Table ===
+
+Vector   | Source / Purpose                  | Status
+---------|-----------------------------------|----------------------------
+0x20     | LAPIC Timer (default LVT entry)   | Masked initially
+0x21     | LAPIC Performance Counter         | Masked
+0x22     | LAPIC LINT0 (ExtINT input)        | Masked
+0x23     | LAPIC LINT1 (NMI input)           | Masked
+0x24     | LAPIC Error interrupt             | Masked
+0xFF     | Spurious Interrupt (SVR register) | Enabled (LAPIC global enable)
+0xDC     | LAPIC Timer (calibration/periodic)| Active, masked until unmasked
+0x08     | SIPI vector (AP trampoline @0x8000)| AP startup
+0x20     | SIPI vector (AP trampoline @0x20000)| AP startup
+0x20–0x27| Legacy PIC1 IRQs (remapped)       | Disabled after APIC enable
+0x28–0x2F| Legacy PIC2 IRQs (remapped)       | Disabled after APIC enable
+
+
+=================================================================
+
+=== Interrupt Vectors Configured (Redirection / LAPIC Setup) ===
+
+Local APIC LVT entries:
+- 0x20 (32)  → LAPIC Timer (masked initially)
+- 0x21 (33)  → LAPIC Performance Counter (masked)
+- 0x22 (34)  → LAPIC LINT0 (ExtINT input, masked)
+- 0x23 (35)  → LAPIC LINT1 (NMI input, masked)
+- 0x24 (36)  → LAPIC Error interrupt (masked)
+- 0xFF (255) → Spurious Interrupt Vector (SVR register, enabled)
+
+APIC Timer (apictim.c):
+- 0xDC (220) → LAPIC Timer vector
+   • One‑shot mode (calibration, unmasked)
+   • Periodic mode (masked until explicitly unmasked)
+
+Startup IPI (AP bootstrap):
+- 0x20 (32) → SIPI vector when trampoline base = 0x20000
+- 0x08 (8)  → SIPI vector when trampoline base = 0x8000
+
+Legacy PIC (remapped then disabled):
+- 0x20–0x27 → PIC1 IRQs (remapped to IDT entries 32–39, then masked)
+- 0x28–0x2F → PIC2 IRQs (remapped to IDT entries 40–47, then masked)
+
+=== Summary ===
+Active vectors after initialization:
+- 0xFF → Spurious interrupt handler
+- 0xDC (220) → LAPIC timer (once unmasked)
+- 0x08 / 0x20 → SIPI vectors for AP startup
+
+All other vectors (0x20–0x24, legacy PIC ranges) are 
+configured but remain masked/disabled until explicitly enabled.
+
+=============================================================
+
+=== Interrupt Vector Usage ===
+
+Local APIC LVT initial setup:
+- 0x20 (32)  → LAPIC Timer (masked)
+- 0x21 (33)  → LAPIC Performance Counter (masked)
+- 0x22 (34)  → LAPIC LINT0 (ExtINT, masked)
+- 0x23 (35)  → LAPIC LINT1 (NMI, masked)
+- 0x24 (36)  → LAPIC Error interrupt (masked)
+- 0xFF (255) → Spurious Interrupt Vector (enabled)
+
+APIC Timer (apictim.c):
+- 0xDC (220) → LAPIC Timer vector (one‑shot calibration, then periodic mode)
+
+Startup IPI (AP bootstrap):
+- 0x20 (32) → SIPI vector when trampoline base = 0x20000
+- 0x08 (8)  → SIPI vector when trampoline base = 0x8000
+
+Legacy PIC remap (before disabling):
+- PIC1 IRQs → 0x20–0x27 (IRQs 0–7 mapped to IDT entries 32–39)
+- PIC2 IRQs → 0x28–0x2F (IRQs 8–15 mapped to IDT entries 40–47)
+- Then masked/disabled once APIC is active
+
+=== Key Point ===
+Yes — you initially programmed LAPIC LVT entries at 0x20–0x24,
+but then the legacy PIC was also remapped into 0x20–0x2F.
+That means there’s a collision: both LAPIC local sources and PIC IRQs
+are mapped into the same vector range.
+
+In practice:
+- LAPIC Timer at 0x20 conflicts with PIC IRQ0 (also remapped to 0x20).
+- LAPIC Perf/LINT0/LINT1/Error at 0x21–0x24 overlap with PIC IRQ1–IRQ4.
+
+This overlap is why the comment in your code warns:
+“the timer needs another vector number, because 32 is already in use
+in the redirection table.”
+
+===========================================================
+
+=== Interrupt Vector Usage (Redirection Table & LAPIC Setup) ===
+
+Local APIC LVT entries (apic_setup_registers):
+- 0x20 (32)  → LAPIC Timer (masked initially)
+- 0x21 (33)  → LAPIC Performance Counter (masked)
+- 0x22 (34)  → LAPIC LINT0 (ExtINT input, masked)
+- 0x23 (35)  → LAPIC LINT1 (NMI input, masked)
+- 0x24 (36)  → LAPIC Error interrupt (masked)
+- 0xFF (255) → Spurious Interrupt Vector (SVR register, enabled)
+
+APIC Timer (apictim_initialize):
+- 0xDC (220) → LAPIC Timer vector
+   • One‑shot mode (calibration, unmasked)
+   • Periodic mode (masked until explicitly unmasked)
+
+Startup IPI (AP bootstrap):
+- 0x20 (32) → SIPI vector when trampoline base = 0x20000
+- 0x08 (8)  → SIPI vector when trampoline base = 0x8000
+
+Legacy PIC remap (before disabling):
+- 0x20–0x27 → PIC1 IRQs (remapped to IDT entries 32–39, then masked)
+- 0x28–0x2F → PIC2 IRQs (remapped to IDT entries 40–47, then masked)
+
+=== Important Note ===
+The LAPIC LVT entries at 0x20–0x24 are critical for local interrupt sources.
+Remapping the legacy PIC into 0x20–0x2F overlaps with these vectors.
+This is why the APIC timer was later moved to vector 0xDC (220),
+to avoid collision with the redirection table and preserve the LAPIC setup.
+
+============================================
+

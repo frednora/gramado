@@ -109,6 +109,20 @@ void flush_cashes(void)
 }
 */
 
+// Handler for the lapic timer (test)
+void apic_TimerHandler0000(void)
+{
+    /*
+    printk("apic_TimerHandler0000\n");
+    while(1){
+        asm ("hlt \n");
+    };
+    */
+
+    printk("apic_TimerHandler0000\n");
+    //frontbuffer_draw_rectangle( 0, 0, 16, 16, COLOR_BLUE, 0 );
+    local_apic_eoi();
+}
 
 // #todo: 
 // Definir porta 70h usada nesse arquivo. ??
@@ -777,6 +791,11 @@ Note: Common to keep masked until you install an error handler; then unmask.
     );
 
 
+    // #todo
+    // LVT_THERMAL_VECTOR
+    // LVT_CMCI_VECTOR
+
+
 /*
 Spurious-Interrupt Vector Register:
 The Spurious-Interrupt Vector Register contains 
@@ -865,18 +884,16 @@ So:
         getapicbase() );
 */
 
-/*
-    printk("Setup APIC Timer 0 ...\\\\\n");
-    apictim_initialize(lapicbase);
-*/
+
+// Setup apic timer 
 // see: apictim.c
-
 // #todo #bugbug
-// e o timer precisa mudar o vetor 
-// pois 32 ja esta sendo usado pela redirection table.
+// The timer needs another vector number?
+// It's because 32 is already in use in the redirection table.
 
-// Setup apic timer
     apictim_initialize();
+
+    // #breakpoint
     //printk("apictim_initialize: breakpoint\n");
     //while(1){}
 }
