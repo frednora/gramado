@@ -852,8 +852,6 @@ void show_slots(void);
 void show_reg(tid_t tid);
 void show_thread_information(void);
 
-// See: main.c
-void keEarlyRing0IdleThread(void);
 
 // From thread.c
 

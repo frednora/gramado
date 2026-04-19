@@ -364,45 +364,6 @@ static void __setup_utsname(void)
     ksprintf(kernel_utsname.domainname, DOMAIN_NAME);   // "DOMAIN-NAME"
 }
 
-// == Idle thread in ring 0  ===============
-// #suspended
-// #test
-// #bugbug
-// This thread will start to run at the moment when
-// the init process enable the interrupts.
-void keEarlyRing0IdleThread (void)
-{
-// #danger: Do NOT change this function.
-// #bugbug: This thread can't execute complex routine for now.
-    //printk("");  //fail
-
-    //debug_print ("keEarlyRing0IdleThread: w h\n");
-
-    /*
-    unsigned long deviceWidth  = (unsigned long) screenGetWidth();
-    unsigned long deviceHeight = (unsigned long) screenGetHeight();
-    if ( deviceWidth == 0 || deviceHeight == 0 )
-    {
-        debug_print ("keEarlyRing0IdleThread: w h\n");
-        panic       ("keEarlyRing0IdleThread: w h\n");
-    }
-    */
-Loop:
-
-    // acende
-    //backbuffer_draw_rectangle( 0, 0, deviceWidth, 28, COLOR_KERNEL_BACKGROUND );
-    //wink_draw_string(8,8,COLOR_YELLOW," Gramado Operating System ");
-    //refresh_screen();
-
-// relax
-    asm (" sti ");
-    asm (" hlt ");
-// apaga
-    //backbuffer_draw_rectangle( 0, 0, deviceWidth, 28, COLOR_KERNEL_BACKGROUND );
-    //backbuffer_draw_rectangle( 0, 0, deviceWidth, deviceHeight, COLOR_KERNEL_BACKGROUND );  //#bug
-    //refresh_screen();
-    goto Loop;
-}
 
 void init_globals(void)
 {

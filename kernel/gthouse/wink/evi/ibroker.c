@@ -354,6 +354,50 @@ ibroker_set_keymap(
     keymap_extended = p_extended; // new
 }
 
+
+// == Idle thread in ring 0  ===============
+// #suspended
+// #test
+// #bugbug
+// This thread will start to run at the moment when
+// the init process enable the interrupts.
+static void keEarlyRing0IdleThread (void);
+static void keEarlyRing0IdleThread (void)
+{
+// #danger: Do NOT change this function.
+// #bugbug: This thread can't execute complex routine for now.
+    //printk("");  //fail
+
+    //debug_print ("keEarlyRing0IdleThread: w h\n");
+
+    /*
+    unsigned long deviceWidth  = (unsigned long) screenGetWidth();
+    unsigned long deviceHeight = (unsigned long) screenGetHeight();
+    if ( deviceWidth == 0 || deviceHeight == 0 )
+    {
+        debug_print ("keEarlyRing0IdleThread: w h\n");
+        panic       ("keEarlyRing0IdleThread: w h\n");
+    }
+    */
+Loop:
+
+    frontbuffer_draw_rectangle( 0, 0, 16, 16, COLOR_WHITE, 0 );
+
+    // acende
+    //backbuffer_draw_rectangle( 0, 0, deviceWidth, 28, COLOR_KERNEL_BACKGROUND );
+    //wink_draw_string(8,8,COLOR_YELLOW," Gramado Operating System ");
+    //refresh_screen();
+
+// relax
+    //asm (" sti ");
+    //asm (" hlt ");
+// apaga
+    //backbuffer_draw_rectangle( 0, 0, deviceWidth, 28, COLOR_KERNEL_BACKGROUND );
+    //backbuffer_draw_rectangle( 0, 0, deviceWidth, deviceHeight, COLOR_KERNEL_BACKGROUND );  //#bug
+    //refresh_screen();
+    goto Loop;
+}
+
 // Minimal ring 0 thread example
 static void setup_minimal_ring0_thread(void)
 {
@@ -1118,15 +1162,17 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         goto exit_cmp;
     }
 
-/*
+
 // Launch a ring 0 thread
 // #bugbug: We're still working to support ring 0 threads.
+// See: Flags in config.h
+
     if ( kstrncmp( cmdline, "r0-thread", 9 ) == 0 )
     {
-        //setup_minimal_ring0_thread();
+        setup_minimal_ring0_thread();
         goto exit_cmp;
     }
-*/
+
 
 // Test if some AP put the signature in a given address.
     unsigned char *ap_signature_pointer = 
