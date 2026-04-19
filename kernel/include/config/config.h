@@ -278,6 +278,17 @@ Standard Linux Runlevels (0-6)
 #define CONFIG_CURRENT_SCHEDULING_POLICY  \
     __SCHED_POLICY_RR
 
+
+
+//
+// Testing ring 0 threads
+//
+
+#define CONFIG_ALLOW_RING0_THREAD_SPAWN     0
+#define CONFIG_ALLOW_RING0_CONTEXT_SAVE     0
+#define CONFIG_ALLOW_RING0_CONTEXT_RESTORE  0
+
+
 #endif 
 
 

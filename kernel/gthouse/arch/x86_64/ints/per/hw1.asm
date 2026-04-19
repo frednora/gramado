@@ -263,6 +263,8 @@ PeripheralHall_irq0:
 ; calls this interrupt handler can be other than pit, 
 ; it can be local apic timer or hpet for example.
 
+    ;mov r10, qword _irq0_TIMER
+    ;call r10
     call _irq0_TIMER
 
 ; FPU

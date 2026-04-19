@@ -238,7 +238,7 @@ static void __spawn_thread_by_tid_imp(tid_t tid)
 // Target thread
 //
 
-    if ( TargetTID < 0 || TargetTID >= THREAD_COUNT_MAX )
+    if (TargetTID < 0 || TargetTID >= THREAD_COUNT_MAX)
     {
         printk("__spawn_thread_by_tid_imp: TargetTID=%d", TargetTID );  
         keDie();
@@ -255,12 +255,6 @@ static void __spawn_thread_by_tid_imp(tid_t tid)
         panic("__spawn_thread_by_tid_imp: target_thread validation\n");
     }
 
-// Is it a new clone?
-// new clone
-    if (target_thread->new_clone == TRUE){
-        debug_print("__spawn_thread_by_tid_imp: Spawning the flower thread of a new clone\n");
-    }
-
 // Check tid validation
     if (target_thread->tid != TargetTID){
         panic("__spawn_thread_by_tid_imp: target_thread->tid validation\n");
@@ -272,11 +266,15 @@ static void __spawn_thread_by_tid_imp(tid_t tid)
         keDie();
     }
 
-// Saved:
-// If the context is saved, so it is not the first time.
+// Saved? If the context is saved, so it's not the first time.
     if (target_thread->saved == TRUE){
         printk ("__spawn_thread_by_tid_imp: Saved TID={%d}\n", TargetTID );
         keDie();
+    }
+
+// Is it a new clone?
+    if (target_thread->new_clone == TRUE){
+        debug_print("__spawn_thread_by_tid_imp: Spawning the flower thread of a new clone\n");
     }
 
 //
@@ -316,11 +314,11 @@ static void __spawn_thread_by_tid_imp(tid_t tid)
     target_thread->initial_time_ms = 0;
     target_thread->total_time_ms = 0;
 
-// Linked list
-// The next thread will be the window server.
 
-    //target_thread->next = (void *) tid0_thread; 
+// Linked list.
+// Schedule the next thread. The init thread.
     target_thread->next = (void *) InitThread; 
+
 //
 // MOVEMENT 2 (Standby --> Running).
 //
@@ -374,8 +372,7 @@ static void __spawn_thread_by_tid_imp(tid_t tid)
 // Set current thread
 
     set_current_thread(target_thread->tid);
-    if ( current_thread < 0 || 
-         current_thread >= THREAD_COUNT_MAX )
+    if (current_thread < 0 || current_thread >= THREAD_COUNT_MAX)
     {
         panic("__spawn_thread_by_tid_imp: current_thread\n");
     }
@@ -419,6 +416,10 @@ static void __spawn_thread_by_tid_imp(tid_t tid)
 // cpl
 //
 
+// It doesn't run ring 0 threads yet.
+// That’s why ring 0 threads aren’t fully supported yet: 
+// the code explicitly refuses to spawn them.
+
 /*
     if( target_thread->cpl != RING0 && 
         target_thread->cpl != RING3)
@@ -427,10 +428,13 @@ static void __spawn_thread_by_tid_imp(tid_t tid)
     }
 */
 
+
+/*
     if (target_thread->cpl != RING3){
         debug_print("__spawn_thread_by_tid_imp: Invalid cpl\n");
         panic      ("__spawn_thread_by_tid_imp: Invalid cpl\n");
     }
+*/
 
 // ===================
 // ring 0
@@ -438,28 +442,25 @@ static void __spawn_thread_by_tid_imp(tid_t tid)
 // #bugbug
 // We're having problems when receiving syscalls from ring0.
 // Our system interrupt is only for ring3 processes.
+// Or when running a ring 0 thread the timer can fires 
+// and lead us to this place.
 
     if (target_thread->cpl == RING0)
     {
+        if (CONFIG_ALLOW_RING0_THREAD_SPAWN != 1)
+        {
+            debug_print("__spawn_thread_by_tid_imp: RING0\n");
+            panic      ("__spawn_thread_by_tid_imp: RING0 not supported yet\n");
+        }
+
+        // Here is the big moment, where we launch a ring 0 thread.
         // ring0 --> ring0 ?
         // No prob, this time!
         target_thread->transition_counter.to_supervisor++;
-
-        // #bugbug
-        // Suspended.
-        // We're not running threads in ring0 for now.
-
-        //#debug
-        debug_print("__spawn_thread_by_tid_imp: RING0\n");
-        //printk     ("spawn_thread: RING0\n");
-        //debug_print("spawn_thread: RING0 not supported yet\n");
-        panic      ("__spawn_thread_by_tid_imp: RING0 not supported yet\n");
-
-        // #suspended
-        //__spawn_enter_kernelmode( 
-        //    TRUE,  // EOI
-        //    (unsigned long) target_thread->context.rip,
-        //    (unsigned long) target_thread->context.rsp );
+        __spawn_enter_kernelmode( 
+            TRUE,  // EOI
+            (unsigned long) target_thread->context.rip,
+            (unsigned long) target_thread->context.rsp );
     }
 
     // #debug
@@ -476,14 +477,14 @@ static void __spawn_thread_by_tid_imp(tid_t tid)
 // ===================
 // ring 1
 
-    //if ( target_thread->cpl == RING1 )
-    //    panic("spawn_thread: ring1\n");
+    if ( target_thread->cpl == RING1 )
+        panic("__spawn_thread_by_tid_imp: ring1\n");
 
 // ===================
 // ring 2
 
-    //if ( target_thread->cpl == RING2 )
-    //    panic("spawn_thread: ring2\n");
+    if ( target_thread->cpl == RING2 )
+        panic("__spawn_thread_by_tid_imp: ring2\n");
 
 // ===================
 // ring 3

@@ -276,9 +276,9 @@ irq0_release:
 
     ; Compare
     cmp rax, 3
-    je .restore_user_mode
+    je .restore_user_mode      ; It is a ring 3 thread
     cmp rax, 0
-    je .restore_kernel_mode
+    je .restore_kernel_mode    ; It is a ring 0 thread
     jmp .InvalidThread
 
 ; Stack frame. (all double)

@@ -1,0 +1,22 @@
+
+ Notes on ring 0 threads support.
+
+Some flags inside the kernel stops the kernel to run ring 0 threads:
+ + Save and Restore context in x64cont.c 
+ + __spawn_thread_by_tid_imp in spawn.c 
+
+
+Config flags?
+
+  Spawn side: 
+  CONFIG_ALLOW_RING0_THREAD_SPAWN decides whether kernel threads can even be launched.
+
+  Save side: 
+  CONFIG_ALLOW_RING0_CONTEXT_SAVE decides whether the timer interrupt will 
+  actually save a ring 0 thread’s registers instead of panicking.
+
+  Restore side: 
+  CONFIG_ALLOW_RING0_CONTEXT_RESTORE decides whether the scheduler 
+  can restore a ring 0 thread’s state and resume it.
+ 
+ 

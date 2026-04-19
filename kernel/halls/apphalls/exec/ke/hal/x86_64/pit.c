@@ -197,21 +197,22 @@ irq0_TIMER (void)
 // manually invoke their handlers here. 
 // (1000 times per second).
 
+    // Keyboard
     int keyboard_pooling_status = (int) i8042_IsPS2KeyboardPooling();
-    int mouse_pooling_status = (int) i8042_IsPS2MousePooling(); 
     if (keyboard_pooling_status == TRUE){
         irq1_KEYBOARD();
     }
+    // Mouse
+    int mouse_pooling_status = (int) i8042_IsPS2MousePooling(); 
     if (mouse_pooling_status == TRUE){
         irq12_MOUSE();
     }
 
-// OEI?
+// EOI?
 // The key idea is that sometimes the spawn routine 
 // (when creating a new thread during the timer interrupt) must send the EOI itself, 
 // because you’re still inside the PIT handler. Other times, 
 // the assembly epilogue will send the EOI automatically when returning from the interrupt.
-
 
 // --- Task switching and spawn handling --- 
 // 

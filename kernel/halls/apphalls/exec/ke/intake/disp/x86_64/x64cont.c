@@ -116,7 +116,7 @@ void save_current_context (void)
         goto fail0;
     }
 
-// The thread structure.
+// The thread structure
     t = (void *) threadList[current_thread];
     if ((void *) t == NULL){
         printk ("save_current_context: [ERROR] Struct Thread={%d}\n",
@@ -202,10 +202,18 @@ void save_current_context (void)
         panic("save_current_context: cpl\n");
     }
 
+// It doesn't run ring 0 threads yet.
+// That’s why ring 0 threads aren’t fully supported yet: 
+// the code explicitly refuses to save them.
+
 // Isso significa que um thread que estava rodando em ring0,
 // foi interrompida e teve seu contexto salvo por essa rotina.
-    if (cpl == 0){
-        panic("save_current_context: cpl 0\n");
+    if (cpl == 0)
+    {
+        if (CONFIG_ALLOW_RING0_CONTEXT_SAVE != 1){
+            panic("save_current_context: cpl 0\n");
+        }
+        t->transition_counter.to_supervisor++;
     }
     if (cpl == 1){
         panic("save_current_context: cpl 1\n");
@@ -343,9 +351,32 @@ void restore_current_context (void)
         context_fpu_buffer[i] = (unsigned char) t->context.fpu_buffer[i];
     };
 
+
+// It doesn't run ring 0 threads yet.
+// That’s why ring 0 threads aren’t fully supported yet: 
+// the code explicitly refuses to restore them.
+
+/*
 // Is ring3?
     if (t->cpl != 3){
-       panic ("restore_current_context: t->cpl\n");
+    }
+*/
+
+// Transition counter
+    if (t->cpl == 0)
+    {
+        if (CONFIG_ALLOW_RING0_CONTEXT_RESTORE != 1){
+            panic ("restore_current_context: t->cpl 0\n");
+        }
+        t->transition_counter.to_supervisor++;
+    }
+// Transition counter
+    if (t->cpl == 1){
+       panic ("restore_current_context: t->cpl 1\n");
+    }
+// Transition counter
+    if (t->cpl == 2){
+       panic ("restore_current_context: t->cpl 2\n");
     }
 // Transition counter
     if (t->cpl == 3){
