@@ -148,5 +148,12 @@ irq1_KEYBOARD (void)
     if (CurrentThread->state != RUNNING && CurrentThread->state != READY)
         panic ("K");
 */
+
+
+    // #test
+    // apic eoi
+    if (CONFIG_INITIALIZE_IOAPIC_UNMASK_KBD == 1)
+        local_apic_eoi();
+
 }
 

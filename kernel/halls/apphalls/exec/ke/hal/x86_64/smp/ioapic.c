@@ -214,9 +214,9 @@ __set_ioapic_redir_table(
     return 0;
 }
 
+// Initialize the redirection table
 static int __ioapic_initialize_redirection_table(int maximum_redirection)
 {
-// Initialize the redirection table.
 // Called by __setup_ioapic().
 
     // 24
@@ -237,9 +237,6 @@ static int __ioapic_initialize_redirection_table(int maximum_redirection)
 // --------------------------
 // Install 24 entries
 // starting at '32'. Why? 
-// maybe 32, that is where the IRQs starts in Gramado.
-// The purpose here is only setup the redirection table.
-// changing the values for the 24 entries.
 
 // 0x00 --> 32
 // 0x01 --> 33
@@ -255,7 +252,7 @@ static int __ioapic_initialize_redirection_table(int maximum_redirection)
             //}
             // else
             
-            // Escrene na tabela e configura registradores.
+            // Escreve na tabela e configura registradores.
 	        __set_ioapic_redir_table(
 	            i,         // IRQn
 	            (First + i),  // vector
@@ -273,10 +270,10 @@ static int __ioapic_initialize_redirection_table(int maximum_redirection)
     return 0;
 }
 
-
+// Worker
 static int __setup_ioapic(void)
 {
-// Called by enable_ioapic().
+// Called by ioapic_initialize().
 
     if (IOAPIC.initialized != TRUE)
         panic("__setup_ioapic: It depends on IOAPIC.initialized\n");
@@ -313,8 +310,14 @@ static int __setup_ioapic(void)
     if (MaximumRedirection > 24)
         panic("__setup_ioapic: MaximumRedirection\n");
 
-// Initialize the redirection table.
+// Initialize the redirection table
     __ioapic_initialize_redirection_table(MaximumRedirection);
+
+
+    if (CONFIG_INITIALIZE_IOAPIC_UNMASK_KBD == 1)
+        ioapic_umasked(1);
+    if (CONFIG_INITIALIZE_IOAPIC_UNMASK_MOUSE == 1)
+        ioapic_umasked(12);
 
     return 0;
 }
@@ -322,16 +325,16 @@ static int __setup_ioapic(void)
 // Initialize IOAPIC once — this is BSP’s job, not repeated per AP.
 void ioapic_initialize(void)
 {
-// Called by I_kmain() in kmain.c.
+// Called by archinit() in kmain.c.
 
-    printk("enable_ioapic:\n");
+    printk("ioapic_initialize:\n");
 
-// It depends on LAPIC.
-    if (BSP_LAPIC.initialized != TRUE)
-        panic ("enable_ioapic: It depends on BSP_LAPIC.initialized\n");
-
-// Not initialized yet.
+// Not initialized yet
     IOAPIC.initialized = FALSE;
+
+// It depends on LAPIC
+    if (BSP_LAPIC.initialized != TRUE)
+        panic ("ioapic_initialize: It depends on BSP_LAPIC.initialized\n");
 
 // ===================
 // Mapping
@@ -341,14 +344,14 @@ void ioapic_initialize(void)
 // que servira de base para criarmos uma pagetable.
 // Mas endereço físico e virtual são iguais nessa região.
 // Identidade 1:1.
-    unsigned long *pt_ioapic = 
-        (unsigned long *) get_table_pointer_va();
+    unsigned long *pt_ioapic = (unsigned long *) get_table_pointer_va();
 
 // -------------
 // pa
 // #warning: Hard coded.
 // see: ioapic.h
     IOAPIC.ioapic_pa = (unsigned long) (IO_APIC_BASE & 0xFFFFFFFF);
+
 // -------------
 // va
 // see: x64gva.h
@@ -363,7 +366,7 @@ void ioapic_initialize(void)
             IOAPIC.ioapic_pa,
             IOAPIC.ioapic_va );
     if (map_status != 0)
-        panic("enable_ioapic: on mm_map_2mb_region()\n");
+        panic("ioapic_initialize: on mm_map_2mb_region()\n");
 
 // OK, the structure is initialized,
 // now this module can use the values in it.

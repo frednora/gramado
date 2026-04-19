@@ -146,5 +146,10 @@ irq12_MOUSE (void)
         panic ("M");
 */
 
+    // #test
+    // apic eoi
+    if (CONFIG_INITIALIZE_IOAPIC_UNMASK_MOUSE == 1)
+        local_apic_eoi();
+
 }
 

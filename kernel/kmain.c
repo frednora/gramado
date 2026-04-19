@@ -167,6 +167,9 @@ void ap_entry_point00(void)
 
     asm ("cli");
 
+// #test: Pausing the ap forever.
+    //asm (" hlt ");
+
 // Make some very basic initialization,
 // just like the GDT.
     //asm_AP_early_initialization();
@@ -927,14 +930,17 @@ static int archinit(void)
             // #todo
             // Setup ioapic.
             // see: ioapic.c
-            //if (CONFIG_INITIALIZE_IOAPIC == 1)
-            //{
+            if (CONFIG_INITIALIZE_IOAPIC == 1)
+            {
                 // #todo
                 // Isso configura o timer ...
                 // e o timer precisa mudar o vetor 
                 // pois 32 ja esta sendo usado pela redirection table.
-                //ioapic_initialize();
-            //}
+                
+                // This setup a redirection table ...
+                // But we need to unmask the devices we wanna use.
+                ioapic_initialize();
+            }
 
             // #debug
             // Show cpu info.

@@ -110,6 +110,11 @@
 #define CONFIG_INITIALIZE_APIC    0  // Enable apic and timer
 #define CONFIG_UNMASK_APICTIMER   0 
 #define CONFIG_INITIALIZE_IOAPIC  0
+#define CONFIG_INITIALIZE_IOAPIC_UNMASK_KBD  0
+#define CONFIG_INITIALIZE_IOAPIC_UNMASK_MOUSE  0
+// #todo:
+// Do the same for the other interrupts.
+// We need to unmask it in ioapic.c and implement the eoi in the handler.
 // ...
 
 // ------------------------------------------------------
