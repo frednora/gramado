@@ -211,24 +211,26 @@ int x64smp_initialization(void)
 // It was not possible to find the address.
 // Can't initialize LAPIC.
 
+
     // If probed via mptable
     if (smp_info.probe_via == SMP_VIA_MP_TABLE){
         if (LAPIC_address_via_mptable == 0)
             goto fail;    
-        lapic_initializing(LAPIC_address_via_mptable,0);
+        lapic_info_initializing(LAPIC_address_via_mptable);
 
     // If probed via acpi
     } else {
         if (LAPIC_address_via_acpi == 0)
             goto fail;    
-        lapic_initializing(LAPIC_address_via_acpi,0);
+        lapic_info_initializing(LAPIC_address_via_acpi);
     };
 
+// The bsp
 // Check the lapix initialization status
-    if (BSP_LAPIC.initialized == TRUE){
+    if (lapic_info[0].initialized == TRUE){
         printk("x64smp_initialization: lapic initialization ok\n");
         return TRUE;
-    } else if (BSP_LAPIC.initialized != TRUE){
+    } else if (lapic_info[0].initialized != TRUE){
         printk("x64smp_initialization: lapic initialization fail\n");
         return FALSE;
     }

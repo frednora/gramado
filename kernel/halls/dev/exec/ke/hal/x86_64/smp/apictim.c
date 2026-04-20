@@ -22,8 +22,8 @@
 
 static unsigned int apic_timer_ticks=0;
 
-static unsigned int __apictim_read_command(unsigned short addr);
-static void __apictim_write_command(unsigned short addr,unsigned int val);
+static unsigned int __apictim_read_command(unsigned short addr, int lapic_info_id);
+static void __apictim_write_command(unsigned short addr,unsigned int val, int lapic_info_id);
 
 // #todo: Move from this document.
 static void __pit_prepare_sleep(int hz);
@@ -37,7 +37,7 @@ static void __pit_perform_sleep(void);
 
 // Configure LAPIC timer in periodic mode.
 // Pass `masked = 1` to start masked, `masked = 0` to start unmasked.
-void apic_timer_setup_periodic(unsigned int vector, int masked)
+void apic_timer_setup_periodic(unsigned int vector, int masked, int lapic_info_id)
 {
     unsigned int val =
         APIC_TIMER_CONFIG_DATA_LVT(
@@ -50,8 +50,9 @@ void apic_timer_setup_periodic(unsigned int vector, int masked)
             vector & 0xFF  // Vector (e.g. 220)
         );
 
-    __apictim_write_command(LAPIC_LVT_TIMER, val);
+    __apictim_write_command(LAPIC_LVT_TIMER, val, lapic_info_id);
 }
+
 
 /*
 PC Speaker Control:
@@ -106,41 +107,44 @@ static void __pit_perform_sleep(void)
     };
 }
 
-// #todo: 
-// Definir porta 70h usada nesse arquivo. ??
-static unsigned int __apictim_read_command(unsigned short addr)
-{
-    if( (void *) BSP_LAPIC.lapic_va == NULL ){
-        panic("__apictim_read_command: BSP_LAPIC.lapic_va\n");
-    }
-
-    return *( (volatile unsigned int *)(BSP_LAPIC.lapic_va + addr));
-}
-
-static void __apictim_write_command(unsigned short addr,unsigned int val)
-{
-    if( (void *) BSP_LAPIC.lapic_va == NULL ){
-        panic("__apictim_write_command: BSP_LAPIC.lapic_va\n");
-    }
-
-    *( (volatile unsigned int *)(BSP_LAPIC.lapic_va + addr)) = val;
-}
-
-void apic_initial_count_timer(int value)
+void apic_initial_count_timer(int value, int lapic_info_id)
 {
     __apictim_write_command( 
         LAPIC_INITIAL_COUNT_TIMER, 
-        value);
+        value, 
+        lapic_info_id 
+    );
 }
 
-void apic_timer_umasked(void)
+// #todo: 
+// Definir porta 70h usada nesse arquivo. ??
+static unsigned int __apictim_read_command(unsigned short addr, int lapic_info_id)
+{
+    if( (void *) lapic_info[lapic_info_id].lapic_va == NULL ){
+        panic("__apictim_read_command: lapic_info[lapic_info_id].lapic_va\n");
+    }
+
+    return *( (volatile unsigned int *)(lapic_info[lapic_info_id].lapic_va + addr));
+}
+
+static void __apictim_write_command(unsigned short addr,unsigned int val, int lapic_info_id)
+{
+    if( (void *) lapic_info[lapic_info_id].lapic_va == NULL ){
+        panic("__apictim_write_command: lapic_info[lapic_info_id].lapic_va\n");
+    }
+
+    *( (volatile unsigned int *)(lapic_info[lapic_info_id].lapic_va + addr)) = val;
+}
+
+void apic_timer_umasked(int lapic_info_id)
 {
     unsigned int data = 
-        __apictim_read_command(LAPIC_LVT_TIMER);
+        __apictim_read_command(LAPIC_LVT_TIMER, lapic_info_id);
 
     __apictim_write_command( 
         LAPIC_LVT_TIMER, 
-        data & 0xFFFEFFFF );
+        data & 0xFFFEFFFF, 
+        lapic_info_id );
 
 	//Divide Configuration Register, to divide by 128 0xA divide by 32 0x8
 	//local_apic_write_command( APIC_DIVIDE_TIMER, 0xA);
@@ -150,10 +154,14 @@ void apic_timer_umasked(void)
 	
 }
 
-void apic_timer_masked(void)
+void apic_timer_masked(int lapic_info_id)
 {
-	unsigned int data = __apictim_read_command(LAPIC_LVT_TIMER);
-	__apictim_write_command( LAPIC_LVT_TIMER, data | 1 << 16);
+	unsigned int data = __apictim_read_command(LAPIC_LVT_TIMER, lapic_info_id);
+	__apictim_write_command( 
+        LAPIC_LVT_TIMER, 
+        data | 1 << 16, 
+        lapic_info_id 
+    );
 }
 
 //
@@ -162,7 +170,7 @@ void apic_timer_masked(void)
 //
 
 // Initialize apic timer
-int apictim_initialize(void)
+int apictim_initialize(int lapic_info_id)
 {
 // Called by apic_initialize() in apic.c.
 // + make a test using one shot mode
@@ -187,12 +195,13 @@ int apictim_initialize(void)
             APIC_TIMER_NULL,
             LVT_TIMER_VECTOR   //220  //  (Vector) 
             );
-    __apictim_write_command(LAPIC_LVT_TIMER, val);
+    __apictim_write_command(LAPIC_LVT_TIMER, val, lapic_info_id);
 
 // --------------------------------------------------
 // 2 -Set divide configuration:
 // Divide Configuration Register, to divide by 16
-    __apictim_write_command(LAPIC_DIVIDE_TIMER, 0x3);
+    __apictim_write_command(LAPIC_DIVIDE_TIMER, 0x3, lapic_info_id);
+
 
 // --------------------------------------------------
 // 3 - Prepare PIT for sleep (calibration aid):
@@ -206,14 +215,15 @@ int apictim_initialize(void)
 // 4 - Reset LAPIC timer (Initial Count = 0xFFFFFFFF):
 // Reset APIC Timer (set counter to -1)
 // Starts the LAPIC timer counting down from max.
-    __apictim_write_command( LAPIC_INITIAL_COUNT_TIMER, 0xFFFFFFFF );
+    __apictim_write_command( LAPIC_INITIAL_COUNT_TIMER, 0xFFFFFFFF, lapic_info_id );
 
 // 5 - Read Current Count to measure elapsed ticks:
 // This gives you how many ticks elapsed during the PIT sleep. 
 // That’s the calibration step.
 // Right after the RESET
 // Get current counter value.
-    apic_timer_ticks = __apictim_read_command(LAPIC_CURRENT_COUNT_TIMER);
+    apic_timer_ticks = 
+        __apictim_read_command(LAPIC_CURRENT_COUNT_TIMER, lapic_info_id);
 // It is counted down from -1, make it positive
     apic_timer_ticks = 0xFFFFFFFF - apic_timer_ticks;
     apic_timer_ticks++;
@@ -230,13 +240,14 @@ int apictim_initialize(void)
 // == STOP ======================================================
 // 7 - Stop LAPIC timer (mask it):
 // Masks the LVT Timer entry.
-    __apictim_write_command( LAPIC_LVT_TIMER, (1 << 16) );
+    __apictim_write_command( LAPIC_LVT_TIMER, (1 << 16), lapic_info_id );
 
 // 8 - Read Current Count again:
 // Another calibration sample, printed out.
 // Right after the STOP
 // Get current counter value.
-    apic_timer_ticks = __apictim_read_command(LAPIC_CURRENT_COUNT_TIMER);
+    apic_timer_ticks = 
+        __apictim_read_command(LAPIC_CURRENT_COUNT_TIMER, lapic_info_id);
 // It is counted down from -1, make it positive
     apic_timer_ticks = 0xFFFFFFFF - apic_timer_ticks;
     apic_timer_ticks++;
@@ -258,14 +269,14 @@ int apictim_initialize(void)
 	        APIC_TIMER_NULL,
 	        LVT_TIMER_VECTOR  //220  //  (Vector)
             );
-    __apictim_write_command(LAPIC_LVT_TIMER, val);
+    __apictim_write_command(LAPIC_LVT_TIMER, val, lapic_info_id);
 
 // --------------------------------------------------
 // 10 - Set divide register again (optional, hardware quirk):
 // Setting divide value register again not needed by the manuals
 // Although I have found buggy hardware that required it
 //  // divide by 128
-    __apictim_write_command(LAPIC_DIVIDE_TIMER, 0xa);  // Option: 0x3
+    __apictim_write_command(LAPIC_DIVIDE_TIMER, 0xa, lapic_info_id);  // Option: 0x3
 
 // --------------------------------------------------
 // 11 - Load Initial Count for periodic ticks:
@@ -273,7 +284,7 @@ int apictim_initialize(void)
 // Now eax holds appropriate number of ticks, 
 // use it as APIC timer counter initializer.
     apic_timer_ticks = 1000;
-    __apictim_write_command(LAPIC_INITIAL_COUNT_TIMER, apic_timer_ticks);
+    __apictim_write_command(LAPIC_INITIAL_COUNT_TIMER, apic_timer_ticks, lapic_info_id);
 
 
 // #test
@@ -282,7 +293,7 @@ int apictim_initialize(void)
 // #bugbug: maybe its unsafe to do this here 
 // it needs to be at the end of the kernel initialization.
     if (CONFIG_UNMASK_APICTIMER == 1)
-        apic_timer_umasked();
+        apic_timer_umasked(lapic_info_id);
     apic_SPINLOCK = FALSE;  // Unlocked
 
     return 0;

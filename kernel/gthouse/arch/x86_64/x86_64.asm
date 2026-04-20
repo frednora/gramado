@@ -77,8 +77,11 @@ PeripheralHall_lapic_timer_handler:
     mov r10, qword _apic_TimerHandler0000
     call r10
 
+    push rdi
     ; Call the C routine to write EOI
+    mov rdi, 0 ; BSP
     call _local_apic_eoi
+    pop rdi
 
     fxrstor [__sw_local_fpu_buffer_apic_timer]
 
@@ -118,8 +121,11 @@ PeripheralHall_lapic_perf_handler:
 
     ; ... optional profiling bump/counter ...
 
+    push rdi
     ; Call the C routine to write EOI
+    mov rdi, 0 ; BSP
     call _local_apic_eoi
+    pop rdi
 
 
     pop rdx
@@ -138,8 +144,11 @@ PeripheralHall_lapic_lint0_handler:
     ; If you actually route ExtINT, you’d cascade to 8259 handler.
     ; In modern IOAPIC setups, LINT0 stays masked.
 
+    push rdi
     ; Call the C routine to write EOI
+    mov rdi, 0 ; BSP
     call _local_apic_eoi
+    pop rdi
 
     pop rdx
     pop rcx
@@ -158,9 +167,13 @@ PeripheralHall_lapic_nmi_handler:
     ; Minimal, fast handling. Avoid heavy work here.
     ; Log or signal, then return.
 
+    push rdi
     ; EOI (safe, even for NMI)
     ; Call the C routine to write EOI
+    ; Call the C routine to write EOI
+    mov rdi, 0 ; BSP
     call _local_apic_eoi
+    pop rdi
 
 
     pop rdx
@@ -179,10 +192,13 @@ PeripheralHall_lapic_error_handler:
     ; Optionally read LAPIC ESR (Error Status Register) to clear latched errors.
     ; Write to ESR (read-after-write) sequence if you implement it.
 
+    push rdi
     ; EOI required
     ; Call the C routine to write EOI
+    ; Call the C routine to write EOI
+    mov rdi, 0 ; BSP
     call _local_apic_eoi
-
+    pop rdi
 
     pop rdx
     pop rcx
@@ -199,10 +215,13 @@ PeripheralHall_lapic_thermal_handler:
 
     ; Handle/record thermal event, throttle, etc.
 
+    push rdi
     ; EOI required
     ; Call the C routine to write EOI
+    ; Call the C routine to write EOI
+    mov rdi, 0 ; BSP
     call _local_apic_eoi
-
+    pop rdi
 
     pop rdx
     pop rcx

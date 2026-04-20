@@ -812,14 +812,18 @@ static int __test_initialize_ap_processor(int apic_id)
         printk("Updating shared area ...\n");
         ap_shmm[0] = (unsigned long) &ap_entry_point00; 
 
+        //int target_index = 1;  // array slot for the first AP
+        //unsigned int apic_id = lapic_info[target_index].local_id;
+
         // (Step 2)
         printk("Sending INIT IPI ...\n");
-        local_apic_send_startup(1,vector);  // APIC ID 1
+        local_apic_send_startup(1,vector,1);  // APIC ID 1, lapic_info index 0
 
         // (Step 3)
         printk("Sending STARTUP IPI twice ...\n");
         refresh_screen(); //wait
-        Send_STARTUP_IPI_Twice(1);
+        // IN: apic id, lapic info id
+        Send_STARTUP_IPI_Twice(1, 1);  // APIC ID 1, lapic_info index 0
 
         // Check if we have at least one AP running.
         // #todo
@@ -906,6 +910,7 @@ static int archinit(void)
 
         // UP mode
         // No SMP support at all
+        // #todo
 
     } else {
 
@@ -931,7 +936,8 @@ static int archinit(void)
         if (CONFIG_INITIALIZE_APIC == 1)
         {
             // Enable apic and timer
-            if (BSP_LAPIC.initialized == TRUE)
+            // Target: BSP cpu
+            if (lapic_info[0].initialized == TRUE)
                 apic_setup_registers(0);  // #todo: id in parameter.
             //printk("kmain: breakpoint on apic_setup_registers()\n");
             //while(1){}

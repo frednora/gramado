@@ -149,7 +149,7 @@ irq12_MOUSE (void)
     // #test
     // apic eoi
     if (CONFIG_INITIALIZE_IOAPIC_UNMASK_MOUSE == 1)
-        local_apic_eoi();
+        local_apic_eoi(0);  // BSP
 
 }
 

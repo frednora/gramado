@@ -64,6 +64,11 @@ irq14_PRIMARY_IDE (void)
 {
     //debug_print("irq14_PRIMARY_IDE:\n");
     DeviceInterface_PrimaryIDE();
+
+    // #test
+    // apic eoi
+    if (CONFIG_INITIALIZE_IOAPIC_UNMASK_PRIMARY_IDE == 1)
+        local_apic_eoi(0);  // BSP
 }
 
 // Interrupt handler.
@@ -72,6 +77,11 @@ irq15_SECONDARY_IDE (void)
 {
     //debug_print("irq15_SECONDARY_IDE:\n");
     DeviceInterface_SecondaryIDE();
+
+    // #test
+    // apic eoi
+    if (CONFIG_INITIALIZE_IOAPIC_UNMASK_SECONDARY_IDE == 1)
+        local_apic_eoi(0);  // BSP
 }
 
 

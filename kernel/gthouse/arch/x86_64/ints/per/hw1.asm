@@ -263,20 +263,19 @@ PeripheralHall_irq0:
 ; calls this interrupt handler can be other than pit, 
 ; it can be local apic timer or hpet for example.
 
-    ;mov r10, qword _irq0_TIMER
-    ;call r10
-    call _irq0_TIMER
+    mov r10, qword _irq0_TIMER
+    call r10
+    ;call _irq0_TIMER
 
 ; FPU
     fxrstor [_context_fpu_buffer]
 
 ; Release a bandit.
 ; see: hw2.asm
-
     jmp irq0_release
+
 ; --------------------------------------
 .InvalidThread:
-    ; #todo: Call a fancy worker
     cli
     hlt
     jmp .InvalidThread

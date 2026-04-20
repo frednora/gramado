@@ -229,10 +229,10 @@ static int __ioapic_initialize_redirection_table(int maximum_redirection)
         panic("__ioapic_initialize_redirection_table: Max\n");
 
 
-    if (BSP_LAPIC.initialized != TRUE)
-        panic("__ioapic_initialize_redirection_table: It depends on BSP_LAPIC.initialized\n");
+    if (lapic_info[0].initialized != TRUE)
+        panic("__ioapic_initialize_redirection_table: It depends on lapic_info[0].initialized\n");
 
-    unsigned int id = (unsigned int) BSP_LAPIC.local_id;
+    unsigned int id = (unsigned int) lapic_info[0].local_id;
 
 // --------------------------
 // Install 24 entries
@@ -299,9 +299,9 @@ static int __setup_ioapic(void)
 
 // -------------------------
 // Set the id of the lapic.
-    if (BSP_LAPIC.initialized != TRUE)
-        panic("__setup_ioapic: It depends on BSP_LAPIC.initialized\n");
-    unsigned int id = (unsigned int) BSP_LAPIC.local_id;
+    if (lapic_info[0].initialized != TRUE)
+        panic("__setup_ioapic: It depends on lapic_info[0].initialized\n");
+    unsigned int id = (unsigned int) lapic_info[0].local_id;
     write_ioapic_register(IO_APIC_ID,id);
 
 // -------------------------
@@ -318,6 +318,10 @@ static int __setup_ioapic(void)
         ioapic_umasked(1);
     if (CONFIG_INITIALIZE_IOAPIC_UNMASK_MOUSE == 1)
         ioapic_umasked(12);
+    if (CONFIG_INITIALIZE_IOAPIC_UNMASK_PRIMARY_IDE == 1)
+        ioapic_umasked(14);
+    if (CONFIG_INITIALIZE_IOAPIC_UNMASK_SECONDARY_IDE == 1)
+        ioapic_umasked(15);
 
     return 0;
 }
@@ -333,8 +337,8 @@ void ioapic_initialize(void)
     IOAPIC.initialized = FALSE;
 
 // It depends on LAPIC
-    if (BSP_LAPIC.initialized != TRUE)
-        panic ("ioapic_initialize: It depends on BSP_LAPIC.initialized\n");
+    if (lapic_info[0].initialized != TRUE)
+        panic ("ioapic_initialize: It depends on lapic_info[0].initialized\n");
 
 // ===================
 // Mapping
