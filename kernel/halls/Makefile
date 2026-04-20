@@ -4,6 +4,13 @@ all:
 
 
 #
+# platform
+#
+
+	make -C platform/acpi/
+	make -C platform/bus/
+
+#
 # app halls
 #
 
@@ -19,7 +26,6 @@ all:
 	make -C apphalls/per/netdev/
 	make -C apphalls/per/fs/
 	make -C apphalls/per/net/
-	make -C apphalls/per/bus/
 	make -C apphalls/per/
 
 #

@@ -1,0 +1,7 @@
+
+It is an open industry specification that acts as 
+an interface between the operating system and 
+platform firmware (BIOS/UEFI). 
+It is primarily used for power management and device enumeration, 
+not as a physical bus communication standard.
+

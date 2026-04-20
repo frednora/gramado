@@ -86,7 +86,7 @@ x64fault.o x64smp.o \
 apic.o apictim.o ioapic.o \
 cpu.o \
 cpuid.o \
-mpfloat.o acpi.o \
+mps.o \
 detect.o \
 ipc.o \
 ports64.o rtc.o \
@@ -139,8 +139,8 @@ all:
 # hal/x86_64/ (HAL)
 
 # SMP support
-	$(CC) -c hal/x86_64/smp/mpfloat.c  $(KERNEL_INCLUDE) $(CFLAGS) -o mpfloat.o
-	$(CC) -c hal/x86_64/smp/acpi.c     $(KERNEL_INCLUDE) $(CFLAGS) -o acpi.o
+	$(CC) -c hal/x86_64/smp/mps.c  $(KERNEL_INCLUDE) $(CFLAGS) -o mps.o
+
 	$(CC) -c hal/x86_64/smp/apic.c     $(KERNEL_INCLUDE) $(CFLAGS) -o apic.o
 	$(CC) -c hal/x86_64/smp/apictim.c  $(KERNEL_INCLUDE) $(CFLAGS) -o apictim.o
 	$(CC) -c hal/x86_64/smp/ioapic.c   $(KERNEL_INCLUDE) $(CFLAGS) -o ioapic.o

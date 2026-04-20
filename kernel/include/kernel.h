@@ -145,22 +145,28 @@
 #include "../gthouse/kwrap/virt/hv.h"
 
 // ==========================================
+#include "../halls/platform/acpi/acpi.h"
+
+// ==========================================
 // hal/arm/
 // #include "../halls/apphalls/exec/ke/hal/arm/archhal.h"
 
 // ==========================================
 // hal/x86_64/
 #include "../halls/apphalls/exec/ke/hal/x86_64/cpuid.h"
+
 #include "../halls/apphalls/exec/ke/hal/x86_64/up/up.h"
-#include "../halls/apphalls/exec/ke/hal/x86_64/smp/mpfloat.h"
-#include "../halls/apphalls/exec/ke/hal/x86_64/smp/acpi.h"
+
+#include "../halls/apphalls/exec/ke/hal/x86_64/smp/mps.h"
 #include "../halls/apphalls/exec/ke/hal/x86_64/smp/x64smp.h"
-#include "../halls/apphalls/exec/ke/hal/x86_64/pic.h"
 #include "../halls/apphalls/exec/ke/hal/x86_64/smp/apic.h"
 #include "../halls/apphalls/exec/ke/hal/x86_64/smp/apictim.h"
 #include "../halls/apphalls/exec/ke/hal/x86_64/smp/ioapic.h"
+
+#include "../halls/apphalls/exec/ke/hal/x86_64/pic.h"
 #include "../halls/apphalls/exec/ke/hal/x86_64/pit.h"
 #include "../halls/apphalls/exec/ke/hal/x86_64/rtc.h"
+
 #include "../halls/apphalls/exec/ke/hal/x86_64/breaker.h"
 #include "../halls/apphalls/exec/ke/hal/x86_64/archhal.h"
 
@@ -169,10 +175,11 @@
 #include "../halls/apphalls/exec/ke/hal/hal.h"
 
 // ==================================
-// apphalls/per/bus/
-// PCI bus.
-#include "../halls/apphalls/per/bus/pci/pci.h"
-#include "../halls/apphalls/per/bus/bus.h"
+// bus/
+#include "../halls/platform/bus/pci/pci.h"
+//#include "../halls/platform/bus/usb/usb.h"
+//...
+#include "../halls/platform/bus/bus.h"
 
 // ==================================
 // apphalls/per/

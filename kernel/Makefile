@@ -122,8 +122,11 @@ objects-y += chardev.o
 objects-y += blkdev.o  
 
 objects-y += p3_mm.o  
-objects-y += p3_net.o    
+objects-y += p3_net.o  
+
+objects-y += acpi.o  
 objects-y += p3_bus.o  
+
 objects-y += p3_dev.o  
 objects-y += p3_fs.o  
 

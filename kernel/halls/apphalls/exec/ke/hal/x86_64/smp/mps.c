@@ -1,8 +1,10 @@
-// mpfloat.c
+// mps.c
+// Intel Multiprocessor Specification
 // MP Floating Pointer table support.
 // Created by Fred Nora.
 
-// https://wiki.osdev.org/Symmetric_Multiprocessing
+// See:
+// https://en.wikipedia.org/wiki/MultiProcessor_Specification
 
 // #test
 // The routines are running on Qemu.

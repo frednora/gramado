@@ -1,6 +1,10 @@
-// mpfloat.h
+// mps.h
+// Intel Multiprocessor Specification
 // MP Floating Pointer table support.
 // Created by Fred Nora.
+
+// See:
+// https://en.wikipedia.org/wiki/MultiProcessor_Specification
 
 
 #ifndef __SMP_MPFLOAT_H
