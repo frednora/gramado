@@ -1,10 +1,16 @@
-# Compile stuff in outside/
+
 
 all:
 
-	make -C cpp00/
-# todo: udrivers?
+	make -C reboot/
+	make -C pubsh/
+	make -C sh7/
+	make -C shell/
+	make -C shell2/
+	make -C shutdown/
+	make -C uname/
+
 
 clean:
-	-rm cpp00/bin/*.BIN
+	-rm -f bin/*.BIN 
 

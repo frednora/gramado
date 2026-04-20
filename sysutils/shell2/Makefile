@@ -95,10 +95,10 @@ CFLAGS := \
 	-mno-mmx -mno-sse -mno-sse2   
 	
 # Libraries
-LIBC     = ../alpha/libs/rtl/include/
-LIBCOBJ  = ../alpha/libs/rtl/obj
-LIBIO    = ../alpha/libs/libio01/include/
-LIBIOOBJ = ../alpha/libs/libio01/obj
+LIBC     = ../../sdk/alpha/libs/rtl/include/
+LIBCOBJ  = ../../sdk/alpha/libs/rtl/obj
+LIBIO    = ../../sdk/alpha/libs/libio01/include/
+LIBIOOBJ = ../../sdk/alpha/libs/libio01/obj
 
 # Objects
 myObjects = crt0.o main.o \
@@ -133,10 +133,10 @@ all-c:
 	
 cat-link:
 	@echo "Linking ..."
-	@ld -m elf_x86_64 -T ../link.ld -o SHELL.BIN $(myObjects)    
+	@ld -m elf_x86_64 -T ../../sdk/link.ld -o SHELL2.BIN $(myObjects)    
 finalize:
-	@cp SHELL.BIN ../bin/
+	@cp SHELL2.BIN ../bin/
 clean:
 	-rm *.o
-	-rm SHELL.BIN 
+	-rm SHELL2.BIN 
 	

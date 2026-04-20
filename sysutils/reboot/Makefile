@@ -13,7 +13,7 @@ EXTRAVERSION =
 #NAME = 
 
 linkFlags = -m elf_x86_64 \
--s -x -static -T ../link.ld
+-s -x -static -T ../../sdk/link.ld
 
 linkTarget = REBOOT.BIN 
 
@@ -33,11 +33,11 @@ CFLAGS = -m64 \
 	-s \
 	-Werror=strict-prototypes    
 
-LIBC     = ../alpha/libs/rtl/include/
-LIBCOBJ  = ../alpha/libs/rtl/obj
+LIBC     = ../../sdk/alpha/libs/rtl/include/
+LIBCOBJ  = ../../sdk/alpha/libs/rtl/obj
 
-LIBIO    = ../alpha/libs/libio01/include/
-LIBIOOBJ = ../alpha/libs/libio01/obj
+LIBIO    = ../../sdk/alpha/libs/libio01/include/
+LIBIOOBJ = ../../sdk/alpha/libs/libio01/obj
 
 #Objects
 myObjects = crt0.o main.o rtl.o \

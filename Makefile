@@ -24,34 +24,41 @@ BASE = $(DISTROS)/base00
 # Kernel Services: Init process, ring 3 drivers and ring 3 servers.
 __DEP_L1 = netu
 
+
 # =================================
 # Shell Pre-UI: The display server.
 # The infrastruture for the windows.
 __DEP_L2 = winu
-
 # Display servers
 L2_DS = $(__DEP_L2)/core/ds
-
 # Display server with embedded 3D demos
 L2_DEMO_3D_GAME = $(__DEP_L2)/heavy/games3d
 
-# =================================
+
+## =================================
 # Client-side GUI applications.
 __DEP_L3 = winshell
 L3_APPS = winshell
 
-# =================================
-# Posix commands
-__DEP_L4 = cmds
-L4_CMDS = cmds
+
+## =================================
+__DEP_L4 = sdk
+L4_SDK = sdk
+
+
+## =================================
+__DEP_L5 = sysutils
+L5_SYSUTILS = sysutils
+
 
 ## =================================
 # (userland extra system things)
-__DEP_L5 = sysutils
-
+__DEP_L6 = sysutils2
 # Creating one cpp application just for fun
-L5_CPP00 = $(__DEP_L5)/cpp00
+L6_CPP00 = $(__DEP_L6)/cpp00
 
+
+## =================================
 # Make variables (CC, etc...)
 AS      = as
 LD      = ld
@@ -207,9 +214,12 @@ build-extras:
 	@make -C $(__DEP_L3)/
 
 # __DEP_L4::
-# Compiling Unix-like commands
-	@echo "Compiling __DEP_L4 (cmds/)"
+	@echo "Compiling __DEP_L4 (sdk/)"
 	@make -C $(__DEP_L4)/
+
+# __DEP_L5::
+	@echo "Compiling __DEP_L5 (sysutils/)"
+	@make -C $(__DEP_L5)/
 
 #===================================
 # Install BMPs from cali assets.
@@ -217,41 +227,43 @@ build-extras:
 # We can't survive without this one.
 	@cp $(L3_APPS)/assets/themes/theme01/*.BMP  $(BASE)/DE
 
-# Well consolidated programs.
-	@-cp $(L4_CMDS)/bin/PUBSH.BIN    $(BASE)/GRAMADO/
-	@-cp $(L4_CMDS)/bin/PUBSH.BIN    $(BASE)/DE/
-	@-cp $(L4_CMDS)/bin/SHELL.BIN    $(BASE)/GRAMADO/
-	@-cp $(L4_CMDS)/bin/SHELL.BIN    $(BASE)/DE/
-	@-cp $(L4_CMDS)/bin/SHELL2.BIN   $(BASE)/DE/
-#	@-cp $(L4_CMDS)/bin/SHELLZZ.BIN  $(BASE)/GRAMADO/
-#	@-cp $(L4_CMDS)/bin/SHELLZZ.BIN  $(BASE)/DE/
+
+# sysutils/
+
+	@-cp $(__DEP_L5)/bin/REBOOT.BIN    $(BASE)/
+	@-cp $(__DEP_L5)/bin/SHUTDOWN.BIN  $(BASE)/
+	@-cp $(__DEP_L5)/bin/UNAME.BIN     $(BASE)/
+
+	@-cp $(__DEP_L5)/bin/PUBSH.BIN     $(BASE)/GRAMADO/
+	@-cp $(__DEP_L5)/bin/REBOOT.BIN    $(BASE)/GRAMADO/
+	@-cp $(__DEP_L5)/bin/SH7.BIN       $(BASE)/GRAMADO/
+	@-cp $(__DEP_L5)/bin/SHELL.BIN     $(BASE)/GRAMADO/
+	@-cp $(__DEP_L5)/bin/SHUTDOWN.BIN  $(BASE)/GRAMADO/
+
+	@-cp $(__DEP_L5)/bin/PUBSH.BIN     $(BASE)/DE/
+	@-cp $(__DEP_L5)/bin/SHELL.BIN     $(BASE)/DE/
+	@-cp $(__DEP_L5)/bin/SHELL2.BIN    $(BASE)/DE/
+
 
 # Experimental programs.
-	@-cp $(L4_CMDS)/bin/SH7.BIN        $(BASE)/GRAMADO/
-#	@-cp $(L4_CMDS)/bin/SHELLXXX.BIN   $(BASE)/GRAMADO/
-#	@-cp $(L4_CMDS)/bin/TASCII.BIN     $(BASE)/GRAMADO/
-#	@-cp $(L4_CMDS)/bin/TPRINTF.BIN    $(BASE)/GRAMADO/
+#	@-cp $(L4_SDK)/bin/TASCII.BIN     $(BASE)/GRAMADO/
+#	@-cp $(L4_SDK)/bin/TPRINTF.BIN    $(BASE)/GRAMADO/
 
 # Copy well consolidated commands.
-	@-cp $(L4_CMDS)/bin/CAT.BIN       $(BASE)/
-	@-cp $(L4_CMDS)/bin/CAT00.BIN     $(BASE)/
-	@-cp $(L4_CMDS)/bin/REBOOT.BIN    $(BASE)/
-	@-cp $(L4_CMDS)/bin/REBOOT.BIN    $(BASE)/GRAMADO/
-	@-cp $(L4_CMDS)/bin/SHUTDOWN.BIN  $(BASE)/
-	@-cp $(L4_CMDS)/bin/SHUTDOWN.BIN  $(BASE)/GRAMADO/
-	@-cp $(L4_CMDS)/bin/UNAME.BIN     $(BASE)/
+	@-cp $(L4_SDK)/bin/CAT.BIN       $(BASE)/
+	@-cp $(L4_SDK)/bin/CAT00.BIN     $(BASE)/
 
 # Experimental commands.
-#	@-cp $(L4_CMDS)/bin/FALSE.BIN      $(BASE)/GRAMADO/
-#	@-cp $(L4_CMDS)/bin/TRUE.BIN       $(BASE)/GRAMADO/
-#	@-cp $(L4_CMDS)/bin/CMP.BIN       $(BASE)/GRAMADO/
-#	@-cp $(L4_CMDS)/bin/SHOWFUN.BIN   $(BASE)/GRAMADO/
-#	@-cp $(L4_CMDS)/bin/SUM.BIN       $(BASE)/GRAMADO/
-	@-cp $(L4_CMDS)/bin/GRAMCNF.BIN     $(BASE)/
-#@-cp $(L4_CMDS)/bin/N9.BIN         $(BASE)/GRAMADO/
-#@-cp $(L4_CMDS)/bin/N10.BIN        $(BASE)/GRAMADO/
-#@-cp $(L4_CMDS)/bin/N11.BIN        $(BASE)/GRAMADO/
-#@-cp $(L4_CMDS)/bin/UDPTEST.BIN  $(BASE)/GRAMADO/
+#	@-cp $(L4_SDK)/bin/FALSE.BIN      $(BASE)/GRAMADO/
+#	@-cp $(L4_SDK)/bin/TRUE.BIN       $(BASE)/GRAMADO/
+#	@-cp $(L4_SDK)/bin/CMP.BIN       $(BASE)/GRAMADO/
+#	@-cp $(L4_SDK)/bin/SHOWFUN.BIN   $(BASE)/GRAMADO/
+#	@-cp $(L4_SDK)/bin/SUM.BIN       $(BASE)/GRAMADO/
+	@-cp $(L4_SDK)/bin/GRAMCNF.BIN     $(BASE)/
+#@-cp $(L4_SDK)/bin/N9.BIN         $(BASE)/GRAMADO/
+#@-cp $(L4_SDK)/bin/N10.BIN        $(BASE)/GRAMADO/
+#@-cp $(L4_SDK)/bin/N11.BIN        $(BASE)/GRAMADO/
+#@-cp $(L4_SDK)/bin/UDPTEST.BIN  $(BASE)/GRAMADO/
 
 # These need the '#' prefix.
 
@@ -285,11 +297,11 @@ build-extras:
 
 
 # Compiling ulextras stuff
-	@echo "Compiling __DEP_L5"
-	@make -C $(__DEP_L5)/
+	@echo "Compiling __DEP_L6"
+	@make -C $(__DEP_L6)/
 
 # cpp application example
-	@-cp $(L5_CPP00)/bin/CPP00.BIN  $(BASE)/DE
+	@-cp $(L6_CPP00)/bin/CPP00.BIN  $(BASE)/DE
 
 	@echo "~ build-extras"
 
