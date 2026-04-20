@@ -1,6 +1,6 @@
-# apps
+# winshell
 
-Project: apps
+Project: winshell
 
 # Description
 

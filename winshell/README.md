@@ -1,4 +1,4 @@
-# apps - Client-side GUI applications
+# winshell - Client-side GUI applications
 
 All the client-side GUI applications are here.
 
