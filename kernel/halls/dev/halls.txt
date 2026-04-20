@@ -6,8 +6,13 @@ key insight:
 All three halls are fundamentally **interrupt‑driven**, 
 but each hall governs a different *group of interrupts*. 
 
-apphalls: application-driven interrupts.
-uhalls:   user-driven interrupts.
+application-driven interrupts:
+ + exec/
+ + per/
+ + req/
+
+user-driven interrupts:
+ + chardev/
 
 ---
 

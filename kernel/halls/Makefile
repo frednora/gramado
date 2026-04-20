@@ -11,29 +11,31 @@ all:
 	make -C platform/bus/
 
 #
-# app halls
+# application interaction hall
 #
 
 # -- cpu --------------------
     # Origin: cpu
-	make -C apphalls/exec/ke/
+	make -C dev/exec/ke/
 # -- memory --------------------
     # Origin: memory
-	make -C apphalls/req/mm/
+	make -C dev/req/mm/
 # -- disk --------------------
     # Origin: irq
-	make -C apphalls/per/blkdev/
-	make -C apphalls/per/netdev/
-	make -C apphalls/per/fs/
-	make -C apphalls/per/net/
-	make -C apphalls/per/
+	make -C dev/per/blkdev/
+	make -C dev/per/netdev/
+	make -C dev/per/fs/
+	make -C dev/per/net/
+	make -C dev/per/
 
 #
-# user halls
+# user interaction hall
 #
+
+	make -C dev/chardev/
+
 
 # ------------------------------------
-	make -C uhalls/chardev/
 
 clean:
 # ...

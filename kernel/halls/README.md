@@ -12,14 +12,14 @@
 
 
 ``` 
- Application interaction
- * apphalls/exec/  - Execution. (threads)
- * apphalls/per/   - Peripherals. (devices)
- * apphalls/req    - Requests. (memory)
+Application interaction - (application-driven interrupts):
+ * dev/exec/  - Execution. (threads)
+ * dev/per/   - Peripherals. (devices)
+ * dev/req    - Requests. (memory)
 ```
 
 ```
- User interaction
- * uhalls/chardev/ - (Keyboard, mouse, display)
+User interaction - (user-driven interrupts):
+ * dev/chardev/ - (Keyboard, mouse, display)
 ```
 

@@ -39,16 +39,16 @@
 #include "../gthouse/kwrap/bootblk/bootblk.h"
 
 // ==================================
-// halls/apphalls/exec/ke/
-#include "../halls/apphalls/exec/ke/intake/sync.h"
+// halls/dev/exec/ke/
+#include "../halls/dev/exec/ke/intake/sync.h"
 
 // ===============================
 // hal/
-#include "../halls/apphalls/exec/ke/hal/x86_64/gwd.h"  // whatch dogs.
-#include "../halls/apphalls/exec/ke/hal/pints.h"       // profiler
+#include "../halls/dev/exec/ke/hal/x86_64/gwd.h"  // whatch dogs.
+#include "../halls/dev/exec/ke/hal/pints.h"       // profiler
 
 // ===============================
-#include "../halls/apphalls/exec/ke/intake/x64init.h"  // x64 kernel initialization.
+#include "../halls/dev/exec/ke/intake/x64init.h"  // x64 kernel initialization.
 
 // kernel initialization
 #include "../kmain.h"
@@ -62,9 +62,9 @@
 #include "../gthouse/kwrap/klog/klog.h"
 
 // ==================================
-// halls/apphalls/exec/ke/
+// halls/dev/exec/ke/
 // Gramado configuration.
-#include "../halls/apphalls/exec/ke/hal/jiffies.h"
+#include "../halls/dev/exec/ke/hal/jiffies.h"
 
 // ==================================
 // crt/
@@ -106,39 +106,39 @@
 
 
 // ==================================
-// halls/apphalls/exec/ke/
+// halls/dev/exec/ke/
 // Globals. PIDs support.
-#include "../halls/apphalls/exec/ke/intake/kpid.h"
+#include "../halls/dev/exec/ke/intake/kpid.h"
 
 // ==================================
-// apphalls/req/mm/
+// dev/req/mm/
 // Memory management.
-#include "../halls/apphalls/req/mm/mmsize.h"
-#include "../halls/apphalls/req/mm/x86_64/x64gpa.h"
-#include "../halls/apphalls/req/mm/x86_64/x64gva.h"
-#include "../halls/apphalls/req/mm/memmap.h" 
-#include "../halls/apphalls/req/mm/x86_64/intelmm.h"
-#include "../halls/apphalls/req/mm/mmblock.h"
-#include "../halls/apphalls/req/mm/mmusage.h"
-#include "../halls/apphalls/req/mm/x86_64/x64mm.h"
-#include "../halls/apphalls/req/mm/slab.h"
-#include "../halls/apphalls/req/mm/x86_64/paging.h"
-#include "../halls/apphalls/req/mm/mmft.h"
-#include "../halls/apphalls/req/mm/mmpool.h"
-#include "../halls/apphalls/req/mm/mmglobal.h"  // Deve ficar mais acima.
-#include "../halls/apphalls/req/mm/heap.h"      // Heap pointer support.
-#include "../halls/apphalls/req/mm/aspace.h"    // Address Space, (data base account).
-#include "../halls/apphalls/req/mm/bank.h"      // Bank. database
-#include "../halls/apphalls/req/mm/mm.h"
+#include "../halls/dev/req/mm/mmsize.h"
+#include "../halls/dev/req/mm/x86_64/x64gpa.h"
+#include "../halls/dev/req/mm/x86_64/x64gva.h"
+#include "../halls/dev/req/mm/memmap.h" 
+#include "../halls/dev/req/mm/x86_64/intelmm.h"
+#include "../halls/dev/req/mm/mmblock.h"
+#include "../halls/dev/req/mm/mmusage.h"
+#include "../halls/dev/req/mm/x86_64/x64mm.h"
+#include "../halls/dev/req/mm/slab.h"
+#include "../halls/dev/req/mm/x86_64/paging.h"
+#include "../halls/dev/req/mm/mmft.h"
+#include "../halls/dev/req/mm/mmpool.h"
+#include "../halls/dev/req/mm/mmglobal.h"  // Deve ficar mais acima.
+#include "../halls/dev/req/mm/heap.h"      // Heap pointer support.
+#include "../halls/dev/req/mm/aspace.h"    // Address Space, (data base account).
+#include "../halls/dev/req/mm/bank.h"      // Bank. database
+#include "../halls/dev/req/mm/mm.h"
 
 // ==================================
 // hal/
-#include "../halls/apphalls/exec/ke/hal/x86_64/ports64.h"
-#include "../halls/apphalls/exec/ke/hal/x86_64/cpu.h"
-#include "../halls/apphalls/exec/ke/hal/x86_64/tss.h"
-#include "../halls/apphalls/exec/ke/hal/x86_64/x64gdt.h"
-#include "../halls/apphalls/exec/ke/hal/x86_64/x64.h"
-#include "../halls/apphalls/exec/ke/hal/detect.h"
+#include "../halls/dev/exec/ke/hal/x86_64/ports64.h"
+#include "../halls/dev/exec/ke/hal/x86_64/cpu.h"
+#include "../halls/dev/exec/ke/hal/x86_64/tss.h"
+#include "../halls/dev/exec/ke/hal/x86_64/x64gdt.h"
+#include "../halls/dev/exec/ke/hal/x86_64/x64.h"
+#include "../halls/dev/exec/ke/hal/detect.h"
 
 // ==================================
 // virt/
@@ -149,30 +149,30 @@
 
 // ==========================================
 // hal/arm/
-// #include "../halls/apphalls/exec/ke/hal/arm/archhal.h"
+// #include "../halls/dev/exec/ke/hal/arm/archhal.h"
 
 // ==========================================
 // hal/x86_64/
-#include "../halls/apphalls/exec/ke/hal/x86_64/cpuid.h"
+#include "../halls/dev/exec/ke/hal/x86_64/cpuid.h"
 
-#include "../halls/apphalls/exec/ke/hal/x86_64/up/up.h"
+#include "../halls/dev/exec/ke/hal/x86_64/up/up.h"
 
-#include "../halls/apphalls/exec/ke/hal/x86_64/smp/mps.h"
-#include "../halls/apphalls/exec/ke/hal/x86_64/smp/x64smp.h"
-#include "../halls/apphalls/exec/ke/hal/x86_64/smp/apic.h"
-#include "../halls/apphalls/exec/ke/hal/x86_64/smp/apictim.h"
-#include "../halls/apphalls/exec/ke/hal/x86_64/smp/ioapic.h"
+#include "../halls/dev/exec/ke/hal/x86_64/smp/mps.h"
+#include "../halls/dev/exec/ke/hal/x86_64/smp/x64smp.h"
+#include "../halls/dev/exec/ke/hal/x86_64/smp/apic.h"
+#include "../halls/dev/exec/ke/hal/x86_64/smp/apictim.h"
+#include "../halls/dev/exec/ke/hal/x86_64/smp/ioapic.h"
 
-#include "../halls/apphalls/exec/ke/hal/x86_64/pic.h"
-#include "../halls/apphalls/exec/ke/hal/x86_64/pit.h"
-#include "../halls/apphalls/exec/ke/hal/x86_64/rtc.h"
+#include "../halls/dev/exec/ke/hal/x86_64/pic.h"
+#include "../halls/dev/exec/ke/hal/x86_64/pit.h"
+#include "../halls/dev/exec/ke/hal/x86_64/rtc.h"
 
-#include "../halls/apphalls/exec/ke/hal/x86_64/breaker.h"
-#include "../halls/apphalls/exec/ke/hal/x86_64/archhal.h"
+#include "../halls/dev/exec/ke/hal/x86_64/breaker.h"
+#include "../halls/dev/exec/ke/hal/x86_64/archhal.h"
 
 // ==========================================
 // Architecture-independent HAL interface
-#include "../halls/apphalls/exec/ke/hal/hal.h"
+#include "../halls/dev/exec/ke/hal/hal.h"
 
 // ==================================
 // bus/
@@ -182,36 +182,36 @@
 #include "../halls/platform/bus/bus.h"
 
 // ==================================
-// apphalls/per/
+// dev/per/
 // io
-#include "../halls/apphalls/per/io.h"
+#include "../halls/dev/per/io.h"
 
 // ==================================
-// apphalls/per/
+// dev/per/
 // Devices
 // primeiro char, depois block, depois network.
 // tty
-#include "../halls/uhalls/chardev/tty/ttyldisc.h"
-#include "../halls/uhalls/chardev/tty/ttydrv.h"
-#include "../halls/uhalls/chardev/tty/tty.h"
-#include "../halls/uhalls/chardev/tty/pty.h"
+#include "../halls/dev/chardev/tty/ttyldisc.h"
+#include "../halls/dev/chardev/tty/ttydrv.h"
+#include "../halls/dev/chardev/tty/tty.h"
+#include "../halls/dev/chardev/tty/pty.h"
 
-#include "../halls/uhalls/chardev/console/console.h"
+#include "../halls/dev/chardev/console/console.h"
 
 // hw stuff - display device
 
-#include "../halls/uhalls/chardev/display/dc.h"
+#include "../halls/dev/chardev/display/dc.h"
 
 // display device support.
-#include "../halls/uhalls/chardev/display/display.h"
+#include "../halls/dev/chardev/display/display.h"
 // bootloader display device
-#include "../halls/uhalls/chardev/display/bldisp/rop.h"
-#include "../halls/uhalls/chardev/display/bldisp/bldisp.h"
-//#include "../halls/uhalls/chardev/display/qemudisp/qemudisp.h"
+#include "../halls/dev/chardev/display/bldisp/rop.h"
+#include "../halls/dev/chardev/display/bldisp/bldisp.h"
+//#include "../halls/dev/chardev/display/qemudisp/qemudisp.h"
 
 // ==================================
-// apphalls/per/
-#include "../halls/apphalls/per/dev00.h"
+// dev/per/
+#include "../halls/dev/per/dev00.h"
 
 // ==================================
 // gthouse/wink/ 
@@ -221,9 +221,9 @@
 #include "../gthouse/wink/gdi/gre/bg.h"
 
 // ==================================
-// halls/apphalls/exec/ke/
+// halls/dev/exec/ke/
 // Can we move this up?
-#include "../halls/apphalls/exec/ke/intake/msgcode.h"
+#include "../halls/dev/exec/ke/intake/msgcode.h"
 
 // ==================================
 // gthouse/wink/
@@ -251,49 +251,49 @@
 
 // ===========
 
-#include "../halls/apphalls/exec/ke/intake/disp/callback.h"
+#include "../halls/dev/exec/ke/intake/disp/callback.h"
 
 // ==================================
-// apphalls/per/
+// dev/per/
 
-// uhalls/chardev/
+// dev/chardev/
 // Serial port. (COM).
-#include "../halls/uhalls/chardev/serial/serial.h"
+#include "../halls/dev/chardev/serial/serial.h"
 
-#include "../halls/uhalls/chardev/vk.h"
-#include "../halls/uhalls/chardev/kbdmaps/kbdmaps.h"
-#include "../halls/uhalls/chardev/kbdmaps/ptbr/mapabnt2.h"
+#include "../halls/dev/chardev/vk.h"
+#include "../halls/dev/chardev/kbdmaps/kbdmaps.h"
+#include "../halls/dev/chardev/kbdmaps/ptbr/mapabnt2.h"
 // ...
 
 // i8042 (PS/2)
-#include "../halls/uhalls/chardev/i8042/keyboard.h"
-#include "../halls/uhalls/chardev/i8042/ps2kbd.h"
-#include "../halls/uhalls/chardev/i8042/mouse.h"
-#include "../halls/uhalls/chardev/i8042/ps2mouse.h"
-#include "../halls/uhalls/chardev/i8042/i8042.h"
+#include "../halls/dev/chardev/i8042/keyboard.h"
+#include "../halls/dev/chardev/i8042/ps2kbd.h"
+#include "../halls/dev/chardev/i8042/mouse.h"
+#include "../halls/dev/chardev/i8042/ps2mouse.h"
+#include "../halls/dev/chardev/i8042/i8042.h"
 
 // blkdev/
 // Block devices
 // ata, sata
-#include "../halls/apphalls/per/blkdev/ata/ata.h"
-//#include "../halls/apphalls/per/blkdev/ahci/ahci.h"
+#include "../halls/dev/per/blkdev/ata/ata.h"
+//#include "../halls/dev/per/blkdev/ahci/ahci.h"
 // Storage manager.
-#include "../halls/apphalls/per/blkdev/storage.h"
+#include "../halls/dev/per/blkdev/storage.h"
 
 // netdev/
 // Network devices
 // primeiro controladoras depois protocolos
 // e1000 - nic intel
-#include "../halls/apphalls/per/netdev/e1000/e1000.h"
+#include "../halls/dev/per/netdev/e1000/e1000.h"
 
 // ==================================
-// apphalls/per/net/ 
+// dev/per/net/ 
 // (network, protocols and socket)
 // network
-#include "../halls/apphalls/per/net/mac.h"
-#include "../halls/apphalls/per/net/host.h"
-#include "../halls/apphalls/per/net/in.h"
-#include "../halls/apphalls/per/net/un.h"
+#include "../halls/dev/per/net/mac.h"
+#include "../halls/dev/per/net/host.h"
+#include "../halls/dev/per/net/in.h"
+#include "../halls/dev/per/net/un.h"
 
 //
 // Protocols
@@ -303,83 +303,83 @@
 // prot/
 
 // Core protocols
-#include "../halls/apphalls/per/net/prot/core/ethernet.h"
-#include "../halls/apphalls/per/net/prot/core/arp.h"
-#include "../halls/apphalls/per/net/prot/core/ip.h"
+#include "../halls/dev/per/net/prot/core/ethernet.h"
+#include "../halls/dev/per/net/prot/core/arp.h"
+#include "../halls/dev/per/net/prot/core/ip.h"
 // Commom protocols
-#include "../halls/apphalls/per/net/prot/tcp.h"
-#include "../halls/apphalls/per/net/prot/udp.h"
-#include "../halls/apphalls/per/net/prot/dhcp.h" 
-#include "../halls/apphalls/per/net/prot/gprot.h"
+#include "../halls/dev/per/net/prot/tcp.h"
+#include "../halls/dev/per/net/prot/udp.h"
+#include "../halls/dev/per/net/prot/dhcp.h" 
+#include "../halls/dev/per/net/prot/gprot.h"
 
 
 // Extra protocols
-#include "../halls/apphalls/per/net/prot/icmp.h" 
+#include "../halls/dev/per/net/prot/icmp.h" 
 
-// apphalls/per/net/
+// dev/per/net/
 
 // Network
 
-#include "../halls/apphalls/per/net/nports.h"     //(network) Network Ports  (sw)
-#include "../halls/apphalls/per/net/inet.h"
+#include "../halls/dev/per/net/nports.h"     //(network) Network Ports  (sw)
+#include "../halls/dev/per/net/inet.h"
 
-#include "../halls/apphalls/per/net/socklib.h"     //
-#include "../halls/apphalls/per/net/socket.h"      //last always
+#include "../halls/dev/per/net/socklib.h"     //
+#include "../halls/dev/per/net/socket.h"      //last always
 
-#include "../halls/apphalls/per/net/domain.h"
+#include "../halls/dev/per/net/domain.h"
 
-#include "../halls/apphalls/per/net/ifconfig/netif.h"  // Network interface
-#include "../halls/apphalls/per/net/net.h"     //(network) Gerenciamento de rede.  
+#include "../halls/dev/per/net/ifconfig/netif.h"  // Network interface
+#include "../halls/dev/per/net/net.h"     //(network) Gerenciamento de rede.  
 
 // ----------------------
 // Last:
 // Device interface.
 // Device manager.
-#include "../halls/apphalls/per/dev.h"
+#include "../halls/dev/per/dev.h"
 
 // ==================================
-// apphalls/per/fs/
+// dev/per/fs/
 // File system
 // ----------------------
 // Depois de devices.
 // fs
-#include "../halls/apphalls/per/fs/path.h"      // path.
+#include "../halls/dev/per/fs/path.h"      // path.
 
-#include "../halls/apphalls/per/fs/fat/fatlib.h"    // fat16 library.
-#include "../halls/apphalls/per/fs/fat/fat.h"       // fat16.
+#include "../halls/dev/per/fs/fat/fatlib.h"    // fat16 library.
+#include "../halls/dev/per/fs/fat/fat.h"       // fat16.
 
-#include "../halls/apphalls/per/fs/inode.h"
-#include "../halls/apphalls/per/fs/exec_elf.h"
-#include "../halls/apphalls/per/fs/pipe.h"
-#include "../halls/apphalls/per/fs/files.h"
-#include "../halls/apphalls/per/fs/fs.h"
+#include "../halls/dev/per/fs/inode.h"
+#include "../halls/dev/per/fs/exec_elf.h"
+#include "../halls/dev/per/fs/pipe.h"
+#include "../halls/dev/per/fs/files.h"
+#include "../halls/dev/per/fs/fs.h"
 
 // ==================================
 #include "../halls/res.h"
 
 // ==================================
 // intake/
-#include "../halls/apphalls/exec/ke/intake/prio.h"     // Priority
-#include "../halls/apphalls/exec/ke/intake/quantum.h"  // Quantum
-#include "../halls/apphalls/exec/ke/intake/image.h"
-#include "../halls/apphalls/exec/ke/intake/disp/x86_64/x64cont.h"
-#include "../halls/apphalls/exec/ke/intake/disp/ts.h"
-#include "../halls/apphalls/exec/ke/intake/queue.h"
-#include "../halls/apphalls/exec/ke/intake/intake.h"
-#include "../halls/apphalls/exec/ke/intake/disp/spawn.h"
-#include "../halls/apphalls/exec/ke/intake/disp/dispatch.h"
+#include "../halls/dev/exec/ke/intake/prio.h"     // Priority
+#include "../halls/dev/exec/ke/intake/quantum.h"  // Quantum
+#include "../halls/dev/exec/ke/intake/image.h"
+#include "../halls/dev/exec/ke/intake/disp/x86_64/x64cont.h"
+#include "../halls/dev/exec/ke/intake/disp/ts.h"
+#include "../halls/dev/exec/ke/intake/queue.h"
+#include "../halls/dev/exec/ke/intake/intake.h"
+#include "../halls/dev/exec/ke/intake/disp/spawn.h"
+#include "../halls/dev/exec/ke/intake/disp/dispatch.h"
 
-#include "../halls/apphalls/exec/ke/intake/thread.h"
-#include "../halls/apphalls/exec/ke/intake/te.h"
-#include "../halls/apphalls/exec/ke/intake/ithread.h"
-#include "../halls/apphalls/exec/ke/intake/clone.h"
-#include "../halls/apphalls/exec/ke/intake/ipc.h"
+#include "../halls/dev/exec/ke/intake/thread.h"
+#include "../halls/dev/exec/ke/intake/te.h"
+#include "../halls/dev/exec/ke/intake/ithread.h"
+#include "../halls/dev/exec/ke/intake/clone.h"
+#include "../halls/dev/exec/ke/intake/ipc.h"
 
-#include "../halls/apphalls/exec/ke/intake/sched/sched.h"
-#include "../halls/apphalls/exec/ke/intake/sched/schedq.h"
+#include "../halls/dev/exec/ke/intake/sched/sched.h"
+#include "../halls/dev/exec/ke/intake/sched/schedq.h"
 
 // Precisa de todos os componentes de ke/
-#include "../halls/apphalls/exec/ke/ke.h"
+#include "../halls/dev/exec/ke/ke.h"
 
 // ==================================
 // The user interactions
@@ -413,7 +413,7 @@
 // ==================================
 // ke/
 // syscall support
-#include "../halls/apphalls/exec/ke/hal/x86_64/x64sc.h"
+#include "../halls/dev/exec/ke/hal/x86_64/x64sc.h"
 
 // ==================================
 
