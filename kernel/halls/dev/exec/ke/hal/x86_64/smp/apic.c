@@ -120,7 +120,7 @@ void apic_TimerHandler0000(void)
 
     apic_SPINLOCK = TRUE; // Lock
 
-/*
+
     // #test
     // Drawing rectangles
     unsigned int Color = COLOR_BLACK;
@@ -133,7 +133,7 @@ void apic_TimerHandler0000(void)
             Color = COLOR_BLACK;
         frontbuffer_draw_rectangle( i, 0, 16, 16, Color, 0 );
     };
-*/
+
 
     // printk("apic_TimerHandler0000\n");
     //local_apic_eoi();
