@@ -98,10 +98,17 @@
 // ...
 
 
+#define CONFIG_NO_FRED  1
+#define CONFIG_NO_NUMA  1
+
 // ------------------------------------------------------
 // lapic/ioapic debug.
 // see: kmain.c, apic.c, ioapic.c.
-#define CONFIG_USE_SMP    1
+// SMP support
+#define CONFIG_NO_SMP  0
+// But, we are still in the development phase and 
+// some routines are not ready to be tested.
+// For this case we have some extra flags.
 // #test
 // This is a test yet.
 // >> It works only on Virtualbox using ICH9 chipset. <<

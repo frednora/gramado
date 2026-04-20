@@ -187,7 +187,7 @@ void ap_entry_point00(void)
         if (Counter % 2 == 0)
             Color = COLOR_RED;
 
-        for (i=0; i< 1000; i++){
+        for (i=0; i<200; i++){
             frontbuffer_draw_rectangle( 0, i, 16, 16, Color, 0 );
         };
     };
@@ -865,6 +865,9 @@ static int __test_initialize_ap_processor(int apic_id)
 // :: Level ?
 static int archinit(void)
 {
+    int ProcessorType = -1;
+    int ValidProcessorType = FALSE;
+    int smp_status = FALSE;
 
 /*
 //++
@@ -882,95 +885,105 @@ static int archinit(void)
 //--
 */
 
-// ----------------------------------
-// Last thing
-// + Probing for processor type.
-// + Initializing smp for x64 machines.
 
-    int smp_status = FALSE;
-    int processor_type = -1;
+    // 1) - Probe processor type
+    ProcessorType = (int) hal_probe_processor_type();
 
-    if (CONFIG_USE_SMP == 1)
-    {
-        // 1) - Processor probe
-        processor_type = (int) hal_probe_processor_type();
-        if ( processor_type == Processor_AMD || processor_type == Processor_INTEL )
+    // #test
+    // Testing the function serial_printk(),
+    // it sends a formated string to the serial port.
+    // #ok, it is working at this part, not in the
+    // beginning of the routine.
+    serial_printk("archinit: ProcessorType {%d}\n", ProcessorType );
+
+    if ( ProcessorType == Processor_AMD || ProcessorType == Processor_INTEL )
+        ValidProcessorType = TRUE;
+
+    if (ValidProcessorType != TRUE)
+        goto fail;
+
+    if (CONFIG_NO_SMP == 1){
+
+        // UP mode
+        // No SMP support at all
+
+    } else {
+
+        // SMP support
+        // But, we are still in the development phase and 
+        // some routines are not ready to be tested.
+        // For this case we have some extra flags.
+
+        // 2) - SMP initialization
+        // Probe for smp support and initialize lapic.
+        // see: apphalls/exec/ke/hal/x86_64/smp/x64smp.c
+        smp_status = (int) x64smp_initialization();
+        //if (smp_status != TRUE)
+            //panic("smp\n");
+
+        // #warning: See the flags in config.h
+
+        // 3) - Enable APIC
+        // Lets enable the apic, only if smp is supported.
+        // #warning
+        // This routine is gonna disable the legacy PIC.
+        // see: apic.c
+        if (CONFIG_INITIALIZE_APIC == 1)
         {
-            // #test
-            // Testing the function serial_printk(),
-            // it sends a formated string to the serial port.
-            // #ok, it is working at this part, not in the
-            // beginning of the routine.
-            serial_printk("archinit: processor_type {%d}\n", processor_type );
+            // Enable apic and timer
+            if (BSP_LAPIC.initialized == TRUE)
+                apic_setup_registers(0);  // #todo: id in parameter.
+            //printk("kmain: breakpoint on apic_setup_registers()\n");
+            //while(1){}
+        }
 
-            // 2) - SMP initialization
-            // Probe for smp support and initialize lapic.
-            // see: apphalls/exec/ke/hal/x86_64/smp/x64smp.c
-            smp_status = (int) x64smp_initialization();
-            //if (smp_status != TRUE)
-                //panic("smp\n");
-
-            // #warning: See the flags in config.h
-
-            // 3) - Enable APIC
-            // Lets enable the apic, only if smp is supported.
-            // #warning
-            // This routine is gonna disable the legacy PIC.
-            // see: apic.c
-            if (CONFIG_INITIALIZE_APIC == 1)
-            {
-                // Enable apic and timer
-                if (BSP_LAPIC.initialized == TRUE)
-                    apic_setup_registers(0);  // #todo: id in parameter.
-                //printk("kmain: breakpoint on apic_setup_registers()\n");
-                //while(1){}
-            }
-
-            // 4) - Enable IOAPIC
+        // 4) - Enable IOAPIC
+        // #todo
+        // Setup ioapic.
+        // see: ioapic.c
+        if (CONFIG_INITIALIZE_IOAPIC == 1)
+        {
             // #todo
-            // Setup ioapic.
-            // see: ioapic.c
-            if (CONFIG_INITIALIZE_IOAPIC == 1)
-            {
-                // #todo
-                // Isso configura o timer ...
-                // e o timer precisa mudar o vetor 
-                // pois 32 ja esta sendo usado pela redirection table.
+            // Isso configura o timer ...
+            // e o timer precisa mudar o vetor 
+            // pois 32 ja esta sendo usado pela redirection table.
                 
-                // This setup a redirection table ...
-                // But we need to unmask the devices we wanna use.
-                ioapic_initialize();
+            // This setup a redirection table ...
+            // But we need to unmask the devices we wanna use.
+            ioapic_initialize();
+        }
+
+        // #debug
+        // Show cpu info.
+        // see: x64info.c
+        //x64_info();
+
+        // 5) - AP startup
+        if (CONFIG_INITIALIZE_SECOND_PROCESSOR == 1)
+        {
+            // Initialize AP processor.
+            // #bugbug: g_processor_count if faling
+            //if (g_processor_count >= 2)
+            if (smp_info.mptable_number_of_processors >= 2)
+            {
+                smp_info.nr_ap_running = 0;
+                __test_initialize_ap_processor(1);  // APIC ID 1
+                //__test_initialize_ap_processor(2); // APIC ID 2
+                // ...
             }
 
             // #debug
-            // Show cpu info.
-            // see: x64info.c
-            //x64_info();
+            //printk(">>>> breakpoint\n");
+            //refresh_screen();
+            //while(1){asm ("cli"); asm ("hlt");}
 
-            // 5) - AP startup
-            if (CONFIG_INITIALIZE_SECOND_PROCESSOR == 1)
-            {
-                // Initialize AP processor.
-                // #bugbug: g_processor_count if faling
-                //if (g_processor_count >= 2)
-                if (smp_info.mptable_number_of_processors >= 2)
-                {
-                    smp_info.nr_ap_running = 0;
-                    __test_initialize_ap_processor(1);  // APIC ID 1
-                //__test_initialize_ap_processor(2); // APIC ID 2
-                // ...
-                }
+        } // End of CONFIG_INITIALIZE_SECOND_PROCESSOR
+    };
 
-                // #debug
-                //printk(">>>> breakpoint\n");
-                //refresh_screen();
-                //while(1){asm ("cli"); asm ("hlt");}
+    return TRUE;
 
-            } // End of CONFIG_INITIALIZE_SECOND_PROCESSOR
-        }
-    }
-
-    return 0;
+fail:
+    return FALSE;
 }
 
 static int deviceinit(void)
@@ -1309,7 +1322,9 @@ static int I_initialize_kernel(int arch_type, int processor_number)
 // -------------------------------
     PROGRESS(":: archinit\n");
     // [4]
-    archinit();
+    Status = archinit();
+    if (Status != TRUE)
+        panic_at_init(Error40_archinit,KERNEL_SUBSYSTEM_KE);
     wink_update_progress_bar(80);
     //while(1){}
 
