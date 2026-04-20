@@ -503,6 +503,9 @@ static void __apic_disable_legacy_pic(void)
 // Desabilita todas as interrupcoes
     out8(0x21,0xFF);
     out8(0xA1,0xFF);
+
+// Set flag
+    smp_info.bsp_pic_is_disabled = TRUE;
 }
 
 // =================
