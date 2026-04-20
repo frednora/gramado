@@ -37,8 +37,8 @@ L2_DEMO_3D_GAME = $(__DEP_L2)/heavy/games3d
 
 # =================================
 # Client-side GUI applications.
-__DEP_L3 = apps
-L3_APPS = apps
+__DEP_L3 = winshell
+L3_APPS = winshell
 
 # =================================
 # Posix commands
@@ -46,8 +46,8 @@ __DEP_L4 = cmds
 L4_CMDS = cmds
 
 ## =================================
-# (userland extras)
-__DEP_L5 = woods
+# (userland extra system things)
+__DEP_L5 = sysutils
 
 # Creating one cpp application just for fun
 L5_CPP00 = $(__DEP_L5)/cpp00
@@ -215,7 +215,7 @@ build-extras:
 # Install BMPs from cali assets.
 # Copy the $(__DEP_L3)/assets/
 # We can't survive without this one.
-	@cp apps/assets/themes/theme01/*.BMP  $(BASE)/DE
+	@cp $(L3_APPS)/assets/themes/theme01/*.BMP  $(BASE)/DE
 
 # Well consolidated programs.
 	@-cp $(L4_CMDS)/bin/PUBSH.BIN    $(BASE)/GRAMADO/
