@@ -4144,7 +4144,7 @@ save_file:
             goto do_save_dir_and_fat;
 
         // Se não é assinatura ainda.
-        }else{
+        } else {
 
             // #bugbug
             // Estamos usando isso sem nem mesmo checar seu valor.
@@ -4159,7 +4159,7 @@ save_file:
             // Wait and write!
             
             // ata_get_current_ide_port_index()
-            disk_ata_wait_irq(ATACurrentPort.g_current_ide_port_index);
+            disk_ata_wait_irq( ATACurrentPort.g_current_ide_port_index );
 
             //grava - Aqui next esta certo!
             //write_lba ( (unsigned long) address, VOLUME1_DATAAREA_LBA + next -2 );

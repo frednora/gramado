@@ -111,15 +111,6 @@ void flush_cashes(void)
 }
 */
 
-void apic_mark_cpu_as_running(int lapic_info_id)
-{
-    if (lapic_info_id < 0)
-        return;
-    if (lapic_info_id >= NR_CPUS)
-        return;
-    lapic_info[lapic_info_id].running = TRUE;
-}
-
 
 // Handler for the lapic timer (test)
 void apic_TimerHandler0000(void)
@@ -139,13 +130,22 @@ void apic_TimerHandler0000(void)
         Color = COLOR_WHITE + i;
         if (Counter % 8 == 0)
             Color = COLOR_BLACK;
-        frontbuffer_draw_rectangle( i, 0, 16, 16, Color, 0 );
+        frontbuffer_draw_rectangle( i, 0, 4, 4, Color, 0 );
     };
 
     // printk("apic_TimerHandler0000\n");
     //local_apic_eoi(0);
 
     apic_SPINLOCK = FALSE;  // Unlocked
+}
+
+void apic_mark_cpu_as_running(int lapic_info_id)
+{
+    if (lapic_info_id < 0)
+        return;
+    if (lapic_info_id >= NR_CPUS)
+        return;
+    lapic_info[lapic_info_id].running = TRUE;
 }
 
 // #todo: 
@@ -1007,7 +1007,8 @@ int lapic_info_initializing(unsigned long lapic_pa)
 
 
 // -------------------------------------
-// Mapping area for registers
+// Mapping area for registers.
+// Flush TLB
 
     int map_status = -1;
 
@@ -1017,11 +1018,6 @@ int lapic_info_initializing(unsigned long lapic_pa)
     if (map_status != 0){
         panic("lapic_initializing: on mm_map_2mb_region()\n");
     }
-
-//==========================================
-
-// Flush TLB
-// #bugbug: Maybe we need to call a method for that
 
     asm ("movq %cr3, %rax");
     asm ("movq %rax, %cr3");

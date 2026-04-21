@@ -160,8 +160,6 @@ losethos os - Adam1a.HPP.
 #define LVT_THERMAL_VECTOR     0xE1  //0x35   // Thermal sensor (if supported)
 #define LVT_CMCI_VECTOR        0xE2  //0x36   // Corrected Machine Check (newer CPUs)
 
-//#define LVT_MY_TIMER  220
-
 // LAPIC Spurious Interrupt Vector Register (SVR)
 // Not part of the LVT; separate register at offset 0xF0.
 // Bit 8 enables LAPIC, low byte defines spurious vector.

@@ -236,7 +236,7 @@ void AP_kmain(void)
             Color = COLOR_RED;
 
         for (i=0; i<200; i++){
-            frontbuffer_draw_rectangle( 0, i, 16, 16, Color, 0 );
+            frontbuffer_draw_rectangle( 0, i, 4, 4, Color, 0 );
         };
     };
 

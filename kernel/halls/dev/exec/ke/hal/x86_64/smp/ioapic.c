@@ -89,11 +89,11 @@ int ioapic_masked(int n)
 
 int ioapic_umasked(int n)
 {
-// This pointer is define into this document.
+   // This pointer is define into this document
     unsigned long pointer = (unsigned long) &ioapic_redir_table;
 
-// Chech the range.
-    if (n<0 || n>=24)
+// Check the range
+    if (n<0 || n >= 24)
         panic("ioapic_umasked: n\n");
 
     ioapic_redir_table[n].mask = 0;
@@ -121,12 +121,11 @@ __set_ioapic_redir_table(
     unsigned char destination)
 {
 
-// #warning
-// The redirection table is define here in this document.
+    // #warning
+    // The redirection table is define here in this document
     unsigned long pointer = (unsigned long) &ioapic_redir_table;
 
     unsigned int *data = (unsigned int*) pointer;
-
 
 // Invalid entry
 // range: (0~23)
@@ -138,7 +137,6 @@ __set_ioapic_redir_table(
 
 // These are the fields for each entry.
 // Each redirection entry is made of the following fields: 
-
 
 // #todo
 // Talvez devamos começar com a mesma interrupçao
@@ -210,8 +208,7 @@ __set_ioapic_redir_table(
         IO_APIC_REDIR_TBL(n) + 1,
         *(unsigned int*)(data + (n *2) + 1) );
 
-// done
-    return 0;
+    return 0;  // Done
 }
 
 // Initialize the redirection table
@@ -219,19 +216,19 @@ static int __ioapic_initialize_redirection_table(int maximum_redirection)
 {
 // Called by __setup_ioapic().
 
-    // 24
+// 24
     int Max = (int) maximum_redirection;
-
     if (Max < 0)
        panic("__ioapic_initialize_redirection_table: Max\n");
-// Invalid range
     if (Max > 24)
         panic("__ioapic_initialize_redirection_table: Max\n");
 
 
+    // The BSP needs to be initialized
     if (lapic_info[0].initialized != TRUE)
         panic("__ioapic_initialize_redirection_table: It depends on lapic_info[0].initialized\n");
 
+    // Get the hw id
     unsigned int id = (unsigned int) lapic_info[0].local_id;
 
 // --------------------------
@@ -243,28 +240,29 @@ static int __ioapic_initialize_redirection_table(int maximum_redirection)
 // 0x02 --> 34
 // ...
 
-    unsigned char First = 32;
-
     register int i=0;
+    unsigned char First = 32;  // Start with irq0?
+    const unsigned char IsMasked = 1;
+
     for (i=0; i<Max; i++) 
     {
-            //if (i == 11){
-            //}
-            // else
-            
-            // Escreve na tabela e configura registradores.
-	        __set_ioapic_redir_table(
-	            i,         // IRQn
-	            (First + i),  // vector
-	            0,         // Delivery Mode
-	            0,         // Destination Mode
-	            0,         // RO
-	            0,         // Interrupt Input Pin Polarity
-	            0,         // RO
-	            0,
-	            1,         // masked 
-	            id );      // lapic id.
-
+        //if (i == 11){
+        //}
+        // else
+    
+        // Escreve na tabela e configura registradores.
+        __set_ioapic_redir_table(
+	        i,            // IRQn
+	        (First + i),  // vector
+	        0,            // Delivery Mode
+	        0,            // Destination Mode
+	        0,            // RO
+	        0,            // Interrupt Input Pin Polarity
+	        0,            // RO
+	        0,
+	        IsMasked,     // masked 
+	        id            // lapic id
+        );      
     };
 
     return 0;
@@ -302,7 +300,7 @@ static int __setup_ioapic(void)
     if (lapic_info[0].initialized != TRUE)
         panic("__setup_ioapic: It depends on lapic_info[0].initialized\n");
     unsigned int id = (unsigned int) lapic_info[0].local_id;
-    write_ioapic_register(IO_APIC_ID,id);
+    write_ioapic_register(IO_APIC_ID, id);
 
 // -------------------------
 // Fill the table.
@@ -313,13 +311,20 @@ static int __setup_ioapic(void)
 // Initialize the redirection table
     __ioapic_initialize_redirection_table(MaximumRedirection);
 
+//
+// Unmask some of them
+//
 
+// IRQ1 → vector 33
     if (CONFIG_INITIALIZE_IOAPIC_UNMASK_KBD == 1)
         ioapic_umasked(1);
+// IRQ12 → vector 44
     if (CONFIG_INITIALIZE_IOAPIC_UNMASK_MOUSE == 1)
         ioapic_umasked(12);
+// IRQ14 → vector 46,
     if (CONFIG_INITIALIZE_IOAPIC_UNMASK_PRIMARY_IDE == 1)
         ioapic_umasked(14);
+// IRQ15 → vector 47
     if (CONFIG_INITIALIZE_IOAPIC_UNMASK_SECONDARY_IDE == 1)
         ioapic_umasked(15);
 

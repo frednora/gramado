@@ -1141,7 +1141,7 @@ do_clone:
 
 // #debug
     debug_print("copy_process: [5] Check signature\n");
-    //printk ("copy_process: [5] Check signature\n");
+    printk ("copy_process: [5] Check signature\n");
 
 // #bugbug
 // O processo init deve ter suas proprias tabelas de paginas.
@@ -1444,7 +1444,7 @@ do_clone:
 // #debug
     debug_print("copy_process: [5] Done\n");
     //debug_print ("----------------------\n");
-    //printk ("copy_process: [5] Done\n");
+    printk ("copy_process: [5] Done\n");
 
 
 // #todo

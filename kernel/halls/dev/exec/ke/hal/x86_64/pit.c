@@ -239,6 +239,10 @@ irq0_TIMER (void)
 // After task switching, the spawn routine no longer needs to send EOI. 
 // The assembly return sequence will handle EOI for us.
     spawn_reset_eoi_state();
+
+
+    if (CONFIG_USE_LAPIC_TIMER_FOR_TS == 1)
+        local_apic_eoi(0);  // BSP
 }
 
 

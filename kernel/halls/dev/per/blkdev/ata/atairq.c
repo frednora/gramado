@@ -29,6 +29,14 @@ static void DeviceInterface_PrimaryIDE(void)
 
 // Set flag.
     ata_irq_invoked = TRUE;
+
+/*
+// Read all four ports' status registers
+    unsigned char s0 = ata_status_read(0);
+    unsigned char s1 = ata_status_read(1);
+    unsigned char s2 = ata_status_read(2);
+    unsigned char s3 = ata_status_read(3);
+*/
 }
 
 
@@ -43,6 +51,14 @@ static void DeviceInterface_SecondaryIDE(void)
 
 // Set flag.
     ata_irq_invoked = TRUE;
+
+/*
+// Read all four ports' status registers
+    unsigned char s0 = ata_status_read(0);
+    unsigned char s1 = ata_status_read(1);
+    unsigned char s2 = ata_status_read(2);
+    unsigned char s3 = ata_status_read(3);
+*/
 }
 
 
@@ -68,7 +84,10 @@ irq14_PRIMARY_IDE (void)
     // #test
     // apic eoi
     if (CONFIG_INITIALIZE_IOAPIC_UNMASK_PRIMARY_IDE == 1)
+    {
         local_apic_eoi(0);  // BSP
+        printk ("IDE 14: EOI\n");
+    }
 }
 
 // Interrupt handler.
@@ -81,7 +100,11 @@ irq15_SECONDARY_IDE (void)
     // #test
     // apic eoi
     if (CONFIG_INITIALIZE_IOAPIC_UNMASK_SECONDARY_IDE == 1)
+    {
+        //printk ("IDE 15: EOI\n");
         local_apic_eoi(0);  // BSP
+        printk ("IDE 15: EOI\n");
+    }
 }
 
 
@@ -131,14 +154,9 @@ unsigned char ata_wait_irq (int p)
 }
 
 
-/*
- * disk_ata_wait_irq:
- *     Esperando pela interrupção.
- *
- */
-
+// disk_ata_wait_irq:
+// Esperando pela interrupção.
 // #obs: Tem uma função semelhante logo acima.
-
 // OUT:
 //     0    = ok por status da interrupção. 
 //     -1   = ok por status do controlador.
@@ -146,34 +164,50 @@ unsigned char ata_wait_irq (int p)
 
 int disk_ata_wait_irq (int p)
 {
-    unsigned long Timeout = 1000;
+    unsigned long Timeout = 10000;
     unsigned char Data=0;
+
+    printk("disk_ata_wait_irq: Start\n");
+
 // Ok, recebemos uma interrupção e retornaremos 0 erros.
-    if ( ata_irq_invoked == TRUE ){ goto done; }
-    while (!ata_irq_invoked)
+    if (ata_irq_invoked == TRUE){ 
+        goto done; 
+    }
+
+/*
+// Wait for interrupt
+    while ( ata_irq_invoked != TRUE )
     {
+        // Read status
         Data = (unsigned char) ata_status_read(p);
-        // O status indicou um erro.
-        if (Data & ATA_SR_ERR){
-            ata_irq_invoked = FALSE;   
-            return (int) -1;
+
+        // O status indicou um erro
+        if (Data & ATA_SR_ERR)
+        {
+            //ata_irq_invoked = FALSE;   
+            //return (int) -1;
         }
+
         // Não temos erro.
         // Se o tempo acabou, saímos indcando com 0x80.
-        if (Timeout==0){
-            ata_irq_invoked = FALSE;
-            return (int) 0x80;
+        if (Timeout == 0)
+        {
+            //ata_irq_invoked = FALSE;
+            //return (int) 0x80;
         }
+
         // Continua a contagem.
         ata_wait(400);
         Timeout--;
     };
+*/
+
 // Saímos do while. 
 // Isso indica que a flag foi acionada durante o loop.
 // OK por status da interrupção.
 done:
     ata_irq_invoked = FALSE;
+    printk("disk_ata_wait_irq: End\n");
     return 0;
 }
-
 

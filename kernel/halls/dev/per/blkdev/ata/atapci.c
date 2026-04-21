@@ -391,6 +391,27 @@ int atapciSetupMassStorageController(struct pci_device_d *D)
     // printk ("[ Interrupt Line %x Interrupt Pin %x ]\n", 
     //     D->irq_line, D->irq_pin );
 
+    /*
+    printk("[ IDE PCI: bus=%d dev=%d func=%d line=%d pin=%d ]\n",
+       D->bus, D->dev, D->func,
+       D->irq_line, D->irq_pin );
+    */
+
+/*
+Interpret them:
+irq_line → the legacy IRQ number (e.g. 14, 15, or something else).
+irq_pin → tells you which PCI interrupt pin (INTA#, INTB#, etc.) is in use. 
+The chipset maps these pins to IOAPIC inputs.
+*/
+
+/*
+    refresh_screen();
+    while (1)
+    {
+        asm ("hlt\n");
+    }
+*/
+
 //
 // == DMA ====================
 //

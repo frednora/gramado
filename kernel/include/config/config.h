@@ -125,6 +125,8 @@
 // Do the same for the other interrupts.
 // We need to unmask it in ioapic.c and implement the eoi in the handler.
 // ...
+#define CONFIG_USE_LAPIC_TIMER_FOR_TS  0
+// ...
 
 // ------------------------------------------------------
 

@@ -748,6 +748,7 @@ static int input_compare_string(void)
             rtl_sleep(2000);  //2sec
             sc82(10011, shell2_tid, shell2_tid, shell2_tid);
         }
+        printf ("init: Exit ...\n");
         exit(0);
         //isTimeToQuitCmdLine = TRUE;
         goto exit_cmp;

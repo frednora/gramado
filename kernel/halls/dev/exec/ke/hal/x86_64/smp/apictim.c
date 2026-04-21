@@ -283,8 +283,13 @@ int apictim_initialize(int lapic_info_id)
 // This is the reload value for periodic mode.
 // Now eax holds appropriate number of ticks, 
 // use it as APIC timer counter initializer.
-    apic_timer_ticks = 1000;
-    __apictim_write_command(LAPIC_INITIAL_COUNT_TIMER, apic_timer_ticks, lapic_info_id);
+
+    unsigned int ticks_per_ms = apic_timer_ticks / 10;
+    __apictim_write_command(LAPIC_INITIAL_COUNT_TIMER, ticks_per_ms, lapic_info_id);
+
+    //apic_timer_ticks = 1000;
+    //__apictim_write_command(LAPIC_INITIAL_COUNT_TIMER, apic_timer_ticks, lapic_info_id);
+
 
 
 // #test

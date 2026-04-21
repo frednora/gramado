@@ -1509,6 +1509,8 @@ PeripheralHall_irq14:
     ;push es
     push fs
     push gs
+    pushfq    
+
 
     fxsave [__hw_fpu_buffer]
 
@@ -1529,6 +1531,7 @@ PeripheralHall_irq14:
     
     ;POPAD
     ;pop eax
+    popfq
     pop gs
     pop fs
     ;pop es
@@ -1604,6 +1607,7 @@ PeripheralHall_irq15:
     ;push es
     push fs
     push gs
+    pushfq
 
     fxsave [__hw_fpu_buffer]
 
@@ -1629,6 +1633,7 @@ PeripheralHall_irq15:
 
     ;POPAD
     ;pop eax
+    popfq
     pop gs
     pop fs
     ;pop es

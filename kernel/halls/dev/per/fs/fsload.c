@@ -145,7 +145,7 @@ fsLoadFile (
 
     // #debug:
     //debug_print ("fsLoadFile:\n");
-    //printk    ("fsLoadFile:\n");
+    printk("fsLoadFile:\n");
 
 // Parameters:
 // Fat address and dir address.
@@ -424,7 +424,9 @@ __found:
 //loadFAT:
 // 246?
 
+    //printk("fsLoadFile: Load fat\n");
     fs_load_fat( VOLUME1_FAT_ADDRESS, VOLUME1_FAT_LBA, 246 );
+    printk("fsLoadFile: Load fat ok\n");
 
 // Load clusters.
 // Carregar o arquivo, cluster por cluster.
@@ -534,12 +536,15 @@ __loop_next_entry:
         panic("fsLoadFile: fat[] vector limits.\n");
     }
 
-// Read disk.
+// Read disk
+
+    //printk("read lba:\n");
     int FakeDiskId = 0;  //#todo: fake disk id.
     read_lba ( 
         FakeDiskId,  // #todo: fake disk id.
         Buffer, 
         ( VOLUME1_DATAAREA_LBA + cluster -2 )); 
+    //printk("read lba: ok\n");
 
 // Update buffer pointer
     Buffer = (unsigned long) (Buffer + SectorSize); 
@@ -576,8 +581,8 @@ __loop_next_entry:
             panic("fsLoadFile: nreads\n");
         }
 
-        // 0 = OK
-        return (int) 0;
+        printk("fsLoadFile: done\n");
+        return (int) 0;          // 0 = OK
     }
 
     nreads++;
@@ -779,8 +784,7 @@ fsLoadProgramFromDE (
                 program_name, 
                 (unsigned long) buffer,  // buffer
                 (unsigned long) buffer_size_in_bytes );  // buffer limits in bytes
-    if (Status != 0)
-    {
+    if (Status != 0){
         goto fail;
     }
     return 0;
@@ -1364,8 +1368,8 @@ __try_to_load_program_from_special_folder(
 // done:
     if (Status == 0)
     {
-        // OK.
-        return 0;
+
+        return 0;  // OK.
     }
 
 fail:
@@ -1406,6 +1410,9 @@ fs_load_image(
     // ????????
     unsigned long BUGBUG_OVERFLOW = ( 32*128 );
 
+
+    printk("fs_load_image: Start\n");
+
 // Parameter:
     if ((void*) filename == NULL){
         printk("fs_load_image: filename\n");
@@ -1435,6 +1442,8 @@ fs_load_image(
     if ( *filename == '@' || 
          *filename == '#' )
     {
+
+        printk("fs_load_image: Special folder\n");
         return (int) __try_to_load_program_from_special_folder( 
                         filename, image_va );
     }
@@ -1524,8 +1533,8 @@ __found:
                   (unsigned long) image_va,
                   BUGBUG_IMAGE_SIZE_LIMIT );
 
-// ok?
-    return (int) Status;
+    printk("fs_load_image: End\n");
+    return (int) Status;   // ok?
 
 fail:
 
@@ -1533,6 +1542,8 @@ fail:
     // We still need this kind of break,
     // cause the fs infrastructure is still immature.
     // panic("fs_load_image: fail\n");
+
+    printk("fs_load_image: Fail\n");
 
     return (int) -1;
 }

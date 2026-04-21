@@ -43,6 +43,10 @@ global PeripheralHall_lapic_timer_handler
 PeripheralHall_lapic_timer_handler:
 
     cli
+    jmp PeripheralHall_irq0
+
+
+    cli
     push rax
     push rbx
     push rcx
@@ -903,13 +907,15 @@ setup_vectors:
 
 ; 46 - IDE
 ; irq 14
-    mov rax,  qword unhandled_irq
+    ;mov rax,  qword unhandled_irq
+    mov rax,  qword PeripheralHall_irq14
     mov rbx,  qword 46
     call _setup_system_interrupt_hw  ; 0x8E00
 
 ; 47 - IDE
 ; irq 15
-    mov rax,  qword unhandled_irq
+    ;mov rax,  qword unhandled_irq
+    mov rax,  qword PeripheralHall_irq15
     mov rbx,  qword 47
     call _setup_system_interrupt_hw  ; 0x8E00
 

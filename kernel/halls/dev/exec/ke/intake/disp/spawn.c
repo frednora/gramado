@@ -76,9 +76,14 @@ __spawn_enter_kernelmode(
     //refresh_screen();
     //while(1){}
 
-    if (eoi == TRUE){
+    if (eoi == TRUE)
+    {
         asm volatile ("movb $0x20, %al \n");
         asm volatile ("outb %al, $0x20 \n");
+
+        // LAPIC
+        if (CONFIG_USE_LAPIC_TIMER_FOR_TS == 1)
+            local_apic_eoi(0);  // BSP
     }
 
 
@@ -154,9 +159,17 @@ __spawn_enter_usermode(
     unsigned long RING3_RSP  = (unsigned long) rsp3_va;
     int fOption1 = TRUE;
 
-    if (eoi == TRUE){
+
+// Necessary
+    if (eoi == TRUE)
+    {
+        // PIC
         asm ("movb $0x20, %al \n");
         asm ("outb %al, $0x20 \n");
+
+        // LAPIC
+        if (CONFIG_USE_LAPIC_TIMER_FOR_TS == 1)
+            local_apic_eoi(0);  // BSP
     }
 
 // #todo
