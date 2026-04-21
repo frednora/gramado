@@ -94,9 +94,6 @@ static unsigned int local_apic_read_command(
 static void local_apic_write_command(
     unsigned short addr,unsigned int val, int lapic_info_id);
 
-static unsigned int local_apic_get_id(int lapic_info_id);
-static unsigned int local_apic_get_version(int lapic_info_id);
-
 
 // apic stuffs for x86.
 static inline void imcr_pic_to_apic (void);
@@ -113,6 +110,16 @@ void flush_cashes(void)
 	__asm__("wbinvd");
 }
 */
+
+void apic_mark_cpu_as_running(int lapic_info_id)
+{
+    if (lapic_info_id < 0)
+        return;
+    if (lapic_info_id >= NR_CPUS)
+        return;
+    lapic_info[lapic_info_id].running = TRUE;
+}
+
 
 // Handler for the lapic timer (test)
 void apic_TimerHandler0000(void)
@@ -164,7 +171,7 @@ static void local_apic_write_command(unsigned short addr,unsigned int val, int l
 // Get local apic id.
 // see: https://wiki.osdev.org/APIC#Local_APIC_registers
 // bits 24~31 for pentium 4 and later.
-static unsigned int local_apic_get_id(int lapic_info_id)
+unsigned int apic_get_id(int lapic_info_id)
 {
     return (unsigned int) (local_apic_read_command(LAPIC_APIC_ID, lapic_info_id) >> 24) & 0xFF;
 }
@@ -173,7 +180,7 @@ static unsigned int local_apic_get_id(int lapic_info_id)
 // see: https://wiki.osdev.org/APIC#Local_APIC_registers
 // bits: 0~7 for Integrated APIC.
 // 10H~15H
-static unsigned int local_apic_get_version(int lapic_info_id)
+unsigned int apic_get_version(int lapic_info_id)
 {
     return (unsigned int) (local_apic_read_command(LAPIC_APIC_VERSION, lapic_info_id) & 0xFF);
 }
@@ -595,7 +602,8 @@ void apic_setup_registers(int lapic_info_id)
     // LAPIC_APIC_ID
 	//*(volatile unsigned int*)(lapicbase + APIC_ID) = APIC_ID_0 << 24;
 
-    localId = local_apic_get_id(lapic_info_id);
+    localId = apic_get_id(lapic_info_id);
+    lapic_info[lapic_info_id].local_id = (int) (localId & 0xFF);
 
 // -- Interrupts ----------------------------------------------------
 
@@ -929,6 +937,10 @@ So:
         getapicbase() );
 */
 
+// BSP is using LAPIC
+    if (lapic_info_id == 0)
+        smp_info.bsp_is_using_lapic = TRUE;
+
 
 // Setup apic timer 
 // see: apictim.c
@@ -948,16 +960,12 @@ fail:
     return;
 }
 
-
 // #bugbug
 // This routine used a lot of hardcoded addresses.
 // PAGETABLE_RES5, LAPIC_VA, PD_ENTRY_LAPIC, KERNEL_PD_PA.
 // IN:
 // lapic_pa - ?
 // lapic_info_id - Id for the processor structure.
-int lapic_info_initializing(unsigned long lapic_pa)
-{
-// >> Called in x64smp.c
 // Setup BSP's local APIC.
 // That routine maps the LAPIC registers, reads the ID/version, and 
 // marks lapic_info[0].initialized = TRUE.
@@ -965,22 +973,18 @@ int lapic_info_initializing(unsigned long lapic_pa)
 // + Map memory for the registers
 // + Setup the initialization flag
 
-/*
-    printk("lapic_initializing: Processor n={%d}\n", lapic_info_id);
+int lapic_info_initializing(unsigned long lapic_pa)
+{
+// Called in x64smp.c
 
-    if (lapic_info_id < 0)
-        goto fail;
-    if (lapic_info_id >= NR_CPUS)
-        goto fail;
-    lapic_info[lapic_info_id].initialized = FALSE;
-*/
+    // #debug
+    // printk("lapic_initializing: lapic_pa = {%x}\n", lapic_pa);
 
 // Invalid address.
 // 0xFEE00000
 // see: x64gpa.h
     if (lapic_pa != __LAPIC_PA)
     {
-        //lapic_info[lapic_info_id].initialized = FALSE;
         //panic("lapic_initializing: lapic_pa\n");
         printk("lapic_initializing: lapic_pa\n");
         goto fail;
@@ -1001,38 +1005,28 @@ int lapic_info_initializing(unsigned long lapic_pa)
 // Identidade 1:1.
     //unsigned long *pt_lapic = (unsigned long *) get_table_pointer_va();
 
-// -------------
-// pa
-    //lapic_info[lapic_info_id].lapic_pa = (unsigned long) (lapic_pa & 0xFFFFFFFF);
-// -------------
-// va
-// see: x64gva.h
-    //lapic_info[lapic_info_id].lapic_va = (unsigned long) LAPIC_VA;
 
 // -------------------------------------
-// Mapping area for registers.
+// Mapping area for registers
 
     int map_status = -1;
+
+    // IN: pa, va
     map_status = 
-        (int) mm_map_2mb_region( 
-            (lapic_pa & 0xFFFFFFFF), //lapic_info[lapic_info_id].lapic_pa, 
-            LAPIC_VA //lapic_info[lapic_info_id].lapic_va 
-        );
-    if (map_status != 0)
+        (int) mm_map_2mb_region( (lapic_pa & 0xFFFFFFFF), LAPIC_VA );
+    if (map_status != 0){
         panic("lapic_initializing: on mm_map_2mb_region()\n");
+    }
 
 //==========================================
 
-// flush tlb
-// #bugbug
-// Maybe we need to call a method for that.
+// Flush TLB
+// #bugbug: Maybe we need to call a method for that
 
     asm ("movq %cr3, %rax");
     asm ("movq %rax, %cr3");
 
 //=====================================
-
-// Let's get some information about the BSP LAPIC.
 
 // Check values into the registers:
 // see: 
@@ -1046,10 +1040,12 @@ int lapic_info_initializing(unsigned long lapic_pa)
     for (i=0; i<NR_CPUS; i++)
     {
         lapic_info[i].initialized = FALSE;
+        lapic_info[i].running = FALSE;
 
         // -------------
         // pa
         lapic_info[i].lapic_pa = (unsigned long) (lapic_pa & 0xFFFFFFFF);
+
         // -------------
         // va
         // see: x64gva.h
@@ -1057,18 +1053,20 @@ int lapic_info_initializing(unsigned long lapic_pa)
 
         // ---------------
         // ID (the real id provided by the hardware)
-        localid = (int) local_apic_get_id(i);
-        lapic_info[i].local_id = (int) (localid & 0xFF);
+        //localid = (int) apic_get_id(i);
+        //lapic_info[i].local_id = (int) (localid & 0xFF);
+        lapic_info[i].local_id = 0;
         //printk("localid: %d\n",lapic_info[lapic_info_id].local_id);
+
 
         // ---------------
         // Version
         // 8bits
         // 10H~15H
-        localversion = (int) local_apic_get_version(i);
-        lapic_info[i].local_version = (int) (localversion & 0xFF);
+        //localversion = (int) apic_get_version(i);
+        //lapic_info[i].local_version = (int) (localversion & 0xFF);
+        lapic_info[i].local_version = 0;
         //printk("localversion: %xH\n", lapic_info[lapic_info_id].local_version);
-
 
         //=====================================
         // Destination Format Register (DFR)
@@ -1080,25 +1078,39 @@ int lapic_info_initializing(unsigned long lapic_pa)
         //*(volatile unsigned int*)(lapic_info[lapic_info_id].lapic_va + ?) = 0x01000000; 
         //*(volatile unsigned int*)(lapic_info[lapic_info_id].lapic_va + 0x20) = 8;
 
-
-        // Print:
-        printk("ID: %d | VERSION: %xH\n",
-            lapic_info[i].local_id,
-            lapic_info[i].local_version 
-        );
-
-        // #hackhack
-        // This is just a test for now.
+        // #hackhack: This is just a test for now.
         lapic_info[i].initialized = TRUE;
     };
+
+    // ---------------
+    // ID (the real id provided by the hardware)
+    localid = (int) apic_get_id(0);
+    lapic_info[0].local_id = (int) (localid & 0xFF);
+ 
+    // ---------------
+    // Version
+    // 8bits
+    // 10H~15H
+    localversion = (int) apic_get_version(0);
+    lapic_info[0].local_version = (int) (localversion & 0xFF);
+
+    // Print:
+    printk("ID: %d | VERSION: %x\n",
+        lapic_info[i].local_id,
+        lapic_info[i].local_version 
+    );
+
+    // The BSP is already running
+    apic_mark_cpu_as_running(0);
+
+    // refresh_screen();
+    // while (1){ asm("hlt"); }
 
     return TRUE;
 
 fail:
-    //lapic_info[lapic_info_id].initialized = FALSE;
     return FALSE;
 }
-
 
 //
 // End

@@ -227,13 +227,16 @@ See: apple opensource
 struct lapic_info_d
 {
     int initialized;
+	int running;  // Already initialized and running
 
     unsigned long lapic_va;
     unsigned long lapic_pa; 
-    int entry;  // pagedirectory entry.
+    int entry;  // pagedirectory entry. ?
 
-    int local_id;  // CPU id ?
+    int local_id;  // CPU id? Provided by hardware.
     int local_version;
+
+	// ...
 };
 
 // #bugbug: Limited number for now.
@@ -246,7 +249,11 @@ extern struct lapic_info_d lapic_info[NR_CPUS];
 
 extern int apic_SPINLOCK;
 
+unsigned int apic_get_id(int lapic_info_id);
+unsigned int apic_get_version(int lapic_info_id);
 
+
+void apic_mark_cpu_as_running(int lapic_info_id);
 
 // Handler for the lapic timer (test)
 void apic_TimerHandler0000(void);
@@ -263,7 +270,6 @@ void local_apic_send_init(unsigned int apic_id, int lapic_info_id);
 void local_apic_send_startup(unsigned int apic_id, unsigned int vector, int lapic_info_id);
 void Send_INIT_IPI_Once(unsigned int apic_id, int lapic_info_id);
 void Send_STARTUP_IPI_Twice(unsigned int apic_id, int lapic_info_id);
-
 
 void apic_setup_registers(int lapic_info_id);
 int lapic_info_initializing(unsigned long lapic_pa);

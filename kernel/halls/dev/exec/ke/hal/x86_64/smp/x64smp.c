@@ -102,10 +102,10 @@ void x64smp_show_info(void)
     if (smp_info.probe_via_mp_failed == TRUE)
         printk("Probe via MP failed\n");
 
-    printk("NR processors: %d\n", smp_info.mptable_number_of_processors);
-    printk("NR AP running: %d\n", smp_info.nr_ap_running);
-    printk("PIC disabled:  %d\n", smp_info.bsp_pic_is_disabled);
-    printk("Using LAPIC:   %d\n", smp_info.bsp_is_using_lapic);
+    printk("NR processors:      %d\n", smp_info.mptable_number_of_processors);
+    printk("NR AP running:      %d\n", smp_info.nr_ap_running);
+    printk("PIC disabled:       %d\n", smp_info.bsp_pic_is_disabled);
+    printk("BSP is using LAPIC: %d\n", smp_info.bsp_is_using_lapic);
     // ...
 }
 

@@ -127,12 +127,30 @@ void __show_cpu_intel_parameters(void)
     }
 
 // LAPIC
+/*
     if(lapic_info[0].initialized == TRUE){
         printk("lapic_info[0].lapic_pa %x \n",lapic_info[0].lapic_pa);
         printk("lapic_info[0].lapic_va %x \n",lapic_info[0].lapic_va);
         printk("lapic_info[0].local_id %d \n",lapic_info[0].local_id);
     }else{
         printk("[ERROR] LAPIC not initialized\n");
+    };
+*/
+
+    int slot = 0;
+    for (slot=0; slot<NR_CPUS; slot++)
+    {
+        if (lapic_info[slot].initialized == TRUE)
+        {
+            if (lapic_info[slot].running == TRUE)
+            {
+                printk("slot id: %d | hw_id: %d is running | version: %x\n",
+                    slot, 
+                    lapic_info[slot].local_id, 
+                    lapic_info[slot].local_version
+                );
+            }
+        }
     };
 
 // IOAPIC

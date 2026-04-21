@@ -155,24 +155,72 @@ static void panic_at_init(int error_code, kernel_subsystem_t subsystem_id);
 // =======================================================
 //
 
+static int ap_startup_counter = 0;
+
 // The early initialization in Assembly
 // See: head_64.asm
 extern void asm_AP_early_initialization(void);
 
-// void ap_entry_point00(void);
-void ap_entry_point00(void)
+
+// The AP reads its info here when it arrives.
+struct welcome_ap_d 
+{
+    int my_lapic_info_id;
+    int bsp_is_waiting;  // TRUE or FALSE
+    // ...
+};
+struct welcome_ap_d  WelcomeAP;
+
+//
+// #
+// AP INITIALIZATION
+//
+
+void AP_kmain(void)
 {
 // The entry point for the APs.
     int i=0;
 
     asm ("cli");
-
-// #test: Pausing the ap forever.
     //asm (" hlt ");
+    ap_startup_counter++;  // Update counter
+
+
+    // Get the slot id in lapic_info[] database.
+    int id = WelcomeAP.my_lapic_info_id;
+    if (id < 0)
+        goto AP_die;
+    if (id >= NR_CPUS)
+        goto AP_die;
 
 // Make some very basic initialization,
 // just like the GDT.
     //asm_AP_early_initialization();
+
+    int localid;
+    int localversion;
+
+    // ---------------
+    // ID (the real id provided by the hardware)
+    localid = (int) apic_get_id(id);
+    lapic_info[id].local_id = (int) (localid & 0xFF);
+ 
+    // ---------------
+    // Version
+    // 8bits
+    // 10H~15H
+    localversion = (int) apic_get_version(id);
+    lapic_info[id].local_version = (int) (localversion & 0xFF);
+
+    // Print:
+    printk("slot id:%d | HW ID: %d | VERSION: %x\n",
+        id,
+        lapic_info[id].local_id,
+        lapic_info[id].local_version 
+    );
+
+    apic_mark_cpu_as_running(id);  // The Core 1 is running now.
+    WelcomeAP.bsp_is_waiting = FALSE; // BSP can continue
 
 
     // #test
@@ -606,7 +654,10 @@ static int earlyinit_SetupBootblock(void)
 // ==========================
 static void earlyinit_Globals(int arch_type)
 {
-// We don't have any print support for now.
+// We don't have any print support for now
+
+    ap_startup_counter = 0;  // Initialize
+    WelcomeAP.my_lapic_info_id = -1;  // fail
 
 // Scheduler policies
 // Early initialization.
@@ -810,10 +861,13 @@ static int __test_initialize_ap_processor(int apic_id)
         // #important
         // Updating information inside the shared area.
         printk("Updating shared area ...\n");
-        ap_shmm[0] = (unsigned long) &ap_entry_point00; 
+        ap_shmm[0] = (unsigned long) &AP_kmain; 
 
         //int target_index = 1;  // array slot for the first AP
         //unsigned int apic_id = lapic_info[target_index].local_id;
+
+        WelcomeAP.bsp_is_waiting = TRUE;  // Waiting for the AP
+        WelcomeAP.my_lapic_info_id = 1;   // AP's slot in lapic_info[] table.
 
         // (Step 2)
         printk("Sending INIT IPI ...\n");
@@ -836,6 +890,15 @@ static int __test_initialize_ap_processor(int apic_id)
                 printk("kernel: AP is running in 64bit\n");
                 // Our first AP processor is running
                 smp_info.nr_ap_running = 1;
+
+                while (1)
+                {
+                    asm (" pause \n ");
+                    if (WelcomeAP.bsp_is_waiting != TRUE)
+                        break;
+                };
+
+                //apic_mark_cpu_as_running(1);  // The Core 1 is running now.
                 break;
             }
             /*
@@ -1359,7 +1422,7 @@ fail:
 
 //
 // $
-// MAIN
+// BSP INITIALIZATION
 //
 
 // --------------------------------
@@ -1473,21 +1536,6 @@ void I_kmain(int arch_type)
     PROGRESS("Initialization fail\n");
     x_panic("Error: 0x02");
     die();
-// Not reached
-    while (1){
-        asm ("cli");
-        asm ("hlt");
-    };
-}
-
-// First function called by all the AP processors.
-void AP_kmain(void)
-{
-
-    //
-    // #todo
-    //
-
 // Not reached
     while (1){
         asm ("cli");

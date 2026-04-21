@@ -84,7 +84,6 @@ struct smp_info_d
 // Step3:
 // Setup the LAPIC for BSP.
 
-// The BSP is using the his LAPIC.
     int bsp_is_using_lapic;
 
 // The BSP processor will comunicate with the AP
