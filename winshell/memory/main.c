@@ -249,12 +249,21 @@ static void update_children(int fd)
 
     // Draw the label string inside
     const char *label_chose = "System Memory Status: ";
+
+    /*
     libgui_drawstring(
-        frame_left + cr_left +20, 
-        frame_top  + cr_top +label_y,  //20 
+        frame_left + cr_left + 20, 
+        frame_top  + cr_top  + label_y,
         label_chose,
         COLOR_BLACK, COLOR_GRAY, 0
     );
+    */
+    libgui_drawstringblock(
+        frame_left + cr_left + 20,
+        frame_top  + cr_top  + label_y,
+        COLOR_BLACK, //0xFF888888,
+        label_chose,
+        2 );
 
 
     // Metrics block
@@ -598,12 +607,23 @@ int main(int argc, char *argv[])
 
     // Draw the label string inside
     const char *label_chose = "System Memory Status: ";
+
+    /*
     libgui_drawstring(
-        frame_left + cr_left +20, 
-        frame_top  + cr_top +20, 
+        frame_left + cr_left + 20, 
+        frame_top  + cr_top  + 20, 
         label_chose,
         COLOR_BLACK, COLOR_GRAY, 0
     );
+    */
+
+    libgui_drawstringblock(
+        frame_left + cr_left + 20,
+        frame_top  + cr_top  + 20,
+        COLOR_BLACK, //0xFF888888,
+        label_chose,
+        2 );
+
 
     // Button baseline sizes
     unsigned long button_w = cr_width / 5;

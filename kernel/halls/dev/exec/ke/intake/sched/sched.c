@@ -86,9 +86,9 @@ static void sched_quick_and_dirty_load_balancer(void)
     }
 }
 
+// Notify parent process that something happened
 static void __sched_notify_parent(struct thread_d *thread, int event_number)
 {
-// Notify parent process that something happened.
 
     // #todo
     // This is a work in progress!

@@ -1425,8 +1425,7 @@ void *sci0 (
         if (int_retval < 0){
             return (void*) (int_retval & 0xFFFFFFFF);
 		}
-		// OK
-		return NULL;
+		return NULL;  //ok
     }
 
 // #bugbug
@@ -1534,7 +1533,7 @@ void *sci0 (
         
         browser_server_ok = 
             (int) network_register_ring3_browser(
-                (struct cgroup_d *) arg2, (pid_t) arg3);
+                (struct cgroup_d *) arg2, (pid_t) arg3 );
         
         if (browser_server_ok == TRUE){
             return (void*) TRUE;
