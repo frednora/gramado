@@ -138,7 +138,9 @@ gdt_end:
 
 gdt_ptr:
     dw gdt_end - gdt - 1
-    dd gdt
+    dq gdt
+    ;dd gdt
+    ;dd 0x00000000
 
 ;
 ; ==================================================
@@ -219,6 +221,10 @@ switch_to_long_mode:
     mov cr0, eax
 
 
+    ; Load a proper GDT again in 32bit protected mode
+    lgdt [gdt_ptr] 
+
+
 ; 5) Far jump to 64-bit code segment to activate long mode
 ; dword because it is still in 32bit mode.
     jmp dword CODE64_SEL:ap_long_entry
@@ -237,6 +243,9 @@ ap_long_entry:
     mov ds, ax
     mov es, ax
     mov ss, ax
+
+    ; Load a proper GDT again in 64bit long mode
+    lgdt [gdt_ptr]   
 
     ; Set a known-good 64-bit stack (label immediate, not memory)
     ;lea rsp, [stack64_begin]

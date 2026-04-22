@@ -157,10 +157,6 @@ static void panic_at_init(int error_code, kernel_subsystem_t subsystem_id);
 
 static int ap_startup_counter = 0;
 
-// The early initialization in Assembly
-// See: head_64.asm
-extern void asm_AP_early_initialization(void);
-
 
 // The AP reads its info here when it arrives.
 struct welcome_ap_d 
@@ -176,13 +172,15 @@ struct welcome_ap_d  WelcomeAP;
 // AP INITIALIZATION
 //
 
+// Real entry point for the AP
+extern void asm_AP_entry_point(void);
+
 void AP_kmain(void)
 {
 // The entry point for the APs.
     int i=0;
 
     asm ("cli");
-    //asm (" hlt ");
     ap_startup_counter++;  // Update counter
 
 
@@ -193,9 +191,6 @@ void AP_kmain(void)
     if (id >= NR_CPUS)
         goto AP_die;
 
-// Make some very basic initialization,
-// just like the GDT.
-    //asm_AP_early_initialization();
 
     int localid;
     int localversion;
@@ -222,6 +217,16 @@ void AP_kmain(void)
     apic_mark_cpu_as_running(id);  // The Core 1 is running now.
     WelcomeAP.bsp_is_waiting = FALSE; // BSP can continue
 
+//
+// Early die
+//
+
+    //asm (" hlt ");
+
+
+    // #todo 
+    // Now we gotta setup the lapic for this AP 
+
 
     // #test
     // Drawing rectangles
@@ -238,7 +243,11 @@ void AP_kmain(void)
         for (i=0; i<200; i++){
             frontbuffer_draw_rectangle( 0, i, 4, 4, Color, 0 );
         };
+
+        // some interrupt handler need the thread initialization
+        // asm (" int $3 \n ");
     };
+
 
 AP_die:
     while (1){
@@ -861,7 +870,8 @@ static int __test_initialize_ap_processor(int apic_id)
         // #important
         // Updating information inside the shared area.
         printk("Updating shared area ...\n");
-        ap_shmm[0] = (unsigned long) &AP_kmain; 
+        //ap_shmm[0] = (unsigned long) &AP_kmain; 
+        ap_shmm[0] = (unsigned long) &asm_AP_entry_point; // In Assembly
 
         //int target_index = 1;  // array slot for the first AP
         //unsigned int apic_id = lapic_info[target_index].local_id;

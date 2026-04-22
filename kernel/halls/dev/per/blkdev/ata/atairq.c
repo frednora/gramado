@@ -167,7 +167,7 @@ int disk_ata_wait_irq (int p)
     unsigned long Timeout = 10000;
     unsigned char Data=0;
 
-    printk("disk_ata_wait_irq: Start\n");
+    //printk("disk_ata_wait_irq: Start\n");
 
 // Ok, recebemos uma interrupção e retornaremos 0 erros.
     if (ata_irq_invoked == TRUE){ 
@@ -207,7 +207,7 @@ int disk_ata_wait_irq (int p)
 // OK por status da interrupção.
 done:
     ata_irq_invoked = FALSE;
-    printk("disk_ata_wait_irq: End\n");
+    //printk("disk_ata_wait_irq: End\n");
     return 0;
 }
 

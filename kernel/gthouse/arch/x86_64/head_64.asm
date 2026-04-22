@@ -2807,13 +2807,20 @@ dieLoop:
     hlt
     jmp dieLoop
 
+extern _AP_kmain
 
 ;===================================================
 ; AP initialization
 ; Called right after the entrypoint in C.
-; See: ap_entry_point00() in main.c
-global _asm_AP_early_initialization
-_asm_AP_early_initialization:
+; Now the trampoline is jumping directly here to 
+; the assembly code inside the kernel. It will help me 
+; to reuse some comde in assembly before jumping to the C part.
+; See: ap_entry_point00() in kmain.c
+
+global _asm_AP_entry_point
+_asm_AP_entry_point:
+
+; The tranpoline already loaded a valid 64bit GDT.
 
 ; Clear interrupts and direction flag
     cli
@@ -2835,36 +2842,53 @@ _asm_AP_early_initialization:
 
 ; Clear registers
 ; RBP, RSI, RDI.
+
     ;xor rax, rax
     ;mov rbp, rax
     ;mov rsi, rax
     ;mov rdi, rax
 
-    ;lgdt [EARLY_GDT64.Pointer]
+    lgdt [EARLY_GDT64.Pointer]
 
-    ;mov ax, EARLY_GDT64.Data
-    ;mov ds, ax
-    ;mov es, ax
-    ;mov ss, ax
+    mov ax, EARLY_GDT64.Data
+    mov ds, ax
+    mov es, ax
+    mov ss, ax
 	; fs and gd are not used
     ;mov fs, ax
     ;mov gs, ax
 
 ; Load a clean stack
-; #bugbug: It's crashing at this moment
-; We can't change the stack during a function call or the return will fail.
     ;mov rsp, [_EarlySharedAPStack]   ; pointer provided by BSP
     ;mov rbp, rsp               ; optional, set frame base
 
 
 ; LDT
 ; Initialize ldt with a NULL selector.
-    ;xor rax, rax
-    ;lldt ax
+    xor rax, rax
+    lldt ax
 
-; Return to C entry point
-    ret
 
+; IDT
+; #danger:
+    lidt [_IDT_register] 
+
+; Go to C code for the rest of the initialization
+;#todo: We gotta setup the stack
+
+    jmp _AP_kmain
+    ;jmp dummytest
+
+;dummytest:
+;    push EARLY_GDT64.Ring3Code 
+;	push ring3_entry
+;	iretq
+;ring3_entry:
+;    int 3
+;.loopinho:
+;    pause
+;	jmp .loopinho
+;
 
 ;===================================================
 ; DATA: 
