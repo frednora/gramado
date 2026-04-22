@@ -505,14 +505,6 @@ int main(int argc, char *argv[])
     sc80( 48, &m[0], &m[0], &m[0] );
 */
 
-//
-// #test: Expand non-client area.
-//
-
-    // #ps: The server still dont have support for menuitens in hit-testing.
-    // its not registering them as a child.
-    //sc80( 45, 0, 0, 0 );  // Expand non-client area (for testing)
-
 
 //
 // Creating the menu

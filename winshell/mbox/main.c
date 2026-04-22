@@ -58,8 +58,6 @@ int main(int argc, char *argv[])
 // #test: Expand non-client area.
 //
 
-    //int tid = gettid();
-    //sc80( 45, tid, tid, tid );  // Expand non-client area (for testing)
 
     // 2. Call the message box API
     // Parent window = 0 (no parent, since we have no windows)

@@ -1184,12 +1184,6 @@ int editor_initialize(int argc, char *argv[])
     sc80( 48, &m[0], &m[0], &m[0] );
 
 
-//
-// #test: Expand non-client area.
-//
-
-    // sc80( 45, 0, 0, 0 );  // Expand non-client area (for testing)
-
 
 // Address bar - (edit box)
 // Inside the main window.
