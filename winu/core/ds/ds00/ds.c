@@ -1510,7 +1510,7 @@ int serviceCreateWindow(int client_fd)
 
 // Register window
     wid = (int) RegisterWindow(Window);
-    if (wid<0 || wid>=WINDOW_COUNT_MAX)
+    if (wid<0 || wid >= WINDOW_COUNT_MAX)
     {
         //server_debug_print("serviceCreateWindow: on RegisterWindow()\n");
         next_response[1] = 0;  // msg code
@@ -1540,6 +1540,30 @@ int serviceCreateWindow(int client_fd)
     if (Parent->isTaskBar == TRUE)
         wm_add_child_window(Parent,Window);
 
+
+// Client controls (custom)
+// It's a child window.
+// All these controls are considere custom clients and 
+// the server will not hit-testing them.
+
+    Window->is_custom_client_window = FALSE;
+
+    switch (Window->type){
+    case WT_SIMPLE:
+    case WT_EDITBOX_SINGLE_LINE:
+    case WT_EDITBOX_MULTIPLE_LINES:
+    case WT_BUTTON:
+    case WT_ICON:
+    case WT_CHECKBOX:
+    case WT_SCROLLBAR:
+        if (fChild == TRUE || (Window->style & WS_CHILD))
+        {
+            Window->is_custom_client_window = TRUE;
+        }
+        break;
+    default:
+        break;
+    };
 
 //===============================================
 // Save the tid of the client

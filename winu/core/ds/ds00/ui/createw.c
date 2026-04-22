@@ -408,6 +408,7 @@ static struct gws_window_d *__create_window_object(void)
 
 // Create the controls given the titlebar.
 // min, max, close.
+// Frame controls (stock)
 static int __do_create_controls(struct gws_window_d *w_titlebar)
 {
     struct gws_window_d *w_minimize;
@@ -484,6 +485,7 @@ static int __do_create_controls(struct gws_window_d *w_titlebar)
         goto fail;
     }
     w_minimize->type = WT_BUTTON;
+    w_minimize->is_custom_client_window = FALSE;  // Stock control, not custom.
     w_minimize->isControl = TRUE;
     w_minimize->isMinimizeControl = TRUE;
 
@@ -523,6 +525,7 @@ static int __do_create_controls(struct gws_window_d *w_titlebar)
         goto fail;
     }
     w_maximize->type = WT_BUTTON;
+    w_maximize->is_custom_client_window = FALSE;  // Stock control, not custom.
     w_maximize->isControl = TRUE;
     w_maximize->isMaximizeControl = TRUE;
 
@@ -561,6 +564,7 @@ static int __do_create_controls(struct gws_window_d *w_titlebar)
         goto fail;
     }
     w_close->type = WT_BUTTON;
+    w_close->is_custom_client_window = FALSE;  // Stock control, not custom.
     w_close->isControl = TRUE;
     w_close->isCloseControl = TRUE;
 

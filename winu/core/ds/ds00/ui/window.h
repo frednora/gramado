@@ -63,7 +63,7 @@ extern struct gws_window_d *top_window;     // z-order
 
 
 //
-// Window Flags
+// Window styles (Flags)
 //
 
 // ==============================================================
@@ -622,6 +622,11 @@ struct gws_window_d
     int state;
 
 // ===================================
+// The server will not hit-testing this type of window.
+// They are inside the client area.
+    int is_custom_client_window;
+
+// ===================================
 // Name/label support.
     char *name;
     unsigned int label_color_when_selected;
@@ -781,6 +786,7 @@ struct gws_window_d
 
 // ================
 // 4 - Controls
+// Those one inside the title bar
 
     struct windowcontrols_d  Controls;
     int controlsUsed;
@@ -882,7 +888,7 @@ struct gws_window_d
     int isMenuItem;
     // ...
     int isIcon;
-    int isControl;
+    int isControl;  // Those one inside the titlebar.
     int isButton;
     int isEditBox;
     int isCheckBox;

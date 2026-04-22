@@ -23,6 +23,35 @@
 // Global display pointer
 struct gws_display_d *Display;
 
+struct button_info_d
+{
+    int button_id;
+
+// This is the window id that represents the icon.
+    int wid;
+
+// Absolute values
+    unsigned long absolute_left;
+    unsigned long absolute_top;
+    unsigned long width; 
+    unsigned long height;
+
+// Relative values
+    unsigned long left;
+    unsigned long top;
+
+// The state of the icon, it also represents
+// the state of the client application.
+// (running, minimized, etc.).
+    int state;
+};
+static struct button_info_d  MyButton_Refresh;
+static struct button_info_d  MyButton_Close;
+
+static int __hover_button_id = -1; // Invalidate.
+
+
+
 // Window and control IDs
 static int main_window      = -1;
 static int refresh_button   = -1;
@@ -43,14 +72,70 @@ static unsigned long cr_top    = 0;
 static unsigned long cr_width  = 0;
 static unsigned long cr_height = 0;
 
-
+static void update_children(int fd);
 static void set_default_responder(int wid);
 static void switch_responder(int fd);
 static void trigger_default_responder(int fd);
+static void on_button_clicked(int fd, int id);
+static int __hit_test_button(unsigned long rel_mx, unsigned long rel_my);
 
 // ----------------------------------------------------
 // Helpers
 // ----------------------------------------------------
+
+// Handle click events for components
+static void on_button_clicked(int fd, int id)
+{
+    if (id < 0)
+        return;
+
+    switch (id)
+    {
+        case 1:  // MyButton_Refresh.icon_id
+            //printf("Button %d clicked!\n", id);
+            update_children(fd);
+            break;
+
+        case 2:  // MyButton_Close.icon_id
+            //printf("Button %d clicked!\n", id);
+            gws_destroy_window(fd, refresh_button);
+            gws_destroy_window(fd, close_button);
+            gws_destroy_window(fd, main_window);
+            exit(0);
+            break;
+
+        default:
+            printf("Unknown button clicked: %d\n", id);
+            break;
+    };
+}
+
+// Hit-test for our fake button in PowerApp
+static int __hit_test_button(unsigned long rel_mx, unsigned long rel_my) 
+{
+
+// Button Restart
+    if ( rel_mx >= MyButton_Refresh.left && 
+         rel_mx <= MyButton_Refresh.left + MyButton_Refresh.width &&
+         rel_my >= MyButton_Refresh.top  && 
+         rel_my <= MyButton_Refresh.top + MyButton_Refresh.height )
+    {
+        return (int) MyButton_Refresh.button_id;
+    }
+
+// Button Shutdown
+    if ( rel_mx >= MyButton_Close.left && 
+         rel_mx <= MyButton_Close.left + MyButton_Close.width &&
+         rel_my >= MyButton_Close.top  && 
+         rel_my <= MyButton_Close.top + MyButton_Close.height )
+    {
+        return (int) MyButton_Close.button_id;
+    }
+
+    // ...
+
+    return (int) -1;
+}
 
 
 static void query_client_area(int fd)
@@ -75,33 +160,35 @@ static void query_client_area(int fd)
 
 static void draw_label(int fd, int x, int y, const char *text)
 {
-    gws_draw_text(fd, main_window, x, y, COLOR_BLACK, (char *)text);
-
-    // #todo
-    // First we need to include the lingui and initialize it.
-
-/*
-    if (text == NULL) 
+    if ((void*) text == NULL)
         return;
 
-    // Transform relative coords into client area absolute coords
-    int abs_x = cr_left + x;
-    int abs_y = cr_top  + y;
+    // gws_draw_text(fd, main_window, x, y, COLOR_BLACK, (char *)text);
 
-    // Draw string directly into backbuffer
+    // Draw the label string inside
     libgui_drawstring(
-        abs_x, 
-        abs_y, 
-        text, COLOR_BLACK, 0xFFFFFF, 0 );
-*/
-
+        frame_left + cr_left + x,  //20, 
+        frame_top  + cr_top  + y,  //20, 
+        text,
+        COLOR_BLACK, COLOR_GRAY, 0
+    );
 }
 
 static void draw_value_line(int fd, int x, int y, const char *label, unsigned long value_kb)
 {
     char line[128];
     sprintf(line, "%s: %lu KB", label, value_kb);
-    gws_draw_text(fd, main_window, x, y, COLOR_BLACK, line);
+
+    //gws_draw_text(fd, main_window, x, y, COLOR_BLACK, line);
+
+    // Draw the label string inside
+    const char *label_chose = "System Memory Status: ";
+    libgui_drawstring(
+        frame_left + cr_left + x, 
+        frame_top  + cr_top  + y, 
+        line,
+        COLOR_BLACK, COLOR_GRAY, 0
+    );
 }
 
 // ----------------------------------------------------
@@ -158,15 +245,62 @@ static void update_children(int fd)
     // gws_redraw_window(fd, main_window, TRUE);
 
     // Title/label
-    draw_label(fd, 20, label_y, "System Memory Status:");
+    // draw_label(fd, 20, label_y, "System Memory Status:");
+
+    // Draw the label string inside
+    const char *label_chose = "System Memory Status: ";
+    libgui_drawstring(
+        frame_left + cr_left +20, 
+        frame_top  + cr_top +label_y,  //20 
+        label_chose,
+        COLOR_BLACK, COLOR_GRAY, 0
+    );
+
 
     // Metrics block
     draw_memory_metrics(fd, metrics_x, metrics_y, line_h);
 
-    // Move/resize/redraw buttons
+// Move/resize/redraw buttons
+
+
+
+// =====================================
+
+// Refresh button
+
+    //MyButton_Refresh.button_id = 1;   // arbitrary ID
+    // MyButton_Refresh.wid     = main_window; // parent window ID
+
+    // Relative values
+    MyButton_Refresh.left = refresh_x; //4;
+    MyButton_Refresh.top  = buttons_y; //4;
+
+    // Absolute coordinates (relative to screen)
+    MyButton_Refresh.absolute_left = frame_left + cr_left + MyButton_Refresh.left;
+    MyButton_Refresh.absolute_top  = frame_top  + cr_top + MyButton_Refresh.top;
+    MyButton_Refresh.width         = button_w; //32;
+    MyButton_Refresh.height        = button_h; //24;
+
     gws_change_window_position(fd, refresh_button, refresh_x, buttons_y);
     gws_resize_window(fd, refresh_button, button_w, button_h);
     gws_redraw_window(fd, refresh_button, TRUE);
+
+
+// =====================================
+// Close button
+
+    //MyButton_Close.button_id = 2;   // arbitrary ID
+    // MyButton_Close.wid     = main_window; // parent window ID
+
+    // Relative values
+    MyButton_Close.left = close_x; //4;
+    MyButton_Close.top  = buttons_y; //4;
+
+    // Absolute coordinates (relative to screen)
+    MyButton_Close.absolute_left = frame_left + cr_left + MyButton_Close.left;
+    MyButton_Close.absolute_top  = frame_top  + cr_top + MyButton_Close.top;
+    MyButton_Close.width         = button_w; //32;
+    MyButton_Close.height        = button_h; //24;
 
     gws_change_window_position(fd, close_button, close_x, buttons_y);
     gws_resize_window(fd, close_button, button_w, button_h);
@@ -217,6 +351,8 @@ memoryProcedure(
     unsigned long long1, 
     unsigned long long2 )
 {
+    int ButtonId = -1;
+
     if (fd < 0) return -1;
     if (event_window < 0) return -1;
     if (event_type < 0) return -1;
@@ -293,8 +429,29 @@ case MSG_KEYDOWN:
         }
         break;
 
+    // #test
+    case MSG_MOUSEMOVE:
+        // #bugbug
+        // Kernel is sending us absolute values
+        // instead of relative values.
+        //printf("%d %d\n", long1, long2);
+        ButtonId = (int) __hit_test_button(long1, long2);
+        if (ButtonId > 0)
+            __hover_button_id = ButtonId;
+        if (ButtonId <= 0)
+            __hover_button_id = -1;
+        break;
+
     case MSG_MOUSERELEASED:
-        printf("memory: Mouse released\n");
+        printf("memory: Button released: %d\n", __hover_button_id);
+        //printf("power: MSG_MOUSERELEASED:\n");
+        on_button_clicked(fd, __hover_button_id);
+
+        // #test: Testing the activation
+        // We gotta do this only when the window is not active
+        //gws_set_active( fd, main_window );
+        //gws_refresh_window (fd, main_window);
+
         break;
 
     case MSG_CLOSE:
@@ -435,8 +592,18 @@ int main(int argc, char *argv[])
 
 
     // Initial label (will be redrawn in paint anyway)
-    gws_draw_text( client_fd, main_window, 
-        20, 20, COLOR_BLACK, "System Memory Status:");
+    // gws_draw_text( client_fd, main_window, 
+        // 20, 20, COLOR_BLACK, "System Memory Status:");
+    
+
+    // Draw the label string inside
+    const char *label_chose = "System Memory Status: ";
+    libgui_drawstring(
+        frame_left + cr_left +20, 
+        frame_top  + cr_top +20, 
+        label_chose,
+        COLOR_BLACK, COLOR_GRAY, 0
+    );
 
     // Button baseline sizes
     unsigned long button_w = cr_width / 5;
@@ -449,9 +616,25 @@ int main(int argc, char *argv[])
     unsigned long close_x   = (3 * cr_width / 4) - (button_w / 2);
     unsigned long buttons_y = cr_height - (button_h *2);
 
+//
 // Create buttons
+//
 
-    // Refresh button
+// Refresh button
+
+    MyButton_Refresh.button_id = 1;   // arbitrary ID
+    // MyButton_Refresh.wid     = main_window; // parent window ID
+
+    // Relative values
+    MyButton_Refresh.left = refresh_x; //4;
+    MyButton_Refresh.top  = buttons_y; //4;
+
+    // Absolute coordinates (relative to screen)
+    MyButton_Refresh.absolute_left = frame_left + cr_left + MyButton_Refresh.left;
+    MyButton_Refresh.absolute_top  = frame_top  + cr_top + MyButton_Refresh.top;
+    MyButton_Refresh.width         = button_w; //32;
+    MyButton_Refresh.height        = button_h; //24;
+
     refresh_button = 
         (int) gws_create_window(
             client_fd,
@@ -466,7 +649,22 @@ int main(int argc, char *argv[])
 
     gws_refresh_window(client_fd, refresh_button);
 
-    // Close button
+
+// Close button
+
+    MyButton_Close.button_id = 2;   // arbitrary ID
+    // MyButton_Close.wid     = main_window; // parent window ID
+
+    // Relative values
+    MyButton_Close.left = close_x; //4;
+    MyButton_Close.top  = buttons_y; //4;
+
+    // Absolute coordinates (relative to screen)
+    MyButton_Close.absolute_left = frame_left + cr_left + MyButton_Close.left;
+    MyButton_Close.absolute_top  = frame_top  + cr_top + MyButton_Close.top;
+    MyButton_Close.width         = button_w; //32;
+    MyButton_Close.height        = button_h; //24;
+
     close_button = 
         (int) gws_create_window(
             client_fd,
