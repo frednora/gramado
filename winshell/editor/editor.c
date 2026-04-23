@@ -101,15 +101,28 @@ static struct button_info_d  MyButton_Save;
 
 static int __hover_button_id = -1;
 
+// Cached frame/chrome area
+static unsigned long frame_left   = 0;
+static unsigned long frame_top    = 0;
+static unsigned long frame_width  = 0;
+static unsigned long frame_height = 0;
+
+// Cached client area
+static unsigned long cr_left   = 0;
+static unsigned long cr_top    = 0;
+static unsigned long cr_width  = 0;
+static unsigned long cr_height = 0;
+
+
 //
 // Windows
 //
 
 // private
 static int main_window = -1;
-static int addressbar_window = -1;
+// static int addressbar_window = -1;
 // static int savebutton_window = -1;
-static int client_window = -1; // #bugbug: Sometimes we can't delete this window.
+// static int client_window = -1; // #bugbug: Sometimes we can't delete this window.
 // ...
 
 struct child_window_d
@@ -250,9 +263,9 @@ static void editorShutdown(int fd)
     if (fd<0)
         return;
 
-    gws_destroy_window(fd,client_window);   // #bugbug: sometimes we can't delete this window.
+    //gws_destroy_window(fd,client_window);   // #bugbug: sometimes we can't delete this window.
     //gws_destroy_window(fd,savebutton_window);
-    gws_destroy_window(fd,addressbar_window);
+    //gws_destroy_window(fd,addressbar_window);
     gws_destroy_window(fd,main_window);
 }
 
@@ -269,6 +282,21 @@ static void update_clients(int fd)
 // IN: fd, wid, window info structure.
     gws_get_window_info( 
         fd, main_window, (struct gws_window_info_d *) &lWi );
+
+
+
+    // Frame/chrome
+    frame_left = lWi.left;
+    frame_top = lWi.top;
+    frame_width = lWi.width;
+    frame_height = lWi.height;
+
+    // Client area
+    cr_left = lWi.cr_left;
+    cr_top = lWi.cr_top;
+    cr_width = lWi.cr_width;
+    cr_height = lWi.cr_height;
+
 
 // ------------------------
 // Text
@@ -306,6 +334,15 @@ static void update_clients(int fd)
     cwAddressBar.t = 4;
     cwAddressBar.w = (( lWi.cr_width/8 )*3);
     cwAddressBar.h = 24; 
+
+
+    unsigned long ab_l = (( lWi.cr_width/8 )*2);
+    unsigned long ab_t = 4;
+    unsigned long ab_w = (( lWi.cr_width/8 )*3);
+    unsigned long ab_h = 24;
+
+
+/*
     gws_change_window_position( 
         fd,
         addressbar_window,
@@ -317,6 +354,29 @@ static void update_clients(int fd)
         cwAddressBar.w,
         cwAddressBar.h );
     gws_redraw_window(fd, addressbar_window, TRUE);
+*/
+
+// Draw the fake button
+    libgui_backbuffer_draw_rectangle0(
+        frame_left + cr_left + ab_l, 
+        frame_top  + cr_top  + ab_t, 
+        ab_w, 
+        ab_h,
+        COLOR_WHITE, 
+        1, 0, FALSE
+    );
+
+// Refresh to show it
+    libgui_refresh_rectangle_via_kernel(
+        frame_left + cr_left + ab_l, 
+        frame_top  + cr_top  + ab_t, 
+        ab_w, 
+        ab_h
+    );
+
+
+
+
 
 /*
 //---------------------------------------------
@@ -392,6 +452,7 @@ static void update_clients(int fd)
     cwText.w = lWi.cr_width;
     cwText.h = (lWi.cr_height - cwText.t);
 
+/*
     gws_change_window_position( 
         fd,
         client_window,
@@ -404,6 +465,41 @@ static void update_clients(int fd)
         cwText.h );
     //gws_set_focus(fd,client_window);
     gws_redraw_window(fd, client_window, TRUE);
+*/
+
+// (Editbox)
+// Client window (White)
+// Inside the mainwindow.
+// Lembre-se que temos uma status bar.
+
+// left:
+    unsigned long cw_left = 0;
+// top: pad | address bar | pad
+    unsigned long cw_top =  (ab_t + ab_h + 4);
+// width: Width - borders.
+    unsigned long cw_width = (lWi.cr_width);
+// height:
+// #bugbug:
+// We gotta get the client window values.
+    unsigned long cw_height = (lWi.cr_height - cw_top);
+
+    libgui_backbuffer_draw_rectangle0(
+        frame_left + cr_left + cw_left, 
+        frame_top  + cr_top  + cw_top, 
+        cw_width, 
+        cw_height,
+        COLOR_WHITE, 
+        1, 0, FALSE
+    );
+
+// Refresh to show it
+    libgui_refresh_rectangle_via_kernel(
+        frame_left + cr_left + cw_left, 
+        frame_top  + cr_top  + cw_top, 
+        cw_width, 
+        cw_height
+    );
+
 
 
 //
@@ -517,9 +613,9 @@ editorDrawChar(
     cursor_x = pos_x;
     cursor_y = pos_y;
 
+/*
 // Draw
-// Calling the window server for drawing the char.
-
+// Calling the display server for drawing the char.
     gws_draw_char ( 
         fd, 
         client_window, 
@@ -527,6 +623,7 @@ editorDrawChar(
         (cursor_y*8), 
         Color, 
         ch );
+*/
 
     // increment
     cursor_x++;
@@ -591,9 +688,9 @@ editorProcedure(
         if (event_window == main_window)
         {
             // Update the text for address bar.
-            __test_text(fd,addressbar_window);
+            //__test_text(fd,addressbar_window);
             // Update the text for the client window.
-            __test_text(fd,client_window);
+            //__test_text(fd,client_window);
             // Redraw the client windows.
             update_clients(fd);
             return 0;
@@ -808,10 +905,12 @@ static void __test_text(int fd, int wid)
         "This is a long text, a really, really, really, really, really long text";
     char *target_text;
 
-    if (wid == addressbar_window)
-        target_text = short_text;
-    if (wid == client_window)
-        target_text = long_text;
+    target_text = short_text;
+
+    //if (wid == addressbar_window)
+    //    target_text = short_text;
+    //if (wid == client_window)
+    //    target_text = long_text;
 
     // #bugbug: What is the size?
     // The limit is 256 chars.
@@ -983,9 +1082,9 @@ int editor_initialize(int argc, char *argv[])
     gScreenHeight=0;
 // Initialize WIDs.
     main_window = -1;
-    addressbar_window = -1;
+    //addressbar_window = -1;
     //savebutton_window = -1;
-    client_window = -1;
+    //client_window = -1;
 // Cursor
     cursor_x = 0;
     cursor_y = 0;
@@ -1123,14 +1222,6 @@ int editor_initialize(int argc, char *argv[])
     text1_l = 2;
     text1_t = 4 + (24/3);
     text1_color = COLOR_BLACK;
-
-    gws_draw_text (
-        (int) client_fd,
-        (int) main_window,
-        (unsigned long) text1_l,
-        (unsigned long) text1_t,
-        (unsigned long) text1_color,
-        text1_string );
 */
 
     //gws_refresh_window(client_fd, main_window);
@@ -1144,6 +1235,24 @@ int editor_initialize(int argc, char *argv[])
         client_fd, 
         main_window,
         (struct gws_window_info_d *) &lWi );
+
+
+    // Frame/chrome
+    frame_left = lWi.left;
+    frame_top = lWi.top;
+    frame_width = lWi.width;
+    frame_height = lWi.height;
+
+    // Client area
+    cr_left = lWi.cr_left;
+    cr_top = lWi.cr_top;
+    cr_width = lWi.cr_width;
+    cr_height = lWi.cr_height;
+
+
+//
+// Draw text
+//
 
     text1_l = 2;
     text1_t = 4 + (24/3);
@@ -1184,6 +1293,9 @@ int editor_initialize(int argc, char *argv[])
     sc80( 48, &m[0], &m[0], &m[0] );
 
 
+//
+// Address bar
+//
 
 // Address bar - (edit box)
 // Inside the main window.
@@ -1195,6 +1307,7 @@ int editor_initialize(int argc, char *argv[])
     unsigned long ab_w = (( lWi.cr_width/8 )*3);
     unsigned long ab_h = 24;
 
+/*
 // Create address bar window.
     addressbar_window = 
         (int) gws_create_window (
@@ -1209,10 +1322,34 @@ int editor_initialize(int argc, char *argv[])
         printf("editor.bin: addressbar_window failed\n");
         goto fail;
     }
-
     //gws_refresh_window(client_fd, addressbar_window);
     //while(1){}
+*/
 
+
+//
+// Draw address bar rectangle
+//
+
+    libgui_backbuffer_draw_rectangle0(
+        frame_left + cr_left + ab_l, 
+        frame_top  + cr_top  + ab_t, 
+        ab_w, 
+        ab_h,
+        COLOR_WHITE, 
+        1, 0, FALSE
+    );
+
+// Refresh to show it
+    libgui_refresh_rectangle_via_kernel(
+        frame_left + cr_left + ab_l, 
+        frame_top  + cr_top  + ab_t, 
+        ab_w, 
+        ab_h
+    );
+
+
+/*
 // Text inside the address bar.
     if (addressbar_window > 0)
     {
@@ -1225,6 +1362,7 @@ int editor_initialize(int argc, char *argv[])
             text2_string );
     }
     //gws_refresh_window (client_fd, addressbar_window);
+*/
 
 // Save
     cwAddressBar.l = (( lWi.cr_width/8 )*2);
@@ -1356,7 +1494,7 @@ int editor_initialize(int argc, char *argv[])
 // left:
     unsigned long cw_left = 0;
 // top: pad | address bar | pad
-    unsigned long cw_top =  (cwAddressBar.t + cwAddressBar.h + 2);
+    unsigned long cw_top =  (cwAddressBar.t + cwAddressBar.h + 4);
 // width: Width - borders.
     unsigned long cw_width = (lWi.cr_width);
 // height:
@@ -1364,6 +1502,7 @@ int editor_initialize(int argc, char *argv[])
 // We gotta get the client window values.
     unsigned long cw_height = (lWi.cr_height - cw_top);
 
+/*
 // Create client window.
     client_window = 
         (int) gws_create_window ( 
@@ -1378,15 +1517,34 @@ int editor_initialize(int argc, char *argv[])
     }
     //#debug
     //gws_refresh_window (client_fd, client_window);
+*/
+
+    libgui_backbuffer_draw_rectangle0(
+        frame_left + cr_left + cw_left, 
+        frame_top  + cr_top  + cw_top, 
+        cw_width, 
+        cw_height,
+        COLOR_WHITE, 
+        1, 0, FALSE
+    );
+
+// Refresh to show it
+    libgui_refresh_rectangle_via_kernel(
+        frame_left + cr_left + cw_left, 
+        frame_top  + cr_top  + cw_top, 
+        cw_width, 
+        cw_height
+    );
 
 // Save
     cwText.l = 0;
-    cwText.t = (cwAddressBar.t + cwAddressBar.h + 2);
+    cwText.t = (cwAddressBar.t + cwAddressBar.h + 4);
     cwText.w = lWi.cr_width;
     cwText.h = (lWi.cr_height - cwText.t);
 
     gws_set_active( client_fd, main_window );
-    gws_set_focus( client_fd, client_window );
+    gws_set_focus( client_fd, main_window );
+    //gws_set_focus( client_fd, client_window );
 
 // Show main window. (Again)
     gws_refresh_window (client_fd, main_window);
