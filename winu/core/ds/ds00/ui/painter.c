@@ -559,8 +559,9 @@ __draw_window_border(
     }
 
 // ------------------
-// Editbox
-    if ( window->type == WT_EDITBOX || 
+// Popoup and Editbox
+    if ( window->type == WT_POPUP ||
+         window->type == WT_EDITBOX || 
          window->type == WT_EDITBOX_MULTIPLE_LINES )
     { 
         // -- top/left (color 1) -----
@@ -1250,8 +1251,10 @@ redraw_window (
 // ----------------------------------------
 // + Redraws the title bar for WT_OVERLAPPED.
 // + Redraws the borders for overlapped and editbox.
+// + Redraw border for popup.
 
     if ( window->type == WT_OVERLAPPED || 
+         window->type == WT_POPUP ||
          window->type == WT_EDITBOX_SINGLE_LINE || 
          window->type == WT_EDITBOX_MULTIPLE_LINES )
     {
@@ -1318,18 +1321,33 @@ redraw_window (
                 __rop_bottom_border );
         }
 
+        if (window->type == WT_POPUP)
+        {
+            __draw_window_border(
+                window->parent, window,
+                __rop_top_border, 
+                __rop_left_border, 
+                __rop_right_border, 
+                __rop_bottom_border );
+        }
+    
         // Border Color 1 = top/left      (Dark)
         // Border Color 2 = right/bottom  (Light)
-        if (window->type == WT_EDITBOX_SINGLE_LINE || window->type == WT_EDITBOX_MULTIPLE_LINES)
+        if ( window->type == WT_EDITBOX_SINGLE_LINE || 
+             window->type == WT_EDITBOX_MULTIPLE_LINES )
         {
             // focus
             if (window == keyboard_owner){
-                window->Border.border_color1 = (unsigned int) HONEY_COLOR_BORDER_DARK_WWF;  //get_color(csiWWFBorder);
-                window->Border.border_color2 = (unsigned int) HONEY_COLOR_BORDER_LIGHT_WWF;  //get_color(csiWWFBorder);
+                window->Border.border_color1 = 
+                    (unsigned int) HONEY_COLOR_BORDER_DARK_WWF;  //get_color(csiWWFBorder);
+                window->Border.border_color2 = 
+                    (unsigned int) HONEY_COLOR_BORDER_LIGHT_WWF;  //get_color(csiWWFBorder);
             // no focus
             } else {
-                window->Border.border_color1 = (unsigned int) HONEY_COLOR_BORDER_DARK_NOFOCUS; //get_color(csiWindowBorder);
-                window->Border.border_color2 = (unsigned int) HONEY_COLOR_BORDER_LIGHT_NOFOCUS; //get_color(csiWindowBorder);
+                window->Border.border_color1 = 
+                    (unsigned int) HONEY_COLOR_BORDER_DARK_NOFOCUS; //get_color(csiWindowBorder);
+                window->Border.border_color2 = 
+                    (unsigned int) HONEY_COLOR_BORDER_LIGHT_NOFOCUS; //get_color(csiWindowBorder);
             }
             __draw_window_border(
                 window->parent, window,

@@ -767,7 +767,7 @@ tbProcedure(
                 MyButton.absolute_top,
                 MyButton.width, 
                 MyButton.height, 
-                "App", COLOR_BLACK, COLOR_GRAY, TRUE );
+                "App", COLOR_WHITE, COLOR_GRAY, TRUE );
 
             //draw_separator(fd);
             draw_separator2();
@@ -1584,7 +1584,7 @@ int main(int argc, char *argv[])
     unsigned long tb_h = TestHeight;
 */
 
-    unsigned long style = WS_TASKBAR;
+    unsigned long style = WS_TASKBAR | WS_APP;
 
     TaskbarInfo.left = tb_l;
     TaskbarInfo.top = tb_t;
@@ -1596,9 +1596,9 @@ int main(int argc, char *argv[])
     main_window = 
         (int) gws_create_window (
                 client_fd,
-                WT_SIMPLE,  // type 
-                1,          // status
-                1,          // state
+                WT_POPUP,  // type 
+                WINDOW_STATUS_ACTIVE,          // status
+                WINDOW_STATE_NULL,          // state
                 program_name,
                 tb_l, tb_t, tb_w, tb_h,
                 0, 
@@ -1702,14 +1702,14 @@ int main(int argc, char *argv[])
     MyButton.wid     = -1;   // not a server window, just client-side
 
     // Absolute values
-    MyButton.absolute_left = TaskbarInfo.left + 4;
-    MyButton.absolute_top  = TaskbarInfo.top + 4;
-    MyButton.width   = 32;
-    MyButton.height  = 24;
+    MyButton.absolute_left = TaskbarInfo.left +3;
+    MyButton.absolute_top  = TaskbarInfo.top  +3;
+    MyButton.width = 34;
+    MyButton.height = TaskbarInfo.height -6;  //24;
 
     // Relative values
-    MyButton.left    = 4;
-    MyButton.top     = 4;
+    MyButton.left = 3;
+    MyButton.top  = 3;
 
     MyButton.state   = 0;    // 0 = normal, 1 = hover, 2 = pressed
 
@@ -1722,10 +1722,7 @@ int main(int argc, char *argv[])
         MyButton.absolute_top,
         MyButton.width, 
         MyButton.height, 
-        "App", 
-        COLOR_BLACK, 
-        COLOR_GRAY,
-        TRUE );
+        "App", COLOR_WHITE, COLOR_GRAY, TRUE );
 
 // ========================
 // Create separator

@@ -1045,6 +1045,13 @@ doCreateWindowFrame (
         useBorder=TRUE;
         break;
 
+    case WT_POPUP:
+        useFrame=TRUE;
+        window->is_frameless = FALSE;
+        useIcon=FALSE;
+        useBorder=TRUE;
+        break; 
+
     // Uma overlapped maximizada não tem borda.
     case WT_OVERLAPPED:
         useFrame=TRUE; 
@@ -1304,6 +1311,27 @@ doCreateWindowFrame (
         }
 
         return 0;  // OK
+    }
+
+// ===============================================
+    if (Type == WT_POPUP)
+    {
+        window->Border.border_size = BorderSize;
+        window->borderUsed = TRUE;
+        // Draw the border of an edit box
+        __draw_window_border(
+            parent, window,
+            __rop_top_border,
+            __rop_left_border,
+            __rop_right_border,
+            __rop_bottom_border );
+
+        // When we draw the border for editbox windows 
+        // we need to update the client area rectangle.
+        window->rcClient.top    += window->Border.border_size;
+        window->rcClient.left   += window->Border.border_size;
+        window->rcClient.width  -= window->Border.border_size;
+        window->rcClient.height -= window->Border.border_size;
     }
 
 // ===============================================
@@ -2308,6 +2336,56 @@ void *doCreateWindow (
     case WT_SIMPLE:
     case WT_TITLEBAR:
 
+        /*
+        // #important: Set the taskbar created by the user.
+        if (window->style & WS_TASKBAR)
+        {
+            window->isTaskBar = TRUE;
+            taskbar_window = window;
+
+            // #test:
+            // ---- Update Working Area --------------------------------
+            if (WindowManager.initialized == TRUE)
+            {
+                // #bugbug: Valid only for taskbars at bottom fo the screen.
+                WindowManager.wa.left   = 0;
+                WindowManager.wa.top    = 0;
+                WindowManager.wa.width  = deviceWidth;
+                WindowManager.wa.height = window->top; 
+
+                //printf ("window: l=%d t=%d w=%d h=%d\n",
+                    //window->left, window->top, window->width, window->height );
+
+                //printf ("device: w=%d h=%d\n", deviceWidth, deviceHeight );
+
+                //printf ("taskbar: w=%d h=%d\n",
+                    //WindowManager.wa.width, WindowManager.wa.height );
+
+                //while(1){}
+            }
+        }
+        */
+        window->ip_device = IP_DEVICE_NULL;
+        window->frame.used = FALSE;
+        Background = TRUE;
+        window->backgroundUsed = TRUE;
+        window->background_style = 0;
+        break;
+
+    // Edit box. (Simples + borda preta).
+    // Editbox não tem sombra, tem bordas.
+    case WT_EDITBOX_SINGLE_LINE:
+    case WT_EDITBOX_MULTIPLE_LINES:
+        window->ip_device = IP_DEVICE_KEYBOARD;
+        window->frame.used = TRUE;
+        Background = TRUE;
+        Border = TRUE;
+        window->backgroundUsed = TRUE;
+        window->background_style = 0;
+        break;
+
+    // Popup
+    case WT_POPUP:
         // #important: Set the taskbar created by the user.
         if (window->style & WS_TASKBAR)
         {
@@ -2337,28 +2415,10 @@ void *doCreateWindow (
         }
         window->ip_device = IP_DEVICE_NULL;
         window->frame.used = FALSE;
-        Background = TRUE;
-        window->backgroundUsed = TRUE;
-        window->background_style = 0;
-        break;
-
-    // Edit box. (Simples + borda preta).
-    // Editbox não tem sombra, tem bordas.
-    case WT_EDITBOX_SINGLE_LINE:
-    case WT_EDITBOX_MULTIPLE_LINES:
-        window->ip_device = IP_DEVICE_KEYBOARD;
-        window->frame.used = TRUE;
-        Background = TRUE;
-        Border = TRUE;
-        window->backgroundUsed = TRUE;
-        window->background_style = 0;
-        break;
-
-    // Popup. (um tipo de overlapped mais simples).
-    case WT_POPUP:
-        window->ip_device = IP_DEVICE_NULL;
-        window->frame.used = FALSE;
-        Shadow     = TRUE;
+        Shadow = TRUE;
+        if (window->style & WS_TASKBAR){
+            Shadow = FALSE;
+        }
         Background = TRUE;
         window->shadowUsed     = TRUE;
         window->backgroundUsed = TRUE;
@@ -2940,6 +3000,7 @@ void *CreateWindow (
 // See: wt.h
     switch (type){
     case WT_SIMPLE:  // 1
+    case WT_POPUP:
     case WT_EDITBOX_SINGLE_LINE:  // 2 
     case WT_OVERLAPPED:  // 3
     case WT_CHECKBOX:  // 5
@@ -3087,6 +3148,30 @@ void *CreateWindow (
         set_active_window(__w);
         goto draw_frame;
     }
+
+
+// ====
+// 4 - Popup
+    if (type == WT_POPUP)
+    {
+        __w = 
+            (void *) doCreateWindow ( 
+                        WT_POPUP, style, status, state, (char *) _name,
+                        x, y, width, height, 
+                        (struct gws_window_d *) pWindow, 
+                        desktop_id, 
+                        FrameColor, ClientAreaColor, 
+                        (unsigned long) __rop_flags );  
+
+        if ((void *) __w == NULL){
+            goto fail;
+        }
+        __w->type = WT_POPUP;
+        //__w->locked = FALSE;
+        __w->enabled = TRUE;
+        goto draw_frame;
+    }
+
 
 // #todo
 // It does not exist by itself. It needs a parent window.
@@ -3350,6 +3435,11 @@ draw_frame:
         }
     }
 
+
+//
+// Draw window frame
+//
+
 // IN:
 // pwindow, 
 // window, 
@@ -3359,6 +3449,7 @@ draw_frame:
 // style
 
     if ( type == WT_OVERLAPPED || 
+         type == WT_POPUP ||
          type == WT_EDITBOX_SINGLE_LINE || 
          type == WT_EDITBOX_MULTIPLE_LINES || 
          type == WT_BUTTON ||
