@@ -182,12 +182,23 @@ static void update_children(int fd)
 
     // Draw the label string inside
     const char *label_chose = "Choose an action: ";
+
+    /*
     libgui_drawstring(
         wi.left + wi.cr_left +20, 
         wi.top + wi.cr_top +20, 
         label_chose,
         COLOR_BLACK, COLOR_GRAY, 0
     );
+    */
+
+    libgui_drawstringblock(
+        wi.left + wi.cr_left +20, 
+        wi.top + wi.cr_top +20, 
+        COLOR_BLACK, //0xFF888888,
+        label_chose,
+        2 );
+
 
 //
 // Support for button positions and dimensions
@@ -628,12 +639,22 @@ int main(int argc, char *argv[])
 
     // Draw the label string inside
     const char *label_chose = "Choose an action: ";
+
+    /*
     libgui_drawstring(
         wi.left + wi.cr_left +20, 
         wi.top + wi.cr_top +20, 
         label_chose,
         COLOR_BLACK, COLOR_GRAY, 0
     );
+    */
+
+    libgui_drawstringblock(
+        wi.left + wi.cr_left +20, 
+        wi.top + wi.cr_top +20, 
+        COLOR_BLACK, //0xFF888888,
+        label_chose,
+        2 );
 
 
 // ============================================================
