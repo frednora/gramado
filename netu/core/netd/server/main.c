@@ -883,7 +883,6 @@ static int ServerLoop(void)
 
     int InitializeFirstClient = TRUE;
 
-
 // Sincronizaçao provisoria
 // vamos precisar disso antes de tudo;
 // vamos pegar a que foi criada pelo primeiro cliente.
@@ -931,6 +930,10 @@ static int ServerLoop(void)
         goto fail;
     }
 
+//
+// >>> Client <<<
+//
+
 // Calling child and wait.
 // Just for fun, not for profit.
     if (InitializeFirstClient == TRUE){
@@ -940,7 +943,6 @@ static int ServerLoop(void)
     for (i=0; i<11; i++){
         ServerYield();
     };
-
 
 //
 // == Accept =====================================
@@ -964,7 +966,7 @@ static int ServerLoop(void)
     isTimeToQuit = FALSE;
     while (1)
     {
-        // If the server changed the status.
+        // If the server changed the status
         if (isTimeToQuit == TRUE)
             break;
 
@@ -995,7 +997,6 @@ static int ServerLoop(void)
 fail:
     return (int) -1;
 }
-
 
 //
 // $

@@ -46,7 +46,8 @@ static void reset_prompt(void)
 
 static void show_prompt(void)
 {
-    write(1, "$ ", 2);
+    //write(1, "$ ", 2);
+    write(1, "shell2.bin-$ ", 13);
 }
 
 

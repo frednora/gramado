@@ -45,7 +45,7 @@ static void reset_prompt(void)
 
 static void show_prompt(void)
 {
-    write(__fd_stdout, "$ ", 2);
+    write(__fd_stdout, "shell.bin-$ ", 12);
 }
 
 // Worker: read from a given fd and forward to shell's stdout (terminal).
