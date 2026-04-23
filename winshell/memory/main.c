@@ -54,11 +54,11 @@ static int __hover_button_id = -1; // Invalidate.
 
 // Window and control IDs
 static int main_window      = -1;
-static int refresh_button   = -1;
-static int close_button     = -1;
+//static int refresh_button   = -1;
+//static int close_button     = -1;
 
 // Global default responder 
-static int default_responder = -1;
+//static int default_responder = -1;
 
 // Cached frame/chrome area
 static unsigned long frame_left   = 0;
@@ -98,8 +98,8 @@ static void on_button_clicked(int fd, int id)
 
         case 2:  // MyButton_Close.icon_id
             //printf("Button %d clicked!\n", id);
-            gws_destroy_window(fd, refresh_button);
-            gws_destroy_window(fd, close_button);
+            //gws_destroy_window(fd, refresh_button);
+            //gws_destroy_window(fd, close_button);
             gws_destroy_window(fd, main_window);
             exit(0);
             break;
@@ -290,9 +290,39 @@ static void update_children(int fd)
     MyButton_Refresh.width         = button_w; //32;
     MyButton_Refresh.height        = button_h; //24;
 
-    gws_change_window_position(fd, refresh_button, refresh_x, buttons_y);
-    gws_resize_window(fd, refresh_button, button_w, button_h);
-    gws_redraw_window(fd, refresh_button, TRUE);
+    //gws_change_window_position(fd, refresh_button, refresh_x, buttons_y);
+    //gws_resize_window(fd, refresh_button, button_w, button_h);
+    //gws_redraw_window(fd, refresh_button, TRUE);
+
+
+// -------------------------------------------------------
+// Refresh button
+
+    libgui_backbuffer_draw_rectangle0(
+        MyButton_Refresh.absolute_left, 
+        MyButton_Refresh.absolute_top, 
+        MyButton_Refresh.width, 
+        MyButton_Refresh.height,
+        xCOLOR_GRAY2, 
+        1, 0, FALSE
+    );
+
+    // Draw the label string inside
+    const char *label_refresh = "REFRESH";
+    libgui_drawstring(
+        MyButton_Refresh.absolute_left +4, 
+        MyButton_Refresh.absolute_top +4, 
+        label_refresh,
+        COLOR_BLACK, COLOR_GRAY, 0
+    );
+
+// Refresh to show it
+    libgui_refresh_rectangle_via_kernel(
+        MyButton_Refresh.absolute_left, 
+        MyButton_Refresh.absolute_top, 
+        MyButton_Refresh.width, 
+        MyButton_Refresh.height
+    );
 
 
 // =====================================
@@ -311,22 +341,62 @@ static void update_children(int fd)
     MyButton_Close.width         = button_w; //32;
     MyButton_Close.height        = button_h; //24;
 
-    gws_change_window_position(fd, close_button, close_x, buttons_y);
-    gws_resize_window(fd, close_button, button_w, button_h);
-    gws_redraw_window(fd, close_button, TRUE);
+    //gws_change_window_position(fd, close_button, close_x, buttons_y);
+    //gws_resize_window(fd, close_button, button_w, button_h);
+    //gws_redraw_window(fd, close_button, TRUE);
+
+
+
+    libgui_backbuffer_draw_rectangle0(
+        MyButton_Close.absolute_left, 
+        MyButton_Close.absolute_top, 
+        MyButton_Close.width, 
+        MyButton_Close.height,
+        xCOLOR_GRAY2, 
+        1, 0, FALSE
+    );
+
+    // Draw the label string inside
+    const char *label_close = "CLOSE";
+    libgui_drawstring(
+        MyButton_Close.absolute_left +4, 
+        MyButton_Close.absolute_top +4, 
+        label_close,
+        COLOR_BLACK, COLOR_GRAY, 0
+    );
+
+// Refresh to show it
+    libgui_refresh_rectangle_via_kernel(
+        MyButton_Close.absolute_left, 
+        MyButton_Close.absolute_top, 
+        MyButton_Close.width, 
+        MyButton_Close.height
+    );
+
 
     // Optional: ensure final composite
-    gws_refresh_window(fd, main_window);
+    // #todo: use kernel service
+    //gws_refresh_window(fd, main_window);
+
+// Refresh to show it
+    libgui_refresh_rectangle_via_kernel(
+        frame_left, 
+        frame_top, 
+        frame_width, 
+        frame_height
+    );
+
 }
 
 static void set_default_responder(int wid)
 {
-    if (wid >= 0)
-        default_responder = wid;
+    //if (wid >= 0)
+        //default_responder = wid;
 }
 
 static void switch_responder(int fd)
 {
+/*
     if (default_responder == refresh_button) {
         set_default_responder(close_button);
         gws_set_focus(fd, close_button);
@@ -334,10 +404,12 @@ static void switch_responder(int fd)
         set_default_responder(refresh_button);
         gws_set_focus(fd, refresh_button);
     }
+*/
 }
 
 static void trigger_default_responder(int fd) 
 {
+/*
     if (default_responder == refresh_button) {
         update_children(fd);
     } else if (default_responder == close_button) {
@@ -346,6 +418,7 @@ static void trigger_default_responder(int fd)
         gws_destroy_window(fd, main_window);
         exit(0);
     }
+*/
 }
 
 // ----------------------------------------------------
@@ -385,9 +458,9 @@ case MSG_KEYDOWN:
 
     case 'C':
     case 'c':
-        gws_destroy_window(fd, refresh_button);
-        gws_destroy_window(fd, close_button);
-        gws_destroy_window(fd, main_window);
+        //gws_destroy_window(fd, refresh_button);
+        //gws_destroy_window(fd, close_button);
+        //gws_destroy_window(fd, main_window);
         exit(0);
         break;
     }
@@ -424,6 +497,7 @@ case MSG_KEYDOWN:
         break;
 
     case GWS_MouseClicked:
+        /*
         // Child ID comes in long1
         if ((int)long1 == refresh_button) {
             // Just trigger a repaint to refresh metrics
@@ -436,6 +510,7 @@ case MSG_KEYDOWN:
             gws_destroy_window(fd, main_window);
             exit(0);
         }
+        */
         break;
 
     // #test
@@ -464,8 +539,8 @@ case MSG_KEYDOWN:
         break;
 
     case MSG_CLOSE:
-        gws_destroy_window(fd, refresh_button);
-        gws_destroy_window(fd, close_button);
+        //gws_destroy_window(fd, refresh_button);
+        //gws_destroy_window(fd, close_button);
         gws_destroy_window(fd, main_window);
         exit(0);
         break;
@@ -655,6 +730,7 @@ int main(int argc, char *argv[])
     MyButton_Refresh.width         = button_w; //32;
     MyButton_Refresh.height        = button_h; //24;
 
+/*
     refresh_button = 
         (int) gws_create_window(
             client_fd,
@@ -668,8 +744,39 @@ int main(int argc, char *argv[])
             COLOR_GRAY, COLOR_GRAY );
 
     gws_refresh_window(client_fd, refresh_button);
+*/
+
+// -------------------------------------------------------
+// Refresh button
+
+    libgui_backbuffer_draw_rectangle0(
+        MyButton_Refresh.absolute_left, 
+        MyButton_Refresh.absolute_top, 
+        MyButton_Refresh.width, 
+        MyButton_Refresh.height,
+        xCOLOR_GRAY2, 
+        1, 0, FALSE
+    );
+
+    // Draw the label string inside
+    const char *label_refresh = "REFRESH";
+    libgui_drawstring(
+        MyButton_Refresh.absolute_left +4, 
+        MyButton_Refresh.absolute_top +4, 
+        label_refresh,
+        COLOR_BLACK, COLOR_GRAY, 0
+    );
+
+// Refresh to show it
+    libgui_refresh_rectangle_via_kernel(
+        MyButton_Refresh.absolute_left, 
+        MyButton_Refresh.absolute_top, 
+        MyButton_Refresh.width, 
+        MyButton_Refresh.height
+    );
 
 
+// -------------------------------------------------------
 // Close button
 
     MyButton_Close.button_id = 2;   // arbitrary ID
@@ -685,6 +792,7 @@ int main(int argc, char *argv[])
     MyButton_Close.width         = button_w; //32;
     MyButton_Close.height        = button_h; //24;
 
+/*
     close_button = 
         (int) gws_create_window(
             client_fd,
@@ -696,11 +804,40 @@ int main(int argc, char *argv[])
             main_window, 
             WS_CHILD,
             COLOR_GRAY, COLOR_GRAY );
-
     gws_refresh_window(client_fd, close_button);
+*/
+
+
+    libgui_backbuffer_draw_rectangle0(
+        MyButton_Close.absolute_left, 
+        MyButton_Close.absolute_top, 
+        MyButton_Close.width, 
+        MyButton_Close.height,
+        xCOLOR_GRAY2, 
+        1, 0, FALSE
+    );
+
+    // Draw the label string inside
+    const char *label_close = "CLOSE";
+    libgui_drawstring(
+        MyButton_Close.absolute_left +4, 
+        MyButton_Close.absolute_top +4, 
+        label_close,
+        COLOR_BLACK, COLOR_GRAY, 0
+    );
+
+// Refresh to show it
+    libgui_refresh_rectangle_via_kernel(
+        MyButton_Close.absolute_left, 
+        MyButton_Close.absolute_top, 
+        MyButton_Close.width, 
+        MyButton_Close.height
+    );
+
+
 
 // Default responder
-    set_default_responder(refresh_button);
+    //set_default_responder(refresh_button);
 
 // Main window
     gws_set_active(client_fd, main_window);
