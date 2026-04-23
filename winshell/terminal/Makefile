@@ -48,18 +48,27 @@ CFLAGS += -fno-pie
 CFLAGS += -fno-omit-frame-pointer
 CFLAGS += -fno-optimize-sibling-calls    
 
-# API
+# rtl
 LIBC      = ../api/libs/rtl/include/
 LIBCOBJ   = ../api/libs/rtl/obj
+
+# libgws - (Using the server-side services)
 LIBGWS    = ../api/libs/libgws/include/
 LIBGWSOBJ = ../api/libs/libgws/obj
+
+# libgui - Client-side services
+LIBGUI    = ../api/libs/libgui/include/
+LIBGUIOBJ = ../api/libs/libgui/obj
+
+
 
 # Objects
 myObjects = crt0.o globals.o rtl.o \
 ctype.o stdio.o fcntl.o stdlib.o string.o \
 unistd.o termios.o ioctl.o socket.o \
-libgws.o \
+libgws.o libgui.o \
 core.o shell.o ui.o main.o    
+
 
 .PHONY: all all-c hello-link finalize clean
 
@@ -68,14 +77,14 @@ all: all-c hello-link finalize clean
 
 all-c:
 # Shared
-	gcc -c shared/globals.c  $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I include/ -o globals.o
+	gcc -c shared/globals.c  $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I $(LIBGUI) -I include/ -o globals.o
 # Backend
-	gcc -c core/core.c   $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I include/ -o core.o 
-	gcc -c core/shell.c  $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I include/ -o shell.o 
+	gcc -c core/core.c   $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I $(LIBGUI) -I include/ -o core.o 
+	gcc -c core/shell.c  $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I $(LIBGUI) -I include/ -o shell.o 
 # Frontend
-	gcc -c ui/ui.c  $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I include/ -o ui.o
+	gcc -c ui/ui.c  $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I $(LIBGUI) -I include/ -o ui.o
 # Main
-	gcc -c main.c   $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I include/ -o main.o 
+	gcc -c main.c   $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I $(LIBGUI) -I include/ -o main.o 
 
 # Copy
 
@@ -95,6 +104,10 @@ all-c:
 
 # libgws
 	cp $(LIBGWSOBJ)/libgws.o .
+
+# libgui
+	cp $(LIBGUIOBJ)/libgui.o .
+
 
 hello-link:
 	ld $(linkFlags) -o TERMINAL.BIN $(myObjects)    

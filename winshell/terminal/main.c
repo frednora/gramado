@@ -25,6 +25,11 @@
 // Client-side library.
 #include <gws.h>
 
+// #test
+// The client-side library
+#include <libgui.h>
+
+
 /*
 // #test: These are sent by the system
 #define __MSG_DC1  76  // ^q
@@ -194,6 +199,18 @@ unsigned long __barheight=0;
 static const char *cw_string = "Client";
 
 
+// Current window frame values
+unsigned long frame_left=0;
+unsigned long frame_top=0;
+unsigned long frame_width=0;
+unsigned long frame_height=0;
+
+// Current client area values
+unsigned long cr_left=0;
+unsigned long cr_top=0;
+unsigned long cr_width=0;
+unsigned long cr_height=0;
+
 //
 // == Private functions: Prototypes ==============
 //
@@ -330,10 +347,25 @@ static void update_clients(int fd)
         main_window,   // The app window
         (struct gws_window_info_d *) &lWi );
 
-    unsigned long l = 0;
+    unsigned long l = 0;  // Offset inside the client area
     unsigned long t = 0;
     unsigned long w = lWi.cr_width;
     unsigned long h = lWi.cr_height;
+
+    // Update the current global values
+
+// Current window frame values
+    frame_left = lWi.left;
+    frame_top  = lWi.top;
+    frame_width = lWi.width;
+    frame_height = lWi.height;
+
+// Current client area values
+    cr_left = lWi.cr_left;
+    cr_top  = lWi.cr_top;
+    cr_width  = lWi.cr_width;
+    cr_height = lWi.cr_height;
+
 
     if (wid < 0)
         return;
@@ -348,7 +380,28 @@ static void update_clients(int fd)
     // No
     //gws_set_focus(fd,wid);
 
-    gws_redraw_window(fd, wid, TRUE);
+    // Redraw and refresh using server.
+    // gws_redraw_window(fd, wid, TRUE);
+
+
+// Draw the fake button
+    libgui_backbuffer_draw_rectangle0(
+        frame_left + cr_left +0, 
+        frame_top  + cr_top  +0, 
+        cr_width, 
+        cr_height,
+        COLOR_BLACK,  //xCOLOR_GRAY2, 
+        1, 0, FALSE
+    );
+
+// Refresh to show it
+    libgui_refresh_rectangle_via_kernel(
+        frame_left + cr_left +0, 
+        frame_top  + cr_top  +0, 
+        cr_width, 
+        cr_height
+    );
+
 
 // ------------------------------------------------
 // Update some font info based on our new viewport
@@ -1296,6 +1349,34 @@ static void doPrompt(int fd)
         CharWidth,
         CharHeight );
 
+
+// Draw char using lingui
+// #ps: Using current values.
+// We gotta update the, when the server sends paint message.
+    //unsigned long x = (cursor_x*CharWidth);
+    //unsigned long y = (cursor_y*CharHeight);
+
+/*
+    libgui_drawchar( 
+        frame_left + cr_left + (x & 0xFFFF),
+        frame_top  + cr_top  + (y & 0xFFFF),
+        '>',  //c,
+        prompt_color, 
+        COLOR_BLACK,   // bg
+        0
+    );
+*/
+
+/*
+// Refresh to show it
+    libgui_refresh_rectangle_via_kernel(
+        frame_left + cr_left + (x & 0xFFFF), 
+        frame_top  + cr_top  + (y & 0xFFFF), 
+        8, 
+        8
+    );
+*/
+
     // it works
     //gws_refresh_window(fd,wid);
 }
@@ -1485,6 +1566,7 @@ terminal_write_char (
 // White on black
 // IN: fd, wid, l, t, color, ch.
 
+/*
 // Draw and refresh?
     gws_draw_char (
         (int) fd,
@@ -1493,6 +1575,29 @@ terminal_write_char (
         (unsigned long) (y & 0xFFFF),
         (unsigned long) fg_color,
         (unsigned long) c );
+*/
+
+
+// Draw char using lingui
+// #ps: Using current values.
+// We gotta update the, when the server sends paint message.
+    libgui_drawchar( 
+        frame_left + cr_left + (x & 0xFFFF),
+        frame_top  + cr_top  + (y & 0xFFFF),
+        c,
+        fg_color, 
+        COLOR_BLACK,   // bg
+        0
+    );
+
+// Refresh to show it
+    libgui_refresh_rectangle_via_kernel(
+        frame_left + cr_left + (x & 0xFFFF), 
+        frame_top  + cr_top  + (y & 0xFFFF), 
+        8, 
+        8
+    );
+
 
 // Coloca no buffer de linhas e colunas.
     terminalInsertNextChar((char) c); 
@@ -3522,6 +3627,18 @@ int terminal_init(unsigned short flags)
     //int main_window = 0;
     //int terminal_window = 0;
 
+
+// =========================================
+// Library initialization
+
+    int status = -1;
+    status = (int) libgui_initialize();
+    if (status < 0){
+        printf("terminal: libgui_initialize fail\n");
+        exit(1);
+    }
+
+
 // --------------------------------------
 // main window
     unsigned long mwWidth  = (w >> 1);
@@ -3559,7 +3676,8 @@ int terminal_init(unsigned short flags)
                 mwLeft, mwTop, mwWidth, mwHeight,
                 0, 
                 WS_APP | WS_TERMINAL,  // Style 
-                mwColor, mwColor );
+                mwColor, mwColor 
+            );
 
     if (main_window < 0){
         printf("terminal.c: fail on main_window\n");
@@ -3656,6 +3774,43 @@ int terminal_init(unsigned short flags)
         exit (1);
     }
 
+
+// ============================================================
+// #test
+// Update the wproxy structure that belongs to this thread.
+
+    unsigned long m[10];
+    int mytid = gettid();
+    m[0] = (unsigned long) (mytid & 0xFFFFFFFF);
+
+    // Frame/chrome rectangle
+    m[1] = lWi.left;
+    m[2] = lWi.top;
+    m[3] = lWi.width;
+    m[4] = lWi.height;
+
+    // Client area rectangle
+    m[5] = lWi.cr_left;
+    m[6] = lWi.cr_top;
+    m[7] = lWi.cr_width;
+    m[8] = lWi.cr_height;
+
+    sc80( 48, &m[0], &m[0], &m[0] );
+
+
+// Current window frame values
+    frame_left = lWi.left;
+    frame_top  = lWi.top;
+    frame_width = lWi.width;
+    frame_height = lWi.height;
+
+// Current client area values
+    cr_left = lWi.cr_left;
+    cr_top  = lWi.cr_top;
+    cr_width  = lWi.cr_width;
+    cr_height = lWi.cr_height;
+
+
 // #danger
 // Let's get the values for the client area.
 // #
@@ -3670,17 +3825,25 @@ int terminal_init(unsigned short flags)
 // So, we simply need to know the width and height,
 // cause a client will be drawed inside the client area.
 
-// Left/top always in 0,0 for client area.
-    wLeft   = 0;
-    wTop    = 0;
+// Left/top always in 0, 0 for client area.
+
+    // lWi.cr_left is where the client area starts in left
+    // lWi.cr_top is where the client area starts in top
+
+    wLeft   = 0;  // Offset inside client area
+    wTop    = 0;  // Offset inside client area
     wWidth  = lWi.cr_width;
     wHeight = lWi.cr_height;
 
 // Create terminal window
+// (Inside the client area)
     terminal_window = 
         (int) gws_create_window (
                   client_fd,
-                  WT_SIMPLE, 1, 1, cw_string,
+                  WT_SIMPLE, 
+                  1, 
+                  1, 
+                  cw_string,
                   wLeft, wTop, wWidth, wHeight,
                   main_window,
                   WS_CHILD,
@@ -3702,7 +3865,7 @@ int terminal_init(unsigned short flags)
 
     // #bugbug
     // Its not returning the right client area values.
-    //while(1){}
+    // while(1){}
 
     Terminal._mode = 0;
 
