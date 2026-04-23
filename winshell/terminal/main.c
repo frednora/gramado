@@ -39,7 +39,7 @@
 */
 
 // Program name
-static const char *program_name = "TERMINAL"; //"TERM00";
+static const char *program_name = "TERMINAL";
 struct gws_display_d *Display;
 
 
@@ -298,9 +298,9 @@ static void terminal_initialize_pty(void)
 {
     ptym_fd = open("/DEV/PTYM", 0, "a+");
     if (ptym_fd < 0) {
-        //printf("term00: Failed to open PTYM\n");
+        //printf("terminal: Failed to open PTYM\n");
     } else {
-        //printf("term00: PTYM opened, fd=%d\n", ptym_fd);
+        //printf("terminal: PTYM opened, fd=%d\n", ptym_fd);
     }
 }
 
@@ -367,12 +367,12 @@ static void update_clients(int fd)
     cr_height = lWi.cr_height;
 
 
-    if (wid < 0)
-        return;
+    //if (wid < 0)
+       // return;
 
     // Change position, resize and redraw the window. (terminal window)
-    gws_change_window_position( fd, wid, l, t );
-    gws_resize_window( fd, wid, w, h );
+    //gws_change_window_position( fd, wid, l, t );
+    //gws_resize_window( fd, wid, w, h );
 
 // #todo: 
 // We need a list o clients. maybe clients[i]
@@ -445,7 +445,7 @@ static void update_clients(int fd)
 // #todo: Maybe we need to get the window info again.
 static void clear_terminal_client_window(int fd)
 {
-    int wid = Terminal.client_window_id;
+    //int wid = Terminal.client_window_id;
 
     if (fd<0){
         return;
@@ -454,7 +454,28 @@ static void clear_terminal_client_window(int fd)
     //gws_redraw_window( fd, wid, TRUE );   //Slower?
 // Clear the window
 // Repaint it using the default background color.
-    gws_clear_window(fd,wid);  // Faster?
+    //gws_clear_window(fd,wid);  // Faster?
+
+    // #todo
+    // Use libgui to draw a rectangle
+
+    // Background
+    libgui_backbuffer_draw_rectangle0(
+        frame_left + cr_left + 0, 
+        frame_top  + cr_top  + 0, 
+        Terminal.width, 
+        Terminal.height,
+        COLOR_BLACK, 1, 0, FALSE );
+
+    // Refresh
+    libgui_refresh_rectangle_via_kernel(
+        frame_left + cr_left + 0, 
+        frame_top  + cr_top  + 0, 
+        Terminal.width, 
+        Terminal.height
+        );
+
+
 // Update cursor.
     cursor_x = Terminal.left;
     cursor_y = Terminal.top;
@@ -473,9 +494,9 @@ static void __winmax(int fd)
 // Talvez um wm client-side tambem possa tratar isso.
 
     int wid        = (int) Terminal.main_window_id;
-    int client_wid = (int) Terminal.client_window_id;
-    unsigned long w=rtl_get_system_metrics(1);
-    unsigned long h=rtl_get_system_metrics(2);
+    //int client_wid = (int) Terminal.client_window_id;
+    unsigned long w = rtl_get_system_metrics(1);
+    unsigned long h = rtl_get_system_metrics(2);
                   // #bugbug
                   // The server needs to respect the working area.
                   h = (h -40);
@@ -516,9 +537,9 @@ static void __winmax(int fd)
     //gws_change_window_position(fd,client_wid,wi->cr_left,wi->cr_top);
     // Always in 0,0
 
-    gws_change_window_position( fd, client_wid, 0, 0 );
-    gws_resize_window(fd, client_wid, wi->cr_width, wi->cr_height);
-    gws_redraw_window(fd, client_wid, TRUE);
+    //gws_change_window_position( fd, client_wid, 0, 0 );
+    //gws_resize_window(fd, client_wid, wi->cr_width, wi->cr_height);
+    //gws_redraw_window(fd, client_wid, TRUE);
 }
 
 // Minimize application window.
@@ -534,7 +555,7 @@ static void __winmin(int fd)
 // Talvez um wm client-side tambem possa tratar isso.
 
     int wid        = (int) Terminal.main_window_id;
-    int client_wid = (int) Terminal.client_window_id;
+    //int client_wid = (int) Terminal.client_window_id;
 
 // #bugbug
 // Estamos chamando o kernel pra pegar informações sobre tela.
@@ -590,12 +611,9 @@ static void __winmin(int fd)
 
     // Always in 0,0
     //gws_change_window_position(fd,client_wid,wi->cr_left,wi->cr_top);
-    gws_change_window_position(
-        fd, client_wid, 
-        0,
-        0 );
-    gws_resize_window(fd, client_wid, wi->cr_width, wi->cr_height );
-    gws_redraw_window(fd, client_wid, TRUE );
+    //gws_change_window_position( fd, client_wid,  0, 0 );
+    //gws_resize_window(fd, client_wid, wi->cr_width, wi->cr_height );
+    //gws_redraw_window(fd, client_wid, TRUE );
 }
 
 // command "window"
@@ -1047,8 +1065,9 @@ static void compareStrings(int fd)
         goto exit_cmp;
     }
 
-    if ( strncmp(prompt,"tputc",5) == 0 ){
-        tputc(fd, Terminal.client_window_id, 'x', 1);
+    if ( strncmp(prompt,"tputc",5) == 0 )
+    {
+        //tputc(fd, Terminal.client_window_id, 'x', 1);
         goto exit_cmp;
     }
 
@@ -1180,7 +1199,7 @@ static void compareStrings(int fd)
     int child_tid = -1;
     child_tid = (int) terminal_core_launch_from_cmdline(fd, prompt);
     if (child_tid < 0){
-        //printf("term00.bin: on terminal_core_launch_from_cmdline()\n");
+        //printf("terminal.bin: on terminal_core_launch_from_cmdline()\n");
         return;
     }
 
@@ -1223,7 +1242,7 @@ exit_cmp:
 static void doHelp(int fd)
 {
     const char *String = 
-        "term00.bin: This is the terminal application\n";
+        "terminal.bin: This is the terminal application\n";
 
     if (fd<0){
         return;
@@ -1243,7 +1262,7 @@ static void doHelp(int fd)
 // But for now we are using a embedded shell.
 static void doAbout(int fd)
 {
-    const char *String =  "term00.bin: This is the terminal application\n";
+    const char *String =  "terminal.bin: This is the terminal application\n";
     if (fd < 0){
         return;
     }
@@ -1287,11 +1306,13 @@ static void doPrompt(int fd)
         clear_terminal_client_window(fd);
     }
 
+/*
 // Refresh client window.
     int wid = Terminal.client_window_id;
     if (wid < 0){
         return;
     }
+*/
 
 //--------------------------------------
 //
@@ -1316,7 +1337,7 @@ static void doPrompt(int fd)
 // Using display server as the input authority.
 // ok. It is working.
 // But we need the prompt string.
-    gws_set_focus(fd,wid);
+    gws_set_focus(fd, main_window);
 
 // -------------------------------
 
@@ -1326,6 +1347,7 @@ static void doPrompt(int fd)
         CharHeight = FontInfo.height;
     }
 
+/*
 // Draw prompt symbol.
     gws_draw_char ( 
         fd, 
@@ -1334,6 +1356,7 @@ static void doPrompt(int fd)
         (cursor_y*CharHeight), 
         prompt_color, 
         '>' ); 
+*/
 
 // Increment x.
     cursor_x++;
@@ -1342,21 +1365,22 @@ static void doPrompt(int fd)
 // Refreshing the whole window is too much.
 // Refresh only the rectangle of the size of a char or line.
 
+/*
     gws_refresh_retangle(
         fd,
         (cursor_x*CharWidth),
         (cursor_y*CharHeight),
         CharWidth,
         CharHeight );
-
+*/
 
 // Draw char using lingui
 // #ps: Using current values.
 // We gotta update the, when the server sends paint message.
-    //unsigned long x = (cursor_x*CharWidth);
-    //unsigned long y = (cursor_y*CharHeight);
+    unsigned long x = (cursor_x*CharWidth);
+    unsigned long y = (cursor_y*CharHeight);
 
-/*
+
     libgui_drawchar( 
         frame_left + cr_left + (x & 0xFFFF),
         frame_top  + cr_top  + (y & 0xFFFF),
@@ -1365,9 +1389,9 @@ static void doPrompt(int fd)
         COLOR_BLACK,   // bg
         0
     );
-*/
 
-/*
+
+
 // Refresh to show it
     libgui_refresh_rectangle_via_kernel(
         frame_left + cr_left + (x & 0xFFFF), 
@@ -1375,7 +1399,7 @@ static void doPrompt(int fd)
         8, 
         8
     );
-*/
+
 
     // it works
     //gws_refresh_window(fd,wid);
@@ -2827,14 +2851,15 @@ terminalProcedure (
 
 
     case MSG_CLOSE:
-        //printf("term00.bin: MSG_CLOSE\n");
-        tputstring(fd, "term00.bin: MSG_CLOSE\n");
+        //printf("terminal.bin: MSG_CLOSE\n");
+        tputstring(fd, "terminal.bin: MSG_CLOSE\n");
+        //while(1){}
 
         // Notify the child app with ETX/EOT
         terminal_notify_child_close();
 
         // Tear down the terminal windows
-        gws_destroy_window(fd, terminal_window);
+        //gws_destroy_window(fd, terminal_window);
         gws_destroy_window(fd, main_window);
 
         // Exit the terminal process itself. (quick and dirty)
@@ -2858,7 +2883,7 @@ terminalProcedure (
     //case GWS_SelectAll:  // [control + a] (Select all)
         //break;
     //case GWS_Find:  // [control + f] (Find)
-        //printf("term00.bin: GWS_Find\n");
+        //printf("terminal.bin: GWS_Find\n");
         //break;
     //case GWS_Save:  // [control + s] (Save?)
         //break;
@@ -3612,13 +3637,13 @@ int terminal_init(unsigned short flags)
 // IN: hostname:number.screen_number
     Display = (struct gws_display_d *) gws_open_display(display_name_string);
     if ((void*) Display == NULL){
-        printf("term00.bin: Display\n");
+        printf("terminal.bin: Display\n");
         goto fail;
     }
 // Get client socket
     client_fd = (int) Display->fd;
     if (client_fd <= 0){
-        printf("term00.bin: fd\n");
+        printf("terminal.bin: fd\n");
         goto fail;
     }
     Terminal.client_fd = (int) client_fd;
@@ -3835,6 +3860,7 @@ int terminal_init(unsigned short flags)
     wWidth  = lWi.cr_width;
     wHeight = lWi.cr_height;
 
+/*
 // Create terminal window
 // (Inside the client area)
     terminal_window = 
@@ -3854,6 +3880,15 @@ int terminal_init(unsigned short flags)
         exit(1);
     }
     Terminal.client_window_id = terminal_window;
+*/
+
+    // Background
+    libgui_backbuffer_draw_rectangle0(
+        frame_left + cr_left + wLeft, 
+        frame_top  + cr_top  + wTop, 
+        wWidth, 
+        wHeight,
+        COLOR_BLACK, 1, 0, FALSE );
 
     // #debug
     //gws_draw_rectangle(client_fd, main_window,
@@ -3861,7 +3896,15 @@ int terminal_init(unsigned short flags)
         //COLOR_WHITE, TRUE, 0);
 
     //#debug
-    gws_refresh_window(client_fd, terminal_window);
+    //gws_refresh_window(client_fd, terminal_window);
+
+    // Refresh
+    libgui_refresh_rectangle_via_kernel(
+        frame_left + cr_left + wLeft, 
+        frame_top  + cr_top  + wTop, 
+        wWidth, 
+        wHeight
+        );
 
     // #bugbug
     // Its not returning the right client area values.
@@ -4045,7 +4088,7 @@ int terminal_init(unsigned short flags)
     const char *filename = "#shell.bin";
     int tid = (int) rtl_clone_and_execute_return_tid(filename);
     if (tid < 0){
-        tputstring(client_fd, "term00: shell failed\n");
+        tputstring(client_fd, "terminal: shell failed\n");
         exit(0);
     }
     //rtl_sleep(4000);
@@ -4084,8 +4127,10 @@ int terminal_init(unsigned short flags)
     while (1){
 
         // 1. Pump events from Input Broker (system events)
-        for (nSysMsg=0; nSysMsg<32; nSysMsg++){
-            __get_system_event(client_fd, Terminal.client_window_id);
+        for (nSysMsg=0; nSysMsg<32; nSysMsg++)
+        {
+            //__get_system_event(client_fd, Terminal.client_window_id);
+            __get_system_event(client_fd, main_window);
         };
 
         // 2. Read what comes from the shell and print it
@@ -4155,12 +4200,12 @@ int terminal_init(unsigned short flags)
 */
 
 done:
-    printf("term00.bin: Bye\n");
+    printf("terminal.bin: Bye\n");
     return 0;
 
 fail:
     // #bugbug: This code is running. We're simply avoiding the noise.
-    printf("term00.bin: Fail :)\n");
+    printf("terminal.bin: Fail\n");
     return (int) -1;
 }
 
@@ -4215,7 +4260,7 @@ int main(int argc, char *argv[])
     Terminal.esc = 0;
  
     Terminal.main_window_id = -1;
-    Terminal.client_window_id = -1;
+    //Terminal.client_window_id = -1;
 
     Terminal.left = 0;
     Terminal.top = 0;
@@ -4251,7 +4296,7 @@ int main(int argc, char *argv[])
     Status = (int) terminal_init(INIT_FLAGS);
     if (Status != 0)
     {
-        printf("term00 main(): Something is wrong\n");
+        printf("terminal main(): Something is wrong\n");
         //printf("TERM: main() is returning in thread %d\n", 
             //term00_gettid() );
         

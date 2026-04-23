@@ -622,11 +622,6 @@ struct gws_window_d
     int state;
 
 // ===================================
-// The server will not hit-testing this type of window.
-// They are inside the client area.
-    int is_custom_client_window;
-
-// ===================================
 // Name/label support.
     char *name;
     unsigned int label_color_when_selected;

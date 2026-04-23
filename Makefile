@@ -270,7 +270,7 @@ build-extras:
 # DE core applications.
 	@-cp $(L3_APPS)/bin/TASKBAR.BIN   $(BASE)/DE/
 	@-cp $(L3_APPS)/bin/GDM.BIN       $(BASE)/DE/
-	@-cp $(L3_APPS)/bin/TERM00.BIN    $(BASE)/DE/
+#	@-cp $(L3_APPS)/bin/TERM00.BIN    $(BASE)/DE/
 	@-cp $(L3_APPS)/bin/TERMINAL.BIN  $(BASE)/DE/
 
 # DE Utilities.

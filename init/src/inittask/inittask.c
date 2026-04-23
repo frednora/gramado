@@ -235,7 +235,7 @@ xxxProcessEvent (
                     //#debug
                     //printf("init.bin: 4001, from {%d}\n",caller_tid);
                     memset(__filename_local_buffer,0,64);
-                    sprintf(__filename_local_buffer,"#term00.bin");
+                    sprintf(__filename_local_buffer,"#terminal.bin");
                     rtl_clone_and_execute(__filename_local_buffer);
                     return 0;
                 }

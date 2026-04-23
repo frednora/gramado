@@ -10,7 +10,6 @@ all:
 # 2 - DE core applications.
 	make -C  taskbar/
 	make -C  gdm/
-	make -C  term00/
 	make -C  terminal/
 
 # 2 - DE Utilities

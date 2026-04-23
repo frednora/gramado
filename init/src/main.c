@@ -354,7 +354,7 @@ static void do_launch_de2(void)
     rtl_sleep(2000);
 
 // Launch new process.
-    ret_val = (int) rtl_clone_and_execute("#term00.bin");
+    ret_val = (int) rtl_clone_and_execute("#terminal.bin");
     if (ret_val<=0){
         printf("Couldn't clone\n");
         return;
@@ -375,7 +375,7 @@ static void do_launch_list(void)
 
 
     rtl_clone_and_execute("#taskbar.bin");
-    rtl_clone_and_execute("#term00.bin");
+    rtl_clone_and_execute("#terminal.bin");
     //rtl_clone_and_execute("#editor.bin");
     //rtl_clone_and_execute("#browser.bin");
     //rtl_clone_and_execute("#fileman.bin");

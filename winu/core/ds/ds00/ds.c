@@ -1214,7 +1214,19 @@ int serviceHello(void)
 // Save it as an argument of the window structure.
 int serviceCreateWindow(int client_fd)
 {
-// The buffer is a global variable
+
+    // #test
+    // The server will be a compositor, responsable or compose the 
+    // desktop scene, it still will be able to draw the frame/chrome 
+    // but it will not accept requests to draw inside the client area.
+    // The client will draw inside a surface and the server 
+    // will compose the desktop using these canvas.
+    // The will NOT create child windows inside the client area anymore.
+    // It takes too much time to repaing when the window moves or 
+    // changes its sizes.
+    // No child windows for now in server size.
+
+    // The buffer is a global variable
     unsigned long *message_address = (unsigned long *) __buffer;
     gReq r;  // Standard structure for request
     register int i=0;
@@ -1384,12 +1396,34 @@ int serviceCreateWindow(int client_fd)
     }
 */
 
+    int is_valid_type = FALSE;
+
+// Valid types
+    switch (type){
+
+    // The application window, using frame/chrome or not.
+    // >>> It can move or resize.
+    case WT_OVERLAPPED:
+        ServerProfiler.cw_overlapped++;
+        is_valid_type = TRUE;
+        break;
+    
+    // Application window, used for message boxes, dialog boxes, notifications, etc.
+    // Using frame/chrome or not.
+   // >>> It can NOT move or resize.
+    case WT_POPUP:
+        ServerProfiler.cw_popup++;
+        is_valid_type = TRUE;
+        break;
+    };
+
 // --------------------------------
 // Server profiler
 
+/*
     switch (type){
     case WT_SIMPLE: 
-        ServerProfiler.cw_simple++; 
+        ServerProfiler.cw_simple++;
         break;
     case WT_EDITBOX_SINGLE_LINE:
         ServerProfiler.cw_editbox_single_line++;
@@ -1424,6 +1458,7 @@ int serviceCreateWindow(int client_fd)
     default:
         break;
     };
+*/
 
 // --------------------------------
 
@@ -1460,16 +1495,20 @@ int serviceCreateWindow(int client_fd)
 
     if (my_style & WS_APP)
     {
+        // We can create main window when the root window is the parent
         if (pwid == 0)
             fCanCreateMainwindow = TRUE;
         if (pwid == __root_window->id)
             fCanCreateMainwindow = TRUE;
 
+        // We can NOT create main window 
+        // when the root window is NOT the parent
         if (fCanCreateMainwindow != TRUE){
             goto fail;
         }
     }
 
+/*
 // Is it a child window?
     if (my_style & WS_CHILD)
         fChild = TRUE;
@@ -1481,6 +1520,16 @@ int serviceCreateWindow(int client_fd)
             goto fail;
         if (Parent->magic != 1234)
             goto fail;
+    }
+*/
+
+// #test
+// Not creating child windows
+    if (my_style & WS_CHILD)
+    {
+        // #debug
+        printf("ds00: WS_CHILD style not supported\n");
+        goto fail;
     }
 
 // Calling a worker on server to create the window.
@@ -1517,6 +1566,7 @@ int serviceCreateWindow(int client_fd)
         goto fail;
     }
 
+/*
 // Add it to the list of childs
 // These are the types we want to put into the list.
     switch (Window->type){
@@ -1536,18 +1586,19 @@ int serviceCreateWindow(int client_fd)
         //printf("main.c: on Window->type\n");
         break;
     };
+*/
 
-    if (Parent->isTaskBar == TRUE)
-        wm_add_child_window(Parent,Window);
-
+// # Can't create inside the taskbar
+    //if (Parent->isTaskBar == TRUE)
+        //wm_add_child_window(Parent,Window);
 
 // Client controls (custom)
 // It's a child window.
 // All these controls are considere custom clients and 
 // the server will not hit-testing them.
 
-    Window->is_custom_client_window = FALSE;
 
+/*
     switch (Window->type){
     case WT_SIMPLE:
     case WT_EDITBOX_SINGLE_LINE:
@@ -1558,12 +1609,13 @@ int serviceCreateWindow(int client_fd)
     case WT_SCROLLBAR:
         if (fChild == TRUE || (Window->style & WS_CHILD))
         {
-            Window->is_custom_client_window = TRUE;
+            //...
         }
         break;
     default:
         break;
     };
+*/
 
 //===============================================
 // Save the tid of the client
@@ -1577,6 +1629,8 @@ int serviceCreateWindow(int client_fd)
 // The client socket id
     Window->client_fd = (int) client_fd;
 
+/*
+// Can't create child windows anymore
 // #bugbug: Why?
 // Focus if editbox
     if (Window->type == WT_EDITBOX || 
@@ -1584,6 +1638,7 @@ int serviceCreateWindow(int client_fd)
     {
         set_focus(Window);
     }
+*/
 
 // ===============================================
 // #test
@@ -1753,11 +1808,11 @@ int serviceCreateWindow(int client_fd)
         next_response[i] = 0;
 
 // Response: [wid, msg code, nothing, nothing]
+// Maybe we can send additional info in the future.
     next_response[0] = (unsigned long) (wid & 0xFFFFFFFF);
     next_response[1] = SERVER_PACKET_TYPE_REPLY;
     next_response[2] = 0;
     next_response[3] = 0;
-// Done: Maybe we can send additional info in the future.
     return 0;
 
 fail:
@@ -1770,6 +1825,10 @@ fail:
 // Is it showing or not?
 int serviceDrawChar(void)
 {
+
+    // #deprecated
+    // The server will not draw inside the client window anymore.
+
     unsigned long *message_address = (unsigned long *) &__buffer[0];
 
     struct gws_window_d *window;
@@ -2020,18 +2079,12 @@ int serviceResizeWindow(void)
     return 0;
 }
 
-// #bugbug
-// Usaremos a função create window para desenhar botões.
-// #deletar !!!
+// #deprecated
 int serviceDrawButton(void)
 {
-// Business Logic:
-
-    // Deprecated !!
-    //server_debug_print("serviceDrawButton: deprecated\n");
     printf            ("serviceDrawButton: deprecated\n");
+    // #hang because we need a response
     exit(1);
-
     return -1;
 }
 
@@ -2106,6 +2159,11 @@ fail:
 
 int serviceRedrawWindow(void)
 {
+
+    // #deprecated
+    // Its used to redraw window inside the client area,
+    // and we will not do it anymore
+
     unsigned long *message_address = (unsigned long *) &__buffer[0];
     struct gws_window_d *window;
     int window_id = -1;
@@ -2206,6 +2264,10 @@ fail:
 // It is a drawer only, not a rectangle object creator.
 int serviceDrawRectangle(void)
 {
+
+    // #deprecated
+    // We will not draw inside the client area anymore
+
     unsigned long *message_address = (unsigned long *) &__buffer[0];
 
     unsigned long rel_left=0;
@@ -2404,10 +2466,14 @@ void serviceCloneAndExecute(void)
 
 // Draw text.
 // Service 1005
-int serviceDrawText(void)
-{
 // Draw a text.
 // Is it showing or not?
+
+int serviceDrawText(void)
+{
+
+    // #deprecated
+    // We will not draw inside the client area anymore
 
     unsigned long *message_address = (unsigned long *) &__buffer[0];
     struct gws_window_d  *window;
