@@ -267,32 +267,24 @@ build-extras:
 
 # These need the '#' prefix.
 
-# DE core applications.
+# DE core applications
 	@-cp $(L3_APPS)/bin/TASKBAR.BIN   $(BASE)/DE/
-	@-cp $(L3_APPS)/bin/GDM.BIN       $(BASE)/DE/
-#	@-cp $(L3_APPS)/bin/TERM00.BIN    $(BASE)/DE/
 	@-cp $(L3_APPS)/bin/TERMINAL.BIN  $(BASE)/DE/
 
-# DE Utilities.
+# DE Utilities
 	@-cp $(L3_APPS)/bin/DOC.BIN      $(BASE)/DE/
 	@-cp $(L3_APPS)/bin/EDITOR.BIN   $(BASE)/DE/
 	@-cp $(L3_APPS)/bin/MEMORY.BIN   $(BASE)/DE/
 	@-cp $(L3_APPS)/bin/POWER.BIN    $(BASE)/DE/
-	@-cp $(L3_APPS)/bin/SETUP.BIN    $(BASE)/DE/
 	@-cp $(L3_APPS)/bin/SYSINFO.BIN  $(BASE)/DE/
 
-# Experimental applications.
-	@-cp $(L3_APPS)/bin/BMENU.BIN    $(BASE)/DE/
-	@-cp $(L3_APPS)/bin/CALC00.BIN   $(BASE)/DE/
-	@-cp $(L3_APPS)/bin/DBOX.BIN     $(BASE)/DE/
+# Experimental applications
 	@-cp $(L3_APPS)/bin/DRAW.BIN     $(BASE)/DE/
-	@-cp $(L3_APPS)/bin/GWTEST.BIN   $(BASE)/DE/
 	@-cp $(L3_APPS)/bin/LAUNCH.BIN   $(BASE)/DE/
-	@-cp $(L3_APPS)/bin/MBOX.BIN     $(BASE)/DE/
 	@-cp $(L3_APPS)/bin/MENUAPP.BIN  $(BASE)/DE/
 
 
-# Other applications.
+# Other applications
 	@-cp $(L3_APPS)/bin/GWS.BIN      $(BASE)/DE/
 
 

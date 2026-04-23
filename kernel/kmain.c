@@ -167,30 +167,27 @@ struct welcome_ap_d
 };
 struct welcome_ap_d  WelcomeAP;
 
-//
-// #
-// AP INITIALIZATION
-//
 
 // Real entry point for the AP
 extern void asm_AP_entry_point(void);
+static int __AP_handshake(void);
 
-void AP_kmain(void)
+// ======================
+
+// Talk with the BSP in order to identify the current AP.
+// OUT: id in lapic_info[] database.
+static int __AP_handshake(void)
 {
-// The entry point for the APs.
-    int i=0;
+// Called bu AP_main().
 
-    asm ("cli");
     ap_startup_counter++;  // Update counter
-
 
     // Get the slot id in lapic_info[] database.
     int id = WelcomeAP.my_lapic_info_id;
     if (id < 0)
-        goto AP_die;
+        goto fail;
     if (id >= NR_CPUS)
-        goto AP_die;
-
+        goto fail;
 
     int localid;
     int localversion;
@@ -217,43 +214,10 @@ void AP_kmain(void)
     apic_mark_cpu_as_running(id);  // The Core 1 is running now.
     WelcomeAP.bsp_is_waiting = FALSE; // BSP can continue
 
-//
-// Early die
-//
+    return (int) id;  // Return an valid ID
 
-    //asm (" hlt ");
-
-
-    // #todo 
-    // Now we gotta setup the lapic for this AP 
-
-
-    // #test
-    // Drawing rectangles
-    unsigned int Color = COLOR_BLACK;
-    int Counter = 0;
-    while (1){
-        while (apic_SPINLOCK == TRUE){ asm ("pause \n"); };
-
-        Counter++;
-        Color = COLOR_YELLOW;
-        if (Counter % 2 == 0)
-            Color = COLOR_RED;
-
-        for (i=0; i<200; i++){
-            frontbuffer_draw_rectangle( 0, i, 4, 4, Color, 0 );
-        };
-
-        // some interrupt handler need the thread initialization
-        // asm (" int $3 \n ");
-    };
-
-
-AP_die:
-    while (1){
-        asm (" cli ");
-        asm (" hlt ");
-    };
+fail:
+    return (int) -1;  // Return an invalid ID
 }
 
 
@@ -1275,159 +1239,261 @@ static int I_initialize_kernel(int arch_type, int processor_number)
 {
     int Status = FALSE;
 
-// Early init
-// We don't have any print support yet.
-// We initialized the serial debug support, and console structures, 
-// but we still can't use the printk functions.
+    // BSP
+    if (processor_number == 0){
 
-    system_state = SYSTEM_PREINIT;
-    // [1]
-    earlyinit();
-    wink_update_progress_bar(5);
-    //while(1){}
+        system_state = SYSTEM_PREINIT;
 
-//
-// Booting
-//
+        // [1]
+        // Early init
+        // We don't have any print support yet.
+        // We initialized the serial debug support, and console structures, 
+        // but we still can't use the printk functions.
+        earlyinit();
+        wink_update_progress_bar(5);
 
-    PROGRESS(":: BOOTING\n");
-    system_state = SYSTEM_BOOTING;
+        // BSP is Booting
+        PROGRESS(":: BOOTING BSP\n");
+        system_state = SYSTEM_BOOTING;
+        // Do we have boot info?
+        if (bootblk.initialized != TRUE){
+            panic("I_initialize_kernel: bootblk.initialized\n");
+        }
 
-// boot info
-    if (bootblk.initialized != TRUE){
-        panic("I_kmain: bootblk.initialized\n");
-    }
+        // ...
+
+    // AP kernel initialization
+    } else {
+        // #todo
+    };
 
 //
 // mm subsystem
 //
 
-    //PROGRESS(":: Initialize mm subsystem\n");
+    // BSP initialization (mm)
+    if (processor_number == 0){
 
-// -------------------------------
-// Initialize mm phase 0.
-// See: mm.c
-// + Initialize video support.
-// + Inittialize heap support.
-// + Inittialize stack support. 
-// + Initialize memory sizes.
-    PROGRESS(":: MM PHASE 0\n");
-    // [2:0]
-    Status = (int) mmInitialize(0);
-    if (Status != TRUE){
-        __failing_kernel_subsystem = KERNEL_SUBSYSTEM_MM;
-        if (Initialization.is_serial_log_initialized == TRUE){
-            debug_print("I_kmain: mmInitialize phase 0 fail\n");
+        //PROGRESS(":: Initialize mm subsystem\n");
+
+        // -------------------------------
+        // Initialize mm phase 0.
+        // See: mm.c
+        // + Initialize video support.
+        // + Inittialize heap support.
+        // + Inittialize stack support. 
+        // + Initialize memory sizes.
+        PROGRESS(":: MM PHASE 0 (BSP)\n");
+        // [2:0]
+        Status = (int) mmInitialize(0);
+        if (Status != TRUE){
+            __failing_kernel_subsystem = KERNEL_SUBSYSTEM_MM;
+            if (Initialization.is_serial_log_initialized == TRUE){
+                debug_print("I_initialize_kernel: mmInitialize phase 0 fail\n");
+            }
+            goto fail;
         }
-        goto fail;
-    }
-    Initialization.mm_phase0 = TRUE;
-    wink_update_progress_bar(20);
-    //while(1){}
+        Initialization.mm_phase0 = TRUE;
+        wink_update_progress_bar(20);
 
-// -------------------------------
-// Initialize mm phase 1.
-// + Initialize framepoll support.
-// + Initializing the paging infrastructure.
-//   Mapping all the static system areas.
-    PROGRESS(":: MM PHASE 1\n");
-    // [2:1]
-    Status = (int) mmInitialize(1);
-    if (Status != TRUE){
-        __failing_kernel_subsystem = KERNEL_SUBSYSTEM_MM;
-        if (Initialization.is_serial_log_initialized == TRUE){
-            debug_print("I_kmain: mmInitialize phase 1 fail\n");
+        // -------------------------------
+        // Initialize mm phase 1.
+        // + Initialize framepoll support.
+        // + Initializing the paging infrastructure.
+        //   Mapping all the static system areas.
+        PROGRESS(":: MM PHASE 1 (BSP)\n");
+        // [2:1]
+        Status = (int) mmInitialize(1);
+        if (Status != TRUE){
+            __failing_kernel_subsystem = KERNEL_SUBSYSTEM_MM;
+            if (Initialization.is_serial_log_initialized == TRUE){
+                debug_print("I_initialize_kernel: mmInitialize phase 1 fail\n");
+            }
+            goto fail;
         }
-        goto fail;
-    }
-    Initialization.mm_phase1 = TRUE;
-    wink_update_progress_bar(40);
-    //while(1){}
+        Initialization.mm_phase1 = TRUE;
+        wink_update_progress_bar(40);
 
-    g_module_runtime_initialized = TRUE;
+        // Why?
+        g_module_runtime_initialized = TRUE;
+
+    // AP initialization (mm)
+    } else {
+        // #todo
+    };
 
 //
 // ke subsystem
 //
 
-    //PROGRESS(":: Initialize ke subsystem\n");
+    // BSP initialization (ke)
+    if (processor_number == 0){
 
-// -------------------------------
-// Initialize ke phase 0.
-// See: ke.c
-// + kernel font.
-// + background.
-// + refresh support.
-// + show banner and resolution info.
-// + Check gramado mode and grab data from linker.
-// + Initialize bootloader display device.
-    PROGRESS(":: KE PHASE 0\n");
-    // [3:0]
-    Status = (int) keInitialize(0);
-    if (Status != TRUE)
-        panic_at_init(Error30_kePhase0,KERNEL_SUBSYSTEM_KE);
-    Initialization.ke_phase0 = TRUE;
-    wink_update_progress_bar(50);
-    //while(1){}
+        //PROGRESS(":: Initialize ke subsystem\n");
 
-// -------------------------------
-// Initialize ke phase 1.
-// + Calling I_x64main to 
-//   initialize a lot of stuff from the 
-//   current architecture.
-// + PS2 early initialization.
-    PROGRESS(":: KE PHASE 1\n");
-    // [3:1]
-    Status = (int) keInitialize(1);
-    if (Status != TRUE)
-        panic_at_init(Error31_kePhase1,KERNEL_SUBSYSTEM_KE);
-    Initialization.ke_phase1 = TRUE;
-    wink_update_progress_bar(60);
-    //while(1){}
+        // -------------------------------
+        // Initialize ke phase 0.
+        // See: ke.c
+        // + kernel font.
+        // + background.
+        // + refresh support.
+        // + show banner and resolution info.
+        // + Check gramado mode and grab data from linker.
+        // + Initialize bootloader display device.
+        PROGRESS(":: KE PHASE 0 (BSP)\n");
+        // [3:0]
+        Status = (int) keInitialize(0);
+        if (Status != TRUE)
+            panic_at_init(Error30_kePhase0,KERNEL_SUBSYSTEM_KE);
+        Initialization.ke_phase0 = TRUE;
+        wink_update_progress_bar(50);
 
-// -------------------------------
-// Initialize ke phase 2.
-// + Initialize background.
-// + Load BMP icons.
-    PROGRESS(":: KE PHASE 2\n");
-    // [3:2]
-    Status = (int) keInitialize(2);
-    if (Status != TRUE)
-        panic_at_init(Error32_kePhase2,KERNEL_SUBSYSTEM_KE);
-    Initialization.ke_phase2 = TRUE;
-    wink_update_progress_bar(70);
-    //while(1){}
+        // -------------------------------
+        // Initialize ke phase 1.
+        // + Calling I_x64main to 
+        //   initialize a lot of stuff from the 
+        //   current architecture.
+        // + PS2 early initialization.
+        PROGRESS(":: KE PHASE 1 (BSP)\n");
+        // [3:1]
+        Status = (int) keInitialize(1);
+        if (Status != TRUE)
+            panic_at_init(Error31_kePhase1,KERNEL_SUBSYSTEM_KE);
+        Initialization.ke_phase1 = TRUE;
+        wink_update_progress_bar(60);
 
-// -------------------------------
-    PROGRESS(":: archinit\n");
-    // [4]
-    Status = archinit();
-    if (Status != TRUE)
-        panic_at_init(Error40_archinit,KERNEL_SUBSYSTEM_KE);
-    wink_update_progress_bar(80);
-    //while(1){}
+        // -------------------------------
+        // Initialize ke phase 2.
+        // + Initialize background.
+        // + Load BMP icons.
+        PROGRESS(":: KE PHASE 2 (BSP)\n");
+        // [3:2]
+        Status = (int) keInitialize(2);
+        if (Status != TRUE)
+            panic_at_init(Error32_kePhase2,KERNEL_SUBSYSTEM_KE);
+        Initialization.ke_phase2 = TRUE;
+        wink_update_progress_bar(70);
 
-// -------------------------------
-    PROGRESS(":: deviceinit\n");
-    // [5]
-    deviceinit();
-    wink_update_progress_bar(100);
-    //while(1){}
+    // AP initialization (ke)
+    } else {
+        // #todo
+    };
 
-// -------------------------------
-    if (Status == TRUE)
-    {
+
+    // BSP initialization (archinit)
+    if (processor_number == 0){
+
+        PROGRESS(":: archinit\n");
+        // [4]
+        Status = archinit();
+        if (Status != TRUE)
+            panic_at_init(Error40_archinit,KERNEL_SUBSYSTEM_KE);
+        wink_update_progress_bar(80);
+
+    // AP initialization (archinit)
+    } else {
+        // #todo
+    };
+
+
+    // BSP initialization (deviceinit)
+    if (processor_number == 0){
+
+        PROGRESS(":: deviceinit\n");
+        // [5]
+        deviceinit();
+        wink_update_progress_bar(100);
+
+    // AP initialization (deviceinit)
+    } else {
+        // #todo
+    };
+
+    // BSP initialization (lateinit)
+    if (processor_number == 0){
+
+        if (Status != TRUE)
+            goto fail;
+        
         PROGRESS(":: lateinit\n");
         // [6]
+        // It doesn't return?
         Status = (int) lateinit();
         if (Status != TRUE)
-            panic_at_init(Error60_lateinit,KERNEL_SUBSYSTEM_KMAIN);
-    }
+            panic_at_init(Error60_lateinit,KERNEL_SUBSYSTEM_KMAIN);       
 
-// Initialization fail
+    // AP initialization (lateinit)
+    } else {
+        //#todo
+    };
+
+// BSP Initialization failed
 fail:
     system_state = SYSTEM_ABORTED;
     return FALSE;
+}
+
+
+//
+// $
+// AP INITIALIZATION
+//
+
+void AP_kmain(void)
+{
+    int i=0;
+    int id = -1;
+
+    asm ("cli");  // For safety
+    //PROGRESS("AP_kmain: \n")
+
+// Talk with the BSP in order to identify the current AP.
+    id = (int) __AP_handshake();
+
+
+/*
+    ProcessorNumber = id;  // ID
+    Status = (int) I_initialize_kernel(arch_type, ProcessorNumber);
+    if (Status == FALSE){
+        PROGRESS("on I_initialize_kernel()\n");
+    }
+    if (system_state == SYSTEM_ABORTED){
+        PROGRESS("SYSTEM_ABORTED\n");
+    }
+*/
+
+//
+// Animation
+//
+
+    // #test
+    // Drawing rectangles
+    unsigned int Color = COLOR_BLACK;
+    int Counter = 0;
+    while (1){
+        while (apic_SPINLOCK == TRUE){ asm ("pause \n"); };
+
+        Counter++;
+        Color = COLOR_YELLOW;
+        if (Counter % 2 == 0)
+            Color = COLOR_RED;
+
+        for (i=0; i<200; i++){
+            frontbuffer_draw_rectangle( 0, i, 4, 4, Color, 0 );
+        };
+
+        // some interrupt handler need the thread initialization
+        // asm (" int $3 \n ");
+    };
+
+// Something went wrong with this AP.
+// #todo:
+// Call a system routine in order to report this.
+AP_die:
+    while (1){
+        asm (" cli ");
+        asm (" hlt ");
+    };
 }
 
 //
@@ -1444,7 +1510,7 @@ fail:
 void I_kmain(int arch_type)
 {
     int Status = -1;
-    static int ProcessorNumber = 0;
+    static int ProcessorNumber = 0;  // BSP
 
 // #test
 // Initialize variable that makes sense only for the BSP,
@@ -1533,7 +1599,7 @@ void I_kmain(int arch_type)
     //current_arch = (int) arch_type;
 
 
-// I_kmain is called only for the BSP. So it needs to be number 0.
+    ProcessorNumber = 0;  // BSP
     Status = (int) I_initialize_kernel(arch_type, ProcessorNumber);
     if (Status == FALSE){
         PROGRESS("on I_initialize_kernel()\n");

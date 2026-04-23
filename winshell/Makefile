@@ -9,7 +9,6 @@ all:
 
 # 2 - DE core applications.
 	make -C  taskbar/
-	make -C  gdm/
 	make -C  terminal/
 
 # 2 - DE Utilities
@@ -17,20 +16,16 @@ all:
 	make -C  editor/
 	make -C  memory/
 	make -C  power/
-	make -C  setup/
 	make -C  sysinfo/
 
 # 3 - Experiments
-	make -C  bmenu/
-	make -C  calc00/
-	make -C  client/
-	make -C  cmdline/
-	make -C  dbox/
 	make -C  draw/
-	make -C  gwtest/
 	make -C  launch/
-	make -C  mbox/
 	make -C  menuapp/
+
+# gws client example
+	make -C gws/
+
 
 clean:
 	-rm bin/*.BIN

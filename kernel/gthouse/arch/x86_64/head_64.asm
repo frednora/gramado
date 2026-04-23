@@ -2800,12 +2800,15 @@ START:
 
 
 ; Call I_kmain() function in kmain.c
-; See: core/kmain/kmain.c
-    call _I_kmain
-dieLoop:
-    cli
-    hlt
-    jmp dieLoop
+; See: kmain.c
+    ;call _I_kmain
+    mov rax, _I_kmain
+	jmp rax
+
+;dieLoop:
+;    cli
+;    hlt
+;    jmp dieLoop
 
 extern _AP_kmain
 
@@ -2876,18 +2879,9 @@ _asm_AP_entry_point:
 ; Go to C code for the rest of the initialization
 ;#todo: We gotta setup the stack
 
-    jmp _AP_kmain
-    ;jmp dummytest
+    mov rax, _AP_kmain
+    jmp rax
 
-;dummytest:
-;    push EARLY_GDT64.Ring3Code 
-;	push ring3_entry
-;	iretq
-;ring3_entry:
-;    int 3
-;.loopinho:
-;    pause
-;	jmp .loopinho
 ;
 
 ;===================================================
