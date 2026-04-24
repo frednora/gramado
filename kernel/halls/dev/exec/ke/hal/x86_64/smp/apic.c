@@ -587,7 +587,7 @@ void apic_setup_registers(int lapic_info_id)
     local_apic_write_command(
         (unsigned short) 0x00e0, 
         (unsigned int) 0xffffffff, 
-        lapic_info_id);
+        lapic_info_id );
 
 
 // Logical Destination Register (LDR)
@@ -632,6 +632,32 @@ Task Priority Register (TPR)
 
 // Task Priority Register (TPR), to inhibit softint delivery
 // Allow all interrupts by priority (TPR = 0)
+// #ps: Set task priority to 0 so that it can
+// receive all interrupts from IPI.
+// Setting the Task Priority Register (TPR) to 0 
+// means the LAPIC will accept all interrupts regardless of their priority.
+// What TPR does?
+// The LAPIC compares the priority of an incoming interrupt (derived from its vector number) against the value in TPR.
+// If the interrupt’s priority is less than or equal to TPR, it is blocked.
+// If it’s greater than TPR, it is delivered.
+// When TPR = 0:
+// Threshold = 0, so nothing is blocked.
+// Every interrupt vector (from 0 to 255) has a priority ≥ 0, so they all pass the filter.
+// If you leave TPR at a non‑zero value, you might accidentally 
+// mask out “lower‑priority” interrupts (like timer or IPI vectors).
+// Later, the kernel can raise TPR temporarily during critical sections 
+// to block less urgent interrupts, but for bring‑up you want everything enabled.
+
+// How operating systems usually handle it?
+// Initialization: 
+//   During bring‑up, TPR is set to 0 so nothing is missed.
+// Runtime tuning: 
+//   Later, the kernel may raise TPR temporarily during 
+//   critical sections (e.g., while holding a spinlock) 
+//   to block lower‑priority interrupts.
+// Load distribution: 
+//   Once APs are online, interrupts are spread across cores, reducing BSP latency.
+
     local_apic_write_command(
         (unsigned short) LAPIC_TASK_PRIORITY, 
         (unsigned int) 0, 
@@ -703,6 +729,7 @@ Keep vectors collision-free with your IOAPIC mappings and other local sources.
 //LVT LINT1 (0x23, NMI):    Masked → not accepting NMIs.
 //LVT Error (0x24):         Masked → no LAPIC error interrupts.
 
+    unsigned int lvt_bits = 0;
 
 /*
 Timer interrupt vector (0x20 = 32)
@@ -719,17 +746,20 @@ LVT TIMER (offset LAPIC_LVT_TIMER)
 // without relying on PIT/HPET. Essential for SMP scheduling
 
 // Timer interrupt vector, to disable timer interrupts
-    local_apic_write_command(
-        (unsigned short) LAPIC_LVT_TIMER,
+    lvt_bits = 
         (unsigned int) APIC_CONFIG_DATA_LVT(
-            /*TimerMode*/      0,
-            /*Mask*/           1,
-            /*TriggerMode*/    0,
-            /*Remote*/         0,
-            /*InterruptInput*/ 0,
-            /*DeliveryMode*/   0,
-            /*Vector*/         LVT_TIMER_VECTOR
-        ), 
+            0,  // Timer Mode
+            1,  // Mask
+            0,  // Trigger Mode
+            0,  // Remote
+            0,  // Interrupt Input
+            0,  // Delivery Mode
+            LVT_TIMER_VECTOR  // Vector
+        );
+
+    local_apic_write_command(
+        (unsigned short) LAPIC_LVT_TIMER, 
+        (unsigned int) lvt_bits, 
         lapic_info_id
     );
 
@@ -745,19 +775,23 @@ LVT PERFORMANCE COUNTER (offset LAPIC_LVT_PERF)
 */
 
 // Performance counter interrupt, to disable performance counter interrupts
+    lvt_bits = 
+        (unsigned int) APIC_CONFIG_DATA_LVT(
+            0,  // Timer Mode
+            1,  // Mask
+            0,  // Trigger Mode
+            0,  // Remote
+            0,  // Interrupt Input
+            0,  // Delivery Mode
+            LVT_PERF_VECTOR  // Vector
+        );
+
     local_apic_write_command(
         (unsigned short) LAPIC_LVT_PERF,
-        (unsigned int) APIC_CONFIG_DATA_LVT(
-            /*TimerMode*/      0,
-            /*Mask*/           1,
-            /*TriggerMode*/    0,
-            /*Remote*/         0,
-            /*InterruptInput*/ 0,
-            /*DeliveryMode*/   0,
-            /*Vector*/         LVT_PERF_VECTOR
-        ), 
+        (unsigned int) lvt_bits, 
         lapic_info_id
     );
+
 
 /*
 Local interrupt 0
@@ -773,19 +807,23 @@ external device IRQs via IOAPIC redirection entries instead.
 */
 
 // Local interrupt 0, to enable normal external interrupts, Trigger Mode = Level
+    lvt_bits = 
+        (unsigned int) APIC_CONFIG_DATA_LVT(
+            0,  // Timer Mode
+            1,  // Mask
+            1,  // Trigger Mode
+            0,  // Remote
+            1,  // Interrupt Mode
+            7,  // Delivery Mode
+            LVT_LINT0_VECTOR  // Vector
+        );
+
     local_apic_write_command(
         (unsigned short) LAPIC_LVT_LINT0,
-        (unsigned int) APIC_CONFIG_DATA_LVT(
-            /*TimerMode*/      0,
-            /*Mask*/           1,
-            /*TriggerMode*/    1,
-            /*Remote*/         0,
-            /*InterruptInput*/ 1,
-            /*DeliveryMode*/   7,
-            /*Vector*/         LVT_LINT0_VECTOR
-        ), 
+        (unsigned int) lvt_bits, 
         lapic_info_id
    );
+
 
 /*
 Local interrupt 1
@@ -800,19 +838,23 @@ Note: Typically you’d unmask LINT1 for NMI if you plan to handle NMIs.
 */
 
 // Local interrupt 1, to enable normal NMI processing
+    lvt_bits = 
+        (unsigned int) APIC_CONFIG_DATA_LVT(
+            0,  // Timer Mode
+            1,  // Mask
+            0,  // Trigger Mode
+            0,  // Remote
+            0,  // Interrupt Input
+            4,  // Delivery Mode
+            LVT_LINT1_VECTOR  // Vector
+        );
+
     local_apic_write_command(
         (unsigned short) LAPIC_LVT_LINT1,
-        (unsigned int) APIC_CONFIG_DATA_LVT(
-            /*TimerMode*/      0,
-            /*Mask*/           1,
-            /*TriggerMode*/    0,
-            /*Remote*/         0,
-            /*InterruptInput*/ 0,
-            /*DeliveryMode*/   4,
-            /*Vector*/         LVT_LINT1_VECTOR
-        ), 
+        (unsigned int) lvt_bits, 
         lapic_info_id
     );
+
 
 /*
 Error interrupt
@@ -827,17 +869,20 @@ Note: Common to keep masked until you install an error handler; then unmask.
 */
 
 // Error interrupt, to disable error interrupts
+    lvt_bits = 
+        (unsigned int) APIC_CONFIG_DATA_LVT(
+            0,  // Timer Mode
+            1,  // Mask
+            0,  // Trigger Mode
+            0,  // Remote
+            0,  // Interrupt Input
+            0,  // Delivery Mode
+            LVT_ERROR_VECTOR  // Vector
+        );
+
     local_apic_write_command(
         (unsigned short) LAPIC_LVT_ERR,
-        (unsigned int) APIC_CONFIG_DATA_LVT(
-            /*TimerMode*/      0,
-            /*Mask*/           1,
-            /*TriggerMode*/    0,
-            /*Remote*/         0,
-            /*InterruptInput*/ 0,
-            /*DeliveryMode*/   0,
-            /*Vector*/         LVT_ERROR_VECTOR
-        ), 
+        (unsigned int) lvt_bits, 
         lapic_info_id
     );
 
@@ -902,6 +947,7 @@ So:
 // You must have an IDT entry at 0xFF, even if the handler 
 // just acknowledges and returns, because the LAPIC may 
 // deliver a spurious interrupt there.
+// 0xdf?
 
 // Spurious interrupt Vector Register, to enable the APIC and set
 // spurious vector to 255
@@ -973,19 +1019,27 @@ fail:
 // + Map memory for the registers
 // + Setup the initialization flag
 
-int lapic_info_initializing(unsigned long lapic_pa)
+int lapic_info_initializing(unsigned long lapic_pa, int lapic_info_id)
 {
-// Called in x64smp.c
+// + Called in x64smp.c during the BSP intialization
+// + #todo: Probably called again by the AP
 
     // #debug
     // printk("lapic_initializing: lapic_pa = {%x}\n", lapic_pa);
 
-// Invalid address.
-// 0xFEE00000
+    if (lapic_info_id < 0){
+        //printk("lapic_info_initializing: lapic_info_id < 0\n");
+        goto fail;
+    }
+    if (lapic_info_id >= NR_CPUS){
+        //printk("lapic_info_initializing: lapic_info_id >= NR_CPUS\n");
+        goto fail;
+    }
+
+// Invalid address. The expacted is (0xFEE00000).
 // see: x64gpa.h
-    if (lapic_pa != __LAPIC_PA)
-    {
-        //panic("lapic_initializing: lapic_pa\n");
+
+    if (lapic_pa != __LAPIC_PA){
         printk("lapic_initializing: lapic_pa\n");
         goto fail;
     }
@@ -1005,22 +1059,23 @@ int lapic_info_initializing(unsigned long lapic_pa)
 // Identidade 1:1.
     //unsigned long *pt_lapic = (unsigned long *) get_table_pointer_va();
 
-
 // -------------------------------------
 // Mapping area for registers.
+// Mapped for all the core at the same virtual address.
 // Flush TLB
+    int status = -1;
 
-    int map_status = -1;
-
-    // IN: pa, va
-    map_status = 
-        (int) mm_map_2mb_region( (lapic_pa & 0xFFFFFFFF), LAPIC_VA );
-    if (map_status != 0){
-        panic("lapic_initializing: on mm_map_2mb_region()\n");
+    if (lapic_info_id == 0)
+    {
+        // IN: pa, va
+        status = (int) mm_map_2mb_region( (lapic_pa & 0xFFFFFFFF), LAPIC_VA );
+        if (status != 0){
+            panic("lapic_initializing: on mm_map_2mb_region()\n");
+        }
+        // Flush it
+        asm ("movq %cr3, %rax \n");
+        asm ("movq %rax, %cr3 \n");
     }
-
-    asm ("movq %cr3, %rax");
-    asm ("movq %rax, %cr3");
 
 //=====================================
 
@@ -1033,74 +1088,74 @@ int lapic_info_initializing(unsigned long lapic_pa)
     int localversion;
 
 // For all the structures
-    for (i=0; i<NR_CPUS; i++)
+    if (lapic_info_id == 0)
     {
-        lapic_info[i].initialized = FALSE;
-        lapic_info[i].running = FALSE;
+        for (i=0; i<NR_CPUS; i++)
+        {
+            lapic_info[i].initialized = FALSE;
+            lapic_info[i].running = FALSE;
 
-        // -------------
-        // pa
-        lapic_info[i].lapic_pa = (unsigned long) (lapic_pa & 0xFFFFFFFF);
+            // Saving physical and virtual addresses
+            // see: x64gva.h
+            lapic_info[i].lapic_pa = (unsigned long) (lapic_pa & 0xFFFFFFFF);
+            lapic_info[i].lapic_va = (unsigned long) LAPIC_VA;
 
-        // -------------
-        // va
-        // see: x64gva.h
-        lapic_info[i].lapic_va = (unsigned long) LAPIC_VA;
+            // ---------------
+            // ID (the real id provided by the hardware)
+            //localid = (int) apic_get_id(i);
+            //lapic_info[i].local_id = (int) (localid & 0xFF);
+            lapic_info[i].local_id = 0;
+            //printk("localid: %d\n",lapic_info[lapic_info_id].local_id);
 
-        // ---------------
-        // ID (the real id provided by the hardware)
-        //localid = (int) apic_get_id(i);
-        //lapic_info[i].local_id = (int) (localid & 0xFF);
-        lapic_info[i].local_id = 0;
-        //printk("localid: %d\n",lapic_info[lapic_info_id].local_id);
+            // ---------------
+            // Version
+            // 8bits
+            // 10H~15H
+            //localversion = (int) apic_get_version(i);
+            //lapic_info[i].local_version = (int) (localversion & 0xFF);
+            lapic_info[i].local_version = 0;
+            //printk("localversion: %xH\n", lapic_info[lapic_info_id].local_version);
 
+            //=====================================
+            // Destination Format Register (DFR)
+            // Value after reset, flat mode
+            // depois de invalidar o pic?
+            //*(volatile unsigned int*)(lapic_info[lapic_info_id].lapic_va + ?) = 0xFFFFFFFF; 
+            // Logical Destination Register (LDR)
+            // All cpus use logical id 1
+            //*(volatile unsigned int*)(lapic_info[lapic_info_id].lapic_va + ?) = 0x01000000; 
+            //*(volatile unsigned int*)(lapic_info[lapic_info_id].lapic_va + 0x20) = 8;
 
-        // ---------------
-        // Version
-        // 8bits
-        // 10H~15H
-        //localversion = (int) apic_get_version(i);
-        //lapic_info[i].local_version = (int) (localversion & 0xFF);
-        lapic_info[i].local_version = 0;
-        //printk("localversion: %xH\n", lapic_info[lapic_info_id].local_version);
+            // The structure is consided initialized
+            lapic_info[i].initialized = TRUE;
+        };
+    }
 
-        //=====================================
-        // Destination Format Register (DFR)
-        // Value after reset, flat mode
-        // depois de invalidar o pic?
-        //*(volatile unsigned int*)(lapic_info[lapic_info_id].lapic_va + ?) = 0xFFFFFFFF; 
-        // Logical Destination Register (LDR)
-        // All cpus use logical id 1
-        //*(volatile unsigned int*)(lapic_info[lapic_info_id].lapic_va + ?) = 0x01000000; 
-        //*(volatile unsigned int*)(lapic_info[lapic_info_id].lapic_va + 0x20) = 8;
-
-        // #hackhack: This is just a test for now.
-        lapic_info[i].initialized = TRUE;
-    };
-
-    // ---------------
-    // ID (the real id provided by the hardware)
-    localid = (int) apic_get_id(0);
-    lapic_info[0].local_id = (int) (localid & 0xFF);
+// ---------------
+// ID (the real id provided by the hardware)
+    localid = (int) apic_get_id(lapic_info_id);
+    lapic_info[lapic_info_id].local_id = (int) (localid & 0xFF);
  
-    // ---------------
-    // Version
-    // 8bits
-    // 10H~15H
-    localversion = (int) apic_get_version(0);
-    lapic_info[0].local_version = (int) (localversion & 0xFF);
+// ---------------
+// Version
+// 8bits
+// 10H~15H
+    localversion = (int) apic_get_version(lapic_info_id);
+    lapic_info[lapic_info_id].local_version = (int) (localversion & 0xFF);
 
-    // Print:
-    printk("ID: %d | VERSION: %x\n",
-        lapic_info[i].local_id,
-        lapic_info[i].local_version 
+// Print for the current cpu
+    printk("table index: %d: | HW ID: %d | VERSION: %x\n",
+        lapic_info_id,
+        lapic_info[lapic_info_id].local_id,
+        lapic_info[lapic_info_id].local_version 
     );
 
-    // The BSP is already running
-    apic_mark_cpu_as_running(0);
+// Mark this core as already running
+    apic_mark_cpu_as_running(lapic_info_id);
 
-    // refresh_screen();
-    // while (1){ asm("hlt"); }
+    // #debug
+    //refresh_screen();
+    //while (1){ asm("hlt"); }
 
     return TRUE;
 

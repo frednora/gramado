@@ -555,9 +555,13 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
 // Estabilize the credits.
     Idle->quantum = QUANTUM_NORMAL_THRESHOLD;       
 
-    //Idle->affinity_processor = 0;
+
     //Idle->current_processor = 0;
-    //Idle->next_processor = 0;
+
+    //Idle->affinity_processor[0] = 0;
+    //Idle->affinity_processor[1] = 0;
+    //Idle->affinity_processor[2] = 0;
+    //Idle->affinity_processor[3] = 0;
 
 // Check TID.
 // Por enquanto a Idle thread desse processador

@@ -234,6 +234,14 @@ struct lapic_info_d
     int local_id;  // CPU id? Provided by hardware.
     int local_version;
 
+//
+// Threads
+//
+
+// The idle thread for this processor:
+// This thread will run here when there is no other job to do.
+    // tid_t idle_tid;
+
 	// ...
 };
 
@@ -241,6 +249,10 @@ struct lapic_info_d
 #define NR_CPUS 8   // or detect dynamically
 // One structure per processor
 extern struct lapic_info_d lapic_info[NR_CPUS];
+
+// The index for the BSP processor into the lapic_info[] table.
+#define LAPIC_INFO_BSP_INDEX  0
+// ...
 
 
 // =======================
@@ -270,7 +282,7 @@ void Send_INIT_IPI_Once(unsigned int apic_id, int lapic_info_id);
 void Send_STARTUP_IPI_Twice(unsigned int apic_id, int lapic_info_id);
 
 void apic_setup_registers(int lapic_info_id);
-int lapic_info_initializing(unsigned long lapic_pa);
+int lapic_info_initializing(unsigned long lapic_pa, int lapic_info_id);
 
 #endif    //____APIC_H
 

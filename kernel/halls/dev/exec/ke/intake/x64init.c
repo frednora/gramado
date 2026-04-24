@@ -818,6 +818,12 @@ void I_x64ExecuteInitialProcess(void)
         panic ("I_x64ExecuteInitialProcess: rflags_initial_iopl\n");
     }
 
+    t->current_processor = LAPIC_INFO_BSP_INDEX;
+    t->affinity_processor[0] = LAPIC_INFO_BSP_INDEX;
+    t->affinity_processor[1] = LAPIC_INFO_BSP_INDEX;
+    t->affinity_processor[2] = LAPIC_INFO_BSP_INDEX;
+    t->affinity_processor[3] = LAPIC_INFO_BSP_INDEX;
+
     //PROGRESS(":: Go to ring3!\n");
     printk ("GO!\n");
     //printk("go!\n");
@@ -851,7 +857,8 @@ void I_x64ExecuteInitialProcess(void)
         " pushq $0x3002   \n"  // Stack frame: RFLAGS
         " pushq $0x1B     \n"  // Stack frame: CS
         " pushq %%rax     \n"  // Stack frame: RIP
-        " iretq           \n" :: "D"(EntryPoint), "S"(RING3_RSP) );
+        " iretq           \n" :: "D"(EntryPoint), "S"(RING3_RSP) 
+    );
 
 // Paranoia
     PROGRESS("I_x64ExecuteInitialProcess: Fail\n");

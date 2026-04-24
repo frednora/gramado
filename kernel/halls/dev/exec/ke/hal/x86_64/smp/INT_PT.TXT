@@ -1,0 +1,62 @@
+
+---
+
+## Registro de Prioridade de Tarefas (TPR) – LAPIC
+
+### O que o TPR faz
+- O LAPIC compara a **prioridade da interrupção recebida** (derivada do número do vetor) com o valor configurado no TPR.  
+- **Se a prioridade da interrupção ≤ TPR**, ela é bloqueada.  
+- **Se a prioridade da interrupção > TPR**, ela é entregue ao processador.  
+
+### Quando TPR = 0
+- Limite = 0 → nada é bloqueado.  
+- Todos os vetores de interrupção (0 a 255) têm prioridade ≥ 0, então passam pelo filtro.  
+- Esse é o valor padrão durante a inicialização, pois garante que a CPU receba IPIs, ticks de timer e outras interrupções essenciais.  
+
+### Importância na inicialização do APIC
+- Se o TPR for deixado com valor diferente de zero, você pode mascarar acidentalmente interrupções de menor prioridade (como timer ou IPIs).  
+- Ao escrever explicitamente `0`, você garante que o processador responda a todas as interrupções configuradas na IDT.  
+- Mais tarde, o kernel pode aumentar o TPR temporariamente em seções críticas para bloquear interrupções menos urgentes.  
+
+---
+
+## Como funciona a entrega de interrupções
+
+- **Local APIC (por CPU):**  
+  Cada núcleo tem seu próprio LAPIC, que trata a entrega da interrupção uma vez que ela é roteada para aquele núcleo.  
+
+- **I/O APIC (nível de sistema):**  
+  Esse chip recebe os IRQs de dispositivos externos e decide **para qual LAPIC** enviar cada interrupção.  
+
+- **Entradas da Tabela de Redirecionamento (RTEs):**  
+  Cada linha de IRQ no I/O APIC possui uma entrada que define:  
+  - O número do vetor (qual entrada da IDT será invocada).  
+  - O modo de destino (físico ou lógico).  
+  - O campo de destino (quais LAPIC IDs devem receber).  
+  - O modo de entrega (fixo, menor prioridade, etc.).  
+
+---
+
+## Estratégias de balanceamento de carga
+
+- **Entrega fixa:**  
+  Sempre envia um IRQ específico para uma CPU determinada (ex.: BSP).  
+
+- **Menor prioridade:**  
+  O I/O APIC pode entregar a interrupção para a CPU que estiver com menor prioridade no momento (baseado em arbitragem do LAPIC).  
+
+- **Destino lógico:**  
+  É possível configurar um grupo de CPUs como destinos elegíveis, e o I/O APIC distribui as interrupções entre eles.  
+
+---
+
+## Impacto na latência do BSP
+- Se todos os IRQs forem roteados para o BSP (modo fixo), ele fica sobrecarregado e a latência aumenta.  
+- Ao configurar o I/O APIC para distribuir interrupções (menor prioridade ou destino lógico), você equilibra a carga entre os APs e reduz a latência no BSP.  
+- Kernels modernos (Linux, Windows, etc.) reprogramam ativamente o I/O APIC para distribuir interrupções entre os núcleos e melhorar o desempenho.  
+
+---
+
+Em resumo: **TPR = 0 garante que cada CPU aceite todas as interrupções. O I/O APIC é quem decide para qual CPU cada IRQ vai. Configurar bem o I/O APIC é essencial para evitar sobrecarga no BSP e reduzir latência.**
+
+---

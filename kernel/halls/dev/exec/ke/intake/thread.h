@@ -277,7 +277,7 @@ struct thread_d
 // It needs to be the same of tgid.
     struct te_d *te;
 
-// Thread Group ID (thread environment id)
+// Thread Group ID (thread environment id) (The PID)
 // Shared among all threads in the same environment.
 // This is the same value found in thread->te->pid.
 // Returned by getpid().
@@ -447,13 +447,16 @@ struct thread_d
 //
 
 // What processor the thread is running now.
+// See: lapic_info[] table.
     int current_processor;
-// What will be the next processor for this thread.
-    int next_processor;
+
 // Processor affinity. (CPU pinning)
-// The thread will execute only on the designated CPU.
+// The thread will execute only on the designated CPU(s).
 // See: https://en.wikipedia.org/wiki/Processor_affinity
-    int affinity_processor;
+// Here it will represent an index into the lapic_info[] table.
+// See: apic.h
+    int affinity_processor[4];
+
 
 // ORDEM: 
 // O que segue é referenciado durante a interrupção de timer.

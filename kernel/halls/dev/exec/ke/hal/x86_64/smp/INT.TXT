@@ -1,0 +1,56 @@
+
+What TPR does
+The LAPIC compares the priority of an incoming interrupt (derived from its vector number) against the value in TPR.
+
+If the interrupt’s priority is less than or equal to TPR, it is blocked.
+
+If it’s greater than TPR, it is delivered.
+
+When TPR = 0
+Threshold = 0 → nothing is blocked.
+
+Every interrupt vector (from 0 to 255) has a priority ≥ 0, so they all pass the filter.
+
+This is the normal setting during initialization, because you want the CPU to be able to receive IPIs, timer ticks, and other interrupts.
+
+Why it matters for APIC init
+If you leave TPR at a non‑zero value, you might accidentally mask out “lower‑priority” interrupts (like timer or IPI vectors).
+
+By explicitly writing 0, you guarantee that the AP will respond to all interrupts configured in the IDT.
+
+Later, the kernel can raise TPR temporarily during critical sections to block less urgent interrupts, but for bring‑up you want everything enabled.
+
+How it works?
+
+Local APIC (per‑CPU): 
+Each core has its own LAPIC, which handles delivery once an interrupt is routed to that CPU.
+
+I/O APIC (system‑wide): 
+This chip receives external device IRQs and decides which LAPIC(s) to send them to.
+
+Redirection Table Entries (RTEs): 
+Each IRQ line in the I/O APIC has a redirection entry that specifies:
+ The vector number (which IDT entry to invoke).
+ The destination mode (physical or logical).
+ The destination field (which LAPIC IDs should receive it).
+ Delivery mode (fixed, lowest priority, etc.).
+
+Load balancing strategies
+
+Fixed delivery: 
+Always send a given IRQ to one specific CPU (e.g., BSP).
+
+Lowest priority delivery: 
+The I/O APIC can deliver the interrupt to whichever CPU currently has the lowest priority (based on LAPIC arbitration).
+
+Logical destination mode: 
+You can configure a group of CPUs as eligible targets, and the I/O APIC will distribute interrupts among them.
+
+What this means for BSP latency?
+If all IRQs are routed to the BSP (fixed mode), it becomes overloaded and latency increases.
+
+By configuring the I/O APIC to spread interrupts 
+(lowest priority or logical mode), you balance the load across APs, reducing BSP latency.
+
+Modern OS kernels (Linux, Windows, etc.) actively 
+reprogram the I/O APIC to distribute interrupts across cores for performance.

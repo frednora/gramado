@@ -352,14 +352,14 @@ unsigned long GetThreadStats(tid_t tid, int index)
         case 7:
             return (unsigned long) t->current_processor;
             break;
-        // Qual será a próximo processador que a thread vai rodar.
-        case 8:
-            return (unsigned long) t->next_processor;
-            break;   
-        // Confined into one given processor.
-        case 9:
-            return (unsigned long) t->affinity_processor;
-            break; 
+
+        // #deprecated
+        case 8: 
+            break;
+
+        // #deprecated
+        case 9: 
+            break;
 
         // pml4_PA: 
         // Phisical address of the pml4 table for the curren thread.
@@ -1525,6 +1525,17 @@ struct thread_d *create_thread (
     if ((void *) Thread == NULL){
         panic("create_thread: Thread\n");
     }
+    
+    // Current processor
+    // #todo:
+    // We need to receive this id as a parameter
+    Thread->current_processor = -1;  // Not initialized
+
+    // Affinity processors: (Only on these ones)
+    Thread->affinity_processor[0] = -1;  // Not initialized
+    Thread->affinity_processor[1] = -1;  // Not initialized
+    Thread->affinity_processor[2] = -1;  // Not initialized
+    Thread->affinity_processor[3] = -1;  // Not initialized
 
 // #todo
 // Is it a valid type?

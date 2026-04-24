@@ -1445,6 +1445,15 @@ void AP_kmain(void)
     int id = -1;
 
     asm ("cli");  // For safety
+
+// CLTS — Clear Task-Switched Flag in CR0
+// The processor sets the TS flag every time a task switch occurs. 
+// For taskswitching via hardware i guess.
+// see:
+// https://www.felixcloutier.com/x86/clts
+    asm volatile ("clts \n");
+
+
     //PROGRESS("AP_kmain: \n")
 
 // Talk with the BSP in order to identify the current AP.
@@ -1512,7 +1521,7 @@ AP_die:
 void I_kmain(int arch_type)
 {
     int Status = -1;
-    static int ProcessorNumber = 0;  // BSP
+    const int ProcessorNumber = 0;  // BSP
 
 // #test
 // Initialize variable that makes sense only for the BSP,
@@ -1601,7 +1610,6 @@ void I_kmain(int arch_type)
     //current_arch = (int) arch_type;
 
 
-    ProcessorNumber = 0;  // BSP
     Status = (int) I_initialize_kernel(arch_type, ProcessorNumber);
     if (Status == FALSE){
         PROGRESS("on I_initialize_kernel()\n");

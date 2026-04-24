@@ -205,24 +205,24 @@ int x64smp_initialization(void)
 
 
 //
-// LAPIC initialization
+// BSP LAPIC initialization
 //
+    const int ProcessorNumber = 0;  // BSP
 
 // It was not possible to find the address.
 // Can't initialize LAPIC.
-
 
     // If probed via mptable
     if (smp_info.probe_via == SMP_VIA_MP_TABLE){
         if (LAPIC_address_via_mptable == 0)
             goto fail;    
-        lapic_info_initializing(LAPIC_address_via_mptable);
+        lapic_info_initializing(LAPIC_address_via_mptable, ProcessorNumber);
 
     // If probed via acpi
     } else {
         if (LAPIC_address_via_acpi == 0)
             goto fail;    
-        lapic_info_initializing(LAPIC_address_via_acpi);
+        lapic_info_initializing(LAPIC_address_via_acpi, ProcessorNumber);
     };
 
 // The bsp
