@@ -103,6 +103,7 @@ struct wproxy_d *wproxy_create0(
     unsigned long h, 
     unsigned int color);
 
+void wproxy_ap_test(void);
 
 char *wproxy_create_data_buffer(struct wproxy_d *wproxy, int size);
 char *wproxy_get_data_buffer(struct wproxy_d *wproxy);

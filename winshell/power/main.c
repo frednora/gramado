@@ -627,15 +627,7 @@ int main(int argc, char *argv[])
 
 
 // ============================================================
-
 // Text
-/*
-    gws_draw_text(
-        client_fd,
-        main_window,
-        20, 20, COLOR_BLACK, "Choose an action:" 
-    );
-*/
 
     // Draw the label string inside
     const char *label_chose = "Choose an action: ";

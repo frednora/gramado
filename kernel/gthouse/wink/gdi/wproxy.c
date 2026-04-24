@@ -265,6 +265,36 @@ fail:
     return NULL;
 }
 
+// #test: Called by AP processor for testing purpose.
+void wproxy_ap_test(void)
+{
+    struct wproxy_d *w;
+    int i=0;
+    unsigned int Color = COLOR_RED;
+
+    w = (struct wproxy_d *) wproxy_shell;
+    while (w != NULL){
+        if ((void*)w != NULL)
+        {
+            if (w->magic == 1234)
+            {
+                for (i=0; i<100; i++)
+                {
+                    frontbuffer_draw_rectangle( 
+                        w->l + i, 
+                        w->t + 0, 
+                        4, 
+                        4, 
+                        Color, 
+                        0x20 
+                    );
+                }
+            }
+        }
+        w = w->next;
+    };
+}
+
 // #test:
 // Create a data buffer for the window proxy.
 // This is used for off-screen rendering.

@@ -1478,9 +1478,11 @@ void AP_kmain(void)
         if (Counter % 2 == 0)
             Color = COLOR_RED;
 
-        for (i=0; i<200; i++){
+        for (i=0; i<100; i++){
             frontbuffer_draw_rectangle( 0, i, 4, 4, Color, 0 );
         };
+
+        //wproxy_ap_test();
 
         // some interrupt handler need the thread initialization
         // asm (" int $3 \n ");
