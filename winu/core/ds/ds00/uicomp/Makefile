@@ -77,13 +77,13 @@ CFLAGS += -fno-optimize-sibling-calls
 
 #todo
 #path longo. vamos mudar  as libs de lugar para gramado/libs.
-LIBC        = ../../libs/rtl/include/
-LIBCOBJ     = ../../libs/rtl/obj
+LIBC        = ../../garden/rtl/include/
+LIBCOBJ     = ../../garden/rtl/obj
 
-LIBDISP     = ../../libs/libdisp/include/
-LIBDISPOBJ  = ../../libs/libdisp/obj
-LIBGR       = ../../libs/libgr/include/
-LIBGROBJ    = ../../libs/libgr/obj
+LIBDISP     = ../../gthouse/libdisp/include/
+LIBDISPOBJ  = ../../gthouse/libdisp/obj
+LIBGR       = ../../gthouse/libgr/include/
+LIBGROBJ    = ../../gthouse/libgr/obj
 
 CINCLUDES  = -I $(LIBC)  
 CINCLUDES += -I $(LIBDISP)

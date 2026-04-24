@@ -5,9 +5,13 @@
 
 all:
 
+# garden - rtl
+	make -C garden/
+
+# gthouse - libs
 # Libraries
 # Excluive for the display server.
-	make -C libs/
+	make -C gthouse/
 
 # Display servers
 	make -C ds00/

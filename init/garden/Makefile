@@ -1,0 +1,4 @@
+
+all:
+	make -C rtl/
+

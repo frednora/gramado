@@ -74,16 +74,16 @@ CFLAGS += -fno-omit-frame-pointer
 CFLAGS += -fno-optimize-sibling-calls    
 
 # rtl - Gramado libc
-LIBC        = ../libs/rtl/include/
-LIBCOBJ     = ../libs/rtl/obj
+LIBC        = ../garden/rtl/include/
+LIBCOBJ     = ../garden/rtl/obj
 
 # libdisp - Gramado display library
-LIBDISP     = ../libs/libdisp/include/
-LIBDISPOBJ  = ../libs/libdisp/obj
+LIBDISP     = ../gthouse/libdisp/include/
+LIBDISPOBJ  = ../gthouse/libdisp/obj
 
 # libgr - Gramado graphics library
-LIBGR       = ../libs/libgr/include/
-LIBGROBJ    = ../libs/libgr/obj
+LIBGR       = ../gthouse/libgr/include/
+LIBGROBJ    = ../gthouse/libgr/obj
 
 
 CINCLUDES  = -I $(LIBC)  

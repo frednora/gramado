@@ -1,10 +1,13 @@
 
+# Compiling the ring 3 init process
 
 all:
-	make -C libs/
+
+	make -C garden/
+	make -C gthouse/
 	make -C src/
+
 clean:
-	#todo
-
-
+	-rm src/*.o
+	-rm src/bin/*.BIN
 

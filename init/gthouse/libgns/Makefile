@@ -25,7 +25,7 @@ CFLAGS = -m64 \
 	-Werror=strict-prototypes    
 
 # rtl
-LIBS = -I. -I ../rtl/include/    
+LIBS = -I. -I ../../garden/rtl/include/    
 
 .PHONY: all all-c finalize clean
 

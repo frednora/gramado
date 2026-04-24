@@ -26,8 +26,9 @@ CFLAGS = -m64 \
 	-Werror=strict-prototypes    
 	
 # Libraries
-LIBC    = ../libs/rtl/include/
-LIBCOBJ = ../libs/rtl/obj
+LIBC    = ../garden/rtl/include/
+LIBCOBJ = ../garden/rtl/obj
+
 
 # Objects
 myObjects = initcrt0.o main.o inittask.o rtl.o \
@@ -67,6 +68,7 @@ link_app:
 	@ld -m elf_x86_64 -T ../link.ld -o INIT.BIN $(myObjects)    
 finalize:
 	@cp INIT.BIN  bin/
+
 clean:
 	-rm *.o
 	-rm INIT.BIN 
