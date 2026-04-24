@@ -3,8 +3,7 @@
 # Created by Fred Nora.
 
 all:
-	make -C hvmod0/
-	make -C hvmod1/
+	make -C dungeon/
 
 clean:
 	-rm bin/*.BIN
@@ -13,9 +12,6 @@ clean-all:
 
 	-rm bin/*.BIN
 
-	-rm hvmod0/*.o
-	-rm hvmod0/*.BIN 
-
-	-rm hvmod1/*.o
-	-rm hvmod1/*.BIN 
+	-rm dungeon/*.o
+	-rm dungeon/*.BIN 
 

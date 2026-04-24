@@ -144,14 +144,9 @@ build-gramado-os:
 
 # Copy the ring0 module image.
 # It is loadable, but it's not a dynlinked format.
-	@cp modules/bin/HVMOD0.BIN  $(BASE)/
-#	@cp modules/bin/HVMOD0.BIN  $(BASE)/GRAMADO
-	@cp modules/bin/HVMOD0.BIN  $(BASE)/DE
+	@cp modules/bin/DUNGEON.BIN  $(BASE)/
+	@cp modules/bin/DUNGEON.BIN  $(BASE)/GRAMADO
 
-# Copy the ring0 module image.
-# It is loadable, but it's not a dynlinked format.
-#	@cp modules/bin/HVMOD1.BIN  $(BASE)/
-#	@cp modules/bin/HVMOD1.BIN  $(BASE)/GRAMADO
 
 	@$(MAKE) -C init/
 

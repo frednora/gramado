@@ -882,6 +882,10 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 
 // see: mod.c
 // Vamos testar um modulo que ja foi carregado previamente?
+    if ( kstrncmp(cmdline,"mod",3) == 0 ){
+        test_mod0();
+        goto exit_cmp;
+    }
     if ( kstrncmp(cmdline,"mod0",4) == 0 ){
         test_mod0();
         goto exit_cmp;

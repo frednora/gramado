@@ -10,7 +10,7 @@ SUBLEVEL = 0
 EXTRAVERSION = 
 #NAME = 
 
-linkTarget = HVMOD1.BIN  
+linkTarget = DUNGEON.BIN  
 
 
 # Make variables (CC, etc...)
@@ -115,7 +115,7 @@ all-c:
 
 gws-link:
 	$(LD) $(user_ldflags) -o $(linkTarget) $(myObjects)
-#	$(LD) -m elf_i386 -T ../link.ld -o HVMOD0.BIN $(myObjects)  
+#	$(LD) -m elf_i386 -T ../link.ld -o $(linkTarget) $(myObjects)  
 finalize:
 	-cp $(linkTarget) ../bin/
 clean:

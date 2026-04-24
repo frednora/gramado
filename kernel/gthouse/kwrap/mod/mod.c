@@ -16,8 +16,7 @@ static unsigned long kmList[KMODULE_MAX];
 // The name of the kernel of the root partition.
 // see: gramp/oskernel/
 
-//const char *mod0_image_name = "MOD0    BIN";
-const char *mod0_image_name = "HVMOD0  BIN";
+const char *mod0_image_name = "DUNGEON BIN";
 
 
 static int __mod_initialize_first_module(void);
