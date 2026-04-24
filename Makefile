@@ -29,33 +29,18 @@ __DEP_L1 = netu
 # Shell Pre-UI: The display server.
 # The infrastruture for the windows.
 __DEP_L2 = winu
+
 # Display servers
 L2_DS = $(__DEP_L2)/core/ds
-# Display server with embedded 3D demos
-L2_DEMO_3D_GAME = $(__DEP_L2)/heavy/games3d
 
 
-## =================================
-# Client-side GUI applications.
-__DEP_L3 = winshell
-L3_APPS = winshell
 
-
-## =================================
-__DEP_L4 = sdk
-L4_SDK = sdk
-
-
-## =================================
-__DEP_L5 = sysutils
-L5_SYSUTILS = sysutils
-
-
-## =================================
-# (userland extra system things)
-__DEP_L6 = sysutils2
-# Creating one cpp application just for fun
-L6_CPP00 = $(__DEP_L6)/cpp00
+__DEP_L3 = xland
+L3_HEAVY = $(__DEP_L3)/heavy
+L3_SDK = $(__DEP_L3)/sdk
+L3_SYSUTIL  = $(__DEP_L3)/sysutils
+L3_SYSUTIL2 = $(__DEP_L3)/sysutils2
+L3_WINSHELL = $(__DEP_L3)/winshell
 
 
 ## =================================
@@ -184,7 +169,6 @@ build-extras:
 	@echo "build-extras"
 
 # __DEP_L1::
-
 	@echo "Compiling __DEP_L1"
 	@$(MAKE) -C $(__DEP_L1)
 
@@ -197,103 +181,96 @@ build-extras:
 	@make -C $(__DEP_L2)/
 
 	@echo "Installing __DEP_L2"
-
-# Winu Core
-# Display server
+# Winu Core - Display server
 	@-cp $(L2_DS)/ds00/bin/DS00.BIN    $(BASE)/DE
-
-# Winu Heavy
-# 3D game demos
-	@-cp $(L2_DEMO_3D_GAME)/bin/DEMO00.BIN   $(BASE)/DE/
-#	@-cp $(L2_DEMO_3D_GAME)/bin/DEMO01.BIN   $(BASE)/DE/
-# ...
-
-# __DEP_L3::
-# Compiling client-side GUI applications
-	@echo "Compiling __DEP_L3"
-	@make -C $(__DEP_L3)/
-
-# __DEP_L4::
-	@echo "Compiling __DEP_L4 (sdk/)"
-	@make -C $(__DEP_L4)/
-
-# __DEP_L5::
-	@echo "Compiling __DEP_L5 (sysutils/)"
-	@make -C $(__DEP_L5)/
 
 #===================================
 # Install BMPs from cali assets.
-# Copy the $(__DEP_L3)/assets/
+# Copy the $(L3_WINSHELL)/assets/
 # We can't survive without this one.
-	@cp $(L3_APPS)/assets/themes/theme01/*.BMP  $(BASE)/DE
+	@cp $(L3_WINSHELL)/assets/themes/theme01/*.BMP  $(BASE)/DE
 
 
-# sysutils/
-
-	@-cp $(__DEP_L5)/bin/REBOOT.BIN    $(BASE)/
-	@-cp $(__DEP_L5)/bin/SHUTDOWN.BIN  $(BASE)/
-	@-cp $(__DEP_L5)/bin/UNAME.BIN     $(BASE)/
-
-	@-cp $(__DEP_L5)/bin/PUBSH.BIN     $(BASE)/GRAMADO/
-	@-cp $(__DEP_L5)/bin/REBOOT.BIN    $(BASE)/GRAMADO/
-	@-cp $(__DEP_L5)/bin/SH7.BIN       $(BASE)/GRAMADO/
-	@-cp $(__DEP_L5)/bin/SHELL.BIN     $(BASE)/GRAMADO/
-	@-cp $(__DEP_L5)/bin/SHUTDOWN.BIN  $(BASE)/GRAMADO/
-
-	@-cp $(__DEP_L5)/bin/PUBSH.BIN     $(BASE)/DE/
-	@-cp $(__DEP_L5)/bin/SHELL.BIN     $(BASE)/DE/
-	@-cp $(__DEP_L5)/bin/SHELL2.BIN    $(BASE)/DE/
+# __DEP_L3::
+	@echo "Compiling __DEP_L3"
+	@make -C $(__DEP_L3)/
 
 
-# Experimental programs.
-#	@-cp $(L4_SDK)/bin/TASCII.BIN     $(BASE)/GRAMADO/
-#	@-cp $(L4_SDK)/bin/TPRINTF.BIN    $(BASE)/GRAMADO/
+# --------
+# heavy
+# Winu Heavy
+# 3D game demos
+	@-cp $(L3_HEAVY)/games3d/bin/DEMO00.BIN   $(BASE)/DE/
+#	@-cp $(L3_HEAVY)/games3d/bin/DEMO01.BIN   $(BASE)/DE/
+# ...
 
-# Copy well consolidated commands.
-	@-cp $(L4_SDK)/bin/CAT.BIN       $(BASE)/
-	@-cp $(L4_SDK)/bin/CAT00.BIN     $(BASE)/
+
+# --------
+# sdk
+
+	@-cp $(L3_SDK)/bin/CAT.BIN       $(BASE)/
+	@-cp $(L3_SDK)/bin/CAT00.BIN     $(BASE)/
 
 # Experimental commands.
-#	@-cp $(L4_SDK)/bin/FALSE.BIN      $(BASE)/GRAMADO/
-#	@-cp $(L4_SDK)/bin/TRUE.BIN       $(BASE)/GRAMADO/
-#	@-cp $(L4_SDK)/bin/CMP.BIN       $(BASE)/GRAMADO/
-#	@-cp $(L4_SDK)/bin/SHOWFUN.BIN   $(BASE)/GRAMADO/
-#	@-cp $(L4_SDK)/bin/SUM.BIN       $(BASE)/GRAMADO/
-	@-cp $(L4_SDK)/bin/GRAMCNF.BIN     $(BASE)/
-#@-cp $(L4_SDK)/bin/N9.BIN         $(BASE)/GRAMADO/
-#@-cp $(L4_SDK)/bin/N10.BIN        $(BASE)/GRAMADO/
-#@-cp $(L4_SDK)/bin/N11.BIN        $(BASE)/GRAMADO/
-#@-cp $(L4_SDK)/bin/UDPTEST.BIN  $(BASE)/GRAMADO/
+#	@-cp $(L3_SDK)/bin/FALSE.BIN      $(BASE)/GRAMADO/
+#	@-cp $(L3_SDK)/bin/TRUE.BIN       $(BASE)/GRAMADO/
+#	@-cp $(L3_SDK)/bin/CMP.BIN       $(BASE)/GRAMADO/
+#	@-cp $(L3_SDK)/bin/SHOWFUN.BIN   $(BASE)/GRAMADO/
+#	@-cp $(L3_SDK)/bin/SUM.BIN       $(BASE)/GRAMADO/
+	@-cp $(L3_SDK)/bin/GRAMCNF.BIN     $(BASE)/
+#@-cp $(L3_SDK)/bin/N9.BIN         $(BASE)/GRAMADO/
+#@-cp $(L3_SDK)/bin/N10.BIN        $(BASE)/GRAMADO/
+#@-cp $(L3_SDK)/bin/N11.BIN        $(BASE)/GRAMADO/
+#@-cp $(L3_SDK)/bin/UDPTEST.BIN  $(BASE)/GRAMADO/
 
+# --------
+# sysutils/
+
+	@-cp $(L3_SYSUTIL)/bin/REBOOT.BIN    $(BASE)/
+	@-cp $(L3_SYSUTIL)/bin/SHUTDOWN.BIN  $(BASE)/
+	@-cp $(L3_SYSUTIL)/bin/UNAME.BIN     $(BASE)/
+
+	@-cp $(L3_SYSUTIL)/bin/PUBSH.BIN     $(BASE)/GRAMADO/
+	@-cp $(L3_SYSUTIL)/bin/REBOOT.BIN    $(BASE)/GRAMADO/
+	@-cp $(L3_SYSUTIL)/bin/SH7.BIN       $(BASE)/GRAMADO/
+	@-cp $(L3_SYSUTIL)/bin/SHELL.BIN     $(BASE)/GRAMADO/
+	@-cp $(L3_SYSUTIL)/bin/SHUTDOWN.BIN  $(BASE)/GRAMADO/
+
+	@-cp $(L3_SYSUTIL)/bin/PUBSH.BIN     $(BASE)/DE/
+	@-cp $(L3_SYSUTIL)/bin/SHELL.BIN     $(BASE)/DE/
+	@-cp $(L3_SYSUTIL)/bin/SHELL2.BIN    $(BASE)/DE/
+
+
+# --------
+# sysutil2
+# cpp application example
+#	@-cp $(L3_CPP00)/bin/CPP00.BIN  $(BASE)/DE
+
+
+
+# --------
+# winshell
 # These need the '#' prefix.
 
 # DE core applications
-	@-cp $(L3_APPS)/bin/TASKBAR.BIN   $(BASE)/DE/
-	@-cp $(L3_APPS)/bin/TERMINAL.BIN  $(BASE)/DE/
+	@-cp $(L3_WINSHELL)/bin/TASKBAR.BIN   $(BASE)/DE/
+	@-cp $(L3_WINSHELL)/bin/TERMINAL.BIN  $(BASE)/DE/
 
 # DE Utilities
-	@-cp $(L3_APPS)/bin/DOC.BIN      $(BASE)/DE/
-	@-cp $(L3_APPS)/bin/EDITOR.BIN   $(BASE)/DE/
-	@-cp $(L3_APPS)/bin/MEMORY.BIN   $(BASE)/DE/
-	@-cp $(L3_APPS)/bin/POWER.BIN    $(BASE)/DE/
-	@-cp $(L3_APPS)/bin/SYSINFO.BIN  $(BASE)/DE/
+	@-cp $(L3_WINSHELL)/bin/DOC.BIN      $(BASE)/DE/
+	@-cp $(L3_WINSHELL)/bin/EDITOR.BIN   $(BASE)/DE/
+	@-cp $(L3_WINSHELL)/bin/MEMORY.BIN   $(BASE)/DE/
+	@-cp $(L3_WINSHELL)/bin/POWER.BIN    $(BASE)/DE/
+	@-cp $(L3_WINSHELL)/bin/SYSINFO.BIN  $(BASE)/DE/
 
 # Experimental applications
-	@-cp $(L3_APPS)/bin/DRAW.BIN     $(BASE)/DE/
-	@-cp $(L3_APPS)/bin/LAUNCH.BIN   $(BASE)/DE/
-	@-cp $(L3_APPS)/bin/MENUAPP.BIN  $(BASE)/DE/
-
+	@-cp $(L3_WINSHELL)/bin/DRAW.BIN     $(BASE)/DE/
+	@-cp $(L3_WINSHELL)/bin/LAUNCH.BIN   $(BASE)/DE/
+	@-cp $(L3_WINSHELL)/bin/MENUAPP.BIN  $(BASE)/DE/
 
 # Other applications
-	@-cp $(L3_APPS)/bin/GWS.BIN      $(BASE)/DE/
+	@-cp $(L3_WINSHELL)/bin/GWS.BIN      $(BASE)/DE/
 
-
-# Compiling ulextras stuff
-	@echo "Compiling __DEP_L6"
-	@make -C $(__DEP_L6)/
-
-# cpp application example
-	@-cp $(L6_CPP00)/bin/CPP00.BIN  $(BASE)/DE
 
 	@echo "~ build-extras"
 
