@@ -1,8 +1,6 @@
 
 all:
 
-#	make -C libcpp/
-
 
 # Graphics support (Server-side?)
 	make -C libgr/
@@ -23,8 +21,6 @@ all:
 # I/O ports in ring3.
 	make -C libio01/
 
-	make -C rtl/
-
 clean:
 
 	-rm -f libdisp/*.o
@@ -39,14 +35,8 @@ clean:
 	-rm -f libgws/*.o
 	-rm -f libgws/obj/*.o
 
-	-rm -f libx/*.o
-	-rm -f libx/obj/*.o
-
 	-rm -f libio01/*.o
 	-rm -f libio01/obj/*.o
-
-	-rm -f rtl/*.o
-	-rm -f rtl/obj/*.o
 
 
 

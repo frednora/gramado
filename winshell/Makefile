@@ -31,13 +31,15 @@ clean:
 	-rm bin/*.BIN
 
 clean-all:
-	#-rm -f api/libs/libcpp/obj/*.o
-	-rm -f api/libs/libdisp/obj/*.o
-	-rm -f api/libs/libgr/obj/*.o
-	-rm -f api/libs/libgr3d/obj/*.o
-	-rm -f api/libs/libgws/obj/*.o
-	-rm -f api/libs/libio01/obj/*.o
-	-rm -f api/libs/rtl/obj/*.o
-
 	-rm bin/*.BIN
+
+	-rm -f api/garden/rtl/obj/*.o
+
+	#-rm -f api/gthouse/libcpp/obj/*.o
+	-rm -f api/gthouse/libdisp/obj/*.o
+	-rm -f api/gthouse/libgr/obj/*.o
+	-rm -f api/gthouse/libgr3d/obj/*.o
+	-rm -f api/gthouse/libgws/obj/*.o
+	-rm -f api/gthouse/libio01/obj/*.o
+
 

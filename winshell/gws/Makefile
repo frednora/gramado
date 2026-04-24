@@ -47,10 +47,12 @@ CFLAGS += -fno-omit-frame-pointer
 CFLAGS += -fno-optimize-sibling-calls    
 
 # API
-LIBC      = ../api/libs/rtl/include/
-LIBCOBJ   = ../api/libs/rtl/obj
-LIBGWS    = ../api/libs/libgws/include/
-LIBGWSOBJ = ../api/libs/libgws/obj
+LIBC      = ../api/garden/rtl/include/
+LIBCOBJ   = ../api/garden/rtl/obj
+
+LIBGWS    = ../api/gthouse/libgws/include/
+LIBGWSOBJ = ../api/gthouse/libgws/obj
+
 
 # Objects
 myObjects = crt0.o main.o rtl.o \

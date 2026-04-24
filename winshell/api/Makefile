@@ -1,13 +1,22 @@
 
 all:
-	make -C libs/
+
+# garden - rtl
+	make -C garden/
+
+# gthouse - libs
+	make -C gthouse/
 
 clean:
-	#-rm -f libs/libcpp/obj/*.o
-	-rm -f libs/libdisp/obj/*.o
-	-rm -f libs/libgr/obj/*.o
-	-rm -f libs/libgr3d/obj/*.o
-	-rm -f libs/libgws/obj/*.o
-	-rm -f libs/libio01/obj/*.o
-	-rm -f libs/rtl/obj/*.o
+
+# garden - rtl
+	-rm -f garden/rtl/obj/*.o
+
+# gthouse - libs
+	#-rm -f gthouse/libcpp/obj/*.o
+	-rm -f gthouse/libdisp/obj/*.o
+	-rm -f gthouse/libgr/obj/*.o
+	-rm -f gthouse/libgr3d/obj/*.o
+	-rm -f gthouse/libgws/obj/*.o
+	-rm -f gthouse/libio01/obj/*.o
 

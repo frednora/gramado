@@ -24,7 +24,7 @@ CFLAGS = -m64 \
 	-s \
 	-Werror=strict-prototypes    
 
-LIBS = -I.  -I ../rtl/include/
+LIBS = -I.  -I ../../garden/rtl/include/
 
 myObjects = connect.o rw.o \
 events.o gr.o gws.o    
