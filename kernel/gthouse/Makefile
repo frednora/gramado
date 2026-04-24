@@ -1,12 +1,6 @@
 
 all:
 
-# Entries: 
-#  + Boot time entry
-#  + AP initialization entry
-#  + Interrupt time entry
-	make -C arch/
-
 # Top level routines
 	make -C kwrap/
 

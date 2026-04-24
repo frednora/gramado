@@ -22,8 +22,8 @@
 
 // -------
 
-//#include "../gthouse/arch/arm/arch.h"
-#include "../gthouse/arch/x86_64/arch.h"
+//#include "../garden/arch/arm/arch.h"
+#include "../garden/arch/x86_64/arch.h"
 
 //
 // Core control kwrap/
@@ -51,7 +51,7 @@
 #include "../halls/dev/exec/ke/intake/x64init.h"  // x64 kernel initialization.
 
 // kernel initialization
-#include "../kmain.h"
+#include "../garden/kmain.h"
 
 
 // ===============================

@@ -7,12 +7,12 @@
 # -----------------------------------------
 # Zone         | Subfolders to compile
 # -----------------------------------------
-# Red   (Hot)  | gthouse/core/
-# Pink  (Warm) | gthouse/wink/ and halls/
-# White (Cold) | gthouse/libk/ 
+# Red          | halls/
+# Pink         | gthouse/
+# White        | garden/    (Communicatior: Link with the external world) 
 
 # Tools
-include gthouse/arch/x86_64/makeinc
+include garden/arch/x86_64/makeinc
 
 INCLUDE = include
 
@@ -34,7 +34,7 @@ linkFlags := -m elf_x86_64 \
 -x \
 -static \
 -Map=kernel.map \
--T gthouse/arch/x86_64/link.ld   
+-T garden/arch/x86_64/link.ld   
 
 #
 # Config
@@ -149,32 +149,29 @@ clean
 	@echo "Done?"
 
 # ----------------
-# Core kernel components
 RedZone:
-# Part 01
 	@echo "Compiling: Compiling RedZone"
-	$(Q)$(MAKE) -C gthouse/
 
-# ----------------
-# Graphical Device Interface and User Interaction Interface.
-# Resources
-PinkZone:
-# Part 02 and Part 3
-	@echo "Compiling: Compiling PinkZone"
 	$(Q)$(MAKE) -C halls/
 
 # ----------------
-# gthouse/libk/ (Runtime Library)
+PinkZone:
+	@echo "Compiling: Compiling PinkZone"
+	$(Q)$(MAKE) -C gthouse/
+
+# ----------------
 WhiteZone:
-# Part 04
 	@echo "Compiling: Compiling WhiteZone"
-#   ...
+
+# (arch)
+	$(Q)$(MAKE) -C garden/
+
+# kmain
+	$(CC) -c garden/kmain.c   $(KERNEL_INCLUDE) $(CFLAGS) -o kmain.o
+
 
 # ----------------
 link-kernel:
-
-# kmain
-	$(CC) -c kmain.c   $(KERNEL_INCLUDE) $(CFLAGS) -o kmain.o
 
 	@echo "Linking: Linking the kernel image ..."
 	$(LD) $(linkFlags) -o $(linkTarget) $(objects-y)  
@@ -188,10 +185,12 @@ clean-all:
 	rm -rf *.o   
 	rm -rf *.BIN   
 
+	rm -rf garden/*.o   
 	rm -rf gthouse/*.o   
 	rm -rf halls/*.o   
 
-	rm -rf gthouse/arch/*.o   
+	rm -rf garden/arch/*.o   
+
 	rm -rf gthouse/kwrap/*.o   
 	rm -rf gthouse/libk/*.o   
 	rm -rf gthouse/wink/*.o   
