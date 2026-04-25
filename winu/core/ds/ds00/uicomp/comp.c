@@ -61,6 +61,8 @@ static int __mouse_initialized = FALSE;
 static int __clear_mousebox = FALSE;
 
 
+int need_rootwindow_redraw = FALSE;
+
 // --------------------------
 
 static void direct_draw_mouse_pointer(void);
@@ -951,7 +953,7 @@ void comp_display_desktop_components(void)
         return;
     }
 
-// Refresh only the components that was changed by the painter.
+// Refresh only the components that was changed by the painter
     wmReactToPaintEvents();
 
     if (CONFIG_TEST_SPARE_BUFFER == 1)
@@ -999,8 +1001,9 @@ void comp_display_desktop_components(void)
                     CANVAS_SPAREBUFFER,    // source
                     CANVAS_FRONTBUFFER,    // destination
                     20, 20,                // destination position
-                    spare_dccanvas->device_width >> 1,     // width 
-                    spare_dccanvas->device_height >> 1 );  // height  
+                    spare_dccanvas->device_width >> 1,  // width 
+                    spare_dccanvas->device_height >> 1  // height
+                );  
             }
         }
         //---------
@@ -1018,6 +1021,195 @@ void comp_display_desktop_components(void)
 
 // fps
     //__update_fps();
+}
+
+void realCompositor(void)
+{
+    register int i=0;
+
+// The component.
+// It's a window, but we don't care about its type.
+// All we need to do is refreshing the window's rectangle.
+
+    struct gws_window_d *w;
+
+    int fOnlyValidate = FALSE;
+
+// fps++
+    if (WindowManager.initialized == TRUE){
+        WindowManager.frame_counter++;
+    }
+
+// ===========================================
+// Redraw root window, but do not show it yet.
+// #todo: We're redrawing for now ... but the plain is copying it from its
+
+    if (CONFIG_TEST_SPARE_BUFFER == 1)
+    {
+        if (need_rootwindow_redraw == TRUE)
+        {
+            need_rootwindow_redraw = FALSE;
+            redraw_window(__root_window,FALSE);
+        }
+    }
+
+
+// Is the root window a valid window
+
+    unsigned long my_width;
+    unsigned long my_height;
+
+// Get the window pointer, refresh the windows retangle via KGWS and 
+// validate the window.
+    for (i=0; i<WINDOW_COUNT_MAX; ++i)
+    {
+        w = (struct gws_window_d *) windowList[i];
+        if ((void*) w != NULL)
+        {
+            if (w->used == TRUE && w->magic == 1234)
+            {
+                if (w->dirty == TRUE)
+                {
+
+                    //---------
+                    // #test
+                    if (CONFIG_TEST_SPARE_BUFFER == 1)
+                    {
+                    // #test >>> frontbuffer
+                    if ((void*) spare_dccanvas != NULL)
+                    {
+                        if (spare_dccanvas->magic == 1234)
+                        {
+                            // Width (clipping)
+                            my_width = spare_dccanvas->device_width;
+                            if (spare_dccanvas->device_width > w->width)
+                                my_width = w->width;
+
+                            // Height (clipping)
+                            my_height = spare_dccanvas->device_height;
+                            if (spare_dccanvas->device_height > w->height)
+                                my_height = w->height;
+
+                            if (w->type == WT_OVERLAPPED)
+                            {
+                                comp_blit_canvas_to_canvas(
+                                    CANVAS_SPAREBUFFER,    // source
+                                    CANVAS_BACKBUFFER,  //CANVAS_FRONTBUFFER,    // destination
+                                    w->absolute_x +4 +36, 
+                                    w->absolute_y +4,
+                                    my_width >> 1,  // width 
+                                    26//my_height  // height
+                                );
+                            }
+
+                            if (w->type == WT_BUTTON)
+                            {
+                                comp_blit_canvas_to_canvas(
+                                    CANVAS_SPAREBUFFER,    // source
+                                    CANVAS_BACKBUFFER,  //CANVAS_FRONTBUFFER,    // destination
+                                    w->absolute_x +5, 
+                                    w->absolute_y +5,
+                                    my_width  -10,  // width 
+                                    my_height -10  // height
+                                );
+                            }
+
+                            // ...
+                        }
+                    }
+                    }
+                    //---------
+
+                    // If the root window was refreshed,
+                    // there is no need to refresh any other window,
+                    // so, lets simply validate them.
+
+                    /*
+                    if (fOnlyValidate != TRUE)
+                    {
+                        gws_refresh_rectangle ( 
+                            w->absolute_x,  w->absolute_y, 
+                            w->width, w->height );
+                    }
+                    */
+
+                    // Validate the window we refreshed.
+                    //validate_window(w);
+
+                    // The window was the root.
+                    // There is no need to refresh anyother
+                    // #bugbug: But they are still marked as dirty.
+                    // For now, we're gonna refresh them in the next round,
+                    // but we can simple validate all the rest.
+                    // Continue the loop,
+                    // but now we will only validate the windows, not refresh.
+                    /*
+                    if (w == __root_window){
+                        fOnlyValidate = TRUE;
+                    }
+                    */
+                }
+            }
+        }
+    };
+
+    if (CONFIG_TEST_SPARE_BUFFER == 1)
+    {
+        //---------
+        // #test
+        // Copy bytes from the spare buffer to the 
+        // top left corner of the screen.
+        //comp_test_spare_buffer();
+        // ok
+        //comp_blit_spare_to_backbuffer(100, 100,10,10);
+        //gws_refresh_rectangle ( 100, 100, 10, 10 );
+        //---------
+
+        /*
+        //---------
+        // #test >>> backbuffer
+        comp_blit_canvas_to_canvas(
+            CANVAS_SPAREBUFFER,   // source
+            CANVAS_BACKBUFFER,    // destination
+            200, 200,             // destination position
+            10, 10 );                // width, height
+        gws_refresh_rectangle(200, 200, 10, 10);
+        //---------
+        */
+
+        /*
+        //---------
+        // #test >>> frontbuffer
+        comp_blit_canvas_to_canvas(
+            CANVAS_SPAREBUFFER,   // source
+            CANVAS_FRONTBUFFER,    // destination
+            300, 100,             // destination position
+            10, 10 );                // width, height
+        //---------
+        */
+
+        /*
+        //---------
+        // #test >>> frontbuffer
+        if ((void*) spare_dccanvas != NULL)
+        {
+            if (spare_dccanvas->magic == 1234)
+            {
+                comp_blit_canvas_to_canvas(
+                    CANVAS_SPAREBUFFER,    // source
+                    CANVAS_FRONTBUFFER,    // destination
+                    20, 20,                // destination position
+                    spare_dccanvas->device_width >> 1,  // width 
+                    spare_dccanvas->device_height >> 1  // height
+                );  
+            }
+        }
+        //---------
+        */
+    }
+
+// Flush backbuffer into the front buffer
+    refresh_screen();
 }
 
 // wmCompose:

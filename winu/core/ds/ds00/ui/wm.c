@@ -801,7 +801,10 @@ static void on_mouse_hover(struct gws_window_d *window)
             window->bg_color = (unsigned int) get_color(csiWhenMouseHover);
         };
 
-        redraw_window(window, TRUE);
+        if (CONFIG_USE_REAL_COMPOSITOR == 1)
+            redraw_window(window, FALSE);
+        if (CONFIG_USE_REAL_COMPOSITOR != 1)
+            redraw_window(window, TRUE);
     }
 
 // Visual efect
@@ -2151,7 +2154,8 @@ void wm_update_desktop(int tile, int show)
 // We can create a worker to this routine.
     w = (struct gws_window_d *) first_window;
 
-    while (1){
+    while (1)
+    {
         // End of the list?
         if ((void*) w == NULL)
             break;
@@ -2159,6 +2163,8 @@ void wm_update_desktop(int tile, int show)
         {
             // If the window has a valid titlebar,
             // Validate the titlebar and its ocntrols.
+            if (CONFIG_USE_REAL_COMPOSITOR != 1)
+            {
             if ((void*) w->titlebar != NULL)
             {
                 w->titlebar->dirty = FALSE;
@@ -2169,9 +2175,9 @@ void wm_update_desktop(int tile, int show)
                 validate_window_by_id(
                     w->titlebar->Controls.close_wid );
             }
-
             // Validate the window
             w->dirty = FALSE;
+            }
         }
         w = w->next;
     };    
@@ -4940,7 +4946,11 @@ void wm_exit_fullscreen_mode(int tile)
 // Set the window with focus.
     keyboard_owner = NULL;
 
-    wm_update_desktop(tile,TRUE);
+    if (CONFIG_USE_REAL_COMPOSITOR == 1){
+        wm_update_desktop(tile,FALSE);
+    } else {
+        wm_update_desktop(tile,TRUE);
+    }
 }
 
 /*
@@ -5393,6 +5403,7 @@ int dock_window( struct gws_window_d *window, int position )
             return -1;
             break;
     };
+
 
 // Set a new active window.
 // Update all the windows, respecting the position.

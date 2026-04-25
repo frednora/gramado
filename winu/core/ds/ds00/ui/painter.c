@@ -916,7 +916,8 @@ int redraw_titlebar_window(struct gws_window_d *window)
             (int) icon_id, 
             (unsigned long) iL, 
             (unsigned long) iT,
-            FALSE );
+                FALSE 
+        );
     }
 
 // ---------------
@@ -1400,6 +1401,8 @@ done:
 // Show or not.
     if (flags == TRUE)
     {
+        if (CONFIG_USE_REAL_COMPOSITOR != 1)
+        {
         gws_show_window_rect(window);
         window->dirty = FALSE;  // Validate
         if (window->type == WT_OVERLAPPED)
@@ -1415,6 +1418,7 @@ done:
                 validate_window_by_id(
                     window->titlebar->Controls.close_wid );
             }
+        }
         }
     }
     return 0;

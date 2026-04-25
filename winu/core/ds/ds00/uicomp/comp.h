@@ -8,6 +8,7 @@
 
 //extern int __compose_lock;
 
+extern int need_rootwindow_redraw;
 
 // Structure to describe a clipping region for a buffer
 struct spare_buffer_clip_info_d 
@@ -126,6 +127,9 @@ void wmReactToPaintEvents(void);
 
 void __display_mouse_cursor(void);
 void comp_display_desktop_components(void);
+// #test
+// Creating a real compositor. Using offscreen buffers.
+void realCompositor(void);
 
 
 void 

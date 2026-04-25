@@ -4636,9 +4636,16 @@ static int ServerLoop(int client_index)
 
         // Compose the frame or simply update some windows.        
         if (IsComposing == TRUE)
-        {         
+        {
+            // #test
+            // Creating a real compositor. Using offscreen buffers.
+            if (CONFIG_USE_REAL_COMPOSITOR == 1)
+                realCompositor();
+
             // Display the desktop components without using the compositor.
-            comp_display_desktop_components();
+            
+            if (CONFIG_USE_REAL_COMPOSITOR != 1)
+                comp_display_desktop_components();
 
             // #todo: 
             // Use this one, that will have a flag to indicate the
