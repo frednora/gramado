@@ -30,9 +30,12 @@
 // #test: It also work withour using the kernel.
 #define USE_KERNEL_TO_DRAW_RECTANGLES  1
 
+
+// #test
+// Allow the creation and usage of the spare buffer for composition
 #define CONFIG_TEST_SPARE_BUFFER  0
 
-
+// #test
 // Meu plano é começar usando off-screen buffers em componentes do frame, 
 // depois no frame todo e por fim na área de cliente.
 #define CONFIG_USE_REAL_COMPOSITOR  0

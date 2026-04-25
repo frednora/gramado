@@ -31,6 +31,8 @@ struct spare_buffer_clip_info_d  SpareBufferClipInfo;
 char *spare_128kb_buffer_p;
 
 struct dccanvas_d *spare_dccanvas;
+struct dccanvas_d *test00_dccanvas;
+
 
 // #todo
 // Create some configuration globals here
@@ -227,6 +229,111 @@ void *comp_create_slab_spare_128kb_buffer(size_t size_in_kb)
     return NULL;
 }
 
+struct dccanvas_d *comp_create_dc_and_allocate_buffer(size_t size_in_kb)
+{
+
+// Device info
+// #bugbug
+// If you ever change resolution or bpp, recompute the spare size before writing.
+    unsigned long DeviceWidth  = (unsigned long) server_get_system_metrics(1);
+    unsigned long DeviceHeight = (unsigned long) server_get_system_metrics(2);
+    // Bits per pixel
+    unsigned long DeviceBPP    = (unsigned long) server_get_system_metrics(9);
+
+// Pitch
+// Backbuffer visible area. (Screen size)
+    unsigned long Pitch = (DeviceWidth * (DeviceBPP/8));
+
+// new area
+    unsigned long TotalSpareInBytes = (size_in_kb * 1024);
+
+    // Allocate a new buffer in heap memory
+    char *buf = (char *) malloc(TotalSpareInBytes);
+    if (!buf) 
+        return NULL;
+
+    //----------------------------
+
+    struct dccanvas_d *tmp_dccanvas;
+
+    // --- Setup clipping info for spare buffer ---
+
+    unsigned long BufferClipInfo_bpp    = DeviceBPP;  // bytes per pixel
+    unsigned long BufferClipInfo_pitch  = Pitch;      // Same of the device
+
+    unsigned long BufferClipInfo_width  = DeviceWidth;   // align with OS-supported width
+    unsigned long BufferClipInfo_height = (TotalSpareInBytes/Pitch); 
+
+    // -------------------------------------------
+
+    tmp_dccanvas = 
+        (void *) libgd_create_dc (
+            (char *) buf,
+            BufferClipInfo_width,
+            BufferClipInfo_height,
+            BufferClipInfo_bpp      // bits per pixel
+        );
+
+    if ((void*)tmp_dccanvas == NULL){
+        return NULL;
+    }
+    if (tmp_dccanvas->magic != 1234){
+        return NULL;
+    }
+
+    return (void*) tmp_dccanvas;  // return dc
+
+// fail
+fail:
+    return NULL;
+}
+
+// w, h, bits per pixel, dc
+struct canvas_information_d *compCreateNewCanvas(struct dccanvas_d *dc)
+{
+    //char *buf;
+    struct canvas_information_d *ci_new;
+
+    if ((void*) dc == NULL){
+        printf("compCreateNewCanvas: dc\n"); 
+        goto fail;
+    }
+
+// Create structure for canvas information
+    ci_new = (void*) malloc(sizeof(struct canvas_information_d));
+    if ((void*) ci_new == NULL){
+        printf("compCreateNewCanvas: ci_newd\n"); 
+        goto fail; 
+    }
+
+    ci_new->width  = dc->device_width; 
+    ci_new->height = dc->device_height; 
+    ci_new->bpp    = dc->bpp;   // bits per pixel
+
+    unsigned long DeviceWidth  = (unsigned long) server_get_system_metrics(1);
+
+// Pitch
+// Backbuffer visible area. (Screen size)
+    //unsigned long Pitch = 
+        //(DeviceWidth * (dc->bpp/8));
+
+// bytes per row (width * bytes_per_pixel)
+    ci_new->pitch = dc->pitch; //Pitch;
+
+    ci_new->base = (void*) dc->data; 
+
+    // It belongs to the root window for now.
+    ci_new->owner_window = __root_window; 
+    ci_new->used = TRUE;
+    ci_new->magic = 1234;
+    ci_new->initialized = TRUE;
+
+    return (struct canvas_information_d*) ci_new;
+fail:
+    return NULL;
+}
+
+
 // Create a drawable buffer in a spare area 
 // at the end of the backbuffer.
 // The compositor:
@@ -276,15 +383,15 @@ struct canvas_information_d *compCreateCanvasUsingSpareBuffer(void)
 
 // Draw something early.
 // First: draw a test pattern into the spare buffer
-    if (CONFIG_TEST_SPARE_BUFFER == 1)
-    {
+    //if (CONFIG_TEST_SPARE_BUFFER == 1)
+    //{
         comp_draw_into_spare_buffer();
 
         // #debug:
         // Draw something early.
         // Draw a red pixel at (0,0) inside the spare buffer
         // putpixel0(0xFFFF0000, 0, 0, ROP_COPY, (unsigned long) b);
-    }
+    //}
 
     return (struct canvas_information_d *) ci_sparebuffer;
 };
@@ -353,14 +460,14 @@ void comp_draw_into_spare_buffer(void)
 */
 
 // New test using clipping
-    spare_putpixel0(0xFFFF0000, 0, 0, ROP_COPY);
-    spare_putpixel0(0xFFFF0000, 9, 0, ROP_COPY);
-    spare_putpixel0(0xFFFF0000, 9, 9, ROP_COPY);
-    spare_putpixel0(0xFFFF0000, 0, 9, ROP_COPY);
+    spare_putpixel0(0xFFFF0000,  1,  1, ROP_COPY);
+    spare_putpixel0(0xFFFF0000, 10,  1, ROP_COPY);
+    spare_putpixel0(0xFFFF0000, 10, 10, ROP_COPY);
+    spare_putpixel0(0xFFFF0000,  1, 10, ROP_COPY);
 
     // #test
-    dc_drawchar(spare_dccanvas, 10, 10, 'H', COLOR_YELLOW, COLOR_BLUE, ROP_COPY);
-    dc_drawchar(spare_dccanvas, 18, 10, 'i', COLOR_YELLOW, COLOR_BLUE, ROP_COPY);
+    dc_drawchar(spare_dccanvas, 10, 2, 'H', COLOR_YELLOW, COLOR_BLUE, ROP_COPY);
+    dc_drawchar(spare_dccanvas, 18, 2, 'i', COLOR_YELLOW, COLOR_BLUE, ROP_COPY);
 
 /*
     spare_putpixel0(
@@ -450,9 +557,9 @@ comp_blit_canvas_to_canvas(
     struct canvas_information_d *dst;
 
 // We have few canvases for now.
-    if (id_src_canvas < 0 || id_src_canvas >= 4)
+    if (id_src_canvas < 0 || id_src_canvas >= CANVAS_COUNT_MAX)
         return;
-    if (id_dst_canvas < 0 || id_dst_canvas >= 4)
+    if (id_dst_canvas < 0 || id_dst_canvas >= CANVAS_COUNT_MAX)
         return;
     // #todo: More filters.
 
@@ -1073,52 +1180,63 @@ void realCompositor(void)
 
                     //---------
                     // #test
+                    // Considering the sparebuffer only for overlapped
                     if (CONFIG_TEST_SPARE_BUFFER == 1)
                     {
-                    // #test >>> frontbuffer
-                    if ((void*) spare_dccanvas != NULL)
-                    {
-                        if (spare_dccanvas->magic == 1234)
+                        // #test >>> frontbuffer
+                        if ((void*) spare_dccanvas != NULL)
                         {
-                            // Width (clipping)
-                            my_width = spare_dccanvas->device_width;
-                            if (spare_dccanvas->device_width > w->width)
-                                my_width = w->width;
-
-                            // Height (clipping)
-                            my_height = spare_dccanvas->device_height;
-                            if (spare_dccanvas->device_height > w->height)
-                                my_height = w->height;
-
-                            if (w->type == WT_OVERLAPPED)
+                            if (spare_dccanvas->magic == 1234)
                             {
-                                comp_blit_canvas_to_canvas(
-                                    CANVAS_SPAREBUFFER,    // source
-                                    CANVAS_BACKBUFFER,  //CANVAS_FRONTBUFFER,    // destination
-                                    w->absolute_x +4 +36, 
-                                    w->absolute_y +4,
-                                    my_width >> 1,  // width 
-                                    26//my_height  // height
-                                );
-                            }
+                                // Width (clipping)
+                                my_width = spare_dccanvas->device_width;
+                                if (spare_dccanvas->device_width > w->width)
+                                    my_width = w->width;
 
-                            if (w->type == WT_BUTTON)
-                            {
-                                comp_blit_canvas_to_canvas(
-                                    CANVAS_SPAREBUFFER,    // source
-                                    CANVAS_BACKBUFFER,  //CANVAS_FRONTBUFFER,    // destination
-                                    w->absolute_x +5, 
-                                    w->absolute_y +5,
-                                    my_width  -10,  // width 
-                                    my_height -10  // height
-                                );
-                            }
+                                // Height (clipping)
+                                my_height = spare_dccanvas->device_height;
+                                if (spare_dccanvas->device_height > w->height)
+                                    my_height = w->height;
 
+                                if (w->type == WT_OVERLAPPED)
+                                {
+                                    comp_blit_canvas_to_canvas(
+                                        CANVAS_SPAREBUFFER,    // source
+                                        CANVAS_BACKBUFFER,     // destination
+                                        w->absolute_x +4 +36, 
+                                        w->absolute_y +4,
+                                        my_width >> 1,  // width 
+                                        26//my_height  // height
+                                    );
+                                }
                             // ...
+                            }
                         }
                     }
-                    }
                     //---------
+
+                    if (w->type == WT_BUTTON)
+                    {
+                        // Width (clipping)
+                        my_width = test00_dccanvas->device_width;
+                        if (test00_dccanvas->device_width > w->width)
+                            my_width = w->width;
+
+                        // Height (clipping)
+                        my_height = test00_dccanvas->device_height;
+                        if (test00_dccanvas->device_height > w->height)
+                            my_height = w->height;
+
+                        // 6 is the index of our new test canvas.
+                        comp_blit_canvas_to_canvas(
+                            CANVAS_TEST00, //CANVAS_SPAREBUFFER,  // source
+                            CANVAS_BACKBUFFER,   // destination
+                            w->absolute_x +4, 
+                            w->absolute_y +4,
+                            (my_width -8),  // width 
+                            (my_height -8)  // height
+                        );
+                    }
 
                     // If the root window was refreshed,
                     // there is no need to refresh any other window,
@@ -1364,9 +1482,9 @@ This was the first experiment in order to have a future
 */
 
 // -------------------------
+    struct canvas_information_d *ci_tmp;
     if (CONFIG_TEST_SPARE_BUFFER == 1)
     {
-        struct canvas_information_d *ci_tmp;
         ci_tmp = (void *) compCreateCanvasUsingSpareBuffer();
         if ((void*) ci_tmp == NULL){
             printf("comp.c: ci_tmp\n");
@@ -1374,6 +1492,71 @@ This was the first experiment in order to have a future
         }
     }
 // -------------------------
+
+// ---------------------------------
+// the dc
+    struct dccanvas_d *dc;
+    dc = (struct dccanvas_d *) comp_create_dc_and_allocate_buffer(64);
+    if ((void*)dc == NULL)
+    {
+        return NULL;
+    }
+    if (dc->magic != 1234)
+    {
+        return NULL;
+    }
+
+// Save the dc for future usage
+    test00_dccanvas = (struct dccanvas_d *) dc;
+
+// --------------
+
+// Create a new off-screen buffer
+// baesd on the dc
+    struct canvas_information_d *ci00;
+    // Bits per pixel
+    //unsigned long DeviceBPP00 = (unsigned long) server_get_system_metrics(9);
+    ci00 = (void *) compCreateNewCanvas(dc);
+    if ((void*) ci00 == NULL){
+        printf("comp.c: ci00\n");
+        exit(1);
+    }
+
+    // Saving into the list for testing purpose
+    canvasList[CANVAS_TEST00] = (unsigned long) ci00;
+
+// -----------------
+// Draw into the new dc
+    // B of button
+    dc_drawchar( dc, 2, 2, 'B', COLOR_YELLOW, COLOR_RED, ROP_COPY );
+
+    putpixel0(
+        dc,
+        COLOR_YELLOW, 
+        1, 
+        1, 
+        ROP_COPY );
+
+    putpixel0(
+        dc,
+        COLOR_YELLOW, 
+        10, 
+        1, 
+        ROP_COPY );
+
+    putpixel0(
+        dc,
+        COLOR_YELLOW, 
+        1, 
+        10, 
+        ROP_COPY );
+
+    putpixel0(
+        dc,
+        COLOR_YELLOW, 
+        10, 
+        10, 
+        ROP_COPY );
 
 // ...
 

@@ -67,6 +67,11 @@ setup_spare_buffer_clip(
 
 void *comp_create_slab_spare_128kb_buffer(size_t size_in_kb);
 
+struct dccanvas_d *comp_create_dc_and_allocate_buffer(size_t size_in_kb);
+
+// w, h, bits per pixel, dc
+struct canvas_information_d *compCreateNewCanvas(struct dccanvas_d *dc );
+
 struct canvas_information_d *compCreateCanvasUsingSpareBuffer(void);
 
 void 

@@ -251,10 +251,12 @@ extern int use_vsync;
 
 
 // Indexes to canvases
-#define CANVAS_COUNT_MAX    4
+#define CANVAS_COUNT_MAX    8
 #define CANVAS_FRONTBUFFER     0  // VRAM
 #define CANVAS_BACKBUFFER      1  // RAM
 #define CANVAS_SPAREBUFFER     2  // spare buffer
+
+#define CANVAS_TEST00  6
 
 // Each window needs to have an index for one of this structurea.
 // This way the display server will know the information about 
