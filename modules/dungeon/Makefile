@@ -80,9 +80,10 @@ user_ldflags = -m elf_x86_64 -T x86_64/link_r0.ld
 INCLUDES = -I include 
 
 # Objects
-myObjects = head.o mmain.o globals.o \
+myObjects = head.o globals.o \
 kmemory.o kstring.o kstdio.o \
-display.o ports64.o hal.o kal.o   
+display.o ports64.o hal.o kal.o \
+mmain.o    
 
 
 .PHONY: all all-c gws-link finalize clean

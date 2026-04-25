@@ -3127,6 +3127,8 @@ void *CreateWindow (
             style |= WS_TRANSPARENT;
         }
 
+        // Create a window using the WT_SIMPLE type and 
+        // change it to WT_OVERLAPPED later.
         __w = 
             (void *) doCreateWindow ( 
                         WT_SIMPLE, style, status, state, (char *) _name,
@@ -3140,7 +3142,7 @@ void *CreateWindow (
             //server_debug_print ("CreateWindow: doCreateWindow fail\n");
             goto fail;
         }
-        __w->type = WT_OVERLAPPED; // Change the type back to overlapped
+        __w->type = WT_OVERLAPPED;  // Change the type back to overlapped
         //__w->locked = FALSE;
         __w->enabled = TRUE;
 

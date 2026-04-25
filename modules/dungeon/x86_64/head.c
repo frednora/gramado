@@ -44,7 +44,7 @@ kernel_start(
 // But we can have some special values indicating that
 // the module was called by the kernel or by another module.
 
-
+// Called by syscalls
 // sc81 and sc83
     if ( id == 0x81 ||
          id == 0x83 )
