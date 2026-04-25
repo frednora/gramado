@@ -531,3 +531,14 @@ RequestHall_int131:
 ;--    
 
 
+; This is the system call.
+; 0x80 - The system call 
+; 0x81 - Auxiliary
+; 0x82 - Auxiliary
+; 0x83 - Auxiliary
+align 8
+global _system_call
+_system_call:
+    jmp RequestHall_int128
+
+
