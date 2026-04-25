@@ -71,6 +71,11 @@ global _kernel_entry_point
 _kernel_entry_point:
 ; We don't have any print support yet.
 
+    nop 
+
+global startup_64
+startup_64:
+
     cli
     cld 
 	; Jump to the end of this document.

@@ -119,6 +119,12 @@ extern struct initialization_d  Initialization;
 // Used during the kernel initialization.
 //
 
+// See: kmain.c
+void init_globals(void);
+
+// See: kmain.c
+void init_globals(void);
+
 // ::(1)
 // The kernel starts at ...
 // see: '_kernel_entry_point' in head_64.asm.
@@ -129,11 +135,8 @@ void I_kmain(int arch_type);
 // First function called by all the AP processors.
 void AP_kmain(void);
 
-// See: kmain.c
-void init_globals(void);
+void start_kernel(int arch_type);
 
-// See: kmain.c
-void init_globals(void);
 
 
 #endif    
