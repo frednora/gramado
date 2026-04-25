@@ -1629,11 +1629,20 @@ void I_kmain(int arch_type)
     };
 }
 
-// BSP's first function in C.
-// It's a wrapper. Maybe it's not called by the assembly code.
+
+// #test Not in use
 void start_kernel(int arch_type)
 {
     I_kmain((int) arch_type);
+}
+
+// #test Not in use
+// BSP's first function in C.
+// It's a wrapper. Maybe it's not called by the assembly code.
+// This is here for Linux lovers.
+void x86_64_start_kernel(int arch_type)
+{
+    start_kernel((int) arch_type);
 }
 
 

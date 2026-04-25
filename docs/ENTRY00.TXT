@@ -1,0 +1,14 @@
+
+ Entry sequency in Linux
+
+The entry sequence is: 
+startup_64 (ASM) >> x86_64_start_kernel (C) >> start_kernel (C).
+
+The entry sequence is: 
+startup_32 (ASM) >> i386_start_kernel (C) >> start_kernel (C).
+
+
+Important:
+startup_64 (Assembly):
+x86_64_start_kernel (Architecture-Specific C)
+start_kernel (Generic C): 

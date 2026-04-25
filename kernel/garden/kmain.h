@@ -136,7 +136,7 @@ void I_kmain(int arch_type);
 void AP_kmain(void);
 
 void start_kernel(int arch_type);
-
+void x86_64_start_kernel(int arch_type);
 
 
 #endif    

@@ -2793,11 +2793,15 @@ START:
 
 ;--------------------------------------
 
+.Ljmp_to_C_code:
+
 ; Use the calling convention for this compiler.
 ; rdi
 ; No return
 ; See: kmain.c
 ; #todo: arch type (2) ??
+
+    ; xor rbp, rbp
 
     xor rax, rax
     mov rdi, rax    ; First argument.
@@ -2806,16 +2810,10 @@ START:
 
 ; Call I_kmain() function in kmain.c
 ; See: kmain.c
-    ;call _I_kmain
+    ; mov rax, _x86_64_start_kernel
     mov rax, _I_kmain
 	jmp rax
 
-;dieLoop:
-;    cli
-;    hlt
-;    jmp dieLoop
-
-extern _AP_kmain
 
 ;===================================================
 ; AP initialization
@@ -2825,6 +2823,9 @@ extern _AP_kmain
 ; to reuse some comde in assembly before jumping to the C part.
 ; See: ap_entry_point00() in kmain.c
 
+extern _AP_kmain
+
+align 8
 global _asm_AP_entry_point
 _asm_AP_entry_point:
 
