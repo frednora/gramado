@@ -1021,6 +1021,26 @@ redraw_window (
 // for mouse hit test.
     wm_sync_absolute_dimensions(window);
 
+
+// #test
+// Slip the redrawing for overlapped and buttons
+    if (CONFIG_USE_REAL_COMPOSITOR == 1)
+    {
+        if (window->type == WT_BUTTON)
+        {
+            window->dirty = TRUE; // Flush the offscreen buffer
+            return 0;
+        }
+
+        if (window->type == WT_OVERLAPPED)
+        {
+            window->dirty = TRUE; // Flush the offscreen buffer
+            goto done;
+            //return 0;
+        } 
+    }
+
+
 // =======================
 // shadowUsed
 // A sombra pertence à janela e ao frame.
@@ -1063,7 +1083,7 @@ redraw_window (
                 (window->height +1 +1), 
                 __tmp_color, 
                 TRUE,     // fill?
-                (unsigned long) window->rop_shadow ); 
+                (unsigned long) window->rop_shadow );
         }
     }
 
@@ -1375,16 +1395,18 @@ redraw_window (
 
 done:
 
-    window->dirty = TRUE;
+    window->dirty = TRUE;  // Invalidate 
 
     // If this is a overlapped, 
     // so we need o invalidate a lot of subwindows.
     if (window->type == WT_OVERLAPPED)
     {
-        window->dirty == TRUE;  // Validate
+        window->dirty == TRUE;  // Invalidate
         if ( (void*) window->titlebar != NULL )
         {
-            window->titlebar->dirty = TRUE;
+            window->titlebar->dirty = TRUE;  // Invalidate titlebar
+
+            // Invalidate controls
             invalidate_window_by_id(
                 window->titlebar->Controls.minimize_wid );
             invalidate_window_by_id(
@@ -1392,33 +1414,38 @@ done:
             invalidate_window_by_id(
                 window->titlebar->Controls.close_wid );
         }
+
+        if (CONFIG_USE_REAL_COMPOSITOR == 1)
+            return 0;
     }
 
 
-// -------------------------
-// If we show the window,
-// so, we need to validate it.
-// Show or not.
+// If we need to show (flush) an overlapped window
     if (flags == TRUE)
     {
         if (CONFIG_USE_REAL_COMPOSITOR != 1)
         {
-        gws_show_window_rect(window);
-        window->dirty = FALSE;  // Validate
-        if (window->type == WT_OVERLAPPED)
-        {
-            if ((void*)window->titlebar != NULL)
+
+            gws_show_window_rect(window);   // Flush it
+            window->dirty = FALSE;          // Validate (don't need to show)
+
+            // If it was an overlapped window, 
+            // we need to validate it's child windows.
+            if (window->type == WT_OVERLAPPED)
             {
-                window->titlebar->dirty = FALSE;
-                //#todo: Validate by id.
-                validate_window_by_id(
-                    window->titlebar->Controls.minimize_wid );
-                validate_window_by_id(
-                    window->titlebar->Controls.maximize_wid );
-                validate_window_by_id(
-                    window->titlebar->Controls.close_wid );
+                if ((void*)window->titlebar != NULL)
+                {
+                    window->titlebar->dirty = FALSE;  // Validate
+    
+                    // Validate controls
+                    validate_window_by_id(
+                        window->titlebar->Controls.minimize_wid );
+                    validate_window_by_id(
+                        window->titlebar->Controls.maximize_wid );
+                    validate_window_by_id(
+                        window->titlebar->Controls.close_wid );
+                }
             }
-        }
         }
     }
     return 0;

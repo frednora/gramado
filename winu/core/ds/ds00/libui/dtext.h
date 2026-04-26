@@ -9,6 +9,18 @@
 // Text/String support.
 //
 
+
+void 
+dc_drawstring ( 
+    struct dccanvas_d *dc, 
+    unsigned long x,
+    unsigned long y,
+    unsigned int fg_color,
+    unsigned int bg_color,
+    unsigned long rop,
+    unsigned char *string );
+
+
 //---
 void 
 grDrawString ( 

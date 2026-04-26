@@ -4,8 +4,118 @@
 
 #include "../ds.h"
 
+
+// dc_drawstring:
+// Draw a string into the backbuffer 
+// No clipping
+void 
+dc_drawstring ( 
+    struct dccanvas_d *dc, 
+    unsigned long x,
+    unsigned long y,
+    unsigned int fg_color,
+    unsigned int bg_color,
+    unsigned long rop,
+    unsigned char *string )
+{
+// Absolute positions.
+
+    int Index=0;
+    //#bugbug:  Determinando
+    int cWidth = 8;   
+    //int cWidth = get_char_width ();
+    //int cHeight = get_char_height ();
+
+    //int is_transparent = transparent;  // from parameters.
+    //int is_transparent = TRUE;
+
+    //#todo
+    unsigned int __fg_color = fg_color;
+    unsigned int __bg_color = bg_color;
+    //unsigned int __fg_color = color;
+    //unsigned int __bg_color = color;
+
+    if ((void *) string == NULL)
+        return;
+    if (*string == 0)
+        return;
+
+// #fail
+// Char width
+    //if ( cWidth == 0 || cHeight == 0 )
+    if (cWidth == 0){
+        //panic ("grDrawString: cWidth");
+        //#debug
+        //gde_message_box (3, "xxx","dtext-draw_string: cWidth");
+        printf ("grDrawString: cWidth\n");
+        while(1){
+        };
+    }
+
+    //int size = sizeof(string);  
+    //for ( Index=0; Index<size; Index++ )
+
+// Draw
+// see: char.c
+
+    for ( Index=0; string[Index] != 0; Index++ )
+    {
+        // not transparent.
+        /*
+        if (is_transparent != TRUE)
+        {
+            grBackbufferDrawChar( 
+                x, 
+                y,
+                string[Index],
+                (unsigned int) __fg_color,     // fg color
+                (unsigned int) __bg_color );   // bg color
+        }
+        */
+
+        // transparent
+        //if (is_transparent == TRUE)
+        //{
+            //grBackbufferDrawCharTransparent ( 
+            //    x, y, 
+            //    (unsigned int) __fg_color, 
+            //    string[Index] );
+            /*
+            grBackbufferDrawCharTransparent2 ( 
+                x, y, 
+                (unsigned int) __fg_color, 
+                string[Index],
+                FontInitialization.address );
+            */
+         //}
+
+            dc_drawchar (
+                (struct dccanvas_d *) dc, 
+                x, 
+                y,  
+                string[Index],  //c
+                __fg_color,  //fgcolor
+                __bg_color,  //bgcolor
+                rop 
+            );
+
+        // gradient
+        //if( string_flags & ? ){
+        //grBackbufferDrawCharTransparent ( 
+            //x, y, 
+            //(unsigned int) interpolate_color(COLOR_BLACK, __fg_color, x), 
+            //string[Index] );
+        //}
+
+        x += cWidth;
+    };
+}
+
+
+
+
 // grDrawString:
-// Draw a string on the screen. 
+// Draw a string into the backbuffer 
 // No clipping
 void 
 grDrawString ( 

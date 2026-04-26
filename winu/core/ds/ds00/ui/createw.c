@@ -619,7 +619,7 @@ struct gws_window_d *do_create_titlebar(
     const int is_fullscreen = (parent->state == WINDOW_STATE_FULL); 
     const int is_maximized = (parent->state == WINDOW_STATE_MAXIMIZED);
 
-// Use parent->border_size (must be set in doCreateWindowFrame before this call) 
+// Use parent->border_size (must be set in doCreateAndDrawWindowFrame before this call) 
     unsigned long b = parent->Border.border_size;
 
     TitleBarLeft  = b;
@@ -656,7 +656,7 @@ struct gws_window_d *do_create_titlebar(
     }
 
     tbWindow = 
-       (void *) doCreateWindow ( 
+       (void *) doCreateAndDrawWindow ( 
                 WT_TITLEBAR, 
                 MyStyle, 
                 1, 
@@ -845,7 +845,7 @@ struct gws_window_d *do_create_titlebar(
     return (struct gws_window_d *) tbWindow;
 }
 
-// doCreateWindowFrame:
+// doCreateAndDrawWindowFrame:
 // Called by CreateWindow in createw.c
 // #importante:
 // Essa rotina será chamada depois que criarmos uma janela básica,
@@ -873,8 +873,9 @@ struct gws_window_d *do_create_titlebar(
 // 0   = ok, no erros;
 // < 0 = not ok. something is wrong.
 
+// Creator and drawer.
 int 
-doCreateWindowFrame ( 
+doCreateAndDrawWindowFrame ( 
     struct gws_window_d *parent,
     struct gws_window_d *window,
     unsigned long border_size,
@@ -963,7 +964,7 @@ doCreateWindowFrame (
 
 // ---- check parent ---------------
     if ((void*) parent == NULL){
-        //server_debug_print ("doCreateWindowFrame: [FAIL] parent\n");
+        //server_debug_print ("doCreateAndDrawWindowFrame: [FAIL] parent\n");
         goto fail;
     }
     if (parent->used != TRUE || parent->magic != 1234){
@@ -972,7 +973,7 @@ doCreateWindowFrame (
 
 // ---- check window ---------------
     if ((void*) window == NULL){
-        //server_debug_print ("doCreateWindowFrame: [FAIL] window\n");
+        //server_debug_print ("doCreateAndDrawWindowFrame: [FAIL] window\n");
         goto fail;
     }
     if (window->used != TRUE || window->magic != 1234){
@@ -1215,7 +1216,7 @@ doCreateWindowFrame (
             // Register window
             id = (int) RegisterWindow(tbWindow);
             if (id<0){
-                //server_debug_print ("doCreateWindowFrame: Couldn't register window\n");
+                //server_debug_print ("doCreateAndDrawWindowFrame: Couldn't register window\n");
                 goto fail;
             }
             // Add it to the list of childs
@@ -1276,7 +1277,7 @@ doCreateWindowFrame (
             //while(1){}
             
             sbWindow = 
-                (void *) doCreateWindow ( 
+                (void *) doCreateAndDrawWindow ( 
                              WT_SIMPLE, 
                              0, // Style 
                              1, 
@@ -1294,7 +1295,7 @@ doCreateWindowFrame (
             window->rcClient.height -= window->statusbar_height;
 
             if ((void *) sbWindow == NULL){
-                //server_debug_print ("doCreateWindowFrame: sbWindow fail \n");
+                //server_debug_print ("doCreateAndDrawWindowFrame: sbWindow fail \n");
                 goto fail;
             }
             sbWindow->type = WT_SIMPLE;
@@ -1303,7 +1304,7 @@ doCreateWindowFrame (
             // Register window
             id = (int) RegisterWindow(sbWindow);
             if (id<0){
-                //server_debug_print ("doCreateWindowFrame: Couldn't register window\n");
+                //server_debug_print ("doCreateAndDrawWindowFrame: Couldn't register window\n");
                 goto fail;
             }
             // Add it to the list of childs
@@ -1365,7 +1366,7 @@ fail:
     return (int) (-1);
 }
 
-// doCreateWindow:
+// doCreateAndDrawWindow:
 // Create a new window object and set up its position, size, and frame.
 //
 // IN:
@@ -1383,7 +1384,10 @@ fail:
 //   ROP Raster operations 
 // OUT:
 //   Returns pointer to new window structure or NULL on failure.
-void *doCreateWindow ( 
+
+// Creator and drawer.
+// It creates the window structure.
+void *doCreateAndDrawWindow ( 
     unsigned long type, 
     unsigned long style,
     unsigned long status,
@@ -1421,7 +1425,7 @@ void *doCreateWindow (
 
     if (type == WT_OVERLAPPED)
     {
-        printf ("doCreateWindow: [ERROR] This function do not create WT_OVERLAPPED windows\n");
+        printf ("doCreateAndDrawWindow: [ERROR] This function do not create WT_OVERLAPPED windows\n");
         //#debug
         exit(0); 
     }
@@ -1546,7 +1550,7 @@ void *doCreateWindow (
     unsigned int buttonBorder_br1_color=0;  // br1 most inner
     unsigned int buttonBorder_outer_color=0;  //Essa cor muda de acordo com o foco 
 
-    //debug_print ("doCreateWindow:\n");
+    //debug_print ("doCreateAndDrawWindow:\n");
 
 // ROP (Raster Operations)
 // 0 means that there is no ROP. 
@@ -1722,10 +1726,10 @@ void *doCreateWindow (
 // state when the window is actually a button.
 // -------------------------------------------------------------
 
-     int ButtonState = BS_NULL;
-     if (type == WT_BUTTON){
+    int ButtonState = BS_NULL;
+    if (type == WT_BUTTON){
         ButtonState = (int) (status & 0xFFFFFFFF);
-     }
+    }
 
 // Colors:
 // Background, client-area bg, bg when mouse hover.
@@ -2483,8 +2487,8 @@ void *doCreateWindow (
     // We need to work on this case.
 
     default:
-        debug_print("doCreateWindow: [DEBUG] default\n");
-             printf("doCreateWindow: [DEBUG] default\n");
+        debug_print("doCreateAndDrawWindow: [DEBUG] default\n");
+             printf("doCreateAndDrawWindow: [DEBUG] default\n");
         while (1){
         };
         //return NULL;
@@ -2891,7 +2895,7 @@ void *doCreateWindow (
     return (void *) window;
 
 fail:
-    debug_print ("doCreateWindow: Fail\n");
+    debug_print ("doCreateAndDrawWindow: Fail\n");
     return NULL;
 }
 
@@ -2902,6 +2906,7 @@ fail:
 // when the dispatcher calls the serviceCreateWindow() sevice in main.c.
 // It also can be called internally by the server.
 // A child window will have its position relative to the parent window's client area.
+
 
 void *CreateWindow ( 
     unsigned long type, 
@@ -3052,7 +3057,7 @@ void *CreateWindow (
     if (type == WT_SIMPLE)
     {
         __w = 
-            (void *) doCreateWindow ( 
+            (void *) doCreateAndDrawWindow ( 
                         WT_SIMPLE, style, status, state, (char *) _name,
                         x, y, width, height, 
                         (struct gws_window_d *) pWindow, 
@@ -3130,7 +3135,7 @@ void *CreateWindow (
         // Create a window using the WT_SIMPLE type and 
         // change it to WT_OVERLAPPED later.
         __w = 
-            (void *) doCreateWindow ( 
+            (void *) doCreateAndDrawWindow ( 
                         WT_SIMPLE, style, status, state, (char *) _name,
                         x, y, width, height, 
                         (struct gws_window_d *) pWindow, 
@@ -3139,7 +3144,7 @@ void *CreateWindow (
                         (unsigned long) __rop_flags ); 
 
         if ((void *) __w == NULL){
-            //server_debug_print ("CreateWindow: doCreateWindow fail\n");
+            //server_debug_print ("CreateWindow: doCreateAndDrawWindow fail\n");
             goto fail;
         }
         __w->type = WT_OVERLAPPED;  // Change the type back to overlapped
@@ -3157,7 +3162,7 @@ void *CreateWindow (
     if (type == WT_POPUP)
     {
         __w = 
-            (void *) doCreateWindow ( 
+            (void *) doCreateAndDrawWindow ( 
                         WT_POPUP, style, status, state, (char *) _name,
                         x, y, width, height, 
                         (struct gws_window_d *) pWindow, 
@@ -3194,7 +3199,7 @@ void *CreateWindow (
         }
 
         __w = 
-            (void *) doCreateWindow ( 
+            (void *) doCreateAndDrawWindow ( 
                         WT_SIMPLE, style, status, state, (char *) _name, 
                         x, y, width, height, 
                         (struct gws_window_d *) pWindow, 
@@ -3250,7 +3255,7 @@ void *CreateWindow (
         }
 
         __w = 
-            (void *) doCreateWindow ( 
+            (void *) doCreateAndDrawWindow ( 
                         WT_BUTTON, 
                         style,
                         status,  // #bugbug status (Button state)
@@ -3263,7 +3268,7 @@ void *CreateWindow (
                         (unsigned long) __rop_flags );
 
          if ((void *) __w == NULL){
-            //server_debug_print ("CreateWindow: doCreateWindow fail\n");
+            //server_debug_print ("CreateWindow: doCreateAndDrawWindow fail\n");
             goto fail;
          }
 
@@ -3282,7 +3287,7 @@ void *CreateWindow (
     if (type == WT_ICON)
     {
         __w = 
-            (void *) doCreateWindow ( 
+            (void *) doCreateAndDrawWindow ( 
                         WT_SIMPLE, style, status, state, (char *) _name,
                         x, y, width, height, 
                         (struct gws_window_d *) pWindow, 
@@ -3291,7 +3296,7 @@ void *CreateWindow (
                         (unsigned long) __rop_flags );  
 
         if ((void *) __w == NULL){
-            //server_debug_print("CreateWindow: doCreateWindow fail\n");
+            //server_debug_print("CreateWindow: doCreateAndDrawWindow fail\n");
             goto fail;
         }
 
@@ -3336,7 +3341,7 @@ void *CreateWindow (
 // (Borders for the frame)
 // We already have the shadow and 
 // the background for the frame.
-// These were created by doCreateWindow.
+// These were created by doCreateAndDrawWindow.
 // #todo:
 // Lembrando que frame é coisa do wm.
 // Porém tem algumas coisas que o display server faz,
@@ -3459,7 +3464,7 @@ draw_frame:
     {
         if ((void*) __w != NULL)
         {
-            doCreateWindowFrame ( 
+            doCreateAndDrawWindowFrame ( 
                 (struct gws_window_d *) pWindow,
                 (struct gws_window_d *) __w, 
                 BorderSize,

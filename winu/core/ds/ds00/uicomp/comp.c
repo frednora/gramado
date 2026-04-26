@@ -465,9 +465,20 @@ void comp_draw_into_spare_buffer(void)
     spare_putpixel0(0xFFFF0000, 10, 10, ROP_COPY);
     spare_putpixel0(0xFFFF0000,  1, 10, ROP_COPY);
 
-    // #test
-    dc_drawchar(spare_dccanvas, 10, 2, 'H', COLOR_YELLOW, COLOR_BLUE, ROP_COPY);
-    dc_drawchar(spare_dccanvas, 18, 2, 'i', COLOR_YELLOW, COLOR_BLUE, ROP_COPY);
+    // #test: Draw char
+    // dc_drawchar(spare_dccanvas, 10, 2, 'H', COLOR_YELLOW, COLOR_BLUE, ROP_COPY);
+    // dc_drawchar(spare_dccanvas, 18, 2, 'i', COLOR_YELLOW, COLOR_BLUE, ROP_COPY);
+
+    // Draw string
+    dc_drawstring ( 
+        spare_dccanvas,  //dc 
+        10,  // x
+        2,  // y
+        COLOR_YELLOW,  //fg_color
+        COLOR_BLUE,    //bg_color
+        ROP_COPY,  //rop
+        "Spare buffer" 
+    );
 
 /*
     spare_putpixel0(
@@ -1151,7 +1162,7 @@ void realCompositor(void)
 // Redraw root window, but do not show it yet.
 // #todo: We're redrawing for now ... but the plain is copying it from its
 
-    if (CONFIG_TEST_SPARE_BUFFER == 1)
+    if (CONFIG_TEST_SPARE_BUFFER == 1 || CONFIG_USE_REAL_COMPOSITOR)
     {
         if (need_rootwindow_redraw == TRUE)
         {
@@ -1189,24 +1200,30 @@ void realCompositor(void)
                             if (spare_dccanvas->magic == 1234)
                             {
                                 // Width (clipping)
-                                my_width = spare_dccanvas->device_width;
-                                if (spare_dccanvas->device_width > w->width)
-                                    my_width = w->width;
+                                //my_width = spare_dccanvas->device_width;
+                                //if (spare_dccanvas->device_width > w->width)
+                                //    my_width = w->width;
 
                                 // Height (clipping)
-                                my_height = spare_dccanvas->device_height;
-                                if (spare_dccanvas->device_height > w->height)
-                                    my_height = w->height;
+                                //my_height = spare_dccanvas->device_height;
+                                //if (spare_dccanvas->device_height > w->height)
+                                    //my_height = w->height;
+
+                                //my_width = w->width >> 1;
+                                //my_height = 26;
+
+                                my_width = w->width - (w->width/3);
+                                my_height = 26;
 
                                 if (w->type == WT_OVERLAPPED)
                                 {
                                     comp_blit_canvas_to_canvas(
                                         CANVAS_SPAREBUFFER,    // source
                                         CANVAS_BACKBUFFER,     // destination
-                                        w->absolute_x +4 +36, 
-                                        w->absolute_y +4,
-                                        my_width >> 1,  // width 
-                                        26//my_height  // height
+                                        w->absolute_x, 
+                                        w->absolute_y,
+                                        my_width,  // width 
+                                        my_height  // height
                                     );
                                 }
                             // ...

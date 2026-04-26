@@ -1719,8 +1719,7 @@ rectBackbufferDrawRectangle0 (
         rect.top++;
     };
 
-// Invalidate
-    rect.dirty = TRUE;
+    rect.dirty = TRUE;  // Invalidate
 done:
     return;
 }

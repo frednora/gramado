@@ -4919,7 +4919,11 @@ void wm_enter_fullscreen_mode(void)
     WindowManager.fullscreen_window = (struct gws_window_d *) w;
     WindowManager.is_fullscreen = TRUE;
 
-// Update window
+
+// Redraw bg
+    redraw_window(__root_window,FALSE);
+
+// Update window (redraw)
     update_window(w,TRUE);
 
 // New keyboard and mouse owner

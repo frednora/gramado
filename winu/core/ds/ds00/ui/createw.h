@@ -26,7 +26,7 @@ struct gws_window_d *do_create_titlebar(
 // ou oferece recursos que serão usados pelo wm.
 // In: style = estilo do frame.
 int 
-doCreateWindowFrame ( 
+doCreateAndDrawWindowFrame ( 
     struct gws_window_d *parent,
     struct gws_window_d *window,
     unsigned long border_size,
@@ -44,7 +44,7 @@ doCreateWindowFrame (
 
 // Low level
 // Called by CreateWindow().
-void *doCreateWindow ( 
+void *doCreateAndDrawWindow ( 
     unsigned long type, 
     unsigned long style,
     unsigned long status, 
