@@ -1112,6 +1112,12 @@ int serviceAsyncCommand(void)
         dock_active_window(subrequest_id);
         break;
 
+    // Client is sharing a surface address
+    case 100:
+        // printf("ds00: Shared address {%x}\n", data);
+        break;
+
+
     // 1000 - Put a pixel into the backbuffer
     // IN: color, x, y, rop
     // #todo: Explain it better.

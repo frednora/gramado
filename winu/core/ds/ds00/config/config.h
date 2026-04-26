@@ -32,8 +32,9 @@
 
 
 //
-// Off-screen buffers
+// Off-screen buffers (tests)
 //
+
 
 // #test
 // Allow the creation and usage of the spare buffer for composition

@@ -721,8 +721,6 @@ static int __hit_test_icon(unsigned long rel_mx, unsigned long rel_my)
     return (int) -1;
 }
 
-
-// Process event that came from the server.
 static int 
 tbProcedure(
     int fd, 
@@ -877,7 +875,7 @@ tbProcedure(
 
         // #test
         case MSG_MOUSEMOVE:
-            //printf("%d %d\n", long1, long2);
+            // printf("%d %d\n", long1, long2);
             IconId = (int) __hit_test_icon(long1, long2);
             if (IconId > 0)
                 __hover_icon_id = IconId;

@@ -24,6 +24,7 @@
 #define HIT_NONE       0
 #define HIT_FRAME      1   // Non-client area (chrome, borders, titlebar)
 #define HIT_CLIENT     2   // Client area
+#define HIT_DESKTOP    3   // Not inside a window
 
 struct wproxy_d 
 {

@@ -590,7 +590,13 @@ int main(int argc, char *argv[])
     gws_refresh_window(client_fd, main_window);
 
 // =============================
+// #test
+// Sending to the server the surface shared address.
+    //void *sh_add = (void*) malloc(32*1024);  // 32KB
+    //gws_async_command(client_fd, 100, 0, sh_add);
 
+
+// =============================
 
     //#debug
     //gws_refresh_window(client_fd, main_window);

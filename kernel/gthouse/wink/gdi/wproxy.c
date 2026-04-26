@@ -68,6 +68,12 @@ fail:
 // return the one that is under the mouse cursor.
 // It also says if the mouse is over the frame/chrome or 
 // the client area of the window.
+
+// Hit test priority:
+// 1) Foreground application windows.
+// 2) Taskbar/shell app (if the pointer is inside its rectangle).
+// 3) Desktop background (if neither of the above applies).
+
 void wproxy_hit_test00(unsigned long x, unsigned long y)
 {
     struct wproxy_d *hover = NULL;
@@ -152,10 +158,27 @@ void wproxy_hit_test00(unsigned long x, unsigned long y)
     };
 
 // New hover
-    if (hover != wproxy_hover)
-        wproxy_hover = hover;
-}
+    //if (hover != wproxy_hover)
+        //wproxy_hover = hover;
 
+
+// After walking the list
+    if (hover != NULL) {
+        wproxy_hover = hover;
+    } else {
+
+        if ((void*) wproxy_shell != NULL)
+        {
+            if (wproxy_shell->magic == 1234)
+            {
+                // Fallback: route to taskbar as desktop controller
+                wproxy_hover = wproxy_shell;
+                if (wproxy_hover != NULL)
+                    wproxy_hover->hit_area = HIT_DESKTOP;
+            }
+        }
+    }
+}
 
 // Create a window proxy object and add it into the list.
 struct wproxy_d *wproxyCreateObject(void)

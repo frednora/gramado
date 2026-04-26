@@ -32,7 +32,8 @@ char *spare_128kb_buffer_p;
 
 struct dccanvas_d *spare_dccanvas;
 struct dccanvas_d *test00_dccanvas;
-
+struct dccanvas_d *bg_dccanvas;
+// 
 
 // #todo
 // Create some configuration globals here
@@ -229,6 +230,68 @@ void *comp_create_slab_spare_128kb_buffer(size_t size_in_kb)
     return NULL;
 }
 
+// Create a dc for a buffer given its size in KB.
+struct dccanvas_d *comp_create_dc_for_a_buffer(
+    char *buffer_address, size_t size_in_kb )
+{
+
+// Device info
+// #bugbug
+// If you ever change resolution or bpp, recompute the spare size before writing.
+    unsigned long DeviceWidth  = (unsigned long) server_get_system_metrics(1);
+    unsigned long DeviceHeight = (unsigned long) server_get_system_metrics(2);
+    // Bits per pixel
+    unsigned long DeviceBPP    = (unsigned long) server_get_system_metrics(9);
+
+// Pitch
+// Backbuffer visible area. (Screen size)
+    unsigned long Pitch = (DeviceWidth * (DeviceBPP/8));
+
+// new area
+    unsigned long TotalSpareInBytes = (size_in_kb * 1024);
+
+    // Allocate a new buffer in heap memory
+    //char *buf = (char *) malloc(TotalSpareInBytes);
+    char *buf = (char *) buffer_address;
+    if (!buf) 
+        return NULL;
+
+    //----------------------------
+
+    struct dccanvas_d *tmp_dccanvas;
+
+    // --- Setup clipping info for spare buffer ---
+
+    unsigned long BufferClipInfo_bpp    = DeviceBPP;  // bytes per pixel
+    unsigned long BufferClipInfo_pitch  = Pitch;      // Same of the device
+
+    unsigned long BufferClipInfo_width  = DeviceWidth;   // align with OS-supported width
+    unsigned long BufferClipInfo_height = (TotalSpareInBytes/Pitch); 
+
+    // -------------------------------------------
+
+    tmp_dccanvas = 
+        (void *) libgd_create_dc (
+            (char *) buf,
+            BufferClipInfo_width,
+            BufferClipInfo_height,
+            BufferClipInfo_bpp      // bits per pixel
+        );
+
+    if ((void*)tmp_dccanvas == NULL){
+        return NULL;
+    }
+    if (tmp_dccanvas->magic != 1234){
+        return NULL;
+    }
+
+    return (void*) tmp_dccanvas;  // return dc
+
+// fail
+fail:
+    return NULL;
+}
+
 struct dccanvas_d *comp_create_dc_and_allocate_buffer(size_t size_in_kb)
 {
 
@@ -322,6 +385,8 @@ struct canvas_information_d *compCreateNewCanvas(struct dccanvas_d *dc)
 
     ci_new->base = (void*) dc->data; 
 
+    ci_new->dc = (struct dccanvas_d *) dc;
+
     // It belongs to the root window for now.
     ci_new->owner_window = __root_window; 
     ci_new->used = TRUE;
@@ -369,6 +434,8 @@ struct canvas_information_d *compCreateCanvasUsingSpareBuffer(void)
     ci_sparebuffer->bpp = SpareBufferClipInfo.bpp; 
     ci_sparebuffer->pitch = SpareBufferClipInfo.pitch; 
     ci_sparebuffer->base = (void*) spare_128kb_buffer_p; 
+
+    ci_sparebuffer->dc = NULL;  // No dc for now
 
     // It belongs to the root window for now.
     ci_sparebuffer->owner_window = __root_window; 
@@ -1217,6 +1284,7 @@ void realCompositor(void)
 
                                 if (w->type == WT_OVERLAPPED)
                                 {
+                                    // Fake titlebar
                                     comp_blit_canvas_to_canvas(
                                         CANVAS_SPAREBUFFER,    // source
                                         CANVAS_BACKBUFFER,     // destination
@@ -1225,6 +1293,24 @@ void realCompositor(void)
                                         my_width,  // width 
                                         my_height  // height
                                     );
+
+                                    
+                                    /*
+                                    // #todo:
+                                    // Here we can flush the client area,
+                                    // After the moment the client finished 
+                                    // the painting
+                                    comp_blit_canvas_to_canvas(
+                                        CANVAS_BG00,    // source
+                                        CANVAS_BACKBUFFER,     // destination
+                                        w->absolute_x, 
+                                        w->absolute_y,
+                                        my_width,  // width 
+                                        my_height  // height
+                                    );
+                                    */
+                                    
+
                                 }
                             // ...
                             }
@@ -1246,7 +1332,7 @@ void realCompositor(void)
 
                         // 6 is the index of our new test canvas.
                         comp_blit_canvas_to_canvas(
-                            CANVAS_TEST00, //CANVAS_SPAREBUFFER,  // source
+                            CANVAS_TEST00,       // source
                             CANVAS_BACKBUFFER,   // destination
                             w->absolute_x +4, 
                             w->absolute_y +4,
@@ -1513,15 +1599,16 @@ This was the first experiment in order to have a future
 // ---------------------------------
 // the dc
     struct dccanvas_d *dc;
-    dc = (struct dccanvas_d *) comp_create_dc_and_allocate_buffer(64);
-    if ((void*)dc == NULL)
-    {
+    dc = (struct dccanvas_d *) comp_create_dc_and_allocate_buffer(64);  //64KB
+    if ((void*)dc == NULL){
         return NULL;
     }
-    if (dc->magic != 1234)
-    {
+    if (dc->magic != 1234){
         return NULL;
     }
+
+// Associating the new dc with our canvas info structure.
+    ci_tmp->dc = (struct dccanvas_d *) dc;
 
 // Save the dc for future usage
     test00_dccanvas = (struct dccanvas_d *) dc;
@@ -1576,6 +1663,28 @@ This was the first experiment in order to have a future
         ROP_COPY );
 
 // ...
+
+
+// ============================================
+// #test
+// Dirty creation of canvas for shared bg
+
+    struct dccanvas_d *dc88;
+    dc88 = (struct dccanvas_d *) comp_create_dc_and_allocate_buffer(64);  //64KB
+    if ((void*) dc88 == NULL)
+        return -1;
+    bg_dccanvas = dc88;   // Global for painting routines
+
+    struct canvas_information_d *ci88;
+    ci88 = (void *) compCreateNewCanvas(dc88);
+    if ((void*) ci88 == NULL)
+        return -1;
+
+    dc_drawchar( bg_dccanvas, 2, 2, 'z', COLOR_YELLOW, COLOR_RED, ROP_COPY );
+
+    // Saving into the list for testing purpose
+    canvasList[CANVAS_BG00] = (unsigned long) ci88;
+ 
 
     return 0;
 }

@@ -257,6 +257,7 @@ extern int use_vsync;
 #define CANVAS_SPAREBUFFER     2  // spare buffer
 
 #define CANVAS_TEST00  6
+#define CANVAS_BG00  7
 
 // Each window needs to have an index for one of this structurea.
 // This way the display server will know the information about 
@@ -274,6 +275,8 @@ struct canvas_information_d
     unsigned long pitch;   // bytes per row (width * bytes_per_pixel)
 
     void *base;            // pointer to buffer memory
+
+    struct dccanvas_d *dc;  // DC associated with this canvas information
 
     struct gws_window_d *owner_window;
 };

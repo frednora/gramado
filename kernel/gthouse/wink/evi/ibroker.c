@@ -3855,6 +3855,38 @@ wmMouseEvent(
                             (unsigned long) rel_long2 );
                         return 0;
 
+                    // Send it only to the taskbar
+                    } else if (wproxy_hover->hit_area == HIT_DESKTOP) {
+
+                        rel_long1 = long1;
+                        rel_long2 = long2;
+
+                        if (wproxy_hover != wproxy_shell)
+                            return 0;
+
+
+                        // We need more parameters for this kind of message.
+                        // We need to change the event loop 
+                        // in taskbar in order to handle the extra parameters
+                        
+                        //ipc_post_message_to_tid(
+                            //(tid_t) __HARDWARE_TID, 
+                            //(tid_t) wproxy_hover->tid,
+                            //event_id, 
+                            //(unsigned long) rel_long1, 
+                            //(unsigned long) rel_long2 );
+
+                        //ipc_post_message_to_tid2 (
+                        //    (tid_t) __HARDWARE_TID, 
+                        //    (tid_t) wproxy_hover->tid,
+                        //    event_id, 
+                        //    (unsigned long) rel_long1, 
+                        //    (unsigned long) rel_long2,
+                        //    1234,
+                        //    4321 );
+
+                        return 0;
+
                     } else {
                         // Abort?
                         return 0;
