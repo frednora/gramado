@@ -185,8 +185,9 @@ void pit_speaker_off (void)
  *     but if a spawn occurs here, the spawn routine must send EOI itself.
  */
 
-__VOID_IRQ 
-irq0_TIMER (void)
+
+// __VOID_IRQ
+unsigned long irq0_TIMER(void)
 {
 
 // Calling the timer routine.
@@ -233,7 +234,8 @@ irq0_TIMER (void)
 // For now the context is saved only on global variables. That is the moment 
 // when the context will be saved into the thread structure.
 // See: disp/ts.c
-    tsTaskSwitch();
+    unsigned long rv = 0;
+    rv = (unsigned long) tsTaskSwitch();
 
 // Reset the EOI state flag. 
 // After task switching, the spawn routine no longer needs to send EOI. 
@@ -243,6 +245,11 @@ irq0_TIMER (void)
 
     if (CONFIG_USE_LAPIC_TIMER_FOR_TS == 1)
         local_apic_eoi(0);  // BSP
+
+// Return the flags to the assembly code.
+// Ex:
+// bit 7: Skip CR3 reload (same thread continues)
+    return (unsigned long) rv;
 }
 
 

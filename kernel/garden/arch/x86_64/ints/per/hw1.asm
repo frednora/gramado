@@ -267,6 +267,20 @@ PeripheralHall_irq0:
     call r10
     ;call _irq0_TIMER
 
+; Check the return value.
+; 0x80 is the flag that tells us to skip the cr3 reload.
+; bit 7: Skip CR3 reload (same thread continues)
+
+    and rax, 0x80     ; isolate the skip bit
+    cmp rax, 0x80
+    je .SkipCR3Reload
+
+    mov rax, cr3
+    IODELAY
+    mov cr3, rax
+
+.SkipCR3Reload:
+
 ; FPU
     fxrstor [_context_fpu_buffer]
 

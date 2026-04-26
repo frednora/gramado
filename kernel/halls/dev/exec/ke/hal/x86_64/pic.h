@@ -56,8 +56,8 @@ struct pic_d
 //
 
 // See: x86/pit.c
-__VOID_IRQ 
-irq0_TIMER(void);
+//__VOID_IRQ 
+unsigned long irq0_TIMER(void);
 
 // See: keyboard.c
 __VOID_IRQ 

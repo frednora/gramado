@@ -14,8 +14,9 @@ unsigned long task_switch_status=0; // locked
 
 static void __tsOnFinishedExecuting(struct thread_d *t);
 static void __tsCry(unsigned long flags);
-// Task switching implementation.
-static void __task_switch (void);
+
+// Task switching implementation
+static unsigned long __task_switch(void);
 
 //
 // =============================================
@@ -251,10 +252,14 @@ static void __tsOnFinishedExecuting(struct thread_d *t)
  * + Select the next thread and dispatch
  * + Return to _irq0
  */
-// Worker:
+
+ // Worker:
 // Called by psTaskSwitch()
-static void __task_switch(void)
+
+static unsigned long __task_switch(void)
 {
+    //unsigned long rv = 0;
+
 // Current
     struct thread_d  *CurrentThread;
     struct te_d *CurrentProcess;
@@ -273,10 +278,10 @@ static void __task_switch(void)
 // Current thread
 //
 
-    if ( current_thread < 0 || current_thread >= THREAD_COUNT_MAX ){
-        panic ("ts: current_thread\n");
+    if (current_thread < 0 || current_thread >= THREAD_COUNT_MAX){
+        panic("ts: current_thread\n");
     }
-// structure
+    // structure
     CurrentThread = (void *) threadList[current_thread]; 
     if ((void *) CurrentThread == NULL){
         panic ("ts: CurrentThread\n");
@@ -284,6 +289,7 @@ static void __task_switch(void)
     if ( CurrentThread->used != TRUE || CurrentThread->magic != 1234 ){
         panic ("ts: CurrentThread validation\n");
     }
+
 // =======================================================
 
 // Current process
@@ -339,10 +345,14 @@ static void __task_switch(void)
 // The ts needs to be in an UNLOCKED state.
 
 // Locked? Return without saving the context.
-    if (task_switch_status == LOCKED){
+    if (task_switch_status == LOCKED)
+    {
         IncrementDispatcherCount (SELECT_CURRENT_COUNT);
         debug_print ("ts: Locked\n");
-        return; 
+        
+        // #ps: There was no taskswitching,
+        // but we will not set the flag 0x80 here.
+        return (unsigned long) 0x00;
     }
 
 // Not Unlocked?
@@ -414,20 +424,19 @@ static void __task_switch(void)
 // :: ----
 // Still in quantum:
 // The thread still have some processing time in its quantum value.
-// Let's return and allow the thread to run for a while.
+// Let's return and allow the thread to run for again.
 
     if (CurrentThread->runningCount < CurrentThread->quantum){
 
         // Yield in progress. 
-        // Esgota o quantum e ela saírá naturalmente
-        // no próximo tick.
+        // Esgota o quantum e ela sairá naturalmente no próximo tick.
         // Revertemos a flag acionada em schedi.c.
 
         // :: yield - Force quantum end.
         if ( CurrentThread->state == RUNNING && 
              CurrentThread->Deferred.yield_in_progress == TRUE )
         {
-            CurrentThread->runningCount = CurrentThread->quantum;  // Esgoto
+            CurrentThread->runningCount = CurrentThread->quantum;  // Esgota
             CurrentThread->Deferred.yield_in_progress = FALSE;
         }
 
@@ -446,9 +455,15 @@ static void __task_switch(void)
         }
 
         IncrementDispatcherCount (SELECT_CURRENT_COUNT);
+
         //debug_print (" The same again $\n");
-        //debug_print ("s");  // the same again
-        return; 
+
+        // #important:
+        // There was no taskswitching.
+        // Here is the perfect moment to return the the flag 0x80,
+        // that tells to Assembly code to skip the cr3 reload.
+
+        return (unsigned long) 0x80;
 
 // :: ----
 // End of quantum:
@@ -788,7 +803,7 @@ dispatch_current:
     if ( targetthread_OwnerPID < 0 || 
          targetthread_OwnerPID >= THREAD_COUNT_MAX )
     {
-       printk ("ts: targetthread_OwnerPID ERROR\n", targetthread_OwnerPID );
+       printk ("ts: targetthread_OwnerPID ERROR\n", targetthread_OwnerPID);
        die();
     }
 
@@ -817,7 +832,7 @@ dispatch_current:
 
 // check pml4_PA
     if ( (unsigned long) TargetProcess->pml4_PA == 0 ){
-        printk ("ts: Process %s pml4 fail\n", TargetProcess->name );
+        printk ("ts: Process %s pml4 fail\n", TargetProcess->name);
         die();
     }
 
@@ -826,7 +841,10 @@ dispatch_current:
     // current_process_pagedirectory_address = (unsigned long) P->DirectoryPA;
     // ?? = (unsigned long) P->pml4_PA;
 
-    return;
+// We had a taskswitching.
+// Let's return the flags with all bits unset.
+    return (unsigned long) 0;
+
 fail:
     panic ("ts: Unspected error\n");
 }
@@ -860,8 +878,9 @@ fail:
 // Called by irq0_TIMER() int pit.c.
 // See also: hw.asm
 
-void tsTaskSwitch(void)
+unsigned long tsTaskSwitch(void)
 {
+    unsigned long rv = 0;
     pid_t current_process_pid = -1;
     pid_t ws_pid = -1;
 
@@ -879,8 +898,7 @@ void tsTaskSwitch(void)
     if ( current_process_pid < 0 || 
          current_process_pid >= PROCESS_COUNT_MAX )
     {
-        printk ("psTaskSwitch: current_process_pid %d", 
-            current_process_pid);
+        printk ("psTaskSwitch: current_process_pid %d", current_process_pid);
         die();
     }
 
@@ -889,7 +907,7 @@ void tsTaskSwitch(void)
 // This variable was set at the last release or the last spawn.
 // Global variable.
 
-    if ( current_thread < 0 || current_thread >= THREAD_COUNT_MAX )
+    if (current_thread < 0 || current_thread >= THREAD_COUNT_MAX)
     {
         printk ("psTaskSwitch: current_thread %d", current_thread); 
         die();
@@ -921,7 +939,8 @@ void tsTaskSwitch(void)
 */
 
 // The task switching routine
-    __task_switch();
+    rv = (unsigned long) __task_switch();
+
 
 /*
 My plain now is: 
@@ -947,8 +966,7 @@ so you don’t get duplicate deliveries. The thread can re‑arm later if it wan
 */
 
 
-    if ( current_thread < 0 || 
-         current_thread >= THREAD_COUNT_MAX )
+    if (current_thread < 0 || current_thread >= THREAD_COUNT_MAX)
     {
         printk ("psTaskSwitch: current_thread %d", current_thread); 
         die();
@@ -965,6 +983,8 @@ so you don’t get duplicate deliveries. The thread can re‑arm later if it wan
         ring3_callback_address = (unsigned long) t->cb_r3_address;
         t->callback_in_progress = TRUE;
     }
+
+    return (unsigned long) rv;
 }
 
 //

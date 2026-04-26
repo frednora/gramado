@@ -215,9 +215,9 @@ irq0_release:
 ; We flush TLB each tick; only do it when switching address spaces. 
 ; Otherwise it’s needless overhead.
 
-    mov RAX, CR3  
-    IODELAY 
-    mov CR3, RAX  
+    ;mov RAX, CR3  
+    ;IODELAY 
+    ;mov CR3, RAX  
 
 ; Wait TLB.
     ;IODELAY 
