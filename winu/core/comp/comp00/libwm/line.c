@@ -352,6 +352,45 @@ rectBackbufferDrawHorizontalLineInsideWindow(
 }
 
 
+// #not tested yet
+void 
+dc_draw_horizontal_line ( 
+    struct dccanvas_d *dc,
+    unsigned long x1,
+    unsigned long y, 
+    unsigned long x2, 
+    unsigned int color,
+    unsigned long rop_flags )
+{
+
+    if ((void*)dc == NULL)
+        return;
+
+// #todo
+// Maybe we need checking some limits here.
+    if (x1 > x2){
+        return;
+    }
+// IN: color, x, y, rop flags
+    while (x1 < x2)
+    {
+        //backbuffer_putpixel( color, x1, y, rop_flags ); 
+
+        // #test: New method with dc.
+        // IN: dc, color, x, y, rop
+        putpixel0(
+                dc,
+                color, 
+                x1, 
+                y, 
+                rop_flags );
+
+        x1++;
+    };
+}
+
+
+
 //
 // End
 //

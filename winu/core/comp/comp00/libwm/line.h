@@ -62,6 +62,16 @@ rectBackbufferDrawHorizontalLineInsideWindow(
     unsigned long rop_flags,
     int back_or_front );
 
+
+void 
+dc_draw_horizontal_line ( 
+    struct dccanvas_d *dc,
+    unsigned long x1,
+    unsigned long y, 
+    unsigned long x2, 
+    unsigned int color,
+    unsigned long rop_flags );
+
 #endif    
 
 //
