@@ -1,4 +1,15 @@
-# ds00 - Display server.
+# ds00 - Display server
+
+The goal here is building a compositor.
+
+```
+ comp/  - Compositor (server/compositor loop)
+        - The main loop is in comploop.c
+ libds/ - Library for the server (connections)
+ libos/ - OS dependencies
+ libwm/ - Library for the window manager
+ wm/    - Window manager
+```
 
 This is the main display server for Gramado OS.
 

@@ -3,7 +3,7 @@
 # This is a display server running in ring 3.
 # 2020 - Created by Fred Nora.
 
-linkTarget = DS00.BIN
+linkTarget = COMP00.BIN
 
 # See: https://linux.die.net/man/1/ld
 # -s --strip-all:   Omit all symbol information from the output file.
@@ -108,8 +108,6 @@ myObjects += uicomp.o
 
 myObjects += libds.o    
 
-myObjects += ds.o
-
 myObjects += main.o
 
 .PHONY: all all-c gws-link finalize clean
@@ -123,22 +121,22 @@ main.o:
 	$(CC) -c main.c $(CFLAGS) $(CINCLUDES) -o main.o
 
 # display server module
-	$(CC) -c ds.c $(CFLAGS) $(CINCLUDES) -o ds.o
+#	$(CC) -c comp/comploop.c $(CFLAGS) $(CINCLUDES) -o comploop.o
 
 all-c:
 
 # system deps
 	make -C libos/
 
-# window manager and drawing routines
-	make -C libui/
-	make -C ui/
-
-# desktop composition (core component)
-	make -C uicomp/
-
 # display server routines
 	make -C libds/
+
+# window manager and drawing routines
+	make -C libwm/
+	make -C wm/
+
+# desktop composition (core component)
+	make -C comp/
 
 gws-link:
 
@@ -169,19 +167,23 @@ gws-link:
 
 finalize:
 	cp $(linkTarget) bin/
+
 clean:
 	-rm *.o
-	-rm osdep/*.o
 	-rm comp/*.o
-	-rm libui/*.o
-	-rm ui/*.o
+	-rm libds/*.o
+	-rm libos/*.o
+	-rm libwm/*.o
+	-rm wm/*.o
 	-rm $(linkTarget)
+
 clean-all:
 	-rm *.o
-	-rm osdep/*.o
 	-rm comp/*.o
-	-rm libui/*.o
-	-rm ui/*.o
+	-rm libds/*.o
+	-rm libos/*.o
+	-rm libwm/*.o
+	-rm wm/*.o
 	-rm $(linkTarget)
 	-rm bin/*.BIN 
 

@@ -1,6 +1,5 @@
-# ds00/
-# Gramado display server.
-# DS00.BIN is the main display server for Gramado OS.
+# Gramado compositor/display server.
+# COMP00.BIN is the main display server for Gramado OS.
 # Created by Fred Nora.
 
 all:
@@ -14,17 +13,17 @@ all:
 	make -C gthouse/
 
 # Display servers
-	make -C ds00/
+	make -C comp00/
 
 # ps: Not time for more display servers.
 #	make -C ds01/
 
 clean:
-#	-rm -f ds00/*.o
+#	-rm -f comp00/*.o
 #	-rm -f ds0~1/*.o
-	-rm -f ds00/bin/*.BIN
+	-rm -f comp00/bin/*.BIN
 #	-rm -f ds01/bin/*.BIN
 
 clean-all:
-	-rm -f ds00/*.o
-	-rm -f ds00/bin/*.BIN
+	-rm -f comp00/*.o
+	-rm -f comp00/bin/*.BIN

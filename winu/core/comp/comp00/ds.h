@@ -20,52 +20,56 @@ extern int server_mode;  // DEMO ...
 #include <rtl/gramado.h>
 
 // Gramado Window System
-#include "ui/gws.h"
+#include "wm/gws.h"
 #include "libos/gramado/callback.h"
 
 // Configuration and debug support.
 #include "config/config.h"
 #include "api/protocol.h"
 #include "api/async.h"
-#include "libds/globals.h"
-#include "ui/colors.h"
-#include "ui/themes/honey.h"
+
+#include "libds/dsglob.h"
+#include "comp/compglob.h"
+
+#include "wm/colors.h"
+#include "wm/themes/honey.h"
+
 
 // #imported
 // Display device library.
 #include <libdisp.h>
 
-#include "libui/line.h"
+#include "libwm/line.h"
 
-#include "ui/wt.h"
-#include "ui/menu.h"
+#include "wm/wt.h"
+#include "wm/menu.h"
 //#include "zres/grinput.h"   //#test
-#include "ui/metrics.h"
+#include "wm/metrics.h"
 
 // #test: Create a room for rect support.
-#include "libui/rect.h"
+#include "libwm/rect.h"
 
-#include "ui/window.h"
-#include "ui/createw.h"
+#include "wm/window.h"
+#include "wm/createw.h"
 
 // Draw inside the windows.
-#include "libui/char.h"
-#include "libui/dtext.h"
+#include "libwm/char.h"
+#include "libwm/dtext.h"
 
-#include "ui/bar.h"    // Notification bar. (yellow)
-#include "ui/wa.h"     // Working Area
-#include "ui/swamp.h"  // Swamp
+#include "wm/bar.h"    // Notification bar. (yellow)
+#include "wm/wa.h"     // Working Area
+#include "wm/swamp.h"  // Swamp
 
-#include "ui/wm.h"
-#include "ui/wminput.h"
+#include "wm/wm.h"
+#include "wm/wminput.h"
 
-#include "libui/bitblt.h"
+#include "libwm/bitblt.h"
 
 // #suspended
-//#include "ui/desktop.h"
+//#include "wm/desktop.h"
 
-#include "ui/painter.h"
-#include "ui/bmp.h"
+#include "wm/painter.h"
+#include "wm/bmp.h"
 
 // h:0.0
 #include "libos/gramado/screen.h"   // X-like
@@ -75,34 +79,34 @@ extern int server_mode;  // DEMO ...
 #include "libos/gramado/surface.h"
 #include "libos/gramado/gramado.h"
 
-#include "ui/gui.h"
+#include "wm/gui.h"
 
 // Compositor
-#include "uicomp/comp.h"
+#include "comp/comp.h"
 
 // view inputs
-#include "ui/event.h"
+#include "wm/event.h"
 
 // #imported
 #include <grprim0.h>
 #include <libgr.h>
 
-#include "libui/transf.h"
-#include "libui/grprim.h"
-#include "libui/camera.h"
-#include "libui/proj.h"
+#include "libwm/transf.h"
+#include "libwm/grprim.h"
+#include "libwm/camera.h"
+#include "libwm/proj.h"
 
-#include "ui/sprite.h"
+#include "wm/sprite.h"
 
 // #demos/
-#include "ui/demos/demos.h"
-#include "ui/demos/cat.h"
-#include "ui/demos/poly00.h"
-#include "ui/demos/lin00.h"
-#include "ui/demos/tri00.h"
-#include "ui/demos/curve00.h"
+#include "wm/demos/demos.h"
+#include "wm/demos/cat.h"
+#include "wm/demos/poly00.h"
+#include "wm/demos/lin00.h"
+#include "wm/demos/tri00.h"
+#include "wm/demos/curve00.h"
 
-#include "ui/font.h"
+#include "wm/font.h"
 
 #include "libos/gramado/packet.h"
 #include "libos/gramado/connect.h"
@@ -124,6 +128,9 @@ extern int server_mode;  // DEMO ...
 // The services called by the dispacher.
 // It needs to be the last one.
 #include "api/service.h"
+
+#include "comp/comploop.h"
+
 
 struct gws_graphics_d
 {
@@ -240,7 +247,6 @@ void gwssrv_broadcast_close(void);
 
 void ServerShutdown(int server_fd);
 
-int ds_main (int argc, char **argv);
 
 //
 // End

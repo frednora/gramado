@@ -34,7 +34,7 @@ int InvalidLauncher = FALSE;
 
 static int isTimeToQuitCmdLine = FALSE;
 
-static const char *app1_name = "#ds00.bin";  // In DE/
+static const char *app1_name = "#comp00.bin";  // In DE/
 //static const char *app2_name = "???.bin";
 static const char *app3_name = "@netd.bin"; 
 static const char *app4_name = "net.bin";
@@ -47,9 +47,9 @@ static const char *app5_name = "shell.bin";
 // --tb - Launches the default taskbar application.
 // -?   - ...
 
-static const char *cmdline1 = "ds00 -1 -2 -3 --tb";
-//static const char *cmdline1 = "ds00 -1 -2 -3 --dm";
-static const char *cmdline2 = "ds00 -1 -2 -3 --tb";
+static const char *cmdline1 = "comp00 -1 -2 -3 --tb";
+//static const char *cmdline1 = "comp00 -1 -2 -3 --dm";
+static const char *cmdline2 = "comp00 -1 -2 -3 --tb";
 // ...
 
 struct init_d  Init;
@@ -203,7 +203,7 @@ static void do_help(void)
     printf ("HELP:\n");
     printf ("Commands: help, wsq, nsq, reboot, shutdown ...\n");
 // Launch the DE, Desktop Environment.
-// See: ds00/
+// See: comp00/
     printf ("'wsq': Launch the GUI\n");
     printf ("[control + f9] to open the kernel console\n");
 }
@@ -313,7 +313,7 @@ static void do_launch_de(void)
 // and the same doesn't happen when we use the version in libgws.
 // But init process cant use libgws.
 
-// Launch ds00
+// Launch comp00
     //ret_val = (int) rtl_clone_and_execute(filename);
     ret_val = (int) rtl_clone_and_execute(app1_name);
     if (ret_val <= 0){
@@ -342,7 +342,7 @@ static void do_launch_de2(void)
     rewind(stdin);
     write( fileno(stdin), cmdline1, strlen(cmdline1) );
 
-// Launch new process. ds00
+// Launch new process. comp00
     ret_val = (int) rtl_clone_and_execute(app1_name);
     if (ret_val<=0){
         printf("Couldn't clone\n");
@@ -1217,7 +1217,7 @@ int main( int argc, char **argv)
     Init.__selected_option = 0;
 
 // Set the default.
-// It changes if the user launch demo00 or demo01 instead of ds00.
+// It changes if the user launch demo00 or demo01 instead of comp00.
     Init.environment = EnvironmentWinuCore;
 
     // #debug

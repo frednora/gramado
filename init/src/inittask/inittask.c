@@ -332,14 +332,14 @@ xxxProcessEvent (
         break;
 
 // Out of range for system messages
-// ds00 display server is telling us that 
+// comp00 display server is telling us that 
 // it was initialized and running.
     case 44900:
         is_ds_running = TRUE;
         break;
 
 // Out of range for system messages
-// ds00 display server is telling us that 
+// comp00 display server is telling us that 
 // it is shutting down.
     case 44901:
         is_ds_running = FALSE;

@@ -62,7 +62,7 @@ See: https://wiki.osdev.org/Graphics_stack
 // This file is part of this project.
 // It is NOT a library.
 
-#include "ds.h"
+#include "../ds.h"
 
 #define VERSION  "0.1"
 #define VERSION_MAJOR  0
@@ -4715,17 +4715,9 @@ fail:
 }
 
 
-//
-// $$ 
-// MAIN
-//
 
-// main: 
-// Entry point.
-// Called by crt0() in 
-// userland/libs/rtl/entrance/student/crt0.c.
-// This application was launched by init.bin.
-int ds_main (int argc, char **argv)
+// Called by main() in main.c
+int comploop_main (int argc, char **argv)
 {
     int Status=-1;
     register int i=0;

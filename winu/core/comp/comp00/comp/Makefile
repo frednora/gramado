@@ -1,4 +1,4 @@
-# srv/
+# comp/
 # 2020 - Created by Fred Nora.
 
 #linkTarget = GRAMLAND.BIN
@@ -75,7 +75,8 @@ CFLAGS += -fno-pie
 CFLAGS += -fno-omit-frame-pointer
 CFLAGS += -fno-optimize-sibling-calls    
 
-
+#todo
+#path longo. vamos mudar  as libs de lugar para gramado/libs.
 LIBC        = ../../garden/rtl/include/
 LIBCOBJ     = ../../garden/rtl/obj
 
@@ -89,10 +90,11 @@ CINCLUDES += -I $(LIBDISP)
 CINCLUDES += -I $(LIBGR)
 CINCLUDES += -I .    
 CINCLUDES += -I ../
-
-
+    
 # Objects
-myObjects = client.o globals.o shutdown.o    
+myObjects = compglob.o comp.o comploop.o    
+
+
 
 .PHONY: all all-c gws-link finalize clean
 
@@ -101,15 +103,16 @@ all: main.o all-c gws-link finalize clean
 main.o:
 #	$(CC)  -c grinput.c  $(CFLAGS) $(CINCLUDES) -o grinput.o
 all-c:
-	$(CC) -c client.c    $(CFLAGS) $(CINCLUDES) -o client.o
-	$(CC) -c globals.c   $(CFLAGS) $(CINCLUDES) -o globals.o
-	$(CC) -c shutdown.c  $(CFLAGS) $(CINCLUDES) -o shutdown.o
+#	$(CC)  -c grinput.c  $(CFLAGS) $(CINCLUDES) -o grinput.o
+	$(CC)  -c compglob.c  $(CFLAGS) $(CINCLUDES) -o compglob.o   
+	$(CC)  -c comp.c  $(CFLAGS) $(CINCLUDES) -o comp.o   
+	$(CC)  -c comploop.c  $(CFLAGS) $(CINCLUDES) -o comploop.o   
 
 gws-link:
 #	$(LD) $(linkFlags) -o $(linkTarget) $(myObjects)
 # link
-	$(LD) -r -o libds.o $(myObjects)
-	cp libds.o ../
+	$(LD) -r -o uicomp.o $(myObjects)
+	cp uicomp.o ../
 	rm *.o
 
 finalize:

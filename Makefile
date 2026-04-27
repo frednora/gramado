@@ -30,8 +30,8 @@ __DEP_L1 = netu
 # The infrastruture for the windows.
 __DEP_L2 = winu
 
-# Display servers
-L2_DS = $(__DEP_L2)/core/ds
+# Compositor / Display servers
+L2_COMP = $(__DEP_L2)/core/comp
 
 
 
@@ -176,8 +176,8 @@ build-extras:
 	@make -C $(__DEP_L2)/
 
 	@echo "Installing __DEP_L2"
-# Winu Core - Display server
-	@-cp $(L2_DS)/ds00/bin/DS00.BIN    $(BASE)/DE
+# Winu Core - Compositor / Display server
+	@-cp $(L2_COMP)/comp00/bin/COMP00.BIN    $(BASE)/DE
 
 #===================================
 # Install BMPs from cali assets.
