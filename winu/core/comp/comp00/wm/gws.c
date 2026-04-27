@@ -365,9 +365,11 @@ static int __gwssrv_init_globals(void)
     ci_frontbuffer->used = TRUE;
     ci_frontbuffer->magic = 1234;
     ci_frontbuffer->initialized = TRUE;
-// Save the address into the global list
-    canvasList[CANVAS_FRONTBUFFER] = (unsigned long) ci_frontbuffer;
 
+// Save the address into the global list. (table)
+    canvasList[CANVAS_FRONTBUFFER] = (unsigned long) ci_frontbuffer;
+// Save the address into the global list. (for the linked list)
+    canvas_frontbuffer = ci_frontbuffer;
 
 // ------------------------------------- 
 // Create the second canvas: BACKBUFFER 
@@ -401,7 +403,10 @@ static int __gwssrv_init_globals(void)
 
 // Save the address into the global list
     canvasList[CANVAS_BACKBUFFER] = (unsigned long) ci_backbuffer;
+// for the linked list
+    canvas_backbuffer = ci_backbuffer;
 
+    
 // -------------------------
 
 // Flags for refresh

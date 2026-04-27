@@ -46,7 +46,6 @@
 #define CONFIG_USE_REAL_COMPOSITOR  0
 
 
-
 // Target interval (in milliseconds) for each iteration of the main loop.
 // The main loop is responsible for orchestrating all core tasks:
 // - Processing requests from the client-side GUI application

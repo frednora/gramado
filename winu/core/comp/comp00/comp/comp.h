@@ -72,6 +72,8 @@ struct dccanvas_d *comp_create_dc_for_a_buffer(
     char *buffer_address, size_t size_in_kb );
 struct dccanvas_d *comp_create_dc_and_allocate_buffer(size_t size_in_kb);
 
+void comp_add_to_list(struct canvas_information_d *ci);
+
 // w, h, bits per pixel, dc
 struct canvas_information_d *compCreateNewCanvas(struct dccanvas_d *dc);
 
@@ -137,7 +139,7 @@ void __display_mouse_cursor(void);
 void comp_display_desktop_components(void);
 // #test
 // Creating a real compositor. Using offscreen buffers.
-void realCompositor(void);
+void compComposeDesktop(void);
 
 
 void 

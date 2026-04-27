@@ -1720,6 +1720,30 @@ int serviceCreateWindow(int client_fd)
         }
     }
 
+
+// #test
+// Creating a canvas for the window
+    size_t size_in_kb = 128; //64;
+    struct dccanvas_d *dc = comp_create_dc_and_allocate_buffer(size_in_kb);
+    struct canvas_information_d *ci = compCreateNewCanvas(dc);
+    // Draw string
+    dc_drawstring ( 
+        dc,  //dc 
+        10,  // x
+        2,  // y
+        COLOR_YELLOW,  //fg_color
+        COLOR_BLUE,    //bg_color
+        ROP_COPY,  //rop
+        Window->name  //"Window" 
+    );
+    ci->dirty = TRUE;
+    // Link with the window
+    ci->owner_window = Window; // link to the window
+    Window->canvas = ci;       // window keeps a pointer to its canvas
+    // add to the list for the compositor
+    comp_add_to_list(ci);
+
+
 // #test
 // Testing char using rectangles. 
 
@@ -4601,10 +4625,14 @@ static int ServerLoop(int client_index)
     int UseSleep = TRUE;
 
 
-    // #ps: We will sleep if a round was less than 16 ms, (60fps).
-    // The thread wait until complete the 16 ms.
-    // #bugbug: Valid only if the timer fires 1000 times a second.
-    // It gives the opportunities for other threads to run a bit more.
+// #ps: We will sleep if a round was less than 16 ms, (60fps).
+// The thread wait until complete the 16 ms.
+// #bugbug: Valid only if the timer fires 1000 times a second.
+// It gives the opportunities for other threads to run a bit more.
+
+
+// This is the loop for the compositor.
+// This is also the loop for the server.
     while (running == TRUE){
         start_jiffie = (unsigned long) rtl_jiffies();
         if (IsTimeToQuit == TRUE){ break; };
@@ -4646,10 +4674,9 @@ static int ServerLoop(int client_index)
             // #test
             // Creating a real compositor. Using offscreen buffers.
             if (CONFIG_USE_REAL_COMPOSITOR == 1)
-                realCompositor();
+                compComposeDesktop();
 
             // Display the desktop components without using the compositor.
-            
             if (CONFIG_USE_REAL_COMPOSITOR != 1)
                 comp_display_desktop_components();
 

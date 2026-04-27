@@ -566,8 +566,8 @@ int main(int argc, char *argv[])
 // Main window
     unsigned long win_w = screen_w / 2;
     unsigned long win_h = screen_h / 2;
-    unsigned long win_x = (screen_w - win_w) / 2;
-    unsigned long win_y = (screen_h - win_h) / 2;
+    unsigned long win_x = screen_w/4;  //(screen_w - win_w) / 2;
+    unsigned long win_y = screen_h/4;  //(screen_h - win_h) / 2;
 
     main_window = 
         (int) gws_create_window(

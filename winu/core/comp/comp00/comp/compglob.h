@@ -28,6 +28,9 @@ struct canvas_information_d
     int magic;
     int initialized;       // Safety first
 
+// If dirty, flush it into the backbuffer.
+    int dirty;
+
     unsigned long width;   // buffer width in pixels
     unsigned long height;  // buffer height in pixels
     unsigned long bpp;     // bits per pixel
@@ -39,11 +42,15 @@ struct canvas_information_d
     struct dccanvas_d *dc;  // DC associated with this canvas information
 
     struct gws_window_d *owner_window;
+
+    struct canvas_information_d *next;
 };
 
 extern unsigned long canvasList[CANVAS_COUNT_MAX];
 
-
+extern struct canvas_information_d  *canvas_head;
+extern struct canvas_information_d  *canvas_frontbuffer;
+extern struct canvas_information_d  *canvas_backbuffer;
 
 #endif   
 

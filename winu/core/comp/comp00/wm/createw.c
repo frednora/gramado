@@ -2004,7 +2004,7 @@ void *doCreateAndDrawWindow (
 
 
 // =================================
-// Client area: Initializing using the window dimensions.
+// Frame area. (wrong)
     window->rcWindow.left   = (unsigned long) 0;
     window->rcWindow.top    = (unsigned long) 0;
     window->rcWindow.width  = (unsigned long) WindowWidth;

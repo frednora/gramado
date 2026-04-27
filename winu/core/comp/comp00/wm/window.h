@@ -497,7 +497,7 @@ struct gws_window_d
 
 // Main drawing surface (client area)
 // This is the primary canvas where the window's content is rendered.
-    struct canvas_information_d *main_canvas;
+    struct canvas_information_d *canvas;
 
 // Small experimental canvases for components
 // These are optional and can be allocated only when needed.

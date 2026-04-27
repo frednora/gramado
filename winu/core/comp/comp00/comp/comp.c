@@ -351,6 +351,39 @@ fail:
     return NULL;
 }
 
+void comp_add_to_list(struct canvas_information_d *ci)
+{
+    struct canvas_information_d *tmp;
+
+    if ((void*) ci == NULL)
+        return;
+// ...
+
+
+// Empty list
+    if ((void*) canvas_head == NULL)
+    {
+        canvas_head = ci;
+        ci->next = NULL;
+        return;
+    }
+
+
+// Walk the list
+    tmp = (struct canvas_information_d *) canvas_head;
+    while (1)
+    {
+        if ((void*) tmp->next == NULL)
+        {
+            tmp->next = ci;
+            ci->next = NULL;
+            break;
+        }
+        tmp = tmp->next;
+    };
+}
+
+
 // w, h, bits per pixel, dc
 struct canvas_information_d *compCreateNewCanvas(struct dccanvas_d *dc)
 {
@@ -1208,7 +1241,8 @@ void comp_display_desktop_components(void)
     //__update_fps();
 }
 
-void realCompositor(void)
+// The worker that compose the desktop scene
+void compComposeDesktop(void)
 {
     register int i=0;
 
@@ -1216,19 +1250,147 @@ void realCompositor(void)
 // It's a window, but we don't care about its type.
 // All we need to do is refreshing the window's rectangle.
 
-    struct gws_window_d *w;
-
-    int fOnlyValidate = FALSE;
+    //struct gws_window_d *w;
+    //int fOnlyValidate = FALSE;
 
 // fps++
     if (WindowManager.initialized == TRUE){
         WindowManager.frame_counter++;
     }
 
+    if (CONFIG_USE_REAL_COMPOSITOR != 1)
+        return;
+
+// #todo: Root window also needs its own canvas.
+    redraw_window(__root_window, FALSE);
+
+// Walk the list of canvas
+    struct canvas_information_d *ci;
+    struct canvas_information_d *ci_src;
+    struct canvas_information_d *ci_dst;
+    unsigned long left;
+    unsigned long top;
+    unsigned long width;
+    unsigned long height;
+
+    ci = (struct canvas_information_d *) canvas_head;
+
+
+/*
+    ci_src = ci;
+    ci_dst = canvas_backbuffer;
+    // Values for destination (backbuffer)
+    left = 0;
+    top = 0;
+    width  = 40;
+    height = 40;
+
+    // Copy the canvas into the baclbuffer
+    comp_blit_canvas_to_canvas_imp (
+        ci_src,
+        ci_dst,
+        left,
+        top,
+        width,
+        height
+    );
+*/
+
+    int Counter=0;
+    while (1)
+    {
+        // End of list
+        if ((void*) ci == NULL)
+            break;
+        
+        //if ((void*) ci != NULL)
+        //{
+            //if (ci->used == 1234)
+            //{
+                // If dirty, flush it into the backbuffer.
+                //if (ci->dirty == TRUE)
+                //{
+                    //printf ("dirty\n");
+                    ci_src = ci;
+                    ci_dst = canvas_backbuffer;
+                    // Values for destination (backbuffer)
+                    left = 0;
+                    top = Counter * 20;
+                    // #todo: Check dc validation
+                    width = 0;
+                    height = 0;
+                    // It has a dc
+                    if ((void*) ci->dc != NULL)
+                    {
+                        width  = ci->dc->device_width;
+                        height = ci->dc->device_height;
+                    }
+                    // Now it belongs to a window,
+                    // lets respect the windows dimensions
+                    if ((void*) ci->owner_window != NULL)
+                    {
+                        left = ci->owner_window->absolute_x;
+                        top = ci->owner_window->absolute_y;
+    
+                        // We gotta clip is into the screen now.
+
+                        // the window is larger than the space we have
+                        //if (ci->owner_window->width > 
+                        //    (ci->dc->device_width - ci->owner_window->absolute_x) )
+                        //{
+                            //width = (ci->dc->device_width - ci->owner_window->absolute_x);  
+                        //}
+                        width = ci->owner_window->width;
+
+                        //if (ci->owner_window->height > 
+                        //    (ci->dc->device_height - ci->owner_window->absolute_y) )
+                        //{
+                        //    height = (ci->dc->device_height - ci->owner_window->absolute_y);  
+                        //}
+                        height = ci->owner_window->height;
+                        if (ci->owner_window->height > ci->dc->device_height)
+                            height = ci->dc->device_height;
+                    }
+
+                    // Copy the canvas into the baclbuffer
+                    comp_blit_canvas_to_canvas_imp (
+                        ci_src,
+                        ci_dst,
+                        left,
+                        top,
+                        width,
+                        height
+                    );
+
+                    // Based on the index into the table.
+                    
+                    //comp_blit_canvas_to_canvas(
+                    //    CANVAS_SPAREBUFFER,    // source
+                    //    CANVAS_BACKBUFFER,     // destination
+                    //    w->absolute_x, 
+                    //    w->absolute_y,
+                    //    my_width,  // width 
+                    //    my_height  // height
+                    //);
+                    
+
+                    // Flush it into the backbuffer
+                    // ci->dirty = FALSE;
+                //}
+            //}
+        //}
+
+        Counter++;
+        
+        ci = ci->next;  // Get next in the list
+    };
+
+
 // ===========================================
 // Redraw root window, but do not show it yet.
 // #todo: We're redrawing for now ... but the plain is copying it from its
 
+/*
     if (CONFIG_TEST_SPARE_BUFFER == 1 || CONFIG_USE_REAL_COMPOSITOR)
     {
         if (need_rootwindow_redraw == TRUE)
@@ -1237,13 +1399,15 @@ void realCompositor(void)
             redraw_window(__root_window,FALSE);
         }
     }
+*/
 
 
 // Is the root window a valid window
 
-    unsigned long my_width;
-    unsigned long my_height;
+    //unsigned long my_width;
+    //unsigned long my_height;
 
+/*
 // Get the window pointer, refresh the windows retangle via KGWS and 
 // validate the window.
     for (i=0; i<WINDOW_COUNT_MAX; ++i)
@@ -1295,21 +1459,19 @@ void realCompositor(void)
                                     );
 
                                     
-                                    /*
+                                
                                     // #todo:
                                     // Here we can flush the client area,
                                     // After the moment the client finished 
                                     // the painting
-                                    comp_blit_canvas_to_canvas(
-                                        CANVAS_BG00,    // source
-                                        CANVAS_BACKBUFFER,     // destination
-                                        w->absolute_x, 
-                                        w->absolute_y,
-                                        my_width,  // width 
-                                        my_height  // height
-                                    );
-                                    */
-                                    
+                                    //comp_blit_canvas_to_canvas(
+                                    //    CANVAS_BG00,    // source
+                                    //    CANVAS_BACKBUFFER,     // destination
+                                    //    w->absolute_x, 
+                                    //    w->absolute_y,
+                                    //    my_width,  // width 
+                                    //    my_height  // height
+                                    //);                                    
 
                                 }
                             // ...
@@ -1345,14 +1507,14 @@ void realCompositor(void)
                     // there is no need to refresh any other window,
                     // so, lets simply validate them.
 
-                    /*
-                    if (fOnlyValidate != TRUE)
-                    {
-                        gws_refresh_rectangle ( 
-                            w->absolute_x,  w->absolute_y, 
-                            w->width, w->height );
-                    }
-                    */
+                    
+                    //if (fOnlyValidate != TRUE)
+                    //{
+                    //    gws_refresh_rectangle ( 
+                    //        w->absolute_x,  w->absolute_y, 
+                    //        w->width, w->height );
+                    //}
+                    
 
                     // Validate the window we refreshed.
                     //validate_window(w);
@@ -1364,18 +1526,19 @@ void realCompositor(void)
                     // but we can simple validate all the rest.
                     // Continue the loop,
                     // but now we will only validate the windows, not refresh.
-                    /*
-                    if (w == __root_window){
-                        fOnlyValidate = TRUE;
-                    }
-                    */
+                    
+                    //if (w == __root_window){
+                    //    fOnlyValidate = TRUE;
+                    //}
+                    
                 }
             }
         }
     };
+*/
 
-    if (CONFIG_TEST_SPARE_BUFFER == 1)
-    {
+   // if (CONFIG_TEST_SPARE_BUFFER == 1)
+   // {
         //---------
         // #test
         // Copy bytes from the spare buffer to the 
@@ -1427,10 +1590,31 @@ void realCompositor(void)
         }
         //---------
         */
-    }
+   // }
 
+// #provisory?
 // Flush backbuffer into the front buffer
-    refresh_screen();
+    //refresh_screen();
+
+/*
+// #test (flush something) last thing, like pointer
+    comp_blit_canvas_to_canvas(
+        CANVAS_TEST00,    // source
+        CANVAS_BACKBUFFER,    // destination
+        20, 20,                // destination position
+        40,  // width 
+        40  // height
+    );  
+*/
+
+// Flush
+    comp_blit_canvas_to_canvas(
+        CANVAS_BACKBUFFER,    // source
+        CANVAS_FRONTBUFFER,    // destination
+        0, 0,                // destination position
+        800,  // width 
+        600  // height
+    );                 
 }
 
 // wmCompose:
@@ -1613,6 +1797,9 @@ This was the first experiment in order to have a future
 // Save the dc for future usage
     test00_dccanvas = (struct dccanvas_d *) dc;
 
+    //comp_add_to_list(ci_tmp);
+
+
 // --------------
 
 // Create a new off-screen buffer
@@ -1628,6 +1815,8 @@ This was the first experiment in order to have a future
 
     // Saving into the list for testing purpose
     canvasList[CANVAS_TEST00] = (unsigned long) ci00;
+
+    //comp_add_to_list(ci00);
 
 // -----------------
 // Draw into the new dc
@@ -1682,9 +1871,22 @@ This was the first experiment in order to have a future
 
     dc_drawchar( bg_dccanvas, 2, 2, 'z', COLOR_YELLOW, COLOR_RED, ROP_COPY );
 
+    ci88->dirty = TRUE;
+
     // Saving into the list for testing purpose
     canvasList[CANVAS_BG00] = (unsigned long) ci88;
- 
+
+//
+// Head
+//
+
+// Initialize our list with one single element
+// #todo: Create the function to add elements to the list.
+    //ci88->next = NULL;  // finish the list
+    //canvas_head = ci88;
+
+
+    //comp_add_to_list(ci88);
 
     return 0;
 }
