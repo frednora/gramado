@@ -1,12 +1,13 @@
-# Codename: Summer
-# Created by Fred Nora.
+# Created by Fred Nora
 
 all:
-	make -C core/
+	make -C hunter/
+	make -C farmer/
 
 clean:
 	-rm -f *.o
 	-rm -f bin/*.BIN
+
 clean-all:
 	-rm -f *.o
 	-rm -f bin/*.BIN

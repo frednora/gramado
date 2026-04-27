@@ -20,27 +20,23 @@ BASE = $(DISTROS)/base00
 # It's because of the close interaction userland
 # with the other subfolders in core/.
 
-# =================================
-# Kernel Services: Init process, ring 3 drivers and ring 3 servers.
-__DEP_L1 = netu
-
 
 # =================================
-# Shell Pre-UI: The display server.
-# The infrastruture for the windows.
-__DEP_L2 = winu
-
+# Windowing system
+__DEP_L2 = native
 # Compositor / Display servers
-L2_COMP = $(__DEP_L2)/core/comp
+L2_COMP     = $(__DEP_L2)/hunter/comp
+# Client-side GUI applications
+L2_WINSHELL = $(__DEP_L2)/farmer/winshell
 
 
-
-__DEP_L3 = xland
+# =================================
+# Nomad Pastors
+__DEP_L3 = np
 L3_HEAVY = $(__DEP_L3)/heavy
 L3_SDK = $(__DEP_L3)/sdk
 L3_SYSUTIL  = $(__DEP_L3)/sysutils
 L3_SYSUTIL2 = $(__DEP_L3)/sysutils2
-L3_WINSHELL = $(__DEP_L3)/winshell
 
 
 ## =================================
@@ -163,13 +159,6 @@ build-extras:
 
 	@echo "build-extras"
 
-# __DEP_L1::
-	@echo "Compiling __DEP_L1"
-	@$(MAKE) -C $(__DEP_L1)
-
-	@echo "Installing __DEP_L1"
-	@-cp $(__DEP_L1)/core/bin/NET.BIN   $(BASE)/GRAMADO/
-	@-cp $(__DEP_L1)/core/bin/NETD.BIN  $(BASE)/GRAMADO/
 
 # __DEP_L2:: Display servers
 	@echo "Compiling __DEP_L2"
@@ -181,9 +170,9 @@ build-extras:
 
 #===================================
 # Install BMPs from cali assets.
-# Copy the $(L3_WINSHELL)/assets/
+# Copy the $(L2_WINSHELL)/assets/
 # We can't survive without this one.
-	@cp $(L3_WINSHELL)/assets/themes/theme01/*.BMP  $(BASE)/DE
+	@cp $(L2_WINSHELL)/assets/themes/theme01/*.BMP  $(BASE)/DE
 
 
 # __DEP_L3::
@@ -193,12 +182,15 @@ build-extras:
 
 # --------
 # heavy
-# Winu Heavy
 # 3D game demos
 	@-cp $(L3_HEAVY)/games3d/bin/DEMO00.BIN   $(BASE)/DE/
 #	@-cp $(L3_HEAVY)/games3d/bin/DEMO01.BIN   $(BASE)/DE/
 # ...
 
+# --------
+# netu
+	@-cp $(L3_HEAVY)/netu/core/bin/NET.BIN   $(BASE)/GRAMADO/
+	@-cp $(L3_HEAVY)/netu/core/bin/NETD.BIN  $(BASE)/GRAMADO/
 
 # --------
 # sdk
@@ -248,23 +240,23 @@ build-extras:
 # These need the '#' prefix.
 
 # DE core applications
-	@-cp $(L3_WINSHELL)/bin/TASKBAR.BIN   $(BASE)/DE/
-	@-cp $(L3_WINSHELL)/bin/TERMINAL.BIN  $(BASE)/DE/
+	@-cp $(L2_WINSHELL)/bin/TASKBAR.BIN   $(BASE)/DE/
+	@-cp $(L2_WINSHELL)/bin/TERMINAL.BIN  $(BASE)/DE/
 
 # DE Utilities
-	@-cp $(L3_WINSHELL)/bin/DOC.BIN      $(BASE)/DE/
-	@-cp $(L3_WINSHELL)/bin/EDITOR.BIN   $(BASE)/DE/
-	@-cp $(L3_WINSHELL)/bin/MEMORY.BIN   $(BASE)/DE/
-	@-cp $(L3_WINSHELL)/bin/POWER.BIN    $(BASE)/DE/
-	@-cp $(L3_WINSHELL)/bin/SYSINFO.BIN  $(BASE)/DE/
+	@-cp $(L2_WINSHELL)/bin/DOC.BIN      $(BASE)/DE/
+	@-cp $(L2_WINSHELL)/bin/EDITOR.BIN   $(BASE)/DE/
+	@-cp $(L2_WINSHELL)/bin/MEMORY.BIN   $(BASE)/DE/
+	@-cp $(L2_WINSHELL)/bin/POWER.BIN    $(BASE)/DE/
+	@-cp $(L2_WINSHELL)/bin/SYSINFO.BIN  $(BASE)/DE/
 
 # Experimental applications
-	@-cp $(L3_WINSHELL)/bin/DRAW.BIN     $(BASE)/DE/
-	@-cp $(L3_WINSHELL)/bin/LAUNCH.BIN   $(BASE)/DE/
-	@-cp $(L3_WINSHELL)/bin/MENUAPP.BIN  $(BASE)/DE/
+	@-cp $(L2_WINSHELL)/bin/DRAW.BIN     $(BASE)/DE/
+	@-cp $(L2_WINSHELL)/bin/LAUNCH.BIN   $(BASE)/DE/
+	@-cp $(L2_WINSHELL)/bin/MENUAPP.BIN  $(BASE)/DE/
 
 # Other applications
-	@-cp $(L3_WINSHELL)/bin/GWS.BIN      $(BASE)/DE/
+	@-cp $(L2_WINSHELL)/bin/GWS.BIN      $(BASE)/DE/
 
 
 	@echo "~ build-extras"
@@ -406,13 +398,6 @@ clean-all: clean
 	-rm init/src/*.BIN 
 	-rm init/src/bin/*.BIN 
 
-# ==================
-# $(__DEP_L1)/
-
-	-rm $(__DEP_L1)/core/netd/client/*.o
-	-rm $(__DEP_L1)/core/netd/client/*.BIN
-	-rm $(__DEP_L1)/core/netd/server/*.o
-	-rm $(__DEP_L1)/core/netd/server/*.BIN 
 
 # ==================
 # Clear the disk cache
