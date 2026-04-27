@@ -29,19 +29,8 @@ boot/     - Gramado OS bootloader.
 kernel/   - Gramado OS kernel.
 modules/  - Ring 0 loadable kernel modules. (Not dynlinked).
 init/     - The init process.
-winu/     - Display server.
-apps/     - Ring 3 client-side GUI applications.
-cmds/     - Posix-like commands.
-```
-
-## Main dependencies
-
-```
-+ netu/ - (DEP L1) Network server
-+ winu/ - (DEP L2) Display server
-
-+ apps/ - (DEP L3) Client-side GUI applications
-+ cmds/ - (DEP L4) Posix-commands
+native/   - Compositor and client-side GUI applications.
+np/       - Posix-like commands and experiments.
 ```
 
 ## The extra folders

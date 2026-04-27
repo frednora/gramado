@@ -1,19 +1,18 @@
-# winu - 
+# native 
 
 Thew user mode windowing system.
 
 
-## core - Winu Core subsystem
+## farmer - Client-side GUI applications
 
 ```
-    2D standard display server.
-    It used the ds00 display server.
-    It used the client-side GUI applications in apps/
+    Native client-side GUI applications
 ```
 
-## heavy - Winu Heavy subsystem
+## hunter - The compositor / display server
 
 ```
-    3D experimental display server.
-    It used the demo00 or the demo01 display servers.
+    comp00 - It's a ring 3 compositor.
+           - It also operates as a window manager and display server.
 ```
+
