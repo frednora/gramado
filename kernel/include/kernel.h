@@ -202,11 +202,15 @@
 
 #include "../halls/dev/chardev/display/dc.h"
 
-// display device support.
+#include "../halls/dev/chardev/display/rop.h"
+
+// display device support
 #include "../halls/dev/chardev/display/display.h"
+
 // bootloader display device
-#include "../halls/dev/chardev/display/bldisp/rop.h"
 #include "../halls/dev/chardev/display/bldisp/bldisp.h"
+
+// qemu display device
 //#include "../halls/dev/chardev/display/qemudisp/qemudisp.h"
 
 // ==================================

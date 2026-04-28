@@ -53,8 +53,6 @@
 #define TTY_FLUSHPENDING     20	/* Queued buffer flush pending */
 
 
-
-
 //
 // Console modes
 //
@@ -451,6 +449,10 @@ struct tty_d
 // == prototypes ===============================================
 //
 
+//
+// Flush
+//
+
 void tty_flush_raw_queue(struct tty_d *tty, int console_number);
 void tty_flush_canonical_queue(struct tty_d *tty, int console_number);
 void tty_flush_output_queue(struct tty_d *tty, int console_number);
@@ -479,10 +481,6 @@ tty_copy_output_buffer(
 int tty_queue_putchar(struct tty_queue *q, char c);
 int tty_queue_getchar(struct tty_queue *q);
 
-ssize_t __tty_read(struct tty_d *tty, char *buf, size_t size);
-
-int __tty_read2(struct tty_d *tty, char *buffer, int nr);
-int __tty_read3(struct tty_d *tty, char *buffer, int nr);
 
 /*
 // Write into the raw queue.
@@ -493,15 +491,23 @@ __tty_write_old (
     int nr );
 */
 
+ssize_t __tty_read(struct tty_d *tty, char *buf, size_t size);
 ssize_t __tty_write(struct tty_d *tty, const char *buf, size_t size);
 
+
+int __tty_read2(struct tty_d *tty, char *buffer, int nr);
 // Write into the output queue.
 int __tty_write2(struct tty_d *tty, char *buffer, int nr);
 
+
+
+int __tty_read3(struct tty_d *tty, char *buffer, int nr);
 int __tty_write3(struct tty_d *tty, char *buffer, int nr);
+
 
 int __tty_read_mode(struct tty_d *tty, char *buffer, int nr, int mode);
 int __tty_write_mode(struct tty_d *tty, char *buffer, int nr, int mode);
+
 
 int 
 tty_read ( 
@@ -510,14 +516,15 @@ tty_read (
     int n );
 
 int 
-sys_tty_read ( 
+tty_write ( 
     int fd, 
     char *buffer, 
     int n );
 
 
+
 int 
-tty_write ( 
+sys_tty_read ( 
     int fd, 
     char *buffer, 
     int n );
@@ -532,8 +539,9 @@ int tty_set_output_worker(struct tty_d *tty, int worker_number);
 
 int tty_reset_termios (struct tty_d *tty);
 
-struct tty_d *file_tty (file *f);
+struct tty_d *file_tty(file *f);
 int tty_delete (struct tty_d *tty);
+
 void tty_start (struct tty_d *tty);
 void tty_stop (struct tty_d *tty);
 

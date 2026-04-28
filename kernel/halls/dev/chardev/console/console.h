@@ -170,19 +170,3 @@ int VirtualConsole_early_initialization(void);
 
 #endif    
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -68,25 +68,24 @@ KERNEL_INCLUDE := -I $(INCLUDE)
 # LDFLAGS := -m elf_x86_64 -static
 LDFLAGS := -m elf_x86_64 -s -x -static  
 
-
-# Everything is a file.
+# Objects
 OBJS = \
 bldisp.o display.o \
 tty.o console.o pty.o \
 i8042.o mapabnt2.o ps2kbd.o ps2mouse.o keyboard.o mouse.o \
 serial.o    
 
+
 all:
 
+	$(CC) -c console/console.c  $(KERNEL_INCLUDE) $(CFLAGS) -o console.o 
 
 # bl display device
 	$(CC) -c display/bldisp/bldisp.c  $(KERNEL_INCLUDE) $(CFLAGS) -o bldisp.o
+# qemu display device
 #$(CC) -c display/qemudisp/qemudisp.c  $(KERNEL_INCLUDE) $(CFLAGS) -o qemudisp.o
-	$(CC) -c display/display.c  $(KERNEL_INCLUDE) $(CFLAGS) -o display.o
 
-# Keyboard maps
-	$(CC) -c kbdmaps/ptbr/mapabnt2.c   $(KERNEL_INCLUDE) $(CFLAGS) -o mapabnt2.o
-# ...
+	$(CC) -c display/display.c  $(KERNEL_INCLUDE) $(CFLAGS) -o display.o
 
 # i8042 (PS/2)
 	$(CC) -c i8042/i8042.c    $(KERNEL_INCLUDE) $(CFLAGS) -o i8042.o
@@ -95,13 +94,16 @@ all:
 	$(CC) -c i8042/ps2kbd.c   $(KERNEL_INCLUDE) $(CFLAGS) -o ps2kbd.o
 	$(CC) -c i8042/ps2mouse.c $(KERNEL_INCLUDE) $(CFLAGS) -o ps2mouse.o
 
+# Keyboard maps
+	$(CC) -c kbdmaps/ptbr/mapabnt2.c  $(KERNEL_INCLUDE) $(CFLAGS) -o mapabnt2.o
+# ...
+
 # serial
 	$(CC) -c serial/serial.c  $(KERNEL_INCLUDE) $(CFLAGS) -o serial.o
-# tty
-	$(CC) -c tty/tty.c      $(KERNEL_INCLUDE) $(CFLAGS) -o tty.o
-	$(CC) -c tty/pty.c      $(KERNEL_INCLUDE) $(CFLAGS) -o pty.o
 
-	$(CC) -c console/console.c  $(KERNEL_INCLUDE) $(CFLAGS) -o console.o 
+# tty
+	$(CC) -c tty/tty.c  $(KERNEL_INCLUDE) $(CFLAGS) -o tty.o
+	$(CC) -c tty/pty.c  $(KERNEL_INCLUDE) $(CFLAGS) -o pty.o
 
 
 # link
