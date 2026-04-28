@@ -211,7 +211,6 @@ void *CreateAndIntallPageTable (
     panic("CreateAndIntallPageTable: suspended\n");
     return NULL;
 
-
 /*
     int i=0;
 
@@ -446,6 +445,7 @@ unsigned long table_pointer_heap_base =
 // Mas endereço físico e virtual são iguais nessa região.
 // Identidade 1:1.
 
+// Very dangerous hack
 unsigned long get_table_pointer_va(void)
 {
     //debug_print ("get_table_pointer_va:\n");
@@ -1735,6 +1735,71 @@ mm_map_2mb_region(
 fail:
     return (int) -1;
 }
+
+
+
+/*
+// mm_map_one_2mb_huge()
+// Maps 2MB of physical memory using a huge page (PSE)
+// Returns 0 on success, -1 on failure
+int mm_map_one_2mb_huge(unsigned long pa, unsigned long va);
+int mm_map_one_2mb_huge(unsigned long pa, unsigned long va)
+{
+    // Both addresses MUST be 2MB aligned
+    if ((pa & 0x1FFFFF) != 0 || (va & 0x1FFFFF) != 0)
+    {
+        printk("mm_map_one_2mb_huge: Misaligned address\n");
+        return -1;
+    }
+
+    unsigned long *pd = (unsigned long *) KERNEL_PD_PA;   // Your kernel page directory
+    int pd_index = (int) X64_GET_PDE_INDEX(va);
+
+    if (pd_index < 0 || pd_index >= 512)
+    {
+        printk("mm_map_one_2mb_huge: Invalid PD index\n");
+        return -1;
+    }
+
+    // Flags for kernel-only, read/write, 2MB huge page
+    // Present(1) + Write(1) + PSE(1<<7) = 0x83
+    unsigned long entry = (unsigned long) (pa | 0x83);
+
+    pd[pd_index] = entry;
+
+    // Invalidate TLB for this virtual address
+    // asm volatile("invlpg (%0)" : : "r"(va) : "memory");
+
+    return 0;
+}
+*/
+
+/*
+void mm_map_large_physical_region(void);
+void mm_map_large_physical_region(void)
+{
+    unsigned long phys = 0x10000000;     // Start at 256 MB physical
+    unsigned long virt = 0x40000000;     // Start at 1 GB virtual
+    int num_pages = 128;                 // 128 * 2MB = 256 MB
+
+    printk("Mapping %d MB of physical memory...\n", (num_pages*2));
+
+    for (int i = 0; i < num_pages; i++)
+    {
+        if (mm_map_one_2mb_huge(phys, virt) != 0)
+        {
+            printk("Failed at page %d\n", i);
+            break;
+        }
+
+        phys += 0x200000;   // 2MB
+        virt += 0x200000;   // 2MB
+    }
+
+    printk("Large region mapped successfully.\n");
+}
+*/
+
 
 // PAGE TABLES.
 // Vamos criar algumas pagetables e apontá-las

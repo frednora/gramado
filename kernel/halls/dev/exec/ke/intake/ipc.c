@@ -1,4 +1,7 @@
 // ipc.c
+// Low level IPC worker.
+// #todo: We can create wrapper in an upper level subsystem for IPC.
+// maybe called 'binder' or something else.
 // System message support.
 // Messages using the circular queue into the thread structure.
 // Created by Fred Nora.
