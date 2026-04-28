@@ -3227,29 +3227,27 @@ wmRawKeyEvent(
         // mensagem de digitação.
         if (Event_Message == MSG_KEYDOWN)
         {
-            // Minúsculas.
+            // Minúsculas
             if (capslock_status == FALSE && shift_status == FALSE)
             { 
                 Event_LongVK = keymap_normal[Keyboard_ScanCode];
 
                 // #test
-                // We send a combination event,
-                // and the ascii char.
-                // For stdin we send just the ascii char.
+                // We send a combination event, and the ascii char.
+                // But for stdin we send just the ascii char.
                 if (ctrl_status == TRUE)
                     Event_LongVK = keymap_ctrl[Keyboard_ScanCode];
 
                 goto done; 
             }
-            // Maiúsculas.
+            // Maiúsculas
             if (capslock_status == TRUE || shift_status == TRUE)
             {
                 Event_LongVK = keymap_shift[Keyboard_ScanCode];
 
                 // #test
-                // We send a combination event,
-                // and the ascii char.
-                // For stdin we send just the ascii char.
+                // We send a combination event, and the ascii char.
+                // But for stdin we send just the ascii char.
                 if (ctrl_status == TRUE)
                     Event_LongVK = keymap_ctrl[Keyboard_ScanCode];
 
@@ -3267,15 +3265,14 @@ wmRawKeyEvent(
 // == Dispatch ========
 //
 
-// Done
-// Para finalizar, vamos enviar a mensagem para fila certa.
-// Fixing the rawbyte to fit in the message arg.
+// Done. Let's send it to the right queue. Display server or 
+// foreground thread. Send it also to the tty.
 
 done:
 
+    // Fixing the rawbyte to fit in the message arg.
     Event_LongRawByte  = (unsigned long) (Keyboard_RawByte  & 0x000000FF);
     Event_LongScanCode = (unsigned long) (Event_LongRawByte & 0x0000007F);
-
     //printk("raw=%d sc=%d\n",Event_LongRawByte,Event_LongScanCode);
 
 // ------------------------------------
@@ -3317,7 +3314,7 @@ done:
         // Not a pause/break key
         if (fPause != TRUE)
         {
-            is_break = ( raw_data.raw1 & 0x80) ? TRUE : FALSE;
+            is_break = (raw_data.raw1 & 0x80) ? TRUE : FALSE;
             if (is_break == TRUE){
                 Event_Message = MSG_SYSKEYUP;
             } else {
@@ -3538,7 +3535,7 @@ done:
 // Fullscreen Exclusive mode (Games)
     if (isCombination != TRUE)
     {
-        if (InputBrokerInfo.fullscreen_exclusive)
+        if (InputBrokerInfo.fullscreen_exclusive == TRUE)
         {
             ibroker_post_message_to_fg_thread(
                 Event_Message, 
@@ -4120,14 +4117,19 @@ fail:
     return (int) -1;
 }
 
+// Called by:
+// + phase 0: VirtualConsole_early_initialization() in console.c
+// + phase 1: deviceinit() in kmain.c
 int ibroker_initialize(int phase)
 {
     if (phase == 0){
         InputBrokerInfo.shell_flag = FALSE;
+        InputBrokerInfo.fullscreen_exclusive = FALSE;
+        // ...
         InputBrokerInfo.initialized = TRUE;
     } else if (phase == 1){
 
-        printk("Setup keymaps\n");
+        // printk("Setup keymaps\n");
 
         // Setup the keymaps
         ibroker_set_keymap(
@@ -4138,13 +4140,14 @@ int ibroker_initialize(int phase)
             (unsigned char *) extended_abnt2   // Extended
         );
 
-        //panic ("breakpoint");
+    } else {
+        // return (int) -1;
     };
 
-
 // #test
-// Mouse support
+// kernel-side mouse pointer drawing
 // Set flag
+
     //ibroker_use_kernelside_mouse_drawing(TRUE);
     ibroker_use_kernelside_mouse_drawing(FALSE);
 

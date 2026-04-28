@@ -3035,9 +3035,9 @@ int VirtualConsole_early_initialization(void)
     // #debug
     PROGRESS("VirtualConsole_early_initialization: (First time)\n");;
 
-// Console em primeiro plano.
+// Console em primeiro plano
     fg_console = CONSOLE0;
-// Redirecionador.
+// Redirecionador
     redirect = NULL;
 
 // Initialize the input broker.
@@ -3049,12 +3049,12 @@ int VirtualConsole_early_initialization(void)
 // Initialize the output broker.
     obroker_initialize();
 
-    __EscapeSequenceStage=0;
+    __EscapeSequenceStage = 0;
 
 // Limpa o array de parâmetros usado durante o 
 // tratamento de escape sequencies.
     for (i=0; i<NPAR; i++){
-        par[i]=0;
+        par[i] = 0;
     };
 
     unsigned int bg_colors[CONSOLETTYS_COUNT_MAX];
