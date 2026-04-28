@@ -495,9 +495,12 @@ struct gws_window_d
 // offscreen buffers in a lightweight way before scaling up
 // to full-window canvases.
 
-// Main drawing surface (client area)
-// This is the primary canvas where the window's content is rendered.
-    struct canvas_information_d *canvas;
+
+// The canvas for the frame/chrome. (Painted by the compositor)
+    struct canvas_information_d *frame_canvas;
+// The canvas for the client-area. (Painted by the apps)
+    struct canvas_information_d *ca_canvas;
+
 
 // Small experimental canvases for components
 // These are optional and can be allocated only when needed.

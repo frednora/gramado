@@ -1031,7 +1031,7 @@ redraw_window (
     {
         if (window->style == WS_APP)
         {
-            ci = (struct canvas_information_d *) window->canvas;
+            ci = (struct canvas_information_d *) window->frame_canvas;
             dc = (struct dccanvas_d *) ci->dc;
 
             if (window->style & WS_APP)

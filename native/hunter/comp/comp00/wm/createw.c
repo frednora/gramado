@@ -169,7 +169,7 @@ int destroy_window_by_wid(int wid)
     {
         if (window->style == WS_APP)
         {
-            ci = (struct canvas_information_d *) window->canvas;
+            ci = (struct canvas_information_d *) window->frame_canvas;
             ci->dirty = FALSE;  // Do not blit it anymore.
             //#todo: We gotta delete this structure 
             // and remove it from the linked list into the compositor.
@@ -1692,7 +1692,7 @@ void *doCreateAndDrawWindow (
     struct dccanvas_d *dc;
     struct canvas_information_d *ci;
 
-    window->canvas = NULL;
+    window->frame_canvas = NULL;
 
     if (CONFIG_USE_REAL_COMPOSITOR == 1)
     {
@@ -1709,7 +1709,7 @@ void *doCreateAndDrawWindow (
 
             // Link with the window
             ci->owner_window = window; // link to the window
-            window->canvas = ci;       // window keeps a pointer to its canvas
+            window->frame_canvas = ci;       // window keeps a pointer to its canvas
             // add to the list for the compositor
             comp_add_to_list(ci);
         }
