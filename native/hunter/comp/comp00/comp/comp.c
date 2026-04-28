@@ -1305,11 +1305,11 @@ void compComposeDesktop(void)
         
         //if ((void*) ci != NULL)
         //{
-            //if (ci->used == 1234)
-            //{
+            if (ci->initialized == TRUE)
+            {
                 // If dirty, flush it into the backbuffer.
-                //if (ci->dirty == TRUE)
-                //{
+                if (ci->dirty == TRUE)
+                {
                     //printf ("dirty\n");
                     ci_src = ci;
                     ci_dst = canvas_backbuffer;
@@ -1372,12 +1372,9 @@ void compComposeDesktop(void)
                     //    my_width,  // width 
                     //    my_height  // height
                     //);
-                    
 
-                    // Flush it into the backbuffer
-                    // ci->dirty = FALSE;
-                //}
-            //}
+                }
+            }
         //}
 
         Counter++;

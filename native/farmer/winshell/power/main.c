@@ -564,6 +564,9 @@ int main(int argc, char *argv[])
 
 // =========================================
 // Main window
+
+    unsigned long mw_style = WS_APP;
+
     unsigned long win_w = screen_w / 2;
     unsigned long win_h = screen_h / 2;
     unsigned long win_x = screen_w/4;  //(screen_w - win_w) / 2;
@@ -578,7 +581,7 @@ int main(int argc, char *argv[])
                 "Power Manager",
                 win_x, win_y, win_w, win_h,
                 0,
-                0x0000,  // style
+                mw_style,  // style
                 COLOR_WHITE, COLOR_GRAY );
 
     if (main_window < 0) {

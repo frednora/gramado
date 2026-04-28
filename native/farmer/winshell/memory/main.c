@@ -619,6 +619,9 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+
+    unsigned long mw_style = WS_APP;
+
     // Main window geometry
     unsigned long win_w = screen_w / 2;
     unsigned long win_h = screen_h / 2;
@@ -634,7 +637,7 @@ int main(int argc, char *argv[])
             "Memory Information",
             win_x, win_y, win_w, win_h,
             0,
-            0x0000,  // style
+            mw_style,  // style
             COLOR_WHITE, 
             COLOR_GRAY );
 

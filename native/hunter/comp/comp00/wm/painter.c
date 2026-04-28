@@ -1023,9 +1023,38 @@ redraw_window (
 
 
 // #test
-// Slip the redrawing for overlapped and buttons
+// Skip the redrawing for overlapped and buttons
+    struct canvas_information_d *ci;
+    struct dccanvas_d *dc;
+
     if (CONFIG_USE_REAL_COMPOSITOR == 1)
     {
+        if (window->style == WS_APP)
+        {
+            ci = (struct canvas_information_d *) window->canvas;
+            dc = (struct dccanvas_d *) ci->dc;
+
+            if (window->style & WS_APP)
+            {
+                // Draw a string into the canvas
+                dc_draw_horizontal_line(
+                    dc, 
+                    0,  // x1 
+                    0,  // y
+                    window->width,  // x2
+                    COLOR_YELLOW, 
+                    0 
+                );
+
+                // Draw string into de canvas
+                dc_drawstring ( 
+                    dc, 4, 4, COLOR_WHITE, COLOR_BLUE,
+                    ROP_COPY, window->name );
+
+                ci->dirty = TRUE;
+            }
+        }
+
         if (window->type == WT_BUTTON)
         {
             window->dirty = TRUE; // Flush the offscreen buffer

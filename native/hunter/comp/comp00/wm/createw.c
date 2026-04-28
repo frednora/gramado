@@ -130,7 +130,6 @@ void useFrame( int value )
 }
 */
 
-
 int destroy_window_by_wid(int wid)
 {
     struct gws_window_d *window;
@@ -147,7 +146,7 @@ int destroy_window_by_wid(int wid)
         goto fail;
     }
 
-// Window structure.
+// Window structure
     window = (struct gws_window_d *) get_window_from_wid(wid);
     if ((void*) window == NULL)
         goto fail;
@@ -159,6 +158,24 @@ int destroy_window_by_wid(int wid)
 // The shutdown routine weill destroy it manually.
     if (window == __root_window){
         goto fail;
+    }
+
+
+// --------------------------------------
+// App window in compositor mode
+    struct canvas_information_d *ci;
+
+    if (CONFIG_USE_REAL_COMPOSITOR == 1)
+    {
+        if (window->style == WS_APP)
+        {
+            ci = (struct canvas_information_d *) window->canvas;
+            ci->dirty = FALSE;  // Do not blit it anymore.
+            //#todo: We gotta delete this structure 
+            // and remove it from the linked list into the compositor.
+            //ci->used = FALSE; // Not in use.
+            //ci = NULL;  // Delete the canvas
+        }
     }
 
 // --------------------------------------
@@ -1668,6 +1685,39 @@ void *doCreateAndDrawWindow (
         return NULL;
     }
 
+// ================
+// #test
+// Creating a canvas for the window
+    size_t size_in_kb = 128; //64;
+    struct dccanvas_d *dc;
+    struct canvas_information_d *ci;
+
+    window->canvas = NULL;
+
+    if (CONFIG_USE_REAL_COMPOSITOR == 1)
+    {
+        if (style & WS_APP)
+        {
+            dc = (struct dccanvas_d *) comp_create_dc_and_allocate_buffer(size_in_kb);
+            ci = (struct canvas_information_d *) compCreateNewCanvas(dc);
+
+            // Draw string
+            //dc_drawstring ( 
+            //    dc, 10, 2, COLOR_YELLOW, COLOR_BLUE,
+            //    ROP_COPY, window->name );
+            //ci->dirty = TRUE;
+
+            // Link with the window
+            ci->owner_window = window; // link to the window
+            window->canvas = ci;       // window keeps a pointer to its canvas
+            // add to the list for the compositor
+            comp_add_to_list(ci);
+        }
+    }
+// ================
+
+
+
 // #test
 // Window class
     window->window_class.ownerClass = gws_WindowOwnerClassNull;
@@ -1921,6 +1971,7 @@ void *doCreateAndDrawWindow (
     } else if ((void*) title == NULL){
         window->name = (char *) default_window_name;
     };
+
 
 // ===================================
 // Parent
@@ -2200,6 +2251,45 @@ void *doCreateAndDrawWindow (
             WindowManager.is_fullscreen = TRUE;
         }
     }
+
+
+
+// ==================================================
+// Draw inside the canvas
+
+    if (CONFIG_USE_REAL_COMPOSITOR == 1)
+    {
+        if (style & WS_APP)
+        {
+            // Draw a string into the canvas
+            dc_draw_horizontal_line(dc, 
+                0,  // x1 
+                0,  // y
+                window->width,  // x2
+                COLOR_YELLOW, 
+                0 
+            );
+
+            // Draw a string into the canvas
+            // #bugbug: Can't do it if the height is bigger
+            // than the canvas height
+            //dc_draw_horizontal_line(dc, 
+            //    0,  // x1 
+            //    window->height -1,  // y
+            //    window->width,      // x2
+            //    COLOR_YELLOW, 
+            //    0 
+            // );
+
+            // Draw string into de canvas
+            dc_drawstring ( 
+                dc, 4, 4, COLOR_WHITE, COLOR_BLUE,
+                ROP_COPY, window->name );
+            ci->dirty = TRUE;
+        }
+    }
+
+// ==================================================
 
 // Colors: 
 // Background and client area background.
@@ -3363,6 +3453,8 @@ draw_frame:
         goto fail;
     }
 
+// ==========================================
+
 //
 // Setup the parameters for the frame drawing routine
 //
@@ -3475,7 +3567,7 @@ draw_frame:
     }
 
 // z order for overlapped.
-// Quando criamos uma overlapped, ela deve vicar no topo da pilha.
+// Quando criamos uma overlapped, ela deve ficar no topo da pilha.
     if (type == WT_OVERLAPPED)
     {
         // #bugbug

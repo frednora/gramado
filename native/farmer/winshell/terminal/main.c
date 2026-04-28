@@ -3691,6 +3691,8 @@ int terminal_init(unsigned short flags)
 // ===================================================
 // main window
 
+    unsigned long mw_style = WS_APP | WS_TERMINAL;
+
     main_window = 
         (int) gws_create_window (
                 client_fd,
@@ -3700,7 +3702,7 @@ int terminal_init(unsigned short flags)
                 program_name,
                 mwLeft, mwTop, mwWidth, mwHeight,
                 0, 
-                WS_APP | WS_TERMINAL,  // Style 
+                mw_style, 
                 mwColor, mwColor 
             );
 

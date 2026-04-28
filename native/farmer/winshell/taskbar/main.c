@@ -1582,7 +1582,7 @@ int main(int argc, char *argv[])
     unsigned long tb_h = TestHeight;
 */
 
-    unsigned long style = WS_TASKBAR | WS_APP;
+    unsigned long style = WS_APP | WS_TASKBAR;
 
     TaskbarInfo.left = tb_l;
     TaskbarInfo.top = tb_t;
