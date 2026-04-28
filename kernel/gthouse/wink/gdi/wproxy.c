@@ -12,6 +12,8 @@ struct wproxy_d *wproxy_head;
 struct wproxy_d *wproxy_hover;
 // Shell window proxy. It is the taskbar.
 struct wproxy_d *wproxy_shell;
+// The desktop area wproxy
+struct wproxy_d *wproxy_desktop;
 // ...
 
 
@@ -177,7 +179,7 @@ void wproxy_hit_test00(unsigned long x, unsigned long y)
                     wproxy_hover->hit_area = HIT_DESKTOP;
             }
         }
-    }
+    };
 }
 
 // Create a window proxy object and add it into the list.
@@ -192,7 +194,7 @@ struct wproxy_d *wproxyCreateObject(void)
     }
     wproxy->used = TRUE;
     wproxy->magic = 1234;
-    wproxy->has_frame = TRUE;  // By default, assume it has a frame/chrome.
+    //wproxy->has_frame = TRUE;  // By default, assume it has a frame/chrome.
 
     status = (int) __wproxy_add_to_list(wproxy);
     if (status != 0){
@@ -238,7 +240,7 @@ int wproxy_set_shell(tid_t tid)
 
 // Set the shell window proxy. The taskbar is the shell.
     wproxy_shell = wproxy;
-    wproxy_shell->has_frame = FALSE;  // No frame/chrome, only client area.
+    //->has_frame = FALSE;  // No frame/chrome, only client area.
     return (int) 0;
 
     // ...
@@ -247,7 +249,10 @@ fail:
     return (int) -1;
 }
 
+// Service 47
 // Create a window proxy object and initialize it with the given parameters.
+// The wproxy holds the pointer to the tid.
+// But the thread do not have a pointer for this wproxy.
 struct wproxy_d *wproxy_create0(
     tid_t tid,
     unsigned long l, 

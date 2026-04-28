@@ -1112,9 +1112,11 @@ int serviceAsyncCommand(void)
         dock_active_window(subrequest_id);
         break;
 
-    // Client is sharing a surface address
+    // Create the surface area for a client
+    // given the wid and the buffer address.
     case 100:
-        // printf("ds00: Shared address {%x}\n", data);
+        wid = (int) (data1 & 0xFFFFFFFF);
+        printf("ds00: wid {%d} | address {%x}\n", wid, data2);
         break;
 
 
@@ -4886,19 +4888,6 @@ int comploop_main (int argc, char **argv)
     return EXIT_SUCCESS;
 
 fail:
-
-// #todo
-// Unexpected fail.
-    server_debug_print("DS00.BIN: Hang on exit\n");
-    printf            ("DS00.BIN: Hang on exit\n");
-
-    // #test
-    // exit(Status);
-    exit(1);
-
-    while(1){
-    };
-
     return EXIT_FAILURE;
 }
 

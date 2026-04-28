@@ -4275,22 +4275,20 @@ gws_async_command2 (
         goto fail;
     if (libgws_disp->magic != 1234)
         goto fail;
-    unsigned long *message_buffer = 
-        (unsigned long *) libgws_disp->packet;
+    unsigned long *message_buffer = (unsigned long *) libgws_disp->packet;
 
 // --------------------
-// Clean the main buffer.
+// Clean the main buffer
     for (i=0; i<512; i++){
         libgws_disp->packet[i] = 0;
     };
 
-// Window ID
-    message_buffer[0] = 0;
-// Message code. (2222?)
-    message_buffer[1] = GWS_AsyncCommand;
+// wid, msg code, request, subrequest.
 // #todo: We need a list of services we can all with this function.
-    message_buffer[2] = request;      // request
-    message_buffer[3] = sub_request;  // sub request
+    message_buffer[0] = 0;
+    message_buffer[1] = GWS_AsyncCommand;
+    message_buffer[2] = request;
+    message_buffer[3] = sub_request;
 
 // Data field
 // #todo: We can deliver more data if we want

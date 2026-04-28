@@ -535,7 +535,8 @@ void *sci0 (
 
 // 47 - Create wproxy support
 // Create a wproxy.
-// #ps: Not associated with a thread.
+// The wproxy holds the pointer to the tid.
+// But the thread do not have a pointer for this wproxy.
     if (number == 47)
     {
         unsigned int wproxy_Color = 

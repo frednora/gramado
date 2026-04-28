@@ -3314,44 +3314,8 @@ fail:
     return 0;
 }
 
-/*
- * libgui_putpixel0:
- *   Write a pixel into a backbuffer using a raster operation (ROP).
- *   The server (kgws) can access the backbuffer but not the frontbuffer,
- *   so it must use the video driver dialog for display.
- *
- * Parameters:
- *   _color     - Source color (BGRA)
- *   _x, _y     - Pixel coordinates
- *   _rop_flags - ROP code (low byte)
- *   buffer_va  - Virtual address of the backbuffer
- *
- * Returns:
- *   Number of pixels changed (currently always 1, or 0 on error).
- */
-
-/*
- * libgui_putpixel0:
- *     O servidor kgws pode acessar um buffer. Mas não tem acesso
- * ao frontbuffer. Para isso ele precisa usasr o diálogo do driver 
- * de vídeo.
- * IN: 
- *     color, x, y, rop_flags, buffer va.
- */
-// #todo
-// + Change the names of these parameters.
-// + Create a parameter for the address of the buffer.
-
-// Colors:
-// b,   g,  r,  a = Color from parameter.
-// b2, g2, r2, a2 = Color from backbuffer.
-// b3, g3, r3, a3 = Color to be stored.
-// Performance
-// Direct memory writes are fine for now, but later you might want:
-//  + Inline assembly for speed.
-//  + SIMD operations for batch pixel effects.
-//  + Double-buffering strategies (swap back/front).
-
+// Write pixel inside a canvas.
+// IN: dc, x, y, rop
 int
 libgui_putpixel0 ( 
     struct dccanvas_d *dc,
@@ -4431,8 +4395,7 @@ libgui_backbuffer_draw_rectangle0 (
     };
 
     rect.dirty = TRUE;  // Invalidate
-
-done:
+// done:
     return;
 }
 
@@ -4691,8 +4654,7 @@ libgui_frontbuffer_draw_rectangle0 (
     };
 
     rect.dirty = TRUE;  // Invalidate
-
-done:
+//done:
     return;
 }
 

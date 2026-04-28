@@ -46,10 +46,11 @@ static void reset_prompt(void)
 
 static void show_prompt(void)
 {
-    //write(1, "$ ", 2);
-    write(1, "shell2.bin-$ ", 13);
-}
+    const char *MyString = "shell2.bin-$ ";
 
+    //write(1, "$ ", 2);
+    write(1, MyString, 13);
+}
 
 //====================================================
 // Local worker: run a command line, feed stdin, launch child
@@ -116,20 +117,25 @@ static void process_run_command(const char *cmdline, int use_pipes)
 // Process a completed command
 //====================================================
 
+// Process a command line present in prompt[].
 static void process_command(void)
 {
     char *argv[16];   // up to 16 args
     int argc = 0;
 
-    // Tokenize input line
+// ------------
+// Tokenize input line
     char *token = strtok(prompt, " \t");
-    while (token != NULL && argc < 16) {
+    while (token != NULL && argc < 16) 
+    {
         argv[argc++] = token;
         token = strtok(NULL, " \t");
-    }
-    argv[argc] = NULL; // terminate list
+    };
+    argv[argc] = NULL;  // terminate list
+// ------------
 
-    if (argc == 0) {
+    if (argc == 0) 
+    {
         // empty line
         //reset_prompt();
         //show_prompt();
@@ -139,12 +145,14 @@ static void process_command(void)
     // Built-in commands
     if (strcmp(argv[0], "about") == 0) {
         write(1, "shell2: minimal stdin/stdout shell\n", 34);
+        write(1, "\n", 1);  // Go to the next line
     }
     else if (strcmp(argv[0], "help") == 0) {
         write(1, "shell2: commands: about, help, run\n", 34);
-
+        write(1, "\n", 1);  // Go to the next line
     }
     else if (strcmp(argv[0], "run") == 0 && argc > 1) {
+
         // Build the command line string from argv[1..]
         char cmdline[128];
         memset(cmdline, 0, sizeof(cmdline));
@@ -184,6 +192,7 @@ static void process_command(void)
     }
     else {
         write(1, "shell2: unknown command\n", 24);
+        write(1, "\n", 1);  // Go to the next line
     }
 
     //reset_prompt();
@@ -210,12 +219,15 @@ static void shell_worker(void)
             // Printable ASCII
             if (C >= 0x20 && C <= 0x7E)
             {
-                if (prompt_pos < sizeof(prompt)-1) {
+                // Echo char back to the terminal or kernel console
+                write(1, &buf[0], 1);
+
+                // Inject it into the command line buffer.
+                if (prompt_pos < sizeof(prompt)-1)
+                {
                     prompt[prompt_pos++] = C;
                     prompt[prompt_pos] = 0;
                 }
-
-                write(1, &buf[0], 1);  // echo
             }
 
             // BACKSPACE
@@ -231,13 +243,13 @@ static void shell_worker(void)
             // ENTER
             else if (C == '\n' || C == '\r')
             {
-                write(1, "\n", 1);
+                write(1, "\n", 1);  // Go to the next line
                 process_command();
                 reset_prompt();
                 show_prompt();
             }
         }
-    }
+    };
 }
 
 //====================================================
