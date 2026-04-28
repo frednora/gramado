@@ -613,10 +613,9 @@ static void csi_at (int nr, int console_number)
     };
 }
 
+// Set the new fg_console
 void console_set_current_virtual_console(int console_number)
 {
-// Set the new fg_console.
-
     if (console_number == fg_console){
         return;
     }
@@ -758,18 +757,18 @@ void set_up_cursor2 ( int console_number, unsigned long x, unsigned long y )
 }
 */
 
+// In the case of called before console initialization
 unsigned long get_cursor_x(void)
 {
-// In the case of called before console initialization.
     if (fg_console<0 || fg_console>=CONSOLETTYS_COUNT_MAX){
         return 0;
     }
     return (unsigned long) CONSOLE_TTYS[fg_console].cursor_x;
 }
 
+// In the case of called before console initialization
 unsigned long get_cursor_y(void)
 {
-// In the case of called before console initialization.
     if (fg_console<0 || fg_console>=CONSOLETTYS_COUNT_MAX){
         return 0;
     }
@@ -864,7 +863,6 @@ int console_scroll_rect(int console_number, int direction)
 // #todo: Argument 'direction'
     scroll_screen_rect();
 
-
 // -------------------------------------
 
 // #test
@@ -898,7 +896,6 @@ int console_scroll_rect(int console_number, int direction)
     OldTop    = CONSOLE_TTYS[console_number].cursor_top;
     OldRight  = CONSOLE_TTYS[console_number].cursor_right;
     OldBottom = CONSOLE_TTYS[console_number].cursor_bottom;
-
 
 // #bugbug
 // cursor_bottom Isso não é a última, é o limite.
@@ -970,8 +967,6 @@ fail:
  *   - Does not handle control characters or scrolling logic.
  */
 
-static void __console_outbyte_imp (int c, int console_number)
-{
 // Draw
 // Low level.
 // This routine is gonna call the function char_draw()
@@ -981,15 +976,10 @@ static void __console_outbyte_imp (int c, int console_number)
 // this way we will know that the function belongs
 // to the device driver.  Maybe display_draw_char().
 
+static void __console_outbyte_imp (int c, int console_number)
+{
     register int Ch = c;
-    //unsigned long Ch = (unsigned long) (c & 0xFF);
-
-// Target console
-    int n = (int) console_number;
-
-    int cWidth = get_char_width();
-    int cHeight = get_char_height();
-
+    int n = (int) console_number;  // Target console
     unsigned long screenx=0;
     unsigned long screeny=0;
     unsigned int bg_color = COLOR_BLUE;
@@ -1001,6 +991,9 @@ static void __console_outbyte_imp (int c, int console_number)
     if (n >= CONSOLETTYS_COUNT_MAX)
         return;
 
+// Char support
+    int cWidth = get_char_width();
+    int cHeight = get_char_height();
     if ( cWidth == 0 || cHeight == 0 )
     {
         x_panic ("__console_outbyte_imp: fail w h");
@@ -1025,11 +1018,11 @@ static void __console_outbyte_imp (int c, int console_number)
         x_panic     ("__console_outbyte_imp: kernel in text mode");
     }
 
-// Screen position.
+// Screen position
     screenx = (unsigned long) (cWidth  * CONSOLE_TTYS[n].cursor_x);
     screeny = (unsigned long) (cHeight * CONSOLE_TTYS[n].cursor_y);
 
-// Get the colors for this console.
+// Get the colors for this console
     bg_color = (unsigned int) CONSOLE_TTYS[n].bg_color; 
     fg_color = (unsigned int) CONSOLE_TTYS[n].fg_color;
 
@@ -2274,7 +2267,6 @@ console_banner(
     unsigned int fg_color = COLOR_WHITE;
     int ClearConsole = TRUE;
 
-
     // #todo: 
     // Change this based on flags.
     if (banner_flags & 0x1000)
@@ -2297,7 +2289,6 @@ console_banner(
         return;
     if (fg_console >= CONSOLETTYS_COUNT_MAX)
         return;
-
     if (CONSOLE_TTYS[fg_console].initialized != TRUE)
     {
         debug_print ("console_banner: fg_console not initialized\n");
@@ -2305,16 +2296,17 @@ console_banner(
         return;
     }
 
-// Get colors
+    // Get colors
     bg_color = CONSOLE_TTYS[fg_console].bg_color;
     fg_color = CONSOLE_TTYS[fg_console].fg_color;
 
-// Clear console.
+    // Clear console
     if (ClearConsole == TRUE){
         console_clear_imp( bg_color, fg_color, fg_console );
         set_up_cursor(0,0);
     }
 
+    // Strings
     if ((void*) product_string == NULL)
         return;
     if ((void*) build_string == NULL){
@@ -2367,7 +2359,7 @@ fail:
     return (int) -1;
 }
 
-// Create a console.
+
 int console_clear00(int console_number)
 {
     int ConsoleID = console_number;
@@ -2384,11 +2376,11 @@ int console_clear00(int console_number)
 // IN: bg color, fg color, console number.
     console_clear_imp( bg_color, fg_color, ConsoleID );
     return 0;
+
 fail:
     return (int) -1;
 }
 
-// Create foreground console.
 int console_clear(void)
 {
     int rv = -1;
@@ -3069,21 +3061,21 @@ int VirtualConsole_early_initialization(void)
     unsigned int fg_colors[CONSOLETTYS_COUNT_MAX];
 
 // -----------------------------
-// c0 console: --> INIT.BIN
-// Default kernel console.
+// c0 console:
+// Default kernel console
     bg_colors[0] = (unsigned int) COLOR_BLUE;
     fg_colors[0] = (unsigned int) COLOR_WHITE;
 // -----------------------------
-// c1 console: --> GRAMLAND.BIN
+// c1 console:
     bg_colors[1] = (unsigned int) COLOR_BLUE;
     fg_colors[1] = (unsigned int) COLOR_YELLOW;
 // -----------------------------
-// c2 console: --> NICCTLD.BIN
-// Warning console.
+// c2 console:
+// Warning console
     bg_colors[2] = (unsigned int) COLOR_ORANGE;
     fg_colors[2] = (unsigned int) COLOR_WHITE;
 // -----------------------------
-// c3 console: --> NETCTLD.BIN
+// c3 console:
 // Danger console.
     bg_colors[3] = (unsigned int) COLOR_RED;
     fg_colors[3] = (unsigned int) COLOR_YELLOW;

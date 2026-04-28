@@ -249,6 +249,7 @@ static void compareStrings(int fd);
 static void doPrompt(int fd);
 static void __on_return_key_pressed(int fd);
 
+static void doClose(int fd);
 static void doHelp(int fd);
 static void doAbout(int fd);
 static void __libc_test(int fd);
@@ -1237,6 +1238,24 @@ static void compareStrings(int fd)
 
 exit_cmp:
     return;
+}
+
+// Close the terminal application
+static void doClose(int fd)
+{
+    //printf("terminal.bin: MSG_CLOSE\n");
+    tputstring(fd, "terminal.bin: MSG_CLOSE\n");
+    //while(1){}
+
+    // Notify the child app with ETX/EOT
+    terminal_notify_child_close();
+
+    // Tear down the terminal windows
+    //gws_destroy_window(fd, terminal_window);
+    gws_destroy_window(fd, main_window);
+
+    // Exit the terminal process itself. (quick and dirty)
+    exit(0);
 }
 
 static void doHelp(int fd)
@@ -2730,24 +2749,6 @@ terminalProcedure (
         }
         break;
 
-    case MSG_DC1:
-        tputstring(fd, "MSG_DC1\n");
-        break;
-    case MSG_DC2:
-        tputstring(fd, "MSG_DC2\n");
-        break;
-    case MSG_DC3:
-        tputstring(fd, "MSG_DC3\n");
-        break;
-    case MSG_DC4:
-        tputstring(fd, "MSG_DC4\n");
-        break;
-
-    //case MSG_QUIT:
-    //case 4080:
-        //exit(0);
-        //break;
-
     case MSG_KEYDOWN:
         switch (long1)
         {
@@ -2849,23 +2850,28 @@ terminalProcedure (
         return 0;
         break;
 
-
-    case MSG_CLOSE:
-        //printf("terminal.bin: MSG_CLOSE\n");
-        tputstring(fd, "terminal.bin: MSG_CLOSE\n");
-        //while(1){}
-
-        // Notify the child app with ETX/EOT
-        terminal_notify_child_close();
-
-        // Tear down the terminal windows
-        //gws_destroy_window(fd, terminal_window);
-        gws_destroy_window(fd, main_window);
-
-        // Exit the terminal process itself. (quick and dirty)
-        exit(0);
+    case MSG_DC1:
+        tputstring(fd, "MSG_DC1\n");
+        break;
+    case MSG_DC2:
+        tputstring(fd, "MSG_DC2\n");
+        break;
+    case MSG_DC3:
+        tputstring(fd, "MSG_DC3\n");
+        break;
+    case MSG_DC4:
+        tputstring(fd, "MSG_DC4\n");
         break;
 
+    // Close the terminal application
+    case MSG_CLOSE:
+        doClose(fd);
+        break;
+
+    //case MSG_QUIT:
+    //case 4080:
+        //exit(0);
+        //break;
 
     //case GWS_Undo:  // [control + z] (Undo)
         //break;
@@ -3249,7 +3255,7 @@ static void __get_system_event(int fd, int wid)
         return;
         break;
 
-
+    // Device Control chars
     case MSG_DC1:
     case MSG_DC2:
     case MSG_DC3:
