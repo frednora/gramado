@@ -97,6 +97,7 @@ static void process_run_command(const char *cmdline, int use_pipes)
     // Report result
     if (tid < 0) {
         write(STDOUT_FILENO, "shell2: failed to launch\n", 24);
+        write(1, "\n", 1);  // Go to the next line
     } else {
 
         // #debug

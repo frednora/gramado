@@ -42,12 +42,12 @@ static int process_file(char *file_name);
 static void __clear_buffer(void);
 //-----------------------------
 
-static void cat_error( char *why);
+static void cat_error(char *why);
 static void cat_notice(char *where);
 
 // ========================================================
 
-static void cat_error( char *why)
+static void cat_error(char *why)
 {
     if ((void*) why == NULL)
         return;
@@ -249,7 +249,7 @@ int main(int argc, char *argv[])
             if (i >= Max){
                 goto fail;
             }
-            FileStatus = (int) process_file((char *) argv[i]);
+            FileStatus = (int) process_file( (char *) argv[i] );
             if (FileStatus < 0){
                 goto fail;
             }
