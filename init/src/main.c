@@ -1220,11 +1220,40 @@ int main( int argc, char **argv)
 // It changes if the user launch demo00 or demo01 instead of comp00.
     Init.environment = EnvironmentWinuCore;
 
+//
+// Runlevel
+//
+
+/*
+Standard Linux Runlevels (0-6)
+
+0 (Halt): 
+  Shuts down the system.
+
+1 (Single-User Mode): 
+  Minimal services, for maintenance or recovery.
+
+2 (Multi-User, No Network): 
+  Multi-user mode, but without network services.
+
+3 (Full Multi-User): 
+  Standard command-line interface (CLI) mode with networking.
+
+4 (Custom): 
+  Unused by default, can be defined by the user.
+
+5 (Graphical): 
+  Similar to runlevel 3 but with a graphical user interface (GUI).
+
+6 (Reboot): 
+  Reboots the system.
+*/
+
     // #debug
     // printf("Runlevel: %d\n", Init.__runlevel);
 
-    switch (Init.__runlevel){
-
+    switch (Init.__runlevel)
+    {
         case __RUNLEVEL_HALT:
             rtl_clone_and_execute(cmd_shutdown);
             exit(0);

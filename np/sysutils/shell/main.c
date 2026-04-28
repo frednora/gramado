@@ -246,9 +246,11 @@ static void process_command(void)
     // Built-in commands
     if (strcmp(argv[0], "about") == 0) {
         write(__fd_stdout, "shell: minimal stdin/stdout shell\n", 34);
+        write( __fd_stdout, "\n", 1 );  // Go to next line
     }
     else if (strcmp(argv[0], "help") == 0) {
         write(__fd_stdout, "shell: commands: about, help, run\n", 34);
+        write( __fd_stdout, "\n", 1 );  // Go to next line
 
     }
     else if (strcmp(argv[0], "run") == 0 && argc > 1) {
@@ -291,6 +293,7 @@ static void process_command(void)
     }
     else {
         write(__fd_stdout, "shell: unknown command\n", 24);
+        write( __fd_stdout, "\n", 1 );  // Go to next line
     }
 
     //reset_prompt();
@@ -327,18 +330,22 @@ static void shell_worker(void)
             // Printable ASCII
             if (C >= 0x20 && C <= 0x7E)
             {
-                if (prompt_pos < sizeof(prompt)-1) {
+                // Echo the char to the terminal or kernel console
+                write( __fd_stdout, &char_buf[0], 1 );
+
+                // Inject the chat into the cmdline buffer
+                if (prompt_pos < sizeof(prompt)-1) 
+                {
                     prompt[prompt_pos++] = C;
                     prompt[prompt_pos] = 0;
                 }
-
-                write( __fd_stdout, &char_buf[0], 1 );  // echo
             }
 
             // BACKSPACE
             else if (C == 0x7F || C == 0x08)
             {
-                if (prompt_pos > 0) {
+                if (prompt_pos > 0) 
+                {
                     prompt_pos--;
                     prompt[prompt_pos] = 0;
                     write( __fd_stdout, "\b \b", 3 );
@@ -348,8 +355,9 @@ static void shell_worker(void)
             // ENTER
             else if (C == '\n' || C == '\r')
             {
-                write( __fd_stdout, "\n", 1 );
+                write( __fd_stdout, "\n", 1 );  // Go to next line
                 process_command();
+
                 reset_prompt();
                 show_prompt();
             }
