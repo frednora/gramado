@@ -582,6 +582,18 @@ void *sci0 (
         return NULL;
     }
 
+// 50
+
+
+// 51
+// #test
+// Set fullscreen exclusive mode
+    if (number == 51){
+        InputBrokerInfo.fullscreen_exclusive = TRUE;
+        return NULL;
+    }
+
+
 // ...
 
 // 65 - Put a char in the current virtual console

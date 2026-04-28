@@ -3533,8 +3533,23 @@ done:
 // It returns
 // 3. Plain keydown → send outward to valid targets
 
+
+// #test
+// Fullscreen Exclusive mode (Games)
+    if (isCombination != TRUE)
+    {
+        if (InputBrokerInfo.fullscreen_exclusive)
+        {
+            ibroker_post_message_to_fg_thread(
+                Event_Message, 
+                Event_LongVK, 
+                Event_LongScanCode );
+            return 0;
+        }
+    }
+
     //if ( alt_status != TRUE && ctrl_status != TRUE && shift_status != TRUE )
-    if  (isCombination != TRUE)
+    if (isCombination != TRUE)
     {
 
         // Send it to the tty associated with stdin.

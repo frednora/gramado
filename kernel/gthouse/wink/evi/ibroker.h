@@ -26,6 +26,10 @@ struct input_broker_info_d
     //#test
     int use_kernelside_mouse_drawing;
 
+    // #test
+    // One app has exclusive access to the input and display device.
+    int fullscreen_exclusive;
+
     // ...
 };
 extern struct input_broker_info_d  InputBrokerInfo;

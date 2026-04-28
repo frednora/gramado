@@ -3983,6 +3983,10 @@ int main(int argc, char **argv)
 
     gamestate = GS_NULL;
 
+// #test
+// Set fullscreen exclusive mode in kernel-side.
+    // sc80(51,0,0,0);
+
 // #todo
 // Parse the parameters and select the flags.
 
