@@ -20,7 +20,7 @@ align 16
 ;     + It is never called from kernel mode.
 ;     + It calls a system service without changing the segment registers.
 ;     + We are using the caller cr3.
-;     It has four parameters:
+; It has four parameters:
 ;     rax - Argument 1
 ;     rbx - Argument 2
 ;     rcx - Argument 3
@@ -143,6 +143,13 @@ RequestHall_int128:
 .int128_cs: dq 0
 .int128_rip: dq 0
 ;--  
+
+; We can't build a dispatch table here, 
+; Because the service indexes are not in order
+; and the list of indexes is too long.
+;DISPATCH_INT128:
+;    dq ?   ; 0
+    ; ...
 
 ;;-----
 ; RequestHall_int129

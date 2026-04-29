@@ -2,6 +2,13 @@
 ; Entry point for a 64bit kernel image.
 ; Created by Fred Nora.
 
+; Order:
+; + Entrypoint (Jump to main routine)
+; + Data 
+; + Workers 
+; + Main routine 
+
+
 %include "header.asm"
 
 ; segment .head_x86_64
@@ -78,7 +85,7 @@ startup_64:
 
     cli
     cld 
-	; Jump to the end of this document.
+	; Jump to the end of this document
     jmp START
 
 ; =======================================================
@@ -203,6 +210,10 @@ sys_code      equ    8     ; Code selector
 ; Nesse momento criamos apenas o esqueleto da tabela,
 ; Uma rotina vai ser chamada para preencher o que falta.
 
+align 4
+DEBUG_IDT: db "IDT"
+
+align 4
 global _idt
 _idt:
 
@@ -2587,7 +2598,7 @@ align 4
 align 4
     %include "x86_64.asm"
 
-; Startup routine called by the entry point.
+; Startup routine called by the entry point
 align 4
 DEBUG_START: db "START"
 
@@ -2634,7 +2645,7 @@ START:
     mov r15, rax
 
 ; GDT
-; This gdt is here in this document.
+; This gdt is here in this document
     lgdt [EARLY_GDT64.Pointer]
 
 ; Segment registers:
@@ -2677,12 +2688,11 @@ START:
     mov gs, ax
 
 ; LDT
-; Initialize ldt with a NULL selector.
+; Initialize ldt with a NULL selector
     xor rax, rax
     lldt ax
 
-; Clear registers
-; RBP, RSI, RDI.
+; Clear registers RBP, RSI and RDI.
     xor rax, rax
     mov rbp, rax
     mov rsi, rax
@@ -2737,7 +2747,7 @@ START:
 ; PIT
     call PIT_early_initialization
 
-; Unmask all maskable interrupts.
+; Unmask all maskable interrupts
     mov al, 0
     out 0xA1, al
     IODELAY
@@ -2775,8 +2785,7 @@ START:
 
     ; call sw2_initialize_syscall_support
 
-;--------------------------------------
-
+; --------------------------------------
 ; Clear register 
     xor rax, rax
     xor rbx, rbx
@@ -2791,8 +2800,7 @@ START:
     mov r14, rax
     mov r15, rax
 
-;--------------------------------------
-
+; --------------------------------------
 .Ljmp_to_C_code:
 
 ; Use the calling convention for this compiler.
@@ -2877,7 +2885,6 @@ _asm_AP_entry_point:
     xor rax, rax
     lldt ax
 
-
 ; IDT
 ; #danger:
     lidt [_IDT_register] 
@@ -2888,20 +2895,16 @@ _asm_AP_entry_point:
     mov rax, _AP_kmain
     jmp rax
 
-;
-
 ;===================================================
 ; DATA: 
 ;     Início do Segmento de dados.
 ;     Coloca uma assinatura no todo.
-
 
 segment .data
 global _data_start
 _data_start:
     db 0x55
     db 0xAA
-
 
 ;=================================================================
 ; BSS:
