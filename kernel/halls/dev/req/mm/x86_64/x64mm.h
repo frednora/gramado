@@ -97,25 +97,6 @@ struct mm_zones_d *zones;
 
 // =============================================================
 
-// variaveis blobais de endereços 
-// usados no gerenciamento de zonas de memoria.
-
-/*
-#define SYSTEMZONE_START 0
-#define SYSTEMZONE_END   0x0FFFFFFF 
-#define WINDOWZONE_START 0x10000000
-//#define WINDOWZONE_END ??
-*/
-
-/*
-unsigned long systemzoneStart;
-unsigned long systemzoneEnd;
-unsigned long systemzoneSize;
-unsigned long windowzoneStart;
-unsigned long windowzoneEnd;    //?? Devemos levar em consideraçao o calculo do tamanho da mem�ria
-unsigned long windowzoneSize;
-*/
-
 
 /*
  * page_directory_d:
@@ -233,77 +214,11 @@ struct page_table_d
 
 unsigned long pagetableList[PAGETABLE_COUNT_MAX]; 
 
-//Linked List talvez seja uma op��o.
-//page_table_t *pagetableLinkedListHead;
 
-
-
-// ------------
-
-/**
- **  **  SUPER IMPORTANTE  **
- ** Super block.
- ** ESSAS VARI�VEIS GLOBAIS MARCAR�O O IN�CIO E O FIM 
- ** DA �REA DE MEM�RIA F�SICA DESTINADA AOS FRAMES DE MEM�RIA 
- ** F�SICA QUE SER�O USADOS PELO GERENCIADOR DE P�GINAS.
- ** Pertencer�o ao banco FDB. (Free Data Base).
- ** 0x10000000 � um bom lugar pra come�ar os frames ,
- ** na verdade os blocos 4MB, pois cada bloco de 4MB pode ser mapeado 
- ** usando apenas uma pagetable.
- ** mmFramesSuperBlockStart = 0x10000000
- ** mmFramesSuperBlockEnd   = 0x1FFFFFFF
- ** Esses s�o endere�os f�sicos.
- ** Obs: Ficar�o nesse lugar caso se tenha mem�ria dispon�vel para isso.
- **/
-
-/*
-// Frames Super Block.
-// Vari�veis globais parecem ser uma op��o melhor de estrutura
-// para esse caso. 
-// Obs: Temos listas de frames em algum lugar. 
-// Criaremos listas aqui para o FSB, que ser� o nome do gerenciado, 
-// para melhorar o controle dessa �rea.
-unsigned long mmFramesSuperBlockStart;      //Endere�o onde come�a o FSB.
-unsigned long mmFramesSuperBlockEnd;        //Endere�o onde termina o FSB.
-unsigned long mmFramesSuperBlockSize;       //Tamanho do FSB dado em bytes.
-unsigned long mmFramesSuperBlockTotal;      //Total de frames.
-unsigned long mmFramesSuperBlockTotalFree;  //Total de frames livres. 
-unsigned long mmFramesSuperBlockTotalUsed;  //Total de frames e uso. 
-//Continua...
-*/
-
-// ((0x1FFFFFFF - 0x10000000) / 512)  = QUANTIDADE DE FRAMES NESSA �REA.
-#define FSB_FRAMES_MAX      (1*1024) //?? @todo: Determinar melhor isso
-#define FSB_FREEFRAMES_MAX  (1*1024) //?? @todo: Determinar melhor isso
-
-//## BUGBUG isso tornaria esse array bem grande.
-
-
-//
-// Lista com todos.
-//
-
-// Lista de ponteiros para as estruturas de 
-// todos os frames do FSB.
-unsigned long fsbFrames[FSB_FRAMES_MAX]; 
-
-//
-// Lista de livres.
-//
-
-// Lista de ponteiros para as estruturas de 
-// todos os frames 'LIVRES' do FSB.
-unsigned long fsbFreeFrames[FSB_FREEFRAMES_MAX];  
- 
- 
 
 //
 // memory:
 //
-
-
-
-
 // Quantidade m�xima de framepools.
 // Um framepool � uma parti��o da mem�ria f�sica.
 // Cada framepool � composto de 1024 pageframes.

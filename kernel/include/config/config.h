@@ -26,6 +26,11 @@
 // See: clone.c process.c and process.h
 #define CONFIG_RING3_STACK_SIZE_IN_KB    64  //32
 
+
+// #test
+#define CONFIG_TEST_MMBLOCK00  0
+
+
 // ------------------------------------------------------
 // Target machine
 // #todo: Explain it better.

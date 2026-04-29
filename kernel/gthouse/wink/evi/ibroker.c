@@ -1142,6 +1142,39 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         goto exit_cmp;
     }
 
+    char *mm256a = (char *) 0x10000000;
+    char *mm256b = (char *) 0x10200000;
+    char *mm256c = (char *) 0x10400000;
+    char *mm256d = (char *) 0x10600000;
+    char *mm256e = (char *) 0x10800000;
+    if ( kstrncmp(cmdline,"mm256",5) == 0 )
+    {
+        if (CONFIG_TEST_MMBLOCK00 != 1)
+            goto exit_cmp;
+
+        mm256a[8] = 'a';
+        if (mm256a[8] == 'a')
+            printk("a ok\n");
+
+        mm256b[8] = 'b';
+        if (mm256b[8] == 'b')
+            printk("b ok\n");
+
+        mm256c[8] = 'c';
+        if (mm256c[8] == 'c')
+            printk("c ok\n");
+
+        mm256d[8] = 'd';
+        if (mm256d[8] == 'd')
+            printk("d ok\n");
+
+        mm256e[8] = 'e';
+        if (mm256e[8] == 'e')
+            printk("e ok\n");
+
+        goto exit_cmp;
+    }
+
 
 // path:
 // Test the use of 'pathnames' with multiple levels.

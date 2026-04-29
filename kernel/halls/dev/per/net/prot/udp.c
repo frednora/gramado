@@ -780,8 +780,8 @@ network_handle_udp(
 // What kind of data we're pushing into these buffers?
 // Is it the raw frame only? Or only UDP?
 // see: network.c
-    int PushIntoTheQueue = TRUE;
-    //int PushIntoTheQueue = FALSE;
+    //int PushIntoTheQueue = TRUE;
+    int PushIntoTheQueue = FALSE;
 
     int NoReply = TRUE;
 
