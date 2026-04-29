@@ -2415,8 +2415,7 @@ update_window (
 // The window manager is in full screen.
 // This is window needs to have 
 // the position and dimension for fullscreen
-// #todo: For now we are prepering the window for 
-// a maximized visual.
+// #todo: For now we are prepering the window for a maximized visual.
     if (WindowManager.is_fullscreen == TRUE)
     {
         // The keyboard and mouse owner
@@ -2466,11 +2465,12 @@ update_window (
 
 // Tile or not?
 
-    // Redraw and paint the childs of the window with focus.
+    // Redraw and paint the childs of the window with focus
     if (flags == TRUE){
         redraw_window(window,TRUE);
         on_update_window(window,GWS_Paint);
-    // Only redraw it.
+
+    // Only redraw it
     } else {
         redraw_window(window,FALSE);
     }
@@ -4918,7 +4918,6 @@ void wm_enter_fullscreen_mode(void)
 // Set the window and the flag
     WindowManager.fullscreen_window = (struct gws_window_d *) w;
     WindowManager.is_fullscreen = TRUE;
-
 
 // Redraw bg
     redraw_window(__root_window,FALSE);

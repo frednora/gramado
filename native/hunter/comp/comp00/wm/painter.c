@@ -1334,7 +1334,8 @@ redraw_window (
                     // #warning: Not recursive. 
                     // Paint, but do not show them.
                     // It also redraw the controls.
-                    redraw_titlebar_window(window->titlebar);
+                    //if (WindowManager.is_fullscreen != TRUE)
+                        redraw_titlebar_window(window->titlebar);
                 }
             }
         }
@@ -1363,6 +1364,7 @@ redraw_window (
                 }
             }
 
+            //if (WindowManager.is_fullscreen != TRUE)
             __draw_window_border(
                 window->parent, window,
                 __rop_top_border, 
@@ -1373,6 +1375,7 @@ redraw_window (
 
         if (window->type == WT_POPUP)
         {
+            //if (WindowManager.is_fullscreen != TRUE)
             __draw_window_border(
                 window->parent, window,
                 __rop_top_border, 
@@ -1516,7 +1519,7 @@ int clear_window_by_id(int wid, unsigned long flags)
     struct gws_window_d *w;
 
 // Validations
-    if (wid<0 || wid>=WINDOW_COUNT_MAX){
+    if (wid<0 || wid >= WINDOW_COUNT_MAX){
         goto fail;
     }
     w = (void*) windowList[wid];
