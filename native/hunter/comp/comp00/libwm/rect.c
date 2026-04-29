@@ -1363,15 +1363,19 @@ __drawrectangle0(
 // #debug
 // Provisório
 
+    /*
     if ( ClippingRect.width > 800 ){
         //server_debug_print("__drawrectangle0: width");
         return;
     }
+    */
     
+    /*
     if ( ClippingRect.height > 600 ){
         //server_debug_print("__drawrectangle0: height");
         return;
     }
+    */
 
     /*
     if ( ClippingRect.right > 800 ){
@@ -1527,16 +1531,25 @@ rectBackbufferDrawRectangle0 (
     unsigned long device_h = (unsigned long) gws_get_device_height();
     device_w = (unsigned long) (device_w & 0xFFFF);
     device_h = (unsigned long) (device_h & 0xFFFF);
-// #provisório
-// limites do dispositivo
-    if (device_w > 800){
+
+// #hack provisory
+// Resolution limits
+    
+    if (device_w > 800)
+    {
         debug_print("rectBackbufferDrawRectangle0: [FAIL] device_w\n");
-        return; 
+        //return; 
     }
-    if (device_h > 600){
+
+    // #hack provisory
+    // We dont wanna mess up the memory beyond the buffer
+    if (device_h > 600)
+    {
+        height = 600;
         debug_print("rectBackbufferDrawRectangle0: [FAIL] device_h\n");
-        return; 
+        //return; 
     }
+
 
 // Set values
     rect.left   = (unsigned long) (x      & 0xFFFF);

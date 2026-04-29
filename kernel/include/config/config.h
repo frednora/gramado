@@ -28,8 +28,8 @@
 
 
 // #test
-#define CONFIG_TEST_MMBLOCK00  0
-
+// #ps: Necessary for the new areas in 256mb and 512mb marks.
+#define CONFIG_TEST_MMBLOCK00  1
 
 // ------------------------------------------------------
 // Target machine

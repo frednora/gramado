@@ -1142,8 +1142,12 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         goto exit_cmp;
     }
 
-    char *mm256  = (char *) 0x10000000;  // 256mb mark
-    char *mm512  = (char *) 0x20000000;  // 512mb mark
+    //char *mm256a  = (char *) 0x10000000;  // 256mb mark
+    //char *mm256b  = (char *) 0x10800000;  // 
+
+    char *mm512a  = (char *) 0x20000000;  // 512mb mark
+    char *mm512b  = (char *) 0x20800000;  // 
+
     // #caution: 
     // 768mb mark (kernel image and kernel stuff)
     //char *mm768  = (char *) 0x30000000;  
@@ -1153,14 +1157,24 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
             goto exit_cmp;
 
         // 1) 256mb mark
-        mm256[8] = '1';
-        if (mm256)
-            printk("mm256: 1 ok\n");
+        //mm256a[8] = '1';
+        //if (mm256a[8] == '1')
+            //printk("mm256a: 1 ok\n");
 
-        // 2) 512mb mark
-        mm512[8] = '2';
-        if (mm512[8] == '2')
-            printk("mm512: 2 ok\n");
+        // 
+        //mm256b[8] = '2';
+        //if (mm256b[8] == '2')
+            //printk("mm256b: 2 ok\n");
+
+        // 1) 512mb mark
+        mm512a[8] = '1';
+        if (mm512a[8] == '1')
+            printk("mm512a: 1 ok\n");
+
+        // 
+        mm512b[8] = '2';
+        if (mm512b[8] == '2')
+            printk("mm512b: 2 ok\n");
 
         goto exit_cmp;
     }

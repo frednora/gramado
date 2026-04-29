@@ -120,18 +120,25 @@ __drawrectangle0(
 // #debug
 // Provisório
 
+/*
     if ( ClippingRect.width > 800 ){
+        debug_print("__drawrectangle0: width\n");
         panic("__drawrectangle0: width\n");
     }
     if ( ClippingRect.height > 600 ){
         panic("__drawrectangle0: height\n");
+        panic("__drawrectangle0: height\n");
     }
     if ( ClippingRect.right > 800 ){
+        debug_print("__drawrectangle0: right\n");
         panic("__drawrectangle0: right\n");
     }
     if ( ClippingRect.bottom > 600 ){
+        debug_print("__drawrectangle0: bottom\n");
         panic("__drawrectangle0: bottom\n");
     }
+*/
+
 
 //
 // == Target rectangle ================
@@ -171,11 +178,21 @@ __drawrectangle0(
     if ( Rect.bottom > ClippingRect.bottom ){ Rect.bottom = ClippingRect.bottom; }
 
 // Draw
-// Draw lines on backbuffer.
+// Draw lines on backbuffer
 
+/*
     //#provisório
-    if ( internal_height > 600 ){
+    if (internal_height > 600){
+       debug_print("__drawrectangle0: internal_height\n");
        panic("__drawrectangle0: internal_height\n");
+    }
+*/
+    // #hack
+    // We dont wanna mess up the memory
+    if (internal_height > 600)
+    {
+        debug_print("__drawrectangle0: [HACK] 600 h ajust for resolution limit\n");
+        internal_height = 600;
     }
 
 // Paint
@@ -406,6 +423,15 @@ __refresh_rectangle0 (
 // Não copiamos a parte que está fora da janela do dispositivo.
 // memcpy64: 8 bytes per time.
 
+    // #hack
+    // We dont wanna mess up the memory beyond the buffer
+    if (lines > 600)
+    {
+        debug_print("__refresh_rectangle0: [HACK] 600 h ajust for resolution limit\n");
+        lines = 600;
+    }
+
+
     if ( (rectangle_pitch % 8) == 0 )
     {
         count = (rectangle_pitch>>3);
@@ -534,10 +560,11 @@ refresh_rectangle (
     }
 // =====================
 
-    __refresh_rectangle0(
+    __refresh_rectangle0 (
         x, y, width, height,
-        FRONTBUFFER_ADDRESS,   // dest
-        BACKBUFFER_ADDRESS );  // src
+        FRONTBUFFER_VA,   // dest
+        BACKBUFFER_VA     // src
+    );  
 }
 
 // scroll_screen_rect:
@@ -598,13 +625,13 @@ void scroll_screen_rect (void)
 // Source is the second line. It has the height of a char.
 
     void *Dest = 
-        (void *) BACKBUFFER_ADDRESS;
+        (void *) BACKBUFFER_VA;
     
     unsigned long SrcOffset = 
         (unsigned long) (bytes_count * gSavedX * cHeight);
     
     const void *Src = 
-        (const void *) (BACKBUFFER_ADDRESS + SrcOffset);
+        (const void *) (BACKBUFFER_VA + SrcOffset);
 
 // Copy
 // #importante

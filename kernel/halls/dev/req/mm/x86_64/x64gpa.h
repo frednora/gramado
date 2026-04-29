@@ -410,7 +410,8 @@ See: https://wiki.osdev.org/Memory_Map_(x86)
 // 0x04000000
 // The backbuffer has only 2MB in size for now.
 // But maybe in the future we can extend it.
-#define BACKBUFFER_PA  0x04000000
+#define BACKBUFFER_PA  0x04000000 
+
 
 // Here is a big space reserved for the backbuffer.
 
@@ -452,7 +453,7 @@ See: https://wiki.osdev.org/Memory_Map_(x86)
 // 0x20000000
 #define __512MB_MARK_PA  (0x20000000)
 
-
+// 768
 // 0x30000000 - 768mb mark
 
 //

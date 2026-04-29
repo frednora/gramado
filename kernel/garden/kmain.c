@@ -1250,6 +1250,8 @@ static int I_initialize_kernel(int arch_type, int processor_number)
         // We initialized the serial debug support, and console structures, 
         // but we still can't use the printk functions.
         earlyinit();
+        //debug_print("Break point\n");
+        //while(1){}
         wink_update_progress_bar(5);
 
         // BSP is Booting

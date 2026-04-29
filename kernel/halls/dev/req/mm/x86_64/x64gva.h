@@ -79,6 +79,8 @@
 // #todo
 // These two main addresses are free.
 // 0x10000000 - 256mb mark
+
+
 // 0x20000000 - 512mb mark
 
 
@@ -144,8 +146,6 @@
 // Always NX (non-executable)
 // 768MB + 2MB mark (VA)
 #define FRONTBUFFER_VA  0x0000000030200000
-#define DEFAULT_LFB_VIRTUALADDRESS  FRONTBUFFER_VA 
-#define FRONTBUFFER_ADDRESS         FRONTBUFFER_VA
 
 //
 // Backbuffer (RAM) ----------------------------------
@@ -156,9 +156,9 @@
 // Backbuffer
 // Endereço virtual padrão para o BackBuffer. (buffer1)
 // 768MB + 4MB mark (VA)
-#define BACKBUFFER_VA   0x0000000030400000
-#define DEFAULT_BACKBUFFER_VIRTUALADDRESS  BACKBUFFER_VA
-#define BACKBUFFER_ADDRESS                 BACKBUFFER_VA
+#define BACKBUFFER_VA   0x0000000030400000  // Original 
+
+
 
 //
 // Paged pool --------------------------------

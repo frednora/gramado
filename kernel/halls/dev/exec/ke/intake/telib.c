@@ -12,7 +12,7 @@ static void print_size_bytes_kb(const char *label, unsigned long bytes) {
 */
 
 // Display information about the processes.
-// The structures are created inside the kernel's heap using kmallok.
+// The structures are created inside the kernel's heap using kmalloc.
 void show_process_information (void)
 {
     struct te_d *p;

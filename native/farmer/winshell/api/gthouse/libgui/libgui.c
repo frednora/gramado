@@ -4196,15 +4196,23 @@ libgui_backbuffer_draw_rectangle0 (
 
     device_w = (unsigned long) (device_w & 0xFFFF);
     device_h = (unsigned long) (device_h & 0xFFFF);
-// #provisório
-// limites do dispositivo
+
+// #hack provisory
+// Resolution limits
+
+
     if (device_w > 800){
         debug_print("libgui_backbuffer_draw_rectangle0: [FAIL] device_w\n");
-        return; 
+        //return; 
     }
-    if (device_h > 600){
+
+    // #hack provisory
+    // We dont wanna mess up the memory beyond the buffer
+    if (device_h > 600)
+	{
+        height = 600;
         debug_print("libgui_backbuffer_draw_rectangle0: [FAIL] device_h\n");
-        return; 
+        //return; 
     }
 
 // Set values

@@ -298,7 +298,7 @@ static unsigned long bl_test_memory_size(int mb)
 
         // Se nao conseguimos retirar os mesmos bytes que colocamos
         // e nao tivemos uma excecao.
-        }else{
+        } else {
 
             ____testing_memory_size_flag = 0;
             

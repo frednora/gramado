@@ -1796,14 +1796,17 @@ static void __initialize_canonical_kernel_pagetables(void)
 // 0x10000000 - 256mb mark - VA
 //
 
+
+// kernel-size 
     if (CONFIG_TEST_MMBLOCK00 == 1)
     {
         // 256mb mark - free
         mm_map_2mb_region_in_pd0(0x10000000,0x10000000);
         mm_map_2mb_region_in_pd0(0x10200000,0x10200000);
-        //mm_map_2mb_region_in_pd0(0x10400000,0x10400000);
-        //mm_map_2mb_region_in_pd0(0x10600000,0x10600000);
-        //mm_map_2mb_region_in_pd0(0x10800000,0x10800000);
+        mm_map_2mb_region_in_pd0(0x10400000,0x10400000);
+        mm_map_2mb_region_in_pd0(0x10600000,0x10600000);
+        mm_map_2mb_region_in_pd0(0x10800000,0x10800000);
+        // ...
     }
 
 
@@ -1811,11 +1814,16 @@ static void __initialize_canonical_kernel_pagetables(void)
 // 0x20000000 - 512mb mark - VA
 //
 
+// kernel-size 
     if (CONFIG_TEST_MMBLOCK00 == 1)
     {
         // 512mb mark - free
         mm_map_2mb_region_in_pd0(0x20000000,0x20000000);
         mm_map_2mb_region_in_pd0(0x20200000,0x20200000);
+        mm_map_2mb_region_in_pd0(0x20400000,0x20400000);
+        mm_map_2mb_region_in_pd0(0x20600000,0x20600000);
+        mm_map_2mb_region_in_pd0(0x20800000,0x20800000);
+        // ...
     }
 
 //

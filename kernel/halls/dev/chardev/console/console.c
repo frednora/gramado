@@ -657,14 +657,17 @@ void jobcontrol_switch_console(int n)
     unsigned int bg_color=COLOR_BLACK;
     unsigned int fg_color=COLOR_WHITE;
 
+
     if  ( n<0 || n >= CONSOLETTYS_COUNT_MAX )
     {
         return;
     }
 
 // Set the current virtual console.
+    debug_print("jc 1\n");
     console_set_current_virtual_console(n);
 
+    debug_print("jc 2\n");
 // Clear the screen, set bg and fg colors and set the cursor position.
 // IN: bg color, fg color, console number.
     bg_color = (unsigned int) CONSOLE_TTYS[n].bg_color;
@@ -692,7 +695,10 @@ void jobcontrol_switch_console(int n)
     }
 
 // Banner
+    debug_print("jc 3\n");
     wink_show_banner(TRUE);
+
+    debug_print("jc 4\n");
     consolePrompt();
     //printk ("Console number {%d}\n", n);
 }
@@ -2351,11 +2357,14 @@ console_clear_imp (
 // This worker belongs to the display device driver,
 // so we need a name that represents it.
 // IN: color, refresh
+    debug_print("console_clear_imp: bg\n");
     bg_initialize(bg_color,TRUE);
-    
+
+    debug_print("console_clear_imp: done\n");
     return 0;
 
 fail:
+    debug_print("console_clear_imp: fail\n");
     return (int) -1;
 }
 
@@ -3008,6 +3017,8 @@ DDINIT_console(
     };
 
     CONSOLE_TTYS[ConsoleIndex].initialized = TRUE; 
+
+    //debug_print("Done\n");
 }
 
 //
@@ -3024,7 +3035,7 @@ DDINIT_console(
 // We have 4 preallocated tty structures for virtual consoles.
 int VirtualConsole_early_initialization(void)
 {
-// Called by wink_initialize_virtual_consoles() in zero.c
+// Called by wink_initialize_virtual_consoles()
 
     register int i=0;
 
@@ -3086,8 +3097,12 @@ int VirtualConsole_early_initialization(void)
         DDINIT_console( i, bg_colors[i], fg_colors[i] );
     };
 
+    debug_print("Breakpoint 1\n");
+
 // Setup foreground console
     jobcontrol_switch_console(0);
+
+    debug_print("Breakpoint 2\n");
 
 // Cursor for the current console
 // See: system.c
@@ -3096,6 +3111,8 @@ int VirtualConsole_early_initialization(void)
 // #hackhack: This configuration belongs to kstdio
     kstdio_info.kstdio_in_terminalmode = TRUE;
     kstdio_info.kstdio_in_verbosemode = TRUE;
+
+    //debug_print("Done\n");
 
     return 0;
 }

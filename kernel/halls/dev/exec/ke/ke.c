@@ -353,21 +353,26 @@ static void __check_refresh_support(void)
 // Worker
 static void __print_resolution_info(void)
 {
-// Print device info.
+// Print device info
+
     printk ("Width:%d Height:%d BPP:%d\n",
         bootblk.deviceWidth,
         bootblk.deviceHeight,
         bootblk.bpp );
+
 // ---------------
 // Is it supported?
 // #temp
 // Supported widths. 800, 640, 320.
+/*
     if ( bootblk.deviceWidth != 800 &&
          bootblk.deviceWidth != 640 &&
          bootblk.deviceWidth != 320 )
     {
+        debug_print("__print_resolution_info: Unsupported resolution\n");
         panic("__print_resolution_info: Unsupported resolution\n");
     }
+*/
 }
 
 // Worker
@@ -392,6 +397,7 @@ static void __check_gramado_mode(void)
     case GRAMADO_HOME:
         // OK
         break;
+
 // #temp
 // Unsupported gramado mode. (yet)
     case GRAMADO_P2:
@@ -401,8 +407,9 @@ static void __check_gramado_mode(void)
         // #bugbug: 
         // panic and x_panic are not working at this point.
         debug_print("__check_gramado_mode: Unsupported gramado mode\n");
-        panic("__check_gramado_mode: Unsupported gramado mode\n");
+        //panic("__check_gramado_mode: Unsupported gramado mode\n");
         break;
+
 // Undefined gramado mode.
     default:
         // #bugbug: 
@@ -643,15 +650,20 @@ int keInitialize(int phase)
         wink_show_banner(FALSE);
 
         // Print resolution info
+        debug_print("ke 0: 1\n");
         __print_resolution_info();
 
         // Check gramado mode
+        debug_print("ke 0: 2\n");
         __check_gramado_mode();
+
         // Import data from linker.
+        debug_print("ke 0: 3\n");
         __import_data_from_linker();
 
         // Initialize the device drivers for the display controllers.
         // See: display.c
+        debug_print("ke 0: 4\n");
         displayInitialize();
 
         goto InitializeEnd;

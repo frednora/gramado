@@ -41,12 +41,8 @@ void die(void)
     die();
 }
 
-/*
- * doGetSystemMetrics:
- *     Retorna informações sobre o sistema.
- *     #todo: 
- *     Criam um enum para essa função, aqui mesmo nesse arquivo.
- */
+// doGetSystemMetrics:
+// Get system information
 unsigned long doGetSystemMetrics(int index)
 {
 // Called by sys_get_system_metrics() in sys.c
@@ -64,12 +60,12 @@ unsigned long doGetSystemMetrics(int index)
 
     switch (index){
 
-        //screen width.
+        // screen width
         case 1:
             return (unsigned long) screenGetWidth();
             break;
 
-        //screen height.
+        // screen height
         case 2:
             return (unsigned long) screenGetHeight();
             break;
@@ -120,12 +116,14 @@ unsigned long doGetSystemMetrics(int index)
 
         // lfb pa
         // #todo: We need a method for this.
+        // #ps: physical
         case 10:
             return (unsigned long) g_frontbuffer_pa;
             break;
 
         // lfb va
         // #todo: We need a method for this.
+        // #ps virtual
         case 11:
             return (unsigned long) g_frontbuffer_va;
             break;
