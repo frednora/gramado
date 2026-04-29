@@ -8,8 +8,6 @@
 
 #include <kernel.h>
 
-
-
 // see: acpi.h
 struct rsdp_d *rsdp;
 struct xsdp_d *xsdp;
@@ -200,11 +198,11 @@ static int __acpi_rsdp(unsigned long rsdp_pointer)
         // OUT: 0=ok | -1=fail
         // see: pages.c
         mapStatus = 
-            (int) mm_map_2mb_region(
+            (int) mm_map_2mb_region_in_pd0 (
                 (unsigned long) address_pa,    // pa
                 (unsigned long) address_va );  // va
         if (mapStatus != 0){
-            panic("acpi.c: mm_map_2mb_region\n");
+            panic("acpi.c: mm_map_2mb_region_in_pd0\n");
         }
 
         // #test
@@ -322,11 +320,11 @@ static int __acpi_rsdp(unsigned long rsdp_pointer)
         // OUT: 0=ok | -1=fail
         // see: pages.c
         mapStatus = 
-            (int) mm_map_2mb_region(
+            (int) mm_map_2mb_region_in_pd0 (
                 (unsigned long) address_pa,    // pa
                 (unsigned long) address_va );  // va
         if (mapStatus != 0){
-            panic("acpi.c: mm_map_2mb_region\n");
+            panic("acpi.c: mm_map_2mb_region_in_pd0\n");
         }
 
         // #test

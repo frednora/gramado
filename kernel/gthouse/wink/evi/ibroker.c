@@ -1142,35 +1142,25 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         goto exit_cmp;
     }
 
-    char *mm256a = (char *) 0x10000000;
-    char *mm256b = (char *) 0x10200000;
-    char *mm256c = (char *) 0x10400000;
-    char *mm256d = (char *) 0x10600000;
-    char *mm256e = (char *) 0x10800000;
+    char *mm256  = (char *) 0x10000000;  // 256mb mark
+    char *mm512  = (char *) 0x20000000;  // 512mb mark
+    // #caution: 
+    // 768mb mark (kernel image and kernel stuff)
+    //char *mm768  = (char *) 0x30000000;  
     if ( kstrncmp(cmdline,"mm256",5) == 0 )
     {
         if (CONFIG_TEST_MMBLOCK00 != 1)
             goto exit_cmp;
 
-        mm256a[8] = 'a';
-        if (mm256a[8] == 'a')
-            printk("a ok\n");
+        // 1) 256mb mark
+        mm256[8] = '1';
+        if (mm256)
+            printk("mm256: 1 ok\n");
 
-        mm256b[8] = 'b';
-        if (mm256b[8] == 'b')
-            printk("b ok\n");
-
-        mm256c[8] = 'c';
-        if (mm256c[8] == 'c')
-            printk("c ok\n");
-
-        mm256d[8] = 'd';
-        if (mm256d[8] == 'd')
-            printk("d ok\n");
-
-        mm256e[8] = 'e';
-        if (mm256e[8] == 'e')
-            printk("e ok\n");
+        // 2) 512mb mark
+        mm512[8] = '2';
+        if (mm512[8] == '2')
+            printk("mm512: 2 ok\n");
 
         goto exit_cmp;
     }

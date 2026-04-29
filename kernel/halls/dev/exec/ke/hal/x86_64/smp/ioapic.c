@@ -371,11 +371,11 @@ void ioapic_initialize(void)
 
     int map_status = -1;
     map_status = 
-        (int) mm_map_2mb_region(
+        (int) mm_map_2mb_region_in_pd0 (
             IOAPIC.ioapic_pa,
             IOAPIC.ioapic_va );
     if (map_status != 0)
-        panic("ioapic_initialize: on mm_map_2mb_region()\n");
+        panic("ioapic_initialize: on mm_map_2mb_region_in_pd0()\n");
 
 // OK, the structure is initialized,
 // now this module can use the values in it.

@@ -1671,10 +1671,30 @@ static void __initialize_extraheap3(void)
 }
 
 // ---------------------------
-// mm_map_2mb_region:
+// mm_map_2mb_region_in_pd0:
 // OUT: 0=OK -1=FAIL.
+// #bugbug: 
+// We can't map abouve this mark using mm_map_2mb_region_in_pd0().
+// It's because we have  alimit of 512 entries of 2MB,
+// that gives us the limit of 1024 MB
+
+// ============================================================
+// LIMITATION NOTICE:
+//
+// This allocator uses a single page directory with 512 entries.
+// Each entry points to a page table, and each page table can map
+// 2 MB of memory using 4 KB pages. That means:
+//
+//     512 entries × 2 MB = 1024 MB (1 GB)
+//
+// So the maximum addressable space with the current design is 1 GB.
+// To expand beyond this limit, support for multiple directories
+// (PDs/PDPTs) or a different paging strategy must be implemented.
+// ============================================================
+
+// Old name: mm_map_2mb_region
 int 
-mm_map_2mb_region(
+mm_map_2mb_region_in_pd0 (
     unsigned long pa,
     unsigned long va)
 {
@@ -1758,6 +1778,11 @@ static void __initialize_canonical_kernel_pagetables(void)
 // Install some pagetables into the 
 // kernel page directory 0.
 
+
+//
+// 0 - 0mb mark - VA
+//
+
 // --------------------------
 // va=0          | Ring 0 area.
     __initialize_ring0area();
@@ -1765,6 +1790,37 @@ static void __initialize_canonical_kernel_pagetables(void)
 // --------------------------
 // va=0x00200000 | Ring 3 area.
     __initialize_ring3area();
+
+
+//
+// 0x10000000 - 256mb mark - VA
+//
+
+    if (CONFIG_TEST_MMBLOCK00 == 1)
+    {
+        // 256mb mark - free
+        mm_map_2mb_region_in_pd0(0x10000000,0x10000000);
+        mm_map_2mb_region_in_pd0(0x10200000,0x10200000);
+        //mm_map_2mb_region_in_pd0(0x10400000,0x10400000);
+        //mm_map_2mb_region_in_pd0(0x10600000,0x10600000);
+        //mm_map_2mb_region_in_pd0(0x10800000,0x10800000);
+    }
+
+
+//
+// 0x20000000 - 512mb mark - VA
+//
+
+    if (CONFIG_TEST_MMBLOCK00 == 1)
+    {
+        // 512mb mark - free
+        mm_map_2mb_region_in_pd0(0x20000000,0x20000000);
+        mm_map_2mb_region_in_pd0(0x20200000,0x20200000);
+    }
+
+//
+// 0x30000000 - 768mb mark - VA
+//
 
 // --------------------------
 // va=0x30000000 | kernel image region.
@@ -1798,21 +1854,27 @@ static void __initialize_canonical_kernel_pagetables(void)
     __initialize_extraheap2();
 // va=0x30E00000 | Extra heap 3.
     __initialize_extraheap3();
-// Criado com dois blocos consecutivos de 2mb cada,
-// previamente alocados.
+// Criado com dois blocos consecutivos de 2mb cada, previamente alocados.
 // see: slab.c
     slab_initialize();
 
-//...
 
+//
+// 0x40000000 - 1024mb mark - VA
+//
+
+// #bugbug: 
+// We can't map abouve this mark using mm_map_2mb_region_in_pd0().
+// It's because we have  alimit of 512 entries of 2MB,
+// that gives us the limit of 1024 MB
+// #todo: We need to use another allocator.
+
+/*
     if (CONFIG_TEST_MMBLOCK00 == 1)
     {
-        mm_map_2mb_region(0x10000000,0x10000000);
-        mm_map_2mb_region(0x10200000,0x10200000);
-        mm_map_2mb_region(0x10400000,0x10400000);
-        mm_map_2mb_region(0x10600000,0x10600000);
-        mm_map_2mb_region(0x10800000,0x10800000);
     }
+*/
+
 }
 
 

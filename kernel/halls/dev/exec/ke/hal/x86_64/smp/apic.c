@@ -1068,9 +1068,14 @@ int lapic_info_initializing(unsigned long lapic_pa, int lapic_info_id)
     if (lapic_info_id == 0)
     {
         // IN: pa, va
-        status = (int) mm_map_2mb_region( (lapic_pa & 0xFFFFFFFF), LAPIC_VA );
+        status = 
+            (int) mm_map_2mb_region_in_pd0 ( 
+                (lapic_pa & 0xFFFFFFFF), 
+                LAPIC_VA 
+            );
+
         if (status != 0){
-            panic("lapic_initializing: on mm_map_2mb_region()\n");
+            panic("lapic_initializing: on mm_map_2mb_region_in_pd0()\n");
         }
         // Flush it
         asm ("movq %cr3, %rax \n");

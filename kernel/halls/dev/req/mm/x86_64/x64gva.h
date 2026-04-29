@@ -76,6 +76,12 @@
 // Here we have big not used espace of virtual address.
 //
 
+// #todo
+// These two main addresses are free.
+// 0x10000000 - 256mb mark
+// 0x20000000 - 512mb mark
+
+
 //
 // Kernel image -----------------------------------------
 //

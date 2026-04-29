@@ -127,8 +127,23 @@ int mm_is_page_aligned_va(unsigned long va);
 // #todo
 void pages_calc_mem (void);
 
+
+// ============================================================
+// LIMITATION NOTICE:
+//
+// This allocator uses a single page directory with 512 entries.
+// Each entry points to a page table, and each page table can map
+// 2 MB of memory using 4 KB pages. That means:
+//
+//     512 entries × 2 MB = 1024 MB (1 GB)
+//
+// So the maximum addressable space with the current design is 1 GB.
+// To expand beyond this limit, support for multiple directories
+// (PDs/PDPTs) or a different paging strategy must be implemented.
+// ============================================================
+
 int 
-mm_map_2mb_region(
+mm_map_2mb_region_in_pd0(
     unsigned long pa,
     unsigned long va);
 

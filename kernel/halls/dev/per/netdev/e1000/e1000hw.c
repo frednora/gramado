@@ -764,7 +764,7 @@ __mapping_nic1_device_address(
 {
 // OUT: 0=ok | -1=fail
 // see: pages.c
-    return (int) mm_map_2mb_region(pa,va);
+    return (int) mm_map_2mb_region_in_pd0(pa,va);
 }
 
 // Action after the transmission event
