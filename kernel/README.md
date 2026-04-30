@@ -6,18 +6,34 @@ This directory contains the code for the base kernel. It builds the image KERNEL
 
 ```
 kernel/
- ├── gthouse/     # Gatehouse: entry point, stubs, init, wrappers, libk, UI
+ ├── garden/      #
  │    ├── arch/   # Architecture-specific boot & interrupt stubs
+ ├── gthouse/     # Gatehouse: entry point, stubs, init, wrappers, libk, UI
  │    ├── kwrap/  # Kernel wrappers (high-level abstractions)
  │    ├── libk/   # Kernel library (shared utilities)
  │    └── wink/   # User interface (input events, GDI)
  |
  ├── halls/       # Castle halls: execution, peripherals, requests
- │    ├── exec/   # CPU Hall: threads, dispatcher, scheduler, exceptions
- │    ├── per/    # Peripheral Hall: external devices, drivers
- │    └── req/    # Memory Hall: syscalls, memory management (mm/)
+ |    ├── uih: chardev/#  
+ │    ├── aih: exec/   # CPU Hall: threads, dispatcher, scheduler, exceptions
+ │    ├── aih: per/    # Peripheral Hall: external devices, drivers
+ │    └── aih: req/    # Memory Hall: syscalls, memory management (mm/)
  |
  └── include/     # Castle library: headers, definitions, shared interfaces
+```
+
+```
+Garden → the outermost layer, handling the entry points (startup, syscalls, interrupts). It’s like the “front yard” where everything first arrives before being directed inward.
+
+Gate House → the controlled entrance, wrapping and dispatching requests into the kernel. This is essentially your abstraction layer, ensuring external calls are translated into internal service invocations.
+
+Halls → the inner chambers where the actual services live, such as device drivers and core implementations. This is where the real work happens once requests have passed through the gate.
+```
+
+```
+In Halls:
++ program-driven events: (application interaction)
++ human-driven events: (user interaction)
 ```
 
 ## Kernel initialization
