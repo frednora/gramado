@@ -452,6 +452,11 @@ See: https://wiki.osdev.org/Memory_Map_(x86)
 // 0x20000000
 #define __512MB_MARK_PA  (0x20000000)
 
+// #test
+// The pa for the new backbuffer
+#define NEW_BACKBUFFER_PA  0x20000000
+
+
 // 768
 // 0x30000000 - 768mb mark
 

@@ -632,6 +632,21 @@ static void earlyinit_Globals(int arch_type)
     ap_startup_counter = 0;  // Initialize
     WelcomeAP.my_lapic_info_id = -1;  // fail
 
+
+//
+// Backbuffer
+//
+
+// Se current addresses
+    if (CONFIG_USE_NEW_BACKBUFFER_IN_512MB_MARK == 1){
+        display_set_backbuffer_pa(NEW_BACKBUFFER_PA);
+        display_set_backbuffer_va(NEW_BACKBUFFER_VA);
+    } else {
+        display_set_backbuffer_pa(BACKBUFFER_PA);
+        display_set_backbuffer_va(BACKBUFFER_VA);
+    };
+
+
 // Scheduler policies
 // Early initialization.
 // See: 
@@ -768,7 +783,7 @@ static int earlyinit(void)
 // Getting critical boot information.
     earlyinit_SetupBootblock();
 
-// We do not have serial debug yet.
+// We do not have serial debug yet
     earlyinit_Globals(0);  // IN: arch_type
 
 // Serial debug support.

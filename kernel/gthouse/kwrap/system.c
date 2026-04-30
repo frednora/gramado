@@ -118,7 +118,8 @@ unsigned long doGetSystemMetrics(int index)
         // #todo: We need a method for this.
         // #ps: physical
         case 10:
-            return (unsigned long) g_frontbuffer_pa;
+            panic ("doGetSystemMetrics: [10]\n");
+            // return (unsigned long) g_frontbuffer_pa;
             break;
 
         // lfb va
@@ -131,7 +132,8 @@ unsigned long doGetSystemMetrics(int index)
         // main backbuffer va
         // #todo: We need a method for this.
         case 12:
-            return (unsigned long) g_backbuffer_va;
+            // return (unsigned long) g_backbuffer_va;
+            return (unsigned long) display_get_backbuffer_va();
             break;
 
         //20

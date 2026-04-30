@@ -124,6 +124,9 @@ extern struct display_device_d *bl_display_device;
 
 // ----------------------
 
+void bldisp_show_info(void);
+
+
 // ++
 // Mouse support
 void bldisp_do_we_need_to_erase_mouse_pointer(int value);

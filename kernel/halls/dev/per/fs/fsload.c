@@ -39,13 +39,15 @@ static int __check_address_validation(unsigned long address)
 {
     int Status = TRUE;
 
+    unsigned long BackbufferCurrrentVA = (unsigned long) display_get_backbuffer_va();
+
 // Parameter
 // fat, rootdir, base kernel, lfb, backbuffer ...
     if (address == VOLUME1_FAT_ADDRESS_VA)           { Status=FALSE; }
     if (address == VOLUME1_ROOTDIR_ADDRESS_VA)       { Status=FALSE; }
     if (address == KERNELIMAGE_VA)                   { Status=FALSE; }
     if (address == FRONTBUFFER_VA)       { Status=FALSE; }
-    if (address == BACKBUFFER_VA){ Status=FALSE; }
+    if (address == BackbufferCurrrentVA){ Status=FALSE; }
     // ...
 
 // #todo

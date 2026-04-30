@@ -83,6 +83,10 @@
 
 // 0x20000000 - 512mb mark
 
+// #test
+// The va for the new backbuffer
+#define NEW_BACKBUFFER_VA  0x20000000
+
 
 //
 // Kernel image -----------------------------------------
@@ -156,9 +160,10 @@
 // Backbuffer
 // Endereço virtual padrão para o BackBuffer. (buffer1)
 // 768MB + 4MB mark (VA)
-#define BACKBUFFER_VA   0x0000000030400000  // Original 
+#define BACKBUFFER_VA   0x0000000030400000
 
-
+// #bugbug
+// We only have 2MB of backbuffer
 
 //
 // Paged pool --------------------------------

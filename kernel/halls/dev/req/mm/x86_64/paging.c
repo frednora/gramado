@@ -2,6 +2,15 @@
 // Paging for x86_64 machines.
 // Created by Fred Nora.
 
+// See:
+// https://wiki.osdev.org/Paging
+// ...
+
+// Paging is a system which allows each process to see 
+// a full virtual address space, without actually requiring 
+// the full amount of physical memory to be available or present.
+
+
 // Memory manager.
 // It maps the first portions of memory ised by the kernel
 // and the init process.
@@ -91,6 +100,7 @@ static void __initialize_ring3area(void);
 static void __initialize_kernelimage_region(void);
 static void __initialize_frontbuffer(void);
 static void __initialize_backbuffer(void);
+static void __initialize_new_backbuffer_in_512mb_mark(void);
 
 static void __initialize_pagedpool(void);
 
@@ -1018,7 +1028,13 @@ static void __initialize_canonical_physical_regions(void)
     SMALL_user_pa        = (unsigned long) SMALLSYSTEM_USERBASE;
     SMALL_cga_pa         = (unsigned long) SMALLSYSTEM_CGA;
     SMALL_frontbuffer_pa = (unsigned long) gSavedLFB;      //frontbuffer // #todo: precisamos que o bl passe  endereço físico para mapearmos o lfb.
-    SMALL_backbuffer_pa  = (unsigned long) BACKBUFFER_PA;  //backbuffer
+
+    if (CONFIG_USE_NEW_BACKBUFFER_IN_512MB_MARK == 1){
+        SMALL_backbuffer_pa  = (unsigned long) NEW_BACKBUFFER_VA;  //backbuffer
+    } else {
+        SMALL_backbuffer_pa  = (unsigned long) BACKBUFFER_PA;  //backbuffer
+    }
+
     SMALL_pagedpool_pa   = (unsigned long) SMALLSYSTEM_PAGEDPOLL_START;  //PAGED POOL
     SMALL_heappool_pa    = (unsigned long) SMALLSYSTEM_HEAPPOLL_START;
     SMALL_extraheap1_pa  = (unsigned long) SMALLSYSTEM_EXTRAHEAP1_START;
@@ -1031,7 +1047,13 @@ static void __initialize_canonical_physical_regions(void)
     MEDIUM_user_pa        = (unsigned long) MEDIUMSYSTEM_USERBASE;
     MEDIUM_cga_pa         = (unsigned long) MEDIUMSYSTEM_CGA;
     MEDIUM_frontbuffer_pa = (unsigned long) gSavedLFB; // #todo: precisamos que o bl passe  endereço físico para mapearmos o lfb.
-    MEDIUM_backbuffer_pa  = (unsigned long) BACKBUFFER_PA;
+
+    if (CONFIG_USE_NEW_BACKBUFFER_IN_512MB_MARK == 1){
+        MEDIUM_backbuffer_pa  = (unsigned long) NEW_BACKBUFFER_VA;  //backbuffer
+    } else {
+        MEDIUM_backbuffer_pa  = (unsigned long) BACKBUFFER_PA;  //backbuffer
+    }
+
     MEDIUM_pagedpool_pa   = (unsigned long) MEDIUMSYSTEM_PAGEDPOLL_START;
     MEDIUM_heappool_pa    = (unsigned long) MEDIUMSYSTEM_HEAPPOLL_START;
     MEDIUM_extraheap1_pa  = (unsigned long) MEDIUMSYSTEM_EXTRAHEAP1_START;
@@ -1044,7 +1066,13 @@ static void __initialize_canonical_physical_regions(void)
     LARGE_user_pa        = (unsigned long) LARGESYSTEM_USERBASE;
     LARGE_cga_pa         = (unsigned long) LARGESYSTEM_CGA;
     LARGE_frontbuffer_pa = (unsigned long) gSavedLFB; // #todo: precisamos que o bl passe  endereço físico para mapearmos o lfb.
-    LARGE_backbuffer_pa  = (unsigned long) BACKBUFFER_PA;
+
+    if (CONFIG_USE_NEW_BACKBUFFER_IN_512MB_MARK == 1){
+        LARGE_backbuffer_pa  = (unsigned long) NEW_BACKBUFFER_VA;  //backbuffer
+    } else {
+        LARGE_backbuffer_pa  = (unsigned long) BACKBUFFER_PA;  //backbuffer
+    }
+
     LARGE_pagedpool_pa   = (unsigned long) LARGESYSTEM_PAGEDPOLL_START;
     LARGE_heappool_pa    = (unsigned long) LARGESYSTEM_HEAPPOLL_START;
     LARGE_extraheap1_pa  = (unsigned long) LARGESYSTEM_EXTRAHEAP1_START;
@@ -1401,13 +1429,17 @@ static void __initialize_backbuffer(void)
 // ----------------------------
 // va
 // Saving the virtual address into a global variable.
-    vaList[MM_COMPONENT_BACKBUFFER_VA] = (unsigned long) BACKBUFFER_VA;
-    g_backbuffer_va = (unsigned long) BACKBUFFER_VA;
+    unsigned long CurrentBackbufferVA = (unsigned long) display_get_backbuffer_va();
+
+    vaList[MM_COMPONENT_BACKBUFFER_VA] = (unsigned long) CurrentBackbufferVA; //BACKBUFFER_VA;
+    g_backbuffer_va = (unsigned long) CurrentBackbufferVA;  //BACKBUFFER_VA;
 
 // ----------------------------
 // pd index
 // Based on our va.
-    int pdindex = (int) X64_GET_PDE_INDEX(BACKBUFFER_VA);
+    //int pdindex = (int) X64_GET_PDE_INDEX(BACKBUFFER_VA);
+    int pdindex = (int) X64_GET_PDE_INDEX(CurrentBackbufferVA);
+
 // size
     mm_used_backbuffer = (1024 * 2);
 
@@ -1428,6 +1460,41 @@ static void __initialize_backbuffer(void)
         (unsigned long) &pt_backbuffer[0],  // pt
         (unsigned long) backbuffer_pa,      // region base
         (unsigned long) ( PAGE_USER | PAGE_WRITE | PAGE_PRESENT ) );  // flags=7
+}
+
+
+static void __initialize_new_backbuffer_in_512mb_mark(void)
+{
+
+    // 512mb mark - free
+
+    display_set_backbuffer_pa(0x20000000);  //NEW_BACKBUFFER_PA
+    display_set_backbuffer_va(0x20000000);  //NEW_BACKBUFFER_VA
+
+    mm_map_2mb_region_in_pd0_imp(0x20000000,0x20000000,0x1F);
+    mm_map_2mb_region_in_pd0_imp(0x20200000,0x20200000,0x1F);
+    mm_map_2mb_region_in_pd0_imp(0x20400000,0x20400000,0x1F);
+    mm_map_2mb_region_in_pd0_imp(0x20600000,0x20600000,0x1F);
+    mm_map_2mb_region_in_pd0_imp(0x20800000,0x20800000,0x1F);
+    // ...
+
+
+//
+// Setup the new backbuffer globals
+//
+
+    unsigned long CurrentBackbufferPA = display_get_backbuffer_pa();
+    unsigned long CurrentBackbufferVA = display_get_backbuffer_va();
+
+    paList[MM_COMPONENT_BACKBUFFER_PA] = (unsigned long) CurrentBackbufferPA;
+    g_backbuffer_pa = (unsigned long) CurrentBackbufferPA; 
+
+    vaList[MM_COMPONENT_BACKBUFFER_VA] = (unsigned long) CurrentBackbufferVA;
+    g_backbuffer_va = (unsigned long) CurrentBackbufferVA; 
+
+    // size
+    //mm_used_backbuffer = (1024 * 2); // 2MB
+    mm_used_backbuffer = (1024 * 2 * 5); // 2MB * 5
 }
 
 
@@ -1853,14 +1920,23 @@ static void __initialize_canonical_kernel_pagetables(void)
 // User-side
     if (CONFIG_TEST_MMBLOCK00 == 1)
     {
-        // 512mb mark - free
-        mm_map_2mb_region_in_pd0_imp(0x20000000,0x20000000, 0x1F);
-        mm_map_2mb_region_in_pd0_imp(0x20200000,0x20200000, 0x1F);
-        mm_map_2mb_region_in_pd0_imp(0x20400000,0x20400000, 0x1F);
-        mm_map_2mb_region_in_pd0_imp(0x20600000,0x20600000, 0x1F);
-        mm_map_2mb_region_in_pd0_imp(0x20800000,0x20800000, 0x1F);
-        // ...
+
+        // If 512mb mark became the new backbuffer
+        if (CONFIG_USE_NEW_BACKBUFFER_IN_512MB_MARK == 1){
+            __initialize_new_backbuffer_in_512mb_mark();  // New
+
+        // If 512mb is not a backbuffer
+        } else {
+            
+            mm_map_2mb_region_in_pd0_imp(0x20000000,0x20000000,0x1F);
+            mm_map_2mb_region_in_pd0_imp(0x20200000,0x20200000,0x1F);
+            mm_map_2mb_region_in_pd0_imp(0x20400000,0x20400000,0x1F);
+            mm_map_2mb_region_in_pd0_imp(0x20600000,0x20600000,0x1F);
+            mm_map_2mb_region_in_pd0_imp(0x20800000,0x20800000,0x1F);
+            // ...
+        }
     }
+
 
 //
 // 0x30000000 - 768mb mark - VA
@@ -1876,7 +1952,12 @@ static void __initialize_canonical_kernel_pagetables(void)
 
 // --------------------------
 // va=0x30400000 | Backbuffer.
-    __initialize_backbuffer();
+
+    if (CONFIG_USE_NEW_BACKBUFFER_IN_512MB_MARK == 1){
+       // In this case 0x30400000 is available
+    } else {
+        __initialize_backbuffer();  // Old
+    }
 
 // --------------------------
 // va=0x30600000 | Paged pool.
@@ -2086,7 +2167,7 @@ int pagesInitializePaging(void)
 
 // #bugbug
 // Estaríamos dizendo que todas as entradas do primeiro diretorio
-// esntão em ring0, e que todas as entradas do primeiro pdpt
+// estão em ring0, e que todas as entradas do primeiro pdpt
 // também estão?
 
 // pd >> pdpt
@@ -2122,6 +2203,9 @@ int pagesInitializePaging(void)
         
         // #bugbug: Verbose is not available yet.
         // while(1){}
+
+        // #todo:
+        // We can create a flag in order to report this error.
     }
 
 // ------
@@ -2180,8 +2264,7 @@ int pagesInitializePaging(void)
 
 // Isso precisa ser um endereço físico.
 // Existe identidade.
-// Esse é um ponteiro para uma região da memória
-// abaixo de 1MB.
+// Esse é um ponteiro para uma região da memória abaixo de 1MB.
 
     //load_pml4_table( (void *) &kernel_pml4[0] );
     load_pml4_table(kernel_mm_data.pml4_pa);

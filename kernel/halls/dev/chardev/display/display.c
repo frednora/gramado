@@ -2,13 +2,40 @@
 // Main file for the display manager.
 // Created by Fred Nora.
 
-
 #include <kernel.h>
 
 // Initialized when the display device is initialized.
 // See: bldisp.c, qemudisp.c ...
 struct dc_d *dc_backbuffer;
 struct dc_d *dc_frontbuffer;
+
+// Local
+static unsigned long __CurrentBackbufferPA = 0;
+static unsigned long __CurrentBackbufferVA = 0;
+
+
+// backbuffer pa
+void display_set_backbuffer_pa(unsigned long address)
+{
+    __CurrentBackbufferPA = (unsigned long) address;
+}
+unsigned long display_get_backbuffer_pa(void)
+{
+    return (unsigned long) __CurrentBackbufferPA;
+}
+
+// backbuffer va
+void display_set_backbuffer_va(unsigned long address)
+{
+    __CurrentBackbufferVA = (unsigned long) address;
+}
+unsigned long display_get_backbuffer_va(void)
+{
+    return (unsigned long) __CurrentBackbufferVA;
+}
+
+
+
 
 //
 // #

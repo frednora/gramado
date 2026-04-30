@@ -536,6 +536,8 @@ refresh_rectangle (
 // But there is another worker in ring 3 inside the display server 
 // that is calling this worker in ring 0 via syscall.
 
+    unsigned long CurrentBackbufferVA = (unsigned long) display_get_backbuffer_va();
+
 // == FLASH ========
 // #todo: Create a global variable for this.
 // #debug
@@ -563,7 +565,7 @@ refresh_rectangle (
     __refresh_rectangle0 (
         x, y, width, height,
         FRONTBUFFER_VA,   // dest
-        BACKBUFFER_VA     // src
+        CurrentBackbufferVA  //BACKBUFFER_VA     // src
     );  
 }
 
@@ -624,14 +626,15 @@ void scroll_screen_rect (void)
 // Destination is the first line.
 // Source is the second line. It has the height of a char.
 
-    void *Dest = 
-        (void *) BACKBUFFER_VA;
+    unsigned long CurrentBackbufferVA = (unsigned long) display_get_backbuffer_va();
+
+    void *Dest = (void *) CurrentBackbufferVA; //BACKBUFFER_VA;
     
     unsigned long SrcOffset = 
         (unsigned long) (bytes_count * gSavedX * cHeight);
     
-    const void *Src = 
-        (const void *) (BACKBUFFER_VA + SrcOffset);
+    //const void *Src = (const void *) (BACKBUFFER_VA + SrcOffset);
+    const void *Src = (const void *) (CurrentBackbufferVA + SrcOffset);
 
 // Copy
 // #importante

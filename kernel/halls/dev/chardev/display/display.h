@@ -137,7 +137,17 @@ struct video_d  VideoBlock;
 // == prototypes =================================
 //
 
-void bldisp_show_info(void);
+//
+// Babuffer va support
+//
+
+// backbuffer pa
+void display_set_backbuffer_pa(unsigned long address);
+unsigned long display_get_backbuffer_pa(void);
+
+// backbuffer va
+void display_set_backbuffer_va(unsigned long address);
+unsigned long display_get_backbuffer_va(void);
 
 
 int displayInitialize(void);

@@ -265,11 +265,14 @@ static void __bldisp_flush_into_lfb(unsigned long flags)
 
 // Loop
     register int i=0;
+
+    unsigned long CurrentBackbufferVA = (unsigned long) display_get_backbuffer_va();
+
 // Char. The slow way.
-    unsigned char *backbuffer  = (unsigned char *) BACKBUFFER_VA;
+    unsigned char *backbuffer  = (unsigned char *) CurrentBackbufferVA;  //BACKBUFFER_VA;
     unsigned char *frontbuffer = (unsigned char *) FRONTBUFFER_VA;
 // Long. The fast way. (8bytes)
-    unsigned long *backbuffer_long  = (unsigned long *) BACKBUFFER_VA;
+    unsigned long *backbuffer_long  = (unsigned long *) CurrentBackbufferVA;  // BACKBUFFER_VA;
     unsigned long *frontbuffer_long = (unsigned long *) FRONTBUFFER_VA;
 
 // We can't refresh.
@@ -1144,12 +1147,13 @@ static int __videoInit(void)
     g_frontbuffer_va = (unsigned long) __frontbuffer_va;
 
 // Backbuffer
-     g_backbuffer_va  = (unsigned long) BACKBUFFER_VA;
+    //g_backbuffer_va  = (unsigned long) BACKBUFFER_VA;
+    g_backbuffer_va  = (unsigned long) display_get_backbuffer_va();
 
 // Device screen sizes. 
 // (herdadas do boot loader.)
 // See: 
-// admin/config/superv/gdevice.h
+// ?
     g_device_screen_width  = (unsigned long) gSavedX;
     g_device_screen_height = (unsigned long) gSavedY;
     g_device_screen_bpp    = (unsigned long) gSavedBPP;
@@ -1286,7 +1290,8 @@ int DDINIT_bldisp(void)
     dc_backbuffer->device_height = bl_display_device->framebuffer_height;
     dc_backbuffer->bpp           = bl_display_device->framebuffer_bpp; // bits per pixel
     dc_backbuffer->pitch         = bl_display_device->framebuffer_pitch;
-    dc_backbuffer->data = (unsigned char*) BACKBUFFER_VA;
+    //dc_backbuffer->data = (unsigned char*) BACKBUFFER_VA;
+    dc_backbuffer->data = (unsigned char*) display_get_backbuffer_va();
     dc_backbuffer->used = TRUE;
     dc_backbuffer->magic = 1234;
     dc_backbuffer->initialized = TRUE;
