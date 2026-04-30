@@ -1078,6 +1078,7 @@ static void __initialize_canonical_physical_regions(void)
 // Isso mapeia os primeiros 2MB da memória RAM em ring0.
 // SMALL_origin_pa = kernel_address_pa;
 
+// User-side
 static void __initialize_ring0area(void)
 {
     // #ps: In this case virtual and physical addresses are the same.
@@ -1157,6 +1158,7 @@ static void __initialize_ring0area(void)
 // Essa é uma área em user mode
 // size = (2 MB).
 
+// User-side
 static void __initialize_ring3area(void)
 {
 // #todo
@@ -1221,6 +1223,7 @@ static void __initialize_ring3area(void)
 // Criamos a entrada 384 apontando para a pagetable.
 // SMALL_kernel_base_pa = kernel_base_pa;
 
+// Kernel-side
 static void __initialize_kernelimage_region(void)
 {
     // #ps: In this case virtual and physical addresses are the same.
@@ -1292,6 +1295,7 @@ static void __initialize_kernelimage_region(void)
 //  + Criamos uma pagetable.
 //  + Apontamos a pagetable para uma entrada do diretório do kernel.
 
+// User-side
 static void __initialize_frontbuffer(void)
 {
     // #ps: In this case virtual and physical addresses are the same.
@@ -1370,6 +1374,8 @@ static void __initialize_frontbuffer(void)
 // Mapping the backbuffer.
 // see: BACKBUFFER_PA in x64gpa.h
 // see: BACKBUFFER_VA in x64gva.h
+
+// User-side
 static void __initialize_backbuffer(void)
 {
     // #ps: In this case virtual and physical addresses are the same.
@@ -1435,6 +1441,7 @@ static void __initialize_backbuffer(void)
 // g_pagedpool_va = (unsigned long) PAGEDPOOL_VA;
 // mapeando 2mb de memória em ring3 para o pagedpool.
 
+// User-side
 static void __initialize_pagedpool(void)
 {
     // #ps: In this case virtual and physical addresses are the same.
@@ -1495,6 +1502,7 @@ static void __initialize_pagedpool(void)
 // Vamos garantir que ele não use um heap vindo desse pool.
 // Pois ele tem seu próprio heap em ring0.
 
+// User-side
 static void __initialize_heappool(void)
 {
     // #ps: In this case virtual and physical addresses are the same.
@@ -1553,6 +1561,7 @@ static void __initialize_heappool(void)
 // TEInitProcess->Heap = (unsigned long) g_extraheap1_va; :)
 // 2048 KB = (2 MB).
 
+// Kernel-side
 static void __initialize_extraheap1(void)
 {
     // #ps: In this case virtual and physical addresses are the same.
@@ -1595,6 +1604,8 @@ static void __initialize_extraheap1(void)
 // 2mb, ring0, start = 0x30C00000.
 // local worker
 // used by the slab allocator.
+
+// User-side
 static void __initialize_extraheap2(void)
 {
     // #ps: In this case virtual and physical addresses are the same.
@@ -1637,6 +1648,8 @@ static void __initialize_extraheap2(void)
 
 // 2mb, ring3, start = 0x30E00000.
 // used by the slab allocator.
+
+// User-side
 static void __initialize_extraheap3(void)
 {
     // #ps: In this case virtual and physical addresses are the same.
@@ -1692,25 +1705,13 @@ static void __initialize_extraheap3(void)
 // (PDs/PDPTs) or a different paging strategy must be implemented.
 // ============================================================
 
-// Old name: mm_map_2mb_region
 int 
-mm_map_2mb_region_in_pd0 (
+mm_map_2mb_region_in_pd0_imp (
     unsigned long pa,
-    unsigned long va)
+    unsigned long va, 
+    unsigned long flags )
 {
-// + Only ring 0.
-// + Only in the kernel's main page directory.
-// ---------------------------
-// Flags: = 0x1B
-// 10=cache desable 
-// 8= Write-Through 
-// 0x002 = Writeable 
-// 0x001 = Present
-// 0001 1011
-
-// #todo
-// We can create another version of this function,
-// but with flags into parameters.
+// #ps: It accepts flags.
 
     unsigned long _pa = (unsigned long) pa;
     unsigned long _va = (unsigned long) va;
@@ -1732,17 +1733,6 @@ mm_map_2mb_region_in_pd0 (
     if (pdindex >= 512)
         goto fail;
 
-// Flags:
-// 10=cache desable 
-// 8= Write-Through 
-// 0x002 = Writeable 
-// 0x001 = Present
-// 0001 1011
-    unsigned long flags = (unsigned long) 0x1B;
-
-// + Only ring 0.
-// + Only in the kernel's main page directory.
-
     mm_fill_page_table( 
         (unsigned long) target_pd_va,  // pd 
         (int) pdindex,                 // entry
@@ -1757,7 +1747,45 @@ fail:
 }
 
 
-// PAGE TABLES.
+// ============================================================
+// LIMITATION NOTICE:
+//
+// This allocator uses a single page directory with 512 entries.
+// Each entry points to a page table, and each page table can map
+// 2 MB of memory using 4 KB pages. That means:
+//
+//     512 entries × 2 MB = 1024 MB (1 GB)
+//
+// So the maximum addressable space with the current design is 1 GB.
+// To expand beyond this limit, support for multiple directories
+// (PDs/PDPTs) or a different paging strategy must be implemented.
+// ============================================================
+
+int 
+mm_map_2mb_region_in_pd0(
+    unsigned long pa,
+    unsigned long va )
+{
+// Ring 0 region
+// + Only ring 0.
+// + Only in the kernel's main page directory.
+
+// Flags: 
+// 0x1B = 0001 1011
+// bit 4 - Cache desable
+// bit 3 - Write-Through
+// bit 2 - Kernel (Not user)
+// bit 1 - Writeable  
+// bit 0 - Present 
+
+    unsigned long flags = (unsigned long) 0x1B;
+
+    return (int) mm_map_2mb_region_in_pd0_imp(pa, va, flags);
+}
+
+
+
+// PAGE TABLES
 // Vamos criar algumas pagetables e apontá-las
 // como entradas no diretório 'kernel_pd0'.
 // Entries:
@@ -1814,15 +1842,23 @@ static void __initialize_canonical_kernel_pagetables(void)
 // 0x20000000 - 512mb mark - VA
 //
 
-// kernel-size 
+// Flags: 
+// 0x1F = 0001 1111
+// bit 4 - Cache desable
+// bit 3 - Write-Through
+// bit 2 - Kernel (Not user)
+// bit 1 - Writeable  
+// bit 0 - Present 
+
+// User-side
     if (CONFIG_TEST_MMBLOCK00 == 1)
     {
         // 512mb mark - free
-        mm_map_2mb_region_in_pd0(0x20000000,0x20000000);
-        mm_map_2mb_region_in_pd0(0x20200000,0x20200000);
-        mm_map_2mb_region_in_pd0(0x20400000,0x20400000);
-        mm_map_2mb_region_in_pd0(0x20600000,0x20600000);
-        mm_map_2mb_region_in_pd0(0x20800000,0x20800000);
+        mm_map_2mb_region_in_pd0_imp(0x20000000,0x20000000, 0x1F);
+        mm_map_2mb_region_in_pd0_imp(0x20200000,0x20200000, 0x1F);
+        mm_map_2mb_region_in_pd0_imp(0x20400000,0x20400000, 0x1F);
+        mm_map_2mb_region_in_pd0_imp(0x20600000,0x20600000, 0x1F);
+        mm_map_2mb_region_in_pd0_imp(0x20800000,0x20800000, 0x1F);
         // ...
     }
 
@@ -1866,6 +1902,9 @@ static void __initialize_canonical_kernel_pagetables(void)
 // see: slab.c
     slab_initialize();
 
+
+// ...
+// There is more free space here
 
 //
 // 0x40000000 - 1024mb mark - VA
