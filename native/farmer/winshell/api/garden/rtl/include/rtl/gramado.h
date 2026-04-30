@@ -149,8 +149,8 @@ unsigned long  rtl_to_ulong  (long ch);
 #define RTL_POOL_FOR_EVENTS  2
 
 
-//  The buffer for the event elements.
-//unsigned long RTLEventBuffer[32];
+//  The buffer for the event elements
+// See: rtl.c
 extern unsigned long RTLEventBuffer[32];
 
 
@@ -353,7 +353,7 @@ void rtl_sleep(unsigned long ms);
 void rtl_invalidate_screen(void);
 
 // Use the kernel allocator for ring 3 shared memory.
-void *shAlloc( size_t size_in_bytes );
+void *shAlloc(size_t size_in_bytes);
 
 int rtl_execute_cmdline( char *cmdline );
 

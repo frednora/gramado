@@ -499,7 +499,7 @@ int rtl_get_event(void)
     // para pegar input.
     // if( ....
     
-    Status = xxxScanApplicationQueue();
+    Status = (int) xxxScanApplicationQueue();
 
     return (int) Status;
 }
