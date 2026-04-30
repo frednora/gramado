@@ -2,6 +2,14 @@
 ; File: pm.inc
 ;     stage3
 ;     +Enable Protected Mode with no Paging.
+; Trampoline: 
+;     Switch to protected mode
+;
+; This file has a mix of different modes:
+; + real mode 16bit
+; + protected mode 32bit
+; + protected mode 16bit
+;
 ; Segments:
 ;     DS = stage2_DATA_SEL  
 ;     ES = stage2_DATA_SEL
@@ -20,9 +28,8 @@
 ; ===========================================================
 ; pmInit:
 ;     Switching to Protected Mode
-; obs: 
+; #ps: Maybe this routine needs to receive arguments.
 ; Talvez essa rotina deva receber argumentos. 
-; Na inicializa��o essa rotina � chamada em modo texto.
 ;
 ; routine:
 ; + Keep the interrupts disabled.
@@ -63,43 +70,25 @@ pmInit:
     call get_boot_mode
     mov bl, al
 
-; Flush pipeline.
-
+; Flush pipeline
 pmTrampoline:
     jmp stage2_CODE_SEL:pm32_start
-    [BITS 32]
+
+[BITS 32]
 pm32_start:
 
-    ; Text mode debug.
+    ; Text mode debug
     ; mov byte [0B8000h], byte 'P'
     ; jmp $
 
-;
-; ## Inicalizando modo de boot ##
-;
+; Initializing the boot mode.
+; Probably here we are in boot mode 0 because bl is 0.
 
-; Salva o boot mode em um endere�o de 32 bits.
-; #bugbug: O bl foi zerado um pouco antes.
-; Provavelmente podemos deletar isso.
-; � preciso conferir se n�o usamos essa vari�vel 
-; logo a frente.
-
-; Aqui estamos selecionando o modo '0'.
     mov byte [BOOT.modo], bl
 
-
-;
-; Reconfigurando registradores.
-;
-
-; #todo: 
-; Talvez d� para passar outras coisas atrav�s dos registradores b, c, d.
-; #obs: 
-; A pilha est� bem perto do diret�rio do kernel. ??.
+; Set up registers
 ; Stack = 0x0009FFFC 
-; Directory = 9C000.  
-
-; Set up registers.
+; Directory = 9C000 ?
 
     mov ax, stage2_DATA_SEL 
     mov ds, ax
@@ -129,36 +118,32 @@ pm32_start:
 .do_start:
     
 ; set IOPL to zero and reset all flags
-
     ;push 0x00000002
     ;popfd
 
-
 ; Enable PMC in userspace.
-
     ;mov eax, cr4
     ;or eax, 0x100
     ;mov cr4, eax
 
-; IMPORTANTE: 
-; A ROTINA PARA VOLTAR PARA O MODO REAL E EXECUTAR UM SERVI�O 
-; FUNCIONOU CORRETAMENTE, MAS N�O SER� CHAMADA NESSE MOMENTO.
+; #important:
+; We have a working function to return to real mode.
+; It will not be used now.
 
 ; start:
-; Inicia o modo escolhido que foi salvo em 'BOOT.modo'.
+; Initialize the mode save in [BOOT.modo].
 ; IN: AL = Boot mode.
-; #bugbug: 
-; Podemos ter um proble nessa vari�vel BOOT BOOT.modo.
-; start.inc
-; See: start.inc
+; #bugbug: Maybe this variable in corrupted.
+; See: start32.inc
 
 ;;
 ;; == Go to Start =======================================
 ;;
 
+    ; Go to 'start' carring the boot mode in al
     mov al, byte [BOOT.modo]
-
-    JMP start
+    ;JMP start
+    JMP start32
     JMP $
 
 ;;
@@ -208,9 +193,8 @@ pm32_start:
 ;;     Desliga a m�quina fica APM. N�o tem argumentos. 
 ;;     Obs: Estamos usando a gdt do m�dulo de 32 bit
 
-;; Called by do_shutdown in shcalls.inc
-
 rmShutdown:
+; Called by do_shutdown in shcalls.inc
 
     mov ax, DATA_SEL    
     mov ds,ax

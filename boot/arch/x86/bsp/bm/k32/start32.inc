@@ -42,6 +42,8 @@
 ;; salva no contexto de 32 bits.
 ;; Called by pm32 in stage3/pm.inc
 
+start32:
+    nop
 start:
 
 ; #bugbug 

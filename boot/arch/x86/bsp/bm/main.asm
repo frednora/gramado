@@ -1181,10 +1181,12 @@ stage2_msg_pe_sigFound:
     db "bm-xxx_checkSig: Signature found", 13, 10, 0
 ; ===================================================
 
-; Trampoline.
-; pm
-; Switch to protected mode.
-; Comuta para o modo protegido.
+; Trampoline: 
+; Switch to protected mode
+; This file has a mix of different modes:
+; + real mode 16bit
+; + protected mode 32bit
+; + protected mode 16bit
 
     %include  "features/pm.inc"
 
@@ -1196,12 +1198,14 @@ stage2_msg_pe_sigFound:
 
 bootmanager_main:
 
-; Em ordem de prioridade na compilação.
+; Order:
+; Priority in compilation
 
 ; 14 - Header principal. 
 ; Definições globais usadas em 32bit.
 ; Header principal em 32 bits.
     %include "k32/header32.inc"
+
 ; 13 - Headers. 
     %include "k32/system.inc"     ; Arquivo de configura��o do sistema.
     %include "k32/init.inc"       ; Arquivo de configura��o da inicializa��o.
@@ -1213,15 +1217,18 @@ bootmanager_main:
     %include "k32/stacks32.inc"   ; Stacks
     %include "k32/x8632/ints32.inc"      ; Handles para as interrupções.
     %include "k32/fs/fat16header.inc"  ; Headers para o sistema de arquivos fat16.
+
 ; 12 - Monitor.
     %include "k32/drivers/screen32.inc"  ; Rotinas de screen em 32 bits.
     %include "k32/drivers/input32.inc"   ; Rotinas de input 2m 32 bits.
     %include "k32/string32.inc"  ; Rotinas de strings em 32 bits.
     %include "k32/font32.inc"    ; Fonte.
+
 ; 11 - Hardware.
     %include "k32/x8632/cpuinfo.inc"  ; Rotinas de detec��o e configura��o de cpu.
     %include "k32/hardware.inc"     ; Rotinas de detec��o e configura��o de hardware.
     ; ...
+
 ; 10 - Irqs.
     %include "k32/drivers/timer.inc"     ; Irq 0, Timer.
     %include "k32/drivers/keyboard.inc"  ; Irq 1, Keyboard.
@@ -1229,14 +1236,18 @@ bootmanager_main:
     %include "k32/drivers/clock.inc"     ; Irq 8, Clock.
     %include "k32/drivers/hdd32.inc"     ; Irq 14/15, Hdd.
     ; ...
+
 ; 9 - Tasks. (#no tasks)
 ; Rotinas de inicialização do sistema de tarefas.
     %include "k32/tasks32.inc"   
+
 ; 8 - lib32.
-; Rotinas em 32 bits. 
+; This lib is at the end.
+
 ; 7 - setup  
 ; Inicializa arquitetura.
     %include "k32/setup.inc"
+
 ; 6 - Disk.
     %include "k32/fs/fat12pm.inc"   ;FAT12 em 32 bits.
     %include "k32/fs/fat16lib.inc"  ;FAT16 (rotinas).
@@ -1244,26 +1255,31 @@ bootmanager_main:
     %include "k32/fs/ramfs.inc"     ;RamDisk fs.
     %include "k32/fs/format.inc"    ;Formata.
     %include "k32/fs/fs32.inc"      ;fs, (ger�ncia os sistemas de arquivos).
+
 ; 5 - File.
     %include "k32/installer.inc"   ;Instala metafiles em LBAs espec�ficas.
     %include "k32/fs/file.inc"     ;Operaçoes com aquivos.
     %include "k32/bootloader.inc"  ;Carrega o Boot Loader (BLGRAM.BIN).
+
 ; 4 - Debug.
 ; System debug.
     %include "k32/debug.inc"
+
 ; 3 - blconfig.
 ; Gerencia a inicialização.
     %include "k32/blconfig.inc"
+
 ; 2 - Boot Manager Mini-Shell.
 ; Prompt de comandos.
     %include "k32/shell32/shell.inc"
     %include "k32/shell32/shcalls.inc"  ;Chamadas dos comandos.
     %include "k32/shell32/shlib.inc"    ;Lib de funções do Shell.
     %include "k32/shell32/shmsg.inc"    ;Mensagens e variáveis do Shell.
+
 ; 1 - Start.
-    %include "k32/start.inc"
+    %include "k32/start32.inc"
+
 ; 0 - lib32.
-;Rotinas em 32 bits.
     %include "k32/lib32.inc" 
 ; ========================================================
 
