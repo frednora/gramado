@@ -2630,6 +2630,7 @@ START:
     mov rax, qword LCONFIG_SYSTEM_BOOTING
     mov qword [_system_state], rax 
 
+; Clear registers
     xor rax, rax
     xor rbx, rbx
     xor rcx, rcx
@@ -2691,6 +2692,10 @@ START:
 ; Initialize ldt with a NULL selector
     xor rax, rax
     lldt ax
+
+; Put 0 in cr2. It's good in the case of Page Faults.
+    xor rax, rax
+	mov	cr2, rax
 
 ; Clear registers RBP, RSI and RDI.
     xor rax, rax

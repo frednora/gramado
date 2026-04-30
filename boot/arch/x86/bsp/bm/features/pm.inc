@@ -12,29 +12,31 @@
 ;     AL  = New initialization mode.
 ;     EBX = ECX = EDX = 0.
 ; History:
-;     ?    - Created by Fred Nora.
-;     2015 - Adapted from older version.
-;     2016 - Revision.
+;     2005+ - Created by Fred Nora.
+;     2015  - Adapted from older version.
+;     2016  - Revision.
 
 
 ; ===========================================================
 ; pmInit:
-;     Switching to Protected Mode.
+;     Switching to Protected Mode
 ; obs: 
 ; Talvez essa rotina deva receber argumentos. 
-; Na inicialização essa rotina é chamada em modo texto.
+; Na inicializaï¿½ï¿½o essa rotina ï¿½ chamada em modo texto.
+;
 ; routine:
-; Keep the interrupts disabled.
-; Setup registers 
-; GDTR - Carrega o gdtr do stage 2.
-; CR0 - PE ; Muda PE.
-; clear register
-; switch to protected mode.
-; get boot mode.
-; flush pipeline. jmp.
+; + Keep the interrupts disabled.
+; + Setup registers 
+; + GDTR - Carrega o gdtr do stage 2.
+; + CR0 - PE ; Muda PE.
+; + clear register
+; + switch to protected mode.
+; + get boot mode.
+; + flush pipeline. jmp.
+;
 
 pmInit:
-; Called by mShell in s2modes.inc.
+; Called by mShell in s2modes.inc
 
     cli
 
@@ -64,9 +66,9 @@ pmInit:
 ; Flush pipeline.
 
 pmTrampoline:
-    jmp stage2_CODE_SEL:Gramado_pm32
+    jmp stage2_CODE_SEL:pm32_start
     [BITS 32]
-Gramado_pm32:
+pm32_start:
 
     ; Text mode debug.
     ; mov byte [0B8000h], byte 'P'
@@ -76,10 +78,10 @@ Gramado_pm32:
 ; ## Inicalizando modo de boot ##
 ;
 
-; Salva o boot mode em um endereço de 32 bits.
+; Salva o boot mode em um endereï¿½o de 32 bits.
 ; #bugbug: O bl foi zerado um pouco antes.
 ; Provavelmente podemos deletar isso.
-; É preciso conferir se não usamos essa variável 
+; ï¿½ preciso conferir se nï¿½o usamos essa variï¿½vel 
 ; logo a frente.
 
 ; Aqui estamos selecionando o modo '0'.
@@ -91,9 +93,9 @@ Gramado_pm32:
 ;
 
 ; #todo: 
-; Talvez dê para passar outras coisas através dos registradores b, c, d.
+; Talvez dï¿½ para passar outras coisas atravï¿½s dos registradores b, c, d.
 ; #obs: 
-; A pilha está bem perto do diretório do kernel. ??.
+; A pilha estï¿½ bem perto do diretï¿½rio do kernel. ??.
 ; Stack = 0x0009FFFC 
 ; Directory = 9C000.  
 
@@ -108,11 +110,6 @@ Gramado_pm32:
     mov ss, ax
     mov esp, dword 0x0009FFFC
 
-    mov edx, dword 0
-    mov ecx, dword 0
-    mov ebx, dword 0
-    mov eax, dword 0
-
 ; LDT
 ; Initialize ldt with a NULL selector.
 ; Intel VT needs that.
@@ -120,11 +117,22 @@ Gramado_pm32:
     xor ebx, ebx
     lldt bx
 
+; Put 0 in cr2. It's good in the case of Page Faults.
+    xor ebx, ebx
+	mov	cr2, ebx
+
+    xor eax, eax
+    xor ebx, ebx
+    xor ecx, ecx
+    xor edx, edx
+
 .do_start:
     
 ; set IOPL to zero and reset all flags
+
     ;push 0x00000002
     ;popfd
+
 
 ; Enable PMC in userspace.
 
@@ -133,14 +141,14 @@ Gramado_pm32:
     ;mov cr4, eax
 
 ; IMPORTANTE: 
-; A ROTINA PARA VOLTAR PARA O MODO REAL E EXECUTAR UM SERVIÇO 
-; FUNCIONOU CORRETAMENTE, MAS NÃO SERÁ CHAMADA NESSE MOMENTO.
+; A ROTINA PARA VOLTAR PARA O MODO REAL E EXECUTAR UM SERVIï¿½O 
+; FUNCIONOU CORRETAMENTE, MAS Nï¿½O SERï¿½ CHAMADA NESSE MOMENTO.
 
 ; start:
 ; Inicia o modo escolhido que foi salvo em 'BOOT.modo'.
 ; IN: AL = Boot mode.
 ; #bugbug: 
-; Podemos ter um proble nessa variável BOOT BOOT.modo.
+; Podemos ter um proble nessa variï¿½vel BOOT BOOT.modo.
 ; start.inc
 ; See: start.inc
 
@@ -158,7 +166,7 @@ Gramado_pm32:
 ;;
 
 ; ==================================================
-; Contexto dos registradores após o JMP para o start.
+; Contexto dos registradores apï¿½s o JMP para o start.
 ;
 ; Segments:
 ;    DS = stage2_DATA_SEL  
@@ -176,11 +184,11 @@ Gramado_pm32:
 ;;
 
 ;;
-;; O que segue são rotinas de funções que serão chamadas do modo protegido
-;; e serão atendidas com recursos do BIOS.
-;; @todo: Os ponteiros para essas funções devem ser passados para o boot loader.
+;; O que segue sï¿½o rotinas de funï¿½ï¿½es que serï¿½o chamadas do modo protegido
+;; e serï¿½o atendidas com recursos do BIOS.
+;; @todo: Os ponteiros para essas funï¿½ï¿½es devem ser passados para o boot loader.
 ;; na verdade podemos passar um ponteiro para uma tabela de ponteiros. Cada
-;; ponteiro do bloco será um ponteiro para uma rotina que atende serviços
+;; ponteiro do bloco serï¿½ um ponteiro para uma rotina que atende serviï¿½os
 ;; usando recursos do bios. Esse bloco fica bem aqui.
 ;;
 
@@ -191,14 +199,14 @@ Gramado_pm32:
 
 
 ;;
-;; 'rm' será a classe de funções que efetuam um serviço em modo real,
+;; 'rm' serï¿½ a classe de funï¿½ï¿½es que efetuam um serviï¿½o em modo real,
 ;; sendo chamadas do modo protegido.
 ;;
 
 ;;===========================================================
 ;; rmShutdown:
-;;     Desliga a máquina fica APM. Não tem argumentos. 
-;;     Obs: Estamos usando a gdt do módulo de 32 bit
+;;     Desliga a mï¿½quina fica APM. Nï¿½o tem argumentos. 
+;;     Obs: Estamos usando a gdt do mï¿½dulo de 32 bit
 
 ;; Called by do_shutdown in shcalls.inc
 
@@ -214,7 +222,7 @@ rmShutdown:
     mov esp, dword 0x0009FFFC
 
 ; Importante:
-; Daqui pra frente não usaremos mais o seletor para 32bit, 
+; Daqui pra frente nï¿½o usaremos mais o seletor para 32bit, 
 ; somente o seletor para modo protegido de 16bit.
 
 ; Pula para o o modo protegido de 16bit, 
@@ -355,7 +363,7 @@ rm_shutdown_msg1:
 
 
 ;; Temos que mudar para 32bit [bits 32]
-;; para não estragar codigos subsequêntes.
+;; para nï¿½o estragar codigos subsequï¿½ntes.
 
 [bits 32]   
 
@@ -363,16 +371,16 @@ rm_shutdown_msg1:
 ;; ====================================================================
 ;; rmStartGUI:
 ;; 
-;;     Inicializa o modo gráfico padrão.
-;;     Essa rotina está em 32bit e foi chamada pelo shell. 
-;;     Essa rotina poderá ser chamada pelo shell em 32 bit modo texto,
-;;     que está dentro do boot manager. 
+;;     Inicializa o modo grï¿½fico padrï¿½o.
+;;     Essa rotina estï¿½ em 32bit e foi chamada pelo shell. 
+;;     Essa rotina poderï¿½ ser chamada pelo shell em 32 bit modo texto,
+;;     que estï¿½ dentro do boot manager. 
 ;;     Obs: 
-;;     Estamos usando a gdt do módulo de 32 bit      
+;;     Estamos usando a gdt do mï¿½dulo de 32 bit      
 ;;
 ;; ****  IMPORTANTE  ****
-;; BL.BIN já foi carregado por BM.BIN usando os recursos do BIOS.
-;; Só nos resta passar o comando para BL.BIN.
+;; BL.BIN jï¿½ foi carregado por BM.BIN usando os recursos do BIOS.
+;; Sï¿½ nos resta passar o comando para BL.BIN.
 ;;
 
 ;; Called by do_boot in shcalls.inc
@@ -391,7 +399,7 @@ rmStartGUI:
 ; #importante:
 ; Pula para o o modo protegido de 16 bit, 
 ; usando o seletor de 16 bit.
-; Daqui pra frente não usaremos mais o seletor para 32 bit, 
+; Daqui pra frente nï¿½o usaremos mais o seletor para 32 bit, 
 ; somente o seletor para modo protegido de 16 bit.
 
     jmp RM_Code_Sel:pmode_16bit_startgui
@@ -400,7 +408,7 @@ rmStartGUI:
 
 pmode_16bit_startgui:
 
-; Ajusta os seletores de código para 
+; Ajusta os seletores de cï¿½digo para 
 ; modo protegido de 16 bit.
 
     mov ax, RM_Data_Sel
@@ -509,8 +517,8 @@ do_rm_startgui:
 .enableTextMode:
 
 ; #bugbug
-; Não precisamos disso, pois estamos entrando no modo
-; gráfico através do vesa?
+; Nï¿½o precisamos disso, pois estamos entrando no modo
+; grï¿½fico atravï¿½s do vesa?
 ; Mas o que acontece se falhar?
 ; Precisaremos de um verbose em modo texto.
 
@@ -519,8 +527,8 @@ do_rm_startgui:
 
 	;; #Importante:
 	;; Mensagem em modo real.
-	;; Suspenderemos essa mensagem porque está degradando o desempenho.
-	;; Ela será uma opção de debug.
+	;; Suspenderemos essa mensagem porque estï¿½ degradando o desempenho.
+	;; Ela serï¿½ uma opï¿½ï¿½o de debug.
 
 	;; #debug
 	;; mov si, rm_startgui_msg1
@@ -536,7 +544,7 @@ do_rm_startgui:
 
 .doStartGUI:
 
-    ; #bugbug: Isso foi para o fim dessa funçao.
+    ; #bugbug: Isso foi para o fim dessa funï¿½ao.
     ; Set mode.
     ;mov al, byte BOOTMODE_GUI
     ;call set_boot_mode
@@ -565,7 +573,7 @@ do_rm_startgui:
     ;; ...
 
     ;; Selecionamos primeiramente a 
-    ;; configuraçao default feita no main.asm,
+    ;; configuraï¿½ao default feita no main.asm,
     ;; mas em seguida pegamos a que nos foi oferecida 
     ;; pelo comando de boot.
     ;; boot, bootjail, bootp1 ... etc ...
@@ -588,7 +596,7 @@ do_rm_startgui:
 
 
     ;; #todo:
-    ;; Temos que rever essa configuraçao acima,
+    ;; Temos que rever essa configuraï¿½ao acima,
     ;; por enquanto quem decide eh o comando de boot.
     ;; parece divertido.
     
@@ -663,7 +671,7 @@ do_rm_startgui:
 ;; and select the default 'gramado mode' in the arguments.
     
 ;; #IMPORTANTE
-;; Definição do arquivo main.asm
+;; Definiï¿½ï¿½o do arquivo main.asm
 
     mov word [META$FILE.VIDEO_MODE], G_VIDEO_MODE
 
@@ -713,7 +721,7 @@ rm_startgui_msg1:
 
 ;; #importante
 ;; Temos que mudar para 32bit [bits 32]
-;; para não estragar codigos subsequêntes.
+;; para nï¿½o estragar codigos subsequï¿½ntes.
 
 [bits 32]
 
