@@ -65,11 +65,14 @@ static int __initialize_fs_buffers(void)
 
 // #bugbug
 // 4 pages per level.
-    for (i=0; i<Max; i++){
+    for (i=0; i<Max; i++)
+    {
         TmpAddr = (unsigned long) allocPages(PagesPerBuffer);
         if ((void*) TmpAddr == NULL){
             goto fail;
         }
+        // Important: Zero the memory!
+        //memset((void*)va, 0, 4096 * 4);
         fs_buffers[i] = (unsigned long) TmpAddr;
     };
 

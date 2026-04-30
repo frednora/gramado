@@ -849,7 +849,7 @@ fs_load_path (
     char name_buffer[12];
     unsigned char *p;
 
-// Onde carregaremos o diretório.
+// Onde carregaremos o diretório
     void *__src_buffer;
     void *__dst_buffer;
     void *__file_buffer;

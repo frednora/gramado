@@ -242,6 +242,18 @@ void i8042_keyboard_expect_ack (void)
     //return 0;
 }
 
+// Interpret the raw by the call the injection routine:
+// #todo: Maybe we can have more than one injection routine,
+// with a configurable procedure address. This way we call 
+// a given procedure depending on the injection mode.
+// Injection routine:
+// + wmRawKeyEvent: 
+//       Process some key combinations and send structured data 
+//       to the display server, fg thread or tty.
+// + OtherProcedure:?
+//       ex: We can send a raw message for some apps 
+//       in fullscreen exclusive mode.
+
 static void 
 __ps2kbd_interpret_and_dispatch(
     unsigned char b0,
@@ -253,36 +265,40 @@ __ps2kbd_interpret_and_dispatch(
     unsigned char raw_code_1 = b1;
     unsigned char raw_code_2 = b2;
 
-    switch (prefix)
-    {
-        // Prefix 0x00
-        // For normal keys and
-        // For extended keys in Virtualbox, that doesn't use prefix.
-        case 0x00:
-            wmRawKeyEvent( raw_code_0, 0x00, 0x00, 0x00 );
-            break;
+    switch (prefix){
 
-        // We gotta send 2 or 3 bytes
-        case 0xE0:
-            // #todo: The worker will accept 3 bytes
-            if (raw_code_1 == 0xF0) {
-                // Break sequence: E0 F0 xx
-                wmRawKeyEvent(raw_code_0, raw_code_1, raw_code_2, prefix);
-            } else {
-                // Make sequence: E0 xx 
-                // Clear the third byte since it's not used
-                wmRawKeyEvent(raw_code_0, raw_code_1, 0x00, prefix);
-            }
-            break;
+    // Prefix 0x00
+    // For normal keys and
+    // For extended keys in Virtualbox, that doesn't use prefix.
+    case 0x00:
+        wmRawKeyEvent( raw_code_0, 0x00, 0x00, 0x00 );
+        return;
+        break;
 
-        // We gotta send 3 bytes
-        case 0xE1:
-            // #todo: The worker will accept 3 bytes
+    // We gotta send 2 or 3 bytes
+    case 0xE0:
+        // #todo: The worker will accept 3 bytes
+        if (raw_code_1 == 0xF0) {
+            // Break sequence: E0 F0 xx
             wmRawKeyEvent(raw_code_0, raw_code_1, raw_code_2, prefix);
-            break;
+            return;
+        } else {
+            // Make sequence: E0 xx 
+            // Clear the third byte since it's not used
+            wmRawKeyEvent(raw_code_0, raw_code_1, 0x00, prefix);
+            return;
+        }
+        break;
 
-        default:
-            break;
+    // We gotta send 3 bytes
+    case 0xE1:
+        // #todo: The worker will accept 3 bytes
+        wmRawKeyEvent(raw_code_0, raw_code_1, raw_code_2, prefix);
+        return;
+        break;
+
+    default:
+        break;
     };
 }
 

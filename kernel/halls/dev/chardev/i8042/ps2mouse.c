@@ -90,6 +90,8 @@ static int ps2_mouse_moving=0;
 static void __ps2mouse_parse_data_packet(void);
 static void __initialize_mouse_position(void);
 
+static int __ps2mouse_get_device_id(void);
+
 // ----------------------------------------------------
 
 // zzz_mouse_read:
@@ -365,6 +367,7 @@ static void __ps2mouse_parse_data_packet(void)
 // Call the event handler.
 // Was it pressed or released?
 
+// -----------------------------
 // 1 (left)
 // The button 0 changed the state.
 // O botao 0, eh na verdade o botao 1. (left)
@@ -383,6 +386,7 @@ static void __ps2mouse_parse_data_packet(void)
         return;
     }
 
+// -----------------------------
 // 2 (right)
 // The button 1 changed the state.
 // O botao 1, eh na verdade o botao 2. (right)
@@ -401,6 +405,7 @@ static void __ps2mouse_parse_data_packet(void)
         return;
     }
 
+// -----------------------------
 // 3 (middle)
 // The button 2 changed the state.
 // O botao 2, eh na verdade o botao 3. (middle)
@@ -421,38 +426,33 @@ static void __ps2mouse_parse_data_packet(void)
 
 // ------------------------------------
 // Step3:
-// Dealing with movement.
+// Dealing with movement
 
-// Is the mouse moving or not?
-
-    // Default: Not.
-    ps2_mouse_moving = FALSE;
-
-    // Yes.
-    if ( saved_mouse_x != mouse_x || 
-         saved_mouse_y != mouse_y )
+// Check if the mouse is moving or not
+    ps2_mouse_moving = FALSE;  // Default: Not moving
+    if ( saved_mouse_x != mouse_x || saved_mouse_y != mouse_y )
     {
-        ps2_mouse_moving = TRUE;
+        ps2_mouse_moving = TRUE;  // Yes, it's moving
     }
 
 // Call the event handler if we have an move event.
+// #todo: Maybe we can have more than one injection procedure.
+// We pick one depending on the injection mode.
 // IN: event id, x, y.
-// see: grinput.c
+// see: ibroker.c
     if (ps2_mouse_moving == TRUE){
         wmMouseEvent( MSG_MOUSEMOVE, mouse_x, mouse_y );
         return;
     }
 }
 
-// local
-//int __get_device_id(void);
-int __get_device_id(void)
+
+static int __ps2mouse_get_device_id(void)
 {
     i8042_mouse_write (PS2MOUSE_GET_DEVICE_ID);
     i8042_mouse_expect_ack();
     return (int) i8042_mouse_read(); 
 }
-
 
 // DeviceInterface_PS2Mouse:
 //   Low-level PS/2 mouse handler.
@@ -837,7 +837,7 @@ None	Ancient AT keyboard with translation enabled in the PS/Controller (not poss
 //
 
 // Get the device id for the first time.
-    device_id = (int) __get_device_id();
+    device_id = (int) __ps2mouse_get_device_id();
     if (device_id == 0xFA){ 
         printk("ps2 mouse: device id fail\n");
     }
@@ -869,7 +869,7 @@ None	Ancient AT keyboard with translation enabled in the PS/Controller (not poss
         i8042_mouse_expect_ack();
 
         // Checando novamente pra ver se ficou inteligente.
-        device_id = (int) __get_device_id();
+        device_id = (int) __ps2mouse_get_device_id();
         if (device_id != 0xFA){ 
             PS2Mouse.device_id = device_id;
         }
@@ -927,7 +927,7 @@ None	Ancient AT keyboard with translation enabled in the PS/Controller (not poss
         i8042_mouse_expect_ack();
         // Pega novamente para sabermos se e' mouse de id 4
         // e tem 5 botoes.
-        device_id = (int) __get_device_id();
+        device_id = (int) __ps2mouse_get_device_id();
         if (device_id != 0xFA){ 
             PS2Mouse.device_id = device_id;
         }
