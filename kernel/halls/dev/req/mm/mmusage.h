@@ -30,5 +30,9 @@ extern unsigned long mm_used_frame_table;
 // start = ?? size = 2MB
 extern unsigned long mm_used_lfb; 
 
+//#test
+extern unsigned long mm_used_module0; 
+
+
 #endif   
 

@@ -106,6 +106,7 @@ void mmShowMemoryInfo(void)
     printk ("extraheap2     (%d KB)\n", mm_used_extraheap2 );
     printk ("extraheap3     (%d KB)\n", mm_used_extraheap3 );
     printk ("frame table    (%d KB)\n", mm_used_frame_table );
+    printk ("module 0       (%d KB)\n", mm_used_module0 );
 
 //==================================
 // System type. (size)

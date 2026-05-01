@@ -6,7 +6,7 @@
 
 // Entry point
 unsigned long  
-kernel_start(
+module_crt0 (
     unsigned char sc_id,  // syscall id
     unsigned long l1,   // Reason
     unsigned long l2,   // data 1

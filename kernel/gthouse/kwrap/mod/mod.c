@@ -20,7 +20,7 @@ const char *mod0_image_name = "DUNGEON BIN";
 
 
 static int __mod_initialize_first_module(void);
-static int __load_mod_image(const char *image_name);
+static int __load_mod0_image(const char *image_name);
 
 // ==================================
 
@@ -125,7 +125,7 @@ static int __mod_initialize_first_module(void)
 {
     struct kernel_module_d *m;
     int module_id = KMODULE_MOD0;
-    unsigned long module_entry_point_va = (unsigned long) XP_MOD0;
+    unsigned long module_entry_point_va = (unsigned long) MOD0_ENTRYPOINT;
     const char *name = "km::mod0";
     size_t s=0;
 
@@ -192,7 +192,7 @@ fail:
 // Save some of this information in the process structure. 
 // see: exec_elf.h and process.h
 // OUT: 0 = ok | -1 = fail
-static int __load_mod_image(const char *image_name)
+static int __load_mod0_image(const char *image_name)
 {
     int fileret = -1;
 
@@ -200,7 +200,7 @@ static int __load_mod_image(const char *image_name)
 // #warning
 // This is a static address. Why not?
 // Hack!
-    const unsigned long ImageAddress = (unsigned long) 0x30A00000;
+    const unsigned long ImageAddress = (unsigned long) MOD0_BASE_ADDRESS;
 
 // #bugbug
 // We have a limit for the image size.
@@ -209,10 +209,10 @@ static int __load_mod_image(const char *image_name)
 
 // Check the validation of the name.
     if ((void*) image_name == NULL){
-        panic("__load_mod_image: image_name\n");
+        panic("__load_mod0_image: image_name\n");
     }
     if (*image_name == 0)
-        panic("__load_mod_image: image_name\n");
+        panic("__load_mod0_image: image_name\n");
 
 /*
 // ok
@@ -264,7 +264,7 @@ static int __load_mod_image(const char *image_name)
     */
 
     if (fileret != 0){
-        printk("__load_mod_image: on fsLoadFile()\n");
+        printk("__load_mod0_image: on fsLoadFile()\n");
         goto fail;
     }
 
@@ -287,18 +287,10 @@ int mod_initialize(void)
     register int i=0;
     int Status = -1;
 
-// Initialize the kernel module list.
+// Initialize the kernel module list
     for (i=0; i<KMODULE_MAX; i++){
         kmList[i] = 0;
     };
-
-/*
-// ok
-    // Wait for some problem with the AP that was initialized.
-    printk("Waiting mod ...\n");
-    refresh_screen();
-    while(1){}
-*/
 
 //
 // The first Kernel module
@@ -309,9 +301,9 @@ int mod_initialize(void)
 // Check the information in the elf header.
 // Save some of this information in the process structure. 
 // see: exec_elf.h and process.h
-    Status = (int) __load_mod_image(mod0_image_name);
+    Status = (int) __load_mod0_image(mod0_image_name);
     if (Status<0){
-        panic ("__load_mod_image: Couldn't load\n");
+        panic ("__load_mod0_image: Couldn't load\n");
     }
 
 // ====================

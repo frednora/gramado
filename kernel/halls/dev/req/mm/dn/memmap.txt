@@ -14,14 +14,14 @@ x64gva.h for virtual addresses.
 ---------------------------------------------
 
 These are static system areas, do not change them.
-// va=0          | Ring 0 area.
-// va=0x00200000 | Ring 3 area.
-// va=0x30000000 | kernel image region.
+// va=0          | Ring 0 area
+// va=0x00200000 | Ring 3 area
+// va=0x30000000 | kernel image region
 // va=0x30200000 | Frontbuffer. (LFB)
-// va=0x30400000 | Backbuffer.
-// va=0x30600000 | Paged pool.
-// va=0x30800000 | Heap pool.
-// va=0x30A00000 | Extra heap 1. (Used by the kernel module.)
+// va=0x30400000 | ?
+// va=0x30600000 | Paged pool
+// va=0x30800000 | Heap pool
+// va=0x30A00000 | Extra heap 1. (Not in use)
 // va=0x30C00000 | Extra heap 2. (Slab allocator)
 // va=0x30E00000 | Extra heap 3. (Slab allocator too)
 

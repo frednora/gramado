@@ -2,9 +2,9 @@
  * File: link_r0.ld
  * ld script to make the x86_64 window server image.
  * Base:
- *     0x30A00000
+ *     0x10000000  old:0x30A00000
  * Entry point: 
- *     0x30A01000
+ *     0x10001000  old:0x30A01000
  *     See: See the entrypoint at crt0.c in rtl/.
  * History:
  *     2021 - Created by Fred Nora.
@@ -14,14 +14,14 @@
 /* 64-bit ELF format for the x86-64 architecture. */
 
 OUTPUT_FORMAT("elf64-x86-64")
-ENTRY(main)
+ENTRY(module_crt0)
 
 /* Essa aplicação está usando o diretório do processo kernel. */
 
 SECTIONS
 {
-    . = 0x30A01000;
-    .text 0x30A01000: 
+    . = 0x10001000;
+    .text 0x10001000: 
     {
         _server_begin = .;
         _start_of_server_image = .;

@@ -8,20 +8,22 @@
 #define KMODULE_MOD0  0   // first of the list.
 #define KMODULE_MAX   8
 
-// Cross Pointer
-#define XP_MOD0    0x30A01000
+//
+// mod0 addresses
+//
+
+// New address
+#define MOD0_BASE_ADDRESS  0x10000000
+#define MOD0_ENTRYPOINT    0x10001000
 
 
-// Informações compartilhadas 
-// entre o kernel e um dado módulo.
+// Handling information between kernel and a given module.
 struct km_shared_info_d
 {
-// The entry point
-    unsigned long entry_point;
-// Procedure
-    unsigned long dialog_address;
-// The pointer for a table of symbols exported
-// by this module.
+    unsigned long entry_point;  // The entry point
+    unsigned long dialog_address;  // Procedure
+
+// The pointer for a table of symbols exported by this module.
     unsigned long function_table_address;
 };
 

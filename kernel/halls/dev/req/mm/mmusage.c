@@ -25,6 +25,8 @@ unsigned long mm_used_extraheap2=0;
 unsigned long mm_used_extraheap3=0;
 unsigned long mm_used_frame_table=0;
 // start = ?? size = 2MB
-unsigned long mm_used_lfb=0; 
+unsigned long mm_used_lfb=0;
+//#test
+unsigned long mm_used_module0 = 0; 
 
 

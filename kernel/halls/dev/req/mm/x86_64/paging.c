@@ -718,8 +718,10 @@ static void __mmSetupMemoryUsage(void)
         mm_used_extraheap1 + 
         mm_used_extraheap2 + 
         mm_used_extraheap3 +
-        mm_used_frame_table 
-        );
+        mm_used_frame_table + 
+        mm_used_module0 
+    );
+
 
 // free memory
     memorysizeFree = 
@@ -1016,6 +1018,8 @@ void __initialize_ram_usage_varables(void)
     mm_used_extraheap2 = 0; 
     mm_used_extraheap3 = 0; 
     mm_used_frame_table = 0;
+
+    mm_used_module0 = 0;  // Loadable module
 }
 
 static void __initialize_canonical_physical_regions(void)
@@ -1462,7 +1466,7 @@ static void __initialize_backbuffer(void)
         (unsigned long) ( PAGE_USER | PAGE_WRITE | PAGE_PRESENT ) );  // flags=7
 }
 
-
+// New backbuffer at 512mb mark
 static void __initialize_new_backbuffer_in_512mb_mark(void)
 {
 
@@ -1623,12 +1627,11 @@ static void __initialize_heappool(void)
 
 // ====================================================================
 // 2mb, ring0, start = 0x30A00000.
-// Ring 0 kernel module. MOD0.BIN.
-// See: x64init.c When we setup the Heap pointer.
-// TEInitProcess->Heap = (unsigned long) g_extraheap1_va; :)
-// 2048 KB = (2 MB).
+// 2048 KB = (2 MB)
 
 // Kernel-side
+// #ps: This buffer is not used bacause we are not
+// loading the module 0 here anymore.
 static void __initialize_extraheap1(void)
 {
     // #ps: In this case virtual and physical addresses are the same.
@@ -1637,7 +1640,7 @@ static void __initialize_extraheap1(void)
     unsigned long *pt_extraheap1 = 
         (unsigned long *) get_table_pointer_va();
 
-// pa
+// pa: ?
     paList[MM_COMPONENT_EXTRAHEAP1_PA] = (unsigned long) SMALL_extraheap1_pa;
     unsigned long extraheap1_pa = (unsigned long) SMALL_extraheap1_pa;
 
@@ -1902,6 +1905,8 @@ static void __initialize_canonical_kernel_pagetables(void)
         mm_map_2mb_region_in_pd0(0x10600000,0x10600000);
         mm_map_2mb_region_in_pd0(0x10800000,0x10800000);
         // ...
+
+        mm_used_module0 = (1024 * 2 * 5); // 2MB * 5
     }
 
 

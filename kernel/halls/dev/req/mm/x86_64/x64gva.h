@@ -187,7 +187,6 @@
 //
 
 // 768MB + 10MB mark (VA)
-// Ring 0 kernel module. (MOD0.BIN)
 // see: __initialize_extraheap1() in pages.c.
 #define EXTRAHEAP1_VA   0x0000000030A00000
 
@@ -203,10 +202,6 @@
 
 //-------------
 
-// Alias
-// The firt ring0 module. mod0.bin
-#define MOD0_IMAGE_VA  EXTRAHEAP1_VA
-#define MOD0_ENTRYPOINT_VA  0x0000000030A01000
 
 // -----------------------------------
 // free :)

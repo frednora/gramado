@@ -1,4 +1,5 @@
 // head.c
+// crt0 file for a ring0 kernel module.
 // Created by Fred Nora.
 
 #include <kernel.h>
@@ -22,7 +23,7 @@ const char *crt0_args[] = {
 // ----------------------------------
 // Entry point
 unsigned long  
-kernel_start(
+module_crt0 (
     unsigned char sc_id,  // syscall id
     unsigned long l1,   // Reason
     unsigned long l2,   // data 1

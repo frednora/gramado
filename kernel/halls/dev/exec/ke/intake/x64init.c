@@ -870,11 +870,7 @@ void I_x64ExecuteInitialProcess(void)
 // This is a ring0 process.
 // This process has two images,
 // KERNEL.BIN loaded by the boot loader and
-// MOD0.BIN loaded by the kernel base.
-// This is the virtual address for the base of the image.
-// We are using the kernel pagetables for that.
-// #define EXTRAHEAP1_VA   0x0000000030A00000
-// MOD0_IMAGE_VA
+// module 0 loaded by the kernel base.
 // See: x64gva.h
 
 static int I_x64CreateKernelProcess(void)
@@ -950,9 +946,7 @@ static int I_x64CreateKernelProcess(void)
     TEKernelProcess->token.egid = (gid_t) GID_DEFAULT;  // effective
     TEKernelProcess->token.sgid = (gid_t) GID_DEFAULT;  // saved
 
-// The kernel process is a system program.
-// KERNEL.BIN and GWSSRV.BIN
-
+// The kernel process is a system program
     TEKernelProcess->type = PROCESS_TYPE_SYSTEM;
 
     TEKernelProcess->base_priority = BasePriority;
@@ -964,7 +958,8 @@ static int I_x64CreateKernelProcess(void)
 
 // kernel_mm_data validation.
 
-    if (kernel_mm_data.used != TRUE || kernel_mm_data.magic != 1234){
+    if (kernel_mm_data.used != TRUE || kernel_mm_data.magic != 1234)
+    {
         printk ("I_x64CreateKernelProcess: kernel_mm_data validation\n");
         return FALSE;
     }

@@ -11,6 +11,8 @@
 #include "kernel.h"
 
 
+#define KERNEL_IMAGE_ENTRYPOINT  0x30001000
+
 // kernel sysboltable address.
 // Pointer for the table of function pointers
 // exported by the base kernel.
@@ -73,9 +75,10 @@ int newm0_initialize(void)
 {
 
 // The kernel static entry point.
-// #bugbug: It's not safe.
-// We need a random address.
-    unsigned char *k = (unsigned char *) 0x30001000;
+// #bugbug: 
+// Static address is not safe. We need a random address.
+
+    unsigned char *k = (unsigned char *) KERNEL_IMAGE_ENTRYPOINT;
 
 // #test
 // Lookup for "__GRAMADO__"
@@ -146,11 +149,14 @@ mmain (
     unsigned long param3,  // long2
     unsigned long param4 ) // long3
 {
-// Called by kernel_start() in head.c
+// Called by module_crt0() in head.c
 
     unsigned long reason = (unsigned long) (param1 & 0xFFFF);
     int Status = -1;
     unsigned long ReturnValue;
+
+    // The entrypoint for the mod0
+    unsigned long entrypoint_address = (unsigned long) &module_crt0;
 
 // #todo
 // sc_id means the id of the syscall used to
@@ -177,7 +183,8 @@ mmain (
             // See: kstdio.c
             Status = (int) newm0_initialize();
             if (Status == TRUE){
-                printk("Initialization OK\n");
+                printk("dungeon.bin: Initialization at {%x} OK\n", 
+                    entrypoint_address );
                 return 1234;
             }
             return (unsigned long) 0;
