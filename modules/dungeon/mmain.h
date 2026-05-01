@@ -31,7 +31,11 @@ extern struct module_initialization_d  ModuleInitialization;
 // ============================
 
 int newm0_1001(void);
-int newm0_initialize(void);
 
+int 
+newm0_initialize(
+    unsigned long long1, 
+    unsigned long long2, 
+    unsigned long long3 );
 #endif   
 

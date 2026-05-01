@@ -30,7 +30,7 @@ display_initialization_phase1(
     if (ModuleInitialization.initialized != TRUE)
     {
         // See: kstdio.c
-        newm0_initialize();
+        newm0_initialize(0,0,0);
     }
 
     if (ModuleInitialization.initialized == TRUE)

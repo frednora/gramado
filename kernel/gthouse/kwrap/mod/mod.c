@@ -50,29 +50,42 @@ void test_mod0(void)
     if ((void*) kernel_mod0->entry_point == NULL)
         return;
 
+
+//
+// Calling the module
+//
+
 // #test
 // Calling the virtual function, and
 // getting the return value.
 
 // --------------------
 // Reason 1000: Initializing the module.
+// IN: caller id, reason, long1, long2, long3
+
+    unsigned long reason = 1000;
+    unsigned long long1 = 1234;  // Signature
+    unsigned long long2 = 0;
+    unsigned long long3 = 0;
     return_value = 
         (unsigned long) kernel_mod0->entry_point(
             0xFF,
-            1000,1234,0,0);
+            reason, long1, long2, long3 );
     printk ("RETURN: %d\n",return_value);
 
 // --------------------
-// Reason 1001: Testing printk function.
+// Reason 1001: Testing printk function
+// IN: caller id, reason, long1, long2, long3
     return_value = 
         (unsigned long) kernel_mod0->entry_point(
             0xFF,
-            1001,1234,0,0);    
+            1001, 1234, 0, 0);    
     printk ("RETURN: %d\n",return_value);
 
 // --------------------
 // Reason 1002:
 // Exporting the pointer for the function table.
+// IN: caller id, reason, long1, long2, long3
     fn_table_base = (unsigned long) &kernel_mod0->fn_table[0];
     return_value = 
         (unsigned long) kernel_mod0->entry_point(
@@ -84,6 +97,7 @@ void test_mod0(void)
 // Reason 1003:
 // Exporting the pointer for the module sci.
 // This way the module can call routines inside the kernel.
+// IN: caller id, reason, long1, long2, long3
     mod_sci = (unsigned long) &ring0_module_sci;
     return_value = 
         (unsigned long) kernel_mod0->entry_point(
@@ -91,8 +105,7 @@ void test_mod0(void)
             1003, 1234, mod_sci, mod_sci );    
     printk ("RETURN: %d\n",return_value);
 
-// Done:
-    printk ("test_mod0: Done\n");
+    printk ("test_mod0: Done\n");  // done
 }
 
 // Handler for ring0 module syscall.
@@ -106,14 +119,16 @@ void *ring0_module_sci(
     unsigned long arg3, 
     unsigned long arg4 )
 {
-    printk("ring0_module_sci:\n");
+    unsigned long Value = 1234;
+
+    printk("ring0_module_sci: Service number %d\n", number);
 
 // #todo:
 // Populate the switch with some good services for modules.
 
-    unsigned long Value = 1234;
+    //switch (number){
+    //}
 
-    //return NULL;
     return (void*) Value;
 }
 

@@ -71,7 +71,11 @@ fail:
 // #todo: Why this name?
 // Why this functions is here? Move it to another place.
 // OUT: TRUE or FALSE.
-int newm0_initialize(void)
+int 
+newm0_initialize(
+    unsigned long long1, 
+    unsigned long long2, 
+    unsigned long long3 )
 {
 
 // The kernel static entry point.
@@ -143,7 +147,7 @@ fail:
 // Called by kernel_start() in head.c
 unsigned long 
 mmain (
-    unsigned char sc_id,   // system call id.
+    unsigned char sc_id,   // system call id
     unsigned long param1,  // reason
     unsigned long param2,  // long1
     unsigned long param3,  // long2
@@ -152,6 +156,10 @@ mmain (
 // Called by module_crt0() in head.c
 
     unsigned long reason = (unsigned long) (param1 & 0xFFFF);
+    unsigned long long1 = (unsigned long) (param2);
+    unsigned long long2 = (unsigned long) (param3);
+    unsigned long long3 = (unsigned long) (param4);
+
     int Status = -1;
     unsigned long ReturnValue;
 
@@ -166,7 +174,7 @@ mmain (
 // But we can have some special values indicating that
 // the module was called by the kernel or by another module.
 
-    //#debug
+    //#debug: only the kernel
     //if (sc_id == 0xFF)
         //printk ("[0xFF]: Called by kernel\n");
 
@@ -175,22 +183,31 @@ mmain (
         goto fail;
     }
 
+    // param1 = reason
     switch (reason){
 
-        // Initializing the module.
+        // Initializing the module
         case 1000:
-            // Initialize the server functions.
-            // See: kstdio.c
-            Status = (int) newm0_initialize();
-            if (Status == TRUE){
+
+            // Initialize the server functions
+            Status = (int) newm0_initialize(long1, long2, long3);
+            if (Status == TRUE)
+            {
+                // #debug
                 printk("dungeon.bin: Initialization at {%x} OK\n", 
                     entrypoint_address );
+                
+                // #debug
+                printk("long1={%x} long2={%x} long3={%x}\n", 
+                    long1, long2, long3 );
+                
                 return 1234;
             }
+
             return (unsigned long) 0;
             break;
 
-        // Testing printk function.
+        // Testing printk function
         case 1001:
             Status = (int) newm0_1001();
             if (Status == TRUE){
@@ -248,14 +265,14 @@ mmain (
                                        param4 );
             break;
 
-        // Testing the parameter list.
+        // Testing the parameter list
         case 8888:
-            
-            if (ModuleInitialization.initialized != TRUE)
-            {
-                // See: kstdio.c
-                newm0_initialize();
+
+            // If its not initialized yet
+            if (ModuleInitialization.initialized != TRUE){
+                newm0_initialize(long1, long2, long3);
             }
+
             if (ModuleInitialization.initialized == TRUE)
             {
                 printk("Parameters: %d | %d | %d | %d\n",

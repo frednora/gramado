@@ -33,8 +33,9 @@ L2_WINSHELL = $(__DEP_L2)/farmer/winshell
 # =================================
 # Nomad Pastors
 __DEP_L3 = np
-L3_HEAVY = $(__DEP_L3)/heavy
-L3_SDK = $(__DEP_L3)/sdk
+L3_HEAVY    = $(__DEP_L3)/heavy
+L3_NETU     = $(__DEP_L3)/netu
+L3_SDK      = $(__DEP_L3)/sdk
 L3_SYSUTIL  = $(__DEP_L3)/sysutils
 L3_SYSUTIL2 = $(__DEP_L3)/sysutils2
 
@@ -189,8 +190,8 @@ build-extras:
 
 # --------
 # netu
-	@-cp $(L3_HEAVY)/netu/core/bin/NET.BIN   $(BASE)/GRAMADO/
-	@-cp $(L3_HEAVY)/netu/core/bin/NETD.BIN  $(BASE)/GRAMADO/
+	@-cp $(L3_NETU)/core/bin/NET.BIN   $(BASE)/GRAMADO/
+	@-cp $(L3_NETU)/core/bin/NETD.BIN  $(BASE)/GRAMADO/
 
 # --------
 # sdk

@@ -103,13 +103,11 @@ struct tagGraphics *Graphics;
 // Video support
 //
 
-/*
- * video_d:
- *     Estrutura para informações sobre parâmetros de vídeo.
- */
+
+// Information about vide
 struct video_d
 {
-    object_type_t  objectType;
+    object_type_t objectType;
     object_class_t objectClass;
 
 	//call back

@@ -31,10 +31,10 @@ module_crt0 (
     unsigned long l4 )  // data 3
 {
     unsigned char id = (unsigned char) sc_id;
-    unsigned long param1 = (unsigned long) l1;
-    unsigned long param2 = (unsigned long) l2;
-    unsigned long param3 = (unsigned long) l3;
-    unsigned long param4 = (unsigned long) l4;
+    unsigned long param1 = (unsigned long) l1; // Reason
+    unsigned long param2 = (unsigned long) l2; // long1
+    unsigned long param3 = (unsigned long) l3; // long2
+    unsigned long param4 = (unsigned long) l4; // long3
     unsigned long return_value=0;
 
 // #todo
@@ -45,7 +45,8 @@ module_crt0 (
 // But we can have some special values indicating that
 // the module was called by the kernel or by another module.
 
-// Called by syscalls
+// -----------------------------------------------
+// 0x81 and 0x83: Called by syscalls
 // sc81 and sc83
     if ( id == 0x81 ||
          id == 0x83 )
@@ -56,9 +57,8 @@ module_crt0 (
                                 param1, param2, param3, param4 );
     }
 
-// #test #todo
-// Other options
-// FF - Called by kernel itself.
+// -----------------------------------------------
+// 0xFF: Called by kernel itself
     if (id == 0xFF)
     {
         return_value = 
