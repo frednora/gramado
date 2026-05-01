@@ -40,7 +40,9 @@ static void __get_cpu_intel_parameters(void);
 // See: head_64.asm
 
 extern void rsp0Stack(void);
-extern void gdt_flush(unsigned long gdtr_address);
+
+// See: x86_64.asm
+extern void asm_load_gdt(unsigned long gdtr_address);
 
 int x64_init_gdt(void)
 {
@@ -52,12 +54,31 @@ int x64_init_gdt(void)
 // 32 segment descriptors.
 // see: x64gdt.h
 
-    unsigned long GDT_Base = 
-        (unsigned long) &xxx_gdt[GNULL_SEL];
+//
+// The base address for the GDT
+//
+
+    // This is the pointer for an array os structures.
+    // This is the GDT with 32 entries.
+    unsigned long GDT_Base = (unsigned long) &xxx_gdt[GNULL_SEL];
+
+//
+// The number of entries. (32)
+//
 
     size_t GDT_NumberOfEntries = DESCRIPTOR_COUNT_MAX;  //32 
+
+//
+// The size
+//
+
     size_t GDT_Size = 
         (size_t) ( sizeof(struct segment_descriptor_d) * GDT_NumberOfEntries );
+
+//
+// Clear the table
+//
+
     memset( GDT_Base, 0, GDT_Size );
 
 
@@ -70,14 +91,21 @@ int x64_init_gdt(void)
 
 // ----------------
 // null
+// GNULL_SEL      0  // Null descriptor
+// Create the NULL entry.
+
     set_gdt_entry ( 
         &xxx_gdt[GNULL_SEL], 
-        0,0,0,0,0,0,0,0,0,0);
+        0,0,0,0,0,0,0,0,0,0 );
 
 // ----------------
+// GCODE_SEL      1  // Kernel code descriptor
+// GDATA_SEL      2  // Kernel data descriptor
 // ring 0
 // dpl 0
 // (n, limit, base, type, s, dpl, p, avl, l, db, g)
+
+    // k code
     set_gdt_entry ( 
         &xxx_gdt[GCODE_SEL], 
         0,    // limit
@@ -90,6 +118,8 @@ int x64_init_gdt(void)
         1,    // l
         0,    // db
         0);   // g
+
+    // k data
     set_gdt_entry ( 
         &xxx_gdt[GDATA_SEL], 
         0,    // limit
@@ -104,9 +134,13 @@ int x64_init_gdt(void)
         0);   // g
 
 // ----------------
+// GUCODE_SEL     3  // User code descriptor
+// GUDATA_SEL     4  // User data descriptor
 // ring 3
 // dpl 3
 // (n, limit, base, type, s, dpl, p, avl, l, db, g)
+
+    // u code
     set_gdt_entry ( 
         &xxx_gdt[GUCODE_SEL], 
         0,    // limit
@@ -119,6 +153,8 @@ int x64_init_gdt(void)
         1,    // l
         0,    // db
         0);   // g
+
+    // u data
     set_gdt_entry ( 
         &xxx_gdt[GUDATA_SEL], 
         0,      // limit   
@@ -154,13 +190,17 @@ int x64_init_gdt(void)
 // given the ring0 stack pointer.
     tss_init ( 
         (struct tss_d *) tss,  // tss 
-        (void *) &rsp0Stack    // ring 0 stack address
+        (void *) &rsp0Stack    // ring 0 stack address for this processor.
         );
 
 // System Segment Descriptor
 
+// GTSS_SEL       5  // tss
+// GTSS_CONT_SEL  6  // tss continuação
 // tss, dpl 3
 // Two entries.
+
+    // tss
     set_gdt_entry( 
         &xxx_gdt[GTSS_SEL], 
         sizeof(struct tss_d) - 1,   // limit
@@ -173,42 +213,45 @@ int x64_init_gdt(void)
         0,   // l
         0,   // db
         1);  // g
+
+    // tss cont.
     set_gdt_entry( 
         &xxx_gdt[GTSS_CONT_SEL], 
         (unsigned long) tss >> 32,
         (unsigned long) tss >> 48,
         0,0,0,0,0,0,0,0);
 
-// Current TSS.
-    CurrentTSS = tss;
+// Current TSS for this processor.
+    //CurrentTSS = tss;
     //CurrentTSS = (struct tss_d *) tss;
 
 //
 // Load GDT
 //
 
+// ------------------
+// Register the GDT using assembly.
 // Limit and base.
-
+// See: x86_64.asm
+// See: x64gdt.h
     xxx_gdt_ptr.limit = 
         (unsigned short) ((DESCRIPTOR_COUNT_MAX * sizeof(struct segment_descriptor_d) ) -1);
     xxx_gdt_ptr.base = 
         (unsigned long) &xxx_gdt[GNULL_SEL];
-
-
-// Register.
-// see: header3.asm
-    gdt_flush( (unsigned long) &xxx_gdt_ptr );
-
-    // See: x64gdt.h
+    asm_load_gdt( (unsigned long) &xxx_gdt_ptr );
     //load_gdt (&xxx_gdt_ptr);
+// ------------------
+
+//
+// Load TR.
+//
+
+    // 0x2B = (0x28+3).
+    x64_load_ltr(0x2B);
+
 
 // #todo
 // print gdt entries.
-
-
-// Load TR. #danger
-// 0x2B = (0x28+3).
-    x64_load_ltr(0x2B);
 
     return 0;
 }

@@ -402,8 +402,11 @@ int halInitialize(void)
 // #bugbug
 // see: x64.c
 
-    //PROGRESS(":: GDT\n"); 
+    PROGRESS(":: GDT\n"); 
+    PROGRESS("halInitialize: Initializing GDT and TSS\n");
     x64_init_gdt();
+
+    // while(1){ asm("hlt\n");}
 
     return TRUE;
 

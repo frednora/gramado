@@ -293,13 +293,14 @@ _x64_clear_nt_flag:
 ; Then reloads all segment registers (ds, es, fs, gs, ss) 
 ; with selector 0x10 (your data segment).
 ; This ensures the CPU is using your fresh descriptors.
-global _gdt_flush
-_gdt_flush:
+
+global _asm_load_gdt
+_asm_load_gdt:
 
     mov rax, rdi
     lgdt [rax]
 
-    mov rax, 0x10  ; Hardcoded
+    mov rax, 0x10  ; #bugbug: Hardcoded
     mov ds, ax
     mov es, ax
     mov fs, ax

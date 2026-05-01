@@ -1,7 +1,7 @@
 // tss.h
 // Created by Fred Nora.
 
-#ifndef __TSS_H
+#ifndef __X86_64_TSS_H
 #define __TSS_H    1
 
 
@@ -35,7 +35,8 @@ typedef struct tss_d {
 
 // #todo
 // Put this in tss.c and put here an external reference.
-struct tss_d  *CurrentTSS;
+// Valid for one processor. Probably BSP.
+// struct tss_d  *CurrentTSS;
 
 /*
  * I/O bitmap offset beyond TSS's segment limit means no bitmaps.
@@ -56,7 +57,7 @@ struct tss_d  *CurrentTSS;
 
 // See: x64.c
 void 
-tss_init( 
+tss_init ( 
     struct tss_d *tss, 
     void *stack_address );
 

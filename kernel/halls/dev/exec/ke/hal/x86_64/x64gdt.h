@@ -101,6 +101,8 @@ Types available in Long Mode:
 // https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/desc_defs.h
 // gdt structure.
 /* 8 byte segment descriptor */
+
+// GDT entry
 struct segment_descriptor_d 
 {
 // 16 bits
@@ -129,6 +131,7 @@ struct segment_descriptor_d
 // using Assembly language. 
 // Isso é uma gdt com 32 entradas.
 #define DESCRIPTOR_COUNT_MAX    32
+
 // 32 segment descriptors.
 // see: x64.c
 extern struct segment_descriptor_d xxx_gdt[DESCRIPTOR_COUNT_MAX];
