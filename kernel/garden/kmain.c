@@ -1497,7 +1497,7 @@ void AP_kmain(void)
     unsigned int Color = COLOR_BLACK;
     int Counter = 0;
     while (1){
-        while (apic_SPINLOCK == TRUE){ asm ("pause \n"); };
+        //while (apic_SPINLOCK == TRUE){ asm ("pause \n"); };
 
         Counter++;
         Color = COLOR_YELLOW;
@@ -1510,9 +1510,16 @@ void AP_kmain(void)
 
         //wproxy_ap_test();
 
-        // some interrupt handler need the thread initialization
-        // asm (" int $3 \n ");
+        // #test
+        // Delay
+        // With this delay we can have performance enough 
+        // in both cores to make tests.
+        // #todo: Do not change it for now.
+        asm ("xorl %%eax, %%eax" ::);
+        asm ("pause \n");
+        asm ("outb %%al, $0x80"  ::);
     };
+
 
 // Something went wrong with this AP.
 // #todo:

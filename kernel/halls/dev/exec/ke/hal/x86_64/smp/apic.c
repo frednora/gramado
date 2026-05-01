@@ -112,7 +112,10 @@ void flush_cashes(void)
 */
 
 
-// Handler for the lapic timer (test)
+// #test
+// Handler for the lapic timer.
+// This was a test. Now we're using the standard handler. 
+// The sam eused by the BSP.
 void apic_TimerHandler0000(void)
 {
     int i=0;

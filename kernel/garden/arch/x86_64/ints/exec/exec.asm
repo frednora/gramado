@@ -50,8 +50,8 @@ extern _x64_all_faults
 align 4  
 all_faults:
 
-; Save context.
-    ;cli
+; Save context
+    cli
 
     pop qword [_contextRIP]     ; rip
     pop qword [_contextCS]      ; cs (R3)
@@ -104,11 +104,10 @@ all_faults:
     mov rax, qword [_save_fault_number]
     mov rdi, rax 
     call _x64_all_faults 
+    ;jmp _AllFaultsHang
 
 ; FPU
     fxrstor [_context_fpu_buffer]
-
-    ;jmp _AllFaultsHang
 
 ; retornaremos com o contexto da proxima thread,
 ; e com o cr3 atualizado pela rotina de restauraçao de contexto.
@@ -170,7 +169,7 @@ all_faults:
 ; We do NOT need the 'sti'. 
 ; The flags in the 'eflags' will reenable it.
 
-    ;sti
+    sti
     iretq
 
 ;----------------------------
