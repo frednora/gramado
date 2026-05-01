@@ -4,6 +4,7 @@
 
 #include <kernel.h>
 
+
 // Initialized when the display device is initialized.
 // See: bldisp.c, qemudisp.c ...
 struct dc_d *dc_backbuffer;

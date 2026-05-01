@@ -65,8 +65,10 @@ void test_mod0(void)
 
     unsigned long reason = 1000;
     unsigned long long1 = 1234;  // Signature
-    unsigned long long2 = 0;
+    // #see: bootblk.h, bootblk.c
+    unsigned long long2 = (unsigned long) &bootblk;     // The Boot Block structure
     unsigned long long3 = 0;
+
     return_value = 
         (unsigned long) kernel_mod0->entry_point(
             0xFF,
