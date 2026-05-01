@@ -392,8 +392,7 @@ fail:
 // Get system messages from Init Thread (idle).
 // Getting requests or events.
 // Process the events.
-// Respont the request of other processes, 
-// using system messages.
+// Respond the request of other processes using system messages.
 static int xxxEventLoopSystemEvents(void)
 {
 
@@ -417,6 +416,7 @@ static int xxxEventLoopSystemEvents(void)
 
 // Nessa hora ja não nos preocupamos mais com essa thread.
 // Ele receberá algumas mensagens eventualmente.
+
     while (TRUE){
 
         //start_jiffie = rtl_jiffies();
@@ -424,6 +424,7 @@ static int xxxEventLoopSystemEvents(void)
 		if (isTimeToQuitServer == TRUE){
 			break;
 		}
+
         // #todo
         // We gotta put this thread into a wait state if there's no 
         // more events into the queue.
@@ -496,6 +497,7 @@ int libinit_initialize_library(void)
 // We're NOT using the unix-sockets
 // just like in a regular Gramado server. 
 // We're just getting messages in the threads message queue.
+
 int msgloop_RunServer(void)
 {
 // Called by main() in main.c

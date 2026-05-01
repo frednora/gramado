@@ -1,10 +1,12 @@
 // Init process. INIT.BIN.
+// Init as a Command Line Interpreter and System Server.
+// Created by Fred Nora.
+
 // This is the first ring3 process.
 // This is also has an embedded shell. 
 // This way we can use it to launch the window server.
 // After that the applications goes to a loop
 // receving messages from the kernel.
-// Created by Fred Nora.
 
 
 #include "inc/init.h"
@@ -1016,6 +1018,9 @@ fail:
 // printing it into the kernel console.
 // The command line interpreter inside the initprocess.
 // There is no display server running yet.
+
+// The loopSTDIN is the first “event loop” — it continuously reads from stdin, 
+// interprets commands, and can put the thread into an alertable state for callbacks.
 static int loopSTDIN(void)
 {
     register int C=0;
@@ -1044,9 +1049,8 @@ static int loopSTDIN(void)
         C = (int) fgetc(stdin);
         if (C <= 0)
         {
-
             // Put the thread into the alertable state.
-            // The kernel will consume this state, and we will put it again.
+            // The kernel will consume this state, and we will set it again.
 
             if (CONFIG_TEST_CALLBACK == 1)
             {
@@ -1248,6 +1252,12 @@ Standard Linux Runlevels (0-6)
 6 (Reboot): 
   Reboots the system.
 */
+
+
+// #todo
+// ex: struct app_info gui_app_rl3[MAX_GUI_APPS_RL3];
+// This can be a good way to handle the presence of the expected apps
+// in each one of the runlevels. ex: app 0 in rl5 is display server.
 
     // #debug
     // printf("Runlevel: %d\n", Init.__runlevel);
@@ -1536,6 +1546,8 @@ CommandInterpreter:
 // =[Loop 1]===============================
 // Get input from stdin.
 // Local function.
+// When quiting the command lint interpreter 
+// we go to the server loop in inittask.c.
     int cmdline_status = -1;
     if (fRunCommandLine == TRUE)
     {

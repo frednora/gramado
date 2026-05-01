@@ -535,7 +535,7 @@ void __test_post_async_hello(void)
 {
     unsigned long message_buffer[32];
 // The tid of init.bin is '0', i guess. :)
-    int InitProcessControlTID = 0;
+    static int InitProcessControlTID = 0;
 // Response support.
     //int __src_tid = -1;
     //int __dst_tid = -1;
@@ -552,9 +552,10 @@ void __test_post_async_hello(void)
 // Post
 // Add the message into the queue. In tail.
 // IN: tid, message buffer address
-    rtl_post_system_message( 
+    rtl_post_system_message ( 
         (int) InitProcessControlTID, 
-        (unsigned long) message_buffer );
+        (unsigned long) message_buffer 
+    );
 
 // #todo
 // Actually this test needs to stay into a loop 

@@ -16,7 +16,7 @@
 #include "endpoint.h"
 
 // Internal library (Creating a template)
-#include "../inittask/inittask.h"
+#include "../initsrv/initsrv.h"
 
 
 #define EnvironmentWinuCore   4000

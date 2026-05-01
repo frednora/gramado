@@ -31,9 +31,10 @@ LIBCOBJ = ../garden/rtl/obj
 
 
 # Objects
-myObjects = initcrt0.o main.o inittask.o rtl.o \
+myObjects = initcrt0.o rtl.o \
 ctype.o stdio.o fcntl.o stdlib.o string.o unistd.o termios.o ioctl.o \
-socket.o    
+socket.o \
+initsrv.o main.o    
 
 .PHONY: all all-c link_app finalize clean
 
@@ -45,7 +46,7 @@ main.o:
 
 all-c:
 
-	gcc  -c inittask/inittask.c  $(CFLAGS) -I $(LIBC) -o inittask.o
+	gcc  -c initsrv/initsrv.c  $(CFLAGS) -I $(LIBC) -o initsrv.o
 
 	@echo "Importing library ..."
 
