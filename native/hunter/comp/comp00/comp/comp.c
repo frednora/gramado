@@ -1332,8 +1332,8 @@ void compComposeDesktop(void)
                         width  = ci->dc->device_width;
                         height = ci->dc->device_height;
                     }
-                    // Now it belongs to a window,
-                    // lets respect the windows dimensions
+                    // Now it belongs to a window, let's respect 
+                    // the window dimensions.
                     if ((void*) ci->owner_window != NULL)
                     {
                         left = ci->owner_window->absolute_x;
@@ -1354,19 +1354,22 @@ void compComposeDesktop(void)
                         //{
                         //    height = (ci->dc->device_height - ci->owner_window->absolute_y);  
                         //}
+                        // #ps: Here we need a valid dc
                         height = ci->owner_window->height;
-                        if (ci->owner_window->height > ci->dc->device_height)
-                            height = ci->dc->device_height;
+                        if (10 < ci->dc->device_height)
+                            height = 10;
+                        //if (ci->owner_window->height > ci->dc->device_height)
+                            //height = ci->dc->device_height;
+
+                        if (ci->owner_window->type == WT_POPUP)
+                            height = 2;
                     }
 
-                    // Copy the canvas into the baclbuffer
+                    // Copy the canvas for the frame into the backbuffer
                     comp_blit_canvas_to_canvas_imp (
                         ci_src,
                         ci_dst,
-                        left,
-                        top,
-                        width,
-                        height
+                        left, top, width, height
                     );
 
                     // Based on the index into the table.

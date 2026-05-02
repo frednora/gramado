@@ -1047,9 +1047,12 @@ redraw_window (
                 );
 
                 // Draw string into de canvas
-                dc_drawstring ( 
-                    dc, 4, 4, COLOR_WHITE, COLOR_BLUE,
-                    ROP_COPY, window->name );
+                if (window->type == WT_OVERLAPPED)
+                {
+                    dc_drawstring ( 
+                        dc, 1, 1, COLOR_WHITE, COLOR_BLUE,
+                        ROP_COPY, window->name );
+                }
 
                 ci->dirty = TRUE;
             }
