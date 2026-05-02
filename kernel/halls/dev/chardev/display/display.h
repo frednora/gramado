@@ -5,6 +5,7 @@
 #ifndef __DISPLAY_DISPLAY_H
 #define __DISPLAY_DISPLAY_H    1
 
+extern int gKernelOwnsDisplay;
 
 // Initialized when the display device is initialized.
 // See: bldisp.c, qemudisp.c ...
@@ -134,6 +135,15 @@ struct video_d  VideoBlock;
 //
 // == prototypes =================================
 //
+
+int 
+display_putpixel0 ( 
+    struct dc_d *dc,
+    unsigned int  _color,
+    unsigned long _x, 
+    unsigned long _y, 
+    unsigned long _rop_flags );
+
 
 //
 // Babuffer va support

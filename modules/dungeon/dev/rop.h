@@ -1,6 +1,6 @@
 // rop.h
-// It belongs to the display device driver interface 
-// inside the base kernel.
+// It belongs to the display device driver 
+// inside the dungeon ring 0 loadable module.
 // Created by Fred Nora.
 
 #ifndef __ROP_H

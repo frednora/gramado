@@ -35,6 +35,9 @@ struct dccanvas_d *test00_dccanvas;
 struct dccanvas_d *bg_dccanvas;
 // 
 
+// The whole desktop was updated
+// int gCompositorUpdateDesktop = FALSE;
+
 // #todo
 // Create some configuration globals here
 // int gUseSomething = TRUE;
@@ -1261,8 +1264,12 @@ void compComposeDesktop(void)
     if (CONFIG_USE_REAL_COMPOSITOR != 1)
         return;
 
-// #todo: Root window also needs its own canvas.
-    redraw_window(__root_window, FALSE);
+// #todo: 
+// Root window also needs its own canvas.
+    //if (gCompositorUpdateDesktop == TRUE)
+    //redraw_window(__root_window, FALSE);
+    //refresh_window(__root_window);
+
 
 // Walk the list of canvas
     struct canvas_information_d *ci;

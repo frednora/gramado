@@ -633,6 +633,9 @@ static void earlyinit_Globals(int arch_type)
     WelcomeAP.my_lapic_info_id = -1;  // fail
 
 
+    // The kernel owns the device driver
+    gKernelOwnsDisplay = TRUE;
+
 //
 // Backbuffer
 //

@@ -30,6 +30,12 @@ extern struct display_info_d  DisplayInfo;
 // ================================================
 //
 
+int bldisp_putpixel0 (unsigned long msg_buf);
+
+//
+// ================================================
+//
+
 // Step1
 unsigned long 
 display_initialization_phase1(

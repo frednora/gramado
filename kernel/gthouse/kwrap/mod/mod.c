@@ -18,6 +18,8 @@ static unsigned long kmList[KMODULE_MAX];
 
 const char *mod0_image_name = "DUNGEON BIN";
 
+// Structure to save the functions imported by the display device driver.
+struct mod_fn_d  mod0_modfn;
 
 static int __mod_initialize_first_module(void);
 static int __load_mod0_image(const char *image_name);
@@ -106,6 +108,39 @@ void test_mod0(void)
             0xFF,
             1003, 1234, mod_sci, mod_sci );    
     printk ("RETURN: %d\n",return_value);
+
+
+//
+// #test
+//
+
+
+    // The list of functions imported from the module
+    unsigned long fn_list[10];  // #provisory
+
+// Import the function addresses to a given table of functions
+    return_value = 
+        (unsigned long) kernel_mod0->entry_point(
+            0xFF,
+            4000, 1234, &fn_list[0], &fn_list[0] );    
+    printk ("RETURN: %d\n",return_value);
+    printk ("fn_list[0]: %x\n", fn_list[0] ); // The address for the first function
+    // ...
+
+    // #todo
+    // Setup structure mod_fn_d
+    mod0_modfn.fn_write_pixel = (void*) fn_list[0];  // 
+    // ...
+
+    //unsigned long msg[10];
+    //mod0_modfn.fn_write_pixel(&msg[0]);
+
+    // #test
+    // At this point the kernel do not owns the display anymore.
+
+    printk ("test_mod0: gKernelOwnsDisplay = FALSE\n");
+    gKernelOwnsDisplay = FALSE;
+
 
     printk ("test_mod0: Done\n");  // done
 }

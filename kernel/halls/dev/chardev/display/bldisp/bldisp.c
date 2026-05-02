@@ -421,29 +421,30 @@ void bldisp_vsync(void)
 // b2, g2, r2, a2 = Color from backbuffer.
 // b3, g3, r3, a3 = Color to be stored.
 
-int 
-bldisp_putpixel0 ( 
-    struct dc_d *dc,
-    unsigned int  _color,
-    unsigned long _x, 
-    unsigned long _y, 
-    unsigned long _rop_flags )
+int bldisp_putpixel0 (unsigned long msg_buf)
 {
+    unsigned long *msg = (unsigned long *) msg_buf;
 
-// Validate context
-    if (!dc || dc->initialized != TRUE || !dc->data)
+    // Invalid address
+    if ((void*) msg == NULL)
         return -1;
 
-// Local copies from dc
-    unsigned char *dc_where = dc->data;
-    unsigned long dc_width   = dc->device_width;
-    unsigned long dc_height  = dc->device_height;
-    unsigned long dc_bpp     = dc->bpp;    // bits per pixel
-    unsigned long dc_pitch   = dc->pitch;  // bytes per row
+    unsigned char *dc_where  = (unsigned long *) msg[0]; // Address
 
-    unsigned int Color = (unsigned int) (_color & 0xFFFFFFFF);
+    unsigned long dc_width   = (unsigned long) msg[1];
+    unsigned long dc_height  = (unsigned long) msg[2];
+    unsigned long dc_bpp     = (unsigned long) msg[3];    // bits per pixel
+
+    unsigned long dc_pitch   = (unsigned long) msg[4];  // bytes per row
+
+    unsigned int Color       = (unsigned int) (msg[5] & 0xFFFFFFFF);
+    unsigned long _x         = (unsigned long) msg[6];  
+    unsigned long _y         = (unsigned long) msg[7]; 
+    unsigned long _rop_flags = (unsigned long) msg[8];
+
+    
 // ----------------------------
-// A cor passada via argumento.
+// Color
     char b, g, r, a;
     b = (Color & 0xFF);
     g = (Color & 0xFF00) >> 8;

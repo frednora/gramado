@@ -160,6 +160,10 @@ mmain (
     unsigned long long2 = (unsigned long) (param3);
     unsigned long long3 = (unsigned long) (param4);
 
+    // The msg buffer address comes in the parameters
+    // The driver will write into that buffer.
+    unsigned long *msg = (unsigned long *) (param4);  // Address for msg buffer
+
     int Status = -1;
     unsigned long ReturnValue;
 
@@ -265,6 +269,20 @@ mmain (
                                        param4 );
             break;
 
+
+        // Export well know functions to the kernel
+        // fn0: Draw pixel
+        case 4000:
+            // Check signature
+            if (long1 != 1234)
+                return 0;
+            // #todo: Create a worker
+            msg[0] = (unsigned long) &bldisp_putpixel0;  // Draw pixel
+            // ... (Other functions)
+            return 1234;
+            break;
+
+            
         // Testing the parameter list
         case 8888:
 

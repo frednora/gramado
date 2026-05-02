@@ -34,7 +34,8 @@ backbuffer_putpixel (
     if (dc_backbuffer->magic != 1234)
         return (int) -1;
 
-    return (int) bldisp_putpixel0(dc_backbuffer, _color, _x, _y, _rop_flags);
+// Call the kernel interface, that will call the display device driver.
+    return (int) display_putpixel0(dc_backbuffer, _color, _x, _y, _rop_flags);
 }
 
 // Putpixel at the given buffer address.
@@ -56,6 +57,6 @@ frontbuffer_putpixel (
     if (dc_frontbuffer->magic != 1234)
         return (int) -1;
 
-    return (int) bldisp_putpixel0(dc_frontbuffer, _color, _x, _y, _rop_flags);
+    return (int) display_putpixel0(dc_frontbuffer, _color, _x, _y, _rop_flags);
 }
 

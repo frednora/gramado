@@ -71,7 +71,18 @@ extern struct kernel_module_d  *kernel_mod0;
 
 //----------------------------------------------
 
+struct mod_fn_d 
+{
+    //#todo
 
+// Write pixel:
+    int (*fn_write_pixel)(unsigned long);
+    // ...
+};
+extern struct mod_fn_d  mod0_modfn;
+
+
+// ===================================
 
 void test_mod0(void);
 

@@ -138,13 +138,7 @@ void bldisp_display_mouse_cursor(void);
 void bldisp_flush(unsigned long flags);
 void bldisp_vsync(void);
 
-int 
-bldisp_putpixel0 ( 
-    struct dc_d *dc,
-    unsigned int  _color,
-    unsigned long _x, 
-    unsigned long _y, 
-    unsigned long _rop_flags );
+int bldisp_putpixel0 (unsigned long msg_buf);
 
 // The whole screen is dirty.
 // It can be flushed into the framebuffer.
