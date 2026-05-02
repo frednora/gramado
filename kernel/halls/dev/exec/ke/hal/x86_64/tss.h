@@ -8,8 +8,8 @@
 // See:
 // https://wiki.osdev.org/Task_State_Segment
 
-typedef struct tss_d {
-
+typedef struct tss_d 
+{
     unsigned int reserved;
     
     unsigned long rsp0; 
@@ -33,10 +33,6 @@ typedef struct tss_d {
 
 } __attribute__((packed)) tagTSS;
 
-// #todo
-// Put this in tss.c and put here an external reference.
-// Valid for one processor. Probably BSP.
-// struct tss_d  *CurrentTSS;
 
 /*
  * I/O bitmap offset beyond TSS's segment limit means no bitmaps.

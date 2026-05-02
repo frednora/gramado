@@ -182,8 +182,8 @@ struct gdt_ptr_d
  * NetBSD style.
  */
 
-struct gate_descriptor_d {
-
+struct gate_descriptor_d 
+{
     // OFFSET LOW
     unsigned gd_looffset :16;  //gate offset (lsb) 
     unsigned gd_selector :16;  //gate segment selector 
@@ -268,7 +268,10 @@ static inline void native_store_gdt(struct gdt_ptr_d *dtr)
 #define load_gdt(dtr)   native_load_gdt(dtr)
 #define store_gdt(dtr)  native_store_gdt(dtr)
 
-int x64_init_gdt(void);
+int 
+x64_init_gdt(
+    int lapic_info_id, 
+    unsigned long rin0_stack_base_address );
 
 #endif    
 

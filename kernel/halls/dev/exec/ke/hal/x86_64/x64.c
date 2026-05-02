@@ -39,13 +39,23 @@ static void __get_cpu_intel_parameters(void);
 // Called by I_x64main in init.c.
 // See: head_64.asm
 
-extern void rsp0Stack(void);
+// extern void rsp0Stack(void);
 
 // See: x86_64.asm
 extern void asm_load_gdt(unsigned long gdtr_address);
 
-int x64_init_gdt(void)
+// Initialize GDT for a given processor.
+// IN: index for lapic_info[i] table.
+int 
+x64_init_gdt(
+    int lapic_info_id, 
+    unsigned long rin0_stack_base_address )
 {
+
+// #todo:
+// Each processor needs to have its own GDT and TSS.
+// We can include then inside the lapic_info structure.
+
     struct tss_d  *tss;
 
     // debug_print ("[x64] x64_init_gdt: [DANGER] \n");
@@ -54,32 +64,45 @@ int x64_init_gdt(void)
 // 32 segment descriptors.
 // see: x64gdt.h
 
+    if (lapic_info_id < 0)
+        panic("x64_init_gdt: lapic_info_id\n");
+    if (lapic_info_id >= NR_CPUS)
+        panic("x64_init_gdt: lapic_info_id\n");
+
 //
 // The base address for the GDT
 //
 
     // This is the pointer for an array os structures.
     // This is the GDT with 32 entries.
-    unsigned long GDT_Base = (unsigned long) &xxx_gdt[GNULL_SEL];
+    //unsigned long GDT_Base = (unsigned long) &xxx_gdt[GNULL_SEL];
+    lapic_info[lapic_info_id].GDT_Base = (unsigned long) &xxx_gdt[GNULL_SEL];
+    unsigned long BaseAddress = lapic_info[lapic_info_id].GDT_Base;
 
 //
 // The number of entries. (32)
 //
 
-    size_t GDT_NumberOfEntries = DESCRIPTOR_COUNT_MAX;  //32 
+    //size_t GDT_NumberOfEntries = DESCRIPTOR_COUNT_MAX;  //32 
+    lapic_info[lapic_info_id].GDT_NumberOfEntries = DESCRIPTOR_COUNT_MAX;  //32 
+    size_t NumberOfEntries = lapic_info[lapic_info_id].GDT_NumberOfEntries;
 
 //
 // The size
 //
 
-    size_t GDT_Size = 
-        (size_t) ( sizeof(struct segment_descriptor_d) * GDT_NumberOfEntries );
+    //size_t GDT_Size = 
+    //    (size_t) ( sizeof(struct segment_descriptor_d) * GDT_NumberOfEntries );
+    lapic_info[lapic_info_id].GDT_Size = 
+        (size_t) ( NumberOfEntries * sizeof(struct segment_descriptor_d) );
+    size_t gdt_size = lapic_info[lapic_info_id].GDT_Size;
+
 
 //
 // Clear the table
 //
 
-    memset( GDT_Base, 0, GDT_Size );
+    memset ( BaseAddress, 0, gdt_size );
 
 
 // ---------------------------
@@ -188,10 +211,16 @@ int x64_init_gdt(void)
 
 // Initializing the tss structure,
 // given the ring0 stack pointer.
+// Old address used bu BSP: //&rsp0Stack
+
+    // IN:
+    // + TSS pointer
+    // + Ring 0 stack address for this processor
+
     tss_init ( 
-        (struct tss_d *) tss,  // tss 
-        (void *) &rsp0Stack    // ring 0 stack address for this processor.
-        );
+        (struct tss_d *) tss,
+        (void *) rin0_stack_base_address 
+    );
 
 // System Segment Descriptor
 
@@ -221,9 +250,13 @@ int x64_init_gdt(void)
         (unsigned long) tss >> 48,
         0,0,0,0,0,0,0,0);
 
-// Current TSS for this processor.
-    //CurrentTSS = tss;
-    //CurrentTSS = (struct tss_d *) tss;
+
+//
+// Save the tss pointer into the lapic_info structure.
+//
+
+    lapic_info[lapic_info_id].tss = (struct tss_d *) tss;
+
 
 //
 // Load GDT

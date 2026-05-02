@@ -106,6 +106,21 @@ void x64smp_show_info(void)
     printk("NR AP running:      %d\n", smp_info.nr_ap_running);
     printk("PIC disabled:       %d\n", smp_info.bsp_pic_is_disabled);
     printk("BSP is using LAPIC: %d\n", smp_info.bsp_is_using_lapic);
+
+//
+// GDT (BSP only)
+//
+
+    printk("BSP GDT_Base: %x\n", 
+        lapic_info[0].GDT_Base );
+    printk("BSP GDT_NumberOfEntries: %d\n", 
+        lapic_info[0].GDT_NumberOfEntries );
+    printk("BSP GDT_Size: %d\n", 
+        lapic_info[0].GDT_Size );
+
+    printk("BSP tss: %x\n", lapic_info[0].tss );
+
+
     // ...
 }
 

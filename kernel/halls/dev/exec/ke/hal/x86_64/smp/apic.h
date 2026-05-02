@@ -242,11 +242,26 @@ struct lapic_info_d
 // This thread will run here when there is no other job to do.
     // tid_t idle_tid;
 
+//
+// GDT support
+//
+
+// The base address for the gdt that belongs to this processor.
+    unsigned long GDT_Base;
+// The number of entries in this GDT.
+	size_t GDT_NumberOfEntries;
+// The table's size.
+	size_t GDT_Size;
+
+
+// Pointer for the tss that belongs to this processor.
+	struct tss_d  *tss;
+
 	// ...
 };
 
 // #bugbug: Limited number for now.
-#define NR_CPUS 8   // or detect dynamically
+#define NR_CPUS  8   // or detect dynamically
 // One structure per processor
 extern struct lapic_info_d lapic_info[NR_CPUS];
 

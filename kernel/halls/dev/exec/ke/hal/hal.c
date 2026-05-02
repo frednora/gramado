@@ -9,6 +9,9 @@
 // import
 //
 
+extern void rsp0Stack(void);
+
+
 //extern unsigned long gdt;
 //extern unsigned long idt;
 //extern unsigned long tss;
@@ -404,8 +407,23 @@ int halInitialize(void)
 
     PROGRESS(":: GDT\n"); 
     PROGRESS("halInitialize: Initializing GDT and TSS\n");
-    x64_init_gdt();
 
+    static int LAPIC_INFO_ID = 0;  // Index in lapic_info[] table
+    unsigned long Ring0StackBaseAddress = &rsp0Stack;  // Ring 0 Stack for the BSP.
+
+    // #ps:
+    // In the case of BSP processor initialization,
+    // the stack address was given to us.
+    // APs will need to allocate them.
+
+    // IN: 
+    // lapic info id, stack address for the tss gdt entry.
+    x64_init_gdt (
+        LAPIC_INFO_ID,
+        Ring0StackBaseAddress
+    );
+
+    // #debug
     // while(1){ asm("hlt\n");}
 
     return TRUE;

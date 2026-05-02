@@ -671,11 +671,6 @@ void I_x64ExecuteInitialProcess(void)
     // Refresh CR3 (Reload TLB)
     x64mm_refresh_cr3();
 
-// #maybe
-// Vamos iniciar antes para que
-// possamos usar a current_tss quando criarmos as threads
-    //x64_init_gdt();
-
 // #importante
 // Mudamos para a última fase da inicialização.
 // Com isso alguns recursos somente para as fases anteriores
