@@ -551,8 +551,10 @@ int bldisp_putpixel0 (unsigned long msg_buf)
 // -------------------------
 // 0 - Sem modificação
 // A cor a ser registrada é a mesma enviada por argumento.
-    if (Operation == ROP_COPY){
+    if (Operation == ROP_COPY)
+    {
         r3=r; g3=g; b3=b; a3=a;
+        //goto RegisterColor;
     }
 // -------------------------
 // 1 = or
@@ -847,7 +849,9 @@ int bldisp_putpixel0 (unsigned long msg_buf)
 
 //
 // == Register =====================
-// 
+//
+
+//RegisterColor:
 
 // ----------------------------
 // BGR and A

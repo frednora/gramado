@@ -39,10 +39,10 @@ display_putpixel0 (
 
 // Local copies from dc
     unsigned char *dc_where = dc->data;
-    unsigned long dc_width   = dc->device_width;
-    unsigned long dc_height  = dc->device_height;
-    unsigned long dc_bpp     = dc->bpp;    // bits per pixel
-    unsigned long dc_pitch   = dc->pitch;  // bytes per row
+    unsigned long dc_width  = dc->device_width;
+    unsigned long dc_height = dc->device_height;
+    unsigned long dc_bpp    = dc->bpp;    // bits per pixel
+    unsigned long dc_pitch  = dc->pitch;  // bytes per row
     //unsigned int Color = (unsigned int) (_color & 0xFFFFFFFF);
 
 
@@ -65,14 +65,42 @@ display_putpixel0 (
 // Call the display device driver
 //
 
+/*
+    switch (gKernelOwnsDisplay)
+    {
+        case TRUE:
+            return (int) bldisp_putpixel0( (unsigned long) &msg[0] );
+            break;
+
+        default:
+            return (int) mod0_modfn.fn_write_pixel( (unsigned long) &msg[0] );
+            break;
+    }
+*/
+
+
     if (gKernelOwnsDisplay == TRUE){
+
+        // >> Inside the kernel
         // See: bldispl.c
+        // #ps: Nos slow in Virtualbox
         rv = (int) bldisp_putpixel0( (unsigned long) &msg[0] );
+        return (int) rv;
+
     } else {
+
+        // >> Inside the kernel
+        // #ps: Nos slow in Virtualbox
+        rv = (int) bldisp_putpixel0( (unsigned long) &msg[0] );
+
+        // >> Inside the kernel module
         // See: mod.c
         // debug_print("m\n");
-        rv = (int) mod0_modfn.fn_write_pixel( (unsigned long) &msg[0] );
-    }
+        // #bugbug: >>> This is very slow in Virtualbox <<<
+        // rv = (int) mod0_modfn.fn_write_pixel( (unsigned long) &msg[0] );
+
+        return (int) rv;
+    };
 
     return (int) rv;
 

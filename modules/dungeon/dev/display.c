@@ -38,7 +38,10 @@ int bldisp_putpixel0 (unsigned long msg_buf)
 
     // Invalid address
     if ((void*) msg == NULL)
-        return -1;
+        goto fail;
+
+// #ps
+// maybe these operations are slow because of cache issues.
 
     unsigned char *dc_where  = (unsigned long *) msg[0]; // Address
 
@@ -163,11 +166,14 @@ int bldisp_putpixel0 (unsigned long msg_buf)
 // A cor transformada.
 // A cor a ser gravada.
     unsigned char b3, g3, r3, a3;
+
 // -------------------------
 // 0 - Sem modificação
 // A cor a ser registrada é a mesma enviada por argumento.
-    if (Operation == ROP_COPY){
+    if (Operation == ROP_COPY)
+    {
         r3=r; g3=g; b3=b; a3=a;
+        //goto RegisterColor;
     }
 // -------------------------
 // 1 = or
@@ -464,6 +470,8 @@ int bldisp_putpixel0 (unsigned long msg_buf)
 // == Register =====================
 // 
 
+//RegisterColor:
+
 // ----------------------------
 // BGR and A
     dc_where[offset]    = b3;
@@ -472,8 +480,12 @@ int bldisp_putpixel0 (unsigned long msg_buf)
     //if (gSavedBPP == 32){ where[offset +3] = a3; };
     if (dc_bpp == 32){ dc_where[offset +3] = a3; };
 
-// Number of changed pixels.
+// Number of changed pixels
     return (int) 1;
+
+// Number of changed pixels
+fail:
+    return (int) 0;
 }
 
 
