@@ -32,6 +32,9 @@ struct display_info_d  DisplayInfo;
 // b2, g2, r2, a2 = Color from backbuffer.
 // b3, g3, r3, a3 = Color to be stored.
 
+// #importante:
+// This function is very latency sensitive.
+// Do not call it frequently from the kernel in a hot path.
 int bldisp_putpixel0 (unsigned long msg_buf)
 {
     unsigned long *msg = (unsigned long *) msg_buf;

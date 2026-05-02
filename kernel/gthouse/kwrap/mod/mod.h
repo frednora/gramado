@@ -73,10 +73,13 @@ extern struct kernel_module_d  *kernel_mod0;
 
 struct mod_fn_d 
 {
-    //#todo
+    int used;
+    int magic;
+    int initialized;
 
-// Write pixel:
-    int (*fn_write_pixel)(unsigned long);
+// This is a module procedure for multiple 
+// services that are NOT sensitive to cache locality latency.
+    int (*fn_module_procedure)(unsigned long);
     // ...
 };
 extern struct mod_fn_d  mod0_modfn;

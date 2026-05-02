@@ -32,8 +32,32 @@ int FN_PUTCHAR_FGCONSOLE=4;  //(1arg)
 // #todo: Move this to another place.
 struct module_initialization_d  ModuleInitialization;
 
+static int mmain_procedure(unsigned long msg_buf);
+
 // =====================================================
 
+// 4000
+// IN: message buffer
+static int mmain_procedure(unsigned long msg_buf)
+{
+    unsigned long *msg = (unsigned long *) msg_buf;
+    unsigned long ServiceNumber = msg[0];
+
+    newm0_print_string("mmain_procedure: \n");
+
+    switch (ServiceNumber){
+    case 88:
+        newm0_print_string("[88]\n");
+        break;
+    default:
+        newm0_print_string("[default]\n");
+        break;
+    };
+
+// ...
+
+    return (int) 0;
+}
 
 
 int newm0_1001(void)
@@ -277,7 +301,7 @@ mmain (
             if (long1 != 1234)
                 return 0;
             // #todo: Create a worker
-            msg[0] = (unsigned long) &bldisp_putpixel0;  // Draw pixel
+            msg[0] = (unsigned long) &mmain_procedure;  // Draw pixel
             // ... (Other functions)
             return 1234;
             break;

@@ -114,6 +114,9 @@ void test_mod0(void)
 // #test
 //
 
+// ==============================================
+
+    mod0_modfn.initialized = FALSE;
 
     // The list of functions imported from the module
     unsigned long fn_list[10];  // #provisory
@@ -129,17 +132,27 @@ void test_mod0(void)
 
     // #todo
     // Setup structure mod_fn_d
-    mod0_modfn.fn_write_pixel = (void*) fn_list[0];  // 
+    mod0_modfn.fn_module_procedure = (void*) fn_list[0];  // 
     // ...
 
     //unsigned long msg[10];
-    //mod0_modfn.fn_write_pixel(&msg[0]);
+    //mod0_modfn.fn_module_procedure(&msg[0]);
 
-    // #test
-    // At this point the kernel do not owns the display anymore.
+    mod0_modfn.used = TRUE;
+    mod0_modfn.magic = 1234;
+    mod0_modfn.initialized = TRUE;
 
+// #test
+// At this point the kernel do not owns the display anymore.
     printk ("test_mod0: gKernelOwnsDisplay = FALSE\n");
     gKernelOwnsDisplay = FALSE;
+
+    // #test Testing the imported function
+    unsigned long msg[10];
+    msg[0] = 88;  // Service number
+    mod0_modfn.fn_module_procedure( (unsigned long) &msg[0] );
+
+// ==============================================
 
 
     printk ("test_mod0: Done\n");  // done

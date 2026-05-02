@@ -65,43 +65,10 @@ display_putpixel0 (
 // Call the display device driver
 //
 
-/*
-    switch (gKernelOwnsDisplay)
-    {
-        case TRUE:
-            return (int) bldisp_putpixel0( (unsigned long) &msg[0] );
-            break;
-
-        default:
-            return (int) mod0_modfn.fn_write_pixel( (unsigned long) &msg[0] );
-            break;
-    }
-*/
-
-
-    if (gKernelOwnsDisplay == TRUE){
-
-        // >> Inside the kernel
-        // See: bldispl.c
-        // #ps: Nos slow in Virtualbox
-        rv = (int) bldisp_putpixel0( (unsigned long) &msg[0] );
-        return (int) rv;
-
-    } else {
-
-        // >> Inside the kernel
-        // #ps: Nos slow in Virtualbox
-        rv = (int) bldisp_putpixel0( (unsigned long) &msg[0] );
-
-        // >> Inside the kernel module
-        // See: mod.c
-        // debug_print("m\n");
-        // #bugbug: >>> This is very slow in Virtualbox <<<
-        // rv = (int) mod0_modfn.fn_write_pixel( (unsigned long) &msg[0] );
-
-        return (int) rv;
-    };
-
+// #importante:
+// Put pixel is a very latency sensitive function. Let's keep it 
+// inside the core kernel in order to avoid cache locality issues.
+    rv = (int) bldisp_putpixel0( (unsigned long) &msg[0] );
     return (int) rv;
 
 fail:
