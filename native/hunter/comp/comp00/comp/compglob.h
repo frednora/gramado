@@ -46,6 +46,7 @@ struct canvas_information_d
 
     struct gws_window_d *owner_window;
 
+    struct canvas_information_d *clientarea_canvas;
     struct canvas_information_d *next;
 };
 

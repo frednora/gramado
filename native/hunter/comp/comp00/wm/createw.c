@@ -163,14 +163,19 @@ int destroy_window_by_wid(int wid)
 
 // --------------------------------------
 // App window in compositor mode
-    struct canvas_information_d *ci;
+    struct canvas_information_d *ci00;
+    struct canvas_information_d *ci01;
 
-    if (CONFIG_USE_REAL_COMPOSITOR == 1)
+    if (Compositor.is_composition_disabled == FALSE)
     {
         if (window->style == WS_APP)
         {
-            ci = (struct canvas_information_d *) window->frame_canvas;
-            ci->dirty = FALSE;  // Do not blit it anymore.
+            ci00 = (struct canvas_information_d *) window->frame_canvas;
+            ci00->dirty = FALSE;  // Do not blit it anymore.
+
+            ci01 = (struct canvas_information_d *) window->ca_canvas;
+            ci01->dirty = FALSE;  // Do not blit it anymore.
+
             //#todo: We gotta delete this structure 
             // and remove it from the linked list into the compositor.
             //ci->used = FALSE; // Not in use.
@@ -1698,7 +1703,7 @@ void *doCreateAndDrawWindow (
     window->frame_canvas = NULL;
     window->ca_canvas = NULL;
 
-    if (CONFIG_USE_REAL_COMPOSITOR == 1)
+    if (Compositor.is_composition_disabled == FALSE)
     {
         if (style & WS_APP)
         {
@@ -1710,6 +1715,8 @@ void *doCreateAndDrawWindow (
             ci00->is_frame = TRUE; // It's a frame
             window->frame_canvas = ci00;       // window keeps a pointer to its canvas
             // add to the list for the compositor
+            // #important:
+            // Only the frame canvas gets injected into the global linked 
             comp_add_to_list(ci00);
 
             // client area canvas ---------
@@ -1720,7 +1727,11 @@ void *doCreateAndDrawWindow (
             ci01->is_frame = FALSE;  // Not a frame
             window->ca_canvas = ci01;       // window keeps a pointer to its canvas
             // add to the list for the compositor
-            comp_add_to_list(ci01);
+            // #ps #important
+            // We do not put the client canvas into the list,
+            // we create a pointer into its frame canvas
+            //comp_add_to_list(ci01);
+            ci00->clientarea_canvas = ci01;
         }
     }
 // ================
@@ -2261,12 +2272,10 @@ void *doCreateAndDrawWindow (
         }
     }
 
-
-
 // ==================================================
 // Draw inside the canvas
 
-    if (CONFIG_USE_REAL_COMPOSITOR == 1)
+    if (Compositor.is_composition_disabled == FALSE)
     {
         if (style & WS_APP)
         {

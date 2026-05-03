@@ -41,9 +41,8 @@
 #define CONFIG_TEST_SPARE_BUFFER  0
 
 // #test
-// Meu plano é começar usando off-screen buffers em componentes do frame, 
-// depois no frame todo e por fim na área de cliente.
-#define CONFIG_USE_REAL_COMPOSITOR  0
+// Disable or not the composition feature
+#define CONFIG_DISABLE_COMPOSITION  1
 
 
 // Target interval (in milliseconds) for each iteration of the main loop.

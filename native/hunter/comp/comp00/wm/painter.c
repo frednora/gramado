@@ -1029,7 +1029,7 @@ redraw_window (
     struct dccanvas_d *dc01;
     struct canvas_information_d *ci01;
 
-    if (CONFIG_USE_REAL_COMPOSITOR == 1)
+    if (Compositor.is_composition_disabled == FALSE)
     {
         if (window->style & WS_APP)
         {
@@ -1468,7 +1468,7 @@ done:
                 window->titlebar->Controls.close_wid );
         }
 
-        if (CONFIG_USE_REAL_COMPOSITOR == 1)
+        if (Compositor.is_composition_disabled == FALSE)
             return 0;
     }
 
@@ -1476,7 +1476,7 @@ done:
 // If we need to show (flush) an overlapped window
     if (flags == TRUE)
     {
-        if (CONFIG_USE_REAL_COMPOSITOR != 1)
+        if (Compositor.is_composition_disabled == TRUE)
         {
 
             gws_show_window_rect(window);   // Flush it

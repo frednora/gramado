@@ -801,10 +801,11 @@ static void on_mouse_hover(struct gws_window_d *window)
             window->bg_color = (unsigned int) get_color(csiWhenMouseHover);
         };
 
-        if (CONFIG_USE_REAL_COMPOSITOR == 1)
-            redraw_window(window, FALSE);
-        if (CONFIG_USE_REAL_COMPOSITOR != 1)
+        if (Compositor.is_composition_disabled == TRUE){
             redraw_window(window, TRUE);
+        } else {
+            redraw_window(window, FALSE);
+        }
     }
 
 // Visual efect
@@ -2162,21 +2163,20 @@ void wm_update_desktop(int tile, int show)
         if (w->type == WT_OVERLAPPED)
         {
             // If the window has a valid titlebar,
-            // Validate the titlebar and its ocntrols.
-            if (CONFIG_USE_REAL_COMPOSITOR != 1)
+            // Validate the titlebar and its controls.
+            if (Compositor.is_composition_disabled == TRUE)
             {
-            if ((void*) w->titlebar != NULL)
-            {
-                w->titlebar->dirty = FALSE;
-                validate_window_by_id(
-                    w->titlebar->Controls.minimize_wid );
-                validate_window_by_id(
-                    w->titlebar->Controls.maximize_wid );
-                validate_window_by_id(
-                    w->titlebar->Controls.close_wid );
-            }
-            // Validate the window
-            w->dirty = FALSE;
+                if ((void*) w->titlebar != NULL)
+                {
+                    w->titlebar->dirty = FALSE;
+                    validate_window_by_id(
+                        w->titlebar->Controls.minimize_wid );
+                    validate_window_by_id(
+                        w->titlebar->Controls.maximize_wid );
+                    validate_window_by_id(
+                        w->titlebar->Controls.close_wid );
+                }
+                w->dirty = FALSE;  // Validate the window
             }
         }
         w = w->next;
@@ -4949,10 +4949,10 @@ void wm_exit_fullscreen_mode(int tile)
 // Set the window with focus.
     keyboard_owner = NULL;
 
-    if (CONFIG_USE_REAL_COMPOSITOR == 1){
-        wm_update_desktop(tile,FALSE);
-    } else {
+    if (Compositor.is_composition_disabled == TRUE){
         wm_update_desktop(tile,TRUE);
+    } else {
+        wm_update_desktop(tile,FALSE);
     }
 }
 

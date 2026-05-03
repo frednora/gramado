@@ -39,14 +39,9 @@ struct compositor_d
     int _locked;
     unsigned long counter;
 
-// >> This flag enables composition for the display server.
-// In this case the server will compose a final backbbuffer
-// using buffers and the zorder for these buffers. In this case 
-// each application window will have it's own buffer.
-// >> If this flag is not set, all the windows will be painted in the
-// directly in the same backbuffer, and the compositor will just
-// copy the backbuffer to the LFB.
-    int __enable_composition;
+
+// Disable the composition for compatibility with the old method.
+    int is_composition_disabled;
 
     // ...
 };
