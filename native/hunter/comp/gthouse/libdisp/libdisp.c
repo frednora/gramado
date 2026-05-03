@@ -57,10 +57,11 @@ static struct dccanvas_d *libgd_dc_frontbuffer;
 //
 // Returns:
 //   pointer to a new dccanvas_d, or NULL on failure.
-struct dccanvas_d *libgd_create_dc(unsigned char *base,
-                               unsigned long width,
-                               unsigned long height,
-                               unsigned long bpp)
+struct dccanvas_d *libgd_create_dc(
+    unsigned char *base,
+    unsigned long width,
+    unsigned long height,
+    unsigned long bpp )
 {
     if (!base || width == 0 || height == 0 || bpp == 0)
         return NULL;

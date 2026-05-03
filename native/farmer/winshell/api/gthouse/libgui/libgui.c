@@ -2839,7 +2839,7 @@ __draw_rectangle_via_kgws (
 struct dccanvas_d *libgui_create_dc(unsigned char *base,
                                unsigned long width,
                                unsigned long height,
-                               unsigned long bpp)
+                               unsigned long bpp )
 {
     if (!base || width == 0 || height == 0 || bpp == 0)
         return NULL;
@@ -4747,10 +4747,6 @@ libgui_drawstringblock(
         str++;
     }
 }
-
-
-
-
 
 
 void libgui_set_mouse_pointer(unsigned long x, unsigned long y)

@@ -743,6 +743,52 @@ int serviceGetWindowInfo(void)
 
     // ...
 
+    // #todo border width
+    next_response[17] = (unsigned long) 0;
+
+// ==========================================
+// #test
+// Information about the canvas for the client area
+// if the window has one.
+
+    struct dccanvas_d *dc00;
+    struct canvas_information_d *ci00;
+    ci00 = w->ca_canvas;
+    if ((void*) ci00 != NULL)
+    {
+        if (ci00->magic == 1234 && ci00->is_frame == FALSE)
+        {
+            dc00 = ci00->dc;
+            if ((void*) dc00 != NULL)
+            {
+                next_response[18] = (unsigned long) dc00->data;
+                next_response[19] = (unsigned long) dc00->device_width;
+                next_response[20] = (unsigned long) dc00->device_height;
+                next_response[21] = (unsigned long) dc00->bpp;
+                next_response[22] = (unsigned long) dc00->pitch;
+
+                //next_response[18] = (unsigned long) ci00->base;
+                //next_response[19] = (unsigned long) ci00->width;
+                //next_response[20] = (unsigned long) ci00->height;
+                //next_response[21] = (unsigned long) ci00->bpp;
+                //next_response[22] = (unsigned long) ci00->pitch;
+
+                //printf ("dc info server-side: address=%x w=%d h=%d bpp=%d\n",
+                //   next_response[18],  // ok
+                //   next_response[19],  // ok
+                //   next_response[20],  // ok
+                //   next_response[21]   // ok
+                //);
+                //while(1){}
+
+                //next_response[24] = (unsigned long) 1234;
+
+            }
+        }
+    }
+// ==========================================
+
+
 // #debug
     //printf("serviceGetWindowInfo: l=%d t=%d w=%d h=%d\n",
         //__root_window->left, 
@@ -1115,10 +1161,9 @@ int serviceAsyncCommand(void)
     // Create the surface area for a client
     // given the wid and the buffer address.
     case 100:
-        wid = (int) (data1 & 0xFFFFFFFF);
-        printf("ds00: wid {%d} | address {%x}\n", wid, data2);
+        //wid = (int) (data1 & 0xFFFFFFFF);
+        //printf("comp00: wid {%d} | address {%x}\n", wid, data2);
         break;
-
 
     // 1000 - Put a pixel into the backbuffer
     // IN: color, x, y, rop

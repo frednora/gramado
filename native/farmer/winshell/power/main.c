@@ -29,6 +29,8 @@
 struct gws_display_d *Display;
 
 
+struct dccanvas_d *dc00;  // shared dc
+
 struct button_info_d
 {
     int button_id;
@@ -147,6 +149,20 @@ static void update_children(int fd)
     unsigned long restart_x  = (wi.cr_width / 4) - (button_w / 2);
     unsigned long shutdown_x = (3 * wi.cr_width / 4) - (button_w / 2);
 
+/*
+    if ((void*) dc00 != NULL)
+    {
+        libgui_drawchar_dc ( 
+            dc00,
+            200, // _x, 
+            1, //_y,
+            'Y',
+            COLOR_BLUE,
+            COLOR_YELLOW, 
+            0  //_rop_flags 
+        );
+    }
+*/
 
 
 // Move and redraw buttons
@@ -596,15 +612,15 @@ int main(int argc, char *argv[])
 // =============================
 // #test
 // Sending to the server the surface shared address.
-    void *sh_add = (void*) malloc(32*1024);  // 32KB
+    //void *sh_add = (void*) malloc(32*1024);  // 32KB
+    unsigned long backbuffer_va = (unsigned long) rtl_get_system_metrics(12);
     gws_async_command2(
         client_fd, 
         100, 
         0,
-        main_window, sh_add, 0, 0 );
+        main_window, backbuffer_va, 0, 0 );
 // =============================
 */
-
 
     //#debug
     //gws_refresh_window(client_fd, main_window);
@@ -639,6 +655,51 @@ int main(int argc, char *argv[])
 
     sc80( 48, &m[0], &m[0], &m[0] );
 
+/*
+// ============================================================
+// #test
+// Changing the libgui device context
+// Create a new one using the values provided by the server.
+
+    printf ("dc info: address=%x w=%d h=%d bpp=%d\n",
+        wi.ca_canvas_base_address,  // ok
+        wi.ca_canvas_width,         // ok
+        wi.ca_canvas_height,        // fail
+        wi.ca_canvas_bpp            // fail
+    );
+    while(1){}
+
+    dc00 = (struct dccanvas_d *)libgui_create_dc(
+        wi.ca_canvas_base_address,
+        wi.ca_canvas_width,
+        wi.ca_canvas_height,
+        wi.ca_canvas_bpp
+    );
+    if ((void*)dc00 == NULL){
+        printf("power: on dc00\n");
+        exit(1);
+    }
+
+// #dange: Setup a new dc for the libgui
+    //libgui_dc_backbuffer = dc00;
+
+    // Draw a crar inside a shared canvas 
+    // represented here by the new dc.
+    //while (1){
+
+    libgui_drawchar_dc ( 
+        dc00,
+        200, // _x, 
+        1, //_y,
+        'X',
+        COLOR_BLUE,
+        COLOR_YELLOW, 
+        0  //_rop_flags 
+    );
+
+    //}
+// ============================================================
+*/
 
 // ============================================================
 // Text

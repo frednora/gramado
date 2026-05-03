@@ -270,6 +270,7 @@ static struct gws_window_info_d *__gws_get_window_info_response(
         goto fail;
     if (libgws_disp->magic != 1234)
         goto fail;
+    // Size: 512 chars
     unsigned long *message_buffer = 
         (unsigned long *) libgws_disp->packet;
 
@@ -361,7 +362,27 @@ process_response:
         window_info->cr_height = (unsigned long) message_buffer[16];  // cr height
 
         // border
+        // #todo: This is a work in progress
         window_info->border_width = (unsigned long) message_buffer[17];  // border width
+
+        // #test
+        // #todo
+        // The canvas for the client area
+        // Device conext information
+        window_info->ca_canvas_base_address = (unsigned long) message_buffer[18];
+        window_info->ca_canvas_width        = (unsigned long) message_buffer[19];
+        window_info->ca_canvas_height       = (unsigned long) message_buffer[20];
+        window_info->ca_canvas_bpp          = (unsigned long) message_buffer[21];
+        window_info->ca_canvas_pitch        = (unsigned long) message_buffer[22];
+
+        // #bugbug: 20 and 21 are failing. (right in server-side)
+        //printf ("dc info libgws-side: address=%x w=%d h=%d bpp=%d\n",
+        //    message_buffer[18],  // ok
+        //    message_buffer[19],  // ok
+        //    message_buffer[20],  // fail
+        //    message_buffer[21]   // fail
+        //);
+        //while(1){}
 
         // The app will need this thing.
         window_info->used = TRUE;
@@ -374,6 +395,7 @@ process_response:
         // ok, we got it.
         return (struct gws_window_info_d *) window_info;
     }
+
 // Fall trough
 fail:
     return NULL;

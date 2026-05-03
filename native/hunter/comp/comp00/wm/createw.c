@@ -1689,29 +1689,38 @@ void *doCreateAndDrawWindow (
 // #test
 // Creating a canvas for the window
     size_t size_in_kb = 128; //64;
-    struct dccanvas_d *dc;
-    struct canvas_information_d *ci;
+    struct dccanvas_d *dc00;
+    struct dccanvas_d *dc01;
+    struct canvas_information_d *ci00;
+    struct canvas_information_d *ci01;
 
+    // Not allocated yet
     window->frame_canvas = NULL;
+    window->ca_canvas = NULL;
 
     if (CONFIG_USE_REAL_COMPOSITOR == 1)
     {
         if (style & WS_APP)
         {
-            dc = (struct dccanvas_d *) comp_create_dc_and_allocate_buffer(size_in_kb);
-            ci = (struct canvas_information_d *) compCreateNewCanvas(dc);
-
-            // Draw string
-            //dc_drawstring ( 
-            //    dc, 10, 2, COLOR_YELLOW, COLOR_BLUE,
-            //    ROP_COPY, window->name );
-            //ci->dirty = TRUE;
-
+            // frame/chrome canvas ---------
+            dc00 = (struct dccanvas_d *) comp_create_dc_and_allocate_buffer(size_in_kb);
+            ci00 = (struct canvas_information_d *) compCreateNewCanvas(dc00);
             // Link with the window
-            ci->owner_window = window; // link to the window
-            window->frame_canvas = ci;       // window keeps a pointer to its canvas
+            ci00->owner_window = window; // link to the window
+            ci00->is_frame = TRUE; // It's a frame
+            window->frame_canvas = ci00;       // window keeps a pointer to its canvas
             // add to the list for the compositor
-            comp_add_to_list(ci);
+            comp_add_to_list(ci00);
+
+            // client area canvas ---------
+            dc01 = (struct dccanvas_d *) comp_create_dc_and_allocate_buffer(size_in_kb);
+            ci01 = (struct canvas_information_d *) compCreateNewCanvas(dc01);
+            // Link with the window
+            ci01->owner_window = window; // link to the window
+            ci01->is_frame = FALSE;  // Not a frame
+            window->ca_canvas = ci01;       // window keeps a pointer to its canvas
+            // add to the list for the compositor
+            comp_add_to_list(ci01);
         }
     }
 // ================
@@ -2261,35 +2270,36 @@ void *doCreateAndDrawWindow (
     {
         if (style & WS_APP)
         {
-            // Draw a string into the canvas
-            dc_draw_horizontal_line(dc, 
+            // Draw a string into the frame canvas
+            dc_draw_horizontal_line( 
+                dc00, 
                 0,  // x1 
                 0,  // y
                 window->width,  // x2
                 COLOR_YELLOW, 
                 0 
             );
-
-            // Draw a string into the canvas
-            // #bugbug: Can't do it if the height is bigger
-            // than the canvas height
-            //dc_draw_horizontal_line(dc, 
-            //    0,  // x1 
-            //    window->height -1,  // y
-            //    window->width,      // x2
-            //    COLOR_YELLOW, 
-            //    0 
-            // );
+            //// Draw line into the ca canvas.
+            dc_draw_horizontal_line( 
+                dc01, 
+                1, //window->rcClient.left,  //0,  // x1 
+                1, //window->rcClient.top,   //  0,  // y
+                100, //window->rcClient.window,  //window->width,  // x2
+                COLOR_WHITE, 
+                0 
+            );
 
             // Draw string into de canvas
-            if (window->type == WT_OVERLAPPED)
-            {
-                dc_drawstring ( 
-                    dc, 1, 1, COLOR_WHITE, COLOR_BLUE,
-                    ROP_COPY, window->name );
-            }
+            dc_drawstring ( 
+                dc00, 1, 1, COLOR_WHITE, COLOR_BLUE,
+                ROP_COPY, window->name );
 
-            ci->dirty = TRUE;
+            dc_drawstring ( 
+                dc01, 2, 2, COLOR_WHITE, COLOR_BLUE,
+                ROP_COPY, "Client area" );
+
+            ci00->dirty = TRUE;
+            ci01->dirty = TRUE;
         }
     }
 

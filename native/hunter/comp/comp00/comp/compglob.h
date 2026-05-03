@@ -31,6 +31,9 @@ struct canvas_information_d
 // If dirty, flush it into the backbuffer.
     int dirty;
 
+// Is it a canvas for frame/chrome.
+    int is_frame;
+
     unsigned long width;   // buffer width in pixels
     unsigned long height;  // buffer height in pixels
     unsigned long bpp;     // bits per pixel

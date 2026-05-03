@@ -140,9 +140,11 @@ struct gws_window_info_d
 {
     int used;
     int magic;
+
     int wid;   // The window id.
     int pwid;  // The wid of the parent.
     int type;
+
 // Relative to the parent.
     unsigned long left;
     unsigned long top;
@@ -151,6 +153,7 @@ struct gws_window_info_d
 // Relative to the parent.
     unsigned long right;
     unsigned long bottom;
+
 // Client rectangle.
 // Se a janela tem um client rect, 
 // so we can save the values here.
@@ -160,8 +163,19 @@ struct gws_window_info_d
     unsigned long cr_top;
     unsigned long cr_width;
     unsigned long cr_height;
+
     unsigned long border_width;
     // ...
+
+// #test
+// The canvas for the client area
+// Device conext information
+    unsigned long ca_canvas_base_address;
+    unsigned long ca_canvas_width;
+    unsigned long ca_canvas_height;
+    unsigned long ca_canvas_bpp;
+    unsigned long ca_canvas_pitch;
+
 };
 
 #endif    

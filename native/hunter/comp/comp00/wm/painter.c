@@ -1024,38 +1024,56 @@ redraw_window (
 
 // #test
 // Skip the redrawing for overlapped and buttons
-    struct canvas_information_d *ci;
-    struct dccanvas_d *dc;
+    struct dccanvas_d *dc00;
+    struct canvas_information_d *ci00;
+    struct dccanvas_d *dc01;
+    struct canvas_information_d *ci01;
 
     if (CONFIG_USE_REAL_COMPOSITOR == 1)
     {
-        if (window->style == WS_APP)
+        if (window->style & WS_APP)
         {
-            ci = (struct canvas_information_d *) window->frame_canvas;
-            dc = (struct dccanvas_d *) ci->dc;
+            ci00 = (struct canvas_information_d *) window->frame_canvas;
+            dc00 = (struct dccanvas_d *) ci00->dc;
 
-            if (window->style & WS_APP)
+            ci01 = (struct canvas_information_d *) window->ca_canvas;
+            dc01 = (struct dccanvas_d *) ci01->dc;
+
+            // Draw a horisontal line into the frame canvas
+            dc_draw_horizontal_line(
+                dc00, 
+                0,  // x1 
+                0,  // y
+                window->width,  // x2
+                COLOR_YELLOW, 
+                0 
+            );
+            // Draw a horizontal line into the ca canvas
+            dc_draw_horizontal_line(
+                dc01, 
+                1,  // x1 
+                1,  // y
+                100, // window->width,  // x2
+                COLOR_YELLOW, 
+                0 
+            );
+
+            // Draw string into de canvas
+            if (window->type == WT_OVERLAPPED)
             {
-                // Draw a string into the canvas
-                dc_draw_horizontal_line(
-                    dc, 
-                    0,  // x1 
-                    0,  // y
-                    window->width,  // x2
-                    COLOR_YELLOW, 
-                    0 
-                );
+                // into the frame
+                dc_drawstring ( 
+                    dc00, 1, 1, COLOR_RED, COLOR_BLUE,
+                    ROP_COPY, window->name );
 
-                // Draw string into de canvas
-                if (window->type == WT_OVERLAPPED)
-                {
-                    dc_drawstring ( 
-                        dc, 1, 1, COLOR_WHITE, COLOR_BLUE,
-                        ROP_COPY, window->name );
-                }
-
-                ci->dirty = TRUE;
+                // into the client area
+                dc_drawstring ( 
+                    dc01, 2, 2, COLOR_RED, COLOR_BLUE,
+                    ROP_COPY, "Client area" );
             }
+
+            ci00->dirty = TRUE;
+            ci01->dirty = TRUE;
         }
 
         if (window->type == WT_BUTTON)

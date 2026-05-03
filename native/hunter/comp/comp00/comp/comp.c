@@ -306,7 +306,7 @@ struct dccanvas_d *comp_create_dc_and_allocate_buffer(size_t size_in_kb)
     // Bits per pixel
     unsigned long DeviceBPP    = (unsigned long) server_get_system_metrics(9);
 
-// Pitch
+// Bytes per line
 // Backbuffer visible area. (Screen size)
     unsigned long Pitch = (DeviceWidth * (DeviceBPP/8));
 
@@ -331,7 +331,7 @@ struct dccanvas_d *comp_create_dc_and_allocate_buffer(size_t size_in_kb)
     unsigned long BufferClipInfo_height = (TotalSpareInBytes/Pitch); 
 
     // -------------------------------------------
-
+    // See: libdisp/
     tmp_dccanvas = 
         (void *) libgd_create_dc (
             (char *) buf,
@@ -339,6 +339,11 @@ struct dccanvas_d *comp_create_dc_and_allocate_buffer(size_t size_in_kb)
             BufferClipInfo_height,
             BufferClipInfo_bpp      // bits per pixel
         );
+
+    tmp_dccanvas->device_width  = BufferClipInfo_width;
+    tmp_dccanvas->device_height = BufferClipInfo_height;
+    tmp_dccanvas->bpp           = BufferClipInfo_bpp;
+    tmp_dccanvas->pitch = BufferClipInfo_pitch;
 
     if ((void*)tmp_dccanvas == NULL){
         return NULL;
@@ -409,7 +414,7 @@ struct canvas_information_d *compCreateNewCanvas(struct dccanvas_d *dc)
     ci_new->height = dc->device_height; 
     ci_new->bpp    = dc->bpp;   // bits per pixel
 
-    unsigned long DeviceWidth  = (unsigned long) server_get_system_metrics(1);
+    //unsigned long DeviceWidth  = (unsigned long) server_get_system_metrics(1);
 
 // Pitch
 // Backbuffer visible area. (Screen size)
@@ -1320,24 +1325,37 @@ void compComposeDesktop(void)
                     //printf ("dirty\n");
                     ci_src = ci;
                     ci_dst = canvas_backbuffer;
+
                     // Values for destination (backbuffer)
                     left = 0;
-                    top = Counter * 20;
-                    // #todo: Check dc validation
+                    top = 0;
                     width = 0;
                     height = 0;
+
                     // It has a dc
                     if ((void*) ci->dc != NULL)
                     {
-                        width  = ci->dc->device_width;
-                        height = ci->dc->device_height;
+                        width = 4;
+                        height = 4; 
+                        if (ci->is_frame == TRUE){
+                            width  = ci->dc->device_width;
+                            height = ci->dc->device_height;
+                        }
                     }
                     // Now it belongs to a window, let's respect 
                     // the window dimensions.
                     if ((void*) ci->owner_window != NULL)
                     {
-                        left = ci->owner_window->absolute_x;
-                        top = ci->owner_window->absolute_y;
+                        // Not a frame (it's a client area)
+                        if (ci->is_frame == FALSE){
+                            left = (ci->owner_window->absolute_x + ci->owner_window->rcClient.left);
+                            top  = (ci->owner_window->absolute_y + ci->owner_window->rcClient.top);
+                        }
+                        // It's a frame
+                        if (ci->is_frame == TRUE){
+                            left = ci->owner_window->absolute_x;
+                            top = ci->owner_window->absolute_y;
+                        }
     
                         // We gotta clip is into the screen now.
 
@@ -1347,7 +1365,10 @@ void compComposeDesktop(void)
                         //{
                             //width = (ci->dc->device_width - ci->owner_window->absolute_x);  
                         //}
-                        width = ci->owner_window->width;
+                        if (ci->is_frame == FALSE)
+                            width = ci->owner_window->rcClient.width;
+                        if (ci->is_frame == TRUE)
+                            width = ci->owner_window->width;
 
                         //if (ci->owner_window->height > 
                         //    (ci->dc->device_height - ci->owner_window->absolute_y) )
@@ -1355,14 +1376,22 @@ void compComposeDesktop(void)
                         //    height = (ci->dc->device_height - ci->owner_window->absolute_y);  
                         //}
                         // #ps: Here we need a valid dc
-                        height = ci->owner_window->height;
-                        if (10 < ci->dc->device_height)
+
+                        // Not a frame
+                        if (ci->is_frame == FALSE)
+                            height = 20;  //ci->owner_window->rcClient.height;
+                        // it's a frame
+                        if (ci->is_frame == TRUE){
                             height = 10;
+                            //height = ci->owner_window->height;
+                            //if (ci->dc->device_height)
+                                //height = 10;
+                        }
                         //if (ci->owner_window->height > ci->dc->device_height)
                             //height = ci->dc->device_height;
 
-                        if (ci->owner_window->type == WT_POPUP)
-                            height = 2;
+                        //if (ci->owner_window->type == WT_POPUP)
+                            //height = 2;
                     }
 
                     // Copy the canvas for the frame into the backbuffer
