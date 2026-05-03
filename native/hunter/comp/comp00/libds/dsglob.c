@@ -20,11 +20,13 @@ char *screen_number;
 // == buffer ===============================================
 //
 
+// Buffer for the request message
 // This is the buffer used when we receive 
 // requests via socket.
 // see: globals.h
 char __buffer[MSG_BUFFER_SIZE];
 
+// Buffer for the response message
 // Esses valores serão enviados como 
 // resposta ao serviço atual.
 // Eles são configurados pelo dialogo na hora da 

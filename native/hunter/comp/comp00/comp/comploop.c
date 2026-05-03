@@ -698,7 +698,7 @@ int serviceGetWindowInfo(void)
     int msg_code = -1;
     register int i=0;
 
-// Get wid and message code.
+// Get wid and message code
     wid      = (int) message_address[0];  // window id 
     msg_code = (int) message_address[1];  // message code
     if (wid<0 || wid >= WINDOW_COUNT_MAX)
@@ -708,7 +708,8 @@ int serviceGetWindowInfo(void)
     if (msg_code != GWS_GetWindowInfo){
         goto fail;
     }
-// Window
+
+    // Window
     w = (struct gws_window_d *) windowList[wid];
     if ((void*) w == NULL){
         goto fail;
@@ -720,31 +721,41 @@ int serviceGetWindowInfo(void)
         goto fail;
     }
 
-// Building the next response.
-// Let's clean the buffer.
-    for (i=0; i<32; i++)
+// Clear the buffer used for responses
+    for (i=0; i<32; i++){
         next_response[i] = 0;
+    };
 
+// The packet header:
 // Header: wid, msg type, signature1, signature2.
     next_response[0] = (unsigned long) (wid & 0xFFFFFFFF);
     next_response[1] = SERVER_PACKET_TYPE_REPLY;
     next_response[2] = 1234;
     next_response[3] = 5678;
-// Window: l,t,w,h
-    next_response[7]  = (unsigned long) w->absolute_x;
-    next_response[8]  = (unsigned long) w->absolute_y;
-    next_response[9]  = (unsigned long) w->width;
-    next_response[10] = (unsigned long) w->height;
-// Client rectangle: l,t,w,h
-    next_response[13] = (unsigned long) w->rcClient.left;
-    next_response[14] = (unsigned long) w->rcClient.top; 
-    next_response[15] = (unsigned long) w->rcClient.width;
-    next_response[16] = (unsigned long) w->rcClient.height;
 
-    // ...
+// Extra fields 1
+// Window frame: l,t,w,h
+    next_response[4] = (unsigned long) w->absolute_x;
+    next_response[5] = (unsigned long) w->absolute_y;
+    next_response[6] = (unsigned long) w->width;
+    next_response[7] = (unsigned long) w->height;
+
+    // Extra fields 2
+    next_response[8] = (unsigned long) 0;
+    next_response[9] = (unsigned long) 0;
+
+    // Extra fields 3
+    // Client rectangle: l,t,w,h
+    next_response[10] = (unsigned long) w->rcClient.left;
+    next_response[11] = (unsigned long) w->rcClient.top; 
+    next_response[12] = (unsigned long) w->rcClient.width;
+    next_response[13] = (unsigned long) w->rcClient.height;
+
+// -----------------------------------------
+// Data field (size = 256)
 
     // #todo border width
-    next_response[17] = (unsigned long) 0;
+    //next_response[14] = (unsigned long) 0;
 
 // ==========================================
 // #test
@@ -753,52 +764,54 @@ int serviceGetWindowInfo(void)
 
     struct dccanvas_d *dc00;
     struct canvas_information_d *ci00;
-    ci00 = w->ca_canvas;
-    if ((void*) ci00 != NULL)
+
+    if (w->style & WS_APP)
     {
-        if (ci00->magic == 1234 && ci00->is_frame == FALSE)
-        {
-            dc00 = ci00->dc;
-            if ((void*) dc00 != NULL)
-            {
-                next_response[18] = (unsigned long) dc00->data;
-                next_response[19] = (unsigned long) dc00->device_width;
-                next_response[20] = (unsigned long) dc00->device_height;
-                next_response[21] = (unsigned long) dc00->bpp;
-                next_response[22] = (unsigned long) dc00->pitch;
-
-                //next_response[18] = (unsigned long) ci00->base;
-                //next_response[19] = (unsigned long) ci00->width;
-                //next_response[20] = (unsigned long) ci00->height;
-                //next_response[21] = (unsigned long) ci00->bpp;
-                //next_response[22] = (unsigned long) ci00->pitch;
-
-                //printf ("dc info server-side: address=%x w=%d h=%d bpp=%d\n",
-                //   next_response[18],  // ok
-                //   next_response[19],  // ok
-                //   next_response[20],  // ok
-                //   next_response[21]   // ok
-                //);
-                //while(1){}
-
-                //next_response[24] = (unsigned long) 1234;
-
-            }
+        ci00 = w->ca_canvas;   // Canvas for client area
+        if ((void*) ci00 == NULL){
+            //printf ("ci00 NULL\n");  //#debug
+            goto fail;
         }
-    }
+        if ((void*) ci00->magic != 1234){
+            //printf ("ci00->magic\n");  //#debug
+            goto fail;
+        }
+        // Can't be a frame
+        if (ci00->is_frame == TRUE){
+            //printf ("Frame\n");  //#debug
+            goto fail;
+        }
+
+        // Get dc
+        dc00 = ci00->dc;
+        if ((void*) dc00 == NULL){
+            //printf ("dc00 NULL\n");  //#debug
+            goto fail;
+        }
+        // inject dc values
+        next_response[15] = (unsigned long) dc00->data;
+        next_response[16] = (unsigned long) dc00->device_width;
+        next_response[17] = (unsigned long) dc00->device_height;
+        next_response[18] = (unsigned long) dc00->bpp;
+        next_response[19] = (unsigned long) dc00->pitch;
+
+        // #debug
+        //printf ("dc info server-side: address=%x w=%d h=%d bpp=%d\n",
+        //    next_response[15],  // ok
+        //    next_response[16],  // ok
+        //    next_response[17],  // ok
+        //    next_response[18]   // ok
+        //);
+        //while(1){}
+    } 
+
 // ==========================================
 
-
-// #debug
-    //printf("serviceGetWindowInfo: l=%d t=%d w=%d h=%d\n",
-        //__root_window->left, 
-        //__root_window->top, 
-        //__root_window->width, 
-        //__root_window->height );
-
-// ok, send a reply response.
+// The response buffer is done.
+// Return and send the response.
 done:
     return 0;
+
 fail:
     debug_print("serviceGetWindowInfo: fail\n");
     return (int) (-1);

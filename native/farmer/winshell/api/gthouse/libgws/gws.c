@@ -313,6 +313,7 @@ static struct gws_window_info_d *__gws_get_window_info_response(
 // Put the message info into the structure.
 process_response:
 
+// ------------------------------------
 // Get the header.
 // Window ID, msg code, signature 1234, signature 5678.
     wid      = (int)           message_buffer[0];
@@ -320,83 +321,101 @@ process_response:
     sig1     = (unsigned long) message_buffer[2];
     sig2     = (unsigned long) message_buffer[3];
 
-// Signature fails.
-    if (sig1 != 1234){
-        goto fail;
-    }
-    if (sig2 != 5678){
-        goto fail;
-    }
+// Signature fails
+    if (sig1 != 1234){ goto fail; }
+    if (sig2 != 5678){ goto fail; }
 
+    if (msg_code != SERVER_PACKET_TYPE_REPLY)
+        goto fail;
+
+    //printf("__gws_get_next_event_response: WE GOT THE DATA\n");
+
+// ---------------------------------------
 // If it's a reply. 
 // Get the data field and populate the window info structure.
-    if (msg_code == SERVER_PACKET_TYPE_REPLY)
-    {
-        //printf("__gws_get_next_event_response: WE GOT THE DATA\n");
+// IsReply:
     
-        window_info->wid   = (int) message_buffer[4];  // wid
-        window_info->pwid  = (int) message_buffer[5];  // parent wid
-        window_info->type  = (int) message_buffer[6];  // window type
+// ------------------------------------
+ 
+    //window_info->wid   = (int) message_buffer[4];  // wid
+    //window_info->pwid  = (int) message_buffer[5];  // parent wid
+    //window_info->type  = (int) message_buffer[6];  // window type
 
-        // window
-        window_info->left   = (unsigned long) message_buffer[7];   // left 
-        window_info->top    = (unsigned long) message_buffer[8];   // top
-        window_info->width  = (unsigned long) message_buffer[9];   // width
-        window_info->height = (unsigned long) message_buffer[10];  // height
+// ------------------------------------
+// Extra fields 1
+// Window frame: l,t,w,h
+    window_info->left   = (unsigned long) message_buffer[4];   // left 
+    window_info->top    = (unsigned long) message_buffer[5];   // top
+    window_info->width  = (unsigned long) message_buffer[6];   // width
+    window_info->height = (unsigned long) message_buffer[7];  // height
 
-        //#debug
-        //printf("libgws: l=%d t=%d w=%d h=%d\n",
-            //window_info->left, 
-            //window_info->top, 
-            //window_info->width, 
-            //window_info->height );
+    //#debug
+    //printf("libgws-side: l=%d t=%d w=%d h=%d\n",
+    //    window_info->left, 
+    //    window_info->top, 
+    //    window_info->width, 
+    //    window_info->height 
+    //);
+    //while(1){}
 
-        // limits
-        window_info->right  = (unsigned long) message_buffer[11];  // right
-        window_info->bottom = (unsigned long) message_buffer[12];  // bottom
+// ------------------------------------
+// Extra fields 2
+    // 8 and 9 are unused for now.
 
-        // client area rectangle
-        window_info->cr_left   = (unsigned long) message_buffer[13];  // cr left 
-        window_info->cr_top    = (unsigned long) message_buffer[14];  // cr top
-        window_info->cr_width  = (unsigned long) message_buffer[15];  // cr width
-        window_info->cr_height = (unsigned long) message_buffer[16];  // cr height
+// ------------------------------------
+// Extra fields 3
+    // client area rectangle
+    window_info->cr_left   = (unsigned long) message_buffer[10];  // cr left 
+    window_info->cr_top    = (unsigned long) message_buffer[11];  // cr top
+    window_info->cr_width  = (unsigned long) message_buffer[12];  // cr width
+    window_info->cr_height = (unsigned long) message_buffer[13];  // cr height
 
-        // border
-        // #todo: This is a work in progress
-        window_info->border_width = (unsigned long) message_buffer[17];  // border width
+    // #debug
+    //printf("libgws-side: cl=%d ct=%d cw=%d ch=%d\n",
+    //    window_info->cr_left, 
+    //    window_info->cr_top, 
+    //    window_info->cr_width, 
+    //    window_info->cr_height 
+    //);
+    //while(1){}
 
-        // #test
-        // #todo
-        // The canvas for the client area
-        // Device conext information
-        window_info->ca_canvas_base_address = (unsigned long) message_buffer[18];
-        window_info->ca_canvas_width        = (unsigned long) message_buffer[19];
-        window_info->ca_canvas_height       = (unsigned long) message_buffer[20];
-        window_info->ca_canvas_bpp          = (unsigned long) message_buffer[21];
-        window_info->ca_canvas_pitch        = (unsigned long) message_buffer[22];
+// -----------------------------------------
+// Data field (size = 256)
 
-        // #bugbug: 20 and 21 are failing. (right in server-side)
-        //printf ("dc info libgws-side: address=%x w=%d h=%d bpp=%d\n",
-        //    message_buffer[18],  // ok
-        //    message_buffer[19],  // ok
-        //    message_buffer[20],  // fail
-        //    message_buffer[21]   // fail
-        //);
-        //while(1){}
+    // border
+    // #todo: This is a work in progress
+    //window_info->border_width = (unsigned long) message_buffer[14];  // border width
 
-        // The app will need this thing.
-        window_info->used = TRUE;
-        window_info->magic = 1234;
+    // #test
+    // #todo
+    // The canvas for the client area
+    // Device conext information
+    window_info->ca_canvas_base_address = (unsigned long) message_buffer[15];
+    window_info->ca_canvas_width        = (unsigned long) message_buffer[16];
+    window_info->ca_canvas_height       = (unsigned long) message_buffer[17];
+    window_info->ca_canvas_bpp          = (unsigned long) message_buffer[18];
+    window_info->ca_canvas_pitch        = (unsigned long) message_buffer[19];
 
-        // #debug
-        //printf ("::: wid=%d msg=%d l1=%d l2=%d \n",
-            //window_info->wid, window_info->msg, window_info->long1, window_info->long2 );
+    // #debug
+    //printf ("dc info libgws-side: address=%x w=%d h=%d bpp=%d\n",
+    //    message_buffer[15],  // ok
+    //    message_buffer[16],  // ok
+    //    message_buffer[17],  // fail
+    //    message_buffer[18]   // fail
+    //);
+    //while(1){}
 
-        // ok, we got it.
-        return (struct gws_window_info_d *) window_info;
-    }
+    // The app will need this thing.
+    window_info->used = TRUE;
+    window_info->magic = 1234;
 
-// Fall trough
+    // #debug
+    //printf ("::: wid=%d msg=%d l1=%d l2=%d \n",
+        //window_info->wid, window_info->msg, window_info->long1, window_info->long2 );
+
+    // ok, we got it.
+    return (struct gws_window_info_d *) window_info;
+
 fail:
     return NULL;
 }

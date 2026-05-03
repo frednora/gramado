@@ -1833,25 +1833,29 @@ static int serviceGetWindowInfo(void)
     next_response[3] = 5678;  //signature
 
 // Window
-    next_response[7]  = (unsigned long) w->absolute_x;
-    next_response[8]  = (unsigned long) w->absolute_y; 
-    next_response[9]  = (unsigned long) w->width;
-    next_response[10] = (unsigned long) w->height;
+    next_response[4]  = (unsigned long) w->absolute_x;
+    next_response[5]  = (unsigned long) w->absolute_y; 
+    next_response[6]  = (unsigned long) w->width;
+    next_response[7] = (unsigned long) w->height;
 
-// Client rectangle.
-    next_response[13] = (unsigned long) w->rcClient.left;
-    next_response[14] = (unsigned long) w->rcClient.top; 
-    next_response[15] = (unsigned long) w->rcClient.width;
-    next_response[16] = (unsigned long) w->rcClient.height;
+    // Extra fields 2
+    next_response[8] = (unsigned long) 0;
+    next_response[9] = (unsigned long) 0;
+
+
+    // Extra fields 3
+    // Client rectangle: l,t,w,h
+    next_response[10] = (unsigned long) w->rcClient.left;
+    next_response[11] = (unsigned long) w->rcClient.top; 
+    next_response[12] = (unsigned long) w->rcClient.width;
+    next_response[13] = (unsigned long) w->rcClient.height;
 
     // ...
 
-// #debug
-    //printf("serviceGetWindowInfo: l=%d t=%d w=%d h=%d\n",
-        //__root_window->left, 
-        //__root_window->top, 
-        //__root_window->width, 
-        //__root_window->height );
+    // #todo border width
+    //next_response[14] = (unsigned long) 0;
+
+// ==========================================
 
 //ok, send a reply response.
 done:

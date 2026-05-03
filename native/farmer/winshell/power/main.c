@@ -149,7 +149,7 @@ static void update_children(int fd)
     unsigned long restart_x  = (wi.cr_width / 4) - (button_w / 2);
     unsigned long shutdown_x = (3 * wi.cr_width / 4) - (button_w / 2);
 
-/*
+
     if ((void*) dc00 != NULL)
     {
         libgui_drawchar_dc ( 
@@ -162,7 +162,6 @@ static void update_children(int fd)
             0  //_rop_flags 
         );
     }
-*/
 
 
 // Move and redraw buttons
@@ -655,19 +654,20 @@ int main(int argc, char *argv[])
 
     sc80( 48, &m[0], &m[0], &m[0] );
 
-/*
+
 // ============================================================
 // #test
 // Changing the libgui device context
 // Create a new one using the values provided by the server.
 
-    printf ("dc info: address=%x w=%d h=%d bpp=%d\n",
-        wi.ca_canvas_base_address,  // ok
-        wi.ca_canvas_width,         // ok
-        wi.ca_canvas_height,        // fail
-        wi.ca_canvas_bpp            // fail
-    );
-    while(1){}
+    // #debug
+    //printf ("dc info: address=%x w=%d h=%d bpp=%d\n",
+    //    wi.ca_canvas_base_address,  // ok
+    //    wi.ca_canvas_width,         // ok
+    //    wi.ca_canvas_height,        // fail
+    //    wi.ca_canvas_bpp            // fail
+    //);
+    //while(1){}
 
     dc00 = (struct dccanvas_d *)libgui_create_dc(
         wi.ca_canvas_base_address,
@@ -675,31 +675,29 @@ int main(int argc, char *argv[])
         wi.ca_canvas_height,
         wi.ca_canvas_bpp
     );
-    if ((void*)dc00 == NULL){
-        printf("power: on dc00\n");
-        exit(1);
+    if ((void*)dc00 == NULL)
+    {
+        //printf("power: on dc00\n");
+        //exit(1);
     }
 
-// #dange: Setup a new dc for the libgui
-    //libgui_dc_backbuffer = dc00;
+// Draw a crar inside a shared canvas 
+// represented here by the new dc.
 
-    // Draw a crar inside a shared canvas 
-    // represented here by the new dc.
-    //while (1){
-
-    libgui_drawchar_dc ( 
-        dc00,
-        200, // _x, 
-        1, //_y,
-        'X',
-        COLOR_BLUE,
-        COLOR_YELLOW, 
-        0  //_rop_flags 
-    );
-
-    //}
+    if ((void*)dc00 != NULL)
+    {
+        libgui_drawchar_dc ( 
+            dc00,
+            200, // _x, 
+            1, //_y,
+            'X',
+            COLOR_BLUE,
+            COLOR_YELLOW, 
+            0  //_rop_flags 
+        );
+    }
 // ============================================================
-*/
+
 
 // ============================================================
 // Text

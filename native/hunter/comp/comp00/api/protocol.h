@@ -58,7 +58,7 @@ struct _gReq
     unsigned long ul11;
     unsigned long ul12;
     unsigned long ul13;
-// Strings or some other data.
+// Strings or some other data
     unsigned char data[256];
 };
 typedef struct _gReq  gReq;
@@ -69,25 +69,30 @@ typedef struct _gReq  gReq;
 //
 struct _gRep
 {
+
 // packed header
-    unsigned long wid;   // window id
-    unsigned long code;  // message code
+    unsigned long wid;   // 0 - window id
+    unsigned long code;  // 1 - message code
     unsigned long ul2;
     unsigned long ul3;
-// extra
-    unsigned long ul4;
+
+// Extra fields 1
+    unsigned long ul4; // 4
     unsigned long ul5;
     unsigned long ul6;
     unsigned long ul7;
-// extra
-    unsigned long ul8;
+
+// Extra fields 2
+    unsigned long ul8; //8
     unsigned long ul9;
-// extra
-    unsigned long ul10;
+
+// Extra fields 3
+    unsigned long ul10;  //10
     unsigned long ul11;
     unsigned long ul12;
     unsigned long ul13;
-// Strings or some other data.
+
+// Strings or some other data - 14
     unsigned char data[256];
 };
 typedef struct _gRep  gRep;
