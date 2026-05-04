@@ -648,7 +648,6 @@ struct gws_window_d *do_create_titlebar(
         // #todo: Pointer validation
     }
 
-
 // Get parameter
     useIcon = has_icon;
 
@@ -805,11 +804,12 @@ struct gws_window_d *do_create_titlebar(
             r0_left, r0_top, r0_width, r0_height, 
             r0_color, r0_rop 
         );
+
     } else {
 
         // Draw ornament into the canvas
-        if (Compositor.is_composition_disabled == FALSE)
-        {
+        //if (Compositor.is_composition_disabled == FALSE)
+        //{
 
             // Draw a line into the frame canvas
             dc_draw_horizontal_line( 
@@ -830,7 +830,7 @@ struct gws_window_d *do_create_titlebar(
                 COLOR_YELLOW, //r0_color 
                 r0_rop
             );
-        }
+        //}
     }
 
 //----------------------
@@ -893,7 +893,11 @@ struct gws_window_d *do_create_titlebar(
     {
         sL = (unsigned long) ((tbWindow->absolute_x) + StringLeftPad);
         sT = (unsigned long) ((tbWindow->absolute_y) + StringTopPad);
-        grDrawString ( sL, sT, StringColor, tbWindow->name );
+
+        if (Compositor.is_composition_disabled == TRUE){
+            // #ps: Drawing directly into the backbuffer
+            grDrawString ( sL, sT, StringColor, tbWindow->name );
+        }
 
         // Saving relative position
         parent->titlebar_text_left = StringLeftPad;

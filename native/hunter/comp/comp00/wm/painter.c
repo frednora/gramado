@@ -824,6 +824,10 @@ int redraw_titlebar_window(struct gws_window_d *window)
     struct gws_window_d *parent;
     struct gws_window_d *tb_window;
 
+    struct dccanvas_d *dc00;
+    struct canvas_information_d *ci00;
+
+
 // -- Title bar -------------------------------
     if ( (void*) window == NULL )
         return -1;
@@ -837,6 +841,15 @@ int redraw_titlebar_window(struct gws_window_d *window)
         return -1;
     if (parent->magic != 1234)
         return -1;
+
+
+    if (Compositor.is_composition_disabled == FALSE)
+    {
+        if (parent->type == WT_OVERLAPPED){
+            ci00 = parent->frame_canvas;
+            dc00 = ci00->dc;
+        }
+    }
 
 // ------------------
 // Parent is active
@@ -872,16 +885,23 @@ int redraw_titlebar_window(struct gws_window_d *window)
 // for mouse hit test.
     wm_sync_absolute_dimensions(tb_window);
 
+// ----------------
 // bg
-    rectBackbufferDrawRectangle ( 
-        tb_window->absolute_x, 
-        tb_window->absolute_y, 
-        tb_window->width, 
-        tb_window->height, 
-        tb_window->bg_color, 
-        TRUE,   // fill
-        (unsigned long) tb_window->rop_bg );  // rop for this window
+    if (Compositor.is_composition_disabled == TRUE)
+    {
+        // #ps: Drawing directly into the backbuffer
+        rectBackbufferDrawRectangle ( 
+            tb_window->absolute_x, 
+            tb_window->absolute_y, 
+            tb_window->width, 
+            tb_window->height, 
+            tb_window->bg_color, 
+            TRUE,   // fill
+            (unsigned long) tb_window->rop_bg // rop for this window 
+        );
+    }
 
+// ----------------
 // Ornament
     if (Compositor.is_composition_disabled == TRUE){
         rectBackbufferDrawRectangle ( 
@@ -897,30 +917,28 @@ int redraw_titlebar_window(struct gws_window_d *window)
     } else {
 
         // Draw ornament into the canvas
+        if ((void*)dc00 == NULL)
+            return -1;
 
-        /*
         // Draw a line into the frame canvas
         dc_draw_horizontal_line( 
             dc00, 
-            1,  // x1 
-            1,  //r0_top,  // y
-            tb_window->width; //r0_width,  // x2
+            0,  // x1 
+            0,  //r0_top,  // y
+            tb_window->width, //r0_width,  // x2
             COLOR_GREEN, //parent->titlebar_ornament_color, //r0_color 
-            r0_rop
+            tb_window->rop_ornament
         );
-        */
 
-        /*
         // Draw a into line the frame canvas
         dc_draw_horizontal_line( 
             dc00, 
             0,  // x1 
             19,  // y
-            r0_width,  // x2
-            parent->titlebar_ornament_color, //r0_color 
-            r0_rop
+            tb_window->width,  //r0_width,  // x2
+            COLOR_GREEN,  //parent->titlebar_ornament_color, //r0_color 
+            tb_window->rop_ornament
         );
-        */
     }
 
 
@@ -946,6 +964,7 @@ int redraw_titlebar_window(struct gws_window_d *window)
 
         if (Compositor.is_composition_disabled == TRUE)
         {
+            // #ps: Drawing directly inside the backbuffer
             bmp_decode_system_icon( 
                 (int) icon_id, 
                 (unsigned long) iL, 
@@ -976,8 +995,12 @@ int redraw_titlebar_window(struct gws_window_d *window)
             (unsigned long) 
             ( tb_window->absolute_y + parent->titlebar_text_top);
         
-        if ((void*) tb_window->name != NULL){
-            grDrawString ( sL, sT, sColor, tb_window->name );
+        if ((void*) tb_window->name != NULL)
+        {
+            if (Compositor.is_composition_disabled == TRUE){
+                // #ps: Drawing directly inside the backbuffer
+                grDrawString ( sL, sT, sColor, tb_window->name );
+            }
         }
     }
 
@@ -1037,7 +1060,6 @@ redraw_window (
         goto fail;
     }
 
-
 // ROP
 // Getting the saved rop values
 // Respect the ROP added during the creation phase
@@ -1074,6 +1096,7 @@ redraw_window (
             ci01 = (struct canvas_information_d *) window->ca_canvas;
             dc01 = (struct dccanvas_d *) ci01->dc;
 
+            /*
             // Draw a horisontal line into the frame canvas
             dc_draw_horizontal_line(
                 dc00, 
@@ -1083,6 +1106,7 @@ redraw_window (
                 COLOR_YELLOW, 
                 0 
             );
+            */
 
             /*
             // Draw a horizontal line into the ca canvas
