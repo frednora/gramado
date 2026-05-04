@@ -235,6 +235,17 @@ void invalidate_surface_retangle(void);
 struct gws_rect_d *clientrect_from_window(struct gws_window_d *window);
 struct gws_rect_d *rect_from_window(struct gws_window_d *window);
 
+// Drawing a rectangle inside a given canvas,
+// given its device context.
+void
+dc_draw_rectangle0(
+    struct dccanvas_d *dc,
+    unsigned long left,
+    unsigned long top,
+    unsigned long width,
+    unsigned long height,
+    unsigned int color,
+    unsigned long rop );
 
 #endif   
 

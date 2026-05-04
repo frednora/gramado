@@ -102,7 +102,7 @@ grBackbufferDrawCharTransparent (
         {
             if ( ( *work_char_p & bit_mask ) )
             {
-                // IN: color, x, y,rop
+                // IN: color, x, y, rop
                 libdisp_backbuffer_putpixel ( 
                     (unsigned int) color, 
                     (x + x2), 

@@ -1006,13 +1006,16 @@ struct gws_window_d
     struct gws_event_d  single_event;
 
 // Event list
+
+    // Indexes
     int ev_head;
     int ev_tail;
+    // Standard header
     unsigned long ev_wid[32];
     unsigned long ev_msg[32];
     unsigned long ev_long1[32];
     unsigned long ev_long2[32];
-// Extra
+    // Extra Fields
     unsigned long ev_long3[32];
     unsigned long ev_long4[32];
     // ...

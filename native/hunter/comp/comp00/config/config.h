@@ -42,6 +42,7 @@
 
 // #test
 // Disable or not the composition feature
+// #ps: Maybe it still depends on the CONFIG_TEST_SPARE_BUFFER flag.
 #define CONFIG_DISABLE_COMPOSITION  1
 
 

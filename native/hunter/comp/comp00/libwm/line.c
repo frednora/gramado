@@ -352,7 +352,9 @@ rectBackbufferDrawHorizontalLineInsideWindow(
 }
 
 
-// #not tested yet
+// #test
+// Draw a pixel inside a canvas, given it's device context.
+// #todo: No Clipping support yet
 void 
 dc_draw_horizontal_line ( 
     struct dccanvas_d *dc,
@@ -362,6 +364,7 @@ dc_draw_horizontal_line (
     unsigned int color,
     unsigned long rop_flags )
 {
+// #ps: Not tested yet
 
     if ((void*)dc == NULL)
         return;
@@ -376,14 +379,17 @@ dc_draw_horizontal_line (
     {
         //backbuffer_putpixel( color, x1, y, rop_flags ); 
 
-        // #test: New method with dc.
+        // #test:
+        // Draw a pixel inside a canvas, given it's device context.
+        // see: libdisp.c
         // IN: dc, color, x, y, rop
-        putpixel0(
+        putpixel0 (
                 dc,
                 color, 
                 x1, 
                 y, 
-                rop_flags );
+                rop_flags 
+        );
 
         x1++;
     };

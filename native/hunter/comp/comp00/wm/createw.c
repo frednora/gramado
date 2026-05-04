@@ -739,11 +739,18 @@ struct gws_window_d *do_create_titlebar(
         // Draw icon
         iL = (unsigned long) (tbWindow->absolute_x + METRICS_ICON_LEFTPAD);
         iT = (unsigned long) (tbWindow->absolute_y + METRICS_ICON_TOPPAD);
-        bmp_decode_system_icon( 
-            (int) icon_id, 
-            (unsigned long) iL, 
-            (unsigned long) iT,
-            FALSE );
+
+        if (Compositor.is_composition_disabled == TRUE)
+        {
+            // #ps: Drawing directly inside the backbuffer
+            bmp_decode_system_icon( 
+                (int) icon_id, 
+                (unsigned long) iL, 
+                (unsigned long) iT,
+                FALSE 
+            );
+        }
+
         parent->titlebarHasIcon = TRUE;
     }
 
@@ -774,11 +781,17 @@ struct gws_window_d *do_create_titlebar(
     unsigned long r0_color  = OrnamentColor1;
     unsigned long r0_rop    = 0;
 
-// Draw rectangle
+// Draw rectangle (ornament)
 // IN: l, t, w, h, color, rop
-    painterFillWindowRectangle( 
-        r0_left, r0_top, r0_width, r0_height, 
-        r0_color, r0_rop );
+
+    if (Compositor.is_composition_disabled == TRUE)
+    {
+        // #ps: Drawing directly inside the backbuffer
+        painterFillWindowRectangle ( 
+            r0_left, r0_top, r0_width, r0_height, 
+            r0_color, r0_rop 
+        );
+    }
 
 //----------------------
 // String
@@ -787,7 +800,7 @@ struct gws_window_d *do_create_titlebar(
 
     int useTitleString = has_string;  //#HACK
     unsigned long StringLeftPad = 0;
-    unsigned long StringTopPad = 8;  // char size.
+    unsigned long StringTopPad = 8;  // char size
     size_t StringSize = (size_t) strlen( (const char *) parent->name );
     if (StringSize > 64){
         StringSize = 64;
@@ -1125,7 +1138,9 @@ doCreateAndDrawWindowFrame (
     {
         window->Border.border_size = BorderSize;
         window->borderUsed = TRUE;
+
         // Draw the border of an edit box
+        // #ps: Drawing it directly inside the backbuffer
         __draw_window_border(
             parent, window,
             __rop_top_border,
@@ -1183,12 +1198,16 @@ doCreateAndDrawWindowFrame (
             //WindowManager.fullscreen_window = window;
 
             // Draw border
-            __draw_window_border(
-                parent, window,
-                __rop_top_border,
-                __rop_left_border,
-                __rop_right_border,
-                __rop_bottom_border );
+            if (Compositor.is_composition_disabled == TRUE)
+            {
+                // #ps: Drawing it directly inside the backbuffer
+                __draw_window_border(
+                    parent, window,
+                    __rop_top_border,
+                    __rop_left_border,
+                    __rop_right_border,
+                    __rop_bottom_border );
+            }
 
             // When we draw the border for overlapped windows 
             // we need to update the client area rectangle.
@@ -1604,7 +1623,6 @@ void *doCreateAndDrawWindow (
 
     if (style & WS_CHILD)
         fChild = TRUE;
-
     if (style & WS_TRANSPARENT)
     {
         Transparent=TRUE;
@@ -1737,7 +1755,6 @@ void *doCreateAndDrawWindow (
 // ================
 
 
-
 // #test
 // Window class
     window->window_class.ownerClass = gws_WindowOwnerClassNull;
@@ -1751,20 +1768,19 @@ void *doCreateAndDrawWindow (
 
 // Style: design-time identity.
 // Defines window type and decorations/features.
-    window->style = (unsigned long) style;
 
+    window->style = (unsigned long) style;
     // Identity checks
     if (style & WS_MENU)
         window->isMenu = TRUE;
-
     if (style & WS_MENUITEM)
        window->isMenuItem = TRUE;
-
     //if (style & (WS_DESKTOPICON | WS_BARICON | WS_TRAYICON | WS_BUTTONICON))
        //window->isIcon = TRUE;
 
 // State: runtime condition.
 // Tracks current behavior (minimized, maximized, fullscreen, etc).
+
     window->state = (int) state;
 
 // Status: interaction/activation.
@@ -1914,21 +1930,30 @@ void *doCreateAndDrawWindow (
     unsigned long __BorderSize = window->Border.border_size;
 
 // == Title Bar =============================
-// Titlebar height.
+// Titlebar height
     unsigned long __TBHeight = METRICS_TITLEBAR_DEFAULT_HEIGHT;
+
+// Events
+    // window->single_event = ?;
 
 // == Event Queue =============================
     register int e=0;
     static int Max=32;
+    // Indexes
+    window->ev_head=0;
+    window->ev_tail=0;
     for (e=0; e<Max; e++)
     {
+        // Standard header
         window->ev_wid[e]=0;
         window->ev_msg[e]=0;
         window->ev_long1[e]=0;
         window->ev_long2[e]=0;
+        // Extra fields
+        window->ev_long3[e]=0;
+        window->ev_long4[e]=0;
     };
-    window->ev_head=0;
-    window->ev_tail=0;
+
 
 // Lock or unlock the window.
     //window->locked = FALSE;
@@ -2298,15 +2323,26 @@ void *doCreateAndDrawWindow (
                 0 
             );
 
-            // Draw string into de canvas
+            // Draw string into de frame canvas
             dc_drawstring ( 
                 dc00, 1, 1, COLOR_WHITE, COLOR_BLUE,
                 ROP_COPY, window->name );
 
+            // Draw string into de client area canvas
             dc_drawstring ( 
                 dc01, 2, 2, COLOR_WHITE, COLOR_BLUE,
                 ROP_COPY, "Client area" );
 
+            // #test OK
+            // Drawing a rectangle inside the client area canvas
+            //dc_draw_rectangle0 (
+            //    dc01,
+            //    4, 4, 4, 4,   // l,t,w,h
+            //    COLOR_RED,
+            //    0  //rop 
+            //);
+
+            // Invalidate
             ci00->dirty = TRUE;
             ci01->dirty = TRUE;
         }
@@ -2810,13 +2846,18 @@ void *doCreateAndDrawWindow (
         // Paint the background.
         // This routine is calling the kernel to paint the rectangle.
         // Absolute values.
-        painterFillWindowRectangle( 
-            window->absolute_x, 
-            window->absolute_y, 
-            window->width, 
-            window->height, 
-            window->bg_color, 
-            window->rop_bg );  // #bugbug: Invalid value in the structure
+        // #ps: Drawing directly inside the backbuffer
+        if (Compositor.is_composition_disabled == TRUE)
+        {
+            painterFillWindowRectangle( 
+                window->absolute_x, 
+                window->absolute_y, 
+                window->width, 
+                window->height, 
+                window->bg_color, 
+                window->rop_bg 
+            );
+        }
 
         // #todo
         // Could we return now if its type is WT_SIMPLE?
@@ -2944,13 +2985,18 @@ void *doCreateAndDrawWindow (
             // This routine is calling the kernel to paint the rectangle.
             // #todo
             // We can register these colors inside the windows structure.
-            __draw_button_borders(
-                (struct gws_window_d *) window,
-                (unsigned int) buttonBorder_tl2_color,        // tl 2 inner
-                (unsigned int) buttonBorder_tl1_color,        // tl 1 most inner
-                (unsigned int) buttonBorder_br2_color,        // br 2 inner
-                (unsigned int) buttonBorder_br1_color,  // br 1 most inner
-                (unsigned int) buttonBorder_outer_color );
+
+            if (Compositor.is_composition_disabled == TRUE)
+            {
+                // #ps: Drawing directly into the backbuffer
+                __draw_button_borders(
+                    (struct gws_window_d *) window,
+                    (unsigned int) buttonBorder_tl2_color,        // tl 2 inner
+                    (unsigned int) buttonBorder_tl1_color,        // tl 1 most inner
+                    (unsigned int) buttonBorder_br2_color,        // br 2 inner
+                    (unsigned int) buttonBorder_br1_color,  // br 1 most inner
+                    (unsigned int) buttonBorder_outer_color );
+            }
 
 
             if (isDarkTheme == TRUE) {
@@ -2970,11 +3016,16 @@ void *doCreateAndDrawWindow (
 
             // Draw the label's string.
             // The label is the window's name.
-            grDrawString ( 
-                (window->absolute_x + l_offset), 
-                (window->absolute_y + t_offset), 
-                (unsigned int) label_color, 
-                window->name );
+            // #ps: Drawing directly into the backbuffer
+            if (Compositor.is_composition_disabled == TRUE)
+            {
+                grDrawString ( 
+                    (window->absolute_x + l_offset), 
+                    (window->absolute_y + t_offset), 
+                    (unsigned int) label_color, 
+                    window->name 
+                );
+            }
 
             // #test
             // Testing the possibility of painting an icon inside the button.

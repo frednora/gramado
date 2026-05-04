@@ -1284,10 +1284,8 @@ frontbuffer_draw_rectangle(
         2 );      // back or front.
 }
 
-/* 
- * __drawrectangle0:
- *     Draw a rectangle on backbuffer or frontbuffer.
- */
+// __drawrectangle0:
+// Draw a rectangle on backbuffer or frontbuffer.
 // Service 9.
 // #bugbug
 // Agora precisamos considerar o limite de apenas 2mb
@@ -1427,6 +1425,7 @@ __drawrectangle0(
 // Draw
 // Draw lines on backbuffer.
 
+    // #bugbug: Provisory
     if ( internal_height > 600 ){
         //server_debug_print("__drawrectangle0: internal_height");
         return;
@@ -1443,12 +1442,15 @@ __drawrectangle0(
 
     while (1)
     {
-        // 1=backbuffer
+        // 1 = backbuffer
+        // #ps: Drawing directly into the backbuffer
         if ( back_or_front == 1 ){
             backbuffer_draw_horizontal_line ( 
                 Rect.left, Y, myright, Rect.bg_color, rop_flags );
         }
-        // 2=backbuffer
+
+        // 2 = frontbuffer
+        // #ps: Drawing directly into the frontbuffer (LFB)
         if ( back_or_front == 2 ){
             frontbuffer_draw_horizontal_line ( 
                 Rect.left, Y, myright, Rect.bg_color, rop_flags );
@@ -1468,12 +1470,13 @@ __drawrectangle0(
             }
         }
 
-        // Decrementa o contador.
+        // Decrement the counter for the number of lines
         internal_height--;
         if (internal_height == 0){
             break;
         }
     };
+
 
 // ??
 // Send the rectangle to a list.
@@ -1665,9 +1668,11 @@ rectBackbufferDrawRectangle0 (
     {
         // debug_print("rectBackbufferDrawRectangle0: Using R0");
         // IN: l,t,w,h,bg color, rop flags.
+
         __draw_rectangle_via_kgws (
             rect.left, rect.top, rect.width, rect.height,
             rect.bg_color, rop_flags );
+
         rect.dirty = TRUE;
         return;
     }
@@ -1723,16 +1728,20 @@ rectBackbufferDrawRectangle0 (
         if (rect.top >= device_h){
             break;
         }
+
         // Draw horizontal line
         // see: line.c
+        // #ps: Drawing directly into the backbuffer
         grBackbufferDrawHorizontalLine ( 
             rect.left, rect.top, __right, 
-            (unsigned int) rect.bg_color );
-        // Next line
-        rect.top++;
+            (unsigned int) rect.bg_color 
+        );
+
+        rect.top++;  // Next line
     };
 
     rect.dirty = TRUE;  // Invalidate
+
 done:
     return;
 }
@@ -1764,12 +1773,13 @@ rectBackbufferDrawRectangle (
     }
 
 // Draw the rectangle, using the kernel or not.
-    rectBackbufferDrawRectangle0(
+    rectBackbufferDrawRectangle0 (
         x, y, width, height,
         color,
         fill,
         rop_flags,
-        UseKernelPainter );
+        UseKernelPainter 
+    );
 }
 
 // Worker
@@ -1906,6 +1916,98 @@ int update_rectangle(struct gws_rect_d *rect)
 
 fail:
     return (int) -1;
+}
+
+// #test
+// Drawing a rectangle inside a given canvas,
+// given its device context.
+void
+dc_draw_rectangle0(
+    struct dccanvas_d *dc,
+    unsigned long left,
+    unsigned long top,
+    unsigned long width,
+    unsigned long height,
+    unsigned int color,
+    unsigned long rop )
+{
+// #ps: Not tested yet
+
+    int i=0;
+    int NumberOfLines=0;
+
+    if ((void*) dc == NULL){
+        printf("dc_draw_rectangle0: dc\n");
+        goto fail;
+    }
+
+    unsigned long DeviceWidth = dc->device_width;
+    unsigned long DeviceHeight = dc->device_height;
+    // ...
+
+//
+// Clipping
+//
+
+    // Starting out of limits
+    if (left >= DeviceWidth){
+        printf("dc_draw_rectangle0: left\n");
+        return;
+    }
+    if (top >= DeviceHeight){
+        printf("dc_draw_rectangle0: top\n");
+        return;
+    }
+
+    // Available space
+    unsigned long w_space = (DeviceWidth - left);
+    unsigned long h_space = (DeviceHeight - top);
+    // Final values
+    unsigned long final_width = width;
+    unsigned long final_height = height;
+
+    if (width > w_space)
+        final_width = w_space;
+    if (height > h_space)
+        final_height = h_space;
+
+    if (final_width == 0){
+        printf("dc_draw_rectangle0: final_width\n");
+        return;
+    }
+    if (final_height == 0){
+        printf("dc_draw_rectangle0: final_height\n");
+        return;
+    }
+
+    unsigned long __right  = (unsigned long) (left + final_width);
+    //unsigned long __bottom = (unsigned long) (top  + final_height); 
+
+    if (__right > DeviceWidth)
+        __right = DeviceWidth;
+    //if (__bottom > DeviceHeight)
+        //__bottom = DeviceHeight;
+
+    NumberOfLines = final_height;
+
+//
+// Drawing multiple lines inside the canvas
+//
+
+    for (i=0; i<NumberOfLines; i++)
+    {
+        dc_draw_horizontal_line ( 
+            dc,
+            left,      // x1
+            (top +i),  // y 
+            __right,   // x2 
+            color,
+            rop 
+        );
+    };
+
+fail:
+    return;
 }
 
 //
