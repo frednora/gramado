@@ -52,7 +52,16 @@ typedef enum {
 
 extern unsigned long vaList[32];
 
+
+
+// Pointer for a set of 2mb usermode shared buffers for coavases.
+// #todo: We can expand this
+//extern unsigned long shbufferList[2];
+
+
 // =========================
+
+
 
 int mm_gc(void);
 int mmInitialize(int phase);

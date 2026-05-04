@@ -1941,6 +1941,9 @@ static void __initialize_canonical_kernel_pagetables(void)
             mm_map_2mb_region_in_pd0_imp(0x20600000,0x20600000,0x1F);
             mm_map_2mb_region_in_pd0_imp(0x20800000,0x20800000,0x1F);
             // ...
+            // #bugbug
+            // #todo: We also need to setup the globals that handles the memory usage
+            // for these region.
         }
     }
 
@@ -2001,28 +2004,61 @@ static void __initialize_canonical_kernel_pagetables(void)
     if (CONFIG_USE_SHBUFFER_FOR_CANVAS == 1)
     {
 
+
+        //
+        // #bugbug
+        //
+        // >>> WE NEED MORE SPACE MEMORY FOR THE WORKER THAT PICK MEMORY SPACE
+        //     FOR THE PAGE TABLE NEEDED FOR MAPPING.
+        //
+
+
     // 0x0000000036000000 - SHBUFFER_BASE_VA
 
-        mm_map_2mb_region_in_pd0_imp(0x0000000036000000,0x0000000036000000,0x1F);
-        mm_map_2mb_region_in_pd0_imp(0x0000000036200000,0x0000000036200000,0x1F);
-        mm_map_2mb_region_in_pd0_imp(0x0000000036400000,0x0000000036400000,0x1F);
-        mm_map_2mb_region_in_pd0_imp(0x0000000036600000,0x0000000036600000,0x1F);
-        mm_map_2mb_region_in_pd0_imp(0x0000000036800000,0x0000000036800000,0x1F);
-        mm_map_2mb_region_in_pd0_imp(0x0000000036A00000,0x0000000036A00000,0x1F);
-        mm_map_2mb_region_in_pd0_imp(0x0000000036C00000,0x0000000036C00000,0x1F);
-        mm_map_2mb_region_in_pd0_imp(0x0000000036E00000,0x0000000036E00000,0x1F);
+        //mm_map_2mb_region_in_pd0_imp(0x0000000036000000,0x0000000036000000,0x1F);
+        //mm_map_2mb_region_in_pd0_imp(0x0000000036200000,0x0000000036200000,0x1F);
+        //mm_map_2mb_region_in_pd0_imp(0x0000000036400000,0x0000000036400000,0x1F);
+        //mm_map_2mb_region_in_pd0_imp(0x0000000036600000,0x0000000036600000,0x1F);
+        //mm_map_2mb_region_in_pd0_imp(0x0000000036800000,0x0000000036800000,0x1F);
+        //mm_map_2mb_region_in_pd0_imp(0x0000000036A00000,0x0000000036A00000,0x1F);
+        //mm_map_2mb_region_in_pd0_imp(0x0000000036C00000,0x0000000036C00000,0x1F);
+        //mm_map_2mb_region_in_pd0_imp(0x0000000036E00000,0x0000000036E00000,0x1F);
+        // 
+        //mm_map_2mb_region_in_pd0_imp(0x0000000037000000,0x0000000037000000,0x1F);
+        //mm_map_2mb_region_in_pd0_imp(0x0000000037200000,0x0000000037200000,0x1F);
+        //mm_map_2mb_region_in_pd0_imp(0x0000000037400000,0x0000000037400000,0x1F);
+        //mm_map_2mb_region_in_pd0_imp(0x0000000037600000,0x0000000037600000,0x1F);
+        //mm_map_2mb_region_in_pd0_imp(0x0000000037800000,0x0000000037800000,0x1F);
+        //mm_map_2mb_region_in_pd0_imp(0x0000000037A00000,0x0000000037A00000,0x1F);
+        //mm_map_2mb_region_in_pd0_imp(0x0000000037C00000,0x0000000037C00000,0x1F);
+        //mm_map_2mb_region_in_pd0_imp(0x0000000037E00000,0x0000000037E00000,0x1F);
         // ...
 
+        // See: mm.c and mm.h
+        //int it=0;
+        //for (it=0; it<2; it++)
+            //shbufferList[it] = 0;
+
+        //shbufferList[0] = 0x0000000036000000;
+        //shbufferList[1] = 0x0000000036200000;
+        //shbufferList[2] = 0x0000000036400000;
+        //shbufferList[3] = 0x0000000036600000;
+        //shbufferList[4] = 0x0000000036800000;
+        //shbufferList[5] = 0x0000000036A00000;
+        //shbufferList[6] = 0x0000000036C00000;
+        //shbufferList[7] = 0x0000000036E00000;
+
         /*
-        shbufferList[0] = 0x0000000036000000;
-        shbufferList[1] = 0x0000000036200000;
-        shbufferList[2] = 0x0000000036400000;
-        shbufferList[3] = 0x0000000036600000;
-        shbufferList[4] = 0x0000000036800000;
-        shbufferList[5] = 0x0000000036A00000;
-        shbufferList[6] = 0x0000000036C00000;
-        shbufferList[7] = 0x0000000036E00000;
+        shbufferList[8]  = 0x0000000037000000;
+        shbufferList[9]  = 0x0000000037200000;
+        shbufferList[10] = 0x0000000037400000;
+        shbufferList[11] = 0x0000000037600000;
+        shbufferList[12] = 0x0000000037800000;
+        shbufferList[13] = 0x0000000037A00000;
+        shbufferList[14] = 0x0000000037C00000;
+        shbufferList[15] = 0x0000000037E00000;
         */
+
 
     }
 // --------------------------------------------------

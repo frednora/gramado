@@ -100,6 +100,13 @@ static unsigned long mm_prev_pointer=0;
 
 // ----------------------------
 
+// Pointer for a set of 2mb usermode shared buffers for coavases.
+// #todo: We can expand this
+//unsigned long shbufferList[2];
+//static int shbuffer_current_index = 0;
+
+// ----------------------------
+
 static int __init_kernel_heap(void);
 static int __init_kernel_stack(void);
 
@@ -109,6 +116,20 @@ static struct mmblock_d *__find_reusable_block(unsigned long size);
 
 // ----------------------------
 
+/*
+unsigned long mm_get_2mb_shared_ubuffer(void);
+unsigned long mm_get_2mb_shared_ubuffer(void)
+{
+    unsigned long rv=0;
+    if (shbuffer_current_index >= 0 && shbuffer_current_index <= 2)
+    {
+        rv = (unsigned long) shbufferList[shbuffer_current_index];
+        shbuffer_current_index++;
+        return (unsigned long) rv;
+    }
+    return 0;  // Fail
+}
+*/
 
 // mm_gc:
 // Garbage collector.

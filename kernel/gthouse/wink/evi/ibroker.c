@@ -1179,10 +1179,12 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         goto exit_cmp;
     }
 
+/*
 // #test
 // Buffers for shared memory
 // It starts here: 0x0000000036000000
-    char *mmsh  = (char *) 0x0000000036E00000;
+    char *mmsh  = (char *) 0x0000000037E00000;
+    unsigned long buf00=0;
     if ( kstrncmp(cmdline,"mmsh",4) == 0 )
     {
         mmsh[8] = 's';
@@ -1191,8 +1193,12 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 
         // ...
 
+        buf00 = (unsigned long) mm_get_2mb_shared_ubuffer();
+        printk("buf00={ %x }\n",buf00);
+
         goto exit_cmp;
     }
+*/
 
 
 // path:
