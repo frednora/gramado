@@ -8,6 +8,7 @@
 # It handles the process stuff.
 # It also handles the system initialization,
 
+#bugbug: Ugly 
 INCLUDE = ../../../../include
 
 AS	= as
@@ -80,6 +81,7 @@ LDFLAGS := -m elf_x86_64 -s -x -static
 OBJS = sched.o schedi.o schedq.o \
 ts.o dispatch.o spawn.o x64cont.o callback.o \
 thread.o tlib.o te.o telib.o ithread.o clone.o \
+ipc.o \
 pit.o \
 x64sc.o \
 x64fault.o x64smp.o \
@@ -88,7 +90,6 @@ cpu.o \
 cpuid.o \
 mps.o \
 detect.o \
-ipc.o \
 ports64.o rtc.o \
 sync.o \
 archhal.o \
@@ -111,7 +112,7 @@ all:
 	$(CC) -c intake/ithread.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ithread.o
 	$(CC) -c intake/clone.c    $(KERNEL_INCLUDE) $(CFLAGS) -o clone.o
 
-	$(CC) -c intake/ipc.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ipc.o
+	$(CC) -c intake/broker/ipc.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ipc.o
 	$(CC) -c intake/sync.c  $(KERNEL_INCLUDE) $(CFLAGS) -o sync.o
 
 	$(CC) -c intake/disp/ts.c              $(KERNEL_INCLUDE)  $(CFLAGS) -o ts.o  

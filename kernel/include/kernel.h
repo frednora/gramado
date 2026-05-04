@@ -377,7 +377,7 @@
 #include "../halls/dev/exec/ke/intake/te.h"
 #include "../halls/dev/exec/ke/intake/ithread.h"
 #include "../halls/dev/exec/ke/intake/clone.h"
-#include "../halls/dev/exec/ke/intake/ipc.h"
+#include "../halls/dev/exec/ke/intake/broker/ipc.h"
 
 #include "../halls/dev/exec/ke/intake/sched/sched.h"
 #include "../halls/dev/exec/ke/intake/sched/schedq.h"

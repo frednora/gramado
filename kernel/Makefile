@@ -121,18 +121,19 @@ objects-y += netdev.o
 objects-y += chardev.o  
 objects-y += blkdev.o  
 
-objects-y += p3_mm.o  
 objects-y += p3_net.o  
-
-objects-y += acpi.o  
-objects-y += p3_bus.o  
-
 objects-y += p3_dev.o  
 objects-y += p3_fs.o  
+
+objects-y += p3_mm.o  
 
 # ==[Part 04]======================
 # gthouse/libk/ (Runtime Library)
 objects-y += p4_libk.o  
+
+# COLD
+objects-y += acpi.o  
+objects-y += p3_bus.o  
 
 objects-y += kmain.o    
 

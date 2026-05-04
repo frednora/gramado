@@ -771,7 +771,13 @@ struct thread_d
 // ====================================================
 // Message Queue
 // For the msg_d structure,
-// see: window.h
+
+//
+// Message Queue (MQ)
+//
+
+// The message queue is used by the 'Message Broker' in broker/ipc/
+
     unsigned long MsgQueue[MSG_QUEUE_MAX];
     int MsgQueueHead;
     int MsgQueueTail;
