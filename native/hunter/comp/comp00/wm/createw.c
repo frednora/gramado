@@ -897,6 +897,14 @@ struct gws_window_d *do_create_titlebar(
         if (Compositor.is_composition_disabled == TRUE){
             // #ps: Drawing directly into the backbuffer
             grDrawString ( sL, sT, StringColor, tbWindow->name );
+        } else {
+
+            // Draw string into de frame canvas
+            if ((void*)dc00 != NULL){
+                dc_drawstring ( 
+                    dc00, 1, 1, COLOR_YELLOW, COLOR_BLUE,
+                    ROP_COPY, parent->name );
+            }
         }
 
         // Saving relative position
@@ -917,10 +925,11 @@ struct gws_window_d *do_create_titlebar(
     }
 
 // Now the parent has a valid ponter to the titlebar
-    parent->titlebar = (struct gws_window_d *) tbWindow;
+// Invalidate the tb window and return its pointer.
 
-// Invalidate the tb window and return its pointer
+    parent->titlebar = (struct gws_window_d *) tbWindow;
     tbWindow->dirty = TRUE;
+
     return (struct gws_window_d *) tbWindow;
 }
 
@@ -1648,17 +1657,15 @@ void *doCreateAndDrawWindow (
 // style
 //
 
-// Maximized: The window occupies the whole desktop working area.
-    if (state == WINDOW_STATE_MAXIMIZED)
-    {
+// Maximized: The window occupies the whole desktop working area
+    if (state == WINDOW_STATE_MAXIMIZED){
         Maximized=TRUE;
     }
 // Minimized: (Iconic)
-    if (state == WINDOW_STATE_MINIMIZED)
-    {
+    if (state == WINDOW_STATE_MINIMIZED){
         Minimized=TRUE;
     }
-// Fullscreen: The client are occupies the whole screen.
+// Fullscreen: The client are occupies the whole screen
     if (state == WINDOW_STATE_FULL){
         Fullscreen=TRUE;
     }
@@ -1893,6 +1900,7 @@ void *doCreateAndDrawWindow (
 
     switch (window->type){
 
+    // Used to create controls into the titlebar
     case WT_BUTTON:
     case WT_ICON:
         window->rop_shadow = THEME_ROP_WINDOW_SHADOW;
@@ -1966,7 +1974,7 @@ void *doCreateAndDrawWindow (
     //window->locked = FALSE;
 
 // == Border =============================
-// Initializing border info for the first time.
+// Initializing border info for the first time
     window->Border.border_color1 = HONEY_COLOR_BORDER_LIGHT_NOFOCUS;
     window->Border.border_color2 = HONEY_COLOR_BORDER_DARK_NOFOCUS;
     window->Border.border_size = METRICS_BORDER_SIZE;
@@ -2163,6 +2171,16 @@ void *doCreateAndDrawWindow (
     unsigned int pad_right  = METRICS_CLIENTAREA_RIGHTPAD;
     unsigned int pad_bottom = METRICS_CLIENTAREA_BOTTOMPAD;
 
+/*
+    if (window->type == WT_POPUP)
+    {
+        pad_left   = 0;
+        pad_top    = 0;
+        pad_right  = 0;
+        pad_bottom = 0;
+    }
+*/
+
     // Temporary
     // >> Relative values <<
     struct gws_rect_d  crTmp;
@@ -2204,6 +2222,7 @@ void *doCreateAndDrawWindow (
 // Saving client rectangle into the window structure.
 // This is the viewport for some applications, just like browsers.
 // >> Inside dimensions clipped by parent.
+
     window->rcClient.left   = (unsigned long) crTmp.left;
     window->rcClient.top    = (unsigned long) crTmp.top;
     window->rcClient.width  = (unsigned long) crTmp.width;
@@ -2382,10 +2401,12 @@ void *doCreateAndDrawWindow (
             );
             */
 
+            /*
             // Draw string into de frame canvas
             dc_drawstring ( 
                 dc00, 1, 1, COLOR_WHITE, COLOR_BLUE,
                 ROP_COPY, window->name );
+            */
 
             /*
             // Draw string into de client area canvas
@@ -2659,6 +2680,7 @@ void *doCreateAndDrawWindow (
     // Only the bg for now.
     // #todo: Button has borders?
     // #todo: BUtton has icon?
+    // Used to create controls into the titlebar
     case WT_BUTTON:
         window->ip_device = IP_DEVICE_NULL;
         window->frame.used = TRUE;
@@ -3057,6 +3079,8 @@ void *doCreateAndDrawWindow (
                     (unsigned int) buttonBorder_br2_color,        // br 2 inner
                     (unsigned int) buttonBorder_br1_color,  // br 1 most inner
                     (unsigned int) buttonBorder_outer_color );
+            } else {
+                //
             }
 
 
@@ -3077,15 +3101,28 @@ void *doCreateAndDrawWindow (
 
             // Draw the label's string.
             // The label is the window's name.
-            // #ps: Drawing directly into the backbuffer
             if (Compositor.is_composition_disabled == TRUE)
             {
+                // #ps: Drawing directly into the backbuffer
                 grDrawString ( 
                     (window->absolute_x + l_offset), 
                     (window->absolute_y + t_offset), 
                     (unsigned int) label_color, 
                     window->name 
                 );
+            } else {
+
+                // Draw into the canvas
+                if ((void*) dc00 != NULL)
+                {
+                    // #bugbug: Not working
+                    //dc_drawstring ( 
+                    //    dc00, l_offset, t_offset, COLOR_GREEN, COLOR_BLUE,
+                    //    ROP_COPY, window->name );
+
+                    //printf("breakpoint\n");
+                    //while(1){}
+                }
             }
 
             // #test
@@ -3467,7 +3504,8 @@ void *CreateWindow (
 
 // =======
 // 8 - button
-// Podemos usar o esquema padrão de cores ...
+// Used to create controls into the titlebar
+// #ps: Podemos usar o esquema padrão de cores ...
     if (type == WT_BUTTON)
     {     
         //if ((void*) pWindow == NULL){ return NULL; }

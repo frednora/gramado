@@ -1000,6 +1000,14 @@ int redraw_titlebar_window(struct gws_window_d *window)
             if (Compositor.is_composition_disabled == TRUE){
                 // #ps: Drawing directly inside the backbuffer
                 grDrawString ( sL, sT, sColor, tb_window->name );
+            } else {
+
+                // Draw string into de frame canvas
+                if ((void*)dc00 != NULL){
+                    dc_drawstring ( 
+                        dc00, 1, 1, COLOR_YELLOW, COLOR_BLUE,
+                        ROP_COPY, parent->name );
+                }
             }
         }
     }
@@ -1123,10 +1131,12 @@ redraw_window (
             // Draw string into de canvas
             if (window->type == WT_OVERLAPPED)
             {
+                /*
                 // into the frame
                 dc_drawstring ( 
                     dc00, 1, 1, COLOR_RED, COLOR_BLUE,
                     ROP_COPY, window->name );
+                */
 
                 // Redraw the title bar and controls.
                 if ((void*) window->titlebar != NULL)
