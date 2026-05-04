@@ -1179,6 +1179,21 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         goto exit_cmp;
     }
 
+// #test
+// Buffers for shared memory
+// It starts here: 0x0000000036000000
+    char *mmsh  = (char *) 0x0000000036E00000;
+    if ( kstrncmp(cmdline,"mmsh",4) == 0 )
+    {
+        mmsh[8] = 's';
+        if (mmsh[8] == 's')
+            printk("mmsh: s ok\n");
+
+        // ...
+
+        goto exit_cmp;
+    }
+
 
 // path:
 // Test the use of 'pathnames' with multiple levels.

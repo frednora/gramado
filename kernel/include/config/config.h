@@ -36,6 +36,10 @@
 // #ps: It needs the CONFIG_TEST_MMBLOCK00 flag on
 #define CONFIG_USE_NEW_BACKBUFFER_IN_512MB_MARK  1
 
+// #test
+// Area for the buffers needed by the compositor for canvases.
+#define CONFIG_USE_SHBUFFER_FOR_CANVAS  0
+
 
 // ------------------------------------------------------
 // Target machine

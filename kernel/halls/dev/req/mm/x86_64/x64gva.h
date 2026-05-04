@@ -202,6 +202,9 @@
 
 //-------------
 
+// #
+// There are some free virtual addresses here
+
 
 // -----------------------------------
 // free :)
@@ -259,6 +262,15 @@
 // #todo
 // We have more tables for ACPI support.
 // MADT FADT
+
+// #
+// There are some free virtual addresses here
+
+
+// #test
+// Sequence of 2MB shared usermode canvases
+#define SHBUFFER_BASE_VA    0x0000000036000000
+
 
 //--------------------------------------------
 

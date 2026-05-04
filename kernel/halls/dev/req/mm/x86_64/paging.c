@@ -1890,6 +1890,8 @@ static void __initialize_canonical_kernel_pagetables(void)
     __initialize_ring3area();
 
 
+// There are some free virtual addresses here
+
 //
 // 0x10000000 - 256mb mark - VA
 //
@@ -1991,6 +1993,39 @@ static void __initialize_canonical_kernel_pagetables(void)
 
 // ...
 // There is more free space here
+
+
+// --------------------------------------------------
+// Area for the buffers needed by the compositor for canvases.
+
+    if (CONFIG_USE_SHBUFFER_FOR_CANVAS == 1)
+    {
+
+    // 0x0000000036000000 - SHBUFFER_BASE_VA
+
+        mm_map_2mb_region_in_pd0_imp(0x0000000036000000,0x0000000036000000,0x1F);
+        mm_map_2mb_region_in_pd0_imp(0x0000000036200000,0x0000000036200000,0x1F);
+        mm_map_2mb_region_in_pd0_imp(0x0000000036400000,0x0000000036400000,0x1F);
+        mm_map_2mb_region_in_pd0_imp(0x0000000036600000,0x0000000036600000,0x1F);
+        mm_map_2mb_region_in_pd0_imp(0x0000000036800000,0x0000000036800000,0x1F);
+        mm_map_2mb_region_in_pd0_imp(0x0000000036A00000,0x0000000036A00000,0x1F);
+        mm_map_2mb_region_in_pd0_imp(0x0000000036C00000,0x0000000036C00000,0x1F);
+        mm_map_2mb_region_in_pd0_imp(0x0000000036E00000,0x0000000036E00000,0x1F);
+        // ...
+
+        /*
+        shbufferList[0] = 0x0000000036000000;
+        shbufferList[1] = 0x0000000036200000;
+        shbufferList[2] = 0x0000000036400000;
+        shbufferList[3] = 0x0000000036600000;
+        shbufferList[4] = 0x0000000036800000;
+        shbufferList[5] = 0x0000000036A00000;
+        shbufferList[6] = 0x0000000036C00000;
+        shbufferList[7] = 0x0000000036E00000;
+        */
+
+    }
+// --------------------------------------------------
 
 //
 // 0x40000000 - 1024mb mark - VA

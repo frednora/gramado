@@ -3,13 +3,6 @@
 all:
 
 #
-# platform/
-#
-
-	make -C platform/acpi/
-	make -C platform/bus/
-
-#
 # dev/
 #
 
@@ -46,6 +39,13 @@ all:
 	make -C dev/chardev/
 
 # ------------------------------------
+
+#
+# platform/
+#
+
+	make -C platform/acpi/
+	make -C platform/bus/
 
 clean:
 # ...
