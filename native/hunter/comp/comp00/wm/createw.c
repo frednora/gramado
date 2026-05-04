@@ -616,6 +616,9 @@ struct gws_window_d *do_create_titlebar(
 {
     struct gws_window_d *tbWindow;
 
+    struct dccanvas_d *dc00;
+    struct canvas_information_d *ci00;
+
 // Titlebar position and size depend on parent’s border and style.
     unsigned long TitleBarLeft=0; // X offset inside parent
     unsigned long TitleBarTop=0;  // Y offset inside parent
@@ -634,7 +637,19 @@ struct gws_window_d *do_create_titlebar(
     if (parent->magic != 1234)
         return NULL;
 
-// Get parameter.
+    if (parent->type == WT_OVERLAPPED || parent->type == WT_POPUP)
+    {
+        if (Compositor.is_composition_disabled == FALSE)
+        {
+            ci00 = parent->frame_canvas;  // Canvas information
+            dc00 = ci00->dc;              // The dc
+        }
+
+        // #todo: Pointer validation
+    }
+
+
+// Get parameter
     useIcon = has_icon;
 
 // Overlapped + fullscreen or maximized: no border offset. 
@@ -784,13 +799,38 @@ struct gws_window_d *do_create_titlebar(
 // Draw rectangle (ornament)
 // IN: l, t, w, h, color, rop
 
-    if (Compositor.is_composition_disabled == TRUE)
-    {
+    if (Compositor.is_composition_disabled == TRUE){
         // #ps: Drawing directly inside the backbuffer
         painterFillWindowRectangle ( 
             r0_left, r0_top, r0_width, r0_height, 
             r0_color, r0_rop 
         );
+    } else {
+
+        // Draw ornament into the canvas
+        if (Compositor.is_composition_disabled == FALSE)
+        {
+
+            // Draw a line into the frame canvas
+            dc_draw_horizontal_line( 
+                dc00, 
+                0,  // x1 
+                0,  //r0_top,  // y
+                r0_width,  // x2
+                COLOR_YELLOW, //r0_color 
+                r0_rop
+            );
+
+            // Draw a line into the frame canvas
+            dc_draw_horizontal_line( 
+                dc00, 
+                0,  // x1 
+                19,  // y
+                r0_width,  // x2
+                COLOR_YELLOW, //r0_color 
+                r0_rop
+            );
+        }
     }
 
 //----------------------
@@ -1711,7 +1751,7 @@ void *doCreateAndDrawWindow (
 // ================
 // #test
 // Creating a canvas for the window
-    size_t size_in_kb = 128; //64;
+    size_t size_in_kb = 200; //128; //64;
     struct dccanvas_d *dc00;
     struct dccanvas_d *dc01;
     struct canvas_information_d *ci00;
@@ -1720,6 +1760,10 @@ void *doCreateAndDrawWindow (
     // Not allocated yet
     window->frame_canvas = NULL;
     window->ca_canvas = NULL;
+
+//
+// Create canvases for chrome/frame and client area
+//
 
     if (Compositor.is_composition_disabled == FALSE)
     {
@@ -2298,12 +2342,20 @@ void *doCreateAndDrawWindow (
     }
 
 // ==================================================
-// Draw inside the canvas
+
+//
+// Draw inside the canvas (provisory)
+//
+
+// #test
+// This is provosity. Here is not the right place to draw the frame 
+// and offcourse draw inside the client area.
 
     if (Compositor.is_composition_disabled == FALSE)
     {
         if (style & WS_APP)
         {
+            /*
             // Draw a string into the frame canvas
             dc_draw_horizontal_line( 
                 dc00, 
@@ -2313,7 +2365,9 @@ void *doCreateAndDrawWindow (
                 COLOR_YELLOW, 
                 0 
             );
-            //// Draw line into the ca canvas.
+            */
+            /*
+            // Draw line into the ca canvas.
             dc_draw_horizontal_line( 
                 dc01, 
                 1, //window->rcClient.left,  //0,  // x1 
@@ -2322,16 +2376,19 @@ void *doCreateAndDrawWindow (
                 COLOR_WHITE, 
                 0 
             );
+            */
 
             // Draw string into de frame canvas
             dc_drawstring ( 
                 dc00, 1, 1, COLOR_WHITE, COLOR_BLUE,
                 ROP_COPY, window->name );
 
+            /*
             // Draw string into de client area canvas
             dc_drawstring ( 
                 dc01, 2, 2, COLOR_WHITE, COLOR_BLUE,
                 ROP_COPY, "Client area" );
+            */
 
             // #test OK
             // Drawing a rectangle inside the client area canvas

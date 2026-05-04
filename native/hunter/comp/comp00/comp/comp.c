@@ -1391,7 +1391,7 @@ void compComposeDesktop(void)
                             //height = 20;  //ci->owner_window->rcClient.height;
                         // it's a frame
                         if (ci->is_frame == TRUE){
-                            height = 10;
+                            height = 20;
                             //height = ci->owner_window->height;
                             //if (ci->dc->device_height)
                                 //height = 10;

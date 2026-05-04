@@ -141,15 +141,16 @@ static void update_children(int fd)
     // Get window info
     gws_get_window_info(fd, main_window, &wi);
 
-    unsigned long button_w = wi.cr_width / 4;
-    unsigned long button_h = wi.cr_height / 8;
+    unsigned long button_w = 10; //wi.cr_width / 4;
+    unsigned long button_h = 10; //wi.cr_height / 8;
 
-    unsigned long button_y = (wi.cr_height - button_h) / 2;
+    unsigned long button_y = 2; //(wi.cr_height - button_h) / 2;
 
-    unsigned long restart_x  = (wi.cr_width / 4) - (button_w / 2);
-    unsigned long shutdown_x = (3 * wi.cr_width / 4) - (button_w / 2);
+    unsigned long restart_x  = 2; //(wi.cr_width / 4) - (button_w / 2);
+    unsigned long shutdown_x = 12; //(3 * wi.cr_width / 4) - (button_w / 2);
 
 
+/*
     if ((void*) dc00 != NULL)
     {
         libgui_drawchar_dc ( 
@@ -162,6 +163,7 @@ static void update_children(int fd)
             0  //_rop_flags 
         );
     }
+*/
 
 
 // Move and redraw buttons
@@ -196,9 +198,8 @@ static void update_children(int fd)
 */
 
     // Draw the label string inside
-    const char *label_chose = "Choose an action: ";
-
     /*
+    const char *label_chose = "Choose an action: ";
     libgui_drawstring(
         wi.left + wi.cr_left +20, 
         wi.top + wi.cr_top +20, 
@@ -207,12 +208,14 @@ static void update_children(int fd)
     );
     */
 
+/*
     libgui_drawstringblock(
         wi.left + wi.cr_left +20, 
         wi.top + wi.cr_top +20, 
         COLOR_BLACK, //0xFF888888,
         label_chose,
         2 );
+*/
 
 
 //
@@ -223,13 +226,21 @@ static void update_children(int fd)
 // Draw restart button
 
     // Relative values
-    MyButton_Restart.left = restart_x; // 4;
-    MyButton_Restart.top  = button_y;  // 4;
+    MyButton_Restart.left = restart_x;
+    MyButton_Restart.top  = button_y;
 
     // Update absolute values.
     MyButton_Restart.absolute_left = wi.left + wi.cr_left + MyButton_Restart.left;
     MyButton_Restart.absolute_top = wi.top + wi.cr_top + MyButton_Restart.top;
 
+    if ((void*)dc00 != NULL)
+    {
+        libgui_drawchar_dc ( 
+            dc00, MyButton_Restart.left, MyButton_Restart.top,
+            'R', COLOR_YELLOW, COLOR_BLUE, 0 );
+    }
+
+/*
 // Draw the fake button
     libgui_backbuffer_draw_rectangle0(
         MyButton_Restart.absolute_left, 
@@ -239,7 +250,9 @@ static void update_children(int fd)
         xCOLOR_GRAY2, 
         1, 0, FALSE
     );
+*/
 
+/*
     // Draw the label string inside
     const char *label_restart = "RESTART";
     libgui_drawstring(
@@ -248,8 +261,9 @@ static void update_children(int fd)
         label_restart,
         COLOR_BLACK, COLOR_GRAY, 0
     );
+*/
 
-
+/*
 // Refresh to show it
     libgui_refresh_rectangle_via_kernel(
         MyButton_Restart.absolute_left, 
@@ -257,19 +271,27 @@ static void update_children(int fd)
         MyButton_Restart.width, 
         MyButton_Restart.height
     );
-
+*/
 
 // -------------------------------------------------
 // Draw shutdown button
 
     // Relative values
-    MyButton_Shutdown.left = shutdown_x; // 4;
-    MyButton_Shutdown.top  = button_y;  // 4;
+    MyButton_Shutdown.left = shutdown_x;
+    MyButton_Shutdown.top  = button_y;
 
     // Update absolute values.
     MyButton_Shutdown.absolute_left = wi.left + wi.cr_left + MyButton_Shutdown.left;
     MyButton_Shutdown.absolute_top = wi.top + wi.cr_top + MyButton_Shutdown.top;
 
+    if ((void*)dc00 != NULL)
+    {
+        libgui_drawchar_dc ( 
+            dc00, MyButton_Shutdown.left, MyButton_Shutdown.top,
+            'S', COLOR_YELLOW, COLOR_BLUE, 0 );
+    }
+
+/*
 // Draw the fake button
     libgui_backbuffer_draw_rectangle0(
         MyButton_Shutdown.absolute_left, 
@@ -279,7 +301,9 @@ static void update_children(int fd)
         xCOLOR_GRAY2,
         1, 0, FALSE
     );
+*/
 
+/*
     // Draw the label string inside
     const char *label_shutdown = "SHUTDOWN";
     libgui_drawstring(
@@ -288,7 +312,9 @@ static void update_children(int fd)
         label_shutdown,
         COLOR_BLACK, COLOR_GRAY, 0
     );
+*/
 
+/*
 // Refresh to show it
     libgui_refresh_rectangle_via_kernel(
         MyButton_Shutdown.absolute_left, 
@@ -296,7 +322,9 @@ static void update_children(int fd)
         MyButton_Shutdown.width, 
         MyButton_Shutdown.height
     );
+*/
 
+/*
 // #test
 // Refresh the whole client window.
     libgui_refresh_rectangle_via_kernel(
@@ -305,6 +333,7 @@ static void update_children(int fd)
         wi.cr_width, 
         wi.cr_height
     );
+*/
 }
 
 static void set_default_responder(int wid)
@@ -669,7 +698,7 @@ int main(int argc, char *argv[])
     //);
     //while(1){}
 
-    dc00 = (struct dccanvas_d *)libgui_create_dc(
+    dc00 = (struct dccanvas_d *) libgui_create_dc(
         wi.ca_canvas_base_address,
         wi.ca_canvas_width,
         wi.ca_canvas_height,
@@ -684,18 +713,18 @@ int main(int argc, char *argv[])
 // Draw a crar inside a shared canvas 
 // represented here by the new dc.
 
+    /*
     if ((void*)dc00 != NULL)
     {
         libgui_drawchar_dc ( 
-            dc00,
-            200, // _x, 
-            1, //_y,
-            'X',
-            COLOR_BLUE,
-            COLOR_YELLOW, 
-            0  //_rop_flags 
-        );
+            dc00, 1, 1,
+            'C', COLOR_YELLOW, COLOR_BLUE, 0 );
+
+        libgui_drawchar_dc ( 
+            dc00, 10, 1,
+            'A', COLOR_YELLOW, COLOR_BLUE, 0 );
     }
+    */
 // ============================================================
 
 
@@ -703,9 +732,8 @@ int main(int argc, char *argv[])
 // Text
 
     // Draw the label string inside
-    const char *label_chose = "Choose an action: ";
-
     /*
+    const char *label_chose = "Choose an action: ";
     libgui_drawstring(
         wi.left + wi.cr_left +20, 
         wi.top + wi.cr_top +20, 
@@ -714,12 +742,14 @@ int main(int argc, char *argv[])
     );
     */
 
+    /*
     libgui_drawstringblock(
         wi.left + wi.cr_left +20, 
         wi.top + wi.cr_top +20, 
         COLOR_BLACK, //0xFF888888,
         label_chose,
         2 );
+    */
 
 
 // ============================================================
@@ -728,12 +758,12 @@ int main(int argc, char *argv[])
 // Support for button positions and dimensions
 //
 
-    unsigned long button_w = wi.cr_width / 4;
-    unsigned long button_h = wi.cr_height / 8;
-    unsigned long button_y = (wi.cr_height - button_h) / 2;
+    unsigned long button_w = 10; //wi.cr_width / 4;
+    unsigned long button_h = 10; // wi.cr_height / 8;
+    unsigned long button_y = 2; //(wi.cr_height - button_h) / 2;
 
-    unsigned long restart_x  = (wi.cr_width / 4) - (button_w / 2);
-    unsigned long shutdown_x = (3 * wi.cr_width / 4) - (button_w / 2);
+    unsigned long restart_x  = 2;   //(wi.cr_width / 4) - (button_w / 2);
+    unsigned long shutdown_x = 12;  //(3 * wi.cr_width / 4) - (button_w / 2);
 
 // ============================================================
 // Create restart button
@@ -748,12 +778,21 @@ int main(int argc, char *argv[])
     // Absolute coordinates (relative to screen)
     MyButton_Restart.absolute_left = wi.left + wi.cr_left + MyButton_Restart.left;
     MyButton_Restart.absolute_top  = wi.top + wi.cr_top + MyButton_Restart.top;
-    MyButton_Restart.width         = button_w; //32;
-    MyButton_Restart.height        = button_h; //24;
+    MyButton_Restart.width         = button_w;
+    MyButton_Restart.height        = button_h;
 
     // Initial state
     // MyButton_Restart.state = 0;
 
+    if ((void*)dc00 != NULL)
+    {
+        libgui_drawchar_dc ( 
+            dc00, MyButton_Restart.left, MyButton_Restart.top,
+            'R', COLOR_YELLOW, COLOR_BLUE, 0 );
+    }
+
+
+/*
 // Draw the fake button
     libgui_backbuffer_draw_rectangle0(
         MyButton_Restart.absolute_left, 
@@ -763,7 +802,9 @@ int main(int argc, char *argv[])
         xCOLOR_GRAY2, 
         1, 0, FALSE
     );
+*/
 
+/*
     // Draw the label string inside
     const char *label_restart = "RESTART";
     libgui_drawstring(
@@ -772,7 +813,9 @@ int main(int argc, char *argv[])
         label_restart,
         COLOR_BLACK, COLOR_GRAY, 0
     );
+*/
 
+/*
 // Refresh to show it
     libgui_refresh_rectangle_via_kernel(
         MyButton_Restart.absolute_left, 
@@ -780,6 +823,7 @@ int main(int argc, char *argv[])
         MyButton_Restart.width, 
         MyButton_Restart.height
     );
+*/
 
 // ============================================================
 // Create shutdown button
@@ -788,18 +832,19 @@ int main(int argc, char *argv[])
     // MyButton_Shutdown.wid     = main_window; // parent window ID
 
     // Relative values
-    MyButton_Shutdown.left = shutdown_x; //4;
-    MyButton_Shutdown.top  = button_y; //4;
+    MyButton_Shutdown.left = shutdown_x;
+    MyButton_Shutdown.top  = button_y;
 
     // Absolute coordinates (relative to screen)
     MyButton_Shutdown.absolute_left = wi.left + wi.cr_left + MyButton_Shutdown.left;
     MyButton_Shutdown.absolute_top  = wi.top + wi.cr_top + MyButton_Shutdown.top;
-    MyButton_Shutdown.width         = button_w; //32;
-    MyButton_Shutdown.height        = button_h; //24;
+    MyButton_Shutdown.width         = button_w;
+    MyButton_Shutdown.height        = button_h;
 
     // Initial state
     // MyButton_Shutdown.state = 0;
 
+/*
 // Draw the fake button
     libgui_backbuffer_draw_rectangle0(
         MyButton_Shutdown.absolute_left, 
@@ -809,7 +854,9 @@ int main(int argc, char *argv[])
         xCOLOR_GRAY2, 
         1, 0, FALSE
     );
+*/
 
+/*
     // Draw the label string inside
     const char *label_shutdown = "SHUTDOWN";
     libgui_drawstring(
@@ -818,7 +865,16 @@ int main(int argc, char *argv[])
         label_shutdown,
         COLOR_BLACK, COLOR_GRAY, 0
     );
+*/
 
+    if ((void*)dc00 != NULL)
+    {
+        libgui_drawchar_dc ( 
+            dc00, MyButton_Shutdown.left, MyButton_Shutdown.top,
+            'S', COLOR_YELLOW, COLOR_BLUE, 0 );
+    }
+
+/*
 // Refresh to show it
     libgui_refresh_rectangle_via_kernel(
         MyButton_Shutdown.absolute_left, 
@@ -826,6 +882,7 @@ int main(int argc, char *argv[])
         MyButton_Shutdown.width, 
         MyButton_Shutdown.height
     );
+*/
 
 // ---------------------
 

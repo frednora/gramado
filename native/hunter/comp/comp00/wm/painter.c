@@ -883,14 +883,46 @@ int redraw_titlebar_window(struct gws_window_d *window)
         (unsigned long) tb_window->rop_bg );  // rop for this window
 
 // Ornament
-    rectBackbufferDrawRectangle ( 
-        tb_window->absolute_x, 
-        ( (tb_window->absolute_y) + (tb_window->height) - METRICS_TITLEBAR_ORNAMENT_SIZE ),  
-        tb_window->width, 
-        METRICS_TITLEBAR_ORNAMENT_SIZE, 
-        parent->titlebar_ornament_color, 
-        TRUE,  // fill
-        (unsigned long) tb_window->rop_ornament );  // rop_flags
+    if (Compositor.is_composition_disabled == TRUE){
+        rectBackbufferDrawRectangle ( 
+            tb_window->absolute_x, 
+            ( (tb_window->absolute_y) + (tb_window->height) - METRICS_TITLEBAR_ORNAMENT_SIZE ),  
+            tb_window->width, 
+            METRICS_TITLEBAR_ORNAMENT_SIZE, 
+            parent->titlebar_ornament_color, 
+            TRUE,  // fill
+            (unsigned long) tb_window->rop_ornament  // rop_flags 
+        );  
+
+    } else {
+
+        // Draw ornament into the canvas
+
+        /*
+        // Draw a line into the frame canvas
+        dc_draw_horizontal_line( 
+            dc00, 
+            1,  // x1 
+            1,  //r0_top,  // y
+            tb_window->width; //r0_width,  // x2
+            COLOR_GREEN, //parent->titlebar_ornament_color, //r0_color 
+            r0_rop
+        );
+        */
+
+        /*
+        // Draw a into line the frame canvas
+        dc_draw_horizontal_line( 
+            dc00, 
+            0,  // x1 
+            19,  // y
+            r0_width,  // x2
+            parent->titlebar_ornament_color, //r0_color 
+            r0_rop
+        );
+        */
+    }
+
 
 // --------------------
 // Icon
@@ -912,12 +944,15 @@ int redraw_titlebar_window(struct gws_window_d *window)
         iL = (unsigned long) (tb_window->absolute_x + METRICS_ICON_LEFTPAD);
         iT = (unsigned long) (tb_window->absolute_y + METRICS_ICON_TOPPAD);
 
-        bmp_decode_system_icon( 
-            (int) icon_id, 
-            (unsigned long) iL, 
-            (unsigned long) iT,
+        if (Compositor.is_composition_disabled == TRUE)
+        {
+            bmp_decode_system_icon( 
+                (int) icon_id, 
+                (unsigned long) iL, 
+                (unsigned long) iT,
                 FALSE 
-        );
+            );
+        }
     }
 
 // ---------------
@@ -1048,6 +1083,8 @@ redraw_window (
                 COLOR_YELLOW, 
                 0 
             );
+
+            /*
             // Draw a horizontal line into the ca canvas
             dc_draw_horizontal_line(
                 dc01, 
@@ -1057,6 +1094,7 @@ redraw_window (
                 COLOR_YELLOW, 
                 0 
             );
+            */
 
             // Draw string into de canvas
             if (window->type == WT_OVERLAPPED)
@@ -1066,10 +1104,21 @@ redraw_window (
                     dc00, 1, 1, COLOR_RED, COLOR_BLUE,
                     ROP_COPY, window->name );
 
-                // into the client area
-                dc_drawstring ( 
-                    dc01, 2, 2, COLOR_RED, COLOR_BLUE,
-                    ROP_COPY, "Client area" );
+                // Redraw the title bar and controls.
+                if ((void*) window->titlebar != NULL)
+                {
+                    if (window->titlebar->magic == 1234)
+                    {
+                        // #warning: Not recursive. 
+                        // Paint, but do not show them.
+                        // It also redraw the controls.
+                        //if (WindowManager.is_fullscreen != TRUE)
+                        redraw_titlebar_window(window->titlebar);
+                    }
+                }
+
+                //ci00->dirty = TRUE;
+                //ci01->dirty = TRUE;
             }
 
             ci00->dirty = TRUE;
@@ -1084,9 +1133,13 @@ redraw_window (
 
         if (window->type == WT_OVERLAPPED)
         {
-            window->dirty = TRUE; // Flush the offscreen buffer
+            window->dirty = TRUE;  // Flush the offscreen buffer
             goto done;
-            //return 0;
+        }
+        if (window->type == WT_POPUP)
+        {
+            window->dirty = TRUE;  // Flush the offscreen buffer
+            goto done;
         } 
     }
 
@@ -1126,6 +1179,7 @@ redraw_window (
 
             // Shadow rectangle
             // Respect the ROP added during the creation phase
+            // #ps: Drawing directly into the backbuffer
             rectBackbufferDrawRectangle ( 
                 (window->absolute_x +1), 
                 (window->absolute_y +1), 
@@ -1168,6 +1222,7 @@ redraw_window (
 
         // Redraw the background rectangle
         // Respect the ROP added during the creation phase
+        // #ps: Drawing directly into the baclbuffer
         rectBackbufferDrawRectangle ( 
                 window->absolute_x, 
                 window->absolute_y, 
@@ -1280,6 +1335,7 @@ redraw_window (
 
 
         // Redraw the button border
+        // #ps: Drawing directly into the backbuffer
         __draw_button_borders(
             (struct gws_window_d *) window,
             (unsigned int) buttonBorder_tl2_color,  // tl 2 inner
@@ -1297,6 +1353,7 @@ redraw_window (
 
         // Redraw the label's string.
         // The label is the window's name.
+        // #ps: Drawing directly into the backbuffer
         grDrawString ( 
             (window->absolute_x + l_offset), 
             (window->absolute_y + t_offset), 
