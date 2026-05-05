@@ -1152,15 +1152,11 @@ static int I_initKernelComponents(void)
 // see: fs.c
     fsInitialize();
 
-// ok
-// Return to the main initialization routine
-// in x64init.c
+// OK. Return to the main initialization routine in x64init.c.
     return TRUE;
 
 // ====================
-// fail
-// Return to the main initialization routine
-// in x64init.c
+// Fail. Return to the main initialization routine in x64init.c
 
 //fail1:
     // If we already have printk verbose.

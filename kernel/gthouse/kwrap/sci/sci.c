@@ -594,6 +594,18 @@ void *sci0 (
     }
 
 
+
+// #test
+// Slab allocator for shared memory
+// See: paging
+    if (number == 55)
+    {
+        // Get a 2MB user mode shared region.
+        return (void*) get_2mb_user_heap_page();
+    }
+
+
+
 // ...
 
 // 65 - Put a char in the current virtual console

@@ -1179,14 +1179,15 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         goto exit_cmp;
     }
 
-/*
+
 // #test
 // Mapped using 2MB pages
     //char *mm2mb  = (char *) 0x0000000038000000;
     //char *mm2mb  = (char *) 0x000000003E000000;
     //char *mm2mb  = (char *) 0x10800000;
     //char *mm2mb  = (char *) 0x00400000;
-    char *mm2mb  = (char *) 0x0E000000;
+    //char *mm2mb  = (char *) 0x0E000000;
+    char *mm2mb  = (char *) (0x00400000 + (0x200000 * 99));
     if ( kstrncmp(cmdline,"mm2mb",5) == 0 )
     {
         mm2mb[8] = '2';
@@ -1197,7 +1198,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 
         goto exit_cmp;
     }
-*/
+
 
 
 // path:

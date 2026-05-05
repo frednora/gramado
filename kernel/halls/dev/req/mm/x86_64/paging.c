@@ -38,6 +38,12 @@ These are static system areas, do not change them.
 
 #include <kernel.h>
 
+
+// #todo:
+// pagefile.sys
+// const char *pagefile_image_name = "PAGEFILESYS";
+
+
 // global
 // The virtual address of the kernel pml4 table.
 unsigned long gKernelPML4Address=0;
@@ -112,6 +118,48 @@ static void __initialize_extraheap3(void);
 static void __mmSetupMemoryUsage(void);
 
 // ==================================================
+
+
+struct shmm_user_heap_d
+{
+    int initialized;
+    // Base of the pre-mapped user region
+    //unsigned long user_heap_base;
+    unsigned long next_address;
+
+    // #todo
+    // Track the limit
+};
+static struct shmm_user_heap_d  shmm_user_heap;
+
+
+void shmm_user_heap_initialize(unsigned long base_address)
+{
+    shmm_user_heap.initialized = FALSE;
+    shmm_user_heap.next_address = (unsigned long) base_address;
+    // ...
+    shmm_user_heap.initialized = TRUE;
+}
+
+// Worker: return the next 2MB slot
+// See: service 55 in sc80 in sci.c
+void *get_2mb_user_heap_page(void)
+{
+    if (shmm_user_heap.initialized != TRUE)
+        return NULL;
+
+    // #todo
+    // Track the limit
+
+    unsigned long va = shmm_user_heap.next_address;
+
+    // Advance cursor by 2MB for next call
+    shmm_user_heap.next_address += 0x200000;
+
+    // Return pointer into already mapped region
+    return (void *) va;
+}
+
 
 
 void pages_print_info(int system_type)
@@ -1972,8 +2020,6 @@ void map_user_va_1gb(unsigned long va, unsigned long phys_addr)
 }
 
 
-
-
 // PAGE TABLES
 // Vamos criar algumas pagetables e apontá-las
 // como entradas no diretório 'kernel_pd0'.
@@ -2018,16 +2064,6 @@ static void __initialize_canonical_kernel_pagetables(void)
 // Install some pagetables into the 
 // kernel page directory 0.
 
-
-/*
-    // #test OK (Not needed)
-    // Mapping 2MB pages before doing the real mapping using 4KB pages
-    map_kernel_va_2mb(0,0);
-    map_kernel_va_2mb(0x200000, 0x200000);
-    map_kernel_va_2mb(0x400000, 0x400000);
-    map_kernel_va_2mb(0x600000, 0x600000);
-*/
-
 //
 // 0 - 0mb mark - VA
 //
@@ -2058,6 +2094,26 @@ static void __initialize_canonical_kernel_pagetables(void)
     // ...
     // map_kernel_va_2mb(0x0E000000, 0x0E000000);
     // ...
+
+
+// ------------------------
+// #test
+// Create a set of user mode 2mb shared buffer
+// that can be used as canvases for the compositor.
+// 252/2 = 126
+    int CanvasSlot = 0;
+    for (CanvasSlot=0; CanvasSlot<100; CanvasSlot++)
+    {
+        map_user_va_2mb(
+            0x00400000 + (0x200000 * CanvasSlot),    // va
+            0x00400000 + (0x200000 * CanvasSlot)     // pa
+        );
+    };
+
+    // Initialization:
+    // Set the base pointer for the heap used by our new allocator.
+    shmm_user_heap_initialize(0x00400000);
+// ------------------------
 
 
 //
@@ -2317,8 +2373,34 @@ int pagesInitializePaging(void)
 
     //debug_print("pagesInitializePaging:\n");
 
-// RAM usage management
+
+// RAM usage management:
+// Initialize global variables with the value 0 for safety.
     __initialize_ram_usage_varables();
+
+
+//
+// #test
+// Mapping 1:1 identity low are before implementing the 
+// mapping of the canonical 1GB region.
+// #todo: 
+// Remember. We still need to handle the memory mapped by the boot loader 
+// and this is a way of clean up the mess into this low area.       
+//
+
+// Only the first 2 MB
+//    map_kernel_va_2mb(0,0);
+
+/*
+// #test OK (Not needed)
+// Mapping some 2MB pages
+    map_kernel_va_2mb(0,0);
+    map_kernel_va_2mb(0x200000, 0x200000);
+    map_kernel_va_2mb(0x400000, 0x400000);
+    map_kernel_va_2mb(0x600000, 0x600000);
+    // ...
+*/
+
 
 //
 // Goal for the GB areas:
