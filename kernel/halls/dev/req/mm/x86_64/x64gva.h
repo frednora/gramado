@@ -18,6 +18,23 @@
 #define VOLUME1_VBR_ADDRESS_VA   (MBR_ADDRESS_VA + 0x200) 
 #define VOLUME2_VBR_ADDRESS_VA   (MBR_ADDRESS_VA + 0x200) 
 
+
+/*
+ #bugbug
+ # very important
+ The function get_table_pointer_va() uses the address 0x1000 as bae address 
+ for a set of tables. These tables are been overlayed by the AP's trampoline code or/and 
+ exceeding its limits.
+
+ See:
+ + get_table_pointer_va() in paging.c 
+ + ____DANGER_TABLE_POINTER_HEAP_BASE in x64gpa.h 
+
+*/
+
+// See: x64goa.h because the it has 1:1 identity for the first mega.
+
+
 // fat
 //Podemos alocar memória para isso, liberando esse espaço?
 #define VOLUME1_FAT_ADDRESS_VA   0x00030000 

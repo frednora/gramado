@@ -455,6 +455,19 @@ unsigned long table_pointer_heap_base =
 // Mas endereço físico e virtual são iguais nessa região.
 // Identidade 1:1.
 
+/*
+ #bugbug
+ # very important
+ The function get_table_pointer_va() uses the address 0x1000 as bae address 
+ for a set of tables. These tables are been overlayed by the AP's trampoline code or/and 
+ exceeding its limits.
+
+ See:
+ + get_table_pointer_va() in paging.c 
+ + ____DANGER_TABLE_POINTER_HEAP_BASE in x64gpa.h 
+
+*/
+
 // Very dangerous hack
 unsigned long get_table_pointer_va(void)
 {

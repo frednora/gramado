@@ -81,12 +81,27 @@
 
 // This is the base address of a pre-alocated heap of pagetables.
 // 31KB. (31 alocações)
+
+/*
+ #bugbug
+ # very important
+ The function get_table_pointer_va() uses the address 0x1000 as bae address 
+ for a set of tables. These tables are been overlayed by the AP's trampoline code or/and 
+ exceeding its limits.
+
+ See:
+ + get_table_pointer_va() in paging.c 
+ + ____DANGER_TABLE_POINTER_HEAP_BASE in x64gpa.h 
+
+*/
+
 #define ____DANGER_TABLE_POINTER_HEAP_BASE  0x1000
 
 // Essa tabela é bem longa
 // Vai até o MBR.
 // #bugbug
 // We're gonna use this area to put the AP trampoline code.
+// >>>> The AP's trampoline is overlaying these tables. <<<<
 
 //
 // == 128 KB ==================================================
