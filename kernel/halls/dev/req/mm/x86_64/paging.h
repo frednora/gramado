@@ -169,6 +169,28 @@ mm_map_2mb_region_in_pd0(
     unsigned long va );
 
 
+
+
+//
+// #test 
+//
+
+// #test
+// Map a 2MB page into the kernel PD using the VA to pick the slot
+// va: virtual address you want to map
+// phys_addr: physical base address of the 2MB frame
+void map_kernel_va_2mb(unsigned long va, unsigned long phys_addr);
+void map_user_va_2mb(unsigned long va, unsigned long phys_addr);
+
+
+// #test
+// Map a 1GB page into the kernel PDPT using the VA to pick the slot
+// va: virtual address you want to map
+// phys_addr: physical base address of the 1GB frame
+void map_kernel_va_1gb(unsigned long va, unsigned long phys_addr);
+void map_user_va_1gb(unsigned long va, unsigned long phys_addr);
+
+
 //
 // #
 // INITIALIZATION

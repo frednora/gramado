@@ -1866,6 +1866,112 @@ mm_map_2mb_region_in_pd0(
     return (int) mm_map_2mb_region_in_pd0_imp(pa, va, flags);
 }
 
+// #test
+// Map a 2MB page into the kernel PD using the VA to pick the slot
+// va: virtual address you want to map
+// phys_addr: physical base address of the 2MB frame
+void map_kernel_va_2mb(unsigned long va, unsigned long phys_addr)
+{
+    unsigned long *pd = (unsigned long *) KERNEL_PD_PA;
+    int pd_index = X64_GET_PDE_INDEX(va);
+
+    // sanity checks
+    if (!pd) return;
+    if (pd_index < 0 || pd_index >= 512) return;
+    if (phys_addr & 0x1FFFFF) {
+        // must be aligned to 2MB
+        return;
+    }
+
+    // PDE for 2MB page:
+    // bits 51:21 = physical base address
+    // bit 7 = PS (Page Size)
+    // bits 0–2 = flags (present + writable)
+    unsigned long entry = phys_addr | (1 << 7) | 0x3;
+
+    pd[pd_index] = entry;
+}
+
+// #test
+// Map a 2MB page into the kernel PD using the VA to pick the slot
+// va: virtual address you want to map
+// phys_addr: physical base address of the 2MB frame
+void map_user_va_2mb(unsigned long va, unsigned long phys_addr)
+{
+    unsigned long *pd = (unsigned long *) KERNEL_PD_PA;
+    int pd_index = X64_GET_PDE_INDEX(va);
+
+    // sanity checks
+    if (!pd) return;
+    if (pd_index < 0 || pd_index >= 512) return;
+    if (phys_addr & 0x1FFFFF) {
+        // must be aligned to 2MB
+        return;
+    }
+
+    // PDE for 2MB page:
+    // bits 51:21 = physical base address
+    // bit 7 = PS (Page Size)
+    // bits 0–2 = flags (present + writable)
+    unsigned long entry = phys_addr | (1 << 7) | 0x7;
+
+    pd[pd_index] = entry;
+}
+
+
+// #test
+// Map a 1GB page into the kernel PDPT using the VA to pick the slot
+// va: virtual address you want to map
+// phys_addr: physical base address of the 1GB frame
+void map_kernel_va_1gb(unsigned long va, unsigned long phys_addr)
+{
+    unsigned long *pdpt = (unsigned long *) KERNEL_PDPT_PA;
+    int pdpt_index = X64_GET_PDPE_INDEX(va);
+
+    // sanity checks
+    if (!pdpt) return;
+    if (pdpt_index < 0 || pdpt_index >= 512) return;
+    if (phys_addr & 0x3FFFFFFF) {
+        // must be aligned to 1GB
+        return;
+    }
+
+    // PDPTE for 1GB page:
+    // bits 51:30 = physical base address
+    // bit 7 = PS (Page Size)
+    // bits 0–2 = flags (present + writable)
+    unsigned long entry = phys_addr | (1 << 7) | 0x3;
+
+    pdpt[pdpt_index] = entry;
+}
+
+// #test
+// Map a 1GB page into the kernel PDPT using the VA to pick the slot
+// va: virtual address you want to map
+// phys_addr: physical base address of the 1GB frame
+void map_user_va_1gb(unsigned long va, unsigned long phys_addr)
+{
+    unsigned long *pdpt = (unsigned long *) KERNEL_PDPT_PA;
+    int pdpt_index = X64_GET_PDPE_INDEX(va);
+
+    // sanity checks
+    if (!pdpt) return;
+    if (pdpt_index < 0 || pdpt_index >= 512) return;
+    if (phys_addr & 0x3FFFFFFF) {
+        // must be aligned to 1GB
+        return;
+    }
+
+    // PDPTE for 1GB page:
+    // bits 51:30 = physical base address
+    // bit 7 = PS (Page Size)
+    // bits 0–2 = flags (present + writable)
+    unsigned long entry = phys_addr | (1 << 7) | 0x7;
+
+    pdpt[pdpt_index] = entry;
+}
+
+
 
 
 // PAGE TABLES
@@ -1883,6 +1989,29 @@ mm_map_2mb_region_in_pd0(
 // 390 = extraheap2
 // 391 = extraheap3. The window server image.
 
+
+/*
+
+//
+// Classes of processes
+//
+
+Trusted/system processes:
+    they inherit the full canonical kernel mappings (first GB), 
+    including shared buffers, backbuffer, extra heaps, etc. 
+    This makes them powerful and flexible.
+
+Restricted/untrusted processes:
+    they start from the same clone, but you deliberately strip out or 
+    overwrite certain PDEs before loading CR3. For example, you can 
+    clear the backbuffer mapping or remove extra heaps, so they don’t 
+    have access to sensitive shared regions.
+
+*/
+
+// >>>> The canonical 1 GB virtual space <<<<
+// Each PD covers 1 GB of virtual space. 
+// And here we are using only the first PD.
 static void __initialize_canonical_kernel_pagetables(void)
 {
 // Called by pagesInitializePaging().
@@ -1890,44 +2019,91 @@ static void __initialize_canonical_kernel_pagetables(void)
 // kernel page directory 0.
 
 
+/*
+    // #test OK (Not needed)
+    // Mapping 2MB pages before doing the real mapping using 4KB pages
+    map_kernel_va_2mb(0,0);
+    map_kernel_va_2mb(0x200000, 0x200000);
+    map_kernel_va_2mb(0x400000, 0x400000);
+    map_kernel_va_2mb(0x600000, 0x600000);
+*/
+
 //
 // 0 - 0mb mark - VA
 //
 
 // --------------------------
+// 0x00000000 → 0x001FFFFF → Ring 0 area
 // va=0          | Ring 0 area.
     __initialize_ring0area();
 
+
 // --------------------------
+// 0x00200000 → 0x003FFFFF → Ring 3 area
 // va=0x00200000 | Ring 3 area.
     __initialize_ring3area();
 
 
+// 0x00400000 → 0x0FFFFFFF → free gap (~252 MB, prime candidate for new mappings)
 // There are some free virtual addresses here
+// 0x00400000 → 0x0FFFFFFF → free gap 
+// 252 MB of contiguous free virtual space.
+
+    // #ps
+    // >> It's working <<
+    // We can map a lot of space here using this method.
+
+    // #test
+    // map_kernel_va_2mb(0x00400000, 0x00400000);
+    // ...
+    // map_kernel_va_2mb(0x0E000000, 0x0E000000);
+    // ...
+
 
 //
 // 0x10000000 - 256mb mark - VA
 //
 
-
+// 0x10000000 → ... → Ring 0 module (mapped with your new method)
+// 10 MB for now
+// 0x10000000 → 0x1FFFFFFF
 // kernel-size 
     if (CONFIG_TEST_MMBLOCK00 == 1)
     {
         // 256mb mark - free
-        mm_map_2mb_region_in_pd0(0x10000000,0x10000000);
-        mm_map_2mb_region_in_pd0(0x10200000,0x10200000);
-        mm_map_2mb_region_in_pd0(0x10400000,0x10400000);
-        mm_map_2mb_region_in_pd0(0x10600000,0x10600000);
-        mm_map_2mb_region_in_pd0(0x10800000,0x10800000);
+
+        // ok its working
+        //mm_map_2mb_region_in_pd0(0x10000000,0x10000000);
+        //mm_map_2mb_region_in_pd0(0x10200000,0x10200000);
+        //mm_map_2mb_region_in_pd0(0x10400000,0x10400000);
+        //mm_map_2mb_region_in_pd0(0x10600000,0x10600000);
+        //mm_map_2mb_region_in_pd0(0x10800000,0x10800000);
         // ...
+
+        // #test
+        // Doing the same thing as above, but using a different method
+        map_kernel_va_2mb(0x10000000, 0x10000000);
+        map_kernel_va_2mb(0x10200000, 0x10200000);
+        map_kernel_va_2mb(0x10400000, 0x10400000);
+        map_kernel_va_2mb(0x10600000, 0x10600000);
+        map_kernel_va_2mb(0x10800000, 0x10800000);
+        // ...
+
 
         mm_used_module0 = (1024 * 2 * 5); // 2MB * 5
     }
 
 
+// #ps: 
+// We can extend the main ring 0 module here untill the limit.
+
+
 //
 // 0x20000000 - 512mb mark - VA
 //
+
+// 10 MB for now.
+// 0x20000000 → 0x2FFFFFFF
 
 // Flags: 
 // 0x1F = 0001 1111
@@ -1961,20 +2137,26 @@ static void __initialize_canonical_kernel_pagetables(void)
     }
 
 
+// #ps: 
+// We can extend the backbuffer here untill the limit.
+
 //
 // 0x30000000 - 768mb mark - VA
 //
 
 // --------------------------
+// 0x30000000 → Kernel image region
 // va=0x30000000 | kernel image region.
     __initialize_kernelimage_region();
 
 // --------------------------
+// 0x30200000 → Frontbuffer
 // va=0x30200000 | Frontbuffer.
     __initialize_frontbuffer();
 
 // --------------------------
-// va=0x30400000 | Backbuffer.
+// 0x30400000 → Old Backbuffer
+// va=0x30400000 | Old Backbuffer.
 
     if (CONFIG_USE_NEW_BACKBUFFER_IN_512MB_MARK == 1){
        // In this case 0x30400000 is available
@@ -1983,29 +2165,39 @@ static void __initialize_canonical_kernel_pagetables(void)
     }
 
 // --------------------------
+// 0x30600000 → Paged pool
 // va=0x30600000 | Paged pool.
     __initialize_pagedpool();
 
 // --------------------------
+// 0x30800000 → Heap pool
 // va=0x30800000 | Heap pool.
     __initialize_heappool();
 
 // -----------------------------------
+// 0x30A00000 → Extra heap 1
 // Extraheap 1: Used by the kernel module.
 // va=0x30A00000 | Extra heap 1.
     __initialize_extraheap1();
 
 // -----------------------------------
+// 0x30C00000 → Extra heap 2
 // New paged pool: //  It uses the extraheap2 and 3.
 // Extraheap 2 and 3: Used by the slab allocator.
 // va=0x30C00000 | Extra heap 2.
     __initialize_extraheap2();
+// 0x30E00000 → Extra heap 3
 // va=0x30E00000 | Extra heap 3.
     __initialize_extraheap3();
 // Criado com dois blocos consecutivos de 2mb cada, previamente alocados.
 // see: slab.c
     slab_initialize();
 
+
+//
+// #important
+// Some device drivers are using virtual addresses probably here in this area.
+//
 
 // ...
 // There is more free space here
@@ -2076,6 +2268,18 @@ static void __initialize_canonical_kernel_pagetables(void)
     }
 // --------------------------------------------------
 
+/*
+// Mapping 2MB pages - Its working <<<<
+    map_kernel_va_2mb(0x0000000038000000, 0x0000000038000000);
+    map_kernel_va_2mb(0x000000003A000000, 0x000000003A000000);
+    map_kernel_va_2mb(0x000000003C000000, 0x000000003C000000);
+    map_kernel_va_2mb(0x000000003E000000, 0x000000003E000000);
+*/
+
+// #important:
+// 0x3FFFFFFF is our limit for now, because
+// we are using only the first PD.
+
 //
 // 0x40000000 - 1024mb mark - VA
 //
@@ -2116,8 +2320,26 @@ int pagesInitializePaging(void)
 // RAM usage management
     __initialize_ram_usage_varables();
 
-// Default physical regions
+//
+// Goal for the GB areas:
+// + Step 1) First GB (0x00000000 → 0x3FFFFFFF) → Canonical kernel area
+// + Step 2) Second GB (0x40000000 → 0x7FFFFFFF) → Dynamic allocations
+// + ...
+//
+
+// Step 1:
+// First GB (0x00000000 → 0x3FFFFFFF) → Canonical kernel area
+// First PD
     __initialize_canonical_physical_regions();
+
+// Step 2:
+// #todo
+// Second GB (0x40000000 → 0x7FFFFFFF) → Dynamic allocations
+// Second PD
+    // ...
+
+// Step 3:
+// ...
 
 // =========================================================
 

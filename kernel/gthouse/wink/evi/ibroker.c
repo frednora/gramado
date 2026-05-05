@@ -1181,20 +1181,19 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 
 /*
 // #test
-// Buffers for shared memory
-// It starts here: 0x0000000036000000
-    char *mmsh  = (char *) 0x0000000037E00000;
-    unsigned long buf00=0;
-    if ( kstrncmp(cmdline,"mmsh",4) == 0 )
+// Mapped using 2MB pages
+    //char *mm2mb  = (char *) 0x0000000038000000;
+    //char *mm2mb  = (char *) 0x000000003E000000;
+    //char *mm2mb  = (char *) 0x10800000;
+    //char *mm2mb  = (char *) 0x00400000;
+    char *mm2mb  = (char *) 0x0E000000;
+    if ( kstrncmp(cmdline,"mm2mb",5) == 0 )
     {
-        mmsh[8] = 's';
-        if (mmsh[8] == 's')
-            printk("mmsh: s ok\n");
+        mm2mb[8] = '2';
+        if (mm2mb[8] == '2')
+            printk("mm2mb: 2 ok\n");
 
         // ...
-
-        buf00 = (unsigned long) mm_get_2mb_shared_ubuffer();
-        printk("buf00={ %x }\n",buf00);
 
         goto exit_cmp;
     }
