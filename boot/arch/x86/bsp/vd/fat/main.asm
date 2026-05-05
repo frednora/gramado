@@ -1,7 +1,9 @@
 ; main.asm
 ; Main file of a VHD created using nasm.
 ; Yes it is a virtual disk with a program inside it.
+; LICENSE: MIT
 ; 2017 - Created by Fred Nora.
+
 
 ; What is this?
 ; Main file for creating a 32MB virtual disk using nasm.

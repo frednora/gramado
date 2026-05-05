@@ -28,16 +28,15 @@ all:
 	@echo "Copying APX86.BIN"
 	@-cp APX86.BIN  x86/bin/
 
-# BM.BIN
-# ::Build BM.BIN. (legacy, no dialog)
-	@echo "Building BM.BIN"
-	@$(MAKE) -C x86/bsp/bm/ 
 
-# BM2.BIN
-# ::Build BM2.BIN. (Interface with dialog)
-	@echo "Building BM2.BIN"
-	@$(MAKE) -C x86/bsp/bm2/ 
+# --------
+# BMGRAM.BIN
+# ::Build BMGRAM.BIN. (Interface with dialog)
+	@echo "Building BMGRAM.BIN"
+	@$(MAKE) -C x86/bsp/bmgram/ 
 
+
+# --------
 # BLGRAM.BIN
 # ::Build BLGRAM.BIN
 # This is the bootloader for Gramado OS.

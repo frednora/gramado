@@ -1,6 +1,6 @@
 ; s1data.inc
 ; Data for stage1.asm
-
+; 2005 - Created by Fred Nora.
 
 
 END_OF_CLUSTER EQU  0xFFFF
@@ -55,9 +55,16 @@ STACK_OFFSET  EQU  0xFFF0
 ; BPB Personalizado para o VHD de 32MB usado pelo Gramado.
 ; Na inicialização, reaproveitamos esse endereço como buffer.
 
+
+; #ps: 
+; Based in MS-DOS 1.25, MS-DOS 2.0 and MS-DOS 4.0 (MIT LICENSE)
+; See:
+; https://github.com/microsoft/MS-DOS
+; ...
+
 BUFFER_NAME:
     DB "MSDOS"    ; OS name
-    DB "5.0"      ; OS version
+    DB "4.0"      ; OS version
 
 ; The BPB itself.
 BPB:
@@ -118,24 +125,24 @@ cluster     dw  0x0000
 ;absoluteTrack  db 0x00
 ;CylinderNumbers:  dd 0  ;;dword
 
-; ---------------------------
-; Option 1:
-; This is the legacy boot manager.
-; It loads the legacy version of the boot manager,
-; with the 32bit-assembly shell.
-;
-;ImageName db  "BM      BIN", 0x0D, 0x0A, 0x00
 
 ; ---------------------------
-; Option 2:
+; Option 1:
 ; It loads a faster version of the boot manager,
 ; with NO 32bit-assembly shell.
 ; This boot manager with UI dialog window.
 ; In one option we the system is initialized and 
-; in the second we go to the shell. Probably it is
-; the old 32bit shell.
-;
-ImageName db  "BM2     BIN", 0x0D, 0x0A, 0x00
+; in the second we go to the shell. Probably it is the old 32bit shell.
+
+ImageName db  "BMGRAM  BIN", 0x0D, 0x0A, 0x00
+
+
+; ---------------------------
+; Option 1:
+; Miami project:
+; It is a new version for my standard BM, but more MS-DOS compatible if possible.
+
+; ImageName db  "MIAMI   BIN", 0x0D, 0x0A, 0x00
 
 
 ; ---------------------------

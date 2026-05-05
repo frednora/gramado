@@ -104,14 +104,13 @@ build-gramado-os:
 	@cp boot/arch/GRAMHV.VHD  .
 
 # Copy the bootloader into the rootdir.
-	@cp boot/arch/x86/bin/BM.BIN      $(BASE)/
-	@cp boot/arch/x86/bin/BM2.BIN     $(BASE)/
+	@cp boot/arch/x86/bin/BMGRAM.BIN  $(BASE)/
 	@cp boot/arch/x86/bin/BLGRAM.BIN  $(BASE)/
 	@cp boot/arch/x86/bin/MBR0.BIN    $(BASE)/
 	@cp boot/arch/x86/bin/APX86.BIN   $(BASE)/
+
 # Copy the bootloader into the GRAMADO/ directory.
-	@cp boot/arch/x86/bin/BM.BIN      $(BASE)/GRAMADO
-	@cp boot/arch/x86/bin/BM2.BIN     $(BASE)/GRAMADO
+	@cp boot/arch/x86/bin/BMGRAM.BIN  $(BASE)/GRAMADO
 	@cp boot/arch/x86/bin/BLGRAM.BIN  $(BASE)/GRAMADO
 	@cp boot/arch/x86/bin/MBR0.BIN    $(BASE)/GRAMADO
 

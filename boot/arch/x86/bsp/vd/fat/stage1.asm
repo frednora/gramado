@@ -1,7 +1,7 @@
 ; state1.asm
-;     Gramado MBR
-;     2005 - Created by Fred Nora.
-;     This file marks the beginning of the Gramado Project.
+; Gramado MBR
+; This file marks the beginning of the Gramado MBR Project.
+; 2005 - Created by Fred Nora.
 
 ; What is this?
 ; This is the MBR for the Gramado Boot Loader.
@@ -54,7 +54,7 @@
 ;       |        |
 ;       +--------+
 
-; Do NOT change this thing.
+; Do NOT change this thing
 [ORG 0x0000]
 
 ; 16bit. 
