@@ -92,7 +92,7 @@ bmpDisplayBMP0 (
 // The address validation
 // Endereço base do BMP que foi carregado na memoria
     unsigned char *bmp = (unsigned char *) address;
-    if ((void*)address==NULL){
+    if ((void*)address == NULL){
         goto fail;
     }
 
@@ -140,27 +140,21 @@ bmpDisplayBMP0 (
     unsigned char *c  = (unsigned char *) &color;
     unsigned char *c2 = (unsigned char *) &color2;
 
-// Limits
-// #todo: 
-// #bugbug: Isso é provisório.
-// Get system metrics.
-    xLimit = 800;
-    yLimit = 600;
+// Limits:
+// #todo: Get the system metrics
 
-// #debug:
-    //server_debug_print ("bmpDisplayBMP:\n");
+    xLimit = 1024;  //800;
+    yLimit = 768;   //600;
 
 // Limits
-    if ( x > xLimit || y > yLimit ){
-        //server_debug_print ("bmpDisplayBMP0: Limits\n");
+    if (x > xLimit || y > yLimit)
+    {
         printf ("bmpDisplayBMP0: Limits\n");
         goto fail;
     }
 
-// #todo:
-// Testar validade do endereço.
+// Address validation
     if (address == 0){
-        //server_debug_print ("bmpDisplayBMP0: address\n");
         printf ("bmpDisplayBMP0: address\n");
         goto fail;
     }

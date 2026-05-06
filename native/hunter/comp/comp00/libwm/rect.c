@@ -1426,10 +1426,13 @@ __drawrectangle0(
 // Draw lines on backbuffer.
 
     // #bugbug: Provisory
-    if ( internal_height > 600 ){
+    // if ( internal_height > 600 )
+    if ( internal_height > 768 )
+    {
         //server_debug_print("__drawrectangle0: internal_height");
         return;
     }
+
 
 // Paint lines:
 // Incrementa a linha a ser pintada.
@@ -1537,13 +1540,16 @@ rectBackbufferDrawRectangle0 (
 
 // #hack provisory
 // Resolution limits
-    
+  
+/*
     if (device_w > 800)
     {
         debug_print("rectBackbufferDrawRectangle0: [FAIL] device_w\n");
         //return; 
     }
+*/
 
+/*
     // #hack provisory
     // We dont wanna mess up the memory beyond the buffer
     if (device_h > 600)
@@ -1552,7 +1558,7 @@ rectBackbufferDrawRectangle0 (
         debug_print("rectBackbufferDrawRectangle0: [FAIL] device_h\n");
         //return; 
     }
-
+*/
 
 // Set values
     rect.left   = (unsigned long) (x      & 0xFFFF);

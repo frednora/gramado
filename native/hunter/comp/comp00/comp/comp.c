@@ -1464,14 +1464,18 @@ void compComposeDesktop(void)
 // #bugbug
 // It's hardcoded for now. 
 // We need variables or its gonna fail for other resolutions
+
+
+    unsigned long DeviceWidth  = (unsigned long) server_get_system_metrics(1);
+    unsigned long DeviceHeight = (unsigned long) server_get_system_metrics(2);
+
     comp_blit_canvas_to_canvas(
-        CANVAS_BACKBUFFER,    // source
-        CANVAS_FRONTBUFFER,    // destination
-        0, 0,                // destination position
-        800,  // width 
-        600  // height
-    );                 
+        CANVAS_BACKBUFFER,    // source >>>
+        CANVAS_FRONTBUFFER,   // >>> destination
+        0, 0,                 // destination position
+        DeviceWidth, DeviceHeight );                 
 }
+
 
 // wmCompose:
 // Called by the main routine for now.
@@ -1532,9 +1536,10 @@ void comp_initialize_mouse(void)
         cursor_clip = __root_window;
     }
 
-    if (w>=0 && w<=800)
+    // #bugbug: harcoded limit
+    if (w>=0 && w <= 1024)
         hotspotx = (w >> 1);
-    if (h>=0 && h<=800)
+    if (h>=0 && h <= 768)
         hotspoty = (h >> 1);
 
 // Save it globally.

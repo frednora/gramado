@@ -201,6 +201,7 @@ grBackbufferDrawHorizontalLine (
         return;
     }
 
+    // #ps: Removing this limitation
     //if (__x2 > 800){
     //    debug_print("grBackbufferDrawHorizontalLine: __x2 > 800\n");
     //    return;
