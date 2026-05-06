@@ -1,0 +1,21 @@
+
+ Initialization routes
+ 
+-----------------------------------
+; from dialog.
+AFTER_DATA          finish.inc
+>> do_rm_startgui   pm.inc
+s2modesActivateMode s2modes.inc
+pmInit              pm.inc
+start               start.inc
+startGUI            start.inc
+
+-----------------------------------
+; from shell
+rmStartGUI           pm.inc
+>> do_rm_startgui    pm.inc
+s2modesActivateMode  s2modes.inc
+pmInit               pm.inc
+start                start.inc
+startGUI             start.inc
+

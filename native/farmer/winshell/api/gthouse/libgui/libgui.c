@@ -3929,6 +3929,61 @@ libgui_frontbuffer_draw_horizontal_line (
     };
 }
 
+// #test
+// Draw a pixel inside a canvas, given it's device context.
+// #todo: No Clipping support yet
+void 
+libgui_draw_horizontal_line_dc ( 
+    struct dccanvas_d *dc,
+    unsigned long x1,
+    unsigned long y, 
+    unsigned long x2, 
+    unsigned int color,
+    unsigned long rop_flags )
+{
+// #ps: Not tested yet
+
+    if ((void*)dc == NULL)
+        return;
+
+// #todo
+// Maybe we need checking some limits here.
+    if (x1 > x2){
+        return;
+    }
+// IN: color, x, y, rop flags
+    while (x1 < x2)
+    {
+        //backbuffer_putpixel( color, x1, y, rop_flags ); 
+
+        // #test:
+        // Draw a pixel inside a canvas, given it's device context.
+        // see: libdisp.c
+        // IN: dc, color, x, y, rop
+        /*
+		putpixel0 (
+                dc,
+                color, 
+                x1, 
+                y, 
+                rop_flags 
+		*/
+
+        // #test: New method with dc.
+        // IN: dc, color, x, y, rop
+        libgui_putpixel0(
+                dc,
+                color,  //*work_char & bit_mask ? fgcolor: bgcolor, 
+                x1, 
+                y, 
+                rop_flags
+        );
+
+        x1++;
+    };
+}
+
+
 static int char_initialize(void)
 {
 // Called by gwsInitGUI() in gws.c.
@@ -4073,6 +4128,47 @@ libgui_drawstring(
         s++;
     };
 }
+
+// Draw a string into a device context (dc)
+// starting at (x, y), using fg/bg colors and rop.
+void 
+libgui_drawstring_dc (
+    struct dccanvas_d *dc,
+    unsigned long x, 
+	unsigned long y,
+    unsigned int fg_color,
+    unsigned int bg_color,
+    unsigned long rop,
+    const char *string )
+{
+    int i=0;
+
+    if (!dc || !string)
+        return;
+
+    unsigned long cursor_x = x;
+    unsigned long cursor_y = y;
+
+    for (i=0; string[i] != '\0'; i++) 
+	{
+        char c = string[i];
+
+        // Draw one character
+        libgui_drawchar_dc(
+            dc,
+            cursor_x,
+            cursor_y,
+            c,
+            fg_color,
+            bg_color,
+            rop
+        );
+
+        // Advance cursor horizontally by font width (8px for 8x8 font)
+        cursor_x += 8;
+    }
+}
+
 
 //======================================
 // Calling kgws in the kernel.
@@ -4665,6 +4761,104 @@ libgui_frontbuffer_draw_rectangle0 (
 //done:
     return;
 }
+
+
+// #test
+// Drawing a rectangle inside a given canvas,
+// given its device context.
+void
+lingui_draw_rectangle0_dc(
+    struct dccanvas_d *dc,
+    unsigned long left,
+    unsigned long top,
+    unsigned long width,
+    unsigned long height,
+    unsigned int color,
+    unsigned long rop )
+{
+// #ps: Not tested yet
+
+    int i=0;
+    int NumberOfLines=0;
+
+    if ((void*) dc == NULL){
+        printf("dc_draw_rectangle0: dc\n");
+        goto fail;
+    }
+
+    unsigned long DeviceWidth = dc->device_width;
+    unsigned long DeviceHeight = dc->device_height;
+    // ...
+
+//
+// Clipping
+//
+
+    // Starting out of limits
+    if (left >= DeviceWidth){
+        printf("dc_draw_rectangle0: left\n");
+        return;
+    }
+    if (top >= DeviceHeight){
+        printf("dc_draw_rectangle0: top\n");
+        return;
+    }
+
+    // Available space
+    unsigned long w_space = (DeviceWidth - left);
+    unsigned long h_space = (DeviceHeight - top);
+    // Final values
+    unsigned long final_width = width;
+    unsigned long final_height = height;
+
+    if (width > w_space)
+        final_width = w_space;
+    if (height > h_space)
+        final_height = h_space;
+
+    if (final_width == 0){
+        printf("dc_draw_rectangle0: final_width\n");
+        return;
+    }
+    if (final_height == 0){
+        printf("dc_draw_rectangle0: final_height\n");
+        return;
+    }
+
+    unsigned long __right  = (unsigned long) (left + final_width);
+    //unsigned long __bottom = (unsigned long) (top  + final_height); 
+
+    if (__right > DeviceWidth)
+        __right = DeviceWidth;
+    //if (__bottom > DeviceHeight)
+        //__bottom = DeviceHeight;
+
+    NumberOfLines = final_height;
+
+//
+// Drawing multiple lines inside the canvas
+//
+
+    for (i=0; i<NumberOfLines; i++)
+    {
+        libgui_draw_horizontal_line_dc ( 
+            dc,
+            left,      // x1
+            (top +i),  // y 
+            __right,   // x2 
+            color,
+            rop 
+        );
+    };
+
+fail:
+    return;
+}
+
+
+
+
+
 
 void
 libgui_BackbufferDrawCharBlockStyle(

@@ -1,0 +1,24 @@
+
+   bugfix:
+   Now the initialization routes are kinda similar
+   and the initialization is not affecting the window server anymore.
+
+------------------
+
+    The way we initialize the GUI mode is affecting the 
+    window server in 64bit.
+
+    It works when we initialize the gui after the 32bit shell.
+    If we initialize the gui directly without entering in the shell
+    so, the window server will fail.
+
+    Something is right with the gui initialization after the shell
+    and something is wrong with the gui initialization without 
+    entering the shell.
+
+; #BUGBUG 
+; Suspended!!!!
+; Something is affecting the window server,
+; if we enter in the graphics mode without entering
+; the shell first. There are two routines 
+; to initialize the gui mode. Only one is good.

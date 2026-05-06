@@ -37,6 +37,12 @@ all:
 
 
 # --------
+# MIAMI.BIN
+# ::Build MIAMI.BIN. (Interface with dialog)
+	@echo "Building MIAMI.BIN"
+	@$(MAKE) -C x86/bsp/miami/ 
+
+# --------
 # BLGRAM.BIN
 # ::Build BLGRAM.BIN
 # This is the bootloader for Gramado OS.

@@ -141,13 +141,13 @@ static void update_children(int fd)
     // Get window info
     gws_get_window_info(fd, main_window, &wi);
 
-    unsigned long button_w = 10; //wi.cr_width / 4;
-    unsigned long button_h = 10; //wi.cr_height / 8;
+    unsigned long button_w = wi.cr_width / 4;
+    unsigned long button_h = wi.cr_height / 8;
 
-    unsigned long button_y = 2; //(wi.cr_height - button_h) / 2;
+    unsigned long button_y = (wi.cr_height - button_h) / 2;
 
-    unsigned long restart_x  = 2; //(wi.cr_width / 4) - (button_w / 2);
-    unsigned long shutdown_x = 12; //(3 * wi.cr_width / 4) - (button_w / 2);
+    unsigned long restart_x  = (wi.cr_width / 4) - (button_w / 2);
+    unsigned long shutdown_x = (3 * wi.cr_width / 4) - (button_w / 2);
 
 
 /*
@@ -235,6 +235,13 @@ static void update_children(int fd)
 
     if ((void*)dc00 != NULL)
     {
+       lingui_draw_rectangle0_dc (
+            dc00,
+            MyButton_Restart.left, MyButton_Restart.top, 14, 14,
+            COLOR_GRAY,
+            0  // ROP
+        );
+
         libgui_drawchar_dc ( 
             dc00, MyButton_Restart.left, MyButton_Restart.top,
             'R', COLOR_YELLOW, COLOR_BLUE, 0 );
@@ -286,6 +293,13 @@ static void update_children(int fd)
 
     if ((void*)dc00 != NULL)
     {
+       lingui_draw_rectangle0_dc (
+            dc00,
+            MyButton_Shutdown.left, MyButton_Shutdown.top, 14, 14,
+            COLOR_GRAY,
+            0  // ROP
+        );
+
         libgui_drawchar_dc ( 
             dc00, MyButton_Shutdown.left, MyButton_Shutdown.top,
             'S', COLOR_YELLOW, COLOR_BLUE, 0 );
@@ -689,14 +703,16 @@ int main(int argc, char *argv[])
 // Changing the libgui device context
 // Create a new one using the values provided by the server.
 
+/*
     // #debug
-    //printf ("dc info: address=%x w=%d h=%d bpp=%d\n",
-    //    wi.ca_canvas_base_address,  // ok
-    //    wi.ca_canvas_width,         // ok
-    //    wi.ca_canvas_height,        // fail
-    //    wi.ca_canvas_bpp            // fail
-    //);
+    printf ("power: dc info address=%x w=%d h=%d bpp=%d\n",
+        wi.ca_canvas_base_address,  // ok
+        wi.ca_canvas_width,         // ok
+        wi.ca_canvas_height,        // fail
+        wi.ca_canvas_bpp            // fail
+    );
     //while(1){}
+*/
 
     dc00 = (struct dccanvas_d *) libgui_create_dc(
         wi.ca_canvas_base_address,
@@ -710,8 +726,51 @@ int main(int argc, char *argv[])
         //exit(1);
     }
 
+
 // Draw a crar inside a shared canvas 
 // represented here by the new dc.
+
+    if ((void*)dc00 != NULL)
+    {
+        libgui_drawstring_dc(
+            dc00,
+            20,
+            20,
+            COLOR_YELLOW,
+            COLOR_BLUE,
+            0, // ROP 
+            "power app: Testing string" 
+        );
+    }
+
+/*
+// ok
+    if ((void*)dc00 != NULL)
+    {
+        libgui_draw_horizontal_line_dc (
+            dc00,
+            20,  // X1
+            30,  // Y
+            40,  // X2
+            COLOR_GREEN,
+            0  // ROP
+        );
+    }
+*/
+
+
+/*
+// #test ok
+    if ((void*)dc00 != NULL)
+    {
+        lingui_draw_rectangle0_dc (
+            dc00,
+            30, 30, 40, 40,
+            COLOR_GREEN,
+            0  // ROP
+        );
+    }
+*/
 
     /*
     if ((void*)dc00 != NULL)
@@ -726,6 +785,7 @@ int main(int argc, char *argv[])
     }
     */
 // ============================================================
+
 
 
 // ============================================================
@@ -758,12 +818,12 @@ int main(int argc, char *argv[])
 // Support for button positions and dimensions
 //
 
-    unsigned long button_w = 10; //wi.cr_width / 4;
-    unsigned long button_h = 10; // wi.cr_height / 8;
-    unsigned long button_y = 2; //(wi.cr_height - button_h) / 2;
+    unsigned long button_w = wi.cr_width / 4;
+    unsigned long button_h = wi.cr_height / 8;
+    unsigned long button_y = (wi.cr_height - button_h) / 2;
 
-    unsigned long restart_x  = 2;   //(wi.cr_width / 4) - (button_w / 2);
-    unsigned long shutdown_x = 12;  //(3 * wi.cr_width / 4) - (button_w / 2);
+    unsigned long restart_x  = (wi.cr_width / 4) - (button_w / 2);
+    unsigned long shutdown_x = (3 * wi.cr_width / 4) - (button_w / 2);
 
 // ============================================================
 // Create restart button
@@ -784,11 +844,19 @@ int main(int argc, char *argv[])
     // Initial state
     // MyButton_Restart.state = 0;
 
+// Drawing a fake button
     if ((void*)dc00 != NULL)
     {
+       lingui_draw_rectangle0_dc (
+            dc00,
+            MyButton_Restart.left, MyButton_Restart.top, MyButton_Restart.width, MyButton_Restart.height,
+            COLOR_GRAY,
+            0  // ROP
+        );
+ 
         libgui_drawchar_dc ( 
             dc00, MyButton_Restart.left, MyButton_Restart.top,
-            'R', COLOR_YELLOW, COLOR_BLUE, 0 );
+            'R', COLOR_WHITE, COLOR_GRAY, 0 );
     }
 
 
@@ -869,6 +937,13 @@ int main(int argc, char *argv[])
 
     if ((void*)dc00 != NULL)
     {
+       lingui_draw_rectangle0_dc (
+            dc00,
+            MyButton_Shutdown.left, MyButton_Shutdown.top, MyButton_Shutdown.width, MyButton_Shutdown.height,
+            COLOR_GRAY,
+            0  // ROP
+        );
+
         libgui_drawchar_dc ( 
             dc00, MyButton_Shutdown.left, MyButton_Shutdown.top,
             'S', COLOR_YELLOW, COLOR_BLUE, 0 );

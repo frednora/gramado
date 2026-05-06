@@ -1,8 +1,16 @@
 ;-----------------------------------------------------------------------------
 ; File: main.asm
-; Main entry point for GramadoOS Boot Manager (BM2.BIN)
+; Main entry point for Gramado Boot Manager (MIAMI.BIN)
 ; Author: Fred Nora (2005)
-; Credits: MikeOS (BSD License)
+;
+; Credits: 
+;
+; + MS-DOS 1.25, 2.0 and 4.0 (MIT License)
+;   https://github.com/microsoft/MS-DOS
+;
+; + MikeOS (BSD License)
+;   https://mikeos.sourceforge.net/
+;
 ; Description:
 ;   This assembly file implements the 16/32-bit boot manager responsible for:
 ;     - Displaying an interactive boot menu or launching a CLI
@@ -102,8 +110,8 @@
 ;       |            | 
 ;       |------------| 0x0000:0xFFFF
 ;       |            | 
-;       |   BM2.BIN  | 
-;       |            | The entry point.
+;       | MIAMI.BIN  | 
+;       | (16/32bit) | The entry point
 ;  >>>  |------------| 0x0000:0x8000
 ;       |            |
 ;       |------------| 0x0000:0x6000
@@ -117,7 +125,9 @@
 ;       |            |
 ;       +------------+
 
-	%DEFINE GBM_VER '1.1'	; version number
+; --------------------------------------------------------
+
+%DEFINE GBM_VER  '0.8'  ; version number
 
 
 ;;=====================================
@@ -559,8 +569,11 @@ menu_loop:
 ; ===========================================
 ; --
 
-; Clear the screen
+; Right after the memu
 after_menu:
+
+; Clear the screen
+
     call Window.ClearScreen
 
 ;
@@ -577,7 +590,15 @@ after_menu:
 
 load_bootloader_image:
 
+; #todo
+; Maybe we can load some 16bit command line routine, 
+; capable of launching an application at a given standard address.
+; Probably in ORG 100H.
+;
+
 ; Load image1
+; Load the bootloader image
+
     mov ax, word ImageName_GramadoOSBootloader
     call diskLoadBL
 
@@ -593,12 +614,19 @@ Trampoline:
     push WORD AFTER_DATA 
     retf
 
+; Got to the start of a 16 bit command line routine
+;NewTrampoline:
+;    push WORD 0
+;    push WORD CMDINIT
+;    retf
+
+
 ; ================================================
 ; DATA
 ; ================================================
 ; Data for the above code...
 
-    msg_topbar     db 'Gramado Boot Manager - BMGRAM', 0
+    msg_topbar     db 'Gramado Boot Manager - MIAMI', 0
     msg_bottombar  db 'ENTER=Confirm', 0
 
     dialog_string_1  db 'Please select an option:', 0

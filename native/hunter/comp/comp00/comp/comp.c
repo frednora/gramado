@@ -311,10 +311,17 @@ struct dccanvas_d *comp_create_dc_and_allocate_buffer(size_t size_in_kb)
     unsigned long Pitch = (DeviceWidth * (DeviceBPP/8));
 
 // new area
-    unsigned long TotalSpareInBytes = (size_in_kb * 1024);
+    unsigned long TotalInBytes = (size_in_kb * 1024);
 
     // Allocate a new buffer in heap memory
-    char *buf = (char *) malloc(TotalSpareInBytes);
+    char *buf;
+    // 2MB
+    if (size_in_kb == 2048){
+        buf = (char *) sc80(55,0,0,0);      // #test
+    } else {
+        buf = (char *) malloc(TotalInBytes);   // ok, its working
+    }
+
     if (!buf) 
         return NULL;
 
@@ -328,7 +335,7 @@ struct dccanvas_d *comp_create_dc_and_allocate_buffer(size_t size_in_kb)
     unsigned long BufferClipInfo_pitch  = Pitch;      // Same of the device
 
     unsigned long BufferClipInfo_width  = DeviceWidth;   // align with OS-supported width
-    unsigned long BufferClipInfo_height = (TotalSpareInBytes/Pitch); 
+    unsigned long BufferClipInfo_height = (TotalInBytes/Pitch); 
 
     // -------------------------------------------
     // See: libdisp/
@@ -1333,7 +1340,7 @@ void compComposeDesktop(void)
                 {
                     //printf ("dirty\n");
                     //ci_src = ci;
-                    ci_dst = canvas_backbuffer;
+                    ci_dst = canvas_backbuffer;  // Destination
 
                     // Values for destination (backbuffer)
                     left = 0;
@@ -1390,9 +1397,14 @@ void compComposeDesktop(void)
                         //if (ci->is_frame == FALSE)
                             //height = 20;  //ci->owner_window->rcClient.height;
                         // it's a frame
-                        if (ci->is_frame == TRUE){
-                            height = 20;
-                            //height = ci->owner_window->height;
+                        if (ci->is_frame == TRUE)
+                        {
+
+                            // #danger: 
+                            // Its sensitive. It needs to be smaller than 
+                            // the number of lines in the buffer
+                            //height = 20;
+                            height = ci->owner_window->height;
                             //if (ci->dc->device_height)
                                 //height = 10;
                         }
@@ -1405,6 +1417,7 @@ void compComposeDesktop(void)
 
                     // Copy the canvases for the frame into the backbuffer
 
+                    // ----------------------------------
                     // 1) chrome/frame canvas
                     ci_src = ci;
                     comp_blit_canvas_to_canvas_imp (
@@ -1418,11 +1431,17 @@ void compComposeDesktop(void)
                     {
                         left = (ci->owner_window->absolute_x + ci->owner_window->rcClient.left);
                         top  = (ci->owner_window->absolute_y + ci->owner_window->rcClient.top);
-                        width = ci->owner_window->rcClient.width;
+                        
+                        width  = ci->owner_window->rcClient.width;
+                        // #danger: 
+                        // Its sensitive. It needs to be smaller than 
+                        // the number of lines in the buffer
+                        height = ci->owner_window->rcClient.height;
                     }
                     //width = 20;
-                    height = 20;
+                    //height = 20;
 
+                    // ----------------------------------
                     // 2) client area canvas
                     ci_src = ci->clientarea_canvas;
                     comp_blit_canvas_to_canvas_imp (

@@ -125,6 +125,18 @@ libgui_frontbuffer_draw_horizontal_line (
     unsigned long rop_flags );
 
 
+// #test
+// Draw a pixel inside a canvas, given it's device context.
+// #todo: No Clipping support yet
+void 
+libgui_draw_horizontal_line_dc ( 
+    struct dccanvas_d *dc,
+    unsigned long x1,
+    unsigned long y, 
+    unsigned long x2, 
+    unsigned int color,
+    unsigned long rop_flags );
+
 // #todo
 // Draw char into a given device context
 void 
@@ -136,6 +148,18 @@ libgui_drawchar_dc (
     unsigned int fgcolor,
     unsigned int bgcolor,
     unsigned long rop );
+
+// Draw a string into a device context (dc)
+// starting at (x, y), using fg/bg colors and rop.
+void 
+libgui_drawstring_dc (
+    struct dccanvas_d *dc,
+    unsigned long x, 
+	unsigned long y,
+    unsigned int fg_color,
+    unsigned int bg_color,
+    unsigned long rop,
+    const char *string );
 
 void 
 libgui_drawchar (
@@ -183,6 +207,19 @@ libgui_frontbuffer_draw_rectangle0 (
     int fill,
     unsigned long rop_flags );
 
+
+// #test
+// Drawing a rectangle inside a given canvas,
+// given its device context.
+void
+lingui_draw_rectangle0_dc(
+    struct dccanvas_d *dc,
+    unsigned long left,
+    unsigned long top,
+    unsigned long width,
+    unsigned long height,
+    unsigned int color,
+    unsigned long rop );
 
 void
 libgui_BackbufferDrawCharBlockStyle(

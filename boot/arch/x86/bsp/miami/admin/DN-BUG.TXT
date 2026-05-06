@@ -1,0 +1,8 @@
+
+	BM.BIN was loaded at 0:8000H
+	The segment is 0H, so we only have 32KB for this program.
+	This is the limit of a 64KB segment in real mode.
+
+	At this moment the program already has almost 32KB.
+	We are at the limit and we need to cut off some parts 
+	of this program and not adding mor features.

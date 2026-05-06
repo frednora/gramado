@@ -1762,7 +1762,7 @@ void *doCreateAndDrawWindow (
 // ================
 // #test
 // Creating a canvas for the window
-    size_t size_in_kb = 200; //128; //64;
+    size_t size_in_kb = 2048; //200; //128; //64;
     struct dccanvas_d *dc00;
     struct dccanvas_d *dc01;
     struct canvas_information_d *ci00;

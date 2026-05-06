@@ -13,7 +13,7 @@
 
 SHELL:
 .prompt_string:
-    db 'BMGRAM-SHELL', 0
+    db 'MIAMI-SHELL', 0
 .prompt_string_separator1:
     db ':', 0
 .prompt_string_separator2:
