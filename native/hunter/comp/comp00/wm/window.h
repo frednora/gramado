@@ -495,11 +495,14 @@ struct gws_window_d
 // offscreen buffers in a lightweight way before scaling up
 // to full-window canvases.
 
-
 // The canvas for the frame/chrome. (Painted by the compositor)
     struct canvas_information_d *frame_canvas;
 // The canvas for the client-area. (Painted by the apps)
     struct canvas_information_d *ca_canvas;
+
+// Pointer for an base address inside a sharead area for flags.
+// It's gonna be used by the compositor and the app.
+    void *shflags_p;
 
 
 // Small experimental canvases for components

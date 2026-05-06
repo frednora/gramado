@@ -28,8 +28,9 @@
 // Global display pointer
 struct gws_display_d *Display;
 
-
 struct dccanvas_d *dc00;  // shared dc
+static unsigned long __sh_flags = 0;
+
 
 struct button_info_d
 {
@@ -150,6 +151,26 @@ static void update_children(int fd)
     unsigned long shutdown_x = (3 * wi.cr_width / 4) - (button_w / 2);
 
 
+    // #test It's working
+    // But its dangeours.
+    // Update the address for the shared flags.
+    // printf("sh_flags: %x\n", wi.sh_flags);
+    // __sh_flags = (unsigned long) wi.sh_flags;
+
+
+// #test 
+// The background
+    if ((void*)dc00 != NULL)
+    {
+        lingui_draw_rectangle0_dc (
+            dc00,
+            wi.cr_left, wi.cr_left, wi.cr_width, wi.cr_height,
+            COLOR_WHITE,
+            0  // ROP
+        );
+    }
+
+
 /*
     if ((void*) dc00 != NULL)
     {
@@ -216,6 +237,23 @@ static void update_children(int fd)
         label_chose,
         2 );
 */
+
+
+// Draw a crar inside a shared canvas 
+// represented here by the new dc.
+
+    if ((void*)dc00 != NULL)
+    {
+        libgui_drawstring_dc(
+            dc00,
+            8,
+            8,
+            COLOR_YELLOW,
+            COLOR_BLUE,
+            0, // ROP 
+            "power app: Testing string" 
+        );
+    }
 
 
 //
@@ -726,22 +764,18 @@ int main(int argc, char *argv[])
         //exit(1);
     }
 
-
-// Draw a crar inside a shared canvas 
-// represented here by the new dc.
-
+// #test ok
+// The background
     if ((void*)dc00 != NULL)
     {
-        libgui_drawstring_dc(
+        lingui_draw_rectangle0_dc (
             dc00,
-            20,
-            20,
-            COLOR_YELLOW,
-            COLOR_BLUE,
-            0, // ROP 
-            "power app: Testing string" 
+            wi.cr_left, wi.cr_left, wi.cr_width, wi.cr_height,
+            COLOR_WHITE,
+            0  // ROP
         );
     }
+
 
 /*
 // ok
@@ -759,18 +793,21 @@ int main(int argc, char *argv[])
 */
 
 
-/*
-// #test ok
+// Draw a crar inside a shared canvas 
+// represented here by the new dc.
+
     if ((void*)dc00 != NULL)
     {
-        lingui_draw_rectangle0_dc (
+        libgui_drawstring_dc(
             dc00,
-            30, 30, 40, 40,
-            COLOR_GREEN,
-            0  // ROP
+            8,
+            8,
+            COLOR_YELLOW,
+            COLOR_BLUE,
+            0, // ROP 
+            "power app: Testing string" 
         );
     }
-*/
 
     /*
     if ((void*)dc00 != NULL)
@@ -1037,6 +1074,22 @@ int main(int argc, char *argv[])
 
     while (1)
     {
+
+        // #test It's working
+        // But its dangeours.
+        // Get value inside the shared area
+        /*
+        char *p;
+        if (__sh_flags != 0)
+        {
+            p = (char *) __sh_flags;
+            if (*p == 1){
+                printf("power: FLAGS\n");
+                exit(0);
+            }
+        }
+        */
+
         // 1. Pump events from Display Server
         // #bugbug:
         // This pump is very slow, affecting the responsivity

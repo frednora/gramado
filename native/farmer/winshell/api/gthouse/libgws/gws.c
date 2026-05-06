@@ -362,6 +362,10 @@ process_response:
 // Extra fields 2
     // 8 and 9 are unused for now.
 
+
+    window_info->sh_flags = (unsigned long) message_buffer[8];
+    //window_info->??   = (unsigned long) message_buffer[9];
+
 // ------------------------------------
 // Extra fields 3
     // client area rectangle

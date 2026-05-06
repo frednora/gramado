@@ -1415,6 +1415,19 @@ void compComposeDesktop(void)
                             //height = 2;
                     }
 
+
+                    /*
+                    // #test It's working
+                    // But its dangeours.
+                    // Sending a flag
+                    if ((void*) ci->owner_window->shflags_p != NULL)
+                    {
+                        char *p = (char *) ci->owner_window->shflags_p;
+                        *p = 1;
+                    }
+                    */
+                    
+
                     // Copy the canvases for the frame into the backbuffer
 
                     // ----------------------------------

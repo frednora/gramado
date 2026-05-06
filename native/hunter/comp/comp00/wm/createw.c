@@ -1780,6 +1780,13 @@ void *doCreateAndDrawWindow (
     {
         if (style & WS_APP)
         {
+
+            window->shflags_p = (void*) malloc(8);  // 8bytes
+            if ((void*) window->shflags_p == NULL){
+                printf("doCreateAndDrawWindow: on window->shflags_p\n");
+                exit(1);
+            }
+
             // frame/chrome canvas ---------
             dc00 = (struct dccanvas_d *) comp_create_dc_and_allocate_buffer(size_in_kb);
             ci00 = (struct canvas_information_d *) compCreateNewCanvas(dc00);

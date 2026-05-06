@@ -803,6 +803,9 @@ int serviceGetWindowInfo(void)
         //    next_response[18]   // ok
         //);
         //while(1){}
+
+        // Extra field: Pointer to shared flags area
+        next_response[8] = (unsigned long) w->shflags_p; 
     } 
 
 // ==========================================
