@@ -36,6 +36,10 @@
 #define CONFIG_USE_SHBUFFER_FOR_CANVAS  0
 
 
+// #test: Use the new frontbuffer
+#define CONFIG_USE_NEW_FRONTBUFFER  1
+
+
 // ------------------------------------------------------
 // Target machine
 // #todo: Explain it better.

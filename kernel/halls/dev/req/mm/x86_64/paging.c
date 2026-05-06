@@ -104,7 +104,12 @@ static void __initialize_canonical_kernel_pagetables(void);
 static void __initialize_ring0area(void);
 static void __initialize_ring3area(void);
 static void __initialize_kernelimage_region(void);
-static void __initialize_frontbuffer(void);
+
+// #deprecated: This is the old frontbuffer initialization
+//static void __initialize_frontbuffer(void);
+
+// New frontbuffer
+static void __initialize_new_frontbuffer(void);
 
 // #deprecated: This is the old backbuffer initialization
 // static void __initialize_backbuffer(void);
@@ -1374,6 +1379,8 @@ static void __initialize_kernelimage_region(void)
 //  + Apontamos a pagetable para uma entrada do diretório do kernel.
 
 // User-side
+/*
+// #deprecated: Old frontbuffer
 static void __initialize_frontbuffer(void)
 {
     // #ps: In this case virtual and physical addresses are the same.
@@ -1426,6 +1433,76 @@ static void __initialize_frontbuffer(void)
         (unsigned long) framebuffer_pa,      // region base
         (unsigned long) ( PAGE_USER | PAGE_WRITE | PAGE_PRESENT ) );  // flags=7
 }
+*/
+
+// #test:
+// New frontbuffer
+static void __initialize_new_frontbuffer(void)
+{
+
+    display_set_backbuffer_pa(SMALL_frontbuffer_pa);
+    display_set_backbuffer_va(FRONTBUFFER_VA);
+
+    // First 2MB
+    mm_map_2mb_region_in_pd0_imp(
+        (SMALL_frontbuffer_pa + 0), 
+        (FRONTBUFFER_VA + 0), 
+        0x1F 
+    );
+    // Second 2MB
+    mm_map_2mb_region_in_pd0_imp(
+        (SMALL_frontbuffer_pa + 0x200000),
+        (FRONTBUFFER_VA + 0x200000),
+        0x1F 
+    );
+
+    //mm_map_2mb_region_in_pd0_imp(0x20400000,0x20400000,0x1F);
+    //mm_map_2mb_region_in_pd0_imp(0x20600000,0x20600000,0x1F);
+    //mm_map_2mb_region_in_pd0_imp(0x20800000,0x20800000,0x1F);
+    // ...
+
+// -----------------------------------------
+// pa
+// Saving the physical address into a global variable.
+    paList[MM_COMPONENT_FRONTBUFFER_PA] = (unsigned long) SMALL_frontbuffer_pa;
+    g_frontbuffer_pa = 
+        (unsigned long) SMALL_frontbuffer_pa;
+    // Local variable.
+    unsigned long framebuffer_pa = 
+        (unsigned long) SMALL_frontbuffer_pa;
+
+// -----------------------------------------
+// va
+// Saving the virtual address into a global variable.
+    vaList[MM_COMPONENT_FRONTBUFFER_VA] = (unsigned long) FRONTBUFFER_VA;
+    g_frontbuffer_va = (unsigned long) FRONTBUFFER_VA;
+
+// -----------------------------------------
+
+    // Size = (2MB *2)
+    mm_used_lfb = (1024 * 2 * 2);
+
+
+/*
+//
+// Setup the new backbuffer globals
+//
+
+    unsigned long CurrentBackbufferPA = display_get_backbuffer_pa();
+    unsigned long CurrentBackbufferVA = display_get_backbuffer_va();
+
+    paList[MM_COMPONENT_BACKBUFFER_PA] = (unsigned long) CurrentBackbufferPA;
+    g_backbuffer_pa = (unsigned long) CurrentBackbufferPA; 
+
+    vaList[MM_COMPONENT_BACKBUFFER_VA] = (unsigned long) CurrentBackbufferVA;
+    g_backbuffer_va = (unsigned long) CurrentBackbufferVA; 
+
+    // size
+    //mm_used_backbuffer = (1024 * 2); // 2MB
+    mm_used_backbuffer = (1024 * 2 * 5); // 2MB * 5
+*/
+}
+
 
 
 // The backbuffer.
@@ -2177,15 +2254,21 @@ static void __initialize_canonical_kernel_pagetables(void)
 // va=0x30000000 | kernel image region.
     __initialize_kernelimage_region();
 
-// --------------------------
-// 0x30200000 → Frontbuffer
-// va=0x30200000 | Frontbuffer.
-    __initialize_frontbuffer();
 
-// --------------------------
-// 0x30400000 → Old Backbuffer
-// va=0x30400000 | Old Backbuffer.
-// >>> free area
+
+    // --------------------------
+// 0x30200000 → First part for the Frontbuffer
+// va=0x30200000 
+
+    if (CONFIG_USE_NEW_FRONTBUFFER == 1){
+        __initialize_new_frontbuffer();
+    } else {
+        //__initialize_frontbuffer();
+    }
+
+// 0x30400000 → Second part  the frontbuffer
+// va=0x30400000 
+
 
 // --------------------------
 // 0x30600000 → Paged pool
