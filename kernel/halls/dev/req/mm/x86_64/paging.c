@@ -1440,9 +1440,6 @@ static void __initialize_frontbuffer(void)
 static void __initialize_new_frontbuffer(void)
 {
 
-    display_set_backbuffer_pa(SMALL_frontbuffer_pa);
-    display_set_backbuffer_va(FRONTBUFFER_VA);
-
     // First 2MB
     mm_map_2mb_region_in_pd0_imp(
         (SMALL_frontbuffer_pa + 0), 
@@ -1455,6 +1452,10 @@ static void __initialize_new_frontbuffer(void)
         (FRONTBUFFER_VA + 0x200000),
         0x1F 
     );
+
+    // #todo:
+    // We can map more consecutive if the next are became free or 
+    // if we pick another origin.
 
     //mm_map_2mb_region_in_pd0_imp(0x20400000,0x20400000,0x1F);
     //mm_map_2mb_region_in_pd0_imp(0x20600000,0x20600000,0x1F);

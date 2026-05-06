@@ -199,7 +199,7 @@ __drawrectangle0(
     // We dont wanna mess up the memory
     if (internal_height > 768)
     {
-        debug_print("__drawrectangle0: [HACK] 600 h ajust for resolution limit\n");
+        debug_print("__drawrectangle0: [HACK] 768 h ajust for resolution limit\n");
         internal_height = 768;
     }
 
@@ -362,9 +362,14 @@ __refresh_rectangle0 (
         panic ("__refresh_rectangle0: w h\n");
     }
 
+    //printk("deviceWidth=%d deviceHeight%d\n", deviceWidth, deviceHeight);
+    //printk("__refresh_rectangle0: x=%d y=%d\n", x, y);
+    //while(1){} 
+
+
 // Internal
 
-// Get function parameters.
+// Get function parameters
     unsigned long X = (unsigned long) (x & 0xFFFF);
     unsigned long Y = (unsigned long) (y & 0xFFFF);
     hl_width = (unsigned int) (width  & 0xFFFF);
@@ -379,14 +384,13 @@ __refresh_rectangle0 (
 
 // How many bytes per pixel?
     switch (gSavedBPP){
-        case 32:
-            // (32/8)
-            bytes_count = 4;
-            break;
-        case 24:
-            // (24/8)
-            bytes_count = 3;
-            break;
+
+        // (32/8)
+        case 32:  bytes_count = 4;  break;
+
+        // (24/8)
+        case 24:  bytes_count = 3;  break;
+
         // ... #todo
         default:
             panic("__refresh_rectangle0: gSavedBPP\n");
@@ -431,6 +435,7 @@ __refresh_rectangle0 (
 // Não copiamos a parte que está fora da janela do dispositivo.
 // memcpy64: 8 bytes per time.
 
+/*
     // #hack
     // We dont wanna mess up the memory beyond the buffer
     if (lines > 600)
@@ -438,7 +443,13 @@ __refresh_rectangle0 (
         debug_print("__refresh_rectangle0: [HACK] 600 h ajust for resolution limit\n");
         lines = 600;
     }
+*/
 
+    if (lines > 768)
+    {
+        debug_print("__refresh_rectangle0: [HACK] 768 h ajust for resolution limit\n");
+        lines = 768;
+    }
 
     if ( (rectangle_pitch % 8) == 0 )
     {
@@ -570,12 +581,15 @@ refresh_rectangle (
     }
 // =====================
 
+    //printk("refresh_rectangle: x=%d y=%d\n", x, y);
+
     __refresh_rectangle0 (
         x, y, width, height,
-        FRONTBUFFER_VA,   // dest
-        CurrentBackbufferVA  //BACKBUFFER_VA     // src
+        FRONTBUFFER_VA,        // dest
+        CurrentBackbufferVA    // src
     );  
 }
+
 
 // scroll_screen_rect:
 // Scroll a rectangle?

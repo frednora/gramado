@@ -172,8 +172,8 @@ void bldisp_update_mouse_position(unsigned long x, unsigned long y)
 // + Pinta o novo cursor diretamente no lfb.
 void bldisp_display_mouse_cursor(void)
 {
-    unsigned long rWidth = 16;
-    unsigned long rHeight = 16;
+    const unsigned long rWidth = 16;
+    const unsigned long rHeight = 16;
 
 // Display server not initialized yet.
    // if ((void*) display_server == NULL)
@@ -200,12 +200,21 @@ void bldisp_display_mouse_cursor(void)
 // We call it when we receive an 'mouse move' event.
     if (__clear_mousebox == TRUE)
     {
+
+        //printk("e: %d %d\n", __old_mouse_x, __old_mouse_y);
+
         //gws_refresh_rectangle(
             //__old_mouse_x, __old_mouse_y, rWidth, rHeight );
         
         refresh_rectangle (
             __old_mouse_x, __old_mouse_y, rWidth, rHeight
         );
+
+        //frontbuffer_draw_rectangle( 
+        //    __old_mouse_x, __old_mouse_y, rWidth, rHeight, 
+        //    COLOR_YELLOW,  // Color 
+        //    0 
+        //);
         
         //bldisp_do_we_need_to_erase_mouse_pointer(FALSE);
     }
@@ -218,6 +227,9 @@ void bldisp_display_mouse_cursor(void)
 // Draw the pointer direcly into the LFB.
 // Not printing it into the backbuffer.
 // It uses the new values.
+
+    // printk("d: %d %d\n", __new_mouse_x, __new_mouse_y);
+
     //direct_draw_mouse_pointer();
     frontbuffer_draw_rectangle( 
         __new_mouse_x, __new_mouse_y, rWidth, rHeight, 

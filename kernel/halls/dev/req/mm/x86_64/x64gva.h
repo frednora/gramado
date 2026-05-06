@@ -166,6 +166,7 @@
 // Map with Write-Combining (WC) if supported, else Uncacheable (UC).
 // Always NX (non-executable)
 // 768MB + 2MB mark (VA)
+
 #define FRONTBUFFER_VA  0x0000000030200000
 
 //

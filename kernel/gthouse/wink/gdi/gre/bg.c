@@ -62,8 +62,6 @@ int bg_initialize(unsigned int color,int show)
     set_up_cursor(0,0);
 
     background_info.initialized = TRUE;
-
     return 0;
 }
-
 

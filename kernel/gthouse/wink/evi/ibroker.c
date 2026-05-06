@@ -3811,10 +3811,9 @@ wmMouseEvent(
         panic("wmMouseEvent: w h\n");
     }
 
-// No mouse device can send us input event yet.
+// No mouse device can send us input event yet
     if (system_state != SYSTEM_RUNNING)
         goto fail;
-
 
 // Parameters:
     if (event_id < 0){
