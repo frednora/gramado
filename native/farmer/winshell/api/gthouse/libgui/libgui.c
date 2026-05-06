@@ -4297,11 +4297,14 @@ libgui_backbuffer_draw_rectangle0 (
 // Resolution limits
 
 
+/*
     if (device_w > 800){
         debug_print("libgui_backbuffer_draw_rectangle0: [FAIL] device_w\n");
         //return; 
     }
+*/
 
+/*
     // #hack provisory
     // We dont wanna mess up the memory beyond the buffer
     if (device_h > 600)
@@ -4310,6 +4313,12 @@ libgui_backbuffer_draw_rectangle0 (
         debug_print("libgui_backbuffer_draw_rectangle0: [FAIL] device_h\n");
         //return; 
     }
+*/
+
+    if (device_h > 768)
+	{
+		return;
+	}
 
 // Set values
     rect.left   = (unsigned long) (x      & 0xFFFF);
@@ -4556,14 +4565,19 @@ libgui_frontbuffer_draw_rectangle0 (
     device_h = (unsigned long) (device_h & 0xFFFF);
 // #provisório
 // limites do dispositivo
-    if (device_w > 800){
-        debug_print("libgui_backbuffer_draw_rectangle0: [FAIL] device_w\n");
+    //if (device_w > 800)
+	if (device_w > 1024)
+	{
+        //debug_print("libgui_backbuffer_draw_rectangle0: [FAIL] device_w\n");
         return; 
     }
-    if (device_h > 600){
-        debug_print("libgui_backbuffer_draw_rectangle0: [FAIL] device_h\n");
+    //if (device_h > 600)
+    if (device_h > 768)
+	{
+        //debug_print("libgui_backbuffer_draw_rectangle0: [FAIL] device_h\n");
         return; 
     }
+
 
 // Set values
     rect.left   = (unsigned long) (x      & 0xFFFF);
