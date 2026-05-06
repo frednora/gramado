@@ -37,6 +37,8 @@
 
 
 // #test: Use the new frontbuffer
+// #todo: This new backbuffer is the default now.
+// We dont need this flag.
 #define CONFIG_USE_NEW_FRONTBUFFER  1
 
 
