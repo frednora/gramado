@@ -38,10 +38,8 @@ static void *__rectStrCopyMemory32 (
 // =======================================
 
 
-/* 
- * __drawrectangle0: 
- *     Draw a rectangle on backbuffer or frontbuffer.
- */
+// __drawrectangle0: 
+// Draw a rectangle on backbuffer or frontbuffer.
 // Service 9.
 // #bugbug
 // Agora precisamos considerar o limite de apenas 2mb
@@ -50,6 +48,8 @@ static void *__rectStrCopyMemory32 (
 // IN:
 // 1=backbuffer
 // 2=frontbuffer
+
+// Return the number of changed pixels.
 
 static int 
 __drawrectangle0( 
@@ -61,11 +61,7 @@ __drawrectangle0(
     unsigned long rop_flags,
     int back_or_front )
 {
-// Return the number of changed pixels.
-
     int npixels=0;
-
-    //debug_print("__drawrectangle0: r0 :)\n");
 
 // Copy
     unsigned long X      = (x      & 0xFFFF);
@@ -75,7 +71,8 @@ __drawrectangle0(
     unsigned int Color   = color;
 
 // Invalid argument
-    if ( back_or_front != 1 && back_or_front != 2 ){
+    if (back_or_front != 1 && back_or_front != 2)
+    {
         panic("__drawrectangle0: back_or_front\n");
     }
 
@@ -91,7 +88,7 @@ __drawrectangle0(
 // Clipping support.
     unsigned long deviceWidth  = (unsigned long) screenGetWidth();
     unsigned long deviceHeight = (unsigned long) screenGetHeight();
-    if ( deviceWidth == 0 || deviceHeight == 0 )
+    if (deviceWidth == 0 || deviceHeight == 0)
     {
         debug_print ("__drawrectangle0: [PANIC] w h\n");
         //panic       ("__drawrectangle0: [PANIC] w h\n");
@@ -187,12 +184,23 @@ __drawrectangle0(
        panic("__drawrectangle0: internal_height\n");
     }
 */
+
+/*
     // #hack
     // We dont wanna mess up the memory
     if (internal_height > 600)
     {
         debug_print("__drawrectangle0: [HACK] 600 h ajust for resolution limit\n");
         internal_height = 600;
+    }
+*/
+
+    // #hack
+    // We dont wanna mess up the memory
+    if (internal_height > 768)
+    {
+        debug_print("__drawrectangle0: [HACK] 600 h ajust for resolution limit\n");
+        internal_height = 768;
     }
 
 // Paint

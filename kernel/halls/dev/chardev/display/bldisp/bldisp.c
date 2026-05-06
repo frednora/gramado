@@ -327,12 +327,22 @@ static void __bldisp_flush_into_lfb(unsigned long flags)
 
 // 800*3*600 = 1440000
 // 800*4*600 = 1920000
+// 1024*3*768 = 2359296
+// 1024*4*768 = 3145728
+
 // Não pode ser mais que 2MB.
 // 2048 * 1024 = 2097152.
-    if (TotalInBytes >= 2097152){
+
+// Não pode ser mais que 4MB.
+// 2097152 * 2 = 4194304
+
+    //if (TotalInBytes >= 2097152) // 2mb
+    if (TotalInBytes >= 4194304)  //4mb
+    {
         debug_print_string("fb_refresh_screen: [FAIL-FIXME] Total\n");
         return;
     }
+
 
 //
 // Refresh

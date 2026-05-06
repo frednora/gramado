@@ -2323,15 +2323,14 @@ console_banner(
     // printk("gcc: %d\n",GCC_VERSION);
 }
 
-// Implementation
+// Implementation:
+// Clear a console with the given colors
 int 
 console_clear_imp (
     unsigned int bg_color, 
     unsigned int fg_color, 
     int console_number )
 {
-// Clear a console with the given colors.
-
     if (VideoBlock.useGui != TRUE){
         goto fail;
     }

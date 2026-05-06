@@ -17,21 +17,24 @@ static void __bg_paint(unsigned int color, int show);
 // Called by kmain()
 // Where? backbuffer?
 // Draw a rectangle into the backbuffer.
+
 static void __bg_paint(unsigned int color, int show)
 {
     unsigned long deviceWidth  = (unsigned long) screenGetWidth();
     unsigned long deviceHeight = (unsigned long) screenGetHeight();
+
     if ( deviceWidth == 0 || deviceHeight == 0 )
     {
         debug_print ("backgroundDraw: [PANIC] w h\n");
-        //panic       ("drawDataRectangle: [PANIC] w h\n");
+        //panic     ("drawDataRectangle: [PANIC] w h\n");
         return;
     }
 
-    backbuffer_draw_rectangle( 
+    backbuffer_draw_rectangle ( 
         0, 0, deviceWidth, deviceHeight, 
         color,
-        0 );   //rop_flags
+        0    // rop_flags
+    );
 
     if (show == TRUE)
         refresh_screen();
