@@ -10,7 +10,7 @@
 
 // Current build number
 // Updated by the builder
-#define __CURRENT_BUILD_NUMBER    374
+#define __CURRENT_BUILD_NUMBER    375
 
 // Version
 #define VERSION_MAJOR    0
@@ -21,7 +21,7 @@
 #define VERSION_WORD    0x0008
 // Strings
 #define VERSION_STRING    "0.8"
-#define BUILD_STRING      "374"
+#define BUILD_STRING      "375"
 #define BUILD_CODENAME_STRING  "Gramado 3006"
 #define RELEASE_STRING    PRODUCT_TYPE_STRING
 
