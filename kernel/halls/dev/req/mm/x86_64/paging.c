@@ -105,7 +105,11 @@ static void __initialize_ring0area(void);
 static void __initialize_ring3area(void);
 static void __initialize_kernelimage_region(void);
 static void __initialize_frontbuffer(void);
-static void __initialize_backbuffer(void);
+
+// #deprecated: This is the old backbuffer initialization
+// static void __initialize_backbuffer(void);
+
+// New backbuffer
 static void __initialize_new_backbuffer_in_512mb_mark(void);
 
 static void __initialize_pagedpool(void);
@@ -1093,14 +1097,8 @@ static void __initialize_canonical_physical_regions(void)
     SMALL_user_pa        = (unsigned long) SMALLSYSTEM_USERBASE;
     SMALL_cga_pa         = (unsigned long) SMALLSYSTEM_CGA;
     SMALL_frontbuffer_pa = (unsigned long) gSavedLFB;      //frontbuffer // #todo: precisamos que o bl passe  endereço físico para mapearmos o lfb.
-
-    if (CONFIG_USE_NEW_BACKBUFFER_IN_512MB_MARK == 1){
-        SMALL_backbuffer_pa  = (unsigned long) NEW_BACKBUFFER_VA;  //backbuffer
-    } else {
-        SMALL_backbuffer_pa  = (unsigned long) BACKBUFFER_PA;  //backbuffer
-    }
-
-    SMALL_pagedpool_pa   = (unsigned long) SMALLSYSTEM_PAGEDPOLL_START;  //PAGED POOL
+    SMALL_backbuffer_pa  = (unsigned long) NEW_BACKBUFFER_VA;  // backbuffer
+    SMALL_pagedpool_pa   = (unsigned long) SMALLSYSTEM_PAGEDPOLL_START;  // PAGED POOL
     SMALL_heappool_pa    = (unsigned long) SMALLSYSTEM_HEAPPOLL_START;
     SMALL_extraheap1_pa  = (unsigned long) SMALLSYSTEM_EXTRAHEAP1_START;
     SMALL_extraheap2_pa  = (unsigned long) SMALLSYSTEM_EXTRAHEAP2_START;
@@ -1112,13 +1110,7 @@ static void __initialize_canonical_physical_regions(void)
     MEDIUM_user_pa        = (unsigned long) MEDIUMSYSTEM_USERBASE;
     MEDIUM_cga_pa         = (unsigned long) MEDIUMSYSTEM_CGA;
     MEDIUM_frontbuffer_pa = (unsigned long) gSavedLFB; // #todo: precisamos que o bl passe  endereço físico para mapearmos o lfb.
-
-    if (CONFIG_USE_NEW_BACKBUFFER_IN_512MB_MARK == 1){
-        MEDIUM_backbuffer_pa  = (unsigned long) NEW_BACKBUFFER_VA;  //backbuffer
-    } else {
-        MEDIUM_backbuffer_pa  = (unsigned long) BACKBUFFER_PA;  //backbuffer
-    }
-
+    MEDIUM_backbuffer_pa  = (unsigned long) NEW_BACKBUFFER_VA;  // backbuffer
     MEDIUM_pagedpool_pa   = (unsigned long) MEDIUMSYSTEM_PAGEDPOLL_START;
     MEDIUM_heappool_pa    = (unsigned long) MEDIUMSYSTEM_HEAPPOLL_START;
     MEDIUM_extraheap1_pa  = (unsigned long) MEDIUMSYSTEM_EXTRAHEAP1_START;
@@ -1131,20 +1123,13 @@ static void __initialize_canonical_physical_regions(void)
     LARGE_user_pa        = (unsigned long) LARGESYSTEM_USERBASE;
     LARGE_cga_pa         = (unsigned long) LARGESYSTEM_CGA;
     LARGE_frontbuffer_pa = (unsigned long) gSavedLFB; // #todo: precisamos que o bl passe  endereço físico para mapearmos o lfb.
-
-    if (CONFIG_USE_NEW_BACKBUFFER_IN_512MB_MARK == 1){
-        LARGE_backbuffer_pa  = (unsigned long) NEW_BACKBUFFER_VA;  //backbuffer
-    } else {
-        LARGE_backbuffer_pa  = (unsigned long) BACKBUFFER_PA;  //backbuffer
-    }
-
+    LARGE_backbuffer_pa  = (unsigned long) NEW_BACKBUFFER_VA;  // backbuffer
     LARGE_pagedpool_pa   = (unsigned long) LARGESYSTEM_PAGEDPOLL_START;
     LARGE_heappool_pa    = (unsigned long) LARGESYSTEM_HEAPPOLL_START;
     LARGE_extraheap1_pa  = (unsigned long) LARGESYSTEM_EXTRAHEAP1_START;
     LARGE_extraheap2_pa  = (unsigned long) LARGESYSTEM_EXTRAHEAP2_START;
     LARGE_extraheap3_pa  = (unsigned long) LARGESYSTEM_EXTRAHEAP3_START;
 }
-
 
 // ----------------------
 
@@ -1469,6 +1454,9 @@ static void __initialize_frontbuffer(void)
 // see: BACKBUFFER_VA in x64gva.h
 
 // User-side
+
+/*
+// #deprecated: This is the old backbuffer initialization
 static void __initialize_backbuffer(void)
 {
     // #ps: In this case virtual and physical addresses are the same.
@@ -1526,6 +1514,7 @@ static void __initialize_backbuffer(void)
         (unsigned long) backbuffer_pa,      // region base
         (unsigned long) ( PAGE_USER | PAGE_WRITE | PAGE_PRESENT ) );  // flags=7
 }
+*/
 
 // New backbuffer at 512mb mark
 static void __initialize_new_backbuffer_in_512mb_mark(void)
@@ -2172,29 +2161,12 @@ static void __initialize_canonical_kernel_pagetables(void)
 // User-side
     if (CONFIG_TEST_MMBLOCK00 == 1)
     {
-
         // If 512mb mark became the new backbuffer
-        if (CONFIG_USE_NEW_BACKBUFFER_IN_512MB_MARK == 1){
-            __initialize_new_backbuffer_in_512mb_mark();  // New
-
-        // If 512mb is not a backbuffer
-        } else {
-            
-            mm_map_2mb_region_in_pd0_imp(0x20000000,0x20000000,0x1F);
-            mm_map_2mb_region_in_pd0_imp(0x20200000,0x20200000,0x1F);
-            mm_map_2mb_region_in_pd0_imp(0x20400000,0x20400000,0x1F);
-            mm_map_2mb_region_in_pd0_imp(0x20600000,0x20600000,0x1F);
-            mm_map_2mb_region_in_pd0_imp(0x20800000,0x20800000,0x1F);
-            // ...
-            // #bugbug
-            // #todo: We also need to setup the globals that handles the memory usage
-            // for these region.
-        }
+        __initialize_new_backbuffer_in_512mb_mark();
     }
 
-
 // #ps: 
-// We can extend the backbuffer here untill the limit.
+// We can extend the backbuffer here untill the limit
 
 //
 // 0x30000000 - 768mb mark - VA
@@ -2213,12 +2185,7 @@ static void __initialize_canonical_kernel_pagetables(void)
 // --------------------------
 // 0x30400000 → Old Backbuffer
 // va=0x30400000 | Old Backbuffer.
-
-    if (CONFIG_USE_NEW_BACKBUFFER_IN_512MB_MARK == 1){
-       // In this case 0x30400000 is available
-    } else {
-        __initialize_backbuffer();  // Old
-    }
+// >>> free area
 
 // --------------------------
 // 0x30600000 → Paged pool

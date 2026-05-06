@@ -30,11 +30,6 @@
 // #test
 // #ps: Necessary for the new areas in 256mb and 512mb marks.
 #define CONFIG_TEST_MMBLOCK00  1
-// #test
-// Use the new backbuffer that starts at the 512mb mark,
-// the pa and the va.
-// #ps: It needs the CONFIG_TEST_MMBLOCK00 flag on
-#define CONFIG_USE_NEW_BACKBUFFER_IN_512MB_MARK  1
 
 // #test
 // Area for the buffers needed by the compositor for canvases.
