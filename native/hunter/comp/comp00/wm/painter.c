@@ -929,8 +929,8 @@ int redraw_titlebar_window(struct gws_window_d *window)
         // Draw a line into the frame canvas
         dc_draw_horizontal_line( 
             dc00, 
-            0,  // x1 
-            0,  // y
+            tb_window->left,  // x1 
+            tb_window->top,   // y
             tb_window->width, // x2
             parent->titlebar_ornament_color,  
             tb_window->rop_ornament
@@ -939,7 +939,7 @@ int redraw_titlebar_window(struct gws_window_d *window)
         // Draw a into line the frame canvas
         dc_draw_horizontal_line( 
             dc00, 
-            0,  // x1 
+            tb_window->left,    // x1 
             tb_window->height,  // y
             tb_window->width,   // x2
             parent->titlebar_ornament_color, 
@@ -1006,8 +1006,10 @@ int redraw_titlebar_window(struct gws_window_d *window)
         if ((void*) tb_window->name != NULL)
         {
             if (Compositor.is_composition_disabled == TRUE){
+
                 // #ps: Drawing directly inside the backbuffer
                 grDrawString ( sL, sT, sColor, tb_window->name );
+
             } else {
 
                 // Draw string into de frame canvas
@@ -1015,8 +1017,13 @@ int redraw_titlebar_window(struct gws_window_d *window)
                 {
                     // #todo: Fix the position for the text
                     dc_drawstring ( 
-                        dc00, 4, 4, COLOR_BLACK, COLOR_WHITE,
-                        ROP_COPY, parent->name );
+                        dc00, 
+                        tb_window->left + parent->titlebar_text_left, 
+                        tb_window->top + parent->titlebar_text_top, 
+                        sColor, 
+                        COLOR_WHITE,
+                        ROP_COPY, 
+                        tb_window->name );
                 }
             }
         }

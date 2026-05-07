@@ -815,8 +815,9 @@ struct gws_window_d *do_create_titlebar(
 
     } else {
 
-        r0_left = 0;
-        r0_top = 0;
+        // The titlebar's position relative to the application window
+        r0_left = tbWindow->left;
+        r0_top  = tbWindow->top;
            
         // Draw ornament into the canvas
 
@@ -903,8 +904,10 @@ struct gws_window_d *do_create_titlebar(
         sT = (unsigned long) ((tbWindow->absolute_y) + StringTopPad);
 
         if (Compositor.is_composition_disabled == TRUE){
+
             // #ps: Drawing directly into the backbuffer
             grDrawString ( sL, sT, StringColor, tbWindow->name );
+
         } else {
 
             // Draw string into de frame canvas
@@ -912,8 +915,13 @@ struct gws_window_d *do_create_titlebar(
             {
                 // #todo: Fix the string position
                 dc_drawstring ( 
-                    dc00, 4, 4, COLOR_BLACK, COLOR_WHITE,
-                    ROP_COPY, parent->name );
+                    dc00, 
+                    tbWindow->left + StringLeftPad, 
+                    tbWindow->top + StringTopPad, 
+                    StringColor, 
+                    COLOR_WHITE,
+                    ROP_COPY, 
+                    tbWindow->name );
             }
         }
 
@@ -1967,14 +1975,14 @@ void *doCreateAndDrawWindow (
         if (window->style & WS_TRANSPARENT){
             window->rop_shadow = ROP_KEEP_DST; //ROP_XOR;
         }
-        window->rop_bg     = THEME_ROP_WINDOW_BACKGROUND;
+        window->rop_bg = THEME_ROP_WINDOW_BACKGROUND;
         if (window->style & WS_TRANSPARENT){
             window->rop_bg = ROP_KEEP_DST; //ROP_XOR;
         }
-        window->rop_ornament      = THEME_ROP_WINDOW_ORNAMENT;
-        window->rop_top_border    = THEME_ROP_TOP_BORDER;
-        window->rop_left_border   = THEME_ROP_LETF_BORDER;
-        window->rop_right_border  = THEME_ROP_RIGHT_BORDER; 
+        window->rop_ornament = THEME_ROP_WINDOW_ORNAMENT;
+        window->rop_top_border = THEME_ROP_TOP_BORDER;
+        window->rop_left_border = THEME_ROP_LETF_BORDER;
+        window->rop_right_border = THEME_ROP_RIGHT_BORDER; 
         window->rop_bottom_border = THEME_ROP_BOTTOM_BORDER;
         break;
 
@@ -2585,7 +2593,6 @@ void *doCreateAndDrawWindow (
 
     switch (type){
 
-    // Simple window. (Sem barra de títulos).
     case WT_SIMPLE:
     case WT_TITLEBAR:
 
@@ -2964,10 +2971,16 @@ void *doCreateAndDrawWindow (
         } else {
 
             // #test 
+            // Overlapped and Popup windows
             // Drawing a rectangle inside the frame canvas.
             // It's gonna be the background of the whole window.
+
             if (window->style & WS_APP)
             {
+                // #
+                // For application window, it creates an simple window
+                // using the style WS_APP and then convert it to Overlapped
+
                 dc_draw_rectangle0 (
                     dc00,
                     0, 0, window->width, window->height,
