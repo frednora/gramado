@@ -126,11 +126,15 @@ void yellowstatus0(const char *string,int refresh)
 // bar = 24
 // 24-16 = 8;
 // 8/2=4
+
+/*
+// #suspended
     bmp_decode_system_icon( 
         (int) 1,  // icon id 
         (unsigned long) Left +4, 
         (unsigned long) Top +4,
         FALSE );  // dont show it
+*/
 
 // Paint the string, but dont show it.
     grDrawString ( 

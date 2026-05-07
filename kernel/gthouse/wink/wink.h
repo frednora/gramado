@@ -16,9 +16,6 @@ wink_draw_string (
     unsigned int color,
     const char *string );
 
-int wink_load_gramado_icons(void);
-
-
 void wink_update_progress_bar(unsigned long percent);
 
 void refresh_screen(void);

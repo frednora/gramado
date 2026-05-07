@@ -632,7 +632,7 @@ gwssrv_display_system_icon (
     sm_buffer = (char *) __get_system_icon(index);
     if ( (void *) sm_buffer == NULL ){
         printf ("gwssrv_display_system_icon: sm_buffer\n");
-        return -1;
+        return (int) -1;
     }
 
 // Check BM header

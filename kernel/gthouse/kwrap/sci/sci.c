@@ -2003,17 +2003,17 @@ void *sci0 (
         return (void *) sys_setup_stdin((int) arg2);
     }
 
+
+
 // 9100 - Get system icon
-// Pegando o endereço de um buffer de icone.
-// queremos saber se ele eh compartilhado.
-// shared_buffer_terminal_icon
-// #bugbug: Static size for the icons. Static buffer size.
-// See: wm.c
+// #deprecated:
+// No more support for icons inside the core kernel
+
     if (number == 9100){
-        if (arg2<0)
-            return NULL;
-        return (void *) gre_get_system_icon((int) arg2);
+        return NULL;
     }
+
+
 
 // ========================================================
 //done:

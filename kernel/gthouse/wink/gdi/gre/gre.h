@@ -23,30 +23,6 @@ struct tagRGBA
    char alpha;
 };
 
-//--------------------------------------
-// Ponteiros para ícones
-// Ponteiros para o endereço onde os ícones 
-// foram carregados.
-// queremos saber se o endereço alocado eh compartilhado ...
-// para o window server usar ... entao chamaremos de sharedbufferIcon.
-// see: gre.c
-
-// Icon cache structure.
-// see: gre.c
-struct icon_cache_d
-{
-    int initialized;
-    size_t size_in_bytes;
-
-// Pointers to shared memory
-    void *app;        // 1
-    void *file; 
-    void *folder;
-    void *terminal;
-    void *cursor;     // 5
-    // ...
-};
-extern struct icon_cache_d  icon_cache;
 
 // High level GUI structure.
 // General information about the ring 0 GUI subsystem.
@@ -166,9 +142,6 @@ void demo0(void);
 void kgws_enable(void);
 void kgws_disable(void);
 
-void *gre_get_system_icon(int n);
-
-int greLoadGramadoIcons(void);
 
 //
 // $

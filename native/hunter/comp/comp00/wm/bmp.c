@@ -54,10 +54,12 @@ static void *__get_system_icon(int n);
 // O kernel vai retornar NULL se for fora do limite.
 // limits=(1~5)
 
+// #deprecated:
+// We are removing from the kernel the support for this routine
 static void *__get_system_icon (int n)
 {
 
-// #bugbug
+    // #bugbug
 // #todo: max limit
 
     //#todo: if (n <= 0){
@@ -711,10 +713,12 @@ bmp_decode_system_icon0 (
 // Get buffer address.
 // Check pointer validation
     sm_buffer = (char *) __get_system_icon(index);
-    if ((void *) sm_buffer == NULL){
+    if ((void *) sm_buffer == NULL)
+    {
         printf ("bmp_decode_system_icon0: sm_buffer\n");
         goto fail;
     }
+
 
 // Check BM header
     if ( sm_buffer[0] != 'B' || sm_buffer[1] != 'M' )
@@ -771,6 +775,7 @@ bmp_decode_system_icon0 (
     //}
 
     return 0;
+
 fail:
     return -1;
 }

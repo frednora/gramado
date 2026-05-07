@@ -969,6 +969,8 @@ int redraw_titlebar_window(struct gws_window_d *window)
 
         if (Compositor.is_composition_disabled == TRUE)
         {
+            /*
+            // #suspended
             // #ps: Drawing directly inside the backbuffer
             bmp_decode_system_icon( 
                 (int) icon_id, 
@@ -976,6 +978,7 @@ int redraw_titlebar_window(struct gws_window_d *window)
                 (unsigned long) iT,
                 FALSE 
             );
+            */
         }
     }
 

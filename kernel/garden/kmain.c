@@ -1379,9 +1379,9 @@ static int I_initialize_kernel(int arch_type, int processor_number)
         wink_update_progress_bar(60);
 
         // -------------------------------
-        // Initialize ke phase 2.
-        // + Initialize background.
-        // + Load BMP icons.
+        // Initialize ke phase 2
+        // + Initialize background
+
         PROGRESS(":: KE PHASE 2 (BSP)\n");
         // [3:2]
         Status = (int) keInitialize(2);

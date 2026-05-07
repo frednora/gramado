@@ -1569,13 +1569,18 @@ wmCreateWindowFrame (
             // IN: index, left, top
             // see: bmp.c
 
-            if( useIcon == TRUE )
+            if (useIcon == TRUE)
             {
                 window->titlebarHasIcon = TRUE;
+
+                /*
+                // #suspended:
+                // No more support in kernel mode
                 gwssrv_display_system_icon( 
                     (int) window->frame.titlebar_icon_id, 
                     (tbWindow->absolute_x + METRICS_ICON_LEFTPAD), 
                     (tbWindow->absolute_y + METRICS_ICON_TOPPAD) );
+                */
             }
 
             //

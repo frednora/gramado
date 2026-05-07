@@ -29,13 +29,6 @@ wink_draw_string (
     draw_string(x, y, color, string);
 }
 
-// Load some .BMP system icons into the memory.
-// It's a part of the window system's initialization.
-int wink_load_gramado_icons(void)
-{
-    return (int) greLoadGramadoIcons();
-}
-
 void wink_update_progress_bar(unsigned long percent)
 {
     unsigned long rectLeft=0;

@@ -618,11 +618,13 @@ int keInitializeIntake(void)
 //   current architecture.
 // + PS2 early initialization.
 // --------------------------------
-// Initialize ke phase 2.
-// + Initialize background.
-// + Load BMP icons.
+// Initialize ke phase 2
+// + Initialize background
+// + ...
 //
-// OUT: TRUE or FALSE.
+// OUT: 
+// TRUE or FALSE
+
 int keInitialize(int phase)
 {
 // Called by I_kmain() in kmain.c.
@@ -756,11 +758,9 @@ int keInitialize(int phase)
         //#debug
         //refresh_screen();
         //while(1){}
-        // Clear the screen again.
-        wink_initialize_background();
 
-        // Loading .BMP icon images
-        wink_load_gramado_icons();
+        // Clear the screen again
+        wink_initialize_background();
 
         // ==========================
         // Network support.

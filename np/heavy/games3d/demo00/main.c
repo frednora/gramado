@@ -1373,9 +1373,8 @@ static void initBackground(void)
     //asm ("int $3");
 
 
-// Testing bmp.
-// 
-// See: gramado/themes
+// Testing bmp
+// #suspended
 
 /*
     if (current_mode == GRAMADO_JAIL){
@@ -1384,6 +1383,8 @@ static void initBackground(void)
         gwssrv_display_system_icon ( 2, 8, 8 );
     };
 */
+
+
 
 // See: 
 // gws.c

@@ -756,6 +756,8 @@ struct gws_window_d *do_create_titlebar(
 
         if (Compositor.is_composition_disabled == TRUE){
 
+            /*
+            // #suspended
             // #ps: Drawing directly inside the backbuffer
             bmp_decode_system_icon ( 
                 (int) icon_id, 
@@ -763,6 +765,7 @@ struct gws_window_d *do_create_titlebar(
                 (unsigned long) iT, 
                 FALSE 
             );
+            */
 
         } else {
             // #todo: Draw icon when composition is on
