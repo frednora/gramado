@@ -76,11 +76,13 @@ panic.o \
 reboot.o \
 request.o \
 system.o \
-hv.o \
 wrappers.o \
 sys.o \
 sci.o \
 mod.o \
+cg.o \
+ns.o \
+hv.o \
 public.o    
 
 
@@ -90,7 +92,7 @@ all:
 	$(CC) -c globals.c $(KERNEL_INCLUDE) $(CFLAGS) -o globals.o
 	$(CC) -c bootblk/bootblk.c $(KERNEL_INCLUDE) $(CFLAGS) -o bootblk.o
 
-# Overall routines.
+# Overall routines
 	$(CC) -c klog/klog.c  $(KERNEL_INCLUDE) $(CFLAGS) -o klog.o
 	$(CC) -c info.c       $(KERNEL_INCLUDE) $(CFLAGS) -o info.o
 	$(CC) -c panic.c      $(KERNEL_INCLUDE) $(CFLAGS) -o panic.o  
@@ -98,18 +100,22 @@ all:
 	$(CC) -c request.c    $(KERNEL_INCLUDE) $(CFLAGS) -o request.o
 	$(CC) -c system.c     $(KERNEL_INCLUDE) $(CFLAGS) -o system.o
 
-# Wrapper functions.
+# Wrapper functions
 	$(CC) -c wrappers.c  $(KERNEL_INCLUDE) $(CFLAGS) -o wrappers.o
 
-# Module manager.
+# Module manager
 	$(CC) -c mod/mod.c     $(KERNEL_INCLUDE) $(CFLAGS) -o mod.o
 	$(CC) -c mod/public.c  $(KERNEL_INCLUDE) $(CFLAGS) -o public.o
 
-# System calls support
+# System calls suppor
 	$(CC) -c sci/sys.c  $(KERNEL_INCLUDE) $(CFLAGS) -o sys.o
 	$(CC) -c sci/sci.c  $(KERNEL_INCLUDE) $(CFLAGS) -o sci.o    
 
-# Virtualization routines.
+# container: ns and cg
+	$(CC) -c cont/ns.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ns.o
+	$(CC) -c cont/cg.c  $(KERNEL_INCLUDE) $(CFLAGS) -o cg.o
+
+# Virtualization routines
 	$(CC) -c virt/hv.c  $(KERNEL_INCLUDE) $(CFLAGS) -o hv.o
 
 # kmain

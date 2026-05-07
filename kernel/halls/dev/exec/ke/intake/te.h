@@ -305,10 +305,6 @@ struct te_d
     struct token_d  token;
 
 // --------------------------
-// #test
-    //struct ns_proxy_d *nsproxy;
-
-// --------------------------
 
 // Personality types:
 // Based on environment subsystems.

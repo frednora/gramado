@@ -2,6 +2,17 @@
 // cgroups for containers.
 // Created by Fred Nora.
 
+/*
+cgroups:
+    Provide resource management by limiting what a process can use (CPU, memory, I/O).
+
+cgroup: Control Groups provide a mechanism for aggregating/partitioning sets of tasks, and 
+all their future children, into hierarchical groups with specialized behaviour.
+
+Cgroups = limits how much you can use;
+
+*/
+
 // #todo
 // See: user.h and user.c for cgroups.
 
@@ -67,6 +78,12 @@ extern int cg_counter;
 // List of cgroups.
 #define CGROUP_COUNT_MAX    16
 extern unsigned long cgroupList[CGROUP_COUNT_MAX];
+
+
+// ====================================
+
+
+int cg_initialize(int phase);
 
 
 #endif   

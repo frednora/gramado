@@ -2,84 +2,50 @@
 // namespaces for containers.
 // Created by Fred Nora.
 
+/*
+Namespaces:
+    Provide isolation by restricting what a process can see (network, PID, mounts).
+
+namespace: wraps a global system resource in an abstraction that makes it appear 
+to the processes within the namespace that they have their own isolated instance of the global resource.
+
+namespaces = limits what you can see (and therefore use)
+*/
+
+
 #ifndef __CONT_NS_H
 #define __CONT_NS_H    1
 
-//
-// Core namespaces
-//
-
-// UTS namespace: 
-// Each container has its own hostname and domain name.
-struct uts_namespace_d
+// namespaces in other words are the container per se.
+struct ns_d
 {
     int used;
     int magic;
+    int id;
     int initialized;
+
+// This is all about the pusepose of this isolated group of processes.
+// Ex: 'system ns' is a container for processes that belongs to the system.
+    int type;
+
+    // ....
+
+// This address for a list of thread environment that belongs to this ns.
+    void *te_list_base_address;
+    size_t list_size;
+
+    // ....
+
+    struct ns_d *next;
 };
 
-// User namespace: 
-// Isolates user and group IDs, 
-// enabling different user and group mappings within containers.   
-struct user_namespace_d
-{
-    int used;
-    int magic;
-    int initialized;
-};
+// The list of namespaces in this machine.
+// Only 32 containers.
+extern struct ns_d ns[32];
 
-// PID namespace: 
-// Each container sees its own process ID (PID) space, 
-// providing process isolation.   
-struct pid_namespace_d
-{
-    int used;
-    int magic;
-    int initialized;
-};
+// ======================================
 
-// IPC namespace: 
-// Isolates system IPC resources like message queues, 
-// shared memory, and semaphores.   
-struct ipc_namespace_d
-{
-    int used;
-    int magic;
-    int initialized;
-};
-
-// Mount namespace: 
-// Each container has its own view of the filesystem, 
-// allowing for different file systems and mount points.
-struct mount_namespace_d
-{
-    int used;
-    int magic;
-    int initialized;
-};
-
-// Network namespace: 
-// Each container has its own network stack, 
-// including network interfaces, IP addresses, and routing tables.   
-struct network_namespace_d
-{
-    int used;
-    int magic;
-    int initialized;
-};
-
-// ====================================================
-
-struct ns_proxy_d
-{
-    struct uts_namespace_d      *ns_uts;
-    struct user_namespace_d     *ns_user;
-    struct pid_namespace_d      *ns_pid;
-    struct ipc_namespace_d      *ns_ipc;
-    struct mount_namespace_d    *ns_mount;
-    struct network_namespace_d  *ns_network;
-    // ...
-};
+int ns_initialize(int phase);
 
 #endif    
 

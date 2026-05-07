@@ -675,6 +675,9 @@ int keInitialize(int phase)
     // >> Process and thread support.
     } else if (phase == 1) {
 
+        // Initialize ns phaes 0.
+        ns_initialize(0);
+
         // serial_printk("phase %d\n",phase);
 
         // Starting with some architecture independent stuff.
