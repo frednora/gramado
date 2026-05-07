@@ -754,15 +754,18 @@ struct gws_window_d *do_create_titlebar(
         iL = (unsigned long) (tbWindow->absolute_x + METRICS_ICON_LEFTPAD);
         iT = (unsigned long) (tbWindow->absolute_y + METRICS_ICON_TOPPAD);
 
-        if (Compositor.is_composition_disabled == TRUE)
-        {
+        if (Compositor.is_composition_disabled == TRUE){
+
             // #ps: Drawing directly inside the backbuffer
-            bmp_decode_system_icon( 
+            bmp_decode_system_icon ( 
                 (int) icon_id, 
                 (unsigned long) iL, 
-                (unsigned long) iT,
+                (unsigned long) iT, 
                 FALSE 
             );
+
+        } else {
+            // #todo: Draw icon when composition is on
         }
 
         parent->titlebarHasIcon = TRUE;
@@ -788,8 +791,9 @@ struct gws_window_d *do_create_titlebar(
     parent->frame.ornament_color1   = OrnamentColor1;
     parent->titlebar_ornament_color = OrnamentColor1;
 
-    unsigned long r0_left   = tbWindow->absolute_x;
-    unsigned long r0_top    = ( (tbWindow->absolute_y) + (tbWindow->height) - METRICS_TITLEBAR_ORNAMENT_SIZE );
+    unsigned long r0_left = tbWindow->absolute_x;
+    unsigned long r0_top = 
+        ((tbWindow->absolute_y) + (tbWindow->height) - METRICS_TITLEBAR_ORNAMENT_SIZE);
     unsigned long r0_width  = tbWindow->width;
     unsigned long r0_height = OrnamentHeight;
     unsigned long r0_color  = OrnamentColor1;
@@ -799,6 +803,7 @@ struct gws_window_d *do_create_titlebar(
 // IN: l, t, w, h, color, rop
 
     if (Compositor.is_composition_disabled == TRUE){
+
         // #ps: Drawing directly inside the backbuffer
         painterFillWindowRectangle ( 
             r0_left, r0_top, r0_width, r0_height, 
@@ -807,30 +812,30 @@ struct gws_window_d *do_create_titlebar(
 
     } else {
 
+        r0_left = 0;
+        r0_top = 0;
+           
         // Draw ornament into the canvas
-        //if (Compositor.is_composition_disabled == FALSE)
-        //{
 
-            // Draw a line into the frame canvas
-            dc_draw_horizontal_line( 
-                dc00, 
-                0,  // x1 
-                0,  //r0_top,  // y
-                r0_width,  // x2
-                COLOR_YELLOW, //r0_color 
-                r0_rop
-            );
+        // Draw a line into the frame canvas
+        dc_draw_horizontal_line( 
+            dc00, 
+            r0_left,   // x1 
+            r0_top,    // y
+            r0_width,  // x2
+            r0_color, 
+            r0_rop
+        );
 
-            // Draw a line into the frame canvas
-            dc_draw_horizontal_line( 
-                dc00, 
-                0,  // x1 
-                19,  // y
-                r0_width,  // x2
-                COLOR_YELLOW, //r0_color 
-                r0_rop
-            );
-        //}
+        // Draw a line into the frame canvas
+        dc_draw_horizontal_line( 
+            dc00, 
+            r0_left,           // x1 
+            tbWindow->height,  // y
+            r0_width,          // x2
+            r0_color,
+            r0_rop
+        );
     }
 
 //----------------------
@@ -900,9 +905,11 @@ struct gws_window_d *do_create_titlebar(
         } else {
 
             // Draw string into de frame canvas
-            if ((void*)dc00 != NULL){
+            if ((void*)dc00 != NULL)
+            {
+                // #todo: Fix the string position
                 dc_drawstring ( 
-                    dc00, 1, 1, COLOR_YELLOW, COLOR_BLUE,
+                    dc00, 4, 4, COLOR_BLACK, COLOR_WHITE,
                     ROP_COPY, parent->name );
             }
         }
@@ -2381,6 +2388,7 @@ void *doCreateAndDrawWindow (
 // This is provosity. Here is not the right place to draw the frame 
 // and offcourse draw inside the client area.
 
+    // #ps: This is not the right moment to draw stuff
     if (Compositor.is_composition_disabled == FALSE)
     {
         if (style & WS_APP)
@@ -2937,8 +2945,10 @@ void *doCreateAndDrawWindow (
         // This routine is calling the kernel to paint the rectangle.
         // Absolute values.
         // #ps: Drawing directly inside the backbuffer
-        if (Compositor.is_composition_disabled == TRUE)
-        {
+
+        if (Compositor.is_composition_disabled == TRUE){
+
+            // bg when the compositor is disabled
             painterFillWindowRectangle( 
                 window->absolute_x, 
                 window->absolute_y, 
@@ -2947,6 +2957,21 @@ void *doCreateAndDrawWindow (
                 window->bg_color, 
                 window->rop_bg 
             );
+
+        } else {
+
+            // #test 
+            // Drawing a rectangle inside the frame canvas.
+            // It's gonna be the background of the whole window.
+            if (window->style & WS_APP)
+            {
+                dc_draw_rectangle0 (
+                    dc00,
+                    0, 0, window->width, window->height,
+                    window->bg_color,
+                    window->rop_bg
+                );
+            }
         }
 
         // #todo
@@ -3079,15 +3104,17 @@ void *doCreateAndDrawWindow (
             if (Compositor.is_composition_disabled == TRUE)
             {
                 // #ps: Drawing directly into the backbuffer
-                __draw_button_borders(
+                __draw_button_borders (
                     (struct gws_window_d *) window,
-                    (unsigned int) buttonBorder_tl2_color,        // tl 2 inner
-                    (unsigned int) buttonBorder_tl1_color,        // tl 1 most inner
-                    (unsigned int) buttonBorder_br2_color,        // br 2 inner
+                    (unsigned int) buttonBorder_tl2_color,  // tl 2 inner
+                    (unsigned int) buttonBorder_tl1_color,  // tl 1 most inner
+                    (unsigned int) buttonBorder_br2_color,  // br 2 inner
                     (unsigned int) buttonBorder_br1_color,  // br 1 most inner
                     (unsigned int) buttonBorder_outer_color );
+
             } else {
-                //
+                // #todo
+                // Draw some border to the button when in compositor mode.
             }
 
 
@@ -3108,8 +3135,8 @@ void *doCreateAndDrawWindow (
 
             // Draw the label's string.
             // The label is the window's name.
-            if (Compositor.is_composition_disabled == TRUE)
-            {
+            if (Compositor.is_composition_disabled == TRUE){
+
                 // #ps: Drawing directly into the backbuffer
                 grDrawString ( 
                     (window->absolute_x + l_offset), 
@@ -3117,15 +3144,25 @@ void *doCreateAndDrawWindow (
                     (unsigned int) label_color, 
                     window->name 
                 );
+
             } else {
 
-                // Draw into the canvas
+                // Draw into the frame canvas
+                // Draw a string inside the button's bg.
                 if ((void*) dc00 != NULL)
                 {
+                    /*
                     // #bugbug: Not working
-                    //dc_drawstring ( 
-                    //    dc00, l_offset, t_offset, COLOR_GREEN, COLOR_BLUE,
-                    //    ROP_COPY, window->name );
+                    dc_drawstring ( 
+                        dc00, 
+                        1, 
+                        1, 
+                        COLOR_GREEN, 
+                        COLOR_BLUE,
+                        ROP_COPY, 
+                        window->name 
+                    );
+                    */
 
                     //printf("breakpoint\n");
                     //while(1){}

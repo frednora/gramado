@@ -331,6 +331,7 @@ br_1 → bottom/right most inner highlight
 outer_color → outer frame
 */
 
+// #ps: Draw directly into the backbuffer
 void 
 __draw_button_borders(
     struct gws_window_d *w,
@@ -887,8 +888,9 @@ int redraw_titlebar_window(struct gws_window_d *window)
 
 // ----------------
 // bg
-    if (Compositor.is_composition_disabled == TRUE)
-    {
+
+    if (Compositor.is_composition_disabled == TRUE){
+
         // #ps: Drawing directly into the backbuffer
         rectBackbufferDrawRectangle ( 
             tb_window->absolute_x, 
@@ -899,11 +901,15 @@ int redraw_titlebar_window(struct gws_window_d *window)
             TRUE,   // fill
             (unsigned long) tb_window->rop_bg // rop for this window 
         );
+    } else {
+        // #todo: (maybe) Draw titlebar's bg when the compisition is on 
     }
+
 
 // ----------------
 // Ornament
     if (Compositor.is_composition_disabled == TRUE){
+
         rectBackbufferDrawRectangle ( 
             tb_window->absolute_x, 
             ( (tb_window->absolute_y) + (tb_window->height) - METRICS_TITLEBAR_ORNAMENT_SIZE ),  
@@ -924,9 +930,9 @@ int redraw_titlebar_window(struct gws_window_d *window)
         dc_draw_horizontal_line( 
             dc00, 
             0,  // x1 
-            0,  //r0_top,  // y
-            tb_window->width, //r0_width,  // x2
-            COLOR_GREEN, //parent->titlebar_ornament_color, //r0_color 
+            0,  // y
+            tb_window->width, // x2
+            parent->titlebar_ornament_color,  
             tb_window->rop_ornament
         );
 
@@ -934,13 +940,12 @@ int redraw_titlebar_window(struct gws_window_d *window)
         dc_draw_horizontal_line( 
             dc00, 
             0,  // x1 
-            19,  // y
-            tb_window->width,  //r0_width,  // x2
-            COLOR_GREEN,  //parent->titlebar_ornament_color, //r0_color 
+            tb_window->height,  // y
+            tb_window->width,   // x2
+            parent->titlebar_ornament_color, 
             tb_window->rop_ornament
         );
     }
-
 
 // --------------------
 // Icon
@@ -1003,9 +1008,11 @@ int redraw_titlebar_window(struct gws_window_d *window)
             } else {
 
                 // Draw string into de frame canvas
-                if ((void*)dc00 != NULL){
+                if ((void*)dc00 != NULL)
+                {
+                    // #todo: Fix the position for the text
                     dc_drawstring ( 
-                        dc00, 1, 1, COLOR_YELLOW, COLOR_BLUE,
+                        dc00, 4, 4, COLOR_BLACK, COLOR_WHITE,
                         ROP_COPY, parent->name );
                 }
             }
@@ -1131,6 +1138,20 @@ redraw_window (
             // Draw string into de canvas
             if (window->type == WT_OVERLAPPED)
             {
+
+                // #test 
+                // Drawing a rectangle inside the frame canvas.
+                // It's gonna be the background of the whole window.
+                if (window->style & WS_APP)
+                {
+                    dc_draw_rectangle0 (
+                        dc00,
+                        0, 0, window->width, window->height,
+                        window->bg_color,
+                        window->rop_bg
+                    );
+                }
+
                 /*
                 // into the frame
                 dc_drawstring ( 

@@ -127,22 +127,22 @@ cluster     dw  0x0000
 
 
 ; ---------------------------
-; Option 1:
+; Option 1: (Standard)
 ; It loads a faster version of the boot manager,
 ; with NO 32bit-assembly shell.
 ; This boot manager with UI dialog window.
 ; In one option we the system is initialized and 
 ; in the second we go to the shell. Probably it is the old 32bit shell.
 
-; ImageName db  "BMGRAM  BIN", 0x0D, 0x0A, 0x00
+ImageName db  "BMGRAM  BIN", 0x0D, 0x0A, 0x00
 
 
 ; ---------------------------
-; Option 1:
+; Option 1: (Experimental)
 ; Miami project:
 ; It is a new version for my standard BM, but more MS-DOS compatible if possible.
 
-ImageName db  "MIAMI   BIN", 0x0D, 0x0A, 0x00
+; ImageName db  "MIAMI   BIN", 0x0D, 0x0A, 0x00
 
 
 ; ---------------------------
