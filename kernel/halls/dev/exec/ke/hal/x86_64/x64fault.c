@@ -85,9 +85,11 @@ static int __kill_faulty_current_process(void)
     int isKernel = FALSE;
     int isInit = FALSE;
 
-// The current process and the current thread
+// The current process
     pid = (pid_t) get_current_process();
-    tid = (tid_t) current_thread;
+
+// Get current thread for this core
+    tid = (tid_t) lapic_info[0].current_thread;
 
 // Process validation
     if (pid<0 || pid >= PROCESS_COUNT_MAX)
@@ -222,8 +224,11 @@ void x64_all_faults(unsigned long number)
 // The new context is stored into blobal variables.
 // We're gonna put it all into the thread structure.
 
-    save_current_context();
+    // Save the context for the current thread of the given core.
+    // #bugbug: For now we are using the BSP
+    save_current_context(0);
     CurrentThread->saved = TRUE;
+
 
 // Is it an user thread?
 // We can easily kill an user process.
@@ -327,6 +332,9 @@ void x64_all_faults(unsigned long number)
 
             // Set the INIT_TID as the next current thread.
             //current_thread = (tid_t) target_tid;
+            
+            // Set curren thread for this core.
+            // #bugbug: We need to pass the cpu id via parameter
             set_current_thread((tid_t) target_tid);
             
             // Count the dispatcher method.
@@ -392,9 +400,15 @@ void x64_all_faults(unsigned long number)
         case 3: 
             printk("\n");
             printk("== 3 ==\n");  
-            save_current_context();
+
+            // Save the context for the current thread of the given core.
+            // #bugbug: For now we are using the BSP
+            save_current_context(0);
             //show_slots();
-            show_reg(current_thread);
+
+
+            show_reg( lapic_info[0].current_thread );
+
             refresh_screen();
             // Esse tipo funciona mesmo antes do console
             // ter sido inicializado.

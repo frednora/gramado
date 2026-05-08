@@ -156,9 +156,12 @@ void show_thread_information(void)
     Current = (void *) GetCurrentThread();
     if ((void *) Current != NULL)
     {
-        if (Current->magic == 1234){
-            printk ("Current->tid   = %d\n", Current->tid );
-            printk ("current_thread = %d\n", current_thread );
+        if (Current->magic == 1234)
+        {
+            printk ("Current->tid = %d\n", 
+                Current->tid );
+            printk ("lapic_info[0].current_thread = %d\n", 
+                lapic_info[0].current_thread );
         }
     }
 
@@ -445,7 +448,7 @@ void dead_thread_collector(void)
 
                 // Não podemos matar thread atual,
                 // pois precisamos retornar a execução dela.
-                if (Target->tid == current_thread){
+                if (Target->tid == lapic_info[0].current_thread){
                     panic ("dead_thread_collector: We can't kill the current_thread!\n");
                 }
 

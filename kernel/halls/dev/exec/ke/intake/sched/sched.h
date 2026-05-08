@@ -116,7 +116,10 @@ void sleep_until(tid_t tid, unsigned long ms);
 void sleep(tid_t tid, unsigned long ms);
 
 
-void sched_cut_round(struct thread_d *last_thread);
+void 
+sched_cut_round(
+    struct thread_d *last_thread, 
+    int lapic_info_id );
 
 void scheduler_lock(void);
 void scheduler_unlock(void);
@@ -143,11 +146,13 @@ unsigned long sched_count_active_threads(void);
 void sched_boost_ds_thread(void);
 // Boost quantum for the foreground thread because of an input event
 void sched_boost_foreground_thread(void);
+
 // Lower quantum for the current thread because it's not foreground
-void sched_lower_current_thread(void);
+void sched_lower_current_thread(int lapic_info_id);
 
 // See: sched.c
-void sys_nice(unsigned long decrement);
+void sys_nice(unsigned long decrement, int lapic_info_id);
+
 void sys_sleep(tid_t tid, unsigned long ms);
 void sys_yield(tid_t tid);
 

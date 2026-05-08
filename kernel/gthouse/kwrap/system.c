@@ -438,8 +438,9 @@ unsigned long doGetSystemMetrics(int index)
             break;
        
         // #todo: We need a method for this.
+        // The current thread for a given core
         case 141:  
-            return (unsigned long) current_thread;   
+            return (unsigned long) lapic_info[0].current_thread;   
             break;
 
         // return the number of processors.

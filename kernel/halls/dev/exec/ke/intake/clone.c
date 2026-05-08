@@ -515,6 +515,10 @@ copy_process00(
     unsigned long extra_stuff )
 {
 
+
+// #todo
+// Add parameter for index in laíc_info[] table
+
     // #bugbug
     // #todo
     // When clonning a process something is messing up 
@@ -528,6 +532,9 @@ copy_process00(
 
     struct thread_d *parent_thread;
     struct thread_d *child_thread;
+
+
+    tid_t CallerTID = lapic_info[0].current_thread;
 
 // Usado como armazenamento temporário de endereço físico de tabela.
     unsigned long phy=0;
@@ -764,11 +771,15 @@ copy_process00(
 
 // A thread que fez a chamada precisa ser
 // a thread flower do processo pai.
-    if (current_thread != parent_thread->tid){
-        panic("copy_process: current_thread mismatched\n");
+// The current thread for this core needs to have the same tid
+// of the parent thread.
+
+    if (CallerTID != parent_thread->tid){
+        panic("copy_process: CallerTID mismatched\n");
     }
 
 // O PID do processo pai.
+
     if (parent_pid != parent_process->pid){
         panic("copy_process: parent_pid mismatched\n");
     }
@@ -1560,15 +1571,23 @@ do_clone:
 
     schediSelectForExecution(child_thread);
 
-// Current thread
-// the parent thread.
 
-    current_thread = (tid_t) parent_thread->tid;
-    if ( current_thread < 0 || current_thread >= THREAD_COUNT_MAX )
+// #bugbug: 
+// Are we setting the current thread?
+// Current thread the parent thread.
+
+    // Next current thread for this core
+    tid_t NextCurrentThread = (tid_t) parent_thread->tid; 
+
+    if ( NextCurrentThread < 0 || 
+         NextCurrentThread >= THREAD_COUNT_MAX )
     {
-        panic("copy_process: current_thread limits\n");
+        panic("copy_process: NextCurrentThread limits\n");
     }
+    // ok. Set next thread
+    lapic_info[0].current_thread = (tid_t) NextCurrentThread;
 
+    
 // Counter
     __copy_process_counter++;
 

@@ -874,8 +874,11 @@ void *FindReadyThread (void);
 thread_state_t GetThreadState(struct thread_d *thread);
 thread_type_t GetThreadType(struct thread_d *thread);
 
-void SetCurrentTID(tid_t tid);
-tid_t GetCurrentTID(void);
+
+
+void SetCurrentTID(tid_t tid, int lapic_info_id);
+tid_t GetCurrentTID(int lapic_info_id);
+
 
 void *GetThreadByTID(tid_t tid);
 void *GetCurrentThread(void);

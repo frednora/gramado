@@ -291,6 +291,7 @@ int do_waitpid (pid_t pid, int *status, int options)
 {
     struct te_d *p;
     pid_t current_process = (pid_t) get_current_process();
+    tid_t CurrentTID = lapic_info[0].current_thread;
 
     //#debug
     //printk ( "do_waitpid: current_process=%d pid=%d \n", 
@@ -325,7 +326,7 @@ int do_waitpid (pid_t pid, int *status, int options)
             p->wait4pid = (pid_t) pid; 
 
             //checando se a thread atual é a thread flower. 
-            if (current_thread == p->flower->tid)
+            if (CurrentTID == p->flower->tid)
             {
                 //#debug
                 //printk ("the current thread is also the flower thread\n");
@@ -405,7 +406,7 @@ void schediSelectForExecution(struct thread_d *Thread)
 // Get the TID of the current thread.
 tid_t get_current_thread(void)
 {
-    return (tid_t) current_thread;
+    return (tid_t) lapic_info[0].current_thread;
 }
 
 // Set the tid for the current_thread global variable.
@@ -416,7 +417,7 @@ void set_current_thread(tid_t tid)
     if (tid < 0 || tid >= THREAD_COUNT_MAX){
         return;
     }
-    if (tid == current_thread){
+    if (tid == lapic_info[0].current_thread){
         return;
     }
 
@@ -432,9 +433,10 @@ void set_current_thread(tid_t tid)
         return;
     }
 
-// Change global variable.
-    current_thread = (tid_t) tid;
+// Change the current for this core
+    lapic_info[0].current_thread = (tid_t) tid;
 }
+
 
 // Set the tid for the foreground_thread global variable.
 void set_foreground_thread(tid_t tid)

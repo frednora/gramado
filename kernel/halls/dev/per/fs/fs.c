@@ -27,11 +27,13 @@ ssize_t sys_read(int fd, const char *ubuf, size_t count)
 // #todo
 // We can implement a better routine for this.
 
-    if (fd == 0) {
-        // If caller is not the foreground thread...
-        if (current_thread != foreground_thread) {
-            // ...and also not the special reader, deny.
-            if (current_thread != special_reader)
+    if (fd == 0) 
+    {
+        // If caller is not the foreground thread ...
+        if (lapic_info[0].current_thread != foreground_thread) 
+        {
+            // ... and also not the special reader, deny.
+            if (lapic_info[0].current_thread != special_reader)
                 return (ssize_t) -EPERM;
             // If it's the special reader, allow.
         }
@@ -735,8 +737,8 @@ int sys_sleep_if_socket_is_empty(int fd)
         debug_print("sys_sleep_if_socket_is_empty: Buffer is empty. we can not read. sleeping\n");
         object->_flags |= __SWR;                  // pode escrever
         //todo: falg que nege a leitura.
-        object->tid_waiting = current_thread;     // thread atual dorme   
-        //do_thread_waiting (current_thread);
+        object->tid_waiting = lapic_info[0].current_thread;     // thread atual dorme   
+        //do_thread_waiting (lapic_info[0].current_thread);
         return FALSE;  // nao pode ler
     }
 

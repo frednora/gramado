@@ -53,11 +53,14 @@ void callback_is_restored(void)
 {
     struct thread_d *t;
 
-    if (current_thread<0)
+// The current thread for this core
+    tid_t CurrentTID = lapic_info[0].current_thread;
+
+    if (CurrentTID<0)
         return;
-    if (current_thread >= THREAD_COUNT_MAX)
+    if (CurrentTID >= THREAD_COUNT_MAX)
         return;
-    t = (struct thread_d *) threadList[current_thread];
+    t = (struct thread_d *) threadList[CurrentTID];
     if (t->used != TRUE)
         return;
     if (t->magic != 1234)

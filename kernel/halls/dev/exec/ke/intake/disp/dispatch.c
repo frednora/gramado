@@ -105,6 +105,8 @@ void dispatcher(int type)
 {
     struct thread_d *TargetThread;
 
+    tid_t TargetTID = -1;
+
     //debug_print (" DISPATCHER: ");
 
 //
@@ -126,12 +128,15 @@ void dispatcher(int type)
 
 dispatch_current:
 
-// Target thread.
+// Target thread:
+// Get the current thread for this core.
 
-    if ( current_thread < 0 || current_thread >= THREAD_COUNT_MAX ){
-        panic("dispatcher: current_thread\n");
+    TargetTID = lapic_info[0].current_thread;
+
+    if ( TargetTID < 0 || TargetTID >= THREAD_COUNT_MAX ){
+        panic("dispatcher: TargetTID\n");
     }
-    TargetThread = (void *) threadList[current_thread];
+    TargetThread = (void *) threadList[TargetTID];
     if ((void *) TargetThread == NULL){
         panic ("dispatcher: TargetThread\n");
     }
@@ -202,11 +207,13 @@ dispatch_current:
 // if something goes wrong. So this way we can try another thing.
 
     TargetThread->saved = FALSE;
-    restore_current_context();  // update cr3.
+
+// Save the context for the current thread of the given core.
+// #bugbug: For now we are using the BSP
+    restore_current_context(0);  // update cr3
     return;
     //return 0;
 }
-
 
 //
 // $

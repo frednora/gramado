@@ -242,6 +242,13 @@ struct lapic_info_d
 // This thread will run here when there is no other job to do.
     // tid_t idle_tid;
 
+
+// The current thread running on this core.
+// Currently having the processing time on this core.
+
+	tid_t current_thread;
+
+
 //
 // GDT support
 //
@@ -275,7 +282,13 @@ extern struct lapic_info_d lapic_info[NR_CPUS];
 extern int apic_SPINLOCK;
 
 unsigned int apic_get_id(int lapic_info_id);
+unsigned int apic_get_id_00(void);
+
 unsigned int apic_get_version(int lapic_info_id);
+unsigned int apic_get_version_00(void);
+
+void local_apic_eoi(int lapic_info_id);
+void local_apic_eoi_00(void);
 
 
 void apic_mark_cpu_as_running(int lapic_info_id);
@@ -283,7 +296,6 @@ void apic_mark_cpu_as_running(int lapic_info_id);
 // Handler for the lapic timer (test)
 void apic_TimerHandler0000(void);
 
-void local_apic_eoi(int lapic_info_id);
 
 // Check presence of apic.
 int has_apic (void);

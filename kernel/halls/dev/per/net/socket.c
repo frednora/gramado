@@ -101,7 +101,7 @@ int sys_socket( int family, int type, int protocol )
     */
 
     //debug_print("sys_socket:\n");
-    do_credits_by_tid(current_thread);
+    do_credits_by_tid( lapic_info[0].current_thread );
 
 // Filters
 // For now we're only accepting AF_UNIX, AF_INET and AF_GRAMADO.
@@ -360,7 +360,7 @@ __accept_imp (
 
     // #debug
     // debug_print ("sys_accept:\n");
-    do_credits_by_tid(current_thread);
+    do_credits_by_tid(lapic_info[0].current_thread);
 
 //
 // fd Server 
@@ -724,7 +724,7 @@ sys_bind (
 
     // #debug
     //debug_print ("sys_bind:\n");
-    do_credits_by_tid(current_thread);
+    do_credits_by_tid( lapic_info[0].current_thread );
 
 // fd
     if ( sockfd < 0 || sockfd >= OPEN_MAX )
@@ -963,7 +963,7 @@ __connect_inet (
 
     unsigned char *given_ip;
 
-    do_credits_by_tid(current_thread);
+    do_credits_by_tid( lapic_info[0].current_thread );
 
     pid_t current_process = (pid_t) get_current_process();
 
@@ -1551,7 +1551,7 @@ __connect_local (
 
     unsigned char *given_ip;
 
-    do_credits_by_tid(current_thread);
+    do_credits_by_tid( lapic_info[0].current_thread );
 
     pid_t current_process = (pid_t) get_current_process();
 
@@ -2160,7 +2160,7 @@ static int __listen_imp(int sockfd, int backlog)
     struct te_d  *p;
     pid_t current_process = -1;
 
-    do_credits_by_tid(current_thread);
+    do_credits_by_tid( lapic_info[0].current_thread );
 
 // #debug
     //debug_print ("sys_listen: [TODO]\n");

@@ -693,6 +693,9 @@ void *ipc_get_message(unsigned long ubuf)
     int fBlockOnEmpty = FALSE;
     int fEmpty = FALSE;
 
+    // Get from this TID
+    tid_t FromThisTID = lapic_info[0].current_thread;
+
 // buffer
 // #todo: Check some other invalid address.
     if (ubuf == 0){
@@ -703,10 +706,10 @@ void *ipc_get_message(unsigned long ubuf)
 // ===========================================================
 // Thread
 // This is the thread that called this service.
-    if (current_thread < 0 || current_thread >= THREAD_COUNT_MAX){
+    if (FromThisTID < 0 || FromThisTID >= THREAD_COUNT_MAX){
         return NULL;
     }
-    t = (void *) threadList[current_thread];
+    t = (void *) threadList[FromThisTID];
     if ((void *) t == NULL){
         panic ("ipc_get_message: t\n");
     }
@@ -883,6 +886,9 @@ void *sys_get_message2(
     int fBlockOnEmpty = FALSE;
     int fEmpty = FALSE;
 
+    // Get from this TID
+    tid_t FromThisTID = lapic_info[0].current_thread;
+
 // buffer
 // #todo: Check some other invalid address.
     if (ubuf == 0){ 
@@ -893,12 +899,14 @@ void *sys_get_message2(
 // Thread
 // Essa é a thread que chamou esse serviço.
 
-    if (current_thread<0 || current_thread>=THREAD_COUNT_MAX){
+    if (FromThisTID < 0 || 
+        FromThisTID >= THREAD_COUNT_MAX)
+    {
         return NULL;
     }
 
 // Structure
-    t = (void *) threadList[current_thread];
+    t = (void *) threadList[FromThisTID];
     if ((void *) t == NULL){
         panic ("sys_get_message2: t\n");
     }
@@ -911,7 +919,7 @@ void *sys_get_message2(
         fBlockOnEmpty = TRUE;
 
 // Get the index
-    if(index<0 || index >= MSG_QUEUE_MAX){
+    if (index<0 || index >= MSG_QUEUE_MAX){
         goto fail0;
     }
     t->MsgQueueHead = (int) (index & 0xFFFFFFFF);
@@ -1048,13 +1056,19 @@ sys_post_message_to_tid(
     int tid, 
     unsigned long ubuf )
 {
-    tid_t src_tid = (tid_t) current_thread;   // caller's tid.
-    tid_t dst_tid = (tid_t) tid;              // targt tid.
 
-// Invalid target tid.
+// Sender: caller's tid
+    tid_t src_tid = (tid_t) lapic_info[0].current_thread;
+
+// Receiver: targt tid
+    tid_t dst_tid = (tid_t) tid;
+
+
+// Invalid target tid
     if ( dst_tid < 0 || dst_tid >= THREAD_COUNT_MAX ){
         return 0;
     }
+
 // Pointer to a ring 3 buffer.
 // #todo
 // Check the validation of this address agaisnt the valid user area,
@@ -1103,9 +1117,13 @@ sys_post_message_to_tid(
 // Broadcast system message to all the threads.
 // IN: Buffer
 // OUT: The number of posted messages.
+
 unsigned long sys_broadcast_system_message(unsigned long ubuf)
 {
-    tid_t Sender_TID = (tid_t) current_thread;
+
+// Sender: The current thread for this core
+    tid_t Sender_TID = (tid_t) lapic_info[0].current_thread;
+
     unsigned long long_rv=0;
 
 // Pointer to a ring 3 buffer.
@@ -1121,15 +1139,16 @@ unsigned long sys_broadcast_system_message(unsigned long ubuf)
 // Only the first 32 bits.
     int MessageCode = (int) (m[1] & 0xFFFFFFFF);
 
-// Call the worker.
+// Call the worker
     long_rv = 
-    (unsigned long) ipc_broadcast_system_message(
-        (tid_t) Sender_TID, // The sender is always the current_thread.
+    (unsigned long) ipc_broadcast_system_message (
+        (tid_t) Sender_TID,  // The sender is always the current_thread
         (int) MessageCode,
         (unsigned long) m[2],
         (unsigned long) m[3],
         (unsigned long) m[4],
-        (unsigned long) m[5] );
+        (unsigned long) m[5] 
+    );
 
     return (unsigned long) long_rv;
 }

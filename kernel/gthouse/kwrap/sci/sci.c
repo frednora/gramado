@@ -49,7 +49,13 @@ static void __servicePutChar(int c, int console_number)
 // #test
 static void __service897(void)
 {
-    struct thread_d *myThread; 
+    struct thread_d *myThread;
+
+    // #todo: Get the current value
+    int lapic_info_id = 0; // BSP
+
+    tid_t CurrentTID = lapic_info[lapic_info_id].current_thread;
+
     struct rect_d r;
     unsigned int _Color=0;
     int Draw = TRUE;
@@ -57,10 +63,11 @@ static void __service897(void)
 // Current thread
 // This routine only can be called by the 
 // init process. Its tid is INIT_TID.
-    if ( current_thread < 0 || current_thread >= THREAD_COUNT_MAX ){
+    if ( CurrentTID < 0 || CurrentTID >= THREAD_COUNT_MAX )
+    {
         return;
     }
-    if (current_thread != INIT_TID){
+    if (CurrentTID != INIT_TID){
         return;
     }
 
@@ -76,7 +83,7 @@ static void __service897(void)
     r.magic = 1234;
 
 //  Thread
-    myThread = (struct thread_d *) threadList[current_thread];
+    myThread = (struct thread_d *) threadList[ CurrentTID ];
     if ((void*) myThread == NULL)
         return;
     if (myThread->used != TRUE)
@@ -109,6 +116,12 @@ static void __setup_surface_rectangle(
     unsigned long height )
 {
     struct thread_d *t;
+
+    // #todo: Get the current value
+    int lapic_info_id = 0; // BSP
+
+    tid_t CurrentTID = lapic_info[lapic_info_id].current_thread;
+
     struct rect_d *r;
 
 /*
@@ -121,12 +134,12 @@ static void __setup_surface_rectangle(
     }
 */
 
-    if ( current_thread<0 || current_thread >= THREAD_COUNT_MAX ){
+    if ( CurrentTID<0 || CurrentTID >= THREAD_COUNT_MAX ){
         return;
     }
 
 // Thread
-    t = (struct thread_d *) threadList[current_thread];
+    t = (struct thread_d *) threadList[ CurrentTID ];
     if ((void*) t == NULL){
         return;
     }
@@ -155,14 +168,19 @@ static void __setup_surface_rectangle(
 static void __invalidate_surface_rectangle(void)
 {
     struct thread_d *t;
+
+    // #todo: Get the current value
+    int lapic_info_id = 0; // BSP
+
+    tid_t CurrentTID = lapic_info[lapic_info_id].current_thread;
     struct rect_d *r;
 
-    if ( current_thread<0 || current_thread >= THREAD_COUNT_MAX ){
+    if ( CurrentTID<0 || CurrentTID >= THREAD_COUNT_MAX ){
         return;
     }
 
 // Thread
-    t = (struct thread_d *) threadList[current_thread];
+    t = (struct thread_d *) threadList[ CurrentTID ];
     if ((void*) t == NULL){
         return;
     }
@@ -212,12 +230,20 @@ void *sci0 (
     g_profiler_ints_syscall_counter++;
 
 // ---------------------------------
+
+    // #todo: Get the current value
+    int lapic_info_id = 0; // BSP
+
+
+// The current thread for this core
+    tid_t CurrentTID = lapic_info[lapic_info_id].current_thread;
+
 // Thread
-    if ( current_thread<0 || current_thread >= THREAD_COUNT_MAX )
+    if ( CurrentTID<0 || CurrentTID >= THREAD_COUNT_MAX )
     { 
         return NULL;
     }
-    t = (struct thread_d *) threadList[current_thread];
+    t = (struct thread_d *) threadList[ CurrentTID ];
     if ((void*) t == NULL)
         return NULL;
     if (t->magic != 1234)
@@ -530,7 +556,7 @@ void *sci0 (
 
 // 46 - Setup who will be the system shell wproxy. The taskbar.
     if (number == 46){
-        return (void*) wproxy_set_shell( (tid_t) current_thread );
+        return (void*) wproxy_set_shell( (tid_t) CurrentTID );
     }
 
 // 47 - Create wproxy support
@@ -543,14 +569,15 @@ void *sci0 (
             (unsigned int) (message_address[4] & 0xFFFFFF); 
         
         // Create a wproxy.
-        // #ps: Not associated with a thread.
-        wproxy_create0(
-            (tid_t) current_thread,
+        // #ps: Not associated with a thread
+        wproxy_create0 (
+            (tid_t) CurrentTID,
             (unsigned long) message_address[0],
             (unsigned long) message_address[1],
             (unsigned long) message_address[2],
             (unsigned long) message_address[3],
-            (unsigned int) wproxy_Color );
+            (unsigned int) wproxy_Color 
+        );
 
         return NULL;
     }
@@ -593,8 +620,6 @@ void *sci0 (
         return NULL;
     }
 
-
-
 // #test
 // Slab allocator for shared memory
 // See: paging
@@ -603,8 +628,6 @@ void *sci0 (
         // Get a 2MB user mode shared region.
         return (void*) get_2mb_user_heap_page();
     }
-
-
 
 // ...
 
@@ -771,7 +794,7 @@ void *sci0 (
                             (int *) arg3, 
                             (int)   arg4 );
                 
-       //block_for_a_reason ( (int) current_thread, (int) arg2 ); //suspenso
+       //block_for_a_reason ( (int) CurrentTID, (int) arg2 ); //suspenso
     }
 
 // 84 - free
@@ -785,7 +808,7 @@ void *sci0 (
 
 // 87 - Get current thread id
     if (number == 87){
-        return (void*) current_thread;
+        return (void*) CurrentTID;
     }
 
 // Testa se o processo é válido
@@ -1383,7 +1406,7 @@ void *sci0 (
 // Permission: Maybe it can be done only by the init process.
     if (number == 288)
     {
-        //if (current_thread != INIT_TID)
+        //if (CurrentTID != INIT_TID)
             //return (void*) (-1);
         return (void *) wrappers_get_current_runlevel();
     }
@@ -1627,7 +1650,7 @@ void *sci0 (
 // Only the init thread can call this service.
     if (number == 640)
     {
-        if (current_thread == INIT_TID){
+        if (CurrentTID == INIT_TID){
             taskswitch_lock();
         }
         return NULL;
@@ -1637,7 +1660,7 @@ void *sci0 (
 // Only the init thread can call this service.
     if (number == 641)
     {
-        if (current_thread == INIT_TID){
+        if (CurrentTID == INIT_TID){
             taskswitch_unlock();
         }
         return NULL;
@@ -1647,7 +1670,7 @@ void *sci0 (
 // Only the init thread can call this service.
     if (number == 642)
     {
-        if (current_thread == INIT_TID){
+        if (CurrentTID == INIT_TID){
             scheduler_lock();
         }
         return NULL;
@@ -1657,7 +1680,7 @@ void *sci0 (
 // Only the init thread can call this service.
     if (number == 643)
     {
-        if (current_thread == INIT_TID){
+        if (CurrentTID == INIT_TID){
             scheduler_unlock();
         }
         return NULL;
@@ -1815,7 +1838,7 @@ void *sci0 (
     if (number == 911)
     {
         return (void*) sys_notify_event( 
-            (tid_t) current_thread,
+            (tid_t) CurrentTID,
             (tid_t) (arg2 & 0xFFFFFFFF), 
             (int)   (arg3 & 0xFFFFFFFF) );
     }
@@ -1829,7 +1852,7 @@ void *sci0 (
 // + extra value number
     if (number == 912){
         return (void*) sys_msgctl( 
-            (tid_t) current_thread, 
+            (tid_t) CurrentTID, 
             (int) (arg2 & 0xFFFFFFFF),
             (int) (arg3 & 0xFFFFFFFF) );
     }
@@ -1877,7 +1900,7 @@ void *sci0 (
             (int) 1,                 // status 
             (int) 0,                 // timeout. 0=imediatamente.
             (pid_t) current_process,   // target_pid
-            (tid_t) current_thread,    // target_tid
+            (tid_t) CurrentTID,    // target_tid
             (int) 0,                 // msg  
             (unsigned long) arg2,    // long1  
             (unsigned long) arg3 );  // long2
@@ -2021,6 +2044,9 @@ void *sci0 (
     return NULL;
 }
 
+
+
+
 // This routine was called by the interrupt handler in x64sc.c.
 // Getting requests from ring3 applications via systemcalls.
 // :: Services in mod0.
@@ -2031,23 +2057,28 @@ void *sci1 (
     unsigned long arg4 )
 {
     struct thread_d *t;  // thread
+
+    // #todo: Get the current value
+    int lapic_info_id = 0; // BSP
+
+    tid_t CurrentTID = lapic_info[lapic_info_id].current_thread;
+
     struct te_d *te;     // thread environment
-
-    debug_print("sci1: [TODO]\n");
-
 // thread environment id (fka PID)
     pid_t current_process = (pid_t) get_current_process();
+
+    debug_print("sci1: [TODO]\n");
 
     // Global counter for syscalls.
     g_profiler_ints_syscall_counter++;
 
 // #test
 // ---------------------------------
-    if ( current_thread<0 || current_thread >= THREAD_COUNT_MAX )
+    if ( CurrentTID<0 || CurrentTID >= THREAD_COUNT_MAX )
     { 
         return NULL; 
     }
-    t = (struct thread_d *) threadList[current_thread];
+    t = (struct thread_d *) threadList[CurrentTID];
     if ((void*) t == NULL)
         return NULL;
     if (t->magic != 1234)
@@ -2089,8 +2120,8 @@ void *sci1 (
     }
 
 // #test
-// Only the display server can access this service.
-    if (current_thread != DisplayServerInfo.tid)
+// Only the display server can access this service
+    if (CurrentTID != DisplayServerInfo.tid)
     {
         // OUT: Access denied.
         return 4321;
@@ -2158,8 +2189,13 @@ void *sci2 (
     unsigned long arg4 )
 {
     struct thread_d *t;  // thread
-    struct te_d *p;      // thread environment
 
+    // #todo: Get the current value
+    int lapic_info_id = 0; // BSP
+
+    tid_t CurrentTID = lapic_info[lapic_info_id].current_thread;
+
+    struct te_d *p;      // thread environment
     pid_t current_process = (pid_t) get_current_process();
 
     // Global counter for syscalls.
@@ -2167,11 +2203,11 @@ void *sci2 (
 
 // #test
 // ---------------------------------
-    if ( current_thread<0 || current_thread >= THREAD_COUNT_MAX )
+    if ( CurrentTID<0 || CurrentTID >= THREAD_COUNT_MAX )
     { 
         return NULL;
     }
-    t = (struct thread_d *) threadList[current_thread];
+    t = (struct thread_d *) threadList[CurrentTID];
     if ((void*) t == NULL)
         return NULL;
     if (t->magic != 1234)
@@ -2279,7 +2315,7 @@ void *sci2 (
 //  + Set a flag that this thread will be preempted.
 // See: schedi.c
     if (number == 265){
-        sys_yield(current_thread); 
+        sys_yield(CurrentTID); 
         return NULL; 
     }
 
@@ -2295,7 +2331,7 @@ void *sci2 (
 // O ts vai fazer isso quando for seguro.
 // IN: tid, ms
     if (number == 266){
-        sys_sleep( (tid_t) current_thread, (unsigned long) arg2 );
+        sys_sleep( (tid_t) CurrentTID, (unsigned long) arg2 );
         return NULL;
     }
 
@@ -2306,15 +2342,18 @@ void *sci2 (
 // IN: decrement.
     if (number == 777)
     {
-        sys_nice(1);
+        // IN: decrement, current core
+        sys_nice(1,0);
         return NULL;   
     }
+
 
 /*
 // #todo
 // The implementation of nice() receiving a velue as decrement.
     if (number == 778)
     {
+        // IN: decrement, current core
         sys_nice(arg2);
         return NULL;   
     }
@@ -2675,9 +2714,11 @@ void *sci2 (
         return NULL;
     }
 
-// 10010 - Get the tid of the current thread.
-    if (number == 10010){
-        return (void*) GetCurrentTID();
+// 10010 - Get the tid of the current thread of a given core
+    if (number == 10010)
+    {
+        // #bugbug: Using BSP
+        return (void*) GetCurrentTID( lapic_info_id );
     }
 
 // -----------------------------
@@ -2691,8 +2732,8 @@ void *sci2 (
 
     if (number == 10011)
     {
-        //printk("10011: BEGIN — current_thread=%d arg2=%d\n",
-           //current_thread, arg2);
+        //printk("10011: BEGIN — CurrentTID=%d arg2=%d\n",
+           //CurrentTID, arg2);
 
         //debug_print("sci2: [10011] set foreground thread tid\n");
 
@@ -2707,7 +2748,7 @@ void *sci2 (
 
         // The display server is trying to change the foreground thread.
         // The display server is the input authority.
-        if ( current_thread == DisplayServerInfo.tid && 
+        if ( CurrentTID == DisplayServerInfo.tid && 
              InputAuthority.current_authority == AUTH_DISPLAY_SERVER )
         {
             // #debug
@@ -2718,7 +2759,7 @@ void *sci2 (
         // Some process that is not the display server 
         // is trying to change the foreground thread.
         // The display server is the input authority.
-        if ( current_thread != DisplayServerInfo.tid && 
+        if ( CurrentTID != DisplayServerInfo.tid && 
              InputAuthority.current_authority == AUTH_DISPLAY_SERVER )
         {
             // #debug
@@ -2807,7 +2848,7 @@ void *sci2 (
         /*
         // The display server is trying to change the foreground thread.
         // The display server is the input authority.
-        if ( current_thread == DisplayServerInfo.tid && 
+        if ( CurrentTID == DisplayServerInfo.tid && 
              InputAuthority.current_authority == AUTH_DISPLAY_SERVER )
         {
             // #debug
@@ -2821,7 +2862,7 @@ void *sci2 (
         // Some process that is not the display server 
         // is trying to change the foreground thread.
         // The display server is the input authority.
-        if ( current_thread != DisplayServerInfo.tid && 
+        if ( CurrentTID != DisplayServerInfo.tid && 
              InputAuthority.current_authority == AUTH_DISPLAY_SERVER )
         {
             // #debug
@@ -2873,7 +2914,7 @@ void *sci2 (
     if (number == 10013)
     {
         // The authority is the fg thread
-        if (current_thread != foreground_thread)
+        if (CurrentTID != foreground_thread)
             return NULL;
         if (foreground_thread < 0 || foreground_thread >= THREAD_COUNT_MAX)
             return NULL;
@@ -3056,7 +3097,7 @@ void *sci2 (
 // Remember the restorer interrupt.
     if (number == 44000)
     {
-        tid_t cb_target_tid = current_thread;
+        tid_t cb_target_tid = CurrentTID;
         if (cb_target_tid < 0 || cb_target_tid >= THREAD_COUNT_MAX)
             return NULL;
         t = (struct thread_d *) threadList[cb_target_tid];
@@ -3078,7 +3119,7 @@ void *sci2 (
 // Put the thread into the alertable state.
     if (number == 44001)
     {
-       tid_t alertable_target_tid = current_thread;
+       tid_t alertable_target_tid = CurrentTID;
         if (alertable_target_tid < 0 || alertable_target_tid >= THREAD_COUNT_MAX)
             return NULL;
         t = (struct thread_d *) threadList[alertable_target_tid];
@@ -3110,10 +3151,9 @@ void *sci2 (
 // for sharing it with the child.
     if (number == 44010)
     {
-        current_thread;
-        if (current_thread < 0 || current_thread >= THREAD_COUNT_MAX)
+        if (CurrentTID < 0 || CurrentTID >= THREAD_COUNT_MAX)
             return NULL;
-        t = (struct thread_d *) threadList[current_thread];
+        t = (struct thread_d *) threadList[CurrentTID];
         if ((void*) t == NULL){
             return NULL;
         }
@@ -3139,10 +3179,9 @@ void *sci2 (
 // Probably shared by the father
     if (number == 44011)
     {
-        current_thread;
-        if (current_thread < 0 || current_thread >= THREAD_COUNT_MAX)
+        if (CurrentTID < 0 || CurrentTID >= THREAD_COUNT_MAX)
             return NULL;
-        t = (struct thread_d *) threadList[current_thread];
+        t = (struct thread_d *) threadList[CurrentTID];
         if ((void*) t == NULL){
             return NULL;
         }
@@ -3187,12 +3226,17 @@ void *sci3 (
     unsigned long arg4 )
 {
     struct thread_d *t;  // thread
+
+    // #todo: Get the current value
+    int lapic_info_id = 0; // BSP
+
+    tid_t CurrentTID = lapic_info[lapic_info_id].current_thread;
+
     struct te_d *te;     // thread environment
-
-    //debug_print("sci3: [TODO]\n");
-
 // thread environment id (fka PID)
     pid_t current_process = (pid_t) get_current_process();
+
+    //debug_print("sci3: [TODO]\n");
 
     // Global counter for syscalls.
     g_profiler_ints_syscall_counter++;
@@ -3200,11 +3244,11 @@ void *sci3 (
 
 // #test
 // ---------------------------------
-    if (current_thread<0 || current_thread >= THREAD_COUNT_MAX)
+    if (CurrentTID<0 || CurrentTID >= THREAD_COUNT_MAX)
     { 
         return NULL;
     }
-    t = (struct thread_d *) threadList[current_thread];
+    t = (struct thread_d *) threadList[CurrentTID];
     if ((void*) t == NULL)
         return NULL;
     if (t->magic != 1234)
@@ -3245,9 +3289,9 @@ void *sci3 (
 
 // #test
 // Only the display server can access this service.
-    if (current_thread != DisplayServerInfo.tid)
+    if (CurrentTID != DisplayServerInfo.tid)
     {
-        // OUT: Access denied.
+        // OUT: Access denied
         return 4321;
     }
 // #test

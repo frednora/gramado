@@ -182,39 +182,44 @@ static int __AP_handshake(void)
 
     ap_startup_counter++;  // Update counter
 
-    // Get the slot id in lapic_info[] database.
-    int id = WelcomeAP.my_lapic_info_id;
-    if (id < 0)
+// Get the slot id in lapic_info[] database.
+// The BSP is telling us what is our lapic info id.
+// Based on that, we are able to get the real hw cpu id.
+    int my_lapic_id = WelcomeAP.my_lapic_info_id;
+    if (my_lapic_id < 0)
         goto fail;
-    if (id >= NR_CPUS)
+    if (my_lapic_id >= NR_CPUS)
         goto fail;
 
     int localid;
     int localversion;
 
-    // ---------------
-    // ID (the real id provided by the hardware)
-    localid = (int) apic_get_id(id);
-    lapic_info[id].local_id = (int) (localid & 0xFF);
+// ---------------
+// #important: (REAL CPU ID)
+// ID (the real id provided by the hardware)
+// Saving it into our structure
+    localid = (int) apic_get_id(my_lapic_id);
+    lapic_info[my_lapic_id].local_id = (int) (localid & 0xFF);
  
-    // ---------------
-    // Version
-    // 8bits
-    // 10H~15H
-    localversion = (int) apic_get_version(id);
-    lapic_info[id].local_version = (int) (localversion & 0xFF);
+// ---------------
+// Version
+// 8bits
+// 10H~15H
+// Saving it into our structure
+    localversion = (int) apic_get_version(my_lapic_id);
+    lapic_info[my_lapic_id].local_version = (int) (localversion & 0xFF);
 
     // Print:
     printk("slot id:%d | HW ID: %d | VERSION: %x\n",
-        id,
-        lapic_info[id].local_id,
-        lapic_info[id].local_version 
+        my_lapic_id,
+        lapic_info[my_lapic_id].local_id,
+        lapic_info[my_lapic_id].local_version 
     );
 
-    apic_mark_cpu_as_running(id);  // The Core 1 is running now.
+    apic_mark_cpu_as_running(my_lapic_id);  // The Core 1 is running now.
     WelcomeAP.bsp_is_waiting = FALSE; // BSP can continue
 
-    return (int) id;  // Return an valid ID
+    return (int) my_lapic_id;  // Return an valid ID
 
 fail:
     return (int) -1;  // Return an invalid ID
@@ -397,7 +402,10 @@ void init_globals(void)
 // Order: cpu, ram, devices, etc.
 // #todo: maybe we can move this routine to x64init.c
 
-    int Status=FALSE;
+    int Status = FALSE;
+
+    const int lapic_info_id = 0;  // BSP
+
 
 // smp
     g_smp_initialized = FALSE;
@@ -440,11 +448,16 @@ void init_globals(void)
     //current_process = (pid_t) 0;
     set_current_process(0);  //?
 
-// Thread
+// Global foreground thread
     foreground_thread = (tid_t) 0;
-    current_thread = (int) 0;
 
-// File system support.
+    
+// Per-cpu current thread.
+// Initialize the index of the current thread for the first core.
+    lapic_info[lapic_info_id].current_thread = (tid_t) 0;
+
+
+// File system support
 // Type=1 | FAT16.
     g_currentvolume_filesystem_type = FS_TYPE_FAT16;
     g_currentvolume_fatbits = (int) 16;
@@ -659,7 +672,9 @@ static void earlyinit_Globals(int arch_type)
 
     // Invalidate
     set_current_process(-1);
-    SetCurrentTID(-1);
+
+// IN: tid, lapic id
+    SetCurrentTID(-1,0);
 
 // Initializing the global spinlock.
     __spinlock_ipc = TRUE;
@@ -924,6 +939,9 @@ static int archinit(void)
     int ValidProcessorType = FALSE;
     int smp_status = FALSE;
 
+    const int lapic_info_id = 0;  // BSP
+
+
 /*
 //++
 //----------
@@ -988,8 +1006,8 @@ static int archinit(void)
         {
             // Enable apic and timer
             // Target: BSP cpu
-            if (lapic_info[0].initialized == TRUE)
-                apic_setup_registers(0);  // #todo: id in parameter.
+            if (lapic_info[ lapic_info_id ].initialized == TRUE)
+                apic_setup_registers( lapic_info_id );  // #todo: id in parameter.
             //printk("kmain: breakpoint on apic_setup_registers()\n");
             //while(1){}
         }
@@ -1249,6 +1267,10 @@ fail:
 // + [5]   deviceinit()
 // + [6]   lateinit()
 // ==================================
+
+// IN:
+// + arch type
+// + ?
 static int I_initialize_kernel(int arch_type, int processor_number)
 {
     int Status = FALSE;
@@ -1473,8 +1495,27 @@ void AP_kmain(void)
     //PROGRESS("AP_kmain: \n")
 
 // Talk with the BSP in order to identify the current AP.
+// #ps: return the lapic info id, not the real hw cpu id.
     id = (int) __AP_handshake();
 
+/*
+    if (id <0 || id>NR_CPUS)
+    {
+        panic("AP_kmain: id\n");
+    }
+*/
+
+//
+// Compare
+//
+
+/*
+    int MyHardwareID = (int) apic_get_id_00();
+    if (lapic_info[id].local_id == MyHardwareID)
+    {
+        panic("AP_kmain: MyHardwareID\n");
+    }
+*/
 
 /*
     ProcessorNumber = id;  // ID

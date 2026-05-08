@@ -519,8 +519,10 @@ static int I_x64CreateInitialProcess(void)
 // Set the current process (Canonical value)
     set_current_process(InitProcessPID);
 
-// Set the current thread
-    current_thread = (tid_t) InitThread->tid;
+// Set the current thread for this core
+
+    lapic_info[0].current_thread = (tid_t) InitThread->tid;
+
 
 // Done:
 // Now We already have one valid user mode process.
@@ -599,8 +601,12 @@ void I_x64ExecuteInitialProcess(void)
         panic("I_x64ExecuteInitialProcess: saved\n");
     }
 
-// Set the current and the foreground threads.
+// Set the curren thread for this core
+// #bugbug: We need to pass the cpu id via parameter
+
     set_current_thread(TID);
+
+// Set the clobal foreground thread
     set_foreground_thread(TID);
 
 // State

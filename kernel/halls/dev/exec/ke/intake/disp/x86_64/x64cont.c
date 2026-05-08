@@ -70,9 +70,23 @@ unsigned char context_fpu_buffer[512];
  */
 // unit 1: Capture context.
 // Intake
-void save_current_context (void)
+
+void save_current_context(int lapic_info_id)
 {
     struct thread_d  *t;
+
+    int __lapic_info_id = lapic_info_id;
+
+
+// #debug:
+// Only the BSP processor can save the context for now
+    if (__lapic_info_id != 0){
+        panic("restore_current_context: #todo Not BSP\n");
+    }
+
+// The current thread for this core
+    tid_t CurrentTID = lapic_info[__lapic_info_id].current_thread;
+
     register int i=0;
 
     // Context
@@ -105,27 +119,27 @@ void save_current_context (void)
     unsigned long *context_cpl = (unsigned long *) &contextCPL;
 
 
-// See: ts.c where we are using current_thread
+// See: ts.c where we are using it
 // before calling this routine.
 
 // Structure ~ Colocando o contexto na estrutura.
 
-    if ( current_thread < 0 || current_thread >= THREAD_COUNT_MAX )
+    if ( CurrentTID < 0 || CurrentTID >= THREAD_COUNT_MAX )
     {
-        printk("save_current_context: TID=%d\n", current_thread );
+        printk("save_current_context: CurrentTID=%d\n", CurrentTID );
         goto fail0;
     }
 
 // The thread structure
-    t = (void *) threadList[current_thread];
+    t = (void *) threadList[CurrentTID];
     if ((void *) t == NULL){
-        printk ("save_current_context: [ERROR] Struct Thread={%d}\n",
-            current_thread );
+        printk ("save_current_context: [ERROR] struct for CurrentTID={%d}\n",
+            CurrentTID );
         goto fail1;
     }
     if ( t->used != TRUE || t->magic != 1234 ){
-        printk ("save_current_context: [ERROR] Validation Thread={%d}\n",
-            current_thread );
+        printk ("save_current_context: [ERROR] Validation CurrentTID={%d}\n",
+            CurrentTID );
         goto fail1;
     }
 
@@ -260,9 +274,22 @@ fail0:
 // Burgundy?
 
 // It restores the context and update cr3. 
-void restore_current_context (void)
+
+void restore_current_context(int lapic_info_id)
 {
     struct thread_d  *t;
+
+    int __lapic_info_id = lapic_info_id;
+
+// #debug:
+// Only the BSP processor can save the context for now
+    if (__lapic_info_id != 0){
+        panic("restore_current_context: #todo Not BSP\n");
+    }
+
+// The current thread for this core
+    tid_t CurrentTID = lapic_info[__lapic_info_id].current_thread;
+
     register int i=0;
 
     // Context
@@ -292,12 +319,13 @@ void restore_current_context (void)
     unsigned long *contextr14 = (unsigned long *) &contextR14;
     unsigned long *contextr15 = (unsigned long *) &contextR15;
 
-    if ( current_thread < 0 || current_thread >= THREAD_COUNT_MAX ){
-        printk ("restore_current_context: TID=%d\n", current_thread );
+    if ( CurrentTID < 0 || CurrentTID >= THREAD_COUNT_MAX )
+    {
+        printk ("restore_current_context: CurrentTID=%d\n", CurrentTID );
         goto fail0;
     }
 
-    t = (void *) threadList[current_thread]; 
+    t = (void *) threadList[CurrentTID]; 
     if ((void *) t == NULL){
         printk("restore_current_context error: t\n");
         goto fail1;

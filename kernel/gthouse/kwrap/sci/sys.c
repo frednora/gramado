@@ -26,13 +26,23 @@
 unsigned long sys_alarm(unsigned long seconds)
 {
     struct thread_d *t;
+
+    int lapic_info_id = 0;  // BSP
+
+// The current thread for this core
+    tid_t CurrentTID = lapic_info[lapic_info_id].current_thread;
+
+
     unsigned long old=0;
     unsigned long seconds_remaining=0;
     unsigned long extra_ms=0;
 
-    if (current_thread<0 || current_thread > THREAD_COUNT_MAX )
+    if ( CurrentTID<0 || 
+         CurrentTID > THREAD_COUNT_MAX )
+    {
         return 0; 
-    t = (struct thread_d *) threadList[current_thread];
+    }
+    t = (struct thread_d *) threadList[CurrentTID];
     if ( t->used != TRUE || t->magic != 1234 )
         return 0;
 
@@ -107,8 +117,14 @@ void *sys_create_process (
 {
     struct te_d *new;
     char NewName[32];
+
     struct thread_d *CurrentThread;
     struct te_d *CurrentProcess;
+
+    int lapic_info_id = 0;  // BSP
+
+    tid_t CurrentTID = lapic_info[lapic_info_id].current_thread;
+
     int ProcessPersonality=0;
 
 //
@@ -124,9 +140,9 @@ void *sys_create_process (
     // ==============
     
     // #todo
-    // Check tid validation.
+    // Check tid validation
 
-    CurrentThread = (struct thread_d *) threadList[current_thread];
+    CurrentThread = (struct thread_d *) threadList[ CurrentTID ];
     if ((void*)CurrentThread==NULL){
         return NULL;
     }

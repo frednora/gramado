@@ -16,7 +16,7 @@ static void __tsOnFinishedExecuting(struct thread_d *t);
 static void __tsCry(unsigned long flags);
 
 // Task switching implementation
-static unsigned long __task_switch(void);
+static unsigned long __task_switch(int lapic_info_id);
 
 //
 // =============================================
@@ -256,13 +256,23 @@ static void __tsOnFinishedExecuting(struct thread_d *t)
  // Worker:
 // Called by psTaskSwitch()
 
-static unsigned long __task_switch(void)
+static unsigned long __task_switch(int lapic_info_id)
 {
     //unsigned long rv = 0;
+
+    int __lapic_info_id = lapic_info_id;
+
+    if (__lapic_info_id < 0 || __lapic_info_id >= NR_CPUS)
+    {
+        panic("__task_switch: __lapic_info_id\n");
+    }
+
+    tid_t CurrentTID = lapic_info[__lapic_info_id].current_thread;
 
 // Current
     struct thread_d  *CurrentThread;
     struct te_d *CurrentProcess;
+
 // Target
     struct thread_d  *TargetThread;
     struct te_d *TargetProcess;
@@ -274,15 +284,19 @@ static unsigned long __task_switch(void)
     //tid_t tmp_tid = -1;
 // =======================================================
 
+
+
 //
 // Current thread
 //
 
-    if (current_thread < 0 || current_thread >= THREAD_COUNT_MAX){
-        panic("ts: current_thread\n");
+    if ( CurrentTID < 0 || 
+         CurrentTID >= THREAD_COUNT_MAX )
+    {
+        panic("ts: CurrentTID\n");
     }
     // structure
-    CurrentThread = (void *) threadList[current_thread]; 
+    CurrentThread = (void *) threadList[CurrentTID]; 
     if ((void *) CurrentThread == NULL){
         panic ("ts: CurrentThread\n");
     }
@@ -382,7 +396,10 @@ static unsigned long __task_switch(void)
         panic("ts: Cant save context. Callback in progress\n");
 
 // Save
-    save_current_context();
+// Save the context for the current thread of the given core.
+// #bugbug: For now we are using the BSP
+
+    save_current_context(0);
     CurrentThread->saved = TRUE;
 
 // #test
@@ -632,7 +649,13 @@ ZeroGravity:
     // End of queue = end of stage, not round.
     if ((void *) currentq->next == NULL)
     {
-        current_thread = (tid_t) psScheduler();
+
+        //
+        // Set the current thread for this core
+        //
+
+        lapic_info[__lapic_info_id].current_thread = (tid_t) psScheduler();
+
         // Avoiding the risk of bouncing back into ZeroGravity or 
         // looping forever.
         goto dispatch_current;
@@ -646,7 +669,7 @@ ZeroGravity:
     {
         if (InitThread->magic == 1234)
         {
-            current_thread = (tid_t) InitThread->tid;
+            lapic_info[__lapic_info_id].current_thread = (tid_t) InitThread->tid;
             goto go_ahead;
         }
     }
@@ -683,13 +706,13 @@ go_ahead:
     if ((void *) TargetThread == NULL)
     {
         debug_print ("ts: pointer ");
-        current_thread = (tid_t) psScheduler();
+        lapic_info[__lapic_info_id].current_thread = (tid_t) psScheduler();
         goto ZeroGravity;
     }
     if ( TargetThread->used != TRUE || TargetThread->magic != 1234 )
     {
         debug_print ("ts: val ");
-        current_thread = (tid_t) psScheduler();
+        lapic_info[__lapic_info_id].current_thread = (tid_t) psScheduler();
         goto ZeroGravity;
     }
 // Not ready?
@@ -700,7 +723,7 @@ go_ahead:
         debug_print ("ts: state ");
         //serial_printk ("ts: state name=%s tid=%d ", 
             //TargetThread->__threadname, TargetThread->tid);
-        current_thread = (tid_t) psScheduler();
+        lapic_info[__lapic_info_id].current_thread = (tid_t) psScheduler();
         goto ZeroGravity;
     }
 
@@ -708,10 +731,11 @@ go_ahead:
 // == Dispatcher ====
 //
 
-// OK, we already checked and out target thread is a valid one.
-    
-// Current selected.
-    current_thread = (int) TargetThread->tid;
+// OK, we already checked and our target thread is a valid one.
+// Let's set the current thread for this core.
+
+// Current selected
+    lapic_info[__lapic_info_id].current_thread = (int) TargetThread->tid;
     goto dispatch_current;
 
 // #debug
@@ -729,12 +753,14 @@ go_ahead:
 dispatch_current:
 
 // tid
-    if ( current_thread < 0 || current_thread >= THREAD_COUNT_MAX ){
-        panic ("ts-dispatch_current: current_thread\n");
+    if ( lapic_info[__lapic_info_id].current_thread < 0 || 
+         lapic_info[__lapic_info_id].current_thread >= THREAD_COUNT_MAX )
+    {
+        panic ("ts-dispatch_current: lapic_info[__lapic_info_id].current_thread\n");
     }
 
 // structure
-    TargetThread = (void *) threadList[current_thread];
+    TargetThread = (void *) threadList[ lapic_info[__lapic_info_id].current_thread ];
     if ((void *) TargetThread == NULL){
         panic ("ts-dispatch_current: TargetThread\n");
     }
@@ -884,6 +910,26 @@ unsigned long tsTaskSwitch(void)
     pid_t current_process_pid = -1;
     pid_t ws_pid = -1;
 
+
+// Which CPU am I?
+// Get the hardware cpu id
+    int __lapic_info_id = apic_get_id_00();
+
+    // #debug
+    // Only valid for BSP processor for now.
+    if (__lapic_info_id != 0){
+        panic("tsTaskSwitch: Not in BSP\n");
+    }
+
+    if (__lapic_info_id < 0 || __lapic_info_id >= NR_CPUS)
+    {
+        panic("tsTaskSwitch: __lapic_info_id\n");
+    }
+
+    // The current thread for this core
+    tid_t CurrentTID = lapic_info[__lapic_info_id].current_thread;
+
+
 // Filters
 
 // #::
@@ -907,9 +953,10 @@ unsigned long tsTaskSwitch(void)
 // This variable was set at the last release or the last spawn.
 // Global variable.
 
-    if (current_thread < 0 || current_thread >= THREAD_COUNT_MAX)
+    if ( CurrentTID < 0 || 
+         CurrentTID >= THREAD_COUNT_MAX )
     {
-        printk ("psTaskSwitch: current_thread %d", current_thread); 
+        printk ("psTaskSwitch: CurrentTID %d", CurrentTID); 
         die();
     }
 
@@ -939,7 +986,7 @@ unsigned long tsTaskSwitch(void)
 */
 
 // The task switching routine
-    rv = (unsigned long) __task_switch();
+    rv = (unsigned long) __task_switch( __lapic_info_id );
 
 
 /*
@@ -966,12 +1013,16 @@ so you don’t get duplicate deliveries. The thread can re‑arm later if it wan
 */
 
 
-    if (current_thread < 0 || current_thread >= THREAD_COUNT_MAX)
+    // #important
+    // Now we have a new current thread
+    CurrentTID = lapic_info[__lapic_info_id].current_thread;
+
+    if (CurrentTID < 0 || CurrentTID >= THREAD_COUNT_MAX)
     {
-        printk ("psTaskSwitch: current_thread %d", current_thread); 
+        printk ("psTaskSwitch: CurrentTID %d", CurrentTID); 
         die();
     }
-    tid_t target_tid = current_thread;
+    tid_t target_tid = CurrentTID;
     struct thread_d *t;
     t = (struct thread_d *) threadList[target_tid];
     if (t->is_alertable == TRUE)

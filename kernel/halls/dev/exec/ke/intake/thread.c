@@ -14,7 +14,9 @@ struct thread_d  *InitThread;  // The thread for the Init Process
 //
 
 // ------
-tid_t current_thread=0;
+
+// tid_t current_thread=0;
+
 tid_t foreground_thread=0;
 tid_t special_reader=0;
 // ------
@@ -550,15 +552,25 @@ fail:
 }
 
 // Set the current TID
-void SetCurrentTID(tid_t tid)
+void SetCurrentTID(tid_t tid, int lapic_info_id)
 {
-    current_thread = (tid_t) tid;
+    if (lapic_info_id < 0)
+        return;
+    if (lapic_info_id >= NR_CPUS)
+        return;
+
+    lapic_info[lapic_info_id].current_thread = (tid_t) tid;
 }
 
-// Get the current TID
-tid_t GetCurrentTID(void)
+// Get the current TID for a given core
+tid_t GetCurrentTID(int lapic_info_id)
 {
-    return (tid_t) current_thread;
+    if (lapic_info_id < 0)
+        return (tid_t) -1;
+    if (lapic_info_id >= NR_CPUS)
+        return (tid_t) -1;
+
+    return (tid_t) lapic_info[lapic_info_id].current_thread;
 }
 
 void *GetThreadByTID(tid_t tid)
@@ -573,13 +585,15 @@ void *GetThreadByTID(tid_t tid)
     return (void *) t;
 }
 
-// Get the structure pointer.
+// Get the structure pointer
 void *GetCurrentThread(void)
 {
-    if (current_thread < 0)
+    tid_t tid = lapic_info[0].current_thread;
+
+    if (tid < 0)
         return NULL;
     // ...
-    return (void*) GetThreadByTID(current_thread);
+    return (void*) GetThreadByTID(tid);
 }
 
 // Get the structure pointer.
@@ -819,7 +833,7 @@ int sys_msgctl(tid_t caller_tid, int option, int extra_value)
 
 // -----------------------------------------------------
 // Caller
-    if (caller_tid != current_thread)
+    if (caller_tid != lapic_info[0].current_thread)
         return -1;
     if (caller_tid < 0 || caller_tid >= THREAD_COUNT_MAX)
         return -1;
@@ -945,16 +959,19 @@ fail:
 // Exit current thread
 int exit_current_thread(void)
 {
-    if (current_thread < 0)
+    tid_t tid = lapic_info[0].current_thread;
+
+    if (tid < 0)
         goto fail;
-    if (current_thread >= THREAD_COUNT_MAX)
+    if (tid >= THREAD_COUNT_MAX)
     {
         goto fail;
     }
-    return (int) exit_thread(current_thread);
+    return (int) exit_thread(tid);
 fail:
     return (int) -1;
 }
+
 
 // copy_thread_struct:
 // Clona uma thread.
@@ -1488,7 +1505,8 @@ struct thread_d *create_thread (
 // Pois a thread atual não importa.
 // @todo: deletar isso. 
 
-    if ( current_thread < 0 || current_thread >= THREAD_COUNT_MAX )
+    if ( lapic_info[0].current_thread < 0 || 
+         lapic_info[0].current_thread >= THREAD_COUNT_MAX )
     {
         printk ("create_thread: current_thread\n");
         goto fail;
@@ -1900,10 +1918,12 @@ int init_threads(void)
     debug_print("init_threads:\n");
 
 // Globais
-    current_thread=0;  //tid.
+
 // Número de threads no processador.
     //ProcessorBlock.threads_counter = 0;
     UPProcessorBlock.threads_counter = (int) 0;
+
+    lapic_info[0].current_thread = 0;  //
 
    //...
 

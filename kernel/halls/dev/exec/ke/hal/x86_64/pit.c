@@ -601,6 +601,11 @@ struct timer_d *create_timer (
     struct thread_d  *Thread;
     int ID = -1;  //erro;
 
+
+// The current thread for this core
+    tid_t CurrentTID = lapic_info[0].current_thread;
+
+
     debug_print("create_timer:\n");
     //printk     ("create_timer: pid=%d ms=%d type=%d\n",
     //    pid,ms,type);
@@ -617,13 +622,14 @@ struct timer_d *create_timer (
         return NULL;
     }
 // --------------
-    if (current_thread<0 || current_thread >= THREAD_COUNT_MAX){
-        debug_print("create_timer: [FAIL] current_thread\n");
+    if (CurrentTID<0 || CurrentTID >= THREAD_COUNT_MAX)
+    {
+        debug_print("create_timer: [FAIL] CurrentTID\n");
         return NULL;
     }
     // The flower thread
     //Thread = (struct thread_d *) Process->flower;
-    Thread = (struct thread_d *) threadList[current_thread];
+    Thread = (struct thread_d *) threadList[CurrentTID];
     if ((void*) Thread == NULL){
         debug_print("create_timer: [FAIL] Thread\n");
         return NULL;
@@ -686,7 +692,7 @@ struct timer_d *create_timer (
             Timer->thread  = (struct thread_d *)  Thread;
             Timer->process = (struct te_d *) Process;
             Timer->pid     = pid;
-            Timer->tid     = current_thread;
+            Timer->tid     = CurrentTID;
 
             //printk("create_timer: done t={%d} :) \n",
             //    Timer->initial_count_down);

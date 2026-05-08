@@ -382,12 +382,19 @@ static void __spawn_thread_by_tid_imp(tid_t tid)
 // The current process will be the owner pid.
     set_current_process(cur_teid);
 
-// Set current thread
+
+
+// Set current thread for this core
+// #bugbug:
+// We need to send the 'cpu id' as parameter
 
     set_current_thread(target_thread->tid);
-    if (current_thread < 0 || current_thread >= THREAD_COUNT_MAX)
+
+    // Check if it was setted correctly
+    if ( lapic_info[0].current_thread < 0 || 
+         lapic_info[0].current_thread >= THREAD_COUNT_MAX )
     {
-        panic("__spawn_thread_by_tid_imp: current_thread\n");
+        panic("__spawn_thread_by_tid_imp: lapic_info[0].current_thread\n");
     }
 
     IncrementDispatcherCount(SELECT_INITIALIZED_COUNT);

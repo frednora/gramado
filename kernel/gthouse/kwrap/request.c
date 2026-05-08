@@ -265,7 +265,7 @@ int processDeferredKernelRequest(void)
         //cuidado.
         case 14:
             //debug_print ("processDeferredKernelRequest: Get current thread\n");
-            current_thread = REQUEST.target_tid;
+            lapic_info[0].current_thread = REQUEST.target_tid;
             break;
 
 
@@ -282,7 +282,10 @@ int processDeferredKernelRequest(void)
         case 111:
             //current_process = REQUEST.target_pid;
             set_current_process(REQUEST.target_pid);
-            current_thread  = REQUEST.target_tid;
+
+            // #bugbug: What?
+            // Set the current thread for this core
+            lapic_info[0].current_thread = REQUEST.target_tid;
             
             // IN: file name, parent pid, clone flags.
             return (void *) copy_process( 

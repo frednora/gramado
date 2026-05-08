@@ -284,7 +284,11 @@ int is_scheduler_locked(void){
 // #test: (Not in use yet)
 // Lets end this round putting a given thread at the end
 // of this round.
-void sched_cut_round(struct thread_d *last_thread)
+
+void 
+sched_cut_round(
+    struct thread_d *last_thread, 
+    int lapic_info_id )
 {
     struct thread_d *Current;
 
@@ -297,12 +301,20 @@ void sched_cut_round(struct thread_d *last_thread)
         return;
     }
 
-// The current thread.
-    if ( current_thread < 0 || current_thread >= THREAD_COUNT_MAX )
+
+// Invalud core number
+    if (lapic_info_id < 0 || lapic_info_id >= NR_CPUS)
+        return;
+
+// The current thread
+
+    tid_t tid = lapic_info[lapic_info_id].current_thread;
+
+    if ( tid < 0 || tid >= THREAD_COUNT_MAX )
     {
         return;
     }
-    Current = (struct thread_d *) threadList[current_thread];
+    Current = (struct thread_d *) threadList[tid];
     if ((void *) Current == NULL){
         return;
     }
@@ -1269,10 +1281,15 @@ void sched_boost_foreground_thread(void)
 }
 
 // Lower quantum for the current thread because it's not foreground
-void sched_lower_current_thread(void)
+void sched_lower_current_thread(int lapic_info_id)
 {
     struct thread_d *t;
-    tid_t target_tid = current_thread;
+
+// Invalud core number
+    if (lapic_info_id < 0 || lapic_info_id >= NR_CPUS)
+        return;
+
+    tid_t target_tid = lapic_info[lapic_info_id].current_thread;
 
     // Validate thread ID
     if (target_tid < 0 || target_tid >= THREAD_COUNT_MAX){
@@ -1298,11 +1315,17 @@ void sched_lower_current_thread(void)
 //
 
 // #test
-// 777 - Implementation of rtl_nice() from ring 3 library. 
-void sys_nice(unsigned long decrement)
+// 777 - Implementation of rtl_nice() from ring 3 library 
+void sys_nice(unsigned long decrement, int lapic_info_id)
 {
     struct thread_d  *t;
-    tid_t target_tid = current_thread;
+
+
+// Invalud core number
+    if (lapic_info_id < 0 || lapic_info_id >= NR_CPUS)
+        return;
+
+    tid_t target_tid = lapic_info[lapic_info_id].current_thread;
 
 // #todo: Privilegies
 

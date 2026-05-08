@@ -85,14 +85,25 @@ unsigned int localId=0;
 int apic_SPINLOCK = FALSE;
 
 
+// The base address for the registers
+static unsigned long g_lapic_va=0;
+
+
 //
 // == private functions: prototypes =====================
 //
 
+
+
 static unsigned int local_apic_read_command(
     unsigned short addr, int lapic_info_id);
+static unsigned int local_apic_read_command_00(unsigned short addr);
+
+
 static void local_apic_write_command(
     unsigned short addr,unsigned int val, int lapic_info_id);
+static void local_apic_write_command_00(
+    unsigned short addr,unsigned int val);
 
 
 // apic stuffs for x86.
@@ -151,17 +162,32 @@ void apic_mark_cpu_as_running(int lapic_info_id)
     lapic_info[lapic_info_id].running = TRUE;
 }
 
-// #todo: 
-// Definir porta 70h usada nesse arquivo. ??
+
+// old implemenation
 static unsigned int local_apic_read_command(unsigned short addr, int lapic_info_id)
 {
-    if ((void *) lapic_info[lapic_info_id].lapic_va == NULL){
+
+    if ((void *) lapic_info[lapic_info_id].lapic_va == NULL)
+    {
         panic("local_apic_read_command: lapic_info[lapic_info_id].lapic_va\n");
     }
 
     return *( (volatile unsigned int *)(lapic_info[lapic_info_id].lapic_va + addr) );
 }
+// new implementation
+static unsigned int local_apic_read_command_00(unsigned short addr)
+{
+    void *base_va = (void* ) g_lapic_va;
 
+    if ((void *)base_va == NULL)
+    {
+        panic("local_apic_read_command_00: base_va\n");
+    }
+
+    return *( (volatile unsigned int *)( base_va + addr ) );
+}
+
+// old implementation
 static void local_apic_write_command(unsigned short addr,unsigned int val, int lapic_info_id)
 {
     if ((void *) lapic_info[lapic_info_id].lapic_va == NULL){
@@ -170,14 +196,37 @@ static void local_apic_write_command(unsigned short addr,unsigned int val, int l
 
     *( (volatile unsigned int *)(lapic_info[lapic_info_id].lapic_va + addr) ) = val;
 }
+// New implementation
+static void local_apic_write_command_00(unsigned short addr,unsigned int val)
+{
+    void *base_va = (void* ) g_lapic_va;
+
+    if ((void *)base_va == NULL)
+    {
+        panic("local_apic_write_command_00: base_va\n");
+    }
+
+    *( (volatile unsigned int *)(base_va + addr) ) = val;
+}
 
 // Get local apic id.
+// Hardware LAPIC ID
 // see: https://wiki.osdev.org/APIC#Local_APIC_registers
 // bits 24~31 for pentium 4 and later.
 unsigned int apic_get_id(int lapic_info_id)
 {
-    return (unsigned int) (local_apic_read_command(LAPIC_APIC_ID, lapic_info_id) >> 24) & 0xFF;
+    unsigned int value = (unsigned int) local_apic_read_command(LAPIC_APIC_ID, lapic_info_id);
+    unsigned int hw_lapic_id = (unsigned int) (value >> 24) & 0xFF;
+    return (unsigned int) hw_lapic_id;
 }
+// New implementation
+unsigned int apic_get_id_00(void)
+{
+    unsigned int value = (unsigned int) local_apic_read_command_00(LAPIC_APIC_ID);
+    unsigned int hw_lapic_id = (unsigned int) (value >> 24) & 0xFF;
+    return (unsigned int) hw_lapic_id;
+}
+
 
 // Get local apic version.
 // see: https://wiki.osdev.org/APIC#Local_APIC_registers
@@ -187,7 +236,10 @@ unsigned int apic_get_version(int lapic_info_id)
 {
     return (unsigned int) (local_apic_read_command(LAPIC_APIC_VERSION, lapic_info_id) & 0xFF);
 }
-
+unsigned int apic_get_version_00(void)
+{
+    return (unsigned int) (local_apic_read_command_00(LAPIC_APIC_VERSION) & 0xFF);
+}
 
 // EOI Register:
 // Write to the register with offset 0xB0 using the value 0 
@@ -201,6 +253,15 @@ void local_apic_eoi(int lapic_info_id)
         lapic_info_id 
     );
 }
+// New implementation
+void local_apic_eoi_00(void)
+{
+    local_apic_write_command_00( 
+        (unsigned short) LAPIC_EOI, 
+        (unsigned int) 0 
+    );
+}
+
 
 // Spurious Interrupt Vector Register
 // Set the Spurious Interrupt Vector Register bit 8 to 
@@ -1080,9 +1141,14 @@ int lapic_info_initializing(unsigned long lapic_pa, int lapic_info_id)
         if (status != 0){
             panic("lapic_initializing: on mm_map_2mb_region_in_pd0()\n");
         }
+
         // Flush it
         asm ("movq %cr3, %rax \n");
         asm ("movq %rax, %cr3 \n");
+
+        // Save it:
+        // Set our global that can be accessed anytime.
+        g_lapic_va = (unsigned long) LAPIC_VA;
     }
 
 //=====================================
@@ -1106,7 +1172,7 @@ int lapic_info_initializing(unsigned long lapic_pa, int lapic_info_id)
             // Saving physical and virtual addresses
             // see: x64gva.h
             lapic_info[i].lapic_pa = (unsigned long) (lapic_pa & 0xFFFFFFFF);
-            lapic_info[i].lapic_va = (unsigned long) LAPIC_VA;
+            lapic_info[i].lapic_va = (unsigned long) LAPIC_VA;  // Cache
 
             // ---------------
             // ID (the real id provided by the hardware)
@@ -1123,6 +1189,8 @@ int lapic_info_initializing(unsigned long lapic_pa, int lapic_info_id)
             //lapic_info[i].local_version = (int) (localversion & 0xFF);
             lapic_info[i].local_version = 0;
             //printk("localversion: %xH\n", lapic_info[lapic_info_id].local_version);
+
+            lapic_info[i].current_thread = INIT_TID;
 
             //=====================================
             // Destination Format Register (DFR)

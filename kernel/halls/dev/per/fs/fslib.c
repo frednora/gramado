@@ -917,13 +917,13 @@ __read_imp (
     if (fp->____object == ObjectTypeSocket)
     {
         // debug_print("__read_imp: [DEBUG] Trying to read a socket object\n");
-        do_credits_by_tid(current_thread);
+        do_credits_by_tid( lapic_info[0].current_thread );
 
         // not reading yet
         if ((fp->_flags & __SRD) == 0) 
         {
             //debug_print("__read_imp: [FAIL] flag __SRD \n");
-            //yield (current_thread);
+            //yield (lapic_info[0].current_thread);
             goto fail;
         }
 
@@ -954,12 +954,12 @@ __read_imp (
                 debug_print("__read_imp: SLEEP READER\n");
                 panic("__read_imp: [DEBUG] Couldn't read socket. Buffer not full\n");
 
-                fp->tid_waiting = current_thread;
-                //do_thread_waiting (current_thread);
-                yield (current_thread);
+                fp->tid_waiting = lapic_info[0].current_thread;
+                //do_thread_waiting (lapic_info[0].current_thread);
+                yield (lapic_info[0].current_thread);
                 goto fail;
             }
-            yield (current_thread);
+            yield (lapic_info[0].current_thread);
             goto fail;
         }
 
@@ -982,7 +982,7 @@ __read_imp (
 
                 if (nbytes <= 0){
                     debug_print("__read_imp: [FAIL] file_read_buffer fail when reading a socket \n");
-                    //yield (current_thread);
+                    //yield (lapic_info[0].current_thread);
                     goto fail;
                 }
 
@@ -1046,8 +1046,8 @@ RegularFile:
         
             //Não conseguimos ler.
             //nada de errado, apenas espera.
-            //do_thread_waiting (current_thread);
-            //fp->tid_waiting = current_thread;
+            //do_thread_waiting (lapic_info[0].current_thread);
+            //fp->tid_waiting = lapic_info[0].current_thread;
             //fp->_flags |= __SWR;  //pode escrever.
             //scheduler();
 
@@ -1076,7 +1076,7 @@ RegularFile:
                               (int) count );
  
             if (nbytes <= 0){
-               //yield (current_thread);
+               //yield (lapic_info[0].current_thread);
                goto fail;
             }
 
@@ -1096,8 +1096,8 @@ RegularFile:
 
             //Não conseguimos ler.
             //nada de errado, apenas espera.
-            //do_thread_waiting (current_thread);
-            //fp->tid_waiting = current_thread;
+            //do_thread_waiting (lapic_info[0].current_thread);
+            //fp->tid_waiting = lapic_info[0].current_thread;
             //fp->_flags |= __SWR;  //pode escrever.
             //scheduler();
             return 0;
@@ -1216,8 +1216,8 @@ fail:
 
     // printk ("__read_imp: [FAIL] something is wrong!\n");
     //bloqueando, autorizando a escrita e reescalonando.
-    //do_thread_waiting (current_thread);
-    //fp->tid_waiting = current_thread;
+    //do_thread_waiting (lapic_info[0].current_thread);
+    //fp->tid_waiting = lapic_info[0].current_thread;
     //fp->_flags |= __SWR;  //pode escrever      
     //scheduler();  //#bugbug: Isso é um teste  
 
@@ -1371,8 +1371,10 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
     if (fp->sync.can_write != TRUE)
     {
         //debug_print("__write_imp: [PERMISSION] Can NOT write the file\n");
-        printk     ("__write_imp: [PERMISSION] Can NOT write fd={%d} tid={%d}\n", 
-            fd, current_thread );
+        printk("__write_imp: [PERMISSION] Can NOT write fd={%d} tid={%d}\n", 
+            fd, 
+            lapic_info[0].current_thread 
+        );
         goto fail; 
     }
 
@@ -1627,12 +1629,12 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
 // estiverem com a conexao pendente.
     if (fp->____object == ObjectTypeSocket)
     {
-        do_credits_by_tid(current_thread);
+        do_credits_by_tid(lapic_info[0].current_thread);
         
         // Can't write.
         if ((fp->_flags & __SWR) == 0){
             //debug_print("__write_imp: [FAIL] flag __SWR \n");
-            //yield (current_thread);
+            //yield (lapic_info[0].current_thread);
             goto fail;
         }
 
@@ -1659,12 +1661,12 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
             {
                 //#debug
                 //debug_print("__write_imp: SLEEP WRITER\n");
-                fp->tid_waiting = current_thread;
-                //do_thread_waiting(current_thread);
-                yield (current_thread);
+                fp->tid_waiting = lapic_info[0].current_thread;
+                //do_thread_waiting(lapic_info[0].current_thread);
+                yield (lapic_info[0].current_thread);
                 goto fail;
             }
-            yield (current_thread); 
+            yield (lapic_info[0].current_thread); 
             goto fail;
         }
 
@@ -1690,7 +1692,7 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
                 if (nbytes <= 0){
                     //debug_print("__write_imp: [FAIL] file_write_buffer couldn't write on socket \n");
                     //#todo: Isso pode afetar o desempenho.
-                    yield (current_thread);
+                    yield (lapic_info[0].current_thread);
                     goto fail;
                 }
 
@@ -1714,12 +1716,12 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
                         // #debug
                         //debug_print("__write_imp: SLEEP WRITER\n");
                         
-                        fp->tid_waiting = current_thread;
-                        //do_thread_waiting(current_thread);
+                        fp->tid_waiting = lapic_info[0].current_thread;
+                        //do_thread_waiting(lapic_info[0].current_thread);
                     }
                     // #bugbug: test ...
                     //  impedir que eu mesmo me leia.
-                    //yield (current_thread);
+                    //yield (lapic_info[0].current_thread);
                     return (ssize_t) nbytes;
                 }
             }
@@ -1777,8 +1779,8 @@ RegularFile:
             // suspenso.
             // Não conseguimos escrever ... 
             // nada de errado, apenas esperaremos.
-            //do_thread_waiting (current_thread);
-            //fp->tid_waiting = current_thread;
+            //do_thread_waiting (lapic_info[0].current_thread);
+            //fp->tid_waiting = lapic_info[0].current_thread;
             //fp->_flags |= __SWR;  //pode escrever.
             //scheduler();
             //debug_print ("__write_imp: [FAIL] file_write_buffer fail!\n");
@@ -1896,8 +1898,8 @@ fail2:
 
     // Não conseguimos escrever ... 
     // Estamos com problemas 
-    //do_thread_waiting (current_thread);
-    //fp->tid_waiting = current_thread;
+    //do_thread_waiting (lapic_info[0].current_thread);
+    //fp->tid_waiting = lapic_info[0].current_thread;
     //fp->_flags |= __SWR;  //pode escrever.
     //scheduler();
 
