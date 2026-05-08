@@ -166,6 +166,12 @@ fail:
     return FALSE;
 }
 
+
+//
+// #
+// MAIN FUNCTION
+//
+
 // ---------------------------
 // mmain:
 // Called by kernel_start() in head.c
@@ -222,11 +228,11 @@ mmain (
             if (Status == TRUE)
             {
                 // #debug
-                printk("dungeon.bin: Initialization at {%x} OK\n", 
+                printk("dungeon: Initialization at {%x} OK\n", 
                     entrypoint_address );
                 
                 // #debug
-                printk("long1={%x} long2={%x} long3={%x}\n", 
+                printk("dungeon: long1={%x} long2={%x} long3={%x}\n", 
                     long1, long2, long3 );
                 
                 return 1234;
@@ -244,10 +250,11 @@ mmain (
             return (unsigned long) 0;
             break;
 
-        // The function table exported by the base kernel.
+        // #important:
+        // The function table imported from the kernel
         case 1002:
             fn_table = (unsigned long *) param4;
-            printk("fn_table {%x}\n", fn_table);
+            printk("dungeon: fn_table {%x}\n", fn_table);
             return (unsigned long) 0;
             //while(1){}
             break;
@@ -255,7 +262,7 @@ mmain (
         // The syscall entrypoint exported by the kernel.
         // This way we can call routines inside the kernel.
         case 1003:
-            printk("mod_sci: {%x}\n", param4);
+            printk("dungeon: mod_sci={%x}\n", param4);
             sci_entry = param4;
             
             // Calling the kernel service.
@@ -275,10 +282,7 @@ mmain (
         // see: display.c
         case 2001:
             return (unsigned long) display_initialization_phase1( 
-                                       param1, 
-                                       param2, 
-                                       param3, 
-                                       param4 );
+                                       param1, param2, param3, param4 );
             break;
 
         // :: Step2
@@ -287,23 +291,25 @@ mmain (
         // see: display.c
         case 2002:
             return (unsigned long) display_initialization_phase2( 
-                                       param1, 
-                                       param2, 
-                                       param3, 
-                                       param4 );
+                                       param1, param2, param3, param4 );
             break;
 
 
-        // Export well know functions to the kernel
-        // fn0: Draw pixel
+        // #important:
+        // Export well know functions to the kernel.
+        // Here we're building a function table.
         case 4000:
             // Check signature
             if (long1 != 1234)
                 return 0;
             // #todo: Create a worker
-            msg[0] = (unsigned long) &mmain_procedure;  // Draw pixel
-            // ... (Other functions)
-            return 1234;
+
+            // Exporting functions
+            msg[0] = (unsigned long) &mmain_procedure;
+            //msg[1] = (unsigned long) ?;
+            // ... (Other function procedures)
+
+            return (unsigned long) 1234;
             break;
 
             
@@ -317,14 +323,15 @@ mmain (
 
             if (ModuleInitialization.initialized == TRUE)
             {
-                printk("Parameters: %d | %d | %d | %d\n",
+                printk("dungeon: Parameters: %d | %d | %d | %d\n",
                     param1, param2, param3, param4 );
+
                 return (unsigned long) 1234;
             }
             return 0;
             break;
 
-        // Invalid reason.
+        // Invalid reason
         default:
             goto fail;
             break;

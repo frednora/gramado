@@ -25,7 +25,7 @@ void *sc80h (
     unsigned long arg3, 
     unsigned long arg4 )
 {
-    pid_t current_process = (pid_t) get_current_pid();
+    pid_t CurrentPID = (pid_t) get_current_pid();
     int cpl = -1;
 
 // -----------
@@ -42,8 +42,8 @@ void *sc80h (
 
     if (cpl == 0){
         printk("number=%d\n",number);
-        printk("pid=%d\n",current_process);
-        //if(current_process != 0){
+        printk("pid=%d\n",CurrentPID);
+        //if(CurrentPID != 0){
             panic("sc80h: cpl 0\n");
         //}
     }
@@ -59,7 +59,7 @@ void *sc80h (
 // -----------
 
 // See: sci.c
-    return (void*) sci0(number,arg2,arg3,arg4);
+    return (void*) sci0(number, arg2, arg3, arg4);
 }
 
 // This is the handler for the interrupt 0x81.
@@ -70,7 +70,7 @@ void *sc81h (
     unsigned long arg3, 
     unsigned long arg4 )
 {
-    pid_t current_process = (pid_t) get_current_pid();
+    pid_t CurrentPID = (pid_t) get_current_pid();
     int cpl = -1;
 
 //--------------
@@ -99,7 +99,7 @@ void *sc81h (
 //-----------------
 
 // See: sci.c
-    return (void*) sci1(number,arg2,arg3,arg4);
+    return (void*) sci1(number, arg2, arg3, arg4);
 }
 
 // This is the handler for the interrupt 0x82.
@@ -110,7 +110,7 @@ void *sc82h (
     unsigned long arg3, 
     unsigned long arg4 )
 {
-    pid_t current_process = (pid_t) get_current_pid();
+    pid_t CurrentPID = (pid_t) get_current_pid();
     int cpl = -1;
 
 // --------------
@@ -139,7 +139,7 @@ void *sc82h (
 // --------------
 
 // See: sci.c
-    return (void*) sci2(number,arg2,arg3,arg4);
+    return (void*) sci2(number, arg2, arg3, arg4);
 }
 
 // This is the handler for the interrupt 0x83.
@@ -150,7 +150,7 @@ void *sc83h (
     unsigned long arg3, 
     unsigned long arg4 )
 {
-    pid_t current_process = (pid_t) get_current_pid();
+    pid_t CurrentPID = (pid_t) get_current_pid();
     int cpl = -1;
 
 //-------
@@ -179,6 +179,6 @@ void *sc83h (
 //-------
 
 // See: sci.c
-    return (void*) sci3(number,arg2,arg3,arg4);
+    return (void*) sci3(number, arg2, arg3, arg4);
 }
 

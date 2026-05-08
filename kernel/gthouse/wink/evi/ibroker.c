@@ -890,6 +890,13 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         test_mod0();
         goto exit_cmp;
     }
+    /*
+    if ( kstrncmp(cmdline,"dungeon",7) == 0 ){
+        test_mod0();
+        goto exit_cmp;
+    }
+    */
+
 
 // dir:
 // List the files in a given directory.
