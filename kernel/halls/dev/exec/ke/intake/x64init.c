@@ -3,6 +3,17 @@
 
 #include <kernel.h>
 
+
+//
+// iretq to enter in user mode.
+// See: 
+// Intel: x86_64.asm
+// ...
+//
+
+extern void arch_enter_user_mode(unsigned long entry_point_va, unsigned long ring3_rsp);
+
+
 // Task switching support.
 // See: hw2.asm
 extern void turn_task_switch_on(void);
@@ -838,6 +849,12 @@ void I_x64ExecuteInitialProcess(void)
 // For the other processes we got to check the 
 // 'spawn routine' and the 'return from interrupt routines'.
 
+/*
+
+// #ps
+// This is the old method.
+// It is fully working
+
     asm volatile ( 
         " movq $0, %%rax  \n" 
         " mov %%ax, %%ds  \n" 
@@ -853,6 +870,17 @@ void I_x64ExecuteInitialProcess(void)
         " pushq $0x1B     \n"  // Stack frame: CS
         " pushq %%rax     \n"  // Stack frame: RIP
         " iretq           \n" :: "D"(EntryPoint), "S"(RING3_RSP) 
+    );
+*/
+
+// The architecture‑specific worker in assembly.
+// #ps
+// This is an experimental method.
+// See: x86_64.asm
+
+    arch_enter_user_mode (
+        (unsigned long) EntryPoint,
+        (unsigned long) RING3_RSP
     );
 
 // Paranoia

@@ -143,7 +143,6 @@
 #define CONFIG_USE_LAPIC_TIMER_FOR_TS  0
 // ...
 
-
 // ------------------------------------------------------
 
 // IDE Interface:

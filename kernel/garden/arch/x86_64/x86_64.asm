@@ -33,7 +33,6 @@ __sw_local_fpu_buffer_apic_timer:
 align 16
 
 
-
 ; See: apic.c
 extern _local_apic_eoi
 extern _apic_TimerHandler0000
@@ -1166,4 +1165,41 @@ unit4_reboot:
 ;    ret
 ;__spinlock_test: dq 0
 ;
+
+
+; --------------------------------------------
+; Go to user mode.
+; It's used by the kernel when initializing the init process.
+; See: x64init.c
+; Parameters (System V ABI):
+; IN
+; 1) rsi → user stack pointer
+; 2) rdi → entry point (RIP)
+
+global _arch_enter_user_mode
+_arch_enter_user_mode:
+
+    xor rax, rax 
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov rbp, rax
+
+; Get parameters:
+
+    ; 1) Prepare the user stack
+    mov rbx, rsi
+    mov rsp, rbx
+
+    ; 2) Prepare the entry point
+    mov rax, rdi
+
+    ; Prepare the stack frame
+    push 0x23    ; Stack frame: SS
+    push rsp     ; Stack frame: RSP
+    push 0x3002  ; Stack frame: RFLAGS
+    push 0x1B    ; Stack frame: CS
+    push rax     ; Stack frame: RIP
+    iretq 
 
