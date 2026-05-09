@@ -73,6 +73,10 @@ x64_init_gdt(
 // The base address for the GDT
 //
 
+// #todo:
+// All cores are pointing to the SAME xxx_gdt array! 
+// This needs to be fixed.
+
     // This is the pointer for an array os structures.
     // This is the GDT with 32 entries.
     //unsigned long GDT_Base = (unsigned long) &xxx_gdt[GNULL_SEL];

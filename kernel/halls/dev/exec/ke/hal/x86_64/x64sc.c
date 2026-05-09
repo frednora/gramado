@@ -39,6 +39,9 @@ void *sc80h (
         //return NULL;
     }
 
+    //if (hw_cpu_id < 0 || hw_cpu_id >= NR_CPUS)
+        //x_panic("sc80h: Invalid CPU ID");
+
 // -----------
 //cpl
     unsigned long *cpl_buffer = (unsigned long *) &sci0_cpl;
@@ -95,6 +98,9 @@ void *sc81h (
         x_panic ("sc81h: #debug Not the BSP");
         //return NULL;
     }
+    //if (hw_cpu_id < 0 || hw_cpu_id >= NR_CPUS)
+        //x_panic("sc81h: Invalid CPU ID");
+
 
 //--------------
 //cpl
@@ -146,7 +152,8 @@ void *sc82h (
         x_panic ("sc82h: #debug Not the BSP");
         //return NULL;
     }
-
+    //if (hw_cpu_id < 0 || hw_cpu_id >= NR_CPUS)
+        //x_panic("sc82h: Invalid CPU ID");
 
 
 // --------------
@@ -199,6 +206,8 @@ void *sc83h (
         x_panic ("sc83h: #debug Not the BSP");
         //return NULL;
     }
+    //if (hw_cpu_id < 0 || hw_cpu_id >= NR_CPUS)
+        //x_panic("sc83h: Invalid CPU ID");
 
 //-------
 //cpl

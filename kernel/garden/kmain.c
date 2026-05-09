@@ -1495,6 +1495,11 @@ fail:
 // AP INITIALIZATION
 //
 
+// #todo
+// We need One GDT per-core AND 
+// One IDT per-core (in x86-64 SMP)
+// #ps: We have support for GDT in C.
+
 void AP_kmain(void)
 {
     int i=0;
