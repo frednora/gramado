@@ -917,9 +917,11 @@ unsigned long tsTaskSwitch(void)
 
     // #debug
     // Only valid for BSP processor for now.
-    if (__lapic_info_id != 0){
-        panic("tsTaskSwitch: Not in BSP\n");
+    if (__lapic_info_id != 0)
+    {
+        x_panic("tsTaskSwitch: Not in BSP\n");
     }
+
 
     if (__lapic_info_id < 0 || __lapic_info_id >= NR_CPUS)
     {

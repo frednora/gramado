@@ -890,12 +890,17 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         test_mod0();
         goto exit_cmp;
     }
-    /*
     if ( kstrncmp(cmdline,"dungeon",7) == 0 ){
         test_mod0();
         goto exit_cmp;
     }
-    */
+
+// see: kmain.c
+    if ( kstrncmp(cmdline,"ap-hlt",6) == 0 ){
+        welcome_ap_hlt();
+        goto exit_cmp;
+    }
+
 
 
 // dir:

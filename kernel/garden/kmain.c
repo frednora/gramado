@@ -164,6 +164,9 @@ struct welcome_ap_d
     int my_lapic_info_id;
     int bsp_is_waiting;  // TRUE or FALSE
     // ...
+
+    // #test
+    int msg_code;
 };
 struct welcome_ap_d  WelcomeAP;
 
@@ -173,6 +176,16 @@ extern void asm_AP_entry_point(void);
 static int __AP_handshake(void);
 
 // ======================
+
+
+void welcome_ap_hlt(void)
+{
+    WelcomeAP.msg_code = 1000;
+}
+void welcome_ap_pause(void)
+{
+    WelcomeAP.msg_code = 2000;
+}
 
 // Talk with the BSP in order to identify the current AP.
 // OUT: id in lapic_info[] database.
@@ -1550,6 +1563,24 @@ void AP_kmain(void)
 
         //wproxy_ap_test();
 
+
+        /*
+        // #test
+        // Process request
+        int n = WelcomeAP.msg_code;
+        switch (n){
+            case 1000:
+                asm ("hlt");
+                break;
+            //case 2000:
+            default:
+                asm ("pause");
+                break;
+        };
+        WelcomeAP.msg_code = 0;  // Erease
+        */
+
+
         // #test
         // Delay
         // With this delay we can have performance enough 
@@ -1558,7 +1589,31 @@ void AP_kmain(void)
         asm ("xorl %%eax, %%eax" ::);
         asm ("pause \n");
         asm ("outb %%al, $0x80"  ::);
+
+
+        // Syscall
+        // It needs only to be called from ring 3 actually
+        // #test: The handler was called.
+        // #bugbug:
+        // We can't do that because the AP still do not a 
+        // TSS or a ring 0 stack.
+
+        //if (system_state == SYSTEM_RUNNING)
+            //asm ("int $0x80 \n");
+
+        // spurious
+        // #bugbug
+        // It's not working. The system crashes.
+        // Probably still because the lack of tss and ring 0 stack.
+        //if (system_state == SYSTEM_RUNNING)
+            //asm ("int $0xFF \n");
+
+        // #bugbug
+        // Testing the handlers for taskswitching
+        // if (system_state == SYSTEM_RUNNING)
+            //asm ("int $32 \n");
     };
+
 
 
 // Something went wrong with this AP.

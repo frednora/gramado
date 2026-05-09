@@ -7,8 +7,8 @@ ENTRY(main)
 
 SECTIONS
 { 
-    /* Essa aplicação está usando o diretório do processo kernel. */
-    /* Quando tiver seu próprio diretório de páginas o endereço será 0x00401000.*/
+    . = 0x00200000;
+    _app_begin = .;
 
     .text 0x00201000: 
     {
@@ -47,5 +47,7 @@ SECTIONS
     end = .; 
     _end = .; 
     __end = .;
+
+    _app_end = .;
 }
 

@@ -15,7 +15,7 @@
 #define SYSTEM_BOOTING     2
 // The system is scheduling ...
 #define SYSTEM_SCHEDULING  3
-// The system is running.
+// The system is running
 #define SYSTEM_RUNNING     4
 // The system is running the reboot routine.
 #define SYSTEM_REBOOT      5

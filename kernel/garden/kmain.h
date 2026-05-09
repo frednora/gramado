@@ -115,6 +115,10 @@ extern struct initialization_d  Initialization;
 // ========================
 
 
+// #test: For dialog with APs
+void welcome_ap_hlt(void);
+void welcome_ap_pause(void);
+
 //
 // Used during the kernel initialization.
 //

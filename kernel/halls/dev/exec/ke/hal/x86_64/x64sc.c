@@ -28,6 +28,17 @@ void *sc80h (
     pid_t CurrentPID = (pid_t) get_current_pid();
     int cpl = -1;
 
+// Get the hardware cpu id
+    int hw_cpu_id = (int) apic_get_id_00();
+
+// #test: Not the BSP
+// This is here because we do not have a full SMP support
+    if (hw_cpu_id != 0)
+    {
+        x_panic ("sc80h: #debug Not the BSP");
+        //return NULL;
+    }
+
 // -----------
 //cpl
     unsigned long *cpl_buffer = (unsigned long *) &sci0_cpl;
@@ -73,6 +84,18 @@ void *sc81h (
     pid_t CurrentPID = (pid_t) get_current_pid();
     int cpl = -1;
 
+
+// Get the hardware cpu id
+    int hw_cpu_id = (int) apic_get_id_00();
+
+// #test: Not the BSP
+// This is here because we do not have a full SMP support
+    if (hw_cpu_id != 0)
+    {
+        x_panic ("sc81h: #debug Not the BSP");
+        //return NULL;
+    }
+
 //--------------
 //cpl
     unsigned long *cpl_buffer = (unsigned long *) &sci1_cpl;
@@ -113,6 +136,19 @@ void *sc82h (
     pid_t CurrentPID = (pid_t) get_current_pid();
     int cpl = -1;
 
+// Get the hardware cpu id
+    int hw_cpu_id = (int) apic_get_id_00();
+
+// #test: Not the BSP
+// This is here because we do not have a full SMP support
+    if (hw_cpu_id != 0)
+    {
+        x_panic ("sc82h: #debug Not the BSP");
+        //return NULL;
+    }
+
+
+
 // --------------
 //cpl
     unsigned long *cpl_buffer = (unsigned long *) &sci2_cpl;
@@ -152,6 +188,17 @@ void *sc83h (
 {
     pid_t CurrentPID = (pid_t) get_current_pid();
     int cpl = -1;
+
+// Get the hardware cpu id
+    int hw_cpu_id = (int) apic_get_id_00();
+
+// #test: Not the BSP
+// This is here because we do not have a full SMP support
+    if (hw_cpu_id != 0)
+    {
+        x_panic ("sc83h: #debug Not the BSP");
+        //return NULL;
+    }
 
 //-------
 //cpl
