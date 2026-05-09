@@ -128,6 +128,10 @@ unsigned long saved_bootblock_base=0;
 // == Private functions: Prototypes ========
 //
 
+static void __ap_animation_experiment(void);
+static void __ap_QF_experiment(void);
+
+
 // Internal
 static void __enter_debug_mode(void);
 static void __print_final_messages(void);
@@ -151,6 +155,7 @@ static int I_initialize_kernel(int arch_type, int processor_number);
 
 static void panic_at_init(int error_code, kernel_subsystem_t subsystem_id);
 
+
 //
 // =======================================================
 //
@@ -164,9 +169,6 @@ struct welcome_ap_d
     int my_lapic_info_id;
     int bsp_is_waiting;  // TRUE or FALSE
     // ...
-
-    // #test
-    int msg_code;
 };
 struct welcome_ap_d  WelcomeAP;
 
@@ -283,11 +285,11 @@ int qf_get_message(void)
 
 void welcome_ap_hlt(void)
 {
-    WelcomeAP.msg_code = 1000;
+    // #todo
 }
 void welcome_ap_pause(void)
 {
-    WelcomeAP.msg_code = 2000;
+    // #todo
 }
 
 // Talk with the BSP in order to identify the current AP.
@@ -1587,70 +1589,73 @@ fail:
     return FALSE;
 }
 
-
-//
-// $
-// AP INITIALIZATION
-//
-
-// #todo
-// We need One GDT per-core AND 
-// One IDT per-core (in x86-64 SMP)
-// #ps: We have support for GDT in C.
-
-void AP_kmain(void)
+static void __ap_animation_experiment(void)
 {
     int i=0;
-    int id = -1;
-
-    asm ("cli");  // For safety
-
-// CLTS — Clear Task-Switched Flag in CR0
-// The processor sets the TS flag every time a task switch occurs. 
-// For taskswitching via hardware i guess.
-// see:
-// https://www.felixcloutier.com/x86/clts
-    asm volatile ("clts \n");
-
-
-    //PROGRESS("AP_kmain: \n")
-
-// Talk with the BSP in order to identify the current AP.
-// #ps: return the lapic info id, not the real hw cpu id.
-    id = (int) __AP_handshake();
-
-/*
-    if (id <0 || id>NR_CPUS)
-    {
-        panic("AP_kmain: id\n");
-    }
-*/
-
-//
-// Compare
-//
-
-/*
-    int MyHardwareID = (int) apic_get_id_00();
-    if (lapic_info[id].local_id == MyHardwareID)
-    {
-        panic("AP_kmain: MyHardwareID\n");
-    }
-*/
-
-/*
-    ProcessorNumber = id;  // ID
-    Status = (int) I_initialize_kernel(arch_type, ProcessorNumber);
-    if (Status == FALSE){
-        PROGRESS("on I_initialize_kernel()\n");
-    }
-    if (system_state == SYSTEM_ABORTED){
-        PROGRESS("SYSTEM_ABORTED\n");
-    }
-*/
 
 //
 // Animation
+//
+
+    // #test
+    // Drawing rectangles
+    unsigned int Color = COLOR_BLACK;
+    int Counter = 0;
+
+    while (1){
+        //while (apic_SPINLOCK == TRUE){ asm ("pause \n"); };
+
+        Counter++;
+        Color = COLOR_YELLOW;
+        if (Counter % 2 == 0)
+            Color = COLOR_RED;
+
+        for (i=0; i<100; i++){
+            frontbuffer_draw_rectangle( 0, i, 4, 4, Color, 0 );
+        };
+
+        //wproxy_ap_test();
+
+        // #test
+        // Delay
+        // With this delay we can have performance enough 
+        // in both cores to make tests.
+        // #todo: Do not change it for now.
+        asm ("xorl %%eax, %%eax" ::);
+        asm ("pause \n");
+        asm ("outb %%al, $0x80"  ::);
+
+
+        // Syscall
+        // It needs only to be called from ring 3 actually
+        // #test: The handler was called.
+        // #bugbug:
+        // We can't do that because the AP still do not a 
+        // TSS or a ring 0 stack.
+
+        //if (system_state == SYSTEM_RUNNING)
+            //asm ("int $0x80 \n");
+
+        // spurious
+        // #bugbug
+        // It's not working. The system crashes.
+        // Probably still because the lack of tss and ring 0 stack.
+        //if (system_state == SYSTEM_RUNNING)
+            //asm ("int $0xFF \n");
+
+        // #bugbug
+        // Testing the handlers for taskswitching
+        // if (system_state == SYSTEM_RUNNING)
+            //asm ("int $32 \n");
+    };
+}
+
+static void __ap_QF_experiment(void)
+{
+    int i=0;
+
+//
+// Animation and QF experiment
 //
 
     // #test
@@ -1785,6 +1790,84 @@ void AP_kmain(void)
     // Turn the QF off
     QF.on = FALSE;
 
+}
+
+
+//
+// $
+// AP INITIALIZATION
+//
+
+// #todo
+// We need One GDT per-core AND 
+// One IDT per-core (in x86-64 SMP)
+// #ps: We have support for GDT in C.
+
+void AP_kmain(void)
+{
+    int i=0;
+    int id = -1;
+
+    asm ("cli");  // For safety
+
+// CLTS — Clear Task-Switched Flag in CR0
+// The processor sets the TS flag every time a task switch occurs. 
+// For taskswitching via hardware i guess.
+// see:
+// https://www.felixcloutier.com/x86/clts
+    asm volatile ("clts \n");
+
+
+    //PROGRESS("AP_kmain: \n")
+
+// Talk with the BSP in order to identify the current AP.
+// #ps: return the lapic info id, not the real hw cpu id.
+    id = (int) __AP_handshake();
+
+/*
+    if (id <0 || id>NR_CPUS)
+    {
+        panic("AP_kmain: id\n");
+    }
+*/
+
+//
+// Compare
+//
+
+/*
+    int MyHardwareID = (int) apic_get_id_00();
+    if (lapic_info[id].local_id == MyHardwareID)
+    {
+        panic("AP_kmain: MyHardwareID\n");
+    }
+*/
+
+/*
+    ProcessorNumber = id;  // ID
+    Status = (int) I_initialize_kernel(arch_type, ProcessorNumber);
+    if (Status == FALSE){
+        PROGRESS("on I_initialize_kernel()\n");
+    }
+    if (system_state == SYSTEM_ABORTED){
+        PROGRESS("SYSTEM_ABORTED\n");
+    }
+*/
+
+
+//
+//
+//
+
+    if (CONFIG_USE_QF == 1){
+        __ap_QF_experiment();
+    }
+
+///
+//
+//
+
+    __ap_animation_experiment();
 
 // Something went wrong with this AP.
 // #todo:
