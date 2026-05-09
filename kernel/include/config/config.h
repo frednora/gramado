@@ -144,9 +144,13 @@
 #define CONFIG_USE_LAPIC_TIMER_FOR_TS  0
 // ...
 
-
 // #test
-// Queue feeder
+// Queue feeder:
+// Using the first AP as dedicated core. 
+// #ps: That is not a good use for an AP.
+// An AP needs to be integrated into the scheduler 
+// in order to make the load balance of thread.
+
 #define CONFIG_USE_QF  0
 
 

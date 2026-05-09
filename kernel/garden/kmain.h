@@ -123,31 +123,44 @@ struct qf_d
 {
     int on;
 
-    int busy;
-    int has_msg;
+    int head;  // >> Get
+    int tail;  // << Put
 
 // 1000: Raw keyboard event
 // 2000: Mouse event
 // ...
-    int destination;
-
-// Register 0
-    unsigned long msg;
+    //int destination[32];
+    int msg[32];
 
 // Registers 1, 2, 3, 4
-    unsigned long long1;
-    unsigned long long2;
-    unsigned long long3;
-    unsigned long long4;
+    unsigned long long1[32];
+    unsigned long long2[32];
+    unsigned long long3[32];
+    unsigned long long4[32];
 
 // Registers 5, 6, 7, 8
-    unsigned char char1;
-    unsigned char char2;
-    unsigned char char3;
-    unsigned char char4;
+    unsigned char char1[32];
+    unsigned char char2[32];
+    unsigned char char3[32];
+    unsigned char char4[32];
 };
 extern struct qf_d  QF;
 // ========================
+
+
+void
+qf_post_message(
+    int msg,
+    unsigned long long1,
+    unsigned long long2,
+    unsigned long long3,
+    unsigned long long4,
+    unsigned char char1,
+    unsigned char char2,
+    unsigned char char3,
+    unsigned char char4 );
+
+int qf_get_message(void);
 
 
 // #test: For dialog with APs

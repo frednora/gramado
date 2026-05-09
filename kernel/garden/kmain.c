@@ -180,8 +180,106 @@ static int __AP_handshake(void);
 // Queue feeder
 struct qf_d  QF;
 
+// Current message
+// Only the loop reads this message
+int qf_buf_msg[1];
+unsigned long qf_buf_longs[4];
+unsigned char qf_buf_chars[4];
+
 // ======================
 
+void
+qf_post_message(
+    int msg,
+    unsigned long long1,
+    unsigned long long2,
+    unsigned long long3,
+    unsigned long long4,
+    unsigned char char1,
+    unsigned char char2,
+    unsigned char char3,
+    unsigned char char4 )
+{
+
+// Invalid index
+    if (QF.tail < 0 || QF.tail >= 32)
+    {
+        QF.tail = 0;
+    }
+
+// No mesage in the tail slot
+    if (QF.msg[ QF.tail ] == 0)
+    {
+
+        QF.msg[ QF.tail ] = (int) msg; // We have a new message
+
+        QF.long1[ QF.tail ] = (unsigned long) long1;
+        QF.long2[ QF.tail ] = (unsigned long) long2;
+        QF.long3[ QF.tail ] = (unsigned long) long3;
+        QF.long4[ QF.tail ] = (unsigned long) long4;
+
+        QF.char1[ QF.tail ] = (unsigned char) char1;
+        QF.char2[ QF.tail ] = (unsigned char) char2;
+        QF.char3[ QF.tail ] = (unsigned char) char3;
+        QF.char4[ QF.tail ] = (unsigned char) char4;
+
+        QF.tail++;
+        if (QF.tail >= 32)
+            QF.tail = 0;
+    }
+}
+
+
+int qf_get_message(void)
+{
+    int Slot=0;
+
+// Invalid index
+    if (QF.head < 0 || QF.head >= 32)
+    {
+        QF.head = 0;
+    }
+
+// No mesage in the head slot
+    if (QF.msg[ QF.head ] <= 0)
+    {
+        QF.head++;
+        if (QF.head >= 32)
+            QF.head = 0;
+
+        return (int) -1;  // No message
+    }
+
+// Yes, we have a message in this slot
+    Slot = (int) QF.head;
+
+//
+// Output buffer for the current message
+//
+
+    qf_buf_msg[0] = (int) QF.msg[QF.head];   // Get the message
+
+    qf_buf_longs[0] = (unsigned long) QF.long1[QF.head];
+    qf_buf_longs[1] = (unsigned long) QF.long2[QF.head];
+    qf_buf_longs[2] = (unsigned long) QF.long3[QF.head];
+    qf_buf_longs[3] = (unsigned long) QF.long4[QF.head];
+
+    qf_buf_chars[0] = (unsigned char) QF.char1[QF.head];
+    qf_buf_chars[1] = (unsigned char) QF.char2[QF.head];
+    qf_buf_chars[2] = (unsigned char) QF.char3[QF.head];
+    qf_buf_chars[3] = (unsigned char) QF.char4[QF.head];
+
+    QF.msg[QF.head] = 0;  // No more message in this slot
+
+// Round
+    QF.head++;
+    if (QF.head >= 32)
+        QF.head = 0;
+
+    return (int) Slot;   // Index for the message
+}
+
+//-------------------------------------
 
 void welcome_ap_hlt(void)
 {
@@ -1569,30 +1667,58 @@ void AP_kmain(void)
     while (1){
         //while (apic_SPINLOCK == TRUE){ asm ("pause \n"); };
 
+        
         // Do we have a new message?
-        if (QF.on == TRUE && QF.has_msg == TRUE)
+        if (QF.on == TRUE)
         {
-            QF.busy = TRUE;  // Now we are busy
+            int slot = qf_get_message();
+            if (slot != (-1))
+            {
+                if (slot >=0 && slot < 32)
+                {
+                    switch (qf_buf_msg[0]){
+                        case 1000:
+                            //x_panic("i/o channel 1000");
+                            wmRawKeyEvent (
+                                qf_buf_chars[0], 
+                                qf_buf_chars[1], 
+                                qf_buf_chars[2], 
+                                qf_buf_chars[3]
+                            );
+                            break;
+
+                        case 2000:
+                            break;
+
+                        case 3000:
+                            break;
+
+                        case 4000:
+                            break;
+
+                        case 8000:
+                            asm ("hlt \n");
+                            break;
+                    };
+                }
+            }
+
+            /*
             // Check destination
-            switch (QF.destination){
+            switch (QF.destination)
+            {
 
                 case 1000: // Raw keyboard
-                    // printk("i/o channel\n");
                     x_panic("i/o channel");
                     wmRawKeyEvent (
                         QF.char1, QF.char2, QF.char3, QF.char4
                     );
-                    QF.has_msg = FALSE;  // Erase any message
-                    break;
-
-                case 2000:  // Mouse event
-                    break;
-
-                case 3000:
                     break;
             }
-            QF.busy = FALSE;  // We are not busy anmore
+            //QF.busy = FALSE;  // We are not busy anmore
+            */
         }
+
 
         Counter++;
         Color = COLOR_YELLOW;
