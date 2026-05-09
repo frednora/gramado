@@ -176,6 +176,11 @@ extern void asm_AP_entry_point(void);
 static int __AP_handshake(void);
 
 // ======================
+// #test
+// Queue feeder
+struct qf_d  QF;
+
+// ======================
 
 
 void welcome_ap_hlt(void)
@@ -1549,8 +1554,40 @@ void AP_kmain(void)
     // Drawing rectangles
     unsigned int Color = COLOR_BLACK;
     int Counter = 0;
+
+    // Turn the QF on
+    if (CONFIG_USE_QF == 1)
+        QF.on = TRUE;
+
+    // i/o channel:
+    // (multiplexer?)
     while (1){
         //while (apic_SPINLOCK == TRUE){ asm ("pause \n"); };
+
+        // Do we have a new message?
+        if (QF.on == TRUE && QF.has_msg == TRUE)
+        {
+            QF.busy = TRUE;  // Now we are busy
+            // Check destination
+            switch (QF.destination){
+
+                case 1000: // Raw keyboard
+                    // printk("i/o channel\n");
+                    x_panic("i/o channel");
+                    wmRawKeyEvent (
+                        QF.char1, QF.char2, QF.char3, QF.char4
+                    );
+                    QF.has_msg = FALSE;  // Erase any message
+                    break;
+
+                case 2000:  // Mouse event
+                    break;
+
+                case 3000:
+                    break;
+            }
+            QF.busy = FALSE;  // We are not busy anmore
+        }
 
         Counter++;
         Color = COLOR_YELLOW;
@@ -1614,6 +1651,8 @@ void AP_kmain(void)
             //asm ("int $32 \n");
     };
 
+    // Turn the QF off
+    QF.on = FALSE;
 
 
 // Something went wrong with this AP.

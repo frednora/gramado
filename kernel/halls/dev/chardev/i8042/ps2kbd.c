@@ -265,14 +265,65 @@ __ps2kbd_interpret_and_dispatch(
     unsigned char raw_code_1 = b1;
     unsigned char raw_code_2 = b2;
 
+    int Timeout = 0;
+
     switch (prefix){
 
     // Prefix 0x00
     // For normal keys and
     // For extended keys in Virtualbox, that doesn't use prefix.
     case 0x00:
+
+        /*
+
+        // #suspended: (it's working)
+        // Suspended because i don't wanna miss any event or 
+        // mess up the order inside the queue.
+
+        // OFF: Do it manually
+        if (QF.on != TRUE){
+
+            wmRawKeyEvent( raw_code_0, 0x00, 0x00, 0x00 );
+            // No problem here. We can return safelly.
+            return;
+
+        // ON: Use the i/o channel
+        } else if (QF.on == TRUE){
+
+            // Try 100 times
+            for (Timeout=0; Timeout<100; Timeout++)
+            {
+                if (QF.busy != TRUE)
+                {
+                    // Send command to the virtual device.
+                    QF.destination = 1000; //Raw keyboard event
+                    QF.char1 = raw_code_0;
+                    QF.char2 = 0x00;
+                    QF.char3 = 0x00;
+                    QF.char4 = 0x00;
+                    QF.has_msg = TRUE;
+                    
+                    return;  // Done               
+                } 
+                asm ("pause"); 
+            };
+
+            // Timeout:
+            // #bugbug
+            // + We can't wait for ever.
+            // + We can't drop it.
+            // + We can't send it manually or it mess up the order.
+
+        }
+        */
+
+        // #bugbug:
+        // The problem is. If the i/o channel is slow, 
+        // the order of the events can be wrong.
+        // And waiting here is not an option.
+
         wmRawKeyEvent( raw_code_0, 0x00, 0x00, 0x00 );
-        return;
+
         break;
 
     // We gotta send 2 or 3 bytes

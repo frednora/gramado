@@ -196,12 +196,16 @@ clean-all:
 	rm -rf gthouse/libk/*.o   
 	rm -rf gthouse/wink/*.o   
 
-	rm -rf halls/apphalls/exec/*.o   
-	rm -rf halls/apphalls/per/*.o   
-	rm -rf halls/apphalls/req/*.o   
+# user interaction
+	rm -rf halls/dev/chardev/*.o   
 
-	rm -rf halls/uhalls/chardev/*.o   
+# interrupt-driver stuff
+	rm -rf halls/dev/exec/*.o   
+	rm -rf halls/dev/per/*.o   
+	rm -rf halls/dev/req/*.o   
 
+	rm -rf halls/platform/acpi/*.o   
+	rm -rf halls/platform/bus/*.o   
 
 	@echo "~clean-all"
 

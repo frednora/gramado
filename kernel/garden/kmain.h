@@ -112,6 +112,41 @@ struct initialization_d
 // see: init.c
 extern struct initialization_d  Initialization;
 
+
+// ======================
+// #test
+// Queue feeder (i/o channel)
+// I/O channels are specialized, independent processors that 
+// manage data transfer between peripheral devices and main memory, 
+// largely reducing CPU workload
+struct qf_d 
+{
+    int on;
+
+    int busy;
+    int has_msg;
+
+// 1000: Raw keyboard event
+// 2000: Mouse event
+// ...
+    int destination;
+
+// Register 0
+    unsigned long msg;
+
+// Registers 1, 2, 3, 4
+    unsigned long long1;
+    unsigned long long2;
+    unsigned long long3;
+    unsigned long long4;
+
+// Registers 5, 6, 7, 8
+    unsigned char char1;
+    unsigned char char2;
+    unsigned char char3;
+    unsigned char char4;
+};
+extern struct qf_d  QF;
 // ========================
 
 

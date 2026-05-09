@@ -867,6 +867,7 @@ int console_scroll_rect(int console_number, int direction)
 // Valid only for full screen
 
 // #todo: Argument 'direction'
+
     scroll_screen_rect();
 
 // -------------------------------------

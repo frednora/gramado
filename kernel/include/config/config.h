@@ -130,6 +130,7 @@
 // This is a test yet.
 // >> It works only on Virtualbox using ICH9 chipset. <<
 // # set to 1 to test it.
+
 #define CONFIG_INITIALIZE_SECOND_PROCESSOR  0
 #define CONFIG_INITIALIZE_APIC  0  // Enable apic and timer
 #define CONFIG_UNMASK_APICTIMER  0
@@ -142,6 +143,11 @@
 // BSP's LAPIC
 #define CONFIG_USE_LAPIC_TIMER_FOR_TS  0
 // ...
+
+
+// #test
+// Queue feeder
+#define CONFIG_USE_QF  0
 
 
 // ------------------------------------------------------
