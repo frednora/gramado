@@ -182,8 +182,10 @@ PeripheralHall_irq0:
 ; Stackframe for ring 0 has only 3 elements.
 .R0Thread:
     pop rax
-    mov qword [_contextRSP], 0
-    mov qword [_contextSS], 0
+    ;mov qword [_contextRSP], 0
+    ;mov qword [_contextSS], 0
+    mov qword [_contextRSP], rsp   ; save current kernel stack pointer
+    mov qword [_contextSS], ss     ; save kernel stack segment
     jmp .AfterStackFrame
 
 ; Stack frame for ring 3 has 5 elements.

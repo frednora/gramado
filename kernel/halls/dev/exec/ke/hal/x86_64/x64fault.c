@@ -91,6 +91,9 @@ static int __kill_faulty_current_process(void)
 // Get current thread for this core
     tid = (tid_t) lapic_info[0].current_thread;
 
+    printk("killing tid=%d\n",tid);
+
+
 // Process validation
     if (pid<0 || pid >= PROCESS_COUNT_MAX)
     {
@@ -123,7 +126,8 @@ static int __kill_faulty_current_process(void)
         goto fail;
     }
 // The thread environment structure for the Init Process.
-    if (p == TEInitProcess){
+    if (p == TEInitProcess)
+    {
         goto fail;
     }
 
@@ -140,7 +144,9 @@ static int __kill_faulty_current_process(void)
         goto fail;
     }
 // Init TID
-    if (tid == INIT_TID){
+    if (tid == INIT_TID)
+    {
+        //printk("#fail killing INIT_TID\n");
         goto fail;
     }
 
@@ -149,6 +155,8 @@ static int __kill_faulty_current_process(void)
     t = (void*) threadList[tid];
     if (t->used  != TRUE){ goto fail; }
     if (t->magic != 1234){ goto fail; }
+
+    // printk("killing %s\n",t->__threadname);
 
 // Init thread
     if (t == InitThread){

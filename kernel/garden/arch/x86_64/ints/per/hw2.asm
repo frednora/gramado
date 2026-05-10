@@ -298,12 +298,25 @@ irq0_release:
 ; Stackframe for ring 0 has only 3 elements.
 .restore_kernel_mode:
 
+; rule: If the last thread had 5 elements ... 
+; we resume the next thread using 5 elements ... 
+; even if the next thread is in ring 0.
+
     ; #test (caution)
     ; The last was 3 but now its 5
-    ;mov eax, dword [_gszLastStackFrame]
-    ;cmp eax, 5
+    mov eax, dword [_gszLastStackFrame]
+    cmp eax, 5
+    je .ajust5
     ;je .debugBreakpoint
 
+    push qword [_contextRFLAGS]  ; rflags
+    push qword [_contextCS]      ; cs
+    push qword [_contextRIP]     ; rip
+    jmp .stackframe_done
+
+.ajust5:
+    push qword [_contextSS]  ;r0
+    push qword [_contextRSP] ;r0
     push qword [_contextRFLAGS]  ; rflags
     push qword [_contextCS]      ; cs
     push qword [_contextRIP]     ; rip

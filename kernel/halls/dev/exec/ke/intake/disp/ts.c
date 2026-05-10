@@ -503,14 +503,26 @@ static unsigned long __task_switch(int lapic_info_id)
         // The ring 0 thread is running untill this moment.
         // #test: 
         // It means that the timer was able to save and restore ring 0 threads.
-        //if (CurrentThread->cpl == 0)
-        //{
+        if (CurrentThread->cpl == 0)
+        {
+            //CurrentThread->next = InitThread;  //#hack
+            //lapic_info[__lapic_info_id].current_thread = (tid_t) psScheduler();
+            //lapic_info[__lapic_info_id].current_thread = (tid_t) INIT_TID;
+            //CurrentProcess->state = ZOMBIE;
             //CurrentThread->quantum = 1000;
             //goto dispatch_current; 
             //return (unsigned long) 0x80;
-           // panic("ts: debug cpl 0\n");
-        
-        //}
+
+            //show_reg( CurrentThread->tid );
+            //panic("ts: debug cpl 0\n");
+
+            //currentq = (void *) InitThread;
+            //currentq->next = NULL;
+            //CurrentThread = NULL;
+            //asm ("cli");
+            //lapic_info[__lapic_info_id].current_thread = (tid_t) psScheduler();
+            //goto dispatch_current;
+        }
 
         // # todo: 
         // Let's do something cool here.

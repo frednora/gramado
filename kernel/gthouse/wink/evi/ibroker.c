@@ -367,7 +367,7 @@ static void keEarlyRing0IdleThread (void)
 // #danger: Do NOT change this function.
 // #bugbug: This thread can't execute complex routine for now.
 
-    asm (" int $3 ");
+    //asm (" int $3 ");
 
     //printk("");  //fail
 

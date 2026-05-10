@@ -1716,7 +1716,7 @@ try_next_slot:
 // Explain it better.
     Thread->_protected = FALSE;
 
-// This thread can be preempted.
+// This thread can be preempted
     Thread->is_preemptable = PREEMPTABLE;
 
     Thread->link = NULL;
@@ -1799,7 +1799,8 @@ try_next_slot:
             (struct thread_d *) Thread,
             RING0,
             (unsigned long) init_stack,
-            (unsigned long) init_rip );
+            (unsigned long) init_rip 
+        );
     }
 
 // ring 3
@@ -1814,7 +1815,8 @@ try_next_slot:
             (struct thread_d *) Thread,
             RING3,
             (unsigned long) init_stack,
-            (unsigned long) init_rip );
+            (unsigned long) init_rip 
+        );
     }
 
 //cpu.

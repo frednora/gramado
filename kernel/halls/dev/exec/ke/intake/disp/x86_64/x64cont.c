@@ -230,7 +230,7 @@ void save_current_context(int lapic_info_id)
         if (CONFIG_ALLOW_RING0_CONTEXT_SAVE == 1)
         {
             //panic("save_current_context: cpl 0 #test\n");
-            printk("step %d\n", t->step);
+            //printk("step %d\n", t->step);
         }
         if (CONFIG_ALLOW_RING0_CONTEXT_SAVE != 1){
             panic("save_current_context: cpl 0\n");
