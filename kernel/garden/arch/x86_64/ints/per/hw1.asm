@@ -265,7 +265,6 @@ PeripheralHall_irq0:
 
     mov r10, qword _irq0_TIMER
     call r10
-    ;call _irq0_TIMER
 
 ; Check the return value.
 ; 0x80 is the flag that tells us to skip the cr3 reload.
