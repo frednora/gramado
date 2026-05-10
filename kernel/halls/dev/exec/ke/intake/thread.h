@@ -568,7 +568,7 @@ struct thread_d
 // Time when the thread needs to wakeup.
     unsigned long wake_jiffy;
 
-// How much jiffies until now.
+// How much jiffies until now
     unsigned long step;
 
 // Quando ela foi criada.

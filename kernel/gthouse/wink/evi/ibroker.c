@@ -388,17 +388,26 @@ static void keEarlyRing0IdleThread (void)
     //wink_draw_string(8,8,COLOR_YELLOW," Gramado Operating System ");
     //refresh_screen();
 
-    //printk("ring 0 thread\n");
+    printk("ring 0 thread\n");
+
+// #test
+// The thread run the whole quantum
+// But it is not doing the transition to the next thread,
+// that probably is a ring 3 thread and we need to fix the
+// size of the stack frame in this transition from r0 to r3 thread.
+
+    asm (" int $3 ");
 
 // relax
     //asm (" sti ");
-    asm (" int $3 ");
-    asm (" hlt ");
+    //asm (" int $3 ");
+    //asm (" hlt ");
 
 // apaga
     //backbuffer_draw_rectangle( 0, 0, deviceWidth, 28, COLOR_KERNEL_BACKGROUND );
     //backbuffer_draw_rectangle( 0, 0, deviceWidth, deviceHeight, COLOR_KERNEL_BACKGROUND );  //#bug
     //refresh_screen();
+
 Loop:
     asm (" hlt ");
     goto Loop;

@@ -136,15 +136,36 @@ Dump GDT entries for 0x8 and 0x10. Confirm:
   Don’t leave them pointing to null descriptors. Set them to 0x10 as well.
 */
 
-/*
-// #todo: Set the data segments to 0x10
-mov $0x10, %ax
-mov %ax, %ds
-mov %ax, %es
-mov %ax, %fs
-mov %ax, %gs
-mov %ax, %ss
-*/
+// #bugbug
+// CS=0x08 is not a valid 64‑bit code descriptor (L=1, DB=0, G=1).
+// SS=0x10 is not a valid data descriptor (L=0, DB=1, G=1).
+// Stack pointer misalignment: 
+//   RSP must be 16‑byte aligned before iretq. 
+//   Misalignment can trigger #GP when entering Ring 0.
+// Error code: The #GP error code will tell you 
+// which selector caused the fault (0x08, 0x10, etc.).
+
+    if (gszLastStackFrame == 5){
+
+    asm volatile ( 
+        " movq $0, %%rax  \n" 
+        " mov $0x10, %%ax  \n"
+        " mov %%ax, %%ds  \n" 
+        " mov %%ax, %%es  \n" 
+        " mov %%ax, %%fs  \n" 
+        " mov %%ax, %%gs  \n"
+        " mov %%ax, %%ss  \n"  // kernel data selector
+        " movq %0, %%rax  \n"  // entry
+        " movq %1, %%rsp  \n"  // rsp0
+        " movq $0, %%rbp  \n" 
+        " pushq $0x10     \n"  // Stack frame: SS ring 0
+        " pushq %%rsp     \n"  // Stack frame: RSP ring 0
+        " pushq $0x0202   \n"  // Stack frame: RFLAGS
+        " pushq $0x8      \n"  // Stack frame: CS
+        " pushq %%rax     \n"  // Stack frame: RIP
+        " iretq           \n" :: "D"(EntryPoint), "S"(RING0_RSP) );
+
+    } else if (gszLastStackFrame == 3){
 
     asm volatile ( 
         " movq $0, %%rax  \n" 
@@ -161,6 +182,10 @@ mov %ax, %ss
         " pushq $0x8      \n"  // Stack frame: CS
         " pushq %%rax     \n"  // Stack frame: RIP
         " iretq           \n" :: "D"(EntryPoint), "S"(RING0_RSP) );
+
+    } else {
+        panic ("__spawn_enter_kernelmode: gszLastStackFrame\n");
+    }
 
 // Paranoia
     PROGRESS("__spawn_enter_kernelmode: -- iretq fail ----\n");
@@ -197,6 +222,14 @@ __spawn_enter_usermode(
             local_apic_eoi_00();  // This one is valid for all the cores.
             //local_apic_eoi(0);  // BSP
         }
+    }
+
+
+
+// #test
+// If the last thread was a ring 0 thread
+    if (gszLastStackFrame == 3){
+        panic ("__spawn_enter_usermode: gszLastStackFrame\n");
     }
 
 // #todo
@@ -499,6 +532,9 @@ static void __spawn_thread_by_tid_imp(tid_t tid)
             debug_print("__spawn_thread_by_tid_imp: RING0\n");
             panic      ("__spawn_thread_by_tid_imp: RING0 not supported yet\n");
         }
+
+        // #hack
+        // target_thread->quantum = 100;
 
         // Here is the big moment, where we launch a ring 0 thread.
         // ring0 --> ring0 ?

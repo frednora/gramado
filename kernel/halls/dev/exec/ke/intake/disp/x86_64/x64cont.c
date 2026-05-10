@@ -4,6 +4,10 @@
 
 #include <kernel.h>
 
+
+// Global size of the last stack frame.
+int gszLastStackFrame=5;
+
 // globals.
 // Context:
 // Variáveis para salvar o contexto para x86_64.
@@ -224,10 +228,17 @@ void save_current_context(int lapic_info_id)
 // foi interrompida e teve seu contexto salvo por essa rotina.
     if (cpl == 0)
     {
+        if (CONFIG_ALLOW_RING0_CONTEXT_SAVE == 1)
+        {
+            //panic("save_current_context: cpl 0 #test\n");
+            printk("step %d\n", t->step);
+        }
         if (CONFIG_ALLOW_RING0_CONTEXT_SAVE != 1){
             panic("save_current_context: cpl 0\n");
         }
         t->transition_counter.to_supervisor++;
+
+        gszLastStackFrame = 3;
     }
     if (cpl == 1){
         panic("save_current_context: cpl 1\n");
@@ -237,8 +248,11 @@ void save_current_context(int lapic_info_id)
     }
 // Significa que uma thread que estava rodando em ring3,
 // foi interrompida e teve seu context salvo por essa rotina.
-    if (cpl == 3){
-        t->transition_counter.to_supervisor++;
+    if (cpl == 3)
+    {
+        t->transition_counter.to_supervisor++;  //#bugbug: Not accurate
+
+        gszLastStackFrame = 5;
     }
 
 // rflags

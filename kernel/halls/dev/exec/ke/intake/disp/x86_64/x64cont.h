@@ -5,6 +5,9 @@
 #ifndef __X64COUNT_H
 #define __X64COUNT_H    1
 
+// Global size of the last stack frame.
+extern int gszLastStackFrame;
+
 // #todo
 // functions to 'save' and 'restore' context.
 

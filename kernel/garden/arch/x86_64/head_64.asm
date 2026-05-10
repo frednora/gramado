@@ -121,20 +121,20 @@ EARLY_GDT64:            ; Global Descriptor Table (64-bit).
     db 0                ; Base (high).
 ; 0x08
 .Code: equ $ - EARLY_GDT64    ; The code descriptor.
-    dw 0                ; Limit (low).
-    dw 0                ; Base (low).
+    dw 0                ; Limit (low)
+    dw 0                ; Base (low)
     db 0                ; Base (middle)
-    db 10011010b        ; Access (exec/read).
+    db 10011010b        ; Access (exec/read)
     db 10101111b        ; Granularity, 64 bits flag, limit19:16.
-    db 0                ; Base (high).
+    db 0                ; Base (high)
 ; 0x10
 .Data: equ $ - EARLY_GDT64    ; The data descriptor.
-    dw 0                ; Limit (low).
-    dw 0                ; Base (low).
+    dw 0                ; Limit (low)
+    dw 0                ; Base (low)
     db 0                ; Base (middle)
-    db 10010010b        ; Access (read/write).
-    db 00000000b        ; Granularity.
-    db 0                ; Base (high).
+    db 10010010b        ; Access (read/write)
+    db 00000000b        ; Granularity
+    db 0                ; Base (high)
 ;0x18
 .Ring3Code: equ $ - EARLY_GDT64    ; The code descriptor.
     dw 0                     ; Limit (low).

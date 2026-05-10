@@ -179,6 +179,18 @@ __doRing3Callback:
 ; See: _irq0 in hw1.asm, ts.c, pit.c, sci.c.
 ; -------------------------------------
 
+
+extern _gszLastStackFrame
+
+; _gszLastStackFrame is needed.
+; We need to know how many elements was poped in the last
+; timer interrupt.
+;This dual strategy ensures you never mismatch:
+; Ring 0 → Ring 0 resumes: 3 elements.
+; Ring 3 → Ring 3 resumes: 5 elements.
+; Ring 0 → Ring 3 switch: push 5 from the new thread’s context.
+; Ring 3 → Ring 0 switch: push 3 from the new thread’s context.
+
 ; -------------------------------------
 ; Irq0 release.
 ; Timer interrupt.

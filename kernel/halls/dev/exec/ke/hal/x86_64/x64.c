@@ -132,56 +132,39 @@ x64_init_gdt(
 // dpl 0
 // (n, limit, base, type, s, dpl, p, avl, l, db, g)
 
-    // k code
+// k code
+// For long mode code: 
+// Kernel code (selector 0x08) L=1, DB=0, G=1
     set_gdt_entry ( 
         &xxx_gdt[GCODE_SEL], 
         0,    // limit
         0x0,  // base
-        SEG_CODE_EXRD, // type=0xA (Execute/Read)
-        1,    // s
+        SEG_CODE_EXRD, // type = 0xA (Execute/Read)
+        1,    // s (S = 1 → Code/Data segment) | S = 0 → System segment
         DPL_RING0,  // dpl=0
         1,    // p
         0,    // avl
-        1,    // l
-        0,    // db
-        0     // g
+        1,    // L = 1 → 64‑bit code segment.
+        0,    // DB = 0 → ignored when L=1.
+        1     // G = 1 → granularity (limit scaled in 4KB).
         );   
-        // Kernel code (selector 0x08) L=1, DB=0, G=1
 
-    // k data
-
-// The original
+// k data
+// For long mode data:
+// Kernel data (selector 0x10) L=0, DB=1, G=1
     set_gdt_entry ( 
         &xxx_gdt[GDATA_SEL], 
         0,    // limit
         0x0,  // base
-        SEG_DATA_RDWR, // type=0x2 (Read/Write)
-        1,    // s
+        SEG_DATA_RDWR, // type = 0x2 (Read/Write)
+        1,    // s (S = 1 → Code/Data segment) | S = 0 → System segment
         DPL_RING0,  // dpl=0
         1,    // p
         0,    // avl
-        1,    // l
-        0,    // db
-        0     // g
+        0,    // L = 0 → must be 0 for data segments.
+        1,    // DB = 1 → required for data segments in long mode.
+        1     // G = 1 → granularity (limit scaled in 4KB).
         );   
-        // Kernel data (selector 0x10) L=0, DB=1, G=1
-
-/*
-// #testing this one to sold issues when lauching ring 0 threads
-set_gdt_entry(
-    &xxx_gdt[GDATA_SEL],
-    0,          // limit
-    0x0,        // base
-    SEG_DATA_RDWR, // type=0x2 (Read/Write)
-    1,          // s
-    DPL_RING0,  // dpl=0
-    1,          // p
-    0,          // avl
-    0,          // l (must be 0 for data!)
-    1,          // db (default operand size = 32)
-    1           // g (granularity)
-);
-*/
 
 // ----------------
 // GUCODE_SEL     3  // User code descriptor
@@ -202,7 +185,8 @@ set_gdt_entry(
         0,    // avl
         1,    // l
         0,    // db
-        0);   // g
+        0     // g
+    );
 
     // u data
     set_gdt_entry ( 
@@ -216,7 +200,8 @@ set_gdt_entry(
         0,      // avl
         1,      // l
         0,      // db
-        0);     // g
+        0       // g
+    );
 
 // ----------------
 
@@ -262,13 +247,14 @@ set_gdt_entry(
         sizeof(struct tss_d) - 1,   // limit
         (unsigned long) tss,    // base 
         0x9,  // type = (64-bit TSS (Available))
-        0,    // s
-        RING3,    // dpl=3.
+        0,    // S = 0 → system descriptor (not code/data)
+        DPL_RING0,  // DPL = ring 0
         1,   // p
         0,   // avl
         0,   // l
         0,   // db
-        1);  // g
+        1    // g
+    );
 
     // tss cont.
     set_gdt_entry( 
@@ -307,8 +293,8 @@ set_gdt_entry(
 //
 
     // 0x2B = (0x28+3).
-    x64_load_ltr(0x2B);
-
+    //x64_load_ltr(0x2B);  // Ring 3 DPL
+    x64_load_ltr(0x28);   // Ring 0 DPL
 
 // #todo
 // print gdt entries.
@@ -382,6 +368,9 @@ tss_init (
     //if ( stack_address == 0 )
     //    panic("tss_init: stack_address\n");
     tss->rsp0 = (unsigned long) stack_address;  // va?? 
+
+
+    tss->IOPB_offset = sizeof(struct tss_d);
 
     //#debug
     //printk ("Stack %x\n", stack_address);
