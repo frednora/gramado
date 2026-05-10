@@ -293,13 +293,22 @@ irq0_release:
     je .restore_kernel_mode    ; It is a ring 0 thread
     jmp .InvalidThread
 
+
 ; Stack frame. (all double)
 ; Stackframe for ring 0 has only 3 elements.
 .restore_kernel_mode:
+
+    ; #test (caution)
+    ; The last was 3 but now its 5
+    ;mov eax, dword [_gszLastStackFrame]
+    ;cmp eax, 5
+    ;je .debugBreakpoint
+
     push qword [_contextRFLAGS]  ; rflags
     push qword [_contextCS]      ; cs
     push qword [_contextRIP]     ; rip
     jmp .stackframe_done
+
 
 ; Stack frame. (all double)
 ; Stack frame for ring 3 has 5 elements.
@@ -309,6 +318,12 @@ irq0_release:
     push qword [_contextRFLAGS]  ; rflags
     push qword [_contextCS]      ; cs
     push qword [_contextRIP]     ; rip
+
+    ; #test  (caution)
+    ; The last was 3 but now its 5
+    ;mov eax, dword [_gszLastStackFrame]
+    ;cmp eax, 3
+    ;je .debugBreakpoint
 
 .stackframe_done:
 
@@ -339,6 +354,8 @@ irq0_release:
     hlt
     jmp .InvalidThread
 ; --------------------------------------
+.debugBreakpoint:
+    int 3
 
 ;----------------------------------------------
 ; _turn_task_switch_on:

@@ -211,7 +211,6 @@ void save_current_context(int lapic_info_id)
     if (cpl != t->cpl)
         panic("save_current_context: cpl != t->cpl\n");
 
-
 // Ja temos o valor do current process nesse momento?
     //pid_t current_process = (pid_t) get_current_process();
     

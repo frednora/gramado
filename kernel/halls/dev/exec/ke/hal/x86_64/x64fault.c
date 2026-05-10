@@ -317,7 +317,9 @@ void x64_all_faults(unsigned long number)
         // entao temos problema.
         // 0=OK | -1 = FAIL.
         killstatus= (int) __kill_faulty_current_process();
-        if (killstatus != 0){
+        if (killstatus != 0)
+        {
+            show_reg( lapic_info[0].current_thread );
             x_panic("x64_all_faults: Coudn't kill process");
         }
         if (killstatus == 0)
@@ -466,10 +468,12 @@ void x64_all_faults(unsigned long number)
         case 13: 
             printk ("== GP ==\n");  
             //show_slots();
+
+            //show_reg( lapic_info[0].current_thread );
             refresh_screen();
             // Esse tipo funciona mesmo antes do console
             // ter sido inicializado.
-            x_panic("x64_all_faults: 13  GP"); 
+            x_panic("x64_all_faults: 13  GP <<"); 
             break;
 
         // (PF) - Page Fault

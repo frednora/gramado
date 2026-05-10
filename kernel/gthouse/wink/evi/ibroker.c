@@ -366,6 +366,9 @@ static void keEarlyRing0IdleThread (void)
 {
 // #danger: Do NOT change this function.
 // #bugbug: This thread can't execute complex routine for now.
+
+    asm (" int $3 ");
+
     //printk("");  //fail
 
     //debug_print ("keEarlyRing0IdleThread: w h\n");
@@ -396,7 +399,7 @@ static void keEarlyRing0IdleThread (void)
 // that probably is a ring 3 thread and we need to fix the
 // size of the stack frame in this transition from r0 to r3 thread.
 
-    asm (" int $3 ");
+    // asm (" int $3 ");
 
 // relax
     //asm (" sti ");

@@ -499,6 +499,18 @@ static unsigned long __task_switch(int lapic_info_id)
         // we can process something before planing the next thread.
         __tsOnFinishedExecuting(CurrentThread);
 
+        // #debug
+        // The ring 0 thread is running untill this moment.
+        // #test: 
+        // It means that the timer was able to save and restore ring 0 threads.
+        //if (CurrentThread->cpl == 0)
+        //{
+            //CurrentThread->quantum = 1000;
+            //goto dispatch_current; 
+            //return (unsigned long) 0x80;
+           // panic("ts: debug cpl 0\n");
+        
+        //}
 
         // # todo: 
         // Let's do something cool here.
@@ -861,6 +873,16 @@ dispatch_current:
         printk ("ts: Process %s pml4 fail\n", TargetProcess->name);
         die();
     }
+
+/*
+    // #test: The last frame was 3 and the next thread is ring 3
+    // Good. It means that we are trying to restore a ring 3 thread
+    // right after a ring 0 thread consumed all its quatum.
+    if (gszLastStackFrame == 3 && TargetThread->cpl == 3)
+    {
+        panic("break point\n");
+    }
+*/
 
 // #bugug
 // #todo
