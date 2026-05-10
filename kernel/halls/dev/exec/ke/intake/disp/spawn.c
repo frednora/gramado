@@ -69,10 +69,12 @@ __spawn_enter_kernelmode(
 // This is the entry point of the new thread
     unsigned long EntryPoint = (unsigned long) entry_va;
     unsigned long RING0_RSP  = (unsigned long) rsp0_va;
-    int fOption1 = TRUE;
+
+    printk("__spawn_enter_kernelmode:\n");
 
     // #debug
-    //printk("rsp0: %x \n",rsp0);
+    //printk("EntryPoint:  %x \n",EntryPoint);
+    //printk("RING0_RSP: %x \n",RING0_RSP);
     //refresh_screen();
     //while(1){}
 
@@ -81,61 +83,84 @@ __spawn_enter_kernelmode(
         asm volatile ("movb $0x20, %al \n");
         asm volatile ("outb %al, $0x20 \n");
 
-        // LAPIC
         if (CONFIG_USE_LAPIC_TIMER_FOR_TS == 1)
-            local_apic_eoi(0);  // BSP
+        {
+            local_apic_eoi_00();  // This one is valid for all the cores.
+            //local_apic_eoi(0);  // BSP
+        }
     }
 
 
-// #todo
-// Let's have more options here.
-// This way can setup the register in a personalized way.
-    if (fOption1 == TRUE){
+// When you iretq back into Ring 0, the processor only requires:
+// + RIP (instruction pointer)
+// + CS (code segment selector)
+// + RFLAGS (flags register)
+// But we need to set up SS and RSP registers correctly before the jump, 
+// otherwise the thread won’t have a valid stack segment or pointer 
+// when it starts running.
 
     // #todo
     // We need to review the stack frame for ring0
     // only for ring 0 threads with iopl 0.
     // Interrupts enabled for the thread that is not the first.
+
+    // #bugbug
+    // We are facing a #GP (trap 13).
+    // CPU detects a protection violation.
+    // Common causes:
+    // + Invalid segment selector loaded into CS, SS, DS, ES, FS, or GS.
+    // + Stack segment mismatch: SS doesn’t match privilege level or isn’t present.
+    // + Bad descriptor in GDT/LDT: selector points to 
+    //   a descriptor with wrong type, DPL, or not present.
+    // + Instruction privilege violation: 
+    //   executing a privileged instruction at the wrong CPL.
+    // + Alignment check (if AC flag is set).
+
+    // If 0x8 (CS) or 0x10 (SS) aren’t valid descriptors in your GDT, iretq will trigger #GP.
+    // If SS=0x10 isn’t a writable data segment with DPL=0 and present=1, the CPU will fault.
+    // If CS=0x8 isn’t a code segment with DPL=0 and present=1, the CPU will fault.
+    // If you accidentally cleared DS/ES/FS/GS to 0, and then your thread executes 
+    // an instruction that implicitly uses one of them, you can fault too.
+
+
+/*
+Debugging checklist:
+
+Dump GDT entries for 0x8 and 0x10. Confirm:
+  Base = 0, Limit = 0xFFFFF (or 4GB), Granularity = 1.
+  Type = Code (for 0x8), Data (for 0x10).
+  DPL = 0, Present = 1.
+  Check SS: Must be a valid Ring 0 data segment.
+  Check CS: Must be a valid Ring 0 code segment.
+  Check DS/ES/FS/GS: 
+  Don’t leave them pointing to null descriptors. Set them to 0x10 as well.
+*/
+
+/*
+// #todo: Set the data segments to 0x10
+mov $0x10, %ax
+mov %ax, %ds
+mov %ax, %es
+mov %ax, %fs
+mov %ax, %gs
+mov %ax, %ss
+*/
+
     asm volatile ( 
         " movq $0, %%rax  \n" 
+        " mov $0x10, %%ax  \n"
         " mov %%ax, %%ds  \n" 
         " mov %%ax, %%es  \n" 
         " mov %%ax, %%fs  \n" 
         " mov %%ax, %%gs  \n"
+        " mov %%ax, %%ss  \n"  // kernel data selector
         " movq %0, %%rax  \n"  // entry
         " movq %1, %%rsp  \n"  // rsp0
         " movq $0, %%rbp  \n" 
-        " pushq $0x10     \n"  // SS
-        " pushq %%rsp     \n"  // RSP
         " pushq $0x0202   \n"  // Stack frame: RFLAGS
         " pushq $0x8      \n"  // Stack frame: CS
         " pushq %%rax     \n"  // Stack frame: RIP
         " iretq           \n" :: "D"(EntryPoint), "S"(RING0_RSP) );
-
-    // } else if (...) {
-    } else {
-
-    // #todo
-    // We need to review the stack frame for ring0
-    // only for ring 0 threads with iopl 0.
-    // Interrupts enabled for the thread that is not the first.
-    asm volatile ( 
-        " movq $0, %%rax  \n" 
-        " mov %%ax, %%ds  \n" 
-        " mov %%ax, %%es  \n" 
-        " mov %%ax, %%fs  \n" 
-        " mov %%ax, %%gs  \n"
-        " movq %0, %%rax  \n"  // entry
-        " movq %1, %%rsp  \n"  // rsp0
-        " movq $0, %%rbp  \n" 
-        " pushq $0x10     \n"  // SS
-        " pushq %%rsp     \n"  // RSP
-        " pushq $0x0202   \n"  // Stack frame: RFLAGS
-        " pushq $0x8      \n"  // Stack frame: CS
-        " pushq %%rax     \n"  // Stack frame: RIP
-        " iretq           \n" :: "D"(EntryPoint), "S"(RING0_RSP) );
-
-    };
 
 // Paranoia
     PROGRESS("__spawn_enter_kernelmode: -- iretq fail ----\n");
@@ -167,9 +192,11 @@ __spawn_enter_usermode(
         asm ("movb $0x20, %al \n");
         asm ("outb %al, $0x20 \n");
 
-        // LAPIC
         if (CONFIG_USE_LAPIC_TIMER_FOR_TS == 1)
-            local_apic_eoi(0);  // BSP
+        {
+            local_apic_eoi_00();  // This one is valid for all the cores.
+            //local_apic_eoi(0);  // BSP
+        }
     }
 
 // #todo

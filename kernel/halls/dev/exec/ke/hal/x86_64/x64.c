@@ -144,9 +144,13 @@ x64_init_gdt(
         0,    // avl
         1,    // l
         0,    // db
-        0);   // g
+        0     // g
+        );   
+        // Kernel code (selector 0x08) L=1, DB=0, G=1
 
     // k data
+
+// The original
     set_gdt_entry ( 
         &xxx_gdt[GDATA_SEL], 
         0,    // limit
@@ -158,7 +162,26 @@ x64_init_gdt(
         0,    // avl
         1,    // l
         0,    // db
-        0);   // g
+        0     // g
+        );   
+        // Kernel data (selector 0x10) L=0, DB=1, G=1
+
+/*
+// #testing this one to sold issues when lauching ring 0 threads
+set_gdt_entry(
+    &xxx_gdt[GDATA_SEL],
+    0,          // limit
+    0x0,        // base
+    SEG_DATA_RDWR, // type=0x2 (Read/Write)
+    1,          // s
+    DPL_RING0,  // dpl=0
+    1,          // p
+    0,          // avl
+    0,          // l (must be 0 for data!)
+    1,          // db (default operand size = 32)
+    1           // g (granularity)
+);
+*/
 
 // ----------------
 // GUCODE_SEL     3  // User code descriptor

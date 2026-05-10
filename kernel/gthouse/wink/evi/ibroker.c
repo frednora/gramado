@@ -379,22 +379,28 @@ static void keEarlyRing0IdleThread (void)
         panic       ("keEarlyRing0IdleThread: w h\n");
     }
     */
-Loop:
+//Loop:
 
-    frontbuffer_draw_rectangle( 0, 0, 16, 16, COLOR_WHITE, 0 );
+    // frontbuffer_draw_rectangle( 0, 0, 16, 16, COLOR_WHITE, 0 );
 
     // acende
     //backbuffer_draw_rectangle( 0, 0, deviceWidth, 28, COLOR_KERNEL_BACKGROUND );
     //wink_draw_string(8,8,COLOR_YELLOW," Gramado Operating System ");
     //refresh_screen();
 
+    //printk("ring 0 thread\n");
+
 // relax
     //asm (" sti ");
-    //asm (" hlt ");
+    asm (" int $3 ");
+    asm (" hlt ");
+
 // apaga
     //backbuffer_draw_rectangle( 0, 0, deviceWidth, 28, COLOR_KERNEL_BACKGROUND );
     //backbuffer_draw_rectangle( 0, 0, deviceWidth, deviceHeight, COLOR_KERNEL_BACKGROUND );  //#bug
     //refresh_screen();
+Loop:
+    asm (" hlt ");
     goto Loop;
 }
 
@@ -404,15 +410,19 @@ static void setup_minimal_ring0_thread(void)
     unsigned long stack_base = (unsigned long) kmalloc(4096);
     unsigned long entry_point = (unsigned long) &keEarlyRing0IdleThread;
 
-    struct thread_d *t = create_thread(
-        THREAD_TYPE_SYSTEM,  // type
-        NULL,              // cg
-        entry_point,       // initial RIP
-        stack_base + 4096, // initial RSP (top of stack)
-        0,                 // owner PID (0 for kernel)
-        "ring0-worker",    // thread name
-        RING0              // CPL = 0 (kernel mode)
-    );
+
+    printk("setup_minimal_ring0_thread:\n");
+
+    struct thread_d *t = 
+        create_thread (
+            THREAD_TYPE_SYSTEM,  // type
+            NULL,              // cg
+            entry_point,       // initial RIP
+            stack_base + 4096, // initial RSP (top of stack)
+            0,                 // owner PID (0 for kernel)
+            "ring0-worker",    // thread name
+            RING0              // CPL = 0 (kernel mode)
+        );
 
     if ((void*)t == NULL) {
         panic("Failed to create ring0 thread");
@@ -420,6 +430,12 @@ static void setup_minimal_ring0_thread(void)
 
     // Mark it ready to run
     SelectForExecution(t);
+
+    // #debug
+    //printk("entry_point:  %x \n",entry_point);
+    //printk("RING0_RSP: %x \n",(stack_base + 4096));
+    //refresh_screen();
+    //while(1){}
 }
 
 // Send ascii to the tty associated with stdin.

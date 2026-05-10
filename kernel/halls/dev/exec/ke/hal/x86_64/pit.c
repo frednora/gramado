@@ -243,8 +243,16 @@ unsigned long irq0_TIMER(void)
     spawn_reset_eoi_state();
 
 
+// #todo #bugbug
+// We gotta send it to the right core
+
     if (CONFIG_USE_LAPIC_TIMER_FOR_TS == 1)
-        local_apic_eoi(0);  // BSP
+    {
+        local_apic_eoi_00();  // This one is valid for all the cores.
+        //local_apic_eoi(0);  // BSP
+    }
+
+
 
 // Return the flags to the assembly code.
 // Ex:
