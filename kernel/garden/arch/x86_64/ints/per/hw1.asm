@@ -183,13 +183,14 @@ PeripheralHall_irq0:
     mov rax, qword [_contextCS]  ; Get CPL
     and rax, 3                   ; Select 2 bits
 
-    cmp rax, 3
-    je .R3Thread 
     cmp rax, 0
     je .R0Thread
+    cmp rax, 3
+    je .R3Thread 
     pop rax
     jmp .InvalidThread
 
+; ------------------------------------------------
 ; Stackframe for ring 0 has only 3 elements.
 .R0Thread:
     pop rax
@@ -198,6 +199,7 @@ PeripheralHall_irq0:
     mov qword [_gszLastStackFrame], 3  ; 3 elements
     jmp .AfterStackFrame
 
+; ------------------------------------------------
 ; Stack frame for ring 3 has 5 elements.
 .R3Thread:
     pop rax
@@ -206,6 +208,7 @@ PeripheralHall_irq0:
     mov qword [_gszLastStackFrame], 5  ; 5 elements
     jmp .AfterStackFrame
 
+; ------------------------------------------------
 .AfterStackFrame:
     mov qword [_contextRDX], rdx 
     mov qword [_contextRCX], rcx 

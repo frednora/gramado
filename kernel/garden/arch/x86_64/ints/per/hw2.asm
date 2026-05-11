@@ -287,13 +287,16 @@ irq0_release:
     and rax, 3                    ; Select 2 bits
 
     ; Compare
-    cmp rax, 3
-    je .restore_user_mode      ; It is a ring 3 thread
     cmp rax, 0
     je .restore_kernel_mode    ; It is a ring 0 thread
+    cmp rax, 3
+    je .restore_user_mode      ; It is a ring 3 thread
+
+    ; #bugbug
+    ; We need a panic here.
     jmp .InvalidThread
 
-
+; ------------------------------------------------
 ; Stack frame. (all double)
 ; Stackframe for ring 0 has only 3 elements.
 .restore_kernel_mode:
@@ -309,12 +312,20 @@ irq0_release:
     je .ajust5
     ;je .debugBreakpoint
 
+    ; Stack frame for ring 0 with 3 elements, 
+    ; because the last thread was ring 0.
     push qword [_contextRFLAGS]  ; rflags
     push qword [_contextCS]      ; cs
     push qword [_contextRIP]     ; rip
     jmp .stackframe_done
 
 .ajust5:
+    ; We need to push the extra elements for ring 0.
+    ; It's because the last thread was ring 3 and 
+    ; we need to restore the stack frame.
+    
+    ; Stack frame for ring 0, ajusted to 5 elements 
+    ; because the last thread was ring 3.
     push qword [_contextSS]  ;r0
     push qword [_contextRSP] ;r0
     push qword [_contextRFLAGS]  ; rflags
@@ -323,21 +334,33 @@ irq0_release:
     jmp .stackframe_done
 
 
+; ------------------------------------------------
 ; Stack frame. (all double)
 ; Stack frame for ring 3 has 5 elements.
 .restore_user_mode:
+
+    ; #test  (caution)
+    ; If the last thread had 3 elements ... 
+    ; And we are trying to resume a ring 3 thread with 5 elements ...
+    ; #ps: ring 3 always has 5 elements.
+    ; It's not a problem because the timer interrupt 
+    ; is the moment where the stack come back to the normal state.
+    ; Remember. The stack was initiated with the spawn 
+    ; or with the iretq.
+    ; #important: It means that at this moment we are 
+    ; initializing the stack.
+    ; mov eax, dword [_gszLastStackFrame]
+    ; cmp eax, 3
+    ; je .debugBreakpoint
+
+    ; Stack frame for ring 3 has 5 elements.
     push qword [_contextSS]      ; ss
     push qword [_contextRSP]     ; rsp
     push qword [_contextRFLAGS]  ; rflags
     push qword [_contextCS]      ; cs
     push qword [_contextRIP]     ; rip
 
-    ; #test  (caution)
-    ; The last was 3 but now its 5
-    ;mov eax, dword [_gszLastStackFrame]
-    ;cmp eax, 3
-    ;je .debugBreakpoint
-
+; ------------------------------------------------
 .stackframe_done:
 
 ; EOI - Only the first PIC.
