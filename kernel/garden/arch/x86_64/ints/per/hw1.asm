@@ -128,6 +128,17 @@ hw_reboot:
 ;   EOI is expected in irq0_release (hw2.asm).
 ;================================
 
+extern _gszLastStackFrame
+
+; _gszLastStackFrame is needed.
+; We need to know how many elements was poped in the last
+; timer interrupt.
+;This dual strategy ensures you never mismatch:
+; Ring 0 → Ring 0 resumes: 3 elements.
+; Ring 3 → Ring 3 resumes: 5 elements.
+; Ring 0 → Ring 3 switch: push 5 from the new thread’s context.
+; Ring 3 → Ring 0 switch: push 3 from the new thread’s context.
+
 ; Error codes: 
 ; PIT IRQ has no error code, but remember to handle exceptions 
 ; that push an error code (GP, PF, DF) with a variant entry stub.
@@ -182,10 +193,9 @@ PeripheralHall_irq0:
 ; Stackframe for ring 0 has only 3 elements.
 .R0Thread:
     pop rax
-    ;mov qword [_contextRSP], 0
-    ;mov qword [_contextSS], 0
     mov qword [_contextRSP], rsp   ; save current kernel stack pointer
     mov qword [_contextSS], ss     ; save kernel stack segment
+    mov qword [_gszLastStackFrame], 3  ; 3 elements
     jmp .AfterStackFrame
 
 ; Stack frame for ring 3 has 5 elements.
@@ -193,6 +203,7 @@ PeripheralHall_irq0:
     pop rax
     pop qword [_contextRSP]     ; rsp
     pop qword [_contextSS]      ; ss
+    mov qword [_gszLastStackFrame], 5  ; 5 elements
     jmp .AfterStackFrame
 
 .AfterStackFrame:
