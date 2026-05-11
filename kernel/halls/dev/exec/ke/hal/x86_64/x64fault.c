@@ -234,7 +234,7 @@ void x64_all_faults(unsigned long number)
 
     // Save the context for the current thread of the given core.
     // #bugbug: For now we are using the BSP
-    save_current_context(0);
+    arch_save_context(0);
     CurrentThread->saved = TRUE;
 
 
@@ -413,10 +413,9 @@ void x64_all_faults(unsigned long number)
 
             // Save the context for the current thread of the given core.
             // #bugbug: For now we are using the BSP
-            save_current_context(0);
+            arch_save_context(0);
+
             //show_slots();
-
-
             show_reg( lapic_info[0].current_thread );
 
             refresh_screen();

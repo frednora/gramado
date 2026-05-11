@@ -399,7 +399,7 @@ static unsigned long __task_switch(int lapic_info_id)
 // Save the context for the current thread of the given core.
 // #bugbug: For now we are using the BSP
 
-    save_current_context(0);
+    arch_save_context(0);
     CurrentThread->saved = TRUE;
 
 // #test

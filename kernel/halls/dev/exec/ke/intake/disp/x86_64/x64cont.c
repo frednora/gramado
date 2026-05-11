@@ -61,31 +61,21 @@ unsigned char context_fpu_buffer[512];
 
 // ===============================================
 
-/*
- * save_current_context: 
- *    Salvando o contexto da thread interrompida pelo timer IRQ0.
- *    O contexto da tarefa interrompida foi salvo em vari�veis pela 
- * isr do timer. Aqui esse contexto � colocado na estrutura que 
- * organiza as threads.
- * @todo: 
- *     Est�o faltando vari�veis nesse contexto, como registradores de 
- * debug e float point por exemplo.
- *     Mudar nome para contextSaveCurrent();.
- */
-// unit 1: Capture context.
-// Intake
-
-void save_current_context(int lapic_info_id)
+// arch_save_context:
+// Saving the context of the thread interrupted by timer IRQ0.
+// The context of the interrupted task was saved in variables by the timer isr.
+// Here this context is placed in the structure that organizes the threads.
+// Facility's unit 1: (Intake) 
+// + Capture the context
+void arch_save_context(int lapic_info_id)
 {
     struct thread_d  *t;
-
     int __lapic_info_id = lapic_info_id;
-
 
 // #debug:
 // Only the BSP processor can save the context for now
     if (__lapic_info_id != 0){
-        panic("restore_current_context: #todo Not BSP\n");
+        panic("arch_save_context: #todo Not BSP\n");
     }
 
 // The current thread for this core
@@ -130,19 +120,19 @@ void save_current_context(int lapic_info_id)
 
     if ( CurrentTID < 0 || CurrentTID >= THREAD_COUNT_MAX )
     {
-        printk("save_current_context: CurrentTID=%d\n", CurrentTID );
+        printk("arch_save_context: CurrentTID=%d\n", CurrentTID );
         goto fail0;
     }
 
 // The thread structure
     t = (void *) threadList[CurrentTID];
     if ((void *) t == NULL){
-        printk ("save_current_context: [ERROR] struct for CurrentTID={%d}\n",
+        printk ("arch_save_context: [ERROR] struct for CurrentTID={%d}\n",
             CurrentTID );
         goto fail1;
     }
     if ( t->used != TRUE || t->magic != 1234 ){
-        printk ("save_current_context: [ERROR] Validation CurrentTID={%d}\n",
+        printk ("arch_save_context: [ERROR] Validation CurrentTID={%d}\n",
             CurrentTID );
         goto fail1;
     }
@@ -209,14 +199,14 @@ void save_current_context(int lapic_info_id)
     cpl = (int) (tmp_cpl & 3);
 
     if (cpl != t->cpl)
-        panic("save_current_context: cpl != t->cpl\n");
+        panic("arch_save_context: cpl != t->cpl\n");
 
 // Ja temos o valor do current process nesse momento?
     //pid_t current_process = (pid_t) get_current_process();
     
     if ( cpl != 0 && cpl != 1 && cpl != 2 && cpl != 3 )
     {
-        panic("save_current_context: cpl\n");
+        panic("arch_save_context: cpl\n");
     }
 
 // It doesn't run ring 0 threads yet.
@@ -229,28 +219,35 @@ void save_current_context(int lapic_info_id)
     {
         if (CONFIG_ALLOW_RING0_CONTEXT_SAVE == 1)
         {
-            //panic("save_current_context: cpl 0 #test\n");
+            //panic("arch_save_context: cpl 0 #test\n");
             //printk("step %d\n", t->step);
         }
         if (CONFIG_ALLOW_RING0_CONTEXT_SAVE != 1){
-            panic("save_current_context: cpl 0\n");
+            panic("arch_save_context: cpl 0\n");
         }
         t->transition_counter.to_supervisor++;
 
+        // #ps: We are also doing this in hw1.asm
         gszLastStackFrame = 3;
     }
     if (cpl == 1){
-        panic("save_current_context: cpl 1\n");
+        panic("arch_save_context: cpl 1\n");
     }
     if (cpl == 2){
-        panic("save_current_context: cpl 2\n");
+        panic("arch_save_context: cpl 2\n");
     }
-// Significa que uma thread que estava rodando em ring3,
-// foi interrompida e teve seu context salvo por essa rotina.
+// It means that a thread that was running in ring3, 
+// was interrupted and had its context saved by this routine.
     if (cpl == 3)
     {
-        t->transition_counter.to_supervisor++;  //#bugbug: Not accurate
 
+        // #bugbug: Not accurate
+        // If a Ring 3 thread is interrupted by IRQ0, the CPU switches 
+        // privilege levels (Ring 3 → Ring 0). That’s a transition into 
+        // supervisor mode.
+        t->transition_counter.to_supervisor++;  // (save path)  
+
+        // #ps: We are also doing this in hw1.asm
         gszLastStackFrame = 5;
     }
 
@@ -274,21 +271,14 @@ fail0:
     die();
 }
 
-/*
- * restore_current_context: 
- *     Carregando o contexto da pr�xima thread a ser executada.
- *     Pegando os valores na estrutura e colocando nas vari�veis 
- * que ser�o usadas pelo arquivo em assembly para carregar os valores 
- * dentro dos registradores.
- * @todo:   
- *     Mudar nome para x64contRestoreContext();.
- */
-// unit 3: Release the context.
-// Burgundy?
-
-// It restores the context and update cr3. 
-
-void restore_current_context(int lapic_info_id)
+// arch_restore_context:
+// Setting up the context of the next thread to be executed.
+// The context is loaded from the thread structure and placed in the variables
+// that will be used by the assembly file to load the values into the registers.
+// It also updates cr3. 
+// Facility's unit 3: (Burgundy)
+// Release the context
+void arch_restore_context(int lapic_info_id)
 {
     struct thread_d  *t;
 
@@ -297,7 +287,7 @@ void restore_current_context(int lapic_info_id)
 // #debug:
 // Only the BSP processor can save the context for now
     if (__lapic_info_id != 0){
-        panic("restore_current_context: #todo Not BSP\n");
+        panic("arch_restore_context: #todo Not BSP\n");
     }
 
 // The current thread for this core
@@ -334,17 +324,17 @@ void restore_current_context(int lapic_info_id)
 
     if ( CurrentTID < 0 || CurrentTID >= THREAD_COUNT_MAX )
     {
-        printk ("restore_current_context: CurrentTID=%d\n", CurrentTID );
+        printk ("arch_restore_context: CurrentTID=%d\n", CurrentTID );
         goto fail0;
     }
 
     t = (void *) threadList[CurrentTID]; 
     if ((void *) t == NULL){
-        printk("restore_current_context error: t\n");
+        printk("arch_restore_context error: t\n");
         goto fail1;
     }
     if ( t->used != TRUE || t->magic != 1234 ){
-        printk("restore_current_context error: t validation\n");
+        printk("arch_restore_context error: t validation\n");
         goto fail1;
     }
 
@@ -407,24 +397,24 @@ void restore_current_context(int lapic_info_id)
     if (t->cpl == 0)
     {
         if (CONFIG_ALLOW_RING0_CONTEXT_RESTORE != 1){
-            panic ("restore_current_context: t->cpl 0\n");
+            panic ("arch_restore_context: t->cpl 0\n");
         }
         t->transition_counter.to_supervisor++;
     }
 // Transition counter
     if (t->cpl == 1){
-       panic ("restore_current_context: t->cpl 1\n");
+       panic ("arch_restore_context: t->cpl 1\n");
     }
 // Transition counter
     if (t->cpl == 2){
-       panic ("restore_current_context: t->cpl 2\n");
+       panic ("arch_restore_context: t->cpl 2\n");
     }
 // Transition counter
     if (t->cpl == 3){
-        t->transition_counter.to_user++;
+        t->transition_counter.to_user++;  // (restore path)  
     }
 
-// Restore CR3 and flush TLB.
+// Restore CR3 and flush TLB
     load_pml4_table((unsigned long) t->pml4_PA);
     asm ("movq %cr3, %rax");
     asm ("movq %rax, %cr3");
@@ -434,54 +424,5 @@ fail1:
     show_process_information(); 
 fail0:
     die();
-}
-
-// Checar um contexto valido para threads em ring 3. 
-// #bugbug: 
-// Nao usaremos mais isso.
-int contextCheckThreadRing3Context(int tid)
-{
-    struct thread_d  *t;
-
-    if (tid < 0 || tid >= THREAD_COUNT_MAX){
-        return FALSE;
-    }
-    t = (void *) threadList[tid]; 
-    if ((void *) t == NULL){
-        return FALSE;
-    }
-    if (t->used != TRUE || t->magic != 1234){
-        debug_print("contextCheckThreadRing3Context: validation\n");
-        return FALSE;
-    }
-
-    // cpl
-    if (t->cpl != RING3){
-        panic("contextCheckThreadRing3Context: cpl\n");
-    }
-
-// iopl
-// For now we only accept ring 3 threads with weak protection
-
-    if (t->rflags_initial_iopl != 3){
-        debug_print("contextCheckThreadRing3Context: rflags_initial_iopl\n");
-        return FALSE;
-    }
-    if (t->rflags_current_iopl != 3){
-        debug_print("contextCheckThreadRing3Context: rflags_current_iopl\n");
-        return FALSE;
-    }
-
-// code segment
-// #todo: use some defined value.
-    if (t->context.cs != 0x1B) {
-        debug_print("contextCheckThreadRing3Context: segments fail\n");
-        return FALSE; 
-    }
-
-    // ...
-
-// OK: This is a valid thread for ring3.
-    return TRUE;
 }
 

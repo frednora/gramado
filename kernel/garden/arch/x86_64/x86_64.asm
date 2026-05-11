@@ -1,6 +1,16 @@
 ; x86_64.asm
 ; Created by Fred Nora.
 
+; Gate type:
+; + Interrupt gate → clears IF, preventing nesting.
+; + Trap gate → leaves IF unchanged, allowing nesting if you want.
+
+; Syscall/sysret mechanism: 
+; In x86‑64, the syscall instruction doesn’t even go through the IDT 
+; in the same way — it jumps directly to the kernel entry point 
+; with IF cleared. So you’re guaranteed not to be interrupted 
+; mid‑syscall unless you re‑enable interrupts yourself.
+
 ;extern _Module0EntryPoint
 
 ; Type/flags word:

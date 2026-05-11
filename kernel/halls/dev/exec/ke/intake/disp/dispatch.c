@@ -210,10 +210,12 @@ dispatch_current:
 
 // Save the context for the current thread of the given core.
 // #bugbug: For now we are using the BSP
-    restore_current_context(0);  // update cr3
+    arch_restore_context(0);  // update cr3
+
     return;
     //return 0;
 }
+
 
 //
 // $

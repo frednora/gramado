@@ -79,10 +79,8 @@ struct x64_context_d
 // == prototypes ==============
 //
 
-void save_current_context(int lapic_info_id);
-void restore_current_context(int lapic_info_id);
-
-int contextCheckThreadRing3Context(int tid);
+void arch_save_context(int lapic_info_id);
+void arch_restore_context(int lapic_info_id);
 
 #endif    
 
