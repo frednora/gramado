@@ -565,7 +565,7 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
     Idle->base_priority = PRIORITY_SYSTEM_THRESHOLD;
     Idle->priority      = PRIORITY_SYSTEM_THRESHOLD;
 // Estabilize the credits.
-    Idle->quantum = QUANTUM_NORMAL_THRESHOLD;       
+    Idle->quantum = QUANTUM_NORMAL_THRESHOLD;      
 
 
     //Idle->current_processor = 0;
@@ -656,6 +656,23 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
 
         if ((void *) TmpThread != NULL)
         {
+            // #ps:
+            // #test: Preempt all the threads that are still running.
+            // This schedurer fires at the end of the round.
+            // So we can safely preempt all the threads 
+            // that are still running.
+
+            /*
+            if ( TmpThread->used == TRUE && 
+                 TmpThread->magic == 1234 && 
+                 TmpThread->state == RUNNING )
+            {
+                TmpThread->state = READY;
+                TmpThread->runningCount = 0;
+                TmpThread->quantum = QUANTUM_NORMAL_THRESHOLD;
+            } 
+            */
+
             // =============================
             // Exit in progress
             if (TmpThread->magic == 1234)
@@ -893,8 +910,10 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
 
                 ReadyCounter++;
             }
+
         }
     };
+
 
     SchedulerInfo.rr_ready_threads_in_round = ReadyCounter;
     sched_quick_and_dirty_load_balancer();
@@ -1131,6 +1150,10 @@ tid_t scheduler(void)
 
 // Update the system state
     system_state = SYSTEM_RUNNING;
+
+// #test
+// Setup the current thread for this processor.
+    // lapic_info[0].current_thread = (tid_t) first_tid;
 
 // Return tid
     return (tid_t) first_tid;

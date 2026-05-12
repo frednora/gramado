@@ -126,7 +126,7 @@ static void __tsOnFinishedExecuting(struct thread_d *t)
 //
 // Preempt
 //
- 
+
     if (t->state == RUNNING)
     {
         t->state = READY;
@@ -490,15 +490,11 @@ static unsigned long __task_switch(int lapic_info_id)
 
     } else if (CurrentThread->runningCount >= CurrentThread->quantum){
 
-        // Is it a ring 0 thread?
-        // At this moment if the policy allows,
-        // we can simply return for ring 0 threads.
-        // Do not allowing taskswitching for ring 0 threads.
-
         // The context is already saved,
         // we can process something before planing the next thread.
         __tsOnFinishedExecuting(CurrentThread);
 
+        // Is it a ring 0 thread?
         // #debug
         // The ring 0 thread is running untill this moment.
         // #test: 
@@ -667,6 +663,10 @@ ZeroGravity:
 // ----------------------------------------
 // End of round or end of queue.
 // Rebuild the linked list and get the current thread.
+
+//
+// >> End of round <<
+//
 
     // Round‑Robin Policy: End of round.
     // Priority Interleaving Policy: 
@@ -1041,7 +1041,8 @@ It’s like registering a window proc — the kernel knows where to deliver, and
 
 Alertable state: 
 The kernel decides when it’s safe to flip the thread into “alertable.” 
-That’s the equivalent of Windows marking a thread as ready to process APCs or messages. You avoid unsafe pivots because the scheduler only publishes callbacks at controlled points (end of task switch, right before iretq).
+That’s the equivalent of Windows marking a thread as ready to process APCs or messages. 
+You avoid unsafe pivots because the scheduler only publishes callbacks at controlled points (end of task switch, right before iretq).
 
 One‑shot delivery: 
 The alertable flag is consumed when the callback fires, 
