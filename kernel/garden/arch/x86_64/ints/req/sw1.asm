@@ -61,21 +61,30 @@ align 16
 ; RSI → arg2
 ; RDX → arg3
 
-
 align 4
 global _systemcall64
-_systemcall64: 
+_systemcall64:
+
     mov qword [.save_rcx], rcx
     mov qword [.save_r11], r11
+    mov qword [.save_rsp], rsp
 
-    ; ...
+    mov rax, 0xCAFEBABE        ; test return value
+
     int 3
 
     mov rcx, qword [.save_rcx]
     mov r11, qword [.save_r11]
-    sysret
+    mov rsp, qword [.save_rsp]
+
+    o64 sysret
+    ; Hardcoded sysretq (48 0F 07)
+    ; db 0x48, 0x0F, 0x07
+
 .save_rcx: dq 0
 .save_r11: dq 0
+.save_rsp: dq 0
+
 
 ;------------------------
 ; RequestHall_int128

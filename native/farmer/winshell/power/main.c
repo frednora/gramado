@@ -704,7 +704,8 @@ int main(int argc, char *argv[])
     // #bugbug
     // The syscall is firing and the body of the handler in ring 0 is working, 
     // but its not returning ro the caller here.
-    // syscall3(999, 0, 0, 0);  // Invalid syscall number for testing
+    
+    syscall3(999, 0, 0, 0);  // Invalid syscall number for testing
 
 
 // =========================================

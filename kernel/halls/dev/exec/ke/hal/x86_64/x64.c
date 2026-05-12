@@ -82,9 +82,10 @@ extern void systemcall64(void);  // entry point from assembly
 
 // Segment selectors (from your GDT setup in x64.c)
 #define KERNEL_CS 0x08
-#define KERNEL_SS 0x10
-#define USER_CS   0x1B
-#define USER_SS   0x23
+//#define KERNEL_SS 0x10
+#define USER_CS   0x18  // Base address, without the extra bits.
+//#define USER_SS   0x20  // Base address, without the extra bits.
+
 
 void x64_setup_syscall64(void)
 {
@@ -96,8 +97,7 @@ void x64_setup_syscall64(void)
     lo |= 1; // set SCE bit
     cpuSetMSR(IA32_EFER, lo, hi);
 
-    // 2. STAR: kernel CS/SS and user CS/SS
-    // Bits 47:32 = kernel CS/SS, bits 63:48 = user CS/SS
+    // 2) STAR: [63:48] = User CS (for sysret), [47:32] = Kernel CS
     unsigned long star = ((unsigned long)USER_CS << 48) | ((unsigned long)KERNEL_CS << 32);
     cpuSetMSR(IA32_STAR, (unsigned int)star, (unsigned int)(star >> 32));
 
@@ -105,8 +105,8 @@ void x64_setup_syscall64(void)
     unsigned long lstar = (unsigned long) &systemcall64;
     cpuSetMSR(IA32_LSTAR, (unsigned int)lstar, (unsigned int)(lstar >> 32));
 
-    // 4. FMASK: clear IF, DF, TF on entry
-    unsigned long fmask = (1 << 9) | (1 << 10) | (1 << 8);
+    // 4. FMASK: clear TF|DF|IF on entry
+    unsigned long fmask = (1 << 8) | (1 << 9) | (1 << 10);
     cpuSetMSR(IA32_FMASK, (unsigned int)fmask, (unsigned int)(fmask >> 32));
 }
 
@@ -257,7 +257,9 @@ x64_init_gdt(
 // dpl 3
 // (n, limit, base, type, s, dpl, p, avl, l, db, g)
 
-    // u code
+// u code
+// For long mode code: 
+// User code (selector 0x) L=1, DB=0, G=1
     set_gdt_entry ( 
         &xxx_gdt[GUCODE_SEL], 
         0,    // limit
@@ -269,10 +271,13 @@ x64_init_gdt(
         0,    // avl
         1,    // l
         0,    // db
-        0     // g
+        1     // g
     );
 
-    // u data
+// u data
+// For long mode data:
+// User data (selector 0x) L=0, DB=1, G=1
+
     set_gdt_entry ( 
         &xxx_gdt[GUDATA_SEL], 
         0,      // limit   
@@ -282,9 +287,9 @@ x64_init_gdt(
         DPL_RING3,  // dpl=3
         1,      // p
         0,      // avl
-        1,      // l
-        0,      // db
-        0       // g
+        0,      // l
+        1,      // db
+        1       // g
     );
 
 // ----------------
