@@ -79,6 +79,9 @@
 //
 
 
+void x64_setup_syscall64(void);
+
+
 //
 // FPU
 //

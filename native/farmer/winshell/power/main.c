@@ -80,6 +80,43 @@ static void update_children(int fd);
 // =====================================================
 
 
+/**
+ * Generic syscall stub for x86_64.
+ * num   The syscall number (placed in rax)
+ * arg1  First argument (placed in rdi)
+ * arg2  Second argument (placed in rsi)
+ * arg3  Third argument (placed in rdx)
+ * return      Result from the kernel (returned in rax)
+ */
+
+// "a"(num)  → RAX = syscall number
+// "D"(arg1) → RDI = first argument
+// "S"(arg2) → RSI = second argument
+// "d"(arg3) → RDX = third argument
+
+unsigned long 
+syscall3 (
+    unsigned long num, 
+    unsigned long arg1, 
+    unsigned long arg2, 
+    unsigned long arg3 ) 
+{
+    unsigned long ret=0;
+
+    asm volatile (
+        "syscall \n"
+        : "=a" (ret)                    // Output: rax contains the return value
+        : "a" (num),                    // Input: rax = syscall number
+          "D" (arg1),                   // Input: rdi = arg1
+          "S" (arg2),                   // Input: rsi = arg2
+          "d" (arg3)                    // Input: rdx = arg3
+        : "rcx", "r11", "memory"        // Clobbers: syscall changes rcx and r11
+    );
+
+    return (unsigned long) ret;
+}
+
+
 // Handle click events for components
 static void on_button_clicked(int id)
 {
@@ -657,6 +694,18 @@ int main(int argc, char *argv[])
         printf("power_app: libgui_initialize fail\n");
         exit(1);
     }
+
+
+// =========================================
+// #test
+// Testing the syscall3 function 
+
+    // #ps
+    // #bugbug
+    // The syscall is firing and the body of the handler in ring 0 is working, 
+    // but its not returning ro the caller here.
+    // syscall3(999, 0, 0, 0);  // Invalid syscall number for testing
+
 
 // =========================================
 // Main window

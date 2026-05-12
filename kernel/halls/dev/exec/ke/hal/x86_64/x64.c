@@ -30,6 +30,90 @@ static void __get_cpu_intel_parameters(void);
 //
 
 
+/*
+; Setup systemcall64:
+; Privilege transition: Moves execution from CPL=3 (user mode) to CPL=0 (kernel mode).
+; Entry point: Loads RIP from the IA32_LSTAR MSR (Model Specific Register), 
+; which must be set by the OS to point to the kernel’s syscall handler.
+; Stack handling: The kernel is responsible for setting up a 
+; separate stack for handling system calls, often using 
+; the IA32_STAR MSR to define the stack segment.
+; MSR setup: 
+; The OS must configure IA32_STAR, IA32_LSTAR, and IA32_FMASK 
+; before enabling SYSCALL/SYSRET.
+; Shadow stacks (CET): On modern CPUs, SYSCALL also interacts 
+; with shadow stack pointers (IA32_PL3_SSP MSR).
+
+; RCX and R11 are handled automatically by the CPU 
+; when you execute SYSCALL in long mode. 
+; The hardware does the save/restore work as part 
+; of the privilege transition.
+; RCX: The CPU saves the user‑mode RIP (the return address) into RCX.
+; R11: The CPU saves the user‑mode RFLAGS into R11.
+;      Then it masks those flags using the 
+;      IA32_FMASK MSR (to clear bits like interrupt enable).
+;      On SYSRET, R11 is used to restore the original RFLAGS back to user mode.
+
+; Flow summary:
+; 1) User executes SYSCALL.
+; 2) CPU:
+; + Saves RIP → RCX.
+; + Saves RFLAGS → R11.
+; + Loads kernel RIP from IA32_LSTAR.
+; + Loads CS/SS from IA32_STAR.
+; + Applies IA32_FMASK to RFLAGS.
+; 3) Kernel runs syscall handler.
+; 4) Kernel eventually executes SYSRET.
+; 5) CPU:
+; + Restores RIP from RCX.
+; + Restores RFLAGS from R11.
+; + Returns to CPL=3.
+
+*/
+
+
+extern void systemcall64(void);  // entry point from assembly
+
+// MSR indices
+#define IA32_EFER   0xC0000080
+#define IA32_STAR   0xC0000081
+#define IA32_LSTAR  0xC0000082
+#define IA32_FMASK  0xC0000084
+
+// Segment selectors (from your GDT setup in x64.c)
+#define KERNEL_CS 0x08
+#define KERNEL_SS 0x10
+#define USER_CS   0x1B
+#define USER_SS   0x23
+
+void x64_setup_syscall64(void)
+{
+    unsigned int lo=0; 
+    unsigned int hi=0;
+
+    // 1. Enable SYSCALL/SYSRET in EFER
+    cpuGetMSR(IA32_EFER, &lo, &hi);
+    lo |= 1; // set SCE bit
+    cpuSetMSR(IA32_EFER, lo, hi);
+
+    // 2. STAR: kernel CS/SS and user CS/SS
+    // Bits 47:32 = kernel CS/SS, bits 63:48 = user CS/SS
+    unsigned long star = ((unsigned long)USER_CS << 48) | ((unsigned long)KERNEL_CS << 32);
+    cpuSetMSR(IA32_STAR, (unsigned int)star, (unsigned int)(star >> 32));
+
+    // 3. LSTAR: entry point RIP for SYSCALL
+    unsigned long lstar = (unsigned long) &systemcall64;
+    cpuSetMSR(IA32_LSTAR, (unsigned int)lstar, (unsigned int)(lstar >> 32));
+
+    // 4. FMASK: clear IF, DF, TF on entry
+    unsigned long fmask = (1 << 9) | (1 << 10) | (1 << 8);
+    cpuSetMSR(IA32_FMASK, (unsigned int)fmask, (unsigned int)(fmask >> 32));
+}
+
+//
+// =====================================
+//
+
 
 /*
  * x64_init_gdt:
@@ -979,6 +1063,10 @@ int x64_init_intel (void)
 // Local worker
 // Get info from Intel CPU.
     __get_cpu_intel_parameters();
+
+
+// Setup the usage of syscall in long mode.
+    x64_setup_syscall64();
 
     // ...
 

@@ -1,5 +1,5 @@
-
 // x64gdt.h
+// Created by Fred Nora.
 
 #ifndef ____X64GDT_H
 #define ____X64GDT_H    1

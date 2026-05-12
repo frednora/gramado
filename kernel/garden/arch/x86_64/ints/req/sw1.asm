@@ -13,6 +13,70 @@ __sw_local_fpu_buffer:
 align 16
 
 
+; systemcall64:
+; Privilege transition: Moves execution from CPL=3 (user mode) to CPL=0 (kernel mode).
+; Entry point: Loads RIP from the IA32_LSTAR MSR (Model Specific Register), 
+; which must be set by the OS to point to the kernel’s syscall handler.
+; Stack handling: The kernel is responsible for setting up a 
+; separate stack for handling system calls, often using 
+; the IA32_STAR MSR to define the stack segment.
+; MSR setup: 
+; The OS must configure IA32_STAR, IA32_LSTAR, and IA32_FMASK 
+; before enabling SYSCALL/SYSRET.
+; Shadow stacks (CET): On modern CPUs, SYSCALL also interacts 
+; with shadow stack pointers (IA32_PL3_SSP MSR).
+;
+
+; RCX and R11 are handled automatically by the CPU 
+; when you execute SYSCALL in long mode. 
+; The hardware does the save/restore work as part 
+; of the privilege transition.
+; RCX: The CPU saves the user‑mode RIP (the return address) into RCX.
+; R11: The CPU saves the user‑mode RFLAGS into R11.
+;      Then it masks those flags using the 
+;      IA32_FMASK MSR (to clear bits like interrupt enable).
+;      On SYSRET, R11 is used to restore the original RFLAGS back to user mode.
+
+
+; Flow summary:
+; 1) User executes SYSCALL.
+; 2) CPU:
+; + Saves RIP → RCX.
+; + Saves RFLAGS → R11.
+; + Loads kernel RIP from IA32_LSTAR.
+; + Loads CS/SS from IA32_STAR.
+; + Applies IA32_FMASK to RFLAGS.
+; 3) Kernel runs syscall handler.
+; 4) Kernel eventually executes SYSRET.
+; 5) CPU:
+; + Restores RIP from RCX.
+; + Restores RFLAGS from R11.
+; + Returns to CPL=3.
+
+;
+; When you invoke SYSCALL, arguments are passed in registers:
+;
+; RAX → syscall number
+; RDI → arg1
+; RSI → arg2
+; RDX → arg3
+
+
+align 4
+global _systemcall64
+_systemcall64: 
+    mov qword [.save_rcx], rcx
+    mov qword [.save_r11], r11
+
+    ; ...
+    int 3
+
+    mov rcx, qword [.save_rcx]
+    mov r11, qword [.save_r11]
+    sysret
+.save_rcx: dq 0
+.save_r11: dq 0
+
 ;------------------------
 ; RequestHall_int128
 ;     System Call number 0x80
