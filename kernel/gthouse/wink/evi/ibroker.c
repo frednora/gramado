@@ -391,7 +391,9 @@ static void keEarlyRing0IdleThread (void)
     //wink_draw_string(8,8,COLOR_YELLOW," Gramado Operating System ");
     //refresh_screen();
 
+    asm (" cli ");
     printk("ring 0 thread\n");
+    asm (" sti ");
 
 // #test
 // The thread run the whole quantum
@@ -422,18 +424,25 @@ static void setup_minimal_ring0_thread(void)
     unsigned long stack_base = (unsigned long) kmalloc(4096);
     unsigned long entry_point = (unsigned long) &keEarlyRing0IdleThread;
 
+// #ps
+// Maybe it's mandatory to use the current PID,
+// or we can cause some problem with the address space of the thread.
+    pid_t current_pid = (pid_t) get_current_pid();
+    if (current_pid < 0 || current_pid >= PROCESS_COUNT_MAX) {
+        panic("Failed to get current PID");
+    }
 
     printk("setup_minimal_ring0_thread:\n");
 
     struct thread_d *t = 
         create_thread (
             THREAD_TYPE_SYSTEM,  // type
-            NULL,              // cg
-            entry_point,       // initial RIP
-            stack_base + 4096, // initial RSP (top of stack)
-            0,                 // owner PID (0 for kernel)
-            "ring0-worker",    // thread name
-            RING0              // CPL = 0 (kernel mode)
+            NULL,                // cgroup
+            entry_point,         // initial RIP
+            stack_base + 4096,   // initial RSP (top of stack)
+            current_pid,         // owner PID (0 for kernel)
+            "ring0-worker",      // thread name
+            RING0                // CPL = 0 (kernel mode)
         );
 
     if ((void*)t == NULL) {

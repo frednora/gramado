@@ -383,6 +383,7 @@ irq0_release:
     ;sti
 
     iretq
+
 ; --------------------------------------
 .InvalidThread:
     ; #todo: Call a fancy worker

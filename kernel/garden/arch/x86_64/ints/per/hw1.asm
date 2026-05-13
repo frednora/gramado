@@ -324,6 +324,11 @@ global PeripheralHall_irq1
 PeripheralHall_irq1:
 ; Maskable interrupt
 
+    ; #bugbug
+    ; #todo:
+    ; We also need to be careful if the interrupted thread 
+    ; is a ring 0 thread or a ring 3 thread, because the stack frame is different.
+
     ;cli
 
 ; No caso do dispatcher lançar uma nova thread,
@@ -333,12 +338,47 @@ PeripheralHall_irq1:
 
 ;; == Save context ====================
     
-    ; Stack frame. (all double)
+
+; Pop only the common part of the stack frame, 
+; which is the same for both ring 0 and ring 3 threads.
+
     pop qword [_contextRIP]     ; rip
     pop qword [_contextCS]      ; cs (R3)
     pop qword [_contextRFLAGS]  ; rflags
+
+.TestCPL:
+
+    push rax
+    mov rax, qword [_contextCS]  ; Get CPL
+    and rax, 3                   ; Select 2 bits
+
+    cmp rax, 0
+    je .R0Thread
+    cmp rax, 3
+    je .R3Thread 
+    pop rax
+    jmp .InvalidThread
+
+; ------------------------------------------------
+; Stackframe for ring 0 has only 3 elements.
+.R0Thread:
+    pop rax
+    mov qword [_contextRSP], rsp   ; save current kernel stack pointer
+    mov qword [_contextSS], ss     ; save kernel stack segment
+    ;mov qword [_gszLastStackFrame], 3  ; 3 elements
+    jmp .AfterStackFrame
+
+; ------------------------------------------------
+; Stack frame for ring 3 has 5 elements.
+.R3Thread:
+    pop rax
     pop qword [_contextRSP]     ; rsp
     pop qword [_contextSS]      ; ss
+    ;mov qword [_gszLastStackFrame], 5  ; 5 elements
+    jmp .AfterStackFrame
+
+; ------------------------------------------------
+.AfterStackFrame:
 
     mov qword [_contextRDX], rdx 
     mov qword [_contextRCX], rcx 
@@ -396,7 +436,8 @@ PeripheralHall_irq1:
     mov [_contextCPL], rax
 
 ; See: keyboard.c
-    call _irq1_KEYBOARD
+    mov r10, qword _irq1_KEYBOARD
+    call r10
 
 ; FPU
     fxrstor [_context_fpu_buffer]
@@ -450,12 +491,54 @@ PeripheralHall_irq1:
     mov rcx, qword [_contextRCX] 
     mov rdx, qword [_contextRDX] 
 
+
+; --------------------------------------------
+; Stack frame saga
+
+    ;----------------------------------------
+    ; Now rebuild the hardware-saved stack frame.
+    ; The appropriate frame is chosen based on _contextCPL.
+    ;----------------------------------------
+
+    mov rax, qword [_contextCS]   ; Get CPL
+    and rax, 3                    ; Select 2 bits
+
+    ; Compare
+    cmp rax, 0
+    je .restore_kernel_mode    ; It is a ring 0 thread
+    cmp rax, 3
+    je .restore_user_mode      ; It is a ring 3 thread
+
+    ; #bugbug
+    ; We need a panic here.
+    jmp .InvalidThread
+
+; ------------------------------------------------
 ; Stack frame. (all double)
+; Stackframe for ring 0 has only 3 elements.
+.restore_kernel_mode:
+    ; Stack frame for ring 0 with 3 elements, 
+    ; because the last thread was ring 0.
+    push qword [_contextRFLAGS]  ; rflags
+    push qword [_contextCS]      ; cs
+    push qword [_contextRIP]     ; rip
+    jmp .stackframe_done
+
+; ------------------------------------------------
+; Stack frame. (all double)
+; Stack frame for ring 3 has 5 elements.
+.restore_user_mode:
+    ; Stack frame for ring 3 has 5 elements.
     push qword [_contextSS]      ; ss
     push qword [_contextRSP]     ; rsp
     push qword [_contextRFLAGS]  ; rflags
     push qword [_contextCS]      ; cs
     push qword [_contextRIP]     ; rip
+
+
+
+; ------------------------------------------------
+.stackframe_done:
 
     ; send EOI to XT keyboard
     ;in      al, 061h
@@ -465,7 +548,10 @@ PeripheralHall_irq1:
     ;mov     al, ah
     ;out     061h, al
 
+
 ; EOI - Only the first PIC.
+; #remember: In the case os SMP. It was already done in C.
+
     xor rax, rax 
     MOV AL, 020h
     OUT 020h, AL
@@ -484,6 +570,14 @@ PeripheralHall_irq1:
     ;sti
     iretq
 ;;===========================
+; --------------------------------------
+.InvalidThread:
+    cli
+    hlt
+    jmp .InvalidThread
+; --------------------------------------
+
+
 
 ;=======================================================
 ; IRQ 3 - serial port controller for serial port 2 
@@ -1255,6 +1349,11 @@ global PeripheralHall_irq12
 PeripheralHall_irq12:
 ; Maskable interrupt
 
+    ; #bugbug
+    ; #todo:
+    ; We also need to be careful if the interrupted thread 
+    ; is a ring 0 thread or a ring 3 thread, because the stack frame is different.
+
     ;cli
 
 ; No caso do dispatcher lançar uma nova thread,
@@ -1263,13 +1362,47 @@ PeripheralHall_irq12:
     ; mov dword [_irq0PendingEOI], 1
 
 ;; == Save context ====================
-    
-    ; Stack frame. (all double)
+
+; Pop only the common part of the stack frame, 
+; which is the same for both ring 0 and ring 3 threads.
+
     pop qword [_contextRIP]     ; rip
     pop qword [_contextCS]      ; cs (R3)
     pop qword [_contextRFLAGS]  ; rflags
+
+.TestCPL:
+
+    push rax
+    mov rax, qword [_contextCS]  ; Get CPL
+    and rax, 3                   ; Select 2 bits
+
+    cmp rax, 0
+    je .R0Thread
+    cmp rax, 3
+    je .R3Thread 
+    pop rax
+    jmp .InvalidThread
+
+; ------------------------------------------------
+; Stackframe for ring 0 has only 3 elements.
+.R0Thread:
+    pop rax
+    mov qword [_contextRSP], rsp   ; save current kernel stack pointer
+    mov qword [_contextSS], ss     ; save kernel stack segment
+    ;mov qword [_gszLastStackFrame], 3  ; 3 elements
+    jmp .AfterStackFrame
+
+; ------------------------------------------------
+; Stack frame for ring 3 has 5 elements.
+.R3Thread:
+    pop rax
     pop qword [_contextRSP]     ; rsp
     pop qword [_contextSS]      ; ss
+    ;mov qword [_gszLastStackFrame], 5  ; 5 elements
+    jmp .AfterStackFrame
+
+; ------------------------------------------------
+.AfterStackFrame:
 
     mov qword [_contextRDX], rdx 
     mov qword [_contextRCX], rcx 
@@ -1327,7 +1460,8 @@ PeripheralHall_irq12:
     mov [_contextCPL], rax
 
 ; See: mouse.c
-    call _irq12_MOUSE
+    mov r10, qword _irq12_MOUSE
+    call r10
 
 ; FPU
     fxrstor [_context_fpu_buffer]
@@ -1381,12 +1515,53 @@ PeripheralHall_irq12:
     mov rcx, qword [_contextRCX] 
     mov rdx, qword [_contextRDX] 
 
+
+; --------------------------------------------
+; Stack frame saga
+
+    ;----------------------------------------
+    ; Now rebuild the hardware-saved stack frame.
+    ; The appropriate frame is chosen based on _contextCPL.
+    ;----------------------------------------
+
+    mov rax, qword [_contextCS]   ; Get CPL
+    and rax, 3                    ; Select 2 bits
+
+    ; Compare
+    cmp rax, 0
+    je .restore_kernel_mode    ; It is a ring 0 thread
+    cmp rax, 3
+    je .restore_user_mode      ; It is a ring 3 thread
+
+    ; #bugbug
+    ; We need a panic here.
+    jmp .InvalidThread
+
+; ------------------------------------------------
 ; Stack frame. (all double)
+; Stackframe for ring 0 has only 3 elements.
+.restore_kernel_mode:
+    ; Stack frame for ring 0 with 3 elements, 
+    ; because the last thread was ring 0.
+    push qword [_contextRFLAGS]  ; rflags
+    push qword [_contextCS]      ; cs
+    push qword [_contextRIP]     ; rip
+    jmp .stackframe_done
+
+; ------------------------------------------------
+; Stack frame. (all double)
+; Stack frame for ring 3 has 5 elements.
+.restore_user_mode:
+
+    ; Stack frame. (all double)
     push qword [_contextSS]      ; ss
     push qword [_contextRSP]     ; rsp
     push qword [_contextRFLAGS]  ; rflags
     push qword [_contextCS]      ; cs
     push qword [_contextRIP]     ; rip
+
+; ------------------------------------------------
+.stackframe_done:
 
     ; send EOI to XT keyboard
     ;in      al, 061h
@@ -1418,6 +1593,15 @@ PeripheralHall_irq12:
     iretq
 ;;=================
 
+; --------------------------------------
+.InvalidThread:
+    ; #todo: Call a fancy worker
+    cli
+    hlt
+    jmp .InvalidThread
+; --------------------------------------
+;.debugBreakpoint:
+    ;int 3
 
 ;;============================================================	
 ; IRQ 13 

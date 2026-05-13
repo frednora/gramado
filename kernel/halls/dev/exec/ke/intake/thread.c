@@ -198,9 +198,10 @@ __ps_setup_x64_context (
         t->rflags_initial_iopl = (unsigned int) 0;
         t->rflags_current_iopl = (unsigned int) 0;
 
+        // Stack frame for ring 0
         t->context.ss     = 0x10;
         t->context.rsp    = (unsigned long) init_stack; 
-        t->context.rflags = (unsigned long) 0x0202;    // #caution.
+        t->context.rflags = (unsigned long) 0x0202;    // #caution
         t->context.cs     = 0x8; 
         t->context.rip    = (unsigned long) init_rip; 
 
@@ -218,6 +219,7 @@ __ps_setup_x64_context (
         t->rflags_initial_iopl = (unsigned int) 3;
         t->rflags_current_iopl = (unsigned int) 3;
 
+        // Stack frame for ring 3 (Including the extra bits)
         t->context.ss     = 0x23;    
         t->context.rsp    = (unsigned long) init_stack; 
         t->context.rflags = (unsigned long) 0x3202;    // #caution
@@ -244,9 +246,12 @@ __ps_setup_x64_context (
     t->context.rbx = 0;
     t->context.rcx = 0;
     t->context.rdx = 0;
+
     t->context.rsi = 0;
     t->context.rdi = 0;
+
     t->context.rbp = 0;
+
     t->context.r8 = 0;
     t->context.r9 = 0;
     t->context.r10 = 0;
@@ -258,7 +263,7 @@ __ps_setup_x64_context (
 
     //Thread->tss = current_tss;
 
-// The context is not saved.
+// The context was not saved during the task switch yet.
     t->saved = FALSE;
 }
 
@@ -1440,8 +1445,6 @@ struct thread_d *create_thread (
     const char *name,
     unsigned int cpl )
 {
-// Create a thread
-
     struct thread_d  *Thread;
     struct te_d *Process;
 
@@ -1541,9 +1544,9 @@ struct thread_d *create_thread (
 // Create thread structure
     Thread = (void *) threadObject(); 
     if ((void *) Thread == NULL){
-        panic("create_thread: Thread\n");
+        panic("create_thread: on threadObject()\n");
     }
-    
+
     // Current processor
     // #todo:
     // We need to receive this id as a parameter
@@ -1570,7 +1573,8 @@ struct thread_d *create_thread (
 // Loop.
 // Vamos gerar um TID válido.
 
-    i = (int) USER_THRESHOLD_TID;  // começa na base.
+    // It starts in the base index for user threads.
+    i = (int) USER_THRESHOLD_TID;
     int Cycle=0;
 
 try_next_slot:
@@ -1602,8 +1606,8 @@ try_next_slot:
 
 // ======================================
 // THREAD IDENTIFIERS
-// Index Ok.
-// Now we have an index number.
+
+// Index: Now we have an index number.
     Thread->tid = (tid_t) i;
 // ======================================
 
@@ -1617,8 +1621,11 @@ try_next_slot:
 // wproxy support
     // t->wproxy = NULL;
     //t->wproxy = (struct wproxy_d *) wproxyCreateObject();
+
     Thread->wproxy = 
-        (struct wproxy_d *) wproxy_create0(Thread->tid, 0, 0, 100, 100, COLOR_BLUE);
+        (struct wproxy_d *) wproxy_create0( 
+            Thread->tid, 0, 0, 100, 100, COLOR_BLUE );
+
 // =====================================
 
 
@@ -1775,7 +1782,7 @@ try_next_slot:
 
 // ===================================
 
-// Transition counter.
+// Transition counter
     Thread->transition_counter.to_supervisor = 0;
     Thread->transition_counter.to_user = 0;
 
@@ -1833,12 +1840,13 @@ try_next_slot:
     //Thread->idealprocessornumber
     //Thread->event
 
-// ORDEM: 
-// O que segue � referenciado com pouca frequ�ncia.
 
 //
 // Finalization
 //
+
+// #todo
+// At the end we initialize the fields used with less frequency.
 
 //@todo:
 //herdar o quantum do processo.
@@ -1848,18 +1856,13 @@ try_next_slot:
 // Incrementar a contagem de threads no processo.
     //Process->threadCount++;
 
-// Navigation.
-    Thread->next = NULL;
-
-// Coloca na lista.
-// #bugbug: Check overflow again.
+    Thread->next = NULL;  // Navigation
+    if ( Thread->tid < 0 || Thread->tid >= THREAD_COUNT_MAX )
+        panic("create_thread: Thread->tid\n");
     threadList[ Thread->tid ] = (unsigned long) Thread;
-
-    Thread->state = INITIALIZED;  
-
-// Validation
     Thread->used = TRUE;
     Thread->magic = THREAD_MAGIC;
+    Thread->state = INITIALIZED;  // << New state
 // ===================================================
 
 //

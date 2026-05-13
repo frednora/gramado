@@ -237,6 +237,16 @@ ipc_post_message_to_tid (
         panic("ipc_post_message_to_tid: t->tid != dst_tid\n");
     }
 
+
+// #debug
+// Quick test: No message for ring 0 threads.
+/*
+    if (t->cpl == RING0){
+        panic("ipc_post_message_to_tid: No message for ring 0 threads\n");
+    }
+*/
+
+
 // Wakeup target thread
     thread_wait_reason_t Reason = t->wait_reason;
 
@@ -327,7 +337,8 @@ ipc_post_message_to_tid (
 // #todo:
 // We can implement a repeat counter for keydown when an user keep
 // a key pressed for a long time.
-// Interpret the message as "the key is currently held down, and has repeated N times."
+// Interpret the message as "the key is currently held down, 
+// and has repeated N times."
 
     int isMake = FALSE;
     int isControlArrow = FALSE;
@@ -354,12 +365,15 @@ ipc_post_message_to_tid (
 
     if (isMake == TRUE || isControlArrow == TRUE)
     {
-        int __last_index = (t->MsgQueueTail - 1 + MSG_QUEUE_MAX) % MSG_QUEUE_MAX;
+        int __last_index = 
+            (t->MsgQueueTail - 1 + MSG_QUEUE_MAX) % MSG_QUEUE_MAX;
         struct msg_d *__last_msg = t->MsgQueue[__last_index];
         if ((void*) __last_msg == NULL){
             panic ("ipc_post_message_to_tid: __last_msg\n");
         }
-        if ( __last_msg->used != TRUE || __last_msg->magic != 1234 ){
+        if ( __last_msg->used != TRUE || __last_msg->magic != 1234 )
+        {
+            printk("tid=%d\n",t->tid);
             panic ("ipc_post_message_to_tid: __last_msg validation\n");
         }
 
