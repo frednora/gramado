@@ -237,7 +237,11 @@ static void __tsOnFinishedExecuting(struct thread_d *t)
 
 
 // ====================================================
-    // Do we have a new message?
+// DPC (Deferred Procedure Call) via ZeroGravity
+// Do we have a new message?
+
+    // The last thread was a ring 3 thread?
+    //if (DPC_QUEUE.on == TRUE && gszLastStackFrame == 5)
     if (DPC_QUEUE.on == TRUE)
     {
         int slot = qf_get_message();
