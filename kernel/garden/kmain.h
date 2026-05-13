@@ -119,7 +119,7 @@ extern struct initialization_d  Initialization;
 // I/O channels are specialized, independent processors that 
 // manage data transfer between peripheral devices and main memory, 
 // largely reducing CPU workload
-struct qf_d 
+struct dpc_queue_d 
 {
     int on;
 
@@ -144,7 +144,13 @@ struct qf_d
     unsigned char char3[32];
     unsigned char char4[32];
 };
-extern struct qf_d  QF;
+extern struct dpc_queue_d DPC_QUEUE;
+
+// Current message
+// Only the loop reads this message
+extern int qf_buf_msg[1];
+extern unsigned long qf_buf_longs[4];
+extern unsigned char qf_buf_chars[4];
 // ========================
 
 

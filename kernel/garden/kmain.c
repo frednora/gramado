@@ -180,7 +180,7 @@ static int __AP_handshake(void);
 // ======================
 // #test
 // Queue feeder
-struct qf_d  QF;
+struct dpc_queue_d  DPC_QUEUE;
 
 // Current message
 // Only the loop reads this message
@@ -259,30 +259,30 @@ qf_post_message(
 {
 
 // Invalid index
-    if (QF.tail < 0 || QF.tail >= 32)
+    if (DPC_QUEUE.tail < 0 || DPC_QUEUE.tail >= 32)
     {
-        QF.tail = 0;
+        DPC_QUEUE.tail = 0;
     }
 
 // No mesage in the tail slot
-    if (QF.msg[ QF.tail ] == 0)
+    if (DPC_QUEUE.msg[ DPC_QUEUE.tail ] == 0)
     {
 
-        QF.msg[ QF.tail ] = (int) msg; // We have a new message
+        DPC_QUEUE.msg[ DPC_QUEUE.tail ] = (int) msg; // We have a new message
 
-        QF.long1[ QF.tail ] = (unsigned long) long1;
-        QF.long2[ QF.tail ] = (unsigned long) long2;
-        QF.long3[ QF.tail ] = (unsigned long) long3;
-        QF.long4[ QF.tail ] = (unsigned long) long4;
+        DPC_QUEUE.long1[ DPC_QUEUE.tail ] = (unsigned long) long1;
+        DPC_QUEUE.long2[ DPC_QUEUE.tail ] = (unsigned long) long2;
+        DPC_QUEUE.long3[ DPC_QUEUE.tail ] = (unsigned long) long3;
+        DPC_QUEUE.long4[ DPC_QUEUE.tail ] = (unsigned long) long4;
 
-        QF.char1[ QF.tail ] = (unsigned char) char1;
-        QF.char2[ QF.tail ] = (unsigned char) char2;
-        QF.char3[ QF.tail ] = (unsigned char) char3;
-        QF.char4[ QF.tail ] = (unsigned char) char4;
+        DPC_QUEUE.char1[ DPC_QUEUE.tail ] = (unsigned char) char1;
+        DPC_QUEUE.char2[ DPC_QUEUE.tail ] = (unsigned char) char2;
+        DPC_QUEUE.char3[ DPC_QUEUE.tail ] = (unsigned char) char3;
+        DPC_QUEUE.char4[ DPC_QUEUE.tail ] = (unsigned char) char4;
 
-        QF.tail++;
-        if (QF.tail >= 32)
-            QF.tail = 0;
+        DPC_QUEUE.tail++;
+        if (DPC_QUEUE.tail >= 32)
+            DPC_QUEUE.tail = 0;
     }
 }
 
@@ -292,46 +292,46 @@ int qf_get_message(void)
     int Slot=0;
 
 // Invalid index
-    if (QF.head < 0 || QF.head >= 32)
+    if (DPC_QUEUE.head < 0 || DPC_QUEUE.head >= 32)
     {
-        QF.head = 0;
+        DPC_QUEUE.head = 0;
     }
 
 // No mesage in the head slot
-    if (QF.msg[ QF.head ] <= 0)
+    if (DPC_QUEUE.msg[ DPC_QUEUE.head ] <= 0)
     {
-        QF.head++;
-        if (QF.head >= 32)
-            QF.head = 0;
+        DPC_QUEUE.head++;
+        if (DPC_QUEUE.head >= 32)
+            DPC_QUEUE.head = 0;
 
         return (int) -1;  // No message
     }
 
 // Yes, we have a message in this slot
-    Slot = (int) QF.head;
+    Slot = (int) DPC_QUEUE.head;
 
 //
 // Output buffer for the current message
 //
 
-    qf_buf_msg[0] = (int) QF.msg[QF.head];   // Get the message
+    qf_buf_msg[0] = (int) DPC_QUEUE.msg[DPC_QUEUE.head];   // Get the message
 
-    qf_buf_longs[0] = (unsigned long) QF.long1[QF.head];
-    qf_buf_longs[1] = (unsigned long) QF.long2[QF.head];
-    qf_buf_longs[2] = (unsigned long) QF.long3[QF.head];
-    qf_buf_longs[3] = (unsigned long) QF.long4[QF.head];
+    qf_buf_longs[0] = (unsigned long) DPC_QUEUE.long1[DPC_QUEUE.head];
+    qf_buf_longs[1] = (unsigned long) DPC_QUEUE.long2[DPC_QUEUE.head];
+    qf_buf_longs[2] = (unsigned long) DPC_QUEUE.long3[DPC_QUEUE.head];
+    qf_buf_longs[3] = (unsigned long) DPC_QUEUE.long4[DPC_QUEUE.head];
 
-    qf_buf_chars[0] = (unsigned char) QF.char1[QF.head];
-    qf_buf_chars[1] = (unsigned char) QF.char2[QF.head];
-    qf_buf_chars[2] = (unsigned char) QF.char3[QF.head];
-    qf_buf_chars[3] = (unsigned char) QF.char4[QF.head];
+    qf_buf_chars[0] = (unsigned char) DPC_QUEUE.char1[DPC_QUEUE.head];
+    qf_buf_chars[1] = (unsigned char) DPC_QUEUE.char2[DPC_QUEUE.head];
+    qf_buf_chars[2] = (unsigned char) DPC_QUEUE.char3[DPC_QUEUE.head];
+    qf_buf_chars[3] = (unsigned char) DPC_QUEUE.char4[DPC_QUEUE.head];
 
-    QF.msg[QF.head] = 0;  // No more message in this slot
+    DPC_QUEUE.msg[DPC_QUEUE.head] = 0;  // No more message in this slot
 
 // Round
-    QF.head++;
-    if (QF.head >= 32)
-        QF.head = 0;
+    DPC_QUEUE.head++;
+    if (DPC_QUEUE.head >= 32)
+        DPC_QUEUE.head = 0;
 
     return (int) Slot;   // Index for the message
 }
@@ -1392,6 +1392,13 @@ static int lateinit(void)
 
 
 // -------------------------------------
+
+// #test: Using QF (DPC) via zero gravity, not via AP.
+    if ( CONFIG_USE_DPC_VIA_ZEROGRAVITY == 1 )
+        DPC_QUEUE.on = TRUE;
+
+
+// -------------------------------------
 // #test
 // Creatting a ring 0 thread at the end of the kernel initialization.
 
@@ -1729,9 +1736,10 @@ static void __ap_QF_experiment(void)
     unsigned int Color = COLOR_BLACK;
     int Counter = 0;
 
-    // Turn the QF on
-    if (CONFIG_USE_QF == 1)
-        QF.on = TRUE;
+    // #test: Using DPC via AP, not via zero gravity.
+    // Turn it on
+    if (CONFIG_USE_DPC_VIA_AP == 1)
+        DPC_QUEUE.on = TRUE;
 
     // i/o channel:
     
@@ -1741,9 +1749,9 @@ static void __ap_QF_experiment(void)
     while (1){
         //while (apic_SPINLOCK == TRUE){ asm ("pause \n"); };
 
-        
+
         // Do we have a new message?
-        if (QF.on == TRUE)
+        if (DPC_QUEUE.on == TRUE)
         {
             int slot = qf_get_message();
             if (slot != (-1))
@@ -1752,7 +1760,7 @@ static void __ap_QF_experiment(void)
                 {
                     switch (qf_buf_msg[0]){
                         case 1000:
-                            //x_panic("i/o channel 1000");
+                            //x_panic("1000: DPC Via AP");
                             wmRawKeyEvent (
                                 qf_buf_chars[0], 
                                 qf_buf_chars[1], 
@@ -1779,17 +1787,17 @@ static void __ap_QF_experiment(void)
 
             /*
             // Check destination
-            switch (QF.destination)
+            switch (DPC_QUEUE.destination)
             {
 
                 case 1000: // Raw keyboard
                     x_panic("i/o channel");
                     wmRawKeyEvent (
-                        QF.char1, QF.char2, QF.char3, QF.char4
+                        DPC_QUEUE.char1, DPC_QUEUE.char2, DPC_QUEUE.char3, DPC_QUEUE.char4
                     );
                     break;
             }
-            //QF.busy = FALSE;  // We are not busy anmore
+            //DPC_QUEUE.busy = FALSE;  // We are not busy anmore
             */
         }
 
@@ -1857,8 +1865,7 @@ static void __ap_QF_experiment(void)
     };
 
     // Turn the QF off
-    QF.on = FALSE;
-
+    DPC_QUEUE.on = FALSE;
 }
 
 
@@ -1928,7 +1935,8 @@ void AP_kmain(void)
 //
 //
 
-    if (CONFIG_USE_QF == 1){
+    // #test: Using DPC via AP.
+    if (CONFIG_USE_DPC_VIA_AP == 1){
         __ap_QF_experiment();
     }
 

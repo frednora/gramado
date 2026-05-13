@@ -234,6 +234,47 @@ static void __tsOnFinishedExecuting(struct thread_d *t)
         if (t->_its_my_party_and_ill_cry_if_i_want_to == TRUE)
             __tsCry(0);
     }
+
+
+// ====================================================
+    // Do we have a new message?
+    if (DPC_QUEUE.on == TRUE)
+    {
+        int slot = qf_get_message();
+        if (slot != (-1))
+        {
+            if (slot >=0 && slot < 32)
+            {
+                switch (qf_buf_msg[0]){
+                    case 1000:
+                        //x_panic("1000: DPC Via ZeroGravity");
+                        wmRawKeyEvent (
+                            qf_buf_chars[0], 
+                            qf_buf_chars[1], 
+                            qf_buf_chars[2], 
+                            qf_buf_chars[3]
+                        );
+                        break;
+
+                    case 2000:
+                        break;
+
+                    case 3000:
+                        break;
+
+                    case 4000:
+                        break;
+
+                    case 8000:
+                        asm ("hlt \n");
+                        break;
+                };
+            }
+        }
+    }
+// ====================================================
+
+
 }
 
 

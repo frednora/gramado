@@ -158,7 +158,23 @@
 // during the ZeroGravity phase, when the context was fully saved.
 // But this idea of using a dedicated AP is kinda fancy. (and dangerous)
 
-#define CONFIG_USE_QF  0
+
+//
+// DPC
+//
+
+// Two possible dispatchers for deferred work (DPC‑style jobs):
+// 1) via AP processor
+// 2) via ZeroGravity (during the timer handler, when the context was fully saved)
+// #ps: >>>> WE CAN'T USE BOTH AT THE SAME TIME. <<<<<
+
+// 1) via AP processor
+// DPC (Deferred Procedure via AP processor)
+#define CONFIG_USE_DPC_VIA_AP  0
+
+// 2) via ZeroGravity (during the timer handler, when the context was fully saved)
+// DPC (Deferred Procedure via ZeroGravity)
+#define CONFIG_USE_DPC_VIA_ZEROGRAVITY  0
 
 
 // ------------------------------------------------------
@@ -336,6 +352,7 @@ Standard Linux Runlevels (0-6)
 #define CONFIG_ALLOW_RING0_THREAD_SPAWN     0
 #define CONFIG_ALLOW_RING0_CONTEXT_SAVE     0
 #define CONFIG_ALLOW_RING0_CONTEXT_RESTORE  0
+
 
 #endif 
 
