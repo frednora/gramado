@@ -1354,7 +1354,8 @@ struct te_d *create_process (
 
     Process = (void *) processObject();
     if ((void *) Process == NULL){
-        panic("create_process: Process\n");
+        printk("create_process: on processObject()\n");
+        return NULL;
     }
     Process->type = PROCESS_TYPE_NULL;  // #todo
     Process->state = PROCESS_CREATED;
@@ -1729,30 +1730,21 @@ struct te_d *create_process (
 // Security
     Process->usession = CurrentUserSession;  // Current.
     Process->cg = (struct cgroup_d *) cg;    // Passado via argumento.
-// Navigation
-    Process->prev = NULL; 
-    Process->next = NULL; 
-// Register
-// List
-// Coloca o processo criado na lista de processos.
-    teList[PID] = (unsigned long) Process;
+
 // #todo
     // last_created = PID;
-    Process->state = PROCESS_INITIALIZED;
-// Validation.
+
+
+    Process->prev = NULL; 
+    Process->next = NULL; 
+    teList[PID] = (unsigned long) Process;
     Process->used = TRUE;
     Process->magic = PROCESS_MAGIC;
+    Process->state = PROCESS_INITIALIZED;
 
-    // #debug
-    //debug_print ("create_process: done\n");
-    //printk      ("create_process: done\n");
-
-    // ok
-    return (void *) Process;
+    return (void *) Process;  // OK
 
 fail:
-    //Process = NULL;
-    //refresh_screen();
     return NULL;
 }
 

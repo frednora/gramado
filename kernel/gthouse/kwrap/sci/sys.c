@@ -334,6 +334,7 @@ void *sys_create_thread (
 // #todo:
 // Why is it returning a ring0 pointer to user space?
     return (struct thread_d *) Thread;
+
 fail:
     return NULL;
 }

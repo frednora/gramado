@@ -188,7 +188,62 @@ int qf_buf_msg[1];
 unsigned long qf_buf_longs[4];
 unsigned char qf_buf_chars[4];
 
+static void r0_thread00(void);
+static void __kmain_setup_ring0_thread(void);
+
 // ======================
+
+static void r0_thread00(void)
+{
+    while (1){
+        asm ("sti");
+        asm ("hlt");
+    };
+}
+
+// Minimal ring 0 thread example
+static void __kmain_setup_ring0_thread(void)
+{
+    unsigned long stack_base = (unsigned long) kmalloc(4096);
+    unsigned long entry_point = (unsigned long) &r0_thread00;
+
+// #ps
+// Maybe it's mandatory to use the current PID,
+// or we can cause some problem with the address space of the thread.
+    //pid_t current_pid = (pid_t) get_current_pid();
+    pid_t current_pid = 0;  // Kernel process
+    if (current_pid < 0 || current_pid >= PROCESS_COUNT_MAX) {
+        panic("Failed to get current PID");
+    }
+
+    printk("__kmain_setup_ring0_thread:\n");
+
+    struct thread_d *t = 
+        create_thread (
+            THREAD_TYPE_SYSTEM,  // type
+            NULL,                // cgroup
+            entry_point,         // initial RIP
+            stack_base + 4096,   // initial RSP (top of stack)
+            current_pid,         // owner PID (0 for kernel)
+            "r0-thread",         // thread name
+            RING0                // CPL = 0 (kernel mode)
+        );
+
+    if ((void*)t == NULL) {
+        printk("Failed to create ring0 thread\n");
+        return;
+    }
+
+    // Mark it ready to run
+    SelectForExecution(t);
+
+    // #debug
+    //printk("entry_point:  %x \n",entry_point);
+    //printk("RING0_RSP: %x \n",(stack_base + 4096));
+    //refresh_screen();
+    //while(1){}
+}
+
 
 void
 qf_post_message(
@@ -1334,6 +1389,17 @@ static int lateinit(void)
     if (mod_status != TRUE)
         panic("lateinit: on mod_initialize()\n");
 
+
+
+// -------------------------------------
+// #test
+// Creatting a ring 0 thread at the end of the kernel initialization.
+
+    // #dangerous
+    // Kernel threads are a huge source of problems.
+    if (CONFIG_ALLOW_RING0_THREAD_SPAWN == 1){
+        //__kmain_setup_ring0_thread();
+    }
 
 // -------------------------------------
 // Execute the first ring3 process.

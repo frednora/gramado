@@ -1544,7 +1544,8 @@ struct thread_d *create_thread (
 // Create thread structure
     Thread = (void *) threadObject(); 
     if ((void *) Thread == NULL){
-        panic("create_thread: on threadObject()\n");
+        printk("create_thread: on threadObject()\n");
+        return NULL;
     }
 
     // Current processor

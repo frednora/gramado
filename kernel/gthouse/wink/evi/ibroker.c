@@ -446,7 +446,8 @@ static void setup_minimal_ring0_thread(void)
         );
 
     if ((void*)t == NULL) {
-        panic("Failed to create ring0 thread");
+        printk("Failed to create ring0 thread\n");
+        return;
     }
 
     // Mark it ready to run
