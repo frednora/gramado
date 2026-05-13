@@ -144,11 +144,20 @@
 #define CONFIG_USE_LAPIC_TIMER_FOR_TS  0
 // ...
 
-// #test: Queue feeder
+// #test: >>> DPC <<<
+// Queue feeder (deferred work model)
+// interrupt deferral model 
+// IRQ needs to return queckly. 
+// Avoiding to touch sensitive data structures.
 // Using the first AP as dedicated core. 
 // #ps: That is not a good use for an AP.
 // An AP needs to be integrated into the scheduler 
 // in order to make the load balance of thread.
+
+// #todo: Maybe the BSP can to this job 
+// during the ZeroGravity phase, when the context was fully saved.
+// But this idea of using a dedicated AP is kinda fancy. (and dangerous)
+
 #define CONFIG_USE_QF  0
 
 

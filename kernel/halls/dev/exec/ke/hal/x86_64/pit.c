@@ -190,7 +190,7 @@ void pit_speaker_off (void)
 unsigned long irq0_TIMER(void)
 {
 
-// Calling the timer routine.
+// Calling the timer routine
     DeviceInterface_PIT();
 
 // Polling mode: 

@@ -268,7 +268,7 @@ PeripheralHall_irq0:
 ; cpl
 ; Get the first 2 bits of cs.
 ; see: x64cont.c
-    mov rax, qword [_contextCS]  ;(R3)
+    mov rax, qword [_contextCS]
     and rax, 3
     mov [_contextCPL], rax
 
@@ -362,6 +362,7 @@ PeripheralHall_irq1:
 ; ------------------------------------------------
 ; Stackframe for ring 0 has only 3 elements.
 .R0Thread:
+    ; int 3 ;#debug: A ring 0 thread was interrupted by the keyboard interrupt. 
     pop rax
     mov qword [_contextRSP], rsp   ; save current kernel stack pointer
     mov qword [_contextSS], ss     ; save kernel stack segment
@@ -433,7 +434,7 @@ PeripheralHall_irq1:
 ; see: x64cont.c
     mov rax, qword [_contextCS]  ;(R3)
     and rax, 3
-    mov [_contextCPL], rax
+    mov qword [_contextCPL], rax
 
 ; See: keyboard.c
     mov r10, qword _irq1_KEYBOARD
@@ -536,7 +537,6 @@ PeripheralHall_irq1:
     push qword [_contextRIP]     ; rip
 
 
-
 ; ------------------------------------------------
 .stackframe_done:
 
@@ -547,7 +547,6 @@ PeripheralHall_irq1:
     ;out     061h, al
     ;mov     al, ah
     ;out     061h, al
-
 
 ; EOI - Only the first PIC.
 ; #remember: In the case os SMP. It was already done in C.

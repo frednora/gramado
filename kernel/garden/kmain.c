@@ -1734,7 +1734,10 @@ static void __ap_QF_experiment(void)
         QF.on = TRUE;
 
     // i/o channel:
-    // (multiplexer?)
+    
+    // #ps:
+    // This is the idea of Defered Procedure Call (DPC) in Windows.
+    // The AP is doing the work that belongs to the handlers of the IRQs.
     while (1){
         //while (apic_SPINLOCK == TRUE){ asm ("pause \n"); };
 

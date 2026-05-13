@@ -78,6 +78,13 @@ __spawn_enter_kernelmode(
     //refresh_screen();
     //while(1){}
 
+    if (CONFIG_ALLOW_RING0_THREAD_SPAWN != 1)
+    {
+        debug_print("__spawn_enter_kernelmode: RING0\n");
+        panic      ("__spawn_enter_kernelmode: RING0 not supported yet\n");
+    }
+
+
     if (eoi == TRUE)
     {
         asm volatile ("movb $0x20, %al \n");
@@ -443,7 +450,6 @@ static void __spawn_thread_by_tid_imp(tid_t tid)
     set_current_process(cur_teid);
 
 
-
 // Set current thread for this core
 // #bugbug:
 // We need to send the 'cpu id' as parameter
@@ -527,12 +533,6 @@ static void __spawn_thread_by_tid_imp(tid_t tid)
 
     if (target_thread->cpl == RING0)
     {
-        if (CONFIG_ALLOW_RING0_THREAD_SPAWN != 1)
-        {
-            debug_print("__spawn_thread_by_tid_imp: RING0\n");
-            panic      ("__spawn_thread_by_tid_imp: RING0 not supported yet\n");
-        }
-
         // #hack
         // target_thread->quantum = 100;
 
