@@ -990,6 +990,11 @@ unsigned long tsTaskSwitch(void)
     pid_t ws_pid = -1;
 
 
+// #ps:
+// Dispacher Request Level
+// (save context, Task switching, restore context, spawn)
+    gInterruptRequestLevel = IRQL_DISPATCHER;
+
 // Which CPU am I?
 // Get the hardware cpu id
     int __lapic_info_id = apic_get_id_00();

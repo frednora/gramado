@@ -177,6 +177,11 @@ void x64_all_faults(unsigned long number)
 {
 // Quote: 'You've never failed and You won't start now'.
 
+// Traps and Exceptions Request Level 
+// (page fault, general protection fault, double fault ...)
+    gInterruptRequestLevel = IRQL_TRAPS;
+
+
 // Get the pagefault address.
 // #todo: Not tested.
     //unsigned long address=0;

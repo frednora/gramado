@@ -11,7 +11,7 @@
 // Type of product.
 int g_product_type = PRODUCT_TYPE;
 
-
+int gInterruptRequestLevel = IRQL_NULL;
 
 // Salvando o último endereço válido de memória ram.
 // usado em head.asm

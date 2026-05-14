@@ -30,7 +30,8 @@
 //
 
 #include "../gthouse/kwrap/mode.h"
-#include "../gthouse/kwrap/state.h"
+#include "../gthouse/kwrap/state.h"   // Big moments for the kernel's life.
+#include "../gthouse/kwrap/irql.h"    // Micro moments related with interrupts.
 #include "../gthouse/kwrap/system.h"
 #include "../gthouse/kwrap/klimits2.h"
 

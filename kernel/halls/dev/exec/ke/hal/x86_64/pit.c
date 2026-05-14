@@ -190,6 +190,8 @@ void pit_speaker_off (void)
 unsigned long irq0_TIMER(void)
 {
 
+    gInterruptRequestLevel = IRQL_TIMER_INTERRUPT;  // Set the current IRQL to timer interrupt level.
+
 // Calling the timer routine
     DeviceInterface_PIT();
 

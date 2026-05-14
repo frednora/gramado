@@ -1981,6 +1981,10 @@ void I_kmain(int arch_type)
 // It guides the initialization.
     system_state = SYSTEM_PREINIT;
 
+// #todo: This is a work in progress.
+// See: irql.h
+    gInterruptRequestLevel = IRQL_NULL;
+
 // Runlevel
 // Used by init system.
 // See: config.h

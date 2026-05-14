@@ -109,6 +109,9 @@ int i8042_IsPS2MousePooling(void)
 __VOID_IRQ 
 irq12_MOUSE (void)
 {
+
+    gInterruptRequestLevel = IRQL_IRQ;  // Hardware interrupts (keyboard, mouse, NIC).
+
 // If ps2 mouse isn't initialized yet.
     if (PS2.mouse_initialized != TRUE){
         in8(0x60);

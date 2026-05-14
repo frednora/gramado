@@ -5,6 +5,10 @@
 #ifndef __SYSTEM_STATE_H
 #define __SYSTEM_STATE_H    1
 
+
+// #ps: 
+// system_state is about the big phases of the kernel’s life.
+
 // Nothing
 #define SYSTEM_NULL        0
 // Getting info from bootloader tables.

@@ -111,6 +111,9 @@ int i8042_IsPS2KeyboardPooling(void)
 __VOID_IRQ 
 irq1_KEYBOARD (void)
 {
+
+    gInterruptRequestLevel = IRQL_IRQ;  // Hardware interrupts (keyboard, mouse, NIC).
+
 // If ps2 keyboard isn't initialized yet.
     if (PS2.keyboard_initialized != TRUE){
         in8(0x60);
