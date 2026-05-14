@@ -129,7 +129,7 @@ unsigned long saved_bootblock_base=0;
 //
 
 static void __ap_animation_experiment(void);
-static void __ap_QF_experiment(void);
+static void __ap_DPC_experiment(int lapic_id);
 
 
 // Internal
@@ -1723,9 +1723,17 @@ static void __ap_animation_experiment(void)
     };
 }
 
-static void __ap_QF_experiment(void)
+// #test:
+// The AP is operating as a DPC dispatcher.
+static void __ap_DPC_experiment(int lapic_id)
 {
     int i=0;
+
+// Parameter:
+    if (lapic_id < 0 || lapic_id >= NR_CPUS)
+    {
+        panic("__ap_DPC_experiment: lapic_id\n");
+    }
 
 //
 // Animation and QF experiment
@@ -1739,7 +1747,15 @@ static void __ap_QF_experiment(void)
     // #test: Using DPC via AP, not via zero gravity.
     // Turn it on
     if (CONFIG_USE_DPC_VIA_AP == 1)
+    {
         DPC_QUEUE.on = TRUE;
+
+        // This AP is working as a DPC dispatcher.
+        lapic_info[lapic_id].is_dpc_dispatcher = TRUE;
+        // So, it can't be used by the scheduler for loading balance.
+        lapic_info[lapic_id].dedicated_service = TRUE;
+    }
+
 
     // i/o channel:
     
@@ -1882,7 +1898,7 @@ static void __ap_QF_experiment(void)
 void AP_kmain(void)
 {
     int i=0;
-    int id = -1;
+    int lapic_id = -1;
 
     asm ("cli");  // For safety
 
@@ -1898,10 +1914,10 @@ void AP_kmain(void)
 
 // Talk with the BSP in order to identify the current AP.
 // #ps: return the lapic info id, not the real hw cpu id.
-    id = (int) __AP_handshake();
+    lapic_id = (int) __AP_handshake();
 
 /*
-    if (id <0 || id>NR_CPUS)
+    if (lapic_id <0 || lapic_id>NR_CPUS)
     {
         panic("AP_kmain: id\n");
     }
@@ -1937,7 +1953,7 @@ void AP_kmain(void)
 
     // #test: Using DPC via AP.
     if (CONFIG_USE_DPC_VIA_AP == 1){
-        __ap_QF_experiment();
+        __ap_DPC_experiment(lapic_id);
     }
 
 ///
@@ -1983,7 +1999,8 @@ void I_kmain(int arch_type)
 
 // #todo: This is a work in progress.
 // See: irql.h
-    gInterruptRequestLevel = IRQL_NULL;
+
+    lapic_info[0].irql = IRQL_NULL;  //#todo: We need the cpu id here.
 
 // Runlevel
 // Used by init system.

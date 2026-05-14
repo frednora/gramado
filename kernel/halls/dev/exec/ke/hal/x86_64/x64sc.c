@@ -26,7 +26,8 @@ void *sc80h (
     unsigned long arg4 )
 {
 
-    gInterruptRequestLevel = IRQL_SYSCALL;  // System call entry (int 0x8X, syscall).
+// System call entry (int 0x8X, syscall).
+    lapic_info[0].irql = IRQL_SYSCALL;  //#bugbug: We need the cpu id.
 
     pid_t CurrentPID = (pid_t) get_current_pid();
     int cpl = -1;
@@ -88,7 +89,9 @@ void *sc81h (
     unsigned long arg4 )
 {
 
-    gInterruptRequestLevel = IRQL_SYSCALL;  // System call entry (int 0x8X, syscall).
+// System call entry (int 0x8X, syscall).
+    lapic_info[0].irql = IRQL_SYSCALL;  //#bugbug: We need the cpu id.
+
 
     pid_t CurrentPID = (pid_t) get_current_pid();
     int cpl = -1;
@@ -146,7 +149,8 @@ void *sc82h (
     unsigned long arg4 )
 {
 
-    gInterruptRequestLevel = IRQL_SYSCALL;  // System call entry (int 0x8X, syscall).
+// System call entry (int 0x8X, syscall).
+    lapic_info[0].irql = IRQL_SYSCALL;  //#bugbug: We need the cpu id.
 
     pid_t CurrentPID = (pid_t) get_current_pid();
     int cpl = -1;
@@ -203,7 +207,8 @@ void *sc83h (
     unsigned long arg4 )
 {
 
-    gInterruptRequestLevel = IRQL_SYSCALL;  // System call entry (int 0x8X, syscall).
+// System call entry (int 0x8X, syscall).
+    lapic_info[0].irql = IRQL_SYSCALL;  //#bugbug: We need the cpu id.
 
     pid_t CurrentPID = (pid_t) get_current_pid();
     int cpl = -1;

@@ -110,7 +110,8 @@ __VOID_IRQ
 irq12_MOUSE (void)
 {
 
-    gInterruptRequestLevel = IRQL_IRQ;  // Hardware interrupts (keyboard, mouse, NIC).
+// Hardware interrupts (keyboard, mouse, NIC, ...).
+    lapic_info[0].irql = IRQL_IRQ;   // #bugbug: We need the cpu id.
 
 // If ps2 mouse isn't initialized yet.
     if (PS2.mouse_initialized != TRUE){

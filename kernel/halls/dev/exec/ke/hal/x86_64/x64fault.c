@@ -179,7 +179,8 @@ void x64_all_faults(unsigned long number)
 
 // Traps and Exceptions Request Level 
 // (page fault, general protection fault, double fault ...)
-    gInterruptRequestLevel = IRQL_TRAPS;
+
+    lapic_info[0].irql = IRQL_TRAPS; //#todo: We need the cpu id here.
 
 
 // Get the pagefault address.

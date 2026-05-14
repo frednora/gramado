@@ -993,7 +993,9 @@ unsigned long tsTaskSwitch(void)
 // #ps:
 // Dispacher Request Level
 // (save context, Task switching, restore context, spawn)
-    gInterruptRequestLevel = IRQL_DISPATCHER;
+
+    lapic_info[0].irql = IRQL_DISPATCHER;  // #todo: We need the cpu id here.
+
 
 // Which CPU am I?
 // Get the hardware cpu id

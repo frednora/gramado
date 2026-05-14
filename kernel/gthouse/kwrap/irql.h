@@ -63,13 +63,6 @@ IRQL_SCHEDULER
 
 // ...
 
-// #todo: #important:
-// It's good for the panic() function to show us the current 
-// macro and micro phase we are. Showing the values for 
-// system_state and gInterruptRequestLevel.
-
-extern int gInterruptRequestLevel;
-
 #endif   
 
 

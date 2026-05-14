@@ -238,6 +238,23 @@ struct lapic_info_d
 // Threads
 //
 
+// Current Interrupt Request Level for this processor.
+    int irql;
+
+// This processor is responsable for scheduling?
+	int is_scheduler;
+
+// This processor is dispatching DPCs?
+    int is_dpc_dispatcher;
+
+// Is it in idle thread?
+	int is_idle;
+
+// The AP is been used as a dedicated service.
+// If TRUE, It can be integrated into the scheduler for load balancing purpose.
+    int dedicated_service;
+
+
 // The idle thread for this processor:
 // This thread will run here when there is no other job to do.
     // tid_t idle_tid;

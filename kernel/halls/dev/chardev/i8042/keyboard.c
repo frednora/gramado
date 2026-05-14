@@ -112,7 +112,9 @@ __VOID_IRQ
 irq1_KEYBOARD (void)
 {
 
-    gInterruptRequestLevel = IRQL_IRQ;  // Hardware interrupts (keyboard, mouse, NIC).
+// Hardware interrupts (keyboard, mouse, NIC, ...).
+    lapic_info[0].irql = IRQL_IRQ;   // #bugbug: We need the cpu id.
+
 
 // If ps2 keyboard isn't initialized yet.
     if (PS2.keyboard_initialized != TRUE){

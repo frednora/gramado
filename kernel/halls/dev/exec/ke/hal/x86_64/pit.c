@@ -190,7 +190,9 @@ void pit_speaker_off (void)
 unsigned long irq0_TIMER(void)
 {
 
-    gInterruptRequestLevel = IRQL_TIMER_INTERRUPT;  // Set the current IRQL to timer interrupt level.
+// Set the current IRQL to timer interrupt level.
+    lapic_info[0].irql = IRQL_TIMER_INTERRUPT; //#bugbug: We need the cpu id.
+
 
 // Calling the timer routine
     DeviceInterface_PIT();

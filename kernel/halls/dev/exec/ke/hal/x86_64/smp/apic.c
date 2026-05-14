@@ -1192,6 +1192,13 @@ int lapic_info_initializing(unsigned long lapic_pa, int lapic_info_id)
 
             lapic_info[i].current_thread = INIT_TID;
 
+            lapic_info[i].irql = IRQL_NULL;
+            lapic_info[i].is_scheduler = FALSE;
+            lapic_info[i].is_dpc_dispatcher = FALSE;
+            lapic_info[i].is_idle = FALSE;
+            // If TRUE, it can't be used by the scheduler for load balancing.
+            lapic_info[i].dedicated_service = TRUE;
+
             //=====================================
             // Destination Format Register (DFR)
             // Value after reset, flat mode
