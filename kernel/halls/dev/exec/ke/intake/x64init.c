@@ -536,7 +536,7 @@ static int I_x64CreateInitialProcess(void)
 // Passa o comando para o primeiro processo em user mode.
 // Esse processo ja foi previamente configurado.
 // Called by ke_x64ExecuteInitialProcess in ke.c.
-void I_x64ExecuteInitialProcess(void)
+void I_x64ExecuteInitialProcess(int cpu_id)
 {
     struct thread_d *t;
     register int i=0;
@@ -549,6 +549,12 @@ void I_x64ExecuteInitialProcess(void)
     //debug_print("I_x64ExecuteInitialProcess:\n");
 
     printk ("I_x64ExecuteInitialProcess:\n");
+
+// #ps: Called only during the initialization of the BSP.
+// APs have a different initialization routine.
+    if (cpu_id != 0){
+        panic ("I_x64ExecuteInitialProcess: cpu_id\n");
+    }
 
     // #debug
     //panic("I_x64ExecuteInitialProcess: breakpoint :)");

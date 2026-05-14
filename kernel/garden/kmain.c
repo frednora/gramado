@@ -1424,6 +1424,7 @@ static int lateinit(void)
     };
 */
 
+/*
     ok = (int) ke_x64ExecuteInitialProcess();
     if (ok < 0){
         panic ("lateinit: Couldn't launch init process\n");
@@ -1431,6 +1432,7 @@ static int lateinit(void)
         // Maybe we can call the kernel console for debuging purpose.
         goto fail;
     }
+*/
 
     return TRUE;
 
@@ -1650,6 +1652,8 @@ static int I_initialize_kernel(int arch_type, int processor_number)
         Status = (int) lateinit();
         if (Status != TRUE)
             panic_at_init(Error60_lateinit,KERNEL_SUBSYSTEM_KMAIN);       
+
+        return TRUE; // The kernel was initialized successfully.
 
     // AP initialization (lateinit)
     } else {
@@ -2079,26 +2083,35 @@ void I_kmain(int arch_type)
     current_arch = CURRENT_ARCH_X86_64;
     //current_arch = (int) arch_type;
 
-
+// Initialize the kernel
     Status = (int) I_initialize_kernel(arch_type, ProcessorNumber);
-    if (Status == FALSE){
+
+// The kernel was initialized successfully
+    if (Status == TRUE){
+        int ok = (int) ke_x64ExecuteInitialProcess(ProcessorNumber);
+        if (ok < 0){
+            PROGRESS("on ke_x64ExecuteInitialProcess()\n");
+            //printk ("lateinit: Couldn't launch init process\n");
+            // #todo:
+            // Maybe we can call the kernel console for debuging purpose.
+            system_state = SYSTEM_ABORTED;
+            goto L_die;
+        }
+
+// The kernel initialization failed
+    } else if (Status == FALSE){
         PROGRESS("on I_initialize_kernel()\n");
-    }
-    if (system_state == SYSTEM_ABORTED){
-        PROGRESS("SYSTEM_ABORTED\n");
     }
 
 // Die
-    PROGRESS("Initialization fail\n");
+// Return to assembly.
+L_die:
+    PROGRESS("Kernel initialization failed\n");
+    if (system_state == SYSTEM_ABORTED){
+        PROGRESS("SYSTEM_ABORTED\n");
+    }
     x_panic("Error: 0x02");
-    die();
-// Not reached
-    while (1){
-        asm ("cli");
-        asm ("hlt");
-    };
 }
-
 
 // #test Not in use
 void start_kernel(int arch_type)

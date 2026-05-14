@@ -2823,18 +2823,27 @@ START:
 
 ; Call I_kmain() function in kmain.c
 ; See: kmain.c
+
     ; mov rax, _x86_64_start_kernel
     mov rax, _I_kmain
-	jmp rax
+	call rax 
 
+; Never reached
+.Ldie:
+    cli
+	hlt
+	jmp .Ldie
 
 ;===================================================
 ; AP initialization
-; Called right after the entrypoint in C.
-; Now the trampoline is jumping directly here to 
-; the assembly code inside the kernel. It will help me 
-; to reuse some comde in assembly before jumping to the C part.
-; See: ap_entry_point00() in kmain.c
+; The trampoline jumps directly here.
+; It will help me to reuse some code in assembly 
+; before jumping to the C part.
+; It will call the function _AP_kmain() in kmain.c, 
+; which is the main function for APs.
+; See: 
+; __test_initialize_ap_processor() in kmain.c where this hook is configured.
+;
 
 extern _AP_kmain
 
@@ -2842,7 +2851,8 @@ align 8
 global _asm_AP_entry_point
 _asm_AP_entry_point:
 
-; The tranpoline already loaded a valid 64bit GDT.
+; #ps:
+; The trampoline already loaded a valid 64bit GDT.
 
 ; Clear interrupts and direction flag
     cli

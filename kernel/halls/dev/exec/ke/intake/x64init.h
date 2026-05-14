@@ -10,7 +10,7 @@ int I_x64_initialize(void);
 
 // ::(3)
 // see: x64init.c
-void I_x64ExecuteInitialProcess(void);
+void I_x64ExecuteInitialProcess(int cpu_id);
 
 #endif   
 

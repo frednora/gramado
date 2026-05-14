@@ -545,13 +545,21 @@ int keReboot(void)
     return (int) do_reboot(Flags);
 }
 
-// Called by main to execute the first process.
+// Called by main to execute the first process
 // See: intake/x64init.c
 // Never returns.
-int ke_x64ExecuteInitialProcess(void)
+int ke_x64ExecuteInitialProcess(int cpu_id)
 {
     serial_printk("ke_x64ExecuteInitialProcess:\n");
-    I_x64ExecuteInitialProcess();
+
+    // #ps: Called only during the initialization of the BSP.
+    // APs have a different initialization routine.
+    if (cpu_id == 0){
+        I_x64ExecuteInitialProcess(cpu_id);
+    } else { 
+        panic ("ke_x64ExecuteInitialProcess: cpu_id\n");
+    }
+
     return (int) -1;
 }
 
