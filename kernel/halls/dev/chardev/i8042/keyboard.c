@@ -113,7 +113,18 @@ irq1_KEYBOARD (void)
 {
 
 // Hardware interrupts (keyboard, mouse, NIC, ...).
-    lapic_info[0].irql = IRQL_IRQ;   // #bugbug: We need the cpu id.
+
+    if (gszLastStackFrame == 3){
+        lapic_info[0].irql = IRQL_IRQ_KERNEL; //#bugbug: We need the cpu id.
+
+    } else if (gszLastStackFrame == 5){
+        lapic_info[0].irql = IRQL_IRQ_USER; //#bugbug: We need the cpu id.
+
+    } else {
+        panic("irq1_KEYBOARD: gszLastStackFrame\n");
+    }
+
+
 
 
 // If ps2 keyboard isn't initialized yet.

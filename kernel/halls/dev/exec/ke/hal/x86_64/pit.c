@@ -191,7 +191,18 @@ unsigned long irq0_TIMER(void)
 {
 
 // Set the current IRQL to timer interrupt level.
-    lapic_info[0].irql = IRQL_TIMER_INTERRUPT; //#bugbug: We need the cpu id.
+
+    if (gszLastStackFrame == 3){
+        lapic_info[0].irql = IRQL_TIMER_KERNEL; //#bugbug: We need the cpu id.
+
+    } else if (gszLastStackFrame == 5){
+        lapic_info[0].irql = IRQL_TIMER_USER; //#bugbug: We need the cpu id.
+
+    } else {
+        panic("irq0_TIMER: gszLastStackFrame\n");
+    }
+
+
 
 
 // Calling the timer routine

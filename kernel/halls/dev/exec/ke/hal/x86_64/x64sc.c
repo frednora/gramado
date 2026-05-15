@@ -27,7 +27,20 @@ void *sc80h (
 {
 
 // System call entry (int 0x8X, syscall).
-    lapic_info[0].irql = IRQL_SYSCALL;  //#bugbug: We need the cpu id.
+
+    if (sci0_cpl == 0){
+        lapic_info[0].irql = IRQL_SYSCALL_KERNEL; //#bugbug: We need the cpu id.
+
+        // #test: Not allowing syscall from ring 0.
+        panic ("sc80h: IRQL_SYSCALL_KERNEL\n");
+
+    } else if (sci0_cpl == 3){
+        lapic_info[0].irql = IRQL_SYSCALL_USER; //#bugbug: We need the cpu id.
+
+    } else {
+        panic("sc80h: sci0_cpl\n");
+    }
+
 
     pid_t CurrentPID = (pid_t) get_current_pid();
     int cpl = -1;
@@ -90,7 +103,19 @@ void *sc81h (
 {
 
 // System call entry (int 0x8X, syscall).
-    lapic_info[0].irql = IRQL_SYSCALL;  //#bugbug: We need the cpu id.
+
+    if (sci1_cpl == 0){
+        lapic_info[0].irql = IRQL_SYSCALL_KERNEL; //#bugbug: We need the cpu id.
+
+        // #test: Not allowing syscall from ring 0.
+        panic ("sc81h: IRQL_SYSCALL_KERNEL\n");
+
+    } else if (sci1_cpl == 3){
+        lapic_info[0].irql = IRQL_SYSCALL_USER; //#bugbug: We need the cpu id.
+
+    } else {
+        panic("sc81h: sci1_cpl\n");
+    }
 
 
     pid_t CurrentPID = (pid_t) get_current_pid();
@@ -150,7 +175,21 @@ void *sc82h (
 {
 
 // System call entry (int 0x8X, syscall).
-    lapic_info[0].irql = IRQL_SYSCALL;  //#bugbug: We need the cpu id.
+
+    if (sci2_cpl == 0){
+        lapic_info[0].irql = IRQL_SYSCALL_KERNEL; //#bugbug: We need the cpu id.
+
+        // #test: Not allowing syscall from ring 0.
+        panic ("sc82h: IRQL_SYSCALL_KERNEL\n");
+
+
+    } else if (sci2_cpl == 3){
+        lapic_info[0].irql = IRQL_SYSCALL_USER; //#bugbug: We need the cpu id.
+
+    } else {
+        panic("sc82h: sci2_cpl\n");
+    }
+
 
     pid_t CurrentPID = (pid_t) get_current_pid();
     int cpl = -1;
@@ -208,7 +247,21 @@ void *sc83h (
 {
 
 // System call entry (int 0x8X, syscall).
-    lapic_info[0].irql = IRQL_SYSCALL;  //#bugbug: We need the cpu id.
+
+    if (sci3_cpl == 0){
+        lapic_info[0].irql = IRQL_SYSCALL_KERNEL; //#bugbug: We need the cpu id.
+
+        // #test: Not allowing syscall from ring 0.
+        panic ("sc83h: IRQL_SYSCALL_KERNEL\n");
+
+
+    } else if (sci3_cpl == 3){
+        lapic_info[0].irql = IRQL_SYSCALL_USER; //#bugbug: We need the cpu id.
+
+    } else {
+        panic("sc83h: sci3_cpl\n");
+    }
+
 
     pid_t CurrentPID = (pid_t) get_current_pid();
     int cpl = -1;

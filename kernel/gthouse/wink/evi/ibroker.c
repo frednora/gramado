@@ -790,6 +790,16 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
     }
 
 
+    if ( kstrncmp(cmdline,"intxx",5) == 0 )
+    {
+        //#test
+        //asm (" int $0x80 \n");  // Not allowed from ring 0.
+        asm (" int $3 \n");  // Not allowed from ring 0.
+        goto exit_cmp;
+    }
+
+
+
 // mbr:
 // see: storage.c
     if ( kstrncmp(cmdline,"mbr",3) == 0 ){

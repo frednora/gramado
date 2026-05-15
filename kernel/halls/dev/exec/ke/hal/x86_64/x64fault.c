@@ -177,11 +177,93 @@ void x64_all_faults(unsigned long number)
 {
 // Quote: 'You've never failed and You won't start now'.
 
+// Tracking irql
 // Traps and Exceptions Request Level 
 // (page fault, general protection fault, double fault ...)
 
-    lapic_info[0].irql = IRQL_TRAPS; //#todo: We need the cpu id here.
+// For the case the trap happned during some special irqls.
+    int last_irql = lapic_info[0].irql;
+    int was_running_in_r0 = -1;
 
+    // Set current irql
+    lapic_info[0].irql = IRQL_UNDEFINED;
+
+// During the initialization
+    if (last_irql == IRQL_NULL){
+        printk("last irql: IRQL_NULL\n");
+        was_running_in_r0 = TRUE;
+    } else if (last_irql == IRQL_R3_THREAD_IS_RUNNING){
+        printk("last irql: IRQL_R3_THREAD_IS_RUNNING\n");
+        was_running_in_r0 = FALSE;
+    } else if (last_irql == IRQL_R0_THREAD_IS_RUNNING){
+        printk("last irql: IRQL_R0_THREAD_IS_RUNNING\n");
+        was_running_in_r0 = TRUE;
+    } else if (last_irql == IRQL_SYSCALL_USER){
+        printk("last irql: IRQL_SYSCALL_USER\n");
+        was_running_in_r0 = TRUE;
+    } else if (last_irql == IRQL_SYSCALL_KERNEL){
+        printk("last irql: IRQL_SYSCALL_KERNEL\n");
+        was_running_in_r0 = TRUE;
+    } else if (last_irql == IRQL_TIMER_USER){
+        printk("last irql: IRQL_TIMER_USER\n");
+        was_running_in_r0 = TRUE;
+    } else if (last_irql == IRQL_TIMER_KERNEL){
+        printk("last irql: IRQL_TIMER_KERNEL\n");
+        was_running_in_r0 = TRUE;
+    } else if (last_irql == IRQL_DISPATCHER){
+        printk("last irql: IRQL_DISPATCHER\n");
+        was_running_in_r0 = TRUE;
+    } else if (last_irql == IRQL_SCHEDULER){
+        printk("last irql: IRQL_SCHEDULER\n");
+        was_running_in_r0 = TRUE;
+    } else if (last_irql == IRQL_IRQ_USER){
+        printk("last irql: IRQL_IRQ_USER\n");
+        was_running_in_r0 = TRUE;
+    } else if (last_irql == IRQL_IRQ_KERNEL){
+        printk("last irql: IRQL_IRQ_KERNEL\n");
+        was_running_in_r0 = TRUE;
+
+    // #critical: Trap inside the trap routine.
+    } else if (last_irql == IRQL_TRAPS_USER){
+        printk("last irql: IRQL_TRAPS_USER\n");
+        was_running_in_r0 = TRUE;
+
+    // #critical: Trap inside the trap routine.
+    } else if (last_irql == IRQL_TRAPS_KERNEL){
+        printk("last irql: IRQL_TRAPS_KERNEL\n");
+        was_running_in_r0 = TRUE;
+    } else {
+        printk("last irql: Undefined IRQL\n");
+        was_running_in_r0 = -1;
+    };
+
+// What was the environment during the trap?
+    if (was_running_in_r0 == TRUE){
+        printk("trap env: R0\n");
+        lapic_info[0].irql = IRQL_TRAPS_KERNEL;
+    } else if (was_running_in_r0 == FALSE){
+        printk("trap env: R3\n"); 
+        lapic_info[0].irql = IRQL_TRAPS_USER;
+    } else {
+        printk("trap env: Undefined\n");
+        lapic_info[0].irql = IRQL_UNDEFINED;
+    }
+
+
+/*
+// #todo
+// The size of last saved stack frame.
+// #ps: It is not accurate.
+
+    if (gszLastStackFrame == 3){
+    } else if (gszLastStackFrame == 5){
+    } else {
+    }
+
+*/
+
+    // irql
+    printk("irql: %d\n", lapic_info[0].irql);
 
 // Get the pagefault address.
 // #todo: Not tested.

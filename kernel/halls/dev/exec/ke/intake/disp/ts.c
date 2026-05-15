@@ -278,7 +278,6 @@ static void __tsOnFinishedExecuting(struct thread_d *t)
     }
 // ====================================================
 
-
 }
 
 
@@ -1122,6 +1121,26 @@ so you don’t get duplicate deliveries. The thread can re‑arm later if it wan
         // The handler
         ring3_callback_address = (unsigned long) t->cb_r3_address;
         t->callback_in_progress = TRUE;
+    }
+
+
+//
+// #bugbug (trade off)
+// We are changing it. But we are still in ring 0.
+// If it crashes after that and before resume the thread,
+// we are lost. But if we dont change it, we are lost too.
+//
+
+// Running normal thread in ring 0
+    if (t->cpl == 0){
+        lapic_info[0].irql = IRQL_R0_THREAD_IS_RUNNING;
+
+// Running normal thread in ring 3
+    } else if (t->cpl == 3){
+        lapic_info[0].irql = IRQL_R3_THREAD_IS_RUNNING;
+
+    } else {
+        // Undefined. Maybe still irql 'dispatch'
     }
 
     return (unsigned long) rv;

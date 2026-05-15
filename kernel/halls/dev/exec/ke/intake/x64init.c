@@ -847,6 +847,10 @@ void I_x64ExecuteInitialProcess(int cpu_id)
     //printk("go!\n");
     //while(1){}
 
+
+// Running normal thread in ring 3
+    lapic_info[0].irql = IRQL_R3_THREAD_IS_RUNNING;
+
 // Entry point and ring3 stack.
 // FLOWERTHREAD_ENTRYPOINT
 

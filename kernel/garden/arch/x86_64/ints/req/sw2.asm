@@ -28,7 +28,7 @@ unhandled_int:
 ; Criar um contador para isso.
     iretq
 
-
+; #ps: We already have another routine in sw1.asm
 align 4
 global _syscall_handler
 _syscall_handler:
@@ -37,11 +37,13 @@ _syscall_handler:
     mov qword [.SavedRSP], r11  ; Save user-space RSP
 
     ; Do something (handle syscall)
+    int 3
 
     ; Restore user-space values before returning
     mov rcx, qword [.SavedRIP]  ; Restore user-space RIP
     mov rsp, qword [.SavedRSP]  ; Restore user-space RSP
-    sysret                      ; Return to user mode
+    ;sysret                      ; Return to user mode
+    o64 sysret
 
 ; Storage for saved values
 .SavedRIP: dq 0

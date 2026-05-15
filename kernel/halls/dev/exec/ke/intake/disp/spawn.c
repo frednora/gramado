@@ -97,6 +97,8 @@ __spawn_enter_kernelmode(
         }
     }
 
+// Running normal thread in ring 0
+    lapic_info[0].irql = IRQL_R0_THREAD_IS_RUNNING;
 
 // When you iretq back into Ring 0, the processor only requires:
 // + RIP (instruction pointer)
@@ -231,13 +233,14 @@ __spawn_enter_usermode(
         }
     }
 
-
-
 // #test
 // If the last thread was a ring 0 thread
     if (gszLastStackFrame == 3){
         panic ("__spawn_enter_usermode: gszLastStackFrame\n");
     }
+
+// Running normal thread in ring 3
+    lapic_info[0].irql = IRQL_R3_THREAD_IS_RUNNING;
 
 // #todo
 // Let's have more options here.
