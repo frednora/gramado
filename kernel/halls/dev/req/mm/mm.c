@@ -359,7 +359,7 @@ unsigned long heapAllocateMemory(unsigned long size)
         UserAreaInBytes = (unsigned long) 8;
     }
 
-// Fail if the heap is exhausted.
+// Fail if the heap is exhausted
     if (g_available_heap == 0){
         debug_print ("heapAllocateMemory: g_available_heap={0}\n");
         printk      ("heapAllocateMemory: g_available_heap={0}\n");
@@ -369,11 +369,11 @@ unsigned long heapAllocateMemory(unsigned long size)
 // #bugbug
 // And if the available heap is an invalid big number?
 
-// Fail if not enough heap space for this allocation.
+// Fail if not enough heap space for this allocation
     if (UserAreaInBytes >= g_available_heap)
     {
-        debug_print ("heapAllocateMemory error: UserAreaInBytes >= g_available_heap\n");
-        printk ("heapAllocateMemory error: UserAreaInBytes >= g_available_heap\n");
+        debug_print ("heapAllocateMemory: UserAreaInBytes >= g_available_heap\n");
+        printk      ("heapAllocateMemory: UserAreaInBytes >= g_available_heap\n");
 
         // #todo: 
         // Tentar crescer o heap para atender o size requisitado.
@@ -381,10 +381,11 @@ unsigned long heapAllocateMemory(unsigned long size)
         goto fail;
     }
 
-// Increment block count and ensure we do not exceed block tracking array size.
+// Increment block count and 
+// ensure we do not exceed block tracking array size.
     mmblockCount++;
     if (mmblockCount >= MMBLOCK_COUNT_MAX){
-        x_panic ("heapAllocateMemory: mmblockCount\n");
+        x_panic("heapAllocateMemory: mmblockCount\n");
     }
 
 // #importante
@@ -392,13 +393,11 @@ unsigned long heapAllocateMemory(unsigned long size)
 // é o início da estrutura que o define. 'b->Header'. 
 // Ou seja, o endereço da variável marca o início da estrutura.
 // Pointer Limits:
-// ( Não vamos querer um heap pointer fora dos limites 
-//   do heap do kernel ).
+// ( Não vamos querer um heap pointer fora dos limites do heap do kernel ).
 // Se o 'g_heap_pointer' atual esta fora dos limites do heap, 
 // então devemos usar o último válido, que provavelmente está 
 // nos limites. ?? #bugbug: Mas se o último válido está sendo 
-// usado por uma alocação anterior. ?? Temos flags que 
-// indiquem isso ??
+// usado por uma alocação anterior. ?? Temos flags que indiquem isso ??
 // #importante: 
 // O HEAP POINTER TAMBÉM É O INÍCIO DE UMA ESTRUTURA. 
 // NESSA ESTRUTURA PODEMOS SABER SE O HEAP ESTA EM USO OU NÃO.
@@ -408,7 +407,7 @@ unsigned long heapAllocateMemory(unsigned long size)
 // Out of range.
 // Se estiver fora dos limites do heap do kernel.
 
-// Ensure heap pointer is within kernel heap boundaries.
+// Ensure heap pointer is within kernel heap boundaries
     if ( g_heap_pointer < KERNEL_HEAP_START || 
           g_heap_pointer >= KERNEL_HEAP_END )
     {
@@ -428,7 +427,8 @@ unsigned long heapAllocateMemory(unsigned long size)
 
 // Create and initialize mmblock_d header at the current heap pointer.
     Current = (void *) g_heap_pointer;
-    if ((void *) Current == NULL){
+    if ((void *) Current == NULL)
+    {
         debug_print("heapAllocateMemory: Current\n");
         printk     ("heapAllocateMemory: Current\n");
         goto fail;
@@ -451,7 +451,7 @@ unsigned long heapAllocateMemory(unsigned long size)
 
 // Saving the address of the pointer of the structure.
 
-// Initialize header fields.
+// Initialize header fields
     HeaderBase =  (unsigned long) g_heap_pointer;
     Current->Header = (unsigned long) HeaderBase; 
     Current->headerSize = (unsigned long) HeaderInBytes; 
@@ -460,7 +460,7 @@ unsigned long heapAllocateMemory(unsigned long size)
 // User area
 //
 
-// Initialize user area fields.
+// Initialize user area fields
     UserAreaBase = (unsigned long) (HeaderBase + HeaderInBytes);
     Current->userArea = (unsigned long) UserAreaBase;
     Current->userareaSize = (unsigned long) UserAreaInBytes;
@@ -525,11 +525,11 @@ unsigned long heapAllocateMemory(unsigned long size)
 // Colocar o conteúdo da estrutura no lugar destinado para o header.
 // O header conterá informações sobre o heap.
 // Se falhamos, retorna 0. Que equivalerá à NULL.
+
 fail:
-    refresh_screen();
+    // refresh_screen();
     return (unsigned long) 0;
 }
-
 
 /*
  * heapFreeMemory:

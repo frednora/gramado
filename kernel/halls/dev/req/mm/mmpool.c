@@ -137,9 +137,7 @@ tryAgain:
 }
 
 /*
- * mmNewPage:
- * Aloca uma página em memoria compartilhada de ring3 
- * e retorna seu endereço virtual inicial. 
+ * #ps: Old comments.
  * Isso é feito com base no id do pageframe e no endereço virtual 
  * inicial do pool de pageframes.
  * Obs: 
@@ -148,23 +146,32 @@ tryAgain:
  * de memória física.
  */
 
+// mmNewPage:
+// Allocate one page of ring 3 shared memory and return its virtual address.
+// ...
 // OUT:
-// Retorna o endereço virtual da página alocada.
-// #todo
-// #fixme
+// + The virtual address for the new page.
 
 void *mmNewPage(void)
 {
-// Esse é o endereço virtual do início do pool de páginas.
+
+// This is the base virtual address for the pool of pages.
+// These pages are shared with all the process that 
+// cloned the kernel directory during its creation.
     unsigned long base = (unsigned long) g_pagedpool_va;
+
     unsigned long va=0;
     unsigned long pa=0;
-    int PageSize = PAGE_SIZE;  //4096;
     struct page_d *New;
+
+    // #ps: 
+    // For now each page in the pool has 4096 Byte.
+    int PageSize = PAGE_SIZE;  // 4096
 
     //debug_print ("mmNewPage:\n");
 
-// Invalid base address.
+// Invalid base address
+// #todo: Maybe we can stablish some other limits here.
     if (base == 0){
         debug_print ("mmNewPage: base\n");
         panic       ("mmNewPage: base\n");
@@ -172,6 +179,8 @@ void *mmNewPage(void)
 
 // Create and register a page object.
     New = (void *) __pageObject();
+
+// Struture validation
     if (New == NULL){
         debug_print ("mmNewPage: New\n");
         panic       ("mmNewPage: New\n");
@@ -196,7 +205,7 @@ void *mmNewPage(void)
     New->locked = FALSE;
 
 // Reference counter.
-// How many processes?
+// How many processes are using it?
     New->ref_count = 1;
 
     // #debug
@@ -205,22 +214,26 @@ void *mmNewPage(void)
 
 //
 // VA
-// va = base + (index * page size);
 //
 
+// va = base + (index * page size);
     unsigned long va_offset = (unsigned long) (New->id * PageSize);
     va = (unsigned long) (base + va_offset);
     if (va == 0){
-        panic("mmNewPage: va==0\n");
+        panic("mmNewPage: va={0}\n");
     }
 
 //
 // PA
-// Using the kernel table to get the physical address.
 //
 
-    // IN: Virtual address, kernel pml4 address.
-    pa = (unsigned long) virtual_to_physical(va,gKernelPML4Address);
+// Using the kernel table to get the physical address.
+// See: x64mm.c
+
+    unsigned long kernel_pml4_va = gKernelPML4Address;
+
+    // IN: Virtual address, kernel pml4 va.
+    pa = (unsigned long) virtual_to_physical( va, kernel_pml4_va );
 
 // Invalid physical address.
 // #todo

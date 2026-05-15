@@ -194,11 +194,20 @@ __virtual_to_physical (
     return (unsigned long) (address + o);
 }
 
+
+// virtual_to_physical:
+// Covert virtual address into physical address
+// given the pml4 va and the virtual address.
+//
 // IN:
 //   + virtual_address
 //   + pml4_va
 // OUT:
 //   + physical address
+
+// #todo
+// We can rename it to x64xx_virtual_to_physical().
+
 unsigned long 
 virtual_to_physical ( 
     unsigned long virtual_address, 
