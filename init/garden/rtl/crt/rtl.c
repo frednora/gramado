@@ -873,7 +873,7 @@ void *rtl_create_process(const char *file_name)
         return NULL;
     if (StringSize >= 32)
         return NULL;
-    strncpy(pName,file_name,16);
+    snprintf(pName, sizeof(pName), "%s", file_name);
     pName[17] = 0;
     pName[31] = 0;
 
@@ -2327,7 +2327,7 @@ __rtl_clone_and_execute_imp(
     if (StringSize > 256)
         goto fail;
     memset(LocalName,0,256);
-    sprintf(LocalName,name);
+    snprintf(LocalName, sizeof(LocalName), "%s", name);
     NameAddress = (unsigned long) LocalName;
 
 // #todo
