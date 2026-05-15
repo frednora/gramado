@@ -177,17 +177,6 @@ struct welcome_ap_d  WelcomeAP;
 extern void asm_AP_entry_point(void);
 static int __AP_handshake(void);
 
-// ======================
-// #test
-// Queue feeder
-struct dpc_queue_d  DPC_QUEUE;
-
-// Current message
-// Only the loop reads this message
-int qf_buf_msg[1];
-unsigned long qf_buf_longs[4];
-unsigned char qf_buf_chars[4];
-
 static void r0_thread00(void);
 static void __kmain_setup_ring0_thread(void);
 
@@ -259,79 +248,99 @@ qf_post_message(
 {
 
 // Invalid index
-    if (DPC_QUEUE.tail < 0 || DPC_QUEUE.tail >= 32)
+    if ( lapic_info[0].DPC_QUEUE.tail < 0 || 
+         lapic_info[0].DPC_QUEUE.tail >= 32)
     {
-        DPC_QUEUE.tail = 0;
+        lapic_info[0].DPC_QUEUE.tail = 0;
     }
 
 // No mesage in the tail slot
-    if (DPC_QUEUE.msg[ DPC_QUEUE.tail ] == 0)
+    if (lapic_info[0].DPC_QUEUE.msg[ lapic_info[0].DPC_QUEUE.tail ] == 0)
     {
 
-        DPC_QUEUE.msg[ DPC_QUEUE.tail ] = (int) msg; // We have a new message
+        lapic_info[0].DPC_QUEUE.msg[ lapic_info[0].DPC_QUEUE.tail ] = (int) msg; // We have a new message
 
-        DPC_QUEUE.long1[ DPC_QUEUE.tail ] = (unsigned long) long1;
-        DPC_QUEUE.long2[ DPC_QUEUE.tail ] = (unsigned long) long2;
-        DPC_QUEUE.long3[ DPC_QUEUE.tail ] = (unsigned long) long3;
-        DPC_QUEUE.long4[ DPC_QUEUE.tail ] = (unsigned long) long4;
+        lapic_info[0].DPC_QUEUE.long1[ lapic_info[0].DPC_QUEUE.tail ] = 
+            (unsigned long) long1;
+        lapic_info[0].DPC_QUEUE.long2[ lapic_info[0].DPC_QUEUE.tail ] = 
+            (unsigned long) long2;
+        lapic_info[0].DPC_QUEUE.long3[ lapic_info[0].DPC_QUEUE.tail ] = 
+            (unsigned long) long3;
+        lapic_info[0].DPC_QUEUE.long4[ lapic_info[0].DPC_QUEUE.tail ] = 
+            (unsigned long) long4;
 
-        DPC_QUEUE.char1[ DPC_QUEUE.tail ] = (unsigned char) char1;
-        DPC_QUEUE.char2[ DPC_QUEUE.tail ] = (unsigned char) char2;
-        DPC_QUEUE.char3[ DPC_QUEUE.tail ] = (unsigned char) char3;
-        DPC_QUEUE.char4[ DPC_QUEUE.tail ] = (unsigned char) char4;
+        lapic_info[0].DPC_QUEUE.char1[ lapic_info[0].DPC_QUEUE.tail ] = 
+            (unsigned char) char1;
+        lapic_info[0].DPC_QUEUE.char2[ lapic_info[0].DPC_QUEUE.tail ] = 
+            (unsigned char) char2;
+        lapic_info[0].DPC_QUEUE.char3[ lapic_info[0].DPC_QUEUE.tail ] = 
+            (unsigned char) char3;
+        lapic_info[0].DPC_QUEUE.char4[ lapic_info[0].DPC_QUEUE.tail ] = 
+            (unsigned char) char4;
 
-        DPC_QUEUE.tail++;
-        if (DPC_QUEUE.tail >= 32)
-            DPC_QUEUE.tail = 0;
+        lapic_info[0].DPC_QUEUE.tail++;
+        if (lapic_info[0].DPC_QUEUE.tail >= 32)
+            lapic_info[0].DPC_QUEUE.tail = 0;
     }
 }
-
 
 int qf_get_message(void)
 {
     int Slot=0;
 
 // Invalid index
-    if (DPC_QUEUE.head < 0 || DPC_QUEUE.head >= 32)
+    if ( lapic_info[0].DPC_QUEUE.head < 0 || 
+         lapic_info[0].DPC_QUEUE.head >= 32)
     {
-        DPC_QUEUE.head = 0;
+        lapic_info[0].DPC_QUEUE.head = 0;
     }
 
 // No mesage in the head slot
-    if (DPC_QUEUE.msg[ DPC_QUEUE.head ] <= 0)
+    if (lapic_info[0].DPC_QUEUE.msg[ lapic_info[0].DPC_QUEUE.head ] <= 0)
     {
-        DPC_QUEUE.head++;
-        if (DPC_QUEUE.head >= 32)
-            DPC_QUEUE.head = 0;
+        lapic_info[0].DPC_QUEUE.head++;
+        if (lapic_info[0].DPC_QUEUE.head >= 32)
+            lapic_info[0].DPC_QUEUE.head = 0;
 
         return (int) -1;  // No message
     }
 
 // Yes, we have a message in this slot
-    Slot = (int) DPC_QUEUE.head;
+    Slot = (int) lapic_info[0].DPC_QUEUE.head;
 
 //
 // Output buffer for the current message
 //
 
-    qf_buf_msg[0] = (int) DPC_QUEUE.msg[DPC_QUEUE.head];   // Get the message
+// Put the fetched values into the cache.
 
-    qf_buf_longs[0] = (unsigned long) DPC_QUEUE.long1[DPC_QUEUE.head];
-    qf_buf_longs[1] = (unsigned long) DPC_QUEUE.long2[DPC_QUEUE.head];
-    qf_buf_longs[2] = (unsigned long) DPC_QUEUE.long3[DPC_QUEUE.head];
-    qf_buf_longs[3] = (unsigned long) DPC_QUEUE.long4[DPC_QUEUE.head];
+    lapic_info[0].DPC_QUEUE.cache_msg[0] = 
+        (int) lapic_info[0].DPC_QUEUE.msg[ lapic_info[0].DPC_QUEUE.head ];   // Get the message
 
-    qf_buf_chars[0] = (unsigned char) DPC_QUEUE.char1[DPC_QUEUE.head];
-    qf_buf_chars[1] = (unsigned char) DPC_QUEUE.char2[DPC_QUEUE.head];
-    qf_buf_chars[2] = (unsigned char) DPC_QUEUE.char3[DPC_QUEUE.head];
-    qf_buf_chars[3] = (unsigned char) DPC_QUEUE.char4[DPC_QUEUE.head];
+    lapic_info[0].DPC_QUEUE.cache_longs[0] = 
+        (unsigned long) lapic_info[0].DPC_QUEUE.long1[ lapic_info[0].DPC_QUEUE.head ];
+    lapic_info[0].DPC_QUEUE.cache_longs[1] = 
+        (unsigned long) lapic_info[0].DPC_QUEUE.long2[ lapic_info[0].DPC_QUEUE.head ];
+    lapic_info[0].DPC_QUEUE.cache_longs[2] = 
+        (unsigned long) lapic_info[0].DPC_QUEUE.long3[ lapic_info[0].DPC_QUEUE.head ];
+    lapic_info[0].DPC_QUEUE.cache_longs[3] = 
+        (unsigned long) lapic_info[0].DPC_QUEUE.long4[ lapic_info[0].DPC_QUEUE.head ];
 
-    DPC_QUEUE.msg[DPC_QUEUE.head] = 0;  // No more message in this slot
+    lapic_info[0].DPC_QUEUE.cache_chars[0] = 
+        (unsigned char) lapic_info[0].DPC_QUEUE.char1[ lapic_info[0].DPC_QUEUE.head ];
+    lapic_info[0].DPC_QUEUE.cache_chars[1] = 
+        (unsigned char) lapic_info[0].DPC_QUEUE.char2[ lapic_info[0].DPC_QUEUE.head ];
+    lapic_info[0].DPC_QUEUE.cache_chars[2] = 
+        (unsigned char) lapic_info[0].DPC_QUEUE.char3[ lapic_info[0].DPC_QUEUE.head ];
+    lapic_info[0].DPC_QUEUE.cache_chars[3] = 
+        (unsigned char) lapic_info[0].DPC_QUEUE.char4[ lapic_info[0].DPC_QUEUE.head ];
+
+    lapic_info[0].DPC_QUEUE.msg[ lapic_info[0].DPC_QUEUE.head ] = 0;  // No more message in this slot
 
 // Round
-    DPC_QUEUE.head++;
-    if (DPC_QUEUE.head >= 32)
-        DPC_QUEUE.head = 0;
+    lapic_info[0].DPC_QUEUE.head++;
+    if (lapic_info[0].DPC_QUEUE.head >= 32)
+        lapic_info[0].DPC_QUEUE.head = 0;
 
     return (int) Slot;   // Index for the message
 }
@@ -1395,7 +1404,7 @@ static int lateinit(void)
 
 // #test: Using QF (DPC) via zero gravity, not via AP.
     if ( CONFIG_USE_DPC_VIA_ZEROGRAVITY == 1 )
-        DPC_QUEUE.on = TRUE;
+        lapic_info[0].DPC_QUEUE.on = TRUE;
 
 
 // -------------------------------------
@@ -1752,7 +1761,7 @@ static void __ap_DPC_experiment(int lapic_id)
     // Turn it on
     if (CONFIG_USE_DPC_VIA_AP == 1)
     {
-        DPC_QUEUE.on = TRUE;
+        lapic_info[0].DPC_QUEUE.on = TRUE;
 
         // This AP is working as a DPC dispatcher.
         lapic_info[lapic_id].is_dpc_dispatcher = TRUE;
@@ -1771,25 +1780,35 @@ static void __ap_DPC_experiment(int lapic_id)
 
 
         // Do we have a new message?
-        if (DPC_QUEUE.on == TRUE)
+        if (lapic_info[0].DPC_QUEUE.on == TRUE)
         {
             int slot = qf_get_message();
             if (slot != (-1))
             {
                 if (slot >=0 && slot < 32)
                 {
-                    switch (qf_buf_msg[0]){
+                    int msgcode = lapic_info[0].DPC_QUEUE.cache_msg[0];
+                    switch (msgcode)
+                    {
                         case 1000:
                             //x_panic("1000: DPC Via AP");
                             wmRawKeyEvent (
-                                qf_buf_chars[0], 
-                                qf_buf_chars[1], 
-                                qf_buf_chars[2], 
-                                qf_buf_chars[3]
+                                lapic_info[0].DPC_QUEUE.cache_chars[0], 
+                                lapic_info[0].DPC_QUEUE.cache_chars[1], 
+                                lapic_info[0].DPC_QUEUE.cache_chars[2], 
+                                lapic_info[0].DPC_QUEUE.cache_chars[3]
                             );
                             break;
 
                         case 2000:
+                            // x_panic("2000: DPC Via AP");
+                            int mouse_event_id = 
+                                ( lapic_info[0].DPC_QUEUE.cache_longs[0] & 0xFFFFFFFF); 
+                            wmMouseEvent( 
+                                mouse_event_id,  //event_id, 
+                                lapic_info[0].DPC_QUEUE.cache_longs[1],  //long1, 
+                                lapic_info[0].DPC_QUEUE.cache_longs[2]  //long2 
+                            );
                             break;
 
                         case 3000:
@@ -1885,7 +1904,7 @@ static void __ap_DPC_experiment(int lapic_id)
     };
 
     // Turn the QF off
-    DPC_QUEUE.on = FALSE;
+    lapic_info[0].DPC_QUEUE.on = FALSE;
 }
 
 

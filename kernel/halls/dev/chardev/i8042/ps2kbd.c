@@ -275,12 +275,12 @@ __ps2kbd_interpret_and_dispatch(
     case 0x00:
 
         // OFF: Do it manually
-        if (DPC_QUEUE.on != TRUE){
+        if (lapic_info[0].DPC_QUEUE.on != TRUE){
 
             wmRawKeyEvent( raw_code_0, 0x00, 0x00, 0x00 );
 
         // ON: Post the message into the channel
-        } else if (DPC_QUEUE.on == TRUE){
+        } else if (lapic_info[0].DPC_QUEUE.on == TRUE){
 
             qf_post_message (
                 1000,   // msgcode for raw keyboard

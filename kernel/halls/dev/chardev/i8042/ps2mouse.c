@@ -237,6 +237,44 @@ quit:
     return;
 }
 
+
+/*
+static int 
+__processMouseEvent00(
+    int event_id,
+    long long1, 
+    long long2 );
+*/
+
+static int 
+__processMouseEvent00(
+    int event_id,
+    long long1, 
+    long long2 )
+{
+    if (event_id < 0){
+        return (int) -1;
+    }
+
+    // OFF: Do it manually
+    if (lapic_info[0].DPC_QUEUE.on != TRUE){
+
+        return (int) wmMouseEvent( event_id, long1, long2 );
+
+    // ON: Post the message into the channel
+    } else if (lapic_info[0].DPC_QUEUE.on == TRUE){
+
+        qf_post_message (
+            2000,   // msgcode for raw mouse event
+            event_id, long1, long2, 0,  // 4 longs
+            0, 0, 0, 0  // 4 chars
+        );
+    };
+
+    return 0;
+}
+
+
 // local worker
 // This routine is gonna parse the packet and 
 // give us an updated x and y values.
@@ -247,7 +285,7 @@ quit:
 static void __ps2mouse_parse_data_packet(void)
 {
 // Parse the mouse pacjet and 
-// send event to wmMouseEvent in grinput.c.
+// send event to __processMouseEvent00
 
 // The first byte.
     unsigned char Flags=0;
@@ -375,12 +413,12 @@ static void __ps2mouse_parse_data_packet(void)
     {
         // Presssed
         if (mbuttons_current_state[0] == TRUE){
-            wmMouseEvent( MSG_MOUSEPRESSED, 1, 1 );
+            __processMouseEvent00( MSG_MOUSEPRESSED, 1, 1 );
             return;
         }
         // Released
         if (mbuttons_current_state[0] == FALSE){
-            wmMouseEvent( MSG_MOUSERELEASED, 1, 1 );
+            __processMouseEvent00( MSG_MOUSERELEASED, 1, 1 );
             return;
         }
         return;
@@ -394,12 +432,12 @@ static void __ps2mouse_parse_data_packet(void)
     {
         // Pressed
         if (mbuttons_current_state[1] == TRUE){
-            wmMouseEvent( MSG_MOUSEPRESSED, 2, 2 );
+            __processMouseEvent00( MSG_MOUSEPRESSED, 2, 2 );
             return;
         }
         // Relesed
         if (mbuttons_current_state[1] == FALSE){
-            wmMouseEvent( MSG_MOUSERELEASED, 2, 2 );
+            __processMouseEvent00( MSG_MOUSERELEASED, 2, 2 );
             return;
         }
         return;
@@ -413,12 +451,12 @@ static void __ps2mouse_parse_data_packet(void)
     {
         // Pressed
         if (mbuttons_current_state[2] == TRUE){
-            wmMouseEvent( MSG_MOUSEPRESSED, 3, 3 );
+            __processMouseEvent00( MSG_MOUSEPRESSED, 3, 3 );
             return;
         }
         // Released
         if (mbuttons_current_state[2] == FALSE){
-            wmMouseEvent( MSG_MOUSERELEASED, 3, 3 );
+            __processMouseEvent00( MSG_MOUSERELEASED, 3, 3 );
             return;
         }
         return;
@@ -441,7 +479,7 @@ static void __ps2mouse_parse_data_packet(void)
 // IN: event id, x, y.
 // see: ibroker.c
     if (ps2_mouse_moving == TRUE){
-        wmMouseEvent( MSG_MOUSEMOVE, mouse_x, mouse_y );
+        __processMouseEvent00( MSG_MOUSEMOVE, mouse_x, mouse_y );
         return;
     }
 }

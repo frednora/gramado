@@ -242,25 +242,35 @@ static void __tsOnFinishedExecuting(struct thread_d *t)
 
     // The last thread was a ring 3 thread?
     //if (DPC_QUEUE.on == TRUE && gszLastStackFrame == 5)
-    if (DPC_QUEUE.on == TRUE)
+    if (lapic_info[0].DPC_QUEUE.on == TRUE)
     {
         int slot = qf_get_message();
         if (slot != (-1))
         {
             if (slot >=0 && slot < 32)
             {
-                switch (qf_buf_msg[0]){
+                int msgcode = lapic_info[0].DPC_QUEUE.cache_msg[0];
+                switch (msgcode)
+                {
                     case 1000:
                         //x_panic("1000: DPC Via ZeroGravity");
                         wmRawKeyEvent (
-                            qf_buf_chars[0], 
-                            qf_buf_chars[1], 
-                            qf_buf_chars[2], 
-                            qf_buf_chars[3]
+                            lapic_info[0].DPC_QUEUE.cache_chars[0], 
+                            lapic_info[0].DPC_QUEUE.cache_chars[1], 
+                            lapic_info[0].DPC_QUEUE.cache_chars[2], 
+                            lapic_info[0].DPC_QUEUE.cache_chars[3]
                         );
                         break;
 
                     case 2000:
+                        //x_panic("2000: DPC Via ZeroGravity");
+                        int mouse_event_id = 
+                            ( lapic_info[0].DPC_QUEUE.cache_longs[0] & 0xFFFFFFFF); 
+                        wmMouseEvent( 
+                            mouse_event_id,  //event_id, 
+                            lapic_info[0].DPC_QUEUE.cache_longs[1],  //long1, 
+                            lapic_info[0].DPC_QUEUE.cache_longs[2]  //long2 
+                        );
                         break;
 
                     case 3000:
