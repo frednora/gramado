@@ -92,6 +92,12 @@ static void __initialize_mouse_position(void);
 
 static int __ps2mouse_get_device_id(void);
 
+static int 
+__processMouseEvent00(
+    int event_id,
+    long long1, 
+    long long2 );
+
 // ----------------------------------------------------
 
 // zzz_mouse_read:
@@ -237,14 +243,6 @@ quit:
     return;
 }
 
-
-/*
-static int 
-__processMouseEvent00(
-    int event_id,
-    long long1, 
-    long long2 );
-*/
 
 static int 
 __processMouseEvent00(

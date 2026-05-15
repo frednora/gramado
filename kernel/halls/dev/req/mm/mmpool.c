@@ -1,59 +1,72 @@
 // mmpool.c
+// Allocating shared virtual memory from a pool of pages.
+// This code implements a paged pool allocator for 
+// shared virtual memory (pre-mapped pages from a fixed VA range). 
+// It's a classic kernel technique for fast shared buffers.
 // Created by Fred Nora.
 
 #include <kernel.h>   
 
 static void *__pageObject(void);
+static struct page_d* __page_create(int slot);
 static int __firstSlotForAList(int size);
 
-/*
- * __pageObject:
- * Cria uma estrutura de página.
- * Procura um slot vazio para registrar ela.
- * Inicializa a estrutura.
- * Retorna o ponteiro da estrutura criada.
- */
-// OUT:
-// Retorna o ponteiro de estrutura.
+// =====================================================================
+
+static struct page_d* __page_create(int slot)
+{
+    struct page_d *page = (struct page_d*) kmalloc(sizeof(struct page_d));
+    if (page == NULL)
+        return NULL;
+
+    memset(page, 0, sizeof(struct page_d));
+
+    page->id                = slot;
+    page->used              = TRUE;
+    page->free              = FALSE;
+    page->locked            = FALSE;
+    page->magic             = 1234;
+    page->ref_count         = 1;
+    page->next              = NULL;
+    page->absolute_frame_number = 0;
+
+    return (struct page_d*) page;
+}
+
+// __pageObject:
+// Create a page structure.
+// Register it into an empty slot in pageAllocList[] and 
+// return the pointer for the structure.
+// #ps: This list must to be initialized before calling this worker.
 
 static void *__pageObject(void)
 {
     struct page_d *New;
     int __slot = 0;
 
-// Vamos procurar um slot vazio.
-
+// Probe for an empty slot
     for ( __slot=0; 
           __slot < PAGE_COUNT_MAX; 
           __slot++ )
     {
-        // #
-        // Essa lista precisa ser inicializada com 0
-        // antes de usarmos ela aqui nessa rotina.
-
         New = (void *) pageAllocList[__slot];
 
-        if ( New == NULL )
+        if (New == NULL)
         {
             New = (void *) kmalloc( sizeof(struct page_d) );
-
-            // ?? panic ??
             if (New == NULL)
             {
                 debug_print ("__pageObject:\n");
                 printk      ("__pageObject:\n");
-
-                // #todo: free() ??
                 goto fail;
             }
             memset ( New, 0, sizeof(struct page_d) );
 
-            New->id = __slot;  // Índice dentro da lista.
-            
-            New->used  = TRUE;
+            New->id = __slot;   // Save the index
+            New->free = FALSE;  // Not free 
+            New->used = TRUE;
             New->magic = 1234;
 
-            New->free = 0;        // Not free!
             New->next = NULL;
 
             // #bugbug ... isso tá errado.
@@ -61,21 +74,17 @@ static void *__pageObject(void)
             // New->address = (unsigned long) Address;
             // ...
 
+            // Register and return.
             pageAllocList[__slot] = ( unsigned long ) New; 
-
-            //debug_print ("page: ok\n");
-
             return (void *) New;
-        };
+        }
     };
 
-// Overflow.
-//#debug ??
+// Overflow
 fail:
-    // Message?
-    //debug_print ("page: fail\n");
     return NULL; 
 }
+
 
 /*
  * __firstSlotForAList:
@@ -92,6 +101,10 @@ fail:
 // Ou retorn '-1' no caso de erro.
 // #todo: Explain it better.
 
+/*
+// #suspended:
+// Suspending this old imlementation.
+// Using a new one. Probably safer.
 static int __firstSlotForAList(int size)
 {
     register int i=0;
@@ -135,6 +148,54 @@ tryAgain:
 // Fail: No empty slot.
     return (int) -1;
 }
+*/
+
+
+/*
+ * __firstSlotForAList:
+ * Find the starting index of 'size' consecutive free slots.
+ * Returns -1 if no contiguous block of that size exists.
+ */
+static int __firstSlotForAList(int size)
+{
+    int start=0;
+    int i=0;
+
+    if (size <= 0 || size >= PAGE_COUNT_MAX)
+        return -1;
+
+    /* 
+     * Outer loop: possible starting positions 
+     * We stop early enough so we don't go out of bounds.
+     */
+
+    for ( 
+        start = 0; 
+        start <= PAGE_COUNT_MAX - size; 
+        start++ )
+    {
+        /* Inner loop: check if we have 'size' consecutive free slots */
+        int free_count = 0;
+
+        for (i = start; i < start + size; i++)
+        {
+            if (pageAllocList[i] != 0)   // slot is occupied
+            {
+                break;                   // stop checking this range
+            }
+            free_count++;
+        }
+
+        /* We found a perfect contiguous block */
+        if (free_count == size)
+        {
+            return start;
+        }
+    }
+
+    return -1;   // No contiguous free block found
+}
+
 
 /*
  * #ps: Old comments.
@@ -271,33 +332,13 @@ void *mmNewPage(void)
 // --
 
 // Return the virtual address.
+// ( base + (New->id * PageSize)
     return (void *) va;
-    //return (void *) ( base + (New->id * PageSize) );
 
 fail:
     debug_print ("mmNewPage: fail\n");
     panic       ("mmNewPage: fail\n");
     return NULL;
-}
-
-// Allocate single page
-void *mm_alloc_single_page(void)
-{
-    return (void *) mmNewPage();
-}
-
-// Allocate n contiguous pages
-void *mm_alloc_contig_pages(size_t size)
-{
-    debug_print("mm_alloc_contig_pages: [TODO] [FIXME]\n");
-    panic("mm_alloc_contig_pages: [TODO] its a work in progress\n");
-
-    //if (size<=0)
-       //panic("mm_alloc_contig_pages: [FIXME] invalid size");
-      
-    //#todo
-    //return (void *) allocPages(size);
-    return NULL; 
 }
 
 /*
@@ -331,7 +372,7 @@ void *allocPages(size_t size)
     int __slot=0;
 // Página inicial da lista
     struct page_d *pRet; // pagina inicial da lista criada nessa rotina. 
-    struct page_d *pageConductor;
+    struct page_d *pageConductor = NULL;
     struct page_d *p;  //#todo: use page instead of p.
     unsigned long va=0;
     unsigned long pa=0;
@@ -367,12 +408,8 @@ void *allocPages(size_t size)
 // Checando limites
 
 // Invalid size
-    if (size <= 0)
-    {
-        //size = 1;
-        //if debug
-        panic("allocPages: size 0\n");
-        //return NULL;
+    if (size <= 0){
+        return NULL;
     }
 
 // If it is for allocating only one page
@@ -432,9 +469,11 @@ void *allocPages(size_t size)
         __slot++ )
     {
         p = (void *) pageAllocList[__slot];
+        if ((void*) p != NULL)
+            panic("allocPages: p\n");
 
         // Slot livre
-        if ( p == NULL )
+        if (p == NULL)
         {
             // #bugbug
             // Isso pode esgotar o heap do kernel
@@ -447,13 +486,14 @@ void *allocPages(size_t size)
             //printk("#");
             
             p->id = (int) __slot;
-            p->used  = TRUE;
-            p->magic = 1234;
             p->free = FALSE;
             p->locked = FALSE;
 
             // Contador de referências
             p->ref_count = 1;
+
+            p->used = TRUE;
+            p->magic = 1234;
 
             // #fixme
             // Precisamos usar pml4
@@ -483,8 +523,14 @@ void *allocPages(size_t size)
 
             pageAllocList[__slot] = ( unsigned long ) p;
 
-            pageConductor->next = (void *) p;
-            pageConductor = (void *) pageConductor->next;
+            // Linking the pages.
+            if ((void*) pageConductor == NULL){
+                pageConductor = (void *) p;
+                pageConductor->next = NULL;
+            } else if ((void*) pageConductor != NULL){
+                pageConductor->next = (void *) p;
+                pageConductor = (void *) pageConductor->next;
+            }
 
             // #obs:
             // Vamos precisar da estrutura da primeira página alocada.
@@ -519,11 +565,29 @@ void *allocPages(size_t size)
     };
 
 fail:
+
     // #debug
+    // For now its necessary
     debug_print("allocPages: fail\n");
-    //printk   ("allocPages: fail\n");
+    printk     ("allocPages: fail\n");
     panic      ("allocPages: fail\n");
+
     return NULL;
+}
+
+// Allocate single page
+void *mm_alloc_single_page(void)
+{
+    return (void *) mmNewPage();
+}
+
+// Allocate n contiguous pages
+void *mm_alloc_contig_pages(size_t size)
+{
+    if (size <= 0)
+        return NULL;
+      
+    return (void *) allocPages(size);
 }
 
 void *mmAllocPage(void)
@@ -534,9 +598,13 @@ void *mmAllocPage(void)
 // IN: Number of pages
 void *mmAllocPages(size_t size)
 {
+    if (size <= 0)
+        return NULL;
+
 // IN: Number of pages
     return (void*) allocPages(size);
 }
+
 
 // Initializes the list of pages
 // + Initializes the pageAllocList[] list
@@ -556,6 +624,7 @@ void initializeFramesAlloc(void)
         pageAllocList[__slot] = (unsigned long) 0;
     };
 
+// ---------------------------------
 // Create and save the pointer for the first entry,
 // #todo: Maybe it's not necessary.
     p = (void *) kmalloc(sizeof(struct page_d));
@@ -564,13 +633,15 @@ void initializeFramesAlloc(void)
         panic      ("initializeFramesAlloc:\n");
     }
     memset( p, 0, sizeof(struct page_d) );
-    p->used = TRUE;
-    p->magic = 1234;
     p->id = 0;
     p->free = TRUE;  // Free
+    p->used = TRUE;
+    p->magic = 1234;
     p->next = NULL; 
     // ...
     pageAllocList[0] = (unsigned long) p;
+// ---------------------------------
+
 }
 
 

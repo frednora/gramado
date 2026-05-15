@@ -3859,15 +3859,14 @@ wmMouseEvent(
     //static long old_y=0;
 
 // data:
-    unsigned long button_number = 
-        (unsigned long) (long1 & 0xFFFF);
+    unsigned long button_number = (unsigned long) (long1 & 0xFFFF);
     //unsigned long ? = long2;
 
     unsigned long deviceWidth = (unsigned long) screenGetWidth();
     unsigned long deviceHeight = (unsigned long) screenGetHeight();
     deviceWidth  = (unsigned long) (deviceWidth & 0xFFFF);
     deviceHeight = (unsigned long) (deviceHeight & 0xFFFF);
-    if (deviceWidth==0 || deviceHeight==0){
+    if (deviceWidth == 0 || deviceHeight == 0){
         panic("wmMouseEvent: w h\n");
     }
 
