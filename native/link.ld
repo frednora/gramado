@@ -1,4 +1,5 @@
 
+
 OUTPUT_FORMAT("elf64-x86-64")
 ENTRY(main)
 
@@ -7,6 +8,9 @@ ENTRY(main)
 
 SECTIONS
 { 
+    /* Essa aplicação está usando o diretório do processo kernel. */
+    /* Quando tiver seu próprio diretório de páginas o endereço será 0x00401000.*/
+
     .text 0x00201000: 
     {
         code = .; 

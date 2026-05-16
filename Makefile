@@ -28,16 +28,15 @@ __DEP_L2 = native
 L2_COMP     = $(__DEP_L2)/hunter/comp
 # Client-side GUI applications
 L2_WINSHELL = $(__DEP_L2)/farmer/winshell
-
+# 3D demo
+L2_HEAVY    = $(__DEP_L2)/heavy
+# netu
+L2_NETU     = $(__DEP_L3)/netu
 
 # =================================
 # Nomad Pastors
 __DEP_L3 = np
-L3_HEAVY    = $(__DEP_L3)/heavy
-L3_NETU     = $(__DEP_L3)/netu
-L3_SDK      = $(__DEP_L3)/sdk
-L3_SYSUTIL  = $(__DEP_L3)/sysutils
-L3_SYSUTIL2 = $(__DEP_L3)/sysutils2
+L3_CMDS = $(__DEP_L3)/cmds
 
 
 ## =================================
@@ -186,55 +185,53 @@ build-extras:
 # --------
 # heavy
 # 3D game demos
-	@-cp $(L3_HEAVY)/games3d/bin/DEMO00.BIN   $(BASE)/DE/
-#	@-cp $(L3_HEAVY)/games3d/bin/DEMO01.BIN   $(BASE)/DE/
+	@-cp $(L2_HEAVY)/games3d/bin/DEMO00.BIN   $(BASE)/DE/
+#	@-cp $(L2_HEAVY)/games3d/bin/DEMO01.BIN   $(BASE)/DE/
 # ...
 
 # --------
+# cpp00
+# cpp application example
+#	@-cp $(L3_CPP00)/bin/CPP00.BIN  $(BASE)/DE
+
+# --------
 # netu
-	@-cp $(L3_NETU)/core/bin/NET.BIN   $(BASE)/GRAMADO/
-	@-cp $(L3_NETU)/core/bin/NETD.BIN  $(BASE)/GRAMADO/
+	@-cp $(L2_HEAVY)/core/bin/NET.BIN   $(BASE)/GRAMADO/
+	@-cp $(L2_HEAVY)/core/bin/NETD.BIN  $(BASE)/GRAMADO/
+
+
 
 # --------
 # sdk
 
-	@-cp $(L3_SDK)/bin/CAT.BIN       $(BASE)/
-	@-cp $(L3_SDK)/bin/CAT00.BIN     $(BASE)/
+	@-cp $(L3_CMDS)/bin/CAT.BIN       $(BASE)/
+	@-cp $(L3_CMDS)/bin/CAT00.BIN     $(BASE)/
 
 # Experimental commands.
-#	@-cp $(L3_SDK)/bin/FALSE.BIN      $(BASE)/GRAMADO/
-#	@-cp $(L3_SDK)/bin/TRUE.BIN       $(BASE)/GRAMADO/
-#	@-cp $(L3_SDK)/bin/CMP.BIN       $(BASE)/GRAMADO/
-#	@-cp $(L3_SDK)/bin/SHOWFUN.BIN   $(BASE)/GRAMADO/
-#	@-cp $(L3_SDK)/bin/SUM.BIN       $(BASE)/GRAMADO/
-	@-cp $(L3_SDK)/bin/GRAMCNF.BIN     $(BASE)/
-#@-cp $(L3_SDK)/bin/N9.BIN         $(BASE)/GRAMADO/
-#@-cp $(L3_SDK)/bin/N10.BIN        $(BASE)/GRAMADO/
-#@-cp $(L3_SDK)/bin/N11.BIN        $(BASE)/GRAMADO/
-#@-cp $(L3_SDK)/bin/UDPTEST.BIN  $(BASE)/GRAMADO/
+#	@-cp $(L3_CMDS)/bin/FALSE.BIN      $(BASE)/GRAMADO/
+#	@-cp $(L3_CMDS)/bin/TRUE.BIN       $(BASE)/GRAMADO/
+#	@-cp $(L3_CMDS)/bin/CMP.BIN       $(BASE)/GRAMADO/
+#	@-cp $(L3_CMDS)/bin/SHOWFUN.BIN   $(BASE)/GRAMADO/
+#	@-cp $(L3_CMDS)/bin/SUM.BIN       $(BASE)/GRAMADO/
+	@-cp $(L3_CMDS)/bin/GRAMCNF.BIN     $(BASE)/
+#@-cp $(L3_CMDS)/bin/N9.BIN         $(BASE)/GRAMADO/
+#@-cp $(L3_CMDS)/bin/N10.BIN        $(BASE)/GRAMADO/
+#@-cp $(L3_CMDS)/bin/N11.BIN        $(BASE)/GRAMADO/
+#@-cp $(L3_CMDS)/bin/UDPTEST.BIN  $(BASE)/GRAMADO/
 
-# --------
-# sysutils/
+	@-cp $(L3_CMDS)/bin/REBOOT.BIN    $(BASE)/
+	@-cp $(L3_CMDS)/bin/SHUTDOWN.BIN  $(BASE)/
+	@-cp $(L3_CMDS)/bin/UNAME.BIN     $(BASE)/
 
-	@-cp $(L3_SYSUTIL)/bin/REBOOT.BIN    $(BASE)/
-	@-cp $(L3_SYSUTIL)/bin/SHUTDOWN.BIN  $(BASE)/
-	@-cp $(L3_SYSUTIL)/bin/UNAME.BIN     $(BASE)/
+	@-cp $(L3_CMDS)/bin/PUBSH.BIN     $(BASE)/GRAMADO/
+	@-cp $(L3_CMDS)/bin/REBOOT.BIN    $(BASE)/GRAMADO/
+	@-cp $(L3_CMDS)/bin/SH7.BIN       $(BASE)/GRAMADO/
+	@-cp $(L3_CMDS)/bin/SHELL.BIN     $(BASE)/GRAMADO/
+	@-cp $(L3_CMDS)/bin/SHUTDOWN.BIN  $(BASE)/GRAMADO/
 
-	@-cp $(L3_SYSUTIL)/bin/PUBSH.BIN     $(BASE)/GRAMADO/
-	@-cp $(L3_SYSUTIL)/bin/REBOOT.BIN    $(BASE)/GRAMADO/
-	@-cp $(L3_SYSUTIL)/bin/SH7.BIN       $(BASE)/GRAMADO/
-	@-cp $(L3_SYSUTIL)/bin/SHELL.BIN     $(BASE)/GRAMADO/
-	@-cp $(L3_SYSUTIL)/bin/SHUTDOWN.BIN  $(BASE)/GRAMADO/
-
-	@-cp $(L3_SYSUTIL)/bin/PUBSH.BIN     $(BASE)/DE/
-	@-cp $(L3_SYSUTIL)/bin/SHELL.BIN     $(BASE)/DE/
-	@-cp $(L3_SYSUTIL)/bin/SHELL2.BIN    $(BASE)/DE/
-
-
-# --------
-# sysutil2
-# cpp application example
-#	@-cp $(L3_CPP00)/bin/CPP00.BIN  $(BASE)/DE
+	@-cp $(L3_CMDS)/bin/PUBSH.BIN     $(BASE)/DE/
+	@-cp $(L3_CMDS)/bin/SHELL.BIN     $(BASE)/DE/
+	@-cp $(L3_CMDS)/bin/SHELL2.BIN    $(BASE)/DE/
 
 
 

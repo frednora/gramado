@@ -96,15 +96,17 @@ CFLAGS := \
 	
 
 # Libraries
-LIBC     = ../../sdk/alpha/libs/rtl/include/
-LIBCOBJ  = ../../sdk/alpha/libs/rtl/obj
-LIBIO    = ../../sdk/alpha/libs/libio01/include/
-LIBIOOBJ = ../../sdk/alpha/libs/libio01/obj
+LIBC     = ../alpha/libs/rtl/include/
+LIBCOBJ  = ../alpha/libs/rtl/obj
+LIBIO    = ../alpha/libs/libio01/include/
+LIBIOOBJ = ../alpha/libs/libio01/obj
 
 # Objects
-myObjects = crt0.o main.o \
+myObjects = crt0.o \
 ctype.o stdio.o stdlib.o string.o time.o \
-unistd.o termios.o ioctl.o fcntl.o rtl.o libio.o    
+unistd.o termios.o ioctl.o fcntl.o rtl.o libio.o \
+main.o    
+
 
 .PHONY: all all-c cat-link finalize clean
 
@@ -134,7 +136,7 @@ all-c:
 	
 cat-link:
 	@echo "Linking ..."
-	@ld -m elf_x86_64 -T ../../sdk/link.ld -o PUBSH.BIN $(myObjects)    
+	@ld -m elf_x86_64 -T ../link.ld -o PUBSH.BIN $(myObjects)    
 finalize:
 	@cp PUBSH.BIN  ../bin/
 clean:

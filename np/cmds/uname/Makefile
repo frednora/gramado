@@ -22,13 +22,16 @@ CFLAGS = -m64 \
 	-s \
 	-Werror=strict-prototypes    
 
-LIBC    = ../../sdk/alpha/libs/rtl/include/
-LIBCOBJ = ../../sdk/alpha/libs/rtl/obj
+LIBC    = ../alpha/libs/rtl/include/
+LIBCOBJ = ../alpha/libs/rtl/obj
+
 
 # Objects
-myObjects = crt0.o main.o \
+myObjects = crt0.o \
 ctype.o stdio.o stdlib.o string.o time.o \
-unistd.o termios.o ioctl.o fcntl.o rtl.o    
+unistd.o termios.o ioctl.o fcntl.o rtl.o \
+main.o    
+
 
 .PHONY: all all-c cat-link finalize clean
 
@@ -53,7 +56,8 @@ all-c:
 
 cat-link:
 	@echo "Linking ..."
-	@ld -m elf_x86_64 -T ../../sdk/link.ld -o UNAME.BIN $(myObjects)    
+	@ld -m elf_x86_64 -T ../link.ld -o UNAME.BIN $(myObjects)    
+
 finalize:
 	@cp UNAME.BIN  ../bin
 clean:

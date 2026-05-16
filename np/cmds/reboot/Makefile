@@ -1,16 +1,21 @@
-# shutdown
+#reboot command for Gramado OS.
 # 2019 - Created by Fred Nora.
+
+#history:
+#todo:
+#fazer um makefile pra compilar o shell
+#obs: #bugbug tem que arrumas as coisas aqui.
 
 VERSION = 0
 PATCHLEVEL = 0
 SUBLEVEL = 0
 EXTRAVERSION =
-#NAME = shutdown
+#NAME = 
 
 linkFlags = -m elf_x86_64 \
--s -x -static -T ../../sdk/link.ld
+-s -x -static -T ../link.ld
 
-linkTarget = SHUTDOWN.BIN 
+linkTarget = REBOOT.BIN 
 
 
 CFLAGS = -m64 \
@@ -28,16 +33,14 @@ CFLAGS = -m64 \
 	-s \
 	-Werror=strict-prototypes    
 
+LIBC     = ../alpha/libs/rtl/include/
+LIBCOBJ  = ../alpha/libs/rtl/obj
 
-# Libraries
-LIBC     = ../../sdk/alpha/libs/rtl/include/
-LIBCOBJ  = ../../sdk/alpha/libs/rtl/obj
-# Libraries objects
-LIBIO    = ../../sdk/alpha/libs/libio01/include/
-LIBIOOBJ = ../../sdk/alpha/libs/libio01/obj
+LIBIO    = ../alpha/libs/libio01/include/
+LIBIOOBJ = ../alpha/libs/libio01/obj
 
 #Objects
-myObjects = crt0.o main.o qemu.o rtl.o \
+myObjects = crt0.o main.o rtl.o \
 ctype.o stdio.o stdlib.o string.o \
 unistd.o termios.o ioctl.o fcntl.o libio.o    
 
@@ -50,11 +53,6 @@ main.o:
 	@echo CC $@
 	@gcc  -c  main.c  $(CFLAGS) -I $(LIBC) -I $(LIBIO) -o main.o
 all-c:
-
-	@echo "qemu.o"
-	@gcc  -c  qemu.c  $(CFLAGS) -I $(LIBC) -I $(LIBIO) -o qemu.o
-
-# Imports
 	@echo "Importing library ..."
 
 	@cp $(LIBCOBJ)/crt0.o   .
@@ -74,6 +72,7 @@ all-c:
 jackpot-link:
 	@echo "Linking ..."
 	@ld $(linkFlags) -o $(linkTarget) $(myObjects) 
+
 finalize:
 	@cp $(linkTarget)  ../bin
 clean:

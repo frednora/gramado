@@ -1,15 +1,10 @@
 
-
 all:
 
-# 3D demo
-	make -C heavy/
+# POSIX-like commands for eloquent people.
 
-# Network server
-	make -C netu/
+	make -C cmds/
 
-# sdk and sysutils
-	make -C sdk/
-	make -C sysutils/
-	make -C sysutils2/
+clean-all:
+	-rm *.o 
 

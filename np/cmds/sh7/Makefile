@@ -41,13 +41,14 @@ CFLAGS += -fno-omit-frame-pointer
 CFLAGS += -fno-optimize-sibling-calls    
 
 # Libraries
-LIBC     = ../../sdk/alpha/libs/rtl/include/
-LIBCOBJ  = ../../sdk/alpha/libs/rtl/obj
-LIBIO    = ../../sdk/alpha/libs/libio01/include/
-LIBIOOBJ = ../../sdk/alpha/libs/libio01/obj
+LIBC     = ../alpha/libs/rtl/include/
+LIBCOBJ  = ../alpha/libs/rtl/obj
+LIBIO    = ../alpha/libs/libio01/include/
+LIBIOOBJ = ../alpha/libs/libio01/obj
+
 
 # Objects
-myObjects = crt0.o rtl.o main.o \
+myObjects = crt0.o rtl.o \
 ctype.o \
 stdio.o \
 stdlib.o \
@@ -56,7 +57,9 @@ time.o \
 unistd.o \
 fcntl.o \
 termios.o \
-ioctl.o    
+ioctl.o \
+main.o    
+
 
 .PHONY: all all-c cat-link finalize clean
 
@@ -81,7 +84,7 @@ all-c:
 	cp $(LIBCOBJ)/ioctl.o  .
 
 cat-link:
-	ld -m elf_x86_64 -T ../../sdk/link.ld -o SH7.BIN $(myObjects)    
+	ld -m elf_x86_64 -T ../link.ld -o SH7.BIN $(myObjects)    
 finalize:
 	cp SH7.BIN ../bin/
 clean:

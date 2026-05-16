@@ -40,6 +40,15 @@ all:
 #	make -C n11/
 
 
+	make -C reboot/
+	make -C pubsh/
+	make -C sh7/
+	make -C shell/
+	make -C shell2/
+	make -C shutdown/
+	make -C uname/
+
+
 clean:
 	-rm -f *.o 
 clean-all:
