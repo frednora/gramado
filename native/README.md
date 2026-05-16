@@ -1,6 +1,6 @@
-# native 
+# native - Native UI
 
-Thew user mode windowing system.
+This is the default GUI for Gramado OS.
 
 
 ## farmer - Client-side GUI applications

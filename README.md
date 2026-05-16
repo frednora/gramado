@@ -22,15 +22,26 @@ Some extra features are:
 > Documentation for this distribution is still under development.
 > Folder names are subject to change.
 
-## The main folders
+## The core system
 
 ```
 boot/     - Gramado OS bootloader.
 kernel/   - Gramado OS kernel.
 modules/  - Ring 0 loadable kernel modules. (Not dynlinked).
 init/     - The init process.
-native/   - Compositor and client-side GUI applications.
-np/       - Posix-like commands and experiments.
+```
+
+## The UI
+
+```
+native/   - Native UI
+            Compositor and client-side GUI applications.
+```
+
+## The commands and utilities
+
+```
+np/       - Posix-like commands
 ```
 
 ## The extra folders
@@ -66,18 +77,34 @@ modules/
 
 init/
 
-## Where is the display server?
+## Where is the compositor? (display server)
 
-winu/core/ds/ds00/
+native/hunter/comp/comp00/
+
+```
+The compositor is also the display server.
+It is a ring 3 application.
+It is part of the Native UI, the Graphical User Interface.
+```
 
 ## Where are the client-side GUI applications?
 
-apps/
+native/farmer/winshell/
+
+```
+These are the client-side GUI applications for the Native UI.
+It is a ring 3 application.
+It is part of the Native UI, the Graphical User Interface.
+```
 
 ## Where are the POSIX-like command programs?
 
-cmds/
+np/susutils/
 
+```
+These are the basic posix commands.
+It's part of the project 'Nomad Pastors'.
+```
 
 > [!IMPORTANT]
 > Gramado OS kernel is in a pre-alpha state and is only suitable for developers.
