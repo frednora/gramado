@@ -2107,70 +2107,10 @@ void *sci1 (
 
 
 //
-// Switch
+// Not implemented yet
 //
 
-    //if (number == 0)
-        //return NULL;
-
-
-// The display server was not initialized yet.
-    if (DisplayServerInfo.initialized != TRUE){
-        return 4321;
-    }
-
-// #test
-// Only the display server can access this service
-    if (CurrentTID != DisplayServerInfo.tid)
-    {
-        // OUT: Access denied.
-        return 4321;
-    }
-// #test
-// Only the display server can access this service.
-    if (te->pid != DisplayServerInfo.pid)
-    {
-        // OUT: Access denied.
-        return 4321;
-    }
-
-//++
-//-------------------------------------
-// #test
-// #todo: This is a work in progress.
-// Maybe this interrupt can be used 
-// to call the services provided by the first module, mod0.bin.
-// see: mod.c and mod.h.
-
-    unsigned long return_value=0;
-
-    if ((void*) kernel_mod0 == NULL)
-        return NULL;
-    if (kernel_mod0->magic != 1234)
-        return NULL;
-    if (kernel_mod0->initialized != TRUE)
-        return NULL;
-
-
-// Validation
-    if ((void*) kernel_mod0->entry_point == NULL){
-        goto fail;
-    }
-
-// #test
-// Calling the virtual function, and
-// getting the return value.
-
-    return_value = 
-        (unsigned long) kernel_mod0->entry_point(
-            0x81,    // sc? system id.
-            number,  // Reason
-            arg2,    // l2
-            arg3,    // l3
-            arg4 );  // l3
-
-// Done
-    return (void*) return_value;
+    return NULL;
 
 //-------------------------------------
 //--
@@ -3275,70 +3215,12 @@ void *sci3 (
         panic("sci3: te validation\n");
     }
 
+
 //
-// Switch
+// Not implemented yet
 //
 
-    //if (number == 0)
-        //return NULL;
-
-// The display server was not initialized yet.
-    if (DisplayServerInfo.initialized != TRUE){
-        return 4321;
-    }
-
-// #test
-// Only the display server can access this service.
-    if (CurrentTID != DisplayServerInfo.tid)
-    {
-        // OUT: Access denied
-        return 4321;
-    }
-// #test
-// Only the display server can access this service.
-    if (te->pid != DisplayServerInfo.pid)
-    {
-        // OUT: Access denied.
-        return 4321;
-    }
-
-//++
-//-------------------------------------
-// #test
-// #todo: This is a work in progress.
-// Maybe this interrupt can be used 
-// to call the services provided by the first module, mod0.bin.
-// see: mod.c and mod.h.
-
-    unsigned long return_value=0;
-
-    if ((void*) kernel_mod0 == NULL)
-        return NULL;
-    if (kernel_mod0->magic != 1234)
-        return NULL;
-    if (kernel_mod0->initialized != TRUE)
-        return NULL;
-
-
-// Validation
-    if ((void*) kernel_mod0->entry_point == NULL){
-        goto fail;
-    }
-
-// #test
-// Calling the virtual function, and
-// getting the return value.
-
-    return_value = 
-        (unsigned long) kernel_mod0->entry_point(
-            0x83,    // sc? system id.
-            number,  // Reason
-            arg2,    // l2
-            arg3,    // l3
-            arg4 );  // l3
-
-// Done
-    return (void*) return_value;
+    return NULL;
 
 //-------------------------------------
 //--

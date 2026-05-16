@@ -35,48 +35,21 @@ module_crt0 (
     unsigned long param2 = (unsigned long) l2; // long1
     unsigned long param3 = (unsigned long) l3; // long2
     unsigned long param4 = (unsigned long) l4; // long3
-    unsigned long return_value=0;
+    unsigned long return_value = 0;
 
-// #todo
-// sc_id means the id of the syscall used to
-// request services of this module.
-// Just some few values are allowed,
-// because we only have some few syscall interrupts.
-// But we can have some special values indicating that
-// the module was called by the kernel or by another module.
 
-// -----------------------------------------------
-// 0x81 and 0x83: Called by syscalls
-// sc81 and sc83
-    if ( id == 0x81 ||
-         id == 0x83 )
-    {
-        return_value = 
-            (unsigned long) mmain(
-                                id, 
-                                param1, param2, param3, param4 );
-    }
+// If it was not called by the kernel
+// 0xFF is the kernel ID.
 
-// -----------------------------------------------
-// 0xFF: Called by kernel itself
-    if (id == 0xFF)
-    {
-        return_value = 
-            (unsigned long) mmain(
-                                id, 
-                                param1, param2, param3, param4 );
-    }
+    if (id != 0xFF)
+        return 0;
 
-/*
-// Undefined
-    if ( id == 0x00 )
-    {
-        return_value = 
-            (unsigned long) mmain(
-                                id, 
-                                param1, param2, param3, param4 );
-    }
-*/
+//
+// Call module procedure
+//
+
+    return_value = 
+        (unsigned long) mmain( id, param1, param2, param3, param4 );
 
     return (unsigned long) return_value;
 }

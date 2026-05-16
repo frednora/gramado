@@ -215,7 +215,6 @@ static void __initialize_ds_structure(void);
 static void __initialize_server_profiler(void);
 static void __initialize_server_state(void);
 static int __initialize_gui(void);
-static void __initialize_kernel_module(void);
 static int ServerInitialization(void);
 
 // Game loop
@@ -4094,75 +4093,23 @@ static int __initialize_gui(void)
     return 0;
 }
 
-static void __initialize_kernel_module(void)
-{
-
-// ++
-//-------------------
-// Kernel module.
-// Let's initialize the ring0 kernel module called MOD0.BIN.
-// Are we already registered?
-// First of all, at this point the kernel needs to know about the
-// presence of the display server.
-    unsigned long mod_status=0;
-
-    if ((void*) display_server == NULL)
-    {
-        printf ("__initialize_kernel_module: display_server\n");
-        while (1){
-        };
-    }
-    if (display_server->registration_status != TRUE)
-    {
-        printf ("__initialize_kernel_module: registration_status\n");
-        while (1){
-        };
-    }
-
-// Phase 1
-    mod_status = 
-        sc83(  //sc81( 
-        2001,                // Service number 
-        ____FRONTBUFFER_VA,  // Frontbuffer va 
-        ____BACKBUFFER_VA,   // Backbuffer va
-        1234 );              // Signature
-    //printf ("status = {%d}\n", mod_status);
-    if (mod_status != 1234)
-        printf("__initialize_kernel_module: mod_status fail\n");
-
-
-// Phase 2
-    mod_status = 
-        sc83(  //sc81( 
-        2002,             // Service number 
-        __device_width,   // W
-        __device_height,  // H
-        __device_bpp );   // Bits per pixel
-    //printf ("status = {%d}\n", mod_status);
-    if (mod_status != 1234)
-        printf("__initialize_kernel_module: mod_status fail\n");
-
-//-------------------
-// --
-
-    // #debug
-    //printf ("__initialize_kernel_module: #breakpoint\n");
-    //while(1){
-    //};
-}
-
 /*
- *     + Initializes the gws infrastructure.
- *     + Create the background.
- *     + Create the taskbar.
- *     + Register display server as the current display server 
- *       for this desktop.
+ * ServerInitialization:
+ * + Initializes the gws infrastructure.
+ * + Create the background.
+ * + Create the taskbar.
+ * + Register display server as the current display server 
+ *   for this desktop.
  */
+
 static int ServerInitialization(void)
 {
+    int _status = -1;
 
-// ==========================================
-// Starting the initialization phases.
+// ++
+// ============================================================
+// Starting the initialization phases
+
     Initialization.current_phase = 1;
 
     last_dx = 0;
@@ -4224,25 +4171,19 @@ static int ServerInitialization(void)
 // Client support
 //
 
-// Initialize the client list support.
+// Initialize the client list support
     initClientSupport();
 
-// The server is also a client.
+// The server is also a client
     if ((void*) serverClient == NULL){
-        printf("ds00: serverClient\n");
-        while (1){
-        };
-        //exit(0);
+        printf("comp00: serverClient\n");
+        exit(1);
     }
     if ( serverClient->used != TRUE || serverClient->magic != 1234 )
     {
-        printf("ds00: serverClient validation\n");
-        while (1){
-        };
-        //exit(0);
+        printf("comp00: serverClient validation\n");
+        exit(1);
     }
-
-    int _status = -1;
 
 // Register
 // #bugbug
@@ -4261,11 +4202,11 @@ static int ServerInitialization(void)
     _status = (int) registerDS();
     if (_status < 0){
         printf ("Couldn't register the server\n");
-        goto fail;
+        exit(1);
     }
     display_server->registration_status = TRUE;
-
-// ====================================================
+// ============================================================
+// --
 
 // Setup callback.
 // Register this ring3 address as a callback.
@@ -4355,15 +4296,10 @@ static int ServerInitialization(void)
     */
 // ===============
 
-    //gws_show_backbuffer();
-    //while(1){}
     // #debug
+    //gws_show_backbuffer();
     //printf ("fd: %d\n", serverClient->fd);
     //while(1){}
-
-// ------------------------------------
-// Let's initialize the ring0 kernel module called MOD0.BIN.
-    __initialize_kernel_module();
 
     return 0;
 
@@ -4378,29 +4314,21 @@ fail:
 
 /*
  * ServerLoop: 
- *     + Create the server socket.
- *     + bind it.
- *     + Spawn a client process. (Or not).
- *     + Enter in the main loop, waiting for some types of event.
- *       The possible events are: Reading messages from the kernel,
- *       or Reading a socket. At this moment we can send a response. 
- *       It depends on the type of message found in the socket we readed.
+ * + Create the server socket.
+ * + bind it.
+ * + Spawn a client process. (Or not).
+ * + Enter in the main loop, waiting for some types of event.
+ *   The possible events are: Reading messages from the kernel,
+ *   or Reading a socket. At this moment we can send a response. 
+ *   It depends on the type of message found in the socket we readed.
  */
+
 // IN:
 // client_index
 // ...
+
 static int ServerLoop(int client_index)
 {
-
-//==================
-    struct sockaddr server_address;
-    socklen_t addrlen;
-    server_address.sa_family = AF_GRAMADO;
-    server_address.sa_data[0] = 'd';  // Display server
-    server_address.sa_data[1] = 's';
-    addrlen = sizeof(server_address);
-//==================
-
     // #bugbug
     int UseCompositor = TRUE;   // #debug flags
 // Files
@@ -4413,6 +4341,16 @@ static int ServerLoop(int client_index)
 // Buffer
     char buf[32];
     int CanRead = -1;
+
+// ==================
+// We are the Display Server. [d,s].
+    struct sockaddr server_address;
+    server_address.sa_family = AF_GRAMADO;
+    server_address.sa_data[0] = 'd';
+    server_address.sa_data[1] = 's';
+    socklen_t addrlen;
+    addrlen = sizeof(server_address);
+// ==================
 
     IsTimeToQuit = FALSE;
 
@@ -4489,9 +4427,8 @@ static int ServerLoop(int client_index)
         //#todo
     }
 
-// Checkpoint
+// Checkpoints
     Initialization.setup_connection_checkpoint = TRUE;
-
     Initialization.current_phase = 2;
 
 // Child
@@ -4565,7 +4502,6 @@ static int ServerLoop(int client_index)
 // socket que usaremos ... por isso poderemos fecha-lo
 // para assim obtermos um novo da próxima vez.
 
-
 //#todo:
 // No loop precisamos de accept() read() e write();
 
@@ -4609,7 +4545,6 @@ static int ServerLoop(int client_index)
 // Chamamos o accepr soment quando
 // o servidor estiver aceitando conexoes.
 
-
 // ==========================================
 // Finalize the ws structure initialization.
     display_server->status = STATUS_RUNNING;
@@ -4638,8 +4573,11 @@ static int ServerLoop(int client_index)
     demoCurve();
     */
 
+// IPC:
 // Telling the Init thread that the display server is running.
-// IN: Init process'a TID, message code, signature1, signature2
+// IN: 
+// Init process'a TID, message code, signature1, signature2.
+
     rtl_post_to_tid( 0, 44900, 1234, 5678 );
 
     if (server_mode == SERVER_MODE_DEMO)
@@ -4651,7 +4589,7 @@ static int ServerLoop(int client_index)
 // This is the main loop.
 // Let's optimize it, because we'll spend most of our time here.
 
-    unsigned long MainLoopIntervalMS;
+    unsigned long MainLoopIntervalMS=0;
     if (CONFIG_MAIN_LOOP_INTERVAL_MS == 0){
         MainLoopIntervalMS = 16;
     }else{
@@ -4682,17 +4620,19 @@ static int ServerLoop(int client_index)
             wminputGetAndProcessSystemEvents();
         }
 
-        // Get application messages via socket connection.
+        // Get application messages via socket connection
         if (IsAcceptingConnections == TRUE)
         {
-            newconn = (int) accept ( 
-                ____saved_server_fd,
-                (struct sockaddr *) &server_address, 
-                (socklen_t *) addrlen );
+            newconn = 
+                (int) accept ( 
+                    ____saved_server_fd,
+                    (struct sockaddr *) &server_address, 
+                    (socklen_t *) addrlen 
+                );
 
             // Dispatch service.
-            // In Gramado OS, sys_accept get one connected socket in the queue
-            // and put it in fd=31.
+            // In Gramado OS, sys_accept get one connected socket 
+            // in the queue and put it in fd=31.
             if (newconn == 31){
                 dispacher(newconn);
             }
@@ -4710,7 +4650,6 @@ static int ServerLoop(int client_index)
         // Compose the frame or simply update some windows.        
         if (IsComposing == TRUE)
         {               
-
             // Display the desktop components without using the compositor
             if (Compositor.is_composition_disabled == TRUE){
                 comp_display_desktop_components();
@@ -4754,22 +4693,22 @@ static int ServerLoop(int client_index)
 // We will close all the sockets.
 // ...
 
-// Close the server's fd.
-    if (server_fd>0){
-        // #test
+// #test
+// Close the server's fd
+    if (server_fd > 0){
         printf ("ds00: Close th socket\n");
         close(server_fd);
     }
 
-// Telling the Init thread that the display server is running.
-    rtl_post_to_tid(
-        0,      // Init process tid.
-        44901,  // message code
-        1234,
-        5678 );
+// IPC:
+// Telling the Init thread that the display server is running
+// IN: tid, msgcode, signature, signature.
+    rtl_post_to_tid( 0, 44901, 1234, 5678 );
 
+// Done:
 // Return to main().
     return 0;
+
 // If something goes wrong, we jump down here and return to main().
 fail:
     return (int) -1;

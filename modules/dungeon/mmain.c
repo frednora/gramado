@@ -208,9 +208,9 @@ mmain (
 // But we can have some special values indicating that
 // the module was called by the kernel or by another module.
 
-    //#debug: only the kernel
-    //if (sc_id == 0xFF)
-        //printk ("[0xFF]: Called by kernel\n");
+    //#debug: only the kernel for now
+    if (sc_id != 0xFF)
+        goto fail;
 
 // Invalid reason
     if (reason < 0){
