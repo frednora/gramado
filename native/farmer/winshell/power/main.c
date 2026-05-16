@@ -200,80 +200,21 @@ static void update_children(int fd)
 // The background
     lingui_draw_rectangle0_dc (
         dc00,
-        0, 0, wi.cr_width, wi.cr_height,
+        0, 
+        0, 
+        wi.cr_width, 
+        wi.cr_height,
         COLOR_WHITE,
         0  // ROP
     );
-
-/*
-    if ((void*) dc00 != NULL)
-    {
-        libgui_drawchar_dc ( 
-            dc00,
-            200, // _x, 
-            1, //_y,
-            'Y',
-            COLOR_BLUE,
-            COLOR_YELLOW, 
-            0  //_rop_flags 
-        );
-    }
-*/
 
 // Move and redraw buttons
 
     //if (__paint_is_needed != TRUE)
         //return;
 
-/*
-    gws_change_window_position(fd, restart_button, restart_x, button_y);
-    gws_resize_window(fd, restart_button, button_w, button_h);
-    gws_redraw_window(fd, restart_button, TRUE);
-*/
-
-/*
-    gws_change_window_position(fd, shutdown_button, shutdown_x, button_y);
-    gws_resize_window(fd, shutdown_button, button_w, button_h);
-    gws_redraw_window(fd, shutdown_button, TRUE);
-*/
-
-// Refresh main window
-    // gws_refresh_window (fd, main_window);
-
-//------------------------------------------
-// #test
-
-/*
-    // Redraw label text
-    gws_draw_text(
-        fd, main_window, 20, 20, COLOR_BLACK,
-        "Choose an action:"
-    );
-*/
-
-    // Draw the label string inside
-    /*
-    const char *label_chose = "Choose an action: ";
-    libgui_drawstring(
-        wi.left + wi.cr_left +20, 
-        wi.top + wi.cr_top +20, 
-        label_chose,
-        COLOR_BLACK, COLOR_GRAY, 0
-    );
-    */
-
-/*
-    libgui_drawstringblock(
-        wi.left + wi.cr_left +20, 
-        wi.top + wi.cr_top +20, 
-        COLOR_BLACK, //0xFF888888,
-        label_chose,
-        2 );
-*/
-
-
-// Draw a crar inside a shared canvas 
-// represented here by the new dc.
+// ------------------------------------------
+// String
 
     libgui_drawstring_dc(
         dc00,
@@ -302,46 +243,16 @@ static void update_children(int fd)
 
     lingui_draw_rectangle0_dc (
         dc00,
-        MyButton_Restart.left, MyButton_Restart.top, 14, 14,
+        MyButton_Restart.left, 
+        MyButton_Restart.top, 
+        button_w, 
+        button_h,
         COLOR_GRAY,
         0  // ROP
     );
     libgui_drawchar_dc ( 
         dc00, MyButton_Restart.left, MyButton_Restart.top,
         'R', COLOR_YELLOW, COLOR_BLUE, 0 );
-
-/*
-// Draw the fake button
-    libgui_backbuffer_draw_rectangle0(
-        MyButton_Restart.absolute_left, 
-        MyButton_Restart.absolute_top, 
-        MyButton_Restart.width, 
-        MyButton_Restart.height,
-        xCOLOR_GRAY2, 
-        1, 0, FALSE
-    );
-*/
-
-/*
-    // Draw the label string inside
-    const char *label_restart = "RESTART";
-    libgui_drawstring(
-        MyButton_Restart.absolute_left +4, 
-        MyButton_Restart.absolute_top +4, 
-        label_restart,
-        COLOR_BLACK, COLOR_GRAY, 0
-    );
-*/
-
-/*
-// Refresh to show it
-    libgui_refresh_rectangle_via_kernel(
-        MyButton_Restart.absolute_left, 
-        MyButton_Restart.absolute_top, 
-        MyButton_Restart.width, 
-        MyButton_Restart.height
-    );
-*/
 
 // -------------------------------------------------
 // Draw shutdown button
@@ -356,58 +267,18 @@ static void update_children(int fd)
 
     lingui_draw_rectangle0_dc (
         dc00,
-        MyButton_Shutdown.left, MyButton_Shutdown.top, 14, 14,
+        MyButton_Shutdown.left, 
+        MyButton_Shutdown.top, 
+        button_w, 
+        button_h,
         COLOR_GRAY,
         0  // ROP
     );
     libgui_drawchar_dc ( 
         dc00, MyButton_Shutdown.left, MyButton_Shutdown.top,
         'S', COLOR_YELLOW, COLOR_BLUE, 0 );
-
-/*
-// Draw the fake button
-    libgui_backbuffer_draw_rectangle0(
-        MyButton_Shutdown.absolute_left, 
-        MyButton_Shutdown.absolute_top, 
-        MyButton_Shutdown.width, 
-        MyButton_Shutdown.height,
-        xCOLOR_GRAY2,
-        1, 0, FALSE
-    );
-*/
-
-/*
-    // Draw the label string inside
-    const char *label_shutdown = "SHUTDOWN";
-    libgui_drawstring(
-        MyButton_Shutdown.absolute_left +4, 
-        MyButton_Shutdown.absolute_top +4, 
-        label_shutdown,
-        COLOR_BLACK, COLOR_GRAY, 0
-    );
-*/
-
-/*
-// Refresh to show it
-    libgui_refresh_rectangle_via_kernel(
-        MyButton_Shutdown.absolute_left, 
-        MyButton_Shutdown.absolute_top, 
-        MyButton_Shutdown.width, 
-        MyButton_Shutdown.height
-    );
-*/
-
-/*
-// #test
-// Refresh the whole client window.
-    libgui_refresh_rectangle_via_kernel(
-        wi.left + wi.cr_left, 
-        wi.top  + wi.cr_top, 
-        wi.cr_width, 
-        wi.cr_height
-    );
-*/
 }
+
 
 static void set_default_responder(int wid)
 {
@@ -721,7 +592,7 @@ int main(int argc, char *argv[])
     }
 
     //#debug
-    gws_refresh_window(client_fd, main_window);
+    //gws_refresh_window(client_fd, main_window);
 
 /*
 // =============================
@@ -793,26 +664,20 @@ int main(int argc, char *argv[])
         wi.ca_canvas_height,
         wi.ca_canvas_bpp
     );
-    if ((void*)dc00 == NULL)
-    {
-        //printf("power: on dc00\n");
-        //exit(1);
+
+    if ((void*)dc00 == NULL){
+        printf("power: on dc00\n");
+        exit(1);
     }
 
-// #test ok
-// The background
-/*
-    if ((void*)dc00 != NULL)
-    {
-        lingui_draw_rectangle0_dc (
-            dc00,
-            wi.cr_left, wi.cr_top, wi.cr_width, wi.cr_height,
-            COLOR_WHITE,
-            0  // ROP
-        );
-    }
-*/
 
+// bg
+    lingui_draw_rectangle0_dc (
+        dc00,
+        0, 0, wi.cr_width, wi.cr_height,
+        COLOR_WHITE,
+        0  // ROP
+    );    
 
 /*
 // ok
@@ -833,18 +698,16 @@ int main(int argc, char *argv[])
 // Draw a crar inside a shared canvas 
 // represented here by the new dc.
 
-    if ((void*)dc00 != NULL)
-    {
-        libgui_drawstring_dc(
-            dc00,
-            8,
-            8,
-            COLOR_YELLOW,
-            COLOR_BLUE,
-            0, // ROP 
-            "power app: Testing string" 
-        );
-    }
+    libgui_drawstring_dc(
+        dc00,
+        8,
+        8,
+        COLOR_YELLOW,
+        COLOR_BLUE,
+        0, // ROP 
+        "power app: Testing string" 
+    );
+
 
     /*
     if ((void*)dc00 != NULL)
@@ -859,31 +722,6 @@ int main(int argc, char *argv[])
     }
     */
 // ============================================================
-
-
-
-// ============================================================
-// Text
-
-    // Draw the label string inside
-    /*
-    const char *label_chose = "Choose an action: ";
-    libgui_drawstring(
-        wi.left + wi.cr_left +20, 
-        wi.top + wi.cr_top +20, 
-        label_chose,
-        COLOR_BLACK, COLOR_GRAY, 0
-    );
-    */
-
-    /*
-    libgui_drawstringblock(
-        wi.left + wi.cr_left +20, 
-        wi.top + wi.cr_top +20, 
-        COLOR_BLACK, //0xFF888888,
-        label_chose,
-        2 );
-    */
 
 
 // ============================================================
@@ -919,53 +757,22 @@ int main(int argc, char *argv[])
     // MyButton_Restart.state = 0;
 
 // Drawing a fake button
-    if ((void*)dc00 != NULL)
-    {
-       lingui_draw_rectangle0_dc (
-            dc00,
-            MyButton_Restart.left, MyButton_Restart.top, MyButton_Restart.width, MyButton_Restart.height,
-            COLOR_GRAY,
-            0  // ROP
-        );
- 
-        libgui_drawchar_dc ( 
-            dc00, MyButton_Restart.left, MyButton_Restart.top,
-            'R', COLOR_WHITE, COLOR_GRAY, 0 );
-    }
-
-
-/*
-// Draw the fake button
-    libgui_backbuffer_draw_rectangle0(
-        MyButton_Restart.absolute_left, 
-        MyButton_Restart.absolute_top, 
+    lingui_draw_rectangle0_dc (
+        dc00,
+        MyButton_Restart.left, 
+        MyButton_Restart.top, 
         MyButton_Restart.width, 
         MyButton_Restart.height,
-        xCOLOR_GRAY2, 
-        1, 0, FALSE
+        COLOR_GRAY,
+        0  // ROP
     );
-*/
-
-/*
-    // Draw the label string inside
-    const char *label_restart = "RESTART";
-    libgui_drawstring(
-        MyButton_Restart.absolute_left +4, 
-        MyButton_Restart.absolute_top +4, 
-        label_restart,
-        COLOR_BLACK, COLOR_GRAY, 0
+ 
+    libgui_drawchar_dc ( 
+        dc00, 
+        MyButton_Restart.left, 
+        MyButton_Restart.top,
+        'R', COLOR_WHITE, COLOR_GRAY, 0 
     );
-*/
-
-/*
-// Refresh to show it
-    libgui_refresh_rectangle_via_kernel(
-        MyButton_Restart.absolute_left, 
-        MyButton_Restart.absolute_top, 
-        MyButton_Restart.width, 
-        MyButton_Restart.height
-    );
-*/
 
 // ============================================================
 // Create shutdown button
@@ -986,52 +793,22 @@ int main(int argc, char *argv[])
     // Initial state
     // MyButton_Shutdown.state = 0;
 
-/*
-// Draw the fake button
-    libgui_backbuffer_draw_rectangle0(
-        MyButton_Shutdown.absolute_left, 
-        MyButton_Shutdown.absolute_top, 
+    lingui_draw_rectangle0_dc (
+        dc00,
+        MyButton_Shutdown.left, 
+        MyButton_Shutdown.top, 
         MyButton_Shutdown.width, 
         MyButton_Shutdown.height,
-        xCOLOR_GRAY2, 
-        1, 0, FALSE
+        COLOR_GRAY,
+        0  // ROP
     );
-*/
 
-/*
-    // Draw the label string inside
-    const char *label_shutdown = "SHUTDOWN";
-    libgui_drawstring(
-        MyButton_Shutdown.absolute_left +4, 
-        MyButton_Shutdown.absolute_top +4, 
-        label_shutdown,
-        COLOR_BLACK, COLOR_GRAY, 0
+    libgui_drawchar_dc ( 
+        dc00, 
+        MyButton_Shutdown.left, 
+        MyButton_Shutdown.top,
+        'S', COLOR_YELLOW, COLOR_BLUE, 0 
     );
-*/
-
-    if ((void*)dc00 != NULL)
-    {
-       lingui_draw_rectangle0_dc (
-            dc00,
-            MyButton_Shutdown.left, MyButton_Shutdown.top, MyButton_Shutdown.width, MyButton_Shutdown.height,
-            COLOR_GRAY,
-            0  // ROP
-        );
-
-        libgui_drawchar_dc ( 
-            dc00, MyButton_Shutdown.left, MyButton_Shutdown.top,
-            'S', COLOR_YELLOW, COLOR_BLUE, 0 );
-    }
-
-/*
-// Refresh to show it
-    libgui_refresh_rectangle_via_kernel(
-        MyButton_Shutdown.absolute_left, 
-        MyButton_Shutdown.absolute_top, 
-        MyButton_Shutdown.width, 
-        MyButton_Shutdown.height
-    );
-*/
 
 // ---------------------
 
@@ -1043,51 +820,16 @@ int main(int argc, char *argv[])
 // wi.cr_left, wi.cr_top, wi.cr_width, wi.cr_height
 // which describe the client area rectangle of the main window.
 
-/*
-    restart_button = 
-        (int) gws_create_window(
-            client_fd,
-            WT_BUTTON,
-            BS_DEFAULT,
-            1,
-            "Restart",
-            restart_x, button_y,
-            button_w, button_h,
-            main_window, 
-            WS_CHILD,
-           COLOR_GRAY, COLOR_GRAY );
-
-    gws_refresh_window (client_fd, restart_button);
-*/
-
 //
 // Button (Shutdown)
 //
-
-
-/*
-    shutdown_button = 
-        (int) gws_create_window(
-            client_fd,
-            WT_BUTTON,
-            BS_DEFAULT,
-            1,
-            "Shutdown",
-            shutdown_x, button_y,
-            button_w, button_h,
-            main_window, 
-            WS_CHILD,
-            COLOR_GRAY, COLOR_GRAY );
-
-    gws_refresh_window (client_fd, shutdown_button);
-*/
 
 // Set default responder (choose one) 
     //default_responder = restart_button; // Enter will trigger Restart
 
 // Main window: Activate and show.
     gws_set_active( client_fd, main_window );
-    gws_refresh_window(client_fd, main_window);
+    //gws_refresh_window(client_fd, main_window);
 
     //printf("Restart button id = %d\n", restart_button);
     //printf("Shutdown button id = %d\n", shutdown_button);
@@ -1108,6 +850,10 @@ int main(int argc, char *argv[])
 */
 
     int nSysMsg = 0;
+
+//
+// Event loop
+//
 
     while (1)
     {
