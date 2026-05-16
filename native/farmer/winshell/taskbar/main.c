@@ -80,6 +80,9 @@
 
 struct gws_display_d *Display;
 
+
+struct dccanvas_d *dc00;  // shared dc
+
 // #bugbug
 // The display server doesn't know the value we're setting here.
 // So We need to synchronize the value here and the value 
@@ -294,6 +297,9 @@ static int create_desktop_area(int fd);
 static void set_default_responder(int wid);
 static void trigger_default_responder(int fd);
 static void switch_responder(int fd);
+
+
+static void update_clients(int fd);
 
 //==================================
 
@@ -721,6 +727,44 @@ static int __hit_test_icon(unsigned long rel_mx, unsigned long rel_my)
     return (int) -1;
 }
 
+static void update_clients(int fd)
+{
+
+    if (fd<0)
+        return;
+
+    if ((void*)dc00 == NULL)
+        return;
+
+    struct gws_window_info_d wi;
+    gws_get_window_info(
+        fd,
+        main_window,
+        (struct gws_window_info_d *) &wi );
+
+
+// bg for the client area
+    lingui_draw_rectangle0_dc (
+        dc00,
+        0, 0, wi.cr_width, wi.cr_height,
+        COLOR_RED,
+        0  // ROP
+    );
+
+// string
+    libgui_drawstring_dc(
+            dc00,
+            2,
+            2,
+            COLOR_YELLOW,
+            COLOR_BLUE,
+            0, // ROP 
+            "Taskbar" 
+        );
+
+    // ...
+}
+
 static int 
 tbProcedure(
     int fd, 
@@ -748,17 +792,21 @@ tbProcedure(
         //#todo
         // Update the bar and the list of clients.
         case MSG_PAINT:
+
+            update_clients(fd);
+    
             //printf("task.bin: MSG_PAINT\n");
             // #todo
             // We need to update all the clients
             // Create update_clients()
-            gws_redraw_window(fd, main_window, TRUE);
+            //gws_redraw_window(fd, main_window, TRUE);
             //gws_redraw_window(fd, NavigationInfo.button00_window, TRUE);
             //gws_redraw_window(fd, NavigationInfo.button01_window, TRUE);
             //gws_redraw_window(fd, NavigationInfo.button02_window, TRUE);
             // #test
             // New component. (using libgui)
 
+            /*
             // Ddraw using absolute values
             draw_bar_button(
                 MyButton.absolute_left, 
@@ -766,9 +814,10 @@ tbProcedure(
                 MyButton.width, 
                 MyButton.height, 
                 "App", COLOR_WHITE, COLOR_GRAY, TRUE );
+            */
 
             //draw_separator(fd);
-            draw_separator2();
+            //draw_separator2();
 
             //#test
             //#todo
@@ -1160,22 +1209,46 @@ draw_bar_button(
     unsigned int bg_color,
     int show )
 {
+/*
     // Draw the button background
     libgui_backbuffer_draw_rectangle0(
         left, top, width, height,
         bg_color,
         1, 0, FALSE
     );
+*/
 
+// bg for the client area
+    lingui_draw_rectangle0_dc (
+        dc00,
+        left, top, width, height,
+        bg_color,
+        0  // ROP
+    );
+
+// string
+    libgui_drawstring_dc(
+            dc00,
+            2,
+            2,
+            COLOR_YELLOW,
+            COLOR_BLUE,
+            0, // ROP 
+            "Taskbar" 
+        );
+
+
+/*
     // Draw the label string inside
     libgui_drawstring(
         left + 4, top + 4, label,
         fg_color, bg_color, 0
     );
+*/
 
 // Refresh to show it
-    if (show == TRUE)
-        libgui_refresh_rectangle_via_kernel(left, top, width, height);
+    //if (show == TRUE)
+        //libgui_refresh_rectangle_via_kernel(left, top, width, height);
 
     return 0;
 }
@@ -1610,8 +1683,7 @@ int main(int argc, char *argv[])
     gws_set_active( client_fd, main_window );
 
     // #test: Show the window early
-    gws_refresh_window(client_fd, main_window);
-
+    //gws_refresh_window(client_fd, main_window);
 
 // =============================
 // Set this thread and its wproxy as the system shell. The taskbar.
@@ -1640,6 +1712,41 @@ int main(int argc, char *argv[])
 
     sc80( 48, &m[0], &m[0], &m[0] );
 
+
+// ====================================
+
+// After creating main_window
+    struct gws_window_info_d wi;
+    gws_get_window_info(
+        client_fd,
+        main_window,
+        (struct gws_window_info_d *) &wi );
+
+    dc00 = (struct dccanvas_d *) libgui_create_dc(
+        wi.ca_canvas_base_address,
+        wi.ca_canvas_width,
+        wi.ca_canvas_height,
+        wi.ca_canvas_bpp
+    );
+    if ((void*)dc00 == NULL)
+    {
+        //printf("power: on dc00\n");
+        //exit(1);
+    }
+
+// #test ok
+// The background
+    if ((void*)dc00 != NULL)
+    {
+        /*
+        lingui_draw_rectangle0_dc (
+            dc00,
+            wi.cr_left, wi.cr_top, wi.cr_width, wi.cr_height,
+            COLOR_RED,
+            0  // ROP
+        );
+        */
+    }
 
 // ========================
 // Create button based on the taskbar dimensions
@@ -1715,18 +1822,23 @@ int main(int argc, char *argv[])
 
 // Draw the new component (using lingui)
 // Using absolute values
-    draw_bar_button(
+/*
+    draw_bar_button (
         MyButton.absolute_left, 
         MyButton.absolute_top,
         MyButton.width, 
         MyButton.height, 
+        "App", COLOR_WHITE, COLOR_GRAY, TRUE );
+*/
+    draw_bar_button (
+        0, 0, wi.cr_width, wi.cr_height,
         "App", COLOR_WHITE, COLOR_GRAY, TRUE );
 
 // ========================
 // Create separator
 
     //draw_separator(client_fd);
-    draw_separator2();
+    //draw_separator2();
 
 /*
 // Onde separator
@@ -1848,7 +1960,7 @@ int main(int argc, char *argv[])
     //gws_async_command(client_fd,6,FALSE,0);
 
 // Refresh
-    gws_refresh_window(client_fd, main_window);
+    //gws_refresh_window(client_fd, main_window);
 
 //
 // Client

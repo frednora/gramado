@@ -194,19 +194,16 @@ static void update_children(int fd)
     // printf("sh_flags: %x\n", wi.sh_flags);
     // __sh_flags = (unsigned long) wi.sh_flags;
 
+    if ((void*)dc00 == NULL)
+        return;
 
-// #test 
 // The background
-    if ((void*)dc00 != NULL)
-    {
-        lingui_draw_rectangle0_dc (
-            dc00,
-            wi.cr_left, wi.cr_left, wi.cr_width, wi.cr_height,
-            COLOR_WHITE,
-            0  // ROP
-        );
-    }
-
+    lingui_draw_rectangle0_dc (
+        dc00,
+        0, 0, wi.cr_width, wi.cr_height,
+        COLOR_WHITE,
+        0  // ROP
+    );
 
 /*
     if ((void*) dc00 != NULL)
@@ -222,7 +219,6 @@ static void update_children(int fd)
         );
     }
 */
-
 
 // Move and redraw buttons
 
@@ -279,19 +275,15 @@ static void update_children(int fd)
 // Draw a crar inside a shared canvas 
 // represented here by the new dc.
 
-    if ((void*)dc00 != NULL)
-    {
-        libgui_drawstring_dc(
-            dc00,
-            8,
-            8,
-            COLOR_YELLOW,
-            COLOR_BLUE,
-            0, // ROP 
-            "power app: Testing string" 
-        );
-    }
-
+    libgui_drawstring_dc(
+        dc00,
+        8,
+        8,
+        COLOR_YELLOW,
+        COLOR_BLUE,
+        0, // ROP 
+        "power app: Testing string" 
+    );
 
 //
 // Support for button positions and dimensions
@@ -308,19 +300,15 @@ static void update_children(int fd)
     MyButton_Restart.absolute_left = wi.left + wi.cr_left + MyButton_Restart.left;
     MyButton_Restart.absolute_top = wi.top + wi.cr_top + MyButton_Restart.top;
 
-    if ((void*)dc00 != NULL)
-    {
-       lingui_draw_rectangle0_dc (
-            dc00,
-            MyButton_Restart.left, MyButton_Restart.top, 14, 14,
-            COLOR_GRAY,
-            0  // ROP
-        );
-
-        libgui_drawchar_dc ( 
-            dc00, MyButton_Restart.left, MyButton_Restart.top,
-            'R', COLOR_YELLOW, COLOR_BLUE, 0 );
-    }
+    lingui_draw_rectangle0_dc (
+        dc00,
+        MyButton_Restart.left, MyButton_Restart.top, 14, 14,
+        COLOR_GRAY,
+        0  // ROP
+    );
+    libgui_drawchar_dc ( 
+        dc00, MyButton_Restart.left, MyButton_Restart.top,
+        'R', COLOR_YELLOW, COLOR_BLUE, 0 );
 
 /*
 // Draw the fake button
@@ -366,19 +354,15 @@ static void update_children(int fd)
     MyButton_Shutdown.absolute_left = wi.left + wi.cr_left + MyButton_Shutdown.left;
     MyButton_Shutdown.absolute_top = wi.top + wi.cr_top + MyButton_Shutdown.top;
 
-    if ((void*)dc00 != NULL)
-    {
-       lingui_draw_rectangle0_dc (
-            dc00,
-            MyButton_Shutdown.left, MyButton_Shutdown.top, 14, 14,
-            COLOR_GRAY,
-            0  // ROP
-        );
-
-        libgui_drawchar_dc ( 
-            dc00, MyButton_Shutdown.left, MyButton_Shutdown.top,
-            'S', COLOR_YELLOW, COLOR_BLUE, 0 );
-    }
+    lingui_draw_rectangle0_dc (
+        dc00,
+        MyButton_Shutdown.left, MyButton_Shutdown.top, 14, 14,
+        COLOR_GRAY,
+        0  // ROP
+    );
+    libgui_drawchar_dc ( 
+        dc00, MyButton_Shutdown.left, MyButton_Shutdown.top,
+        'S', COLOR_YELLOW, COLOR_BLUE, 0 );
 
 /*
 // Draw the fake button
@@ -705,7 +689,7 @@ int main(int argc, char *argv[])
     // The syscall is firing and the body of the handler in ring 0 is working, 
     // but its not returning ro the caller here.
 
-    syscall3(999, 0, 0, 0);  // Invalid syscall number for testing
+    //syscall3(999, 0, 0, 0);  // Invalid syscall number for testing
 
     //asm ("int $3 \n");
 
@@ -817,15 +801,17 @@ int main(int argc, char *argv[])
 
 // #test ok
 // The background
+/*
     if ((void*)dc00 != NULL)
     {
         lingui_draw_rectangle0_dc (
             dc00,
-            wi.cr_left, wi.cr_left, wi.cr_width, wi.cr_height,
+            wi.cr_left, wi.cr_top, wi.cr_width, wi.cr_height,
             COLOR_WHITE,
             0  // ROP
         );
     }
+*/
 
 
 /*

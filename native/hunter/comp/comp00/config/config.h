@@ -41,9 +41,10 @@
 #define CONFIG_TEST_SPARE_BUFFER  0
 
 // #test
-// Disable or not the composition feature
+// Disable or not the composition feature.
+// Now we're going full to this feature and we will never come back.
 // #ps: Maybe it still depends on the CONFIG_TEST_SPARE_BUFFER flag.
-#define CONFIG_DISABLE_COMPOSITION  1
+#define CONFIG_DISABLE_COMPOSITION  0
 
 
 // Target interval (in milliseconds) for each iteration of the main loop.

@@ -23,6 +23,8 @@
 // Global display pointer
 struct gws_display_d *Display;
 
+struct dccanvas_d *dc00;  // shared dc
+
 struct button_info_d
 {
     int button_id;
@@ -258,19 +260,20 @@ static void update_children(int fd)
         COLOR_BLACK, COLOR_GRAY, 0
     );
     */
+
+/*
     libgui_drawstringblock(
         frame_left + cr_left + 20,
         frame_top  + cr_top  + label_y,
         COLOR_BLACK, //0xFF888888,
         label_chose,
         2 );
-
+*/
 
     // Metrics block
     draw_memory_metrics(fd, metrics_x, metrics_y, line_h);
 
 // Move/resize/redraw buttons
-
 
 
 // =====================================
@@ -298,6 +301,7 @@ static void update_children(int fd)
 // -------------------------------------------------------
 // Refresh button
 
+/*
     libgui_backbuffer_draw_rectangle0(
         MyButton_Refresh.absolute_left, 
         MyButton_Refresh.absolute_top, 
@@ -306,7 +310,6 @@ static void update_children(int fd)
         xCOLOR_GRAY2, 
         1, 0, FALSE
     );
-
     // Draw the label string inside
     const char *label_refresh = "REFRESH";
     libgui_drawstring(
@@ -315,7 +318,6 @@ static void update_children(int fd)
         label_refresh,
         COLOR_BLACK, COLOR_GRAY, 0
     );
-
 // Refresh to show it
     libgui_refresh_rectangle_via_kernel(
         MyButton_Refresh.absolute_left, 
@@ -323,6 +325,26 @@ static void update_children(int fd)
         MyButton_Refresh.width, 
         MyButton_Refresh.height
     );
+*/
+
+// Drawing a fake button
+    if ((void*)dc00 != NULL)
+    {
+       lingui_draw_rectangle0_dc (
+            dc00,
+            MyButton_Refresh.left, 
+            MyButton_Refresh.top, 
+            MyButton_Refresh.width, 
+            MyButton_Refresh.height,
+            COLOR_GRAY,
+            0  // ROP
+        );
+        libgui_drawchar_dc ( 
+            dc00, 
+            MyButton_Refresh.left +2, 
+            MyButton_Refresh.top +2,
+            'R', COLOR_WHITE, COLOR_GRAY, 0 );
+    }
 
 
 // =====================================
@@ -346,7 +368,7 @@ static void update_children(int fd)
     //gws_redraw_window(fd, close_button, TRUE);
 
 
-
+/*
     libgui_backbuffer_draw_rectangle0(
         MyButton_Close.absolute_left, 
         MyButton_Close.absolute_top, 
@@ -355,7 +377,6 @@ static void update_children(int fd)
         xCOLOR_GRAY2, 
         1, 0, FALSE
     );
-
     // Draw the label string inside
     const char *label_close = "CLOSE";
     libgui_drawstring(
@@ -364,7 +385,6 @@ static void update_children(int fd)
         label_close,
         COLOR_BLACK, COLOR_GRAY, 0
     );
-
 // Refresh to show it
     libgui_refresh_rectangle_via_kernel(
         MyButton_Close.absolute_left, 
@@ -372,6 +392,26 @@ static void update_children(int fd)
         MyButton_Close.width, 
         MyButton_Close.height
     );
+*/
+
+// Drawing a fake button
+    if ((void*)dc00 != NULL)
+    {
+       lingui_draw_rectangle0_dc (
+            dc00,
+            MyButton_Close.left, 
+            MyButton_Close.top, 
+            MyButton_Close.width, 
+            MyButton_Close.height,
+            COLOR_GRAY,
+            0  // ROP
+        );
+        libgui_drawchar_dc ( 
+            dc00, 
+            MyButton_Close.left +2, 
+            MyButton_Close.top +2,
+            'R', COLOR_WHITE, COLOR_GRAY, 0 );
+    }
 
 
     // Optional: ensure final composite
@@ -646,7 +686,7 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    gws_refresh_window(client_fd, main_window);
+    //gws_refresh_window(client_fd, main_window);
 
 
 // -- CLient Area ---------------------
@@ -678,6 +718,26 @@ int main(int argc, char *argv[])
     sc80( 48, &m[0], &m[0], &m[0] );
 
 
+// ================================================
+
+// After creating main_window (second time)
+    struct gws_window_info_d wi;
+    gws_get_window_info(
+        client_fd,
+        main_window,
+        (struct gws_window_info_d *) &wi );
+
+
+    dc00 = (struct dccanvas_d *) libgui_create_dc(
+        wi.ca_canvas_base_address,
+        wi.ca_canvas_width,
+        wi.ca_canvas_height,
+        wi.ca_canvas_bpp
+    );
+
+// ================================================
+
+
     // Initial label (will be redrawn in paint anyway)
     // gws_draw_text( client_fd, main_window, 
         // 20, 20, COLOR_BLACK, "System Memory Status:");
@@ -695,12 +755,14 @@ int main(int argc, char *argv[])
     );
     */
 
+/*
     libgui_drawstringblock(
         frame_left + cr_left + 20,
         frame_top  + cr_top  + 20,
         COLOR_BLACK, //0xFF888888,
         label_chose,
         2 );
+*/
 
 
     // Button baseline sizes
@@ -752,6 +814,7 @@ int main(int argc, char *argv[])
 // -------------------------------------------------------
 // Refresh button
 
+    /*
     libgui_backbuffer_draw_rectangle0(
         MyButton_Refresh.absolute_left, 
         MyButton_Refresh.absolute_top, 
@@ -760,7 +823,6 @@ int main(int argc, char *argv[])
         xCOLOR_GRAY2, 
         1, 0, FALSE
     );
-
     // Draw the label string inside
     const char *label_refresh = "REFRESH";
     libgui_drawstring(
@@ -769,7 +831,29 @@ int main(int argc, char *argv[])
         label_refresh,
         COLOR_BLACK, COLOR_GRAY, 0
     );
+    */
 
+// Drawing a fake button
+    if ((void*)dc00 != NULL)
+    {
+       lingui_draw_rectangle0_dc (
+            dc00,
+            MyButton_Refresh.left, 
+            MyButton_Refresh.top, 
+            MyButton_Refresh.width, 
+            MyButton_Refresh.height,
+            COLOR_GRAY,
+            0  // ROP
+        );
+        libgui_drawchar_dc ( 
+            dc00, 
+            MyButton_Refresh.left +2, 
+            MyButton_Refresh.top +2,
+            'R', COLOR_WHITE, COLOR_GRAY, 0 );
+    }
+
+
+/*
 // Refresh to show it
     libgui_refresh_rectangle_via_kernel(
         MyButton_Refresh.absolute_left, 
@@ -777,7 +861,7 @@ int main(int argc, char *argv[])
         MyButton_Refresh.width, 
         MyButton_Refresh.height
     );
-
+*/
 
 // -------------------------------------------------------
 // Close button
@@ -810,7 +894,7 @@ int main(int argc, char *argv[])
     gws_refresh_window(client_fd, close_button);
 */
 
-
+/*
     libgui_backbuffer_draw_rectangle0(
         MyButton_Close.absolute_left, 
         MyButton_Close.absolute_top, 
@@ -828,7 +912,6 @@ int main(int argc, char *argv[])
         label_close,
         COLOR_BLACK, COLOR_GRAY, 0
     );
-
 // Refresh to show it
     libgui_refresh_rectangle_via_kernel(
         MyButton_Close.absolute_left, 
@@ -836,15 +919,33 @@ int main(int argc, char *argv[])
         MyButton_Close.width, 
         MyButton_Close.height
     );
+*/
 
-
+// Drawing a fake button
+    if ((void*)dc00 != NULL)
+    {
+       lingui_draw_rectangle0_dc (
+            dc00,
+            MyButton_Close.left, 
+            MyButton_Close.top, 
+            MyButton_Close.width, 
+            MyButton_Close.height,
+            COLOR_GRAY,
+            0  // ROP
+        );
+        libgui_drawchar_dc ( 
+            dc00, 
+            MyButton_Close.left +2, 
+            MyButton_Close.top +2,
+            'R', COLOR_WHITE, COLOR_GRAY, 0 );
+    }
 
 // Default responder
     //set_default_responder(refresh_button);
 
 // Main window
     gws_set_active(client_fd, main_window);
-    gws_refresh_window(client_fd, main_window);
+    //gws_refresh_window(client_fd, main_window);
 
 // ================================
 // Event loop
