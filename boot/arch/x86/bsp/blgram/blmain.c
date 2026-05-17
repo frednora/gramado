@@ -53,24 +53,6 @@ static unsigned int system_type = 0;
 
 
 //
-// GRAMADO/ (Normal system)
-//
-
-// Load this one
-const char *image_pathname = "/GRAMADO/KERNEL.BIN";
-// or try this one. (BACKUP)
-const char *image_default_pathname = "/GRAMADO/KRNL.BIN";
-
-//
-// DE/ (Desktop Environment)
-//
-
-// Load this one
-const char *image_pathname_de = "/DE/KERNEL.BIN";
-// or try this one. (BACKUP)
-const char *image_default_pathname_de = "/DE/KRNL.BIN";
-
-//
 // globals
 //
 
@@ -163,9 +145,6 @@ bl_clean_memory(
     unsigned long start_address, 
     unsigned long end_address );
 
-// Kernel image
-static int bl_load_kernel_image(void);
-static int bl_load_kernel_image_for_de(void);
 
 // Menu
 static void bl_show_menu(void);
@@ -433,91 +412,6 @@ bl_clean_memory(
     };
 }
 
-
-//
-// $
-// LOAD KERNEL IMAGE
-//
-
-/*
- * bl_load_kernel_image_for_de: 
- *     It loads the kernel image at 0x00100000.
- *     The entry point is at 0x00101000.
- */ 
-// #todo
-// This way can chose the filename from a
-// configuration file.
-// This routine will try to load the default filename
-// if the provide name fail.
-// This routine will build the pathname
-// to search in the default folder.
-static int bl_load_kernel_image_for_de(void)
-{
-// Called by bl_main().
-
-    int Status = -1;
-
-// #bugbug
-// Precisamos que essa rotina retorne
-// para termos a change de inicializarmos o
-// rescue shell. Mas acontece que por enquanto
-// essa função aborta ao primeiro sinal de perigo.
-// See: loader.c
-
-    Status = 
-        (int) elfLoadKernelImage(
-                image_pathname_de, 
-                image_default_pathname_de );
-    if (Status < 0){
-        printf ("bl_load_kernel_image_for_de: on elfLoadKernelImage()\n");
-        goto fail;
-    }
-
-    return (int) Status;  // OK
-
-fail:
-    refresh_screen();
-    return (int) (-1);
-}
-
-/*
- * bl_load_kernel_image: 
- *     It loads the kernel image at 0x00100000.
- *     The entry point is at 0x00101000.
- */ 
-// #todo
-// This way can chose the filename from a
-// configuration file.
-// This routine will try to load the default filename
-// if the provide name fail.
-// This routine will build the pathname
-// to search in the default folder.
-static int bl_load_kernel_image(void)
-{
-// Called by bl_main().
-
-    int Status = -1;
-
-// #bugbug
-// Precisamos que essa rotina retorne
-// para termos a change de inicializarmos o
-// rescue shell. Mas acontece que por enquanto
-// essa função aborta ao primeiro sinal de perigo.
-// See: loader.c
-
-    Status = (int) elfLoadKernelImage(image_pathname,image_default_pathname);
-    if (Status < 0){
-        printf ("bl_load_kernel_image: elfLoadKernelImage fail\n");
-        goto fail;
-    }
-
-    // OK
-    return (int) Status;
-
-fail:
-    refresh_screen();
-    return (int) (-1);
-}
 
 //
 // $
@@ -852,21 +746,33 @@ void bl_main(void)
     refresh_screen();
 #endif  
 
-// Initialize the de kernel environment.
-// #todo:
-// At this moment we need to update the bootblock
-// to tell the kernel that we're loading him from a new perpective.
-    if (initialize_de == TRUE){
-        printf("bl_main: Initializing de kernel\n");
-        refresh_screen();
-        Status = bl_load_kernel_image_for_de();
+//
+// Load image
+//
+   
+// Here we need to consider the target os.
+    unsigned int TargetPlatform = TARGET_PLATFORM;
 
-// Initialize the normal kernel environment.
-    }else{
-        Status = bl_load_kernel_image();
+    if (TargetPlatform == __TARGET_PLATFORM_GRAMADO){
+
+        // See: gramldr.c
+        Status = (int) gramado_load_kernel_image();
+
+    //} else if (TargetPlatform == __TARGET_PLATFORM_XXXX){
+    // ...
+
+    } else {
+
+        printf("bl: Invalid TargetPlatform\n");
+        refresh_screen();
+        while (1){
+            asm("cli");
+            asm("hlt");
+        };
+
     }
 
-    if (Status<0)
+    if (Status < 0)
     {
         // Calling the emergency shell.
         bl_menu_loop();
@@ -875,7 +781,7 @@ void bl_main(void)
             asm("cli");
             asm("hlt");
         };
-         //goto run_rescue_shell;
+        //goto run_rescue_shell;
     }
 
     //printf ("bl: breakpoint\n");

@@ -2,6 +2,17 @@
 // Configuration file for the 32bit boot loader.
 // Created by Fred Nora.
 
+
+//
+// Target platform
+//
+
+#define __TARGET_PLATFORM_GRAMADO  1000
+#define __TARGET_PLATFORM_XXXX     2000
+#define TARGET_PLATFORM  __TARGET_PLATFORM_GRAMADO
+
+
+
 //
 // Debug flag.
 //

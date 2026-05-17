@@ -53,7 +53,7 @@ myIncludes = -I ./
 
 # Objects 
 myObjects = head.o blmain.o globals.o \
-loader.o init.o ports.o x86.o \
+loader.o gramldr.o init.o ports.o x86.o \
 stdio.o stdlib.o string.o \
 pages.o heap.o \
 pci.o \
@@ -91,6 +91,9 @@ bl-x86:
 # fs
 	$(CC) -c fs/fs.c      $(myIncludes) $(CFLAGS) -o fs.o
 	$(CC) -c fs/loader.c  $(myIncludes) $(CFLAGS) -o loader.o
+
+# osdep
+	$(CC) -c osdep/gramado/gramldr.c  $(myIncludes) $(CFLAGS) -o gramldr.o
 
 # libc
 	$(CC) -c libs/stdio.c  $(myIncludes) $(CFLAGS) -o stdio.o
