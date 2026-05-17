@@ -299,13 +299,14 @@ fb_BackBufferPutpixel (
 // raster operation. rasterization.
     // unsigned long rop;
 
-// 2MB limit
-// Our buffer size.
-// 2mb is the limit for 64bit full pagetable.
-// #bubug: Não fazer multilicações
-//MaxOffset = (int) (1024*10124*4);
-//MaxOffset = (int) 0x00400000;
-    MaxOffset = (int) 0x00200000;  // 2MB
+
+// #ps: 
+// Actually our new limitation for backbuffer is 5*2 MB
+// and for frontbuffer is 6 MB.
+
+    //MaxOffset = (int) 0x00200000;  // 2MB
+    MaxOffset = (int) 0x00400000;    // New limitation
+
 
     char b, g, r, a;
     b = (color & 0xFF);
@@ -367,10 +368,15 @@ fb_BackBufferPutpixel (
 
 // #todo
 // Debug
+// #test:
+// We are facing this breakpoint when testing the resolution
+// 1024x768. That can be activated using the command bootp2
+// on 'boot manager'. GRAMBM.
+
     if (tmpOffset >= MaxOffset)
     {
         printf ("fb_BackBufferPutpixel: MaxOffset\n");
-        //printf ("tmpOffset=%x\n",tmpOffset);
+        //printf ("tmpOffset = %x\n",tmpOffset);
         //printf ("x=%d\n",x);
         //printf ("y=%d\n",y);
         //printf ("width=%d\n",width);
