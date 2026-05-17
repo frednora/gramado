@@ -15,6 +15,10 @@
 ; See:
 ; x64cont.c
 
+; #bugbug
+; ok, These global variables are used for saving the trap frame
+; only by the BSP processor.
+
 extern _contextSS        ; User Mode.
 extern _contextRSP       ; User Mode.
 extern _contextRFLAGS    ; User Mode.

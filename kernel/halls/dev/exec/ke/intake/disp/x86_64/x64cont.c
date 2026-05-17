@@ -17,6 +17,11 @@ int gszLastStackFrame=5;
 // #importante
 // Algumas poucas rotinas vão importar essas variáveis.
 
+
+// #bugbug
+// ok, These global variables are used for saving the trap frame
+// only by the BSP processor.
+
 unsigned long contextSS=0;        // User mode.
 unsigned long contextRSP=0;       // User mode.
 unsigned long contextRFLAGS=0; 
@@ -72,7 +77,7 @@ void arch_save_context(int lapic_info_id)
     struct thread_d  *t;
     int __lapic_info_id = lapic_info_id;
 
-// #debug:
+// #debug: Provisory
 // Only the BSP processor can save the context for now
     if (__lapic_info_id != 0){
         panic("arch_save_context: #todo Not BSP\n");
@@ -131,12 +136,31 @@ void arch_save_context(int lapic_info_id)
             CurrentTID );
         goto fail1;
     }
-    if ( t->used != TRUE || t->magic != 1234 ){
+    if ( t->used != TRUE || t->magic != 1234 )
+    {
         printk ("arch_save_context: [ERROR] Validation CurrentTID={%d}\n",
             CurrentTID );
         goto fail1;
     }
 
+
+// -------------------------------------------------
+// #test
+// #bugbug
+// Is this thread running in the right processor?
+// #todo: It needs to fit: The cpu id when associated
+// with the thread and the cpu id that the current thread is running into.
+
+/*
+    if (t->current_processor != __lapic_info_id)
+    {
+        printk ("arch_save_context: #test Wrong t->current_processor\n");
+        goto fail1;
+    }
+*/
+
+
+// -------------------------------------------------
 // Fill the structure.
 
 // #todo
@@ -174,7 +198,7 @@ void arch_save_context(int lapic_info_id)
     t->context.r14 = (unsigned long) contextr14[0];
     t->context.r15 = (unsigned long) contextr15[0];
 
-// Save fpu stuff.
+// Save fpu stuff
 // #ps 
 // Byte by byte. We can do that in a better way.
     for (i=0; i<512; i++){
@@ -337,6 +361,13 @@ void arch_restore_context(int lapic_info_id)
         printk("arch_restore_context error: t validation\n");
         goto fail1;
     }
+
+
+/*
+// #todo
+    t->current_processor = ?
+*/
+
 
 //
 // Restore
