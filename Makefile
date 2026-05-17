@@ -5,7 +5,9 @@
 # Linking on ld 2.38
 
 # Building full distributions into this directory.
-DISTROS = distros
+DISTROS = xdistros
+DOCS    = xdocs
+TOOLS   = xtools
 
 # Target directory for the binaries.
 # The binaries compiled here will go to this directory.
@@ -22,21 +24,44 @@ BASE = $(DISTROS)/base00
 
 
 # =================================
-# Windowing system
+# Native UI
+
 __DEP_L2 = native
+
 # Compositor / Display servers
 L2_COMP     = $(__DEP_L2)/hunter/comp
+
 # Client-side GUI applications
 L2_WINSHELL = $(__DEP_L2)/farmer/winshell
-# 3D demo
-L2_HEAVY    = $(__DEP_L2)/heavy
-# netu
-L2_NETU     = $(__DEP_L3)/netu
 
 # =================================
-# Nomad Pastors
-__DEP_L3 = np
-L3_CMDS = $(__DEP_L3)/cmds
+# Net
+
+__DEP_L3 = net 
+# netu
+L3_NETU     = $(__DEP_L3)/netu
+
+
+# =================================
+# n1 - 3D work force
+__DEP_L4 = n1
+
+# 3D demo 
+# (But we can extract this function and build a 3D library)
+L4_HEAVY = $(__DEP_L4)/heavy
+
+
+# =================================
+# n2 - cpp experiments
+__DEP_L5 = n2
+L5_CPP00 = $(__DEP_L5)/cpp00
+
+
+# =================================
+# Nomad Pastors - POSIX-like commands
+
+__DEP_LZ = np
+LZ_CMDS = $(__DEP_LZ)/cmds
 
 
 ## =================================
@@ -145,11 +170,11 @@ build-gramado-os:
 	@cp modules/bin/DUNGEON.BIN  $(BASE)/
 	@cp modules/bin/DUNGEON.BIN  $(BASE)/GRAMADO
 
-
-	@$(MAKE) -C init/
+# The init process
+	@$(MAKE) -C moon/
 
 # Copy the init process.
-	@cp init/src/bin/INIT.BIN  $(BASE)/
+	@cp moon/src/bin/INIT.BIN  $(BASE)/
 
 	@echo "~build-gramado-os end?"
 
@@ -177,61 +202,61 @@ build-extras:
 	@cp $(L2_WINSHELL)/assets/themes/theme01/*.BMP  $(BASE)/DE
 
 
-# __DEP_L3::
-	@echo "Compiling __DEP_L3"
-	@make -C $(__DEP_L3)/
+# ?::
+#	@echo "Compiling ?"
+#	@make -C $(?)/
 
 
 # --------
 # heavy
 # 3D game demos
-	@-cp $(L2_HEAVY)/games3d/bin/DEMO00.BIN   $(BASE)/DE/
-#	@-cp $(L2_HEAVY)/games3d/bin/DEMO01.BIN   $(BASE)/DE/
+	@-cp $(L4_HEAVY)/games3d/bin/DEMO00.BIN   $(BASE)/DE/
+#	@-cp $(L4_HEAVY)/games3d/bin/DEMO01.BIN   $(BASE)/DE/
 # ...
 
 # --------
 # cpp00
 # cpp application example
-#	@-cp $(L3_CPP00)/bin/CPP00.BIN  $(BASE)/DE
+#	@-cp $(L5_CPP00)/bin/CPP00.BIN  $(BASE)/DE
 
 # --------
 # netu
-	@-cp $(L2_HEAVY)/core/bin/NET.BIN   $(BASE)/GRAMADO/
-	@-cp $(L2_HEAVY)/core/bin/NETD.BIN  $(BASE)/GRAMADO/
+	@-cp $(L3_NETU)/core/bin/NET.BIN   $(BASE)/GRAMADO/
+	@-cp $(L3_NETU)/core/bin/NETD.BIN  $(BASE)/GRAMADO/
 
 
 
 # --------
 # sdk
 
-	@-cp $(L3_CMDS)/bin/CAT.BIN       $(BASE)/
-	@-cp $(L3_CMDS)/bin/CAT00.BIN     $(BASE)/
+	@-cp $(LZ_CMDS)/bin/CAT.BIN       $(BASE)/
+	@-cp $(LZ_CMDS)/bin/CAT00.BIN     $(BASE)/
 
 # Experimental commands.
-#	@-cp $(L3_CMDS)/bin/FALSE.BIN      $(BASE)/GRAMADO/
-#	@-cp $(L3_CMDS)/bin/TRUE.BIN       $(BASE)/GRAMADO/
-#	@-cp $(L3_CMDS)/bin/CMP.BIN       $(BASE)/GRAMADO/
-#	@-cp $(L3_CMDS)/bin/SHOWFUN.BIN   $(BASE)/GRAMADO/
-#	@-cp $(L3_CMDS)/bin/SUM.BIN       $(BASE)/GRAMADO/
-	@-cp $(L3_CMDS)/bin/GRAMCNF.BIN     $(BASE)/
-#@-cp $(L3_CMDS)/bin/N9.BIN         $(BASE)/GRAMADO/
-#@-cp $(L3_CMDS)/bin/N10.BIN        $(BASE)/GRAMADO/
-#@-cp $(L3_CMDS)/bin/N11.BIN        $(BASE)/GRAMADO/
-#@-cp $(L3_CMDS)/bin/UDPTEST.BIN  $(BASE)/GRAMADO/
+#	@-cp $(LZ_CMDS)/bin/FALSE.BIN      $(BASE)/GRAMADO/
+#	@-cp $(LZ_CMDS)/bin/TRUE.BIN       $(BASE)/GRAMADO/
+#	@-cp $(LZ_CMDS)/bin/CMP.BIN       $(BASE)/GRAMADO/
+#	@-cp $(LZ_CMDS)/bin/SHOWFUN.BIN   $(BASE)/GRAMADO/
+#	@-cp $(LZ_CMDS)/bin/SUM.BIN       $(BASE)/GRAMADO/
+	@-cp $(LZ_CMDS)/bin/GRAMCNF.BIN     $(BASE)/
+#@-cp $(LZ_CMDS)/bin/N9.BIN         $(BASE)/GRAMADO/
+#@-cp $(LZ_CMDS)/bin/N10.BIN        $(BASE)/GRAMADO/
+#@-cp $(LZ_CMDS)/bin/N11.BIN        $(BASE)/GRAMADO/
+#@-cp $(LZ_CMDS)/bin/UDPTEST.BIN  $(BASE)/GRAMADO/
 
-	@-cp $(L3_CMDS)/bin/REBOOT.BIN    $(BASE)/
-	@-cp $(L3_CMDS)/bin/SHUTDOWN.BIN  $(BASE)/
-	@-cp $(L3_CMDS)/bin/UNAME.BIN     $(BASE)/
+	@-cp $(LZ_CMDS)/bin/REBOOT.BIN    $(BASE)/
+	@-cp $(LZ_CMDS)/bin/SHUTDOWN.BIN  $(BASE)/
+	@-cp $(LZ_CMDS)/bin/UNAME.BIN     $(BASE)/
 
-	@-cp $(L3_CMDS)/bin/PUBSH.BIN     $(BASE)/GRAMADO/
-	@-cp $(L3_CMDS)/bin/REBOOT.BIN    $(BASE)/GRAMADO/
-	@-cp $(L3_CMDS)/bin/SH7.BIN       $(BASE)/GRAMADO/
-	@-cp $(L3_CMDS)/bin/SHELL.BIN     $(BASE)/GRAMADO/
-	@-cp $(L3_CMDS)/bin/SHUTDOWN.BIN  $(BASE)/GRAMADO/
+	@-cp $(LZ_CMDS)/bin/PUBSH.BIN     $(BASE)/GRAMADO/
+	@-cp $(LZ_CMDS)/bin/REBOOT.BIN    $(BASE)/GRAMADO/
+	@-cp $(LZ_CMDS)/bin/SH7.BIN       $(BASE)/GRAMADO/
+	@-cp $(LZ_CMDS)/bin/SHELL.BIN     $(BASE)/GRAMADO/
+	@-cp $(LZ_CMDS)/bin/SHUTDOWN.BIN  $(BASE)/GRAMADO/
 
-	@-cp $(L3_CMDS)/bin/PUBSH.BIN     $(BASE)/DE/
-	@-cp $(L3_CMDS)/bin/SHELL.BIN     $(BASE)/DE/
-	@-cp $(L3_CMDS)/bin/SHELL2.BIN    $(BASE)/DE/
+	@-cp $(LZ_CMDS)/bin/PUBSH.BIN     $(BASE)/DE/
+	@-cp $(LZ_CMDS)/bin/SHELL.BIN     $(BASE)/DE/
+	@-cp $(LZ_CMDS)/bin/SHELL2.BIN    $(BASE)/DE/
 
 
 
@@ -394,9 +419,9 @@ clean-all: clean
 
 # ==================
 # Clear INIT.BIN
-	-rm init/src/*.o
-	-rm init/src/*.BIN 
-	-rm init/src/bin/*.BIN 
+	-rm moon/src/*.o
+	-rm moon/src/*.BIN 
+	-rm moon/src/bin/*.BIN 
 
 
 # ==================

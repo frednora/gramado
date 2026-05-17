@@ -28,7 +28,7 @@ Some extra features are:
 boot/     - Gramado OS bootloader.
 kernel/   - Gramado OS kernel.
 modules/  - Ring 0 loadable kernel modules. (Not dynlinked).
-init/     - The init process.
+moon/     - The init process.
 ```
 
 ## The UI
@@ -44,12 +44,12 @@ native/   - Native UI
 np/       - Posix-like commands
 ```
 
-## The extra folders
+## The eXtra folders
 
 ```
-distros/   - Complete distributions are built here.
-docs/      - Documentation.
-tools/     - SDK tools.
+xdistros/   - Complete distributions are built here.
+xdocs/      - Documentation.
+xtools/     - SDK tools.
 ```
 
 ## Key artifacts produced
@@ -61,21 +61,21 @@ tools/     - SDK tools.
 + INIT.BIN image.
 ```
 
-## Where is the boot loader?
+## 1. Where is the boot loader?
 
 boot/
 
-## Where is the kernel?
+## 2. Where is the kernel?
 
 kernel/
 
-## Where are the ring 0 kernel modules?
+## 3. Where are the ring 0 kernel modules?
 
 modules/
 
-## Where is the Init Process?
+## 4. Where is the Init Process?
 
-init/
+moon/
 
 ## Where is the compositor? (display server)
 
@@ -99,7 +99,7 @@ It is part of the Native UI, the Graphical User Interface.
 
 ## Where are the POSIX-like command programs?
 
-np/susutils/
+np/cmds/
 
 ```
 These are the basic posix commands.
