@@ -1147,11 +1147,13 @@ _asm_reboot:
     mov al, PS2KEYBOARD_CMD_REBOOT
     out PS2KEYBOARD_PORT, al
 
+    ret 
+
 ; Infinite loop to halt
-.Lloop:
-    cli
-    hlt
-    jmp .Lloop
+;.Lloop:
+;    cli
+;    hlt
+;    jmp .Lloop
 
 
 
