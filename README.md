@@ -31,6 +31,11 @@ modules/  - Ring 0 loadable kernel modules. (Not dynlinked).
 moon/     - The init process.
 ```
 
+```
+This creates a very clear startup flow:
+    boot → kernel → modules → moon (init)
+```
+
 ## The UI
 
 ```

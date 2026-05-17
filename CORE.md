@@ -10,6 +10,11 @@ moon/    - The init process. (The first ring 3 process)
 
 ```
 
+```
+This creates a very clear startup flow:
+    boot → kernel → modules → moon (init)
+```
+
 ## Moon ?
 
 The moon is our starting point now. It is our init process. INIT.BIN.
