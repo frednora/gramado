@@ -1,5 +1,9 @@
 // irql.h
 // Interrupt Request Level (IRQL)
+// #todo
+// There is a way of handling irql using the cr8 register
+// on Intel or AMD machines?! right.
+// This management here is not about that.
 // Created by Fred Nora.
 
 #ifndef __KWRAP_IRQL_H
@@ -74,6 +78,12 @@ IRQL_SCHEDULER
 // ...
 
 #define IRQL_UNDEFINED  999
+
+
+// #todo
+// There is a way of handling irql using the cr8 register
+// on Intel or AMD machines?! right.
+
 
 #endif   
 
