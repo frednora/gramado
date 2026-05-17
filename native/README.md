@@ -3,12 +3,6 @@
 This is the default GUI for Gramado OS.
 
 
-## farmer - Client-side GUI applications
-
-```
-    Native client-side GUI applications
-```
-
 ## hunter - The compositor / display server
 
 ```
@@ -16,3 +10,8 @@ This is the default GUI for Gramado OS.
            - It also operates as a window manager and display server.
 ```
 
+## ifarmer - Client-side GUI applications
+
+```
+    Native client-side GUI applications
+```
