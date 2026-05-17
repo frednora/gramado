@@ -67,30 +67,24 @@
 // Gramado configuration.
 #include "../halls/dev/exec/ke/hal/jiffies.h"
 
-// ==================================
-// crt/
-// Libc support.
-#include "../gthouse/libk/ktypes.h"
-#include "../gthouse/libk/ktypes2.h"
 
-// #todo: Move this one above?
-#include "../gthouse/libk/ascii.h"
-
-// Kernel objects.
-// Can we move this above the libk? Or after it?
+// Kernel objects
 #include "../gthouse/kwrap/kobject.h"
 
-// gthouse/libk/
-// Legacy stuff.
+// ==================================
+// libk/
+// kernel-side support for libc implementation.
+
+#include "../gthouse/libk/ktypes.h"
+#include "../gthouse/libk/ktypes2.h"
+#include "../gthouse/libk/ascii.h"
 #include "../gthouse/libk/kstdarg.h"
 #include "../gthouse/libk/kerrno.h"
 #include "../gthouse/libk/kcdefs.h"
 #include "../gthouse/libk/kstddef.h"
 #include "../gthouse/libk/klimits.h"
-
 #include "../gthouse/libk/kstdio.h"
 #include "../gthouse/libk/printk/printk.h"
-
 #include "../gthouse/libk/kstdlib.h"
 #include "../gthouse/libk/kstring.h"
 #include "../gthouse/libk/kctype.h"
@@ -102,7 +96,7 @@
 #include "../gthouse/libk/kioctls.h"
 #include "../gthouse/libk/ktermios.h"
 #include "../gthouse/libk/kttydef.h"
-
+// Wrapper for libk
 #include "../gthouse/libk/libk.h"
 
 
@@ -155,31 +149,27 @@
 // ==========================================
 // hal/x86_64/
 #include "../halls/dev/exec/ke/hal/x86_64/cpuid.h"
-
 #include "../halls/dev/exec/ke/hal/x86_64/up/up.h"
-
 #include "../halls/dev/exec/ke/hal/x86_64/smp/mps.h"
 #include "../halls/dev/exec/ke/hal/x86_64/smp/x64smp.h"
 #include "../halls/dev/exec/ke/hal/x86_64/smp/apic.h"
 #include "../halls/dev/exec/ke/hal/x86_64/smp/apictim.h"
 #include "../halls/dev/exec/ke/hal/x86_64/smp/ioapic.h"
-
 #include "../halls/dev/exec/ke/hal/x86_64/pic.h"
 #include "../halls/dev/exec/ke/hal/x86_64/pit.h"
 #include "../halls/dev/exec/ke/hal/x86_64/rtc.h"
-
 #include "../halls/dev/exec/ke/hal/x86_64/breaker.h"
 #include "../halls/dev/exec/ke/hal/x86_64/archhal.h"
-
-// ==========================================
-// Architecture-independent HAL interface
+// The wrapper for hal
 #include "../halls/dev/exec/ke/hal/hal.h"
 
 // ==================================
-// bus/
+// platform/
+// bus
+
 #include "../halls/platform/bus/pci/pci.h"
 //#include "../halls/platform/bus/usb/usb.h"
-//...
+// The wrapper for bus support
 #include "../halls/platform/bus/bus.h"
 
 // ==================================
@@ -200,39 +190,29 @@
 #include "../halls/dev/chardev/console/console.h"
 
 // hw stuff - display device
-
 #include "../halls/dev/chardev/display/dc.h"
-
 #include "../halls/dev/chardev/display/rop.h"
-
 // display device support
 #include "../halls/dev/chardev/display/display.h"
-
 // bootloader display device
 #include "../halls/dev/chardev/display/bldisp/bldisp.h"
-
 // qemu display device
 //#include "../halls/dev/chardev/display/qemudisp/qemudisp.h"
-
 // ==================================
 // dev/per/
 #include "../halls/dev/per/dev00.h"
 
 // ==================================
-// gthouse/wink/ 
-// sw - Graphics Engine
-#include "../gthouse/wink/gdi/gre/color.h"
-#include "../gthouse/wink/gdi/gre/font.h"
-#include "../gthouse/wink/gdi/gre/bg.h"
-
-// ==================================
 // halls/dev/exec/ke/
-// Can we move this up?
 #include "../halls/dev/exec/ke/intake/msgcode.h"
 
 // ==================================
-// gthouse/wink/
+// gthouse/wink/ 
 
+// gdi - Graphics Engine
+#include "../gthouse/wink/gdi/gre/color.h"
+#include "../gthouse/wink/gdi/gre/font.h"
+#include "../gthouse/wink/gdi/gre/bg.h"
 #include "../gthouse/wink/gdi/gre/pixel.h"
 #include "../gthouse/wink/gdi/gre/char.h"
 #include "../gthouse/wink/gdi/gre/text.h"
@@ -241,14 +221,12 @@
 #include "../gthouse/wink/gdi/gre/bitblt.h"
 #include "../gthouse/wink/gdi/gre/surface.h"
 #include "../gthouse/wink/gdi/gre/gre.h"
-
 #include "../gthouse/wink/gdi/dispsrv.h"
 #include "../gthouse/wink/gdi/osshell.h"
-
 #include "../gthouse/wink/gdi/wproxy.h"
 #include "../gthouse/wink/gdi/gdi.h"
 
-// Event Interface
+// evi - Event Interface
 #include "../gthouse/wink/evi/obroker.h"
 #include "../gthouse/wink/evi/output.h"
 #include "../gthouse/wink/evi/ibroker.h"
@@ -256,6 +234,7 @@
 
 // ===========
 
+// Callback support
 #include "../halls/dev/exec/ke/intake/disp/callback.h"
 
 // ==================================
@@ -292,7 +271,8 @@
 #include "../halls/dev/per/netdev/e1000/e1000.h"
 
 // ==================================
-// dev/per/net/ 
+// net/
+
 // (network, protocols and socket)
 // network
 #include "../halls/dev/per/net/mac.h"
@@ -316,7 +296,6 @@
 #include "../halls/dev/per/net/prot/udp.h"
 #include "../halls/dev/per/net/prot/dhcp.h" 
 #include "../halls/dev/per/net/prot/gprot.h"
-
 
 // Extra protocols
 #include "../halls/dev/per/net/prot/icmp.h" 
@@ -343,7 +322,7 @@
 #include "../halls/dev/per/dev.h"
 
 // ==================================
-// dev/per/fs/
+// fs/
 // File system
 // ----------------------
 // Depois de devices.
@@ -396,27 +375,34 @@
 
 // Reboot system.
 #include "../gthouse/kwrap/reboot.h"
-// Ring 0 kernel modules.
-#include "../gthouse/kwrap/mod/mod.h"
-#include "../gthouse/kwrap/mod/public.h"
-
 // Kernel layers. (Work in progress)
 #include "../gthouse/kwrap/layers.h"
 
-// The handlers for the services.
+// -------------------------------
+// mod/
+// Ring 0 kernel modules.
+
+#include "../gthouse/kwrap/mod/mod.h"
+#include "../gthouse/kwrap/mod/public.h"
+
+// -------------------------------
+// sci/
+
+// The handlers for the services
 #include "../gthouse/kwrap/sci/sys.h"
 
-// The definitions for the syscall numbers.
+// The definitions for the syscall numbers
 #include "../gthouse/kwrap/sci/sci0.h"
 #include "../gthouse/kwrap/sci/sci1.h"
 #include "../gthouse/kwrap/sci/sci2.h"
 #include "../gthouse/kwrap/sci/sci3.h"
 
-// The handlers for the four syscalls.
+// The handlers for the four syscalls
 #include "../gthouse/kwrap/sci/sci.h" 
 
 // ==================================
-// ke/
+// hal/
+
 // syscall support
 #include "../halls/dev/exec/ke/hal/x86_64/x64sc.h"
 
@@ -425,7 +411,10 @@
 #include "../gthouse/kwrap/wrappers.h"
 #include "../gthouse/kwrap/panic.h"
 
+// ==================================
+// cont/
 // cgroups and namespaces
+
 #include "../gthouse/kwrap/cont/cg.h"
 #include "../gthouse/kwrap/cont/ns.h"
 

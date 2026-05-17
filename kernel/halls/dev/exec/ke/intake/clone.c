@@ -1315,7 +1315,7 @@ do_clone:
 
 // #todo
 // We need to remake this thing.
-// See: gentry.h
+// See: 
     mm_fill_page_table( 
         (unsigned long) child_process->pd0_VA,   // directory va. 
         (int) __pdindex,                         // directory entry for image base.
@@ -1342,8 +1342,6 @@ do_clone:
 
     //#debug
     //printk (" :) \n");
-    //refresh_screen();
-    //return 0;
 
 //
 // Installing (danger)
@@ -1381,12 +1379,9 @@ do_clone:
     //#debug
     // ok
     //printk (" :) \n");
-    //refresh_screen();
-    //return 0;
 
     // #debug
     //printk ("New page table : %x \n", _pt);
-    //refresh_screen();
     //while(1){}
 
 // Configurando o endereço virtual padrão para aplicativos.
@@ -1433,8 +1428,6 @@ do_clone:
     //#debug
     //ok
     //printk (" :) \n");
-    //refresh_screen();
-    //return 0;
 
 //
 // Clone thread
@@ -1454,14 +1447,11 @@ do_clone:
 
 // #debug
     debug_print("copy_process: [5] Done\n");
-    //debug_print ("----------------------\n");
-    printk ("copy_process: [5] Done\n");
-
+    printk     ("copy_process: [5] Done\n");
 
 // #todo
 // We don't need this anymore.
     invalidate_screen();
-    //refresh_screen();
 
 //
 // Debug
@@ -1498,15 +1488,14 @@ do_clone:
     //current_process = (pid_t) child_pid;
     //show_currentprocess_info();
 
+    // #debug
     //printk ("--------------------------\n");
     //printk ("\n");
-
-    // #debug
-    //refresh_screen();
     //while(1){}
 
+    // #test
     // Switch back
-    //x64mm_load_pml4_table( old_pml4 );
+    // x64mm_load_pml4_table( old_pml4 );
 
 // Clear the buffer
     memset(child_process->__processname2, 0, sizeof(child_process->__processname2));
@@ -1520,8 +1509,6 @@ do_clone:
 // Save the actual length
     child_process->processName_len = 
         k_strnlen(child_process->__processname2, sizeof(child_process->__processname2));
-
-
 
 
 //
@@ -1600,15 +1587,14 @@ do_clone:
     if (clone_flags & F_CLONE_RETURN_TID) {
         return (pid_t) child_thread->tid;
     }
-    // Return PID
-    return (pid_t) child_pid;
+
+    return (pid_t) child_pid;  // Return PID
 
 fail:
 
     // #debug
     debug_print ("copy_process: [X] Fail\n");
     printk      ("copy_process: [X] Fail\n");
-    refresh_screen();
 
     // Nem chegamos a pegar o valor.
     // Nem mudar o pml4.
@@ -1626,6 +1612,7 @@ fail:
     return (pid_t) (-1);
 }
 
+// Copy process
 pid_t 
 copy_process( 
     const char *filename, 
@@ -1634,10 +1621,10 @@ copy_process(
 {
     pid_t rPID = -1;
 
-    rPID = (pid_t) copy_process00(filename,pid,clone_flags,0);
-
-    //if (rPID < 0)
-        //rPID = -1;
+    if (pid < 0 || pid >= PROCESS_COUNT_MAX){
+        return (pid_t) -1;
+    }
+    rPID = (pid_t) copy_process00( filename, pid, clone_flags, 0 );
 
     return (pid_t) rPID;
 }

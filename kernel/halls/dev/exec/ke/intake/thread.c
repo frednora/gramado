@@ -152,7 +152,6 @@ static void __ps_initialize_thread_common_elements(struct thread_d *t)
     t->signal = 0;
     t->umask = 0;
 
-
 // ------------------
     // More ?
 }
@@ -269,8 +268,8 @@ __ps_setup_x64_context (
 
 int destroy_thread_structure(struct thread_d *thread)
 {
-    tid_t TID = -1;
     struct thread_d *tmp;
+    tid_t TID = -1;
 
     if ((void*) thread == NULL)
         goto fail;
@@ -293,12 +292,14 @@ int destroy_thread_structure(struct thread_d *thread)
 
 // Destroy the structure.
 // #todo: We can erase the whole structure.
+// #ps: Reuse structures inside the kernel
+// can be dangeours. But maybe we ca do it in some cases.
 
     thread->magic = 0;
     thread->used = FALSE;
     thread = NULL;
-
     return 0;
+
 fail:
     return (int) -1;
 }
@@ -502,8 +503,8 @@ fail:
 
 void *FindReadyThread(void)
 {
-    register int i=0;
     struct thread_d  *t;
+    register int i=0;
 
     for (i=0; i<THREAD_COUNT_MAX; ++i)
     {
@@ -518,8 +519,8 @@ void *FindReadyThread(void)
             }
         }
     };
-// Fail
-    return NULL;
+
+    return NULL;  // Fail
 }
 
 // OUT:
@@ -535,6 +536,7 @@ thread_state_t GetThreadState(struct thread_d *thread)
         goto fail;
     }
     return (thread_state_t) thread->state;
+
 fail:
     return (thread_state_t) -1;
 }
@@ -665,7 +667,7 @@ void thread_show_profiler_info (void)
         }
     };
 
-    refresh_screen();
+    //refresh_screen();
 }
 
 unsigned long thread_get_profiler_percentage(struct thread_d *thread)
@@ -905,12 +907,8 @@ int sys_msgctl(tid_t caller_tid, int option, int extra_value)
     return 0;
 }
 
-/*
- * exit_thread:
- *     Exit a thread.
- *     Torna o estado ZOMBIE mas não destrói a estrutura.
- *     Outra rotina destruirá as informações de uma estrutura de thread zombie.
- */
+// Exit a thread.
+// Set a flat to exit the thread in the right moment.
 int exit_thread(tid_t tid)
 {
     struct thread_d *Idle;
@@ -918,12 +916,10 @@ int exit_thread(tid_t tid)
 
     if (tid < 0 || tid >= THREAD_COUNT_MAX)
     {
-        debug_print ("exit_thread: tid\n");
         goto fail;
     }
 
-// Init thread.
-// We can't exit the idle thread.
+// Is the idle thread for uni- processor a valid one?
     Idle = (struct thread_d *) UPProcessorBlock.IdleThread;
     if ((void *) Idle == NULL){
         panic ("exit_thread: Idle\n");
@@ -931,13 +927,13 @@ int exit_thread(tid_t tid)
     if (Idle->magic != 1234){
         panic ("exit_thread: Idle validation\n");
     }
-    if (tid == Idle->tid){
+// Are we trying to exit the init thread?
+    if (tid == Idle->tid)
+    {
         panic ("exit_thread: We can't kill the Idle thread\n");
     }
 
-// Thread
-// Get thread structure.
-
+// Get thread structure
     Thread = (void *) threadList[tid];
     if ((void *) Thread == NULL){
         printk ("exit_thread: Thread doesn't exist\n");
@@ -948,16 +944,11 @@ int exit_thread(tid_t tid)
         goto fail;
     }
 
-// Zombie
-// Lembrando que se deixarmos no estado ZOMBIE o 
-// deadthread collector vai destruir a estrutura.
-// Let the scheduler put this thread in the ZOMBIE state.
+// Set the flat to exit the thread in the right moment
     Thread->Deferred.exit_in_progress = TRUE;
-    //Thread->state = ZOMBIE;
     return 0;
 
 fail:
-    refresh_screen();  // #debug
     return (int) -1;
 }
 
@@ -968,15 +959,14 @@ int exit_current_thread(void)
 
     if (tid < 0)
         goto fail;
-    if (tid >= THREAD_COUNT_MAX)
-    {
+    if (tid >= THREAD_COUNT_MAX){
         goto fail;
     }
     return (int) exit_thread(tid);
+
 fail:
     return (int) -1;
 }
-
 
 // copy_thread_struct:
 // Clona uma thread.

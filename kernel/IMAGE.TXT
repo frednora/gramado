@@ -1,0 +1,27 @@
+
+kernel image size.
+
+~730 KB for .text + .rodata + .data + .bss
+
+.text          ~309 KB  ~45%
+.bss + COMMON  ~420 KB (total bss section)  ~55%
+
+------------------------------------------
+Object     Size     What it contains
+
+p1_ke.o    73.4 KB  Scheduler, processes, threads, IPC, syscalls, SMP/APIC, faults
+chardev.o  35.9 KB  TTY layer, console, PS/2 keyboard+mouse, serial
+p3_fs.o    34.0 KB  FAT16, file I/O, path resolution, VFS basics
+p2_wink.o  28.6 KB  Windowing proxy, basic graphics primitives, input broker, usersessions
+p3_net.o   28.3 KB  TCP/IP stack (ARP, DHCP, UDP, sockets)
+p1_kwrap.o 21.8 KB  Kernel wrappers, panic, debug, module system
+blkdev.o   21.6 KB  ATA/IDE driver + storage layer
+
+At top i group the stuff related with the execution unit.
+
+
+
+
+
+
+
