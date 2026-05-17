@@ -2,7 +2,7 @@
 
 all:
 	make -C hunter/
-	make -C farmer/
+	make -C ifarmer/
 
 clean:
 	-rm -f *.o

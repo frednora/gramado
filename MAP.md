@@ -13,15 +13,18 @@ boot/arch/x86/bsp/
 ```
 kernel/             (Base kernel)
 modules/dungeon/    (Main kernel module)
-moon/               (The init process)
 ```
+
+## Init process
+
+moon/               (The init process)
 
 
 ## Native UI
 
 ```
-farmer/ - Client-side GUI applications
-hunter/ - Compositor (display server)
+hunter/  - Compositor (display server)
+ifarmer/ - Client-side GUI applications
 ```
 
 ## Posix-like commands

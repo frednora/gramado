@@ -27,41 +27,20 @@ BASE = $(DISTROS)/base00
 # Native UI
 
 __DEP_L2 = native
-
 # Compositor / Display servers
 L2_COMP     = $(__DEP_L2)/hunter/comp
-
 # Client-side GUI applications
-L2_WINSHELL = $(__DEP_L2)/farmer/winshell
-
-# =================================
-# Net
-
-__DEP_L3 = net 
-# netu
-L3_NETU     = $(__DEP_L3)/netu
+L2_WINSHELL = $(__DEP_L2)/ifarmer/winshell
 
 
 # =================================
-# n1 - 3D work force
-__DEP_L4 = n1
-
-# 3D demo 
-# (But we can extract this function and build a 3D library)
-L4_HEAVY = $(__DEP_L4)/heavy
-
-
-# =================================
-# n2 - cpp experiments
-__DEP_L5 = n2
-L5_CPP00 = $(__DEP_L5)/cpp00
-
-
-# =================================
-# Nomad Pastors - POSIX-like commands
+# Nomad Pastors - POSIX-like commands and experiments
 
 __DEP_LZ = np
-LZ_CMDS = $(__DEP_LZ)/cmds
+LZ_CMDS  = $(__DEP_LZ)/cmds
+L3_NETU  = $(__DEP_LZ)/netu
+L4_HEAVY = $(__DEP_LZ)/heavy
+L5_CPP00 = $(__DEP_LZ)/cpp00
 
 
 ## =================================
@@ -186,7 +165,6 @@ build-extras:
 
 	@echo "build-extras"
 
-
 # __DEP_L2:: Display servers
 	@echo "Compiling __DEP_L2"
 	@make -C $(__DEP_L2)/
@@ -203,8 +181,8 @@ build-extras:
 
 
 # ?::
-#	@echo "Compiling ?"
-#	@make -C $(?)/
+	@echo "Compiling np/"
+	@make -C $(__DEP_LZ)/
 
 
 # --------
