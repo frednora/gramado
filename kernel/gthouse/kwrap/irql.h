@@ -1,10 +1,55 @@
 // irql.h
 // Interrupt Request Level (IRQL)
+// task-priority register (TPR).
 // #todo
 // There is a way of handling irql using the cr8 register
 // on Intel or AMD machines?! right.
 // This management here is not about that.
-// Created by Fred Nora.
+// #test
+// It manages the value into the register cr8 used for hw irql support.
+// #bugbug: 
+// We gotta know if the current processor has support for this register.
+// Created by Fred Nora
+
+// See:
+// https://wiki.osdev.org/CPU_Registers_x86-64#CR8
+
+// task-priority register (TPR).
+// Bit     Purpose
+// 0-3     Priority
+// 4-63    Reserved
+
+
+/*
+The cr8 register:
+Task Priority Level (bit 3:0 of CR8) — 
+This sets the threshold value corresponding to the highest - 
+priority interrupt to be blocked. 
+A value of 0 means all interrupts are enabled. 
+This field is available in 64- bit mode. 
+A value of 15 means all interrupts will be disabled.
+*/
+
+/*
+CR8 indicates the current priority of the CPU. 
+When an interrupt is pending, bits 7:4 of the interrupt vector number 
+is compared to CR8. If the vector is greater, it is serviced, otherwise 
+it is held pending until CR8 is set to a lower value.
+*/
+
+/*
+Assuming the APIC is in use, it has an IRR (Interrupt Request Register) 
+with one bit per interrupt vector number. When that bit is set, 
+the interrupt is pending. It can stay that way forever.
+*/
+
+/*
+// #important:
+The new interrupt is merged with the prior one.
+Because of this merging, interrupt service routines must be designed 
+to process all the work that is ready, rather than expecting a 
+distinct interrupt for each unit of work.
+*/
 
 #ifndef __KWRAP_IRQL_H
 #define __KWRAP_IRQL_H    1
@@ -84,6 +129,8 @@ IRQL_SCHEDULER
 // There is a way of handling irql using the cr8 register
 // on Intel or AMD machines?! right.
 
+
+void irql_load_cr8(unsigned long value);
 
 #endif   
 

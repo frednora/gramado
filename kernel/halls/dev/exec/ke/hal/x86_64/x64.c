@@ -4,7 +4,7 @@
 
 #include <kernel.h>
 
-// See: unit1hw.asm
+// See: hw1.asm
 extern void DisableSSE(void);
 extern void EnableSSE(void);
 
@@ -28,6 +28,12 @@ static void __get_cpu_intel_parameters(void);
 //
 // =====================================
 //
+
+
+void x64_load_cr8(unsigned long value)
+{
+    asm volatile ("movq %0, %%cr8"::"r"(value));
+}
 
 
 /*
@@ -471,8 +477,8 @@ tss_init (
 void x64_load_ltr(int tr)
 {
     asm volatile ( \
-        " movw %w0, %%ax; \
-          ltrw %%ax;     "\
+        " movw %w0, %%ax \n \
+          ltrw %%ax \n    "\
         :: "a"(tr) );
 }
 
@@ -948,7 +954,7 @@ int x64_init_fpu_support(void)
 // TS - Task switched.
 // Allows saving x87 task context upon a task switch 
 // only after x87 instruction used.
-// see: arch/x86_64/entrance/hw/hw1.asm
+// see: hw1.asm
     EnableSSE();
 
 // Enable
@@ -956,18 +962,21 @@ int x64_init_fpu_support(void)
 // + Clear EM and Set MP in cr0.
 
     asm volatile (
-        " movq %%cr4, %%rax;  "
-        " orl $0x600, %%eax;  "  // Set OSFXSR and OSXMMEXCPT.
-        " movq %%rax, %%cr4;  "
+        " movq %%cr4, %%rax \n "
+        " orl $0x600, %%eax \n "  // Set OSFXSR and OSXMMEXCPT.
+        " movq %%rax, %%cr4 \n "
 
-        " movq %%cr0, %%rax;  "
-        " andw $0xFFFB, %%ax; "  // Clear EM
-        " orw $0x2, %%ax;     "  // Set MP
-        " movq %%rax, %%cr0;  " 
+        " movq %%cr0, %%rax \n "
+        " andw $0xFFFB, %%ax \n "  // Clear EM
+        " orw $0x2, %%ax     \n "  // Set MP
+        " movq %%rax, %%cr0  \n " 
         :: );
 
+// #ps
+// #bugbug: We are enabling it in kernel-mode. is ti right?
 // Initialize fpu support.
 // Simply call 'fninit' instruction.
+
     x64_init_fpu();
  
     return 0;
@@ -979,7 +988,7 @@ int x64_init_fpu_support(void)
 // resorting to dedicated assembly.
 void fpu_load_control_word(const uint16_t control)
 {
-    asm volatile ("fldcw %0;"::"m"(control)); 
+    asm volatile ("fldcw %0 \n"::"m"(control)); 
 }
 
 // x64 disable interrupts.
@@ -998,11 +1007,6 @@ void x64_enable_interrupts (void)
 void x64_iretq (void)
 {
     asm ("iretq");
-}
-
-void x64_iret (void)
-{
-    asm ("iret");
 }
 
 void x64_lret (void)
@@ -1072,6 +1076,12 @@ int x64_init_intel (void)
 
 // Setup the usage of syscall in long mode.
     x64_setup_syscall64();
+
+// Clear cr8. Allowing all the 16 interrupts.
+// #bugbug: 
+// We gotta know if the current processor has support for this register.
+
+    x64_load_cr8(0);
 
     // ...
 

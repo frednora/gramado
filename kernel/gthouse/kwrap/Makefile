@@ -72,6 +72,7 @@ LDFLAGS := -m elf_x86_64 -s -x -static
 OBJS = globals.o bootblk.o \
 klog.o \
 info.o \
+irql.o \
 panic.o \
 reboot.o \
 request.o \
@@ -95,6 +96,7 @@ all:
 # Overall routines
 	$(CC) -c klog/klog.c  $(KERNEL_INCLUDE) $(CFLAGS) -o klog.o
 	$(CC) -c info.c       $(KERNEL_INCLUDE) $(CFLAGS) -o info.o
+	$(CC) -c irql.c       $(KERNEL_INCLUDE) $(CFLAGS) -o irql.o
 	$(CC) -c panic.c      $(KERNEL_INCLUDE) $(CFLAGS) -o panic.o  
 	$(CC) -c reboot.c     $(KERNEL_INCLUDE) $(CFLAGS) -o reboot.o
 	$(CC) -c request.c    $(KERNEL_INCLUDE) $(CFLAGS) -o request.o

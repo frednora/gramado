@@ -81,6 +81,7 @@
 
 void x64_setup_syscall64(void);
 
+void x64_load_cr8(unsigned long value);
 
 //
 // FPU
@@ -95,7 +96,6 @@ void x64_disable_interrupts(void);
 void x64_enable_interrupts(void);
 
 void x64_iretq(void);
-void x64_iret(void);
 void x64_lret(void);
 
 void x64_cli_hlt(void);

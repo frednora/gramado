@@ -188,6 +188,10 @@ void x64_all_faults(unsigned long number)
     // Set current irql
     lapic_info[0].irql = IRQL_UNDEFINED;
 
+//
+// These IRQL are not related with the cr8 for now.
+//
+
 // During the initialization
     if (last_irql == IRQL_NULL){
         printk("last irql: IRQL_NULL\n");
@@ -282,7 +286,7 @@ void x64_all_faults(unsigned long number)
     debug_print("x64_all_faults:\n");
 
     //printk("\n");
-    printk("\n");
+    //printk("\n");
     printk("\n");
     printk ("number: %d\n",number);
 
@@ -337,7 +341,6 @@ void x64_all_faults(unsigned long number)
 
 // =============
 
-
     unsigned long saved_cr2=0;
     unsigned long saved_cr3=0;
     unsigned long saved_cr4=0;
@@ -348,7 +351,7 @@ void x64_all_faults(unsigned long number)
     unsigned long cr3_pa=0;
 
 // PF
-    if(number=14)
+    if (number=14)
     {
         asm volatile ("movq %%cr2, %0":"=a"(saved_cr2):); // va?
         asm volatile ("movq %%cr3, %0":"=a"(saved_cr3):);
@@ -385,7 +388,7 @@ void x64_all_faults(unsigned long number)
     pid_t target_pid = GRAMADO_PID_INIT;
 
 //
-// Kill the process.
+// Kill the process
 //
 
 // #todo
@@ -461,7 +464,7 @@ void x64_all_faults(unsigned long number)
     }
 
 //
-// More numbers.
+// More numbers
 //
 
     switch (number){
@@ -563,7 +566,6 @@ void x64_all_faults(unsigned long number)
         case 13: 
             printk ("== GP ==\n");  
             //show_slots();
-
             //show_reg( lapic_info[0].current_thread );
             refresh_screen();
             // Esse tipo funciona mesmo antes do console
@@ -575,7 +577,7 @@ void x64_all_faults(unsigned long number)
         // #todo: Com assembly inline podemos pegar cr2 e cr3.
         case 14:
             printk ("== PF ==\n");  
-            //if(user_thread==TRUE){
+            //if(user_thread == TRUE){
             //    printk("It's an user thread!\n");
             //}
             show_slots();
@@ -583,7 +585,7 @@ void x64_all_faults(unsigned long number)
             x_panic("x64_all_faults: 14  PF"); 
             break;
 
-        // Intel reserved.
+        // Intel reserved
         case 15:
             x_panic("x64_all_faults: 15 - Intel reserved");
             break;
@@ -617,7 +619,10 @@ void x64_all_faults(unsigned long number)
             break;
 
         // 20 - Virtualization Exception
-        case 20: x_panic("x64_all_faults: 20"); break;
+        case 20: 
+            x_panic("x64_all_faults: 20 Virtualization Exception"); 
+            break;
+
         // 21 - Control Protection Exception
         case 21: x_panic("x64_all_faults: 21"); break;
         case 22: x_panic("x64_all_faults: 22"); break;
@@ -626,10 +631,17 @@ void x64_all_faults(unsigned long number)
         case 25: x_panic("x64_all_faults: 25"); break;
         case 26: x_panic("x64_all_faults: 26"); break;
         case 27: x_panic("x64_all_faults: 27"); break;
+
         // 28 - Hypervisor Injection Exception
-        case 28: x_panic("x64_all_faults: 28"); break;
+        case 28: 
+            x_panic("x64_all_faults: 28 - Hypervisor Injection Exception");
+            break;
+
         // 29 - VMM Communication Exception
-        case 29: x_panic("x64_all_faults: 29"); break;
+        case 29:
+            x_panic("x64_all_faults: 29 - VMM Communication Exception");
+            break;
+
         // 30 - Security Exception
         case 30: x_panic("x64_all_faults: 30"); break;
         case 31: x_panic("x64_all_faults: 31"); break;
