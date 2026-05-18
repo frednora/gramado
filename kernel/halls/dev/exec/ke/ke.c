@@ -545,6 +545,75 @@ int keReboot(void)
     return (int) do_reboot(Flags);
 }
 
+// Wrapper
+struct te_d *keCreateProcess ( 
+    struct cgroup_d *cg,
+    unsigned long base_address, 
+    unsigned long priority, 
+    ppid_t ppid, 
+    const char *name, 
+    unsigned int cpl,
+    unsigned long pml4_va,
+    unsigned long pdpt0_va,
+    unsigned long pd0_va,
+    personality_t personality )
+{
+    struct te_d *p;   // Process structure
+
+    p = (struct te_d *) create_process ( 
+        cg,
+        base_address, 
+        priority, 
+        ppid, 
+        name, 
+        cpl,
+        pml4_va,
+        pdpt0_va,
+        pd0_va,
+        personality 
+    );
+
+    if ((void*) p == NULL)
+    {
+        //#debug
+        return NULL;
+    }
+
+    return (struct te_d *) p;
+}
+
+// Wrapper
+struct thread_d *keCreateThread ( 
+    thread_type_t thread_type,
+    struct cgroup_d  *cg,
+    unsigned long init_rip, 
+    unsigned long init_stack, 
+    ppid_t pid, 
+    const char *name,
+    unsigned int cpl )
+{
+    struct thread_d *t;
+
+    // #todo
+    t = (struct thread_d *) create_thread(
+        thread_type,
+        cg,
+        init_rip,
+        init_stack,
+        pid,
+        name,
+        cpl
+    );
+
+    if ((void*) t == NULL){
+        // #debug
+        return NULL;
+    }
+
+    return (struct thread_d *) t;
+}
+
+
 // Called by main to execute the first process
 // See: intake/x64init.c
 // Never returns.

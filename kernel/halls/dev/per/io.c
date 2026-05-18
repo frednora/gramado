@@ -68,13 +68,12 @@ io_ioctl (
     debug_print ("io_ioctl:\n");
 
 // Parameter:
-    if ( fd < 0 || 
-         fd >= OPEN_MAX )
+    if ( fd < 0 || fd >= OPEN_MAX )
     {
         return (int) (-EBADF);
     }
 
-// Get file pointer.
+// Get file pointer
     f = (file *) get_file_from_fd(fd);
     if ((void *) f == NULL){
         goto fail;
@@ -152,7 +151,6 @@ io_ioctl (
         goto fail;
         break;
     };
-
 
 fail:
     debug_print ("io_ioctl: Fail\n");

@@ -1274,6 +1274,7 @@ fail:
 // CREATE PROCESS
 //
 
+// Worker:
 // Create process
 struct te_d *create_process ( 
     struct cgroup_d *cg,
@@ -1728,12 +1729,13 @@ struct te_d *create_process (
 // antes da cria��o dos processo.
 
 // Security
-    Process->usession = CurrentUserSession;  // Current.
-    Process->cg = (struct cgroup_d *) cg;    // Passado via argumento.
+    Process->usession = CurrentUserSession;  // Current
+
+// Resource management
+    Process->cg = (struct cgroup_d *) cg;  // Got via argument
 
 // #todo
     // last_created = PID;
-
 
     Process->prev = NULL; 
     Process->next = NULL; 

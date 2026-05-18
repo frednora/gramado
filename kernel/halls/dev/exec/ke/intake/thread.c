@@ -1350,14 +1350,18 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
     clone->waitingCount = father->waitingCount;  //Tempo esperando algo.
     clone->blockedCount = father->blockedCount;  //Tempo bloqueada.
 
-// Qual processo pertence a thread clone.
-// Pois bem, por enquanto ela pertence ao mesmo dono 
-// da thread pai.
 // The 'thread environment' structure. (fka process)
+// Same as the father.
     clone->te = father->te; 
 
 	//Thread->window_station
-	//Thread->cg  // cgroup
+
+// Resource management
+// #todo: 
+// The thread needs to have the same cg of its process.
+	//Thread->cg = cg; // cgroup via argument
+    //Thread->cg = clone->te->cg;
+
 	//Thread->control_menu_procedure
 	//Thread->wait4pid =
 
@@ -1426,6 +1430,8 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
 // setup all the machine independent elements.
 // The second one will setup all the machine dependent elements.
 
+// Worker
+// Main worker for thread creation.
 struct thread_d *create_thread ( 
     thread_type_t thread_type,
     struct cgroup_d  *cg,
@@ -1451,9 +1457,10 @@ struct thread_d *create_thread (
     //printk ("create_thread:\n");
 
 //======================================
-// check parameters.
+// check parameters
 
     // cgroup
+    // #todo: The thread needs to have the same cg of its process.
     if ((void*) cg == NULL){
         debug_print ("create_thread: cg\n");
     }

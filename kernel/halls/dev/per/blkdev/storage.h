@@ -6,7 +6,7 @@
 
 
 // --------------------------------------------------
-// Controller mode
+// Controller mode (Controller type)
 
 #define STORAGE_CONTROLLER_MODE_SCSI     0x00
 #define STORAGE_CONTROLLER_MODE_ATA      0x01
@@ -47,18 +47,21 @@
 
 
 // Storage Controller
+// ATA Mass storage controler structure.
 // There is two types fo HBA:
 // + Integrated HBAs and
 // + Dedicated HBA Cards
 struct storage_controller_d
 {
-// ATA Mass storage controler structure.
-
 // The structure was initialized.
     int initialized;
+
 // IDE, RAID, AHCI.
     uint8_t controller_type;
+
+// ...
 };
+
 // #todo
 // We got to separate the moment we're probing for 
 // the controller type and the moment we're initializating one of them.

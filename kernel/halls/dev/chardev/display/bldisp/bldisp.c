@@ -240,8 +240,6 @@ void bldisp_display_mouse_cursor(void)
 
 }
 
-
-
 /*
  * __bldisp_flush_into_lfb:
  * Coloca o conteúdo do BackBuffer no LFB da memória de vídeo.
@@ -268,17 +266,13 @@ void bldisp_display_mouse_cursor(void)
 // #todo
 // We can also use 16 bytes ... SSE?
 
+// Flash the backbuffer into the frontbuffer.
+// It calls refresh_rectangle as worker.
 static void __bldisp_flush_into_lfb(unsigned long flags)
 {
-
-// #option
-// Use this one. It is working fine.
-    //refresh_rectangle( 0, 0, gSavedX, gSavedY ); 
-
-// Loop
     register int i=0;
-
-    unsigned long CurrentBackbufferVA = (unsigned long) display_get_backbuffer_va();
+    unsigned long CurrentBackbufferVA = 
+        (unsigned long) display_get_backbuffer_va();
 
 // Char. The slow way.
     unsigned char *backbuffer  = (unsigned char *) CurrentBackbufferVA;  //BACKBUFFER_VA;
@@ -303,7 +297,6 @@ static void __bldisp_flush_into_lfb(unsigned long flags)
         panic("fb_refresh_screen: display info\n");
     }
 
-
 // #
 // Provisório, até termos condições de usar mais memória.
 // Clipping:
@@ -312,7 +305,6 @@ static void __bldisp_flush_into_lfb(unsigned long flags)
 // #todo
 // Também podemos salvar esse tipo de valor na 
 // estrutura de display device.
-
 
 // Total number of bytes in the screen.
 // see: init.c
@@ -355,7 +347,6 @@ static void __bldisp_flush_into_lfb(unsigned long flags)
         return;
     }
 
-
 //
 // Refresh
 //
@@ -369,8 +360,7 @@ static void __bldisp_flush_into_lfb(unsigned long flags)
     refresh_rectangle( 0, 0, gSavedX, gSavedY );
 }   
 
-// Flush the content of the backbuffer
-// into the LFB.
+// Flush the content of the backbuffer into the LFB
 void bldisp_flush(unsigned long flags)
 {
     __bldisp_flush_into_lfb(flags);
@@ -1139,8 +1129,11 @@ bldisp_ioctl (
     }
 
     switch (request){
+
+    //
     //case ?:
         //break;
+
     default:
         return (int) (-EINVAL);
         break;
@@ -1205,8 +1198,10 @@ static int __videoInit(void)
 int Video_initialize(void)
 {
     g_driver_video_initialized = FALSE;
+
     __videoInit();
     // ...
+
     g_driver_video_initialized = TRUE;
     return 0;
 }
@@ -1261,7 +1256,6 @@ int DDINIT_bldisp(void)
     bl_display_device->framebuffer_bpp = 
         (unsigned long) bootblk.bpp;
 
-
 // Pitch
 // Get bytes per pixel then multiply by the width.
 // Ex: ((32/8)*800)
@@ -1295,9 +1289,7 @@ int DDINIT_bldisp(void)
 // Structure initialization.
     bl_display_device->initialized = TRUE;
 
-
     Initialization.is_bldisp_initialized = TRUE;
-
 
 //
 // Drawing context
@@ -1339,7 +1331,6 @@ int DDINIT_bldisp(void)
     dc_frontbuffer->magic = 1234;
     dc_frontbuffer->initialized = TRUE;
 
-
 // ===============================
 // #test
 
@@ -1356,16 +1347,14 @@ int DDINIT_bldisp(void)
     __new_mouse_x=0;
     __new_mouse_y=0;
 
-// #test
+
 // Initialize structure
     bldisp_info.used = TRUE;
     bldisp_info.magic = 1234;
     bldisp_info.initialized = TRUE;
-    // ...
 
     return 0;
 }
-
 
 //
 // End

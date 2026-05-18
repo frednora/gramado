@@ -1723,12 +1723,16 @@ static int __ata_initialize(int ataflag)
 // A rotina atapciConfigurationSpace() configurou
 // a estrutura 'ata' com o tipo de controlador encontrado.
 
+
+// Get the controller mode. (controller type)
+
+    uint8_t ControllerType = StorageController.controller_type;
+
 // ==============================================
-// ATA controller type.
+// Controller type: ATA
 
-    // Type
-    if (StorageController.controller_type == STORAGE_CONTROLLER_MODE_ATA){
-
+    if (ControllerType == STORAGE_CONTROLLER_MODE_ATA)
+    {
         printk ("__ata_initialize: [ATA] Initialize ports\n");
         //while(1){}
         
@@ -1890,9 +1894,9 @@ static int __ata_initialize(int ataflag)
     }
 
 // ==============================================
-// RAID controller
+// Controller type: RAID
 
-    if (StorageController.controller_type == STORAGE_CONTROLLER_MODE_RAID)
+    if (ControllerType == STORAGE_CONTROLLER_MODE_RAID)
     {
         // #debug
         printk ("__ata_initialize: [RAID] Unsupported type\n");
@@ -1905,13 +1909,15 @@ static int __ata_initialize(int ataflag)
     }
 
 // ==============================================
-// AHCI controller type.
+// Controller type: AHCI
+
 // #todo:
 // On qemu: Feature '-s -machine q35' uses ahci.
 // It emulates ICH9 not I440FX.
 // see: https://wiki.qemu.org/Features/Q35
 
-    if (StorageController.controller_type == STORAGE_CONTROLLER_MODE_AHCI){
+    if (ControllerType == STORAGE_CONTROLLER_MODE_AHCI)
+    {
         printk ("__ata_initialize: [AHCI] Unsupported type\n");
         while(1){}
         Status = (int) -1;
@@ -1919,9 +1925,10 @@ static int __ata_initialize(int ataflag)
     }
 
 // ==============================================
-// Unknown controller type.
+// Controller type: Unknown
 
-    if (StorageController.controller_type == STORAGE_CONTROLLER_MODE_UNKNOWN){
+    if (ControllerType == STORAGE_CONTROLLER_MODE_UNKNOWN)
+    {
         printk ("__ata_initialize: [UNKNOWN] Unsupported type\n");
         while(1){}
         Status = (int) -1;
@@ -1929,14 +1936,16 @@ static int __ata_initialize(int ataflag)
     }
 
 // ==============================================
-// Nem ATA, nem RAID, nem AHCI.
+// Not ATA, Not RAID, nor AHCI.
     Status = (int) -1;
     printk("__ata_initialize: ATA, RAID or AHCI were not found\n");
+
 fail:
     printk ("__ata_initialize: fail\n");
     return -1;
     //return (int) Status;
 
+// ok
 done:
 // Setup interrupt breaker.
 // Só liberamos se a inicialização fncionou.
@@ -1946,7 +1955,7 @@ done:
         __breaker_ata2_initialized = TRUE; 
     }
 
-// Driver status.
+    // Driver status
     g_ata_driver_initialized = TRUE;
     StorageController.initialized = TRUE;
 

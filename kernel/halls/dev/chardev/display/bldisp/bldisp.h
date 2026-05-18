@@ -6,6 +6,7 @@
 #define __BLDISP_BLDISP_H    1
 
 // The info about the display device driver.
+// VESA
 struct bldisp_info_d
 {
     int used;

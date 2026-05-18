@@ -35,6 +35,9 @@ struct cg_system_service_d
 // cgroup
 // cgroups is all about resources management.
 
+// Control groups is a set o limits
+// the processes needs to respect when it is associated
+// with a cgroup.
 struct cgroup_d
 {
 // Register some components of the cgroups.
@@ -47,8 +50,7 @@ struct cgroup_d
     int used;
     int magic;
 
-    // cgroup ID.
-    int id;
+    int id;  // cgroup ID
 
 // usando o mesmo esquema do usuário.
     char __name[64];

@@ -140,34 +140,36 @@ struct device_d *devmgr_device_object(void)
 {
     struct device_d *d;
     register int i=0;
+    const int Max = DEVICE_LIST_MAX;
     unsigned long __tmp=0;
 
-// Procura um slot vazio
-    for (i=0; i<DEVICE_LIST_MAX; i++)
+// Probe for an empty slot
+    for (i=0; i<Max; i++)
     {
-         // List of pointers.
+        // List of pointers
         __tmp = (unsigned long) deviceList[i];
+
+        // If the slot is empty
         if (__tmp == 0) 
         {
-            // Device structure.
-            // #bugbug
-            // Maybe it will spend a lot of memory.
+            // Get device structure
             d = (struct device_d *) kmalloc( sizeof(struct device_d) );
-            if ((void *) d == NULL)
-            {
-                // #fatal
-                panic("devmgr_device_object: [ERROR] d\n"); 
+            if ((void *) d == NULL){
+                panic("devmgr_device_object: d\n"); 
             }
             memset( d, 0, sizeof(struct device_d) );
-            d->used = TRUE;
-            d->magic = 1234;
+
+            // Initialize the structure
             d->index = i;
             //#todo
             //d->name 
             d->name[0] = 'x';
             d->name[1] = 0;
             // ...
-            // Save and return.
+
+            d->used = TRUE;
+            d->magic = 1234;
+            // Save and return
             deviceList[i] = (unsigned long) d;
 
             return (struct device_d *) d;
@@ -434,7 +436,7 @@ devmgr_register_tty_device(
     }
 
 // =======================
-// Device structure. 
+// Device structure 
 // (It is NOT the pci device struct)
     d = (struct device_d *) devmgr_device_object();
     if ((void *) d == NULL){
@@ -449,7 +451,7 @@ devmgr_register_tty_device(
         panic("devmgr_register_tty_device: id\n");
     }
 
-// Save parameters.
+// Save parameters
     d->__class = (unsigned char) dev_class;
     d->__type  = (unsigned char) dev_type;
 
@@ -467,11 +469,10 @@ devmgr_register_tty_device(
     fp->dev_major = 0;
 // Device index into the deviceList[].
     fp->dev_minor = (short) (d->index & 0xFFFF);
-// Device structure.
+// Device structure
     fp->device = (struct device_d *) d;
 
-
-// Save the file pointer.
+// Save the file pointer
     d->_fp  = (file *) fp;
 
 //
@@ -646,11 +647,10 @@ devmgr_register_pci_device(
     fp->dev_major = 0;
 // Device index into the deviceList[].
     fp->dev_minor = (short) (d->index & 0xFFFF);
-// Device structure.
+// Device structure
     fp->device = (struct device_d *) d;
 
-
-// Save the file pointer.
+// Save the file pointer
     d->_fp  = (file *) fp;
 
 //
@@ -833,7 +833,7 @@ devmgr_register_legacy_device(
         panic("devmgr_register_pci_device: id\n");
     }
 
-// Save parameters.
+// Save parameters
     d->__class = (unsigned char) dev_class;
     d->__type  = (unsigned char) dev_type;
 
@@ -915,14 +915,16 @@ devmgr_register_legacy_device(
     return 0;
 }
 
-// Initialize the list.
+// Initialize the device list
 static int __devmgr_init_device_list(void)
 {
     register int i=0;
+    const int Max = DEVICE_LIST_MAX;
 
-    for (i=0; i<DEVICE_LIST_MAX; i++){
+    for (i=0; i<Max; i++){
         deviceList[i] = 0;
     };
+
     return 0;
 }
 
@@ -946,17 +948,18 @@ void devInitialize(void)
 {
 // Called in x64init.c
     register int i=0;
+    const int MaxNICDevices = 8;
 
-    PROGRESS("devInitialize: <<<< \n");
+    PROGRESS("devInitialize: \n");
 
-// Initialize the list of devices.
+// Initialize the list of devices
     __devmgr_init_device_list();
 
-// Initialize the list of NIC devices.
-    for (i=0; i<8; i++)
-    {
+// Initialize the list of NIC devices
+    for (i=0; i<MaxNICDevices; i++){
         nicList[i] = 0;
     };
+
     // ...
 }
 
