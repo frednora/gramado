@@ -331,8 +331,7 @@ struct lapic_info_d
     struct dpc_queue_d  DPC_QUEUE;
 };
 
-// #bugbug: Limited number for now.
-#define NR_CPUS  8   // or detect dynamically
+// See: cpu.h
 // One structure per processor
 extern struct lapic_info_d lapic_info[NR_CPUS];
 

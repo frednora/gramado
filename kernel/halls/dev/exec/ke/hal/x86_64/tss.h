@@ -33,6 +33,7 @@ typedef struct tss_d
 
 } __attribute__((packed)) tagTSS;
 
+extern struct tss_d TSS[NR_CPUS];
 
 /*
  * I/O bitmap offset beyond TSS's segment limit means no bitmaps.

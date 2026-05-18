@@ -25,7 +25,12 @@
 #define IA32_APIC_BASE_MSR_BSP      0x100  // Processor is a BSP
 #define IA32_APIC_BASE_MSR_ENABLE   0x800
 
-#define PROCESSORS_MAX_COUNT  32
+
+// #ps
+// This is in apic.c and in other places. 
+#define NR_CPUS  8   // or detect dynamically
+#define PROCESSORS_MAX_COUNT  NR_CPUS
+
 
 // see: hal.c
 extern int processors_count;

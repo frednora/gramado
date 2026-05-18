@@ -88,6 +88,7 @@ x64fault.o x64smp.o \
 apic.o apictim.o ioapic.o \
 cpu.o \
 cpuid.o \
+tss.o \
 mps.o \
 detect.o \
 ports64.o rtc.o \
@@ -164,6 +165,8 @@ all:
 
 	$(CC) -c hal/x86_64/cpuid.c  $(KERNEL_INCLUDE) $(CFLAGS) -o cpuid.o
 	$(CC) -c hal/x86_64/cpu.c    $(KERNEL_INCLUDE) $(CFLAGS) -o cpu.o
+
+	$(CC) -c hal/x86_64/tss.c    $(KERNEL_INCLUDE) $(CFLAGS) -o tss.o
 
 # ---------------------
 	$(CC) -c hal/detect.c  $(KERNEL_INCLUDE) $(CFLAGS) -o detect.o

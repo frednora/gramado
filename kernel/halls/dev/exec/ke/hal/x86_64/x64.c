@@ -308,13 +308,17 @@ x64_init_gdt(
 // Save current tss.
 // Create gdt entry for the tss. (two entries)
 
-    tss = (void *) kmalloc( sizeof(struct tss_d) );
+    //tss = (void *) kmalloc( sizeof(struct tss_d) );
+    tss = (struct tss_d *) &TSS[lapic_info_id];   // For a target cpu id
+
     if ((void *) tss == NULL)
     {
         debug_print("x64_init_gdt:\n");
               panic("x64_init_gdt:\n");
     }
-    memset( tss, 0, sizeof(struct tss_d) );
+    //memset( tss, 0, sizeof(struct tss_d) );
+    memset(&TSS[lapic_info_id], 0, sizeof(struct tss_d));
+
 
 // Initializing the tss structure,
 // given the ring0 stack pointer.
@@ -363,7 +367,8 @@ x64_init_gdt(
 // Save the tss pointer into the lapic_info structure.
 //
 
-    lapic_info[lapic_info_id].tss = (struct tss_d *) tss;
+    //lapic_info[lapic_info_id].tss = (struct tss_d *) tss;
+    lapic_info[lapic_info_id].tss = (struct tss_d *) &TSS[lapic_info_id];
 
 
 //
@@ -440,37 +445,6 @@ set_gdt_entry (
     sd->l    = (l   & 1);  // (1)
     sd->db   = (db  & 1);  // (1)
     sd->g    = (g   & 1);  // (1)
-}
-
-// ======================
-
-void
-tss_init ( 
-    struct tss_d *tss, 
-    void *stack_address )
-{
-    if ((void *) tss == NULL){
-        debug_print ("[x64] tss_init:\n");
-        panic       ("[x64] tss_init:\n");
-    }
-
-// Clean
-    memset ( tss, 0, sizeof *tss );
-    //memset ( tss, 0, sizeof(struct tts_d) ); //#todo
-
-// ring 0 stack
-    //#todo
-    //if ( stack_address == 0 )
-    //    panic("tss_init: stack_address\n");
-    tss->rsp0 = (unsigned long) stack_address;  // va?? 
-
-
-    tss->IOPB_offset = sizeof(struct tss_d);
-
-    //#debug
-    //printk ("Stack %x\n", stack_address);
-    //refresh_screen();
-    //while(1){}
 }
 
 // # not tested yet
