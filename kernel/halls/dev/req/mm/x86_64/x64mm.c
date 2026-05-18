@@ -4,6 +4,23 @@
 
 #include <kernel.h>
 
+
+//
+// mm tables
+//
+
+// Lista de estruturas para diretórios de paginas
+unsigned long pagedirectoryList[PAGEDIRECTORY_COUNT_MAX]; 
+
+unsigned long pagetableList[PAGETABLE_COUNT_MAX]; 
+
+unsigned long pageAllocList[PAGE_COUNT_MAX];
+
+// List. (1024 framepools)
+unsigned long framepoolList[FRAMEPOOL_COUNT_MAX];
+
+
+
 // See: x64mm.h
 // Kernel process.
 struct mm_data_d  kernel_mm_data;
@@ -23,6 +40,35 @@ __virtual_to_physical (
     unsigned long pml4_va );
 
 // ========================================================
+
+// Do we have support fo 1GB pages?
+// OUT: TRUE or FALSE
+// Why it works:
+// Leaf: 0x80000001 (Extended Processor Info and Feature Bits)
+// Register: EDX
+// Bit 26 (1 << 26 = 0x4000000): PDPE1GB / 1 GB page support
+// This bit is supported on:
+// Intel: Since Westmere (2010) and later on most server/desktop CPUs.
+// AMD: On many CPUs that support long mode.
+
+int x64mm_has_1gb_pages(void)
+{
+    unsigned long eax=0;
+    unsigned long ebx=0;
+    unsigned long ecx=0;
+    unsigned long edx=0;
+
+    cpuid(0x80000001, eax, ebx, ecx, edx);
+
+    if ((edx & 0x4000000) != 0)
+        return TRUE;
+
+    // alternative
+    //if ((edx & (1 << 26)) != 0)  // or 0x4000000
+        //return TRUE;
+
+    return FALSE;
+}
 
 
 // PAE and PGE

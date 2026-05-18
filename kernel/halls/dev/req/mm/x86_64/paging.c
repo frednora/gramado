@@ -2424,6 +2424,8 @@ int pagesInitializePaging(void)
 
     //debug_print("pagesInitializePaging:\n");
 
+    // #todo
+    int has_1gb_pages = (int) x64mm_has_1gb_pages();
 
 // RAM usage management:
 // Initialize global variables with the value 0 for safety.

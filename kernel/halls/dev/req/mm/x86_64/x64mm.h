@@ -159,8 +159,8 @@ struct page_directory_d *pagedirectoryShared;           // Shared.
 // criados na lista.
 #define PAGEDIRECTORY_COUNT_MAX 1024  
 
-//Lista de estruturas para diretórios de paginas.
-unsigned long pagedirectoryList[PAGEDIRECTORY_COUNT_MAX]; 
+// Lista de estruturas para diretórios de paginas
+extern unsigned long pagedirectoryList[PAGEDIRECTORY_COUNT_MAX]; 
 
 
 // ------------
@@ -211,9 +211,7 @@ struct page_table_d
 // Quantidade de page tables criadas na lista.
 #define PAGETABLE_COUNT_MAX  1024 
 
-
-unsigned long pagetableList[PAGETABLE_COUNT_MAX]; 
-
+extern unsigned long pagetableList[PAGETABLE_COUNT_MAX]; 
 
 
 //
@@ -438,7 +436,7 @@ struct page_d
 //#define PAGE_COUNT_MAX    1024  
 #define PAGE_COUNT_MAX    512
 
-unsigned long pageAllocList[PAGE_COUNT_MAX];
+extern unsigned long pageAllocList[PAGE_COUNT_MAX];
 
 
 /*
@@ -554,8 +552,8 @@ extern unsigned long gPagedPollEnd;
 // virão dessa área de memória.
 extern int g_pageable_framepool_index_max;
 
-// List.(1024 framepools).
-unsigned long framepoolList[FRAMEPOOL_COUNT_MAX];
+// List. (1024 framepools)
+extern unsigned long framepoolList[FRAMEPOOL_COUNT_MAX];
 
 // Lista de framepools livres.
 // int framepoolFreeList[FRAMEPOOL_COUNT_MAX]
@@ -672,6 +670,8 @@ struct x64_address_space_d
 //
 // == prototypes =================================================
 //
+
+int x64mm_has_1gb_pages(void);
 
 //unsigned long slab_2mb_extraheap2(void);
 //unsigned long slab_2mb_extraheap3(void);

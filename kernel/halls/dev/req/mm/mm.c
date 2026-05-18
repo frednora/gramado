@@ -891,6 +891,8 @@ int mmInitialize(int phase)
     // phase 1
     } else if (phase == 1) {
 
+        // int has_1gb_pages = (int) x64mm_has_1gb_pages();
+
         // Inicializando o framepool (paged pool).
         // see mmpool.c
         initializeFramesAlloc();
