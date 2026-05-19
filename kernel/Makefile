@@ -12,7 +12,7 @@
 # White        | garden/    (Communicatior: Link with the external world) 
 
 # Tools
-include garden/arch/x86_64/makeinc
+include garden/bsp/x86_64/makeinc
 
 INCLUDE = include
 
@@ -34,7 +34,8 @@ linkFlags := -m elf_x86_64 \
 -x \
 -static \
 -Map=kernel.map \
--T garden/arch/x86_64/link.ld   
+-T garden/bsp/x86_64/link.ld   
+
 
 #
 # Config
@@ -135,6 +136,7 @@ objects-y += p4_libk.o
 objects-y += acpi.o  
 objects-y += p3_bus.o  
 
+objects-y += apmain.o    
 objects-y += kmain.o    
 
 
@@ -165,11 +167,14 @@ WhiteZone:
 	@echo "Compiling: Compiling WhiteZone"
 
 # (arch)
+# All the files in garden/bsp/, except kmain.c
 	$(Q)$(MAKE) -C garden/
 
-# kmain
-	$(CC) -c garden/kmain.c   $(KERNEL_INCLUDE) $(CFLAGS) -o kmain.o
+# kmain for AP processor
+	$(CC) -c garden/ap/apmain.c   $(KERNEL_INCLUDE) $(CFLAGS) -o apmain.o
 
+# kmain for BSP processor
+	$(CC) -c garden/bsp/kmain.c   $(KERNEL_INCLUDE) $(CFLAGS) -o kmain.o
 
 # ----------------
 link-kernel:
@@ -190,7 +195,8 @@ clean-all:
 	rm -rf gthouse/*.o   
 	rm -rf halls/*.o   
 
-	rm -rf garden/arch/*.o   
+	rm -rf garden/ap/*.o   
+	rm -rf garden/bsp/*.o   
 
 	rm -rf gthouse/kwrap/*.o   
 	rm -rf gthouse/libk/*.o   

@@ -174,6 +174,8 @@ int qf_get_message(void);
 // #test: For dialog with APs
 void welcome_ap_hlt(void);
 void welcome_ap_pause(void);
+int __AP_BSP_handshake(void);
+
 
 //
 // Used during the kernel initialization.
@@ -192,8 +194,6 @@ void init_globals(void);
 // ::(2)
 // First function called by the BSP processor.
 void I_kmain(int arch_type);
-// First function called by all the AP processors.
-void AP_kmain(void);
 
 void start_kernel(int arch_type);
 void x86_64_start_kernel(int arch_type);
