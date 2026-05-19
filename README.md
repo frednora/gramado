@@ -203,9 +203,9 @@ See cmds/.
 
 ## DE - Desktop Environment
 
-This is a screenshot of the desktop environment running on top of the kernel.
-You can find code in the gdeps/ folder.
-![Screenshot](https://raw.githubusercontent.com/noraside/screenshots/main/gramado-9.png)
+This is a screenshot of the Desktop Environment running on top of the kernel.
+You can find code in the native/ folder.
+![Screenshot](https://raw.githubusercontent.com/noraside/screenshots/main/gramado-99.png)
 
 ## Gramado API 
 
@@ -214,7 +214,7 @@ You can find the API to create client-side GUI applications in apps/.
 ## Demos
 
 This is a screenshot of 3D demo running on top of the kernel.
-You can find code in the zde/aurora/ folder.
+You can find code in the demo00/ folder.
 ![Screenshot](https://raw.githubusercontent.com/noraside/screenshots/main/gramado-3.png)
 
 ## The source code.
