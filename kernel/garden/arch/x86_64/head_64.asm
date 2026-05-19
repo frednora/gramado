@@ -2880,6 +2880,7 @@ _asm_AP_entry_point:
     ;mov rsi, rax
     ;mov rdi, rax
 
+; Loading an early GDT for the AP core
     lgdt [EARLY_GDT64.Pointer]
 
     mov ax, EARLY_GDT64.Data
@@ -2896,12 +2897,14 @@ _asm_AP_entry_point:
 
 
 ; LDT
+; Loading an early LDT for the AP core
 ; Initialize ldt with a NULL selector.
     xor rax, rax
     lldt ax
 
 ; IDT
 ; #danger:
+; Loading an early IDT for the AP core
     lidt [_IDT_register] 
 
 ; Go to C code for the rest of the initialization

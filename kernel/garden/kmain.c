@@ -360,7 +360,7 @@ void welcome_ap_pause(void)
 // OUT: id in lapic_info[] database.
 static int __AP_handshake(void)
 {
-// Called bu AP_main().
+// Called by AP_main().
 
     ap_startup_counter++;  // Update counter
 
@@ -1044,6 +1044,7 @@ static int __test_initialize_ap_processor(int apic_id)
 
         // #important
         // Updating information inside the shared area.
+        // See: head_64.asm
         printk("Updating shared area ...\n");
         //ap_shmm[0] = (unsigned long) &AP_kmain; 
         ap_shmm[0] = (unsigned long) &asm_AP_entry_point; // In Assembly
@@ -1931,7 +1932,6 @@ void AP_kmain(void)
 // see:
 // https://www.felixcloutier.com/x86/clts
     asm volatile ("clts \n");
-
 
     //PROGRESS("AP_kmain: \n")
 

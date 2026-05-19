@@ -22,6 +22,7 @@
 ; 0x00030000 - FAT (Don't touch this thing)
 
 
+; The 16-bit real mode starts here
 apx86_start: 
 
     cli
@@ -148,6 +149,7 @@ gdt_ptr:
 
 ; ---------------- 32-bit protected mode entry ----------------
 [bits 32]
+; The 32-bit protected mode starts here
 ap_pm32_entry:
 
     ; Load flat data segments
@@ -234,6 +236,7 @@ switch_to_long_mode:
 ;
 
 [bits 64]
+; The 64-bit long mode starts here
 ap_long_entry:
 
     xor rax, rax
