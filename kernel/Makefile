@@ -167,14 +167,8 @@ WhiteZone:
 	@echo "Compiling: Compiling WhiteZone"
 
 # (arch)
-# All the files in garden/bsp/, except kmain.c
+# All the files in garden/bsp/ and garden/ap.
 	$(Q)$(MAKE) -C garden/
-
-# kmain for AP processor
-	$(CC) -c garden/ap/apmain.c   $(KERNEL_INCLUDE) $(CFLAGS) -o apmain.o
-
-# kmain for BSP processor
-	$(CC) -c garden/bsp/kmain.c   $(KERNEL_INCLUDE) $(CFLAGS) -o kmain.o
 
 # ----------------
 link-kernel:
