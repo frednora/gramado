@@ -215,7 +215,7 @@ You can find the API to create client-side GUI applications in apps/.
 
 This is a screenshot of 3D demo running on top of the kernel.
 You can find code in the demo00/ folder.
-![Screenshot](https://raw.githubusercontent.com/noraside/screenshots/main/gramado-3.png)
+![Screenshot](https://raw.githubusercontent.com/noraside/screenshots/main/demo00.png)
 
 ## The source code.
 
