@@ -37,10 +37,9 @@ L2_WINSHELL = $(__DEP_L2)/ifarmer/winshell
 # Nomad Pastors - POSIX-like commands and experiments
 
 __DEP_LZ = np
+L3_HEAVY = $(__DEP_LZ)/heavy
+L4_CPP00 = $(__DEP_LZ)/cpp00
 LZ_CMDS  = $(__DEP_LZ)/cmds
-L3_NETU  = $(__DEP_LZ)/netu
-L4_HEAVY = $(__DEP_LZ)/heavy
-L5_CPP00 = $(__DEP_LZ)/cpp00
 
 
 ## =================================
@@ -138,16 +137,26 @@ build-gramado-os:
 
 # (3) modules/
 
+# ::Build the ring0 module image
+# ::Build user mode drivers
+# ::Build user mode servers
+
 	@echo "Compiling modules/"
-# ::Build the ring0 module image.
 	@$(Q)$(MAKE) -C modules/
 
 	@echo "Installing modules/"
 
-# Copy the ring0 module image.
-# It is loadable, but it's not a dynlinked format.
+# The main kernel module
 	@cp modules/bin/DUNGEON.BIN  $(BASE)/
 	@cp modules/bin/DUNGEON.BIN  $(BASE)/GRAMADO
+
+# netu
+	@-cp modules/netu/core/bin/NET.BIN   $(BASE)/GRAMADO/
+	@-cp modules/netu/core/bin/NETD.BIN  $(BASE)/GRAMADO/
+
+# Ring 3 VGA device driver
+	@cp modules/udrivers/bin/VGAD.BIN  $(BASE)/GRAMADO
+
 
 # The init process
 	@$(MAKE) -C moon/
@@ -188,20 +197,14 @@ build-extras:
 # --------
 # heavy
 # 3D game demos
-	@-cp $(L4_HEAVY)/games3d/bin/DEMO00.BIN   $(BASE)/DE/
-#	@-cp $(L4_HEAVY)/games3d/bin/DEMO01.BIN   $(BASE)/DE/
+	@-cp $(L3_HEAVY)/games3d/bin/DEMO00.BIN   $(BASE)/DE/
+#	@-cp $(L3_HEAVY)/games3d/bin/DEMO01.BIN   $(BASE)/DE/
 # ...
 
 # --------
 # cpp00
 # cpp application example
-#	@-cp $(L5_CPP00)/bin/CPP00.BIN  $(BASE)/DE
-
-# --------
-# netu
-	@-cp $(L3_NETU)/core/bin/NET.BIN   $(BASE)/GRAMADO/
-	@-cp $(L3_NETU)/core/bin/NETD.BIN  $(BASE)/GRAMADO/
-
+#	@-cp $(L4_CPP00)/bin/CPP00.BIN  $(BASE)/DE
 
 
 # --------

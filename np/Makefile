@@ -11,13 +11,9 @@ all:
 # ps: We can create a library using this.
 	make -C heavy/
 
-# Ring 3 network server.
-	make -C netu/
-
 clean-all:
 	-rm *.o 
 
 	-rm cmds/*.o 
 	-rm cpp00/*.o 
 	-rm heavy/*.o 
-	-rm netu/*.o 

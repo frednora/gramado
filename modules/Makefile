@@ -4,14 +4,21 @@
 
 all:
 	make -C dungeon/
+	make -C netu/
+	make -C udrivers/
 
 clean:
 	-rm bin/*.BIN
 
 clean-all:
 
-	-rm bin/*.BIN
-
 	-rm dungeon/*.o
+	-rm netu/*.o
+#	-rm udrivers/*.o
+
+	-rm bin/*.BIN
 	-rm dungeon/*.BIN 
+	-rm netu/bin/*.BIN
+	-rm udrivers/bin/*.BIN
+
 
