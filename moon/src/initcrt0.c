@@ -1,5 +1,7 @@
 // crt0.c
-// Standard crt0 for Gramado OS ring 3 applications.
+// Special crt0 for the init process. (Moon) 
+// crt0() function is the entrypoint for the Init Process.
+// Gramado OS ring 3 applications.
 // Created by Fred Nora.
 
 #include <types.h>
@@ -75,10 +77,10 @@ extern int main(int argc, char *argv[]);
 // #todo
 // Explain this argument better.
 
-// Application entrypoint
+// This is the entrypoint for the Init Process
 void crt0(unsigned long rdi)
 {
-// This function never returns.
+// This function never returns
 
     // #todo
     // We can get the command line from 'stdin'.
@@ -181,10 +183,10 @@ void crt0(unsigned long rdi)
 */
 
 // Gramado Libc initialization
-// see: rtl.c
+// see: crt/rtl.c
     int c_status = -1;
     c_status = (int) rtl_cinit();
-    if (c_status<0){
+    if (c_status < 0){
     }
 
 // #todo
@@ -192,13 +194,6 @@ void crt0(unsigned long rdi)
 //See: sysdeps/x86/x86start.c
 
     //x86start ( ( token_count, tokenList, default_env );
-
-/*
-#ifdef TEDITOR_VERBOSE
-    //Inicializando o editor propriamente dito.
-	printf("Calling main ... \n"); 
-#endif
-*/
 
 //
 // #bugbug
@@ -224,18 +219,17 @@ void crt0(unsigned long rdi)
 // Read from file to the buffer.
 // #important: Reading only 512 bytes, respecting
 // the limitation we have yet.
-    int n=0;
     const size_t NumberOfBytes = BUFSIZ;
+    int n=0;
     n = (int) read( fileno(stdin), buffer, NumberOfBytes );
     buffer[BUFSIZ-1] = 0;
 
-    //if(n<=0){
+    //if (n<=0){
         //#bugbug: We can't do this
         //stdout = stderr;
         //printf("crt0.c: n<=0");
         //fflush(stdout);
     //}
-
 
 // Depois de lido o stdin e colocada a cmdline no buffer local,
 // então é hora de apagarmos os arquivo, para que outro
@@ -262,9 +256,9 @@ void crt0(unsigned long rdi)
     //tokenList[0] = strtok ( &shared_info[0], LSH_TOK_DELIM );
     tokenList[0] = strtok(buffer,LSH_TOK_DELIM);
 
-// Salva a primeira palavra digitada.
+    // Save the first word. The slot 0.
     token = (char *) tokenList[0];
-    index=0; 
+    index = 0; 
 
     while (token != NULL)
     {
@@ -322,6 +316,7 @@ e o crt0 do driver, não ativa.
 
     // IN: argc, argv.
     main_ret = (int) main( token_count, tokenList );
+
     switch (main_ret){
     case 0:  // EXIT_SUCCESS
         //printf ("crt0: main returned 0\n");

@@ -1431,7 +1431,8 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
 // The second one will setup all the machine dependent elements.
 
 // Worker
-// Main worker for thread creation.
+// Main worker for thread creation
+// #ps: The init_rip depends on the thread's type.
 struct thread_d *create_thread ( 
     thread_type_t thread_type,
     struct cgroup_d  *cg,

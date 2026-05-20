@@ -365,7 +365,7 @@ static int I_x64CreateInitialProcess(void)
     unsigned long Priority     = PRIORITY_SYSTEM_THRESHOLD;
 
     TEInitProcess = 
-        (void *) create_process( 
+        (void *) create_process ( 
                     NULL,  
                     (unsigned long) FLOWERTHREAD_BASE,  //0x00200000 
                     BasePriority, 
@@ -375,7 +375,8 @@ static int I_x64CreateInitialProcess(void)
                     (unsigned long) init_pml4_va,
                     (unsigned long) kernel_mm_data.pdpt0_va,
                     (unsigned long) kernel_mm_data.pd0_va,
-                    PERSONALITY_POSIX );
+                    PERSONALITY_POSIX 
+                );
 
 // validation
     if ((void *) TEInitProcess == NULL){
@@ -444,7 +445,7 @@ static int I_x64CreateInitialProcess(void)
     TEInitProcess->pd0_VA = kernel_mm_data.pd0_va;
     TEInitProcess->pd0_PA = kernel_mm_data.pd0_pa; 
 
-    fs_initialize_process_cwd ( InitProcessPID, "/" );
+    fs_initialize_process_cwd(InitProcessPID, "/");
 
 //====================================================
 // Create thread

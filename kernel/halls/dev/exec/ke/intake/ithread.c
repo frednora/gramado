@@ -26,14 +26,14 @@ struct thread_d *create_init_thread(void)
 
     debug_print ("create_init_thread:\n");
 
-// We need a valid init process structure.
+// We need a valid init process structure
     if ((void *) TEInitProcess == NULL){
         panic ("create_init_thread: TEInitProcess\n");
     }
     if (TEInitProcess->magic != 1234){
         panic ("create_init_thread: TEInitProcess validation\n");
     }
-// Thread structure.
+// Thread structure
     t = (void *) kmalloc( sizeof(struct thread_d) );
     if ((void *) t == NULL){
         panic ("create_init_thread: t\n");
@@ -226,12 +226,14 @@ struct thread_d *create_init_thread(void)
     t->rflags_initial_iopl = (unsigned int) 3; 
     t->rflags_current_iopl = (unsigned int) 3; 
 
-// Stack frame
+
+    // Stack frame
     t->context.ss     = 0x23;
     t->context.rsp    = (unsigned long) FLOWERTHREAD_STACK; 
     t->context.rflags = 0x3202;  // #caution
     t->context.cs     = 0x1B;
     t->context.rip    = (unsigned long) FLOWERTHREAD_ENTRYPOINT; 
+
 
     t->context.ds = 0x23;  
     t->context.es = 0x23;

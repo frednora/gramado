@@ -6397,7 +6397,6 @@ void data_putc (int ch,FILE *_stream)
  *     Inicializa stdio para usar o fluxo padrão.
  *     O retorno deve ser (int) e falhar caso dê algo errado.
  */
-// This routine ws called by crt0() in crt0.c
 // #bugbug
 // Essa estrutura lida com elementos de estrutura em ring3.
 // #atenção: Algumas rotinas importantes estão usando esses elementos.
@@ -6414,7 +6413,7 @@ void data_putc (int ch,FILE *_stream)
 
 void stdioInitialize(void)
 {
-// Called by crt0() in crt0.c
+// Called by rtl_cinit() in rtl.c
 
     int status = 0;
     int i=0;
@@ -6505,11 +6504,11 @@ void stdioInitialize(void)
         exit(1);
     }
     stdin->_lbfsize = BUFSIZ;
-    stdin->_p  = stdin->_base;
-    stdin->_cnt  = 0;  //BUFSIZ-1;
-    stdin->_w  = 0;
-    stdin->_r  = 0;  
-    stdin->_file  = 0;
+    stdin->_p = stdin->_base;
+    stdin->_cnt = 0;  //BUFSIZ-1; #bugbug
+    stdin->_w = 0;
+    stdin->_r = 0;  
+    stdin->_file = 0;
 
 // ========
 // stdout
@@ -6521,7 +6520,7 @@ void stdioInitialize(void)
     }
     stdout->_lbfsize = BUFSIZ;
     stdout->_p = stdout->_base;
-    stdout->_cnt = 0; //BUFSIZ-1; 
+    stdout->_cnt = 0; //BUFSIZ-1;  // #bugbug
     stdout->_w = 0;
     stdout->_r = 0;
     stdout->_file = 1;
@@ -6536,7 +6535,7 @@ void stdioInitialize(void)
     }
     stderr->_lbfsize = BUFSIZ;    
     stderr->_p = stderr->_base;
-    stderr->_cnt = 0; //BUFSIZ-1;    
+    stderr->_cnt = 0; //BUFSIZ-1; #bugbug
     stderr->_w = 0; 
     stderr->_r = 0;
     stderr->_file = 2;
@@ -6586,11 +6585,14 @@ void stdioInitialize(void)
 // tty
 //
 
-// ok
+// #test:
+// alternative routine. (Maybe it is not in use anymore)
 // This is the tty of this process.
-    __libc_tty_id = (int) gramado_system_call ( 266, getpid(), 0, 0 ); 
+    __libc_tty_id = (int) gramado_system_call( 266, getpid(), 0, 0 ); 
+
 // Clear prompt[] buffer.
     prompt_clean();
+
     //debug_print ("stdioInitialize: done\n");
 }
 

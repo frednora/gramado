@@ -2802,11 +2802,20 @@ int rtl_use_wink_windowing_system(void)
 // INITIALIZATION
 //
 
-// Called by crt0.c
+// rtl_cinit:
+// This function calls:
+// + stdlibInitializeRT() - Initialize heap support
+// + stdioInitialize() - Initialize the standard stream support
+// See:
+// stdlib.c and stdio.c.
+
 int rtl_cinit(void)
 {
+// Called by initcrt0.c
+// #ps: We gotta work on this initialization.
+// It is so weak for now.
 
-// Initialize heap support.
+// Initialize heap support
 // See: stdlib.c
     int rt_status = -1;  //fail
     rt_status = (int) stdlibInitializeRT();
@@ -2819,7 +2828,7 @@ int rtl_cinit(void)
     // #debug: put char
     //gramado_system_call(65,'2',0,0);
 
-// Initialize the standard stream support.
+// Initialize the standard stream support
 // return void.
 // See: stdio.c
     stdioInitialize();

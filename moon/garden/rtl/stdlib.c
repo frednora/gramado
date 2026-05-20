@@ -2061,11 +2061,9 @@ fail:
     return (int) 1;
 }
 
-
-// #local
 // __init_mm:
-// Inicializa o memory manager.
-
+// Initializes the memory manager for the library.
+// It initializes the heap.
 static int __init_mm(void)
 {
     register int i=0;
@@ -2091,7 +2089,7 @@ static int __init_mm(void)
 
 // Lista de blocos de memória dentro do heap.
     i=0;
-    while (i<MMBLOCK_COUNT_MAX){
+    while (i < MMBLOCK_COUNT_MAX){
         mmblockList[i] = (unsigned long) 0;
         i++;
     };
@@ -2116,18 +2114,16 @@ static int __init_mm(void)
 
 /*
  * stdlibInitializeRT:
- *     Inicializa o gerenciamento em user mode de memória virtual
- * para a biblioteca libC99.
+ *     Inicializa o gerenciamento em user mode de memória virtual.
  * Obs: 
- * IMPORTANTE: Essa rotina deve ser chamada entes que a biblioteca
- * C seja usada. 
+ * IMPORTANTE: 
+ * Essa rotina deve ser chamada entes que a biblioteca C seja usada. 
  */
-// This routine ws called by crt0() in crt0.c
 // see:
 // crt0.c, heap.h and stdlib.h
 int stdlibInitializeRT (void)
 {
-// Called by crt0() in crt0.c
+// Called by rtl_cinit() in rtl.c
 
     int Status = -1;
 
