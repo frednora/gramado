@@ -360,7 +360,7 @@ You're reaching the boring area of this document!
 
 Documentation and design notes are in the docs/ folder.
 
-> See the [docs](https://github.com/frednora/gramado/tree/main/docs).
+> See the [xdocs](https://github.com/frednora/gramado/tree/main/xdocs).
 
 The project is looking for some people to create a better documentation, for free, 
 as a contribuition to the open source community. To create this new documentation 
