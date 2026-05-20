@@ -1451,9 +1451,10 @@ Standard Linux Runlevels (0-6)
     //gws_debug_print ("gws.bin: Unlock taskswitching and scheduler \n");
     //printf          ("gws.bin: Unlock taskswitching and scheduler \n");
 
-    gramado_system_call (641,0,0,0);
+    sc80 (641,0,0,0);
     Init.taskswitching_unlocked = TRUE;
-    gramado_system_call (643,0,0,0);
+
+    sc80 (643,0,0,0);
     Init.scheduler_unlocked = TRUE;
 
     Init.initialized = TRUE;

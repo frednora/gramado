@@ -7,6 +7,22 @@
 // The 'event delivery' and 'return' support.
 // Created by Fred Nora.
 
+
+// #ps
+// Gramado has four (4) syscall interrupts. 0x80, 0x81, 0x82, 0x83.
+// 0x80 - It's doing the hard work
+// 0x81 - Not in use
+// 0x82 - It's doing some jobs
+// 0x83 - Not in use
+// They do not have a dispatch table with indexes in order.
+// They a a lot o indexes without a specific order.
+// Actually 0x81 and 0x83 has not been used and the hard work
+// is done mainly by 0x80.
+// #todo
+// Based on the infrastructure we already have, we can
+// easly create a dispatch table and use one of these free interrupts.
+// Ex: 0x81 or 0x83 can use a dispatch table.
+
 #include <kernel.h>
 
 static unsigned long __default_syscall_counter=0;

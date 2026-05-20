@@ -20,7 +20,7 @@ static int __socket_pipe( int pipefd[2] );
 // Local worker
 static int __socket_pipe( int pipefd[2] )
 {
-    return (int) gramado_system_call ( 
+    return (int) sc80 ( 
                      247, 
                      (unsigned long) pipefd, 
                      (unsigned long) pipefd, 
@@ -36,7 +36,7 @@ int socket( int domain, int type, int protocol )
     int value = -1;
 
     value = 
-        (int) gramado_system_call ( 
+        (int) sc80 ( 
                 7000, 
                 (unsigned long) domain, 
                 (unsigned long) type, 
@@ -114,7 +114,7 @@ bind (
 // Check addr and addrlen.
 
     value = 
-        (int) gramado_system_call ( 
+        (int) sc80 ( 
                 7003, 
                 (unsigned long) sockfd, 
                 (unsigned long) addr, 
@@ -150,7 +150,7 @@ int listen(int sockfd, int backlog)
     }
 
     value = 
-        (int) gramado_system_call ( 
+        (int) sc80 ( 
                   7004, 
                   (unsigned long) sockfd, 
                   (unsigned long) backlog, 
@@ -204,7 +204,7 @@ int accept2 (int sockfd, struct sockaddr *addr, socklen_t *addrlen)
     }
 
     value = 
-        (int) gramado_system_call ( 
+        (int) sc80 ( 
                 7010, 
                 (unsigned long) sockfd, 
                 (unsigned long) addr, 
@@ -239,7 +239,7 @@ int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
     }
 
     value = 
-        (int) gramado_system_call ( 
+        (int) sc80 ( 
                   7002, 
                   (unsigned long) sockfd, 
                   (unsigned long) addr, 
@@ -269,7 +269,7 @@ connect (
     }
 
     value = 
-        (int) gramado_system_call ( 
+        (int) sc80 ( 
                   7001, 
                   (unsigned long) sockfd, 
                   (unsigned long) addr, 
@@ -304,7 +304,7 @@ int shutdown(int sockfd, int how)
     // #todo: Check 'how' parameter?
 
     value = 
-        (int) gramado_system_call ( 
+        (int) sc80 ( 
             7009, 
             (unsigned long) sockfd, 
             (unsigned long) how, 
@@ -546,7 +546,7 @@ getsockname (
     }
 
     value = 
-        (int) gramado_system_call ( 
+        (int) sc80 ( 
                   7007, 
                   (unsigned long) sockfd, 
                   (unsigned long) addr, 

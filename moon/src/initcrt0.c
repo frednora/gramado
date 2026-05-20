@@ -167,8 +167,7 @@ void crt0(unsigned long rdi)
 
     // Stage 1
     // #debug: put char
-    //gramado_system_call(65,'1',0,0); 
-
+    // sc80(65,'1',0,0); 
 
 // ---------------------------------------------------------
 // #debug

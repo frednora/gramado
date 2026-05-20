@@ -30,7 +30,7 @@ time_t time(time_t *timer)
     }
 */
 
-    Ret = (time_t) gramado_system_call ( 224, 0, 0, 0 );
+    Ret = (time_t) sc80 ( 224, 0, 0, 0 );
 
     *timer = Ret;
 

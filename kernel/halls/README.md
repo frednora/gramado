@@ -29,6 +29,6 @@ User interaction - (user-driven interrupts):
  * dev/chardev/ - (Keyboard, mouse, display)
 ```
 
-## dev
+## platform
 
 acpi, pci, usb.

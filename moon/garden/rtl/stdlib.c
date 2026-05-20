@@ -1911,7 +1911,8 @@ static int __init_heap(void)
 // Se essa libc for usada por ela, então o pid pode ser
 // o pid 0, do kernel.
 
-    int thisprocess_id = (int) gramado_system_call ( 85, 0, 0, 0); 
+    int thisprocess_id = (int) sc80 ( 85, 0, 0, 0);
+
     //if (thisprocess_id <= 0 ){
     if (thisprocess_id < 0 ){
         debug_print ("__init_heap: [FAIL] thisprocess_id  ~~>  :) \n");
@@ -1927,10 +1928,10 @@ static int __init_heap(void)
 // compartilhada com esse processo.
 
     unsigned char *heaptest = 
-        (unsigned char *) gramado_system_call ( 184, thisprocess_id, 0, 0 );
-    if ( (void*) heaptest == NULL )
-    {
-        debug_print ("__init_heap: [FAIL] heaptest \n");
+        (unsigned char *) sc80 ( 184, thisprocess_id, 0, 0 );
+
+    if ((void*) heaptest == NULL){
+        debug_print ("__init_heap: [FAIL] heaptest\n");
         goto fail;
     }
 

@@ -150,7 +150,7 @@ execve (
     }
 
     value = 
-        (int) gramado_system_call ( 
+        (int) sc80 ( 
                   248, 
                   (unsigned long) path, 
                   (unsigned long) argv,   
@@ -174,14 +174,13 @@ ssize_t read_tty (int fd, const void *buf, size_t count)
         errno=EBADF;
         return -1;
     }
-    
-    return (ssize_t) gramado_system_call ( 
-                         272, 
-                         (unsigned long) fd,      // dispositivo.
-                         (unsigned long) buf, 
-                         (unsigned long) count ); 
-}
 
+    return (ssize_t) sc80 ( 
+                        272, 
+                        (unsigned long) fd,
+                        (unsigned long) buf, 
+                        (unsigned long) count ); 
+}
 
 // o descritor seleciona uma tty em ttyList[]
 ssize_t write_tty (int fd, const void *buf, size_t count)
@@ -192,11 +191,11 @@ ssize_t write_tty (int fd, const void *buf, size_t count)
         return -1;
     }
 
-    return (ssize_t) gramado_system_call ( 
-                         273, 
-                         (unsigned long) fd,      // dispositivo.
-                         (unsigned long) buf, 
-                         (unsigned long) count ); 
+    return (ssize_t) sc80 ( 
+                        273, 
+                        (unsigned long) fd,
+                        (unsigned long) buf, 
+                        (unsigned long) count ); 
 }
 
 // read on virtual console!
@@ -209,12 +208,11 @@ ssize_t read_VC (int fd, const void *buf, size_t count)
         return -1;
     }
 
-    return (ssize_t) gramado_system_call ( 
-                         262, 
-                         (unsigned long) fd,      // dispositivo.
-                         (unsigned long) buf, 
-                         (unsigned long) count ); 
-
+    return (ssize_t) sc80 ( 
+                        262, 
+                        (unsigned long) fd,
+                        (unsigned long) buf, 
+                        (unsigned long) count ); 
 }
 
 // write on virtual console!
@@ -227,11 +225,11 @@ ssize_t write_VC (int fd, const void *buf, size_t count)
         return -1;
     }
 
-    return (ssize_t) gramado_system_call ( 
-                         263, 
-                         (unsigned long) fd,      // dispositivo.
-                         (unsigned long) buf, 
-                         (unsigned long) count ); 
+    return (ssize_t) sc80 ( 
+                        263, 
+                        (unsigned long) fd,
+                        (unsigned long) buf, 
+                        (unsigned long) count ); 
 }
 
 ssize_t read(int fd, const void *buf, size_t count)
@@ -445,11 +443,12 @@ void exit(int status)
 
 // Syscall 70.
     value = 
-        (int) gramado_system_call( 
-                  UNISTD_SYSTEMCALL_EXIT, 
-                  (unsigned long) status, 
-                  (unsigned long) status, 
-                  (unsigned long) status );
+        (int) sc80( 
+                UNISTD_SYSTEMCALL_EXIT, 
+                (unsigned long) status, 
+                (unsigned long) status, 
+                (unsigned long) status 
+            );
 
     //if (value ...
 
@@ -463,13 +462,14 @@ pid_t fork(void)
 
     debug_print("fork: \n");
 
-// Syscall 71.
+// Service 71
     value = 
-        (pid_t) gramado_system_call ( 
+        (pid_t) sc80 ( 
                     UNISTD_SYSTEMCALL_FORK, 
                     0, 
                     0, 
-                    0 );
+                    0 
+                );
 
     if (value<0)
     {
@@ -506,8 +506,9 @@ int setuid(uid_t uid)
 // Ainda não temos a suystem call.
 // SYSTEMCALL_SETCURRENTUSERID
 
-    value = (uid_t) gramado_system_call ( 151, 0, 0, 0 );
-    if (value<0){
+    value = (uid_t) sc80 ( 151, 0, 0, 0 );
+    if (value < 0)
+    {
         errno = (-value);
         return (int) -1; 
     }
@@ -523,7 +524,7 @@ uid_t getuid(void)
     uid_t value=-1;
 
 // Syscall 152
-    value = (uid_t) gramado_system_call(152,0,0,0);
+    value = (uid_t) sc80(152,0,0,0);
     if (value<0){
         errno = (-value);
         return (int) -1; 
@@ -547,7 +548,7 @@ int setgid(gid_t gid)
 gid_t getgid (void)
 {
     //SYSTEMCALL_GETCURRENTGROUPID
-    return (gid_t) gramado_system_call ( 154, 0, 0, 0 );
+    return (gid_t) sc80 ( 154, 0, 0, 0 );
 }
 
 // ===============================
@@ -564,7 +565,7 @@ int seteuid(uid_t euid)
 uid_t geteuid(void)
 {
     debug_print ("geteuid: [TODO]\n");
-    //return (uid_t) gramado_system_call ( ?, 0, 0, 0 );
+    //return (uid_t) sc80 ( ?, 0, 0, 0 );
     return -1;
 } 
 
@@ -585,27 +586,23 @@ gid_t getegid(void)
     return -1;
 }
 
-
-// ===============================
-// pid
 pid_t getpid(void)
 {
     unsigned long ul_value=0;
+
     ul_value = 
-        (unsigned long) gramado_system_call ( 
+        (unsigned long) sc80 ( 
             UNISTD_SYSTEMCALL_GETPID, 0, 0, 0 );
+
 // 32bit value.
     return (pid_t) (ul_value & 0xFFFFFFFF);
 }
 
-
-// ===============================
-// ppid
 pid_t getppid(void)
 {
     unsigned long ul_value=0;
     ul_value = 
-        (unsigned long) gramado_system_call ( 
+        (unsigned long) sc80 ( 
             UNISTD_SYSTEMCALL_GETPPID, 0, 0, 0 );
 // 32bit value.
     return (pid_t) (ul_value & 0xFFFFFFFF);
@@ -615,7 +612,7 @@ pid_t getppid(void)
 int gettid(void)
 {
     unsigned long ul_value=0;
-    ul_value = (unsigned long) gramado_system_call(87, 0, 0, 0);
+    ul_value = (unsigned long) sc80(87, 0, 0, 0);
 // 32bit value
     return (pid_t) (ul_value & 0xFFFFFFFF);
 };
@@ -883,9 +880,9 @@ int dup(int oldfd)
         return (int) -1;
     }
 
-// Syscall 600.
+// Service 600
     value = 
-        (int) gramado_system_call( 
+        (int) sc80( 
                   600,
                   (unsigned long) oldfd,
                   (unsigned long) oldfd,
@@ -917,7 +914,7 @@ int dup2(int oldfd, int newfd)
 
 // Syscall 601.
     value = 
-        (int) gramado_system_call ( 
+        (int) sc80 ( 
                   601,
                   (unsigned long) oldfd, 
                   (unsigned long) newfd, 
@@ -949,7 +946,7 @@ int dup3(int oldfd, int newfd, int flags)
 
 // Syscall 602
     value = 
-        (int) gramado_system_call ( 
+        (int) sc80 ( 
                   602,
                   (unsigned long) oldfd, 
                   (unsigned long) newfd, 
@@ -1036,7 +1033,7 @@ int mkdir(const char *pathname, mode_t mode)
 // #todo
 // 'mode' parameter.
     value = 
-        (int) gramado_system_call ( 
+        (int) sc80 ( 
                   44, 
                   (unsigned long) pathname, 
                   0, 
@@ -1299,7 +1296,7 @@ int close(int fd)
 // Syscall 17.
 // Is it for sys_close() in kernel?
     value = 
-        (int) gramado_system_call ( 
+        (int) sc80 ( 
                   17, 
                   (unsigned long) fd, 
                   (unsigned long) fd, 
@@ -1315,7 +1312,7 @@ int close(int fd)
 
 int pipe2 ( int pipefd[2], int flags )
 {
-    return (int) gramado_system_call ( 
+    return (int) sc80 ( 
                     247, 
                     (unsigned long) pipefd, 
                     (unsigned long) flags, 
@@ -1369,7 +1366,8 @@ char __Hostname_buffer[64];
 char *__gethostname(void)
 {
 // Adapter. System dependent.
-    gramado_system_call ( 
+
+    sc80 ( 
         801, 
        (unsigned long) &__Hostname_buffer[0],
        (unsigned long) &__Hostname_buffer[0],
@@ -1402,7 +1400,7 @@ int gethostname (char *name, size_t len)
     }
 
     value = 
-        (int) gramado_system_call ( 
+        (int) sc80 ( 
                   38, 
                   (unsigned long) name,
                   (unsigned long) name,
@@ -1442,7 +1440,7 @@ int sethostname (const char *name, size_t len)
     }
 
     value = 
-        (int) gramado_system_call ( 
+        (int) sc80 ( 
                   39, 
                   (unsigned long) name,
                   (unsigned long) name,
@@ -1484,7 +1482,7 @@ int __getlogin(char *logname, size_t sz)
 char __Login_buffer[64];
 char *getlogin (void)
 {
-    gramado_system_call ( 
+    sc80 ( 
         803, 
         (unsigned long) &__Login_buffer[0],
         (unsigned long) &__Login_buffer[0],
@@ -1511,7 +1509,7 @@ int setlogin (const char *name)
     }
 
     value = 
-        (int) gramado_system_call ( 
+        (int) sc80 ( 
                   804, 
                   (unsigned long) name,
                   (unsigned long) name,
@@ -1546,10 +1544,10 @@ int getusername (char *name, size_t len)
         return -1;
     }
 
-// Coloca no buffer interno.
+// Coloca no buffer interno
 
     value = 
-        (int) gramado_system_call ( 
+        (int) sc80 ( 
                   40, 
                   (unsigned long) name,
                   (unsigned long) name,
@@ -1618,7 +1616,7 @@ int setusername (const char *name, size_t len)
     }
 
     value = 
-        (int) gramado_system_call( 
+        (int) sc80( 
                   41, 
                   (unsigned long) name,
                   (unsigned long) name,
@@ -1720,7 +1718,7 @@ int ttyslot (void)
 int ttyto( int fd);
 int ttyto( int fd)
 {
-    return (int) gramado_system_call ( ?, 
+    return (int) sc80 ( ?, 
                     (unsigned long) fd,
                     (unsigned long) fd,
                     (unsigned long) fd );
@@ -1808,7 +1806,7 @@ int fstat(int fd, struct stat *buf)
     }
 
     value = 
-        (int) gramado_system_call ( 
+        (int) sc80 ( 
                   4005, 
                   (unsigned long) fd,
                   (unsigned long) buf,
@@ -1897,7 +1895,7 @@ unsigned int alarm (unsigned int seconds)
         return (unsigned int) 0;
     }
 
-    return (unsigned int) gramado_system_call(
+    return (unsigned int) sc80(
                               884,
                               (unsigned long) seconds, 
                               0,
@@ -2037,7 +2035,7 @@ int chdir(const char *path)
 
 // Syscall 175.
     value = 
-        (int) gramado_system_call ( 
+        (int) sc80 ( 
                   175, 
                   (unsigned long) path,
                   (unsigned long) path, 
@@ -2126,7 +2124,7 @@ off_t lseek(int fd, off_t offset, int whence)
         return (-1);
     }
 
-    return (off_t) gramado_system_call ( 
+    return (off_t) sc80 ( 
                        603, 
                        (unsigned long) fd,
                        (unsigned long) offset,
@@ -2267,7 +2265,7 @@ int uname(struct utsname *buf)
 
 // Syscall 377
     value = 
-        (int) gramado_system_call ( 
+        (int) sc80 ( 
                   377, 
                   (unsigned long) buf, 
                   0, 
@@ -2769,7 +2767,7 @@ posix_spawn (
 
 // Syscall 900.
     value = 
-        (int) gramado_system_call( 
+        (int) sc80( 
                   900, 
                   (unsigned long) path, 
                   0, 
@@ -2794,7 +2792,8 @@ posix_spawnp (
     char *const envp[] )
 {
     debug_print ("posix_spawn: [FIXME] It's a work in progress.\n"); 
-    return (int) gramado_system_call ( 900, (unsigned long) file, 0, 0 );
+
+    return (int) sc80 ( 900, (unsigned long) file, 0, 0 );
 }
 
 
@@ -2832,13 +2831,14 @@ int spawnv(int mode, char *cmd, char **argv)
         return -1;
     }
 
-// Syscall 900.
+// Service 900
     value = 
-        (int) gramado_system_call( 
-                  900, 
-                  (unsigned long) cmd, 
-                  0, 
-                  0 );
+        (int) sc80 ( 
+                900, 
+                (unsigned long) cmd, 
+                0, 
+                0 
+        );
 
     if (value<0){
         errno = (-value);
@@ -2860,13 +2860,14 @@ int spawnve(int mode, char *path, char *argv[], char *envp[])
         return -1;
     }
 
-// Syscall 900.
+// Service 900
     value = 
-        (int) gramado_system_call( 
-                  900, 
-                  (unsigned long) path, 
-                  0, 
-                  0 );
+        (int) sc80 ( 
+                900, 
+                (unsigned long) path, 
+                0, 
+                0 
+            );
 
     if (value<0){
         errno=(-value);
@@ -2888,13 +2889,14 @@ int spawnvp(int mode, char *path, char *argv[])
         return -1;
     }
 
-// Syscall 900
+// Service 900
     value = 
-        (int) gramado_system_call ( 
-                  900, 
-                  (unsigned long) path, 
-                  0, 
-                  0 );
+        (int) sc80 ( 
+                900, 
+                (unsigned long) path, 
+                0, 
+                0 
+            );
 
     if (value<0){
         errno = (-value);
@@ -2920,13 +2922,14 @@ spawnvpe(
         return -1;
     }
 
-// Syscall 900.
+// Service 900
     value = 
-        (int) gramado_system_call ( 
-                  900, 
-                  (unsigned long) path, 
-                  0, 
-                  0 );
+        (int) sc80 ( 
+                900, 
+                (unsigned long) path, 
+                0, 
+                0 
+            );
 
     if (value<0){
         errno = (-value);
@@ -2960,11 +2963,12 @@ spawnveg(
     }
 
     value = 
-        (int) gramado_system_call ( 
-                  900, 
-                  (unsigned long) command, 
-                  0, 
-                  0 );
+        (int) sc80 ( 
+                900, 
+                (unsigned long) command, 
+                0, 
+                0 
+            );
 
     if (value<0){
        errno=(-value);
