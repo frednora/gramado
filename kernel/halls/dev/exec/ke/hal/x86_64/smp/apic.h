@@ -328,6 +328,10 @@ struct lapic_info_d
 	// ...
 
 
+	int gdt_initialized;
+	int tss_initialized;
+	// ...
+
     struct dpc_queue_d  DPC_QUEUE;
 };
 

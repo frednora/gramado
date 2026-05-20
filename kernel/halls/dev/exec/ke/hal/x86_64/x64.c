@@ -399,6 +399,10 @@ x64_init_gdt(
 // #todo
 // print gdt entries.
 
+    lapic_info[lapic_info_id].gdt_initialized = TRUE;
+    lapic_info[lapic_info_id].tss_initialized = TRUE;
+    // ...
+
     return 0;
 }
 

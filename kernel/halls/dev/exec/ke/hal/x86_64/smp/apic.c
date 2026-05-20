@@ -1209,6 +1209,12 @@ int lapic_info_initializing(unsigned long lapic_pa, int lapic_info_id)
             //*(volatile unsigned int*)(lapic_info[lapic_info_id].lapic_va + ?) = 0x01000000; 
             //*(volatile unsigned int*)(lapic_info[lapic_info_id].lapic_va + 0x20) = 8;
 
+
+            lapic_info[i].gdt_initialized = FALSE;
+            lapic_info[i].tss_initialized = FALSE;
+            // ...
+
+
             // The structure is consided initialized
             lapic_info[i].initialized = TRUE;
         };
