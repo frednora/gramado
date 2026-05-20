@@ -100,7 +100,7 @@ void
 gdeshell_send_packet(void)
 {
     while(1){
-        gramado_system_call( 891, 
+        sc80( 891, 
             (unsigned long)test_packet,   //buf
             (unsigned long)1500,          //len
             0);
@@ -284,7 +284,7 @@ void network_test_buffer(void)
     while (1)
     {
         // IN: Service, buffer, lenght, nothing.
-        gramado_system_call( 890, 
+        sc80( 890, 
             (unsigned long) &buf[0], (unsigned long) 1500, 0);
 
         //printf("[begin]%s[end]\n",buf);
@@ -305,7 +305,7 @@ void network_initialize(void)
 {
     debug_print("network_initialize:\n");
     printf     ("network_initialize: Initializing the ring0 network manager...\n");
-    gramado_system_call(968,0,0,0);
+    sc80(968,0,0,0);
 }
 
 // 

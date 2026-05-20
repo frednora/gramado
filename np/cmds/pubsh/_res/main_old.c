@@ -35,7 +35,7 @@ char *__get_commandline (void)
 
 fail:
     if (FlagStatus == 0){
-        gramado_system_call(265,0,0,0); //yield 
+        sc80(265,0,0,0); //yield 
         return (char *) 0;
     }
 }

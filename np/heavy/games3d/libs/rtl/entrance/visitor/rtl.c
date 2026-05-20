@@ -2,7 +2,7 @@
  * File: rtl.c 
  * Low level code used by all the rtl files.
  * Environment:
- *     Ring3, Gramado userland/.
+ *     Ring3, Gramado OS.
  * Created by Fred Nora.
  */
 
@@ -15,10 +15,10 @@
 
 // ----------------------
 // Functions to exetute the syscalls via interrupts.
-//   + 0x80 - gramado_system_call()
 //   + 0x80 - sc80()
 //   + 0x81 - sc81()
 //   + 0x82 - sc82()
+//   + 0x83 - sc83()
 
 #include <stdio.h>
 #include <types.h> 
@@ -244,7 +244,7 @@ void rtl_elegant_exit_on_fail(void)
 
 int rtl_get_input_mode(void)
 {
-    return (int) gramado_system_call(911,0,0,0);
+    return (int) sc80(911,0,0,0);
 }
 
 // #todo:
@@ -254,7 +254,7 @@ void rtl_set_input_mode(int mode)
     if (mode < 0)
         return;
 
-    gramado_system_call(
+    sc80(
         912,    // What is that?
         mode,
         mode,
@@ -347,7 +347,7 @@ unsigned long rtl_get_system_message(unsigned long message_buffer)
         return 0;
     }
 // Input adapter. System dependent.
-    gramado_system_call ( 
+    sc80 ( 
         111,
         (unsigned long) message_buffer,
         (unsigned long) message_buffer,
@@ -366,7 +366,7 @@ rtl_get_system_message2(
         return 0;
     }
 // (Input adapter). System dependent.
-    gramado_system_call ( 
+    sc80 ( 
         120,
         (unsigned long) message_buffer,
         (unsigned long) index,
@@ -397,7 +397,7 @@ rtl_post_system_message(
     }
 
 // #todo: Get return value in 'return_value'.
-    gramado_system_call ( 
+    sc80 ( 
         (unsigned long) 112,
         (unsigned long) tid,
         (unsigned long) message_buffer,
@@ -587,10 +587,14 @@ struct rtl_event_d *rtl_next_event (void)
 // the limit of this structure. Only 8 elements.
 
     rtl_enter_critical_section(); 
-    gramado_system_call ( 111,
+
+    sc80 ( 
+        111,
         (unsigned long) &rtlEvent,
         (unsigned long) &rtlEvent,
-        (unsigned long) &rtlEvent );
+        (unsigned long) &rtlEvent 
+    );
+
     rtl_exit_critical_section(); 
 
  // Check if it is a valid event.
@@ -629,8 +633,7 @@ void rtl_enter_critical_section (void)
 {
     int S=0;
     while (TRUE){
-        S = (int) gramado_system_call ( 
-                      SYSTEMCALL_GET_KERNELSEMAPHORE, 0, 0, 0 );
+        S = (int) sc80 ( SYSTEMCALL_GET_KERNELSEMAPHORE, 0, 0, 0 );
         if (S == 1){
             goto done;
         }
@@ -639,7 +642,7 @@ void rtl_enter_critical_section (void)
 done:
 // #todo
 // Muda para zero para que ninguem entre.
-    gramado_system_call ( SYSTEMCALL_CLOSE_KERNELSEMAPHORE, 0, 0, 0 );
+    sc80 ( SYSTEMCALL_CLOSE_KERNELSEMAPHORE, 0, 0, 0 );
     return;
 }
 
@@ -650,11 +653,12 @@ done:
 // um semáforo e sim um spinlock não atômico.
 void rtl_exit_critical_section (void)
 {
-    gramado_system_call ( 
+    sc80 ( 
         SYSTEMCALL_OPEN_KERNELSEMAPHORE, 
         0, 
         0, 
-        0 );
+        0 
+    );
 }
 
 // Create empty file.
@@ -673,7 +677,7 @@ int rtl_create_empty_file(char *file_name)
     }
 
     Value = 
-        (unsigned long) gramado_system_call ( 
+        (unsigned long) sc80 ( 
                             43, 
                             (unsigned long) file_name, 
                             0, 
@@ -705,7 +709,7 @@ int rtl_create_empty_directory(char *dir_name)
 // TRUE or FALSE ?
 
     Value = 
-        (unsigned long) gramado_system_call ( 
+        (unsigned long) sc80 ( 
                             44, 
                             (unsigned long) dir_name, 
                             0, 
@@ -732,7 +736,7 @@ void *rtl_create_process(const char *file_name)
 // Retorna o ponteiro para uma estrutura de processo
 // que esta em ring0, ou NULL.
 
-    return (void*) gramado_system_call( 
+    return (void*) sc80( 
         73, 
         (unsigned long) &pName[0],
         3,  //priority
@@ -776,7 +780,8 @@ void *rtl_create_thread (
 {
     //#define	SYSTEMCALL_CREATETHREAD     72
     debug_print ("rtl_create_thread:\n");
-    return (void *) gramado_system_call ( 
+
+    return (void *) sc80 ( 
                         72,    //SYSTEMCALL_CREATETHREAD, 
                         init_rip, 
                         init_stack, 
@@ -793,7 +798,8 @@ void *rtl_create_thread (
 void rtl_start_thread (void *thread)
 {
     debug_print ("rtl_create_thread:\n");
-    gramado_system_call ( 
+
+    sc80 ( 
         SYSTEMCALL_STARTTHREAD, 
         (unsigned long) thread, 
         (unsigned long) thread, 
@@ -917,7 +923,7 @@ rtl_draw_text (
     msg[6] = (unsigned long) 0;
     msg[7] = (unsigned long) 0; 
 
-    return (int) gramado_system_call ( 
+    return (int) sc80 ( 
                      SYSTEMCALL_DRAWTEXT, 
                     (unsigned long) &msg[0], 
                     (unsigned long) &msg[0], 
@@ -936,7 +942,7 @@ void rtl_show_backbuffer (void)
 // trocar o nome dessa systemcall.
 // refresh screen será associado à refresh all windows.
     
-    gramado_system_call ( SYSTEMCALL_REFRESHSCREEN, 0, 0, 0 );
+    sc80 ( SYSTEMCALL_REFRESHSCREEN, 0, 0, 0 );
 }
 
 
@@ -953,7 +959,7 @@ unsigned long rtl_get_system_metrics (int index)
         //return 0;
     //}
 
-    return (unsigned long) gramado_system_call ( 
+    return (unsigned long) sc80 ( 
                                SYSTEMCALL_GETSYSTEMMETRICS, 
                                (unsigned long) index, 
                                (unsigned long) index, 
@@ -1147,7 +1153,7 @@ int rtl_sleep_if_socket_is_empty(int fd)
     if (fd<0){
         return -1;   //error
     }
-    return (int) gramado_system_call(913,fd,fd,fd);
+    return (int) sc80(913,fd,fd,fd);
 }
 
 /*
@@ -2051,7 +2057,7 @@ rtl_load_path (
     //    return -1;
     //}
 
-    status = (int) gramado_system_call ( 4004, 
+    status = (int) sc80 ( 4004, 
                        (unsigned long) path, 
                        (unsigned long) buffer, 
                        (unsigned long) buffer_len );
@@ -2131,7 +2137,7 @@ int rtl_focus_on_me(void)
 // Wait for the next round.
 void rtl_yield(void)
 {
-    gramado_system_call (265,0,0,0);
+    sc80 (265,0,0,0);
 }
 
 // This is a worker called bu rtl_sleep()
@@ -2154,7 +2160,7 @@ void rtl_sleep(unsigned long ms)
 // It can be flushed into the framebuffer.
 void rtl_invalidate_screen(void)
 {
-    gramado_system_call (896,0,0,0); 
+    sc80 (896,0,0,0); 
 }
 
 //
@@ -2178,7 +2184,8 @@ void *shAlloc(size_t size_in_bytes)
     if (size_in_bytes==0){
         size_in_bytes++;
     }
-    return (void*) gramado_system_call (891,size_in_bytes,0,0); 
+
+    return (void*) sc80 (891,size_in_bytes,0,0); 
 }
 
 /* compare two ASCII strings ignoring case */

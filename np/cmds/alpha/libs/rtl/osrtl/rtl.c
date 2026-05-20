@@ -2,7 +2,7 @@
  * File: rtl.c 
  * Low level code used by all the rtl files.
  * Environment:
- *     Ring3, Gramado userland/.
+ *     Ring3, Gramado OS.
  * Created by Fred Nora.
  */
 
@@ -15,10 +15,10 @@
 
 // ----------------------
 // Functions to exetute the syscalls via interrupts.
-//   + 0x80 - gramado_system_call()
 //   + 0x80 - sc80()
 //   + 0x81 - sc81()
 //   + 0x82 - sc82()
+//   + 0x83 - sc83()
 
 #include <stdio.h>
 #include <types.h> 

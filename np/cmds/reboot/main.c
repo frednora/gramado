@@ -39,7 +39,7 @@ int main( int argc, char *argv[] )
     // #debug
     //rtl_reboot();
 
-    //gramado_system_call(65,'3',0,0);
+    //sc80(65,'3',0,0);
     //printf ("REBOOT.BIN: This is a test\n");
 
 /*
