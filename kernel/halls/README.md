@@ -10,6 +10,12 @@
 
 ## Folders
 
+```
+ dev/      - Device drivers
+ platform/ - BUS/plataform support
+```
+
+## dev
 
 ``` 
 Application interaction - (application-driven interrupts):
@@ -23,3 +29,6 @@ User interaction - (user-driven interrupts):
  * dev/chardev/ - (Keyboard, mouse, display)
 ```
 
+## dev
+
+acpi, pci, usb.

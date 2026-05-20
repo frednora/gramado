@@ -1,5 +1,19 @@
-# garden
+# garden - Entries
 
 The entry point for the kernel. 
-During the startup and during the interrupts and syscalls.
+
+## Folders
+
+```
+ap/  - AP processors
+bsp/ - BSP processors
+```
+
+## Purpose
+
+```
++ Entrypoint during the BSP/AP startup.
++ Entrypoint during traps and syscalls.
+
+```
 
