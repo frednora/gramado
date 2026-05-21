@@ -32,6 +32,9 @@ struct dccanvas_d *dc00;  // shared dc
 static unsigned long __sh_flags = 0;
 
 
+struct ui_component_d *uic_button_restart;
+struct ui_component_d *uic_button_shutdown;
+
 struct button_info_d
 {
     int button_id;
@@ -241,18 +244,27 @@ static void update_children(int fd)
     MyButton_Restart.absolute_left = wi.left + wi.cr_left + MyButton_Restart.left;
     MyButton_Restart.absolute_top = wi.top + wi.cr_top + MyButton_Restart.top;
 
-    lingui_draw_rectangle0_dc (
-        dc00,
-        MyButton_Restart.left, 
-        MyButton_Restart.top, 
-        button_w, 
-        button_h,
-        COLOR_GRAY,
-        0  // ROP
+    //lingui_draw_rectangle0_dc (
+    //    dc00,
+    //    MyButton_Restart.left, 
+    //    MyButton_Restart.top, 
+    //    button_w, 
+    //    button_h,
+    //    COLOR_GRAY,
+    //    0  // ROP
+    //);
+    //libgui_drawchar_dc ( 
+    //    dc00, MyButton_Restart.left, MyButton_Restart.top,
+    //    'R', COLOR_YELLOW, COLOR_BLUE, 0 );
+
+    // #todo
+    // Create function to update position and dimension
+    // for the ui component
+    libgui_redraw_ui_component(
+        uic_button_restart,
+        dc00
     );
-    libgui_drawchar_dc ( 
-        dc00, MyButton_Restart.left, MyButton_Restart.top,
-        'R', COLOR_YELLOW, COLOR_BLUE, 0 );
+
 
 // -------------------------------------------------
 // Draw shutdown button
@@ -265,18 +277,27 @@ static void update_children(int fd)
     MyButton_Shutdown.absolute_left = wi.left + wi.cr_left + MyButton_Shutdown.left;
     MyButton_Shutdown.absolute_top = wi.top + wi.cr_top + MyButton_Shutdown.top;
 
-    lingui_draw_rectangle0_dc (
-        dc00,
-        MyButton_Shutdown.left, 
-        MyButton_Shutdown.top, 
-        button_w, 
-        button_h,
-        COLOR_GRAY,
-        0  // ROP
+    //lingui_draw_rectangle0_dc (
+    //    dc00,
+    //    MyButton_Shutdown.left, 
+    //    MyButton_Shutdown.top, 
+    //    button_w, 
+    //    button_h,
+    //    COLOR_GRAY,
+    //    0  // ROP
+    //);
+    //libgui_drawchar_dc ( 
+    //    dc00, MyButton_Shutdown.left, MyButton_Shutdown.top,
+    //    'S', COLOR_YELLOW, COLOR_BLUE, 0 );
+
+    // #todo
+    // Create function to update position and dimension
+    // for the ui component
+    libgui_redraw_ui_component(
+        uic_button_shutdown,
+        dc00
     );
-    libgui_drawchar_dc ( 
-        dc00, MyButton_Shutdown.left, MyButton_Shutdown.top,
-        'S', COLOR_YELLOW, COLOR_BLUE, 0 );
+
 }
 
 
@@ -671,7 +692,7 @@ int main(int argc, char *argv[])
     }
 
 
-// bg
+// bg for the client area
     lingui_draw_rectangle0_dc (
         dc00,
         0, 0, wi.cr_width, wi.cr_height,
@@ -705,7 +726,6 @@ int main(int argc, char *argv[])
         0, // ROP 
         "power app: Testing string" 
     );
-
 
     /*
     if ((void*)dc00 != NULL)
@@ -754,30 +774,23 @@ int main(int argc, char *argv[])
     // Initial state
     // MyButton_Restart.state = 0;
 
-// Drawing a fake button
-    //lingui_draw_rectangle0_dc (
-    //    dc00,
-    //    MyButton_Restart.left, 
-    //    MyButton_Restart.top, 
-    //    MyButton_Restart.width, 
-    //    MyButton_Restart.height,
-    //    COLOR_GRAY,
-    //    0  // ROP
-    //);
-    libgui_create_ui_component (
+
+// Create a button
+    uic_button_restart = libgui_create_ui_component (
         dc00, 
-        1,   // type=button 
+        1,   // type = button 
         MyButton_Restart.left, 
         MyButton_Restart.top, 
         MyButton_Restart.width, 
-        MyButton_Restart.height 
+        MyButton_Restart.height,
+        "Restart"
     );
-    libgui_drawchar_dc ( 
-        dc00, 
-        MyButton_Restart.left +4, 
-        MyButton_Restart.top  +4,
-        'R', COLOR_WHITE, COLOR_GRAY, 0 
-    );
+    //libgui_drawchar_dc ( 
+    //    dc00, 
+    //    MyButton_Restart.left +8, 
+    //    MyButton_Restart.top  +8,
+    //    'R', COLOR_WHITE, COLOR_GRAY, 0 
+    //);
 
 // ============================================================
 // Create shutdown button
@@ -798,22 +811,22 @@ int main(int argc, char *argv[])
     // Initial state
     // MyButton_Shutdown.state = 0;
 
-    lingui_draw_rectangle0_dc (
-        dc00,
+// Create a button
+    uic_button_shutdown = libgui_create_ui_component (
+        dc00, 
+        1,   // type = button 
         MyButton_Shutdown.left, 
         MyButton_Shutdown.top, 
         MyButton_Shutdown.width, 
         MyButton_Shutdown.height,
-        COLOR_GRAY,
-        0  // ROP
+        "Shutdown"
     );
-
-    libgui_drawchar_dc ( 
-        dc00, 
-        MyButton_Shutdown.left, 
-        MyButton_Shutdown.top,
-        'S', COLOR_YELLOW, COLOR_BLUE, 0 
-    );
+    //libgui_drawchar_dc ( 
+    //    dc00, 
+    //    MyButton_Shutdown.left +8, 
+    //    MyButton_Shutdown.top  +8,
+    //    'S', COLOR_YELLOW, COLOR_BLUE, 0 
+    //);
 
 // ---------------------
 

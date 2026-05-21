@@ -5225,7 +5225,8 @@ struct ui_component_d *libgui_create_ui_component(
     unsigned long left,
     unsigned long top,
     unsigned long width,
-    unsigned long height )
+    unsigned long height,
+    const char *label )
 {
     struct ui_component_d *uic;
 
@@ -5256,7 +5257,7 @@ struct ui_component_d *libgui_create_ui_component(
 	{
 		uic->type = 1;
 
-		// Draw button
+		// Draw button's background
         lingui_draw_rectangle0_dc(
             dc,
             left, top, width, height,
@@ -5264,6 +5265,7 @@ struct ui_component_d *libgui_create_ui_component(
             0   //rop 
         );
 
+		// Draw button's borders
         __draw_button_borders_dc(
             dc,
             uic,
@@ -5274,12 +5276,88 @@ struct ui_component_d *libgui_create_ui_component(
             0x00101010   // outer 
 		);
 
+		// Draw button's label
+        libgui_drawstring_dc(
+            dc,
+            left +8,
+            top  +8,
+            0x00101010,   // white
+            0x00C0C0C0,   // gray
+            0,    // ROP 
+            label 
+        );
+
 		// ...
 	}
 
 	// ...
     return (struct ui_component_d *) uic;
 }
+
+int 
+libgui_redraw_ui_component(
+	struct ui_component_d *uic,
+    struct dccanvas_d *dc )
+{
+
+	// uic
+    if ((void*) uic == NULL)
+        return -1;
+	if (uic->magic != 1234)
+        return -1;
+
+	// dc
+    if ((void*) dc == NULL)
+        return -1;
+	if (dc->magic != 1234)
+        return -1;
+
+
+	if (uic->type < 0)
+	    return -1;
+
+    // Button
+	if (uic->type == 1)
+	{
+
+		// Draw button's background
+        lingui_draw_rectangle0_dc(
+            dc,
+            uic->left, uic->top, uic->width, uic->height,
+            0x00C0C0C0,  //color
+            0   //rop 
+        );
+
+		// Draw button's borders
+        __draw_button_borders_dc(
+            dc,
+            uic,
+            0x00E0E0E0,  // tl 2 inner (light)
+            0x00FAFAFA,  // tl 1 most inner (lighter)
+            0x00505050,  // br 2 inner (dark)
+            0x00989898,  // br 1 most inner (light) 
+            0x00101010   // outer 
+		);
+
+		// Draw button's label
+        libgui_drawstring_dc(
+            dc,
+            uic->left +8,
+            uic->top  +8,
+            0x00101010,   // white
+            0x00C0C0C0,   // gray
+            0,            // ROP 
+            "#todo"       // label 
+        );
+
+		// ...
+	}
+
+	// ...
+
+	return 0;
+}
+
 
 
 

@@ -263,7 +263,14 @@ struct ui_component_d *libgui_create_ui_component(
     unsigned long left,
     unsigned long top,
     unsigned long width,
-    unsigned long height );
+    unsigned long height,
+    const char *label );
+
+// Redraw a ui component
+int 
+libgui_redraw_ui_component(
+	struct ui_component_d *uic,
+    struct dccanvas_d *dc );
 
 //
 // #
