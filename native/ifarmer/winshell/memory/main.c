@@ -25,6 +25,10 @@ struct gws_display_d *Display;
 
 struct dccanvas_d *dc00;  // shared dc
 
+struct ui_component_d *uic_button_refresh;
+struct ui_component_d *uic_button_close;
+
+
 struct button_info_d
 {
     int button_id;
@@ -305,21 +309,31 @@ static void update_children(int fd)
 // =====================================
 // Refresh button
 
-    lingui_draw_rectangle0_dc (
-        dc00,
+    //lingui_draw_rectangle0_dc (
+    //    dc00,
+    //    MyButton_Refresh.left, 
+    //    MyButton_Refresh.top, 
+    //    MyButton_Refresh.width, 
+    //    MyButton_Refresh.height,
+    //    COLOR_GRAY,
+    //    0  // ROP
+    //);
+    //libgui_drawchar_dc ( 
+    //    dc00, 
+    //    MyButton_Refresh.left +2, 
+    //    MyButton_Refresh.top +2,
+    //    'R', COLOR_WHITE, COLOR_GRAY, 0 
+    //);
+    libgui_set_ui_component_position(
+        uic_button_refresh, 
         MyButton_Refresh.left, 
-        MyButton_Refresh.top, 
-        MyButton_Refresh.width, 
-        MyButton_Refresh.height,
-        COLOR_GRAY,
-        0  // ROP
-    );
-    libgui_drawchar_dc ( 
-        dc00, 
-        MyButton_Refresh.left +2, 
-        MyButton_Refresh.top +2,
-        'R', COLOR_WHITE, COLOR_GRAY, 0 
-    );
+        MyButton_Refresh.top );
+    libgui_set_ui_component_dimension(
+        uic_button_refresh,
+        button_w,
+        button_h );
+    libgui_redraw_ui_component( uic_button_refresh, dc00 );
+
 
 // =====================================
 // Close button
@@ -337,21 +351,32 @@ static void update_children(int fd)
     MyButton_Close.width         = button_w; //32;
     MyButton_Close.height        = button_h; //24;
 
-    lingui_draw_rectangle0_dc (
-        dc00,
+    //lingui_draw_rectangle0_dc (
+    //    dc00,
+    //    MyButton_Close.left, 
+    //    MyButton_Close.top, 
+    //    MyButton_Close.width, 
+    //    MyButton_Close.height,
+    //    COLOR_GRAY,
+    //    0  // ROP
+    //);
+    //libgui_drawchar_dc ( 
+    //    dc00, 
+    //    MyButton_Close.left +2, 
+    //    MyButton_Close.top +2,
+    //    'C', COLOR_WHITE, COLOR_GRAY, 0 
+    //);
+    libgui_set_ui_component_position(
+        uic_button_close, 
         MyButton_Close.left, 
-        MyButton_Close.top, 
-        MyButton_Close.width, 
-        MyButton_Close.height,
-        COLOR_GRAY,
-        0  // ROP
-    );
-    libgui_drawchar_dc ( 
-        dc00, 
-        MyButton_Close.left +2, 
-        MyButton_Close.top +2,
-        'C', COLOR_WHITE, COLOR_GRAY, 0 
-    );
+        MyButton_Close.top );
+    libgui_set_ui_component_dimension(
+        uic_button_close,
+        button_w,
+        button_h );
+    libgui_redraw_ui_component( uic_button_close, dc00 );
+
+
 }
 
 static void set_default_responder(int wid)
@@ -548,9 +573,6 @@ static void pump(int fd)
     memoryProcedure(fd, e->window, e->type, e->long1, e->long2);
 }
 
-// ----------------------------------------------------
-// Main
-// ----------------------------------------------------
 
 int main(int argc, char *argv[])
 {
@@ -612,8 +634,6 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    //gws_refresh_window(client_fd, main_window);
-
 
 // -- CLient Area ---------------------
 
@@ -661,14 +681,12 @@ int main(int argc, char *argv[])
         wi.ca_canvas_bpp
     );
 
-// ================================================
-
     if ((void*)dc00 == NULL){
         printf("memory: dc00\n");
         exit(1);
     }
 
-// bg
+// bg for the client area
     lingui_draw_rectangle0_dc (
         dc00,
         0, 0, wi.cr_width, wi.cr_height,
@@ -676,7 +694,7 @@ int main(int argc, char *argv[])
         0  // ROP
     );    
 
-// Draw the label string inside
+// String for the client area
     const char *label_chose = "System Memory Status: ";
     libgui_drawstring_dc(
         dc00,
@@ -742,32 +760,34 @@ int main(int argc, char *argv[])
     );
     */
 
-// Drawing a fake button
 
-   lingui_draw_rectangle0_dc (
-        dc00,
+
+    //lingui_draw_rectangle0_dc (
+    //    dc00,
+    //    MyButton_Refresh.left, 
+    //    MyButton_Refresh.top, 
+    //    MyButton_Refresh.width, 
+    //    MyButton_Refresh.height,
+    //    COLOR_GRAY,
+    //    0  // ROP
+    //);
+    //libgui_drawchar_dc ( 
+    //    dc00, 
+    //    MyButton_Refresh.left +2, 
+    //    MyButton_Refresh.top +2,
+    //    'R', COLOR_WHITE, COLOR_GRAY, 0 );
+
+// Create a button
+    uic_button_refresh = libgui_create_ui_component (
+        dc00, 
+        1,   // type = button 
         MyButton_Refresh.left, 
         MyButton_Refresh.top, 
         MyButton_Refresh.width, 
         MyButton_Refresh.height,
-        COLOR_GRAY,
-        0  // ROP
+        "Refresh"
     );
-    libgui_drawchar_dc ( 
-        dc00, 
-        MyButton_Refresh.left +2, 
-        MyButton_Refresh.top +2,
-        'R', COLOR_WHITE, COLOR_GRAY, 0 );
 
-/*
-// Refresh to show it
-    libgui_refresh_rectangle_via_kernel(
-        MyButton_Refresh.absolute_left, 
-        MyButton_Refresh.absolute_top, 
-        MyButton_Refresh.width, 
-        MyButton_Refresh.height
-    );
-*/
 
 // -------------------------------------------------------
 // Close button
@@ -812,23 +832,33 @@ int main(int argc, char *argv[])
     );
 */
 
-// Drawing a fake button
 
-    lingui_draw_rectangle0_dc (
-        dc00,
+    //lingui_draw_rectangle0_dc (
+    //    dc00,
+    //    MyButton_Close.left, 
+    //    MyButton_Close.top, 
+    //    MyButton_Close.width, 
+    //    MyButton_Close.height,
+    //    COLOR_GRAY,
+    //    0  // ROP
+    //);
+    //libgui_drawchar_dc ( 
+    //    dc00, 
+    //    MyButton_Close.left +2, 
+    //    MyButton_Close.top +2,
+    //    'C', COLOR_WHITE, COLOR_GRAY, 0 
+    //);
+// Create a button
+    uic_button_close = libgui_create_ui_component (
+        dc00, 
+        1,   // type = button 
         MyButton_Close.left, 
         MyButton_Close.top, 
         MyButton_Close.width, 
         MyButton_Close.height,
-        COLOR_GRAY,
-        0  // ROP
+        "Close"
     );
-    libgui_drawchar_dc ( 
-        dc00, 
-        MyButton_Close.left +2, 
-        MyButton_Close.top +2,
-        'C', COLOR_WHITE, COLOR_GRAY, 0 
-    );
+
 
 // Default responder
     //set_default_responder(refresh_button);
