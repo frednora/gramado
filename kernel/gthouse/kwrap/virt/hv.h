@@ -8,6 +8,47 @@
 #ifndef __VIRT_HV_H
 #define __VIRT_HV_H    1
 
+
+struct vmx_info_d
+{
+// The structure is fully initialized
+    int struct_initialized;
+
+    int support_confirmed_via_cpuid; // CPUID.01h:ECX[5]
+    int support_confirmed_via_msr;   // IA32_FEATURE_CONTROL MSR (0x3A)
+
+    // Final verdict: usable or not
+    // Enabled (both CPUID and MSR say yes).
+    int enabled;
+
+
+// If cpuid=0 → unsupported.
+// If cpuid=1 and msr=0 → disabled by BIOS.
+// If cpuid=1 and msr=1 → enabled.
+
+    // ...
+};
+
+struct svm_info_d
+{
+// The structure is fully initialized
+    int struct_initialized;
+
+    int support_confirmed_via_cpuid; // CPUID.80000001h:ECX[2]
+    int support_confirmed_via_msr;   // IA32_EFER MSR (0xC0000080), bit 12
+
+    // Final verdict: usable or not
+    // Enabled (both CPUID and MSR say yes).
+    int enabled;
+
+// If cpuid=0 → unsupported.
+// If cpuid=1 and msr=0 → disabled by BIOS.
+// If cpuid=1 and msr=1 → enabled.
+
+    // ...
+};
+
+
 // ----------------------------
 // "ACRNACRNACRN"
 // A Big Little Hypervisor for IoT Development.
@@ -114,8 +155,19 @@ int hv_is_qemu(void);
 
 void hv_ps2_full_initialization(void);
 
+// via cpuid. See: x64.c
 int hv_is_vmx_supported(void);
+int hv_is_svm_supported(void);
+
+// via MSR. See: hv.c
+int hv_detect_vmx(void);
+int hv_detect_svm(void);
+
+int enable_Intel_VMX(void);
+int disable_Intel_VMX(void);
+int enable_AMD_SVM(void);
+int disable_AMD_SVM(void);
+
 
 #endif   
-
 

@@ -3,19 +3,19 @@
 
 #include <kernel.h>
 
-static void __show_cpu_intel_parameters(void);
+static void __show_cpu_parameters(void);
 
 // =====================================================
 
 /*
- * __show_cpu_intel_parameters:
+ * __show_cpu_parameters:
  *     Mostra os parametros da CPU intel.
  * #todo: 
  *     Colocar em janela. 
  *     Criar funções: TerminalShowCPUIntelParameters()
  *                    ShowCPUIntelParameters()
  */
-void __show_cpu_intel_parameters(void)
+void __show_cpu_parameters(void)
 {
     printk("\n");
 
@@ -118,13 +118,22 @@ void __show_cpu_intel_parameters(void)
         printk("No HTT!\n");
     }
 
-// VMX
+// Intel VMX
     if (processor->hasVMX == TRUE){
-        printk("It has VMX\n");
+        printk("It has Intel VMX\n");
     }
     if (processor->hasVMX != TRUE){
-        printk("No VMX!\n");
+        printk("No Intel VMX!\n");
     }
+
+// AMD SVM
+    if (processor->hasSVM == TRUE){
+        printk("It has AMD SVM\n");
+    }
+    if (processor->hasSVM != TRUE){
+        printk("No AMD SVM!\n");
+    }
+
 
 // LAPIC
 /*
@@ -189,7 +198,7 @@ void x64_info(void)
     printk("smp via acpi failed {%d}\n",smp_info.probe_via_acpi_failed);
     printk("smp via mp failed {%d}\n",smp_info.probe_via_mp_failed);
     printk("\n");
-    __show_cpu_intel_parameters();
+    __show_cpu_parameters();
 }
 
 //

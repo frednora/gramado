@@ -630,7 +630,10 @@ static void __get_cpu_intel_parameters(void)
     processor->hasSSE3 = 
         (unsigned long)(ecx & 0x0001);
 
-// bit 5.
+// bit 5. 
+// In Intel CPUs, bit 5 of ECX (when EAX=1) indicates 
+// whether VMX (Intel VT-x) is supported.
+// Intel (VMX)	EAX=1	ECX[5]	1 = VMX supported
     processor->hasVMX = 
         (unsigned long)((ecx >> 5) & 0x0001);
 
@@ -724,12 +727,15 @@ static void __get_cpu_intel_parameters(void)
     // EAX=7, ECX=1: Extended Features
 
 // ============================================
+// hypervisor vendor identification
 // hypervisor level 4000_0000h
     cpuid ( 0x40000000, eax, ebx, ecx, edx );
     processor->hvName[0] = ebx;
     processor->hvName[1] = ecx;
     processor->hvName[2] = edx;
     processor->hvName[3] = 0;
+
+// Some hypervisor provides more information in 0x40000001 and 0x40000002.
 
 //========================================
 // EAX=80000000h: Get Highest Extended Function Implemented
@@ -746,6 +752,17 @@ static void __get_cpu_intel_parameters(void)
 
 //========================================
 // EAX=80000001h: Extended Processor Info and Feature Bits
+
+    cpuid ( 0x80000001, eax, ebx, ecx, edx);
+    buffer[0] = eax;  //Processor Brand String
+    buffer[1] = ebx;  //Processor Brand String
+    buffer[2] = ecx;  //Processor Brand String
+    buffer[3] = edx;  //Processor Brand String
+    buffer[4] = 0;
+
+// AMD (SVM)	EAX=0x80000001	ECX[2]	1 = SVM supported
+    processor->hasSVM = 
+        (unsigned long)((ecx >> 2) & 0x0001);
 
 //========================================
 // EAX=80000002h,80000003h,80000004h: Processor Brand String

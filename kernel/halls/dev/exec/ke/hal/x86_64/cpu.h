@@ -46,8 +46,8 @@ extern int processors_count;
 
 struct processor_d   
 {
-    object_type_t   objectType;
-    object_class_t  objectClass;
+    object_type_t objectType;
+    object_class_t objectClass;
 
     int id;
     int used;
@@ -94,7 +94,8 @@ struct processor_d
 //3 MONITOR/MWAIT
 //4 CPL Qualified Debug Store
 //5-7 
-    unsigned int hasVMX;  // bit 5.
+// Intel (VMX)	EAX=1	ECX[5]	1 = VMX supported
+    unsigned int hasVMX;  // bit 5. (Intel VT-x support)
 
 //8 Thermal Monitor 2
 //9 Reserved
@@ -137,6 +138,7 @@ struct processor_d
 
 //----
 
+// hypervisor vendor identification
 // hypervisor level 4000_0000h
     unsigned int hvName[4];
 
@@ -144,6 +146,10 @@ struct processor_d
 // Maximum meaningful value of InfoType for 
 // extended function CPUID information.
     unsigned int MaxFeatureId;
+
+// 0x80000001
+// AMD (SVM)	EAX=0x80000001	ECX[2]	1 = SVM supported
+    unsigned int hasSVM;
 
 // 0x80000002,0x80000003,0x80000004 (Brand name)
     unsigned int BrandName[4*3];

@@ -205,6 +205,7 @@ int hv_probe_info(void)
     return (int) __detect_hv();
 }
 
+// Intel (VMX)
 int hv_is_vmx_supported(void)
 {
     int Status = -1;
@@ -234,6 +235,233 @@ int hv_is_vmx_supported(void)
 done:
     return (int) Status;
 }
+
+// AMD (SVM)
+int hv_is_svm_supported(void)
+{
+    int Status = -1;
+
+    // #bugbug
+    // This structure needs to be initialized.
+    if ((void*) processor == NULL)
+        panic("hv_is_svm_supported: processor\n");
+    if (processor->magic != 1234)
+        panic("hv_is_svm_supported: processor validation\n");
+
+
+    // Supported
+    if (processor->hasSVM == 1){
+        Status = TRUE;
+        goto done;
+    // Not supported
+    }else if (processor->hasSVM != 1){
+        Status = FALSE;
+        goto done;
+    };
+
+    panic("hv_is_svm_supported: Fail\n");
+    // Not reached.
+    return (int) Status;
+
+done:
+    return (int) Status;
+}
+
+// Detect if Intel VMX is available and enabled
+// via IA32_FEATURE_CONTROL MSR (0x3A)
+int hv_detect_vmx(void)
+{
+    unsigned int lo=0, hi=0;
+    uint64_t feature_control=0;
+
+    // First check CPUID capability
+    //if (processor->hasVMX != 1) {
+    //    return FALSE; // Not supported at all
+    //}
+
+    // Read IA32_FEATURE_CONTROL MSR (0x3A)
+    cpuGetMSR(0x3A, &lo, &hi);
+    feature_control = ((uint64_t)hi << 32) | lo;
+
+    // Bit 0 = Lock, Bit 2 = VMX enabled outside SMX
+    if ((feature_control & 0x1) && !(feature_control & (1 << 2))) {
+        // Locked but disabled
+        return FALSE;
+    }
+
+    // If we reach here, VMX is usable
+    return TRUE;
+}
+
+// Detect if AMD SVM is available and enabled
+// via EFER MSR (0xC0000080), bit 12 = SVME enable
+int hv_detect_svm(void)
+{
+    unsigned int lo=0, hi=0;
+    uint64_t efer=0;
+
+    //if (processor->hasSVM != 1) {
+    //    return FALSE; // Not supported
+    //}
+
+    // Read EFER MSR
+    cpuGetMSR(0xC0000080, &lo, &hi);
+    efer = ((uint64_t)hi << 32) | lo;
+
+    // Bit 12 = SVME enable
+    if (!(efer & (1 << 12))) {
+        return FALSE; // Disabled
+    }
+
+    return TRUE;
+}
+
+
+/*
+ * enable_Intel_VMX:
+ * -----------------
+ * Purpose:
+ *   Enable Intel VMX (Virtual Machine Extensions) so the CPU can enter
+ *   virtualization mode and execute VMX instructions (VMXON, VMLAUNCH, etc).
+ *
+ * Steps:
+ *   1. Check CPUID.01h:ECX[bit 5] to confirm VMX capability.
+ *   2. Read IA32_FEATURE_CONTROL MSR (0x3A):
+ *        - Bit 0 = Lock bit (BIOS may lock this MSR).
+ *        - Bit 2 = VMX enabled outside SMX.
+ *      If locked and disabled, VMX cannot be enabled.
+ *   3. Set CR4.VMXE (bit 13) to allow VMX instructions.
+ *
+ * Returns:
+ *   TRUE if VMX is enabled and usable, FALSE otherwise.
+ */
+int enable_Intel_VMX(void)
+{
+    unsigned int lo=0, hi=0;
+    uint64_t feature_control=0;
+
+    // Check CPUID capability
+    //if (processor->hasVMX != 1) return FALSE;
+
+    // Read IA32_FEATURE_CONTROL MSR (0x3A)
+    cpuGetMSR(0x3A, &lo, &hi);
+    feature_control = ((uint64_t)hi << 32) | lo;
+
+    // Must be locked and VMX enabled outside SMX
+    if ((feature_control & 0x1) && !(feature_control & (1 << 2))) {
+        return FALSE; // Disabled by BIOS
+    }
+
+    // Set CR4.VMXE (bit 13)
+    unsigned long cr4;
+    asm volatile ("mov %%cr4, %0" : "=r"(cr4));
+    cr4 |= (1 << 13);
+    asm volatile ("mov %0, %%cr4" :: "r"(cr4));
+
+    return TRUE;
+}
+
+/*
+ * disable_Intel_VMX:
+ * ------------------
+ * Purpose:
+ *   Disable Intel VMX operation and return CPU to normal mode.
+ *
+ * Steps:
+ *   1. Clear CR4.VMXE (bit 13).
+ *   2. Execute VMXOFF instruction to exit VMX root operation.
+ *
+ * Notes:
+ *   VMXOFF must be executed before clearing CR4.VMXE.
+ *   If VMXON was never executed, VMXOFF will #UD fault.
+ *
+ * Returns:
+ *   TRUE once VMX is disabled.
+ */
+int disable_Intel_VMX(void)
+{
+    unsigned long cr4;
+    asm volatile ("mov %%cr4, %0" : "=r"(cr4));
+    cr4 &= ~(1 << 13); // Clear VMXE
+    asm volatile ("mov %0, %%cr4" :: "r"(cr4));
+
+    // Execute VMXOFF to leave VMX operation
+    asm volatile ("vmxoff");
+
+    return TRUE;
+}
+
+/*
+ * enable_AMD_SVM:
+ * ----------------
+ * Purpose:
+ *   Enable AMD SVM (Secure Virtual Machine) so the CPU can run virtualization
+ *   instructions (VMRUN, etc).
+ *
+ * Steps:
+ *   1. Check CPUID.80000001h:ECX[bit 2] to confirm SVM capability.
+ *   2. Read IA32_EFER MSR (0xC0000080).
+ *   3. Set SVME bit (bit 12) in EFER to enable SVM.
+ *
+ * Returns:
+ *   TRUE if SVM is enabled and usable, FALSE otherwise.
+ */
+int enable_AMD_SVM(void)
+{
+    unsigned int lo=0, hi=0;
+    uint64_t efer=0;
+
+    if (processor->hasSVM != 1) return FALSE;
+
+    // Read EFER MSR (0xC0000080)
+    cpuGetMSR(0xC0000080, &lo, &hi);
+    efer = ((uint64_t)hi << 32) | lo;
+
+    // Set SVME bit (bit 12)
+    efer |= (1 << 12);
+    lo = (unsigned int)(efer & 0xFFFFFFFF);
+    hi = (unsigned int)(efer >> 32);
+    cpuSetMSR(0xC0000080, lo, hi);
+
+    return TRUE;
+}
+
+/*
+ * disable_AMD_SVM:
+ * -----------------
+ * Purpose:
+ *   Disable AMD SVM operation and return CPU to normal mode.
+ *
+ * Steps:
+ *   1. Read IA32_EFER MSR (0xC0000080).
+ *   2. Clear SVME bit (bit 12).
+ *
+ * Notes:
+ *   Once cleared, SVM instructions (VMRUN, etc) will #UD fault.
+ *
+ * Returns:
+ *   TRUE once SVM is disabled.
+ */
+int disable_AMD_SVM(void)
+{
+    unsigned int lo=0, hi=0;
+    uint64_t efer=0;
+
+    cpuGetMSR(0xC0000080, &lo, &hi);
+    efer = ((uint64_t)hi << 32) | lo;
+
+    // Clear SVME bit (bit 12)
+    efer &= ~(1 << 12);
+    lo = (unsigned int)(efer & 0xFFFFFFFF);
+    hi = (unsigned int)(efer >> 32);
+    cpuSetMSR(0xC0000080, lo, hi);
+
+    return TRUE;
+}
+
+
+
+
 
 
 /*
