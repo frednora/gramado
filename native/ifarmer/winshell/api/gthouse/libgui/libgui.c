@@ -5359,6 +5359,41 @@ libgui_redraw_ui_component(
 }
 
 
+int 
+libgui_set_ui_component_position(
+    struct ui_component_d *uic,
+	unsigned long left,
+	unsigned long top )
+{
+	// uic
+    if ((void*) uic == NULL)
+        return -1;
+	if (uic->magic != 1234)
+        return -1;
+
+	uic->left = left;
+	uic->top = top;
+
+	return 0;
+}
+
+int 
+libgui_set_ui_component_dimension(
+    struct ui_component_d *uic,
+	unsigned long width,
+	unsigned long height )
+{
+	// uic
+    if ((void*) uic == NULL)
+        return -1;
+	if (uic->magic != 1234)
+        return -1;
+
+	uic->width = width;
+	uic->height = height;
+
+	return 0;
+}
 
 
 //

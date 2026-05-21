@@ -200,13 +200,10 @@ static void update_children(int fd)
     if ((void*)dc00 == NULL)
         return;
 
-// The background
+// The background for the client area
     lingui_draw_rectangle0_dc (
         dc00,
-        0, 
-        0, 
-        wi.cr_width, 
-        wi.cr_height,
+        0, 0, wi.cr_width, wi.cr_height,
         COLOR_WHITE,
         0  // ROP
     );
@@ -234,7 +231,7 @@ static void update_children(int fd)
 //
 
 // -------------------------------------------------
-// Draw restart button
+// Redraw the restart button
 
     // Relative values
     MyButton_Restart.left = restart_x;
@@ -244,30 +241,18 @@ static void update_children(int fd)
     MyButton_Restart.absolute_left = wi.left + wi.cr_left + MyButton_Restart.left;
     MyButton_Restart.absolute_top = wi.top + wi.cr_top + MyButton_Restart.top;
 
-    //lingui_draw_rectangle0_dc (
-    //    dc00,
-    //    MyButton_Restart.left, 
-    //    MyButton_Restart.top, 
-    //    button_w, 
-    //    button_h,
-    //    COLOR_GRAY,
-    //    0  // ROP
-    //);
-    //libgui_drawchar_dc ( 
-    //    dc00, MyButton_Restart.left, MyButton_Restart.top,
-    //    'R', COLOR_YELLOW, COLOR_BLUE, 0 );
-
-    // #todo
-    // Create function to update position and dimension
-    // for the ui component
-    libgui_redraw_ui_component(
+    libgui_set_ui_component_position(
+        uic_button_restart, 
+        MyButton_Restart.left, 
+        MyButton_Restart.top );
+    libgui_set_ui_component_dimension(
         uic_button_restart,
-        dc00
-    );
-
+        button_w,
+        button_h );
+    libgui_redraw_ui_component( uic_button_restart, dc00 );
 
 // -------------------------------------------------
-// Draw shutdown button
+// Redraw the shutdown button
 
     // Relative values
     MyButton_Shutdown.left = shutdown_x;
@@ -277,27 +262,15 @@ static void update_children(int fd)
     MyButton_Shutdown.absolute_left = wi.left + wi.cr_left + MyButton_Shutdown.left;
     MyButton_Shutdown.absolute_top = wi.top + wi.cr_top + MyButton_Shutdown.top;
 
-    //lingui_draw_rectangle0_dc (
-    //    dc00,
-    //    MyButton_Shutdown.left, 
-    //    MyButton_Shutdown.top, 
-    //    button_w, 
-    //    button_h,
-    //    COLOR_GRAY,
-    //    0  // ROP
-    //);
-    //libgui_drawchar_dc ( 
-    //    dc00, MyButton_Shutdown.left, MyButton_Shutdown.top,
-    //    'S', COLOR_YELLOW, COLOR_BLUE, 0 );
-
-    // #todo
-    // Create function to update position and dimension
-    // for the ui component
-    libgui_redraw_ui_component(
+    libgui_set_ui_component_position(
+        uic_button_shutdown, 
+        MyButton_Shutdown.left, 
+        MyButton_Shutdown.top );
+    libgui_set_ui_component_dimension(
         uic_button_shutdown,
-        dc00
-    );
-
+        button_w,
+        button_h );
+    libgui_redraw_ui_component( uic_button_shutdown, dc00 );
 }
 
 
@@ -536,9 +509,7 @@ static void pump(int fd)
     powerProcedure(fd, e->window, e->type, e->long1, e->long2);
 }
 
-// ----------------------------------------------------
-// Main function
-// ----------------------------------------------------
+
 int main(int argc, char *argv[])
 {
     const char *display_name = "display:name.0";
@@ -701,7 +672,7 @@ int main(int argc, char *argv[])
     );    
 
 /*
-// ok
+// Draw horizontal line
     if ((void*)dc00 != NULL)
     {
         libgui_draw_horizontal_line_dc (
@@ -726,20 +697,6 @@ int main(int argc, char *argv[])
         0, // ROP 
         "power app: Testing string" 
     );
-
-    /*
-    if ((void*)dc00 != NULL)
-    {
-        libgui_drawchar_dc ( 
-            dc00, 1, 1,
-            'C', COLOR_YELLOW, COLOR_BLUE, 0 );
-
-        libgui_drawchar_dc ( 
-            dc00, 10, 1,
-            'A', COLOR_YELLOW, COLOR_BLUE, 0 );
-    }
-    */
-// ============================================================
 
 
 // ============================================================
@@ -774,7 +731,6 @@ int main(int argc, char *argv[])
     // Initial state
     // MyButton_Restart.state = 0;
 
-
 // Create a button
     uic_button_restart = libgui_create_ui_component (
         dc00, 
@@ -785,12 +741,6 @@ int main(int argc, char *argv[])
         MyButton_Restart.height,
         "Restart"
     );
-    //libgui_drawchar_dc ( 
-    //    dc00, 
-    //    MyButton_Restart.left +8, 
-    //    MyButton_Restart.top  +8,
-    //    'R', COLOR_WHITE, COLOR_GRAY, 0 
-    //);
 
 // ============================================================
 // Create shutdown button
@@ -821,13 +771,6 @@ int main(int argc, char *argv[])
         MyButton_Shutdown.height,
         "Shutdown"
     );
-    //libgui_drawchar_dc ( 
-    //    dc00, 
-    //    MyButton_Shutdown.left +8, 
-    //    MyButton_Shutdown.top  +8,
-    //    'S', COLOR_YELLOW, COLOR_BLUE, 0 
-    //);
-
 // ---------------------
 
 //

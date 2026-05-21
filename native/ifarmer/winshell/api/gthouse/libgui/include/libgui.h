@@ -272,6 +272,19 @@ libgui_redraw_ui_component(
 	struct ui_component_d *uic,
     struct dccanvas_d *dc );
 
+int 
+libgui_set_ui_component_position(
+    struct ui_component_d *uic,
+	unsigned long left,
+	unsigned long top );
+
+int 
+libgui_set_ui_component_dimension(
+    struct ui_component_d *uic,
+	unsigned long width,
+	unsigned long height );
+
+
 //
 // #
 // INITIALIZATION 
