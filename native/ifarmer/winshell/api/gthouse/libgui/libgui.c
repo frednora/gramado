@@ -4963,6 +4963,326 @@ void libgui_set_mouse_pointer(unsigned long x, unsigned long y)
     __new_mouse_y = y;
 }
 
+// Draw button given the dc and the ui component
+void 
+__draw_button_borders_dc(
+    struct dccanvas_d *dc,
+    struct ui_component_d *ui_c,
+    unsigned int tl_2,  // tl 2 inner (light)
+    unsigned int tl_1,  // tl 1 most inner (lighter)
+    unsigned int br_2,  // br 2 inner (dark)
+    unsigned int br_1,  // br 1 most inner (light) 
+    unsigned int outer_color )
+{
+// #test
+// Size in pixels de apenas 1/3 de todo o size.
+    unsigned long BorderSize = 1;
+// Isso deve ser o total.
+    //window->border_size = ?
+
+    //debug_print("__draw_button_borders:\n");
+
+// The dc
+    if ((void*) dc == NULL){
+        return;
+    }
+    if (dc->magic != 1234){
+        return;
+    }
+
+
+// The ui component
+    if ((void*) ui_c == NULL){
+        return;
+    }
+    if (ui_c->magic != 1234){
+        return;
+    }
+
+// Order:
+// top/left ... right/bottom.
+
+
+//  ____
+// |
+//
+// board1, borda de cima e esquerda.
+// Cores, de fora pra dentro:
+// outer_color, color1, color1.
+
+// -------------------------------
+// :: Top
+// top, top+1, top+2
+    //rectBackbufferDrawRectangle (   // outer
+    //    w->absolute_x+1, 
+    //    w->absolute_y, 
+    //    w->width-2,
+    //    BorderSize, 
+    //    outer_color, TRUE,0 );
+    lingui_draw_rectangle0_dc(
+        dc,   // Device Context
+        ui_c->left +1,
+        ui_c->top,
+        ui_c->width -2,
+        BorderSize,   // height
+        outer_color,  // color
+        0             // rop 
+    );
+
+    //rectBackbufferDrawRectangle (   // tl 2   inner
+        //w->absolute_x+1, 
+        //w->absolute_y+1, 
+        //w->width-2, 
+        //BorderSize, 
+        //tl_2, TRUE,0 );
+    lingui_draw_rectangle0_dc(
+        dc,   // Device Context
+        ui_c->left +1,
+        ui_c->top  +1,
+        ui_c->width -2,
+        BorderSize,   // height
+        tl_2,  // color
+        0             // rop 
+    );
+    //rectBackbufferDrawRectangle (   // tl 1  most inner
+        //w->absolute_x+1+1, 
+        //w->absolute_y+1+1,
+        //w->width-4, 
+        //BorderSize, 
+        //tl_1, TRUE,0 );
+    lingui_draw_rectangle0_dc(
+        dc,   // Device Context
+        ui_c->left +1+1,
+        ui_c->top  +1+1,
+        ui_c->width -4,
+        BorderSize,   // height
+        tl_1,  // color
+        0             // rop 
+    );
+
+// -------------------------------
+// :: Left
+// left, left+1, left+2
+    //rectBackbufferDrawRectangle (    // outer
+        //w->absolute_x, 
+        //w->absolute_y+1, 
+        //BorderSize, 
+        //w->height-2,
+        //outer_color, TRUE,0 );
+    lingui_draw_rectangle0_dc(
+        dc,   // Device Context
+        ui_c->left,
+        ui_c->top  +1,
+        BorderSize,       // width 
+        ui_c->height -2,  // height
+        outer_color,      // color
+        0                 // rop 
+    );
+    //rectBackbufferDrawRectangle (    // tl 2   inner
+        //w->absolute_x+1, 
+        //w->absolute_y+1, 
+        //BorderSize, 
+        //w->height-2,
+        //tl_2, TRUE,0 );
+    lingui_draw_rectangle0_dc(
+        dc,   // Device Context
+        ui_c->left +1,
+        ui_c->top  +1,
+        BorderSize,       // width 
+        ui_c->height -2,  // height
+        tl_2,             // color
+        0                 // rop 
+    );
+    //rectBackbufferDrawRectangle (    // tl 1  most inner
+        //w->absolute_x+1+1, 
+        //w->absolute_y+1+1, 
+        //BorderSize, 
+        //w->height-4,
+        //tl_1, TRUE,0 );
+    lingui_draw_rectangle0_dc(
+        dc,   // Device Context
+        ui_c->left +1+1,
+        ui_c->top  +1+1,
+        BorderSize,       // width 
+        ui_c->height -4,  // height
+        tl_1,      // color
+        0                 // rop 
+    );
+
+
+//  
+//  ____|
+//
+// board2, borda direita e baixo.
+// Cores, de fora pra dentro:
+// outer_color, color2, color2_light.
+
+// -------------------------------
+// :: Right
+// right-3, right-2, right-1
+    //rectBackbufferDrawRectangle (           // outer
+        //((w->absolute_x) + (w->width) -1), 
+        //w->absolute_y+1, 
+        //BorderSize, 
+        //w->height-2, 
+        //outer_color, TRUE, 0 );
+    lingui_draw_rectangle0_dc(
+        dc,   // Device Context
+        ui_c->left + ui_c->width -1,
+        ui_c->top +1,
+        BorderSize,       // width
+        ui_c->height -2,  // height
+        outer_color,      // color
+        0                 // rop 
+    );
+    //rectBackbufferDrawRectangle (              // br 2 inner
+        //((w->absolute_x) + (w->width) -2), 
+        //w->absolute_y+1, 
+        //BorderSize, 
+        //w->height-2, 
+        //br_2, TRUE, 0 );
+    lingui_draw_rectangle0_dc(
+        dc,   // Device Context
+        ui_c->left + ui_c->width -2,
+        ui_c->top +1,
+        BorderSize,       // width
+        ui_c->height -2,  // height
+        br_2,      // color
+        0                 // rop 
+    );
+    //rectBackbufferDrawRectangle (               // br 1 most inner
+        //((w->absolute_x) + (w->width) -3), 
+        //w->absolute_y+1+1, 
+        //BorderSize, 
+        //w->height-4, 
+        //br_1, TRUE, 0 );
+    lingui_draw_rectangle0_dc(
+        dc,   // Device Context
+        ui_c->left + ui_c->width -3,
+        ui_c->top +1+1,
+        BorderSize,       // width
+        ui_c->height -4,  // height
+        br_1,      // color
+        0                 // rop 
+    );
+
+
+
+// -------------------------------
+// :: Bottom
+// bottom-1, bottom-2, bottom-3
+    //rectBackbufferDrawRectangle (        // outer
+        //w->absolute_x+1, 
+        //((w->absolute_y) + (w->height) -1),  
+        //w->width-2, 
+        //BorderSize, 
+        //outer_color, TRUE, 0 );
+    lingui_draw_rectangle0_dc(
+        dc,   // Device Context
+        ui_c->left +1,
+        ui_c->top + ui_c->height -1,
+        ui_c->width -2,    // width
+        BorderSize,       // height
+        outer_color,      // color
+        0                 // rop 
+    );
+    //rectBackbufferDrawRectangle (           // br 2 inner
+        //w->absolute_x+1, 
+        //((w->absolute_y) + (w->height) -2),  
+        //w->width-2, 
+        //BorderSize, 
+        //br_2, TRUE, 0 );
+    lingui_draw_rectangle0_dc(
+        dc,   // Device Context
+        ui_c->left +1,
+        ui_c->top + ui_c->height -2,
+        ui_c->width -2,    // width
+        BorderSize,       // height
+        br_2,      // color
+        0                 // rop 
+    );
+    //rectBackbufferDrawRectangle (            // br 1 most inner
+        //w->absolute_x+1+1, 
+        //((w->absolute_y) + (w->height) -3),  
+        //w->width-4, 
+        //BorderSize, 
+        //br_1, TRUE, 0 );
+    lingui_draw_rectangle0_dc(
+        dc,   // Device Context
+        ui_c->left +1+1,
+        ui_c->top + ui_c->height -3,
+        ui_c->width -4,    // width
+        BorderSize,       // height
+        br_1,      // color
+        0                 // rop 
+    );
+}
+
+
+struct ui_component_d *libgui_create_ui_component(
+    struct dccanvas_d *dc,
+    int type,
+    unsigned long left,
+    unsigned long top,
+    unsigned long width,
+    unsigned long height )
+{
+    struct ui_component_d *uic;
+
+    if ((void*) dc == NULL)
+	    return NULL;
+	if (dc->magic != 1234)
+	    return NULL;
+
+
+    uic = (struct ui_component_d *) malloc( sizeof(struct ui_component_d) );
+    if ((void*) uic == NULL)
+	    return NULL;
+    uic->used = TRUE;
+	uic->magic = 1234;
+
+    uic->left = left;
+    uic->top = top;
+    uic->width = width;
+    uic->height = height;
+
+// ================================
+
+	if (type < 0)
+	    return NULL;
+
+    // Button
+	if (type == 1)
+	{
+		uic->type = 1;
+
+		// Draw button
+        lingui_draw_rectangle0_dc(
+            dc,
+            left, top, width, height,
+            0x00C0C0C0,  //color
+            0   //rop 
+        );
+
+        __draw_button_borders_dc(
+            dc,
+            uic,
+            0x00E0E0E0,  // tl 2 inner (light)
+            0x00FAFAFA,  // tl 1 most inner (lighter)
+            0x00505050,  // br 2 inner (dark)
+            0x00989898,  // br 1 most inner (light) 
+            0x00101010   // outer 
+		);
+
+		// ...
+	}
+
+	// ...
+    return (struct ui_component_d *) uic;
+}
+
+
+
 //
 // #
 // INITIALIZATION 

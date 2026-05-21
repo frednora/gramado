@@ -695,9 +695,7 @@ int main(int argc, char *argv[])
 */
 
 
-// Draw a crar inside a shared canvas 
-// represented here by the new dc.
-
+// String
     libgui_drawstring_dc(
         dc00,
         8,
@@ -757,20 +755,27 @@ int main(int argc, char *argv[])
     // MyButton_Restart.state = 0;
 
 // Drawing a fake button
-    lingui_draw_rectangle0_dc (
-        dc00,
+    //lingui_draw_rectangle0_dc (
+    //    dc00,
+    //    MyButton_Restart.left, 
+    //    MyButton_Restart.top, 
+    //    MyButton_Restart.width, 
+    //    MyButton_Restart.height,
+    //    COLOR_GRAY,
+    //    0  // ROP
+    //);
+    libgui_create_ui_component (
+        dc00, 
+        1,   // type=button 
         MyButton_Restart.left, 
         MyButton_Restart.top, 
         MyButton_Restart.width, 
-        MyButton_Restart.height,
-        COLOR_GRAY,
-        0  // ROP
+        MyButton_Restart.height 
     );
- 
     libgui_drawchar_dc ( 
         dc00, 
-        MyButton_Restart.left, 
-        MyButton_Restart.top,
+        MyButton_Restart.left +4, 
+        MyButton_Restart.top  +4,
         'R', COLOR_WHITE, COLOR_GRAY, 0 
     );
 

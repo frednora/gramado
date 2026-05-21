@@ -13,6 +13,14 @@
 #include "rop.h"
 #include "dccanvas.h"
 
+//
+// UI
+//
+
+#include "ui.h"
+
+
+
 // ===================================================
 
 // Create a new device context for a given buffer.
@@ -238,6 +246,24 @@ libgui_drawstringblock(
     int scale );
 
 void libgui_set_mouse_pointer(unsigned long x, unsigned long y);
+
+void 
+__draw_button_borders_dc(
+    struct dccanvas_d *dc,
+    struct ui_component_d *ui_c,
+    unsigned int tl_2,  // tl 2 inner (light)
+    unsigned int tl_1,  // tl 1 most inner (lighter)
+    unsigned int br_2,  // br 2 inner (dark)
+    unsigned int br_1,  // br 1 most inner (light) 
+    unsigned int outer_color );
+
+struct ui_component_d *libgui_create_ui_component(
+    struct dccanvas_d *dc,
+    int type,
+    unsigned long left,
+    unsigned long top,
+    unsigned long width,
+    unsigned long height );
 
 //
 // #
