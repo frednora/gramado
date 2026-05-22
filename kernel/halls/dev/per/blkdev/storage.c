@@ -1,4 +1,5 @@
 // storage.c
+// Storage support.
 // Created by Fred Nora.
 
 #include <kernel.h>
@@ -16,9 +17,14 @@ const char* sda_string = "sda";
 const char* sdb_string = "sdb";
 const char* sdc_string = "sdc";
 const char* sdd_string = "sdd";
+// ...
 const char* sdfail_string = "sd?";
+// ...
 
-// #test
+// MBR structure for the system disk.
+// see: disk.h
+struct mbr_d  *mbr; 
+
 // see: disk.h
 struct partition_table_d *system_disk_pt0;
 struct partition_table_d *system_disk_pt1;
@@ -26,10 +32,7 @@ struct partition_table_d *system_disk_pt2;
 struct partition_table_d *system_disk_pt3;
 //struct partition_table_d *boot_partition; 
 //struct partition_table_d *system_partition; 
-
-// MBR structure for the system disk.
-// See: disk.h
-struct mbr_d  *mbr; 
+// ...
 
 // VBR structure for the boot partition.
 // See: volume.h
@@ -99,7 +102,7 @@ static int disk_initialize_mbr_info(void);
 
 // =================================================
 
-// Show disk information given its descriptor.
+// Show disk information given its descriptor
 static int __ShowDiskInfo(int index)
 {
 // Worker
@@ -120,9 +123,11 @@ static int __ShowDiskInfo(int index)
 // Get a pre-created disk structure.
 // #bugbug
 // When we created these structures?
+
     d = (struct disk_d *) diskList[n];
+
     if ((void *) d == NULL){
-        printk("d fail\n");
+        printk("d\n");
         goto fail;
     }
     if ( d->used != TRUE || d->magic != 1234 )
@@ -586,6 +591,7 @@ storage_write_sector(
             0 );
 
     return (int) res;
+
 fail:
     return (int) -1;
 }
@@ -621,9 +627,10 @@ static int __disk_init(void)
 //  Disk structure
 //
 
-// Create and initialize the structure for the disk.
+// Create and initialize the structure for the disk
 
     d = (void *) kmalloc( sizeof(struct disk_d) );
+
     if ((void *) d == NULL){
         panic("__disk_init: d\n");
     }
@@ -675,7 +682,7 @@ static int __disk_init(void)
     };
     */
 
-    // Default name.
+    // Default name
     d->name = sdfail_string;
 
     d->next = NULL;
@@ -698,15 +705,15 @@ static int __disk_init(void)
 
    //more?
 
-//done:
     printk("Done\n");
     return 0;
 }
 
 // Show info for all disks in the list.
-// Called by service 251
 void disk_show_info(void)
 {
+// Called by service 251
+
     struct disk_d *disk;
     register int i=0;
 
@@ -723,22 +730,24 @@ void diskShowCurrentDiskInfo(void)
 {
     if (current_disk < 0)
         return;
+
     printk("The current disk is {%d}.\n", current_disk );
     __ShowDiskInfo(current_disk);
 }
 
-// Get the pointer for the disk structure given the index.
+// Get the pointer for the disk structure given the index
 void *disk_get_disk_handle(int number)
 {
-// Parameter
-    if ( number < 0 || number >= DISK_COUNT_MAX )
+    if ( number < 0 || 
+         number >= DISK_COUNT_MAX )
     {
         return NULL;
     }
+
     return (void *) diskList[number];
 }
 
-// Worker: Initialize volume support.
+// worker: Initialize volume support.
 static int __volume_init(void)
 {
     int Status = -1;  //fail
@@ -774,8 +783,7 @@ static int __volume_init(void)
         panic("__volume_init: __create_system_partition fail\n");
     }
 
-//done:
-    return 0;
+    return 0;  // Done
 }
 
 static int __ShowVolumeInfo(int index)
@@ -784,7 +792,6 @@ static int __ShowVolumeInfo(int index)
 
     // #debug
     printk("\n");
-    //printk("\n");
     //printk ("__ShowVolumeInfo:\n");
 
 // Parameter
@@ -798,12 +805,12 @@ static int __ShowVolumeInfo(int index)
 // Structure validation
     v = (struct volume_d *) volumeList[index];
     if ((void *) v == NULL){
-        printk ("struct fail\n");
+        printk ("v\n");
         goto fail;
     }
-    if ( v->used != 1 || v->magic != 1234 )
+    if (v->used != TRUE || v->magic != 1234)
     {
-        printk("flags fail\n");
+        printk("v validation\n");
         goto fail;
     }
 
@@ -821,8 +828,7 @@ static int __ShowVolumeInfo(int index)
     printk ("DATA_lba {%d}\n", v->DATA_lba);
     // ...
 
-//done
-    return 0;
+    return 0;  // Done
 
 fail:
     printk("Fail\n");
@@ -840,14 +846,12 @@ void volumeShowCurrentVolumeInfo(void)
 {
     if (current_volume < 0)
         return;
-    printk ("The current volume is %d\n", current_volume );
 
-// #bugbug
-// Valume is not a disk.
-    //__ShowDiskInfo (current_volume);
+    printk ("The current volume is %d\n", current_volume );
+    __ShowVolumeInfo (current_volume);
 }
 
-// Show info for all volumes in the list.
+// Show info for all volumes in the list
 void volume_show_info (void)
 {
     struct volume_d *volume;
@@ -862,21 +866,29 @@ void volume_show_info (void)
     };
 }
 
+// Get pointer for a volume, given its index.
 void *volume_get_volume_handle(int number)
 {
-    if ( number < 0 || number >= VOLUME_COUNT_MAX )
+    if ( number < 0 || 
+         number >= VOLUME_COUNT_MAX )
     {
         return NULL;
     }
+
+// Get pointer
     return (void *) volumeList[number];
 }
 
+// Get pointer for current volume
 void *volume_get_current_volume_info (void)
 {
-    if ( current_volume < 0 || current_volume > VOLUME_COUNT_MAX )
+    if ( current_volume < 0 || 
+         current_volume > VOLUME_COUNT_MAX )
     {
         return NULL;
     }
+
+// Get pointer
     return (void *) volumeList[VOLUME_COUNT_MAX];
 }
 
@@ -884,6 +896,7 @@ void *volume_get_current_volume_info (void)
  * read_lba:
  *     Load a sector into memory, given the LBA.
  * IN:
+ *   disk_id = disk id. (NOT the IDE ports!)
  *   address = physical address of the buffer.
  *   lba     = logical block address.
  */
@@ -912,10 +925,17 @@ read_lba (
     unsigned long address, 
     unsigned long lba )
 {
+
+// #todo: 
+// Check lba limits
+
 // #todo
-// Fazer algum filtro de argumentos?
+// Each disk has information about its type.
+// And the only supported type for now is IDE.
+// The workers here operate on ATA disks.
 
     /*
+    // disk id. (NOT the IDE ports!)
     if (disk_id < 0){
         debug_print ("read_lba: [FAIL] disk_id\n");
         goto fail;
@@ -927,6 +947,9 @@ read_lba (
         goto fail;
     }
 
+// #ps:
+// All we have for now is IDE support.
+// This routine is getting the port for the boot disk.
     unsigned int L_current_ide_port = 
         (unsigned int) ata_get_current_ide_port_index();
 
@@ -942,8 +965,9 @@ read_lba (
         break;
 
     case 16:
-        //#todo: return value.
-        //#todo: IN: buffer,lba,?,?,
+        // #todo: return value.
+        // #todo: 
+        // IN: buffer, lba, reserved1, reserved2.
         // #see: ata.c
         ataReadSector ( 
             L_current_ide_port, 
@@ -978,6 +1002,7 @@ fail:
  * write_lba:
  *     Write a sector from memory to the disk, given the LBA.
  * IN:
+ *   disk_id = disk id. (NOT the IDE ports!)
  *   address = physical address of the buffer.
  *   lba     = logical block address.
  */
@@ -999,9 +1024,15 @@ write_lba(
 {
 
 // #todo: 
-// Check lba limits.
+// Check lba limits
+
+// #todo
+// Each disk has information about its type.
+// And the only supported type for now is IDE.
+// The workers here operate on ATA disks.
 
     /*
+    // disk id. (NOT the IDE ports!)
     if (disk_id < 0){
         debug_print ("read_lba: [FAIL] disk_id\n");
         goto fail;
@@ -1013,6 +1044,9 @@ write_lba(
         goto fail;
     }
 
+// #ps:
+// All we have for now is IDE support.
+// This routine is getting the port for the boot disk.
     unsigned int L_current_ide_port = 
         (unsigned int) ata_get_current_ide_port_index();
 
@@ -1029,6 +1063,7 @@ write_lba(
         // about the controller type in order to decide 
         // which function we gonna use.
         // #see: ata.c
+        // IN: buffer, lba, reserved1, reserved2.
         ataWriteSector (
             L_current_ide_port,
             address, 
@@ -1102,8 +1137,8 @@ fail:
     return (int) -1;
 }
 
-// Get the number of sectors in the boot disk
-// and save it into a global variable, for now.
+// Get the number of sectors in the boot disk and 
+// save it into a global variable, for now.
 static int storage_set_total_lba_for_boot_disk(void)
 {
     struct disk_d *disk;
@@ -1111,6 +1146,7 @@ static int storage_set_total_lba_for_boot_disk(void)
 
 // --------------------------------
 // Get the boot disk
+
     disk = (struct disk_d *) ____boot____disk;
 
     if ((void*) disk == NULL){
@@ -1123,9 +1159,11 @@ static int storage_set_total_lba_for_boot_disk(void)
     }
 
 // --------------------------------
-    // Get the ata device information
+// Get the ata device information
+
     ata_device = (struct ata_device_d *) disk->ata_device;
-    if ( (void*) ata_device == NULL ){
+
+    if ((void*) ata_device == NULL){
         printk("ata_device\n");
         goto fail;
     }
@@ -1135,15 +1173,18 @@ static int storage_set_total_lba_for_boot_disk(void)
     }
 
 // --------------------------------
-    // Show the number of blocks.
+// #debug: Show the number of blocks in this device.
+
     printk("Number of blocks: %d\n",
         ata_device->dev_total_num_sector );
 
-// Set global variable.
+// Set global variable
+
     gNumberOfSectorsInBootDisk = 
         (unsigned long) ata_device->dev_total_num_sector;
 
-// Save it in the main storage structure
+// Save it into the main storage structure
+
     if ((void*) storage == NULL){
         printk("storage\n");
         goto fail;
@@ -1157,10 +1198,11 @@ fail:
     return FALSE;
 }
 
+// This signature came from bootblock.
+// We're gonna use it to compare what?
+// #debug: We need more attention on this routine.
 static int __validate_disksignature_from_bootblock(void)
 {
-// This signature came from bootblock.
-// We're gonna use it to compare agains the only in the ATA disks.
 
 //
 // Quick test. (#debug)
@@ -1175,7 +1217,8 @@ static int __validate_disksignature_from_bootblock(void)
     // >>>>> Not the address <<<<<
     // Print 8 bytes.
     // #bugbug: >>> printk is not able to print 64bit values.
-    unsigned char *value64bit = (unsigned char *) &bootblk.disk_signature;
+    unsigned char *value64bit = 
+        (unsigned char *) &bootblk.disk_signature;
 
     if (value64bit[0] != 0xEE)
         panic ("Signature 0xEE");
@@ -1211,6 +1254,7 @@ static int __validate_disksignature_from_bootblock(void)
 // A estrutura 'storage' vai ser o nível mais baixo.
 // É nela que as outras partes devem se basear.
 // Create the main 'storage' structure.
+
 int storageInitialize(void)
 {
 // Called by I_initKernelComponents in x64init.c
@@ -1220,12 +1264,13 @@ int storageInitialize(void)
 // check bootdisk signature from bootblock.
     __validate_disksignature_from_bootblock();
 
-// ==================================================================
-// storage structure.
+// =======================================================
+// storage structure
 
     storage = (void *) kmalloc( sizeof(struct storage_d) );
+
     if ((void *) storage == NULL){
-       printk("init_storage_support: storage\n");
+       printk("storageInitialize: storage\n");
        return FALSE;
     }
     memset( storage, 0, sizeof(struct storage_d) );
@@ -1237,19 +1282,22 @@ int storageInitialize(void)
     storage->system_volume = NULL;
     storage->bootvolume_fp = NULL;
     // ...
+
 // =====================================
-
-// Initialize disk support.
+// Initialize disk and volume support
     __disk_init();
-
-// Initialize volume support.
     __volume_init();
 
 // =====================================
-
-// Initializat ata device driver.
+// hw: Initializat ata device driver
 // see: ata.c
 // IN: msg, data1.
+// msg:
+// 1 = Initialize the driver
+// 2 = Register the driver
+// ...
+// FORCEPIO - Select PIO mode as standard.
+
     DDINIT_ata( 1, FORCEPIO );
 
 // =====================================
@@ -1261,12 +1309,12 @@ int storageInitialize(void)
     int Status = FALSE;
     Status = (int) storage_set_total_lba_for_boot_disk();
     if (Status != TRUE){
-        printk ("init_storage_support: storage_set_total_lba_for_boot_disk fail\n"); 
+        printk ("storageInitialize: storage_set_total_lba_for_boot_disk fail\n"); 
         return FALSE;
     }
-    //PROGRESS("storage_set_total_lba_for_boot_disk ok\n"); 
+    //PROGRESS("storageInitialize: storage_set_total_lba_for_boot_disk ok\n"); 
 
-// mbr info
+// mbr info:
 // It depends on the total lba value for boot disk.
 // Its because we're gonna rad the disk to get the partition tables.
     disk_initialize_mbr_info();

@@ -152,30 +152,34 @@ extern int g_currentvolume_fatbits;
 // volume_type_t:
 // Enumerando os tipos de volume.
 typedef enum {
+
     VOLUME_TYPE_NULL, 
-    // Partição em disco físico.
+
+    // Partition in physical disk
     VOLUME_TYPE_DISK_PARTITION,  
-    // Partição em disco virtual.
+
+    // Partition in virtual disk
     VOLUME_TYPE_VIRTUAL_DISK_PARTITION,  
-    // Arquivo.
-    // Um arquivo qualquer. Sem formatação.
-    VOLUME_TYPE_RAW,           
-    // Buffer.
-    // Um arquivo qualquer. Sem formatação.
-    // Usado por banco de dados.
+
+    // The partition is a raw file. Not formatted.
+    VOLUME_TYPE_RAW,
+
+    // The partition is a buffer. Not formatted.
     VOLUME_TYPE_BUFFER,
-    // Partição de swap.
+
+    // This is a swap partition. (physical disk?)
     VOLUME_TYPE_SWAP
+
     //...
+
 }volume_type_t;
 
-// #todo
+// The class for a volume
 typedef enum {
     VOLUME_CLASS_NULL,
     VOLUME_CLASS_2,
     VOLUME_CLASS_3
 }volume_class_t;
-
 
 /*
  * vbr_d:
@@ -183,33 +187,25 @@ typedef enum {
  */  
 struct vbr_d
 {
-	//copiar mbr, é parecido;
+    // #todo: It will be similar to mbr.
 }; 
 // VBR structure for the boot partition.
 // See: storage.c
 extern struct vbr_d  *vbr; 
  
 
-/*
- * volume_d:
- *     Estrutura para acesso rápido a volumes.
- *     Deve ser simples e com poucos elementos.
- */
+// Structure for a volume
 struct volume_d
 {
-    object_type_t  objectType;
+    object_type_t objectType;
     object_class_t objectClass;
-
-    //file *fp;
+    int used;
+    int magic;
+    int id;
 
     volume_type_t   volumeType;
     volume_class_t  volumeClass;
-    
-    int used;
-    int magic;
-
-    int id;
-    
+ 
     //label
     char *name;
 
@@ -220,6 +216,7 @@ struct volume_d
     //isso não existe.
     char path_string[32];  
 
+    //file *fp;
     
     // Only one thread can call read and write routine at time.
     int blocked;
@@ -272,7 +269,6 @@ struct volume_d
     // se ele está ocupoado o escretor terá que esperar.
     //int state;
 
-
     // Se é um volume virtual e precisa ser salvo
     // pois houve uma modificação.
     int need_to_save;
@@ -280,12 +276,13 @@ struct volume_d
     // #todo
     // contador de processos usando o volume
 
-// The volume's file system.
+// The volume's file system
     struct filesystem_d *fs;
 
-// The disk that the volume belongs to.
+// The disk that the volume belongs to
     struct disk_d *disk;
 
+// Navigation
     struct volume_d *next;
 };
 
@@ -315,20 +312,17 @@ void *volume_get_current_volume_info (void);
 // Show info
 //
 
-int volumeShowVolumeInfo ( int descriptor );
+int volumeShowVolumeInfo (int descriptor);
 void volumeShowCurrentVolumeInfo (void);
 void volume_show_info (void);
 
-//==================================================================
+// =====================================================
 // disk
-
-// disk.h
-// Created by Fred Nora.
 
 /*
 LBA MAP:
 Map for main LBA addresses in the system disk.
-see: vd/fat/main.asm
+see: bootloader
 --------------------------------------
     0 = mbr
 --------------------------------------
@@ -356,16 +350,14 @@ Partition 3:
 #define MBR_BOOTABLE   0x80
 #define MBR_SIGNATURE  0xAA55
 
-#define DISK_COUNT_MAX 1024    //8
+#define DISK_COUNT_MAX  1024
 
 #define DISK_BYTES_PER_SECTOR  512 
 //#define DISK_BYTES_PER_SECTOR 4096 
 
-
 //
 // == MBR =================================================
 //
-
 
 // MBR support:
 // MBR for fat16 first partition.
@@ -414,8 +406,6 @@ Partition 3:
 //#define  BS_BootCode     62  /* Boot code (448-byte) */
 #define  BS_BootCode     62  
 
-
-
 /* number of partitions per table partition  */
 //#define N_PART 4 
 
@@ -457,20 +447,19 @@ Partition 3:
 //macro
 //#define CYLMAX(c)  ((c) > 1023 ? 1023 : (c))  
 
-// disk_type_t:
-// Enumerando os tipos de disk.
+// Enumerating disk types
 typedef enum {
+
     DISK_TYPE_NULL, 
     DISK_TYPE_PATA,
     DISK_TYPE_PATAPI,
     DISK_TYPE_SATA,
     DISK_TYPE_SATAPI
     //...
+
 }disk_type_t;
 
-// #Obs:
-// Um disco pode ser físico ou virtual.
-// Um disco virtual também pode ter muitos volumes virtuais.
+// Enumerating disk class
 typedef enum {
     DISK_CLASS_NULL,
     DISK_CLASS_PHYSICAL,
@@ -516,20 +505,23 @@ Element (offset)  Size      Description
 
 struct partition_table_d
 {
-// //0x80=active  0x00=inactive
+
+//0x80=active  0x00=inactive
     unsigned char active;
-// #todo
-// Talvez isso não importe se estivermos usando LBA.
+
+// CHS info. (Not important in LBA mode)
     unsigned char start_chs[3];  //sizes:  8,6,10
-    unsigned char type;
-// #todo
-// Talvez isso não importe se estivermos usando LBA.
-    unsigned char end_chs[3];    //sizes:  8,6,10   
-// Sectors between MBR and first sector.
+
+    unsigned char type;   // ?
+
+// CHS info. (Not important in LBA mode)
+    unsigned char end_chs[3];    //sizes:  8,6,10
+
+// Sectors between MBR and first sector
     unsigned int start_lba;
-// Sectors in partition.
-// O tamanho da partição dado em setores.
-// Se estivermos usando isso, então o CHS não importa.
+
+// Partition size in sectors.
+// In this case CHS is not important.
     unsigned int size;
 };
 
@@ -542,13 +534,19 @@ extern struct partition_table_d *system_disk_pt3;
 //extern struct partition_table_d *boot_partition; 
 //extern struct partition_table_d *system_partition; 
 
-// This is a good code.
-// It is easy to handle the partition table values.
 
+// Structure for MBR support
+// It defines the main regions for the sector. 
 struct mbr_d
 {
+
+// MBR's startup code
     unsigned char boot_code[446];
+
+// The four (4) legacy partitions
     struct partition_table_d p[4];
+
+// The MBR's signature
     unsigned short signature;
 }; 
 
@@ -556,34 +554,27 @@ struct mbr_d
 // See: storage.c
 extern struct mbr_d  *mbr; 
 
-
-/*
- * disk_d:
- *     Estrutura para acesso rápido a discos.
- *     Deve ser simples e com poucos elementos.
- */
-// disk info
+// Structure for disk support
 struct disk_d
 { 
-// Object header.
-    object_type_t  objectType;
+    object_type_t objectType;
     object_class_t objectClass;
-
-    file *fp;
-
-// Structure validation
     int used;
     int magic;
+    int id;  // Index into the list of disks
 
-    disk_type_t  diskType;
+// ID herdado do boot block.
+// #ps: What is this?
+    char boot_disk_number;
+
+    disk_type_t diskType;
     disk_class_t diskClass;
-
-    int id;                 // ID na lista de discos.
-    char boot_disk_number;  // ID herdado do boot block.
 
 // Ponteiro para o nome do disco,
 // Talvez não precise ser um ponteiro, pode ser um array.
     char *name; 
+
+    file *fp;
 
 //#todo
 // se está funcionando ... se está inicializado ...
@@ -594,8 +585,14 @@ struct disk_d
 // se ele está ocupoado o escretor terá que esperar.
     //int state;
 
+//
 // Security
-    pid_t pid;     // Qual processo está usando.
+//
+
+// #todo ?
+// What process is using it at the moment?
+// What group of processes are using it at the moment?
+    pid_t pid;
     gid_t gid;
     // ...
 
@@ -608,6 +605,7 @@ struct disk_d
 // #todo
 // contador de processos usando o disco
 
+// #ps: What are these?
     uint8_t channel;
     uint8_t dev_num;
 
@@ -615,15 +613,18 @@ struct disk_d
 // Capacity
 //
 
-// Number of sectors.
+// Number of sectors
     unsigned long number_of_blocks;
+
+// Bytes per sector
 // 512 or 4096?
     unsigned long bytes_per_sector;
-// How many bytes in the whole disk.
+
+// How many bytes in the whole disk
     unsigned long size_in_bytes;
 
 //
-// Storage device structure.
+// Storage device structure
 //
 
 // hadware info.
@@ -666,18 +667,18 @@ void disk_show_mbr_info(void);
 void diskShowCurrentDiskInfo (void);
 void disk_show_info (void);
 
-
 //==================================================================
 // storage
 
 // See storage.c
 extern unsigned long gNumberOfSectorsInBootDisk;
 
-
+// The main structure for storage support.
 struct storage_d
 {
     int used;
     int magic;
+    // #todo: int struct_initialized;
 
 // Fast access
 // The number of sectors in the boot disk.
@@ -691,10 +692,11 @@ struct storage_d
 // The disk where the system is installed.
     struct disk_d *system_disk;
 
-// Volumes.
-    struct volume_d     *vfs_volume;
+// Volumes
     struct volume_d    *boot_volume;
     struct volume_d  *system_volume;
+    struct volume_d     *vfs_volume;
+    // ...
 
 // vfs
 // virtual file system    
@@ -757,7 +759,6 @@ storageWriteCluster (
     unsigned long sector, 
     unsigned long address, 
     unsigned long spc );
-
 
 int
 storage_read_sector( 

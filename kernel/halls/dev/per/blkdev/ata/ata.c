@@ -1993,7 +1993,7 @@ DDINIT_ata (
 // Probably the kernel already have a list of found 
 // PCI devices at this time, and we're gonna use this list.
 
-    int Status = 1;  // Error.
+    int Status = 1;  // Error
 
     PROGRESS("DDINIT_ata:\n");
 

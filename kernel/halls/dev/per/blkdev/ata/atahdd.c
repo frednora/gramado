@@ -56,14 +56,14 @@ static uint8_t __hdd_ata_status_read (unsigned int port_index)
 {
     unsigned short port=0;
 
-    if (port_index>3){
+    if (port_index > 3){
         panic("__hdd_ata_status_read: port_index\n");
     }
 
 // #bugbug: 
-// Rever o offset.
+// Rever o offset
 
-    port = (unsigned short) (ide_port[port_index].base_port + 7);
+    port = (unsigned short) ( ide_port[port_index].base_port + 7 );
 
     return (uint8_t) in8((unsigned short) port);
 }
@@ -75,14 +75,14 @@ __hdd_ata_cmd_write (
 {
     unsigned short port=0;
 
-    if (port_index>3){
+    if (port_index > 3){
         panic("__hdd_ata_cmd_write: port_index");
     }
 
-// no_busy 
+// Not busy
     __hdd_ata_wait_not_busy(port_index);
 
-    port = (unsigned short) (ide_port[port_index].base_port + 7);
+    port = (unsigned short) ( ide_port[port_index].base_port + 7 );
 
     out8( 
         (unsigned short) port, 
@@ -108,7 +108,7 @@ static int __hdd_ata_wait_busy(int p)
 
 static int __hdd_ata_wait_not_busy (unsigned int port_index)
 {
-    if (port_index>3){
+    if (port_index > 3){
         panic("__hdd_ata_wait_not_busy: port_index\n");
     }
 
@@ -143,13 +143,13 @@ static int __hdd_ata_wait_drq(int p)
 
 static int __hdd_ata_wait_no_drq (unsigned int port_index)
 {
-    if (port_index>3){
+    if (port_index > 3){
         panic("__hdd_ata_wait_no_drq: port_index");
     }
 
 // #bugbug
 // How long?
-    while ( __hdd_ata_status_read(port_index) & ATA_SR_DRQ)
+    while ( __hdd_ata_status_read(port_index) & ATA_SR_DRQ )
     {
         if (__hdd_ata_status_read(port_index) & ATA_SR_ERR)
         {
@@ -160,13 +160,13 @@ static int __hdd_ata_wait_no_drq (unsigned int port_index)
     return FALSE;
 }
 
-
-// #todo: buffer address 64bit
 // IN:
-// + port - ata port. (0~3)
+// + port_index - ata port. (0~3)
 // + buffer
 // + bytes
 // Low level routine.
+// #todo: buffer address 64bit
+
 static void 
 __hdd_ata_pio_read ( 
     unsigned int port_index, 
@@ -177,9 +177,9 @@ __hdd_ata_pio_read (
     unsigned long next_lba=0;
     int nwords=0;
 
-    //debug_print("hdd_ata_pio_read:\n");
+    //debug_print("__hdd_ata_pio_read:\n");
 
-    if ( port_index > 3 ){
+    if (port_index > 3){
         panic("__hdd_ata_pio_read: We only support 4 ata ports\n");
     }
 
@@ -191,10 +191,11 @@ __hdd_ata_pio_read (
 // ex: (32*1024*1024/2) sectors for 32mb disk.
 // (32*1024*1024/2) = 16777216
 
-    unsigned long TestMaxLBA = 16777216;
+    //#define __32MB_DISK  16777216
+    unsigned long TestMaxLBA = 16777216;  // 32MB disk
 
-    if ( next_lba >= TestMaxLBA ){
-        panic("__hdd_ata_pio_read: [debug] Trying to read outside the temporary limit\n");
+    if (next_lba >= TestMaxLBA){
+        panic("__hdd_ata_pio_read: Out of disk\n");
     }
 
 // ================================
@@ -206,25 +207,26 @@ __hdd_ata_pio_read (
     //if ( (void*) buffer == NULL ){ return; );
 
     //ATA_REG_DATA
-    port = 
-        (unsigned short) (ide_port[port_index].base_port + 0);
+    port = (unsigned short) ( ide_port[port_index].base_port + 0 );
 
+    // #todo
+    // This is ugly
     asm volatile (\
-        "cld;\
-        rep; insw":: "D" (buffer),\
+        "cld \n   \
+        rep \n insw":: "D" (buffer),\
         "d" ( (unsigned short) port ),\
         "c" (nwords) );
 
-    //debug_print("hdd_ata_pio_read: done\n");
+    //debug_print("__hdd_ata_pio_read: done\n");
 }
 
-
-// #todo: buffer address 64bit
 // IN:
-// + port - ata port. (0~3)
+// + port_index - ata port. (0~3)
 // + buffer
 // + bytes
 // Low level routine.
+// #todo: buffer address 64bit
+
 static void 
 __hdd_ata_pio_write ( 
     unsigned int port_index, 
@@ -240,22 +242,20 @@ __hdd_ata_pio_write (
         panic("__hdd_ata_pio_write: We only support 4 ata ports\n");
     }
 
-
     // bytes/2
     nwords = (int)(bytes >> 1);
-
 
 // #todo
 // What is the limit for the current disk?
 // ex: (32*1024*1024/2) sectors for 32mb disk.
 // (32*1024*1024/2) = 16777216
 
-    unsigned long TestMaxLBA = 16777216;
+    //#define __32MB_DISK  16777216
+    unsigned long TestMaxLBA = 16777216;  // 32MB disk
 
-    if ( next_lba >= TestMaxLBA ){
-        panic("__hdd_ata_pio_write: Trying to write outside the disk limits\n");
+    if (next_lba >= TestMaxLBA){
+        panic("__hdd_ata_pio_write: Out of disk\n");
     }
-
 
 // ================================
 // #todo
@@ -265,42 +265,28 @@ __hdd_ata_pio_write (
     //#todo
     //if ( (void*) buffer == NULL ){ return; );
 
-    port = (unsigned short) (ide_port[port_index].base_port + 0);
+    port = (unsigned short) ( ide_port[port_index].base_port + 0 );
 
     asm volatile (\
-        "cld;\
-        rep; outsw"::"S" (buffer),\
+        "cld \n\
+        rep \n outsw"::"S" (buffer),\
         "d" ( (unsigned short) port ),\
-        "c" (nwords));
+        "c" (nwords) );
 }
 
 // -----------------------------------------
 
-// Global wrapper
-int 
-atahdd_pio_rw_sector ( 
-    unsigned long buffer, 
-    unsigned int _lba, 
-    int operation_number, 
-    unsigned int port_index )
-{
-    int rv = -1;
-    rv = (int) __pio_rw_sector(buffer, _lba, operation_number, port_index);
-    return (int) rv; 
-}
-
 /*
  * __pio_rw_sector:
  * IN:
- *   buffer - Buffer address. ??? virtual address ??
- *   lba - LBA number 
- *   rw - Flag read or write.
- *   //inline unsigned char in8 (int port)
- *   //out8 ( int port, int data )
- *   (IDE PIO)
+ *   buffer           - Buffer address. (virtual address?)
+ *   _lba             - LBA number 
+ *   operation_number - Flag read or write.
+ *   port_index       - ata port
  */
 // Read and write via pio mode.
 // Low level routine.
+// #ps: Only for ATA disks.
 static int 
 __pio_rw_sector ( 
     unsigned long buffer, 
@@ -580,13 +566,40 @@ failTimeOut:
     return (int) (-3);
 }
 
+// Global wrapper
+// Only for ATA disks.
+// IN:
+// buffer, lba, read or write, port.
+int 
+atahdd_pio_rw_sector ( 
+    unsigned long buffer, 
+    unsigned int _lba, 
+    int operation_number, 
+    unsigned int port_index )
+{
+    int rv = -1;
+
+    // #todo
+    // We can check limits here
+
+    rv = 
+        (int) __pio_rw_sector(
+            buffer, 
+            _lba, 
+            operation_number, 
+            port_index 
+        );
+
+    return (int) rv; 
+}
+
 /*
  * ataReadSector:
  * IN:
- * buffer - buffer
- * lba - lba
- * reserved1 - null
- * reserved2 - null
+ *   buffer    - buffer
+ *   lba       - lba
+ *   reserved1 - 0
+ *   reserved2 - 0
  */
 
 // #todo
@@ -651,7 +664,6 @@ ataReadSector (
 // ====================================================
 */
 
-
 // #test
 // Testing these limits for the boot disk only.
     if (gNumberOfSectorsInBootDisk == 0){
@@ -661,15 +673,14 @@ ataReadSector (
         panic("ataReadSector: lba limits\n");
     }
 
-
 // IN:
 // (buffer, lba, rw flag, port number)
     Status = 
         (int) __pio_rw_sector ( 
-                  (unsigned long) buffer, 
-                  (unsigned long) lba, 
-                  (int) Operation,
-                  (unsigned int) idePort ); 
+                (unsigned long) buffer, 
+                (unsigned long) lba, 
+                (int) Operation,
+                (unsigned int) idePort ); 
 
     return (int) Status;
 }
@@ -677,10 +688,10 @@ ataReadSector (
 /*
  * ataWriteSector:
  * IN: 
- * buffer - buffer
- * lba - lba
- * reserved1 - null
- * reserved2 - null
+ *   buffer    - buffer
+ *   lba       - lba
+ *   reserved1 - 0
+ *   reserved2 - 0
  */
 int
 ataWriteSector ( 
@@ -729,10 +740,11 @@ ataWriteSector (
 
     Status = 
         (int) __pio_rw_sector ( 
-        (unsigned long) buffer, 
-        (unsigned long) lba, 
-        (int) Operation, 
-        (unsigned int) idePort ); 
+            (unsigned long) buffer, 
+            (unsigned long) lba, 
+            (int) Operation, 
+            (unsigned int) idePort 
+        ); 
 
     return (int) Status;
 }
