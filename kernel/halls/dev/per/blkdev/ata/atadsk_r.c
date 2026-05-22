@@ -103,22 +103,22 @@ fatLoadCluster (
 
 // Load metafile
 void 
-ata_load_boot_metafile (
+atadsk_load_boot_metafile (
     unsigned long buffer, 
     unsigned long first_lba, 
     unsigned long size_in_sectors )
 {
     unsigned long SizeInSectors = (size_in_sectors & 0xFFFFFFFF);
 
-    debug_print ("ata_load_boot_metafile:\n");
+    debug_print ("atadsk_load_boot_metafile:\n");
 
 // parameters
     if (buffer == 0){
-        debug_print ("ata_load_boot_metafile: [ERROR] buffer\n");
+        debug_print ("atadsk_load_boot_metafile: [ERROR] buffer\n");
         return;
     }
     if (size_in_sectors == 0){
-        debug_print ("ata_load_boot_metafile: [ERROR] size_in_sectors\n");
+        debug_print ("atadsk_load_boot_metafile: [ERROR] size_in_sectors\n");
         return;
     }
 

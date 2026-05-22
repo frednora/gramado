@@ -753,6 +753,13 @@ write_lba(
     unsigned long lba );
 
 int
+storageWriteCluster ( 
+    unsigned long sector, 
+    unsigned long address, 
+    unsigned long spc );
+
+
+int
 storage_read_sector( 
     int disk_id,
     unsigned long buffer, 

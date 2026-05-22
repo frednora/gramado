@@ -264,6 +264,9 @@
 // blkdev/
 // Block devices
 // ata, sata
+
+#include "../halls/dev/per/blkdev/ata/atadsk_r.h"
+#include "../halls/dev/per/blkdev/ata/atadsk_w.h"
 #include "../halls/dev/per/blkdev/ata/ata.h"
 //#include "../halls/dev/per/blkdev/ahci/ahci.h"
 // Storage manager.

@@ -7,6 +7,14 @@
 
 struct target_dir_d  current_target_dir;
 
+// ===================================================
+
+
+
+
+
+
+
 ssize_t sys_read(int fd, const char *ubuf, size_t count)
 {
     if (fd<0){
@@ -782,8 +790,15 @@ fs_load_boot_metafile (
     unsigned long first_lba, 
     unsigned long size_in_sectors )
 {
-// See: disk_r.c
-    ata_load_boot_metafile(buffer,first_lba,size_in_sectors);
+
+// #ps: Only on ATA disk
+// See: atadsk_r.c
+
+    atadsk_load_boot_metafile(
+        buffer,
+        first_lba,
+        size_in_sectors 
+    );
 }
 
 void 
@@ -792,8 +807,15 @@ fs_store_boot_metafile (
     unsigned long first_lba, 
     unsigned long size_in_sectors )
 {
-// See: disk_w.c
-    ata_store_boot_metafile(buffer,first_lba,size_in_sectors);
+
+// #ps: Only on ATA disk
+// See: atadsk_w.c
+
+    atadsk_store_boot_metafile(
+        buffer,
+        first_lba,
+        size_in_sectors
+    );
 }
 
 // Wrapper

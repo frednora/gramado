@@ -710,12 +710,15 @@ int fs_save_fat16_cache(void)
         return (int) -1;
     }
 
-// #todo: Change this name.
-// see: disk_w.c
-    fs_save_fat(
+// Save FAT table into the disk.
+// ATA disk only.
+// see: atadsk_w.c
+
+    atadsk_save_fat (
         VOLUME1_FAT_ADDRESS,
         VOLUME1_FAT_LBA,
-        VOLUME1_FAT_SIZE );
+        VOLUME1_FAT_SIZE 
+    );
 
     g_fat_cache_saved = FAT_CACHE_SAVED;
     return 0;

@@ -527,24 +527,6 @@ void fsbp_initialize_fat(void);
 // For boot partition
 int fsbp_initialize_bp_directories(void);
 
-void 
-fatWriteCluster ( 
-    unsigned long sector, 
-    unsigned long address, 
-    unsigned long spc );
-
-int 
-fs_save_fat ( 
-    unsigned long fat_address, 
-    unsigned long fat_lba, 
-    size_t fat_size );
-
-int 
-fs_save_rootdir ( 
-    unsigned long root_address, 
-    unsigned long root_lba, 
-    size_t root_size );
-
 void fsUpdateWorkingDiretoryString(char *string);
 
 void fs_fntos(char *name);

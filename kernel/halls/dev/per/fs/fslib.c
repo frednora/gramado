@@ -4221,12 +4221,19 @@ do_save_dir_and_fat:
     //debug_print ("fsSaveFile: [DEBUG] do_save_dir_and_fat\n");
     //printk("fsSaveFile: do_save_dir_and_fat:\n"); 
 
-// Save root
-// #bugbug: We need to save a directory, not the root.
-// IN: root dir address, root dir lba, root dir size in sectors.
 
-    //if ( dir_address == ROO...
-    fs_save_rootdir( VOLUME1_ROOTDIR_ADDRESS, VOLUME1_ROOTDIR_LBA, 32 );
+
+// Save rootdir into the disk
+// #ps: ATA disk only
+// #bugbug: We need to save a directory, not the root.
+// IN: 
+// root dir address, root dir lba, root dir size in sectors.
+
+    atadsk_save_rootdir( 
+        VOLUME1_ROOTDIR_ADDRESS, 
+        VOLUME1_ROOTDIR_LBA, 
+        32
+    );
 
 // Sinalizando que o cache de fat precisa ser salvo.
     fs_fat16_cache_not_saved();

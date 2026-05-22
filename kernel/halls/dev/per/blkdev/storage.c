@@ -1056,6 +1056,52 @@ fail:
     return (int) -1;
 }
 
+/*
+ * storageWriteCluster:
+ *     Save cluster into the disk.
+ * IN:
+ *   setor   ~ Primeiro setor do cluster.
+ *   address ~ Endereço do primeiro setor do cluster.
+ *   spc     ~ Número de setores por cluster.
+ */
+// #bugbug: 
+// It is not only for fat ... it is hw worker.
+
+int
+storageWriteCluster ( 
+    unsigned long sector, 
+    unsigned long address, 
+    unsigned long spc )
+{
+    unsigned long i=0;
+
+// #ps:
+// This is a FAKE disk id
+    const int FakeDiskId = 0;
+
+    // #todo
+    // We need some limits here
+    if (spc == 0){
+        debug_print("storageWriteCluster: spc\n");
+        goto fail;
+    }
+
+    for (i=0; i<spc; i++)
+    {
+        // IN: disk id, address, LBA.
+        write_lba( FakeDiskId, address, (sector + i) );
+        // Next
+        address = (address +512); 
+    };
+
+    // ...
+
+    return 0;  // OK
+
+fail:
+    return (int) -1;
+}
+
 // Get the number of sectors in the boot disk
 // and save it into a global variable, for now.
 static int storage_set_total_lba_for_boot_disk(void)
@@ -1152,6 +1198,8 @@ static int __validate_disksignature_from_bootblock(void)
 
     return 0;  //ok
 }
+
+
 //
 // $
 // INITIALIZATION

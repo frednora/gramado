@@ -74,7 +74,7 @@ LDFLAGS := -m elf_x86_64 -s -x -static
 # Everything is a file.
 OBJS = \
 ata.o atadma.o atahdd.o atainfo.o atairq.o atapci.o \
-disk_r.o disk_w.o storage.o    
+atadsk_r.o atadsk_w.o storage.o    
 
 all:
 
@@ -90,14 +90,17 @@ all:
 	$(CC) -c ata/atainfo.c $(KERNEL_INCLUDE) $(CFLAGS) -o atainfo.o 
 	$(CC) -c ata/atairq.c  $(KERNEL_INCLUDE) $(CFLAGS) -o atairq.o 
 	$(CC) -c ata/atapci.c  $(KERNEL_INCLUDE) $(CFLAGS) -o atapci.o 
-	$(CC) -c ata/disk_r.c  $(KERNEL_INCLUDE) $(CFLAGS) -o disk_r.o
-	$(CC) -c ata/disk_w.c  $(KERNEL_INCLUDE) $(CFLAGS) -o disk_w.o
+
+	$(CC) -c ata/atadsk_r.c  $(KERNEL_INCLUDE) $(CFLAGS) -o atadsk_r.o
+	$(CC) -c ata/atadsk_w.c  $(KERNEL_INCLUDE) $(CFLAGS) -o atadsk_w.o
 
 # storage
 	$(CC) -c storage.c $(KERNEL_INCLUDE) $(CFLAGS) -o storage.o 
 
 # link
 	$(LD) -r -o $(targetFile) $(OBJS)
+
+#bugbug Ugly path
 	cp $(targetFile)  ../../../../
 	rm *.o
 

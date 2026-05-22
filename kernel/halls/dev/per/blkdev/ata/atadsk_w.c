@@ -1,5 +1,7 @@
-// disk_w.c
-// Created by Fred Nora.
+// atadsk_w.c
+// ATA disk write
+// Created by Fred Nora
+
 
 #include <kernel.h>
 
@@ -74,48 +76,8 @@ __do_save_sequence (
     return 0;
 }
 
-/*
- * fatWriteCluster:
- *     Salva um cluster no disco.
- * Argumentos:
- *   setor   ~ Primeiro setor do cluster.
- *   address ~ Endereço do primeiro setor do cluster.
- *   spc     ~ Número de setores por cluster.
- */
-// #todo
-// Return 'int'.
-// #bugbug: it is not only for fat... it is hw worker.
-
 void 
-fatWriteCluster ( 
-    unsigned long sector, 
-    unsigned long address, 
-    unsigned long spc )
-{
-    unsigned long i=0;
-    int FakeDiskId = 0;  //#todo: fake disk id
-
-    // #todo
-    // We need some limits here for now.
-
-    if (spc == 0){
-        debug_print("fatWriteCluster: spc\n");
-        return;
-    }
-
-    for (i=0; i<spc; i++){
-        // IN: disk id, address, LBA
-        write_lba( FakeDiskId, address, (sector + i) );
-        address = (address +512); 
-    };
-
-    //...
-
-    //return 0;  //#todo
-}
-
-void 
-ata_store_boot_metafile (
+atadsk_store_boot_metafile (
     unsigned long buffer, 
     unsigned long first_lba, 
     unsigned long size_in_sectors )
@@ -123,15 +85,15 @@ ata_store_boot_metafile (
 
 // Parameters
     if (buffer == 0){
-        panic("ata_store_boot_metafile: buffer\n");
+        panic("atadsk_store_boot_metafile: buffer\n");
     }
     if (first_lba == 0){
-        panic("ata_store_boot_metafile: first_lba\n");
+        panic("atadsk_store_boot_metafile: first_lba\n");
     }
     // VOLUME1_FAT_SIZE
     // Only one size for now
     //if (size_in_sectors != ?){
-    //    panic("ata_store_boot_metafile: size_in_sectors\n");
+    //    panic("atadsk_store_boot_metafile: size_in_sectors\n");
     //}
 
 // Do save!
@@ -146,30 +108,30 @@ ata_store_boot_metafile (
 // Save FAT into the disk.
 // Low level. It doesn't check the status of the fat cache.
 int 
-fs_save_fat ( 
+atadsk_save_fat ( 
     unsigned long fat_address, 
     unsigned long fat_lba, 
     size_t fat_size )
 {
 
 // #bugbug
-    debug_print("fs_save_fat:\n");
+    debug_print("atadsk_save_fat:\n");
     printk("Saving FAT\n");
 
 // Parameters:
     if (fat_address == 0){
-        panic("fs_save_fat: fat_address\n");
+        panic("atadsk_save_fat: fat_address\n");
     }
     if (fat_lba == 0){
-        panic("fs_save_fat: fat_lba\n");
+        panic("atadsk_save_fat: fat_lba\n");
     }
     // VOLUME1_FAT_SIZE
     // Only one size for now
     if (fat_size != VOLUME1_FAT_SIZE){
-        panic("fs_save_fat: fat_size\n");
+        panic("atadsk_save_fat: fat_size\n");
     }
 
-// Do save!
+// Do save! (ATA device)
 // ata_get_current_ide_port_index()
     __do_save_sequence(
         ATACurrentPort.g_current_ide_port_index,  // port
@@ -177,37 +139,37 @@ fs_save_fat (
         (unsigned long) fat_lba,
         (size_t) fat_size );
 
-// #bugbug: Provisory
-    //debug_print("fs_save_fat: Done\n");
-    //printk     ("fs_save_fat: Done\n"); 
+// #debug
+    //debug_print("atadsk_save_fat: Done\n");
+    //printk     ("atadsk_save_fat: Done\n"); 
 
     return 0;
 }
 
 // Save root dir into the disk
 int 
-fs_save_rootdir ( 
+atadsk_save_rootdir ( 
     unsigned long root_address, 
     unsigned long root_lba, 
     size_t root_size )
 {
 
 // #bugbug
-    debug_print("fs_save_rootdir:\n");
+    debug_print("atadsk_save_rootdir:\n");
     printk("Saving rootdir\n");
 
 // parameters:
     if (root_address == 0){
-        panic("fs_save_rootdir: root_address\n");
+        panic("atadsk_save_rootdir: root_address\n");
     }
     if (root_lba == 0){
-        panic("fs_save_rootdir: root_lba\n");
+        panic("atadsk_save_rootdir: root_lba\n");
     }
     // 32 setores
     // 512 entradas de 32 bytes cada.
     // Only one size for now
     if (root_size != 32){
-        panic("fs_save_rootdir: root_size\n");
+        panic("atadsk_save_rootdir: root_size\n");
     }
 
 // Save
@@ -218,9 +180,9 @@ fs_save_rootdir (
         (unsigned long) root_lba,
         (size_t) root_size );    // Size in sectors.
 
-// #bugbug: Provisory
-    //debug_print("fs_save_rootdir: Done\n");
-    //printk     ("fs_save_rootdir: Done\n"); 
+// #debug
+    //debug_print("atadsk_save_rootdir: Done\n");
+    //printk     ("atadsk_save_rootdir: Done\n"); 
 
     return 0;
 }
