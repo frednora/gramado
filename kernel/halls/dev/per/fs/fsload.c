@@ -147,7 +147,7 @@ fsLoadFile (
 
     // #debug:
     //debug_print ("fsLoadFile:\n");
-    printk("fsLoadFile:\n");
+    printk("fsLoadFile: %s\n", file_name);
 
 // Parameters:
 // Fat address and dir address.

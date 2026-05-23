@@ -945,15 +945,16 @@ int console_scroll_rect(int console_number, int direction)
     CONSOLE_TTYS[console_number].cursor_y = 
         (CONSOLE_TTYS[console_number].cursor_bottom -1); 
 
-// #todo:
-// Essa flag permite que o taskswitch faça o refresh
-// da tela.
-// see: schedulerUpdateScreen() in kgwm.c
-// O certo seria dispatchUpdateScreen()
 
-    //invalidate_screen();  //#bugbug not working
+    //#bugbug not working
+    //invalidate_screen();
+
+// #ps:
+// Attention: This is very expensive!
+// We gotta call it only if we are scrolling.
 
     refresh_screen();
+
     return 0;
 fail:
     return (int) -1;
@@ -3096,13 +3097,11 @@ int VirtualConsole_early_initialization(void)
     for (i=0; i<CONSOLETTYS_COUNT_MAX; i++){
         DDINIT_console( i, bg_colors[i], fg_colors[i] );
     };
-
-    debug_print("Breakpoint 1\n");
+    //debug_print("Breakpoint 1\n");
 
 // Setup foreground console
     jobcontrol_switch_console(0);
-
-    debug_print("Breakpoint 2\n");
+    //debug_print("Breakpoint 2\n");
 
 // Cursor for the current console
 // See: system.c

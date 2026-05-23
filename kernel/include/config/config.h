@@ -75,6 +75,7 @@
 // Device flags:
 
 // Sending verbose to serial port
+// It enables functions like debug_print() and PROGRESS().
 #define USE_SERIALDEBUG    0
 
 

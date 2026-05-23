@@ -102,7 +102,6 @@ unsigned long get_update_screen_frequency(void);
 void set_update_screen_frequency(unsigned long fps);
 unsigned long get_presence_level(void);
 void set_presence_level(unsigned long value);
-void schedulerUpdateScreen(void);
 
 // =======================================================
 

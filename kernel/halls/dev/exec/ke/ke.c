@@ -106,118 +106,6 @@ void set_presence_level(unsigned long value)
     presence_level = value;
 }
 
-// Called by task_switch
-void schedulerUpdateScreen(void)
-{
-    register int i=0;
-    struct thread_d *TmpThread;
-
-    unsigned long deviceWidth  = (unsigned long) screenGetWidth();
-    unsigned long deviceHeight = (unsigned long) screenGetHeight();
-    if ( deviceWidth == 0 || deviceHeight == 0 ){
-        debug_print ("schedulerUpdateScreen: w h\n");
-        panic       ("schedulerUpdateScreen: w h\n");
-    }
-
-// Atualizado pelo timer.
-    if (UpdateScreenFlag != TRUE){
-        return;
-    }
-
-    deviceWidth  = (deviceWidth & 0xFFFF);
-    deviceHeight = (deviceHeight & 0xFFFF);
-
-// ============================
-// Precisamos apenas validar todos retangulos
-// porque fizemos refresh da tela toda.
-    
-    int validate_all= FALSE;
-
-// Flush the whole screen and exit.
-// The whole screen is invalidated.
-// Validate the screen
-    if (screen_is_dirty == TRUE)
-    {
-        refresh_screen();
-        validate_all = TRUE;
-        screen_is_dirty = FALSE;
-    }
-
-/*
-//=========================
-// Blue bar:
-    unsigned long fps = get_update_screen_frequency();
-    char data[32];
-    backbuffer_draw_rectangle( 
-        0, 0, deviceWidth, 24, COLOR_KERNEL_BACKGROUND, 0 );
-    ksprintf(data,"  FPS %d       ",fps);
-    data[12]=0;
-    wink_draw_string(0,8,COLOR_YELLOW,data);
-    refresh_rectangle ( 0, 0, deviceWidth, 24 );
-//=========================
-*/
-
-// Flush a list of dirty surfaces.
-
-    for (i=0; i<THREAD_COUNT_MAX; ++i)
-    {
-        TmpThread = (void *) threadList[i];
-
-        if ( (void *) TmpThread != NULL )
-        {
-            if ( TmpThread->used == TRUE && 
-                 TmpThread->magic == 1234 && 
-                 TmpThread->state == READY )
-            {
-                // #test 
-                //debug_print("  ---- Compositor ----  \n");
-                
-                if ( (void *) TmpThread->surface_rect != NULL )
-                {
-                    if ( TmpThread->surface_rect->used == TRUE && 
-                         TmpThread->surface_rect->magic == 1234 )
-                    {
-                        // Como fizemos refresh da tela toda,
-                        // então precisamos validar todos os retângulos.
-                        
-                        if (validate_all == TRUE)
-                            TmpThread->surface_rect->dirty = FALSE;
-
-                        // dirty rectangle
-                        // Se uma surface está suja de tinta.
-                        // Precisamos copiar para o framebuffer.
-
-                        if ( TmpThread->surface_rect->dirty == TRUE )
-                        {
-                            refresh_rectangle ( 
-                                TmpThread->surface_rect->left, 
-                                TmpThread->surface_rect->top, 
-                                TmpThread->surface_rect->width, 
-                                TmpThread->surface_rect->height );
-
-                            // Validate the surface. (Rectangle)
-                            TmpThread->surface_rect->dirty = FALSE;
-                        }
-
-                    }
-                }
-            }
-        }
-    };
-
-// Chamamos o 3d demo do kernel.
-// See: kgws.c
-
-    if (DemoFlag == TRUE)
-    {
-        //demo0();
-        DemoFlag=FALSE;
-    }
-
-// Atualizado pelo timer.
-    UpdateScreenFlag = FALSE;
-}
-
 // Worker
 static void __check_refresh_support(void)
 {
@@ -420,7 +308,6 @@ static void __check_gramado_mode(void)
     };
 
     // Breakpoint
-    //refresh_screen();
     //while(1){}
 }
 
@@ -474,7 +361,6 @@ static void __import_data_from_linker(void)
         }
 
         // #debug: breakpoint
-        //refresh_screen();
         //while(1){}
     }
 }
@@ -520,7 +406,6 @@ int keCloseInitProcess(void)
 
     // #debug
     printk("#test: Sending CLOSE to init.bin\n");
-    refresh_screen();
 
 // Send
 // IN: SenderTID, TargetTID, msg code, long1, long2
@@ -704,7 +589,7 @@ int keInitializeIntake(void)
 
 int keInitialize(int phase)
 {
-// Called by I_kmain() in kmain.c.
+// Called by I_initialize_kernel() in kmain.c.
 
     int Status=FALSE;
 
@@ -752,7 +637,7 @@ int keInitialize(int phase)
     // >> Process and thread support.
     } else if (phase == 1) {
 
-        // Initialize ns phaes 0.
+        // Initialize ns phase 0.
         ns_initialize(0);
 
         // serial_printk("phase %d\n",phase);
@@ -829,14 +714,13 @@ int keInitialize(int phase)
         // See: dispsrv.c
         ds_init();
 
-        // Initialize the callback support.
+        // Initialize the callback support
         callbackInitialize();
 
         // Final message before jumping to init process.
         //PROGRESS("keInitialize: phase 2\n");
         //printk("keInitialize:  phase 2\n");
         //#debug
-        //refresh_screen();
         //while(1){}
 
         // Clear the screen again
@@ -850,7 +734,7 @@ int keInitialize(int phase)
 
         goto InitializeEnd;
 
-    // Wrong phase number.
+    // Wrong phase number
     } else {
         serial_printk("phase %d: Wrong phase number\n",phase);
         goto fail;

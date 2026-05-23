@@ -226,10 +226,8 @@ static void __kmain_setup_ring0_thread(void)
     // #debug
     //printk("entry_point:  %x \n",entry_point);
     //printk("RING0_RSP: %x \n",(stack_base + 4096));
-    //refresh_screen();
     //while(1){}
 }
-
 
 void
 qf_post_message(
@@ -490,7 +488,8 @@ static void panic_at_init(int error_code, kernel_subsystem_t subsystem_id)
     ksprintf(msg, "%s Error: 0x%x", funcname, (error_code & 0xFF));
 
     // Serial log first (if available)
-    if (Initialization.is_serial_log_initialized == TRUE) {
+    if (Initialization.is_serial_log_initialized == TRUE) 
+    {
         PROGRESS(msg);
         PROGRESS("\n");
     }
@@ -539,7 +538,7 @@ static void __print_final_messages(void)
 {
 // Final messages
     if (Initialization.is_serial_log_initialized == TRUE){
-        PROGRESS("::(2)(3): [final message] FAILURE\n");
+        debug_print("::(2)(3): [final message] FAILURE\n");
     }
     if (Initialization.is_console_log_initialized == TRUE){
         printk("init: [final message] FAILURE\n");
@@ -1059,6 +1058,7 @@ static int __test_initialize_ap_processor(int apic_id)
         // (Step 3)
         printk("Sending STARTUP IPI twice ...\n");
         refresh_screen(); //wait
+
         // IN: apic id, lapic info id
         Send_STARTUP_IPI_Twice(1, 1);  // APIC ID 1, lapic_info index 0
 
@@ -1104,7 +1104,6 @@ static int __test_initialize_ap_processor(int apic_id)
 
         // #debug
         //printk(">>>> breakpoint\n");
-        //refresh_screen();
         //while(1){asm ("cli"); asm ("hlt");}
 
     } // End of CONFIG_INITIALIZE_SECOND_PROCESSOR
@@ -1229,7 +1228,6 @@ static int archinit(void)
 
             // #debug
             //printk(">>>> breakpoint\n");
-            //refresh_screen();
             //while(1){asm ("cli"); asm ("hlt");}
 
         } // End of CONFIG_INITIALIZE_SECOND_PROCESSOR
@@ -1332,18 +1330,16 @@ static int lateinit(void)
         panic("lateinit: on user_initialize()\n");
 
 /*
- // ok
+    // ok
     // Wait for some problem with the AP that was initialized.
     printk("Waiting ...\n");
-    refresh_screen();
     while(1){}
 */
 
 /*
-// ok
+    // ok
     // Wait for some problem with the AP that was initialized.
     printk("Waiting ...\n");
-    refresh_screen();
     while(1){}
 */
 
@@ -1357,12 +1353,11 @@ static int lateinit(void)
     // ok
     // Wait for some problem with the AP that was initialized.
     printk("Waiting ...\n");
-    refresh_screen();
     while(1){}
 */
 
 // -------------------------------------
-// Setup utsname structure.
+// Setup utsname structure
     __setup_utsname();
 
 // -------------------------------------
@@ -1383,10 +1378,8 @@ static int lateinit(void)
     // ok
     // Wait for some problem with the AP that was initialized.
     printk("Waiting ...\n");
-    refresh_screen();
     while(1){}
 */
-
 
 // -------------------------------------
 // Initialize support for loadable kernel modules.
@@ -1491,6 +1484,7 @@ static int I_initialize_kernel(int arch_type, int processor_number)
         wink_update_progress_bar(5);
 
         // BSP is Booting
+        PROGRESS("\n");
         PROGRESS(":: BOOTING BSP\n");
         system_state = SYSTEM_BOOTING;
         // Do we have boot info?
@@ -1512,8 +1506,6 @@ static int I_initialize_kernel(int arch_type, int processor_number)
     // BSP initialization (mm)
     if (processor_number == 0){
 
-        //PROGRESS(":: Initialize mm subsystem\n");
-
         // -------------------------------
         // Initialize mm phase 0.
         // See: mm.c
@@ -1521,6 +1513,7 @@ static int I_initialize_kernel(int arch_type, int processor_number)
         // + Inittialize heap support.
         // + Inittialize stack support. 
         // + Initialize memory sizes.
+        PROGRESS("\n");
         PROGRESS(":: MM PHASE 0 (BSP)\n");
         // [2:0]
         Status = (int) mmInitialize(0);
@@ -1539,6 +1532,7 @@ static int I_initialize_kernel(int arch_type, int processor_number)
         // + Initialize framepoll support.
         // + Initializing the paging infrastructure.
         //   Mapping all the static system areas.
+        PROGRESS("\n");
         PROGRESS(":: MM PHASE 1 (BSP)\n");
         // [2:1]
         Status = (int) mmInitialize(1);
@@ -1567,8 +1561,6 @@ static int I_initialize_kernel(int arch_type, int processor_number)
     // BSP initialization (ke)
     if (processor_number == 0){
 
-        //PROGRESS(":: Initialize ke subsystem\n");
-
         // -------------------------------
         // Initialize ke phase 0.
         // See: ke.c
@@ -1578,6 +1570,7 @@ static int I_initialize_kernel(int arch_type, int processor_number)
         // + show banner and resolution info.
         // + Check gramado mode and grab data from linker.
         // + Initialize bootloader display device.
+        PROGRESS("\n");
         PROGRESS(":: KE PHASE 0 (BSP)\n");
         // [3:0]
         Status = (int) keInitialize(0);
@@ -1592,6 +1585,7 @@ static int I_initialize_kernel(int arch_type, int processor_number)
         //   initialize a lot of stuff from the 
         //   current architecture.
         // + PS2 early initialization.
+        PROGRESS("\n");
         PROGRESS(":: KE PHASE 1 (BSP)\n");
         // [3:1]
         Status = (int) keInitialize(1);
@@ -1604,6 +1598,7 @@ static int I_initialize_kernel(int arch_type, int processor_number)
         // Initialize ke phase 2
         // + Initialize background
 
+        PROGRESS("\n");
         PROGRESS(":: KE PHASE 2 (BSP)\n");
         // [3:2]
         Status = (int) keInitialize(2);
@@ -1621,6 +1616,7 @@ static int I_initialize_kernel(int arch_type, int processor_number)
     // BSP initialization (archinit)
     if (processor_number == 0){
 
+        PROGRESS("\n");
         PROGRESS(":: archinit\n");
         // [4]
         Status = archinit();
@@ -1637,6 +1633,7 @@ static int I_initialize_kernel(int arch_type, int processor_number)
     // BSP initialization (deviceinit)
     if (processor_number == 0){
 
+        PROGRESS("\n");
         PROGRESS(":: deviceinit\n");
         // [5]
         deviceinit();
@@ -1653,6 +1650,7 @@ static int I_initialize_kernel(int arch_type, int processor_number)
         if (Status != TRUE)
             goto fail;
         
+        PROGRESS("\n");
         PROGRESS(":: lateinit\n");
         // [6]
         // It doesn't return?
@@ -1783,12 +1781,36 @@ void I_kmain(int arch_type)
 // Initialize the kernel
     Status = (int) I_initialize_kernel(arch_type, ProcessorNumber);
 
-// The kernel was initialized successfully
+// Let's create the kernel process, the init process and 
+// execute the init process.
+// See: x64init.c
+
+    // Create the kernel process and load the main ring 0 module
+    PROGRESS("\n");
+    PROGRESS("I_kmain: Create kernel process\n");
+    Status = I_x64CreateKernelProcess();
+    if (Status != TRUE){
+        PROGRESS ("Couldn't create the Kernel process\n");
+        goto L_die;
+    }
+
+    // Create the init process and its main thread
+    PROGRESS("\n");
+    PROGRESS("I_kmain: Create init process\n");
+    Status = I_x64CreateInitialProcess();
+    if (Status != TRUE){
+        debug_print ("Couldn't create the Initial process\n");
+        goto L_die;
+    }
+
+    // Spawn the main thread for the init process
+    PROGRESS("\n");
+    PROGRESS("I_kmain: Spawn init thread\n");
     if (Status == TRUE){
         int ok = (int) ke_x64ExecuteInitialProcess(ProcessorNumber);
         if (ok < 0){
-            PROGRESS("on ke_x64ExecuteInitialProcess()\n");
-            //printk ("lateinit: Couldn't launch init process\n");
+            debug_print ("on ke_x64ExecuteInitialProcess()\n");
+            //printk ("Couldn't launch init process\n");
             // #todo:
             // Maybe we can call the kernel console for debuging purpose.
             system_state = SYSTEM_ABORTED;
@@ -1797,15 +1819,15 @@ void I_kmain(int arch_type)
 
 // The kernel initialization failed
     } else if (Status == FALSE){
-        PROGRESS("on I_initialize_kernel()\n");
+        debug_print ("on I_initialize_kernel()\n");
     }
 
 // Die
-// Return to assembly.
+// Return to assembly
 L_die:
-    PROGRESS("Kernel initialization failed\n");
+    debug_print("Kernel initialization failed\n");
     if (system_state == SYSTEM_ABORTED){
-        PROGRESS("SYSTEM_ABORTED\n");
+        debug_print("SYSTEM_ABORTED\n");
     }
     x_panic("Error: 0x02");
 }

@@ -67,8 +67,6 @@ const char *init_image_name = "INIT    BIN";
 
 static int __setup_stdin_cmdline(void);
 static int I_initKernelComponents(void);
-static int I_x64CreateKernelProcess(void);
-static int I_x64CreateInitialProcess(void);
 static int __load_initbin_image(void);
 static int I_x64CreateTID0(void);
 
@@ -101,7 +99,6 @@ static int __setup_stdin_cmdline(void)
 
     // #debug
     //printk("k: Initializing cmdline\n"); 
-    //refresh_screen();
 
 // Run both modes, cmdline and then server mode.
 // #todo: We can copy a different comand line depending on
@@ -271,8 +268,8 @@ static int __load_initbin_image(void)
 //    0 = ok
 
     return 0;
+
 fail:
-    // refresh_screen();
     return (int) -1;
 }
 
@@ -285,14 +282,13 @@ fail:
 // This is a ring 3 process.
 // It loads the first ring3 program, the INIT.BIN.
 
-static int I_x64CreateInitialProcess(void)
+int I_x64CreateInitialProcess(void)
 {
     pid_t InitProcessPID = -1;
 
-// #debug
+    // #debug
     //debug_print ("I_x64CreateInitialProcess: \n");
     //printk      ("I_x64CreateInitialProcess:\n");
-    //refresh_screen();
 
     InitialProcessInitialized = FALSE;
 
@@ -788,7 +784,6 @@ void I_x64ExecuteInitialProcess(int cpu_id)
     printk ("Entry: %x\n", elf_header->e_entry);
 
     //#breakpoint
-    refresh_screen();
     while(1){}
 // ==============
 */
@@ -796,12 +791,9 @@ void I_x64ExecuteInitialProcess(int cpu_id)
 // Input authority
     InputAuthority.current_authority = AUTH_NO_GUI;
 
-// ==============
-// #debug
-
+    // #debug
     //debug_print("I_x64ExecuteInitialProcess: [x64] Go to user mode! IRETQ\n");
     //printk     ("I_x64ExecuteInitialProcess: [x64] Go to user mode! IRETQ\n");
-    //refresh_screen();
 
 // The kernel has booted.
     has_booted = TRUE;
@@ -843,9 +835,10 @@ void I_x64ExecuteInitialProcess(int cpu_id)
     t->affinity_processor[2] = LAPIC_INFO_BSP_INDEX;
     t->affinity_processor[3] = LAPIC_INFO_BSP_INDEX;
 
-    //PROGRESS(":: Go to ring3!\n");
     printk ("GO!\n");
-    //printk("go!\n");
+    PROGRESS(":: Go to ring3!\n");
+    PROGRESS("\n");
+
     //while(1){}
 
 
@@ -913,7 +906,7 @@ void I_x64ExecuteInitialProcess(int cpu_id)
 // module 0 loaded by the kernel base.
 // See: x64gva.h
 
-static int I_x64CreateKernelProcess(void)
+int I_x64CreateKernelProcess(void)
 {
     int Status=FALSE;
     unsigned long BasePriority = PRIORITY_MAX;
@@ -1241,11 +1234,7 @@ int I_x64_initialize(void)
  
     // #debug
     //debug_print ("I_x64main:\n");
-
-// #debug
-// For real machine.
-    //printk      ("I_x64main: [TODO]\n");
-    //refresh_screen();
+    //printk ("I_x64main:\n");
 
 // System State
     if (system_state != SYSTEM_BOOTING){
@@ -1339,7 +1328,7 @@ int I_x64_initialize(void)
 
 
 // -------------------------------
-// Starting phase 3.
+// Starting phase 3
     Initialization.current_phase = 3;
 
 // ================================
@@ -1350,40 +1339,43 @@ int I_x64_initialize(void)
 // window server's flower thread.
 
     // #debug
-    PROGRESS("Calling I_x64CreateKernelProcess\n"); 
+    //PROGRESS("Calling I_x64CreateKernelProcess  [OLD]\n"); 
 
+/*
     //PROGRESS("Create kernel process\n"); 
     Status = I_x64CreateKernelProcess();
     if (Status != TRUE){
         debug_print ("Couldn't create the Kernel process\n");
         return FALSE;
     }
+*/
 
 // ================================
 // [INIT PROCESS] :: Create the first ring3 process.
 // INIT.BIN.
 
     // #debug
-    PROGRESS("Calling I_x64CreateInitialProcess\n"); 
+    //PROGRESS("Calling I_x64CreateInitialProcess [OLD]\n"); 
 
+/*
     //PROGRESS("Create init process\n"); 
     Status = I_x64CreateInitialProcess();
     if (Status != TRUE){
         debug_print ("Couldn't create the Initial process\n");
         return FALSE;
     }
+*/
 
     return TRUE;
 
 // ================================
-// The routine fails.
+// The routine failed
 
 fail:
     // Nothing
     //debug_print("I_x64main: Fail\n"); 
 fail0:
     debug_print ("I_x64_initialize: fail\n");
-    refresh_screen(); 
     return FALSE;
 }
 

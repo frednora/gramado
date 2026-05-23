@@ -424,7 +424,6 @@ copy_process_struct(
 
     //#debug
     //printk("A terminal created two connectors\n");
-    //refresh_screen();
     //while(1){}
 
     }
@@ -515,7 +514,6 @@ copy_process00(
     unsigned long extra_stuff )
 {
 
-
 // #todo
 // Add parameter for index in laíc_info[] table
 
@@ -596,12 +594,10 @@ copy_process00(
     }
 
     //printk ("_pml4: %x\n",_pml4);
-    //refresh_screen();
     //while(1){}
 
     //#debug
     //printk (" :) \n");
-    //refresh_screen();
     //return 0;
 
 // The new process will be in a different pid.
@@ -633,11 +629,10 @@ copy_process00(
     // #debug
     // debug_print ("copy_process:\n");
 
-// pega
+// Get the PID for the current process
     pid_t current_process = (pid_t) get_current_process();
 
     //printk (":)\n");
-    //refresh_screen();
     //return -1;
 
     //usado para salvamento.
@@ -816,7 +811,6 @@ do_clone:
     //x64mm_load_pml4_table( kernel_mm_data.pml4_pa );
 
     //printk (":)\n");
-    //refresh_screen();
     //return -1;
 
 // Worker
@@ -861,7 +855,6 @@ do_clone:
 
     //#debug
     //printk (" :) \n");
-    //refresh_screen();
     //return 0;
 
 //
@@ -892,7 +885,6 @@ do_clone:
     // #debug
     //printk ("child_process->pml4_VA: %x\n",child_process->pml4_VA);
     //printk ("child_process->pml4_PA: %x\n",child_process->pml4_PA);
-    //refresh_screen();
     //while(1){}
 
 // ==============================
@@ -971,7 +963,6 @@ do_clone:
 
     //#debug
     //printk (" :) \n");
-    //refresh_screen();
     //return 0;
 
 // Copy process structure.
@@ -996,19 +987,16 @@ do_clone:
 
     //#debug
     //printk (" :) \n");
-    //refresh_screen();
     //return 0;
 
     // #debug
     // ok
     //printk ("child_process->pml4_VA: %x\n",child_process->pml4_VA);
     //printk ("child_process->pml4_PA: %x\n",child_process->pml4_PA);
-    //refresh_screen();
     //while(1){}
 
     // #debug
     //printk ("Stack : %x \n",__rsp);
-    //refresh_screen();
     //while(1){}
 
 //
@@ -1041,7 +1029,6 @@ do_clone:
 
     // #debug
     //printk (" :) \n");
-    //refresh_screen();
     //return 0;
 
 // Standard va entry point. (RIP = 0x201000)
@@ -1067,7 +1054,6 @@ do_clone:
     // ok
     //printk ("child_process->pml4_VA: %x\n",child_process->pml4_VA);
     //printk ("child_process->pml4_PA: %x\n",child_process->pml4_PA);
-    //refresh_screen();
     //while(1){}
 
 // #hackhack
@@ -1080,7 +1066,6 @@ do_clone:
     // #debug
     //printk ("child_thread->pml4_VA: %x\n",child_thread->pml4_VA);
     //printk ("child_thread->pml4_PA: %x\n",child_thread->pml4_PA);
-    //refresh_screen();
     //while(1){}
 
 // A flower thread do processo clone
@@ -1136,12 +1121,6 @@ do_clone:
         goto fail;
     }
 
-    //#debug
-    //ok
-    //printk (" :) \n");
-    //refresh_screen();
-    //return 0;
-
 // [5]
 // Check ELF signature.
 // OK. O comando existe e o arquivo foi carregado, mas 
@@ -1165,12 +1144,6 @@ do_clone:
         printk     ("copy_process: ELF header\n");
         goto fail;
     }
-
-    //#debug
-    //ok
-    //printk (" :) \n");
-    //refresh_screen();
-    //return 0;
 
 // >> Page table:
 // Remapeando a imagem, mas agora no diretório de páginas
@@ -1202,7 +1175,6 @@ do_clone:
 //
 
     //printk (":)\n");
-    //refresh_screen();
     //return -1;
 
     //debug_print ("copy_process:  This is a work in progress\n");
@@ -1230,7 +1202,6 @@ do_clone:
 
     //#debug
     //printk (" :) \n");
-    //refresh_screen();
     //return 0;
 
 //
