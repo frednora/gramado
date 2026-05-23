@@ -562,11 +562,26 @@ void Send_STARTUP_IPI_Twice(unsigned int apic_id, int lapic_info_id)
     };
 }
 
+
+/*
+// Disable all interrupts at the legacy PIC.
+static void mask_all_interrupts(void);
+static void mask_all_interrupts(void)
+{
+	outb(0xff, 0xa1);	// Mask all interrupts on the secondary PIC
+	io_delay();
+	outb(0xfb, 0x21);	// Mask all but cascade on the primary PIC
+	io_delay();
+}
+*/
+
 static void __apic_disable_legacy_pic(void)
 {
 // Legacy PIC mask all off.
 
     printk("apic_disable_legacy_pic:\n");
+
+    //mask_all_interrupts();
 
 // Envia ICW1 reset
     out8(0x20,0x11);	// reset PIC 1

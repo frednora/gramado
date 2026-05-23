@@ -1,0 +1,55 @@
+
+System call table:
+(Our reference is only the interrupt 0x80)
+#todo: Complete this table ... 
+see: sci0() in sci.c 
+#todo:
++ Complete this whole table
++ Use a common prefix in all the sysbols. (ex: sys_xxxx)
+
+0 - null
+1 - storage_read_sector
+2 - storage_write_sector
+3 - sys_read_file_from_disk
+4 - sys_write_file_to_disk
+5 - sys_vsync
+6 - backbuffer_putpixel
+... 
+8 - backbuffer_draw_horizontal_line
+9 - backbuffer_draw_rectangle
+10 - refresh_rectangle
+11 - refresh_screen
+...
+16 - sys_open
+17 - sys_close
+18 - sys_read
+19 - sys_write
+...
+34 - wink_set_cursor
+...
+38 - sys_gethostname
+39 - sys_sethostname
+40 - sys_getusername
+41 - sys_setusername
+...
+43 - sys_create_empty_file
+44 - sys_create_empty_directory
+...
+46 - wproxy_set_shell
+47 - wproxy_create0
+48 - wproxy_set_parameters_given_tid
+49 - sys_show_system_info
+...
+55 - get_2mb_user_heap_page
+...
+65 - __servicePutChar
+...
+71 - sys_fork
+72 - sys_create_thread
+73 - sys_create_process
+...
+80 - show_currentprocess_info
+81 - sys_getppid
+
+#todo: Complete this table ... 
+see: sci0() in sci.c 

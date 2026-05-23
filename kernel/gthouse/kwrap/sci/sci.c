@@ -558,7 +558,7 @@ void *sci0 (
 
 // 42 - free
 
-// 43 - Create an empty file.
+// 43 - Create an empty file
 // See: fs.c
     if (number == SCI0_CREATE_EMPTY_FILE){
         return (void *) sys_create_empty_file((char *) arg2);
@@ -569,6 +569,8 @@ void *sci0 (
     if (number == SCI0_CREATE_EMPTY_DIRECTORY){
         return (void *) sys_create_empty_directory((char *) arg2);
     }
+
+    // ...
 
 // 46 - Setup who will be the system shell wproxy. The taskbar.
     if (number == 46){
@@ -626,7 +628,6 @@ void *sci0 (
     }
 
 // 50
-
 
 // 51
 // #test
