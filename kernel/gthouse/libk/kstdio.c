@@ -936,7 +936,6 @@ kinguio_vsprintf(
 
     // A buffer to hold converted numbers as strings.
     static char buffer[1024];
-    //char buffer[256];
 
     // Variables for handling numerical conversions.
     // d|i|x

@@ -2221,39 +2221,48 @@ char *kinguio_itoa (int val, char *str)
     return str;
 }
 
-// Worker for printf().
-// Credits: Nelson Cole. Project Sirius/Kinguio.
+// The ring 3 implementation of printf().
+// Credits: 
+// Nelson Cole. 
+// Project Sirius/Kinguio. (BSD license)
+// IN:
+// fmp - format string. (src)
 int kinguio_printf(const char *fmt, ...)
 {
+    // Destination buffer
+    static char dst_buf[1024];
     int ret=0;
-    char buf[256];
 
-    memset(buf,0,256); 
+    memset(dst_buf, 0, 1024); 
 
     va_list ap;
     va_start (ap, fmt);
-    ret = kinguio_vsprintf(buf, fmt, ap);
+    ret = kinguio_vsprintf(dst_buf, fmt, ap);
     va_end (ap);
 
 // Print
-    kinguio_puts(buf);
+    kinguio_puts(dst_buf);
 
     return (int) ret;
 }
 
+// ring 3 implementation of printf function
 int printf(const char *fmt, ...)
 {
-    static char print_buffer[1024];
+    static char dst_buffer[1024];
     int ret=0;
 
     va_list ap;
     va_start (ap, fmt);
-    memset(print_buffer, 0, 1024); 
-    ret = (int) kinguio_vsprintf(print_buffer, fmt, ap);
+    memset(dst_buffer, 0, 1024); 
+    ret = (int) kinguio_vsprintf(dst_buffer, fmt, ap);
     va_end (ap);
 
-// Print and return.
-    kinguio_puts(print_buffer);
+// Print
+// It sends to the stdout tty.
+// The final target is the virtual terminal or the kernel console.
+    kinguio_puts(dst_buffer);
+
     return (int) ret;
 }
 
@@ -2282,17 +2291,18 @@ static char *_vsputs_r(char *dest, char *src)
 
 int 
 kinguio_vsprintf( 
-    char * str, 
+    char *str, 
     const char *fmt, 
     va_list ap )
 {
+    static char buffer[1024];
     register int index=0;
 // Char/String support.
     char c=0;  //c
     char *s;   //s
     char *str_tmp = str;
     char _c_r[] = "\0\0";
-    char buffer[256];
+
 // d|i|x
     int   d=0;
     long ld=0;  //signed long
@@ -2321,7 +2331,7 @@ kinguio_vsprintf(
             
             switch (fmt[index]){
             
-            //int
+            // int
             case 'c':
                 //*_c_r = c = (char) va_arg (ap, int);
                 c = (char) va_arg (ap, int);
@@ -2329,7 +2339,7 @@ kinguio_vsprintf(
                 str_tmp = _vsputs_r( str_tmp, _c_r );  //print
                 break;
 
-            //char*
+            // char*
             case 's':
             case 'S':
                 s = va_arg(ap, char*);
@@ -2349,7 +2359,7 @@ kinguio_vsprintf(
                 str_tmp = _vsputs_r(str_tmp,buffer);
                 break;
 
-            //unsigned int
+            // unsigned long
             case 'u':
                 //'lu'
                 if(type64bit==TRUE){
@@ -2368,7 +2378,7 @@ kinguio_vsprintf(
                 //}
                 break;
 
-            //int  (hexa)
+            // unsigned long (hexa)
             case 'X':
             case 'x':
                 //'lx'  #fail

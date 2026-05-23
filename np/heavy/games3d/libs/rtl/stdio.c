@@ -1903,25 +1903,22 @@ int float_to_string(char *buffer, size_t size, double value)
 }
 */
 
-/*
- * print:
- *     Used by printf.
- */
-int print ( char **out, int *varg )
+
+// print:
+// Worker used by printf.
+int print (char **out, int *varg)
 {
+    static char buffer[1024];  // Buffer for float conversion
     register int width, pad;
     register int pc = 0;
     register char *format = (char *) (*varg++);
     char scr[2];
-    char buffer[256];  // Buffer for float conversion
 
     for ( ; *format != 0; format++ ) 
     {
-
 		// Switch
         if ( *format == '%' ) 
         {
-
 			++format;
 			width = pad = 0;
 
@@ -2015,7 +2012,6 @@ int print ( char **out, int *varg )
 
     return (int) pc;
 }
-
 
 /* 
  * printf:
@@ -2313,10 +2309,10 @@ char *kinguio_itoa (int val, char *str)
 // Credits: Nelson Cole. Project Sirius/Kinguio.
 int kinguio_printf(const char *fmt, ...)
 {
+    static char buf[1024];
     int ret=0;
-    char buf[256];
 
-    memset(buf,0,256); 
+    memset(buf, 0, 1024); 
 
     va_list ap;
     va_start (ap, fmt);
@@ -2591,7 +2587,7 @@ kinguio_vsprintf(
             case 'f':
             {
                 double f_val = va_arg(ap, double);  // Retrieve the float argument
-                char buffer[256];  // Temporary storage for formatted float
+                char buffer[1024];  // Temporary storage for formatted float
                 int pos = 0;       // Buffer position
 
                 // Handle negative numbers: if negative, set the sign flag and convert to positive.

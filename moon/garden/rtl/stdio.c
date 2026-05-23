@@ -2297,13 +2297,13 @@ kinguio_vsprintf(
     const char *fmt, 
     va_list ap )
 {
+    static char buffer[1024];  // Number in ascii format
     register int index=0;
 // Char/String support.
     char c=0;  //c
     char *s;   //s
     char *str_tmp = str;
     char _c_r[] = "\0\0";
-    char buffer[256];  // Number in ascii format.
 
 // d|i|x
     int   d=0;
@@ -2312,11 +2312,11 @@ kinguio_vsprintf(
     //unsigned char u=0;
     unsigned int   u=0;
     unsigned long lu=0;
-// 64bit Format Specifier
-    int type64bit = FALSE;
+
+    int type64bit = FALSE;  // 64bit Format Specifier
 
 // Clear buffer
-    memset(buffer,0,256);
+    memset(buffer, 0, 1024);
 
 // loop
     while ( fmt[index] )
@@ -2336,7 +2336,7 @@ kinguio_vsprintf(
             
             switch (fmt[index]){
             
-            //int
+            // int
             case 'c':
                 //*_c_r = c = (char) va_arg (ap, int);
                 c = (char) va_arg (ap, int);
@@ -2344,7 +2344,7 @@ kinguio_vsprintf(
                 str_tmp = _vsputs_r( str_tmp, _c_r );  //print
                 break;
 
-            //char*
+            // char*
             case 's':
             case 'S':
                 s = va_arg(ap, char*);
@@ -2364,7 +2364,7 @@ kinguio_vsprintf(
                 str_tmp = _vsputs_r(str_tmp,buffer);
                 break;
 
-            //unsigned int
+            // unsigned long
             case 'u':
                 //'lu'
                 if(type64bit==TRUE){
@@ -2383,7 +2383,7 @@ kinguio_vsprintf(
                 //}
                 break;
 
-            //int  (hexa)
+            // unsigned long (hexa)
             case 'X':
             case 'x':
                 //'lx'  #fail

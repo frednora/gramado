@@ -1996,18 +1996,22 @@ char *kinguio_itoa(int val, char *str)
 // Credits: Nelson Cole. Project Sirius/Kinguio.
 int kinguio_printf(const char *fmt, ...)
 {
+    static char dst_buf[1024];
     register int ret=0;
-    char buf[256];
 
-    memset(buf,0,256); 
+    memset(dst_buf, 0, 1024);
 
     va_list ap;
     va_start (ap, fmt);
-    ret = kinguio_vsprintf(buf, fmt, ap);
+    ret = kinguio_vsprintf(dst_buf, fmt, ap);
     va_end (ap);
 
 // Print
-    kinguio_puts(buf);
+// In the context of ring 3 commands like this,
+// print means send the data to the tty, and it will be read 
+// for the virtual terminal or the kernel console.
+
+    kinguio_puts(dst_buf);
 
     return (int) ret;
 }
@@ -2074,13 +2078,14 @@ kinguio_vsprintf(
     const char *fmt, 
     va_list ap )
 {
+    static char buffer[1024];
     register int index=0;
 // Char/String support.
     char c=0;  //c
     char *s;   //s
     char *str_tmp = str;
     char _c_r[] = "\0\0";
-    char buffer[256];
+
 // d|i|x
     int   d=0;
     long ld=0;  //signed long
@@ -2117,7 +2122,7 @@ kinguio_vsprintf(
             
             switch (fmt[index]){
             
-            //int
+            // int
             case 'c':
                 //*_c_r = c = (char) va_arg (ap, int);
                 c = (char) va_arg (ap, int);
@@ -2125,7 +2130,7 @@ kinguio_vsprintf(
                 str_tmp = _vsputs_r( str_tmp, _c_r );  //print
                 break;
 
-            //char*
+            // char*
             case 's':
             case 'S':
                 s = va_arg(ap, char*);
@@ -2145,7 +2150,7 @@ kinguio_vsprintf(
                 str_tmp = _vsputs_r(str_tmp,buffer);
                 break;
 
-            //unsigned int
+            // unsigned long
             case 'u':
                 //'lu'
                 if(type64bit==TRUE){
@@ -2164,7 +2169,7 @@ kinguio_vsprintf(
                 //}
                 break;
 
-            //int  (hexa)
+            // unsigned long (hexa)
             case 'X':
             case 'x':
                 //'lx'  #fail

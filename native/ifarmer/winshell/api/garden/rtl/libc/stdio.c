@@ -1952,36 +1952,44 @@ char *kinguio_itoa(int val, char *str)
 // Credits: Nelson Cole. Project Sirius/Kinguio.
 int kinguio_printf(const char *fmt, ...)
 {
+    static char dst_buf[1024];
     register int ret=0;
-    char buf[256];
 
-    memset(buf,0,256); 
+    memset(dst_buf, 0, 1024); 
 
     va_list ap;
     va_start (ap, fmt);
-    ret = kinguio_vsprintf(buf, fmt, ap);
+    ret = kinguio_vsprintf(dst_buf, fmt, ap);
     va_end (ap);
 
 // Print
-    kinguio_puts(buf);
+// Using the tty, the data goes to 
+// the virtual terminal or kernel console.
+    kinguio_puts(dst_buf);
 
     return (int) ret;
 }
 
-
+// Ring 3 implementation for the printf function
+// IN:
+// fmt - Format string.
 int printf(const char *fmt, ...)
 {
-    static char print_buffer[1024];
+    static char dst_buffer[1024];
     int ret=0;
 
     va_list ap;
     va_start (ap, fmt);
-    memset(print_buffer, 0, 1024); 
-    ret = (int) kinguio_vsprintf(print_buffer, fmt, ap);
+    memset(dst_buffer, 0, 1024); 
+    ret = (int) kinguio_vsprintf(dst_buffer, fmt, ap);
     va_end (ap);
 
-// Print and return.
-    kinguio_puts(print_buffer);
+// Print
+// Using the tty, the data goes to 
+// the virtual terminal or kernel console.
+
+    kinguio_puts(dst_buffer);
+
     return (int) ret;
 }
 
@@ -2014,13 +2022,14 @@ kinguio_vsprintf(
     const char *fmt, 
     va_list ap )
 {
+    static char buffer[1024];
     register int index=0;
 // Char/String support.
     char c=0;  //c
     char *s;   //s
     char *str_tmp = str;
     char _c_r[] = "\0\0";
-    char buffer[256];
+
 // d|i|x
     int   d=0;
     long ld=0;  //signed long
@@ -2057,7 +2066,7 @@ kinguio_vsprintf(
             
             switch (fmt[index]){
             
-            //int
+            // int
             case 'c':
                 //*_c_r = c = (char) va_arg (ap, int);
                 c = (char) va_arg (ap, int);
@@ -2065,7 +2074,7 @@ kinguio_vsprintf(
                 str_tmp = _vsputs_r( str_tmp, _c_r );  //print
                 break;
 
-            //char*
+            // char*
             case 's':
             case 'S':
                 s = va_arg(ap, char*);
@@ -2085,7 +2094,7 @@ kinguio_vsprintf(
                 str_tmp = _vsputs_r(str_tmp,buffer);
                 break;
 
-            //unsigned int
+            // unsigned long
             case 'u':
                 //'lu'
                 if(type64bit==TRUE){
@@ -2104,7 +2113,7 @@ kinguio_vsprintf(
                 //}
                 break;
 
-            //int  (hexa)
+            // unsigned long (hexa)
             case 'X':
             case 'x':
                 //'lx'  #fail
@@ -2246,7 +2255,8 @@ int sprintf(char *str, const char *fmt, ...)
     ret = kinguio_vsprintf(str, fmt, ap);
     va_end (ap);
 
-/* terminate the string */
+// Terminate the string
+
     *(unsigned char*)(str + ret) = '\0';
 
     return (int) ret;

@@ -169,19 +169,22 @@ void kinguio_puts(const char* str)
     __kstdio_puts(str);
 }
 
+// Ring 0 implementation of vsprintf.
+// We are in the context of ring 0 kernel modules.
+// Credits: Nelson Cole. (Project Kingio) License BSD.
 int 
 kinguio_vsprintf(
     char *str, 
     const char *fmt, 
     va_list ap )
 {
+    static char buffer[1024];
     char *str_tmp = str;
     int index=0;
     unsigned char u=0;
     int d=0;
     char c=0; 
     char *s;
-    char buffer[256];  //#bugbug: Too short.
     char _c_r[] = "\0\0";
 
     while ( fmt[index] )
