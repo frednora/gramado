@@ -2464,7 +2464,7 @@ int printf(const char *fmt, ...)
 
 
 // The ring 3 implementation of printf().
-// printk is an alias for this function.
+// printf is an alias for this function.
 // Credits: 
 // Nelson Cole. 
 // Project Sirius/Kinguio. (BSD license)

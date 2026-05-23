@@ -2012,20 +2012,28 @@ int kinguio_printf(const char *fmt, ...)
     return (int) ret;
 }
 
-
+// Ring 3 implementation of printf() function.
+// IN: 
+// fmt - Format string
 int printf(const char *fmt, ...)
 {
-    static char print_buffer[1024];
+    // Destination buffer
+    static char dst_buffer[1024];
     int ret=0;
 
     va_list ap;
     va_start (ap, fmt);
-    memset(print_buffer, 0, 1024); 
-    ret = (int) kinguio_vsprintf(print_buffer, fmt, ap);
+    memset(dst_buffer, 0, 1024); 
+    ret = (int) kinguio_vsprintf(dst_buffer, fmt, ap);
     va_end (ap);
 
-// Print and return.
-    kinguio_puts(print_buffer);
+// Print
+// In the context of ring 3 commands like this,
+// print means send the data to the tty, and it will be read 
+// for the virtual terminal or the kernel console.
+
+    kinguio_puts(dst_buffer);
+
     return (int) ret;
 }
 
@@ -2052,6 +2060,14 @@ static char *_vsputs_r(char *dest, char *src)
     return (char * ) udest;
 }
 
+// The ring 3 implementation of vsprintf().
+// printf is an alias for this function.
+// Credits: 
+// Nelson Cole. 
+// Project Sirius/Kinguio. (BSD license)
+// IN:
+// str - destination buffer.
+// fmp - format string. (src)
 int 
 kinguio_vsprintf( 
     char *str, 
