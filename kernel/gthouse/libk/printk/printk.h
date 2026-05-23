@@ -10,12 +10,13 @@
 // Usaremos kinguio_printf por enquanto.
 int printk_old(const char *format, ...);
 
+// The ring 0 implementation of printf().
 int kinguio_printf(const char *fmt, ...);
 
 // ===========================================
 
-// -----------------------------------
-// printf() in ring0.
+// --------------------------------------
+// The ring 0 implementation of printf().
 #define printk  kinguio_printf
 
 #endif   

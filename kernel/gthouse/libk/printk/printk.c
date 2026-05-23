@@ -38,19 +38,25 @@ int printk_old(const char *format, ...)
 }
 
 
-// printk worker.
-// Credits: Nelson Cole. Project Sirius/Kinguio.
+// The ring 0 implementation of printf().
+// printk is an alias for this function.
+// Credits: 
+// Nelson Cole. 
+// Project Sirius/Kinguio. (BSD license)
+// IN:
+// fmp - format string. (src)
 int kinguio_printf(const char *fmt, ...)
 {
-    static char data_buffer[1024];
+    // Destination buffer
+    static char dst_buffer[1024];
     int ret=0;
 
-// If the virtual console isn't full initialized yet.
+// If the virtual console isn't full initialized yet
     if (Initialization.is_console_log_initialized != TRUE){
         return (int) -1;
     }
 
-    memset (data_buffer, 0, 1024);
+    memset (dst_buffer, 0, 1024);
 
     /*
     if ((void*) fmt == NULL){
@@ -65,20 +71,27 @@ int kinguio_printf(const char *fmt, ...)
 // See: kstdio.c
     va_list ap;
     va_start(ap, fmt);
-    ret = (int) kinguio_vsprintf(data_buffer, fmt, ap);
+    ret = (int) kinguio_vsprintf(dst_buffer, fmt, ap);
     va_end(ap);
 //-----------
 
-// Now we already have the formated string.
-// Lets print it or send it to the serial port.
+// Now we already have the formated string. Lets:
+// + print it or 
+// + send it to the serial port.
 
+    size_t BufferSize = (size_t) sizeof(dst_buffer);
+
+    // Send it to the serial port
     if (Initialization.printk_to_serial == TRUE){
+
             return (int) debug_print_nbytes( 
-                        (const void *) data_buffer, 
-                        (size_t) sizeof(data_buffer) );
+                        (const void *) dst_buffer, 
+                        (size_t) BufferSize );
+
+    // Print it into the screen
     } else {
-        // Print the data buffer.
-        kinguio_puts(data_buffer);
+
+        kinguio_puts(dst_buffer);
     };
 
     return (int) ret;

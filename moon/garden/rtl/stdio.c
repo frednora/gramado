@@ -2463,22 +2463,34 @@ int printf(const char *fmt, ...)
 }
 
 
-// printf
-// Credits: Nelson Cole. Project Sirius/Kinguio.
+// The ring 3 implementation of printf().
+// printk is an alias for this function.
+// Credits: 
+// Nelson Cole. 
+// Project Sirius/Kinguio. (BSD license)
+// IN:
+// fmp - format string. (src)
 int kinguio_printf(const char *fmt, ...)
 {
+    // Destination buffer
+    static char dst_buffer[1024];
     int ret=0;
-    char buf[256];
 
-    memset(buf,0,256); 
+    memset(dst_buffer, 0, 1024); 
 
     va_list ap;
     va_start (ap, fmt);
-    ret = kinguio_vsprintf(buf, fmt, ap);
+    ret = kinguio_vsprintf(dst_buffer, fmt, ap);
     va_end (ap);
 
-// Print
-    kinguio_puts(buf);
+// Print it.
+// #ps:
+// In the context of this ring 3 init process, 'print it'
+// actually means send it to the stdin tty.
+// The stdin tty is a kernel console that prints into the 
+// raw fullscreen display device.
+
+    kinguio_puts(dst_buffer);
 
     return (int) ret;
 }

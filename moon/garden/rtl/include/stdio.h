@@ -16,13 +16,9 @@
 #define CONSOLE_FILE_DESCRIPTOR  1
 
 
-// tty id desse processo.
-// Usado na inicializa��o da biblioteca.
+// TTY's id for this process
 // See: stdio.c:
-
-//int __libc_tty_id;
 extern int __libc_tty_id;
-
 
 
 //
@@ -31,17 +27,17 @@ extern int __libc_tty_id;
 
 
 // #test
-//Os caracteres s�o colocados em stdout.
-#define LIBC_NORMAL_MODE 1
-//Os caracteres s�o pintados na tela.
-#define LIBC_DRAW_MODE 2
+// The chars goes to stdout
+#define LIBC_NORMAL_MODE  1
+// The chars are printed into the screen directly
+#define LIBC_DRAW_MODE  2
 // ...
 
-//printf using draw mode.
-int printf_draw ( const char *fmt, ... );
+// printf using draw mode
+int printf_draw(const char *fmt, ...);
 
-//setup libc mode
-void libc_set_output_mode ( int mode );
+// setup libc mode
+void libc_set_output_mode(int mode);
 
 
 #ifdef _BSD_SIZE_T_
@@ -88,7 +84,7 @@ typedef __va_list va_list;
 #define __SIGN  0x8000    /* ignore this file in _fwalk */
 
 
-typedef char *stdio_va_list; 
+typedef char*  stdio_va_list; 
 
  
 #ifndef NULL
@@ -96,22 +92,21 @@ typedef char *stdio_va_list;
 #endif
 
  
-
 /*  
  "flags" bits definitions
  */
 
 
-// Flags for the iobuf structure.
+// Flags for the iobuf structure
 #define _IOREAD  1
 #define _IOWRT   2
 #define _IORW    0x0080
 
-// Standard stream file descriptors.
+
+// Standard stream file descriptors
 #define STDIN_FILENO   0
 #define STDOUT_FILENO  1
 #define STDERR_FILENO  2
-
 
 
 /*
@@ -127,7 +122,6 @@ typedef char *stdio_va_list;
 //#define _IONBF    0x0004  /* not buffered */
 
 
-
 /*
  * The buffer size as used by setbuf such that it is equivalent to
  * (void) setvbuf(fileSetBuffer, caBuffer, _IOFBF, BUFSIZ).
@@ -139,7 +133,7 @@ typedef char *stdio_va_list;
 // Returned by various functions on 
 // end of file condition or error.
 #ifndef EOF
-#define EOF (-1)
+#define EOF  (-1)
 #endif
 
 // System V/ANSI C; 
@@ -214,7 +208,7 @@ typedef struct __sfpos {
 
 
 // glibc-style
-/* The type of the second argument to `fgetpos' and `fsetpos'.  */
+// The type of the second argument to `fgetpos' and `fsetpos'.
 // See: /sys/types.h
 typedef __off_t          fpos_t;
 typedef __darwin_off_t   fpos_t;
@@ -233,9 +227,9 @@ typedef __gramado_off_t  fpos_t;
 // FILE
 //
 
-// #importante
-// Todo suporte � arquivos foi para libio/file.h
-// Os tipos que eles precisam ainda est� aqui.
+// #important
+// All the support for files are in libio/file.h.
+// But the types needed are still in here.
 
 #include <libio/file.h>
 
@@ -268,31 +262,22 @@ typedef __gramado_off_t  fpos_t;
 #define HEIGHT ROWS
 
 
-// ??
-// Limits
+// Limits ?
 // Lines and coluns
-#define SCREEN_MAX_HEIGHT 256
-#define SCREEN_MAX_WIDTH  256
+#define SCREEN_MAX_HEIGHT  256
+#define SCREEN_MAX_WIDTH   256
 
+#define REVERSE_ATTRIB  0x70
 
-#define REVERSE_ATTRIB 0x70
+#define PAD_RIGHT  1
+#define PAD_ZERO  2
 
-#define PAD_RIGHT 1
-#define PAD_ZERO 2
-
-#define PRINT_BUF_LEN 12
-
+// ?
+#define PRINT_BUF_LEN  12
 
 // #todo: Delete!
 // Pertence ao teclado.
 // #define KEY_RETURN   13    
-
-
-
-//
-// Obs: 
-// O tipo da vari�vel aqui � provis�rio. (UL).
-//
 
 //cursor
 //unsigned long g_cursor_x;
@@ -315,9 +300,7 @@ extern unsigned long g_char_attrib;
 extern unsigned long g_columns;
 extern unsigned long g_rows;
 
-// ??
-// modo gr�fico?
-//int g_using_gui; 
+// graphycs?
 extern int g_using_gui; 
 
 //===========================================
@@ -328,16 +311,10 @@ extern int g_using_gui;
 
 #define PROMPT_MAX_DEFAULT  BUFSIZ
 
-//char prompt[PROMPT_MAX_DEFAULT]; 
-//char prompt_out[PROMPT_MAX_DEFAULT]; 
-//char prompt_err[PROMPT_MAX_DEFAULT]; 
-extern char prompt[PROMPT_MAX_DEFAULT]; 
+extern char     prompt[PROMPT_MAX_DEFAULT]; 
 extern char prompt_out[PROMPT_MAX_DEFAULT]; 
 extern char prompt_err[PROMPT_MAX_DEFAULT]; 
 
-//int prompt_pos;
-//int prompt_max;
-//int prompt_status;
 extern int prompt_pos;
 extern int prompt_max;
 extern int prompt_status;
@@ -452,7 +429,7 @@ int puts (const char *s);
 //
 
 char *fgets (char *s, int size, FILE *stream);
-int fputs ( const char *s, FILE *stream );
+int fputs (const char *s, FILE *stream);
 
 //
 // Root 5
@@ -477,7 +454,7 @@ FILE *fmemopen (void *buf, size_t size, const char *mode);
 FILE *open_wmemstream (wchar_t **ptr, size_t *sizeloc);
 FILE *open_memstream (char **ptr, size_t *sizeloc);
 
-FILE *stdio_make_file ( int fd, const char *mode );
+FILE *stdio_make_file (int fd, const char *mode);
 
 FILE *fdopen (int fd, const char *mode);
 FILE *freopen (const char *pathname, const char *mode, FILE *stream);
@@ -503,9 +480,9 @@ char *tmpnam (char *s);
 //int vdprintf (int fd, const char *format, va_list ap); 
 //int dprintf (int fd, const char *format, ...);
 
-unsigned int filesize (FILE * fp);
+unsigned int filesize (FILE *fp);
 
-char *fileread (FILE * fp);
+char *fileread (FILE *fp);
 
 // remove - remove a file or directory 
 // On success, zero is returned. On error, -1 is returned, and 
@@ -515,17 +492,17 @@ int remove (const char *pathname);
 
 int fileno (FILE *stream);
 
- 
+
 // 
 // File Operations
 // 
- 
-FILE *fopen ( const char *filename, const char *mode ); 
-FILE *fopen2 ( const char *filename, const char *mode ); 
+
+FILE *fopen (const char *filename, const char *mode); 
+FILE *fopen2 (const char *filename, const char *mode); 
 int fclose (FILE *stream); 
 
 //
-// Normal output.
+// Normal output
 //
 
 void nputs (char *cp, int len);
@@ -670,20 +647,18 @@ int linux_fputc (int c, FILE *f);
 //===================
 //--
 
-
 // prompt support.
 // coloca no prompt[] em ring3 e exibe com uma rotina em ring0.
-int prompt_putchar ( int c, int con_id );
-int prompt_put_string ( char *string );
+int prompt_putchar (int c, int con_id);
+int prompt_put_string (char *string);
 int prompt_strcat (char *string);
-int prompt_flush ( int con_id );
+int prompt_flush (int con_id);
 void prompt_clean (void);
 
 //
 // Direct Input and Output Functions
 //
  
-
 //
 // File Positioning Functions
 //
@@ -702,19 +677,17 @@ void scroll (void);
 // ??
 int drawBar (int color);  
 
-
-//#todo
+// #todo
 int snprintf (char *str,size_t count,const char *fmt,...);
 
 //int vprintf (const char *fmt, va_list ap);
 
-//#test
-//ainda n�o foi testada
+// #test
+// Not tested yet
 int fscanf (FILE *stream, const char *format, ... );
 
-// inicializa o fluxo padr�o para o processo.
+// Initialize the standard streams for the process
 int stdio_initialize_standard_streams (void);
-
 
 // see: 
 // https://linux.die.net/man/3/setvbuf
@@ -757,8 +730,9 @@ void stdio_fntos (char *name);
 
 void stdioInitialize(void);
 
-#endif    //__STDIO_H__
+#endif    
+
 
 //
-// End.
+// End
 //
