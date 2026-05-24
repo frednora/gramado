@@ -76,9 +76,12 @@ void wink_putchar_in_fgconsole(unsigned long _char)
     console_outbyte(C, fg_console);
 }
 
-// __x_panic_show_message:
+// __x_panic_show_message: (worker)
 // Draw a small red rectangle in the top/left
 // and print a message into it.
+// IN:
+// final_message - string
+// flags - #todo
 static void __x_panic_show_message(const char *final_string, unsigned long flags)
 {
     unsigned long rectLeft=0;
@@ -127,20 +130,38 @@ static void __x_panic_show_message(const char *final_string, unsigned long flags
     refresh_screen();  // Flush
 }
 
-// Print the string into a box and halt carefully.
+// Print the string into a box and halt carefully
 void x_panic(const char *final_string)
 {
-    __x_panic_show_message(final_string,0);
+    const unsigned long Flags = 0;
+
+    if ((void*) final_string == NULL){
+        __x_panic_show_message("x_panic: final_string", Flags);
+        goto done;
+    }
+
+    __x_panic_show_message(final_string, Flags);
+
+done:
     while (1){
         asm ("cli");  
         asm ("hlt"); 
     };
 }
 
-// Print the string into a box and halt carefully.
+// Print the string into a box and halt carefully
 void wink_panic(const char *final_string)
 {
-    __x_panic_show_message(final_string, 1);
+    const unsigned long Flags = 1;
+
+    if ((void*) final_string == NULL){
+        __x_panic_show_message("wink_panic: final_string", Flags);
+        goto done;
+    }
+
+    __x_panic_show_message(final_string, Flags);
+
+done:
     while (1){
         asm ("cli");  
         asm ("hlt"); 
