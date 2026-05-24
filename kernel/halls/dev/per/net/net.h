@@ -1,8 +1,8 @@
 // net.h
 // Created by Fred Nora.
 
-#ifndef __NET_NETWORK_H
-#define __NET_NETWORK_H    1
+#ifndef __NET_NET_H
+#define __NET_NET_H    1
 
 
 // For side_id

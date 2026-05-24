@@ -243,7 +243,7 @@ static int __load_initbin_image(void)
 // + /GRAMADO/INIT.BIN
 // + /DE/INIT.BIN
 
-// Or function options are:
+// Our function options are:
 // + fsLoadFile()
 // + fsLoadProgramFromDE()
 // + fsLoadProgramFromGRAMADO()

@@ -1,4 +1,5 @@
 // socket.c
+// Kernel-side implementation of socket infrastructure.
 // The APIs for the syscalls related to sockets.
 // Called by sci.c
 // Created by Fred Nora.
@@ -316,6 +317,7 @@ fail:
 // That is not the standard way. We need to create a new socket 
 // for each client, spetially for remote connections.
 
+// #ps: 'addrlen' is a pointer.
 static int 
 __accept_imp (
     int sockfd, 
@@ -399,15 +401,19 @@ __accept_imp (
         //return (int) (-EINVAL);
     }
 
-// Invalid pointer for return value.
-// The 'addrlen' argument is a value-result argument: the caller must
-// initialize it to contain the size (in bytes) of the structure
-// pointed to by addr; on return it will contain the actual size of
-// the peer address.
+
+// #ps:
+// The 'addrlen' argument is a value-result argument: 
+// The caller must initialize it to contain the size (in bytes) 
+// of the structure pointed to by addr. On return it will contain 
+// the actual size of the peer address.
 // See: https://man7.org/linux/man-pages/man2/accept.2.html
 
-    if ((void*)addrlen == NULL)
-    {
+// #todo:
+// We are not setting up this return value yet
+
+// Is it and invalid pointer for return value?
+    if ((void*)addrlen == NULL){
         return (int) (-EINVAL);
     }
 
@@ -635,7 +641,6 @@ __accept_imp (
                 printk("__accept_imp: Server's pid {%d}\n",current_process);
                 printk("__accept_imp: Server's socket fd {%d}\n",sockfd);
                 //printk("__accept_imp: Breakpoint\n");
-                //refresh_screen();
                 while (1){
                     asm (" cli "); 
                     asm (" hlt ");
@@ -661,6 +666,7 @@ fail:
     return (int) -1;
 }
 
+// #ps: 'addrlen' is a pointer.
 int 
 sys_accept (
     int sockfd, 
@@ -1452,14 +1458,14 @@ __OK_new_slot:
     if (Verbose == TRUE)
     {
         printk("__connect_inet: Breakpoint\n");
-        refresh_screen();
+        // die();
         while (1){
             asm (" cli ");
             asm (" hlt ");
         };
     }
-// ok
-    return 0;
+
+    return 0;  // OK
 
 fail:
     debug_print("__connect_inet: fail\n");
@@ -1947,14 +1953,14 @@ __OK_new_slot:
     if (Verbose == TRUE)
     {
         printk("__connect_local: Breakpoint\n");
-        refresh_screen();
+        //die();
         while (1){
             asm (" cli ");
             asm (" hlt ");
         };
     }
-//ok
-    return 0;
+
+    return 0;  // OK
 
 fail:
     debug_print("__connect_local: fail\n");

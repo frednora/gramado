@@ -1,4 +1,5 @@
 // socket.c
+// Ring 3 implementation of socket infrastructure.
 // Created by Fred Nora.
 
 // See: 
@@ -28,12 +29,14 @@ int socket( int domain, int type, int protocol )
     int value = -1;
 
     value = 
-        (int) gramado_system_call ( 
-                  7000, 
-                  (unsigned long) domain, 
-                  (unsigned long) type, 
-                  (unsigned long) protocol );
-    if (value<0)
+        (int) sc80 ( 
+                7000, 
+                (unsigned long) domain, 
+                (unsigned long) type, 
+                (unsigned long) protocol 
+            );
+
+    if (value < 0)
     {
         errno = (-value);
         return (int) -1;
@@ -42,16 +45,15 @@ int socket( int domain, int type, int protocol )
     return (int) value;
 }
 
-// Local worker.
+// Local worker
 static int __socket_pipe( int pipefd[2] )
 {
-    return (int) gramado_system_call ( 
-                     247, 
-                     (unsigned long) pipefd, 
-                     (unsigned long) pipefd, 
-                     (unsigned long) pipefd );
+    return (int) sc80 ( 
+                    247, 
+                    (unsigned long) pipefd, 
+                    (unsigned long) pipefd, 
+                    (unsigned long) pipefd );
 }
-
 
 int socketpair(int domain, int type, int protocol, int sv[2])
 {
@@ -106,9 +108,9 @@ bind (
 {
     int value = -1;
 
-    if (sockfd<0)
+    if (sockfd < 0)
     {
-        errno=EBADF;
+        errno = EBADF;
         return (int) -1;
     }
 
@@ -116,11 +118,12 @@ bind (
 // Check addr and addrlen.
 
     value = 
-        (int) gramado_system_call ( 
-                  7003, 
-                  (unsigned long) sockfd, 
-                  (unsigned long) addr, 
-                  (unsigned long) addrlen );
+        (int) sc80 ( 
+                7003, 
+                (unsigned long) sockfd, 
+                (unsigned long) addr, 
+                (unsigned long) addrlen 
+            );
 
     if (value<0)
     {
@@ -144,6 +147,7 @@ int listen(int sockfd, int backlog)
         errno = EBADF;
         goto fail;
     }
+
 // backlog limits
     if (backlog <= 0 || backlog > SOMAXCONN){
         errno = EBADF;
@@ -151,14 +155,15 @@ int listen(int sockfd, int backlog)
     }
 
     value = 
-        (int) gramado_system_call ( 
-                  7004, 
-                  (unsigned long) sockfd, 
-                  (unsigned long) backlog, 
-                  (unsigned long) 0 );
+        (int) sc80 ( 
+                7004, 
+                (unsigned long) sockfd, 
+                (unsigned long) backlog, 
+                (unsigned long) 0 
+            );
 
-// Fail.
-    if (value<0)
+// Fail
+    if (value < 0)
     {
         errno = (-value);
         goto fail;
@@ -177,7 +182,6 @@ int listen(int sockfd, int backlog)
 fail:
     return (int) (-1);
 }
-
 
 // #todo
 // See: https://linux.die.net/man/2/accept4
@@ -198,21 +202,22 @@ accept4 (
 int accept2 (int sockfd, struct sockaddr *addr, socklen_t *addrlen)
 {
     int value = -1;
-    
-    if(sockfd<0)
+
+    if (sockfd < 0)
     {
         errno = EBADF;
         return (int) (-1);
     }
 
     value = 
-        (int) gramado_system_call ( 
-                  7010, 
-                  (unsigned long) sockfd, 
-                  (unsigned long) addr, 
-                  (unsigned long) addrlen );
+        (int) sc80 ( 
+                7010, 
+                (unsigned long) sockfd, 
+                (unsigned long) addr, 
+                (unsigned long) addrlen 
+            );
 
-    if(value<0)
+    if (value < 0)
     {
         errno = (-value);
         return (int) (-1);
@@ -221,36 +226,41 @@ int accept2 (int sockfd, struct sockaddr *addr, socklen_t *addrlen)
     return (int) value;
 }
 
-
+// accept:
+// The 'addrlen' argument is a value-result argument: 
+// The caller must initialize it to contain the size (in bytes) 
+// of the structure pointed to by addr. On return it will contain 
+// the actual size of the peer address.
 // OUT: fd.
 int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
 {
     int value = -1;
 
-    if (sockfd<0){
+// Parameters:
+    if (sockfd < 0){
         errno = EBADF;
         return (int) (-1);
     }
-    if ( (void*) addr == NULL ){
+    if ((void*) addr == NULL){
         errno = EINVAL;
         return -1;
     }
 
     value = 
-        (int) gramado_system_call ( 
-                  7002, 
-                  (unsigned long) sockfd, 
-                  (unsigned long) addr, 
-                  (unsigned long) addrlen );
+        (int) sc80 ( 
+                7002, 
+                (unsigned long) sockfd, 
+                (unsigned long) addr, 
+                (unsigned long) addrlen 
+            );
 
-    if (value<0){
+    if (value < 0){
         errno = (-value);
         return (int) (-1);
     }
 
     return (int) value;
 }
-
 
 int 
 connect ( 
@@ -260,19 +270,20 @@ connect (
 {
     int value = -1;
 
-    if(sockfd<0){
+    if (sockfd < 0){
         errno = EBADF;
         return (int) (-1);
     }
 
     value = 
-        (int) gramado_system_call ( 
-                  7001, 
-                  (unsigned long) sockfd, 
-                  (unsigned long) addr, 
-                  (unsigned long) addrlen );
+        (int) sc80 ( 
+                7001, 
+                (unsigned long) sockfd, 
+                (unsigned long) addr, 
+                (unsigned long) addrlen 
+            );
 
-    if (value<0)
+    if (value < 0)
     {
         errno = (-value);
         return (int) (-1);
@@ -283,7 +294,7 @@ connect (
 
 
 // shutdown:
-// shut down part of a full-duplex connection.
+// Shut down part of a full-duplex connection.
 // See:
 // https://linux.die.net/man/3/shutdown
 
@@ -291,17 +302,19 @@ int shutdown(int sockfd, int how)
 {
     int value = -1;
 
-    if (sockfd<0)
+    if (sockfd < 0)
     {
         errno = EBADF;
         return (int) (-1);
     }
 
-    value = (int) gramado_system_call ( 
-              7009, 
-              (unsigned long) sockfd, 
-              (unsigned long) how, 
-              (unsigned long) how );
+    value = 
+        (int) sc80 ( 
+            7009, 
+            (unsigned long) sockfd, 
+            (unsigned long) how, 
+            (unsigned long) how 
+        );
 
     if (value<0)
     {
@@ -311,7 +324,6 @@ int shutdown(int sockfd, int how)
 
     return (int) value;
 }
-
 
 /*
 void FD_CLR(int fd, fd_set *set);
@@ -508,20 +520,21 @@ getsockname (
 {
     int value = -1;
 
-    if(sockfd<0)
+    if (sockfd <0)
     {
         errno = EBADF;
         return (int) (-1);
     }
 
     value = 
-        (int) gramado_system_call ( 
-                  7007, 
-                  (unsigned long) sockfd, 
-                  (unsigned long) addr, 
-                  (unsigned long) addrlen );
+        (int) sc80 ( 
+                7007, 
+                (unsigned long) sockfd, 
+                (unsigned long) addr, 
+                (unsigned long) addrlen 
+            );
 
-    if (value<0)
+    if (value < 0)
     {
         printf ("getsockname: fail\n");
         errno = (-value);
@@ -568,9 +581,10 @@ setsockopt (
     return -1; 
 }
 
+// #todo
 int sendfd(int sockfd, int fd)
 {
-    if(sockfd<0)
+    if (sockfd<0)
     {
         errno = EBADF;
         return (int) -1;
@@ -579,9 +593,10 @@ int sendfd(int sockfd, int fd)
     return -1; 
 }
 
+// #todo
 int recvfd(int sockfd)
 {
-    if(sockfd<0)
+    if (sockfd<0)
     {
         errno = EBADF;
         return (int) -1;

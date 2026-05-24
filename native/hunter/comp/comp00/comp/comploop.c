@@ -4422,7 +4422,7 @@ static int ServerLoop(int client_index)
 // SOMAXCONN is the default limit on backlog.
 // see: sys/socket.h
     int ListenStatus = -1;
-    ListenStatus = (int) listen(server_fd,SERVER_BACKLOG);
+    ListenStatus = (int) listen(server_fd, SERVER_BACKLOG);
     if (ListenStatus < 0){
         //#todo
     }
@@ -4606,6 +4606,13 @@ static int ServerLoop(int client_index)
 // The thread wait until complete the 16 ms.
 // #bugbug: Valid only if the timer fires 1000 times a second.
 // It gives the opportunities for other threads to run a bit more.
+
+// #ps: 
+// In accept(),
+// the 'addrlen' argument is a value-result argument: 
+// The caller must initialize it to contain the size (in bytes) 
+// of the structure pointed to by addr. On return it will contain 
+// the actual size of the peer address.
 
 
 // This is the loop for the compositor.

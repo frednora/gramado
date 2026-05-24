@@ -1,11 +1,12 @@
 
 // sys/socket.h
+// Ring 3 implementation of socket infrastructure.
 // Core socket functions and data structures.
 // See:
 // https://en.wikipedia.org/wiki/Berkeley_sockets
 
-#ifndef _SOCKET_H
-#define _SOCKET_H    1
+#ifndef __SYS_SOCKET_H
+#define __SYS_SOCKET_H    1
 
 #include <stddef.h>
 #include <sys/un.h>
@@ -277,18 +278,13 @@ struct sockaddr_gram
 };
 
 
-
-/*
- * Structure used by kernel to pass protocol
- * information in raw sockets.
- * bsd
- */
+// Structure used by kernel to pass protocol
+// information in raw sockets. (BSD - style)
 struct sockproto 
 {
     unsigned short sp_family;    // address family 
     unsigned short sp_protocol;  // protocol 
 };
-
 
 typedef struct
 {
@@ -296,7 +292,6 @@ typedef struct
     unsigned  h_length;
 
 }hostent;
-
 
 
 /*
@@ -354,9 +349,12 @@ connect(
 
 int shutdown(int sockfd, int how);
 
-// Send:
+// Send ------------------
+
 ssize_t send( int sockfd, const void *buf, size_t len, int flags);
+
 ssize_t sendmsg(int sockfd, const struct msghdr *msg, int flags);
+
 ssize_t 
 sendto ( 
     int sockfd, 
@@ -366,9 +364,12 @@ sendto (
     const struct sockaddr *dest_addr, 
     socklen_t addrlen );
 
-// Receive:
+// Receive ------------------
+
 ssize_t recv(int sockfd, void *buf, size_t len, int flags);
+
 ssize_t recvmsg(int sockfd, struct msghdr *msg, int flags);
+
 ssize_t 
 recvfrom ( 
     int sockfd, 
@@ -426,8 +427,6 @@ struct hostent *gethostbyaddr(
 */
 
 #endif    
-
-
 
 //
 // End

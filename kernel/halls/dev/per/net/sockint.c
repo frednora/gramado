@@ -108,7 +108,7 @@ struct socket_d *create_socket_object(void)
 
 // The buffer.
 // The data goes into the stream.
-    s->private_file = (file *) 0;
+    s->private_file = NULL;  //(file *) 0;
 
 // Socket flags
 // The flags that describe the state of this socket.
@@ -618,10 +618,14 @@ socket_gramado (
 // pode ser que peguemos os índices reservados.
 // Para evitar, começaremos depois deles.
 // Reserva um slot.
-// 31 is also reserved. The server is reading 
-// only in this fd.
-    __slot = -1; //fail
-    //for ( i=3; i<NUMBER_OF_FILES; i++ )
+// 31 is also reserved. The server is reading only in this fd.
+
+    __slot = -1;  //fail
+
+    // #ps: 
+    // 31 is out limit, but we have 32 slots.
+    // The last one is reserved.
+
     for ( i=3; i<31; i++ )
     {
         if (Process->Objects[i] == 0)
@@ -631,7 +635,7 @@ socket_gramado (
         }
     };
 
-// Check slot validation. 
+// Check slot validation
     if (__slot == -1){
         printk ("socket_gramado: [FAIL] No free slots\n");
         goto fail;
@@ -639,8 +643,8 @@ socket_gramado (
 
 // Buffer
     buff = (char *) kmalloc(BUFSIZ);
-    if ((void *) buff == NULL){
-        //Process->Objects[__slot] = (unsigned long) 0;
+    if ((void *) buff == NULL)
+    {
         debug_print ("socket_gramado: buff fail\n");
         printk      ("socket_gramado: buff fail\n");
         goto fail;
@@ -648,8 +652,8 @@ socket_gramado (
 
 // File
     _file = (void *) kmalloc ( sizeof(file) );
-    if ((void *) _file == NULL){
-        //Process->Objects[__slot] = (unsigned long) 0;
+    if ((void *) _file == NULL)
+    {
         debug_print ("socket_gramado: [FAIL] _file fail\n");
         printk      ("socket_gramado: [FAIL] _file fail\n");
         goto fail;
@@ -659,7 +663,7 @@ socket_gramado (
 // Object type
     _file->____object = ObjectTypeSocket;
 
-// #todo: Call the methods.
+// #todo: Call the methods
     _file->pid = (pid_t) current_process;
     _file->uid = (uid_t) current_user;
     _file->gid = (gid_t) current_group;
@@ -696,12 +700,11 @@ socket_gramado (
     _file->_base = buff;
     _file->_p    = buff;
     _file->_lbfsize = BUFSIZ;
-// Quanto falta
-    _file->_cnt = _file->_lbfsize;
- // Offsets
+    _file->_cnt = _file->_lbfsize;  // The empty space
+    // Offsets
     _file->_r = 0;
     _file->_w = 0;
-// Status do buffer do socket.
+// Status do buffer do socket
     _file->socket_buffer_full = 0;
 
 //
@@ -718,14 +721,15 @@ socket_gramado (
 // na estrutura de processo do processo atual.
     Process->priv = (void *) sock;
 
-// fd
-    _file->_file = __slot;
-// Colocando na lista de arquivos abertos no processo.
+    _file->_file = __slot;  // Save fd
+
+    // Save the pointer into the list of open files
     Process->Objects[__slot] = (unsigned long) _file;
+
     _file->used = TRUE;
     _file->magic = 1234;
-// ok: Retornamos o fd na lista de arquivos abertos pelo processo
-    return (int) __slot;
+
+    return (int) __slot;  // Return fd
 
 fail:
     debug_print ("socket_gramado: fail\n");
