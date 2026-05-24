@@ -235,6 +235,20 @@ static int __load_initbin_image(void)
         panic("__load_initbin_image: init_image_name\n");
     }
 
+
+// #test
+// #todo
+// Here we can have more options. Just like:
+// + /INIT.BIN
+// + /GRAMADO/INIT.BIN
+// + /DE/INIT.BIN
+
+// Or function options are:
+// + fsLoadFile()
+// + fsLoadProgramFromDE()
+// + fsLoadProgramFromGRAMADO()
+// See: fsload.c
+
 // ---------------------
 // It loads a file into the memory.
 // IN:

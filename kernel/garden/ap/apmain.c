@@ -1,4 +1,6 @@
 // apmain.c
+// Main file when the kernel starts up some AP processor.
+// Created by Fred Nora
 
 #include <kernel.h>
 
@@ -331,7 +333,10 @@ AP_die:
 }
 
 
-
+//
+// #
+// Main function (For AP processor)
+//
 
 void AP_kmain(void)
 {

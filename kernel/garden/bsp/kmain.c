@@ -1,4 +1,5 @@
 // kmain.c
+// Main file when the kernel starts up the BSP processor.
 // This is the first C file, called after the assembly routines.
 // Created by Fred Nora.
 
@@ -1672,8 +1673,8 @@ fail:
 }
 
 //
-// $
-// BSP INITIALIZATION
+// #
+// Main function (For BSP processor)
 //
 
 // --------------------------------
@@ -1783,7 +1784,7 @@ void I_kmain(int arch_type)
 
 // Let's create the kernel process, the init process and 
 // execute the init process.
-// See: x64init.c
+// See: intake/x64init.c
 
     // Create the kernel process and load the main ring 0 module
     PROGRESS("\n");
