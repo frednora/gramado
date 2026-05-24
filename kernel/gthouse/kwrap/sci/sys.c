@@ -22,7 +22,7 @@
 // alarm() returns the number of seconds remaining until any
 //       previously scheduled alarm was due to be delivered, or zero if
 //       there was no previously scheduled alarm.
-
+// 884
 unsigned long sys_alarm(unsigned long seconds)
 {
     struct thread_d *t;
@@ -105,6 +105,7 @@ unsigned long sys_get_system_metrics(int n)
     return (unsigned long) doGetSystemMetrics((int)n);
 }
 
+// 73
 // Only ring3 for now.
 // OUT: ?
 void *sys_create_process ( 
@@ -339,7 +340,7 @@ fail:
     return NULL;
 }
 
-// Exit thread.
+// Exit thread
 int sys_exit_thread (tid_t tid)
 {
     serial_printk("sys_exit_thread: tid={%d}\n",tid);
@@ -355,6 +356,7 @@ fail:
     return (int) -1;
 }
 
+// 71
 // #todo:
 // We're working in a helper function for clonning processes.
 // See: clone.c
@@ -487,6 +489,7 @@ int sys_initialize_component (int n)
 
 // # We need to return when 
 // a non-superuser process call this service.
+// 110
 
 int sys_reboot(unsigned long flags)
 {
@@ -561,10 +564,8 @@ int sys_serial_debug_printk(char *s)
     serial_printk("R3: %s",s);  // Sent from ring3.
     return 0;
 }
-
-// Wrapper
-// Shutdown routine.
-// Not tested yet.
+ 
+// Shutdown routine
 void sys_shutdown(unsigned long flags)
 {
     static int How=0;
@@ -575,8 +576,8 @@ void sys_shutdown(unsigned long flags)
     core_shutdown(How);
 }
 
+// 49
 // Usada por vários serviços de debug.
-// Usada para debug.
 void sys_show_system_info(int n)
 {
     if (n<0){
@@ -661,7 +662,7 @@ int sys_uname(struct utsname *ubuf)
     return 0;
 }
 
-// ??
+// 5
 // Sync the vertical retrace of the monitor.
 void sys_vsync(void)
 {

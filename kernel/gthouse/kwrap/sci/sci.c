@@ -219,6 +219,11 @@ static void __invalidate_surface_rectangle(void)
 
 // =====================================================
 
+// #ps:
+// Duplicate entries:
+// Services 38-41 (hostname/username) appear at both 38-41 AND 801-804
+// Services 260-261 (sys_read/write) appear at multiple locations
+
 // This routine was called by the interrupt handler in x64sc.c.
 // Getting requests from ring3 applications via systemcalls.
 // :: Services in kernel.
