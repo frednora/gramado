@@ -50,6 +50,170 @@ see: sci0() in sci.c
 ...
 80 - show_currentprocess_info
 81 - sys_getppid
+82 - show_process_information
+83 - do_waitpid
+...
+85 - get_current_pid
+...
+88 - processTesting
+...
+94 - core_start_thread
+...
+110 - sys_reboot
+111 - sys_get_message
+112 - sys_post_message_to_tid
+...
+118 - sys_network_push_packet
+119 - sys_network_pop_packet
+120 - sys_get_message2
+...
+126 - portsx86_IN
+127 - portsx86_OUT
+...
+132 - char_draw
+133 - char_draw_transparent
+...
+138 - keyboardGetKeyState
+...
+159 - get_current_cg_id
+...
+161 - getSocketIPV4
+162 - getSocketPort
+163 - update_socket
+...
+170 - sys_pwd
+...
+173 - fsListFiles
+174 - search_in_dir
+175 - sys_cd_command
+176 - fs_pathname_backup
+177 - fsList
+178 - sys_get_file_size
+179 - sys_getdtablesize
+...
+184 - GetProcessHeapStart
+...
+223 - get_systime_info
+224 - hal_get_time
+225 - hal_get_date
+...
+227 - process_close_gate
+228 - process_open_gate
+...
+240 - get_cursor_x
+241 - get_cursor_y
+...
+247 - sys_pipe
+...
+250 - sys_get_system_metrics
+...
+260 - sys_read
+261 - sys_write
+262 - console_read
+263 - console_write
+...
+266 - process_get_tty
+...
+272 - sys_tty_read
+273 - sys_tty_write
+...
+277 - console_get_current_virtual_console
+278 - console_set_current_virtual_console
+...
+288 - wrappers_get_current_runlevel
+289 - sys_serial_debug_printk
+...
+292 - core_get_memory_size_mb
+293 - info_get_boot_info
+294 - sys_change_boot_menu_option
+...
+350 - sys_initialize_component
+...
+377 - sys_uname
+...
+391 - backbuffer_draw_rectangle
+...
+513 - network_register_ring3_display_server
+...
+518 - network_register_ring3_browser
+...
+521 - socket_set_gramado_port
+...
+600 - sys_dup
+601 - sys_dup2
+602 - sys_dup3
+603 - sys_lseek
+...
+640 - taskswitch_lock
+641 - taskswitch_unlock
+642 - scheduler_lock
+643 - scheduler_unlock
+...
+770 - devmgr_show_device_list
+...
+801 - sys_gethostname
+802 - sys_sethostname
+803 - sys_getusername
+804 - sys_setusername
+...
+808 - __ptsname
+809 - __ptsname (again)
+...
+880 - get_process_stats
+881 - GetThreadStats
+882 - getprocessname
+883 - getthreadname
+884 - sys_alarm
+...
+891 - core_alloc_shared_ring3_pages
+892 - __setup_surface_rectangle
+893 - __invalidate_surface_rectangle
+...
+896 - invalidate_screen
+897 - __service897
+898 - input_enter_kernel_console
+899 - input_exit_kernel_console
+...
+911 - sys_notify_event
+912 - sys_msgctl
+913 - sys_sleep_if_socket_is_empty
+...
+940 - wink_use_windowing_system
+...
+4444 - fs_show_root_fs_info
+...
+7000 - sys_socket
+7001 - sys_connect
+7002 - sys_accept
+7003 - sys_bind
+7004 - sys_listen
+...
+7006 - socket_set_gramado_port
+7007 - sys_getsockname
+7008 - show_socket_for_a_process
+7009 - sys_socket_shutdown
+...
+8000 - sys_ioctl
+8001 - sys_fcntl
+8002 - sys_setup_stdin
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #todo: Complete this table ... 
 see: sci0() in sci.c 

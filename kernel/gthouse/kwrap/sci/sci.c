@@ -806,7 +806,7 @@ void *sci0 (
     if (number == SCI0_WAIT4PID)
     { 
         debug_print("sci0: [FIXME] SCI0_WAIT4PID\n");
-        return (void *) do_waitpid( 
+        return (void *) do_waitpid ( 
                             (pid_t) arg2, 
                             (int *) arg3, 
                             (int)   arg4 );
@@ -1307,6 +1307,8 @@ void *sci0 (
         return (void *) get_cursor_y();
     }
 
+    // ...
+
 // 247 - sys_pipe()
     if (number == 247){
         return (void*) sys_pipe((int*) arg2, (int) arg3);
@@ -1314,10 +1316,8 @@ void *sci0 (
 
 // 248 - sys_execve()
 // see: kunistd.c in libk/
-    if (number == 248)
-    {
+    if (number == 248){
         printk("[248]: sys_execve() Not implemented\n");
-        refresh_screen();
         return (void *) -1;
     }
 
@@ -1418,7 +1418,9 @@ void *sci0 (
         console_set_current_virtual_console((int) arg2);
         return NULL;
     }
-    
+
+// ...
+
 // 288 - Returns the current runlevel
 // Permission: Maybe it can be done only by the init process.
     if (number == 288)
@@ -1433,6 +1435,8 @@ void *sci0 (
     if ( number == 289 ){
         return (void *) sys_serial_debug_printk((char *) arg2);
     }
+
+    // ...
 
 // 292 - Get memory size in MB.
     if (number == 292){
@@ -1466,6 +1470,8 @@ void *sci0 (
         return (void*) sys_change_boot_menu_option(arg2);
     }
 
+// ...
+
 // 350 - Initialize system component
 // Inicializar ou reinicializar componentes do sistema
 // depois da inicialização completa do kernel.
@@ -1476,6 +1482,8 @@ void *sci0 (
         printk("sci0: 350\n"); 
         return (void *) sys_initialize_component((int) arg2);
     }
+
+// ...
 
 // 377 - sys_uname()
 // Get info to fill the utsname structure.
@@ -1518,6 +1526,8 @@ void *sci0 (
             (unsigned long) message_address[5] );
         return NULL;
     }
+
+// ...
 
 // 512 - Get display server PID for a given cgroup ring0 pointer.
 // IN: 
@@ -1639,6 +1649,8 @@ void *sci0 (
         return NULL; //fail
     }    
 
+    //...
+
 // 600 - dup
     if (number == 600){
         return (void *) sys_dup( (int) arg2 );  
@@ -1662,6 +1674,8 @@ void *sci0 (
                             (off_t) arg3, 
                             (int)   arg4 );
     }
+
+// ...
 
 // 640 - Lock the taskswtiching.
 // Only the init thread can call this service.
@@ -1714,10 +1728,14 @@ void *sci0 (
         return NULL;
     }
 
+// ...
+
 // 777 - cpu usage for idle thread.
     if (number == 777){
         return (void *) profiler_percentage_idle_thread;
     }
+
+// ...
 
 // 801 - get host name
 // see: kunistd.c
@@ -1733,14 +1751,16 @@ void *sci0 (
         return (void *) sys_sethostname((const char *) arg2,0); 
     }
 
-// 803 - Get user name.
+// 803 - Get user name
     if (number == 803){
         return (void *) sys_getusername((char *) arg2);
     }
-// 804 - Set user name.
+// 804 - Set user name
     if (number == 804){
         return (void *) sys_setusername((const char *) arg2); 
     }
+
+// ...
 
 // 808 - pts name
 // #todo
@@ -1763,6 +1783,8 @@ void *sci0 (
         return (void *) __ptsname ( (int) arg2, 
                             (char *) arg3, (size_t) arg4 ); 
     } 
+
+// ...
 
 // 880 - Get process stats given pid
 // IN: pid, index
@@ -1793,6 +1815,8 @@ void *sci0 (
         return (void *) sys_alarm((unsigned long) arg2);
     }
 
+// ...
+
 // 891 - Allocate shared ring3 pages.
     if (number == 891){
         debug_print("sci0: 891, Allocate shared ring3 pages\n");
@@ -1819,6 +1843,8 @@ void *sci0 (
         return NULL;
     }
 
+    //...
+
 // 896 - Invalidate the whole screen
     if (number == 896){
         invalidate_screen();
@@ -1844,6 +1870,7 @@ void *sci0 (
         return NULL;
     }
 
+// ...
 
 // A thread wants to configure if it will block on
 // empty message queue or not.
@@ -1867,7 +1894,8 @@ void *sci0 (
 // + caller tid
 // + option number
 // + extra value number
-    if (number == 912){
+    if (number == 912)
+    {
         return (void*) sys_msgctl( 
             (tid_t) CurrentTID, 
             (int) (arg2 & 0xFFFFFFFF),
@@ -1883,6 +1911,7 @@ void *sci0 (
         return (void *) sys_sleep_if_socket_is_empty(arg2);
     }
 
+// ...
 
 // 940 - Use wink windowing system
 // See: wink.c
@@ -1934,12 +1963,16 @@ void *sci0 (
     //    return (void *) k_fopen ( (const char *) arg2, "r+" );
     //}
 
+// ...
+
 // 4444 - Show root files system info.
 // Print into the raw kernel console.
     if (number == 4444){
         fs_show_root_fs_info();
         return NULL;
     }
+
+// ...
 
 // 7000 - sys_socket() 
 // See: socket.c
@@ -2016,6 +2049,9 @@ void *sci0 (
         return NULL;
     }
 
+
+//...
+
 // 8000 - sys_ioctl()
 // IN: fd, request, arg
 // See: fs.c
@@ -2043,7 +2079,7 @@ void *sci0 (
         return (void *) sys_setup_stdin((int) arg2);
     }
 
-
+// ...
 
 // 9100 - Get system icon
 // #deprecated:
@@ -2052,7 +2088,6 @@ void *sci0 (
     if (number == 9100){
         return NULL;
     }
-
 
 
 // ========================================================
@@ -2810,10 +2845,8 @@ void *sci2 (
         {
             // #debug
             printk("10012: tid=ds | auth=ds\n");
-            refresh_screen();
         }
         */
-
 
         /*
         // Some process that is not the display server 
@@ -2824,7 +2857,6 @@ void *sci2 (
         {
             // #debug
             printk("10012: tid!=ds | auth=ds\n");
-            refresh_screen();
         }
         */
 
