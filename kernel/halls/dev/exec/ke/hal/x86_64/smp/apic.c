@@ -1205,7 +1205,7 @@ int lapic_info_initializing(unsigned long lapic_pa, int lapic_info_id)
             lapic_info[i].local_version = 0;
             //printk("localversion: %xH\n", lapic_info[lapic_info_id].local_version);
 
-            lapic_info[i].current_thread = INIT_TID;
+            lapic_info[i].current_tid = (tid_t) INIT_TID;
 
             lapic_info[i].irql = IRQL_NULL;
             lapic_info[i].is_scheduler = FALSE;

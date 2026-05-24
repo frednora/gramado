@@ -708,7 +708,7 @@ void *ipc_get_message(unsigned long ubuf)
     int fEmpty = FALSE;
 
     // Get from this TID
-    tid_t FromThisTID = lapic_info[0].current_thread;
+    tid_t FromThisTID = (tid_t) lapic_info[0].current_tid;
 
 // buffer
 // #todo: Check some other invalid address.
@@ -901,7 +901,7 @@ void *sys_get_message2(
     int fEmpty = FALSE;
 
     // Get from this TID
-    tid_t FromThisTID = lapic_info[0].current_thread;
+    tid_t FromThisTID = (tid_t) lapic_info[0].current_tid;
 
 // buffer
 // #todo: Check some other invalid address.
@@ -1072,11 +1072,9 @@ sys_post_message_to_tid(
 {
 
 // Sender: caller's tid
-    tid_t src_tid = (tid_t) lapic_info[0].current_thread;
-
+    tid_t src_tid = (tid_t) lapic_info[0].current_tid;
 // Receiver: targt tid
     tid_t dst_tid = (tid_t) tid;
-
 
 // Invalid target tid
     if ( dst_tid < 0 || dst_tid >= THREAD_COUNT_MAX ){
@@ -1136,7 +1134,7 @@ unsigned long sys_broadcast_system_message(unsigned long ubuf)
 {
 
 // Sender: The current thread for this core
-    tid_t Sender_TID = (tid_t) lapic_info[0].current_thread;
+    tid_t Sender_TID = (tid_t) lapic_info[0].current_tid;
 
     unsigned long long_rv=0;
 
@@ -1156,7 +1154,7 @@ unsigned long sys_broadcast_system_message(unsigned long ubuf)
 // Call the worker
     long_rv = 
     (unsigned long) ipc_broadcast_system_message (
-        (tid_t) Sender_TID,  // The sender is always the current_thread
+        (tid_t) Sender_TID,  // The sender is always the current_tid
         (int) MessageCode,
         (unsigned long) m[2],
         (unsigned long) m[3],

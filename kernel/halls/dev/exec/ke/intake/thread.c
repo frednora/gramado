@@ -15,8 +15,6 @@ struct thread_d  *InitThread;  // The thread for the Init Process
 
 // ------
 
-// tid_t current_thread=0;
-
 tid_t foreground_thread=0;
 tid_t special_reader=0;
 // ------
@@ -566,7 +564,7 @@ void SetCurrentTID(tid_t tid, int lapic_info_id)
     if (lapic_info_id >= NR_CPUS)
         return;
 
-    lapic_info[lapic_info_id].current_thread = (tid_t) tid;
+    lapic_info[lapic_info_id].current_tid = (tid_t) tid;
 }
 
 // Get the current TID for a given core
@@ -577,7 +575,7 @@ tid_t GetCurrentTID(int lapic_info_id)
     if (lapic_info_id >= NR_CPUS)
         return (tid_t) -1;
 
-    return (tid_t) lapic_info[lapic_info_id].current_thread;
+    return (tid_t) lapic_info[lapic_info_id].current_tid;
 }
 
 void *GetThreadByTID(tid_t tid)
@@ -595,7 +593,7 @@ void *GetThreadByTID(tid_t tid)
 // Get the structure pointer
 void *GetCurrentThread(void)
 {
-    tid_t tid = lapic_info[0].current_thread;
+    tid_t tid = lapic_info[0].current_tid;
 
     if (tid < 0)
         return NULL;
@@ -840,7 +838,7 @@ int sys_msgctl(tid_t caller_tid, int option, int extra_value)
 
 // -----------------------------------------------------
 // Caller
-    if (caller_tid != lapic_info[0].current_thread)
+    if (caller_tid != lapic_info[0].current_tid)
         return -1;
     if (caller_tid < 0 || caller_tid >= THREAD_COUNT_MAX)
         return -1;
@@ -955,7 +953,7 @@ fail:
 // Exit current thread
 int exit_current_thread(void)
 {
-    tid_t tid = lapic_info[0].current_thread;
+    tid_t tid = lapic_info[0].current_tid;
 
     if (tid < 0)
         goto fail;
@@ -1506,10 +1504,10 @@ struct thread_d *create_thread (
 // Pois a thread atual não importa.
 // @todo: deletar isso. 
 
-    if ( lapic_info[0].current_thread < 0 || 
-         lapic_info[0].current_thread >= THREAD_COUNT_MAX )
+    if ( lapic_info[0].current_tid < 0 || 
+         lapic_info[0].current_tid >= THREAD_COUNT_MAX )
     {
-        printk ("create_thread: current_thread\n");
+        printk ("create_thread: current_tid\n");
         goto fail;
     }
 
@@ -1927,9 +1925,9 @@ int init_threads(void)
     //ProcessorBlock.threads_counter = 0;
     UPProcessorBlock.threads_counter = (int) 0;
 
-    lapic_info[0].current_thread = 0;  //
-
-   //...
+    lapic_info[0].idle_tid = 0;  //
+    lapic_info[0].current_tid = 0;  //
+    //...
 
 // #todo: 
 // Porque essas variáveis usam o termo 'task'?

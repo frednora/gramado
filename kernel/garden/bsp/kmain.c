@@ -633,8 +633,7 @@ void init_globals(void)
     
 // Per-cpu current thread.
 // Initialize the index of the current thread for the first core.
-    lapic_info[lapic_info_id].current_thread = (tid_t) 0;
-
+    lapic_info[lapic_info_id].current_tid = (tid_t) 0;
 
 // File system support
 // Type=1 | FAT16.

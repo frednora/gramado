@@ -131,7 +131,7 @@ dispatch_current:
 // Target thread:
 // Get the current thread for this core.
 
-    TargetTID = lapic_info[0].current_thread;
+    TargetTID = (tid_t) lapic_info[0].current_tid;
 
     if ( TargetTID < 0 || TargetTID >= THREAD_COUNT_MAX ){
         panic("dispatcher: TargetTID\n");

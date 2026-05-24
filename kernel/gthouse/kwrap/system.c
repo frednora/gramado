@@ -436,11 +436,11 @@ unsigned long doGetSystemMetrics(int index)
             //return (unsigned long) current_process;
             return (unsigned long) get_current_process(); //#bugbug mask?  
             break;
-       
+
         // #todo: We need a method for this.
         // The current thread for a given core
-        case 141:  
-            return (unsigned long) lapic_info[0].current_thread;   
+        case 141:
+            return (unsigned long) (lapic_info[0].current_tid & 0xFFFFFFFF);
             break;
 
         // return the number of processors.

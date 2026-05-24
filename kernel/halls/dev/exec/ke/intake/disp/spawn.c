@@ -460,10 +460,10 @@ static void __spawn_thread_by_tid_imp(tid_t tid)
     set_current_thread(target_thread->tid);
 
     // Check if it was setted correctly
-    if ( lapic_info[0].current_thread < 0 || 
-         lapic_info[0].current_thread >= THREAD_COUNT_MAX )
+    if ( lapic_info[0].current_tid < 0 || 
+         lapic_info[0].current_tid >= THREAD_COUNT_MAX )
     {
-        panic("__spawn_thread_by_tid_imp: lapic_info[0].current_thread\n");
+        panic("__spawn_thread_by_tid_imp: lapic_info[0].current_tid\n");
     }
 
     IncrementDispatcherCount(SELECT_INITIALIZED_COUNT);

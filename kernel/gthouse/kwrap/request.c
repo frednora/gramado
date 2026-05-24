@@ -169,14 +169,14 @@ int processDeferredKernelRequest(void)
             break;
 
 
-        //2 - faz a current_thread dormir. 
+        //2 - faz a current_tid dormir. 
         case KR_SLEEP:
             //debug_print ("processDeferredKernelRequest: block a thread\n");
             //do_thread_blocked ( (int) REQUEST.target_tid );
             break;
 
 
-        //3 - acorda a current_thread.
+        //3 - acorda a current_tid.
         case KR_WAKEUP:
             //debug_print ("processDeferredKernelRequest: wake up a thread\n");
             //wakeup_thread ( (int) REQUEST.target_tid );
@@ -261,13 +261,12 @@ int processDeferredKernelRequest(void)
             break;
 
 
-        //make target thread current
-        //cuidado.
+        // make target thread current
+        // #cuidado
         case 14:
             //debug_print ("processDeferredKernelRequest: Get current thread\n");
-            lapic_info[0].current_thread = REQUEST.target_tid;
+            lapic_info[0].current_tid = (tid_t) REQUEST.target_tid;
             break;
-
 
         case 15:
             //debug_print ("processDeferredKernelRequest: Wait for a reason \n");
@@ -285,7 +284,7 @@ int processDeferredKernelRequest(void)
 
             // #bugbug: What?
             // Set the current thread for this core
-            lapic_info[0].current_thread = REQUEST.target_tid;
+            lapic_info[0].current_tid = (pid_t) REQUEST.target_tid;
             
             // IN: file name, parent pid, clone flags.
             return (void *) copy_process( 

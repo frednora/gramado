@@ -70,7 +70,8 @@ static void __service897(void)
     // #todo: Get the current value
     int lapic_info_id = 0; // BSP
 
-    tid_t CurrentTID = lapic_info[lapic_info_id].current_thread;
+    tid_t CurrentTID = 
+        (tid_t) lapic_info[lapic_info_id].current_tid;
 
     struct rect_d r;
     unsigned int _Color=0;
@@ -136,7 +137,8 @@ static void __setup_surface_rectangle(
     // #todo: Get the current value
     int lapic_info_id = 0; // BSP
 
-    tid_t CurrentTID = lapic_info[lapic_info_id].current_thread;
+    tid_t CurrentTID = 
+        (tid_t) lapic_info[lapic_info_id].current_tid;
 
     struct rect_d *r;
 
@@ -188,7 +190,9 @@ static void __invalidate_surface_rectangle(void)
     // #todo: Get the current value
     int lapic_info_id = 0; // BSP
 
-    tid_t CurrentTID = lapic_info[lapic_info_id].current_thread;
+    tid_t CurrentTID = 
+        (tid_t) lapic_info[lapic_info_id].current_tid;
+
     struct rect_d *r;
 
     if ( CurrentTID<0 || CurrentTID >= THREAD_COUNT_MAX ){
@@ -257,7 +261,8 @@ void *sci0 (
 
 
 // The current thread for this core
-    tid_t CurrentTID = lapic_info[lapic_info_id].current_thread;
+    tid_t CurrentTID = 
+        (tid_t) lapic_info[lapic_info_id].current_tid;
 
 // Thread
     if ( CurrentTID<0 || CurrentTID >= THREAD_COUNT_MAX )
@@ -2118,7 +2123,8 @@ void *sci1 (
     // #todo: Get the current value
     int lapic_info_id = 0; // BSP
 
-    tid_t CurrentTID = lapic_info[lapic_info_id].current_thread;
+    tid_t CurrentTID = 
+        (tid_t) lapic_info[lapic_info_id].current_tid;
 
     struct te_d *te;     // thread environment
 // thread environment id (fka PID)
@@ -2190,7 +2196,8 @@ void *sci2 (
     // #todo: Get the current value
     int lapic_info_id = 0; // BSP
 
-    tid_t CurrentTID = lapic_info[lapic_info_id].current_thread;
+    tid_t CurrentTID = 
+        (tid_t) lapic_info[lapic_info_id].current_tid;
 
     struct te_d *p;      // thread environment
     pid_t current_process = (pid_t) get_current_process();
@@ -3219,16 +3226,19 @@ void *sci3 (
     unsigned long arg3, 
     unsigned long arg4 )
 {
+// thread environment
+// thread environment id (fka PID)
+    struct te_d *te;
+    pid_t CurrentPID = (pid_t) get_current_process();
+
     struct thread_d *t;  // thread
 
     // #todo: Get the current value
     int lapic_info_id = 0; // BSP
 
-    tid_t CurrentTID = lapic_info[lapic_info_id].current_thread;
+    tid_t CurrentTID = 
+        (tid_t) lapic_info[lapic_info_id].current_tid;
 
-    struct te_d *te;     // thread environment
-// thread environment id (fka PID)
-    pid_t current_process = (pid_t) get_current_process();
 
     //debug_print("sci3: [TODO]\n");
 
@@ -3256,10 +3266,10 @@ void *sci3 (
 // ---------------------------------
 
 // permission
-    if (current_process<0 || current_process >= PROCESS_COUNT_MAX){
-        panic("sci3: current_process\n");
+    if (CurrentPID<0 || CurrentPID >= PROCESS_COUNT_MAX){
+        panic("sci3: CurrentPID\n");
     }
-    te = (struct te_d *) teList[current_process];
+    te = (struct te_d *) teList[CurrentPID];
     if ((void*) te == NULL){
         debug_print("sci3: p\n");
         panic("sci3: p\n");

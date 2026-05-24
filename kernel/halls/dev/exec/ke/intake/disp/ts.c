@@ -321,7 +321,7 @@ static unsigned long __task_switch(int lapic_info_id)
         panic("__task_switch: __lapic_info_id\n");
     }
 
-    tid_t CurrentTID = lapic_info[__lapic_info_id].current_thread;
+    tid_t CurrentTID = lapic_info[__lapic_info_id].current_tid;
 
 // Current
     struct thread_d  *CurrentThread;
@@ -556,8 +556,8 @@ static unsigned long __task_switch(int lapic_info_id)
         if (CurrentThread->cpl == 0)
         {
             //CurrentThread->next = InitThread;  //#hack
-            //lapic_info[__lapic_info_id].current_thread = (tid_t) psScheduler();
-            //lapic_info[__lapic_info_id].current_thread = (tid_t) INIT_TID;
+            //lapic_info[__lapic_info_id].current_tid = (tid_t) psScheduler();
+            //lapic_info[__lapic_info_id].current_tid = (tid_t) INIT_TID;
             //CurrentProcess->state = ZOMBIE;
             //CurrentThread->quantum = 1000;
             //goto dispatch_current; 
@@ -570,7 +570,7 @@ static unsigned long __task_switch(int lapic_info_id)
             //currentq->next = NULL;
             //CurrentThread = NULL;
             //asm ("cli");
-            //lapic_info[__lapic_info_id].current_thread = (tid_t) psScheduler();
+            //lapic_info[__lapic_info_id].current_tid = (tid_t) psScheduler();
             //goto dispatch_current;
         }
 
@@ -732,7 +732,7 @@ ZeroGravity:
         // Set the current thread for this core
         //
 
-        lapic_info[__lapic_info_id].current_thread = (tid_t) psScheduler();
+        lapic_info[__lapic_info_id].current_tid = (tid_t) psScheduler();
 
         // Avoiding the risk of bouncing back into ZeroGravity or 
         // looping forever.
@@ -747,7 +747,7 @@ ZeroGravity:
     {
         if (InitThread->magic == 1234)
         {
-            lapic_info[__lapic_info_id].current_thread = (tid_t) InitThread->tid;
+            lapic_info[__lapic_info_id].current_tid = (tid_t) InitThread->tid;
             goto go_ahead;
         }
     }
@@ -784,13 +784,13 @@ go_ahead:
     if ((void *) TargetThread == NULL)
     {
         debug_print ("ts: pointer ");
-        lapic_info[__lapic_info_id].current_thread = (tid_t) psScheduler();
+        lapic_info[__lapic_info_id].current_tid = (tid_t) psScheduler();
         goto ZeroGravity;
     }
     if ( TargetThread->used != TRUE || TargetThread->magic != 1234 )
     {
         debug_print ("ts: val ");
-        lapic_info[__lapic_info_id].current_thread = (tid_t) psScheduler();
+        lapic_info[__lapic_info_id].current_tid = (tid_t) psScheduler();
         goto ZeroGravity;
     }
 // Not ready?
@@ -801,7 +801,7 @@ go_ahead:
         debug_print ("ts: state ");
         //serial_printk ("ts: state name=%s tid=%d ", 
             //TargetThread->__threadname, TargetThread->tid);
-        lapic_info[__lapic_info_id].current_thread = (tid_t) psScheduler();
+        lapic_info[__lapic_info_id].current_tid = (tid_t) psScheduler();
         goto ZeroGravity;
     }
 
@@ -813,7 +813,7 @@ go_ahead:
 // Let's set the current thread for this core.
 
 // Current selected
-    lapic_info[__lapic_info_id].current_thread = (int) TargetThread->tid;
+    lapic_info[__lapic_info_id].current_tid = (int) TargetThread->tid;
     goto dispatch_current;
 
 // #debug
@@ -831,14 +831,14 @@ go_ahead:
 dispatch_current:
 
 // tid
-    if ( lapic_info[__lapic_info_id].current_thread < 0 || 
-         lapic_info[__lapic_info_id].current_thread >= THREAD_COUNT_MAX )
+    if ( lapic_info[__lapic_info_id].current_tid < 0 || 
+         lapic_info[__lapic_info_id].current_tid >= THREAD_COUNT_MAX )
     {
-        panic ("ts-dispatch_current: lapic_info[__lapic_info_id].current_thread\n");
+        panic ("ts-dispatch_current: lapic_info[__lapic_info_id].current_tid\n");
     }
 
 // structure
-    TargetThread = (void *) threadList[ lapic_info[__lapic_info_id].current_thread ];
+    TargetThread = (void *) threadList[ lapic_info[__lapic_info_id].current_tid ];
     if ((void *) TargetThread == NULL){
         panic ("ts-dispatch_current: TargetThread\n");
     }
@@ -1024,7 +1024,7 @@ unsigned long tsTaskSwitch(void)
     }
 
     // The current thread for this core
-    tid_t CurrentTID = lapic_info[__lapic_info_id].current_thread;
+    tid_t CurrentTID = lapic_info[__lapic_info_id].current_tid;
 
 
 // Filters
@@ -1110,10 +1110,9 @@ The alertable flag is consumed when the callback fires,
 so you don’t get duplicate deliveries. The thread can re‑arm later if it wants more callbacks.
 */
 
-
     // #important
     // Now we have a new current thread
-    CurrentTID = lapic_info[__lapic_info_id].current_thread;
+    CurrentTID = lapic_info[__lapic_info_id].current_tid;
 
     if (CurrentTID < 0 || CurrentTID >= THREAD_COUNT_MAX)
     {

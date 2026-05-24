@@ -89,7 +89,7 @@ static int __kill_faulty_current_process(void)
     pid = (pid_t) get_current_process();
 
 // Get current thread for this core
-    tid = (tid_t) lapic_info[0].current_thread;
+    tid = (tid_t) lapic_info[0].current_tid;
 
     printk("killing tid=%d\n",tid);
 
@@ -305,13 +305,13 @@ void x64_all_faults(unsigned long number)
 // em ring3. Pois nesse caso poderemos tentar retomar a
 // execução.
 
-    if ( current_thread < 0 || 
-         current_thread >= THREAD_COUNT_MAX )
+    if ( current_tid < 0 || 
+         current_tid >= THREAD_COUNT_MAX )
     {
-        panic("faults: current_thread\n");
+        panic("faults: current_tid\n");
     }
 
-    CurrentThread = (void *) threadList[current_thread]; 
+    CurrentThread = (void *) threadList[current_tid]; 
 
 // validation
     if ( CurrentThread->used != TRUE ||  
@@ -418,7 +418,7 @@ void x64_all_faults(unsigned long number)
         killstatus= (int) __kill_faulty_current_process();
         if (killstatus != 0)
         {
-            show_reg( lapic_info[0].current_thread );
+            show_reg( lapic_info[0].current_tid );
             x_panic("x64_all_faults: Coudn't kill process");
         }
         if (killstatus == 0)
@@ -432,7 +432,7 @@ void x64_all_faults(unsigned long number)
             //
 
             // Set the INIT_TID as the next current thread.
-            //current_thread = (tid_t) target_tid;
+            //current_tid = (tid_t) target_tid;
             
             // Set curren thread for this core.
             // #bugbug: We need to pass the cpu id via parameter
@@ -507,7 +507,7 @@ void x64_all_faults(unsigned long number)
             arch_save_context(0);
 
             //show_slots();
-            show_reg( lapic_info[0].current_thread );
+            show_reg( lapic_info[0].current_tid );
 
             refresh_screen();
             // Esse tipo funciona mesmo antes do console
@@ -566,7 +566,7 @@ void x64_all_faults(unsigned long number)
         case 13: 
             printk ("== GP ==\n");  
             //show_slots();
-            //show_reg( lapic_info[0].current_thread );
+            //show_reg( lapic_info[0].current_tid );
             refresh_screen();
             // Esse tipo funciona mesmo antes do console
             // ter sido inicializado.

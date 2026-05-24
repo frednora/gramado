@@ -531,8 +531,7 @@ copy_process00(
     struct thread_d *parent_thread;
     struct thread_d *child_thread;
 
-
-    tid_t CallerTID = lapic_info[0].current_thread;
+    tid_t CallerTID = (tid_t) lapic_info[0].current_tid;
 
 // Usado como armazenamento temporário de endereço físico de tabela.
     unsigned long phy=0;
@@ -1543,7 +1542,7 @@ do_clone:
         panic("copy_process: NextCurrentThread limits\n");
     }
     // ok. Set next thread
-    lapic_info[0].current_thread = (tid_t) NextCurrentThread;
+    lapic_info[0].current_tid = (tid_t) NextCurrentThread;
 
     
 // Counter

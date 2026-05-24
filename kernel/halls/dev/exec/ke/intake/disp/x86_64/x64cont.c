@@ -84,7 +84,8 @@ void arch_save_context(int lapic_info_id)
     }
 
 // The current thread for this core
-    tid_t CurrentTID = lapic_info[__lapic_info_id].current_thread;
+    tid_t CurrentTID = 
+        (tid_t) lapic_info[__lapic_info_id].current_tid;
 
     register int i=0;
 
@@ -315,7 +316,8 @@ void arch_restore_context(int lapic_info_id)
     }
 
 // The current thread for this core
-    tid_t CurrentTID = lapic_info[__lapic_info_id].current_thread;
+    tid_t CurrentTID = 
+        (tid_t) lapic_info[__lapic_info_id].current_tid;
 
     register int i=0;
 

@@ -69,6 +69,8 @@ extern struct scheduler_info_d  SchedulerInfo;
 // == prototypes ============
 //
 
+tid_t sched_get_idle_thread_by_tid(int cpu_id);
+
 struct thread_d *get_init_thread(void);
 struct thread_d *get_next_on_queue_or_the_init_thread(struct thread_d *q);
 struct thread_d *get_ev_responter(void);

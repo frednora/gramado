@@ -291,7 +291,8 @@ int do_waitpid (pid_t pid, int *status, int options)
 {
     struct te_d *p;
     pid_t current_process = (pid_t) get_current_process();
-    tid_t CurrentTID = lapic_info[0].current_thread;
+
+    tid_t CurrentTID = (tid_t) lapic_info[0].current_tid;
 
     //#debug
     //printk ( "do_waitpid: current_process=%d pid=%d \n", 
@@ -406,10 +407,10 @@ void schediSelectForExecution(struct thread_d *Thread)
 // Get the TID of the current thread.
 tid_t get_current_thread(void)
 {
-    return (tid_t) lapic_info[0].current_thread;
+    return (tid_t) lapic_info[0].current_tid;
 }
 
-// Set the tid for the current_thread global variable.
+// Set the tid for the current_tid global variable.
 void set_current_thread(tid_t tid)
 {
     struct thread_d *t;
@@ -417,7 +418,7 @@ void set_current_thread(tid_t tid)
     if (tid < 0 || tid >= THREAD_COUNT_MAX){
         return;
     }
-    if (tid == lapic_info[0].current_thread){
+    if (tid == lapic_info[0].current_tid){
         return;
     }
 
@@ -434,7 +435,7 @@ void set_current_thread(tid_t tid)
     }
 
 // Change the current for this core
-    lapic_info[0].current_thread = (tid_t) tid;
+    lapic_info[0].current_tid = (tid_t) tid;
 }
 
 

@@ -60,6 +60,15 @@ static void sched_quick_and_dirty_load_balancer(void);
 
 // =======================================
 
+tid_t sched_get_idle_thread_by_tid(int cpu_id)
+{
+    // Invalid index
+    if (cpu_id<0 || cpu_id >= NR_CPUS)
+        return (tid_t) -1;
+
+    return (tid_t) lapic_info[cpu_id].idle_tid;
+}
+
 // Quick and dirty load balancer
 // No parameters, uses global SchedulerInfo.
 // If ready count > 3, lower InitThread quantum.
@@ -307,8 +316,7 @@ sched_cut_round(
         return;
 
 // The current thread
-
-    tid_t tid = lapic_info[lapic_info_id].current_thread;
+    tid_t tid = (tid_t) lapic_info[lapic_info_id].current_tid;
 
     if ( tid < 0 || tid >= THREAD_COUNT_MAX )
     {
@@ -1153,7 +1161,7 @@ tid_t scheduler(void)
 
 // #test
 // Setup the current thread for this processor.
-    // lapic_info[0].current_thread = (tid_t) first_tid;
+    // lapic_info[0].current_tid = (tid_t) first_tid;
 
 // Return tid
     return (tid_t) first_tid;
@@ -1201,7 +1209,7 @@ tid_t psScheduler(void)
 
 // There is only one thread in the uniprocessor.
 // Put it into the currentq queue.
-// It needs to become the current_thread and return it.
+// It needs to become the current_tid and return it.
 /*
     if (UPProcessorBlock.threads_counter == 1)
     {
@@ -1209,8 +1217,8 @@ tid_t psScheduler(void)
         //debug_print("psScheduler: Idle $\n");
         
         currentq = (struct thread_d *) UPProcessorBlock.IdleThread;
-        current_thread = (tid_t) currentq->tid;
-        return (tid_t) current_thread;
+        current_tid = (tid_t) currentq->tid;
+        return (tid_t) current_tid;
     }
 */
 
@@ -1312,7 +1320,7 @@ void sched_lower_current_thread(int lapic_info_id)
     if (lapic_info_id < 0 || lapic_info_id >= NR_CPUS)
         return;
 
-    tid_t target_tid = lapic_info[lapic_info_id].current_thread;
+    tid_t target_tid = (tid_t) lapic_info[lapic_info_id].current_tid;
 
     // Validate thread ID
     if (target_tid < 0 || target_tid >= THREAD_COUNT_MAX){
@@ -1348,7 +1356,7 @@ void sys_nice(unsigned long decrement, int lapic_info_id)
     if (lapic_info_id < 0 || lapic_info_id >= NR_CPUS)
         return;
 
-    tid_t target_tid = lapic_info[lapic_info_id].current_thread;
+    tid_t target_tid = (tid_t) lapic_info[lapic_info_id].current_tid;
 
 // #todo: Privilegies
 

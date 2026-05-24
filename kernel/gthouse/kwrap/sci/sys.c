@@ -30,7 +30,8 @@ unsigned long sys_alarm(unsigned long seconds)
     int lapic_info_id = 0;  // BSP
 
 // The current thread for this core
-    tid_t CurrentTID = lapic_info[lapic_info_id].current_thread;
+    tid_t CurrentTID = 
+        (tid_t) lapic_info[lapic_info_id].current_tid;
 
 
     unsigned long old=0;
@@ -124,7 +125,7 @@ void *sys_create_process (
 
     int lapic_info_id = 0;  // BSP
 
-    tid_t CurrentTID = lapic_info[lapic_info_id].current_thread;
+    tid_t CurrentTID = (tid_t) lapic_info[lapic_info_id].current_tid;
 
     int ProcessPersonality=0;
 

@@ -532,8 +532,7 @@ int I_x64CreateInitialProcess(void)
 
 // Set the current thread for this core
 
-    lapic_info[0].current_thread = (tid_t) InitThread->tid;
-
+    lapic_info[0].current_tid = (tid_t) InitThread->tid;
 
 // Done:
 // Now We already have one valid user mode process.

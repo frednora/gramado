@@ -624,13 +624,11 @@ struct timer_d *create_timer (
     struct thread_d  *Thread;
     int ID = -1;  //erro;
 
-
 // The current thread for this core
-    tid_t CurrentTID = lapic_info[0].current_thread;
-
+    tid_t CurrentTID = lapic_info[0].current_tid;
 
     debug_print("create_timer:\n");
-    //printk     ("create_timer: pid=%d ms=%d type=%d\n",
+    //printk("create_timer: pid=%d ms=%d type=%d\n",
     //    pid,ms,type);
 
 // --------------

@@ -54,7 +54,7 @@ void callback_is_restored(void)
     struct thread_d *t;
 
 // The current thread for this core
-    tid_t CurrentTID = lapic_info[0].current_thread;
+    tid_t CurrentTID = (tid_t) lapic_info[0].current_tid;
 
     if (CurrentTID<0)
         return;

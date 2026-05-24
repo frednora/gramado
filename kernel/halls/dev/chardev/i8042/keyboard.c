@@ -155,9 +155,9 @@ irq1_KEYBOARD (void)
 // Tracing if some interrupt happens when the thread is in an invalid state.
 // Current ------
     struct thread_d *CurrentThread;
-    if (current_thread < 0 || current_thread >= THREAD_COUNT_MAX)
+    if (current_tid < 0 || current_tid >= THREAD_COUNT_MAX)
         return;
-    CurrentThread = (struct thread_d *) threadList[current_thread];
+    CurrentThread = (struct thread_d *) threadList[current_tid];
     if (CurrentThread->magic != 1234)
         return;
     // It needs to be in a running state

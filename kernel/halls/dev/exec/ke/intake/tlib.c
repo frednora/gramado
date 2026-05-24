@@ -160,8 +160,8 @@ void show_thread_information(void)
         {
             printk ("Current->tid = %d\n", 
                 Current->tid );
-            printk ("lapic_info[0].current_thread = %d\n", 
-                lapic_info[0].current_thread );
+            printk ("lapic_info[0].current_tid = %d\n", 
+                lapic_info[0].current_tid );
         }
     }
 
@@ -448,8 +448,8 @@ void dead_thread_collector(void)
 
                 // Não podemos matar thread atual,
                 // pois precisamos retornar a execução dela.
-                if (Target->tid == lapic_info[0].current_thread){
-                    panic ("dead_thread_collector: We can't kill the current_thread!\n");
+                if (Target->tid == lapic_info[0].current_tid){
+                    panic ("dead_thread_collector: We can't kill the current_tid!\n");
                 }
 
                 // Muda o state para DEAD
