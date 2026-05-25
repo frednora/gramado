@@ -272,19 +272,6 @@ extern struct ata_current_port_d  ATACurrentPort;
 #define __OPERATION_PIO_READ  1000
 #define __OPERATION_PIO_WRITE  2000
 
-/*
- * PCIDeviceATA:
- * Estrutura de dispositivos pci para um disco ata.
- * #bugbug: E se tivermos mais que um instalado ???
- * #importante
- * Essa é uma estrutura de dispositivos pci 
- * criada para o gramado, 
- * definida em pci.h e criada em atapci.c
- */
-// see: atapci.c
-extern struct pci_device_d *PCIDeviceATA;
-// extern struct pci_device_d *PCIDeviceATA2;
-// ...
 
 // dev_nport:
 // AHCI ports
@@ -608,21 +595,6 @@ ata_ioctl (
     unsigned long request, 
     unsigned long arg );
 
-uint32_t 
-diskReadPCIConfigAddr ( 
-    int bus, 
-    int dev,
-    int fun, 
-    int offset );
-
-void 
-diskWritePCIConfigAddr ( 
-    int bus, 
-    int dev,
-    int fun, 
-    int offset, 
-    int data );
-
 // Global wrapper
 int 
 atahdd_pio_rw_sector ( 
@@ -660,7 +632,6 @@ ide_dma_data (
 
 uint32_t diskPCIScanDevice(int class);
 
-int atapciSetupMassStorageController(struct pci_device_d *D);
 
 unsigned char ata_wait_irq(int p);
 int disk_ata_wait_irq(int p);

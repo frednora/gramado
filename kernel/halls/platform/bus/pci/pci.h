@@ -623,6 +623,22 @@ struct pci_driver_d
 // == prototypes ===========================
 //
 
+uint32_t 
+pci_ReadPCIConfigAddr ( 
+    int bus, 
+    int dev,
+    int fun, 
+    int offset );
+
+void 
+pci_WritePCIConfigAddr ( 
+    int bus, 
+    int dev,
+    int fun, 
+    int offset, 
+    int data );
+
+
 // read 8 bits.
 unsigned char 
 pciConfigReadByte ( 

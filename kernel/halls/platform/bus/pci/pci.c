@@ -143,6 +143,41 @@ static const char* bridge_subclass_strings[] = {
 };
 
 
+
+/* 
+ * pci_ReadPCIConfigAddr:
+ *     READ 
+ */
+uint32_t 
+pci_ReadPCIConfigAddr ( 
+    int bus, 
+    int dev,
+    int fun, 
+    int offset )
+{
+    out32( PCI_PORT_ADDR, __PCI_CONFIG_ADDR( bus, dev, fun, offset ) );
+    return (uint32_t) in32(PCI_PORT_DATA);
+}
+
+/* 
+ * pci_WritePCIConfigAddr:
+ *     WRITE 
+ */
+void 
+pci_WritePCIConfigAddr ( 
+    int bus, 
+    int dev,
+    int fun, 
+    int offset, 
+    int data )
+{
+    out32( PCI_PORT_ADDR, __PCI_CONFIG_ADDR( bus, dev, fun, offset ) );
+    out32( PCI_PORT_DATA, data );
+}
+
+
+
+
 // pciConfigReadByte:
 // Read com retorno do tipo unsigned char.
 
@@ -623,7 +658,7 @@ pciHandleDevice (
 // ou mesmo um nome genérico.
 // #todo: put the correct type.
 
-    data = (uint32_t) diskReadPCIConfigAddr( bus, dev, fun, 8 );
+    data = (uint32_t) pci_ReadPCIConfigAddr( bus, dev, fun, 8 );
 
 // PCI Class and subclass
     pci_dev->classCode = (unsigned char) (data >> 24) & 0xFF;

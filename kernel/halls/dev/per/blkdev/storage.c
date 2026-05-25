@@ -1243,6 +1243,330 @@ static int __validate_disksignature_from_bootblock(void)
 }
 
 
+// storagePCISetupMassStorageController:
+// Espaço de configuraçao PCI Mass Storage.
+// Nessa rotina:
+// + Encontra o tipo de driver, ser é IDE, RAID, AHCI ou Desconhecido.
+// It gets all the information for the PCI device structure.
+// + Make some initialization if it finds an ATA/IDE device
+// + Make some initialization if it finds an AHCI device
+
+int storagePCISetupMassStorageController(struct pci_device_d *D)
+{
+// Called by __ata_initialize().
+
+    uint32_t data=0;
+
+// A estrutura ainda nao foi configurada.
+    //ata_port.used = FALSE;
+    //ata_port.magic = 0;
+
+// We still don't know the type of this controller.
+// But the caller already knows that 
+// it's a mass storage device, and ide.
+    StorageController.controller_type = (uint8_t) STORAGE_CONTROLLER_MODE_UNKNOWN;
+
+// Check parameters.
+    if ((void *) D == NULL){
+        printk("atapciConfigurationSpace: D\n");
+        goto fail;
+    }
+    if ( D->used != TRUE || D->magic != 1234 ){
+        printk ("atapciSetupMassStorageController: D validation\n");
+        goto fail;
+    }
+
+// Indentification Device
+    //data = (uint32_t) pci_ReadPCIConfigAddr ( D->bus, D->dev, D->func, 0 );
+
+// Salvando configurações.
+    //D->Vendor = data &0xffff;
+    //D->Device = data >> 16 &0xffff;
+
+    // #debug
+    // printk ("Disk info: [ Vendor ID: %x,Device ID: %x ]\n", 
+    //     D->Vendor, D->Device );
+
+/*
+    if ( D->Vendor == 0x1106 && D->Device == 0x0591 ){
+        printk ("VIA disk found\n");
+    } else if (D->Vendor == 0x1106 && D->Device == 0x0591){
+        // ...
+    };
+ */
+
+// Obtendo informações.
+// Classe code, programming interface, revision id.
+
+    //data  = (uint32_t) pci_ReadPCIConfigAddr ( D->bus, D->dev, D->func, 8 );
+
+// Saving info.
+// Classe e sub-classe.
+// prog if.
+// Revision.
+
+    //ata_pci->classCode  = data >> 24 & 0xff;
+    //ata_pci->subclass   = data >> 16 & 0xff;
+    //ata_pci->progif     = data >> 8  & 0xff;
+    //ata_pci->revisionId = data       & 0xff;
+
+// #importante:
+// Aqui detectamos o tipo de dispositivo com base 
+// nas informações de classe e subclasse.
+
+//
+// == #SCSI ========
+//
+
+// ====
+    // 1:0 = SCSI controller.
+    if ( D->classCode == PCI_CLASSCODE_MASS && 
+         D->subclass == PCI_SUBCLASS_SCSI ){
+
+        StorageController.controller_type = (uint8_t) PCI_SUBCLASS_SCSI;
+        printk ("atapciSetupMassStorageController: SCSI not supported\n");
+        goto fail;
+
+//
+// == #IDE ========
+//
+
+// ====
+    // 1:1 = IDE controller.
+    } else if ( D->classCode == PCI_CLASSCODE_MASS && 
+                D->subclass == PCI_SUBCLASS_IDE ){
+
+        // #type: (ATA).
+        StorageController.controller_type = (uint8_t) STORAGE_CONTROLLER_MODE_ATA; 
+
+        // Compatibilidade e nativo, primary.
+        data = pci_ReadPCIConfigAddr ( D->bus, D->dev, D->func, 8 );
+        if ( data & 0x200 ){ 
+            pci_WritePCIConfigAddr ( D->bus, D->dev, D->func, 8, data | 0x100 ); 
+        }
+
+        // Compatibilidade e nativo, secundary.
+        data = pci_ReadPCIConfigAddr ( D->bus, D->dev, D->func, 8 );
+        if ( data & 0x800 ){ 
+            pci_WritePCIConfigAddr ( D->bus, D->dev, D->func, 8, data | 0x400 ); 
+        }
+
+        //#todo: Comment.
+        data = pci_ReadPCIConfigAddr ( D->bus, D->dev, D->func, 8 );
+        if ( data & 0x8000 ){
+            // Bus Master Enable
+            data = pci_ReadPCIConfigAddr (D->bus, D->dev, D->func, 4);
+            pci_WritePCIConfigAddr ( D->bus, D->dev, D->func, 4, data | 0x4);
+        }
+
+        // Habilitar interrupcao (INTx#)
+        data = pci_ReadPCIConfigAddr ( D->bus, D->dev, D->func, 4 );
+        pci_WritePCIConfigAddr ( D->bus, D->dev, D->func, 4, data & ~0x400);
+
+        // IDE Decode Enable
+        data = pci_ReadPCIConfigAddr ( D->bus, D->dev, D->func, 0x40 );
+        pci_WritePCIConfigAddr ( D->bus, D->dev, D->func, 0x40, data | 0x80008000 );
+
+        // Synchronous DMA Control Register
+        // Enable UDMA
+        data = pci_ReadPCIConfigAddr ( D->bus, D->dev, D->func, 0x48 );
+        pci_WritePCIConfigAddr ( D->bus, D->dev, D->func, 0x48, data | 0xf);
+
+        // #debug
+        // printk ("[ Sub Class Code %s Programming Interface %d Revision ID %d ]\n",\
+        //    ata_sub_class_code_register_strings[StorageController.controller_type],
+        //    ata_pci.progif,
+        //    ata_pci.revisionId );
+
+//
+// == #RAID ========
+//
+
+// #todo
+// Devemos falhar, 
+// pois não daremos suporte à IDE RAID.
+
+// ====
+    // 1:4 = RAID controller
+    }else if ( D->classCode == PCI_CLASSCODE_MASS && 
+               D->subclass == PCI_SUBCLASS_RAID ){
+
+        // #type: (ATA RAID).
+        StorageController.controller_type = (uint8_t) STORAGE_CONTROLLER_MODE_RAID;
+        printk ("atapciSetupMassStorageController: ATA RAID not supported\n");
+        goto fail;
+
+//
+//  # ACHI
+//
+
+// #todo
+// Devemos falhar, pois temos outro driver 
+// para esse tipo de controlador.
+
+// ====
+    // 1:6 = SATA controller.
+    } else if ( D->classCode == PCI_CLASSCODE_MASS && 
+               D->subclass == PCI_SUBCLASS_SATA ){
+
+        // #type (ACHI)
+        StorageController.controller_type = (uint8_t) STORAGE_CONTROLLER_MODE_AHCI;
+
+        // Compatibilidade e nativo, primary.
+        data = pci_ReadPCIConfigAddr ( D->bus, D->dev, D->func, 8 );
+        if ( data & 0x200 ){ 
+            pci_WritePCIConfigAddr ( D->bus, D->dev, D->func, 8, data | 0x100 ); 
+        }
+
+        // Compatibilidade e nativo, secundary.
+        data = pci_ReadPCIConfigAddr ( D->bus, D->dev, D->func, 8 );
+        if ( data & 0x800 ){ 
+            pci_WritePCIConfigAddr ( D->bus, D->dev, D->func, 8, data | 0x400 ); 
+        }
+
+        // ??#todo: Comment
+        data = pci_ReadPCIConfigAddr ( D->bus, D->dev, D->func, 8 );
+        if ( data & 0x8000 ) 
+        {    
+            // Bus Master Enable.
+            data = pci_ReadPCIConfigAddr ( D->bus, D->dev, D->func, 4 );
+            pci_WritePCIConfigAddr ( D->bus, D->dev, D->func, 4, data | 0x4 );
+        } 
+
+        // IDE Decode Enable.
+        data = pci_ReadPCIConfigAddr ( D->bus, D->dev, D->func, 0x40 );
+        pci_WritePCIConfigAddr ( D->bus, D->dev, D->func, 0x40, data | 0x80008000 );
+
+        // Habilitar interrupcao (INTx#)
+        data = pci_ReadPCIConfigAddr ( D->bus, D->dev, D->func, 4 );
+        pci_WritePCIConfigAddr ( D->bus, D->dev, D->func, 4, data & ~0x400);
+
+        // #debug
+        // printk ("[ Sub Class Code %s Programming Interface %d Revision ID %d ]\n",\
+        //     ata_sub_class_code_register_strings[ata_port.controller_type], 
+        //     ata_pci.progif,
+        //     ata_pci.revisionId );
+
+
+    // 1:7
+    }else if ( D->classCode == PCI_CLASSCODE_MASS && 
+               D->subclass == PCI_SUBCLASS_SERIALSCSI ){
+
+        StorageController.controller_type = (uint8_t) PCI_SUBCLASS_SCSI;
+        printk ("atapciSetupMassStorageController: Serial SCSI not supported\n");
+        goto fail;
+
+    // 1:8
+    }else if ( D->classCode == PCI_CLASSCODE_MASS && 
+               D->subclass == PCI_SUBCLASS_NVMEMORY ){
+
+        StorageController.controller_type = (uint8_t) PCI_SUBCLASS_SCSI;
+        printk ("atapciSetupMassStorageController: NVMe not supported\n");
+        goto fail;
+
+    // 1:9
+    }else if ( D->classCode == PCI_CLASSCODE_MASS && 
+               D->subclass == PCI_SUBCLASS_SAS ){
+
+        StorageController.controller_type = (uint8_t) PCI_SUBCLASS_SCSI;
+        printk ("atapciSetupMassStorageController: SAS not supported\n");
+        goto fail;
+
+// ====
+// No type
+// Fail!
+// O tipo de dispositivo de armazenaento de massa 
+// não é suportado.
+
+    // Fail
+    // ?:? = Class/subclass not supported.
+    // #type: Unknown controller.
+    }else{
+        StorageController.controller_type = (uint8_t) STORAGE_CONTROLLER_MODE_UNKNOWN;
+        printk("atapciSetupMassStorageController: Mass Storage Device NOT supported\n");
+        goto fail;
+    };
+
+// #obs:
+// Nesse momento já sabemos se é IDE, RAID, AHCI.
+// Vamos pegar mais informações,
+// Salvaremos as informações na estrutura.
+
+// PCI cacheline, Latancy, Headr type, end BIST
+    data = pci_ReadPCIConfigAddr ( D->bus, D->dev, D->func, 0xC );
+    D->latency_timer = (data >> 8)  & 0xff;
+    D->header_type   = (data >> 16) & 0xff;
+    D->bist          = (data >> 24) & 0xff;
+
+// BARs
+    D->BAR0 = pci_ReadPCIConfigAddr ( D->bus, D->dev, D->func, 0x10 );
+    D->BAR1 = pci_ReadPCIConfigAddr ( D->bus, D->dev, D->func, 0x14 );
+    D->BAR2 = pci_ReadPCIConfigAddr ( D->bus, D->dev, D->func, 0x18 );
+    D->BAR3 = pci_ReadPCIConfigAddr ( D->bus, D->dev, D->func, 0x1C );
+    D->BAR4 = pci_ReadPCIConfigAddr ( D->bus, D->dev, D->func, 0x20 );
+    D->BAR5 = pci_ReadPCIConfigAddr ( D->bus, D->dev, D->func, 0x24 );
+
+// irqline and irq pin.
+    data = pci_ReadPCIConfigAddr ( D->bus, D->dev, D->func, 0x3C );
+    D->irq_line = (unsigned char) (data & 0xFF);
+    D->irq_pin  = (unsigned char) (data >> 8) & 0xFF;
+
+// #test
+// Where are we setting up the PIC controller.
+// Is it a good time for it?
+// Maybe we're doing it only at the early kernel initialization.
+
+// PCI command and status.
+    data = pci_ReadPCIConfigAddr ( D->bus, D->dev, D->func, 4 );
+    D->Command = (data & 0xffff); 
+    D->Status  = (data >> 16) & 0xffff;
+
+    // #debug
+    // printk ("[ Command %x Status %x ]\n", D->Command, D->Status );
+    // printk ("[ Interrupt Line %x Interrupt Pin %x ]\n", 
+    //     D->irq_line, D->irq_pin );
+
+    /*
+    printk("[ IDE PCI: bus=%d dev=%d func=%d line=%d pin=%d ]\n",
+       D->bus, D->dev, D->func,
+       D->irq_line, D->irq_pin );
+    */
+
+/*
+Interpret them:
+irq_line → the legacy IRQ number (e.g. 14, 15, or something else).
+irq_pin → tells you which PCI interrupt pin (INTA#, INTB#, etc.) is in use. 
+The chipset maps these pins to IOAPIC inputs.
+*/
+
+/*
+    refresh_screen();
+    while (1)
+    {
+        asm ("hlt\n");
+    }
+*/
+
+//
+// == DMA ====================
+//
+    data = pci_ReadPCIConfigAddr( D->bus, D->dev, D->func, 0x48 );
+//#debug
+    //printk("[ Synchronous DMA Control Register %x ]\n", data );
+
+//done:
+    //ata_port.used = TRUE;
+    //ata_port.magic = 1234;
+    return (int) PCI_MSG_SUCCESSFUL;
+
+fail:
+    //ata_port.used = FALSE;
+    //ata_port.magic = 0;
+    return (int) PCI_MSG_ERROR;
+}
+
+
+
 //
 // $
 // INITIALIZATION

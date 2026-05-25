@@ -1672,9 +1672,14 @@ static int __ata_initialize(int ataflag)
     // The PCI structure.
     // Fill the structure PCIDeviceATA with all the information we need.
     // See: ataci.c
+
+    // #bugbug
+    // In this moment we don't know yet
+    // if the controller is ATA or not.
+
     printk("Getting PCI into for PCIDeviceATA\n");
     Value = 
-        (unsigned long) atapciSetupMassStorageController((struct pci_device_d*) PCIDeviceATA);
+        (unsigned long) storagePCISetupMassStorageController((struct pci_device_d*) PCIDeviceATA);
 
     if (Value == PCI_MSG_ERROR){
         printk ("__ata_initialize: Error Driver [%x]\n", Value );
@@ -1733,6 +1738,7 @@ static int __ata_initialize(int ataflag)
 
 
 // Get the controller mode. (controller type)
+// #ps: storagePCISetupMassStorageController() setted up this variable for us.
 
     uint8_t ControllerType = StorageController.controller_type;
 

@@ -1160,7 +1160,7 @@ DDINIT_e1000 (
 // Fazer uma lista de dispositivos Intel suportados por esse driver.
 // +usar if else.
 
-    data = (uint32_t) diskReadPCIConfigAddr( bus, dev, fun, 0 );
+    data = (uint32_t) pci_ReadPCIConfigAddr( bus, dev, fun, 0 );
     Vendor = (unsigned short) (data       & 0xffff);
     Device = (unsigned short) (data >> 16 & 0xffff);
 
@@ -1249,17 +1249,17 @@ DDINIT_e1000 (
 
 // BARs
     pci_device->BAR0 = 
-        (unsigned long) diskReadPCIConfigAddr( bus, dev, fun, 0x10 );
+        (unsigned long) pci_ReadPCIConfigAddr( bus, dev, fun, 0x10 );
     pci_device->BAR1 = 
-        (unsigned long) diskReadPCIConfigAddr( bus, dev, fun, 0x14 ); 
+        (unsigned long) pci_ReadPCIConfigAddr( bus, dev, fun, 0x14 ); 
     pci_device->BAR2 = 
-        (unsigned long) diskReadPCIConfigAddr( bus, dev, fun, 0x18 );
+        (unsigned long) pci_ReadPCIConfigAddr( bus, dev, fun, 0x18 );
     pci_device->BAR3 = 
-        (unsigned long) diskReadPCIConfigAddr( bus, dev, fun, 0x1C );
+        (unsigned long) pci_ReadPCIConfigAddr( bus, dev, fun, 0x1C );
     pci_device->BAR4 = 
-        (unsigned long) diskReadPCIConfigAddr( bus, dev, fun, 0x20 );
+        (unsigned long) pci_ReadPCIConfigAddr( bus, dev, fun, 0x20 );
     pci_device->BAR5 = 
-        (unsigned long) diskReadPCIConfigAddr( bus, dev, fun, 0x24 );
+        (unsigned long) pci_ReadPCIConfigAddr( bus, dev, fun, 0x24 );
 
 // IRQ
 
@@ -1414,11 +1414,11 @@ DDINIT_e1000 (
                        (unsigned char) fun, 
                        (unsigned char) 0x04 );
 
-    // IN: (bus, slot, func, PCI_COMMAND, cmd);
+    // IN: (bus, slot, func, PCI_COMMAND, cmd)
     if ( (cmd & 0x04) != 0x04 )
     {
         cmd |= 0x04;
-        diskWritePCIConfigAddr ( 
+        pci_WritePCIConfigAddr ( 
             (int) bus, (int) dev, (int) fun, 
             (int) 0x04, (int) cmd ); 
     }

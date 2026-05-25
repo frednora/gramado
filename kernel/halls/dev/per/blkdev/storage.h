@@ -772,6 +772,11 @@ storage_write_sector(
     unsigned long buffer, 
     unsigned long lba );
 
+
+
+int storagePCISetupMassStorageController(struct pci_device_d *D);
+
+
 //
 // $
 // INITIALIZATION
