@@ -299,6 +299,7 @@ struct lapic_info_d
     int dedicated_service;
 
 
+
 // The idle thread for this processor:
 // This thread will run here when there is no other job to do.
     tid_t idle_tid;   // TID
@@ -307,6 +308,7 @@ struct lapic_info_d
 // Currently having the processing time on this core.
 
 	tid_t current_tid;  // TID
+    pid_t current_pid;  // PID
 
 //
 // GDT support

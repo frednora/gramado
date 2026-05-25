@@ -744,8 +744,13 @@ tty_read (
 // process.
 // Vamos pegar o ponteiro de estrutura
 // do processo que chamou essa funçao
-    current_process = (pid_t) get_current_process();
-    if (current_process<0 || current_process >= PROCESS_COUNT_MAX){
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+    current_process = (pid_t) get_current_process(0);
+
+    if ( current_process<0 || 
+         current_process >= PROCESS_COUNT_MAX){
         goto fail;
     }
     p = (struct te_d *) teList[current_process];
@@ -844,7 +849,11 @@ tty_write (
 // vamos pegar o ponteiro do processo
 // que chamou essa funçao, dentro da lista global
 // de ponteiros de processos.
-    current_process = (pid_t) get_current_process();
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+    current_process = (pid_t) get_current_process(0);
+
     if (current_process<0 || current_process >= PROCESS_COUNT_MAX){
         goto fail;
     }
@@ -1260,7 +1269,10 @@ tty_ioctl (
 // podemos checar novamente se realmente se trata de
 // um tty. Mas isso ja foi feito no wrapper sys_ioctl.
 
-    current_process = (pid_t) get_current_process();
+    // Get PID for the current process for a given core.
+    // IN: core id
+    current_process = (pid_t) get_current_process(0);
+
     if (current_process < 0 || current_process >= PROCESS_COUNT_MAX){ 
         return -1;
     }

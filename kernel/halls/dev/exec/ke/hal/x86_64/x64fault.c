@@ -85,8 +85,10 @@ static int __kill_faulty_current_process(void)
     int isKernel = FALSE;
     int isInit = FALSE;
 
-// The current process
-    pid = (pid_t) get_current_process();
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    pid = (pid_t) get_current_process(0);
 
 // Get current thread for this core
     tid = (tid_t) lapic_info[0].current_tid;
@@ -452,7 +454,8 @@ void x64_all_faults(unsigned long number)
             // #todo: 
             // Precisamos atualizar os contadores da proxima thread.
             // update the global variable
-            set_current_process((pid_t)target_pid);
+            // IN: pid, cpu id.
+            set_current_process((pid_t)target_pid, 0);
             
             // Final message.
             printk("Resuming the init thread\n");

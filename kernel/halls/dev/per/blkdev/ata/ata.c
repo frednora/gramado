@@ -747,7 +747,11 @@ static int __ide_identify_device(uint8_t nport)
             disk->name = (char *) strdup ( (const char *) name_buffer);  
 
             // Security
-            disk->pid = (pid_t) get_current_process(); //current_process;
+
+            // Get PID for the current process for a given core.
+            // IN: core id
+            disk->pid = (pid_t) get_current_process(0);
+
             disk->gid = current_group;
             // ...
 
@@ -880,7 +884,11 @@ static int __ide_identify_device(uint8_t nport)
             disk->name = (char *) strdup((const char *) name_buffer);  
 
             // Security
-            disk->pid = (pid_t) get_current_process();  //current_process;
+
+            // Get PID for the current process for a given core.
+            // IN: core id
+            disk->pid = (pid_t) get_current_process(0);
+
             disk->gid = current_group;
               
             disk->channel = ata_port[nport].channel;  // Primary or secondary.

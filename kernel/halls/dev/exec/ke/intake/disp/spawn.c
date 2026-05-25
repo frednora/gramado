@@ -449,8 +449,9 @@ static void __spawn_thread_by_tid_imp(tid_t tid)
     }
 
 // #important
-// The current process will be the owner pid.
-    set_current_process(cur_teid);
+// The current process will be the owner pid
+    // IN: pid, core id
+    set_current_process(cur_teid, 0);
 
 
 // Set current thread for this core

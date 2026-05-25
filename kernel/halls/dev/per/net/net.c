@@ -187,7 +187,12 @@ static void __maximize_ds_priority(pid_t pid)
     unsigned long ThreadPriority     = ProcessPriority;
 
 // PID
-    pid_t current_process = (pid_t) get_current_process();
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    pid_t current_process = (pid_t) get_current_process(0);
+
     if (pid<=0 || pid >= PROCESS_COUNT_MAX){
         return;
     }
@@ -272,7 +277,12 @@ network_register_ring3_display_server(
 //
 // Current process
 // 
-    current_process = (pid_t) get_current_process();
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    current_process = (pid_t) get_current_process(0);
+
     if ( current_process < 0 || current_process >= PROCESS_COUNT_MAX )
     {
         panic("network_register_ring3_display_server: current_process\n");
@@ -402,7 +412,12 @@ network_register_ring3_browser(
 //
 // Current process
 // 
-    current_process = (pid_t) get_current_process();
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    current_process = (pid_t) get_current_process(0);
+
     if ( current_process < 0 || current_process >= PROCESS_COUNT_MAX )
     {
         panic("network_register_ring3_display_server: current_process\n");

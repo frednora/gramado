@@ -949,8 +949,10 @@ void close_all_threads_of_this_process(struct te_d *process);
 
 void close_all_processes(void);
 
-void set_current_process(pid_t pid);
-pid_t get_current_process(void);
+// Set current process for the current cpu
+void set_current_process(pid_t pid, int lapic_info_id);
+// Get current process for the current cpu
+pid_t get_current_process(int lapic_info_id);
 
 pid_t get_current_pid(void);
 struct te_d *get_current_process_pointer(void);

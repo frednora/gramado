@@ -163,19 +163,29 @@ void close_all_processes(void)
     };
 }
 
-void set_current_process(pid_t pid)
+// Set current process for the current cpu
+void set_current_process(pid_t pid, int lapic_info_id)
 {
-    __current_pid = (pid_t) pid;
+    if (lapic_info_id<0 || lapic_info_id > NR_CPUS)
+        return;
+    lapic_info[lapic_info_id].current_pid = (pid_t) pid;
 }
 
-pid_t get_current_process(void)
+// Get current process for the current cpu
+pid_t get_current_process(int lapic_info_id)
 {
-    return (pid_t) __current_pid;
+    if (lapic_info_id<0 || lapic_info_id > NR_CPUS)
+        return (pid_t) -1;  // fail
+
+    return (pid_t) lapic_info[lapic_info_id].current_pid;
 }
 
 pid_t get_current_pid(void)
 {
-    return (pid_t) get_current_process();
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    return (pid_t) get_current_process(0);
 }
 
 // Return the pointer for a valid current process.
@@ -191,7 +201,11 @@ struct te_d *get_current_process_pointer(void)
         goto fail;
     }
 
-    __pid = (pid_t) get_current_process();
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    __pid = (pid_t) get_current_process(0);
+
     if ( __pid < 0 || __pid >= PROCESS_COUNT_MAX )
     {
         goto fail;
@@ -665,7 +679,11 @@ file *process_get_file_from_pid ( pid_t pid, int fd )
 //#todo: IN: pid, fd
 file *process_get_file (int fd)
 {
-    pid_t current_process = (pid_t) get_current_process();
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    pid_t current_process = (pid_t) get_current_process(0);
 
 // #todo: max limit
     if( fd<0){
@@ -1769,8 +1787,8 @@ void init_processes (void)
 // O que fazer com a tarefa atual.
     kernel_request = 0;
 
-    set_current_process(0);
-    //current_process = 0;
+    // IN: pid, core id
+    set_current_process(0,0);
 
 // Clear process list.
 

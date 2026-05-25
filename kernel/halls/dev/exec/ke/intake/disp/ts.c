@@ -384,7 +384,8 @@ static unsigned long __task_switch(int lapic_info_id)
         panic("ts: CurrentProcess->pid != te_id\n");
     }
 // Set the new current process (thread environment id)
-    set_current_process(te_id);
+    // IN: pid, cpu id
+    set_current_process(te_id, 0);
 
 //
 // == Counting =================================
@@ -931,11 +932,11 @@ dispatch_current:
 // Set current process.
 // Update global variable.
 
-    //current_process = (pid_t) TargetProcess->pid;
-    set_current_process(TargetProcess->pid);
+    // IN: pid, cpu id    
+    set_current_process(TargetProcess->pid, 0);
 
 // check pml4_PA
-    if ( (unsigned long) TargetProcess->pml4_PA == 0 ){
+    if ((unsigned long) TargetProcess->pml4_PA == 0){
         printk ("ts: Process %s pml4 fail\n", TargetProcess->name);
         die();
     }
@@ -1037,7 +1038,11 @@ unsigned long tsTaskSwitch(void)
 // window server, mas esse callout não sera interrompido
 // por outra interrupçao de timer, pois ainda não chamamos EOI.
 
-    current_process_pid = (pid_t) get_current_process();
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    current_process_pid = (pid_t) get_current_process(0);
+
     if ( current_process_pid < 0 || 
          current_process_pid >= PROCESS_COUNT_MAX )
     {

@@ -189,8 +189,14 @@ void *sys_create_process (
 // Create process
 //
 
-    pid_t current_pid = (pid_t) get_current_process();
-    if (current_pid<0 || current_pid >= PROCESS_COUNT_MAX){
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    pid_t current_pid = (pid_t) get_current_process(0);
+
+    if ( current_pid<0 || 
+         current_pid >= PROCESS_COUNT_MAX)
+    {
         panic("sys_create_process: current_pid\n");
     }
     CurrentProcess = (struct te_d *) teList[current_pid];

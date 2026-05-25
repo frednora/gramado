@@ -142,8 +142,15 @@ off_t sys_lseek(int fd, off_t offset, int whence)
     }
 
 // pid
-    current_process = (pid_t) get_current_process();
-    if (current_process<0 || current_process >= PROCESS_COUNT_MAX){
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    current_process = (pid_t) get_current_process(0);
+
+    if (current_process<0 || 
+        current_process >= PROCESS_COUNT_MAX)
+    {
         goto fail;
     }
 

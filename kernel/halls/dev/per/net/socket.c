@@ -148,8 +148,12 @@ int sys_socket( int family, int type, int protocol )
 // Process
 //
 
-// Current pid
-    current_process = (pid_t) get_current_process();
+    // Current pid
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    current_process = (pid_t) get_current_process(0);
+
     if (current_process < 0 || current_process >= PROCESS_COUNT_MAX){
         debug_print ("sys_socket: current_process fail\n");
         panic       ("sys_socket: current_process fail\n");
@@ -419,8 +423,14 @@ __accept_imp (
 
 // Current process. (The server)
 // The accept() was called by the server.
-    current_process = (pid_t) get_current_process();
-    if ( current_process < 0  || current_process >= PROCESS_COUNT_MAX ){
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    current_process = (pid_t) get_current_process(0);
+
+    if ( current_process < 0  || current_process >= PROCESS_COUNT_MAX )
+    {
         debug_print ("__accept_imp: [FAIL] current_process\n");
         printk      ("__accept_imp: [FAIL] current_process\n");
         goto fail;
@@ -761,7 +771,12 @@ sys_bind (
         return (int) (-EINVAL);
 
 // Process
-    current_process = (pid_t) get_current_process();
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    current_process = (pid_t) get_current_process(0);
+
     // #debug
     if (Verbose == TRUE){
         printk("sys_bind: PID %d | fd %d |\n", 
@@ -971,7 +986,10 @@ __connect_inet (
 
     do_credits_by_tid( lapic_info[0].current_tid );
 
-    pid_t current_process = (pid_t) get_current_process();
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    pid_t current_process = (pid_t) get_current_process(0);
 
     if (Verbose == TRUE){
         printk ("__connect_inet: Client's pid {%d}\n", current_process );
@@ -1559,7 +1577,10 @@ __connect_local (
 
     do_credits_by_tid( lapic_info[0].current_tid );
 
-    pid_t current_process = (pid_t) get_current_process();
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    pid_t current_process = (pid_t) get_current_process(0);
 
     if (Verbose == TRUE){
         printk ("__connect_local: Client's pid {%d}\n", current_process );
@@ -2077,7 +2098,12 @@ sys_getsockname (
     }
 
 // process
-    current_process = (pid_t) get_current_process();
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    current_process = (pid_t) get_current_process(0);
+
     p = (struct te_d *) teList[current_process]; 
     if ((void *) p == NULL){
         printk ("sys_getsockname: p fail\n");
@@ -2183,8 +2209,14 @@ static int __listen_imp(int sockfd, int backlog)
     }
 
 // ==============================================
-    current_process = (pid_t) get_current_process();
-    if ( current_process < 0 || current_process >= PROCESS_COUNT_MAX )
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    current_process = (pid_t) get_current_process(0);
+
+    if ( current_process < 0 || 
+         current_process >= PROCESS_COUNT_MAX )
     {
         printk("sys_listen: current_process\n");
         goto fail;
@@ -2325,7 +2357,12 @@ int sys_socket_shutdown(int socket, int how)
     }
 
 // Process
-    current_process = (pid_t) get_current_process();
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    current_process = (pid_t) get_current_process(0);
+
     if (current_process < 0  || current_process >= PROCESS_COUNT_MAX){
         printk      ("sys_socket_shutdown: p fail\n");
         goto fail;        

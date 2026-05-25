@@ -432,9 +432,12 @@ unsigned long doGetSystemMetrics(int index)
         // When a thread is running to call this service,
         // so, this thread is the current thread.
         // But, current for what processor?
+
+        // Get PID for the current process for a given core.
+        // IN: core id
+
         case 140:  
-            //return (unsigned long) current_process;
-            return (unsigned long) get_current_process(); //#bugbug mask?  
+            return (unsigned long) get_current_process(0);
             break;
 
         // #todo: We need a method for this.

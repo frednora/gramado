@@ -290,7 +290,11 @@ void do_thread_zombie(tid_t tid)
 int do_waitpid (pid_t pid, int *status, int options)
 {
     struct te_d *p;
-    pid_t current_process = (pid_t) get_current_process();
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    pid_t current_process = (pid_t) get_current_process(0);
 
     tid_t CurrentTID = (tid_t) lapic_info[0].current_tid;
 

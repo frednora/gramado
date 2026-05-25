@@ -90,7 +90,11 @@ struct socket_d *create_socket_object(void)
 
     s->id = 0;  //#todo
 
-    s->pid = (pid_t) get_current_process();
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    s->pid = (pid_t) get_current_process(0);
+
     s->uid = (uid_t) current_user;
     s->gid = (gid_t) current_group;
 
@@ -230,8 +234,15 @@ struct socket_d *get_socket_from_fd(int fd)
 //----------------
 // #todo: We need a worker for that routine.
 // process
-    current_process = (pid_t) get_current_process();
-    if (current_process<0 || current_process>=PROCESS_COUNT_MAX){
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    current_process = (pid_t) get_current_process(0);
+
+    if (current_process<0 || 
+        current_process>=PROCESS_COUNT_MAX)
+    {
         goto fail;
     }
     p = (struct te_d *) teList[current_process];
@@ -482,7 +493,12 @@ int socket_ioctl ( int fd, unsigned long request, unsigned long arg )
 // ...
 
 // process
-    current_process = (pid_t) get_current_process();
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    current_process = (pid_t) get_current_process(0);
+
     p = (void*) teList[current_process];
     if ((void *) p == NULL){
         debug_print("socket_ioctl: p\n");
@@ -590,7 +606,12 @@ socket_gramado (
 // and the protocol needs to be GRAMADO_PROTOCOL.
 
 // Process
-    current_process = (pid_t) get_current_process();
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    current_process = (pid_t) get_current_process(0);
+
     if ( current_process < 0 || current_process >= PROCESS_COUNT_MAX ){
         printk ("socket_gramado: current_process\n");
         goto fail;
@@ -778,8 +799,14 @@ socket_unix (
 // GRAMADO_PROTOCOL is a valid protocol in AF_UNIX.
 
 // Process
-    current_process = (pid_t) get_current_process();
-    if ( current_process < 0 || current_process >= PROCESS_COUNT_MAX ){
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    current_process = (pid_t) get_current_process(0);
+
+    if ( current_process < 0 || current_process >= PROCESS_COUNT_MAX )
+    {
         printk ("socket_unix: current_process\n");
         goto fail;
     }
@@ -981,8 +1008,15 @@ socket_inet (
 // GRAMADO_PROTOCOL is a valid protocol in AF_INET.
 
 // Process
-    current_process = (pid_t) get_current_process();
-    if ( current_process < 0 || current_process >= PROCESS_COUNT_MAX ){
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    current_process = (pid_t) get_current_process(0);
+
+    if ( current_process < 0 || 
+         current_process >= PROCESS_COUNT_MAX )
+    {
         printk ("socket_inet: current_process\n");
         goto fail;
     }

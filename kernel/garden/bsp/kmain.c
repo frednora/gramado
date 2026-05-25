@@ -623,9 +623,11 @@ void init_globals(void)
     current_usersession = (int) 0;
 
 // Process
+
     foreground_process = (pid_t) 0;
-    //current_process = (pid_t) 0;
-    set_current_process(0);  //?
+
+    // IN: pid, core id
+    set_current_process(0,0);
 
 // Global foreground thread
     foreground_thread = (tid_t) 0;
@@ -849,7 +851,8 @@ static void earlyinit_Globals(int arch_type)
     TEInitProcess = NULL;  // thread environment
 
     // Invalidate
-    set_current_process(-1);
+    // IN: pid, core id
+    set_current_process(-1, 0);
 
 // IN: tid, lapic id
     SetCurrentTID(-1,0);

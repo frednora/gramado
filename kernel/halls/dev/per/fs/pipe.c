@@ -15,7 +15,12 @@ unsigned int pipe_max_size = 4096;
 
 static struct te_d *get_current_process_struct(void)
 {
-    pid_t current_process = (pid_t) get_current_process();
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    pid_t current_process = (pid_t) get_current_process(0);
+
     struct te_d *Process = (void *) teList[current_process];
 
     if ((void *) Process == NULL)
@@ -41,6 +46,7 @@ int sys_dup(int oldfd)
 
     // Get current process
     Process = get_current_process_struct();
+
     if ((void *) Process == NULL)
         return (int) (-EBADF);
 
@@ -203,7 +209,12 @@ int sys_pipe(int *pipefd, int flags)
     // unsigned long fd_flags = (flags & O_CLOEXEC) ? FD_CLOEXEC : 0;
 
 // Process
-    current_process = (pid_t) get_current_process();
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    current_process = (pid_t) get_current_process(0);
+
     Process = (void *) teList[current_process];
     if ((void *) Process == NULL){
         //debug_print("sys_pipe: Process\n");

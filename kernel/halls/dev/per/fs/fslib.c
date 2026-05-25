@@ -598,10 +598,16 @@ __read_imp (
 
 //-----------------------------
     struct te_d *p;
-    pid_t current_process = (pid_t) get_current_process();
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    pid_t current_process = (pid_t) get_current_process(0);
+
 // Process
 // #todo: There is a helper for that small routine.
-    if (current_process < 0 || current_process >= PROCESS_COUNT_MAX){
+    if (current_process < 0 || current_process >= PROCESS_COUNT_MAX)
+    {
         debug_print("__read_imp: current_process\n");
         goto fail;
     }
@@ -1283,7 +1289,12 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
 
 //-----------------------------
     struct te_d *p;
-    pid_t current_process = (pid_t) get_current_process();
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    pid_t current_process = (pid_t) get_current_process(0);
+
 // Process
 // #todo: There is a helper for that small routine.
     if (current_process < 0 || current_process >= PROCESS_COUNT_MAX){
@@ -1954,10 +1965,15 @@ __open_imp (
         return (int) (-EFAULT);
     }
 
-
 // Process
-    current_process = (pid_t) get_current_process();
-    if (current_process < 0 || current_process >= PROCESS_COUNT_MAX){
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    current_process = (pid_t) get_current_process(0);
+
+    if (current_process < 0 || current_process >= PROCESS_COUNT_MAX)
+    {
         debug_print("__open_imp: current_process\n");
         goto fail;
     }
@@ -2150,8 +2166,14 @@ int __close_imp(int fd)
         return (int) (-EBADF);
 
 // Process
-    current_process = (pid_t) get_current_process();
-    if (current_process < 0 || current_process >= PROCESS_COUNT_MAX){
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    current_process = (pid_t) get_current_process(0);
+
+    if (current_process < 0 || current_process >= PROCESS_COUNT_MAX)
+    {
         debug_print("__close_imp: current_process\n");
         goto fail;
     }
@@ -2301,9 +2323,15 @@ file *get_file_from_fd(int fd)
         goto fail;
     }
 
-// Current PID and process pointer.
-    current_pid = (pid_t) get_current_process();
-    if ( current_pid < 0 || current_pid >= PROCESS_COUNT_MAX ){
+// Current PID and process pointer
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    current_pid = (pid_t) get_current_process(0);
+
+    if ( current_pid < 0 || current_pid >= PROCESS_COUNT_MAX )
+    {
         return NULL;
     }
     p = (struct te_d *) teList[current_pid];
@@ -2943,8 +2971,14 @@ void fsUpdateWorkingDiretoryString (char *string)
     }
 
 // Current process
-    current_process = (pid_t) get_current_process();
-    if (current_process < 0 || current_process >= PROCESS_COUNT_MAX){
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    current_process = (pid_t) get_current_process(0);
+
+    if (current_process < 0 || current_process >= PROCESS_COUNT_MAX)
+    {
         panic ("fsUpdateWorkingDiretoryString: current_process\n");
     }
     p = (struct te_d *) teList[current_process];

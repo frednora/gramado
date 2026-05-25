@@ -69,7 +69,11 @@ void show_process_information (void)
 void show_currentprocess_info (void)
 {
     struct te_d  *Current;
-    pid_t current_process = (pid_t) get_current_process();
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    pid_t current_process = (pid_t) get_current_process(0);
 
     if ( current_process < 0 || 
          current_process >= PROCESS_COUNT_MAX )

@@ -628,8 +628,10 @@ copy_process00(
     // #debug
     // debug_print ("copy_process:\n");
 
-// Get the PID for the current process
-    pid_t current_process = (pid_t) get_current_process();
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    pid_t current_process = (pid_t) get_current_process(0);
 
     //printk (":)\n");
     //return -1;

@@ -151,9 +151,15 @@ int sys_setup_stdin(int stdin_fd)
     }
 
 // pid
-    current_process = (pid_t) get_current_process();
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    current_process = (pid_t) get_current_process(0);
+
     if ( current_process < 0 || current_process >= PROCESS_COUNT_MAX )
         return FALSE;
+
 // Process structure
     p = (struct te_d *) teList[current_process];
     if ((void*) p == NULL){

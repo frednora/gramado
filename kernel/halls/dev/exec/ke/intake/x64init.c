@@ -528,7 +528,8 @@ int I_x64CreateInitialProcess(void)
     TEInitProcess->thread_count = 1;  // flower thread is the first.
 
 // Set the current process (Canonical value)
-    set_current_process(InitProcessPID);
+    // IN: pid, cou id
+    set_current_process(InitProcessPID, 0);
 
 // Set the current thread for this core
 
@@ -648,7 +649,8 @@ void I_x64ExecuteInitialProcess(int cpu_id)
     if (t->te->pid != GRAMADO_PID_INIT){
         panic("I_x64ExecuteInitialProcess: t->te->pid\n");
     }
-    set_current_process(GRAMADO_PID_INIT);
+    // IN: pid, core id
+    set_current_process(GRAMADO_PID_INIT, 0);
 
 // List
 // Dispatcher ready list.

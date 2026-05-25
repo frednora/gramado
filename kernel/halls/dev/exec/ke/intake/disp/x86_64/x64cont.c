@@ -227,7 +227,10 @@ void arch_save_context(int lapic_info_id)
         panic("arch_save_context: cpl != t->cpl\n");
 
 // Ja temos o valor do current process nesse momento?
-    //pid_t current_process = (pid_t) get_current_process();
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    //pid_t current_process = (pid_t) get_current_process(0);
     
     if ( cpl != 0 && cpl != 1 && cpl != 2 && cpl != 3 )
     {

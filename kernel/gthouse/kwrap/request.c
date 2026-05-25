@@ -252,12 +252,10 @@ int processDeferredKernelRequest(void)
             break;
 
 
-        //make target porcess current
-        //cuidado.
+        // Set current process for a given core. #bugbug
         case 13:
-            //debug_print ("processDeferredKernelRequest: Get current process\n");
-            //current_process = REQUEST.target_pid;
-            set_current_process(REQUEST.target_pid);
+            // IN pid, core id
+            set_current_process(REQUEST.target_pid, 0);
             break;
 
 
@@ -277,10 +275,12 @@ int processDeferredKernelRequest(void)
 		// Tratar mais tipos.	
 		//...
 		
-		// clone and execute process.
+		// Clone and execute process
         case 111:
-            //current_process = REQUEST.target_pid;
-            set_current_process(REQUEST.target_pid);
+            
+            // Set the current process for a given core.
+            // IN: pid, core id.
+            set_current_process(REQUEST.target_pid, 0);
 
             // #bugbug: What?
             // Set the current thread for this core
@@ -289,7 +289,7 @@ int processDeferredKernelRequest(void)
             // IN: file name, parent pid, clone flags.
             return (void *) copy_process( 
                                  (const char *) REQUEST.long1, 
-                                 (pid_t) get_current_process(),//current_process,
+                                 (pid_t) get_current_process(0),
                                  (unsigned long) REQUEST.long2 );
             break;
 

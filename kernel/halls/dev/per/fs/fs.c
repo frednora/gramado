@@ -400,8 +400,14 @@ void sys_set_file_sync(int fd, int request, int data)
 
 
 // == Process ================
-    current_process = (pid_t) get_current_process();
-    if ( current_process < 0 || current_process >= PROCESS_COUNT_MAX ){
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    current_process = (pid_t) get_current_process(0);
+
+    if ( current_process < 0 || current_process >= PROCESS_COUNT_MAX )
+    {
         debug_print("sys_set_file_sync: current_process\n");
         return;
     }
@@ -513,8 +519,14 @@ int sys_get_file_sync(int fd, int request)
  */
 
 // == Process ================
-    current_process = (pid_t) get_current_process();
-    if ( current_process < 0 || current_process >= PROCESS_COUNT_MAX ){
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    current_process = (pid_t) get_current_process(0);
+
+    if ( current_process < 0 || current_process >= PROCESS_COUNT_MAX )
+    {
         debug_print("sys_get_file_sync: current_process\n");
         goto fail;
     }
@@ -615,8 +627,14 @@ int sys_open_device_by_number(int device_index)
 // Put the pointer into the list.
 
 // Process
-    current_process = (pid_t) get_current_process();
-    if (current_process < 0 || current_process >= PROCESS_COUNT_MAX){
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    current_process = (pid_t) get_current_process(0);
+
+    if (current_process < 0 || current_process >= PROCESS_COUNT_MAX)
+    {
         goto fail;
     }
     p = (struct te_d *) teList[current_process];
@@ -697,8 +715,14 @@ int sys_sleep_if_socket_is_empty(int fd)
     }
 
 // Process
-    current_process = (pid_t) get_current_process();
-    if ( current_process < 0 || current_process >= PROCESS_COUNT_MAX ){
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    current_process = (pid_t) get_current_process(0);
+
+    if ( current_process < 0 || current_process >= PROCESS_COUNT_MAX )
+    {
         debug_print("sys_sleep_if_socket_is_empty: current_process\n");
         goto fail;
     }
@@ -770,8 +794,13 @@ void sys_pwd(void)
 {
     pid_t current_process = -1;
 
-    current_process = (pid_t) get_current_process();
-    if ( current_process < 0 || current_process >= PROCESS_COUNT_MAX ){
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    current_process = (pid_t) get_current_process(0);
+
+    if ( current_process < 0 || current_process >= PROCESS_COUNT_MAX )
+    {
         printk ("sys_pwd: [FAIL] current_process\n");
         return;
     }

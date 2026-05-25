@@ -50,7 +50,12 @@ int dispsrv_setup_ds_info(pid_t pid)
     if (pid < 0 || pid >= PROCESS_COUNT_MAX){
         goto fail;
     }
-    current_process = (pid_t) get_current_process();
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    current_process = (pid_t) get_current_process(0);
+
     if (pid != current_process)
     {
         // #debug

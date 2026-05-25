@@ -2127,8 +2127,11 @@ void *sci1 (
         (tid_t) lapic_info[lapic_info_id].current_tid;
 
     struct te_d *te;     // thread environment
-// thread environment id (fka PID)
-    pid_t current_process = (pid_t) get_current_process();
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    pid_t current_process = (pid_t) get_current_process(0);
 
     debug_print("sci1: [TODO]\n");
 
@@ -2200,7 +2203,11 @@ void *sci2 (
         (tid_t) lapic_info[lapic_info_id].current_tid;
 
     struct te_d *p;      // thread environment
-    pid_t current_process = (pid_t) get_current_process();
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    pid_t current_process = (pid_t) get_current_process(0);
 
     // Global counter for syscalls.
     g_profiler_ints_syscall_counter++;
@@ -3229,7 +3236,11 @@ void *sci3 (
 // thread environment
 // thread environment id (fka PID)
     struct te_d *te;
-    pid_t CurrentPID = (pid_t) get_current_process();
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    pid_t CurrentPID = (pid_t) get_current_process(0);
 
     struct thread_d *t;  // thread
 
