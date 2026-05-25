@@ -101,8 +101,10 @@ void schediSelectForExecution(struct thread_d *Thread);
 void schedi_drop_quantum(struct thread_d *thread);
 void schedi_check_for_standby(void);
 
-tid_t get_current_thread(void);
-void set_current_thread(tid_t tid);
+
+tid_t get_current_thread(int lapic_info_id);
+void set_current_thread(tid_t tid, int lapic_info_id);
+
 void set_foreground_thread(tid_t tid);
 
 void wait_for_a_reason ( tid_t tid, int reason );

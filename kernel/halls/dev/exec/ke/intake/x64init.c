@@ -619,9 +619,8 @@ void I_x64ExecuteInitialProcess(int cpu_id)
     }
 
 // Set the curren thread for this core
-// #bugbug: We need to pass the cpu id via parameter
-
-    set_current_thread(TID);
+// IN: tid, core id
+    set_current_thread(TID, 0);
 
 // Set the clobal foreground thread
     set_foreground_thread(TID);

@@ -437,9 +437,9 @@ void x64_all_faults(unsigned long number)
             //current_tid = (tid_t) target_tid;
             
             // Set curren thread for this core.
-            // #bugbug: We need to pass the cpu id via parameter
-            set_current_thread((tid_t) target_tid);
-            
+            // IN: tid, core id
+            set_current_thread((tid_t) target_tid, 0);
+
             // Count the dispatcher method.
             IncrementDispatcherCount(SELECT_DISPATCHER_COUNT);
             

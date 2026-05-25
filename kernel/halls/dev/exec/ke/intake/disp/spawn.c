@@ -455,10 +455,8 @@ static void __spawn_thread_by_tid_imp(tid_t tid)
 
 
 // Set current thread for this core
-// #bugbug:
-// We need to send the 'cpu id' as parameter
-
-    set_current_thread(target_thread->tid);
+// IN: tid, core id.
+    set_current_thread(target_thread->tid, 0);
 
     // Check if it was setted correctly
     if ( lapic_info[0].current_tid < 0 || 

@@ -409,20 +409,28 @@ void schediSelectForExecution(struct thread_d *Thread)
 }
 
 // Get the TID of the current thread.
-tid_t get_current_thread(void)
+tid_t get_current_thread(int lapic_info_id)
 {
-    return (tid_t) lapic_info[0].current_tid;
+    if (lapic_info_id<0 || lapic_info_id > NR_CPUS)
+        return (tid_t) -1;  // fail
+
+    return (tid_t) lapic_info[lapic_info_id].current_tid;
 }
 
-// Set the tid for the current_tid global variable.
-void set_current_thread(tid_t tid)
+// Set the tid for the current_tid global variable
+void set_current_thread(tid_t tid, int lapic_info_id)
 {
     struct thread_d *t;
 
+// Parameter limits:
     if (tid < 0 || tid >= THREAD_COUNT_MAX){
         return;
     }
-    if (tid == lapic_info[0].current_tid){
+    if (lapic_info_id<0 || lapic_info_id > NR_CPUS)
+        return;
+
+// Already done?
+    if (tid == lapic_info[lapic_info_id].current_tid){
         return;
     }
 
@@ -439,9 +447,8 @@ void set_current_thread(tid_t tid)
     }
 
 // Change the current for this core
-    lapic_info[0].current_tid = (tid_t) tid;
+    lapic_info[lapic_info_id].current_tid = (tid_t) tid;
 }
-
 
 // Set the tid for the foreground_thread global variable.
 void set_foreground_thread(tid_t tid)
@@ -840,6 +847,11 @@ void schedi_drop_quantum(struct thread_d *thread)
 
 void schedi_check_for_standby(void)
 {
+
+// #todo
+// We are launching it in BSP.
+// Maybe we can do it in any other core.
+
     struct thread_d *t;
     tid_t target_tid = -1;
     register int i=0;
@@ -882,7 +894,9 @@ do_spawn:
     }
 
 // Set the current thread and spawn it.
-    set_current_thread(target_tid);
+// IN: tid, core id
+    set_current_thread(target_tid, 0);
+
     psSpawnThreadByTID(target_tid);
 
 // Not reached
