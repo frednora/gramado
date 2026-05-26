@@ -42,6 +42,7 @@
 static const char *program_name = "TERMINAL";
 struct gws_display_d *Display;
 
+struct dccanvas_d *dc00;  // shared dc
 
 FILE *__terminal_input_fp;
 
@@ -384,7 +385,7 @@ static void update_clients(int fd)
     // Redraw and refresh using server.
     // gws_redraw_window(fd, wid, TRUE);
 
-
+/*
 // Draw the fake button
     libgui_backbuffer_draw_rectangle0(
         frame_left + cr_left +0, 
@@ -394,7 +395,6 @@ static void update_clients(int fd)
         COLOR_BLACK,  //xCOLOR_GRAY2, 
         1, 0, FALSE
     );
-
 // Refresh to show it
     libgui_refresh_rectangle_via_kernel(
         frame_left + cr_left +0, 
@@ -402,6 +402,15 @@ static void update_clients(int fd)
         cr_width, 
         cr_height
     );
+*/
+
+// bg for the client area
+    lingui_draw_rectangle0_dc (
+        dc00,
+        0, 0, lWi.cr_width, lWi.cr_height,
+        COLOR_RED,
+        0  // ROP
+    );    
 
 
 // ------------------------------------------------
@@ -448,6 +457,8 @@ static void clear_terminal_client_window(int fd)
 {
     //int wid = Terminal.client_window_id;
 
+    struct gws_window_info_d  lWi;  // Local
+
     if (fd<0){
         return;
     }
@@ -457,9 +468,15 @@ static void clear_terminal_client_window(int fd)
 // Repaint it using the default background color.
     //gws_clear_window(fd,wid);  // Faster?
 
-    // #todo
-    // Use libgui to draw a rectangle
 
+// Get info about the main window.
+// IN: fd, wid, window info structure.
+    gws_get_window_info(
+        fd, 
+        main_window,   // The app window
+        (struct gws_window_info_d *) &lWi );
+
+/*
     // Background
     libgui_backbuffer_draw_rectangle0(
         frame_left + cr_left + 0, 
@@ -467,7 +484,6 @@ static void clear_terminal_client_window(int fd)
         Terminal.width, 
         Terminal.height,
         COLOR_BLACK, 1, 0, FALSE );
-
     // Refresh
     libgui_refresh_rectangle_via_kernel(
         frame_left + cr_left + 0, 
@@ -475,6 +491,16 @@ static void clear_terminal_client_window(int fd)
         Terminal.width, 
         Terminal.height
         );
+*/
+
+// bg for the client area
+    lingui_draw_rectangle0_dc (
+        dc00,
+        0, 0, lWi.cr_width, lWi.cr_height,
+        COLOR_RED,
+        0  // ROP
+    );    
+
 
 
 // Update cursor.
@@ -1621,6 +1647,7 @@ terminal_write_char (
 */
 
 
+/*
 // Draw char using lingui
 // #ps: Using current values.
 // We gotta update the, when the server sends paint message.
@@ -1632,7 +1659,6 @@ terminal_write_char (
         COLOR_BLACK,   // bg
         0
     );
-
 // Refresh to show it
     libgui_refresh_rectangle_via_kernel(
         frame_left + cr_left + (x & 0xFFFF), 
@@ -1640,6 +1666,18 @@ terminal_write_char (
         8, 
         8
     );
+*/
+
+    libgui_drawchar_dc(
+        dc00, 
+        (x & 0xFFFF), 
+        (y & 0xFFFF), 
+        c,
+        fg_color,      // fg color
+        COLOR_BLACK,   // bg color
+        0              // ROP
+    );
+
 
 
 // Coloca no buffer de linhas e colunas.
@@ -3718,8 +3756,8 @@ int terminal_init(unsigned short flags)
     }
     Terminal.main_window_id = main_window;
 
-    // #test: Show the window early.
-    gws_refresh_window(client_fd, main_window);
+    // #test: Show the window early
+    //gws_refresh_window(client_fd, main_window);
 
 // ===================================================
 // Client area window
@@ -3829,6 +3867,27 @@ int terminal_init(unsigned short flags)
     m[8] = lWi.cr_height;
 
     sc80( 48, &m[0], &m[0], &m[0] );
+// ============================================================
+
+    dc00 = (struct dccanvas_d *) libgui_create_dc(
+        lWi.ca_canvas_base_address,
+        lWi.ca_canvas_width,
+        lWi.ca_canvas_height,
+        lWi.ca_canvas_bpp
+    );
+
+    if ((void*)dc00 == NULL){
+        printf("terminal: on dc00\n");
+        exit(1);
+    }
+
+// bg for the client area
+    lingui_draw_rectangle0_dc (
+        dc00,
+        0, 0, lWi.cr_width, lWi.cr_height,
+        COLOR_RED,
+        0  // ROP
+    );    
 
 
 // Current window frame values
@@ -3890,6 +3949,9 @@ int terminal_init(unsigned short flags)
     Terminal.client_window_id = terminal_window;
 */
 
+
+
+    /*
     // Background
     libgui_backbuffer_draw_rectangle0(
         frame_left + cr_left + wLeft, 
@@ -3897,6 +3959,7 @@ int terminal_init(unsigned short flags)
         wWidth, 
         wHeight,
         COLOR_BLACK, 1, 0, FALSE );
+    */
 
     // #debug
     //gws_draw_rectangle(client_fd, main_window,
@@ -3906,6 +3969,7 @@ int terminal_init(unsigned short flags)
     //#debug
     //gws_refresh_window(client_fd, terminal_window);
 
+    /*
     // Refresh
     libgui_refresh_rectangle_via_kernel(
         frame_left + cr_left + wLeft, 
@@ -3913,6 +3977,8 @@ int terminal_init(unsigned short flags)
         wWidth, 
         wHeight
         );
+    */
+    
 
     // #bugbug
     // Its not returning the right client area values.
@@ -4060,7 +4126,7 @@ int terminal_init(unsigned short flags)
     gws_set_active( client_fd, main_window );
 
     //#debug
-    gws_refresh_window(client_fd, main_window);
+    //gws_refresh_window(client_fd, main_window);
 
 
 // Open PTYM
