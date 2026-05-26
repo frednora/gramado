@@ -262,8 +262,7 @@ struct dir_d
 // File system info
 struct filesystem_d
 {
-    object_type_t objectType;
-    object_class_t objectClass;
+    struct kobject_d kobj;
     int used;
     int magic;
 

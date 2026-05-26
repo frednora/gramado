@@ -60,8 +60,9 @@ static void __ps_initialize_thread_common_elements(struct thread_d *t)
     register int i=0;
     struct msg_d  *tmp;
 
-    t->objectType = ObjectTypeThread;
-    t->objectClass = ObjectClassKernelObject;
+    t->kobj._type = ObjectTypeThread;
+    t->kobj._class = ObjectClassKernelObject;
+    t->kobj.flags = 0;
 
 //
 // == Wait support ==================

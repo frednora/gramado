@@ -231,8 +231,7 @@ struct terminal_connection_d
 // The old 'process_d' structure.
 struct te_d
 {
-    object_type_t objectType;
-    object_class_t objectClass;
+    struct kobject_d kobj;
     int used;
     int magic;
 

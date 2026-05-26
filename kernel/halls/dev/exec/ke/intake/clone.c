@@ -109,9 +109,11 @@ copy_process_struct(
 // From father to child.
 //
 
-// Object
-    Process2->objectType = Process1->objectType;
-    Process2->objectClass = Process1->objectClass;
+    // kobject
+    Process2->kobj._type  = Process1->kobj._type;
+    Process2->kobj._class = Process1->kobj._class;
+    Process2->kobj.flags  = Process1->kobj.flags;
+
     Process2->base_priority = (unsigned long) CloneBasePriority;
     Process2->priority      = (unsigned long) ClonePriority;
 

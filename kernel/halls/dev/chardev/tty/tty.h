@@ -215,8 +215,8 @@ struct tty_queue
 // This is famous TTY structure.
 struct tty_d
 {
-    object_type_t objectType;
-    object_class_t objectClass;
+    struct kobject_d kobj;
+
     int used;
     int magic;
 // Where?

@@ -113,8 +113,8 @@ struct keyboardMessage
 // this is gonna be used by PS2 structure in ps2.h
 struct ps2_keyboard_d
 {
-    object_type_t objectType;
-    object_class_t objectClass;
+    struct kobject_d kobj;
+
     keyboard_type_t type;
     file *fp;
     int initialized;

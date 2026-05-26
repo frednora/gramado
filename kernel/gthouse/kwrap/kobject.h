@@ -4,13 +4,14 @@
 // A lot of structures are using these indexes
 // to describe the onject handled by the structure.
 
-#ifndef __KE_KOBJECT_H
-#define __KE_KOBJECT_H    1
+#ifndef __KWRAP_KOBJECT_H
+#define __KWRAP_KOBJECT_H    1
 
 // Object types.
 // This list is used in the element file->____object,
 // to describe the 'operation mode. If the file is a console,
 // or a pipe, or a socket, or a regular file.
+
 typedef enum {
 
     ObjectTypeNull,               //0 Null. (Free)
@@ -130,7 +131,7 @@ typedef enum {
 
 
 //
-// Object class.
+// Object class
 //
 
 // Some structures are using this element
@@ -143,7 +144,16 @@ typedef enum {
 
     ObjectClassKernelObject,  // Kernel Objects
     ObjectClassUserObject     // User Objects
-}object_class_t;
+} object_class_t;
+
+
+struct kobject_d 
+{
+    object_type_t _type;
+    object_class_t _class;
+    unsigned int flags;  // 32 bit
+    // ...
+};
 
 
 //

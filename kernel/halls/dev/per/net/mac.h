@@ -8,12 +8,11 @@
 
 struct mac_address_d
 {
-    object_type_t objectType;
-    object_class_t objectClass;
-// 6 bytes. 
+    struct kobject_d kobj;
+
+    // 6-byte
     unsigned long mac_address_high;   // OUI
     unsigned long mac_address_low;    // NIC
-
 };
 
 #endif   

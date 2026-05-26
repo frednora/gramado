@@ -9,12 +9,10 @@
 
 // ===========================
 
-
 // RGBA tag
 struct tagRGBA
 {
-    object_type_t objectType;
-    object_class_t objectClass;
+    //struct kobject_d kobj;
 
 // RGBA
    char red;

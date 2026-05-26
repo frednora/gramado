@@ -429,15 +429,15 @@ struct pci_class_d
 */
 
 //
-// PCI device structure.
+// PCI device structure
 //
- 
+
 struct pci_device_d 
 {
-    object_type_t  objectType;
-    object_class_t objectClass;
+    struct kobject_d kobj;
     int used;
     int magic;
+
     int id;
 
     char *name;
@@ -545,18 +545,14 @@ unsigned long pcideviceList[PCI_DEVICE_LIST_SIZE];
 // DRIVER
 //
 
-/*
- * pci_driver_d:
- *     Estrutura para drivers de dispositivos pci.     
- */
+// Structure to handle device drivers for PCI devices
 struct pci_driver_d
 {
-    object_type_t  objectType;
-    object_class_t objectClass;
+    struct kobject_d kobj;
     int used;
     int magic;
-// Driver ID.
-    int id;
+
+    int id;  // Driver ID
 
 //status do driver de dispositivo.
 //Initialized, ... @todo: Criar enum. pci_device_status_t;

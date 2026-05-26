@@ -83,23 +83,21 @@ struct sockaddr_in {
 #define HOST_DEFAULTNAME    "gramadox" 
 #define HOST_NAME_MAX  64
 
-//static char hostname_buffer[HOSTNAME_BUFFER_SIZE];
 
 /*
  * host_info_d:
- *     The host structure.
+ *     The host structure
  */
 
 struct host_info_d
 {
-    object_type_t  objectType;
-    object_class_t objectClass;
-
-    int id;
+    struct kobject_d kobj;
     int used;
     int magic;
 
-// N�mero identificador desse host dentro da rede interna.
+    int id;
+
+// ID inside the iternal network
     int hostIdentifier;
 
     char __hostname[HOST_NAME_MAX];

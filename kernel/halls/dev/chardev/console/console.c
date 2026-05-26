@@ -2787,8 +2787,10 @@ DDINIT_console(
 // Data
 //
 
-    CONSOLE_TTYS[ConsoleIndex].objectType = ObjectTypeTTY;
-    CONSOLE_TTYS[ConsoleIndex].objectClass = ObjectClassKernelObject;
+    // kobject
+    CONSOLE_TTYS[ConsoleIndex].kobj._type = ObjectTypeTTY;
+    CONSOLE_TTYS[ConsoleIndex].kobj._class = ObjectClassKernelObject;
+
     CONSOLE_TTYS[ConsoleIndex].used = TRUE;
     CONSOLE_TTYS[ConsoleIndex].magic = (int) 1234;
     CONSOLE_TTYS[ConsoleIndex].initialized = FALSE;

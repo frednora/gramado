@@ -625,8 +625,10 @@ pciHandleDevice (
     }
     memset( pci_dev, 0, sizeof(struct pci_device_d) );
 
-    pci_dev->objectType = ObjectTypePciDevice;
-    pci_dev->objectClass = ObjectClassKernelObject;
+    // kobject
+    pci_dev->kobj._type = ObjectTypePciDevice;
+    pci_dev->kobj._class = ObjectClassKernelObject;
+
     pci_dev->used = TRUE;
     pci_dev->magic = 1234;
 

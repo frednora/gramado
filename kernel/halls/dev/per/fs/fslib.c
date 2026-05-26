@@ -2521,8 +2521,10 @@ void fs_init_structures (void)
     }
     memset( root, 0, sizeof(struct filesystem_d) );
 
-    root->objectType = ObjectTypeFileSystem;
-    root->objectClass = ObjectClassKernelObject;
+    // kobject
+    root->kobj._type = ObjectTypeFileSystem;
+    root->kobj._class = ObjectClassKernelObject;
+
     root->used = TRUE;
     root->magic = 1234;
 
@@ -3699,8 +3701,8 @@ void fs_show_root_fs_info(void)
         }
 
         printk ("name = %s \n",       root->name );
-        printk ("Object type %d \n",  root->objectType );
-        printk ("Object class %d \n", root->objectClass );
+        printk ("Object type %d \n",  root->kobj._type );
+        printk ("Object class %d \n", root->kobj._class );
         printk ("type = %d \n",       root->type );
         printk ("Dir entries %d \n",  root->dir_entries );
         printk ("Entry size %d \n",   root->entry_size );

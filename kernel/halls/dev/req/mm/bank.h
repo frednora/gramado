@@ -26,12 +26,10 @@ typedef enum {
     banktypeFDB,    // FDB - Free Data Base.    (free memory)
 }bank_type_t;
 
-
+// ? It's a kind of region
 struct bank_d
 {
-	object_type_t  objectType;
-	object_class_t objectClass;
-
+	struct kobject_d kobj;
 	int used;
 	int magic;
 

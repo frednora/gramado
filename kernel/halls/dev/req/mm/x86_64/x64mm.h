@@ -98,28 +98,14 @@ struct mm_zones_d *zones;
 // =============================================================
 
 
-/*
- * page_directory_d:
- *     Estrutura para o 'page directory' de um processo.
- *     Todo processo tem seu pr�prio diret�rio de p�ginas.
- *     Assim v�rios processos podem usar o mesmo endere�o l�gico.
- *     Ex: 0x400000
- *     @todo: Um ponteiro para essa estrutura pode estar no PCB do processo.
- *            usar os processos criados por processos para testar a configura��o
- *           de page directory.
- *     Obs: Um diret�rio tem ponteiros para page tables. as page tables 
- * funcionam como pools de frames.
- */
-
+// Structure for handling a given page directory
 struct page_directory_d
 {
-    object_type_t  objectType;
-    object_class_t objectClass;
-
-//identificadores.
-    int id;
+    struct kobject_d kobj;
     int used;
     int magic;
+
+    int id;
 
 //Qual processo � o dono do diret�rio de p�ginas.
 //talvez seja possivel reaproveitar o diret�rio.
@@ -165,22 +151,14 @@ extern unsigned long pagedirectoryList[PAGEDIRECTORY_COUNT_MAX];
 
 // ------------
 
-
-/*
- * page_table_d.
- *     Page table structure.
- *     Obs: Uma page table funciona como um pool de frames.
- *          Tamb�m pode ser compartilhada entre processo.(cuidado).
- */
-
+// Structure for handling a given pagetable
 struct page_table_d
 {
-    object_type_t  objectType;
-    object_class_t objectClass;
-
-    int id;
+    struct kobject_d kobj;
     int used;
     int magic;
+
+    int id;
 
 // A qual diret�rio de p�ginas a page table perrtence.
 // se bem que talvez possamos usar a mesma pagetable
@@ -310,20 +288,10 @@ extern unsigned long kernel_stack_end;       //va
 extern unsigned long kernel_stack_start;     //va
 extern unsigned long kernel_stack_start_pa;  //pa (endere�o indicado na TSS).
 
-/*
- * process_memory_info_d:
- *     Estrutura para informa��es sobre a 
- * mem�ria utilizada por um processo.
- * Obs: 
- * O gerenciamento de mem�ria � tarefa do 
- * modulo /sm portanto isso n�o deve 
- * ir para o /microkernel.
- */
-
+// It manages the memory info of a given process
 struct process_memory_info_d
 {
-    object_type_t  objectType;
-    object_class_t objectClass;
+    struct kobject_d kobj;
 
     struct te_d *process;
 
@@ -339,43 +307,26 @@ struct process_memory_info_d
 	//??delta de conjunto de trabalho.
 	//...
 };
-//struct process_memory_info_d *pmiCurrent;
-//...
 
-
-/*
- * physical_memory_info_d:
- *     Informa��es sobre a mem�ria f�sica.
- *     O arquivo system.h deve usar isso. 
- */
-
+// Handling information about physical memory
 struct physical_memory_info_d
 {
-    object_type_t objectType;
-    object_class_t objectClass;
+    struct kobject_d kobj;
 
-//?? d�vidas.
+// ?
     unsigned long Total;    //Total de mem�ria f�sica.(RAM).
     unsigned long InCache;  //Parte do total que est� em cache.(foi paginada e est� em cache).
     unsigned long Free;     //Livre.(Existe na RAM mas n�o foi paginada??).
     //...
 };
-//struct physical_memory_info_d *pmiMemoryInfo;
-//...
 
 
-/*
- * memory_info_d:
- *     Informa��es sobre a mem�ria.
- *     Isso pode ser usado pela configura��o do sistema. 
- */
-
+// Handling information about system memory
 struct memory_info_d
 {
-    object_type_t objectType;
-    object_class_t objectClass;
+    struct kobject_d kobj;
 
-// Physical.
+// Physical
     unsigned long TotalP;
     unsigned long AvailableP;
 
@@ -383,23 +334,20 @@ struct memory_info_d
     unsigned long TotalV;
     unsigned long AvailableV;
 };
-//struct memory_info_d *miMemoryInfo;
-//...
 
 
 // -----------------------------------
 
-// Estrutura para gerência de página.
+// Struture for handling a single page.
+// #ps: A page is a virtual representation of a frame, that is 
+// a small region into a physical memory.
 struct page_d
 {
-
-// Identificador da estrutura.
-// É um índice dentro da lista de páginas de um pool.
-
-    int id;
-
+    struct kobject_d kobj;
     int used;
     int magic;
+
+    int id;
 
 // Índice do frame.
 // Começando a contar do início da memória física.
@@ -449,16 +397,13 @@ extern unsigned long pageAllocList[PAGE_COUNT_MAX];
 
 struct frame_pool_d
 {
-    //object_type_t objectType;
-    //object_class_t objectClass;
-
-// Índice na lista de frame pools.
-    int id;
-
+    struct kobject_d kobj;
     int used;
     int magic;
 
-//Não pode ser modificada.
+    int id;
+
+// Não pode ser modificada
     int locked;
 
 // Endereço do início do framepool.

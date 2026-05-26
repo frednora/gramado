@@ -15,10 +15,10 @@ typedef enum {
 // This structure can be used to represent any region of physical memory. 
 // We have another structure for blocks of memory called mm_block, but that 
 // memory is used only to represent memory blocks inside the Kernel's heap.
+
 struct aspace_d
 {
-	object_type_t objectType;
-	object_class_t objectClass;
+	struct kobject_d kobj;
 	int used;
 	int magic;
 

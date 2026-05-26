@@ -1511,8 +1511,10 @@ struct tty_d *tty_create(short type, short subtype, const char *devname)
     }
     memset( __tty, 0, sizeof(struct tty_d) );
 
-    __tty->objectType = ObjectTypeTTY;
-    __tty->objectClass = ObjectClassKernelObject;
+    // kobject
+    __tty->kobj._type = ObjectTypeTTY;
+    __tty->kobj._class = ObjectClassKernelObject;
+
     __tty->used = TRUE;
     __tty->magic = 1234;
     __tty->initialized = FALSE;

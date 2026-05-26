@@ -104,14 +104,10 @@ struct tagGraphics *Graphics;
 // Video support
 //
 
-
-// Information about vide
+// Information about video
 struct video_d
 {
-    object_type_t objectType;
-    object_class_t objectClass;
-
-	//call back
+    struct kobject_d kobj;
 
     int useGui;   //se estamos ou não usando gui. text mode, video mode.
     int vgaMode;  //número do modo de vídeo se estiver usando vga.

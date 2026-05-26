@@ -197,14 +197,14 @@ extern struct vbr_d  *vbr;
 // Structure for a volume
 struct volume_d
 {
-    object_type_t objectType;
-    object_class_t objectClass;
+    struct kobject_d kobj;
     int used;
     int magic;
+
     int id;
 
-    volume_type_t   volumeType;
-    volume_class_t  volumeClass;
+    volume_type_t volumeType;
+    volume_class_t volumeClass;
  
     //label
     char *name;
@@ -556,11 +556,11 @@ extern struct mbr_d  *mbr;
 
 // Structure for disk support
 struct disk_d
-{ 
-    object_type_t objectType;
-    object_class_t objectClass;
+{
+    struct kobject_d kobj;
     int used;
     int magic;
+
     int id;  // Index into the list of disks
 
 // ID herdado do boot block.

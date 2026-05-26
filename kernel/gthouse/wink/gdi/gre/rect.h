@@ -6,11 +6,11 @@
 #define __GRE_RECT_H    1
 
 
-// Structure for rectangle management.
+// Structure for rectangle management
+// It can be important when managing display surfaces and dc.
 struct rect_d 
 {
-    object_type_t objectType;
-    object_class_t objectClass;
+    struct kobject_d kobj;
     int used;
     int magic;
 

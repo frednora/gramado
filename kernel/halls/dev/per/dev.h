@@ -96,21 +96,19 @@ extern unsigned long nicList[8];
 // struct more complete, with a lot of information.
 struct device_class_d 
 {
-    //object_type_t objectType;
-    //object_class_t objectClass;
     int device_class;
     int device_subclass;    
 };
 
 #define DEVICE_NAME_SIZE  64
 
-// Device structure.
+// Device structure
 struct device_d 
 {
-    object_type_t objectType;
-    object_class_t objectClass;
+    struct kobject_d kobj;
     int used;
     int magic;
+
     int index;
 
     //name for pci devices: "/DEV_8086_8086"  

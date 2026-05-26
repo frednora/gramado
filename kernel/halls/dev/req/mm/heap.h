@@ -21,11 +21,12 @@ extern unsigned long g_available_heap;   // Available
 
 struct heap_d 
 {
-    object_type_t objectType;
-    object_class_t objectClass;
-    int id;
+    struct kobject_d kobj;
     int used;
     int magic;
+
+    int id;
+
     unsigned long HeapStart;  
     unsigned long HeapEnd;
     unsigned long HeapPointer; 

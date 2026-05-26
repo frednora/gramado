@@ -45,8 +45,7 @@ struct cgroup_d
 // + network server.
 // ...
 
-    object_type_t  objectType;
-    object_class_t  objectClass;
+    struct kobject_d kobj;
     int used;
     int magic;
 

@@ -149,14 +149,13 @@ struct sockcred
 };
 */
 
-// The socket structure.
+// The socket structure
 struct socket_d
 {
-    // Core object information
-    object_type_t objectType;
-    object_class_t objectClass;
+    struct kobject_d kobj;
     int used;
     int magic;
+
     int id;
 
     // Basic socket parameters

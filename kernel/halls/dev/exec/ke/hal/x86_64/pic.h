@@ -24,8 +24,8 @@
 // Estrutura para gerenciar as irqs do PIC.
 struct irq_d
 {
-    //object_type_t objectType;
-    //object_class_t objectClass;
+    struct kobject_d kobj;
+
     int used;
     int magic;
     int id;
@@ -42,14 +42,12 @@ struct irq_d
 
 struct pic_d
 {
-    object_type_t objectType;
-    object_class_t objectClass;
+    struct kobject_d kobj;
+
     int dummy;
+
     // 8 entries for pic controller.
 };
-// #todo
-// Put this in pic.c and create an external refrence here.
-//struct pic_d *Pic;
 
 //
 // == IRQ Handlers =======================================

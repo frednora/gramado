@@ -74,8 +74,8 @@
 // mouse info.
 struct ps2_mouse_d
 {
-    object_type_t objectType;
-    object_class_t objectClass;
+    struct kobject_d kobj;
+
     file *fp;
     int initialized;
     int irq_is_working;

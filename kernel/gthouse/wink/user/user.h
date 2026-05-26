@@ -9,11 +9,11 @@
  * usession_d:
  *     The user section structure. 
  *     (u.session)
- */ 
+ */
+
 struct usession_d
 {
-    object_type_t objectType;
-    object_class_t objectClass;
+    struct kobject_d kobj;
     int used;
     int magic;
 
@@ -110,14 +110,12 @@ typedef enum {
 
 struct user_info_d
 {
-    object_type_t  objectType;
-    object_class_t objectClass;
+    struct kobject_d kobj;
+    int used;
+    int magic;
     
     uid_t userId;
     
-    int used;
-    int magic;
-
 // This structure was initialized.
     int initialized;
 

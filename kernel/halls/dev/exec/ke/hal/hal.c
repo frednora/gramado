@@ -298,11 +298,14 @@ int halInitialize(void)
         return FALSE;
     }
     memset( processor, 0, sizeof(struct processor_d) );
+
+
+    // kobject
+    processor->kobj._type = ObjectTypeProcessor;
+    processor->kobj._class = ObjectClassKernelObject;
+
 // Validate the structure
-// This is a valid structure,
-// but it's not initialized yet.
-    processor->objectType = ObjectTypeProcessor;
-    processor->objectClass = ObjectClassKernelObject;
+// This is a valid structure, but it's not initialized yet.
     processor->used = TRUE;
     processor->magic = 1234;
 

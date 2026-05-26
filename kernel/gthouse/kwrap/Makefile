@@ -1,4 +1,5 @@
 # Compiling kwrap/ folder.
+# Created by Fred Nora
 
 INCLUDE = ../../include
 
@@ -14,16 +15,17 @@ MAKE	= make
 NASM	= nasm
 OBJCOPY	= objcopy
 OBJDUMP	= objdump
-LEX	= flex
-YACC	= bison
-PERL	= perl
+#LEX	= flex
+#YACC	= bison
+#PERL	= perl
 PYTHON	= python
 PYTHON2	= python2
 PYTHON3	= python3
-RUBY	= ruby
+#RUBY	= ruby
 
-# test: gramado 64bit
-# See: https://gcc.gnu.org/onlinedocs/gcc/Code-Gen-Options.html
+# See: 
+# https://gcc.gnu.org/onlinedocs/gcc/Code-Gen-Options.html
+
 CFLAGS := \
 	-Wall \
 	-Wundef \
@@ -66,11 +68,12 @@ KERNEL_INCLUDE := -I $(INCLUDE)
 # -s --strip-all:   Omit all symbol information from the output file.
 # -x --discard-all: Delete all local symbols.
 # -M --print-map:   Print a link map to the standard output.
-# LDFLAGS := -m elf_x86_64 -static
+
 LDFLAGS := -m elf_x86_64 -s -x -static  
 
 OBJS = globals.o bootblk.o \
 klog.o \
+kobject.o \
 info.o \
 irql.o \
 panic.o \
@@ -95,6 +98,7 @@ all:
 
 # Overall routines
 	$(CC) -c klog/klog.c  $(KERNEL_INCLUDE) $(CFLAGS) -o klog.o
+	$(CC) -c kobject.c    $(KERNEL_INCLUDE) $(CFLAGS) -o kobject.o
 	$(CC) -c info.c       $(KERNEL_INCLUDE) $(CFLAGS) -o info.o
 	$(CC) -c irql.c       $(KERNEL_INCLUDE) $(CFLAGS) -o irql.o
 	$(CC) -c panic.c      $(KERNEL_INCLUDE) $(CFLAGS) -o panic.o  

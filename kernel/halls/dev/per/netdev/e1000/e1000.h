@@ -179,10 +179,10 @@ struct e1000_arp_cache_item_d
 // #bugbug
 // Me parece que isso deve ser usado apenas para dispositivos  
 // Intel. Pois cada marca terá suas características.
+
 struct intel_nic_info_d
 {
-    object_type_t objectType;
-    object_class_t objectClass;
+    struct kobject_d kobj;
     int used;
     int magic;
 

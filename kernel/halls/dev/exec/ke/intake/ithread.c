@@ -40,8 +40,11 @@ struct thread_d *create_init_thread(void)
     } 
     memset( t, 0, sizeof(struct thread_d) );
 
-    t->objectType = ObjectTypeThread;
-    t->objectClass = ObjectClassKernelObject;
+    // kobject
+    t->kobj._type = ObjectTypeThread;
+    t->kobj._class = ObjectClassKernelObject;
+    t->kobj.flags = 0;
+
     t->type = THREAD_TYPE_SYSTEM;
 
 // THREAD IDENTIFIERS

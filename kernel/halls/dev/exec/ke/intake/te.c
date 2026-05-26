@@ -1005,8 +1005,9 @@ static void __initialize_process_common_elements(struct te_d *p)
     if ((void*) p == NULL)
         return;
 
-    p->objectType = ObjectTypeProcess;
-    p->objectClass = ObjectClassKernelObject;
+    p->kobj._type = ObjectTypeProcess;
+    p->kobj._class = ObjectClassKernelObject;
+    p->kobj.flags = 0;
 
     p->signal = 0;
     p->umask = 0;

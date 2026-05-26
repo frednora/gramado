@@ -46,12 +46,10 @@ extern int processors_count;
 
 struct processor_d   
 {
-    object_type_t objectType;
-    object_class_t objectClass;
-
-    int id;
+    struct kobject_d kobj;
     int used;
     int magic;
+    int id;
 
 // #todo: 
 // Processor State ???
@@ -211,15 +209,14 @@ extern struct processor_d  *processor;
  * UPProcessorBlock_d:
  *     Processor Block.
  *     Used in the task switch routines.
- *     It handles information about CPU and the process running
- * into the CPU.
+ *     It handles information about CPU and 
+ * the process running into the CPU.
  *     It handles the running threads count.
  */
 
 struct UPProcessorBlock_d
 {
-    object_type_t   objectType;
-    object_class_t  objectClass;
+    struct kobject_d kobj;
     int used;
     int magic;
     int id;

@@ -85,8 +85,8 @@ struct socket_d *create_socket_object(void)
     }
     memset( s, 0, sizeof(struct socket_d) );
 
-    //s->objectType =
-    //s->objectClass =
+    //s->kobj._type = 0
+    //s->kobj._class = 0
 
     s->id = 0;  //#todo
 
@@ -413,7 +413,7 @@ struct socket_d *get_socket_in_process_list(unsigned short target_port)
                     if (sock->magic == 1234)
                     {
                         // Is it a socket structure?
-                        if (sock->objectType == ObjectTypeSocket)
+                        if (sock->kobj._type == ObjectTypeSocket)
                         {
                             // OK, we have a valid socket structure.
                             // Let's find out if this is socket we're
