@@ -79,7 +79,7 @@ static int nport_ajust(char nport);
 static int __ata_probe_boot_disk_signature(void);
 static int __ide_identify_device(uint8_t nport);
 static int ata_initialize_ide_device(char port);
-static int __ata_initialize(int ataflag);
+
 
 // =======================================================
 
@@ -1550,18 +1550,28 @@ fail:
 // ++
 //----------------------------------------------
 
-// __ata_initialize:
+//
+// $
+// INITIALIZATION
+//
+
+// DDINIT_ata:
 // Inicializa o ATA e mostra informações sobre o disco.
 // Sondando na lista de dispositivos encontrados 
 // pra ver se tem algum controlador de disco ATA.
 // IN: ?
 // Configurando flags do driver.
 // FORCEPIO = 1234
-// Called by ataDialog in atainit.c
 
-static int __ata_initialize(int ataflag)
+int 
+DDINIT_ata (
+    struct pci_device_d *pci_device_ata,
+    uint8_t controller_type,
+    unsigned long ataflag )
 {
-// Called by DDINIT_ata().
+// Called by storageInitialize() in storage.c
+// when it detects an ATA controller.
+
 // Here we're gonna know some things about the ata controller.
 // + What is the type of ata controller we have: ATA, RAID or AHCI.
 // + For ATA controller we're gonna initialize the 'ports', or the
@@ -1583,7 +1593,7 @@ static int __ata_initialize(int ataflag)
     // Iterator.
     int iPortNumber=0;
 
-    PROGRESS("__ata_initialize:\n");
+    PROGRESS("DDINIT_ata:\n");
 
 // Setup interrupt breaker.
     //debug_print("ata_initialize: Turn on interrupt breaker\n");
@@ -1641,19 +1651,25 @@ static int __ata_initialize(int ataflag)
 // É uma estrutura para dispositivos pci. (pci_device_d)
 // Vamos mudar de nome.
 
-// pci device.
+    /*
+    // pci device.
+    // #ps: This job was done by the caller.
     PCIDeviceATA = 
         (struct pci_device_d *) scan_pci_device_list2 ( 
                                     (unsigned char) PCI_CLASSCODE_MASS, 
                                     (unsigned char) PCI_SUBCLASS_IDE );
+    */
+
+    // Save the pointer for our ATA PCI device.
+    PCIDeviceATA = pci_device_ata;
 
     if ((void *) PCIDeviceATA == NULL){
-        printk("__ata_initialize: PCIDeviceATA\n");
+        printk("DDINIT_ata: PCIDeviceATA\n");
         Status = (int) -1;
         goto fail;
     }
     if ( PCIDeviceATA->used != TRUE || PCIDeviceATA->magic != 1234 ){
-        printk ("__ata_initialize: PCIDeviceATA validation\n");
+        printk ("DDINIT_ata: PCIDeviceATA validation\n");
         Status = (int) -1;
         goto fail;
     }
@@ -1682,7 +1698,7 @@ static int __ata_initialize(int ataflag)
         (unsigned long) storagePCISetupMassStorageController((struct pci_device_d*) PCIDeviceATA);
 
     if (Value == PCI_MSG_ERROR){
-        printk ("__ata_initialize: Error Driver [%x]\n", Value );
+        printk ("DDINIT_ata: Error Driver [%x]\n", Value );
         Status = (int) -1;
         goto fail;
     }
@@ -1742,12 +1758,17 @@ static int __ata_initialize(int ataflag)
 
     uint8_t ControllerType = StorageController.controller_type;
 
+    // #ps: The type needs to be the same detected by the caller.
+    if (ControllerType != controller_type){
+        panic ("DDINIT_ata: Unexpected ControllerType");
+    }
+
 // ==============================================
 // Controller type: ATA
 
     if (ControllerType == STORAGE_CONTROLLER_MODE_ATA)
     {
-        printk ("__ata_initialize: [ATA] Initialize ports\n");
+        printk ("DDINIT_ata: [ATA] Initialize ports\n");
         //while(1){}
         
         // Soft Reset, defina IRQ.
@@ -1812,7 +1833,7 @@ static int __ata_initialize(int ataflag)
         ata_devinfo_buffer = (unsigned short *) kmalloc(4096);
         if ((void *) ata_devinfo_buffer == NULL)
         {
-            printk ("ata_initialize: ata_devinfo_buffer\n");
+            printk ("DDINIT_ata: ata_devinfo_buffer\n");
             Status = (int) -1;
             goto fail;
         }
@@ -1861,7 +1882,7 @@ static int __ata_initialize(int ataflag)
         int disk_ok = -1;
         disk_ok = (int) __ata_probe_boot_disk_signature();
         if (disk_ok < 0){
-            printk(": Boot disk not found\n");
+            printk("DDINIT_ata: Boot disk not found\n");
             keDie();
         }
 
@@ -1870,7 +1891,7 @@ static int __ata_initialize(int ataflag)
         // Head of list
         tmp = (struct ata_device_d *) ready_queue_dev;
         if ((void*) tmp == NULL)
-            panic("Head is missing");
+            panic("DDINIT_ata: Head is missing");
         //if (tmp->magic != 1234)
             //panic("Head magic is missing");
         while (1)
@@ -1884,7 +1905,7 @@ static int __ata_initialize(int ataflag)
                 tmp->dev_channel == ATACurrentPort.g_current_ide_channel &&
                 tmp->dev_num     == ATACurrentPort.g_current_ide_device )
             {
-                printk("ata.c: Valid boot device\n");
+                printk("DDINIT_ata: Valid boot device\n");
                 //while(1){}
 
                 ____boot____disk->ata_device = tmp;
@@ -1900,7 +1921,7 @@ static int __ata_initialize(int ataflag)
         //printk("Invalid boot device\n");
         //while(1){}
 
-        panic("ata.c: Invalid boot device\n");
+        panic("DDINIT_ata: Invalid boot device\n");
 
         // Ok
         //Status = 0;
@@ -1913,7 +1934,7 @@ static int __ata_initialize(int ataflag)
     if (ControllerType == STORAGE_CONTROLLER_MODE_RAID)
     {
         // #debug
-        printk ("__ata_initialize: [RAID] Unsupported type\n");
+        printk ("DDINIT_ata: [RAID] Unsupported type\n");
         die();
         while (1){
         };
@@ -1932,7 +1953,7 @@ static int __ata_initialize(int ataflag)
 
     if (ControllerType == STORAGE_CONTROLLER_MODE_AHCI)
     {
-        printk ("__ata_initialize: [AHCI] Unsupported type\n");
+        printk ("DDINIT_ata: [AHCI] Unsupported type\n");
         while(1){}
         Status = (int) -1;
         goto fail;
@@ -1943,7 +1964,7 @@ static int __ata_initialize(int ataflag)
 
     if (ControllerType == STORAGE_CONTROLLER_MODE_UNKNOWN)
     {
-        printk ("__ata_initialize: [UNKNOWN] Unsupported type\n");
+        printk ("DDINIT_ata: [UNKNOWN] Unsupported type\n");
         while(1){}
         Status = (int) -1;
         goto fail;
@@ -1952,10 +1973,10 @@ static int __ata_initialize(int ataflag)
 // ==============================================
 // Not ATA, Not RAID, nor AHCI.
     Status = (int) -1;
-    printk("__ata_initialize: ATA, RAID or AHCI were not found\n");
+    printk("DDINIT_ata: ATA, RAID or AHCI were not found\n");
 
 fail:
-    printk ("__ata_initialize: fail\n");
+    printk ("DDINIT_ata: fail\n");
     return -1;
     //return (int) Status;
 
@@ -1972,73 +1993,6 @@ done:
     // Driver status
     g_ata_driver_initialized = TRUE;
     StorageController.initialized = TRUE;
-
-    return (int) Status;
-}
-
-//
-// $
-// INITIALIZATION
-//
-
-//----------------------------------------------
-//--
-
-// DDINIT_ata:
-// Device driver initialization.
-// Rotina de diálogo com o driver ATA. 
-// #importante
-// Nessa hora ja temos as estruturas de disk e volume inicializadas.
-// entao as estruturas usadas pelo driver ata, pode
-// se registrar em disk ou volume.
-// msg:
-// 1 = Initialize the driver.
-// 2 = Register the driver.
-// ...
-
-// IN: ???
-int 
-DDINIT_ata ( 
-    int msg, 
-    unsigned long long1 )
-{
-// Called by storageInitialize() in storage.c.
-// Do some ata routine given the operation number.
-// Probably the kernel already have a list of found 
-// PCI devices at this time, and we're gonna use this list.
-
-    int Status = 1;  // Error
-
-    PROGRESS("DDINIT_ata:\n");
-
-    switch (msg)
-    {
-        // ATAMSG_INITIALIZE
-        // Initialize driver.
-        // ata.c
-        case 1:
-            //debug_print("init_ata: Initialize ata support\n");
-            if (long1 == FORCEPIO){
-                debug_print("ATA in PIO mode\n");
-            }
-            // IN: forcepio?
-            Status = (int) __ata_initialize((int) long1);
-            // We can't live without this at the moment.
-            if (Status<0){
-                panic("DDINIT_ata: ata_initialize failed\n");
-            }
-            return (int) Status;
-            break;
-
-        //ATAMSG_REGISTER
-        //registra o driver. 
-        //case 2:
-        //    break;
-
-        default:
-            panic("DDINIT_ata: Unsupported service\n");
-            break;
-    };
 
     return (int) Status;
 }

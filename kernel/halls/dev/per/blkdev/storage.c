@@ -1612,17 +1612,88 @@ int storageInitialize(void)
     __disk_init();
     __volume_init();
 
-// =====================================
-// hw: Initializat ata device driver
-// see: ata.c
-// IN: msg, data1.
-// msg:
-// 1 = Initialize the driver
-// 2 = Register the driver
-// ...
-// FORCEPIO - Select PIO mode as standard.
 
-    DDINIT_ata( 1, FORCEPIO );
+    int Status = -1;  //error
+    int Value = -1;
+
+
+// =====================================
+// #todo
+// Let's know what is the controller we have,
+// and than call the right initialization hook for them.
+
+    struct pci_device_d *PCIDeviceStorage;
+// pci device.
+    PCIDeviceStorage = 
+        (struct pci_device_d *) scan_pci_device_list2 ( 
+                                    (unsigned char) PCI_CLASSCODE_MASS, 
+                                    (unsigned char) PCI_SUBCLASS_IDE );
+
+    if ((void *) PCIDeviceStorage == NULL){
+        printk("storageInitialize: PCIDeviceStorage\n");
+        Status = (int) -1;
+        goto fail;
+    }
+    if ( PCIDeviceStorage->used != TRUE || PCIDeviceStorage->magic != 1234 ){
+        printk ("storageInitialize: PCIDeviceStorage validation\n");
+        Status = (int) -1;
+        goto fail;
+    }
+
+
+    printk("Getting PCI into for PCIDeviceStorage\n");
+    Value = 
+        (unsigned long) storagePCISetupMassStorageController(
+            (struct pci_device_d*) PCIDeviceStorage 
+        );
+
+    if (Value == PCI_MSG_ERROR){
+        printk ("storageInitialize: Error Driver [%x]\n", Value );
+        Status = (int) -1;
+        goto fail;
+    }
+
+    // #ps:
+    // 'PCIDeviceStorage' provides us the vendor and device id.
+    // The device id will tell us what is the device driver 
+    // we need to load or initialize.
+    // But for now we have only one generic ata device driver in ata/.
+
+// At this moment we already know the controller type.
+// Thanks to storagePCISetupMassStorageController that
+// setted up this variable for us.
+
+    uint8_t ControllerType = StorageController.controller_type;
+
+    switch (ControllerType){
+        
+        // Controller type: ATA
+        case STORAGE_CONTROLLER_MODE_ATA:
+           // FORCEPIO - Select PIO mode as standard.
+            DDINIT_ata( 
+                PCIDeviceStorage, 
+                STORAGE_CONTROLLER_MODE_ATA, 
+                FORCEPIO 
+            );
+            break;
+
+        // STORAGE_CONTROLLER_MODE_RAID
+
+        //case STORAGE_CONTROLLER_MODE_AHCI:
+            // See: ahci.c
+            //DDINIT_ahci();
+            //break;
+
+        // ...
+
+        //STORAGE_CONTROLLER_MODE_UNKNOWN
+
+        // Invalid
+        default:
+            panic("storageInitialize: Unsupported controller type #todo");
+            break;
+    }
+
 
 // =====================================
 
@@ -1630,7 +1701,7 @@ int storageInitialize(void)
 // Set the number of sectors in the boot disk.
 // It depends on the disk and ata initialization.
 // So, now we can do this.
-    int Status = FALSE;
+    //int Status = FALSE;
     Status = (int) storage_set_total_lba_for_boot_disk();
     if (Status != TRUE){
         printk ("storageInitialize: storage_set_total_lba_for_boot_disk fail\n"); 
@@ -1644,5 +1715,9 @@ int storageInitialize(void)
     disk_initialize_mbr_info();
 
     return TRUE;
+
+fail:
+    panic("storageInitialize: fail\n");
+    return 0;
 }
 

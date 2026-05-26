@@ -642,12 +642,12 @@ void ata_show_device_list_info(void);
 void ata_show_ata_controller_info(void);
 void ata_show_ata_info_for_boot_disk(void);
 
-// Driver initialization
+
 int 
-DDINIT_ata ( 
-    int msg, 
-    unsigned long long1 );
+DDINIT_ata (
+    struct pci_device_d *pci_device_ata,
+    uint8_t controller_type,
+    unsigned long ataflag );;
 
 #endif    
-
 
