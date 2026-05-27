@@ -6,14 +6,21 @@
 
 ```
 Mission
-Gramado OS is a personal hobby project: a lightweight 64-bit graphical operating system built entirely from scratch for x86_64. It includes a custom bootloader, a monolithic kernel, a ring-3 display server (compositor), client-side GUI applications, and basic POSIX-like tools. The project exists as a hands-on exploration of operating system design, graphics, and low-level systems programming.
+Gramado OS is a personal hobby project: a lightweight 64-bit graphical operating system 
+built entirely from scratch for x86_64. It includes a custom bootloader, a monolithic 
+kernel, a ring-3 display server (compositor), client-side GUI applications, and basic 
+POSIX-like tools. The project exists as a hands-on exploration of operating system design, 
+graphics, and low-level systems programming. 
 ```
 
 ```
 Vision
-To evolve Gramado OS into a capable, stable, and self-contained hobby operating system where the existing components are continuously improved, featuring a functional virtual terminal for running POSIX commands, and the ability to host simple servers such as file servers, telnet servers, and web servers — enabling learning, experimentation, and real-world usage by a single developer and contributors.
+To evolve Gramado OS into a capable, stable, and self-contained hobby operating system 
+where the existing components are continuously improved, featuring a functional virtual 
+terminal for running POSIX commands, and the ability to host simple servers such as file 
+servers, telnet servers, and web servers — enabling learning, experimentation, and 
+real-world usage by a single developer and contributors. 
 ```
-
 
 ## System componetents
 
