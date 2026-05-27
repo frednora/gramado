@@ -171,7 +171,6 @@ struct deferred_d
 // The scheduler will do this job.
     int exit_in_progress;
     int exit_code;  // Reason to close the thread
-
 };
 
 
@@ -243,7 +242,7 @@ typedef enum {
 
 // The thread was create, but the structure is not 
 // fully initialized yet.
-    THREAD_STATE_CREATED,
+    THREAD_STATE_CREATED,  // 0
 
 // Earth states (lifecycle-related states)
     INITIALIZED,  // 1 - The context and parameters were created.
@@ -255,7 +254,12 @@ typedef enum {
     READY,        // 5 - Thread is ready to run again.
     RUNNING,      // 6 - Thread is currently running.
     WAITING,      // 7 - Thread is waiting.
-    BLOCKED       // 8 - Thread is blocked by an event.
+    BLOCKED,      // 8 - Thread is blocked by an event.
+
+// The thread is not running. 
+// The structure was not deleted, waiting for reuse.
+    THREAD_STATE_WAITING_FOR_REUSE  // 9
+
 } thread_state_t;
 
 // The thread structure

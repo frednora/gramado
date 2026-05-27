@@ -98,22 +98,17 @@ typedef enum {
     PROCESS_TYPE_NORMAL   // Low priority
 }process_type_t;
 
-/*
- * process_state_t
- *     Status de um processo.
- *     @todo: Pode-se usar mais status.
- *            como estado de transi��o.
- *  Os status de um processo s�o diferentes do status de uma thread.
- */ 
-// canonical.
+// The possible states for a process or a process structure.
+// #ps: This is a work in progress.
 typedef enum {
-    PROCESS_CREATED,
-    PROCESS_INITIALIZED,
-    PROCESS_RUNNING,
-    PROCESS_BLOCKED,
-    PROCESS_TERMINATED,
-    PROCESS_IN_MEMORY,        //O processo est� carregado na mem�ria.
-    PROCESS_OUT_OF_MEMORY,    //O processo n�o est� carregado na mem�ria.
+    PROCESS_CREATED,      // 0
+    PROCESS_INITIALIZED,  // 1
+    PROCESS_RUNNING,      // 2
+    PROCESS_BLOCKED,      // 3
+    PROCESS_TERMINATED,   // 4
+    PROCESS_IN_MEMORY,        //  5
+    PROCESS_OUT_OF_MEMORY,    //  6
+    PROCESS_STATE_WAITING_FOR_REUSE   // 7 The structure can be reused  
     // ...
 }process_state_t;
 

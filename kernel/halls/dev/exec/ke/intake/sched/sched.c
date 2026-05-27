@@ -731,8 +731,9 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                         // se ele estiver sinalizado como exit in progress
                         // e ela for a thread flower dele.
                         TmpThread->state = ZOMBIE;
+                        TmpThread->Deferred.exit_in_progress = FALSE;
 
-                        // Invalidate the foreground thread variable.
+                        // Invalidate the foreground thread variable
                         if (TmpThread->tid == foreground_thread)
                             foreground_thread = -1;
                         
@@ -837,9 +838,29 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                 // if (t->wait4tid == TmpThread->tid)
                 //     waike up (t) 
 
-                TmpThread->used = FALSE;
-                TmpThread->magic = 0;
-                TmpThread = NULL;
+                // #delete
+                //TmpThread->used = FALSE;
+                //TmpThread->magic = 0;
+                //TmpThread = NULL;
+
+                // #test: Reusing it
+                // #todo: Create a method for this.
+                TmpThread->kobj.is_available_for_reuse = TRUE;
+                TmpThread->state = THREAD_STATE_WAITING_FOR_REUSE;
+                TmpThread->used = TRUE;
+                TmpThread->magic = 4321;  // Reuse state
+
+                // #todo: We can do the same for the process.
+                // #test: Reusing it
+                // #todo: Create a method for this.
+                // #ps: It needs to be a valid pointer for te.
+                if ((void*) TmpThread->te != NULL)
+                {
+                    TmpThread->te->kobj.is_available_for_reuse = TRUE;
+                    TmpThread->te->state = PROCESS_STATE_WAITING_FOR_REUSE;
+                    TmpThread->te->used = TRUE;
+                    TmpThread->te->magic = 4321;  // Reuse state
+                }
 
                 continue;
             }

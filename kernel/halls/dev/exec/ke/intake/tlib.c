@@ -21,6 +21,10 @@ void show_slot(tid_t tid)
         printk ("show_slot: t\n");
         goto fail;
     }
+    if (t->used != TRUE){
+        printk ("show_slot: Not in use\n");
+        goto fail;
+    }
 
 // Show one slot
     printk ("\n");
@@ -85,8 +89,7 @@ void show_slots(void)
     {
         t = (void *) threadList[i];
         if ( (void *) t != NULL && 
-             t->used == TRUE && 
-             t->magic == 1234 )
+             t->used == TRUE )
         {
             show_slot(t->tid);
         }

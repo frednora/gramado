@@ -25,8 +25,7 @@ void show_process_information (void)
         p = (void *) teList[i];
 
         if ( (void *) p != NULL && 
-             p->used == TRUE && 
-             p->magic == 1234 )
+             p->used == TRUE )
         {
             //printk("\n");
             printk("\n=====================================\n");

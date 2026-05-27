@@ -952,8 +952,11 @@ fail:
 }
 
 // Exit current thread
+// #todo: cpuid as parameter
 int exit_current_thread(void)
 {
+
+    // #todo: cpuid as parameter
     tid_t tid = lapic_info[0].current_tid;
 
     if (tid < 0)

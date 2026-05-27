@@ -153,6 +153,12 @@ struct kobject_d
     object_class_t _class;
     unsigned int flags;  // 32 bit
     // ...
+
+// The structure represented by this kobject_d
+// is now in a state that it can simply be reused,
+// we dont need to alocate memory, we can simply 
+// clear the structure and reuse it.
+    int is_available_for_reuse;
 };
 
 

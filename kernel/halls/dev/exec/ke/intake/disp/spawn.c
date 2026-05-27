@@ -218,7 +218,6 @@ __spawn_enter_usermode(
     unsigned long RING3_RSP  = (unsigned long) rsp3_va;
     int fOption1 = TRUE;
 
-
 // Necessary
     if (eoi == TRUE)
     {
@@ -422,6 +421,8 @@ static void __spawn_thread_by_tid_imp(tid_t tid)
 
 // Destrava o mecanismo de taskswitch.
 // Destrava o Scheduler.
+// #ps: It's done at the system initialization
+// We dont need to do it again. 
     set_taskswitch_status(UNLOCKED);
     scheduler_unlock(); 
 
@@ -453,6 +454,18 @@ static void __spawn_thread_by_tid_imp(tid_t tid)
     // IN: pid, core id
     set_current_process(cur_teid, 0);
 
+    struct te_d *p; // the process structure
+    p = (struct te_d *) teList[cur_teid];
+    if ((void*)p != NULL)
+    {
+        if (p->magic == 1234)
+        {
+            p->state = PROCESS_RUNNING;
+            // ...
+        }
+    }
+
+// -------------------------------------
 
 // Set current thread for this core
 // IN: tid, core id.
