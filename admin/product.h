@@ -70,8 +70,5 @@
 #define MACHINE_TYPE_STRING  "x86_64"
 
 
-extern int g_product_type; 
-
-
 #endif    
 

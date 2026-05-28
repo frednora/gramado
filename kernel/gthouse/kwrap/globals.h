@@ -5,6 +5,13 @@
 #ifndef __KMAIN_GLOBALS_H
 #define __KMAIN_GLOBALS_H    1
 
+
+// See:
+// globals.c
+// admin/product.h
+extern int g_product_type; 
+
+
 // Are we using the GUI or not?
 #define GUI_ON   1
 #define GUI_OFF  0
