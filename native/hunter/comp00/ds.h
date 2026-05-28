@@ -7,6 +7,13 @@
 extern int os_mode;      // GRAMADO_P1 ...
 extern int server_mode;  // DEMO ...
 
+
+#include "../../../admin/product.h"
+#include "../../../admin/version.h"
+#include "../../../admin/utsname.h"
+#include "../../../admin/u.h"
+
+
 // rtl
 #include <types.h>
 #include <sys/types.h>

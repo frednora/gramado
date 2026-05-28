@@ -28,7 +28,7 @@ BASE = $(DISTROS)/base00
 
 __DEP_L2 = native
 # Compositor / Display servers
-L2_COMP     = $(__DEP_L2)/hunter/comp
+L2_COMP     = $(__DEP_L2)/hunter
 # Client-side GUI applications
 L2_WINSHELL = $(__DEP_L2)/ifarmer/winshell
 
