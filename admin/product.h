@@ -13,12 +13,22 @@
 #define PRODUCT_NAME_LONG   "Gramado OS"
 #define PRODUCT_NAME  PRODUCT_NAME_LONG
 
+
+//
+//  == Product realm ==========================================
+//
+
+
+#define PR_DATA_CENTER  1000
+#define PR_EDGE         2000
+// Alias
+#define PR_CLOUD    PR_DATA_CENTER
+
+
 //
 //  == Product type ==========================================
 //
 
-
-// --------------------------------------------------------
 
 // Baremetal hypervisor.
 #define PT_GRAMADO_HYPERVISOR           1000
