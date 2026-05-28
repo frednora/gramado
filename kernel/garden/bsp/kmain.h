@@ -5,6 +5,11 @@
 #ifndef __KMAIN_H
 #define __KMAIN_H    1
 
+
+// see: kmain.c
+extern struct admin_utsname_d  kernel_utsname;
+
+
 // Saving the bootblock address passed by the blgram.
 extern unsigned long saved_bootblock_base;
 

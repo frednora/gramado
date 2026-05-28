@@ -6,7 +6,8 @@
 // for the 'drivers' like this to receive and response messages.
 // And initialize/finalize.
 
-#include "../inc/init.h"
+#include "../include/init.h"
+#include "initsrv.h"
 
 int isTimeToQuitServer = FALSE;
 

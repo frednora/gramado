@@ -2,8 +2,8 @@
 // Product configuration.
 // Created by Fred Nora.
 
-#ifndef __PRODUCT_PRODUCT_H
-#define __PRODUCT_PRODUCT_H    1
+#ifndef __ADMIN_PRODUCT_H
+#define __ADMIN_PRODUCT_H    1
 
 //
 //  == Product name ==========================================

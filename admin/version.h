@@ -1,12 +1,10 @@
-/*
- version.h
- Product configuration.
- Here is where we update the version and the build number.
- Created by Fred Nora.
-*/
+// version.h
+// Product configuration.
+// Here is where we update the version and the build number.
+// Created by Fred Nora.
 
-#ifndef __PRODUCT_VERSION_H
-#define __PRODUCT_VERSION_H  1
+#ifndef __ADMIN_VERSION_H
+#define __ADMIN_VERSION_H  1
 
 // Current build number
 // Updated by the builder

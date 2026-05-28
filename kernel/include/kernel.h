@@ -9,16 +9,15 @@
 // Order:
 // configuration, libc, devices ...
 
-//
-// Configuration
-//
 
-#include "config/product.h"  // Product type
-#include "config/version.h"  // Product version
+// == OS Configuration ========
+#include "../../admin/product.h"    // Product type
+#include "../../admin/version.h"    // Product version
+#include "../../admin/utsname.h"    // System and machine
+#include "../../admin/u.h"          // System, machine and user.
 
-#include "config/config.h"   // Select components
-#include "config/utsname.h"  // System and machine
-#include "config/u.h"        // System, machine and user.
+// == kernel Configuration ========
+#include "config/config.h"    // Select components
 
 // -------
 
@@ -80,6 +79,7 @@
 // libk/
 // kernel-side support for libc implementation.
 
+#include "../gthouse/libk/utsname.h"
 #include "../gthouse/libk/ktypes.h"
 #include "../gthouse/libk/ktypes2.h"
 #include "../gthouse/libk/ascii.h"

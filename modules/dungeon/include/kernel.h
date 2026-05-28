@@ -5,6 +5,12 @@
 #define __KERNEL_H  1
 
 
+#include "../../../admin/product.h"
+#include "../../../admin/version.h"
+#include "../../../admin/utsname.h"
+#include "../../../admin/u.h"
+
+
 #include "config.h"
 
 #include "../x86_64/head.h"

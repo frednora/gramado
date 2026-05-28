@@ -74,3 +74,8 @@ clean:
 	-rm *.o
 	-rm INIT.BIN 
 
+clean-all:
+	-rm *.o
+	-rm bin/*.BIN
+	-rm INIT.BIN 
+

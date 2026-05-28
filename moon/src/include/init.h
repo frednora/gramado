@@ -5,6 +5,11 @@
 #ifndef __INIT_H
 #define __INIT_H    1
 
+#include "../../../admin/product.h"
+#include "../../../admin/version.h"
+#include "../../../admin/utsname.h"
+#include "../../../admin/u.h"
+
 #include <types.h>
 #include <string.h>
 #include <stdio.h>
@@ -15,8 +20,10 @@
 #include "config.h"
 #include "endpoint.h"
 
-// Internal library (Creating a template)
-#include "../initsrv/initsrv.h"
+// Used when processing the control keys.
+#include "ascii.h"
+
+
 
 
 #define EnvironmentWinuCore   4000

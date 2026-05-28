@@ -9,9 +9,9 @@
 // receving messages from the kernel.
 
 
-#include "inc/init.h"
-// Used when processing the control keys.
-#include "inc/ascii.h"
+#include "include/init.h"
+#include "initsrv/initsrv.h"
+
 
 // Run the event loop. 
 // Getting input from the message queue in the control thread.

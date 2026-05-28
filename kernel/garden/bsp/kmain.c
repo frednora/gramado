@@ -33,8 +33,8 @@
 
 #include <kernel.h>
 
-// see: utsname.h
-struct utsname  kernel_utsname;
+// see: kmain.h
+struct admin_utsname_d  kernel_utsname;
 
 
 typedef enum {

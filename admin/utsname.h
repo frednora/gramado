@@ -2,8 +2,8 @@
 // 'UNIX Time-Sharing' standard variables.
 // Created by Fred Nora.
 
-#ifndef __GRAMADO_UTSNAME_H
-#define __GRAMADO_UTSNAME_H    1
+#ifndef __ADMIN_UTSNAME_H
+#define __ADMIN_UTSNAME_H    1
 
 
 #ifndef UTS_SYSNAME
@@ -20,11 +20,11 @@
 #endif
 
 
-#define _UTSNAME_LENGTH  65
+#define _UTSNAME_LENGTH    65  // 64+1
 
 /* Structure describing the system and machine.  */
 
-struct utsname_d { 
+struct admin_utsname_d { 
     char sysname[_UTSNAME_LENGTH]; 
     char nodename[_UTSNAME_LENGTH]; 
     char release[_UTSNAME_LENGTH]; 
@@ -32,10 +32,7 @@ struct utsname_d {
     char machine[_UTSNAME_LENGTH]; 
     char domainname[_UTSNAME_LENGTH]; 
 };
-#define utsname  utsname_d
 
-// see: kmain.c
-extern struct utsname  kernel_utsname;
 
 //The length of the arrays in a struct utsname is unspecified (see
 //NOTES); the fields are terminated by a null byte ('\0').
