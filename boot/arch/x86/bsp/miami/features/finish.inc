@@ -37,7 +37,7 @@ AFTER_DATA:
 
 ; Message: Boot Manager Splash screen. (banner)
 ; See: s2header.inc
-    mov si, msg_bm_splash
+    mov si, msg_bm_banner  ;HEADER
     call DisplayMessage
 
     ; #debug
@@ -80,6 +80,16 @@ AFTER_DATA:
 
 ;MyLoop00:
 
+    ; IN
+    ;mov ah, 01h     ; CONIN
+    ;int 21h         ; wait for key, AL = char
+
+    ; OUT
+    ;mov dl, al      ; copy char to DL
+    ;mov ah, 02h     ; CONOUT
+    ;int 21h         ; print char
+
+    ;; Only for DOS 1.25
     ;mov ah, 1      ; CONIN
     ;int 21h        ; read key into AL, also prints it
 
@@ -94,14 +104,35 @@ AFTER_DATA:
 
     ;jmp MyLoop00
 
+    ;call Io.WaitKey
+
+    ; Terminate program
+    ;mov ax, 4C00h    ; AH=4Ch, AL=00h (exit code 0)
+    ;int 21h          ; terminate program
+
+    ; Get DOS version
+    ;mov ah, 30h
+    ;int 21h
+    ; AX = 0200h → DOS 2.00
+    ; BH = 00h   → OEM number
+    ; BL = 00h   → version flag
+
+    ; If it is the version 2.00
+    ;cmp ax, 0x0200
+    ;je xxx_checkSig
+
+    ;mov dx, msg_DOLLAR_TERMINATED   ; DS:DX points to string
+    ;mov ah, 09h          ; DOS Print String
+    ;int 21h              ; call DOS service
+
     ;xor ax, ax 
     ;int 0x16
     ;int 0x19
 
-    ;Debug breakpoint.
-    ;cli
-    ;hlt
-    ;jmp $
+    ; Debug breakpoint
+    ; cli
+    ; hlt
+    ; jmp $
 ;--------------------------
 
 ;; PE signature for BL.BIN image.

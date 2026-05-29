@@ -29,8 +29,8 @@
 ;
 ;
 
-; Same as MS-DOS 1.25
-%DEFINE BOOTMANAGER_VER  '1.25'
+; Same as MS-DOS 2.00
+%DEFINE BOOTMANAGER_VER  '2.00+'
 ;; ...
 
 ;------------------------------------
@@ -195,13 +195,15 @@ g_Fat16BPB  dd 0    ;Para rotinas de 32 bit.
 ;; == Messages =====================================================
 ;;
 
-; Splash
-; Change this name to 'msg_bm_banner'
-msg_bm_splash:
-    ;db 'Gramado Boot Manager ', 
-    ;db 'version ', BOOTMANAGER_VER, 13, 10, 0 
-    db 'Gramado Boot Manager (MIAMI DOS) ', 
-    db 'version ', BOOTMANAGER_VER, 13, 10, 0 
+
+; Banner
+HEADER:
+msg_bm_banner:
+    DB 13, 10
+    DB "Gramado Boot Manager (MIAMI DOS) version "
+    DB BOOTMANAGER_VER,
+    DB 13, 10, 0 
+
 
 msg_s2_init: 
     db 13, 10, "s2: Initializing stage 2", 13, 10, 0
@@ -300,6 +302,11 @@ msg_s2fat16_step3:
     db '~3', 13, 10, 0
 msg_s2fat16_step4:
     db '~4', 13, 10, 0
+
+
+
+msg_DOLLAR_TERMINATED:
+    db 'Hello DOS world!$', 0
 
 ;
 ; End

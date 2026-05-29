@@ -1,6 +1,6 @@
 ;
 ; File: s2lib.inc
-;     Funções utilizadas pelo Stage 2.
+;     Funï¿½ï¿½es utilizadas pelo Stage 2.
 ; 2015 - Created by Fred Nora.
 ; Credits: MikeOS. (License: BSD).
 ;
@@ -129,10 +129,32 @@ PoeString:
     jmp DisplayMessage
     jmp $
 
+
+; DisplayMessageDollar:
+;   Prints a $-terminated string (DOS 09h style)
+DisplayMessageDollar:
+    mov ah, 0x0E        ; BIOS teletype output
+    mov bh, 0x00
+    mov bl, 0x07
+.nextChar:
+    lodsb               ; load next char from DS:SI into AL
+    cmp al, '$'         ; check for DOS terminator
+    je .end
+    int 0x10            ; print char
+    jmp .nextChar
+.end:
+    ret
+
+;; alias.
+PoeStringDollar:
+    jmp DisplayMessageDollar
+    jmp $
+
+
 ;-----------------------------------
 ; String:
 ;     Rotinas de string.
-;     Variável global.
+;     Variï¿½vel global.
 ;++
 String:
 
@@ -373,7 +395,7 @@ Window:
 	popa
 	ret
 
-;barra de título.
+;barra de tï¿½tulo.
 .TitleBar:
 	mov dh, 0
 	mov dl, 0

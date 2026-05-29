@@ -30,6 +30,16 @@ DOS125_IRET:
 ; int21h_offset:
 int21h_handler:
 
+; Classic DOS programs: They set AH=function_number before int 21h.
+; Function number in CL: DOS 1.25’s dispatcher expected the service index in CL.
+; Function number in AH: DOS 2.00 standardized on AH.
+
+; These early calls remained available in DOS 2.00+
+; CONIN (AH=01h) → Read character from keyboard, echoed.
+; CONOUT (AH=02h) → Write character to console.
+; Print String (AH=09h) → Output $‑terminated string.
+; Terminate Program (AH=00h in DOS 1.x, later standardized as AH=4Ch).
+
     ;; #TODO: PUSH AND POP THE REGISTERS USING THE SAME
     ;; ROUTINE FOUND IN DOS 1.25
 
@@ -48,11 +58,14 @@ int21h_handler:
     ;PUSH    AX              ;Save segment
     ;PUSH  WORD [.TEMP]  ;CS:[TEMP]       ;Stack now ordered as if INT had been used
 
-; Limits
-    CMP     CL, DOS125_MAXCALL     ;This entry point doesn't get as many calls
-    JA      DOS125_BADCALL
+    ; Limits in DOS 1.25
+    ;CMP     CL, DOS125_MAXCALL     ;This entry point doesn't get as many calls
+    ;JA      DOS125_BADCALL
+    ;MOV     AH, CL
 
-    MOV     AH, CL
+    ; Limits in DOS 2.00 and above
+    ;CMP AH, DOS125_MAXCALL
+    ;JA DOS125_BAD_CALL
 
 .SAVREGS:
 ; --------------------------------------
@@ -86,7 +99,46 @@ int21h_handler:
         MOV     SS, SP
 
 
+; Calling Convention (DOS 2.00+)
+; AH = 4Ch → Terminate Program.
+; AL = exit code → returned to the parent process.
+; Effect: Ends the current program, cleans up, and passes AL back.
+
+    CMP AH, 0x4C ; terminate program
+    JE .TERMINATE_PROGRAM
+
+    CMP AH, 0x30 ; Get DOS version
+    JE .GET_DOS_VERSION
+
+    ;CMP AH, 0x4C ; terminate program
+    ;JE .TERMINATE_PROGRAM
+
+    JMP .REDISP
+
+; Calling Convention (DOS 2.00+)
+; AH = 4Ch → Terminate Program.
+; AL = exit code → returned to the parent process.
+; Effect: Ends the current program, cleans up, and passes AL back.
+.TERMINATE_PROGRAM:
+    ; Nothig for now
+    XOR AX, AX
+    JMP .LEAVE
+
+; AH=30h
+.GET_DOS_VERSION:
+    mov ax, 0200h   ; DOS version 2.00 (AH=02, AL=00)
+    ;mov ax, 0300h
+    ;mov ax, 0400h
+    MOV WORD [.RETURN_VALUE], AX
+    mov bh, 00h     ; OEM number
+    mov bl, 00h     ; version flag
+    MOV WORD [.TEMP], BX
+    JMP .LEAVE
+
+; ...
+
 .REDISP:
+
 
 ; Index calculation  
 ; You already load AH = CL (the function number).
@@ -95,6 +147,7 @@ int21h_handler:
         ;MOV     SP, OFFSET DOSGROUP:IOSTACK
         ;STI                     ;Stack OK now
     
+        ;XOR     BX, BX
         MOV     BL, AH  ; function number
         MOV     BH, 0   ; clear high byte
         SHL     BX, 1   ; BX = index * 2
@@ -154,9 +207,17 @@ int21h_handler:
         POP     DS
         POP     ES
 
+        ; AX
+        MOV AX, WORD [.RETURN_VALUE]
+
+        ; BX
+        MOV BX, WORD [.TEMP]
+
         ;STI
         IRET
 
+.RETURN_VALUE:
+    DW 0 
 .TEMP:
     DW 0 
 .SPSAVE:  DW 0
@@ -228,7 +289,7 @@ DOS125_LIST:            ;5
 DOS125_RAWIO:
 DOS125_RAWINP:
 ;DOS125_IN:
-DOS125_PRTBUF:
+;DOS125_PRTBUF:
 DOS125_BUFIN:           ;10
 DOS125_CONSTAT:
 DOS125_FLUSHKB:
@@ -279,9 +340,10 @@ DOS125_ABORT:
 
 DOS125_CONIN:  ;System call 1
     CALL    DOS125_IN
-    PUSH    AX
-    CALL    DOS125_OUT
-    POP     AX
+    ; #ps: In DOS 2.00+ it does not echo the char.
+    ;PUSH    AX
+    ;CALL    DOS125_OUT
+    ;POP     AX
     RET
 
 ; The CONIN loop depended on the Zero Flag (ZF) to indicate 
@@ -291,7 +353,7 @@ DOS125_CONIN:  ;System call 1
 DOS125_IN:     ;System call 8
     CALL    DOS125_INCHK
     ;JZ      DOS125_IN
-RET29:  
+;RET29:  
     RET
 
 
@@ -416,6 +478,17 @@ DOS125_CTRLOUT:
     ; TODO: move cursor down
     ret
 
+
+DOS125_PRTBUF: ;System call 9
+        MOV     SI, DX
+;DOS125_OUTSTR:
+        ;LODSB
+        ;CMP     AL, "$"
+        ;JZ      RET20
+        ;CALL    DOS125_OUT
+        ;JMP     SHORT DOS125_OUTSTR
+    CALL DisplayMessageDollar
+    RET
 
 ; -----------------------------------------------------------
 int21h_message00:
