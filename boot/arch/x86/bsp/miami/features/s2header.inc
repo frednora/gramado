@@ -29,10 +29,9 @@
 ;
 ;
 
-; Defini��es usadas apenas em 16bit.
-; #bugbug: Isso deveria ficar num arquivo mais global.
-%DEFINE BOOTMANAGER_VER  '1.1'
-;;...
+; Same as MS-DOS 1.25
+%DEFINE BOOTMANAGER_VER  '1.25'
+;; ...
 
 ;------------------------------------
 
@@ -199,7 +198,9 @@ g_Fat16BPB  dd 0    ;Para rotinas de 32 bit.
 ; Splash
 ; Change this name to 'msg_bm_banner'
 msg_bm_splash:
-    db 'Gramado Boot Manager ', 
+    ;db 'Gramado Boot Manager ', 
+    ;db 'version ', BOOTMANAGER_VER, 13, 10, 0 
+    db 'Gramado Boot Manager (MIAMI DOS) ', 
     db 'version ', BOOTMANAGER_VER, 13, 10, 0 
 
 msg_s2_init: 

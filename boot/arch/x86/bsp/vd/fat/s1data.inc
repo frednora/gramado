@@ -142,7 +142,7 @@ ImageName db  "BMGRAM  BIN", 0x0D, 0x0A, 0x00
 ; Miami project:
 ; It is a new version for my standard BM, but more MS-DOS compatible if possible.
 
-; ImageName db  "MIAMI   BIN", 0x0D, 0x0A, 0x00
+;ImageName db  "MIAMI   BIN", 0x0D, 0x0A, 0x00
 
 
 ; ---------------------------

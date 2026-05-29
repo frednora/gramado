@@ -45,9 +45,10 @@ AFTER_DATA:
 
 ;--------------------------
 ; Setup the interrupt 0x21
+; See: int21h.inc
 ; IN:
-; DX = OFFSET
-; DS = SEGMENT
+;   DX = OFFSET
+;   DS = SEGMENT
     mov dx, int21h_handler
     push ds
     mov ax, cs 
@@ -57,7 +58,41 @@ AFTER_DATA:
     CALL SETVECT
     pop ds 
 
-    int 0x21
+; -------------------------------------
+; Test 1
+
+    ;int 0x21
+
+; -------------------------------------
+; Test 2 - Hi!
+
+    mov dl, 'H'   ; character to print
+    mov ah, 2     ; DOS function 2 = CONOUT
+    int 21h
+
+    mov dl, 'i'
+    mov ah, 2
+    int 21h
+
+    mov dl, '!'
+    mov ah, 2
+    int 21h
+
+;MyLoop00:
+
+    ;mov ah, 1      ; CONIN
+    ;int 21h        ; read key into AL, also prints it
+
+    ; AL now contains the character
+    ; You can use it for further logic, e.g. exit on 'q'
+    ;cmp al, 'q'
+    ;je done
+
+    ;mov dl, al  ;; the char we get
+    ;mov ah, 2
+    ;int 21h
+
+    ;jmp MyLoop00
 
     ;xor ax, ax 
     ;int 0x16
