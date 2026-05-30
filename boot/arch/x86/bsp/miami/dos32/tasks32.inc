@@ -1,11 +1,7 @@
-;
-; Arquivo: tasks.inc
-;
+; Arquivo: tasks32.inc
 ; Descrição:
 ;     Theres no tasks on boot manager.
-;
 ; Versão 1.0, 2015.
-;
 
 ;#
 ;# task1
@@ -26,5 +22,6 @@ task1:
 	jmp task1
 
 ;
-;fim.
+; End
 ;
+

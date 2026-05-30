@@ -1,32 +1,29 @@
-;
 ; File: header32.inc 
-;
-; Descrição:
+; Descriï¿½ï¿½o:
 ;     Header principal do Boot Manager.
 ;     Header para a parte de 32bit.
 ;
 ; Importante:
-; O arquivo main.asm faz uma sequencia de inclusões de módulos
-; que compõem o Boot manager, começando pelos módulos de 16bit
-; e depois os módulos de 32bit. O arquivo header32.inc deve ficar no 
-; início das inclusões dos módulos de 32bit, para que os módulos
+; O arquivo main.asm faz uma sequencia de inclusï¿½es de mï¿½dulos
+; que compï¿½em o Boot manager, comeï¿½ando pelos mï¿½dulos de 16bit
+; e depois os mï¿½dulos de 32bit. O arquivo header32.inc deve ficar no 
+; inï¿½cio das inclusï¿½es dos mï¿½dulos de 32bit, para que os mï¿½dulos
 ; de 32bit possam utiliza-lo adequadamente.
 ;
 ; Sobre os arquivos system.cnf e init.cnf:
-;     Os arquivos system.cnf e init.cnf são carregados em 0x00009000.
-;     Variáveis dentro do arquivo system.cnf.
+;     Os arquivos system.cnf e init.cnf sï¿½o carregados em 0x00009000.
+;     Variï¿½veis dentro do arquivo system.cnf.
 ;     Address = 0x00009000, logo apos o bootmanager ( 0xe00 ~ 0x8000 ) 31,5 kb.
 ;
 ; 2015 - Created by Fred Nora.
-;
 
 
 ;
-; Defines.
+; Defines
 ;
 
 
-;Definições usadas apenas em 32bit.
+;Definiï¿½ï¿½es usadas apenas em 32bit.
 %DEFINE BOOT_VER          '0.1'
 %DEFINE BOOT_MANAGER_VER  '0.1'
 %DEFINE SHELL_VER         '0.1'
@@ -77,14 +74,12 @@ USER_DIR         EQU 0x00400000    ;User dir.
 
 ;; LBA
 Boot_Fat  equ  67   ; FAT.
-Root_Dir  equ  559  ; Diretório raiz.
+Root_Dir  equ  559  ; Diretï¿½rio raiz.
 ;; ...
 
 
-
-
 ;
-; Variáveis.
+; Vars
 ;
 
 ;reinicia algum modo de 32 bits.
@@ -95,7 +90,7 @@ restart32_status:
 current:  
   dd 0
 
-;deslocamento dentro da memória de video 
+;deslocamento dentro da memï¿½ria de video 
 scr_loc:    
   dd 0
 
@@ -104,18 +99,17 @@ g_cursor_x:  dd 0
 g_cursor_y:  dd 0
 
 
-
 ;
 ; File System support.
 ;
 
-;Endreço do início da entrada do volume atual.
+;Endreï¿½o do inï¿½cio da entrada do volume atual.
 g_current_volume_entry_address    dd 0    
-g_current_fat_address        dd 0    ;Endereço do início da fat atual.
+g_current_fat_address        dd 0    ;Endereï¿½o do inï¿½cio da fat atual.
 g_current_fat_lba            dd 0    
-g_current_directory_address  dd 0    ;Endereço do início do diretório atual.
+g_current_directory_address  dd 0    ;Endereï¿½o do inï¿½cio do diretï¿½rio atual.
 g_current_directory_lba      dd 0    
-g_current_dataarea_address   dd 0    ;Endereço do início da area de dados atual.
+g_current_dataarea_address   dd 0    ;Endereï¿½o do inï¿½cio da area de dados atual.
 g_current_dataarea_lba       dd 0
 
 ;SYSTEM  EQU 0x00009000  
@@ -143,19 +137,19 @@ g_system_SystemID           db "FAT16   "	 	;.SystemID:    db "FAT16   "
 
 
 ;
-; Variáveis dentro do arquivo init.cnf.
+; Variï¿½veis dentro do arquivo init.cnf.
 ;
 
 ;---------------------------------------
-; Observação: (#IMPORTANTE!!!)
-;     O Boot Loader apaga essas informações ao carregar    
-;     o Kernel nesse endereço físico.
+; Observaï¿½ï¿½o: (#IMPORTANTE!!!)
+;     O Boot Loader apaga essas informaï¿½ï¿½es ao carregar    
+;     o Kernel nesse endereï¿½o fï¿½sico.
 ;
 ;     @todo: 
-;         Se essas informações são configurações do
-;         sistema, é preciso encontrar um novo endereço pra elas.
-;         A não ser que esse metafile seja salvo em disco. Ai
-;         ele poderá ser aberto aqualquer hora, com endereço
+;         Se essas informaï¿½ï¿½es sï¿½o configuraï¿½ï¿½es do
+;         sistema, ï¿½ preciso encontrar um novo endereï¿½o pra elas.
+;         A nï¿½o ser que esse metafile seja salvo em disco. Ai
+;         ele poderï¿½ ser aberto aqualquer hora, com endereï¿½o
 ;         alocado dinamicamente.
 ;
 ;
@@ -163,9 +157,9 @@ g_system_SystemID           db "FAT16   "	 	;.SystemID:    db "FAT16   "
 ;INIT  EQU 0x00100000    
 ;principais	
 ;BOOT:
-g_init_modo            dd 0  ;.modo: dd 0  ;+0   modo de inicializção do boot loader.
+g_init_modo            dd 0  ;.modo: dd 0  ;+0   modo de inicializï¿½ï¿½o do boot loader.
 g_init_disco_atual     dd 0  ;.res2: dd 0  ;+4   numero do disco atual.
-g_init_particao_atual  dd 0  ;.res3: dd 0  ;+8   numero da partição atual.
+g_init_particao_atual  dd 0  ;.res3: dd 0  ;+8   numero da partiï¿½ï¿½o atual.
 g_init_bl_cluster      dd 0  ;.res4: dd 0  ;+12  bl.bin cluster inicial.
 g_init_bl_address      dd 0  ;.res5: dd 0  ;+16  bl.bin address.
 g_init_bl_entry_point  dd 0  ;.res6: dd 0  ;+20  bl.bin entrypoint.
@@ -202,9 +196,8 @@ g_y_resolution dw 0
 g_bpp          db 0
 
 
-
 ;;
-;; End.
+;; End
 ;;
 
 

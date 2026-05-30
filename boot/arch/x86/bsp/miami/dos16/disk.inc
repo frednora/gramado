@@ -395,7 +395,8 @@ bootmanagermsgCRLF      db  0x0D, 0x0A, 0x00
 ;---------------------------------------
 ;; #todo
 ;; Change some names here!
-bootmanagerOEM_ID             db "GRAMA-OS"
+;bootmanagerOEM_ID             db "GRAMA-OS"
+bootmanagerOEM_ID             db "MIAMIDOS"
 bootmanagerBytesPerSector     dw 0x0200
 bootmanagerSectorsPerCluster  db 1
 bootmanagerReservedSectors    dw 62
@@ -413,7 +414,8 @@ bootmanagerDriveNumber        db 0x80
 bootmanagerFlags              db 0x00
 bootmanagerSignature          db 0x29
 bootmanagerVolumeID           dd 0x980E63F5
-bootmanagerVolumeLabel        db "GRAMA  BMBM"
+;bootmanagerVolumeLabel        db "GRAMA  BMBM"
+bootmanagerVolumeLabel        db "MIAMI-DOS  "
 bootmanagerSystemID           db "FAT16   "
 
 ; Número de cilindros do disco.

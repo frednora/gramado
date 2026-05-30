@@ -1,16 +1,11 @@
-;
 ; Arquivo: stacks32.inc
-;
-; Descrição:
+; Descriï¿½ï¿½o:
 ;     Pilhas para o Boot Manager.
-;
-; Versão: 1.0, 2015, 2016.
-;
-
+; 2015, 2016 - Created by Fred Nora
 
 
 ;----------------------------------
-; Pilha genérica.
+; Pilha genï¿½rica.
 ;
     times 256 db 0
 	times 256 db 0
@@ -39,7 +34,7 @@ stack1_krn_ptr:
 	
 ;-----------------------------------
 ; Pilha da tarefa 0. 
-;    (@todo: Não é necessário no Boot Manager. Deletar isso)
+;    (@todo: Nï¿½o ï¿½ necessï¿½rio no Boot Manager. Deletar isso)
 ;
     times 256 db 0
     times 256 db 0
@@ -49,7 +44,7 @@ stack0_ptr:
 
 ;--------------------------------------
 ; Pilha da tarefa 1. 
-;     (@todo: Não é necessário no Boot Manager. Deletar isso)
+;     (@todo: Nï¿½o ï¿½ necessï¿½rio no Boot Manager. Deletar isso)
 ;
 	times 256 db 0
 	times 256 db 0
@@ -59,7 +54,7 @@ stack1_ptr:
 	
 ;-------------------------------------------
 ; Pilha da tarefa 0. 
-;     (@todo: Não é necessário no Boot Manager. Deletar isso)
+;     (@todo: Nï¿½o ï¿½ necessï¿½rio no Boot Manager. Deletar isso)
 ;
 	;times 256 db 0
 	;times 256 db 0
@@ -70,7 +65,7 @@ _task0_stack:
 	
 ;--------------------------------------------
 ; Pilha da tarefa 1. 
-;     (@todo: Não é necessário no Boot Manager. Deletar isso)
+;     (@todo: Nï¿½o ï¿½ necessï¿½rio no Boot Manager. Deletar isso)
 ;
 	;times 256 db 0
 	;times 256 db 0
@@ -81,7 +76,7 @@ _task1_stack:
 	
 ;-----------------------------------------------
 ; Pilha da tarefa 2. 
-;     (@todo: Não é necessário no Boot Manager. Deletar isso)
+;     (@todo: Nï¿½o ï¿½ necessï¿½rio no Boot Manager. Deletar isso)
 ;
 	;times 256 db 0
 	;times 256 db 0
@@ -90,5 +85,5 @@ _task2_stack:
     dd 0
 
 ;
-;fim.
+; End
 ;

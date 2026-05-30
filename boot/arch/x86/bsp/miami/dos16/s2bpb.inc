@@ -66,8 +66,8 @@ bpb:
 	VolumeLabel        db "FREDNORAF12"
 	SystemID           db "FAT12   "	
 	
-;Continua ...
+; Continua ...
 
 ;
-;fim.
+; End
 ;

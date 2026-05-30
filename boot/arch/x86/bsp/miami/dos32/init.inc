@@ -1,8 +1,7 @@
-;
 ; Arquivo: init.inc
-; Descrição:
-;     Variáveis de inicialização dentro do Boot Manager.
-;     Não são salvas no disco como no caso do META$FILE.
+; Descriï¿½ï¿½o:
+;     Variï¿½veis de inicializaï¿½ï¿½o dentro do Boot Manager.
+;     Nï¿½o sï¿½o salvas no disco como no caso do META$FILE.
 ;     2015 - Fred Nora
 
 ;
@@ -10,15 +9,15 @@
 ;
 
 BOOT:
-.modo:           dd 1              ;+0   (step 1) modo de inicialização do boot manager.
+.modo:           dd 1              ;+0   (step 1) modo de inicializaï¿½ï¿½o do boot manager.
 .disco_atual:    dd 0              ;+4   (step 2) disco atual 
-.particao_atual: dd 0              ;+8   (step 3) partição atual 
+.particao_atual: dd 0              ;+8   (step 3) partiï¿½ï¿½o atual 
 .bl_cluster:     dd 2              ;+12  (step 4) cluster inicial do bl.bin 
-.bl_address:     dd 0x00020000     ;+16  (step 5) endereço de bl.bin
+.bl_address:     dd 0x00020000     ;+16  (step 5) endereï¿½o de bl.bin
 .bl_entry_point: dd 0x00021000     ;+20  (step 6) entrypoint de bl.bin 
 ;status
-.status_bm16:    dd 0              ;+24  (step 7) 1 = ouve mudanças de configuração
-                                   ;              0 = nao houve mudanças.          
+.status_bm16:    dd 0              ;+24  (step 7) 1 = ouve mudanï¿½as de configuraï¿½ï¿½o
+                                   ;              0 = nao houve mudanï¿½as.          
 .status_bl32:    dd 0              ;+28  (step 8) 1 = reservado
                                    ;              0 = reservado.
 
@@ -51,9 +50,9 @@ USERDIR:
 ;
 
 DiscoAtivo:	
-    .disk_number       dd 0 ;número do disco selecionado.
-    .particao_ativa    dd 0 ;número da partição ativa.
-    .partition_number  dd 0 ;número da partição selecionada.
+    .disk_number       dd 0 ;nï¿½mero do disco selecionado.
+    .particao_ativa    dd 0 ;nï¿½mero da partiï¿½ï¿½o ativa.
+    .partition_number  dd 0 ;nï¿½mero da partiï¿½ï¿½o selecionada.
     .flag_p0           db 0
     .flag_p1           db 0
     .flag_p2           db 0
@@ -81,25 +80,25 @@ ParticaoAtiva:
 .s_final:   db 0
 
 .lba_inicial:
-    db 0x00, 0x00, 0x00, 0x00 
+   db 0x00, 0x00, 0x00, 0x00 
 
 .tamanho_da_particao:
-    db 0x00, 0x00, 0x00, 0x00 
+   db 0x00, 0x00, 0x00, 0x00 
 
 ;
 ; File System support.
 ;
 
 FILESYSTEM:
-    .fs_volume db 0    ;Número do volume.   
-    .fs_type   db 0    ;Tipo de sistema de arquivos.
-    .fs_res1   db 0
-    .fs_res2   db 0
-    .fs_res3   db 0
-    ;...
+   .fs_volume db 0    ;Nï¿½mero do volume.   
+   .fs_type   db 0    ;Tipo de sistema de arquivos.
+   .fs_res1   db 0
+   .fs_res2   db 0
+   .fs_res3   db 0
+   ; ...
 
 ;
-; Vídeo support.
+; Video support
 ;
 
 VIDEO:

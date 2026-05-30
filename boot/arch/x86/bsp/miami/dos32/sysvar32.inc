@@ -1,4 +1,3 @@
-
 ; sysvar32.inc
 ; Memory map and system variables.
 ; Using physical addresses.
@@ -6,30 +5,30 @@
 
 
 align 2
-    db 'DEBUG: SYSVAR   '
+    db 'SYSVAR '
 align 2
 
 
 ; bloco 0
 mm_ivt:        equ  0x00000000    ;BIOS IVT.
-mm_stackRM:    equ  0x00000E00    ;pilha em modo real. (isso é pra onde foi o mbr.).
+mm_stackRM:    equ  0x00000E00    ;pilha em modo real. (isso ï¿½ pra onde foi o mbr.).
 mm_stage1:     equ  0x00000E00    ;stage 1 (mbr).
 
 ; bloco 1
 mm_stage2:       equ  0x00001000    ;stage 2 (boot manager).
-mm_meta$file:    equ  0x00001000    ;o inicio do stage 2 é um metafile.
+mm_meta$file:    equ  0x00001000    ;o inicio do stage 2 ï¿½ um metafile.
 mm_sys_var:      equ  0x00009000    ;variaveis de sistema.
 
 ; bloco 2
-; bloco 3 - continuação do boot loader.
+; bloco 3 - continuaï¿½ï¿½o do boot loader.
 mm_bl:  equ  0x00020000    ;boot loader.
 
 ; bloco 4
-; bloco 5 - continuação do root dir
+; bloco 5 - continuaï¿½ï¿½o do root dir
 mm_root:    equ  0x00040000    ;root dir.
 
 ; bloco 6
-; bloco 7 - continuação da fat (talvez a fat use o bloco 8.)
+; bloco 7 - continuaï¿½ï¿½o da fat (talvez a fat use o bloco 8.)
 mm_fat:    equ  0x00060000    ;fat.
 
 ; bloco 8
@@ -47,7 +46,7 @@ os_args:               equ 0x00093C00
 bmfs_directory:        equ 0x00094000  ; 4096 bytes 0x090000 -> 0x090FFF
 os_filehandlers:       equ 0x00095000  ; 64 bytes (1x64)
 os_filehandlers_seek:  equ 0x00096000  ; 512 bytes (8x64)
-mm_stack:              equ 0x0009fff0  ; inicio da pilha (pra trás)
+mm_stack:              equ 0x0009fff0  ; inicio da pilha (pra trï¿½s)
 
 ; bloco a
 mm_graphic_video:  equ 0x000A0000
@@ -59,7 +58,6 @@ mm_text_video:  equ 0x000B8000
 ; bloco d - bios stuffs 
 ; bloco e - bios stuffs 
 ; bloco f - bios stuffs 
-
 
 ;
 ; -- 1 MB mark --------
@@ -303,7 +301,7 @@ new_line:  db 13, 10, 0
 tab:       db 9, 0
 system_status_header:  db '[BM:] Boot manager v1.0', 0
 readymsg:              db '[BM:] Boot is ready', 0
-memory_message:        db '[BM:] Not enough system memory for CPU stacks! System halted.', 0
+memory_message:        db '[BM:] Not enough memory for CPU stacks! System halted.', 0
 startupapp:            db 'startup.app', 0
 
 ; Constants

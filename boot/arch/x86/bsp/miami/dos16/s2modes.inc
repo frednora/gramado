@@ -402,7 +402,7 @@ s2modespm32:
 ; Strings:
 
 s2modes_initmessageinGM: 
-    DB "s2modes.inc: Initializing PM in GM", 13, 10, 0
+    DB "s2modes: Initializing PM in GM", 13, 10, 0
 
 ;;
 ;; ##############################################################
@@ -433,11 +433,10 @@ noVesa:
 ;; Change to msg_mode1_selected and msg_mode2_selected. 
 
 msg_mode1: 
-    DB "s2modes.inc: BM-Shell", 13, 10, 0
+    DB "s2modes: BM-Shell", 13, 10, 0
 msg_mode2: 
-    DB "s2modes.inc: BM-GUI",   13, 10, 0
-
+    DB "s2modes: BM-GUI",   13, 10, 0
 
 ;
-; End.
+; End
 ;

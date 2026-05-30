@@ -135,7 +135,7 @@ cluster     dw  0x0000
 ; In one option we the system is initialized and 
 ; in the second we go to the shell. Probably it is the old 32bit shell.
 
-;ImageName db  "BMGRAM  BIN", 0x0D, 0x0A, 0x00
+ImageName db  "BMGRAM  BIN", 0x0D, 0x0A, 0x00
 
 
 ; ---------------------------
@@ -144,7 +144,7 @@ cluster     dw  0x0000
 ; It is a new version for my standard BM, but more MS-DOS compatible if possible.
 ; DOS 1.25, 2.00 and 4.00. (MIT license)
 
-ImageName db  "MIAMI   BIN", 0x0D, 0x0A, 0x00
+;ImageName db  "MIAMI   BIN", 0x0D, 0x0A, 0x00
 
 
 ; ---------------------------

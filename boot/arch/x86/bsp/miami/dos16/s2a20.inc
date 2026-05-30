@@ -1,5 +1,5 @@
 ;
-; File: rm/s2a20.inc
+; File: s2a20.inc
 ; Routines to enable the A20 line during boot.
 ; The A20 line allows access to memory above 1 MB.
 ; Two methods are provided:

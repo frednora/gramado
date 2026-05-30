@@ -1,4 +1,3 @@
-;
 ; File: lib32.inc 
 ; Descriçao:
 ;     Rotinas para o Boot Manager.
@@ -1277,7 +1276,7 @@ _my_buffer_char_blt:
 .y:      dd 0
 
 ;
-; End.
+; End
 ;
 
 

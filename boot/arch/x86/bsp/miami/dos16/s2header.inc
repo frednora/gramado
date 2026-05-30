@@ -243,7 +243,7 @@ msgProgress:
 
 ;debug
 debug_msg_1:
-    db "s2: Press any key",0
+    db "s2: Press a key",0
 debug_msg_2:
     db "s2: loaded.",0
 debug_msg_3:
@@ -282,7 +282,7 @@ msg_s2fat16_step4:  db '~4', 13, 10, 0
 
 ; Example of a dollar sign terminated string
 msg_DOLLAR_TERMINATED:
-    db 'Hello DOS world!$', 0
+    db 'Hello DOS$', 0
 
 ;
 ; End

@@ -1,9 +1,6 @@
-;
 ; Arquivo: string32.inc
-; 
-; Descrição:
-;     Funções de string, para o Boot Manager.
-;
+; Descriï¿½ï¿½o:
+;     Funï¿½ï¿½es de string, para o Boot Manager.
 ;==========================================
 ; Autor:
 ; BareMetal -- a 64-bit OS written in Assembly for x86-64 systems.
@@ -11,7 +8,7 @@
 ;
 ; String Functions
 ;========================
-; Versão: 1.0, 2015.
+; Versï¿½o: 1.0, 2015.
 ;
 
 

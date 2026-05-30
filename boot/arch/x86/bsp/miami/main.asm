@@ -653,14 +653,15 @@ ImageName_GramadoOSBootloader:
     %include "dos16/s2gdt.inc"
     %include "dos16/s2vesa.inc" 
     %include "dos16/s2config16.inc" 
-    %include "dos16/s2a20.inc"
+    ;%include "dos16/s2a20.inc"    ; Suspended
+    %include "dos16/a20fast.inc"
     %include "dos16/s2lib.inc"
     %include "dos16/s2fat12.inc"
     %include "dos16/s2fat16.inc"
     %include "dos16/s2menu16.inc"
     %include "dos16/s2modes.inc"
-    %include "dos16/s2detect.inc"
-    %include "dos16/lib16.inc"
+    ;%include "dos16/s2detect.inc" ;dead
+    ;%include "dos16/lib16.inc" ; dead
     %include "dos16/disk.inc"
     %include "dos16/screen.inc"
     %include "dos16/dialog.inc"

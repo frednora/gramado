@@ -1,4 +1,3 @@
-;
 ; File: start.inc 
 ;    stage3
 ; Descricao: 
@@ -810,6 +809,6 @@ msg_start_sig:
 
 
 ;
-; End.
+; End
 ;
 

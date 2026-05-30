@@ -3,7 +3,7 @@
 ; Created by Fed Nora.
 
 ; Credits:                                                         ;
-; Autor: (c) Craig Bamford, All rights reserved.
+; Autor: (c) Craig Bamford, for the table.
 
 ;=========================================================;
 frame_buffer:  dd  0                                      ;
@@ -255,27 +255,27 @@ search_vesa:
 	ret
 	
 
-; Get screen width in pixels.
+; Get screen width in pixels
 s2vesaGetWidth:
     mov ax, word [ModeInfo_XResolution] 
     ret
 	
-; Get the screen height in pixels.	
+; Get the screen height in pixels
 s2vesaGetHeight:
     mov ax, word [ModeInfo_YResolution]
 	ret
 
-; Get Bits Per Pixel.
+; Get Bits Per Pixel
 s2vesaGetBPP:
     mov al, byte [ModeInfo_BitsPerPixel]
 	ret
 
-; Initialize VESA.
+; Initialize VESA
 s2vesaInitVESA:
     call stage2_init_vesa
 	ret
 
-; Check if VESA is supported.
+; Check if VESA is supported
 s2vesaSearchVESA:
     call search_vesa
 	ret
@@ -285,11 +285,11 @@ s2vesaSearchVESA:
 ;
 
 msg_no_machine:
-    db "s2: vesa: No machine",13,10,0		
+    db "s2vesa: No machine", 13,10,0		
 msg_no_vesa:
-    db "s2: vesa: No VESA",13,10,0
+    db "s2vesa: No VESA", 13,10,0
 msg_ver_vesa:
-    db "s2: vesa: Ver",13,10,0	
+    db "s2vesa: Ver", 13,10,0	
 
 ;
 ; End

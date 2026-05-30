@@ -1,16 +1,10 @@
-;
 ; File: debug.inc 
-;
 ; goal: Show some initialization info.
-;
 ; 2015.
-;
- 
 
 ;-----------------------------------------------
 ; debug_main:
 ;     main function.
-;
 
 debug_main:
     pushad
@@ -20,10 +14,8 @@ debug_main:
     xor eax, eax
     RET
 
-
 ;-------------------------------------------
 ; debug_show_metafile_info:
-;
 ;     Analiza e mostra informa��es sobre o sistema. 
 ;     Mostra as informa��es salvas em META$FILE.
 ;
@@ -101,10 +93,8 @@ debug_show_metafile_info:
 
 
 
-;
 ; debug_config_ativar_status:
 ;     Critico ... testar
-;
 debug_config_ativar_status:
 	;faz mudan�as
 	call blconfig_open_init_cnf
@@ -114,11 +104,8 @@ debug_config_ativar_status:
 	call blconfig_save_init_cnf
     ret
 
-	
-;
+
 ; debug_show_system_cnf:
-;
-;
 debug_show_system_cnf:
    
     mov esi, new_line
@@ -152,12 +139,9 @@ debug_show_system_cnf:
 	
 	ret
 
-dm_sys_name      db "System name Ok.",   13,10,0
-dm_sys_name_fail db "System name fail!", 13,10,0
-
-
-
-
+; Messages
+dm_sys_name      db "System name Ok",   13,10,0
+dm_sys_name_fail db "System name fail", 13,10,0
 
 
 ;---------------------------------------- 
@@ -170,10 +154,6 @@ mostrar_parametros_do_disco_atual:
     ret
 
 
-
-
-
- 
 ;---------------------------------------------
 ; mostrar_parametros_da_particao_ativa:
 ;     Mostrar os parametros da parti��o ativa, 
@@ -186,7 +166,6 @@ mostrar_parametros_da_particao_ativa:
 ;-------------------------------------
 ; debug_show_root_dir:
 ;     Interface para a fun��o que mostra o diret�rio raiz.
-;
 debug_show_root_dir:
     pushad
     call show_root_dir	
@@ -197,29 +176,19 @@ debug_show_root_dir:
 ;;=========================
 ;; show_current_dir:
 ;;     Print a list of the entries of the current directory.
-;;
-
 show_current_dir:
     call fs32_show_currentdir
     ret
-
-
 
 ;-------------------------------------
 ; show_root_dir:
 ;     (Mostra o diret�rio de volumes)
 ;     Show root dir.
-; 
 show_root_dir:
     call fs32_show_rootdir
     ret
 
-
-	
-;
 ; fs32_show_current:
-;
-;
 fs32_show_current:
 
     pushad
@@ -262,27 +231,25 @@ fs32_show_current:
 ;
 
 msg_debug_about: 
-    db "Debug ~ Showing info from META$FILE.", 13,10,0
+    db "Debug ~ META$FILE.", 13,10,0
 
-;META$FILE info	
-msg_debug_1 db 13, 10, "Init Mode     - " ,0    ;Modo de inicializ��o do System4Nora.
-msg_debug_2 db 13, 10, "Video Mode    - " ,0    ;Saved Video mode.
-msg_debug_3 db 13, 10, "Screen X      - " ,0    ;Screen X.
-msg_debug_4 db 13, 10, "Screen Y      - " ,0    ;Screen Y.
-msg_debug_5 db 13, 10, "LFB Address   - " ,0    ;LFB Address.
-msg_debug_6 db 13, 10, "Nothing for now!" ,0    ;Nothing for now!
-msg_debug_7 db 13, 10, "Nothing for now!" ,0    ;Nothing for now!
-msg_debug_8 db 13, 10, "Nothing for now!" ,0    ;Nothing for now!
+; META$FILE info	
+msg_debug_1 db 13, 10, "Init Mode   - " ,0    ;Modo de inicializ��o do System4Nora.
+msg_debug_2 db 13, 10, "Video Mode  - " ,0    ;Saved Video mode.
+msg_debug_3 db 13, 10, "Screen X - " ,0    ;Screen X.
+msg_debug_4 db 13, 10, "Screen Y - " ,0    ;Screen Y.
+msg_debug_5 db 13, 10, "LFB Address - " ,0    ;LFB Address.
+msg_debug_6 db 13, 10, "Nothing " ,0    ;Nothing for now!
+msg_debug_7 db 13, 10, "Nothing " ,0    ;Nothing for now!
+msg_debug_8 db 13, 10, "Nothing " ,0    ;Nothing for now!
 
-msg_cur_disk db "Current disk      - ",0
+msg_cur_disk db "Current disk - ",0
 msg_cur_part db "Current partition - ",0
-
 
 msg_check_system_cnf  db "[BM:] Check system.cnf",13,10,0	
 msg_check_init_cnf    db "[BM:] Check init.cnf"  ,13,10,0	
 
 ;
-; End.
+; End
 ;
- 
  

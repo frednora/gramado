@@ -74,9 +74,9 @@ AFTER_DATA:
     mov ah, 2
     int 21h
 
-    mov dl, '!'
-    mov ah, 2
-    int 21h
+    ;mov dl, '!'
+    ;mov ah, 2
+    ;int 21h
 
 ;MyLoop00:
 
@@ -132,9 +132,9 @@ AFTER_DATA:
     ;xor ax, ax 
     ;int 0x16
 
-    pusha
-    call MY_COMMAND
-    popa 
+    ;pusha
+    ;call MY_COMMAND
+    ;popa 
 
     ; Debug breakpoint
     ; cli

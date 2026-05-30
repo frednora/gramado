@@ -55,14 +55,14 @@ stage2_gdtr:
 ;;
 ;; Algum suporte para voltar para o modo real.
 ;;
-	
+
 ;----------------------------------------------------------
 ; Para voltar para o modo real  esse � o registro da IVT.
 dw 0
 dw 0	
 ivtr_rm:
-	dw (256*4-1)		;;# idt contains 256 entries
-	dd 0 ; t 0000:0000 inicio
+	dw (256*4 -1)    ; # idt contains 256 entries
+	dd 0             ; t 0000:0000 inicio
 
 ;
 ; End

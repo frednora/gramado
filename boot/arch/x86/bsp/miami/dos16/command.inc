@@ -1,5 +1,9 @@
 ; file: command.inc
+; 16bit command line routine.
 ; Very simple command interpreter using INT 21h
+; #ps: For now it is embedded into the miami dos kernel.
+; #todo: It can be reused in order to create 
+; a COMMAND.BIN application for MIAMI-DOS.
 
 
 MY_COMMAND:

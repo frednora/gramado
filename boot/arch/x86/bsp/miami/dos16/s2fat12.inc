@@ -266,5 +266,5 @@ msg_debug_end  db "fat12: 4 Ok",0
 buffer:       
     times (512*2) db 0
 ;
-; End.
+; End
 ;

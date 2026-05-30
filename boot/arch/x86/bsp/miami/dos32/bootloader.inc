@@ -291,33 +291,32 @@ start_bootloader_on_graphic_mode:
 	
 	;debug
 	jmp $
-	
-	
+
 	jmp 8:IMAGE_ADDRESS_ENTRY_POINT
 	JMP $
 
-;O arquivo n�o est� presente na mem�ria.	
+; The file is not in memory
 .peFail:
 	mov esi, msg_bootloader_sig
 	call lib32PrintString
 	call _asm_refresh_screen		
     jmp $
 
-msg_bootloader_sig     db "start_bootloader_on_graphic_mode: A assinatura PE de BL.BIN falhou ... *HANG",0	
-msg_bootloader_jumping db "start_bootloader_on_graphic_mode: Passando o comando para o BL.BIN ... *HANG",0	
+msg_bootloader_sig     db "start_bootloader_on_graphic_mode: PE sig for BL",0	
+msg_bootloader_jumping db "start_bootloader_on_graphic_mode: Passing command to BL",0	
 	
 ;
-; Messages.
+; Messages
 ;
 
-;Erros.
-bl_bl_fail_text      db "start_bootloader error: Text Mode fail!",13,10,0
-bl_bl_fail_graphics  db "start_bootloader error: Graphic mode fail!",13,10,0	
-bl_bl_presente       db "start_bootloader error: BL.BIN Validation!",13,10,0
-bl_bl_nao_presente   db "start_bootloader error: BL.BIN Validation!",13,10,0
-bl_bl_test           db "start_bootloader: Passa o comando para o Boot Loader..",13,10,0
+; Errors
+bl_bl_fail_text      db "start_bootloader: Text mode fail", 13,10,0
+bl_bl_fail_graphics  db "start_bootloader: Graphics mode fail", 13,10,0	
+bl_bl_presente       db "start_bootloader: BL Validation", 13,10,0
+bl_bl_nao_presente   db "start_bootloader: BL Validation", 13,10,0
+bl_bl_test           db "start_bootloader: Passing command to BL", 13,10,0
 
 ;
-;fim.
+; End
 ;	
  
