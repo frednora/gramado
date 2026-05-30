@@ -128,6 +128,7 @@ cluster     dw  0x0000
 
 ; ---------------------------
 ; Option 1: (Standard)
+; This is a stable boot manager for the full 64bit OS.
 ; It loads a faster version of the boot manager,
 ; with NO 32bit-assembly shell.
 ; This boot manager with UI dialog window.
@@ -143,7 +144,7 @@ ImageName db  "BMGRAM  BIN", 0x0D, 0x0A, 0x00
 ; It is a new version for my standard BM, but more MS-DOS compatible if possible.
 ; DOS 1.25, 2.00 and 4.00. (MIT license)
 
-;ImageName db  "MIAMI   BIN", 0x0D, 0x0A, 0x00
+; ImageName db  "MIAMI   BIN", 0x0D, 0x0A, 0x00
 
 
 ; ---------------------------

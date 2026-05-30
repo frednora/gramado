@@ -1,16 +1,12 @@
-;
 ; File: s2bpb.inc
-;
-;     FAT12 and FAT16 BPB used in the Stage 2.
-;
-; Version: 1.0, 2015.
-;
+; FAT12 and FAT16 BPB used in the Stage 2.
+; 2015 - Created by Fred Nora
 
 
 ;===============================================
 ; Stage 2 BPB for fat16 filesystem.
 ;
-; Partição 0 - (31MB).
+; Partiï¿½ï¿½o 0 - (31MB).
 ;
 ;vbr  - ?     ;134 (Depende do tanto de setores reservados.).
 ;fat1 - ?
@@ -44,7 +40,7 @@ s2_bpb:
 ;=============================================
 ; Stage 2 BPB for fat12 filesystem.
 ;
-; OBS:. fat12 é usado em hds pequenos.
+; OBS:. fat12 ï¿½ usado em hds pequenos.
 ;
 ; fat 12, BPB.
 ;	

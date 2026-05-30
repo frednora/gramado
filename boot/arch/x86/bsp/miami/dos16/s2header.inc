@@ -1,14 +1,13 @@
-;
 ; File: s2header.inc 
 ; This is the header file for the Gramado Boot Manager.
 ; Defines and variables used in the Stage 2.
+; 2015 - Created by Fred Nora.
+
 ; Importante:
 ; O arquivo stage2.inc faz uma sequ�ncia de inclus�es de m�dulos
 ; de 16bit que comp�em o stage2. Os promeiros devem ser s2metafile.inc 
 ; e s2header.inc que servir�o de suporte para todos os outros modulos
 ; do stage2.
-; 2015 - Created by Fred Nora.
-;
 
 ;
 ; SATA Controller Modes: 
@@ -29,7 +28,7 @@
 ;
 ;
 
-; Same as MS-DOS 2.00
+; Same as MS-DOS 2.00+
 %DEFINE BOOTMANAGER_VER  '2.00+'
 ;; ...
 
@@ -54,31 +53,20 @@ ROOT_OFFSET   equ  0
 ROOT_LBA      equ  559
 
 ; ========================
-; Aqui est� a localiza��o do bootloader na mem�ria. 
-; A LBAno importa, pois ele foi carregado do sistema sistema de 
-; arquivos e a LBA inicial dele estava armazenada na entrada do 
-; diretrio raiz.
+; Segment and Offset for the BLGRAM.BIN 32bit boot loader.
 
-; Boot Loader.
 BL_SEGMENT  equ  2000H
 BL_OFFSET   equ  0
-BL_LBA      equ  0
+;BL_LBA      equ  0  ; Not important
 
-;--------------------------------------- 
-; Algum suporte para cores no modo texto. 
+; --------------------------------------- 
+; Some colors and atributes for text mode
 ; BLUE    equ     01f00h
 ; RED     equ     02f00h
 ; GREEN   equ     04f00h
 
-
-;------------------------------------
-
-
-
-
-
-
-; Defini��es.
+; ------------------------------------
+; Definitions
 
 ;;
 ;; #BUGBUG: 
@@ -93,83 +81,76 @@ BL_LBA      equ  0
 ;; es:bx    "Os valores aqui s�o referentes ao offset apenas."
 ;;          "Lembrese de configurar a base na rotina" 
 ;;
-;Valores para formata��o com imdisk. (volume 31mb)
-S2_FAT16_VBR_ADDRESS       equ 0x0000; 0x001A0000  ;0x00020000.
-S2_FAT16_VBR_LBA           equ 63 ;134         ;vbr.
-S2_FAT16_FAT_ADDRESS       equ 0x1000 ;0x001B0000  ;0x00060000.
-S2_FAT16_FAT_LBA           equ 67 ;136         ;fat1. 
-S2_FAT16_ROOTDIR_ADDRESS   equ 0x2000 ;0x001C0000  ;0x00080000.
-S2_FAT16_ROOTDIR_LBA       equ 559 ;264         ;root.
-S2_FAT16_DATAAREA_ADDRESS  equ 0x3000 ;0x00100000
-S2_FAT16_DATAAREA_LBA      equ 591 ;296         ;data. 
-;;... 
+
+; These values came from 32/31 mb disk formate using imdisk.
+; #ps: We gotta check if these address are correct.
+S2_FAT16_VBR_ADDRESS       equ  0x0000
+S2_FAT16_VBR_LBA           equ  63         ; VBR
+S2_FAT16_FAT_ADDRESS       equ  0x1000
+S2_FAT16_FAT_LBA           equ  67         ; FAT 01 
+S2_FAT16_ROOTDIR_ADDRESS   equ  0x2000
+S2_FAT16_ROOTDIR_LBA       equ  559        ; ROOT DIR
+S2_FAT16_DATAAREA_ADDRESS  equ  0x3000
+S2_FAT16_DATAAREA_LBA      equ  591        ; DATA AREA
+; ... 
 
 
-;Modos de inicializa��o.
-BOOTMODE_SHELL  EQU 1    ;Shell do Boot Manager em modo texto.
-BOOTMODE_GUI    EQU 2    ;GUI.
+; Initialization modes
+BOOTMODE_SHELL  EQU 1    ; (CLI) - 32bit text mode mini-shell 
+BOOTMODE_GUI    EQU 2    ; (GUI)
 
 ;
-; Kernel info:
-; ============
-;
-; O KERNEL.BIN ser� carregado em 0x00100000 pelo BL.BIN.
+; The kernel image (KERNEL.BIN):
+; It's gonna be loaded at 0x00100000 (physical) by BLGRAM.BIN.
+; 1 MB mark of physical memory.
 ;
 
-
-;@todo: bug bug (trocar)
-;Esses Valores est�o errados, o certo � 0x00100000.
-kernel_seg            equ 0900h
-kernel_off            equ 0h
-kernel_entry_point    equ 0x00008200
 
 ;
 ; FAT info:
 ; ========
 ;
 
-FAT16_FILE_SEGMENT      equ 0x2000
-FAT16_FILE_OFFSET       equ 0x0000  
+FAT16_FILE_SEGMENT  equ  0x2000
+FAT16_FILE_OFFSET   equ  0x0000  
 
-; Algumas defini��es.
 
-;VGA display memory segment.
+; VGA display memory segment
 VGA_VIDEO_SEGMENT       equ  0A000h  
 
-;Offset of BIOS variable.
+; Offset of BIOS variable
 SCREEN_WIDTH_IN_BYTES   equ  044Ah   
 
-;Bytes in each font char TESTANDO 16 PRA USAR ALGUMA FONT DA ROM.
 FONT_CHARACTER_SIZE     equ  8  
 
-; VGA register equates.
-SC_INDEX                equ  3C4h    ;SC index register.
-SC_MAP_MASK             equ  2       ;SC map mask register index.
-GC_INDEX                equ  3CEh    ;GC index register.
-GC_SET_RESET            equ  0       ;GC set/reset register index.
-GC_ENABLE_SET_RESET     equ  1       ;GC enable set/reset register index.
-GC_ROTATE               equ  3       ;GC data rotate/logical function  register index.
-GC_MODE                 equ  5       ;GC Mode register.
-GC_BIT_MASK             equ  8       ;GC bit mask register index.
-TEST_TEXT_ROW           equ  69      ;row to display test text at.
-TEST_TEXT_COL           equ  17      ;column to display test text at.
-TEST_TEXT_WIDTH         equ  8       ;width of a character in pixels.
+; VGA register equates
+SC_INDEX                equ  3C4h    ; SC index register.
+SC_MAP_MASK             equ  2       ; SC map mask register index.
+GC_INDEX                equ  3CEh    ; GC index register.
+GC_SET_RESET            equ  0       ; GC set/reset register index.
+GC_ENABLE_SET_RESET     equ  1       ; GC enable set/reset register index.
+GC_ROTATE               equ  3       ; GC data rotate/logical function  register index.
+GC_MODE                 equ  5       ; GC Mode register.
+GC_BIT_MASK             equ  8       ; GC bit mask register index.
+TEST_TEXT_ROW           equ  69      ; row to display test text at.
+TEST_TEXT_COL           equ  17      ; column to display test text at.
+TEST_TEXT_WIDTH         equ  8       ; width of a character in pixels.
 
 
-;status do modo gr�fico.
+; Status for graphics mode
 g_graphic_mode_status:  db 0
-;Font.
+; Font
 FontPointer:            dd 0
-;Segmentos em modo real.
+; Segments for real mode
 DS_REAL_MODE:           DW 0
 ES_REAL_MODE:           DW 0
-; Vari�veis usadas pelo carregador de arquivos.
+; Used to load files
 qual_file               db 0 
 destino_seg             dw 0
 destino_off             dw 0
-; Aqui ficar� o armazenado o endere�o do nome do arquivo.
+; Address for the filename
 ImageNamePos:           dw 0
-;Disco.
+; Disk
 absoluteSector          db 0x00
 absoluteHead            db 0x00
 absoluteTrack           db 0x00
@@ -179,22 +160,20 @@ salva_carregar_cs       dw 0
 salva_carregar_ip       dw 0
 salva2_carregar_cs      dw 0
 salva2_carregar_ip      dw 0
-;s1 BPB.
+; s1 BPB
 salva_s1_bpb            dw 0
 
 ;
-; BPB pointers.
+; BPB pointers
 ;
-g_Stage1BPB dw 0    ;Para rotinas de 16 bit.
-g_Stage2BPB dw 0    ;Para rotinas de 16 bit.
-g_Fat16BPB  dd 0    ;Para rotinas de 32 bit.
+g_Stage1BPB dw 0    ; 16bit routines
+g_Stage2BPB dw 0    ; 16bit routines
+g_Fat16BPB  dd 0    ; 32bit routines
 ; ...
-
 
 ;;
 ;; == Messages =====================================================
 ;;
-
 
 ; Banner
 HEADER:
@@ -294,17 +273,14 @@ msg_s2fat16_Failure:
 msg_s2file_ok:
     db 'File found', 13, 10, 0
   
-msg_s2fat16_step1:
-    db '~1', 13, 10, 0
-msg_s2fat16_step2:
-    db '~2', 13, 10, 0
-msg_s2fat16_step3:
-    db '~3', 13, 10, 0
-msg_s2fat16_step4:
-    db '~4', 13, 10, 0
+; Step markers
+msg_s2fat16_step1:  db '~1', 13, 10, 0
+msg_s2fat16_step2:  db '~2', 13, 10, 0
+msg_s2fat16_step3:  db '~3', 13, 10, 0
+msg_s2fat16_step4:  db '~4', 13, 10, 0
 
 
-
+; Example of a dollar sign terminated string
 msg_DOLLAR_TERMINATED:
     db 'Hello DOS world!$', 0
 

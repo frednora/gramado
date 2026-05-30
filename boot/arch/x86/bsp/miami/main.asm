@@ -1,7 +1,7 @@
-;-----------------------------------------------------------------------------
 ; File: main.asm
+; Gramado Boot Manager - MIAMI-DOS
 ; Main entry point for Gramado Boot Manager (MIAMI.BIN)
-; Author: Fred Nora (2005)
+; Author: Fred Nora (2005+)
 ;
 ; Credits: 
 ;
@@ -127,8 +127,6 @@
 
 ; --------------------------------------------------------
 
-%DEFINE GBM_VER  '0.8'  ; version number
-
 
 ;;=====================================
 ;;    Entry point do Boot Manager    ;;
@@ -220,7 +218,7 @@ os_call_vectors:
     ; ...
 
 ; Data
-; see: features/disk.inc
+; see: dos16/disk.inc
 ROOTDIRSTART EQU  (bootmanagerOEM_ID)
 ROOTDIRSIZE  EQU  (bootmanagerOEM_ID+4)
 ; ...
@@ -581,7 +579,7 @@ after_menu:
 ;
 
 ; Load the BLGRAM.BIN image at 2000H:0000H.
-; see: features/disk.inc
+; see: dos16/disk.inc
 ; This routine starts the system based on a flag,
 ; that will tell us if we start the system using the graphics mode
 ; or we start the 32bit embedded shell here in the bm.
@@ -608,7 +606,7 @@ load_bootloader_image:
 
 
 ; Trampoline:
-; see: features/finish.inc
+; see: dos16/finish.inc
 Trampoline:
     push WORD 0
     push WORD AFTER_DATA 
@@ -626,14 +624,17 @@ Trampoline:
 ; ================================================
 ; Data for the above code...
 
-    msg_topbar     db 'Gramado Boot Manager - MIAMI', 0
+    ; Strings for the bars
+    msg_topbar     db 'Gramado Boot Manager - (MIAMI-DOS)', 0
     msg_bottombar  db 'ENTER=Confirm', 0
 
+    ; Strings inside the box window
     dialog_string_1  db 'Please select an option:', 0
     dialog_string_2  db '+ [OK] to initialize the system       ', 0
     dialog_string_3  db '+ [Cancel] for command line           ', 0
 
-; Gramado OS bootloader.
+; Gramado OS bootloader:
+; BLGRAM.BIN is a 32bit boot loader for Gramado OS
 ImageName_GramadoOSBootloader:
     db "BLGRAM  BIN", 0x0D, 0x0A, 0x00
 
@@ -645,27 +646,27 @@ ImageName_GramadoOSBootloader:
 ; == Includes ========
 ;
 
-; 16bit includes.
-    %include "features/s2metafile.inc"
-    %include "features/s2header.inc"
-    %include "features/s2bpb.inc"
-    %include "features/s2gdt.inc"
-    %include "features/s2vesa.inc" 
-    %include "features/s2config16.inc" 
-    %include "features/s2a20.inc"
-    %include "features/s2lib.inc"
-    %include "features/s2fat12.inc"
-    %include "features/s2fat16.inc"
-    %include "features/s2menu16.inc"
-    %include "features/s2modes.inc"
-    %include "features/s2detect.inc"
-    %include "features/lib16.inc"
-    %include "features/disk.inc"
-    %include "features/screen.inc"
-    %include "features/dialog.inc"
-    %include "features/finish.inc"
-    %include "features/int21h.inc"
-    %include "features/pm.inc"
+; 16bit includes
+    %include "dos16/s2metafile.inc"
+    %include "dos16/s2header.inc"
+    %include "dos16/s2bpb.inc"
+    %include "dos16/s2gdt.inc"
+    %include "dos16/s2vesa.inc" 
+    %include "dos16/s2config16.inc" 
+    %include "dos16/s2a20.inc"
+    %include "dos16/s2lib.inc"
+    %include "dos16/s2fat12.inc"
+    %include "dos16/s2fat16.inc"
+    %include "dos16/s2menu16.inc"
+    %include "dos16/s2modes.inc"
+    %include "dos16/s2detect.inc"
+    %include "dos16/lib16.inc"
+    %include "dos16/disk.inc"
+    %include "dos16/screen.inc"
+    %include "dos16/dialog.inc"
+    %include "dos16/finish.inc"
+    %include "dos16/int21h.inc"
+    %include "dos16/pm.inc"
 
 
 ;-----------------------------------------------------------------------------
@@ -674,78 +675,90 @@ ImageName_GramadoOSBootloader:
 ; These includes bring in the 32-bit boot manager logic, drivers,
 ; file systems, and shell. Execution jumps here after protected mode switch.
 ;-----------------------------------------------------------------------------
+
 [bits 32]
 bootmanager_main:
 
-; Em ordem de prioridade na compilação.
+; #ps:
+; It follows the order of priority
 
-; 14 - Header principal. 
-; Definições globais usadas em 32bit.
-; Header principal em 32 bits.
-    %include "k32/header32.inc"
-; 13 - Headers. 
-    %include "k32/system.inc"       ; System configuration.
-    %include "k32/init.inc"         ; Initialization configuration.
-    %include "k32/sysvar32.inc"     ; Variáveis do sistema.
-    %include "k32/x8632/gdt32.inc"  ; Gdt
-    %include "k32/x8632/idt32.inc"  ; Idt
-    %include "k32/x8632/ldt32.inc"  ; Ldt
-    %include "k32/x8632/tss32.inc"  ; Tss
-    %include "k32/stacks32.inc"     ; Stacks
-    %include "k32/x8632/ints32.inc"    ; Handles para as interrupções.
-    %include "k32/fs/fat16header.inc"  ; Headers para o sistema de arquivos fat16.
-; 12 - Monitor.
-    %include "k32/drivers/screen32.inc"  ; Rotinas de screen em 32 bits.
-    %include "k32/drivers/input32.inc"   ; Rotinas de input 2m 32 bits.
-    %include "k32/string32.inc"  ; Rotinas de strings em 32 bits.
-    %include "k32/font32.inc"    ; Fonte.
-; 11 - Hardware.
-    %include "k32/x8632/cpuinfo.inc"  ; CPU
-    %include "k32/hardware.inc"       ; Hardware
+; 14 - main header for 32bit
+; Global definitions
+    %include "dos32/header32.inc"
+
+; 13 - Headers for 32bit
+    %include "dos32/system.inc"       ; System configuration.
+    %include "dos32/init.inc"         ; Initialization configuration.
+    %include "dos32/sysvar32.inc"     ; Variáveis do sistema.
+    %include "dos32/x8632/gdt32.inc"  ; Gdt
+    %include "dos32/x8632/idt32.inc"  ; Idt
+    %include "dos32/x8632/ldt32.inc"  ; Ldt
+    %include "dos32/x8632/tss32.inc"  ; Tss
+    %include "dos32/stacks32.inc"     ; Stacks
+    %include "dos32/x8632/ints32.inc"    ; Handles para as interrupções.
+    %include "dos32/fs/fat16header.inc"  ; Headers para o sistema de arquivos fat16.
+
+; 12 - User interaction:
+; Screen, input, strings and fonts
+    %include "dos32/drivers/screen32.inc"  ; Rotinas de screen em 32 bits.
+    %include "dos32/drivers/input32.inc"   ; Rotinas de input 2m 32 bits.
+    %include "dos32/string32.inc"  ; Rotinas de strings em 32 bits.
+    %include "dos32/font32.inc"    ; Fonte.
+
+; 11 - Hardware
+    %include "dos32/x8632/cpuinfo.inc"  ; CPU
+    %include "dos32/hardware.inc"       ; Hardware
     ; ...
-; 10 - Irqs.
-    %include "k32/drivers/timer.inc"     ; Irq 0, Timer.
-    %include "k32/drivers/keyboard.inc"  ; Irq 1, Keyboard.
-    %include "k32/drivers/fdc32.inc"     ; Irq 6, Fdc. (@todo: Suspender o suporte.)
-    %include "k32/drivers/clock.inc"     ; Irq 8, Clock.
-    %include "k32/drivers/hdd32.inc"     ; Irq 14/15, Hdd.
+
+; 10 - IRQs support
+    %include "dos32/drivers/timer.inc"     ; Irq 0, Timer.
+    %include "dos32/drivers/keyboard.inc"  ; Irq 1, Keyboard.
+    %include "dos32/drivers/fdc32.inc"     ; Irq 6, Fdc. (@todo: Suspender o suporte.)
+    %include "dos32/drivers/clock.inc"     ; Irq 8, Clock.
+    %include "dos32/drivers/hdd32.inc"     ; Irq 14/15, Hdd.
     ; ...
-; 9 - Tasks. (#no tasks)
-; Rotinas de inicialização do sistema de tarefas.
-    %include "k32/tasks32.inc"   
-; 8 - lib32.
-; Rotinas em 32 bits. 
+
+; 9 - Tasks (#ps: No support for tasks in 32bit)
+    %include "dos32/tasks32.inc"   
+
+; 8 - ? Undefined
+
 ; 7 - setup  
-; Inicializa arquitetura.
-    %include "k32/setup.inc"
-; 6 - Disk.
-    %include "k32/fs/fat12pm.inc"   ;FAT12 em 32 bits.
-    %include "k32/fs/fat16lib.inc"  ;FAT16 (rotinas).
-    %include "k32/fs/fat16.inc"     ;FAT16 (funçoes principais).
-    %include "k32/fs/ramfs.inc"     ;RamDisk fs.
-    %include "k32/fs/format.inc"    ;Formata.
-    %include "k32/fs/fs32.inc"      ;fs, (gerencia os sistemas de arquivos).
-; 5 - File.
-    %include "k32/installer.inc"   ;Instala metafiles em LBAs específicas.
-    %include "k32/fs/file.inc"     ;Operaçoes com aquivos.
-    %include "k32/bootloader.inc"  ;Carrega o Boot Loader (BLGRAM.BIN).
-; 4 - Debug.
-; System debug.
-    %include "k32/debug.inc"
-; 3 - blconfig.
-; Gerencia a inicialização.
-    %include "k32/blconfig.inc"
-; 2 - Boot Manager 32bit Mini-Shell.
-; Prompt de comandos.
-    %include "k32/shell32/shell.inc"
-    %include "k32/shell32/shcalls.inc"  ;Chamadas dos comandos.
-    %include "k32/shell32/shlib.inc"    ;Lib de funções do Shell.
-    %include "k32/shell32/shmsg.inc"    ;Mensagens e variáveis do Shell.
-; 1 - Start.
-    %include "k32/start.inc"
-; 0 - lib32.
-;Rotinas em 32 bits.
-    %include "k32/lib32.inc" 
+; Arch initialization
+    %include "dos32/setup.inc"
+
+; 6 - Disk and filesystem support
+    %include "dos32/fs/fat12pm.inc"   ;FAT12 em 32 bits.
+    %include "dos32/fs/fat16lib.inc"  ;FAT16 (rotinas).
+    %include "dos32/fs/fat16.inc"     ;FAT16 (funçoes principais).
+    %include "dos32/fs/ramfs.inc"     ;RamDisk fs.
+    %include "dos32/fs/format.inc"    ;Formata.
+    %include "dos32/fs/fs32.inc"      ;fs, (gerencia os sistemas de arquivos).
+
+; 5 - File support
+    %include "dos32/installer.inc"   ;Instala metafiles em LBAs específicas.
+    %include "dos32/fs/file.inc"     ;Operaçoes com aquivos.
+    %include "dos32/bootloader.inc"  ;Carrega o Boot Loader (BLGRAM.BIN).
+
+; 4 - Debug system
+    %include "dos32/debug.inc"
+
+; 3 - blconfig
+; It manages the initialization
+    %include "dos32/blconfig.inc"
+
+; 2 - CLI - 32bit protected mode mini-shell
+    %include "dos32/shell32/shell.inc"
+    %include "dos32/shell32/shcalls.inc"  ;Chamadas dos comandos.
+    %include "dos32/shell32/shlib.inc"    ;Lib de funções do Shell.
+    %include "dos32/shell32/shmsg.inc"    ;Mensagens e variáveis do Shell.
+
+; 1 - Start
+    %include "dos32/start.inc"
+
+; 0 - lib32
+; 32-bit workers
+    %include "dos32/lib32.inc" 
 ; ========================================================
 
 ;
