@@ -210,7 +210,7 @@ os_call_vectors:
     ; ...
 
 ; Data
-; see: features/disk.inc
+; see: bm16/disk.inc
 ROOTDIRSTART EQU  (bootmanagerOEM_ID)
 ROOTDIRSIZE  EQU  (bootmanagerOEM_ID+4)
 ; ...
@@ -568,7 +568,7 @@ after_menu:
 ;
 
 ; Load the BLGRAM.BIN image at 2000H:0000H.
-; see: features/disk.inc
+; see: bm16/disk.inc
 ; This routine starts the system based on a flag,
 ; that will tell us if we start the system using the graphics mode
 ; or we start the 32bit embedded shell here in the bm.
@@ -587,7 +587,7 @@ load_bootloader_image:
 
 
 ; Trampoline:
-; see: features/finish.inc
+; see: bm16/finish.inc
 Trampoline:
     push WORD 0
     push WORD AFTER_DATA 
@@ -618,26 +618,26 @@ ImageName_GramadoOSBootloader:
 ;
 
 ; 16bit includes.
-    %include "features/s2metafile.inc"
-    %include "features/s2header.inc"
-    %include "features/s2bpb.inc"
-    %include "features/s2gdt.inc"
-    %include "features/s2vesa.inc" 
-    %include "features/s2config16.inc" 
-    %include "features/s2a20.inc"
-    %include "features/s2lib.inc"
-    %include "features/s2fat12.inc"
-    %include "features/s2fat16.inc"
-    %include "features/s2menu16.inc"
-    %include "features/s2modes.inc"
-    %include "features/s2detect.inc"
-    %include "features/lib16.inc"
-    %include "features/disk.inc"
-    %include "features/screen.inc"
-    %include "features/dialog.inc"
-    %include "features/finish.inc"
-    %include "features/int21h.inc"
-    %include "features/pm.inc"
+    %include "bm16/s2metafile.inc"
+    %include "bm16/s2header.inc"
+    %include "bm16/s2bpb.inc"
+    %include "bm16/s2gdt.inc"
+    %include "bm16/s2vesa.inc" 
+    %include "bm16/s2config16.inc" 
+    %include "bm16/s2a20.inc"
+    %include "bm16/s2lib.inc"
+    %include "bm16/s2fat12.inc"
+    %include "bm16/s2fat16.inc"
+    %include "bm16/s2menu16.inc"
+    %include "bm16/s2modes.inc"
+    %include "bm16/s2detect.inc"
+    %include "bm16/lib16.inc"
+    %include "bm16/disk.inc"
+    %include "bm16/screen.inc"
+    %include "bm16/dialog.inc"
+    %include "bm16/finish.inc"
+    %include "bm16/int21h.inc"
+    %include "bm16/pm.inc"
 
 
 ;-----------------------------------------------------------------------------
@@ -654,70 +654,70 @@ bootmanager_main:
 ; 14 - Header principal. 
 ; Definições globais usadas em 32bit.
 ; Header principal em 32 bits.
-    %include "k32/header32.inc"
+    %include "bm32/header32.inc"
 ; 13 - Headers. 
-    %include "k32/system.inc"       ; System configuration.
-    %include "k32/init.inc"         ; Initialization configuration.
-    %include "k32/sysvar32.inc"     ; Variáveis do sistema.
-    %include "k32/x8632/gdt32.inc"  ; Gdt
-    %include "k32/x8632/idt32.inc"  ; Idt
-    %include "k32/x8632/ldt32.inc"  ; Ldt
-    %include "k32/x8632/tss32.inc"  ; Tss
-    %include "k32/stacks32.inc"     ; Stacks
-    %include "k32/x8632/ints32.inc"    ; Handles para as interrupções.
-    %include "k32/fs/fat16header.inc"  ; Headers para o sistema de arquivos fat16.
+    %include "bm32/system.inc"       ; System configuration.
+    %include "bm32/init.inc"         ; Initialization configuration.
+    %include "bm32/sysvar32.inc"     ; Variáveis do sistema.
+    %include "bm32/x8632/gdt32.inc"  ; Gdt
+    %include "bm32/x8632/idt32.inc"  ; Idt
+    %include "bm32/x8632/ldt32.inc"  ; Ldt
+    %include "bm32/x8632/tss32.inc"  ; Tss
+    %include "bm32/stacks32.inc"     ; Stacks
+    %include "bm32/x8632/ints32.inc"    ; Handles para as interrupções.
+    %include "bm32/fs/fat16header.inc"  ; Headers para o sistema de arquivos fat16.
 ; 12 - Monitor.
-    %include "k32/drivers/screen32.inc"  ; Rotinas de screen em 32 bits.
-    %include "k32/drivers/input32.inc"   ; Rotinas de input 2m 32 bits.
-    %include "k32/string32.inc"  ; Rotinas de strings em 32 bits.
-    %include "k32/font32.inc"    ; Fonte.
+    %include "bm32/drivers/screen32.inc"  ; Rotinas de screen em 32 bits.
+    %include "bm32/drivers/input32.inc"   ; Rotinas de input 2m 32 bits.
+    %include "bm32/string32.inc"  ; Rotinas de strings em 32 bits.
+    %include "bm32/font32.inc"    ; Fonte.
 ; 11 - Hardware.
-    %include "k32/x8632/cpuinfo.inc"  ; CPU
-    %include "k32/hardware.inc"       ; Hardware
+    %include "bm32/x8632/cpuinfo.inc"  ; CPU
+    %include "bm32/hardware.inc"       ; Hardware
     ; ...
 ; 10 - Irqs.
-    %include "k32/drivers/timer.inc"     ; Irq 0, Timer.
-    %include "k32/drivers/keyboard.inc"  ; Irq 1, Keyboard.
-    %include "k32/drivers/fdc32.inc"     ; Irq 6, Fdc. (@todo: Suspender o suporte.)
-    %include "k32/drivers/clock.inc"     ; Irq 8, Clock.
-    %include "k32/drivers/hdd32.inc"     ; Irq 14/15, Hdd.
+    %include "bm32/drivers/timer.inc"     ; Irq 0, Timer.
+    %include "bm32/drivers/keyboard.inc"  ; Irq 1, Keyboard.
+    %include "bm32/drivers/fdc32.inc"     ; Irq 6, Fdc. (@todo: Suspender o suporte.)
+    %include "bm32/drivers/clock.inc"     ; Irq 8, Clock.
+    %include "bm32/drivers/hdd32.inc"     ; Irq 14/15, Hdd.
     ; ...
 ; 9 - Tasks. (#no tasks)
 ; Rotinas de inicialização do sistema de tarefas.
-    %include "k32/tasks32.inc"   
+    %include "bm32/tasks32.inc"   
 ; 8 - lib32.
 ; Rotinas em 32 bits. 
 ; 7 - setup  
 ; Inicializa arquitetura.
-    %include "k32/setup.inc"
+    %include "bm32/setup.inc"
 ; 6 - Disk.
-    %include "k32/fs/fat12pm.inc"   ;FAT12 em 32 bits.
-    %include "k32/fs/fat16lib.inc"  ;FAT16 (rotinas).
-    %include "k32/fs/fat16.inc"     ;FAT16 (funçoes principais).
-    %include "k32/fs/ramfs.inc"     ;RamDisk fs.
-    %include "k32/fs/format.inc"    ;Formata.
-    %include "k32/fs/fs32.inc"      ;fs, (gerencia os sistemas de arquivos).
+    %include "bm32/fs/fat12pm.inc"   ;FAT12 em 32 bits.
+    %include "bm32/fs/fat16lib.inc"  ;FAT16 (rotinas).
+    %include "bm32/fs/fat16.inc"     ;FAT16 (funçoes principais).
+    %include "bm32/fs/ramfs.inc"     ;RamDisk fs.
+    %include "bm32/fs/format.inc"    ;Formata.
+    %include "bm32/fs/fs32.inc"      ;fs, (gerencia os sistemas de arquivos).
 ; 5 - File.
-    %include "k32/installer.inc"   ;Instala metafiles em LBAs específicas.
-    %include "k32/fs/file.inc"     ;Operaçoes com aquivos.
-    %include "k32/bootloader.inc"  ;Carrega o Boot Loader (BLGRAM.BIN).
+    %include "bm32/installer.inc"   ;Instala metafiles em LBAs específicas.
+    %include "bm32/fs/file.inc"     ;Operaçoes com aquivos.
+    %include "bm32/bootloader.inc"  ;Carrega o Boot Loader (BLGRAM.BIN).
 ; 4 - Debug.
 ; System debug.
-    %include "k32/debug.inc"
+    %include "bm32/debug.inc"
 ; 3 - blconfig.
 ; Gerencia a inicialização.
-    %include "k32/blconfig.inc"
+    %include "bm32/blconfig.inc"
 ; 2 - Boot Manager 32bit Mini-Shell.
 ; Prompt de comandos.
-    %include "k32/shell32/shell.inc"
-    %include "k32/shell32/shcalls.inc"  ;Chamadas dos comandos.
-    %include "k32/shell32/shlib.inc"    ;Lib de funções do Shell.
-    %include "k32/shell32/shmsg.inc"    ;Mensagens e variáveis do Shell.
+    %include "bm32/shell32/shell.inc"
+    %include "bm32/shell32/shcalls.inc"  ;Chamadas dos comandos.
+    %include "bm32/shell32/shlib.inc"    ;Lib de funções do Shell.
+    %include "bm32/shell32/shmsg.inc"    ;Mensagens e variáveis do Shell.
 ; 1 - Start.
-    %include "k32/start.inc"
+    %include "bm32/start.inc"
 ; 0 - lib32.
 ;Rotinas em 32 bits.
-    %include "k32/lib32.inc" 
+    %include "bm32/lib32.inc" 
 ; ========================================================
 
 ;
