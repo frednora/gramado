@@ -129,6 +129,13 @@ AFTER_DATA:
     ;int 0x16
     ;int 0x19
 
+    ;xor ax, ax 
+    ;int 0x16
+
+    pusha
+    call MY_COMMAND
+    popa 
+
     ; Debug breakpoint
     ; cli
     ; hlt

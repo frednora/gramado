@@ -666,6 +666,7 @@ ImageName_GramadoOSBootloader:
     %include "dos16/dialog.inc"
     %include "dos16/finish.inc"
     %include "dos16/int21h.inc"
+    %include "dos16/command.inc"
     %include "dos16/pm.inc"
 
 

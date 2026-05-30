@@ -175,6 +175,10 @@ int21h_handler:
 
     call    word [cs:INT21H_DISPATCH + bx]
 
+    ; Lets respect the ax value returned from the worker
+    mov word [.RETURN_VALUE], ax   ; save result
+
+
 .LEAVE:
 
     ;CLI
@@ -339,11 +343,18 @@ DOS125_ABORT:
 
 
 DOS125_CONIN:  ;System call 1
-    CALL    DOS125_IN
+
+    xor ax, ax
+    int 16h
+
+    ;CALL    DOS125_IN
+
     ; #ps: In DOS 2.00+ it does not echo the char.
     ;PUSH    AX
     ;CALL    DOS125_OUT
     ;POP     AX
+
+    ;mov word [.RETURN_VALUE], ax   ; save result
     RET
 
 ; The CONIN loop depended on the Zero Flag (ZF) to indicate 
