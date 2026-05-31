@@ -146,6 +146,7 @@
 
 // ==========================================
 #include "../halls/platform/acpi/acpi.h"
+#include "../halls/platform/mps/mps.h"
 
 // ==========================================
 // hal/arm/
@@ -155,7 +156,6 @@
 // hal/x86_64/
 #include "../halls/dev/exec/ke/hal/x86_64/cpuid.h"
 #include "../halls/dev/exec/ke/hal/x86_64/up/up.h"
-#include "../halls/dev/exec/ke/hal/x86_64/smp/mps.h"
 #include "../halls/dev/exec/ke/hal/x86_64/smp/x64smp.h"
 #include "../halls/dev/exec/ke/hal/x86_64/smp/apic.h"
 #include "../halls/dev/exec/ke/hal/x86_64/smp/apictim.h"

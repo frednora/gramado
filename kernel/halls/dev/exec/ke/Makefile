@@ -89,7 +89,6 @@ apic.o apictim.o ioapic.o \
 cpu.o \
 cpuid.o \
 tss.o \
-mps.o \
 detect.o \
 ports64.o rtc.o \
 sync.o \
@@ -139,9 +138,6 @@ all:
 
 # ---------------------
 # hal/x86_64/ (HAL)
-
-# SMP support
-	$(CC) -c hal/x86_64/smp/mps.c  $(KERNEL_INCLUDE) $(CFLAGS) -o mps.o
 
 	$(CC) -c hal/x86_64/smp/apic.c     $(KERNEL_INCLUDE) $(CFLAGS) -o apic.o
 	$(CC) -c hal/x86_64/smp/apictim.c  $(KERNEL_INCLUDE) $(CFLAGS) -o apictim.o

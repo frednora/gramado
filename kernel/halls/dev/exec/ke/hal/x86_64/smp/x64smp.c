@@ -151,17 +151,13 @@ int x64smp_initialization(void)
     smp_info.probe_via = 0;
 
 // The SMP support
-    printk("\n");
-    printk("---- SMP START ----\n");
-    printk("x64smp_initialization:\n");
-
+    printk("SMP: Starting ...\n");
 
 //
 // == ACPI ===========================================================
 //
 
-    printk("\n");
-    printk("== SMP VIA ACPI ===================\n");
+    printk("SMP: Probing via ACPI\n");
 
 // Setup the desired mode.
 // #test: But for now the initialization is just getting some information 
@@ -181,11 +177,11 @@ int x64smp_initialization(void)
     };
 
 //
-// == MP ===========================================================
+// == MPS ===========================================================
 //
 
-    printk("\n");
-    printk("== SMP VIA MP ===================\n");
+    // Intel: Multi Processor Specification
+    printk("SMP: Probing via MPS\n");
 
 // ----------------------
 // MP Table
@@ -212,11 +208,8 @@ int x64smp_initialization(void)
 
     } else {
         smp_info.probe_via_mp_failed = TRUE;
-        printk("x64smp_initialization: [__x64_probe_smp_via_mptable] failed\n");
+        printk("x64smp_initialization: [mptable_probe] failed\n");
     };
-
-    printk("---- SMP END ----\n");
-    printk("\n");
 
 
 //
@@ -243,14 +236,15 @@ int x64smp_initialization(void)
 // The bsp
 // Check the lapix initialization status
     if (lapic_info[0].initialized == TRUE){
-        printk("x64smp_initialization: lapic initialization ok\n");
         return TRUE;
+
     } else if (lapic_info[0].initialized != TRUE){
         printk("x64smp_initialization: lapic initialization fail\n");
         return FALSE;
     }
 
-    return FALSE;
+    // Fall trough
+    // return FALSE;
 
 fail:
     return FALSE;

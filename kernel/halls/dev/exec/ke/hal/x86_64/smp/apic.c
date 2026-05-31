@@ -1119,14 +1119,14 @@ int lapic_info_initializing(unsigned long lapic_pa, int lapic_info_id)
 // see: x64gpa.h
 
     if (lapic_pa != __LAPIC_PA){
-        printk("lapic_initializing: lapic_pa\n");
+        printk("lapic_info_initializing: lapic_pa\n");
         goto fail;
     }
 
 // #todo
 // Do we have apic support in this processor?
     //if (has_apic() != TRUE)
-        //panic("lapic_initializing: APIC not supported\n");
+        //panic("lapic_info_initializing: APIC not supported\n");
 
 // ===================
 // Mapping
@@ -1154,7 +1154,7 @@ int lapic_info_initializing(unsigned long lapic_pa, int lapic_info_id)
             );
 
         if (status != 0){
-            panic("lapic_initializing: on mm_map_2mb_region_in_pd0()\n");
+            panic("lapic_info_initializing: on mm_map_2mb_region_in_pd0()\n");
         }
 
         // Flush it
@@ -1248,7 +1248,7 @@ int lapic_info_initializing(unsigned long lapic_pa, int lapic_info_id)
     lapic_info[lapic_info_id].local_version = (int) (localversion & 0xFF);
 
 // Print for the current cpu
-    printk("table index: %d: | HW ID: %d | VERSION: %x\n",
+    printk("APIC: cpu_id={%d} hw_id={%d} ver={%x}\n",
         lapic_info_id,
         lapic_info[lapic_info_id].local_id,
         lapic_info[lapic_info_id].local_version 
@@ -1258,7 +1258,6 @@ int lapic_info_initializing(unsigned long lapic_pa, int lapic_info_id)
     apic_mark_cpu_as_running(lapic_info_id);
 
     // #debug
-    //refresh_screen();
     //while (1){ asm("hlt"); }
 
     return TRUE;

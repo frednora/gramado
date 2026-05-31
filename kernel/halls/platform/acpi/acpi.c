@@ -409,7 +409,6 @@ fail:
     return FALSE;
 }
 
-
 // After you've gathered the information, 
 // you'll need to disable the PIC and prepare for I/O APIC. 
 // You also need to setup BSP's local APIC. 
@@ -420,7 +419,7 @@ int acpi_probe(void)
 {
 // Called by x64smp_initialization() in x64smp.c.
 
-// TRUE when finding the RSDP table.
+// TRUE when finding the RSDP table
     int Status = FALSE;
 
 // 0x040E - The base address.
@@ -443,19 +442,17 @@ int acpi_probe(void)
 // Probe ebda address at bda base.
 //
 
-    printk("EBDA short Address: %x\n", bda[0] ); 
+    printk("ACPI: EBDA short Address: %x\n", bda[0] ); 
     ebda_address = (unsigned long) ( bda[0] << 4 );
     ebda_address = (unsigned long) ( ebda_address & 0xFFFFFFFF );
-    printk("EBDA Address: %x\n", ebda_address ); 
+    printk("ACPI: EBDA Address: %x\n", ebda_address ); 
 
 // base
 // between 0xF0000 and 0xFFFFF.
 // #todo: filter
 
-
 // The signature was found?
     static int Found = FALSE;
-
     register int i=0;
 
 // ------------------------------------------
@@ -484,7 +481,7 @@ int acpi_probe(void)
              c7 == 'R' &&
              c8 == ' '  )
         {
-            printk (":1: Found [RSD PTR ] at index %d. :)\n",i);
+            printk ("ACPI: [RSD PTR ] at index={%d}\n",i);
             Found=TRUE;
             break;
         }
@@ -522,7 +519,7 @@ int acpi_probe(void)
                  c7 == 'R' &&
                  c8 == ' '  )
             {
-                printk (":2: Found [RSD PTR ] at index %d. :)\n",i);
+                printk ("ACPI: [RSD PTR ] at index={%d}\n",i);
                 Found=TRUE;
                 break;
             }
@@ -533,7 +530,7 @@ int acpi_probe(void)
     if (Found != TRUE)
     {
         Status = FALSE;
-        printk("acpi_probe: [RSD PTR ] wasn't found\n");
+        printk("ACPI: [RSD PTR ] not found\n");
         goto fail;
     }
 
@@ -546,7 +543,7 @@ int acpi_probe(void)
 // == RSDP =========================================
     Status = (int) __acpi_rsdp(__rsdp_Pointer);
     if (Status != TRUE){
-        printk("acpi_probe: failed on __acpi_rsdp()\n");
+        printk("ACPI: on __acpi_rsdp()\n");
         goto fail;
     }
 
@@ -559,15 +556,14 @@ int acpi_probe(void)
     fadt = (struct FADT_d *)__brute_force_probe_fadt(va);
 
     // Lets print the signature
-    printk("fadt signature: \n");
-    printk ("%c %c %c %c \n",
+    printk ("ACPI: FADT sig: %c %c %c %c\n",
         fadt->h.Signature[0],
         fadt->h.Signature[1],
         fadt->h.Signature[2],
-        fadt->h.Signature[3] );
+        fadt->h.Signature[3] 
+    );
 
     // #debug
-    //refresh_screen();
     //while(1){}
 
     return TRUE;

@@ -132,8 +132,9 @@ objects-y += p3_mm.o
 # gthouse/libk/ (Runtime Library)
 objects-y += p4_libk.o  
 
-# COLD
+# platform/
 objects-y += acpi.o  
+objects-y += mps.o  
 objects-y += p3_bus.o  
 
 objects-y += apmain.o    

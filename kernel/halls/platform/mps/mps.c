@@ -59,13 +59,11 @@ int mptable_probe(void)
     unsigned long ebda_address=0;
     register int i=0;
     unsigned char *p;
-// Signature elements.
+// Signature elements
     unsigned char c1=0;
     unsigned char c2=0;
     unsigned char c3=0;
     unsigned char c4=0;
-
-    printk("__x64_probe_smp:\n");
 
 // #todo
 // We can use a structure and put all these variable together,
@@ -79,17 +77,14 @@ int mptable_probe(void)
     }
 // Is APIC supported?
     if (processor->hasAPIC != TRUE){
-        panic("mptable_probe: No APIC\n");
+        panic("mptable_probe: hasAPIC\n");
     }
 
 // Probe ebda address at bda base.
-    printk("EBDA short Address: %x\n", bda[0] ); 
+    printk("MPS: EBDA short Address {%x}\n", bda[0] ); 
     ebda_address = (unsigned long) ( bda[0] << 4 );
     ebda_address = (unsigned long) ( ebda_address & 0xFFFFFFFF);
-    printk("EBDA Address: %x\n", ebda_address ); 
-
-    // #debug
-    // refresh_screen();
+    printk("MPS: EBDA Address: {%x}\n", ebda_address ); 
 
 //
 // Probe 0x5F504D5F signature. 
@@ -115,7 +110,8 @@ int mptable_probe(void)
         c4 = p[i+3];
         if ( c1 == '_' && c2 == 'M' && c3 == 'P' && c4 == '_' )
         {
-            printk (":: Found _MP_ at index %d. :)\n",i);
+            // #DEBUG
+            // printk (":: Found _MP_ at index %d. :)\n",i);
             mp_found=TRUE;
             break;
         }
@@ -123,11 +119,11 @@ int mptable_probe(void)
 
 // Signature not found.
     if (mp_found != TRUE){
-        printk("mptable_probe: MP table wasn't found!\n");
+        printk("MPS: table wasn't found\n");
         goto fail;
     }
 
-//mp_table_found:
+// mp_table_found:
 
 // ==============================================
 // MPTable
@@ -153,14 +149,17 @@ int mptable_probe(void)
 // + OK on qemu.
 // + OK on kvm.
 // + FAIL on Virtualbox. #todo: try APIC.
+
+    /*
+    // #debug
     printk("Signature: %c %c %c %c\n",
         MPTable->signature[0],
         MPTable->signature[1],
         MPTable->signature[2],
         MPTable->signature[3] );
+    */
 
     //#debug
-    //refresh_screen();
     //while(1){}
 
 // ------------------------------------------
@@ -170,29 +169,29 @@ int mptable_probe(void)
     unsigned long configurationtable_address = 
         (unsigned long) (MPTable->configuration_table & 0xFFFFFFFF);
 
-// Pointer for the configuration table.
-    printk("Configuration table address: {%x}\n",
-        configurationtable_address);
+// Pointer for the configuration table
+    printk("MPS: address={%x} ",
+        configurationtable_address );
 // Lenght: n*16 bytes
 // The length of the floating point structure table, 
 // in 16 byte units. 
 // This field *should* contain 0x01, meaning 16-bytes.
-    printk("Lenght: {%d}\n", MPTable->length);
+    printk("Lenght={%d} ", MPTable->length);
 // Revision: 1.x
 // The version number of the MP Specification. 
 // A value of 1 indicates 1.1, 4 indicates 1.4, and so on.
-    printk("Revision: {%d}\n", MPTable->mp_specification_revision);
+    printk("revision={%d} ", MPTable->mp_specification_revision);
 // Checksum
 // The checksum of the Floating Point Structure. 
-    printk("Checksum: {%d}\n", MPTable->checksum);
+    printk("checksum={%d} ", MPTable->checksum);
 // Default configuration flag.
 // If this is not zero then configuration_table should be 
 // ignored and a default configuration should be loaded instead.
-    printk("Default configuration flag: {%d}\n",
+    printk("flag={%d}\n",
         MPTable->default_configuration );
 
     if ( MPTable->default_configuration != 0 ){
-        printk("todo: The configuration table should be ignored\n");
+        printk("MPS: #todo The configuration table should be ignored\n");
     }
 
 // Features
@@ -201,18 +200,17 @@ int mptable_probe(void)
 // then the IMCR is present and PIC mode is being used, 
 // otherwise virtual wire mode is. 
 // All other bits are reserved.
-    printk("Features: {%d}\n", MPTable->features);
+    printk("MPS: features={%d}\n", MPTable->features);
 // Se o bit 7 está ligado.
     if ( MPTable->features & (1 << 7) ){
-        printk("The IMCR is present and PIC mode is being used.\n");
+        printk("MPS: IMCR is present and PIC mode being used\n");
     }
 // Se o bit 7 está desligado.
     if ( (MPTable->features & (1 << 7)) == 0 ){
-        printk("Using the virtual wire mode.\n");
+        printk("MPS: virtual wire mode\n");
     }
 
     //#debug
-    //refresh_screen();
     //while(1){}
 
 // ==============================================
@@ -225,7 +223,7 @@ int mptable_probe(void)
         (struct mp_configuration_table_d *) configurationtable_address;
 
     if ((void*) MPConfigurationTable == NULL){
-        printk("__x64_probe_smp: Invalid Configuration table address\n");
+        printk("MPS: Invalid table address\n");
         goto fail;
     }
 // Saving
@@ -234,7 +232,7 @@ int mptable_probe(void)
 
 // Signature
 // "PCMP"
-    printk("Signature: %c %c %c %c\n",
+    printk("MPS: Sig={%c %c %c %c}\n",
         MPConfigurationTable->signature[0],
         MPConfigurationTable->signature[1],
         MPConfigurationTable->signature[2],
@@ -249,7 +247,7 @@ int mptable_probe(void)
         oemid_string[i] = MPConfigurationTable->oem_id[i];
     };
     oemid_string[8]=0;  // finish
-    printk("OEM ID STRING: {%s}\n",oemid_string);
+    printk("MPS: OEM={%s} \n",oemid_string);
 
 // PRODUCT ID STRING
     char productid_string[12+1];
@@ -257,16 +255,16 @@ int mptable_probe(void)
         productid_string[i] = MPConfigurationTable->product_id[i];
     };
     productid_string[12]=0;  // finish
-    printk("PRODUCT ID STRING: {%s}\n",productid_string);
+    printk("MPS: product={%s}\n",productid_string);
 
 // Lapic address
-    printk("lapic address: {%x}\n",
+    printk("MPS: lapic_address={%x}\n",
         MPConfigurationTable->lapic_address );
 
 // Is this the standard lapic address?
     if ( MPConfigurationTable->lapic_address != LAPIC_BASE )
     {
-        printk("fail: Not standard lapic address\n");
+        printk("MPS: [FAIL] Bad address ");
         printk("Found={%x} Standard{%x}\n",
             MPConfigurationTable->lapic_address,
             LAPIC_BASE );
@@ -276,9 +274,6 @@ int mptable_probe(void)
 // Entries
 //
 
-    printk("\n");
-    printk("------------------\n");
-
 // Probing the entries right below the MPConfigurationTable.
 
 // -------------------------------
@@ -286,10 +281,9 @@ int mptable_probe(void)
 
     // This field tell us how many entries we have to probe.
     register int EntryCount = (int) MPConfigurationTable->entry_count;
-    printk("Entry count: {%d}\n", MPConfigurationTable->entry_count);
+    printk("MPS: [Entries] count={%d}\n", MPConfigurationTable->entry_count);
 
     //#debug
-    //refresh_screen();
     //while(1){};
 
 // #bugbug
@@ -359,7 +353,7 @@ Assignment  |    4 |      8 | One entry per system interrupt source.
 // Limit our loop to match with the number of pointers we're 
 // capable of handling. #todo: Expand it.
     if (EntryCount > 32){
-        printk("#bugbug: EntryCount > 32\n");
+        printk("MPS: EntryCount > 32 #bug\n");
         EntryCount = 32;
     }
 
@@ -396,23 +390,24 @@ Assignment  |    4 |      8 | One entry per system interrupt source.
             NumberOfProcessors += 1;
 
             // apic id.
-            printk("local_apic_id %d\n", e->local_apic_id);
+            printk("id={%d} ", e->local_apic_id);
             // apic version
-            printk("local_apic_version %d\n", e->local_apic_version);
+            printk("ver={%d} ", e->local_apic_version);
+            printk("stepping: %d ", (e->signature & 0x00F));
+            printk("model: %d ",((e->signature & 0x0F0) >> 4) );
+            printk("family: %d\n",((e->signature & 0xF00) >> 8) );
+
             // Flags:
             // If bit 0 is clear then the processor must be ignored.
             // If bit 1 is set then the processor is the bootstrap processor.
             // Ignore the processor.
             if ( (e->flags & (1<<0)) == 0 ){
-                printk("Processor must be ignored\n");
+                printk("{must be ignored}\n");
             }
-            // BSP processor.
+            // BSP processor
             if ( e->flags & (1<<1) ){
-                printk("__x64_probe_smp: The processor is a BSP\n");
+                printk("{BSP}\n");
             }
-            printk ("stepping: %d\n", (e->signature & 0x00F));
-            printk ("   model: %d\n",((e->signature & 0x0F0) >> 4) );
-            printk ("  family: %d\n",((e->signature & 0xF00) >> 8) );
 
             entry_base = (unsigned long) (entry_base + 20);
 
@@ -450,26 +445,20 @@ Assignment  |    4 |      8 | One entry per system interrupt source.
 
 //done:
 
-    printk("\n");
-    printk("------------------\n");
-
 // Global number of processors.
     g_processor_count = (unsigned int) NumberOfProcessors;
 // smp number of processors.
     smp_info.mptable_number_of_processors = (unsigned int) NumberOfProcessors;
-    printk("Processor count: {%d}\n", smp_info.mptable_number_of_processors );
+    printk("MPS: Processor count: {%d}\n", smp_info.mptable_number_of_processors );
 
-// smp done.
+// smp done
     smp_info.initialized = TRUE;
-    printk("mptable_probe: done\n");
-
+    // g_smp_initialized = TRUE;
 
     // #debug
-    //printk("breakpoint\n");
-    //refresh_screen();
+    // printk("mptable_probe: done\n");
     //while(1){};
 
-    // g_smp_initialized = TRUE;
     return TRUE;
 
 fail:
