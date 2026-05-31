@@ -1678,11 +1678,19 @@ int storageInitialize(void)
             break;
 
         // STORAGE_CONTROLLER_MODE_RAID
+        // break
 
-        //case STORAGE_CONTROLLER_MODE_AHCI:
+        case STORAGE_CONTROLLER_MODE_AHCI:
+
+            panic("storage.c: STORAGE_CONTROLLER_MODE_AHCI\n"); 
+
             // See: ahci.c
-            //DDINIT_ahci();
-            //break;
+            //DDINIT_ahci(
+            //    PCIDeviceStorage,
+            //    STORAGE_CONTROLLER_MODE_AHCI
+            //);
+
+            break;
 
         // ...
 

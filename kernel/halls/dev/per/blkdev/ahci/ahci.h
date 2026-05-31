@@ -12,7 +12,7 @@ struct ahci_port_d
 {
     int todo00;
 };
-extern struct ahci_port_d  ahci_port[4];
+extern struct ahci_port_d  ahci_port[NR_PORTS];
 
 
 struct ahci_current_port_d 
@@ -360,10 +360,9 @@ typedef struct tagHBA_CMD_TBL
 // Prototypes 
 //
 
-
-
-int DDINIT_ahci (void);
-
+int DDINIT_ahci(
+    struct pci_device_d *pci_ahci,
+    uint8_t controller_type );
 
 #endif  
 

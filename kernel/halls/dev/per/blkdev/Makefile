@@ -74,12 +74,15 @@ LDFLAGS := -m elf_x86_64 -s -x -static
 # Everything is a file.
 OBJS = \
 ata.o atadma.o atahdd.o atainfo.o atairq.o atapci.o \
-atadsk_r.o atadsk_w.o storage.o    
+atadsk_r.o atadsk_w.o \
+ahci.o \
+storage.o    
+
 
 all:
 
 # AHCI
-#	$(CC) -c ahci/ahci.c      $(KERNEL_INCLUDE) $(CFLAGS) -o ahci.o 
+	$(CC) -c ahci/ahci.c      $(KERNEL_INCLUDE) $(CFLAGS) -o ahci.o 
 #	$(CC) -c ahci/ahciinfo.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ahciinfo.o 
 #	$(CC) -c ahci/ahcipci.c   $(KERNEL_INCLUDE) $(CFLAGS) -o ahcipci.o 
 
