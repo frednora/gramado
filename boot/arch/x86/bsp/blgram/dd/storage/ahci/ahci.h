@@ -16,7 +16,7 @@ struct ahci_port_d
 {
     int todo00;
 };
-extern struct ahci_port_d  ahci_port[4];
+extern struct ahci_port_d  ahci_port[NR_PORTS];
 
 
 struct ahci_current_port_d 

@@ -111,6 +111,5 @@ int storage_initialize(void)
         return FALSE;        
     }
 
-// Done
-    return TRUE;
+    return TRUE;  // Done
 }

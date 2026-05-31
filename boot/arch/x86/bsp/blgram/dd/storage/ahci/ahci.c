@@ -3,6 +3,8 @@
 
 #include "../../../bl.h"
 
+
+struct ahci_port_d  ahci_port[NR_PORTS];
 struct ahci_current_port_d  AHCICurrentPort;
 
 //static int __ahci_probe_controller(void);
