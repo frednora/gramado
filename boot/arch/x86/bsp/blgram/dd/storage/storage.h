@@ -5,6 +5,7 @@
 #define __DD_STORAGE_H    1
 
 
+
 // --------------------------------------------------
 // Controller mode
 
@@ -95,6 +96,8 @@ void read_lba( unsigned long address, unsigned long lba );
 // White lba on ide device.
 void write_lba( unsigned long address, unsigned long lba );
 
+
+uint32_t storagePCIScanDevice(int class);
 
 int storage_initialize(void);
 

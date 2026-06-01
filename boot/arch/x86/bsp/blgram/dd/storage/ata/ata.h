@@ -529,7 +529,22 @@ void ide_dma_start(int p);
 void ide_dma_stop(int p);
 int ide_dma_read_status(int p);
 
-void show_ide_info();
+void show_ide_info(void);
+
+
+//
+// IRQ stuff
+//
+
+void diskATAIRQHandler1(void);
+void diskATAIRQHandler2(void);
+int disk_get_ata_irq_invoked(void);
+void disk_reset_ata_irq_invoked(void);
+
+
+// Inicializa o IDE e mostra informações sobre o disco.
+int __ata_probe_controller(int ataflag);
+
 
 //
 // $

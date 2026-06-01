@@ -1,5 +1,5 @@
 // ata.c
-// ATA/AHCI device controller implementation for the Gramado OS bootloader.
+// ATA device controller implementation for the Gramado OS bootloader.
 //
 // This file provides low-level routines for initializing and interacting
 // with ATA-compatible storage devices (IDE/PATA/SATA), including PCI probing,
@@ -60,21 +60,6 @@ IDE (Integrated Drive Electronics) can handle up to four drives, which may be:
 
 #include "../../../bl.h"
 
-
-// PCI Support
-// Macro to construct a 32-bit PCI configuration space address 
-// for accessing device registers via I/O ports.
-// Avoid using macros for critical register accesses in production code!
-#define CONFIG_ADDR(bus,device,fn,offset)\
-                       (\
-                       (((uint32_t)(bus)    & 0xff) << 16)|\
-                       (((uint32_t)(device) & 0x3f) << 11)|\
-                       (((uint32_t)(fn)     & 0x07) <<  8)|\
-                       ( (uint32_t)(offset) & 0xfc)|0x80000000 )
-
-
-#define PCI_PORT_ADDR  0xCF8
-#define PCI_PORT_DATA  0xCFC
 
 // Device indices for up to four drives on a standard IDE controller
 #define DISK1  1
@@ -166,15 +151,12 @@ unsigned long ATA_BAR5=0;  // AHCI Base Address / SATA Index Data Pair Base Addr
 
 static void ata_cmd_write(int p, int cmd_val);
 
-
 static void __ata_pio_read(int p, _void *buffer,_i32 bytes);
 static void __ata_pio_write(int p, _void *buffer,_i32 bytes);
 static inline void __atapi_pio_read ( int p, void *buffer, uint32_t bytes );
 
 static void ata_soft_reset(int p);
 static _u8 ata_status_read(int p);
-
-
 
 static _u8 ata_wait_irq(int p);
 
@@ -193,7 +175,7 @@ static _u8 __ata_assert_dever(char nport);
 static void __set_ata_addr(int p, int channel);
 
 //
-// PCI support.
+// PCI support
 //
 
 // Read
@@ -219,7 +201,6 @@ __ataPCIConfigurationSpace (
     char dev, 
     char fun );
 
-static uint32_t __ataPCIScanDevice(int class);
 
 //
 // $
@@ -233,9 +214,6 @@ int __ata_identify_device(char port);
 static int __ata_probe_boot_disk_signature(void);
 static int __ata_initialize_controller(void);
 
-// Inicializa o IDE e mostra informações sobre o disco.
-static int __ata_probe_controller(int ataflag);
-
 // Rotina de diálogo com o driver ATA.
 static int 
 __ata_initialization_dialog ( 
@@ -247,20 +225,19 @@ __ata_initialization_dialog (
 // =====================================================
 //
 
- /*
- * diskATAIRQHandler1
- *   Handler for IRQ 14 (Primary IDE Channel). Sets the global IRQ flag.
- */
-void diskATAIRQHandler1 ()
+
+// diskATAIRQHandler1:
+// Handler for IRQ 14 (Primary IDE Channel). 
+// It sets the global IRQ flag.
+void diskATAIRQHandler1(void)
 {
     ata_irq_invoked = 1;  
 }
 
-/*
- * diskATAIRQHandler2
- *   Handler for IRQ 15 (Secondary IDE Channel). Sets the global IRQ flag.
- */ 
-void diskATAIRQHandler2 ()
+// diskATAIRQHandler2
+// Handler for IRQ 15 (Secondary IDE Channel). 
+// It sets the global IRQ flag.
+void diskATAIRQHandler2(void)
 {
     ata_irq_invoked = 1;   
 }
@@ -275,6 +252,7 @@ void diskATAIRQHandler2 ()
  *
  *   Note: Always check/clear ata_irq_invoked before and after use!
  */
+
 static int disk_ata_wait_irq(int p)
 {
    _u32 tmp = 0x10000;
@@ -291,41 +269,39 @@ static int disk_ata_wait_irq(int p)
         data = ata_status_read(p);
 
         // #bugbug: Review this code.
-        if ( (data &ATA_SR_ERR) )
+        if ( (data & ATA_SR_ERR) )
         {
             ata_irq_invoked = 0;
             return (int) -1;
         }
 
-        //ns
+        // ns
         if (tmp--){
-            ata_wait (100);
+            ata_wait(100);
         }else{
-            //ok por tempo esperado.
+            // ok por tempo esperado.
             ata_irq_invoked = 0;
             return (int) 0x80;
         };
     };
  
-// ok por status da interrup��o.
-    ata_irq_invoked = 0;
-// ok 
-    return 0;
+    ata_irq_invoked = 0;  // Update the irq state
+    return 0;  // OK
 }
 
-/*
- * show_ide_info
- *   Prints diagnostic information for each detected IDE port.
- *   Useful for debugging and verifying device/port initialization.
- */
-void show_ide_info()
+// show_ide_info
+// Prints diagnostic information for each detected IDE port.
+// Useful for debugging and verifying device/port initialization.
+
+void show_ide_info(void)
 {
     register int i=0;
 
     printf ("show_ide_info:\n");
 
-    // four ports.
-    for ( i=0; i<4; i++ ){
+    // four ports
+    for ( i=0; i<4; i++ )
+    {
         printf ("\n");
         printf ("id        = %d \n", ide_port[i].id );
         printf ("used      = %d \n", ide_port[i].used );
@@ -335,7 +311,8 @@ void show_ide_info()
         printf ("base_port = %x \n", ide_port[i].base_port );
     };
 
-	/*
+
+/*
 	// Estrutura 'ata'
 	// Qual lista ??
 	
@@ -355,14 +332,12 @@ void show_ide_info()
 		printf("busMasterBaseAddress={%d}\n", (int) ata.bus_master_base_address);
 		printf("ahciBaseAddress={%d}\n", (int) ata.ahci_base_address);
 	//};
-	*/
+*/
 
 	// Estrutura 'atapi'
 	// Qual lista ??
-
 	// Estrutura 'st_dev'
 	// Est�o na lista 'ready_queue_dev'
-
     //...
 }
 
@@ -378,7 +353,8 @@ void show_ide_info()
  *   - bytes: Number of bytes to read (must be even, as insw reads 16 bits).
  *   Uses 'rep; insw' to efficiently read 'bytes/2' words from the port's data register.
  */
-static void __ata_pio_read ( int p, void *buffer, _i32 bytes )
+
+static void __ata_pio_read( int p, void *buffer, _i32 bytes )
 {
 
     /*
@@ -389,8 +365,8 @@ static void __ata_pio_read ( int p, void *buffer, _i32 bytes )
     */
 
     asm volatile (\
-        "cld;\
-        rep; insw"::"D"(buffer),\
+        "cld  \n\
+        rep \n insw"::"D"(buffer),\
         "d"(ata_port[p].cmd_block_base_address + ATA_REG_DATA),\
         "c"(bytes/2) );
 }
@@ -401,13 +377,15 @@ static void __ata_pio_read ( int p, void *buffer, _i32 bytes )
  *   - p: Port index (0-3), refers to ata_port[p].
  *   - buffer: Source buffer for write data.
  *   - bytes: Number of bytes to write (must be even).
- *   Uses 'rep; outsw' to efficiently write 'bytes/2' words to the port's data register.
+ *   Uses 'rep; outsw' to efficiently write 'bytes/2' 
+ *  words to the port's data register.
  */
-static void __ata_pio_write ( int p, void *buffer, _i32 bytes )
+
+static void __ata_pio_write( int p, void *buffer, _i32 bytes )
 {
     asm volatile (\
-        "cld;\
-        rep; outsw"::"S"(buffer),\
+        "cld \n\
+        rep \n outsw"::"S"(buffer),\
         "d"(ata_port[p].cmd_block_base_address + ATA_REG_DATA),\
         "c"(bytes/2) );
 }
@@ -420,11 +398,12 @@ static void __ata_pio_write ( int p, void *buffer, _i32 bytes )
  *   - bytes: Number of bytes to read.
  *   Uses 'rep; insw' for efficient transfer.
  */
-static inline void __atapi_pio_read ( int p, void *buffer, uint32_t bytes )
+
+static inline void __atapi_pio_read( int p, void *buffer, uint32_t bytes )
 {
     asm volatile (\
-        "cld;\
-        rep; insw"::"D"(buffer),\
+        "cld \n\
+        rep \n insw"::"D"(buffer),\
         "d"(ata_port[p].cmd_block_base_address + ATA_REG_DATA),\
         "c"(bytes/2) );
 }
@@ -436,7 +415,8 @@ static inline void __atapi_pio_read ( int p, void *buffer, uint32_t bytes )
  *   Returns the current value of the global ATA IRQ flag.
  *   Used to check if an ATA interrupt has occurred.
  */
-int disk_get_ata_irq_invoked()
+
+int disk_get_ata_irq_invoked(void)
 {
     return (int) ata_irq_invoked;
 }
@@ -445,7 +425,7 @@ int disk_get_ata_irq_invoked()
  * disk_reset_ata_irq_invoked
  *   Clears the global ATA IRQ flag, resetting interrupt state.
  */
-void disk_reset_ata_irq_invoked ()
+void disk_reset_ata_irq_invoked(void)
 {
     ata_irq_invoked = 0;
 }
@@ -478,13 +458,17 @@ void ata_wait(int val)
  *   Returns 0 if BSY clears, 1 if error.
  *   Use this after issuing a command to ata_port[p].
  */
+// OUT: 1 or 0.
 static _u8 ata_wait_not_busy(int p)
 {
-    if (p<0)
+    if (p < 0){
         return 1;
+    }
 
-    while ( ata_status_read(p) & ATA_SR_BSY ){
-        if ( ata_status_read(p) & ATA_SR_ERR ){
+    while ( ata_status_read(p) & ATA_SR_BSY )
+    {
+        if ( ata_status_read(p) & ATA_SR_ERR )
+        {
             return 1;
         }
     };
@@ -500,12 +484,14 @@ static _u8 ata_wait_not_busy(int p)
  */
 static _u8 ata_wait_busy(int p)
 {
-    if (p<0)
+    if (p < 0){
         return 1;
+    }
 
     while ( !(ata_status_read(p) & ATA_SR_BSY ) )
     {
-        if ( ata_status_read(p) & ATA_SR_ERR ){
+        if ( ata_status_read(p) & ATA_SR_ERR )
+        {
             return 1;
         }
     };
@@ -520,12 +506,14 @@ static _u8 ata_wait_busy(int p)
  */
 static _u8 ata_wait_no_drq(int p)
 {
-    if (p<0)
+    if (p < 0){
         return 1;
+    }
 
     while ( ata_status_read(p) & ATA_SR_DRQ )
     {
-        if (ata_status_read(p) & ATA_SR_ERR){
+        if (ata_status_read(p) & ATA_SR_ERR)
+        {
             return 1;
         }
     }
@@ -538,14 +526,17 @@ static _u8 ata_wait_no_drq(int p)
  *   Waits until the DRQ (Data Request) bit is set for the port.
  *   Returns 0 if successful, 1 if error.
  */
+
 static _u8 ata_wait_drq(int p)
 {
-    if (p<0)
+    if (p < 0){
         return 1;
+    }
 
     while ( !(ata_status_read(p) & ATA_SR_DRQ) )
     {
-        if (ata_status_read(p) & ATA_SR_ERR){
+        if (ata_status_read(p) & ATA_SR_ERR)
+        {
             return 1;
         }
     };
@@ -558,19 +549,21 @@ static _u8 ata_wait_drq(int p)
  *   Waits for an ATA IRQ (interrupt) or times out for the specified port.
  *   Returns 0 on IRQ, -1 on error, 0x80 on timeout.
  */
+
 static _u8 ata_wait_irq(int p)
 {
    _u8 Data=0;
    _u32 tmp = 0x10000;
 
-   if (p<0)
-       return -1;
+    if (p < 0){
+        return -1;
+    }
 
     while (!ata_irq_invoked)
     {
         Data = ata_status_read(p);
-        
-        if ( (Data & ATA_SR_ERR) )
+
+        if (Data & ATA_SR_ERR)
         {
             ata_irq_invoked = 0;
             return -1;
@@ -587,7 +580,6 @@ static _u8 ata_wait_irq(int p)
     };
  
     ata_irq_invoked = 0;
-
     return 0;
 }
 
@@ -597,20 +589,26 @@ static _u8 ata_wait_irq(int p)
  *   Toggles the SRST (Soft Reset) bit in the control register.
  *   Used for recovery and device signature detection per port.
  */
+
 static void ata_soft_reset(int p)
 {
     _u8 Data=0;
 
-    if (p<0)
+    if (p < 0){
         return;
+    }
 
     Data = in8(ata_port[p].ctrl_block_base_address + 2);
+
     out8( 
         ata_port[p].ctrl_block_base_address, 
-        Data | 0x4 );
+        (Data | 0x4) 
+    );
+
     out8( 
         ata_port[p].ctrl_block_base_address, 
-        Data & 0xfb ); 
+        (Data & 0xfb)
+    ); 
 }
 
 // #bugbug
@@ -639,12 +637,17 @@ static _u8 ata_status_read(int p)
  *   Waits for the device to be not busy before issuing.
  *   After writing, a short delay ensures command acceptance.
  */
+
 static void ata_cmd_write(int p, int cmd_val)
 {
+    if (p<0)
+        return;
+
     ata_wait_not_busy(p);
     out8( ata_port[p].cmd_block_base_address + ATA_REG_CMD, cmd_val );
-    ata_wait(400);  
+    ata_wait(400);
 }
+
 
 /*
  * __ata_assert_dever
@@ -654,33 +657,37 @@ static void ata_cmd_write(int p, int cmd_val)
  *   Must be called before port-specific register access.
  *   Returns 0 on success, -1 on invalid port.
  */
+
 static _u8 __ata_assert_dever(char nport)
 {
-    if (nport>3){
+    if (nport < 0){
+        return -1;
+    }
+    if (nport > 3){
         return -1;
     }
 
     switch (nport){
 
-    // Primary master.
+    // Primary master
     case 0:
         ata_port[nport].channel = ATA_PRIMARY; //0;  // Primary
         ata_port[nport].dev_num = ATA_MASTER_DEV;  //0;  // Not slave
         break;
 
-    //  Primary slave.
+    // Primary slave
     case 1:   
         ata_port[nport].channel = ATA_PRIMARY;  //0;  // Primary
         ata_port[nport].dev_num = ATA_SLAVE_DEV;  //1;  // Slave
         break;
 
-    // Secondary master.
+    // Secondary master
     case 2:
         ata_port[nport].channel = ATA_SECONDARY;  //1;  // Secondary
         ata_port[nport].dev_num = ATA_MASTER_DEV;  //0;  // Not slave
         break;
 
-    // Secondary slave.
+    // Secondary slave
     case 3:
         ata_port[nport].channel = ATA_SECONDARY;  //1;  // Secondary
         ata_port[nport].dev_num = ATA_SLAVE_DEV;  //1;  // Slave
@@ -696,7 +703,8 @@ static _u8 __ata_assert_dever(char nport)
 
     __set_ata_addr (
         nport, 
-        ata_port[nport].channel );
+        ata_port[nport].channel 
+    );
 
     return 0;
 
@@ -710,8 +718,12 @@ fail:
  *   Populates ata_port[p] fields for command/control/bus master addresses.
  *   For AHCI in the future, this would be replaced by port selection and MMIO base.
  */
+
 static void __set_ata_addr(int p, int channel)
 {
+    if (p < 0)
+        return;
+
     if (channel < 0){
         printf ("__set_ata_addr: [FAIL] channel\n");
         return;
@@ -748,12 +760,14 @@ static void __set_ata_addr(int p, int channel)
  *   Wraps to start if at end. Used for cycling through all detected devices.
  *   Ensures driver can cycle through all detected ports/devices.
  */
+
 static inline void dev_switch(void)
 {
     // Pula, se ainda não tiver nenhuma unidade?
     if (!current_dev){
         return;
     }
+
     // Advance to next device, or wrap to start of list
     current_dev = current_dev->next;    
 
@@ -767,26 +781,31 @@ static inline void dev_switch(void)
  *   Returns the device ID of the currently selected device.
  *   Used for process management or higher-level device enumeration.
  */
-static inline int getpid_dev()
+
+static inline int getpid_dev(void)
 {
-    if ((void*) current_dev == NULL){
-        printf("getpid_dev: [FAIL] Invalid pointer\n");
+    // #ps: handling a global pointer
+    if ((void*) current_dev == NULL)
+    {
+        printf("getpid_dev: current_dev\n");
         return -1;
     }
-    return current_dev->dev_id;
+
+    return (int) current_dev->dev_id;
 }
 
-/*
- * getnport_dev
- *   Returns the port index (0-3) of the currently selected device.
- */
-static inline int getnport_dev()
+// getnport_dev
+// Returns the port index (0-3) of the currently selected device.
+static inline int getnport_dev(void)
 {
-    if ((void*) current_dev == NULL){
+    // #ps: handling a global pointer
+    if ((void*) current_dev == NULL)
+    {
         printf("getnport_dev: [FAIL] Invalid pointer\n");
         return -1;
     }
-    return current_dev->dev_nport;
+
+    return (int) current_dev->dev_nport;
 }
 
 /*
@@ -795,12 +814,13 @@ static inline int getnport_dev()
  *   Returns 0 on success, -1 on failure (e.g., port not found after 4 tries).
  *   Ensures correct device is active before issuing commands.
  */
+
 static int nport_ajuste(char nport)
 {
     _i8 i=0;
 
 // #todo: 
-// Simplify.
+// Simplify it
 
     while ( nport != getnport_dev() )
     {
@@ -816,15 +836,16 @@ static int nport_ajuste(char nport)
         goto fail;
     }
 
-// ok
-    return 0;
+    return 0;  // OK
+
 fail:
     return (int) -1;
 }
 
 /*
  * ata_set_device_and_sector
- *   Prepares ATA registers in ata_port[nport] to specify device, sector (LBA), and access mode.
+ *   Prepares ATA registers in ata_port[nport] to specify device, 
+ *   sector (LBA), and access mode.
  *   Supports both LBA28 and LBA48 addressing.
  *   - count:      Number of sectors to transfer.
  *   - addr:       LBA of the first sector.
@@ -840,7 +861,7 @@ static inline void ata_set_device_and_sector (
 {
     __ata_assert_dever(nport);  // Ensure channel/device is selected
 
-// Access type.
+// Access type
 
     switch (access_type){
         // 28-bit LBA mode
@@ -901,10 +922,6 @@ static inline void ata_set_device_and_sector (
     };
 }
 
-// ==========================
-// O que segue � um suporte ao controlador de DMA 
-// para uso nas rotinas de IDE.
-
 //
 // DMA support
 //
@@ -943,10 +960,12 @@ static inline void ata_set_device_and_sector (
  *   Each entry describes a memory region for DMA transfer.
  *   For up to 4 ports/devices.
  */
+
 struct {
     uint32_t addr;  // Physical address of buffer
     uint32_t len;   // Length and flags (bit 31 = end of table)
 }ide_dma_prdt[4];
+
 
 /*
  * ide_dma_data
@@ -960,6 +979,7 @@ struct {
  *   This sets up the hardware for a subsequent DMA transfer.
  *   For multi-port: each device/port uses its own PRDT entry.
  */
+
 void 
 ide_dma_data ( 
     void *addr, 
@@ -1009,23 +1029,28 @@ ide_dma_data (
  * ide_dma_start
  *   Starts the DMA transfer by setting the bus master 'start' bit.
  */
+
 void ide_dma_start(int p)
 {
-    _u8 Data = 0; 
-    
+    _u8 Data = 0;
+
+    if (p < 0)
+        return;
+
     Data = in8 ( ata_port[p].bus_master_base_address + ide_dma_reg_cmd );
     out8 ( 
         ata_port[p].bus_master_base_address + ide_dma_reg_cmd, 
         Data | 1 );
 }
 
-/*
- * ide_dma_stop
- *   Stops the DMA transfer and clears interrupt/error bits.
- */
+// ide_dma_stop
+// Stops the DMA transfer and clears interrupt/error bits.
 void ide_dma_stop(int p)
 {
     _u8 Data=0;
+
+    if (p < 0)
+        return;
 
     Data = in8 ( ata_port[p].bus_master_base_address + ide_dma_reg_cmd );  
     out8( 
@@ -1044,40 +1069,17 @@ void ide_dma_stop(int p)
  *   Reads the IDE DMA status register to check the result of a DMA operation.
  *   Returns the raw status byte for interpretation by higher-level routines.
  */
+
 int ide_dma_read_status(int p)
 {
     int Status=0;
+
+    if (p < 0)
+        return -1;
+
     Status = in8 ( ata_port[p].bus_master_base_address + ide_dma_reg_status );
     return Status;
 }
-
-// pci support
-// #todo:
-// Checar se temos uma lista dessa no suporte a PCI.
-// #bugbug
-// That 'Unknown' thing in the bottom of the list.
-
-const char *pci_classes[] = {
-    "Unknown [old]",
-    "Mass storage",
-    "Network",
-    "Display",
-    "Multimedia device",
-    "Memory",
-    "Bridge device",
-    "Simple Communication",
-    "Base System Peripheral",
-    "Input Device",
-    "Docking Station",
-    "Processor",
-    "Serial Bus",
-    "Wireless",
-    "Inteligent I/O",
-    "Satellite Communications",
-    "Encrypt/Decrypt",
-    "Data acquisition and signal processing",
-    [255]="Unknown"
-};
 
 /*
  * __ataReadPCIConfigAddr
@@ -1085,6 +1087,7 @@ const char *pci_classes[] = {
  *   Used for reading device IDs, BARs, class codes, etc. during controller probing.
  *   Args: bus, dev, fun, offset (all integers)
  */
+
 uint32_t 
 __ataReadPCIConfigAddr ( 
     int bus, 
@@ -1101,7 +1104,7 @@ __ataReadPCIConfigAddr (
         PCI_PORT_ADDR, 
         CONFIG_ADDR( bus, dev, fun, offset ) );
 
-    return (uint32_t) in32 (PCI_PORT_DATA);
+    return (uint32_t) in32(PCI_PORT_DATA);
 }
 
 /*
@@ -1109,6 +1112,7 @@ __ataReadPCIConfigAddr (
  *   Writes a 32-bit word to the PCI configuration space at the specified location.
  *   Used for enabling/disabling features (e.g., DMA, interrupts) in the controller.
  */
+
 void 
 __ataWritePCIConfigAddr ( 
     int bus, 
@@ -1140,23 +1144,20 @@ __ataPCIConfigurationSpace (
 {
     uint32_t data=0;
 
+    printf ("ATA: Initializing PCI Mass Storage support\n");
+
 // Controller type
     StorageController.controller_type = STORAGE_CONTROLLER_MODE_UNKNOWN;
 
-    printf ("Initializing PCI Mass Storage support..\n");
-
-// Indentification Device e
-// Salvando configura��es.
+// Getting device info
 
     data = (uint32_t) __ataReadPCIConfigAddr( bus, dev, fun, 0 );
 
     ata_pci.vendor_id = data       & 0xffff;
     ata_pci.device_id = data >> 16 & 0xffff;
 
-    //printf ("\nDisk info:\n");
-    printf("[ Vendor ID: %X,Device ID: %X ]\n", 
-        ata_pci.vendor_id, 
-        ata_pci.device_id );
+    printf("ATA: [ Vendor ID: %x,Device ID: %x ]\n", 
+        ata_pci.vendor_id, ata_pci.device_id );
 
 // ======================================================
 // Getting information about the PCI device.
@@ -1164,34 +1165,31 @@ __ataPCIConfigurationSpace (
 
     data = (uint32_t) __ataReadPCIConfigAddr( bus, dev, fun, 8 );
 
-// Class and subclass
-    ata_pci.class       = data >> 24 & 0xff;
-    ata_pci.subclass    = data >> 16 & 0xff;
+    // Here we have 4 bytes with information
 
-// prog if
-    ata_pci.prog_if     = data >>  8 & 0xff;
-// revision id
-    ata_pci.revision_id = data       & 0xff;
+    ata_pci.class       = (data >> 24) & 0xff;  // Class
+    ata_pci.subclass    = (data >> 16) & 0xff;  // Subclass
+    ata_pci.prog_if     = (data >>  8) & 0xff;  // prog if
+    ata_pci.revision_id = data         & 0xff;  // revision id
 
 // ===========================================
 // Detecting the device subclass base on the information above.
 
+    if (ata_pci.class != PCI_CLASS_MASS)
+    {
+        printf("ATA: Not a PCI_CLASS_MASS\n");
+        return (int) PCI_MSG_ERROR;
+    }
 
-// SCSI
-    if ( ata_pci.class == PCI_CLASS_MASS && 
-         ata_pci.subclass == STORAGE_CONTROLLER_MODE_SCSI ){
+// :: SCSI (Not supported)
+    if (ata_pci.subclass == STORAGE_CONTROLLER_MODE_SCSI){
 
         StorageController.controller_type = STORAGE_CONTROLLER_MODE_SCSI;
         printf ("SCSI not supported\n");
         return (int) PCI_MSG_ERROR;
 
-//
-//  ## IDE ##
-//
-
-    // 1:1 = ATA
-    } else if ( ata_pci.class == PCI_CLASS_MASS && 
-         ata_pci.subclass == STORAGE_CONTROLLER_MODE_ATA ){
+// :: ATA (IDE) 1:1
+    } else if (ata_pci.subclass == STORAGE_CONTROLLER_MODE_ATA){
 
         StorageController.controller_type = STORAGE_CONTROLLER_MODE_ATA;
 
@@ -1246,37 +1244,24 @@ __ataPCIConfigurationSpace (
             ata_pci.prog_if,
             ata_pci.revision_id );
 
-//
-//  ## RAID ##
-//
-
-    // 1:4 = RAID
-    } else if ( ata_pci.class == PCI_CLASS_MASS && 
-                ata_pci.subclass == STORAGE_CONTROLLER_MODE_RAID ){
+// :: RAID 1:4 (Not supported)
+    } else if (ata_pci.subclass == STORAGE_CONTROLLER_MODE_RAID){
 
         StorageController.controller_type = STORAGE_CONTROLLER_MODE_RAID;
         printf ("RAID not supported\n");
         return (int) PCI_MSG_ERROR;
 
-//
-//  ## ATA DMA ## 
-//
-
-    // 1:5 = ATA with dma
-    } else if ( ata_pci.class == PCI_CLASS_MASS && 
-                ata_pci.subclass == STORAGE_CONTROLLER_MODE_DMA ){
+// :: ATA with DMA 1:5 (Not supported)
+    } else if (ata_pci.subclass == STORAGE_CONTROLLER_MODE_DMA){
 
         StorageController.controller_type = STORAGE_CONTROLLER_MODE_DMA;
         printf ("ATA DMA not supported\n");
         return (int) PCI_MSG_ERROR;
 
-//
-//  ## ACHI ##  SATA
-//
-
-    // 1:6 = SATA
-    } else if ( ata_pci.class == PCI_CLASS_MASS && 
-                ata_pci.subclass == STORAGE_CONTROLLER_MODE_AHCI ){
+// :: AHCI - 1:6 = for SATA disks
+// #bugbug: This is not the right place to support this,
+// because we are inside the ATA device driver.
+    } else if (ata_pci.subclass == STORAGE_CONTROLLER_MODE_AHCI){
 
         StorageController.controller_type = STORAGE_CONTROLLER_MODE_AHCI;
 
@@ -1327,24 +1312,21 @@ __ataPCIConfigurationSpace (
             ata_pci.revision_id );
 
 
-    // 1:8 = NVME
-    } else if ( ata_pci.class == PCI_CLASS_MASS && 
-                ata_pci.subclass == STORAGE_CONTROLLER_MODE_NVME ){
+// :: NVME 1:8 (Not supported) 
+    } else if (ata_pci.subclass == STORAGE_CONTROLLER_MODE_NVME){
 
         StorageController.controller_type = STORAGE_CONTROLLER_MODE_NVME;
         printf ("NVME not supported\n");
         return (int) PCI_MSG_ERROR;
 
-    // 1:9 = SAS
-    } else if ( ata_pci.class == PCI_CLASS_MASS && 
-                ata_pci.subclass == STORAGE_CONTROLLER_MODE_SAS ){
+// :: SAS 1:9 (Not dupported) 
+    } else if (ata_pci.subclass == STORAGE_CONTROLLER_MODE_SAS){
 
         StorageController.controller_type = STORAGE_CONTROLLER_MODE_SAS;
         printf ("SAS not supported\n");
         return (int) PCI_MSG_ERROR;
 
-    // Fail
-    // ?:? = Class/subclass not supported.
+// :: FAIL - subclass not supported
     } else {
 
         StorageController.controller_type = STORAGE_CONTROLLER_MODE_UNKNOWN;
@@ -1361,9 +1343,9 @@ __ataPCIConfigurationSpace (
 
     data = __ataReadPCIConfigAddr ( bus, dev, fun, 0xC );
 
-    ata_pci.primary_master_latency_timer = data >>  8 & 0xff;
-    ata_pci.header_type                  = data >> 16 & 0xff;
-    ata_pci.BIST                         = data >> 24 & 0xff;
+    ata_pci.primary_master_latency_timer = (data >>  8) & 0xff;
+    ata_pci.header_type                  = (data >> 16) & 0xff;
+    ata_pci.BIST                         = (data >> 24) & 0xff;
 
 // ========================
 // BARs
@@ -1376,14 +1358,14 @@ __ataPCIConfigurationSpace (
 // ========================
 // Interrupt
     data = __ataReadPCIConfigAddr( bus, dev, fun, 0x3C );
-    ata_pci.interrupt_line = data      & 0xff;
-    ata_pci.interrupt_pin  = data >> 8 & 0xff;
+    ata_pci.interrupt_line = data        & 0xff;
+    ata_pci.interrupt_pin  = (data >> 8) & 0xff;
 
 // ========================
 // PCI command and status.
     data = __ataReadPCIConfigAddr( bus, dev, fun, 4 );
-    ata_pci.command = data       & 0xffff; 
-    ata_pci.status  = data >> 16 & 0xffff;
+    ata_pci.command = data         & 0xffff; 
+    ata_pci.status  = (data >> 16) & 0xffff;
 
 // ------------------------
 
@@ -1407,58 +1389,6 @@ __ataPCIConfigurationSpace (
     //refresh_screen();
 
     return (int) PCI_MSG_SUCCESSFUL;
-}
-
-// __ataPCIScanDevice:
-// Get the bus/dev/fun for a device given the class.
-static uint32_t __ataPCIScanDevice(int class)
-{
-    uint32_t data = -1;
-    int bus=0; 
-    int dev=0; 
-    int fun=0;
-
-// =============
-// Probe
-
-    for ( bus=0; bus < 256; bus++ )
-    {
-        for ( dev=0; dev < 32; dev++ )
-        {
-            for ( fun=0; fun < 8; fun++ )
-            {
-                out32 ( PCI_PORT_ADDR, CONFIG_ADDR( bus, dev, fun, 0x8) );
-                
-                data = in32 (PCI_PORT_DATA);
-                
-                // #todo
-                // We need a class variable outside the if statement.
-                // ex: ClassValue = data >> 24 & 0xff;
-                
-                if ( ( data >> 24 & 0xff ) == class )
-                {
-                    // #todo: Save this information.
-                    printf ("[ Detected PCI device: %s ]\n", 
-                        pci_classes[class] );
-
-                    // Done
-                    
-                    // #todo
-                    // Put this into a variable.
-                    
-                    // XXXValue = ( fun + (dev*8) + (bus*32) );
-                    // return (uint32_t) XXXValue;
-                    
-                    return (uint32_t) ( fun + (dev*8) + (bus*32) );
-                }
-            };
-        };
-    };
-
-// Fail
-    printf ("[ PCI device NOT detected ]\n");
-    refresh_screen ();
-    return (uint32_t) (-1);
 }
 
 /*
@@ -2045,7 +1975,8 @@ static int __ata_initialize_controller(void)
  *   Prepares for future AHCI/SATA and RAID support.
  *   Credits: Nelson Cole.
  */
-static int __ata_probe_controller(int ataflag)
+
+int __ata_probe_controller(int ataflag)
 {
     int Status = 1;  //error
     _u32 data=0;
@@ -2159,7 +2090,7 @@ static int __ata_probe_controller(int ataflag)
 
     // Scan PCI for a Mass Storage Controller (class 0x01)
     // Get the bus/dev/fun for a device given the class.
-    data = (_u32) __ataPCIScanDevice(PCI_CLASS_MASS);
+    data = (_u32) storagePCIScanDevice(PCI_CLASS_MASS);
 
 // Error
     if (data == -1)

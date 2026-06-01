@@ -4,6 +4,36 @@
 
 #include "../bl.h"  
 
+
+// pci support
+// #todo:
+// Checar se temos uma lista dessa no suporte a PCI.
+// #bugbug
+// That 'Unknown' thing in the bottom of the list.
+
+const char *pci_classes[] = {
+    "Unknown [old]",
+    "Mass storage",
+    "Network",
+    "Display",
+    "Multimedia device",
+    "Memory",
+    "Bridge device",
+    "Simple Communication",
+    "Base System Peripheral",
+    "Input Device",
+    "Docking Station",
+    "Processor",
+    "Serial Bus",
+    "Wireless",
+    "Inteligent I/O",
+    "Satellite Communications",
+    "Encrypt/Decrypt",
+    "Data acquisition and signal processing",
+    [255]="Unknown"  // #ps: Oh boy
+};
+
+
 /*
  * pciConfigReadWord:
  *    Envia o comando para a porta 0xCF8, e 

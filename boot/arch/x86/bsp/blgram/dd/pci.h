@@ -5,6 +5,25 @@
 #ifndef __DD_PCI_H
 #define __DD_PCI_H    1
 
+
+// PCI Support
+// Macro to construct a 32-bit PCI configuration space address 
+// for accessing device registers via I/O ports.
+// Avoid using macros for critical register accesses in production code!
+#define CONFIG_ADDR(bus,device,fn,offset)\
+                       (\
+                       (((uint32_t)(bus)    & 0xff) << 16)|\
+                       (((uint32_t)(device) & 0x3f) << 11)|\
+                       (((uint32_t)(fn)     & 0x07) <<  8)|\
+                       ( (uint32_t)(offset) & 0xfc)|0x80000000 )
+
+
+#define PCI_PORT_ADDR  0xCF8
+#define PCI_PORT_DATA  0xCFC
+
+
+
+
 #define PCI_ADDRESS_PORT      0x0CF8
 #define PCI_DATA_PORT         0x0CFC
  
@@ -239,7 +258,7 @@
 //#define PCI_SUBCLASS_PACCEL    0    //Processing accelerators.
 
 //...
-
+extern const char *pci_classes[];  // Defined in pci.c
 
 unsigned short 
 pciConfigReadWord ( 
