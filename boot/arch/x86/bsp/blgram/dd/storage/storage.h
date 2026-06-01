@@ -79,14 +79,17 @@ struct storage_controller_d
 extern struct storage_controller_d  StorageController;
 
 
-// Internal use
-#define CONTROLLER_TYPE_ATA   1000
-#define CONTROLLER_TYPE_AHCI  2000
-
 struct boot_disk_d
 {
     int initialized;
     int controller_type;
+
+    unsigned char bus;
+    unsigned char dev;  
+    unsigned char fun;
+
+    unsigned long ahci_bar5;
+    int boot_port;
 };
 extern struct boot_disk_d  BootDisk;
 

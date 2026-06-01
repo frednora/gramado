@@ -2203,7 +2203,7 @@ int __ata_probe_controller(int ataflag)
 // IDE controller: proceed with full ATA support (multi-port)
     if (StorageController.controller_type == STORAGE_CONTROLLER_MODE_ATA){
         
-        BootDisk.controller_type = CONTROLLER_TYPE_ATA;
+        BootDisk.controller_type = STORAGE_CONTROLLER_MODE_ATA;
         __ata_initialize_controller();
 
 // =========================
@@ -2227,7 +2227,7 @@ int __ata_probe_controller(int ataflag)
 // Sub-class 06h = SATA Controller
     } else if (StorageController.controller_type == STORAGE_CONTROLLER_MODE_AHCI){
 
-        BootDisk.controller_type = CONTROLLER_TYPE_AHCI;
+        BootDisk.controller_type = STORAGE_CONTROLLER_MODE_AHCI;
         printf ("__ata_probe_controller: AHCI not supported\n");
         bl_die();
 

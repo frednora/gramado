@@ -125,6 +125,22 @@ char *strcat(char *to, const char *from)
     return (ret);
 }
 
+
+// Fill memory with a constant byte.
+void *memset(void *s, int c, size_t n)
+{
+    unsigned char *p = (unsigned char *) s;
+    unsigned char byte = (unsigned char) c;
+
+    while (n--)
+    {
+        *p++ = byte;
+    }
+
+    return s;
+}
+
+
 // Copy n bytes.
 void bcopy (char *from, char *to, int len)
 {
@@ -142,6 +158,13 @@ void bzero(char *cp, int len)
         *(cp + len) = 0;
     };
 }
+
+// Alternative version (more explicit)
+void bzero00(void *s, size_t n)
+{
+    memset(s, 0, n);
+}
+
 
 //
 // End

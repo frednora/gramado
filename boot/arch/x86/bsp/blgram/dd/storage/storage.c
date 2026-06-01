@@ -29,13 +29,13 @@ void read_lba( unsigned long address, unsigned long lba )
     int ControllerType = BootDisk.controller_type;
     switch (ControllerType)
     {
-        case CONTROLLER_TYPE_AHCI:
+        case STORAGE_CONTROLLER_MODE_AHCI:
             //ahci_read_sector(...)
             break;
 
         // see: libata.c
-        case CONTROLLER_TYPE_ATA:
-            //printf("CONTROLLER_TYPE_ATA\n");
+        case STORAGE_CONTROLLER_MODE_ATA:
+            //printf("STORAGE_CONTROLLER_MODE_ATA\n");
             ata_read_sector ( address, lba, 0, 0 );
             break;
         
@@ -69,11 +69,11 @@ void write_lba ( unsigned long address, unsigned long lba )
     int ControllerType = BootDisk.controller_type;
     switch (ControllerType)
     {
-        case CONTROLLER_TYPE_AHCI:
+        case STORAGE_CONTROLLER_MODE_AHCI:
             //ahci_write_sector(...)
             break;
 
-        case CONTROLLER_TYPE_ATA:
+        case STORAGE_CONTROLLER_MODE_ATA:
             ata_write_sector ( address, lba, 0, 0 );
             break;
         
@@ -196,6 +196,14 @@ int storage_initialize(void)
         bl_die();
     }
 
+
+
+    // Reset BootDisk info
+    BootDisk.initialized = FALSE;
+    BootDisk.controller_type = STORAGE_CONTROLLER_MODE_UNKNOWN;
+    BootDisk.ahci_bar5 = 0;
+    BootDisk.boot_port = -1;
+
 // -----------------------
 
 // AHCI:
@@ -205,14 +213,40 @@ int storage_initialize(void)
 
         printf("storage: AHCI Controller\n");
 
+
+        // === CRITICAL: Read BAR5 ===
+        BootDisk.ahci_bar5 = __ataReadPCIConfigAddr(bus, dev, fun, 0x24) & ~0xF;
+
+        if (BootDisk.ahci_bar5 == 0)
+        {
+            printf("AHCI ERROR: BAR5 is zero!\n");
+            refresh_screen();
+            bl_die();
+        }
+
+        // Save PCI location
+        BootDisk.bus = bus;
+        BootDisk.dev = dev;
+        BootDisk.fun = fun;
+        BootDisk.controller_type = STORAGE_CONTROLLER_MODE_AHCI;
+
+        // Enable Bus Master (recommended)
+        // data = __ataReadPCIConfigAddr(bus, dev, fun, 0x04);
+        // __ataWritePCIConfigAddr(bus, dev, fun, 0x04, data | 0x04);
+
         // #debug
         // refresh_screen();
         // bl_die();
 
         Status = (int) ahci_initialize();
         if (Status != TRUE){
-            // Nothing in case of failure.
+            // Nothing in case of failure
         }
+
+        // #debug
+        refresh_screen();
+        bl_die();
+
 
 // ATA:
 // Try initialization for the ata mode.
