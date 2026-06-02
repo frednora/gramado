@@ -670,6 +670,21 @@ void disk_show_info (void);
 //==================================================================
 // storage
 
+struct boot_disk_d
+{
+    int initialized;
+    int controller_type;
+
+    unsigned char bus;
+    unsigned char dev;  
+    unsigned char fun;
+
+    unsigned long ahci_bar5;
+    int boot_port;
+};
+extern struct boot_disk_d  BootDisk;
+
+
 // See storage.c
 extern unsigned long gNumberOfSectorsInBootDisk;
 
@@ -772,7 +787,7 @@ storage_write_sector(
     unsigned long buffer, 
     unsigned long lba );
 
-
+uint32_t storagePCIScanDevice(int class);
 
 int storagePCISetupMassStorageController(struct pci_device_d *D);
 

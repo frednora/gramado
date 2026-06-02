@@ -284,6 +284,7 @@
 // #
 // There are some free virtual addresses here
 
+#define AHCI_CONTROLLER_VA    0x0000000034000000
 
 // #test
 // Sequence of 2MB shared usermode canvases

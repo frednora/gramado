@@ -165,11 +165,12 @@ int hdd_ata_wait_no_drq(int p)
  *   Reads 'bytes' from the disk data register (port p) into 'buffer' using PIO.
  *   - Uses the 'rep insw' instruction for high-speed 16-bit word transfer.
  */
+
 static void __libata_pio_read( int p, void *buffer, int bytes )
 {
     asm volatile (\
-        "cld;\
-         rep; insw":: "D" (buffer),\
+        "cld \n\
+         rep \n insw":: "D" (buffer),\
          "d" (ide_port[p].base_port + 0),\
           "c" (bytes/2));
 }
@@ -179,14 +180,16 @@ static void __libata_pio_read( int p, void *buffer, int bytes )
  *   Writes 'bytes' from 'buffer' to the disk data register (port p) using PIO.
  *   - Uses 'rep outsw' for high-speed 16-bit word transfer.
  */
+
 static void __libata_pio_write( int p, void *buffer, int bytes )
 {
     asm volatile (\
-                "cld;\
-                rep; outsw"::"S"(buffer),\
+                "cld \n\
+                rep \n outsw"::"S"(buffer),\
                 "d"(ide_port[p].base_port + 0),\
                 "c"(bytes/2));
 }
+
 
 /* ========================
    Main Sector R/W Routine

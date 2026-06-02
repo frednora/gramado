@@ -6,8 +6,10 @@
 
 // Main structure for managing the storage information.
 struct storage_d  *storage;
-
 struct storage_controller_d  StorageController;
+
+struct boot_disk_d  BootDisk;
+
 
 // The number of sectors in the boot disk.
 // See: storage_set_total_lba_for_boot_disk().
@@ -1242,6 +1244,59 @@ static int __validate_disksignature_from_bootblock(void)
     return 0;  //ok
 }
 
+// storagePCIScanDevice:
+// Get the bus/dev/fun for a device given the class.
+
+uint32_t storagePCIScanDevice(int class)
+{
+    uint32_t data = -1;
+    int bus=0; 
+    int dev=0; 
+    int fun=0;
+
+// =============
+// Probe
+
+    for ( bus=0; bus < 256; bus++ )
+    {
+        for ( dev=0; dev < 32; dev++ )
+        {
+            for ( fun=0; fun < 8; fun++ )
+            {
+                out32 ( PCI_PORT_ADDR, __PCI_CONFIG_ADDR( bus, dev, fun, 0x8) );
+                
+                data = in32 (PCI_PORT_DATA);
+                
+                // #todo
+                // We need a class variable outside the if statement.
+                // ex: ClassValue = data >> 24 & 0xff;
+                
+                if ( ( data >> 24 & 0xff ) == class )
+                {
+                    // #todo: Save this information.
+                    //printk ("[ Detected PCI device: %s ]\n", 
+                        //pci_classes[class] );
+
+                    // Done
+                    
+                    // #todo
+                    // Put this into a variable.
+                    
+                    // XXXValue = ( fun + (dev*8) + (bus*32) );
+                    // return (uint32_t) XXXValue;
+                    
+                    return (uint32_t) ( fun + (dev*8) + (bus*32) );
+                }
+            };
+        };
+    };
+
+// Fail
+    printk ("[ PCI device NOT detected ]\n");
+    //refresh_screen ();
+    return (uint32_t) (-1);
+}
+
 
 // storagePCISetupMassStorageController:
 // Espaço de configuraçao PCI Mass Storage.
@@ -1565,7 +1620,26 @@ fail:
     return (int) PCI_MSG_ERROR;
 }
 
+/*
+uint32_t 
+__storageReadPCIConfigAddr ( 
+    int bus, 
+    int dev,
+    int fun, 
+    int offset )
+{
 
+// #bugbug
+// Do not use macros.
+// Expand this macro outside the function.
+ 
+    out32 ( 
+        PCI_PORT_ADDR, 
+        CONFIG_ADDR( bus, dev, fun, offset ) );
+
+    return (uint32_t) in32(PCI_PORT_DATA);
+}
+*/
 
 //
 // $
@@ -1584,6 +1658,12 @@ int storageInitialize(void)
 // Called by I_initKernelComponents in x64init.c
 // #bugbug
 // When the rest of the structure is initialized?
+
+    unsigned int data=0;
+    unsigned char bus=0;
+    unsigned char dev=0;
+    unsigned char fun=0;
+
 
 // check bootdisk signature from bootblock.
     __validate_disksignature_from_bootblock();
@@ -1612,10 +1692,61 @@ int storageInitialize(void)
     __disk_init();
     __volume_init();
 
-
     int Status = -1;  //error
     int Value = -1;
 
+/*
+    // Reset BootDisk info
+    BootDisk.initialized = FALSE;
+    BootDisk.controller_type = STORAGE_CONTROLLER_MODE_UNKNOWN;
+    BootDisk.ahci_bar5 = 0;
+    BootDisk.boot_port = -1;
+*/
+
+    data = (unsigned int) storagePCIScanDevice(PCI_CLASSCODE_MASS);
+// Error
+    if (data == -1)
+    {
+        printk ("storageInitialize: pci_scan_device fail. ret={%d}\n", 
+            (unsigned int) data );
+
+        // Abort
+        Status = (int) (PCI_MSG_ERROR);
+        printk("storage: No Mass Storage Controller found\n");
+        //refresh_screen();
+        die();
+    }
+
+    // Decode bus/dev/fun from PCI scan result
+    bus = ( data >> 8 & 0xff );
+    dev = ( data >> 3 & 31 );
+    fun = ( data      & 7 );
+
+
+    // Getting information about the PCI device.
+    // class, subclass, prog if and revision id.
+    data = (uint32_t) pci_ReadPCIConfigAddr( bus, dev, fun, 8 );
+
+    unsigned char __class    = (data >> 24) & 0xff;  // Class
+    unsigned char __subclass = (data >> 16) & 0xff;  // Subclass
+
+    if (__class != PCI_CLASSCODE_MASS)
+    {
+        printk("storage: Not a PCI_CLASSCODE_MASS\n");
+        //refresh_screen();
+        die();
+    }
+
+    // Reset BootDisk info
+    BootDisk.initialized = FALSE;
+    BootDisk.controller_type = STORAGE_CONTROLLER_MODE_UNKNOWN;
+    BootDisk.ahci_bar5 = 0;
+    BootDisk.boot_port = -1;
+
+   
+    // #debug
+    //printk ("Breakpoint\n");
+    //while(1){}
 
 // =====================================
 // #todo
@@ -1623,18 +1754,35 @@ int storageInitialize(void)
 // and than call the right initialization hook for them.
 
     struct pci_device_d *PCIDeviceStorage;
-// pci device.
-    PCIDeviceStorage = 
-        (struct pci_device_d *) scan_pci_device_list2 ( 
-                                    (unsigned char) PCI_CLASSCODE_MASS, 
-                                    (unsigned char) PCI_SUBCLASS_IDE );
 
-    if ((void *) PCIDeviceStorage == NULL){
+    if (__subclass == STORAGE_CONTROLLER_MODE_AHCI)
+    {
+        // AHCI controller only.
+        // pci device.
+        PCIDeviceStorage = 
+            (struct pci_device_d *) scan_pci_device_list2 ( 
+                                (unsigned char) PCI_CLASSCODE_MASS, 
+                                (unsigned char) PCI_SUBCLASS_SATA );  // ahci
+
+    } else if (__subclass == STORAGE_CONTROLLER_MODE_ATA){
+
+        // ATA controller only.
+        // pci device.
+        PCIDeviceStorage = 
+            (struct pci_device_d *) scan_pci_device_list2 ( 
+                                (unsigned char) PCI_CLASSCODE_MASS, 
+                                (unsigned char) PCI_SUBCLASS_IDE );
+
+    }
+
+    if ((void *) PCIDeviceStorage == NULL)
+    {
         printk("storageInitialize: PCIDeviceStorage\n");
         Status = (int) -1;
         goto fail;
     }
-    if ( PCIDeviceStorage->used != TRUE || PCIDeviceStorage->magic != 1234 ){
+    if ( PCIDeviceStorage->used != TRUE || PCIDeviceStorage->magic != 1234 )
+    {
         printk ("storageInitialize: PCIDeviceStorage validation\n");
         Status = (int) -1;
         goto fail;
@@ -1653,6 +1801,7 @@ int storageInitialize(void)
         goto fail;
     }
 
+
     // #ps:
     // 'PCIDeviceStorage' provides us the vendor and device id.
     // The device id will tell us what is the device driver 
@@ -1665,10 +1814,17 @@ int storageInitialize(void)
 
     uint8_t ControllerType = StorageController.controller_type;
 
+    BootDisk.controller_type = ControllerType;
+
     switch (ControllerType){
         
         // Controller type: ATA
         case STORAGE_CONTROLLER_MODE_ATA:
+
+            // #debug
+            //printk ("Breakpoint ATA\n");
+            //while(1){}
+
            // FORCEPIO - Select PIO mode as standard.
             DDINIT_ata( 
                 PCIDeviceStorage, 
@@ -1682,13 +1838,21 @@ int storageInitialize(void)
 
         case STORAGE_CONTROLLER_MODE_AHCI:
 
-            panic("storage.c: STORAGE_CONTROLLER_MODE_AHCI\n"); 
+            // #debug
+            //printk ("Breakpoint AHCI\n");
+            //while(1){}
+
+            //panic("storage.c: STORAGE_CONTROLLER_MODE_AHCI\n"); 
 
             // See: ahci.c
-            //DDINIT_ahci(
-            //    PCIDeviceStorage,
-            //    STORAGE_CONTROLLER_MODE_AHCI
-            //);
+            DDINIT_ahci(
+                PCIDeviceStorage,
+                STORAGE_CONTROLLER_MODE_AHCI
+            );
+
+            printk("storageInitialize: AHCI controller initialized\n");
+            ahci_test_read();   
+            while(1){}
 
             break;
 

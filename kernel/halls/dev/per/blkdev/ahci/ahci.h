@@ -23,6 +23,25 @@ extern struct ahci_current_port_d  AHCICurrentPort;
 
 
 
+
+// AHCI Port Interrupt Status Register (PxIS) bits
+#define HBA_PxIS_TFES    (1 << 30)   // Task File Error Status
+#define HBA_PxIS_HBFS    (1 << 29)   // Host Bus Fatal Error
+#define HBA_PxIS_IFS     (1 << 27)   // Interface Fatal Error
+#define HBA_PxIS_INFS    (1 << 26)   // Interface Non-Fatal Error
+#define HBA_PxIS_OFS     (1 << 24)   // Overflow Error
+#define HBA_PxIS_IPMS    (1 << 23)   // Incorrect Port Multiplier Status
+#define HBA_PxIS_PRCS    (1 << 22)   // PhyRdy Change Status
+#define HBA_PxIS_DMPS    (1 <<  7)   // Device Mechanical Presence Status
+#define HBA_PxIS_PCS     (1 <<  6)   // Port Connect Change Status
+#define HBA_PxIS_DPS     (1 <<  5)   // Descriptor Processed
+#define HBA_PxIS_UFS     (1 <<  4)   // Unknown FIS
+#define HBA_PxIS_SDBS    (1 <<  3)   // Set Device Bits FIS
+#define HBA_PxIS_DSS     (1 <<  2)   // DMA Setup FIS
+#define HBA_PxIS_PSS     (1 <<  1)   // PIO Setup FIS
+#define HBA_PxIS_DHRS    (1 <<  0)   // Device to Host Register FIS
+
+
 //
 // Structure based on osdev.org totorial.
 //
@@ -259,7 +278,7 @@ typedef volatile struct tagHBA_MEM
 	uint8_t  vendor[0x100-0xA0];
 
 	// 0x100 - 0x10FF, Port control registers
-	HBA_PORT	ports[1];	// 1 ~ 32
+	HBA_PORT	ports[NR_PORTS];	// 1 ~ 32
 } HBA_MEM;
 
 
@@ -359,6 +378,11 @@ typedef struct tagHBA_CMD_TBL
 //
 // Prototypes 
 //
+
+
+// IN: port, lba. buffer, sector_count
+int ahci_read_sector(int port, uint64_t lba, void *buffer, uint32_t sector_count);
+void ahci_test_read(void);
 
 int DDINIT_ahci(
     struct pci_device_d *pci_ahci,

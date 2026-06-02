@@ -27,15 +27,20 @@ void read_lba( unsigned long address, unsigned long lba )
     }
 
     int ControllerType = BootDisk.controller_type;
+    int AHCI_Port = 0;  //BootDisk.boot_port;
+    int NumberOfSectors = 1;  // #todo: parameterize this.
+
     switch (ControllerType)
     {
         case STORAGE_CONTROLLER_MODE_AHCI:
-            //ahci_read_sector(...)
+            // IN: port, lba. buffer, sector_count
+            ahci_read_sector(AHCI_Port, lba, address, NumberOfSectors);
             break;
 
         // see: libata.c
         case STORAGE_CONTROLLER_MODE_ATA:
             //printf("STORAGE_CONTROLLER_MODE_ATA\n");
+            // IN: address, lba, unused, unused
             ata_read_sector ( address, lba, 0, 0 );
             break;
         
@@ -71,9 +76,16 @@ void write_lba ( unsigned long address, unsigned long lba )
     {
         case STORAGE_CONTROLLER_MODE_AHCI:
             //ahci_write_sector(...)
+
+            // #todo: We need this.
+            printf("write_lba: AHCI write not implemented yet\n");
+            refresh_screen();
+            bl_die();
+
             break;
 
         case STORAGE_CONTROLLER_MODE_ATA:
+            // IN: address, lba, unused, unused
             ata_write_sector ( address, lba, 0, 0 );
             break;
         
@@ -196,8 +208,6 @@ int storage_initialize(void)
         bl_die();
     }
 
-
-
     // Reset BootDisk info
     BootDisk.initialized = FALSE;
     BootDisk.controller_type = STORAGE_CONTROLLER_MODE_UNKNOWN;
@@ -243,9 +253,11 @@ int storage_initialize(void)
             // Nothing in case of failure
         }
 
+        //ahci_test_read(); // ok its working 
+
         // #debug
-        refresh_screen();
-        bl_die();
+        // refresh_screen();
+        // bl_die();
 
 
 // ATA:
