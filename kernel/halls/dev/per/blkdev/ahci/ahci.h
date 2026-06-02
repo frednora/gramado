@@ -8,21 +8,6 @@
 #define NR_PORTS  32  // maximum number of ports
 //#define NR_CMDS   32  // maximum number of queued commands
 
-struct ahci_port_d 
-{
-    int todo00;
-};
-extern struct ahci_port_d  ahci_port[NR_PORTS];
-
-
-struct ahci_current_port_d 
-{
-    int todo00;
-};
-extern struct ahci_current_port_d  AHCICurrentPort;
-
-
-
 
 // AHCI Port Interrupt Status Register (PxIS) bits
 #define HBA_PxIS_TFES    (1 << 30)   // Task File Error Status
@@ -95,7 +80,7 @@ typedef struct tagFIS_REG_H2D
 
 	// DWORD 4
 	uint8_t  rsv1[4];	// Reserved
-} FIS_REG_H2D;
+} __attribute__((packed)) FIS_REG_H2D;
 
 // 3) Register FIS – Device to Host
 typedef struct tagFIS_REG_D2H
@@ -130,7 +115,7 @@ typedef struct tagFIS_REG_D2H
 
 	// DWORD 4
 	uint8_t  rsv4[4];     // Reserved
-} FIS_REG_D2H;
+} __attribute__((packed)) FIS_REG_D2H;
 
 
 // 4) Data FIS – Bidirectional
@@ -147,7 +132,7 @@ typedef struct tagFIS_DATA
 
 	// DWORD 1 ~ N
 	uint32_t data[1];	// Payload
-} FIS_DATA;
+}__attribute__((packed)) FIS_DATA;
 
 
 // 5) PIO Setup – Device to Host
@@ -188,7 +173,7 @@ typedef struct tagFIS_PIO_SETUP
 	// DWORD 4
 	uint16_t tc;		// Transfer count
 	uint8_t  rsv4[2];	// Reserved
-} FIS_PIO_SETUP;
+} __attribute__((packed)) FIS_PIO_SETUP;
 
 
 // 6) DMA Setup – Device to Host
@@ -222,7 +207,7 @@ typedef struct tagFIS_DMA_SETUP
     //DWORD 6
     uint32_t resvd;          //Reserved
         
-} FIS_DMA_SETUP;
+} __attribute__((packed)) FIS_DMA_SETUP;
 
 
 
@@ -284,8 +269,31 @@ typedef volatile struct tagHBA_MEM
 
 // 2) Port Received FIS and Command List Memory
 
+
+// Set Device Bits FIS – Device to Host
+typedef struct tagFIS_DEV_BITS
+{
+    // DWORD 0
+    uint8_t  fis_type;    // FIS_TYPE_DEV_BITS
+
+    uint8_t  pmport:4;    // Port multiplier
+    uint8_t  rsv0:2;      // Reserved
+    uint8_t  i:1;         // Interrupt bit
+    uint8_t  rsv1:1;      // Reserved
+
+    uint8_t  status;      // Status register (bits 7:0)
+    uint8_t  error;       // Error register
+
+    // DWORD 1
+    uint32_t sact;        // Shadow Active (SActive) register - 32 bits
+
+    // DWORD 2
+    uint32_t rsv2;        // Reserved
+} __attribute__((packed)) FIS_DEV_BITS;
+
 // 3) Received FIS
 
+/*
 typedef volatile struct tagHBA_FIS
 {
 	// 0x00
@@ -311,6 +319,34 @@ typedef volatile struct tagHBA_FIS
 	// 0xA0
 	uint8_t   	rsv[0x100-0xA0];
 } HBA_FIS;
+*/
+
+// 3) Received FIS
+
+typedef volatile struct tagHBA_FIS
+{
+    // 0x00 - 0x1F
+    FIS_DMA_SETUP   dsfis;      // DMA Setup FIS
+    uint8_t         pad0[4];
+
+    // 0x20 - 0x3F
+    FIS_PIO_SETUP   psfis;      // PIO Setup FIS
+    uint8_t         pad1[12];
+
+    // 0x40 - 0x57
+    FIS_REG_D2H     rfis;       // Register – Device to Host FIS
+    uint8_t         pad2[4];
+
+    // 0x58 - 0x5F
+    FIS_DEV_BITS    sdbfis;     // Set Device Bits FIS
+
+    // 0x60 - 0x9F
+    uint8_t         ufis[64];   // Unknown FIS
+
+    // 0xA0 - 0xFF (padding to 256 bytes)
+    uint8_t         rsv[0x100 - 0xA0];
+} HBA_FIS;
+
 
 
 // 4) Command List
@@ -341,7 +377,7 @@ typedef struct tagHBA_CMD_HEADER
 
 	// DW4 - 7
 	uint32_t rsv1[4];	// Reserved
-} HBA_CMD_HEADER;
+} __attribute__((packed)) HBA_CMD_HEADER;
 
 // 5) Command Table and Physical Region Descriptor Table
 
@@ -355,8 +391,9 @@ typedef struct tagHBA_PRDT_ENTRY
 	uint32_t dbc:22;		// Byte count, 4M max
 	uint32_t rsv1:9;		// Reserved
 	uint32_t i:1;		// Interrupt on completion
-} HBA_PRDT_ENTRY;
+}__attribute__((packed)) HBA_PRDT_ENTRY;
 
+/*
 typedef struct tagHBA_CMD_TBL
 {
 	// 0x00
@@ -371,7 +408,51 @@ typedef struct tagHBA_CMD_TBL
 	// 0x80
 	HBA_PRDT_ENTRY	prdt_entry[1];	// Physical region descriptor table entries, 0 ~ 65535
 } HBA_CMD_TBL;
+*/
 
+// Command Table - better to support up to 8 PRDTs for larger transfers
+typedef struct tagHBA_CMD_TBL
+{
+    uint8_t             cfis[64];           // Command FIS
+    uint8_t             acmd[16];           // ATAPI command (12 or 16 bytes)
+    uint8_t             rsv[48];            // Reserved
+    HBA_PRDT_ENTRY      prdt_entry[8];      // Up to 8 entries (4MB each) - very safe for now
+} __attribute__((packed)) HBA_CMD_TBL;
+
+
+
+// One contiguous aligned block per port (best practice)
+typedef struct tagAHCI_PORT_MEMORY
+{
+    HBA_CMD_HEADER   cmd_list[32] __attribute__((aligned(1024)));
+    HBA_FIS          fis        __attribute__((aligned(256)));
+    HBA_CMD_TBL      cmd_tbl[32] __attribute__((aligned(128)));   // one per command slot
+} __attribute__((packed)) AHCI_PORT_MEMORY;
+
+
+/*
+struct ahci_port_d 
+{
+    int todo00;
+};
+*/
+struct ahci_port_d 
+{
+    int todo00;
+    AHCI_PORT_MEMORY *mem;        // Virtual address of the whole block
+    unsigned long     mem_pa;     // Physical address
+    int               initialized;
+    int               port_num;
+    // ... more later (device info, etc.)
+};
+extern struct ahci_port_d  ahci_port[NR_PORTS];
+
+
+struct ahci_current_port_d 
+{
+    int todo00;
+};
+extern struct ahci_current_port_d  AHCICurrentPort;
 
 
 
