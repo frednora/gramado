@@ -382,7 +382,6 @@ typedef struct tagHBA_CMD_TBL
 
 int ahci_read_sector(int port, uint64_t lba, void *buffer, uint32_t sector_count);
 
-
 int ahci_initialize(void);
 
 #endif  

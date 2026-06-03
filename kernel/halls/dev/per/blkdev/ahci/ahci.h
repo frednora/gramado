@@ -27,6 +27,14 @@
 #define HBA_PxIS_DHRS    (1 <<  0)   // Device to Host Register FIS
 
 
+// PxCMD - Port x Command and Status
+#define HBA_PxCMD_ST    0x1     // Start (ST)
+#define HBA_PxCMD_FRE   0x10    // FIS Receive Enable (FRE)
+#define HBA_PxCMD_FR    0x4000  // FIS Receive Running (FR)
+#define HBA_PxCMD_CR    0x8000  // Command List Running (CR)
+//#define HBA_PxIS_TFES   0x40000000
+
+
 //
 // Structure based on osdev.org totorial.
 //
@@ -460,7 +468,7 @@ extern struct ahci_current_port_d  AHCICurrentPort;
 
 
 // IN: port, lba. buffer, sector_count
-int ahci_read_sector(int port, uint64_t lba, void *buffer, uint32_t sector_count);
+int ahci_read_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_count);
 void ahci_test_read(void);
 
 int DDINIT_ahci(

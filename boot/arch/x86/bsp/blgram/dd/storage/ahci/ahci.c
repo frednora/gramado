@@ -12,6 +12,11 @@ struct ahci_current_port_d  AHCICurrentPort;
 
 // =====================================================
 
+static void ahci_io_delay(void);
+static void ahci_delay(int ms);
+
+// =====================================================
+
 static void ahci_io_delay(void)
 {
     asm volatile("outb %%al, $0x80" : : "a"(0));
@@ -158,7 +163,6 @@ static int ahci_setup_port(int port_num)
 
     // Stop port
     port->cmd &= ~((1<<0) | (1<<4));   // Clear ST + FRE
-
     // Wait for CR + FR to clear
     while (port->cmd & ((1<<15) | (1<<14)))
         ahci_io_delay();
