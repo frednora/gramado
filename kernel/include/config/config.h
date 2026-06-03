@@ -63,6 +63,7 @@
 // So, we can't see the output for the kernel console.
 #define CONFIG_PRINTK_TO_SERIAL  1
 
+
 // #test
 // It changes the whey printk will work. Sending bytes to the serial port.
 // This is case only for syscalls.

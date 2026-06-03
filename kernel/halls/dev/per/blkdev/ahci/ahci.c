@@ -23,7 +23,15 @@ static HBA_CMD_TBL    __test_cmdtbl      __attribute__((aligned(128)));
 // Globals
 int g_ahci_driver_initialized = FALSE;
 
-volatile HBA_MEM *AHCI_HBA = NULL;   // Main HBA register base
+
+// Main structure:
+// It has the following components:
+// + 0x00 - 0x2B, Generic Host Control
+// + 0x2C - 0x9F, Reserved
+// + 0xA0 - 0xFF, Vendor specific registers
+// + 0x100 - 0x10FF, Port control registers
+volatile HBA_MEM *AHCI_HBA_STRUCT = NULL;
+
 
 struct ahci_port_d  ahci_port[NR_PORTS];
 struct ahci_current_port_d  AHCICurrentPort;
@@ -42,7 +50,7 @@ struct ahci_device_d *current_ahci_dev     = NULL;
 static inline void ahci_flush_cr3(void);
 static void ahci_io_delay(void);
 static void ahci_delay(int ms);
-static int  ahci_setup_port(int port_num);
+static int  __ahci_setup_port(int port_num);
 static int  ahci_identify_device(int port_num);
 static void ahci_flush_cache(void *va, unsigned long size);
 static void ahci_invalidate_cache(void *va, unsigned long size);
@@ -108,7 +116,7 @@ static int ahci_identify_device(int port_num)
     if (port_num < 0 || port_num >= NR_PORTS)
         return -1;
 
-    volatile HBA_PORT *port = &AHCI_HBA->ports[port_num];
+    volatile HBA_PORT *port = &AHCI_HBA_STRUCT->ports[port_num];
 
     // Check if device is present
     if (port->sig == 0 || port->sig == 0xFFFFFFFF)
@@ -147,7 +155,7 @@ int ahci_read_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_co
         return -1;
     }
 
-    p = &AHCI_HBA->ports[port];
+    p = &AHCI_HBA_STRUCT->ports[port];
 
     printk("=== AHCI READ ATTEMPT === Port %d | LBA %u | Sectors %u | VA=0x%x\n",
            port, (uint32_t)lba, sector_count, (unsigned long)buffer_va);
@@ -330,10 +338,10 @@ void ahci_test_read(void)
 
 static void ahci_enable(void)
 {
-    if (!AHCI_HBA)
+    if (!AHCI_HBA_STRUCT)
         return;
 
-    AHCI_HBA->ghc |= (1 << 31);   // AE bit
+    AHCI_HBA_STRUCT->ghc |= (1 << 31);   // AE bit
 }
 
 
@@ -344,15 +352,15 @@ static void ahci_enable(void)
 
 static void ahci_reset_hba(void)
 {
-    if (!AHCI_HBA)
+    if (!AHCI_HBA_STRUCT)
         return;
 
-    printk("AHCI: Resetting HBA...\n");
+    printk("AHCI: Resetting HBA ...\n");
 
-    AHCI_HBA->ghc |= (1 << 0);   // HR bit
+    AHCI_HBA_STRUCT->ghc |= (1 << 0);   // HR bit
 
     // Wait for reset to complete (HR self-clears)
-    while (AHCI_HBA->ghc & (1 << 0))
+    while (AHCI_HBA_STRUCT->ghc & (1 << 0))
         ahci_io_delay();
 
     printk("AHCI: HBA Reset done\n");
@@ -360,22 +368,35 @@ static void ahci_reset_hba(void)
 
 
 // =======================================================
-// ahci_setup_port
+// __ahci_setup_port
 // Allocate and map command list, FIS area and command tables.
 // =======================================================
 
-static int ahci_setup_port(int port_num)
+// Worker
+static int __ahci_setup_port(int port_num)
 {
+
+    printk("__ahci_setup_port: Setup port %d\n", port_num);
 
 // Parameters:
     if (port_num < 0 || port_num >= NR_PORTS)
         return (int) -1;
 
+// --------------------------------------------------------
+// Get pointer to the port structure
 // The port hardware registers
-    volatile HBA_PORT *port = &AHCI_HBA->ports[port_num];
 
-// The software port descriptor
-    struct ahci_port_d *pinfo = &ahci_port[port_num];
+    volatile HBA_PORT *port = &AHCI_HBA_STRUCT->ports[port_num];
+
+    printk("Port %d: sig=0x%x  ", port_num, port->sig);
+
+    if (port->sig == 0x00000101)
+        printk("[SATA]\n");
+    else if (port->sig == 0xEB140101)
+        printk("[SATAPI]\n");
+    else
+        printk("[Unknown/Not present]\n");
+
 
 //
 // Stop port cleanly before reconfiguring
@@ -398,11 +419,18 @@ static int ahci_setup_port(int port_num)
 // Using the locally allocated static buffer for now.
 //
 
+// Base address for locally allocated port memory (static buffer)
+    HBA_BASE = (unsigned long) _zhba_base;
+
+    // The software port descriptor
+    struct ahci_port_d *pinfo = &ahci_port[port_num];
+    // #important:
+    // pinfo->mem is the poiter for the AHCI_PORT_MEMORY structure.
     pinfo->mem    = (AHCI_PORT_MEMORY *) HBA_BASE;
     pinfo->mem_pa = virtual_to_physical((unsigned long)pinfo->mem, gKernelPML4Address);
 
     // Zero the whole block
-    memset(pinfo->mem, 0, sizeof(AHCI_PORT_MEMORY));
+    // memset(pinfo->mem, 0, sizeof(AHCI_PORT_MEMORY));
 
     // Flush to memory so the HBA sees clean state
     ahci_flush_cache(pinfo->mem, sizeof(AHCI_PORT_MEMORY));
@@ -416,6 +444,11 @@ static int ahci_setup_port(int port_num)
 // Program Command List Base (CLB) — must be 1K-aligned physical address
 //
 
+// #ps: This is the HBA_BASE.
+//      At some point we will setup the content into that area.
+//      There are some structures into this area.
+
+// CLB: It points to a Command List. That points to Command Tables.
     port->clb  = (uint32_t)(pinfo->mem_pa & 0xFFFFFFFF);
     port->clbu = (uint32_t)(pinfo->mem_pa >> 32);
 
@@ -426,8 +459,10 @@ static int ahci_setup_port(int port_num)
 
     unsigned long fb_pa = pinfo->mem_pa + 0x400;   // 1024 bytes after CLB
 
+// FB: It points to a FIS receive struture.
     port->fb  = (uint32_t)(fb_pa & 0xFFFFFFFF);
     port->fbu = (uint32_t)(fb_pa >> 32);
+
 
 //
 // Allocate Command Tables (one per slot, 128-byte aligned)
@@ -437,21 +472,31 @@ static int ahci_setup_port(int port_num)
     int i = 0;
     for (i = 0; i < 32; i++)
     {
-        void *tbl_va = kmalloc_aligned(sizeof(HBA_CMD_TBL), 128);
+        // Command table
+        // #ps: Command list struture, points to command table structure
+
+        // == virtual address ==
+        void *tbl_va = kmalloc_aligned(sizeof(HBA_CMD_TBL), 128); // cmd table
         if (!tbl_va)
             return -3;
-
         memset(tbl_va, 0, sizeof(HBA_CMD_TBL));
+        // Keep virtual pointer for CPU-side access
+        // Here we build a lot of command tables.
+        pinfo->cmd_tbl_va[i] = (HBA_CMD_TBL *) tbl_va; // save
 
+        // == physical address ==
+        // This is a list of command table structure? <<<<
+        // Let's make the command list structure
+        // points to command tables.
+
+        // >>> The list <<<
         unsigned long tbl_pa = virtual_to_physical((unsigned long)tbl_va, gKernelPML4Address);
-
         // Write physical address into command header so HBA can DMA-fetch it
         pinfo->mem->cmd_list[i].ctba  = (uint32_t)(tbl_pa & 0xFFFFFFFF);
         pinfo->mem->cmd_list[i].ctbau = (uint32_t)(tbl_pa >> 32);
-        pinfo->mem->cmd_list[i].prdtl = 1;
 
-        // Keep virtual pointer for CPU-side access
-        pinfo->cmd_tbl_va[i] = (HBA_CMD_TBL *) tbl_va;
+        // Physical region descriptor table length in entries
+        pinfo->mem->cmd_list[i].prdtl = 1;
     }
 
     // Flush command list with updated ctba values
@@ -501,17 +546,24 @@ static int ahci_setup_port(int port_num)
 static void ahci_probe_ports(void)
 {
     int i = 0;
-    uint32_t pi = AHCI_HBA->pi;
+
+// 0x0C, Port implemented
+    uint32_t pi = AHCI_HBA_STRUCT->pi;
 
     printk("AHCI: Ports Implemented = 0x%x\n", pi);
 
     for (i = 0; i < NR_PORTS; i++)
     {
-        if (pi & (1u << i))
+        // This tell is the port is implemented or not.
+        if (pi & (1 << i))
         {
-            volatile HBA_PORT *port = &AHCI_HBA->ports[i];
+            printk("PROBE: Port %d Is implemented\n", i);
 
-            printk("AHCI Port %d: sig=0x%x  ", i, port->sig);
+            /*
+            // Get pointer to the port structure
+            volatile HBA_PORT *port = &AHCI_HBA_STRUCT->ports[i];
+
+            printk("Port %d: sig=0x%x  ", i, port->sig);
 
             if (port->sig == 0x00000101)
                 printk("[SATA]\n");
@@ -519,9 +571,10 @@ static void ahci_probe_ports(void)
                 printk("[SATAPI]\n");
             else
                 printk("[Unknown/Not present]\n");
+            */
 
             // Setup port regardless — device may appear after init
-            ahci_setup_port(i);
+            __ahci_setup_port(i);  // Worker
         }
     }
 }
@@ -532,7 +585,11 @@ static void ahci_probe_ports(void)
 // Main driver initialization (mirrors DDINIT_ata style)
 // =======================================================
 
-int DDINIT_ahci(
+// IN:
+// pci_ahci - pointer to PCI device struct for the AHCI controller
+// controller_type - expected to be STORAGE_CONTROLLER_MODE_AHCI
+int 
+DDINIT_ahci(
     struct pci_device_d *pci_ahci,
     uint8_t controller_type )
 {
@@ -540,20 +597,14 @@ int DDINIT_ahci(
     printk("DDINIT_ahci:\n");
 
 // Parameters:
-    if ((void *) pci_ahci == NULL)
-    {
+    if ((void *) pci_ahci == NULL){
         printk("DDINIT_ahci: pci_ahci == NULL\n");
         return -1;
     }
-
-    if (controller_type != STORAGE_CONTROLLER_MODE_AHCI)
-    {
+    if (controller_type != STORAGE_CONTROLLER_MODE_AHCI){
         printk("DDINIT_ahci: Wrong controller type\n");
         return -1;
     }
-
-// Base address for locally allocated port memory (static buffer)
-    HBA_BASE = (unsigned long) _zhba_base;
 
 // BAR5 is the AHCI base address (ABAR)
     unsigned long bar5 = pci_ahci->BAR5 & ~0xF;
@@ -567,21 +618,28 @@ int DDINIT_ahci(
         printk("AHCI: Mapping BAR5 failed\n");
         return -1;
     }
-
     ahci_flush_cr3();   // Activate new page table entry
 
+// Do we have a valid address?
     printk("DDINIT_ahci: BAR5 PA=0x%x  VA=0x%x\n", (uint32_t)bar5, (uint32_t)va);
 
 // ----------------------------
-    AHCI_HBA = (volatile HBA_MEM *) va;
-    if (!AHCI_HBA)
-    {
-        printk("DDINIT_ahci: Invalid HBA address\n");
+
+//
+// Get the pointer for the main structure
+//
+
+    AHCI_HBA_STRUCT = (volatile HBA_MEM *) va;
+
+    if (!AHCI_HBA_STRUCT){
+        printk("DDINIT_ahci: Invalid AHCI_HBA_STRUCT\n");
         return -1;
     }
 
     printk("AHCI: HBA at VA=0x%x | CAP=0x%x | PI=0x%x | VS=0x%x\n",
-           (uint32_t)va, AHCI_HBA->cap, AHCI_HBA->pi, AHCI_HBA->vs);
+           (uint32_t)va, AHCI_HBA_STRUCT->cap, 
+           AHCI_HBA_STRUCT->pi, 
+           AHCI_HBA_STRUCT->vs );
 
 // ----------------------------
     ahci_reset_hba();

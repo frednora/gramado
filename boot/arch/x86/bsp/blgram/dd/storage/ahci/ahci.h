@@ -191,8 +191,8 @@ typedef struct tagFIS_DMA_SETUP
 
 	//DWORD 1&2
 
-    uint64_t DMAbufferID;    // DMA Buffer Identifier. Used to Identify DMA buffer in host memory.
-                             // SATA Spec says host specific and not in Spec. Trying AHCI spec might work.
+    uint64_t DMAbufferID;   // DMA Buffer Identifier. Used to Identify DMA buffer in host memory.
+                            // SATA Spec says host specific and not in Spec. Trying AHCI spec might work.
 
     //DWORD 3
     uint32_t rsvd;           //More reserved
