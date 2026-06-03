@@ -221,8 +221,11 @@ __E1000AllocCont (
     if (pa == 0){
         panic ("__E1000AllocCont: [FAIL] pa\n");
     }
-    //#debug
-    //printk("pa=%x\n",pa);
+    
+    // #debug
+    // #bugbug: It is producing an wrong address ,,, above the mark of 2MB.
+    printk("pa=%x\n",pa);
+    //while(1){}
 
     return (unsigned long) pa;
 }

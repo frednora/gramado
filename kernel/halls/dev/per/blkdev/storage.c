@@ -1850,9 +1850,9 @@ int storageInitialize(void)
                 STORAGE_CONTROLLER_MODE_AHCI
             );
 
-            printk("storageInitialize: AHCI controller initialized\n");
-            ahci_test_read();   
-            while(1){}
+            //printk("storageInitialize: AHCI controller initialized\n");
+            //ahci_test_read();   
+            //while(1){}
 
             break;
 

@@ -430,21 +430,19 @@ typedef struct tagAHCI_PORT_MEMORY
 } __attribute__((packed)) AHCI_PORT_MEMORY;
 
 
-/*
 struct ahci_port_d 
 {
-    int todo00;
-};
-*/
-struct ahci_port_d 
-{
-    int todo00;
     AHCI_PORT_MEMORY *mem;        // Virtual address of the whole block
     unsigned long     mem_pa;     // Physical address
     int               initialized;
     int               port_num;
-    // ... more later (device info, etc.)
+
+    // Array of virtual pointers to each command table
+    HBA_CMD_TBL      *cmd_tbl_va[32];
+
+    // Later: device info, queue state, etc.
 };
+
 extern struct ahci_port_d  ahci_port[NR_PORTS];
 
 

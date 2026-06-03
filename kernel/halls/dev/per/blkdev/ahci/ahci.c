@@ -22,6 +22,14 @@ struct ahci_device_d *current_ahci_dev = NULL;
 
 // =======================================================
 
+// #test
+static inline void ahci_flush_cr3(void) 
+{
+    unsigned long cr3;
+    asm volatile("mov %%cr3, %0" : "=r"(cr3));
+    asm volatile("mov %0, %%cr3" : : "r"(cr3));
+}
+
 static void ahci_io_delay(void)
 {
     asm volatile("outb %%al, $0x80" : : "a"(0));
@@ -103,81 +111,243 @@ static int ahci_setup_port(int port_num)
 }
 */
 
+/*
+static int ahci_setup_port(int port_num)
+{
+    printk("ahci_setup_port: port_num=%d\n", port_num);
+
+    if (port_num < 0 || port_num >= NR_PORTS)
+        return -1;
+
+    // Port info structure
+    struct ahci_port_d *pinfo = &ahci_port[port_num];
+
+// Get the port structure
+    volatile HBA_PORT *port = &AHCI_HBA->ports[port_num];
+
+// Stop port
+    port->cmd &= ~((1<<0) | (1<<4));   // Clear ST + FRE
+
+
+// Wait for CR + FR to clear
+    while (port->cmd & ((1<<15) | (1<<14)))
+        ahci_io_delay();
+
+
+    // 2. Allocate contiguous aligned memory
+   // pinfo->mem = (AHCI_PORT_MEMORY*) kmalloc_aligned(sizeof(AHCI_PORT_MEMORY), 1024);
+
+    // =============================================
+    // Allocate memory (9472 bytes)
+    // =============================================
+    //size_t mem_size = sizeof(AHCI_PORT_MEMORY);   // should be 9472 bytes
+
+
+    // Allocate a bit more so we can align it
+    //void *raw = kmalloc(mem_size + 1024);
+    //if (!raw)
+    //{
+    //    printk("ahci_setup_port: Out of memory for port %d\n", port_num);
+    //    return -2;
+    //}
+    // Align to 1024 bytes (required for Command List)
+    //unsigned long va_aligned = ((unsigned long)raw + 1023) & ~0x3FFULL;
+
+    //pinfo->mem = (AHCI_PORT_MEMORY*) kmalloc(sizeof(AHCI_PORT_MEMORY), 1024);
+    //pinfo->mem = (AHCI_PORT_MEMORY*) va_aligned;
+
+
+    //if (!pinfo->mem)
+       // return -2;
+
+    //memset(pinfo->mem, 0, mem_size);   // use mem_size instead of sizeof
+
+
+    //pinfo->mem_pa = virtual_to_physical((unsigned long)pinfo->mem, gKernelPML4Address);
+    //pinfo->port_num = port_num;
+    //pinfo->initialized = TRUE;
+
+
+    //printk("ahci_setup_port: Port %d memory allocated at VA=0x%x, PA=0x%x\n", 
+    //    port_num, (unsigned long)pinfo->mem, pinfo->mem_pa );
+    //while(1){}
+
+    size_t mem_size = sizeof(AHCI_PORT_MEMORY);   // ~9472 bytes
+    pinfo->mem = (AHCI_PORT_MEMORY*) kmalloc_aligned(mem_size, 1024);
+    if (!pinfo->mem) return -2;
+    memset(pinfo->mem, 0, mem_size);
+
+    pinfo->mem_pa = virtual_to_physical((unsigned long)pinfo->mem, gKernelPML4Address);
+
+// 3. Setup CLB (Command List Base)
+    port->clb  = (uint32_t) pinfo->mem_pa;
+    port->clbu = (uint32_t)(pinfo->mem_pa >> 32);
+
+// 4. Setup FB (FIS Base)
+    unsigned long fis_pa = pinfo->mem_pa + offsetof(AHCI_PORT_MEMORY, fis);
+    port->fb   = (uint32_t) fis_pa;
+    port->fbu  = (uint32_t)(fis_pa >> 32);
+
+
+
+    int i=0;
+    for (i = 0; i < 32; i++) {
+        void *tbl_va = kmalloc_aligned(sizeof(HBA_CMD_TBL), 128);
+        unsigned long tbl_pa = virtual_to_physical((unsigned long)tbl_va, gKernelPML4Address);
+
+        pinfo->mem->cmd_list[i].ctba  = (uint32_t) tbl_pa;
+        pinfo->mem->cmd_list[i].ctbau = (uint32_t)(tbl_pa >> 32);
+        pinfo->mem->cmd_list[i].prdtl = 1;
+    }
+
+
+// 6. Clear port interrupts
+    port->is = 0xFFFFFFFF;
+
+// 7. Start port
+
+    port->cmd |= (1 << 4);   // FRE
+    while (!(port->cmd & (1u << 14))) ahci_io_delay();  // Wait FR
+
+    port->cmd |= (1 << 0);   // ST
+    while (!(port->cmd & (1u << 15))) ahci_io_delay();  // Wait CR
+
+    pinfo->port_num = port_num;
+    pinfo->initialized = TRUE;
+
+    printk("ahci_setup_port: Port %d initialized successfully\n", port_num);
+    return 0;
+}
+*/
+
+/*
+static int ahci_setup_port(int port_num)
+{
+    printk("ahci_setup_port: port_num=%d\n", port_num);
+
+    if (port_num < 0 || port_num >= NR_PORTS)
+        return -1;
+
+    struct ahci_port_d *pinfo = &ahci_port[port_num];
+    volatile HBA_PORT *port = &AHCI_HBA->ports[port_num];
+
+    // Stop port
+    port->cmd &= ~((1<<0) | (1<<4));
+    while (port->cmd & ((1<<15) | (1<<14))) ahci_io_delay();
+
+    // Allocate aligned memory for command list + FIS
+    size_t mem_size = sizeof(AHCI_PORT_MEMORY);
+    pinfo->mem = (AHCI_PORT_MEMORY*) kmalloc_aligned(mem_size, 1024);
+    if (!pinfo->mem) return -2;
+    memset(pinfo->mem, 0, mem_size);
+
+    pinfo->mem_pa = virtual_to_physical((unsigned long)pinfo->mem, gKernelPML4Address);
+
+    // CLB
+    port->clb  = (uint32_t) pinfo->mem_pa;
+    port->clbu = (uint32_t)(pinfo->mem_pa >> 32);
+
+    // FB
+    unsigned long fis_pa = pinfo->mem_pa + offsetof(AHCI_PORT_MEMORY, fis);
+    port->fb  = (uint32_t) fis_pa;
+    port->fbu = (uint32_t)(fis_pa >> 32);
+
+    // Allocate command tables separately and link them
+    int i = 0;
+    for (i = 0; i < 32; i++) 
+    {
+        void *tbl_va = kmalloc_aligned(sizeof(HBA_CMD_TBL), 128);
+        if (!tbl_va) return -3;
+        memset(tbl_va, 0, sizeof(HBA_CMD_TBL));
+
+        unsigned long tbl_pa = virtual_to_physical((unsigned long)tbl_va, gKernelPML4Address);
+
+        pinfo->mem->cmd_list[i].ctba  = (uint32_t) tbl_pa;
+        pinfo->mem->cmd_list[i].ctbau = (uint32_t)(tbl_pa >> 32);
+        pinfo->mem->cmd_list[i].prdtl = 1;
+
+        // Save virtual pointer for later use in ahci_read_sector()
+        pinfo->cmd_tbl_va[i] = (HBA_CMD_TBL*) tbl_va;
+    }
+
+    // Mark initialized
+    pinfo->initialized = TRUE;
+    pinfo->port_num = port_num;
+
+    // Clear interrupts
+    port->is = 0xFFFFFFFF;
+
+    // Start port
+    port->cmd |= (1 << 4);   // FRE
+    while (!(port->cmd & (1u << 14))) ahci_io_delay();
+    port->cmd |= (1 << 0);   // ST
+    while (!(port->cmd & (1u << 15))) ahci_io_delay();
+
+    printk("ahci_setup_port: Port %d initialized successfully\n", port_num);
+    return 0;
+}
+*/
+
 static int ahci_setup_port(int port_num)
 {
     if (port_num < 0 || port_num >= NR_PORTS)
         return -1;
 
-    volatile HBA_PORT *port = &AHCI_HBA->ports[port_num];
     struct ahci_port_d *pinfo = &ahci_port[port_num];
+    volatile HBA_PORT *port = &AHCI_HBA->ports[port_num];
 
-    // 1. Stop port
-    port->cmd &= ~((1u << 0) | (1u << 4));  // Clear ST + FRE
-    while (port->cmd & ((1u << 15) | (1u << 14)))   // Wait CR + FR
+    // Stop port cleanly
+    port->cmd &= ~((1<<0) | (1<<4));  // ST + FRE
+    while (port->cmd & ((1<<15) | (1<<14)))  // CR + FR
         ahci_io_delay();
 
-    // 2. Allocate contiguous aligned memory
-    //pinfo->mem = (AHCI_PORT_MEMORY*) kmalloc_aligned(sizeof(AHCI_PORT_MEMORY), 1024);
-
-    // =============================================
-    // Allocate memory (9472 bytes)
-    // =============================================
-    size_t mem_size = sizeof(AHCI_PORT_MEMORY);   // should be 9472 bytes
-
-
-    // Allocate a bit more so we can align it
-    void *raw = kmalloc(mem_size + 1024);
-    if (!raw)
-    {
-        printk("AHCI: Out of memory for port %d\n", port_num);
-        return -2;
-    }
-    // Align to 1024 bytes (required for Command List)
-    unsigned long va_aligned = ((unsigned long)raw + 1023) & ~0x3FFULL;
-
-    //pinfo->mem = (AHCI_PORT_MEMORY*) kmalloc(sizeof(AHCI_PORT_MEMORY), 1024);
-    pinfo->mem = (AHCI_PORT_MEMORY*) va_aligned;
+    // Allocate port memory (Command List + FIS + Received FIS)
+    size_t mem_size = sizeof(AHCI_PORT_MEMORY);
+    pinfo->mem = (AHCI_PORT_MEMORY*) kmalloc_aligned(mem_size, 1024);
     if (!pinfo->mem)
         return -2;
 
-    memset(pinfo->mem, 0, mem_size);   // use mem_size instead of sizeof
-
-
+    memset(pinfo->mem, 0, mem_size);
     pinfo->mem_pa = virtual_to_physical((unsigned long)pinfo->mem, gKernelPML4Address);
-    pinfo->port_num = port_num;
-    pinfo->initialized = TRUE;
 
-    // 3. Setup CLB (Command List Base)
-    port->clb  = (uint32_t) pinfo->mem_pa;
+    // Command List Base
+    port->clb  = (uint32_t)pinfo->mem_pa;
     port->clbu = (uint32_t)(pinfo->mem_pa >> 32);
 
-    // 4. Setup FB (FIS Base)
+    // FIS Base
     unsigned long fis_pa = pinfo->mem_pa + offsetof(AHCI_PORT_MEMORY, fis);
-    port->fb   = (uint32_t) fis_pa;
+    port->fb   = (uint32_t)fis_pa;
     port->fbu  = (uint32_t)(fis_pa >> 32);
 
-    // 5. Link Command Headers to Command Tables
-    int i=0;
-    for (i=0; i < 32; i++)
-    {
-        unsigned long tbl_pa = pinfo->mem_pa + offsetof(AHCI_PORT_MEMORY, cmd_tbl[i]);
+    // Command Tables (one per slot)
+    int i = 0;
+    for (i = 0; i < 32; i++) {
+        void *tbl_va = kmalloc_aligned(sizeof(HBA_CMD_TBL), 128);
+        if (!tbl_va) return -3;
 
-        pinfo->mem->cmd_list[i].ctba  = (uint32_t) tbl_pa;
+        memset(tbl_va, 0, sizeof(HBA_CMD_TBL));
+        unsigned long tbl_pa = virtual_to_physical((unsigned long)tbl_va, gKernelPML4Address);
+
+        pinfo->mem->cmd_list[i].ctba  = (uint32_t)tbl_pa;
         pinfo->mem->cmd_list[i].ctbau = (uint32_t)(tbl_pa >> 32);
-        pinfo->mem->cmd_list[i].prdtl = 1;        // We use 1 PRDT for now
+        pinfo->mem->cmd_list[i].prdtl = 1;   // One PRDT for now
+
+        pinfo->cmd_tbl_va[i] = (HBA_CMD_TBL*)tbl_va;
     }
 
-    // 6. Clear port interrupts
-    port->is = 0xFFFFFFFF;
+    port->is = 0xFFFFFFFF;  // Clear interrupts
 
-    // 7. Start port
-    port->cmd |= (1u << 4);   // FRE
-    while (!(port->cmd & (1u << 14))) ahci_io_delay();  // Wait FR
+    // Start port
+    port->cmd |= (1 << 4);  // FRE
+    while (!(port->cmd & (1 << 14))) ahci_io_delay();
 
-    port->cmd |= (1u << 0);   // ST
-    while (!(port->cmd & (1u << 15))) ahci_io_delay();  // Wait CR
+    port->cmd |= (1 << 0);  // ST
+    while (!(port->cmd & (1 << 15))) ahci_io_delay();
 
-    printk("AHCI: Port %d initialized successfully\n", port_num);
+    pinfo->initialized = TRUE;
+    pinfo->port_num = port_num;
+
+    printk("AHCI: Port %d fully initialized\n", port_num);
     return 0;
 }
 
@@ -236,7 +406,7 @@ static int ahci_identify_device(int port_num)
     // TODO: Allocate command list, FIS, command table here (next step)
 
     // For now just mark the port as detected
-    ahci_port[port_num].todo00 = 1234;  // placeholder
+    //ahci_port[port_num].todo00 = 1234;  // placeholder
 
     return 0;
 }
@@ -245,6 +415,7 @@ static int ahci_identify_device(int port_num)
 // Probe all implemented ports
 // =======================================================
 
+/*
 static void ahci_probe_ports(void)
 {
     int i=0;
@@ -260,22 +431,153 @@ static void ahci_probe_ports(void)
         }
     }
 }
+*/
 
+static void ahci_probe_ports(void)
+{
+    int i=0;
+    uint32_t pi = AHCI_HBA->pi;
+
+    printk("AHCI: Ports Implemented = 0x%x\n", pi);
+    //printk("AHCI: Ports Implemented = %d\n", pi);
+
+    for (i=0; i < NR_PORTS; i++)
+    {
+        if (pi & (1u << i))
+        {
+            volatile HBA_PORT *port = &AHCI_HBA->ports[i];
+
+            printk("AHCI Port %d: sig=0x%x  ", i, port->sig);
+
+            if (port->sig == 0x00000101)
+                printk("[SATA]\n");
+            else if (port->sig == 0xEB140101)
+                printk("[SATAPI]\n");
+            else
+                printk("[Unknown]\n");
+
+            // Setup port
+            ahci_setup_port(i);
+        }
+    }
+
+/*
+// #todo: We need this.
+    if (port->sig == 0x00000101 && BootDisk.boot_port < 0)
+    {
+        BootDisk.boot_port = i;
+        printf("AHCI: Boot port candidate = %d\n", i);
+    }
+*/
+
+}
+
+/*
 static void ahci_flush_cache(void *va, size_t size)
 {
-/*
- //#todo
     unsigned long addr = (unsigned long)va;
     unsigned long end = addr + size;
+    unsigned long p;
 
-    // CLFLUSH + MFENCE (works on x86_64)
-    for (unsigned long p = addr; p < end; p += 64)
+// CLFLUSH + MFENCE (works on x86_64)
+    //for (unsigned long p = addr; p < end; p += 64)
+    while(1)
     {
+        p = addr;
+        if (p >= end)
+            break;
         asm volatile("clflush (%0)" : : "r"(p) : "memory");
+
+        addr += 64;
+    }
+
+    asm volatile("mfence" ::: "memory");
+}
+*/
+
+/*
+static void ahci_flush_cache(void *va, unsigned long size)
+{
+    unsigned long addr;
+    unsigned long end;
+
+    if (size == 0)
+        return;
+
+    addr = (unsigned long)va;
+    end  = addr + size;
+
+    while (addr < end)
+    {
+        asm volatile("clflush (%0)" : : "r"(addr) : "memory");
+        addr += 64;
+    }
+
+    asm volatile("mfence" ::: "memory");
+}
+*/
+
+/*
+static void ahci_flush_cache(void *va, unsigned long size)
+{
+    unsigned long addr = (unsigned long)va;
+    unsigned long end  = addr + size;
+
+    while (addr < end)
+    {
+        asm volatile("clflush (%0)" : : "r"(addr) : "memory");
+        addr = addr + 64;
+    }
+
+    asm volatile("mfence" ::: "memory");
+}
+*/
+
+/*
+static void ahci_flush_cache(void *va, unsigned long size)
+{
+    unsigned long addr = (unsigned long)va;
+    unsigned long end  = addr + size;
+
+    //Flush before DMA (write-back) 
+    while (addr < end)
+    {
+        asm volatile("clflush (%0)" : : "r"(addr) : "memory");
+        addr = addr + 64;
     }
     asm volatile("mfence" ::: "memory");
-*/
 }
+*/
+
+/*
+//New: Invalidate cache after DMA read 
+static void ahci_invalidate_cache(void *va, unsigned long size)
+{
+    unsigned long addr = (unsigned long)va;
+    unsigned long end  = addr + size;
+
+    while (addr < end)
+    {
+        asm volatile("clflush (%0)" : : "r"(addr) : "memory");
+        addr = addr + 64;
+    }
+    asm volatile("mfence" ::: "memory");
+}
+*/
+
+/* Stronger flush - write back dirty lines */
+static void ahci_flush_cache(void *va, unsigned long size)
+{
+    /* For safety, we use full WBINVD when clflush is not reliable */
+    asm volatile("wbinvd" ::: "memory");
+}
+
+/* Invalidate after DMA read */
+static void ahci_invalidate_cache(void *va, unsigned long size)
+{
+    asm volatile("wbinvd" ::: "memory");
+}
+
 
 // =====================================================
 // Basic AHCI Read Sector (for kernel)
@@ -484,6 +786,7 @@ int ahci_read_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_co
 }
 */
 
+/*
 int ahci_read_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_count)
 {
     if (port < 0 || port >= NR_PORTS || !AHCI_HBA || !buffer_va || sector_count == 0)
@@ -505,7 +808,8 @@ int ahci_read_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_co
         ahci_io_delay();
 
     HBA_CMD_HEADER *cmd_hdr = &pinfo->mem->cmd_list[0];
-    HBA_CMD_TBL    *cmd_tbl = &pinfo->mem->cmd_tbl[0];
+    //HBA_CMD_TBL    *cmd_tbl = &pinfo->mem->cmd_tbl[0];
+    HBA_CMD_TBL *cmd_tbl = pinfo->cmd_tbl_va[0];
 
     memset(cmd_hdr, 0, sizeof(HBA_CMD_HEADER));
     memset(cmd_tbl, 0, sizeof(HBA_CMD_TBL));
@@ -544,7 +848,7 @@ int ahci_read_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_co
     p->is = 0xFFFFFFFF;
 
     // Flush before DMA
-    // ahci_flush_cache(buffer_va, sector_count * 512);
+    ahci_flush_cache(buffer_va, sector_count * 512);
 
     p->ci = 1 << 0;
 
@@ -559,7 +863,7 @@ int ahci_read_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_co
     }
 
     // Flush after DMA
-    //ahci_flush_cache(buffer_va, sector_count * 512);
+    ahci_flush_cache(buffer_va, sector_count * 512);
 
     if (p->tfd & ATA_SR_ERR)
     {
@@ -576,7 +880,346 @@ int ahci_read_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_co
 
     return 0;
 }
+*/
 
+/*
+int ahci_read_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_count)
+{
+    if (port < 0 || port >= NR_PORTS || !buffer_va || sector_count == 0 || sector_count > 128)
+        return -1;
+
+    struct ahci_port_d *pinfo = &ahci_port[port];
+    if (!pinfo->initialized)
+        return -1;
+
+    volatile HBA_PORT *p = &AHCI_HBA->ports[port];
+
+    // Wait for BSY + DRQ
+    while (p->tfd & (ATA_SR_BSY | ATA_SR_DRQ))
+        ahci_io_delay();
+
+    // Use slot 0 for simplicity
+    HBA_CMD_HEADER *cmd_hdr = &pinfo->mem->cmd_list[0];
+    HBA_CMD_TBL    *cmd_tbl = pinfo->cmd_tbl_va[0];
+
+    memset(cmd_hdr, 0, sizeof(HBA_CMD_HEADER));
+    memset(cmd_tbl, 0, sizeof(HBA_CMD_TBL));
+
+    // Command Header
+    cmd_hdr->cfl   = 5;        // 5 dwords for H2D FIS
+    cmd_hdr->w     = 0;        // Read
+    cmd_hdr->prdtl = 1;
+
+    // FIS
+    FIS_REG_H2D *fis = (FIS_REG_H2D*)cmd_tbl->cfis;
+    memset(fis, 0, sizeof(FIS_REG_H2D));
+
+    fis->fis_type = FIS_TYPE_REG_H2D;
+    fis->c        = 1;
+    fis->command  = ATA_CMD_READ_DMA_EXT;
+    fis->device   = 1 << 6;  // LBA mode
+
+    fis->lba0 = (lba >> 0)  & 0xFF;
+    fis->lba1 = (lba >> 8)  & 0xFF;
+    fis->lba2 = (lba >> 16) & 0xFF;
+    fis->lba3 = (lba >> 24) & 0xFF;
+    fis->lba4 = (lba >> 32) & 0xFF;
+    fis->lba5 = (lba >> 40) & 0xFF;
+
+    fis->countl = sector_count & 0xFF;
+    fis->counth = (sector_count >> 8) & 0xFF;
+
+    // PRDT
+    unsigned long buf_pa = virtual_to_physical((unsigned long)buffer_va, gKernelPML4Address);
+    cmd_tbl->prdt_entry[0].dba  = (uint32_t)buf_pa;
+    cmd_tbl->prdt_entry[0].dbau = (uint32_t)(buf_pa >> 32);
+    cmd_tbl->prdt_entry[0].dbc  = (sector_count * 512) - 1;
+    cmd_tbl->prdt_entry[0].i    = 1;
+
+    p->is = 0xFFFFFFFF;
+
+    ahci_flush_cache(buffer_va, sector_count * 512);
+
+    p->ci = 1 << 0;   // Issue command
+
+    // Wait for completion
+    while (p->ci & 1) {
+        if (p->is & (HBA_PxIS_TFES | HBA_PxIS_HBFS | HBA_PxIS_IFS)) {
+            printk("AHCI: Error! IS=0x%x, TFD=0x%x\n", p->is, p->tfd);
+            return -1;
+        }
+    }
+
+    ahci_flush_cache(buffer_va, sector_count * 512);
+
+    if (p->tfd & ATA_SR_ERR) {
+        printk("AHCI: TFD Error = 0x%x\n", p->tfd);
+        return -1;
+    }
+
+    return 0;
+}
+*/
+
+/*
+int ahci_read_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_count)
+{
+    struct ahci_port_d *pinfo;
+    volatile HBA_PORT *p;
+    HBA_CMD_HEADER *cmd_hdr;
+    HBA_CMD_TBL *cmd_tbl;
+    FIS_REG_H2D *fis;
+    unsigned long buf_pa;
+    uint32_t timeout = 1000000;   // safety timeout 
+
+    if (port < 0 || port >= NR_PORTS || !buffer_va || sector_count == 0)
+        return -1;
+
+    pinfo = &ahci_port[port];
+    if (!pinfo->initialized || !pinfo->mem)
+    {
+        printk("AHCI: Port %d not initialized\n", port);
+        return -1;
+    }
+
+    p = &AHCI_HBA->ports[port];
+
+    printk("=== AHCI READ START === Port %d | LBA %u | Sectors %u | Buf VA 0x%x\n", 
+           port, (uint32_t)lba, sector_count, (unsigned long)buffer_va);
+
+    // 1. Wait for port ready 
+    while ((p->tfd & (ATA_SR_BSY | ATA_SR_DRQ)) && timeout--)
+        ahci_io_delay();
+
+    if (timeout == 0)
+    {
+        printk("AHCI: Timeout waiting for BSY/DRQ clear\n");
+        return -1;
+    }
+
+    // 2. Use slot 0 
+    cmd_hdr = &pinfo->mem->cmd_list[0];
+    cmd_tbl = pinfo->cmd_tbl_va[0];
+
+    memset(cmd_hdr, 0, sizeof(HBA_CMD_HEADER));
+    memset(cmd_tbl, 0, sizeof(HBA_CMD_TBL));
+
+    //Command Header 
+    cmd_hdr->cfl   = 5;      // 5 dwords 
+    cmd_hdr->w     = 0;      // Read 
+    cmd_hdr->prdtl = 1;
+
+    // Command FIS 
+    fis = (FIS_REG_H2D*)cmd_tbl->cfis;
+    memset(fis, 0, sizeof(FIS_REG_H2D));
+
+    fis->fis_type = FIS_TYPE_REG_H2D;
+    fis->c        = 1;
+    fis->command  = ATA_CMD_READ_DMA_EXT;
+    fis->device   = (1 << 6);   // LBA mode 
+
+    fis->lba0 = (lba >> 0)  & 0xFF;
+    fis->lba1 = (lba >> 8)  & 0xFF;
+    fis->lba2 = (lba >> 16) & 0xFF;
+    fis->lba3 = (lba >> 24) & 0xFF;
+    fis->lba4 = (lba >> 32) & 0xFF;
+    fis->lba5 = (lba >> 40) & 0xFF;
+
+    fis->countl = sector_count & 0xFF;
+    fis->counth = (sector_count >> 8) & 0xFF;
+
+    //Physical address for DMA 
+    buf_pa = virtual_to_physical((unsigned long)buffer_va, gKernelPML4Address);
+    printk("Buffer PA: 0x%x\n", (uint32_t)buf_pa);
+
+    cmd_tbl->prdt_entry[0].dba  = (uint32_t)buf_pa;
+    cmd_tbl->prdt_entry[0].dbau = (uint32_t)(buf_pa >> 32);
+    cmd_tbl->prdt_entry[0].dbc  = (sector_count * 512) - 1;
+    cmd_tbl->prdt_entry[0].i    = 1;
+
+    //Clear interrupts 
+    p->is = 0xFFFFFFFF;
+
+    // Flush before command 
+    ahci_flush_cache(buffer_va, sector_count * 512);
+
+    //Issue command 
+    p->ci = (1 << 0);
+
+    // 3. Wait for completion with timeout + error checking
+    timeout = 1000000;
+    while ((p->ci & 1) && timeout--)
+    {
+        if (p->is & HBA_PxIS_TFES)
+        {
+            printk("AHCI: TFES Error! TFD=0x%x\n", p->tfd);
+            return -1;
+        }
+        if (p->is & HBA_PxIS_HBFS)
+        {
+            printk("AHCI: HBFS (Fatal) Error!\n");
+            return -1;
+        }
+    }
+
+    if (timeout == 0)
+    {
+        printk("AHCI: Command timeout!\n");
+        return -1;
+    }
+
+    //Flush after DMA 
+    ahci_flush_cache(buffer_va, sector_count * 512);
+
+    if (p->tfd & ATA_SR_ERR)
+    {
+        printk("AHCI: Final TFD Error = 0x%x\n", p->tfd);
+        return -1;
+    }
+
+    //=== DEBUG OUTPUT === 
+    {
+        unsigned char *b = (unsigned char*)buffer_va;
+        int i;
+
+        printk("First 32 bytes: ");
+        for (i = 0; i < 32; i++)
+            printk("%x ", b[i]);
+        printk("\n");
+
+        printk("MBR Signature (510-511): 0x%X 0x%X\n", b[510], b[511]);
+    }
+
+    return 0;
+}
+*/
+
+int ahci_read_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_count)
+{
+    struct ahci_port_d *pinfo;
+    volatile HBA_PORT *p;
+    HBA_CMD_HEADER *cmd_hdr;
+    HBA_CMD_TBL *cmd_tbl;
+    FIS_REG_H2D *fis;
+    unsigned long buf_pa;
+    uint32_t timeout;
+
+    if (port < 0 || port >= NR_PORTS || !buffer_va || sector_count == 0)
+        return -1;
+
+    pinfo = &ahci_port[port];
+    if (!pinfo->initialized)
+    {
+        printk("AHCI: Port %d not initialized\n", port);
+        return -1;
+    }
+
+    p = &AHCI_HBA->ports[port];
+
+    printk("=== AHCI READ ATTEMPT === Port %d | LBA %u | Sectors %u | VA=0x%x\n", 
+           port, (uint32_t)lba, sector_count, (unsigned long)buffer_va);
+
+    /* 1. Wait for port ready */
+    timeout = 2000000;
+    while ((p->tfd & (ATA_SR_BSY | ATA_SR_DRQ)) && timeout--)
+        ahci_io_delay();
+
+    if (timeout == 0)
+    {
+        printk("AHCI: Timeout waiting for ready\n");
+        return -1;
+    }
+
+    /* 2. Prepare command slot 0 */
+    cmd_hdr = &pinfo->mem->cmd_list[0];
+    cmd_tbl = pinfo->cmd_tbl_va[0];
+
+    memset(cmd_hdr, 0, sizeof(HBA_CMD_HEADER));
+    memset(cmd_tbl, 0, sizeof(HBA_CMD_TBL));
+
+    cmd_hdr->cfl   = 5;
+    cmd_hdr->w     = 0;        /* Read */
+    cmd_hdr->prdtl = 1;
+
+    fis = (FIS_REG_H2D*)cmd_tbl->cfis;
+    memset(fis, 0, sizeof(FIS_REG_H2D));
+
+    fis->fis_type = FIS_TYPE_REG_H2D;
+    fis->c        = 1;
+    fis->command  = ATA_CMD_READ_DMA_EXT;
+    fis->device   = (1 << 6);   /* LBA48 */
+
+    fis->lba0 = (lba >> 0)  & 0xFF;
+    fis->lba1 = (lba >> 8)  & 0xFF;
+    fis->lba2 = (lba >> 16) & 0xFF;
+    fis->lba3 = (lba >> 24) & 0xFF;
+    fis->lba4 = (lba >> 32) & 0xFF;
+    fis->lba5 = (lba >> 40) & 0xFF;
+
+    fis->countl = sector_count & 0xFF;
+    fis->counth = (sector_count >> 8) & 0xFF;
+
+    buf_pa = virtual_to_physical((unsigned long)buffer_va, gKernelPML4Address);
+    printk("Buffer PA: 0x%x\n", (uint32_t)buf_pa);
+
+    cmd_tbl->prdt_entry[0].dba  = (uint32_t)buf_pa;
+    cmd_tbl->prdt_entry[0].dbau = (uint32_t)(buf_pa >> 32);
+    cmd_tbl->prdt_entry[0].dbc  = (sector_count * 512) - 1;
+    cmd_tbl->prdt_entry[0].i    = 1;
+
+    p->is = 0xFFFFFFFF;
+
+    /* === CACHE === */
+    ahci_flush_cache(buffer_va, sector_count * 512);
+
+    p->ci = (1 << 0);   /* Fire! */
+
+    /* 3. Wait for completion */
+    timeout = 3000000;
+    while ((p->ci & 1) && timeout--)
+    {
+        if (p->is & (HBA_PxIS_TFES | HBA_PxIS_HBFS | HBA_PxIS_IFS))
+        {
+            printk("AHCI Error! IS=0x%x | TFD=0x%x\n", p->is, p->tfd);
+            return -1;
+        }
+    }
+
+    if (timeout == 0)
+    {
+        printk("AHCI: Command timeout!\n");
+        return -1;
+    }
+
+    /* Invalidate cache after DMA */
+    ahci_invalidate_cache(buffer_va, sector_count * 512);
+
+    if (p->tfd & ATA_SR_ERR)
+    {
+        printk("TFD Error = 0x%x\n", p->tfd);
+        return -1;
+    }
+
+    /* === SHOW RESULT === */
+    {
+        unsigned char *b = (unsigned char*)buffer_va;
+        int i;
+
+        printk("First 32 bytes: ");
+        for (i = 0; i < 32; i++)
+            printk("%x ", b[i]);
+        printk("\n");
+
+        printk("MBR Signature (510-511): %x %x\n", b[510], b[511]);
+
+        if (b[510] == 0x55 && b[511] == 0xAA)
+            printk(">>> MBR SIGNATURE CORRECT! <<<\n");
+        else
+            printk("Still wrong signature...\n");
+    }
+
+    return 0;
+}
 
 /*
 void ahci_test_read(void)
@@ -608,17 +1251,20 @@ void ahci_test_read(void)
 }
 */
 
+/*
 void ahci_test_read(void)
 {
     // Use a page that is identity-mapped or marked as uncached if possible
-    unsigned char *test_buf = (unsigned char*) kmalloc(512);
+    //unsigned char *test_buf = (unsigned char*) kmalloc(512);
+    unsigned char *test_buf = (unsigned char*) kmalloc_aligned(4096, 4096);
     if (!test_buf) return;
 
     memset(test_buf, 0xFE, 512);   // obvious garbage
 
     printk("Before: First byte = %x\n", test_buf[0]);
 
-    if (ahci_read_sector(0, 0ULL, test_buf, 1) == 0)
+    // IN: port, lba. buffer, sector_count
+    if (ahci_read_sector(0, 0, test_buf, 1) == 0)
     {
         printk("After read - Signature: %x %x\n", test_buf[510], test_buf[511]);
         
@@ -628,7 +1274,55 @@ void ahci_test_read(void)
             printk("Still wrong (probably cache issue)\n");
     }
 }
+*/
 
+/*
+void ahci_test_read(void)
+{
+    unsigned char *test_buf;
+
+    test_buf = (unsigned char*) kmalloc_aligned(4096, 4096);
+    if (!test_buf)
+    {
+        printk("AHCI test: kmalloc failed\n");
+        return;
+    }
+
+    memset(test_buf, 0xAA, 512);   //clear with known pattern 
+
+    printk("=== AHCI TEST READ ===\n");
+    if (ahci_read_sector(0, 0, test_buf, 1) == 0)
+    {
+        printk("Read command completed without error.\n");
+    }
+    else
+    {
+        printk("Read command FAILED.\n");
+    }
+}
+*/
+
+void ahci_test_read(void)
+{
+    unsigned char *test_buf = (unsigned char*) kmalloc_aligned(4096, 4096);
+    if (!test_buf)
+    {
+        printk("kmalloc failed\n");
+        return;
+    }
+
+    memset(test_buf, 0xFE, 512);   /* fill with obvious value */
+
+    printk("=== AHCI TEST READ START ===\n");
+    if (ahci_read_sector(0, 0, test_buf, 1) == 0)
+    {
+        printk("Read completed successfully.\n");
+    }
+    else
+    {
+        printk("Read failed!\n");
+    }
+}
 
 
 // =======================================================
@@ -646,15 +1340,13 @@ int DDINIT_ahci(
 
     printk("DDINIT_ahci:\n");
 
-    if ((void*)pci_ahci == NULL)
-    {
+    if ((void*)pci_ahci == NULL){
         printk("DDINIT_ahci: pci_ahci == NULL\n");
         return -1;
     }
 
     // Check controller type
-    if (controller_type != STORAGE_CONTROLLER_MODE_AHCI)
-    {
+    if (controller_type != STORAGE_CONTROLLER_MODE_AHCI){
         printk("DDINIT_ahci: Wrong controller type\n");
         return -1;
     }
@@ -663,7 +1355,7 @@ int DDINIT_ahci(
     unsigned long bar5 = pci_ahci->BAR5 & ~0xF;
     BootDisk.ahci_bar5 = bar5;  // Save for later use in storage.c
 
-    unsigned long va   = AHCI_CONTROLLER_VA;
+    unsigned long va = AHCI_CONTROLLER_VA;
 
     // IN: pa, va
     if (mm_map_2mb_region_in_pd0(bar5, va) < 0) 
@@ -672,32 +1364,25 @@ int DDINIT_ahci(
         return -1;
     }
 
-    printk("DDINIT_ahci: #breakpoint %x\n", bar5);  // physical address
-    printk("DDINIT_ahci: #breakpoint %x\n", va);
+    ahci_flush_cr3();  // Ensure new mapping is active
+
+    printk("DDINIT_ahci: bar5 pa %x\n", bar5);  // physical address
+    printk("DDINIT_ahci: bar5 va %x\n", va);    // virtual address
     //while(1){}
 
-    AHCI_HBA = (volatile HBA_MEM *) va;  //
-
-    if (!AHCI_HBA)
-    {
+// ----------------------------
+    AHCI_HBA = (volatile HBA_MEM *) va;
+    if (!AHCI_HBA){
         printk("DDINIT_ahci: Invalid HBA address\n");
         return -1;
     }
-
-
     printk("AHCI: HBA at 0x%x | CAP=0x%x | PI=0x%x | VS=0x%x\n",
            bar5, AHCI_HBA->cap, AHCI_HBA->pi, AHCI_HBA->vs);
 
-
-    //printk("DDINIT_ahci: #breakpoint\n");
-    //while(1){}
-
-    // Reset and enable AHCI
     ahci_reset_hba();
     ahci_enable();
-
-    // Setup ports
     ahci_probe_ports();
+
 
 /*
  // Probe and setup ports
@@ -713,12 +1398,13 @@ int DDINIT_ahci(
 // initialize the first port for testing
     //ahci_setup_port(0);
 
+/*
     // Setup only port 0 for now
-    if (ahci_setup_port(0) != 0)
-    {
+    if (ahci_setup_port(0) != 0){
         printk("AHCI: Failed to setup port 0\n");
         return -1;
     }
+*/
 
 
     BootDisk.initialized = TRUE;
@@ -727,6 +1413,12 @@ int DDINIT_ahci(
     g_ahci_driver_initialized = TRUE;
 
     printk("AHCI: Driver initialized successfully\n");
+
+//========================================
+
+    ahci_test_read();   
+    while(1){}
+
     return 0;
 }
 

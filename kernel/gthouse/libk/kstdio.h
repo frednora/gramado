@@ -614,6 +614,7 @@ int kputs (const char *str);
 int sprintf_old ( char *str, const char *format, ... );
 int mysprintf(char *buf, const char *fmt, ...);
 
+
 // ===================================
 // The kinguio support for printf().
 // Credits: Nelson Cole.

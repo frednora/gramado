@@ -98,3 +98,20 @@ int kinguio_printf(const char *fmt, ...)
 }
 // ===================================
 
+// Allocate memory aligned to 'align' boundary.
+// align must be a power of two (e.g. 512, 4096).
+void *kmalloc_aligned(size_t size, size_t align)
+{
+    // Allocate extra space so we can align manually
+    void *raw = kmalloc(size + align);
+    if (!raw) return NULL;
+
+    // Round up to nearest alignment boundary
+    unsigned long addr = (unsigned long)raw;
+    unsigned long aligned = (addr + (align - 1)) & ~(align - 1);
+
+    // Zero out the aligned region
+    memset((void*)aligned, 0, size);
+
+    return (void*)aligned;
+}

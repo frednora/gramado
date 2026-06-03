@@ -153,6 +153,7 @@ static int ahci_setup_port(int port_num)
     if (port_num < 0 || port_num >= NR_PORTS)
         return -1;
 
+// Get the port structure
     volatile HBA_PORT *port = &AHCI_HBA->ports[port_num];
 
     // Stop port
@@ -175,12 +176,14 @@ static int ahci_setup_port(int port_num)
     if (!fb) return -1;
     memset((void*)fb, 0, 256);
 
+// Setup CLB (Command List Base)
     port->clb  = (uint32_t)clb;
     port->clbu = 0;
+// 4. Setup FB (FIS Base)
     port->fb   = (uint32_t)fb;
     port->fbu  = 0;
 
-    // Start port
+// Start port
     port->cmd |= (1 << 4);   // FRE
     port->cmd |= (1 << 0);   // ST
 
@@ -196,6 +199,7 @@ static void ahci_probe_ports(void)
     uint32_t pi = AHCI_HBA->pi;
 
     printf("AHCI: Ports Implemented = 0x%x\n", pi);
+    //printf("AHCI: Ports Implemented = %d\n", pi);
 
     for (i=0; i < NR_PORTS; i++)
     {
@@ -212,6 +216,7 @@ static void ahci_probe_ports(void)
             else
                 printf("[Unknown]\n");
 
+            // Setup port
             ahci_setup_port(i);
         }
     }
@@ -233,12 +238,12 @@ int ahci_initialize(void)
 {
     printf("ahci_initialize:\n");
 
-    if (BootDisk.ahci_bar5 == 0)
-    {
+    if (BootDisk.ahci_bar5 == 0){
         printf("AHCI: BAR5 not configured!\n");
         return FALSE;
     }
 
+// ----------------------------
     AHCI_HBA = (volatile HBA_MEM *) BootDisk.ahci_bar5;
 
     printf("AHCI HBA at 0x%x\n", BootDisk.ahci_bar5);
@@ -247,8 +252,8 @@ int ahci_initialize(void)
 
     ahci_reset_hba();
     ahci_enable();
-
     ahci_probe_ports();
+
 
     BootDisk.initialized = TRUE;
     BootDisk.controller_type = STORAGE_CONTROLLER_MODE_AHCI;

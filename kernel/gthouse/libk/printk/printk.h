@@ -19,4 +19,6 @@ int kinguio_printf(const char *fmt, ...);
 // The ring 0 implementation of printf().
 #define printk  kinguio_printf
 
+void *kmalloc_aligned(size_t size, size_t align);
+
 #endif   
