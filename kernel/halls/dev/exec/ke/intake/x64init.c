@@ -1204,6 +1204,8 @@ static int I_initKernelComponents(void)
 // see: fs.c
     fsInitialize();
 
+    printk("I_initKernelComponents: done\n");
+
 // OK. Return to the main initialization routine in x64init.c.
     return TRUE;
 
@@ -1332,6 +1334,7 @@ int I_x64_initialize(void)
 
     // #debug
     PROGRESS("Calling keInitializeIntake\n"); 
+    printk("I_x64_initialize: Calling keInitializeIntake\n");
 
     Status = keInitializeIntake();
     if (Status != TRUE){

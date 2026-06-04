@@ -150,8 +150,9 @@ int ahci_read_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_co
     if (port < 0 || port >= NR_PORTS || !buffer_va || sector_count == 0)
         return -1;
 
-    printk("=== AHCI READ ATTEMPT === Port %d | LBA %u | Sectors %u | VA=0x%x\n",
-           port, (uint32_t)lba, sector_count, (unsigned long)buffer_va);
+
+    //printk("=== AHCI READ ATTEMPT === Port %d | LBA %u | Sectors %u | VA=0x%x\n",
+    //       port, (uint32_t)lba, sector_count, (unsigned long)buffer_va);
 
 
 //
@@ -240,8 +241,9 @@ int ahci_read_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_co
 //
 
     buf_pa = virtual_to_physical((unsigned long)buffer_va, gKernelPML4Address);
-    printk("AHCI: Buffer VA=0x%x  PA=0x%x\n",
-           (uint32_t)(unsigned long)buffer_va, (uint32_t)buf_pa);
+    
+    //printk("AHCI: Buffer VA=0x%x  PA=0x%x\n",
+           //(uint32_t)(unsigned long)buffer_va, (uint32_t)buf_pa);
 
     cmd_tbl->prdt_entry[0].dba  = (uint32_t)(buf_pa & 0xFFFFFFFF);
     cmd_tbl->prdt_entry[0].dbau = (uint32_t)(buf_pa >> 32);
@@ -314,6 +316,7 @@ int ahci_read_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_co
 // 10. Dump result for verification
 //
 
+/*
     {
         unsigned char *b = (unsigned char *) buffer_va;
         int i = 0;
@@ -330,6 +333,7 @@ int ahci_read_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_co
         else
             printk("AHCI: Wrong signature — DMA may not have completed correctly.\n");
     }
+*/
 
     return 0;
 }
@@ -355,11 +359,13 @@ int ahci_write_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_c
     if (port < 0 || port >= NR_PORTS || !buffer_va || sector_count == 0)
         return -1;
 
+/*
     printk("=== AHCI WRITE ATTEMPT === Port %d | LBA %u | Sectors %u | VA=0x%x\n",
        port,
        (uint32_t) lba,
        sector_count,
        (unsigned long) buffer_va);
+*/
 
 //
 // 1. Wait for port to be ready (BSY + DRQ must be clear)
@@ -452,8 +458,9 @@ int ahci_write_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_c
 //
 
     buf_pa = virtual_to_physical((unsigned long)buffer_va, gKernelPML4Address);
-    printk("AHCI: Buffer VA=0x%x  PA=0x%x\n",
-           (uint32_t)(unsigned long)buffer_va, (uint32_t)buf_pa);
+    
+    //printk("AHCI: Buffer VA=0x%x  PA=0x%x\n",
+        //(uint32_t)(unsigned long)buffer_va, (uint32_t)buf_pa);
 
     cmd_tbl->prdt_entry[0].dba  = (uint32_t)(buf_pa & 0xFFFFFFFF);
     cmd_tbl->prdt_entry[0].dbau = (uint32_t)(buf_pa >> 32);
@@ -537,6 +544,7 @@ int ahci_write_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_c
 // 10. Dump result for verification
 //
 
+/*
     {
         unsigned char *b = (unsigned char *) buffer_va;
         int i = 0;
@@ -553,6 +561,7 @@ int ahci_write_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_c
         else
             printk("AHCI: Wrong signature — DMA may not have completed correctly.\n");
     }
+*/
 
     return 0;
 }
@@ -589,14 +598,12 @@ void ahci_test_rw(void)
 
     printk("=== AHCI READ/WRITE TEST ===\n");
 
+    // The buffer
     buf = (unsigned char *) kmalloc_aligned(4096,4096);
-
-    if (!buf)
-    {
+    if (!buf){
         printk("ahci_test_rw: no buffer\n");
         return;
     }
-
     memset(buf,0,512);
 
     //
@@ -611,16 +618,14 @@ void ahci_test_rw(void)
     buf[5] = 'D';
     buf[6] = 'O';
 
-    //
-    // Standard MBR signature.
-    //
-
+    // Standard MBR signature
     buf[510] = 0x55;
     buf[511] = 0xAA;
 
     printk("Writing sector...\n");
 
-    if (ahci_write_sector(0,0,buf,1) != 0)
+    //if (ahci_write_sector(0,0,buf,1) != 0)
+    if (write_lba(0,buf,0) != 0)  // IN: port, buf, lba
     {
         printk("WRITE FAILED\n");
         return;
@@ -634,7 +639,8 @@ void ahci_test_rw(void)
 
     printk("Reading sector back...\n");
 
-    if (ahci_read_sector(0,0,buf,1) != 0)
+    //if (ahci_read_sector(0,0,buf,1) != 0)
+    if (read_lba(0,buf,0) != 0)  // IN: port, buf, lba
     {
         printk("READ FAILED\n");
         return;
@@ -986,8 +992,8 @@ DDINIT_ahci(
 //========================================
 
     //ahci_test_read();
-    ahci_test_rw();
-    while(1){}
+    //ahci_test_rw();
+    //while(1){}
 
     return 0;
 }

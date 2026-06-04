@@ -5156,6 +5156,7 @@ int __fs_initialize_imp (void)
     int slot = -1;
 
     PROGRESS("__fs_initialize_imp:\n");
+    printk("__fs_initialize_imp:\n");
 
 // Initialize slab buffers to load directories.
     int buffers_ok = (int) __initialize_fs_buffers();
@@ -5174,6 +5175,7 @@ int __fs_initialize_imp (void)
 
 // Init dev/ dir.
 // Is it a 'virtual folder'?
+    printk("__fs_initialize_imp: fs_initialize_dev_dir\n");
     fs_initialize_dev_dir();
 
 //
@@ -5336,17 +5338,21 @@ int __fs_initialize_imp (void)
 
 // Target dir struct
 // Inicializa a estrutura de suporte ao target dir.
+    printk("__fs_initialize_imp: fsInitTargetDir\n");
     fsInitTargetDir(VOLUME1_ROOTDIR_ADDRESS,"/");
 
 // FAT support for the boot partition
+    printk("__fs_initialize_imp: fsbp_initialize_fat\n");
     fsbp_initialize_fat();
 
 // Initialize boot partitions canonical directories.
 // see: fsbp.c
+    printk("__fs_initialize_imp: fsbp_initialize_bp_directories\n");
     fsbp_initialize_bp_directories();
     // ...
 
     PROGRESS("__fs_initialize_imp: Done\n");
+    printk("__fs_initialize_imp: Done\n");
 
     return 0;
 }

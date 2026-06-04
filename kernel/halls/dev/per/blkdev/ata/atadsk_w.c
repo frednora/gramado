@@ -46,22 +46,40 @@ __do_save_sequence (
 
     for (i=0; i<Total; i++)
     {
-        // Waiting before the next.
-        // #bugbug: 
-        // Maybe this is make this process very slow in the vms.
-        
-        // #todo:
-        // Maybe, do not use this on vms.
-        // See: atairq.c
-        // if (is_qemu != TRUE)
-        disk_ata_wait_irq(p);
 
-        ataWriteSector ( 
-            L_current_ide_port,
-            (unsigned long) ( buffer_base + buffer_off ), 
-            (unsigned long) ( lba_base    + lba_off ), 
-            0, 
-            0 );
+        if (BootDisk.controller_type == STORAGE_CONTROLLER_MODE_AHCI){
+
+            // AHCI controller
+            // IN: port, lba, buf, number of sectors
+            ahci_write_sector( 
+                0, 
+                (lba_base    + lba_off), 
+                (buffer_base + buffer_off), 
+                1 
+            );
+            //write_lba( 0, address + b, next_lba );
+
+        } else {
+
+            // ATA devices
+    
+            // Waiting before the next.
+            // #bugbug: 
+            // Maybe this is make this process very slow in the vms.
+        
+            // #todo:
+            // Maybe, do not use this on vms.
+            // See: atairq.c
+            // if (is_qemu != TRUE)
+            disk_ata_wait_irq(p);
+
+            ataWriteSector ( 
+                L_current_ide_port,
+                (unsigned long) (buffer_base + buffer_off), 
+                (unsigned long) (lba_base    + lba_off), 
+                0, 
+                0 );
+        }
 
         // Update offsets.
         // Sector size is 512 and the cluster has only one sector for now.

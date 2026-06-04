@@ -461,6 +461,10 @@ static int disk_initialize_mbr_info(void)
 
     printk ("disk_get_mbr_info:\n");
 
+
+
+
+
     if (g_ata_driver_initialized != TRUE){
         panic("disk_get_mbr_info: g_ata_driver_initialized\n");
     }
@@ -956,6 +960,17 @@ read_lba (
         goto fail;
     }
 
+
+// #test
+// This is provisory
+    const int AHCI_Port_ID = 0;
+    if (BootDisk.controller_type == STORAGE_CONTROLLER_MODE_AHCI)
+    {
+        // IN: port, lba, buffer_va, sector_count
+        ahci_read_sector( AHCI_Port_ID, lba, address, 1 );
+        return 0;  // OK
+    }
+
 // #ps:
 // All we have for now is IDE support.
 // This routine is getting the port for the boot disk.
@@ -1060,6 +1075,17 @@ write_lba(
         goto fail;
     }
 
+// #test
+// This is provisory
+    const int AHCI_Port_ID = 0;
+    if (BootDisk.controller_type == STORAGE_CONTROLLER_MODE_AHCI)
+    {
+        // IN: port, lba, buffer_va, sector_count
+        ahci_write_sector( AHCI_Port_ID, lba, address, 1 );
+        return 0;  // OK
+    }
+
+
 // #ps:
 // All we have for now is IDE support.
 // This routine is getting the port for the boot disk.
@@ -1159,6 +1185,13 @@ static int storage_set_total_lba_for_boot_disk(void)
 {
     struct disk_d *disk;
     struct ata_device_d  *ata_device;
+
+// #test
+// We can't do this for AHCI disks for now
+    if (BootDisk.controller_type == STORAGE_CONTROLLER_MODE_AHCI)
+    {
+        return TRUE;  // #hackhack
+    }
 
 // --------------------------------
 // Get the boot disk
@@ -1898,7 +1931,20 @@ int storageInitialize(void)
 // mbr info:
 // It depends on the total lba value for boot disk.
 // Its because we're gonna rad the disk to get the partition tables.
-    disk_initialize_mbr_info();
+
+// #test
+// We can't do this for AHCI disks for now
+    if (BootDisk.controller_type == STORAGE_CONTROLLER_MODE_AHCI){
+
+        // Nothing for now
+
+    } else {
+
+        // ATA only
+        disk_initialize_mbr_info();
+    }
+
+    printk("storageInitialize: done\n");
 
     return TRUE;
 

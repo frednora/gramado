@@ -40,12 +40,25 @@ __load_sequential_sectors (
     {
         next_lba = (unsigned long) (lba + i);
 
-        ataReadSector ( 
-            L_current_ide_port, 
-            address + b, 
-            next_lba, 
-            0, 
-            0 );
+        if (BootDisk.controller_type == STORAGE_CONTROLLER_MODE_AHCI){
+
+            // AHCI controller
+            // IN: port, lba, buf, number of sectors
+            ahci_read_sector( 0, next_lba, address + b, 1 );
+            //read_lba( 0, address + b, next_lba );
+
+        } else {
+
+            // ATA controller
+            // #todo: user read_lba()
+            //read_lba( L_current_ide_port, address + b, next_lba );
+            ataReadSector ( 
+                L_current_ide_port, 
+                address + b, 
+                next_lba, 
+                0, 
+                0 );
+        }
 
         b = (b +512);
     };
@@ -162,6 +175,12 @@ fs_load_fat(
     unsigned long fat_lba, 
     size_t size_in_sectors )
 {
+
+    // #bugbug
+    // #todo
+    // It doesn not belong to ATA only.
+    // We need to move it to another place.
+    // AHCI systems needs to load the FAT too.
 
 // #todo
 // We need a structure to track the state

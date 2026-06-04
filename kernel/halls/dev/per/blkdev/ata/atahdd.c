@@ -665,13 +665,25 @@ ataReadSector (
 */
 
 // #test
-// Testing these limits for the boot disk only.
-    if (gNumberOfSectorsInBootDisk == 0){
-        panic("ataReadSector: gNumberOfSectorsInBootDisk\n");
-    }
-    if (lba >= gNumberOfSectorsInBootDisk){
-        panic("ataReadSector: lba limits\n");
-    }
+// We cant test it in AHCI disks yet.
+// Let's skip the limit in this case. For now.
+
+    if (BootDisk.controller_type == STORAGE_CONTROLLER_MODE_AHCI){
+
+        // Nothing for now
+
+    } else {
+
+        // #test
+        // Testing these limits for the boot disk only
+        if (gNumberOfSectorsInBootDisk == 0){
+            panic("ataReadSector: gNumberOfSectorsInBootDisk\n");
+        }
+        if (lba >= gNumberOfSectorsInBootDisk){
+            panic("ataReadSector: lba limits\n");
+        }
+    };
+
 
 // IN:
 // (buffer, lba, rw flag, port number)
@@ -726,13 +738,24 @@ ataWriteSector (
 // Limits for 'buffer' and 'lba'.
 
 // #test
-// Testing these limits for the boot disk only.
-    if (gNumberOfSectorsInBootDisk == 0){
-        panic("ataWriteSector: gNumberOfSectorsInBootDisk\n");
-    }
-    if (lba >= gNumberOfSectorsInBootDisk){
-        panic("ataWriteSector: lba limits\n");
-    }
+// We cant test it in AHCI disks yet.
+// Let's skip the limit in this case. For now.
+
+    if (BootDisk.controller_type == STORAGE_CONTROLLER_MODE_AHCI){
+
+        // Nothing for now
+
+    } else {
+
+        // #test
+        // Testing these limits for the boot disk only.
+        if (gNumberOfSectorsInBootDisk == 0){
+            panic("ataWriteSector: gNumberOfSectorsInBootDisk\n");
+        }
+        if (lba >= gNumberOfSectorsInBootDisk){
+            panic("ataWriteSector: lba limits\n");
+        }
+    };
 
 
 // IN:
