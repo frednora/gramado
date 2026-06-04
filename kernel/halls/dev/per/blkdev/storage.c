@@ -931,6 +931,13 @@ read_lba (
 // #todo: 
 // Check lba limits
 
+
+// #todo
+// In the case of reading from AHCI disks use this.
+// #todo: We gotta see how the boot loader is handling
+// these workers.
+// ahci_read_sector(0,0,buf,1)
+
 // #todo
 // Each disk has information about its type.
 // And the only supported type for now is IDE.
@@ -1032,6 +1039,13 @@ write_lba(
 // Each disk has information about its type.
 // And the only supported type for now is IDE.
 // The workers here operate on ATA disks.
+
+// #todo
+// In the case of writing from AHCI disks use this.
+// #todo: We gotta see how the boot loader is handling
+// these workers.
+// ahci_write_sector(0,0,buf,1)
+
 
     /*
     // disk id. (NOT the IDE ports!)
