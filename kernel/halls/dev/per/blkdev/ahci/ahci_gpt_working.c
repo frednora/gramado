@@ -189,19 +189,20 @@ int ahci_read_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_co
     //cmd_hdr = &pinfo->mem->cmd_list[port];
     //cmd_tbl = pinfo->cmd_tbl_va[port];
 
+
     // Preserve command table physical address
-    //uint32_t saved_ctba  = cmd_hdr->ctba;
-    //uint32_t saved_ctbau = cmd_hdr->ctbau;
+    uint32_t saved_ctba  = cmd_hdr->ctba;
+    uint32_t saved_ctbau = cmd_hdr->ctbau;
 
     // Clear structures
-    //memset(cmd_hdr, 0, sizeof(HBA_CMD_HEADER));  // do not clear this one
+    memset(cmd_hdr, 0, sizeof(HBA_CMD_HEADER));
     memset(cmd_tbl, 0, sizeof(HBA_CMD_TBL));
 
 // Configure command header
 
     // Restore CTBA linkage
-    //cmd_hdr->ctba  = saved_ctba;
-    //cmd_hdr->ctbau = saved_ctbau;
+    cmd_hdr->ctba  = saved_ctba;
+    cmd_hdr->ctbau = saved_ctbau;
 
     // Command FIS length in DWORDs (FIS_REG_H2D = 20 bytes = 5 DWORDs)
     //cmd_hdr->cfl   = 5;
@@ -336,230 +337,6 @@ int ahci_read_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_co
 
 
 // =======================================================
-// ahci_write_sector
-// IN: port, lba, buffer_va, sector_count
-// =======================================================
-
-int ahci_write_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_count)
-{
-
-// Parameters:
-    struct ahci_port_d  *pinfo;
-    volatile HBA_PORT   *p;
-    HBA_CMD_HEADER      *cmd_hdr;
-    HBA_CMD_TBL         *cmd_tbl;
-    FIS_REG_H2D         *fis;
-    unsigned long        buf_pa;
-    uint32_t             timeout;
-
-    if (port < 0 || port >= NR_PORTS || !buffer_va || sector_count == 0)
-        return -1;
-
-    printk("=== AHCI WRITE ATTEMPT === Port %d | LBA %u | Sectors %u | VA=0x%x\n",
-       port,
-       (uint32_t) lba,
-       sector_count,
-       (unsigned long) buffer_va);
-
-//
-// 1. Wait for port to be ready (BSY + DRQ must be clear)
-//
-
-    p = &AHCI_HBA_STRUCT->ports[port];
-
-    timeout = 2000000;
-    while ((p->tfd & (ATA_SR_BSY | ATA_SR_DRQ)) && timeout--)
-        ahci_io_delay();
-
-    if (timeout == 0){
-        printk("AHCI: Timeout waiting for port ready\n");
-        return -1;
-    }
-
-
-//
-// 2. Select command slot 0
-//
-
-    pinfo = &ahci_port[port];
-    if (!pinfo->initialized){
-        printk("AHCI: Port %d not initialized\n", port);
-        return -1;
-    }
-
-// CORRECT — always use slot 0 for now
-    cmd_hdr = &pinfo->mem->cmd_list[0];
-    cmd_tbl = pinfo->cmd_tbl_va[0];
-    //cmd_tbl = cmd_hdr->ctba;
-
-    // #bugbug
-    //cmd_hdr = &pinfo->mem->cmd_list[port];
-    //cmd_tbl = pinfo->cmd_tbl_va[port];
-
-    // Preserve command table physical address
-    //uint32_t saved_ctba  = cmd_hdr->ctba;
-    //uint32_t saved_ctbau = cmd_hdr->ctbau;
-
-    // Clear structures
-    //memset(cmd_hdr, 0, sizeof(HBA_CMD_HEADER));  // do not clear this one
-    memset(cmd_tbl, 0, sizeof(HBA_CMD_TBL));
-
-// Configure command header
-
-    // Restore CTBA linkage
-    //cmd_hdr->ctba  = saved_ctba;
-    //cmd_hdr->ctbau = saved_ctbau;
-
-    // Command FIS length in DWORDs (FIS_REG_H2D = 20 bytes = 5 DWORDs)
-    //cmd_hdr->cfl   = 5;
-    cmd_hdr->cfl = sizeof(FIS_REG_H2D)/sizeof(uint32_t);  // 5 dwords
-    // 0 = device -> memory
-    // 1 = memory -> device
-    cmd_hdr->w     = 1;   // Write (Host -> Device)
-    cmd_hdr->prdtl = 1;   // One PRDT entry
-
-    cmd_hdr->prdbc = 0;   //
-
-//
-// 3. Build H2D Register FIS
-//
-
-    // Then cast cfis[] to a FIS_REG_H2D and fill it in
-    fis = (FIS_REG_H2D *) cmd_tbl->cfis;
-    //fis = (FIS_REG_H2D *) &cmd_tbl->cfis[0];
-    memset(fis, 0, sizeof(FIS_REG_H2D));
-
-    fis->fis_type = FIS_TYPE_REG_H2D;
-    fis->c        = 1;                    // Command register update
-    //fis->command  = ATA_CMD_READ_DMA_EXT;
-    fis->command = ATA_CMD_WRITE_DMA_EXT;
-    fis->device   = (1 << 6);            // LBA48 mode
-
-    // LBA 48-bit address
-    fis->lba0 = (uint8_t)((lba >>  0) & 0xFF);
-    fis->lba1 = (uint8_t)((lba >>  8) & 0xFF);
-    fis->lba2 = (uint8_t)((lba >> 16) & 0xFF);
-    fis->lba3 = (uint8_t)((lba >> 24) & 0xFF);
-    fis->lba4 = (uint8_t)((lba >> 32) & 0xFF);
-    fis->lba5 = (uint8_t)((lba >> 40) & 0xFF);
-
-    // Sector count
-    fis->countl = (uint8_t)(sector_count & 0x00FF);
-    fis->counth = (uint8_t)((sector_count >> 8) & 0x00FF);
-
-//
-// 4. Set up PRDT entry (physical address of data buffer)
-//
-
-    buf_pa = virtual_to_physical((unsigned long)buffer_va, gKernelPML4Address);
-    printk("AHCI: Buffer VA=0x%x  PA=0x%x\n",
-           (uint32_t)(unsigned long)buffer_va, (uint32_t)buf_pa);
-
-    cmd_tbl->prdt_entry[0].dba  = (uint32_t)(buf_pa & 0xFFFFFFFF);
-    cmd_tbl->prdt_entry[0].dbau = (uint32_t)(buf_pa >> 32);
-    cmd_tbl->prdt_entry[0].dbc  = (sector_count * 512) - 1;  // Byte count minus 1
-
-// Interrupt on completion
-// Polling, not using interrupts. 
-// Setting i=1 isn't harmful, but make sure port->ie 
-// doesn't have interrupt bits enabled that could fire unexpectedly 
-// into an uninitialized IDT handler.
-    cmd_tbl->prdt_entry[0].i = 1;
-
-
-//
-// Device will READ from RAM.
-// Make sure CPU cache is written back first.
-//
-
-    ahci_flush_cache(
-        buffer_va,
-        sector_count * 512);
-
-//
-// 5. Flush command structures to memory BEFORE issuing the command
-//    The HBA reads cmd_hdr + cmd_tbl via DMA — CPU cache must be written back first.
-//
-
-    ahci_flush_cache(cmd_hdr, sizeof(HBA_CMD_HEADER));
-    ahci_flush_cache(cmd_tbl, sizeof(HBA_CMD_TBL));
-
-//
-// 6. Clear interrupt status and issue command
-//
-
-    p->is  = 0xFFFFFFFF;   // Clear all pending interrupt bits
-    p->serr = 0xFFFFFFFF;  // Clear SATA errors too
-    p->ci  = (1 << 0);     // Issue command slot 0
-
-//
-// 7. Wait for completion (poll CI bit)
-//
-
-    timeout = 3000000;
-    while ((p->ci & (1 << 0)) && timeout--)
-    {
-        // Check for fatal errors during transfer
-        if (p->is & (HBA_PxIS_TFES | HBA_PxIS_HBFS | HBA_PxIS_IFS))
-        {
-            printk("AHCI: Error during transfer! IS=0x%x | TFD=0x%x | SERR=0x%x\n",
-                   p->is, p->tfd, p->serr);
-            return -1;
-        }
-        ahci_io_delay();
-    }
-
-    if (timeout == 0)
-    {
-        printk("AHCI: Command timeout! TFD=0x%x CI=0x%x IS=0x%x\n",
-               p->tfd, p->ci, p->is);
-        return -1;
-    }
-
-//
-// 8. Invalidate CPU cache over the data buffer so we read fresh DMA data
-//
-
-    // Do not use it for write
-    // ahci_invalidate_cache(buffer_va, sector_count * 512);
-
-//
-// 9. Check TFD for ATA errors
-//
-
-    if (p->tfd & ATA_SR_ERR)
-    {
-        printk("AHCI: TFD Error = 0x%x\n", p->tfd);
-        return -1;
-    }
-
-//
-// 10. Dump result for verification
-//
-
-    {
-        unsigned char *b = (unsigned char *) buffer_va;
-        int i = 0;
-
-        printk("AHCI: First 32 bytes: ");
-        for (i = 0; i < 32; i++)
-            printk("%x ", b[i]);
-        printk("\n");
-
-        printk("AHCI: MBR Signature (510-511): %x %x\n", b[510], b[511]);
-
-        if (b[510] == 0x55 && b[511] == 0xAA)
-            printk("AHCI: >>> MBR SIGNATURE CORRECT! <<<\n");
-        else
-            printk("AHCI: Wrong signature — DMA may not have completed correctly.\n");
-    }
-
-    return 0;
-}
-
-
-
-// =======================================================
 // ahci_test_read
 // =======================================================
 
@@ -580,100 +357,6 @@ void ahci_test_read(void)
         printk("AHCI: Read completed successfully.\n");
     else
         printk("AHCI: Read failed!\n");
-}
-
-void ahci_test_rw(void)
-{
-    unsigned char *buf;
-    int i;
-
-    printk("=== AHCI READ/WRITE TEST ===\n");
-
-    buf = (unsigned char *) kmalloc_aligned(4096,4096);
-
-    if (!buf)
-    {
-        printk("ahci_test_rw: no buffer\n");
-        return;
-    }
-
-    memset(buf,0,512);
-
-    //
-    // Build a fake MBR sector.
-    //
-
-    buf[0] = 'G';
-    buf[1] = 'R';
-    buf[2] = 'A';
-    buf[3] = 'M';
-    buf[4] = 'A';
-    buf[5] = 'D';
-    buf[6] = 'O';
-
-    //
-    // Standard MBR signature.
-    //
-
-    buf[510] = 0x55;
-    buf[511] = 0xAA;
-
-    printk("Writing sector...\n");
-
-    if (ahci_write_sector(0,0,buf,1) != 0)
-    {
-        printk("WRITE FAILED\n");
-        return;
-    }
-
-    //
-    // Clear buffer so we know data comes from disk.
-    //
-
-    memset(buf,0,512);
-
-    printk("Reading sector back...\n");
-
-    if (ahci_read_sector(0,0,buf,1) != 0)
-    {
-        printk("READ FAILED\n");
-        return;
-    }
-
-    printk("First 16 bytes:\n");
-
-    for (i=0; i<16; i++)
-        printk("%x ", buf[i]);
-
-    printk("\n");
-
-    printk("As text: ");
-
-    for (i=0; i<8; i++)
-        printk("%c", buf[i]);
-
-    printk("\n");
-
-    printk("Signature: %x %x\n",
-        buf[510],
-        buf[511]);
-
-    if (buf[0]=='G' &&
-        buf[1]=='R' &&
-        buf[2]=='A' &&
-        buf[3]=='M' &&
-        buf[4]=='A' &&
-        buf[5]=='D' &&
-        buf[6]=='O' &&
-        buf[510]==0x55 &&
-        buf[511]==0xAA)
-    {
-        printk("AHCI R/W TEST PASSED\n");
-    }
-    else
-    {
-        printk("AHCI R/W TEST FAILED\n");
-    }
 }
 
 
@@ -985,8 +668,7 @@ DDINIT_ahci(
 
 //========================================
 
-    //ahci_test_read();
-    ahci_test_rw();
+    ahci_test_read();
     while(1){}
 
     return 0;

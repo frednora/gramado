@@ -411,37 +411,29 @@ typedef struct tagHBA_CMD_TBL
 // One contiguous aligned block per port (best practice)
 typedef struct tagAHCI_PORT_MEMORY
 {
-    HBA_CMD_HEADER   cmd_list[32] __attribute__((aligned(1024)));
-    HBA_FIS          fis          __attribute__((aligned(256)));
-    HBA_CMD_TBL      cmd_tbl[32]  __attribute__((aligned(128)));   // one per command slot
+    HBA_CMD_HEADER   cmd_list[32] __attribute__((aligned(1024)));  // CLB — must be first, 1K aligned
+    HBA_FIS          fis          __attribute__((aligned(256)));   // FB — right after, 256 aligned
+    HBA_CMD_TBL      cmd_tbl[32]  __attribute__((aligned(128)));   // cmd tables after
 } __attribute__((packed)) AHCI_PORT_MEMORY;
 
-//
-// -------------------------------------------------
-//
-
+// AHCI port information
 struct ahci_port_d 
 {
+    int port_num;
+    int initialized;
+
+// A big block of information
+// cmd list, fis and cmd table 
     AHCI_PORT_MEMORY *mem;        // Virtual address of the whole block
     unsigned long     mem_pa;     // Physical address
-    int               initialized;
-    int               port_num;
 
     // Array of virtual pointers to each command table
+	// Easy access for cmd tables?
     HBA_CMD_TBL      *cmd_tbl_va[32];
 
     // Later: device info, queue state, etc.
 };
-
 extern struct ahci_port_d  ahci_port[NR_PORTS];
-
-
-struct ahci_current_port_d 
-{
-    int todo00;
-};
-extern struct ahci_current_port_d  AHCICurrentPort;
-
 
 
 //
@@ -451,7 +443,11 @@ extern struct ahci_current_port_d  AHCICurrentPort;
 
 // IN: port, lba. buffer, sector_count
 int ahci_read_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_count);
+int ahci_write_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_count);
+
+
 void ahci_test_read(void);
+void ahci_test_rw(void);
 
 int DDINIT_ahci(
     struct pci_device_d *pci_ahci,
