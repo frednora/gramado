@@ -1,8 +1,7 @@
 // ahci.c
-// AHCI driver - Basic version
+// AHCI driver - (Basic version)
+// Environment: 64-bit kernel-side
 // Created by Fred Nora.
-// Following the same philosophy as ata.c
-// Rebuilt by Claude
 
 #include <kernel.h>
 
@@ -10,10 +9,10 @@
 // #bugbug
 // Critical Bug: All Ports Share One Static Buffer
 unsigned long HBA_BASE = 0;
-// #ps: Removing const, because it is read only
-//static const char _zhba_base[62*1024] __attribute__((aligned(4096)));
-static char _zhba_base[62*1024] __attribute__((aligned(4096)));
 
+// #ps: 
+// Do not use const, because const if for read only data.
+static char _zhba_base[62*1024] __attribute__((aligned(4096)));
 
 // #todo
 // Memory for all the ports
@@ -21,11 +20,8 @@ static char _zhba_base[62*1024] __attribute__((aligned(4096)));
 // then in __ahci_setup_port:
 // pinfo->mem = &_port_mem[port_num];
 
-
-
 // Globals
 int g_ahci_driver_initialized = FALSE;
-
 
 // Main structure:
 // It has the following components:
@@ -35,7 +31,7 @@ int g_ahci_driver_initialized = FALSE;
 // + 0x100 - 0x10FF, Port control registers
 volatile HBA_MEM *AHCI_HBA_STRUCT = NULL;
 
-
+// Top level port strutures
 struct ahci_port_d  ahci_port[NR_PORTS];
 
 // Next device ID
@@ -67,7 +63,7 @@ static void ahci_probe_ports(void);
 
 static inline void ahci_flush_cr3(void)
 {
-    unsigned long cr3;
+    unsigned long cr3=0;
     asm volatile("mov %%cr3, %0" : "=r"(cr3));
     asm volatile("mov %0, %%cr3" : : "r"(cr3));
 }
@@ -125,17 +121,20 @@ static int ahci_identify_device(int port_num)
         return -1;
 
     printk("AHCI Port %d: Signature 0x%X\n", port_num, port->sig);
-
     return 0;
 }
-
 
 // =======================================================
 // ahci_read_sector
 // IN: port, lba, buffer_va, sector_count
 // =======================================================
 
-int ahci_read_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_count)
+int 
+ahci_read_sector(
+    int port, 
+    uint64_t lba, 
+    void *buffer_va, 
+    uint32_t sector_count)
 {
 
 // Parameters:
@@ -150,10 +149,8 @@ int ahci_read_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_co
     if (port < 0 || port >= NR_PORTS || !buffer_va || sector_count == 0)
         return -1;
 
-
     //printk("=== AHCI READ ATTEMPT === Port %d | LBA %u | Sectors %u | VA=0x%x\n",
     //       port, (uint32_t)lba, sector_count, (unsigned long)buffer_va);
-
 
 //
 // 1. Wait for port to be ready (BSY + DRQ must be clear)
@@ -169,7 +166,6 @@ int ahci_read_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_co
         printk("AHCI: Timeout waiting for port ready\n");
         return -1;
     }
-
 
 //
 // 2. Select command slot 0
@@ -302,19 +298,13 @@ int ahci_read_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_co
 
     ahci_invalidate_cache(buffer_va, sector_count * 512);
 
-//
 // 9. Check TFD for ATA errors
-//
-
-    if (p->tfd & ATA_SR_ERR)
-    {
+    if (p->tfd & ATA_SR_ERR){
         printk("AHCI: TFD Error = 0x%x\n", p->tfd);
         return -1;
     }
 
-//
 // 10. Dump result for verification
-//
 
 /*
     {
@@ -338,13 +328,17 @@ int ahci_read_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_co
     return 0;
 }
 
-
 // =======================================================
 // ahci_write_sector
 // IN: port, lba, buffer_va, sector_count
 // =======================================================
 
-int ahci_write_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_count)
+int 
+ahci_write_sector(
+    int port, 
+    uint64_t lba, 
+    void *buffer_va, 
+    uint32_t sector_count )
 {
 
 // Parameters:
@@ -474,34 +468,29 @@ int ahci_write_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_c
     cmd_tbl->prdt_entry[0].i = 1;
 
 
-//
 // Device will READ from RAM.
 // Make sure CPU cache is written back first.
-//
 
     ahci_flush_cache(
         buffer_va,
         sector_count * 512);
 
-//
 // 5. Flush command structures to memory BEFORE issuing the command
-//    The HBA reads cmd_hdr + cmd_tbl via DMA — CPU cache must be written back first.
-//
+//    The HBA reads cmd_hdr + cmd_tbl via DMA — 
+//    CPU cache must be written back first.
 
     ahci_flush_cache(cmd_hdr, sizeof(HBA_CMD_HEADER));
     ahci_flush_cache(cmd_tbl, sizeof(HBA_CMD_TBL));
 
-//
+
 // 6. Clear interrupt status and issue command
-//
 
     p->is  = 0xFFFFFFFF;   // Clear all pending interrupt bits
     p->serr = 0xFFFFFFFF;  // Clear SATA errors too
     p->ci  = (1 << 0);     // Issue command slot 0
 
-//
+
 // 7. Wait for completion (poll CI bit)
-//
 
     timeout = 3000000;
     while ((p->ci & (1 << 0)) && timeout--)
@@ -523,26 +512,20 @@ int ahci_write_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_c
         return -1;
     }
 
-//
 // 8. Invalidate CPU cache over the data buffer so we read fresh DMA data
-//
 
     // Do not use it for write
     // ahci_invalidate_cache(buffer_va, sector_count * 512);
 
-//
-// 9. Check TFD for ATA errors
-//
 
-    if (p->tfd & ATA_SR_ERR)
-    {
+// 9. Check TFD for ATA errors
+
+    if (p->tfd & ATA_SR_ERR){
         printk("AHCI: TFD Error = 0x%x\n", p->tfd);
         return -1;
     }
 
-//
 // 10. Dump result for verification
-//
 
 /*
     {
@@ -567,7 +550,6 @@ int ahci_write_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_c
 }
 
 
-
 // =======================================================
 // ahci_test_read
 // =======================================================
@@ -575,12 +557,10 @@ int ahci_write_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_c
 void ahci_test_read(void)
 {
     unsigned char *test_buf = (unsigned char *) kmalloc_aligned(4096, 4096);
-    if (!test_buf)
-    {
+    if (!test_buf){
         printk("AHCI: kmalloc_aligned failed\n");
         return;
     }
-
     memset(test_buf, 0xFE, 512);   // Fill with known pattern before read
 
     printk("=== AHCI TEST READ START ===\n");
@@ -707,7 +687,7 @@ static void ahci_reset_hba(void)
     if (!AHCI_HBA_STRUCT)
         return;
 
-    printk("AHCI: Resetting HBA ...\n");
+    // printk("AHCI: Resetting HBA ...\n");
 
     AHCI_HBA_STRUCT->ghc |= (1 << 0);   // HR bit
 
@@ -715,9 +695,8 @@ static void ahci_reset_hba(void)
     while (AHCI_HBA_STRUCT->ghc & (1 << 0))
         ahci_io_delay();
 
-    printk("AHCI: HBA Reset done\n");
+    // printk("AHCI: HBA Reset done\n");
 }
-
 
 // =======================================================
 // __ahci_setup_port
@@ -727,12 +706,11 @@ static void ahci_reset_hba(void)
 // Worker
 static int __ahci_setup_port(int port_num)
 {
-
-    printk("__ahci_setup_port: Setup port %d\n", port_num);
-
 // Parameters:
     if (port_num < 0 || port_num >= NR_PORTS)
         return (int) -1;
+
+    printk("__ahci_setup_port: Setup port %d\n", port_num);
 
 // --------------------------------------------------------
 // Get pointer to the port structure
@@ -749,7 +727,6 @@ static int __ahci_setup_port(int port_num)
     else
         printk("[Unknown/Not present]\n");
 
-
 //
 // Stop port cleanly before reconfiguring
 //
@@ -765,7 +742,6 @@ static int __ahci_setup_port(int port_num)
     // Wait for CR (bit15) to clear
     while (port->cmd & HBA_PxCMD_CR)
         ahci_io_delay();
-
 
 
 //
@@ -794,11 +770,11 @@ static int __ahci_setup_port(int port_num)
     // Flush to memory so the HBA sees clean state
     ahci_flush_cache(pinfo->mem, sizeof(AHCI_PORT_MEMORY));
 
+    // #debug
     printk("AHCI: Port %d mem VA=0x%x  PA=0x%x\n",
            port_num,
            (uint32_t)(unsigned long)pinfo->mem,
            (uint32_t)pinfo->mem_pa);
-
 
     // Command list - 1024
     port->clb  = (uint32_t)(pinfo->mem_pa & 0xFFFFFFFF); // start of struct = cmd_list
@@ -873,13 +849,13 @@ static int __ahci_setup_port(int port_num)
     // Start command processing
     port->cmd |= HBA_PxCMD_ST;
 
-//
+
 // Mark as initialized
-//
 
     pinfo->port_num    = port_num;
     pinfo->initialized = TRUE;
 
+    // #debug
     printk("AHCI: Port %d fully initialized | CLB PA=0x%x | FB PA=0x%x\n",
            port_num, port->clb, port->fb);
 
@@ -911,7 +887,7 @@ static void ahci_probe_ports(void)
             // Setup port regardless — device may appear after init
             __ahci_setup_port(i);  // Worker
         }
-    }
+    };
 }
 
 
@@ -955,8 +931,10 @@ DDINIT_ahci(
     }
     ahci_flush_cr3();   // Activate new page table entry
 
-// Do we have a valid address?
-    printk("DDINIT_ahci: BAR5 PA=0x%x  VA=0x%x\n", (uint32_t)bar5, (uint32_t)va);
+    // #debug
+    // Do we have a valid address?
+    printk("DDINIT_ahci: BAR5 PA=0x%x  VA=0x%x\n", 
+        (uint32_t)bar5, (uint32_t)va );
 
 // ----------------------------
 
@@ -971,6 +949,7 @@ DDINIT_ahci(
         return -1;
     }
 
+    // #debug
     printk("AHCI: HBA at VA=0x%x | CAP=0x%x | PI=0x%x | VS=0x%x\n",
            (uint32_t)va, AHCI_HBA_STRUCT->cap, 
            AHCI_HBA_STRUCT->pi, 
@@ -984,13 +963,11 @@ DDINIT_ahci(
 // ----------------------------
     BootDisk.initialized    = TRUE;
     BootDisk.controller_type = STORAGE_CONTROLLER_MODE_AHCI;
-
     g_ahci_driver_initialized = TRUE;
-
+    // #debug
     printk("AHCI: Driver initialized successfully\n");
 
-//========================================
-
+// ========================================
     //ahci_test_read();
     //ahci_test_rw();
     //while(1){}

@@ -1,4 +1,6 @@
 // ahci.h
+// AHCI device driver.
+// Environment: 64-bit long mode kernel-side.
 // Creted by Fred Nora.
 
 #ifndef __BLKDEV_AHCI_H
@@ -7,7 +9,6 @@
 
 #define NR_PORTS  32  // maximum number of ports
 //#define NR_CMDS   32  // maximum number of queued commands
-
 
 // AHCI Port Interrupt Status Register (PxIS) bits
 #define HBA_PxIS_TFES    (1 << 30)   // Task File Error Status
@@ -26,7 +27,6 @@
 #define HBA_PxIS_PSS     (1 <<  1)   // PIO Setup FIS
 #define HBA_PxIS_DHRS    (1 <<  0)   // Device to Host Register FIS
 
-
 // PxCMD - Port x Command and Status
 #define HBA_PxCMD_ST    0x1     // Start (ST)
 #define HBA_PxCMD_FRE   0x10    // FIS Receive Enable (FRE)
@@ -34,15 +34,15 @@
 #define HBA_PxCMD_CR    0x8000  // Command List Running (CR)
 //#define HBA_PxIS_TFES   0x40000000
 
-
 //
 // Structure based on osdev.org totorial.
 //
 
-
 // 1) FIS types
-// Following code defines different kinds of FIS specified in Serial ATA Revision 3.0.
-typedef enum{
+// Following code defines different kinds of 
+// FIS specified in Serial ATA Revision 3.0.
+
+typedef enum {
 
 	FIS_TYPE_REG_H2D	= 0x27,	// Register FIS - host to device
 	FIS_TYPE_REG_D2H	= 0x34,	// Register FIS - device to host
@@ -54,7 +54,6 @@ typedef enum{
 	FIS_TYPE_DEV_BITS	= 0xA1,	// Set device bits FIS - device to host
 
 } FIS_TYPE;
-
 
 // 2) Register FIS – Host to Device
 typedef struct tagFIS_REG_H2D
@@ -89,6 +88,7 @@ typedef struct tagFIS_REG_H2D
 
 	// DWORD 4
 	uint8_t  rsv1[4];	// Reserved
+
 } __attribute__((packed)) FIS_REG_H2D;
 
 
@@ -108,7 +108,7 @@ typedef struct tagFIS_DATA
 
 	// DWORD 1 ~ N
 	// #bugbug
-	// 
+	// Maybe it needs to be bigger
 	uint32_t data[1];	// Payload
 
 }__attribute__((packed)) FIS_DATA;
@@ -117,7 +117,6 @@ typedef struct tagFIS_DATA
 //
 // AHCI Registers and Memory Structures (osdev.org tutorial)
 //
-
 
 // ------------------------------------------------------------
 // 1) HBA memory registers
@@ -151,6 +150,7 @@ typedef volatile struct tagHBA_PORT
 
 } HBA_PORT;
 
+// This is the main structure
 typedef volatile struct tagHBA_MEM
 {
 
@@ -181,13 +181,8 @@ typedef volatile struct tagHBA_MEM
 
 // ------------------------------------------------------------
 // 2) Port Received FIS and Command List Memory
-
 // Nothing here
-
-
-// --------------------------------------------------
-// 3) Received FIS
-
+// (The structures are bellow)
 
 
 // 6) DMA Setup – Device to Host
@@ -261,8 +256,8 @@ typedef struct tagFIS_PIO_SETUP
 	// DWORD 4
 	uint16_t tc;		// Transfer count
 	uint8_t  rsv4[2];	// Reserved
-} __attribute__((packed)) FIS_PIO_SETUP;
 
+} __attribute__((packed)) FIS_PIO_SETUP;
 
 // 3) Register FIS – Device to Host
 typedef struct tagFIS_REG_D2H
@@ -297,6 +292,7 @@ typedef struct tagFIS_REG_D2H
 
 	// DWORD 4
 	uint8_t  rsv4[4];     // Reserved
+
 } __attribute__((packed)) FIS_REG_D2H;
 
 // Set Device Bits FIS – Device to Host
@@ -318,8 +314,8 @@ typedef struct tagFIS_DEV_BITS
 
     // DWORD 2
     uint32_t rsv2;        // Reserved
-} __attribute__((packed)) FIS_DEV_BITS;
 
+} __attribute__((packed)) FIS_DEV_BITS;
 
 typedef volatile struct tagHBA_FIS
 {
@@ -345,7 +341,6 @@ typedef volatile struct tagHBA_FIS
     uint8_t         rsv[0x100 - 0xA0];
 
 } HBA_FIS;
-
 
 // -----------------------------------------------------------
 // 4) Command List struture
@@ -394,6 +389,7 @@ typedef struct tagHBA_PRDT_ENTRY
 	uint32_t i:1;		// Interrupt on completion
 
 }__attribute__((packed)) HBA_PRDT_ENTRY;
+
 // Command Table - better to support up to 8 PRDTs for larger transfers
 typedef struct tagHBA_CMD_TBL
 {
@@ -403,20 +399,19 @@ typedef struct tagHBA_CMD_TBL
     HBA_PRDT_ENTRY      prdt_entry[8];      // Up to 8 entries (4MB each) - very safe for now
 } __attribute__((packed)) HBA_CMD_TBL;
 
-//
 // ------------------------------------------------
-//
-
-
 // One contiguous aligned block per port (best practice)
 typedef struct tagAHCI_PORT_MEMORY
 {
-    HBA_CMD_HEADER   cmd_list[32] __attribute__((aligned(1024)));  // CLB — must be first, 1K aligned
-    HBA_FIS          fis          __attribute__((aligned(256)));   // FB — right after, 256 aligned
-    HBA_CMD_TBL      cmd_tbl[32]  __attribute__((aligned(128)));   // cmd tables after
+
+	HBA_CMD_HEADER cmd_list[32] __attribute__((aligned(1024)));  // CLB — must be first, 1K aligned
+    HBA_FIS        fis          __attribute__((aligned(256)));   // FB — right after, 256 aligned
+    HBA_CMD_TBL    cmd_tbl[32]  __attribute__((aligned(128)));   // cmd tables after
+
 } __attribute__((packed)) AHCI_PORT_MEMORY;
 
 // AHCI port information
+// Top level port structure
 struct ahci_port_d 
 {
     int port_num;
@@ -435,21 +430,29 @@ struct ahci_port_d
 };
 extern struct ahci_port_d  ahci_port[NR_PORTS];
 
-
 //
-// Prototypes 
+// == Prototypes ===========================
 //
-
 
 // IN: port, lba. buffer, sector_count
-int ahci_read_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_count);
-int ahci_write_sector(int port, uint64_t lba, void *buffer_va, uint32_t sector_count);
+int 
+ahci_read_sector(
+    int port, uint64_t lba, 
+	void *buffer_va, 
+	uint32_t sector_count );
 
+int 
+ahci_write_sector(
+    int port, 
+	uint64_t lba, 
+	void *buffer_va, 
+	uint32_t sector_count );
 
 void ahci_test_read(void);
 void ahci_test_rw(void);
 
-int DDINIT_ahci(
+int 
+DDINIT_ahci(
     struct pci_device_d *pci_ahci,
     uint8_t controller_type );
 
