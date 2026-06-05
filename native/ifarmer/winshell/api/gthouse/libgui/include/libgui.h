@@ -32,15 +32,15 @@
 //
 // Returns:
 //   pointer to a new dccanvas_d, or NULL on failure.
-struct dccanvas_d *libgui_create_dc(unsigned char *base,
-                               unsigned long width,
-                               unsigned long height,
-                               unsigned long bpp);
+struct dccanvas_d *libgui_create_dc(
+    unsigned char *base,
+    unsigned long width,
+    unsigned long height,
+    unsigned long bpp );
 
 // Getters for default contexts
 struct dccanvas_d *libgui_get_backbuffer_dc(void);
 struct dccanvas_d *libgui_get_frontbuffer_dc(void);
-
 
 /*
 // #test: 
@@ -131,7 +131,6 @@ libgui_frontbuffer_draw_horizontal_line (
     unsigned long x2, 
     unsigned int color,
     unsigned long rop_flags );
-
 
 // #test
 // Draw a pixel inside a canvas, given it's device context.
@@ -284,7 +283,6 @@ libgui_set_ui_component_dimension(
 	unsigned long width,
 	unsigned long height );
 
-
 //
 // #
 // INITIALIZATION 
@@ -294,6 +292,4 @@ libgui_set_ui_component_dimension(
 int libgui_initialize(void);
 
 #endif    
-
-
 

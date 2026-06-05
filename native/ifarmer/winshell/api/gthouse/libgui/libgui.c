@@ -2704,7 +2704,6 @@ struct libgui_font_initialization_d
     unsigned long height;
     int index_for_current_font;
 };
-//extern struct libgui_font_initialization_d  FontInitialization;
 struct libgui_font_initialization_d  FontInitialization;
 // ===================================================
 
@@ -2804,7 +2803,6 @@ struct libgui_node_d
 };
 
 
-
 //======================================
 // Calling kgws in the kernel.
 // Using the kgws to refresh the rectangle.
@@ -2836,32 +2834,33 @@ __draw_rectangle_via_kgws (
 //
 // Returns:
 //   pointer to a new dccanvas_d, or NULL on failure.
-struct dccanvas_d *libgui_create_dc(unsigned char *base,
-                               unsigned long width,
-                               unsigned long height,
-                               unsigned long bpp )
+struct dccanvas_d *libgui_create_dc(
+	unsigned char *base,
+    unsigned long width,
+    unsigned long height,
+    unsigned long bpp )
 {
     if (!base || width == 0 || height == 0 || bpp == 0)
         return NULL;
 
+	// dc - Device Context struture
     struct dccanvas_d *dc = malloc(sizeof(struct dccanvas_d));
     if (!dc) 
         return NULL;
-
     memset(dc, 0, sizeof(struct dccanvas_d));
 
-    dc->data         = base;
-    dc->device_width = width;
-    dc->device_height= height;
-    dc->bpp          = bpp;                  // bits per pixel
-    dc->pitch        = width * (bpp / 8);    // bytes per row
-    //dc->next         = NULL;
+    dc->data          = base;
+    dc->device_width  = width;
+    dc->device_height = height;
+    dc->bpp           = bpp;                  // bits per pixel
+    dc->pitch         = width * (bpp / 8);    // bytes per row
+    //dc->next        = NULL;
 
-    dc->used        = TRUE;
-    dc->magic       = 1234;
+    dc->used = TRUE;
+    dc->magic = 1234;
     dc->initialized = TRUE;
 
-    return dc;
+    return (struct dccanvas_d *) dc;
 }
 
 // Get the pointer for the backbufer dc
@@ -2973,7 +2972,6 @@ libgui_backbuffer_putpixel3 (
     //if (target_buffer == 0)
         //return 0;
 
-
 // IN: color, x, y, rop, target buffer.
     ret_value = 
         (int) libgui_fb_backbuffer_putpixel( 
@@ -3007,8 +3005,7 @@ libgui_backbuffer_putpixel2 (
     if (x<0){ return -1; }
     if (y<0){ return -1; }
 
-// Service number 6
-    //return (int) gramado_system_call ( 6, color, x, y );
+    // Service number 6
     return (int) sc80( 6, color, x, y );
 }
 
@@ -3195,7 +3192,6 @@ libgui_fb_backbuffer_putpixel (
 // A cor a ser gravada.
     unsigned char b3, g3, r3, a3;
 
-
 // ------------
 // 0 = Sem modificação
 // A cor a ser registrada é a mesma enviada por argumento.
@@ -3296,7 +3292,6 @@ libgui_fb_backbuffer_putpixel (
 */
 
 
-
 //
 // == Record ==============================
 //
@@ -3309,6 +3304,7 @@ libgui_fb_backbuffer_putpixel (
 
 // Return the number of changed pixels. '1'.
     return (int) 1;
+
 // Return the number of changed pixels. '0'.
 fail:
     return 0;
@@ -3332,10 +3328,10 @@ libgui_putpixel0 (
 
 // Local copies from dc
     unsigned char *dc_where = dc->data;
-    unsigned long dc_width   = dc->device_width;
-    unsigned long dc_height  = dc->device_height;
-    unsigned long dc_bpp     = dc->bpp;    // bits per pixel.
-    unsigned long dc_pitch   = dc->pitch;  // bytes per row
+    unsigned long dc_width  = dc->device_width;
+    unsigned long dc_height = dc->device_height;
+    unsigned long dc_bpp    = dc->bpp;    // bits per pixel.
+    unsigned long dc_pitch  = dc->pitch;  // bytes per row
 
 // The address where we're gonna put the data into.
 // #todo: It needs to be a valid ring3 address.
@@ -3414,13 +3410,13 @@ libgui_putpixel0 (
     //    break;
     default:
         //server_debug_print("libgui_putpixel0: bpp\n");
-        printf            ("libgui_putpixel0: bpp\n");
+        printf ("libgui_putpixel0: bpp\n");
         exit(1);
         while(1){}
         break;
     };
 
-// Device width.
+    // Device width
     width = (int) (width & 0xFFFF);
 
 //
@@ -3769,7 +3765,7 @@ libgui_putpixel0 (
     dc_where[offset +2] = r3;
     if (bpp == 32){ dc_where[offset +3] = a3; };
 
-// Return the number of changed pixels.
+// Return the number of changed pixels
     return (int) 1;
 }
 
@@ -3788,7 +3784,7 @@ libgui_backbuffer_putpixel (
 // Putpixel at the given buffer address
     //libgui_putpixel0( _color, _x, _y, _rop_flags, buffer );
 
-    // #test: New worker with dc.
+    // #test: New worker with dc
     libgui_putpixel0(libgui_dc_backbuffer, _color, _x, _y, _rop_flags);
 }
 
@@ -3806,7 +3802,7 @@ libgui_frontbuffer_putpixel (
 // Putpixel at the given buffer address
     //libgui_putpixel0( _color, _x, _y, _rop_flags, buffer );
 
-    // #test: New worker with dc.
+    // #test: New worker with dc
     libgui_putpixel0(libgui_dc_frontbuffer, _color, _x, _y, _rop_flags);
 }
 
@@ -3820,18 +3816,16 @@ libgui_putpixel (
     unsigned long rop,
     int back_or_front )
 {
-    if (back_or_front ==1){
-        libgui_backbuffer_putpixel(color,x,y,rop);
+    if (back_or_front == 1){
+        libgui_backbuffer_putpixel(color, x, y, rop);
         return 0;
     }
     if (back_or_front == 2){
-        libgui_frontbuffer_putpixel(color,x,y,rop);
+        libgui_frontbuffer_putpixel(color, x, y, rop);
         return 0;
     }
     return (int) -1;
 }
-
-//============
 
 // Get the color value given the position
 unsigned int libgui_backbuffer_getpixelcolor(int x, int y)
@@ -3883,7 +3877,7 @@ unsigned int libgui_backbuffer_getpixelcolor(int x, int y)
 // Set bytes of ColorBuffer.
     c[0] = b;  c[1] = g;  c[2] = r;  c[3] = a;
 
-// Return the color value.
+// Return the color value
     return (unsigned int) ColorBuffer;
 }
 
@@ -3986,8 +3980,6 @@ libgui_draw_horizontal_line_dc (
 
 static int char_initialize(void)
 {
-// Called by gwsInitGUI() in gws.c.
-
     CharInitialization.initialized = FALSE;
 
 // Char width and height.
@@ -4030,7 +4022,6 @@ libgui_drawchar_dc (
     if (dc->magic != 1234)
         return;
 
-
 // Get the font pointer.
 // #todo:
 // usar variavel g8x8fontAddress.	 
@@ -4038,7 +4029,6 @@ libgui_drawchar_dc (
 // + Usar o ponteiro para a fonte atual que foi carregada.
 // + Criar um switch para o tamanho da fonte.
 //   isso deveria estar na inicialização do módulo char.
- 
  
     if ( FontInitialization.address == 0 ||  
          FontInitialization.width <= 0 || 
@@ -4103,7 +4093,7 @@ libgui_drawchar (
         return;
 
     libgui_drawchar_dc(
-		libgui_dc_backbuffer, x, y, c, fgcolor, bgcolor, rop);
+		libgui_dc_backbuffer, x, y, c, fgcolor, bgcolor, rop );
 }
 
 void 
@@ -4508,8 +4498,7 @@ libgui_backbuffer_draw_rectangle0 (
     };
 
     rect.dirty = TRUE;  // Invalidate
-// done:
-    return;
+    return;  // Done
 }
 
 /*
@@ -4772,10 +4761,8 @@ libgui_frontbuffer_draw_rectangle0 (
     };
 
     rect.dirty = TRUE;  // Invalidate
-//done:
-    return;
+    return;  // Done
 }
-
 
 // #test
 // Drawing a rectangle inside a given canvas,
@@ -4869,23 +4856,20 @@ fail:
     return;
 }
 
-
-
-
-
-
 void
 libgui_BackbufferDrawCharBlockStyle(
     unsigned long x,          // top-left in screen space
     unsigned long y,
-    unsigned int  fgcolor,
-    int           ch,         // character code
-    int           scale)      // 1 = classic 8×8, 2 = 16×16 blocks, etc.
+    unsigned int fgcolor,
+    int ch,         // character code
+    int scale )     // 1 = classic 8×8, 2 = 16×16 blocks, etc.
 {
 
     // #test: NOT TESTED YET
 
-    if (scale < 1) scale = 1;
+    if (scale < 1){
+	    scale = 1;
+	}
 
     if (!FontInitialization.initialized || FontInitialization.address == 0)
         return;
@@ -4956,7 +4940,6 @@ libgui_drawstringblock(
     }
 }
 
-
 void libgui_set_mouse_pointer(unsigned long x, unsigned long y)
 {
     __new_mouse_x = x;
@@ -4990,7 +4973,6 @@ __draw_button_borders_dc(
         return;
     }
 
-
 // The ui component
     if ((void*) ui_c == NULL){
         return;
@@ -5001,7 +4983,6 @@ __draw_button_borders_dc(
 
 // Order:
 // top/left ... right/bottom.
-
 
 //  ____
 // |
@@ -5218,7 +5199,6 @@ __draw_button_borders_dc(
     );
 }
 
-
 struct ui_component_d *libgui_create_ui_component(
     struct dccanvas_d *dc,
     int type,
@@ -5235,8 +5215,7 @@ struct ui_component_d *libgui_create_ui_component(
 	if (dc->magic != 1234)
 	    return NULL;
 
-
-    uic = (struct ui_component_d *) malloc( sizeof(struct ui_component_d) );
+    uic = (struct ui_component_d *) malloc(sizeof(struct ui_component_d));
     if ((void*) uic == NULL)
 	    return NULL;
     uic->used = TRUE;
@@ -5299,7 +5278,6 @@ libgui_redraw_ui_component(
 	struct ui_component_d *uic,
     struct dccanvas_d *dc )
 {
-
 	// uic
     if ((void*) uic == NULL)
         return -1;
@@ -5311,7 +5289,6 @@ libgui_redraw_ui_component(
         return -1;
 	if (dc->magic != 1234)
         return -1;
-
 
 	if (uic->type < 0)
 	    return -1;
@@ -5358,7 +5335,6 @@ libgui_redraw_ui_component(
 	return 0;
 }
 
-
 int 
 libgui_set_ui_component_position(
     struct ui_component_d *uic,
@@ -5394,7 +5370,6 @@ libgui_set_ui_component_dimension(
 
 	return 0;
 }
-
 
 //
 // #
@@ -5479,8 +5454,6 @@ int libgui_initialize(void)
     libgui_dc_backbuffer->magic = 1234;
     libgui_dc_backbuffer->initialized = TRUE;
 
-
-
     // Frontbuffer
     libgui_dc_frontbuffer = malloc(sizeof(struct dccanvas_d));
     if ((void*)libgui_dc_frontbuffer == NULL){
@@ -5499,12 +5472,11 @@ int libgui_initialize(void)
     libgui_dc_frontbuffer->used = TRUE;
     libgui_dc_frontbuffer->magic = 1234;
     libgui_dc_frontbuffer->initialized = TRUE;
-
-
-// 
+ 
     char_initialize();
 
     return 0;
+
 fail:
     return (int) -1;
 }
