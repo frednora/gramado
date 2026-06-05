@@ -5,29 +5,36 @@
 #include "../../../bl.h"
 
 
+// The main structure
 volatile HBA_MEM *AHCI_HBA = NULL;
 
+// The top level structure for ports
 struct ahci_port_d  ahci_port[NR_PORTS];
-struct ahci_current_port_d  AHCICurrentPort;
 
-// =====================================================
 
-static void ahci_io_delay(void);
+// == Prototypes ===============================
+
+static void __ahci_io_delay(void);
 static void ahci_delay(int ms);
 
 // =====================================================
 
-static void ahci_io_delay(void)
+
+// Worker
+static void __ahci_io_delay(void)
 {
     asm volatile("outb %%al, $0x80" : : "a"(0));
 }
 
+// Dalay
 static void ahci_delay(int ms)
 {
     int i=0;
+    int Max = (int) (1000 * ms);
 
-    for (i=0; i < ms * 1000; i++)
-        ahci_io_delay();
+    for (i=0; i<Max; i++){
+        __ahci_io_delay();
+    };
 }
 
 
@@ -35,8 +42,17 @@ static void ahci_delay(int ms)
 // Basic AHCI Read Sector (for bootloader)
 // =====================================================
 
+// #todo
+// We need to handle the lba value using two 32bit variables
+// because we are in a 32bit environment?
+
 // IN: port, lba. buffer, sector_count
-int ahci_read_sector(int port, uint64_t lba, void *buffer, uint32_t sector_count)
+int 
+ahci_read_sector(
+    int port, 
+    uint64_t lba, 
+    void *buffer, 
+    uint32_t sector_count )
 {
     if (port < 0 || port >= NR_PORTS || !AHCI_HBA || !buffer)
         return -1;
@@ -45,7 +61,7 @@ int ahci_read_sector(int port, uint64_t lba, void *buffer, uint32_t sector_count
 
     // Wait for port to be ready
     while (p->tfd & (ATA_SR_BSY | ATA_SR_DRQ))
-        ahci_io_delay();
+        __ahci_io_delay();
 
     // Use command slot 0 (simple for bootloader)
     HBA_CMD_HEADER *cmd_hdr = (HBA_CMD_HEADER*)((unsigned long)p->clb);
@@ -66,6 +82,11 @@ int ahci_read_sector(int port, uint64_t lba, void *buffer, uint32_t sector_count
     fis->c        = 1;                    // Command
     fis->command  = ATA_CMD_READ_DMA_EXT; // 0x25
     fis->device   = 1 << 6;               // LBA mode
+
+
+// #todo
+// We need to handle the lba value using two 32bit variables
+// because we are in a 32bit environment?
 
     // LBA48
     fis->lba0 = (uint8_t) (lba);
@@ -106,10 +127,30 @@ int ahci_read_sector(int port, uint64_t lba, void *buffer, uint32_t sector_count
     return 0;  // Success
 }
 
+// #todo
+// We need to handle the lba value using two 32bit variables
+// because we are in a 32bit environment?
+
+int 
+ahci_write_sector(
+    int port, 
+	uint64_t lba, 
+	void *buffer, 
+	uint32_t sector_count )
+{
+
+    // #todo
+    // Its very similar to the read implementation.
+    // we just need to change some few values.
+
+    return 0;
+}
+
 void ahci_test_read(void)
 {
     // Test read sector 0 (MBR)
     unsigned char *test_buf = (unsigned char*) malloc(512);
+
     if (test_buf)
     {
         memset(test_buf, 0, 512);
@@ -118,7 +159,7 @@ void ahci_test_read(void)
         if (ahci_read_sector(0, 0, test_buf, 1) == 0)
         {
             printf("ahci_test_read: AHCI Read Sector 0 OK! Signature: %x %x\n", 
-                   test_buf[510], test_buf[511]);
+                   test_buf[510], test_buf[511] );
         }
         else
         {
@@ -134,13 +175,13 @@ static void ahci_reset_hba(void)
     if (!AHCI_HBA) 
         return;
 
-    printf("AHCI: Resetting HBA...\n");
+    // printf("AHCI: Resetting HBA...\n");
     AHCI_HBA->ghc |= (1 << 0);        // HR = 1
 
     while (AHCI_HBA->ghc & (1 << 0))
-        ahci_io_delay();
+        __ahci_io_delay();
 
-    printf("AHCI: HBA Reset done\n");
+    // printf("AHCI: HBA Reset done\n");
 }
 
 static void ahci_enable(void)
@@ -165,19 +206,21 @@ static int ahci_setup_port(int port_num)
     port->cmd &= ~((1<<0) | (1<<4));   // Clear ST + FRE
     // Wait for CR + FR to clear
     while (port->cmd & ((1<<15) | (1<<14)))
-        ahci_io_delay();
+        __ahci_io_delay();
 
     // #todo: Allocate aligned memory properly in bootloader
     // For now, using a simple approach (you can improve later)
 
     // Command List Base (1KB aligned)
     unsigned long clb = (unsigned long) malloc(1024);
-    if (!clb) return -1;
+    if (!clb)
+        return -1;
     memset((void*)clb, 0, 1024);
 
     // FIS Base (256B aligned)
     unsigned long fb = (unsigned long) malloc(256);
-    if (!fb) return -1;
+    if (!fb)
+        return -1;
     memset((void*)fb, 0, 256);
 
 // Setup CLB (Command List Base)
@@ -191,7 +234,7 @@ static int ahci_setup_port(int port_num)
     port->cmd |= (1 << 4);   // FRE
     port->cmd |= (1 << 0);   // ST
 
-    printf("AHCI: Port %d setup done\n", port_num);
+    // printf("AHCI: Port %d setup done\n", port_num);
     return 0;
 }
 
@@ -202,7 +245,7 @@ static void ahci_probe_ports(void)
     int i=0;
     uint32_t pi = AHCI_HBA->pi;
 
-    printf("AHCI: Ports Implemented = 0x%x\n", pi);
+    //printf("AHCI: Ports Implemented = 0x%x\n", pi);
     //printf("AHCI: Ports Implemented = %d\n", pi);
 
     for (i=0; i < NR_PORTS; i++)
@@ -248,6 +291,7 @@ int ahci_initialize(void)
     }
 
 // ----------------------------
+// The main structure
     AHCI_HBA = (volatile HBA_MEM *) BootDisk.ahci_bar5;
 
     printf("AHCI HBA at 0x%x\n", BootDisk.ahci_bar5);
@@ -262,8 +306,7 @@ int ahci_initialize(void)
     BootDisk.initialized = TRUE;
     BootDisk.controller_type = STORAGE_CONTROLLER_MODE_AHCI;
 
-    printf("AHCI: Initialization completed.\n");
+    printf("AHCI: Initialization completed\n");
     return TRUE;
 }
-
 
