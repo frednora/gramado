@@ -63,123 +63,14 @@ static struct dccanvas_d *libgui_dc_frontbuffer;
 
 
 // ====================================================
+// Char and font support
 
-
-#define DEFAULT_FONT_WIDTH  8
-#define DEFAULT_FONT_HEIGHT  8
-
-
-struct libgui_char_initialization_d
-{
-    int initialized;
-
-    int width;
-    int height;
-};
 struct libgui_char_initialization_d  CharInitialization;
 
 static int char_initialize(void);
 
 // ===================================================
 
-
-// Structure for a rectangle.
-// A rectangle belongs to a window.
-struct libgui_rect_d 
-{
-    int used;
-    int magic;
-
-    // struct libdisp_window_d *window;
-
-    unsigned long left;
-    unsigned long top;
-    unsigned long width;
-    unsigned long height;
-
-    unsigned int bg_color;  // color
-    int is_filled;          // filled or not
-    unsigned long rop;      // raster operation
-
-    //unsigned int flags;      // Reserved for future use
-
-    int dirty;  // Validation
-	int is_solid; // Is it a solid color rectangle?
-
-    struct libgui_rect_d *next;
-};
-
-// The view:
-// UI element / UI component.
-struct libgui_view_d 
-{
-    int used;
-	int magic;
-
-// If we want to draw the component in an offscreen buffer, 
-// we can use this field to store the buffer's address.
-// Offscreen buffer for the component's content
-	//char *offscreen_buffer;
-
-// Type of the component (e.g., button, checkbox, text field)
-// it also can be a container for other components, like a panel or a window.
-// maybe called viewgroup or something like that.
-	int type;
-
-// Text label for the component (e.g., button text, checkbox label)
-    char *label;
-
-    unsigned int fg;  // foreground (text, icon, border)
-    unsigned int bg;  // background (fill)
-	unsigned long rop; // raster operation for drawing the component
-
-// Geometry
-// The values here are relative to the window's client area.
-    unsigned long left;
-    unsigned long top;
-    unsigned long width;
-    unsigned long height;
-
-// State of the component (e.g., normal, hovered, pressed, disabled)
-	int state;
-
-//
-// Input Pointer support (keyboard)
-//
-
-// The state of the input ponter.
-// Used to blink the cursor.
-    int ip_on;
-
-    unsigned long ip_x;
-    unsigned long ip_y;
-    unsigned int ip_color;
-    unsigned long width_in_chars;
-    unsigned long height_in_chars;
-
-    //unsigned long ip_type; //?? algum estilo especifico de cursor?
-    //unsigned long ip_style;
-    // ...
-
-// para input do tipo teclado
-    unsigned long ip_pixel_x;
-    unsigned long ip_pixel_y;
-
-// Navigation
-    struct libgui_view_d *next;
-};
-
-struct libgui_node_d 
-{
-	int used;
-	int magic;
-
-	struct libgui_view_d *component;
-	struct libgui_node_d *next;
-};
-
-
-//======================================
 // Calling kgws in the kernel.
 // Using the kgws to refresh the rectangle.
 static void 
@@ -1359,14 +1250,14 @@ static int char_initialize(void)
     CharInitialization.initialized = FALSE;
 
 // Char width and height.
-    CharInitialization.width = DEFAULT_FONT_WIDTH;
-    CharInitialization.height = DEFAULT_FONT_HEIGHT;
+    CharInitialization.width = LIBGUI_DEFAULT_FONT_WIDTH;
+    CharInitialization.height = LIBGUI_DEFAULT_FONT_HEIGHT;
 
     FontInitialization.initialized = FALSE;
     if (FontInitialization.initialized != TRUE)
     {
-        FontInitialization.width = DEFAULT_FONT_WIDTH;
-        FontInitialization.height = DEFAULT_FONT_HEIGHT;
+        FontInitialization.width = LIBGUI_DEFAULT_FONT_WIDTH;
+        FontInitialization.height = LIBGUI_DEFAULT_FONT_HEIGHT;
         FontInitialization.address = (unsigned long) &font_lin8x8[0];
         FontInitialization.index_for_current_font = 0;
         FontInitialization.initialized = TRUE;
@@ -2849,9 +2740,14 @@ int libgui_initialize(void)
     libgui_dc_frontbuffer->magic = 1234;
     libgui_dc_frontbuffer->initialized = TRUE;
  
+//
+// Char and font initialization
+//
     char_initialize();
 
-    return 0;
+	// ...
+
+    return 0;  // Initialization OK
 
 fail:
     return (int) -1;

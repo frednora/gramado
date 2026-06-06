@@ -4,6 +4,16 @@
 #ifndef __LIBGUI_FONT_H
 #define __LIBGUI_FONT_H    1
 
+
+// #todo: Use this one
+#define LIBGUI_DEFAULT_FONT_WIDTH  8
+#define LIBGUI_DEFAULT_FONT_HEIGHT  8
+
+// #deprecated
+//#define DEFAULT_FONT_WIDTH  8
+//#define DEFAULT_FONT_HEIGHT  8
+
+
 struct libgui_font_info_d
 {
     int initialized;
