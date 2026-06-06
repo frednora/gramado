@@ -118,19 +118,9 @@ struct desktop_info_d
 };
 struct desktop_info_d  DesktopInfo;
 
-// #todo
-// Taskbar info?
-struct taskbar_info_d
-{
-    int initialized;
-    int inUse;
-    int style;
 
-    unsigned long left;
-    unsigned long top;
-    unsigned long width;
-    unsigned long height;
-};
+// Taskbar info
+// See: taskbar.h
 struct taskbar_info_d  TaskbarInfo;
 
 // This application is the OS Shell

@@ -59,5 +59,20 @@ struct tb_client_d
 #define CLIENT_COUNT_MAX  32
 extern struct tb_client_d clientList[CLIENT_COUNT_MAX];
 
+
+// Taskbar info
+struct taskbar_info_d
+{
+    int initialized;
+    int inUse;
+    int style;
+
+    unsigned long left;
+    unsigned long top;
+    unsigned long width;
+    unsigned long height;
+};
+extern struct taskbar_info_d  TaskbarInfo;
+
 #endif   
 
