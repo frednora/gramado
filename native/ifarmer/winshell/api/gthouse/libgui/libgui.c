@@ -76,36 +76,12 @@ struct libgui_char_initialization_d
     int width;
     int height;
 };
-//extern struct libgui_char_initialization_d  CharInitialization;
 struct libgui_char_initialization_d  CharInitialization;
 
 static int char_initialize(void);
 
 // ===================================================
 
-//
-// Font
-//
-
-struct libgui_font_info_d
-{
-    int initialized;
-    int font_id;
-    unsigned long address;
-    unsigned long width;
-    unsigned long height;
-};
-
-struct libgui_font_initialization_d
-{
-    int initialized;
-    unsigned long address;
-    unsigned long width;
-    unsigned long height;
-    int index_for_current_font;
-};
-struct libgui_font_initialization_d  FontInitialization;
-// ===================================================
 
 // Structure for a rectangle.
 // A rectangle belongs to a window.

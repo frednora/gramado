@@ -2,6 +2,10 @@
 
 #include "include/font.h"
 
+
+
+struct libgui_font_initialization_d  FontInitialization;
+
 // ====================================================
 
 // fnt8x8.c
