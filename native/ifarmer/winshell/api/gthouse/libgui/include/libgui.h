@@ -8,6 +8,7 @@
 #include <types.h>
 #include <stddef.h>
 
+#include "font.h"
 #include "vk.h"       // # view input events
 #include "lt8x8.h"
 #include "rop.h"
