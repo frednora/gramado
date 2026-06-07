@@ -53,6 +53,18 @@ __draw_window_border(
     unsigned long rop_right,
     unsigned long rop_bottom );
 
+// Draw the window border when we have a dc.
+void 
+__dc_draw_window_border( 
+    struct dccanvas_d *dc,
+    struct gws_window_d *parent, 
+    struct gws_window_d *window,
+    unsigned long rop_top,
+    unsigned long rop_left,
+    unsigned long rop_right,
+    unsigned long rop_bottom );
+
+
 void redraw_text_for_editbox(struct gws_window_d *window);
 
 int redraw_controls(struct gws_window_d *window);

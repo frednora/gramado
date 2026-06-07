@@ -1265,23 +1265,15 @@ int serviceHello(void)
     return 0;
 }
 
-/*
- * serviceCreateWindow:
- *     Create a window.
- *     Service: GWS_CreateWindow.
- *     It's a wrapper.
- *     Chamaremos a função que cria a janela com base 
- * nos argumentos que estão no buffer, que é uma variável global 
- * nesse documento.
- *     Mostraremos a janela na tela ao fim dessa rotina.
- *     #todo: Mas poderíamos simplesmente marcar como 'dirty'.
- */
-// Called by dsProcedure in main.c
-// #todo
-// Receive the tid of the client in the request packet.
-// Save it as an argument of the window structure.
+
+// serviceCreateWindow:
+// Create a window based on the parameters found in the message buffer.
+// Service: GWS_CreateWindow.
+// At the end of the routine we show the window.
+
 int serviceCreateWindow(int client_fd)
 {
+// Called by dsProcedure in main.c
 
     // #test
     // The server will be a compositor, responsable or compose the 
@@ -1609,6 +1601,7 @@ int serviceCreateWindow(int client_fd)
 // l, t, w, h,
 // parent_ptr, 
 // desktop id, frame color, client area color.
+
     Window = 
         (struct gws_window_d *) CreateWindow ( 
                                     type, 
@@ -1616,7 +1609,8 @@ int serviceCreateWindow(int client_fd)
                                     r.data,
                                     x, y, w, h,
                                     (struct gws_window_d *) Parent, 
-                                    0, frame_color, client_color );
+                                    0, frame_color, client_color 
+                                );
 
     if ((void *) Window == NULL)
     {

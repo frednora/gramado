@@ -604,6 +604,7 @@ fail:
 
 // Create titlebar and controls.
 // It respects the border size of the parent.
+// #ps: This function ca draw inside the canvas.
 struct gws_window_d *do_create_titlebar(
     struct gws_window_d *parent,
     unsigned long tb_height,
@@ -992,6 +993,12 @@ doCreateAndDrawWindowFrame (
     unsigned int ornament_color2,
     int frame_style ) 
 {
+
+    // In the case we are using canvas
+    struct dccanvas_d *dc00;
+    struct canvas_information_d *ci00;
+
+
     int useFrame       = FALSE;
     int useTitleBar    = FALSE;
     int useTitleString = FALSE;
@@ -1018,18 +1025,16 @@ doCreateAndDrawWindowFrame (
 // Border size
     unsigned long BorderSize = (border_size & 0xFFFF);
 
-// Border color
+// Border colors
     unsigned int BorderColor1 = border_color1;  // top/left
     unsigned int BorderColor2 = border_color2;  // right/bottom
     unsigned int BorderColor3 = border_color3;
-
-// Ornament color
+// Ornament colors
     unsigned int OrnamentColor1 = ornament_color1;
     unsigned int OrnamentColor2 = ornament_color2;
 
-// Title bar height
-    unsigned long TitleBarHeight = 
-        METRICS_TITLEBAR_DEFAULT_HEIGHT;
+// Titlebar height
+    unsigned long TitleBarHeight = METRICS_TITLEBAR_DEFAULT_HEIGHT;
 
 // Titlebar colors for active window
     unsigned int TitleBarColor = 
@@ -1043,17 +1048,17 @@ doCreateAndDrawWindowFrame (
 // Define default ROPs for each component 
 // Later, We're gonna get the values saved into the window structure.
 
-    unsigned long __rop_bg=ROP_COPY;  // Windows bg
-    unsigned long __rop_shadow=ROP_COPY;  // Windows bg
-    unsigned long __rop_ornament=ROP_COPY;  // Windows ornament
+    unsigned long __rop_bg = ROP_COPY;        // Window bg
+    unsigned long __rop_shadow = ROP_COPY;    // Window bg
+    unsigned long __rop_ornament = ROP_COPY;  // Window ornament
 
-    // Windows borders
-    unsigned long __rop_top_border=ROP_COPY;  // 
-    unsigned long __rop_left_border=ROP_COPY;  // 
-    unsigned long __rop_right_border=ROP_COPY;  // 
-    unsigned long __rop_bottom_border=ROP_COPY;  // 
+    // Window borders
+    unsigned long __rop_top_border = ROP_COPY;  // 
+    unsigned long __rop_left_border = ROP_COPY;  // 
+    unsigned long __rop_right_border = ROP_COPY;  // 
+    unsigned long __rop_bottom_border = ROP_COPY;  // 
 
-// Components for the frame of overlapped windows.
+// Components for the frame of overlapped windows
     unsigned long __rop_titlebar = THEME_ROP_TITLEBAR; 
     unsigned long __rop_controls = THEME_ROP_CONTROLS; 
     unsigned long __rop_statusbar = THEME_ROP_STATUSBAR;
@@ -1086,6 +1091,20 @@ doCreateAndDrawWindowFrame (
         goto fail;
     }
 
+
+// In these cases the window has a canvas
+    if (window->type == WT_OVERLAPPED || window->type == WT_POPUP)
+    {
+        if (Compositor.is_composition_disabled == FALSE)
+        {
+            ci00 = window->frame_canvas;  // Canvas information
+            dc00 = ci00->dc;              // The dc
+        }
+
+        // #todo: Pointer validation
+    }
+
+
 // Save border colors setted by the caller
     window->Border.border_color1 = (unsigned int) BorderColor1;
     window->Border.border_color2 = (unsigned int) BorderColor2;
@@ -1093,9 +1112,9 @@ doCreateAndDrawWindowFrame (
 // ROP
 // Getting the saved rop values
 
-    __rop_bg       = window->rop_bg;  // Windows bg
-    __rop_shadow   = window->rop_shadow;  // Windows bg
-    __rop_ornament = window->rop_ornament;  // Windows ornament 
+    __rop_bg       = window->rop_bg;        // Window bg
+    __rop_shadow   = window->rop_shadow;    // Window bg
+    __rop_ornament = window->rop_ornament;  // Window ornament 
 
     // Windows borders
     __rop_top_border    = window->rop_top_border;  // 
@@ -1159,7 +1178,7 @@ doCreateAndDrawWindowFrame (
         useBorder=TRUE;
         break; 
 
-    // Uma overlapped maximizada não tem borda.
+    // #ps: There is not border in minimized overlapped window
     case WT_OVERLAPPED:
         useFrame=TRUE; 
         window->is_frameless = FALSE;
@@ -1212,12 +1231,13 @@ doCreateAndDrawWindowFrame (
 
         // Draw the border of an edit box
         // #ps: Drawing it directly inside the backbuffer
-        __draw_window_border(
+        __draw_window_border (
             parent, window,
             __rop_top_border,
             __rop_left_border,
             __rop_right_border,
-            __rop_bottom_border );
+            __rop_bottom_border 
+        );
 
         // When we draw the border for editbox windows 
         // we need to update the client area rectangle.
@@ -1256,12 +1276,12 @@ doCreateAndDrawWindowFrame (
         // and a flag to indicate that border is used.
         // It also has a border style.
 
-        // Not using border yet
-        window->borderUsed = FALSE;
+        window->borderUsed = FALSE;  // Not using border yet
 
         // Normal case:
         // The window is not maximized and not in fullscreen,
         // so we need to draw the border and the title bar.
+        // #ps: What about minimized?
         if (IsMaximized == FALSE && IsFullscreen == FALSE)
         {
             window->borderUsed = TRUE;
@@ -1269,15 +1289,30 @@ doCreateAndDrawWindowFrame (
             //WindowManager.fullscreen_window = window;
 
             // Draw border
+            // #ps: Drawing it directly inside the backbuffer
             if (Compositor.is_composition_disabled == TRUE)
             {
-                // #ps: Drawing it directly inside the backbuffer
                 __draw_window_border(
                     parent, window,
                     __rop_top_border,
                     __rop_left_border,
                     __rop_right_border,
-                    __rop_bottom_border );
+                    __rop_bottom_border 
+                );
+            }
+
+            // We have a compositor and a canvas,
+            // Lets draw the window borders using the dc
+            if (Compositor.is_composition_disabled == FALSE)
+            {
+                // #test: Draws window border when we have dc
+                __dc_draw_window_border(
+                    dc00, parent, window,
+                    __rop_top_border,
+                    __rop_left_border,
+                    __rop_right_border,
+                    __rop_bottom_border 
+                );
             }
 
             // When we draw the border for overlapped windows 
@@ -1499,6 +1534,7 @@ fail:
 
 // Creator and drawer.
 // It creates the window structure.
+
 void *doCreateAndDrawWindow ( 
     unsigned long type, 
     unsigned long style,
@@ -3229,7 +3265,6 @@ fail:
 // It also can be called internally by the server.
 // A child window will have its position relative to the parent window's client area.
 
-
 void *CreateWindow ( 
     unsigned long type, 
     unsigned long style,   // style of window
@@ -3279,8 +3314,7 @@ void *CreateWindow (
 
 /*
 // #hack No full screen allowd for now.
-    if (state == WINDOW_STATE_FULL)
-    {
+    if (state == WINDOW_STATE_FULL){
         printf("server: Invalid WINDOW_STATE_FULL\n");
         exit(0);
     }
@@ -3463,7 +3497,8 @@ void *CreateWindow (
                         (struct gws_window_d *) pWindow, 
                         desktop_id, 
                         FrameColor, ClientAreaColor, 
-                        (unsigned long) __rop_flags ); 
+                        (unsigned long) __rop_flags 
+                    ); 
 
         if ((void *) __w == NULL){
             //server_debug_print ("CreateWindow: doCreateAndDrawWindow fail\n");
@@ -3714,7 +3749,6 @@ draw_frame:
     if (__w == keyboard_owner)
         isKeyboardOwner = TRUE;
 
-
 // == Normal windows =================================
 // Border Color 1 = top/left      (Light)
 // Border Color 2 = right/bottom  (Dark)
@@ -3754,11 +3788,10 @@ draw_frame:
         }
     }
 
-// Ornament color for Overlapped window
+// Ornament colors for Overlapped window
     if (type == WT_OVERLAPPED)
     {
-        if (__w->status == WINDOW_STATUS_ACTIVE)
-        {
+        if (__w->status == WINDOW_STATUS_ACTIVE){
             oc_1 = COLOR_ORNAMENT_FG;
             oc_2 = COLOR_ORNAMENT_FG;
         } else {
@@ -3766,7 +3799,6 @@ draw_frame:
             oc_2 = COLOR_ORNAMENT_BG;
         }
     }
-
 
 //
 // Draw window frame
@@ -3795,7 +3827,8 @@ draw_frame:
                 BorderSize,
                 (unsigned int) bc_1, (unsigned int) bc_2, (unsigned int) bc_3,
                 (unsigned int) oc_1, (unsigned int) oc_2,
-                FrameStyle );
+                FrameStyle 
+            );
         }
     }
 

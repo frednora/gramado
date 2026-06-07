@@ -470,6 +470,7 @@ __draw_button_borders(
 // >> no checks
 // #check
 // This routine is calling the kernel to paint the rectangle.
+// #ps: Drawing it directly inside the backbuffer
 
 void 
 __draw_window_border( 
@@ -480,7 +481,7 @@ __draw_window_border(
     unsigned long rop_right,
     unsigned long rop_bottom )
 {
-// + Repecting the color in the strucure
+// + Respecting the color in the strucure
 // border color 1 - left/top
 // border color 2 - bottom/right
 
@@ -616,6 +617,231 @@ __draw_window_border(
         return;
     }
 }
+
+// Draw the window border when we have a dc.
+void 
+__dc_draw_window_border( 
+    struct dccanvas_d *dc,
+    struct gws_window_d *parent, 
+    struct gws_window_d *window,
+    unsigned long rop_top,
+    unsigned long rop_left,
+    unsigned long rop_right,
+    unsigned long rop_bottom )
+{
+// + Respecting the color in the strucure
+// border color 1 - left/top
+// border color 2 - bottom/right
+
+    // dc
+    if ((void*)dc == NULL)
+        return;
+    if (dc->magic != 1234)
+        return;
+
+    unsigned long __rop_top = rop_top;  // top
+    unsigned long __rop_left = rop_left;  // left
+    unsigned long __rop_right = rop_right;  // right
+    unsigned long __rop_bottom = rop_bottom;  // bottom
+
+    if ((void*) parent == NULL){
+        return;
+    }
+    if ((void*) window == NULL){
+        return;
+    }
+
+// ----------
+// Overlapped
+    if (window->type == WT_OVERLAPPED)
+    {
+        //if (window->active == TRUE)
+        //    window->border_size=2;
+        //if (window->active == FALSE)
+        //    window->border_size=1;
+
+        // Absolute values.
+        // Relative to the screen.
+
+        // -- top/left (color 1) -----
+
+        // top
+        //rectBackbufferDrawRectangle( 
+            //parent->absolute_x + window->left, 
+            //parent->absolute_y + window->top, 
+            //window->width, 
+            //window->Border.border_size, 
+            //window->Border.border_color1, 
+            //TRUE, 
+            //__rop_top );
+        dc_draw_rectangle0 (
+            dc,
+            0, //window->left, 
+            0, //window->top, 
+            window->width, 
+            window->Border.border_size,
+            window->Border.border_color1,
+            __rop_top );
+        // left
+        //rectBackbufferDrawRectangle( 
+            //parent->absolute_x + window->left, 
+            //parent->absolute_y + window->top, 
+            //window->Border.border_size, 
+            //window->height, 
+            //window->Border.border_color1, 
+            //TRUE,
+            //__rop_left );
+        dc_draw_rectangle0 (
+            dc,
+            0,  //window->left, 
+            0,  //window->top, 
+            window->Border.border_size, 
+            window->height,
+            window->Border.border_color1,
+            __rop_left );
+
+
+        // -- right/bottom (color 2) -----
+
+        // right
+        //rectBackbufferDrawRectangle( 
+        //    (parent->absolute_x + window->left + window->width - window->Border.border_size), 
+        //    (parent->absolute_y + window->top), 
+        //    window->Border.border_size, 
+        //    window->height, 
+        //    window->Border.border_color2, 
+        //    TRUE,
+        //    __rop_right );
+        dc_draw_rectangle0 (
+            dc,
+            (window->width - window->Border.border_size), 
+            0, //window->top, 
+            window->Border.border_size, 
+            window->height,
+            window->Border.border_color2,
+            __rop_right );
+
+        // bottom
+        //rectBackbufferDrawRectangle ( 
+        //    (parent->absolute_x + window->left), 
+        //    (parent->absolute_y + window->top + window->height - window->Border.border_size), 
+        //    window->width, 
+        //    window->Border.border_size, 
+        //    window->Border.border_color2, 
+        //    TRUE,
+        //    __rop_bottom );
+        dc_draw_rectangle0 (
+            dc,
+            0, //window->left, 
+            (window->height - window->Border.border_size), 
+            window->width, 
+            window->Border.border_size,
+            window->Border.border_color2,
+            __rop_bottom );
+
+    
+        // #test
+        // Subtract border size.
+        //window->left   += window->border_size;
+        //window->top    += window->border_size;
+        //window->right  -= window->border_size;
+        //window->bottom -= window->border_size;
+        return;
+    }
+
+// ------------------
+// Popup and Editbox
+    if ( window->type == WT_POPUP ||
+         window->type == WT_EDITBOX || 
+         window->type == WT_EDITBOX_MULTIPLE_LINES )
+    { 
+        // -- top/left (color 1) -----
+ 
+        // top
+        //rectBackbufferDrawRectangle( 
+        //    window->absolute_x, 
+        //    window->absolute_y, 
+        //    window->width,                 // w
+        //    window->Border.border_size,    // h
+        //    window->Border.border_color1,  // color
+        //    TRUE,                          // fill?
+        //    __rop_top );                   // rop
+        dc_draw_rectangle0 (
+            dc,
+            0, //window->left, 
+            0, //window->top, 
+            window->width, 
+            window->Border.border_size,
+            window->Border.border_color1,
+            __rop_top );
+
+        // left
+        //rectBackbufferDrawRectangle( 
+        //    window->absolute_x, 
+        //    window->absolute_y, 
+        //    window->Border.border_size,    // w 
+        //    window->height,                // h
+        //    window->Border.border_color1,  // color
+        //    TRUE,                          // fill?
+        //    __rop_left );                  // rop
+        dc_draw_rectangle0 (
+            dc,
+            0,  //window->left, 
+            0,  //window->top, 
+            window->Border.border_size, 
+            window->height,
+            window->Border.border_color1,
+            __rop_left );
+
+
+        // -- right/bottom (color 2) -----
+
+        // right
+        //rectBackbufferDrawRectangle( 
+        //    (window->absolute_x + window->width - window->Border.border_size), 
+        //    window->absolute_y,  
+        //    window->Border.border_size,    // w 
+        //    window->height,                // h
+        //    window->Border.border_color2,  // color
+        //    TRUE,                          // fill
+        //    __rop_right );                 // rop
+        dc_draw_rectangle0 (
+            dc,
+            (window->width - window->Border.border_size), 
+            0,  //window->top, 
+            window->Border.border_size, 
+            window->height,
+            window->Border.border_color2,
+            __rop_right );
+
+        // bottom
+        //rectBackbufferDrawRectangle ( 
+        //    window->absolute_x, 
+        //    (window->absolute_y + window->height - window->Border.border_size), 
+        //    window->width,                 // w
+        //    window->Border.border_size,    // h
+        //    window->Border.border_color2,  // color
+        //    TRUE,                          // fill
+        //    __rop_bottom );                // rop
+        dc_draw_rectangle0 (
+            dc,
+            0,  //window->left, 
+            (window->height - window->Border.border_size), 
+            window->width, 
+            window->Border.border_size,
+            window->Border.border_color2,
+            __rop_bottom );
+        
+        // #test
+        // Subtract border size.
+        //window->left   += window->border_size;
+        //window->top    += window->border_size;
+        //window->right  -= window->border_size;
+        //window->bottom -= window->border_size;
+        return;
+    }
+}
+
 
 // Draws text inside single-line or multi-line editboxes.
 // IN: Editbox window
