@@ -11,13 +11,35 @@
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
-#ifdef __GNUC__
-#include <floatingpoint.h>
-#endif
+
+
+//#ifdef __GNUC__
+//#include <floatingpoint.h>
+//#endif
+
 
 #include "lua.h"
 
-static FILE *in=stdin, *out=stdout;
+// #test
+#include "iolib.h"
+
+
+//FILE *in=stdin, *out=stdout;
+//static FILE *in=stdin, *out=stdout;
+
+static FILE *in  = NULL;
+static FILE *out = NULL;
+
+
+// Called by lua_openfile() in inout.c
+void __init_io_pointers(FILE *my_in, FILE *my_out)
+{
+    in = my_in;
+    out = my_out;
+}
+
+
+
 
 /*
 ** Open a file to read.

@@ -12,13 +12,16 @@
 #include <stdio.h>
 #include <unistd.h>
 
+// #test
+#include "lua.h"
+
 
 int main(int argc, char *argv[])
 {
 
     // #todo
     // See: lua.c
-    // lua_main(argc, argv);
+    lua_main(argc, argv);
 
     return 0;
 }

@@ -16,6 +16,12 @@
 #include "inout.h"
 #include "table.h"
 
+
+//#test
+#include "lex_yy.h"
+#include "iolib.h"
+
+
 /* Exported variables */
 int lua_linenumber;
 int lua_debug;
@@ -45,8 +51,9 @@ void lua_errorfunction (void (*fn) (char *s))
 */
 static int fileinput (void)
 {
- int c = fgetc (fp);
- return (c == EOF ? 0 : c);
+    int c = fgetc (fp);
+
+    return (c == EOF ? 0 : c);
 }
 
 /*
@@ -54,7 +61,7 @@ static int fileinput (void)
 */
 static void fileunput (int c)
 {
- ungetc (c, fp);
+    ungetc (c, fp);
 }
 
 /*
@@ -80,14 +87,30 @@ static void stringunput (int c)
 */
 int lua_openfile (char *fn)
 {
- lua_linenumber = 1;
- lua_setinput (fileinput);
- lua_setunput (fileunput);
- fp = fopen (fn, "r");
- if (fp == NULL) return 1;
- if (lua_addfile (fn)) return 1;
- return 0;
+    lua_linenumber = 1;
+
+    lua_setinput(fileinput);
+    lua_setunput(fileunput);
+
+    fp = fopen (fn, "r");
+    if (fp == NULL)
+        return 1;
+
+// #test
+// Lets updata the default input file in lex_yy.c
+    yyin = fp;
+    //yyin = stdin;
+    //yyout = stdout;
+
+    __init_io_pointers(fp,NULL);
+    //__init_io_pointers(fp,stdout);
+
+    if (lua_addfile (fn))
+        return 1;
+
+    return 0;
 }
+
 
 /*
 ** Function to close an opened file

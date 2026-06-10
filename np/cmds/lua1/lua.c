@@ -34,22 +34,25 @@ static void execstr (void)
 void lua_main (int argc, char *argv[])
 {
     int i;
- if (argc < 2)
- {
-  puts ("usage: lua filename [functionnames]");
-  return;
- }
- lua_register ("callfunc", callfunc);
- lua_register ("execstr", execstr);
- lua_register ("test", test);
- iolib_open ();
- strlib_open ();
- mathlib_open ();
- lua_dofile (argv[1]);
- for (i=2; i<argc; i++)
- {
-  lua_call (argv[i],0);
- }
-}
 
+    if (argc < 2){
+        puts ("usage: lua filename [functionnames]");
+        return;
+    }
+
+    lua_register ("callfunc", callfunc);
+    lua_register ("execstr", execstr);
+    lua_register ("test", test);
+
+    iolib_open ();
+    strlib_open ();
+    mathlib_open ();
+
+    lua_dofile (argv[1]);
+
+    for (i=2; i<argc; i++)
+    {
+        lua_call (argv[i],0);
+    }
+}
 

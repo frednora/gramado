@@ -54,8 +54,9 @@ Hash  	              **lua_array = arraybuffer;
 Word    		lua_narray=0;
 
 #define MAXFILE 	20
-char  		       *lua_file[MAXFILE];
-int      		lua_nfile;
+
+char *lua_file[MAXFILE];
+int lua_nfile;
 
 
 /*
@@ -279,27 +280,31 @@ void *lua_createarray (void *a)
 ** the external variable "lua_filename" with the function filename set.
 ** Return 0 on success or 1 on error.
 */
+
 int lua_addfile (char *fn)
 {
- if (lua_nfile >= MAXFILE-1)
- {
-  lua_error ("too many files");
-  return 1;
- }
- if ((lua_file[lua_nfile++] = strdup (fn)) == NULL)
- {
-  lua_error ("not enough memory");
-  return 1;
- }
- return 0;
+    if (lua_nfile >= MAXFILE-1)
+    {
+        lua_error ("too many files");
+        return 1;
+    }
+
+    if ((lua_file[lua_nfile++] = strdup(fn)) == NULL)
+    {
+        lua_error ("not enough memory");
+        return 1;
+    }
+
+    return 0;
 }
+
 
 /*
 ** Return the last file name set.
 */
 char *lua_filename (void)
 {
- return lua_file[lua_nfile-1];
+    return lua_file[lua_nfile-1];
 }
 
 /*

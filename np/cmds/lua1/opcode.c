@@ -7,9 +7,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef __GNUC__
-#include <floatingpoint.h>
-#endif
+
+
+//#ifdef __GNUC__
+//#include <floatingpoint.h>
+//#endif
+
 
 #include "opcode.h"
 #include "hash.h"
@@ -563,11 +566,19 @@ void lua_markstack (void)
 */
 int lua_dofile (char *filename)
 {
- if (lua_openfile (filename)) return 1;
- if (lua_parse ()) { lua_closefile (); return 1; }
- lua_closefile ();
- return 0;
+    if (lua_openfile (filename))
+        return 1;
+
+    if (lua_parse())
+    {
+        lua_closefile();
+        return 1; 
+    }
+
+    lua_closefile ();
+    return 0;
 }
+
 
 /*
 ** Generate opcode stored on string and execute global statement. Return 0 on

@@ -49,6 +49,9 @@ all:
 	make -C uname/
 
 
+	make -C lua1/
+
+
 clean:
 	-rm -f *.o 
 clean-all:

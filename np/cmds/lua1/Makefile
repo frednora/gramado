@@ -50,13 +50,9 @@ LIBC    = ../alpha/libs/rtl/include/
 LIBCOBJ = ../alpha/libs/rtl/obj
 
 # Objects
-#myObjects = crt0.o main.o rtl.o \
-#ctype.o stdlib.o stdio.o string.o unistd.o termios.o ioctl.o fcntl.o \
-#globals.o lexer.o parser.o tree.o compiler.o    
-
-# Objects
 myObjects = crt0.o rtl.o \
-ctype.o stdlib.o stdio.o string.o unistd.o termios.o ioctl.o fcntl.o \
+ctype.o stdlib.o stdio.o string.o unistd.o termios.o ioctl.o fcntl.o math.o fscanf.o \
+hash.o inout.o lex_yy.o opcode.o table.o y_tab.o iolib.o mathlib.o strlib.o lua.o \
 main.o    
 
 
@@ -72,16 +68,16 @@ main.o:
 all-c:
 
 # from lua
-	gcc  -c  hash.c   -I $(LIBC) $(CFLAGS) -o hash.o
-	gcc  -c  inout.c  -I $(LIBC) $(CFLAGS) -o inout.o
-#	gcc  -c  lex_yy.c -I $(LIBC) $(CFLAGS) -o lex_yy.o
-#	gcc  -c  opcode.c -I $(LIBC) $(CFLAGS) -o opcode.o
-	gcc  -c  table.c  -I $(LIBC) $(CFLAGS) -o table.o
-#	gcc  -c  y_tab.c  -I $(LIBC) $(CFLAGS) -o y_tab.o
-#	gcc  -c  iolib.c  -I $(LIBC) $(CFLAGS) -o iolib.o
-	gcc  -c  mathlib.c  -I $(LIBC) $(CFLAGS) -o mathlib.o
+	gcc  -c  hash.c    -I $(LIBC) $(CFLAGS) -o hash.o
+	gcc  -c  inout.c   -I $(LIBC) $(CFLAGS) -o inout.o
+	gcc  -c  lex_yy.c  -I $(LIBC) $(CFLAGS) -o lex_yy.o
+	gcc  -c  opcode.c  -I $(LIBC) $(CFLAGS) -o opcode.o
+	gcc  -c  table.c   -I $(LIBC) $(CFLAGS) -o table.o
+	gcc  -c  y_tab.c   -I $(LIBC) $(CFLAGS) -o y_tab.o
+	gcc  -c  iolib.c   -I $(LIBC) $(CFLAGS) -o iolib.o
+	gcc  -c  mathlib.c -I $(LIBC) $(CFLAGS) -o mathlib.o
 	gcc  -c  strlib.c  -I $(LIBC) $(CFLAGS) -o strlib.o
-	gcc  -c  lua.c  -I $(LIBC) $(CFLAGS) -o lua.o
+	gcc  -c  lua.c     -I $(LIBC) $(CFLAGS) -o lua.o
 # ...
 
 
@@ -99,16 +95,9 @@ all-c:
 	cp $(LIBCOBJ)/ioctl.o   .
 	cp $(LIBCOBJ)/fcntl.o   .
 
-# deprecated
-# from libgui
-#cp $(APIOBJ)/api.o      .
-
-# from gramc
-#	gcc  -c  globals.c   -I $(LIBC) $(CFLAGS) -o globals.o
-#	gcc  -c  lexer.c     -I $(LIBC) $(CFLAGS) -o lexer.o
-#	gcc  -c  parser.c    -I $(LIBC) $(CFLAGS) -o parser.o
-#	gcc  -c  tree.c      -I $(LIBC) $(CFLAGS) -o tree.o
-#	gcc  -c  compiler.c  -I $(LIBC) $(CFLAGS) -o compiler.o
+#test
+	cp $(LIBCOBJ)/math.o   .
+	cp $(LIBCOBJ)/fscanf.o   .
 
 gramcc-link:
 	ld -m elf_x86_64 -T ../link.ld -o LUA1.BIN $(myObjects)    

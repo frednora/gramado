@@ -10,6 +10,11 @@
 #include "table.h"
 #include "lua.h"
 
+
+// #test
+#include "lex_yy.h"
+
+
 #ifndef ALIGNMENT
 #define ALIGNMENT	(sizeof(void *))
 #endif
@@ -35,6 +40,20 @@ static int     err;		     /* flag to indicate error */
 
 /* Internal functions */
 #define align(n)  align_n(sizeof(n))
+
+
+//
+// == Prototypes ===============================
+//
+
+
+static int yyparse(void);
+
+//
+// == Functions ===============================
+//
+
+
 
 static void code_byte (Byte c)
 {
@@ -276,9 +295,9 @@ void yyerror (char *s)
  err = 1;
 }
 
-int yywrap (void)
+int yywrap(void)
 {
- return 1;
+    return (int) 1;
 }
 
 
@@ -821,10 +840,11 @@ int yychar;			/* current input token number */
 
 
 /*
-** yyparse - return 0 if worked, 1 if syntax error not recovered from
-*/
-int
-yyparse()
+ * yyparse:
+ * return 0 if worked, 1 if syntax error not recovered from
+ */
+
+static int yyparse(void)
 {
 	register YYSTYPE *yypvt;	/* top of value stack for $vars */
 	unsigned yymaxdepth = YYMAXDEPTH;
@@ -1637,3 +1657,5 @@ case 104:
 	}
 	goto yystack;		/* reset registers in driver code */
 }
+
+
