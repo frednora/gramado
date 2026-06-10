@@ -71,6 +71,20 @@ main.o:
 
 all-c:
 
+# from lua
+	gcc  -c  hash.c   -I $(LIBC) $(CFLAGS) -o hash.o
+	gcc  -c  inout.c  -I $(LIBC) $(CFLAGS) -o inout.o
+#	gcc  -c  lex_yy.c -I $(LIBC) $(CFLAGS) -o lex_yy.o
+#	gcc  -c  opcode.c -I $(LIBC) $(CFLAGS) -o opcode.o
+	gcc  -c  table.c  -I $(LIBC) $(CFLAGS) -o table.o
+#	gcc  -c  y_tab.c  -I $(LIBC) $(CFLAGS) -o y_tab.o
+#	gcc  -c  iolib.c  -I $(LIBC) $(CFLAGS) -o iolib.o
+	gcc  -c  mathlib.c  -I $(LIBC) $(CFLAGS) -o mathlib.o
+	gcc  -c  strlib.c  -I $(LIBC) $(CFLAGS) -o strlib.o
+	gcc  -c  lua.c  -I $(LIBC) $(CFLAGS) -o lua.o
+# ...
+
+
 # rtl
 	cp $(LIBCOBJ)/crt0.o    .
 	cp $(LIBCOBJ)/rtl.o    .
