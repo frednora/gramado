@@ -408,7 +408,7 @@ static void update_clients(int fd)
     lingui_draw_rectangle0_dc (
         dc00,
         0, 0, lWi.cr_width, lWi.cr_height,
-        COLOR_RED,
+        COLOR_BLACK,
         0  // ROP
     );    
 
@@ -497,7 +497,7 @@ static void clear_terminal_client_window(int fd)
     lingui_draw_rectangle0_dc (
         dc00,
         0, 0, lWi.cr_width, lWi.cr_height,
-        COLOR_RED,
+        COLOR_BLACK,
         0  // ROP
     );    
 
@@ -659,13 +659,13 @@ void __test_gws(int fd)
     gws_resize_window( fd, Window, 400, 400);
     //gws_refresh_window(fd,Window); //#bugbug
     //text
-    //gws_draw_text(fd,Window,0,0,COLOR_RED,"This is a string");
+    //gws_draw_text(fd,Window,0,0,COLOR_BLACK,"This is a string");
 //redraw and refresh.
     gws_redraw_window( fd, Window, TRUE );
 //redraw and not refresh
     //gws_redraw_window( fd, Window, FALSE );
     //text
-    //gws_draw_text(fd,Window,0,0,COLOR_RED,"This is a string");
+    //gws_draw_text(fd,Window,0,0,COLOR_BLACK,"This is a string");
 }
 
 // Comand 'w-main'.
@@ -2695,7 +2695,7 @@ void _draw(int fd, int c)
                         (int) 0, //__response_wid, //window_id,
                         (unsigned long) __tmp_x,//left,
                         (unsigned long) __tmp_y,//top,
-                        (unsigned long) COLOR_RED,
+                        (unsigned long) COLOR_BLACK,
                         (unsigned long) x ); 
                         */
                     
@@ -3885,7 +3885,7 @@ int terminal_init(unsigned short flags)
     lingui_draw_rectangle0_dc (
         dc00,
         0, 0, lWi.cr_width, lWi.cr_height,
-        COLOR_RED,
+        COLOR_BLACK,
         0  // ROP
     );    
 
@@ -4025,7 +4025,7 @@ int terminal_init(unsigned short flags)
         (int) __response_wid,     //window_id,
         (unsigned long) __tmp_x,  //left,
         (unsigned long) __tmp_y,  //top,
-        (unsigned long) COLOR_RED,
+        (unsigned long) COLOR_BLACK,
         (unsigned long) 'X' );
     terminal_drawchar_response((int) client_fd);
  */

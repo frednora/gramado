@@ -93,11 +93,8 @@ int yylex(void)
 	int nstr; 
 	extern int yyprevious;
 
-    while((nstr = yylook()) >= 0){
-
-    yyfussy:  // REJECT makes the code jump here
-    switch (nstr){
-
+while((nstr = yylook()) >= 0)
+yyfussy: switch (nstr){
     case 0:
         if (yywrap())
 		    return(0);
@@ -192,9 +189,7 @@ int yylex(void)
 
     default:
         fprintf(yyout,"bad switch yylook %d",nstr);
-        return 0;  // #test: Adding this statement
-    }   // switch end
-    };  // while end
+    } 
 
     return (0); 
 }
