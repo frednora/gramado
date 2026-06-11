@@ -259,98 +259,100 @@ char *lua_createstring (char *s)
 */
 void *lua_createarray (void *a)
 {
- if (a == NULL) return NULL;
- 
- if (lua_narray >= MAXARRAY-1)
- {
-  lua_pack ();
-  if (lua_narray >= MAXARRAY-1)
-  {
-   lua_error ("indexed table overflow");
-   return NULL;
-  }
- } 
- lua_array[lua_narray++] = a;
- return a;
+    if (a == NULL)
+        return NULL;
+
+    if (lua_narray >= MAXARRAY-1)
+    {
+        lua_pack();
+        if (lua_narray >= MAXARRAY-1)
+        {
+            lua_error ("indexed table overflow");
+            return NULL;
+        }
+    }
+
+    lua_array[lua_narray++] = a;
+    return a;
 }
 
+// Add a file name at file table, checking overflow. 
+// This function also set the external variable "lua_filename" 
+// with the function filename set.
+// Return 0 on success or 1 on error.
 
-/*
-** Add a file name at file table, checking overflow. This function also set
-** the external variable "lua_filename" with the function filename set.
-** Return 0 on success or 1 on error.
-*/
-
-int lua_addfile (char *fn)
+int lua_addfile(char *fn)
 {
+// Called by lua_openfile in inout.c
+
     if (lua_nfile >= MAXFILE-1)
     {
-        lua_error ("too many files");
+        lua_error("lua_addfile: too many files");
         return 1;
     }
 
+    // Oh boy!
     if ((lua_file[lua_nfile++] = strdup(fn)) == NULL)
     {
-        lua_error ("not enough memory");
+        lua_error ("lua_addfile: not enough memory");
         return 1;
     }
 
     return 0;
 }
 
-
-/*
-** Return the last file name set.
-*/
-char *lua_filename (void)
+// Return the last file name set
+char *lua_filename(void)
 {
     return lua_file[lua_nfile-1];
 }
 
-/*
-** Internal function: return next global variable
-*/
-void lua_nextvar (void)
+// Internal function: return next global variable
+void lua_nextvar(void)
 {
- int index;
- Object *o = lua_getparam (1);
- if (o == NULL)
- { lua_error ("too few arguments to function `nextvar'"); return; }
- if (lua_getparam (2) != NULL)
- { lua_error ("too many arguments to function `nextvar'"); return; }
- if (tag(o) == T_NIL)
- {
-  index = 0;
- }
- else if (tag(o) != T_STRING) 
- { 
-  lua_error ("incorrect argument to function `nextvar'"); 
-  return;
- }
- else
- {
-  for (index=0; index<lua_ntable; index++)
-   if (streq(s_name(index),svalue(o))) break;
-  if (index == lua_ntable) 
-  {
-   lua_error ("name not found in function `nextvar'");
-   return;
-  }
-  index++;
-  while (index < lua_ntable-1 && tag(&s_object(index)) == T_NIL) index++;
-  
-  if (index == lua_ntable-1)
-  {
-   lua_pushnil();
-   lua_pushnil();
-   return;
-  }
- }
- {
-  Object name;
-  tag(&name) = T_STRING;
-  svalue(&name) = lua_createstring(lua_strdup(s_name(index)));
-  if (lua_pushobject (&name)) return;
-  if (lua_pushobject (&s_object(index))) return;
- }
+    int index=0;
+    
+    Object *o = lua_getparam(1);
+
+    if (o == NULL){
+        lua_error("too few arguments to function `nextvar'");
+        return;
+    }
+
+    if ( lua_getparam(2) != NULL ){
+        lua_error("too many arguments to function `nextvar'"); 
+        return; 
+    }
+
+    if (tag(o) == T_NIL){
+        index = 0;
+    } else if (tag(o) != T_STRING) { 
+        lua_error ("incorrect argument to function `nextvar'"); 
+        return;
+    } else {
+         for (index=0; index<lua_ntable; index++)
+            if (streq(s_name(index),svalue(o))) break;
+        if (index == lua_ntable) 
+        {
+            lua_error ("name not found in function `nextvar'");
+            return;
+        }
+        index++;
+        while (index < lua_ntable-1 && tag(&s_object(index)) == T_NIL) 
+            index++;
+
+        if (index == lua_ntable-1)
+        {
+            lua_pushnil();
+            lua_pushnil();
+            return;
+        }
+    }
+    {
+        Object name;
+        tag(&name) = T_STRING;
+        svalue(&name) = lua_createstring(lua_strdup(s_name(index)));
+        if (lua_pushobject (&name)) return;
+        if (lua_pushobject (&s_object(index))) return;
+    }
 }

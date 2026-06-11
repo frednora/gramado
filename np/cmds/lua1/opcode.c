@@ -560,80 +560,103 @@ void lua_markstack (void)
   lua_markobject (o);
 }
 
-/*
-** Open file, generate opcode and execute global statement. Return 0 on
-** success or 1 on error.
-*/
-int lua_dofile (char *filename)
+// Open file, generate opcode and execute global statement. 
+// Return 0 on success or 1 on error.
+int lua_dofile(char *filename)
 {
-    if (lua_openfile (filename))
-        return 1;
+// Called by lua_main() in lua.c
 
-    if (lua_parse())
+// See: inout.c
+    if (lua_openfile (filename))
+        goto fail;
+
+    if ( lua_parse() )
     {
         lua_closefile();
-        return 1; 
+        goto fail;
     }
 
-    lua_closefile ();
+    lua_closefile();
+    return 0;  // OK
+
+fail:
+    return (int) 1;   // EXIT_FAILURE
+}
+
+// Generate opcode stored on string and execute global statement. 
+// Return 0 on success or 1 on error.
+int lua_dostring (char *string)
+{
+
+// #todo:
+    //if ((void*) string == NULL)
+    //    return 1;
+    //if (*string == 0)
+    //    return 1;
+
+    if ( lua_openstring(string) )
+        return 1;
+
+    if ( lua_parse() )
+        return 1;
+
     return 0;
 }
 
-
-/*
-** Generate opcode stored on string and execute global statement. Return 0 on
-** success or 1 on error.
-*/
-int lua_dostring (char *string)
-{
- if (lua_openstring (string)) return 1;
- if (lua_parse ()) return 1;
- return 0;
-}
-
-/*
-** Execute the given function. Return 0 on success or 1 on error.
-*/
+// Execute the given function. 
+// Return 0 on success or 1 on error.
 int lua_call (char *functionname, int nparam)
 {
- static Byte startcode[] = {CALLFUNC, HALT};
- int i; 
- Object func = s_object(lua_findsymbol(functionname));
- if (tag(&func) != T_FUNCTION) return 1;
- for (i=1; i<=nparam; i++)
-  *(top-i+2) = *(top-i);
- top += 2;
- tag(top-nparam-1) = T_MARK;
- *(top-nparam-2) = func;
- return (lua_execute (startcode));
+    static Byte startcode[] = { 
+        CALLFUNC, 
+        HALT
+    };
+
+    int i=0;
+ 
+    Object func = s_object( lua_findsymbol(functionname) );
+
+    if (tag(&func) != T_FUNCTION)
+        return 1;
+
+    for (i=1; i<=nparam; i++)
+        *(top-i+2) = *(top-i);
+    top += 2;
+    tag(top-nparam-1) = T_MARK;
+    *(top-nparam-2) = func;
+    return ( lua_execute(startcode) );
 }
 
-/*
-** Get a parameter, returning the object handle or NULL on error.
-** 'number' must be 1 to get the first parameter.
-*/
-Object *lua_getparam (int number)
+// Get a parameter, returning the object handle or NULL on error.
+// 'number' must be 1 to get the first parameter.
+Object *lua_getparam(int number)
 {
- if (number <= 0 || number > top-base) return NULL;
- return (base+number-1);
+    if (number <= 0 || number > top-base) 
+        return NULL;
+
+    return (base+number-1);
 }
 
-/*
-** Given an object handle, return its number value. On error, return 0.0.
-*/
-real lua_getnumber (Object *object)
+// Given an object handle, return its number value. 
+// On error, return 0.0.
+real lua_getnumber(Object *object)
 {
- if (tonumber (object)) return 0.0;
- else                   return (nvalue(object));
+    if ( tonumber(object) ){ 
+        return 0.0; 
+    } else { 
+        return ( nvalue(object) );
+    }
 }
 
-/*
-** Given an object handle, return its string pointer. On error, return NULL.
-*/
+// Given an object handle, return its string pointer. 
+// On error, return NULL.
 char *lua_getstring (Object *object)
 {
- if (tostring (object)) return NULL;
- else                   return (svalue(object));
+    if ( tostring(object) ){ 
+        return NULL; 
+    } else { 
+        return ( svalue(object) );
+    }
 }
 
 /*

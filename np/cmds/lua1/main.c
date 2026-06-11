@@ -12,17 +12,21 @@
 #include <stdio.h>
 #include <unistd.h>
 
-// #test
+// Lua
 #include "lua.h"
 
 
+// The main function
 int main(int argc, char *argv[])
 {
+    int rv = EXIT_FAILURE;
 
-    // #todo
     // See: lua.c
-    lua_main(argc, argv);
+    rv = (int) lua_main(argc, argv);
 
-    return 0;
+    //#debug
+    printf("lua1: Exit with %d\n", rv);
+
+    return (int) rv;
 }
 

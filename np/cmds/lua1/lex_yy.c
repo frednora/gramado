@@ -1,13 +1,14 @@
+// lex_yy.c
 
-//# include "stdio.h"
 
-// #test
+// rtl
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "lex_yy.h"
+#include <string.h>
 
-# define U(x) x
+
+# define U(x)  x
 # define NLSTATE yyprevious=YYNEWLINE
 # define BEGIN yybgin = yysvec + 1 +
 # define INITIAL 0
@@ -18,30 +19,23 @@
 
 #define __lex_output(c)  putc(c,yyout)
 
-// #bugbug
-// Two definitions ... 
-// We wanna preserve the other one that is updated
-// during the initialization
-//#define input() (((yytchar=yysptr>yysbuf?U(*--yysptr):getc(yyin))==10?(yylineno++,yytchar):yytchar)==EOF?0:yytchar)
-//#define unput(c) {yytchar= (c);if(yytchar=='\n')yylineno--;*yysptr++=yytchar;}
-
-// #test
+// Default handlers
 // New symbols in order to avoid conflict
 #define LEX_INPUT() (((yytchar=yysptr>yysbuf?U(*--yysptr):getc(yyin))==10?(yylineno++,yytchar):yytchar)==EOF?0:yytchar)
 #define LEX_UNPUT(c) {yytchar= (c);if(yytchar=='\n')yylineno--;*yysptr++=yytchar;}
 
 
-# define yymore() (yymorfg=1)
-# define ECHO fprintf(yyout, "%s",yytext)
-# define REJECT { nstr = yyreject(); goto yyfussy;}
-int yyleng; extern char yytext[];
+#define yymore()  (yymorfg=1)
+#define ECHO  fprintf(yyout, "%s",yytext)
+#define REJECT  { nstr = yyreject(); goto yyfussy;}
+
+int yyleng;
+extern char yytext[];
 int yymorfg;
 extern char *yysptr, yysbuf[];
 int yytchar;
 
 //FILE *yyin = {stdin}, *yyout = {stdout};
-//FILE *yyin = stdin;
-//FILE *yyout = stdout;
 FILE *yyin  = NULL;
 FILE *yyout = NULL;
 
@@ -50,27 +44,28 @@ FILE *yyout = NULL;
 //FILE *__lua_stdin;
 //FILE *__lua_stdout;
 
-
 extern int yylineno;
-struct yysvf { 
-	struct yywork *yystoff;
-	struct yysvf *yyother;
-	int *yystops;};
+struct yysvf 
+{ 
+    struct yywork *yystoff;
+    struct yysvf *yyother;
+    int *yystops;
+};
 struct yysvf *yyestate;
 extern struct yysvf yysvec[], *yybgin;
-#include <stdlib.h>
-#include <string.h>
 
+
+// Lua
 #include "opcode.h"
 #include "hash.h"
 #include "inout.h"
 #include "table.h"
 #include "y_tab.h"
+#include "lex_yy.h"
+
 
 //#undef input
 //#undef unput
-//static Input input;
-//static Unput unput;
 
 static Input __lex_input_fn;
 static Unput __lex_unput_fn;
@@ -86,133 +81,115 @@ void lua_setunput (Unput fn)
     __lex_unput_fn = fn;
 }
 
-char *lua_lasttext (void)
+char *lua_lasttext(void)
 {
- return yytext;
+    return yytext;
 }
 
-# define YYNEWLINE 10
+#define YYNEWLINE  10
 
 int yylex(void)
 {
-
-	int nstr; extern int yyprevious;
+	int nstr; 
+	extern int yyprevious;
 
 while((nstr = yylook()) >= 0)
-yyfussy: switch(nstr){
-case 0:
-if(yywrap()) return(0); break;
-case 1:
-				;
-break;
-case 2:
-			{yylval.vInt = 1; return DEBUG;}
-break;
-case 3:
-			{yylval.vInt = 0; return DEBUG;}
-break;
-case 4:
-				lua_linenumber++;
-break;
-case 5:
-				;
-break;
-case 6:
-				return LOCAL;
-break;
-case 7:
-				return IF;
-break;
-case 8:
-				return THEN;
-break;
-case 9:
-				return ELSE;
-break;
-case 10:
-			return ELSEIF;
-break;
-case 11:
-				return WHILE;
-break;
-case 12:
-				return DO;
-break;
-case 13:
-			return REPEAT;
-break;
-case 14:
-				return UNTIL;
-break;
-case 15:
-			{
-                                         yylval.vWord = lua_nfile-1;
-                                         return FUNCTION;
-					}
-break;
-case 16:
-				return END;
-break;
-case 17:
-				return RETURN;
-break;
-case 18:
-				return LOCAL;
-break;
-case 19:
-				return NIL;
-break;
-case 20:
-				return AND;
-break;
-case 21:
-				return OR;
-break;
-case 22:
-				return NOT;
-break;
-case 23:
-				return NE;
-break;
-case 24:
-				return LE;
-break;
-case 25:
-				return GE;
-break;
-case 26:
-				return CONC;
-break;
-case 27:
-			case 28:
-		      {
-				       yylval.vWord = lua_findenclosedconstant (yytext);
-				       return STRING;
-				      }
-break;
-case 29:
-case 30:
-case 31:
-case 32:
-{
-				        yylval.vFloat = atof(yytext);
-				        return NUMBER;
-				       }
-break;
-case 33:
- 	       {
-					yylval.vWord = lua_findsymbol (yytext);
-					return NAME;
-				       }
-break;
-case 34:
-				return  *yytext;
-break;
-case -1:
-break;
-default:
-fprintf(yyout,"bad switch yylook %d",nstr);
-} 
+yyfussy: switch (nstr){
+    case 0:
+        if (yywrap())
+		    return(0);
+		break;
+
+    case 1:
+		;
+        break;
+
+    case 2:
+		{
+		    yylval.vInt = 1; 
+			return DEBUG;
+		}
+        break;
+
+    case 3:
+		{
+            yylval.vInt = 0;
+			return DEBUG;
+		}
+        break;
+
+    case 4:
+		lua_linenumber++;
+        break;
+
+    case 5:
+		;
+        break;
+
+    case 6:  return LOCAL;  break;
+    case 7:  return IF;     break;
+    case 8:  return THEN;   break;
+    case 9:  return ELSE;   break;
+    case 10: return ELSEIF; break;
+    case 11: return WHILE;  break;
+    case 12: return DO;     break;
+    case 13: return REPEAT; break;
+    case 14: return UNTIL;  break;
+
+    case 15:
+		{
+            yylval.vWord = lua_nfile-1;
+            return FUNCTION;
+		}
+        break;
+
+    case 16:  return END;     break;
+    case 17:  return RETURN;  break;
+    case 18:  return LOCAL;   break;
+    case 19:  return NIL;     break;
+    case 20:  return AND;     break;
+    case 21:  return OR;      break;
+    case 22:  return NOT;     break;
+    case 23:  return NE;      break;
+    case 24:  return LE;      break;
+    case 25:  return GE;      break;
+    case 26:  return CONC;    break;
+
+    case 27:
+	case 28:
+	    {
+	        yylval.vWord = lua_findenclosedconstant(yytext);
+			return STRING;
+		}
+        break;
+
+    case 29:
+    case 30:
+    case 31:
+    case 32:
+        {
+		    yylval.vFloat = atof(yytext);
+		    return NUMBER;
+		}
+        break;
+
+    case 33:
+ 	    {
+			yylval.vWord = lua_findsymbol(yytext);
+			return NAME;
+	    }
+        break;
+
+    case 34:
+	    return  *yytext;
+        break;
+
+    case -1:
+        break;
+
+    default:
+        fprintf(yyout,"bad switch yylook %d",nstr);
+    } 
 
     return (0); 
 }

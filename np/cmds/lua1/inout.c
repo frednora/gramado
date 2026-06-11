@@ -81,12 +81,12 @@ static void stringunput (int c)
  st--;
 }
 
-/*
-** Function to open a file to be input unit. 
-** Return 0 on success or 1 on error.
-*/
+// Function to open a file to be input unit. 
+// Return 0 on success or 1 on error.
 int lua_openfile (char *fn)
 {
+// Called by lua_dofile() in opcode.c
+
     lua_linenumber = 1;
 
     lua_setinput(fileinput);
@@ -96,16 +96,21 @@ int lua_openfile (char *fn)
     if (fp == NULL)
         return 1;
 
-// #test
-// Lets updata the default input file in lex_yy.c
-    yyin = fp;
-    //yyin = stdin;
-    //yyout = stdout;
 
-    __init_io_pointers(fp,NULL);
+// Lets update the default input file in lex_yy.c
+    yyin = stdin;
+    yyout = stdout;
+    // Option
+    //yyin = fp;
+
+// Update default io files in iolib.c
+    __init_io_pointers(stdin,stdout);
+    // Options
+    //__init_io_pointers(fp,NULL);
     //__init_io_pointers(fp,stdout);
 
-    if (lua_addfile (fn))
+// See: table.c
+    if ( lua_addfile(fn) )
         return 1;
 
     return 0;

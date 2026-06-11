@@ -17,7 +17,7 @@ typedef struct Object *lua_Object;
 
 void           lua_errorfunction    	(void (*fn) (char *s));
 void           lua_error		(char *s);
-int            lua_dofile 		(char *filename);
+
 int            lua_dostring 		(char *string);
 int            lua_call 		(char *functionname, int nparam);
 
@@ -52,6 +52,6 @@ int            lua_iscfunction 		(lua_Object object);
 int            lua_isuserdata 		(lua_Object object);
 
 
-void lua_main (int argc, char *argv[]);
+int lua_main(int argc, char *argv[]);
 
 #endif

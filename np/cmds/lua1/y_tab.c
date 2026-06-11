@@ -1,17 +1,16 @@
 # line 2 "lua.stx"
 
+// rtl
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+// Lua
 #include "opcode.h"
 #include "hash.h"
 #include "inout.h"
 #include "table.h"
 #include "lua.h"
-
-
-// #test
 #include "lex_yy.h"
 
 
@@ -76,15 +75,15 @@ static void code_word (Word n)
  pc += sizeof(Word);
 }
 
-static void code_float (float n)
+static void code_float(float n)
 {
- if (pc-basepc>MAXCODE-sizeof(float))
- {
-  lua_error ("code buffer overflow");
-  err = 1;
- }
- *((float *)pc) = n;
- pc += sizeof(float);
+    if (pc-basepc > MAXCODE-sizeof(float))
+    {
+        lua_error("code buffer overflow");
+        err = 1;
+    }
+    *((float *)pc) = n;
+    pc += sizeof(float);
 }
 
 static void incr_ntemp (void)
@@ -157,37 +156,40 @@ static void code_number (float f)
 # line 140 "lua.stx"
 typedef union  
 {
- int   vInt;
- long  vLong;
- float vFloat;
- Word  vWord;
- Byte *pByte;
-} YYSTYPE;
-# define NIL 257
-# define IF 258
-# define THEN 259
-# define ELSE 260
-# define ELSEIF 261
-# define WHILE 262
-# define DO 263
-# define REPEAT 264
-# define UNTIL 265
-# define END 266
-# define RETURN 267
-# define LOCAL 268
-# define NUMBER 269
-# define FUNCTION 270
-# define NAME 271
-# define STRING 272
-# define DEBUG 273
-# define NOT 274
-# define AND 275
-# define OR 276
-# define NE 277
-# define LE 278
-# define GE 279
-# define CONC 280
-# define UNARY 281
+    int   vInt;
+    long  vLong;
+    float vFloat;
+    Word  vWord;
+    Byte *pByte;
+}YYSTYPE;
+
+
+# define NIL  257
+# define IF  258
+# define THEN  259
+# define ELSE  260
+# define ELSEIF  261
+# define WHILE  262
+# define DO  263
+# define REPEAT  264
+# define UNTIL  265
+# define END  266
+# define RETURN  267
+# define LOCAL  268
+# define NUMBER  269
+# define FUNCTION  270
+# define NAME  271
+# define STRING  272
+# define DEBUG  273
+# define NOT  274
+# define AND  275
+# define OR  276
+# define NE  277
+# define LE  278
+# define GE  279
+# define CONC  280
+# define UNARY  281
+
 #define yyclearin yychar = -1
 #define yyerrok yyerrflag = 0
 extern int yychar;
@@ -201,15 +203,15 @@ YYSTYPE yylval, yyval;
 # line 530 "lua.stx"
 
 
-/*
-** Search a local name and if find return its index. If do not find return -1
-*/
-static int lua_localname (Word n)
+// Search a local name and if find return its index. 
+// If do not find return -1
+static int lua_localname(Word n)
 {
- int i;
- for (i=nlocalvar-1; i >= 0; i--)
-  if (n == localvar[i]) return i;	/* local var */
- return -1;		        /* global var */
+    int i=0;
+
+    for (i=nlocalvar-1; i >= 0; i--)
+        if (n == localvar[i]) return i;  /* local var */
+    return -1;		                     /* global var */
 }
 
 /*
@@ -286,13 +288,21 @@ static void lua_codestore (int i)
  }
 }
 
-void yyerror (char *s)
+void yyerror(char *s)
 {
- static char msg[256];
- sprintf (msg,"%s near \"%s\" at line %d in file \"%s\"",
-          s, lua_lasttext (), lua_linenumber, lua_filename());
- lua_error (msg);
- err = 1;
+    static char msg[256];
+
+    sprintf (
+		msg,
+		"%s near \"%s\" at line %d in file \"%s\"",
+        s, 
+		lua_lasttext(), 
+		lua_linenumber, 
+		lua_filename() 
+	);
+
+    lua_error(msg);
+    err = 1;
 }
 
 int yywrap(void)
@@ -300,20 +310,21 @@ int yywrap(void)
     return (int) 1;
 }
 
-
-/*
-** Parse LUA code and execute global statement.
-** Return 0 on success or 1 on error.
-*/
+// Parse LUA code and execute global statement.
+// Return 0 on success or 1 on error.
 int lua_parse (void)
 {
- Byte *initcode = maincode;
- err = 0;
- if (yyparse () || (err==1)) return 1;
- *maincode++ = HALT;
- if (lua_execute (initcode)) return 1;
- maincode = initcode;
- return 0;
+    Byte *initcode = maincode;
+
+    err = 0;
+    if (yyparse() || (err==1))
+	    return 1;
+    *maincode++ = HALT;
+    if ( lua_execute(initcode) )
+	    return 1;
+    maincode = initcode;
+
+    return 0;
 }
 
 
@@ -839,34 +850,35 @@ int yyerrflag;			/* error recovery flag */
 int yychar;			/* current input token number */
 
 
-/*
- * yyparse:
- * return 0 if worked, 1 if syntax error not recovered from
- */
+// yyparse:
+// return 0 if worked, 1 if syntax error not recovered from.
 
 static int yyparse(void)
 {
-	register YYSTYPE *yypvt;	/* top of value stack for $vars */
+	register YYSTYPE *yypvt;  // top of value stack for $vars
 	unsigned yymaxdepth = YYMAXDEPTH;
 
-	/*
-	** Initialize externals - yyparse may be called more than once
-	*/
-	yyv = (YYSTYPE*)malloc(yymaxdepth*sizeof(YYSTYPE));
-	yys = (int*)malloc(yymaxdepth*sizeof(int));
+// Initialize externals:
+// yyparse may be called more than once.
+
+	yyv = (YYSTYPE*) malloc( yymaxdepth * sizeof(YYSTYPE) );
+	yys = (int*)     malloc( yymaxdepth * sizeof(int) );
 	if (!yyv || !yys)
 	{
 		yyerror( "out of memory" );
 		return(1);
 	}
+
 	yypv = &yyv[-1];
 	yyps = &yys[-1];
+
 	yystate = 0;
 	yytmp = 0;
 	yynerrs = 0;
 	yyerrflag = 0;
 	yychar = -1;
 
+	// Oh boy!
 	goto yystack;
 	{
 		register YYSTYPE *yy_pv;	/* top of value stack */
@@ -937,16 +949,16 @@ static int yyparse(void)
 			int yyps_index = (yy_ps - yys);
 			int yypv_index = (yy_pv - yyv);
 			int yypvt_index = (yypvt - yyv);
+
 			yymaxdepth += YYMAXDEPTH;
-			yyv = (YYSTYPE*)realloc((char*)yyv,
-				yymaxdepth * sizeof(YYSTYPE));
-			yys = (int*)realloc((char*)yys,
-				yymaxdepth * sizeof(int));
+			yyv = (YYSTYPE*) realloc( (char*)yyv, yymaxdepth * sizeof(YYSTYPE) );
+			yys = (int*)     realloc( (char*)yys, yymaxdepth * sizeof(int) );
 			if (!yyv || !yys)
 			{
 				yyerror( "yacc stack overflow" );
 				return(1);
 			}
+
 			yy_ps = yys + yyps_index;
 			yy_pv = yyv + yypv_index;
 			yypvt = yyv + yypvt_index;
@@ -954,9 +966,8 @@ static int yyparse(void)
 		*yy_ps = yy_state;
 		*++yy_pv = yyval;
 
-		/*
-		** we have a new state - find out what to do
-		*/
+
+		// we have a new state - find out what to do
 	yy_newstate:
 		if ( ( yy_n = yypact[ yy_state ] ) <= YYFLAG )
 			goto yydefault;		/* simple state */
@@ -1042,8 +1053,7 @@ static int yyparse(void)
 			{
 				register int *yyxi = yyexca;
 
-				while ( ( *yyxi != -1 ) ||
-					( yyxi[1] != yy_state ) )
+				while ( ( *yyxi != -1 ) || ( yyxi[1] != yy_state ) )
 				{
 					yyxi += 2;
 				}
@@ -1055,13 +1065,11 @@ static int yyparse(void)
 			}
 		}
 
-		/*
-		** check for syntax error
-		*/
-		if ( yy_n == 0 )	/* have an error */
+		// check for syntax error
+		if ( yy_n == 0 )  // have an error
 		{
-			/* no worry about speed here! */
-			switch ( yyerrflag )
+			// no worry about speed here
+			switch (yyerrflag)
 			{
 			case 0:		/* new error */
 				yyerror( "syntax error" );
@@ -1154,6 +1162,7 @@ static int yyparse(void)
 				yychar = -1;
 				goto yy_newstate;
 			}
+
 		}/* end if ( yy_n == 0 ) */
 		/*
 		** reduction by production yy_n
@@ -1211,15 +1220,15 @@ static int yyparse(void)
 				yy_state = yyact[ yypgo[ yy_n ] ];
 			}
 		}
-					/* save until reenter driver code */
+
+		// save until reenter driver code
 		yystate = yy_state;
 		yyps = yy_ps;
 		yypv = yy_pv;
 	}
-	/*
-	** code supplied by user is placed in this switch
-	*/
-	switch( yytmp )
+
+	// code supplied by user is placed in this switch
+	switch (yytmp)
 	{
 		
 case 2:

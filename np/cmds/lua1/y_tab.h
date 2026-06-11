@@ -1,3 +1,4 @@
+// y_tab.h
 
 #ifndef __Y_TAB_H
 #define __Y_TAB_H    1
@@ -5,13 +6,15 @@
 
 typedef union  
 {
- int   vInt;
- long  vLong;
- float vFloat;
- Word  vWord;
- Byte *pByte;
+    int   vInt;
+    long  vLong;
+    float vFloat;
+    Word  vWord;
+    Byte *pByte;
 } YYSTYPE;
+
 extern YYSTYPE yylval;
+
 # define NIL 257
 # define IF 258
 # define THEN 259

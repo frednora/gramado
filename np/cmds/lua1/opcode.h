@@ -141,4 +141,7 @@ void    lua_type       (void);
 void 	lua_obj2number (void);
 void 	lua_print      (void);
 
+
+int lua_dofile(char *filename);
+
 #endif
