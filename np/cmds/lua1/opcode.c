@@ -27,8 +27,9 @@
 #define MAXSTACK 256
 #endif
 static Object stack[MAXSTACK] = {{T_MARK, {NULL}}};
-static Object *top=stack+1, *base=stack+1;
 
+static Object *top  = stack+1, 
+              *base = stack+1;
 
 /*
 ** Concatenate two given string, creating a mark space at the beginning.
@@ -134,12 +135,16 @@ static int lua_tostring (Object *obj)
  return 0;
 }
 
-
-/*
-** Execute the given opcode. Return 0 in success or 1 on error.
-*/
+// Execute the given opcode. 
+// Return 0 in success or 1 on error.
 int lua_execute (Byte *pc)
 {
+
+    // #debug
+    //printf("[DEBUG] sizeof(Object) = %d bytes\n", sizeof(Object));
+    //printf("[DEBUG] sizeof(real)   = %d bytes\n", sizeof(real));
+    //printf("[DEBUG] ALIGNMENT      = %d\n", (size_t)ALIGNMENT);
+
  while (1)
  {
   switch ((OpCode)*pc++)
@@ -429,10 +434,9 @@ int lua_execute (Byte *pc)
    }
    break;
    
-   case JMP: pc += *((Word *)(pc)) + sizeof(Word); break;
-    
-   case UPJMP: pc -= *((Word *)(pc)) - sizeof(Word); break; 
-   
+   case JMP:    pc += *((Word *)(pc)) + sizeof(Word);  break; 
+   case UPJMP:  pc -= *((Word *)(pc)) - sizeof(Word);  break; 
+
    case IFFJMP:
    {
     int n = *((Word *)(pc));
@@ -642,7 +646,8 @@ Object *lua_getparam(int number)
 real lua_getnumber(Object *object)
 {
     if ( tonumber(object) ){ 
-        return 0.0; 
+        //return 0.0;
+        return (real) 0.0f;
     } else { 
         return ( nvalue(object) );
     }
@@ -659,183 +664,188 @@ char *lua_getstring (Object *object)
     }
 }
 
-/*
-** Given an object handle, return a copy of its string. On error, return NULL.
-*/
+// Given an object handle, return a copy of its string. 
+// On error, return NULL.
 char *lua_copystring (Object *object)
 {
- if (tostring (object)) return NULL;
- else                   return (strdup(svalue(object)));
+    if (tostring (object)) { return NULL; }
+    else                   { return (strdup(svalue(object))); }
 }
 
-/*
-** Given an object handle, return its cfuntion pointer. On error, return NULL.
-*/
+// Given an object handle, return its cfuntion pointer. 
+// On error, return NULL.
 lua_CFunction lua_getcfunction (Object *object)
 {
- if (tag(object) != T_CFUNCTION) return NULL;
- else                            return (fvalue(object));
+    if (tag(object) != T_CFUNCTION) { return NULL; }
+    else                            { return (fvalue(object)); }
 }
 
-/*
-** Given an object handle, return its user data. On error, return NULL.
-*/
+// Given an object handle, return its user data. 
+// On error, return NULL.
 void *lua_getuserdata (Object *object)
 {
- if (tag(object) != T_USERDATA) return NULL;
- else                           return (uvalue(object));
+    if (tag(object) != T_USERDATA) { return NULL; }
+    else                           { return (uvalue(object)); }
 }
 
-/*
-** Given an object handle and a field name, return its field object.
-** On error, return NULL.
-*/
+// Given an object handle and a field name, return its field object.
+// On error, return NULL.
 Object *lua_getfield (Object *object, char *field)
 {
- if (tag(object) != T_ARRAY)
-  return NULL;
- else
- {
-  Object ref;
-  tag(&ref) = T_STRING;
-  svalue(&ref) = lua_createstring(lua_strdup(field));
-  return (lua_hashdefine(avalue(object), &ref));
- }
+    if (tag(object) != T_ARRAY){
+        return NULL; 
+    } else {       
+        Object ref;
+
+        tag(&ref) = T_STRING;
+        svalue(&ref) = lua_createstring( lua_strdup(field) );
+
+        return (lua_hashdefine(avalue(object), &ref));
+    }
 }
 
-/*
-** Given an object handle and an index, return its indexed object.
-** On error, return NULL.
-*/
+// Given an object handle and an index, return its indexed object.
+// On error, return NULL.
 Object *lua_getindexed (Object *object, float index)
 {
- if (tag(object) != T_ARRAY)
-  return NULL;
- else
- {
-  Object ref;
-  tag(&ref) = T_NUMBER;
-  nvalue(&ref) = index;
-  return (lua_hashdefine(avalue(object), &ref));
- }
+    if (tag(object) != T_ARRAY){
+        return NULL;
+    } else {
+        Object ref;
+
+        tag(&ref) = T_NUMBER;
+        nvalue(&ref) = index;
+
+        return (lua_hashdefine(avalue(object), &ref));
+    }
 }
 
-/*
-** Get a global object. Return the object handle or NULL on error.
-*/
+// Get a global object. 
+// Return the object handle or NULL on error.
 Object *lua_getglobal (char *name)
 {
- int n = lua_findsymbol(name);
- if (n < 0) return NULL;
- return &s_object(n);
+    int n = lua_findsymbol(name);
+
+    if (n < 0)
+        return NULL;
+
+    return &s_object(n);
 }
 
-/*
-** Pop and return an object
-*/
+// Pop and return an object
 Object *lua_pop (void)
 {
- if (top <= base) return NULL;
- top--;
- return top;
+    if (top <= base)
+        return NULL;
+    top--;
+
+    return top;
 }
 
-/*
-** Push a nil object
-*/
+// Push a nil object
 int lua_pushnil (void)
 {
- if ((top-stack) >= MAXSTACK-1)
- {
-  lua_error ("stack overflow");
-  return 1;
- }
- tag(top) = T_NIL;
- return 0;
+    if ((top-stack) >= MAXSTACK-1)
+    {
+        lua_error ("stack overflow");
+        return 1;
+    }
+    tag(top) = T_NIL;
+
+    return 0;
 }
 
-/*
-** Push an object (tag=number) to stack. Return 0 on success or 1 on error.
-*/
+// Push an object (tag=number) to stack.
+// Return 0 on success or 1 on error.
 int lua_pushnumber (real n)
 {
- if ((top-stack) >= MAXSTACK-1)
- {
-  lua_error ("stack overflow");
-  return 1;
- }
- tag(top) = T_NUMBER; nvalue(top++) = n;
- return 0;
+    if ((top-stack) >= MAXSTACK-1)
+    {
+        lua_error ("stack overflow");
+        return 1;
+    }
+    tag(top) = T_NUMBER;
+    nvalue(top++) = n;
+
+    return 0;
 }
 
-/*
-** Push an object (tag=string) to stack. Return 0 on success or 1 on error.
-*/
+// Push an object (tag=string) to stack. 
+// Return 0 on success or 1 on error.
 int lua_pushstring (char *s)
 {
- if ((top-stack) >= MAXSTACK-1)
- {
-  lua_error ("stack overflow");
-  return 1;
- }
- tag(top) = T_STRING; 
- svalue(top++) = lua_createstring(lua_strdup(s));
- return 0;
+    if ((top-stack) >= MAXSTACK-1)
+    {
+        lua_error ("stack overflow");
+        return 1;
+    }
+    tag(top) = T_STRING; 
+    svalue(top++) = lua_createstring( lua_strdup(s) );
+
+    return 0;
 }
 
-/*
-** Push an object (tag=cfunction) to stack. Return 0 on success or 1 on error.
-*/
+// Push an object (tag=cfunction) to stack.
+// Return 0 on success or 1 on error.
 int lua_pushcfunction (lua_CFunction fn)
 {
- if ((top-stack) >= MAXSTACK-1)
- {
-  lua_error ("stack overflow");
-  return 1;
- }
- tag(top) = T_CFUNCTION; fvalue(top++) = fn;
- return 0;
+    if ((top-stack) >= MAXSTACK-1)
+    {
+        lua_error("lua_pushcfunction: stack overflow");
+        return 1;
+    }
+    tag(top) = T_CFUNCTION;
+    fvalue(top++) = fn;
+
+    return 0;
 }
 
-/*
-** Push an object (tag=userdata) to stack. Return 0 on success or 1 on error.
-*/
+// Push an object (tag=userdata) to stack. 
+// Return 0 on success or 1 on error.
 int lua_pushuserdata (void *u)
 {
- if ((top-stack) >= MAXSTACK-1)
- {
-  lua_error ("stack overflow");
-  return 1;
- }
- tag(top) = T_USERDATA; uvalue(top++) = u;
- return 0;
+    if ((top-stack) >= MAXSTACK-1)
+    {
+        lua_error ("stack overflow");
+        return 1;
+    }
+
+    tag(top) = T_USERDATA;
+    uvalue(top++) = u;
+
+    return 0;
 }
 
-/*
-** Push an object to stack.
-*/
+// Push an object to stack
 int lua_pushobject (Object *o)
 {
- if ((top-stack) >= MAXSTACK-1)
- {
-  lua_error ("stack overflow");
-  return 1;
- }
- *top++ = *o;
- return 0;
+    if ((top-stack) >= MAXSTACK-1)
+    {
+        lua_error ("lua_pushobject: stack overflow");
+        return 1;
+    }
+    
+    *top++ = *o;
+
+    return 0;
 }
 
-/*
-** Store top of the stack at a global variable array field. 
-** Return 1 on error, 0 on success.
-*/
-int lua_storeglobal (char *name)
+// Store top of the stack at a global variable array field. 
+// Return 1 on error, 0 on success.
+int lua_storeglobal(char *name)
 {
- int n = lua_findsymbol (name);
- if (n < 0) return 1;
- if (tag(top-1) == T_MARK) return 1;
- s_object(n) = *(--top);
- return 0;
+    int n=0;
+
+    n = lua_findsymbol(name);
+    if (n < 0)
+        return 1;
+
+    if (tag(top-1) == T_MARK)
+        return 1;
+
+    s_object(n) = *(--top);
+
+    return 0;
 }
 
 /*
@@ -879,62 +889,48 @@ int lua_storeindexed (lua_Object object, float index)
  return 0;
 }
 
-
-/*
-** Given an object handle, return if it is nil.
-*/
+// Given an object handle, return if it is nil.
 int lua_isnil (Object *object)
 {
- return (object != NULL && tag(object) == T_NIL);
+    return (object != NULL && tag(object) == T_NIL);
 }
 
-/*
-** Given an object handle, return if it is a number one.
-*/
+// Given an object handle, return if it is a number one.
 int lua_isnumber (Object *object)
 {
- return (object != NULL && tag(object) == T_NUMBER);
+    return (object != NULL && tag(object) == T_NUMBER);
 }
 
-/*
-** Given an object handle, return if it is a string one.
-*/
+// Given an object handle, return if it is a string one.
 int lua_isstring (Object *object)
 {
- return (object != NULL && tag(object) == T_STRING);
+    return (object != NULL && tag(object) == T_STRING);
 }
 
-/*
-** Given an object handle, return if it is an array one.
-*/
+// Given an object handle, return if it is an array one.
 int lua_istable (Object *object)
 {
- return (object != NULL && tag(object) == T_ARRAY);
+    return (object != NULL && tag(object) == T_ARRAY);
 }
 
-/*
-** Given an object handle, return if it is a cfunction one.
-*/
+// Given an object handle, return if it is a cfunction one.
 int lua_iscfunction (Object *object)
 {
- return (object != NULL && tag(object) == T_CFUNCTION);
+    return (object != NULL && tag(object) == T_CFUNCTION);
 }
 
-/*
-** Given an object handle, return if it is an user data one.
-*/
+// Given an object handle, return if it is an user data one.
 int lua_isuserdata (Object *object)
 {
- return (object != NULL && tag(object) == T_USERDATA);
+    return (object != NULL && tag(object) == T_USERDATA);
 }
 
-/*
-** Internal function: return an object type. 
-*/
-void lua_type (void)
+// Internal function: return an object type. 
+void lua_type(void)
 {
- Object *o = lua_getparam(1);
- lua_pushstring (lua_constant[tag(o)]);
+    Object *o = lua_getparam(1);
+
+    lua_pushstring( lua_constant[tag(o)] );
 }
 
 /*
@@ -946,22 +942,23 @@ void lua_obj2number (void)
  lua_pushobject (lua_convtonumber(o));
 }
 
-/*
-** Internal function: print object values
-*/
-void lua_print (void)
+// Internal function: print object values
+void lua_print(void)
 {
- int i=1;
- void *obj;
- while ((obj=lua_getparam (i++)) != NULL)
- {
-  if      (lua_isnumber(obj))    printf("%g\n",lua_getnumber (obj));
-  else if (lua_isstring(obj))    printf("%s\n",lua_getstring (obj));
-  else if (lua_iscfunction(obj)) printf("cfunction: %p\n",lua_getcfunction (obj));
-  else if (lua_isuserdata(obj))  printf("userdata: %p\n",lua_getuserdata (obj));
-  else if (lua_istable(obj))     printf("table: %p\n",obj);
-  else if (lua_isnil(obj))       printf("nil\n");
-  else			         printf("invalid value to print\n");
- }
+    int i=1;
+    void *obj;
+
+    while ((obj=lua_getparam (i++)) != NULL)
+    {
+        if      (lua_isnumber(obj))    printf("%g\n",lua_getnumber (obj));
+        else if (lua_isstring(obj))    printf("%s\n",lua_getstring (obj));
+        else if (lua_iscfunction(obj)) printf("cfunction: %p\n",lua_getcfunction (obj));
+        else if (lua_isuserdata(obj))  printf("userdata: %p\n",lua_getuserdata (obj));
+        else if (lua_istable(obj))     printf("table: %p\n",obj);
+        else if (lua_isnil(obj))       printf("nil\n");
+        else { 
+            printf("invalid value to print\n"); 
+        }
+    };
 }
 

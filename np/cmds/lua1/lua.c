@@ -25,7 +25,7 @@ static void callfunc(void)
 
 static void execstr(void)
 {
-    lua_Object obj = lua_getparam (1);
+    lua_Object obj = lua_getparam(1);
     if (lua_isstring(obj))
         lua_dostring(lua_getstring(obj));
 }
@@ -52,9 +52,9 @@ int lua_main(int argc, char *argv[])
     }
 
     // Register functions
-    lua_register ("callfunc", callfunc);
-    lua_register ("execstr", execstr);
-    lua_register ("test", test);
+    lua_register("callfunc", callfunc);
+    lua_register("execstr",  execstr);
+    lua_register("test",     test);
     // ...
 
     // ?

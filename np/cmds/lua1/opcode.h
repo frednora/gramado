@@ -12,7 +12,8 @@
 #endif 
 
 #ifndef real
-#define real float
+//#define real  float
+#define real  double
 #endif
 
 typedef unsigned char  Byte;
@@ -99,7 +100,7 @@ typedef union
 typedef struct Object
 {
     Type tag;
-    Value value;
+    Value value;  // union containing pointers (8 bytes on 64-bit)
 } Object;
 
 typedef struct
