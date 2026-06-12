@@ -16,7 +16,6 @@
 #endif
 
 typedef unsigned char  Byte;
-
 typedef unsigned short Word;
 
 typedef enum 
@@ -81,31 +80,34 @@ typedef enum
  T_USERDATA
 } Type; 
 
+// Functions
+// It's ok for 64bit systems
 typedef void (*Cfunction) (void);
 typedef int  (*Input) (void);
-typedef void (*Unput) (int );
+typedef void (*Unput) (int);
 
 typedef union
 {
- Cfunction 	 f;
- real    	 n;
- char      	*s;
- Byte      	*b;
- struct Hash    *a;
- void           *u;
+    Cfunction f;  // Virtual function
+    real n;
+    char *s;
+    Byte *b;
+    struct Hash *a;
+    void *u;
 } Value;
 
 typedef struct Object
 {
- Type  tag;
- Value value;
+    Type tag;
+    Value value;
 } Object;
 
 typedef struct
 {
- char   *name;
- Object  object;
+    char *name;
+    Object object;
 } Symbol;
+
 
 /* Macros to access structure members */
 #define tag(o)		((o)->tag)
@@ -129,18 +131,19 @@ typedef struct
 
 
 /* Exported functions */
-int     lua_execute   (Byte *pc);
-void    lua_markstack (void);
-char   *lua_strdup (char *l);
+int     lua_execute(Byte *pc);
+void    lua_markstack(void);
+char   *lua_strdup(char *l);
 
-void    lua_setinput   (Input fn);	/* from "lua.lex" module */
-void    lua_setunput   (Unput fn);	/* from "lua.lex" module */
+// #ps: These are 64bit addresses
+void    lua_setinput(Input fn);	 /* from "lua.lex" module */
+void    lua_setunput(Unput fn);  /* from "lua.lex" module */
+
 char   *lua_lasttext   (void);		/* from "lua.lex" module */
 int     lua_parse      (void); 		/* from "lua.stx" module */
 void    lua_type       (void);
 void 	lua_obj2number (void);
 void 	lua_print      (void);
-
 
 int lua_dofile(char *filename);
 

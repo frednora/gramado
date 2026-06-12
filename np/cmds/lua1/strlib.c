@@ -7,11 +7,12 @@
 ** 19 May 93
 */
 
+// rtl
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
-
+// Lua
 #include "lua.h"
 
 /*
@@ -36,16 +37,19 @@ static void str_find (void)
 /*
 ** Return the string length
 ** LUA interface:
-**			n = strlen (string)
+**     n = strlen (string)
 */
-static void str_len (void)
+static void str_len(void)
 {
- lua_Object o = lua_getparam (1);
- if (!lua_isstring(o))
- { lua_error ("incorrect arguments to function `strlen'"); return; }
- lua_pushnumber(strlen(lua_getstring(o)));
-}
+    lua_Object o = lua_getparam(1);
 
+    if (!lua_isstring(o)){
+        lua_error("incorrect arguments to function `strlen'");
+        return;
+    }
+    // Oh boy!
+    lua_pushnumber( strlen(lua_getstring(o)) );
+}
 
 /*
 ** Return the substring of a string, from start to end
@@ -117,15 +121,13 @@ static void str_upper (void)
  free(s);
 } 
 
-
-/*
-** Open string library
-*/
-void strlib_open (void)
+// Open string library
+void strlib_open(void)
 {
- lua_register ("strfind", str_find);
- lua_register ("strlen", str_len);
- lua_register ("strsub", str_sub);
- lua_register ("strlower", str_lower);
- lua_register ("strupper", str_upper);
+    lua_register("strfind",  str_find);
+    lua_register("strlen",   str_len);
+    lua_register("strsub",   str_sub);
+    lua_register("strlower", str_lower);
+    lua_register("strupper", str_upper);
 }
+

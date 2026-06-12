@@ -149,14 +149,14 @@ void *yalloc (size_t n, size_t o){
 }
 
 
-int rcmp (const void *a, const void *b){
-	
+int rcmp (const void *a, const void *b)
+{
 	return ((Rule *)a)->lhs - ((Rule *)b)->lhs;
 }
 
 
-Rule *rfind (Sym lhs){
-	
+Rule *rfind (Sym lhs)
+{
 	Rule *r;
 	Rule k;
 
@@ -171,23 +171,21 @@ Rule *rfind (Sym lhs){
 }
 
 
-int slen (Sym *l){
-	
+int slen (Sym *l)
+{
 	int n;
 
 	for (n=0; *l!=S; n++, l++);
 	return n;
 }
 
-
-void tszero(TSet *ts){
-	
+void tszero(TSet *ts)
+{
 	memset (ts, 0, sizeof *ts);
 }
 
-
-int tsunion (TSet *tsa, TSet *tsb){
-	
+int tsunion (TSet *tsa, TSet *tsb)
+{
 	int n;
 	unsigned *a, *b, c, t;
 
@@ -223,9 +221,8 @@ first(TSet *ts, Sym *stnc, TSet *last)
 	tsunion(ts, &is[f].fst);
 }
 
-
-void ginit (void){
-	
+void ginit (void)
+{	
 	int chg;
 	Rule *r;
 	Info *i;
@@ -1318,14 +1315,9 @@ void init (int ac, char *av[])
 }
 
 
-/*
- ******************************
- * main
- */
-
-int main (int ac, char *av[]){
-
-
+// The main function
+int main (int ac, char *av[])
+{
     printf ("miniyacc: \n");
 
     printf ("miniyacc: init\n");
@@ -1363,9 +1355,7 @@ int main (int ac, char *av[]){
 	|sed 's|.*|"&\\n",|'
 */
 
-
 char *retcode = "\t\tyyval = ps[1].val; return 0;";
-
 
 char *code0[] = {
 "\n",

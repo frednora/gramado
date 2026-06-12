@@ -13,7 +13,7 @@ all:
 #	make -C true/
 
 # Compile extra commands
-#	make -C cmp/
+	make -C cmp/
 #	make -C env/
 #	make -C rect/
 #	make -C replace/

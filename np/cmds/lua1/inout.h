@@ -1,10 +1,7 @@
-/*
-** inout.h
-**
-** Waldemar Celes Filho
-** TeCGraf - PUC-Rio
-** 11 May 93
-*/
+// inout.h
+// Waldemar Celes Filho
+// TeCGraf - PUC-Rio
+// 11 May 93
 
 
 #ifndef inout_h

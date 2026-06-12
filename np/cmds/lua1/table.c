@@ -5,53 +5,61 @@
 ** 11 May 93
 */
 
+// rtl
 #include <stdlib.h>
 #include <string.h>
 
+// Lua
 #include "opcode.h"
 #include "hash.h"
 #include "inout.h"
 #include "table.h"
 #include "lua.h"
 
-#define streq(s1,s2)	(strcmp(s1,s2)==0)
+
+#define streq(s1,s2)  (strcmp(s1,s2)==0)
 
 #ifndef MAXSYMBOL
 #define MAXSYMBOL	512
 #endif
-static Symbol  		tablebuffer[MAXSYMBOL] = {
-                                    {"type",{T_CFUNCTION,{lua_type}}},
-                                    {"tonumber",{T_CFUNCTION,{lua_obj2number}}},
-                                    {"next",{T_CFUNCTION,{lua_next}}},
-                                    {"nextvar",{T_CFUNCTION,{lua_nextvar}}},
-                                    {"print",{T_CFUNCTION,{lua_print}}}
-                                                 };
-Symbol	       	       *lua_table=tablebuffer;
-Word   	 		lua_ntable=5;
+
+static Symbol tablebuffer[MAXSYMBOL] = {
+    {"type",     {T_CFUNCTION,{lua_type}} },
+    {"tonumber", {T_CFUNCTION,{lua_obj2number}} },
+    {"next",     {T_CFUNCTION,{lua_next}} },
+    {"nextvar",  {T_CFUNCTION,{lua_nextvar}} },
+    {"print",    {T_CFUNCTION,{lua_print}} }
+};
+
+Symbol *lua_table=tablebuffer;
+Word lua_ntable=5;
 
 #ifndef MAXCONSTANT
 #define MAXCONSTANT	256
 #endif
-static char  	       *constantbuffer[MAXCONSTANT] = {"mark","nil","number",
-                                                       "string","table",
-                                                       "function","cfunction"
-                                                      };
-char  	      	      **lua_constant = constantbuffer;
-Word    		lua_nconstant=T_CFUNCTION+1;
+
+static char *constantbuffer[MAXCONSTANT] = { 
+    "mark", "nil", "number",
+    "string", "table",
+    "function", "cfunction" 
+};
+
+char **lua_constant = constantbuffer;
+Word lua_nconstant=T_CFUNCTION+1;
 
 #ifndef MAXSTRING
 #define MAXSTRING	512
 #endif
-static char 	       *stringbuffer[MAXSTRING];
-char  		      **lua_string = stringbuffer;
-Word    		lua_nstring=0;
+static char *stringbuffer[MAXSTRING];
+char **lua_string = stringbuffer;
+Word lua_nstring=0;
 
 #ifndef MAXARRAY
 #define MAXARRAY	512
 #endif
-static Hash             *arraybuffer[MAXARRAY];
-Hash  	              **lua_array = arraybuffer;
-Word    		lua_narray=0;
+static Hash *arraybuffer[MAXARRAY];
+Hash **lua_array = arraybuffer;
+Word lua_narray=0;
 
 #define MAXFILE 	20
 

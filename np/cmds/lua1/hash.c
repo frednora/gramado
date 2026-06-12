@@ -6,29 +6,33 @@
 ** 12 May 93
 */
 
+// rtl
 #include <string.h>
 #include <stdlib.h>
 
+// Lua
 #include "opcode.h"
 #include "hash.h"
 #include "inout.h"
 #include "table.h"
 #include "lua.h"
 
-#define streq(s1,s2)	(strcmp(s1,s2)==0)
-#define strneq(s1,s2)	(strcmp(s1,s2)!=0)
 
-#define new(s)		((s *)malloc(sizeof(s)))
-#define newvector(n,s)	((s *)calloc(n,sizeof(s)))
+#define streq(s1,s2)	 (strcmp(s1,s2)==0)
+#define strneq(s1,s2)  (strcmp(s1,s2)!=0)
 
-#define nhash(t)	((t)->nhash)
-#define nodelist(t)	((t)->list)
-#define list(t,i)	((t)->list[i])
+#define new(s)  ((s *)malloc(sizeof(s)))
+#define newvector(n,s)  ((s *)calloc(n,sizeof(s)))
+
+#define nhash(t)	   ((t)->nhash)
+#define nodelist(t)	 ((t)->list)
+#define list(t,i)	   ((t)->list[i])
 #define ref_tag(n)	(tag(&(n)->ref))
-#define ref_nvalue(n)	(nvalue(&(n)->ref))
-#define ref_svalue(n)	(svalue(&(n)->ref))
+#define ref_nvalue(n)  (nvalue(&(n)->ref))
+#define ref_svalue(n)  (svalue(&(n)->ref))
 
-static int head (Hash *t, Object *ref)		/* hash function */
+/* hash function */
+static int head (Hash *t, Object *ref)
 {
  if (tag(ref) == T_NUMBER) return (((int)nvalue(ref))%nhash(t));
  else if (tag(ref) == T_STRING)
@@ -76,48 +80,48 @@ static Node *present(Hash *t, Object *ref, int h)
  return n;
 }
 
-static void freelist (Node *n)
+static void freelist(Node *n)
 {
- while (n)
- {
-  Node *next = n->next;
-  free (n);
-  n = next;
- }
+    while (n)
+    {
+        Node *next = n->next;
+        free(n);
+        n = next;
+    };
 }
 
-/*
-** Create a new hash. Return the hash pointer or NULL on error.
-*/
+// Create a new hash. 
+// Return the hash pointer or NULL on error.
 Hash *lua_hashcreate (unsigned int nhash)
 {
- Hash *t = new (Hash);
- if (t == NULL)
- {
-  lua_error ("not enough memory");
-  return NULL;
- }
- nhash(t) = nhash;
- markarray(t) = 0;
- nodelist(t) = newvector (nhash, Node*);
- if (nodelist(t) == NULL)
- {
-  lua_error ("not enough memory");
-  return NULL;
- }
- return t;
+    Hash *t = new (Hash);
+
+    if (t == NULL){
+        lua_error ("lua_hashcreate: not enough memory");
+        return NULL;
+    }
+
+    nhash(t) = nhash;
+    markarray(t) = 0;
+    nodelist(t) = newvector(nhash, Node*);
+    if (nodelist(t) == NULL)
+    {
+        lua_error ("not enough memory");
+        return NULL;
+    }
+
+    return t;
 }
 
-/*
-** Delete a hash
-*/
+// Delete a hash
 void lua_hashdelete (Hash *h)
 {
- int i;
- for (i=0; i<nhash(h); i++)
-  freelist (list(h,i));
- free (nodelist(h));
- free(h);
+    int i=0;
+
+    for (i=0; i<nhash(h); i++)
+        freelist(list(h,i));
+    free(nodelist(h));
+    free(h);
 }
 
 /*
@@ -154,9 +158,9 @@ Object *lua_hashdefine (Hash *t, Object *ref)
 */
 void lua_hashmark (Hash *h)
 {
- int i;
+    int i;
  
- markarray(h) = 1;
+    markarray(h) = 1;
  
  for (i=0; i<nhash(h); i++)
  {
@@ -195,6 +199,7 @@ static void firstnode (Hash *a, int h)
  lua_pushnil();
  lua_pushnil();
 }
+
 void lua_next (void)
 {
  Hash   *a;

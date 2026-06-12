@@ -116,34 +116,32 @@ int lua_openfile (char *fn)
     return 0;
 }
 
-
-/*
-** Function to close an opened file
-*/
+// Function to close an opened file
 void lua_closefile (void)
 {
- if (fp != NULL)
- {
-  fclose (fp);
-  fp = NULL;
- }
+    if (fp != NULL)
+    {
+      fclose(fp);
+      fp = NULL;
+    }
 }
 
-/*
-** Function to open a string to be input unit
-*/
+// Function to open a string to be input unit
 int lua_openstring (char *s)
 {
- lua_linenumber = 1;
- lua_setinput (stringinput);
- lua_setunput (stringunput);
- st = s;
- {
-  char sn[64];
-  sprintf (sn, "String: %10.10s...", s);
-  if (lua_addfile (sn)) return 1;
- }
- return 0;
+    lua_linenumber = 1;
+
+    lua_setinput(stringinput);
+    lua_setunput(stringunput);
+    st = s;
+    {
+       char sn[64];
+       sprintf (sn, "String: %10.10s...", s);
+       if (lua_addfile (sn))
+           return 1;
+    }
+
+    return 0;
 }
 
 /*
@@ -173,22 +171,21 @@ int lua_pushfunction (int file, int function)
  return 0;
 }
 
-/*
-** Called to execute  RESET opcode, this function pops a function from 
-** function stack.
-*/
-void lua_popfunction (void)
+// Called to execute RESET opcode, 
+// this function pops a function from function stack.
+void lua_popfunction(void)
 {
- nfuncstack--;
+    nfuncstack--;
 }
 
-/*
-** Report bug building a message and sending it to lua_error function.
-*/
+// Report bug building a message and 
+// sending it to lua_error function.
 void lua_reportbug (char *s)
 {
- char msg[1024];
- strcpy (msg, s);
+    char msg[1024];
+
+    strcpy (msg, s);
+
  if (lua_debugline != 0)
  {
   int i;
@@ -211,6 +208,7 @@ void lua_reportbug (char *s)
          lua_debugline, lua_filename());
   }
  }
- lua_error (msg);
+
+    lua_error(msg);
 }
 

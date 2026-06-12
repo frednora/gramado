@@ -177,13 +177,14 @@ yyerror()
 	puts("oops");
 }
 
-int
-yylex()
+int yylex()
 {
 	char c;
 
 	p += strspn(p, "\t ");
+
 	switch ((c=*p++)) {
+
 	case '+':
 	case '-':
 	case '*':

@@ -215,6 +215,7 @@ build-extras:
 
 #test
 	@-cp $(LZ_CMDS)/bin/LUA1.BIN       $(BASE)/
+#	@-cp $(LZ_CMDS)/bin/CMP.BIN        $(BASE)/
 
 
 # Experimental commands.
