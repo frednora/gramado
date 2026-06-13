@@ -28,8 +28,10 @@
 #endif
 static Object stack[MAXSTACK] = {{T_MARK, {NULL}}};
 
-static Object *top  = stack+1, 
-              *base = stack+1;
+//static Object *top  = stack+1, 
+//              *base = stack+1;
+static Object *top  = stack+1;
+static Object *base = stack+1;
 
 /*
 ** Concatenate two given string, creating a mark space at the beginning.
@@ -139,11 +141,10 @@ static int lua_tostring (Object *obj)
 // Return 0 in success or 1 on error.
 int lua_execute (Byte *pc)
 {
-
     // #debug
     //printf("[DEBUG] sizeof(Object) = %d bytes\n", sizeof(Object));
-    //printf("[DEBUG] sizeof(real)   = %d bytes\n", sizeof(real));
-    //printf("[DEBUG] ALIGNMENT      = %d\n", (size_t)ALIGNMENT);
+    //printf("[DEBUG] sizeof(Type)   = %d bytes\n", sizeof(Type));
+    //printf("[DEBUG] sizeof(Value)  = %d bytes\n", sizeof(Value));
 
  while (1)
  {
@@ -157,15 +158,27 @@ int lua_execute (Byte *pc)
    case PUSH1: tag(top) = T_NUMBER; nvalue(top++) = 1; break;
    case PUSH2: tag(top) = T_NUMBER; nvalue(top++) = 2; break;
 
-   case PUSHBYTE: tag(top) = T_NUMBER; nvalue(top++) = *pc++; break;
+    case PUSHBYTE:
+       tag(top) = T_NUMBER; 
+       nvalue(top++) = *pc++; 
+       //printf("PUSHBYTE\n");
+       break;
    
    case PUSHWORD: 
-    tag(top) = T_NUMBER; nvalue(top++) = *((Word *)(pc)); pc += sizeof(Word);
-   break;
-   
-   case PUSHFLOAT:
-    tag(top) = T_NUMBER; nvalue(top++) = *((float *)(pc)); pc += sizeof(float);
-   break;
+       tag(top) = T_NUMBER; 
+       nvalue(top++) = *((Word *)(pc)); 
+       //printf("PUSHWORD\n");
+       pc += sizeof(Word);
+       break;
+
+    case PUSHFLOAT:
+        tag(top) = T_NUMBER; 
+        nvalue(top++) = *((double *)(pc)); 
+        //printf("PUSHFLOAT\n");
+        pc += sizeof(double);
+        break;
+
+
    case PUSHSTRING:
    {
     int w = *((Word *)(pc));
@@ -173,7 +186,8 @@ int lua_execute (Byte *pc)
     tag(top) = T_STRING; svalue(top++) = lua_constant[w];
    }
    break;
-   
+
+   // Local Less than 10
    case PUSHLOCAL0: *top++ = *(base + 0); break;
    case PUSHLOCAL1: *top++ = *(base + 1); break;
    case PUSHLOCAL2: *top++ = *(base + 2); break;
@@ -185,12 +199,25 @@ int lua_execute (Byte *pc)
    case PUSHLOCAL8: *top++ = *(base + 8); break;
    case PUSHLOCAL9: *top++ = *(base + 9); break;
    
-   case PUSHLOCAL: *top++ = *(base + (*pc++)); break;
-   
-   case PUSHGLOBAL: 
-    *top++ = s_object(*((Word *)(pc))); pc += sizeof(Word);
-   break;
-   
+    // Local >= 10
+    case PUSHLOCAL:
+        *top++ = *(base + (*pc++));
+        break;
+
+
+    case PUSHGLOBAL: 
+        *top++ = s_object(*((Word *)(pc))); 
+        pc += sizeof(Word);
+        break;
+    // #test
+    case PUSHGLOBAL2: 
+    {
+        Word index = *((Word *)pc);   // read index from bytecode
+        pc += sizeof(Word);
+        *top++ = s_object(index);     // push symbol table entry back
+        break;
+    }
+
    case PUSHINDEXED:
     --top;
     if (tag(top-1) != T_ARRAY)
@@ -205,10 +232,16 @@ int lua_execute (Byte *pc)
     }
    break;
    
-   case PUSHMARK: tag(top++) = T_MARK; break;
-   
-   case PUSHOBJECT: *top = *(top-3); top++; break;
-   
+   case PUSHMARK: 
+       tag(top++) = T_MARK; 
+       break;
+
+   case PUSHOBJECT: 
+       *top = *(top-3); 
+       top++; 
+       break;
+
+
    case STORELOCAL0: *(base + 0) = *(--top); break;
    case STORELOCAL1: *(base + 1) = *(--top); break;
    case STORELOCAL2: *(base + 2) = *(--top); break;
@@ -222,9 +255,20 @@ int lua_execute (Byte *pc)
     
    case STORELOCAL: *(base + (*pc++)) = *(--top); break;
    
-   case STOREGLOBAL:
-    s_object(*((Word *)(pc))) = *(--top); pc += sizeof(Word);
-   break;
+
+    case STOREGLOBAL:
+        s_object(*((Word *)(pc))) = *(--top); 
+        pc += sizeof(Word);
+       break;
+
+    // #test
+    case STOREGLOBAL2: 
+    {
+        Word index = *((Word *)pc);   // read index from bytecode
+        pc += sizeof(Word);           // advance program counter
+        s_object(index) = *--top;     // store stack top into symbol table
+        break;
+    }
 
    case STOREINDEXED0:
     if (tag(top-3) != T_ARRAY)
@@ -706,7 +750,7 @@ Object *lua_getfield (Object *object, char *field)
 
 // Given an object handle and an index, return its indexed object.
 // On error, return NULL.
-Object *lua_getindexed (Object *object, float index)
+Object *lua_getindexed (Object *object, double index)
 {
     if (tag(object) != T_ARRAY){
         return NULL;
@@ -872,7 +916,7 @@ int lua_storefield (lua_Object object, char *field)
 /*
 ** Store top of the stack at an array index. Return 1 on error, 0 on success.
 */
-int lua_storeindexed (lua_Object object, float index)
+int lua_storeindexed (lua_Object object, double index)
 {
  if (tag(object) != T_ARRAY)
   return 1;

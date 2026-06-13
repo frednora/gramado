@@ -32,6 +32,7 @@ typedef enum
  PUSHLOCAL5, PUSHLOCAL6, PUSHLOCAL7, PUSHLOCAL8, PUSHLOCAL9,
  PUSHLOCAL,
  PUSHGLOBAL,
+ PUSHGLOBAL2,
  PUSHINDEXED,
  PUSHMARK,
  PUSHOBJECT,
@@ -39,6 +40,7 @@ typedef enum
  STORELOCAL5, STORELOCAL6, STORELOCAL7, STORELOCAL8, STORELOCAL9,
  STORELOCAL,
  STOREGLOBAL,
+ STOREGLOBAL2,
  STOREINDEXED0,
  STOREINDEXED,
  STOREFIELD,
@@ -69,8 +71,7 @@ typedef enum
  RESET
 } OpCode;
 
-typedef enum
-{
+typedef enum {
  T_MARK,
  T_NIL,
  T_NUMBER,
@@ -89,19 +90,26 @@ typedef void (*Unput) (int);
 
 typedef union
 {
-    Cfunction f;  // Virtual function
-    real n;
-    char *s;
-    Byte *b;
-    struct Hash *a;
-    void *u;
+    Cfunction f;     // 8 bytes
+    real n;          // 8 bytes
+    char *s;         // 8 bytes
+    Byte *b;         // 8 bytes
+    struct Hash *a;  // 8 bytes
+    void *u;         // 8 bytes 
 } Value;
 
+
+// On 64-bit, the compiler adds 4 bytes of padding → sizeof(Object) = 16 bytes.
+// sizeof(Object) = 16
+// sizeof(Type)   = 4
+// sizeof(Value)  = 8
+// This means the compiler is inserting 4 bytes of padding after Type.
 typedef struct Object
 {
-    Type tag;
+    Type tag;     // 4 bytes
     Value value;  // union containing pointers (8 bytes on 64-bit)
 } Object;
+// Still 16 bytes, because the compiler pads the struct to 8‑byte boundaries.
 
 typedef struct
 {

@@ -50,7 +50,7 @@ char 	      *lua_copystring 		(lua_Object object);
 lua_CFunction  lua_getcfunction 	(lua_Object object);
 void          *lua_getuserdata  	(lua_Object object);
 lua_Object     lua_getfield        	(lua_Object object, char *field);
-lua_Object     lua_getindexed      	(lua_Object object, float index);
+lua_Object     lua_getindexed      	(lua_Object object, double index);
 lua_Object     lua_getglobal 		(char *name);
 
 //
@@ -76,7 +76,7 @@ int lua_pushobject(lua_Object object);
 
 int lua_storeglobal(char *name);
 int lua_storefield(lua_Object object, char *field);
-int lua_storeindexed(lua_Object object, float index);
+int lua_storeindexed(lua_Object object, double index);
 
 //
 // is_ ?

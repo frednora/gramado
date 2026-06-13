@@ -15,12 +15,16 @@
 
 
 #ifndef ALIGNMENT
+// This is 8 on 64-bit
 #define ALIGNMENT	(sizeof(void *))
+// Safe value for 64-bit + double
+//#define ALIGNMENT  8
 #endif
 
 #ifndef MAXCODE
 #define MAXCODE 1024
 #endif
+
 static long   buffer[MAXCODE];
 static Byte  *code = (Byte *)buffer;
 static long   mainbuffer[MAXCODE];
@@ -38,12 +42,15 @@ static int     ntemp;		     /* number of temporary var into stack */
 static int     err;		     /* flag to indicate error */
 
 /* Internal functions */
-#define align(n)  align_n(sizeof(n))
+//#define align(n)  align_n(sizeof(n))
+#define align(t)  align_n(sizeof(t))
 
 
 //
 // == Prototypes ===============================
 //
+
+static void align_n(unsigned size);
 
 
 static int yyparse(void);
@@ -75,15 +82,15 @@ static void code_word (Word n)
  pc += sizeof(Word);
 }
 
-static void code_float(float n)
+static void code_float(double n)
 {
-    if (pc-basepc > MAXCODE-sizeof(float))
+    if (pc-basepc > MAXCODE-sizeof(double))
     {
         lua_error("code buffer overflow");
         err = 1;
     }
-    *((float *)pc) = n;
-    pc += sizeof(float);
+    *((double *)pc) = n;
+    pc += sizeof(double);
 }
 
 static void incr_ntemp (void)
@@ -119,37 +126,57 @@ static void incr_nvarbuffer (void)
  }
 }
 
+/*
+static void align_n(unsigned size)
+{
+    if (size > ALIGNMENT)
+	    size = ALIGNMENT;
+
+	// +1 to include BYTECODE
+    while ( ((pc+1-code)%size) != 0 )
+        code_byte (NOP);
+}
+*/
 static void align_n (unsigned size)
 {
- if (size > ALIGNMENT) size = ALIGNMENT;
- while (((pc+1-code)%size) != 0)	/* +1 to include BYTECODE */
-  code_byte (NOP);
+    if (size > ALIGNMENT) 
+        size = ALIGNMENT;
+
+    /* Portable alignment for 64-bit */
+    while (((unsigned long)(pc - code) % size) != 0)
+        code_byte (NOP);
 }
 
-static void code_number (float f)
-{ int i = f;
-  if (f == i)  /* f has an integer value */
-  {
-   if (i <= 2) code_byte(PUSH0 + i);
-   else if (i <= 255)
-   {
-    code_byte(PUSHBYTE);
-    code_byte(i);
-   }
-   else
-   {
-    align(Word);
-    code_byte(PUSHWORD);
-    code_word(i);
-   }
-  }
-  else
-  {
-   align(float);
-   code_byte(PUSHFLOAT);
-   code_float(f);
-  }
-  incr_ntemp();
+static void code_number (double f)
+{
+    int i = f;
+
+	//#debug
+	printf ("code_number: %d\n",i);
+
+    if (f == i)  /* f has an integer value */
+    {
+        if (i <= 2) code_byte(PUSH0 + i);
+        else if (i <= 255)
+        {
+            code_byte(PUSHBYTE);
+            code_byte(i);
+        }
+        else
+        {
+            align(Word);
+            code_byte(PUSHWORD);
+            code_word(i);
+        }
+    }
+    else
+    {
+        align(double);
+        code_byte(PUSHFLOAT);
+        code_float(f);
+    }
+
+    incr_ntemp();
 }
 
 
@@ -158,7 +185,7 @@ typedef union
 {
     int   vInt;
     long  vLong;
-    float vFloat;
+    double vDouble;
     Word  vWord;
     Byte *pByte;
 }YYSTYPE;
@@ -215,35 +242,39 @@ static int lua_localname(Word n)
 }
 
 /*
-** Push a variable given a number. If number is positive, push global variable
-** indexed by (number -1). If negative, push local indexed by ABS(number)-1.
+** Push a variable given a number. 
+** If number is positive, push global variable indexed by (number -1). 
+** If negative, push local indexed by ABS(number)-1.
 ** Otherwise, if zero, push indexed variable (record).
 */
+
 static void lua_pushvar (long number)
 { 
- if (number > 0)	/* global var */
- {
-  align(Word);
-  code_byte(PUSHGLOBAL);
-  code_word(number-1);
-  incr_ntemp();
- }
- else if (number < 0)	/* local var */
- {
-  number = (-number) - 1;
-  if (number < 10) code_byte(PUSHLOCAL0 + number);
-  else
-  {
-   code_byte(PUSHLOCAL);
-   code_byte(number);
-  }
-  incr_ntemp();
- }
- else
- {
-  code_byte(PUSHINDEXED);
-  ntemp--;
- }
+
+    // global var 
+    if (number > 0){
+        align(Word);
+        //code_byte(PUSHGLOBAL);
+		code_byte(PUSHGLOBAL2);
+        code_word(number-1);
+        incr_ntemp();
+
+    // local var
+    } else if (number < 0){
+
+        number = (-number) - 1;
+        if (number < 10){
+			code_byte(PUSHLOCAL0 + number); 
+		} else {
+            code_byte(PUSHLOCAL);
+            code_byte(number);
+        }
+        incr_ntemp();
+
+    } else {
+        code_byte(PUSHINDEXED);
+        ntemp--;
+    }
 }
 
 static void lua_codeadjust (int n)
@@ -254,13 +285,15 @@ static void lua_codeadjust (int n)
 
 static void lua_codestore (int i)
 {
- if (varbuffer[i] > 0)		/* global var */
- {
-  align(Word);
-  code_byte(STOREGLOBAL);
-  code_word(varbuffer[i]-1);
- }
- else if (varbuffer[i] < 0)      /* local var */
+
+    if (varbuffer[i] > 0)		/* global var */
+    {
+        align(Word);
+        //code_byte(STOREGLOBAL);
+		code_byte(STOREGLOBAL2);
+        code_word(varbuffer[i]-1);
+    }
+    else if (varbuffer[i] < 0)      /* local var */
  {
   int number = (-varbuffer[i]) - 1;
   if (number < 10) code_byte(STORELOCAL0 + number);
@@ -1467,7 +1500,7 @@ case 51:
 { lua_pushvar (yypvt[-0].vLong); yyval.vInt = 1;} break;
 case 52:
 # line 379 "lua.stx"
-{ code_number(yypvt[-0].vFloat); yyval.vInt = 1; } break;
+{ code_number(yypvt[-0].vDouble); yyval.vInt = 1; } break;
 case 53:
 # line 381 "lua.stx"
 {

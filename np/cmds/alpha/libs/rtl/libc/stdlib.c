@@ -2304,6 +2304,78 @@ int putenv(char *string)
     return (int) rval;
 }
 
+
+double my_strtod(const char *s, char **endptr) 
+{
+    double result = 0.0;
+    int sign = 1;
+    int i = 0;
+
+    // Skip whitespace
+    while (*s == ' ' || *s == '\t' || *s == '\n')
+        s++;
+
+    // Handle sign
+    if (*s == '-') { sign = -1; s++; }
+    else if (*s == '+') { s++; }
+
+    // Integer part
+    while (*s >= '0' && *s <= '9') {
+        result = result * 10.0 + (*s - '0');
+        s++;
+    }
+
+    // Fractional part
+    if (*s == '.') {
+        s++;
+        double frac = 0.0, base = 1.0;
+        while (*s >= '0' && *s <= '9') {
+            frac = frac * 10.0 + (*s - '0');
+            base *= 10.0;
+            s++;
+        }
+        result += frac / base;
+    }
+
+    // Exponent part
+    if (*s == 'e' || *s == 'E') {
+        s++;
+        int expSign = 1;
+        if (*s == '-') { expSign = -1; s++; }
+        else if (*s == '+') { s++; }
+        int exp = 0;
+        while (*s >= '0' && *s <= '9') {
+            exp = exp * 10 + (*s - '0');
+            s++;
+        }
+        double pow10 = 1.0;
+        for (i=0; i < exp; i++) pow10 *= 10.0;
+        if (expSign > 0) result *= pow10;
+        else result /= pow10;
+    }
+
+    if (endptr) 
+        *endptr = (char *)s;
+    return sign * result;
+}
+
+
+int my_strtoi(const char *s) 
+{
+    int result = 0, sign = 1;
+    while (*s == ' ' || *s == '\t' || *s == '\n')
+        s++;
+    if (*s == '-') { sign = -1; s++; }
+    else if (*s == '+') { s++; }
+    while (*s >= '0' && *s <= '9') 
+    {
+        result = result * 10 + (*s - '0');
+        s++;
+    }
+    return sign * result;
+}
+
+
 //
 // End
 //

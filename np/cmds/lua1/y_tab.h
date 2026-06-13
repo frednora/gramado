@@ -8,7 +8,7 @@ typedef union
 {
     int   vInt;
     long  vLong;
-    float vFloat;
+    double vDouble;
     Word  vWord;
     Byte *pByte;
 } YYSTYPE;

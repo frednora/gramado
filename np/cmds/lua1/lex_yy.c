@@ -179,7 +179,11 @@ int yylex(void)
     case 31:
     case 32:
         {
-		    yylval.vFloat = atof(yytext);
+            yylval.vDouble = my_strtod(yytext, NULL);
+            //printf("[LEXER] NUMBER token: %s → %f\n", yytext, yylval.vDouble);
+			//yylval.vDouble = 42.0f;
+		    //yylval.vDouble = atof(yytext);
+			//yylval.vDouble = atod(yytext);
 		    return NUMBER;
 		}
         break;
