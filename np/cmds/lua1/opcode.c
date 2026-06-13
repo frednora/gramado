@@ -992,13 +992,16 @@ void lua_print(void)
     int i=1;
     void *obj;
 
+    // #todo
+    // We need to work on the switches in the printf function
+
     while ((obj=lua_getparam (i++)) != NULL)
     {
-        if      (lua_isnumber(obj))    printf("%g\n",lua_getnumber (obj));
+        if      (lua_isnumber(obj))    printf("%d\n",lua_getnumber (obj));
         else if (lua_isstring(obj))    printf("%s\n",lua_getstring (obj));
-        else if (lua_iscfunction(obj)) printf("cfunction: %p\n",lua_getcfunction (obj));
-        else if (lua_isuserdata(obj))  printf("userdata: %p\n",lua_getuserdata (obj));
-        else if (lua_istable(obj))     printf("table: %p\n",obj);
+        else if (lua_iscfunction(obj)) printf("cfunction: %x\n",lua_getcfunction (obj));
+        else if (lua_isuserdata(obj))  printf("userdata: %s\n",lua_getuserdata (obj));
+        else if (lua_istable(obj))     printf("table: %x\n",obj);
         else if (lua_isnil(obj))       printf("nil\n");
         else { 
             printf("invalid value to print\n"); 
