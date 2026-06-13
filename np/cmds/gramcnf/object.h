@@ -73,7 +73,7 @@ struct object_d
     size_t length;
 
     // Source position
-    int line;     // from lexer_currentline
+    int line;     // from LexerInfo.current_line
     int column;   // optional, for more precise errors
 
     keywords_t   keyword;

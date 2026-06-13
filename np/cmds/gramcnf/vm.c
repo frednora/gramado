@@ -3,6 +3,9 @@
 #include "gramcnf.h"
 
 
+struct vm_info_d  VMInfo;
+
+
 int vm_loop(void)
 {
     // 1) Get an object into the stack of objects

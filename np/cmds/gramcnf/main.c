@@ -147,10 +147,10 @@ static void debugShowStat(void)
 // lexer
     printf("==========================================\n");
     printf("Lexer info:\n");
-    printf("number of lines: {%d}\n",lexer_number_of_lines);
-    printf("first line:      {%d}\n",lexer_firstline);
-    printf("last line:       {%d}\n",lexer_lastline);
-    printf("token count:     {%d}\n",lexer_token_count);
+    printf("number of lines: {%d}\n", LexerInfo.lexer_number_of_lines );
+    printf("first line:      {%d}\n", LexerInfo.lexer_firstline );
+    printf("last line:       {%d}\n", LexerInfo.lexer_lastline );
+    printf("token count:     {%d}\n", LexerInfo.lexer_token_count );
 
 // -------------------------
 // parser
@@ -349,12 +349,13 @@ int main(int argc, char *argv[])
 // generate by the compiler.
     if (fDumpOutput == TRUE){
         printf ("\n");
-        printf ("-----------------------\n");    
+        printf ("--------------------\n");    
         printf ("OUTPUT FILE:\n");
         printf ("%s\n", outfile);
         printf ("\n");
-        printf ("-----------------------\n");
-        printf ("number of lines: %d \n", lexer_currentline );
+        printf ("--------------------\n");
+        printf ("number of lines: %d\n", 
+            LexerInfo.current_line );
     }
 
 // Show stats

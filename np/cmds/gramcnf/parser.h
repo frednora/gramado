@@ -359,6 +359,13 @@ static enum rid rid[] = {
 };
 */
 
+
+struct parser_info_d 
+{
+    int dummy;
+};
+extern struct parser_info_d  ParserInfo;
+
 //
 // -- Prototypes --------
 //

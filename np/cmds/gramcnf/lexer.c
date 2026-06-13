@@ -17,20 +17,9 @@ int current_string=0;
 int current_separator=0; 
 int current_special=0;
 
-//
-// Line support
-//
-
-int lexer_currentline=0;  //lineno=0; // Current line number.
-int lexer_firstline=0;
-int lexer_lastline=0;
-int lexer_number_of_lines=0;  // Total number of lines.
-
-// Expressions.
-int lexer_expression=0;  //lexer_code=0;
 
 // Token support
-int lexer_token_count=0;
+//int lexer_token_count=0;
 int number_of_tokens=0;  // Total number of tokens.
 int current_token=0;  // The class of the curent token.
 
@@ -78,6 +67,12 @@ int brace_count=0;
 int eofno=0;
 
 //
+// Lexer information
+//
+
+struct lexer_info_d  LexerInfo;
+
+//
 // -- Prototypes --------
 //
 
@@ -100,7 +95,7 @@ int check_newline ()
     while (1)
     {
 	   //Entramos nessa função porque encontramos um '\n'.		
-        lexer_currentline++;
+        LexerInfo.current_line++;
 		//printf(" [LF1] ");
 		
 		//pega mais um depois do '\n'
@@ -202,8 +197,8 @@ begin:
 
             // ## new lines ##
             case '\n':
-                lexer_currentline++;
-                //próximo.
+                LexerInfo.current_line++;
+                //próximo
                 c = getc(finput);
                 break;
 
@@ -277,10 +272,10 @@ begin:
                             }
 
 						// se vamos pular mudar de linha dentro do comentário.
-                        }else if (c == '\n'){
+                        } else if (c == '\n'){
 
-						    //precisamos contar.
-                            lexer_currentline++;
+						    // precisamos contar
+                            LexerInfo.current_line++;
 							//printf(" [LF2] ");
                             c = getc (finput);
 							  
@@ -291,7 +286,7 @@ begin:
 
                             eofno++;
                             printf ("__skip_white_space: Unterminated comment in line %d\n", 
-                                lexer_currentline );
+                                LexerInfo.current_line );
                             exit(1);
 
 						//default
@@ -326,7 +321,7 @@ begin:
 					if( c == '\n' ){
 						//não precisa contar, pois sairemos do switch e 
 						//entraremos no switch novamente agora com \n que será contado na hora apropriada.
-						//lexer_currentline++;
+						//LexerInfo.current_line++;
 						//printf(" [LF3] ");
 					    break;
 					}
@@ -345,7 +340,8 @@ begin:
 // Get the next token.
 int yylex(void)
 {
-    register int value=0;
+    register int value=0;  // The return value
+
     register int c=0;
     register char *p;
     register int c1=0;
@@ -362,9 +358,10 @@ again:
         case 0:
             //printf ("yylex: 0 or EOF\n");
             eofno++; 
-            lexer_lastline = lexer_currentline;  // Last line?
-            lexer_number_of_lines = lexer_lastline;
-            return (int) TK_EOF;
+            LexerInfo.lexer_lastline = LexerInfo.current_line;  // Last line?
+            LexerInfo.lexer_number_of_lines = LexerInfo.lexer_lastline;
+            value = (int) TK_EOF;
+            goto done;
             break;
 
         // [A~Z] [a~z] [_]
@@ -414,7 +411,7 @@ again:
                 }
             };
 
-            // Temos um identificador.
+            // Temos um identificador
             we_have_an_identifier:
             
             //#debug
@@ -439,31 +436,41 @@ again:
             {
                 keyword_found  = KWSIGNED;
                 modifier_found = MSIGNED;
-                return (int) TK_MODIFIER;
+                //return (int) TK_MODIFIER;
+                value = (int) TK_MODIFIER;
+                goto done;
             }
             if ( strncmp( real_token_buffer, "unsigned", 8 ) == 0 )
             {
                 keyword_found  = KWUNSIGNED;
                 modifier_found = MUNSIGNED;
-                return (int) TK_MODIFIER;
+                //return (int) TK_MODIFIER;
+                value = (int) TK_MODIFIER;
+                goto done; 
             }
             if ( strncmp( real_token_buffer, "inline", 6 ) == 0 )
             {
                 keyword_found  = KWINLINE;
                 modifier_found = MINLINE;
-                return (int) TK_MODIFIER;
+                //return (int) TK_MODIFIER;
+                value = (int) TK_MODIFIER;
+                goto done;
             }
             if ( strncmp( real_token_buffer, "static", 6 ) == 0 )
             {
                 keyword_found  = KWSTATIC;
                 modifier_found = MSTATIC;
-                return (int) TK_MODIFIER;
+                //return (int) TK_MODIFIER;
+                value = (int) TK_MODIFIER;
+                goto done;
             }
             if ( strncmp( real_token_buffer, "volatile", 8 ) == 0  )
             {
                 keyword_found  = KWVOLATILE;
                 modifier_found = MVOLATILE;
-                return (int) TK_MODIFIER;
+                //return (int) TK_MODIFIER;
+                value = (int) TK_MODIFIER;
+                goto done;
             }
 
             // types
@@ -472,61 +479,81 @@ again:
             {
                 keyword_found = KWVOID;
                 type_found    = TVOID;
-                return (int) TK_TYPE;
+                //return (int) TK_TYPE;
+                value = (int) TK_TYPE;
+                goto done;
             }
             if ( strncmp( real_token_buffer, "char", 4 ) == 0 )
             {
                 keyword_found = KWCHAR;
                 type_found    = TCHAR;
-                return (int) TK_TYPE;
+                //return (int) TK_TYPE;
+                value = (int) TK_TYPE;
+                goto done;
             }
             if ( strncmp( real_token_buffer, "short", 5 ) == 0 )
             {
                 keyword_found = KWSHORT;
                 type_found    = TSHORT;
-                return (int) TK_TYPE;
+                //return (int) TK_TYPE;
+                value = (int) TK_TYPE;
+                goto done;
             }
             if ( strncmp( real_token_buffer, "int", 3 ) == 0 )
             {
                 keyword_found = KWINT;
                 type_found    = TINT;
-                return (int) TK_TYPE;
+                //return (int) TK_TYPE;
+                value = (int) TK_TYPE;
+                goto done;
             }
             if ( strncmp( real_token_buffer, "long", 4 ) == 0 )
             {
                 keyword_found = KWLONG;
                 type_found    = TLONG;
-                return (int) TK_TYPE;
+                //return (int) TK_TYPE;
+                value = (int) TK_TYPE;
+                goto done;
             }
             if ( strncmp( real_token_buffer, "box", 3 ) == 0 )
             {
                 keyword_found = KWBOX;
                 type_found    = TBOX;
-                return (int) TK_TYPE;
+                //return (int) TK_TYPE;
+                value = (int) TK_TYPE;
+                goto done;
             }
             if ( strncmp( real_token_buffer, "meta", 4 ) == 0 )
             {
                 keyword_found = KWMETA;
                 type_found    = TMETA;
-                return (int) TK_TYPE;
+                //return (int) TK_TYPE;
+                value = (int) TK_TYPE;
+                goto done;
             }
             if ( strncmp( real_token_buffer, "def", 3 ) == 0 )
             {
                 keyword_found = KWDEF;
                 type_found    = TDEF;
-                return (int) TK_TYPE;
+                //return (int) TK_TYPE;
+                value = (int) TK_TYPE;
+                goto done;
             }
             if ( strncmp( real_token_buffer, "var", 3 ) == 0  )
             {
                 keyword_found = KWVAR;
                 type_found    = TVAR;
-                return (int) TK_TYPE;
+                //return (int) TK_TYPE;
+                value = (int) TK_TYPE;
+                goto done;
             }
             if ( strncmp( real_token_buffer, "let", 3 ) == 0  )
             {
                 keyword_found = KWLET;
                 type_found    = TLET;
-                return (int) TK_TYPE;
+                //return (int) TK_TYPE;
+                value = (int) TK_TYPE;
+                goto done;
             }
 
             // keywords
@@ -534,102 +561,141 @@ again:
             if ( strncmp( real_token_buffer, "name", 4 ) == 0 )
             {
                 keyword_found = KWNAME;
-                return (int) TK_KEYWORD;
+                //return (int) TK_KEYWORD;
+                value = (int) TK_KEYWORD;
+                goto done;
             }
             if ( strncmp( real_token_buffer, "content", 7 ) == 0 )
             {
                 keyword_found = KWCONTENT;
-                return (int) TK_KEYWORD;
+                //return (int) TK_KEYWORD;
+                value = (int) TK_KEYWORD;
+                goto done;
             }
             if ( strncmp( real_token_buffer, "goto", 4 ) == 0 )
             {
                 keyword_found = KWGOTO;
-                return (int) TK_KEYWORD;
+                //return (int) TK_KEYWORD;
+                value = (int) TK_KEYWORD;
+                goto done;
             }
             if ( strncmp( real_token_buffer, "return", 6 ) == 0 )
             {
                 keyword_found = KWRETURN;
-                return (int) TK_KEYWORD;
+                //return (int) TK_KEYWORD;
+                value = (int) TK_KEYWORD;
+                goto done;
             }
             if ( strncmp( real_token_buffer, "exit", 4 ) == 0 )
             {
                 keyword_found = KWEXIT;
-                return (int) TK_KEYWORD;
+                //return (int) TK_KEYWORD;
+                value = (int) TK_KEYWORD;
+                goto done;
             }
             if ( strncmp( real_token_buffer, "switch", 6 ) == 0 )
             {
                 keyword_found = KWSWITCH;
-                return (int) TK_KEYWORD;
+                //return (int) TK_KEYWORD;
+                value = (int) TK_KEYWORD;
+                goto done;
             }
             if ( strncmp( real_token_buffer, "case", 4 ) == 0 )
             {
                 keyword_found = KWCASE;
-                return (int) TK_KEYWORD;
+                //return (int) TK_KEYWORD;
+                value = (int) TK_KEYWORD;
+                goto done;
             }
             if ( strncmp( real_token_buffer, "break", 5 ) == 0 )
             {
                 keyword_found = KWBREAK;
-                return (int) TK_KEYWORD;
+                //return (int) TK_KEYWORD;
+                value = (int) TK_KEYWORD;
+                goto done;
             }
             if ( strncmp( real_token_buffer, "default", 7 ) == 0 )
             {
                 keyword_found = KWDEFAULT;
-                return (int) TK_KEYWORD;
+                //return (int) TK_KEYWORD;
+                value = (int) TK_KEYWORD;
+                goto done;
             }
             if ( strncmp( real_token_buffer, "for", 3 ) == 0 )
             {
                 keyword_found = KWFOR;
-                return (int) TK_KEYWORD;
+                //return (int) TK_KEYWORD;
+                value = (int) TK_KEYWORD;
+                goto done;
             }
             if ( strncmp( real_token_buffer, "continue", 8 ) == 0 )
             {
                 keyword_found = KWCONTINUE;
-                return (int) TK_KEYWORD;
+                //return (int) TK_KEYWORD;
+                value = (int) TK_KEYWORD;
+                goto done;
             }
             if ( strncmp( real_token_buffer, "do", 2 ) == 0 )
             {
                 keyword_found = KWDO;
-                return (int) TK_KEYWORD;
+                //return (int) TK_KEYWORD;
+                value = (int) TK_KEYWORD;
+                goto done;
             }
             if ( strncmp( real_token_buffer, "while", 5 ) == 0 )
             {
                 keyword_found = KWWHILE;
-                return (int) TK_KEYWORD;
+                //return (int) TK_KEYWORD;
+                value = (int) TK_KEYWORD;
+                goto done;
             }
             if ( strncmp( real_token_buffer, "if", 2 ) == 0 )
             {
                 keyword_found = KWIF;
-                return (int) TK_KEYWORD;
+                //return (int) TK_KEYWORD;
+                value = (int) TK_KEYWORD;
+                goto done;
             }
             if ( strncmp( real_token_buffer, "else", 4 ) == 0 )
             {
                 keyword_found = KWELSE;
-                return (int) TK_KEYWORD;
+                //return (int) TK_KEYWORD;
+                value = (int) TK_KEYWORD;
+                goto done;
             }
             if ( strncmp( real_token_buffer, "union", 5 ) == 0 )
             {
                 keyword_found = KWUNION;
-                return (int) TK_KEYWORD;
+                //return (int) TK_KEYWORD;
+                value = (int) TK_KEYWORD;
+                goto done;
             }
             if ( strncmp( real_token_buffer, "struct", 6 ) == 0 )
             {
                 keyword_found = KWSTRUCT;
-                return (int) TK_KEYWORD;
+                //return (int) TK_KEYWORD;
+                value = (int) TK_KEYWORD;
+                goto done;
             }
             if ( strncmp( real_token_buffer, "enum", 4 ) == 0 )
             {
                 keyword_found = KWENUM;
-                return (int) TK_KEYWORD;
+                //return (int) TK_KEYWORD;
+                value = (int) TK_KEYWORD;
+                goto done;
             }
             if ( strncmp( real_token_buffer, "sizeof", 6 ) == 0 )
             {
                 keyword_found = KWSIZEOF;
-                return (int) TK_KEYWORD;
+                // return (int) TK_KEYWORD;
+                value = (int) TK_KEYWORD;
+                goto done;
             }
 
             //...
 
-            return (int) value;
+            //return (int) value;
+            goto done;
             break;
 
         case '0': case '1': case '2': case '3':
@@ -676,13 +742,14 @@ again:
                     };
                 }
 
-                printf ("yylex: FAIL expected x in constant in line %", 
-                    lexer_currentline );
+                // #bugbug
+                printf ("yylex: FAIL expected x in constant in line %d", 
+                    LexerInfo.current_line );
                 exit (1);
 
-            }else{
+            } else {
 
-                //base = 10.
+                //base=10
 
                 *p++ = c; 
 
@@ -690,7 +757,7 @@ again:
                 {
                     c = getc(finput);
 
-                    // se não é digito.
+                    // se não é digito
                     if ( isdigit( c ) == 0 )
                     {
 						//fim
@@ -701,7 +768,7 @@ again:
 						constant_base_found = CONSTANT_BASE_DEC;
                         goto constant_done;
                     }
-                    // coloca o digito.
+                    // coloca o digito
                     *p++ = c;
                 };
             };
@@ -728,7 +795,7 @@ again:
 	        
 			    //}else if (c == '\n')
 			    //      {
-		        //          lexer_currentline++;
+		        //          LexerInfo.current_line++;
 	            //      }
 
 	            //if (p == token_buffer + maxtoken)
@@ -785,22 +852,22 @@ again:
             switch (c)
             {
                 // '+-*/'
-                case '+':  lexer_expression = PLUS_EXPR;       break;
-                case '-':  lexer_expression = MINUS_EXPR;      break;
-                case '*':  lexer_expression = MULT_EXPR;       break;
-                case '/':  lexer_expression = TRUNC_DIV_EXPR;  break;
+                case '+':  LexerInfo.lexer_expression = PLUS_EXPR;       break;
+                case '-':  LexerInfo.lexer_expression = MINUS_EXPR;      break;
+                case '*':  LexerInfo.lexer_expression = MULT_EXPR;       break;
+                case '/':  LexerInfo.lexer_expression = TRUNC_DIV_EXPR;  break;
 
-                case '&':  lexer_expression = BIT_AND_EXPR;     break;
-                case '|':  lexer_expression = BIT_IOR_EXPR;     break;
-                case '%':  lexer_expression = TRUNC_MOD_EXPR;   break;
-                case '^':  lexer_expression = BIT_XOR_EXPR;     break;
+                case '&':  LexerInfo.lexer_expression = BIT_AND_EXPR;     break;
+                case '|':  LexerInfo.lexer_expression = BIT_IOR_EXPR;     break;
+                case '%':  LexerInfo.lexer_expression = TRUNC_MOD_EXPR;   break;
+                case '^':  LexerInfo.lexer_expression = BIT_XOR_EXPR;     break;
 
                 // ?
-                case TK_LSHIFT:  lexer_expression = LSHIFT_EXPR;  break;
-                case TK_RSHIFT:  lexer_expression = RSHIFT_EXPR;  break;
+                case TK_LSHIFT:  LexerInfo.lexer_expression = LSHIFT_EXPR;  break;
+                case TK_RSHIFT:  LexerInfo.lexer_expression = RSHIFT_EXPR;  break;
 
-                case '<':  lexer_expression = LT_EXPR;  break;
-                case '>':  lexer_expression = GT_EXPR;  break;
+                case '<':  LexerInfo.lexer_expression = LT_EXPR;  break;
+                case '>':  LexerInfo.lexer_expression = GT_EXPR;  break;
             }
 
             c1 = getc (finput);
@@ -810,20 +877,23 @@ again:
                 switch (c)
                 {
                     case '<':
+                        LexerInfo.lexer_expression = LE_EXPR; 
                         value = TK_ARITHCOMPARE;  //?
-                        lexer_expression = LE_EXPR; 
                         goto done;
+
                     case '>':
+                        LexerInfo.lexer_expression = GE_EXPR; 
                         value = TK_ARITHCOMPARE;  //?
-                        lexer_expression = GE_EXPR; 
                         goto done;
+
                     case '!':
+                        LexerInfo.lexer_expression = NE_EXPR; 
                         value = TK_EQCOMPARE;  //?
-                        lexer_expression = NE_EXPR; 
                         goto done;
+
                     case '=':
+                        LexerInfo.lexer_expression = EQ_EXPR; 
                         value = TK_EQCOMPARE;  //?
-                        lexer_expression = EQ_EXPR; 
                         goto done;
                 };
 
@@ -857,16 +927,18 @@ again:
                 goto done;
         };
 
-        // Return the chat itself.
+        // Return the char itself
         default:
             value = (int) c;
 
-    }; //switch
+    };  // switch end
 
 done:
-// Return the token.
+    // Increment counter here, once per token
+    LexerInfo.lexer_token_count++;
     return (int) value;
 }
+
 
 /*
  * __lexerInit:
@@ -878,16 +950,16 @@ static int __lexerInit(void)
     register int i=0;
 
 // Line support
-// Arquivo de texto começa com a linha 1.
-    lexer_currentline = 1;  // Current line.
-    lexer_firstline=1;
-    lexer_lastline=1;
-    lexer_number_of_lines=1;
+// Arquivo de texto começa com a linha 1
+    LexerInfo.current_line = 1;  // Current line
+    LexerInfo.lexer_firstline=1;
+    LexerInfo.lexer_lastline=1;
+    LexerInfo.lexer_number_of_lines=1;
 
-    lexer_expression = 0;
+    LexerInfo.lexer_expression = 0;
 
     // Token support
-    lexer_token_count=0;
+    LexerInfo.lexer_token_count = 0;
     number_of_tokens=0;  // Total number of tokens.
     current_token=0;  // The class of the curent token.
     maxtoken = TOKEN_BUFFER_MAX;

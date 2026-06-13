@@ -54,20 +54,8 @@ typedef enum {
     EQ_EXPR          // 16
 }lexerexpr_t;  //lexercode_t;
 
-//
-// Line support
-//
 
-extern int lexer_currentline;  //lineno;  // Current line.
-extern int lexer_firstline;
-extern int lexer_lastline;
-extern int lexer_number_of_lines;   // Total numbe rof lines.
-
-// Expressions.
-extern int lexer_expression;  //lexer_code;
-
-// Token support.
-extern int lexer_token_count;
+// Token support
 extern int number_of_tokens;
 extern int current_token;  // The class of the curent token.
 
@@ -114,6 +102,28 @@ extern int parentheses_count;
 extern int brace_start;
 extern int brace_end;
 extern int brace_count;
+
+
+struct lexer_info_d 
+{
+    int lexer_token_count;
+
+//
+// Line support
+//
+
+    int lexer_firstline;  // First line
+    int lexer_lastline;
+    int lexer_number_of_lines;   // Total numbe rof lines
+    int current_line;  // Current line
+
+
+    int lexer_expression;
+
+    // ...
+};
+extern struct lexer_info_d  LexerInfo;
+
 
 //
 // -- Prototypes --------

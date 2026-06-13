@@ -4,6 +4,9 @@
 
 #include "gramcnf.h"
 
+
+struct parser_info_d  ParserInfo;
+
 // -------------------------------------
 // Getting the string from "asm()" and saving here
 // as a structured data.
@@ -133,7 +136,7 @@ static int parse_function(int token)
         id[ID_STACK_OFFSET] = stack_index;
 
 	    //	printf ("parse_function: TK_IDENTIFIER={%s} in line %d\n", 
-	    //	    real_token_buffer, lexer_currentline );
+	    //	    real_token_buffer, LexerInfo.current_line );
     }
 
     while (running)
@@ -152,14 +155,14 @@ static int parse_function(int token)
                         if ( strncmp( (char *) real_token_buffer, "(", 1 ) == 0  )
                         {
                             // printf ("parse_function: TK_SEPARATOR={%s} in line %d\n", 
-	                        //     real_token_buffer, lexer_currentline );
+	                        //     real_token_buffer, LexerInfo.current_line );
                             State=2;
                         }
                         break;
 
                     default:
                         printf("parse_function: State1 Missed '(' separator in line %d\n", 
-                            lexer_currentline );
+                            LexerInfo.current_line );
                         exit(1);
                         break;
                 };
@@ -176,7 +179,7 @@ static int parse_function(int token)
                         if ( strncmp( (char *) real_token_buffer, ")", 1 ) == 0 )
                         {
 	                        // printf ("parse_function: TK_SEPARATOR={%s} in line %d\n", 
-	                        //    real_token_buffer, lexer_currentline ); 
+	                        //    real_token_buffer, LexerInfo.current_line ); 
                             State=3;
                         }
                         break;
@@ -188,7 +191,7 @@ static int parse_function(int token)
 
                     default:
                         printf("parse_function: State2 something wrong in line %d\n", 
-                            lexer_currentline );
+                            LexerInfo.current_line );
                         exit(1);
                         break;
                 };
@@ -206,14 +209,14 @@ static int parse_function(int token)
                         if ( strncmp( (char *) real_token_buffer, ";", 1 ) == 0 )
                         {
 	                        // printf ("parse_function: TK_SEPARATOR={%s} in line %d\n", 
-	                        //     real_token_buffer, lexer_currentline ); 
+	                        //     real_token_buffer, LexerInfo.current_line ); 
                             return (int) TK_SEPARATOR;
                         }
                         break;
 
                     default:
                         printf("parse_function: State3 Expected separator ';' in line %d\n",
-                            lexer_currentline );
+                            LexerInfo.current_line );
                         exit(1);
                         break;
                 };
@@ -250,7 +253,7 @@ static int parse_name(int token)
     }
     if (token == TK_KEYWORD){
         // printf("parse_name: TK_KEYWORD={%s} in line %d\n", 
-        //     real_token_buffer, lexer_currentline );
+        //     real_token_buffer, LexerInfo.current_line );
     }
 
 //
@@ -265,7 +268,7 @@ static int parse_name(int token)
         if ( strncmp( (char *) real_token_buffer, "(", 1 ) == 0  )
         {
             // printf("parse_name: TK_KEYWORD={%s} in line %d\n", 
-            //     real_token_buffer, lexer_currentline ); 
+            //     real_token_buffer, LexerInfo.current_line ); 
             //ok
             inside = 1;
         }
@@ -372,7 +375,7 @@ static int parse_content(int token)
     }
     if (token == TK_KEYWORD){
         // printf("parse_content: TK_KEYWORD={%s} in line %d\n", 
-        //     real_token_buffer, lexer_currentline );
+        //     real_token_buffer, LexerInfo.current_line );
     }
 
 //
@@ -387,7 +390,7 @@ static int parse_content(int token)
         if ( strncmp( (char *) real_token_buffer, "(", 1 ) == 0  )
         {
             // printf("parse_content: TK_KEYWORD={%s} in line %d\n", 
-            //     real_token_buffer, lexer_currentline ); 
+            //     real_token_buffer, LexerInfo.current_line ); 
             //ok
             inside = 1;
         }
@@ -491,7 +494,7 @@ error0:
 // Parse do statement.
 static int parse_do(int token)
 {
-    printf("todo: parse_do in line %d\n", lexer_currentline );
+    printf("todo: parse_do in line %d\n", LexerInfo.current_line );
     exit(1);
     return -1;
 }
@@ -499,7 +502,7 @@ static int parse_do(int token)
 // Parse for statement.
 static int parse_for(int token)
 {
-    printf ("todo: parse_for in line %d\n", lexer_currentline );
+    printf ("todo: parse_for in line %d\n", LexerInfo.current_line );
     exit(1);
     return -1;
 }
@@ -511,7 +514,7 @@ static int parse_if(int token)
     int If_Result = -1;
     unsigned long Exp_Result=0;
 
-    printf("todo: parse_if in line %d\n", lexer_currentline );
+    printf("todo: parse_if in line %d\n", LexerInfo.current_line );
 
 // #todo
 // Conferir se o token do argumento é um if 
@@ -732,7 +735,7 @@ static int parse_return(int token, int *return_value)
 
     // Improved error handling
     //printf ("parse_return: Error: ';' not found after return expression (line %d)\n", 
-    //    lexer_currentline );
+    //    LexerInfo.current_line );
     //exit(1);
 
 //
@@ -764,7 +767,7 @@ static int parse_return(int token, int *return_value)
 #ifdef PARSER_VERBOSE
 						//ok;
 						printf ("parse_return: State1 TK_CONSTANT={%s} line %d\n", 
-						    real_token_buffer, lexer_currentline );
+						    real_token_buffer, LexerInfo.current_line );
 #endif
 
 					    constant[CONSTANT_TOKEN] = TK_CONSTANT;
@@ -819,12 +822,12 @@ static int parse_return(int token, int *return_value)
 							
 #ifdef PARSER_RETURN_VERBOSE							
 							printf("parse_return: separator ';' in line %d\n", 
-							    lexer_currentline );
+							    LexerInfo.current_line );
 #endif							
 							
 						    if (open == 1)
                             {
-								printf("parse_return: State1 wrong separator ';' in line %d\n", lexer_currentline);
+								printf("parse_return: State1 wrong separator ';' in line %d\n", LexerInfo.current_line);
 								exit(1);
 							}
 							
@@ -882,7 +885,7 @@ static int parse_return(int token, int *return_value)
 #ifdef PARSER_RETURN_VERBOSE
 			                //deu certo.
 			                printf ("parse_return: State2 do_separator TK_SEPARATOR={%s} line %d \n", 
-							    real_token_buffer, lexer_currentline );
+							    real_token_buffer, LexerInfo.current_line );
 #endif		                    
 							//Se encontramos o separador que finaliza o statement
 							//então podemos retornar.
@@ -919,7 +922,7 @@ do_constant:
 		
 #ifdef PARSER_RETURN_VERBOSE		
 	    printf ("parse_return: do_constant TK_CONSTANT={%s} line %d\n", 
-		    real_token_buffer, lexer_currentline );	
+		    real_token_buffer, LexerInfo.current_line );	
 #endif
 		constant[CONSTANT_TOKEN] = TK_CONSTANT;
 		constant[CONSTANT_TYPE] = constant_type_found;
@@ -927,7 +930,7 @@ do_constant:
 	
 	} else {
 			//falhou.
-			printf("parse_return: do_constant Expacted constant on line %d", lexer_currentline);
+			printf("parse_return: do_constant Expacted constant on line %d", LexerInfo.current_line);
 			exit(1);
 			//while(1){}		
 	};
@@ -948,7 +951,7 @@ do_separator:
 #ifdef PARSER_RETURN_VERBOSE
 			//deu certo.
 			printf("parse_return: do_separator TK_SEPARATOR={%s} line %d \n", 
-			    real_token_buffer, lexer_currentline );
+			    real_token_buffer, LexerInfo.current_line );
 #endif		  
 		  
 			goto done;
@@ -961,7 +964,7 @@ do_separator:
 		
 	}else{
 			//falhou.
-			printf("parse_return: do_separator Expected ';' on line %d",lexer_currentline);
+			printf("parse_return: do_separator Expected ';' on line %d",LexerInfo.current_line);
 			exit(1);
 			//while(1){}		
 	};
@@ -982,7 +985,7 @@ static int parse_exit(int token)
         exit(1);
     }
 
-    printf("parse_exit: exit statement at line %d\n", lexer_currentline);
+    printf("parse_exit: exit statement at line %d\n", LexerInfo.current_line );
 
     // Signal to stop parsing
     //running = 0;
@@ -1007,7 +1010,7 @@ static int parse_exit(int token)
 
     if (NoSemicolon){
         printf("parse_exit: Error: ';' expected after exit (line %d)\n",
-            lexer_currentline);
+            LexerInfo.current_line );
         exit(1);
     }
 
@@ -1024,7 +1027,7 @@ static int parse_break(int token)
         exit(1);
     }
 
-    printf("parse_break: break statement at line %d\n", lexer_currentline);
+    printf("parse_break: break statement at line %d\n", LexerInfo.current_line );
 
     // Signal to stop parsing
     //running = 0;
@@ -1049,7 +1052,7 @@ static int parse_break(int token)
 
     if (NoSemicolon){
         printf("parse_exit: Error: ';' expected after exit (line %d)\n",
-            lexer_currentline);
+            LexerInfo.current_line );
         exit(1);
     }
 
@@ -1107,7 +1110,7 @@ static unsigned long parse_sizeof(int token)
 						case TLONG:  Result = sizeof(long);   break;  //8
                         default:
                             printf("parse_sizeof: State 2 unexpected type found in line %d\n", 
-                                lexer_currentline);
+                                LexerInfo.current_line );
                             break;
                     }
                     State=3;
@@ -1115,7 +1118,7 @@ static unsigned long parse_sizeof(int token)
                 }
 
                 printf("parse_sizeof: #TODO State 2 unexpected element on sizeof in line %d\n", 
-                    lexer_currentline);
+                    LexerInfo.current_line );
                 exit(1);
                 break;
 
@@ -1153,7 +1156,7 @@ static int parse_while(int token)
     int While_Result = -1;
     unsigned long Exp_Result=0;
 
-    printf("todo: parse_while in line %d\n", lexer_currentline );
+    printf("todo: parse_while in line %d\n", LexerInfo.current_line );
 
 // #todo
 // conferir se o token do argumento é um while
@@ -1225,13 +1228,13 @@ static unsigned long parse_expression(int token)
             if ( strncmp( (char *) real_token_buffer, "(", 1 ) == 0  )
             {
                 // printf("parse_expression: TK_SEPARATOR={%s} in line %d\n", 
-                //     real_token_buffer, lexer_currentline ); 
+                //     real_token_buffer, LexerInfo.current_line ); 
                 //State = 2;
             }
             break;
         default:
             // printf ("parse_expression: State 1 Missed '(' separator in line %d \n", 
-            //     lexer_currentline );
+            //     LexerInfo.current_line );
             exit(1);
             break;
     }
@@ -1280,7 +1283,7 @@ static unsigned long parse_expression(int token)
 						{
 #ifdef PARSER_EXPRESSION_VERBOSE
 						    printf("parse_expression: TK_SEPARATOR={%s} in line %d\n", 
-							    real_token_buffer, lexer_currentline ); 
+							    real_token_buffer, LexerInfo.current_line ); 
 #endif							
 							//State = 1;	
 						    break;
@@ -1290,7 +1293,7 @@ static unsigned long parse_expression(int token)
 							
 #ifdef PARSER_EXPRESSION_VERBOSE
 						    printf("parse_expression: TK_SEPARATOR={%s} in line %d\n", 
-							    real_token_buffer, lexer_currentline );
+							    real_token_buffer, LexerInfo.current_line );
 #endif								
 							//State = 1;
                             //provisório
@@ -1304,7 +1307,7 @@ static unsigned long parse_expression(int token)
 						//ok;
 #ifdef PARSER_EXPRESSION_VERBOSE
 						printf ("parse_expression: State1 TK_CONSTANT={%s} line %d\n", 
-						    real_token_buffer, lexer_currentline );
+						    real_token_buffer, LexerInfo.current_line );
 #endif
 
 						switch(eCount)
@@ -1337,7 +1340,7 @@ static unsigned long parse_expression(int token)
 #ifdef PARSER_EXPRESSION_VERBOSE
 						        printf("eCount-case-1:\n");
 								printf ("parse_expression: State1 error unexpected operator element TK_CONSTANT={%s} line %d\n", 
-						            real_token_buffer, lexer_currentline );
+						            real_token_buffer, LexerInfo.current_line );
 #endif                                
 								exit(1); 
 							    break;
@@ -1429,7 +1432,7 @@ static unsigned long parse_expression(int token)
 									State = 1;
 								    goto again;
 								}else{
-									printf("expected separator in line %d", lexer_currentline);
+									printf("expected separator in line %d", LexerInfo.current_line);
 									exit(1);
 								}
 
@@ -1441,7 +1444,7 @@ static unsigned long parse_expression(int token)
 								
 							default:
 						        printf ("parse_expression: State1 error #default TK_CONSTANT={%s} line %d\n", 
-						            real_token_buffer, lexer_currentline );
+						            real_token_buffer, LexerInfo.current_line );
 								exit(1);
 							    break;
 						};
@@ -1449,7 +1452,7 @@ static unsigned long parse_expression(int token)
 						
 					case TK_IDENTIFIER:
 						printf ("parse_expression: State1 #todo TK_IDENTIFIER={%s} line %d\n", 
-						    real_token_buffer, lexer_currentline );
+						    real_token_buffer, LexerInfo.current_line );
 					    //State = 2;
 						exit(1);
 						break;
@@ -1460,7 +1463,7 @@ static unsigned long parse_expression(int token)
 						{
 							
 #ifdef PARSER_EXPRESSION_VERBOSE
-						   printf("parse_expression: State1 sizeof found in line %d\n", lexer_currentline);
+						   printf("parse_expression: State1 sizeof found in line %d\n", LexerInfo.current_line );
 #endif						   
 						    //#bugbug
 							//não sabemos se é a primeira ou a segunda constante.
@@ -1514,7 +1517,7 @@ static unsigned long parse_expression(int token)
 					//#importante
 					//o lexer lida com alguns tokens usados por expressões 
 					//usar esse tokens. 
-					//lexer_expression = o operador encontrado, que pode ser simples ou duplo. 
+					// LexerInfo.lexer_expression = o operador encontrado, que pode ser simples ou duplo. 
 					
                     case '+':
                     case '-':
@@ -1530,8 +1533,8 @@ static unsigned long parse_expression(int token)
                     case '=':
 
 #ifdef PARSER_EXPRESSION_VERBOSE
-					    printf("parse_expression: State 2 simple operator{%s} lexer_expression=%d \n", 
-						    real_token_buffer, lexer_expression );
+					    printf("parse_expression: State 2 simple operator{%s} LexerInfo.lexer_expression=%d \n", 
+						    real_token_buffer, LexerInfo.lexer_expression );
 #endif					    
 						
 						if ( eCount != 1 )
@@ -1542,7 +1545,7 @@ static unsigned long parse_expression(int token)
 						//avançamos para pegarmos constantes.
 						eCount++; 
 						
-						switch (lexer_expression)
+						switch (LexerInfo.lexer_expression)
 						{
                             case PLUS_EXPR:
 							    Op = PLUS_EXPR;
@@ -1587,7 +1590,7 @@ static unsigned long parse_expression(int token)
 							//...
 
 							default:
-                                printf ("parse_expression: State 2 default lexer code %d", lexer_expression );
+                                printf ("parse_expression: State 2 default lexer code %d", LexerInfo.lexer_expression );
 								exit (1); 
 								break;
 							//...
@@ -1599,8 +1602,8 @@ static unsigned long parse_expression(int token)
 					case TK_ARITHCOMPARE:
 					
 #ifdef PARSER_EXPRESSION_VERBOSE	
-					    printf("parse_expression: State 2 TK_ARITHCOMPARE{%s} lexer_expression=%d \n", 
-						    real_token_buffer, lexer_expression );
+					    printf("parse_expression: State 2 TK_ARITHCOMPARE{%s} LexerInfo.lexer_expression=%d \n", 
+						    real_token_buffer, LexerInfo.lexer_expression );
 #endif					    
 						if ( eCount != 1 )
 						{
@@ -1610,13 +1613,13 @@ static unsigned long parse_expression(int token)
 						//avançamos para pegarmos constantes.
 						eCount++; 						
 						
-						switch (lexer_expression)
+						switch (LexerInfo.lexer_expression)
 						{
 							case LE_EXPR:
 							    Op = LE_EXPR;
 
 #ifdef PARSER_EXPRESSION_VERBOSE									
-								printf("parse_expression: LE_EXPR lexer_expression=%d \n", lexer_expression );
+								printf("parse_expression: LE_EXPR LexerInfo.lexer_expression=%d \n", LexerInfo.lexer_expression );
 #endif							    
 								//State = 1;
 								break;
@@ -1624,7 +1627,7 @@ static unsigned long parse_expression(int token)
 							case GE_EXPR:
 							    Op = GE_EXPR;
 #ifdef PARSER_EXPRESSION_VERBOSE									
-								printf("parse_expression: GE_EXPR lexer_expression=%d \n", lexer_expression );
+								printf("parse_expression: GE_EXPR LexerInfo.lexer_expression=%d \n", LexerInfo.lexer_expression );
 #endif							    
 								//State = 1;
 								break;
@@ -1633,8 +1636,8 @@ static unsigned long parse_expression(int token)
 							///...	
 								
 							default:
-							    printf("parse_expression: State 2 error TK_ARITHCOMPARE default lexer_expression=%d in line %d \n", 
-								    lexer_expression, lexer_currentline );
+							    printf("parse_expression: State 2 error TK_ARITHCOMPARE default LexerInfo.lexer_expression=%d in line %d \n", 
+								    LexerInfo.lexer_expression, LexerInfo.current_line );
 							    exit(1); //die();
 								//State = 1;
 								break;
@@ -1645,29 +1648,29 @@ static unsigned long parse_expression(int token)
 				    
 					case TK_EQCOMPARE:
 #ifdef PARSER_EXPRESSION_VERBOSE
-					    printf("parse_expression: State 2 TK_EQCOMPARE{%s} lexer_expression=%d \n", 
-						    real_token_buffer, lexer_expression );
+					    printf("parse_expression: State 2 TK_EQCOMPARE{%s} LexerInfo.lexer_expression=%d \n", 
+						    real_token_buffer, LexerInfo.lexer_expression );
 #endif						
-						switch (lexer_expression)
+						switch (LexerInfo.lexer_expression)
 						{
 							
 							case NE_EXPR:
 #ifdef PARSER_EXPRESSION_VERBOSE
-							    printf("parse_expression: NE_EXPR lexer_expression=%d \n", lexer_expression );
+							    printf("parse_expression: NE_EXPR LexerInfo.lexer_expression=%d \n", LexerInfo.lexer_expression );
 #endif							    
 								State = 1;
 								break;
 								
 							case EQ_EXPR:
 #ifdef PARSER_EXPRESSION_VERBOSE
-							    printf("parse_expression: EQ_EXPR lexer_expression=%d \n", lexer_expression );
+							    printf("parse_expression: EQ_EXPR LexerInfo.lexer_expression=%d \n", LexerInfo.lexer_expression );
 #endif							    
 								State = 1;
 								break;							
 							
 							default:
-							    printf("parse_expression: State 2 error TK_EQCOMPARE default lexer_expression=%d in line %d \n", 
-								    lexer_expression, lexer_currentline );
+							    printf("parse_expression: State 2 error TK_EQCOMPARE default LexerInfo.lexer_expression=%d in line %d \n", 
+								    LexerInfo.lexer_expression, LexerInfo.current_line );
 							    //exit(1); //die();
 								State = 1;
 								exit(1);
@@ -1677,64 +1680,64 @@ static unsigned long parse_expression(int token)
 					   
 					case TK_ASSIGN:
 #ifdef PARSER_EXPRESSION_VERBOSE						
-                        printf("parse_expression: State 2 TK_ASSIGN{%s} lexer_expression=%d \n",  
-						    real_token_buffer, lexer_expression );
+                        printf("parse_expression: State 2 TK_ASSIGN{%s} LexerInfo.lexer_expression=%d \n",  
+						    real_token_buffer, LexerInfo.lexer_expression );
 #endif						
 						State = 1;
 						break;					
 					   
 					case TK_PLUSPLUS:
 #ifdef PARSER_EXPRESSION_VERBOSE						
-					   printf("parse_expression: State 2 TK_PLUSPLUS{%s} lexer_expression=%d \n",  
-					       real_token_buffer, lexer_expression );
+					   printf("parse_expression: State 2 TK_PLUSPLUS{%s} LexerInfo.lexer_expression=%d \n",  
+					       real_token_buffer, LexerInfo.lexer_expression );
 #endif					   
 					   State = 1;
 					   break;
 					   
 					case TK_MINUSMINUS:
 #ifdef PARSER_EXPRESSION_VERBOSE						
-					   printf("parse_expression: State 2 TK_MINUSMINUS{%s} lexer_expression=%d \n", 
-					       real_token_buffer, lexer_expression );
+					   printf("parse_expression: State 2 TK_MINUSMINUS{%s} LexerInfo.lexer_expression=%d \n", 
+					       real_token_buffer, LexerInfo.lexer_expression );
 #endif					   
 					   State = 1;
 					   break;
 
 					case TK_ANDAND:
 #ifdef PARSER_EXPRESSION_VERBOSE						
-					   printf("parse_expression: State 2 TK_ANDAND{%s} lexer_expression=%d \n",  
-					       real_token_buffer, lexer_expression );
+					   printf("parse_expression: State 2 TK_ANDAND{%s} LexerInfo.lexer_expression=%d \n",  
+					       real_token_buffer, LexerInfo.lexer_expression );
 #endif					   
 					   State = 1;
 					   break;
 
 					case TK_OROR:
 #ifdef PARSER_EXPRESSION_VERBOSE						
-					   printf("parse_expression: State 2 TK_OROR{%s} lexer_expression=%d \n",  
-					       real_token_buffer, lexer_expression );
+					   printf("parse_expression: State 2 TK_OROR{%s} LexerInfo.lexer_expression=%d \n",  
+					       real_token_buffer, LexerInfo.lexer_expression );
 #endif					   
 					   State = 1;
 					   break;
 
 					case TK_POINTSAT:
 #ifdef PARSER_EXPRESSION_VERBOSE
-					   printf("parse_expression: State 2 TK_POINTSAT{%s} lexer_expression=%d \n", 
-					       real_token_buffer, lexer_expression );
+					   printf("parse_expression: State 2 TK_POINTSAT{%s} LexerInfo.lexer_expression=%d \n", 
+					       real_token_buffer, LexerInfo.lexer_expression );
 #endif
 					   State = 1;
 					   break;
 					   
 					case TK_LSHIFT:
 #ifdef PARSER_EXPRESSION_VERBOSE						
-					   printf("parse_expression: State 2 TK_LSHIFT{%s} lexer_expression=%d \n", 
-					       real_token_buffer, lexer_expression );
+					   printf("parse_expression: State 2 TK_LSHIFT{%s} LexerInfo.lexer_expression=%d \n", 
+					       real_token_buffer, LexerInfo.lexer_expression );
 #endif
 					   State = 1;
 					   break;
 
 					case TK_RSHIFT:
 #ifdef PARSER_EXPRESSION_VERBOSE						
-					   printf ("parse_expression: State 2 TK_RSHIFT{%s} lexer_expression=%d \n", 
-					       real_token_buffer, lexer_expression );
+					   printf ("parse_expression: State 2 TK_RSHIFT{%s} LexerInfo.lexer_expression=%d \n", 
+					       real_token_buffer, LexerInfo.lexer_expression );
 #endif					   
 					   State = 1;
 					   break;
@@ -1742,7 +1745,7 @@ static unsigned long parse_expression(int token)
 					//...
 					
 					default:
-					    printf("parse_expression: default case in State 2 {%s} lexer_expression=%d \n",real_token_buffer, lexer_expression );
+					    printf("parse_expression: default case in State 2 {%s} LexerInfo.lexer_expression=%d \n",real_token_buffer, LexerInfo.lexer_expression );
 						State = 1;
 						goto again;
 					    break;
@@ -1753,7 +1756,7 @@ static unsigned long parse_expression(int token)
 			
 			//State default
             default:	
-                printf("parse_expression: default State {%s} lexer_expression=%d \n",real_token_buffer, lexer_expression );
+                printf("parse_expression: default State {%s} LexerInfo.lexer_expression=%d \n",real_token_buffer, LexerInfo.lexer_expression );
                 exit(1); //die();				
 		        break;
 	    };
@@ -1876,7 +1879,7 @@ int parser_loop(int dump_output)
                         //continua pois precisamos pegar um tipo.
                         //#bugbug ??mas e se o modificar vir seguido de um simbolo ???
                         //printf("State1: TK_MODIFIER={%s} line %d\n", 
-                        //   real_token_buffer, lexer_currentline );
+                        //   real_token_buffer, LexerInfo.current_line );
                         //#endif
                         State = 1;
                         //goto again;
@@ -1889,12 +1892,12 @@ int parser_loop(int dump_output)
                         id[ID_TYPE] = type_found;
                         if (type_found == TBOX)
                         {
-                            printf ("box: Line %d\n",lexer_currentline);
+                            printf ("box: Line %d\n", LexerInfo.current_line );
                             waiting_identifier_after_type = TRUE;
                         }
                         if (type_found == TMETA)
                         {
-                            printf ("meta: Line %d\n",lexer_currentline);
+                            printf ("meta: Line %d\n", LexerInfo.current_line );
                             waiting_identifier_after_type = TRUE;
                         }
                         // Depois de um type vem um identificador.
@@ -1905,11 +1908,11 @@ int parser_loop(int dump_output)
                     // e se o arquivo começar com um separador, 
                     // então teremos problema.
                     case TK_SEPARATOR:
-                        //printf("State1: TK_SEPARATOR={%s} line %d\n", real_token_buffer, lexer_currentline );
+                        //printf("State1: TK_SEPARATOR={%s} line %d\n", real_token_buffer, LexerInfo.current_line );
                         // ( função
                         if ( strncmp( (char *) real_token_buffer, "(", 1 ) == 0  )
                         {
-                            printf("[PAR] line %d\n", lexer_currentline);
+                            printf("[PAR] line %d\n", LexerInfo.current_line );
                             parentheses_inside++;
                             //#test
                             //peekChar = c;
@@ -1930,7 +1933,7 @@ int parser_loop(int dump_output)
                         // Curly bracket
                         if ( strncmp( (char *) real_token_buffer, "{", 1 ) == 0  )
                         {
-                            //printf ("[BRACE] line %d\n", lexer_currentline); 
+                            //printf ("[BRACE] line %d\n", LexerInfo.current_line ); 
                             braces_inside++;
                             // Isso vai para o 1 onde procura-se por modificadores e tipos,
                             // mas se estivermos com o corpo da função aberto ele avançará para o próximo state.
@@ -1946,7 +1949,7 @@ int parser_loop(int dump_output)
                         {
                             if ( square_brackets_inside > 0)
                             {
-                                printf("box terminate: in line %d\n", lexer_currentline);
+                                printf("box terminate: in line %d\n", LexerInfo.current_line );
                                 square_brackets_inside--;
                                 State = 1;
                                 if (square_brackets_inside == 0)
@@ -1966,7 +1969,7 @@ int parser_loop(int dump_output)
                         {
                             if (parentheses_inside > 0)
                             {
-                                //printf("[/PAR] line %d\n", lexer_currentline);
+                                //printf("[/PAR] line %d\n", LexerInfo.current_line );
                                 parentheses_inside--;
                                 State = 1;
                                 break;
@@ -1980,7 +1983,7 @@ int parser_loop(int dump_output)
                         // Curly bracket
                         if ( strncmp( (char *) real_token_buffer, "}", 1 ) == 0  )
                         {
-                            //printf ("[/BRACE] line %d\n", lexer_currentline);
+                            //printf ("[/BRACE] line %d\n", LexerInfo.current_line);
                             if (braces_inside > 0)
                             {
                                 braces_inside--;
@@ -2041,7 +2044,7 @@ int parser_loop(int dump_output)
                         }
 					    //printf("State1: default error\n");
 						printf ("State1: default. MODIFIER,  TYPE or SEPARATOR expected on line %d \n", 
-						    lexer_currentline);
+						    LexerInfo.current_line );
                         printf (">>>token={%d}\n",token);
                         exit(1);
                         break;
@@ -2066,7 +2069,7 @@ int parser_loop(int dump_output)
                     case TK_IDENTIFIER:
                         
                         printf("State2: TK_IDENTIFIER={%s} line %d\n", 
-                            real_token_buffer, lexer_currentline );    
+                            real_token_buffer, LexerInfo.current_line );    
                         
                         id[ID_TOKEN] = TK_IDENTIFIER;
                         id[ID_STACK_OFFSET] = stack_index;
@@ -2129,7 +2132,7 @@ int parser_loop(int dump_output)
                         // apos box symbol vem [.
                         token = yylex();
 
-                       // printf("test={%s} line %d\n", real_token_buffer, lexer_currentline ); 
+                       // printf("test={%s} line %d\n", real_token_buffer, LexerInfo.current_line ); 
 
                         // : para label 
                         // ( para função 
@@ -2181,12 +2184,12 @@ int parser_loop(int dump_output)
 								if ( parentheses_inside < 1 )
 								{
 									printf("state2: Error trying to close a not opened parentheses in line %d \n", 
-									  lexer_currentline );
+									    LexerInfo.current_line );
 									exit(1);
 								}
 								//fechamos um dos parênteses.
 								parentheses_inside--;
-                                //printf ("[/PAR] line %d\n", lexer_currentline);
+                                //printf ("[/PAR] line %d\n", LexerInfo.current_line );
                                 // É bss porque não foi inicializada.
                                 //strcat( BSS,"\n segment .bss \n");
                                 strcat( BSS,"_");
@@ -2202,9 +2205,9 @@ int parser_loop(int dump_output)
                                 if ( strncmp( (char *) real_token_buffer, "{", 1 ) == 0  )
                                 {
                                     //printf ("State2: separator={%s} line %d\n", 
-                                    //    real_token_buffer, lexer_currentline );  
+                                    //    real_token_buffer, LexerInfo.current_line );  
                                     braces_inside++;
-                                    //printf ("\n[BRACE] line %d\n", lexer_currentline);
+                                    //printf ("\n[BRACE] line %d\n", LexerInfo.current_line);
 									// Vai para o 1, 
 									// onde procura-se por modificadores e tipos,
 									// mas se estivermos com o corpo da 
@@ -2222,7 +2225,7 @@ int parser_loop(int dump_output)
                             {
 //#ifdef PARSER_VERBOSE
 	//					        printf ("State2: SEP={%s} line %d\n", 
-	//							    real_token_buffer, lexer_currentline );
+	//							    real_token_buffer, LexerInfo.current_line );
 //#endif
 
 								//tentando mandar alguma coisa para o arquivo de output 
@@ -2245,7 +2248,7 @@ int parser_loop(int dump_output)
                             {
 //#ifdef PARSER_VERBOSE 
 	//					        printf ("State2: SEP={%s} line %d\n", 
-	//							    real_token_buffer, lexer_currentline );
+	//							    real_token_buffer, LexerInfo.current_line );
 //#endif
 								//tentando mandar alguma coisa para o arquivo de output 
 						        //pra ter o que salvar, pra construir o assembly file;	
@@ -2298,7 +2301,7 @@ int parser_loop(int dump_output)
 					    }
 					    //printf("State2: default Error.\n");
 						printf ("State2: default. expected identifier on line %d.\n", 
-						    lexer_currentline );
+						    LexerInfo.current_line );
                         exit(1);
                         break;
 
@@ -2328,9 +2331,9 @@ int parser_loop(int dump_output)
                         if (keyword_found == KWRETURN)
                         {
                             // #debug
-                            //printf("State3: keyword return found in line %d\n",lexer_currentline);
+                            //printf("State3: keyword return found in line %d\n",LexerInfo.current_line);
                             //printf ("State3: TK_KEYWORD={%s} KWRETURN, line %d \n", 
-                                //real_token_buffer, lexer_currentline );
+                                //real_token_buffer, LexerInfo.current_line );
                             
                             // #test
                             int __result=0; 
@@ -2343,7 +2346,7 @@ int parser_loop(int dump_output)
                             }
                             // #debug
                             //printf("State3: return result={%d} in line %d\n", 
-                               // __result, lexer_currentline );
+                               // __result, LexerInfo.current_line );
 
                             metadata[meta_index].return_value = (unsigned int) __result;
 
@@ -2427,7 +2430,7 @@ int parser_loop(int dump_output)
                         if (keyword_found == KWGOTO)
                         {
                             printf("State3: goto stmt not supported in line %d \n", 
-                               lexer_currentline );
+                                LexerInfo.current_line );
                             //State = ?;
                             break;
                         }
@@ -2437,7 +2440,7 @@ int parser_loop(int dump_output)
                         if (keyword_found == KWIF)
                         {
                             //printf ("State3: TK_KEYWORD={%s} KWIF in line %d \n", 
-                                //real_token_buffer, lexer_currentline );
+                                //real_token_buffer, LexerInfo.current_line );
                                 
                             If_Result = (int) parse_if(TK_KEYWORD);
                          
@@ -2461,7 +2464,7 @@ int parser_loop(int dump_output)
                         if (keyword_found == KWNAME)
                         {
                             //printf ("State3: TK_KEYWORD={%s} KWNAME in line %d \n", 
-                            //    real_token_buffer, lexer_currentline );
+                            //    real_token_buffer, LexerInfo.current_line );
                             parse_name(TK_KEYWORD);
                             //recomeçamos
                             State = 1;
@@ -2473,7 +2476,7 @@ int parser_loop(int dump_output)
                         if (keyword_found == KWCONTENT)
                         {
                             //printf ("State3: TK_KEYWORD={%s} KWCONTENT in line %d \n", 
-                            //    real_token_buffer, lexer_currentline );
+                            //    real_token_buffer, LexerInfo.current_line );
                             parse_content(TK_KEYWORD);
                             //recomeçamos
                             State = 1;
@@ -2505,7 +2508,7 @@ int parser_loop(int dump_output)
 					    }
 						//??em que momento espera-se por uma keyword e não encontra ??
 					    printf("State3: default. keyword expected in line %d\n",
-					        lexer_currentline);
+					        LexerInfo.current_line );
 						State = 1;
 						exit (1);
 						break;
@@ -2526,7 +2529,7 @@ int parser_loop(int dump_output)
                             //ok #todo
                         }else{
                             printf ("State4: [ERROR] Expected ';' in line %d\n", 
-                                lexer_currentline );
+                                LexerInfo.current_line );
                             exit(1);
                         };
                         break;
@@ -2537,7 +2540,7 @@ int parser_loop(int dump_output)
                     // Not a separator.
                     default:
                         printf("State4: [default] Expected ';' separator in line %d\n", 
-                            lexer_currentline );
+                            LexerInfo.current_line );
                         exit(1);
                         break;
                 };
@@ -2550,11 +2553,11 @@ int parser_loop(int dump_output)
 
                 if (parentheses_inside > 0){
                     printf("default: expected ) in line %d\n", 
-                        lexer_currentline );
+                        LexerInfo.current_line );
                 }
                 if (braces_inside > 0){
                     printf("default: expected } in line %d\n", 
-                        lexer_currentline );
+                        LexerInfo.current_line );
                 }
                 if (braces_inside == 0){
                     //
@@ -2587,7 +2590,7 @@ debug_output:
 // Dump input file?
     //printf("\n INPUT: \n");
     //printf("%s\n",stdin->_base);
-    //printf("number of lines: %d \n",lexer_currentline);
+    //printf("number of lines: %d \n", LexerInfo.current_line );
     //...
 
 // --------------------------------
@@ -2609,7 +2612,7 @@ debug_output:
     printf ("%s\n", outfile);
     printf ("\n");
     printf ("--------------------------------\n");
-    printf ("number of lines: %d \n", lexer_currentline );
+    printf ("number of lines: %d \n", LexerInfo.current_line );
 */
 
     // goto __parse_exit;
@@ -2620,7 +2623,7 @@ __parse_exit:
     return 0;
 
 syntax:
-    printf("parser_loop: Systax error in line %d\n", lexer_currentline );
+    printf("parser_loop: Systax error in line %d\n", LexerInfo.current_line );
     exit(1);
 
 hang:
