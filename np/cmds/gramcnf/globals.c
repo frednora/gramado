@@ -17,7 +17,7 @@ int special_count=0;
 int maxtoken=0;      // Current length of token buffer.
 char *token_buffer;  // Pointer to token buffer.
 
-char real_token_buffer[MAXTOKEN];
+char real_token_buffer[TOKEN_BUFFER_MAX];
 
 // ----------------------------------------------
 // ## stack support ##
@@ -25,7 +25,8 @@ char real_token_buffer[MAXTOKEN];
 // Isso será a pilha para os argumentos ou expressões matemáticas.
 // #todo: agora o arquivo tree.c lida com pilha.
 // Não precismos mais disso.
-long stack[1024];
+
+long stack[STACK_COUNT_MAX];
 //xxx() if(((( ))))       ... tem que dar zero no final. 
 int stack_count=0;
 int stack_index=0; //current index.

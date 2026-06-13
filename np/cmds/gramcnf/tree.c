@@ -21,49 +21,21 @@ static int POS_BUFFER[32];
 int buffer_offset = 0;
 //====================================================================
 
-#define DT_INVALID   0
-#define DT_OPERATOR  1000
-#define DT_DIGIT     2000
-// ...
-
-// Node
-// #todo: Change to node_d
-struct node 
-{ 
-
-//  0000 = ignore
-//  1000 = operator
-//  2000 = digits
-//  ...
-    int _datatype;  // Type of data
-    int _data;   // Data
-
-    struct node *left;
-    struct node *right;
-}; 
-
-// Stack
-// #todo: Change to stack_d
-struct stack
-{
-    int top;
-    int items[32];
-};
 
 // ==============================================
 // Prototypes for internal workers.
 
 
 static int my_isdigit(char ch);
-static void exibirEmOrdem (struct node *node);
-static void exibirPreOrdem(struct node *node);
-static void exibirPosOrdemAndInclude (struct node *node);
+static void exibirEmOrdem (struct node_d *node);
+static void exibirPreOrdem(struct node_d *node);
+static void exibirPosOrdemAndInclude (struct node_d *node);
 
-static void inorder(struct node *root);
-static struct node *newNode(int data_type, int data);
-static struct node *insert( struct node* node, int data_type, int data );
-static void push( struct stack *s, int x );
-static int pop (struct stack *s);
+static void inorder(struct node_d *root);
+static struct node_d *newNode(int data_type, int data);
+static struct node_d *insert( struct node_d* node, int data_type, int data );
+static void push( struct stack_d *s, int x );
+static int pop (struct stack_d *s);
 static int oper(char c, int opnd1, int opnd2);
 static int __eval(void);
 static int bst_initialize(void);
@@ -83,12 +55,12 @@ static int my_isdigit(char ch)
 // A utility function to create a new BST node.
 // IN: The value we're gonna store into the 'key'.
 // OUT: The pointer for the structure of a node.
-static struct node *newNode(int data_type, int data)
+static struct node_d *newNode(int data_type, int data)
 {
-    struct node *tmp;
+    struct node_d *tmp;
 
 // #malloc
-    tmp = (struct node *) malloc( sizeof(struct node) );
+    tmp = (struct node_d *) malloc( sizeof(struct node_d) );
     if ((void*) tmp == NULL){
         return NULL;
     }
@@ -97,12 +69,12 @@ static struct node *newNode(int data_type, int data)
     tmp->left = NULL;
     tmp->right = NULL;
 
-    return (struct node *) tmp;
+    return (struct node_d *) tmp;
 }
 
 // A utility function to do inorder traversal of BST.
 // IN: root node?
-static void inorder(struct node *root)
+static void inorder(struct node_d *root)
 {
     if ((void*) root == NULL)
         return;
@@ -124,7 +96,7 @@ static void inorder(struct node *root)
 // ai visita a direita do �ltimo e desce pela esquerda,
 // n�o havendo esquerda vai pra direita.
 // IN: root node?
-static void exibirEmOrdem (struct node *node)
+static void exibirEmOrdem (struct node_d *node)
 {
     if ((void*) node == NULL)
         return;
@@ -141,7 +113,7 @@ static void exibirEmOrdem (struct node *node)
 // desce at� o �ltimo pela esquerda
 // visita a direita e desce at� o �ltimo pela esquerda.
 // IN: root node?
-static void exibirPreOrdem(struct node *node)
+static void exibirPreOrdem(struct node_d *node)
 {
     if ((void*) node == NULL)
         return;
@@ -158,7 +130,7 @@ static void exibirPreOrdem(struct node *node)
 // Exibe em n�veis. de baixo para cima.
 // desce at� o ultimo pela esquerda
 // visita o da direita e imprime;
-static void exibirPosOrdemAndInclude (struct node *node)
+static void exibirPosOrdemAndInclude (struct node_d *node)
 {
 // Include into POS_BUFFER[] 
 // this buffer is used by eval.
@@ -200,28 +172,28 @@ static void exibirPosOrdemAndInclude (struct node *node)
 // An utility function to insert 
 // a new node with given key in BST.
 // IN: node, value
-static struct node *insert( struct node* node, int data_type, int data )
+static struct node_d *insert( struct node_d* node, int data_type, int data )
 {
 
 // If the tree is empty, createe a new node and return the pointer.
     if ((void*) node == NULL){
-        return (struct node *) newNode(data_type, data); 
+        return (struct node_d *) newNode(data_type, data); 
     }
 
 // Otherwise, recur down the tree.
 
     // Se for menor, inclui na esquerda.
     if (data_type == DT_INVALID){
-        node->left = (struct node *) insert(node->left, data_type, data); 
+        node->left = (struct node_d *) insert(node->left, data_type, data); 
     }else if (data_type == DT_OPERATOR){
-        node->left = (struct node *) insert(node->left, data_type, data); 
+        node->left = (struct node_d *) insert(node->left, data_type, data); 
     // Se for maior, inclui na direita.
     }else if (data_type == DT_DIGIT){
-        node->right = (struct node *) insert(node->right, data_type, data); 
+        node->right = (struct node_d *) insert(node->right, data_type, data); 
     };
 
 // return the (unchanged) node pointer.
-    return (struct node *) node; 
+    return (struct node_d *) node; 
 } 
 
 /*
@@ -248,7 +220,7 @@ static struct node *insert( struct node* node, int data_type, int data )
 // Initialize the BST.
 static int bst_initialize(void)
 {
-    struct node *root = NULL; 
+    struct node_d *root = NULL; 
 
 // Buffer para dígitos.
     int buffer_digits[32];
@@ -433,7 +405,7 @@ static int bst_initialize(void)
 
 //====================================================================
 
-static void push( struct stack *s, int x )
+static void push( struct stack_d *s, int x )
 {
 
 // Parameter
@@ -459,7 +431,7 @@ static void push( struct stack *s, int x )
         s->top++;
 }
 
-static int pop(struct stack *s)
+static int pop(struct stack_d *s)
 {
     int Value=0;
 
@@ -547,7 +519,7 @@ static int __eval(void)
     int opnd1=0;
     int opnd2=0; 
     int val=0;
-    struct stack stk;
+    struct stack_d stk;
 
     /*
     //printf("eval: Show DT_BUFFER[] and POS_BUFFER[]\n");
@@ -557,7 +529,7 @@ static int __eval(void)
     };
     */
 
-    memset( &stk, 0, sizeof(struct stack) );
+    memset( &stk, 0, sizeof(struct stack_d) );
     //stk.top = -1;
     stk.top = 0;
     //stk.top = 1;

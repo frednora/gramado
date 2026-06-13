@@ -62,8 +62,11 @@ extern int special_count;
 extern int maxtoken;       /* Current length of token buffer */
 extern char *token_buffer; /* Pointer to token buffer */
 
-#define MAXTOKEN  256 
-extern char real_token_buffer[MAXTOKEN];
+
+// Acts as a temporary string buffer for the current token.
+#define TOKEN_BUFFER_MAX  256 
+extern char real_token_buffer[TOKEN_BUFFER_MAX];
+
 
 // ----------------------------------------------
 // ## stack support ##
@@ -71,7 +74,8 @@ extern char real_token_buffer[MAXTOKEN];
 // Isso será a pilha para os argumentos ou expressões matemáticas.
 // #todo: agora o arquivo tree.c lida com pilha.
 // Não precismos mais disso.
-extern long stack[1024];
+#define STACK_COUNT_MAX  1024
+extern long stack[STACK_COUNT_MAX];
 //xxx() if(((( ))))       ... tem que dar zero no final. 
 extern int stack_count;
 extern int stack_index;   //current index.

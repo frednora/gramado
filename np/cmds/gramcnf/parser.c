@@ -1779,7 +1779,11 @@ void concat_into_outfile(void)
 // Função principal.
 // Pegando tokens com o lexer e fazendo coisas ...
 // Called by compiler() in compiler.c
-int parse(int dump_output)
+
+// phase 1: 
+// Scaning tokens and building the stack of bytecodes
+// that is gonna be used by the VM.
+int parser_loop(int dump_output)
 {
 // Stages:
 // 1: modifier, type, metatag, separator
@@ -1831,12 +1835,12 @@ int parse(int dump_output)
     //--
 
 // Initial message
-    printf ("parse:\n");
+    printf ("parser_loop:\n");
 
 // Vamos usar um while até que se encontre o fim do arquivo.
 
     while (running == 1){
-        // Get a token from lexer.
+        // Get a token from lexer
         token = yylex();
         if (token == TK_EOF){ running=0; break; }
 
@@ -2612,15 +2616,15 @@ debug_output:
 
 // OK, done!
 __parse_exit:
-    printf("parse: Done\n");
+    printf("parser_loop: Done\n");
     return 0;
 
 syntax:
-    printf("parse: Systax error in line %d\n", lexer_currentline );
+    printf("parser_loop: Systax error in line %d\n", lexer_currentline );
     exit(1);
 
 hang:
-    printf("parse: *hang\n");
+    printf("parser_loop: *hang\n");
     while (1){
         asm ("pause");
     };
@@ -2647,7 +2651,9 @@ static int __parserInit(void)
     for ( i=0; i<ID_MAX; i++ )       { id[i] = 0;          };
     for ( i=0; i<CONSTANT_MAX; i++ ) { constant[i] = 0;    };
     for ( i=0; i<8; i++ )            { return_info[i] = 0; };
-    for ( i=0; i<512; i++ )          { stack[i] = 0;       };
+    for ( i=0; i<STACK_COUNT_MAX; i++ ) { 
+        stack[i] = 0;
+    };
     //...
 
 // Esses endereços vão depender do arquivo 

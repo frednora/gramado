@@ -169,6 +169,11 @@ int check_newline ()
 };
 */
 
+void error(char *msg)
+{
+    printf ("error: %s\n", msg );
+}
+
 //------------------------------------------------
 // Skipping white spaces.
 static int __skip_white_space(void)
@@ -382,7 +387,7 @@ again:
             // Address
             p = token_buffer;
             // clean
-            memset( real_token_buffer, 0, MAXTOKEN );
+            memset( real_token_buffer, 0, TOKEN_BUFFER_MAX );
             // #todo: 
             // Limite tamanho do buffer
             
@@ -885,7 +890,7 @@ static int __lexerInit(void)
     lexer_token_count=0;
     number_of_tokens=0;  // Total number of tokens.
     current_token=0;  // The class of the curent token.
-    maxtoken = MAXTOKEN;
+    maxtoken = TOKEN_BUFFER_MAX;
 
     //()
     parentheses_start=0;
@@ -903,7 +908,7 @@ static int __lexerInit(void)
 //
 
 // Clear buffer
-    for ( i=0; i<MAXTOKEN; i++ )
+    for ( i=0; i<TOKEN_BUFFER_MAX; i++ )
     {
         //real_token_buffer[i] = (char) '\0';
         real_token_buffer[i] = 0;
@@ -944,11 +949,6 @@ int check_subseq ( int c, int a, int b )
 	return (b);
 };
 */
-
-void error(char *msg)
-{
-    printf ("error: %s\n", msg );
-}
 
 //
 // End

@@ -19,7 +19,14 @@
 #include "globals.h"
 #include "gdef.h"
 #include "token.h"
+
+// used by lexer and parser
+#include "object.h"
+
 #include "lexer.h"
 #include "parser.h"
+#include "vm.h"
+
+
 #include "tree.h" 
-#include "compiler.h" 
+#include "compiler.h"

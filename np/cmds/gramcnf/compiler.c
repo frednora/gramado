@@ -27,6 +27,7 @@ FILE *compiler(int dump_output)
 
 // --------------
 // Lexer:
+// See: lexer.c
 
 // Initialize lexer and parser
 // Just initializing the lexer
@@ -34,12 +35,22 @@ FILE *compiler(int dump_output)
     //analizar retorno
 
 // --------------
-// Parser:
+// Parser: (Phase 1: Parser loop)
+// See: parser.c
 
 // The parser will call the yylex() a lot of times.
     int status = (int) parser_initialize();
 // IN: dump output file?
-    parser_return = (int) parse(dump_output);
+    parser_return = (int) parser_loop(dump_output);
+
+
+// --------------
+// VM: (Phase 2: VM loop)
+// See: vm.c
+
+    // #todo: This is a test yet
+    vm_initialize();
+    vm_loop();
 
 // Nesse momento ja temos um arquivo de output.
 // more ...

@@ -6,13 +6,14 @@
 #define __TOKEN_H    1
 
 // ----------------------------------
-// keyword_found = Índice de keywords.
 // Keywords
+// keyword_found: Indexes for keywords
+
 typedef enum {
     KWNULL,
 // types
     KWVOID,
-    KWCHAR, KWSHORT, KWINT, KWLONG,
+    KWCHAR, KWSHORT, KWINT, KWLONG,  // #todo KWDOUBLE
     KWBOX,
     KWMETA,
     KWDEF,
@@ -46,8 +47,9 @@ typedef enum {
 }keywords_t;
 
 // ----------------------------------
-// value = token type.
-// Enumeração dos tipos de tokens.
+// value = token type
+// Enumerate all types of token
+
 typedef enum {
 
 // Token index.
@@ -55,19 +57,19 @@ typedef enum {
 
     TK_NULL,
     TK_EOF,
-    TK_KEYWORD, // Reserved words.
-    TK_IDENTIFIER, // Function name, variable name.
-    TK_CONSTANT, // 10 20 0x1234 ... (literals?)
-    TK_STRING, // "This is a string"
-    TK_OPERATOR,  // math: + - * / % | & ^ =
-    TK_SEPARATOR, // Separators (){}[],.;:? ...
-    TK_SPECIAL, // O resto: $ # & <= >= -= += ! && || ++ -- \" \' ...
-    TK_QUALIFIER,  // static volatile ... ? #todo?
-    TK_MODIFIER, // signed, unsigned ...
+    TK_KEYWORD,     // Reserved words.
+    TK_IDENTIFIER,  // Function name, variable name.
+    TK_CONSTANT,    // 10 20 0x1234 ... (literals?)
+    TK_STRING,      // "This is a string"
+    TK_OPERATOR,    // math: + - * / % | & ^ =
+    TK_SEPARATOR,   // Separators (){}[],.;:? ...
+    TK_SPECIAL,     // O resto: $ # & <= >= -= += ! && || ++ -- \" \' ...
+    TK_QUALIFIER,   // static volatile ... ? #todo?
+    TK_MODIFIER,    // signed, unsigned ...
     TK_TYPE,
     TK_ARITHCOMPARE,
     TK_EQCOMPARE,
-    TK_ASSIGN,           // =
+    TK_ASSIGN,          // =
     TK_PLUSPLUS,
     TK_MINUSMINUS,
     TK_ANDAND,
@@ -75,15 +77,17 @@ typedef enum {
     TK_LSHIFT,
     TK_RSHIFT,
     TK_POINTSAT
+
 }token_t;
 
 // ----------------------------------
 // type_found = Indice de tipo;
-// Enumeração dos tipos de dados.
+// Enumetate the types of data.
+
 typedef enum {
     TNULL,
     TVOID,
-    TCHAR, TSHORT, TINT, TLONG,
+    TCHAR, TSHORT, TINT, TLONG,  //#todo: TDOUBLE
     TBOX,
     TMETA,
     TDEF,
@@ -92,8 +96,9 @@ typedef enum {
     //...
 }types_t;
 
-// modifier_found - indice de modificador.
-// Enumeração dos modificadores.
+// modifier_found
+// Enumerate the types of modifiers
+
 typedef enum {
     MNULL,
     MSIGNED, MUNSIGNED,
@@ -101,6 +106,7 @@ typedef enum {
     MSTATIC,
     MVOLATILE,
     //...
+
 }modifiers_t;
 
 // Enumeração dos qualificadores.
@@ -383,7 +389,7 @@ static	 while
 //...
 
 
-// Variables.
+// Variables
 struct variable_d
 {
     int used;
@@ -391,10 +397,9 @@ struct variable_d
 };
 typedef struct variable_d  variable_t;
 
-// Symbols.
+// Symbols
 // símbolos tipados.
 // funções e variáveis.
-
 struct symbol_d
 {
     int used;
@@ -414,7 +419,7 @@ struct symbol_d
 typedef struct symbol_d  sysmbol_t;
 
 
-// Types.
+// Types
 struct type_d
 {
     int used;

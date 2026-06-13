@@ -119,10 +119,6 @@ extern int brace_count;
 // -- Prototypes --------
 //
 
-// Initialize
-int lexer_initialize(void);
-// Get stuff.
-int yylex(void);
 void error(char *msg);
 //int check_newline ();
 //Isso pega o código original, retira os espaços 
@@ -132,6 +128,12 @@ void error(char *msg);
 //int getElementID ( char *s );
 //int getElementClass ( int number );
 //...
+
+// Get stuff
+int yylex(void);
+
+// Initialize
+int lexer_initialize(void);
 
 #endif    
 
