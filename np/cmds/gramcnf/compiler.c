@@ -19,38 +19,53 @@
 // OUT: The output pointer.
 FILE *compiler(int dump_output)
 {
-    int lexer_return = -1;
-    int parser_return = -1;
-
+    int Status = -1;
 
     printf("compiler:\n");
 
-// --------------
-// Lexer:
-// See: lexer.c
+//
+// Initializations
+//
 
-// Initialize lexer and parser
-// Just initializing the lexer
-    lexer_return = (int) lexer_initialize();
-    //analizar retorno
+    Status = (int) lexer_initialize();
+    if (Status < 0){ 
+        printf("compiler: on lexer_initialize()\n");
+        goto fail; 
+    }
+    Status = (int) parser_initialize();
+    if (Status < 0){ 
+        printf("compiler: on parser_initialize()\n");
+        goto fail; 
+    }
+    Status = (int) vm_initialize();
+    if (Status < 0){ 
+        printf("compiler: on vm_initialize()\n");
+        goto fail; 
+    }
 
-// --------------
-// Parser: (Phase 1: Parser loop)
-// See: parser.c
 
-// The parser will call the yylex() a lot of times.
-    int status = (int) parser_initialize();
-// IN: dump output file?
-    parser_return = (int) parser_loop(dump_output);
+//
+// Parser loop
+//
+
+    Status = (int) parser_loop(dump_output);
+    if (Status < 0){ 
+        printf("compiler: on parser_loop()\n");
+        goto fail; 
+    }
 
 
-// --------------
-// VM: (Phase 2: VM loop)
-// See: vm.c
+//
+// VM loop
+//
 
-    // #todo: This is a test yet
-    vm_initialize();
-    vm_loop();
+    Status = (int) vm_loop();
+    if (Status < 0){ 
+        printf("compiler: on vm_loop()\n");
+        goto fail; 
+    }
+
+    // ...
 
 // Nesse momento ja temos um arquivo de output.
 // more ...
@@ -61,5 +76,9 @@ FILE *compiler(int dump_output)
 // into the screen.
 // We gotta use another output file to simply save it into the disk.
     return (FILE *) stdout;
+
+fail:
+    printf("compiler: fail\n");
+    return NULL;
 }
 
