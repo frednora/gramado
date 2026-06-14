@@ -69,9 +69,13 @@ static int __parserInit(void);
 static int parse_function(int token);
 // Statements
 
+static int parse_box(int token);
+
+static int parse_meta(int token);
 // name/content
 static int parse_name(int token);
 static int parse_content(int token);
+static int parse_print(int token);
 
 static int parse_do(int token);
 static int parse_for(int token);
@@ -233,6 +237,42 @@ static int parse_function(int token)
     return 0;
 }
 
+static int parse_box(int token)
+{
+//
+// Object
+//
+
+    struct object_d *o;
+    o = (struct object_d *) malloc( sizeof(struct object_d) );
+    if ((void*) o == NULL){
+        printf("parse_return: o\n");  
+        exit(1);
+    }
+    o->opcode = OP_BOX_TYPE;
+    vm_push(o);
+
+    return 0;
+}
+
+static int parse_meta(int token)
+{
+//
+// Object
+//
+
+    struct object_d *o;
+    o = (struct object_d *) malloc( sizeof(struct object_d) );
+    if ((void*) o == NULL){
+        printf("parse_return: o\n");  
+        exit(1);
+    }
+    o->opcode = OP_META_TYPE;
+    vm_push(o);
+
+    return 0;
+}
+
 // Parse asm statement.
 static int parse_name(int token)
 {
@@ -300,8 +340,8 @@ static int parse_name(int token)
         
         
         //Stage 0: Get the name string
-        if (meta_stage == 0)
-        {
+        //if (meta_stage == 0)
+        //{
             string_size = (size_t) strlen(real_token_buffer);
             if (string_size <= 0 ){
                 printf("string size min\n");
@@ -319,8 +359,8 @@ static int parse_name(int token)
             metadata[meta_index].name_size = string_size;
             
             // Next stage.
-            meta_stage++;
-        }
+            //meta_stage++;
+        //}
 
         // Coloca a string no arquivo de saída.
         strcat( outfile, real_token_buffer );
@@ -420,8 +460,8 @@ static int parse_content(int token)
         //printf ("content-string: {%s}\n", real_token_buffer );
 
         //Stage 1: Get the content string
-        if (meta_stage == 1)
-        {
+        //if (meta_stage == 1)
+        //{
             string_size = (size_t) strlen(real_token_buffer);
             if (string_size <= 0 ){
                 printf("string size min\n");
@@ -453,9 +493,9 @@ static int parse_content(int token)
                 //goto error0;
             //}
 
-            // Come back to first stage.
-            meta_stage=0;
-        }
+            // Come back to first stage
+            //meta_stage=0;
+        //}
 
         // Coloca a string no arquivo de saída.
         strcat( outfile, real_token_buffer );
@@ -488,6 +528,157 @@ error0:
     exit(1);
     return -1;
 }
+
+// Parse asm statement.
+static int parse_print(int token)
+{
+// #todo:
+// "asm" pode virar um visualizador de strings.
+
+    int c=0;
+    int running = 1;
+    int State = 1;
+    int inside = 0;
+
+    //debug
+    //printf("[CONTENT]\n");
+
+
+
+// Se entramos errado.
+    if (token != TK_KEYWORD){
+        printf ("parse_print: token error\n");  exit(1);
+    }
+    if (token == TK_KEYWORD){
+        // printf("parse_print: TK_KEYWORD={%s} in line %d\n", 
+        //     real_token_buffer, LexerInfo.current_line );
+    }
+
+//
+// (
+//
+
+    c = yylex ();
+    if (c != TK_SEPARATOR){
+        printf("parse_print: expected (\n");  exit(1);
+    }
+    if (c == TK_SEPARATOR){
+        if ( strncmp( (char *) real_token_buffer, "(", 1 ) == 0  )
+        {
+            // printf("parse_print: TK_KEYWORD={%s} in line %d\n", 
+            //     real_token_buffer, LexerInfo.current_line ); 
+            //ok
+            inside = 1;
+        }
+    }
+
+//
+// String?
+// " .... "
+//
+
+    c = yylex();
+    if (c != TK_STRING){
+        printf("parse_print: expected string in content("")\n");  exit(1);
+    }
+    if (c == TK_STRING)
+    {
+        //if ( strncmp( (char *) real_token_buffer, "\"", 1 ) == 0 ){
+            //ok
+            //inside = 1;
+        //} 
+
+        // #test
+        // Visualizar a string, pois "asm" pode ser usado 
+        // para manipular strings por outros motivos.
+        // Isso pode ser algum tipo de dado vindo 
+        // de um arquivo de configuração.
+        //printf ("content-string: {%s}\n", real_token_buffer );
+
+        //Stage 1: Get the content string
+        //if (meta_stage == 1)
+        //{
+            string_size = (size_t) strlen(real_token_buffer);
+            if (string_size <= 0 ){
+                printf("string size min\n");
+                goto error0;
+            }
+            if (string_size >= 256){
+                printf("string size max\n");
+                goto error0;
+            }
+            memset(metadata[meta_index].print_string, 0, 256);
+            strncpy(
+                metadata[meta_index].print_string,
+                real_token_buffer,
+                string_size );
+            metadata[meta_index].print_string_size = string_size;
+
+
+            // Object
+            struct object_d *o;
+            o = (struct object_d *) malloc( sizeof(struct object_d) );
+            if ((void*) o == NULL){
+                printf("parse_print: o\n");  exit(1);
+            }
+            strncpy(o->token_buffer, real_token_buffer, TOKEN_BUFFER_MAX);
+            o->opcode = OP_PRINT;
+            vm_push(o);
+
+
+            // Let's initialize it only after the return statement.
+
+            //metadata[meta_index].initialized = TRUE;
+            //printf("INITIALIZED\n");
+            
+            // Salva o index.
+            //metadata[meta_index].id = (int) meta_index;
+            
+            // Só muda de index depois de 2 strings.
+            //meta_index++;
+            //if (meta_index >= 32){
+                //printf("meta_index limits\n");
+                //goto error0;
+            //}
+
+            // Come back to first stage.
+            //meta_stage=0;
+        //}
+
+        // Coloca a string no arquivo de saída.
+        strcat( outfile, real_token_buffer );
+        // Ao fim da string vamos para a próxima linha do output file
+        strcat( outfile,"\n");
+
+        c = yylex();
+
+        //)
+        if ( strncmp( (char *) real_token_buffer, ")", 1 ) == 0 )
+        {
+            inside = 0;
+            c = yylex();
+            // ;
+            if ( strncmp( (char *) real_token_buffer, ";", 1 ) == 0 )
+            {
+                // ok
+                return (int) c;
+            }
+            printf("parse_print: expected ; in content string\n");
+            exit(1);
+        }
+
+        printf("parse_print: expected ) in content string\n");
+        exit(1);
+    }
+
+error0:
+    printf ("parse_print: todo unexpected error in comtent string\n");
+    exit(1);
+    return -1;
+}
+
+
+
 
 
 
@@ -708,6 +899,21 @@ static int parse_return(int token, int *return_value)
     // #debug
     itoa ( (int) eval_ret, buffer );
     //printf("parse_return: value={%s}\n",buffer);
+
+
+//
+// Object
+//
+
+    struct object_d *o;
+    o = (struct object_d *) malloc( sizeof(struct object_d) );
+    if ((void*) o == NULL){
+        printf("parse_return: o\n");  
+        exit(1);
+    }
+    o->opcode = OP_RET;
+    vm_push(o);
+
 
 //
 // Output
@@ -994,6 +1200,21 @@ static int parse_exit(int token)
     strcat(TEXT, ";[EXIT]\n");
     strcat(TEXT, "  ; program requested exit\n");
 
+//
+// Object
+//
+
+    struct object_d *o;
+    o = (struct object_d *) malloc( sizeof(struct object_d) );
+    if ((void*) o == NULL){
+        printf("parse_exit: o\n");  
+        exit(1);
+    }
+    o->opcode = OP_EXIT;
+    vm_push(o);
+
+
+
     // Now consume the next token, expecting ';'
     c = yylex();
 
@@ -1035,6 +1256,21 @@ static int parse_break(int token)
     // Emit assembly or marker
     strcat(TEXT, ";[BREAK]\n");
     strcat(TEXT, "  ; program requested break\n");
+
+
+//
+// Object
+//
+
+    struct object_d *o;
+    o = (struct object_d *) malloc( sizeof(struct object_d) );
+    if ((void*) o == NULL){
+        printf("parse_break: o\n");  
+        exit(1);
+    }
+    o->opcode = OP_BREAK;
+    vm_push(o);
+
 
     // Now consume the next token, expecting ';'
     c = yylex();
@@ -1840,12 +2076,28 @@ int parser_loop(int dump_output)
 // Initial message
     printf ("parser_loop:\n");
 
+
+    // For general usage inside the loop
+    struct object_d *o;
+
 // Vamos usar um while até que se encontre o fim do arquivo.
 
     while (running == 1){
+
         // Get a token from lexer
         token = yylex();
-        if (token == TK_EOF){ running=0; break; }
+
+        if (token == TK_EOF)
+        {
+            o = (struct object_d *) malloc( sizeof(struct object_d) );
+            if ((void*) o == NULL){
+                printf("parser_loop: o\n");  exit(1);
+            }
+            o->opcode = OP_EOF;
+            vm_push(o);
+            running=0; 
+            break; 
+        }
 
         again:
 
@@ -1894,11 +2146,13 @@ int parser_loop(int dump_output)
                         {
                             printf ("box: Line %d\n", LexerInfo.current_line );
                             waiting_identifier_after_type = TRUE;
+                            parse_box(TK_TYPE);
                         }
                         if (type_found == TMETA)
                         {
                             printf ("meta: Line %d\n", LexerInfo.current_line );
                             waiting_identifier_after_type = TRUE;
+                            parse_meta(TK_TYPE);
                         }
                         // Depois de um type vem um identificador.
                         State=2;
@@ -2110,6 +2364,8 @@ int parser_loop(int dump_output)
                                 // #todo
                                 // Save the box symbol in some place.
                             }
+
+                            // ...
                         }
                         //----------------------------------------------------
 
@@ -2482,6 +2738,18 @@ int parser_loop(int dump_output)
                             State = 1;
                             break;
                         }
+
+                        //-------------------------
+                        // STMT: 'print'
+                        // the print inside the meta()
+                        if (keyword_found == KWPRINT)
+                        {
+                            parse_print(TK_KEYWORD);
+                            //recomeçamos
+                            State = 1;
+                            break;
+                        }
+
 
                         //...
 

@@ -20,7 +20,7 @@ typedef enum {
     KWVAR,
     KWLET,
 // name/content
-    KWNAME, KWCONTENT,
+    KWNAME, KWCONTENT, KWPRINT,
 // modifiers
     KWINLINE,
     KWSTATIC,

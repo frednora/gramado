@@ -568,7 +568,12 @@ again:
             if ( strncmp( real_token_buffer, "content", 7 ) == 0 )
             {
                 keyword_found = KWCONTENT;
-                //return (int) TK_KEYWORD;
+                value = (int) TK_KEYWORD;
+                goto done;
+            }
+            if ( strncmp( real_token_buffer, "print", 5 ) == 0 )
+            {
+                keyword_found = KWPRINT;
                 value = (int) TK_KEYWORD;
                 goto done;
             }

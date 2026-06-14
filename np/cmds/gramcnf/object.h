@@ -44,7 +44,20 @@ typedef enum {
 
     // System / special
     OP_PRINT,        // debug print
-    OP_HALT          // stop execution
+    OP_HALT,         // stop execution
+
+    OP_EOF,           // EOF. The last object
+  
+    // New high-level ops
+    OP_BOX_TYPE,
+    OP_BOX_BEGIN,
+    OP_BOX_END,
+    OP_META_TYPE,
+    OP_NAME,
+    OP_CONTENT,
+    OP_BREAK,
+    OP_EXIT
+
 } opcode_t;
 
 

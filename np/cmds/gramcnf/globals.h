@@ -27,6 +27,10 @@ struct metadata_d
     char content[128];
     size_t content_size;
 
+// print=""
+    char print_string[256];
+    size_t print_string_size;
+
 // ...
 
     unsigned int return_value;

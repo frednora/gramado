@@ -28,6 +28,8 @@ extern struct vm_info_d  VMInfo;
 extern unsigned long vm_stack[VM_STACK_COUNT_MAX];
 
 
+int vm_print(struct object_d *o);
+
 // Put object into the stack
 int vm_push(struct object_d *obj);
 struct object_d *vm_pop(void);
