@@ -1,0 +1,23 @@
+
+box One 
+[
+    // Testing print() function
+
+meta MetaOne()
+{
+    print("Hello world!");
+    break;
+}
+
+    /*
+    Testing multi-line 
+    comments
+    */
+
+// Testing exit outside meta 
+// exit;
+
+meta MyMetaExit(){ exit; }
+
+
+]

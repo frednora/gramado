@@ -246,7 +246,7 @@ static int parse_box(int token)
     struct object_d *o;
     o = (struct object_d *) malloc( sizeof(struct object_d) );
     if ((void*) o == NULL){
-        printf("parse_return: o\n");  
+        printf("parse_box: o\n");  
         exit(1);
     }
     o->opcode = OP_BOX_TYPE;
@@ -264,7 +264,7 @@ static int parse_meta(int token)
     struct object_d *o;
     o = (struct object_d *) malloc( sizeof(struct object_d) );
     if ((void*) o == NULL){
-        printf("parse_return: o\n");  
+        printf("parse_meta: o\n");  
         exit(1);
     }
     o->opcode = OP_META_TYPE;
@@ -1287,7 +1287,7 @@ static int parse_break(int token)
     }
 
     if (NoSemicolon){
-        printf("parse_exit: Error: ';' expected after exit (line %d)\n",
+        printf("parse_break: Error: ';' expected after exit (line %d)\n",
             LexerInfo.current_line );
         exit(1);
     }

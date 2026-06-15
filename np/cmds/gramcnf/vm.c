@@ -114,7 +114,12 @@ int vm_loop(void)
 {
     struct object_d *o;
 
+    VMInfo.state = VM_STATE_RUNNING;
+
     while (1){
+
+    if (VMInfo.state == VM_STATE_SHUTTING_DOWN)
+        break;
 
     // Get object
     o = (struct object_d *) vm_get();
@@ -134,6 +139,11 @@ int vm_loop(void)
         case OP_EOF:  // The last object
             printf("vm_loop: OP_EOF\n");
             exit(0);
+            break;
+
+        case OP_EXIT:
+            printf("vm_loop: OP_EXIT\n");
+            VMInfo.state = VM_STATE_SHUTTING_DOWN;
             break;
 
         case OP_PRINT:
@@ -158,6 +168,7 @@ fail:
 int vm_initialize(void)
 {
     VMInfo.initialized = FALSE;
+    VMInfo.state = VM_STATE_NULL;
     VMInfo.pc = 0;  // Program counter
     VMInfo.last = 0;  // Index for the last object
 

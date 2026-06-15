@@ -7,6 +7,7 @@
 
 #define VM_STATE_NULL     0
 #define VM_STATE_RUNNING  1
+#define VM_STATE_SHUTTING_DOWN  2
 // ...
 
 struct vm_info_d 
