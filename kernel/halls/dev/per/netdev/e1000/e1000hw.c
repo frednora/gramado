@@ -88,19 +88,30 @@ static void __e1000_linkup(struct intel_nic_info_d *d);
 void e1000_show_info(void)
 {
     printk("e1000 NIC info:\n");
+
+//
+//  currentNIC
+//
+
     if ((void*) currentNIC == NULL){
         printk ("currentNIC fail\n");
     }
-    if (currentNIC->magic != 1234)
-        printk ("currentNIC validation\n");
+    if ((void*) currentNIC != NULL)
+    {
+        if (currentNIC->magic != 1234)
+            printk ("currentNIC validation\n");
+        
+        // ...
+    }
 
 // Counters
     printk("Counters: TX={%d} RX={%d}\n",
         e1000_tx_counter, e1000_rx_counter );
 
+// ...
 }
 
-// Read from memory mapped register.
+// Read from memory mapped register
 static uint32_t 
 __E1000ReadCommand ( 
     struct intel_nic_info_d *d, 
@@ -108,6 +119,8 @@ __E1000ReadCommand (
 {
     //if ( (void*) d == NULL ) { return 0; }
     unsigned long address = (d->registers_base_address + addr);
+
+// Return a 32bit value
     return *( (volatile unsigned int *) address );
 }
 
@@ -118,7 +131,7 @@ __E1000WriteCommand (
     uint16_t addr, 
     uint32_t val )
 {
-    //if ( (void*) d == NULL ) { return 0; }
+    //if ( (void*) d == NULL ) { return; }
     unsigned long address = (d->registers_base_address + addr);
     *( (volatile unsigned int *) address ) = val;
 }
@@ -167,6 +180,8 @@ __E1000ReadEEPROM (
         };
     };
 
+// Return a 32bit value
+// #ps: Masking some bits
     return (uint32_t) ((data >> 16) & 0xFFFF); 
 }
 
@@ -187,7 +202,7 @@ __E1000ReadEEPROM (
 static unsigned long 
 __E1000AllocCont ( 
     uint32_t amount, 
-    unsigned long *virt )  //#todo: 64bit address
+    unsigned long *virt )
 {
     unsigned long va=0;
     unsigned long pa=0;
@@ -196,14 +211,15 @@ __E1000AllocCont (
 // What is the limit for this value?
 
     if (amount == 0){
-        panic("__E1000AllocCont: [FAIL] amount\n");
+        panic("__E1000AllocCont: amount\n");
     }
+
 // ============
 // va
     va = (unsigned long) kmalloc((size_t) amount);
     *virt = va;
     if (*virt == 0){
-        panic("__E1000AllocCont: [FAIL] va allocation\n");
+        panic("__E1000AllocCont: va allocation\n");
     }
     memset ( va, 0, amount );
     //#debug
@@ -222,8 +238,9 @@ __E1000AllocCont (
         panic ("__E1000AllocCont: [FAIL] pa\n");
     }
     
-    // #debug
-    // #bugbug: It is producing an wrong address ,,, above the mark of 2MB.
+// #debug
+// #bugbug: 
+// It's producing an invalid address, above the 2MB mark.
     printk("pa=%x\n",pa);
     //while(1){}
 
@@ -237,6 +254,7 @@ __E1000AllocCont (
 static void __e1000_enable_interrupt(struct intel_nic_info_d *nic_info)
 {
     uint32_t value=0;
+
     if ((void*) nic_info == NULL){
         panic("__e1000_enable_interrupt: nic_info\n");
     }
@@ -253,11 +271,11 @@ static void __e1000_linkup(struct intel_nic_info_d *d)
 {
     uint32_t val=0;
 
+    printk("__e1000_linkup:\n");
+
     if ((void*)d == NULL){
         panic("__e1000_linkup: d\n");
     }
-
-    printk("__e1000_linkup:\n");
 
 // CTRL - Device Control Register
     val = (uint32_t) __E1000ReadCommand(d,0);
@@ -267,10 +285,9 @@ static void __e1000_linkup(struct intel_nic_info_d *d)
     printk("__e1000_linkup: Done\n");
 }
 
+// 00400h - Transmit Control Register
 static void __initialize_tx_support(struct intel_nic_info_d *d)
 {
-// 00400h - Transmit Control Register
-
     register int i=0;
 
     if ((void*) d == NULL){
@@ -295,7 +312,7 @@ static void __initialize_tx_support(struct intel_nic_info_d *d)
 // o físico no retorno da função.
 
     uint32_t size_all_desc = 
-        (uint32_t) ((sizeof(struct legacy_tx_desc) * 8) + 16 );
+        (uint32_t) ((sizeof(struct legacy_tx_desc) * 8) +16);
 
     d->tx_descs_phys = 
         (unsigned long) __E1000AllocCont ( 
@@ -386,16 +403,16 @@ static void __initialize_tx_support(struct intel_nic_info_d *d)
 //TDBAL	= 0x3800,	/* Tx Descriptor Base Address Low */
 //TDBAH	= 0x3804,	/* Tx Descriptor Base Address High */
 
-// low
+// low address. (Ring's address)
     __E1000WriteCommand (
         d, 
         0x3800, 
-        (unsigned int) d->tx_descs_phys );  //low (endereço do ring)
-// high
+        (unsigned int) d->tx_descs_phys );
+// high address
     __E1000WriteCommand (
         d, 
         0x3804, 
-        (unsigned int) (d->tx_descs_phys >> 32) );   //high
+        (unsigned int) (d->tx_descs_phys >> 32) );
 
 /*
 // #debug
@@ -407,16 +424,14 @@ static void __initialize_tx_support(struct intel_nic_info_d *d)
 */
 
 // =================
-
-// Descriptor len.
-    __E1000WriteCommand (d, 0x3808, 128);  //8*16
+// Descriptor len. (8*16)
+    __E1000WriteCommand (d, 0x3808, 128);
 
 // =================
 
-// Head and tail para tx.
-    __E1000WriteCommand (d, 0x3810, 0);    //head
-    __E1000WriteCommand (d, 0x3818, 7);    //tail
-
+// Head and tail for tx
+    __E1000WriteCommand (d, 0x3810, 0);  // head
+    __E1000WriteCommand (d, 0x3818, 7);  // tail
 
 	//#define E1000_TCTL     0x00400  /* TX Control - RW */
     //• CT = 0x0F (16d collision)
@@ -448,7 +463,8 @@ static void __initialize_tx_support(struct intel_nic_info_d *d)
     __E1000WriteCommand (
         d, 
         0x3828, 
-        (0x01000000 | 0x003F0000) );
+        (0x01000000 | 0x003F0000) 
+    );
 
 
 /*
@@ -461,7 +477,6 @@ static void __initialize_tx_support(struct intel_nic_info_d *d)
 	//E1000WriteCommand(d, 0x400, 0x3003F0FA);
 	//E1000WriteCommand(d, 0x400, (1 << 1) | (1 << 3) );
 */
-
 
 /*
 #define TCTL_EN          (1 << 1)    // Transmit Enable
@@ -492,7 +507,8 @@ static void __initialize_tx_support(struct intel_nic_info_d *d)
     __E1000WriteCommand (
         d, 
         0x400, 
-        ( 0x00000ff0 | 0x003ff000 | 0x00000008 | 0x00000002) );
+        (0x00000ff0 | 0x003ff000 | 0x00000008 | 0x00000002) 
+    );
 
 //=====================
 
@@ -509,12 +525,11 @@ static void __initialize_tx_support(struct intel_nic_info_d *d)
         (  0x0000000A | 0x00000008 | 0x00000002) ); 
 */
 
-
     __E1000WriteCommand (
         d, 
         0x410, 
-        0x0060200A );  
-
+        0x0060200A 
+    );
 
 // Talvez ja fizemos isso. 
 // Initialize the transmit descriptor registers (TDBAL, TDBAH, TDL, TDH, and TDT).
@@ -536,15 +551,12 @@ static void __initialize_tx_support(struct intel_nic_info_d *d)
 	
 	//endereço físico  dos rings;
 	//printk("tx_ring_pa=%x rx_ring_pa=%x \n", 
-	//    d->rx_descs_phys, 
-	//	d->tx_descs_phys );
-
+	//    d->rx_descs_phys, d->tx_descs_phys );
 }
 
+// 00100h - Receive Control Register
 static void __initialize_rx_support(struct intel_nic_info_d *d)
 {
-// 00100h - Receive Control Register
-
     register int i=0;
 
     if ((void*) d == NULL){
@@ -554,7 +566,7 @@ static void __initialize_rx_support(struct intel_nic_info_d *d)
 // And alloc the phys/virt address of the receive buffer.
 
     uint32_t size_all_desc = 
-        (uint32_t) ((sizeof(struct legacy_rx_desc) * 32) + 16 );
+        (uint32_t) ((sizeof(struct legacy_rx_desc) * 32) +16);
 
     d->rx_descs_phys = 
         __E1000AllocCont (
@@ -623,15 +635,16 @@ static void __initialize_rx_support(struct intel_nic_info_d *d)
 // Setup the (receive) ring registers.
 // Pass the physical address (and some other informations) of the receive buffer
 
-// Address: low and high.
+// Low address
     __E1000WriteCommand (
         d, 
         0x2800, 
-        (unsigned int) d->rx_descs_phys );  // low
+        (unsigned int) d->rx_descs_phys );
+// High address
     __E1000WriteCommand (
         d, 
         0x2804, 
-        (unsigned int) (d->rx_descs_phys >> 32) );  // high 
+        (unsigned int) (d->rx_descs_phys >> 32) );
 
 /*
 // #debug
@@ -642,32 +655,29 @@ static void __initialize_rx_support(struct intel_nic_info_d *d)
     while(1){}
 */
 
-// Buffer
-    __E1000WriteCommand (d, 0x2808, 512);  // 32*16
+// Buffer (32*16)
+    __E1000WriteCommand (d, 0x2808, 512);
 
-// head and tail para rx.
+// head and tail for rx.
     __E1000WriteCommand (d, 0x2810, 0);   // head
     __E1000WriteCommand (d, 0x2818, 31);  // tail
 
 // receive control
 // RCTL = 0x0100, /* Receive Control */
-    __E1000WriteCommand ( d, 0x100, 0x602801E );
+    __E1000WriteCommand (d, 0x100, 0x602801E);
 
 // RX Delay Timer Register
     //__E1000WriteCommand (d, 0x2820, 0);
 }
 
-// Reset the controller.
+// Reset the controller
 static int __e1000_reset_controller(struct intel_nic_info_d *d)
 {
     register int i=0;
-    //uint32_t value=0;
 
     // #debug
-    //debug_print ("__e1000_reset_controller:\n");
-    //printk      ("__e1000_reset_controller:\n");
+    //printk("__e1000_reset_controller:\n");
 
-// structure
     if ((void*) d == NULL){
         panic("__e1000_reset_controller: d\n");
     }
@@ -676,7 +686,8 @@ static int __e1000_reset_controller(struct intel_nic_info_d *d)
     if (d->registers_base_address == 0){
         panic ("__e1000_reset_controller: d->registers_base_address\n");
     }
-// Clear the Multicast Table Array (MTA).
+
+// Clear the Multicast Table Array (MTA)
     for (i=0; i<128; i++){
         __E1000WriteCommand ( d, 0x5200 + (i * 4), 0 );
     };
@@ -690,6 +701,10 @@ static int __e1000_reset_controller(struct intel_nic_info_d *d)
 }
 
 //=======================================================
+// #ps:
+// Here we are setting up IRQ in the context of legacy PIC.
+// This implementation is fragile and messy.
+//
 // __e1000_setup_irq:
 //     Setup nic irq 
 // #importante
@@ -723,12 +738,13 @@ static void __e1000_setup_irq(int irq_line)
     uint8_t idt_num = (uint8_t) (irq + 32);
 
 //#debug OK (irq=9) 
-    printk("__e1000_setup_irq: irq={%d}\n", irq);
-    printk("__e1000_setup_irq: idt_num={%d}\n", idt_num);
-    printk("__e1000_setup_irq: handler={%x}\n", handler);
-	//printk ("PCIRegisterIRQHandler: pin={%d}\n",currentNIC->pci->irq_pin);//shared INTA#
-	//while(1){}
-	//#debug interrupção=41 
+//#debug interrupção=41
+    printk("__e1000_setup_irq: irq={%d} idt_num={%d} handler={%x}\n", 
+        irq, idt_num, handler );
+	//printk ("PCIRegisterIRQHandler: pin={%d}\n",
+        // currentNIC->pci->irq_pin);  //shared INTA#
+
+	//while(1){} 
 
 //
 // Creating IDT entry
@@ -750,10 +766,8 @@ static void __e1000_setup_irq(int irq_line)
 //na verdade o assembly esta usando outro endereço
     nic_idt_entry_new_address = (unsigned long) handler; 
 
-    printk("__e1000_setup_irq: interrupt={%d}\n", 
-        nic_idt_entry_new_number );
-    printk("__e1000_setup_irq: handler={%x}\n", 
-        nic_idt_entry_new_address );
+    printk("__e1000_setup_irq: interrupt={%d} handler={%x}\n", 
+        nic_idt_entry_new_number, nic_idt_entry_new_address );
 
 // Call assembly.
 // #todo: Move this export to the top of this document.
@@ -767,7 +781,7 @@ __mapping_nic1_device_address(
     unsigned long va)
 {
 // OUT: 0=ok | -1=fail
-// see: pages.c
+// see: paging.c
     return (int) mm_map_2mb_region_in_pd0(pa,va);
 }
 
@@ -784,6 +798,8 @@ static void __e1000_on_transmit(void)
 }
 
 // Worker for sending
+// #ps: 
+// Structure only for Intel NIC device.
 int 
 e1000hw_send(
     struct intel_nic_info_d *dev, 
@@ -791,7 +807,9 @@ e1000hw_send(
     const char *data )
 {
     uint16_t old=0;
-// dev
+
+// #ps: 
+// Structure only for Intel NIC device.
     struct intel_nic_info_d *d;
 
 // Device structure
@@ -867,11 +885,10 @@ fail:
 // + Frame Check Sequence (FCS) field (4 bytes).
 static void __e1000_on_receive(void)
 {
-// Frame
+    // Frame support
     unsigned char *frame;
     uint16_t frame_lenght = 0x0000;
-// Descriptor index.
-    uint16_t old = 0;
+    uint16_t old=0;  // Descriptor index
 
 // The current NIC.
 // (Intel structure?)
@@ -1044,19 +1061,23 @@ __e1000hw_service_procedure(
     };
 
 done:
-// Clear all the bits.
-// Write 1b, clear the bit.
+
+    // ??
+    // #maybe: Clear all the bits.( Write 1b, clear the bit.)
     // __E1000WriteCommand( target_dev, 0xC0, 0xffffffff );
+
     return 0;
+
 fail:
     return (int) -1;
 }
 
 // Interrupt handler
+// #todo: Implement the return value.
 static void DeviceInterface_e1000(void)
 {
-    struct intel_nic_info_d *target_dev;
     int rv = -1;
+    struct intel_nic_info_d *target_dev; // Local
 
 // The current NIC.
 // (Intel structure?)
@@ -1071,6 +1092,7 @@ static void DeviceInterface_e1000(void)
     rv = (int) __e1000hw_service_procedure(target_dev);
 
     return;
+    //return (int) rv;
 }
 
 /*
