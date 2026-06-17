@@ -125,9 +125,11 @@ extern int e1000_irq_count;
 // Transmit Descriptor
 struct legacy_tx_desc 
 {
-    //uint64_t addr;  // The physical address of the buffer.
-    uint32_t addr;
-    uint32_t addr2;
+
+// The physical address of the buffer
+    uint32_t addr;   // 32 Least Significant Bit (LSB)
+    uint32_t addr2;  // 32 Most Significant Bit (MSB)
+    //uint64_t addr;
 
     uint16_t length;
     uint8_t cso;      // Checksum offset

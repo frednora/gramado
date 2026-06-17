@@ -303,7 +303,7 @@ static void __initialize_tx_support(struct intel_nic_info_d *d)
                (unsigned long *)(&d->legacy_tx_descs) );
 
     if (d->tx_descs_phys == 0){
-        panic ("__e1000_reset_controller: [FAIL] d->tx_descs_phys\n");
+        panic ("__initialize_tx_support: d->tx_descs_phys\n");
     }
 
     //printk("[2]:\n");
@@ -329,17 +329,18 @@ static void __initialize_tx_support(struct intel_nic_info_d *d)
                  (unsigned long *) &d->tx_buffers_virt[i] );
         
         if (tmp_txaddress_pa == 0){
-            panic("__e1000_reset_controller: tmp_txaddress_pa\n");
+            panic("__initialize_tx_support: tmp_txaddress_pa\n");
         }
-        
+
         // Buffer (PA)
-        // A estrutura contém um ponteiro físico para o bufffer.
-        // Em duas partes de 32bit.
-        // Mas d->tx_buffers_virt[i] contém o ponteiro virtual de 64bit.
-        d->legacy_tx_descs[i].addr  = (unsigned int) tmp_txaddress_pa;
-        d->legacy_tx_descs[i].addr2 = (unsigned int) (tmp_txaddress_pa>>32);
+        // Physical pointer for the buffer.
+        // Two parts of 32bit each.
+        // d->tx_buffers_virt[i] is for the VA.
+
+        d->legacy_tx_descs[i].addr = (unsigned int) tmp_txaddress_pa;  // LSB
+        d->legacy_tx_descs[i].addr2 = (unsigned int) (tmp_txaddress_pa >> 32);  // MSB
         if (d->legacy_tx_descs[i].addr == 0){
-            panic ("__e1000_reset_controller: [FAIL] d->legacy_tx_descs[i].addr\n");
+            panic ("__initialize_tx_support: d->legacy_tx_descs[i].addr\n");
         }
 
         // #test: 
@@ -531,7 +532,7 @@ static void __initialize_tx_support(struct intel_nic_info_d *d)
 	
 	//iow32(d, TCTL, TCTL_EN);
 
-	//printk("nic_i8254x_reset: Done\n");
+	//printk("__initialize_tx_support: Done\n");
 	
 	//endereço físico  dos rings;
 	//printk("tx_ring_pa=%x rx_ring_pa=%x \n", 
@@ -561,7 +562,7 @@ static void __initialize_rx_support(struct intel_nic_info_d *d)
             (unsigned long *)(&d->legacy_rx_descs));
 
     if (d->rx_descs_phys == 0){
-        panic ("__e1000_reset_controller: [FAIL] d->rx_descs_phys\n");
+        panic ("__initialize_rx_support: d->rx_descs_phys\n");
     }
 
 // rx
@@ -582,17 +583,17 @@ static void __initialize_rx_support(struct intel_nic_info_d *d)
                 (unsigned long *) &d->rx_buffers_virt[i] );
 
         if (tmp_rxaddress_pa == 0){
-            panic("__e1000_reset_controller: tmp_rxaddress_pa\n");
+            panic("__initialize_rx_support: tmp_rxaddress_pa\n");
         }
 
         // Buffer (PA)
-        // A estrutura contém um ponteiro físico para o bufffer.
-        // Em duas partes de 32bit.
-        // Mas d->rx_buffers_virt[i] contém o ponteiro virtual de 64bit.
+        // Physical address for the buffer.
+        // The address has two 32 bit parts.
+        // d->rx_buffers_virt[i] is for a 64bit VA.
         d->legacy_rx_descs[i].addr  = (unsigned int) tmp_rxaddress_pa;
         d->legacy_rx_descs[i].addr2 = (unsigned int) (tmp_rxaddress_pa>>32);
         if (d->legacy_rx_descs[i].addr == 0){
-            panic ("__e1000_reset_controller: [FAIL] d->legacy_rx_descs[i].addr\n");
+            panic ("__initialize_rx_support: d->legacy_rx_descs[i].addr\n");
         }
 
         // #test: 
