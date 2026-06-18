@@ -1,5 +1,4 @@
-;
-; File: gdt.inc
+; File: gdt32.inc
 ; Description:
 ;   Global Descriptor Table (GDT) for the Boot Manager.
 ;   Provides:
@@ -8,31 +7,33 @@
 ;     - 16-bit protected-mode segments for the real-mode trampoline
 ;     - Additional system descriptors (text mode screen, TSS, LDT)
 ;   2015 - Fred Nora
-;
 
 ;
 ; GDT
 ;
 
 gdt:
+
 ; Null descriptor (selector 0 is always invalid)
-NULL_SEL equ $-gdt
+NULL_SEL equ  $-gdt
     dd 0
     dd 0
+
 ; 32-bit code segment (ring 0), base=0, limit=4GB, readable
 ; Access 0x9A: present=1, DPL=0, code=1, readable=1
 ; Flags  0xCF: granularity=4KB (G=1), 32-bit (D=1), limit high=0xF
-CODE_SEL equ $-gdt
+CODE_SEL equ  $-gdt
 	dw 0xFFFF
 	dw 0
 	db 0 
 	db 0x9A  ;present, ring0, code, non-confirming, readble.
 	db 0xCF
 	db 0
+
 ; 32-bit data segment (ring 0), base=0, limit=4GB, writable
 ; Access 0x92: present=1, DPL=0, data=1, writable=1
 ; Flags  0xCF: granularity=4KB (G=1), 32-bit (D=1), limit high=0xF
-DATA_SEL equ $-gdt
+DATA_SEL equ  $-gdt
 	dw 0xFFFF
 	dw 0
 	db 0 
@@ -40,18 +41,19 @@ DATA_SEL equ $-gdt
 	db 0xCF
 	db 0
 
-; 16-bit protected-mode code segment (for real-mode return trampoline)
+; 16-bit protected-mode Code segment (for real-mode return trampoline)
 ; Access 0x9A: present=1, DPL=0, code=1, readable=1
 ; Flags: D=0 (16-bit), G=0 (byte granularity), limit=0xFFFF
-RM_Code_Sel equ $-gdt
+RM_Code_Sel equ  $-gdt
    dw   0xFFFF
    dw   0x0000
    dw   0x9A00
    dw   0x0000
-; 16-bit protected-mode data segment (for real-mode return trampoline)
+
+; 16-bit protected-mode Data segment (for real-mode return trampoline)
 ; Access 0x92: present=1, DPL=0, data=1, writable=1
 ; Flags: D=0 (16-bit), G=0 (byte granularity), limit=0xFFFF
-RM_Data_Sel   equ $-gdt
+RM_Data_Sel equ  $-gdt
    dw 0xFFFF
    dw 0x0000
    dw 0x9200
@@ -67,10 +69,11 @@ RM_Data_Sel   equ $-gdt
     dq 0x0000e90100000068  ; TSS1 descr 0x30
     dq 0x0000e20100000040  ; ?
 end_gdt:
-    dd 0    ;Separador.
-; -----------------------------------------------------------------------------
+    dd 0  ; Align
+
+; -----------------------------------------------
 ; GDTR setup (limit and base), for use with LGDT
-; -----------------------------------------------------------------------------
+; -----------------------------------------------
 lgdt_opcode:
     dw (end_gdt-gdt)-1  ; GDT size in bytes minus one
     dd gdt              ; Linear base address of GDT
