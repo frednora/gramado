@@ -395,5 +395,5 @@ The source code uses the MIT License.
 ## Quotes:
 
 ```
-    "Gramado"
+    "Trust"
 ```

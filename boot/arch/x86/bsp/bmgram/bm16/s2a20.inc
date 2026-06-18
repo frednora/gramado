@@ -32,7 +32,7 @@ A20_fast_enable:
 A20_enable:
 
     cli
-    mov cx, 5    ;Number of attempts.
+    mov cx, 5    ;Number of attempts
     mov dx, 0x64
     jmp short .start_attempt1
 ; Small procedure to wait for the keyboard controller 

@@ -303,13 +303,13 @@ startGUI:
 
 ; ...
 
-; Mask all interrupts.
+; Mask all interrupts
 
     mov al, 255
     out 0xA1, al
     out 0x21, al
 
-; Setup data registers and stack.
+; Setup data registers and stack
 
     mov ax, word 0x10 
     mov ds, ax
@@ -548,8 +548,8 @@ startGUI:
     call lib32PrintString
     call _asm_refresh_screen
 
-;#breakpoint
-    ;jmp $
+    ; #breakpoint
+    ; jmp $
 
 ;
 ; == Image =============================
