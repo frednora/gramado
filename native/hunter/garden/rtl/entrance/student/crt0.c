@@ -1,5 +1,6 @@
 // crt0.c
-// Standard crt0 for Gramado OS for the display server in ring 3.
+// Standard crt0 for Gramado OS 
+// display server/ compositor in ring 3.
 
 #include <types.h>
 #include <stddef.h>
@@ -36,7 +37,7 @@ const char *argv[] = {
 	$SHELL:     Gives location of current user's shell program.
 */
 
-const char *my_environ[] = { 
+const char *__libc_default_environ[] = { 
 
     "DISPLAY=kgws-or-gwssrv",  //#todo
     "EDITOR=gramcode",
@@ -115,20 +116,15 @@ void crt0(unsigned long rdi)
 
 // Environment.
 // The library will have this default environment.
-// #todo: Change the name to '__libc_default_environ'
-    environ = my_environ;
+
+    environ = __libc_default_environ;
 
 /*
 // #debug
 #ifdef TEDITOR_VERBOSE
 	printf ("\n");
 	printf ("crt0: Initializing ...\n");
-	//printf("\n");
-	//printf(".\n");
-	printf ("..\n");
 	printf ("# MESSAGE={%s} #\n", shared_info );
-	printf ("..\n");
-	//printf(".\n");
 	//printf("\n");
 	//#debug
 	//while(1){ asm ("pause"); }
@@ -173,9 +169,9 @@ void crt0(unsigned long rdi)
 // when a new process is initializing. Let's make it 
 // friendly visable.
 
-    debug_print ("+\n");
-    debug_print ("++ crt0.c: Initializing (ui/core/) process\n");
-    debug_print ("+\n");
+    //debug_print ("+\n");
+    //debug_print ("++ crt0.c: Initializing (ui/core/) process\n");
+    //debug_print ("+\n");
 
 
 // Initialize heap support.
@@ -193,7 +189,6 @@ void crt0(unsigned long rdi)
     // #debug: put char
     //gramado_system_call(65,'2',0,0);
 
-// return void.
 // See: 
 // stdio/stdio.c
 

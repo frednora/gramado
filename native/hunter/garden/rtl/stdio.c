@@ -5989,9 +5989,9 @@ char *ctermid (char *s)
 // Em que momento foi inicializado o heap do processo? 
 // crt0 chamou libcInitRT antes de chamar essa função.
 // See: stdlib/stdlib.c
-// See: crts/crt0.c
+// See: crt0.c
 
-void stdioInitialize(void)
+int stdioInitialize(void)
 {
     int status = 0;
     int i=0;
@@ -6018,9 +6018,7 @@ void stdioInitialize(void)
 // Pointers
 //
 
-    //stdin  = (FILE *) &buffer0[0];
-    //stdout = (FILE *) &buffer1[0];
-    //stderr = (FILE *) &buffer2[0];
+    debug_print ("stdioInitialize: Standard stream structures\n");
 
 // #bugbug
 // Se essa inicializaçao falhar, nao temos como mostrar
@@ -6032,37 +6030,31 @@ void stdioInitialize(void)
 
 // ===============
 // stdin
-    debug_print ("stdioInitialize: [1] stdin\n");  
+    //debug_print ("stdioInitialize: [1] stdin\n");  
     stdin = (FILE *) malloc( sizeof(FILE) );
-    if ((void*) stdin == NULL)
-    {
-        debug_print ("stdioInitialize: stdin fail\n");
-        //printf      ("stdioInitialize: stdin fail\n");
-        exit(1);
+    if ((void*) stdin == NULL){
+        debug_print ("stdioInitialize: stdin\n");
+        goto fail;
     }
     memset( stdin, 0, sizeof(struct _iobuf) );
 
 // ===============
 // stdout
-    debug_print ("stdioInitialize: [2] stdout\n");  
+    //debug_print ("stdioInitialize: [2] stdout\n");  
     stdout = (FILE *) malloc( sizeof(FILE) );
-    if ((void*) stdout == NULL)
-    {
-        debug_print ("stdioInitialize: stdout fail\n");
-        //printf ("stdioInitialize: stdout fail\n");
-        exit(1);
+    if ((void*) stdout == NULL){
+        debug_print ("stdioInitialize: stdout\n");
+        goto fail;
     }
     memset( stdout, 0, sizeof(struct _iobuf) );
 
 // ===============
 // stderr
-    debug_print ("stdioInitialize: [3] stderr\n");  
+    //debug_print ("stdioInitialize: [3] stderr\n");  
     stderr = (FILE *) malloc( sizeof(FILE) );
-    if ((void*) stderr == NULL)
-    {
-        debug_print ("stdioInitialize: stderr fail\n");
-        //printf ("stdioInitialize: stderr fail\n");
-        exit(1);
+    if ((void*) stderr == NULL){
+        debug_print ("stdioInitialize: stderr\n");
+        goto fail;
     }
     memset( stderr, 0, sizeof(struct _iobuf) );
 
@@ -6070,19 +6062,14 @@ void stdioInitialize(void)
 // Buffers
 //
 
-    // Buffers.
-    // Buffers dos arquivos.
-    //stdin->_base  = &buffer0_data[0];
-    //stdout->_base = &buffer1_data[0];
-    //stderr->_base = &buffer2_data[0];
-
 // ========
-// stdin
+// stdin:
+// Allocate buffer and setup structure.
+
     stdin->_base = (char *) malloc(BUFSIZ);
     if ( (void*) stdin->_base == NULL ){
-        debug_print ("stdioInitialize: stdin->_base fail\n");
-        //printf ("stdioInitialize: stdin->_base fail\n");
-        exit(1);
+        debug_print ("stdioInitialize: stdin->_base\n");
+        goto fail;
     }
     stdin->_lbfsize = BUFSIZ;
     stdin->_p  = stdin->_base;
@@ -6092,12 +6079,13 @@ void stdioInitialize(void)
     stdin->_file  = 0;
 
 // ========
-// stdout
+// stdout:
+// Allocate buffer and setup structure.
+
     stdout->_base = (char *) malloc(BUFSIZ);
     if ( (void*) stdout->_base == NULL ){
-        debug_print ("stdioInitialize: stdout->_base fail\n");
-        //printf ("stdioInitialize: stdout->_base fail\n");
-        exit(1);
+        debug_print ("stdioInitialize: stdout->_base\n");
+        goto fail;
     }
     stdout->_lbfsize = BUFSIZ;
     stdout->_p = stdout->_base;
@@ -6107,12 +6095,13 @@ void stdioInitialize(void)
     stdout->_file = 1;
         
 // ========
-// stderr   
+// stderr:
+// Allocate buffer and setup structure.
+
     stderr->_base = (char *) malloc(BUFSIZ);
     if ( (void*) stderr->_base == NULL ){
-        debug_print ("stdioInitialize: stderr->_base fail\n");
-        //printf ("stdioInitialize: stderr->_base fail\n");
-        exit(1);
+        debug_print ("stdioInitialize: stderr->_base\n");
+        goto fail;
     }
     stderr->_lbfsize = BUFSIZ;    
     stderr->_p = stderr->_base;
@@ -6166,12 +6155,21 @@ void stdioInitialize(void)
 // tty
 //
 
-// ok
-// This is the tty of this process.
-    __libc_tty_id = (int) gramado_system_call ( 266, getpid(), 0, 0 ); 
-// Clear prompt[] buffer.
+// This is the tty of this process
+    pid_t MyPID = (pid_t) getpid();
+    __libc_tty_id = (int) gramado_system_call ( 266, MyPID, 0, 0 ); 
+
+// Clear prompt[] buffer
     prompt_clean();
-    //debug_print ("stdioInitialize: done\n");
+
+    // ...
+
+    return 0;  // OK
+
+// No printf support yet
+fail:
+    exit(1);
+    return (int) -1;
 }
 
 // #test
