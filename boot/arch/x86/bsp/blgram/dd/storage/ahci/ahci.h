@@ -87,6 +87,7 @@ typedef struct tagFIS_DATA
 
 	// DWORD 1 ~ N
 	// #todo: maybe it needs to be bigger
+	// #ps: The code is not using it yet
 	uint32_t data[1];	// Payload
 
 } FIS_DATA;
@@ -291,6 +292,25 @@ typedef struct tagFIS_REG_D2H
 	uint8_t  rsv4[4];     // Reserved
 
 } FIS_REG_D2H;
+
+/*
+typedef struct tagFIS_DEV_BITS
+{
+    uint8_t  fis_type;     // FIS_TYPE_DEV_BITS
+
+    uint8_t  pmport:4;
+    uint8_t  rsv0:2;
+    uint8_t  i:1;          // Interrupt bit
+    uint8_t  rsv1:1;
+
+    uint8_t  status;       // bits 7:0 of status
+    uint8_t  error;        // bits 7:0 of error
+
+    uint32_t sactive;      // SActive register (32 bits)
+
+    uint8_t  rsv2[4];      // Reserved
+} FIS_DEV_BITS;
+*/
 
 // 3) Received FIS
 typedef volatile struct tagHBA_FIS

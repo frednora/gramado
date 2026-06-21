@@ -12,6 +12,13 @@ unsigned long HBA_BASE = 0;
 
 // #ps: 
 // Do not use const, because const if for read only data.
+// #bugbug:
+// Critical Bug: Shared Static Buffer
+// This is very dangerous. 
+// All ports are sharing the same memory region 
+// for Command List + FIS area. This will cause corruption 
+// as soon as you use more than one port.
+
 static char _zhba_base[62*1024] __attribute__((aligned(4096)));
 
 // #todo
@@ -785,6 +792,10 @@ static int __ahci_setup_port(int port_num)
     port->fb  = (uint32_t)(fb_pa & 0xFFFFFFFF);
     port->fbu = (uint32_t)(fb_pa >> 32);
 
+
+    // #bugbug
+    // I guess we need allocate memory for ctba.
+    // Maybe it has been done in another routine.
 
 //
 // Allocate Command Tables (one per slot, 128-byte aligned)

@@ -73,6 +73,7 @@ ahci_read_sector(
     cmd_hdr->prdtl = 1; // One PRDT entry
 
     // Command Table
+    // #bugbug: We got to allocate memory for cmd_hdr->ctba?
     HBA_CMD_TBL *cmd_tbl = (HBA_CMD_TBL*)((unsigned long)cmd_hdr->ctba);
     memset(cmd_tbl, 0, sizeof(HBA_CMD_TBL));
 
@@ -223,12 +224,23 @@ static int ahci_setup_port(int port_num)
         return -1;
     memset((void*)fb, 0, 256);
 
+    // 3. Command Table - 128 bytes aligned (usually bigger is safer)
+    //void* cmd_tbl_mem = malloc(128);   // 4KB is generous for bootloader
+    //if (!cmd_tbl_mem) return -1;
+    //memset(cmd_tbl_mem, 0, 128);
+
 // Setup CLB (Command List Base)
     port->clb  = (uint32_t)clb;
     port->clbu = 0;
 // 4. Setup FB (FIS Base)
     port->fb   = (uint32_t)fb;
     port->fbu  = 0;
+
+    // #todo: We need a pointer for ctba
+    // Link Command Header → Command Table
+    //HBA_CMD_HEADER *cmd_hdr = (HBA_CMD_HEADER*)clb_mem;
+    //cmd_hdr->ctba  = (uint32_t)(unsigned long)cmd_tbl_mem;
+    //cmd_hdr->ctbau = 0;
 
 // Start port
     port->cmd |= (1 << 4);   // FRE
