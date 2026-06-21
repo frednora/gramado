@@ -201,7 +201,7 @@ void crt0(unsigned long rdi)
 
 // ------------------------------------
 // Initialize the stadard stream.
-// OUT: void
+// OUT: 0=ok <0=fail
 // See: stdio.c
     stdioInitialize();
 

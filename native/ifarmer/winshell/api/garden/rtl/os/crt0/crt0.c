@@ -1,5 +1,6 @@
 // crt0.c
-// Standard crt0 for Gramado OS ring 3 applications.
+// Standard crt0 for Gramado OS ring 3 
+// client-side GUI applications.
 
 #include <types.h>
 #include <stddef.h>
@@ -36,31 +37,32 @@ const char *argv[] = {
 	$SHELL:     Gives location of current user's shell program.
 */
 
-const char *my_environ[] = { 
+const char *__libc_default_environ[] = { 
 
-    "DISPLAY=kgws-or-gwssrv",  //#todo
-    "EDITOR=gramcode",
+    "DISPLAY=comp00",  //#todo
+    "EDITOR=editor",
     "HOME=/HOME",
     "HOSTNAME=gramado",
     "LANG=en-us",
     "LANG2=pt-br",
     "LANGX=en-br",
     "OSTYPE=gramado",   //#todo
-    "PATH=/:/PROGRAMS:/GRAMADO",
+    "PATH=/:/GRAMADO:/DE",
     "PS1=~$",
     "PS2=:>",
     "PWD=/",             //#bugbug: This is the working directory.
-    "SHELL=gdeshell",
-    "TERM=noraterm",     //#bugbug
+    "SHELL=shell",
+    "TERM=terminal",     //#bugbug
     "TMP=/TMP",
     "UID=no-id",         //#todo
     "USER=anon",  
     NULL 
 };
 
-
 // ==============================
-// Import from the ring3 application.
+// External reference.
+// The client-side GUI application needs to
+// implement this function.
 extern int main(int argc, char *argv[]);
 
 // ==============================
@@ -85,7 +87,7 @@ void crt0(unsigned long rdi)
 // as a return value to the father.
     int main_ret=0;
 
-// Token support.
+// Token support
     char *tokenList[TOKENLIST_MAX_DEFAULT];
     char *token;
     int token_count=0;
@@ -116,20 +118,15 @@ void crt0(unsigned long rdi)
 
 // Environment.
 // The library will have this default environment.
-// #todo: Change the name to '__libc_default_environ'
-    environ = my_environ;
+
+    environ = __libc_default_environ;
 
 /*
 // #debug
 #ifdef TEDITOR_VERBOSE
 	printf ("\n");
 	printf ("crt0: Initializing ...\n");
-	//printf("\n");
-	//printf(".\n");
-	printf ("..\n");
 	printf ("# MESSAGE={%s} #\n", shared_info );
-	printf ("..\n");
-	//printf(".\n");
 	//printf("\n");
 	//#debug
 	//while(1){ asm ("pause"); }
@@ -167,7 +164,6 @@ void crt0(unsigned long rdi)
     // #debug: put char
     //sc80(65,'1',0,0); 
 
-
 // ---------------------------------------------------------
 // #debug
 // Probably this is the first message in the serial debug 
@@ -198,7 +194,7 @@ void crt0(unsigned long rdi)
 
 // ------------------------------------
 // Initialize the stadard stream.
-// OUT: void
+// OUT: 0=ok <0=fail
 // See: stdio.c
     stdioInitialize();
 

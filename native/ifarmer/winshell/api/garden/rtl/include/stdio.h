@@ -673,8 +673,8 @@ void stdio_fntos(char *name);
 // Initialization
 //
 
-// Initializing the library.
-void stdioInitialize(void);
+// Initializing the library
+int stdioInitialize(void);
 
 #endif    
 
