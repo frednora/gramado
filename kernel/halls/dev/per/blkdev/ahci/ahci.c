@@ -3,6 +3,15 @@
 // Environment: 64-bit kernel-side
 // Created by Fred Nora.
 
+/*
+Alignment reminders (critical for AHCI):
+ + Command List (clb): 1 KiB aligned
+ + FIS receive area (fb): 256 bytes aligned
+ + Command Table (ctba): 128 bytes aligned
+ + PRDT entries: 128-byte aligned recommended
+*/
+
+
 #include <kernel.h>
 
 // #test
