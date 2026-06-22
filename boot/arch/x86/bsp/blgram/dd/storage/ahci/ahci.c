@@ -2,6 +2,15 @@
 // AHCI driver for Bootloader
 // Created by Fred Nora
 
+/*
+Alignment reminders (critical for AHCI):
+ + Command List (clb): 1 KiB aligned
+ + FIS receive area (fb): 256 bytes aligned
+ + Command Table (ctba): 128 bytes aligned
+ + PRDT entries: 128-byte aligned recommended
+*/
+
+
 #include "../../../bl.h"
 
 
@@ -225,9 +234,19 @@ static int ahci_setup_port(int port_num)
     memset((void*)fb, 0, 256);
 
     // 3. Command Table - 128 bytes aligned (usually bigger is safer)
-    //void* cmd_tbl_mem = malloc(128);   // 4KB is generous for bootloader
-    //if (!cmd_tbl_mem) return -1;
-    //memset(cmd_tbl_mem, 0, 128);
+    //unsigned long cmd_tbl_mem = (unsigned long) malloc(128);   // 4KB is generous for bootloader
+    unsigned long cmd_tbl_mem = (unsigned long) malloc(1024);
+    if (!cmd_tbl_mem)
+        return -1;
+    memset(cmd_tbl_mem, 0, 1024);
+
+    printf("AHCI Port %d: CLB=0x%x | FB=0x%x | CTBA=0x%x\n", 
+           port_num, (uint32_t)clb, (uint32_t)fb, (uint32_t)cmd_tbl_mem);
+
+    //refresh_screen();
+    //while(1){}
+
+// -------------------------------
 
 // Setup CLB (Command List Base)
     port->clb  = (uint32_t)clb;
@@ -238,9 +257,9 @@ static int ahci_setup_port(int port_num)
 
     // #todo: We need a pointer for ctba
     // Link Command Header → Command Table
-    //HBA_CMD_HEADER *cmd_hdr = (HBA_CMD_HEADER*)clb_mem;
-    //cmd_hdr->ctba  = (uint32_t)(unsigned long)cmd_tbl_mem;
-    //cmd_hdr->ctbau = 0;
+    HBA_CMD_HEADER *cmd_hdr = (HBA_CMD_HEADER*)clb;
+    cmd_hdr->ctba  = (uint32_t)cmd_tbl_mem;
+    cmd_hdr->ctbau = 0;
 
 // Start port
     port->cmd |= (1 << 4);   // FRE
