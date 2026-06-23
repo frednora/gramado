@@ -138,7 +138,8 @@ int vm_loop(void)
 
         case OP_EOF:  // The last object
             printf("vm_loop: OP_EOF\n");
-            exit(0);
+            //exit(0);
+            return 0;
             break;
 
         case OP_EXIT:

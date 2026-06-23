@@ -2998,7 +2998,7 @@ int parser_loop(int dump_output)
                             int rv = (int) parser_box(TK_TYPE, 0); // inner loop until ']'
                             if (rv == 0){
                                 printf ("After parse_box()\n");
-                                State = 2;
+                                // State = 2;
                                 //goto done;
                                 break;
                             }
@@ -3017,10 +3017,38 @@ int parser_loop(int dump_output)
                         }
                         // ...
 
-                        State = 2;
+                        //State = 2;
                         break;
 
                     case TK_SEPARATOR:
+                        break;
+
+                    // processing kw in the state 1
+                    case TK_KEYWORD:
+                        if (keyword_found == KWPRINT)
+                        {
+                            printf("print found\n");
+                            parse_print(TK_KEYWORD);
+                            break;
+                        }
+                        if (keyword_found == KWEXIT)
+                        {
+                            printf("exit found:\n"); 
+                            // exit(1);
+
+                            int kwexit_return = 0;
+                            kwexit_return = (int) parse_exit(TK_KEYWORD);
+                            // Expected: ';'.
+                            if (kwexit_return != TK_SEPARATOR)
+                            {
+                                printf ("State1: TK_KEYWORD TK_SEPARATOR fail\n");
+                                exit (1);
+                            }
+                            printf("After parse_exit() ok\n");
+                            goto done;
+                        }
+                        printf ("State 1: Unsupported KW");
+                        exit(1);
                         break;
 
                     // ...
@@ -3035,6 +3063,7 @@ int parser_loop(int dump_output)
             case 2:
                 switch (Token)
                 {
+                    /*
                     case TK_KEYWORD:
                         if (keyword_found == KWEXIT)
                         {
@@ -3055,6 +3084,7 @@ int parser_loop(int dump_output)
                         printf ("State 2: Unsupported KW");
                         exit(1);
                         break;
+                    */
 
                     default:
                         printf("State 2: default\n");

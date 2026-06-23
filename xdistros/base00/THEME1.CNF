@@ -10,7 +10,7 @@ box One
 
 meta meta5()
 {
-    print("meta5:");
+    print("meta5: Inside");
     name("titlebar-icon");
     content("2");
     return 1 + 2;
