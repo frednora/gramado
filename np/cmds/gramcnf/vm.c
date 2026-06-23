@@ -28,7 +28,6 @@ int vm_print(struct object_d *o)
     return 0;
 }
 
-
 static int __vm_push00(struct object_d *obj, int index)
 {
     if ((void*)obj == NULL)
@@ -40,7 +39,9 @@ static int __vm_push00(struct object_d *obj, int index)
 
     vm_stack[index] = (unsigned long) obj;  // Save pointer
 
-    printf("__vm_push00: %d\n", obj->opcode);
+    // #debug
+    //printf("__vm_push00: %d\n", obj->opcode);
+
     return 0;
 
 fail:
@@ -129,7 +130,7 @@ int vm_loop(void)
         goto fail;
     }
 
-    printf("OP: %d\n", o->opcode);
+    // printf("OP: %d\n", o->opcode);
 
     switch (o->opcode){
 
@@ -150,6 +151,14 @@ int vm_loop(void)
         case OP_PRINT:
             //printf("VM: print => %s\n", o->token_buffer);
             vm_print(o);
+            break;
+
+        case OP_RET:
+            // printf("vm_loop: OP_RET\n");
+            // Decide scope:
+            // If inside a meta, skip to end of meta.
+            // If at top level, treat as program return.
+            // For now, just continue execution:
             break;
 
         default:

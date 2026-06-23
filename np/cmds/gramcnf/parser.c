@@ -68,7 +68,7 @@ char save_symbol[32];
 static int parse_function(int token);
 // Statements
 
-static int __parse_box_keyword(int token);
+//static int __parse_box_keyword(int token);
 
 static int parse_meta(int token);
 // name/content
@@ -240,8 +240,10 @@ static int parse_function(int token)
     return 0;
 }
 
+/*
 static int __parse_box_keyword(int token)
 {
+
 //
 // Object
 //
@@ -257,6 +259,7 @@ static int __parse_box_keyword(int token)
 
     return 0;
 }
+*/
 
 static int parse_meta(int token)
 {
@@ -799,7 +802,6 @@ static int parse_return(int token, int *return_value)
     o->opcode = OP_RET;
     vm_push(o);
 
-
 //
 // Output
 //
@@ -1076,7 +1078,8 @@ static int parse_exit(int token)
         exit(1);
     }
 
-    printf("parse_exit: exit statement at line %d\n", LexerInfo.current_line );
+    // #debug
+    //printf("parse_exit: exit statement at line %d\n", LexerInfo.current_line );
 
     // Signal to stop parsing
     //running = 0;
@@ -1133,7 +1136,7 @@ static int parse_break(int token)
         exit(1);
     }
 
-    printf("parse_break: break statement at line %d\n", LexerInfo.current_line );
+    // printf("parse_break: break statement at line %d\n", LexerInfo.current_line );
 
     // Signal to stop parsing
     //running = 0;
@@ -1936,6 +1939,12 @@ static int parser_box(int last_token, int dump_output)
 // size?
     size_t size=0;
 
+    // For general usage inside the loop
+    struct object_d *o;
+    // Special for box object
+    struct object_d *box_obj;
+
+
     meta_index=0;
 
 // #bugbug
@@ -1961,8 +1970,7 @@ static int parser_box(int last_token, int dump_output)
     //--
 
 // Initial message
-    printf ("parser_box:\n");
-
+    // printf ("parser_box:\n");
 
 //
 // Validate entry
@@ -1978,18 +1986,9 @@ static int parser_box(int last_token, int dump_output)
         exit(1);
     }
 
-    //id[ID_TYPE] = type_found;
-    //__parse_box_keyword(last_token);  // TK_TYPE
-
-    // printf("parser_box: Breakpoint\n");
-    // exit(0);
-
 //
 // The loop inside box [ ... ]
 //
-
-    // For general usage inside the loop
-    struct object_d *o;
 
 // Vamos usar um while até que se encontre o fim do arquivo.
 
@@ -2062,16 +2061,25 @@ static int parser_box(int last_token, int dump_output)
                         id[ID_TYPE] = type_found;
                         if (type_found == TBOX)
                         {
-                            printf ("box: Line %d\n", LexerInfo.current_line );
+                            // printf ("box: Line %d\n", LexerInfo.current_line );
                             waiting_identifier_after_type = TRUE;
-                            __parse_box_keyword(TK_TYPE);
+
+                            box_obj = (struct object_d *) malloc( sizeof(struct object_d) );
+                            if ((void*) box_obj == NULL){
+                                printf("parse_box: box_obj\n");  
+                                exit(1);
+                            }
+                            box_obj->opcode = OP_BOX_TYPE;
+                            vm_push(box_obj);
                         }
+
                         if (type_found == TMETA)
                         {
-                            printf ("meta: Line %d\n", LexerInfo.current_line );
+                            // printf ("meta: Line %d\n", LexerInfo.current_line );
                             waiting_identifier_after_type = TRUE;
                             parse_meta(TK_TYPE);
                         }
+
                         // Depois de um type vem um identificador.
                         State=2;
                         break;
@@ -2121,7 +2129,7 @@ static int parser_box(int last_token, int dump_output)
                         {
                             if ( square_brackets_inside > 0)
                             {
-                                printf("box terminate: in line %d\n", LexerInfo.current_line );
+                                // printf("box terminate: in line %d\n", LexerInfo.current_line );
                                 square_brackets_inside--;
                                 State = 1;
                                 if (square_brackets_inside == 0)
@@ -2240,8 +2248,8 @@ static int parser_box(int last_token, int dump_output)
                     
                     case TK_IDENTIFIER:
                         
-                        printf("State2: TK_IDENTIFIER={%s} line %d\n", 
-                            real_token_buffer, LexerInfo.current_line );    
+                        //printf("State2: TK_IDENTIFIER={%s} line %d\n", 
+                            //real_token_buffer, LexerInfo.current_line );    
                         
                         id[ID_TOKEN] = TK_IDENTIFIER;
                         id[ID_STACK_OFFSET] = stack_index;
@@ -2319,7 +2327,7 @@ static int parser_box(int last_token, int dump_output)
  
                         if (token == TK_SEPARATOR)
                         {
-                            printf("Separator after a symbol\n");
+                            //printf("Separator after a symbol\n");
 
                             // ':' O separador é uma label.
                             if ( strncmp ( (char *) real_token_buffer, ":", 1 ) == 0 )
@@ -2332,7 +2340,7 @@ static int parser_box(int last_token, int dump_output)
                             // '[' O separador indica que entramos no box.
                             if ( strncmp( (char *) real_token_buffer, "[", 1 ) == 0  )
                             {
-                                printf ("box start:\n");
+                                //printf ("box start:\n");
                                 //while(1){}
                                 square_brackets_inside++;
                                 //emit_function();
@@ -2805,7 +2813,7 @@ debug_output:
 
 // OK, done!
 __parse_exit:
-    printf("parser_box: Done\n");
+    // printf("parser_box: Done\n");
     return 0;
 
 syntax:
@@ -2830,7 +2838,7 @@ int parser_loop(int dump_output)
     int rv=-1;
 
     // Initial message
-    printf ("parser_loop:\n");
+    // printf ("parser_loop:\n");
 
     // For general usage inside the loop
     struct object_d *o;
@@ -2879,7 +2887,7 @@ int parser_loop(int dump_output)
                             //parse_box(TK_TYPE, dump_output);
                             int rv = (int) parser_box(TK_TYPE, 0); // inner loop until ']'
                             if (rv == 0){
-                                printf ("After parse_box()\n");
+                                //printf ("After parse_box()\n");
                                 State = 1;
                                 break;
                             }
@@ -2907,14 +2915,14 @@ int parser_loop(int dump_output)
                     case TK_KEYWORD:
                         if (keyword_found == KWPRINT)
                         {
-                            printf("print found\n");
+                            //("print found\n");
                             parse_print(TK_KEYWORD);
                             State = 1;
                             break;
                         }
                         else if (keyword_found == KWEXIT)
                         {
-                            printf("exit found:\n"); 
+                            // printf("exit found:\n"); 
 
                             int kwexit_return = 0;
                             kwexit_return = (int) parse_exit(TK_KEYWORD);
@@ -2923,7 +2931,7 @@ int parser_loop(int dump_output)
                                 printf ("State1: TK_KEYWORD TK_SEPARATOR fail\n");
                                 exit (1);
                             }
-                            printf("After parse_exit() ok\n");
+                            //printf("After parse_exit() ok\n");
                             State = 0;
                             Running = FALSE;
                             //goto done;

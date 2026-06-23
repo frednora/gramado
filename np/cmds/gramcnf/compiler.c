@@ -21,7 +21,7 @@ FILE *compiler(int dump_output)
 {
     int Status = -1;
 
-    printf("compiler:\n");
+    //printf("compiler:\n");
 
 //
 // Initializations

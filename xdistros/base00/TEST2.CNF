@@ -1,0 +1,40 @@
+
+/*
+  Testing comment 
+*/
+
+// Testing comment
+
+print("Hello");
+print("Hello");
+print("Hello");
+print("Hello");
+
+box MyBox
+[
+
+meta meta1()
+{
+
+    print("Print inside");
+
+    name("background-color");
+    content("green");
+    break;
+}
+
+]
+
+print ("Bye");
+print ("Bye");
+print ("Bye");
+print ("Bye");
+
+/*
+  Testing comment 
+*/
+
+// Testing comment
+
+exit;
+
