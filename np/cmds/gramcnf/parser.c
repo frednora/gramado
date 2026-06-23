@@ -2096,11 +2096,11 @@ static int parser_box(int last_token, int dump_output)
         exit(1);
     }
 
-    id[ID_TYPE] = type_found;
-    __parse_box_keyword(TK_TYPE);
+    //id[ID_TYPE] = type_found;
+    //__parse_box_keyword(last_token);  // TK_TYPE
 
-    printf("parser_box: Breakpoint\n");
-    exit(0);
+    // printf("parser_box: Breakpoint\n");
+    // exit(0);
 
 //
 // The loop inside box [ ... ]
@@ -2111,10 +2111,17 @@ static int parser_box(int last_token, int dump_output)
 
 // Vamos usar um while até que se encontre o fim do arquivo.
 
+    int StartWithToken = TRUE;
+
     while (running == 1){
 
         // Get a token from lexer
-        token = yylex();
+        if (StartWithToken == TRUE){
+            token = last_token;
+            StartWithToken = FALSE;
+        } else {
+            token = yylex();
+        }
 
         if (token == TK_EOF)
         {
@@ -2938,6 +2945,7 @@ int parser_loop(int dump_output)
     register int Token=0;
     int Running = FALSE;
     int State = 0;
+    int rv=-1;
 
     // Initial message
     printf ("parser_loop:\n");
@@ -2946,6 +2954,7 @@ int parser_loop(int dump_output)
     struct object_d *o;
 
     Running = TRUE;
+    State = 1;
     while (Running == TRUE)
     {
         // Get a token from lexer
@@ -2955,7 +2964,7 @@ int parser_loop(int dump_output)
         {
             o = (struct object_d *) malloc( sizeof(struct object_d) );
             if ((void*) o == NULL){
-                printf("parser_box: o\n");  exit(1);
+                printf("parser_loop: o\n");  exit(1);
             }
             o->opcode = OP_EOF;
             vm_push(o);
@@ -2982,11 +2991,33 @@ int parser_loop(int dump_output)
                         // box statement starts with a type
                         if (type_found == TBOX)
                         {
+                            //printf ("box: Line %d\n", LexerInfo.current_line );
                             // IN:
                             // last token, flag
                             //parse_box(TK_TYPE, dump_output);
-                            parser_box(TK_TYPE, 0); // inner loop until ']'
+                            int rv = (int) parser_box(TK_TYPE, 0); // inner loop until ']'
+                            if (rv == 0){
+                                printf ("After parse_box()\n");
+                                State = 2;
+                                //goto done;
+                                break;
+                            }
+                            if (rv != 0){
+                                printf ("Fail after parse_box()\n");
+                                exit(1);
+                            }
+                            //State = 2;
+                            //break;
                         }
+                        if (type_found == TMETA)
+                        {
+                            // Can't handle meta outside box.
+                            printf ("meta: [unexpected] Line %d\n", LexerInfo.current_line );
+                            exit(1);
+                        }
+                        // ...
+
+                        State = 2;
                         break;
 
                     case TK_SEPARATOR:
@@ -2995,6 +3026,7 @@ int parser_loop(int dump_output)
                     // ...
 
                     default:
+                        printf ("default: Line %d\n", LexerInfo.current_line );
                         break;
                 };
                 break;
@@ -3003,6 +3035,31 @@ int parser_loop(int dump_output)
             case 2:
                 switch (Token)
                 {
+                    case TK_KEYWORD:
+                        if (keyword_found == KWEXIT)
+                        {
+                            printf("exit found:\n"); 
+                            // exit(1);
+
+                            int kwexit_return = 0;
+                            kwexit_return = (int) parse_exit(TK_KEYWORD);
+                            // Expected: ';'.
+                            if (kwexit_return != TK_SEPARATOR)
+                            {
+                                printf ("State2: TK_KEYWORD TK_SEPARATOR fail\n");
+                                exit (1);
+                            }
+                            printf("After parse_exit() ok\n");
+                            goto done;
+                        }
+                        printf ("State 2: Unsupported KW");
+                        exit(1);
+                        break;
+
+                    default:
+                        printf("State 2: default\n");
+                        exit(1);
+                        break;
                 };
                 break;
 
@@ -3027,7 +3084,17 @@ int parser_loop(int dump_output)
 
     } // End of the outer loop
 
+
+done:
+// --------------------------------
+// Dump output file?
+    if (dump_output){
+        // Save the content of the output file into a buffer.
+        concat_into_outfile();
+    }
     return 0;
+fail:
+    return (int) -1;
 }
 
 // parserInit:
