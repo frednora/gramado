@@ -1,22 +1,15 @@
-
-box One 
-[
+box One[
     meta meta1(){ name("background-color");     content("green");      break; }
     meta meta2(){ name("window-color");         content("white");      break; }
     meta meta3(){ name("titlebar-color");       content("blue");       break; }
     meta meta4(){ print("meta4:"); name("titlebar-text-color");  content("white");      break; }
-
 // Now we can use break, exit and return.
-
-meta meta5()
-{
+meta meta5(){
     print("meta5: Inside");
     name("titlebar-icon");
     content("2");
     return 1 + 2;
 }
-
-] 
+]    
 
 exit;
-

@@ -532,157 +532,39 @@ error0:
     return -1;
 }
 
-// Parse asm statement.
 static int parse_print(int token)
 {
-// #todo:
-// "asm" pode virar um visualizador de strings.
-
-    int c=0;
-    int running = 1;
-    int State = 1;
-    int inside = 0;
-
-    //debug
-    //printf("[CONTENT]\n");
-
-
-
-// Se entramos errado.
-    if (token != TK_KEYWORD){
-        printf ("parse_print: token error\n");  exit(1);
-    }
-    if (token == TK_KEYWORD){
-        // printf("parse_print: TK_KEYWORD={%s} in line %d\n", 
-        //     real_token_buffer, LexerInfo.current_line );
-    }
-
-//
-// (
-//
-
-    c = yylex ();
-    if (c != TK_SEPARATOR){
-        printf("parse_print: expected (\n");  exit(1);
-    }
-    if (c == TK_SEPARATOR){
-        if ( strncmp( (char *) real_token_buffer, "(", 1 ) == 0  )
-        {
-            // printf("parse_print: TK_KEYWORD={%s} in line %d\n", 
-            //     real_token_buffer, LexerInfo.current_line ); 
-            //ok
-            inside = 1;
-        }
-    }
-
-//
-// String?
-// " .... "
-//
-
-    c = yylex();
-    if (c != TK_STRING){
-        printf("parse_print: expected string in content("")\n");  exit(1);
-    }
-    if (c == TK_STRING)
-    {
-        //if ( strncmp( (char *) real_token_buffer, "\"", 1 ) == 0 ){
-            //ok
-            //inside = 1;
-        //} 
-
-        // #test
-        // Visualizar a string, pois "asm" pode ser usado 
-        // para manipular strings por outros motivos.
-        // Isso pode ser algum tipo de dado vindo 
-        // de um arquivo de configuração.
-        //printf ("content-string: {%s}\n", real_token_buffer );
-
-        //Stage 1: Get the content string
-        //if (meta_stage == 1)
-        //{
-            string_size = (size_t) strlen(real_token_buffer);
-            if (string_size <= 0 ){
-                printf("string size min\n");
-                goto error0;
-            }
-            if (string_size >= 256){
-                printf("string size max\n");
-                goto error0;
-            }
-            memset(metadata[meta_index].print_string, 0, 256);
-            strncpy(
-                metadata[meta_index].print_string,
-                real_token_buffer,
-                string_size );
-            metadata[meta_index].print_string_size = string_size;
-
-
-            // Object
-            struct object_d *o;
-            o = (struct object_d *) malloc( sizeof(struct object_d) );
-            if ((void*) o == NULL){
-                printf("parse_print: o\n");  exit(1);
-            }
-            strncpy(o->token_buffer, real_token_buffer, TOKEN_BUFFER_MAX);
-            o->opcode = OP_PRINT;
-            vm_push(o);
-
-
-            // Let's initialize it only after the return statement.
-
-            //metadata[meta_index].initialized = TRUE;
-            //printf("INITIALIZED\n");
-            
-            // Salva o index.
-            //metadata[meta_index].id = (int) meta_index;
-            
-            // Só muda de index depois de 2 strings.
-            //meta_index++;
-            //if (meta_index >= 32){
-                //printf("meta_index limits\n");
-                //goto error0;
-            //}
-
-            // Come back to first stage.
-            //meta_stage=0;
-        //}
-
-        // Coloca a string no arquivo de saída.
-        strcat( outfile, real_token_buffer );
-        // Ao fim da string vamos para a próxima linha do output file
-        strcat( outfile,"\n");
-
-        c = yylex();
-
-        //)
-        if ( strncmp( (char *) real_token_buffer, ")", 1 ) == 0 )
-        {
-            inside = 0;
-            c = yylex();
-            // ;
-            if ( strncmp( (char *) real_token_buffer, ";", 1 ) == 0 )
-            {
-                // ok
-                return (int) c;
-            }
-            printf("parse_print: expected ; in content string\n");
-            exit(1);
-        }
-
-        printf("parse_print: expected ) in content string\n");
+    if (token != TK_KEYWORD || keyword_found != KWPRINT) {
+        printf("parse_print: wrong token\n");
         exit(1);
     }
 
-error0:
-    printf ("parse_print: todo unexpected error in comtent string\n");
-    exit(1);
-    return -1;
+    int c = yylex();
+    if (c != TK_SEPARATOR || strncmp(real_token_buffer, "(", 1) != 0) {
+        printf("parse_print: expected '('\n");
+        exit(1);
+    }
+
+    c = yylex();
+    if (c != TK_STRING) {
+        printf("parse_print: expected string\n");
+        exit(1);
+    }
+
+    struct object_d *o = malloc(sizeof(struct object_d));
+    if (!o) { printf("parse_print: malloc failed\n"); exit(1); }
+    strncpy(o->token_buffer, real_token_buffer, TOKEN_BUFFER_MAX);
+    o->opcode = OP_PRINT;
+    vm_push(o);
+
+    // consume ')' and ';'
+    c = yylex();
+    if (strncmp(real_token_buffer, ")", 1) != 0) { printf("parse_print: expected ')'\n"); exit(1); }
+    c = yylex();
+    if (strncmp(real_token_buffer, ";", 1) != 0) { printf("parse_print: expected ';'\n"); exit(1); }
+
+    return TK_SEPARATOR;
 }
-
-
-
-
 
 
 // Parse do statement.
@@ -2998,15 +2880,13 @@ int parser_loop(int dump_output)
                             int rv = (int) parser_box(TK_TYPE, 0); // inner loop until ']'
                             if (rv == 0){
                                 printf ("After parse_box()\n");
-                                // State = 2;
-                                //goto done;
+                                State = 1;
                                 break;
                             }
                             if (rv != 0){
                                 printf ("Fail after parse_box()\n");
                                 exit(1);
                             }
-                            //State = 2;
                             //break;
                         }
                         if (type_found == TMETA)
@@ -3029,26 +2909,29 @@ int parser_loop(int dump_output)
                         {
                             printf("print found\n");
                             parse_print(TK_KEYWORD);
+                            State = 1;
                             break;
                         }
-                        if (keyword_found == KWEXIT)
+                        else if (keyword_found == KWEXIT)
                         {
                             printf("exit found:\n"); 
-                            // exit(1);
 
                             int kwexit_return = 0;
                             kwexit_return = (int) parse_exit(TK_KEYWORD);
                             // Expected: ';'.
-                            if (kwexit_return != TK_SEPARATOR)
-                            {
+                            if (kwexit_return != TK_SEPARATOR){
                                 printf ("State1: TK_KEYWORD TK_SEPARATOR fail\n");
                                 exit (1);
                             }
                             printf("After parse_exit() ok\n");
-                            goto done;
+                            State = 0;
+                            Running = FALSE;
+                            //goto done;
+                            break;
+                        } else {
+                            printf ("State 1: Unsupported KW");
+                            exit(1);
                         }
-                        printf ("State 1: Unsupported KW");
-                        exit(1);
                         break;
 
                     // ...

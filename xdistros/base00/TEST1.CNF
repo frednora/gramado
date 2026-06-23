@@ -1,23 +1,12 @@
 
-box One 
+print("Hello");
+
+box MyBox
 [
-    // Testing print() function
-
-meta MetaOne()
-{
-    print("Hello world!");
-    break;
-}
-
-    /*
-    Testing multi-line 
-    comments
-    */
-
-// Testing exit outside meta 
-// exit;
-
-meta MyMetaExit(){ exit; }
-
-
+    meta meta1(){ name("background-color");     content("green");      break; }
 ]
+
+print ("Bye");
+
+exit;
+
