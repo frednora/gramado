@@ -64,12 +64,11 @@ char save_symbol[32];
 // -- Private: Prototypes --------
 //
 
-static int __parserInit(void);
 // Functions
 static int parse_function(int token);
 // Statements
 
-static int parse_box(int token);
+static int __parse_box_keyword(int token);
 
 static int parse_meta(int token);
 // name/content
@@ -92,6 +91,10 @@ static unsigned long parse_expression(int token);
 // Emit
 static void emit_label(void);
 static void emit_function(void);
+
+static int parser_box(int last_token, int dump_output);
+static int __parserInit(void);
+
 
 //
 // -------------------------------------
@@ -237,7 +240,7 @@ static int parse_function(int token)
     return 0;
 }
 
-static int parse_box(int token)
+static int __parse_box_keyword(int token)
 {
 //
 // Object
@@ -246,7 +249,7 @@ static int parse_box(int token)
     struct object_d *o;
     o = (struct object_d *) malloc( sizeof(struct object_d) );
     if ((void*) o == NULL){
-        printf("parse_box: o\n");  
+        printf("__parse_box_keyword: o\n");  
         exit(1);
     }
     o->opcode = OP_BOX_TYPE;
@@ -2022,7 +2025,9 @@ void concat_into_outfile(void)
 // phase 1: 
 // Scaning tokens and building the stack of bytecodes
 // that is gonna be used by the VM.
-int parser_loop(int dump_output)
+
+// parser_box() ends when it sees ] (end of box body).
+static int parser_box(int last_token, int dump_output)
 {
 // Stages:
 // 1: modifier, type, metatag, separator
@@ -2030,8 +2035,8 @@ int parser_loop(int dump_output)
 // 3: keyword.
 // 4: separator. Only ';'.
 
-    int running = 1;
     register int token=0;
+    int running = 1;
     int i=0;
 
 // Se estamos esperando um identificador para um tipo.
@@ -2074,8 +2079,32 @@ int parser_loop(int dump_output)
     //--
 
 // Initial message
-    printf ("parser_loop:\n");
+    printf ("parser_box:\n");
 
+
+//
+// Validate entry
+//
+
+    if (last_token != TK_TYPE){
+        printf("parser_box: expected TK_TYPE\n");
+        exit(1);
+    }
+
+    if (type_found != TBOX){
+        printf("parser_box: expected TBOX\n");
+        exit(1);
+    }
+
+    id[ID_TYPE] = type_found;
+    __parse_box_keyword(TK_TYPE);
+
+    printf("parser_box: Breakpoint\n");
+    exit(0);
+
+//
+// The loop inside box [ ... ]
+//
 
     // For general usage inside the loop
     struct object_d *o;
@@ -2091,7 +2120,7 @@ int parser_loop(int dump_output)
         {
             o = (struct object_d *) malloc( sizeof(struct object_d) );
             if ((void*) o == NULL){
-                printf("parser_loop: o\n");  exit(1);
+                printf("parser_box: o\n");  exit(1);
             }
             o->opcode = OP_EOF;
             vm_push(o);
@@ -2146,7 +2175,7 @@ int parser_loop(int dump_output)
                         {
                             printf ("box: Line %d\n", LexerInfo.current_line );
                             waiting_identifier_after_type = TRUE;
-                            parse_box(TK_TYPE);
+                            __parse_box_keyword(TK_TYPE);
                         }
                         if (type_found == TMETA)
                         {
@@ -2887,18 +2916,118 @@ debug_output:
 
 // OK, done!
 __parse_exit:
-    printf("parser_loop: Done\n");
+    printf("parser_box: Done\n");
     return 0;
 
 syntax:
-    printf("parser_loop: Systax error in line %d\n", LexerInfo.current_line );
+    printf("parser_box: Systax error in line %d\n", 
+        LexerInfo.current_line );
     exit(1);
 
 hang:
-    printf("parser_loop: *hang\n");
+    printf("parser_box: *hang\n");
     while (1){
         asm ("pause");
     };
+}
+
+// Parse the whole program
+// parse_loop() ends when it sees EOF (end of program).
+int parser_loop(int dump_output)
+{
+    register int Token=0;
+    int Running = FALSE;
+    int State = 0;
+
+    // Initial message
+    printf ("parser_loop:\n");
+
+    // For general usage inside the loop
+    struct object_d *o;
+
+    Running = TRUE;
+    while (Running == TRUE)
+    {
+        // Get a token from lexer
+        Token = yylex();
+
+        if (Token == TK_EOF)
+        {
+            o = (struct object_d *) malloc( sizeof(struct object_d) );
+            if ((void*) o == NULL){
+                printf("parser_box: o\n");  exit(1);
+            }
+            o->opcode = OP_EOF;
+            vm_push(o);
+            Running=0; 
+            break; 
+        }
+
+        // The 4 States:
+        // >> 1: keyword, modifier, type, metatag, separator
+        // >> 2: identifier
+        // >> 3: keyword
+        // >> 4: separator. Only ';'
+        switch (State)
+        {
+
+            // >> 1: keyword, modifier, type, metatag, separator
+            case 1:
+                switch (Token)
+                {
+                    case TK_MODIFIER:
+                        break;
+
+                    case TK_TYPE:
+                        // box statement starts with a type
+                        if (type_found == TBOX)
+                        {
+                            // IN:
+                            // last token, flag
+                            //parse_box(TK_TYPE, dump_output);
+                            parser_box(TK_TYPE, 0); // inner loop until ']'
+                        }
+                        break;
+
+                    case TK_SEPARATOR:
+                        break;
+
+                    // ...
+
+                    default:
+                        break;
+                };
+                break;
+
+            // >> 2: identifier
+            case 2:
+                switch (Token)
+                {
+                };
+                break;
+
+            // >> 3: keyword
+            case 3:
+                switch (Token)
+                {
+                };
+                break;
+
+            // >> 4: separator. Only ';'
+            case 4:
+                switch (Token)
+                {
+                };
+                break;
+
+            default:
+                break;
+
+        };
+
+    } // End of the outer loop
+
+    return 0;
 }
 
 // parserInit:
