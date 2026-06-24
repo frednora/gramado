@@ -607,7 +607,8 @@ libata_pio_rw_sector (
  *   - cx, dx: unused
  *   Uses current global port and device selection.
  */
-void 
+
+int 
 ata_read_sector ( 
     unsigned long ax, 
     unsigned long bx, 
@@ -624,6 +625,9 @@ ata_read_sector (
 // We do not have the IDE port, so, we are using the ide channel.
     int ideChannel = ATACurrentPort.g_current_ide_channel;  // 2 channels
     int isSlave    = ATACurrentPort.g_current_ide_device;   // 0=master, 1=slave
+
+// #todo
+// Check port validation
 
 // ====================== WARNING ==============================
 // #IMPORTANTE:
@@ -655,6 +659,7 @@ ata_read_sector (
 	//testar sem ele antes.
 */
 
+    return (int) 0;
 }
 
 /*
@@ -665,7 +670,8 @@ ata_read_sector (
  *   - cx, dx: unused
  *   Uses current global port and device selection.
  */
-void 
+
+int 
 ata_write_sector ( 
     unsigned long ax, 
     unsigned long bx, 
@@ -674,7 +680,7 @@ ata_write_sector (
 {
     static int Operation = __OPERATION_PIO_WRITE;
 
-    int idePort = ATACurrentPort.g_current_ide_port;            // Port index (0-3)
+    int idePort = ATACurrentPort.g_current_ide_port;  // Port index (0-3)
 
 // Channel and device number
 // #bugbug 
@@ -690,6 +696,9 @@ ata_write_sector (
     refresh_screen();
     while(1){}
 */
+
+// #todo
+// Check port validation
 
 // =========================== WARNING ==============================
 // #IMPORTANTE:
@@ -723,6 +732,7 @@ ata_write_sector (
 	os_write_sector(); 
 */
 
+    return (int) 0;
 }
 
 //

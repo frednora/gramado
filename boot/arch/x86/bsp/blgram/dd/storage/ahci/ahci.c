@@ -64,13 +64,14 @@ ahci_read_sector(
     uint32_t sector_count )
 {
     if (port < 0 || port >= NR_PORTS || !AHCI_HBA || !buffer)
-        return -1;
+        goto fail;
 
     volatile HBA_PORT *p = &AHCI_HBA->ports[port];
 
     // Wait for port to be ready
-    while (p->tfd & (ATA_SR_BSY | ATA_SR_DRQ))
+    while (p->tfd & (ATA_SR_BSY | ATA_SR_DRQ)){
         __ahci_io_delay();
+    };
 
     // Use command slot 0 (simple for bootloader)
     HBA_CMD_HEADER *cmd_hdr = (HBA_CMD_HEADER*)((unsigned long)p->clb);
@@ -123,18 +124,21 @@ ahci_read_sector(
     {
         if (p->is & HBA_PxIS_TFES)   // Task File Error
         {
-            printf("AHCI Read Error: TFES\n");
-            return -1;
+            printf("ahci_read_sector: HBA_PxIS_TFES\n");
+            goto fail;
         }
-    }
+    };
 
     if (p->tfd & ATA_SR_ERR)
     {
-        printf("AHCI Read Error: Status Error\n");
-        return -1;
+        printf("ahci_read_sector: ATA_SR_ERR\n");
+        goto fail;
     }
 
     return 0;  // Success
+
+fail:
+    return (int) (-1);
 }
 
 // #todo

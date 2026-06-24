@@ -4,18 +4,20 @@
 
 #include "../../bl.h"
 
-// Main controller structure.
+// Main controller structure
 struct storage_controller_d  StorageController;
 
-
+// Boot disk
 struct boot_disk_d  BootDisk;
 
 
 // read_lba: 
 // Read a LBA from the disk.
-void read_lba( unsigned long address, unsigned long lba )
+int read_lba( unsigned long address, unsigned long lba )
 {
 // Called by fsLoadFile in fs.c
+
+    int rv = -1;
 
     // if ( address == 0 ){}
 
@@ -30,38 +32,40 @@ void read_lba( unsigned long address, unsigned long lba )
     int AHCI_Port = 0;  //BootDisk.boot_port;
     int NumberOfSectors = 1;  // #todo: parameterize this.
 
-    switch (ControllerType)
-    {
+
+    switch (ControllerType){
+
         case STORAGE_CONTROLLER_MODE_AHCI:
             // IN: port, lba. buffer, sector_count
-            ahci_read_sector(AHCI_Port, lba, address, NumberOfSectors);
+            rv = (int) ahci_read_sector(AHCI_Port, lba, address, NumberOfSectors);
             break;
 
         // see: libata.c
         case STORAGE_CONTROLLER_MODE_ATA:
-            //printf("STORAGE_CONTROLLER_MODE_ATA\n");
+            // printf("STORAGE_CONTROLLER_MODE_ATA\n");
             // IN: address, lba, unused, unused
-            ata_read_sector ( address, lba, 0, 0 );
+            rv = (int) ata_read_sector ( address, lba, 0, 0 );
             break;
-        
+
         default:
             printf("read_lba: Invalid controller type\n");
             goto fail;
             break;
-    }
+    };
 
-//OK:
-    return;
+    return (int) rv;  // Done
 
 fail:
-    return;
+    return (int) (-1);
 }
 
 // write_lba: 
 // Write a LBA into the disk.
-void write_lba ( unsigned long address, unsigned long lba )
+int write_lba ( unsigned long address, unsigned long lba )
 {
 // Called by fsLoadFile in fs.c
+
+    int rv = -1;
 
     // if ( address == 0 ){}
 
@@ -86,33 +90,32 @@ void write_lba ( unsigned long address, unsigned long lba )
 
         case STORAGE_CONTROLLER_MODE_ATA:
             // IN: address, lba, unused, unused
-            ata_write_sector ( address, lba, 0, 0 );
+            rv = (int) ata_write_sector ( address, lba, 0, 0 );
             break;
-        
+
         default:
             printf("write_lba: Invalid controller type\n");
             goto fail;
             break;
     }
 
-//OK:
-    return;
+    return (int) rv;  // Done
 
 fail:
-    return;
+    return (int) (-1);
 }
 
 // storagePCIScanDevice:
 // Get the bus/dev/fun for a device given the class.
-
-uint32_t storagePCIScanDevice(int class)
+uint32_t storagePCIScanDevice(int class_id)
 {
+    uint32_t rv = 0;
     uint32_t data = -1;
     int bus=0; 
     int dev=0; 
     int fun=0;
+    int ClassID = class_id;
 
-// =============
 // Probe
 
     for ( bus=0; bus < 256; bus++ )
@@ -121,40 +124,38 @@ uint32_t storagePCIScanDevice(int class)
         {
             for ( fun=0; fun < 8; fun++ )
             {
-                out32 ( PCI_PORT_ADDR, CONFIG_ADDR( bus, dev, fun, 0x8) );
-                
-                data = in32 (PCI_PORT_DATA);
+                out32( 
+                    PCI_PORT_ADDR, 
+                    CONFIG_ADDR( bus, dev, fun, 0x8) 
+                );
+
+                // Get value
+                data = (uint32_t) in32(PCI_PORT_DATA);
                 
                 // #todo
                 // We need a class variable outside the if statement.
                 // ex: ClassValue = data >> 24 & 0xff;
                 
-                if ( ( data >> 24 & 0xff ) == class )
+                if ( ( data >> 24 & 0xff ) == ClassID )
                 {
-                    // #todo: Save this information.
-                    printf ("[ Detected PCI device: %s ]\n", 
-                        pci_classes[class] );
+                    // #todo: Save this information
+                    printf ("Detected PCI device: {%s}\n", 
+                        pci_classes[ClassID] );
 
-                    // Done
-                    
-                    // #todo
-                    // Put this into a variable.
-                    
-                    // XXXValue = ( fun + (dev*8) + (bus*32) );
-                    // return (uint32_t) XXXValue;
-                    
-                    return (uint32_t) ( fun + (dev*8) + (bus*32) );
+                    rv = (uint32_t) ( fun + (dev*8) + (bus*32) );
+
+                    return (uint32_t) rv;  // Done
                 }
             };
         };
     };
 
 // Fail
-    printf ("[ PCI device NOT detected ]\n");
-    refresh_screen ();
+    printf("[ PCI device NOT detected ]\n");
+    refresh_screen();
+
     return (uint32_t) (-1);
 }
-
 
 // Called by main.c
 int storage_initialize(void)
@@ -171,16 +172,18 @@ int storage_initialize(void)
     // type = __ataPCIConfigurationSpace(..)
 
     data = (_u32) storagePCIScanDevice(PCI_CLASS_MASS);
-// Error
+
+    // Error. Abort it.
     if (data == -1)
     {
-        printf ("__ata_probe_controller: pci_scan_device fail. ret={%d}\n", 
+        printf ("storage_initialize: on storagePCIScanDevice() ret={%d}\n", 
             (_u32) data );
 
-        // Abort
-        Status = (int) (PCI_MSG_ERROR);
-        printf("storage: No Mass Storage Controller found\n");
+        // Status = (int) (PCI_MSG_ERROR);
+
+        printf("storage_initialize: Mass Storage Controller not found\n");
         refresh_screen();
+
         bl_die();
     }
 
@@ -189,9 +192,11 @@ int storage_initialize(void)
     dev = ( data >> 3 & 31 );
     fun = ( data      & 7 );
 
-// Getting device info
+//
+// Getting some device info
+//
 
-    // This is for vendor and device id.
+    // Get vendor and device id
     // data = (uint32_t) __ataReadPCIConfigAddr( bus, dev, fun, 0 );
 
     // Getting information about the PCI device.
@@ -203,8 +208,9 @@ int storage_initialize(void)
 
     if (__class != PCI_CLASS_MASS)
     {
-        printf("storage: Not a PCI_CLASS_MASS\n");
+        printf("storage_initialize: Not PCI_CLASS_MASS\n");
         refresh_screen();
+
         bl_die();
     }
 
@@ -221,16 +227,17 @@ int storage_initialize(void)
 // AHCI handles only SATA interface standard.
     if (__subclass == STORAGE_CONTROLLER_MODE_AHCI){
 
-        printf("storage: AHCI Controller\n");
-
+        printf("storage_initialize: AHCI Controller\n");
 
         // === CRITICAL: Read BAR5 ===
-        BootDisk.ahci_bar5 = __ataReadPCIConfigAddr(bus, dev, fun, 0x24) & ~0xF;
+        BootDisk.ahci_bar5 = 
+            __ataReadPCIConfigAddr(bus, dev, fun, 0x24) & ~0xF;
 
         if (BootDisk.ahci_bar5 == 0)
         {
-            printf("AHCI ERROR: BAR5 is zero!\n");
+            printf("AHCI: BAR5 is zero\n");
             refresh_screen();
+
             bl_die();
         }
 
@@ -251,6 +258,8 @@ int storage_initialize(void)
         Status = (int) ahci_initialize();
         if (Status != TRUE){
             // Nothing in case of failure
+            // #todo: Maybe we can return FALSE here
+            // return FALSE;
         }
 
         //ahci_test_read(); // ok its working 
@@ -259,13 +268,12 @@ int storage_initialize(void)
         // refresh_screen();
         // bl_die();
 
-
 // ATA:
 // Try initialization for the ata mode.
 // ATA handles PATA and SATA intarface standards.
     } else if (__subclass == STORAGE_CONTROLLER_MODE_ATA){
 
-        printf("storage: ATA Controller\n");
+        printf("storage_initialize: ATA Controller\n");
 
         // #debug
         // refresh_screen();
@@ -273,17 +281,19 @@ int storage_initialize(void)
 
         Status = (int) ata_initialize();
         if (Status != TRUE){
-            return FALSE;        
+            return FALSE;     
         }
 
 // #todo
 // More types ...
     // }else if (){
 
-// Invalid or unsupported controller type.
+// Invalid or unsupported controller type
     } else {
-        printf("storage: Controller type not supported\n");
+
+        printf("storage_initialize: Controller type not supported\n");
         refresh_screen();
+
         bl_die();
     }
 

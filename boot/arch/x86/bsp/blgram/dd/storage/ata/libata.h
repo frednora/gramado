@@ -19,14 +19,14 @@ libata_pio_rw_sector (
     int port_index,     
     int slave );
 
-void 
-ata_read_hd_sector ( 
+int 
+ata_read_sector ( 
     unsigned long ax, 
     unsigned long bx, 
     unsigned long cx, 
     unsigned long dx ); 
 
-void 
+int 
 ata_write_sector ( 
     unsigned long ax, 
     unsigned long bx, 

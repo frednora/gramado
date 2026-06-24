@@ -1,13 +1,14 @@
 // storage.h 
+// Storage support for the boot loader.
+// Environment: 32bit.
 // Created by Fred Nora.
 
 #ifndef __DD_STORAGE_H
 #define __DD_STORAGE_H    1
 
 
-
 // --------------------------------------------------
-// Controller mode
+// Controller modes
 
 #define STORAGE_CONTROLLER_MODE_SCSI     0x00
 #define STORAGE_CONTROLLER_MODE_ATA      0x01
@@ -46,7 +47,6 @@
 #define STORAGE_INTERFACE_STANDARD_SATAPI_SIG2  0x96
 
 
-
 /*
  * struct storage_controller_d
  * ----------------------------------------------------------------------
@@ -63,6 +63,7 @@
  * Note: Per-port and per-device information is tracked in ata_port[4] and other structures;
  * storage_controller_d is only for the general controller overview and global state.
  */
+
 struct storage_controller_d
 {
 // 0: Not initialized; 1: Controller and ports are ready.
@@ -94,13 +95,12 @@ struct boot_disk_d
 extern struct boot_disk_d  BootDisk;
 
 
-// Read lba on ide device.
-void read_lba( unsigned long address, unsigned long lba );
-// White lba on ide device.
-void write_lba( unsigned long address, unsigned long lba );
+// Read LBA from device
+int read_lba( unsigned long address, unsigned long lba );
+// White LBA on device
+int write_lba( unsigned long address, unsigned long lba );
 
-
-uint32_t storagePCIScanDevice(int class);
+uint32_t storagePCIScanDevice(int class_id);
 
 int storage_initialize(void);
 
