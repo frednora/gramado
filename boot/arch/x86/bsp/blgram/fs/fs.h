@@ -1,6 +1,6 @@
-
 // fs.h
-// Boot loader fs support.
+// Bootloader fs support.
+// Environment: 32bit
 // 2015 - Created by Fred Nora.
 
 #ifndef ___FS_H
@@ -26,15 +26,18 @@
 //#define FAT16_CLUSTER_LAST       0xFFFF
 
 
-//teste 
-#define FAT_ERRO_1   0xffff9     //N�o h� entradas vazias. 
+/*
+// #test
+// What is this?
+#define FAT_ERRO_1   0xffff9     //Nao ha entradas vazias
 #define FAT_ERRO_2   0xffff8   
 #define FAT_ERRO_3   0xffff7
 #define FAT_ERRO_4   0xffff6
-#define FAT_STATUS_1 0xffff5    //Não ha mais entradas cheias.
+#define FAT_STATUS_1 0xffff5     //Nao ha mais entradas cheias
 #define FAT_STATUS_2 0xffff4
 #define FAT_STATUS_3 0xffff3
 #define FAT_STATUS_4 0xffff2
+*/
 
 // #important:
 // Loading status.
@@ -57,12 +60,12 @@ extern unsigned short file_cluster_list[MAX_CLUSTERS];
 // a partition table entry.
 struct partition_table_d
 {
-    unsigned char boot_indicator;    //80h, active.
+    unsigned char boot_indicator;    // 80h, active.
     unsigned char start_chs[3];
     unsigned char partition_type;
     unsigned char end_chs[3];
     unsigned long start_sector;
-    unsigned long partition_size;    //In sectors.
+    unsigned long partition_size;    // In sectors
 };
 
 extern struct partition_table_d  partition;
@@ -71,14 +74,6 @@ extern struct partition_table_d  partition;
 //
 // Prototypes ========================
 //
-
-//
-// File System initialization support.
-//
-
-int fsInit(void);
-void fsInitStructures();
-void fsInitFat();
 
 //
 //  Cluster and LBA support. (Disc parameters)
@@ -97,14 +92,14 @@ fatLoadCluster (
      unsigned long spc );
 
 //
-// Loading files.
+// Loading files
 //
 
 // See: loader.c
 int elfLoadKernelImage(const char *pathname, const char *default_pathname);
 
 //
-// File support.
+// File support
 //
 
 int 
@@ -208,6 +203,15 @@ void fs_init_bootfile_struct();
 
 void fs_set_structures();
 void fs_save_structure();
+
+
+//
+// File System initialization support
+//
+
+void fsInitFat(void);
+void fsInitStructures(void);
+int fsInit(void);
 
 #endif    
 

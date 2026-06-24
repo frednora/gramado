@@ -1371,46 +1371,42 @@ exit:
     printf("Done!\n");
 #endif
     return 0;
+
 fail:
     printf("Fail!\n");
     return 1;
 }
 
-
-/*
- * fsInitFat:
- *    Inicializa as estruturas da FAT.
- */
-// Called by fsInit.
-void fsInitFat()
+// Nothing for now
+void fsInitFat(void)
 {
-    //return;  //Ainda n�o implementada.
-}
-
-/*
- * fsInitStructures: 
- *     +Limpa as estruturas para primeiro uso.
- *     +@todo: Configura as estruturas com os falores encontrados
- *             no mbr, no rootdir.
- * OBS: Quem vai usar essas estuturas � o bootloader.
- */
 // Called by fsInit.
-void fsInitStructures()
-{
+
     //return;
 }
 
-/*
- * fsInit:
- *     Inicializa o sistema de arquivos da parti��o do sistema.
- *     Obs: Isso deve ficar no fim do arquivo. 
- */
-// Called by init() in init.c
+// Nothing for now
+void fsInitStructures(void)
+{
+// Called by fsInit.
+
+    //return;
+}
+
+
+//
+// #
+// INITIALIZATION
+//
+
+// Initializes the file system for the system partition
 int fsInit(void)
 {
+// Called by init() in init.c
+
     register int i=0;
 
-// Clear the list of clusters.
+// Clear the list of clusters
     for (i=0; i<MAX_CLUSTERS; i++){
         file_cluster_list[i] = 0;
     };
@@ -1418,7 +1414,11 @@ int fsInit(void)
     fsInitStructures();
     fsInitFat();
     // ...
+
     return 0;
+
+//fail:
+    //return (int) -1;
 }
 
 //
