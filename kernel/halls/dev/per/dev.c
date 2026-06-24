@@ -1,10 +1,13 @@
 // dev.c
+// Device manager.
+// Environment: 64bit kernel.
 // Created by Fred Nora.
 
 #include <kernel.h>  
 
-// List of devices.
+// List of devices
 unsigned long deviceList[DEVICE_LIST_MAX];
+
 // #maybe
 // A linked list of devices.
 // struct device_d  *devices;
@@ -77,8 +80,10 @@ void devmgr_show_device_list(int object_type)
 // #todo
 // Só podemos chamar isso se a lista ja estiver inicializada.
 // precisamos de uma flag. Pois os valores podem estar sujos.
+
 // #todo: Use 'const char*'
-file *devmgr_search_in_dev_list(char *path)
+
+file *devmgr_search_in_dev_list(const char *path)
 {
     register int i=0;
     size_t PathSize=0;
@@ -99,7 +104,7 @@ file *devmgr_search_in_dev_list(char *path)
 
     for (i=0; i<DEVICE_LIST_MAX; i++)
     {
-        // Get a pointer to a device structure.
+        // Get a pointer to a device structure
         tmp_dev = (struct device_d *) deviceList[i];
 
         // Is it a valid pointer?
@@ -120,9 +125,11 @@ file *devmgr_search_in_dev_list(char *path)
                     {
                         // #debug
                         printk("Device found!\n");
+
                         // OUT:
                         // Return the file pointer for 
                         // the file structure of this device.
+
                         return (file *) tmp_dev->_fp;
                     }
                 }
@@ -167,9 +174,10 @@ struct device_d *devmgr_device_object(void)
             d->name[1] = 0;
             // ...
 
+            // Sign, save and return.
+    
             d->used = TRUE;
             d->magic = 1234;
-            // Save and return
             deviceList[i] = (unsigned long) d;
 
             return (struct device_d *) d;
@@ -390,6 +398,18 @@ devmgr_register_tty_device(
 {
     int rv = -1;
 
+// The device
+    struct device_d *d;
+    int id= -1;
+
+// Mount point
+    size_t NameSize=0;
+    const int PathSize = 64;  // Pathname size
+    char buf[PathSize];
+    char *new_mount_point;
+
+// Parameters:
+
     if ((void*) fp == NULL){
         return (int) -1;
     }
@@ -402,14 +422,9 @@ devmgr_register_tty_device(
     if ((void*) tty == NULL){
         return (int) -1;
     }
+
 // ========================================================
-    struct device_d *d;
-    int id= -1;
-// mount point
-    size_t NameSize=0;
-    int PathSize = 64;  // Pathname size.
-    char buf[PathSize];
-    char *new_mount_point;
+
 
     //debug_print("devmgr_register_tty_device:\n");
 
@@ -567,6 +582,18 @@ devmgr_register_pci_device(
 {
     int rv = -1;
 
+// The device
+    struct device_d *d;
+    int id= -1;
+
+// Mount point
+    size_t NameSize=0;
+    const int PathSize = 64;  // Pathname size
+    char buf[PathSize];
+    char *new_mount_point;
+
+// Parameters:
+
     if ((void*) fp == NULL){
         return (int) -1;
     }
@@ -581,13 +608,6 @@ devmgr_register_pci_device(
     }
 
 // ========================================================
-    struct device_d *d;
-    int id= -1;
-// mount point
-    size_t NameSize=0;
-    int PathSize = 64;  // Pathname size.
-    char buf[PathSize];
-    char *new_mount_point;
 
     //debug_print("devmgr_register_pci_device:\n");
 
@@ -774,6 +794,18 @@ devmgr_register_legacy_device(
 {
     int rv = -1;
 
+// The device
+    struct device_d *d;
+    int id= -1;
+
+// Mount point
+    size_t NameSize=0;
+    const int PathSize = 64;  // Pathname size
+    char buf[PathSize];
+    char *new_mount_point;
+
+// Parameters:
+
     if ((void*) fp == NULL){
         return (int) -1;
     }
@@ -785,13 +817,6 @@ devmgr_register_legacy_device(
     }
 
 // ========================================================
-    struct device_d *d;
-    int id= -1;
-// mount point
-    size_t NameSize=0;
-    int PathSize = 64;  // Pathname size.
-    char buf[PathSize];
-    char *new_mount_point;
 
     //debug_print("devmgr_register_pci_device:\n");
 
@@ -944,9 +969,10 @@ static int __devmgr_init_device_list(void)
 // At this moment we didn't initialize any device,
 // maybe only the 'serial port' used in the basic debug.
 
-void devInitialize(void)
+int devInitialize(void)
 {
 // Called in x64init.c
+
     register int i=0;
     const int MaxNICDevices = 8;
 
@@ -961,6 +987,8 @@ void devInitialize(void)
     };
 
     // ...
+
+    return 0;  // OK
 }
 
 //

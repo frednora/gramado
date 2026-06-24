@@ -105,7 +105,7 @@ struct device_class_d
 // Device structure
 struct device_d 
 {
-    struct kobject_d kobj;
+    struct kobject_d  kobj;
     int used;
     int magic;
 
@@ -184,7 +184,8 @@ struct device_d
 
 // Continua ...
 
-    // maybe not.
+
+// Navigation
     //struct device_d *next;
 };
 
@@ -204,7 +205,7 @@ struct device_d
 // NUMBER_OF_FILES
 #define DEVICE_LIST_MAX    512
 
-// see: devmgr.c
+// see: dev.c
 extern unsigned long deviceList[DEVICE_LIST_MAX];
 
 //
@@ -212,7 +213,7 @@ extern unsigned long deviceList[DEVICE_LIST_MAX];
 //
 
 void devmgr_show_device_list(int object_type);
-file *devmgr_search_in_dev_list(char *path);
+file *devmgr_search_in_dev_list(const char *path);
 
 struct device_d *devmgr_device_object(void);
 
@@ -251,7 +252,7 @@ devmgr_register_legacy_device(
     unsigned char dev_class,
     unsigned char dev_type );
 
-void devInitialize(void);
+int devInitialize(void);
 
 #endif    
 
