@@ -7,6 +7,14 @@ Basically there are two models:
 We can also mix the idea of 'message queue' and 'database', 
 for volatile and persistent data.
 
+List of the main infrastructure models, each with a single‑line explanation:
+
+- Client/Server     → Direct request/response between client and server, best for synchronous interactions.  
+- Message Queue     → Producers send messages to a broker, consumers process them asynchronously.  
+- Publish/Subscribe → Publishers broadcast to topics, subscribers receive updates like a news feed.  
+- Event Sourcing    → Every change is stored as an event log, state is rebuilt by replaying events.  
+- Hybrid Models     → Mix of direct client/server calls and asynchronous queues for flexibility.  
+
 --------------------------------------------------
 
 
