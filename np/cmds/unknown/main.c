@@ -1,4 +1,3 @@
-
 // unknown.bin
 // Remonta o nome do arquivo, caso ele tenha sido
 // digitado com espaços ...

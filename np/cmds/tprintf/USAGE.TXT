@@ -1,0 +1,9 @@
+# Basic run (default tests)
+TPRINTF.BIN
+
+# Run specific tests
+TPRINTF.BIN -p -f -b
+TPRINTF.BIN --all
+TPRINTF.BIN --stress
+TPRINTF.BIN -h
+

@@ -213,10 +213,11 @@ build-extras:
 	@-cp $(LZ_CMDS)/bin/CAT.BIN       $(BASE)/
 	@-cp $(LZ_CMDS)/bin/CAT00.BIN     $(BASE)/
 
-#test
+#tests
 	@-cp $(LZ_CMDS)/bin/LUA1.BIN       $(BASE)/
 #	@-cp $(LZ_CMDS)/bin/CMP.BIN        $(BASE)/
-
+#	@-cp $(LZ_CMDS)/bin/TASCII.BIN     $(BASE)/
+#	@-cp $(LZ_CMDS)/bin/TPRINTF.BIN    $(BASE)/
 
 # Experimental commands.
 #	@-cp $(LZ_CMDS)/bin/FALSE.BIN      $(BASE)/GRAMADO/
