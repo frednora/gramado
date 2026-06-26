@@ -567,10 +567,10 @@ copy_process00(
 
 // File name
     if ((void*) filename == NULL){
-        panic ("copy_process: filename\n");
+        panic ("copy_process00: filename\n");
     }
     if (*filename == 0){
-        panic ("copy_process: *filename\n");
+        panic ("copy_process00: *filename\n");
     }
 // ppid
     //if (pid<0)
@@ -581,7 +581,7 @@ copy_process00(
 // The caller is trying to clone the process using the unix style, 
 // but we're not prepared for that yet.
     if ((clone_flags & F_CLONE_UNIX_STYLE) != 0){
-        printk("clone_process: #todo F_CLONE_UNIX_STYLE\n");
+        printk("copy_process00: #todo F_CLONE_UNIX_STYLE\n");
         goto fail;
     }
 
@@ -591,7 +591,7 @@ copy_process00(
 // Clonning the kernel's pml4.
     _pml4 = (void *) CloneKernelPML4();
     if ((void*) _pml4 == NULL){
-        panic("copy_process: _pml4\n");
+        panic("copy_process00: _pml4\n");
     }
 
     //printk ("_pml4: %x\n",_pml4);
@@ -649,24 +649,24 @@ copy_process00(
 
 // parent pid.
     if (parent_pid < 0 || parent_pid >= PROCESS_COUNT_MAX){
-        printk("copy_process: parent_pid\n");
+        printk("copy_process00: parent_pid\n");
         goto fail;
     }
 // parent process pointer.
     parent_process = (struct te_d *) teList[parent_pid];
     if ((void *) parent_process == NULL){
-        printk("copy_process: parent_process\n");
+        printk("copy_process00: parent_process\n");
         goto fail;
     }
     if (parent_process->used != TRUE || parent_process->magic != 1234){
-        printk("copy_process: parent_process validation\n");
+        printk("copy_process00: parent_process validation\n");
         goto fail;
     }
 
 // cpl:
 // Only ring 3 processes can clone for now.
     if (parent_process->cpl != RING3){
-        panic("copy_process: cpl != RING3\n");
+        panic("copy_process00: cpl != RING3\n");
     }
 
 // iopl:
@@ -690,17 +690,17 @@ copy_process00(
 
 // pml4
     if ((void*) parent_process->pml4_VA == NULL){
-        printk("copy_process: [FAIL] parent_process->pml4_VA\n");
+        printk("copy_process00: [FAIL] parent_process->pml4_VA\n");
         goto fail;
     }
 // pdpt
     if ((void*) parent_process->pdpt0_VA == NULL){
-        printk("copy_process: [FAIL] parent_process->pdpt0_VA\n");
+        printk("copy_process00: [FAIL] parent_process->pdpt0_VA\n");
         goto fail;
     }
 // pd
     if ((void*) parent_process->pd0_VA == NULL){
-        printk("copy_process: [FAIL] parent_process->pd0_VA\n");
+        printk("copy_process00: [FAIL] parent_process->pd0_VA\n");
         goto fail;
     }
 
@@ -719,16 +719,16 @@ copy_process00(
 //
     parent_thread = (struct thread_d *) parent_process->flower;
     if ((void*) parent_thread == NULL){
-        panic("copy_process: parent_thread\n");
+        panic("copy_process00: parent_thread\n");
     }
     if (parent_thread->magic != 1234){
-        panic("copy_process: parent_thread validation\n");
+        panic("copy_process00: parent_thread validation\n");
     }
 
 // cpl
 // For now we can only clone ring 3 threads.
     if (parent_thread->cpl != RING3)
-        panic("copy_process: parent_thread->cpl\n");
+        panic("copy_process00: parent_thread->cpl\n");
 
 // iopl
 // #bugbug:
@@ -764,7 +764,7 @@ copy_process00(
 // Let's check the validation for the 
 // Thread group id = Thread Environment ID (fka PID)
     if (parent_thread->tgid != parent_process->pid){
-        panic("copy_process: parent_thread->tgid\n");
+        panic("copy_process00: parent_thread->tgid\n");
     }
 
 // A thread que fez a chamada precisa ser
@@ -773,13 +773,13 @@ copy_process00(
 // of the parent thread.
 
     if (CallerTID != parent_thread->tid){
-        panic("copy_process: CallerTID mismatched\n");
+        panic("copy_process00: CallerTID mismatched\n");
     }
 
 // O PID do processo pai.
 
     if (parent_pid != parent_process->pid){
-        panic("copy_process: parent_pid mismatched\n");
+        panic("copy_process00: parent_pid mismatched\n");
     }
 
 // Select the 
@@ -794,14 +794,14 @@ copy_process00(
     if ( parent_process->pid < 0 || 
          parent_process->pid >= PROCESS_COUNT_MAX )
     {
-        panic("copy_process: parent_process->pid limits\n");
+        panic("copy_process00: parent_process->pid limits\n");
     }
 
 // pid again.
 // Tem que ser igual ao current_process que pegamos logo acima
 // pois o pai tem que ser quem esta chamando.
     if (current_process != parent_process->pid){
-        panic("copy_process: current_process != parent_process->pid\n");
+        panic("copy_process00: current_process != parent_process->pid\n");
     }
 
 //
@@ -823,13 +823,13 @@ do_clone:
         (struct te_d *) create_and_initialize_process_object();
 
     if ((void *) child_process == NULL){
-        debug_print("copy_process: child_process\n");
-        printk     ("copy_process: child_process\n");
+        //debug_print("copy_process00: child_process\n");
+        printk     ("copy_process00: child_process\n");
         goto fail;
     }
     if (child_process->magic != 1234){
-        debug_print("copy_process: child_process validation\n");
-        printk     ("copy_process: child_process validation\n");
+        //debug_print("copy_process00: child_process validation\n");
+        printk     ("copy_process00: child_process validation\n");
         goto fail;
     }
 
@@ -841,17 +841,17 @@ do_clone:
 
     child_pid = (pid_t) child_process->pid;
     if ( child_pid < 0 || child_pid >= PROCESS_COUNT_MAX ){
-        panic("copy_process: child_pid limits\n");
+        panic("copy_process00: child_pid limits\n");
     }
 
 // The child pid can't be the same of his father.
     if (child_pid == parent_pid){
-        panic("copy_process: child_pid == parent_pid\n");
+        panic("copy_process00: child_pid == parent_pid\n");
     }
 
 // The child pid can't be the same of the kernel.
     if (child_pid == GRAMADO_PID_KERNEL){
-        panic("copy_process: child_pid == GRAMADO_PID_KERNEL\n");
+        panic("copy_process00: child_pid == GRAMADO_PID_KERNEL\n");
     }
 
 // Breakpoint
@@ -873,7 +873,7 @@ do_clone:
 // Endereço virtual do pml4 do processo filho.
     child_process->pml4_VA = (unsigned long) _pml4;
     if ((void *) child_process->pml4_VA == NULL){
-        panic("copy_process: [FAIL] child_process->pml4_VA\n");
+        panic("copy_process00: [FAIL] child_process->pml4_VA\n");
     }
 
 // Endereço físico do pml4 do processo filho.
@@ -959,7 +959,7 @@ do_clone:
 // Allocating memory for the image and for the stack.
     Status = (int) alloc_memory_for_image_and_stack(parent_process);
     if (Status != 0){
-        panic("copy_process: __alloc_memory_for_image_and_stack\n");
+        panic("copy_process00: __alloc_memory_for_image_and_stack\n");
     }
 
 // Breakpoint
@@ -983,7 +983,7 @@ do_clone:
 // #todo: It depends on the childs personality.
     Status = (int) copy_process_struct( parent_process, child_process );
     if (Status != 0){
-        panic("copy_process: [FAIL] copy_process_struct\n");
+        panic("copy_process00: [FAIL] copy_process_struct\n");
     }
 
 // Breakpoint
@@ -1011,7 +1011,7 @@ do_clone:
     //debug_print("copy_process: [3] Copying thread structure\n");
     child_thread = (struct thread_d *) copy_thread_struct(parent_thread);
     if ((void *) child_thread == NULL){
-        panic("copy_process: [FAIL] copy_thread_struct\n");
+        panic("copy_process00: [FAIL] copy_thread_struct\n");
     }
 
 // #bugbug: 
@@ -1095,11 +1095,11 @@ do_clone:
 // Check both addresses
     // va
     if ((void *) child_process->Image == NULL){
-        panic("copy_process: [FAIL] child_process->Image\n");
+        panic("copy_process00: [FAIL] child_process->Image\n");
     }
     // pa
     if ((void *) child_process->ImagePA == NULL){
-        panic("copy_process: [FAIL] child_process->ImagePA\n");
+        panic("copy_process00: [FAIL] child_process->ImagePA\n");
     }
 
 //
@@ -1118,8 +1118,8 @@ do_clone:
 
     if (Status != 0)
     {
-        debug_print("copy_process: [FAIL] Couldn't load the file\n");
-        printk     ("copy_process: [FAIL] Couldn't load the file %s\n", 
+        //debug_print("copy_process: [FAIL] Couldn't load the file\n");
+        printk     ("copy_process00: [FAIL] Couldn't load the file %s\n", 
             filename );
         goto fail;
     }
@@ -1133,8 +1133,8 @@ do_clone:
 // See: fs.c
 
 // #debug
-    debug_print("copy_process: [5] Check signature\n");
-    printk ("copy_process: [5] Check signature\n");
+    //debug_print("copy_process: [5] Check signature\n");
+    printk ("copy_process00: [5] Check signature\n");
 
 // #bugbug
 // O processo init deve ter suas proprias tabelas de paginas.
@@ -1143,8 +1143,8 @@ do_clone:
     unsigned long image_va = (unsigned long) child_process->Image;
     Status = (int) fsCheckELFFile(image_va);
     if (Status < 0){
-        debug_print("copy_process: ELF header\n");
-        printk     ("copy_process: ELF header\n");
+        //debug_print("copy_process: ELF header\n");
+        printk     ("copy_process00: ELF header\n");
         goto fail;
     }
 
@@ -1157,20 +1157,20 @@ do_clone:
 
     // #todo
     // Retornaremos o endereço virtual da pagetable.
-    // See: core/ps/x86/pages.c
+    // See: paging.c
 
 // Check again
 // Checando as tabelas principais novamente.
 // Isso foi obtido pela rotina de clonagem de processo,
 // juntamente com seu endereço físico.
     if ((void*) child_process->pml4_VA == NULL){
-        panic("copy_process: [2nd time] child_process->pml4_VA\n");
+        panic("copy_process00: [2nd time] child_process->pml4_VA\n");
     }
     if ((void*) child_process->pdpt0_VA == NULL){
-        panic("copy_process: [2nd time] child_process->pdpt0_VA\n");
+        panic("copy_process00: [2nd time] child_process->pdpt0_VA\n");
     }
     if ((void*) child_process->pd0_VA == NULL){
-        panic("copy_process: [2nd time] child_process->pd0_VA\n");
+        panic("copy_process00: [2nd time] child_process->pd0_VA\n");
     }
 
 //
@@ -1182,7 +1182,7 @@ do_clone:
 
     //debug_print ("copy_process:  This is a work in progress\n");
     //     printk ("copy_process:  This is a work in progress\n");
-    debug_print("copy_process: Calling CreateAndIntallPageTable\n");
+    debug_print("copy_process00: Calling CreateAndIntallPageTable\n");
     //printk   ("copy_process: Calling CreateAndIntallPageTable :)\n");
     //panic    ("copy_process: [Breakpoint] CreateAndIntallPageTable\n");
 
@@ -1240,7 +1240,7 @@ do_clone:
 // criaremos nossa pagetable.
     unsigned long ptVA = (unsigned long) get_table_pointer_va();
     if (ptVA == 0){
-        panic("copy_process: [FAIL] ptVA\n");
+        panic("copy_process00: [FAIL] ptVA\n");
     }
 // Get the physical address.
     unsigned long ptPA = 
@@ -1266,9 +1266,9 @@ do_clone:
                             gKernelPML4Address ); 
 
     if (child_process->pd0_VA == 0)
-        panic("copy_process: child_process->pd0_VA==0\n");
+        panic("copy_process00: child_process->pd0_VA==0\n");
     if (child_process->pd0_PA == 0)
-        panic("copy_process: child_process->pd0_PA==0\n");
+        panic("copy_process00: child_process->pd0_PA==0\n");
 
 // The va for the base of the image. 0x200000.
 // #bugbug:
@@ -1310,9 +1310,9 @@ do_clone:
                             gKernelPML4Address ); 
 
     if (child_process->pdpt0_VA == 0)
-        panic("copy_process: child_process->pdpt0_VA==0\n");
+        panic("copy_process00: child_process->pdpt0_VA==0\n");
     if (child_process->pdpt0_PA == 0)
-        panic("copy_process: child_process->pdpt0_PA==0\n");
+        panic("copy_process00: child_process->pdpt0_PA==0\n");
 
     //#debug
     //printk (" :) \n");
@@ -1420,11 +1420,11 @@ do_clone:
 // Isso ajudará a reorganizarmos essa rotina.
 
 // #debug
-    debug_print("copy_process: [5] Done\n");
-    printk     ("copy_process: [5] Done\n");
+    //debug_print("copy_process: [5] Done\n");
+    printk     ("copy_process00: [5] Done\n");
 
 // #todo
-// We don't need this anymore.
+// We don't need this anymore
     invalidate_screen();
 
 //
@@ -1499,6 +1499,7 @@ do_clone:
         );
         child_thread->cmdline[511] = 0; // ensure termination
         child_thread->has_cmdline = TRUE;
+
     } else { 
         child_thread->has_cmdline = FALSE; 
     }
@@ -1543,7 +1544,7 @@ do_clone:
     if ( NextCurrentThread < 0 || 
          NextCurrentThread >= THREAD_COUNT_MAX )
     {
-        panic("copy_process: NextCurrentThread limits\n");
+        panic("copy_process00: NextCurrentThread limits\n");
     }
     // ok. Set next thread
     lapic_info[0].current_tid = (tid_t) NextCurrentThread;
@@ -1567,8 +1568,8 @@ do_clone:
 fail:
 
     // #debug
-    debug_print ("copy_process: [X] Fail\n");
-    printk      ("copy_process: [X] Fail\n");
+    debug_print ("copy_process00: [X] Fail\n");
+    printk      ("copy_process00: [X] Fail\n");
 
     // Nem chegamos a pegar o valor.
     // Nem mudar o pml4.
@@ -1583,6 +1584,7 @@ fail:
     //}
 
     copy_process_in_progress=FALSE;
+
     return (pid_t) (-1);
 }
 
@@ -1594,6 +1596,8 @@ copy_process(
     unsigned long clone_flags )
 {
     pid_t rPID = -1;
+
+    // printf("copy_process:\n");
 
     if (pid < 0 || pid >= PROCESS_COUNT_MAX){
         return (pid_t) -1;
