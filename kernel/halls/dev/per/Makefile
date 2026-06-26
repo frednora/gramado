@@ -77,8 +77,8 @@ dev.o io.o
 all:
 
 # i/o
-	$(CC) -c dev.c   $(KERNEL_INCLUDE) $(CFLAGS) -o dev.o 
-	$(CC) -c io.c       $(KERNEL_INCLUDE) $(CFLAGS) -o io.o
+	$(CC) -c dev.c  $(KERNEL_INCLUDE) $(CFLAGS) -o dev.o 
+	$(CC) -c io.c   $(KERNEL_INCLUDE) $(CFLAGS) -o io.o
 
 # link
 	$(LD) -r -o p3_dev.o $(OBJS)
