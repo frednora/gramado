@@ -40,7 +40,9 @@
 // AF_GRAMADO
 // ... gramado_ports[]
 // ...
-#define GRAMADO_PORT_WS  11  // Window server
+
+#define GRAMADO_PORT_DS  11  // Display server
+
 #define GRAMADO_PORT_WM  12  // Window manager
 #define GRAMADO_PORT_NS  14  // Network server
 #define GRAMADO_PORT_FS  16  // File system

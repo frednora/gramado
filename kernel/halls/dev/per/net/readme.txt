@@ -1,4 +1,15 @@
 
+Basically there are two models:
++ client/server. (connection-driver)
++ message queue. (publishers and subscribers) (queue-driven)
+
+#ps:
+We can also mix the idea of 'message queue' and 'database', 
+for volatile and persistent data.
+
+--------------------------------------------------
+
+
 net/
  |-- ifconfig/   # configure interfaces
  |-- hosts/      # individual nodes

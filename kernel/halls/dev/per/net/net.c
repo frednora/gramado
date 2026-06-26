@@ -319,9 +319,9 @@ network_register_ring3_display_server(
 // Register_ws_process(current_process);
     cg->service_display_server.pid = (pid_t) current_process;
 
-// #todo
-// Maybe this method belongs to the sys_bind() routine.
-    socket_set_gramado_port( GRAMADO_PORT_WS, (pid_t) current_process );
+// #todo: Maybe this method belongs to the sys_bind() routine.
+// #ps: This is the Display Server.
+    socket_set_gramado_port( GRAMADO_PORT_DS, (pid_t) current_process );
 
 // Initialize DisplayServerInfo structure.
 // See: dispsrv.h and dispsrv.c.

@@ -779,10 +779,10 @@ sys_bind (
 
     // #debug
     if (Verbose == TRUE){
-        printk("sys_bind: PID %d | fd %d |\n", 
-            current_process, sockfd );
+        printk("sys_bind: PID %d | fd %d \n", current_process, sockfd );
     }
-    if (current_process < 0 || current_process >= PROCESS_COUNT_MAX){
+    if (current_process < 0 || current_process >= PROCESS_COUNT_MAX)
+    {
         printk("sys_bind: current_process\n");
         goto fail;
     }
@@ -839,7 +839,7 @@ sys_bind (
 // Maybe we can use this method to update the cache
 // when we realized what is the server that is calling this routine.
     socket_set_gramado_port(
-        GRAMADO_PORT_WS,
+        GRAMADO_PORT_DS,
         (pid_t) current_process );
 */
 
@@ -847,25 +847,26 @@ sys_bind (
 // Domains
 //
 
-
 // ---------------------
 // AF_GRAMADO
 // Copy. Always 14.
 // #important:
-// For this type of family, the information associated with the
+// For this family, the information associated with the
 // servers socket is a two byte string. Example: 'ws' or 'ns'.
+
     if (s->addr.sa_family == AF_GRAMADO)
     {
-        debug_print ("sys_bind: [AF_GRAMADO] Binding the name to the socket.\n");
+        debug_print ("sys_bind: [AF_GRAMADO] Bind the name to the socket\n");
         for (i=0; i<14; i++){
             s->addr.sa_data[i] = addr->sa_data[i];
         };
         // #debug
-        if (Verbose==TRUE){
+        if (Verbose == TRUE){
             printk ("sys_bind: process %d | family %d | len %d\n", 
                 current_process, addr->sa_family, addrlen  );
         }
-        return 0;
+
+        return 0;  // Done
     }
 
 // ---------------------
@@ -877,7 +878,8 @@ sys_bind (
         printk      ("sys_bind: AF_UNIX not supported yet\n");
         // Copy.
         //for (i=0; i<14; i++){ s->addr.sa_data[i] = addr->sa_data[i]; }; 
-        return -1;
+        
+        goto fail;
     }
 
 // ---------------------
@@ -888,7 +890,8 @@ sys_bind (
         printk      ("sys_bind: AF_INET not supported yet\n");
         // Copy.
         //for (i=0; i<14; i++){ s->addr.sa_data[i] = addr->sa_data[i]; }; 
-        return -1;
+
+        goto fail;
     }
 
 // #fail
@@ -896,7 +899,7 @@ sys_bind (
     debug_print ("sys_bind: [FAIL] family not valid\n");
     printk      ("sys_bind: [FAIL] family not valid\n");
 
-// fail
+
 fail:
     debug_print ("sys_bind: fail\n");
     printk      ("sys_bind: fail\n");
@@ -1131,11 +1134,13 @@ __connect_inet (
         }
 
         // 4040 - Display server
-        // Se a porta for , então usaremos o pid do display server.
+        // If the port is Display Server,
+        // let's use the PID associated with this port.
+
         if (addr_in->sin_port == __PORTS_DISPLAY_SERVER)
         {
-            target_pid = (pid_t) socket_get_gramado_port(GRAMADO_PORT_WS);
-            if (Verbose==TRUE)
+            target_pid = (pid_t) socket_get_gramado_port(GRAMADO_PORT_DS);
+            if (Verbose == TRUE)
             {
                 printk("__connect_inet: [AF_INET] Connecting to the Window Server\n");
                 printk("__connect_inet: IP {%x}\n", 
@@ -1650,9 +1655,9 @@ __connect_local (
 
         debug_print ("__connect_local: AF_GRAMADO ok\n");
 
-        // ds: Display server.
+        // ds: Display server
         if ( addr->sa_data[0] == 'd' && addr->sa_data[1] == 's' ){
-            target_pid = (pid_t) socket_get_gramado_port(GRAMADO_PORT_WS);
+            target_pid = (pid_t) socket_get_gramado_port(GRAMADO_PORT_DS);
         }
         // wm: ...
         // ns: Network server
@@ -1993,6 +1998,7 @@ fail:
 // #warning
 // We can have two types of address.
 // One for local and another one for inet.
+
 int 
 sys_connect ( 
     int sockfd, 
@@ -2009,7 +2015,7 @@ sys_connect (
         return (int) (-EBADF);
     }
 
-// Invalid address.
+// Invalid address
     if ((void *) addr == NULL){
         printk ("sys_connect: addr\n");
         return (int) (-EINVAL);
