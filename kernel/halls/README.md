@@ -11,7 +11,8 @@
 ## Folders
 
 ```
- dev/      - Device drivers
+ dev/      - Device drivers (application-driven)
+ hcidev/   - Device drivers (user-driven)
  platform/ - BUS/plataform support
 ```
 
@@ -24,9 +25,11 @@ Application interaction - (application-driven interrupts):
  * dev/req    - Requests. (memory)
 ```
 
+## hcidev
+
 ```
 User interaction - (user-driven interrupts):
- * dev/chardev/ - (Keyboard, mouse, display)
+ * hcidev/chardev/ - (Keyboard, mouse, display)
 ```
 
 ## platform

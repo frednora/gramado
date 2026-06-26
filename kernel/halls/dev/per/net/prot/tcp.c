@@ -1,6 +1,21 @@
 // tcp.c
 // Created by Fred Nora.
 
+//
+// The 3-Step Handshake Process:
+//
+// (1) Client to Server (SYN=1, ACK=0): 
+//     The client initiates the connection by sending this segment.
+//
+// (2) Server to Client (SYN=1, ACK=1): 
+//     The server replies with its own synchronization and 
+//     acknowledges the client's packet .
+//
+// (3) Client to Server (SYN=0, ACK=1): 
+//     The client sends a final acknowledgment. The connection is 
+//     now "ESTABLISHED" and data transfer can begin .
+//
+
 #include <kernel.h>
 
 static char tcp_payload[1024];
@@ -115,9 +130,14 @@ network_handle_tcp(
     //printk("TCP: dport{%d}   #debug\n",dport);
 
     // #debug
-    if (dport == 80 || dport == 443){
-        printk("TCP: dport{%d}   #debug\n",dport);
+    if (dport == 80 || dport == 443)
+    {
+        printk("TCP: dport{%d} (Server not implemented yet)\n", dport);
+        printk("SYN={%d} ACK={%d}\n", fSYN, fACK);
+
+        return;
     }
+
 
 // Show
 
@@ -133,22 +153,29 @@ network_handle_tcp(
         // >> Reply: 
         // SYN=1, ACK=1
 
-        printk("SYN={%d} ACK={%d}\n",fSYN,fACK);
+        printk("SYN={%d} ACK={%d}\n", fSYN, fACK);
 
         // (1) SYN
         // A client is trying to initialize a new connection.
-        if ( fSYN == 1 && fACK == 0 ){
+        // The client shares an Initial Sequence Number (ISN) with the server.
+        // It means the server here needs to respond.
+        if ( fSYN == 1 && fACK == 0 )
+        {
             printk("\n");
             printk("<<<< [TCP] SYN     (1)\n");
-            printk("SEQ={%d} | ACK={%d}\n",
-                _seq_number, _ack_number);
+            printk("SEQ={%d} | ACK={%d}\n", _seq_number, _ack_number );
+
             // #todo
-            // Connect to the process that is listening at 11888.
+            // The client is saying: "I want to connect to the 
+            // server process that is listening to the port 11888"
+
             return;
         }
+
         // (2) SYN/ACK
         // A server accepted the connection.
-        if ( fSYN == 1 && fACK == 1 ){
+        if ( fSYN == 1 && fACK == 1 )
+        {
             printk("\n");
             printk("<<<< [TCP] SYN/ACK (2)\n");
             printk("SEQ={%d} | ACK={%d}\n",
@@ -158,6 +185,7 @@ network_handle_tcp(
             // our syn sent by a process in this machine.
             return;
         }
+
         // (3) ACK
         // A client is confirming the connection we accepted.
         if ( fSYN == 0 && fACK == 1 ){

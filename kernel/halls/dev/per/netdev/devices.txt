@@ -1,0 +1,11 @@
+
+List of devices:
+
+-------------------------------------------
+e1000:
+
+On Virtualbox:
+Adapter type: Intel PRO/1000 MT Desktop (82540EM)
+Vendor:0x8086 Device:0x100E
+
+

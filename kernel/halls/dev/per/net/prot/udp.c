@@ -831,6 +831,9 @@ network_handle_udp(
 
 // Fail
 // Return if something goes wrong.
+
+    printk("UDP: [fail] port %d\n",dport);
+
     return;
 }
 
