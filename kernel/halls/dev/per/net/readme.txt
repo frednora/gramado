@@ -15,8 +15,24 @@ List of the main infrastructure models, each with a single‑line explanation:
 - Event Sourcing    → Every change is stored as an event log, state is rebuilt by replaying events.  
 - Hybrid Models     → Mix of direct client/server calls and asynchronous queues for flexibility.  
 
---------------------------------------------------
+-------------------------
+Consumer Interaction Models:
 
+Pull model   → The consumer explicitly requests the next message from the broker. 
+               This is how Kafka works: consumers poll topics/partitions for new events.
+
+Push model   → The broker delivers messages to consumers as soon as they arrive. 
+               This is how RabbitMQ works by default: it pushes messages from queues to subscribers.
+
+Hybrid model → Some systems allow both: consumers can request messages (pull) or 
+               receive them automatically (push), depending on configuration.
+
+
+Analogy
+Pull: Like refreshing your news feed manually — you ask, “Any new articles?”
+Push: Like getting notifications on your phone — the system tells you immediately when something new arrives.
+
+--------------------------------------------------
 
 net/
  |-- ifconfig/   # configure interfaces

@@ -34,9 +34,9 @@ all:
 #	make -C udptest/
 #	make -C unknown/
 
+	make -C ed00/
+
 # Compile SDK commands.
-#	make -C c4/
-#	make -C gramc4/
 	make -C gramcnf/
 #	make -C miniyacc/
 #	make -C n9/
