@@ -22,10 +22,23 @@ void load_file(const char *fname);
 // Simple clear (no ANSI)
 // #bugbug: This is valid only for the case
 // we are running on the kernel console.
+// The Problem:
+// On the kernel console, you can clear the full screen 
+// with ioctl(1, 440, 0).
+// On the GUI virtual terminal, you don't want to clear 
+// the entire screen — you want to clear only the client area 
+// of the terminal window.
+// So you need to intercept escape sequences 
+// (like \033[2J for clear screen) and handle them 
+// appropriately depending on the environment.
+
 static void clear_screen(void)
 {
     // Use your existing method
     ioctl(1, 440, 0);   // Clear background
+
+    // #todo:
+    // Send escape sequence to the virtual terminal
 }
 
 void load_file(const char *fname)
@@ -87,58 +100,10 @@ void save_file(void)
     printf("Saved: %s\n", filename);
 }
 
-// ======================
-// Redraw - More Defensive
-// ======================
-/*
 void redraw(void)
 {
-    int i;
-    int start;
-
-    clear_screen();
-
-    // Defensive guards
-    if (cursor_y < 0) cursor_y = 0;
-    if (num_lines < 0) num_lines = 0;
-
-    start = cursor_y - 8;
-    if (start < 0) start = 0;
-
-    // Draw text lines safely
-    for (i = start; i < start + 16 && i < num_lines; i++)
-    {
-        if (i >= 0 && i < MAX_LINES && text[i] != NULL) {
-            printf("%s\n", text[i]);
-        } else {
-            printf("\n");
-        }
-    }
-
-    // Status bar - very safe
-    printf("\n--- ");
-
-    if (filename[0])
-        printf("%s", filename);
-    else
-        printf("[No Name]");
-
-    if (modified)
-        printf(" [Modified]");
-
-    printf(" | Line %d/%d | Col %d ---\n",
-           cursor_y + 1,
-           num_lines,
-           cursor_x + 1);
-
-    fflush(stdout);
-}
-*/
-
-void redraw(void)
-{
-    int i;
-    int start;
+    int i=0;
+    int start=0;
 
     clear_screen();
 
