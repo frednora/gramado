@@ -218,12 +218,14 @@ int main(int argc, char *argv[])
             }
 
             // Create line if it doesn't exist
-            if (text[cursor_y] == NULL) {
+            if (text[cursor_y] == NULL) 
+            {
                 text[cursor_y] = (char*) malloc(MAX_LINE_LEN);
                 if (text[cursor_y] == NULL) {
                     printf("Out of memory!\n");
                     continue;
                 }
+                // #ps: Can we avoid matrices?
                 text[cursor_y][0] = '\0';
                 if (cursor_y >= num_lines)
                     num_lines = cursor_y + 1;
@@ -235,33 +237,17 @@ int main(int argc, char *argv[])
             {
                 // Shift to insert character
                 size_t j=0;
-                for (j = len; j > (size_t)cursor_x; j--) {
+                for (j = len; j > (size_t)cursor_x; j--) 
+                {
+                    // #ps: Can we avoid matrices?
                     text[cursor_y][j] = text[cursor_y][j-1];
                 }
+                // #ps: Can we avoid matrices?
                 text[cursor_y][cursor_x] = (char)ch;
                 cursor_x++;
                 modified = 1;
             }
         }
-
-        /*
-        else if (ch >= 32 && ch < 127)
-        {
-            // Insert character (very basic)
-            if (cursor_y < MAX_LINES) {
-                if (!text[cursor_y])
-                    text[cursor_y] = strdup("");
-                if (text[cursor_y]) {
-                    size_t len = strlen(text[cursor_y]);
-                    if (len < MAX_LINE_LEN - 2) {
-                        text[cursor_y][cursor_x] = ch;
-                        cursor_x++;
-                        modified = 1;
-                    }
-                }
-            }
-        }
-        */
     }
 
     printf("\nEditor closed.\n");
