@@ -176,6 +176,9 @@ int main(int argc, char *argv[])
     
         // ... rest of your input handling ...
 
+        // #bugbug:
+        // Maybe fgets() is not working properly and we need
+        // to build a look here to get the commands.
         if (ch == ':')        // Command mode
         {
             char cmd[64] = {0};

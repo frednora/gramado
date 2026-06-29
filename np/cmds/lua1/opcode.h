@@ -16,8 +16,8 @@
 #define real  double
 #endif
 
-typedef unsigned char  Byte;
-typedef unsigned short Word;
+typedef unsigned char   Byte;
+typedef unsigned short  Word;
 
 typedef enum 
 { 
@@ -84,10 +84,11 @@ typedef enum {
 
 // Functions
 // It's ok for 64bit systems
-typedef void (*Cfunction) (void);
-typedef int  (*Input) (void);
-typedef void (*Unput) (int);
+typedef void (*Cfunction)(void);
+typedef int  (*Input)(void);
+typedef void (*Unput)(int);
 
+// This is used in Object
 typedef union
 {
     Cfunction f;     // 8 bytes
@@ -99,17 +100,41 @@ typedef union
 } Value;
 
 
-// On 64-bit, the compiler adds 4 bytes of padding → sizeof(Object) = 16 bytes.
+// Current Situation (Summary):
+// sizeof(Object) = 16 bytes 
+// (natural on 64-bit: 4-byte Type + 4-byte padding + 8-byte Value)
+// #important: 
+// The original 1993 code was designed for 8-byte Object.
+// This causes wrong pointer arithmetic (base + n), 
+// bad stack copies, and Trap 13 (access violation) 
+// especially on local variables.
+// Recommended Strategy (Clean 64-bit Port):
+// Keep natural 16-byte Object + fix the VM code
+
+
+// On 64-bit, the compiler adds 4 bytes of padding 
+// sizeof(Object) = 16 bytes
 // sizeof(Object) = 16
 // sizeof(Type)   = 4
 // sizeof(Value)  = 8
+
+// #ps:
 // This means the compiler is inserting 4 bytes of padding after Type.
+
 typedef struct Object
 {
-    Type tag;     // 4 bytes
-    Value value;  // union containing pointers (8 bytes on 64-bit)
+
+// 4 bytes
+    Type tag;
+
+    // #ps: 
+    // 64bit compiler is adding 4 byte padding here.
+
+// union containing pointers (8 bytes on 64-bit)
+    Value value;
+
 } Object;
-// Still 16 bytes, because the compiler pads the struct to 8‑byte boundaries.
+
 
 typedef struct
 {

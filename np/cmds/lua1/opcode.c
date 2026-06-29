@@ -8,7 +8,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 //#ifdef __GNUC__
 //#include <floatingpoint.h>
 //#endif
@@ -19,6 +18,9 @@
 #include "inout.h"
 #include "table.h"
 #include "lua.h"
+
+
+extern Byte    nlocalvar;
 
 #define tonumber(o) ((tag(o) != T_NUMBER) && (lua_tonumber(o) != 0))
 #define tostring(o) ((tag(o) != T_STRING) && (lua_tostring(o) != 0))
@@ -137,39 +139,69 @@ static int lua_tostring (Object *obj)
  return 0;
 }
 
+// Virtual Machine loop 
+// The heart of the interpreter. 
+// It reads the bytecode (*pc++) and executes each opcode 
+// in the big switch.
 // Execute the given opcode. 
 // Return 0 in success or 1 on error.
 int lua_execute (Byte *pc)
 {
+    //
     // #debug
+    //
+
     //printf("[DEBUG] sizeof(Object) = %d bytes\n", sizeof(Object));
     //printf("[DEBUG] sizeof(Type)   = %d bytes\n", sizeof(Type));
     //printf("[DEBUG] sizeof(Value)  = %d bytes\n", sizeof(Value));
 
- while (1)
- {
-  switch ((OpCode)*pc++)
-  {
-   case NOP: break;
-   
-   case PUSHNIL: tag(top++) = T_NIL; break;
-   
-   case PUSH0: tag(top) = T_NUMBER; nvalue(top++) = 0; break;
-   case PUSH1: tag(top) = T_NUMBER; nvalue(top++) = 1; break;
-   case PUSH2: tag(top) = T_NUMBER; nvalue(top++) = 2; break;
+    // If the debug shows base and top starting at the same address 
+    // it is (normal for empty function)
+    printf("[DEBUG] sizeof(Object)=%u | base=%x | top=%x \n",
+       sizeof(Object), (void*)base, (void*)top );
+
+
+    printf("[lua_execute] ENTERED with pc = %x\n", (void*)pc);
+    
+    if (pc == NULL) {
+        printf("[ERROR] pc is NULL\n");
+        return 1;
+    }
+
+
+    while (1){
+
+    // #debug:
+    // We are seeing different opcodes been called.
+    // Byte opcode = *pc;
+    // printf("[OPCODE] %d (0x%x) at pc=%x\n", 
+        // (int)opcode, (int)opcode, (void*)pc);
+
+    switch ( (OpCode)*pc++ ){
+
+    case NOP:
+        break;
+
+    case PUSHNIL: 
+        tag(top++) = T_NIL; 
+        break;
+
+    case PUSH0: tag(top) = T_NUMBER; nvalue(top++) = 0; break;
+    case PUSH1: tag(top) = T_NUMBER; nvalue(top++) = 1; break;
+    case PUSH2: tag(top) = T_NUMBER; nvalue(top++) = 2; break;
 
     case PUSHBYTE:
-       tag(top) = T_NUMBER; 
-       nvalue(top++) = *pc++; 
-       //printf("PUSHBYTE\n");
-       break;
-   
-   case PUSHWORD: 
-       tag(top) = T_NUMBER; 
-       nvalue(top++) = *((Word *)(pc)); 
-       //printf("PUSHWORD\n");
-       pc += sizeof(Word);
-       break;
+        tag(top) = T_NUMBER; 
+        nvalue(top++) = *pc++; 
+        //printf("PUSHBYTE\n");
+        break;
+
+    case PUSHWORD: 
+        tag(top) = T_NUMBER; 
+        nvalue(top++) = *((Word *)(pc)); 
+        //printf("PUSHWORD\n");
+        pc += sizeof(Word);
+        break;
 
     case PUSHFLOAT:
         tag(top) = T_NUMBER; 
@@ -178,83 +210,112 @@ int lua_execute (Byte *pc)
         pc += sizeof(double);
         break;
 
+    case PUSHSTRING:
+    {
+        int w = *((Word *)(pc));
+        pc += sizeof(Word);
+        tag(top) = T_STRING; svalue(top++) = lua_constant[w];
+    }
+    break;
 
-   case PUSHSTRING:
-   {
-    int w = *((Word *)(pc));
-    pc += sizeof(Word);
-    tag(top) = T_STRING; svalue(top++) = lua_constant[w];
-   }
-   break;
+    // #test:
+    // New implementation (for 64bit compiler)
+    // SAFE 16-BYTE OBJECT COPYING
+    case PUSHLOCAL0: 
+        printf("[PUSHLOCAL0] reading from slot 0 = %d\n", nvalue(&base[0]));
+        memcpy(top++, &base[0], sizeof(Object)); 
+        break;
+    case PUSHLOCAL1: 
+        printf("[PUSHLOCAL1] reading from slot 1 = %d\n", nvalue(&base[1]));
+        memcpy(top++, &base[1], sizeof(Object)); 
+        break;
+    case PUSHLOCAL2: memcpy(top++, &base[2], sizeof(Object)); break;
+    case PUSHLOCAL3: memcpy(top++, &base[3], sizeof(Object)); break;
+    case PUSHLOCAL4: memcpy(top++, &base[4], sizeof(Object)); break;
+    case PUSHLOCAL5: memcpy(top++, &base[5], sizeof(Object)); break;
+    case PUSHLOCAL6: memcpy(top++, &base[6], sizeof(Object)); break;
+    case PUSHLOCAL7: memcpy(top++, &base[7], sizeof(Object)); break;
+    case PUSHLOCAL8: memcpy(top++, &base[8], sizeof(Object)); break;
+    case PUSHLOCAL9: memcpy(top++, &base[9], sizeof(Object)); break;
 
-   // Local Less than 10
-   case PUSHLOCAL0: *top++ = *(base + 0); break;
-   case PUSHLOCAL1: *top++ = *(base + 1); break;
-   case PUSHLOCAL2: *top++ = *(base + 2); break;
-   case PUSHLOCAL3: *top++ = *(base + 3); break;
-   case PUSHLOCAL4: *top++ = *(base + 4); break;
-   case PUSHLOCAL5: *top++ = *(base + 5); break;
-   case PUSHLOCAL6: *top++ = *(base + 6); break;
-   case PUSHLOCAL7: *top++ = *(base + 7); break;
-   case PUSHLOCAL8: *top++ = *(base + 8); break;
-   case PUSHLOCAL9: *top++ = *(base + 9); break;
-   
+    // #test: New implementation (for 64bit compilers)
     // Local >= 10
     case PUSHLOCAL:
-        *top++ = *(base + (*pc++));
+    {
+        int Lidx = *pc++;
+        printf("[PUSHLOCAL] Lidx=%d  nlocalvar=%d  base=%p\n", 
+            Lidx, nlocalvar, (void*)base );
+        if (Lidx < 0 || Lidx >= nlocalvar) {
+            printf("WARNING: bad local index %d\n", Lidx);
+        }
+        memcpy(top++, &base[Lidx], sizeof(Object));
         break;
-
+    }
 
     case PUSHGLOBAL: 
         *top++ = s_object(*((Word *)(pc))); 
         pc += sizeof(Word);
         break;
+
     // #test
     case PUSHGLOBAL2: 
     {
-        Word index = *((Word *)pc);   // read index from bytecode
+        Word Lindex = *((Word *)pc);   // read Lindex from bytecode
         pc += sizeof(Word);
-        *top++ = s_object(index);     // push symbol table entry back
+        *top++ = s_object(Lindex);     // push symbol table entry back
         break;
     }
 
-   case PUSHINDEXED:
-    --top;
-    if (tag(top-1) != T_ARRAY)
+    case PUSHINDEXED:
+        --top;
+        if (tag(top-1) != T_ARRAY)
+        {
+            lua_reportbug ("indexed expression not a table");
+            return 1;
+        }
+        {
+            Object *h = lua_hashdefine(avalue(top-1), top);
+            if (h == NULL) 
+                return 1;
+            *(top-1) = *h;
+        }
+        break;
+
+    case PUSHMARK: 
+        tag(top++) = T_MARK; 
+        break;
+
+    case PUSHOBJECT: 
+        *top = *(top-3); 
+        top++; 
+        break;
+
+    // #test: New implementation for (64bit compilers)
+    case STORELOCAL0: 
+        printf("[STORELOCAL0] storing %d to slot 0\n", nvalue(top-1));
+        memcpy(&base[0], --top, sizeof(Object)); 
+        break;
+    case STORELOCAL1: 
+        printf("[STORELOCAL1] storing %d to slot 1\n", nvalue(top-1));
+        memcpy(&base[1], --top, sizeof(Object)); 
+        break;
+    case STORELOCAL2: memcpy(&base[2], --top, sizeof(Object)); break;
+    case STORELOCAL3: memcpy(&base[3], --top, sizeof(Object)); break;
+    case STORELOCAL4: memcpy(&base[4], --top, sizeof(Object)); break;
+    case STORELOCAL5: memcpy(&base[5], --top, sizeof(Object)); break;
+    case STORELOCAL6: memcpy(&base[6], --top, sizeof(Object)); break;
+    case STORELOCAL7: memcpy(&base[7], --top, sizeof(Object)); break;
+    case STORELOCAL8: memcpy(&base[8], --top, sizeof(Object)); break;
+    case STORELOCAL9: memcpy(&base[9], --top, sizeof(Object)); break;  
+
+    // #test: New implementation for (64bit compilers)
+    case STORELOCAL:
     {
-     lua_reportbug ("indexed expression not a table");
-     return 1;
+        int Lidx_0000 = *pc++;
+        printf("[STORELOCAL] Lidx_0000=%d\n", Lidx_0000);
+        memcpy(&base[Lidx_0000], --top, sizeof(Object));
+        break;
     }
-    {
-     Object *h = lua_hashdefine (avalue(top-1), top);
-     if (h == NULL) return 1;
-     *(top-1) = *h;
-    }
-   break;
-   
-   case PUSHMARK: 
-       tag(top++) = T_MARK; 
-       break;
-
-   case PUSHOBJECT: 
-       *top = *(top-3); 
-       top++; 
-       break;
-
-
-   case STORELOCAL0: *(base + 0) = *(--top); break;
-   case STORELOCAL1: *(base + 1) = *(--top); break;
-   case STORELOCAL2: *(base + 2) = *(--top); break;
-   case STORELOCAL3: *(base + 3) = *(--top); break;
-   case STORELOCAL4: *(base + 4) = *(--top); break;
-   case STORELOCAL5: *(base + 5) = *(--top); break;
-   case STORELOCAL6: *(base + 6) = *(--top); break;
-   case STORELOCAL7: *(base + 7) = *(--top); break;
-   case STORELOCAL8: *(base + 8) = *(--top); break;
-   case STORELOCAL9: *(base + 9) = *(--top); break;
-    
-   case STORELOCAL: *(base + (*pc++)) = *(--top); break;
-   
 
     case STOREGLOBAL:
         s_object(*((Word *)(pc))) = *(--top); 
@@ -270,58 +331,61 @@ int lua_execute (Byte *pc)
         break;
     }
 
-   case STOREINDEXED0:
-    if (tag(top-3) != T_ARRAY)
-    {
-     lua_reportbug ("indexed expression not a table");
-     return 1;
-    }
-    {
-     Object *h = lua_hashdefine (avalue(top-3), top-2);
-     if (h == NULL) return 1;
-     *h = *(top-1);
-    }
-    top -= 3;
-   break;
-   
-   case STOREINDEXED:
-   {
-    int n = *pc++;
-    if (tag(top-3-n) != T_ARRAY)
-    {
-     lua_reportbug ("indexed expression not a table");
-     return 1;
-    }
-    {
-     Object *h = lua_hashdefine (avalue(top-3-n), top-2-n);
-     if (h == NULL) return 1;
-     *h = *(top-1);
-    }
-    --top;
-   }
-   break;
-   
-   case STOREFIELD:
-    if (tag(top-3) != T_ARRAY)
-    {
-     lua_error ("internal error - table expected");
-     return 1;
-    }
+    case STOREINDEXED0:
+        if (tag(top-3) != T_ARRAY)
+        {
+            lua_reportbug ("indexed expression not a table");
+            return 1;
+        }
+        {
+            Object *h = lua_hashdefine(avalue(top-3), top-2);
+            if (h == NULL)
+                return 1;
+            *h = *(top-1);
+        }
+        top -= 3;
+        break;
+
+    case STOREINDEXED:
+        {
+        int n = *pc++;
+        if (tag(top-3-n) != T_ARRAY)
+        {
+            lua_reportbug ("indexed expression not a table");
+            return 1;
+        }
+        {
+            Object *h = lua_hashdefine(avalue(top-3-n), top-2-n);
+            if (h == NULL) 
+                return 1;
+            *h = *(top-1);
+        }
+        --top;
+        }
+        break;
+
+    case STOREFIELD:
+        if (tag(top-3) != T_ARRAY)
+        {
+            lua_error ("internal error - table expected");
+            return 1;
+        }
     *(lua_hashdefine (avalue(top-3), top-2)) = *(top-1);
     top -= 2;
    break;
    
-   case ADJUST:
-   {
-    Object *newtop = base + *(pc++);
-    if (top != newtop)
-    {
-     while (top < newtop) tag(top++) = T_NIL;
-     top = newtop;
-    }
-   }
-   break;
-   
+    case ADJUST:
+        {
+            Object *newtop = base + *(pc++);
+            if (top != newtop)
+            {
+                while (top < newtop) 
+                   tag(top++) = T_NIL;
+                top = newtop;
+            }
+        }
+        break;
+
    case CREATEARRAY:
     if (tag(top-1) == T_NIL) 
      nvalue(top-1) = 101;
@@ -395,17 +459,17 @@ int lua_execute (Byte *pc)
    }
    break;
    
-   case ADDOP:
-   {
-    Object *l = top-2;
-    Object *r = top-1;
-    if (tonumber(r) || tonumber(l))
-     return 1;
-    nvalue(l) += nvalue(r);
-    --top;
-   }
-   break; 
-   
+    case ADDOP:
+        {
+            Object *l = top-2;
+            Object *r = top-1;
+            if (tonumber(r) || tonumber(l))
+                return 1;
+            nvalue(l) += nvalue(r);
+            --top;
+        }
+        break; 
+
    case SUBOP:
    {
     Object *l = top-2;
@@ -452,15 +516,15 @@ int lua_execute (Byte *pc)
    }
    break; 
    
-   case MINUSOP:
-    if (tonumber(top-1))
-     return 1;
-    nvalue(top-1) = - nvalue(top-1);
-   break; 
-   
-   case NOTOP:
-    tag(top-1) = tag(top-1) == T_NIL ? T_NUMBER : T_NIL;
-   break; 
+    case MINUSOP:
+        if (tonumber(top-1))
+            return 1;
+        nvalue(top-1) = - nvalue(top-1);
+        break; 
+
+    case NOTOP:
+        tag(top-1) = tag(top-1) == T_NIL ? T_NUMBER : T_NIL;
+        break; 
    
    case ONTJMP:
    {
@@ -499,8 +563,10 @@ int lua_execute (Byte *pc)
    }
    break;
 
-   case POP: --top; break;
-   
+    case POP:
+        --top; 
+        break;
+
    case CALLFUNC:
    {
     Byte *newpc;
@@ -511,7 +577,10 @@ int lua_execute (Byte *pc)
      lua_debugline = 0;			/* always reset debug flag */
      newpc = bvalue(b-1);
      bvalue(b-1) = pc;		        /* store return code */
-     nvalue(b) = (base-stack);		/* store base value */
+     /* store base value */
+     // storing pointer difference as double
+     nvalue(b) = (base-stack);
+
      base = b+1;
      pc = newpc;
      if (MAXSTACK-(base-stack) < STACKGAP)
@@ -534,7 +603,7 @@ int lua_execute (Byte *pc)
       int i;
       int nretval = top - base - nparam;
       top = base - 2;
-      base = stack + (int) nvalue(base-1);
+      base = stack + (int) nvalue(base-1);  // casting back
       for (i=0; i<nretval; i++)
       {
        *top = *(top+nparam+2);
@@ -557,7 +626,7 @@ int lua_execute (Byte *pc)
     int nretval = top - base - shift;
     top = base - 2;
     pc = bvalue(base-2);
-    base = stack + (int) nvalue(base-1);
+    base = stack + (int) nvalue(base-1);  // casting back
     for (i=0; i<nretval; i++)
     {
      *top = *(top+shift+2);
@@ -566,9 +635,9 @@ int lua_execute (Byte *pc)
    }
    break;
    
-   case HALT:
-   return 0;		/* success */
-   
+    case HALT:
+        return 0;		/* success */
+
    case SETFUNCTION:
    {
     int file, func;
@@ -586,15 +655,15 @@ int lua_execute (Byte *pc)
     pc += sizeof(Word);
    break;
    
-   case RESET:
-    lua_popfunction ();
-   break;
-   
-   default:
-    lua_error ("internal error - opcode didn't match");
-   return 1;
-  }
- }
+    case RESET:
+        lua_popfunction();
+        break;
+
+    default:
+        lua_error ("internal error - opcode didn't match");
+        return 1;
+    }
+    }
 }
 
 

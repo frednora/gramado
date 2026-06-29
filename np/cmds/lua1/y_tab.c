@@ -1,3 +1,5 @@
+// y_tab.c
+
 # line 2 "lua.stx"
 
 // rtl
@@ -37,7 +39,8 @@ static long    varbuffer[MAXVAR];
 static Byte    nvarbuffer=0;	     /* number of variables at a list */
 
 static Word    localvar[STACKGAP];
-static Byte    nlocalvar=0;	     /* number of local variables */
+//static Byte    nlocalvar=0;	     /* number of local variables */
+Byte    nlocalvar=0;	     /* number of local variables */
 static int     ntemp;		     /* number of temporary var into stack */
 static int     err;		     /* flag to indicate error */
 
