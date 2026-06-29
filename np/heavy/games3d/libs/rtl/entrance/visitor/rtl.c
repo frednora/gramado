@@ -728,8 +728,7 @@ void *rtl_create_process(const char *file_name)
     debug_print("rtl_create_process:\n #todo\n");
     //return NULL;
     
-    strncpy(pName,file_name,16);
-    pName[17] = 0;
+    snprintf(pName, sizeof(pName), "%s", file_name);
     pName[31] = 0;
 
 // Create process
@@ -2357,8 +2356,7 @@ int rtl_open_device(char *dev_number)
     int value = -1;
 
     char dev_name[10];
-    strcpy(dev_name, "DEV");
-    strcat(dev_name, dev_number);
+    snprintf(dev_name, sizeof(dev_name), "DEV%s", dev_number);
     
     value = (int) open(dev_name, O_RDWR|O_NDELAY);
     
