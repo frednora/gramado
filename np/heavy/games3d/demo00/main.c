@@ -940,6 +940,10 @@ wsInputProcedure (
     {
         // 20 = MSG_KEYDOWN
         case wsMSG_KEYDOWN:
+            // Validate key code is within expected scan code range
+            if (long1 > 0xFF) {
+                goto done;
+            }
             switch (long1)
             {
 
@@ -2426,8 +2430,7 @@ serviceCreateWindow (int client_fd)
     int name_len = strlen(Window->name);
     if(name_len > 32){ name_len = 32; }
     char w_name[64];
-    sprintf(w_name,":: ");
-    strncat(w_name, Window->name, name_len);
+    snprintf(w_name, sizeof(w_name), ":: %.*s", (int)name_len, Window->name);
     w_name[63]=0;
 
 // Coloca na fila
@@ -3265,14 +3268,11 @@ void __init_ws_structure(void)
     // #todo: we need to finalize these strings?
 
 // name
-    sprintf( display_server->name, "Gramado Window Server" );
-    strcat(display_server->name,"\0");
+    snprintf( display_server->name, 64, "Gramado Window Server" );
 // edition name
-    sprintf( display_server->edition_name, "Presence" );
-    strcat(display_server->edition_name,"\0");
+    snprintf( display_server->edition_name, 64, "Presence" );
 // version string
-    sprintf( display_server->version_string, "0.1" );
-    strcat(display_server->version_string,"\0");
+    snprintf( display_server->version_string, 64, "0.1" );
 // We need to register the server in the host system.
     display_server->registration_status = FALSE;
 // graphics initialization status.
@@ -3442,9 +3442,7 @@ static int on_execute(void)
     host_name    = "gramado";
     display_number  = ":0";
     screen_number   = ".0";
-    strcpy(display, host_name);
-    strcat(display, display_number);
-    strcat(display, screen_number);
+    snprintf(display, sizeof(display), "%s%s%s", host_name, display_number, screen_number);
     printf("DISPLAY={%s}\n",display);
     while(1){}
     */
@@ -3892,7 +3890,7 @@ static int on_execute(void)
                 sec++; // New second.
                 memset(buf_fps,0,64);
                 itoa(frames,buf_fps);
-                strcat(buf_fps," FPS");
+                strcat_s(buf_fps, sizeof(buf_fps), " FPS");
                 accumulatedDeltaTick=0;
                 frames=0;
             }
