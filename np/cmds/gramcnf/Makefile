@@ -2,10 +2,6 @@
 # Language Interpreter for Gramado OS.
 # 2019 - Created by Fred Nora.
 
-# It's a project based on gramc.
-# The goal here is to create a small parser
-# for a new language for configuration files.
-
 VERSION = 0
 PATCHLEVEL = 0
 SUBLEVEL = 0
@@ -49,14 +45,15 @@ LIBC    = ../alpha/libs/rtl/include/
 LIBCOBJ = ../alpha/libs/rtl/obj
 
 # Objects
-myObjects = crt0.o main.o rtl.o \
+myObjects = crt0.o rtl.o \
 ctype.o stdlib.o stdio.o string.o unistd.o termios.o ioctl.o fcntl.o \
-globals.o lexer.o parser.o vm.o tree.o compiler.o    
+globals.o lexer.o parser.o vm.o tree.o compiler.o \
+main.o    
 
 
-.PHONY: all all-c gramcc-link finalize clean
+.PHONY: all all-c gramcnf-link finalize clean
 
-all: main.o all-c gramcc-link finalize clean
+all: main.o all-c gramcnf-link finalize clean
 	@echo "Ok?"
 
 main.o:
@@ -77,10 +74,6 @@ all-c:
 	cp $(LIBCOBJ)/ioctl.o   .
 	cp $(LIBCOBJ)/fcntl.o   .
 
-# deprecated
-# from libgui
-	#cp $(APIOBJ)/api.o      .
-
 # from gramc
 	gcc  -c  globals.c   -I $(LIBC) $(CFLAGS) -o globals.o
 	gcc  -c  lexer.c     -I $(LIBC) $(CFLAGS) -o lexer.o
@@ -89,8 +82,10 @@ all-c:
 	gcc  -c  tree.c      -I $(LIBC) $(CFLAGS) -o tree.o
 	gcc  -c  compiler.c  -I $(LIBC) $(CFLAGS) -o compiler.o
 
-gramcc-link:
+# Generate the executable file
+gramcnf-link:
 	ld -m elf_x86_64 -T ../link.ld -o GRAMCNF.BIN $(myObjects)    
+
 finalize:
 	cp GRAMCNF.BIN  ../bin
 clean:
