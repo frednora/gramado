@@ -138,8 +138,6 @@ unsigned long sec=0;
 // Called by dispatcher().
 static int __send_response(int fd, int is_error);
 
-static int InitHot(void);
-static int on_execute(void);
 static void dispacher(int fd);
 
 static int
@@ -149,11 +147,6 @@ gwsProcedure (
     int msg,
     unsigned long long1,
     unsigned long long2 );
-
-static int initGraphics(void);
-static void initBackground(void);
-static void initClientSupport(void);
-static void initClientStruct( struct gws_client_d *c );
 
 // Line
 static int servicelineBackbufferDrawHorizontalLine (void);
@@ -194,6 +187,13 @@ static inline void do_restorer(void);
 void callback1(void);
 
 static int test_printf(void);
+
+static void initBackground(void);
+static void initClientSupport(void);
+static void initClientStruct( struct gws_client_d *c );
+static int __initGraphics(void);
+static int InitGraphicsSupport(void);
+static int game_loop(void);
 
 // ===============================================
 
@@ -1403,21 +1403,20 @@ static void initBackground(void)
 }
 
 
-
 /*
- * initGraphics:
+ * __initGraphics:
  *     Initialize the graphics support.
  */
 // Initialize the window server infrastructure.
 // The current display and the current screen.
 // Initialize the 3d support.
 
-static int initGraphics(void)
+static int __initGraphics(void)
 {
     int __init_status = -1;
 
-    //debug_print("initGraphics\n");
-    //printf("initGraphics: \n");
+    //debug_print("__initGraphics\n");
+    //printf("__initGraphics: \n");
 
     display_server->graphics_initialization_status = FALSE;
 
@@ -1428,13 +1427,10 @@ static int initGraphics(void)
 // See: gws.c
 
     __init_status = (int) gwsInit();
-
-    if (__init_status != 0)
-    {
-        debug_print ("initGraphics: [PANIC] Couldn't initialize the graphics\n");
-        printf      ("initGraphics: [PANIC] Couldn't initialize the graphics\n");
+    if (__init_status != 0){
+        debug_print ("__initGraphics: [PANIC] Couldn't initialize the graphics\n");
+        printf      ("__initGraphics: [PANIC] Couldn't initialize the graphics\n");
         goto fail;
-        //exit(1);
     }
 
 // Create root window.
@@ -1454,20 +1450,17 @@ static int initGraphics(void)
 // == checks ==============
 //
 
-// Check if we already have the root window.
-
-    if ( (void*) __root_window == NULL )
-    {
-        gwssrv_debug_print ("initGraphics: [FAIL] root window doesn't exist\n");
-        printf             ("initGraphics: [FAIL] root window doesn't exist\n");
+    // Check if we already have the root window
+    if ((void*) __root_window == NULL){
+        gwssrv_debug_print ("__initGraphics: [FAIL] root window doesn't exist\n");
+        printf             ("__initGraphics: [FAIL] root window doesn't exist\n");
         goto fail;
-        //exit(1);
     }
-    
+
     keyboard_owner = (void*) __root_window;
     mouse_owner    = (void*) __root_window;
 
-//#debug
+    //#debug
     //gws_show_backbuffer();
     //while(1){}
 
@@ -1475,19 +1468,17 @@ static int initGraphics(void)
 // Now we can use 3d routines.
 // See: grprim.c
     
-    //gwssrv_debug_print ("initGraphics: Calling grInit() \n");
-    //printf ("initGraphics: Calling grInit() \n");
+    //gwssrv_debug_print ("__initGraphics: Calling grInit() \n");
+    //printf ("__initGraphics: Calling grInit() \n");
     grInit();
 
-
-//#debug
+    //#debug
     //gws_show_backbuffer();
     //while(1){}
 
-
     // #debug
-    //gwssrv_debug_print ("initGraphics: :)\n");
-    //printf ("initGraphics: :)\n");
+    //gwssrv_debug_print ("__initGraphics: :)\n");
+    //printf ("__initGraphics: :)\n");
     //asm("int $3");
     //while(1){}
 
@@ -3288,28 +3279,22 @@ void __init_ws_structure(void)
 // Not initialized yet.
 }
 
-
-
-
+// InitGraphicsSupport:
 // Init Graphics:
 // Draw something.
 // Init ws infrastructure.
 // Initialize the '3D' graphics support.
 // Let's create the standard green background.
-static int InitHot(void)
+static int InitGraphicsSupport(void)
 {
     int graphics_status = -1;
 
     //#todo: Is it the first time?
 
-    graphics_status = (int) initGraphics();
-
-    if(graphics_status<0)
-    {
-        printf("InitHot: initGraphics failed\n");
+    graphics_status = (int) __initGraphics();
+    if (graphics_status < 0){
+        printf("InitGraphicsSupport: __initGraphics failed\n");
         return -1;
-        //while(1){}
-        //exit(1);
     }
 
 //
@@ -3343,7 +3328,7 @@ static int InitHot(void)
 
 
 /*
- * on_execute: 
+ * game_loop: 
  *     + Initializes the gws infrastructure.
  *     + Create the background.
  *     + Create the taskbar.
@@ -3359,7 +3344,7 @@ static int InitHot(void)
  *       message found in the sockeck we readed.
  */
 
-static int on_execute(void)
+static int game_loop(void)
 {
     int IsServer = FALSE;
 
@@ -3594,9 +3579,9 @@ static int on_execute(void)
 // #todo: Change the name of this function.
 
     int graphics_status = -1;
-    graphics_status = (int) InitHot();
+    graphics_status = (int) InitGraphicsSupport();
     if (graphics_status < 0){
-        printf("demo00: InitHot failed\n");
+        printf("demo00: on InitGraphicsSupport()\n");
         goto fail;
     }
 
@@ -4052,16 +4037,22 @@ int main(int argc, char **argv)
     //testing_model_scanner();
     //while(1){}
 
-//0 = Time to quit.
-    Status = (int) on_execute();
+    // Call main initialization and game loop
+    Status = (int) game_loop();
+
+    // Wrong status
+    // 0 = Time to quit.
     if (Status != 0){
         goto fail;
     }
-    // Wrong time to quit the server.
+
+    // Wrong time to quit the server
     if (IsTimeToQuit != TRUE){
         goto fail;
     }
+
     return EXIT_SUCCESS;
+
 fail:
     return EXIT_FAILURE;
 }
