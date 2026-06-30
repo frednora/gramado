@@ -220,6 +220,7 @@ build-extras:
 #	@-cp $(LZ_CMDS)/bin/TPRINTF.BIN    $(BASE)/
 	@-cp $(LZ_CMDS)/bin/ED00.BIN       $(BASE)/
 
+#	@-cp $(LZ_CMDS)/bin/HEXDUMP.BIN    $(BASE)/
 
 
 # Experimental commands

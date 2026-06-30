@@ -36,6 +36,8 @@ all:
 
 	make -C ed00/
 
+#	make -C hexdump/
+
 # Compile SDK commands.
 	make -C gramcnf/
 #	make -C miniyacc/

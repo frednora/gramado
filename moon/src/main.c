@@ -746,12 +746,20 @@ static int input_compare_string(void)
         printf("Launching shell.bin #todo\n");
         do_clear_console();
         shell2_tid = (int) rtl_clone_and_execute_return_tid("#shell2.bin");
-        if (shell2_tid > 0){
+        if (shell2_tid > 0)
+        {
             rtl_sleep(2000);  //2sec
+            // ?
             sc82(10011, shell2_tid, shell2_tid, shell2_tid);
+
+            // #todo:
+            // Actually the puepose is not exit the init process.
+            // Maybe we can keep it alive while running the shell2.
         }
-        printf ("init: Exit ...\n");
+        
+        //printf ("init: Exit ...\n");
         exit(0);
+
         //isTimeToQuitCmdLine = TRUE;
         goto exit_cmp;
     }
