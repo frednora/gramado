@@ -56,13 +56,13 @@ struct n3d_rectangle_d
 // Matrices
 //
 
-struct gr_mat2x2_d {
+struct n3d_mat2x2_d {
     float m[2][2];
 };
-struct gr_mat3x3_d {
+struct n3d_mat3x3_d {
     float m[3][3];
 };
-struct gr_mat4x4_d {
+struct n3d_mat4x4_d {
     float m[4][4];
 };
 

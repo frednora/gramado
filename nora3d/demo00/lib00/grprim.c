@@ -3116,7 +3116,7 @@ gr_rotate_x(
     float angle, 
     float fElapsedTime )
 {
-    struct gr_mat4x4_d matRotX;
+    struct n3d_mat4x4_d matRotX;
 
     //angle += 1.0f * fElapsedTime;
     angle = (float) angle * (float) fElapsedTime;
@@ -3172,7 +3172,7 @@ gr_rotate_y(
     float angle, 
     float fElapsedTime )
 {
-    struct gr_mat4x4_d matRotY;
+    struct n3d_mat4x4_d matRotY;
 
     //angle += 1.0f * fElapsedTime;
     angle = (float) angle * (float) fElapsedTime;
@@ -3219,7 +3219,7 @@ gr_rotate_z(
     float angle, 
     float fElapsedTime )
 {
-    struct gr_mat4x4_d matRotZ; 
+    struct n3d_mat4x4_d matRotZ;
 
     //angle += 1.0f * fElapsedTime;
     angle = (float) angle * (float) fElapsedTime;

@@ -70,40 +70,40 @@ float gr_VectorDistance3D(struct n3d_vec_d *a, struct n3d_vec_d *b);
 
 // Multiply two 2x2 matrices
 void gr_MultiplyMatrix2x2(
-    struct gr_mat2x2_d *a,
-    struct gr_mat2x2_d *b,
-    struct gr_mat2x2_d *result );
+    struct n3d_mat2x2_d *a,
+    struct n3d_mat2x2_d *b,
+    struct n3d_mat2x2_d *result );
 
 // Multiply two 3x3 matrices
 void gr_MultiplyMatrix3x3(
-    struct gr_mat3x3_d *a,
-    struct gr_mat3x3_d *b,
-    struct gr_mat3x3_d *result );
+    struct n3d_mat3x3_d *a,
+    struct n3d_mat3x3_d *b,
+    struct n3d_mat3x3_d *result );
 
 // Multiply two 4x4 matrices
 void gr_MultiplyMatrix4x4(
-    struct gr_mat4x4_d *a,
-    struct gr_mat4x4_d *b,
-    struct gr_mat4x4_d *result );
+    struct n3d_mat4x4_d *a,
+    struct n3d_mat4x4_d *b,
+    struct n3d_mat4x4_d *result );
 
 
 void 
 gr_ProjectVector(
     struct n3d_vec_d *i, 
     struct n3d_vec_d *o, 
-    struct gr_mat4x4_d *m );
+    struct n3d_mat4x4_d *m );
 
 void 
 gr_MultiplyVector (
     struct n3d_vec_d *i, 
     struct n3d_vec_d *o, 
-    struct gr_mat4x4_d *m );
+    struct n3d_mat4x4_d *m );
 
 void 
 gr_MultiplyAndProjectVector(
     struct n3d_vec_d *i, 
     struct n3d_vec_d *o, 
-    struct gr_mat4x4_d *m );
+    struct n3d_mat4x4_d *m );
 
 
 struct n3d_vec_d *grVectorCrossProduct(

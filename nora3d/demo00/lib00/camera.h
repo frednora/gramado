@@ -73,7 +73,7 @@ struct gr_cameraF_d
 // Applied to all vertices before projection.
 
 // View matrix (world → camera space) 
-    // struct gr_mat4x4_d  viewMatrix;
+    // struct n3d_mat4x4_d  viewMatrix;
 
 // Projection Link:
 // Connects the camera to its projection (gr_projectionF_d).

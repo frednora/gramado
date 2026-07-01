@@ -5,7 +5,7 @@
 #ifndef __LIB00_PROJ_H
 #define __LIB00_PROJ_H    1
 
-extern struct gr_mat4x4_d  matProj;
+extern struct n3d_mat4x4_d  matProj;
 
 // ======================================================
 // ??
@@ -92,7 +92,7 @@ struct gr_projectionF_d
     
     //#todo: hotspot
 
-    //struct gr_mat4x4_d *projection_matrix;
+    //struct n3d_mat4x4_d *projection_matrix;
 };
 extern struct gr_projectionF_d  CurrentProjectionF;
 
@@ -116,19 +116,19 @@ void
 workerModelTransform(
     struct n3d_vec_d *in,
     struct n3d_vec_d *out,
-    struct gr_mat4x4_d *modelMatrix);
+    struct n3d_mat4x4_d *modelMatrix);
 
 void 
 workerViewTransform(
     struct n3d_vec_d *in,
     struct n3d_vec_d *out,
-    struct gr_mat4x4_d *viewMatrix );
+    struct n3d_mat4x4_d *viewMatrix );
 
 void 
 workerProjection(
     struct n3d_vec_d *in,
     struct n3d_vec_d *out,
-    struct gr_mat4x4_d *projMatrix );
+    struct n3d_mat4x4_d *projMatrix );
 
 void 
 workerViewportTransform(

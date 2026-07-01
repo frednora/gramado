@@ -6,7 +6,7 @@
 
 
 struct gr_projection_d  *CurrentProjection;
-struct gr_mat4x4_d  matProj;
+struct n3d_mat4x4_d  matProj;
 
 // ===================================================
 
@@ -125,7 +125,7 @@ void
 workerModelTransform(
     struct n3d_vec_d *in,
     struct n3d_vec_d *out,
-    struct gr_mat4x4_d *modelMatrix)
+    struct n3d_mat4x4_d *modelMatrix)
 {
     gr_MultiplyAndProjectVector(in, out, modelMatrix);
 }
@@ -138,7 +138,7 @@ void
 workerViewTransform(
     struct n3d_vec_d *in,
     struct n3d_vec_d *out,
-    struct gr_mat4x4_d *viewMatrix)
+    struct n3d_mat4x4_d *viewMatrix)
 {
     gr_MultiplyAndProjectVector(in, out, viewMatrix);
 }
@@ -150,7 +150,7 @@ void
 workerProjection(
     struct n3d_vec_d *in,
     struct n3d_vec_d *out,
-    struct gr_mat4x4_d *projMatrix)
+    struct n3d_mat4x4_d *projMatrix)
 {
     gr_MultiplyAndProjectVector(in, out, projMatrix);
     // Perspective divide is already inside gr_MultiplyAndProjectVector

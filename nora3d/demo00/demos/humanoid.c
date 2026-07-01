@@ -52,9 +52,9 @@ static void __drawHumanoidModel(struct humanoid_model_d *model, float fElapsedTi
     char string0[16];
 
 // Matrices
-    struct gr_mat4x4_d  matRotX;
-    struct gr_mat4x4_d  matRotY;
-    struct gr_mat4x4_d  matRotZ;
+    struct n3d_mat4x4_d  matRotX;
+    struct n3d_mat4x4_d  matRotY;
+    struct n3d_mat4x4_d  matRotZ;
 
 // Triangles
     struct n3d_triangle_d  tri;            // triângulo original.
@@ -180,45 +180,45 @@ static void __drawHumanoidModel(struct humanoid_model_d *model, float fElapsedTi
         gr_MultiplyAndProjectVector(
             (struct n3d_vec_d *) &tri.p[0], 
             (struct n3d_vec_d *) &triRotatedX.p[0], 
-            (struct gr_mat4x4_d *) &matRotX);
+            (struct n3d_mat4x4_d *) &matRotX);
         gr_MultiplyAndProjectVector(
             (struct n3d_vec_d *) &tri.p[1], 
             (struct n3d_vec_d *) &triRotatedX.p[1], 
-            (struct gr_mat4x4_d *) &matRotX);
+            (struct n3d_mat4x4_d *) &matRotX);
         gr_MultiplyAndProjectVector(
             (struct n3d_vec_d *) &tri.p[2], 
             (struct n3d_vec_d *) &triRotatedX.p[2], 
-            (struct gr_mat4x4_d *) &matRotX);
+            (struct n3d_mat4x4_d *) &matRotX);
 
         //-----------------------------    
         // Rotate in Y-Axis
         gr_MultiplyAndProjectVector(
             (struct n3d_vec_d *) &triRotatedX.p[0], 
             (struct n3d_vec_d *) &triRotatedXY.p[0], 
-            (struct gr_mat4x4_d *) &matRotY);
+            (struct n3d_mat4x4_d *) &matRotY);
         gr_MultiplyAndProjectVector(
             (struct n3d_vec_d *) &triRotatedX.p[1], 
             (struct n3d_vec_d *) &triRotatedXY.p[1], 
-            (struct gr_mat4x4_d *) &matRotY);
+            (struct n3d_mat4x4_d *) &matRotY);
         gr_MultiplyAndProjectVector(
             (struct n3d_vec_d *) &triRotatedX.p[2], 
             (struct n3d_vec_d *) &triRotatedXY.p[2], 
-            (struct gr_mat4x4_d *) &matRotY);
+            (struct n3d_mat4x4_d *) &matRotY);
 
         //-----------------------------    
         // Rotate in Z-Axis
         gr_MultiplyAndProjectVector(
             (struct n3d_vec_d *) &triRotatedXY.p[0], 
             (struct n3d_vec_d *) &triRotatedXYZ.p[0], 
-            (struct gr_mat4x4_d *) &matRotZ);
+            (struct n3d_mat4x4_d *) &matRotZ);
         gr_MultiplyAndProjectVector(
             (struct n3d_vec_d *) &triRotatedXY.p[1], 
             (struct n3d_vec_d *) &triRotatedXYZ.p[1], 
-            (struct gr_mat4x4_d *) &matRotZ);
+            (struct n3d_mat4x4_d *) &matRotZ);
         gr_MultiplyAndProjectVector(
             (struct n3d_vec_d *) &triRotatedXY.p[2], 
             (struct n3d_vec_d *) &triRotatedXYZ.p[2], 
-            (struct gr_mat4x4_d *) &matRotZ);
+            (struct n3d_mat4x4_d *) &matRotZ);
 
 
         triRotatedXYZ.p[0].color = tri.p[0].color;
@@ -393,9 +393,9 @@ static void __drawEnemy(struct humanoid_model_d *model, float vel)
     char string0[16];
 
 // Matrices
-    struct gr_mat4x4_d  matRotX;
-    struct gr_mat4x4_d  matRotY;
-    struct gr_mat4x4_d  matRotZ; 
+    struct n3d_mat4x4_d  matRotX;
+    struct n3d_mat4x4_d  matRotY;
+    struct n3d_mat4x4_d  matRotZ;
 
 // Triangles
     struct n3d_triangle_d  tri;            // Original triangle.
@@ -547,45 +547,45 @@ static void __drawEnemy(struct humanoid_model_d *model, float vel)
         gr_MultiplyAndProjectVector(
             (struct n3d_vec_d *) &tri.p[0], 
             (struct n3d_vec_d *) &triRotatedX.p[0], 
-            (struct gr_mat4x4_d *) &matRotX);
+            (struct n3d_mat4x4_d *) &matRotX);
         gr_MultiplyAndProjectVector(
             (struct n3d_vec_d *) &tri.p[1], 
             (struct n3d_vec_d *) &triRotatedX.p[1], 
-            (struct gr_mat4x4_d *) &matRotX);
+            (struct n3d_mat4x4_d *) &matRotX);
         gr_MultiplyAndProjectVector(
             (struct n3d_vec_d *) &tri.p[2], 
             (struct n3d_vec_d *) &triRotatedX.p[2], 
-            (struct gr_mat4x4_d *) &matRotX);
+            (struct n3d_mat4x4_d *) &matRotX);
 
         //-----------------------------
         // Rotate in Y-Axis
         gr_MultiplyAndProjectVector(
             (struct n3d_vec_d *) &triRotatedX.p[0], 
             (struct n3d_vec_d *) &triRotatedXY.p[0], 
-            (struct gr_mat4x4_d *) &matRotY);
+            (struct n3d_mat4x4_d *) &matRotY);
         gr_MultiplyAndProjectVector(
             (struct n3d_vec_d *) &triRotatedX.p[1], 
             (struct n3d_vec_d *) &triRotatedXY.p[1], 
-            (struct gr_mat4x4_d *) &matRotY);
+            (struct n3d_mat4x4_d *) &matRotY);
         gr_MultiplyAndProjectVector(
             (struct n3d_vec_d *) &triRotatedX.p[2], 
             (struct n3d_vec_d *) &triRotatedXY.p[2], 
-            (struct gr_mat4x4_d *) &matRotY);
+            (struct n3d_mat4x4_d *) &matRotY);
 
         //-----------------------------
         // Rotate in Z-Axis
         gr_MultiplyAndProjectVector(
             (struct n3d_vec_d *) &triRotatedXY.p[0], 
             (struct n3d_vec_d *) &triRotatedXYZ.p[0], 
-            (struct gr_mat4x4_d *) &matRotZ);
+            (struct n3d_mat4x4_d *) &matRotZ);
         gr_MultiplyAndProjectVector(
             (struct n3d_vec_d *) &triRotatedXY.p[1], 
             (struct n3d_vec_d *) &triRotatedXYZ.p[1], 
-            (struct gr_mat4x4_d *) &matRotZ);
+            (struct n3d_mat4x4_d *) &matRotZ);
         gr_MultiplyAndProjectVector(
             (struct n3d_vec_d *) &triRotatedXY.p[2], 
             (struct n3d_vec_d *) &triRotatedXYZ.p[2], 
-            (struct gr_mat4x4_d *) &matRotZ);
+            (struct n3d_mat4x4_d *) &matRotZ);
 
         // The color for the rotated triangle.
         // This is the original color.
@@ -816,7 +816,7 @@ static void __drawEnemy(struct humanoid_model_d *model, float vel)
             // But we do not have a scale factor for z.
             // So, z can be any vallur between 0.01f and 1000.0f.
             // #todo
-            // Maybe this function can accept more parameters.
+            // Maybe this function can accept more parameters
             if ((void*) __root_window != NULL)
             {
                 plotTriangleF(
