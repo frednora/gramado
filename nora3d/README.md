@@ -1,10 +1,8 @@
-# ds3d - Display servers with 3D support
+# nora3d
 
-Display servers for Gramado OS.
+3D library and demo for Gramado OS.
 
 ```
-This folder has display servers. Each display server has 3D support and 
-an embedde 3D demo. The server can be launch using the command line interpreter 
-inside the init process. Simply type: '$ demo00' or '$ demo01'.
+This is a ring 3 program. it can be called typing: "demo00".
 ```
 
