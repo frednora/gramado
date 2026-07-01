@@ -20,7 +20,7 @@ struct obj_element_d
 
     int type;  // 0=none, 1=vertex, 2=face
     struct n3d_vec_d vertex;  // Parsed "v" line
-    struct gr_face_d face;      // Parsed "f" line
+    struct n3d_face_d face;      // Parsed "f" line
 };
 
 

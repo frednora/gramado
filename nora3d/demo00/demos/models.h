@@ -20,10 +20,10 @@ struct humanoid_model_d
     int vertex_count; // how many faces are stored
 
     // Faces (12 triangles for a cube) 
-    struct gr_face_d faces[128]; // (16+1) each face has vi[3] indices 
+    struct n3d_face_d faces[128];  // (16+1) each face has vi[3] indices 
     int face_count; // how many faces are stored
 
-    unsigned int colors[128]; //32 #bugbug: colors needs to fit the number of faces.
+    unsigned int colors[128];  //32 #bugbug: colors needs to fit the number of faces.
 
     float fThetaAngle;
 
