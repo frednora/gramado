@@ -1,4 +1,4 @@
-# Library for 3D graphics projects.
+# libn3d - Library for 3D graphics projects.
 # 2020 - Created by Fred Nora.
 # todo: 
 # ?? Link all togheter in a single object file .o.
@@ -7,10 +7,10 @@ VERSION = 0
 PATCHLEVEL = 0
 SUBLEVEL = 0
 EXTRAVERSION =
-#NAME = ?
+#NAME = libn3d
 
 #todo:
-#We need to simplify these flags
+# We need to simplify these flags
 
 CFLAGS = -m64 \
 	-std=gnu89 \
@@ -34,7 +34,8 @@ LIBS = -I.  -I ../rtl/include/
 all: all-c finalize clean
 	@echo "Ok?"
 all-c:
-	gcc -c libgr3d.c  $(CFLAGS) $(LIBS) -o libgr3d.o
+	gcc -c libn3d.c  $(CFLAGS) $(LIBS) -o libn3d.o  
+
 finalize:
 	-mkdir obj/
 	-cp *.o obj/

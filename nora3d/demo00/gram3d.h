@@ -61,8 +61,7 @@ extern int current_mode;
 // Imported
 #include <grprim0.h>   // Common for eng/ and gramland/.
 #include <libgr.h>     // Common for eng/ and gramland/.
-#include <grprim3d.h>  // Only for eng/
-#include <libgr3d.h>   // Only for eng/
+#include <libn3d.h>   // Only for eng/
 
 #include "lib00/grprim.h"
 #include "lib00/camera.h"

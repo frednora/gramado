@@ -81,13 +81,14 @@ LIBDISP    = ../libs/libdisp/include/
 LIBDISPOBJ = ../libs/libdisp/obj
 LIBGR      = ../libs/libgr/include/
 LIBGROBJ   = ../libs/libgr/obj
-LIBGR3D    = ../libs/libgr3d/include/
-LIBGR3DOBJ = ../libs/libgr3d/obj
+LIBN3D    = ../libs/libn3d/include/
+LIBN3DOBJ = ../libs/libn3d/obj
+
 
 CINCLUDES  = -I $(LIBC)  
 CINCLUDES += -I $(LIBDISP)
 CINCLUDES += -I $(LIBGR)
-CINCLUDES += -I $(LIBGR3D)
+CINCLUDES += -I $(LIBN3D)
 CINCLUDES += -I .    
 
 WS_INCLUDES       = include/ 
@@ -101,7 +102,7 @@ termios.o ioctl.o fcntl.o
 myObjects += globals.o 
 myObjects += libdisp.o
 myObjects += libgr.o
-myObjects += libgr3d.o
+myObjects += libn3d.o
 
 myObjects += archive_basics1.o
 myObjects += archive_libui.o
@@ -212,11 +213,11 @@ demos.o models.o humanoid.o cat00.o polygon.o tri00.o lin00.o curve00.o
 #test
 	@cp $(LIBDISPOBJ)/libdisp.o .
 	@cp $(LIBGROBJ)/libgr.o .
-	@cp $(LIBGR3DOBJ)/libgr3d.o .
+	@cp $(LIBN3DOBJ)/libn3d.o .
 
 gws-link:
 	$(LD) $(linkFlags) -o $(linkTarget) $(myObjects)
-	#$(LD) -r -o gramado.o $(myObjects)
+
 finalize:
 	cp $(linkTarget)  ../bin/
 clean:

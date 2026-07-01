@@ -19,7 +19,8 @@ gr_discriminant:
 is used for intersection tests (like in ray tracing) to check if a quadratic equation has real solutions.
 */
 
-#include "include/libgr3d.h"
+// Include libn3d
+#include "include/libn3d.h"
 
 int libgr_dummy=0;
 

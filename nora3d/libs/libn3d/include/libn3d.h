@@ -1,4 +1,4 @@
-// libgr3d.h
+// libn3d.h
 // 3D floating routines.
 // Created by Fred Nora.
 
@@ -22,7 +22,7 @@ is used for intersection tests (like in ray tracing) to check if a quadratic equ
 #ifndef __LIBGR3D_H
 #define __LIBGR3D_H   1
 
-#include "grprim3d.h"
+#include "n3dprim.h"
 #include <stddef.h>
 #include <math.h>
 

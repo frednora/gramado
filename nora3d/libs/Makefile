@@ -1,8 +1,10 @@
-# It builds the libraries used by the projects inside aurora/.
+# It builds the libraries
 
 all:
 	make -C libdisp/
 	make -C libgr/
-	make -C libgr3d/
+
+	make -C libn3d/
+
 	make -C rtl/
 
