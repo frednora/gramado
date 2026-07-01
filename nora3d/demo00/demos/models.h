@@ -16,7 +16,7 @@ extern struct cat_model_d  CatModel;   // Cat model 0.
 struct humanoid_model_d
 {
     // We don't need 32 vectors. But its ok.
-    struct gr_vecF3D_d vecs[128]; //32
+    struct n3d_vec_d vecs[128]; //32
     int vertex_count; // how many faces are stored
 
     // Faces (12 triangles for a cube) 

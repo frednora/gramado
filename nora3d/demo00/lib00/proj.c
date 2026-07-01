@@ -123,8 +123,8 @@ gwsDepthRange(
 // Applies local object transforms (rotation, translation, scaling).
 void 
 workerModelTransform(
-    struct gr_vecF3D_d *in,
-    struct gr_vecF3D_d *out,
+    struct n3d_vec_d *in,
+    struct n3d_vec_d *out,
     struct gr_mat4x4_d *modelMatrix)
 {
     gr_MultiplyAndProjectVector(in, out, modelMatrix);
@@ -136,8 +136,8 @@ workerModelTransform(
 
 void 
 workerViewTransform(
-    struct gr_vecF3D_d *in,
-    struct gr_vecF3D_d *out,
+    struct n3d_vec_d *in,
+    struct n3d_vec_d *out,
     struct gr_mat4x4_d *viewMatrix)
 {
     gr_MultiplyAndProjectVector(in, out, viewMatrix);
@@ -148,8 +148,8 @@ workerViewTransform(
 // Applies perspective shrink and aspect ratio correction.
 void 
 workerProjection(
-    struct gr_vecF3D_d *in,
-    struct gr_vecF3D_d *out,
+    struct n3d_vec_d *in,
+    struct n3d_vec_d *out,
     struct gr_mat4x4_d *projMatrix)
 {
     gr_MultiplyAndProjectVector(in, out, projMatrix);
@@ -158,9 +158,10 @@ workerProjection(
 
 // Viewport Transform
 // Maps normalized device coordinates (NDC) into screen coordinates.
+
 void 
 workerViewportTransform(
-    struct gr_vecF3D_d *in,
+    struct n3d_vec_d *in,
     int *screenX, int *screenY,
     int screenWidth, int screenHeight)
 {

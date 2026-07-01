@@ -42,11 +42,11 @@ struct gr_cameraF_d
 
 // EYE: Position of the camera.
 // Position (EYE): where the camera sits in world space.
-    struct gr_vecF3D_d position;
+    struct n3d_vec_d position;
 
 // UP: Orientation.
 // Up vector (UP): defines orientation (which way is “up”).
-    struct gr_vecF3D_d upview;
+    struct n3d_vec_d upview;
 
 // AT: target point.
 // LookAt (AT): the target point the camera is focused on.
@@ -54,7 +54,7 @@ struct gr_cameraF_d
 // Consider znear and zfar. 
 // This way we know the if the model 
 // is becoming bigger or smaller.
-    struct gr_vecF3D_d lookat;
+    struct n3d_vec_d lookat;
 
 
 // Forward, Right, Up:
@@ -63,9 +63,9 @@ struct gr_cameraF_d
 // Used to build the view matrix.
 
 // Derived basis vectors (orthonormal camera axes) 
-    struct gr_vecF3D_d forward;  // normalized (lookat - position) 
-    struct gr_vecF3D_d right;    // cross(forward, upview) 
-    struct gr_vecF3D_d up;       // recomputed cross(right, forward)
+    struct n3d_vec_d forward;  // normalized (lookat - position) 
+    struct n3d_vec_d right;    // cross(forward, upview) 
+    struct n3d_vec_d up;       // recomputed cross(right, forward)
 
 // View Matrix:
 // Stores the transformation from world space into camera space.

@@ -36,35 +36,35 @@ extern int libgr_dummy;
 // Add two 3D vectors
 void 
 gr_AddVector3D(
-    struct gr_vecF3D_d *a, 
-    struct gr_vecF3D_d *b, 
-    struct gr_vecF3D_d *result ) ;
+    struct n3d_vec_d *a, 
+    struct n3d_vec_d *b, 
+    struct n3d_vec_d *result ) ;
 
 // Subtract two 3D vectors
 void 
 gr_SubVector3D(
-    struct gr_vecF3D_d *a, 
-    struct gr_vecF3D_d *b, 
-    struct gr_vecF3D_d *result);
+    struct n3d_vec_d *a, 
+    struct n3d_vec_d *b, 
+    struct n3d_vec_d *result);
 
 // Scale a 3D vector by a scalar
 void 
 gr_ScaleVector3D(
-    struct gr_vecF3D_d *v, 
+    struct n3d_vec_d *v, 
     float s, 
-    struct gr_vecF3D_d *result);
+    struct n3d_vec_d *result);
 
 // Magnitude (length) of a 3D vector
-float gr_VectorMagnitude3D(struct gr_vecF3D_d *v);
+float gr_VectorMagnitude3D(struct n3d_vec_d *v);
 
 // Normalize a 3D vector (unit length)
 void 
 gr_NormalizeVector3D(
-    struct gr_vecF3D_d *v, 
-    struct gr_vecF3D_d *result);
+    struct n3d_vec_d *v, 
+    struct n3d_vec_d *result);
 
 // Distance between two 3D vectors (points)
-float gr_VectorDistance3D(struct gr_vecF3D_d *a, struct gr_vecF3D_d *b);
+float gr_VectorDistance3D(struct n3d_vec_d *a, struct n3d_vec_d *b);
 
 // ===================
 
@@ -89,28 +89,28 @@ void gr_MultiplyMatrix4x4(
 
 void 
 gr_ProjectVector(
-    struct gr_vecF3D_d *i, 
-    struct gr_vecF3D_d *o, 
+    struct n3d_vec_d *i, 
+    struct n3d_vec_d *o, 
     struct gr_mat4x4_d *m );
 
 void 
 gr_MultiplyVector (
-    struct gr_vecF3D_d *i, 
-    struct gr_vecF3D_d *o, 
+    struct n3d_vec_d *i, 
+    struct n3d_vec_d *o, 
     struct gr_mat4x4_d *m );
 
 void 
 gr_MultiplyAndProjectVector(
-    struct gr_vecF3D_d *i, 
-    struct gr_vecF3D_d *o, 
+    struct n3d_vec_d *i, 
+    struct n3d_vec_d *o, 
     struct gr_mat4x4_d *m );
 
 
-struct gr_vecF3D_d *grVectorCrossProduct(
-    struct gr_vecF3D_d *v1, 
-    struct gr_vecF3D_d *v2 );
+struct n3d_vec_d *grVectorCrossProduct(
+    struct n3d_vec_d *v1, 
+    struct n3d_vec_d *v2 );
 
-float dot_productF( struct gr_vecF3D_d *v1, struct gr_vecF3D_d *v2 );
+float dot_productF( struct n3d_vec_d *v1, struct n3d_vec_d *v2 );
 
 float gr_discriminant(float a, float b, float c);
 

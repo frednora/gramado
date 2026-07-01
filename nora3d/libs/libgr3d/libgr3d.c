@@ -29,9 +29,9 @@ int libgr_dummy=0;
 // Add two 3D vectors
 void 
 gr_AddVector3D(
-    struct gr_vecF3D_d *a, 
-    struct gr_vecF3D_d *b, 
-    struct gr_vecF3D_d *result ) 
+    struct n3d_vec_d *a, 
+    struct n3d_vec_d *b, 
+    struct n3d_vec_d *result ) 
 {
     result->x = a->x + b->x;
     result->y = a->y + b->y;
@@ -41,9 +41,9 @@ gr_AddVector3D(
 // Subtract two 3D vectors
 void 
 gr_SubVector3D(
-    struct gr_vecF3D_d *a, 
-    struct gr_vecF3D_d *b, 
-    struct gr_vecF3D_d *result) 
+    struct n3d_vec_d *a, 
+    struct n3d_vec_d *b, 
+    struct n3d_vec_d *result) 
 {
     result->x = a->x - b->x;
     result->y = a->y - b->y;
@@ -53,9 +53,9 @@ gr_SubVector3D(
 // Scale a 3D vector by a scalar
 void 
 gr_ScaleVector3D(
-    struct gr_vecF3D_d *v, 
+    struct n3d_vec_d *v, 
     float s, 
-    struct gr_vecF3D_d *result) 
+    struct n3d_vec_d *result) 
 {
     result->x = v->x * s;
     result->y = v->y * s;
@@ -63,7 +63,7 @@ gr_ScaleVector3D(
 }
 
 // Magnitude (length) of a 3D vector
-float gr_VectorMagnitude3D(struct gr_vecF3D_d *v) 
+float gr_VectorMagnitude3D(struct n3d_vec_d *v) 
 {
     return (float) sqrt(v->x*v->x + v->y*v->y + v->z*v->z);
 }
@@ -71,8 +71,8 @@ float gr_VectorMagnitude3D(struct gr_vecF3D_d *v)
 // Normalize a 3D vector (unit length)
 void 
 gr_NormalizeVector3D(
-    struct gr_vecF3D_d *v, 
-    struct gr_vecF3D_d *result) 
+    struct n3d_vec_d *v, 
+    struct n3d_vec_d *result) 
 {
     float mag = gr_VectorMagnitude3D(v);
     if (mag != 0.0f) {
@@ -83,7 +83,7 @@ gr_NormalizeVector3D(
 }
 
 // Distance between two 3D vectors (points)
-float gr_VectorDistance3D(struct gr_vecF3D_d *a, struct gr_vecF3D_d *b) 
+float gr_VectorDistance3D(struct n3d_vec_d *a, struct n3d_vec_d *b) 
 {
     float dx = a->x - b->x;
     float dy = a->y - b->y;
@@ -185,8 +185,8 @@ void gr_MultiplyMatrix4x4(
 //   o - normalized vector after perspective divide
 void 
 gr_ProjectVector(
-    struct gr_vecF3D_d *i, 
-    struct gr_vecF3D_d *o, 
+    struct n3d_vec_d *i, 
+    struct n3d_vec_d *o, 
     struct gr_mat4x4_d *m )
 {
     // Compute homogeneous coordinate w
@@ -214,8 +214,8 @@ gr_ProjectVector(
 
 void 
 gr_MultiplyVector (
-    struct gr_vecF3D_d *i, 
-    struct gr_vecF3D_d *o, 
+    struct n3d_vec_d *i, 
+    struct n3d_vec_d *o, 
     struct gr_mat4x4_d *m )
 {
     o->x = 
@@ -260,8 +260,8 @@ gr_MultiplyVector (
 
 void 
 gr_MultiplyAndProjectVector (
-    struct gr_vecF3D_d *i, 
-    struct gr_vecF3D_d *o, 
+    struct n3d_vec_d *i, 
+    struct n3d_vec_d *o, 
     struct gr_mat4x4_d *m )
 {
     // Multiply the input vector by the matrix to get the transformed coordinates.
@@ -338,13 +338,13 @@ gr_MultiplyAndProjectVector (
 // Calculates the cross product of two 3D vectors.
 // The cross product produces a vector that is perpendicular to both input vectors.
 // Useful for computing normals in 3D graphics.
-struct gr_vecF3D_d *grVectorCrossProduct(
-    struct gr_vecF3D_d *v1, 
-    struct gr_vecF3D_d *v2 )
+struct n3d_vec_d *grVectorCrossProduct(
+    struct n3d_vec_d *v1, 
+    struct n3d_vec_d *v2 )
 {
 //#todo: Not tested yet.
 
-    struct gr_vecF3D_d vRes;
+    struct n3d_vec_d vRes;
 
     // Cross product formula:
     // x = y1*z2 - z1*y2
@@ -354,7 +354,7 @@ struct gr_vecF3D_d *grVectorCrossProduct(
     vRes.y = (float) (v1->z * v2->x - v1->x * v2->z);
     vRes.z = (float) (v1->x * v2->y - v1->y * v2->x);
 
-    return (struct gr_vecF3D_d *) &vRes;
+    return (struct n3d_vec_d *) &vRes;
 }
 
 // dot_productF
@@ -368,7 +368,8 @@ struct gr_vecF3D_d *grVectorCrossProduct(
 // Positive: Same direction
 // negative: Opposite direction
 // 0:        Perpendicular.
-float dot_productF( struct gr_vecF3D_d *v1, struct gr_vecF3D_d *v2 )
+
+float dot_productF(struct n3d_vec_d *v1, struct n3d_vec_d *v2)
 {
 
 // Safety check for NULL pointers

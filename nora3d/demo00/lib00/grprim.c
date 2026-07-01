@@ -1846,7 +1846,7 @@ fillTriangle(
 int 
 plotTriangleF(
     struct gws_window_d *window,
-    struct gr_triangleF3D_d *t,
+    struct n3d_triangle_d *t,
     int fill,
     unsigned long rop )
 {
@@ -2216,7 +2216,7 @@ plotTriangleF(
 int 
 plotPixelF(
     struct gws_window_d *window,
-    struct gr_vecF3D_d *vec,
+    struct n3d_vec_d *vec,
     unsigned long rop )
 {
 // Plot a single pixel.
@@ -3112,8 +3112,8 @@ matrix_multiply_2x3 (
 // each vertex of the triangle by this matrix (using gr_MultiplyAndProjectVector).
 int 
 gr_rotate_x(
-    struct gr_triangleF3D_d *in_tri,
-    struct gr_triangleF3D_d *out_tri,   // rotated 
+    struct n3d_triangle_d *in_tri,
+    struct n3d_triangle_d *out_tri,   // rotated 
     float angle, 
     float fElapsedTime )
 {
@@ -3149,16 +3149,16 @@ gr_rotate_x(
 // This rotates the triangle in 3D space.
 
     gr_MultiplyAndProjectVector(
-        (struct gr_vecF3D_d *) &in_tri->p[0], 
-        (struct gr_vecF3D_d *) &out_tri->p[0], 
+        (struct n3d_vec_d *) &in_tri->p[0], 
+        (struct n3d_vec_d *) &out_tri->p[0], 
         &matRotX );
     gr_MultiplyAndProjectVector(
-        (struct gr_vecF3D_d *) &in_tri->p[1], 
-        (struct gr_vecF3D_d *) &out_tri->p[1], 
+        (struct n3d_vec_d *) &in_tri->p[1], 
+        (struct n3d_vec_d *) &out_tri->p[1], 
         &matRotX );
     gr_MultiplyAndProjectVector(
-        (struct gr_vecF3D_d *) &in_tri->p[2], 
-        (struct gr_vecF3D_d *) &out_tri->p[2], 
+        (struct n3d_vec_d *) &in_tri->p[2], 
+        (struct n3d_vec_d *) &out_tri->p[2], 
         &matRotX );
 
     return 0;
@@ -3168,8 +3168,8 @@ gr_rotate_x(
 // Rotate in y
 int 
 gr_rotate_y(
-    struct gr_triangleF3D_d *in_tri,
-    struct gr_triangleF3D_d *out_tri,   // rotated 
+    struct n3d_triangle_d *in_tri,
+    struct n3d_triangle_d *out_tri,   // rotated 
     float angle, 
     float fElapsedTime )
 {
@@ -3196,16 +3196,16 @@ gr_rotate_y(
 //-----------------------------    
 // Rotate in Y-Axis
     gr_MultiplyAndProjectVector(
-        (struct gr_vecF3D_d *) &in_tri->p[0], 
-        (struct gr_vecF3D_d *) &out_tri->p[0], 
+        (struct n3d_vec_d *) &in_tri->p[0], 
+        (struct n3d_vec_d *) &out_tri->p[0], 
         &matRotY);
     gr_MultiplyAndProjectVector(
-        (struct gr_vecF3D_d *) &in_tri->p[1], 
-        (struct gr_vecF3D_d *) &out_tri->p[1], 
+        (struct n3d_vec_d *) &in_tri->p[1], 
+        (struct n3d_vec_d *) &out_tri->p[1], 
         &matRotY);
     gr_MultiplyAndProjectVector(
-        (struct gr_vecF3D_d *) &in_tri->p[2], 
-        (struct gr_vecF3D_d *) &out_tri->p[2], 
+        (struct n3d_vec_d *) &in_tri->p[2], 
+        (struct n3d_vec_d *) &out_tri->p[2], 
         &matRotY);
 
     return 0;
@@ -3215,8 +3215,8 @@ gr_rotate_y(
 // Rotate in z
 int 
 gr_rotate_z(
-    struct gr_triangleF3D_d *in_tri,
-    struct gr_triangleF3D_d *out_tri,   // rotated 
+    struct n3d_triangle_d *in_tri,
+    struct n3d_triangle_d *out_tri,   // rotated 
     float angle, 
     float fElapsedTime )
 {
@@ -3246,16 +3246,16 @@ gr_rotate_z(
 //-----------------------------    
 // Rotate in Z-Axis
     gr_MultiplyAndProjectVector(
-        (struct gr_vecF3D_d *) &in_tri->p[0], 
-        (struct gr_vecF3D_d *) &out_tri->p[0], 
+        (struct n3d_vec_d *) &in_tri->p[0], 
+        (struct n3d_vec_d *) &out_tri->p[0], 
         &matRotZ);
     gr_MultiplyAndProjectVector(
-        (struct gr_vecF3D_d *) &in_tri->p[1], 
-        (struct gr_vecF3D_d *) &out_tri->p[1], 
+        (struct n3d_vec_d *) &in_tri->p[1], 
+        (struct n3d_vec_d *) &out_tri->p[1], 
         &matRotZ);
     gr_MultiplyAndProjectVector(
-        (struct gr_vecF3D_d *) &in_tri->p[2], 
-        (struct gr_vecF3D_d *) &out_tri->p[2], 
+        (struct n3d_vec_d *) &in_tri->p[2], 
+        (struct n3d_vec_d *) &out_tri->p[2], 
         &matRotZ);
 //-----------------------------    
 

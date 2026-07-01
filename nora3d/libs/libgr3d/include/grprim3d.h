@@ -5,17 +5,10 @@
 #ifndef __GRPRIM3D_H
 #define __GRPRIM3D_H    1
 
-// 2D float point.
-// #todo: Maybe in the future.
-struct gr_vecF2D_d
-{
-    float x;
-    float y;
-    unsigned int color;
-};
 
 // 3D float point.
-struct gr_vecF3D_d
+// For nora3d library.
+struct n3d_vec_d
 {
     float x;
     float y;
@@ -37,23 +30,23 @@ struct gr_face_d
     //int n[3];  // normal indices (optional, can be 0 if unused)
 };
 
-
 // float 3D triangle
-struct gr_triangleF3D_d
+// For nora3d library.
+struct n3d_triangle_d
 {
     int used;
     int magic;
     int initialized;
-    struct gr_vecF3D_d p[3];
+    struct n3d_vec_d p[3];
     // mesh support.
-    struct gr_triangleF3D_d *last;
-    struct gr_triangleF3D_d *next;
+    struct n3d_triangle_d *last;
+    struct n3d_triangle_d *next;
 };
 
 // 3D rectangle. float falues.
 struct gr_rectangleF3D_d
 {
-    struct gr_vecF3D_d p[4];
+    struct n3d_vec_d p[4];
     // mesh support.
     struct gr_rectangleF3D_d *last;
     struct gr_rectangleF3D_d *next;

@@ -37,7 +37,7 @@ struct gr_word3d_d
     float y_size;
     float z_size;
 
-    //struct gr_vecF3D_d *
+    //struct n3d_vec_d *
 };
 extern struct gr_word3d_d  *current_world_3d;
 

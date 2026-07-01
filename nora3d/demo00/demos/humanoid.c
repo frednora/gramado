@@ -4,17 +4,14 @@
 
 #include "../gram3d.h"
 
-
 static int game_update_taskbar=TRUE;
 static int hits=0;
-
 
 #define MODEL_MAX  8
 unsigned long models[MODEL_MAX];
 
 #define STATIC_MODEL_MAX  8
 unsigned long static_models[STATIC_MODEL_MAX];
-
 
 // local
 /*
@@ -60,10 +57,10 @@ static void __drawHumanoidModel(struct humanoid_model_d *model, float fElapsedTi
     struct gr_mat4x4_d  matRotZ;
 
 // Triangles
-    struct gr_triangleF3D_d  tri;            // triângulo original.
-    struct gr_triangleF3D_d  triRotatedX; 
-    struct gr_triangleF3D_d  triRotatedXY;
-    struct gr_triangleF3D_d  triRotatedXYZ;
+    struct n3d_triangle_d  tri;            // triângulo original.
+    struct n3d_triangle_d  triRotatedX; 
+    struct n3d_triangle_d  triRotatedXY;
+    struct n3d_triangle_d  triRotatedXYZ;
 
     int cull=FALSE;
 
@@ -181,46 +178,46 @@ static void __drawHumanoidModel(struct humanoid_model_d *model, float fElapsedTi
         //-----------------------------    
         // Rotate in X-Axis
         gr_MultiplyAndProjectVector(
-            (struct gr_vecF3D_d *) &tri.p[0], 
-            (struct gr_vecF3D_d *) &triRotatedX.p[0], 
+            (struct n3d_vec_d *) &tri.p[0], 
+            (struct n3d_vec_d *) &triRotatedX.p[0], 
             (struct gr_mat4x4_d *) &matRotX);
         gr_MultiplyAndProjectVector(
-            (struct gr_vecF3D_d *) &tri.p[1], 
-            (struct gr_vecF3D_d *) &triRotatedX.p[1], 
+            (struct n3d_vec_d *) &tri.p[1], 
+            (struct n3d_vec_d *) &triRotatedX.p[1], 
             (struct gr_mat4x4_d *) &matRotX);
         gr_MultiplyAndProjectVector(
-            (struct gr_vecF3D_d *) &tri.p[2], 
-            (struct gr_vecF3D_d *) &triRotatedX.p[2], 
+            (struct n3d_vec_d *) &tri.p[2], 
+            (struct n3d_vec_d *) &triRotatedX.p[2], 
             (struct gr_mat4x4_d *) &matRotX);
 
         //-----------------------------    
         // Rotate in Y-Axis
         gr_MultiplyAndProjectVector(
-            (struct gr_vecF3D_d *) &triRotatedX.p[0], 
-            (struct gr_vecF3D_d *) &triRotatedXY.p[0], 
+            (struct n3d_vec_d *) &triRotatedX.p[0], 
+            (struct n3d_vec_d *) &triRotatedXY.p[0], 
             (struct gr_mat4x4_d *) &matRotY);
         gr_MultiplyAndProjectVector(
-            (struct gr_vecF3D_d *) &triRotatedX.p[1], 
-            (struct gr_vecF3D_d *) &triRotatedXY.p[1], 
+            (struct n3d_vec_d *) &triRotatedX.p[1], 
+            (struct n3d_vec_d *) &triRotatedXY.p[1], 
             (struct gr_mat4x4_d *) &matRotY);
         gr_MultiplyAndProjectVector(
-            (struct gr_vecF3D_d *) &triRotatedX.p[2], 
-            (struct gr_vecF3D_d *) &triRotatedXY.p[2], 
+            (struct n3d_vec_d *) &triRotatedX.p[2], 
+            (struct n3d_vec_d *) &triRotatedXY.p[2], 
             (struct gr_mat4x4_d *) &matRotY);
 
         //-----------------------------    
         // Rotate in Z-Axis
         gr_MultiplyAndProjectVector(
-            (struct gr_vecF3D_d *) &triRotatedXY.p[0], 
-            (struct gr_vecF3D_d *) &triRotatedXYZ.p[0], 
+            (struct n3d_vec_d *) &triRotatedXY.p[0], 
+            (struct n3d_vec_d *) &triRotatedXYZ.p[0], 
             (struct gr_mat4x4_d *) &matRotZ);
         gr_MultiplyAndProjectVector(
-            (struct gr_vecF3D_d *) &triRotatedXY.p[1], 
-            (struct gr_vecF3D_d *) &triRotatedXYZ.p[1], 
+            (struct n3d_vec_d *) &triRotatedXY.p[1], 
+            (struct n3d_vec_d *) &triRotatedXYZ.p[1], 
             (struct gr_mat4x4_d *) &matRotZ);
         gr_MultiplyAndProjectVector(
-            (struct gr_vecF3D_d *) &triRotatedXY.p[2], 
-            (struct gr_vecF3D_d *) &triRotatedXYZ.p[2], 
+            (struct n3d_vec_d *) &triRotatedXY.p[2], 
+            (struct n3d_vec_d *) &triRotatedXYZ.p[2], 
             (struct gr_mat4x4_d *) &matRotZ);
 
 
@@ -304,9 +301,9 @@ static void __drawHumanoidModel(struct humanoid_model_d *model, float fElapsedTi
 
         //----------------------------------------------------
         // Use Cross-Product to get surface normal
-        struct gr_vecF3D_d normal; 
-        struct gr_vecF3D_d line1; 
-        struct gr_vecF3D_d line2;
+        struct n3d_vec_d normal; 
+        struct n3d_vec_d line1; 
+        struct n3d_vec_d line2;
 
         line1.x = (float) triRotatedXYZ.p[1].x - triRotatedXYZ.p[0].x;
         line1.y = (float) triRotatedXYZ.p[1].y - triRotatedXYZ.p[0].y;
@@ -373,7 +370,7 @@ static void __drawHumanoidModel(struct humanoid_model_d *model, float fElapsedTi
             {
                 plotTriangleF(
                     (struct gws_window_d *) __root_window, 
-                    (struct gr_triangleF3D_d *) &triRotatedXYZ,
+                    (struct n3d_triangle_d *) &triRotatedXYZ,
                     fFillTriangle,
                     0 );
             }
@@ -401,10 +398,10 @@ static void __drawEnemy(struct humanoid_model_d *model, float vel)
     struct gr_mat4x4_d  matRotZ; 
 
 // Triangles
-    struct gr_triangleF3D_d  tri;            // Original triangle.
-    struct gr_triangleF3D_d  triRotatedX;    // Rotate in X
-    struct gr_triangleF3D_d  triRotatedXY;   // Rotate in Y
-    struct gr_triangleF3D_d  triRotatedXYZ;  // Rotate in Z (Projected)
+    struct n3d_triangle_d  tri;            // Original triangle.
+    struct n3d_triangle_d  triRotatedX;    // Rotate in X
+    struct n3d_triangle_d  triRotatedXY;   // Rotate in Y
+    struct n3d_triangle_d  triRotatedXYZ;  // Rotate in Z (Projected)
 
     int cull=FALSE;
     int nTriangles=12;
@@ -548,46 +545,46 @@ static void __drawEnemy(struct humanoid_model_d *model, float vel)
         //-----------------------------
         // Rotate in X-Axis
         gr_MultiplyAndProjectVector(
-            (struct gr_vecF3D_d *) &tri.p[0], 
-            (struct gr_vecF3D_d *) &triRotatedX.p[0], 
+            (struct n3d_vec_d *) &tri.p[0], 
+            (struct n3d_vec_d *) &triRotatedX.p[0], 
             (struct gr_mat4x4_d *) &matRotX);
         gr_MultiplyAndProjectVector(
-            (struct gr_vecF3D_d *) &tri.p[1], 
-            (struct gr_vecF3D_d *) &triRotatedX.p[1], 
+            (struct n3d_vec_d *) &tri.p[1], 
+            (struct n3d_vec_d *) &triRotatedX.p[1], 
             (struct gr_mat4x4_d *) &matRotX);
         gr_MultiplyAndProjectVector(
-            (struct gr_vecF3D_d *) &tri.p[2], 
-            (struct gr_vecF3D_d *) &triRotatedX.p[2], 
+            (struct n3d_vec_d *) &tri.p[2], 
+            (struct n3d_vec_d *) &triRotatedX.p[2], 
             (struct gr_mat4x4_d *) &matRotX);
 
         //-----------------------------
         // Rotate in Y-Axis
         gr_MultiplyAndProjectVector(
-            (struct gr_vecF3D_d *) &triRotatedX.p[0], 
-            (struct gr_vecF3D_d *) &triRotatedXY.p[0], 
+            (struct n3d_vec_d *) &triRotatedX.p[0], 
+            (struct n3d_vec_d *) &triRotatedXY.p[0], 
             (struct gr_mat4x4_d *) &matRotY);
         gr_MultiplyAndProjectVector(
-            (struct gr_vecF3D_d *) &triRotatedX.p[1], 
-            (struct gr_vecF3D_d *) &triRotatedXY.p[1], 
+            (struct n3d_vec_d *) &triRotatedX.p[1], 
+            (struct n3d_vec_d *) &triRotatedXY.p[1], 
             (struct gr_mat4x4_d *) &matRotY);
         gr_MultiplyAndProjectVector(
-            (struct gr_vecF3D_d *) &triRotatedX.p[2], 
-            (struct gr_vecF3D_d *) &triRotatedXY.p[2], 
+            (struct n3d_vec_d *) &triRotatedX.p[2], 
+            (struct n3d_vec_d *) &triRotatedXY.p[2], 
             (struct gr_mat4x4_d *) &matRotY);
 
         //-----------------------------
         // Rotate in Z-Axis
         gr_MultiplyAndProjectVector(
-            (struct gr_vecF3D_d *) &triRotatedXY.p[0], 
-            (struct gr_vecF3D_d *) &triRotatedXYZ.p[0], 
+            (struct n3d_vec_d *) &triRotatedXY.p[0], 
+            (struct n3d_vec_d *) &triRotatedXYZ.p[0], 
             (struct gr_mat4x4_d *) &matRotZ);
         gr_MultiplyAndProjectVector(
-            (struct gr_vecF3D_d *) &triRotatedXY.p[1], 
-            (struct gr_vecF3D_d *) &triRotatedXYZ.p[1], 
+            (struct n3d_vec_d *) &triRotatedXY.p[1], 
+            (struct n3d_vec_d *) &triRotatedXYZ.p[1], 
             (struct gr_mat4x4_d *) &matRotZ);
         gr_MultiplyAndProjectVector(
-            (struct gr_vecF3D_d *) &triRotatedXY.p[2], 
-            (struct gr_vecF3D_d *) &triRotatedXYZ.p[2], 
+            (struct n3d_vec_d *) &triRotatedXY.p[2], 
+            (struct n3d_vec_d *) &triRotatedXYZ.p[2], 
             (struct gr_mat4x4_d *) &matRotZ);
 
         // The color for the rotated triangle.
@@ -715,9 +712,9 @@ static void __drawEnemy(struct humanoid_model_d *model, float vel)
 
         //----------------------------------------------------
         // Use Cross-Product to get surface normal.
-        struct gr_vecF3D_d normal;
-        struct gr_vecF3D_d line1;
-        struct gr_vecF3D_d line2;
+        struct n3d_vec_d normal;
+        struct n3d_vec_d line1;
+        struct n3d_vec_d line2;
 
         // Vector 1 - Vector 0.
         line1.x = (float) triRotatedXYZ.p[1].x - triRotatedXYZ.p[0].x;
@@ -824,21 +821,21 @@ static void __drawEnemy(struct humanoid_model_d *model, float vel)
             {
                 plotTriangleF(
                     (struct gws_window_d *) __root_window, 
-                    (struct gr_triangleF3D_d *) &triRotatedXYZ,
+                    (struct n3d_triangle_d *) &triRotatedXYZ,
                     fFillTriangle,
                     0 );
 
 
                 /*
                 // #test: Not working yet
-                struct gr_vecF3D_d testv;
+                struct n3d_vec_d testv;
                 testv.x = 1.0f;
                 testv.y = 1.0f;
                 testv.z = 5.0f;
                 testv.color = COLOR_RED;
                 plotPixelF(
                     (struct gws_window_d *) __root_window,
-                    (struct gr_vecF3D_d*) &testv,
+                    (struct n3d_vec_d*) &testv,
                     0 );
                 */
 
@@ -1148,7 +1145,7 @@ void demoHumanoidSetup(void)
     
         // -- Test -----------------------------------------------------
         struct obj_element_d elem;
-        //struct gr_vecF3D_d vertex;
+        //struct n3d_vec_d vertex;
         // Multi-line string containing vertex data.
         //const char *cubeData = "v 1.0 2.0 3.0 \n v 4.0 5.0 6.0 \n v 7.0 8.0 9.0 \n";
         
@@ -1334,11 +1331,11 @@ void demoHumanoidSetup(void)
 
     
         // -- Test -----------------------------------------------------
-        struct obj_element_d elem;
-        //struct gr_vecF3D_d vertex;
+        struct obj_element_d  elem;
+        //struct n3d_vec_d vertex;
         // Multi-line string containing vertex data.
         //const char *cubeData = "v 1.0 2.0 3.0 \n v 4.0 5.0 6.0 \n v 7.0 8.0 9.0 \n";
-        
+
         /*
         // Original
         const char *cubeData =

@@ -25,22 +25,22 @@
 
 int 
 gr_rotate_x(
-    struct gr_triangleF3D_d *in_tri,
-    struct gr_triangleF3D_d *out_tri,   // rotated 
+    struct n3d_triangle_d *in_tri,
+    struct n3d_triangle_d *out_tri,   // rotated 
     float angle, 
     float fElapsedTime );
 
 int 
 gr_rotate_y(
-    struct gr_triangleF3D_d *in_tri,
-    struct gr_triangleF3D_d *out_tri,   // rotated 
+    struct n3d_triangle_d *in_tri,
+    struct n3d_triangle_d *out_tri,   // rotated 
     float angle, 
     float fElapsedTime );
 
 int 
 gr_rotate_z(
-    struct gr_triangleF3D_d *in_tri,
-    struct gr_triangleF3D_d *out_tri,   // rotated 
+    struct n3d_triangle_d *in_tri,
+    struct n3d_triangle_d *out_tri,   // rotated 
     float angle, 
     float fElapsedTime );
 
@@ -195,7 +195,7 @@ fillTriangle(
 int 
 plotTriangleF(
     struct gws_window_d *window,
-    struct gr_triangleF3D_d *t,
+    struct n3d_triangle_d *t,
     int fill,
     unsigned long rop );
 
@@ -203,7 +203,7 @@ plotTriangleF(
 int 
 plotPixelF(
     struct gws_window_d *window,
-    struct gr_vecF3D_d *vec,
+    struct n3d_vec_d *vec,
     unsigned long rop );
 
 //
