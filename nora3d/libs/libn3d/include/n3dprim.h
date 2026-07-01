@@ -1,9 +1,9 @@
-// grprim3d.h
+// n3dprim.h
 // Some 3D stuff using float.
 // Created by Fred Nora.
 
-#ifndef __GRPRIM3D_H
-#define __GRPRIM3D_H    1
+#ifndef __N3DPRIM_H
+#define __N3DPRIM_H    1
 
 
 // 3D float point.
@@ -44,15 +44,17 @@ struct n3d_triangle_d
 };
 
 // 3D rectangle. float falues.
-struct gr_rectangleF3D_d
+struct n3d_rectangle_d
 {
     struct n3d_vec_d p[4];
     // mesh support.
-    struct gr_rectangleF3D_d *last;
-    struct gr_rectangleF3D_d *next;
+    struct n3d_rectangle_d *last;
+    struct n3d_rectangle_d *next;
 };
 
-
+//
+// Matrices
+//
 
 struct gr_mat2x2_d {
     float m[2][2];
@@ -65,12 +67,4 @@ struct gr_mat4x4_d {
 };
 
 
-/*
-struct gr_vecF4D_d {
-    float x, y, z, w;
-    unsigned int color;
-};
-*/
-
 #endif    
-

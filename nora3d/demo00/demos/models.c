@@ -178,12 +178,9 @@ void __draw_demo_curve1(int position, int model_z)
         GRCOLOR_LIGHTRED, 'O', modelz );
 }
 
-
-
-
 void drawRectangle0(float modelz)
 {
-    struct gr_rectangleF3D_d r;
+    struct n3d_rectangle_d r;
 
     r.p[0].x = (float) -0.02f;  
     r.p[0].y = (float)  0.02f;  
@@ -205,7 +202,7 @@ void drawRectangle0(float modelz)
     r.p[3].z = (float) modelz;  
     r.p[3].color = COLOR_WHITE;
 
-    drawRectangleF( (struct gr_rectangleF3D_d *) &r );
+    drawRectangleF( (struct n3d_rectangle_d *) &r );
 }
 
 

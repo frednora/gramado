@@ -1231,8 +1231,7 @@ rectangle_from_two_points (
         color );
 }
 
-
-void drawRectangleF(struct gr_rectangleF3D_d *rectangle)
+void drawRectangleF(struct n3d_rectangle_d *rectangle)
 {
     // 'int' values
     struct gr_rectangle_d r;

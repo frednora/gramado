@@ -153,7 +153,7 @@ rectangle_from_two_points (
     int right, int bottom,
     unsigned int color );
 
-void drawRectangleF(struct gr_rectangleF3D_d *rectangle);
+void drawRectangleF(struct n3d_rectangle_d *rectangle);
 void __rectangleZZ( struct gr_rectangle_d *rect );
 int grRectangle( struct gr_rectangle_d *rect );
 
