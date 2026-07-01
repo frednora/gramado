@@ -831,6 +831,8 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
     if (kstrncmp(cmdline,"udp",3) == 0)
     {
         //#test: Test sender.
+        network_test_udp();
+        network_test_udp2();
         goto exit_cmp;
     }
 

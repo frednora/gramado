@@ -236,12 +236,25 @@ done:
     //printk ("kernel: Sending response\n");
     //refresh_screen();
 
-    if ((void*)buf==NULL)
+    if ((void*)buf == NULL)
         return (int) -1;
     if (MessageSize <= 0)
         return (int) -1;
 
+
+    /*
+    printk("reply MAC: %x:%x:%x:%x:%x:%x\n",
+        NetworkSaved.caller_mac[0],
+        NetworkSaved.caller_mac[1],
+        NetworkSaved.caller_mac[2],
+        NetworkSaved.caller_mac[3],
+        NetworkSaved.caller_mac[4],
+        NetworkSaved.caller_mac[5] 
+    );
+    */
+
     // #test
+    // #bugbug: Maybe some of these parameters are wrong.
     gprot_send_udp (
         NetworkSaved.caller_ipv4,  // dst ip
         NetworkSaved.caller_mac,   // dst mac
@@ -261,7 +274,7 @@ done:
         MessageSize );        // udp payload size (Message size)
     */
 
-    return 0; // ok
+    return 0;  // ok
 
 fail:
     return (int) -1;

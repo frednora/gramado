@@ -1,123 +1,119 @@
-// CLIENT
-// Creadits:
-// https://mcalabprogram.blogspot.com/2012/01/udp-sockets-chat-application-server.html
+// gconsole.c
+// Gramado Protocol Console
+// Linux UDP client
 
 #include <sys/types.h>
 #include <unistd.h>
 #include <arpa/inet.h>
 
-#include<sys/socket.h>
-#include<netdb.h>
-#include<string.h>
-#include<stdlib.h>
-#include<stdio.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 
-// #hack
-#define TRUE (1)
-#define FALSE (0)
+#define SERVER_IP   "192.168.1.3"
+#define SERVER_PORT 11888
 
-//const char *ip = "127.0.0.1";
-//#define PORT 43454
-const char *ip = "192.168.1.10";
-#define PORT  11888
+#define BUFFER_SIZE 512
 
-#define MAX  256  //80
-static char buff[MAX];
-
-#define SA struct sockaddr
-
-int main(int argc, char **argv)
+int main(void)
 {
-    int sockfd, len, n;
-    struct sockaddr_in servaddr;
-    int IsTimeToQuit = FALSE;
+    int sockfd;
+    socklen_t addrlen;
 
-    memset(buff, 0, sizeof(buff));
+    struct sockaddr_in server;
+    struct sockaddr_in from;
 
-    // It means UDP.
-    sockfd = socket(AF_INET,SOCK_DGRAM,0);
-    if (sockfd == -1){
-        printf("socket creation failed...\n");
-        goto fail;
-    } else {
-        printf("Socket successfully created..\n");
-    };
-    bzero(&servaddr,sizeof(len));
-    servaddr.sin_family=AF_INET;
-    servaddr.sin_addr.s_addr = inet_addr(ip);
-    servaddr.sin_port=htons(PORT);
-    len = sizeof(servaddr);
+    char tx[BUFFER_SIZE];
+    char rx[BUFFER_SIZE];
 
-// Loop
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+
+    if (sockfd < 0)
+    {
+        perror("socket");
+        return 1;
+    }
+
+    memset(&server,0,sizeof(server));
+
+    server.sin_family = AF_INET;
+    server.sin_port   = htons(SERVER_PORT);
+    server.sin_addr.s_addr = inet_addr(SERVER_IP);
+
+    addrlen = sizeof(from);
+
+    printf("\n");
+    printf("Gramado Protocol Console\n");
+    printf("Server %s:%d\n", SERVER_IP, SERVER_PORT);
+    printf("\n");
+
     for (;;)
     {
-        if (IsTimeToQuit)
+        printf("gprot> ");
+        fflush(stdout);
+
+        memset(tx,0,sizeof(tx));
+
+        if (fgets(tx,sizeof(tx),stdin) == NULL)
             break;
 
+        /* remove '\n' */
+        size_t len = strlen(tx);
+
+        if (len > 0 && tx[len-1] == '\n')
+        {
+            tx[len-1] = 0;
+            len--;
+        }
+
+        if (strcmp(tx,"quit") == 0)
+            break;
+
+        if (len == 0)
+            continue;
+
+        if (sendto(
+                sockfd,
+                tx,
+                len + 1,
+                0,
+                (struct sockaddr *) &server,
+                sizeof(server)) < 0)
+        {
+            perror("sendto");
+            continue;
+        }
+
+        memset(rx,0,sizeof(rx));
+
+        int n = recvfrom(
+                    sockfd,
+                    rx,
+                    sizeof(rx)-1,
+                    0,
+                    (struct sockaddr *) &from,
+                    &addrlen);
+
+        if (n < 0)
+        {
+            perror("recvfrom");
+            continue;
+        }
+
+        rx[n] = 0;
+
         printf("\n");
-        printf("Enter string : ");
-        n=0;
-        
-        // Get string
-        memset(buff, 0, sizeof(buff));
-        while ( (buff[n++] = getchar()) != '\n')
-        {
-        };
+        printf("Reply from %s:%d\n",
+            inet_ntoa(from.sin_addr),
+            ntohs(from.sin_port));
 
-        if (n < MAX)
-        {
-            // Remove End Of Line.
-            if (buff[n-1] == '\n')
-                buff[n-1] = 0;
-        }
-
-        // Send request
-        sendto (
-            sockfd,
-            buff,
-            sizeof(buff), 
-            0,
-            (SA *)&servaddr,
-            len );
-        
-        // Read response
-        bzero(buff,sizeof(buff));
-        recvfrom(
-            sockfd,
-            buff,
-            sizeof(buff),
-            0,
-            (SA *) &servaddr,
-            &len );
-
-        // Print response
-        printf("From Server : %s\n",buff);
-
-        // Compare response
-
-        // g:0 = Request.
-        if (buff[0] == 'g' &&
-            buff[1] == ':' &&
-            buff[2] == '0' )
-        {
-            if (strncmp("quit",(buff+4),4) == 0)
-            {
-                printf("udp01: ~quit\n");
-                IsTimeToQuit = TRUE;
-                break;
-            }
-            if (strncmp("exit",(buff+4),4) == 0)
-            {
-                printf("udp01: ~exit\n");
-                IsTimeToQuit = TRUE;
-                break;
-            }
-            // ...
-        }
-    };
+        printf("%s\n",rx);
+        printf("\n");
+    }
 
     close(sockfd);
-    return EXIT_SUCCESS;
-fail:
-    return EXIT_FAILURE;
+
+    return 0;
 }

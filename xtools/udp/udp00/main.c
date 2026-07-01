@@ -1,5 +1,5 @@
 // CLIENT
-// Creadits:
+// Credits:
 // https://mcalabprogram.blogspot.com/2012/01/udp-sockets-chat-application-server.html
 
 #include <sys/socket.h>
@@ -16,7 +16,7 @@
 //const char *ip = "127.0.0.1";
 //#define PORT 43454
 
-const char *ip = "192.168.1.4";
+const char *ip = "192.168.1.3";
 #define PORT  11888
 
 #define SA  struct sockaddr

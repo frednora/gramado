@@ -45,7 +45,8 @@ unsigned char __udp_gramado_default_ipv4[4] = {
 };
 // destination ip (linux)
 unsigned char __udp_target_default_ipv4[4]  = { 
-    192, 168, 1, 10  //linux
+    //192, 168, 1, 2  //linux
+    172, 31, 248, 34  //linux
 };
 // destination ip (gateway)
 unsigned char __udp_target_gateway_ipv4[4]  = { 
@@ -716,6 +717,8 @@ network_handle_udp(
     char *p2; 
     p2 = (buffer + UDP_HEADER_LENGHT);
     size_t p_size = strlen(p2);
+    //size_t p_size = udp->uh_ulen - UDP_HEADER_LENGHT;
+
     if (p_size <= 512)
     {
         strncpy(
@@ -780,8 +783,8 @@ network_handle_udp(
 // What kind of data we're pushing into these buffers?
 // Is it the raw frame only? Or only UDP?
 // see: network.c
-    //int PushIntoTheQueue = TRUE;
-    int PushIntoTheQueue = FALSE;
+    //int PushPayloadIntoTheQueue = TRUE;
+    int PushPayloadIntoTheQueue = FALSE;
 
     int NoReply = TRUE;
 
@@ -796,7 +799,7 @@ network_handle_udp(
         // the udp's payloads.
         // It's currently the only route for delivering UDP payloads 
         // to the rest of the OS.
-        if (PushIntoTheQueue == TRUE){
+        if (PushPayloadIntoTheQueue == TRUE){
 
             // #ps: It's working.
             // A ring 3 process (init) can read it via syscall,
@@ -816,7 +819,8 @@ network_handle_udp(
             //ipc_post_message_to_init(77888, 1234, 5678);
 
             //__handle_gprotocol(sport,dport);
-            gprot_handle_protocol(udp_payload,sport,dport);
+            // See: gprot.c
+            gprot_handle_protocol(udp_payload, sport, dport);
         };
 
         // Clear UDP local buffer.
