@@ -37,10 +37,11 @@ L2_WINSHELL = $(__DEP_L2)/ifarmer/winshell
 # Nomad Pastors - POSIX-like commands and experiments
 
 __DEP_LZ = np
-L3_HEAVY = $(__DEP_LZ)/heavy
 L4_CPP00 = $(__DEP_LZ)/cpp00
 LZ_CMDS  = $(__DEP_LZ)/cmds
 
+__DEP_NORA3D = nora3d
+L3_HEAVY = $(__DEP_LZ)/heavy
 
 ## =================================
 # Make variables (CC, etc...)
@@ -193,13 +194,9 @@ build-extras:
 	@echo "Compiling np/"
 	@make -C $(__DEP_LZ)/
 
+	@echo "Compiling nora3d/"
+	@make -C $(__DEP_NORA3D)/
 
-# --------
-# heavy
-# 3D game demos
-	@-cp $(L3_HEAVY)/games3d/bin/DEMO00.BIN   $(BASE)/DE/
-#	@-cp $(L3_HEAVY)/games3d/bin/DEMO01.BIN   $(BASE)/DE/
-# ...
 
 # --------
 # cpp00
@@ -250,7 +247,6 @@ build-extras:
 	@-cp $(LZ_CMDS)/bin/SHELL2.BIN    $(BASE)/DE/
 
 
-
 # --------
 # winshell
 # These need the '#' prefix.
@@ -273,6 +269,12 @@ build-extras:
 
 # Other applications
 	@-cp $(L2_WINSHELL)/bin/GWS.BIN      $(BASE)/DE/
+
+# --------
+# heavy (nora3d/)
+# 3D game demos
+
+	@-cp $(__DEP_NORA3D)/bin/DEMO00.BIN   $(BASE)/DE/
 
 
 	@echo "~ build-extras"
