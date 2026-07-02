@@ -122,8 +122,11 @@ int file_read_buffer( file *f, char *buffer, int len )
 // #bugbug: Isso é provisório
 // A quantidade que desejamos ler é menor que o tamanho do buffer.
 // Estamos lendo do início do arquivo?
-    if (Count > f->_lbfsize){
-        printk ("file_read_buffer: Count > f->_lbfsize\n");
+    if (Count > f->_lbfsize)
+    {
+        //printk ("file_read_buffer: Count > f->_lbfsize\n");
+        printk ("file_read_buffer: Count={%d} > f->_lbfsize={%d} f->_fsize={%d}\n",
+            Count, f->_lbfsize, f->_fsize );
         goto fail;
     }
 
@@ -132,6 +135,10 @@ int file_read_buffer( file *f, char *buffer, int len )
     //    Count = f->_fsize;
     //    goto fail;
     //}
+
+    // #debug
+    // printk ("file_read_buffer: Count={%d} > f->_lbfsize={%d} f->_fsize={%d}\n",
+        // Count, f->_lbfsize, f->_fsize );
 
 /*
 // stdin
@@ -575,6 +582,11 @@ __read_imp (
     char *ubuf,       //#todo: use 'void *'
     size_t count )
 {
+
+// The system can now open and allocate buffers for larger files (like 5KB), 
+// but the read path is still capped at 1KB because of leftover hardcoded checks.
+// Probably we are capping it inside the kernel AND in the C libraries in ring 3.
+
 // Limits:
 // #test
 // Probably we can extand the limit to BUFSIZ,
@@ -4550,10 +4562,10 @@ __OK:
     }
     memset( fp, 0, sizeof(file) );
 
-// Initialize.
+// Initialize struture
     fp->used = TRUE;
     fp->magic = 1234;
-    fp->pid = (pid_t) p->pid;  //current_process;
+    fp->pid = (pid_t) p->pid;
     fp->uid = (uid_t) current_user;
     fp->gid = (gid_t) current_group;
 
@@ -4643,7 +4655,7 @@ __OK:
         printk ("do_read_file_from_disk: FileSize\n");
         goto fail;
     }
-// Structure field for file size.
+    // Structure field for file size
     fp->_fsize = (int) FileSize;
 
 // #bugbug
@@ -4658,6 +4670,7 @@ __OK:
 // Se o arquivo for maior que buffer disponivel.
 // Podemos aumentar o buffer.
 
+    // The file size is bigger than the buffer size.
     if (FileSize >= fp->_lbfsize)
     {
         // #debug
@@ -4681,8 +4694,7 @@ __OK:
         // #bugbug:
         // We need a limit here.
         // The limit is 8KB. See above.
-        //if (buflen > BUFSIZ)
-            //return -1;
+
         fp->_base = (char *) kmalloc(buflen);
         if ((void *) fp->_base == NULL){
             printk ("do_read_file_from_disk: Couldn't create a new buffer\n");

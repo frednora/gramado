@@ -18,7 +18,8 @@
 #define TRUE   1
 
 //4KB
-#define __BufferSize  (4*1024)
+// #define __BufferSize  (4*1024)
+#define __BufferSize  (8*1024)
 static char buffer[__BufferSize];
 
 static int Max = 8;  // Max number of files
@@ -109,7 +110,9 @@ static int process_file(char *file_name)
 
 // Read from fd
 // #bugbug: 511 byte file limit
-    nreads = (int) read(fdRead, buffer, 511);
+    //nreads = (int) read(fdRead, buffer, 511);
+    //nreads = (int) read(fdRead, buffer, 511*4);
+    nreads = (int) read(fdRead, buffer, 1024*4);
     if (nreads <= 0){
         printf ("cat: File {%d} failed on read()\n", fdRead);
         goto fail;
@@ -120,12 +123,30 @@ static int process_file(char *file_name)
 // Print the whole file into the screen.
 // In this case we don't have any modification flag.
     int fd_output = fileno(stdout);
+
+/*
     nwrites = (int) write(fd_output, buffer, sizeof(buffer));
     if (nwrites <= 0){
         printf ("cat: File {%d} failed on write()\n", 
             fileno(stdout) );
         goto fail;
     }
+*/
+
+// #test #todo
+// This is because we have a limitation 
+// of 1KB in the write() implementation for now.
+
+    int total = 0;
+    while (total < nreads) 
+    {
+        int chunk = (nreads - total > 1024) ? 1024 : (nreads - total);
+        int nw = write(fd_output, buffer + total, chunk);
+        if (nw <= 0) 
+            break;
+        total += nw;
+    }
+
     ReturnValue = nwrites;
 
 // Clear the buffer
@@ -148,6 +169,7 @@ static void __clear_buffer(void)
 void test_streams_worker(void)
 {
     char buf[512];
+    //char buf[1024 * 8];
     int n;
 
     // 1. Write something into stdout (pipe write end)
