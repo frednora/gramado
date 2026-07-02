@@ -125,9 +125,14 @@ int file_read_buffer( file *f, char *buffer, int len )
     if (Count > f->_lbfsize)
     {
         //printk ("file_read_buffer: Count > f->_lbfsize\n");
-        printk ("file_read_buffer: Count={%d} > f->_lbfsize={%d} f->_fsize={%d}\n",
-            Count, f->_lbfsize, f->_fsize );
-        goto fail;
+        // printk ("file_read_buffer: Count={%d} > f->_lbfsize={%d} f->_fsize={%d}\n",
+            // Count, f->_lbfsize, f->_fsize );
+
+        // #test:
+        // Ajust to read only the available bytes in the buffer. 
+        Count = f->_lbfsize;
+
+        // goto fail;
     }
 
     //if ( Count > f->_fsize ){

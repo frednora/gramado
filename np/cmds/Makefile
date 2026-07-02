@@ -3,7 +3,7 @@
 all:
 
 # Compile libraries and toolkits for the commands in cmds/.
-	make -C alpha/
+	make -C api/
 
 # Compile base commands
 	make -C cat/
@@ -60,10 +60,11 @@ all:
 
 clean:
 	-rm -f *.o 
+
 clean-all:
 	-rm -f *.o 
-#	-rm -f alpha/libs/
-#	-rm -f alpha/toolkits/
+#	-rm -f api/libs/
+#	-rm -f api/toolkits/
 	-rm -f bin/*.BIN
 
 

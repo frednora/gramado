@@ -1,8 +1,7 @@
-/*
- * File: string.h
- * Descrição:
- *     Operações com strings. Padrão C.
- */
+// string.h
+// String support
+// Created by Fred Nora.
+
 
 #ifndef __STRING_H__
 #define __STRING_H__    1
@@ -30,6 +29,7 @@ check_bytes8 (
 int strcoll (const char *s1, const char *s2);
 
 int memcmp (const void *s1, const void *s2, size_t n);
+int CRYPTO_memcmp (const void *s1, const void *s2, size_t n);
 
 void *memmove(void *dest, const void *src, size_t count);
 void *memscan (void *addr, int c, size_t size);
@@ -61,7 +61,7 @@ int strcmp(const char *s1, const char *s2);
 // http://man7.org/linux/man-pages/man3/strcmp.3.html
 int strncmp(const char *s1, const char *s2, size_t n);
 
-//#bugbug deletando porque tá errado.
+//#bugbug deletando porque tï¿½ errado.
 //int str_cmp(unsigned char *str1, unsigned char *str2);
 
 void *memsetw (void *dst, int val, size_t count);

@@ -23,8 +23,8 @@ CFLAGS = -m64 \
 	-Werror=strict-prototypes    
 
 # Libraries
-LIBC    = ../alpha/libs/rtl/include/
-LIBCOBJ = ../alpha/libs/rtl/obj
+LIBC    = ../api/libs/rtl/include/
+LIBCOBJ = ../api/libs/rtl/obj
 
 # Objects
 myObjects = crt0.o main.o \

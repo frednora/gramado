@@ -1,6 +1,6 @@
-
 // string.c
-// String support.
+// String support
+// Created by Fred Nora.
 
 #include <ctype.h>
 #include <stddef.h>
@@ -335,8 +335,7 @@ void *memsetw (void *dst, int val, size_t count)
 }
 
 // memcmp:
-// Compare memory regions.
-
+// Compare memory regions
 int memcmp (const void *s1, const void *s2, size_t n)
 {
     if (n != 0) 
@@ -352,6 +351,24 @@ int memcmp (const void *s1, const void *s2, size_t n)
     }
 
     return 0;
+}
+
+// Compare memory regions for cryptographic purposes
+// Returns 0 if the same, non-zero otherwise.
+// The purpose is to avoid timing attacks by ensuring that 
+// the comparison takes the same amount of time regardless 
+// of where the first difference occurs.
+int CRYPTO_memcmp (const void *s1, const void *s2, size_t n)
+{
+    const unsigned char *p1 = s1;
+    const unsigned char *p2 = s2;
+    unsigned char diff = 0;
+
+    while (n--)
+        diff |= *p1++ ^ *p2++;
+
+// Returns 0 if the same, non-zero otherwise.
+    return (int) (diff & 0xFF);
 }
 
 
