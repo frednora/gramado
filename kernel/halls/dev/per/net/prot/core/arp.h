@@ -50,6 +50,7 @@ struct arp_cache_item_d
     int used;
     int magic;
     int id;
+    int is_free;
     uint8_t ipv4_address[4];
     uint8_t mac_address[6];
     // #todo: Aging, jiffies, timestamp, etc.
@@ -69,6 +70,9 @@ extern struct arp_table_d  ARP_Table;
 // =====================================
 
 void arp_initialize_arp_table(void);
+
+int arp_table_lookup(uint8_t ip[4]);
+int arp_table_find_free_slot(void);
 
 void 
 arp_table_set_entry(

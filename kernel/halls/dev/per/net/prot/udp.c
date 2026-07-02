@@ -45,8 +45,8 @@ unsigned char __udp_gramado_default_ipv4[4] = {
 };
 // destination ip (linux)
 unsigned char __udp_target_default_ipv4[4]  = { 
-    //192, 168, 1, 2  //linux
-    172, 31, 248, 34  //linux
+    192, 168, 1, 2  // Window/Linux
+//    172, 31, 248, 34  // Window/Linux
 };
 // destination ip (gateway)
 unsigned char __udp_target_gateway_ipv4[4]  = { 

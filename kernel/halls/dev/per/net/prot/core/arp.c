@@ -29,15 +29,61 @@ unsigned char __arp_gateway_default_ipv4[4] = {
 void arp_initialize_arp_table(void)
 {
     register int i=0;
+
     for (i=0; i<ARP_TABLE_COUNT_MAX; i++)
     {
         ARP_Table.arpTable[i].id = (int) i;
         memset( ARP_Table.arpTable[i].ipv4_address, 0, 4 );
         memset( ARP_Table.arpTable[i].mac_address, 0, 6 );
+        ARP_Table.arpTable[i].is_free = TRUE;
         ARP_Table.arpTable[i].used = TRUE;
         ARP_Table.arpTable[i].magic = 1234;
     };
     ARP_Table.initialized = TRUE;
+}
+
+// Lookup by IPv4 address.
+// Returns index if found, -1 if not found.
+int arp_table_lookup(uint8_t ip[4])
+{
+    int i=0;
+
+    if (ARP_Table.initialized != TRUE)
+        return -1;
+
+    for (i=0; i < ARP_TABLE_COUNT_MAX; i++)
+    {
+        if (ARP_Table.arpTable[i].is_free == FALSE &&
+            ARP_Table.arpTable[i].ipv4_address[0] == ip[0] &&
+            ARP_Table.arpTable[i].ipv4_address[1] == ip[1] &&
+            ARP_Table.arpTable[i].ipv4_address[2] == ip[2] &&
+            ARP_Table.arpTable[i].ipv4_address[3] == ip[3])
+        {
+            return i; // Found
+        }
+    }
+    return -1; // Not found
+}
+
+
+int arp_table_find_free_slot(void)
+{
+    int i=0;
+
+    if (ARP_Table.initialized != TRUE)
+        goto fail;
+
+    for (i=0; i < ARP_TABLE_COUNT_MAX; i++)
+    {
+        if ( ARP_Table.arpTable[i].magic == 1234 && 
+             ARP_Table.arpTable[i].is_free == TRUE)
+        {
+            return (int) i;
+        }
+    };
+
+fail:
+    return (int) -1;  // No free slot
 }
 
 void 
@@ -66,6 +112,8 @@ arp_table_set_entry(
     ARP_Table.arpTable[index].mac_address[3] = target_mac[3];
     ARP_Table.arpTable[index].mac_address[4] = target_mac[4];
     ARP_Table.arpTable[index].mac_address[5] = target_mac[5];
+
+    ARP_Table.arpTable[index].is_free = FALSE;
 }
 
 // #debug
@@ -82,7 +130,7 @@ void arp_table_show_index(int index)
     uint8_t b = ARP_Table.arpTable[index].ipv4_address[1]; 
     uint8_t c = ARP_Table.arpTable[index].ipv4_address[2];
     uint8_t d = ARP_Table.arpTable[index].ipv4_address[3];
-    printk("IP: %c.%c.%c.%c | ",
+    printk("IP: %d.%d.%d.%d | ",
         a,b,c,d );
 
     uint8_t a2 = ARP_Table.arpTable[index].mac_address[0];
@@ -91,7 +139,7 @@ void arp_table_show_index(int index)
     uint8_t d2 = ARP_Table.arpTable[index].mac_address[3];
     uint8_t e2 = ARP_Table.arpTable[index].mac_address[4];
     uint8_t f2 = ARP_Table.arpTable[index].mac_address[5];
-    printk("MAC: %c.%c.%c.%c.%c.%c ",
+    printk("MAC: %x:%x:%x:%x:%x:%x ",
         a2,b2,c2,d2,e2,f2 );
 
     printk("INDEX: %d\n",index);
@@ -108,8 +156,7 @@ void arp_show_table(void)
 
     printk("ARP table:\n");
     printk("-------------------------------------\n");
-    for (i=0; i<ARP_TABLE_COUNT_MAX; i++)
-    {
+    for (i=0; i<ARP_TABLE_COUNT_MAX; i++){
         arp_table_show_index(i);
     };
     printk("-------------------------------------\n");
@@ -391,6 +438,7 @@ network_send_arp(
 
     //printk ("Done\n");
     return;
+
 fail:
     return;
 }
@@ -464,20 +512,30 @@ network_handle_arp(
 // REPLY
     } else if (op == ARP_OPC_REPLY){
 
-        // #todo: This is a work in progress.
-        // #test
-        // #bugbug: Setting only the first index.
-        //arp_table_set_entry( 
-        //   0,
-        //   ar->arp_spa,
-        //   ar->arp_sha );
-
         // #debug
         printk("ARP: REPLY from %d.%d.%d.%d\n",
-            ar->arp_spa[0], 
-            ar->arp_spa[1], 
-            ar->arp_spa[2], 
-            ar->arp_spa[3] );
+            ar->arp_spa[0], ar->arp_spa[1], 
+            ar->arp_spa[2], ar->arp_spa[3] 
+        );
+
+        int t_idx = arp_table_lookup(ar->arp_spa);
+        
+        // Not found, insert new
+        if (t_idx < 0) 
+        {
+            int FreeSlot = arp_table_find_free_slot();
+            if (FreeSlot >= 0 && FreeSlot < ARP_TABLE_COUNT_MAX)
+            {
+                arp_table_set_entry( FreeSlot, ar->arp_spa, ar->arp_sha );
+            }
+        }
+        // It was found into this index, so we can update it.
+        if (t_idx >= 0 && t_idx < ARP_TABLE_COUNT_MAX)
+        {
+            arp_table_set_entry( t_idx, ar->arp_spa, ar->arp_sha );
+            //printk("ARP: Updated entry at index %d\n", t_idx);
+        }
+
 
         // From gateway?
         // #todo:
