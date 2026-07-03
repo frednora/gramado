@@ -102,6 +102,35 @@ void network_show_dhcp_info(void)
         dhcp_info.server_ipv4[1], 
         dhcp_info.server_ipv4[2], 
         dhcp_info.server_ipv4[3] );
+
+//
+// Lease management
+//
+
+    printk("DHCP: Lease %u seconds\n", dhcp_info.lease_time);
+
+//
+// Network configuration
+//
+
+    printk("DHCP: Subnet %d.%d.%d.%d\n", 
+        dhcp_info.subnet_mask[0], 
+        dhcp_info.subnet_mask[1], 
+        dhcp_info.subnet_mask[2], 
+        dhcp_info.subnet_mask[3] );
+
+    printk("DHCP: Gateway %d.%d.%d.%d\n", 
+        dhcp_info.gateway_ipv4[0], 
+        dhcp_info.gateway_ipv4[1], 
+        dhcp_info.gateway_ipv4[2], 
+        dhcp_info.gateway_ipv4[3] );
+
+    printk("DHCP: DNS %d.%d.%d.%d\n", 
+        dhcp_info.dns_ipv4[0], 
+        dhcp_info.dns_ipv4[1], 
+        dhcp_info.dns_ipv4[2], 
+        dhcp_info.dns_ipv4[3] );
+
     //...
 }
 
@@ -174,7 +203,10 @@ network_dhcp_send(
     srand(jiffies);
     xid = (unsigned int) rand(); 
     xid = (unsigned int) (xid + 0x3903F326);
+    // Save last transaction ID
     dhcp->xid = ToNetByteOrder32(xid);
+    dhcp_info.xid = dhcp->xid;
+
 
 // Elapsed time in seconds.
     dhcp->secs = ToNetByteOrder16(0);
@@ -216,8 +248,10 @@ network_dhcp_send(
     }
     if ((void*) currentNIC != NULL)
     {
-        for (i=0; i<6; i++){
+        for (i=0; i<6; i++)
+        {
             dhcp->chaddr[i] = (uint8_t) currentNIC->mac_address[i];
+            dhcp_info.your_mac[i] = dhcp->chaddr[i];  // Save our MAC
         };
     }
 
@@ -512,6 +546,16 @@ network_handle_dhcp(
 // Minimum size
     //if (size < ? )
         //return;
+
+
+    /*
+    if (dhcp->xid != dhcp_info.xid) 
+    {
+        printk("DHCP: xid mismatch, ignoring packet\n");
+        return;
+    }
+    */
+
 
 // yiaddr: Your IP address.
     your_ipv4[0] = (uint8_t) (  dhcp->yiaddr        & 0xFF);

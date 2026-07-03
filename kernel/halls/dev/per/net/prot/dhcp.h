@@ -16,6 +16,18 @@ acknowledge (confirmação)
 #define __PROT_DHCP_H    1
 
 
+/*
+What a DHCP client should store?
+A minimal DHCP client state usually includes:
+ + Your IP address (yiaddr) — the one the server gave you.
+ + Server IP address (siaddr or option 54) — so you know who to talk to for renewals.
+ + Lease time (option 51) — how long the IP is valid.
+ + Renewal (T1) and Rebinding (T2) timers — when to send REQUESTs again.
+ + Subnet mask, gateway, DNS servers — parsed from options.
+ + Transaction ID (xid) — to match replies with requests.
+ + MAC address — already in your struct, but useful for validation.
+*/
+
 // Save information about the dhcp initialization.
 struct dhcp_info_d
 {
@@ -24,15 +36,30 @@ struct dhcp_info_d
 // This is set TRUE only after the ACK.
     int initialized;
 
-    unsigned int Step;  // 1,2,3,4 (DORA)
+// 1,2,3,4 (DORA)
+    unsigned int Step;
 
-// US:
+// Client info: (US) 
     uint8_t your_ipv4[4];  // Your IP. We got it from the server.
-// SERVER:
+    uint8_t your_mac[6];   // Our NIC MAC
+
+// Server info: (SERVER)
     uint8_t server_ipv4[4];  // The server IP.
     uint8_t server_mac[6];   // The server MAC.
 
-    //...
+    // Lease management
+    uint32_t lease_time;    // Option 51: seconds
+    uint32_t renew_time;    // T1 (usually 50% of lease)
+    uint32_t rebind_time;   // T2 (usually 87.5% of lease)
+
+    // Network configuration
+    uint8_t subnet_mask[4];   // Option 1
+    uint8_t gateway_ipv4[4];  // Option 3 (router)
+    uint8_t dns_ipv4[4];      // Option 6 (first DNS)
+
+// Transaction tracking
+// Think of it as the “conversation tag” between the client and the server.
+    uint32_t xid;           // Last transaction ID
 };
 // see: dhcp.c
 extern struct dhcp_info_d  dhcp_info;
