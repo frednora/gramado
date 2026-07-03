@@ -1,6 +1,56 @@
 // parser.c
 // The parser for the gramcnf project.
+// #ps: There is a lot of comments for academic purpose.
 // 2018 - Created by Fred Nora.
+
+// Parser?
+// Instead of recognizing regular languages (lexical tokens), 
+// it organizes them into context-free structures.
+
+//
+// Academic Framing for the Parser
+//
+
+/*
+Syntax Analysis:  
+The parser checks whether the sequence of tokens belongs 
+to the language defined by the grammar. 
+Errors (expected '(', expected ';') correspond to 
+violations of grammar rules.
+*/
+
+/*
+Semantic Hooks:  
+Functions like vm_push(o) attach semantic meaning to syntactic constructs. 
+This is where parsing transitions into intermediate representation or 
+code generation.
+*/
+
+//
+// Extra Academic Insights
+//
+
+/*
+Parser vs Lexer:  
++ Lexer  = DFA recognizing regular languages.
++ Parser = PDA recognizing context-free languages.
+*/
+
+/*
+Error Handling:  
+Each printf("expected ...") corresponds to 
+detecting a string not in the grammar. 
+This is the parser rejecting invalid input.
+*/
+
+/*
+Semantic Integration:  
+The parser doesn’t just check syntax; 
+it builds semantic objects (object_d) and 
+emits assembly markers. (Maybe we will keep this feature or not)
+This is the bridge between syntax analysis and code generation.
+*/
+
 
 #include "gramcnf.h"
 
@@ -118,7 +168,7 @@ static void emit_function(void)
     strcat (TEXT,":\n");
 }
 
-// Parse function.
+
 static int parse_function(int token)
 {
     int c=0;
@@ -279,7 +329,14 @@ static int parse_meta(int token)
     return 0;
 }
 
-// Parse asm statement.
+// parse_name:
+// Grammar rule: name → "name" "(" string ")"
+// - Recognizes metadata name strings.
+// - Demonstrates how the parser consumes tokens in order,
+//   enforcing parentheses and string placement.
+// - This is a PDA-like behavior: the parser must track
+//   opening and closing parentheses.
+
 static int parse_name(int token)
 {
 // #todo:
@@ -400,8 +457,12 @@ error0:
     return -1;
 }
 
+// parse_content:
+// Grammar rule: content → "content" "(" string ")"
+// - Similar to parse_name, but for content strings.
+// - Academic note: illustrates how multiple productions
+//   share structure but differ in semantics.
 
-// Parse asm statement.
 static int parse_content(int token)
 {
 // #todo:
@@ -534,6 +595,13 @@ error0:
     exit(1);
     return -1;
 }
+
+// parse_print:
+// Grammar rule: print → "print" "(" string ")" ";"
+// - Enforces parentheses around the string and a trailing semicolon.
+// - Semantic action: creates an object with OP_PRINT opcode.
+// - This shows how parsers combine syntax recognition
+//   with semantic translation.
 
 static int parse_print(int token)
 {
@@ -738,8 +806,14 @@ static int parse_number(int olen)
 };
 */
 
-// Parse return statement.
-// >> termina com  ';'
+// parse_return:
+// Grammar rule (simplified):
+//   return_stmt → "return" expression ";"
+// - Evaluates the expression (tree_eval).
+// - Semantic action: pushes OP_RET object.
+// - Academic note: shows how syntax (CFG) and semantics
+//   (evaluation, code generation) are linked in parsing.
+
 // return 0;
 // return (int) 1;
 // return 1+2;
@@ -747,6 +821,7 @@ static int parse_number(int olen)
 // return (int) (1+2);
 // return function();
 // return (int) function();
+
 static int parse_return(int token, int *return_value)
 {
     int c=0;
@@ -1068,7 +1143,15 @@ done:
    return c;
 }
 
+// parse_exit:
+// Grammar rules:
+//   exit_stmt → "exit" ";"
+// - Simple productions that enforce keyword + semicolon.
+// - Semantic actions push OP_EXIT.
+// - Academic note: illustrates terminal productions
+//   in the grammar (no nested structure).
 // OUT: TK_SEPARATOR
+
 static int parse_exit(int token)
 {
     int c = 0;
@@ -1126,7 +1209,15 @@ static int parse_exit(int token)
     return TK_SEPARATOR;
 }
 
+// parse_break:
+// Grammar rules:
+//   break_stmt → "break" ";"
+// - Simple productions that enforce keyword + semicolon.
+// - Semantic actions push OP_BREAK.
+// - Academic note: illustrates terminal productions
+//   in the grammar (no nested structure).
 // OUT: TK_SEPARATOR
+
 static int parse_break(int token)
 {
     int c = 0;
@@ -2828,10 +2919,39 @@ hang:
     };
 }
 
-// Parse the whole program
-// parse_loop() ends when it sees EOF (end of program).
+
+// parser_loop:
+// ----------------------------------------------------
+// This is the main control loop of the parser.
+// It repeatedly calls the lexer (yylex) to obtain tokens,
+// then dispatches them to the appropriate parse_* function
+// depending on the token type.
+//
+// Academic perspective:
+// - The parser loop implements a Pushdown Automaton (PDA).
+//   Unlike the lexer’s DFA, the parser must handle nested
+//   structures (parentheses, braces, blocks), which require
+//   a stack-like mechanism.
+// - Each iteration corresponds to consuming one or more
+//   tokens and matching them against productions in the
+//   context-free grammar (CFG).
+// - The loop enforces syntactic validity: if the sequence
+//   of tokens does not conform to the grammar, an error is
+//   raised ("expected '('", "expected ';'").
+// - Semantic actions (like vm_push or emit_function) are
+//   triggered alongside syntactic recognition, showing how
+//   parsing bridges syntax analysis with code generation.
+//
+// In summary:
+// parser_loop = { while tokens remain, recognize CFG productions,
+// apply semantic actions, and advance the input stream }.
+// ----------------------------------------------------
+
 int parser_loop(int dump_output)
 {
+// Parse the whole program
+// parse_loop() ends when it sees EOF (end of program).
+
     register int Token=0;
     int Running = FALSE;
     int State = 0;

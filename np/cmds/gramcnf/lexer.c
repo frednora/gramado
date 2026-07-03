@@ -992,7 +992,34 @@ again:
             break;
         };
 
+
+        // Separator recognition:
+        // ----------------------------------------------------
+        // Grammar symbols like parentheses (), braces {}, brackets [],
+        // commas, semicolons, colons, and question marks are recognized here.
+        // These are not part of the "lexical content" (like identifiers or constants),
+        // but rather delimiters that define the structure of the language.
+        //
+        // Academic perspective:
+        // - Separators correspond to terminals in the context-free grammar (CFG).
+        //   For example, productions like:
+        //       function → identifier "(" ")" ";"
+        //   require separators to enforce syntactic boundaries.
+        // - In automata terms, separators are single-symbol tokens
+        //   that move the parser into new states (e.g., entering/exiting a block).
+        // - Recognizing separators ensures the parser can later
+        //   validate nested constructs (balanced parentheses/braces).
+        // - This illustrates the bridge between lexical analysis (DFA)
+        //   and syntax analysis (PDA): separators are simple regular tokens,
+        //   but their meaning emerges only in the parser when matched
+        //   against grammar rules.
+        // ----------------------------------------------------
         // Separators: (){}[],.;:?
+
+        // Safe to extend: 
+        // We can add more characters (like @, ~, $) 
+        // to this list without breaking the lexer.
+
         case '(':  case ')':
         case '{':  case '}':
         case '[':  case ']':
@@ -1001,13 +1028,16 @@ again:
         case ';':
         case ':':
         case '?':
-            p = token_buffer;
-            *p++ = c;
-            *p++ = 0;
-            value = TK_SEPARATOR;
+
+            p = token_buffer;  // Address of the buffer
+
+            *p++ = c;  // Save the separator character into the buffer
+            *p++ = 0;  // Finalize the buffer for the separator token
+
+            value = TK_SEPARATOR;  // We have a separator token
+
             //return (int) TK_SEPARATOR;
             break;
-
 
         // Operator recognition:
         // Handles single and compound operators (+, -, ==, !=, <=, >=, ++, --).
