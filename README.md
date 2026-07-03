@@ -42,7 +42,7 @@ Some extra features are:
 > Documentation for this distribution is still under development.
 > Folder names are subject to change.
 
-## Core System  (P)
+## Core System  (Pride)
 
 ```
 boot/     - Gramado OS bootloader.
@@ -56,14 +56,14 @@ This creates a very clear startup flow:
     boot → kernel → modules → moon (init)
 ```
 
-## Native UI (S)
+## Native UI (Sup.:)
 
 ```
 native/   - Native UI
             Compositor and client-side GUI applications.
 ```
 
-## Nomad Pastors (E)
+## Nomad Pastors (Env.:)
 
 ```
 np/       - Posix-like commands and experiments.
