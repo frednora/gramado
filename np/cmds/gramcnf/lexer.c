@@ -1,9 +1,120 @@
 // lexer.c
 // The lexer for gramcnf interpreter.
+// #ps: There is a lot o comments for academic purpose.
 // 2018 - Created by Fred Nora.
 
 // Credits:
 // Inspired on gcc 0.9.
+
+//
+// Lexer?
+//
+
+// Through the lens of Formal Languages and Automata Theory. A lexer is 
+// essentially a finite automaton that scans an input stream and 
+// classifies substrings into tokens.
+
+/*
+Finite Automaton:  
+The lexer behaves like a deterministic finite automaton (DFA). 
+Each branch in the switch(c) inside yylex() represents a transition 
+based on the current input symbol. For example, 
+encountering 'a'..'z' or 'A'..'Z' moves the automaton 
+into the identifier state.
+*/
+
+/*
+Lexical Categories:  
+Tokens are classified into categories: 
+identifiers, keywords, constants, strings, separators, and operators. 
+This corresponds to the alphabet partitioning in automata theory, 
+where the input alphabet is divided into equivalence classes.
+*/
+
+/*
+Regular Languages:  
+Each token type (like identifiers or numbers) is defined by 
+a regular expression. For instance:
++ Identifier:       [A-Za-z_][A-Za-z0-9_]*
++ Decimal constant: [0-9]+
++ Hex constant:     0[xX][0-9A-Fa-f]+  
+The lexer implements these regexes procedurally, 
+but conceptually they are regular languages recognized by DFAs.
+*/
+
+/*
+Token Buffer:  
+The token_buffer acts as the automaton’s memory, storing the lexeme 
+until classification is complete. Once the DFA reaches an accepting state, 
+the buffer is finalized.
+*/
+
+//
+// Key Functions Explained
+//
+
+/*
+__skip_white_space():
+Implements transitions that ignore whitespace and comments. 
+In automata terms, these are ε-transitions 
+(moves that don’t produce tokens but advance the input).
+*/
+
+/*
+yylex():
+The main DFA driver. It:
++ Reads the next symbol.
++ Chooses a branch (state transition).
++ Accumulates characters in the buffer.
++ Stops when a non-matching symbol is found (accepting state).
++ Returns a token code.
+*/
+
+/*
+Keyword Recognition:
+After recognizing an identifier, the lexer checks if 
+it matches reserved words (if, while, return, etc.). 
+This is a post-processing step: the DFA accepts the identifier, then 
+a lookup table refines its classification.
+*/
+
+/*
+Operator Handling:
+Operators like ==, !=, <=, >=, ++, -- are handled by lookahead. 
+The lexer peeks at the next character (getc) and 
+decides whether to combine symbols. This is equivalent to DFA transitions 
+that require multiple input symbols before reaching an accepting state.
+*/
+
+// Identifier recognition:
+// Matches the regular expression [A-Za-z_][A-Za-z0-9_]*.
+// Initially classified as TK_IDENTIFIER, but refined
+// through keyword lookup to TK_KEYWORD, TK_TYPE, or TK_MODIFIER.
+
+// Constant recognition:
+// Implements two regular languages:
+//   Decimal: [0-9]+
+//   Hexadecimal: 0[xX][0-9A-Fa-f]+
+// These are disjoint token classes in the lexer’s alphabet.
+
+//
+// Extra academic insight
+//
+
+// Token buffer as memory: 
+// In DFA terms, the buffer is not part of the automaton’s formal definition 
+// (DFAs don’t have memory beyond state), but in implementation it’s necessary 
+// to store the lexeme for later semantic use.
+
+// Reserved word lookup: 
+// This is a post-DFA refinement. The DFA recognizes the identifier language, 
+// then a table lookup reclassifies certain strings. This shows how 
+// lexical analysis combines automata with symbol tables.
+
+// Error handling: 
+// Unterminated comments or malformed constants are examples of 
+// the lexer rejecting strings not in the defined regular languages.
+
 
 #include "gramcnf.h"
 
@@ -169,10 +280,21 @@ void error(char *msg)
     printf ("error: %s\n", msg );
 }
 
-//------------------------------------------------
-// Skipping white spaces.
+
+// __skip_white_space:
+// Models ε-transitions in automata theory.
+// Whitespace and comments do not produce tokens,
+// but advance the input pointer.
+// - Single-line comments: //.*\n
+// - Multi-line comments:  /\*([^*]|\*+[^/])*\*+/
+// These are regular languages that the lexer discards,
+// ensuring only meaningful tokens are passed to the parser.
+
+
 static int __skip_white_space(void)
 {
+// Skip whitespace and comments. Return the next non-whitespace character.
+
     register int c=0;
     register int inside=0;
 begin:
@@ -337,9 +459,24 @@ begin:
 
 // -----------------------------------------
 // yylex:
-// Get the next token.
+// Implements a deterministic finite automaton (DFA).
+// Each case in the switch corresponds to a transition
+// based on the current input symbol. Accepting states
+// produce tokens, which are elements of the regular language
+// defined by the grammar of the source language.
+//
+// Academic note:
+// - The lexer is equivalent to a DFA where states represent
+//   partial recognition of a token (e.g., "inside identifier").
+// - Transitions are triggered by input symbols.
+// - Once an accepting state is reached, the token is emitted.
+// - This bridges regular languages (lexical analysis) with
+//   context-free grammars (parsing).
+
 int yylex(void)
 {
+// Get the next token
+
     register int value=0;  // The return value
 
     register int c=0;
@@ -348,7 +485,8 @@ int yylex(void)
     register int number_length=0;
 
 again:
-// Pega um char da stream de entrada.
+
+    // Get a char from the input stream, skipping whitespace and comments.
     c = (int) __skip_white_space();
 
     switch (c)
@@ -364,7 +502,17 @@ again:
             goto done;
             break;
 
-        // [A~Z] [a~z] [_]
+
+        // Identifier recognition:
+        // Matches the regular expression [A-Za-z_][A-Za-z0-9_]*.
+        // - The first character must be a letter or underscore.
+        // - Subsequent characters may include digits.
+        // This ensures identifiers belong to a regular language
+        // where the alphabet is partitioned into {letters, digits, underscore}.
+        // After recognition, identifiers are checked against a
+        // reserved-word table, refining classification into
+        // TK_KEYWORD, TK_TYPE, or TK_MODIFIER.
+
         case 'A': case 'B': case 'C': case 'D':
         case 'E': case 'F': case 'G': case 'H':
         case 'I': case 'J': case 'K': case 'L':
@@ -398,10 +546,9 @@ again:
                 c = getc(finput);
 
                 // Not Alpha-numeric and not '_'.
-                // Finalize the buffer if it is not an identifier.
-                // Only // [A~Z] [a~z] [_] are accepted.
-                // #todo: Maybe we can expand this set of chars accepted
-                // as part of the identifier. Ex: '$'.
+                // Finalize the buffer if it's not an identifier.
+                // The loop continues as long as the next character 
+                // is alphanumeric (isalnum) or underscore.
 
                 if ( ( isalnum(c) == 0 ) &&  (c != '_') )
                 {
@@ -703,47 +850,60 @@ again:
             goto done;
             break;
 
+        // Constant recognition:
+        // Two disjoint regular languages are implemented:
+        //   Decimal:     [0-9]+
+        //   Hexadecimal: 0[xX][0-9A-Fa-f]+
+        // Each is a regular expression recognized by a DFA.
+        // The lexer distinguishes them by prefix inspection (0x/0X).
+        // This illustrates how token classes are defined as
+        // separate languages over the same input alphabet.
+
         case '0': case '1': case '2': case '3':
         case '4': case '5': case '6': case '7':
         case '8': case '9':
         //case '.':
 
-            // Address
-            p = token_buffer;
+            p = token_buffer;  // Address of the buffer
 
+            // #ps: In the case of a hexadecimal constant, 
+            // we will have a prefix '0x' or '0X'.
             if (c == '0'){
-                // Coloca no buffer.
-                *p = c;
-                p++;
+
+                *p = c;  // Save it into the buffer
+                p++;     // Increment the buffer pointer
+
                 c = getc(finput);
 
                 if ( c == 'x' || c == 'X' )
                 {
-                    //base = 16;
-                    //*p++ = c; //coloca o x.
+                    //base = 16;  // Set the base to hexadecimal
 
-                     *p = c;
-                     p++;
+                    *p = c;  // Save it into the buffer
+                    p++;     // Increment the buffer pointer
 
                     while (1)
                     {
                         c = getc(finput);
 
-                        // Se o próximo não for um digito hexadecimal. 
+                        // If the next character is not a hexadecimal digit, 
+                        // we finalize the token.
                         if ( isxdigit(c) == 0 )
                         {
-                            *p = 0;
+                            *p = 0;  // Finalize the buffer
+
                             ungetc( c, finput );
-                            //fim
-                            value = TK_CONSTANT;
+
+                            value = TK_CONSTANT;  // We have a constant token
+
                             //constant_type_found = //#todo tem que contar. 
                             constant_base_found = CONSTANT_BASE_HEX;
                             goto constant_done;
                         }
 
-                        //coloca se é hexa.
-                        *p = c;
-                        p++;
+                        // Yes it is a hexadecimal digit
+                        *p = c;  // Save it into the buffer
+                        p++;     // Increment the buffer pointer
                     };
                 }
 
@@ -762,18 +922,21 @@ again:
                 {
                     c = getc(finput);
 
-                    // se não é digito
+                    // If the next character is not a digit, we finalize the token.
                     if ( isdigit( c ) == 0 )
                     {
-						//fim
-						*p = 0;
+						*p = 0;  // Finalize the buffer
+
 						ungetc(c, finput);
-						value = TK_CONSTANT;
+
+						value = TK_CONSTANT;  // We have a constant token
+
 						//constant_type_found = //#todo tem que contar. 
 						constant_base_found = CONSTANT_BASE_DEC;
                         goto constant_done;
                     }
-                    // coloca o digito
+
+                    // Save it into the buffer and increment the buffer pointer.
                     *p++ = c;
                 };
             };
@@ -782,7 +945,14 @@ again:
             //return (int) value;
             break;
 
-        //String
+        // String recognition:
+        // Matches the regular expression "([^"])*"
+        // - Begins and ends with double quotes.
+        // - Accepts any character except unescaped quotes.
+        // Strings are stored in the token buffer until the closing quote.
+        // This is another regular language, though in practice
+        // escape sequences complicate the DFA slightly.
+
         case '\"':
         {
             c = getc(finput);
@@ -811,15 +981,13 @@ again:
 	                c = getc(finput);
 	        };//while
 
-            //finaliza a string
-            *p++ = 0;
+            *p++ = 0;  // Finalize the buffer for the string token
 
             //yylval.ttype = build_string (p - token_buffer, token_buffer);
             //TREE_TYPE (yylval.ttype) = char_array_type_node;
 
-            // Avisa que é uma string
-            // Ela vai estar no token_buffer.
-            value = TK_STRING;
+            value = TK_STRING;  // We have a string token
+
             //return (int) TK_STRING;
             break;
         };
@@ -840,9 +1008,16 @@ again:
             //return (int) TK_SEPARATOR;
             break;
 
-        //usadas em expressões matemáticas, 
-        //#todo: não mudar isso.
-        //@todo: talvez se enviarmos esses chars para o buffer ajude no debug.
+
+        // Operator recognition:
+        // Handles single and compound operators (+, -, ==, !=, <=, >=, ++, --).
+        // - Compound operators require lookahead (peek at next char).
+        // - This simulates DFA transitions that consume multiple symbols
+        //   before reaching an accepting state.
+        // Academic note: lookahead is a practical extension beyond
+        // pure DFA theory, but conceptually it is equivalent to
+        // longer regular expressions (e.g., "==" vs "=").
+
         case '+':  case '-':  case '*':  case '/':
         case '<':  case '>':
         case '&':
