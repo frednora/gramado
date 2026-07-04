@@ -71,7 +71,8 @@ char *demosReadFileIntoBuffer(const char *filename)
 {
     //size_t FakeFileSize=512;
     //size_t FakeFileSize=512*4;
-    size_t FakeFileSize = 1024 -1;
+    //size_t FakeFileSize = 1024 -1;
+    size_t FakeFileSize = 1024 *6;
     int fd;
 
     if ((void*) filename == NULL)

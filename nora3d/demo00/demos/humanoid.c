@@ -37,15 +37,115 @@ static int __r[4][4] = {
 
 
 
-static void __drawHumanoidModel(struct humanoid_model_d *model, float fElapsedTime);
-static void __drawEnemy(struct humanoid_model_d *model, float vel);
-static void __drawMainCharacter(struct humanoid_model_d *model, float fElapsedTime);
+static void __drawModelWithShading (struct humanoid_model_d *model, float fElapsedTime);
+static void __drawRotatingModel(struct humanoid_model_d *model, float vel);
+static void __drawHumanoidMain (struct humanoid_model_d *model, float fElapsedTime);
 static void __drawEnemy00(struct humanoid_model_d *model, float fElapsedTime);
-static void __drawStaticModel(struct humanoid_model_d *model);
+static void __drawModelStatic (struct humanoid_model_d *model);
+
+static void assignBandColors(struct humanoid_model_d *m, int blockSize,
+                              const unsigned int *palette, int palette_len);
+
+static void assignRangeColor(struct humanoid_model_d *m,
+                              int startFace, int endFace, unsigned int color);
+static void assignSaucerColors(struct humanoid_model_d *s_model);
+
+static unsigned int computeColor(struct n3d_vec_d *vertex,
+                                 struct n3d_vec_d *normal,
+                                 unsigned int baseColor);
 
 //======================
 
-static void __drawHumanoidModel(struct humanoid_model_d *model, float fElapsedTime)
+// models[] — OBJ06.TXT: 7 blocks of 12 faces (head, torso, L/R leg, L/R arm, chest)
+static const unsigned int humanoidPalette[7] = {
+    0xFFD1B3, // head        - skin tone
+    0x6699CC, // torso       - shirt
+    0x333333, // left leg    - pants
+    0x333333, // right leg   - pants
+    0xCC4444, // left arm    - sleeve
+    0xCC4444, // right arm   - sleeve
+    0x999999, // chest/pack  - gear
+};
+
+// static_models[] — OBJ07.TXT: 4 bands of 16 faces (lower hull, rim, dome base, dome cap)
+static const unsigned int saucerPalette[4] = {
+    0x707070, // lower hull - dark metal skirt
+    0xC0C0C0, // upper rim  - bright metal (widest disk edge)
+    0x9999CC, // dome base  - canopy/glass tint
+    0xFFCC00, // dome cap   - beacon light
+};
+
+// Colors one "band" of faces at a time — a band is a contiguous run of
+// blockSize triangles sharing one color (a cube's 12 faces, or a
+// ring-to-ring strip's 16 faces).
+static void assignBandColors(struct humanoid_model_d *m, int blockSize,
+                              const unsigned int *palette, int palette_len)
+{
+    int nBlocks  = m->face_count / blockSize;
+    int leftover = m->face_count % blockSize;
+    int b, f;
+
+    for (b = 0; b < nBlocks; b++) {
+        unsigned int c = palette[b % palette_len];
+        for (f = 0; f < blockSize; f++)
+            m->colors[b*blockSize + f] = c;
+    }
+    if (leftover > 0) {
+        unsigned int c = palette[nBlocks % palette_len];
+        for (f = 0; f < leftover; f++)
+            m->colors[nBlocks*blockSize + f] = c;
+    }
+}
+
+
+// Colors a contiguous run of faces [startFace, endFace] (1-based, inclusive)
+static void assignRangeColor(struct humanoid_model_d *m,
+                              int startFace, int endFace, unsigned int color)
+{
+    int f;
+    for (f = startFace; f <= endFace && f <= m->face_count; f++)
+        m->colors[f - 1] = color;   // colors[] is 0-based, faces[] is 1-based
+}
+
+// static_models[] — OBJ07.TXT (64 faces): 3 hull bands of 16 + dome fan of 8 + bottom fan of 8
+static void assignSaucerColors(struct humanoid_model_d *s_model)
+{
+    assignRangeColor(s_model,  1, 16, 0x707070); // lower hull  - dark metal skirt
+    assignRangeColor(s_model, 17, 32, 0xC0C0C0); // upper rim   - bright metal (widest point)
+    assignRangeColor(s_model, 33, 48, 0x9999CC); // dome base   - canopy/glass tint
+    assignRangeColor(s_model, 49, 56, 0xFFCC00); // dome cap    - beacon light
+    assignRangeColor(s_model, 57, 64, 0x404040); // underside   - dark belly
+}
+
+static unsigned int computeColor(struct n3d_vec_d *vertex,
+                                 struct n3d_vec_d *normal,
+                                 unsigned int baseColor)
+{
+    // Light direction
+    struct n3d_vec_d lightDir = {0.5f, 1.0f, -0.5f};
+    float len = sqrtf(lightDir.x*lightDir.x + lightDir.y*lightDir.y + lightDir.z*lightDir.z);
+    lightDir.x /= len; lightDir.y /= len; lightDir.z /= len;
+
+    // Diffuse factor
+    float dp = normal->x*lightDir.x + normal->y*lightDir.y + normal->z*lightDir.z;
+    if (dp < 0.0f) dp = 0.0f;
+    float brightness = 0.2f + 0.8f * dp;
+
+    // Extract base RGB
+    unsigned char r = (baseColor >> 16) & 0xFF;
+    unsigned char g = (baseColor >> 8) & 0xFF;
+    unsigned char b = baseColor & 0xFF;
+
+    // Apply brightness
+    r = (unsigned char)(r * brightness);
+    g = (unsigned char)(g * brightness);
+    b = (unsigned char)(b * brightness);
+
+    return (r << 16) | (g << 8) | b;
+}
+
+// this is the generic draw routine with diffuse shading.
+static void __drawModelWithShading (struct humanoid_model_d *model, float fElapsedTime)
 {
 // No rotation. Small translation in positive z.
 
@@ -170,6 +270,7 @@ static void __drawHumanoidModel(struct humanoid_model_d *model, float fElapsedTi
         //tri.p[1].color = COLOR_WHITE; 
         //tri.p[2].color = COLOR_WHITE;
 
+        // #backup
         tri.p[0].color = model->colors[i-1];
         tri.p[1].color = model->colors[i-1];
         tri.p[2].color = model->colors[i-1];
@@ -328,6 +429,13 @@ static void __drawHumanoidModel(struct humanoid_model_d *model, float fElapsedTi
         normal.y = (float) (normal.y/l); 
         normal.z = (float) (normal.z/l);
 
+        // #test
+        unsigned int base = model->colors[i-1]; // pick base color for this face
+        triRotatedXYZ.p[0].color = computeColor(&triRotatedXYZ.p[0], &normal, base);
+        triRotatedXYZ.p[1].color = computeColor(&triRotatedXYZ.p[1], &normal, base);
+        triRotatedXYZ.p[2].color = computeColor(&triRotatedXYZ.p[2], &normal, base);
+
+
         //#ok
         //if ( (float) normal.z <  0.0f){ cull=FALSE;}  //pinta
         //if ( (float) normal.z >= 0.0f){ cull=TRUE; }  //não pinta
@@ -388,7 +496,8 @@ static void __drawHumanoidModel(struct humanoid_model_d *model, float fElapsedTi
 // 3 top-front-left
 // 4 top-front-right
 
-static void __drawEnemy(struct humanoid_model_d *model, float vel)
+// this is the rotating object routine.
+static void __drawRotatingModel (struct humanoid_model_d *model, float vel)
 {
     char string0[16];
 
@@ -845,9 +954,10 @@ static void __drawEnemy(struct humanoid_model_d *model, float vel)
     };  // loop: Number of triangles.
 }
 
-static void __drawMainCharacter(struct humanoid_model_d *model, float fElapsedTime)
+// the humanoid’s main draw.
+static void __drawHumanoidMain (struct humanoid_model_d *model, float fElapsedTime)
 {
-    __drawHumanoidModel(
+    __drawModelWithShading (
         (struct humanoid_model_d *) model,
         (float) fElapsedTime );
 }
@@ -857,12 +967,13 @@ static void __drawEnemy00(struct humanoid_model_d *model, float fElapsedTime)
     if (!model) 
         return;
 
-    __drawHumanoidModel(
+    __drawModelWithShading (
         (struct humanoid_model_d *) model,
         (float) fElapsedTime );
 }
 
-static void __drawStaticModel(struct humanoid_model_d *model)
+// for static geometry
+static void __drawModelStatic (struct humanoid_model_d *model)
 {
     if (!model) 
         return;
@@ -873,7 +984,7 @@ static void __drawStaticModel(struct humanoid_model_d *model)
     //model->delta_z = 0.0f;
 
     // Draw with the worker
-    __drawHumanoidModel(model, 0.0f);
+    __drawModelWithShading (model, 0.0f);
 }
 
 
@@ -960,7 +1071,7 @@ void demoHumanoidDrawScene(unsigned long sec)
 
 // Draw the main character
 // Humanoid number 0.
-    __drawMainCharacter(main_character, 0.0f);
+    __drawHumanoidMain (main_character, 0.0f);
 
 
 // Static scenery 
@@ -972,8 +1083,8 @@ void demoHumanoidDrawScene(unsigned long sec)
         s_model = (struct humanoid_model_d*) static_models[i]; 
         if (s_model != NULL) 
         {
-            __drawStaticModel(s_model); 
-            //__drawHumanoidModel(s_model, 0.0f); 
+            __drawModelStatic (s_model); 
+            //__drawModelWithShading (s_model, 0.0f); 
         } 
     };
 
@@ -1008,7 +1119,7 @@ void demoHumanoidDrawScene(unsigned long sec)
             enemy->t = (float) enemy->t + (float) sec * 0.1f;
             enemy->v = (float) enemy->t * enemy->a;  
 
-            //__drawEnemy( 
+            //__drawRotatingModel ( 
             //    (struct humanoid_model_d *) enemy,
             //    (float) enemy->v );
 
@@ -1024,7 +1135,7 @@ void demoHumanoidDrawScene(unsigned long sec)
 /*
 // Static buildings 
     for (int i = 0; i < building_count; i++) { 
-        __drawHumanoidModel(building_models[i], fElapsedTime); 
+        __drawModelWithShading (building_models[i], fElapsedTime); 
     }
 */
 
@@ -1070,17 +1181,24 @@ void demoUpdate(void)
 //Index 0 → main_character (the player).
 //Index 1–7 → enemies (other humanoids).
 
+
+// Setup function for humanoid or disk model
+// -----------------------------------------
+// Each model has:
+// - Up to 128 vertices (low-poly budget)
+// - 72 faces (triangles) that need base colors
+// - Colors must be initialized ONCE here, not inside draw()
+// - Shading later uses computeColor(vertex, normal, baseColor)
+// -----------------------------------------
+
 void demoHumanoidSetup(void)
 {
-// This is called once.
+// This is called once
 
-// first cube
     struct humanoid_model_d *model;
-    struct humanoid_model_d *s_model;  // static model
+    struct humanoid_model_d *s_model;  // static
 
-// Cube1
     register int i=0;
-
 
 // The seqeunce values.
 // These are the 12 faces in order.
@@ -1096,7 +1214,6 @@ void demoHumanoidSetup(void)
     int seq_i=0;
     int seq_max = 12 * 3;
 
-
 /*
     for (i=0; i<8; i++){
         cube_x[i] = (float) 0.0f;
@@ -1104,7 +1221,7 @@ void demoHumanoidSetup(void)
     };
 */
 
-// Clear the list.
+// Clear the list
     for (i=0; i<MODEL_MAX; i++){
         models[i] = (unsigned long) 0;
     };
@@ -1145,50 +1262,17 @@ void demoHumanoidSetup(void)
     
         // -- Test -----------------------------------------------------
         struct obj_element_d elem;
-        //struct n3d_vec_d vertex;
-        // Multi-line string containing vertex data.
-        //const char *cubeData = "v 1.0 2.0 3.0 \n v 4.0 5.0 6.0 \n v 7.0 8.0 9.0 \n";
-        
-        /*
-        // Original
-        const char *cubeData =
-            "v -0.2 -0.2  0.2\n"
-            "v  0.2 -0.2  0.2\n"
-            "v -0.2  0.2  0.2\n"
-            "v  0.2  0.2  0.2\n"
-            "v -0.2  0.2 -0.2\n"
-            "v  0.2  0.2 -0.2\n"
-            "v -0.2 -0.2 -0.2\n"
-            "v  0.2 -0.2 -0.2\n";
-        */
+        //struct n3d_vec_d vertex;     
 
-        /*
-        // "tapered" or truncated-pyramid shape using eight vertices.
-        // Same Vertex Count & Order. Different Geometry.
-        const char *cubeData =
-            "v -0.3 -0.2 0.3\n"   // Vertex 1: bottom front left (expanded base)
-            "v 0.3 -0.2 0.3\n"    // Vertex 2: bottom front right (expanded base)
-            "v -0.1 0.2 0.2\n"    // Vertex 3: top front left (contracted top)
-            "v 0.1 0.2 0.2\n"     // Vertex 4: top front right (contracted top)
-            "v -0.1 0.2 -0.2\n"   // Vertex 5: top back left (contracted top)
-            "v 0.1 0.2 -0.2\n"    // Vertex 6: top back right (contracted top)
-            "v -0.3 -0.2 -0.3\n"  // Vertex 7: bottom back left (expanded base)
-            "v 0.3 -0.2 -0.3\n";  // Vertex 8: bottom back right (expanded base)
-        */
+        // Humanoid
+        const char *modelData = (char *) demosReadFileIntoBuffer("obj06.txt");  // ok
 
-        //const char *cubeData = (char *) demosReadFileIntoBuffer("cube.txt");
-        //const char *cubeData = (char *) demosReadFileIntoBuffer("cube02.txt");
-        //const char *cubeData = (char *) demosReadFileIntoBuffer("cube03.txt");
-        //const char *cubeData = (char *) demosReadFileIntoBuffer("obj00.txt");
-        //const char *cubeData = (char *) demosReadFileIntoBuffer("obj01.txt");
-        //const char *cubeData = (char *) demosReadFileIntoBuffer("obj02.txt");
-        const char *cubeData = (char *) demosReadFileIntoBuffer("obj02.txt");
         // ...
-        if ((void*)cubeData == NULL){
+        if ((void*)modelData == NULL){
             printf("on demosReadFileIntoBuffer()\n");
             exit(0);
         }
-        const char *nextLine = cubeData;
+        const char *nextLine = modelData;
 
         int VertexCounter = 1; 
         int FaceCounter = 1;
@@ -1261,28 +1345,12 @@ void demoHumanoidSetup(void)
         // During the drawing phase we're gonna select vectors to create the triangles.
         // We have two triangles per surface,
 
-        int it=0;
 
-        // Head (faces 0–11)
-        for (it=0; it<12; it++) model->colors[it] = 0xFFB6B6; //COLOR_RED;
+        // Assign colors for the humanoid model
+        // enemy loop
+        assignBandColors(model, 12, humanoidPalette, 7);
 
-        // Torso (faces 12–23)
-        for (it=12; it<24; it++) model->colors[it] = 0xCBAACB; //COLOR_GREEN;
-
-        // Left leg (faces 24–35)
-        for (it=24; it<36; it++) model->colors[it] = 0xFFD8B1; //COLOR_BLUE;
-
-        // Right leg (faces 36–47)
-        for (it=36; it<48; it++) model->colors[it] = 0xFFD8B1; //COLOR_BLUE;
-
-        // more 2 models is too much for a file with 1KB limitation.
-
-        // Left arm (faces 48–59) (Not implemented)
-        for (it=48; it<60; it++) model->colors[it] = COLOR_ORANGE;
-
-        // Right arm (faces 60–71) (Not implemented)
-        for (it=60; it<72; it++) model->colors[it] = COLOR_PURPLE;
-
+        // --------------------------------
     
         model->origin_x = 
             (float) -3.0f + (float) 0.8f * (float) count; // spread across X axis
@@ -1319,8 +1387,14 @@ void demoHumanoidSetup(void)
             exit(1);
         }
 
-        s_model->fThetaAngle = (float) 0.0f;
-       
+        // Tilt the saucer so we see it 3/4-on instead of edge-on.
+        // fThetaAngle is used as (angle * 0.5f) in the rotation matrix,
+        // so ~0.8f here gives a visible ~23° pitch.
+        s_model->fThetaAngle = (float) 0.8f;
+        // s_model->fThetaAngle = (float) 0.0f;
+
+
+
         // Initialize vectors
         for (i=0; i<128; i++)
         {
@@ -1333,49 +1407,16 @@ void demoHumanoidSetup(void)
         // -- Test -----------------------------------------------------
         struct obj_element_d  elem;
         //struct n3d_vec_d vertex;
-        // Multi-line string containing vertex data.
-        //const char *cubeData = "v 1.0 2.0 3.0 \n v 4.0 5.0 6.0 \n v 7.0 8.0 9.0 \n";
 
-        /*
-        // Original
-        const char *cubeData =
-            "v -0.2 -0.2  0.2\n"
-            "v  0.2 -0.2  0.2\n"
-            "v -0.2  0.2  0.2\n"
-            "v  0.2  0.2  0.2\n"
-            "v -0.2  0.2 -0.2\n"
-            "v  0.2  0.2 -0.2\n"
-            "v -0.2 -0.2 -0.2\n"
-            "v  0.2 -0.2 -0.2\n";
-        */
+        // Flying sauces
+        const char *modelData = (char *) demosReadFileIntoBuffer("obj07.txt");  // ok
 
-        /*
-        // "tapered" or truncated-pyramid shape using eight vertices.
-        // Same Vertex Count & Order. Different Geometry.
-        const char *cubeData =
-            "v -0.3 -0.2 0.3\n"   // Vertex 1: bottom front left (expanded base)
-            "v 0.3 -0.2 0.3\n"    // Vertex 2: bottom front right (expanded base)
-            "v -0.1 0.2 0.2\n"    // Vertex 3: top front left (contracted top)
-            "v 0.1 0.2 0.2\n"     // Vertex 4: top front right (contracted top)
-            "v -0.1 0.2 -0.2\n"   // Vertex 5: top back left (contracted top)
-            "v 0.1 0.2 -0.2\n"    // Vertex 6: top back right (contracted top)
-            "v -0.3 -0.2 -0.3\n"  // Vertex 7: bottom back left (expanded base)
-            "v 0.3 -0.2 -0.3\n";  // Vertex 8: bottom back right (expanded base)
-        */
-
-        //const char *cubeData = (char *) demosReadFileIntoBuffer("cube.txt");
-        //const char *cubeData = (char *) demosReadFileIntoBuffer("cube02.txt");
-        //const char *cubeData = (char *) demosReadFileIntoBuffer("cube03.txt");
-        //const char *cubeData = (char *) demosReadFileIntoBuffer("obj00.txt");
-        //const char *cubeData = (char *) demosReadFileIntoBuffer("obj01.txt");
-        //const char *cubeData = (char *) demosReadFileIntoBuffer("obj02.txt");
-        const char *cubeData = (char *) demosReadFileIntoBuffer("obj02.txt");
         // ...
-        if ((void*)cubeData == NULL){
+        if ((void*)modelData == NULL){
             printf("on demosReadFileIntoBuffer()\n");
             exit(0);
         }
-        const char *nextLine = cubeData;
+        const char *nextLine = modelData;
 
         int VertexCounter = 1; 
         int FaceCounter = 1;
@@ -1448,34 +1489,30 @@ void demoHumanoidSetup(void)
         // During the drawing phase we're gonna select vectors to create the triangles.
         // We have two triangles per surface,
 
-        int it=0;
 
-        // Head (faces 0–11)
-        for (it=0; it<12; it++) s_model->colors[it] = 0xC1E1C1; //COLOR_RED;
+        // Assign colors for the flying sauces. (disk with something on top)
+        // static loop
+        // assignBandColors(s_model, 16, saucerPalette, 4);
+        assignSaucerColors(s_model);
 
-        // Torso (faces 12–23)
-        for (it=12; it<24; it++) s_model->colors[it] = 0xF5F5DC; //COLOR_GREEN;
 
-        // Left leg (faces 24–35)
-        for (it=24; it<36; it++) s_model->colors[it] = 0xD3D3D3; //COLOR_BLUE;
+        // ----------------------
+        // Position in the world.
 
-        // Right leg (faces 36–47)
-        for (it=36; it<48; it++) s_model->colors[it] = 0xD3D3D3; //COLOR_BLUE;
+        // Spread wider in X so the (radius ~2.0) disks don't overlap.
+        // Centered around x=0 instead of starting at -3.0f.
+        s_model->origin_x =
+            (float) ((count - (STATIC_MODEL_MAX - 1) / 2.0f) * 5.0f);
 
-        // more 2 models is too much for a file with 1KB limitation.
+        // Lift into "sky" airspace, above the humanoids (y=0) and hero (y=-3.0).
+        // Slight stagger per model so they're not perfectly level with each other.
+        s_model->origin_y = (float) (3.0f + 0.4f * count);
 
-        // Left arm (faces 48–59) (Not implemented)
-        for (it=48; it<60; it++) s_model->colors[it] = COLOR_ORANGE;
-
-        // Right arm (faces 60–71) (Not implemented)
-        for (it=60; it<72; it++) s_model->colors[it] = COLOR_PURPLE;
-
-        s_model->origin_x = 
-            (float) -3.0f + (float) 0.8f * (float) count; // spread across X axis
-        s_model->origin_y = (float) -1.2f;
+        // Tighter z spread so distant ones don't shrink to invisible dots.
         float factor = (float) count;
-        s_model->origin_z = 
-            (float) DEFAULT_CUBE_INITIAL_Z_POSITION + (8.0f * factor); 
+        s_model->origin_z =
+            (float) DEFAULT_CUBE_INITIAL_Z_POSITION + (3.0f * factor);
+
 
         // Translations ...
         s_model->delta_x = (float) 0.0f;
@@ -1501,28 +1538,12 @@ void demoHumanoidSetup(void)
 // Special values for the hero.
     if ( (void*) main_character != NULL )
     {
-        int iter=0;
 
-        // Head (faces 0–11)
-        for (iter=0; iter<12; iter++) main_character->colors[iter] = 0xA7C7E7; //COLOR_BLUE;
+        // Assign colors for the main char (also humanoid)
+        // hero — reuse the same body-part palette instead of the manual 6-range block
+        assignBandColors(main_character, 12, humanoidPalette, 7);
 
-        // Torso (faces 12–23)
-        for (iter=12; iter<24; iter++) main_character->colors[iter] = 0xFFFACD; //COLOR_PINK;
-
-        // Left leg (faces 24–35)
-        for (iter=24; iter<36; iter++) main_character->colors[iter] = 0xFFD1DC; //COLOR_PURPLE;
-
-        // Right leg (faces 36–47)
-        for (iter=36; iter<48; iter++) main_character->colors[iter] = 0xFFD1DC; //COLOR_PURPLE;
-
-        // more 2 models is too much for a file with 1KB limitation.
-
-        // Left arm (faces 48–59) (Not implemented)
-        for (iter=48; iter<60; iter++) main_character->colors[iter] = COLOR_ORANGE;
-
-        // Right arm (faces 60–71) (Not implemented)
-        for (iter=60; iter<72; iter++) main_character->colors[iter] = COLOR_PURPLE;
-
+        // ------------------------------
 
         main_character->origin_x = (float)  0.0f;  // center horizontally
         main_character->origin_y = (float) -3.0f;  // slightly lower (ground level)

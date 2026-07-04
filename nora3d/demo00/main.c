@@ -3346,6 +3346,10 @@ static int InitGraphicsSupport(void)
 
 static int game_loop(void)
 {
+
+    // #ps:
+    // This program will not operate as a server anymore.
+    // We are going to remove this feature completely.
     int IsServer = FALSE;
 
     if (CONFIG_IS_IT_A_SERVER == 1){
@@ -3652,7 +3656,7 @@ static int game_loop(void)
 //
 
     if (flagUseClient == TRUE){
-        rtl_clone_and_execute("#terminal.bin");
+       // rtl_clone_and_execute("#terminal.bin");
     }
 
 
@@ -3747,7 +3751,7 @@ static int game_loop(void)
     accumulatedDeltaTick=0;
     sec=0;
 // Clear the buffer for the string in the yellow bar.
-    memset(buf_fps,0,64);
+    memset(buf_fps, 0, 64);
 
 // Testing demos.
     //demoCat();
@@ -3768,12 +3772,16 @@ static int game_loop(void)
         case GS_LEVEL:
             ShowDemo = TRUE;
             break;
-        //... 
+
+        // ... 
+
+        default:
+            break;
     };
 
     // ==============================================
     // >>> Setup the current demo
-    // see: demos.c
+    // see: humanoid.c
     // Each demos has its own file.
     if (ShowDemo == TRUE)
     {
@@ -3839,7 +3847,7 @@ static int game_loop(void)
             // -------------------------
             // Clear canvas.
             //demoClearWA(COLOR_BLACK);            //clear surface
-            gramado_clear_surface(NULL,0xF8F6F2);  //clear surface
+            gramado_clear_surface(NULL, 0xF8F6F2);  //clear surface
 
             // Draw desktop?
             // Draw, but do not refresh.
@@ -3848,12 +3856,14 @@ static int game_loop(void)
                 wm_update_desktop(TRUE,FALSE);
             }
 
+            // see: humanoid.c
             demoUpdate();
 
             // ===================================
             // Draw the scene for the current demo
             // IN: draw terrain, second counter
-            demoHumanoidDrawScene(sec);
+
+            demoHumanoidDrawScene(sec);  // see: humanoid.c
             //demoCat();
             //demoTriangle();
             //demoCurve();
