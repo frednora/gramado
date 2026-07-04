@@ -400,7 +400,19 @@ struct thread_d
 
 // -------------
 
-// Test
+// #test
+// Here we save an address for a system routine that will be called 
+// by the kernel right before the thread goes to user mode.
+
+    //unsigned long fn_system_routine;
+
+
+// #test
+// It is related with the moment where the task switching
+// is in a state of zero gravity and it can do whatever it wants to do,
+// because the state of the thread is fully saved and 
+// and the next thread was not selected yet.
+
     int _its_my_party_and_ill_cry_if_i_want_to;
 
 //
@@ -418,10 +430,12 @@ struct thread_d
 // this thread has been identified as part of a deadlock cycle.
     int deadlock_detected;
 
-// Plano de execução.
-// Threads:
-// Entre as janelas overlapped, a que estiver ativa,
-// deve mudar o plano da thread para FOREGROUND.
+// #test
+// Execution plane.
+// The thread is is foreground or background.
+// #ps: Actually we have a global variable that 
+// says which thread is the foreground thread.
+// This element looks kinda redundant.
 
     int plane;
 
@@ -453,6 +467,7 @@ struct thread_d
 // See: lapic_info[] table.
     int current_processor;
 
+// ?
 // Processor affinity. (CPU pinning)
 // The thread will execute only on the designated CPU(s).
 // See: https://en.wikipedia.org/wiki/Processor_affinity
@@ -473,22 +488,21 @@ struct thread_d
 // == pml4 =======================================
 //
 
-// #todo:
-// We can have a structure for these addresses
+// ------------------------------------
+// PML4, PDPT0, PD0 table addresses for this thread.
+// #todo: We can have a structure for these addresses.
 
-// #todo
-// COLOCAR O DIRETÓRIO DE PÁGINAS QUE A THREAD USA, 
-// ISSO AJUDA NA HORA DO TASKSWITCH.
-
-// The pml4
+// The PML4
     unsigned long pml4_VA;
     unsigned long pml4_PA;
-// The first pdpt
+// The first PDPT
     unsigned long pdpt0_VA;
     unsigned long pdpt0_PA;
-// The first pd
+// The first PD
     unsigned long pd0_VA;
     unsigned long pd0_PA;
+
+// ------------------------------------
 
 // Page Fault information
     struct pf_info_d  PF;

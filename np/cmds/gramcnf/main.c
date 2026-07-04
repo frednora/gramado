@@ -3,6 +3,61 @@
 // Target: GRAMCNF.BIN
 // 2022 - Fred Nora
 
+
+//
+// =====================================================
+// Command Line Usage: IR File Workflow
+// =====================================================
+//
+// This interpreter/compiler supports two special flags
+// for working with Intermediate Representation (IR) files:
+//
+// 1. Generate IR file (-ir)
+// -------------------------
+// Usage:
+//     gramcnf -ir source.gcn
+//
+// Behavior:
+//   - The source file (e.g., source.gcn) is compiled normally.
+//   - Instead of only producing assembly, the compiler serializes
+//     the internal stack of objects (IR) into a binary file
+//     with extension .gir (e.g., source.gir).
+//   - This .gir file contains all opcodes, operands, and token
+//     strings needed for execution.
+//   - No VM execution is performed in this mode.
+//
+// 2. Run IR file (-r or --run)
+// ----------------------------
+// Usage:
+//     gramcnf -r program.gir
+//     gramcnf --run program.gir
+//
+// Behavior:
+//   - The lexer and parser are skipped.
+//   - The VM loads the specified .gir file directly.
+//   - The loader reconstructs the stack of objects from the file.
+//   - vm_initialize() prepares the runtime environment.
+//   - vm_loop() executes the opcodes sequentially.
+//   - This mode allows fast startup and direct execution of
+//     previously compiled programs.
+//
+// Notes:
+//   - These two flags are mutually exclusive with the normal
+//     compile path. If -r/--run is set, compiler() is not called.
+//   - The .gir format is portable: it can be generated once
+//     and executed multiple times without re-parsing the source.
+//   - This design mirrors other systems such as Java (.class),
+//     Python (.pyc), and LLVM (.bc).
+//
+// =====================================================
+
+// #todo
+// Minimal header for a .gir file.
+// It should contain:
+// - Magic string to identify the file type. ex: "GIR"
+// ...
+
+
 #include "gramcnf.h"
 
 // See: parser.h
@@ -211,6 +266,10 @@ int main(int argc, char *argv[])
     int fShowStats = FALSE;  //#bugbug
     int fDumpOutput = FALSE;  // Dump output file?
 
+    int fDumpIR = FALSE;      // Generate Intermediate Representation (IR) file.
+    int fRunProgram = FALSE;  // Run program from a target binary (.gir).
+    char *inputFile = NULL;
+
 // Carregamos o arquivo num buffer em ring0.
 // getc() precisa ler os dados em stdin
 // #bugbug: 
@@ -259,6 +318,16 @@ int main(int argc, char *argv[])
         }
         if ( strncmp( argv[i], "-s", 2) == 0 ){
             asm_flag = 1;
+        }
+        // Generate Intermediate Representation (IR) file.
+        if (strncmp(argv[i], "-ir", 3) == 0) {
+            fDumpIR = TRUE;
+        }
+        // Run program from a target binary (.gir).
+        if ( strncmp(argv[i], "-r", 2) == 0 || 
+             strncmp(argv[i], "--run", 5) == 0 ) 
+        {
+            fRunProgram = TRUE;
         }
         // Show stats
         if ( strncmp( argv[i], "--stats", 7) == 0 ){
@@ -325,6 +394,30 @@ int main(int argc, char *argv[])
     //while(1){}
 //=====================================
 
+    if (fRunProgram == TRUE) 
+    {
+        int Status = -1;
+
+        // Step 1: Load the target binary (.gir) into memory and 
+        // build the stack of objects needed for execution.
+        // ex: load_ir_binary(argv[2]);
+        
+        // Step 2: Run the program.
+        Status = (int) vm_initialize();
+        if (Status < 0){ 
+            printf("main: on vm_initialize()\n");
+            goto fail; 
+        }
+        Status = (int) vm_loop();
+        if (Status < 0){ 
+            printf("main: on vm_loop()\n");
+            goto fail; 
+        }
+    }
+
+//=====================================
+
+
 // Compiler
 // Routine:
 // + Initialize the lexer.
@@ -337,11 +430,15 @@ int main(int argc, char *argv[])
 // into the screen.
 // We gotta use another output file to simply save it into the disk.
 
-    ____O = (FILE *) compiler(fDumpOutput);
-    //if ( (void*) ____O == NULL )
-    //{
-       //
-    //}
+    if (fRunProgram != TRUE) 
+    {
+        ____O = (FILE *) compiler(fDumpOutput);
+        //if ( (void*) ____O == NULL )
+        //{
+        //
+        //}
+    }
+
 
 // Show the content of the output file.
 // This is an assembly code.

@@ -11,7 +11,9 @@
 // ...
 //
 
-extern void arch_enter_user_mode(unsigned long entry_point_va, unsigned long ring3_rsp);
+extern void arch_enter_user_mode (
+    unsigned long entry_point_va, 
+    unsigned long ring3_rsp );
 
 
 // Task switching support.
@@ -518,6 +520,19 @@ int I_x64CreateInitialProcess(void)
         //(struct thread_d *) InitThread ); 
 
     InitThread->pe_mode = PE_MODE_EFFICIENCY;
+
+
+    // #test
+    // Maybe we can setup a pointer for a 'system routine'.
+    // This function will be called right before the thread 
+    // goes to user mode. It will be called by the kernel.
+    // At this point we can pass this pointer to 
+    // the Assembly and this routine will be called 
+    // in the future, right before the thread goes to user mode.
+
+    // ex:
+    // InitThread->fn_system_routine = (unsigned long) &init_system_routine;
+
 
 // ===========================
 
@@ -1054,7 +1069,7 @@ int I_x64CreateKernelProcess(void)
 }
 
 // #suspended
-// Create a ring0 thread for the window server image.
+// Create a ring0 thread.
 // It belongs to the kernel process.
 static int I_x64CreateTID0(void)
 {

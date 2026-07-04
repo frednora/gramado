@@ -313,10 +313,8 @@ static int __parse_box_keyword(int token)
 
 static int parse_meta(int token)
 {
-//
-// Object
-//
 
+// Object
     struct object_d *o;
     o = (struct object_d *) malloc( sizeof(struct object_d) );
     if ((void*) o == NULL){
@@ -325,6 +323,7 @@ static int parse_meta(int token)
     }
     o->opcode = OP_META_TYPE;
     vm_push(o);
+
 
     return 0;
 }
@@ -622,11 +621,24 @@ static int parse_print(int token)
         exit(1);
     }
 
+//
+// Object
+//
+
     struct object_d *o = malloc(sizeof(struct object_d));
-    if (!o) { printf("parse_print: malloc failed\n"); exit(1); }
+    if (!o) { 
+        printf("parse_print: malloc failed\n"); 
+        exit(1); 
+    }
+    memset(o, 0, sizeof(struct object_d));
     strncpy(o->token_buffer, real_token_buffer, TOKEN_BUFFER_MAX);
+    o->line = LexerInfo.current_line;
+    o->token_type = TK_KEYWORD;
+    o->keyword = KWPRINT;
     o->opcode = OP_PRINT;
+    o->operand = OPERAND_NONE;
     vm_push(o);
+
 
     // consume ')' and ';'
     c = yylex();
@@ -829,17 +841,16 @@ static int parse_return(int token, int *return_value)
     int State = 1;
     int open = 0;
     unsigned long eval_ret=0;
-    char buffer[32];
+    char buffer[32];  // Size?
     //char *buffer;
 
-// #debug
+    // #debug
     //printf ("parse_return:\n");
 
-// Se entramos errado.
-    if ( token != TK_KEYWORD || 
-         keyword_found != KWRETURN )
+    // It's not a return statement
+    if ( token != TK_KEYWORD || keyword_found != KWRETURN )
     {
-        printf ("parse_return: Can't initialize return statement\n");
+        printf ("parse_return: It's not a return statement\n");
         exit(1);
     }
 
@@ -847,14 +858,12 @@ static int parse_return(int token, int *return_value)
 // Isso significa que o token atual é uma keyword 'return'.
 // Se a próxima keyword for um ';' então não temos uma expressão.
 
-// Eval
-// see: tree.c
-
+    // Evaluate expression
+    // see: tree.c
     eval_ret = (unsigned long) tree_eval();
     // #debug
-    printf("parse_return: value={%d}\n",eval_ret);
-
-// Returning the value.
+    printf("parse_return: value={%d}\n", eval_ret);
+    // Returning the value
     if (return_value != NULL){
         *return_value = (int) eval_ret;
     }
@@ -862,7 +871,6 @@ static int parse_return(int token, int *return_value)
     // #debug
     itoa ( (int) eval_ret, buffer );
     //printf("parse_return: value={%s}\n",buffer);
-
 
 //
 // Object
@@ -874,8 +882,14 @@ static int parse_return(int token, int *return_value)
         printf("parse_return: o\n");  
         exit(1);
     }
+    memset(o, 0, sizeof(struct object_d));
+    strncpy(o->token_buffer, real_token_buffer, TOKEN_BUFFER_MAX);
+    o->line = LexerInfo.current_line;
+    o->token_type = TK_KEYWORD;
+    o->keyword = KWRETURN;
     o->opcode = OP_RET;
-    vm_push(o);
+    o->operand = OPERAND_IMMEDIATE;  // immediate literal value
+    vm_push(o);  // semantic action
 
 //
 // Output
@@ -1992,16 +2006,6 @@ void concat_into_outfile(void)
     strcat ( outfile, BSS );
 }
 
-// -------------------------
-// parse:
-// Função principal.
-// Pegando tokens com o lexer e fazendo coisas ...
-// Called by compiler() in compiler.c
-
-// phase 1: 
-// Scaning tokens and building the stack of bytecodes
-// that is gonna be used by the VM.
-
 // parser_box() ends when it sees ] (end of box body).
 static int parser_box(int last_token, int dump_output)
 {
@@ -2407,6 +2411,13 @@ static int parser_box(int last_token, int dump_output)
 
                        // printf("test={%s} line %d\n", real_token_buffer, LexerInfo.current_line ); 
 
+                        if (token != TK_SEPARATOR)
+                        {
+                            printf ("state2: TK_IDENTIFIER fail. Separator expected after symbol on line %d \n", 
+                                LexerInfo.current_line );
+                            exit(1);
+                        }
+
                         // : para label 
                         // ( para função 
                         // ; para declaração de variável.
@@ -2758,15 +2769,13 @@ static int parser_box(int last_token, int dump_output)
 
                         //-------------------------
                         // STMT: 'print'
-                        // the print inside the meta()
+                        // The print inside the meta()
                         if (keyword_found == KWPRINT)
                         {
                             parse_print(TK_KEYWORD);
-                            //recomeçamos
-                            State = 1;
+                            State = 1;  // Restart from state 1
                             break;
                         }
-
 
                         //...
 
