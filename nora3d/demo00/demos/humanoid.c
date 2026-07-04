@@ -7,6 +7,14 @@
 static int game_update_taskbar=TRUE;
 static int hits=0;
 
+//
+// Obj files
+//
+
+static char *model_data_humanoid = NULL;
+static char *model_data_saucer = NULL;
+// ...
+
 #define MODEL_MAX  8
 unsigned long models[MODEL_MAX];
 
@@ -35,7 +43,7 @@ static int __r[4][4] = {
         };
 */
 
-
+static int __load_all_obj_files(void);
 
 static void __drawModelWithShading (struct humanoid_model_d *model, float fElapsedTime);
 static void __drawRotatingModel(struct humanoid_model_d *model, float vel);
@@ -1166,6 +1174,26 @@ void demoUpdate(void)
     }
 }
 
+
+static int __load_all_obj_files(void)
+{
+    // Humanoid
+    model_data_humanoid = (char *) demosReadFileIntoBuffer("obj06.txt");
+    if ((void*) model_data_humanoid == NULL){
+        printf("on loading obj06.txt\n");
+        exit(1);
+    }
+
+    // Flying saucer
+    model_data_saucer = (char *) demosReadFileIntoBuffer("obj07.txt");
+    if ((void*) model_data_saucer == NULL){
+        printf("on loading obj07.txt\n");
+        exit(1);
+    }
+
+    return 0;  //ok
+}
+
 //
 // #
 // INITIALIZATION
@@ -1229,6 +1257,14 @@ void demoHumanoidSetup(void)
         static_models[i] = (unsigned long) 0;
     };
 
+
+//
+// Loading obj files
+//
+
+    __load_all_obj_files();
+
+
     int count=0;
     int rand1=0;
 
@@ -1265,14 +1301,7 @@ void demoHumanoidSetup(void)
         //struct n3d_vec_d vertex;     
 
         // Humanoid
-        const char *modelData = (char *) demosReadFileIntoBuffer("obj06.txt");  // ok
-
-        // ...
-        if ((void*)modelData == NULL){
-            printf("on demosReadFileIntoBuffer()\n");
-            exit(0);
-        }
-        const char *nextLine = modelData;
+        const char *nextLine = model_data_humanoid;
 
         int VertexCounter = 1; 
         int FaceCounter = 1;
@@ -1345,7 +1374,6 @@ void demoHumanoidSetup(void)
         // During the drawing phase we're gonna select vectors to create the triangles.
         // We have two triangles per surface,
 
-
         // Assign colors for the humanoid model
         // enemy loop
         assignBandColors(model, 12, humanoidPalette, 7);
@@ -1391,9 +1419,6 @@ void demoHumanoidSetup(void)
         // fThetaAngle is used as (angle * 0.5f) in the rotation matrix,
         // so ~0.8f here gives a visible ~23° pitch.
         s_model->fThetaAngle = (float) 0.8f;
-        // s_model->fThetaAngle = (float) 0.0f;
-
-
 
         // Initialize vectors
         for (i=0; i<128; i++)
@@ -1408,15 +1433,8 @@ void demoHumanoidSetup(void)
         struct obj_element_d  elem;
         //struct n3d_vec_d vertex;
 
-        // Flying sauces
-        const char *modelData = (char *) demosReadFileIntoBuffer("obj07.txt");  // ok
-
-        // ...
-        if ((void*)modelData == NULL){
-            printf("on demosReadFileIntoBuffer()\n");
-            exit(0);
-        }
-        const char *nextLine = modelData;
+        // Flying sauce
+        const char *nextLine = model_data_saucer;
 
         int VertexCounter = 1; 
         int FaceCounter = 1;
@@ -1489,15 +1507,12 @@ void demoHumanoidSetup(void)
         // During the drawing phase we're gonna select vectors to create the triangles.
         // We have two triangles per surface,
 
-
         // Assign colors for the flying sauces. (disk with something on top)
         // static loop
-        // assignBandColors(s_model, 16, saucerPalette, 4);
         assignSaucerColors(s_model);
 
-
         // ----------------------
-        // Position in the world.
+        // Position in the world
 
         // Spread wider in X so the (radius ~2.0) disks don't overlap.
         // Centered around x=0 instead of starting at -3.0f.
@@ -1528,7 +1543,7 @@ void demoHumanoidSetup(void)
         s_model->a = (float) s_model->v / s_model->t;
         // v = a*t;
 
-        // Save the model pointer.
+        // Save the model pointer
         static_models[count] = (unsigned long) s_model;
     };
 
@@ -1536,7 +1551,7 @@ void demoHumanoidSetup(void)
 // ========================================================================
 // Hero
 // Special values for the hero.
-    if ( (void*) main_character != NULL )
+    if ((void*) main_character != NULL)
     {
 
         // Assign colors for the main char (also humanoid)
@@ -1575,13 +1590,11 @@ void demoHumanoidSetup(void)
 // World
 //
 
-    if ((void *) current_world_3d == NULL)
-    {
+    if ((void *) current_world_3d == NULL){
         printf("current_world_3d\n");
         exit(0);
     }
-    if (current_world_3d->magic != 1234)
-    {
+    if (current_world_3d->magic != 1234){
         printf("current_world_3d magic\n");
         exit(0);
     }
