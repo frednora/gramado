@@ -5,13 +5,28 @@
 // Created by Fred Nora.
 
 
+//Lexer stage: 
+// DFA-like routines that recognize atomic tokens (integers, floats).
+//Parser stage: 
+// CFG-like routine that interprets those tokens in context (v → vector, f → face).
+
+// Grammar rules like
+// vertex_line → 'v' FLOAT FLOAT FLOAT
+// face_line   → 'f' INT INT INT
+
+
 #include "../gram3d.h"
 
 // ==============================================================
 
+
 // Local, for now.
 // Declaration of our custom float parser.
 double __pow0000(double __x, double __y);
+
+static int __lexer_read_int(const char **strPtr);
+static float __lexer_read_float(const char **strPtr);
+
 
 // ==============================================================
 
@@ -38,72 +53,67 @@ double __pow0000(double __x, double __y)
     return (double) RetValue;
 }
 
-// =========================================
-/*
-int scan00_custom_read_int(const char **strPtr)
+// Lexical analysis:
+// Act as lexical analyzers. It consumes characters from the input string and 
+// produce tokens (integers). In compiler terms, it is “token recognizer”.
+// Lexer-like routine: recognizes an integer token from the input stream.
+// Equivalent to a DFA over the alphabet {0-9, '+', '-'}.
+static int __lexer_read_int(const char **strPtr)
 {
     const char *s = *strPtr;
 
-    // Skip whitespace
-    while (*s && isspace((unsigned char)*s))
-        s++;
+//
+// Skip whitespace
+//
 
-    // Optional sign
+    while ( *s && 
+             isspace((unsigned char)*s))
+    {
+        s++;
+    };
+
+//
+// Optional sign
+//
     int sign = 1;
-    if (*s == '-') { 
+
+    if (*s == '-'){
         sign = -1; 
-        s++; }
-    else if (*s == '+') { 
+        s++; 
+    } else if (*s == '+'){ 
         s++; 
     }
 
-    // Build integer
-    long result = 0;
-    while (*s && isdigit((unsigned char)*s)) 
-    {
-        result = result * 10 + (*s - '0');
-        s++;
-    }
+//
+// Copy digits into a small buffer
+//
 
-    *strPtr = s;
-
-    return (int)(sign * result);
-}
-*/
-
-int scan00_custom_read_int(const char **strPtr)
-{
-    const char *s = *strPtr;
-
-    // Skip whitespace
-    while (*s && isspace((unsigned char)*s))
-        s++;
-
-    // Optional sign
-    int sign = 1;
-    if (*s == '-') { sign = -1; s++; }
-    else if (*s == '+') { s++; }
-
-    // Copy digits into a small buffer
     char buf[32];
     int len = 0;
-    while (*s && isdigit((unsigned char)*s) && len < (int)(sizeof(buf)-1)) {
+
+    while ( *s && 
+            isdigit((unsigned char)*s) && 
+            len < (int)(sizeof(buf)-1) ) 
+    {
         buf[len++] = *s;
         s++;
-    }
+    };
     buf[len] = '\0';
 
-    // Convert with atoi
+//
+// Convert to int using atoi()
+//
     int value = atoi(buf) * sign;
 
     // Advance pointer
+    // What?
     *strPtr = s;
-    return value;
+
+    return (int) value;
 }
 
-
 /**
- * scan00_custom_read_float - Parses a floating-point number from a string.
+ * __lexer_read_float - Parses a floating-point number from a string.
  *
  * @strPtr: A pointer to the string pointer that points to the number.
  *          The function will update this pointer to the position immediately
@@ -116,48 +126,82 @@ int scan00_custom_read_int(const char **strPtr)
  * and an optional exponent prefixed with 'e' or 'E'.
  */
 
-float scan00_custom_read_float(const char **strPtr) 
+// Lexical analysis:
+// Act as lexical analyzers. It consumes characters from the input string and 
+// produce tokens (float). In compiler terms, it is “token recognizer”.
+// Lexer-like routine: recognizes a floating-point token.
+// Grammar fragment: <float> ::= [sign] digits [ '.' digits ] [ ('e'|'E') [sign] digits ]
+static float __lexer_read_float(const char **strPtr) 
 {
     const char *s = *strPtr;
-    
-    // Skip any leading whitespace.
-    while (isspace((unsigned char)*s))
+
+//
+// Skip any leading whitespace
+//
+
+    while ( isspace((unsigned char)*s) )
+    {
         s++;
-    
-    // Process optional sign.
+    };
+
+//
+// Process optional sign
+//
+
     int sign = 1;
+
     if (*s == '-') {
         sign = -1;
         s++;
     } else if (*s == '+') {
         s++;
     }
-    
-    // Parse the integer part of the number.
+
+//
+// Parse the integer part of the number
+//
+
     float result = 0.0f;
     //double result = 0.0;  // Use double for better accuracy
 
-    while (*s && isdigit((unsigned char)*s)) {
+    while ( *s && 
+            isdigit((unsigned char)*s) ) 
+    {
         result = result * 10.0f + (*s - '0');
         s++;
-    }
-    
-    // Parse the fractional part if a decimal point is present.
-    if (*s == '.') {
+    };
+
+//
+// Parse the fractional part if a decimal point is present
+//
+
+    if (*s == '.') 
+    {
         s++;
+
         float fraction = 0.0f;
         float divisor = 10.0f;
-        while (*s && isdigit((unsigned char)*s)) {
+
+        while ( *s && 
+                isdigit((unsigned char)*s) ) 
+        {
             fraction += (*s - '0') / divisor;
             divisor *= 10.0f;
+
             s++;
-        }
+        };
+
         result += fraction;
     }
-    
-    // Parse exponential part if present.
-    if (*s == 'e' || *s == 'E') {
+
+//
+// Parse exponential part if present
+//
+
+    if (*s == 'e' || *s == 'E') 
+    {
         s++;
+
         int expSign = 1;
         if (*s == '-') {
             expSign = -1;
@@ -165,24 +209,34 @@ float scan00_custom_read_float(const char **strPtr)
         } else if (*s == '+') {
             s++;
         }
+
         int exponent = 0;
-        while (*s && isdigit((unsigned char)*s)) {
+        while ( *s && 
+                isdigit((unsigned char)*s) ) 
+        {
             exponent = exponent * 10 + (*s - '0');
             s++;
         }
-        //result *= pow(10, expSign * exponent);
+
         result *= __pow0000(10, expSign * exponent);
+        //result *= pow(10, expSign * exponent);
     }
 
-    // Update the pointer to reflect the new reading position.
+
+// Update the pointer to reflect the new reading position
     *strPtr = s;
-    
+
+// #ps: Return float value
     return sign * result;
 }
 
 // Its real purpose is to parse a line containing a vertex definition (v x y z) and 
 // return a 3D vector.
 // Modified function: it now returns a pointer into the string after the newline.
+// Parser routine: recognizes a vertex production.
+// Grammar rule: vertex_line → 'v' float float float
+// Automaton transitions: start → 'v' → float → float → float → end_of_line
+
 const char *scan00_read_element_from_line(
     const char *line_ptr, 
     struct obj_element_d *elem )
@@ -196,22 +250,38 @@ const char *scan00_read_element_from_line(
 // this code only skips the comment if the line 
 // starts with # right after whitespace.
 
-
     // 'ptr' will traverse the string.
     const char *ptr = line_ptr;
 
-    if ((void*) elem == NULL)
+    if ((void*) elem == NULL){
         return NULL;
+    }
+
     elem->initialized = FALSE;
+    elem->token_count = 0;
 
+//
+// Lexer: Skip any whitespace before the identifier
+//
 
-    // Skip any whitespace before the identifier.
-    while (*ptr && isspace((unsigned char)*ptr))
+    while ( *ptr && 
+            isspace((unsigned char)*ptr) )
+    {
         ptr++;
+    };
+
+//
+// Lexer: EOL (End Of Line)
+//
 
     // If we reached the end already, return NULL.
     if (*ptr == '\0')
+    {
+        elem->token[elem->token_count].type = TOKEN_EOL;
+        //strcpy(elem->token[elem->token_count].lexeme, "\\0");
+        elem->token_count++;
         return NULL;
+    }
 
 
 // =======================================
@@ -263,23 +333,52 @@ const char *scan00_read_element_from_line(
 */
 
 // =======================================
+// Parser: Parse the 'v' statement
 // Handle vertex lines ("v")
+
+// parse_v_statement:
+
     if (*ptr == 'v') 
     {
-        // Skip the initial identifier ("v") if it's present.
+        // TOKEN_VERTEX
+        elem->token[elem->token_count].type = TOKEN_VERTEX;
+        strcpy( elem->token[elem->token_count].lexeme, "v");
+        elem->token_count++;
+
+        // Lexer: Skip the initial identifier ("v") if it's present.
         ptr++;
 
-        // Skip any whitespace after the identifier.
+        // Lexer: Skip any whitespace after the identifier
         while (*ptr && isspace((unsigned char)*ptr))
+        {
             ptr++;
+        };
 
         // Fill the new structure instead of an external pointer
         elem->type = OBJ_ELEMENT_TYPE_VECTOR; 
 
-        // Parse three floats and store them in the structure.
-        elem->vertex.x = scan00_custom_read_float(&ptr);
-        elem->vertex.y = scan00_custom_read_float(&ptr);
-        elem->vertex.z = scan00_custom_read_float(&ptr);
+        // Parse three floats and store them in the structure
+
+        elem->vertex.x = __lexer_read_float(&ptr);
+        // TOKEN_FLOAT x
+        elem->token[elem->token_count].type = TOKEN_FLOAT;
+        elem->token[elem->token_count].float_value = elem->vertex.x;
+        // No lexeme for now
+        elem->token_count++;
+
+        elem->vertex.y = __lexer_read_float(&ptr);
+        // TOKEN_FLOAT y
+        elem->token[elem->token_count].type = TOKEN_FLOAT;
+        elem->token[elem->token_count].float_value = elem->vertex.y;
+        // No lexeme for now
+        elem->token_count++;
+
+        elem->vertex.z = __lexer_read_float(&ptr);
+        // TOKEN_FLOAT z
+        elem->token[elem->token_count].type = TOKEN_FLOAT;
+        elem->token[elem->token_count].float_value = elem->vertex.z;
+        // No lexeme for now
+        elem->token_count++;
 
         // Debug output: print the parsed coordinates.
         //printf("Parsed Vertex Coordinates:\n");
@@ -287,64 +386,98 @@ const char *scan00_read_element_from_line(
         //printf("y = %f\n", (double)return_v->y);
         //printf("z = %f\n", (double)return_v->z);
 
-        // #test: default color
-        elem->vertex.color = COLOR_WHITE;
 
+        elem->vertex.color = COLOR_WHITE; // #test: default color
         elem->initialized = TRUE;
 
-        // Advance 'ptr' to the end of the current line.
+        // Lexer: Advance 'ptr' to the end of the current line.
         while (*ptr && *ptr != '\n')
+        {
             ptr++;
+        };
 
-        // If a newline is found, move one character beyond it.
+        // Lexer: If a newline is found, move one character beyond it.
         if (*ptr == '\n')
             ptr++;
 
-        // If we've reached the end of the string, return NULL.
-        if (*ptr == '\0')
+        // Lexer: If we've reached the end of the string, return NULL.
+        if (*ptr == '\0'){
             return NULL;
+        }
 
         // Otherwise, return the pointer to the next line's start.
         return ptr;
     };
 
 // =======================================
+// Parser: Parse the 'f' statement
 // Handle face lines ("f")
+
+// parse_f_statement:
+
     if (*ptr == 'f') 
     {
+        // TOKEN_FACE
+        elem->token[elem->token_count].type = TOKEN_FACE;
+        strcpy( elem->token[elem->token_count].lexeme, "f");
+        elem->token_count++;
+
         // Skip the initial identifier ("f") if it's present.
         ptr++;
 
-        // Skip any whitespace after the identifier.
+        // Skip any whitespace after the identifier
         while (*ptr && isspace((unsigned char)*ptr))
+        {
             ptr++;
+        };
 
         elem->type = OBJ_ELEMENT_TYPE_FACE;
 
         // Parse three integers
-        elem->face.vi[0] = scan00_custom_read_int(&ptr);
-        elem->face.vi[1] = scan00_custom_read_int(&ptr);
-        elem->face.vi[2] = scan00_custom_read_int(&ptr);
+
+        elem->face.vi[0] = __lexer_read_int(&ptr);
+        // TOKEN_INT 0
+        elem->token[elem->token_count].type = TOKEN_INT;
+        elem->token[elem->token_count].int_value = elem->face.vi[0];
+        // No lexeme for now
+        elem->token_count++;
+
+        elem->face.vi[1] = __lexer_read_int(&ptr);
+        // TOKEN_INT 1
+        elem->token[elem->token_count].type = TOKEN_INT;
+        elem->token[elem->token_count].int_value = elem->face.vi[1];
+        // No lexeme for now
+        elem->token_count++;
+
+        elem->face.vi[2] = __lexer_read_int(&ptr);
+        // TOKEN_INT 2
+        elem->token[elem->token_count].type = TOKEN_INT;
+        elem->token[elem->token_count].int_value = elem->face.vi[2];
+        // No lexeme for now
+        elem->token_count++;
+
 
         //printf ("f: %d %d %d \n",
             //elem->face.vi[0], elem->face.vi[1], elem->face.vi[2] );
-
         //while(1){}
 
         elem->initialized = TRUE;
 
-        // Advance to end of line
-        while (*ptr && *ptr != '\n') 
+        // Lexer: Advance to end of line
+        while (*ptr && *ptr != '\n')
+        {
             ptr++;
+        };
+        // Lexer:
         if (*ptr == '\n') 
             ptr++;
+        // Lexer:
         if (*ptr == '\0') 
             return NULL;
 
         return ptr;
     }
 
-
+// Fail
     return NULL;
 }
-

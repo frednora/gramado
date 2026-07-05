@@ -109,9 +109,6 @@ myObjects += archive_libui.o
 myObjects += archive_fx.o    
 myObjects += archive_extra.o    
 
-#test
-myObjects += scan00.o   
-
 myObjects += math.o   
 
 myObjects += comp.o   
@@ -155,6 +152,7 @@ line.o rect.o window.o button.o bmp.o
 	$(CC)  -c lib00/sprite.c  $(user_ccflags) $(CINCLUDES) -o sprite.o
 	$(CC)  -c lib00/surface.c $(user_ccflags) $(CINCLUDES) -o surface.o
 
+
 # Common for all the demos.
 	$(CC)  -c demos/demos.c   $(user_ccflags) $(CINCLUDES) -o demos.o
 	$(CC)  -c demos/models.c  $(user_ccflags) $(CINCLUDES) -o models.o
@@ -165,18 +163,18 @@ line.o rect.o window.o button.o bmp.o
 	$(CC)  -c demos/tri00.c     $(user_ccflags) $(CINCLUDES) -o tri00.o
 	$(CC)  -c demos/lin00.c     $(user_ccflags) $(CINCLUDES) -o lin00.o
 	$(CC)  -c demos/curve00.c   $(user_ccflags) $(CINCLUDES) -o curve00.o
-
+	$(CC)  -c demos/scan00.c    $(user_ccflags) $(CINCLUDES) -o scan00.o
 
 	$(LD) -r -o archive_fx.o \
 grprim.o camera.o world.o proj.o sprite.o surface.o \
-demos.o models.o humanoid.o cat00.o polygon.o tri00.o lin00.o curve00.o    
+demos.o models.o humanoid.o cat00.o polygon.o tri00.o lin00.o curve00.o scan00.o    
+
 
 #extra
 	$(CC)  -c  xxxinput.c  $(user_ccflags) $(CINCLUDES) -o xxxinput.o
 	$(CC)  -c  font.c      $(user_ccflags) $(CINCLUDES) -o font.o
 	$(LD) -r -o archive_extra.o  xxxinput.o font.o 
 
-	$(CC)  -c demos/scan00.c   $(user_ccflags) $(CINCLUDES) -I include/  -o scan00.o
 
 # ui/
 	$(CC)  -c  ui/wm.c    $(user_ccflags) $(CINCLUDES) -I include/  -o wm.o
