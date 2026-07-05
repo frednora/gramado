@@ -125,6 +125,7 @@ static void assignSaucerColors(struct humanoid_model_d *s_model)
     assignRangeColor(s_model, 57, 64, 0x404040); // underside   - dark belly
 }
 
+// shading
 static unsigned int computeColor(struct n3d_vec_d *vertex,
                                  struct n3d_vec_d *normal,
                                  unsigned int baseColor)
@@ -134,17 +135,22 @@ static unsigned int computeColor(struct n3d_vec_d *vertex,
     float len = sqrtf(lightDir.x*lightDir.x + lightDir.y*lightDir.y + lightDir.z*lightDir.z);
     lightDir.x /= len; lightDir.y /= len; lightDir.z /= len;
 
-    // Diffuse factor
+    // Diffuse factor — use fabsf() instead of clamping negative to 0.
+    // This makes lighting robust to winding-order mistakes: a face whose
+    // normal happens to point the "wrong" way still gets a sensible
+    // brightness instead of going near-black.
     float dp = normal->x*lightDir.x + normal->y*lightDir.y + normal->z*lightDir.z;
-    if (dp < 0.0f) dp = 0.0f;
-    float brightness = 0.2f + 0.8f * dp;
+    dp = fabsf(dp);
 
-    // Extract base RGB
+    // Higher ambient floor (0.6 instead of 0.2) so palette colors keep
+    // their identity — this is a gentle "hint of depth" look rather than
+    // full directional shading.
+    float brightness = 0.6f + 0.4f * dp;
+
     unsigned char r = (baseColor >> 16) & 0xFF;
     unsigned char g = (baseColor >> 8) & 0xFF;
     unsigned char b = baseColor & 0xFF;
 
-    // Apply brightness
     r = (unsigned char)(r * brightness);
     g = (unsigned char)(g * brightness);
     b = (unsigned char)(b * brightness);
@@ -186,6 +192,7 @@ static void __drawModelWithShading (struct humanoid_model_d *model, float fElaps
     for (i=0; i<4; i++){
         for (j=0; j<4; j++){
             matRotZ.m[i][j] = (float) 0.0f;
+            matRotY.m[i][j] = (float) 0.0f;   // <-- add this
             matRotX.m[i][j] = (float) 0.0f;
         };
     };
@@ -438,6 +445,7 @@ static void __drawModelWithShading (struct humanoid_model_d *model, float fElaps
         normal.z = (float) (normal.z/l);
 
         // #test
+        // Shading
         unsigned int base = model->colors[i-1]; // pick base color for this face
         triRotatedXYZ.p[0].color = computeColor(&triRotatedXYZ.p[0], &normal, base);
         triRotatedXYZ.p[1].color = computeColor(&triRotatedXYZ.p[1], &normal, base);
@@ -480,6 +488,7 @@ static void __drawModelWithShading (struct humanoid_model_d *model, float fElaps
         // But we do not have a scale factor for z.
         // So, z can be any vallur between 0.01f and 1000.0f.
 
+        // cull = FALSE;
         if (cull == FALSE)
         {
             if ((void*) __root_window != NULL)
@@ -536,6 +545,7 @@ static void __drawRotatingModel (struct humanoid_model_d *model, float vel)
     for (i=0; i<4; i++){
         for (j=0; j<4; j++){
             matRotZ.m[i][j] = (float) 0.0f;
+            matRotY.m[i][j] = (float) 0.0f;   // <-- add this
             matRotX.m[i][j] = (float) 0.0f;
         };
     };
@@ -922,6 +932,7 @@ static void __drawRotatingModel (struct humanoid_model_d *model, float vel)
         // It means that the vectors are in opposite directions.
         // So, we're gonna paint this surface.
         // Muuuuu!
+        // cull = FALSE;
         if (cull == FALSE)
         {
             // The 'image space'.

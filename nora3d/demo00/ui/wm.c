@@ -3427,15 +3427,25 @@ wmProcedure (
     case GWS_KeyDown:
 
         switch (long1){
+
+        // Left  <<<
         case 'a': 
             //printf("left\n"); 
             //demoHumanoidMoveCharacter( char_id, direction, (float) value );
             demoHumanoidMoveCharacter( 0, 1, (float) 0.4f );
             return 0;
             break;
+
+        // Right >>>
         case 'd': 
             //printf("right\n"); 
             demoHumanoidMoveCharacter( 0, 2, (float) 0.4f );
+            return 0;
+            break;
+
+
+        // For any other key we exit.
+        default:
             return 0;
             break;
         };
@@ -3831,8 +3841,10 @@ static int is_combination(int msg_code)
     return FALSE;
 }
 
-// Get the messages in the queue, respecting the circular queue.
-// Called by on_execute() in main.c
+// Get the messages from the thread's queue, 
+// respecting the circular queue.
+// Called by game_loop() in main.c
+
 int wmInputReader(void)
 {
     int status=0;
@@ -3900,8 +3912,16 @@ new_event:
          msg == GWS_SysKeyDown ||
          msg == GWS_SysKeyUp )
     {
-        on_keyboard_event( 
-            (int) msg, (unsigned long) long1, (unsigned long) long2 );
+        // #debug
+        //if (msg == GWS_KeyDown)
+            //printf("Down\n");
+
+        if (msg == GWS_KeyDown)
+        {
+            on_keyboard_event( 
+                (int) msg, (unsigned long) long1, (unsigned long) long2 );
+        }
+
         return 0;
     }
 
@@ -3909,6 +3929,9 @@ new_event:
     IsCombination = (int) is_combination(msg);
     if (IsCombination)
     {
+        // #debug
+        //printf("Combination\n");
+
         demos_on_combination(msg);
         on_combination(msg);
     }
