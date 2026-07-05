@@ -53,6 +53,10 @@
 #include <editor.h>
 
 
+struct dccanvas_d *dc00;  // shared dc
+
+struct ui_component_d *uic_button_save;
+
 /*
 #define IP(a, b, c, d) (a << 24 | b << 16 | c << 8 | d)
 struct sockaddr_in addr = {
@@ -274,16 +278,14 @@ static void update_clients(int fd)
     struct gws_window_info_d  lWi;
 
 // Parameter
-    if (fd<0){
+    if (fd < 0){
         return;
     }
 
 // Get info about the main window.
 // IN: fd, wid, window info structure.
-    gws_get_window_info( 
+    gws_get_window_info ( 
         fd, main_window, (struct gws_window_info_d *) &lWi );
-
-
 
     // Frame/chrome
     frame_left = lWi.left;
@@ -297,6 +299,22 @@ static void update_clients(int fd)
     cr_width = lWi.cr_width;
     cr_height = lWi.cr_height;
 
+// ------------------------
+
+    if ((void*)dc00 == NULL)
+        return;
+
+//
+// bg for the client area
+//
+
+    lingui_draw_rectangle0_dc (
+        dc00,
+        0, 0, lWi.cr_width, lWi.cr_height,
+        COLOR_GRAY,
+        0  // ROP
+    );
+
 
 // ------------------------
 // Text
@@ -305,36 +323,17 @@ static void update_clients(int fd)
     text1_l = 2;
     text1_t = 4 + (24/3);
     text1_color = COLOR_BLACK;
-    /*
-    gws_draw_text (
-        (int) fd,
-        (int) main_window,
-        (unsigned long) text1_l,
-        (unsigned long) text1_t,
-        (unsigned long) text1_color,
-        text1_string );
-    */
-    libgui_drawstring(
-        lWi.left + lWi.cr_left + text1_l, 
-        lWi.top  + lWi.cr_top  + text1_t, 
-        text1_string, text1_color, 0xFFFFFF, 0);
-
-    libgui_refresh_rectangle_via_kernel( 
-        lWi.left + lWi.cr_left + text1_l, 
-        lWi.top  + lWi.cr_top  + text1_t, 
-        8*strlen(text1_string), 
-        16 ); 
 
 // ---------------------------------------------
 // Address bar
 // #todo: 
 // '.l': It actually depends on the text befor this.
 // We need to know the text width.
+
     cwAddressBar.l = (( lWi.cr_width/8 )*2);
     cwAddressBar.t = 4;
     cwAddressBar.w = (( lWi.cr_width/8 )*3);
     cwAddressBar.h = 24; 
-
 
     unsigned long ab_l = (( lWi.cr_width/8 )*2);
     unsigned long ab_t = 4;
@@ -342,61 +341,12 @@ static void update_clients(int fd)
     unsigned long ab_h = 24;
 
 
-/*
-    gws_change_window_position( 
-        fd,
-        addressbar_window,
-        cwAddressBar.l,
-        cwAddressBar.t );
-    gws_resize_window(
-        fd,
-        addressbar_window,
-        cwAddressBar.w,
-        cwAddressBar.h );
-    gws_redraw_window(fd, addressbar_window, TRUE);
-*/
-
-// Draw the fake button
-    libgui_backbuffer_draw_rectangle0(
-        frame_left + cr_left + ab_l, 
-        frame_top  + cr_top  + ab_t, 
-        ab_w, 
-        ab_h,
-        COLOR_WHITE, 
-        1, 0, FALSE
+    lingui_draw_rectangle0_dc (
+        dc00,
+        ab_l, ab_t, ab_w, ab_h,
+        COLOR_WHITE,
+        0  // ROP
     );
-
-// Refresh to show it
-    libgui_refresh_rectangle_via_kernel(
-        frame_left + cr_left + ab_l, 
-        frame_top  + cr_top  + ab_t, 
-        ab_w, 
-        ab_h
-    );
-
-
-
-
-
-/*
-//---------------------------------------------
-// Save button
-    cwButton.l = (( lWi.cr_width/8 )*7) -4;
-    cwButton.t = 4;
-    cwButton.w = (( lWi.cr_width/8 )*1);
-    cwButton.h = 24;
-    gws_change_window_position( 
-        fd,
-        savebutton_window,
-        cwButton.l,
-        cwButton.t );
-    gws_resize_window(
-        fd,
-        savebutton_window,
-        cwButton.w,
-        cwButton.h );
-    gws_redraw_window(fd, savebutton_window, TRUE);
-*/
 
 // ============================================================
 // Create restart button
@@ -416,33 +366,17 @@ static void update_clients(int fd)
 
     // Initial state
     // MyButton_Save.state = 0;
-
-// Draw the fake button
-    libgui_backbuffer_draw_rectangle0(
-        MyButton_Save.absolute_left, 
-        MyButton_Save.absolute_top, 
-        MyButton_Save.width, 
-        MyButton_Save.height,
-        xCOLOR_GRAY2, 
-        1, 0, FALSE
-    );
-
-    // Draw the label string inside
-    const char *label_save = "SAVE";
-    libgui_drawstring(
-        MyButton_Save.absolute_left +4, 
-        MyButton_Save.absolute_top +4, 
-        label_save,
-        COLOR_BLACK, COLOR_GRAY, 0
-    );
-
-// Refresh to show it
-    libgui_refresh_rectangle_via_kernel(
-        MyButton_Save.absolute_left, 
-        MyButton_Save.absolute_top, 
-        MyButton_Save.width, 
-        MyButton_Save.height
-    );
+  
+    libgui_set_ui_component_position(
+        uic_button_save, 
+        MyButton_Save.left, 
+        MyButton_Save.top );
+    libgui_set_ui_component_dimension(
+        uic_button_save,
+        MyButton_Save.width,
+        MyButton_Save.height );
+    // #todo: We have an issue with the label string
+    libgui_redraw_ui_component( uic_button_save, dc00 );
 
 //-----------------------
 // The client window where we type the text.
@@ -451,21 +385,6 @@ static void update_clients(int fd)
     cwText.t = (cwAddressBar.t + cwAddressBar.h + 2);
     cwText.w = lWi.cr_width;
     cwText.h = (lWi.cr_height - cwText.t);
-
-/*
-    gws_change_window_position( 
-        fd,
-        client_window,
-        cwText.l,
-        cwText.t );
-    gws_resize_window(
-        fd,
-        client_window,
-        cwText.w,
-        cwText.h );
-    //gws_set_focus(fd,client_window);
-    gws_redraw_window(fd, client_window, TRUE);
-*/
 
 // (Editbox)
 // Client window (White)
@@ -483,70 +402,12 @@ static void update_clients(int fd)
 // We gotta get the client window values.
     unsigned long cw_height = (lWi.cr_height - cw_top);
 
-    libgui_backbuffer_draw_rectangle0(
-        frame_left + cr_left + cw_left, 
-        frame_top  + cr_top  + cw_top, 
-        cw_width, 
-        cw_height,
-        COLOR_WHITE, 
-        1, 0, FALSE
+    lingui_draw_rectangle0_dc (
+        dc00,
+        cw_left, cw_top, cw_width, cw_height,
+        COLOR_WHITE,
+        0  // ROP
     );
-
-// Refresh to show it
-    libgui_refresh_rectangle_via_kernel(
-        frame_left + cr_left + cw_left, 
-        frame_top  + cr_top  + cw_top, 
-        cw_width, 
-        cw_height
-    );
-
-
-
-//
-// Testing libdisp client-side library
-//
-
-    //printf("Left: %d, Top: %d\n", 
-       // lWi.cr_left, lWi.cr_top);
-
-    // #ps:
-    // Not inside the client area yet
-
-/*
-    unsigned long rc_left = lWi.left + lWi.cr_left;
-    unsigned long rc_top  = lWi.top  + lWi.cr_top;
-    unsigned long rc_width  = 100; //lWi.cr_width;
-    unsigned long rc_height = 100; //lWi.cr_height;
-
-    // Create a rectangle
-    libgui_backbuffer_draw_rectangle0(
-        rc_left,   // absolute X origin of client area
-        rc_top,    // absolute Y origin of client area
-        rc_width,             // client area width
-        rc_height,            // client area height
-        0xFFFF00,                 // color
-        1, 0, FALSE               // style flags
-    );
-
-
-    libgui_drawchar(
-        rc_left, rc_top, 'A', 0xFFFFFF, 0x000000, 0);
-
-    libgui_drawstring(
-        rc_left +10, rc_top +10, "Hello, World!", 0xFFFF00, 0x000000, 0);
-
-    libgui_refresh_rectangle_via_kernel( 
-        rc_left, rc_top, rc_width, rc_height );
-
-    //gws_refresh_window(fd, main_window);
-
-    libgui_frontbuffer_draw_horizontal_line( 
-        rc_left, rc_top +12, rc_width, 0xFF0000, 0 );
-
-    libgui_frontbuffer_putpixel(0x0000FF, rc_left +20, rc_top +20, 0);
-*/
-
-    //gws_refresh_window(fd, main_window);
 }
 
 static int editor_init_globals(void)
@@ -1211,7 +1072,6 @@ int editor_initialize(int argc, char *argv[])
         printf("editor.bin: main_window failed\n");
         goto fail;
     }
-    gws_refresh_window(client_fd, main_window);
 
 // Label
 // Text inside the main window.
@@ -1224,7 +1084,6 @@ int editor_initialize(int argc, char *argv[])
     text1_color = COLOR_BLACK;
 */
 
-    //gws_refresh_window(client_fd, main_window);
 // -----------------------------
 
 // Get info about the main window.
@@ -1249,7 +1108,6 @@ int editor_initialize(int argc, char *argv[])
     cr_width = lWi.cr_width;
     cr_height = lWi.cr_height;
 
-
 //
 // Draw text
 //
@@ -1257,18 +1115,6 @@ int editor_initialize(int argc, char *argv[])
     text1_l = 2;
     text1_t = 4 + (24/3);
     text1_color = COLOR_BLACK;
-
-    libgui_drawstring(
-        lWi.left + lWi.cr_left + text1_l, 
-        lWi.top  + lWi.cr_top  + text1_t, 
-        text1_string, text1_color, 0xFFFFFF, 0);
-
-    libgui_refresh_rectangle_via_kernel( 
-        lWi.left + lWi.cr_left + text1_l, 
-        lWi.top  + lWi.cr_top  + text1_t, 
-        8*strlen(text1_string), 
-        16 ); 
-
 
 // ============================================================
 // #test
@@ -1292,6 +1138,34 @@ int editor_initialize(int argc, char *argv[])
 
     sc80( 48, &m[0], &m[0], &m[0] );
 
+// ----------------------------------------
+
+//
+// dc
+//
+
+    dc00 = (struct dccanvas_d *) libgui_create_dc(
+        lWi.ca_canvas_base_address,
+        lWi.ca_canvas_width,
+        lWi.ca_canvas_height,
+        lWi.ca_canvas_bpp
+    );
+    if ((void*)dc00 == NULL){
+        printf("power: on dc00\n");
+        exit(1);
+    }
+
+//
+// Background for the client area
+//
+
+    lingui_draw_rectangle0_dc (
+        dc00,
+        0, 0, lWi.cr_width, lWi.cr_height,
+        COLOR_GRAY,
+        0  // ROP
+    );
+
 
 //
 // Address bar
@@ -1307,63 +1181,18 @@ int editor_initialize(int argc, char *argv[])
     unsigned long ab_w = (( lWi.cr_width/8 )*3);
     unsigned long ab_h = 24;
 
-/*
-// Create address bar window.
-    addressbar_window = 
-        (int) gws_create_window (
-                client_fd,
-                WT_EDITBOX, 1, 1, bar1_string,
-                ab_l, ab_t, ab_w, ab_h,  //0, 0, lWi.cr_width, lWi.cr_height,   
-                main_window, 
-                WS_CHILD, 
-                COLOR_WHITE, COLOR_WHITE );
-
-    if (addressbar_window < 0){
-        printf("editor.bin: addressbar_window failed\n");
-        goto fail;
-    }
-    //gws_refresh_window(client_fd, addressbar_window);
-    //while(1){}
-*/
-
 
 //
 // Draw address bar rectangle
 //
 
-    libgui_backbuffer_draw_rectangle0(
-        frame_left + cr_left + ab_l, 
-        frame_top  + cr_top  + ab_t, 
-        ab_w, 
-        ab_h,
-        COLOR_WHITE, 
-        1, 0, FALSE
+    lingui_draw_rectangle0_dc (
+        dc00,
+        ab_l, ab_t, ab_w, ab_h,
+        COLOR_WHITE,
+        0  // ROP
     );
-
-// Refresh to show it
-    libgui_refresh_rectangle_via_kernel(
-        frame_left + cr_left + ab_l, 
-        frame_top  + cr_top  + ab_t, 
-        ab_w, 
-        ab_h
-    );
-
-
-/*
-// Text inside the address bar.
-    if (addressbar_window > 0)
-    {
-        gws_draw_text (
-            (int) client_fd,            // fd
-            (int) addressbar_window,    // window id
-            (unsigned long) 8,          // left
-            (unsigned long) 8,          // top
-            (unsigned long) COLOR_BLACK,
-            text2_string );
-    }
-    //gws_refresh_window (client_fd, addressbar_window);
-*/
-
+ 
 // Save
     cwAddressBar.l = (( lWi.cr_width/8 )*2);
     cwAddressBar.t = 4;
@@ -1375,36 +1204,6 @@ int editor_initialize(int argc, char *argv[])
 
     // #test
     // The 'button state' is the same of window status.
-
-/*
-// Create save button window.
-    savebutton_window = 
-        (int) gws_create_window ( 
-                client_fd,
-                WT_BUTTON,
-                BS_DEFAULT,  // window status or button state
-                1,
-                b1_string,
-                (( lWi.cr_width/8 )*6),  //l 
-                4,                       //t
-                (( lWi.cr_width/8 )*1), 
-                24,
-                main_window, 
-                WS_CHILD, 
-                COLOR_GRAY, COLOR_GRAY );
-
-    if (savebutton_window < 0){
-        printf("editor.bin: savebutton_window failed\n");
-        goto fail;
-    }
-    //gws_refresh_window (client_fd, savebutton_window);
-
-// Save button
-    cwButton.l = (( lWi.cr_width/8 )*7) -4;
-    cwButton.t = 4;
-    cwButton.w = (( lWi.cr_width/8 )*1);
-    cwButton.h = 24;
-*/
 
 // ============================================================
 // Create restart button
@@ -1425,34 +1224,18 @@ int editor_initialize(int argc, char *argv[])
     // Initial state
     // MyButton_Save.state = 0;
 
-// Draw the fake button
-    libgui_backbuffer_draw_rectangle0(
-        MyButton_Save.absolute_left, 
-        MyButton_Save.absolute_top, 
-        MyButton_Save.width, 
-        MyButton_Save.height,
-        xCOLOR_GRAY2, 
-        1, 0, FALSE
-    );
 
-    // Draw the label string inside
-    const char *label_save = "SAVE";
-    libgui_drawstring(
-        MyButton_Save.absolute_left +4, 
-        MyButton_Save.absolute_top +4, 
-        label_save,
-        COLOR_BLACK, COLOR_GRAY, 0
-    );
-
-// Refresh to show it
-    libgui_refresh_rectangle_via_kernel(
-        MyButton_Save.absolute_left, 
-        MyButton_Save.absolute_top, 
-        MyButton_Save.width, 
-        MyButton_Save.height
-    );
-
-
+// Create a button
+    uic_button_save = 
+        libgui_create_ui_component (
+            dc00, 
+            1,   // type = button 
+            MyButton_Save.left, 
+            MyButton_Save.top, 
+            MyButton_Save.width, 
+            MyButton_Save.height,
+            "Save"
+        );
 
 //
 // == Client window =======================
@@ -1467,24 +1250,6 @@ int editor_initialize(int argc, char *argv[])
 // >> We're gonna send parts of this file to the display server,
 // and the server will save it into the text buffer 
 // in the window structure.
-
-/*
-
- // #todo: Get the client window's info.
- // see: the same in terminal.bin appication.
-
-    struct gws_window_info_d *wi;
-    wi = (void*) malloc( sizeof( struct gws_window_info_d ) );
-    if ( (void*) wi == NULL ){
-        printf("terminal: wi\n");
-        while(1){}
-    }
-    //IN: fd, wid, window info structure.
-    gws_get_window_info(
-        client_fd, 
-        main_window,   // The app window.
-        (struct gws_window_info_d *) wi );
-*/
 
 // (Editbox)
 // Client window (White)
@@ -1502,39 +1267,14 @@ int editor_initialize(int argc, char *argv[])
 // We gotta get the client window values.
     unsigned long cw_height = (lWi.cr_height - cw_top);
 
-/*
-// Create client window.
-    client_window = 
-        (int) gws_create_window ( 
-                client_fd,
-                WT_EDITBOX_MULTIPLE_LINES, 1, 1, cw_string,
-                cw_left, cw_top, cw_width, cw_height,
-                main_window, WS_CHILD, COLOR_WHITE, COLOR_WHITE );
-
-    if (client_window < 0){
-        printf("editor.bin: client_window failed\n");
-        goto fail;
-    }
-    //#debug
-    //gws_refresh_window (client_fd, client_window);
-*/
-
-    libgui_backbuffer_draw_rectangle0(
-        frame_left + cr_left + cw_left, 
-        frame_top  + cr_top  + cw_top, 
-        cw_width, 
-        cw_height,
-        COLOR_WHITE, 
-        1, 0, FALSE
+// Rectangle for the client area
+    lingui_draw_rectangle0_dc (
+        dc00,
+        cw_left, cw_top, cw_width, cw_height,
+        COLOR_WHITE,
+        0  // ROP
     );
 
-// Refresh to show it
-    libgui_refresh_rectangle_via_kernel(
-        frame_left + cr_left + cw_left, 
-        frame_top  + cr_top  + cw_top, 
-        cw_width, 
-        cw_height
-    );
 
 // Save
     cwText.l = 0;
@@ -1545,9 +1285,6 @@ int editor_initialize(int argc, char *argv[])
     gws_set_active( client_fd, main_window );
     gws_set_focus( client_fd, main_window );
     //gws_set_focus( client_fd, client_window );
-
-// Show main window. (Again)
-    gws_refresh_window (client_fd, main_window);
 
 // ============================================
 
@@ -1615,6 +1352,7 @@ int editor_initialize(int argc, char *argv[])
         }
         };
     };
+
 
 /*
     while (1)

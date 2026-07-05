@@ -650,13 +650,14 @@ int main(int argc, char *argv[])
     //while(1){}
 */
 
+// dc
+
     dc00 = (struct dccanvas_d *) libgui_create_dc(
         wi.ca_canvas_base_address,
         wi.ca_canvas_width,
         wi.ca_canvas_height,
         wi.ca_canvas_bpp
     );
-
     if ((void*)dc00 == NULL){
         printf("power: on dc00\n");
         exit(1);
