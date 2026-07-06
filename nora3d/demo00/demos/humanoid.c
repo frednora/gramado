@@ -387,17 +387,19 @@ static void __drawModelWithShading (struct model_d *model, float fElapsedTime)
         //}
 
         // Now apply model translation
+        // Now apply this model's own position (translation)
         triRotatedXYZ.p[0].z += model->origin_z; 
         triRotatedXYZ.p[1].z += model->origin_z; 
         triRotatedXYZ.p[2].z += model->origin_z; 
+
+        triRotatedXYZ.p[0].y += model->origin_y; 
+        triRotatedXYZ.p[1].y += model->origin_y; 
+        triRotatedXYZ.p[2].y += model->origin_y; 
 
         triRotatedXYZ.p[0].x += model->origin_x; 
         triRotatedXYZ.p[1].x += model->origin_x; 
         triRotatedXYZ.p[2].x += model->origin_x; 
 
-        triRotatedXYZ.p[0].y += model->origin_y; 
-        triRotatedXYZ.p[1].y += model->origin_y; 
-        triRotatedXYZ.p[2].y += model->origin_y; 
 
         // --------------------------------
 
@@ -450,6 +452,8 @@ static void __drawModelWithShading (struct model_d *model, float fElapsedTime)
         }
         */
 
+        /*
+
         triRotatedXYZ.p[0].z =
             (float) ( triRotatedXYZ.p[0].z + model->origin_z ); 
         triRotatedXYZ.p[1].z = 
@@ -474,6 +478,8 @@ static void __drawModelWithShading (struct model_d *model, float fElapsedTime)
             (float) (triRotatedXYZ.p[1].y + model->origin_y); 
         triRotatedXYZ.p[2].y = 
             (float) (triRotatedXYZ.p[2].y + model->origin_y); 
+
+        */
 
         //----------------------------------------------------
         // Use Cross-Product to get surface normal
