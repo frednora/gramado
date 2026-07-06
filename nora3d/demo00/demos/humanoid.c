@@ -13,6 +13,7 @@ static int hits=0;
 
 static char *model_data_humanoid = NULL;
 static char *model_data_saucer = NULL;
+static char *model_data_ground = NULL;
 // ...
 
 #define MODEL_MAX  8
@@ -20,6 +21,14 @@ unsigned long models[MODEL_MAX];
 
 #define STATIC_MODEL_MAX  8
 unsigned long static_models[STATIC_MODEL_MAX];
+
+// World yaw -- how much the world has turned around the hero's fixed
+// position. Read by the draw functions later; written only here.
+static float worldYawAngle = 0.0f;
+
+#define WORLD_TURN_SPEED  (0.05f)  // radians per input step -- tune to taste
+
+
 
 // local
 /*
@@ -45,22 +54,29 @@ static int __r[4][4] = {
 
 static int __load_all_obj_files(void);
 
-static void __drawModelWithShading (struct humanoid_model_d *model, float fElapsedTime);
-static void __drawRotatingModel(struct humanoid_model_d *model, float vel);
-static void __drawHumanoidMain (struct humanoid_model_d *model, float fElapsedTime);
-static void __drawEnemy00(struct humanoid_model_d *model, float fElapsedTime);
-static void __drawModelStatic (struct humanoid_model_d *model);
+static void __drawModelWithShading (struct model_d *model, float fElapsedTime);
+static void __drawRotatingModel(struct model_d *model, float vel);
+static void __drawHumanoidMain (struct model_d *model, float fElapsedTime);
+static void __drawEnemy00(struct model_d *model, float fElapsedTime);
+static void __drawModelStatic (struct model_d *model);
 
-static void assignBandColors(struct humanoid_model_d *m, int blockSize,
+static void assignBandColors(struct model_d *m, int blockSize,
                               const unsigned int *palette, int palette_len);
 
-static void assignRangeColor(struct humanoid_model_d *m,
+static void assignRangeColor(struct model_d *m,
                               int startFace, int endFace, unsigned int color);
-static void assignSaucerColors(struct humanoid_model_d *s_model);
+static void assignSaucerColors(struct model_d *s_model);
 
 static unsigned int computeColor(struct n3d_vec_d *vertex,
                                  struct n3d_vec_d *normal,
                                  unsigned int baseColor);
+
+
+static void __rotateAroundPivotY(float *x, float *z, float px, float pz, float angle);
+
+static void __setupTerrain(void);
+static void assignTerrainColors(struct terrain_model_d *t);
+static void __drawTerrain(struct terrain_model_d *t);
 
 //======================
 
@@ -86,7 +102,7 @@ static const unsigned int saucerPalette[4] = {
 // Colors one "band" of faces at a time — a band is a contiguous run of
 // blockSize triangles sharing one color (a cube's 12 faces, or a
 // ring-to-ring strip's 16 faces).
-static void assignBandColors(struct humanoid_model_d *m, int blockSize,
+static void assignBandColors(struct model_d *m, int blockSize,
                               const unsigned int *palette, int palette_len)
 {
     int nBlocks  = m->face_count / blockSize;
@@ -107,7 +123,7 @@ static void assignBandColors(struct humanoid_model_d *m, int blockSize,
 
 
 // Colors a contiguous run of faces [startFace, endFace] (1-based, inclusive)
-static void assignRangeColor(struct humanoid_model_d *m,
+static void assignRangeColor(struct model_d *m,
                               int startFace, int endFace, unsigned int color)
 {
     int f;
@@ -116,7 +132,7 @@ static void assignRangeColor(struct humanoid_model_d *m,
 }
 
 // static_models[] — OBJ07.TXT (64 faces): 3 hull bands of 16 + dome fan of 8 + bottom fan of 8
-static void assignSaucerColors(struct humanoid_model_d *s_model)
+static void assignSaucerColors(struct model_d *s_model)
 {
     assignRangeColor(s_model,  1, 16, 0x707070); // lower hull  - dark metal skirt
     assignRangeColor(s_model, 17, 32, 0xC0C0C0); // upper rim   - bright metal (widest point)
@@ -158,8 +174,24 @@ static unsigned int computeColor(struct n3d_vec_d *vertex,
     return (r << 16) | (g << 8) | b;
 }
 
+
+
+// Rotates a single (x,z) point around a fixed pivot by `angle` radians.
+// Pure float math -- doesn't know or care which struct type owns the point.
+static void __rotateAroundPivotY(float *x, float *z, float px, float pz, float angle)
+{
+    float dx = *x - px;
+    float dz = *z - pz;
+    float c = cosf(angle);
+    float s = sinf(angle);
+
+    *x = px + (dx * c - dz * s);
+    *z = pz + (dx * s + dz * c);
+}
+
+
 // this is the generic draw routine with diffuse shading.
-static void __drawModelWithShading (struct humanoid_model_d *model, float fElapsedTime)
+static void __drawModelWithShading (struct model_d *model, float fElapsedTime)
 {
 // No rotation. Small translation in positive z.
 
@@ -342,6 +374,34 @@ static void __drawModelWithShading (struct humanoid_model_d *model, float fElaps
         triRotatedXYZ.p[2].color = tri.p[2].color;
 
 
+        // --------------------------------
+
+        // #test
+        // World rotation -- pivot is the hero's own model_d origin.
+        //{
+            float px = main_character->origin_x;
+            float pz = main_character->origin_z;
+            __rotateAroundPivotY(&triRotatedXYZ.p[0].x, &triRotatedXYZ.p[0].z, px, pz, worldYawAngle);
+            __rotateAroundPivotY(&triRotatedXYZ.p[1].x, &triRotatedXYZ.p[1].z, px, pz, worldYawAngle);
+            __rotateAroundPivotY(&triRotatedXYZ.p[2].x, &triRotatedXYZ.p[2].z, px, pz, worldYawAngle);
+        //}
+
+        // Now apply model translation
+        triRotatedXYZ.p[0].z += model->origin_z; 
+        triRotatedXYZ.p[1].z += model->origin_z; 
+        triRotatedXYZ.p[2].z += model->origin_z; 
+
+        triRotatedXYZ.p[0].x += model->origin_x; 
+        triRotatedXYZ.p[1].x += model->origin_x; 
+        triRotatedXYZ.p[2].x += model->origin_x; 
+
+        triRotatedXYZ.p[0].y += model->origin_y; 
+        triRotatedXYZ.p[1].y += model->origin_y; 
+        triRotatedXYZ.p[2].y += model->origin_y; 
+
+        // --------------------------------
+
+
         // Translate in z. (main_character)
 
         /*
@@ -514,7 +574,7 @@ static void __drawModelWithShading (struct humanoid_model_d *model, float fElaps
 // 4 top-front-right
 
 // this is the rotating object routine.
-static void __drawRotatingModel (struct humanoid_model_d *model, float vel)
+static void __drawRotatingModel (struct model_d *model, float vel)
 {
     char string0[16];
 
@@ -974,25 +1034,25 @@ static void __drawRotatingModel (struct humanoid_model_d *model, float vel)
 }
 
 // the humanoid’s main draw.
-static void __drawHumanoidMain (struct humanoid_model_d *model, float fElapsedTime)
+static void __drawHumanoidMain (struct model_d *model, float fElapsedTime)
 {
     __drawModelWithShading (
-        (struct humanoid_model_d *) model,
+        (struct model_d *) model,
         (float) fElapsedTime );
 }
 
-static void __drawEnemy00(struct humanoid_model_d *model, float fElapsedTime)
+static void __drawEnemy00(struct model_d *model, float fElapsedTime)
 {
     if (!model) 
         return;
 
     __drawModelWithShading (
-        (struct humanoid_model_d *) model,
+        (struct model_d *) model,
         (float) fElapsedTime );
 }
 
 // for static geometry
-static void __drawModelStatic (struct humanoid_model_d *model)
+static void __drawModelStatic (struct model_d *model)
 {
     if (!model) 
         return;
@@ -1006,6 +1066,180 @@ static void __drawModelStatic (struct humanoid_model_d *model)
     __drawModelWithShading (model, 0.0f);
 }
 
+static void __drawTerrain(struct terrain_model_d *t)
+{
+    struct n3d_mat4x4_d matRotX;
+    struct n3d_mat4x4_d matRotY;
+    struct n3d_mat4x4_d matRotZ;
+
+    struct n3d_triangle_d tri;
+    struct n3d_triangle_d triRotatedX;
+    struct n3d_triangle_d triRotatedXY;
+    struct n3d_triangle_d triRotatedXYZ;
+
+    int cull;
+    int i, j;
+
+    // Terrain has no fThetaAngle field -- it never rotates on its own,
+    // so this is a literal 0.0f rather than a struct member. The matrix
+    // math below is identical in shape to the other draw routines even
+    // though it always resolves to identity for now.
+    float angle = 0.0f;
+
+    if ((void*) t == NULL) return;
+
+// ---------
+// Zero all three matrices, same as the other draw routines.
+    for (i=0; i<4; i++){
+        for (j=0; j<4; j++){
+            matRotX.m[i][j] = (float) 0.0f;
+            matRotY.m[i][j] = (float) 0.0f;
+            matRotZ.m[i][j] = (float) 0.0f;
+        };
+    };
+
+//------------------------------------------------
+// Rotation X (identity while angle stays 0.0f)
+    matRotX.m[0][0] = (float) 1.0f;
+    matRotX.m[1][1] = (float) cosf(angle * 0.5f);
+    matRotX.m[1][2] = (float) -sinf(angle * 0.5f);
+    matRotX.m[2][1] = (float) sinf(angle * 0.5f);
+    matRotX.m[2][2] = (float) cosf(angle * 0.5f);
+    matRotX.m[3][3] = (float) 1.0f;
+//------------------------------------------------
+// Rotation Y (identity)
+    matRotY.m[0][0] = cosf(0.0f);
+    matRotY.m[0][2] = sinf(0.0f);
+    matRotY.m[1][1] = (float) 1.0f;
+    matRotY.m[2][0] = -sinf(0.0f);
+    matRotY.m[2][2] = cosf(0.0f);
+    matRotY.m[3][3] = (float) 1.0f;
+//------------------------------------------------
+// Rotation Z (identity)
+    matRotZ.m[0][0] = (float) cosf(0.0f);
+    matRotZ.m[0][1] = (float) -sinf(0.0f);
+    matRotZ.m[1][0] = (float) sinf(0.0f);
+    matRotZ.m[1][1] = (float) cosf(0.0f);
+    matRotZ.m[2][2] = (float) 1.0f;
+    matRotZ.m[3][3] = (float) 1.0f;
+
+    for (i=1; i <= t->face_count; i++)
+    {
+        cull = FALSE;
+
+        int i0 = t->faces[i].vi[0];
+        int i1 = t->faces[i].vi[1];
+        int i2 = t->faces[i].vi[2];
+
+        tri.p[0] = t->vecs[i0];
+        tri.p[1] = t->vecs[i1];
+        tri.p[2] = t->vecs[i2];
+
+        tri.p[0].color = t->colors[i-1];
+        tri.p[1].color = t->colors[i-1];
+        tri.p[2].color = t->colors[i-1];
+
+        //-----------------------------
+        // Rotate in X-Axis
+        gr_MultiplyAndProjectVector(&tri.p[0], &triRotatedX.p[0], &matRotX);
+        gr_MultiplyAndProjectVector(&tri.p[1], &triRotatedX.p[1], &matRotX);
+        gr_MultiplyAndProjectVector(&tri.p[2], &triRotatedX.p[2], &matRotX);
+
+        //-----------------------------
+        // Rotate in Y-Axis
+        gr_MultiplyAndProjectVector(&triRotatedX.p[0], &triRotatedXY.p[0], &matRotY);
+        gr_MultiplyAndProjectVector(&triRotatedX.p[1], &triRotatedXY.p[1], &matRotY);
+        gr_MultiplyAndProjectVector(&triRotatedX.p[2], &triRotatedXY.p[2], &matRotY);
+
+        //-----------------------------
+        // Rotate in Z-Axis
+        gr_MultiplyAndProjectVector(&triRotatedXY.p[0], &triRotatedXYZ.p[0], &matRotZ);
+        gr_MultiplyAndProjectVector(&triRotatedXY.p[1], &triRotatedXYZ.p[1], &matRotZ);
+        gr_MultiplyAndProjectVector(&triRotatedXY.p[2], &triRotatedXYZ.p[2], &matRotZ);
+
+        triRotatedXYZ.p[0].color = tri.p[0].color;
+        triRotatedXYZ.p[1].color = tri.p[1].color;
+        triRotatedXYZ.p[2].color = tri.p[2].color;
+
+        // Translate into world space.
+        triRotatedXYZ.p[0].x += t->origin_x;
+        triRotatedXYZ.p[1].x += t->origin_x;
+        triRotatedXYZ.p[2].x += t->origin_x;
+
+        triRotatedXYZ.p[0].y += t->origin_y;
+        triRotatedXYZ.p[1].y += t->origin_y;
+        triRotatedXYZ.p[2].y += t->origin_y;
+
+        triRotatedXYZ.p[0].z += t->origin_z;
+        triRotatedXYZ.p[1].z += t->origin_z;
+        triRotatedXYZ.p[2].z += t->origin_z;
+
+
+        // #test
+        // World rotation -- terrain_model_d has no fThetaAngle or spin
+        // state of its own. The pivot is the hero's model_d origin (the
+        // one shared reference point every draw function rotates
+        // around), applied here against t's own already-translated
+        // triRotatedXYZ triangle.
+        //{
+            float px = main_character->origin_x;
+            float pz = main_character->origin_z;
+            __rotateAroundPivotY(&triRotatedXYZ.p[0].x, &triRotatedXYZ.p[0].z, px, pz, worldYawAngle);
+            __rotateAroundPivotY(&triRotatedXYZ.p[1].x, &triRotatedXYZ.p[1].z, px, pz, worldYawAngle);
+            __rotateAroundPivotY(&triRotatedXYZ.p[2].x, &triRotatedXYZ.p[2].z, px, pz, worldYawAngle);
+        //}
+
+
+        // Surface normal, same cross-product technique as the other draw paths.
+        struct n3d_vec_d normal, line1, line2;
+
+        line1.x = triRotatedXYZ.p[1].x - triRotatedXYZ.p[0].x;
+        line1.y = triRotatedXYZ.p[1].y - triRotatedXYZ.p[0].y;
+        line1.z = triRotatedXYZ.p[1].z - triRotatedXYZ.p[0].z;
+
+        line2.x = triRotatedXYZ.p[2].x - triRotatedXYZ.p[0].x;
+        line2.y = triRotatedXYZ.p[2].y - triRotatedXYZ.p[0].y;
+        line2.z = triRotatedXYZ.p[2].z - triRotatedXYZ.p[0].z;
+
+        normal.x = (float) (line1.y*line2.z - line1.z*line2.y);
+        normal.y = (float) (line1.z*line2.x - line1.x*line2.z);
+        normal.z = (float) (line1.x*line2.y - line1.y*line2.x);
+
+        float l = (float) sqrt( (double)
+                    (normal.x*normal.x + normal.y*normal.y + normal.z*normal.z) );
+
+        normal.x = normal.x / l;
+        normal.y = normal.y / l;
+        normal.z = normal.z / l;
+
+        // Shading -- same computeColor pass used everywhere else.
+        unsigned int base = t->colors[i-1];
+        triRotatedXYZ.p[0].color = computeColor(&triRotatedXYZ.p[0], &normal, base);
+        triRotatedXYZ.p[1].color = computeColor(&triRotatedXYZ.p[1], &normal, base);
+        triRotatedXYZ.p[2].color = computeColor(&triRotatedXYZ.p[2], &normal, base);
+
+        // Backface cull, same camera-relative test as the other draw paths.
+        if (CurrentCameraF.initialized == FALSE){ return; }
+        float tmp =
+            normal.x * (triRotatedXYZ.p[0].x - CurrentCameraF.position.x) +
+            normal.y * (triRotatedXYZ.p[0].y - CurrentCameraF.position.y) +
+            normal.z * (triRotatedXYZ.p[0].z - CurrentCameraF.position.z);
+        if (tmp >= 0.0f) { cull = TRUE;  }
+        if (tmp <  0.0f) { cull = FALSE; }
+
+        if (cull == FALSE)
+        {
+            if ((void*) __root_window != NULL)
+            {
+                plotTriangleF(
+                    (struct gws_window_d *) __root_window,
+                    (struct n3d_triangle_d *) &triRotatedXYZ,
+                    TRUE,
+                    0 );
+            }
+        }
+    }
+}
 
 
 // Control + arrow key
@@ -1013,7 +1247,7 @@ static void __drawModelStatic (struct humanoid_model_d *model)
 // In: model id, direction, value.
 void demoHumanoidMoveCharacter(int number, int direction, float value)
 {
-    struct humanoid_model_d *model;
+    struct model_d *model;
 
 // Model ID
     if (number < 0)
@@ -1021,7 +1255,7 @@ void demoHumanoidMoveCharacter(int number, int direction, float value)
     if (number >= MODEL_MAX)
         return;
 // Model structure
-    model = (struct humanoid_model_d *) models[number];
+    model = (struct model_d *) models[number];
     if ((void*) model == NULL)
         return;
 
@@ -1056,6 +1290,25 @@ void demoHumanoidMoveCharacter(int number, int direction, float value)
 */
 }
 
+// New worker, separate from demoHumanoidMoveCharacter.
+// Instead of moving a model's origin, this turns the whole world
+// around the hero's fixed position. The hero itself never moves
+// sideways anymore -- everything else swings around them.
+//
+// direction: 1 = turn left, 2 = turn right.
+// value: same "how much" input demoHumanoidMoveCharacter already takes.
+void demoHumanoidRotateWorld(int direction, float value)
+{
+    // turn left
+    if (direction == 1){
+        worldYawAngle -= (float) (value * WORLD_TURN_SPEED);
+    }
+    // turn right
+    if (direction == 2){
+        worldYawAngle += (float) (value * WORLD_TURN_SPEED);
+    }
+}
+
 // Build, paint and display the frame.
 // Called by the engine, by the function on_execute() in main.c.
 // + Clear the surface 
@@ -1071,14 +1324,18 @@ void demoHumanoidMoveCharacter(int number, int direction, float value)
 // Define cube geometry
 // You store 8 vertices (cube->vecs) and 12 triangles (faces split into two triangles each).
 
+// #ps:
+// The demo is called 'Humanoid'. 
+// Here we're gonna draw the whole scene.
+// Containing humanoids, sauces and ground.
 void demoHumanoidDrawScene(unsigned long sec)
 {
-// The function on_execute() in main.c initilizes this demos
+// The function xxx() in main.c initilizes this demos
 // and spins into a loop calling this function to draw all the scene.
 // #todo: It means that of this demo was not initialized,
 // we need to abort this function.
 
-    struct humanoid_model_d *enemy;
+    struct model_d *enemy;
 
     // #todo
     // This demo was initialized before calling this drawing routine?
@@ -1088,6 +1345,13 @@ void demoHumanoidDrawScene(unsigned long sec)
 // Moved to the main loop of the server.
     //unsigned long gBeginTick = rtl_jiffies();
 
+//
+// Draw the terrain
+//
+
+    __drawTerrain(ground);
+
+
 // Draw the main character
 // Humanoid number 0.
     __drawHumanoidMain (main_character, 0.0f);
@@ -1095,11 +1359,11 @@ void demoHumanoidDrawScene(unsigned long sec)
 
 // Static scenery 
     int i=0;
-    struct humanoid_model_d *s_model;
+    struct model_d *s_model;
     for (i = 0; i < STATIC_MODEL_MAX; i++) 
     {
         // Pick one
-        s_model = (struct humanoid_model_d*) static_models[i]; 
+        s_model = (struct model_d*) static_models[i]; 
         if (s_model != NULL) 
         {
             __drawModelStatic (s_model); 
@@ -1117,7 +1381,7 @@ void demoHumanoidDrawScene(unsigned long sec)
         }
 
         // Get a pointer for the next cube.
-        enemy = (struct humanoid_model_d *) models[n];
+        enemy = (struct model_d *) models[n];
         if ((void*) enemy == NULL){
             //printf("enemy\n");
             //exit(1);
@@ -1139,11 +1403,11 @@ void demoHumanoidDrawScene(unsigned long sec)
             enemy->v = (float) enemy->t * enemy->a;  
 
             //__drawRotatingModel ( 
-            //    (struct humanoid_model_d *) enemy,
+            //    (struct model_d *) enemy,
             //    (float) enemy->v );
 
             __drawEnemy00( 
-                (struct humanoid_model_d *) enemy,
+                (struct model_d *) enemy,
                 (float) enemy->v );
 
         }
@@ -1163,13 +1427,13 @@ void demoHumanoidDrawScene(unsigned long sec)
 void demoUpdate(void)
 {
     int i=0;
-    struct humanoid_model_d *model;
+    struct model_d *model;
 
     // Update only static models
     // Not the hero
     for (i = 1; i < MODEL_MAX; i++) 
     {
-        model = (struct humanoid_model_d *) models[i];
+        model = (struct model_d *) models[i];
         if (!model) continue;
 
         // Apply deltas
@@ -1202,8 +1466,114 @@ static int __load_all_obj_files(void)
         exit(1);
     }
 
+    // Ground
+    model_data_ground= (char *) demosReadFileIntoBuffer("obj08.txt");
+    if ((void*) model_data_ground == NULL){
+        printf("on loading obj08.txt\n");
+        exit(1);
+    }
+
     return 0;  //ok
 }
+
+// ground[] — OBJ08.TXT: colored per-face from local vertex height,
+// not fixed ranges, since the grid mesh has no clean contiguous "bands"
+// the way the saucer's rings do.
+static const unsigned int terrainPalette[3] = {
+    0x8B5A2B, // low ground (dips)   - dirt/soil brown
+    0x6B8E23, // mid ground          - olive farmland green
+    0x9ACD32, // high ground (rises) - bright grass green
+};
+
+static void assignTerrainColors(struct terrain_model_d *t)
+{
+    int f;
+    for (f = 1; f <= t->face_count; f++)
+    {
+        int i0 = t->faces[f].vi[0];
+        int i1 = t->faces[f].vi[1];
+        int i2 = t->faces[f].vi[2];
+
+        float avgY = (t->vecs[i0].y + t->vecs[i1].y + t->vecs[i2].y) / 3.0f;
+
+        unsigned int c;
+        if      (avgY < -0.03f) c = terrainPalette[0];
+        else if (avgY <  0.03f) c = terrainPalette[1];
+        else                    c = terrainPalette[2];
+
+        t->colors[f - 1] = c;
+    }
+}
+
+
+static void __setupTerrain(void)
+{
+    struct terrain_model_d *t;
+    int i;
+
+    t = (struct terrain_model_d *) malloc( sizeof(struct terrain_model_d) );
+    if ((void*) t == NULL){
+        printf("__setupTerrain: t\n");
+        exit(1);
+    }
+
+    // Initialize vectors
+    for (i=0; i<200; i++)
+    {
+        t->vecs[i].x = (float) 0.0f;
+        t->vecs[i].y = (float) 0.0f;
+        t->vecs[i].z = (float) 0.0f;
+    };
+
+    struct obj_element_d elem;
+    const char *nextLine = model_data_ground;
+
+    int VertexCounter = 1;
+    int FaceCounter = 1;
+    do {
+        const char *temp =
+            scan00_read_element_from_line(
+                nextLine,
+                (struct obj_element_d *) &elem );
+
+        if (elem.initialized == TRUE)
+        {
+            if (elem.type == OBJ_ELEMENT_TYPE_VECTOR)
+            {
+                t->vecs[VertexCounter].x = (float) elem.vertex.x;
+                t->vecs[VertexCounter].y = (float) elem.vertex.y;
+                t->vecs[VertexCounter].z = (float) elem.vertex.z;
+                VertexCounter++;
+            }
+            else if (elem.type == OBJ_ELEMENT_TYPE_FACE)
+            {
+                t->faces[FaceCounter].vi[0] = elem.face.vi[0];
+                t->faces[FaceCounter].vi[1] = elem.face.vi[1];
+                t->faces[FaceCounter].vi[2] = elem.face.vi[2];
+                FaceCounter++;
+            }
+        }
+
+        nextLine = temp;
+
+    } while (nextLine != NULL);
+
+    t->vertex_count = VertexCounter - 1;
+    t->face_count   = FaceCounter - 1;
+
+    // Colors — patchy farmland look, computed from real mesh height.
+    assignTerrainColors(t);
+
+    // Position: sits at "ground level", under the hero's feet.
+    // Hero is at origin_y = -3.0f, so put the plane a little below that.
+    t->origin_x = (float) 0.0f;
+    t->origin_y = (float) -3.2f;
+    t->origin_z = (float) DEFAULT_CUBE_INITIAL_Z_POSITION;
+
+// #ps: Defined in models.c
+    ground = t;
+}
+
 
 //
 // #
@@ -1234,8 +1604,8 @@ void demoHumanoidSetup(void)
 {
 // This is called once
 
-    struct humanoid_model_d *model;
-    struct humanoid_model_d *s_model;  // static
+    struct model_d *model;
+    struct model_d *s_model;  // static
 
     register int i=0;
 
@@ -1276,6 +1646,13 @@ void demoHumanoidSetup(void)
     __load_all_obj_files();
 
 
+//
+// Stup terrain
+//
+
+    __setupTerrain();   // <-- add this
+
+
     int count=0;
     int rand1=0;
 
@@ -1284,7 +1661,7 @@ void demoHumanoidSetup(void)
 
     for (count=0; count<MODEL_MAX; count++)
     {
-        model = (void*) malloc( sizeof(struct humanoid_model_d) );
+        model = (void*) malloc( sizeof(struct model_d) );
         if ((void*) model == NULL){
             printf("demoHumanoidSetup: model\n");
             exit(1);
@@ -1292,7 +1669,7 @@ void demoHumanoidSetup(void)
 
         // Create terrain
         if (count == 0){
-            main_character = (struct humanoid_model_d *) model;
+            main_character = (struct model_d *) model;
         }
 
         model->fThetaAngle = (float) 0.0f;
@@ -1420,7 +1797,7 @@ void demoHumanoidSetup(void)
 
     for (count=0; count<STATIC_MODEL_MAX; count++)
     {
-        s_model = (void*) malloc( sizeof(struct humanoid_model_d) );
+        s_model = (void*) malloc( sizeof(struct model_d) );
         if ((void*) s_model == NULL){
             printf("demoHumanoidSetup: s_model\n");
             exit(1);

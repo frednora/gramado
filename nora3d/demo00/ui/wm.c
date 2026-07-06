@@ -3432,14 +3432,16 @@ wmProcedure (
         case 'a': 
             //printf("left\n"); 
             //demoHumanoidMoveCharacter( char_id, direction, (float) value );
-            demoHumanoidMoveCharacter( 0, 1, (float) 0.4f );
+            //demoHumanoidMoveCharacter( 0, 1, (float) 0.4f );
+            demoHumanoidRotateWorld(1, (float) 0.5f);
             return 0;
             break;
 
         // Right >>>
         case 'd': 
             //printf("right\n"); 
-            demoHumanoidMoveCharacter( 0, 2, (float) 0.4f );
+            //demoHumanoidMoveCharacter( 0, 2, (float) 0.4f );
+            demoHumanoidRotateWorld(2, (float) 0.5f);
             return 0;
             break;
 

@@ -13,7 +13,8 @@ struct cat_model_d
 extern struct cat_model_d  CatModel;   // Cat model 0.
 
 
-struct humanoid_model_d
+//struct humanoid_model_d
+struct model_d
 {
     // We don't need 32 vectors. But its ok.
     struct n3d_vec_d vecs[128]; //32
@@ -45,7 +46,34 @@ struct humanoid_model_d
     float t;  // Time:
 };
 
-extern struct humanoid_model_d *main_character;
+extern struct model_d *main_character;
+
+
+//
+// Terrain
+//
+
+// -----------------------------------------
+struct terrain_model_d
+{
+    struct n3d_vec_d vecs[200];      // 12x12 grid = 144, headroom for future files
+    int vertex_count;
+
+    struct n3d_face_d faces[400];    // 242 faces, headroom to ~14x14 grids later
+    int face_count;
+
+    unsigned int colors[400];        // must match faces[] capacity
+
+    // Placement only -- terrain doesn't rotate, animate, or move once placed.
+    float origin_x;
+    float origin_y;
+    float origin_z;
+};
+
+extern struct terrain_model_d *ground;
+
+
+
 
 #define DEFAULT_CUBE_INITIAL_Z_POSITION  (5.0f)
 #define DEFAULT_CUBE_INITIAL_DELTA_Z     (0.005f)

@@ -4,10 +4,8 @@
 #include "../gram3d.h"
 
 struct cat_model_d  CatModel;
-
-// The terrain is a cube.
-struct humanoid_model_d *main_character;
-
+struct model_d *main_character;
+struct terrain_model_d *ground;
 
 //---------------------------------------------------------------
 
