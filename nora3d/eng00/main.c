@@ -206,6 +206,7 @@ static void engineSetupCurrentDemo(void);
 static void engineUpdateCurrentDemo(void);
 static void engineDrawSceneForCurrentDemo(unsigned long sec);
 static int engineGameLoop(void);
+static void engineShutdown(void);
 
 // ===============================================
 
@@ -3370,6 +3371,21 @@ static void engineDrawSceneForCurrentDemo(unsigned long sec)
     //noraDrawingStuff(); // loop
 }
 
+static void engineShutdown(void)
+{
+    printf("engineShutdown: Starting final cleanup...\n");
+
+ // TODO:
+ // - Save game state if needed
+ // - Destroy game objects
+ // - Release textures, models, etc.
+ // - Final UI message (optional)
+ // - Small delay for user feedback
+
+    rtl_sleep(300); // Give user time to see final frame
+
+    printf("engineShutdown: Cleanup finished.\n");
+}
 
 /*
  * engineGameLoop: 
@@ -3416,7 +3432,7 @@ static int engineGameLoop(void)
 //==================
 
     // Flags
-    int ShowDemo = TRUE;
+    int isPlaying = TRUE;
     int DrawDesktopDuringDemo = FALSE;
     int DrawYellowStatusDuringDemo = FALSE;
 
@@ -3808,12 +3824,12 @@ static int engineGameLoop(void)
 
     // Initialize the game state.
     // See: globals.h
-    gamestate = GS_LEVEL;
+    gamestate = GS_PLAYING;  //GS_LEVEL;
 
     switch (gamestate)
     {
-        case GS_LEVEL:
-            ShowDemo = TRUE;
+        case GS_PLAYING:
+            isPlaying = TRUE;
             break;
 
         // ... 
@@ -3825,14 +3841,21 @@ static int engineGameLoop(void)
     // ==============================================
     // >>> Setup the current demo
 
-    if (ShowDemo == TRUE){
+    if (isPlaying == TRUE){
         engineSetupCurrentDemo();
     }
 
     // input > update > render > sleep
     while (running == TRUE){
+
         gBeginTick = (unsigned long) rtl_jiffies();
-        if (IsTimeToQuit == TRUE){ break; }
+        if (IsTimeToQuit == TRUE)
+        { 
+            gameaction = GA_QUIT;        // Trigger a clean quit action
+            // or directly:
+            // next_gamestate = GS_SHUTDOWN;
+            break; 
+        }
 
         // Pump system events.
         // See: wm.c
@@ -3875,7 +3898,7 @@ static int engineGameLoop(void)
         // calling this drawing routine.
         // see: demos.c
         // IN: Draw desktop, color.
-        if (ShowDemo)
+        if (isPlaying)
         {
             //
             // #### PAINT BEGIN ####
@@ -3978,6 +4001,10 @@ static int engineGameLoop(void)
     };  // while ends
 
 // =======================================
+// Escaped from the game loop.
+// At that point, you should move into cleanup / shutdown phase, 
+// not keep changing game states.
+
 
 // Is it time to quit?
     if (IsTimeToQuit == TRUE){
@@ -3985,6 +4012,14 @@ static int engineGameLoop(void)
     } else {
         debug_print ("demo00: [ERROR] Invalid IsTimeToQuit\n");
     };
+
+    if (gamestate != GS_SHUTDOWN)
+        gamestate = GS_SHUTDOWN;
+
+
+    // #todo
+    // Final cleanup
+    engineShutdown();
 
 // #todo
 // Now we will close the window server.  
@@ -4029,61 +4064,24 @@ int main(int argc, char **argv)
 // the fpu context.
     //gUseCallback = TRUE;
     gUseCallback = FALSE;
-// Stating time.
+
+// Stating time
     starting_tick = (unsigned long) rtl_jiffies();
 
-
-
-// ==================
-// Tests
-
-// OK, its working
+    // #test
     //test_printf();
-    //while(1){}
-
-// ==================
-// Tests
-
-    // Parse three floats for the vertex coordinates.
-    // float x = (float)  1.1f;
-    // float y = (float)  1.2f;
-    // float z = (float)  1.3f;
-
-/*
-    // Output the parsed coordinates.
-    printf("Parsed Vertex Coordinates:\n");
-    printf("x = %f\n", (double)x);
-    printf("y = %f\n", (double)y);
-    printf("z = %f\n", (double)z);
-
-    printf("Test float output: %f\n", (float) 3.14159);
-    printf("Multiple float test: %f, %f, %f\n", 1.23, -4.56, 789.1011);
-*/
-
-/*
-    char buffer[10];
-    snprintf(buffer, sizeof(buffer), "123456789012345");  // Should be truncated safely
-    printf("Truncated Output: %s\n", buffer);
-*/
-
-/*
-    char buffer[100];
-    int xx=42;
-    int yy=255;
-    //sprintf(buffer, "Int: %d, Hex: %x, Float: %f", 42, 255, 3.14159);
-    //sprintf(buffer, "Int: %d, Hex: %x", (int) xx, (int) yy);
-    sprintf(buffer,"String");
-    printf("Formatted Output: %s\n", buffer);
-*/
-
     //testing_model_scanner();
     //while(1){}
+
+//
+// Game loop
+//
 
     // Call main initialization and game loop
     Status = (int) engineGameLoop();
 
     // Wrong status
-    // 0 = Time to quit.
+    // 0 = Time to quit
     if (Status != 0){
         goto fail;
     }

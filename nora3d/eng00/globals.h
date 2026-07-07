@@ -251,20 +251,55 @@ struct vid_d vidConfig;
 //
 
 /*
+What are gamestate and gameaction?
++ classic Doom-inspired model:
+
 gamestate: 
+  high-level mode the system is in.
   generally tracks the high-level mode of the game 
   (e.g., are we in the menu, playing a level, or watching a demo?).
+
 gameaction:
+  pending command/transition.
   determines what action the engine should perform next 
   (e.g., loading a level, saving, or quitting). 
 */
 
+// Game states
+
+/*
 #define GS_NULL  0
-#define GS_LEVEL         1  // actively playing a level.
-#define GS_INTERMISSION  2  // between levels.
-#define GS_FINALE        3  // endgame text/graphics.
-#define GS_DEMOSCREEN    4  // demo playback or title screen.
-#define GS_DESKTOP       5  // no demo at all.
+#define GS_LEVEL         1  // actively playing a level
+#define GS_INTERMISSION  2  // between levels
+#define GS_FINALE        3  // endgame text/graphics
+#define GS_DEMOSCREEN    4  // demo playback or title screen
+#define GS_DESKTOP       5  // no demo at all
+*/
+
+#define GS_NULL          0
+#define GS_BOOT          1     // Engine initialization, loading core systems
+#define GS_LOGO          2     // Splash screen / studio logo
+#define GS_TITLE         3     // Main title / menu screen
+#define GS_DEMO          4     // Attract / demo mode
+#define GS_PLAYING       5     // Actively playing the game
+#define GS_LEVEL         5  // actively playing a level
+#define GS_PAUSED        6
+#define GS_INTERMISSION  7     // Between levels, score screen, etc.
+#define GS_FINALE        8     // End of game sequence (cutscene, credits)
+#define GS_GAMEOVER      9
+#define GS_EDITOR       10     // Optional: built-in level editor
+#define GS_SHUTDOWN     11
+
+
+typedef enum {
+    GA_NULL,
+    GA_START_GAME,
+    GA_PAUSE,
+    GA_UNPAUSE,
+    GA_GAME_OVER,
+    GA_RETURN_TO_TITLE,
+    GA_QUIT
+} gameaction_t;
 
 extern int gamestate;
 extern int gameaction;
