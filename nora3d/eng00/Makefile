@@ -3,7 +3,8 @@
 # It's called by the init process.
 # 2022 - Created by Fred Nora.
 
-linkTarget = DEMO00.BIN
+#linkTarget = DEMO00.BIN
+linkTarget = ENG00.BIN
 
 # See: https://linux.die.net/man/1/ld
 # -s --strip-all:   Omit all symbol information from the output file.

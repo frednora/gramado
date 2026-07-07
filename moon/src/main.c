@@ -803,25 +803,27 @@ static int input_compare_string(void)
 */
 
 //
-// Testing 3D demos.
+// Testing 3D demos
 //
 
-    // DEMO00.BIN
-    if ( strncmp(prompt,"demo00",6) == 0 ){
-        printf ("Launch demo00.bin\n");
+    // demo00
+    if ( strncmp(prompt,"demo00",6) == 0 )
+    {
+        printf ("Launching eng00.bin\n");
         do_clear_console();
-        rtl_clone_and_execute("#demo00.bin");
+        rtl_clone_and_execute("#eng00.bin");
         Init.environment = EnvironmentWinuHeavy;
         isTimeToQuitCmdLine = TRUE;
         goto exit_cmp;
     }
 
 /*
-    // DEMO01.BIN
-    if ( strncmp(prompt,"demo01",6) == 0 ){
-        printf ("Launch demo01.bin\n");
+    // demo01
+    if ( strncmp(prompt,"demo01",6) == 0 )
+    {
+        printf ("Launching eng01.bin\n");
         do_clear_console();
-        rtl_clone_and_execute("#demo01.bin");
+        rtl_clone_and_execute("#eng01.bin");
         Init.environment = EnvironmentWinuHeavy;
         isTimeToQuitCmdLine = TRUE;
         goto exit_cmp;
@@ -829,16 +831,18 @@ static int input_compare_string(void)
 */
 
     // ...
-    // eng.bin
-    // This is here for retro-compatibility.
-    if ( strncmp(prompt,"eng",3) == 0 ){
-        printf ("Launch demo00.bin\n");
+
+    // eng00
+    if ( strncmp(prompt,"eng00",5) == 0 )
+    {
+        printf ("Launching eng00.bin\n");
         do_clear_console();
-        rtl_clone_and_execute("#demo00.bin");
+        rtl_clone_and_execute("#eng00.bin");
         Init.environment = EnvironmentWinuHeavy;
         isTimeToQuitCmdLine = TRUE;
         goto exit_cmp;
     }
+
 
 /*
 // ----------------------------------------

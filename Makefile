@@ -41,7 +41,7 @@ L4_CPP00 = $(__DEP_LZ)/cpp00
 LZ_CMDS  = $(__DEP_LZ)/cmds
 
 __DEP_NORA3D = nora3d
-L3_HEAVY = $(__DEP_LZ)/heavy
+#L3_XX = $(__DEP_LZ)/xx
 
 ## =================================
 # Make variables (CC, etc...)
@@ -274,7 +274,7 @@ build-extras:
 # heavy (nora3d/)
 # 3D game demos
 
-	@-cp $(__DEP_NORA3D)/bin/DEMO00.BIN   $(BASE)/DE/
+	@-cp $(__DEP_NORA3D)/bin/ENG00.BIN   $(BASE)/DE/
 
 
 	@echo "~ build-extras"

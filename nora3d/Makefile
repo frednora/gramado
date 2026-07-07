@@ -2,8 +2,7 @@
 all:
 	make -C libs/
 
-	make -C demo00/
-#	make -C demo01/
+	make -C eng00/
 # ...
 
 
