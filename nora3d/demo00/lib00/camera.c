@@ -202,24 +202,37 @@ unveil_camera(
 }
 
 // ==============================================
-// Using float.    
+// Using float
+// Camera starts at world origin.
+// Main character starts just in front of it, offset along Z.
+// The camera is looking straight at the character’s spawn point.  
 
 int cameraF_initialize(void)
 {
 // Using float.
     CurrentCameraF.initialized = FALSE;
+
 // Position
+// This means the camera starts at the world origin (0,0,0).
     CurrentCameraF.position.x = (float) 0.0f;
     CurrentCameraF.position.y = (float) 0.0f;
     CurrentCameraF.position.z = (float) 0.0f;
+
 // Upview
+// Up vector:
+// The camera’s “up” direction is tilted slightly upward 
+// along the Y axis, so the scene isn’t completely flat.
     CurrentCameraF.upview.x = (float) 0.0f;
     CurrentCameraF.upview.y = (float) 0.5f;   // # Up  :)
     CurrentCameraF.upview.z = (float) 0.0f;
+
 // Lookat
+// Look-at target:
+// The camera is looking directly at the origin point.
     CurrentCameraF.lookat.x = (float) 0.0f;
     CurrentCameraF.lookat.y = (float) 0.0f;
     CurrentCameraF.lookat.z = (float) 0.0f;
+
     CurrentCameraF.initialized = TRUE;
     return 0;
 }

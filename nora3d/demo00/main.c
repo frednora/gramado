@@ -3846,8 +3846,9 @@ static int game_loop(void)
 
             // -------------------------
             // Clear canvas.
-            //demoClearWA(COLOR_BLACK);            //clear surface
-            gramado_clear_surface(NULL, 0xF8F6F2);  //clear surface
+            //demoClearWA(COLOR_BLACK);
+            // gramado_clear_surface(NULL, 0xF8F6F2);  //(a beige/cream tone)
+            gramado_clear_surface(NULL, 0x87CEEB);  // Light sky blue
 
             // Draw desktop?
             // Draw, but do not refresh.

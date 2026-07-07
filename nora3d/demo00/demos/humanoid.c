@@ -25,6 +25,9 @@ unsigned long static_models[STATIC_MODEL_MAX];
 // World yaw -- how much the world has turned around the hero's fixed
 // position. Read by the draw functions later; written only here.
 static float worldYawAngle = 0.0f;
+// rotation of the main character only
+static float heroYawAngle = 0.0f; 
+
 
 #define WORLD_TURN_SPEED  (0.05f)  // radians per input step -- tune to taste
 
@@ -379,12 +382,40 @@ static void __drawModelWithShading (struct model_d *model, float fElapsedTime)
         // #test
         // World rotation -- pivot is the hero's own model_d origin.
         //{
+        if (model != main_character)
+        {
             float px = main_character->origin_x;
             float pz = main_character->origin_z;
-            __rotateAroundPivotY(&triRotatedXYZ.p[0].x, &triRotatedXYZ.p[0].z, px, pz, worldYawAngle);
-            __rotateAroundPivotY(&triRotatedXYZ.p[1].x, &triRotatedXYZ.p[1].z, px, pz, worldYawAngle);
-            __rotateAroundPivotY(&triRotatedXYZ.p[2].x, &triRotatedXYZ.p[2].z, px, pz, worldYawAngle);
+
+            float newangle = -worldYawAngle;
+
+            __rotateAroundPivotY(&triRotatedXYZ.p[0].x, &triRotatedXYZ.p[0].z, px, pz, newangle);
+            __rotateAroundPivotY(&triRotatedXYZ.p[1].x, &triRotatedXYZ.p[1].z, px, pz, newangle);
+            __rotateAroundPivotY(&triRotatedXYZ.p[2].x, &triRotatedXYZ.p[2].z, px, pz, newangle);
+        }
         //}
+
+        if (model == main_character)
+        {
+            // Hero rotation only: spin in place
+            float c = cosf(heroYawAngle);
+            float s = sinf(heroYawAngle);
+
+            float x0 = triRotatedXYZ.p[0].x;
+            float z0 = triRotatedXYZ.p[0].z;
+            triRotatedXYZ.p[0].x = x0 * c - z0 * s;
+            triRotatedXYZ.p[0].z = x0 * s + z0 * c;
+
+            float x1 = triRotatedXYZ.p[1].x;
+            float z1 = triRotatedXYZ.p[1].z;
+            triRotatedXYZ.p[1].x = x1 * c - z1 * s;
+            triRotatedXYZ.p[1].z = x1 * s + z1 * c;
+
+            float x2 = triRotatedXYZ.p[2].x;
+            float z2 = triRotatedXYZ.p[2].z;
+            triRotatedXYZ.p[2].x = x2 * c - z2 * s;
+            triRotatedXYZ.p[2].z = x2 * s + z2 * c;
+        }
 
         // Now apply model translation
         // Now apply this model's own position (translation)
@@ -525,13 +556,44 @@ static void __drawModelWithShading (struct model_d *model, float fElapsedTime)
         // #test
         // Considering the camera position.
         if (CurrentCameraF.initialized == FALSE){ return; }
+
+        /*
+        struct n3d_vec_d viewDir;
+        viewDir.x = CurrentCameraF.lookat.x - CurrentCameraF.position.x;
+        viewDir.y = CurrentCameraF.lookat.y - CurrentCameraF.position.y;
+        viewDir.z = CurrentCameraF.lookat.z - CurrentCameraF.position.z;
+        float len = 
+            sqrtf(viewDir.x*viewDir.x + viewDir.y*viewDir.y + viewDir.z*viewDir.z);
+        if (len > 0.0f) 
+        {
+            viewDir.x /= len;
+            viewDir.y /= len;
+            viewDir.z /= len;
+        }
+        float tmp = 
+            (float) (
+            normal.x * viewDir.x +
+            normal.y * viewDir.y +
+            normal.z * viewDir.z );
+        */
+
+        
         float tmp = 
              (float) (
              normal.x * (triRotatedXYZ.p[0].x - CurrentCameraF.position.x) + 
              normal.y * (triRotatedXYZ.p[0].y - CurrentCameraF.position.y) +
              normal.z * (triRotatedXYZ.p[0].z - CurrentCameraF.position.z) );
-        if( (float) tmp <  0.0f){ cull=FALSE; }  //paint
-        if( (float) tmp >= 0.0f){ cull=TRUE;  }  //do not paint
+
+        /*
+        float tmp = 
+             (float) (
+             normal.x * (triRotatedXYZ.p[0].x - CurrentCameraF.lookat.x) + 
+             normal.y * (triRotatedXYZ.p[0].y - CurrentCameraF.lookat.y) +
+             normal.z * (triRotatedXYZ.p[0].z - CurrentCameraF.lookat.z) );
+        */
+
+        if ((float) tmp <  0.0f){ cull=FALSE; }  //paint
+        if ((float) tmp >= 0.0f){ cull=TRUE;  }  //do not paint
         //cull=FALSE;
         //----------------------------------------------------
 
@@ -1296,6 +1358,54 @@ void demoHumanoidMoveCharacter(int number, int direction, float value)
 */
 }
 
+static void updateCameraFollowCharacter(void);
+/*
+static void updateCameraFollowCharacter(void)
+{
+    float radius = 2.0f;   // distance behind the character
+    float height = 1.0f;   // lift camera above ground
+
+    // Pivot around character
+    float px = main_character->origin_x;
+    float py = main_character->origin_y;
+    float pz = main_character->origin_z;
+
+    CurrentCameraF.position.x = px + radius * cosf(worldYawAngle);
+    CurrentCameraF.position.z = pz + radius * sinf(worldYawAngle);
+    CurrentCameraF.position.y = py + height;
+
+    CurrentCameraF.lookat.x = px;
+    CurrentCameraF.lookat.y = py;
+    CurrentCameraF.lookat.z = pz;
+}
+*/
+static void updateCameraFollowCharacter(void)
+{
+    //float radius = 2.0f;   // distance behind the character
+    //float height = 1.0f;   // lift camera above ground
+
+    // Pivot around character
+    //float px = main_character->origin_x;
+    //float py = main_character->origin_y;
+    //float pz = main_character->origin_z;
+
+    //CurrentCameraF.position.x = px + radius * cosf(worldYawAngle);
+    //CurrentCameraF.position.z = pz + radius * sinf(worldYawAngle);
+    //CurrentCameraF.position.y = py + height;
+
+    float px = main_character->origin_x;
+    float py = main_character->origin_y;
+    float pz = main_character->origin_z;
+
+    __rotateAroundPivotY(
+        &CurrentCameraF.position.x, 
+        &CurrentCameraF.position.z, px, pz, worldYawAngle);
+
+    CurrentCameraF.lookat.x = px;
+    CurrentCameraF.lookat.y = py;
+    CurrentCameraF.lookat.z = pz;
+}
+
 // New worker, separate from demoHumanoidMoveCharacter.
 // Instead of moving a model's origin, this turns the whole world
 // around the hero's fixed position. The hero itself never moves
@@ -1303,16 +1413,36 @@ void demoHumanoidMoveCharacter(int number, int direction, float value)
 //
 // direction: 1 = turn left, 2 = turn right.
 // value: same "how much" input demoHumanoidMoveCharacter already takes.
+
+// ok, lemme rethink it. 
+// The main char needs to stay at the center of the screen (kinda), 
+// when a keyboard input happens, the char needs to rotate, 
+// but not change its position in the screen, 
+// the world and the other models can rotate too if necessary and 
+// the camera can move too if necessary.
+
+/*
+Goals:
+The main character stays fixed at the center of the screen (its origin doesn’t move in screen space).
+When you press a key, the character rotates in place (changes orientation, not position).
+The world and other models rotate around the hero if you want the illusion of turning.
+The camera can orbit as well, so the player sees the rotation from behind or above.
+*/
+
 void demoHumanoidRotateWorld(int direction, float value)
 {
     // turn left
     if (direction == 1){
         worldYawAngle -= (float) (value * WORLD_TURN_SPEED);
+        heroYawAngle  += (float) (value * WORLD_TURN_SPEED);
     }
     // turn right
     if (direction == 2){
         worldYawAngle += (float) (value * WORLD_TURN_SPEED);
+        heroYawAngle  -= (float) (value * WORLD_TURN_SPEED);
     }
+
+    //updateCameraFollowCharacter();
 }
 
 // Build, paint and display the frame.
