@@ -188,12 +188,24 @@ void callback1(void);
 
 static int test_printf(void);
 
+//
+// Engine initialization
+//
+
 static void initBackground(void);
 static void initClientSupport(void);
 static void initClientStruct( struct gws_client_d *c );
 static int __initGraphics(void);
 static int InitGraphicsSupport(void);
-static int game_loop(void);
+
+//
+// Engine main functions
+//
+
+static void engineSetupCurrentDemo(void);
+static void engineUpdateCurrentDemo(void);
+static void engineDrawSceneForCurrentDemo(unsigned long sec);
+static int engineGameLoop(void);
 
 // ===============================================
 
@@ -3326,9 +3338,41 @@ static int InitGraphicsSupport(void)
     return 0;
 }
 
+// see: humanoid.c
+// Each demos has its own file.
+static void engineSetupCurrentDemo(void)
+{
+    demoHumanoidSetup();
+    //cat00SetupDemo();
+    //tri00SetupDemo();
+    //curve00SetupDemo();
+    // ...
+}
+
+static void engineUpdateCurrentDemo(void)
+{
+    // see: humanoid.c
+    demoHumanoidUpdate();
+    // ...
+}
+
+// Draw the scene for the current demo
+static void engineDrawSceneForCurrentDemo(unsigned long sec)
+{
+    // IN: second counter
+    demoHumanoidDrawScene(sec);  // see: humanoid.c
+
+    //demoCat();
+    //demoTriangle();
+    //demoCurve();
+    // ...
+
+    //noraDrawingStuff(); // loop
+}
+
 
 /*
- * game_loop: 
+ * engineGameLoop: 
  *     + Initializes the gws infrastructure.
  *     + Create the background.
  *     + Create the taskbar.
@@ -3344,9 +3388,8 @@ static int InitGraphicsSupport(void)
  *       message found in the sockeck we readed.
  */
 
-static int game_loop(void)
+static int engineGameLoop(void)
 {
-
     // #ps:
     // This program will not operate as a server anymore.
     // We are going to remove this feature completely.
@@ -3781,15 +3824,9 @@ static int game_loop(void)
 
     // ==============================================
     // >>> Setup the current demo
-    // see: humanoid.c
-    // Each demos has its own file.
-    if (ShowDemo == TRUE)
-    {
-        demoHumanoidSetup();
-        //cat00SetupDemo();
-        //tri00SetupDemo();
-        //curve00SetupDemo();
-        // ...
+
+    if (ShowDemo == TRUE){
+        engineSetupCurrentDemo();
     }
 
     // input > update > render > sleep
@@ -3857,20 +3894,15 @@ static int game_loop(void)
                 wm_update_desktop(TRUE,FALSE);
             }
 
-            // see: humanoid.c
-            demoUpdate();
+            // ===================================
+            // >>> Update current demo
+            engineUpdateCurrentDemo();
+
 
             // ===================================
-            // Draw the scene for the current demo
-            // IN: draw terrain, second counter
-
-            demoHumanoidDrawScene(sec);  // see: humanoid.c
-            //demoCat();
-            //demoTriangle();
-            //demoCurve();
-            // ...
-
-            //noraDrawingStuff(); // loop
+            // >>> Draw the scene for the current demo
+            // IN: seconds
+            engineDrawSceneForCurrentDemo(sec);
 
             // At this moment we already painted the whole scene
             // for your demo. Let's print the bar on top of it.
@@ -4012,11 +4044,10 @@ int main(int argc, char **argv)
 // ==================
 // Tests
 
-
     // Parse three floats for the vertex coordinates.
-    float x = (float)  1.1f;
-    float y = (float)  1.2f;
-    float z = (float)  1.3f;
+    // float x = (float)  1.1f;
+    // float y = (float)  1.2f;
+    // float z = (float)  1.3f;
 
 /*
     // Output the parsed coordinates.
@@ -4049,7 +4080,7 @@ int main(int argc, char **argv)
     //while(1){}
 
     // Call main initialization and game loop
-    Status = (int) game_loop();
+    Status = (int) engineGameLoop();
 
     // Wrong status
     // 0 = Time to quit.

@@ -14,7 +14,7 @@ void demoHumanoidRotateWorld(int direction, float value);
 void demoHumanoidDrawScene(unsigned long sec);
 
 
-void demoUpdate(void);
+void demoHumanoidUpdate(void);
 
 //
 // #

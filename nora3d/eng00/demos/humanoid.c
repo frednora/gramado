@@ -1560,31 +1560,35 @@ void demoHumanoidDrawScene(unsigned long sec)
 
 }
 
-void demoUpdate(void)
+// + Update position for the models
+// + Reset if they go out of bounds (out of the world)
+void demoHumanoidUpdate(void)
 {
     int i=0;
     struct model_d *model;
 
-    // Update only static models
-    // Not the hero
-    for (i = 1; i < MODEL_MAX; i++) 
+// Update only static models
+// Not the hero
+// #ps: It starts at 1, not 0.
+
+    for (i=1; i < MODEL_MAX; i++) 
     {
         model = (struct model_d *) models[i];
-        if (!model) continue;
+        if (!model)
+            continue;
 
         // Apply deltas
         model->origin_x += model->delta_x;
         model->origin_y += model->delta_y;
         model->origin_z += model->delta_z;
 
-        // Optional: reset if they go out of bounds
+        // Reset if they go out of bounds
         if (model->origin_z > current_world_3d->z_size) 
         {
-            model->origin_z = DEFAULT_CUBE_INITIAL_Z_POSITION;
+            model->origin_z = DEFAULT_MODEL_INITIAL_Z_POSITION;
         }
-    }
+    };
 }
-
 
 static int __load_all_obj_files(void)
 {
@@ -1704,7 +1708,7 @@ static void __setupTerrain(void)
     // Hero is at origin_y = -3.0f, so put the plane a little below that.
     t->origin_x = (float) 0.0f;
     t->origin_y = (float) -3.2f;
-    t->origin_z = (float) DEFAULT_CUBE_INITIAL_Z_POSITION;
+    t->origin_z = (float) DEFAULT_MODEL_INITIAL_Z_POSITION;
 
 // #ps: Defined in models.c
     ground = t;
@@ -1907,15 +1911,14 @@ void demoHumanoidSetup(void)
         model->origin_x = 
             (float) -3.0f + (float) 0.8f * (float) count; // spread across X axis
         model->origin_y = (float) 0.0f;
-        model->origin_z = (float) DEFAULT_CUBE_INITIAL_Z_POSITION; 
+        model->origin_z = (float) DEFAULT_MODEL_INITIAL_Z_POSITION; 
 
         // Translations ...
         model->delta_x = (float) 0.0f; 
         model->delta_y = (float) 0.0f; 
-        model->delta_z = (float) DEFAULT_CUBE_INITIAL_DELTA_Z + 1.0f;
-
+        model->delta_z = (float) (DEFAULT_MODEL_INITIAL_DELTA_Z + 1.0f);
         
-        // Initializing.
+        // Initializing
         // Cada cubo tem uma aceleração diferente.
         // Então, com o passar do tempo,
         // cada cubo tera um incremento diferente na sua velocidade.
@@ -2050,15 +2053,14 @@ void demoHumanoidSetup(void)
         // Tighter z spread so distant ones don't shrink to invisible dots.
         float factor = (float) count;
         s_model->origin_z =
-            (float) DEFAULT_CUBE_INITIAL_Z_POSITION + (3.0f * factor);
-
+            (float) DEFAULT_MODEL_INITIAL_Z_POSITION + (3.0f * factor);
 
         // Translations ...
         s_model->delta_x = (float) 0.0f;
         s_model->delta_y = (float) 0.0f;
         s_model->delta_z = (float) 0.0f; 
 
-        // Initializing.
+        // Initializing
         // Cada cubo tem uma aceleração diferente.
         // Então, com o passar do tempo,
         // cada cubo tera um incremento diferente na sua velocidade.
@@ -2086,12 +2088,12 @@ void demoHumanoidSetup(void)
 
         main_character->origin_x = (float)  0.0f;  // center horizontally
         main_character->origin_y = (float) -3.0f;  // slightly lower (ground level)
-        main_character->origin_z = (float) (float) DEFAULT_CUBE_INITIAL_Z_POSITION + 1.0f;  // visible depth
+        main_character->origin_z = (float) (DEFAULT_MODEL_INITIAL_Z_POSITION + 1.0f);  // visible depth
 
         // Translations
         main_character->delta_x = (float) 0.0f;
         main_character->delta_y = (float) 0.0f;
-        main_character->delta_z = (float) DEFAULT_CUBE_INITIAL_DELTA_Z;
+        main_character->delta_z = (float) DEFAULT_MODEL_INITIAL_DELTA_Z;
 
         // Initializing.
         // Cada cubo tem uma aceleração diferente.

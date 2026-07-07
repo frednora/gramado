@@ -219,9 +219,15 @@ gws-link:
 
 finalize:
 	cp $(linkTarget)  ../bin/
+
 clean:
 	-rm *.o
 	-rm $(linkTarget) 
+
 clean2:
 	-rm *.o
+
+clean-all:
+	-rm *.o
+	-rm $(linkTarget) 
 

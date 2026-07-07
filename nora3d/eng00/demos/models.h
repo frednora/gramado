@@ -1,6 +1,9 @@
 // models.h
 // This is a place for structures of default models.
 
+#ifndef __DEMOS_MODELS_H
+#define __DEMOS_MODELS_H    1
+
 
 // -----------------------------------------
 struct cat_model_d
@@ -73,10 +76,9 @@ struct terrain_model_d
 extern struct terrain_model_d *ground;
 
 
-
-
-#define DEFAULT_CUBE_INITIAL_Z_POSITION  (5.0f)
-#define DEFAULT_CUBE_INITIAL_DELTA_Z     (0.005f)
+// Some initial values
+#define DEFAULT_MODEL_INITIAL_Z_POSITION  (5.0f)
+#define DEFAULT_MODEL_INITIAL_DELTA_Z     (0.005f)
 
 
 // -----------------------------------------
@@ -86,8 +88,5 @@ void __draw_cat(int eye_scale, int cat_x, int cat_y, int cat_z);
 void __draw_demo_curve1(int position, int model_z);
 void drawRectangle0(float modelz);
 
-
-
-
-
+#endif   
 
