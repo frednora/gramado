@@ -17,8 +17,7 @@
 #define FALSE  0
 #define TRUE   1
 
-//4KB
-// #define __BufferSize  (4*1024)
+// 8KB
 #define __BufferSize  (8*1024)
 static char buffer[__BufferSize];
 
@@ -109,9 +108,8 @@ static int process_file(char *file_name)
     }
 
 // Read from fd
-// #bugbug: 511 byte file limit
-    //nreads = (int) read(fdRead, buffer, 511);
-    //nreads = (int) read(fdRead, buffer, 511*4);
+// Reading 4KB into a 8KB buffer.
+
     nreads = (int) read(fdRead, buffer, 1024*4);
     if (nreads <= 0){
         printf ("cat: File {%d} failed on read()\n", fdRead);
@@ -134,8 +132,8 @@ static int process_file(char *file_name)
 */
 
 // #test #todo
-// This is because we have a limitation 
-// of 1KB in the write() implementation for now.
+// This is because we have a limitation of 1KB in the write() 
+// implementation for now.
 
     int total = 0;
     while (total < nreads) 

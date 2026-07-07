@@ -673,6 +673,53 @@ static void do_user(void)
     }
 }
 
+// #test
+static void console_test_escape_sequences(void);
+static void console_test_escape_sequences(void)
+{
+    int n = fg_console;
+
+    printk("=== Escape Sequence Test ===\n\n");
+
+    // 1. Basic colors
+    console_write_string(n, "\033[31mRed text\033[0m\n");
+    console_write_string(n, "\033[32mGreen text\033[0m\n");
+    console_write_string(n, "\033[33mYellow text\033[0m\n");
+    console_write_string(n, "\033[34mBlue text\033[0m\n");
+    console_write_string(n, "\033[35mMagenta\033[0m | \033[36mCyan\033[0m | \033[37mWhite\033[0m\n");
+
+    // 2. Bold + colors
+    console_write_string(n, "\033[1;31mBold Red\033[0m | \033[1;32mBold Green\033[0m\n");
+
+    // 3. Cursor positioning
+    console_write_string(n, "\033[10;10H");           // Move to row 10, col 10 (1-based)
+    console_write_string(n, "Cursor moved here!");
+
+    // 4. Cursor movements
+    console_write_string(n, "\n\nCursor moves:\n");
+    console_write_string(n, "Right: \033[5C>>>>>\n");
+    console_write_string(n, "Left:  \033[10D<<<<<\n");
+    console_write_string(n, "Down:  \033[3Bvvv\n");
+    console_write_string(n, "Up:    \033[2A^^^\n");
+
+    // 5. Erase commands
+    console_write_string(n, "\nErase tests:\n");
+    console_write_string(n, "This line will be partially erased: \033[K<-- erased to end\n");
+    console_write_string(n, "\033[2KFull line erased above\n");
+
+    // 6. Save / Restore cursor
+    console_write_string(n, "\033[s");                    // Save position
+    console_write_string(n, "\033[20;5H");
+    console_write_string(n, "Saved position text");
+    console_write_string(n, "\033[u");                    // Restore
+    console_write_string(n, " <-- back to saved position\n");
+
+    // 7. Clear screen test
+    //console_write_string(n, "\033[2J\033[H");           // Clear screen + home (uncomment if you want)
+
+    console_write_string(n, "\n=== End of Escape Test ===\n");
+}
+
 // Compare the strings that were
 // typed into the kernel virtual console.
 static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
@@ -705,6 +752,9 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
     {
         wink_show_banner(FALSE);
         printk("The kernel console\n");
+
+        //console_test_escape_sequences();
+
         goto exit_cmp;
     }
 

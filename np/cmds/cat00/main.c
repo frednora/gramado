@@ -18,8 +18,8 @@
 #define FALSE  0
 #define TRUE   1
 
-//4KB
-#define __BufferSize  (4*1024)
+// 8KB
+#define __BufferSize  (8*1024)
 static char buffer[__BufferSize];
 
 static int Max = 8;  // Max number of files
@@ -113,11 +113,10 @@ static int process_file(char *file_name)
         goto fail;
     }
 
-//
-// Read from fd.
-//
-
-    nreads = (int) read( fdRead, buffer, 511 );
+// Read from fd
+// Reading 4KB into a 8KB buffer.
+    // nreads = (int) read( fdRead, buffer, 511 );
+    nreads = (int) read(fdRead, buffer, 1024*4);
     if (nreads <= 0){
         printf ("cat00: File {%d} failed on read()\n", fdRead);
         goto fail;
@@ -127,6 +126,7 @@ static int process_file(char *file_name)
 // Write
 //
 
+/*
 // Write on stdout. If there's no redirection. 
 // Print the whole file into the screen.
 // In this case we don't have any modification flag.
@@ -136,6 +136,23 @@ static int process_file(char *file_name)
             fileno(stdout) );
         goto fail;
     }
+*/
+
+// #test #todo
+// This is because we have a limitation of 1KB in the write() 
+// implementation for now.
+
+    int total = 0;
+    while (total < nreads) 
+    {
+        int chunk = (nreads - total > 1024) ? 1024 : (nreads - total);
+        int nw = write(fileno(stdout), buffer + total, chunk);
+        if (nw <= 0) 
+            break;
+        total += nw;
+    }
+
+
     ReturnValue = nwrites;
 
 // Clear the buffer
