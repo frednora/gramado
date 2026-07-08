@@ -78,8 +78,11 @@ extern struct terrain_model_d *ground;
 
 // Some initial values
 #define DEFAULT_MODEL_INITIAL_Z_POSITION  (5.0f)
-#define DEFAULT_MODEL_INITIAL_DELTA_Z     (0.005f)
 
+
+#define DEFAULT_MODEL_INITIAL_DELTA_X     (0.1f)
+#define DEFAULT_MODEL_INITIAL_DELTA_Y     (0.1f)
+#define DEFAULT_MODEL_INITIAL_DELTA_Z     (0.1f)
 
 // -----------------------------------------
 

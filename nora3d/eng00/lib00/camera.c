@@ -237,4 +237,23 @@ int cameraF_initialize(void)
     return 0;
 }
 
+// Move camera along Z axis
+void demoCameraMoveZ(int direction)
+{
+    const float STEP = 1.0f;
+
+    if (direction == 1) { // nearer
+        CurrentCameraF.position.z -= STEP;
+    }
+    else if (direction == 2) { // farther
+        CurrentCameraF.position.z += STEP;
+    }
+
+    // Keep looking at the hero
+    CurrentCameraF.lookat.x = main_character->origin_x;
+    CurrentCameraF.lookat.y = main_character->origin_y;
+    CurrentCameraF.lookat.z = main_character->origin_z;
+}
+
+
 

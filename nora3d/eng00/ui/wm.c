@@ -3446,6 +3446,52 @@ wmProcedure (
             break;
 
 
+        //case '1': demoCameraOrbit(1, 0.5f); return 0; break;
+        //case '2': demoCameraOrbit(2, 0.5f); return 0; break;
+        //case '1': demoCameraSpinWorld(1); return 0; break;
+        //case '2': demoCameraSpinWorld(2); return 0; break;
+
+        /*
+        // view frustum becomes smaller
+        case '1':
+
+            CurrentProjectionF.znear = 
+                (float) CurrentProjectionF.znear + (float) 0.1f;
+            CurrentProjectionF.zfar = 
+                (float) CurrentProjectionF.zfar - (float) 100.0f;
+            //CurrentProjectionF.fov = 
+                //(float) CurrentProjectionF.fov + (float) 0.01f;
+
+            workerReinitializeProjection(
+                CurrentProjectionF.znear,
+                CurrentProjectionF.zfar,
+                CurrentProjectionF.fov
+            );
+            return 0;
+            break;
+        */
+
+        /*
+        // view frustum becomes bigger
+        case '2':
+
+            CurrentProjectionF.znear = 
+                (float) CurrentProjectionF.znear - (float) 0.1f;
+            CurrentProjectionF.zfar = 
+                (float) CurrentProjectionF.zfar + (float) 100.0f;
+            //CurrentProjectionF.fov = 
+                //(float) CurrentProjectionF.fov + (float) 0.01f;
+
+            workerReinitializeProjection(
+                CurrentProjectionF.znear,
+                CurrentProjectionF.zfar,
+                CurrentProjectionF.fov
+            );
+            return 0;
+            break;
+        */
+
+
         // For any other key we exit.
         default:
             return 0;
@@ -3712,6 +3758,7 @@ static int on_combination(int msg_code)
     if (msg_code == GWS_ControlArrowRight){
         //dock_active_window(2);
         //FlyingCubeMove(0,1,(float) 0.08f);  //left
+        //demoCameraOrbit(2, 0.5f);
         return 0;
     }
     if (msg_code == GWS_ControlArrowDown){
@@ -3722,6 +3769,7 @@ static int on_combination(int msg_code)
     if (msg_code == GWS_ControlArrowLeft){
         //dock_active_window(4); 
         //FlyingCubeMove(0,2,(float) 0.08f); //right
+        //demoCameraOrbit(1, 0.5f);
         return 0;
     }
 

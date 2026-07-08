@@ -8,6 +8,8 @@
 // Input support
 void demoHumanoidMoveCharacter(int number, int direction, float value);
 void demoHumanoidRotateWorld(int direction, float value);
+void demoCameraOrbit(int direction, float value);
+void demoCameraSpinWorld(int direction);
 
 // Draw a single frame.
 // This is called by the gameloop.

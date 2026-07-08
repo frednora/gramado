@@ -27,10 +27,12 @@ unsigned long static_models[STATIC_MODEL_MAX];
 static float worldYawAngle = 0.0f;
 // rotation of the main character only
 static float heroYawAngle = 0.0f; 
+// rotation for the camera
+static float cameraYawAngle = 0.0f; 
 
 
 #define WORLD_TURN_SPEED  (0.05f)  // radians per input step -- tune to taste
-
+#define CAMERA_TURN_SPEED  (0.05f)
 
 
 // local
@@ -1406,6 +1408,62 @@ static void updateCameraFollowCharacter(void)
     CurrentCameraF.lookat.z = pz;
 }
 
+
+// Called when a key combination is pressed
+void demoCameraOrbit(int direction, float value)
+{
+/*
+// #suspended
+    printf("Camera\n");
+
+    // Orbit left
+    if (direction == 1) {
+        cameraYawAngle -= (float)(value * CAMERA_TURN_SPEED);
+    }
+    // Orbit right
+    if (direction == 2) {
+        cameraYawAngle += (float)(value * CAMERA_TURN_SPEED);
+    }
+
+    // Update camera position based on new yaw
+    //float radius = 10.0f;   // distance from hero
+    //float height = 3.0f;    // camera height
+    float radius = 0.5f;   // distance from hero
+    float height = 0.5f;    // camera height
+
+    CurrentCameraF.position.x = main_character->origin_x + radius * cosf(cameraYawAngle);
+    CurrentCameraF.position.z = main_character->origin_z + radius * sinf(cameraYawAngle);
+    CurrentCameraF.position.y = main_character->origin_y + height;
+
+    // Always look at hero
+    CurrentCameraF.lookat.x = main_character->origin_x;
+    CurrentCameraF.lookat.y = main_character->origin_y;
+    CurrentCameraF.lookat.z = main_character->origin_z;
+*/
+}
+
+// Orbit the whole world when pressing Ctrl+Arrow
+void demoCameraSpinWorld(int direction)
+{
+    // Turn speed constant
+    //const float CAMERA_TURN_SPEED = 0.05f;
+
+    if (direction == 1) // Ctrl+Left
+    {
+        worldYawAngle -= CAMERA_TURN_SPEED;
+        heroYawAngle  += CAMERA_TURN_SPEED;
+    }
+    else if (direction == 2) // Ctrl+Right
+    {
+        worldYawAngle += CAMERA_TURN_SPEED;
+        heroYawAngle  -= CAMERA_TURN_SPEED;
+    }
+
+    // Camera stays fixed — no position update needed.
+    // It will still render correctly because the world + hero angles changed.
+}
+
+
 // New worker, separate from demoHumanoidMoveCharacter.
 // Instead of moving a model's origin, this turns the whole world
 // around the hero's fixed position. The hero itself never moves
@@ -1444,6 +1502,7 @@ void demoHumanoidRotateWorld(int direction, float value)
 
     //updateCameraFollowCharacter();
 }
+
 
 // Build, paint and display the frame.
 // Called by the engine, by the function on_execute() in main.c.
@@ -1562,6 +1621,7 @@ void demoHumanoidDrawScene(unsigned long sec)
 
 // + Update position for the models
 // + Reset if they go out of bounds (out of the world)
+/*
 void demoHumanoidUpdate(void)
 {
     int i=0;
@@ -1589,6 +1649,83 @@ void demoHumanoidUpdate(void)
         }
     };
 }
+*/
+void demoHumanoidUpdate(void)
+{
+    int humanoid_count = MODEL_MAX;
+    int i;
+    // #ps: We gotta start at 1.
+    for (i = 1; i < humanoid_count; i++) {
+        struct model_d *m = models[i];
+
+        // March forward
+        m->origin_z += m->delta_z;
+
+        // --- Behavior based on world size ---
+        // If the world is small, humanoids panic and bounce around.
+        if (current_world_3d->z_size < 100.0f) {
+            //m->origin_x += (rand() % 3 - 1) * 0.2f; // jitter left/right
+            m->origin_y = ground->origin_y;         // stay grounded
+        }
+
+        // If the world is medium, humanoids slide normally.
+        else if (current_world_3d->z_size < 300.0f) {
+            // Smooth march
+            m->origin_y = ground->origin_y;
+        }
+
+        // If the world is huge, humanoids get lazy and stop halfway.
+        else {
+            if (m->origin_z > current_world_3d->z_size / 2) {
+                m->delta_z = 0.0f; // take a nap
+            }
+        }
+
+        // --- Collision with z world edge ---
+        if (m->origin_z > current_world_3d->z_size) 
+        {
+            // Random funny behavior
+            int action = rand() % 3;
+            switch (action) {
+                case 0:
+                    // Reset to start
+                    m->origin_z = DEFAULT_MODEL_INITIAL_Z_POSITION;
+                    break;
+                case 1:
+                    // Bounce back
+                    m->delta_z = -m->delta_z;
+                    break;
+                case 2:
+                    // Fall off the world
+                    //m->origin_y -= 0.1f;
+                    break;
+            }
+        }
+
+        // --- Collision with x world edge ---
+        if ( m->origin_x > current_world_3d->x_size || 
+             m->origin_x < (-current_world_3d->x_size) ) 
+        {
+            // Random funny behavior
+            int action = rand() % 3;
+            switch (action) {
+                case 0:
+                    // Reset to start
+                    m->origin_x = 0.0f;
+                    break;
+                case 1:
+                    // Bounce back
+                    m->delta_x = -m->delta_x;
+                    break;
+                case 2:
+                    // Fall off the world
+                    //m->origin_y -= 0.1f;
+                    break;
+            }
+        }
+    }
+}
+
 
 static int __load_all_obj_files(void)
 {
@@ -1712,6 +1849,36 @@ static void __setupTerrain(void)
 
 // #ps: Defined in models.c
     ground = t;
+
+// ----------------------------------------
+// Compute terrain bounds.
+// It will become the dimensions for the world.
+
+    float minX = 999999.0f, maxX = -999999.0f;
+    float minY = 999999.0f, maxY = -999999.0f;
+    float minZ = 999999.0f, maxZ = -999999.0f;
+
+
+    for (i = 1; i <= t->vertex_count; i++) {
+    if (t->vecs[i].x < minX) minX = t->vecs[i].x;
+    if (t->vecs[i].x > maxX) maxX = t->vecs[i].x;
+    if (t->vecs[i].y < minY) minY = t->vecs[i].y;
+    if (t->vecs[i].y > maxY) maxY = t->vecs[i].y;
+    if (t->vecs[i].z < minZ) minZ = t->vecs[i].z;
+    if (t->vecs[i].z > maxZ) maxZ = t->vecs[i].z;
+    }
+
+    // Dimensions
+    float width  = maxX - minX;
+    float height = maxY - minY;
+    float depth  = maxZ - minZ;
+
+// Sync world size to terrain
+    if (current_world_3d != NULL) {
+    current_world_3d->x_size = width;
+    current_world_3d->y_size = height;
+    current_world_3d->z_size = depth;
+    }
 }
 
 
@@ -1907,16 +2074,19 @@ void demoHumanoidSetup(void)
         assignBandColors(model, 12, humanoidPalette, 7);
 
         // --------------------------------
-    
+
+        float zoffset = (float) (rand() % 8);
+
+        // origin
         model->origin_x = 
             (float) -3.0f + (float) 0.8f * (float) count; // spread across X axis
-        model->origin_y = (float) 0.0f;
-        model->origin_z = (float) DEFAULT_MODEL_INITIAL_Z_POSITION; 
+        model->origin_y = (float) -3.0f;  // slightly lower (ground level)
+        model->origin_z = (float) DEFAULT_MODEL_INITIAL_Z_POSITION + (float) zoffset; 
 
         // Translations ...
-        model->delta_x = (float) 0.0f; 
-        model->delta_y = (float) 0.0f; 
-        model->delta_z = (float) (DEFAULT_MODEL_INITIAL_DELTA_Z + 1.0f);
+        model->delta_x = (float) 0.0f;  //DEFAULT_MODEL_INITIAL_DELTA_X; 
+        model->delta_y = (float) 0.0f;  // DEFAULT_MODEL_INITIAL_DELTA_Y; 
+        model->delta_z = (float) DEFAULT_MODEL_INITIAL_DELTA_Z;
         
         // Initializing
         // Cada cubo tem uma aceleração diferente.
@@ -2086,9 +2256,16 @@ void demoHumanoidSetup(void)
 
         // ------------------------------
 
+        // Origin
+        //main_character->origin_x = (float)  0.0f;  // center horizontally
+        //main_character->origin_y = (float) -3.0f;  // slightly lower (ground level)
+        //main_character->origin_z = (float) (DEFAULT_MODEL_INITIAL_Z_POSITION + 1.0f);  // visible depth
+
+        // Origin
         main_character->origin_x = (float)  0.0f;  // center horizontally
         main_character->origin_y = (float) -3.0f;  // slightly lower (ground level)
-        main_character->origin_z = (float) (DEFAULT_MODEL_INITIAL_Z_POSITION + 1.0f);  // visible depth
+        main_character->origin_z = (float) (DEFAULT_MODEL_INITIAL_Z_POSITION + 4.0f);  // visible depth
+
 
         // Translations
         main_character->delta_x = (float) 0.0f;

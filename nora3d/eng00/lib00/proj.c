@@ -255,13 +255,41 @@ grInitializeProjection(
 
     //matProj.m[3][2] = (float) ((-fFar * fNear) / (fFar - fNear));
     // #test: This is how its done in other conventional engines.
-     matProj.m[3][2] = (-2 * fFar * fNear) / (fFar - fNear);
+    matProj.m[3][2] = (-2 * fFar * fNear) / (fFar - fNear);
 
     matProj.m[3][3] = (float) 0.0f;
 
     CurrentProjectionF.initialized = TRUE;
 
     return 0;
+}
+
+
+// Reinitialize projection dynamically
+// Called when camera zoom or screen size changes
+void workerReinitializeProjection(float znear, float zfar, float fov)
+{
+    unsigned long deviceWidth  = gws_get_device_width();
+    unsigned long deviceHeight = gws_get_device_height();
+
+    if (deviceWidth == 0 || deviceHeight == 0) {
+        printf("workerReinitializeProjection: invalid device size\n");
+        return;
+    }
+
+    // Use current scale factor or fallback
+    float scale = CurrentProjectionF.scale_factor;
+    if (scale <= 0.0f) scale = 0.5f;
+
+    // Reinitialize projection matrix (float version)
+    grInitializeProjection(
+        znear,
+        zfar,
+        fov,
+        (unsigned long)(deviceWidth & 0xFFFFFFFF),
+        (unsigned long)(deviceHeight & 0xFFFFFFFF),
+        scale
+    );
 }
 
 

@@ -112,6 +112,7 @@ unveil_camera(
 // Using float.    
 
 int cameraF_initialize(void);
+void demoCameraMoveZ(int direction);
 
 #endif    
 

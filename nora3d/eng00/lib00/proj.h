@@ -148,7 +148,7 @@ grInitializeProjection(
     unsigned long height,
     float scalefactor );
 
-
+void workerReinitializeProjection(float znear, float zfar, float fov);
 
 #endif    
 

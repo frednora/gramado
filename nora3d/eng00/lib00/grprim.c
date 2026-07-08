@@ -212,6 +212,7 @@ int grInit (void)
 
 // Using int.
     projection_initialize();
+
 // Changing the view for the current projection.
     gr_depth_range(CurrentProjection,0,40);
 // World
