@@ -16,11 +16,13 @@ static char *model_data_saucer = NULL;
 static char *model_data_ground = NULL;
 // ...
 
+// Humanoids
 #define MODEL_MAX  8
 unsigned long models[MODEL_MAX];
 
+// Disks
 #define STATIC_MODEL_MAX  8
-unsigned long static_models[STATIC_MODEL_MAX];
+unsigned long m_disks[STATIC_MODEL_MAX];
 
 // World yaw -- how much the world has turned around the hero's fixed
 // position. Read by the draw functions later; written only here.
@@ -96,7 +98,7 @@ static const unsigned int humanoidPalette[7] = {
     0x999999, // chest/pack  - gear
 };
 
-// static_models[] — OBJ07.TXT: 4 bands of 16 faces (lower hull, rim, dome base, dome cap)
+// m_disks[] — OBJ07.TXT: 4 bands of 16 faces (lower hull, rim, dome base, dome cap)
 static const unsigned int saucerPalette[4] = {
     0x707070, // lower hull - dark metal skirt
     0xC0C0C0, // upper rim  - bright metal (widest disk edge)
@@ -136,7 +138,7 @@ static void assignRangeColor(struct model_d *m,
         m->colors[f - 1] = color;   // colors[] is 0-based, faces[] is 1-based
 }
 
-// static_models[] — OBJ07.TXT (64 faces): 3 hull bands of 16 + dome fan of 8 + bottom fan of 8
+// m_disks[] — OBJ07.TXT (64 faces): 3 hull bands of 16 + dome fan of 8 + bottom fan of 8
 static void assignSaucerColors(struct model_d *s_model)
 {
     assignRangeColor(s_model,  1, 16, 0x707070); // lower hull  - dark metal skirt
@@ -627,7 +629,8 @@ static void __drawModelWithShading (struct model_d *model, float fElapsedTime)
                     (struct gws_window_d *) __root_window, 
                     (struct n3d_triangle_d *) &triRotatedXYZ,
                     fFillTriangle,
-                    0 );
+                    model->rop  // Rop value for the whole model 
+                );
             }
         }
     };
@@ -1305,7 +1308,8 @@ static void __drawTerrain(struct terrain_model_d *t)
                     (struct gws_window_d *) __root_window,
                     (struct n3d_triangle_d *) &triRotatedXYZ,
                     TRUE,
-                    0 );
+                    t->rop  // Desired ROP for the model 
+                );
             }
         }
     }
@@ -1558,7 +1562,7 @@ void demoHumanoidDrawScene(unsigned long sec)
     for (i = 0; i < STATIC_MODEL_MAX; i++) 
     {
         // Pick one
-        s_model = (struct model_d*) static_models[i]; 
+        s_model = (struct model_d*) m_disks[i]; 
         if (s_model != NULL) 
         {
             __drawModelStatic (s_model); 
@@ -1664,42 +1668,46 @@ void demoHumanoidUpdate(void)
     float limit_z = (float) current_world_3d->z_size / (float) 8.0f;
 
 
-    int disk_count = STATIC_MODEL_MAX;
-    int humanoid_count = MODEL_MAX;
-    int i;
+
+    int i=1;
     int HitLimit = FALSE;
 
+
+// disks
+// #ps: We gotta start at 1.
+    int disk_count = STATIC_MODEL_MAX;
     for (i = 1; i < disk_count; i++)
     {
-        struct model_d *m = static_models[i];
+        struct model_d *m = m_disks[i];
 
         m->origin_y -= 0.01f;
         if (m->origin_y <= ground->origin_y)
             m->origin_y = ground->origin_y;
     }
 
-    // #ps: We gotta start at 1.
+// humanoids
+// #ps: We gotta start at 1.
+    int humanoid_count = MODEL_MAX;
     for (i = 1; i < humanoid_count; i++) 
     {
-
         struct model_d *m = models[i];  // Humanoids
         int reset = FALSE;
 
         if ((i%2) == 0)
         {
             m->origin_x += 0.2f;
-            if (m->collision_state == TRUE)
+            if (m->collided == TRUE)
             {
-                m->collision_state = FALSE;
+                m->collided = FALSE;
                 reset = TRUE;
             }
         }
         if ((i%2) != 0)
         {
             m->origin_x -= 0.2f;
-            if (m->collision_state == TRUE)
+            if (m->collided == TRUE)
             {
-                m->collision_state = FALSE;
+                m->collided = FALSE;
                 reset = TRUE;
             }
         }
@@ -1730,7 +1738,7 @@ void demoHumanoidUpdate(void)
              m->origin_z > (main_character->origin_z - 0.4f) &&
              m->origin_z < (main_character->origin_z + 0.4f) )
         {
-            m->collision_state = TRUE;
+            m->collided = TRUE;
         }
         */
         // --- Collision with the main charactere ---
@@ -1739,7 +1747,7 @@ void demoHumanoidUpdate(void)
         float dz = m->origin_z - main_character->origin_z;
         float distance = sqrtf(dx*dx + dz*dz);
         if (distance < radius) {
-            m->collision_state = TRUE;
+            m->collided = TRUE;
         }
 
 
@@ -1750,22 +1758,22 @@ void demoHumanoidUpdate(void)
         if ( m->origin_x < (-limit_x) )
         { 
             m->origin_x = (-limit_x);
-            m->collision_state = TRUE;
+            m->collided = TRUE;
         }
         if ( m->origin_x > limit_x    )
         { 
             m->origin_x = limit_x;
-            m->collision_state = TRUE;
+            m->collided = TRUE;
         }
         if ( m->origin_z < (-limit_x) )
         { 
             m->origin_z = (-limit_z);
-            m->collision_state = TRUE;
+            m->collided = TRUE;
         }
         if ( m->origin_z > limit_z    )
         { 
             m->origin_x = limit_z;
-            m->collision_state = TRUE;
+            m->collided = TRUE;
         }
     };
 }
@@ -1845,6 +1853,9 @@ static void __setupTerrain(void)
         t->vecs[i].y = (float) 0.0f;
         t->vecs[i].z = (float) 0.0f;
     };
+
+    // t->rop = 42;
+    t->rop = 0;
 
     struct obj_element_d elem;
     const char *nextLine = model_data_ground;
@@ -1990,7 +2001,7 @@ void demoHumanoidSetup(void)
         models[i] = (unsigned long) 0;
     };
     for (i=0; i<STATIC_MODEL_MAX; i++){
-        static_models[i] = (unsigned long) 0;
+        m_disks[i] = (unsigned long) 0;
     };
 
 
@@ -2012,7 +2023,7 @@ void demoHumanoidSetup(void)
     int rand1=0;
 
 // ==========================================================
-// enemies
+// Models: humanoids
 
     for (count=0; count<MODEL_MAX; count++)
     {
@@ -2028,6 +2039,8 @@ void demoHumanoidSetup(void)
         }
 
         model->fThetaAngle = (float) 0.0f;
+
+        model->rop = 0;
                 
         // Initialize vectors
         //for (i=0; i<32; i++)
@@ -2150,7 +2163,7 @@ void demoHumanoidSetup(void)
     };
 
 // =======================================================================
-// Static models
+// Static models: disks
 
     for (count=0; count<STATIC_MODEL_MAX; count++)
     {
@@ -2164,6 +2177,8 @@ void demoHumanoidSetup(void)
         // fThetaAngle is used as (angle * 0.5f) in the rotation matrix,
         // so ~0.8f here gives a visible ~23° pitch.
         s_model->fThetaAngle = (float) 0.8f;
+
+        s_model->rop = 0;
 
         // Initialize vectors
         for (i=0; i<128; i++)
@@ -2288,7 +2303,7 @@ void demoHumanoidSetup(void)
         // v = a*t;
 
         // Save the model pointer
-        static_models[count] = (unsigned long) s_model;
+        m_disks[count] = (unsigned long) s_model;
     };
 
 
@@ -2328,6 +2343,9 @@ void demoHumanoidSetup(void)
         main_character->t = (float) 1.0f;
         main_character->a = (float) main_character->v / main_character->t;
         // v = a*t;
+
+        //main_character->rop = 51;  // ROP for the hero
+        main_character->rop = 0;  // ROP for the hero
     }
 
 //----------------

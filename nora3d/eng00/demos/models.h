@@ -16,7 +16,15 @@ struct cat_model_d
 extern struct cat_model_d  CatModel;   // Cat model 0.
 
 
-//struct humanoid_model_d
+// Ideas for the model:
+// 1. Core Vital Stats
+// 2. Position & Movement
+// 3. Attributes / Stats (RPG / Action games)
+// 4. Combat & Status
+// 5. Progression & Economy
+// 6. Inventory & Equipment
+// 7. Appearance & Customization (especially in modern games)
+
 struct model_d
 {
     // We don't need 32 vectors. But its ok.
@@ -28,6 +36,8 @@ struct model_d
     int face_count; // how many faces are stored
 
     unsigned int colors[128];  //32 #bugbug: colors needs to fit the number of faces.
+
+    unsigned long rop;  // Desired ROP value
 
     float fThetaAngle;
 
@@ -48,10 +58,38 @@ struct model_d
     float v;  // Velocity:
     float t;  // Time:
 
-//
-// Collisions
-//
-    int collision_state;     // current collision type
+// Collision flag
+    int collided;     // current collision type
+
+// #test
+// (STATE_IDLE, STATE_MOVING, STATE_COLLIDED, STATE_GHOST).
+// Grounded / Airborne / Swimming / Flying state
+    int state;
+
+    int health_value;  // Its about damage level i guess.
+    int score_value;
+
+    int level;  // Level
+    int xp;     // Experience Points (XP) / Progress toward next level
+
+    int lives;  // Lives (if it's a lives-based game like platformers)
+
+
+// Interaction radius → defines how close the player must be 
+// to trigger exploration events (talk, collect, inspect).
+    float interaction_radius;
+
+    // Collectibles
+    // a structure can handle this.
+
+// Attributes / Stats (RPG / Action games) Strength, 
+// Agility, Intelligence, Vitality, Luck, etc.
+// Attack / Defense values
+// Movement speed
+// Attack speed / Cooldown reduction
+// Critical chance / Critical damage
+
+    int IsAlive;
 };
 
 extern struct model_d *main_character;
@@ -76,6 +114,8 @@ struct terrain_model_d
     float origin_x;
     float origin_y;
     float origin_z;
+
+    unsigned long rop;  // Desired ROP value
 };
 
 extern struct terrain_model_d *ground;

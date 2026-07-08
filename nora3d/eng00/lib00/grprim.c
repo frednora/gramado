@@ -478,7 +478,7 @@ gr_dc_plot0(
     return 0;
 }
 
-
+// grPlot2D:
 // Plot a pixel using the top/left coordinates. (0,0).
 // Clipping in the screen.
 int 
@@ -497,6 +497,8 @@ grPlot2D (
         return 0;
     if (y<0)
         return 0;
+
+// See: libdisp.c
     return (int) libdisp_backbuffer_putpixel( (unsigned int) color, x, y, rop ); 
 }
 
@@ -1608,7 +1610,7 @@ fillTriangle0(
             {
                 e1 -= dx1;
                 if (changed1) 
-                    t1xp=signx1;//t1x += signx1;
+                    t1xp=signx1;  //t1x += signx1;
                 else 
                     goto next1;
             };
@@ -1658,7 +1660,7 @@ fillTriangle0(
         
         y += 1;
         
-        if(y==y2){
+        if (y == y2){
             break;
         }
     };

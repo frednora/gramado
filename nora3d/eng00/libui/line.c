@@ -163,7 +163,6 @@ void test_draw_line2(void)
     gwssrv_show_backbuffer();
 }
 
-
 /* 
  * grBackbufferDrawHorizontalLine:
  *     Draw a horizontal line on backbuffer. 
@@ -256,12 +255,12 @@ grBackbufferDrawHorizontalLine (
         __x1++;
     };
 
-// We painted less than we wanted.
-    if ( check_value < npixels ){
+// We painted less than we wanted
+    if (check_value < npixels){
         npixels = check_value; 
     }
 
-// Return the number of changed pixels.
+// Return the number of changed pixels
     return (int) npixels;
 }
 

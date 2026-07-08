@@ -134,6 +134,7 @@ fail:
     return (int) -1;
 }
 
+// libdisp_backbuffer_putpixel:
 // Plot pixel into the raster.
 // The origin is top/left of the viewport. (0,0).
 int 
@@ -146,9 +147,8 @@ libdisp_backbuffer_putpixel (
 // #todo: Return the number of changed pixels.
 
     int ret_value=0;
-// The base address for the target backbuffer.
-    unsigned long target_buffer = 
-        libgd_BACKBUFFER_VA;
+// The base address for the target backbuffer
+    unsigned long target_buffer = libgd_BACKBUFFER_VA;
 
 // Clipping
 // #bugbug:
@@ -424,47 +424,160 @@ fb_BackBufferPutpixel (
 // 10 - red
     if (Operation == 10)
     {
-        r3 = (r2 & 0xFE);
-        g3 = g2;
-        b3 = b2; 
+        r3 = (r2 & 0xC0);  // Bigger
+        g3 = (g2 & 0x80);
+        b3 = (b2 & 0x10);
         a3 = a2;
     }
 // ------------
 // 11 - green
     if (Operation == 11)
     {
-        r3 = r2;
-        g3 = (g2 & 0xFE);
-        b3 = b2; 
+        r3 = (r2 & 0x80);
+        g3 = (g2 & 0xC0);  // Bigger
+        b3 = (b2 & 0x10);
         a3 = a2;
     }
 // ------------
 // 12 - blue
     if (Operation == 12)
     {
-        r3 = r2;
-        g3 = g2;
-        b3 = (b2 & 0xFE); 
+        r3 = (r2 & 0x80);
+        g3 = (g2 & 0x10);
+        b3 = (b2 & 0xC0);  // Bigger
         a3 = a2;
     }
 // ------------
 // 20 - gray
     if (Operation == 20)
     {
-        r3 = (r2 & 0x80);
-        g3 = (g2 & 0x80);
-        b3 = (b2 & 0x80);
+        r3 = (r2 & 0xC0);
+        g3 = (g2 & 0xC0);
+        b3 = (b2 & 0xC0);
         a3 = a2;
     }
 // ------------
 // 21 - gray
     if (Operation == 21)
     {
-        r3 = (r2 & 0x00);
-        g3 = (g2 & 0xFF);
-        b3 = (b2 & 0xFF);
+        r3 = (r2 & 0x80);
+        g3 = (g2 & 0x80);
+        b3 = (b2 & 0x80);
         a3 = a2;
     }
+
+// ------------
+// 30 - invert
+    if (Operation == 30)
+    {
+        r3 = ~r2;
+        g3 = ~g2;
+        b3 = ~b2;
+        a3 = a2;
+    }
+
+// ------------
+// 31 - add (saturate)
+    if (Operation == 31)
+    {
+        r3 = (r2 + r > 255) ? 255 : r2 + r;
+        g3 = (g2 + g > 255) ? 255 : g2 + g;
+        b3 = (b2 + b > 255) ? 255 : b2 + b;
+        a3 = a2;
+    }
+
+// ------------
+// 32 - subtract (clamp)
+    if (Operation == 32)
+    {
+        r3 = (r2 - r < 0) ? 0 : r2 - r;
+        g3 = (g2 - g < 0) ? 0 : g2 - g;
+        b3 = (b2 - b < 0) ? 0 : b2 - b;
+        a3 = a2;
+    }
+
+// ------------
+// 33 - average (blend)
+    if (Operation == 33)
+    {
+        r3 = (r2 + r) >> 1;
+        g3 = (g2 + g) >> 1;
+        b3 = (b2 + b) >> 1;
+        a3 = a2;
+    }
+
+// ------------
+// 34 - max channel
+    if (Operation == 34)
+    {
+        r3 = (r2 > r) ? r2 : r;
+        g3 = (g2 > g) ? g2 : g;
+        b3 = (b2 > b) ? b2 : b;
+        a3 = a2;
+    }
+
+// ------------
+// 35 - min channel
+    if (Operation == 35)
+    {
+        r3 = (r2 < r) ? r2 : r;
+        g3 = (g2 < g) ? g2 : g;
+        b3 = (b2 < b) ? b2 : b;
+        a3 = a2;
+    }
+
+// ------------
+// 40 - pure red
+    if (Operation == 40)
+    {
+        r3 = r;
+        g3 = 0;
+        b3 = 0;
+        a3 = a;
+    }
+
+// ------------
+// 41 - pure green
+    if (Operation == 41)
+    {
+        r3 = 0;
+        g3 = g;
+        b3 = 0;
+        a3 = a;
+    }
+
+// ------------
+// 42 - pure blue
+    if (Operation == 42)
+    {
+        r3 = 0;
+        g3 = 0;
+        b3 = b;
+        a3 = a;
+    }
+
+// ------------
+// 50 - grayscale (average)
+    if (Operation == 50)
+    {
+        unsigned char gray = (r2 + g2 + b2) / 3;
+        r3 = gray;
+        g3 = gray;
+        b3 = gray;
+        a3 = a2;
+    }
+
+// ------------
+// 51 - grayscale (luminosity)
+    if (Operation == 51)
+    {
+        unsigned char gray = (unsigned char)(r2*0.3 + g2*0.59 + b2*0.11);
+        r3 = gray;
+        g3 = gray;
+        b3 = gray;
+        a3 = a2;
+    }
+
 
 // luminosity
 // Gray: luminosity = R*0.3 + G*0.59 + B *0.11
