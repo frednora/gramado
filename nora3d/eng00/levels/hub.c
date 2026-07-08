@@ -1,8 +1,15 @@
-// humanoid.c
-// Humanoid demo.
+// hub.c (Hub World)
+// Explanation:
+// A Hub World is a central, safe (or relatively safe) area that 
+// connects multiple levels. Players return to it after finishing a level, 
+// and from there they can choose which level to enter next.
 // Created by Fred Nora.
 
 #include "../gram3d.h"
+
+
+int current_level = LEVEL_HUB;
+int exit_level = FALSE;  // Is it time to exit the current level?
 
 static int game_update_taskbar=TRUE;
 static int hits=0;

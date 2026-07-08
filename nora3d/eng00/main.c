@@ -3330,45 +3330,105 @@ static int InitGraphicsSupport(void)
         current_mode == GRAMADO_P1 ||
         current_mode == GRAMADO_HOME)
     {
-         //demoModel1();
-         // again
-         //wm_Update_TaskBar("Welcome :)",TRUE);
+        //demoModel1();
+        // again
+        //wm_Update_TaskBar("Welcome :)",TRUE);
     }
 
 // ok, no errors.
     return 0;
 }
 
-// see: humanoid.c
 // Each demos has its own file.
 static void engineSetupCurrentDemo(void)
 {
-    demoHumanoidSetup();
-    //cat00SetupDemo();
-    //tri00SetupDemo();
-    //curve00SetupDemo();
-    // ...
+    int CurrentLevel = current_level;
+
+    switch (CurrentLevel){
+
+    case LEVEL_HUB:
+        demoHumanoidSetup();  // see: hub.c
+        break;
+    
+    case LEVEL_1:
+        cat00SetupDemo();
+        break;
+    case LEVEL_2:
+    case LEVEL_3:
+        demoHumanoidSetup();  // see: hub.c
+        // #todo
+        //cat00SetupDemo();
+        //tri00SetupDemo();
+        //curve00SetupDemo();
+        // ...
+        break;
+
+    // Hub is the default level
+    default:
+        demoHumanoidSetup();  // see: hub.c
+        break;
+    };
 }
 
 static void engineUpdateCurrentDemo(void)
 {
-    // see: humanoid.c
-    demoHumanoidUpdate();
-    // ...
+    int CurrentLevel = current_level;
+
+    switch (CurrentLevel){
+
+    case LEVEL_HUB:
+        demoHumanoidUpdate();  // see: hub.c
+        break;
+    
+    case LEVEL_1:
+        break;
+    case LEVEL_2:
+    case LEVEL_3:
+        demoHumanoidUpdate();  // see: hub.c
+        break;
+
+    // Hub is the default level
+    default:
+        demoHumanoidUpdate();  // see: hub.c
+        break;
+    };
 }
+
 
 // Draw the scene for the current demo
 static void engineDrawSceneForCurrentDemo(unsigned long sec)
 {
-    // IN: second counter
-    demoHumanoidDrawScene(sec);  // see: humanoid.c
+    int CurrentLevel = current_level;
 
-    //demoCat();
-    //demoTriangle();
-    //demoCurve();
-    // ...
+    switch (CurrentLevel){
 
-    //noraDrawingStuff(); // loop
+    case LEVEL_HUB:
+        // IN: second counter
+        demoHumanoidDrawScene(sec);  // see: hub.c
+        break;
+    
+    case LEVEL_1:
+        demoCat();
+        break;
+
+    case LEVEL_2:
+    case LEVEL_3:
+        // IN: second counter
+        demoHumanoidDrawScene(sec);  // see: hub.c
+        //demoCat();
+        //demoTriangle();
+        //demoCurve();
+        // ...
+        //noraDrawingStuff(); // loop
+        break;
+
+    // Hub is the default level
+    default:
+        // IN: second counter
+        demoHumanoidDrawScene(sec);  // see: hub.c
+        break;
+    };
+
 }
 
 static void engineShutdown(void)
@@ -3839,7 +3899,18 @@ static int engineGameLoop(void)
     };
 
     // ==============================================
-    // >>> Setup the current demo
+    // >>> Setup the current level
+    
+    current_level = LEVEL_HUB;  // Hub World
+
+//
+// Level entry point
+//
+
+level_entry_point:
+
+// Is it time to exit the current level?
+    exit_level = FALSE;
 
     if (isPlaying == TRUE){
         engineSetupCurrentDemo();
@@ -3849,12 +3920,19 @@ static int engineGameLoop(void)
     while (running == TRUE){
 
         gBeginTick = (unsigned long) rtl_jiffies();
+
+        // Is it time to wuit the game?
         if (IsTimeToQuit == TRUE)
         { 
             gameaction = GA_QUIT;        // Trigger a clean quit action
             // or directly:
             // next_gamestate = GS_SHUTDOWN;
             break; 
+        }
+        // Is it time to exit the current level?
+        if (exit_level == TRUE)
+        {
+            break;
         }
 
         // Pump system events.
@@ -4004,6 +4082,11 @@ static int engineGameLoop(void)
 // Escaped from the game loop.
 // At that point, you should move into cleanup / shutdown phase, 
 // not keep changing game states.
+
+    // Is it time to exit the current level?
+    if (exit_level == TRUE){
+        goto level_entry_point;
+    }
 
 
 // Is it time to quit?

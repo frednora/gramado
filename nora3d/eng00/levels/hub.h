@@ -1,9 +1,20 @@
-// humanoid.h
-// Flying cube
+// hub.h
 // Created by Fred Nora.
 
-#ifndef __DEMOS_HUMANOID_H
-#define __DEMOS_HUMANOID_H    1
+#ifndef __LEVELS_HUB_H
+#define __LEVELS_HUB_H    1
+
+//
+// Levels
+//
+
+#define LEVEL_HUB  0
+#define LEVEL_1  1  //#todo
+#define LEVEL_2  2  //#todo
+#define LEVEL_3  3  //#todo
+// ...
+extern int current_level;
+extern int exit_level;
 
 // Input support
 void demoHumanoidMoveCharacter(int number, int direction, float value);

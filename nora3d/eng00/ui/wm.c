@@ -3491,6 +3491,18 @@ wmProcedure (
             break;
         */
 
+        case '0':
+            current_level = LEVEL_HUB;
+            exit_level = TRUE;
+            return 0;
+            break;
+
+        case '1':
+            current_level = LEVEL_1;
+            exit_level = TRUE;
+            return 0;
+            break;
+
 
         // For any other key we exit.
         default:

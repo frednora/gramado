@@ -70,27 +70,20 @@ extern int current_mode;
 #include "lib00/sprite.h"
 #include "lib00/surface.h"
 
-// Common for all the demos
-#include "demos/demos.h"
-#include "demos/models.h"
-#include "demos/scan00.h"
+// Common for all the levels
+#include "levels/demos.h"
+#include "levels/models.h"
+#include "levels/scan00.h"
 
-// Demos
-#include "demos/humanoid.h"
-#include "demos/cat00.h"
-#include "demos/polygon.h"
-#include "demos/tri00.h"
-#include "demos/lin00.h"
-#include "demos/curve00.h"
-
+// Levels
+#include "levels/hub.h"
+#include "levels/cat00.h"
+#include "levels/polygon.h"
+#include "levels/tri00.h"
+#include "levels/lin00.h"
+#include "levels/curve00.h"
 
 #include "packet.h"
-
-
-//
-// =============================================================
-//
-
 
 
 //
