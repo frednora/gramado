@@ -47,6 +47,11 @@ struct model_d
     float a;  // Acceletarion: How fast the velocity changes.
     float v;  // Velocity:
     float t;  // Time:
+
+//
+// Collisions
+//
+    int collision_state;     // current collision type
 };
 
 extern struct model_d *main_character;
@@ -77,12 +82,12 @@ extern struct terrain_model_d *ground;
 
 
 // Some initial values
-#define DEFAULT_MODEL_INITIAL_Z_POSITION  (5.0f)
+#define DEFAULT_MODEL_INITIAL_Z_POSITION  (6.0f)
 
 
-#define DEFAULT_MODEL_INITIAL_DELTA_X     (0.1f)
-#define DEFAULT_MODEL_INITIAL_DELTA_Y     (0.1f)
-#define DEFAULT_MODEL_INITIAL_DELTA_Z     (0.1f)
+#define DEFAULT_MODEL_INITIAL_DELTA_X     (0.4f)
+#define DEFAULT_MODEL_INITIAL_DELTA_Y     (0.4f)
+#define DEFAULT_MODEL_INITIAL_DELTA_Z     (0.4f)
 
 // -----------------------------------------
 

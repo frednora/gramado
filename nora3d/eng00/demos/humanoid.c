@@ -1652,78 +1652,122 @@ void demoHumanoidUpdate(void)
 */
 void demoHumanoidUpdate(void)
 {
+// #ps: The game/demo is called humanoid.
+// This routine can affect every part of the game.
+
+//
+// Limits
+//
+
+    float limit_x = (float) current_world_3d->x_size / (float) 8.0f;
+    //float limit_y = (float) current_world_3d->y_size / (float) 2.0f;
+    float limit_z = (float) current_world_3d->z_size / (float) 8.0f;
+
+
+    int disk_count = STATIC_MODEL_MAX;
     int humanoid_count = MODEL_MAX;
     int i;
-    // #ps: We gotta start at 1.
-    for (i = 1; i < humanoid_count; i++) {
-        struct model_d *m = models[i];
+    int HitLimit = FALSE;
 
-        // March forward
-        m->origin_z += m->delta_z;
+    for (i = 1; i < disk_count; i++)
+    {
+        struct model_d *m = static_models[i];
 
-        // --- Behavior based on world size ---
-        // If the world is small, humanoids panic and bounce around.
-        if (current_world_3d->z_size < 100.0f) {
-            //m->origin_x += (rand() % 3 - 1) * 0.2f; // jitter left/right
-            m->origin_y = ground->origin_y;         // stay grounded
-        }
-
-        // If the world is medium, humanoids slide normally.
-        else if (current_world_3d->z_size < 300.0f) {
-            // Smooth march
+        m->origin_y -= 0.01f;
+        if (m->origin_y <= ground->origin_y)
             m->origin_y = ground->origin_y;
-        }
-
-        // If the world is huge, humanoids get lazy and stop halfway.
-        else {
-            if (m->origin_z > current_world_3d->z_size / 2) {
-                m->delta_z = 0.0f; // take a nap
-            }
-        }
-
-        // --- Collision with z world edge ---
-        if (m->origin_z > current_world_3d->z_size) 
-        {
-            // Random funny behavior
-            int action = rand() % 3;
-            switch (action) {
-                case 0:
-                    // Reset to start
-                    m->origin_z = DEFAULT_MODEL_INITIAL_Z_POSITION;
-                    break;
-                case 1:
-                    // Bounce back
-                    m->delta_z = -m->delta_z;
-                    break;
-                case 2:
-                    // Fall off the world
-                    //m->origin_y -= 0.1f;
-                    break;
-            }
-        }
-
-        // --- Collision with x world edge ---
-        if ( m->origin_x > current_world_3d->x_size || 
-             m->origin_x < (-current_world_3d->x_size) ) 
-        {
-            // Random funny behavior
-            int action = rand() % 3;
-            switch (action) {
-                case 0:
-                    // Reset to start
-                    m->origin_x = 0.0f;
-                    break;
-                case 1:
-                    // Bounce back
-                    m->delta_x = -m->delta_x;
-                    break;
-                case 2:
-                    // Fall off the world
-                    //m->origin_y -= 0.1f;
-                    break;
-            }
-        }
     }
+
+    // #ps: We gotta start at 1.
+    for (i = 1; i < humanoid_count; i++) 
+    {
+
+        struct model_d *m = models[i];  // Humanoids
+        int reset = FALSE;
+
+        if ((i%2) == 0)
+        {
+            m->origin_x += 0.2f;
+            if (m->collision_state == TRUE)
+            {
+                m->collision_state = FALSE;
+                reset = TRUE;
+            }
+        }
+        if ((i%2) != 0)
+        {
+            m->origin_x -= 0.2f;
+            if (m->collision_state == TRUE)
+            {
+                m->collision_state = FALSE;
+                reset = TRUE;
+            }
+        }
+
+        if (reset == TRUE)
+        {
+            float zoffset = (float) (rand() % 8);
+
+            // origin
+            m->origin_x = 
+                (float) -3.0f + (float) 0.8f * (float) i; // spread across X axis
+            m->origin_y = (float) -3.0f;  // slightly lower (ground level)
+            m->origin_z = (float) DEFAULT_MODEL_INITIAL_Z_POSITION + (float) zoffset;
+
+            // Translations ...
+            m->delta_x = (float) 0.0f;  //DEFAULT_MODEL_INITIAL_DELTA_X; 
+            m->delta_y = (float) 0.0f;  // DEFAULT_MODEL_INITIAL_DELTA_Y; 
+            m->delta_z = (float) DEFAULT_MODEL_INITIAL_DELTA_Z;
+        }
+
+        m->origin_y = ground->origin_y;  // Stay grounded
+        m->origin_z += m->delta_z;       // March forward
+
+        /*
+        // --- Collision with the main charactere ---
+        if ( m->origin_x > (main_character->origin_x - 0.4f) &&  
+             m->origin_x < (main_character->origin_x + 0.4f) &&
+             m->origin_z > (main_character->origin_z - 0.4f) &&
+             m->origin_z < (main_character->origin_z + 0.4f) )
+        {
+            m->collision_state = TRUE;
+        }
+        */
+        // --- Collision with the main charactere ---
+        float radius = 0.8f; // collision radius
+        float dx = m->origin_x - main_character->origin_x;
+        float dz = m->origin_z - main_character->origin_z;
+        float distance = sqrtf(dx*dx + dz*dz);
+        if (distance < radius) {
+            m->collision_state = TRUE;
+        }
+
+
+        //
+        // -- Collision with the limits
+        //
+
+        if ( m->origin_x < (-limit_x) )
+        { 
+            m->origin_x = (-limit_x);
+            m->collision_state = TRUE;
+        }
+        if ( m->origin_x > limit_x    )
+        { 
+            m->origin_x = limit_x;
+            m->collision_state = TRUE;
+        }
+        if ( m->origin_z < (-limit_x) )
+        { 
+            m->origin_z = (-limit_z);
+            m->collision_state = TRUE;
+        }
+        if ( m->origin_z > limit_z    )
+        { 
+            m->origin_x = limit_z;
+            m->collision_state = TRUE;
+        }
+    };
 }
 
 
@@ -1850,7 +1894,10 @@ static void __setupTerrain(void)
 // #ps: Defined in models.c
     ground = t;
 
+/*
 // ----------------------------------------
+// #ps: 
+// >>> keeping the world dimensions larger than the terrain <<<
 // Compute terrain bounds.
 // It will become the dimensions for the world.
 
@@ -1879,6 +1926,7 @@ static void __setupTerrain(void)
     current_world_3d->y_size = height;
     current_world_3d->z_size = depth;
     }
+*/
 }
 
 
