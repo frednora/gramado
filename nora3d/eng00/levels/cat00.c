@@ -37,13 +37,11 @@ static void __drawCatScene(void)
         //for (i=0; i<scale_max; i++)
         //{
             //validate_background();                  //begin paint
-            demoClearSurface(dw_cat,GRCOLOR_LIGHTCYAN);   // Clear surface
-            
+            demoClearSurface(dw_cat, GRCOLOR_LIGHTCYAN);   // Clear surface
 
+            // see: models.c
             // IN: eye scale, x,y,z
-            __draw_cat(
-                1, 
-                0, 0, CatDemoInfo.z_counter );
+            __draw_cat( 1, 0, 0, CatDemoInfo.z_counter );
 
             demoFlushSurface(dw_cat);
 
@@ -63,14 +61,14 @@ static void __drawCatScene(void)
 }
 
 
-void demoCat(void)
+void cat00DrawScene(void)
 {
     __drawCatScene();
 
-// Increase the scene coutner.
+// Increase the scene coutner
     CatDemoInfo.z_counter++;
 
-// Round.
+// Round
     if (CatDemoInfo.z_counter >= CatDemoInfo.z_max)
         CatDemoInfo.z_counter = 0;
 }

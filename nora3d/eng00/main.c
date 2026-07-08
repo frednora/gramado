@@ -2005,7 +2005,7 @@ serviceAsyncCommand (void)
     case 4:
         gwssrv_debug_print ("serviceAsyncCommand: [4]\n");
         if (current_mode == GRAMADO_JAIL){
-            demoCat();
+            cat00DrawScene();
         }
         goto done;
         break;
@@ -3353,6 +3353,7 @@ static void engineSetupCurrentDemo(void)
     case LEVEL_1:
         cat00SetupDemo();
         break;
+
     case LEVEL_2:
     case LEVEL_3:
         demoHumanoidSetup();  // see: hub.c
@@ -3408,14 +3409,14 @@ static void engineDrawSceneForCurrentDemo(unsigned long sec)
         break;
     
     case LEVEL_1:
-        demoCat();
+        cat00DrawScene();
         break;
 
     case LEVEL_2:
     case LEVEL_3:
         // IN: second counter
         demoHumanoidDrawScene(sec);  // see: hub.c
-        //demoCat();
+        //cat00DrawScene();
         //demoTriangle();
         //demoCurve();
         // ...
@@ -3433,6 +3434,10 @@ static void engineDrawSceneForCurrentDemo(unsigned long sec)
 
 static void engineShutdown(void)
 {
+
+    gramado_clear_surface(NULL, 0x000000);  // Black
+    gramado_flush_surface(NULL);
+
     printf("engineShutdown: Starting final cleanup...\n");
 
  // TODO:
@@ -3873,7 +3878,7 @@ static int engineGameLoop(void)
     memset(buf_fps, 0, 64);
 
 // Testing demos.
-    //demoCat();
+    //cat00DrawScene();
     //demoCurve();
     //demoLines();
     //demoPolygon();
@@ -4035,7 +4040,7 @@ level_entry_point:
             // #### PAINT END ####
             //
 
-            // Flush the backbuffer into the framebuffer.
+            // Flush the backbuffer into the framebuffer
             gramado_flush_surface(NULL);
 
             /*
@@ -4121,6 +4126,7 @@ level_entry_point:
 
 // Return to main()
     return 0;
+
 fail:
     return (int) -1;
 }

@@ -15,7 +15,7 @@ extern struct cat_demo_info_d  CatDemoInfo;
 
 
 // Draw
-void demoCat(void);
+void cat00DrawScene(void);
 
 // Setup
 // Called once
