@@ -1742,7 +1742,12 @@ void demoHumanoidUpdate(void)
         }
         */
         // --- Collision with the main charactere ---
-        float radius = 0.8f; // collision radius
+        //float radius = 0.8f; // collision radius
+        float radius = (float) main_character->interaction_radius;
+        if ( (float) radius < (float) 0.5f )
+        { 
+            radius = (float) 0.5f; 
+        };
         float dx = m->origin_x - main_character->origin_x;
         float dz = m->origin_z - main_character->origin_z;
         float distance = sqrtf(dx*dx + dz*dz);
@@ -2039,8 +2044,8 @@ void demoHumanoidSetup(void)
         }
 
         model->fThetaAngle = (float) 0.0f;
-
         model->rop = 0;
+        model->interaction_radius = (float) 0.8f;
                 
         // Initialize vectors
         //for (i=0; i<32; i++)
@@ -2346,6 +2351,7 @@ void demoHumanoidSetup(void)
 
         //main_character->rop = 51;  // ROP for the hero
         main_character->rop = 0;  // ROP for the hero
+        main_character->interaction_radius = (float) 0.8f;
     }
 
 //----------------
