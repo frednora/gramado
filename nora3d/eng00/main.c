@@ -3347,7 +3347,7 @@ static void engineSetupCurrentDemo(void)
     switch (CurrentLevel){
 
     case LEVEL_INTRO:
-        intro00SetupDemo();
+        intro00SetupDemo();  // see: intro00.c
         break;
 
     case LEVEL_HUB:
@@ -3355,11 +3355,11 @@ static void engineSetupCurrentDemo(void)
         break;
 
     case LEVEL_1:
-        cat00SetupDemo();
+        cat00SetupDemo();  // see: cat00.c
         break;
 
     case LEVEL_2:
-        tri00SetupDemo();
+        tri00SetupDemo();  // see: tri00.c
         break;
 
     case LEVEL_3:
