@@ -15,38 +15,73 @@ ipv4_send (
     uint8_t source_ip[4], 
     uint8_t target_ip[4], 
     uint8_t target_mac[6],
-    char *data_buffer,     // IPV4 payload
-    size_t data_lenght )
+    const char *data_buffer,  // IPV4 payload
+    size_t data_lenght )       // IPV4 payload size
 {
     int Status = -1;
+
+//
+// The frame
+//
+
+    // Th whole frame, needed by ethernet_send()
+    size_t FRAME_SIZE = 
+               ( ETHERNET_HEADER_LENGHT +\
+                 IP_HEADER_LENGHT +\
+                 data_lenght );
+
+    // Ethernet MTU is usually 1500 bytes.
+    // Add Ethernet + IPv4 headers for safety.
+    size_t MAX_FRAME_SIZE = 
+        (ETHERNET_HEADER_LENGHT + IP_HEADER_LENGHT + 1500);
+
+    // Local buffer for the whole frame
+    uint8_t frame[MAX_FRAME_SIZE];
+
     register int i=0;
-// Frame base. (The IPV4 payload)
-    unsigned long addr = (unsigned long) data_buffer;
+
+// The frame can't be bigger than the buffer we created.
+    if (FRAME_SIZE > MAX_FRAME_SIZE)
+    {
+        printk("ipv4_send: Frame too large (%d)\n", FRAME_SIZE);
+        goto fail;
+    }
 
     // #todo
     //if ( (void*) currentNIC == NULL )
         //goto fail;
 
-//==============================================
-// # ethernet header #
+// ==============================================
+
+//
+// ETHERNET header
+//
 
 // Ethernet base
-    struct ether_header  Leh;
 // Destination MAC, Our MAC and Type of protocol.
+
+    struct ether_header  Leh;
     for (i=0; i<6; i++){
         Leh.mac_src[i] = (uint8_t) currentNIC->mac_address[i];  // source 
         Leh.mac_dst[i] = (uint8_t) target_mac[i];               // dest
     };
     Leh.type = (uint16_t) ToNetByteOrder16(ETHERTYPE_IPV4);
+    // Push
+    memcpy (  
+        frame,   // At the base of the buffer
+        &Leh, 
+        ETHERNET_HEADER_LENGHT 
+    );
 
+// ==============================================
 
-//==============================================
-// # ipv4 header #
+//
+// IPV4 header
+//
 
-// IPV4 base
-    struct ip_d  Lipv4;
+    struct ip_d  Lipv4;  // IPV4 base
 
-// The Ipv4 header
+    // The Ipv4 header
     //hdr->ihl = 5;
     //hdr->ver = 4;
     //hdr->tos = 0;
@@ -71,12 +106,11 @@ ipv4_send (
 // No payload do ip temos o (udp+data)
 // O lenght do protocolo precisa conter o seu proprio header e o seu proprio payload.
 
-    uint16_t xxxdata = (uint16_t) (data_lenght & 0xFFFF);
-    uint16_t __ipheaderlen = IP_HEADER_LENGHT;
-    uint16_t __ippayloadlen = (uint16_t) (UDP_HEADER_LENGHT +  xxxdata);
-    uint16_t __iplen = (uint16_t) (__ipheaderlen + __ippayloadlen);
-// Len
-    Lipv4.ip_len = (uint16_t) ToNetByteOrder16(__iplen);
+    // Total length = IPv4 header + data_length
+    // (data_length already includes protocol header + payload)
+    uint16_t __ip_len = IP_HEADER_LENGHT + (uint16_t)data_lenght;
+    Lipv4.ip_len = ToNetByteOrder16(__ip_len);
+
 
 // Identification
 // ... identifying the group of fragments of a single IP datagram. 
@@ -91,7 +125,7 @@ ipv4_send (
     Lipv4.ip_sum = 0;   // Checksum
 
 //
-// IPV4
+// addresses
 //
 
     //network_fill_ipv4(hdr->src, source_ip);
@@ -99,11 +133,11 @@ ipv4_send (
 
     unsigned char *spa = (unsigned char *) &Lipv4.ip_src.s_addr;
     unsigned char *tpa = (unsigned char *) &Lipv4.ip_dst.s_addr;
-
     for (i=0; i<4; i++){
         spa[i] = (uint8_t) source_ip[i]; 
         tpa[i] = (uint8_t) target_ip[i]; 
     };
+
 
 //
 // Checksum
@@ -115,30 +149,53 @@ ipv4_send (
               0, 
               0,
               (const unsigned char *) &Lipv4, 
-              (const unsigned char *) &Lipv4 + sizeof(struct ip_d));
+              (const unsigned char *) &Lipv4 + sizeof(struct ip_d) );
     Lipv4.ip_sum =
          (uint16_t) ToNetByteOrder16(Lipv4.ip_sum);
 
-// #debug
-    // printk("ip_sum={%x} \n",Lipv4.ip_sum);
 
-    //printk ("size %d\n", sizeof (struct ip_d) );
-    //refresh_screen();
-    //while(1){}
+    // Push
+    memcpy (
+        frame + ETHERNET_HEADER_LENGHT,  // Right after the ethernet header
+        &Lipv4, 
+        IP_HEADER_LENGHT 
+    );
+
+    // #debug
+    // printk("ip_sum={%x} \n",Lipv4.ip_sum);
+    // printk ("size %d\n", sizeof (struct ip_d) );
+    // refresh_screen();
+    // while(1){}
+
+
+    // -------------------------------
+    // Payload
+
+    memcpy (
+        frame + ETHERNET_HEADER_LENGHT + IP_HEADER_LENGHT,  // Right after the ip header
+        data_buffer, 
+        data_lenght
+    );
+
+
+//
+// SEND
+//
 
 // Send frame via hardware
-    size_t FRAME_SIZE = 
-               ( ETHERNET_HEADER_LENGHT +\
-                 IP_HEADER_LENGHT +\
-                 data_lenght );
+// #bugbug: That is not the right pointer
 
-// Send
-    Status = (int) ethernet_send( FRAME_SIZE, addr );
-    if (Status<0){
+// We are building the ethernet header, the ipv4 header and 
+// we received the ipv4 payload pointer and size. 
+// We need put these blocks together at the end of the routine.
+
+    Status = (int) ethernet_send(FRAME_SIZE, (const char*) frame);
+    if (Status < 0){
         goto fail;
     }
 
-    return 0;
+    return 0;  // OK
+
 fail:
     return (int) -1;
 }

@@ -815,21 +815,21 @@ e1000hw_send(
 // Device structure
     d = (struct intel_nic_info_d *) dev;
     if ((void*) d == NULL){
-        printk("e1000_send: d\n");
+        printk("e1000hw_send: d\n");
         goto fail;
     }
     if (d->magic != 1234){
-        printk("e1000_send: d validation\n");
+        printk("e1000hw_send: d validation\n");
         goto fail;
     }
 
 // len
     if (len <= 0)
-        panic("e1000_send: len=0\n");
+        panic("e1000hw_send: len=0\n");
     // #test
     // 8192 
     if (len > E1000_DEFAULT_BUFFER_SIZE)
-        panic("e1000_send: len\n");
+        panic("e1000hw_send: len\n");
 
     if ((void*) data == NULL){
         panic("e1000:_send: data\n");
@@ -838,7 +838,7 @@ e1000hw_send(
 // current descriptor
     old = d->tx_cur;
     if (old >= SEND_BUFFER_MAX){
-        panic("e1000_send: old\n");
+        panic("e1000hw_send: old\n");
     }
 
 // Usando o ponteiro virtual de 64bit.

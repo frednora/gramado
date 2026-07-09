@@ -15,10 +15,45 @@
 // Protocols
 //
 
+/*
 #define PROTOCOL_IP_ICMP  1
 #define PROTOCOL_IP_TCP   6
 #define PROTOCOL_IP_UDP   17
 // ...
+*/
+
+// ip.h
+
+// Internet Control Message Protocol
+#define PROTOCOL_IP_ICMP   1
+
+// Internet Group Management Protocol
+#define PROTOCOL_IP_IGMP   2
+
+// Transmission Control Protocol
+#define PROTOCOL_IP_TCP    6
+
+// User Datagram Protocol
+#define PROTOCOL_IP_UDP    17
+
+// Generic Routing Encapsulation
+#define PROTOCOL_IP_GRE    47
+
+// Encapsulating Security Payload (IPsec)
+#define PROTOCOL_IP_ESP    50
+
+// Authentication Header (IPsec)
+#define PROTOCOL_IP_AH     51
+
+// Stream Control Transmission Protocol
+#define PROTOCOL_IP_SCTP   132
+
+// IPv6 encapsulation
+#define PROTOCOL_IP_IPV6   41
+
+// Open Shortest Path First
+#define PROTOCOL_IP_OSPF   89
+
 
 #define IP_RF  0x8000			/* reserved fragment flag */
 #define IP_EF  0x8000			/* evil flag, per RFC 3514 */
@@ -104,8 +139,8 @@ ipv4_send (
     uint8_t source_ip[4], 
     uint8_t target_ip[4], 
     uint8_t target_mac[6],
-    char *data_buffer, 
-    size_t data_lenght );
+    const char *data_buffer,  // IPV4 payload
+    size_t data_lenght );       // IPV4 payload size
 
 
 //

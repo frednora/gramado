@@ -23,10 +23,18 @@ NOT resolve IP routing
 // you can start printing interface state (name, MAC, IP) whenever you send, 
 // which helps confirm the stack is using the right interface.
 
+// IN:
+// + len = Frame size
+// + data = Frame pointer
+
+// Expectation: 
+// frame_pointer should point to a contiguous buffer containing 
+// Ethernet header + IP header + payload. 
+
 int 
 ethernet_send(
-    size_t len, 
-    const char *data )
+    size_t frame_size, 
+    const char *frame_pointer )
 {
 
 // #todo
@@ -68,15 +76,14 @@ ethernet_send(
         
         // Send frame via NIC.
         // IN: nic, frame size, frame pointer.
-        e1000_send( nic_intel, len, data );
+        e1000_send( nic_intel, frame_size, frame_pointer );
     }
 
     // #todo: Other devices
     //if (...){
     //}
 
-// Done
-    return 0;
+    return 0;  // Done
 
 fail:
     return (int) -1;

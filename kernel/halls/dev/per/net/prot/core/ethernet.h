@@ -97,13 +97,12 @@ struct ether_header
     uint16_t type;              // type of protocol: ARP/IP ...
 } __attribute__ ((packed));
 
-
 //---------------------
 
 int 
 ethernet_send(
-    size_t len, 
-    const char *data );
+    size_t frame_size, 
+    const char *frame_pointer );
 
 int ethernet_on_sending (void);
 
