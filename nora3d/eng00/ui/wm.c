@@ -3491,14 +3491,30 @@ wmProcedure (
             break;
         */
 
+        // Humanoids (HUB)
         case '0':
             current_level = LEVEL_HUB;
             exit_level = TRUE;
             return 0;
             break;
 
+        // Cat
         case '1':
             current_level = LEVEL_1;
+            exit_level = TRUE;
+            return 0;
+            break;
+
+        // Triangle
+        case '2':
+            current_level = LEVEL_2;
+            exit_level = TRUE;
+            return 0;
+            break;
+
+        // Curve and string
+        case '3':
+            current_level = LEVEL_3;
             exit_level = TRUE;
             return 0;
             break;

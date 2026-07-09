@@ -8,10 +8,11 @@
 // Levels
 //
 
-#define LEVEL_HUB  0
-#define LEVEL_1  1  //#todo
-#define LEVEL_2  2  //#todo
-#define LEVEL_3  3  //#todo
+#define LEVEL_INTRO  0
+#define LEVEL_HUB    1
+#define LEVEL_1  101
+#define LEVEL_2  102
+#define LEVEL_3  103
 // ...
 extern int current_level;
 extern int exit_level;

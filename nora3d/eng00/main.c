@@ -3346,22 +3346,24 @@ static void engineSetupCurrentDemo(void)
 
     switch (CurrentLevel){
 
+    case LEVEL_INTRO:
+        intro00SetupDemo();
+        break;
+
     case LEVEL_HUB:
         demoHumanoidSetup();  // see: hub.c
         break;
-    
+
     case LEVEL_1:
         cat00SetupDemo();
         break;
 
     case LEVEL_2:
+        tri00SetupDemo();
+        break;
+
     case LEVEL_3:
-        demoHumanoidSetup();  // see: hub.c
-        // #todo
-        //cat00SetupDemo();
-        //tri00SetupDemo();
-        //curve00SetupDemo();
-        // ...
+        intro00SetupDemo();
         break;
 
     // Hub is the default level
@@ -3377,15 +3379,20 @@ static void engineUpdateCurrentDemo(void)
 
     switch (CurrentLevel){
 
+    case LEVEL_INTRO:
+        break;
+
     case LEVEL_HUB:
         demoHumanoidUpdate();  // see: hub.c
         break;
     
     case LEVEL_1:
         break;
+
     case LEVEL_2:
+        break;
+
     case LEVEL_3:
-        demoHumanoidUpdate();  // see: hub.c
         break;
 
     // Hub is the default level
@@ -3403,6 +3410,10 @@ static void engineDrawSceneForCurrentDemo(unsigned long sec)
 
     switch (CurrentLevel){
 
+    case LEVEL_INTRO:
+        intro00DrawScene();
+        break;
+
     case LEVEL_HUB:
         // IN: second counter
         demoHumanoidDrawScene(sec);  // see: hub.c
@@ -3413,13 +3424,11 @@ static void engineDrawSceneForCurrentDemo(unsigned long sec)
         break;
 
     case LEVEL_2:
+        demoTriangle();
+        break;
+
     case LEVEL_3:
-        // IN: second counter
-        demoHumanoidDrawScene(sec);  // see: hub.c
-        //cat00DrawScene();
-        //demoTriangle();
-        //demoCurve();
-        // ...
+        intro00DrawScene();
         //noraDrawingStuff(); // loop
         break;
 
@@ -3879,7 +3888,7 @@ static int engineGameLoop(void)
 
 // Testing demos.
     //cat00DrawScene();
-    //demoCurve();
+    //intro00DrawScene();
     //demoLines();
     //demoPolygon();
     //demoPolygon2();
@@ -3906,7 +3915,8 @@ static int engineGameLoop(void)
     // ==============================================
     // >>> Setup the current level
     
-    current_level = LEVEL_HUB;  // Hub World
+    // current_level = LEVEL_HUB;  // Hub World
+    current_level = LEVEL_INTRO;   // Intro, then hub
 
 //
 // Level entry point

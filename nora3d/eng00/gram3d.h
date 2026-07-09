@@ -81,7 +81,7 @@ extern int current_mode;
 #include "levels/polygon.h"
 #include "levels/tri00.h"
 #include "levels/lin00.h"
-#include "levels/curve00.h"
+#include "levels/intro00.h"
 
 #include "packet.h"
 
