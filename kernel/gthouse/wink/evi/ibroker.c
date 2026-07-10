@@ -878,6 +878,14 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         network_send_arp_request2();
         goto exit_cmp;
     }
+
+    if (kstrncmp(cmdline,"test-tcp",8) == 0)
+    {
+        test_sending_tcp();
+        goto exit_cmp;
+    }
+
+
     if (kstrncmp(cmdline,"udp",3) == 0)
     {
         //#test: Test sender.

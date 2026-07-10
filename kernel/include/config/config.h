@@ -88,7 +88,7 @@
 // #todo: See 'Core isolation' in network/firewall configuration.
 // >> It works only on Virtualbox using PIIX3 chipset. <<
 // see: pci.c, e1000hw.c
-#define USE_E1000    1
+#define USE_E1000    0
 
 
 // #test: Pooling PS2 Keyboard and Mouse.

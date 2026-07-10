@@ -121,8 +121,11 @@ ipv4_send (
 
     Lipv4.ip_off = ToNetByteOrder16(0x4000);  //htons(0x4000);
     Lipv4.ip_ttl = 64;
+    // This is the protocol identifier inside the IPv4 header. 
+    // It tells the receiver what the payload actually is (TCP, UDP, ICMP, etc.). 
     Lipv4.ip_p = protocol;
     Lipv4.ip_sum = 0;   // Checksum
+
 
 //
 // addresses
@@ -166,7 +169,6 @@ ipv4_send (
     // printk ("size %d\n", sizeof (struct ip_d) );
     // refresh_screen();
     // while(1){}
-
 
     // -------------------------------
     // Payload

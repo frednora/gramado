@@ -493,6 +493,33 @@ network_handle_arp(
     // continua: macs e ips ... 
 */
 
+// --------------------------
+
+// --- Gateway check right at the start ---
+    if (ar->arp_spa[0] == 192 && 
+        ar->arp_spa[1] == 168 && 
+        ar->arp_spa[2] == 1   &&
+        ar->arp_spa[3] == 1) 
+    {
+        printk("ARP: Gateway reply detected\n");
+
+        /*
+        // Save into NetworkInfo
+        if ((void*) NetworkInfo != NULL && NetworkInfo->initialized == TRUE) {
+            network_fill_ipv4(NetworkInfo->gateway_ipv4, ar->arp_spa);
+            network_fill_mac(NetworkInfo->gateway_mac, ar->arp_sha);
+            NetworkInfo->gateway_initialized = TRUE;
+        }
+        */
+
+        // Save into NetworkSaved for fast access
+        network_fill_ipv4(NetworkSaved.gateway_ipv4, ar->arp_spa);
+        network_fill_mac(NetworkSaved.gateway_mac, ar->arp_sha);
+    }
+
+    // --- continue with normal ARP handling ---
+
+// ----------------------------
 // Operation
     uint16_t op = (uint16_t) FromNetByteOrder16(ar->op);
 

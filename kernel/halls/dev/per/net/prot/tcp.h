@@ -149,6 +149,21 @@ struct tcp_d
 
 // =====================================
 
+void test_sending_tcp(void);
+
+int 
+tcp_send(
+    uint8_t source_ip[4],
+    uint8_t target_ip[4],
+    uint8_t target_mac[6],
+    uint16_t source_port,
+    uint16_t dest_port,
+    tcp_seq seq,
+    tcp_ack ack,
+    uint16_t flags,
+    const char *payload,
+    size_t payload_len );
+
 //
 // $
 // HANDLER

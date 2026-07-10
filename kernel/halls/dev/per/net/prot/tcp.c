@@ -22,6 +22,122 @@ static char tcp_payload[1024];
 
 // ===================================================
 
+/*
+void test_sending_tcp(void)
+{
+    printk("test_sending_tcp: sending multiple SYNs via gateway\n");
+
+    // Google DNS (TCP 53)
+    uint8_t dns_ip[4] = {8, 8, 8, 8};
+    tcp_send(dhcp_info.your_ipv4, dns_ip, NetworkSaved.gateway_mac,
+             12345, 53, 0x2000, 0, TH_SYN, NULL, 0);
+
+    // Cloudflare DNS (TCP 53)
+    uint8_t cf_ip[4] = {1, 1, 1, 1};
+    tcp_send(dhcp_info.your_ipv4, cf_ip, NetworkSaved.gateway_mac,
+             12346, 53, 0x3000, 0, TH_SYN, NULL, 0);
+
+    // Example.com HTTP (80)
+    uint8_t ex_ip[4] = {93, 184, 216, 34};
+    tcp_send(dhcp_info.your_ipv4, ex_ip, NetworkSaved.gateway_mac,
+             12347, 80, 0x4000, 0, TH_SYN, NULL, 0);
+
+    // Example.com HTTPS (443)
+    tcp_send(dhcp_info.your_ipv4, ex_ip, NetworkSaved.gateway_mac,
+             12348, 443, 0x5000, 0, TH_SYN, NULL, 0);
+
+    // Google DNS port 22 (SSH, usually closed)
+    tcp_send(dhcp_info.your_ipv4, dns_ip, NetworkSaved.gateway_mac,
+             12349, 22, 0x6000, 0, TH_SYN, NULL, 0);
+}
+*/
+
+void test_sending_tcp(void)
+{
+    printk("test_sending_tcp: sending multiple SYNs via gateway\n");
+
+    // Google Web (HTTP)
+    uint8_t google_ip[4] = {142, 250, 190, 46};
+    tcp_send(dhcp_info.your_ipv4, google_ip, NetworkSaved.gateway_mac,
+             12350, 80, 0x7000, 0, TH_SYN, NULL, 0);
+
+    // Cloudflare Web (HTTPS)
+    uint8_t cf_ip[4] = {104, 16, 132, 229};
+    tcp_send(dhcp_info.your_ipv4, cf_ip, NetworkSaved.gateway_mac,
+             12351, 443, 0x8000, 0, TH_SYN, NULL, 0);
+
+    // Microsoft Azure (HTTP)
+    uint8_t ms_ip[4] = {20, 112, 52, 29};
+    tcp_send(dhcp_info.your_ipv4, ms_ip, NetworkSaved.gateway_mac,
+             12352, 80, 0x9000, 0, TH_SYN, NULL, 0);
+
+    // Wikipedia (HTTPS)
+    uint8_t wiki_ip[4] = {208, 80, 154, 224};
+    tcp_send(dhcp_info.your_ipv4, wiki_ip, NetworkSaved.gateway_mac,
+             12353, 443, 0xA000, 0, TH_SYN, NULL, 0);
+}
+
+
+
+int 
+tcp_send(
+    uint8_t source_ip[4],
+    uint8_t target_ip[4],
+    uint8_t target_mac[6],
+    uint16_t source_port,
+    uint16_t dest_port,
+    tcp_seq seq,
+    tcp_ack ack,
+    uint16_t flags,
+    const char *payload,
+    size_t payload_len )
+{
+    // Buffer for TCP header + payload
+    uint8_t segment[TCP_HEADER_LENGHT + payload_len];
+
+    struct tcp_d tcp;
+
+    // Fill TCP header
+    tcp.th_sport = ToNetByteOrder16(source_port);
+    tcp.th_dport = ToNetByteOrder16(dest_port);
+    tcp.th_seq   = ToNetByteOrder32(seq);
+    tcp.th_ack   = ToNetByteOrder32(ack);
+
+    // Data offset (header length in 32-bit words = 5 for 20 bytes)
+    // Reserved bits = 0, flags = passed in
+    tcp.do_res_flags = ToNetByteOrder16(flags | (5 << 12));
+
+    tcp.window_size   = ToNetByteOrder16(65535); // max window
+    tcp.checksum      = 0;                       // will calculate later
+    tcp.urgent_pointer= 0;
+
+    // Copy header into buffer
+    memcpy(segment, &tcp, TCP_HEADER_LENGHT);
+
+    // Copy payload if any
+    if (payload_len > 0 && payload != NULL) {
+        memcpy(segment + TCP_HEADER_LENGHT, payload, payload_len);
+    }
+
+    // TODO: Calculate TCP checksum (pseudo-header + TCP header + payload)
+
+    int rv = -1;
+
+    // Send via IPv4
+    rv = 
+    (int) ipv4_send(
+        PROTOCOL_IP_TCP,
+        source_ip,
+        target_ip,
+        target_mac,
+        (const char*) segment,
+        TCP_HEADER_LENGHT + payload_len
+    );
+
+    return (int) rv;
+}
+
+
 //
 // $
 // HANDLER
@@ -169,9 +285,39 @@ network_handle_tcp(
             // The client is saying: "I want to connect to the 
             // server process that is listening to the port 11888"
 
+            // #todo
+            // >>> Lets work on this response! <<<
+    
+            // Example sequence/ack numbers
+            tcp_seq seq = 1000;              // server initial sequence number
+            tcp_ack ack = _seq_number + 1;   // acknowledge client’s ISN
+
+            // Flags: SYN + ACK
+            uint16_t flags = TH_SYN | TH_ACK;
+
+            //
+            printk(">> Sending SYN/ACK\n");
+
+            // No payload for handshake
+            tcp_send(
+                dhcp_info.your_ipv4,       //my_ip,           // server IP
+                NetworkSaved.caller_ipv4,  //client_ip,       // client IP
+                NetworkSaved.caller_mac,   //client_mac,      // client MAC
+                11888,           // server port
+                sport,           // client port
+                seq,
+                ack,
+                flags,
+                NULL,            // no payload
+                0
+            );
+
+            // Waiting for the ACK:
+
             return;
         }
 
+    
         // (2) SYN/ACK
         // A server accepted the connection.
         if ( fSYN == 1 && fACK == 1 )
