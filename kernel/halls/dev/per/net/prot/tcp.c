@@ -18,123 +18,555 @@
 
 #include <kernel.h>
 
-static char tcp_payload[1024];
+static char __tcp_payload[1024];
+
+static uint16_t 
+__tcp_checksum(
+    uint8_t src_ip[4],
+    uint8_t dst_ip[4],
+    const uint8_t *tcp_segment,
+    size_t tcp_len );
 
 // ===================================================
 
+
 /*
-void test_sending_tcp(void)
+static uint16_t 
+__tcp_checksum(
+    uint8_t src_ip[4],
+    uint8_t dst_ip[4],
+    const uint8_t *tcp_segment,
+    size_t tcp_len )
 {
-    printk("test_sending_tcp: sending multiple SYNs via gateway\n");
+    uint32_t sum = 0;
+    size_t i=0;
 
-    // Google DNS (TCP 53)
-    uint8_t dns_ip[4] = {8, 8, 8, 8};
-    tcp_send(dhcp_info.your_ipv4, dns_ip, NetworkSaved.gateway_mac,
-             12345, 53, 0x2000, 0, TH_SYN, NULL, 0);
+    // Pseudo-header
+    sum += (src_ip[0] << 8) | src_ip[1];
+    sum += (src_ip[2] << 8) | src_ip[3];
+    sum += (dst_ip[0] << 8) | dst_ip[1];
+    sum += (dst_ip[2] << 8) | dst_ip[3];
+    sum += 6;               // Protocol = TCP
+    sum += tcp_len;
 
-    // Cloudflare DNS (TCP 53)
-    uint8_t cf_ip[4] = {1, 1, 1, 1};
-    tcp_send(dhcp_info.your_ipv4, cf_ip, NetworkSaved.gateway_mac,
-             12346, 53, 0x3000, 0, TH_SYN, NULL, 0);
+    // TCP header + payload
+    for (i=0; i < tcp_len; i += 2) {
+        uint16_t word = tcp_segment[i] << 8;
+        if (i+1 < tcp_len) word |= tcp_segment[i+1];
+        sum += word;
+    }
 
-    // Example.com HTTP (80)
-    uint8_t ex_ip[4] = {93, 184, 216, 34};
-    tcp_send(dhcp_info.your_ipv4, ex_ip, NetworkSaved.gateway_mac,
-             12347, 80, 0x4000, 0, TH_SYN, NULL, 0);
+    // Fold 32-bit sum to 16 bits
+    while (sum >> 16) sum = (sum & 0xFFFF) + (sum >> 16);
 
-    // Example.com HTTPS (443)
-    tcp_send(dhcp_info.your_ipv4, ex_ip, NetworkSaved.gateway_mac,
-             12348, 443, 0x5000, 0, TH_SYN, NULL, 0);
-
-    // Google DNS port 22 (SSH, usually closed)
-    tcp_send(dhcp_info.your_ipv4, dns_ip, NetworkSaved.gateway_mac,
-             12349, 22, 0x6000, 0, TH_SYN, NULL, 0);
+    return (uint16_t)(~sum);
 }
 */
 
-void test_sending_tcp(void)
+static uint16_t 
+__tcp_checksum(
+    uint8_t src_ip[4],
+    uint8_t dst_ip[4],
+    const uint8_t *tcp_segment,   // TCP header + data, with checksum field = 0
+    size_t tcp_len)
 {
-    printk("test_sending_tcp: sending multiple SYNs via gateway\n");
+    uint32_t sum = 0;
+    size_t i;
 
-    // Google Web (HTTP)
-    uint8_t google_ip[4] = {142, 250, 190, 46};
-    tcp_send(dhcp_info.your_ipv4, google_ip, NetworkSaved.gateway_mac,
-             12350, 80, 0x7000, 0, TH_SYN, NULL, 0);
+    // Pseudo-header
+    sum += (src_ip[0] << 8) | src_ip[1];
+    sum += (src_ip[2] << 8) | src_ip[3];
+    sum += (dst_ip[0] << 8) | dst_ip[1];
+    sum += (dst_ip[2] << 8) | dst_ip[3];
+    sum += 6;                    // TCP protocol
+    sum += (uint16_t)tcp_len;    // TCP length
 
-    // Cloudflare Web (HTTPS)
-    uint8_t cf_ip[4] = {104, 16, 132, 229};
-    tcp_send(dhcp_info.your_ipv4, cf_ip, NetworkSaved.gateway_mac,
-             12351, 443, 0x8000, 0, TH_SYN, NULL, 0);
+    // TCP header + data (checksum field must be 0)
+    for (i = 0; i < tcp_len; i += 2) {
+        uint16_t word = (tcp_segment[i] << 8);
+        if (i + 1 < tcp_len)
+            word |= tcp_segment[i + 1];
+        sum += word;
+    }
 
-    // Microsoft Azure (HTTP)
-    uint8_t ms_ip[4] = {20, 112, 52, 29};
-    tcp_send(dhcp_info.your_ipv4, ms_ip, NetworkSaved.gateway_mac,
-             12352, 80, 0x9000, 0, TH_SYN, NULL, 0);
+    // If odd length, pad with zero (already handled by the loop above)
 
-    // Wikipedia (HTTPS)
-    uint8_t wiki_ip[4] = {208, 80, 154, 224};
-    tcp_send(dhcp_info.your_ipv4, wiki_ip, NetworkSaved.gateway_mac,
-             12353, 443, 0xA000, 0, TH_SYN, NULL, 0);
+    // Fold 32-bit sum
+    while (sum >> 16)
+        sum = (sum & 0xFFFF) + (sum >> 16);
+
+    return (uint16_t)(~sum);
 }
 
 
-
-int 
-tcp_send(
-    uint8_t source_ip[4],
-    uint8_t target_ip[4],
-    uint8_t target_mac[6],
-    uint16_t source_port,
-    uint16_t dest_port,
+int
+network_send_tcp ( 
+    uint8_t source_ip[4], 
+    uint8_t target_ip[4], 
+    uint8_t target_mac[6], 
+    unsigned short source_port,
+    unsigned short target_port,
     tcp_seq seq,
     tcp_ack ack,
     uint16_t flags,
-    const char *payload,
-    size_t payload_len )
+    char *data_buffer, 
+    size_t data_lenght )
 {
-    // Buffer for TCP header + payload
-    uint8_t segment[TCP_HEADER_LENGHT + payload_len];
+// Buffers:
+// ethernet, ipv4, tcp, data.
 
-    struct tcp_d tcp;
+    register int i=0;
+    int j=0;
+    char *data = (char *) data_buffer;  // TCP payload
 
-    // Fill TCP header
-    tcp.th_sport = ToNetByteOrder16(source_port);
-    tcp.th_dport = ToNetByteOrder16(dest_port);
-    tcp.th_seq   = ToNetByteOrder32(seq);
-    tcp.th_ack   = ToNetByteOrder32(ack);
+//==============================================
+
+// #todo
+// NIC Intel device structure.
+
+    if ((void *) currentNIC == NULL){
+        printk("network_send_tcp: currentNIC\n");
+        //goto fail;
+        return -1;
+    }
+
+// Configurando a estrutura do dispositivo.
+// 192.168.1.12
+// Not used?
+    currentNIC->ip_address[0] = source_ip[0];  //192;
+    currentNIC->ip_address[1] = source_ip[1];  //168;
+    currentNIC->ip_address[2] = source_ip[2];  //1;
+    currentNIC->ip_address[3] = source_ip[3];  //12;
+    //...
+
+//==============================================
+    if ((void*) data == NULL){
+        printk ("network_send_tcp: Invalid data buffer\n");
+        //goto fail;
+        return -1;
+    }
+
+
+    printk("TCP SEND: %d.%d.%d.%d:%d -> %d.%d.%d.%d:%d flags=%x seq=%u ack=%u\n",
+       source_ip[0],source_ip[1],source_ip[2],source_ip[3],source_port,
+       target_ip[0],target_ip[1],target_ip[2],target_ip[3],target_port,
+       flags, seq, ack);
+
+//==============================================
+// # ethernet header #
+
+    struct ether_header  Leh;
+    /*
+    struct ether_header  *eh;
+    eh = (void *) kmalloc( sizeof(struct ether_header ) );
+    if ((void *) eh == NULL){
+        printk("network_send_tcp: eh fail\n");
+        goto fail;
+    }
+    */
+
+// Coloca na estrutura do ethernet header os seguintes valores: 
+// > endereço mac da origem.
+// > endereço mac do destion.
+// O endereço mac da origem está na estrutura do controlador nic intel. 
+// O endereço mac do destino foi passado via argumento.
+
+    for (i=0; i<6; i++){
+        Leh.mac_src[i] = (uint8_t) currentNIC->mac_address[i];  // source 
+        Leh.mac_dst[i] = (uint8_t) target_mac[i];               // dest
+    };
+    Leh.type = (uint16_t) ToNetByteOrder16(ETHERTYPE_IPV4);
+
+//==============================================
+// # ipv4 header #
+
+    struct ip_d  Lipv4;
+    /*
+    struct ip_d  *ipv4;
+    ipv4 = (void *) kmalloc( sizeof(struct ip_d) );
+    if ((void *) ipv4 == NULL){
+        printk("network_send_tcp: ipv4 fail\n");
+        goto fail;
+    }
+    */
+
+// IPv4 common header
+// See: ip.h
+
+//>>>>
+    Lipv4.v_hl = 0x45;    // 8 bit
+
+// Type of service (8bits)
+// - Differentiated Services Code Point (6bits)
+// - Explicit Congestion Notification (2bits)
+    Lipv4.ip_tos = 0x00;  // 8 bit (0=Normal)
+
+// IPV4 Length
+// ip + (ip payload)
+// 16 bit
+// This 16-bit field defines the entire packet size in bytes, 
+// including header and data. 
+// The minimum size is 20 bytes (header without data) and the maximum is 65,535 bytes. 
+// ip header + (udp header + data).
+// #todo: Check if it is right?
+// No payload do ip temos o (udp+data)
+// O lenght do protocolo precisa conter o seu proprio header e o seu proprio payload.
+
+    //uint16_t __datalen = (uint16_t) (data_lenght & 0xFFFF);
+    //uint16_t __ipheaderlen = IP_HEADER_LENGHT;
+    //uint16_t __ippayloadlen = (uint16_t) (TCP_HEADER_LENGHT + __datalen);
+    //uint16_t _iplen = (uint16_t) (__ipheaderlen + __ippayloadlen); 
+    // The lenght for the IPV4 payload
+    //Lipv4.ip_len = (uint16_t) ToNetByteOrder16(_iplen);
+
+    uint16_t ip_total_len = IP_HEADER_LENGHT + TCP_HEADER_LENGHT + data_lenght;
+    Lipv4.ip_len = ToNetByteOrder16(ip_total_len);
+
+
+// Identification
+// ... identifying the group of fragments of a single IP datagram. 
+// 16 bit
+
+// IPv4 identification field  
+// Setting ip_id = 0. 
+// For robustness, increment a counter per packet (like UDP does). 
+// Some routers expect unique IDs for fragmentation handling.
+
+    //uint16_t ipv4count = 1; 
+    //ipv4->ip_id = 0x0100;
+    //ipv4->ip_id = (uint16_t) ToNetByteOrder16(ipv4count);
+    Lipv4.ip_id = 0;  
+
+// Flags (3bits) (Do we have fragments?)
+// Fragment offset (13bits) (fragment position)
+// Don't fragment for now.
+    Lipv4.ip_off = ToNetByteOrder16(0x4000); 
+
+    Lipv4.ip_ttl = 255;  //64; //0x40;  //8bit
+
+    // Protocol (8bit)
+    Lipv4.ip_p = 0x06; //TCP
+
+
+/*
+// src ip
+// #bugbug: Esta na ordem certa?
+    memcpy ( 
+        (void *) &ipv4->ip_src.s_addr, 
+        (const void *) &source_ip[0], 
+        4 );
+    //ipv4->ip_src.s_addr = (unsigned int) ToNetByteOrder32(ipv4->ip_src.s_addr);
+
+// dst ip
+// #bugbug: Esta na ordem certa?
+    memcpy ( 
+        (void *) &ipv4->ip_dst.s_addr, 
+        (const void *) &target_ip[0], 
+        4 );
+    //ipv4->ip_dst.s_addr = (unsigned int) ToNetByteOrder32(ipv4->ip_dst.s_addr);
+    //printk ("ip %x\n", ipv4->ip_dst.s_addr);
+*/
+
+    //unsigned char *spa = (unsigned char *) &ipv4->ip_src.s_addr;
+    //unsigned char *tpa = (unsigned char *) &ipv4->ip_dst.s_addr;
+    unsigned char *spa = (unsigned char *) &Lipv4.ip_src.s_addr;
+    unsigned char *tpa = (unsigned char *) &Lipv4.ip_dst.s_addr;
+
+    register int it=0;
+    for (it=0; it<4; it++)
+    {
+        spa[it] = (uint8_t) source_ip[it]; 
+        tpa[it] = (uint8_t) target_ip[it]; 
+    };
+
+//
+// Checksum
+//
+
+    Lipv4.ip_sum = 0;
+    Lipv4.ip_sum =
+         (uint16_t)  net_checksum(
+              0, 
+              0,
+              (const unsigned char *) &Lipv4, 
+              (const unsigned char *) &Lipv4 + sizeof(struct ip_d));
+    Lipv4.ip_sum =
+         (uint16_t) ToNetByteOrder16(Lipv4.ip_sum);
+
+    // #debug
+    // printk("ip_sum={%x} \n",Lipv4.ip_sum);
+
+    //printk ("size %d\n", sizeof (struct ip_d) );
+    //refresh_screen();
+    //while(1){}
+
+
+//
+// TCP header
+//
+
+
+//==============================================
+// # tcp header #
+    struct tcp_d  Ltcp;
+
+// Ports
+    Ltcp.th_sport = (uint16_t) ToNetByteOrder16(source_port);
+    Ltcp.th_dport = (uint16_t) ToNetByteOrder16(target_port);
+    Ltcp.th_seq   = ToNetByteOrder32(seq);
+    Ltcp.th_ack   = ToNetByteOrder32(ack);
 
     // Data offset (header length in 32-bit words = 5 for 20 bytes)
     // Reserved bits = 0, flags = passed in
-    tcp.do_res_flags = ToNetByteOrder16(flags | (5 << 12));
+    //Ltcp.do_res_flags = ToNetByteOrder16(flags | (5 << 12));
+    Ltcp.do_res_flags = 0;  // clear first
+    Ltcp.do_res_flags = (5 << 12) | flags;   // data offset = 5 (20 bytes), no options
+    Ltcp.do_res_flags = ToNetByteOrder16(Ltcp.do_res_flags);
 
-    tcp.window_size   = ToNetByteOrder16(65535); // max window
-    tcp.checksum      = 0;                       // will calculate later
-    tcp.urgent_pointer= 0;
+    Ltcp.window_size   = ToNetByteOrder16(65535); // max window
+    Ltcp.checksum = 0;  // We will calculate at the end of the routine. 
+    Ltcp.urgent_pointer= 0;
 
-    // Copy header into buffer
-    memcpy(segment, &tcp, TCP_HEADER_LENGHT);
 
-    // Copy payload if any
-    if (payload_len > 0 && payload != NULL) {
-        memcpy(segment + TCP_HEADER_LENGHT, payload, payload_len);
+// UDP Length
+// (UPD header + payload).
+// This field specifies the length in bytes of the UDP header and UDP data. 
+// The minimum length is 8 bytes, the length of the header. 
+    //uint16_t __tcpheaderlen = TCP_HEADER_LENGHT;
+    //uint16_t __tcppayloadlen = (uint16_t) (data_lenght & 0xFFFF);
+    //uint16_t _tcplen = (uint16_t) (__tcpheaderlen + __tcppayloadlen); 
+    //Ltcp.uh_ulen = (uint16_t) ToNetByteOrder16(_tcplen);
+
+// Checksum
+// #remember:
+// When UDP runs over IPv4, 
+// the checksum is computed using a "pseudo header" 
+// that contains some of the same information from the real IPv4 header.
+// # UDP lets us set the checksum to 0 to ignore it?
+    Ltcp.checksum = 0;  //#todo
+
+    uint8_t tcp_segment[TCP_HEADER_LENGHT + data_lenght];
+    // Inject the tcp header
+    memcpy(tcp_segment, &Ltcp, TCP_HEADER_LENGHT);
+    // Inject the tcp payload
+    if (data_lenght > 0 && data_buffer != NULL)
+    {
+        memcpy(tcp_segment + TCP_HEADER_LENGHT, data_buffer, data_lenght);
     }
+    // Calculate the checksum
+    Ltcp.checksum = __tcp_checksum(source_ip, target_ip, tcp_segment, sizeof(tcp_segment));
 
-    // TODO: Calculate TCP checksum (pseudo-header + TCP header + payload)
+    // Byte swapping
+    Ltcp.checksum = (uint16_t) ToNetByteOrder16(Ltcp.checksum);
 
-    int rv = -1;
+    //printk ("size %d\n", sizeof (struct  udp_d) );
+    //refresh_screen();
+    //while(1){}
 
-    // Send via IPv4
-    rv = 
-    (int) ipv4_send(
-        PROTOCOL_IP_TCP,
-        source_ip,
-        target_ip,
-        target_mac,
-        (const char*) segment,
-        TCP_HEADER_LENGHT + payload_len
+// ----------------------------------------------------
+
+//
+// Buffer
+//
+
+// Let's call it 'frame'.
+// Because we're sending a 'frame'.
+
+// ??
+// Quem?
+// Estamos pegando o offset que nos levara ao endereço do buffer.
+// Usaremos esse offset logo abaixo.
+// Pegamos esse offset na estrutura do controlador nic intel.
+// Copiando o pacote no buffer.
+// Pegando o endereco virtual do buffer na estrutura do controlador 
+// nic intel. Para isso usamos o offset obtido logo acima.
+
+    uint16_t buffer_index = (uint16_t) currentNIC->tx_cur;
+
+// Get the buffer address based on its offset.
+    unsigned char *frame = 
+        (unsigned char *) currentNIC->tx_buffers_virt[buffer_index];
+
+    //#debug
+    //printk ("buffer_index {%d}\n",buffer_index);
+
+// #importante:
+// Preparando ponteiros para manipularmos as 
+// estruturas usadas no pacote.
+
+    unsigned char *src_ethernet = (unsigned char *) &Leh;    //eh; 
+    unsigned char *src_ipv4     = (unsigned char *) &Lipv4;  //ipv4; 
+    unsigned char *src_tcp      = (unsigned char *) &Ltcp;   //tcp; 
+
+//
+// Copy
+//
+
+    if ((void*) frame == NULL)
+        panic("network_send_tcp: frame\n");
+
+// Copiando as estruturas para o buffer.
+// >Step1) Copiando o header ethernet.
+// >Step2) Copiando o heder ipv4.
+// >Step3) Copiando o header udp.
+// >Step4) Copiando os dados.
+
+// Step1: Copy ethernet header
+    int eth_offset=0;
+    for ( j=0; j<ETHERNET_HEADER_LENGHT; j++ )
+    {
+        frame[eth_offset +j] = src_ethernet[j];
+    };
+
+// Step2: Copy IPV4 header
+    int ipv4_offset = ETHERNET_HEADER_LENGHT;
+    for ( j=0; j<IP_HEADER_LENGHT; j++ )
+    {
+        frame[ipv4_offset +j] = src_ipv4[j];
+    };
+
+// Step3: Copy TCP header
+    int tcp_offset = ETHERNET_HEADER_LENGHT + IP_HEADER_LENGHT;
+    for ( j=0; j<TCP_HEADER_LENGHT; j++ ){
+        frame[tcp_offset +j] = src_tcp[j];
+    };
+
+// Step4: Copy TCP payload
+    int data_offset = 
+            ( ETHERNET_HEADER_LENGHT +
+              IP_HEADER_LENGHT +
+              TCP_HEADER_LENGHT );
+    for ( j=0; j<data_lenght; j++ )
+    {
+        frame[data_offset +j] = data[j];
+    };
+
+// ---------------------------------------
+// send
+// lenght:
+// Vamos configurar na estrutura do nic intel o tamanho do pacote.
+// Lenght de um pacote ipv4.
+// ethernet header, ipv4 header, udp header, data.
+// 14 + 20 + 6 + 512 = 552.
+    size_t FRAME_SIZE = 
+               ( ETHERNET_HEADER_LENGHT +\
+                 IP_HEADER_LENGHT +\
+                 TCP_HEADER_LENGHT +\
+                 data_lenght );
+
+//
+// Check
+//
+
+    // #todo
+    //if ((void*) frame == NULL)
+    //    goto fail;
+    //if (FRAME_SIZE == 0)
+    //    goto fail;
+
+//
+// Send
+//
+
+// #bugbug
+// I guess we don't need the routine above.
+// It's because ethernet_send() will put the given data into 
+// the right place.
+
+// Send frame via current NIC
+    ethernet_send( FRAME_SIZE, frame );
+
+// #debug
+// Send frame to myself.
+    //network_on_receiving(frame,FRAME_SIZE);
+    //refresh_screen();
+    //while(1){}
+
+// #test
+    //kfree(eh);
+    //kfree(udp);
+    //kfree(udp);
+
+    printk("Done\n");
+    return 0;
+
+fail:
+    printk ("Fail\n");
+    return -1;
+}
+
+
+void test_sending_tcp(void)
+{
+    unsigned short SourcePort = 11888;
+    char payload[4];
+    size_t payload_len = 0;  // 1
+    payload[0]=0;
+    payload[1]=0;
+    payload[2]=0;
+    payload[3]=0;
+
+    printk("test_sending_tcp: sending SYNs to external targets\n");
+
+    // Google Web (HTTP)
+    uint8_t google_ip[4] = {142, 250, 190, 46};
+    network_send_tcp(
+        dhcp_info.your_ipv4,
+        google_ip,
+        NetworkSaved.gateway_mac,
+        SourcePort,   // source port
+        80,      // dest port
+        0x1000,  // seq
+        0,       // ack
+        TH_SYN,  // flags
+        payload,    // no payload
+        payload_len
     );
 
-    return (int) rv;
+    // Cloudflare Web (HTTPS)
+    uint8_t cf_ip[4] = {104, 16, 132, 229};
+    network_send_tcp(
+        dhcp_info.your_ipv4,
+        cf_ip,
+        NetworkSaved.gateway_mac,
+        SourcePort,
+        443,
+        0x2000,
+        0,
+        TH_SYN,
+        payload,
+        payload_len
+    );
+
+    // Microsoft Azure (HTTP)
+    uint8_t ms_ip[4] = {20, 112, 52, 29};
+    network_send_tcp(
+        dhcp_info.your_ipv4,
+        ms_ip,
+        NetworkSaved.gateway_mac,
+        SourcePort,
+        80,
+        0x3000,
+        0,
+        TH_SYN,
+        payload,
+        payload_len
+    );
+
+    // Wikipedia (HTTPS)
+    uint8_t wiki_ip[4] = {208, 80, 154, 224};
+    network_send_tcp(
+        dhcp_info.your_ipv4,
+        wiki_ip,
+        NetworkSaved.gateway_mac,
+        SourcePort,
+        443,
+        0x4000,
+        0,
+        TH_SYN,
+        payload,
+        payload_len
+    );
 }
 
 
@@ -181,11 +613,11 @@ network_handle_tcp(
     tcp_ack _ack_number = (tcp_ack) FromNetByteOrder32(tcp->th_ack);
 
 // Clean the payload local buffer.
-    memset(tcp_payload,0,sizeof(tcp_payload));
+    memset(__tcp_payload,0,sizeof(__tcp_payload));
 
 // Create a local copy of the TCP payload.
-    strncpy( tcp_payload, (buffer + TCP_HEADER_LENGHT), 1020 );
-    tcp_payload[1021] = 0;
+    strncpy( __tcp_payload, (buffer + TCP_HEADER_LENGHT), 1020 );
+    __tcp_payload[1021] = 0;
 
 //
 // Control fields
@@ -251,6 +683,11 @@ network_handle_tcp(
         printk("TCP: dport{%d} (Server not implemented yet)\n", dport);
         printk("SYN={%d} ACK={%d}\n", fSYN, fACK);
 
+        if ( fSYN == 1 && fACK == 1 )
+        {
+            printk("TCP: SYS/ACK received in port{%d}\n", dport);
+        }
+
         return;
     }
 
@@ -299,17 +736,21 @@ network_handle_tcp(
             printk(">> Sending SYN/ACK\n");
 
             // No payload for handshake
-            tcp_send(
+            char dummy_payload[4];
+            dummy_payload[0] = 0;
+            dummy_payload[1] = 0;
+
+            network_send_tcp(
                 dhcp_info.your_ipv4,       //my_ip,           // server IP
                 NetworkSaved.caller_ipv4,  //client_ip,       // client IP
                 NetworkSaved.caller_mac,   //client_mac,      // client MAC
-                11888,           // server port
-                sport,           // client port
+                11888,           // server port (source=we)
+                sport,           // client port (target)
                 seq,
                 ack,
                 flags,
-                NULL,            // no payload
-                0
+                dummy_payload,  // No tcp payload
+                1               // No tcp payload lenght
             );
 
             // Waiting for the ACK:
@@ -317,7 +758,7 @@ network_handle_tcp(
             return;
         }
 
-    
+        /*
         // (2) SYN/ACK
         // A server accepted the connection.
         if ( fSYN == 1 && fACK == 1 )
@@ -331,6 +772,41 @@ network_handle_tcp(
             // our syn sent by a process in this machine.
             return;
         }
+        */
+
+        if ( fSYN == 1 && fACK == 1 )
+        {
+            printk("\n");
+            printk("<<<< [TCP] SYN/ACK (2)\n");
+            printk("SEQ={%d} | ACK={%d}\n", _seq_number, _ack_number);
+
+            // We're the client here — the remote side acked our SYN and sent
+            // its own SYN. Complete the handshake with the final ACK.
+
+            tcp_seq final_seq = _ack_number;       // = our ISN + 1, given by the server's ack
+            tcp_ack final_ack = _seq_number + 1;   // acknowledge the server's ISN
+
+            printk(">> Sending final ACK (3)\n");
+
+            char no_payload[1];
+            no_payload[0] = 0;
+
+            network_send_tcp(
+                dhcp_info.your_ipv4,        // our IP
+                NetworkSaved.caller_ipv4,   // remote IP (whoever this packet came from)
+                NetworkSaved.caller_mac,    // remote MAC
+                11888,                      // our local port (source)
+                sport,                      // remote port (target) — 80 or 443
+                final_seq,
+                final_ack,
+                TH_ACK,                     // ACK only, no SYN
+                no_payload,
+                0                            // no payload — pure ACK doesn't consume a seq number
+            );
+
+            return;
+        }
+
 
         // (3) ACK
         // A client is confirming the connection we accepted.

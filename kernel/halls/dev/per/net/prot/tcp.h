@@ -149,20 +149,20 @@ struct tcp_d
 
 // =====================================
 
-void test_sending_tcp(void);
-
-int 
-tcp_send(
-    uint8_t source_ip[4],
-    uint8_t target_ip[4],
-    uint8_t target_mac[6],
-    uint16_t source_port,
-    uint16_t dest_port,
+int
+network_send_tcp ( 
+    uint8_t source_ip[4], 
+    uint8_t target_ip[4], 
+    uint8_t target_mac[6], 
+    unsigned short source_port,
+    unsigned short target_port,
     tcp_seq seq,
     tcp_ack ack,
     uint16_t flags,
-    const char *payload,
-    size_t payload_len );
+    char *data_buffer, 
+    size_t data_lenght );
+
+void test_sending_tcp(void);
 
 //
 // $

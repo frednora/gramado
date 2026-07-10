@@ -37,7 +37,10 @@ gprot_send_udp (
         data_buffer,          // udp payload
         data_lenght );        // udp payload size (Message size)
 
+    return 0;
+
 fail:
+    printk("gprot_send_udp: fail\n");
     return (int) -1;
 }
 

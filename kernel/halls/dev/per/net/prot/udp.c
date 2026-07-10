@@ -233,6 +233,11 @@ void network_test_udp(void)
 // Called by the syscall 22003 in sci.c
 // The terminal.bin command is "n2".
 
+    unsigned short SourcePort = 11888;
+
+
+    uint8_t google_ip[4] = {142, 250, 190, 46};
+
     char message[512];
     memset(message,0,sizeof(message));
     ksprintf(message,"Hello from Gramado to Linux\n");
@@ -242,7 +247,8 @@ void network_test_udp(void)
 
 // IN:
 // ...
-    network_send_udp( 
+
+    network_send_udp ( 
         dhcp_info.your_ipv4,        //__udp_gramado_default_ipv4,  // scr ip
         __udp_target_gateway_ipv4,  //__udp_target_default_ipv4,   // dst ip
         __udp_target_mac,           // dst mac
@@ -250,6 +256,17 @@ void network_test_udp(void)
         11999,      // dst port
         message,    // msg
          512 );     // msg lenght
+
+
+    network_send_udp ( 
+        dhcp_info.your_ipv4,        //__udp_gramado_default_ipv4,  // scr ip
+        google_ip,  //__udp_target_gateway_ipv4,  //__udp_target_default_ipv4,   // dst ip
+        NetworkSaved.gateway_mac,  //__udp_target_mac,           // dst mac
+        11888,      // source port
+        11999,      // dst port
+        message,    // msg
+         512 );     // msg lenght
+
 }
 
 void 
