@@ -112,6 +112,7 @@ typedef uint32_t  tcp_ack;
 
 #define TCP_HEADER_LENGHT  20
 
+// tcp header (20 bytes)
 struct tcp_d
 {
 

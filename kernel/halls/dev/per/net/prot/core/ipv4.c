@@ -16,8 +16,10 @@ ipv4_send (
     uint8_t target_ip[4], 
     uint8_t target_mac[6],
     const char *data_buffer,  // IPV4 payload
-    size_t data_lenght )       // IPV4 payload size
+    size_t data_lenght )      // IPV4 payload size
 {
+// Buffers: [ethernet, ipv4, data]
+
     int Status = -1;
 
 //

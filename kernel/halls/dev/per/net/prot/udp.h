@@ -8,8 +8,7 @@
 
 #define UDP_HEADER_LENGHT  8
 
-// UDP datagram structure
-// 4*2 = 8 bytes.
+// UDP header (8 bytes)
 struct udp_d
 {
 

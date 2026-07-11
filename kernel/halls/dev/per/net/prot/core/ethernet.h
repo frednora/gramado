@@ -89,7 +89,7 @@ EtherType values for some notable protocols[8] EtherType 	Protocol
 // Ethernet header length
 #define ETHERNET_HEADER_LENGHT  14
 
-// Ethernet header.
+// Ethernet header (14 bytes)
 struct ether_header 
 {
     uint8_t mac_dst[ETH_ALEN];  // destination mac

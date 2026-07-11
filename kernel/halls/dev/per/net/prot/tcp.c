@@ -112,8 +112,7 @@ network_send_tcp (
     char *data_buffer, 
     size_t data_lenght )
 {
-// Buffers:
-// ethernet, ipv4, tcp, data.
+// Buffers: [ethernet, ipv4, tcp, data]
 
     register int i=0;
     int j=0;

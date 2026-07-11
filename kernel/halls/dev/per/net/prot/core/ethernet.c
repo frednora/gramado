@@ -36,6 +36,7 @@ ethernet_send(
     size_t frame_size, 
     const char *frame_pointer )
 {
+// Buffers: [ethernet, data]
 
 // #todo
 // We are wiring the Ethernet layer into the network interface abstraction.

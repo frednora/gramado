@@ -64,9 +64,7 @@ static int __debug_check_inicialization (void)
     if (cp_status != TRUE)
         Status = FALSE;
 
-// OK
-//done:
-    return (int) Status;
+    return (int) Status;  // Done
 
 fail:
 

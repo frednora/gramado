@@ -329,8 +329,7 @@ network_send_udp (
     char *data_buffer,   // UDP payload
     size_t data_lenght )
 {
-// Buffers:
-// ethernet, ipv4, udp, data.
+// Buffers: [ethernet, ipv4, udp, data]
 
     register int i=0;
     int j=0;
