@@ -72,7 +72,7 @@
 struct ip_d
 {
 
-// - Version (4bits)
+// - Version (8bits)
 // - IHL (4bits). Lenght of the header in chuncks of 4 bytes. 
     u_int8_t v_hl;
 

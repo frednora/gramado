@@ -27,6 +27,7 @@ struct udp_d
 // the checksum is computed using a "pseudo header" 
 // that contains some of the same information from the real IPv4 header.
     uint16_t uh_sum;
+
 } __attribute__ ((packed));
 
 
