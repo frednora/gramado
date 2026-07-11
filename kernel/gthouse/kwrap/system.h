@@ -190,19 +190,7 @@ extern int gSystemEdition;
 extern int gSystemStatus;
 
 
-/*
- * version_d:
- *     Estrutura para versão do sistema.    
- *     O que determina a versão do sistema é a versão do Kernel.
- * @todo: 
- *     Usar apenas esses 4 elementos.
- *     Dados complementares sobre a versão devem ficar 
- *     na estrutura versioninfo.
- * Obs: Talvez usar um header. version.h.
- * #bugbug: 
- * Já tem version_t tefinida em algum lugar.
- *         Aparentemente não deu mais problema. 
- */
+// #ps: We also have the file version.h
 struct version_d
 {
     unsigned long Major;
@@ -210,12 +198,8 @@ struct version_d
     unsigned long Build;
 };
 extern struct version_d  *Version;
-//...
 
-/*
- * version_info_d:
- *     Dados complemetares sobre a versão.
- */
+// #ps: We also have the file version.h
 struct version_info_d
 {
     struct version_d *version;
@@ -224,7 +208,7 @@ struct version_info_d
     // ...
 };
 extern struct version_info_d  *VersionInfo;
-//...
+
 
 /*
  * system_d:

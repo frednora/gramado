@@ -21,11 +21,11 @@
 #define SYSTEM_SCHEDULING  3
 // The system is running
 #define SYSTEM_RUNNING     4
-// The system is running the reboot routine.
+// The system is running the reboot routine
 #define SYSTEM_REBOOT      5
-// The system is running the poweroff routine.
+// The system is running the poweroff routine
 #define SYSTEM_POWEROFF    6
-// The system is running the routine to restart the kernel.
+// The system is running the routine to restart the kernel
 #define SYSTEM_RESTART     7
 // The system was aborted ... ex: initialization fail
 #define SYSTEM_ABORTED     8

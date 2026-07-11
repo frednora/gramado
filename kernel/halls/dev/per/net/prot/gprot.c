@@ -128,12 +128,37 @@ int gprot_handle_protocol(char *data, uint16_t s_port, uint16_t d_port)
          buf[1] == ':' && 
          buf[2] == '0' )
     {
+        int __request_id = -1;
+
+        // #test: 0
+        if (buf[4] == '0' && buf[5] == ' ')
+        {
+            __request_id = 0;
+        }
+        // #test: 1
+        if (buf[4] == '1' && buf[5] == ' ')
+        {
+            __request_id = 1;
+        }
+        // ...
+
+        // Process request
+        switch (__request_id){
+            case 1:
+                // keReboot();
+                // die();
+                break;
+        };
+
+        // #ps: No response sometimes
+
         memset(buf, 0, sizeof(buf));
         ksprintf(buf,"g:1 ");  // Reply code
         ksprintf(
             (buf + 4),
             "This is a response from Gramado OS\n");
         NoReply = FALSE;
+
         goto done;
     }
 
@@ -264,6 +289,47 @@ int gprot_handle_protocol(char *data, uint16_t s_port, uint16_t d_port)
             NetworkSaved.gateway_mac[3],
             NetworkSaved.gateway_mac[4],
             NetworkSaved.gateway_mac[5]
+        );
+        NoReply = FALSE;
+        goto done;
+    }
+
+// ----------------
+// g:ss
+// packet type: request for System State
+    if (buf[0] == 'g' && 
+        buf[1] == ':' && 
+        buf[2] == 's' && 
+        buf[3] == 's')
+    {
+        //char ss_string[8];
+        //itoa(system_state, ss_string);
+        
+        memset(buf, 0, sizeof(buf));
+        ksprintf(buf, "g:1 ");  // Reply code
+        ksprintf(
+            (buf + 4),
+            "%d",
+            system_state
+        );
+        NoReply = FALSE;
+        goto done;
+    }
+
+// ----------------
+// g:rl
+// packet type: request for current run level
+    if (buf[0] == 'g' && 
+        buf[1] == ':' && 
+        buf[2] == 'r' && 
+        buf[3] == 'l')
+    {       
+        memset(buf, 0, sizeof(buf));
+        ksprintf(buf, "g:1 ");  // Reply code
+        ksprintf(
+            (buf + 4),
+            "%d",
+            CONFIG_CURRENT_RUNLEVEL
         );
         NoReply = FALSE;
         goto done;

@@ -40,7 +40,6 @@ extern int g_product_type;
 
 // ===================================================
 
-
 // Current runlevel. Used in init process.
 extern int runlevel;
 
