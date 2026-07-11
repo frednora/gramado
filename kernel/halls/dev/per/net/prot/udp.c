@@ -562,60 +562,58 @@ network_send_udp (
     //#debug
     //printk ("buffer_index {%d}\n",buffer_index);
 
-// #importante:
-// Preparando ponteiros para manipularmos as 
-// estruturas usadas no pacote.
-
-    unsigned char *src_ethernet = (unsigned char *) &Leh;    //eh; 
-    unsigned char *src_ipv4     = (unsigned char *) &Lipv4;  //ipv4; 
-    unsigned char *src_udp      = (unsigned char *) &Ludp;   //udp; 
+    // Prepare pointer for the header
+    unsigned char *src_ethernet = (unsigned char *) &Leh;    // eh 
+    unsigned char *src_ipv4     = (unsigned char *) &Lipv4;  // ipv4 
+    unsigned char *src_udp      = (unsigned char *) &Ludp;   // udp
 
 //
 // Copy
 //
 
     if ((void*) frame == NULL)
+    {
+        // #debug
+        // We don't need panic here
         panic("network_send_udp: frame\n");
 
-// Copiando as estruturas para o buffer.
-// >Step1) Copiando o header ethernet.
-// >Step2) Copiando o heder ipv4.
-// >Step3) Copiando o header udp.
-// >Step4) Copiando os dados.
+        //printk("network_send_udp: frame\n");
+        //goto fail;
+    }
 
-// Step1
-// Copia o header ethernet
+// Inject data structure into the buffer
+// Step1: Inject ethernet header
+// Step2: Inject ipv4 header
+// Step3: Inject udp header
+// Step4: Inject udp payload
+
+// Step1: Inject ethernet header
     int eth_offset=0;
-    for ( j=0; j<ETHERNET_HEADER_LENGHT; j++ )
-    {
+    for ( j=0; j<ETHERNET_HEADER_LENGHT; j++ ){
         frame[eth_offset +j] = src_ethernet[j];
     };
 
-//Step2
-//copia o ipv4
+// Step2: Inject ipv4 header
     int ipv4_offset = ETHERNET_HEADER_LENGHT;
-    for ( j=0; j<IP_HEADER_LENGHT; j++ )
-    {
+    for ( j=0; j<IP_HEADER_LENGHT; j++ ){
         frame[ipv4_offset +j] = src_ipv4[j];
     };
 
-//Step3
-//copia o udp
+// Step3: Inject udp header
     int udp_offset = ETHERNET_HEADER_LENGHT + IP_HEADER_LENGHT;
     for ( j=0; j<UDP_HEADER_LENGHT; j++ ){
         frame[udp_offset +j] = src_udp[j];
     };
 
-//Step4
-//copia o payload.
+// Step4: Inject udp payload
     int data_offset = 
             ( ETHERNET_HEADER_LENGHT +
               IP_HEADER_LENGHT +
               UDP_HEADER_LENGHT );
-    for ( j=0; j<data_lenght; j++ )
-    {
+    for ( j=0; j<data_lenght; j++ ){
         frame[data_offset +j] = data[j];
     };
+
 
 // ---------------------------------------
 // send
@@ -650,8 +648,14 @@ network_send_udp (
 // It's because ethernet_send() will put the given data into 
 // the right place.
 
+    int rv = -1;
+
 // Send frame via current NIC
-    ethernet_send( FRAME_SIZE, frame );
+    rv = (int) ethernet_send( FRAME_SIZE, frame );
+    if (rv < 0){
+        printk("network_send_udp: on ethernet_send()\n");
+        goto fail;
+    }
 
 // #debug
 // Send frame to myself.

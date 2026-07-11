@@ -323,9 +323,9 @@ network_send_tcp (
     Ltcp.do_res_flags = (5 << 12) | flags;   // data offset = 5 (20 bytes), no options
     Ltcp.do_res_flags = ToNetByteOrder16(Ltcp.do_res_flags);
 
-    Ltcp.window_size   = ToNetByteOrder16(65535); // max window
+    Ltcp.window_size = ToNetByteOrder16(TCP_WINDOW_SIZE);  // max window
     Ltcp.checksum = 0;  // We will calculate at the end of the routine. 
-    Ltcp.urgent_pointer= 0;
+    Ltcp.urgent_pointer = 0;
 
 
 // UDP Length
@@ -394,6 +394,7 @@ network_send_tcp (
 // Preparando ponteiros para manipularmos as 
 // estruturas usadas no pacote.
 
+
     unsigned char *src_ethernet = (unsigned char *) &Leh;    //eh; 
     unsigned char *src_ipv4     = (unsigned char *) &Lipv4;  //ipv4; 
     unsigned char *src_tcp      = (unsigned char *) &Ltcp;   //tcp; 
@@ -403,43 +404,48 @@ network_send_tcp (
 //
 
     if ((void*) frame == NULL)
+    {
+        // #debug
+        // We don't need panic here
         panic("network_send_tcp: frame\n");
 
-// Copiando as estruturas para o buffer.
-// >Step1) Copiando o header ethernet.
-// >Step2) Copiando o heder ipv4.
-// >Step3) Copiando o header udp.
-// >Step4) Copiando os dados.
+        //printk("network_send_tcp: frame\n");
+        //goto fail;
+    }
 
-// Step1: Copy ethernet header
+// Inject data structure into the buffer
+// Step1: Inject ethernet header
+// Step2: Inject ipv4 header
+// Step3: Inject tcp header
+// Step4: Inject tcp payload
+
+// Step1: Inject ethernet header
     int eth_offset=0;
-    for ( j=0; j<ETHERNET_HEADER_LENGHT; j++ )
-    {
+    for ( j=0; j<ETHERNET_HEADER_LENGHT; j++ ){
         frame[eth_offset +j] = src_ethernet[j];
     };
 
-// Step2: Copy IPV4 header
+// Step2: Inject ipv4 header
     int ipv4_offset = ETHERNET_HEADER_LENGHT;
-    for ( j=0; j<IP_HEADER_LENGHT; j++ )
-    {
+    for ( j=0; j<IP_HEADER_LENGHT; j++ ){
         frame[ipv4_offset +j] = src_ipv4[j];
     };
 
-// Step3: Copy TCP header
+// Step3: Inject tcp header
     int tcp_offset = ETHERNET_HEADER_LENGHT + IP_HEADER_LENGHT;
     for ( j=0; j<TCP_HEADER_LENGHT; j++ ){
         frame[tcp_offset +j] = src_tcp[j];
     };
 
-// Step4: Copy TCP payload
+// Step4: Inject tcp payload
     int data_offset = 
             ( ETHERNET_HEADER_LENGHT +
               IP_HEADER_LENGHT +
               TCP_HEADER_LENGHT );
-    for ( j=0; j<data_lenght; j++ )
-    {
+    for ( j=0; j<data_lenght; j++ ){
         frame[data_offset +j] = data[j];
     };
+
 
 // ---------------------------------------
 // send
@@ -473,8 +479,14 @@ network_send_tcp (
 // It's because ethernet_send() will put the given data into 
 // the right place.
 
+    int rv = -1;
+
 // Send frame via current NIC
-    ethernet_send( FRAME_SIZE, frame );
+    rv = (int) ethernet_send( FRAME_SIZE, frame );
+    if (rv < 0){
+        printk("network_send_tcp: on ethernet_send()\n");
+        goto fail;
+    }
 
 // #debug
 // Send frame to myself.
@@ -677,8 +689,15 @@ network_handle_tcp(
     //printk("TCP: sport{%d}   #debug\n",sport);
     //printk("TCP: dport{%d}   #debug\n",dport);
 
-    // #debug
-    if (dport == 80 || dport == 443)
+    // #todo
+    // Ignore it for now.
+    if (dport == 443)
+    {
+        return;  // No verbose
+    }
+
+    // #todo
+    if (dport == 80)
     {
         printk("TCP: dport{%d} (Server not implemented yet)\n", dport);
         printk("SYN={%d} ACK={%d}\n", fSYN, fACK);

@@ -141,9 +141,19 @@ network_handle_ethernet (
         //printk("network_on_receiving: frame\n");
         goto fail;
     }
+
     // 1~8192
-    if ( frame_size <= 0 || frame_size > E1000_DEFAULT_BUFFER_SIZE ){
+    if ( frame_size <= 0 || 
+         frame_size > E1000_DEFAULT_BUFFER_SIZE )
+    {
         //printk("network_on_receiving: frame_size\n");
+        goto fail;
+    }
+
+    // #test
+    // Smaller than ethernet header
+    if ( frame_size < sizeof(struct ether_header) )
+    {
         goto fail;
     }
 
@@ -245,8 +255,8 @@ network_handle_ethernet (
         break;
     };
 
-// done:
-    return 0;
+    return 0;   // done
+
 fail:
     return (int) -1;
 }

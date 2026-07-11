@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define SERVER_IP   "192.168.1.3"
+#define SERVER_IP   "192.168.1.8"
 #define SERVER_PORT 11888
 
 #define BUFFER_SIZE 512

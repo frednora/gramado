@@ -8,7 +8,7 @@ import socket
 # Send to Gramado on virtualbox.
 #UDP_IP = "192.168.1.255"
 
-UDP_IP = "192.168.1.10"
+UDP_IP = "192.168.1.8"
 UDP_PORT = 11888
 # Using the g protocol for udp.
 MESSAGE = b"g:3 "

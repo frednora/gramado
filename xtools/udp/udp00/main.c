@@ -16,7 +16,7 @@
 //const char *ip = "127.0.0.1";
 //#define PORT 43454
 
-const char *ip = "192.168.1.3";
+const char *ip = "192.168.1.8";
 #define PORT  11888
 
 #define SA  struct sockaddr

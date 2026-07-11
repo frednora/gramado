@@ -5,6 +5,9 @@
 #ifndef __PROT_TCP_H
 #define __PROT_TCP_H    1
 
+
+#define TCP_WINDOW_SIZE  65535
+
 // Control flags:
 /*
 #define TCP_ACK  16

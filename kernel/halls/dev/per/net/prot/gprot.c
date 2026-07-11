@@ -223,6 +223,54 @@ int gprot_handle_protocol(char *data, uint16_t s_port, uint16_t d_port)
 */
 
 // ----------------
+// g:ip
+// packet type: request for our IP
+    if (buf[0] == 'g' && 
+        buf[1] == ':' && 
+        buf[2] == 'i' && 
+        buf[3] == 'p')
+    {
+        memset(buf, 0, sizeof(buf));
+        ksprintf(buf, "g:1 ");  // Reply code
+        ksprintf(
+            (buf + 4),
+            "%d.%d.%d.%d",
+            dhcp_info.your_ipv4[0],
+            dhcp_info.your_ipv4[1],
+            dhcp_info.your_ipv4[2],
+            dhcp_info.your_ipv4[3]
+        );
+        NoReply = FALSE;
+        goto done;
+    }
+
+// ----------------
+// g:mac
+// packet type: request for our MAC
+    if (buf[0] == 'g' && 
+        buf[1] == ':' && 
+        buf[2] == 'm' && 
+        buf[3] == 'a' && 
+        buf[4] == 'c')
+    {
+        memset(buf, 0, sizeof(buf));
+        ksprintf(buf, "g:1 ");  // Reply code
+        ksprintf(
+            (buf + 4),
+            "%x:%x:%x:%x:%x:%x",
+            NetworkSaved.gateway_mac[0],
+            NetworkSaved.gateway_mac[1],
+            NetworkSaved.gateway_mac[2],
+            NetworkSaved.gateway_mac[3],
+            NetworkSaved.gateway_mac[4],
+            NetworkSaved.gateway_mac[5]
+        );
+        NoReply = FALSE;
+        goto done;
+    }
+
+
+// ----------------
 // Invalid request
 // invalid_request:
     memset(buf, 0, sizeof(buf));

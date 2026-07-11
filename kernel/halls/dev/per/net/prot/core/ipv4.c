@@ -237,6 +237,14 @@ network_handle_ipv4(
         printk("network_handle_ipv4: ip\n");
         goto fail;
     }
+    if (size <= 0){
+        printk("network_handle_ipv4: size 0\n");
+        goto fail;
+    }
+    if ( size < sizeof(struct ip_d) ){
+        printk("network_handle_ipv4: size\n");
+        goto fail;
+    }
 
 // The minimum size.
 // Only the ip header.

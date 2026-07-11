@@ -2,7 +2,7 @@
 
 from socket import *
 
-TARGET = "192.168.1.3"
+TARGET = "192.168.1.8"
 PORT = 11888
 
 sock = socket(AF_INET, SOCK_DGRAM)

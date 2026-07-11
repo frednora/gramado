@@ -4,7 +4,7 @@
 import socket
 
 # IP:PORT
-TARGET_IP = "192.168.1.10"
+TARGET_IP = "192.168.1.8"
 TARGET_PORT = 11888
 MESSAGE = b"Hello from Python script on Linux.\0"
 
