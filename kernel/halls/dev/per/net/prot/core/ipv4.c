@@ -269,6 +269,30 @@ network_handle_ipv4(
         NetworkSaved.caller_ipv4, 
         src_ipv4 );
 
+
+// #debug: Cathing broadcast
+
+/*
+    if ( dst_ipv4[0]==255 && 
+         dst_ipv4[1]==255 &&
+         dst_ipv4[2]==255 && 
+         dst_ipv4[3]==255) 
+    {
+        printk("IPv4: Global broadcast IP received\n");
+    }
+*/
+
+/*
+    if ( dst_ipv4[0]==192 && 
+         dst_ipv4[1]==168 &&
+         dst_ipv4[2]==1 && 
+         dst_ipv4[3]==255) 
+    {
+        printk("IPv4: Subnet broadcast IP received\n");
+    }
+*/
+
+
 // Show data.
 // Bytes: Net-style.
 

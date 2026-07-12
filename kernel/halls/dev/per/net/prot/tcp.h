@@ -153,6 +153,8 @@ struct tcp_d
 
 // =====================================
 
+void test_sending_tcp(void);
+
 int
 network_send_tcp ( 
     uint8_t source_ip[4], 
@@ -165,8 +167,6 @@ network_send_tcp (
     uint16_t flags,
     char *data_buffer, 
     size_t data_lenght );
-
-void test_sending_tcp(void);
 
 //
 // $

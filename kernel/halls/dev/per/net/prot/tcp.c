@@ -98,6 +98,78 @@ __tcp_checksum(
     return (uint16_t)(~sum);
 }
 
+void test_sending_tcp(void)
+{
+    unsigned short SourcePort = 11888;
+    char payload[4];
+    size_t payload_len = 0;  // 1
+    payload[0]=0;
+    payload[1]=0;
+    payload[2]=0;
+    payload[3]=0;
+
+    printk("test_sending_tcp: sending SYNs to external targets\n");
+
+    // Google Web (HTTP)
+    uint8_t google_ip[4] = {142, 250, 190, 46};
+    network_send_tcp(
+        dhcp_info.your_ipv4,
+        google_ip,
+        NetworkSaved.gateway_mac,
+        SourcePort,   // source port
+        80,      // dest port
+        0x1000,  // seq
+        0,       // ack
+        TH_SYN,  // flags
+        payload,    // no payload
+        payload_len
+    );
+
+    // Cloudflare Web (HTTPS)
+    uint8_t cf_ip[4] = {104, 16, 132, 229};
+    network_send_tcp(
+        dhcp_info.your_ipv4,
+        cf_ip,
+        NetworkSaved.gateway_mac,
+        SourcePort,
+        443,
+        0x2000,
+        0,
+        TH_SYN,
+        payload,
+        payload_len
+    );
+
+    // Microsoft Azure (HTTP)
+    uint8_t ms_ip[4] = {20, 112, 52, 29};
+    network_send_tcp(
+        dhcp_info.your_ipv4,
+        ms_ip,
+        NetworkSaved.gateway_mac,
+        SourcePort,
+        80,
+        0x3000,
+        0,
+        TH_SYN,
+        payload,
+        payload_len
+    );
+
+    // Wikipedia (HTTPS)
+    uint8_t wiki_ip[4] = {208, 80, 154, 224};
+    network_send_tcp(
+        dhcp_info.your_ipv4,
+        wiki_ip,
+        NetworkSaved.gateway_mac,
+        SourcePort,
+        443,
+        0x4000,
+        0,
+        TH_SYN,
+        payload,
+        payload_len
+    );
+}
 
 int
 network_send_tcp ( 
@@ -446,80 +518,6 @@ network_send_tcp (
 fail:
     printk ("Fail\n");
     return -1;
-}
-
-
-void test_sending_tcp(void)
-{
-    unsigned short SourcePort = 11888;
-    char payload[4];
-    size_t payload_len = 0;  // 1
-    payload[0]=0;
-    payload[1]=0;
-    payload[2]=0;
-    payload[3]=0;
-
-    printk("test_sending_tcp: sending SYNs to external targets\n");
-
-    // Google Web (HTTP)
-    uint8_t google_ip[4] = {142, 250, 190, 46};
-    network_send_tcp(
-        dhcp_info.your_ipv4,
-        google_ip,
-        NetworkSaved.gateway_mac,
-        SourcePort,   // source port
-        80,      // dest port
-        0x1000,  // seq
-        0,       // ack
-        TH_SYN,  // flags
-        payload,    // no payload
-        payload_len
-    );
-
-    // Cloudflare Web (HTTPS)
-    uint8_t cf_ip[4] = {104, 16, 132, 229};
-    network_send_tcp(
-        dhcp_info.your_ipv4,
-        cf_ip,
-        NetworkSaved.gateway_mac,
-        SourcePort,
-        443,
-        0x2000,
-        0,
-        TH_SYN,
-        payload,
-        payload_len
-    );
-
-    // Microsoft Azure (HTTP)
-    uint8_t ms_ip[4] = {20, 112, 52, 29};
-    network_send_tcp(
-        dhcp_info.your_ipv4,
-        ms_ip,
-        NetworkSaved.gateway_mac,
-        SourcePort,
-        80,
-        0x3000,
-        0,
-        TH_SYN,
-        payload,
-        payload_len
-    );
-
-    // Wikipedia (HTTPS)
-    uint8_t wiki_ip[4] = {208, 80, 154, 224};
-    network_send_tcp(
-        dhcp_info.your_ipv4,
-        wiki_ip,
-        NetworkSaved.gateway_mac,
-        SourcePort,
-        443,
-        0x4000,
-        0,
-        TH_SYN,
-        payload,
-        payload_len
-    );
 }
 
 

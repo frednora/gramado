@@ -31,15 +31,7 @@ struct udp_d
 } __attribute__ ((packed));
 
 
-int
-network_send_udp ( 
-    uint8_t source_ip[4], 
-    uint8_t target_ip[4], 
-    uint8_t target_mac[6], 
-    unsigned short source_port,
-    unsigned short target_port,
-    char *data_buffer,
-    size_t data_lenght );
+void udp_save_mac(uint8_t mac[6]);
 
 void 
 network_test_udp0(
@@ -50,7 +42,15 @@ network_test_udp0(
 void network_test_udp(void);
 void network_test_udp2(void);
 
-void udp_save_mac( uint8_t mac[6] );
+int
+network_send_udp ( 
+    uint8_t source_ip[4], 
+    uint8_t target_ip[4], 
+    uint8_t target_mac[6], 
+    unsigned short source_port,
+    unsigned short target_port,
+    char *data_buffer,
+    size_t data_lenght );
 
 //
 // $

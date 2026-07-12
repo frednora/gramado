@@ -8,8 +8,23 @@ static char response_file[512];
 const char *gprot_response_file = 
     "<html><head></head><body><span>This is the Gramado Kernel</span></body></html>\x00";
 
-int
-gprot_send_udp ( 
+
+static int 
+__gprot_send_udp ( 
+    uint8_t target_ip[4], 
+    uint8_t target_mac[6], 
+    unsigned short source_port,
+    unsigned short target_port,
+    char *data_buffer,   // UDP payload
+    size_t data_lenght );
+
+static int __gprot_handle_g(char *data, uint16_t s_port, uint16_t d_port);
+static int __gprot_handle_http(char *buf, uint16_t sport, uint16_t dport);
+
+// --------------------------------------------------------------------
+
+static int 
+__gprot_send_udp ( 
     uint8_t target_ip[4], 
     uint8_t target_mac[6], 
     unsigned short source_port,
@@ -40,9 +55,11 @@ gprot_send_udp (
     return 0;
 
 fail:
-    printk("gprot_send_udp: fail\n");
+    printk("__gprot_send_udp: fail\n");
     return (int) -1;
 }
+
+
 
 // #test: 
 // Respond the UDP message receive on port 11888.
@@ -53,7 +70,7 @@ fail:
 //   provavelmente na estrutura de IP.
 // + #todo: 
 //   O MAC do alvo ficaria registrado na estrutura de ethernet.
-int gprot_handle_protocol(char *data, uint16_t s_port, uint16_t d_port)
+static int __gprot_handle_g(char *data, uint16_t s_port, uint16_t d_port)
 {
     char *buf = (char *) data;  // Testing on UDP payload for now.
     uint16_t sport = s_port;
@@ -71,6 +88,16 @@ int gprot_handle_protocol(char *data, uint16_t s_port, uint16_t d_port)
 
     if (dport != OurPort)
         goto fail;
+
+
+// Not a valid gprot string
+
+    if ( buf[0] != 'g' || 
+         buf[1] != ':' ) 
+    {
+        // #todo: Response?
+        return -1;
+    }
 
 // ----------------
 // g:/
@@ -372,7 +399,7 @@ done:
 
     // #test
     // #bugbug: Maybe some of these parameters are wrong.
-    gprot_send_udp (
+    __gprot_send_udp (
         NetworkSaved.caller_ipv4,  // dst ip
         NetworkSaved.caller_mac,   // dst mac
         dport,                // source port: "US"
@@ -526,4 +553,87 @@ int gprot_handle_protocol(char *data, uint16_t s_port, uint16_t d_port)
 }
 */
 
+// Worker for HTTP requests
+static int __gprot_handle_http(char *buf, uint16_t sport, uint16_t dport)
+{
+    size_t MessageSize = 256;
+    int NoReply = TRUE;
+
+    if (!buf) 
+        return -1;
+
+
+    if (kstrncmp(buf, "GET /", 5) == 0)
+    {
+        printk("GET received\n");
+
+        // Response
+        memset(buf, 0, MessageSize);
+
+        ksprintf(buf,
+            "HTTP/1.1 200 OK\r\n"
+            "Content-Type: text/plain\r\n"
+            "\r\n"
+            "Hello from Gramado OS\n");
+
+        /*
+        ksprintf(buf,
+            "HTTP/1.1 200 OK\r\n"
+            "Content-Type: text/html\r\n"
+            "\r\n"
+            "<html><body><h1>Hello from Gramado OS</h1></body></html>");
+        */
+
+        NoReply = FALSE;
+        goto done;
+    }
+
+    if (kstrncmp(buf, "POST /", 6) == 0)
+    {
+        // Response
+        memset(buf, 0, MessageSize);
+        ksprintf(buf,
+            "HTTP/1.1 200 OK\r\n"
+            "Content-Type: text/plain\r\n"
+            "\r\n"
+            "Hello from Gramado OS\n");
+        NoReply = FALSE;
+        goto done;
+    }
+
+done:
+
+    if (!NoReply)
+    {
+        __gprot_send_udp(
+            NetworkSaved.caller_ipv4,
+            NetworkSaved.caller_mac,
+            dport,
+            sport,
+            buf,
+            MessageSize
+        );
+    }
+
+    return 0;
+}
+
+int gprot_handle_protocol(char *data, uint16_t s_port, uint16_t d_port)
+{
+    char *buf = data;
+
+    if (!buf) 
+        return -1;
+    //if (*buf == 0)
+        //return -1;
+
+// Gramado protocol
+    if (buf[0] == 'g' && buf[1] == ':') 
+    {
+        return (int) __gprot_handle_g(buf, s_port, d_port);
+    }
+
+// Otherwise, assume HTTP
+    return (int) __gprot_handle_http(buf, s_port, d_port);
+}
 

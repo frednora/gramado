@@ -209,6 +209,17 @@ network_handle_ethernet (
         (unsigned short) eth->type);
 */
 
+/*
+    // #debug: Cathing broadcast
+    if (eth->mac_dst[0]==0xFF && eth->mac_dst[1]==0xFF &&
+        eth->mac_dst[2]==0xFF && eth->mac_dst[3]==0xFF &&
+        eth->mac_dst[4]==0xFF && eth->mac_dst[5]==0xFF) 
+    {
+        printk("Ethernet: Broadcast MAC received\n");
+    }
+*/
+
+
 // Save the MAC of the caller.
     network_fill_mac(
         NetworkSaved.caller_mac, 

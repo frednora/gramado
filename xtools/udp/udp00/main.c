@@ -16,7 +16,7 @@
 //const char *ip = "127.0.0.1";
 //#define PORT 43454
 
-const char *ip = "192.168.1.8";
+const char *ip = "192.168.1.4";
 #define PORT  11888
 
 #define SA  struct sockaddr
@@ -77,9 +77,25 @@ int process_command(char *cmdline)
         isTimeToQuit = TRUE;
         goto done;
     }
+
+    // Otherwise, assume HTTP
+    if (strncmp("HTTP/", cmdline, 5) == 0) 
+    {
+        //printf("HTTP response: { %s }\n", cmdline);
+        printf("\n");
+        printf("%s",cmdline);
+        printf("\n");
+        goto done;
+    }
+
+    printf("Response not supported\n");
+
+// unsupported response    
     goto fail;
+
 done:
     return 0;
+
 fail: 
     return (int) -1;
 }

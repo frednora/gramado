@@ -64,7 +64,6 @@ unsigned char udp_saved_mac[6] = {
 
 
 static void __udp_clear_payload_buffer(void);
-static void __handle_gprotocol(uint16_t s_port, uint16_t d_port);
 
 
 //
@@ -75,146 +74,6 @@ static void __handle_gprotocol(uint16_t s_port, uint16_t d_port);
 static void __udp_clear_payload_buffer(void)
 {
     memset( udp_payload, 0, sizeof(udp_payload) );
-}
-
-// #test: 
-// Respond the UDP message receive on port 11888.
-// Somente se o dhcp foi initializado.
-// + Nosso IP ficou registrado na estrutura de dhcp.
-// + #todo: 
-//   O IP do alvo deveria estar salvo em alguma estrutura
-//   provavelmente na estrutura de IP.
-// + #todo: 
-//   O MAC do alvo ficaria registrado na estrutura de ethernet.
-static void __handle_gprotocol(uint16_t s_port, uint16_t d_port)
-{
-    uint16_t sport = s_port;
-    uint16_t dport = d_port;
-    const uint16_t OurPort = 11888;
-    size_t MessageSize = 256;
-
-    int NoReply = TRUE;
-
-    if (dhcp_info.initialized != TRUE)
-        return;
-
-    if (dport != OurPort)
-        return;
-
-// ----------------
-// g:0
-// packet type: 0 = request
-    if ( udp_payload[0] == 'g' && 
-         udp_payload[1] == ':' && 
-         udp_payload[2] == '0' )
-    {
-        //printk("[request]\n"); refresh_screen();
-        memset(udp_payload, 0, sizeof(udp_payload));
-        ksprintf(udp_payload,"g:1 ");  // Reply code
-        ksprintf(
-            (udp_payload + 4),
-            "This is a response from Gramado OS\n");
-        NoReply = FALSE;
-        goto done;
-    }
-
-// -----------------------
-// g:1
-// packet type: 1 = reply
-    if ( udp_payload[0] == 'g' && 
-         udp_payload[1] == ':' && 
-         udp_payload[2] == '1' )
-    {
-        //memset(udp_payload, 0, sizeof(udp_payload));
-
-        // #debug
-        printk("[g:1] REPLY\n");
-        refresh_screen();
-
-        NoReply = TRUE;
-        goto done;
-    }
-
-// -------------------------
-// g:2
-// packet type: 2 = event
-    if ( udp_payload[0] == 'g' && 
-         udp_payload[1] == ':' && 
-         udp_payload[2] == '2' )
-    {
-        //memset(udp_payload, 0, sizeof(udp_payload));
-
-        // #debug
-        printk("[g:2] EVENT\n");
-        refresh_screen();
-
-        NoReply = TRUE;
-        goto done;
-    }
-
-// ---------------------------
-// g:3
-// packet type: 3 = error
-    if ( udp_payload[0] == 'g' && 
-         udp_payload[1] == ':' && 
-         udp_payload[2] == '3' )
-    {
-        //memset(udp_payload, 0, sizeof(udp_payload));
-
-        // #debug
-        printk("[g:3] ERROR\n");
-        refresh_screen();
-
-        // #test
-        // Testing keyboard event
-        // OK, it's working. We can see a x in the client area of editor.bin.
-        // network_keyboard_event(MSG_KEYDOWN, 'x', 'x' );
-
-        NoReply = TRUE;
-        goto done;
-    }
-
-// --------------------------
-// g:4
-// packet type: 4 = disconnect
-    if ( udp_payload[0] == 'g' && 
-         udp_payload[1] == ':' && 
-         udp_payload[2] == '4' )
-    {
-        //printk("[g:4] \n");
-        //refresh_screen;
-
-        memset(udp_payload, 0, sizeof(udp_payload));
-        ksprintf(udp_payload,"g:0 ");          // Request
-        ksprintf( (udp_payload + 4), "exit");  // exit command
-        NoReply = FALSE;
-        goto done;
-    }
-
-    //if (dport == 11888)
-        //ksprintf(udp_payload,"This is a response from Gramado OS");
-
-// Fail: 
-// The received message is invalid.
-    NoReply = TRUE;
-
-// ---------------------
-// Response
-done:
-    if (NoReply == TRUE)
-        return;
-
-    //printk ("kernel: Sending response\n");
-    //refresh_screen();
-
-    network_send_udp(  
-        dhcp_info.your_ipv4,  // scr ip
-        NetworkSaved.caller_ipv4,  // dst ip
-        NetworkSaved.caller_mac,   // dst mac
-        dport,                // source port: "US"
-        sport,                // target port  "Who sent"
-        udp_payload,          // udp payload
-        MessageSize );        // udp payload size (Message size)
 }
 
 void udp_save_mac(uint8_t mac[6])
@@ -668,7 +527,8 @@ network_handle_udp(
     uint16_t dport = (uint16_t) FromNetByteOrder16(udp->uh_dport);
 
 /*
-    //#debug
+    #debug
+    printk("UDP: dport{%d} #debug\n",dport);
     printk ("sp ={%d}\n",sport);
     printk ("dp ={%d}\n",dport);
     printk ("len={%d}\n",udp->uh_ulen);
@@ -705,10 +565,6 @@ network_handle_udp(
     */
     udp_payload[1021] = 0;
 
-    //#debug
-    // A lot of noise.
-    //printk("UDP: dport{%d} #debug\n",dport);
-
 // Don't print every message.
 // Is it a valid port?
 // Hang if the port is valid.
@@ -717,18 +573,14 @@ network_handle_udp(
     p = udp_payload;
     int mFlag=0;
 
-// #test
-// DHCP dialog
+// ----------------------------------
+// DHCP dialog:
 // Receiving Offer and Ack.
 // Handle dhcp protocol.
+// DHCP ports:
+// UDP Port 67 – Used by the DHCP server to listen for incoming requests from clients.
+// UDP Port 68 – Used by the client to receive responses from the server.
 
-    //printk("UDP: dport{%d}   #debug\n",dport);
-    //die();
-
-    // DHCP ports
-    // UDP Port 67 – Used by the DHCP server to listen for incoming requests from clients.
-    // UDP Port 68 – Used by the client to receive responses from the server.
-    //if (sport == 67 || dport == 68)
     if (dport == 68)
     {
         printk("UDP: on DHCP port %d\n",dport);
@@ -757,6 +609,23 @@ network_handle_udp(
 
     int NoReply = TRUE;
 
+    if (dport == 11888)
+    {
+        gprot_handle_protocol(udp_payload, sport, dport);
+        __udp_clear_payload_buffer();
+        return;
+    }
+
+    if (dport == 22888)
+    {
+        // Print the message for this port
+        printk("UDP: { %s }\n", udp_payload );
+
+        __udp_clear_payload_buffer();
+        return;
+    }
+
+    /*
     if ( dport == 11888 ||
          dport == 22888 ||
          dport == 34884 )
@@ -779,17 +648,27 @@ network_handle_udp(
 
         } else {
 
-            // Print the message for these ports.
-            printk("UDP: { %s }\n", udp_payload );
+            int IsGPROC = FALSE;
 
-            // #test
-            // System message
-            // Send a command to the init process.
-            //ipc_post_message_to_init(77888, 1234, 5678);
+            if ( udp_payload[0] == 'g' && 
+                 udp_payload[1] == ':' )
+            {
+                IsGPROC = TRUE;
+            }
 
-            //__handle_gprotocol(sport,dport);
-            // See: gprot.c
-            gprot_handle_protocol(udp_payload, sport, dport);
+            if (IsGPROC == TRUE){
+                // See: gprot.c
+                gprot_handle_protocol(udp_payload, sport, dport);
+            } else {
+
+                // Print the message for these ports.
+                printk("UDP: { %s }\n", udp_payload );
+
+                // #test
+                // System message
+                // Send a command to the init process.
+                //ipc_post_message_to_init(77888, 1234, 5678);
+            }
         };
 
         // Clear UDP local buffer.
@@ -801,6 +680,7 @@ network_handle_udp(
         __udp_clear_payload_buffer();
         return;
     }
+    */
 
 // Fail
 // Return if something goes wrong.

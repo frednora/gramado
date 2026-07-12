@@ -4,8 +4,8 @@
 import socket
 
 # IP:PORT
-TARGET_IP = "192.168.1.8"
-TARGET_PORT = 11888
+TARGET_IP = "192.168.1.4"
+TARGET_PORT = 22888
 MESSAGE = b"Hello from Python script on Linux.\0"
 
 # Verbose
