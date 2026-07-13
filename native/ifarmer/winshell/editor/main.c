@@ -32,38 +32,7 @@
 #include "globals.h"
 #include <editor.h>
 
-static int __open_document(char *file_name);
-
 // ---------------------------------------------
-
-static int __open_document(char *file_name)
-{
-    int fd = -1;
-    char buf[1024];
-
-    if ((void*)file_name == NULL)
-        goto fail;
-
-    //doc_fp = (FILE *) fopen(file_name, "r+");        
-    //if (doc_fp == NULL){
-    //    goto fail;
-    //}
-    //int fd = (int) fileno(doc_fp);
-
-    fd = (int) open((char *) file_name, 0, "a+");
-    if (fd < 0){
-        printf ("__open_document: on open()\n");
-        goto fail;
-    }
-    read(fd, buf, 512);
-    printf("%s",buf);
-
-    return 0;  // OK
-
-fail:
-    printf("fail\n");
-    return (int) -1;
-}
 
 int main(int argc, char *argv[])
 {

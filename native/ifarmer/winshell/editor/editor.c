@@ -49,6 +49,8 @@ static int file_status=FALSE;
 
 struct text_buffer_d *text_buffer;
 
+struct editor_initialization_d  EditorInitialization;
+
 // #test
 // The file buffer.
 //char file_buffer[512];
@@ -170,7 +172,7 @@ static int editor_init_windows(void);
 struct text_buffer_d *editorInitBuffer(void);
 
 static void __test_text(int fd, int wid);
-static void __test_load_file(int socked_fd);
+//static void __test_load_file(int socked_fd);
 
 static void editorDrawChar_dc(struct dccanvas_d *dc, int ch);
 static void editorInjectChar(struct text_buffer_d *tb, int line, int col, char ch);
@@ -185,6 +187,8 @@ static void editorDrawCell(struct dccanvas_d *dc, int line, int col);
 
 static void editorHandleKey(int key);
 
+static void editorDrawStatusBar(void);
+
 static int 
 editorProcedure(
     int fd, 
@@ -194,6 +198,10 @@ editorProcedure(
     unsigned long long2 );
 
 static void pump(int fd, int wid);
+
+static int __open_document(char *file_name);
+
+static int __editor_initialize(void);
 
 // =====================================
 // Functions
@@ -608,10 +616,22 @@ static void editorHandleKey(int key)
 
     switch (key)
     {
+        /*
         case VK_RETURN:
             // Move to new line
             cursor_x = 0;
             cursor_y++;
+            break;
+        */
+        case VK_RETURN:
+            // Move to new line
+            cursor_x = 0;
+            if (cursor_y < (DEFAULT_ROWS - 1)) {
+                cursor_y++;
+            } else {
+                // Already at last line, stay there
+                cursor_y = DEFAULT_ROWS - 1;
+            }
             break;
 
         case VK_TAB:
@@ -649,12 +669,29 @@ static void editorHandleKey(int key)
             break;
         */
 
+        /*
         default:
             if (key >= 32 && key <= 126) 
             {
                 editorInjectChar(text_buffer, cursor_y, cursor_x, key);
                 editorDrawCell(dc00, cursor_y, cursor_x);
                 cursor_x++;
+            }
+            break;
+        */
+
+        default:
+            if (key >= 32 && key <= 126) 
+            {
+                if (cursor_x < DEFAULT_COLS) {
+                    editorInjectChar(
+                        text_buffer, cursor_y, cursor_x, key);
+                    editorDrawCell(dc00, cursor_y, cursor_x);
+                    cursor_x++;
+                } else {
+                    // At end of line, optionally wrap or ignore
+                    cursor_x = DEFAULT_COLS - 1;
+                }
             }
             break;
     };
@@ -681,6 +718,46 @@ editorSetCursor(
     {
         cursor_y = y;
     }
+}
+
+// Draw status bar showing line/column
+static void editorDrawStatusBar(void)
+{
+    struct dccanvas_d *dc;
+
+    dc = dc00;
+
+    if (!dc || !text_buffer) 
+        return;
+
+    unsigned long sb_height = 24;
+    unsigned long sb_left   = 0;
+    unsigned long sb_top    = cr_height - sb_height;
+    unsigned long sb_width  = cr_width;
+
+    // Background rectangle
+    lingui_draw_rectangle0_dc(
+        dc,
+        sb_left, sb_top, sb_width, sb_height,
+        COLOR_LIGHTGRAY,  // background
+        0                 // ROP
+    );
+
+    // Build status string from cursor position
+    char status[64];
+    sprintf( status, "Ln %d | Col %d", 
+        cursor_y + 1, cursor_x + 1 );
+
+    // Draw string into the status bar
+    libgui_drawstring_dc(
+        dc,
+        sb_left + 8,        // x offset
+        sb_top + 6,         // y offset
+        COLOR_BLACK,        // foreground
+        COLOR_LIGHTGRAY,    // background
+        0, 
+        status
+    );
 }
 
 static int 
@@ -737,12 +814,18 @@ editorProcedure(
             // Redraw the text buffer contents
             editorRedrawBuffer(dc00);
 
+            // Draw the status bar
+            editorDrawStatusBar();
+
             return 0;
         }
         break;
 
+
     case MSG_KEYDOWN:
-        editorHandleKey (long1);
+        editorHandleKey(long1);
+        // Draw the status bar
+        editorDrawStatusBar();
         break;
 
     case MSG_KEYUP:
@@ -981,6 +1064,7 @@ static void __test_text(int fd, int wid)
 // #test
 // Working on routine to load a file
 // into the client area of the application window.
+/*
 static void __test_load_file(int socked_fd)
 {
 // #
@@ -1070,6 +1154,7 @@ static void __test_load_file(int socked_fd)
         }
     };
 }
+*/
 
 static void pump(int fd, int wid)
 {
@@ -1115,8 +1200,110 @@ static void pump(int fd, int wid)
     editorProcedure( fd, e->window, e->type, e->long1, e->long2 );
 }
 
-// Called by main() in main.c.
-int editor_initialize(int argc, char *argv[])
+/*
+static int __open_document(char *file_name)
+{
+    int fd = -1;
+    char buf[1024];
+
+    if ((void*)file_name == NULL)
+        goto fail;
+
+    //doc_fp = (FILE *) fopen(file_name, "r+");        
+    //if (doc_fp == NULL){
+    //    goto fail;
+    //}
+    //int fd = (int) fileno(doc_fp);
+
+    fd = (int) open((char *) file_name, 0, "a+");
+    if (fd < 0){
+        printf ("__open_document: on open()\n");
+        goto fail;
+    }
+    read(fd, buf, 512);
+
+//
+// Inject file
+//
+
+    //printf("%s",buf);
+
+    return 0;  // OK
+
+fail:
+    printf("fail\n");
+    return (int) -1;
+}
+*/
+
+static int __open_document(char *file_name)
+{
+    int fd = -1;
+    char buf[1024];
+    int nreads = 0;
+    int i;
+
+    if ((void*)file_name == NULL)
+        goto fail;
+
+    fd = open((char *) file_name, 0, "r");  // open for reading
+    if (fd < 0) {
+        printf("__open_document: failed to open %s\n", file_name);
+        goto fail;
+    }
+
+    // Read file into buffer
+    nreads = read(fd, buf, sizeof(buf)-1);
+    if (nreads <= 0) 
+    {
+        //close(fd);
+        return -1;
+    }
+    buf[nreads] = '\0';  // null terminate
+
+    //close(fd);
+
+//
+// Inject into text_buffer
+//
+
+    int line = 0;
+    int col  = 0;
+
+    for (i=0; i < nreads; i++) 
+    {
+        char ch = buf[i];
+
+        if (ch == '\n') 
+        {
+            line++;
+            col = 0;
+            continue;
+        }
+
+        if (line >= text_buffer->line_count)
+            break;
+
+        editorInjectChar(text_buffer, line, col, ch);
+        col++;
+
+        if (col >= text_buffer->lines[line]->max_chars) 
+        {
+            line++;
+            col = 0;
+        }
+    };
+
+    EditorInitialization.file_loaded_at_initialization = TRUE;
+    return 0; // success
+
+fail:
+    return (int) -1;
+}
+
+
+// Local worker
+static int __editor_initialize(void)
 {
     const char *display_name_string = "display:name.0";
     int client_fd = -1;
@@ -1481,19 +1668,14 @@ int editor_initialize(int argc, char *argv[])
 
 // ============================================
 
-// #test
-// Initializing the text buffer
-
-    text_buffer = (struct text_buffer_d *) editorInitBuffer();
-    if ((void *) text_buffer == NULL){
-        printf("editor: on editorInitBuffer()\n");
-        goto fail;
+    if (EditorInitialization.file_loaded_at_initialization == TRUE)
+    {
+        // Draw buffer contents
+        editorRedrawBuffer(dc00);
     }
 
-// #test: 
-// loading and printing a text file
-    // __test_load_file(client_fd);
-
+// Draw the status bar
+    editorDrawStatusBar();
 
 // ============================================
 
@@ -1689,6 +1871,52 @@ int editor_initialize(int argc, char *argv[])
 
 fail:
     return EXIT_FAILURE;
+}
+
+// Called by main() in main.c
+int editor_initialize(int argc, char *argv[])
+{
+    int status = -1;
+
+    EditorInitialization.initialized = FALSE;
+    EditorInitialization.file_loaded_at_initialization = FALSE;
+
+    //if (argc < 0)
+        // return EXIT_FAILURE;
+
+// #test
+// Initializing the text buffer
+
+    text_buffer = (struct text_buffer_d *) editorInitBuffer();
+    if ((void *) text_buffer == NULL){
+        printf("editor: on editorInitBuffer()\n");
+        goto fail;
+    }
+
+
+//
+// document
+//
+
+    // #test
+    // #todo: Save it into a proper buffer
+    // We need a structure to handle the document
+    // loaded by the editor.
+
+    if (argc >= 2){
+        __open_document( (char *) argv[1] );
+        //while(1){}
+    }
+
+//
+// Initialize editor
+//
+
+    __editor_initialize();
+
+    return 0;
+fail:
+    return 1;
 }
 
 //

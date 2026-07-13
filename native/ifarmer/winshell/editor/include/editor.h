@@ -69,6 +69,27 @@ struct text_buffer_d {
 
 extern struct text_buffer_d *text_buffer;
 
+// Represents the current document being edited
+struct doc_d 
+{
+    char *file_name;           // Path to the file
+    int is_open;               // Flag: file opened successfully
+    int is_dirty;              // Flag: buffer modified since last save
+    struct text_buffer_d *tb;  // Pointer to the text buffer
+};
+
+// Represents initialization options for the editor
+struct editor_initialization_d 
+{
+    int initialized;
+    int file_loaded_at_initialization;
+
+    //int load_file;             // Flag: load file at startup
+    //char *initial_file_name;   // File to load if flag is set
+};
+extern struct editor_initialization_d EditorInitialization;
+
+
 // ===========================================================
 
 int editor_initialize(int argc, char *argv[]);
