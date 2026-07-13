@@ -19,7 +19,6 @@ all:
 	make -C  sysinfo/
 
 # 3 - Experiments
-	make -C  draw/
 	make -C  launch/
 	make -C  menuapp/
 

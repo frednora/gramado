@@ -24,6 +24,7 @@
 // https://wiki.osdev.org/Synchronization_Primitives
 // ...
 
+/*
 // rtl
 #include <types.h>
 #include <ctype.h>
@@ -45,9 +46,9 @@
 // The client-side library
 #include <libgui.h>
 
-
 // Internal
 #include <packet.h>
+*/
 
 #include "globals.h"
 #include <editor.h>
@@ -189,7 +190,7 @@ static int editor_init_windows(void);
 static int editor_init_globals(void);
 
 static void __test_text(int fd, int wid);
-static void __test_load_file(int socket, int wid);
+static void __test_load_file(int socked_fd);
 
 
 static int 
@@ -432,6 +433,8 @@ static int editor_init_windows(void)
 // e com as características de edição configuradas pra ela.
 // Ou ainda uma biblioteca client-side.
 
+// #todo
+// We need to draw the char inside the dc using the libgui.
 void 
 editorDrawChar( 
     int fd,
@@ -822,17 +825,46 @@ static void __test_text(int fd, int wid)
 // #test
 // Working on routine to load a file
 // into the client area of the application window.
-static void __test_load_file(int socket, int wid)
+static void __test_load_file(int socked_fd)
 {
 // #
 // This is a work in progress!
 
     int fd = -1;
-    char *name = "init.ini";
-
+    //char *name = "init.ini";
+    char *name = "fox.txt";
     file_status = FALSE;
 
+//------------------------------------
+    struct gws_window_info_d  lWi;
+
+    if (socked_fd<0)
+        return;
+
+// Get info about the main window.
+// IN: fd, wid, window info structure.
+    gws_get_window_info ( 
+        socked_fd, main_window, (struct gws_window_info_d *) &lWi );
+
+    // Frame/chrome
+    // frame_left = lWi.left;
+    // frame_top = lWi.top;
+    // frame_width = lWi.width;
+    // frame_height = lWi.height;
+
+    // Client area
+    cr_left   = lWi.cr_left;
+    cr_top    = lWi.cr_top;
+    cr_width  = lWi.cr_width;
+    cr_height = lWi.cr_height;
+
+// ------------------------------------
+// file
+
     fd = open( (char*) name, 0, "a+" );
+    if (fd<0)
+        return;
+
     //lseek(fd,0,SEEK_SET);
     int nreads=0;
     nreads = read(fd,file_buffer,511);
@@ -840,11 +872,11 @@ static void __test_load_file(int socket, int wid)
         file_status = TRUE;
 
 // socket
-    if(socket<0)
-        return;
+    //if(socket<0)
+        //return;
 
-    if(wid<0)
-        return;
+    //if(wid<0)
+        //return;
 
     unsigned long x=0;
     unsigned long y=0;
@@ -852,18 +884,23 @@ static void __test_load_file(int socket, int wid)
     // Draw and refresh chars.
     for (i=0; i<nreads; i++)
     {
-        if ( isalnum( file_buffer[i] ) )
+        //if ( isalnum( file_buffer[i] ) )
+        if ( file_buffer[i] != 0 && 
+             file_buffer[i] != '\n' )
         {
-            gws_draw_char (
-                (int) socket,      // socket fd
-                (int) wid,         // wid
-                (unsigned long) x, // left
-                (unsigned long) y, // top
-                (unsigned long) COLOR_BLACK,
-                (unsigned long) file_buffer[i] );  // char.
+            // Draw one character
+            libgui_drawchar_dc(
+                dc00,
+                cr_left + x,  // cursor_x
+                cr_top  + y,  // cursor_y
+                file_buffer[i],   // c
+                COLOR_BLACK,      // fg_color
+                COLOR_WHITE,      // bg_color
+                0  // ROP
+            );
         }
 
-        x += 8;  // Next column.
+        x += 8;  // Next column
         if (x > (8*40))
         {
            x=0;
@@ -1326,6 +1363,13 @@ int editor_initialize(int argc, char *argv[])
         exit(0);
     }
 */
+
+//
+// #test: loading and printing a text file
+//
+
+    __test_load_file(client_fd);
+
 
     int nSysMsg = 0;
 

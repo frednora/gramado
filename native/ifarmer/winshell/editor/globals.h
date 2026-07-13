@@ -1,6 +1,9 @@
+// globals.h
 
 #ifndef __GLOBALS_H
 #define __GLOBALS_H    1
+
+//extern FILE *doc_fp;
 
 #define PORTS_WS  4040
 #define PORTS_NS  4041

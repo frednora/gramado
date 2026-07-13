@@ -263,7 +263,6 @@ build-extras:
 	@-cp $(L2_WINSHELL)/bin/SYSINFO.BIN  $(BASE)/DE/
 
 # Experimental applications
-	@-cp $(L2_WINSHELL)/bin/DRAW.BIN     $(BASE)/DE/
 	@-cp $(L2_WINSHELL)/bin/LAUNCH.BIN   $(BASE)/DE/
 	@-cp $(L2_WINSHELL)/bin/MENUAPP.BIN  $(BASE)/DE/
 

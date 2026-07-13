@@ -238,7 +238,6 @@ void crt0(unsigned long rdi)
         //fflush(stdout);
     //}
 
-
 // Depois de lido o stdin e colocada a cmdline no buffer local,
 // então é hora de apagarmos os arquivo, para que outro
 // programa consiga usar o arquivo.
@@ -255,6 +254,15 @@ void crt0(unsigned long rdi)
     memcpy(buffer,shared_buffer,512);
     shared_buffer[511]=0;
 */
+
+// #test
+// Trying to do the same we are already doing with posix comands.
+
+// Get cmdline passed by father via kernel.
+// Overriding only if there is some cmdline for us.
+    sc82(44011,buffer,buffer,buffer);
+    size_t nBytes = sizeof(buffer);
+    buffer[nBytes] = '\0';
 
 // ===================================================
 // Tokenizing.

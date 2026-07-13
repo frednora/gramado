@@ -2174,12 +2174,9 @@ int main(int argc, char *argv[])
     };
     */
  
-// Done:
-    //gws_debug_print("taskbar.bin: Exit\n");
-    return EXIT_SUCCESS;
+    return EXIT_SUCCESS;  // done
 }
 
 //
 // End
 //
-

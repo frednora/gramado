@@ -2183,6 +2183,56 @@ libgui_BackbufferDrawCharBlockStyle(
     }
 }
 
+void
+libgui_BackbufferDrawCharBlockStyle_dc(
+    struct dccanvas_d *dc,
+    unsigned long x,          // top-left in screen space
+    unsigned long y,
+    unsigned int fgcolor,
+    int ch,         // character code
+    int scale )     // 1 = classic 8×8, 2 = 16×16 blocks, etc.
+{
+    if ((void*) dc == NULL)
+        return;
+
+    if (scale < 1){
+	    scale = 1;
+	}
+
+    if (!FontInitialization.initialized || FontInitialization.address == 0)
+        return;
+
+    int char_index = (int)(ch & 0xFF);
+    unsigned char *glyph = 
+        (unsigned char *)FontInitialization.address + (char_index * FontInitialization.height);
+
+    int row;
+    int col;
+
+    for (row = 0; row < FontInitialization.height; row++)
+    {
+        unsigned char bits = glyph[row];
+
+        for (col = 0; col < FontInitialization.width; col++)
+        {
+            if (bits & (0x80 >> col))
+            {
+                unsigned long bx = x + (col * scale);
+                unsigned long by = y + (row * scale);
+
+                lingui_draw_rectangle0_dc ( 
+                    dc, 
+                    bx, 
+                    by,
+                    scale, scale,
+                    fgcolor,
+                    0         // ROP
+                );
+            }
+        };
+    };
+}
+
 void 
 libgui_drawstringblock(
     unsigned long x,
@@ -2201,6 +2251,36 @@ libgui_drawstringblock(
         } else {
             //grDrawCharBlockStyleInsideWindow(wid, cx, y, color, *str, scale, 0);
             libgui_BackbufferDrawCharBlockStyle(cx, y, color, *str, scale);
+			cx += advance;
+        }
+        str++;
+    }
+}
+
+void 
+libgui_drawstringblock_dc(
+    struct dccanvas_d *dc,
+    unsigned long x,
+    unsigned long y,
+    unsigned int color,
+    const char *str,
+    int scale )
+{
+    int advance = FontInitialization.width * scale;
+    unsigned long cx = x;
+
+    if ((void*) dc == NULL)
+        return;
+
+    while (*str)
+    {
+        if (*str == ' ') {
+            cx += advance;          // or advance / 2 for tighter word spacing
+        } else {
+
+            libgui_BackbufferDrawCharBlockStyle_dc(
+                dc, cx, y, color, *str, scale );
+
 			cx += advance;
         }
         str++;

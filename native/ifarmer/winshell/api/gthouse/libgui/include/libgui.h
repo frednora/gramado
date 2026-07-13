@@ -237,6 +237,15 @@ libgui_BackbufferDrawCharBlockStyle(
     int           ch,         // character code
     int           scale);      // 1 = classic 8×8, 2 = 16×16 blocks, etc.
 
+void
+libgui_BackbufferDrawCharBlockStyle_dc(
+    struct dccanvas_d *dc,
+    unsigned long x,          // top-left in screen space
+    unsigned long y,
+    unsigned int fgcolor,
+    int ch,         // character code
+    int scale );    // 1 = classic 8×8, 2 = 16×16 blocks, etc.
+
 void 
 libgui_drawstringblock(
     unsigned long x,
@@ -244,6 +253,16 @@ libgui_drawstringblock(
     unsigned int color,
     const char *str,
     int scale );
+
+void 
+libgui_drawstringblock_dc(
+    struct dccanvas_d *dc,
+    unsigned long x,
+    unsigned long y,
+    unsigned int color,
+    const char *str,
+    int scale );
+
 
 void libgui_set_mouse_pointer(unsigned long x, unsigned long y);
 
