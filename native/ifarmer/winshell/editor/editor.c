@@ -24,38 +24,11 @@
 // https://wiki.osdev.org/Synchronization_Primitives
 // ...
 
-/*
-// rtl
-#include <types.h>
-#include <ctype.h>
-#include <string.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <netdb.h>
-#include <netinet/in.h>
-//#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <rtl/gramado.h>
-
-// The client-side library
-#include <gws.h>
-
-// #test
-// The client-side library
-#include <libgui.h>
-
-// Internal
-#include <packet.h>
-*/
-
 #include "globals.h"
 #include <editor.h>
 
 
 struct dccanvas_d *dc00;  // shared dc
-
 struct ui_component_d *uic_button_save;
 
 /*
@@ -69,6 +42,12 @@ struct sockaddr_in addr = {
 
 static int isTimeToQuit = FALSE;
 static int file_status=FALSE;
+
+//
+// Text buffer
+//
+
+struct text_buffer_d *text_buffer;
 
 // #test
 // The file buffer.
@@ -186,12 +165,25 @@ static void editorShutdown(int fd);
 
 static void update_clients(int fd);
 
-static int editor_init_windows(void);
 static int editor_init_globals(void);
+static int editor_init_windows(void);
+struct text_buffer_d *editorInitBuffer(void);
 
 static void __test_text(int fd, int wid);
 static void __test_load_file(int socked_fd);
 
+static void editorDrawChar_dc(struct dccanvas_d *dc, int ch);
+static void editorInjectChar(struct text_buffer_d *tb, int line, int col, char ch);
+static void editorInjectCharColored(
+    struct text_buffer_d *tb,
+    int line, int col,
+    char ch,
+    unsigned int fg,
+    unsigned int bg,
+    unsigned int attr );
+static void editorDrawCell(struct dccanvas_d *dc, int line, int col);
+
+static void editorHandleKey(int key);
 
 static int 
 editorProcedure(
@@ -201,7 +193,7 @@ editorProcedure(
     unsigned long long1, 
     unsigned long long2 );
 
-void pump(int fd, int wid);
+static void pump(int fd, int wid);
 
 // =====================================
 // Functions
@@ -428,69 +420,244 @@ static int editor_init_windows(void)
     return 0;
 }
 
-// Quem deveria fazer isso seria o window server
-// escrevendo na janela com foco de entrada 
-// e com as características de edição configuradas pra ela.
-// Ou ainda uma biblioteca client-side.
-
-// #todo
-// We need to draw the char inside the dc using the libgui.
-void 
-editorDrawChar( 
-    int fd,
-    int ch)
+// Initialize the text buffer structure
+struct text_buffer_d *editorInitBuffer(void)
 {
-// #:
-// The server is printing the char if the
-// window with focus is an editbox.
+    int i, j;
 
-    int pos_x=0;
-    int pos_y=0;
+    // Allocate the text buffer
+    struct text_buffer_d *tb = (struct text_buffer_d *) malloc(sizeof(struct text_buffer_d));
+    if (!tb) return NULL;
+
+    tb->line_count = DEFAULT_ROWS;
+    tb->max_lines  = DEFAULT_ROWS;
+
+    // Allocate array of line pointers
+    tb->lines = (struct line_buffer_d **) malloc(sizeof(struct line_buffer_d *) * DEFAULT_ROWS);
+    if (!tb->lines) {
+        //free(tb);
+        return NULL;
+    }
+
+    // Initialize each line
+    for (i = 0; i < DEFAULT_ROWS; i++) {
+        tb->lines[i] = (struct line_buffer_d *) malloc(sizeof(struct line_buffer_d));
+        if (!tb->lines[i]) continue;
+
+        tb->lines[i]->char_count = 0;
+        tb->lines[i]->max_chars  = DEFAULT_COLS;
+
+        // Allocate cells for each line
+        tb->lines[i]->cells = (struct char_cell_d *) malloc(sizeof(struct char_cell_d) * DEFAULT_COLS);
+        if (!tb->lines[i]->cells) continue;
+
+        // Initialize cells
+        for (j = 0; j < DEFAULT_COLS; j++) {
+            tb->lines[i]->cells[j].ch   = ' ';
+            tb->lines[i]->cells[j].fg   = COLOR_BLACK;
+            tb->lines[i]->cells[j].bg   = COLOR_WHITE;
+            tb->lines[i]->cells[j].attr = 0;
+        }
+    }
+
+    return tb;
+}
+
+
+// Draw a character directly into the DC
+static void editorDrawChar_dc(struct dccanvas_d *dc, int ch)
+{
+    int pos_x = cursor_x;
+    int pos_y = cursor_y;
     unsigned int Color = COLOR_BLACK;
 
-// Parameter
-    if (fd<0)
+    if (!dc) 
         return;
 
-// Get saved value
-    pos_x = (int) (cursor_x & 0xFFFF);
-    pos_y = (int) (cursor_y & 0xFFFF);
+    // Bounds check
+    if (pos_x < 0) pos_x = 0;
+    if (pos_y < 0) pos_y = 0;
 
-    if ( pos_x < 0 ){ pos_x = 0; }
-    if ( pos_y < 0 ){ pos_y = 0; }
-
-// End of line
-    if ( pos_x >= cursor_x_max )
-    {
+    // End of line
+    if (pos_x >= cursor_x_max) {
         pos_x = 0;
         pos_y++;
     }
 
-// Last line
-// #todo: scroll
-    if ( pos_y >= cursor_y_max )
-    {
-        pos_y = cursor_y_max-1;
+    // Last line (no scroll yet)
+    if (pos_y >= cursor_y_max) {
+        pos_y = cursor_y_max - 1;
     }
 
-// Save cursor
+    // Save cursor
     cursor_x = pos_x;
     cursor_y = pos_y;
 
-/*
-// Draw
-// Calling the display server for drawing the char.
-    gws_draw_char ( 
-        fd, 
-        client_window, 
-        (cursor_x*8), 
-        (cursor_y*8), 
-        Color, 
-        ch );
-*/
+    // Draw character into the canvas
+    libgui_drawchar_dc(
+        dc,
+        cr_left + (cursor_x * 8),   // X position
+        cr_top  + (cursor_y * 8),   // Y position
+        ch,                         // character
+        Color,                      // foreground
+        COLOR_WHITE,                // background
+        0                           // ROP
+    );
 
-    // increment
-    cursor_x++;
+    cursor_x++;  // Advance cursor
+}
+
+// Updates the logical buffer only.
+static void editorInjectChar(struct text_buffer_d *tb, int line, int col, char ch)
+{
+    if (!tb) return;
+    if (line < 0 || line >= tb->line_count) return;
+
+    struct line_buffer_d *lb = tb->lines[line];
+    if (!lb) return;
+    if (col < 0 || col >= lb->max_chars) return;
+
+    lb->cells[col].ch   = ch;
+    lb->cells[col].fg   = COLOR_BLACK;
+    lb->cells[col].bg   = COLOR_WHITE;
+    lb->cells[col].attr = 0;
+
+    if (col >= lb->char_count) {
+        lb->char_count = col + 1;
+    }
+}
+
+static void editorInjectCharColored(
+    struct text_buffer_d *tb,
+    int line, int col,
+    char ch,
+    unsigned int fg,
+    unsigned int bg,
+    unsigned int attr )
+{
+    if (!tb) return;
+    if (line < 0 || line >= tb->line_count) return;
+
+    struct line_buffer_d *lb = tb->lines[line];
+    if (!lb) return;
+    if (col < 0 || col >= lb->max_chars) return;
+
+    lb->cells[col].ch   = ch;
+    lb->cells[col].fg   = fg;
+    lb->cells[col].bg   = bg;
+    lb->cells[col].attr = attr;
+
+    if (col >= lb->char_count) {
+        lb->char_count = col + 1;
+    }
+}
+
+
+// Draws a single cell from the buffer into the canvas.
+static void editorDrawCell(struct dccanvas_d *dc, int line, int col)
+{
+    if (!dc || !text_buffer) return;
+    if (line < 0 || line >= text_buffer->line_count) return;
+
+    struct line_buffer_d *lb = text_buffer->lines[line];
+    if (!lb || col < 0 || col >= lb->max_chars) return;
+
+    struct char_cell_d *cell = &lb->cells[col];
+
+    libgui_drawchar_dc(
+        dc,
+        cr_left + (col * 8),
+        cr_top  + (line * 8),
+        cell->ch,
+        cell->fg,
+        cell->bg,
+        cell->attr
+    );
+}
+
+// Redraw the entire text buffer into the canvas
+static void editorRedrawBuffer(struct dccanvas_d *dc)
+{
+    int line;
+    int LineCount;
+    int col;
+    int CharCount;
+
+    if (!dc || !text_buffer)
+        return;
+
+    LineCount = text_buffer->line_count;
+    for (line=0; line < LineCount; line++) 
+    {
+        struct line_buffer_d *lb = text_buffer->lines[line];
+        if (!lb)
+            continue;
+
+        CharCount = lb->char_count;
+        for (col=0; col < CharCount; col++) {
+            editorDrawCell(dc, line, col);
+        }
+    }
+}
+
+// Handle keyboard input for the editor
+static void editorHandleKey(int key)
+{
+    if (key <= 0)
+        return;
+
+    switch (key)
+    {
+        case VK_RETURN:
+            // Move to new line
+            cursor_x = 0;
+            cursor_y++;
+            break;
+
+        case VK_TAB:
+            // Insert spaces (basic tab = 4 spaces)
+            editorDrawChar_dc(dc00, ' ');
+            editorDrawChar_dc(dc00, ' ');
+            editorDrawChar_dc(dc00, ' ');
+            editorDrawChar_dc(dc00, ' ');
+            break;
+
+        case VK_ESCAPE:
+            // Escape pressed — could trigger quit or clear
+            printf("editor.bin: VK_ESCAPE pressed\n");
+            break;
+
+        case VK_BACK:
+            // Handle backspace: move cursor back and erase
+            if (cursor_x > 0) 
+            {
+                cursor_x--;
+                libgui_drawchar_dc(dc00,
+                    cr_left + (cursor_x * 8),
+                    cr_top  + (cursor_y * 8),
+                    ' ', COLOR_BLACK, COLOR_WHITE, 0);
+            }
+            break;
+
+        /*
+        default:
+            // Printable characters
+            if (key >= 32 && key <= 126) 
+            {
+                editorDrawChar_dc(dc00, key);
+            }
+            break;
+        */
+
+        default:
+            if (key >= 32 && key <= 126) 
+            {
+                editorInjectChar(text_buffer, cursor_y, cursor_x, key);
+                editorDrawCell(dc00, cursor_y, cursor_x);
+                cursor_x++;
+            }
+            break;
+    };
 }
 
 void
@@ -524,8 +691,6 @@ editorProcedure(
     unsigned long long1, 
     unsigned long long2 )
 {
-
-
     int ButtonId = -1;
 
 // Parameters
@@ -547,6 +712,7 @@ editorProcedure(
         return 0;
         break;
 
+    /*
     // If the event window is the main window, redraw all client windows.
     case MSG_PAINT:
         if (event_window == main_window)
@@ -560,33 +726,23 @@ editorProcedure(
             return 0;
         }
         break;
+        */
+
+    case MSG_PAINT:
+        if (event_window == main_window)
+        {
+            // Redraw the window chrome and client area
+            update_clients(fd);
+
+            // Redraw the text buffer contents
+            editorRedrawBuffer(dc00);
+
+            return 0;
+        }
+        break;
 
     case MSG_KEYDOWN:
-        //printf("editor: MSG_KEYDOWN\n");
-        switch (long1) 
-        {
-            case VK_RETURN: 
-                printf("Editor: MSG_KEYDOWN VK_RETURN\n"); 
-                break;
-            case VK_TAB:
-                printf("editor.bin: VK_TAB received\n");
-                break;
-
-            case VK_ESCAPE:
-                printf("editor.bin: VK_ESCAPE received\n");
-
-                // #test: Testing libdisp library.
-                // Draw it (frontbuffer)
-                //libgui_frontbuffer_putpixel( 0xFF0000, 10, 11, 0 );
-                //libgui_frontbuffer_putpixel( 0x00FF00, 10, 12, 0 );
-                //libgui_frontbuffer_putpixel( 0x0000FF, 10, 13, 0 );
-
-                // libgui_drawchar(20, 20, 'E', 0xFFFFFF, 0x000000, 0);
-
-                //libgui_frontbuffer_draw_horizontal_line( 10, 15, 100, 0xFF0000, 0 );
-
-                break;
-        };
+        editorHandleKey (long1);
         break;
 
     case MSG_KEYUP:
@@ -915,7 +1071,7 @@ static void __test_load_file(int socked_fd)
     };
 }
 
-void pump(int fd, int wid)
+static void pump(int fd, int wid)
 {
     struct gws_event_d lEvent;
     lEvent.used = FALSE;
@@ -1325,6 +1481,22 @@ int editor_initialize(int argc, char *argv[])
 
 // ============================================
 
+// #test
+// Initializing the text buffer
+
+    text_buffer = (struct text_buffer_d *) editorInitBuffer();
+    if ((void *) text_buffer == NULL){
+        printf("editor: on editorInitBuffer()\n");
+        goto fail;
+    }
+
+// #test: 
+// loading and printing a text file
+    // __test_load_file(client_fd);
+
+
+// ============================================
+
 //
 // Event loop
 //
@@ -1363,13 +1535,6 @@ int editor_initialize(int argc, char *argv[])
         exit(0);
     }
 */
-
-//
-// #test: loading and printing a text file
-//
-
-    __test_load_file(client_fd);
-
 
     int nSysMsg = 0;
 
