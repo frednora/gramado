@@ -5,7 +5,7 @@ all:
 	make -C cmds/
 
 # Experiment with cpp.
-#	make -C cpp00/
+	make -C cpp00/
 
 clean-all:
 	-rm *.o 

@@ -201,7 +201,7 @@ build-extras:
 # --------
 # cpp00
 # cpp application example
-#	@-cp $(L4_CPP00)/bin/CPP00.BIN  $(BASE)/DE
+	@-cp $(L4_CPP00)/bin/CPP00.BIN  $(BASE)/DE
 
 
 # --------

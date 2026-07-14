@@ -2,8 +2,7 @@
 # Makefile for a C++ program for Gramado OS.
 # Created by Fred Nora.
 
-
-LINKFLAGS = -m elf_x86_64 -T ../link.ld
+LINKFLAGS = -m elf_x86_64 -T link.ld
 
 CPPFLAGS = -m64 \
 -ffreestanding \
@@ -12,8 +11,13 @@ CPPFLAGS = -m64 \
 -nodefaultlibs    
 
 all:
+
+	g++ -c main.cpp   $(CPPFLAGS) -o main.o 
 	g++ -c cpprt0.cpp $(CPPFLAGS) -o cpprt0.o 
-	ld $(LINKFLAGS) -o CPP00.BIN cpprt0.o
+	g++ -c rtl.cpp    $(CPPFLAGS) -o rtl.o 
+
+
+	ld $(LINKFLAGS) -o CPP00.BIN cpprt0.o rtl.o main.o 
 	-mv CPP00.BIN bin/
 
 clean:
