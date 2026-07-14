@@ -91,8 +91,15 @@ __draw_rectangle_via_kgws (
 
 // ===================================================
 
-
+//
 // Create a new device context for a given buffer.
+//
+// #ps: 
+// We can use this structure to create a dc for 
+// drawing inside the client area of an application window.
+// In this case the parameters we got with the server 
+// calling a function to get informations of a window.
+//
 // Parameters:
 //   base   - pointer to buffer memory
 //   width  - width in pixels
@@ -2761,7 +2768,8 @@ int libgui_initialize(void)
 
 
 // Backbuffer and frontbuffer.
-    if ( libgui_FRONTBUFFER_VA == 0 || libgui_BACKBUFFER_VA == 0 )
+    if ( libgui_FRONTBUFFER_VA == 0 || 
+         libgui_BACKBUFFER_VA == 0 )
     {
         printf("libgui_initialize: Buffers\n");
         goto fail;

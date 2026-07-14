@@ -1,5 +1,6 @@
 // taskbar.h
 // This is the header for the taskbar application.
+// Created by Fred Nora.
 
 #ifndef __TASKBAR_H
 #define __TASKBAR_H    1
@@ -73,6 +74,12 @@ struct taskbar_info_d
     unsigned long height;
 };
 extern struct taskbar_info_d  TaskbarInfo;
+
+//
+// == Prototypes =================================
+//
+
+
 
 #endif   
 

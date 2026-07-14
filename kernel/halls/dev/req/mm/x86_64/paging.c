@@ -2061,7 +2061,8 @@ void map_kernel_va_1gb(unsigned long va, unsigned long phys_addr)
 }
 
 // #test
-// Map a 1GB page into the kernel PDPT using the VA to pick the slot
+// Map a 1GB page into the kernel PDPT using the VA 
+// to pick the slot
 // va: virtual address you want to map
 // phys_addr: physical base address of the 1GB frame
 void map_user_va_1gb(unsigned long va, unsigned long phys_addr)
@@ -2070,8 +2071,10 @@ void map_user_va_1gb(unsigned long va, unsigned long phys_addr)
     int pdpt_index = X64_GET_PDPE_INDEX(va);
 
     // sanity checks
-    if (!pdpt) return;
-    if (pdpt_index < 0 || pdpt_index >= 512) return;
+    if (!pdpt) 
+        return;
+    if (pdpt_index < 0 || pdpt_index >= 512) 
+        return;
     if (phys_addr & 0x3FFFFFFF) {
         // must be aligned to 1GB
         return;

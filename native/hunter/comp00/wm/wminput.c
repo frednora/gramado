@@ -144,7 +144,7 @@ wmProcessMouseEvent(
         // The compositor is doing its job,
         // painting the pointer in the right position.
         // Lets update the position. See: comp.c
-        comp_set_mouse_position(saved_x,saved_y);
+        comp_set_mouse_position(saved_x, saved_y);
 
         // #test
         __display_mouse_cursor();
@@ -533,13 +533,41 @@ wmProcessTimerEvent(
     */
 }
 
-// Handle combination code.
+// Handle combination code
 int wmProcessCombinationEvent(int msg_code)
 {
 
 // Parameter:
     if (msg_code < 0){
         goto fail;
+    }
+
+// ===============================
+// [control + arrow keys]
+
+    if (msg_code == GWS_ControlArrowUp)
+    {
+        //yellow_status("Control + up");
+        dock_active_window(1);
+        return 0;
+    }
+    if (msg_code == GWS_ControlArrowRight)
+    {
+        //yellow_status("Control + right");
+        dock_active_window(2);
+        return 0;
+    }
+    if (msg_code == GWS_ControlArrowDown)
+    {
+        //yellow_status("Control + down");
+        dock_active_window(3);
+        return 0;
+    }
+    if (msg_code == GWS_ControlArrowLeft)
+    {
+        //yellow_status("Control + left");
+        dock_active_window(4); 
+        return 0;
     }
 
 //
@@ -627,34 +655,6 @@ int wmProcessCombinationEvent(int msg_code)
 // Not implemented yet
     if (msg_code == GWS_Save){
         yellow_status("Control + s");
-        return 0;
-    }
-
-// ===============================
-// [control + arrow keys]
-
-    if (msg_code == GWS_ControlArrowUp)
-    {
-        //yellow_status("Control + up");
-        dock_active_window(1);
-        return 0;
-    }
-    if (msg_code == GWS_ControlArrowRight)
-    {
-        //yellow_status("Control + right");
-        dock_active_window(2);
-        return 0;
-    }
-    if (msg_code == GWS_ControlArrowDown)
-    {
-        //yellow_status("Control + down");
-        dock_active_window(3);
-        return 0;
-    }
-    if (msg_code == GWS_ControlArrowLeft)
-    {
-        //yellow_status("Control + left");
-        dock_active_window(4); 
         return 0;
     }
 

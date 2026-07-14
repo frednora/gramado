@@ -1472,10 +1472,18 @@ int main(int argc, char *argv[])
     int useDesktop = FALSE;  //TRUE;
     // ...
     int client_fd = -1;
+    int status = -1;
+
+// --------------------------------
+
+    if (argc <= 0)
+    {
+        // #test
+    }
+
 
 // --------------------------------
 // Initialize the library
-    int status = -1;
     status = (int) libgui_initialize();
     if (status < 0){
         printf("taskbar: libgui_initialize fail\n");
@@ -1676,7 +1684,9 @@ int main(int argc, char *argv[])
     //gws_refresh_window(client_fd, main_window);
 
 // =============================
-// Set this thread and its wproxy as the system shell. The taskbar.
+// #test
+// Set this thread and its wproxy as the system shell. 
+// The taskbar.
     sc80(46, 0, 0, 0);
 
 // =============================

@@ -1,13 +1,13 @@
-# 2019 - Created by Fred Nora.
-#todo:
-#fazer um makefile pra compilar o shell
-#obs: #bugbug tem que arrumas as coisas aqui.
+# Compile the taskbar application.
+# This is the main program for the UI Shell.
 
 VERSION = 0
 PATCHLEVEL = 0
 SUBLEVEL = 0
 EXTRAVERSION =
 #NAME = taskbar
+
+linkTarget = TASKBAR.BIN  
 
 linkFlags  = -m elf_x86_64 \
 -s -x -static -T ../link.ld
@@ -45,19 +45,17 @@ CFLAGS += -fno-pie
 CFLAGS += -fno-omit-frame-pointer
 CFLAGS += -fno-optimize-sibling-calls    
 
-# rtl
+# rtl (libc)
 LIBC      = ../api/garden/rtl/include/
 LIBCOBJ   = ../api/garden/rtl/obj
 
-# libgws - (Using the server-side services)
+# libgws - For server-side services
 LIBGWS    = ../api/gthouse/libgws/include/
 LIBGWSOBJ = ../api/gthouse/libgws/obj
 
-# libgui - Client-side services
+# libgui - for client-side services
 LIBGUI    = ../api/gthouse/libgui/include/
 LIBGUIOBJ = ../api/gthouse/libgui/obj
-
-
 
 # Objects
 myObjects = crt0.o rtl.o \
@@ -68,9 +66,9 @@ libgws.o libgui.o \
 main.o    
 
 
-.PHONY: all all-c hello-link finalize clean
+.PHONY: all all-c link_program finalize clean
 
-all: main.o all-c hello-link finalize clean
+all: main.o all-c link_program finalize clean
 	@echo "Ok?"
 
 main.o:
@@ -78,21 +76,18 @@ main.o:
 
 all-c:
 
+# rtl (libc)
 	cp $(LIBCOBJ)/crt0.o  .
 	cp $(LIBCOBJ)/rtl.o  .
-
 	cp $(LIBCOBJ)/ctype.o   .
 	cp $(LIBCOBJ)/stdio.o .
 	cp $(LIBCOBJ)/fcntl.o .
 	cp $(LIBCOBJ)/stdlib.o .
 	cp $(LIBCOBJ)/string.o .
 	cp $(LIBCOBJ)/unistd.o  .
-
 	cp $(LIBCOBJ)/termios.o  .
 	cp $(LIBCOBJ)/ioctl.o  .
 	cp $(LIBCOBJ)/socket.o  .
-
-#test
 	cp $(LIBCOBJ)/math.o  .
 
 # libgws
@@ -101,12 +96,12 @@ all-c:
 # libgui
 	cp $(LIBGUIOBJ)/libgui.o .
 
+link_program:
+	ld $(linkFlags) -o $(linkTarget) $(myObjects)    
 
-hello-link:
-	ld $(linkFlags) -o TASKBAR.BIN $(myObjects)    
 finalize:
-	cp TASKBAR.BIN  ../bin
+	cp $(linkTarget)  ../bin
 clean:
 	-rm *.o
-	-rm TASKBAR.BIN 
-	
+	-rm $(linkTarget)  
+

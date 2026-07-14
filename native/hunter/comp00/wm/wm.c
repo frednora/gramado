@@ -2232,7 +2232,7 @@ void  wm_update_desktop2(void)
             {
                 if (w->state != WINDOW_STATE_MINIMIZED)
                 {
-                    redraw_window(w,FALSE);
+                    redraw_window(w, FALSE);
                     //on_update_window(w,GWS_Paint);
                 }
             }
@@ -5294,7 +5294,7 @@ int gwsDefineInitialRootWindow (struct gws_window_d *window)
 // Not valid in fullscreen mode.
 // IN: 
 // position: 1=top, 2=right, 3=bottom, 4=left
-int dock_window( struct gws_window_d *window, int position )
+int dock_window(struct gws_window_d *window, int position)
 {
 
 // Parameters:
@@ -5353,12 +5353,14 @@ int dock_window( struct gws_window_d *window, int position )
                     window->enabled = TRUE;
                 }
             }
-            gws_resize_window( window, 
-              (w -4), 
-              (h -4 -24));
-            gwssrv_change_window_position( window, 
-              (l +2), 
-              (t +2) );
+            gws_resize_window( 
+                window, 
+                (w -4), 
+                (h -4 -24) );
+            gwssrv_change_window_position( 
+                window, 
+                (l +2), 
+                (t +2) );
             //#todo: maximize instead.
             break;
 
@@ -5370,12 +5372,14 @@ int dock_window( struct gws_window_d *window, int position )
                 break;
             }
             // 24 is the yellow status bar at the bottom.
-            gws_resize_window( window, 
-              (w>>1)-4, 
-              (h -4 -24) );
-            gwssrv_change_window_position( window, 
-              ((w>>1) +2), 
-              (t+2) );
+            gws_resize_window( 
+                window, 
+                (w>>1)-4, 
+                (h -4 -24) );
+            gwssrv_change_window_position( 
+                window, 
+                ((w>>1) +2), 
+                (t+2) );
             break;
 
         // -----------------
@@ -5394,12 +5398,14 @@ int dock_window( struct gws_window_d *window, int position )
                 break;
             }
             // 24 is the yellow status bar at the bottom.
-            gws_resize_window( window, 
-              ((w>>1) -4), 
-              (h -4 -24) );
-            gwssrv_change_window_position( window, 
-              l +2, 
-              t +2); 
+            gws_resize_window( 
+                window, 
+                ((w>>1) -4), 
+                (h -4 -24) );
+            gwssrv_change_window_position( 
+                window, 
+                l +2, 
+                t +2 ); 
             break;
 
         default:
@@ -5407,13 +5413,16 @@ int dock_window( struct gws_window_d *window, int position )
             break;
     };
 
-
 // Set a new active window.
 // Update all the windows, respecting the position.
    wm_update_desktop3(window);
 
 // Send a message to the window to repaint the client windows.
-    on_update_window(window,GWS_Paint);
+// #suspended:
+// When we call wm_update_desktop3() right above,
+// it calls redraw_window, that sends this message to 
+// the application. We don't need to do it twice.
+    // on_update_window(window, GWS_Paint);
 
     return 0;
 
@@ -5448,7 +5457,7 @@ void dock_window_by_id(int wid, int position)
     }
     
 // Dock it
-    dock_window(w,position);
+    dock_window(w, position);
 }
 
 
@@ -5489,7 +5498,7 @@ int dock_active_window(int position)
     }
 
 // Dock
-    dock_window(aw,position);
+    dock_window(aw, position);
     return 0;
 fail:
     return (int) -1;

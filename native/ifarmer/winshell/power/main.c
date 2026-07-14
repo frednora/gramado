@@ -174,7 +174,6 @@ static int __hit_test_button(unsigned long rel_mx, unsigned long rel_my)
     return -1;
 }
 
-
 static void update_children(int fd)
 {
     struct gws_window_info_d  wi;
@@ -220,10 +219,10 @@ static void update_children(int fd)
         dc00,
         8,
         8,
-        COLOR_YELLOW,
-        COLOR_BLUE,
-        0, // ROP 
-        "power app: Testing string" 
+        COLOR_BLACK,
+        COLOR_WHITE,
+        0,  // ROP 
+        "R=Reboot  S=Shutdown" 
     );
 
 //
@@ -238,8 +237,10 @@ static void update_children(int fd)
     MyButton_Restart.top  = button_y;
 
     // Update absolute values.
-    MyButton_Restart.absolute_left = wi.left + wi.cr_left + MyButton_Restart.left;
-    MyButton_Restart.absolute_top = wi.top + wi.cr_top + MyButton_Restart.top;
+    MyButton_Restart.absolute_left = 
+        wi.left + wi.cr_left + MyButton_Restart.left;
+    MyButton_Restart.absolute_top = 
+        wi.top + wi.cr_top + MyButton_Restart.top;
 
     libgui_set_ui_component_position(
         uic_button_restart, 
@@ -249,7 +250,7 @@ static void update_children(int fd)
         uic_button_restart,
         button_w,
         button_h );
-    libgui_redraw_ui_component( uic_button_restart, dc00 );
+    libgui_redraw_ui_component(uic_button_restart, dc00);
 
 // -------------------------------------------------
 // Redraw the shutdown button
@@ -258,9 +259,11 @@ static void update_children(int fd)
     MyButton_Shutdown.left = shutdown_x;
     MyButton_Shutdown.top  = button_y;
 
-    // Update absolute values.
-    MyButton_Shutdown.absolute_left = wi.left + wi.cr_left + MyButton_Shutdown.left;
-    MyButton_Shutdown.absolute_top = wi.top + wi.cr_top + MyButton_Shutdown.top;
+    // Update absolute values
+    MyButton_Shutdown.absolute_left = 
+        wi.left + wi.cr_left + MyButton_Shutdown.left;
+    MyButton_Shutdown.absolute_top = 
+        wi.top + wi.cr_top + MyButton_Shutdown.top;
 
     libgui_set_ui_component_position(
         uic_button_shutdown, 
@@ -270,9 +273,8 @@ static void update_children(int fd)
         uic_button_shutdown,
         button_w,
         button_h );
-    libgui_redraw_ui_component( uic_button_shutdown, dc00 );
+    libgui_redraw_ui_component(uic_button_shutdown, dc00);
 }
-
 
 static void set_default_responder(int wid)
 {
@@ -538,7 +540,7 @@ int main(int argc, char *argv[])
     int status = -1;
     status = (int) libgui_initialize();
     if (status < 0){
-        printf("power_app: libgui_initialize fail\n");
+        printf("power_app: on libgui_initialize()\n");
         exit(1);
     }
 
@@ -603,13 +605,13 @@ int main(int argc, char *argv[])
     //#debug
     //gws_refresh_window(client_fd, main_window);
 
-// After creating main_window
+// After creating main_window,
+// get information about it.
     struct gws_window_info_d wi;
     gws_get_window_info(
         client_fd,
         main_window,
         (struct gws_window_info_d *) &wi );
-
 
 // ============================================================
 // #test
@@ -650,7 +652,9 @@ int main(int argc, char *argv[])
     //while(1){}
 */
 
-// dc
+// Create a device context structure
+// based on the information we got with the server.
+// This is a dc to draw into the client area.
 
     dc00 = (struct dccanvas_d *) libgui_create_dc(
         wi.ca_canvas_base_address,
@@ -663,14 +667,13 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-
 // bg for the client area
     lingui_draw_rectangle0_dc (
         dc00,
         0, 0, wi.cr_width, wi.cr_height,
         COLOR_WHITE,
         0  // ROP
-    );    
+    );
 
 /*
 // Draw horizontal line
@@ -687,18 +690,16 @@ int main(int argc, char *argv[])
     }
 */
 
-
 // String
     libgui_drawstring_dc(
         dc00,
         8,
         8,
-        COLOR_YELLOW,
-        COLOR_BLUE,
-        0, // ROP 
-        "power app: Testing string" 
+        COLOR_BLACK,
+        COLOR_WHITE,
+        0,  // ROP 
+        "R=Reboot  S=Shutdown" 
     );
-
 
 // ============================================================
 

@@ -5,14 +5,14 @@
 #define __LIBDISP_DCCANVAS_H  1 
 
 
-// Low level component for device context support.
+// Low level component for device context support
 struct dccanvas_d 
 {
     int used;
     int magic;
     int initialized;
 
-// pointer to framebuffer or backbuffer
+// Pointer to framebuffer or backbuffer
     unsigned char *data;
 
 // Hardware information
