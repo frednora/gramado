@@ -67,7 +67,7 @@ static struct dccanvas_d *libgui_dc_frontbuffer;
 
 struct libgui_char_initialization_d  CharInitialization;
 
-static int char_initialize(void);
+static int __initialize_char_and_font_support(void);
 
 // ===================================================
 
@@ -214,6 +214,7 @@ libgd_put_pixel(
 }
 */
 
+// #direct
 // Plot pixel into the raster.
 // The origin is top/left of the viewport. (0,0).
 int 
@@ -264,12 +265,12 @@ libgui_backbuffer_putpixel3 (
     return (int) ret_value;
 }
 
+// #direct
 // ## putpixel: 
 // backbuffer e lfb ##
 // IN: cor, x, y
 // Put pixel using the kernel service.
 // Slow!
-
 int 
 libgui_backbuffer_putpixel2 ( 
     unsigned int color, 
@@ -317,7 +318,7 @@ libgui_backbuffer_putpixel2 (
 // b,   g,  r,  a = Color from parameter.
 // b2, g2, r2, a2 = Color from backbuffer.
 // b3, g3, r3, a3 = Color to be stored.
-
+// #direct
 int 
 libgui_fb_backbuffer_putpixel ( 
     unsigned int color, 
@@ -1043,6 +1044,7 @@ libgui_putpixel0 (
     return (int) 1;
 }
 
+// #direct
 void 
 libgui_backbuffer_putpixel ( 
     unsigned int  _color,
@@ -1062,6 +1064,7 @@ libgui_backbuffer_putpixel (
     libgui_putpixel0(libgui_dc_backbuffer, _color, _x, _y, _rop_flags);
 }
 
+// #direct
 void 
 libgui_frontbuffer_putpixel ( 
     unsigned int  _color,
@@ -1080,6 +1083,7 @@ libgui_frontbuffer_putpixel (
     libgui_putpixel0(libgui_dc_frontbuffer, _color, _x, _y, _rop_flags);
 }
 
+// #direct
 // IN: 
 // back_or_front: 1=back | 2=front
 int 
@@ -1101,6 +1105,7 @@ libgui_putpixel (
     return (int) -1;
 }
 
+// #direct
 // Get the color value given the position
 unsigned int libgui_backbuffer_getpixelcolor(int x, int y)
 {
@@ -1155,6 +1160,7 @@ unsigned int libgui_backbuffer_getpixelcolor(int x, int y)
     return (unsigned int) ColorBuffer;
 }
 
+// #direct
 // libgui_backbuffer_draw_horizontal_line:
 // Draw a horizontal line on backbuffer. 
 void 
@@ -1177,6 +1183,7 @@ libgui_backbuffer_draw_horizontal_line (
     };
 }
 
+// #direct
 void 
 libgui_frontbuffer_draw_horizontal_line ( 
     unsigned long x1,
@@ -1251,8 +1258,7 @@ libgui_draw_horizontal_line_dc (
     };
 }
 
-
-static int char_initialize(void)
+static int __initialize_char_and_font_support(void)
 {
     CharInitialization.initialized = FALSE;
 
@@ -1354,6 +1360,7 @@ libgui_drawchar_dc (
     };
 }
 
+// #direct
 void 
 libgui_drawchar (
     unsigned long x, 
@@ -1370,6 +1377,7 @@ libgui_drawchar (
 		libgui_dc_backbuffer, x, y, c, fgcolor, bgcolor, rop );
 }
 
+// #direct
 void 
 libgui_drawstring(
     unsigned long x, 
@@ -1456,6 +1464,7 @@ __kgws_adapter_refresh_rectangle (
     sc80 ( 10, (unsigned long) buffer, 0, 0 );
 }
 
+// #direct
 void 
 libgui_refresh_rectangle_via_kernel(
     unsigned long x, 
@@ -1502,6 +1511,7 @@ __draw_rectangle_via_kgws (
 
 
 /*
+// #direct
  * libgui_backbuffer_draw_rectangle0: (API)
  *     Draw a rectangle on backbuffer. 
  */
@@ -1776,6 +1786,7 @@ libgui_backbuffer_draw_rectangle0 (
 }
 
 /*
+// #direct
  * libgui_frontbuffer_draw_rectangle0: (API)
  *     Draw a rectangle on backbuffer. 
  */
@@ -2038,7 +2049,6 @@ libgui_frontbuffer_draw_rectangle0 (
     return;  // Done
 }
 
-// #test
 // Drawing a rectangle inside a given canvas,
 // given its device context.
 void
@@ -2130,6 +2140,7 @@ fail:
     return;
 }
 
+// #direct
 void
 libgui_BackbufferDrawCharBlockStyle(
     unsigned long x,          // top-left in screen space
@@ -2240,6 +2251,7 @@ libgui_BackbufferDrawCharBlockStyle_dc(
     };
 }
 
+// #direct
 void 
 libgui_drawstringblock(
     unsigned long x,
@@ -2348,12 +2360,7 @@ __draw_button_borders_dc(
 // -------------------------------
 // :: Top
 // top, top+1, top+2
-    //rectBackbufferDrawRectangle (   // outer
-    //    w->absolute_x+1, 
-    //    w->absolute_y, 
-    //    w->width-2,
-    //    BorderSize, 
-    //    outer_color, TRUE,0 );
+
     lingui_draw_rectangle0_dc(
         dc,   // Device Context
         ui_c->left +1,
@@ -2363,47 +2370,29 @@ __draw_button_borders_dc(
         outer_color,  // color
         0             // rop 
     );
-
-    //rectBackbufferDrawRectangle (   // tl 2   inner
-        //w->absolute_x+1, 
-        //w->absolute_y+1, 
-        //w->width-2, 
-        //BorderSize, 
-        //tl_2, TRUE,0 );
     lingui_draw_rectangle0_dc(
         dc,   // Device Context
         ui_c->left +1,
         ui_c->top  +1,
         ui_c->width -2,
-        BorderSize,   // height
-        tl_2,  // color
-        0             // rop 
+        BorderSize,  // height
+        tl_2,        // color
+        0            // rop 
     );
-    //rectBackbufferDrawRectangle (   // tl 1  most inner
-        //w->absolute_x+1+1, 
-        //w->absolute_y+1+1,
-        //w->width-4, 
-        //BorderSize, 
-        //tl_1, TRUE,0 );
     lingui_draw_rectangle0_dc(
         dc,   // Device Context
         ui_c->left +1+1,
         ui_c->top  +1+1,
         ui_c->width -4,
-        BorderSize,   // height
-        tl_1,  // color
-        0             // rop 
+        BorderSize,  // height
+        tl_1,        // color
+        0            // rop 
     );
 
 // -------------------------------
 // :: Left
 // left, left+1, left+2
-    //rectBackbufferDrawRectangle (    // outer
-        //w->absolute_x, 
-        //w->absolute_y+1, 
-        //BorderSize, 
-        //w->height-2,
-        //outer_color, TRUE,0 );
+
     lingui_draw_rectangle0_dc(
         dc,   // Device Context
         ui_c->left,
@@ -2413,12 +2402,6 @@ __draw_button_borders_dc(
         outer_color,      // color
         0                 // rop 
     );
-    //rectBackbufferDrawRectangle (    // tl 2   inner
-        //w->absolute_x+1, 
-        //w->absolute_y+1, 
-        //BorderSize, 
-        //w->height-2,
-        //tl_2, TRUE,0 );
     lingui_draw_rectangle0_dc(
         dc,   // Device Context
         ui_c->left +1,
@@ -2428,19 +2411,13 @@ __draw_button_borders_dc(
         tl_2,             // color
         0                 // rop 
     );
-    //rectBackbufferDrawRectangle (    // tl 1  most inner
-        //w->absolute_x+1+1, 
-        //w->absolute_y+1+1, 
-        //BorderSize, 
-        //w->height-4,
-        //tl_1, TRUE,0 );
     lingui_draw_rectangle0_dc(
         dc,   // Device Context
         ui_c->left +1+1,
         ui_c->top  +1+1,
         BorderSize,       // width 
         ui_c->height -4,  // height
-        tl_1,      // color
+        tl_1,             // color
         0                 // rop 
     );
 
@@ -2455,12 +2432,7 @@ __draw_button_borders_dc(
 // -------------------------------
 // :: Right
 // right-3, right-2, right-1
-    //rectBackbufferDrawRectangle (           // outer
-        //((w->absolute_x) + (w->width) -1), 
-        //w->absolute_y+1, 
-        //BorderSize, 
-        //w->height-2, 
-        //outer_color, TRUE, 0 );
+
     lingui_draw_rectangle0_dc(
         dc,   // Device Context
         ui_c->left + ui_c->width -1,
@@ -2470,86 +2442,56 @@ __draw_button_borders_dc(
         outer_color,      // color
         0                 // rop 
     );
-    //rectBackbufferDrawRectangle (              // br 2 inner
-        //((w->absolute_x) + (w->width) -2), 
-        //w->absolute_y+1, 
-        //BorderSize, 
-        //w->height-2, 
-        //br_2, TRUE, 0 );
     lingui_draw_rectangle0_dc(
         dc,   // Device Context
         ui_c->left + ui_c->width -2,
         ui_c->top +1,
         BorderSize,       // width
         ui_c->height -2,  // height
-        br_2,      // color
+        br_2,             // color
         0                 // rop 
     );
-    //rectBackbufferDrawRectangle (               // br 1 most inner
-        //((w->absolute_x) + (w->width) -3), 
-        //w->absolute_y+1+1, 
-        //BorderSize, 
-        //w->height-4, 
-        //br_1, TRUE, 0 );
     lingui_draw_rectangle0_dc(
         dc,   // Device Context
         ui_c->left + ui_c->width -3,
         ui_c->top +1+1,
         BorderSize,       // width
         ui_c->height -4,  // height
-        br_1,      // color
+        br_1,             // color
         0                 // rop 
     );
-
 
 
 // -------------------------------
 // :: Bottom
 // bottom-1, bottom-2, bottom-3
-    //rectBackbufferDrawRectangle (        // outer
-        //w->absolute_x+1, 
-        //((w->absolute_y) + (w->height) -1),  
-        //w->width-2, 
-        //BorderSize, 
-        //outer_color, TRUE, 0 );
+
     lingui_draw_rectangle0_dc(
         dc,   // Device Context
         ui_c->left +1,
         ui_c->top + ui_c->height -1,
-        ui_c->width -2,    // width
-        BorderSize,       // height
-        outer_color,      // color
-        0                 // rop 
+        ui_c->width -2,  // width
+        BorderSize,      // height
+        outer_color,     // color
+        0                // rop 
     );
-    //rectBackbufferDrawRectangle (           // br 2 inner
-        //w->absolute_x+1, 
-        //((w->absolute_y) + (w->height) -2),  
-        //w->width-2, 
-        //BorderSize, 
-        //br_2, TRUE, 0 );
     lingui_draw_rectangle0_dc(
         dc,   // Device Context
         ui_c->left +1,
         ui_c->top + ui_c->height -2,
-        ui_c->width -2,    // width
-        BorderSize,       // height
-        br_2,      // color
-        0                 // rop 
+        ui_c->width -2,  // width
+        BorderSize,      // height
+        br_2,            // color
+        0                // rop 
     );
-    //rectBackbufferDrawRectangle (            // br 1 most inner
-        //w->absolute_x+1+1, 
-        //((w->absolute_y) + (w->height) -3),  
-        //w->width-4, 
-        //BorderSize, 
-        //br_1, TRUE, 0 );
     lingui_draw_rectangle0_dc(
         dc,   // Device Context
         ui_c->left +1+1,
         ui_c->top + ui_c->height -3,
-        ui_c->width -4,    // width
-        BorderSize,       // height
-        br_1,      // color
-        0                 // rop 
+        ui_c->width -4,  // width
+        BorderSize,      // height
+        br_1,            // color
+        0                // rop 
     );
 }
 
@@ -2828,10 +2770,9 @@ int libgui_initialize(void)
     libgui_dc_frontbuffer->magic = 1234;
     libgui_dc_frontbuffer->initialized = TRUE;
  
-//
+
 // Char and font initialization
-//
-    char_initialize();
+    __initialize_char_and_font_support();
 
 	// ...
 
