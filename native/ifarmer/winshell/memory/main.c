@@ -270,6 +270,7 @@ static void update_children(int fd)
 
 // Draw the label string inside
     const char *label_chose = "System Memory Status: ";
+    /*
     libgui_drawstring_dc(
         dc00,
         8,
@@ -278,6 +279,15 @@ static void update_children(int fd)
         COLOR_WHITE,
         0, // ROP 
         label_chose
+    );
+    */
+    libgui_drawstringblock_dc(
+        dc00,
+        8,
+        8,
+        COLOR_BLACK,
+        label_chose,
+        2
     );
 
     // Metrics block
@@ -693,6 +703,7 @@ int main(int argc, char *argv[])
 
 // String for the client area
     const char *label_chose = "System Memory Status: ";
+    /*
     libgui_drawstring_dc(
         dc00,
         8,
@@ -701,6 +712,15 @@ int main(int argc, char *argv[])
         COLOR_WHITE,
         0,  // ROP 
         label_chose
+    );
+    */
+    libgui_drawstringblock_dc(
+        dc00,
+        8,
+        8,
+        COLOR_BLACK,
+        label_chose,
+        2
     );
 
     // Button baseline sizes

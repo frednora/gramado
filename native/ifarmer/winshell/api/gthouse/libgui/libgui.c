@@ -2303,7 +2303,7 @@ libgui_drawstringblock_dc(
 			cx += advance;
         }
         str++;
-    }
+    };
 }
 
 void libgui_set_mouse_pointer(unsigned long x, unsigned long y)
