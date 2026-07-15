@@ -46,9 +46,15 @@
 // ======================================================
 
 // Padding for control buttons (minimize, maximize, close)
-#define METRICS_TITLEBAR_CONTROLS_TOPPAD     2
+//#define METRICS_TITLEBAR_CONTROLS_TOPPAD     2
+//#define METRICS_TITLEBAR_CONTROLS_RIGHTPAD   2
+//#define METRICS_TITLEBAR_CONTROLS_SEPARATOR_WIDTH  1
+
+#define METRICS_TITLEBAR_CONTROLS_TOPPAD     4
 #define METRICS_TITLEBAR_CONTROLS_RIGHTPAD   2
 #define METRICS_TITLEBAR_CONTROLS_SEPARATOR_WIDTH  1
+
+
 
 // Control button dimensions 
 // Derived from titlebar height minus gap and ornament

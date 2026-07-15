@@ -465,6 +465,235 @@ __draw_button_borders(
         br_1, TRUE, 0 );
 }
 
+
+void 
+__dc_draw_button_borders(
+    struct dccanvas_d *dc,
+    struct gws_window_d *w,
+    unsigned int tl_2,        // top/left inner highlight
+    unsigned int tl_1,        // top/left most inner highlight
+    unsigned int br_2,        // bottom/right inner shadow
+    unsigned int br_1,        // bottom/right most inner highlight
+    unsigned int outer_color) // outer frame
+{
+
+// #test
+// Size in pixels de apenas 1/3 de todo o size.
+    unsigned long BorderSize = 1;
+// Isso deve ser o total.
+    //window->border_size = ?
+
+    //debug_print("__draw_button_borders:\n");
+
+    if ((void*) dc == NULL){
+        return;
+    }
+    if (dc->magic != 1234){
+        return;
+    }
+
+    if ((void*) w == NULL){
+        return;
+    }
+    if (w->magic != 1234){
+        return;
+    }
+
+
+// Order:
+// top/left ... right/bottom.
+
+
+//  ____
+// |
+//
+// board1, borda de cima e esquerda.
+// Cores, de fora pra dentro:
+// outer_color, color1, color1.
+
+// -------------------------------
+// :: Top
+// top, top+1, top+2
+    //rectBackbufferDrawRectangle (   // outer
+        //w->absolute_x+1, 
+        //w->absolute_y, 
+        //w->width-2,
+        //BorderSize, 
+        //outer_color, TRUE,0 );
+    dc_draw_rectangle0(dc,
+        w->left + 1,
+        w->top,
+        w->width - 2,
+        BorderSize,
+        outer_color,
+        ROP_COPY);
+    //rectBackbufferDrawRectangle (   // tl 2   inner
+        //w->absolute_x+1, 
+        //w->absolute_y+1, 
+        //w->width-2, 
+        //BorderSize, 
+        //tl_2, TRUE,0 );
+    dc_draw_rectangle0(dc,
+        w->left + 1,
+        w->top + 1,
+        w->width - 2,
+        BorderSize,
+        tl_2,
+        ROP_COPY);
+    //rectBackbufferDrawRectangle (   // tl 1  most inner
+    //    w->absolute_x+1+1, 
+    //    w->absolute_y+1+1,
+    //    w->width-4, 
+    //    BorderSize, 
+    //    tl_1, TRUE,0 );
+    dc_draw_rectangle0(dc,
+        w->left +1+1,
+        w->top  +1+1,
+        w->width - 4,
+        BorderSize,
+        tl_1,
+        ROP_COPY);
+
+// -------------------------------
+// :: Left
+// left, left+1, left+2
+    //rectBackbufferDrawRectangle (    // outer
+        //w->absolute_x, 
+        //w->absolute_y+1, 
+        //BorderSize, 
+        //w->height-2,
+        //outer_color, TRUE,0 );
+    dc_draw_rectangle0(dc,
+        w->left,
+        w->top +1,
+        BorderSize,
+        w->height - 2,
+        outer_color,
+        ROP_COPY);
+    //rectBackbufferDrawRectangle (    // tl 2   inner
+        //w->absolute_x+1, 
+        //w->absolute_y+1, 
+        //BorderSize, 
+        //w->height-2,
+        //tl_2, TRUE,0 );
+    dc_draw_rectangle0(dc,
+        w->left +1,
+        w->top  +1,
+        BorderSize,
+        w->height - 2,
+        tl_2,
+        ROP_COPY);
+    //rectBackbufferDrawRectangle (    // tl 1  most inner
+        //w->absolute_x+1+1, 
+        //w->absolute_y+1+1, 
+        //BorderSize, 
+        //w->height-4,
+        //tl_1, TRUE,0 );
+    dc_draw_rectangle0(dc,
+        w->left +1+1,
+        w->top  +1+1,
+        BorderSize,
+        w->height - 4,
+        tl_1,
+        ROP_COPY);
+
+//  
+//  ____|
+//
+// board2, borda direita e baixo.
+// Cores, de fora pra dentro:
+// outer_color, color2, color2_light.
+
+// -------------------------------
+// :: Right
+// right-3, right-2, right-1
+    //rectBackbufferDrawRectangle (           // outer
+        //((w->absolute_x) + (w->width) -1), 
+        //w->absolute_y+1, 
+        //BorderSize, 
+        //w->height-2, 
+        //outer_color, TRUE, 0 );
+    dc_draw_rectangle0(dc,
+        w->left + (w->width) -1,
+        w->top  +1,
+        BorderSize,
+        w->height - 2,
+        outer_color,
+        ROP_COPY);
+    //rectBackbufferDrawRectangle (              // br 2 inner
+        //((w->absolute_x) + (w->width) -2), 
+        //w->absolute_y+1, 
+        //BorderSize, 
+        //w->height-2, 
+        //br_2, TRUE, 0 );
+    dc_draw_rectangle0(dc,
+        w->left + (w->width) -2,
+        w->top  +1,
+        BorderSize,
+        w->height - 2,
+        br_2,
+        ROP_COPY);
+    //rectBackbufferDrawRectangle (               // br 1 most inner
+        //((w->absolute_x) + (w->width) -3), 
+        //w->absolute_y+1+1, 
+        //BorderSize, 
+        //w->height-4, 
+        //br_1, TRUE, 0 );
+    dc_draw_rectangle0(dc,
+        w->left + (w->width) -3,
+        w->top  +1+1,
+        BorderSize,
+        w->height - 4,
+        br_1,
+        ROP_COPY);
+
+// -------------------------------
+// :: Bottom
+// bottom-1, bottom-2, bottom-3
+    //rectBackbufferDrawRectangle (        // outer
+        //w->absolute_x+1, 
+        //((w->absolute_y) + (w->height) -1),  
+        //w->width-2, 
+        //BorderSize, 
+        //outer_color, TRUE, 0 );
+    dc_draw_rectangle0(dc,
+        w->left +1,
+        w->top + (w->height) -1,
+        w->width - 2,
+        BorderSize,
+        outer_color,
+        ROP_COPY);
+    //rectBackbufferDrawRectangle (           // br 2 inner
+        //w->absolute_x+1, 
+        //((w->absolute_y) + (w->height) -2),  
+        //w->width-2, 
+        //BorderSize, 
+        //br_2, TRUE, 0 );
+    dc_draw_rectangle0(dc,
+        w->left +1,
+        w->top + (w->height) -2,
+        w->width - 2,
+        BorderSize,
+        br_2,
+        ROP_COPY);
+    //rectBackbufferDrawRectangle (            // br 1 most inner
+        //w->absolute_x+1+1, 
+        //((w->absolute_y) + (w->height) -3),  
+        //w->width-4, 
+        //BorderSize, 
+        //br_1, TRUE, 0 );
+    dc_draw_rectangle0(dc,
+        w->left +1+1,
+        w->top + (w->height) -3,
+        w->width - 4,
+        BorderSize,
+        br_1,
+        ROP_COPY);
+
+}
+
+
+
 // worker:
 // Draw the border of edit box and overlapped windows.
 // >> no checks
@@ -993,36 +1222,40 @@ void redraw_text_for_editbox(struct gws_window_d *window)
 
 // Paint the controls, but do not show them.
 // IN: Titlebar window.
-int redraw_controls(struct gws_window_d *window)
+int redraw_controls(struct gws_window_d *tb_window)
 {
-    //struct gws_window_d *parent;
-    struct gws_window_d *tb_window;
+    struct gws_window_d *parent;
     register int wid = -1;
 
-// -- Title bar -------------------------------
-    if ((void*) window == NULL){
-        goto fail;
-    }
-    if (window->magic != 1234){
-        goto fail;
-    }
-    tb_window = window;
+    struct dccanvas_d *dc00;
+    struct canvas_information_d *ci00;
 
-/*
+    //printf("redraw_controls:\n");
+    //while(1){}
+
+// -- Title bar -------------------------------
+    if ((void*) tb_window == NULL){
+        goto fail;
+    }
+    if (tb_window->magic != 1234){
+        goto fail;
+    }
+
+
 // -- Title bar's parent -----------------------
     parent = (struct gws_window_d *) tb_window->parent;
     if ( (void*) parent == NULL )
-        return -1;
+        goto fail;
     if (parent->magic != 1234)
-        return -1;
+        goto fail;
 
-    if (parent == active_window)
+    if (Compositor.is_composition_disabled == FALSE)
     {
+        if (parent->type == WT_OVERLAPPED){
+            ci00 = parent->frame_canvas;
+            dc00 = ci00->dc;
+        }
     }
-    if (parent != active_window)
-    {
-    }
-*/
 
 // #todo:
 // We gotta change the state of the controls based on the
@@ -1032,15 +1265,80 @@ int redraw_controls(struct gws_window_d *window)
 // Check if its really a taskbar?
 
 // Redraw controls
+
+    /*
     wid = (int) tb_window->Controls.minimize_wid;
     redraw_window_by_id(wid,FALSE);
     wid = (int) tb_window->Controls.maximize_wid;
     redraw_window_by_id(wid,FALSE);
     wid = (int) tb_window->Controls.close_wid;
     redraw_window_by_id(wid,FALSE);
+    */
+
+    // #test
+    // Drawing one control
+    struct gws_window_d* w;
+    int isDarkTheme = FALSE;
+
+    if (Compositor.is_composition_disabled == FALSE)
+    {
+        // -----------------------------------------------------
+        w = (struct gws_window_d*) get_window_from_wid(tb_window->Controls.minimize_wid);
+        redraw_window(w, FALSE);
+        /*
+        dc_draw_rectangle0 (
+            dc00,
+            w->left, w->top, w->width, w->height,
+            w->bg_color,
+            w->rop_bg
+        );
+        */
+        /*
+        //#test
+        if (isDarkTheme == TRUE) {
+                // Dark theme
+                window->label_color_when_not_selected = HONEY_COLOR_LABEL_BASELINE_DARK;  //COLOR_RED;    // baseline
+                window->label_color_when_selected     = HONEY_COLOR_LABEL_SELECTED_DARK;  //COLOR_BLUE;   // highlight
+        } else {
+                // Light theme
+                window->label_color_when_not_selected = HONEY_COLOR_LABEL_BASELINE_LIGHT; //COLOR_GREEN;  // baseline
+                window->label_color_when_selected     = HONEY_COLOR_LABEL_SELECTED_LIGHT;  //COLOR_YELLOW; // highlight
+        }
+        label_color = window->label_color_when_not_selected;
+        if (ButtonState == BS_PRESSED)
+            label_color = window->label_color_when_selected;
+            // ...
+        */
+
+        // -----------------------------------------------------
+        w = (struct gws_window_d*) get_window_from_wid(tb_window->Controls.maximize_wid);
+        redraw_window(w, FALSE);
+        /*
+        dc_draw_rectangle0 (
+            dc00,
+            w->left, w->top, w->width, w->height,
+            w->bg_color,
+            w->rop_bg
+        );
+        */
+
+        // -----------------------------------------------------
+        w = (struct gws_window_d*) get_window_from_wid(tb_window->Controls.close_wid);
+        redraw_window(w, FALSE);
+        /*
+        dc_draw_rectangle0 (
+            dc00,
+            w->left, w->top, w->width, w->height,
+            w->bg_color,
+            w->rop_bg
+        );
+        */
+    }
+
     return 0;
 
 fail:
+    // printf("fail\n"); while(1){}
     return (int) -1;
 }
 
@@ -1128,7 +1426,8 @@ int redraw_titlebar_window(struct gws_window_d *window)
             (unsigned long) tb_window->rop_bg // rop for this window 
         );
     } else {
-        // #todo: (maybe) Draw titlebar's bg when the compisition is on 
+        // #todo: 
+        // (maybe) Draw titlebar's bg when the compisition is on 
     }
 
 
@@ -1260,7 +1559,7 @@ int redraw_titlebar_window(struct gws_window_d *window)
 
 // Redraw the controls in the titlebar
 // IN: titlebar
-    redraw_controls(window); 
+    redraw_controls(window);
 
     return 0;
 }
@@ -1310,6 +1609,15 @@ redraw_window (
     if (window->used!=TRUE || window->magic!=1234){
         goto fail;
     }
+
+    /*
+    // #debug
+    if (window->type == WT_BUTTON)
+    {
+        printf("BUTTON\n"); 
+        while(1){}
+    }
+    */
 
 // ROP
 // Getting the saved rop values
@@ -1418,8 +1726,24 @@ redraw_window (
 
         if (window->type == WT_BUTTON)
         {
-            window->dirty = TRUE; // Flush the offscreen buffer
-            return 0;
+            struct gws_window_d *pWindow = window->parent;
+            if ((void*)pWindow == NULL)
+                goto fail;
+            if (pWindow->magic != 1234)
+                goto fail;
+            struct gws_window_d *app_window = pWindow->parent;
+            if ((void*)app_window == NULL)
+                goto fail;
+            if (app_window->magic != 1234)
+                goto fail;
+            if (app_window->type != WT_OVERLAPPED)
+                goto fail;
+            // Now we can get the pointers for canvases.
+            ci00 = app_window->frame_canvas;
+            dc00 = ci00->dc;
+
+            //window->dirty = TRUE; // Flush the offscreen buffer
+            //return 0;
         }
 
         if (window->type == WT_OVERLAPPED)
@@ -1509,12 +1833,36 @@ redraw_window (
             
             // #todo We have more state to cover
             // ...  
+
+            dc_draw_rectangle0 (
+                dc00,
+                window->left, window->top, window->width, window->height,
+                window->bg_color,
+                0  // ROP
+            );
+
+            // #todo: label
         }
 
         // Redraw the background rectangle
         // Respect the ROP added during the creation phase
         // #ps: Drawing directly into the baclbuffer
-        rectBackbufferDrawRectangle ( 
+ 
+        /*
+        if (Compositor.is_composition_disabled == FALSE){
+            dc_draw_rectangle0(
+                dc00,
+                window->left, 
+                window->top,     
+                window->width,
+                window->height,
+                window->bg_color,
+                window->rop_bg
+            );
+        }*/ 
+        //else {
+
+            rectBackbufferDrawRectangle ( 
                 window->absolute_x, 
                 window->absolute_y, 
                 window->width, 
@@ -1522,6 +1870,7 @@ redraw_window (
                 window->bg_color, 
                 TRUE,  //fill
                 (unsigned long) window->rop_bg );
+        //}
 
         // All done for WT_SIMPLE type
         if ( window->type == WT_SIMPLE ||
@@ -1627,13 +1976,26 @@ redraw_window (
 
         // Redraw the button border
         // #ps: Drawing directly into the backbuffer
-        __draw_button_borders(
-            (struct gws_window_d *) window,
-            (unsigned int) buttonBorder_tl2_color,  // tl 2 inner
-            (unsigned int) buttonBorder_tl1_color,  // tl 1 most inner
-            (unsigned int) buttonBorder_br2_color,  // br 2 inner
-            (unsigned int) buttonBorder_br1_color,   // br 1 most inner
-            (unsigned int) buttonBorder_outer_color );  // outter color
+        if (Compositor.is_composition_disabled == TRUE){
+            __draw_button_borders(
+                (struct gws_window_d *) window,
+                (unsigned int) buttonBorder_tl2_color,  // tl 2 inner
+                (unsigned int) buttonBorder_tl1_color,  // tl 1 most inner
+                (unsigned int) buttonBorder_br2_color,  // br 2 inner
+                (unsigned int) buttonBorder_br1_color,   // br 1 most inner
+                (unsigned int) buttonBorder_outer_color );  // outter color
+        } else {
+
+            // if ((void*) dc00 != NULL)
+            __dc_draw_button_borders (
+                dc00,
+                (struct gws_window_d *) window,
+                (unsigned int) buttonBorder_tl2_color,  // tl 2 inner
+                (unsigned int) buttonBorder_tl1_color,  // tl 1 most inner
+                (unsigned int) buttonBorder_br2_color,  // br 2 inner
+                (unsigned int) buttonBorder_br1_color,  // br 1 most inner
+                (unsigned int) buttonBorder_outer_color );
+        }
 
         // Button label
         //server_debug_print ("redraw_window: [FIXME] Button label\n"); 
@@ -1645,10 +2007,29 @@ redraw_window (
         // Redraw the label's string.
         // The label is the window's name.
         // #ps: Drawing directly into the backbuffer
+        /*
         grDrawString ( 
             (window->absolute_x + l_offset), 
             (window->absolute_y + t_offset), 
             label_color, window->name );
+        */
+
+        if ((void*) dc00 != NULL)
+        {
+            // #bugbug: Not working
+            dc_drawstring ( 
+                dc00, 
+                window->left + l_offset, 
+                window->top + t_offset, 
+                label_color, 
+                window->bg_color,
+                0,  // ROP 
+                window->name 
+            );
+                  
+            //printf("breakpoint\n");
+            //while(1){}
+        }
 
         // ok, repintamos o botao que eh um caso especial
         // nao precisamos das rotinas abaixo,

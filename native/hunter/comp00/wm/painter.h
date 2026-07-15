@@ -42,6 +42,15 @@ __draw_button_borders(
     unsigned int br_1,  // br 1 most inner (light) 
     unsigned int outer_color );
 
+void __dc_draw_button_borders(
+    struct dccanvas_d *dc,
+    struct gws_window_d *w,
+    unsigned int tl_2,       // top/left inner highlight
+    unsigned int tl_1,       // top/left most inner highlight
+    unsigned int br_2,       // bottom/right inner shadow
+    unsigned int br_1,       // bottom/right most inner highlight
+    unsigned int outer_color // outer frame
+);
 
 // worker: no checks
 void 
@@ -67,7 +76,7 @@ __dc_draw_window_border(
 
 void redraw_text_for_editbox(struct gws_window_d *window);
 
-int redraw_controls(struct gws_window_d *window);
+int redraw_controls(struct gws_window_d *tb_window);
 int redraw_titlebar_window(struct gws_window_d *window);
 
 int 

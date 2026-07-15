@@ -1557,6 +1557,11 @@ void *doCreateAndDrawWindow (
 // The caller builds this window creating the WT_SIMPLE window
 // and then converting it to WT_OVERLAPPED before creating the frame.
 
+// #important
+// For button we need to find the pointer for the application window
+// to get access to the canvases.
+// Button → Titlebar → Application window
+
     register struct gws_window_d *window;
     struct gws_window_d *Parent;
 
@@ -1867,6 +1872,30 @@ void *doCreateAndDrawWindow (
             //comp_add_to_list(ci01);
             ci00->clientarea_canvas = ci01;
         }
+
+        // If the type is a button
+        // we need to have access to the canvases that belongs to
+        // the application window.
+        if (type == WT_BUTTON)
+        {
+            if ((void*)pWindow == NULL)
+                goto fail;
+            if (pWindow->magic != 1234)
+                goto fail;
+            struct gws_window_d *app_window = pWindow->parent;
+            if ((void*)app_window == NULL)
+                goto fail;
+            if (app_window->magic != 1234)
+                goto fail;
+            if (app_window->type != WT_OVERLAPPED)
+                goto fail;
+            // Now we can get the pointers for canvases.
+            ci00 = app_window->frame_canvas;
+            dc00 = ci00->dc;
+        }
+ 
+        // ... (OTHER TYPES)
+
     }
 // ================
 
@@ -3024,6 +3053,35 @@ void *doCreateAndDrawWindow (
                     window->rop_bg
                 );
             }
+            else if (window->type == WT_BUTTON) {
+
+                // draw background for button/controls
+                // #ps: We need a valid dc here.
+                // For buttons dc comes from the grand parent.
+
+                dc_draw_rectangle0 (
+                    dc00,
+                    window->left, 
+                    window->top, 
+                    window->width, 
+                    window->height,
+                    window->bg_color,
+                    window->rop_bg
+                );
+
+                /*
+                // Draw label
+                dc_drawstring(
+                    dc00,
+                    window->left + 4, window->top + 2,
+                    COLOR_BLACK, window->bg_color,
+                    ROP_COPY,
+                    window->name 
+                );
+                */
+            }
+            
+            // ... (#todo: For other types)
         }
 
         // #todo
@@ -3153,8 +3211,7 @@ void *doCreateAndDrawWindow (
             // #todo
             // We can register these colors inside the windows structure.
 
-            if (Compositor.is_composition_disabled == TRUE)
-            {
+            if (Compositor.is_composition_disabled == TRUE){
                 // #ps: Drawing directly into the backbuffer
                 __draw_button_borders (
                     (struct gws_window_d *) window,
@@ -3167,6 +3224,17 @@ void *doCreateAndDrawWindow (
             } else {
                 // #todo
                 // Draw some border to the button when in compositor mode.
+
+                // if ((void*) dc00 != NULL)
+                __dc_draw_button_borders (
+                    dc00,
+                    (struct gws_window_d *) window,
+                    (unsigned int) buttonBorder_tl2_color,  // tl 2 inner
+                    (unsigned int) buttonBorder_tl1_color,  // tl 1 most inner
+                    (unsigned int) buttonBorder_br2_color,  // br 2 inner
+                    (unsigned int) buttonBorder_br1_color,  // br 1 most inner
+                    (unsigned int) buttonBorder_outer_color );
+
             }
 
 
@@ -3203,19 +3271,17 @@ void *doCreateAndDrawWindow (
                 // Draw a string inside the button's bg.
                 if ((void*) dc00 != NULL)
                 {
-                    /*
                     // #bugbug: Not working
                     dc_drawstring ( 
                         dc00, 
-                        1, 
-                        1, 
-                        COLOR_GREEN, 
-                        COLOR_BLUE,
-                        ROP_COPY, 
+                        window->left + l_offset, 
+                        window->top + t_offset, 
+                        label_color, 
+                        window->bg_color,
+                        0,  // ROP 
                         window->name 
                     );
-                    */
-
+                    
                     //printf("breakpoint\n");
                     //while(1){}
                 }
@@ -3625,10 +3691,11 @@ void *CreateWindow (
                         FrameColor, ClientAreaColor, 
                         (unsigned long) __rop_flags );
 
-         if ((void *) __w == NULL){
+        if ((void *) __w == NULL)
+        {
             //server_debug_print ("CreateWindow: doCreateAndDrawWindow fail\n");
             goto fail;
-         }
+        }
 
         // Pintamos simples, mas a tipagem será overlapped.
         __w->type = WT_BUTTON;
