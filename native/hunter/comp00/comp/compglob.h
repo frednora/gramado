@@ -1,4 +1,6 @@
 // compglob.h
+// Globals for the compositor component in the project.
+// Created by Fred Nora
 
 #ifndef __COMP_COMPGLOB_H
 #define __COMP_COMPGLOB_H    1
@@ -12,9 +14,9 @@ extern int use_vsync;
 
 // Indexes to canvases
 #define CANVAS_COUNT_MAX    8
-#define CANVAS_FRONTBUFFER     0  // VRAM
-#define CANVAS_BACKBUFFER      1  // RAM
-#define CANVAS_SPAREBUFFER     2  // spare buffer
+#define CANVAS_FRONTBUFFER  0  // VRAM
+#define CANVAS_BACKBUFFER   1  // RAM
+#define CANVAS_SPAREBUFFER  2  // spare buffer
 
 #define CANVAS_TEST00  6
 #define CANVAS_BG00  7

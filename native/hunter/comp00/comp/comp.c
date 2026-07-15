@@ -22,7 +22,6 @@ Pipeline:
 #include "../ds.h"
 
 
-
 // It manages the compositor behavior.
 struct compositor_d  Compositor;
 
@@ -50,7 +49,6 @@ extern struct gws_window_d *mouse_hover;
 // but it can be the client area of an application window 
 // when the mouse is captured by an application window.
 extern struct gws_window_d *cursor_clip;
-
 
 //old
 static long __old_mouse_x=0;
@@ -233,9 +231,10 @@ void *comp_create_slab_spare_128kb_buffer(size_t size_in_kb)
     return NULL;
 }
 
-// Create a dc for a buffer given its size in KB.
+// Create a dc for a buffer given its size in KB
 struct dccanvas_d *comp_create_dc_for_a_buffer(
-    char *buffer_address, size_t size_in_kb )
+    char *buffer_address, 
+    size_t size_in_kb )
 {
 
 // Device info
@@ -290,7 +289,6 @@ struct dccanvas_d *comp_create_dc_for_a_buffer(
 
     return (void*) tmp_dccanvas;  // return dc
 
-// fail
 fail:
     return NULL;
 }
@@ -361,7 +359,6 @@ struct dccanvas_d *comp_create_dc_and_allocate_buffer(size_t size_in_kb)
 
     return (void*) tmp_dccanvas;  // return dc
 
-// fail
 fail:
     return NULL;
 }
@@ -374,7 +371,6 @@ void comp_add_to_list(struct canvas_information_d *ci)
         return;
 // ...
 
-
 // Empty list
     if ((void*) canvas_head == NULL)
     {
@@ -382,7 +378,6 @@ void comp_add_to_list(struct canvas_information_d *ci)
         ci->next = NULL;
         return;
     }
-
 
 // Walk the list
     tmp = (struct canvas_information_d *) canvas_head;
@@ -398,12 +393,11 @@ void comp_add_to_list(struct canvas_information_d *ci)
     };
 }
 
-
 // w, h, bits per pixel, dc
 struct canvas_information_d *compCreateNewCanvas(struct dccanvas_d *dc)
 {
-    //char *buf;
     struct canvas_information_d *ci_new;
+    //char *buf;
 
     if ((void*) dc == NULL){
         printf("compCreateNewCanvas: dc\n"); 
@@ -419,7 +413,7 @@ struct canvas_information_d *compCreateNewCanvas(struct dccanvas_d *dc)
 
     ci_new->width  = dc->device_width; 
     ci_new->height = dc->device_height; 
-    ci_new->bpp    = dc->bpp;   // bits per pixel
+    ci_new->bpp = dc->bpp;   // bits per pixel
 
     //unsigned long DeviceWidth  = (unsigned long) server_get_system_metrics(1);
 
@@ -435,17 +429,18 @@ struct canvas_information_d *compCreateNewCanvas(struct dccanvas_d *dc)
 
     ci_new->dc = (struct dccanvas_d *) dc;
 
-    // It belongs to the root window for now.
+    // It belongs to the root window for now
     ci_new->owner_window = __root_window; 
+
     ci_new->used = TRUE;
     ci_new->magic = 1234;
     ci_new->initialized = TRUE;
 
     return (struct canvas_information_d*) ci_new;
+
 fail:
     return NULL;
 }
-
 
 // Create a drawable buffer in a spare area 
 // at the end of the backbuffer.
@@ -519,7 +514,7 @@ spare_putpixel0(
     unsigned long y, 
     unsigned long rop )
 {
-// Not initialized.
+    // Not initialized?
     if (SpareBufferClipInfo.initialized != TRUE)
         return;
 
@@ -545,13 +540,14 @@ spare_putpixel0(
     if (!spare_dccanvas) 
         return;
 
-// #test: New method with dc.
+// #test: New method using dc.
     putpixel0(
         spare_dccanvas,
         color, 
         x, 
         y, 
-        rop );
+        rop 
+    );
 }
 
 // Test drawing directly into the spare buffer using putpixel0.
@@ -586,12 +582,12 @@ void comp_draw_into_spare_buffer(void)
 
     // Draw string
     dc_drawstring ( 
-        spare_dccanvas,  //dc 
-        10,  // x
-        2,  // y
-        COLOR_YELLOW,  //fg_color
-        COLOR_BLUE,    //bg_color
-        ROP_COPY,  //rop
+        spare_dccanvas,  // dc 
+        10,              // x
+        2,               // y
+        COLOR_YELLOW,    // fg_color
+        COLOR_BLUE,      // bg_color
+        ROP_COPY,        // rop
         "Spare buffer" 
     );
 
@@ -670,7 +666,6 @@ comp_blit_canvas_to_canvas_imp(
     );
 }
 
-// #test
 // Given the indexes
 void 
 comp_blit_canvas_to_canvas(
@@ -701,6 +696,7 @@ comp_blit_canvas_to_canvas(
     if (dst->magic != 1234)
         return;
 
+    // Worker
     comp_blit_canvas_to_canvas_imp(
         (struct canvas_information_d *) src,
         (struct canvas_information_d *) dst,
@@ -734,10 +730,12 @@ int flush_window_by_id(int wid)
     if ((void*) w == NULL){
         goto fail;
     }
-// Flush
+
+    // Flush
     flush_window(w);
     return 0;
     //return (int) flush_window(w);
+
 fail:
     return (int) (-1);
 }
@@ -1489,7 +1487,6 @@ void compComposeDesktop(void)
         DeviceWidth, DeviceHeight );                 
 }
 
-
 // wmCompose:
 // Called by the main routine for now.
 // Its gonna be called by the timer.
@@ -1516,11 +1513,8 @@ wmCompose(
         // compose();
     };
 
-
     Compositor.counter++;
-
-// Unlock
-    Compositor._locked = FALSE;
+    Compositor._locked = FALSE;  // Unlock
 }
 
 /*
@@ -1730,7 +1724,6 @@ This was the first experiment in order to have a future
         ROP_COPY );
 
 // ...
-
 
 // ============================================
 // #test

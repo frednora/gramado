@@ -1,7 +1,9 @@
 # comp/
-# 2020 - Created by Fred Nora.
+# Compile the compositor part of the project
+# 2020 - Created by Fred Nora
 
-#linkTarget = GRAMLAND.BIN
+#linkTarget = NOTHING
+# uicomp.o is the final target for this module
 
 # See: https://linux.die.net/man/1/ld
 # -s --strip-all:   Omit all symbol information from the output file.
@@ -14,15 +16,12 @@
 #linkFlags  = -m elf_x86_64 \
 #-s -x -static -T ../../link.ld
 
-#linkFlags  = -m elf_x86_64 \
-#-s -x -static -T link.ld
-
 
 VERSION = 0
 PATCHLEVEL = 1
 SUBLEVEL = 0
 EXTRAVERSION = 
-#NAME = GWS
+#NAME = NOTHING
 
 # Make variables (CC, etc...)
 AS	= as
@@ -33,9 +32,9 @@ MAKE	= make
 NASM	= nasm
 OBJCOPY	= objcopy
 OBJDUMP	= objdump
-LEX	= flex
-YACC	= bison
-PERL	= perl
+#LEX	= flex
+#YACC	= bison
+#PERL	= perl
 PYTHON	= python
 PYTHON2	= python2
 PYTHON3	= python3
@@ -75,13 +74,16 @@ CFLAGS += -fno-pie
 CFLAGS += -fno-omit-frame-pointer
 CFLAGS += -fno-optimize-sibling-calls    
 
-#todo
-#path longo. vamos mudar  as libs de lugar para gramado/libs.
+
+# rtl (libc)
 LIBC        = ../../garden/rtl/include/
 LIBCOBJ     = ../../garden/rtl/obj
 
+# libdisp
 LIBDISP     = ../../gthouse/libdisp/include/
 LIBDISPOBJ  = ../../gthouse/libdisp/obj
+
+# libgr
 LIBGR       = ../../gthouse/libgr/include/
 LIBGROBJ    = ../../gthouse/libgr/obj
 
@@ -95,29 +97,26 @@ CINCLUDES += -I ../
 myObjects = compglob.o comp.o comploop.o    
 
 
-
 .PHONY: all all-c gws-link finalize clean
 
 all: main.o all-c gws-link finalize clean
 	@echo "Ok?"
 main.o:
 #	$(CC)  -c grinput.c  $(CFLAGS) $(CINCLUDES) -o grinput.o
+
 all-c:
-#	$(CC)  -c grinput.c  $(CFLAGS) $(CINCLUDES) -o grinput.o
 	$(CC)  -c compglob.c  $(CFLAGS) $(CINCLUDES) -o compglob.o   
-	$(CC)  -c comp.c  $(CFLAGS) $(CINCLUDES) -o comp.o   
+	$(CC)  -c comp.c      $(CFLAGS) $(CINCLUDES) -o comp.o   
 	$(CC)  -c comploop.c  $(CFLAGS) $(CINCLUDES) -o comploop.o   
 
 gws-link:
-#	$(LD) $(linkFlags) -o $(linkTarget) $(myObjects)
-# link
 	$(LD) -r -o uicomp.o $(myObjects)
 	cp uicomp.o ../
 	rm *.o
 
 finalize:
 #	cp $(linkTarget) ../bin/
-#	cp $(linkTarget) bin/
+
 clean:
 	-rm *.o
 #	-rm $(linkTarget)

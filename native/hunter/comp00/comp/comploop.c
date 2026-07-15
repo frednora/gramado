@@ -1,8 +1,7 @@
-// main.c
-// DS00.BIN
-// ds00 Display Server.
-// This is a ring3 display server and window manager.
-// 2020 - Created by Fred Nora.
+// comploop.c
+// This is the main file for the compositor component
+// inside the display server.
+// Created by Fred Nora
 
 // See:
 // Transformations
@@ -38,11 +37,6 @@
 // display manager:
 // login stuff
 // The display manager must authenticate itself to the server.
-
-// main.c
-// Arquivo principal do gws.
-// As funções começam com o nome do módulo
-// para que em client side começem com gws_
 
 /*
 See: https://wiki.osdev.org/Graphics_stack
@@ -224,8 +218,7 @@ static int ServerLoop(int client_index);
 // == Functions ======================================================
 //
 
-// This way the module is able to know
-// if the server is accepting input or not.
+// Is the server is accepting input or not?
 int server_is_accepting_input(void)
 {
     return (int) IsAcceptingInput;
@@ -241,12 +234,14 @@ void server_set_input_status(int is_accepting)
     IsAcceptingInput = (int) is_accepting;
 }
 
-// Print a simple string in the serial port.
+// Print a simple string in the serial port
 void server_debug_print(char *string)
 {
     if ((void*) string == NULL){
         return;
     }
+    //if (*string == 0)
+        //return;
     gramado_system_call ( 
         289,
         (unsigned long) string,
@@ -257,6 +252,7 @@ void server_debug_print(char *string)
 // We can use the rtl or the library
 unsigned long server_get_system_metrics (int index)
 {
+    unsigned long rv;
 
     //if (index<0){
         //gde_debug_print ("gswsrv_get_system_metrics: fail\n");
@@ -264,10 +260,14 @@ unsigned long server_get_system_metrics (int index)
     //}
     //#define	SYSTEMCALL_GETSYSTEMMETRICS  250 
 
-   return (unsigned long) gramado_system_call ( 250, 
-                               (unsigned long) index, 
-                               (unsigned long) index, 
-                               (unsigned long) index );
+    rv = 
+        (unsigned long) gramado_system_call ( 
+                            250, 
+                            (unsigned long) index, 
+                            (unsigned long) index, 
+                            (unsigned long) index );
+
+    return (unsigned long) rv;
 }
 
 // enter critical section
@@ -482,6 +482,7 @@ __again:
 }
 */
 
+// #test
 // Not used for now!
 // Maybe in the future with smp.
 static void xxxxCompositor_Thread(void)
@@ -584,9 +585,9 @@ int serviceNextEvent(void)
     w->ev_long2[Head] = 0;
     w->ev_long3[Head] = 0;
     w->ev_long4[Head] = 0;
+
     return 0;  // Done
 
-// Fail
 fail:
     return (int) (-1);
 }
@@ -677,9 +678,11 @@ fail:
             focus_w->ev_tail = 0;
             }
         }
-        return 0;
+
+        return 0;  // Done
     }
-    return (int) (-1);
+
+    return (int) (-1);  // Fail
 }
 
 // Query window info.
@@ -1252,7 +1255,8 @@ done:
     for (i=0; i<MSG_BUFFER_SIZE; i++){
         __buffer[i] = 0;
     };
-    return 0;
+
+    return 0;  // Done
 
 fail:
     //server_debug_print("serviceAsyncCommand: Fail\n");
@@ -1264,7 +1268,6 @@ int serviceHello(void)
 {
     return 0;
 }
-
 
 // serviceCreateWindow:
 // Create a window based on the parameters found in the message buffer.
@@ -1713,8 +1716,9 @@ int serviceCreateWindow(int client_fd)
     //}
     //sprintf(w_name,":: ");
     //strncat(w_name, Window->name, name_len);
-    if (name_len <= 10)
-        sprintf(w_name,Window->name);
+    if (name_len <= 10){
+        sprintf(w_name, Window->name);
+    }
     w_name[63] = 0;
 
 // Coloca na fila
@@ -1739,16 +1743,15 @@ int serviceCreateWindow(int client_fd)
     int manage_status = -1;
     if (Window->type == WT_OVERLAPPED)
     {
-        // Adiciona na lista de janelas
-        wm_add_window_to_top(Window);
-        
+        wm_add_window_to_top(Window);  // Add to the list of windows
+
         // #bugbug
         // Apenas uma janela deve ser associada com a estrutura de cliete.
 
         // Associa a janela com uma estrutura de cliente.
         manage_status = wmBindWindowToClient(Window);
         if (manage_status<0){
-            printf("serviceCreateWindow: wmBindWindowToClient fail\n");
+            printf("serviceCreateWindow: wmBindWindowToClient fail #hang\n");
             while (1){
             };
         }
@@ -1875,7 +1878,8 @@ int serviceCreateWindow(int client_fd)
     next_response[1] = SERVER_PACKET_TYPE_REPLY;
     next_response[2] = 0;
     next_response[3] = 0;
-    return 0;
+
+    return 0;  // Done
 
 fail:
     // printf("serviceCreateWindow: FAIL\n");
@@ -1921,32 +1925,31 @@ int serviceDrawChar(void)
    _string[1] = (unsigned char) 0;
 
 //
-// Target window.
+// Target window
 //
 
-// Window ID limits
+// Get the window structure given the ID
     if ( window_id < 0 || window_id >= WINDOW_COUNT_MAX ){
         goto fail;
     }
-// Get the window structure given the id.
     window = (struct gws_window_d *) windowList[window_id];
     if ((void *) window == NULL){
         goto fail;
     }
-    if ( window->used != TRUE || window->magic != 1234 ){
+    if (window->used != TRUE || window->magic != 1234){
         goto fail;
     }
 
-// Window state
+    // Window state
     if (window->state == WINDOW_STATE_MINIMIZED){
         goto fail;
     }
-// Enabled?
+    // Enabled?
     if (window->enabled != TRUE)
         goto fail;
 
 //
-// Parent window.
+// Parent window
 //
 
 // If the parent window is minimized, we simply can't
@@ -1959,12 +1962,11 @@ int serviceDrawChar(void)
     if ( parent->used != TRUE || parent->magic != 1234 ){
         goto fail;
     }
-
-// Window state
+    // Window state
     if (parent->state == WINDOW_STATE_MINIMIZED){
         goto fail;
     }
-// Enabled?
+    // Enabled?
     if (parent->enabled != TRUE)
         goto fail;
 
@@ -2044,24 +2046,25 @@ int serviceChangeWindowPosition(void)
     // #debug
     //server_debug_print ("gwssrv: serviceChangeWindowPosition\n");
 
-// Get
-    window_id = message_address[0];  //wid
-    // msg
-    x         = message_address[2];
-    y         = message_address[3];
+    window_id = message_address[0];  // Get wid
+    x = message_address[2];          // Get x value
+    y = message_address[3];          // Get y value
 
 // Window ID limits
-    if ( window_id < 0 || window_id >= WINDOW_COUNT_MAX ){
+    if (window_id < 0 || window_id >= WINDOW_COUNT_MAX)
+    {
         //server_debug_print ("gwssrv: serviceChangeWindowPosition window_id\n");
         return -1;
     }
-// Get the window structure given the id.
+// Get the window structure given the id
     window = (struct gws_window_d *) windowList[window_id];
-    if ( (void *) window == NULL ){
+    if ((void *) window == NULL)
+    {
         //server_debug_print ("gwssrv: serviceChangeWindowPosition window\n");
         return -1;
     }
-    if ( window->used != TRUE || window->magic != 1234 ){
+    if (window->used != TRUE || window->magic != 1234)
+    {
         //server_debug_print ("gwssrv: serviceChangeWindowPosition validation\n");
         return -1;
     }
@@ -2074,7 +2077,8 @@ int serviceChangeWindowPosition(void)
     gwssrv_change_window_position ( 
         (struct gws_window_d *) window, 
         (unsigned long) x, 
-        (unsigned long) y );
+        (unsigned long) y 
+    );
 
     for (i=0; i<MSG_BUFFER_SIZE; i++)
         __buffer[i] = 0;
@@ -2082,11 +2086,9 @@ int serviceChangeWindowPosition(void)
     return 0;
 }
 
+// Resize a window
 int serviceResizeWindow(void)
 {
-// Business Logic:
-// Resize a window.
-
     unsigned long *message_address = (unsigned long *) &__buffer[0];
     struct gws_window_d *window;
     int window_id = -1;
@@ -2100,11 +2102,9 @@ int serviceResizeWindow(void)
     // #todo
     // Check all the header.
 
-// Get
-    window_id = message_address[0];  //wid
-    // msg
-    w         = message_address[2];
-    h         = message_address[3];
+    window_id = message_address[0];  // Get wid
+    w = message_address[2];          // Get w value
+    h = message_address[3];          // Get h value
 
 // Window ID limits
     if ( window_id < 0 || 
@@ -2114,14 +2114,16 @@ int serviceResizeWindow(void)
         return -1;
     }
 
-// Get the window structure given the id.
+// Get the window structure given the id
     window = (struct gws_window_d *) windowList[window_id];
-    if ( (void *) window == NULL ){
+    if ((void *) window == NULL)
+    {
         //server_debug_print ("gwssrv: serviceResizeWindow window\n");
         return -1;
     }
     if ( window->used != TRUE || 
-         window->magic != 1234 ){
+         window->magic != 1234 )
+    {
         //server_debug_print ("gwssrv: serviceResizeWindow validation\n");
         return -1;
     }
@@ -2133,7 +2135,8 @@ int serviceResizeWindow(void)
     gws_resize_window ( 
         (struct gws_window_d *) window, 
         (unsigned long) w, 
-        (unsigned long) h );
+        (unsigned long) h 
+    );
 
     for (i=0; i<MSG_BUFFER_SIZE; i++)
         __buffer[i] = 0;
@@ -2150,13 +2153,11 @@ int serviceDrawButton(void)
     return -1;
 }
 
-// Redraw window.
+// Redraw a window. (Repaint).
 // It will invalidate the window, and it will need to be flushed
 // into the frame buffer.
 static int __worker_redraw_window_by_id(int id, unsigned long flags)
 {
-// Redraw a window. (Repaint).
-
     //unsigned long *message_address = (unsigned long *) &__buffer[0];
     struct gws_window_d *window;
     int window_id = (int) id;
@@ -2165,21 +2166,23 @@ static int __worker_redraw_window_by_id(int id, unsigned long flags)
 
 // Window ID
     window_id = (int) (window_id & 0xFFFF);
-    if (window_id < 0 || window_id >= WINDOW_COUNT_MAX){
+    if (window_id < 0 || window_id >= WINDOW_COUNT_MAX)
+    {
         //server_debug_print ("serviceRedrawWindow: [FAIL] window_id\n");
         goto fail;
     }
 // Get the window structure given the id.
     window = (struct gws_window_d *) windowList[window_id];
-    if ( (void *) window == NULL ){
+    if ((void *) window == NULL)
+    {
         //server_debug_print ("serviceRedrawWindow: window\n");
         goto fail;
     }
-    if (window->used != TRUE || window->magic != 1234){
+    if (window->used != TRUE || window->magic != 1234)
+    {
         //server_debug_print ("serviceRedrawWindow: window validation\n");
         goto fail;
     }
-
 
 // We can't redraw a minimied window.
 // We need to restore it first.
@@ -2208,13 +2211,16 @@ static int __worker_redraw_window_by_id(int id, unsigned long flags)
 // TRUE = show the window now. FALSE=do not show the window.
     redraw_window ( 
         (struct gws_window_d *) window, 
-        (unsigned long) Flags );
+        (unsigned long) Flags 
+    );
 
 // Invalidate
 // Now the compositor can refresh it.
 // Não podemos mostra se a flag diz pra não mostrar.
     // window->dirty = TRUE;
-    return 0;
+
+    return 0;  // Done
+
 fail:
     return (int) (-1);
 }
@@ -2326,7 +2332,6 @@ fail:
 // It is a drawer only, not a rectangle object creator.
 int serviceDrawRectangle(void)
 {
-
     // #deprecated
     // We will not draw inside the client area anymore
 
@@ -2505,8 +2510,8 @@ void serviceCloneAndExecute(void)
     memset(buf, 0 ,256);
     for (i=0; i<256; i++)
     {
-         buf[i] = *p;
-         p++;
+        buf[i] = *p;
+        p++;
     };
     buf[i] = 0;
 // ==================================
@@ -4347,7 +4352,6 @@ static int ServerLoop(int client_index)
 // ==================
 
     IsTimeToQuit = FALSE;
-
     IsAcceptingInput = TRUE;
     IsAcceptingConnections = TRUE;
     IsComposing= TRUE;
@@ -4678,7 +4682,7 @@ static int ServerLoop(int client_index)
 
 // =======================================
 
-// Server state
+    // Server state
     ServerState.state = SERVER_STATE_SHUTTINGDOWN;
 
     if (IsTimeToQuit != TRUE){
@@ -4694,8 +4698,8 @@ static int ServerLoop(int client_index)
 // We will close all the sockets.
 // ...
 
-// #test
-// Close the server's fd
+    // #test
+    // Close the server's fd
     if (server_fd > 0){
         printf ("ds00: Close th socket\n");
         close(server_fd);
@@ -4706,16 +4710,12 @@ static int ServerLoop(int client_index)
 // IN: tid, msgcode, signature, signature.
     rtl_post_to_tid( 0, 44901, 1234, 5678 );
 
-// Done:
-// Return to main().
-    return 0;
+    return 0;  // Done. Return to main().
 
 // If something goes wrong, we jump down here and return to main().
 fail:
     return (int) -1;
 }
-
-
 
 // Called by main() in main.c
 int comploop_main (int argc, char **argv)
@@ -4733,8 +4733,6 @@ int comploop_main (int argc, char **argv)
 */
 
     server_mode = SERVER_MODE_SERVER;
-
-    //while(1){};  //#debug
 
     if (argc>0)
     {
