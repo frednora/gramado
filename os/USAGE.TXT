@@ -1,0 +1,15 @@
+
+ Quick explanation about how to test the system.
+
+ -----------------------------------------------
+ When in the command prompt:
+
+  + Type 'wsq' or 'gramado' to start the Desktop Environment with the full GUI.
+  + Type shell2 to start a raw fullscreen shell.
+
+ -----------------------------------------------
+ When in the Desktop Environment (DE):
+
+  + Press [control + F1] to launch the virtual terminal.
+  + Press [shift + F12] to start the mouse support on qemu.
+

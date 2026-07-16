@@ -1,15 +1,12 @@
 
- Quick explanation about how to test the system.
+-----------------------------------
+Gramado OS:
+$ cd os/
+$ make
 
- -----------------------------------------------
- When in the command prompt:
+-----------------------------------
+Gramado Tools:
+$ cd tools/
 
-  + Type 'wsq' or 'gramado' to start the Desktop Environment with the full GUI.
-  + Type shell2 to start a raw fullscreen shell.
 
- -----------------------------------------------
- When in the Desktop Environment (DE):
-
-  + Press [control + F1] to launch the virtual terminal.
-  + Press [shift + F12] to start the mouse support on qemu.
 
