@@ -5,8 +5,8 @@ Fred Nora: gramado
 # Main folders
 
 ```
-os/    - Gramado OS
 docs/  - Documentation for Gramado 
+os/    - Gramado OS
 tools/ - Gramado Tools 
 ```
 
