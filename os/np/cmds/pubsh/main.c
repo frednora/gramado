@@ -193,7 +193,7 @@ do_compare:
 // esc
 // Let's send 0x00~0x1F to the terminal.
 // Or scape sequencies.
-    if ( strncmp ( prompt, "esc", 3 ) == 0 )
+    if ( gramado_strncmp ( prompt, "esc", 3 ) == 0 )
     {
         doLF();
         __test_escapesequence();
@@ -202,7 +202,7 @@ do_compare:
 
 // cls
 // #todo: Send escape sequence.
-    if ( strncmp(prompt,"cls",3) == 0 )
+    if ( gramado_strncmp(prompt,"cls",3) == 0 )
     {
         doLF();
         //printf("\033D");
@@ -214,7 +214,7 @@ do_compare:
  
 // about
 // #todo: Create do_banner();
-    if ( strncmp ( prompt, "about", 5 ) == 0 )
+    if ( gramado_strncmp ( prompt, "about", 5 ) == 0 )
     {
         doLF();
         printf("pubsh: This is a shell, sending bytes to the terminal.");
@@ -224,7 +224,7 @@ do_compare:
 
 // getpid
     int my_pid=0;
-    if ( strncmp( prompt, "getpid", 6 ) == 0 )
+    if ( gramado_strncmp( prompt, "getpid", 6 ) == 0 )
     {
         my_pid = getpid();
         doLF();
@@ -234,7 +234,7 @@ do_compare:
 
 // getppid
     int my_ppid=0;
-    if ( strncmp( prompt, "getppid", 7 ) == 0 )
+    if ( gramado_strncmp( prompt, "getppid", 7 ) == 0 )
     {
         my_ppid = getppid();
         doLF();
@@ -245,7 +245,7 @@ do_compare:
 // mm-size (MB)
 // Total memory installed in the machine.
     unsigned long __mm_size_mb = 0;    
-    if ( strncmp( prompt, "mm-size", 7 ) == 0 )
+    if ( gramado_strncmp( prompt, "mm-size", 7 ) == 0 )
     {
         __mm_size_mb = (unsigned long) sc80 (292,0,0,0);
         doLF();
@@ -254,7 +254,7 @@ do_compare:
     }
 
 // current-process
-    if ( strncmp ( prompt, "current-process", 15 ) == 0 )
+    if ( gramado_strncmp ( prompt, "current-process", 15 ) == 0 )
     {
         //printf("\n");
         //sc80 ( SYSTEMCALL_CURRENTPROCESSINFO, 0, 0, 0 );
@@ -263,7 +263,7 @@ do_compare:
     }
 
 // process-info
-    if ( strncmp ( prompt, "process-info", 12 ) == 0 )
+    if ( gramado_strncmp ( prompt, "process-info", 12 ) == 0 )
     {
         //printf("\n");
         sc80( 82, 0, 0, 0 );
@@ -271,7 +271,7 @@ do_compare:
     }
 
 // exit
-    if ( strncmp( prompt, "exit", 4 ) == 0 )
+    if ( gramado_strncmp( prompt, "exit", 4 ) == 0 )
     {
         doLF();
         doExit();
@@ -279,7 +279,7 @@ do_compare:
     }
 
 // quit
-    if ( strncmp( prompt, "quit", 4 ) == 0 )
+    if ( gramado_strncmp( prompt, "quit", 4 ) == 0 )
     {
         doLF();
         doExit();
@@ -289,7 +289,7 @@ do_compare:
 // malloc
 // 32KB.
     void *hBuffer;
-    if ( strncmp( prompt, "malloc", 6 ) == 0 )
+    if ( gramado_strncmp( prompt, "malloc", 6 ) == 0 )
     {
         doLF();
         printf ("Testing heap: 32KB\n");
@@ -308,7 +308,7 @@ do_compare:
 // Salva os buffers em ring0 no disco fisico.
 // Isso pode ser um programa.
 // See: unistd.c
-    if ( strncmp( prompt, "sync", 4 ) == 0 )
+    if ( gramado_strncmp( prompt, "sync", 4 ) == 0 )
     {
         // #bugbug
         // It can messup with our files,
@@ -320,7 +320,7 @@ do_compare:
     }
 
 // tty3
-    if ( strncmp ( prompt, "tty3", 4 ) == 0 )
+    if ( gramado_strncmp ( prompt, "tty3", 4 ) == 0 )
     {
         //if ( isatty(fileno(stdin)) == 0 ){
         //    printf ("stdin is not a tty\n");
@@ -436,12 +436,12 @@ static int compare00(void)
 // ------------------------
 // Compare
 
-    if ( strncmp( (char *) tokenList[0], "test", 4 ) == 0 ){
+    if ( gramado_strncmp( (char *) tokenList[0], "test", 4 ) == 0 ){
         printf("~test\n");
         goto exit_cmp;	
     }
 
-    if ( strncmp( (char *) tokenList[0], "help", 4 ) == 0 )
+    if ( gramado_strncmp( (char *) tokenList[0], "help", 4 ) == 0 )
     {
         printf("~help\n");
         
@@ -452,10 +452,10 @@ static int compare00(void)
             goto exit_cmp;
         }
 
-        if ( strncmp( (char *) tokenList[i], "-a", 2 ) == 0 ){
+        if ( gramado_strncmp( (char *) tokenList[i], "-a", 2 ) == 0 ){
             printf("AAAA\n");
         }
-        if ( strncmp( (char *) tokenList[i], "-b", 2 ) == 0 ){
+        if ( gramado_strncmp( (char *) tokenList[i], "-b", 2 ) == 0 ){
             printf("BBBB\n");
         }
         printf("help done\n");

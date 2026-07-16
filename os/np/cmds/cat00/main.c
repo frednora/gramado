@@ -214,25 +214,25 @@ int main(int argc, char *argv[])
     {
         isFlag = FALSE;
 
-        if ( strncmp( argv[i], "--help", 6) == 0 ){
+        if ( gramado_strncmp( argv[i], "--help", 6) == 0 ){
             isFlag=TRUE;
             doHelp();
             goto done;
         }
-        if ( strncmp( argv[i], "--version", 9) == 0 ){
+        if ( gramado_strncmp( argv[i], "--version", 9) == 0 ){
             isFlag=TRUE;
             doVersion();
             goto done;
         }
-        if ( strncmp( argv[i], "--number", 8) == 0 ){
+        if ( gramado_strncmp( argv[i], "--number", 8) == 0 ){
             isFlag=TRUE;
             fNumber = TRUE;
         }
-        if ( strncmp( argv[i], "--show-tabs", 11) == 0 ){
+        if ( gramado_strncmp( argv[i], "--show-tabs", 11) == 0 ){
             isFlag = TRUE;
             fShowTabs = TRUE;
         }
-        if ( strncmp( argv[i], "--show-ends", 11) == 0 ){
+        if ( gramado_strncmp( argv[i], "--show-ends", 11) == 0 ){
             isFlag = TRUE;
             fShowEnds = TRUE;
         }

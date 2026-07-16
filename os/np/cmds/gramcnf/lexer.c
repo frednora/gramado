@@ -579,7 +579,7 @@ again:
 
             // Modifiers
 
-            if ( strncmp( real_token_buffer, "signed", 6 ) == 0 )
+            if ( gramado_strncmp( real_token_buffer, "signed", 6 ) == 0 )
             {
                 keyword_found  = KWSIGNED;
                 modifier_found = MSIGNED;
@@ -587,7 +587,7 @@ again:
                 value = (int) TK_MODIFIER;
                 goto done;
             }
-            if ( strncmp( real_token_buffer, "unsigned", 8 ) == 0 )
+            if ( gramado_strncmp( real_token_buffer, "unsigned", 8 ) == 0 )
             {
                 keyword_found  = KWUNSIGNED;
                 modifier_found = MUNSIGNED;
@@ -595,7 +595,7 @@ again:
                 value = (int) TK_MODIFIER;
                 goto done; 
             }
-            if ( strncmp( real_token_buffer, "inline", 6 ) == 0 )
+            if ( gramado_strncmp( real_token_buffer, "inline", 6 ) == 0 )
             {
                 keyword_found  = KWINLINE;
                 modifier_found = MINLINE;
@@ -603,7 +603,7 @@ again:
                 value = (int) TK_MODIFIER;
                 goto done;
             }
-            if ( strncmp( real_token_buffer, "static", 6 ) == 0 )
+            if ( gramado_strncmp( real_token_buffer, "static", 6 ) == 0 )
             {
                 keyword_found  = KWSTATIC;
                 modifier_found = MSTATIC;
@@ -611,7 +611,7 @@ again:
                 value = (int) TK_MODIFIER;
                 goto done;
             }
-            if ( strncmp( real_token_buffer, "volatile", 8 ) == 0  )
+            if ( gramado_strncmp( real_token_buffer, "volatile", 8 ) == 0  )
             {
                 keyword_found  = KWVOLATILE;
                 modifier_found = MVOLATILE;
@@ -622,7 +622,7 @@ again:
 
             // types
 
-            if ( strncmp( real_token_buffer, "void", 4 ) == 0 )
+            if ( gramado_strncmp( real_token_buffer, "void", 4 ) == 0 )
             {
                 keyword_found = KWVOID;
                 type_found    = TVOID;
@@ -630,7 +630,7 @@ again:
                 value = (int) TK_TYPE;
                 goto done;
             }
-            if ( strncmp( real_token_buffer, "char", 4 ) == 0 )
+            if ( gramado_strncmp( real_token_buffer, "char", 4 ) == 0 )
             {
                 keyword_found = KWCHAR;
                 type_found    = TCHAR;
@@ -638,7 +638,7 @@ again:
                 value = (int) TK_TYPE;
                 goto done;
             }
-            if ( strncmp( real_token_buffer, "short", 5 ) == 0 )
+            if ( gramado_strncmp( real_token_buffer, "short", 5 ) == 0 )
             {
                 keyword_found = KWSHORT;
                 type_found    = TSHORT;
@@ -646,7 +646,7 @@ again:
                 value = (int) TK_TYPE;
                 goto done;
             }
-            if ( strncmp( real_token_buffer, "int", 3 ) == 0 )
+            if ( gramado_strncmp( real_token_buffer, "int", 3 ) == 0 )
             {
                 keyword_found = KWINT;
                 type_found    = TINT;
@@ -654,7 +654,7 @@ again:
                 value = (int) TK_TYPE;
                 goto done;
             }
-            if ( strncmp( real_token_buffer, "long", 4 ) == 0 )
+            if ( gramado_strncmp( real_token_buffer, "long", 4 ) == 0 )
             {
                 keyword_found = KWLONG;
                 type_found    = TLONG;
@@ -662,7 +662,7 @@ again:
                 value = (int) TK_TYPE;
                 goto done;
             }
-            if ( strncmp( real_token_buffer, "box", 3 ) == 0 )
+            if ( gramado_strncmp( real_token_buffer, "box", 3 ) == 0 )
             {
                 keyword_found = KWBOX;
                 type_found    = TBOX;
@@ -670,7 +670,9 @@ again:
                 value = (int) TK_TYPE;
                 goto done;
             }
-            if ( strncmp( real_token_buffer, "meta", 4 ) == 0 )
+            // #in order to avoid mistach with meta1234
+            //if ( gramado_strncmp( real_token_buffer, "meta", 4 ) == 0 )
+            if ( strcmp( real_token_buffer, "meta" ) == 0 )
             {
                 keyword_found = KWMETA;
                 type_found    = TMETA;
@@ -678,7 +680,7 @@ again:
                 value = (int) TK_TYPE;
                 goto done;
             }
-            if ( strncmp( real_token_buffer, "def", 3 ) == 0 )
+            if ( gramado_strncmp( real_token_buffer, "def", 3 ) == 0 )
             {
                 keyword_found = KWDEF;
                 type_found    = TDEF;
@@ -686,7 +688,7 @@ again:
                 value = (int) TK_TYPE;
                 goto done;
             }
-            if ( strncmp( real_token_buffer, "var", 3 ) == 0  )
+            if ( gramado_strncmp( real_token_buffer, "var", 3 ) == 0  )
             {
                 keyword_found = KWVAR;
                 type_found    = TVAR;
@@ -694,7 +696,7 @@ again:
                 value = (int) TK_TYPE;
                 goto done;
             }
-            if ( strncmp( real_token_buffer, "let", 3 ) == 0  )
+            if ( gramado_strncmp( real_token_buffer, "let", 3 ) == 0  )
             {
                 keyword_found = KWLET;
                 type_found    = TLET;
@@ -705,138 +707,138 @@ again:
 
             // keywords
 
-            if ( strncmp( real_token_buffer, "name", 4 ) == 0 )
+            if ( gramado_strncmp( real_token_buffer, "name", 4 ) == 0 )
             {
                 keyword_found = KWNAME;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
             }
-            if ( strncmp( real_token_buffer, "content", 7 ) == 0 )
+            if ( gramado_strncmp( real_token_buffer, "content", 7 ) == 0 )
             {
                 keyword_found = KWCONTENT;
                 value = (int) TK_KEYWORD;
                 goto done;
             }
-            if ( strncmp( real_token_buffer, "print", 5 ) == 0 )
+            if ( gramado_strncmp( real_token_buffer, "print", 5 ) == 0 )
             {
                 keyword_found = KWPRINT;
                 value = (int) TK_KEYWORD;
                 goto done;
             }
-            if ( strncmp( real_token_buffer, "goto", 4 ) == 0 )
+            if ( gramado_strncmp( real_token_buffer, "goto", 4 ) == 0 )
             {
                 keyword_found = KWGOTO;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
             }
-            if ( strncmp( real_token_buffer, "return", 6 ) == 0 )
+            if ( gramado_strncmp( real_token_buffer, "return", 6 ) == 0 )
             {
                 keyword_found = KWRETURN;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
             }
-            if ( strncmp( real_token_buffer, "exit", 4 ) == 0 )
+            if ( gramado_strncmp( real_token_buffer, "exit", 4 ) == 0 )
             {
                 keyword_found = KWEXIT;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
             }
-            if ( strncmp( real_token_buffer, "switch", 6 ) == 0 )
+            if ( gramado_strncmp( real_token_buffer, "switch", 6 ) == 0 )
             {
                 keyword_found = KWSWITCH;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
             }
-            if ( strncmp( real_token_buffer, "case", 4 ) == 0 )
+            if ( gramado_strncmp( real_token_buffer, "case", 4 ) == 0 )
             {
                 keyword_found = KWCASE;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
             }
-            if ( strncmp( real_token_buffer, "break", 5 ) == 0 )
+            if ( gramado_strncmp( real_token_buffer, "break", 5 ) == 0 )
             {
                 keyword_found = KWBREAK;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
             }
-            if ( strncmp( real_token_buffer, "default", 7 ) == 0 )
+            if ( gramado_strncmp( real_token_buffer, "default", 7 ) == 0 )
             {
                 keyword_found = KWDEFAULT;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
             }
-            if ( strncmp( real_token_buffer, "for", 3 ) == 0 )
+            if ( gramado_strncmp( real_token_buffer, "for", 3 ) == 0 )
             {
                 keyword_found = KWFOR;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
             }
-            if ( strncmp( real_token_buffer, "continue", 8 ) == 0 )
+            if ( gramado_strncmp( real_token_buffer, "continue", 8 ) == 0 )
             {
                 keyword_found = KWCONTINUE;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
             }
-            if ( strncmp( real_token_buffer, "do", 2 ) == 0 )
+            if ( gramado_strncmp( real_token_buffer, "do", 2 ) == 0 )
             {
                 keyword_found = KWDO;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
             }
-            if ( strncmp( real_token_buffer, "while", 5 ) == 0 )
+            if ( gramado_strncmp( real_token_buffer, "while", 5 ) == 0 )
             {
                 keyword_found = KWWHILE;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
             }
-            if ( strncmp( real_token_buffer, "if", 2 ) == 0 )
+            if ( gramado_strncmp( real_token_buffer, "if", 2 ) == 0 )
             {
                 keyword_found = KWIF;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
             }
-            if ( strncmp( real_token_buffer, "else", 4 ) == 0 )
+            if ( gramado_strncmp( real_token_buffer, "else", 4 ) == 0 )
             {
                 keyword_found = KWELSE;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
             }
-            if ( strncmp( real_token_buffer, "union", 5 ) == 0 )
+            if ( gramado_strncmp( real_token_buffer, "union", 5 ) == 0 )
             {
                 keyword_found = KWUNION;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
             }
-            if ( strncmp( real_token_buffer, "struct", 6 ) == 0 )
+            if ( gramado_strncmp( real_token_buffer, "struct", 6 ) == 0 )
             {
                 keyword_found = KWSTRUCT;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
             }
-            if ( strncmp( real_token_buffer, "enum", 4 ) == 0 )
+            if ( gramado_strncmp( real_token_buffer, "enum", 4 ) == 0 )
             {
                 keyword_found = KWENUM;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
             }
-            if ( strncmp( real_token_buffer, "sizeof", 6 ) == 0 )
+            if ( gramado_strncmp( real_token_buffer, "sizeof", 6 ) == 0 )
             {
                 keyword_found = KWSIZEOF;
                 // return (int) TK_KEYWORD;

@@ -147,7 +147,7 @@ static int parse_function(int token)
                 switch (c)
                 {
                     case TK_SEPARATOR:
-                        if ( strncmp( (char *) real_token_buffer, "(", 1 ) == 0  )
+                        if ( gramado_strncmp( (char *) real_token_buffer, "(", 1 ) == 0  )
                         {
                             // printf ("parse_function: TK_SEPARATOR={%s} in line %d\n", 
 	                        //     real_token_buffer, lexer_currentline );
@@ -171,7 +171,7 @@ static int parse_function(int token)
                 {
                     // ')'
                     case TK_SEPARATOR:
-                        if ( strncmp( (char *) real_token_buffer, ")", 1 ) == 0 )
+                        if ( gramado_strncmp( (char *) real_token_buffer, ")", 1 ) == 0 )
                         {
 	                        // printf ("parse_function: TK_SEPARATOR={%s} in line %d\n", 
 	                        //    real_token_buffer, lexer_currentline ); 
@@ -201,7 +201,7 @@ static int parse_function(int token)
                     // ';'
                     // Terminamos o statement function.
                     case TK_SEPARATOR:
-                        if ( strncmp( (char *) real_token_buffer, ";", 1 ) == 0 )
+                        if ( gramado_strncmp( (char *) real_token_buffer, ";", 1 ) == 0 )
                         {
 	                        // printf ("parse_function: TK_SEPARATOR={%s} in line %d\n", 
 	                        //     real_token_buffer, lexer_currentline ); 
@@ -260,7 +260,7 @@ static int parse_name(int token)
         printf("parse_name: expected (\n");  exit(1);
     }
     if (c == TK_SEPARATOR){
-        if ( strncmp( (char *) real_token_buffer, "(", 1 ) == 0  )
+        if ( gramado_strncmp( (char *) real_token_buffer, "(", 1 ) == 0  )
         {
             // printf("parse_name: TK_KEYWORD={%s} in line %d\n", 
             //     real_token_buffer, lexer_currentline ); 
@@ -280,7 +280,7 @@ static int parse_name(int token)
     }
     if (c == TK_STRING)
     {
-        //if ( strncmp( (char *) real_token_buffer, "\"", 1 ) == 0 ){
+        //if ( gramado_strncmp( (char *) real_token_buffer, "\"", 1 ) == 0 ){
             //ok
             //inside = 1;
         //} 
@@ -325,12 +325,12 @@ static int parse_name(int token)
         c = yylex();
 
         //)
-        if ( strncmp( (char *) real_token_buffer, ")", 1 ) == 0 )
+        if ( gramado_strncmp( (char *) real_token_buffer, ")", 1 ) == 0 )
         {
             inside = 0;
             c = yylex();
             // ;
-            if ( strncmp( (char *) real_token_buffer, ";", 1 ) == 0 )
+            if ( gramado_strncmp( (char *) real_token_buffer, ";", 1 ) == 0 )
             {
                 // ok
                 return (int) c;
@@ -382,7 +382,7 @@ static int parse_content(int token)
         printf("parse_content: expected (\n");  exit(1);
     }
     if (c == TK_SEPARATOR){
-        if ( strncmp( (char *) real_token_buffer, "(", 1 ) == 0  )
+        if ( gramado_strncmp( (char *) real_token_buffer, "(", 1 ) == 0  )
         {
             // printf("parse_content: TK_KEYWORD={%s} in line %d\n", 
             //     real_token_buffer, lexer_currentline ); 
@@ -402,7 +402,7 @@ static int parse_content(int token)
     }
     if (c == TK_STRING)
     {
-        //if ( strncmp( (char *) real_token_buffer, "\"", 1 ) == 0 ){
+        //if ( gramado_strncmp( (char *) real_token_buffer, "\"", 1 ) == 0 ){
             //ok
             //inside = 1;
         //} 
@@ -457,12 +457,12 @@ static int parse_content(int token)
         c = yylex();
 
         //)
-        if ( strncmp( (char *) real_token_buffer, ")", 1 ) == 0 )
+        if ( gramado_strncmp( (char *) real_token_buffer, ")", 1 ) == 0 )
         {
             inside = 0;
             c = yylex();
             // ;
-            if ( strncmp( (char *) real_token_buffer, ";", 1 ) == 0 )
+            if ( gramado_strncmp( (char *) real_token_buffer, ";", 1 ) == 0 )
             {
                 // ok
                 return (int) c;
@@ -595,7 +595,7 @@ static int parse_number(int olen)
 //se começar com '0x', ou '0X', indicando se um número heaxadecimal.
 //então a base será 16.
 	if ( len >= 3 && 
-	     ( !strncmp (p, "0x", 2) || !strncmp (p, "0X", 2)) ) 
+	     ( !gramado_strncmp (p, "0x", 2) || !gramado_strncmp (p, "0X", 2)) ) 
 	{
 		//baes hexa.
 		base = 16;
@@ -715,7 +715,7 @@ static int parse_return(int token)
 // O ultimo token em um return statement foi ';'
 // vamos conferir
 // #bugbug: The routine above is returning after find the ';'.
-    if ( strncmp( (char *) real_token_buffer, ";", 1 ) == 0 )
+    if ( gramado_strncmp( (char *) real_token_buffer, ";", 1 ) == 0 )
     {
         printf("parse_return: ';' found\n");
         c = TK_SEPARATOR;
@@ -787,21 +787,21 @@ static int parse_return(int token)
 
 						//iniciamos uma expressão ou condicional.
 						//uma árvore.
-						if ( strncmp( (char *) real_token_buffer, "(", 1 ) == 0  )
+						if ( gramado_strncmp( (char *) real_token_buffer, "(", 1 ) == 0  )
                         {
 						    open = 1;
 						}
 						
 						//se fecharmos, o que segue pode ser um separador ';',
 						//uma função, uma constante ou uma expressão.
-	                    if ( strncmp( (char *) real_token_buffer, ")", 1 ) == 0  )
+	                    if ( gramado_strncmp( (char *) real_token_buffer, ")", 1 ) == 0  )
 						{
 						    open = 0;							
 						}
 						
 						//se o separador for ';' é porque estamos num retorno do tipo void.
 						//se o retorno não for do tipo void então foi erro de sintaxe..
-						if ( strncmp( (char *) real_token_buffer, ";", 1 ) == 0  )
+						if ( gramado_strncmp( (char *) real_token_buffer, ";", 1 ) == 0  )
 						{
 							
 #ifdef PARSER_RETURN_VERBOSE							
@@ -864,7 +864,7 @@ static int parse_return(int token)
 			    switch(c)
 				{
 					case TK_SEPARATOR:
-	                    if ( strncmp( (char *) real_token_buffer, ";", 1 ) == 0  )
+	                    if ( gramado_strncmp( (char *) real_token_buffer, ";", 1 ) == 0  )
                         {
 #ifdef PARSER_RETURN_VERBOSE
 			                //deu certo.
@@ -929,7 +929,7 @@ do_separator:
 	//isso finaliza o statement.
 	if (c == TK_SEPARATOR)
     {
-	    if( strncmp( (char *) real_token_buffer, ";", 1 ) == 0  )
+	    if( gramado_strncmp( (char *) real_token_buffer, ";", 1 ) == 0  )
         {
 
 #ifdef PARSER_RETURN_VERBOSE
@@ -1123,7 +1123,7 @@ static unsigned long parse_expression(int token)
     {
         // (
         case TK_SEPARATOR:
-            if ( strncmp( (char *) real_token_buffer, "(", 1 ) == 0  )
+            if ( gramado_strncmp( (char *) real_token_buffer, "(", 1 ) == 0  )
             {
                 // printf("parse_expression: TK_SEPARATOR={%s} in line %d\n", 
                 //     real_token_buffer, lexer_currentline ); 
@@ -1177,7 +1177,7 @@ static unsigned long parse_expression(int token)
 				{
 					
 					case TK_SEPARATOR:
-	                    if ( strncmp( (char *) real_token_buffer, "(", 1 ) == 0  )
+	                    if ( gramado_strncmp( (char *) real_token_buffer, "(", 1 ) == 0  )
 						{
 #ifdef PARSER_EXPRESSION_VERBOSE
 						    printf("parse_expression: TK_SEPARATOR={%s} in line %d\n", 
@@ -1186,7 +1186,7 @@ static unsigned long parse_expression(int token)
 							//State = 1;	
 						    break;
 						}
-	                    if ( strncmp( (char *) real_token_buffer, ")", 1 ) == 0  )
+	                    if ( gramado_strncmp( (char *) real_token_buffer, ")", 1 ) == 0  )
 						{
 							
 #ifdef PARSER_EXPRESSION_VERBOSE
@@ -1809,7 +1809,7 @@ int parse(int dump_output)
                     case TK_SEPARATOR:
                         //printf("State1: TK_SEPARATOR={%s} line %d\n", real_token_buffer, lexer_currentline );
                         // ( função
-                        if ( strncmp( (char *) real_token_buffer, "(", 1 ) == 0  )
+                        if ( gramado_strncmp( (char *) real_token_buffer, "(", 1 ) == 0  )
                         {
                             printf("[PAR] line %d\n", lexer_currentline);
                             parentheses_inside++;
@@ -1830,7 +1830,7 @@ int parse(int dump_output)
                         // '{'
                         // Entramos no corpo da função.
                         // Curly bracket
-                        if ( strncmp( (char *) real_token_buffer, "{", 1 ) == 0  )
+                        if ( gramado_strncmp( (char *) real_token_buffer, "{", 1 ) == 0  )
                         {
                             //printf ("[BRACE] line %d\n", lexer_currentline); 
                             braces_inside++;
@@ -1844,7 +1844,7 @@ int parse(int dump_output)
                         // fechando um box.
                         // por enquanto so temos um box,
                         // entao fechamos o programa.
-                        if ( strncmp( (char *) real_token_buffer, "]", 1 ) == 0  )
+                        if ( gramado_strncmp( (char *) real_token_buffer, "]", 1 ) == 0  )
                         {
                             if ( square_brackets_inside > 0)
                             {
@@ -1864,7 +1864,7 @@ int parse(int dump_output)
 
                         // ')'
                         // Fechando UM parênteses, provavelmente sem nada dentro.
-                        if ( strncmp( (char *) real_token_buffer, ")", 1 ) == 0  )
+                        if ( gramado_strncmp( (char *) real_token_buffer, ")", 1 ) == 0  )
                         {
                             if (parentheses_inside > 0)
                             {
@@ -1880,7 +1880,7 @@ int parse(int dump_output)
                         // '}'
                         // Fechando UM corpo de função. 
                         // Curly bracket
-                        if ( strncmp( (char *) real_token_buffer, "}", 1 ) == 0  )
+                        if ( gramado_strncmp( (char *) real_token_buffer, "}", 1 ) == 0  )
                         {
                             //printf ("[/BRACE] line %d\n", lexer_currentline);
                             if (braces_inside > 0)
@@ -1893,7 +1893,7 @@ int parse(int dump_output)
                             // '}' found without entering with a '{'.
                         }
 
-                        if ( strncmp( (char *) real_token_buffer, ";", 1 ) == 0  )
+                        if ( gramado_strncmp( (char *) real_token_buffer, ";", 1 ) == 0  )
                         {
                             //printf(" ; separator found!\n");
                             State=1;
@@ -2047,7 +2047,7 @@ int parse(int dump_output)
                             printf("Separator after a symbol\n");
 
                             // ':' O separador é uma label.
-                            if ( strncmp ( (char *) real_token_buffer, ":", 1 ) == 0 )
+                            if ( gramado_strncmp ( (char *) real_token_buffer, ":", 1 ) == 0 )
                             {
                                 emit_label();     
                                 State=1;
@@ -2055,7 +2055,7 @@ int parse(int dump_output)
                             }
 
                             // '[' O separador indica que entramos no box.
-                            if ( strncmp( (char *) real_token_buffer, "[", 1 ) == 0  )
+                            if ( gramado_strncmp( (char *) real_token_buffer, "[", 1 ) == 0  )
                             {
                                 printf ("box start:\n");
                                 //while(1){}
@@ -2068,7 +2068,7 @@ int parse(int dump_output)
                             // '(' O separador indica que iniciamos a pilha de parâmetro.
                             // incrementamos
                             // pois podemos estar no primeiro, no segundo etc ...
-                            if ( strncmp( (char *) real_token_buffer, "(", 1 ) == 0  )
+                            if ( gramado_strncmp( (char *) real_token_buffer, "(", 1 ) == 0  )
                             {
                                 parentheses_inside++;
                                 emit_function();
@@ -2077,7 +2077,7 @@ int parse(int dump_output)
                             }
                             // ) Se encontramos um separador ')' 
                             // entao esperaremos um separador '{'.
-                            if ( strncmp( (char *) real_token_buffer, ")", 1 ) == 0  )
+                            if ( gramado_strncmp( (char *) real_token_buffer, ")", 1 ) == 0  )
                             {
 								//se não tem parênteses aberto.
 								if ( parentheses_inside < 1 )
@@ -2101,7 +2101,7 @@ int parse(int dump_output)
                                 token = yylex();
                                 // { = entramos no corpo da função
                                 // logo após o ()
-                                if ( strncmp( (char *) real_token_buffer, "{", 1 ) == 0  )
+                                if ( gramado_strncmp( (char *) real_token_buffer, "{", 1 ) == 0  )
                                 {
                                     //printf ("State2: separator={%s} line %d\n", 
                                     //    real_token_buffer, lexer_currentline );  
@@ -2120,7 +2120,7 @@ int parse(int dump_output)
                             // ; = O identificador é uma variável.
                             // Ou finalizamos uma chamada de função.
                             // ou finalizamos um corpo.
-                            if ( strncmp( (char *) real_token_buffer, ";", 1 ) == 0  )
+                            if ( gramado_strncmp( (char *) real_token_buffer, ";", 1 ) == 0  )
                             {
 //#ifdef PARSER_VERBOSE
 	//					        printf ("State2: SEP={%s} line %d\n", 
@@ -2143,7 +2143,7 @@ int parse(int dump_output)
 
                             // , = Separador quando estamos listando 
                             // argumentos ou listando identificadores.
-                            if ( strncmp( (char *) real_token_buffer, ",", 1 ) == 0  )
+                            if ( gramado_strncmp( (char *) real_token_buffer, ",", 1 ) == 0  )
                             {
 //#ifdef PARSER_VERBOSE 
 	//					        printf ("State2: SEP={%s} line %d\n", 
@@ -2347,7 +2347,7 @@ int parse(int dump_output)
                     case TK_SEPARATOR:
                         
                         // Expected: ';'
-                        if ( strncmp( (char *) real_token_buffer, ";", 1 ) == 0  ){
+                        if ( gramado_strncmp( (char *) real_token_buffer, ";", 1 ) == 0  ){
                             //ok #todo
                         }else{
                             printf ("State4: [ERROR] Expected ';' in line %d\n", 

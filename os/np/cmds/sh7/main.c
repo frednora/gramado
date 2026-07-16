@@ -17,7 +17,7 @@
 #include <rtl/gramado.h>
 
 
-#define STRCMP(c, s, n) strlen(c) == n && strncmp(c, s, n)
+#define STRCMP(c, s, n) strlen(c) == n && gramado_strncmp(c, s, n)
 
 char *the_prompt = "sh7 $ ";
 
@@ -28,7 +28,7 @@ process_cmd(char *b)
     pid_t pid;
     int rc;
     char *arg;
-    if (strncmp(b, "fork ", 5) == 0) {
+    if (gramado_strncmp(b, "fork ", 5) == 0) {
         arg = b + 5;
         if (pid = fork()) {
             int status;

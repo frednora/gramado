@@ -703,7 +703,7 @@ unsigned long tree_eval(void)
     // End of statement.
     if (c == TK_SEPARATOR)
     {
-        if ( strncmp ( (char *) real_token_buffer, ";", 1 ) == 0  )
+        if ( gramado_strncmp ( (char *) real_token_buffer, ";", 1 ) == 0  )
         {
             //printf("tree_eval: ';' was found!\n");
             exp_buffer[exp_offset] = (int) 0;
@@ -730,13 +730,13 @@ unsigned long tree_eval(void)
         // ';' separador no caso de return void.
         // para quando a express�o � depois do return.
         case TK_SEPARATOR:
-            if ( strncmp( (char *) real_token_buffer, ";", 1 ) == 0  )
+            if ( gramado_strncmp( (char *) real_token_buffer, ";", 1 ) == 0  )
             {
                 exp_buffer[exp_offset] = (int) 0;
                 //exp_offset++;
                 goto do_bst;  // #done
             }
-            //if ( strncmp( (char *) real_token_buffer, ")", 1 ) == 0  )
+            //if ( gramado_strncmp( (char *) real_token_buffer, ")", 1 ) == 0  )
             //{}
         // #todo
         // Temos que tratar as aberturas e fechamentos (),{}	
@@ -773,14 +773,14 @@ unsigned long tree_eval(void)
         // da� incluimos o finalizador provis�rio '?'
         case TK_SEPARATOR:
             // ')'
-            if ( strncmp( (char *) real_token_buffer, ")", 1 ) == 0  )
+            if ( gramado_strncmp( (char *) real_token_buffer, ")", 1 ) == 0  )
             {
                 exp_buffer[exp_offset] = (int) 0;
                 //exp_offset++;
                 goto do_bst;  // #done
             }
             // ';'
-            if ( strncmp( (char *) real_token_buffer, ";", 1 ) == 0  )
+            if ( gramado_strncmp( (char *) real_token_buffer, ";", 1 ) == 0  )
             {
                 //printf("tree_eval: ';' was found\n");
                 exp_buffer[exp_offset] = (int) 0;

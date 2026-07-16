@@ -703,12 +703,26 @@ char *strncpy (char *s1, const char *s2, size_t n)
 
 /*
  * strcmp:
- *     Compare two strings. 
+ * Compare two null-terminated strings.
+ *
+ * Behavior:
+ * - Iterates character by character until a difference is found or until '\0'.
+ * - Returns 0 if both strings are identical.
+ * - Returns a negative value if s1 < s2 (based on ASCII ordering).
+ * - Returns a positive value if s1 > s2.
+ *
+ * Compatibility:
+ * - This implementation is fully compliant with the C standard and POSIX/glibc.
+ * - Ensures predictable behavior across different libc environments.
+ *
+ * Usage:
+ * - Ideal for exact keyword matching in the lexer.
+ * - Prevents prefix collisions (e.g., "meta" vs "meta1").
  */
-
 // See:
 // http://man7.org/linux/man-pages/man3/strcmp.3.html
 
+// 
 int strcmp (const char *s1, const char *s2)
 {
     register int i=0;
@@ -723,11 +737,30 @@ int strcmp (const char *s1, const char *s2)
     return (int) ( s1[i] - s2[i] );
 }
 
-// strncmp:
-//  Compare two strings
+
+/*
+ * gramado_strncmp:
+ * Custom string comparison function used in Gramado OS.
+ *
+ * Behavior:
+ * - Compares up to 'n' characters.
+ * - Returns 1 if a mismatch is found during comparison.
+ * - Returns 2 if one string ends before the other after 'n' characters.
+ * - Returns 0 only if both strings are identical and end together.
+ *
+ * Compatibility:
+ * - NOT POSIX/glibc compatible.
+ * - In POSIX/glibc, strncmp("meta1","meta",4) would return 0 (prefix match),
+ *   but here it returns 2 because one string continues after the other.
+ *
+ * Usage:
+ * - Safe for strict equality checks inside Gramado OS.
+ * - Not portable: use strcmp for keyword matching in the lexer.
+ */
+
 // See:
 // http://man7.org/linux/man-pages/man3/strcmp.3.html
-int strncmp(const char *s1, const char *s2, size_t n)
+int gramado_strncmp(const char *s1, const char *s2, size_t n)
 {
     while (n > 0)
     {
@@ -745,6 +778,35 @@ int strncmp(const char *s1, const char *s2, size_t n)
     }
 
     return 0;
+}
+
+/*
+ * strncmp:
+ * Standard POSIX/glibc-compatible implementation.
+ *
+ * Behavior:
+ * - Compares up to 'n' characters of two strings.
+ * - Returns 0 if the first 'n' characters are equal.
+ * - Returns a negative value if s1 < s2.
+ * - Returns a positive value if s1 > s2.
+ *
+ * Compatibility:
+ * - Fully compliant with C standard and POSIX/glibc.
+ * - Ensures portable behavior across Linux, BSD, musl, newlib, etc.
+ */
+
+int strncmp(const char *s1, const char *s2, size_t n)
+{
+    while (n > 0 && *s1 && (*s1 == *s2)) 
+    {
+        s1++;
+        s2++;
+        n--;
+    };
+    if (n == 0)
+        return 0;
+
+    return (unsigned char)*s1 - (unsigned char)*s2;
 }
 
 void *memset( void *ptr, int value, int size )

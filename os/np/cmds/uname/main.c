@@ -97,12 +97,12 @@ int main(int argc, char **argv)
     {
         //printf("%d: %s\n",i, argv[i]);
         // Se em algum momento a flag for '-?'.
-        if ( strncmp( argv[i], "-a", 2 ) == 0 ){ fAll = TRUE; }
-        if ( strncmp( argv[i], "-s", 2 ) == 0 ){ fSysName = TRUE; }
-        if ( strncmp( argv[i], "-r", 2 ) == 0 ){ fRelease = TRUE; }
-        if ( strncmp( argv[i], "-v", 2 ) == 0 ){ fVersion = TRUE; }
-        //if ( strncmp( argv[i], "-?", 2 ) == 0 ){ fMachine = TRUE; } //
-        if ( strncmp( argv[i], "-n", 2 ) == 0 ){ fNodeName = TRUE; }
+        if ( gramado_strncmp( argv[i], "-a", 2 ) == 0 ){ fAll = TRUE; }
+        if ( gramado_strncmp( argv[i], "-s", 2 ) == 0 ){ fSysName = TRUE; }
+        if ( gramado_strncmp( argv[i], "-r", 2 ) == 0 ){ fRelease = TRUE; }
+        if ( gramado_strncmp( argv[i], "-v", 2 ) == 0 ){ fVersion = TRUE; }
+        //if ( gramado_strncmp( argv[i], "-?", 2 ) == 0 ){ fMachine = TRUE; } //
+        if ( gramado_strncmp( argv[i], "-n", 2 ) == 0 ){ fNodeName = TRUE; }
         //...
     };
 

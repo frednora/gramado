@@ -77,9 +77,9 @@ int main(int argc, char *argv[])
 
     for (i=1; i<argc; i++)
     {
-        if ( strncmp(argv[i],"--silent",8) == 0 )
+        if ( gramado_strncmp(argv[i],"--silent",8) == 0 )
             fSilent=TRUE;
-        //if ( strncmp(argv[i],"--silent",8) == 0 )
+        //if ( gramado_strncmp(argv[i],"--silent",8) == 0 )
             //fSilent=TRUE;
     };
 

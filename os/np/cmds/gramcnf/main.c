@@ -312,39 +312,39 @@ int main(int argc, char *argv[])
         // #todo
         // Create symmetric symbols for these flags. 
 
-        if ( strncmp( argv[i], "-a", 2) == 0 ){
+        if ( gramado_strncmp( argv[i], "-a", 2) == 0 ){
         }
-        if ( strncmp( argv[i], "-b", 2) == 0 ){
+        if ( gramado_strncmp( argv[i], "-b", 2) == 0 ){
         }
-        if ( strncmp( argv[i], "-s", 2) == 0 ){
+        if ( gramado_strncmp( argv[i], "-s", 2) == 0 ){
             asm_flag = 1;
         }
         // Generate Intermediate Representation (IR) file.
-        if (strncmp(argv[i], "-ir", 3) == 0) {
+        if (gramado_strncmp(argv[i], "-ir", 3) == 0) {
             fDumpIR = TRUE;
         }
         // Run program from a target binary (.gir).
-        if ( strncmp(argv[i], "-r", 2) == 0 || 
-             strncmp(argv[i], "--run", 5) == 0 ) 
+        if ( gramado_strncmp(argv[i], "-r", 2) == 0 || 
+             gramado_strncmp(argv[i], "--run", 5) == 0 ) 
         {
             fRunProgram = TRUE;
         }
         // Show stats
-        if ( strncmp( argv[i], "--stats", 7) == 0 ){
+        if ( gramado_strncmp( argv[i], "--stats", 7) == 0 ){
             fShowStats = TRUE;
         }
         // Dump (Show) output file.
         // Show assembly code.
-        if ( strncmp( argv[i], "--dumpo", 7) == 0 ){
+        if ( gramado_strncmp( argv[i], "--dumpo", 7) == 0 ){
             fDumpOutput = TRUE;
         }
         // help
-        if ( strncmp( argv[i], "--help", 6) == 0 ){
+        if ( gramado_strncmp( argv[i], "--help", 6) == 0 ){
             doUsage(argv);
             return EXIT_SUCCESS;
         }
         // version
-        if ( strncmp( argv[i], "--version", 9) == 0 ){
+        if ( gramado_strncmp( argv[i], "--version", 9) == 0 ){
             doVersion(argv);
             return EXIT_SUCCESS;
         }

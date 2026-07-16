@@ -259,28 +259,28 @@ int main(int argc, char *argv[])
         // #todo
         // Create symmetric symbols for these flags. 
 
-        if ( strncmp( argv[i], "-a", 2) == 0 ){
+        if ( gramado_strncmp( argv[i], "-a", 2) == 0 ){
         }
-        if ( strncmp( argv[i], "-b", 2) == 0 ){
+        if ( gramado_strncmp( argv[i], "-b", 2) == 0 ){
         }
-        if ( strncmp( argv[i], "-s", 2) == 0 ){
+        if ( gramado_strncmp( argv[i], "-s", 2) == 0 ){
             asm_flag = 1;
         }
         // Show stats
-        if ( strncmp( argv[i], "--stats", 7) == 0 ){
+        if ( gramado_strncmp( argv[i], "--stats", 7) == 0 ){
             fShowStats = TRUE;
         }
         // Dump (Show) output file.
-        if ( strncmp( argv[i], "--dumpo", 7) == 0 ){
+        if ( gramado_strncmp( argv[i], "--dumpo", 7) == 0 ){
             fDumpOutput = TRUE;
         }
         // help
-        if ( strncmp( argv[i], "--help", 6) == 0 ){
+        if ( gramado_strncmp( argv[i], "--help", 6) == 0 ){
             doUsage(argv);
             return EXIT_SUCCESS;
         }
         // version
-        if ( strncmp( argv[i], "--version", 9) == 0 ){
+        if ( gramado_strncmp( argv[i], "--version", 9) == 0 ){
             doVersion(argv);
             return EXIT_SUCCESS;
         }

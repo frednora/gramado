@@ -1,0 +1,18 @@
+
+print("Hello");
+
+box MyBox
+[
+
+meta meta1()
+{
+    name("background-color");  content("blue");    break;
+    name("foreground-color");  content("yellow");  break;
+}
+
+]
+
+print ("Bye");
+
+exit;
+
