@@ -351,15 +351,27 @@ fsLoadFile (
 // (32/2) próxima entrada! (16 words) 512 vezes!
 
     i=0; 
-    while (i<MaxEntries)
+    while (i < MaxEntries)
     {
         // Se a entrada não começar com a short '0x0000'.
         if ( __dir[z] != 0x0000 )
         {
-            //#bugbug: Estamos movendo shorts e não chars.
-            //memcpy ( tmpName, &__dir[z], (FileNameSize/2) );
+            // #bugbug:
+            // Maybe here we are not copying the whole file name 
+            // from the directory entry.
+
+            // #ps:
+            // Maybe this is working because the filename
+            // provided by the parameter is formatted
+            // in the same way it appears into the FAT entry.
+
             memcpy( tmpName, &__dir[z], FileNameSize );
             tmpName[FileNameSize] = 0;
+
+            // #test
+            // Bugfix
+            // memcpy(tmpName, &__dir[z], 11);
+            // tmpName[11] = 0;  // Null‑terminate
 
             Status = gramado_strncmp( file_name, tmpName, FileNameSize );
             if (Status == 0)

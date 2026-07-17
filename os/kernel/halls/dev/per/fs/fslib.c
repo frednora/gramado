@@ -2010,8 +2010,14 @@ __open_imp (
 // and some extra bytes.
 
     char pathname_local_copy[256];
-    memset(pathname_local_copy,0,256);
-    strncpy(pathname_local_copy,pathname,256);
+    memset(pathname_local_copy, 0, 256);
+    // #bugbug: Copy only the string, not the whole 256 bytes.
+    strncpy(pathname_local_copy, pathname, 256);
+    // pathname_local_copy[255] = 0;
+
+    // #todo:
+    // Maybe we can use it as safe measure
+    // size_t PathSize = strlen(pathname_local_copy);
 
 // ----------------------------
 // #hackhack

@@ -465,10 +465,9 @@ int search_path_in_the_inode_table(const char *path)
             if ((void*) tmp_inode != NULL)
             {
                 //#todo validation
-                
                 //#bugbug: types = (const char *)
                 Status = gramado_strncmp( path, tmp_inode->path, PathSize );
-                // OK
+                // ok?
                 if (Status == 0){
                     return (int) i;
                 } 
