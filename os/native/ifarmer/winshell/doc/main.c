@@ -282,17 +282,17 @@ static int doc_viewer( int argc, char *argv[] )
 
     for ( i=0; i < argc; i++ )
     {
-        if ( strncmp( argv[i], "-a", 2) == 0 ){
+        if ( gramado_strncmp( argv[i], "-a", 2) == 0 ){
         }
-        if ( strncmp( argv[i], "-b", 2) == 0 ){
+        if ( gramado_strncmp( argv[i], "-b", 2) == 0 ){
         }
-        if ( strncmp( argv[i], "-s", 2) == 0 ){
+        if ( gramado_strncmp( argv[i], "-s", 2) == 0 ){
             asm_flag = 1;
         }
-        if ( strncmp( argv[i], "--stats", 7) == 0 ){
+        if ( gramado_strncmp( argv[i], "--stats", 7) == 0 ){
             fShowStats = TRUE;
         }
-        if ( strncmp( argv[i], "--dumpo", 7) == 0 ){
+        if ( gramado_strncmp( argv[i], "--dumpo", 7) == 0 ){
             fDumpOutput = TRUE;
         }
         //...

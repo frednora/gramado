@@ -126,8 +126,8 @@ int main(int argc, char *argv[])
 */
 
 /*
-// Check signature.
-    if( strncmp(argv[0],"GWS.BIN",7) == 0 )
+// Check signature
+    if( gramado_strncmp(argv[0],"GWS.BIN",7) == 0 )
     {
         fSignature=TRUE;
         printf("signature ok\n");

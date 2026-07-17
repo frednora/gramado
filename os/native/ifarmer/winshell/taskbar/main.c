@@ -481,7 +481,7 @@ static void compareStrings(int fd)
 
     printf("\n");
 
-    if ( strncmp(prompt,"close",5) == 0 )
+    if ( gramado_strncmp(prompt, "close", 5) == 0 )
     {
          printf("~close()\n");
          close(fd);
@@ -491,14 +491,14 @@ static void compareStrings(int fd)
          goto exit_cmp;
     }
 
-    if ( strncmp(prompt,"exit",4) == 0 )
+    if ( gramado_strncmp(prompt,"exit",4) == 0 )
     {
          printf("~exit()\n");
          exit(0);
          goto exit_cmp;
     }
 
-    if ( strncmp(prompt,"test",4) == 0 )
+    if ( gramado_strncmp(prompt,"test",4) == 0 )
     {
         //get init tid.
         init_tid = (int) sc82(10021,0,0,0);
@@ -510,20 +510,20 @@ static void compareStrings(int fd)
         goto exit_cmp;
     }
 
-    if ( strncmp(prompt,"ascii",5) == 0 )
+    if ( gramado_strncmp(prompt,"ascii",5) == 0 )
     {
         //not working
         //print_ascii_table(fd);
         goto exit_cmp;
     }
 
-    if ( strncmp(prompt,"reboot",6) == 0 )
+    if ( gramado_strncmp(prompt,"reboot",6) == 0 )
     {
         rtl_reboot();
         goto exit_cmp;
     }
 
-    if ( strncmp(prompt,"cls",3) == 0 )
+    if ( gramado_strncmp(prompt,"cls",3) == 0 )
     {
         gws_redraw_window(fd,main_window,TRUE);
         //#define SYSTEMCALL_SETCURSOR  34
@@ -531,13 +531,13 @@ static void compareStrings(int fd)
         goto exit_cmp;
     }
 
-    if ( strncmp(prompt,"about",5) == 0 )
+    if ( gramado_strncmp(prompt,"about",5) == 0 )
     {
         printf("taskbar.bin: Command line application\n");
         goto exit_cmp;
     }
 
-    if ( strncmp(prompt,"x",1) == 0 ){
+    if ( gramado_strncmp(prompt, "x", 1) == 0 ){
         __test_gr(fd);
         goto exit_cmp;
     }

@@ -820,7 +820,7 @@ static void compareStrings(int fd)
 
 // Test kernel module
     unsigned long mod_ret=0;
-    if ( strncmp(prompt,"mod0",4) == 0 )
+    if ( gramado_strncmp(prompt,"mod0",4) == 0 )
     {
         // ---------------------------------------
         // Reason 1000: Initialize the module.
@@ -849,9 +849,8 @@ static void compareStrings(int fd)
         goto exit_cmp;
     }
 
-
 // Unlock network
-    if ( strncmp(prompt,"net-on",6) == 0 )
+    if ( gramado_strncmp(prompt, "net-on", 6) == 0 )
     {
         sc82 ( 22001, 
         1,  // ON 
@@ -863,7 +862,7 @@ static void compareStrings(int fd)
         goto exit_cmp;
     }
 // Lock network
-    if ( strncmp(prompt,"net-off",7) == 0 )
+    if ( gramado_strncmp(prompt, "net-off", 7) == 0 )
     {
         sc82 ( 22001, 
         0,  // OFF
@@ -879,7 +878,7 @@ static void compareStrings(int fd)
 // Quit embedded shell, 
 // launch #shell00.bin
 // and start listening to stderr.
-    if ( strncmp(prompt, "start-shell", 11) == 0 )
+    if ( gramado_strncmp(prompt, "start-shell", 11) == 0 )
     {
         // #todo: Create a worker for that.
         //printf("Quit embedded shell.\n");
@@ -897,7 +896,7 @@ static void compareStrings(int fd)
 // Maybe we're gonna connect to this server to get information
 // about our network.
     int netd_res = -1;
-    if ( strncmp(prompt,"start-netd", 10) == 0 )
+    if ( gramado_strncmp(prompt,"start-netd", 10) == 0 )
     {
         netd_res = 
             (int) gws_clone_and_execute2(
@@ -906,29 +905,28 @@ static void compareStrings(int fd)
         goto exit_cmp;
     }
 
-// #libc
-// Testing libc components.
-    if ( strncmp(prompt,"libc",4) == 0 )
+// #libc: Testing libc components
+    if ( gramado_strncmp(prompt,"libc",4) == 0 )
     {
         __libc_test(fd);
         goto exit_cmp; 
     }
 
 // Create file using rtl implementation, not posix.
-    if ( strncmp(prompt,"create-file",11) == 0 )
+    if ( gramado_strncmp(prompt,"create-file",11) == 0 )
     {
         rtl_create_empty_file("newfil.txt");
         goto exit_cmp; 
     }
 // Create directory using rtl implementation, not posix.
-    if ( strncmp(prompt,"create-dir",10) == 0 )
+    if ( gramado_strncmp(prompt,"create-dir",10) == 0 )
     {
         rtl_create_empty_directory("newdir");
         goto exit_cmp; 
     }
 
 // exit: Exit the terminal application.
-    if ( strncmp(prompt,"exit",4) == 0 )
+    if ( gramado_strncmp(prompt,"exit",4) == 0 )
     {
         cr();
         lf();
@@ -944,7 +942,7 @@ static void compareStrings(int fd)
 // Send systen message to init.bin and
 // do NOT wait for response.
 // But it will send us a message back.
-    if ( strncmp(prompt,"msg1",4) == 0 )
+    if ( gramado_strncmp(prompt,"msg1",4) == 0 )
     {
         __test_post_async_hello();
         goto exit_cmp;
@@ -953,7 +951,7 @@ static void compareStrings(int fd)
 // Send system message to init.bin and
 // do NOT wait for response.
 // But it will send us a message back.
-    if ( strncmp(prompt,"msg2",4) == 0 )
+    if ( gramado_strncmp(prompt,"msg2",4) == 0 )
     {
         // IN: PID for init process, msgcode, sig, sig.
         rtl_post_to_tid( 0, 44888, 1234, 5678 );
@@ -962,7 +960,7 @@ static void compareStrings(int fd)
 
 // Sleep until
 // IN: ms.
-    if ( strncmp(prompt,"sleep",5) == 0 ){
+    if ( gramado_strncmp(prompt,"sleep",5) == 0 ){
         rtl_sleep(2000);
         goto exit_cmp;
     }
@@ -970,17 +968,17 @@ static void compareStrings(int fd)
 // Network tests
 
 // arp
-    if ( strncmp(prompt,"n1", 2) == 0 ){
+    if ( gramado_strncmp(prompt,"n1", 2) == 0 ){
         sc82( 22003, 1, 0, 0 );
         goto exit_cmp;
     }
 // udp
-    if( strncmp(prompt,"n2", 2) == 0 ){
+    if( gramado_strncmp(prompt,"n2", 2) == 0 ){
         sc82 ( 22003, 2, 0, 0 );
         goto exit_cmp;
     }
 // dhcp
-    if ( strncmp(prompt,"n3", 2) == 0 ){
+    if ( gramado_strncmp(prompt,"n3", 2) == 0 ){
         sc82( 22003, 3, 0, 0 );
         goto exit_cmp;
     }
@@ -988,7 +986,7 @@ static void compareStrings(int fd)
 // Enable mouse.
 // Begging the display server to initialize
 // the mouse support. The kernel part and the ws part.
-    if ( strncmp(prompt,"ps2-qemu", 8) == 0 )
+    if ( gramado_strncmp(prompt,"ps2-qemu", 8) == 0 )
     {
         // #todo
         // Create a wrapper for that request.
@@ -1000,7 +998,7 @@ static void compareStrings(int fd)
 // yes or no.
 // see: stdio.c
     static int yn_result = -1;
-    if ( strncmp(prompt,"yn",2) == 0 )
+    if ( gramado_strncmp(prompt,"yn",2) == 0 )
     {
         yn_result = (int) rtl_y_or_n();
         if (yn_result == TRUE){
@@ -1018,7 +1016,7 @@ static void compareStrings(int fd)
 /*
 // open1
 // Test open() function.
-    if ( strncmp(prompt,"open1",5) == 0 )
+    if ( gramado_strncmp(prompt,"open1",5) == 0 )
     {
         // #test: ok, found.
         open("/DEV/TTY0",          0, "a+"); 
@@ -1032,7 +1030,7 @@ static void compareStrings(int fd)
     }
 */
 
-    if (strncmp(prompt, "hishell", 7) == 0)
+    if (gramado_strncmp(prompt, "hishell", 7) == 0)
     {
         if (ptym_fd<0) 
             goto exit_cmp;
@@ -1040,7 +1038,7 @@ static void compareStrings(int fd)
         goto exit_cmp;
     }
 
-    if (strncmp(prompt, "ptym", 4) == 0)
+    if (gramado_strncmp(prompt, "ptym", 4) == 0)
     {
         int fd = open("/DEV/PTYM", 0, "a+");
         printf("open(/DEV/PTYM) returned fd=%d\n", fd);
@@ -1049,7 +1047,7 @@ static void compareStrings(int fd)
     }
 
     char ptys_buffer[64];
-    if (strncmp(prompt, "ptys", 4) == 0)
+    if (gramado_strncmp(prompt, "ptys", 4) == 0)
     {
         int fd = open("/DEV/PTYS", 0, "a+");
         printf("open(/DEV/PTYS) returned fd=%d\n", fd);
@@ -1059,19 +1057,19 @@ static void compareStrings(int fd)
         goto exit_cmp;
     }
 
-    if ( strncmp(prompt,"int3",4) == 0 ){
+    if ( gramado_strncmp(prompt,"int3",4) == 0 ){
         do_int3();
         goto exit_cmp;
     }
 
     // GP fault
-    if ( strncmp(prompt,"cli",3) == 0 ){
+    if ( gramado_strncmp(prompt,"cli",3) == 0 ){
         do_cli();
         goto exit_cmp;
     }
 
 // Poweroff via ds.
-    if ( strncmp(prompt,"poweroff",8) == 0 )
+    if ( gramado_strncmp(prompt,"poweroff",8) == 0 )
     {
         terminal_poweroff_machine(fd);
         goto exit_cmp;
@@ -1079,7 +1077,7 @@ static void compareStrings(int fd)
 
 // Get window info: main window
 // IN: fd, wid
-    if ( strncmp(prompt,"w-main",6) == 0 ){
+    if ( gramado_strncmp(prompt,"w-main",6) == 0 ){
         __test_winfo( fd, main_window );
         goto exit_cmp;
     }
@@ -1087,19 +1085,19 @@ static void compareStrings(int fd)
 // Get window info: terminal window
 // Terminal.client_window_id
 // IN: fd, wid
-    if ( strncmp(prompt,"w-terminal",10) == 0 ){
+    if ( gramado_strncmp(prompt,"w-terminal",10) == 0 ){
         __test_winfo( fd, terminal_window );
         goto exit_cmp;
     }
 
-    if ( strncmp(prompt,"tputc",5) == 0 )
+    if ( gramado_strncmp(prompt,"tputc",5) == 0 )
     {
         //tputc(fd, Terminal.client_window_id, 'x', 1);
         goto exit_cmp;
     }
 
 // Print a string inside the client window?
-    if ( strncmp(prompt, "string", 6) == 0 )
+    if ( gramado_strncmp(prompt, "string", 6) == 0 )
     {
         cr(); 
         lf();
@@ -1109,7 +1107,7 @@ static void compareStrings(int fd)
 
 // Testing escape sequence in the 'kernel console'.
 // Test escape sequence do console no kernel.
-    if ( strncmp(prompt,"esc-k",5) == 0 )
+    if ( gramado_strncmp(prompt,"esc-k",5) == 0 )
     {
         // Moving the cursor:
         printf("\033[8Cm Fred\n");         // right
@@ -1122,30 +1120,30 @@ static void compareStrings(int fd)
 
 // Testing escape sequence inside the client window.
 // Test escape sequence do terminal.
-    if ( strncmp(prompt,"esc-t",5) == 0 ){
+    if ( gramado_strncmp(prompt,"esc-t",5) == 0 ){
         __test_escapesequence(fd);
         goto exit_cmp;
     }
 
 // Quit 'ds'.
-    if ( strncmp(prompt,"ds-quit",7) == 0 ){
+    if ( gramado_strncmp(prompt,"ds-quit",7) == 0 ){
         //gws_async_command(fd,88,0,0);  //ok
         goto exit_cmp;
     }
 
 // Testing ioctl
-    if ( strncmp(prompt,"ioctl",5) == 0 ){
+    if ( gramado_strncmp(prompt,"ioctl",5) == 0 ){
         __test_ioctl();
         goto exit_cmp;
     }
 
-    if ( strncmp(prompt,"winmax",6) == 0 ){
+    if ( gramado_strncmp(prompt,"winmax",6) == 0 ){
         __winmax(fd);
         clear_terminal_client_window(fd);
         goto exit_cmp;
     }
 
-    if ( strncmp(prompt,"winmin",6) == 0 ){
+    if ( gramado_strncmp(prompt,"winmin",6) == 0 ){
         __winmin(fd);
         //clear_terminal_client_window(fd);
         goto exit_cmp;
@@ -1153,33 +1151,33 @@ static void compareStrings(int fd)
 
 // #test: 
 // Testando serviços diversos.
-    if ( strncmp(prompt,"window",6) == 0 ){
+    if ( gramado_strncmp(prompt,"window",6) == 0 ){
         __test_gws(fd);
         goto exit_cmp;
     }
 
 // #test: 
 // Update all the windows in the desktop.
-    if ( strncmp(prompt,"desktop",7) == 0 ){
+    if ( gramado_strncmp(prompt,"desktop",7) == 0 ){
         gws_update_desktop(fd);
         goto exit_cmp;
     }
 
 // 'help'
-    if ( strncmp(prompt,"help",4) == 0 ){
+    if ( gramado_strncmp(prompt,"help",4) == 0 ){
         doHelp(fd);
         goto exit_cmp;
     }
 
 // 'about'
-    if ( strncmp(prompt,"about",5) == 0 ){
+    if ( gramado_strncmp(prompt,"about",5) == 0 ){
         doAbout(fd);
         goto exit_cmp;
     }
 
 // 'console'
     int fg_console = -1;
-    if ( strncmp(prompt,"console",7) == 0 )
+    if ( gramado_strncmp(prompt,"console",7) == 0 )
     {
         fg_console = (int) rtl_get_system_metrics(400);
         fg_console = (int) (fg_console & 0xFF);
@@ -1189,19 +1187,19 @@ static void compareStrings(int fd)
 
 // 'reboot'
 // reboot via ws.
-    if ( strncmp(prompt,"reboot",6) == 0 ){
+    if ( gramado_strncmp(prompt,"reboot",6) == 0 ){
         gws_reboot(fd);
         goto exit_cmp;
     }
 
 // 'cls'
-    if ( strncmp(prompt,"cls",3) == 0 ){
+    if ( gramado_strncmp(prompt,"cls",3) == 0 ){
         clear_terminal_client_window(fd);
         goto exit_cmp;
     }
 
 // 'clear'
-    if ( strncmp(prompt,"clear",5) == 0 ){
+    if ( gramado_strncmp(prompt,"clear",5) == 0 ){
         clear_terminal_client_window(fd);
         goto exit_cmp;
     }
@@ -1209,7 +1207,7 @@ static void compareStrings(int fd)
 /*
 // =============
 // 't1'
-    if ( strncmp(prompt,"t1",2) == 0 ){
+    if ( gramado_strncmp(prompt,"t1",2) == 0 ){
         goto exit_cmp;
     }
 */
@@ -4304,17 +4302,17 @@ int main(int argc, char *argv[])
         // #todo
         // Create useful flags for this application.
 
-        if ( strncmp( argv[i], "-a", 2) == 0 ){
+        if ( gramado_strncmp( argv[i], "-a", 2) == 0 ){
         }
-        if ( strncmp( argv[i], "-b", 2) == 0 ){
+        if ( gramado_strncmp( argv[i], "-b", 2) == 0 ){
         }
-        if ( strncmp( argv[i], "-s", 2) == 0 ){
+        if ( gramado_strncmp( argv[i], "-s", 2) == 0 ){
             asm_flag = 1;
         }
-        if ( strncmp( argv[i], "--stats", 7) == 0 ){
+        if ( gramado_strncmp( argv[i], "--stats", 7) == 0 ){
             fShowStats = TRUE;
         }
-        if ( strncmp( argv[i], "--dumpo", 7) == 0 ){
+        if ( gramado_strncmp( argv[i], "--dumpo", 7) == 0 ){
             fDumpOutput = TRUE;
         }
         //...

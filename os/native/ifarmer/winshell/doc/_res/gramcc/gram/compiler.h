@@ -1,4 +1,0 @@
-
-FILE *compiler ();
-
-
