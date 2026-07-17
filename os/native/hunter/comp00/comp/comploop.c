@@ -4740,30 +4740,30 @@ int comploop_main (int argc, char **argv)
         {
             //printf("%d: {%s}\n",i,argv[i]);
 
-            if ( strncmp( argv[i], "-1", 2 ) == 0 )
+            if ( gramado_strncmp( argv[i], "-1", 2 ) == 0 )
                 f1=TRUE;
-            if ( strncmp( argv[i], "-2", 2 ) == 0 )
+            if ( gramado_strncmp( argv[i], "-2", 2 ) == 0 )
                 f2=TRUE;
-            if ( strncmp( argv[i], "-3", 2 ) == 0 )
+            if ( gramado_strncmp( argv[i], "-3", 2 ) == 0 )
                 f3=TRUE;
-            if ( strncmp( argv[i], "-4", 2 ) == 0 )
+            if ( gramado_strncmp( argv[i], "-4", 2 ) == 0 )
                 f4=TRUE;
 
 
             // What is the first client to be launched?
 
             // Launches the default Terminal
-            if ( strncmp( argv[i], "--term", 4 ) == 0 ){
+            if ( gramado_strncmp( argv[i], "--term", 4 ) == 0 ){
                 fLaunchTerminal=TRUE;
             }
 
             // Launches the default Display Manager
-            if ( strncmp( argv[i], "--dm", 4 ) == 0 ){
+            if ( gramado_strncmp( argv[i], "--dm", 4 ) == 0 ){
                 fLaunchDM=TRUE;
             }
 
             // Launches the default taskbar
-            if ( strncmp( argv[i], "--tb", 4 ) == 0 ){
+            if ( gramado_strncmp( argv[i], "--tb", 4 ) == 0 ){
                 fLaunchTB=TRUE;
             }
 
