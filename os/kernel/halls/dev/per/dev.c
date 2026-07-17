@@ -121,7 +121,7 @@ file *devmgr_search_in_dev_list(const char *path)
                     // We already know the size of the given path.
                     // It can't be bigger than 64.
                     // see: devmgr.h.
-                    if ( kstrncmp( p, path, PathSize ) == 0 )
+                    if ( gramado_strncmp( p, path, PathSize ) == 0 )
                     {
                         // #debug
                         printk("Device found!\n");

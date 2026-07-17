@@ -43,8 +43,8 @@ string_compute_checksum (
     return (unsigned long) Total;
 }
 
-// strcmp:
-//     Compare two strings. 
+// strcmp: 
+// Compare two strings
 int strcmp(char *s1, char *s2)
 {
     register int i=0;
@@ -59,9 +59,29 @@ int strcmp(char *s1, char *s2)
     return ((int) (s1[i] - s2[i]));
 }
 
-// kstrncmp:
-//    Compare n bytes of two strings. 
-int kstrncmp( char *s1, char *s2, int len )
+/*
+ * gramado_strncmp:
+ * Custom string comparison function used in Gramado OS.
+ *
+ * Behavior:
+ * - Compares up to 'n' characters.
+ * - Returns 1 if a mismatch is found during comparison.
+ * - Returns 2 if one string ends before the other after 'n' characters.
+ * - Returns 0 only if both strings are identical and end together.
+ *
+ * Compatibility:
+ * - NOT POSIX/glibc compatible.
+ * - In POSIX/glibc, strncmp("meta1","meta",4) would return 0 (prefix match),
+ *   but here it returns 2 because one string continues after the other.
+ *
+ * Usage:
+ * - Safe for strict equality checks inside Gramado OS.
+ * - Not portable: use strcmp for keyword matching in the lexer.
+ */
+
+// gramado_strncmp:
+//    Compare n bytes of two strings
+int gramado_strncmp( char *s1, char *s2, int len )
 {
     register int n = len;
 
@@ -83,31 +103,37 @@ int kstrncmp( char *s1, char *s2, int len )
     return 0;
 }
 
+/*
+ * strncmp:
+ * Standard POSIX/glibc-compatible implementation.
+ *
+ * Behavior:
+ * - Compares up to 'n' characters of two strings.
+ * - Returns 0 if the first 'n' characters are equal.
+ * - Returns a negative value if s1 < s2.
+ * - Returns a positive value if s1 > s2.
+ *
+ * Compatibility:
+ * - Fully compliant with C standard and POSIX/glibc.
+ * - Ensures portable behavior across Linux, BSD, musl, newlib, etc.
+ */
 
-// str_cmp:
-//     Compare two strings.
-int str_cmp(unsigned char *str1, unsigned char *str2)
+/*
+int strncmp(const char *s1, const char *s2, size_t n)
 {
-    while ( *str1 == *str2 && 
-            *str1 != 0     && 
-            *str2 != 0 ) 
-    { 
-        str1++;  str2++; 
+    while (n > 0 && *s1 && (*s1 == *s2)) 
+    {
+        s1++;
+        s2++;
+        n--;
     };
-
-// Mesma quantidade de chars iguais
-    if (*str1 == *str2){
+    if (n == 0)
         return 0;
-    }
-    if (*str1 > *str2){
-        return 1;
-    }
-    if (*str1 < *str2){
-        return (int) (-1);
-    }
 
-    return (int) (-1);
+    return (unsigned char)*s1 - (unsigned char)*s2;
 }
+*/
+
 
 void *memcpy( void *v_dst, const void *v_src, unsigned long n )
 {

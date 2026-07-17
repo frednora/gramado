@@ -2026,9 +2026,9 @@ __open_imp (
 
     // # All the processes are associated with the current kernel console
     //   in the open file table.
-    if (kstrncmp(pathname_local_copy,"/dev/tty",8) == 0)
+    if (gramado_strncmp(pathname_local_copy, "/dev/tty", 8) == 0)
         return (int) STDOUT_FILENO;
-    if (kstrncmp(pathname_local_copy,"/DEV/TTY",8) == 0)
+    if (gramado_strncmp(pathname_local_copy, "/DEV/TTY", 8) == 0)
         return (int) STDOUT_FILENO;
 
 // /dev/console	
@@ -2037,11 +2037,10 @@ __open_imp (
 //     This is often mapped to the first virtual terminal (/dev/tty0) or 
 //     a serial device in headless setups.
 
-    if (kstrncmp(pathname_local_copy,"/dev/console",12) == 0)
+    if (gramado_strncmp(pathname_local_copy, "/dev/console", 12) == 0)
         return (int) STDOUT_FILENO;
-    if (kstrncmp(pathname_local_copy,"/DEV/CONSOLE",12) == 0)
+    if (gramado_strncmp(pathname_local_copy, "/DEV/CONSOLE", 12) == 0)
         return (int) STDOUT_FILENO;
-
 
 //----------------------------
 

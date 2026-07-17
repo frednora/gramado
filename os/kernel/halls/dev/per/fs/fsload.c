@@ -361,7 +361,7 @@ fsLoadFile (
             memcpy( tmpName, &__dir[z], FileNameSize );
             tmpName[FileNameSize] = 0;
 
-            Status = kstrncmp( file_name, tmpName, FileNameSize );
+            Status = gramado_strncmp( file_name, tmpName, FileNameSize );
             if (Status == 0)
             {
                 SavedDirEntry = i; 

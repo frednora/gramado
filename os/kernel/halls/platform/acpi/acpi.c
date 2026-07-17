@@ -58,7 +58,7 @@ int acpi_check_header02(unsigned int *ptr, char *sig)
     char Sum=0;
 
     // Match
-    if (kstrncmp(ptr, sig, 4) == 0)
+    if (gramado_strncmp(ptr, sig, 4) == 0)
     {
         len = *(ptr + 1);
         while (0 < len--)
@@ -230,14 +230,14 @@ static int __acpi_rsdp(unsigned long rsdp_pointer)
         //refresh_screen();
 
         /*
-        // #bugbug: kstrncmp() is not working.
-        if (kstrncmp(xsdt->Signature, "XSDT", 4) == 0)
+
+        if (gramado_strncmp(xsdt->Signature, "XSDT", 4) == 0)
         {
             printk("XSDT ok\n");
             refresh_screen();
             return TRUE;
         }
-        if (kstrncmp(xsdt->Signature, "RSDT", 4) == 0) 
+        if (gramado_strncmp(xsdt->Signature, "RSDT", 4) == 0) 
         {
             printk("RSDT ok\n");
             refresh_screen();

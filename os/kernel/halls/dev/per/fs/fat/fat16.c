@@ -469,12 +469,12 @@ fsGetFileSize (
     i=0; 
     while (i < max)
     {
-        // Se a entrada não for vazia.
+        // If the entry is NOT empty
         if ( Dir[z] != 0 )
         {
             memcpy ( NameX, &Dir[z], szFileName );
             NameX[szFileName] = 0;
-            CmpStatus = kstrncmp( file_name, NameX, szFileName );
+            CmpStatus = gramado_strncmp( file_name, NameX, szFileName );
             if (CmpStatus == 0){
                 goto found;
             }

@@ -1132,7 +1132,7 @@ static int archinit(void)
     char *eisa_p;
     int EISA_bus=0;
     eisa_p = 0x000FFFD9;
-	if (kstrncmp(eisa_p, "EISA", 4) == 0)
+	if (gramado_strncmp(eisa_p, "EISA", 4) == 0)
 		EISA_bus = 1;
     printk("EISA_bus %d\n",EISA_bus);
     while(1){}

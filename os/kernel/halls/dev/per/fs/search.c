@@ -212,8 +212,8 @@ __search_in_dir_imp (
             memcpy( Name_InEntry, &dir[j], 11 );
             Name_InEntry[11] = 0;
 
-            //Status = (int) kstrncmp ( file_name, Name_InEntry, 11 );
-            Status = (int) kstrncmp( Name_Desired, Name_InEntry, 11 );
+            //Status = (int) gramado_strncmp ( file_name, Name_InEntry, 11 );
+            Status = (int) gramado_strncmp( Name_Desired, Name_InEntry, 11 );
             
             // Found!
             // #todo:
@@ -467,7 +467,7 @@ int search_path_in_the_inode_table(const char *path)
                 //#todo validation
                 
                 //#bugbug: types = (const char *)
-                Status = kstrncmp( path, tmp_inode->path, PathSize );
+                Status = gramado_strncmp( path, tmp_inode->path, PathSize );
                 // OK
                 if (Status == 0){
                     return (int) i;

@@ -562,8 +562,7 @@ static int __gprot_handle_http(char *buf, uint16_t sport, uint16_t dport)
     if (!buf) 
         return -1;
 
-
-    if (kstrncmp(buf, "GET /", 5) == 0)
+    if (gramado_strncmp(buf, "GET /", 5) == 0)
     {
         printk("GET received\n");
 
@@ -588,7 +587,7 @@ static int __gprot_handle_http(char *buf, uint16_t sport, uint16_t dport)
         goto done;
     }
 
-    if (kstrncmp(buf, "POST /", 6) == 0)
+    if (gramado_strncmp(buf, "POST /", 6) == 0)
     {
         // Response
         memset(buf, 0, MessageSize);

@@ -10,9 +10,50 @@ void *memcpy   ( void *v_dst, const void *v_src, unsigned long n );
 void *memcpy32 ( void *v_dst, const void *v_src, unsigned long n );
 void *memcpy64 ( void *v_dst, const void *v_src, unsigned long n );
 
+// strcmp: 
+// Compare two strings
 int strcmp (char * s1, char * s2);
-int kstrncmp ( char *s1, char *s2, int len );
-int str_cmp(unsigned char *str1, unsigned char *str2);
+
+/*
+ * gramado_strncmp:
+ * Custom string comparison function used in Gramado OS.
+ *
+ * Behavior:
+ * - Compares up to 'n' characters.
+ * - Returns 1 if a mismatch is found during comparison.
+ * - Returns 2 if one string ends before the other after 'n' characters.
+ * - Returns 0 only if both strings are identical and end together.
+ *
+ * Compatibility:
+ * - NOT POSIX/glibc compatible.
+ * - In POSIX/glibc, strncmp("meta1","meta",4) would return 0 (prefix match),
+ *   but here it returns 2 because one string continues after the other.
+ *
+ * Usage:
+ * - Safe for strict equality checks inside Gramado OS.
+ * - Not portable: use strcmp for keyword matching in the lexer.
+ */
+
+int gramado_strncmp ( char *s1, char *s2, int len );
+
+/*
+ * strncmp:
+ * Standard POSIX/glibc-compatible implementation.
+ *
+ * Behavior:
+ * - Compares up to 'n' characters of two strings.
+ * - Returns 0 if the first 'n' characters are equal.
+ * - Returns a negative value if s1 < s2.
+ * - Returns a positive value if s1 > s2.
+ *
+ * Compatibility:
+ * - Fully compliant with C standard and POSIX/glibc.
+ * - Ensures portable behavior across Linux, BSD, musl, newlib, etc.
+ */
+
+// int strncmp(const char *s1, const char *s2, size_t n);
+
+
 
 char *safe_strcpy(char *to, const char *from, size_t maxlen);
 char *strcpy ( char *to, const char *from );

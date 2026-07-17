@@ -748,7 +748,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 
 // about: 
 // Print banner but do not clear the screen (FALSE).
-    if ( kstrncmp( cmdline, "about", 5 ) == 0 )
+    if ( gramado_strncmp( cmdline, "about", 5 ) == 0 )
     {
         wink_show_banner(FALSE);
         printk("The kernel console\n");
@@ -771,7 +771,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 
 // boot-m:
 // Save 'M' (Show menu)
-    if (kstrncmp(cmdline, "boot-m", 6) == 0)
+    if (gramado_strncmp(cmdline, "boot-m", 6) == 0)
     {
         /*
         printk("Setting boot mode: SHOW MENU\n");
@@ -788,7 +788,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 
 // boot-s:
 // Save 'S' (Skip menu)
-    if (kstrncmp(cmdline, "boot-s", 6) == 0)
+    if (gramado_strncmp(cmdline, "boot-s", 6) == 0)
     {
         /*
         printk("Setting boot mode: SKIP MENU\n");
@@ -804,7 +804,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
     }
 
 // active: Count active threads.
-    if ( kstrncmp(cmdline,"active",6) == 0){
+    if ( gramado_strncmp(cmdline,"active",6) == 0){
         LongValue = (unsigned long) sched_count_active_threads();
         printk("Active threads: {%d}\n",LongValue);
         goto exit_cmp;
@@ -814,7 +814,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 // #todo
 // Use the structure smp_info 
 // to show the information about the smp initialization.
-    if ( kstrncmp(cmdline,"smp",3) == 0 )
+    if ( gramado_strncmp(cmdline,"smp",3) == 0 )
     {
         //printk("Processor count: {%d}\n", 
             //smp_info.mptable_number_of_processors );
@@ -824,7 +824,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
     }
 
 // Unmask lapic timer.
-    if ( kstrncmp(cmdline,"timer",5) == 0 )
+    if ( gramado_strncmp(cmdline,"timer",5) == 0 )
     {
         // IN: vector number, 1=masked
         //apic_timer_setup_periodic(220,0);
@@ -832,7 +832,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
     }
 
 // Has syscall support?
-    if ( kstrncmp(cmdline,"syscall",7) == 0 )
+    if ( gramado_strncmp(cmdline,"syscall",7) == 0 )
     {
         //probe_if_cpu_has_support_to_syscall();
         initialize_syscall();
@@ -840,7 +840,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
     }
 
 
-    if ( kstrncmp(cmdline,"intxx",5) == 0 )
+    if ( gramado_strncmp(cmdline,"intxx",5) == 0 )
     {
         //#test
         //asm (" int $0x80 \n");  // Not allowed from ring 0.
@@ -848,11 +848,9 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         goto exit_cmp;
     }
 
-
-
 // mbr:
 // see: storage.c
-    if ( kstrncmp(cmdline,"mbr",3) == 0 ){
+    if ( gramado_strncmp(cmdline,"mbr",3) == 0 ){
         disk_show_mbr_info();
         goto exit_cmp;
     }
@@ -861,32 +859,32 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 // Network stuff
 //
 
-    if ( kstrncmp(cmdline,"test-nic",8) == 0 ){
+    if ( gramado_strncmp(cmdline,"test-nic",8) == 0 ){
         network_test_NIC();
         goto exit_cmp;
     }
-    // Print arp table.
-    if ( kstrncmp(cmdline,"arp",3) == 0 ){
+    // Print ARP table
+    if ( gramado_strncmp(cmdline,"arp",3) == 0 ){
         arp_show_table();
         goto exit_cmp;
     }
-    if ( kstrncmp(cmdline,"test-arp",8) == 0 ){
+    if ( gramado_strncmp(cmdline,"test-arp",8) == 0 ){
         network_send_arp_request();
         goto exit_cmp;
     }
-    if ( kstrncmp(cmdline,"test-arp-2",10) == 0 ){
+    if ( gramado_strncmp(cmdline,"test-arp-2",10) == 0 ){
         network_send_arp_request2();
         goto exit_cmp;
     }
 
-    if (kstrncmp(cmdline,"test-tcp",8) == 0)
+    if (gramado_strncmp(cmdline,"test-tcp",8) == 0)
     {
         test_sending_tcp();
         goto exit_cmp;
     }
 
 
-    if (kstrncmp(cmdline,"udp",3) == 0)
+    if (gramado_strncmp(cmdline,"udp",3) == 0)
     {
         //#test: Test sender.
         network_test_udp();
@@ -894,32 +892,32 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         goto exit_cmp;
     }
 
-    if ( kstrncmp(cmdline,"test-udp",8) == 0 ){
+    if ( gramado_strncmp(cmdline,"test-udp",8) == 0 ){
         network_test_udp();
         goto exit_cmp;
     }
-    if ( kstrncmp(cmdline,"test-udp-2",10) == 0 ){
+    if ( gramado_strncmp(cmdline,"test-udp-2",10) == 0 ){
         network_test_udp2();
         goto exit_cmp;
     }
-    if ( kstrncmp(cmdline,"dhcp",4) == 0 ){
+    if ( gramado_strncmp(cmdline,"dhcp",4) == 0 ){
         network_show_dhcp_info();
         goto exit_cmp;
     }
-    if ( kstrncmp(cmdline,"test-dhcp",9) == 0 ){
+    if ( gramado_strncmp(cmdline,"test-dhcp",9) == 0 ){
         network_initialize_dhcp();
         goto exit_cmp;
     }
 
     // net-on (same as term00)
-    if ( kstrncmp(cmdline,"net-on",6) == 0 )
+    if ( gramado_strncmp(cmdline,"net-on",6) == 0 )
     {
         networkUnlock();
         network_initialize_dhcp();
         goto exit_cmp;
     }
     // net-off (same as term00)
-    if ( kstrncmp(cmdline,"net-off",7) == 0 )
+    if ( gramado_strncmp(cmdline,"net-off",7) == 0 )
     {
         networkLock();
         goto exit_cmp;
@@ -927,7 +925,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 
 
 // string: Testing string functions.
-    if ( kstrncmp(cmdline,"string",6) == 0 )
+    if ( gramado_strncmp(cmdline,"string",6) == 0 )
     {
         console_print_indent(4,fg_console);
         console_write_string(fg_console,"This is a string\n");
@@ -938,7 +936,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
     }
 
 // csi: Test CSI cursor movement and editing commands.
-    if ( kstrncmp(cmdline,"csi",3) == 0 )
+    if ( gramado_strncmp(cmdline,"csi",3) == 0 )
     {
         console_write_string(fg_console, "Testing CSI sequences...\n");
 
@@ -990,30 +988,28 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 
 // see: mod.c
 // Vamos testar um modulo que ja foi carregado previamente?
-    if ( kstrncmp(cmdline,"mod",3) == 0 ){
+    if ( gramado_strncmp(cmdline,"mod",3) == 0 ){
         test_mod0();
         goto exit_cmp;
     }
-    if ( kstrncmp(cmdline,"mod0",4) == 0 ){
+    if ( gramado_strncmp(cmdline,"mod0",4) == 0 ){
         test_mod0();
         goto exit_cmp;
     }
-    if ( kstrncmp(cmdline,"dungeon",7) == 0 ){
+    if ( gramado_strncmp(cmdline,"dungeon",7) == 0 ){
         test_mod0();
         goto exit_cmp;
     }
 
 // see: kmain.c
-    if ( kstrncmp(cmdline,"ap-hlt",6) == 0 ){
+    if ( gramado_strncmp(cmdline,"ap-hlt",6) == 0 ){
         welcome_ap_hlt();
         goto exit_cmp;
     }
 
-
-
 // dir:
 // List the files in a given directory.
-    if ( kstrncmp(cmdline,"dir",3) == 0 )
+    if ( gramado_strncmp(cmdline,"dir",3) == 0 )
     {
         fsList("[");  // root dir. Same as '/'.
         //fsList("GRAMADO");
@@ -1031,21 +1027,21 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 // com a resolução antiga e precisa ser atualizados.
 
 /*
-    if ( kstrncmp(cmdline,"vga1",4) == 0 ){
+    if ( gramado_strncmp(cmdline,"vga1",4) == 0 ){
         printk ("vga1: This is a work in progress ...\n");
         goto exit_cmp;
     }
 */
 
 // exit: Exit the embedded kernel console.
-    if ( kstrncmp(cmdline,"exit",4) == 0 ){
+    if ( gramado_strncmp(cmdline,"exit",4) == 0 ){
         input_exit_kernel_console(); 
         goto exit_cmp;
     }
 
 // disk: Show disk info.
 // See: storage.c
-    if ( kstrncmp( cmdline, "disk", 4 ) == 0 )
+    if ( gramado_strncmp( cmdline, "disk", 4 ) == 0 )
     {
         //diskShowCurrentDiskInfo();  // Current disk
         disk_show_info();  // All disks.
@@ -1054,7 +1050,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 
 // ata: Show some disk information.
 // See: atainfo.c
-    if ( kstrncmp( cmdline, "ata", 3 ) == 0 )
+    if ( gramado_strncmp( cmdline, "ata", 3 ) == 0 )
     {
         //printk("ATA controller information:\n");
         //ata_show_ata_controller_info();
@@ -1067,7 +1063,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
     }
 
 // volume: Show some volume information.
-    if ( kstrncmp(cmdline,"volume",6) == 0 )
+    if ( gramado_strncmp(cmdline,"volume",6) == 0 )
     {
         volume_show_info();
         goto exit_cmp;
@@ -1075,7 +1071,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 // #test
 // Get volume label from the first entry.
 // see: fat16.c
-    if ( kstrncmp(cmdline,"vol-label",9) == 0 ){
+    if ( gramado_strncmp(cmdline,"vol-label",9) == 0 ){
         test_fat16_find_volume_info();
         goto exit_cmp;
     }
@@ -1083,7 +1079,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 // device: Device list.
 // Show tty devices, pci devices and devices with regular file.
 // See: devmgr.c
-    if ( kstrncmp(cmdline,"device",6) == 0 )
+    if ( gramado_strncmp(cmdline,"device",6) == 0 )
     {
         //printk("\n");
         //printk("Devices:\n");
@@ -1116,40 +1112,40 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 
 // pci:
 // See: pciinfo.c
-    if ( kstrncmp( cmdline, "pci", 3 ) == 0 ){
+    if ( gramado_strncmp( cmdline, "pci", 3 ) == 0 ){
         printk("~pci:\n");
         pciInfo();
         goto exit_cmp;
     }
 
 // full initialization of PS2 kbd/mouse interface.
-    if ( kstrncmp( cmdline, "ps2-full", 8) == 0){
+    if ( gramado_strncmp( cmdline, "ps2-full", 8) == 0){
         printk("~full ps2 initialization\n");
         DDINIT_ps2();
         goto exit_cmp;
     }
 
 // user:
-    if ( kstrncmp( cmdline, "user", 4 ) == 0 ){
+    if ( gramado_strncmp( cmdline, "user", 4 ) == 0 ){
         do_user();
         goto exit_cmp;
     }
 
 // cls:
-    if ( kstrncmp( cmdline, "cls", 3 ) == 0 ){
+    if ( gramado_strncmp( cmdline, "cls", 3 ) == 0 ){
         console_clear();
         goto exit_cmp;
     }
 
 // console:
-    if ( kstrncmp( cmdline, "console", 7 ) == 0 )
+    if ( gramado_strncmp( cmdline, "console", 7 ) == 0 )
     {
         printk("Console number: {%d}\n",fg_console);
         goto exit_cmp;
     }
 
 // sched:
-    if ( kstrncmp( cmdline, "sched", 5 ) == 0 )
+    if ( gramado_strncmp( cmdline, "sched", 5 ) == 0 )
     {
         sched_show_info();
         goto exit_cmp;
@@ -1157,7 +1153,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 
 // cpu: Display cpu info.
 // see: x64info.c
-    if ( kstrncmp( cmdline, "cpu", 3 ) == 0 ){
+    if ( gramado_strncmp( cmdline, "cpu", 3 ) == 0 ){
         x64_info();
         //extra
         if (SchedulerInfo.initialized == TRUE)
@@ -1166,13 +1162,13 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
     }
 
 // display:
-    if ( kstrncmp( cmdline, "display", 7 ) == 0 ){
+    if ( gramado_strncmp( cmdline, "display", 7 ) == 0 ){
         bldisp_show_info();  //bl display device.
         goto exit_cmp;
     }
 
 // pit: Display PIT info.
-    if ( kstrncmp( cmdline, "pit", 3 ) == 0 )
+    if ( gramado_strncmp( cmdline, "pit", 3 ) == 0 )
     {
         // #todo: Create pitShowInfo() in pit.c.
         printk("Dev freq: %d | Clocks per sec: %d HZ | Period: %d\n",
@@ -1183,7 +1179,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
     }
 
 // help:
-    if ( kstrncmp( cmdline, "help", 4 ) == 0 ){
+    if ( gramado_strncmp( cmdline, "help", 4 ) == 0 ){
         printk("Commands: about, help, reboot, cpu, memory, ...\n");
         goto exit_cmp;
     }
@@ -1194,7 +1190,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
     unsigned long *b;
     // We have two gdts: EARLY_GDT64 and xxx_gdt;
     // 
-    if ( kstrncmp( cmdline, "gdt", 3 ) == 0 )
+    if ( gramado_strncmp( cmdline, "gdt", 3 ) == 0 )
     {
         a = (unsigned long *) &xxx_gdt[0];
         b = (unsigned long *) &xxx_gdt[0] + 32;
@@ -1224,7 +1220,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
     }
 
 // memory:
-    if ( kstrncmp( cmdline, "memory", 6 ) == 0 ){
+    if ( gramado_strncmp( cmdline, "memory", 6 ) == 0 ){
         mmShowMemoryInfo();
         goto exit_cmp;
     }
@@ -1233,7 +1229,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 // Show paged memory list.
 // #todo: Explain it better.
 // IN: max index.
-    if ( kstrncmp(cmdline,"mm1",3) == 0 ){
+    if ( gramado_strncmp(cmdline,"mm1",3) == 0 ){
         mmShowPagedMemoryList(512); 
         goto exit_cmp;
     }
@@ -1242,14 +1238,14 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 // Show the blocks allocated by the kernel allocator.
 // It's inside the kernel heap.
 // #todo: Explain it better.
-    if ( kstrncmp(cmdline,"mm2",3) == 0 ){
+    if ( gramado_strncmp(cmdline,"mm2",3) == 0 ){
         mmShowMemoryBlocksForTheKernelAllocator(); 
         goto exit_cmp;
     }
 
 // Simple test for heap allocation, free, and reuse.
 // Allocates memory, frees it, and reuses it in a loop.
-    if ( kstrncmp(cmdline,"mm-reuse",8) == 0 ){
+    if ( gramado_strncmp(cmdline,"mm-reuse",8) == 0 ){
 
         // Test heap reuse
         test_heap_reuse();
@@ -1271,7 +1267,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
     // #caution: 
     // 768mb mark (kernel image and kernel stuff)
     //char *mm768  = (char *) 0x30000000;  
-    if ( kstrncmp(cmdline,"mm256",5) == 0 )
+    if ( gramado_strncmp(cmdline,"mm256",5) == 0 )
     {
         if (CONFIG_TEST_MMBLOCK00 != 1)
             goto exit_cmp;
@@ -1308,7 +1304,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
     //char *mm2mb  = (char *) 0x00400000;
     //char *mm2mb  = (char *) 0x0E000000;
     char *mm2mb  = (char *) (0x00400000 + (0x200000 * 99));
-    if ( kstrncmp(cmdline,"mm2mb",5) == 0 )
+    if ( gramado_strncmp(cmdline,"mm2mb",5) == 0 )
     {
         mm2mb[8] = '2';
         if (mm2mb[8] == '2')
@@ -1325,20 +1321,20 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 // Test the use of 'pathnames' with multiple levels.
 // #test: This test will allocate some pages
 // for the buffer where we are gonna load the file.
-    if ( kstrncmp(cmdline,"path",4) == 0 ){
+    if ( gramado_strncmp(cmdline,"path",4) == 0 ){
         //__test_path();
         goto exit_cmp;
     }
 
 // process:
-    if ( kstrncmp( cmdline, "process", 7 ) == 0 )
+    if ( gramado_strncmp( cmdline, "process", 7 ) == 0 )
     {
         show_process_information();
         goto exit_cmp;
     }
 
 // thread:
-    if ( kstrncmp( cmdline, "thread", 6 ) == 0 )
+    if ( gramado_strncmp( cmdline, "thread", 6 ) == 0 )
     {
         show_thread_information();
         goto exit_cmp;
@@ -1349,7 +1345,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 // #bugbug: We're still working to support ring 0 threads.
 // See: Flags in config.h
 
-    if ( kstrncmp( cmdline, "r0-thread", 9 ) == 0 )
+    if ( gramado_strncmp( cmdline, "r0-thread", 9 ) == 0 )
     {
         setup_minimal_ring0_thread();
         goto exit_cmp;
@@ -1360,7 +1356,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
     unsigned char *ap_signature_pointer = 
         (unsigned char *) 0x00029000; //0x9000;
 
-    if ( kstrncmp( cmdline, "ap", 2 ) == 0 )
+    if ( gramado_strncmp( cmdline, "ap", 2 ) == 0 )
     {
         if (ap_signature_pointer[0] == 0xA0 && 
             ap_signature_pointer[1] == 0xA0)
@@ -1374,7 +1370,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 // Testing the full initialization of ps2 interface.
 // This is a work in progress.
 // See: i8042.c
-    if ( kstrncmp( cmdline, "ps2-qemu", 8 ) == 0 )
+    if ( gramado_strncmp( cmdline, "ps2-qemu", 8 ) == 0 )
     {
         if (HVInfo.initialized == TRUE){
             if (HVInfo.type == HV_TYPE_TCG)
@@ -1389,7 +1385,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 // ps2-kvm: Initializze the ps2 support when running on kvm.
 // #bugbug
 // The initialization is not working on kvm.
-    if ( kstrncmp( cmdline, "ps2-kvm", 7 ) == 0 )
+    if ( gramado_strncmp( cmdline, "ps2-kvm", 7 ) == 0 )
     {
         printk ("#todo: Initialization not working on kvm\n");
         if (HVInfo.initialized == TRUE){
@@ -1402,14 +1398,14 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
     }
 
 // reboot:
-    if ( kstrncmp( cmdline, "reboot", 6 ) == 0 )
+    if ( gramado_strncmp( cmdline, "reboot", 6 ) == 0 )
     {
         keReboot();
         goto exit_cmp;
     }
 
 // beep:
-    if ( kstrncmp( cmdline, "beep", 4 ) == 0 ){
+    if ( gramado_strncmp( cmdline, "beep", 4 ) == 0 ){
         hal_test_speaker();
         goto exit_cmp;
     }
@@ -1424,7 +1420,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 
     struct tty_d *myTTY00 = (struct tty_d *) &CONSOLE_TTYS[0];
     struct tty_d *myTTY01 = (struct tty_d *) &CONSOLE_TTYS[1];
-    if ( kstrncmp( cmdline, "tty", 3 ) == 0 )
+    if ( gramado_strncmp( cmdline, "tty", 3 ) == 0 )
     {
         // Select the worker,
         // it determines the destination.
@@ -1457,7 +1453,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 // serial: Display serial support info.
 // #todo: Only com1 for now.
 // But we can get information for all the 4 ports.
-    if ( kstrncmp( cmdline, "serial", 6 ) == 0 )
+    if ( gramado_strncmp( cmdline, "serial", 6 ) == 0 )
     {
         //#todo: Create serialShowInfo in serial.c.
         //#todo: Only com1 for now.
@@ -1476,7 +1472,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 
 // ========
 // close: Sending a MSG_CLOSE messsage to the init thread.
-    if ( kstrncmp(cmdline,"close",5) == 0 ){
+    if ( gramado_strncmp(cmdline,"close",5) == 0 ){
         keCloseInitProcess();
         goto exit_cmp;
     }
