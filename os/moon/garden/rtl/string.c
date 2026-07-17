@@ -738,7 +738,7 @@ int strcmp (const char *s1, const char *s2)
  * - Not portable: use strcmp for keyword matching in the lexer.
  */
 
-// strncmp:
+// gramado_strncmp:
 //  Compare two strings
 // See:
 // http://man7.org/linux/man-pages/man3/strcmp.3.html

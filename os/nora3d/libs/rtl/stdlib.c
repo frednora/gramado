@@ -1,6 +1,6 @@
-
 // stdlib.c
-// Standard library.
+// Standard library
+// Created by Fred Nora
 
 #include <types.h>
 #include <errno.h>
@@ -375,15 +375,14 @@ static char *__findenv ( const char *name, int *offset )
                  fail = 1;
         };
  
-        //if ( strncmp ( c, (char *) name, len ) == 0 && c[len] == '=' ) 
-        //if ( strncmp2 ( (const char *) c, (const char *) name, len ) == 0 && c[len] == '=' ) 
-        
+        //if ( stdlib_strncmp ( c, (char *) name, len ) == 0 && c[len] == '=' ) 
+        //if ( stdlib_strncmp ( (const char *) c, (const char *) name, len ) == 0 && c[len] == '=' ) 
         
         //if ( c[0] == name[0] && c[len] == '=' )  //ok
-        if (fail == 0){
+        if (fail == 0)
+        {
             *offset = p - environ;
-            // OK.
-            return c + len + 1;
+            return c + len + 1;  // ok
         }
     };
 
