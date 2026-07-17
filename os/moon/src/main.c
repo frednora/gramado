@@ -417,29 +417,29 @@ static int input_compare_string(void)
 
 // #test
 // Enter the cool menu.
-    if (strncmp(prompt,"menu",4) == 0){
+    if (gramado_strncmp(prompt,"menu",4) == 0){
         loopMenu();
         goto exit_cmp;
     }
 
-    if (strncmp(prompt,"exit",4) == 0){
+    if (gramado_strncmp(prompt,"exit",4) == 0){
         loopMenu_ExitGramadoOS();
         goto exit_cmp;
     }
 
-    if ( strncmp(prompt,"quit",4) == 0 ){
+    if ( gramado_strncmp(prompt,"quit",4) == 0 ){
         isTimeToQuitCmdLine=TRUE;
         goto exit_cmp;
     }
 
     //#test
-    if ( strncmp(prompt,"list",4) == 0 ){
+    if ( gramado_strncmp(prompt,"list",4) == 0 ){
         do_launch_list();
         goto exit_cmp;
     }
 
     //char tty_buffer[256];
-    if ( strncmp(prompt,"t1",2) == 0 )
+    if ( gramado_strncmp(prompt,"t1",2) == 0 )
     {
         //#test
         // write and read from a tty that belongs to an oen file.
@@ -472,7 +472,7 @@ static int input_compare_string(void)
         goto exit_cmp;
     }
 
-    if ( strncmp(prompt,"cls",3) == 0 ){
+    if ( gramado_strncmp(prompt, "cls",3) == 0 ){
         do_clear_console();
         goto exit_cmp;
     }
@@ -481,7 +481,7 @@ static int input_compare_string(void)
     // The purpose of this command is
     // helping the implementation of fork() syscall,
     int fork_rv = -1;
-    if ( strncmp(prompt,"fork",4) == 0 )
+    if ( gramado_strncmp(prompt,"fork",4) == 0 )
     {
         fork_rv = (int) fork();
         printf ("return value: %d\n",fork_rv);
@@ -489,7 +489,7 @@ static int input_compare_string(void)
     }
 
     // Testing syscall instruction
-    if ( strncmp(prompt,"syscall",7) == 0 )
+    if ( gramado_strncmp(prompt,"syscall",7) == 0 )
     {
         printf ("syscall: BEFORE\n");
         asm ("syscall \n");
@@ -498,7 +498,7 @@ static int input_compare_string(void)
     }
 
     // Testing PF
-    if ( strncmp(prompt,"pf",2) == 0 )
+    if ( gramado_strncmp(prompt, "pf",2) == 0 )
     {
         /*
         // Remember: KERNEL PANIC. We can't kill the init process.
@@ -512,34 +512,34 @@ static int input_compare_string(void)
 
     // #execve
     int execve_rv = -1;
-    if ( strncmp(prompt,"execve",6) == 0 )
+    if ( gramado_strncmp(prompt,"execve",6) == 0 )
     {
         //execve_rv = (int) execve("test.bin",?,?);
         //printf ("return value: %d\n",execve_rv);
         goto exit_cmp;
     }
 
-    if ( strncmp(prompt,"int3",4) == 0 ){
+    if ( gramado_strncmp(prompt,"int3",4) == 0 ){
         do_int3();
         goto exit_cmp;
     }
 
-    if ( strncmp(prompt,"cli",3) == 0 ){
+    if ( gramado_strncmp(prompt,"cli",3) == 0 ){
         do_cli();
         goto exit_cmp;
     }
-    if ( strncmp(prompt,"sti",3) == 0 ){
+    if ( gramado_strncmp(prompt, "sti",3) == 0 ){
         do_sti();
         goto exit_cmp;
     }
     // hlt: (Generate gp fault)
-    if ( strncmp(prompt,"hlt",3) == 0 ){
+    if ( gramado_strncmp(prompt, "hlt",3) == 0 ){
         do_hlt();
         goto exit_cmp;
     }
 
 /*
-    if ( strncmp(prompt,"callback",8) == 0 )
+    if ( gramado_strncmp(prompt,"callback",8) == 0 )
     {
         while(1){
         // Simply install the handler, do not put the thread into the alertable state.
@@ -553,7 +553,7 @@ static int input_compare_string(void)
 */
 
 /*
-    if ( strncmp(prompt,"alert",5) == 0 )
+    if ( gramado_strncmp(prompt,"alert",5) == 0 )
     {
         // Put the thread into the alertable state.
         // The kernel will consume this state, and we will put it again.
@@ -565,7 +565,7 @@ static int input_compare_string(void)
 // yes or no.
 // see: stdio.c
     static int yn_result = -1;
-    if ( strncmp(prompt,"yn",2) == 0 )
+    if ( gramado_strncmp(prompt,"yn",2) == 0 )
     {
         yn_result = (int) rtl_y_or_n();
         if ( yn_result == TRUE ){
@@ -584,7 +584,7 @@ static int input_compare_string(void)
     // #test
     unsigned long InstanceID=0;
 
-    if ( strncmp(prompt,"about",5) == 0 )
+    if ( gramado_strncmp(prompt,"about",5) == 0 )
     {
         //#test
         InstanceID = rtl_instance_id();
@@ -594,18 +594,18 @@ static int input_compare_string(void)
         goto exit_cmp;
     }
 
-    if ( strncmp(prompt,"help",4) == 0 ){
+    if ( gramado_strncmp(prompt, "help",4) == 0 ){
         do_help();
         goto exit_cmp;
     }
 
-    if ( strncmp(prompt,"reboot",6) == 0 ){
+    if ( gramado_strncmp(prompt, "reboot",6) == 0 ){
         printf ("REBOOT\n");
         rtl_reboot();
         goto exit_cmp;
     }
 
-    if ( strncmp(prompt,"shutdown",8) == 0 ){
+    if ( gramado_strncmp(prompt, "shutdown",8) == 0 ){
         printf ("SHUTDOWN\n");
         rtl_clone_and_execute("shutdown.bin");
         goto exit_cmp;
@@ -614,7 +614,7 @@ static int input_compare_string(void)
 //==============================
 // wink: Windowing system in kernel side.
 
-    if (strncmp(prompt,"wink",4) == 0 )
+    if (gramado_strncmp(prompt,"wink",4) == 0 )
     {
         printf("wink: ~\n");
         rtl_use_wink_windowing_system();
@@ -628,45 +628,45 @@ static int input_compare_string(void)
 //==============================
 // Windowing System: (display server)
 
-// Initialize the display server.
-    if ( strncmp(prompt,"ws",2) == 0 ){
+// Initialize the display server
+    if ( gramado_strncmp(prompt,"ws",2) == 0 ){
         do_init_winu();
         goto exit_cmp;
     }
-// Initialize the display server and quit the command line.
-    if ( strncmp(prompt,"wsq",3) == 0 ){
+// Initialize the display server and quit the command line
+    if ( gramado_strncmp(prompt,"wsq",3) == 0 ){
         do_init_winu();
         goto exit_cmp;
     }
 // Initialize the display server, the terminal and 
 // quit the command line.
-    if ( strncmp(prompt,"wsq2",4) == 0 ){
+    if ( gramado_strncmp(prompt,"wsq2",4) == 0 ){
         do_launch_de2();
         goto exit_cmp;
     }
 
-    if ( strncmp(prompt,"boot",4) == 0 ){
+    if ( gramado_strncmp(prompt,"boot",4) == 0 ){
         do_init_winu();
         goto exit_cmp;
     }
-    if ( strncmp(prompt,"gramado",7) == 0 ){
+    if ( gramado_strncmp(prompt,"gramado",7) == 0 ){
         do_init_winu();
         goto exit_cmp;
     }
     // Initialize the winu graphics subsystem.
     // #todo: The purpose is enter and exit from the winu mode.
     // Comming back to the init process, that represents the core os.
-    if ( strncmp(prompt,"winu",4) == 0 ){
+    if ( gramado_strncmp(prompt,"winu",4) == 0 ){
         do_init_winu();
         goto exit_cmp;
     }
 
-    if (strncmp(prompt,"win",3) == 0)
+    if (gramado_strncmp(prompt,"win",3) == 0)
     { 
         do_launch_de();
         goto exit_cmp; 
     }
-    if (strncmp(prompt,"WIN",3) == 0)
+    if (gramado_strncmp(prompt,"WIN",3) == 0)
     { 
         do_launch_de();
         goto exit_cmp; 
@@ -674,14 +674,14 @@ static int input_compare_string(void)
 
 // #test
 // Test the creation and initialization of a ring 3 thread.
-    if ( strncmp(prompt,"thread",6) == 0 )
+    if ( gramado_strncmp(prompt,"thread",6) == 0 )
     {
         do_test_thread();
         goto exit_cmp;
     }
 
     int myPID = -1;
-    if ( strncmp(prompt,"getpid",6) == 0 )
+    if ( gramado_strncmp(prompt,"getpid",6) == 0 )
     {
         myPID = (int) getpid();
         printf ("PID={%d}\n",myPID);
@@ -689,7 +689,7 @@ static int input_compare_string(void)
     }
 
     int myTID = -1;
-    if ( strncmp(prompt,"gettid",6) == 0 )
+    if ( gramado_strncmp(prompt,"gettid",6) == 0 )
     {
         myTID = (int) gettid();
         printf ("PID={%d}\n",myTID);
@@ -697,20 +697,20 @@ static int input_compare_string(void)
     }
 
     // see: rtl.c
-    if (strncmp(prompt,"pipe",4) == 0 )
+    if (gramado_strncmp(prompt,"pipe",4) == 0 )
     {
         rtl_test_pipe();
         goto exit_cmp;
     }
 
     // Local worker for polling data from a network buffer
-    if (strncmp(prompt,"nb-test",7) == 0 )
+    if (gramado_strncmp(prompt,"nb-test",7) == 0 )
     {
         worker_nb_test();
         goto exit_cmp;
     }
 
-    if (strncmp(prompt,"stderr",6) == 0 )
+    if (gramado_strncmp(prompt, "stderr",6) == 0 )
     {
         write(2,"Writing into stderr\n",19);
         goto exit_cmp;
@@ -720,14 +720,14 @@ static int input_compare_string(void)
 // Network Server:
 
 // Initialize the network server.
-    if ( strncmp(prompt,"ns",2) == 0 ){
+    if ( gramado_strncmp(prompt,"ns",2) == 0 ){
         //printf ("~NS\n");
         // #c3 NETD.BIN
         //rtl_clone_and_execute(app3_name);
         goto exit_cmp;
     }
 // Initialize the network server and quit the command line.
-    if ( strncmp(prompt,"nsq",3) == 0 ){
+    if ( gramado_strncmp(prompt,"nsq",3) == 0 ){
         printf ("~NSQ\n");
         do_clear_console();
         // #c3 NETD.BIN
@@ -741,7 +741,7 @@ static int input_compare_string(void)
 // This application will interpret the commands and send
 // data to the kernel console in ring0.
     int shell2_tid = -1;
-    if ( strncmp(prompt,"shell2",6) == 0 )
+    if ( gramado_strncmp(prompt,"shell2",6) == 0 )
     {
         printf("Launching shell.bin #todo\n");
         do_clear_console();
@@ -766,7 +766,7 @@ static int input_compare_string(void)
 
 // #test
     int uname_tid = -1;
-    if ( strncmp(prompt,"uname",5) == 0 )
+    if ( gramado_strncmp(prompt, "uname",5) == 0 )
     {
         printf("Launching uname.bin\n");
         do_clear_console();
@@ -793,7 +793,7 @@ static int input_compare_string(void)
 
 /*
     // GMC - Gramado Meta Compositor.
-    if ( strncmp(prompt,"comp",4) == 0 ){
+    if ( gramado_strncmp(prompt,"comp",4) == 0 ){
         printf ("~ Comp:\n");
         do_clear_console();
         rtl_clone_and_execute("comp.bin");
@@ -807,7 +807,7 @@ static int input_compare_string(void)
 //
 
     // demo00
-    if ( strncmp(prompt,"demo00",6) == 0 )
+    if ( gramado_strncmp(prompt,"demo00",6) == 0 )
     {
         printf ("Launching eng00.bin\n");
         do_clear_console();
@@ -819,7 +819,7 @@ static int input_compare_string(void)
 
 /*
     // demo01
-    if ( strncmp(prompt,"demo01",6) == 0 )
+    if ( gramado_strncmp(prompt,"demo01",6) == 0 )
     {
         printf ("Launching eng01.bin\n");
         do_clear_console();
@@ -833,7 +833,7 @@ static int input_compare_string(void)
     // ...
 
     // eng00
-    if ( strncmp(prompt,"eng00",5) == 0 )
+    if ( gramado_strncmp(prompt,"eng00",5) == 0 )
     {
         printf ("Launching eng00.bin\n");
         do_clear_console();
@@ -850,7 +850,7 @@ static int input_compare_string(void)
     char *new_cmdline;
     char new_filename[8];
     int new_counter=0;
-    if (strncmp(prompt,"start",5) == 0)
+    if (gramado_strncmp(prompt,"start",5) == 0)
     {
         // Clear the filename buffer
         memset(new_filename,0,8);
