@@ -1027,8 +1027,8 @@ again:
             //TREE_TYPE (yylval.ttype) = char_array_type_node;
 
             value = TK_STRING;  // We have a string token
+            return (int) TK_STRING;
 
-            //return (int) TK_STRING;
             break;
         };
 
@@ -1075,8 +1075,8 @@ again:
             *p++ = 0;  // Finalize the buffer for the separator token
 
             value = TK_SEPARATOR;  // We have a separator token
+            return (int) TK_SEPARATOR;
 
-            //return (int) TK_SEPARATOR;
             break;
 
         // Operator recognition:
