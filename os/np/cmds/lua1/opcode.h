@@ -88,11 +88,14 @@ typedef void (*Cfunction)(void);
 typedef int  (*Input)(void);
 typedef void (*Unput)(int);
 
+
+// ----------------------------------
+// Value union:
 // This is used in Object
 typedef union
 {
     Cfunction f;     // 8 bytes
-    real n;          // 8 bytes
+    real n;          // 8 bytes  (#bugbug: Is it really 8 bytes?)
     char *s;         // 8 bytes
     Byte *b;         // 8 bytes
     struct Hash *a;  // 8 bytes
@@ -100,40 +103,24 @@ typedef union
 } Value;
 
 
-// Current Situation (Summary):
-// sizeof(Object) = 16 bytes 
-// (natural on 64-bit: 4-byte Type + 4-byte padding + 8-byte Value)
-// #important: 
-// The original 1993 code was designed for 8-byte Object.
-// This causes wrong pointer arithmetic (base + n), 
-// bad stack copies, and Trap 13 (access violation) 
-// especially on local variables.
-// Recommended Strategy (Clean 64-bit Port):
-// Keep natural 16-byte Object + fix the VM code
-
-
-// On 64-bit, the compiler adds 4 bytes of padding 
-// sizeof(Object) = 16 bytes
-// sizeof(Object) = 16
-// sizeof(Type)   = 4
-// sizeof(Value)  = 8
-
-// #ps:
-// This means the compiler is inserting 4 bytes of padding after Type.
+// ----------------------------------
+// Object structure:
+// #important:
+// This structure for object has 16 bytes in Lua 1.0 for Gramado OS 64bit.
+// The original lua 1.0 for 32bit has 8 bytes.
 
 typedef struct Object
 {
-    // Type tag;        // 4 bytes
-    // #ps: 64bit compiler is adding 4 byte padding here.
-
-    unsigned long tag;  // 8bytes (No padding included by the compiler)
+    // (8 bytes)
+    unsigned long tag;
 
     // union containing pointers (8 bytes on 64-bit)
     Value value;
 
 } Object;
 
-
+// ----------------------------------
+// Symbol structure:
 typedef struct
 {
     char *name;
@@ -142,25 +129,29 @@ typedef struct
 
 
 /* Macros to access structure members */
-#define tag(o)		((o)->tag)
-#define nvalue(o)	((o)->value.n)
-#define svalue(o)	((o)->value.s)
-#define bvalue(o)	((o)->value.b)
-#define avalue(o)	((o)->value.a)
-#define fvalue(o)	((o)->value.f)
-#define uvalue(o)	((o)->value.u)
+#define tag(o)     ((o)->tag)
+#define nvalue(o)  ((o)->value.n)
+#define svalue(o)  ((o)->value.s)
+#define bvalue(o)  ((o)->value.b)
+#define avalue(o)  ((o)->value.a)
+#define fvalue(o)  ((o)->value.f)
+#define uvalue(o)  ((o)->value.u)
+
 
 /* Macros to access symbol table */
-#define s_name(i)	(lua_table[i].name)
-#define s_object(i)	(lua_table[i].object)
-#define s_tag(i)	(tag(&s_object(i)))
-#define s_nvalue(i)	(nvalue(&s_object(i)))
-#define s_svalue(i)	(svalue(&s_object(i)))
-#define s_bvalue(i)	(bvalue(&s_object(i)))
-#define s_avalue(i)	(avalue(&s_object(i)))
-#define s_fvalue(i)	(fvalue(&s_object(i)))
-#define s_uvalue(i)	(uvalue(&s_object(i)))
+#define s_name(i)    (lua_table[i].name)
+#define s_object(i)  (lua_table[i].object)
+#define s_tag(i)     (tag(&s_object(i)))
+#define s_nvalue(i)  (nvalue(&s_object(i)))
+#define s_svalue(i)  (svalue(&s_object(i)))
+#define s_bvalue(i)  (bvalue(&s_object(i)))
+#define s_avalue(i)  (avalue(&s_object(i)))
+#define s_fvalue(i)  (fvalue(&s_object(i)))
+#define s_uvalue(i)  (uvalue(&s_object(i)))
 
+//
+// == Prototypes =====================================
+//
 
 /* Exported functions */
 int     lua_execute(Byte *pc);
@@ -171,11 +162,11 @@ char   *lua_strdup(char *l);
 void    lua_setinput(Input fn);	 /* from "lua.lex" module */
 void    lua_setunput(Unput fn);  /* from "lua.lex" module */
 
-char   *lua_lasttext   (void);		/* from "lua.lex" module */
-int     lua_parse      (void); 		/* from "lua.stx" module */
-void    lua_type       (void);
-void 	lua_obj2number (void);
-void 	lua_print      (void);
+char   *lua_lasttext(void);		 /* from "lua.lex" module */
+int     lua_parse(void); 		 /* from "lua.stx" module */
+void    lua_type(void);
+void 	lua_obj2number(void);
+void 	lua_print(void);
 
 int lua_dofile(char *filename);
 
