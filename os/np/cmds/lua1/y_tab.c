@@ -1,5 +1,9 @@
 // y_tab.c
 
+// You can basically ignore those tables forever; 
+// they encode "which grammar rule to apply in which state," 
+// but you'll never hand-edit them.
+
 # line 2 "lua.stx"
 
 // rtl
@@ -293,7 +297,8 @@ static void lua_codeadjust (int n)
 
 static void lua_codeadjust (int n)
 {
-    printf("[ADJUST] setting to %d locals\n", n + nlocalvar);
+    //printf("[ADJUST] setting to %d locals\n", n + nlocalvar);
+
     code_byte(ADJUST);
     code_byte(n + nlocalvar);
 }
@@ -350,7 +355,7 @@ static void lua_codestore (int i)
 {
     long v = varbuffer[i];
 
-    printf("[DEBUG] lua_codestore: varbuffer[%d] = %ld\n", i, v);
+    //printf("[DEBUG] lua_codestore: varbuffer[%d] = %ld\n", i, v);
 
     if (v > 0) {                    // global
         align(Word);
@@ -359,7 +364,7 @@ static void lua_codestore (int i)
     }
     else if (v < 0) {               // local
         int idx = (-v) - 1;
-        printf("[DEBUG] STORELOCAL idx=%d\n", idx);
+        //printf("[DEBUG] STORELOCAL idx=%d\n", idx);
 
         if (idx < 10)
             code_byte(STORELOCAL0 + idx);
@@ -514,12 +519,13 @@ int lua_parse (void)
     if (yyparse() || (err==1))
         return 1;
 
-    printf("[PARSER] Final nlocalvar = %d before HALT\n", nlocalvar);
+    //printf("[PARSER] Final nlocalvar = %d before HALT\n", nlocalvar);
 
     // Critical for main chunk with locals
     lua_codeadjust(0);
-    printf("[CHECK] nlocalvar=%d ntemp=%d nvarbuffer=%d\n", 
-		nlocalvar, ntemp, nvarbuffer);
+
+    //printf("[CHECK] nlocalvar=%d ntemp=%d nvarbuffer=%d\n", 
+		//nlocalvar, ntemp, nvarbuffer);
 
     *maincode++ = HALT;
 
@@ -1048,14 +1054,23 @@ static int *yyps;			/* top of state stack */
 static int yystate;			/* current state */
 static int yytmp;			/* extra var (lasts between blocks) */
 
-int yynerrs;			/* number of errors */
+int yynerrs;      /* number of errors */
+int yyerrflag;    /* error recovery flag */
 
-int yyerrflag;			/* error recovery flag */
-int yychar;			/* current input token number */
+int yychar;       /* current input token number */
 
 
 // yyparse:
 // return 0 if worked, 1 if syntax error not recovered from.
+
+/*
+The driver loop's job (layer 2) — you can skim this
+yyparse()'s core loop does one of three things repeatedly:
++ Shift  — consume a token, push a new parser state (goto yy_stack)
++ Reduce — recognize that the last few things on the stack match a grammar rule, 
+           pop them, and run that rule's action code (switch (yytmp) { case N: ... })
++ Error  — no valid shift or reduce; try error recovery, or give up
+*/
 
 static int yyparse(void)
 {
@@ -1116,6 +1131,7 @@ static int yyparse(void)
 		/*
 		** put a state and value onto the stacks
 		*/
+
 #if YYDEBUG
 		/*
 		** if debugging, look up token value in list of value vs.
@@ -1144,14 +1160,15 @@ static int yyparse(void)
 			}
 		}
 #endif /* YYDEBUG */
+
 		if ( ++yy_ps >= &yys[ yymaxdepth ] )	/* room on stack? */
 		{
 			/*
 			** reallocate and recover.  Note that pointers
 			** have to be reset, or bad things will happen
 			*/
-			int yyps_index = (yy_ps - yys);
-			int yypv_index = (yy_pv - yyv);
+			int yyps_index  = (yy_ps - yys);
+			int yypv_index  = (yy_pv - yyv);
 			int yypvt_index = (yypvt - yyv);
 
 			yymaxdepth += YYMAXDEPTH;
@@ -1170,19 +1187,22 @@ static int yyparse(void)
 		*yy_ps = yy_state;
 		*++yy_pv = yyval;
 
-
-		// we have a new state - find out what to do
+	// we have a new state - find out what to do
 	yy_newstate:
 		if ( ( yy_n = yypact[ yy_state ] ) <= YYFLAG )
 			goto yydefault;		/* simple state */
+
 #if YYDEBUG
 		/*
 		** if debugging, need to mark whether new token grabbed
 		*/
 		yytmp = yychar < 0;
 #endif
+
+        // lexer: Lexer returns a token code
 		if ( ( yychar < 0 ) && ( ( yychar = yylex() ) < 0 ) )
 			yychar = 0;		/* reached EOF */
+
 #if YYDEBUG
 		if ( yydebug && yytmp )
 		{
@@ -1205,12 +1225,14 @@ static int yyparse(void)
 			}
 		}
 #endif /* YYDEBUG */
+
 		if ( ( ( yy_n += yychar ) < 0 ) || ( yy_n >= YYLAST ) )
 			goto yydefault;
+
 		if ( yychk[ yy_n = yyact[ yy_n ] ] == yychar )	/*valid shift*/
 		{
 			yychar = -1;
-			yyval = yylval;
+			yyval  = yylval;
 			yy_state = yy_n;
 			if ( yyerrflag > 0 )
 				yyerrflag--;
@@ -1220,11 +1242,15 @@ static int yyparse(void)
 	yydefault:
 		if ( ( yy_n = yydef[ yy_state ] ) == -2 )
 		{
+
 #if YYDEBUG
 			yytmp = yychar < 0;
 #endif
+
+            // lexer: Lexer returns a token code
 			if ( ( yychar < 0 ) && ( ( yychar = yylex() ) < 0 ) )
 				yychar = 0;		/* reached EOF */
+
 #if YYDEBUG
 			if ( yydebug && yytmp )
 			{
@@ -1251,6 +1277,7 @@ static int yyparse(void)
 				}
 			}
 #endif /* YYDEBUG */
+
 			/*
 			** look through exception table
 			*/
@@ -1261,9 +1288,7 @@ static int yyparse(void)
 				{
 					yyxi += 2;
 				}
-				while ( ( *(yyxi += 2) >= 0 ) &&
-					( *yyxi != yychar ) )
-					;
+				while ( ( *(yyxi += 2) >= 0 ) &&( *yyxi != yychar ) );
 				if ( ( yy_n = yyxi[1] ) < 0 )
 					YYACCEPT;
 			}
@@ -1273,8 +1298,8 @@ static int yyparse(void)
 		if ( yy_n == 0 )  // have an error
 		{
 			// no worry about speed here
-			switch (yyerrflag)
-			{
+			switch (yyerrflag){
+
 			case 0:		/* new error */
 				yyerror( "syntax error" );
 				goto skip_init;
@@ -1289,8 +1314,8 @@ static int yyparse(void)
 				yynerrs++;
 			skip_init:
 			case 1:
-			case 2:		/* incompletely recovered error */
-					/* try again... */
+			case 2:    /* incompletely recovered error */
+				       /* try again... */
 				yyerrflag = 3;
 				/*
 				** find state where "error" is a legal
@@ -1300,7 +1325,8 @@ static int yyparse(void)
 				{
 					yy_n = yypact[ *yy_ps ] + YYERRCODE;
 					if ( yy_n >= 0 && yy_n < YYLAST &&
-						yychk[yyact[yy_n]] == YYERRCODE)					{
+						yychk[yyact[yy_n]] == YYERRCODE)
+					{
 						/*
 						** simulate shift of "error"
 						*/
@@ -1311,6 +1337,7 @@ static int yyparse(void)
 					** current state has no shift on
 					** "error", pop stack
 					*/
+
 #if YYDEBUG
 #	define _POP_ "Error recovery pops state %d, uncovers state %d\n"
 					if ( yydebug )
@@ -1318,6 +1345,7 @@ static int yyparse(void)
 							yy_ps[-1] );
 #	undef _POP_
 #endif
+
 					yy_ps--;
 					yy_pv--;
 				}
@@ -1327,6 +1355,7 @@ static int yyparse(void)
 				*/
 				YYABORT;
 			case 3:		/* no shift yet; eat a token */
+
 #if YYDEBUG
 				/*
 				** if debugging, look up token in list of
@@ -1361,17 +1390,20 @@ static int yyparse(void)
 					}
 				}
 #endif /* YYDEBUG */
-				if ( yychar == 0 )	/* reached EOF. quit */
+
+				if ( yychar == 0 )    /* reached EOF. quit */
 					YYABORT;
 				yychar = -1;
 				goto yy_newstate;
 			}
 
 		}/* end if ( yy_n == 0 ) */
+
 		/*
 		** reduction by production yy_n
 		** put stack tops, etc. so things right after switch
 		*/
+
 #if YYDEBUG
 		/*
 		** if debugging, print the string that is the user's
@@ -1382,6 +1414,7 @@ static int yyparse(void)
 			(void)printf( "Reduce by (%d) \"%s\"\n",
 				yy_n, yyreds[ yy_n ] );
 #endif
+
 		yytmp = yy_n;			/* value to switch over */
 		yypvt = yy_pv;			/* $vars top of value stack */
 		/*
@@ -1431,35 +1464,53 @@ static int yyparse(void)
 		yypv = yy_pv;
 	}
 
-	// code supplied by user is placed in this switch
+// -------------------
+// Codes:
+// code supplied by user is placed in this switch
+// -------------------
+
+// The core idea: 
+// each case number is a grammar rule, and 
+// it fires the instant the parser recognizes that rule has been matched — 
+// not before, not "for a statement" in general, but 
+// for that exact fragment of the sentence being built.
+
+// The key mental model: bottom-up, not top-down
+// You might expect parsing to work top-down — "this is a statement, 
+// so let's figure out its parts." Yacc does the opposite: 
+// it reads tokens left to right, and 
+// the moment a sequence of already-recognized pieces 
+// matches the right-hand side of some rule, 
+// it collapses them into the rule's left-hand side. 
+// That collapse is called a >>> reduction <<<, and that's the moment case N fires.
+
+// So a case doesn't "process a statement" — 
+// it processes exactly one small grammar rule, and 
+// a real statement is built from many small reductions firing in sequence, 
+// smallest/innermost first.
+
+// Where the case numbers come from
+// Every rule in lua.stx gets a sequential number in the order
+// it's written in the grammar file. 
+// yyreds[] is literally that list — 
+// yyreds[99] is the human-readable text of rule 99. 
+// That's why case numbers look arbitrary/non-contiguous in y_tab.c: 
+// they're not grouped by "what they do," they're grouped by 
+// "where they appear in the .stx grammar file."
+
 	switch (yytmp)
 	{
 
+
+// case 2 — fires before every top-level statement (functionlist : functionlist). 
+// This is the one we just fixed — it used to zero nlocalvar here, 
+// which was wrong for a "compile-then-execute-once" model.
+
 /*
+// Original
 case 2:
 # line 179 "lua.stx"
 {pc=basepc=maincode; nlocalvar=0;} break;
-*/
-
-/*
-case 2:
-# line 179 "lua.stx"
-{   pc=basepc=maincode; 
-	nlocalvar=0; 
-	ntemp=0; 
-	nvarbuffer=0;} 
-break;
-*/
-/*
-case 2:
-{   
-    printf("[CASE2] resetting nlocalvar (was %d)\n", nlocalvar);
-    pc=basepc=maincode; 
-    nlocalvar=0; 
-    ntemp=0; 
-    // nvarbuffer=0;
-} 
-break;
 */
 
 case 2:
@@ -1473,42 +1524,69 @@ case 2:
 } 
 break;
 
+
 case 3:
 # line 179 "lua.stx"
 {maincode=pc;} break;
+
+
+// case 6 — fires when entering a function body (function : FUNCTION NAME). 
+// Correctly resets nlocalvar=0 because a function body is 
+// a genuinely fresh local scope.
 case 6:
 # line 184 "lua.stx"
-{pc=basepc=code; nlocalvar=0;} break;
+{
+	pc = basepc = code; 
+	nlocalvar=0;
+} break;
+
 case 7:
 # line 185 "lua.stx"
 {
-	        if (lua_debug)
+	    if (lua_debug)
 		{
-		 align(Word);
-	         code_byte(SETFUNCTION); 
-                 code_word(yypvt[-5].vWord);
-		 code_word(yypvt[-4].vWord);
+		    align(Word);
+	        code_byte(SETFUNCTION); 
+            code_word(yypvt[-5].vWord);
+		    code_word(yypvt[-4].vWord);
 		}
-	        lua_codeadjust (0);
-	       } break;
+	    
+		lua_codeadjust (0);
+} break;
+
+// case 8 — fires at the end of a function body. 
+// This is where the compiled bytecode for that function gets calloc'd, 
+// memcpy'd out of the shared code buffer, and 
+// attached to the symbol table as a T_FUNCTION object (s_bvalue(...) = ...).
+
 case 8:
 # line 197 "lua.stx"
 { 
-                if (lua_debug) code_byte(RESET); 
-	        code_byte(RETCODE); code_byte(nlocalvar);
+            if (lua_debug) 
+			    code_byte(RESET); 
+	        code_byte(RETCODE); 
+			code_byte(nlocalvar);
 	        s_tag(yypvt[-7].vWord) = T_FUNCTION;
 	        s_bvalue(yypvt[-7].vWord) = calloc (pc-code, sizeof(Byte));
-	        memcpy (s_bvalue(yypvt[-7].vWord), code, (pc-code)*sizeof(Byte));
-	       } break;
+
+	        memcpy (
+				s_bvalue(yypvt[-7].vWord), 
+				code, 
+				(pc-code)*sizeof(Byte) );
+} break;
+
 case 11:
 # line 210 "lua.stx"
 {
             ntemp = 0; 
             if (lua_debug)
             {
-             align(Word); code_byte(SETLINE); code_word(lua_linenumber);
+                align(Word); 
+				code_byte(SETLINE); 
+				code_word(lua_linenumber);
             }
-	   } break;
+} break;
+
 case 15:
 # line 223 "lua.stx"
 {
@@ -1528,10 +1606,12 @@ case 15:
 	 *(yypvt[-4].pByte) = IFFJMP;
 	 *((Word *)(yypvt[-4].pByte+1)) = elseinit - (yypvt[-4].pByte + sizeof(Word)+1);
 	}
-       } break;
+} break;
+
 case 16:
 # line 242 "lua.stx"
 {yyval.pByte = pc;} break;
+
 case 17:
 # line 244 "lua.stx"
 {
@@ -1540,16 +1620,18 @@ case 17:
         
         *(yypvt[-1].pByte) = UPJMP;
         *((Word *)(yypvt[-1].pByte+1)) = pc - yypvt[-6].pByte;
-       } break;
+} break;
+
 case 18:
 # line 252 "lua.stx"
 {yyval.pByte = pc;} break;
+
 case 19:
 # line 254 "lua.stx"
 {
         *(yypvt[-0].pByte) = IFFUPJMP;
         *((Word *)(yypvt[-0].pByte+1)) = pc - yypvt[-4].pByte;
-       } break;
+} break;
 
 
 /*
@@ -1581,8 +1663,8 @@ case 20:
     for (i=nvarbuffer-1; i>=0; i--)
         lua_codestore (i);
 
-    printf("[PARSER] Assignment done. nlocalvar=%d  ntemp=%d\n", 
-           nlocalvar, ntemp);
+    //printf("[PARSER] Assignment done. nlocalvar=%d  ntemp=%d\n", 
+        // nlocalvar, ntemp);
 
     // Force correct stack adjustment for locals
     lua_codeadjust(0);
@@ -1598,8 +1680,8 @@ case 22:  // stat1 : LOCAL declist
 {
     // nothing extra needed if declist does the work
 
-    printf("[PARSER] LOCAL declaration processed. nlocalvar now = %d\n", 
-		nlocalvar);
+    //printf("[PARSER] LOCAL declaration processed. nlocalvar now = %d\n", 
+		//nlocalvar);
 }
 break;
 
@@ -1622,13 +1704,16 @@ case 25:
 	   *(yypvt[-3].pByte) = IFFJMP;
 	   *((Word *)(yypvt[-3].pByte+1)) = elseinit - (yypvt[-3].pByte + sizeof(Word)+1);
 	  }  
-         } break;
+} break;
+
 case 26:
 # line 299 "lua.stx"
 {yyval.vInt = nlocalvar;} break;
+
 case 27:
 # line 299 "lua.stx"
 {ntemp = 0;} break;
+
 case 28:
 # line 300 "lua.stx"
 {
@@ -1637,16 +1722,19 @@ case 28:
            nlocalvar = yypvt[-3].vInt;
 	   lua_codeadjust (0);
 	  }
-         } break;
+} break;
+
 case 30:
 # line 310 "lua.stx"
 { if (lua_debug){align(Word);code_byte(SETLINE);code_word(lua_linenumber);}} break;
+
 case 31:
 # line 312 "lua.stx"
 { 
            if (lua_debug) code_byte(RESET); 
            code_byte(RETCODE); code_byte(nlocalvar);
-          } break;
+} break;
+
 case 32:
 # line 319 "lua.stx"
 { 
@@ -1654,52 +1742,68 @@ case 32:
 	  yyval.pByte = pc;
 	  code_byte(0);		/* open space */
 	  code_word (0);
-         } break;
+} break;
+
 case 33:
 # line 326 "lua.stx"
 { if (yypvt[-0].vInt == 0) {lua_codeadjust (ntemp+1); incr_ntemp();}} break;
+
 case 34:
 # line 329 "lua.stx"
 { yyval.vInt = yypvt[-1].vInt; } break;
+
 case 35:
 # line 330 "lua.stx"
 { code_byte(EQOP);   yyval.vInt = 1; ntemp--;} break;
+
 case 36:
 # line 331 "lua.stx"
 { code_byte(LTOP);   yyval.vInt = 1; ntemp--;} break;
+
 case 37:
 # line 332 "lua.stx"
 { code_byte(LEOP); code_byte(NOTOP); yyval.vInt = 1; ntemp--;} break;
+
 case 38:
 # line 333 "lua.stx"
 { code_byte(EQOP); code_byte(NOTOP); yyval.vInt = 1; ntemp--;} break;
+
 case 39:
 # line 334 "lua.stx"
 { code_byte(LEOP);   yyval.vInt = 1; ntemp--;} break;
+
 case 40:
 # line 335 "lua.stx"
 { code_byte(LTOP); code_byte(NOTOP); yyval.vInt = 1; ntemp--;} break;
+
 case 41:
 # line 336 "lua.stx"
 { code_byte(ADDOP);  yyval.vInt = 1; ntemp--;} break;
+
 case 42:
 # line 337 "lua.stx"
 { code_byte(SUBOP);  yyval.vInt = 1; ntemp--;} break;
+
 case 43:
 # line 338 "lua.stx"
 { code_byte(MULTOP); yyval.vInt = 1; ntemp--;} break;
+
 case 44:
 # line 339 "lua.stx"
 { code_byte(DIVOP);  yyval.vInt = 1; ntemp--;} break;
+
 case 45:
 # line 340 "lua.stx"
 { code_byte(CONCOP);  yyval.vInt = 1; ntemp--;} break;
+
 case 46:
 # line 341 "lua.stx"
 { yyval.vInt = 1; } break;
+
 case 47:
 # line 342 "lua.stx"
 { code_byte(MINUSOP); yyval.vInt = 1;} break;
+
 case 48:
 # line 344 "lua.stx"
 {
@@ -1707,7 +1811,8 @@ case 48:
       yyval.pByte = pc; code_byte(0);
       incr_ntemp();
       code_byte(CREATEARRAY);
-     } break;
+} break;
+
 case 49:
 # line 351 "lua.stx"
 {
@@ -1731,13 +1836,14 @@ case 49:
         align(Word); code_byte(SETLINE); code_word(lua_linenumber);
        }
       }
-     } break;
+} break;
+
 case 50:
 # line 374 "lua.stx"
 { 
       code_byte(CREATEARRAY);
       yyval.vInt = 1;
-     } break;
+} break;
 
 case 51:
 # line 378 "lua.stx"
@@ -1766,7 +1872,7 @@ case 53:
         // NEW: store the initializer into the local slot
         // lua_codestore(nvarbuffer - 1);
     } 
-	break;
+break;
 
 case 54:
 # line 388 "lua.stx"
@@ -1790,29 +1896,35 @@ case 56:
 case 57:
 # line 398 "lua.stx"
 {code_byte(POP); ntemp--;} break;
+
 case 58:
 # line 399 "lua.stx"
 { 
       *(yypvt[-2].pByte) = ONFJMP;
       *((Word *)(yypvt[-2].pByte+1)) = pc - (yypvt[-2].pByte + sizeof(Word)+1);
       yyval.vInt = 1;
-     } break;
+} break;
+
 case 59:
 # line 404 "lua.stx"
 {code_byte(POP); ntemp--;} break;
+
 case 60:
 # line 405 "lua.stx"
 { 
       *(yypvt[-2].pByte) = ONTJMP;
       *((Word *)(yypvt[-2].pByte+1)) = pc - (yypvt[-2].pByte + sizeof(Word)+1);
       yyval.vInt = 1;
-     } break;
+} break;
+
 case 61:
 # line 412 "lua.stx"
 { code_byte(PUSHNIL); incr_ntemp();} break;
+
 case 63:
 # line 416 "lua.stx"
 {code_byte(PUSHMARK); yyval.vInt = ntemp; incr_ntemp();} break;
+
 case 64:
 # line 417 "lua.stx"
 { code_byte(CALLFUNC); ntemp = yypvt[-3].vInt-1;} break;
@@ -1842,15 +1954,22 @@ case 66:
 case 67:
 # line 423 "lua.stx"
 { yyval.vInt = yypvt[-0].vInt; } break;
+
 case 68:
 # line 426 "lua.stx"
 { yyval.vInt = yypvt[-0].vInt; } break;
+
 case 69:
 # line 427 "lua.stx"
 {if (!yypvt[-1].vInt){lua_codeadjust (ntemp+1); incr_ntemp();}} break;
+
 case 70:
 # line 428 "lua.stx"
 {yyval.vInt = yypvt[-0].vInt;} break;
+
+// case 73 — function parameter declarations (parlist1 : NAME). 
+// Registers a param as a local slot.
+
 case 73:
 # line 435 "lua.stx"
 //{localvar[nlocalvar]=yypvt[-0].vWord; incr_nlocalvar();} break;
@@ -1863,6 +1982,10 @@ case 73:
     incr_nvarbuffer();
 
 } break;
+
+// case 74 — function parameter declarations (parlist1 : NAME). 
+// Registers a param as a local slot.
+
 case 74:
 # line 436 "lua.stx"
 //{localvar[nlocalvar]=yypvt[-0].vWord; incr_nlocalvar();} break;
@@ -1875,30 +1998,39 @@ case 74:
     incr_nvarbuffer();
 
 } break;
+
 case 75:
 # line 439 "lua.stx"
 {yyval.vLong=-1;} break;
+
 case 76:
 # line 440 "lua.stx"
 {yyval.vLong=yypvt[-0].vWord;} break;
+
 case 77:
 # line 443 "lua.stx"
 { yyval.vInt = yypvt[-1].vInt; } break;
+
 case 78:
 # line 444 "lua.stx"
 { yyval.vInt = yypvt[-1].vInt; } break;
+
 case 79:
 # line 447 "lua.stx"
 { yyval.vInt = 0; } break;
+
 case 80:
 # line 448 "lua.stx"
 { yyval.vInt = yypvt[-0].vInt; } break;
+
 case 81:
 # line 451 "lua.stx"
 {yyval.vInt=1;} break;
+
 case 82:
 # line 452 "lua.stx"
 {yyval.vInt=yypvt[-2].vInt+1;} break;
+
 case 83:
 # line 456 "lua.stx"
 {
@@ -1906,70 +2038,100 @@ case 83:
             code_byte(PUSHSTRING);
 	    code_word(lua_findconstant (s_name(yypvt[-0].vWord)));
             incr_ntemp();
-	   } break;
+} break;
+
 case 84:
 # line 463 "lua.stx"
 {
 	    code_byte(STOREFIELD);
 	    ntemp-=2;
-	   } break;
+} break;
+
 case 85:
 # line 469 "lua.stx"
 { yyval.vInt = 0; } break;
+
 case 86:
 # line 470 "lua.stx"
 { yyval.vInt = yypvt[-0].vInt; } break;
+
 case 87:
 # line 473 "lua.stx"
 { code_number(1); } break;
+
 case 88:
 # line 473 "lua.stx"
 {yyval.vInt=1;} break;
+
 case 89:
 # line 474 "lua.stx"
 { code_number(yypvt[-1].vInt+1); } break;
+
 case 90:
 # line 475 "lua.stx"
 {yyval.vInt=yypvt[-3].vInt+1;} break;
+
 case 91:
 # line 479 "lua.stx"
 {
 	    code_byte(STOREFIELD);
 	    ntemp-=2;
-	   } break;
+} break;
+
 case 92:
 # line 486 "lua.stx"
 {
 	   nvarbuffer = 0; 
            varbuffer[nvarbuffer] = yypvt[-0].vLong; incr_nvarbuffer();
 	   yyval.vInt = (yypvt[-0].vLong == 0) ? 1 : 0;
-	  } break;
+} break;
+
 case 93:
 # line 492 "lua.stx"
 { 
            varbuffer[nvarbuffer] = yypvt[-0].vLong; incr_nvarbuffer();
 	   yyval.vInt = (yypvt[-0].vLong == 0) ? yypvt[-2].vInt + 1 : yypvt[-2].vInt;
-	  } break;
+} break;
+
+// case 94 — var : NAME. 
+// Every time a variable name is used, this calls lua_localname(n), 
+// which scans localvar[] from nlocalvar-1 down to 0. 
+// If found, it's local (returns a negative encoded index); 
+// if not, it's global (returns positive). 
+// This is the exact function whose answer flipped once nlocalvar was 
+// getting wrongly zeroed.
+
 case 94:
 # line 499 "lua.stx"
 { 
-	   int local = lua_localname (yypvt[-0].vWord);
-	   if (local == -1)	/* global var */
-	    yyval.vLong = yypvt[-0].vWord + 1;		/* return positive value */
-           else
-	    yyval.vLong = -(local+1);		/* return negative value */
-	  } break;
+	    int local = lua_localname (yypvt[-0].vWord);
+	    
+		// global var? 
+		if (local == -1){
+	        yyval.vLong = yypvt[-0].vWord + 1;    /* return positive value */
+
+		// local var?
+		} else {
+	        yyval.vLong = -(local+1);             /* return negative value */
+		}
+
+} break;
+
+
 case 95:
 # line 507 "lua.stx"
 {lua_pushvar (yypvt[-0].vLong);} break;
+
 case 96:
 # line 508 "lua.stx"
 {
 	   yyval.vLong = 0;		/* indexed variable */
-	  } break;
+} break;
+
 case 97:
 # line 511 "lua.stx"
 {lua_pushvar (yypvt[-0].vLong);} break;
+
 case 98:
 # line 512 "lua.stx"
 {
@@ -1978,6 +2140,14 @@ case 98:
 	   code_word(lua_findconstant (s_name(yypvt[-0].vWord))); incr_ntemp();
 	   yyval.vLong = 0;		/* indexed variable */
 } break;
+
+// Case 99 — declist : NAME init
+// Grammar rule (from yyreds[99]): "declist : NAME init" — 
+// this is the base case, 
+// matching a single NAME (optionally followed by an initializer) with 
+// nothing before it. 
+// This is what fires for the x in local x = 1, and 
+// also for the first name in local x, y = 1, 2.
 
 /*
 case 99:
@@ -1993,25 +2163,8 @@ case 99:
 
 } break;
 */
+
 /*
-case 99:  // declist : NAME init
-# line 520 "lua.stx"
-{
-    localvar[nlocalvar] = yypvt[-1].vWord;   // was yypvt[-0] or wrong index
-    incr_nlocalvar();
-
-    // Track for assignment
-    varbuffer[nvarbuffer] = -(nlocalvar);
-    incr_nvarbuffer();
-
-    // If there's an initializer, store it
-    // lua_codestore(nvarbuffer-1);   // sometimes needed
-
-    lua_codestore(nvarbuffer - 1);   // force store the initializer
-} 
-break;
-*/
-
 case 99:  // declist : NAME init
 {
     localvar[nlocalvar] = yypvt[-1].vWord;
@@ -2020,6 +2173,58 @@ case 99:  // declist : NAME init
     incr_nvarbuffer();
 } 
 break;
+*/
+
+case 99:  // declist : NAME init
+{
+    // yypvt[-1] is the NAME token (the '$1' in "NAME init").
+    // yypvt[-0] would be 'init' itself, but its value isn't used here —
+    // the actual initializer bytecode was already emitted earlier,
+    // by whichever case handled the 'init' subrule (case 65/67/etc.),
+    // because expr codegen happens bottom-up as the parser reduces.
+
+    localvar[nlocalvar] = yypvt[-1].vWord;
+    // Record this name's hash/token into the local-variable name table,
+    // at the next free slot (nlocalvar is currently the count of
+    // locals declared so far in this scope — used as the index).
+
+    incr_nlocalvar();
+    // Officially claims that slot: bumps nlocalvar by 1 (with an
+    // overflow check against STACKGAP/MAXVAR). After this line,
+    // lua_localname() will find this variable and treat future
+    // references to it as local, not global.
+
+    varbuffer[nvarbuffer] = -(nlocalvar);
+    // Records this declaration in varbuffer[] using the local's index
+    // encoded as a NEGATIVE number (the same encoding lua_localname/
+    // lua_pushvar use: negative = local, positive = global, zero =
+    // indexed). varbuffer[] is a *scratch list for this one statement*,
+    // separate from localvar[] which persists for the whole scope.
+    // It exists so that lua_codestore() can later be told, for each
+    // name in a multi-assignment, whether to emit STORELOCAL,
+    // STOREGLOBAL, or STOREINDEXED.
+
+    incr_nvarbuffer();
+    // Advances nvarbuffer, the count of entries currently queued
+    // in varbuffer[] for this statement.
+
+    // NOTE: no lua_codestore() call here anymore (removed — see fix
+    // history). The initializer's value is left sitting on the VM
+    // stack exactly where it was pushed; because locals are declared
+    // in the same order they're pushed, that stack slot IS the local's
+    // final home. No runtime store instruction is needed for THIS name.
+} 
+break;
+
+
+// Case 100 — declist : declist ',' NAME init
+// Grammar rule: "declist : declist ',' NAME init" — 
+// the recursive case, matching a declist we've already built, 
+// followed by , NAME init. 
+// This is what fires for y in local x, y = 1, 2 
+// (and for every name after the first, no matter how long the list gets — 
+// the grammar is left-recursive, 
+// so it reduces one name at a time, growing declist each round).
 
 /*
 case 100:
@@ -2035,6 +2240,7 @@ case 100:
 
 } break;
 */
+/*
 case 100:  // declist : declist ',' NAME init
 {
     localvar[nlocalvar] = yypvt[-1].vWord;
@@ -2044,19 +2250,57 @@ case 100:  // declist : declist ',' NAME init
     incr_nvarbuffer();
 } 
 break;
+*/
+
+case 100:  // declist : declist ',' NAME init
+{
+    // Structurally almost identical to case 99 — same three jobs:
+    // register the name, claim a local slot, queue it in varbuffer.
+    //
+    // yypvt[-1] here is still the NAME just matched (position is the
+    // same relative offset from the top of the value stack regardless
+    // of how much 'declist' has already been built to the left of it —
+    // that's why this case doesn't need to look any different from 99
+    // even though the grammar rule is longer).
+
+    localvar[nlocalvar] = yypvt[-1].vWord;
+    incr_nlocalvar();
+
+    varbuffer[nvarbuffer] = -(nlocalvar);
+    incr_nvarbuffer();
+
+    // Why this is a SEPARATE case from 99 rather than shared code:
+    // yacc generates one switch-case per grammar RULE, not per
+    // "logical operation." "declist : NAME init" and
+    // "declist : declist ',' NAME init" are two distinct rules
+    // (the recursive one embeds the base case via the leading
+    // 'declist' symbol), so yacc mechanically gives them separate
+    // case labels — even though, as written, their action bodies
+    // do the same thing. If you ever need special handling for
+    // "not the first local in the list" (e.g. different diagnostics,
+    // or treating the 2nd+ names differently), this is the case to
+    // put it in.
+} 
+break;
 
 
 case 101:
 # line 524 "lua.stx"
 { code_byte(PUSHNIL); } break;
+
 case 102:
 # line 525 "lua.stx"
 {ntemp = 0;} break;
+
 case 104:
 # line 528 "lua.stx"
-{lua_debug = yypvt[-0].vInt;} break;
-	}
-	goto yystack;		/* reset registers in driver code */
-}
+{
+	lua_debug = yypvt[-0].vInt;
+} 
+break;
 
+    }
+	goto yystack;		/* reset registers in driver code */
+
+}
 

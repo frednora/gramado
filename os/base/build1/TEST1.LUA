@@ -4,8 +4,8 @@ print ("file: TEST1.LUA:\n");
 print ("Hello world!\n");
 
 gString = "This is a global string"
-gNumber = 42
-gFloat = 3.14
+-- gNumber = 42
+-- gFloat = 3.14
 
 -- Worker
 function __fun1()
