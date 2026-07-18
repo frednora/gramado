@@ -1,17 +1,18 @@
 // y_tab.c
+// Lua 1.0
 
 // You can basically ignore those tables forever; 
 // they encode "which grammar rule to apply in which state," 
 // but you'll never hand-edit them.
 
-# line 2 "lua.stx"
+#line 2 "lua.stx"
 
-// rtl
+// rtl (libc)
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-// Lua
+// Lua 1.0
 #include "opcode.h"
 #include "hash.h"
 #include "inout.h"
@@ -19,36 +20,49 @@
 #include "lua.h"
 #include "lex_yy.h"
 
-
-#ifndef ALIGNMENT
 // This is 8 on 64-bit
+#ifndef ALIGNMENT
 #define ALIGNMENT	(sizeof(void *))
-// Safe value for 64-bit + double
-//#define ALIGNMENT  8
 #endif
 
+// #ps What is this?
 #ifndef MAXCODE
 #define MAXCODE 1024
 #endif
 
-static long   buffer[MAXCODE];
-static Byte  *code = (Byte *)buffer;
-static long   mainbuffer[MAXCODE];
-static Byte  *maincode = (Byte *)mainbuffer;
-static Byte  *basepc;
-static Byte  *pc;
+//
+// Buffers abd pointers
+//
 
-#define MAXVAR 32
-static long    varbuffer[MAXVAR];
-static Byte    nvarbuffer=0;	     /* number of variables at a list */
+static long buffer[MAXCODE];
+static Byte *code = (Byte *) buffer;
+static long mainbuffer[MAXCODE];
+static Byte *maincode = (Byte *) mainbuffer;
+static Byte *basepc;
+static Byte *pc;
 
-static Word    localvar[STACKGAP];
-//static Byte    nlocalvar=0;	     /* number of local variables */
-//Byte    nlocalvar=0;	     /* number of local variables */
-int nlocalvar=0;	     /* number of local variables */
+// #todo: Maybe it can be bigger.
+#define MAXVAR  32
+static long varbuffer[MAXVAR];
+static Byte nvarbuffer=0;    // number of variables at a list.
 
-static int     ntemp;		     /* number of temporary var into stack */
-static int     err;		     /* flag to indicate error */
+static Word  localvar[STACKGAP];
+
+/* 
+ The number of local variables. 
+ #ps:  
+ + Changing the type from Byte to int.
+ + Removing the 'static' to make it a global.
+*/
+// static Byte nlocalvar=0;	     
+// Byte nlocalvar=0;
+int nlocalvar = 0;
+
+/* number of temporary var into stack */
+static int ntemp;
+
+/* flag to indicate error */
+static int err;
 
 /* Internal functions */
 //#define align(n)  align_n(sizeof(n))

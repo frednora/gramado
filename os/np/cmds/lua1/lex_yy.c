@@ -1,4 +1,5 @@
 // lex_yy.c
+// Lua 1.0
 
 
 // rtl
@@ -8,21 +9,27 @@
 #include <string.h>
 
 
-# define U(x)  x
-# define NLSTATE yyprevious=YYNEWLINE
-# define BEGIN yybgin = yysvec + 1 +
-# define INITIAL 0
-# define YYLERR yysvec
-# define YYSTATE (yyestate-yysvec-1)
-# define YYOPTIM 1
-# define YYLMAX  BUFSIZ
+#define U(x)  x
+#define NLSTATE  yyprevious=YYNEWLINE
+#define BEGIN  yybgin = yysvec + 1 +
+#define INITIAL  0
+#define YYLERR  yysvec
+#define YYSTATE  (yyestate-yysvec-1)
+#define YYOPTIM  1
+#define YYLMAX  BUFSIZ
 
-#define __lex_output(c)  putc(c,yyout)
+#define __lex_output(c)  putc(c, yyout)
 
-// Default handlers
-// New symbols in order to avoid conflict
-#define LEX_INPUT() (((yytchar=yysptr>yysbuf?U(*--yysptr):getc(yyin))==10?(yylineno++,yytchar):yytchar)==EOF?0:yytchar)
-#define LEX_UNPUT(c) {yytchar= (c);if(yytchar=='\n')yylineno--;*yysptr++=yytchar;}
+//
+// Default handlers:
+// New symbols in order to avoid conflict.
+//
+
+#define LEX_INPUT()  \
+(((yytchar=yysptr>yysbuf?U(*--yysptr):getc(yyin))==10?(yylineno++,yytchar):yytchar)==EOF?0:yytchar)
+
+#define LEX_UNPUT(c)  \
+{yytchar= (c);if(yytchar=='\n')yylineno--;*yysptr++=yytchar;}
 
 
 #define yymore()  (yymorfg=1)
@@ -35,8 +42,13 @@ int yymorfg;
 extern char *yysptr, yysbuf[];
 int yytchar;
 
+// #ps:
+// Changing style to avoid compilation issues.
+// Lua 1.0 initialized it with default stream's pointer.
+// We dont.
+
 //FILE *yyin = {stdin}, *yyout = {stdout};
-FILE *yyin  = NULL;
+FILE *yyin = NULL;
 FILE *yyout = NULL;
 
 // #test
@@ -52,10 +64,13 @@ struct yysvf
     int *yystops;
 };
 struct yysvf *yyestate;
-extern struct yysvf yysvec[], *yybgin;
 
+// #ps: Changing the style.
+//extern struct yysvf yysvec[], *yybgin;
+extern struct yysvf yysvec[];
+extern struct yysvf *yybgin;
 
-// Lua
+// Lua 1.0
 #include "opcode.h"
 #include "hash.h"
 #include "inout.h"
@@ -64,6 +79,7 @@ extern struct yysvf yysvec[], *yybgin;
 #include "lex_yy.h"
 
 
+// #ps: Supending these undefs
 //#undef input
 //#undef unput
 
@@ -71,14 +87,15 @@ static Input __lex_input_fn;
 static Unput __lex_unput_fn;
 
 
-// Custom I/O
-void lua_setinput (Input fn)
+// Custom I/O: SET
+void lua_setinput(Input fn)
 {
+	// #todo: Can't set a NULL value?
     __lex_input_fn = fn;
 }
 
-// Custom I/O
-void lua_setunput (Unput fn)
+// Custom I/O: UNSET
+void lua_setunput(Unput fn)
 {
     __lex_unput_fn = fn;
 }
@@ -88,9 +105,16 @@ char *lua_lasttext(void)
     return yytext;
 }
 
+
 #define YYNEWLINE  10
 
-// Main lexer entry point
+//
+// --------------------------------------------
+// yylex():
+// Main function for the lexer.
+// This is called by the parser.
+//
+
 int yylex(void)
 {
 	int nstr=0;
@@ -100,26 +124,27 @@ int yylex(void)
 
 	nstr = yylook();  // Next token
 
-    if (nstr < 0)     // No more input / end of file
+    // No more input / end of file
+    if (nstr < 0)
         break;
 
-    yyfussy:  // REJECT makes the code jump here
+	// label: REJECT makes the code jump here.
+    yyfussy:
     switch (nstr){
 
     case 0:
-        if (yywrap())
-		    return(0);
+        if ( yywrap() ){
+		    return 0;
+		}
 		break;
 
-    case 1:
-		;
-        break;
+    case 1:  ;  break;
 
     case 2:
-		{
+	    {
 		    yylval.vInt = 1; 
 			return DEBUG;
-		}
+	    }
         break;
 
     case 3:
@@ -133,19 +158,17 @@ int yylex(void)
 		lua_linenumber++;
         break;
 
-    case 5:
-		;
-        break;
+    case 5:  ;  break;
 
-    case 6:  return LOCAL;  break;
-    case 7:  return IF;     break;
-    case 8:  return THEN;   break;
-    case 9:  return ELSE;   break;
-    case 10: return ELSEIF; break;
-    case 11: return WHILE;  break;
-    case 12: return DO;     break;
-    case 13: return REPEAT; break;
-    case 14: return UNTIL;  break;
+    case 6:  return LOCAL;   break;
+    case 7:  return IF;      break;
+    case 8:  return THEN;    break;
+    case 9:  return ELSE;    break;
+    case 10: return ELSEIF;  break;
+    case 11: return WHILE;   break;
+    case 12: return DO;      break;
+    case 13: return REPEAT;  break;
+    case 14: return UNTIL;   break;
 
     case 15:
 		{
@@ -179,11 +202,13 @@ int yylex(void)
     case 31:
     case 32:
         {
+			// Double
             yylval.vDouble = my_strtod(yytext, NULL);
-            //printf("[LEXER] NUMBER token: %s → %f\n", yytext, yylval.vDouble);
 			//yylval.vDouble = 42.0f;
 		    //yylval.vDouble = atof(yytext);
 			//yylval.vDouble = atod(yytext);
+			// #debug:
+			//printf("[LEXER] NUMBER token: %s -> %f\n", yytext, yylval.vDouble);
 		    return NUMBER;
 		}
         break;
@@ -197,22 +222,25 @@ int yylex(void)
 
     case 34:
 	    return  *yytext;
+		// return  (int) *yytext;  //#todo:
         break;
 
     case -1:
         break;
 
     default:
-        fprintf(yyout,"bad switch yylook %d",nstr);
-        return 0;  // #test: Adding this statement
+	    // #ps: No lf
+        fprintf(yyout, "default: Bad switch yylook %d", nstr);
+        return 0;
     }   // switch end
+
     };  // while end
 
-    return (0); 
+    return 0; 
 }
 // Eend of yylex
 
-
+// --------------------------------
 // Stop states for each rule
 int yyvstop[] = {
 0,
@@ -526,12 +554,22 @@ int yyvstop[] = {
 
 3,
 0,
-0};
+0
+};
 
 #define YYTYPE  char
 
+// --------------------------------
 // Transition table (compressed DFA)
-struct yywork { YYTYPE verify, advance; } yycrank[] = {
+struct yywork {
+
+	// #ps: Changing style
+    //YYTYPE verify, advance; 
+    YYTYPE verify; 
+    YYTYPE advance; 
+
+} yycrank[] = {
+
 0,0,	0,0,	1,3,	0,0,	
 0,0,	0,0,	0,0,	0,0,	
 0,0,	0,0,	1,4,	1,5,	
@@ -638,24 +676,27 @@ struct yywork { YYTYPE verify, advance; } yycrank[] = {
 79,91,	79,91,	90,91,	90,91,	
 90,91,	90,91,	90,91,	90,91,	
 90,91,	90,91,	90,91,	90,91,	
-0,0};
+0,0
+};
 
+// --------------------------------
 // State vector
 struct yysvf yysvec[] = {
+
 0,	0,	0,
-yycrank+-1,	0,		yyvstop+1,
-yycrank+-28,	yysvec+1,	yyvstop+3,
-yycrank+0,	0,		yyvstop+5,
-yycrank+4,	0,		yyvstop+7,
-yycrank+0,	0,		yyvstop+10,
-yycrank+-11,	0,		yyvstop+12,
-yycrank+-17,	0,		yyvstop+14,
-yycrank+7,	0,		yyvstop+16,
-yycrank+107,	0,		yyvstop+18,
-yycrank+119,	0,		yyvstop+20,
-yycrank+6,	0,		yyvstop+23,
-yycrank+7,	0,		yyvstop+25,
-yycrank+158,	0,		yyvstop+27,
+yycrank+-1,	        0,	yyvstop+1,
+yycrank+-28, yysvec+1,	yyvstop+3,
+yycrank+0,	        0,	yyvstop+5,
+yycrank+4,	        0,	yyvstop+7,
+yycrank+0,	        0,	yyvstop+10,
+yycrank+-11,	    0,	yyvstop+12,
+yycrank+-17,	    0,	yyvstop+14,
+yycrank+7,	        0,	yyvstop+16,
+yycrank+107,	    0,	yyvstop+18,
+yycrank+119,	    0,	yyvstop+20,
+yycrank+6,	        0,	yyvstop+23,
+yycrank+7,	        0,	yyvstop+25,
+yycrank+158,	    0,  yyvstop+27,
 yycrank+4,	yysvec+13,	yyvstop+30,
 yycrank+5,	yysvec+13,	yyvstop+33,
 yycrank+11,	yysvec+13,	yyvstop+36,
@@ -753,10 +794,15 @@ yycrank+186,	yysvec+13,	yyvstop+212,
 yycrank+204,	0,		0,	
 yycrank+0,	yysvec+13,	yyvstop+214,
 yycrank+0,	0,		yyvstop+217,
-0,	0,	0};
+0,	0,	0 
+};
+
 struct yywork *yytop = yycrank+423;
 struct yysvf *yybgin = yysvec+1;
+
+// --------------------------------
 char yymatch[] = {
+
 00  ,01  ,01  ,01  ,01  ,01  ,01  ,01  ,
 01  ,011 ,012 ,01  ,01  ,01  ,01  ,01  ,
 01  ,01  ,01  ,01  ,01  ,01  ,01  ,01  ,
@@ -773,8 +819,10 @@ char yymatch[] = {
 'A' ,'A' ,'A' ,'A' ,'A' ,'A' ,'A' ,'A' ,
 'A' ,'A' ,'A' ,'A' ,'A' ,'A' ,'A' ,'A' ,
 'A' ,'A' ,'A' ,01  ,01  ,01  ,01  ,01  ,
-0};
+0
+};
 
+// --------------------------------
 char yyextra[] = {
 0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,
@@ -785,24 +833,37 @@ char yyextra[] = {
 };
 
 #ifndef lint
-static char ncform_sccsid[] = "@(#)ncform 1.6 88/02/08 SMI";  /* from S5R2 1.2 */
+// from S5R2 1.2
+static char ncform_sccsid[] = "@(#)ncform 1.6 88/02/08 SMI";
 #endif
 
 int yylineno=1;
 #define YYU(x)  x
 #define NLSTATE  yyprevious=YYNEWLINE
 char yytext[YYLMAX];
-struct yysvf *yylstate [YYLMAX], **yylsp, **yyolsp;
+
+// #ps: Changing style
+//struct yysvf *yylstate [YYLMAX], **yylsp, **yyolsp;
+struct yysvf *yylstate[YYLMAX];
+struct yysvf **yylsp;
+struct yysvf **yyolsp;
+
 char yysbuf[YYLMAX];
 char *yysptr = yysbuf;
 int *yyfnd;
 extern struct yysvf *yyestate;
 int yyprevious = YYNEWLINE;
 
+// ---------------------------------------------------
+// yylook:
 // Core state machine (very optimized, old-school lex)
+
 int yylook(void)
 {
-	register struct yysvf *yystate, **lsp;
+	// #ps: Changing style.
+	//register struct yysvf *yystate, **lsp;
+	register struct yysvf *yystate;
+	register struct yysvf **lsp;
 	register struct yywork *yyt;
 	struct yysvf *yyz;
 	int yych, yyfirst;
@@ -814,7 +875,7 @@ int yylook(void)
 
 	char *yylastch;
 
-	/* start off machines */
+	// start off machines
 #ifdef LEXDEBUG
 	debug = 0;
 #endif
@@ -843,18 +904,22 @@ int yylook(void)
 			    fprintf(yyout,"state %d\n",yystate-yysvec-1);
 #endif
 			yyt = yystate->yystoff;
-			/* may not be any transitions */
+
+			// may not be any transitions 
 			if (yyt == yycrank && !yyfirst)
 			{
 				yyz = yystate->yyother;
-				if (yyz == 0)break;
-				if (yyz->yystoff == yycrank)break;
+				if (yyz == 0)
+				    break;
+				if (yyz->yystoff == yycrank)
+				    break;
 			}
 			*yylastch++ = yych = __lex_input_fn();
 			yyfirst=0;
 
+		// label:
 		tryagain:
-		
+
 #ifdef LEXDEBUG
 			if (debug)
 			{
@@ -863,7 +928,9 @@ int yylook(void)
 				putchar('\n');
 			}
 #endif
+
 			yyr = yyt;
+			// ::
 			if ( (int)yyt > (int)yycrank){
 				yyt = yyr + yych;
 				if (yyt <= yytop && yyt->verify+yysvec == yystate){
@@ -872,13 +939,15 @@ int yylook(void)
 					*lsp++ = yystate = yyt->advance+yysvec;
 					goto contin;
 					}
+			
+			// ::
 			}
-# ifdef YYOPTIM
-			else if((int)yyt < (int)yycrank) {		/* r < yycrank */
+#ifdef YYOPTIM
+			else if ((int)yyt < (int)yycrank) {		/* r < yycrank */
 				yyt = yyr = yycrank+(yycrank-yyt);
-# ifdef LEXDEBUG
+#ifdef LEXDEBUG
 				if(debug)fprintf(yyout,"compressed state\n");
-# endif
+#endif
 				yyt = yyt + yych;
 				if(yyt <= yytop && yyt->verify+yysvec == yystate){
 					if(yyt->advance+yysvec == YYLERR)	/* error transitions */
@@ -900,37 +969,43 @@ int yylook(void)
 					*lsp++ = yystate = yyt->advance+yysvec;
 					goto contin;
 					}
-				}
+			}
 			if ((yystate = yystate->yyother) && (yyt= yystate->yystoff) != yycrank){
 # ifdef LEXDEBUG
 				if(debug)fprintf(yyout,"fall back to state %d\n",yystate-yysvec-1);
 # endif
 				goto tryagain;
-				}
+			}
 # endif
-			else
-				{__lex_unput_fn(*--yylastch);break;}
+			else {
+				__lex_unput_fn(*--yylastch);
+				break;
+			}
+
+		// label:
 		contin:
 # ifdef LEXDEBUG
-			if(debug){
+			if (debug){
 				fprintf(yyout,"state %d char ",yystate-yysvec-1);
 				allprint(yych);
 				putchar('\n');
-				}
-# endif
-			;
 			}
+# endif
+			; 
+		}  // End of for?
 # ifdef LEXDEBUG
-		if(debug){
+		if (debug){
 			fprintf(yyout,"stopped at %d with ",*(lsp-1)-yysvec-1);
 			allprint(yych);
 			putchar('\n');
-			}
+		}
 # endif
 		while (lsp-- > yylstate)
 		{
 			*yylastch-- = 0;
-			if (*lsp != 0 && (yyfnd= (*lsp)->yystops) && *yyfnd > 0){
+
+			if (*lsp != 0 && (yyfnd= (*lsp)->yystops) && *yyfnd > 0)
+			{
 				yyolsp = lsp;
 				if(yyextra[*yyfnd]){		/* must backup */
 					while(yyback((*lsp)->yystops,-*yyfnd) != 1 && lsp > yylstate){
@@ -949,10 +1024,10 @@ int yylook(void)
 					fprintf(yyout," action %d\n",*yyfnd);
 					}
 # endif
-				return (*yyfnd++);
-				}
+			    return (*yyfnd++);
+			}
 			__lex_unput_fn(*yylastch);
-		} // End of while
+		}  // End of while
 
 		if (yytext[0] == 0  /* && feof(yyin) */)
 		{
@@ -971,9 +1046,12 @@ int yylook(void)
     }  // End of for
 }
 
+// -------------------------------------------
+// yyback:
+
 int yyback(int *p, int m)
 {
-    if (p==0)
+    if (p == 0)
 	    return (0);
 
     while (*p)
@@ -985,8 +1063,10 @@ int yyback(int *p, int m)
 	return (0);
 }
 
+//
+// The following are only used in the lex library
+//
 
-/* the following are only used in the lex library */
 int yyinput(void)
 {
 	return ( __lex_input_fn() );
