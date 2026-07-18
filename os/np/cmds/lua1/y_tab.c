@@ -93,6 +93,11 @@ static void code_word (Word n)
 
 static void code_float(double n)
 {
+	int i = (int) n;
+
+	// #debug
+	// printf ("code_float: %d (as integer)\n",i);
+
     if (pc-basepc > MAXCODE-sizeof(double))
     {
         lua_error("code buffer overflow");
@@ -160,12 +165,14 @@ static void code_number (double f)
 {
     int i = f;
 
-	//#debug
-	printf ("code_number: %d (as integer)\n",i);
+	// #debug
+	// printf ("code_number: %d (as integer)\n",i);
 
-    /* f has an integer value */
-    if (f == i)  
-    {
+    // f has an integer value
+    if (f == i){
+
+      	// printf ("code_number: INTEGER\n");
+
         if (i <= 2) code_byte(PUSH0 + i);
         else if (i <= 255)
         {
@@ -178,9 +185,12 @@ static void code_number (double f)
             code_byte(PUSHWORD);
             code_word(i);
         }
-    }
-    else
-    {
+
+	// f is not an integer value
+    } else {
+
+      	// printf ("code_number: REAL\n");
+
         align(double);
         code_byte(PUSHFLOAT);
         code_float(f);
@@ -1669,7 +1679,7 @@ case 20:
     // Force correct stack adjustment for locals
     lua_codeadjust(0);
 }
-
+break;
 
 
 case 21:

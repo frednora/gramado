@@ -205,7 +205,6 @@ int lua_execute (Byte *pc)
        (long)(base-stack));
     */
 
-
     switch ( (OpCode)*pc++ ){
 
     case NOP:
@@ -1302,12 +1301,13 @@ void __lua_print_debug(void)
     }
 }
 
-
+/*
 // Internal function: print object values
 void lua_print(void)
 {
     int i=1;
-    void *obj;
+    //void *obj;
+    Object *obj;
 
     //__lua_print_debug();
     //return;
@@ -1317,12 +1317,10 @@ void lua_print(void)
 
     while (( obj=lua_getparam(i++) ) != NULL)
     {
-        //printf("[TRACE] lua_print param %d tag=%d\n", 
-        //    i, 
-        //    tag(obj));
-        //printf("[TRACE] lua_print param %d \n", i );
 
-        if      (lua_isnumber(obj))    printf("%d\n",lua_getnumber (obj));
+        printf("[PRINT param %d] tag=%d ", i-1, tag(obj));
+
+        if      (lua_isnumber(obj))    printf("%d\n",(int)lua_getnumber (obj));
         else if (lua_isstring(obj))    printf("%s\n",lua_getstring (obj));
         else if (lua_iscfunction(obj)) printf("cfunction: %x\n",lua_getcfunction (obj));
         else if (lua_isuserdata(obj))  printf("userdata: %s\n",lua_getuserdata (obj));
@@ -1333,7 +1331,31 @@ void lua_print(void)
         }
     };
 }
+*/
 
+void lua_print(void)
+{
+    int i=1;
+    Object *obj;
+
+    while ((obj = lua_getparam(i++)) != NULL)
+    {
+        if (lua_isnumber(obj)) 
+            printf("%d\n", (int)lua_getnumber(obj));
+        else if (lua_isstring(obj)) 
+            printf("%s\n", lua_getstring(obj));
+        else if (lua_iscfunction(obj)) 
+            printf("cfunction: %x\n", (unsigned long)lua_getcfunction(obj));
+        else if (lua_isuserdata(obj)) 
+            printf("userdata: %s\n", (char*)lua_getuserdata(obj));
+        else if (lua_istable(obj)) 
+            printf("table: %x\n", (unsigned long)obj);
+        else if (lua_isnil(obj)) 
+            printf("nil\n");
+        else 
+            printf("(unprintable value)\n");
+    }
+}
 
 /*
 void lua_print(void)
