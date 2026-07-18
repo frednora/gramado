@@ -62,6 +62,11 @@ int lua_main(int argc, char *argv[])
     strlib_open();
     mathlib_open();
 
+
+    //printf("sizeof(Type)   = %u\n", sizeof(Type));  // 4
+    //printf("sizeof(Object) = %u\n", sizeof(Object));  // 16
+    //while(1){}
+
 // Handle io files
 // See: opcode.c
 // IN: input file

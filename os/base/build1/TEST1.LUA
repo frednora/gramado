@@ -19,9 +19,9 @@ function main()
     print(x[0])  -- ok
 
     local lString = "This is a local string"
-    print (lString) -- ok
+    print (lString)
 
-    print (gString) -- ok
+    print (gString)
 
     -- print (gNumber)
     -- print (gFloat)

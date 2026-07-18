@@ -19,15 +19,21 @@
 #include "table.h"
 #include "lua.h"
 
+// See: y_tab.c
+//extern Byte    nlocalvar;
+extern int nlocalvar;
 
-extern Byte    nlocalvar;
+#define tonumber(o)  ((tag(o) != T_NUMBER) && (lua_tonumber(o) != 0))
+#define tostring(o)  ((tag(o) != T_STRING) && (lua_tostring(o) != 0))
 
-#define tonumber(o) ((tag(o) != T_NUMBER) && (lua_tonumber(o) != 0))
-#define tostring(o) ((tag(o) != T_STRING) && (lua_tostring(o) != 0))
+//#ifndef MAXSTACK
+//#define MAXSTACK 256
+//#endif
 
 #ifndef MAXSTACK
-#define MAXSTACK 256
+#define MAXSTACK  512
 #endif
+
 static Object stack[MAXSTACK] = {{T_MARK, {NULL}}};
 
 //static Object *top  = stack+1, 
@@ -139,6 +145,20 @@ static int lua_tostring (Object *obj)
  return 0;
 }
 
+// At the top of lua_execute, add:
+static void save_base(void)
+{
+    Object *mark = top - 1;
+    while (tag(mark) != T_MARK && mark > stack) mark--;
+    nvalue(mark) = (real)((unsigned long)(base - stack));  // store offset
+}
+
+static void restore_base(void)
+{
+    unsigned long offset = (unsigned long) nvalue(base - 1);
+    base = stack + offset;
+}
+
 // Virtual Machine loop 
 // The heart of the interpreter. 
 // It reads the bytecode (*pc++) and executes each opcode 
@@ -150,6 +170,9 @@ int lua_execute (Byte *pc)
     //
     // #debug
     //
+
+    printf("[EXEC] nlocalvar = %d, base-stack = %d\n", 
+        nlocalvar, (long)(base - stack));
 
     //printf("[DEBUG] sizeof(Object) = %d bytes\n", sizeof(Object));
     //printf("[DEBUG] sizeof(Type)   = %d bytes\n", sizeof(Type));
@@ -177,6 +200,13 @@ int lua_execute (Byte *pc)
     // printf("[OPCODE] %d (0x%x) at pc=%x\n", 
         // (int)opcode, (int)opcode, (void*)pc);
 
+    printf("[TRACE] pc=%x opcode=%d top=%d base=%d\n",
+       (void*)pc, 
+       (int)*(pc), 
+       (long)(top-stack), 
+       (long)(base-stack));
+
+
     switch ( (OpCode)*pc++ ){
 
     case NOP:
@@ -198,14 +228,16 @@ int lua_execute (Byte *pc)
 
     case PUSHWORD: 
         tag(top) = T_NUMBER; 
-        nvalue(top++) = *((Word *)(pc)); 
+        //nvalue(top++) = *((Word *)(pc)); 
+        nvalue(top++) = (real)*((Word *)pc);   // cast to real
         //printf("PUSHWORD\n");
         pc += sizeof(Word);
         break;
 
     case PUSHFLOAT:
         tag(top) = T_NUMBER; 
-        nvalue(top++) = *((double *)(pc)); 
+        //nvalue(top++) = *((double *)(pc)); 
+        nvalue(top++) = *((double *)pc);
         //printf("PUSHFLOAT\n");
         pc += sizeof(double);
         break;
@@ -214,17 +246,28 @@ int lua_execute (Byte *pc)
     {
         int w = *((Word *)(pc));
         pc += sizeof(Word);
-        tag(top) = T_STRING; svalue(top++) = lua_constant[w];
+        tag(top) = T_STRING; 
+        svalue(top++) = lua_constant[w];
+
+        printf("[DEBUG] PUSHSTRING constant[%d] = %s\n",
+            w, lua_constant[w] ? lua_constant[w] : ">>(null)<<");
     }
     break;
+
+    // Copying Object structs between the stack and the local frame. 
 
     // #test:
     // New implementation (for 64bit compiler)
     // SAFE 16-BYTE OBJECT COPYING
+    //case PUSHLOCAL0: 
+        //printf("[PUSHLOCAL0] reading from slot 0 = %d\n", nvalue(&base[0]));
+        //memcpy(top++, &base[0], sizeof(Object)); 
+        //break;
     case PUSHLOCAL0: 
-        printf("[PUSHLOCAL0] reading from slot 0 = %d\n", nvalue(&base[0]));
+        printf("[PUSHLOCAL0] reading from slot 0 = %g\n", nvalue(&base[0]));
         memcpy(top++, &base[0], sizeof(Object)); 
         break;
+
     case PUSHLOCAL1: 
         printf("[PUSHLOCAL1] reading from slot 1 = %d\n", nvalue(&base[1]));
         memcpy(top++, &base[1], sizeof(Object)); 
@@ -238,19 +281,89 @@ int lua_execute (Byte *pc)
     case PUSHLOCAL8: memcpy(top++, &base[8], sizeof(Object)); break;
     case PUSHLOCAL9: memcpy(top++, &base[9], sizeof(Object)); break;
 
+    /*
     // #test: New implementation (for 64bit compilers)
     // Local >= 10
     case PUSHLOCAL:
     {
         int Lidx = *pc++;
-        printf("[PUSHLOCAL] Lidx=%d  nlocalvar=%d  base=%p\n", 
-            Lidx, nlocalvar, (void*)base );
+       printf("[DEBUG] PUSHLOCAL idx=%d tag=%d str=%s\n",
+           Lidx, 
+           tag(&base[Lidx]),
+           svalue(&base[Lidx]) ? svalue(&base[Lidx]) : "(null)");
         if (Lidx < 0 || Lidx >= nlocalvar) {
             printf("WARNING: bad local index %d\n", Lidx);
         }
         memcpy(top++, &base[Lidx], sizeof(Object));
         break;
     }
+    */
+    /*
+    case PUSHLOCAL:
+    {
+    int Lidx = *pc++;
+
+    printf("[PUSHLOCAL] reading base[%d] = tag:%d num:%d\n", 
+       Lidx, tag(&base[Lidx]), nvalue(&base[Lidx]));
+
+    printf("[PUSHLOCAL] idx=%d  nlocalvar=%d  base[%d] tag=%d num=%d str='%s'\n",
+        Lidx, nlocalvar, Lidx,
+        tag(&base[Lidx]),
+        (tag(&base[Lidx])==T_NUMBER ? nvalue(&base[Lidx]) : 0.0),
+        (tag(&base[Lidx])==T_STRING ? svalue(&base[Lidx]) : "(not string)"));
+
+
+    if (Lidx == 0) {
+        printf("[PUSHLOCAL0] base[0] tag=%d value=%g\n", 
+           tag(&base[0]), nvalue(&base[0]));
+    }
+    if (Lidx < 0 || Lidx >= nlocalvar) {
+        printf("WARNING: Bad local index %d\n", Lidx);
+    }
+
+    memcpy(top++, &base[Lidx], sizeof(Object));
+    break;
+    }
+    */
+
+    /*
+    case PUSHLOCAL:
+    {
+    int Lidx = *pc++;
+
+    printf("[PUSHLOCAL] idx=%d  nlocalvar=%d  base[%d] tag=%d num=%d str='%s'\n",
+        Lidx, nlocalvar, Lidx,
+        tag(&base[Lidx]),
+        (tag(&base[Lidx])==T_NUMBER ? nvalue(&base[Lidx]) : 0.0),
+        (tag(&base[Lidx])==T_STRING ? svalue(&base[Lidx]) : "(not string)"));
+
+    if (Lidx < 0 || Lidx >= nlocalvar) {
+        printf("WARNING: Bad local index %d\n", Lidx);
+    }
+
+    memcpy(top++, &base[Lidx], sizeof(Object));
+    break;
+    }
+    */
+
+    case PUSHLOCAL:
+    {
+    int Lidx = *pc++;
+
+    printf("[PUSHLOCAL] idx=%d  nlocalvar=%d  base[%d] tag=%d num=%d str='%s'\n",
+        Lidx, nlocalvar, Lidx,
+        tag(&base[Lidx]),
+        (tag(&base[Lidx])==T_NUMBER ? nvalue(&base[Lidx]) : 0.0),
+        (tag(&base[Lidx])==T_STRING ? svalue(&base[Lidx]) : "(not string)"));
+
+    if (Lidx < 0 || Lidx >= nlocalvar) {
+        printf("WARNING: Bad local index %d\n", Lidx);
+    }
+
+    memcpy(top++, &base[Lidx], sizeof(Object));
+    break;
+    }
+
 
     case PUSHGLOBAL: 
         *top++ = s_object(*((Word *)(pc))); 
@@ -291,10 +404,15 @@ int lua_execute (Byte *pc)
         break;
 
     // #test: New implementation for (64bit compilers)
+    //case STORELOCAL0: 
+        //printf("[STORELOCAL0] storing %d to slot 0\n", nvalue(top-1));
+        //memcpy(&base[0], --top, sizeof(Object)); 
+        //break;
     case STORELOCAL0: 
         printf("[STORELOCAL0] storing %d to slot 0\n", nvalue(top-1));
         memcpy(&base[0], --top, sizeof(Object)); 
         break;
+
     case STORELOCAL1: 
         printf("[STORELOCAL1] storing %d to slot 1\n", nvalue(top-1));
         memcpy(&base[1], --top, sizeof(Object)); 
@@ -308,13 +426,38 @@ int lua_execute (Byte *pc)
     case STORELOCAL8: memcpy(&base[8], --top, sizeof(Object)); break;
     case STORELOCAL9: memcpy(&base[9], --top, sizeof(Object)); break;  
 
+    /*
     // #test: New implementation for (64bit compilers)
     case STORELOCAL:
     {
         int Lidx_0000 = *pc++;
-        printf("[STORELOCAL] Lidx_0000=%d\n", Lidx_0000);
+        printf("[DEBUG] STORELOCAL idx=%d tag=%d str=%s num=%d\n",
+            Lidx_0000,
+            tag(top-1),
+            svalue(top-1) ? svalue(top-1) : "(null)",
+            (unsigned long) nvalue(top-1) );
         memcpy(&base[Lidx_0000], --top, sizeof(Object));
         break;
+    }
+    */
+    case STORELOCAL:
+    {
+    int Lidx = *pc++;
+    
+    printf("[STORELOCAL] idx=%d  nlocalvar=%d  top_value_tag=%d num=%d str='%s'\n",
+        Lidx, nlocalvar, tag(top-1),
+        (tag(top-1)==T_NUMBER ? nvalue(top-1) : 0.0),
+        (tag(top-1)==T_STRING ? svalue(top-1) : "(not string)"));
+
+    if (Lidx < 0 || Lidx >= nlocalvar) {
+        printf("ERROR: Bad local index %d (max=%d)\n", Lidx, nlocalvar-1);
+    }
+
+    memcpy(&base[Lidx], --top, sizeof(Object));
+    
+    printf("[STORELOCAL] AFTER store -> base[%d] tag=%d num=%d\n",
+        Lidx, tag(&base[Lidx]), nvalue(&base[Lidx]));
+    break;
     }
 
     case STOREGLOBAL:
@@ -374,6 +517,7 @@ int lua_execute (Byte *pc)
     top -= 2;
    break;
    
+    /*
     case ADJUST:
         {
             Object *newtop = base + *(pc++);
@@ -385,6 +529,38 @@ int lua_execute (Byte *pc)
             }
         }
         break;
+        */
+    /*
+    case ADJUST:
+    {
+    int adjust_val = *(pc++);
+    printf("[ADJUST] value=%d  nlocalvar=%d  newtop = base + %d\n", 
+           adjust_val, nlocalvar, adjust_val);
+
+    Object *newtop = base + adjust_val;
+    if (top != newtop)
+    {
+        while (top < newtop) 
+           tag(top++) = T_NIL;
+        top = newtop;
+    }
+    break;
+    }*/
+    case ADJUST:
+    {
+    int adjust_val = *(pc++);
+    printf("[ADJUST] value=%d  nlocalvar=%d\n", adjust_val, nlocalvar);
+
+    Object *newtop = base + adjust_val;
+    if (top != newtop)
+    {
+        while (top < newtop) 
+           tag(top++) = T_NIL;
+        top = newtop;
+    }
+    break;
+    }
+
 
    case CREATEARRAY:
     if (tag(top-1) == T_NIL) 
@@ -569,47 +745,64 @@ int lua_execute (Byte *pc)
 
    case CALLFUNC:
    {
-    Byte *newpc;
-    Object *b = top-1;
-    while (tag(b) != T_MARK) b--;
-    if (tag(b-1) == T_FUNCTION)
-    {
-     lua_debugline = 0;			/* always reset debug flag */
-     newpc = bvalue(b-1);
-     bvalue(b-1) = pc;		        /* store return code */
-     /* store base value */
-     // storing pointer difference as double
-     nvalue(b) = (base-stack);
+        Byte *newpc;
+        Object *b = top-1;
 
-     base = b+1;
-     pc = newpc;
-     if (MAXSTACK-(base-stack) < STACKGAP)
-     {
-      lua_error ("stack overflow");
-      return 1;
-     }
-    }
-    else if (tag(b-1) == T_CFUNCTION)
-    {
-     int nparam; 
-     lua_debugline = 0;			/* always reset debug flag */
-     nvalue(b) = (base-stack);		/* store base value */
-     base = b+1;
-     nparam = top-base;			/* number of parameters */
-     (fvalue(b-1))();			/* call C function */
+        printf("[TRACE] CALLFUNC saving base offset=%u\n",
+           (unsigned long)(base-stack));
+
+        while (tag(b) != T_MARK)
+            b--;
+        if (tag(b-1) == T_FUNCTION)
+        {
+            lua_debugline = 0;			/* always reset debug flag */
+            newpc = bvalue(b-1);
+            bvalue(b-1) = pc;		        /* store return code */
+            /* store base value */
+            // storing pointer difference as double
+            // nvalue(b) = (base-stack);
+            unsigned long diff00 = (unsigned long) (base-stack);
+            nvalue(b) = (real) diff00;
+            // save_base();    // option
+
+            base = b+1;
+            pc = newpc;
+            if (MAXSTACK-(base-stack) < STACKGAP)
+            {
+                lua_error ("stack overflow");
+                return 1;
+            }
+        }
+        else if (tag(b-1) == T_CFUNCTION)
+        {
+            int nparam; 
+            lua_debugline = 0;			/* always reset debug flag */
+            //nvalue(b) = (base-stack);		/* store base value */
+            unsigned long diff01 = (unsigned long)(base-stack);
+            nvalue(b) = (real) diff01;
+
+            base = b+1;
+            nparam = top-base;			/* number of parameters */
+            
+            (fvalue(b-1))();			/* call C function */
      
-     /* shift returned values */
-     { 
-      int i;
-      int nretval = top - base - nparam;
-      top = base - 2;
-      base = stack + (int) nvalue(base-1);  // casting back
-      for (i=0; i<nretval; i++)
-      {
-       *top = *(top+nparam+2);
-       ++top;
-      }
-     }
+            /* shift returned values */
+            { 
+                int i;
+                int nretval = top - base - nparam;
+                top = base - 2;
+
+                //base = stack + (int) nvalue(base-1);  // casting back
+                // restore base using integer offset
+                unsigned long Offset11 = (unsigned long) nvalue(base-1);
+                base = stack + Offset11;
+                
+                for (i=0; i<nretval; i++)
+                {
+                    *top = *(top+nparam+2);
+                    ++top;
+                }
+            }
     }
     else
     {
@@ -626,7 +819,14 @@ int lua_execute (Byte *pc)
     int nretval = top - base - shift;
     top = base - 2;
     pc = bvalue(base-2);
-    base = stack + (int) nvalue(base-1);  // casting back
+
+    printf("[TRACE] RETCODE restoring base offset=%u\n",
+       (unsigned long)nvalue(base-1));
+
+    // base = stack + (int) nvalue(base-1);  // casting back
+    unsigned long Offset = (unsigned long) nvalue(base-1);
+    base = stack + Offset;
+
     for (i=0; i<nretval; i++)
     {
      *top = *(top+shift+2);
@@ -771,8 +971,10 @@ real lua_getnumber(Object *object)
 char *lua_getstring (Object *object)
 {
     if ( tostring(object) ){ 
+        printf("lua_getstring: NULL\n");
         return NULL; 
     } else { 
+        printf("lua_getstring: not NULL\n");
         return ( svalue(object) );
     }
 }
@@ -887,12 +1089,19 @@ int lua_pushnumber (real n)
 // Return 0 on success or 1 on error.
 int lua_pushstring (char *s)
 {
+    printf("lua_pushstring: %s\n",s);
+
     if ((top-stack) >= MAXSTACK-1)
     {
         lua_error ("stack overflow");
         return 1;
     }
-    tag(top) = T_STRING; 
+    tag(top) = T_STRING;
+
+    //svalue(top++) = lua_createstring( lua_strdup(s) );
+    
+    //char *s_saved = lua_createstring( lua_strdup(s) );
+    //printf("lua_pushstring: %s\n",s_saved);
     svalue(top++) = lua_createstring( lua_strdup(s) );
 
     return 0;
@@ -1055,17 +1264,67 @@ void lua_obj2number (void)
  lua_pushobject (lua_convtonumber(o));
 }
 
+void __lua_print_debug(void)
+{
+    int i = 1;
+    Object *obj;
+
+    while ((obj = lua_getparam(i++)) != NULL)
+    {
+        //printf("[DEBUG] param %d: tag=%d\n", i-1, tag(obj));
+        printf("[DEBUG] param %d\n", i-1);
+
+        switch (tag(obj)) {
+            case T_STRING:
+                printf("   STRING: %s\n", svalue(obj) ? svalue(obj) : "(null)");
+                break;
+            case T_NUMBER:
+                printf("   NUMBER: %d\n", (unsigned long)nvalue(obj));
+                break;
+            case T_NIL:
+                printf("   NIL\n");
+                break;
+            case T_ARRAY:
+                printf("   TABLE ptr=%x\n", avalue(obj));
+                break;
+            case T_FUNCTION:
+                printf("   FUNCTION ptr=%x\n", bvalue(obj));
+                break;
+            case T_CFUNCTION:
+                printf("   CFUNCTION ptr=%x\n", fvalue(obj));
+                break;
+            case T_USERDATA:
+                printf("   USERDATA ptr=%x\n", uvalue(obj));
+                break;
+            default:
+                //printf("   UNKNOWN tag=%d\n", tag(obj));
+                break;
+        }
+    }
+}
+
+/*
 // Internal function: print object values
 void lua_print(void)
 {
     int i=1;
     void *obj;
 
+    __lua_print_debug();
+    return;
+
     // #todo
     // We need to work on the switches in the printf function
 
-    while ((obj=lua_getparam (i++)) != NULL)
+    while (( obj=lua_getparam(i++) ) != NULL)
     {
+        //printf("[TRACE] lua_print param %d tag=%d\n", 
+        //    i, 
+        //    tag(obj));
+
+        printf("[TRACE] lua_print param %d \n", i );
+
+
         if      (lua_isnumber(obj))    printf("%d\n",lua_getnumber (obj));
         else if (lua_isstring(obj))    printf("%s\n",lua_getstring (obj));
         else if (lua_iscfunction(obj)) printf("cfunction: %x\n",lua_getcfunction (obj));
@@ -1077,4 +1336,24 @@ void lua_print(void)
         }
     };
 }
+*/
 
+void lua_print(void)
+{
+    int i=1;
+    Object *obj;
+
+    while ((obj = lua_getparam(i++)) != NULL)
+    {
+        printf("[PRINT param %d] tag=%d ", i-1, tag(obj));
+
+        if (lua_isnumber(obj)) 
+            printf("NUMBER: %d\n", lua_getnumber(obj));
+        else if (lua_isstring(obj)) 
+            printf("STRING: %s\n", lua_getstring(obj));
+        else if (lua_isnil(obj)) 
+            printf("NIL\n");
+        else 
+            printf("other tag\n");
+    }
+}

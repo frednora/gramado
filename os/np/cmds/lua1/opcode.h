@@ -123,14 +123,12 @@ typedef union
 
 typedef struct Object
 {
+    // Type tag;        // 4 bytes
+    // #ps: 64bit compiler is adding 4 byte padding here.
 
-// 4 bytes
-    Type tag;
+    unsigned long tag;  // 8bytes (No padding included by the compiler)
 
-    // #ps: 
-    // 64bit compiler is adding 4 byte padding here.
-
-// union containing pointers (8 bytes on 64-bit)
+    // union containing pointers (8 bytes on 64-bit)
     Value value;
 
 } Object;

@@ -40,7 +40,9 @@ static Byte    nvarbuffer=0;	     /* number of variables at a list */
 
 static Word    localvar[STACKGAP];
 //static Byte    nlocalvar=0;	     /* number of local variables */
-Byte    nlocalvar=0;	     /* number of local variables */
+//Byte    nlocalvar=0;	     /* number of local variables */
+int nlocalvar=0;	     /* number of local variables */
+
 static int     ntemp;		     /* number of temporary var into stack */
 static int     err;		     /* flag to indicate error */
 
@@ -155,9 +157,10 @@ static void code_number (double f)
     int i = f;
 
 	//#debug
-	printf ("code_number: %d\n",i);
+	printf ("code_number: %d (as integer)\n",i);
 
-    if (f == i)  /* f has an integer value */
+    /* f has an integer value */
+    if (f == i)  
     {
         if (i <= 2) code_byte(PUSH0 + i);
         else if (i <= 255)
@@ -280,49 +283,108 @@ static void lua_pushvar (long number)
     }
 }
 
+/*
 static void lua_codeadjust (int n)
 {
  code_byte(ADJUST);
  code_byte(n + nlocalvar);
 }
+*/
 
+static void lua_codeadjust (int n)
+{
+    printf("[ADJUST] setting to %d locals\n", n + nlocalvar);
+    code_byte(ADJUST);
+    code_byte(n + nlocalvar);
+}
+
+
+/*
 static void lua_codestore (int i)
 {
 
-    if (varbuffer[i] > 0)		/* global var */
+    printf("[DEBUG] lua_codestore: emitting STORELOCAL for varbuffer[%d]=%d\n",
+		i, varbuffer[i] );
+
+
+//global var
+    if (varbuffer[i] > 0)
     {
         align(Word);
         //code_byte(STOREGLOBAL);
 		code_byte(STOREGLOBAL2);
         code_word(varbuffer[i]-1);
+    
+//local var 
+	}else if (varbuffer[i] < 0){
+
+        int number = (-varbuffer[i]) - 1;
+        if (number < 10) code_byte(STORELOCAL0 + number);
+        else
+        {
+            code_byte(STORELOCAL);
+            code_byte(number);
+        }
+
+// indexed var 
+    } else {
+
+        int j;
+        int upper=0;     	//number of indexed variables upper 
+        int param;		//number of itens until indexed expression 
+        for (j=i+1; j <nvarbuffer; j++)
+            if (varbuffer[j] == 0) upper++;
+        param = upper*2 + i;
+        if (param == 0)
+            code_byte(STOREINDEXED0);
+        else
+        {
+            code_byte(STOREINDEXED);
+            code_byte(param);
+        }
     }
-    else if (varbuffer[i] < 0)      /* local var */
- {
-  int number = (-varbuffer[i]) - 1;
-  if (number < 10) code_byte(STORELOCAL0 + number);
-  else
-  {
-   code_byte(STORELOCAL);
-   code_byte(number);
-  }
- }
- else				  /* indexed var */
- {
-  int j;
-  int upper=0;     	/* number of indexed variables upper */
-  int param;		/* number of itens until indexed expression */
-  for (j=i+1; j <nvarbuffer; j++)
-   if (varbuffer[j] == 0) upper++;
-  param = upper*2 + i;
-  if (param == 0)
-   code_byte(STOREINDEXED0);
-  else
-  {
-   code_byte(STOREINDEXED);
-   code_byte(param);
-  }
- }
 }
+*/
+
+static void lua_codestore (int i)
+{
+    long v = varbuffer[i];
+
+    printf("[DEBUG] lua_codestore: varbuffer[%d] = %ld\n", i, v);
+
+    if (v > 0) {                    // global
+        align(Word);
+        code_byte(STOREGLOBAL2);
+        code_word(v-1);
+    }
+    else if (v < 0) {               // local
+        int idx = (-v) - 1;
+        printf("[DEBUG] STORELOCAL idx=%d\n", idx);
+
+        if (idx < 10)
+            code_byte(STORELOCAL0 + idx);
+        else {
+            code_byte(STORELOCAL);
+            code_byte(idx);
+        }
+    } 
+    else {
+        int j;
+        int upper=0;     	//number of indexed variables upper 
+        int param;		//number of itens until indexed expression 
+        for (j=i+1; j <nvarbuffer; j++)
+            if (varbuffer[j] == 0) upper++;
+        param = upper*2 + i;
+        if (param == 0)
+            code_byte(STOREINDEXED0);
+        else
+        {
+            code_byte(STOREINDEXED);
+            code_byte(param);
+        }
+    }
+}
+
 
 void yyerror(char *s)
 {
@@ -348,6 +410,7 @@ int yywrap(void)
 
 // Parse LUA code and execute global statement.
 // Return 0 on success or 1 on error.
+/*
 int lua_parse (void)
 {
     Byte *initcode = maincode;
@@ -358,6 +421,111 @@ int lua_parse (void)
     *maincode++ = HALT;
     if ( lua_execute(initcode) )
 	    return 1;
+    maincode = initcode;
+
+    return 0;
+}
+*/
+
+/*
+int lua_parse (void)
+{
+    Byte *initcode = maincode;
+
+    printf("[PARSER] lua_parse started\n");
+
+    err = 0;
+    if (yyparse() || (err==1))
+        return 1;
+
+    // Brute force: force one local slot for testing
+    nlocalvar = 1;
+    localvar[0] = 1;  // some hash value for "x" 
+    varbuffer[0] = -1;
+
+    *maincode++ = HALT;
+    if ( lua_execute(initcode) )
+        return 1;
+    maincode = initcode;
+
+    return 0;
+}
+*/
+
+/*
+int lua_parse (void)
+{
+    Byte *initcode = maincode;
+
+    err = 0;
+    if (yyparse() || (err==1))
+        return 1;
+
+    printf("[PARSER] Final nlocalvar = %d before HALT\n", nlocalvar);
+
+    // Important: adjust stack for locals in main chunk
+    lua_codeadjust(0);   // this should emit ADJUST with nlocalvar
+
+    *maincode++ = HALT;
+
+    if ( lua_execute(initcode) )
+        return 1;
+
+    maincode = initcode;
+    return 0;
+}
+*/
+
+/*
+int lua_parse (void)
+{
+    Byte *initcode = maincode;
+
+    err = 0;
+    if (yyparse() || (err==1))
+        return 1;
+
+    printf("[PARSER] Final nlocalvar = %d before HALT\n", nlocalvar);
+
+    // DO NOT reset nlocalvar here
+    // nlocalvar should stay as 1 for the main chunk
+
+    // Force correct number of locals for main chunk
+    if (nlocalvar == 0) nlocalvar = 1;   // temporary hack
+    lua_codeadjust(0);        // This should use the current nlocalvar
+
+    *maincode++ = HALT;
+
+    if ( lua_execute(initcode) )
+        return 1;
+
+    maincode = initcode;
+
+    return 0;
+}
+*/
+
+int lua_parse (void)
+{
+    Byte *initcode = maincode;
+
+    err = 0;
+    nlocalvar = 0;    // reset once, at the start of the whole file
+    if (yyparse() || (err==1))
+        return 1;
+
+    printf("[PARSER] Final nlocalvar = %d before HALT\n", nlocalvar);
+
+    // Critical for main chunk with locals
+    lua_codeadjust(0);
+    printf("[CHECK] nlocalvar=%d ntemp=%d nvarbuffer=%d\n", 
+		nlocalvar, ntemp, nvarbuffer);
+
+    *maincode++ = HALT;
+
+    if ( lua_execute(initcode) )
+        return 1;
+
     maincode = initcode;
 
     return 0;
@@ -1266,10 +1434,45 @@ static int yyparse(void)
 	// code supplied by user is placed in this switch
 	switch (yytmp)
 	{
-		
+
+/*
 case 2:
 # line 179 "lua.stx"
 {pc=basepc=maincode; nlocalvar=0;} break;
+*/
+
+/*
+case 2:
+# line 179 "lua.stx"
+{   pc=basepc=maincode; 
+	nlocalvar=0; 
+	ntemp=0; 
+	nvarbuffer=0;} 
+break;
+*/
+/*
+case 2:
+{   
+    printf("[CASE2] resetting nlocalvar (was %d)\n", nlocalvar);
+    pc=basepc=maincode; 
+    nlocalvar=0; 
+    ntemp=0; 
+    // nvarbuffer=0;
+} 
+break;
+*/
+
+case 2:
+{   
+    pc=basepc=maincode; 
+    ntemp=0; 
+    nvarbuffer=0;
+    // nlocalvar intentionally NOT reset here — top-level locals
+    // must survive across statements since lua_parse() compiles
+    // the whole file before executing it once.
+} 
+break;
+
 case 3:
 # line 179 "lua.stx"
 {maincode=pc;} break;
@@ -1347,22 +1550,59 @@ case 19:
         *(yypvt[-0].pByte) = IFFUPJMP;
         *((Word *)(yypvt[-0].pByte+1)) = pc - yypvt[-4].pByte;
        } break;
+
+
+/*
 case 20:
 # line 261 "lua.stx"
 {
-        {
-         int i;
-         if (yypvt[-0].vInt == 0 || nvarbuffer != ntemp - yypvt[-2].vInt * 2)
-	  lua_codeadjust (yypvt[-2].vInt * 2 + nvarbuffer);
-	 for (i=nvarbuffer-1; i>=0; i--)
-	  lua_codestore (i);
-	 if (yypvt[-2].vInt > 1 || (yypvt[-2].vInt == 1 && varbuffer[0] != 0))
-	  lua_codeadjust (0);
+    {
+        int i;
+        if (yypvt[-0].vInt == 0 || nvarbuffer != ntemp - yypvt[-2].vInt * 2)
+  	        lua_codeadjust (yypvt[-2].vInt * 2 + nvarbuffer);
+	    for (i=nvarbuffer-1; i>=0; i--)
+	        lua_codestore (i);
+
+        printf("[PARSER] Assignment done. nlocalvar=%d\n", nlocalvar);
+
+	    if (yypvt[-2].vInt > 1 || (yypvt[-2].vInt == 1 && varbuffer[0] != 0))
+	        lua_codeadjust (0);
 	}
-       } break;
+
+} break;
+*/
+
+case 20:
+{
+    int i;
+    if (yypvt[-0].vInt == 0 || nvarbuffer != ntemp - yypvt[-2].vInt * 2)
+        lua_codeadjust (yypvt[-2].vInt * 2 + nvarbuffer);
+
+    for (i=nvarbuffer-1; i>=0; i--)
+        lua_codestore (i);
+
+    printf("[PARSER] Assignment done. nlocalvar=%d  ntemp=%d\n", 
+           nlocalvar, ntemp);
+
+    // Force correct stack adjustment for locals
+    lua_codeadjust(0);
+}
+
+
+
 case 21:
 # line 272 "lua.stx"
 { lua_codeadjust (0); } break;
+
+case 22:  // stat1 : LOCAL declist
+{
+    // nothing extra needed if declist does the work
+
+    printf("[PARSER] LOCAL declaration processed. nlocalvar now = %d\n", 
+		nlocalvar);
+}
+break;
+
 case 25:
 # line 279 "lua.stx"
 {
@@ -1498,36 +1738,55 @@ case 50:
       code_byte(CREATEARRAY);
       yyval.vInt = 1;
      } break;
+
 case 51:
 # line 378 "lua.stx"
 { lua_pushvar (yypvt[-0].vLong); yyval.vInt = 1;} break;
+
 case 52:
 # line 379 "lua.stx"
-{ code_number(yypvt[-0].vDouble); yyval.vInt = 1; } break;
+{ 
+    code_number(yypvt[-0].vDouble); 
+	yyval.vInt = 1; 
+
+    // NEW: store into the local slot
+    //lua_codestore(nvarbuffer - 1);
+} 
+break;
+
 case 53:
 # line 381 "lua.stx"
-{
-      align(Word);
-      code_byte(PUSHSTRING);
-      code_word(yypvt[-0].vWord);
-      yyval.vInt = 1;
-      incr_ntemp();
-     } break;
+    {
+        align(Word);
+        code_byte(PUSHSTRING);
+        code_word(yypvt[-0].vWord);
+        yyval.vInt = 1;
+        incr_ntemp();
+
+        // NEW: store the initializer into the local slot
+        // lua_codestore(nvarbuffer - 1);
+    } 
+	break;
+
 case 54:
 # line 388 "lua.stx"
 {code_byte(PUSHNIL); yyval.vInt = 1; incr_ntemp();} break;
+
 case 55:
 # line 390 "lua.stx"
-{
-      yyval.vInt = 0;
-      if (lua_debug)
-      {
-       align(Word); code_byte(SETLINE); code_word(lua_linenumber);
-      }
-     } break;
+    {
+        yyval.vInt = 0;
+        if (lua_debug)
+        {
+            align(Word); code_byte(SETLINE); code_word(lua_linenumber);
+        }
+    }
+	break;
+
 case 56:
 # line 397 "lua.stx"
 { code_byte(NOTOP);  yyval.vInt = 1;} break;
+
 case 57:
 # line 398 "lua.stx"
 {code_byte(POP); ntemp--;} break;
@@ -1557,12 +1816,29 @@ case 63:
 case 64:
 # line 417 "lua.stx"
 { code_byte(CALLFUNC); ntemp = yypvt[-3].vInt-1;} break;
+
 case 65:
 # line 419 "lua.stx"
-{lua_pushvar (yypvt[-0].vLong); } break;
+{
+    lua_pushvar (yypvt[-0].vLong); 
+} break;
+
+/*
 case 66:
 # line 422 "lua.stx"
-{ yyval.vInt = 1; } break;
+{ 
+	yyval.vInt = 1; 
+
+    // Store the initializer into the most recent local
+    lua_codestore(nvarbuffer - 1);
+
+} break;
+*/
+case 66:
+{ 
+    yyval.vInt = 1; 
+} break;
+
 case 67:
 # line 423 "lua.stx"
 { yyval.vInt = yypvt[-0].vInt; } break;
@@ -1577,10 +1853,28 @@ case 70:
 {yyval.vInt = yypvt[-0].vInt;} break;
 case 73:
 # line 435 "lua.stx"
-{localvar[nlocalvar]=yypvt[-0].vWord; incr_nlocalvar();} break;
+//{localvar[nlocalvar]=yypvt[-0].vWord; incr_nlocalvar();} break;
+{
+	localvar[nlocalvar]=yypvt[-0].vWord; 
+	incr_nlocalvar();
+
+    // NEW: record this local in varbuffer
+    varbuffer[nvarbuffer] = -(nlocalvar);
+    incr_nvarbuffer();
+
+} break;
 case 74:
 # line 436 "lua.stx"
-{localvar[nlocalvar]=yypvt[-0].vWord; incr_nlocalvar();} break;
+//{localvar[nlocalvar]=yypvt[-0].vWord; incr_nlocalvar();} break;
+{
+	localvar[nlocalvar]=yypvt[-0].vWord; 
+	incr_nlocalvar();
+
+    // NEW: record this local in varbuffer
+    varbuffer[nvarbuffer] = -(nlocalvar);
+    incr_nvarbuffer();
+
+} break;
 case 75:
 # line 439 "lua.stx"
 {yyval.vLong=-1;} break;
@@ -1683,13 +1977,75 @@ case 98:
 	   code_byte(PUSHSTRING);
 	   code_word(lua_findconstant (s_name(yypvt[-0].vWord))); incr_ntemp();
 	   yyval.vLong = 0;		/* indexed variable */
-	  } break;
+} break;
+
+/*
 case 99:
 # line 520 "lua.stx"
-{localvar[nlocalvar]=yypvt[-1].vWord; incr_nlocalvar();} break;
+//{localvar[nlocalvar]=yypvt[-1].vWord; incr_nlocalvar();} break;
+{
+	localvar[nlocalvar]=yypvt[-0].vWord; 
+	incr_nlocalvar();
+
+    // NEW: record this local in varbuffer
+    varbuffer[nvarbuffer] = -(nlocalvar);
+    incr_nvarbuffer();
+
+} break;
+*/
+/*
+case 99:  // declist : NAME init
+# line 520 "lua.stx"
+{
+    localvar[nlocalvar] = yypvt[-1].vWord;   // was yypvt[-0] or wrong index
+    incr_nlocalvar();
+
+    // Track for assignment
+    varbuffer[nvarbuffer] = -(nlocalvar);
+    incr_nvarbuffer();
+
+    // If there's an initializer, store it
+    // lua_codestore(nvarbuffer-1);   // sometimes needed
+
+    lua_codestore(nvarbuffer - 1);   // force store the initializer
+} 
+break;
+*/
+
+case 99:  // declist : NAME init
+{
+    localvar[nlocalvar] = yypvt[-1].vWord;
+    incr_nlocalvar();
+    varbuffer[nvarbuffer] = -(nlocalvar);
+    incr_nvarbuffer();
+} 
+break;
+
+/*
 case 100:
 # line 521 "lua.stx"
-{localvar[nlocalvar]=yypvt[-1].vWord; incr_nlocalvar();} break;
+//{localvar[nlocalvar]=yypvt[-1].vWord; incr_nlocalvar();} break;
+{
+	localvar[nlocalvar]=yypvt[-0].vWord; 
+	incr_nlocalvar();
+
+    // NEW: record this local in varbuffer
+    varbuffer[nvarbuffer] = -(nlocalvar);
+    incr_nvarbuffer();
+
+} break;
+*/
+case 100:  // declist : declist ',' NAME init
+{
+    localvar[nlocalvar] = yypvt[-1].vWord;
+    incr_nlocalvar();
+
+    varbuffer[nvarbuffer] = -(nlocalvar);
+    incr_nvarbuffer();
+} 
+break;
+
+
 case 101:
 # line 524 "lua.stx"
 { code_byte(PUSHNIL); } break;
