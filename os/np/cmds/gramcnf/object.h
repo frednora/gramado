@@ -49,6 +49,7 @@ typedef enum {
     OP_EOF,           // EOF. The last object
   
     // New high-level ops
+    OP_VAR_TYPE,
     OP_BOX_TYPE,
     OP_BOX_BEGIN,
     OP_BOX_END,
@@ -68,10 +69,9 @@ typedef enum {
     OPERAND_VAR_IDX,    // index in symbol table
     OPERAND_ADDR,       // instruction address (for jumps)
     OPERAND_FUNC_IDX,   // function index
-    OPERAND_IMMEDIATE   // immediate literal value
+    OPERAND_IMMEDIATE,   // immediate literal value
+    OPERAND_STRING
 } operand_t;
-
-
 
 
 struct object_d 
@@ -80,10 +80,11 @@ struct object_d
     int magic;
     int id;
 
-
     // Raw string found by the lexer
     char token_buffer[TOKEN_BUFFER_MAX];
     size_t length;
+
+    unsigned long value;  //#test
 
     // Source position
     int line;     // from LexerInfo.current_line

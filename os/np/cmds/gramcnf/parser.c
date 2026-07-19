@@ -129,6 +129,7 @@ static int parse_print(int token);
 static int parse_do(int token);
 static int parse_for(int token);
 static int parse_if(int token);
+static int parse_var(int token);
 static int parse_return(int token, int *return_value);
 static int parse_exit(int token);
 static int parse_break(int token);
@@ -817,6 +818,157 @@ static int parse_number(int olen)
     return INT;
 };
 */
+
+
+// var_stmt → "var" Symbol "=" expression ";"
+static int parse_var(int token)
+{
+    int c = 0;
+
+    // Must start with keyword 'var'
+    if ( token != TK_TYPE || 
+         keyword_found != KWVAR) 
+    {
+        printf("parse_var: wrong token\n");
+        exit(1);
+    }
+
+    // Next: identifier (variable name)
+    c = yylex();
+    if (c != TK_IDENTIFIER) {
+        printf("parse_var: expected identifier\n");
+        exit(1);
+    }
+    char var_name[TOKEN_BUFFER_MAX];
+    strncpy(var_name, real_token_buffer, TOKEN_BUFFER_MAX);
+
+    //printf("breakpoint\n");
+    //while(1){}
+
+//
+// After identifyer
+//
+
+
+    /*
+    // Next: '='
+    c = yylex();
+    if ( c != TK_ASSIGN || 
+         strcmp(real_token_buffer, "=") != 0 ) 
+    {
+        printf("parse_var: expected '='\n");
+        exit(1);
+    }
+    */
+
+    c = yylex();
+
+    // Not the assign symbol
+    if ( c != '=' ) 
+    {
+
+        // If next token is ';', it's just a declaration
+        if (c == TK_SEPARATOR && strcmp(real_token_buffer, ";") == 0) 
+        {
+            struct object_d *o = malloc(sizeof(struct object_d));
+            if (!o) { printf("parse_var: malloc failed\n"); exit(1); }
+            memset(o, 0, sizeof(struct object_d));
+            strncpy(o->token_buffer, var_name, TOKEN_BUFFER_MAX);
+            o->line = LexerInfo.current_line;
+            o->token_type = TK_TYPE;
+            o->keyword = KWVAR;
+            o->opcode = OP_VAR_TYPE;
+            o->operand = OPERAND_NONE;   // no value assigned
+            o->value = 0;                // default to 0 or mark as uninitialized
+            vm_push(o);
+
+            return TK_SEPARATOR;
+        }
+
+        // Colon means string assignment
+        if (c == TK_SEPARATOR && strcmp(real_token_buffer, ":") == 0) 
+        {
+            c = yylex();
+            if (c != TK_STRING) {
+                printf("parse_var: expected string after ':'\n");
+                exit(1);
+            }
+
+            struct object_d *o = malloc(sizeof(struct object_d));
+            if (!o) { printf("parse_var: malloc failed\n"); exit(1); }
+            memset(o, 0, sizeof(struct object_d));
+            //strncpy(o->token_buffer, var_name, TOKEN_BUFFER_MAX);
+            strncpy(o->token_buffer, real_token_buffer, TOKEN_BUFFER_MAX);
+            o->line = LexerInfo.current_line;
+            o->token_type = TK_TYPE;
+            o->keyword = KWVAR;
+            o->opcode = OP_VAR_TYPE;
+            o->operand = OPERAND_STRING;   // new operand type
+            //strncpy(o->string_value, real_token_buffer, TOKEN_BUFFER_MAX);
+            vm_push(o);
+
+            // Expect ';' after string
+            c = yylex();
+            if (c != TK_SEPARATOR || strcmp(real_token_buffer, ";") != 0) {
+                printf("parse_var: expected ';' after string\n");
+                exit(1);
+            }
+
+            return TK_SEPARATOR;
+        }
+
+        // ...
+
+        // Default
+        printf("parse_var: expected '=' or ';'\n");
+        exit(1);
+    }
+
+    //printf("breakpoint: %c %d\n",c,c);
+    //while(1){}
+
+    unsigned long expr_value=0;
+
+    // After '='
+    //c = yylex();
+
+
+    // If it's a constant, unget it and let tree_eval() handle it
+    //if (c == TK_CONSTANT) 
+    //{
+        //ungetc(c, finput);   // push back into lexer stream
+        expr_value = (unsigned long) tree_eval();
+        printf("parse_var: value={%d}\n", expr_value);
+    //}
+
+    /*
+    // #ps: The function tree_eval() also consumes the ';' token.
+    // Next: ';'
+    c = yylex();
+    if (c != TK_SEPARATOR || strcmp(real_token_buffer, ";") != 0) 
+    {
+        printf("parse_var: expected ';'\n");
+        exit(1);
+    }
+    */
+
+    // Semantic action: create object
+    struct object_d *o = malloc(sizeof(struct object_d));
+    if (!o) { printf("parse_var: malloc failed\n"); exit(1); }
+    memset(o, 0, sizeof(struct object_d));
+    strncpy(o->token_buffer, var_name, TOKEN_BUFFER_MAX);
+    o->line = LexerInfo.current_line;
+    o->token_type = TK_TYPE;
+    o->keyword = KWVAR;
+    o->opcode = OP_VAR_TYPE;
+    o->operand = OPERAND_IMMEDIATE;
+    o->value = (unsigned long) expr_value;
+    vm_push(o);
+
+    return TK_SEPARATOR;
+}
+
+
 
 // parse_return:
 // Grammar rule (simplified):
@@ -3032,6 +3184,13 @@ int parser_loop(int dump_output)
                             printf ("meta: [unexpected] Line %d\n", LexerInfo.current_line );
                             exit(1);
                         }
+                        if (type_found == TVAR)
+                        {
+                            parse_var(TK_TYPE);
+                            State = 1;
+                            break;
+                        }
+
                         // ...
 
                         //State = 2;

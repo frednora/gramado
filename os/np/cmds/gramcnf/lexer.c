@@ -1120,11 +1120,11 @@ again:
                 case '>':  LexerInfo.lexer_expression = GT_EXPR;  break;
             }
 
-            c1 = getc (finput);
+            c1 = getc(finput);  // Second char?
 
-            if (c1 == '=')
-            {
-                switch (c)
+            if (c1 == '='){
+
+                switch (c)  // First
                 {
                     case '<':
                         LexerInfo.lexer_expression = LE_EXPR; 
@@ -1151,7 +1151,7 @@ again:
                 value = TK_ASSIGN; 
                 goto done;
 
-            }else if (c == c1){
+            } else if (c == c1){
 
                 switch (c)
                 {

@@ -3,10 +3,14 @@ print("Hello");
 
 box MyBox
 [
-    meta meta1(){ name("background-color");     content("green");      break; }
+    meta meta1(){ name("background-color");  content("green");  break; }
 ]
 
 print ("Bye");
+
+var MyVARIABLE = 1 + 2;
+
+var MyVar: "Hello world!";
 
 exit;
 

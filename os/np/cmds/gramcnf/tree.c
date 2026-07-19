@@ -7,18 +7,19 @@
 
 #include "gramcnf.h"
 
-// ??
-// #importante
+// Holds tokens of the expression in order (numbers/operators)
 // #expressão em ordem!
 // Os tokens serão colocados aqui como uma expressão em ordem.
 static int exp_buffer[32];
+
+// Current position in exp_buffer
 int exp_offset=0;
 
 //====================================================================
 // Buffer pra fazer conta usando 'pos order'.
-static int DT_BUFFER[32];
-static int POS_BUFFER[32];
-int buffer_offset = 0;
+static int DT_BUFFER[32];   // Data type buffer (digit/operator/invalid)
+static int POS_BUFFER[32];  // Post-order buffer used for evaluation
+int buffer_offset = 0;      // Position in POS_BUFFER
 //====================================================================
 
 
@@ -218,6 +219,17 @@ static struct node_d *insert( struct node_d* node, int data_type, int data )
 
 // bst_initialize:
 // Initialize the BST.
+
+// Role: Builds a binary tree from the tokens in exp_buffer.
+// Steps:
+// + Splits tokens into digits (buffer_digits) and operators (buffer_op).
+// + Creates a root node.
+// + Inserts all operators into the tree.
+// + Inserts all digits into the tree.
+// + Traverses the tree in post-order (exibirPosOrdemAndInclude) to fill POS_BUFFER.
+// Note: This is a simplified tree builder; it doesn’t yet handle precedence correctly.
+
+
 static int bst_initialize(void)
 {
     struct node_d *root = NULL; 
@@ -512,7 +524,17 @@ static int oper(char c, int opnd1, int opnd2)
     };
 }
 
-// Internal worker
+// Role: Evaluates the expression using POS_BUFFER.
+// Steps:
+// + Walks through POS_BUFFER.
+// + Pushes digits onto a stack.
+// + When an operator is found, pops two operands, 
+//   applies the operator, pushes the result.
+// + At the end, pops the final value from the stack (FinalValue).
+// Why "1;" works: 
+// Only one digit is pushed, no operators are applied, 
+// so the final pop returns that digit.
+
 static int __eval(void)
 {
     register int i=0;
@@ -617,9 +639,13 @@ static int __eval(void)
         }
     }
 
-// O resultado é o que sobrou na pilha
-    stk.top--;  // Get last included.
+    stk.top--;  // Get last included
+
+// Whatever is left on the stack at the end is returned.
     int FinalValue = (int) pop(&stk);
+
+    // printf("__eval: Final result = %d\n", FinalValue);
+
     return (int) FinalValue;
 }
 
@@ -668,6 +694,17 @@ static void treeInitializeGlobals(void)
 // os dados s�o transferidos para o buffer POS_BUFFER[].
 // Calcula o resultado chamando eval();
 
+// Role: Entry point for evaluating an expression.
+// Steps:
+// + Initializes buffers (treeInitializeGlobals).
+// + Reads tokens from the lexer (yylex).
+// + Fills exp_buffer with constants and operators.
+// + Detects ; → end of expression.
+// + Calls bst_initialize() to build a tree.
+// + Calls __eval() to compute the final value.
+// Shortcut: If only one constant is found before ;, 
+// the stack evaluation just returns that constant.
+
 unsigned long tree_eval(void)
 {
 // >> This function gets the expression from stdin?
@@ -685,6 +722,17 @@ unsigned long tree_eval(void)
 
     treeInitializeGlobals();
 
+
+// State Machine in tree_eval()
+// State 1: Expecting a number.
+//   If TK_CONSTANT, store it in exp_buffer.
+//   Then switch to State 2.
+// State 2: Expecting operator or separator.
+//   If operator (+, -, etc.), store it and go back to State 1.
+//   If separator ;, jump to evaluation.
+// Shortcut: For "1;", State 2 sees ; and ends immediately, 
+// leaving only one digit in the buffer.
+
     while (running == 1){
 
     // Get from stdin.
@@ -701,11 +749,16 @@ unsigned long tree_eval(void)
 
     // ';' was found. 
     // End of statement.
+    // Shortcut:
+    // If we only saw one constant before ';',
+    // bst_initialize() will build a trivial tree
+    // and __eval() will just return that constant.
+
     if (c == TK_SEPARATOR)
     {
         if ( gramado_strncmp ( (char *) real_token_buffer, ";", 1 ) == 0  )
         {
-            //printf("tree_eval: ';' was found!\n");
+            //printf("tree_eval: ';' was found in State %d\n",State);
             exp_buffer[exp_offset] = (int) 0;
             //exp_offset++;
             goto do_bst;
@@ -716,6 +769,8 @@ unsigned long tree_eval(void)
     
     // State1: Numbers.
     case 1:
+        //printf("tree_eval: entering State %d, token=%d (%s)\n", 
+            //State, c, real_token_buffer);
         switch (c){
 
         // Constants: Números ou separadores.
@@ -747,7 +802,10 @@ unsigned long tree_eval(void)
         break;
 
     // State2: Operators and separators.
+    // In the case of a ';' we return the value found in the state 1.
     case 2:
+        //printf("tree_eval: entering State %d, token=%d (%s)\n", 
+            //State, c, real_token_buffer);
         switch (c){
         
         // Operators
@@ -815,7 +873,8 @@ unsigned long tree_eval(void)
         printf("tree_eval: Default State\n");
         break;
     };
-    };  // While end.
+
+    };  // While end
 
 
 //
@@ -823,6 +882,14 @@ unsigned long tree_eval(void)
 //
 
 do_bst:
+
+// If no tokens were collected, return 0 as default
+    if (exp_offset == 0) 
+    {
+        printf("tree_eval: [do_bst] empty expression before ';' (line %d)\n",
+           LexerInfo.current_line );
+        return 0;  // or handle as an error
+    }
 
 //==================================================
 // #debug
