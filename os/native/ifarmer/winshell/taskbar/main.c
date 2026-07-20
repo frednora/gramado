@@ -97,8 +97,8 @@ struct dccanvas_d *dc00;  // shared dc
 // This area represents the screen size less the taskbar size.
 // >> For now 28 is smaller then the value in the server.
 
-#define TASKBAR_HEIGHT  28
-//#define TASKBAR_HEIGHT  100
+//#define TASKBAR_HEIGHT  28
+#define TASKBAR_HEIGHT  48
 
 // Device Info.
 struct device_info_d 
