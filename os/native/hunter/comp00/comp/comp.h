@@ -10,25 +10,6 @@
 
 extern int need_rootwindow_redraw;
 
-// Structure to describe a clipping region for a buffer
-struct spare_buffer_clip_info_d 
-{
-    int initialized;       // Safety first
-
-    unsigned long width;   // buffer width in pixels
-    unsigned long height;  // buffer height in pixels
-
-    unsigned long bpp;     // bytes per pixel (4 or 3)
-    unsigned long pitch;   // bytes per row (width * bytes_per_pixel)
-
-    void *base;            // pointer to buffer memory
-};
-extern struct spare_buffer_clip_info_d  SpareBufferClipInfo;
-
-// Spare buffer
-extern char *spare_128kb_buffer_p;
-
-extern struct dccanvas_d *spare_dccanvas;
 
 struct compositor_d
 {
@@ -52,16 +33,6 @@ extern struct compositor_d  Compositor;
 // ===================================================
 //
 
-// Initialize the spare buffer clipping info
-void 
-setup_spare_buffer_clip(
-    unsigned long width,
-    unsigned long height,
-    unsigned long bpp,
-    void *base );
-
-void *comp_create_slab_spare_128kb_buffer(size_t size_in_kb);
-
 // Create a dc for a buffer given its size in KB.
 struct dccanvas_d *comp_create_dc_for_a_buffer(
     char *buffer_address, size_t size_in_kb );
@@ -71,21 +42,6 @@ void comp_add_to_list(struct canvas_information_d *ci);
 
 // w, h, bits per pixel, dc
 struct canvas_information_d *compCreateNewCanvas(struct dccanvas_d *dc);
-
-struct canvas_information_d *compCreateCanvasUsingSpareBuffer(void);
-
-void 
-spare_putpixel0(
-    unsigned int color, 
-    unsigned long x, 
-    unsigned long y, 
-    unsigned long rop );
-void comp_draw_into_spare_buffer(void);
-void comp_test_spare_buffer(void);
-// Copy from spare buffer (0,0) into backbuffer at (dst_x, dst_y).
-void comp_blit_spare_to_backbuffer(
-    int dst_x, int dst_y,
-    int width, int height );
 
 void 
 comp_blit_canvas_to_canvas_imp(

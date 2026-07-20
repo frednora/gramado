@@ -16,7 +16,7 @@ extern int use_vsync;
 #define CANVAS_COUNT_MAX    8
 #define CANVAS_FRONTBUFFER  0  // VRAM
 #define CANVAS_BACKBUFFER   1  // RAM
-#define CANVAS_SPAREBUFFER  2  // spare buffer
+
 
 #define CANVAS_TEST00  6
 #define CANVAS_BG00  7

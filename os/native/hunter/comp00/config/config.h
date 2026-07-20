@@ -37,10 +37,6 @@
 
 
 // #test
-// Allow the creation and usage of the spare buffer for composition
-#define CONFIG_TEST_SPARE_BUFFER  0
-
-// #test
 // Disable or not the composition feature.
 // Now we're going full to this feature and we will never come back.
 // #ps: Maybe it still depends on the CONFIG_TEST_SPARE_BUFFER flag.

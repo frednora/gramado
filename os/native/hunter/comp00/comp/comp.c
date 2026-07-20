@@ -25,11 +25,6 @@ Pipeline:
 // It manages the compositor behavior.
 struct compositor_d  Compositor;
 
-// Spare buffer
-struct spare_buffer_clip_info_d  SpareBufferClipInfo;
-char *spare_128kb_buffer_p;
-
-struct dccanvas_d *spare_dccanvas;
 struct dccanvas_d *test00_dccanvas;
 struct dccanvas_d *bg_dccanvas;
 // 
@@ -73,173 +68,12 @@ static void direct_draw_mouse_pointer(void);
 
 // --------------------------
 
-// Refresh screen via kernel.
-// Copy the backbuffer in the frontbuffer(lfb).
-// #??
-// It uses the embedded display server in the kernel.
-//#define	SYSTEMCALL_REFRESHSCREEN        11
-// #todo
-// trocar o nome dessa systemcall.
-// refresh screen será associado à refresh all windows.
-// Initialize the spare buffer clipping info
-void 
-setup_spare_buffer_clip(
-    unsigned long width,
-    unsigned long height,
-    unsigned long bpp,
-    void *base )
-{
-
-    // #bugbug: Not used yet.
-/*
-    // Mark as not initialized until all fields are set
-    SpareBufferClipInfo.initialized = 0;
-
-    SpareBufferClipInfo.width  = (unsigned long) width;
-    SpareBufferClipInfo.height = (unsigned long) height;
-    SpareBufferClipInfo.bpp    = (unsigned long) bpp;
-
-    // Calculate pitch: width * bytes per pixel
-    SpareBufferClipInfo.pitch = (unsigned long) (width * bpp);
-
-    // Base pointer to buffer memory
-    SpareBufferClipInfo.base = (unsigned long) base;
-
-    // Now mark as initialized
-    SpareBufferClipInfo.initialized = 1;
-*/
-}
-
-
-//==============================================================
-// comp_create_spare_buffer
-//
-// Allocate a pointer into the spare region of the global backbuffer.
-//
-// Parameters:
-//   size_in_kb - requested buffer size in kilobytes.
-//
-// Behavior:
-//   - Reads device metrics (width, height, bytes per pixel).
-//   - Computes the visible backbuffer size in bytes.
-//   - Compares against the fixed 2 MB allocation.
-//   - If there is enough spare space (>= size_in_kb), returns
-//     a pointer to the start of the spare region immediately
-//     after the visible backbuffer.
-//   - Otherwise returns NULL.
-//
-// Notes:
-//   - Currently assumes a fixed 2 MB backbuffer allocation.
-//   - Caller is responsible for ensuring the buffer does not
-//     exceed the spare region or overlap with other allocations.
-//   - Alignment is not enforced; add rounding if hardware requires.
-//
-// Return:
-//   void* pointer to the allocated spare buffer region,
-//   or NULL if insufficient space.
-//==============================================================
-
-// The compositor:
-// Doesn’t care who drew the pixels or how.
-// Its job is purely to check flags 
-// (dirty, show_when_creating, redraw, etc.) and 
-// decide whether to copy/blit the buffer into the global backbuffer.
-void *comp_create_slab_spare_128kb_buffer(size_t size_in_kb)
-{
-    SpareBufferClipInfo.initialized = FALSE;
-
-// Device info
-// #bugbug
-// If you ever change resolution or bpp, recompute the spare size before writing.
-    unsigned long DeviceWidth  = (unsigned long) server_get_system_metrics(1);
-    unsigned long DeviceHeight = (unsigned long) server_get_system_metrics(2);
-
-    // Bits per pixel
-    unsigned long DeviceBPP    = (unsigned long) server_get_system_metrics(9);
-
-// Backbuffer Address
-    unsigned long BackbufferAddress = (unsigned long) rtl_get_system_metrics(12);
-// Backbuffer total size
-// #bugbug: Constant for now. This is gonna change.
-    unsigned long TotalBackbufferInBytes = (2*1024*1024);  // 2 MB
-
-// Pitch
-// Backbuffer visible area. (Screen size)
-    unsigned long Pitch = 
-        (DeviceWidth * (DeviceBPP/8));
-
-    unsigned long BackbufferSizeInBytes = (DeviceHeight * Pitch);
-    unsigned long BackbufferSizeInKB = (BackbufferSizeInBytes/1024);
-
-// Spare area
-    unsigned long TotalSpareInBytes = (TotalBackbufferInBytes - BackbufferSizeInBytes);
-    unsigned long TotalSpareInKB = (TotalSpareInBytes / 1024);
-    unsigned long addr;
-
-    struct dccanvas_d *tmp_dccanvas;
-
-
-    if (TotalSpareInKB > size_in_kb){
-        addr = (unsigned long) BackbufferAddress + BackbufferSizeInBytes;
-
-        // --- Setup clipping info for spare buffer ---
-        SpareBufferClipInfo.initialized = FALSE;
-
-        SpareBufferClipInfo.bpp    = DeviceBPP;  // bytes per pixel
-        SpareBufferClipInfo.pitch  = Pitch;      // Same of the device
-
-        SpareBufferClipInfo.width  = DeviceWidth;   // align with OS-supported width
-        SpareBufferClipInfo.height = (TotalSpareInBytes/Pitch); 
-
-        SpareBufferClipInfo.base   = (void*) addr;
-
-        SpareBufferClipInfo.initialized = TRUE;
-        // -------------------------------------------
-
-        tmp_dccanvas = 
-            (void *) libgd_create_dc (
-                SpareBufferClipInfo.base,
-                SpareBufferClipInfo.width,
-                SpareBufferClipInfo.height,
-                SpareBufferClipInfo.bpp      // bits per pixel
-             );
-
-        // Saving
-        spare_dccanvas = tmp_dccanvas;
-        if ((void*)spare_dccanvas == NULL)
-        {
-            spare_dccanvas = NULL;
-            return NULL;
-        }
-        if (spare_dccanvas->magic != 1234)
-        {
-            spare_dccanvas = NULL;
-            return NULL;
-        }
-
-        return (void*) addr;
-
-    } else {
-        SpareBufferClipInfo.initialized = FALSE;
-        spare_dccanvas = NULL;
-        return NULL;
-    }
-
-// fail
-    SpareBufferClipInfo.initialized = FALSE;
-    spare_dccanvas = NULL;
-    return NULL;
-}
-
 // Create a dc for a buffer given its size in KB
 struct dccanvas_d *comp_create_dc_for_a_buffer(
     char *buffer_address, 
     size_t size_in_kb )
 {
-
 // Device info
-// #bugbug
-// If you ever change resolution or bpp, recompute the spare size before writing.
     unsigned long DeviceWidth  = (unsigned long) server_get_system_metrics(1);
     unsigned long DeviceHeight = (unsigned long) server_get_system_metrics(2);
     // Bits per pixel
@@ -250,10 +84,10 @@ struct dccanvas_d *comp_create_dc_for_a_buffer(
     unsigned long Pitch = (DeviceWidth * (DeviceBPP/8));
 
 // new area
-    unsigned long TotalSpareInBytes = (size_in_kb * 1024);
+    unsigned long TotalBufferInBytes = (size_in_kb * 1024);
 
     // Allocate a new buffer in heap memory
-    //char *buf = (char *) malloc(TotalSpareInBytes);
+    //char *buf = (char *) malloc(TotalBufferInBytes );
     char *buf = (char *) buffer_address;
     if (!buf) 
         return NULL;
@@ -262,13 +96,13 @@ struct dccanvas_d *comp_create_dc_for_a_buffer(
 
     struct dccanvas_d *tmp_dccanvas;
 
-    // --- Setup clipping info for spare buffer ---
+    // --- Setup clipping info for a buffer ---
 
     unsigned long BufferClipInfo_bpp    = DeviceBPP;  // bytes per pixel
     unsigned long BufferClipInfo_pitch  = Pitch;      // Same of the device
 
     unsigned long BufferClipInfo_width  = DeviceWidth;   // align with OS-supported width
-    unsigned long BufferClipInfo_height = (TotalSpareInBytes/Pitch); 
+    unsigned long BufferClipInfo_height = (TotalBufferInBytes/Pitch); 
 
     // -------------------------------------------
 
@@ -295,10 +129,6 @@ fail:
 
 struct dccanvas_d *comp_create_dc_and_allocate_buffer(size_t size_in_kb)
 {
-
-// Device info
-// #bugbug
-// If you ever change resolution or bpp, recompute the spare size before writing.
     unsigned long DeviceWidth  = (unsigned long) server_get_system_metrics(1);
     unsigned long DeviceHeight = (unsigned long) server_get_system_metrics(2);
     // Bits per pixel
@@ -327,7 +157,7 @@ struct dccanvas_d *comp_create_dc_and_allocate_buffer(size_t size_in_kb)
 
     struct dccanvas_d *tmp_dccanvas;
 
-    // --- Setup clipping info for spare buffer ---
+    // --- Setup clipping info for buffer ---
 
     unsigned long BufferClipInfo_bpp    = DeviceBPP;  // bytes per pixel
     unsigned long BufferClipInfo_pitch  = Pitch;      // Same of the device
@@ -442,201 +272,8 @@ fail:
     return NULL;
 }
 
-// Create a drawable buffer in a spare area 
-// at the end of the backbuffer.
-// The compositor:
-// Doesn’t care who drew the pixels or how.
-// Its job is purely to check flags 
-// (dirty, show_when_creating, redraw, etc.) and 
-// decide whether to copy/blit the buffer into the global backbuffer.
-
-struct canvas_information_d *compCreateCanvasUsingSpareBuffer(void)
-{
-    void *b;
-
-    // 10*4*10 is ok.
-    // 64 is ok.
-    size_t WindowSizeInKB = 64; 
-    b = (void *) comp_create_slab_spare_128kb_buffer(WindowSizeInKB);
-    if ((void*) b == NULL){
-        return NULL;
-    }
-
-    spare_128kb_buffer_p = b;
-
-// ------------------------------------------------------
-// Create canvas object for the spare buffer 
-    struct canvas_information_d *ci_sparebuffer;
-    ci_sparebuffer = (void*) malloc(sizeof(struct canvas_information_d));
-    if ((void*) ci_sparebuffer == NULL){
-        printf("compCreateCanvasUsingSpareBuffer: malloc failed\n"); 
-        return NULL; 
-    }
-    ci_sparebuffer->width = SpareBufferClipInfo.width; 
-    ci_sparebuffer->height = SpareBufferClipInfo.height; 
-    ci_sparebuffer->bpp = SpareBufferClipInfo.bpp; 
-    ci_sparebuffer->pitch = SpareBufferClipInfo.pitch; 
-    ci_sparebuffer->base = (void*) spare_128kb_buffer_p; 
-
-    ci_sparebuffer->dc = NULL;  // No dc for now
-
-    // It belongs to the root window for now.
-    ci_sparebuffer->owner_window = __root_window; 
-    ci_sparebuffer->used = TRUE;
-    ci_sparebuffer->magic = 1234;
-    ci_sparebuffer->initialized = TRUE;
-
-// Save into global list 
-    canvasList[CANVAS_SPAREBUFFER] = (unsigned long) ci_sparebuffer;
-
-// -----------------------------------------------------
-
-// Draw something early.
-// First: draw a test pattern into the spare buffer
-    //if (CONFIG_TEST_SPARE_BUFFER == 1)
-    //{
-        comp_draw_into_spare_buffer();
-
-        // #debug:
-        // Draw something early.
-        // Draw a red pixel at (0,0) inside the spare buffer
-        // putpixel0(0xFFFF0000, 0, 0, ROP_COPY, (unsigned long) b);
-    //}
-
-    return (struct canvas_information_d *) ci_sparebuffer;
-};
-
-// Draw a pixel into the spare buffer. Using clipping.
-void 
-spare_putpixel0(
-    unsigned int color, 
-    unsigned long x, 
-    unsigned long y, 
-    unsigned long rop )
-{
-    // Not initialized?
-    if (SpareBufferClipInfo.initialized != TRUE)
-        return;
-
-    if (SpareBufferClipInfo.width == 0)
-        return;
-    if (SpareBufferClipInfo.height == 0)
-        return;
-
-// Clipping
-// Using 'unsigned long'.
-    if (x >= SpareBufferClipInfo.width)
-        return;
-    if (y >= SpareBufferClipInfo.height)
-        return;
-
-// # PF
-// #todo: Check against the limits this application can access
-    if ((void*) SpareBufferClipInfo.base == NULL)
-        return;
-
-// Draw it
-
-    if (!spare_dccanvas) 
-        return;
-
-// #test: New method using dc.
-    putpixel0(
-        spare_dccanvas,
-        color, 
-        x, 
-        y, 
-        rop 
-    );
-}
-
-// Test drawing directly into the spare buffer using putpixel0.
-// Only draws pixels, does not blit or refresh.
-void comp_draw_into_spare_buffer(void)
-{
-
-    //if (!spare_dccanvas) 
-       // return;
-
-/*
-// Old test without clipping
-    if ((void*) spare_128kb_buffer_p == NULL)
-        return;
-    unsigned long canvas = (unsigned long) spare_128kb_buffer_p;
-    // Draw a few colored pixels in different positions
-    putpixel0(0xFFFF0000, 0, 0, ROP_COPY, canvas);
-    putpixel0(0xFFFF0000, 9, 0, ROP_COPY, canvas);
-    putpixel0(0xFFFF0000, 9, 9, ROP_COPY, canvas);
-    putpixel0(0xFFFF0000, 0, 9, ROP_COPY, canvas);
-*/
-
-// New test using clipping
-    spare_putpixel0(0xFFFF0000,  1,  1, ROP_COPY);
-    spare_putpixel0(0xFFFF0000, 10,  1, ROP_COPY);
-    spare_putpixel0(0xFFFF0000, 10, 10, ROP_COPY);
-    spare_putpixel0(0xFFFF0000,  1, 10, ROP_COPY);
-
-    // #test: Draw char
-    // dc_drawchar(spare_dccanvas, 10, 2, 'H', COLOR_YELLOW, COLOR_BLUE, ROP_COPY);
-    // dc_drawchar(spare_dccanvas, 18, 2, 'i', COLOR_YELLOW, COLOR_BLUE, ROP_COPY);
-
-    // Draw string
-    dc_drawstring ( 
-        spare_dccanvas,  // dc 
-        10,              // x
-        2,               // y
-        COLOR_YELLOW,    // fg_color
-        COLOR_BLUE,      // bg_color
-        ROP_COPY,        // rop
-        "Spare buffer" 
-    );
-
-/*
-    spare_putpixel0(
-        0xFFFF0000, 
-        (SpareBufferClipInfo.width >> 1), 
-        (SpareBufferClipInfo.height >> 1), 
-        ROP_COPY );
-*/
-}
-
-void comp_test_spare_buffer(void)
-{
-    unsigned long BackbufferAddress = (unsigned long) rtl_get_system_metrics(12);
-    if ((void*)spare_128kb_buffer_p == NULL)
-        return;
-    unsigned char *dst = (unsigned char *) BackbufferAddress;
-    unsigned char *src = (unsigned char *) spare_128kb_buffer_p;
-    int i=0;
-    int max=10*4*10;
-    // Copy byte by byte
-    for (i=0; i<max; i++){
-        dst[i] = src[i];
-    };
-}
-
-// Copy from spare buffer (0,0) into backbuffer at (dst_x, dst_y).
-void comp_blit_spare_to_backbuffer(
-    int dst_x, int dst_y,
-    int width, int height )
-{
-    unsigned long backbuffer_addr = (unsigned long) rtl_get_system_metrics(12);
-    unsigned long spare_addr      = (unsigned long) spare_128kb_buffer_p;
-
-    if (!spare_addr || !backbuffer_addr)
-        return;
-
-    // Use rectangle worker with source fixed at (0,0).
-    __refresh_rectangle1(
-        width, height,
-        dst_x, dst_y, backbuffer_addr,   // destination
-        0, 0, spare_addr                 // source (always top-left)
-    );
-}
-
-// #test
 // Blit from one canvas into another.
-// src_canvas: source canvas (offscreen, spare, window, etc.)
+// src_canvas: source canvas (offscreen, window, etc.)
 // dst_canvas: destination canvas (backbuffer, frontbuffer, etc.)
 void 
 comp_blit_canvas_to_canvas_imp(
@@ -1187,61 +824,6 @@ void comp_display_desktop_components(void)
 // Refresh only the components that was changed by the painter
     wmReactToPaintEvents();
 
-    //if (CONFIG_TEST_SPARE_BUFFER == 1)
-    //{
-        //---------
-        // #test
-        // Copy bytes from the spare buffer to the 
-        // top left corner of the screen.
-        //comp_test_spare_buffer();
-        // ok
-        //comp_blit_spare_to_backbuffer(100, 100,10,10);
-        //gws_refresh_rectangle ( 100, 100, 10, 10 );
-        //---------
-
-        /*
-        //---------
-        // #test >>> backbuffer
-        comp_blit_canvas_to_canvas(
-            CANVAS_SPAREBUFFER,   // source
-            CANVAS_BACKBUFFER,    // destination
-            200, 200,             // destination position
-            10, 10 );                // width, height
-        gws_refresh_rectangle(200, 200, 10, 10);
-        //---------
-        */
-
-        /*
-        //---------
-        // #test >>> frontbuffer
-        comp_blit_canvas_to_canvas(
-            CANVAS_SPAREBUFFER,   // source
-            CANVAS_FRONTBUFFER,    // destination
-            300, 100,             // destination position
-            10, 10 );                // width, height
-        //---------
-        */
-
-        /*
-        //---------
-        // #test >>> frontbuffer
-        if ((void*) spare_dccanvas != NULL)
-        {
-            if (spare_dccanvas->magic == 1234)
-            {
-                comp_blit_canvas_to_canvas(
-                    CANVAS_SPAREBUFFER,    // source
-                    CANVAS_FRONTBUFFER,    // destination
-                    20, 20,                // destination position
-                    spare_dccanvas->device_width >> 1,  // width 
-                    spare_dccanvas->device_height >> 1  // height
-                );  
-            }
-        }
-        //---------
-        */
-    //}
-
 // Show the mouse cursor in the screen.
     if (gUseMouse == TRUE)
     {
@@ -1373,7 +955,7 @@ void compComposeDesktop(void)
     
                         // We gotta clip is into the screen now.
 
-                        // the window is larger than the space we have
+                        // the window is larger than the buffer we have
                         //if (ci->owner_window->width > 
                         //    (ci->dc->device_width - ci->owner_window->absolute_x) )
                         //{
@@ -1639,17 +1221,6 @@ This was the first experiment in order to have a future
    small and big windows in the side-buffer
 */
 
-// -------------------------
-    struct canvas_information_d *ci_tmp;
-    if (CONFIG_TEST_SPARE_BUFFER == 1)
-    {
-        ci_tmp = (void *) compCreateCanvasUsingSpareBuffer();
-        if ((void*) ci_tmp == NULL){
-            printf("comp.c: ci_tmp\n");
-            exit(1);
-        }
-    }
-// -------------------------
 
 // ---------------------------------
 // the dc
@@ -1662,14 +1233,10 @@ This was the first experiment in order to have a future
         return NULL;
     }
 
-// Associating the new dc with our canvas info structure.
-    ci_tmp->dc = (struct dccanvas_d *) dc;
-
 // Save the dc for future usage
     test00_dccanvas = (struct dccanvas_d *) dc;
 
-    // Not in the list
-    //comp_add_to_list(ci_tmp);
+
 
 // --------------
 

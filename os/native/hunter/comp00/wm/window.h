@@ -525,11 +525,7 @@ struct gws_window_d
 // Icon: small glyph or image
     // struct canvas_information_d *icon_canvas;
 
-// Shared spare buffer.
-    // struct canvas_information_d *shared_spare_buffer;
-
 // ...
-
 
 // z-buffer for this window.
 // #test: sometimes the whole screen 
