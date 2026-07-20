@@ -21,13 +21,13 @@ Pipeline:
 
 #include "../ds.h"
 
-
-// It manages the compositor behavior.
+// It manages the compositor behavior
 struct compositor_d  Compositor;
 
+// Canvases
 struct dccanvas_d *test00_dccanvas;
 struct dccanvas_d *bg_dccanvas;
-// 
+// ...
 
 // The whole desktop was updated
 // int gCompositorUpdateDesktop = FALSE;
@@ -37,6 +37,10 @@ struct dccanvas_d *bg_dccanvas;
 // int gUseSomething = TRUE;
 // ...
 
+//
+// Windows
+//
+
 // Mouse hover
 extern struct gws_window_d *mouse_hover;
 // The limits for the mouse pointer.
@@ -45,10 +49,16 @@ extern struct gws_window_d *mouse_hover;
 // when the mouse is captured by an application window.
 extern struct gws_window_d *cursor_clip;
 
-//old
+int need_rootwindow_redraw = FALSE;
+
+//
+// Mouse support
+//
+
+// old
 static long __old_mouse_x=0;
 static long __old_mouse_y=0;
-//current
+// current
 static long __new_mouse_x=0;
 static long __new_mouse_y=0;
 static int __mouse_initialized = FALSE;
@@ -59,10 +69,9 @@ static int __mouse_initialized = FALSE;
 // It erases the pointer in the screen.
 static int __clear_mousebox = FALSE;
 
-
-int need_rootwindow_redraw = FALSE;
-
-// --------------------------
+//
+// -- Prototypes ------------------------
+//
 
 static void direct_draw_mouse_pointer(void);
 
@@ -73,26 +82,25 @@ struct dccanvas_d *comp_create_dc_for_a_buffer(
     char *buffer_address, 
     size_t size_in_kb )
 {
-// Device info
+    // Device info: w, h, bits per pixel.
     unsigned long DeviceWidth  = (unsigned long) server_get_system_metrics(1);
     unsigned long DeviceHeight = (unsigned long) server_get_system_metrics(2);
-    // Bits per pixel
     unsigned long DeviceBPP    = (unsigned long) server_get_system_metrics(9);
-
-// Pitch
-// Backbuffer visible area. (Screen size)
+    // Pitch: Bytes per line
+    // Backbuffer visible area. (Screen size)
     unsigned long Pitch = (DeviceWidth * (DeviceBPP/8));
-
-// new area
+    // The size in bytes for the new area
     unsigned long TotalBufferInBytes = (size_in_kb * 1024);
 
     // Allocate a new buffer in heap memory
-    //char *buf = (char *) malloc(TotalBufferInBytes );
+    // char *buf = (char *) malloc(TotalBufferInBytes );
     char *buf = (char *) buffer_address;
-    if (!buf) 
+    if (!buf){
         return NULL;
+    }
 
-    //----------------------------
+// ----------------------------
+// The canvas structure:
 
     struct dccanvas_d *tmp_dccanvas;
 
@@ -100,11 +108,8 @@ struct dccanvas_d *comp_create_dc_for_a_buffer(
 
     unsigned long BufferClipInfo_bpp    = DeviceBPP;  // bytes per pixel
     unsigned long BufferClipInfo_pitch  = Pitch;      // Same of the device
-
-    unsigned long BufferClipInfo_width  = DeviceWidth;   // align with OS-supported width
+    unsigned long BufferClipInfo_width  = DeviceWidth;  // align with OS-supported width
     unsigned long BufferClipInfo_height = (TotalBufferInBytes/Pitch); 
-
-    // -------------------------------------------
 
     tmp_dccanvas = 
         (void *) libgd_create_dc (
@@ -129,31 +134,31 @@ fail:
 
 struct dccanvas_d *comp_create_dc_and_allocate_buffer(size_t size_in_kb)
 {
+    // Device info: w, h, bits per pixel.
     unsigned long DeviceWidth  = (unsigned long) server_get_system_metrics(1);
     unsigned long DeviceHeight = (unsigned long) server_get_system_metrics(2);
-    // Bits per pixel
     unsigned long DeviceBPP    = (unsigned long) server_get_system_metrics(9);
-
-// Bytes per line
-// Backbuffer visible area. (Screen size)
+    // Pitch: Bytes per line
+    // Backbuffer visible area. (Screen size)
     unsigned long Pitch = (DeviceWidth * (DeviceBPP/8));
-
-// new area
+    // The size in bytes for the new area
     unsigned long TotalInBytes = (size_in_kb * 1024);
 
     // Allocate a new buffer in heap memory
     char *buf;
     // 2MB
     if (size_in_kb == 2048){
-        buf = (char *) sc80(55,0,0,0);      // #test
+        buf = (char *) sc80(55,0,0,0);        // #test
     } else {
-        buf = (char *) malloc(TotalInBytes);   // ok, its working
+        buf = (char *) malloc(TotalInBytes);  // ok, its working
     }
 
-    if (!buf) 
+    if (!buf){
         return NULL;
+    }
 
-    //----------------------------
+// ----------------------------
+// The canvas structure:
 
     struct dccanvas_d *tmp_dccanvas;
 
@@ -161,11 +166,9 @@ struct dccanvas_d *comp_create_dc_and_allocate_buffer(size_t size_in_kb)
 
     unsigned long BufferClipInfo_bpp    = DeviceBPP;  // bytes per pixel
     unsigned long BufferClipInfo_pitch  = Pitch;      // Same of the device
-
-    unsigned long BufferClipInfo_width  = DeviceWidth;   // align with OS-supported width
+    unsigned long BufferClipInfo_width  = DeviceWidth;  // align with OS-supported width
     unsigned long BufferClipInfo_height = (TotalInBytes/Pitch); 
 
-    // -------------------------------------------
     // See: libdisp/
     tmp_dccanvas = 
         (void *) libgd_create_dc (
@@ -223,7 +226,10 @@ void comp_add_to_list(struct canvas_information_d *ci)
     };
 }
 
+// Canvas information:
 // w, h, bits per pixel, dc
+// OUT:
+// + Pointer to the the canvas information structure
 struct canvas_information_d *compCreateNewCanvas(struct dccanvas_d *dc)
 {
     struct canvas_information_d *ci_new;
@@ -266,6 +272,7 @@ struct canvas_information_d *compCreateNewCanvas(struct dccanvas_d *dc)
     ci_new->magic = 1234;
     ci_new->initialized = TRUE;
 
+    // Pointer to the the canvas information structure
     return (struct canvas_information_d*) ci_new;
 
 fail:
@@ -314,7 +321,7 @@ comp_blit_canvas_to_canvas(
     struct canvas_information_d *src;
     struct canvas_information_d *dst;
 
-// We have few canvases for now.
+// We have few canvases for now
     if (id_src_canvas < 0 || id_src_canvas >= CANVAS_COUNT_MAX)
         return;
     if (id_dst_canvas < 0 || id_dst_canvas >= CANVAS_COUNT_MAX)
@@ -341,8 +348,7 @@ comp_blit_canvas_to_canvas(
     );
 }
 
-// ??
-// Using the kernel to show the backbuffer.
+// Using kernel to show the backbuffer
 void gwssrv_show_backbuffer(void)
 {
     gramado_system_call(11,0,0,0);
@@ -351,18 +357,19 @@ void gwssrv_show_backbuffer(void)
 int flush_window(struct gws_window_d *window)
 {
     //if ((void*) window == NULL)
-        //return -1;
+        //return (int) -1;
     return (int) gws_show_window_rect(window);
 }
 
 int flush_window_by_id(int wid)
 {
     struct gws_window_d *w;
-// wid
+
+// Validate parameter
     if (wid<0 || wid >= WINDOW_COUNT_MAX){
         goto fail;
     }
-// Structure validation
+// Validate window pointer
     w = (void*) windowList[wid];
     if ((void*) w == NULL){
         goto fail;
@@ -379,28 +386,20 @@ fail:
 
 // Flush the whole backbuffer.
 // see: painter.c
+// #bugbug: Not a good name. 
+// 'Cause its a frame for fullscreen scene only.
 void flush_frame(void)
 {
     wm_flush_screen();
 }
 
-// gws_show_window_rect:
+
 // Show the rectangle of a window that was painted in the main backbuffer.
 // Copy from backbuffer to frontbuffer.
-// Does it need vsync?
-// #todo: criar um define chamado refresh_window.
-// ??
-// Devemos validar essa janela, para que ela 
-// não seja redesenhada sem antes ter sido suja?
-// E se validarmos alguma janela que não está pronta?
-// #test: validando
-
+// #ps: Does it need vsync?
 int gws_show_window_rect(struct gws_window_d *window)
 {
     struct gws_window_d *parent;
-
-    //#debug
-    //debug_print("gws_show_window_rect:\n");
 
 // Parameter:
     if ((void *) window == NULL){
@@ -459,17 +458,18 @@ int gws_show_window_rect(struct gws_window_d *window)
         window->width, 
         window->height ); 
 
+// Validate
     validate_window(window);
     return 0;
 
 fail:
-    // #slow
     //debug_print("gws_show_window_rect: fail\n");
     return (int) -1;
 }
 
-// Sinaliza que precisamos apagar o ponteiro do mouse,
-// copiando o conteudo do backbuffer no LFB.
+// It signalise that we need to erease the mouse pointer,
+// copying the content from the backbuffer to the front buffer.
+// #ps: Only when the server/compositor is drawing the mouse pointer.
 void DoWeNeedToEraseMousePointer(int value)
 {
     if ( value != FALSE && 
@@ -490,7 +490,6 @@ void DoWeNeedToEraseMousePointer(int value)
 
 // #todo: 
 // Order:  taskbar --> app window --> children
-
 
 struct gws_window_d *mouse_at(void)
 {
@@ -672,25 +671,21 @@ void __display_mouse_cursor(void)
 // We need to clear the mousebox,
 // refreshing the content from backbuffer to LFB.
 // We call it when we receive an 'mouse move' event.
-    if (__clear_mousebox == TRUE)
-    {
-        gws_refresh_rectangle(
+    if (__clear_mousebox == TRUE){
+        gws_refresh_rectangle( 
             __old_mouse_x, __old_mouse_y, rWidth, rHeight );
         DoWeNeedToEraseMousePointer(FALSE);
     }
 
-// save
+    // save
     __old_mouse_x = __new_mouse_x;
     __old_mouse_y = __new_mouse_y;
 
-// ---------------------------
 // Draw the pointer direcly into the LFB.
 // Not printing it into the backbuffer.
 // It uses the new values.
     direct_draw_mouse_pointer();
-//------ 
 }
-
 
 // reactRefreshDirtyWindows: 
 // Called by wmReactToPaintEvents().
@@ -728,7 +723,6 @@ void reactRefreshDirtyWindows(void)
 // All we need to do is refreshing the window's rectangle.
 
     struct gws_window_d *w;
-
     int fOnlyValidate = FALSE;
 
 // Is the root window a valid window
@@ -755,7 +749,7 @@ void reactRefreshDirtyWindows(void)
                             w->width, w->height );
                     }
 
-                    // Validate the window we refreshed.
+                    // Validate the window we refreshed
                     validate_window(w);
 
                     // The window was the root.
@@ -797,7 +791,7 @@ void comp_display_desktop_components(void)
 {
     static int Dirty = FALSE;
 
-// fps++
+    // fps++
     if (WindowManager.initialized == TRUE){
         WindowManager.frame_counter++;
     }
@@ -831,10 +825,9 @@ void comp_display_desktop_components(void)
             __display_mouse_cursor();
     }
 
-// Validate the whole screen.
-    validate();
+    validate();  // Validate the whole screen
 
-// fps
+    // fps
     //__update_fps();
 }
 
@@ -850,12 +843,12 @@ void compComposeDesktop(void)
     //struct gws_window_d *w;
     //int fOnlyValidate = FALSE;
 
-// fps++
+    // fps++
     if (WindowManager.initialized == TRUE){
         WindowManager.frame_counter++;
     }
 
-// Composition disabled
+    // Composition disabled
     if (Compositor.is_composition_disabled == TRUE)
         return;
 
@@ -864,7 +857,6 @@ void compComposeDesktop(void)
     //if (gCompositorUpdateDesktop == TRUE)
     //redraw_window(__root_window, FALSE);
     //refresh_window(__root_window);
-
 
 // Walk the list of canvas
     struct canvas_information_d *ci;
@@ -1051,13 +1043,11 @@ void compComposeDesktop(void)
         ci = ci->next;  // Get next in the list
     };
 
-
 // Flush:
 // #todo:
 // #bugbug
 // It's hardcoded for now. 
 // We need variables or its gonna fail for other resolutions
-
 
     unsigned long DeviceWidth  = (unsigned long) server_get_system_metrics(1);
     unsigned long DeviceHeight = (unsigned long) server_get_system_metrics(2);
@@ -1086,7 +1076,6 @@ wmCompose(
 // This way this routine can't be called recursively,
 // or for a callback routine or signal.
     Compositor._locked = TRUE;
-
 
     // Every window was painted into the backbuffer
     if (Compositor.is_composition_disabled == TRUE){
@@ -1184,7 +1173,6 @@ void comp_set_mouse_position(long x, long y)
 int compInitializeCompositor(void)
 {
     Compositor.initialized = FALSE;
-
     Compositor.counter = 0;
     Compositor._locked = FALSE;
 
@@ -1202,7 +1190,7 @@ int compInitializeCompositor(void)
         Compositor.is_composition_disabled = FALSE; 
     };
 
-// The structure is initialized.
+// The structure is initialized
     Compositor.used = TRUE;
     Compositor.magic = 1234;
     Compositor.initialized = TRUE;
@@ -1221,7 +1209,6 @@ This was the first experiment in order to have a future
    small and big windows in the side-buffer
 */
 
-
 // ---------------------------------
 // the dc
     struct dccanvas_d *dc;
@@ -1235,8 +1222,6 @@ This was the first experiment in order to have a future
 
 // Save the dc for future usage
     test00_dccanvas = (struct dccanvas_d *) dc;
-
-
 
 // --------------
 

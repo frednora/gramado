@@ -80,7 +80,6 @@ static int fLaunchTB=FALSE;        // Launch the default taskbar application.
 #define FIRST_CLIENT_TASKBAR            1002  // Launch Taskbar
 static int first_client_id = FIRST_CLIENT_NULL;
 
-
 // -------------------------------------
 // Default values given by the main() routine.
 // Only main.c ca handle these values.

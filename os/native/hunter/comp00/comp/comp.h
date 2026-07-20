@@ -57,7 +57,6 @@ comp_blit_canvas_to_canvas(
     int dst_x, int dst_y,
     int width, int height );
 
-
 // Flush the window's rectangle
 int gws_show_window_rect(struct gws_window_d *window);
 
@@ -68,13 +67,12 @@ int gws_show_window_rect(struct gws_window_d *window);
 int flush_window(struct gws_window_d *window);
 int flush_window_by_id(int wid);
 
-
 //
 // Flush backbuffer
 //
 
-void gwssrv_show_backbuffer (void);
-// Flush the whole backbuffer.
+void gwssrv_show_backbuffer(void);
+// Flush the whole backbuffer
 void flush_frame(void);
 
 //
@@ -110,8 +108,10 @@ void comp_initialize_mouse(void);
 
 struct gws_window_d *mouse_at(void);
 
-// Sinaliza que precisamos apagar o ponteiro do mouse,
-// copiando o conteudo do backbuffer no LFB.
+
+// It signalise that we need to erease the mouse pointer,
+// copying the content from the backbuffer to the front buffer.
+// #ps: Only when the server/compositor is drawing the mouse pointer.
 void DoWeNeedToEraseMousePointer(int value);
 
 //
@@ -122,5 +122,3 @@ void DoWeNeedToEraseMousePointer(int value);
 int compInitializeCompositor(void);
 
 #endif    
-
-

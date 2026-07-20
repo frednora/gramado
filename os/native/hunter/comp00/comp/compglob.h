@@ -39,7 +39,6 @@ struct canvas_information_d
     unsigned long width;   // buffer width in pixels
     unsigned long height;  // buffer height in pixels
     unsigned long bpp;     // bits per pixel
-
     unsigned long pitch;   // bytes per row (width * bytes_per_pixel)
 
     void *base;            // pointer to buffer memory
@@ -52,8 +51,10 @@ struct canvas_information_d
     struct canvas_information_d *next;
 };
 
+// List of canvases
 extern unsigned long canvasList[CANVAS_COUNT_MAX];
 
+// Canvases
 extern struct canvas_information_d  *canvas_head;
 extern struct canvas_information_d  *canvas_frontbuffer;
 extern struct canvas_information_d  *canvas_backbuffer;
