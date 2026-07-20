@@ -4373,11 +4373,11 @@ static int ServerLoop(int client_index)
         printf ("on socket()\n");
         goto fail;
     }
-// Display server structure.
+    // Display server structure
     display_server->socket = (int) server_fd;
-// The server itself has its own client structure.
+    // The server itself has its own client structure
     serverClient->fd = (int) server_fd;
-// Global variable.
+    // Global variable
     ____saved_server_fd = (int) server_fd;
 
     // #debug Breakpoint
@@ -4390,9 +4390,9 @@ static int ServerLoop(int client_index)
     while (1){
         bind_status = 
             (int) bind (
-                      server_fd, 
-                      (struct sockaddr *) &server_address, 
-                      addrlen );
+                    server_fd, 
+                    (struct sockaddr *) &server_address, 
+                    addrlen );
         // OK
         if (bind_status >= 0)
             break;
@@ -4549,12 +4549,12 @@ static int ServerLoop(int client_index)
     Initialization.ds_struct_checkpoint = TRUE;
 
 // ==========================================
-// Main loop.
+// Main loop
     IsTimeToQuit = FALSE;
     running = TRUE;
     Initialization.inloop_checkpoint = TRUE;
 
-// The last initialization phase.
+// The last initialization phase
     Initialization.current_phase = 3;
 
     // Given 'n' seconds with no requests or input events,
@@ -4580,7 +4580,7 @@ static int ServerLoop(int client_index)
     if (server_mode == SERVER_MODE_DEMO)
         IsAcceptingConnections = FALSE;
 
-// Server state
+    // Server state
     ServerState.state = SERVER_STATE_RUNNING;
 
 // This is the main loop.
@@ -4589,7 +4589,7 @@ static int ServerLoop(int client_index)
     unsigned long MainLoopIntervalMS=0;
     if (CONFIG_MAIN_LOOP_INTERVAL_MS == 0){
         MainLoopIntervalMS = 16;
-    }else{
+    } else {
         MainLoopIntervalMS = CONFIG_MAIN_LOOP_INTERVAL_MS;
     };
 
@@ -4598,19 +4598,16 @@ static int ServerLoop(int client_index)
     unsigned long delta_jiffie=0;
     int UseSleep = TRUE;
 
-
 // #ps: We will sleep if a round was less than 16 ms, (60fps).
 // The thread wait until complete the 16 ms.
 // #bugbug: Valid only if the timer fires 1000 times a second.
 // It gives the opportunities for other threads to run a bit more.
 
 // #ps: 
-// In accept(),
-// the 'addrlen' argument is a value-result argument: 
+// In accept(), the 'addrlen' argument is a value-result argument: 
 // The caller must initialize it to contain the size (in bytes) 
 // of the structure pointed to by addr. On return it will contain 
 // the actual size of the peer address.
-
 
 // This is the loop for the compositor.
 // This is also the loop for the server.
@@ -4618,8 +4615,8 @@ static int ServerLoop(int client_index)
         start_jiffie = (unsigned long) rtl_jiffies();
         if (IsTimeToQuit == TRUE){ break; };
 
-        // Get system messages via thread queue.
-        // See: ui/wminput.c
+        // Get system messages via thread queue
+        // See: wm/wminput.c
         if (IsAcceptingInput == TRUE){
             wminputGetAndProcessSystemEvents();
         }
@@ -4643,17 +4640,17 @@ static int ServerLoop(int client_index)
 
             // #debug
             if (newconn == ____saved_server_fd){
-                printf("ds00: [debug] Invalid new connnection.\n");
-                while (1){
-                };
+                printf("comp00: Invalid newconn\n");
+                exit(1);
             }
 
             //close(newconn);
         }
 
-        // Compose the frame or simply update some windows.        
+        // Compose the frame or simply update some windows       
         if (IsComposing == TRUE)
-        {               
+        {
+            // Composition disabled:
             // Display the desktop components without using the compositor
             if (Compositor.is_composition_disabled == TRUE){
                 comp_display_desktop_components();

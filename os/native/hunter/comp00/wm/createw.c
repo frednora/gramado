@@ -163,6 +163,7 @@ int destroy_window_by_wid(int wid)
 
 // --------------------------------------
 // App window in compositor mode
+
     struct canvas_information_d *ci00;
     struct canvas_information_d *ci01;
 
@@ -1830,6 +1831,14 @@ void *doCreateAndDrawWindow (
     // Not allocated yet
     window->frame_canvas = NULL;
     window->ca_canvas = NULL;
+
+// #important:
+// #todo: Shared flags header
+// Create a small shared memory header (shared_window_flags_t) 
+// to communicate state with the client (needs_redraw, has_focus, 
+// geometry changes, etc.) instead of sending many messages.
+// Pass the pointer to the client in the CreateWindow reply.
+
 
 //
 // Create canvases for chrome/frame and client area

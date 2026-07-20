@@ -179,34 +179,6 @@ struct navigation_info_d
 };
 struct navigation_info_d  NavigationInfo;
 
-
-struct button_info_d
-{
-    int button_id;
-
-// This is the window id that represents the icon.
-    int wid;
-
-// Absolute values
-    unsigned long absolute_left;
-    unsigned long absolute_top;
-    unsigned long width; 
-    unsigned long height;
-
-// Relative values
-    unsigned long left;
-    unsigned long top;
-
-// The state of the icon, it also represents
-// the state of the client application.
-// (running, minimized, etc.).
-    int state;
-};
-static struct button_info_d StartButton;
-
-struct ui_component_d *uic_button_start;
-
-
 //
 // Taskbar icons.
 // Not the start menu.
@@ -318,8 +290,6 @@ static void switch_responder(int fd);
 
 
 static void update_clients(int fd);
-
-static void create_start_button(int fd);
 
 //==================================
 
@@ -756,7 +726,6 @@ static void update_clients(int fd)
     if ((void*)dc00 == NULL)
         return;
 
-// Get window info
     struct gws_window_info_d wi;
     gws_get_window_info(
         fd,
@@ -772,7 +741,6 @@ static void update_clients(int fd)
         0  // ROP
     );
 
-/*
 // string
     libgui_drawstring_dc(
             dc00,
@@ -783,17 +751,8 @@ static void update_clients(int fd)
             0, // ROP 
             "Taskbar" 
         );
-*/
 
-    libgui_set_ui_component_position(
-        uic_button_start, 
-        StartButton.left, 
-        StartButton.top );
-    libgui_set_ui_component_dimension(
-        uic_button_start, 
-        StartButton.width, 
-        StartButton.height );
-    libgui_redraw_ui_component(uic_button_start, dc00);
+    // ...
 }
 
 static int 
@@ -1490,36 +1449,6 @@ fail:
     return (int) -1;
 }
 
-
-static void create_start_button(int fd)
-{
-    struct gws_window_info_d wi;
-    gws_get_window_info(fd, main_window, &wi);
-
-    // Setup metadata
-    StartButton.button_id = 1;
-    StartButton.left  = 2;
-    StartButton.top   = 2;
-    StartButton.width = 80;
-    StartButton.height= wi.cr_height - 4;  // use client rectangle height
-    // StartButton.height= TASKBAR_HEIGHT - 8;
-
-    StartButton.absolute_left = wi.left + wi.cr_left + StartButton.left;
-    StartButton.absolute_top  = wi.top  + wi.cr_top  + StartButton.top;
-    StartButton.state = 0;
-
-    // Create UI component (client-side only)
-    uic_button_start = libgui_create_ui_component(
-        dc00,
-        1, // type = button
-        StartButton.left,
-        StartButton.top,
-        StartButton.width,
-        StartButton.height,
-        "Start"
-    );
-}
-
 // ==========================================
 // Main
 int main(int argc, char *argv[])
@@ -1797,12 +1726,13 @@ int main(int argc, char *argv[])
     );
     if ((void*)dc00 == NULL)
     {
-        printf("power: on dc00\n");
-        exit(1);
+        //printf("power: on dc00\n");
+        //exit(1);
     }
 
     if ((void*)dc00 != NULL){
-        // ...
+        printf("taskbar: on dc00\n");
+        exit(1);
     }
 
     /*
@@ -1897,13 +1827,9 @@ int main(int argc, char *argv[])
         "App", COLOR_WHITE, COLOR_GRAY, TRUE );
 */
 
-    //draw_bar_button (
-        //0, 0, wi.cr_width, wi.cr_height,
-        //"App", COLOR_WHITE, COLOR_GRAY, TRUE );
-
-
-    // #test: using a worker to create an UI component (button)
-    create_start_button(client_fd);
+    draw_bar_button (
+        0, 0, wi.cr_width, wi.cr_height,
+        "App", COLOR_WHITE, COLOR_GRAY, TRUE );
 
 // ========================
 // Create separator
