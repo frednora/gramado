@@ -8,7 +8,19 @@
 // we're we find a pre-loaded image.
 // 2015 - Created by Fred Nora.
 
-#include "../ds.h"
+
+// rtl (libc)
+#include <stdlib.h>
+
+// libgui
+#include "include/libgui.h"
+
+// BMP header
+#include "include/bmp.h"
+
+
+
+
 
 // Signature. "MB".
 #define BMP_TYPE  0x4D42
@@ -45,7 +57,25 @@ struct gws_bmp_infoheader_d  __Local_bi;
 // Private
 //
 
-static void *__get_system_icon(int n);
+// static void *__get_system_icon(int n);
+
+static int 
+__bmpDisplayBMP0 ( 
+    struct dccanvas_d *dc,
+    char *address, 
+    unsigned long x, 
+    unsigned long y,
+    int zoom_factor,
+    int show );
+
+static int 
+__bmp_decode_system_icon0 ( 
+    struct dccanvas_d *dc,
+    const char *img_buffer,
+    unsigned long x, 
+    unsigned long y,
+    int show,
+    int zoom_factor );
 
 // ------------------------------------
 
@@ -60,6 +90,7 @@ static void *__get_system_icon(int n);
 
 // #deprecated:
 // We are removing from the kernel the support for this routine
+/*
 static void *__get_system_icon (int n)
 {
 
@@ -73,9 +104,10 @@ static void *__get_system_icon (int n)
 
     return (void *) gramado_system_call(9100,n,n,n);
 }
+*/
 
 /*
- * bmpDisplayBMP0:
+ * __bmpDisplayBMP0:
  * (Decode), Draw a pre-loaded image into the backbuffer.
  * IN:
  * address = Address for an undecoded BMP file.
@@ -85,8 +117,11 @@ static void *__get_system_icon (int n)
  * show = Show or not.
  */
 // OUT: 0=ok | -1=fail.
-int 
-bmpDisplayBMP0 ( 
+
+// worker
+static int 
+__bmpDisplayBMP0 ( 
+    struct dccanvas_d *dc,
     char *address, 
     unsigned long x, 
     unsigned long y,
@@ -95,6 +130,12 @@ bmpDisplayBMP0 (
 {
 // (Decode), Draw a pre-loaded image into the backbuffer.
  
+
+// Validate context
+    if (!dc || dc->initialized != TRUE || !dc->data)
+        return -1;
+
+
 // The address validation
 // Endereço base do BMP que foi carregado na memoria
     unsigned char *bmp = (unsigned char *) address;
@@ -110,7 +151,7 @@ bmpDisplayBMP0 (
     unsigned int top=0; 
     unsigned int bottom=0;
 
-    struct gws_rect_d finalRect;
+    // struct gws_rect_d finalRect;
 
 // Zoom support.
 // It is working.
@@ -155,13 +196,13 @@ bmpDisplayBMP0 (
 // Limits
     if (x > xLimit || y > yLimit)
     {
-        printf ("bmpDisplayBMP0: Limits\n");
+        printf ("__bmpDisplayBMP0: Limits\n");
         goto fail;
     }
 
 // Address validation
     if (address == 0){
-        printf ("bmpDisplayBMP0: address\n");
+        printf ("__bmpDisplayBMP0: address\n");
         goto fail;
     }
 
@@ -178,7 +219,7 @@ bmpDisplayBMP0 (
     if ( bmp[0] != 'B' || bmp[1] != 'M' )
     {
         //server_debug_print ("bmpDisplayBMP0: [FAIL] signature \n");
-        printf  ("bmpDisplayBMP0: [FAIL] signature %c %c\n", 
+        printf  ("__bmpDisplayBMP0: [FAIL] signature %c %c\n", 
             bmp[0], bmp[1]);
         goto fail;
     }
@@ -324,10 +365,10 @@ bmpDisplayBMP0 (
           (__Local_bi.bmpHeight * ZoomFactor) );
 
 // Final rect to refresh.
-    finalRect.left = left;
-    finalRect.top  = top;
-    finalRect.width  = (__Local_bi.bmpWidth * ZoomFactor);
-    finalRect.height = (bottom-top);
+    //finalRect.left = left;
+    //finalRect.top  = top;
+    //finalRect.width  = (__Local_bi.bmpWidth * ZoomFactor);
+    //finalRect.height = (bottom-top);
 
 // --------------------------
 
@@ -528,10 +569,16 @@ bmpDisplayBMP0 (
                     if (color != bmp_selected_color)
                     {
                         // No scale
-                        if (useZoom==FALSE)
+                        if (useZoom == FALSE)
                         {
                             // IN: color, x, y, rop
-                            libdisp_backbuffer_putpixel ( 
+                            //libdisp_backbuffer_putpixel ( 
+                                //(unsigned int) color, 
+                                //(unsigned long) left, 
+                                //(unsigned long) bottom,
+                                //(unsigned long) 0 );
+                            libgui_putpixel0 (
+                                dc, 
                                 (unsigned int) color, 
                                 (unsigned long) left, 
                                 (unsigned long) bottom,
@@ -547,7 +594,18 @@ bmpDisplayBMP0 (
                             for (ihZoom=0; ihZoom < ZoomFactor; ihZoom++){
                             for (iwZoom=0; iwZoom < ZoomFactor; iwZoom++){ 
                             // IN: color, x, y, rop
-                            libdisp_backbuffer_putpixel ( 
+                            //libdisp_backbuffer_putpixel ( 
+                                //(unsigned int) color, 
+                                //(unsigned long) 
+                                //    left + 
+                                //    ((j * ZoomFactor) + iwZoom), 
+                                //(unsigned long) 
+                                //    bottom - 
+                                //    ((i * ZoomFactor) + ihZoom),
+                                //(unsigned long) 0 );
+
+                            libgui_putpixel0 (
+                                dc, 
                                 (unsigned int) color, 
                                 (unsigned long) 
                                     left + 
@@ -556,6 +614,8 @@ bmpDisplayBMP0 (
                                     bottom - 
                                     ((i * ZoomFactor) + ihZoom),
                                 (unsigned long) 0 );
+
+
                             };};
                         }
                     }
@@ -572,7 +632,14 @@ bmpDisplayBMP0 (
                     if (color == bmp_selected_color)
                     {
                         // IN: color, x, y, rop
-                        libdisp_backbuffer_putpixel ( 
+                        //libdisp_backbuffer_putpixel ( 
+                            //(unsigned int) bmp_substitute_color, 
+                            //(unsigned long) left, 
+                            //(unsigned long) bottom,
+                            //(unsigned long) 0 );
+
+                        libgui_putpixel0 (
+                            dc, 
                             (unsigned int) bmp_substitute_color, 
                             (unsigned long) left, 
                             (unsigned long) bottom,
@@ -584,11 +651,19 @@ bmpDisplayBMP0 (
                     if (color != bmp_selected_color)
                     {
                         // IN: color, x, y, rop
-                        libdisp_backbuffer_putpixel ( 
-                            (unsigned int) color, //bmp_substitute_color, 
+                        //libdisp_backbuffer_putpixel ( 
+                            //(unsigned int) color, //bmp_substitute_color, 
+                            //(unsigned long) left, 
+                            //(unsigned long) bottom,
+                            //(unsigned long) 0 );
+
+                        libgui_putpixel0 (
+                            dc, 
+                            (unsigned int) color, 
                             (unsigned long) left, 
                             (unsigned long) bottom,
                             (unsigned long) 0 );
+
                     }
                     break;
 
@@ -601,11 +676,20 @@ bmpDisplayBMP0 (
                 case BMP_CHANGE_COLOR_NULL:
                 default:
                     // IN: color, x, y, rop
-                    libdisp_backbuffer_putpixel( 
-                        (unsigned int) color,
+                    //libdisp_backbuffer_putpixel( 
+                        //(unsigned int) color,
+                        //(unsigned long) left, 
+                        //(unsigned long) bottom,
+                        //(unsigned long) 0 );
+
+                    // libgui_putpixel0
+                    libgui_putpixel0 (
+                        dc, 
+                        (unsigned int) color, 
                         (unsigned long) left, 
                         (unsigned long) bottom,
                         (unsigned long) 0 );
+
                     break;
             };
 
@@ -649,12 +733,15 @@ done:
 // #todo
 // Create a flag in the function's parameter.
 // Final rect to refresh.
-    if (show == TRUE){
+    if (show == TRUE)
+    {
+        /*
         gws_refresh_rectangle (
             finalRect.left,
             finalRect.top,
             finalRect.width,
             finalRect.height );
+        */
     }
 
     // #debug
@@ -666,10 +753,12 @@ done:
 
 fail:
     //server_debug_print ("bmpDisplayBMP0: fail\n");
-    printf             ("bmpDisplayBMP0: fail\n");
+    printf             ("__bmpDisplayBMP0: fail\n");
     return (int) -1;
 }
 
+/*
+// wrapper
 int 
 bmpDisplayBMP ( 
     char *address, 
@@ -678,6 +767,9 @@ bmpDisplayBMP (
     int show )
 {
 // Decode, paint and maybe refresh.
+
+    if ((void*) address == NULL)
+        return (int) -1;
 
     int res=0;
     res = (int) bmpDisplayBMP0( 
@@ -689,13 +781,15 @@ bmpDisplayBMP (
 
     return (int) res;
 }
+*/
 
-// gwssrv_display_system_icon:
+// __bmp_decode_system_icon0:
 // Called by createwDrawFrame on createw.c
 // >> Called by doCreateWindowFrame in wm.c
-int 
-bmp_decode_system_icon0 ( 
-    int index, 
+static int 
+__bmp_decode_system_icon0 ( 
+    struct dccanvas_d *dc,
+    const char *img_buffer,
     unsigned long x, 
     unsigned long y,
     int show,
@@ -714,30 +808,37 @@ bmp_decode_system_icon0 (
     unsigned long bmp_x = (x & 0xFFFF);
     unsigned long bmp_y = (y & 0xFFFF);
 
+
+// Validate context
+    if (!dc || dc->initialized != TRUE || !dc->data)
+        return -1;
+
+
 // Get buffer address.
 // Check pointer validation
+/*
     sm_buffer = (char *) __get_system_icon(index);
     if ((void *) sm_buffer == NULL)
     {
         printf ("bmp_decode_system_icon0: sm_buffer\n");
         goto fail;
     }
+*/
 
 
 // Check BM header
     if ( sm_buffer[0] != 'B' || sm_buffer[1] != 'M' )
     {
-        // #debug
-        //server_debug_print ("gwssrv_display_system_icon: [FAIL] header\n");
-        printf             ("gwssrv_display_system_icon: [FAIL] header\n");
-        printf ("gwssrv_display_system_icon: %c %c\n", 
+        printf("bmp_decode_system_icon0: [FAIL] header\n");
+        printf("bmp_decode_system_icon0: %c %c\n", 
             &sm_buffer[0], &sm_buffer[1] );
         // #debug
         // Show the whole screen if fail
-        gws_show_backbuffer();
+        //gws_show_backbuffer();
         //return -1;
-        while (1){
-        };
+        //while (1){
+        //};
+        return (int) -1;
     }
 
 //
@@ -753,10 +854,12 @@ bmp_decode_system_icon0 (
         bmp_change_color_flag = BMP_CHANGE_COLOR_TRANSPARENT;
         //bmp_change_color_flag = BMP_CHANGE_COLOR_SUBSTITUTE;
         //bmp_change_color_flag = BMP_CHANGE_COLOR_NULL;
-        bmp_selected_color = COLOR_WHITE;
+        bmp_selected_color = 0x00FFFFFF; //COLOR_WHITE;
+
         // Paint into the backbuffer, but refresh after that.
         draw_status = 
-            (int) bmpDisplayBMP0( 
+            (int) __bmpDisplayBMP0( 
+                dc,
                 (char *) sm_buffer, 
                 (unsigned long) bmp_x, 
                 (unsigned long) bmp_y,
@@ -784,22 +887,79 @@ fail:
     return -1;
 }
 
+
+// Hight level wrapper
 int 
-bmp_decode_system_icon ( 
-    int index, 
+bmp_decode_bmp_image ( 
+    struct dccanvas_d *dc,
+    const char *pathname,
     unsigned long x, 
     unsigned long y,
-    int show )
+    int show,
+    int zoom_factor )
 {
+    int ReturnValue = 0;
+    int fdRead = -1;
+    register int nreads = 0;
+    register int nwrites = 0;
+
+
+// Validate context
+    if (!dc || dc->initialized != TRUE || !dc->data)
+        return -1;
+
+// Parameter
+    if ((void*) pathname == NULL){
+        printf ("bmp_decode_system_icon: Missing pathname parameter\n");
+        goto fail;
+    }
+
+// ----------------------------
+// #test: 
+// Allocate memory for the file
+// We don't know its size, our limit will be 8KB for now.
+    char *buffer_p;
+    size_t BufferSize = (1024 *8);  // 8KB
+
+    buffer_p = (char *) malloc(BufferSize);
+    if ((void*) buffer_p == NULL){
+        printf("bmp_decode_system_icon: buffer_p\n");
+        goto fail;
+    }
+
+// ----------------------------
+// Open
+    fdRead = (int) open((char *) pathname, 0, "a+");
+    if (fdRead < 0){
+        printf ("bmp_decode_system_icon: on open()\n");
+        goto fail;
+    }
+
+// Read from fd
+// Reading 4KB into a 8KB buffer.
+// #todo: We need to read 8KB
+
+    nreads = (int) read(fdRead, buffer_p, 1024*4);
+    if (nreads <= 0){
+        printf ("cat: File {%d} failed on read()\n", fdRead);
+        goto fail;
+    }
+
+    // worker
     int res=0;
-    res = (int) bmp_decode_system_icon0(
-        index,
-        x,
-        y,
-        show, 
-        BMP_DEFAULT_ZOOM_FACTOR );
-    
+    res = 
+        (int) __bmp_decode_system_icon0(
+                dc,
+                buffer_p,
+                x,
+                y,
+                show, 
+                zoom_factor  //BMP_DEFAULT_ZOOM_FACTOR 
+            );
+
     return (int) res;
+fail:
+    return (int) -1;
 }
 
 //

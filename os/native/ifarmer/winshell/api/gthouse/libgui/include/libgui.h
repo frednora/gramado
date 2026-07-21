@@ -14,6 +14,8 @@
 #include "rop.h"
 #include "dccanvas.h"
 
+#include "bmp.h"  //#test
+
 //
 // UI
 //

@@ -665,7 +665,7 @@ static void __drawRotatingModel (struct model_d *model, float vel)
     struct n3d_mat4x4_d  matRotZ;
 
 // Triangles
-    struct n3d_triangle_d  tri;            // Original triangle.
+    struct n3d_triangle_d  tri;            // Original triangle
     struct n3d_triangle_d  triRotatedX;    // Rotate in X
     struct n3d_triangle_d  triRotatedXY;   // Rotate in Y
     struct n3d_triangle_d  triRotatedXYZ;  // Rotate in Z (Projected)
@@ -686,7 +686,7 @@ static void __drawRotatingModel (struct model_d *model, float vel)
     for (i=0; i<4; i++){
         for (j=0; j<4; j++){
             matRotZ.m[i][j] = (float) 0.0f;
-            matRotY.m[i][j] = (float) 0.0f;   // <-- add this
+            matRotY.m[i][j] = (float) 0.0f;
             matRotX.m[i][j] = (float) 0.0f;
         };
     };
@@ -750,10 +750,10 @@ static void __drawRotatingModel (struct model_d *model, float vel)
 //|  cos(θ)  -sin(θ)   0  |
 //|  sin(θ)   cos(θ)   0  |
 //|    0        0      1  |
-    matRotZ.m[0][0] = (float) cosf(0.0f);//(cube->fThetaAngle);
-    matRotZ.m[0][1] = (float) -sinf(0.0f);//(cube->fThetaAngle);
-    matRotZ.m[1][0] = (float) sinf(0.0f);//(cube->fThetaAngle);
-    matRotZ.m[1][1] = (float) cosf(0.0f);//(cube->fThetaAngle);
+    matRotZ.m[0][0] = (float) cosf(0.0f);
+    matRotZ.m[0][1] = (float) -sinf(0.0f);
+    matRotZ.m[1][0] = (float) sinf(0.0f);
+    matRotZ.m[1][1] = (float) cosf(0.0f);
     matRotZ.m[2][2] = (float) 1.0f;
     matRotZ.m[3][3] = (float) 1.0f;
 

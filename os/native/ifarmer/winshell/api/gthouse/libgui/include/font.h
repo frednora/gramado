@@ -1,4 +1,4 @@
-// gont.h
+// font.h
 // Font support for libgui
 
 #ifndef __LIBGUI_FONT_H

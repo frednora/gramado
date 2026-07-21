@@ -30,7 +30,7 @@ CFLAGS = -m64 \
 
 LIBS = -I.  -I ../../garden/rtl/include/
 
-OBJS = font.o libgui00.o    
+OBJS = font.o libgui00.o bmp.o    
 
 
 .PHONY: all all-c finalize clean
@@ -41,6 +41,7 @@ all: all-c finalize clean
 all-c:
 	gcc -c font.c    $(CFLAGS) $(LIBS) -o font.o
 	gcc -c libgui.c  $(CFLAGS) $(LIBS) -o libgui00.o
+	gcc -c bmp.c     $(CFLAGS) $(LIBS) -o bmp.o
 
 # Link the binaries to form the library
 	$(LD) -r -o libgui.o $(OBJS)

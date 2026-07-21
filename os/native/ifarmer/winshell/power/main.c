@@ -797,6 +797,28 @@ int main(int argc, char *argv[])
     );
 // ---------------------
 
+
+// -----------------------------------------------------
+// #test: BMP image
+// ============================================================
+// #test BMP decoder
+// Draw a BMP image into the client area
+    int bmp_status = 
+        bmp_decode_bmp_image(
+            dc00,                  // device context
+            "#folder.bmp",         // path to BMP file
+            50,                    // x position inside client area
+            50,                    // y position inside client area
+           TRUE,                   // show/refresh flag
+           4  //BMP_DEFAULT_ZOOM_FACTOR
+        );
+
+    if (bmp_status < 0) {
+        printf("power_app: Failed to decode BMP image\n");
+        exit(1);
+    }
+// -----------------------------------------------------
+
 //
 // Button (Restart)
 //

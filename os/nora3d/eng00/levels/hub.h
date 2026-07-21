@@ -27,7 +27,6 @@ void demoCameraSpinWorld(int direction);
 // This is called by the gameloop.
 void demoHumanoidDrawScene(unsigned long sec);
 
-
 void demoHumanoidUpdate(void);
 
 //

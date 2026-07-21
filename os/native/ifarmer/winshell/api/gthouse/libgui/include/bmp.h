@@ -66,35 +66,36 @@ struct gws_bmp_infoheader_d
  *     show or not?
  */
  
+/*
 int 
 bmpDisplayBMP0 ( 
+    struct dccanvas_d *dc,
     char *address, 
     unsigned long x, 
     unsigned long y,
     int zoom_factor,
     int show );
+*/
 
+/*
 int 
 bmpDisplayBMP ( 
     char *address, 
     unsigned long x, 
     unsigned long y,
     int show );
+*/
 
+
+// Hight level wrapper
 int 
-bmp_decode_system_icon0 ( 
-    int index, 
+bmp_decode_bmp_image ( 
+    struct dccanvas_d *dc,
+    const char *pathname,
     unsigned long x, 
     unsigned long y,
     int show,
     int zoom_factor );
-
-int 
-bmp_decode_system_icon ( 
-    int index, 
-    unsigned long x, 
-    unsigned long y,
-    int show );
 
 #endif   
 
