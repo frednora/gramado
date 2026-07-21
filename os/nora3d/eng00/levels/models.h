@@ -16,6 +16,20 @@ struct cat_model_d
 extern struct cat_model_d  CatModel;   // Cat model 0.
 
 
+// =============================================
+// Model Type Tags
+// =============================================
+typedef enum {
+    MODEL_TYPE_INVALID     = 0,
+    MODEL_TYPE_HUMANOID    = 1,   // Player + enemies
+    MODEL_TYPE_DISK        = 2,   // Flying saucers
+    MODEL_TYPE_BUILDING    = 3,
+    MODEL_TYPE_PROP        = 4,   // trees, rocks, collectibles...
+    MODEL_TYPE_PROJECTILE  = 5,
+    MODEL_TYPE_EFFECT      = 6,   // explosions, particles, etc.
+    // ... add more as needed
+} model_type_t;
+
 // Ideas for the model:
 // 1. Core Vital Stats
 // 2. Position & Movement
@@ -27,6 +41,12 @@ extern struct cat_model_d  CatModel;   // Cat model 0.
 
 struct model_d
 {
+    // Header
+    int            id;          // Unique identifier / index
+    model_type_t   tag;         // Type tag
+
+    // Geometry
+
     // We don't need 32 vectors. But its ok.
     struct n3d_vec_d vecs[128]; //32
     int vertex_count; // how many faces are stored
@@ -41,8 +61,9 @@ struct model_d
 
     float fThetaAngle;
 
-// World origin 
+// Position & Movement
 
+// World origin 
 // Translation offsets
     float origin_x;  //hposition;  //horisontal position
     float origin_y;  //vposition;  //vertical position
@@ -53,12 +74,16 @@ struct model_d
     float delta_y; // change in y per frame 
     float delta_z; // change in z per frame
 
-    // Motion parameters
-    float a;  // Acceletarion: How fast the velocity changes.
-    float v;  // Velocity:
-    float t;  // Time:
+    // Physics / Animation
+    float a;  // acceleration: How fast the velocity changes
+    float v;  // velocity
+    float t;  // time / angle accumulator
 
-// Collision flag
+//
+// Game logic
+//
+
+    // Collision flag
     int collided;     // current collision type
 
 // #test
@@ -90,6 +115,9 @@ struct model_d
 // Critical chance / Critical damage
 
     int IsAlive;
+
+    // Future extensions
+    // void* extra_data;   // for type-specific data if needed later
 };
 
 extern struct model_d *main_character;

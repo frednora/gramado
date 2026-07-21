@@ -28,8 +28,11 @@ static char *model_data_ground = NULL;
 unsigned long models[MODEL_MAX];
 
 // Disks
-#define STATIC_MODEL_MAX  8
-unsigned long m_disks[STATIC_MODEL_MAX];
+#define DISK_MODEL_MAX  8
+unsigned long m_disks[DISK_MODEL_MAX];
+
+#define DRAWERLIST_MAX  (MODEL_MAX + DISK_MODEL_MAX +1)
+unsigned long drawerList[DRAWERLIST_MAX];
 
 // World yaw -- how much the world has turned around the hero's fixed
 // position. Read by the draw functions later; written only here.
@@ -70,6 +73,8 @@ static int __load_all_obj_files(void);
 
 static void __drawModelWithShading (struct model_d *model, float fElapsedTime);
 static void __drawRotatingModel(struct model_d *model, float vel);
+static void render_model(struct model_d *m, float elapsed);
+static void demo_draw_hud(void);
 
 
 static void assignBandColors(struct model_d *m, int blockSize,
@@ -89,6 +94,9 @@ static void __rotateAroundPivotY(float *x, float *z, float px, float pz, float a
 static void __setupTerrain(void);
 static void assignTerrainColors(struct terrain_model_d *t);
 static void __drawTerrain(struct terrain_model_d *t);
+
+static void __reorderByZ(unsigned long *list, int count);
+static int buildModelList(unsigned long *outList, int maxCount);
 
 //======================
 
@@ -232,20 +240,20 @@ static void __drawModelWithShading (struct model_d *model, float fElapsedTime)
     int j=0;
 
 // ---------
-// Initialize 4x4 matrices.
+    if( (void*) model == NULL ){
+        return;
+    }
+
+// ---------
+// Initialize 4x4 matrices
 // see: gprim.h
     for (i=0; i<4; i++){
         for (j=0; j<4; j++){
             matRotZ.m[i][j] = (float) 0.0f;
-            matRotY.m[i][j] = (float) 0.0f;   // <-- add this
+            matRotY.m[i][j] = (float) 0.0f;
             matRotX.m[i][j] = (float) 0.0f;
         };
     };
-
-// ---------
-    if( (void*) model == NULL ){
-        return;
-    }
 
 // Building the transformation matrices.
 // O angulo muda com o passar do tempo.
@@ -260,10 +268,10 @@ static void __drawModelWithShading (struct model_d *model, float fElapsedTime)
 //|  0   cos(θ)  -sin(θ) |
 //|  0   sin(θ)   cos(θ) |
 	matRotX.m[0][0] = (float) 1.0f;
-	matRotX.m[1][1] = (float) cosf(model->fThetaAngle * 0.5f);
+	matRotX.m[1][1] = (float)  cosf(model->fThetaAngle * 0.5f);
 	matRotX.m[1][2] = (float) -sinf(model->fThetaAngle * 0.5f);
-	matRotX.m[2][1] = (float) sinf(model->fThetaAngle * 0.5f);
-	matRotX.m[2][2] = (float) cosf(model->fThetaAngle * 0.5f);
+	matRotX.m[2][1] = (float)  sinf(model->fThetaAngle * 0.5f);
+	matRotX.m[2][2] = (float)  cosf(model->fThetaAngle * 0.5f);
 	matRotX.m[3][3] = (float) 1.0f;
 //------------------------------------------------
 // Rotation Y
@@ -272,11 +280,11 @@ static void __drawModelWithShading (struct model_d *model, float fElapsedTime)
 //|  cos(θ)   0   sin(θ)  |
 //|   0       1     0     |
 //| -sin(θ)   0   cos(θ)  |
-    matRotY.m[0][0] = cosf(0.0f);//(cube->fThetaAngle * 0.5f);
-    matRotY.m[0][2] = sinf(0.0f);//(cube->fThetaAngle * 0.5f);
+    matRotY.m[0][0] = cosf(0.0f);
+    matRotY.m[0][2] = sinf(0.0f);
     matRotY.m[1][1] = (float) 1.0f;
-    matRotY.m[2][0] = -sinf(0.0f);//(cube->fThetaAngle * 0.5f);
-    matRotY.m[2][2] = cosf(0.0f);//(cube->fThetaAngle * 0.5f);
+    matRotY.m[2][0] = -sinf(0.0f);
+    matRotY.m[2][2] =  cosf(0.0f);
     matRotY.m[3][3] = (float) 1.0f;
 //------------------------------------------------
 // Rotation Z
@@ -285,22 +293,16 @@ static void __drawModelWithShading (struct model_d *model, float fElapsedTime)
 //|  cos(θ)  -sin(θ)   0  |
 //|  sin(θ)   cos(θ)   0  |
 //|    0        0      1  |
-	matRotZ.m[0][0] = (float) cosf(0.0f);//(cube->fThetaAngle);
-	matRotZ.m[0][1] = (float) -sinf(0.0f);//(cube->fThetaAngle);
-	matRotZ.m[1][0] = (float) sinf(0.0f);//(cube->fThetaAngle);
-	matRotZ.m[1][1] = (float) cosf(0.0f);//(cube->fThetaAngle);
+	matRotZ.m[0][0] = (float)  cosf(0.0f);
+	matRotZ.m[0][1] = (float) -sinf(0.0f);
+	matRotZ.m[1][0] = (float)  sinf(0.0f);
+	matRotZ.m[1][1] = (float)  cosf(0.0f);
 	matRotZ.m[2][2] = (float) 1.0f;
 	matRotZ.m[3][3] = (float) 1.0f;
-
 
 // 12 triangles.
 // Order: north, top, south, bottom, east, west.
 // clockwise? or ccw.
-
-// ---------
-// #test
-// draw a rectangle
-   //drawRectangle0((float) 0.08f);
 
 // ---------
 // draw a cube
@@ -723,10 +725,10 @@ static void __drawRotatingModel (struct model_d *model, float vel)
 //|  0   cos(θ)  -sin(θ) |
 //|  0   sin(θ)   cos(θ) |
     matRotX.m[0][0] = (float) 1.0f;
-    matRotX.m[1][1] = (float) cosf(model->fThetaAngle * 0.5f);
+    matRotX.m[1][1] = (float)  cosf(model->fThetaAngle * 0.5f);
     matRotX.m[1][2] = (float) -sinf(model->fThetaAngle * 0.5f);
-    matRotX.m[2][1] = (float) sinf(model->fThetaAngle * 0.5f);
-    matRotX.m[2][2] = (float) cosf(model->fThetaAngle * 0.5f);
+    matRotX.m[2][1] = (float)  sinf(model->fThetaAngle * 0.5f);
+    matRotX.m[2][2] = (float)  cosf(model->fThetaAngle * 0.5f);
     matRotX.m[3][3] = (float) 1.0f;
 //------------------------------------------------
 // Rotation Y
@@ -735,11 +737,11 @@ static void __drawRotatingModel (struct model_d *model, float vel)
 //|  cos(θ)   0   sin(θ)  |
 //|   0       1     0     |
 //| -sin(θ)   0   cos(θ)  |
-    matRotY.m[0][0] = cosf(0.0f);//(cube->fThetaAngle * 0.5f);
-    matRotY.m[0][2] = sinf(0.0f);//(cube->fThetaAngle * 0.5f);
+    matRotY.m[0][0] = cosf(0.0f);
+    matRotY.m[0][2] = sinf(0.0f);
     matRotY.m[1][1] = (float) 1.0f;
-    matRotY.m[2][0] = -sinf(0.0f);//(cube->fThetaAngle * 0.5f);
-    matRotY.m[2][2] = cosf(0.0f);//(cube->fThetaAngle * 0.5f);
+    matRotY.m[2][0] = -sinf(0.0f);
+    matRotY.m[2][2] = cosf(0.0f);
     matRotY.m[3][3] = (float) 1.0f;
 //------------------------------------------------
 // Rotation Z
@@ -1482,7 +1484,7 @@ void demoHumanoidRotateWorld(int direction, float value)
 }
 
 // Bubble sort for small lists
-static void reorderByZ(unsigned long *list, int count) 
+static void __reorderByZ(unsigned long *list, int count) 
 {
     int swapped;
     int i=0;
@@ -1508,7 +1510,7 @@ static void reorderByZ(unsigned long *list, int count)
 }
 
 // Worker: build + reorder list
-int buildModelList(unsigned long *outList, int maxCount) 
+static int buildModelList(unsigned long *outList, int maxCount) 
 {
     int count = 0;
     int i=0;
@@ -1517,7 +1519,7 @@ int buildModelList(unsigned long *outList, int maxCount)
     for (i=0; i < MODEL_MAX; i++) 
     {
         if (count >= maxCount)
-            return -1;
+            goto fail;
         if (models[i] != 0) {
             outList[count] = models[i];
             count++;
@@ -1525,10 +1527,10 @@ int buildModelList(unsigned long *outList, int maxCount)
     }
 
     // Collect saucers/discs
-    for (i=0; i < STATIC_MODEL_MAX; i++) 
+    for (i=0; i < DISK_MODEL_MAX; i++) 
     {
         if (count >= maxCount)
-            return -1;
+            goto fail;
         if (m_disks[i] != 0) {
             outList[count] = m_disks[i];
             count++;
@@ -1536,9 +1538,108 @@ int buildModelList(unsigned long *outList, int maxCount)
     }
 
     // Reorder by origin_z
-    reorderByZ(outList, count);
+    __reorderByZ(outList, count);
 
-    return count; // number of models collected
+    return (int) count;  // number of models collected
+fail:
+    return (int) -1;
+}
+
+// =============================================
+// HUD / On-screen Text
+// =============================================
+static void demo_draw_hud(void)
+{
+    char buffer[64];
+    int i;
+
+    if ((void*)__root_window == NULL)
+        return;
+
+    // ─────────────────────────────────────
+    // Left Side - Main Info
+    // ─────────────────────────────────────
+    dtextDrawText(__root_window, 12, 12, 0xFFFF00, (unsigned char*)"HUB WORLD");     // Bright Yellow
+
+    sprintf(buffer, "Level: %d", current_level);
+    dtextDrawText(__root_window, 12, 34, 0xFFFFFF, (unsigned char*)buffer);         // White
+
+    sprintf(buffer, "Score: %d", hits);
+    dtextDrawText(__root_window, 12, 56, 0x00FFAA, (unsigned char*)buffer);         // Cyan-Green
+
+    // ─────────────────────────────────────
+    // Center Top - Player Status
+    // ─────────────────────────────────────
+    if (main_character)
+    {
+        sprintf(buffer, "Health: %d", main_character->health_value);
+        unsigned int health_color = (main_character->health_value > 30) ? 
+                                    0xFF4444 : 0xFF0000;   // Red → Bright Red when low
+        dtextDrawText(__root_window, 280, 12, health_color, (unsigned char*)buffer);
+
+        sprintf(buffer, "Lives: %d", main_character->lives);
+        dtextDrawText(__root_window, 280, 34, 0xFFFFFF, (unsigned char*)buffer);   // White
+    }
+
+    // ─────────────────────────────────────
+    // Right Side - Stats
+    // ─────────────────────────────────────
+    int alive_enemies = 0;
+    for (i = 1; i < MODEL_MAX; i++)
+    {
+        struct model_d *m = (struct model_d*)models[i];
+        if (m && m->IsAlive) alive_enemies++;
+    }
+
+    sprintf(buffer, "Enemies: %d", alive_enemies);
+    dtextDrawText(__root_window, 480, 12, 0x00FFFF, (unsigned char*)buffer);   // Cyan
+
+    sprintf(buffer, "Disks: %d", DISK_MODEL_MAX);
+    dtextDrawText(__root_window, 480, 34, 0xFFAA00, (unsigned char*)buffer);   // Orange
+
+    // ─────────────────────────────────────
+    // Debug Info
+    // ─────────────────────────────────────
+    /*
+    if (debug_mode)
+    {
+        sprintf(buffer, "Models: %d | Yaw: %.2f", 
+                buildModelList(drawerList, DRAWERLIST_MAX), worldYawAngle);
+        dtextDrawText(__root_window, 12, 90, 0xAAAAAA, (unsigned char*)buffer);   // Light Gray
+
+        if (main_character)
+        {
+            sprintf(buffer, "Hero id=%d @ (%.1f, %.1f, %.1f)", 
+                    main_character->id,
+                    main_character->origin_x,
+                    main_character->origin_y,
+                    main_character->origin_z);
+            dtextDrawText(__root_window, 12, 110, 0xFF8800, (unsigned char*)buffer); // Orange
+        }
+    }
+    */
+}
+
+// #test
+static void render_model(struct model_d *m, float elapsed)
+{
+    if (!m) return;
+
+    // Type-specific pre-processing
+    switch (m->tag)
+    {
+        case MODEL_TYPE_DISK:
+            //m->fThetaAngle += elapsed * 3.0f;   // constant spin
+            break;
+
+        case MODEL_TYPE_HUMANOID:
+            if (m == main_character)
+                heroYawAngle = m->fThetaAngle;  // sync
+            break;
+    }
+
+    // Final draw
+    __drawModelWithShading(m, elapsed);
 }
 
 // Build, paint and display the frame.
@@ -1577,48 +1678,34 @@ void demoHumanoidDrawScene(unsigned long sec)
 // Moved to the main loop of the server.
     //unsigned long gBeginTick = rtl_jiffies();
 
-//
-// Draw the terrain
-//
-
-// Draw terrain first
-// 'ground' is the current terrain
+// === 1. Draw Terrain First ===
     if (ground != NULL) {
         __drawTerrain(ground);
     }
 
-//
-// Draw the models
-//
+// === 2. Build and sort dynamic models ===
 
 // Save the pointers for the models here
-    unsigned long drawerList[64];
 // Clear the list before using it
     int i;
-    for (i = 0; i < 64; i++) {
+    for (i = 0; i < DRAWERLIST_MAX; i++) {
         drawerList[i] = 0;
     }
     // IN: address for the list
     int n;
-    n = (int) buildModelList(drawerList,64);
-    if (n<0 || n >= 64)
+    n = (int) buildModelList(drawerList, DRAWERLIST_MAX);
+    if (n <= 0 || n >= 64)
     {
         printf("on buildModelList()\n");
         exit(1);
     }
 
-// Draw the main character
-// Humanoid number 0.
-// #todo: It needs to be the last.
-// But we are gonna use a list, and there is no need to
-// this routine anymore.
-    //__drawModelWithShading (main_character, 0.0f);
-
+// === 3. Draw models with intelligence ===
 
 // Static scenery 
     //int i=0;
     struct model_d *model;
-    for (i = 0; i < 64; i++) 
+    for (i = 0; i < DRAWERLIST_MAX; i++) 
     {
         // Pick one
         model = (struct model_d*) drawerList[i]; 
@@ -1631,7 +1718,11 @@ void demoHumanoidDrawScene(unsigned long sec)
                 model->v = (float) model->t * model->a;  
             }
 
-            __drawModelWithShading(model, model->v);
+            // New worker
+            render_model(model, model->v);
+
+            // Low level worker
+            // __drawModelWithShading(model, model->v);
         } 
     };
 
@@ -1688,6 +1779,7 @@ void demoHumanoidDrawScene(unsigned long sec)
     }
 */
 
+    demo_draw_hud();
 }
 
 // + Update position for the models
@@ -1742,7 +1834,7 @@ void demoHumanoidUpdate(void)
 
 // disks
 // #ps: We gotta start at 1.
-    int disk_count = STATIC_MODEL_MAX;
+    int disk_count = DISK_MODEL_MAX;
     for (i = 1; i < disk_count; i++)
     {
         struct model_d *m = m_disks[i];
@@ -2072,30 +2164,23 @@ void demoHumanoidSetup(void)
     for (i=0; i<MODEL_MAX; i++){
         models[i] = (unsigned long) 0;
     };
-    for (i=0; i<STATIC_MODEL_MAX; i++){
+    for (i=0; i<DISK_MODEL_MAX; i++){
         m_disks[i] = (unsigned long) 0;
     };
 
 
-//
 // Loading obj files
-//
-
     __load_all_obj_files();
 
-
-//
-// Stup terrain
-//
-
-    __setupTerrain();   // <-- add this
-
+// Setup terrain
+    __setupTerrain();
 
     int count=0;
     int rand1=0;
 
-// ==========================================================
-// Models: humanoids
+// =============================================================
+// Humanoids (Player + Enemies)
+// =============================================================
 
     for (count=0; count<MODEL_MAX; count++)
     {
@@ -2105,7 +2190,11 @@ void demoHumanoidSetup(void)
             exit(1);
         }
 
-        // Create terrain
+        // === Set header ===
+        model->id = count;  // Humanoid number
+        model->tag = MODEL_TYPE_HUMANOID;
+
+        // The main char
         if (count == 0){
             main_character = (struct model_d *) model;
         }
@@ -2115,9 +2204,7 @@ void demoHumanoidSetup(void)
         model->interaction_radius = (float) 0.8f;
                 
         // Initialize vectors
-        //for (i=0; i<32; i++)
-        for (i=0; i<128; i++)
-        {
+        for (i=0; i<128; i++){
             model->vecs[i].x = (float) 0.0f;
             model->vecs[i].y = (float) 0.0f;
             model->vecs[i].z = (float) 0.0f;
@@ -2234,10 +2321,11 @@ void demoHumanoidSetup(void)
         models[count] = (unsigned long) model;
     };
 
-// =======================================================================
-// Static models: disks
+// =============================================================
+// Disks / Saucers
+// =============================================================
 
-    for (count=0; count<STATIC_MODEL_MAX; count++)
+    for (count=0; count<DISK_MODEL_MAX; count++)
     {
         s_model = (void*) malloc( sizeof(struct model_d) );
         if ((void*) s_model == NULL){
@@ -2245,10 +2333,14 @@ void demoHumanoidSetup(void)
             exit(1);
         }
 
+        // === Set header ===
+        s_model->id = count;  // Disk number
+        s_model->tag = MODEL_TYPE_DISK;
+
         // Tilt the saucer so we see it 3/4-on instead of edge-on.
         // fThetaAngle is used as (angle * 0.5f) in the rotation matrix,
         // so ~0.8f here gives a visible ~23° pitch.
-        s_model->fThetaAngle = (float) 0.8f;
+        s_model->fThetaAngle = (float) 0.0f;  //0.8f;
 
         s_model->rop = 0;
 
@@ -2349,7 +2441,7 @@ void demoHumanoidSetup(void)
         // Spread wider in X so the (radius ~2.0) disks don't overlap.
         // Centered around x=0 instead of starting at -3.0f.
         s_model->origin_x =
-            (float) ((count - (STATIC_MODEL_MAX - 1) / 2.0f) * 5.0f);
+            (float) ((count - (DISK_MODEL_MAX - 1) / 2.0f) * 5.0f);
 
         // Lift into "sky" airspace, above the humanoids (y=0) and hero (y=-3.0).
         // Slight stagger per model so they're not perfectly level with each other.
