@@ -52,6 +52,18 @@ struct gws_bmp_infoheader_d
     unsigned int  bmpClrImportant;   // 50 - Number of important colors
 };
 
+// The raw image is cached into the memory.
+// This way we can redecode it easily.
+struct bmp_cache_d 
+{
+    int loaded;          // 0 = not loaded, 1 = loaded
+    char *buffer;        // pointer to raw BMP file already in memory
+    unsigned long size;  // optional: size of the buffer
+
+    // ...
+};
+
+
 // -------------------------------------------
 
 /*
@@ -87,15 +99,15 @@ bmpDisplayBMP (
 */
 
 
-// Hight level wrapper
 int 
 bmp_decode_bmp_image ( 
+    struct bmp_cache_d *cache,
     struct dccanvas_d *dc,
-    const char *pathname,
     unsigned long x, 
     unsigned long y,
-    int show,
     int zoom_factor );
+
+struct bmp_cache_d *bmp_load_bmp_image(const char *pathname);
 
 #endif   
 

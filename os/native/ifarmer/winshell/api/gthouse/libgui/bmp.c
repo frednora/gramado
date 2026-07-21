@@ -65,8 +65,7 @@ __bmpDisplayBMP0 (
     char *address, 
     unsigned long x, 
     unsigned long y,
-    int zoom_factor,
-    int show );
+    int zoom_factor );
 
 static int 
 __bmp_decode_system_icon0 ( 
@@ -74,7 +73,6 @@ __bmp_decode_system_icon0 (
     const char *img_buffer,
     unsigned long x, 
     unsigned long y,
-    int show,
     int zoom_factor );
 
 // ------------------------------------
@@ -125,16 +123,13 @@ __bmpDisplayBMP0 (
     char *address, 
     unsigned long x, 
     unsigned long y,
-    int zoom_factor,
-    int show )
+    int zoom_factor )
 {
 // (Decode), Draw a pre-loaded image into the backbuffer.
  
-
 // Validate context
     if (!dc || dc->initialized != TRUE || !dc->data)
         return -1;
-
 
 // The address validation
 // Endereço base do BMP que foi carregado na memoria
@@ -733,16 +728,16 @@ done:
 // #todo
 // Create a flag in the function's parameter.
 // Final rect to refresh.
+    /*
     if (show == TRUE)
     {
-        /*
         gws_refresh_rectangle (
             finalRect.left,
             finalRect.top,
             finalRect.width,
             finalRect.height );
-        */
     }
+    */
 
     // #debug
     //server_debug_print ("bmpDisplayBMP0: done \n");
@@ -792,17 +787,16 @@ __bmp_decode_system_icon0 (
     const char *img_buffer,
     unsigned long x, 
     unsigned long y,
-    int show,
     int zoom_factor )
 {
     //#expensive: Refresh the whole screen.    
     //int RefreshScreen= FALSE;
-    int RefreshScreen = show;
+    //int RefreshScreen = show;
 
 // Shared memory
 // Um endereço compartilhado onde o ícone
 // foi carregado pelo kernel.
-    char *sm_buffer;
+
 // #todo: 
 // limits for x and y.
     unsigned long bmp_x = (x & 0xFFFF);
@@ -814,24 +808,17 @@ __bmp_decode_system_icon0 (
         return -1;
 
 
-// Get buffer address.
-// Check pointer validation
-/*
-    sm_buffer = (char *) __get_system_icon(index);
-    if ((void *) sm_buffer == NULL)
-    {
-        printf ("bmp_decode_system_icon0: sm_buffer\n");
+    if ((void*) img_buffer == NULL){
+        printf("bmp_decode_system_icon0: img_buffer\n");
         goto fail;
     }
-*/
 
-
-// Check BM header
-    if ( sm_buffer[0] != 'B' || sm_buffer[1] != 'M' )
+    // Check BM header
+    if ( img_buffer[0] != 'B' || img_buffer[1] != 'M' )
     {
         printf("bmp_decode_system_icon0: [FAIL] header\n");
         printf("bmp_decode_system_icon0: %c %c\n", 
-            &sm_buffer[0], &sm_buffer[1] );
+            &img_buffer[0], &img_buffer[1] );
         // #debug
         // Show the whole screen if fail
         //gws_show_backbuffer();
@@ -841,6 +828,7 @@ __bmp_decode_system_icon0 (
         return (int) -1;
     }
 
+
 //
 // Draw the BMP image
 //
@@ -848,7 +836,7 @@ __bmp_decode_system_icon0 (
     int draw_status=-1;
 
 // Check BM header. Again.
-    if ( sm_buffer[0] == 'B' && sm_buffer[1] == 'M' )
+    if ( img_buffer[0] == 'B' && img_buffer[1] == 'M' )
     {
         // #flags
         bmp_change_color_flag = BMP_CHANGE_COLOR_TRANSPARENT;
@@ -860,11 +848,11 @@ __bmp_decode_system_icon0 (
         draw_status = 
             (int) __bmpDisplayBMP0( 
                 dc,
-                (char *) sm_buffer, 
+                (char *) img_buffer, 
                 (unsigned long) bmp_x, 
                 (unsigned long) bmp_y,
-                zoom_factor,
-                show ); 
+                zoom_factor );
+ 
         if (draw_status<0){
             //#todo: error message.
         } 
@@ -888,29 +876,71 @@ fail:
 }
 
 
-// Hight level wrapper
 int 
 bmp_decode_bmp_image ( 
+    struct bmp_cache_d *cache,
     struct dccanvas_d *dc,
-    const char *pathname,
     unsigned long x, 
     unsigned long y,
-    int show,
     int zoom_factor )
 {
-    int ReturnValue = 0;
-    int fdRead = -1;
-    register int nreads = 0;
-    register int nwrites = 0;
-
 
 // Validate context
     if (!dc || dc->initialized != TRUE || !dc->data)
         return -1;
 
+// cache
+    if ((void*) cache == NULL){
+        printf("bmp_decode_system_icon: cache\n");
+        goto fail;
+    }
+    if (cache->loaded != TRUE){
+        printf("bmp_decode_system_icon: Not loaded\n");
+        goto fail;
+    }
+
+//
+// Buffer
+//
+
+    char *buffer_p = (char *) cache->buffer;
+
+    if ((void*) buffer_p == NULL){
+        printf("bmp_decode_system_icon: buffer_p\n");
+        goto fail;
+    }
+
+// worker
+// Decode the raw image
+
+    int res=0;
+    res = 
+        (int) __bmp_decode_system_icon0(
+                dc,
+                buffer_p,
+                x,
+                y,
+                zoom_factor  //BMP_DEFAULT_ZOOM_FACTOR 
+            );
+
+    return (int) res;
+
+fail:
+    return (int) -1;
+}
+
+
+struct bmp_cache_d *bmp_load_bmp_image(const char *pathname)
+{
+    struct bmp_cache_d *cache;
+    int ReturnValue = 0;
+    int fdRead = -1;
+    register int nreads = 0;
+    register int nwrites = 0;
+
 // Parameter
     if ((void*) pathname == NULL){
-        printf ("bmp_decode_system_icon: Missing pathname parameter\n");
+        printf ("bmp_load_bmp_image: Missing pathname parameter\n");
         goto fail;
     }
 
@@ -923,7 +953,7 @@ bmp_decode_bmp_image (
 
     buffer_p = (char *) malloc(BufferSize);
     if ((void*) buffer_p == NULL){
-        printf("bmp_decode_system_icon: buffer_p\n");
+        printf("bmp_load_bmp_image: buffer_p\n");
         goto fail;
     }
 
@@ -931,7 +961,7 @@ bmp_decode_bmp_image (
 // Open
     fdRead = (int) open((char *) pathname, 0, "a+");
     if (fdRead < 0){
-        printf ("bmp_decode_system_icon: on open()\n");
+        printf ("bmp_load_bmp_image: on open()\n");
         goto fail;
     }
 
@@ -941,26 +971,32 @@ bmp_decode_bmp_image (
 
     nreads = (int) read(fdRead, buffer_p, 1024*4);
     if (nreads <= 0){
-        printf ("cat: File {%d} failed on read()\n", fdRead);
+        printf ("bmp_load_bmp_image: File {%d} failed on read()\n", fdRead);
         goto fail;
     }
 
-    // worker
-    int res=0;
-    res = 
-        (int) __bmp_decode_system_icon0(
-                dc,
-                buffer_p,
-                x,
-                y,
-                show, 
-                zoom_factor  //BMP_DEFAULT_ZOOM_FACTOR 
-            );
 
-    return (int) res;
+//
+// Cache
+//
+
+    cache = (struct bmp_cache_d *) malloc( sizeof(struct bmp_cache_d) );
+    if ((void*) cache == NULL)
+    {
+        printf("bmp_load_bmp_image: cache\n");
+        goto fail;
+    }
+
+    // fill it
+    cache->buffer = (char *) buffer_p;
+    cache->loaded = TRUE;
+
+    return (struct bmp_cache_d *) cache;
+
 fail:
-    return (int) -1;
+    return NULL;
 }
+
 
 //
 // End

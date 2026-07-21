@@ -62,6 +62,11 @@ static struct button_info_d  MyButton_Shutdown;
 
 static int __hover_button_id = -1; // Invalidate.
 
+
+struct bmp_cache_d *icon00_cache;
+
+// -----------------
+
 // Window IDs
 static int main_window     = -1;
 // static int restart_button  = -1;
@@ -285,6 +290,14 @@ static void update_children(int fd)
         button_w,
         button_h );
     libgui_redraw_ui_component(uic_button_shutdown, dc00);
+
+// bmp
+
+    if (icon00_cache && icon00_cache->loaded) 
+    {
+        bmp_decode_bmp_image(icon00_cache, dc00, 50, 50, 4); // zoom=4
+    }
+
 }
 
 static void set_default_responder(int wid)
@@ -800,24 +813,13 @@ int main(int argc, char *argv[])
 
 // -----------------------------------------------------
 // #test: BMP image
-// ============================================================
-// #test BMP decoder
-// Draw a BMP image into the client area
-    int bmp_status = 
-        bmp_decode_bmp_image(
-            dc00,                  // device context
-            "#folder.bmp",         // path to BMP file
-            50,                    // x position inside client area
-            50,                    // y position inside client area
-           TRUE,                   // show/refresh flag
-           4  //BMP_DEFAULT_ZOOM_FACTOR
-        );
 
-    if (bmp_status < 0) {
-        printf("power_app: Failed to decode BMP image\n");
-        exit(1);
+    icon00_cache = (struct bmp_cache_d*) bmp_load_bmp_image("#folder.bmp");
+    if (icon00_cache && icon00_cache->loaded) 
+    {
+        bmp_decode_bmp_image(icon00_cache, dc00, 50, 50, 4); // zoom=4
     }
-// -----------------------------------------------------
+
 
 //
 // Button (Restart)
