@@ -70,7 +70,9 @@ static int __load_all_obj_files(void);
 
 static void __drawModelWithShading (struct model_d *model, float fElapsedTime);
 static void __drawRotatingModel(struct model_d *model, float vel);
-
+static void __drawHumanoidMain (struct model_d *model, float fElapsedTime);
+static void __drawEnemy00(struct model_d *model, float fElapsedTime);
+static void __drawModelStatic (struct model_d *model);
 
 static void assignBandColors(struct model_d *m, int blockSize,
                               const unsigned int *palette, int palette_len);
@@ -200,7 +202,6 @@ static void __rotateAroundPivotY(float *x, float *z, float px, float pz, float a
     *x = px + (dx * c - dz * s);
     *z = pz + (dx * s + dz * c);
 }
-
 
 
 // this is the generic draw routine with diffuse shading.
@@ -1112,6 +1113,38 @@ static void __drawRotatingModel (struct model_d *model, float vel)
     };  // loop: Number of triangles.
 }
 
+// the humanoid’s main draw.
+static void __drawHumanoidMain (struct model_d *model, float fElapsedTime)
+{
+    __drawModelWithShading (
+        (struct model_d *) model,
+        (float) fElapsedTime );
+}
+
+static void __drawEnemy00(struct model_d *model, float fElapsedTime)
+{
+    if (!model) 
+        return;
+
+    __drawModelWithShading (
+        (struct model_d *) model,
+        (float) fElapsedTime );
+}
+
+// for static geometry
+static void __drawModelStatic (struct model_d *model)
+{
+    if (!model) 
+        return;
+
+    //model->origin_z = 0.0f;
+
+    // Force no movement
+    //model->delta_z = 0.0f;
+
+    // Draw with the worker
+    __drawModelWithShading (model, 0.0f);
+}
 
 static void __drawTerrain(struct terrain_model_d *t)
 {
@@ -1481,65 +1514,6 @@ void demoHumanoidRotateWorld(int direction, float value)
     //updateCameraFollowCharacter();
 }
 
-// Bubble sort for small lists
-static void reorderByZ(unsigned long *list, int count) 
-{
-    int swapped;
-    int i=0;
-    do {
-        swapped = 0;
-        for (i=0; i < count - 1; i++) 
-        {
-            struct model_d *ma = (struct model_d *) list[i];
-            struct model_d *mb = (struct model_d *) list[i+1];
-            if ((void*)ma != NULL && (void*)mb != NULL)
-            {
-                // Swap only if it is smaller
-                if (ma->origin_z < mb->origin_z) 
-                {
-                    unsigned long tmp = list[i];
-                    list[i] = list[i+1];
-                    list[i+1] = tmp;
-                    swapped = 1;
-                }
-            }
-        };
-    } while (swapped);
-}
-
-// Worker: build + reorder list
-int buildModelList(unsigned long *outList, int maxCount) 
-{
-    int count = 0;
-    int i=0;
-
-    // Collect humanoids
-    for (i=0; i < MODEL_MAX; i++) 
-    {
-        if (count >= maxCount)
-            return -1;
-        if (models[i] != 0) {
-            outList[count] = models[i];
-            count++;
-        }
-    }
-
-    // Collect saucers/discs
-    for (i=0; i < STATIC_MODEL_MAX; i++) 
-    {
-        if (count >= maxCount)
-            return -1;
-        if (m_disks[i] != 0) {
-            outList[count] = m_disks[i];
-            count++;
-        }
-    }
-
-    // Reorder by origin_z
-    reorderByZ(outList, count);
-
-    return count; // number of models collected
-}
 
 // Build, paint and display the frame.
 // Called by the engine, by the function on_execute() in main.c.
@@ -1567,7 +1541,7 @@ void demoHumanoidDrawScene(unsigned long sec)
 // #todo: It means that of this demo was not initialized,
 // we need to abort this function.
 
-    //struct model_d *enemy;
+    struct model_d *enemy;
 
     // #todo
     // This demo was initialized before calling this drawing routine?
@@ -1581,61 +1555,28 @@ void demoHumanoidDrawScene(unsigned long sec)
 // Draw the terrain
 //
 
-// Draw terrain first
-// 'ground' is the current terrain
-    if (ground != NULL) {
-        __drawTerrain(ground);
-    }
+    __drawTerrain(ground);
 
-//
-// Draw the models
-//
-
-// Save the pointers for the models here
-    unsigned long drawerList[64];
-// Clear the list before using it
-    int i;
-    for (i = 0; i < 64; i++) {
-        drawerList[i] = 0;
-    }
-    // IN: address for the list
-    int n;
-    n = (int) buildModelList(drawerList,64);
-    if (n<0 || n >= 64)
-    {
-        printf("on buildModelList()\n");
-        exit(1);
-    }
 
 // Draw the main character
 // Humanoid number 0.
-// #todo: It needs to be the last.
-// But we are gonna use a list, and there is no need to
-// this routine anymore.
-    //__drawModelWithShading (main_character, 0.0f);
+    __drawHumanoidMain (main_character, 0.0f);
 
 
 // Static scenery 
-    //int i=0;
-    struct model_d *model;
-    for (i = 0; i < 64; i++) 
+    int i=0;
+    struct model_d *s_model;
+    for (i = 0; i < STATIC_MODEL_MAX; i++) 
     {
         // Pick one
-        model = (struct model_d*) drawerList[i]; 
-
-        if (model != NULL)
+        s_model = (struct model_d*) m_disks[i]; 
+        if (s_model != NULL) 
         {
-            if (model != main_character)
-            {
-                model->t = (float) model->t + (float) sec * 0.1f;
-                model->v = (float) model->t * model->a;  
-            }
-
-            __drawModelWithShading(model, model->v);
+            __drawModelStatic (s_model); 
+            //__drawModelWithShading (s_model, 0.0f); 
         } 
     };
 
-/*
 // Draw all the enemies
 // 1~n humanoids.
     register int n=1; // main_character =0
@@ -1671,7 +1612,7 @@ void demoHumanoidDrawScene(unsigned long sec)
             //    (struct model_d *) enemy,
             //    (float) enemy->v );
 
-            __drawModelWithShading ( 
+            __drawEnemy00( 
                 (struct model_d *) enemy,
                 (float) enemy->v );
 
@@ -1679,7 +1620,6 @@ void demoHumanoidDrawScene(unsigned long sec)
 
         n++;
     };
-*/
 
 /*
 // Static buildings 
