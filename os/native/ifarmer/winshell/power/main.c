@@ -220,26 +220,14 @@ static void update_children(int fd)
 // ------------------------------------------
 // String
 
-    /*
-    libgui_drawstring_dc(
-        dc00,
-        8,
-        8,
-        COLOR_BLACK,
-        COLOR_WHITE,
-        0,  // ROP 
-        "R=Reboot  S=Shutdown" 
-    );
-    */
     libgui_drawstringblock_dc(
         dc00,
         8,
         8,
         COLOR_BLACK,
-        "R=Reboot  S=Shutdown",
+        "R=Reboot S=Shutdown",
         2
     );
-
 
 //
 // Support for button positions and dimensions
@@ -626,9 +614,6 @@ int main(int argc, char *argv[])
 // =============================
 */
 
-    //#debug
-    //gws_refresh_window(client_fd, main_window);
-
 // After creating main_window,
 // get information about it.
     struct gws_window_info_d wi;
@@ -716,23 +701,12 @@ int main(int argc, char *argv[])
 
 // String
 
-    /*
-    libgui_drawstring_dc(
-        dc00,
-        8,
-        8,
-        COLOR_BLACK,
-        COLOR_WHITE,
-        0,  // ROP 
-        "R=Reboot  S=Shutdown" 
-    );
-    */
     libgui_drawstringblock_dc(
         dc00,
         8,
         8,
         COLOR_BLACK,
-        "R=Reboot  S=Shutdown",
+        "R=Reboot S=Shutdown",
         2
     );
 
