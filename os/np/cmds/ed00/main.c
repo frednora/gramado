@@ -46,7 +46,8 @@ void load_file(const char *fname)
     FILE *f;
     char line[MAX_LINE_LEN];
 
-    if (!fname || !*fname) return;
+    if (!fname || !*fname) 
+        return;
 
     f = fopen(fname, "r");
     if (!f) {
@@ -58,13 +59,17 @@ void load_file(const char *fname)
     strncpy(filename, fname, sizeof(filename)-1);
     num_lines = 0;
 
+    // #todo: Simplify this
     while (num_lines < MAX_LINES && fgets(line, sizeof(line), f))
     {
         if (line[strlen(line)-1] == '\n')
+        {
             line[strlen(line)-1] = '\0';
+        }
 
         text[num_lines] = strdup(line);
-        if (!text[num_lines]) break;
+        if (!text[num_lines]) 
+            break;
         num_lines++;
     }
 
@@ -74,8 +79,8 @@ void load_file(const char *fname)
 
 void save_file(void)
 {
-    int i;
     FILE *f;
+    int i;
 
     if (!filename[0]) {
         printf("No filename!\n");
@@ -88,12 +93,14 @@ void save_file(void)
         return;
     }
 
-    for (i = 0; i < num_lines; i++) {
-        if (text[i])
+    for (i = 0; i < num_lines; i++) 
+    {
+        if (text[i]){
             fprintf(f, "%s\n", text[i]);
-        else
+        } else {
             fprintf(f, "\n");
-    }
+        }
+    };
 
     fclose(f);
     modified = 0;
@@ -107,32 +114,36 @@ void redraw(void)
 
     clear_screen();
 
-    if (cursor_y < 0) cursor_y = 0;
-    if (num_lines < 0) num_lines = 0;
+    if (cursor_y < 0) 
+        cursor_y = 0;
+    if (num_lines < 0) 
+        num_lines = 0;
 
     start = cursor_y - 8;
-    if (start < 0) start = 0;
+    if (start < 0) 
+        start = 0;
 
     // Draw visible lines
-    for (i = start; i < start + 16 && i < num_lines; i++)
+    for ( i = start; 
+          i < start + 16 && i < num_lines; 
+          i++ )
     {
         if (i >= 0 && i < MAX_LINES && text[i] != NULL)
             printf("%s\n", text[i]);
         else
             printf("\n");
-    }
+    };
 
     // Status bar
     printf("\n--- ");
     printf("%s", filename[0] ? filename : "[No Name]");
-    if (modified) printf(" [Modified]");
+    if (modified) 
+        printf(" [Modified]");
     printf(" | Line %d/%d | Col %d ---\n",
-           cursor_y + 1, num_lines, cursor_x + 1);
+        cursor_y + 1, num_lines, cursor_x + 1 );
 
     fflush(stdout);
 }
-
-
 
 // ======================
 // Initialization
@@ -140,6 +151,7 @@ void redraw(void)
 static void editor_init(void)
 {
     int i;
+
     for (i = 0; i < MAX_LINES; i++)
         text[i] = NULL;
 
@@ -153,6 +165,11 @@ static void editor_init(void)
 
 int main(int argc, char *argv[])
 {
+    char buf[4];
+
+// Switches
+    // int f0 = FALSE;
+
     editor_init();        // Safe initialization
 
     printf("=== Gramado Simple Editor ===\n");
@@ -161,8 +178,7 @@ int main(int argc, char *argv[])
         load_file(argv[1]);
     }
 
-    char buf[4];
-
+// Loop:
     while (1)
     {
         redraw();
@@ -170,7 +186,7 @@ int main(int argc, char *argv[])
         while (1){
             if (read(0, buf, 1) > 0)
                 break;
-        }
+        };
 
         int ch = (int) buf[0];
     
@@ -181,6 +197,8 @@ int main(int argc, char *argv[])
         // to build a look here to get the commands.
         if (ch == ':')        // Command mode
         {
+            // printf(":\n");
+
             char cmd[64] = {0};
             fgets(cmd, sizeof(cmd), stdin);
 

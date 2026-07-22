@@ -36,8 +36,44 @@ int main( int argc, char *argv[] )
 
     //stdout = stderr;
 
-    // #debug
-    //rtl_reboot();
+    int fRebootViaRTL = FALSE;
+    int fRebootViaIO = FALSE;
+
+    int i;
+    for (i=0; i<argc; i++)
+    {
+        // -- rtl --------
+        if ( gramado_strncmp( argv[i], "--rtl", 5) == 0 ){
+            fRebootViaRTL = TRUE;
+        }
+
+        // -- io --------
+        if ( gramado_strncmp( argv[i], "--io", 4) == 0 ){
+            fRebootViaIO = TRUE;
+        }
+
+        // ...
+    }
+
+    puts       ("\n");
+    printf     ("REBOOT.BIN: Rebooting ...\n");
+    debug_print("REBOOT.BIN: Rebooting ...\n");
+
+// -------------------------------
+    if (fRebootViaIO == TRUE){
+        //printf("Reboot via IO\n");
+        goto via_libio;
+    }
+// -------------------------------
+    if (fRebootViaRTL == TRUE){
+        //printf("Reboot via RTL\n");
+        goto via_rtl;
+    }
+
+// -------------------------------
+// Default option
+    //printf("Reboot via RTL\n");
+    goto via_rtl;
 
     //sc80(65,'3',0,0);
     //printf ("REBOOT.BIN: This is a test\n");
@@ -111,10 +147,6 @@ int main( int argc, char *argv[] )
     serial_write_char('.');
     */
 
-    puts       ("\n");
-    printf     ("REBOOT.BIN: Rebooting ...\n");
-    debug_print("REBOOT.BIN: Rebooting ...\n");
-
 //
 // Switch method
 //
@@ -143,8 +175,8 @@ int main( int argc, char *argv[] )
     printf ("Good Bye!\n");
 
 
-    //===================================
-    // reboot via libio.
+//===================================
+// reboot via libio.
 via_libio:
     printf ("reboot via libio\n");
     good = 0x02;
@@ -152,19 +184,18 @@ via_libio:
         good = libio_inport8(0x64);
     };
 
-
     debug_print("reboot.bin: Go!\n");
          printf("reboot.bin: Go!\n");
     
     libio_outport8(0x64, 0xFE);
-    //halt();       
+    //halt(); 
      
     debug_print("reboot.bin: via_libio fail\n");
          printf("reboot.bin: via_libio fail\n");
 
 
-    //===================================
-    // reboot via rtl
+//===================================
+// reboot via rtl
 via_rtl:
     printf ("reboot via rtl\n");
     debug_print("reboot.bin: Go!\n");
