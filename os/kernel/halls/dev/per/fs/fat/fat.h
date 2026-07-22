@@ -1,6 +1,7 @@
 // fat.h
-// Main structure and function prototypes used by the fs subsystem.
-// Created by Fred Nora.
+// Main structures and function prototypes used 
+// by the FAT filesystem.
+// Created by Fred Nora
 
 #ifndef  __FAT_FAT_H
 #define  __FAT_FAT_H    1
@@ -15,8 +16,7 @@ The root directory is treated as a normal directory, located by
 the 'Root Cluster' field in the BPB, and can grow dynamically.
 */
 
-
-// fat16 structure.
+// fat16 structure
 struct fat_d
 {
     int used;
@@ -84,7 +84,7 @@ fsGetFileSize (
 void 
 fsFAT16ListFiles ( 
     const char     *dir_name, 
-    unsigned short *dir_address, 
+    unsigned short *dir_va, 
     int            number_of_entries );
 
 void fat16_init_fat_structure(void);

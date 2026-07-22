@@ -1009,11 +1009,20 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 
 // dir:
 // List the files in a given directory.
-    if ( gramado_strncmp(cmdline,"dir",3) == 0 )
+// #ps: fsList() is only working for root at the moment.
+
+    if ( gramado_strncmp(cmdline, "dir", 3) == 0 )
     {
         fsList("[");  // root dir. Same as '/'.
-        //fsList("GRAMADO");
         //fsList("DE");
+        //fsList("GRAMADO");
+        goto exit_cmp;
+    }
+    if ( gramado_strncmp(cmdline, "ls", 2) == 0 )
+    {
+        fsList("/");
+        //fsList("DE");
+        //fsList("GRAMADO");
         goto exit_cmp;
     }
 

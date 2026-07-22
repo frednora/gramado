@@ -35,6 +35,7 @@ struct fat_d  *bootvolume_fat;
 // Option 2: Use Larger Cluster Sizes
 // Option 3: Dynamic Allocation
 // Option 4: Hybrid Approach
+// #ps: This is a very large array!
 unsigned short fat16ClustersToSave[CLUSTERS_TO_SAVE_MAX];
 
 
@@ -112,15 +113,16 @@ fat16_get_entry_info(
     int entry_max )
 {
 // #test
-// Get the entry info.
+// Get the entry info
 
+    struct fat16_directory_entry_d *p;  // Local pointer
     register int i=0;
-// Local pointer.
-    struct fat16_directory_entry_d *p;
+
     p = entry;
 
-    if ((void*) p == NULL)
+    if ((void*) p == NULL){
         panic("fat16_get_entry_info: p\n");
+    }
     if (directory_va == 0)
         panic("fat16_get_entry_info: directory_va\n");
     if (entry_number < 0 || entry_number > 512)
@@ -307,7 +309,7 @@ fsGetFileSize (
     unsigned int intFileSize=0;  // 32bit
 
     register int i=0;
-    unsigned long max = 64;    //?? @todo: rever. Número máximo de entradas.
+    unsigned long MaxNumberOfEntries = 64;  // Dummy value
     unsigned long z = 0;       //Deslocamento do rootdir 
     unsigned long n = 0;       //Deslocamento no nome.
 
@@ -338,21 +340,17 @@ fsGetFileSize (
     // debug_print ("fsGetFileSize: $\n");
 
     if ((void*) file_name == NULL){
-        printk("fsGetFileSize: [ERROR] file_name\n");
+        printk("fsGetFileSize: file_name\n");
         goto fail;
     }
     if (*file_name == 0){
-        printk("fsGetFileSize: [ERROR] *file_name\n");
+        printk("fsGetFileSize: *file_name\n");
         goto fail;
     }
     if (dir_address == 0){
-        printk("fsGetFileSize: [ERROR] dir_address\n");
+        printk("fsGetFileSize: dir_address\n");
         goto fail;
     }
-
-// Lock ??.
-    //taskswitch_lock();
-    //scheduler_lock();
 
 //
 // ## ROOT ##
@@ -384,14 +382,8 @@ fsGetFileSize (
 
     if (dir_address == VOLUME1_ROOTDIR_ADDRESS)
     {
-        // #bugbug
-        // We can not do this everytime this function
-        // is called.
-
-        fs_load_rootdir ( 
-            VOLUME1_ROOTDIR_ADDRESS, 
-            VOLUME1_ROOTDIR_LBA, 
-            32 );
+        // #bugbug: We can not do this everytime the function is called
+        fs_load_rootdir(VOLUME1_ROOTDIR_ADDRESS, VOLUME1_ROOTDIR_LBA, 32);
     }
 
 // #todo:
@@ -414,7 +406,7 @@ fsGetFileSize (
 
         // Setores por cluster
         Spc = root->spc;
-        if (Spc <= 0){ panic ("fsGetFileSize: [FAIL] spc\n"); }
+        if (Spc <= 0){ panic("fsGetFileSize: [FAIL] spc\n"); }
 
         // Max entries ~ Número de entradas no rootdir.
         // #bugbug: 
@@ -423,9 +415,10 @@ fsGetFileSize (
         // por isso temos que usar estruturas para gerenciar
         // diretórios e entradas.
 
-        max = root->dir_entries;
-        if (max <= 0){ 
-            panic ("fsGetFileSize: [FAIL] max root entries\n");
+        MaxNumberOfEntries = root->dir_entries;
+        // #ps: [wrong] We are using unsigned long.
+        if (MaxNumberOfEntries <= 0){ 
+            panic("fsGetFileSize: [FAIL] max root entries\n");
         }
 
         // More?! 
@@ -462,12 +455,13 @@ fsGetFileSize (
         szFileName = 11;
     }
 
-// Compare.
-// Copia o nome e termina incluindo o char 0.
-// Compara 11 caracteres do nome desejado, 
-// com o nome encontrado na entrada atual.
+// Compare:
+// Copy name and add string terminator char.
+// Compare 11 chars of the desired name with the name 
+// found into the current entry.
+
     i=0; 
-    while (i < max)
+    while (i < MaxNumberOfEntries)
     {
         // If the entry is NOT empty
         if ( Dir[z] != 0 )
@@ -481,15 +475,14 @@ fsGetFileSize (
             // Nothing
         }; 
 
-        // Next entry.
+        // Next entry
         // (32/2)  (16 words) 512 times!
 
-        z += 16;    
+        z += 16;   // (short)
         i++;        
     }; 
 
-// Not found!
-
+// Not found
 fail:
 
     if ((void*) file_name != NULL){
@@ -501,8 +494,7 @@ fail:
 
     return (unsigned long) 0;
 
-// Found!
-
+// Found
 found:
 
     // #debug
@@ -518,26 +510,21 @@ found:
 
     FileSize = (unsigned long) intFileSize;
 
-	//printk ("%d \n" , root[ z+14 ]);
-	//printk ("%d \n" , root[ z+15 ]);
-	//printk ("done: FileSize=%d \n" , FileSize);
-
-	//#debug
-	//while(1){ asm("hlt"); }
-
-    // #debug
+	// #debug
+	// printk ("%d \n" , root[ z+14 ]);
+	// printk ("%d \n" , root[ z+15 ]);
+	// printk ("done: FileSize=%d \n" , FileSize);
     // printk ("fsGetFileSize: FileSize=%d \n" , FileSize );
+	// while(1){ asm("hlt"); }
 
     return (unsigned long) (FileSize & 0x00000000FFFFFFFF);
 }
 
 /*
  * fsFAT16ListFiles:
- *     Mostra os nomes dos arquivos de um diretório.
- *     Sistema de arquivos fat16.
+ * Display the filename in a given fat16 directory.
  * IN:
- * dir_address = Ponteiro para 
- * um endereço de memória onde foi carregado o diretório. 
+ * dir_address = va for where the directory was loaded.
  */
 // #todo
 // is dir_address virtual or physical?
@@ -546,16 +533,17 @@ found:
 void 
 fsFAT16ListFiles ( 
     const char     *dir_name, 
-    unsigned short *dir_address, 
+    unsigned short *dir_va, 
     int            number_of_entries )
 {
+    char dirname[64];
     register int i=0;
     int j=0;  // Offset
-    int Max = number_of_entries;  // Max number of entries
+    int MaxNumberOfEntries;
     char NameString[12];  // 8.3 name
     // Buffer
-    unsigned short *shortBuffer = (unsigned short *) dir_address;
-    unsigned char  *charBuffer  = (unsigned char *)  dir_address;
+    unsigned char *buf = (unsigned char *) dir_va;
+    //unsigned short *shortBuffer = (unsigned short *) dir_va;
 
 // Parameter:
     if ((void *) dir_name == NULL){
@@ -566,53 +554,50 @@ fsFAT16ListFiles (
         printk ("fsFAT16ListFiles: *dir_name\n");
         goto fail;
     }
-    // #todo: dir_address parameter
+    if ((void *) buf == NULL){
+        printk ("fsFAT16ListFiles: buf\n");
+        goto fail;
+    }
+
+    memset(dirname, 0, sizeof(dirname));  // Clear local buffer
+    memcpy(dirname, dir_name, 64-1);
+    dirname[63] = 0;  // Safety measure
 
 // banner message
-// #bugbug
-// Missing string finalization.
-        
-    // printk ("fsFAT16ListFiles: Listing names in [%s]\n\n", 
-    //        dir_name );
+// #bugbug: Missing string finalization.
+ 
+    printk ("fsFAT16ListFiles: Listing names in %s:\n", dir_name );
             
-// Number of entries
+// Number of entries:
     if (number_of_entries <= 0){
         debug_print ("fsFAT16ListFiles: number_of_entries\n");
         goto fail;
     }
-
-// #bugbug
-// Number of entries.
     if (number_of_entries > 512){
         debug_print ("fsFAT16ListFiles: number_of_entries is too big\n");
         goto fail;
     }
+    MaxNumberOfEntries = number_of_entries;
 
 // Show 'Max' entries in the directory.
 
     i=0; 
     j=0;
-    while (i < Max)
-    {
+    while (i < MaxNumberOfEntries){
+
         // Not invalid and not free.
-        if ( charBuffer[j] != FAT_DIRECTORY_ENTRY_LAST &&
-             charBuffer[j] != FAT_DIRECTORY_ENTRY_FREE )
+        if ( buf[j] != FAT_DIRECTORY_ENTRY_LAST &&
+             buf[j] != FAT_DIRECTORY_ENTRY_FREE )
         {
             // #bugbug
-            memcpy( 
-                (char*) NameString, 
-                (const char *) &charBuffer[j],
-                11 );
-            NameString[11] = 0;  //finalize string
+            memcpy( (char*) NameString, (const char *) &buf[j], 11 );
+            NameString[11] = 0;  // finalize string
+
+            // Display it
             printk ("%s\n", NameString );
         }
 
-        // (32/2) proxima entrada! 
-        // (16 words) 512 vezes!
- 
-        //j += 16;  //short buffer  
-        j += 32;  //char buffer
-
+        j += 32;  // Next entry
         i++;  
     }; 
 
@@ -630,14 +615,14 @@ fail:
 // + Initializes the bootvolume_fat structure.
 void fat16_init_fat_structure(void)
 {
-    debug_print ("fs_init_fat: [TODO]\n");
+    debug_print ("fat16_init_fat_structure: [TODO]\n");
 
 // root
 // The root file system structure.
 // "/"
 
     if ((void *) root == NULL){
-        panic ("fs_init_fat: root\n");
+        panic ("fat16_init_fat_structure: root\n");
     }
 
 // ==================================
@@ -648,7 +633,7 @@ void fat16_init_fat_structure(void)
 
     bootvolume_fat = (void *) kmalloc( sizeof(struct fat_d) );
     if ((void *) bootvolume_fat == NULL){
-        panic ("fs_init_fat: bootvolume_fat\n");
+        panic ("fat16_init_fat_structure: bootvolume_fat\n");
     }
     memset(bootvolume_fat, 0, sizeof(struct fat_d));
 
@@ -661,10 +646,8 @@ void fat16_init_fat_structure(void)
     bootvolume_fat->fat_address = 
         (unsigned long) root->fat_address; 
 
-    bootvolume_fat->fat_first_lba = 
-        (unsigned long) root->fat_first_lba;
-    bootvolume_fat->fat_last_lba = 
-        (unsigned long) root->fat_last_lba;
+    bootvolume_fat->fat_first_lba = (unsigned long) root->fat_first_lba;
+    bootvolume_fat->fat_last_lba  = (unsigned long) root->fat_last_lba;
 
     //bootvolume_fat->fat_size_in_sectors = (unsigned long) root->fat_size_in_sectors;
     //bootvolume_fat->size_in_bytes = 0;  // (bootvolume_fat->fat_size_in_sectors / 2), se sector=512.
@@ -679,13 +662,13 @@ void fat16_init_fat_structure(void)
 // start of the fat table?
 
     if (bootvolume_fat->fat_address == 0){
-        panic ("fs_init_fat: bootvolume_fat->fat_address\n");
+        panic ("fat16_init_fat_structure: bootvolume_fat->fat_address\n");
     }
 
 // #bugbug: 
 // Is it int ?
     if (bootvolume_fat->type <= 0){
-        panic ("fs_init_fat: fat->type\n");
+        panic ("fat16_init_fat_structure: fat->type\n");
     }
 
     bootvolume_fat->volume = NULL;
@@ -730,20 +713,18 @@ int fs_save_fat16_cache(void)
 //
 
 // fat16Init:
-// Called by fsInit inthis document.
+// Called by fsInit in this document
 int fat16Init(void)
 {
-    debug_print ("fat16Init: [TODO]\n");
+    debug_print ("fat16Init:\n");
 
-// Initializing the cache state.
+    // Initializing the cache state
     g_fat_cache_loaded = FAT_CACHE_NOT_LOADED;
     g_fat_cache_saved  = FAT_CACHE_NOT_SAVED;
-// Set type
-    set_filesystem_type(FS_TYPE_FAT16);
-// fs structures
-    fs_init_structures();
-// fat structure
-    fat16_init_fat_structure();
+
+    set_filesystem_type(FS_TYPE_FAT16);  // Set type
+    fs_init_structures();                // fs structures
+    fat16_init_fat_structure();          // fat structure
 
     debug_print ("fat16Init: Done\n");
     return 0;

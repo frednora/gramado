@@ -2825,11 +2825,15 @@ int fsList(const char *dir_name)
 // #todo: Explain it.
 // Open the dirname '/'.
 
-// #test: Default in root.
-    current_target_dir.current_dir_address = 
-        VOLUME1_ROOTDIR_ADDRESS;
+// --------------------------------------
+// Default in root:
+
+    current_target_dir.current_dir_address = VOLUME1_ROOTDIR_ADDRESS;
     current_target_dir.name[0] = '/';
     current_target_dir.name[1] = '\0'; 
+
+// --------------------------------------
+// [
 
     if ( dir_name[0] == '[' && 
          dir_name[1] == 0 )
@@ -2840,7 +2844,7 @@ int fsList(const char *dir_name)
         current_target_dir.current_dir_address = 
             VOLUME1_ROOTDIR_ADDRESS;
         
-        // Clear the whole buffer.
+        // Clear the whole buffer
         for ( i=0; i<11; i++ ){
             current_target_dir.name[i] = '\0';
         };

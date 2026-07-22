@@ -109,11 +109,11 @@ the 'Root Cluster' field in the BPB, and can grow dynamically.
 #define FAT_CACHE_SAVED        1
 #define FAT_CACHE_NOT_SAVED    0
 
-// Boot partition.
+// Boot partition
 extern int g_fat_cache_saved;
 extern int g_fat_cache_loaded;
 
-
+// #ps: Very large array!
 #define CLUSTERS_TO_SAVE_MAX  (32*1024)
 // #todo: Increase it
 // see: fat16.c
