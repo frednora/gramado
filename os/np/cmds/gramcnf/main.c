@@ -91,6 +91,8 @@ static void debugShowStat(void);
 static void doUsage(char **argv)
 {
     printf ("\n");
+    printf ("-h    Help\n");
+    printf ("-v    Version\n");
     printf("#todo: %s doUsage\n",argv[0]);
 }
 
@@ -263,6 +265,10 @@ int main(int argc, char *argv[])
     int flagS = 0;
     int flagT = 0;
 
+    int fHelp = FALSE;
+    int fVersion = FALSE;
+    int fCopyright = FALSE;
+
     int fShowStats = FALSE;  //#bugbug
     int fDumpOutput = FALSE;  // Dump output file?
 
@@ -312,44 +318,95 @@ int main(int argc, char *argv[])
         // #todo
         // Create symmetric symbols for these flags. 
 
+        // -- a --------
         if ( gramado_strncmp( argv[i], "-a", 2) == 0 ){
         }
+
+        // -- b --------
         if ( gramado_strncmp( argv[i], "-b", 2) == 0 ){
         }
+
+        // -- c --------
+        // See: globals.c
         if ( gramado_strncmp( argv[i], "-s", 2) == 0 ){
             asm_flag = 1;
         }
-        // Generate Intermediate Representation (IR) file.
-        if (gramado_strncmp(argv[i], "-ir", 3) == 0) {
-            fDumpIR = TRUE;
+
+        // -- copyright --------
+        if ( gramado_strncmp( argv[i], "--copyright", 11) == 0 ){
+            fCopyright = TRUE;
         }
-        // Run program from a target binary (.gir).
-        if ( gramado_strncmp(argv[i], "-r", 2) == 0 || 
-             gramado_strncmp(argv[i], "--run", 5) == 0 ) 
-        {
-            fRunProgram = TRUE;
-        }
-        // Show stats
-        if ( gramado_strncmp( argv[i], "--stats", 7) == 0 ){
-            fShowStats = TRUE;
-        }
+
+        // -- dump --------
         // Dump (Show) output file.
         // Show assembly code.
         if ( gramado_strncmp( argv[i], "--dumpo", 7) == 0 ){
             fDumpOutput = TRUE;
         }
-        // help
+
+        // -- help --------
+        if ( gramado_strncmp( argv[i], "-h", 2) == 0 ){
+            fHelp = TRUE;
+        }
         if ( gramado_strncmp( argv[i], "--help", 6) == 0 ){
-            doUsage(argv);
-            return EXIT_SUCCESS;
+            fHelp = TRUE;
         }
-        // version
+
+        // -- ir --------
+        // Generate Intermediate Representation (IR) file.
+        if (gramado_strncmp(argv[i], "-ir", 3) == 0) {
+            fDumpIR = TRUE;
+        }
+
+        // -- run --------
+        // Run program from a target binary (.gir).
+        if ( gramado_strncmp(argv[i], "-r", 2) == 0 ){
+            fRunProgram = TRUE;
+        } 
+        if ( gramado_strncmp(argv[i], "--run", 5) == 0 ){
+            fRunProgram = TRUE;
+        }
+
+        // -- stats --------
+        // Show stats
+        if ( gramado_strncmp( argv[i], "--stats", 7) == 0 ){
+            fShowStats = TRUE;
+        }
+
+        // -- version --------
+        if ( gramado_strncmp( argv[i], "-v", 2) == 0 ){
+            fVersion = TRUE;
+        }
         if ( gramado_strncmp( argv[i], "--version", 9) == 0 ){
-            doVersion(argv);
-            return EXIT_SUCCESS;
+            fVersion = TRUE;
         }
+    
         //...
     };
+
+
+// Copyright
+    if (fCopyright == TRUE)
+    {
+        // #todo: Create worker for that
+        printf("Copyright: Fred Nora\n");
+    }
+
+// Help
+    if (fHelp == TRUE)
+    {
+        doUsage(argv);
+        return EXIT_SUCCESS;
+    }
+
+// Version
+    if (fVersion == TRUE)
+    {
+        doVersion(argv);
+        return EXIT_SUCCESS;
+    }
+
+// ------------------------------
 
 // # Arquivo de entrada #
 // #bugbug
