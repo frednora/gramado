@@ -88,30 +88,27 @@ static int gramcnf_initialize(void);
 static void debugShowStat(void);
 // =====================================================
 
+/*
+int is_letter(char c);
+int is_letter(char c) 
+{
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+}
+*/
+
 static void doUsage(char **argv)
 {
     printf ("\n");
     printf ("-h    Help\n");
     printf ("-v    Version\n");
-    printf("#todo: %s doUsage\n",argv[0]);
+    // printf("#todo: %s doUsage\n",argv[0]);
 }
 
 static void doVersion(char **argv)
 {
     printf ("\n");
-    printf ("====================\n");
     printf ("%s version %s \n", argv[0], VersionString );
 }
-
-
-/*
-int is_letter(char c);
-int is_letter(char c) 
-{
-  return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
-}
-*/
-
 
 // gramcnf_initialize:
 // Initialize global variables.
@@ -192,18 +189,17 @@ static int gramcnf_initialize(void)
     return (int) Status;
 }
 
-// Mostra as estatísticas para o desenvolvedor.
+// Show stats
 static void debugShowStat(void)
 {
     register int i=0;
 
-    printf("\n");
-    printf("debugShowStat\n");
+    // printf("debugShowStat\n");
 
 // -------------------------
 // lexer
-    printf("==========================================\n");
-    printf("Lexer info:\n");
+    printf("\n");
+    printf("== Lexer ================\n");
     printf("number of lines: {%d}\n", LexerInfo.lexer_number_of_lines );
     printf("first line:      {%d}\n", LexerInfo.lexer_firstline );
     printf("last line:       {%d}\n", LexerInfo.lexer_lastline );
@@ -211,19 +207,19 @@ static void debugShowStat(void)
 
 // -------------------------
 // parser
-    printf("==========================================\n");
-    printf("parser info:\n");
-    printf("infile_size:     {%d bytes}\n",infile_size);
-    printf("outfile_size:    {%d bytes}\n",outfile_size);
-
     printf("\n");
-    printf("==========================================\n");
-    printf("Printing metadata structure. :)\n");
+    printf("== Parser ================\n");
+    printf("infile_size:     {%d bytes}\n", infile_size);
+    printf("outfile_size:    {%d bytes}\n", outfile_size);
 
+// -------------------------
 // metadata
+
     printf("\n");
-    for (i=0; i<32; i++)
-    {
+    printf("== Metadata ================\n");
+
+    printf("\n");
+    for (i=0; i<32; i++){
         if (metadata[i].initialized == TRUE)
         {
             printf("id{%d}: tag{%s} name{%s} content{%s} return{%d}\n",
@@ -231,50 +227,22 @@ static void debugShowStat(void)
                 metadata[i].meta_tag,
                 metadata[i].name,
                 metadata[i].content,
-                metadata[i].return_value ); // unsigned int
+                metadata[i].return_value  // unsigned int
+            );
         }
     };
-
-    printf("\n");
-    printf("==========================================\n");
 }
 
 int main(int argc, char *argv[])
 {
-// Input
-    FILE *fp;
-// Output file for compiler.
-    FILE *____O;
+    FILE *fp;     // Input file
+    FILE *____O;  // Output file for compiler
     register int i=0;
-    char *filename;
-// Output string.
-    char *o;
-// Switches 
-    int flagA = 0;
-    int flagB = 0;
-    int flagC = 0;
-    int flagD = 0;
-    int flagString1 = 0;
-    int flagString2 = 0;
-    int flagString3 = 0;
-    int flagString4 = 0;
-    int flagX = 0;
-    int flagY = 0;
-    int flagZ = 0;
-    int flagR = 0;
-    int flagS = 0;
-    int flagT = 0;
-
-    int fHelp = FALSE;
-    int fVersion = FALSE;
-    int fCopyright = FALSE;
-
-    int fShowStats = FALSE;  //#bugbug
-    int fDumpOutput = FALSE;  // Dump output file?
-
-    int fDumpIR = FALSE;      // Generate Intermediate Representation (IR) file.
-    int fRunProgram = FALSE;  // Run program from a target binary (.gir).
+    char *filename = NULL;
     char *inputFile = NULL;
+    char *o;  // Output string
+
+    int IsFileLoaded = FALSE;
 
 // Carregamos o arquivo num buffer em ring0.
 // getc() precisa ler os dados em stdin
@@ -282,6 +250,18 @@ int main(int argc, char *argv[])
 // Se o buffer for maior que isso, read() falha.
     char __buf[1024];
     int nreads=0;
+
+// Switches/Flags
+
+    int fASM = FALSE;
+    int fCopyright = FALSE;
+    int fDumpOutput = FALSE;  // Dump output file?
+    int fRunScript = FALSE;  // A script filename was provided
+    int fHelp = FALSE;
+    int fDumpIR = FALSE;      // Generate Intermediate Representation (IR) file.
+    int fRunProgram = FALSE;  // Run program from a target binary (.gir).
+    int fShowStats = FALSE;  //#bugbug
+    int fVersion = FALSE;
 
 // Initializing
     //debug_print ("gramcnf: Initializing ...\n");  
@@ -315,21 +295,9 @@ int main(int argc, char *argv[])
 
     for (i=0; i<argc; i++)
     {
-        // #todo
-        // Create symmetric symbols for these flags. 
-
-        // -- a --------
-        if ( gramado_strncmp( argv[i], "-a", 2) == 0 ){
-        }
-
-        // -- b --------
-        if ( gramado_strncmp( argv[i], "-b", 2) == 0 ){
-        }
-
-        // -- c --------
-        // See: globals.c
-        if ( gramado_strncmp( argv[i], "-s", 2) == 0 ){
-            asm_flag = 1;
+        // -- asm --------
+        if ( gramado_strncmp( argv[i], "--asm", 5) == 0 ){
+            fASM = TRUE;
         }
 
         // -- copyright --------
@@ -344,6 +312,11 @@ int main(int argc, char *argv[])
             fDumpOutput = TRUE;
         }
 
+        // -- file --------
+        if ( gramado_strncmp( argv[i], "-f", 2) == 0 ){
+            fRunScript = TRUE;
+        }
+
         // -- help --------
         if ( gramado_strncmp( argv[i], "-h", 2) == 0 ){
             fHelp = TRUE;
@@ -354,6 +327,11 @@ int main(int argc, char *argv[])
 
         // -- ir --------
         // Generate Intermediate Representation (IR) file.
+        // #todo: 
+        // It will get a script file and 
+        // generate a binary file based on it.
+        // The binary file will have a header and a set
+        // of object structures.
         if (gramado_strncmp(argv[i], "-ir", 3) == 0) {
             fDumpIR = TRUE;
         }
@@ -384,6 +362,12 @@ int main(int argc, char *argv[])
         //...
     };
 
+// asm
+// See: globals.c
+    asm_flag = 0;
+    if (fASM == TRUE){
+        asm_flag = 1;  // Global variable
+    }
 
 // Copyright
     if (fCopyright == TRUE)
@@ -424,17 +408,33 @@ int main(int argc, char *argv[])
     //if ((void*) argv[2] == NULL) 
         //goto fail;
 
-    fp = fopen((char *) argv[2], "rb");
-    if (fp == NULL){
-        printf("gramcnf: Couldn't open the input file\n");
-        doUsage(argv);
-        goto fail;
+// If a filename was provided for 
+// a script or binary program.
+    if ( fRunScript == TRUE || 
+         fRunProgram == TRUE || 
+         fDumpIR == TRUE )
+    {
+        IsFileLoaded = FALSE;
+        // #ps: Filename always in slot 2
+        fp = fopen((char *) argv[2], "rb");
+        if (fp == NULL){
+            printf("gramcnf: Couldn't open the input file\n");
+            doUsage(argv);
+            goto fail;
+        }
+        IsFileLoaded = TRUE;
     }
 
 // Input file
 // Para que getc leia desse arquivo que carregamos.
-    stdin = fp;
-    finput = fp;
+    if (fRunScript == TRUE)
+    {
+        if (IsFileLoaded == TRUE)
+        {
+            stdin = fp;
+            finput = fp;
+        }
+    }
  
 //#debug
 // Esse while está aqui para visualizarmos o arquivo carregado.
@@ -451,13 +451,26 @@ int main(int argc, char *argv[])
     //while(1){}
 //=====================================
 
+// Run a binary file
+// #todo: 
+// The binary file will have a header and a sequence of
+// object structure inside it.
     if (fRunProgram == TRUE) 
     {
         int Status = -1;
 
+        // #test (Not implemented yet)
+        printf ("fRunProgram: Run binary file #todo\n");
+        
+        //if (IsFileLoaded != TRUE){
+            //goto fail;
+        //}
+
+        goto fail;
+
         // Step 1: Load the target binary (.gir) into memory and 
         // build the stack of objects needed for execution.
-        // ex: load_ir_binary(argv[2]);
+        // #ps: It was done before.
         
         // Step 2: Run the program.
         Status = (int) vm_initialize();
@@ -474,7 +487,6 @@ int main(int argc, char *argv[])
 
 //=====================================
 
-
 // Compiler
 // Routine:
 // + Initialize the lexer.
@@ -487,13 +499,18 @@ int main(int argc, char *argv[])
 // into the screen.
 // We gotta use another output file to simply save it into the disk.
 
-    if (fRunProgram != TRUE) 
+// Run the script file
+    if (fRunScript == TRUE)
     {
+        if (IsFileLoaded != TRUE){
+            printf ("File not loaded\n");
+            goto fail;
+        }
+        // Compile: (parser loop and vm loop)
         ____O = (FILE *) compiler(fDumpOutput);
-        //if ( (void*) ____O == NULL )
-        //{
-        //
-        //}
+        if ((void*) ____O == NULL)
+        {
+        }
     }
 
 
@@ -501,7 +518,8 @@ int main(int argc, char *argv[])
 // This is an assembly code.
 // 'outfile' is a buffer for the assembly code 
 // generate by the compiler.
-    if (fDumpOutput == TRUE){
+    if (fDumpOutput == TRUE)
+    {
         printf ("\n");
         printf ("--------------------\n");    
         printf ("OUTPUT FILE:\n");
@@ -512,12 +530,31 @@ int main(int argc, char *argv[])
             LexerInfo.current_line );
     }
 
+// -- ir --------
+// Generate Intermediate Representation (IR) file.
+// #todo: 
+// It will get a script file and 
+// generate a binary file based on it.
+// The binary file will have a header and 
+// a set of object structures.
+    if (fDumpIR == TRUE){
+        printf ("fDumpIR: Not implemented yet\n");
+
+        if (IsFileLoaded != TRUE){
+            printf ("File not loaded\n");
+            // goto fail;
+        }
+
+        // #todo
+        // ...
+    }
+
 // Show stats
     if (fShowStats){
         debugShowStat();
     }
 
-    printf("Done :)\n");
+    printf("Done :)\n");  // #provisory
     return EXIT_SUCCESS;
 
 fail:

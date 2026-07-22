@@ -2,7 +2,20 @@
 Usage:
 This is how a regular command looks like.
 
-    $ gramcnf -o theme1.cnf --stats  
-    $ gramcnf -o test1.cnf  --stats  
-    $ gramcnf -o #theme2.cnf --stats  
+--------------------------------
+running scripts:
 
+    $ gramcnf -f test1.cnf  
+    $ gramcnf -f theme1.cnf  
+    $ gramcnf -f #theme2.cnf
+    $ gramcnf -f @theme3.cnf
+
+    $ gramcnf -f test1.cnf  --stats  
+    $ gramcnf -f theme1.cnf --stats  
+    $ gramcnf -f #theme2.cnf --stats  
+
+--------------------------------
+running binary files: 
+(Intermediate Representation)
+
+    $ gramcnf -r test1.gir  
