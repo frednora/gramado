@@ -2841,13 +2841,27 @@ struct ui_component_d *libgui_create_ui_component(
 
 // ================================
 
+    if (label != NULL) {
+        strncpy(uic->label, label, sizeof(uic->label)-1);
+        uic->label[sizeof(uic->label)-1] = '\0'; // ensure null-termination
+        uic->label_size = strlen(uic->label);
+    } else {
+        uic->label[0] = '\0';
+        uic->label_size = 0;
+    }
+
+// ================================
+
+
 	if (type < 0)
 	    return NULL;
+
+    uic->type = type;
 
     // Button
 	if (type == 1)
 	{
-		uic->type = 1;
+		// uic->type = 1;
 
 		// Draw button's background
         lingui_draw_rectangle0_dc(
@@ -2873,14 +2887,36 @@ struct ui_component_d *libgui_create_ui_component(
             dc,
             left +8,
             top  +8,
-            0x00101010,   // white
+            0x00101010,
             0x00C0C0C0,   // gray
             0,    // ROP 
-            label 
+            uic->label  //label 
         );
 
 		// ...
 	}
+
+    // Label:
+    // It’s just static text drawn inside a rectangle or at a position. 
+    if (type == 2)
+    { 
+        lingui_draw_rectangle0_dc(dc, left, top, width, height, 0x00E0E0E0, 0);
+        libgui_drawstringblock_dc(dc, left+8, top+8, 0x00101010, uic->label, 1);
+    }
+
+    // header:
+    if (type == 3)
+    { 
+        lingui_draw_rectangle0_dc(dc, left, top, width, height, 0x00E0E0E0, 0);
+        libgui_drawstringblock_dc(dc, left+8, top+8, 0x00101010, uic->label, 2);
+    }
+
+    // Footer:
+    if (type == 4) 
+    {
+        lingui_draw_rectangle0_dc(dc, left, top, width, height, 0x00E0E0E0, 0);
+        libgui_drawstringblock_dc(dc, left+8, top+8, 0x00101010, uic->label, 1);
+    }
 
 	// ...
     return (struct ui_component_d *) uic;
@@ -2909,7 +2945,6 @@ libgui_redraw_ui_component(
     // Button
 	if (uic->type == 1)
 	{
-
 		// Draw button's background
         lingui_draw_rectangle0_dc(
             dc,
@@ -2937,11 +2972,33 @@ libgui_redraw_ui_component(
             0x00101010,   // white
             0x00C0C0C0,   // gray
             0,            // ROP 
-            "#todo"       // label 
+            uic->label    // label 
         );
 
 		// ...
 	}
+
+    // Label:
+    // It’s just static text drawn inside a rectangle or at a position. 
+    if (uic->type == 2)
+    { 
+        lingui_draw_rectangle0_dc(dc, uic->left, uic->top, uic->width, uic->height, 0x00E0E0E0, 0);
+        libgui_drawstringblock_dc(dc, uic->left+8, uic->top+8, 0x00101010, uic->label, 1);
+    }
+
+    // header:
+    if (uic->type == 3)
+    { 
+        lingui_draw_rectangle0_dc(dc, uic->left, uic->top, uic->width, uic->height, 0x00E0E0E0, 0);
+        libgui_drawstringblock_dc(dc, uic->left+8, uic->top+8, 0x00101010, uic->label, 2);
+    }
+
+    // Footer:
+    if (uic->type == 4) 
+    {
+        lingui_draw_rectangle0_dc(dc, uic->left, uic->top, uic->width, uic->height, 0x00E0E0E0, 0);
+        libgui_drawstringblock_dc(dc, uic->left+8, uic->top+8, 0x00101010, uic->label, 1);
+    }
 
 	// ...
 

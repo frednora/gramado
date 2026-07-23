@@ -200,6 +200,7 @@ static void editorDrawCell(struct dccanvas_d *dc, int line, int col);
 static void editorHandleKey(int key);
 
 static void editorDrawStatusBar(void);
+static int editorDrawInSmallBuffer(void);
 
 static int 
 editorProcedure(
@@ -429,16 +430,19 @@ static void update_clients(int fd)
         0  // ROP
     );
 
-    // Example string
-    const char *msg = "Hello";
+//
+// BLIT small buffer
+//
 
+    const char *msg = "Hello";    // Example string
+    size_t StringSize = (size_t) (sizeof(msg) *8);
     if ((void*)small_dc != NULL)
     {
         libgui_blit_canvas_to_canvas(
             CANVAS_SMALL,
             CANVAS_CLIENTAREA,
-            0, 0,      // destination position
-            (sizeof(msg) *8) +2+2, 8+2+2 );      // size
+            0, 0,                       // destination position
+            StringSize +2+2, 8 +2+2 );  // size
     }
 }
 
@@ -789,6 +793,52 @@ static void editorDrawStatusBar(void)
         0, 
         status
     );
+}
+
+static int editorDrawInSmallBuffer(void)
+{
+    const char *msg = "Hello";  // Example string
+
+    if ((void*)small_dc == NULL)
+    {
+        printf("Invalid small_dc\n");
+        exit(1);
+        //goto fail;
+    }
+
+// Fill background of small buffer
+    lingui_draw_rectangle0_dc(
+        small_dc,
+        0, 0, (sizeof(msg) *8) +2+2, 8+2+2,
+        COLOR_BLUE,
+        ROP_COPY
+    );
+
+// Draw at position (2, 2) inside the small buffer
+    libgui_drawstring_dc(
+        small_dc,
+        2, 2,                 // x, y
+        COLOR_BLACK,          // foreground
+        COLOR_WHITE,          // background
+        ROP_COPY,             // raster op
+        msg                   // string
+    );
+
+//
+// BLIT
+//
+
+    size_t StringSize = (size_t) (sizeof(msg) *8);
+    libgui_blit_canvas_to_canvas(
+        CANVAS_SMALL,
+        CANVAS_CLIENTAREA,
+        0, 0,                      // destination position
+        StringSize +2+2, 8+2+2 );  // size
+
+    return 0;
+
+fail:
+    return (int) -1;
 }
 
 static int 
@@ -1657,7 +1707,7 @@ static int __editor_initialize(void)
         0  // ROP
     );
  
-// Save
+    // Save
     cwAddressBar.l = (( lWi.cr_width/8 )*2);
     cwAddressBar.t = 4;
     cwAddressBar.w = (( lWi.cr_width/8 )*3);
@@ -1685,9 +1735,7 @@ static int __editor_initialize(void)
     MyButton_Save.width         = (( lWi.cr_width/8 )*1);
     MyButton_Save.height        = 24;
 
-    // Initial state
-    // MyButton_Save.state = 0;
-
+    // MyButton_Save.state = 0;  // Initial state
 
 // Create a button
     uic_button_save = 
@@ -1731,7 +1779,9 @@ static int __editor_initialize(void)
 // We gotta get the client window values.
     unsigned long cw_height = (lWi.cr_height - cw_top);
 
-// Rectangle for the client area
+
+// Rectangle for the editor's client area.
+// This is the 'text area'.
     lingui_draw_rectangle0_dc (
         dc00,
         cw_left, cw_top, cw_width, cw_height,
@@ -1739,22 +1789,17 @@ static int __editor_initialize(void)
         0  // ROP
     );
 
-
-// Save
+    // Save
     cwText.l = 0;
     cwText.t = (cwAddressBar.t + cwAddressBar.h + 4);
     cwText.w = lWi.cr_width;
     cwText.h = (lWi.cr_height - cwText.t);
 
-    gws_set_active( client_fd, main_window );
-    gws_set_focus( client_fd, main_window );
-    //gws_set_focus( client_fd, client_window );
-
 // ============================================
 
+// Draw buffer's content
     if (EditorInitialization.file_loaded_at_initialization == TRUE)
     {
-        // Draw buffer contents
         editorRedrawBuffer(dc00);
     }
 
@@ -1766,7 +1811,7 @@ static int __editor_initialize(void)
     struct canvas_information_d *ci_client =
     editorCreateCanvasInfo(dc00, main_window, TRUE);
 
-    libgui_canvasList[CANVAS_CLIENTAREA] = (unsigned long) ci_client;      // client area canvas
+    libgui_canvasList[CANVAS_CLIENTAREA] = (unsigned long) ci_client;  // client area canvas
 
 // Create a small buffer
     int b_status = -1;
@@ -1776,43 +1821,14 @@ static int __editor_initialize(void)
         exit (1);
     }
 
-    // Example string
-    const char *msg = "Hello";
-
-    if ((void*)small_dc == NULL){
-        printf("Invalid small_dc\n");
-        exit(1);
-    }
-
-    if ((void*)small_dc != NULL) 
-    {
-
-        // Fill background of small buffer
-        lingui_draw_rectangle0_dc(
-            small_dc,
-            0, 0, (sizeof(msg) *8) +2+2, 8+2+2,
-            COLOR_BLUE,
-            ROP_COPY
-        );
-
-        // Draw at position (8, 8) inside the small buffer
-        libgui_drawstring_dc(
-            small_dc,
-            2, 2,                 // x, y
-            COLOR_BLACK,          // foreground
-            COLOR_WHITE,          // background
-            ROP_COPY,             // raster op
-            msg                   // string
-        );
-
-        libgui_blit_canvas_to_canvas(
-            CANVAS_SMALL,
-            CANVAS_CLIENTAREA,
-            0, 0,      // destination position
-            (sizeof(msg) *8) +2+2, 8+2+2 );      // size
-    }
+// Draw something inside the small buffer and blit.
+    editorDrawInSmallBuffer();
 
 // ============================================
+    gws_set_active( client_fd, main_window );
+    gws_set_focus( client_fd, main_window );
+// ============================================
+
 
 //
 // Event loop

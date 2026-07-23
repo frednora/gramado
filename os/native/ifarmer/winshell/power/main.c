@@ -34,6 +34,7 @@ static unsigned long __sh_flags = 0;
 
 struct ui_component_d *uic_button_restart;
 struct ui_component_d *uic_button_shutdown;
+struct ui_component_d *uic_footer;
 
 struct button_info_d
 {
@@ -279,12 +280,28 @@ static void update_children(int fd)
         button_h );
     libgui_redraw_ui_component(uic_button_shutdown, dc00);
 
+//
 // bmp
+//
 
     if (icon00_cache && icon00_cache->loaded) 
     {
         bmp_decode_bmp_image(icon00_cache, dc00, 50, 50, 4); // zoom=4
     }
+
+//
+// footer
+//
+
+    libgui_set_ui_component_position(
+        uic_footer, 
+        0, 
+        wi.cr_height - 24 );
+    libgui_set_ui_component_dimension(
+        uic_footer,
+        wi.cr_width,
+        24 );
+    libgui_redraw_ui_component(uic_footer, dc00);
 
 }
 
@@ -810,12 +827,30 @@ int main(int argc, char *argv[])
 // Set default responder (choose one) 
     //default_responder = restart_button; // Enter will trigger Restart
 
+
+    //printf("Restart button id = %d\n", restart_button);
+    //printf("Shutdown button id = %d\n", shutdown_button);
+
+// ================================================================================
+
+// Create footer component
+    uic_footer =
+        libgui_create_ui_component(
+            dc00,
+            UI_COMPONENT_FOOTER,
+            0, 
+            wi.cr_height -24, 
+            wi.cr_width, 
+            24,
+            "-- footer --"
+        );
+
+// ================================================================================
+
 // Main window: Activate and show.
     gws_set_active( client_fd, main_window );
     //gws_refresh_window(client_fd, main_window);
 
-    //printf("Restart button id = %d\n", restart_button);
-    //printf("Shutdown button id = %d\n", shutdown_button);
 
 /*
 // ================================
