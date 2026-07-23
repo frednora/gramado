@@ -31,7 +31,7 @@ int main(int argc, char **argv)
     int n;
     struct sockaddr_in  servaddr;
 
-    sockfd = (int) socket(AF_INET,SOCK_DGRAM,0);
+    sockfd = (int) socket(AF_INET, SOCK_DGRAM, 0);
     if (sockfd < 0){
         printf("on socket()\n");
         goto fail;
@@ -46,13 +46,16 @@ int main(int argc, char **argv)
     len = sizeof(servaddr);
 
     isTimeToQuit = FALSE;
-    for (;;){
-	if (isTimeToQuit == TRUE)
-	    break;
+// Loop:
+    for (;;)
+    {
+	    if (isTimeToQuit == TRUE)
+	        break;
+
         printf("\nEnter string : ");
-        // Clean buffer
-        memset(buff,0,MAX);
-        // Get string.
+        memset(buff, 0, MAX);  // Clean buffer
+
+        // Get string
         n=0;
         while ( (buff[n++] = getchar()) != '\n')
         {
@@ -61,7 +64,7 @@ int main(int argc, char **argv)
         if (n < MAX)
         {
 
-            // Remove the EOL.
+            // Remove the EOL
             if (buff[n-1] == '\n')
                 buff[n-1] = 0;
 
@@ -75,10 +78,17 @@ int main(int argc, char **argv)
                 len );
         }
 
-        bzero(buff,sizeof(buff));
+        bzero(buff, sizeof(buff));
 
         // Receive
-        recvfrom(sockfd,buff,sizeof(buff),0,(SA *)&servaddr,&len);
+        recvfrom(
+            sockfd,
+            buff,
+            sizeof(buff),
+            0,
+            (SA *)&servaddr,
+            &len );
+
         printf("From Server : %s\n",buff);
         
         // Compare

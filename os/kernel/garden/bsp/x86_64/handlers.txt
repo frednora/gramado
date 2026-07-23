@@ -1,0 +1,35 @@
+
+### Interrupt Handlers - IDT Setup (x86_64.asm)
+
+| Vector (Decimal) | Vector (Hex) | Type          | Handler Function                              | Description |
+|------------------|--------------|---------------|-----------------------------------------------|-----------|
+| 0                | 0x00         | Fault         | ExecutionHall_fault_N0                        | Divide by zero |
+| 1                | 0x01         | Fault         | ExecutionHall_fault_N1                        | Debug |
+| 2                | 0x02         | NMI           | ExecutionHall_fault_N2                        | Non-maskable interrupt |
+| 3                | 0x03         | Fault         | ExecutionHall_fault_N3                        | Breakpoint |
+| 4                | 0x04         | Fault         | ExecutionHall_fault_N4                        | Overflow |
+| 5                | 0x05         | Fault         | ExecutionHall_fault_N5                        | Bound range exceeded |
+| 6                | 0x06         | Fault         | ExecutionHall_fault_INVALID_OPCODE            | Invalid opcode |
+| 7                | 0x07         | Fault         | ExecutionHall_fault_N7                        | Device not available |
+| 8                | 0x08         | Fault         | ExecutionHall_fault_DOUBLE                    | Double fault |
+| 12               | 0x0C         | Fault         | ExecutionHall_fault_STACK                     | Stack-segment fault |
+| 13               | 0x0D         | Fault         | ExecutionHall_fault_GP                        | General protection fault |
+| 32               | 0x20         | IRQ           | unhandled_irq                                 | Timer (provisory) |
+| 33               | 0x21         | IRQ           | PeripheralHall_irq1                           | PS/2 Keyboard |
+| 40               | 0x28         | IRQ           | unhandled_irq                                 | RTC (Clock) |
+| 44               | 0x2C         | IRQ           | PeripheralHall_irq12                          | PS/2 Mouse |
+| 46               | 0x2E         | IRQ           | PeripheralHall_irq14                          | IDE Primary |
+| 47               | 0x2F         | IRQ           | PeripheralHall_irq15                          | IDE Secondary |
+| 128              | 0x80         | Syscall       | RequestHall_int128                            | Main syscall gate (sci0) |
+| 129              | 0x81         | Syscall       | RequestHall_int129                            | sci1 |
+| 130              | 0x82         | Syscall       | RequestHall_int130                            | sci2 |
+| 131              | 0x83         | Syscall       | RequestHall_int131                            | sci3 |
+| 198              | 0xC6         | Syscall       | RequestHall_int198                            | Callback restorer |
+| 199              | 0xC7         | Syscall       | RequestHall_int199                            | Enable interrupts (init) |
+| 220              | 0xDC         | LAPIC         | PeripheralHall_lapic_timer_handler            | Local APIC Timer |
+| 221              | 0xDD         | LAPIC         | PeripheralHall_lapic_perf_handler             | Performance Counter |
+| 222              | 0xDE         | LAPIC         | PeripheralHall_lapic_lint0_handler            | LINT0 (ExtINT) |
+| 223              | 0xDF         | LAPIC         | PeripheralHall_lapic_nmi_handler              | LINT1 (NMI) |
+| 224              | 0xE0         | LAPIC         | PeripheralHall_lapic_error_handler            | LAPIC Error |
+| 225              | 0xE1         | LAPIC         | PeripheralHall_lapic_thermal_handler          | Thermal Sensor |
+| 255              | 0xFF         | LAPIC         | PeripheralHall_spurious_handler               | Spurious Interrupt |

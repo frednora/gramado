@@ -1,0 +1,30 @@
+### APIC Vectors - Local Vector Table (LVT) & Related
+
+| Vector (Dec) | Vector (Hex) | Name                        | Purpose / Handler |
+|--------------|--------------|-----------------------------|-------------------|
+| 220          | 0xDC         | LVT_TIMER_VECTOR            | LAPIC Timer interrupt |
+| 221          | 0xDD         | LVT_PERF_VECTOR             | Performance Monitoring Counter |
+| 222          | 0xDE         | LVT_LINT0_VECTOR            | Local Interrupt Line 0 (ExtINT / legacy) |
+| 223          | 0xDF         | LVT_LINT1_VECTOR            | Local Interrupt Line 1 (NMI) |
+| 224          | 0xE0         | LVT_ERROR_VECTOR            | LAPIC Internal Error |
+| 225          | 0xE1         | LVT_THERMAL_VECTOR          | Thermal Sensor (if supported) |
+| 226          | 0xE2         | LVT_CMCI_VECTOR             | Corrected Machine Check Interrupt |
+| 255          | 0xFF         | LAPIC_SPURIOUS_VECTOR       | Spurious Interrupt (SVR) |
+
+### Important Notes
+
+- These vectors are used in the **Local Vector Table (LVT)** of each Local APIC.
+- Most of them are **masked by default** during initialization (Mask bit = 1).
+- The **LAPIC Timer** (0xDC) is the most important for scheduling in SMP.
+- **Spurious Vector (0xFF)** is configured in the Spurious Interrupt Vector Register (SVR) and does **not** require an EOI.
+- All these vectors should have corresponding entries in the **IDT** (setup in assembly).
+
+### Related Handlers (from assembly)
+
+- `PeripheralHall_lapic_timer_handler`   → Vector 220 (0xDC)
+- `PeripheralHall_lapic_perf_handler`    → Vector 221 (0xDD)
+- `PeripheralHall_lapic_lint0_handler`   → Vector 222 (0xDE)
+- `PeripheralHall_lapic_nmi_handler`     → Vector 223 (0xDF)
+- `PeripheralHall_lapic_error_handler`   → Vector 224 (0xE0)
+- `PeripheralHall_lapic_thermal_handler` → Vector 225 (0xE1)
+- `PeripheralHall_spurious_handler`      → Vector 255 (0xFF)

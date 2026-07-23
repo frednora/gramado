@@ -229,7 +229,73 @@ static void draw_memory_metrics(int fd, int base_x, int base_y, int line_h)
 // Worker: update children on paint
 // ----------------------------------------------------
 
+// Responsive:
+// Buttons always anchored to bottom band
 static void update_children(int fd)
+{
+    query_client_area(fd);
+
+    // Compute responsive control sizes
+    unsigned long button_w = cr_width / 5;
+    unsigned long button_h = cr_height / 10;
+    if (button_h < 32) button_h = 32;
+
+    unsigned long metrics_x = 20;
+    unsigned long metrics_y = 60;  // below header
+    unsigned long line_h    = 20;
+
+    // Place buttons relative to current client area
+    unsigned long refresh_x = (cr_width / 4) - (button_w / 2);
+    unsigned long close_x   = (3 * cr_width / 4) - (button_w / 2);
+    unsigned long buttons_y = cr_height - button_h - 10; // 10px margin from bottom
+
+    if ((void*)dc00 == NULL){
+        printf("memory: dc00\n");
+        exit(1);
+    }
+
+    // Background bands
+    lingui_draw_rectangle0_dc(dc00, 0, 0, cr_width, cr_height, COLOR_WHITE, 0);
+
+    // Header band
+    lingui_draw_rectangle0_dc(dc00, 0, 0, cr_width, 40, COLOR_LIGHTGRAY, 0);
+
+    // Bottom band (button area)
+    lingui_draw_rectangle0_dc(dc00, 0, cr_height - (button_h + 20), cr_width, button_h + 20, COLOR_STEELBLUE, 0);
+
+    // Header label
+    const char *label_chose = "System Memory Status: ";
+    libgui_drawstringblock_dc(dc00, 8, 8, COLOR_BLACK, label_chose, 2);
+
+    // Metrics block
+    draw_memory_metrics(fd, metrics_x, metrics_y, line_h);
+
+    // Refresh button
+    MyButton_Refresh.left   = refresh_x;
+    MyButton_Refresh.top    = buttons_y;
+    MyButton_Refresh.width  = button_w;
+    MyButton_Refresh.height = button_h;
+
+    libgui_set_ui_component_position(uic_button_refresh, MyButton_Refresh.left, MyButton_Refresh.top);
+    libgui_set_ui_component_dimension(uic_button_refresh, button_w, button_h);
+    libgui_redraw_ui_component(uic_button_refresh, dc00);
+
+    // Close button
+    MyButton_Close.left   = close_x;
+    MyButton_Close.top    = buttons_y;
+    MyButton_Close.width  = button_w;
+    MyButton_Close.height = button_h;
+
+    libgui_set_ui_component_position(uic_button_close, MyButton_Close.left, MyButton_Close.top);
+    libgui_set_ui_component_dimension(uic_button_close, button_w, button_h);
+    libgui_redraw_ui_component(uic_button_close, dc00);
+}
+
+
+/*
+// # old version
+static void update_children_old(int fd);
+static void update_children_old(int fd)
 {
     query_client_area(fd);
 
@@ -268,19 +334,26 @@ static void update_children(int fd)
         0  // ROP
     );
 
+
+// Header band (top 40px, for example)
+    lingui_draw_rectangle0_dc(
+        dc00,
+        0, 0, cr_width, 40,
+        COLOR_LIGHTGRAY,
+        0
+    );
+
+// Bottom band (for buttons)
+    lingui_draw_rectangle0_dc(
+        dc00,
+        0, cr_height - 80, cr_width, 80,
+        COLOR_STEELBLUE,
+        0
+    );
+
 // Draw the label string inside
     const char *label_chose = "System Memory Status: ";
-    /*
-    libgui_drawstring_dc(
-        dc00,
-        8,
-        8,
-        COLOR_BLACK,
-        COLOR_WHITE,
-        0, // ROP 
-        label_chose
-    );
-    */
+
     libgui_drawstringblock_dc(
         dc00,
         8,
@@ -310,8 +383,8 @@ static void update_children(int fd)
     // Absolute coordinates (relative to screen)
     MyButton_Refresh.absolute_left = frame_left + cr_left + MyButton_Refresh.left;
     MyButton_Refresh.absolute_top  = frame_top  + cr_top + MyButton_Refresh.top;
-    MyButton_Refresh.width         = button_w; //32;
-    MyButton_Refresh.height        = button_h; //24;
+    MyButton_Refresh.width         = button_w;
+    MyButton_Refresh.height        = button_h;
 
 // =====================================
 // Refresh button
@@ -340,7 +413,6 @@ static void update_children(int fd)
         button_w,
         button_h );
     libgui_redraw_ui_component( uic_button_refresh, dc00 );
-
 
 // =====================================
 // Close button
@@ -382,9 +454,8 @@ static void update_children(int fd)
         button_w,
         button_h );
     libgui_redraw_ui_component( uic_button_close, dc00 );
-
-
 }
+*/
 
 static void set_default_responder(int wid)
 {
@@ -699,7 +770,23 @@ int main(int argc, char *argv[])
         0, 0, wi.cr_width, wi.cr_height,
         COLOR_WHITE,
         0  // ROP
-    );    
+    );
+
+// Header band (top 40px, for example)
+    lingui_draw_rectangle0_dc(
+        dc00,
+        0, 0, wi.cr_width, 40,
+        COLOR_LIGHTGRAY,
+        0
+    );
+
+// Bottom band (for buttons)
+    lingui_draw_rectangle0_dc(
+        dc00,
+        0, wi.cr_height - 80, wi.cr_width, 80,
+        COLOR_STEELBLUE,
+        0
+    );
 
 // String for the client area
     const char *label_chose = "System Memory Status: ";

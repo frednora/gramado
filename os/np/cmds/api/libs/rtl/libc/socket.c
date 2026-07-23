@@ -10,6 +10,7 @@
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <rtl/gramado.h> 
+// #include <string.h>   // for memset if needed
 
 
 static int __socket_pipe( int pipefd[2] );
@@ -400,26 +401,111 @@ sendto (
     const struct sockaddr *dest_addr, 
     socklen_t addrlen )
 {
-    if(sockfd<0)
+
+// Parameters validation:
+    if (sockfd < 0)
     {
         errno = EBADF;
-        return (ssize_t) -1;
+        goto fail;
+    }
+    if ((void*) buf == NULL)
+    {
+        errno = EFAULT;          // POSIX says EFAULT for invalid buffer
+        goto fail;
+    }
+    if (len == 0) {
+        return 0;               //  Common and useful convention
     }
 
-    return (ssize_t) write ( sockfd, (const void *) buf, len );
+// === Real work happens here ===
+// In a real libc you would call the kernel syscall here
+// When a valid destination is provided, it needs to use the syscall.
+
+// Case 1: Destination address provided → must use sendto syscall
+// This is required for unconnected datagram sockets (UDP).
+    if (dest_addr != NULL)
+    {
+        // #todo: Replace with your actual syscall invocation.
+        // sc80(...);
+
+        // If you don't have the syscall yet, you have two options:
+        // 1. Return -1 with errno = ENOSYS  ("Function not implemented")
+        // 2. Fall through to write() below (only works if socket is connected)
+    }
+
+// Case 2: No destination address → behave like send() / write()
+// This is correct for connected sockets (TCP, connected UDP, etc.)
+
+    return (ssize_t) write( sockfd, (const void *) buf, len );
+
+fail:
+    return (ssize_t) -1;
 }
 
+// sendmsg:
+// Most powerful of the send family (send, sendto, sendmsg).
+// What sendmsg can do that sendto cannot:
+// 1. Send multiple buffers at once (scatter/gather via msg_iov)
+// 2. Send ancillary/control data (file descriptors, timestamps, pktinfo...)
+// 3. Very flexible destination address handling
 
 ssize_t sendmsg (int sockfd, const struct msghdr *msg, int flags)
 {
-    if(sockfd<0)
+    if (sockfd < 0)
     {
         errno = EBADF;
-        return (ssize_t) -1;
+        goto fail;
+    }
+    if (msg == NULL)
+    {
+        errno = EFAULT;
+        goto fail;
     }
 
-    debug_print ("sendmsg: [TODO]\n");
-    return -1;
+    if (msg->msg_iov == NULL || msg->msg_iovlen == 0)
+    {
+        errno = EINVAL;          // No buffers to send
+        goto fail;
+    }
+
+    // Optional: Basic validation
+    if (msg->msg_name != NULL && msg->msg_namelen == 0)
+    {
+        errno = EINVAL;
+        goto fail;
+    }
+
+// ================================================
+//               REAL IMPLEMENTATION
+// ================================================
+
+    printf ("sendmsg: #todo\n");
+
+// In a real libc, sendmsg is usually implemented with a single syscall:
+    // sc80(...);
+
+/*
+    // Call the kernel
+    ssize_t ret = (ssize_t) sc80( ??,                 // <<<< Choose a free syscall number
+                                 (unsigned long)sockfd,
+                                 (unsigned long)msg,
+                                 (unsigned long)flags );
+
+    if (ret < 0)
+    {
+        errno = (int)(-ret);
+        return -1;
+    }
+
+    return ret;
+*/
+
+    // Temporary stub
+    errno = ENOSYS;        // Function not implemented yet
+    return (ssize_t)-1;
+
+fail:
+    return (ssize_t) -1;
 }
 
 
@@ -434,7 +520,15 @@ recv (
 
     if (sockfd<0){
         errno = EBADF;
-        return (ssize_t) (-1);
+        goto fail;
+    }
+    if ((void*) buf == NULL)
+    {
+        errno = EFAULT;          // POSIX says EFAULT for invalid buffer
+        goto fail;
+    }
+    if (len == 0) {
+        return 0;               //  Common and useful convention
     }
 
    return (ssize_t) read( sockfd, (const void *) buf, len );
@@ -443,6 +537,9 @@ recv (
     //return (ssize_t) recvfrom ( (int) sockfd, 
         //(void *) buf, (size_t) len, (int) flags,
         //(struct sockaddr *) src_addr, (socklen_t *) addrlen );
+
+fail:
+    return (ssize_t) (-1);
 }
 
 
@@ -455,26 +552,60 @@ recvfrom (
     struct sockaddr *src_addr, 
     socklen_t *addrlen )
 {
-    if(sockfd<0)
-    {
+    if (sockfd<0){
         errno = EBADF;
-        return (ssize_t) -1;
+        goto fail;
+    }
+    if ((void*) buf == NULL)
+    {
+        errno = EFAULT;          // POSIX says EFAULT for invalid buffer
+        goto fail;
+    }
+    if (len == 0) {
+        return 0;               //  Common and useful convention
     }
 
     return (ssize_t) read( sockfd, (const void *) buf, len );
+fail:
+    return (ssize_t) (-1);
 }
 
 
 ssize_t recvmsg (int sockfd, struct msghdr *msg, int flags)
 {
-    if(sockfd<0)
+    if (sockfd < 0)
     {
         errno = EBADF;
-        return (ssize_t) -1;
+        goto fail;
+    }
+    if (msg == NULL)
+    {
+        errno = EFAULT;
+        goto fail;
     }
 
-    debug_print ("recvmsg: [TODO]\n");
+    printf ("recvmsg: [TODO]\n");
+
+
+/*
+    ssize_t ret = (ssize_t) sc80(??,                 // <<<< Choose a free syscall number
+                                 (unsigned long)sockfd,
+                                 (unsigned long)msg,
+                                 (unsigned long)flags);
+
+    if (ret < 0)
+    {
+        errno = (int)(-ret);
+        return -1;
+    }
+
+    return ret;
+*/
+
     return -1;
+
+fail:
+    return (ssize_t) (-1);
 }
 
 
@@ -484,14 +615,39 @@ getpeername (
     struct sockaddr *addr, 
     socklen_t *addrlen )
 {
-    if(sockfd<0)
+    if (sockfd < 0)
     {
         errno = EBADF;
-        return (int) -1;
+        goto fail;
+    }
+    if (addr == NULL || addrlen == NULL)
+    {
+        errno = EINVAL;
+        goto fail;
     }
 
-    debug_print ("getpeername: [TODO]\n");
+    printf ("getpeername: [TODO]\n");
+
+
+/*
+    int ret = (int) sc80(??,                         // <<<< Choose a free number
+                         (unsigned long)sockfd,
+                         (unsigned long)addr,
+                         (unsigned long)addrlen);
+
+    if (ret < 0)
+    {
+        errno = (-ret);
+        return -1;
+    }
+
+    return 0;
+*/
+
     return -1;
+
+fail:
+    return (ssize_t) (-1);
 }
 
 // getsockname:

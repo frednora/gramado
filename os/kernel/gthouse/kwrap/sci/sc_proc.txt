@@ -1,0 +1,37 @@
+
+### Process Management - Syscalls for sci0 (0x80)
+
+| Syscall | Kernel Function                        | libc Function       | Description |
+|---------|----------------------------------------|---------------------|-----------|
+| 71      | sys_fork()                             | fork()              | Create child process |
+| 73      | sys_create_process()                   | -                   | Create new process |
+| 72      | sys_create_thread()                    | -                   | Create new thread |
+| 94      | core_start_thread()                    | -                   | Start thread (put in ready) |
+| 81      | sys_getppid()                          | getppid()           | Get parent process ID |
+| 85      | get_current_pid()                      | getpid()            | Get current process ID |
+| 87      | (CurrentTID)                           | -                   | Get current thread ID |
+| 83      | do_waitpid()                           | waitpid()           | Wait for process termination |
+| 880     | get_process_stats()                    | -                   | Get process statistics |
+| 882     | getprocessname()                       | -                   | Get process name |
+| 10020   | (GRAMADO_PID_INIT)                     | -                   | Get Init process PID |
+| 10021   | (INIT_TID)                             | -                   | Get Init thread TID |
+| 44010   | (cmdline injection)                    | -                   | Inject command line to child |
+| 44011   | (cmdline read)                         | -                   | Read command line from thread |
+
+### Process Control & Information
+
+| Syscall | Kernel Function                        | Description |
+|---------|----------------------------------------|-----------|
+| 80      | show_currentprocess_info()             | Show current process info |
+| 82      | show_process_information()             | Show all processes info |
+| 888     | get_process_stats() (extended)         | Get detailed process stats |
+| 883     | getthreadname()                        | Get thread name |
+| 881     | GetThreadStats()                       | Get thread statistics |
+| 350     | sys_initialize_component()             | Initialize system component |
+| 640     | taskswitch_lock()                      | Lock task switching |
+| 641     | taskswitch_unlock()                    | Unlock task switching |
+| 642     | scheduler_lock()                       | Lock scheduler |
+| 643     | scheduler_unlock()                     | Unlock scheduler |
+| 65      | (Exit handling)                        | Process exit request |
+| 70      | (Exit handling)                        | Process/thread exit |
+| 288     | wrappers_get_current_runlevel()        | Get current runlevel |

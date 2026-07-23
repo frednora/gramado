@@ -1,0 +1,39 @@
+
+### File Management - Syscalls for sci0 (0x80)
+
+| Syscall | Kernel Function                    | libc Function       | Description |
+|---------|------------------------------------|---------------------|-----------|
+| 16      | sys_open()                         | open()              | Open file or device |
+| 17      | sys_close()                        | close()             | Close file descriptor |
+| 18      | sys_read()                         | read()              | Read from file descriptor |
+| 19      | sys_write()                        | write()             | Write to file descriptor |
+| 260     | sys_read()                         | read()              | Alternative read (duplicate) |
+| 261     | sys_write()                        | write()             | Alternative write (duplicate) |
+| 600     | sys_dup()                          | dup()               | Duplicate file descriptor |
+| 601     | sys_dup2()                         | dup2()              | Duplicate to specific fd |
+| 602     | sys_dup3()                         | dup3()              | Duplicate with flags |
+| 603     | sys_lseek()                        | lseek()             | Reposition file offset |
+| 178     | sys_get_file_size()                | -                   | Get file size |
+| 179     | sys_getdtablesize()                | getdtablesize()     | Get file descriptor table size |
+| 8000    | sys_ioctl()                        | ioctl()             | I/O control |
+| 8001    | sys_fcntl()                        | fcntl()             | File control |
+| 10000   | sys_set_file_sync()                | -                   | Set file synchronization |
+| 10001   | sys_get_file_sync()                | -                   | Get file synchronization |
+| 10006   | sys_set_file_sync()                | -                   | Set file sync (alternative) |
+| 10007   | sys_get_file_sync()                | -                   | Get file sync (alternative) |
+
+### File System & Directory Operations
+
+| Syscall | Kernel Function                        | libc / Command      | Description |
+|---------|----------------------------------------|---------------------|-----------|
+| 3       | sys_read_file_from_disk()              | -                   | Read file from disk |
+| 4       | sys_write_file_to_disk()               | -                   | Write file to disk |
+| 43      | sys_create_empty_file()                | -                   | Create empty file |
+| 44      | sys_create_empty_directory()           | -                   | Create empty directory |
+| 170     | sys_pwd()                              | pwd                 | Print working directory |
+| 175     | sys_cd_command()                       | cd                  | Change directory |
+| 176     | fs_pathname_backup()                   | -                   | Backup pathname |
+| 177     | fsList()                               | dir / ls            | List directory |
+| 173     | fsListFiles()                          | -                   | List files (low level) |
+| 174     | search_in_dir()                        | -                   | Search file in directory |
+| 10008   | fs_save_fat16_cache()                  | -                   | Save FAT cache to disk |

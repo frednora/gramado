@@ -154,10 +154,10 @@
 #define COLOR_GRADIENTINACTIVECAPTION 0xD7E4F2
 #define COLOR_GREENYELLOW         0xADFF2F
 #define COLOR_HONEYDEW            0xF0FFF0
-#define COLOR_HOTPINK             0xFF69B4 //rosa chiclete.
-#define COLOR_HOTTRACK            0x0066CC //azul legal.
+#define COLOR_HOTPINK             0xFF69B4  //rosa chiclete
+#define COLOR_HOTTRACK            0x0066CC  //azul legal
 #define COLOR_INDIANRED           0xCD5C5C
-#define COLOR_INDIGO              0x4B0082 //violeta
+#define COLOR_INDIGO              0x4B0082  //violeta
 #define COLOR_IVORY               0xFFFFF0
 #define COLOR_KHAKI               0xF0E68C
 #define COLOR_LAVENDER            0xE6E6FA
@@ -223,9 +223,9 @@
 #define COLOR_SKYBLUE             0x87CEEB  //azul claro
 #define COLOR_SLATEBLUE           0x6A5ACD  //azul/violeta
 #define COLOR_SLATEGRAY           0x708090
-#define COLOR_SNOW                0xFFFAFA //branco
+#define COLOR_SNOW                0xFFFAFA  //branco
 #define COLOR_SPRINGGREEN         0x00FF7F
-#define COLOR_STEELBLUE           0x4682B4 //azul legal.
+#define COLOR_STEELBLUE           0x4682B4  //azul legal
 #define COLOR_TAN                 0xD2B48C
 #define COLOR_TEAL                0x008080
 #define COLOR_THISTLE             0xD8BFD8
@@ -234,7 +234,7 @@
 #define COLOR_TURQUOISE           0x40E0D0
 #define COLOR_VIOLET              0xEE82EE
 #define COLOR_WHEAT               0xF5DEB3
-#define COLOR_WHITESMOKE          0xF5F5F5 //branco enfumaçado.
+#define COLOR_WHITESMOKE          0xF5F5F5  //branco enfumaçado
 #define COLOR_YELLOW              0xFFFF00
 #define COLOR_YELLOWGREEN         0x9ACD32
 #define STEALTH_ORANGE            0xFF8800

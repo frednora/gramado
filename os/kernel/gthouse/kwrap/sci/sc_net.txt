@@ -1,0 +1,35 @@
+
+### Network Support - Syscalls for sci0 (0x80)
+
+| Syscall | Kernel Function                        | libc Function       | Description |
+|---------|----------------------------------------|---------------------|-----------|
+| 7000    | sys_socket()                           | socket()            | Create a socket |
+| 7001    | sys_connect()                          | connect()           | Connect to remote host |
+| 7002    | sys_accept()                           | accept()            | Accept incoming connection |
+| 7003    | sys_bind()                             | bind()              | Bind socket to address |
+| 7004    | sys_listen()                           | listen()            | Listen for connections |
+| 7005    | sys_getsockopt()                       | getsockopt()        | Get socket options |
+| 7006    | sys_setsockopt() /                     | setsockopt()        | Set socket options / Gramado Port |
+            socket_set_gramado_port() 
+| 7007    | sys_getsockname()                      | getsockname()       | Get local address |
+| 7008    | show_socket_for_a_process()            | -                   | Debug: Show socket info |
+| 7009    | sys_socket_shutdown()                  | shutdown()          | Shutdown part of connection |
+| 7012    | sys_sendto()                           | sendto()            | Send data to address |
+| 7013    | sys_recvfrom()                         | recvfrom()          | Receive data with source address |
+| 7014    | sys_sendmsg()                          | sendmsg()           | Advanced send with msghdr |
+| 7015    | sys_recvmsg()                          | recvmsg()           | Advanced receive with msghdr |
+
+### Other Network-Related Syscalls
+
+| Syscall | Kernel Function                          | Description |
+|---------|------------------------------------------|-----------|
+| 118     | sys_network_push_packet()                | Push packet from user to kernel queue |
+| 119     | sys_network_pop_packet()                 | Pop packet from kernel to user |
+| 161     | getSocketIPV4()                          | Get IPv4 from socket |
+| 162     | getSocketPort()                          | Get port from socket |
+| 163     | update_socket()                          | Update socket IP/port |
+| 521     | network server registration              | Register Network Server |
+| 22001   | networkLock() / networkUnlock()          | Lock/Unlock network stack |
+| 22002   | networkGetStatus()                       | Get network status |
+| 22009   | network_send_raw_packet()                | Send raw packet |
+

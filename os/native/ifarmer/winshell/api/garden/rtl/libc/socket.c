@@ -15,7 +15,19 @@
 static int __socket_pipe( int pipefd[2] );
 
 
-// -----------------
+// ====================== Local Helpers ======================
+
+// Local worker
+static int __socket_pipe( int pipefd[2] )
+{
+    return (int) sc80 ( 
+                    247, 
+                    (unsigned long) pipefd, 
+                    (unsigned long) pipefd, 
+                    (unsigned long) pipefd );
+}
+
+// ====================== Main Socket API ======================
 
 
 // socket:
@@ -28,41 +40,36 @@ int socket( int domain, int type, int protocol )
 
     value = 
         (int) sc80 ( 
-                  7000, 
-                  (unsigned long) domain, 
-                  (unsigned long) type, 
-                  (unsigned long) protocol );
+                7000, 
+                (unsigned long) domain, 
+                (unsigned long) type, 
+                (unsigned long) protocol );
+
     if (value<0)
     {
         errno = (-value);
-        return (int) -1;
+        goto fail;
     }
-
     return (int) value;
-}
 
-// Local worker.
-static int __socket_pipe( int pipefd[2] )
-{
-    return (int) sc80 ( 
-                     247, 
-                     (unsigned long) pipefd, 
-                     (unsigned long) pipefd, 
-                     (unsigned long) pipefd );
+fail:
+    return (int) -1;
 }
 
 
 int socketpair(int domain, int type, int protocol, int sv[2])
 {
-    int fd = -1;
     int pipefd[2];
+    int fd = -1;
 
 // #bugbug
 // Only two types of family?
 
     if ( domain == AF_UNSPEC || domain == AF_UNIX )
     {
-        if ( protocol != 0 ){
+        if ( protocol != 0 )
+        {
+            //errno = EAFNOSUPPORT;
             return (int) (-1);
         }
 
@@ -108,18 +115,21 @@ bind (
     if (sockfd<0)
     {
         errno=EBADF;
-        return (int) -1;
+        goto fail;
+    }
+    if (addr == NULL || addrlen == 0) 
+    {
+        errno = EINVAL;
+        goto fail;
     }
 
-// #todo: 
-// Check addr and addrlen.
-
+//  syscall
     value = 
         (int) sc80 ( 
-                  7003, 
-                  (unsigned long) sockfd, 
-                  (unsigned long) addr, 
-                  (unsigned long) addrlen );
+                7003, 
+                (unsigned long) sockfd, 
+                (unsigned long) addr, 
+                (unsigned long) addrlen );
 
     if (value<0)
     {
@@ -129,6 +139,8 @@ bind (
     }
 
     return (int) value;
+fail:
+    return (int) -1;
 }
 
 // IN:
@@ -143,6 +155,7 @@ int listen(int sockfd, int backlog)
         errno = EBADF;
         goto fail;
     }
+
 // backlog limits
     if (backlog <= 0 || backlog > SOMAXCONN){
         errno = EBADF;
@@ -187,11 +200,20 @@ accept4 (
     socklen_t *addrlen, 
     int flags)
 {
-    errno = -1;
-    printf ("accept4: [TODO] Not implemented yet\n");
-    return -1;
-}
+    if (sockfd<0){
+        errno = EBADF;
+        goto fail;
+    }
 
+    //errno = -1;
+    printf ("accept4: [TODO] Not implemented yet\n");
+
+    // For now, ignore flags (SOCK_NONBLOCK, SOCK_CLOEXEC)
+    // You can extend the syscall later to support them.
+    return accept(sockfd, addr, addrlen);
+fail:
+    return (int) -1;
+}
 
 // Alternative. Not tested.
 int accept2 (int sockfd, struct sockaddr *addr, socklen_t *addrlen)
@@ -206,12 +228,12 @@ int accept2 (int sockfd, struct sockaddr *addr, socklen_t *addrlen)
 
     value = 
         (int) sc80 ( 
-                  7010, 
-                  (unsigned long) sockfd, 
-                  (unsigned long) addr, 
-                  (unsigned long) addrlen );
+                7010, 
+                (unsigned long) sockfd, 
+                (unsigned long) addr, 
+                (unsigned long) addrlen );
 
-    if(value<0)
+    if (value<0)
     {
         errno = (-value);
         return (int) (-1);
