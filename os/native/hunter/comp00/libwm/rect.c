@@ -765,7 +765,7 @@ __refresh_rectangle0 (
 }
 
 // ======================================
-// Copy a rectangle.
+// Copy a rectangle
 // #todo
 // IN:
 // w, h, 
@@ -820,7 +820,10 @@ __refresh_rectangle1 (
 // dc
     //unsigned long deviceWidth  = (unsigned long) screenGetWidth();
     //unsigned long deviceHeight = (unsigned long) screenGetHeight();
-// Device info.
+
+    // Device info
+    // #todo:
+    // If it is doing a syscall we need to change it. (slow)
     unsigned long deviceWidth  = (unsigned long) gws_get_device_width();
     unsigned long deviceHeight = (unsigned long) gws_get_device_height();
     if ( deviceWidth == 0 || deviceHeight == 0 )

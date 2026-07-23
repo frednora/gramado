@@ -31,6 +31,44 @@
 #include "direct00.h"
 
 
+#define CANVAS_COUNT_MAX    16
+
+// Each window needs to have an index for one of this structurea.
+// This way the display server will know the information about 
+// the window's canvas.
+struct canvas_information_d
+{
+    int used;
+    int magic;
+    int initialized;       // Safety first
+
+// If dirty, flush it into the backbuffer.
+    int dirty;
+
+// Is it a canvas for frame/chrome.
+    int is_frame;
+
+    unsigned long width;   // buffer width in pixels
+    unsigned long height;  // buffer height in pixels
+    unsigned long bpp;     // bits per pixel
+    unsigned long pitch;   // bytes per row (width * bytes_per_pixel)
+
+    void *base;            // pointer to buffer memory
+
+    struct dccanvas_d *dc;  // DC associated with this canvas information
+
+    //struct gws_window_d *owner_window;
+    int owner_wid;
+
+    //struct canvas_information_d *clientarea_canvas;
+    //struct canvas_information_d *next;
+};
+
+// List of canvases
+// List of pointer for canvas information structures
+extern unsigned long libgui_canvasList[CANVAS_COUNT_MAX];
+
+
 // ===================================================
 
 // Create a new device context for a given buffer.
@@ -96,6 +134,45 @@ libgui_drawstring_dc (
     unsigned int bg_color,
     unsigned long rop,
     const char *string );
+
+
+// ======================================
+// Copy a rectangle
+// #todo
+// IN:
+// w, h, 
+// dst l, dst t, dst address, 
+// src l, src t, src address.
+void 
+libgui_refresh_rectangle1 ( 
+    unsigned long width,    // common
+    unsigned long height,   // common
+    unsigned long dst_x,        // dst stuff
+    unsigned long dst_y,        // dst stuff
+    unsigned long buffer_dest,  // dst stuff
+    unsigned long src_x,        // src stuff
+    unsigned long src_y,        // src stuff
+    unsigned long buffer_src );  // src stuff
+
+// Blit from one canvas into another.
+// src_canvas: source canvas (offscreen, window, etc.)
+// dst_canvas: destination canvas (backbuffer, frontbuffer, etc.)
+void 
+libgui_blit_canvas_to_canvas_imp(
+    struct canvas_information_d *src_canvas,
+    struct canvas_information_d *dst_canvas,
+    int dst_x, int dst_y,
+    int width, int height );
+
+// Given the indexes
+void 
+libgui_blit_canvas_to_canvas(
+    int id_src_canvas,
+    int id_dst_canvas,
+    int dst_x, int dst_y,
+    int width, int height );
+
+int lingui_initialize_canvas_list(void);
 
 // #test
 // Drawing a rectangle inside a given canvas,

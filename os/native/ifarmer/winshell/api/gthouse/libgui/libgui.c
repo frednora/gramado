@@ -24,6 +24,11 @@
 #include "include/libgui.h"
 
 
+// List of canvases
+unsigned long libgui_canvasList[CANVAS_COUNT_MAX];
+
+
+
 static long __old_mouse_x=0;
 static long __old_mouse_y=0;
 static long __new_mouse_x=0;
@@ -60,6 +65,7 @@ static unsigned long libgui_device_pitch=0;
 // Device context
 static struct dccanvas_d *libgui_dc_backbuffer;
 static struct dccanvas_d *libgui_dc_frontbuffer;
+
 
 
 // ====================================================
@@ -1442,6 +1448,317 @@ libgui_drawstring_dc (
 }
 
 
+// ======================================
+// Copy a rectangle
+// #todo
+// IN:
+// w, h, 
+// dst l, dst t, dst address, 
+// src l, src t, src address.
+void 
+libgui_refresh_rectangle1 ( 
+    unsigned long width,    // common
+    unsigned long height,   // common
+    unsigned long dst_x,        // dst stuff
+    unsigned long dst_y,        // dst stuff
+    unsigned long buffer_dest,  // dst stuff
+    unsigned long src_x,        // src stuff
+    unsigned long src_y,        // src stuff
+    unsigned long buffer_src )  // src stuff
+{
+
+    //debug_print("refresh_rectangle: r0 :)\n");
+
+    //void *dest       = (void *)      FRONTBUFFER_ADDRESS;
+    //const void *src  = (const void*) BACKBUFFER_ADDRESS;
+    void *dest       = (void *)      buffer_dest;
+    const void *src  = (const void*) buffer_src;
+
+// loop
+    register unsigned int i=0;
+    register unsigned int lines=0;
+    unsigned int line_size=0; 
+    register int count=0; 
+
+// Screen pitch.
+// screen line size in pixels * bytes per pixel.
+    unsigned int screen_pitch=0;  
+// Rectangle pitch
+// rectangle line size in pixels * bytes per pixel.
+    unsigned int rectangle_pitch=0;  
+
+    unsigned int src_offset=0;
+    unsigned int dst_offset=0;
+
+// = 3; 24bpp
+    int bytes_count=0;
+
+// First line for both
+    int dstFirstLine = (int) (dst_y & 0xFFFF);
+    int srcFirstLine = (int) (src_y & 0xFFFF);
+
+    //int UseVSync = FALSE;
+    int UseClipping = TRUE;
+
+//==========
+// dc
+    //unsigned long deviceWidth  = (unsigned long) screenGetWidth();
+    //unsigned long deviceHeight = (unsigned long) screenGetHeight();
+
+    // Device info
+    // #todo:
+    // If it is doing a syscall we need to change it. (slow)
+    //unsigned long deviceWidth  = (unsigned long) gws_get_device_width();
+    //unsigned long deviceHeight = (unsigned long) gws_get_device_height();
+    unsigned long deviceWidth  = (unsigned long) libgui_SavedX;
+    unsigned long deviceHeight = (unsigned long) libgui_SavedY;
+
+    if ( deviceWidth == 0 || deviceHeight == 0 )
+    {
+        debug_print ("refresh_rectangle: w h\n");
+        //panic       ("refresh_rectangle: w h\n");
+        return;
+    }
+
+//
+// Internal
+//
+
+    unsigned long dstX = (unsigned long) (dst_x & 0xFFFF);
+    unsigned long srcX = (unsigned long) (src_x & 0xFFFF);
+
+    unsigned long dstY = (unsigned long) (dst_y & 0xFFFF);
+    unsigned long srcY = (unsigned long) (src_y & 0xFFFF);
+
+// both
+    line_size = (unsigned int) (width  & 0xFFFF); 
+    lines     = (unsigned int) (height & 0xFFFF);
+
+    switch (libgui_SavedBPP){
+    // (32/8)
+    case 32:
+        bytes_count = 4;
+        break;
+    // (24/8)
+    case 24:
+        bytes_count = 3;
+        break;
+    // ...
+    default:
+        //panic ("refresh_rectangle: SavedBPP\n");
+        return;
+        break;
+    };
+
+//
+// Pitch
+//
+
+// Screen pitch.
+// Screen line size in pixels plus bytes per pixel.
+    screen_pitch = (unsigned int) (bytes_count * deviceWidth);
+
+// both
+// Rectangle pitch.
+// rectangle line size in pixels * bytes per pixel.
+//(line_size * bytes_count) é o número de bytes por linha. 
+    rectangle_pitch = (unsigned int) (bytes_count * line_size);
+
+// #atenção.
+//offset = (unsigned int) BUFFER_PIXEL_OFFSET( x, y );
+
+    dst_offset = (unsigned int) ( (dstY*screen_pitch) + (bytes_count*dstX) );
+    src_offset = (unsigned int) ( (srcY*screen_pitch) + (bytes_count*srcX) );
+
+    dest = (void *)       (dest + dst_offset); 
+    src  = (const void *) (src  + src_offset); 
+
+// #bugbug
+// Isso pode nos dar problemas.
+// ?? Isso ainda é necessário nos dias de hoje ??
+
+    //if ( UseVSync == TRUE){
+        //vsync();
+    //}
+
+// ================================
+// Se for divisível por 8.
+// Copy lines
+// See:'strength reduction'
+// Clipping?
+// Não copiamos a parte que está fora da janela do dispositivo.
+// memcpy64: 8 bytes per time.
+
+    if ((rectangle_pitch % 8) == 0)
+    {
+        count = (rectangle_pitch >> 3);
+        for (i=0; i < lines; i++)
+        {
+            if (UseClipping == TRUE)
+            {
+                if ( (dstFirstLine + i) > deviceHeight )
+                { 
+                    break; 
+                }
+                if ( (srcFirstLine + i) > deviceHeight )
+                { 
+                    break; 
+                }
+            }
+            memcpy64 ( (void *) dest, (const void *) src, count );
+            dest += screen_pitch;
+            src  += screen_pitch;
+        };
+        return;
+    }
+
+// ================================
+// Se for divisível por 4.
+// Esse não será usado se for divisóvel por 8.
+// Mas será chamado se for menor que 8, apenas 4.
+// Copy lines
+// See:'strength reduction'
+// Clipping?
+// Não copiamos a parte que está fora da janela do dispositivo.
+// memcpy32: 4 bytes per time.
+
+    if ((rectangle_pitch % 4) == 0)
+    {
+        count = (rectangle_pitch >> 2);
+        for (i=0; i < lines; i++)
+        {
+            if (UseClipping == TRUE)
+            {
+                if ((dstFirstLine + i) > deviceHeight)
+                { 
+                    break; 
+                }
+                if ((srcFirstLine + i) > deviceHeight)
+                { 
+                    break; 
+                }
+            }
+            memcpy32 ( (void *) dest, (const void *) src, count );
+            //__rect_memcpy32 ( (void *) dest, (const void *) src, count );
+            dest += screen_pitch;
+            src  += screen_pitch;
+        };
+        return;
+    }
+
+// ================================
+// Se não for divisível por 4. (slow)
+// Copy lines
+// Clipping?
+// Não copiamos a parte que está fora da janela do dispositivo.
+// memcpy: 1 byte per time.
+
+    if ((rectangle_pitch % 4) != 0)
+    {
+        for (i=0; i < lines; i++){
+            if (UseClipping == TRUE)
+            {
+                if ((dstFirstLine + i) > deviceHeight)
+                { 
+                    break; 
+                }
+                if ((srcFirstLine + i) > deviceHeight)
+                { 
+                    break; 
+                }
+            }
+            memcpy ( (void *) dest, (const void *) src, rectangle_pitch );
+            dest += screen_pitch; 
+            src  += screen_pitch; 
+        };
+        return;
+    }
+}
+
+// Blit from one canvas into another.
+// src_canvas: source canvas (offscreen, window, etc.)
+// dst_canvas: destination canvas (backbuffer, frontbuffer, etc.)
+void 
+libgui_blit_canvas_to_canvas_imp(
+    struct canvas_information_d *src_canvas,
+    struct canvas_information_d *dst_canvas,
+    int dst_x, int dst_y,
+    int width, int height )
+{
+
+// Validation
+    if ((void*) src_canvas == NULL || (void*) dst_canvas == NULL)
+        return;
+    if (src_canvas->used != TRUE || dst_canvas->used != TRUE)
+        return;
+    if (src_canvas->magic != 1234 || dst_canvas->magic != 1234)
+        return;
+    if (src_canvas->initialized != TRUE || dst_canvas->initialized != TRUE)
+        return;
+    if (src_canvas->base == NULL || dst_canvas->base == NULL)
+        return;
+
+    // Copy rectangle from source canvas (always top-left for now)
+    libgui_refresh_rectangle1(
+        width, height,
+        dst_x, dst_y, (unsigned long) dst_canvas->base,   // destination
+        0, 0, (unsigned long) src_canvas->base            // source
+    );
+}
+
+// Given the indexes
+void 
+libgui_blit_canvas_to_canvas(
+    int id_src_canvas,
+    int id_dst_canvas,
+    int dst_x, int dst_y,
+    int width, int height )
+{
+    struct canvas_information_d *src;
+    struct canvas_information_d *dst;
+
+// We have few canvases for now
+    if (id_src_canvas < 0 || id_src_canvas >= CANVAS_COUNT_MAX)
+        return;
+    if (id_dst_canvas < 0 || id_dst_canvas >= CANVAS_COUNT_MAX)
+        return;
+    // #todo: More filters.
+
+    src = (struct canvas_information_d *) libgui_canvasList[id_src_canvas];
+    if ((void *) src == NULL)
+        return;
+    if (src->magic != 1234)
+        return;
+
+    dst = (struct canvas_information_d *) libgui_canvasList[id_dst_canvas];
+    if ((void *) dst == NULL)
+        return;
+    if (dst->magic != 1234)
+        return;
+
+    // Worker
+    libgui_blit_canvas_to_canvas_imp(
+        (struct canvas_information_d *) src,
+        (struct canvas_information_d *) dst,
+        dst_x, dst_y, width, height 
+    );
+}
+
+// Initialize a list of pointer for canvas information structures
+int lingui_initialize_canvas_list(void)
+{
+    int i;
+
+    for (i=0; i<CANVAS_COUNT_MAX; i++){
+        libgui_canvasList[i] = 0;
+    }
+    
+    return 0;
+}
+
+
+
+
 //======================================
 // Calling kgws in the kernel.
 // Using the kgws to refresh the rectangle.
@@ -2773,6 +3090,10 @@ int libgui_initialize(void)
 
 // Char and font initialization
     __initialize_char_and_font_support();
+
+
+// Initialize a list of pointer for canvas information structures
+    lingui_initialize_canvas_list();
 
 	// ...
 

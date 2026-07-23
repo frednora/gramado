@@ -28,20 +28,8 @@
 #include <editor.h>
 
 
-
-// Used by small_dc
-unsigned char *small_buffer;
-
 struct dccanvas_d *dc00;  // shared dc
-struct dccanvas_d *small_dc;
-// ...
-
-#define CANVAS_CLIENTAREA  0
-#define CANVAS_SMALL  1
-// ...
-
 struct ui_component_d *uic_button_save;
-
 
 /*
 #define IP(a, b, c, d) (a << 24 | b << 16 | c << 8 | d)
@@ -213,14 +201,7 @@ static void pump(int fd, int wid);
 
 static int __open_document(char *file_name);
 
-// Create a canvas_information_d from a dc
-static struct canvas_information_d *
-editorCreateCanvasInfo(struct dccanvas_d *dc, int owner_wid, int is_frame);
-
-static int __editor_initialize_small_buffer(void);
-
 static int __editor_initialize(void);
-
 
 // =====================================
 // Functions
@@ -428,18 +409,6 @@ static void update_clients(int fd)
         COLOR_WHITE,
         0  // ROP
     );
-
-    // Example string
-    const char *msg = "Hello";
-
-    if ((void*)small_dc != NULL)
-    {
-        libgui_blit_canvas_to_canvas(
-            CANVAS_SMALL,
-            CANVAS_CLIENTAREA,
-            0, 0,      // destination position
-            (sizeof(msg) *8) +2+2, 8+2+2 );      // size
-    }
 }
 
 static int editor_init_globals(void)
@@ -1333,59 +1302,6 @@ fail:
 }
 
 
-// Create a canvas_information_d from a dc
-static struct canvas_information_d *
-editorCreateCanvasInfo(struct dccanvas_d *dc, int owner_wid, int is_frame)
-{
-    if (!dc) return NULL;
-
-    struct canvas_information_d *ci =
-        (struct canvas_information_d *) malloc(sizeof(struct canvas_information_d));
-    if (!ci) return NULL;
-
-    ci->used        = TRUE;
-    ci->magic       = 1234;
-    ci->initialized = TRUE;
-    ci->dirty       = TRUE;   // mark dirty so compositor will flush
-    ci->is_frame    = is_frame;
-
-    ci->width  = dc->device_width;
-    ci->height = dc->device_height;
-    ci->bpp    = dc->bpp;
-    ci->pitch  = dc->pitch;
-    ci->base   = dc->data;
-    ci->dc     = dc;
-
-    ci->owner_wid = owner_wid;
-
-    return ci;
-}
-
-
-static int __editor_initialize_small_buffer(void)
-{
-    // Match the screen's width/bpp so refresh_rectangle1's
-    // stride math (which uses libgui_SavedX/libgui_SavedBPP)
-    // lines up with this buffer's real row size.
-    unsigned long w   = dc00->device_width;  //libgui_SavedX;     // screen width, not 320
-    unsigned long h   = 200;               // height can stay whatever you need
-    unsigned long bpp = dc00->bpp;  //libgui_SavedBPP;   // screen bpp, not 24
-    unsigned long bytes_per_pixel = bpp / 8;
-
-    small_buffer = (unsigned char *) malloc(w * h * bytes_per_pixel);
-    if (!small_buffer) return -1;
-
-    small_dc = libgui_create_dc(small_buffer, w, h, bpp);
-    if (!small_dc) return -1;
-
-    struct canvas_information_d *ci_small =
-    editorCreateCanvasInfo(small_dc, main_window, FALSE);
-
-    libgui_canvasList[CANVAS_SMALL] = (unsigned long) ci_small;
-
-    return 0;
-}
-
 // Local worker
 static int __editor_initialize(void)
 {
@@ -1760,57 +1676,6 @@ static int __editor_initialize(void)
 
 // Draw the status bar
     editorDrawStatusBar();
-
-// ============================================
-// Register canvases in the list
-    struct canvas_information_d *ci_client =
-    editorCreateCanvasInfo(dc00, main_window, TRUE);
-
-    libgui_canvasList[CANVAS_CLIENTAREA] = (unsigned long) ci_client;      // client area canvas
-
-// Create a small buffer
-    int b_status = -1;
-    b_status = (int) __editor_initialize_small_buffer();
-    if (b_status < 0){
-        printf("on __editor_initialize_small_buffer()\n");
-        exit (1);
-    }
-
-    // Example string
-    const char *msg = "Hello";
-
-    if ((void*)small_dc == NULL){
-        printf("Invalid small_dc\n");
-        exit(1);
-    }
-
-    if ((void*)small_dc != NULL) 
-    {
-
-        // Fill background of small buffer
-        lingui_draw_rectangle0_dc(
-            small_dc,
-            0, 0, (sizeof(msg) *8) +2+2, 8+2+2,
-            COLOR_BLUE,
-            ROP_COPY
-        );
-
-        // Draw at position (8, 8) inside the small buffer
-        libgui_drawstring_dc(
-            small_dc,
-            2, 2,                 // x, y
-            COLOR_BLACK,          // foreground
-            COLOR_WHITE,          // background
-            ROP_COPY,             // raster op
-            msg                   // string
-        );
-
-        libgui_blit_canvas_to_canvas(
-            CANVAS_SMALL,
-            CANVAS_CLIENTAREA,
-            0, 0,      // destination position
-            (sizeof(msg) *8) +2+2, 8+2+2 );      // size
-    }
 
 // ============================================
 
