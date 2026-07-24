@@ -743,7 +743,7 @@ unsigned long tree_eval(void)
     // EOF was found
     if (c == TK_EOF){
         printf ("tree_eval: #error EOF in line %d\n", 
-            LexerInfo.current_line );
+            JSLEX_Info.current_line );
         exit(1);
     }
 
@@ -849,13 +849,13 @@ unsigned long tree_eval(void)
 
         case TK_ARITHCOMPARE:
             //printf("tree_eval: TK_ARITHCOMPARE %c\n", real_token_buffer[0]);
-            if (LexerInfo.lexer_expression == LT_EXPR)
+            if (JSLEX_Info.lexer_expression == LT_EXPR)
             {
                 exp_buffer[exp_offset] = (int) '<';
                 exp_offset++;
                 State=1;
             }
-            if (LexerInfo.lexer_expression == GT_EXPR)
+            if (JSLEX_Info.lexer_expression == GT_EXPR)
             {
                 exp_buffer[exp_offset] = (int) '>';
                 exp_offset++;
@@ -883,11 +883,11 @@ unsigned long tree_eval(void)
 
 do_bst:
 
-// If no tokens were collected, return 0 as default
+// If no tokens were collected, return 0 as default.
     if (exp_offset == 0) 
     {
         printf("tree_eval: [do_bst] empty expression before ';' (line %d)\n",
-           LexerInfo.current_line );
+           JSLEX_Info.current_line );
         return 0;  // or handle as an error
     }
 

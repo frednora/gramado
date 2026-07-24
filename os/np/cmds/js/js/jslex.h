@@ -104,7 +104,7 @@ extern int brace_end;
 extern int brace_count;
 
 
-struct lexer_info_d 
+struct jslex_info_d 
 {
     int lexer_token_count;
 
@@ -122,14 +122,14 @@ struct lexer_info_d
 
     // ...
 };
-extern struct lexer_info_d  LexerInfo;
+extern struct jslex_info_d  JSLEX_Info;
 
 
 //
 // -- Prototypes --------
 //
 
-void error(char *msg);
+void jslex_error(char *msg);
 //int check_newline ();
 //Isso pega o código original, retira os espaços 
 //e separa em palavras usando o espaço como delimitador.

@@ -164,18 +164,18 @@ int vm_loop(void)
                 printf("VM: var %s (uninitialized)\n", o->token_buffer);
             }
             // For now, just acknowledge the variable declaration
-            printf("vm_loop: OP_VAR_TYPE => %s = %d\n",
+            printf("VM: OP_VAR_TYPE => %s = %d\n",
                o->token_buffer, o->value);
             // Later: insert into symbol table
             break;
 
         case OP_EXIT:
-            printf("vm_loop: OP_EXIT\n");
+            printf("VM: OP_EXIT\n");
             VMInfo.state = VM_STATE_SHUTTING_DOWN;
             break;
 
         case OP_EOF:  // The last object
-            printf("vm_loop: OP_EOF\n");
+            printf("VM: OP_EOF\n");
             //exit(0);
             return 0;
             break;
@@ -191,6 +191,7 @@ int vm_loop(void)
     return 0;
 
 fail:
+    printf ("vm_loop: fail\n");
     return (int) -1;
 }
 

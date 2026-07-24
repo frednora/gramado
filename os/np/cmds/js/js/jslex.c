@@ -181,7 +181,7 @@ int eofno=0;
 // Lexer information
 //
 
-struct lexer_info_d  LexerInfo;
+struct jslex_info_d  JSLEX_Info;
 
 //
 // -- Prototypes --------
@@ -206,7 +206,7 @@ int check_newline ()
     while (1)
     {
 	   //Entramos nessa função porque encontramos um '\n'.		
-        LexerInfo.current_line++;
+        JSLEX_Info.current_line++;
 		//printf(" [LF1] ");
 		
 		//pega mais um depois do '\n'
@@ -276,11 +276,10 @@ int check_newline ()
 };
 */
 
-void error(char *msg)
+void jslex_error(char *msg)
 {
-    printf ("error: %s\n", msg );
+    printf ("jslex_error: %s\n", msg);
 }
-
 
 // __jslex_skip_white_space:
 // Models ε-transitions in automata theory.
@@ -320,7 +319,7 @@ begin:
 
             // ## new lines ##
             case '\n':
-                LexerInfo.current_line++;
+                JSLEX_Info.current_line++;
                 //próximo
                 c = getc(finput);
                 break;
@@ -398,7 +397,7 @@ begin:
                         } else if (c == '\n'){
 
 						    // precisamos contar
-                            LexerInfo.current_line++;
+                            JSLEX_Info.current_line++;
 							//printf(" [LF2] ");
                             c = getc (finput);
 							  
@@ -409,7 +408,7 @@ begin:
 
                             eofno++;
                             printf ("__jslex_skip_white_space: Unterminated comment in line %d\n", 
-                                LexerInfo.current_line );
+                                JSLEX_Info.current_line );
                             exit(1);
 
 						//default
@@ -444,7 +443,7 @@ begin:
 					if( c == '\n' ){
 						//não precisa contar, pois sairemos do switch e 
 						//entraremos no switch novamente agora com \n que será contado na hora apropriada.
-						//LexerInfo.current_line++;
+						//JSLEX_Info.current_line++;
 						//printf(" [LF3] ");
 					    break;
 					}
@@ -497,8 +496,8 @@ again:
         case 0:
             //printf ("js_yylex: 0 or EOF\n");
             eofno++; 
-            LexerInfo.lexer_lastline = LexerInfo.current_line;  // Last line?
-            LexerInfo.lexer_number_of_lines = LexerInfo.lexer_lastline;
+            JSLEX_Info.lexer_lastline = JSLEX_Info.current_line;  // Last line?
+            JSLEX_Info.lexer_number_of_lines = JSLEX_Info.lexer_lastline;
             value = (int) TK_EOF;
             goto done;
             break;
@@ -959,7 +958,7 @@ again:
 
                 // #bugbug
                 printf ("js_yylex: FAIL expected x in constant in line %d", 
-                    LexerInfo.current_line );
+                    JSLEX_Info.current_line );
                 exit (1);
 
             } else {
@@ -1020,7 +1019,7 @@ again:
 	        
 			    //}else if (c == '\n')
 			    //      {
-		        //          LexerInfo.current_line++;
+		        //          JSLEX_Info.current_line++;
 	            //      }
 
 	            //if (p == token_buffer + maxtoken)
@@ -1112,22 +1111,22 @@ again:
             switch (c)
             {
                 // '+-*/'
-                case '+':  LexerInfo.lexer_expression = PLUS_EXPR;       break;
-                case '-':  LexerInfo.lexer_expression = MINUS_EXPR;      break;
-                case '*':  LexerInfo.lexer_expression = MULT_EXPR;       break;
-                case '/':  LexerInfo.lexer_expression = TRUNC_DIV_EXPR;  break;
+                case '+':  JSLEX_Info.lexer_expression = PLUS_EXPR;       break;
+                case '-':  JSLEX_Info.lexer_expression = MINUS_EXPR;      break;
+                case '*':  JSLEX_Info.lexer_expression = MULT_EXPR;       break;
+                case '/':  JSLEX_Info.lexer_expression = TRUNC_DIV_EXPR;  break;
 
-                case '&':  LexerInfo.lexer_expression = BIT_AND_EXPR;     break;
-                case '|':  LexerInfo.lexer_expression = BIT_IOR_EXPR;     break;
-                case '%':  LexerInfo.lexer_expression = TRUNC_MOD_EXPR;   break;
-                case '^':  LexerInfo.lexer_expression = BIT_XOR_EXPR;     break;
+                case '&':  JSLEX_Info.lexer_expression = BIT_AND_EXPR;     break;
+                case '|':  JSLEX_Info.lexer_expression = BIT_IOR_EXPR;     break;
+                case '%':  JSLEX_Info.lexer_expression = TRUNC_MOD_EXPR;   break;
+                case '^':  JSLEX_Info.lexer_expression = BIT_XOR_EXPR;     break;
 
                 // ?
-                case TK_LSHIFT:  LexerInfo.lexer_expression = LSHIFT_EXPR;  break;
-                case TK_RSHIFT:  LexerInfo.lexer_expression = RSHIFT_EXPR;  break;
+                case TK_LSHIFT:  JSLEX_Info.lexer_expression = LSHIFT_EXPR;  break;
+                case TK_RSHIFT:  JSLEX_Info.lexer_expression = RSHIFT_EXPR;  break;
 
-                case '<':  LexerInfo.lexer_expression = LT_EXPR;  break;
-                case '>':  LexerInfo.lexer_expression = GT_EXPR;  break;
+                case '<':  JSLEX_Info.lexer_expression = LT_EXPR;  break;
+                case '>':  JSLEX_Info.lexer_expression = GT_EXPR;  break;
             }
 
             c1 = getc(finput);  // Second char?
@@ -1137,22 +1136,22 @@ again:
                 switch (c)  // First
                 {
                     case '<':
-                        LexerInfo.lexer_expression = LE_EXPR; 
+                        JSLEX_Info.lexer_expression = LE_EXPR; 
                         value = TK_ARITHCOMPARE;  //?
                         goto done;
 
                     case '>':
-                        LexerInfo.lexer_expression = GE_EXPR; 
+                        JSLEX_Info.lexer_expression = GE_EXPR; 
                         value = TK_ARITHCOMPARE;  //?
                         goto done;
 
                     case '!':
-                        LexerInfo.lexer_expression = NE_EXPR; 
+                        JSLEX_Info.lexer_expression = NE_EXPR; 
                         value = TK_EQCOMPARE;  //?
                         goto done;
 
                     case '=':
-                        LexerInfo.lexer_expression = EQ_EXPR; 
+                        JSLEX_Info.lexer_expression = EQ_EXPR; 
                         value = TK_EQCOMPARE;  //?
                         goto done;
                 };
@@ -1195,7 +1194,7 @@ again:
 
 done:
     // Increment counter here, once per token
-    LexerInfo.lexer_token_count++;
+    JSLEX_Info.lexer_token_count++;
     return (int) value;
 }
 
@@ -1211,15 +1210,15 @@ static int __lexerInit(void)
 
 // Line support
 // Arquivo de texto começa com a linha 1
-    LexerInfo.current_line = 1;  // Current line
-    LexerInfo.lexer_firstline=1;
-    LexerInfo.lexer_lastline=1;
-    LexerInfo.lexer_number_of_lines=1;
+    JSLEX_Info.current_line = 1;  // Current line
+    JSLEX_Info.lexer_firstline=1;
+    JSLEX_Info.lexer_lastline=1;
+    JSLEX_Info.lexer_number_of_lines=1;
 
-    LexerInfo.lexer_expression = 0;
+    JSLEX_Info.lexer_expression = 0;
 
     // Token support
-    LexerInfo.lexer_token_count = 0;
+    JSLEX_Info.lexer_token_count = 0;
     number_of_tokens=0;  // Total number of tokens.
     current_token=0;  // The class of the curent token.
     maxtoken = TOKEN_BUFFER_MAX;

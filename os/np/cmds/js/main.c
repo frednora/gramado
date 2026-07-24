@@ -200,10 +200,10 @@ static void debugShowStat(void)
 // lexer
     printf("\n");
     printf("== Lexer ================\n");
-    printf("number of lines: {%d}\n", LexerInfo.lexer_number_of_lines );
-    printf("first line:      {%d}\n", LexerInfo.lexer_firstline );
-    printf("last line:       {%d}\n", LexerInfo.lexer_lastline );
-    printf("token count:     {%d}\n", LexerInfo.lexer_token_count );
+    printf("number of lines: {%d}\n", JSLEX_Info.lexer_number_of_lines );
+    printf("first line:      {%d}\n", JSLEX_Info.lexer_firstline );
+    printf("last line:       {%d}\n", JSLEX_Info.lexer_lastline );
+    printf("token count:     {%d}\n", JSLEX_Info.lexer_token_count );
 
 // -------------------------
 // parser
@@ -524,10 +524,9 @@ int main(int argc, char *argv[])
         printf ("--------------------\n");    
         printf ("OUTPUT FILE:\n");
         printf ("%s\n", outfile);
-        printf ("\n");
+        // printf ("\n");
         printf ("--------------------\n");
-        printf ("number of lines: %d\n", 
-            LexerInfo.current_line );
+        printf ("number of lines: %d\n", JSLEX_Info.current_line );
     }
 
 // -- ir --------
