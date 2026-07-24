@@ -157,9 +157,11 @@ static int gramcnf_initialize(void)
     special_count = 0;
     // ...
 
+
+/*
 // Usado pelo lexar pra saber 
 // qual lugar na lista colocar o lexeme.
-
+// See: jslex_info_d structure.
     current_keyword = 0; 
     current_identifier = 0; 
     current_keyword = 0; 
@@ -167,6 +169,7 @@ static int gramcnf_initialize(void)
     current_string = 0; 
     current_separator = 0; 
     current_special = 0;
+*/
 
 // The 'program' structure.
 

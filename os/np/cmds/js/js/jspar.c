@@ -610,7 +610,8 @@ error0:
 
 static int parse_log(int token)
 {
-    if (token != TK_KEYWORD || keyword_found != KWLOG) {
+    if (token != TK_KEYWORD || JSLEX_Info.keyword_found != KWLOG) 
+    {
         printf("parse_log: wrong token\n");
         exit(1);
     }
@@ -843,7 +844,7 @@ static int parse_var(int token)
 
     // Must start with keyword 'var'
     if ( token != TK_TYPE || 
-         keyword_found != KWVAR) 
+         JSLEX_Info.keyword_found != KWVAR) 
     {
         printf("parse_var: wrong token\n");
         exit(1);
@@ -1016,7 +1017,7 @@ static int parse_return(int token, int *return_value)
     //printf ("parse_return:\n");
 
     // It's not a return statement
-    if ( token != TK_KEYWORD || keyword_found != KWRETURN )
+    if ( token != TK_KEYWORD || JSLEX_Info.keyword_found != KWRETURN )
     {
         printf ("parse_return: It's not a return statement\n");
         exit(1);
@@ -1121,8 +1122,8 @@ static int parse_return(int token, int *return_value)
 #endif
 
 					    constant[CONSTANT_TOKEN] = TK_CONSTANT;
-						constant[CONSTANT_TYPE] = constant_type_found;
-						constant[CONSTANT_BASE] = constant_base_found;
+						constant[CONSTANT_TYPE] = JSLEX_Info.constant_type_found;
+						constant[CONSTANT_BASE] = JSLEX_Info.constant_base_found;
 
 						//#todo: fazer um switch para tipos válidos.
 						strcat( outfile,"  mov eax, ");
@@ -1276,8 +1277,8 @@ do_constant:
 		    real_token_buffer, JSLEX_Info.current_line );	
 #endif
 		constant[CONSTANT_TOKEN] = TK_CONSTANT;
-		constant[CONSTANT_TYPE] = constant_type_found;
-		constant[CONSTANT_BASE] = constant_base_found;
+		constant[CONSTANT_TYPE] = JSLEX_Info.constant_type_found;
+		constant[CONSTANT_BASE] = JSLEX_Info.constant_base_found;
 	
 	} else {
 			//falhou.
@@ -1338,7 +1339,8 @@ static int parse_exit(int token)
 {
     int c = 0;
 
-    if (token != TK_KEYWORD || keyword_found != KWEXIT) {
+    if (token != TK_KEYWORD || JSLEX_Info.keyword_found != KWEXIT) 
+    {
         printf("parse_exit: token error\n");
         exit(1);
     }
@@ -1403,7 +1405,7 @@ static int parse_break(int token)
 {
     int c = 0;
 
-    if (token != TK_KEYWORD || keyword_found != KWBREAK) {
+    if (token != TK_KEYWORD || JSLEX_Info.keyword_found != KWBREAK) {
         printf("parse_break: token error\n");
         exit(1);
     }
@@ -1495,7 +1497,7 @@ static unsigned long parse_sizeof(int token)
 				//if ...
 			    if (c == TK_TYPE)
 				{
-					switch (type_found)
+					switch (JSLEX_Info.type_found)
 					{
 						case TNULL:  Result = sizeof(0);      break;
                         case TVOID:  Result = sizeof(void);   break;
@@ -1854,7 +1856,7 @@ static unsigned long parse_expression(int token)
 						
 					//sizeof	
 					case TK_KEYWORD:
-					    if (keyword_found == KWSIZEOF)
+					    if (JSLEX_Info.keyword_found == KWSIZEOF)
 						{
 							
 #ifdef PARSER_EXPRESSION_VERBOSE
@@ -2244,7 +2246,7 @@ static int parser_box(int last_token, int dump_output)
         exit(1);
     }
 
-    if (type_found != TBOX){
+    if (JSLEX_Info.type_found != TBOX){
         printf("parser_box: expected TBOX\n");
         exit(1);
     }
@@ -2321,8 +2323,8 @@ static int parser_box(int last_token, int dump_output)
                     // >>> peekChar=) significa marcação de tipagem.
                     // >>> peekSymbol=symbol  significa declaração de variável ou função.
                     case TK_TYPE:
-                        id[ID_TYPE] = type_found;
-                        if (type_found == TBOX)
+                        id[ID_TYPE] = JSLEX_Info.type_found;
+                        if (JSLEX_Info.type_found == TBOX)
                         {
                             // printf ("box: Line %d\n", JSLEX_Info.current_line );
                             waiting_identifier_after_type = TRUE;
@@ -2336,7 +2338,7 @@ static int parser_box(int last_token, int dump_output)
                             vm_push(box_obj);
                         }
 
-                        if (type_found == TMETA)
+                        if (JSLEX_Info.type_found == TMETA)
                         {
                             // printf ("meta: Line %d\n", JSLEX_Info.current_line );
                             waiting_identifier_after_type = TRUE;
@@ -2530,7 +2532,7 @@ static int parser_box(int last_token, int dump_output)
                         {
                             waiting_identifier_after_type = FALSE;
                             
-                            if (type_found == TMETA)
+                            if (JSLEX_Info.type_found == TMETA)
                             {
                                 memset(metadata[meta_index].meta_tag, 0, 64);
                                 string_size = (size_t) strlen(real_token_buffer);
@@ -2548,7 +2550,7 @@ static int parser_box(int last_token, int dump_output)
                                     string_size );
                                 metadata[meta_index].tag_size = (size_t) string_size;
                             }
-                            if (type_found == TBOX)
+                            if (JSLEX_Info.type_found == TBOX)
                             {
                                 // #todo
                                 // Save the box symbol in some place.
@@ -2780,7 +2782,7 @@ static int parser_box(int last_token, int dump_output)
 
                         //-------------------------
                         // STMT: 'return'.
-                        if (keyword_found == KWRETURN)
+                        if (JSLEX_Info.keyword_found == KWRETURN)
                         {
                             // #debug
                             //printf("State3: keyword return found in line %d\n",JSLEX_Info.current_line);
@@ -2827,7 +2829,7 @@ static int parser_box(int last_token, int dump_output)
 
                         //-------------------------
                         // STMT: 'exit'.
-                        if (keyword_found == KWEXIT)
+                        if (JSLEX_Info.keyword_found == KWEXIT)
                         {
                             int kwexit_return = 0;
                             kwexit_return = (int) parse_exit(TK_KEYWORD);
@@ -2852,7 +2854,7 @@ static int parser_box(int last_token, int dump_output)
 
                         //-------------------------
                         // STMT: 'break'.
-                        if (keyword_found == KWBREAK)
+                        if (JSLEX_Info.keyword_found == KWBREAK)
                         {
                             int kwbreak_return = 0;
                             kwbreak_return = (int) parse_break(TK_KEYWORD);
@@ -2879,7 +2881,7 @@ static int parser_box(int last_token, int dump_output)
                         // #todo: 
                         // + Pegamos o pŕoximo token.
                         // + Emitimos um jmp e o symbol.
-                        if (keyword_found == KWGOTO)
+                        if (JSLEX_Info.keyword_found == KWGOTO)
                         {
                             printf("State3: goto stmt not supported in line %d \n", 
                                 JSLEX_Info.current_line );
@@ -2889,7 +2891,7 @@ static int parser_box(int last_token, int dump_output)
 
                         //-------------------------
                         // STMT: 'if'
-                        if (keyword_found == KWIF)
+                        if (JSLEX_Info.keyword_found == KWIF)
                         {
                             //printf ("State3: TK_KEYWORD={%s} KWIF in line %d \n", 
                                 //real_token_buffer, JSLEX_Info.current_line );
@@ -2903,7 +2905,7 @@ static int parser_box(int last_token, int dump_output)
 
                         //-------------------------
                         // STMT: 'while' 
-                        if (keyword_found == KWWHILE)
+                        if (JSLEX_Info.keyword_found == KWWHILE)
                         {
                             While_Result = (int) parse_while(TK_KEYWORD);
                             //  printf("WHILE-RESULT={%d}\n",While_Result);
@@ -2913,7 +2915,7 @@ static int parser_box(int last_token, int dump_output)
 
                         //-------------------------
                         // STMT: 'name'
-                        if (keyword_found == KWNAME)
+                        if (JSLEX_Info.keyword_found == KWNAME)
                         {
                             //printf ("State3: TK_KEYWORD={%s} KWNAME in line %d \n", 
                             //    real_token_buffer, JSLEX_Info.current_line );
@@ -2925,7 +2927,7 @@ static int parser_box(int last_token, int dump_output)
 
                         //-------------------------
                         // STMT: 'content'
-                        if (keyword_found == KWCONTENT)
+                        if (JSLEX_Info.keyword_found == KWCONTENT)
                         {
                             //printf ("State3: TK_KEYWORD={%s} KWCONTENT in line %d \n", 
                             //    real_token_buffer, JSLEX_Info.current_line );
@@ -2938,7 +2940,7 @@ static int parser_box(int last_token, int dump_output)
                         //-------------------------
                         // STMT: 'print'
                         // The print inside the meta()
-                        if (keyword_found == KWLOG)
+                        if (JSLEX_Info.keyword_found == KWLOG)
                         {
                             parse_log(TK_KEYWORD);
                             State = 1;  // Restart from state 1
@@ -3176,7 +3178,7 @@ int parser_loop(int dump_output)
 
                     case TK_TYPE:
                         // box statement starts with a type
-                        if (type_found == TBOX)
+                        if (JSLEX_Info.type_found == TBOX)
                         {
                             //printf ("box: Line %d\n", JSLEX_Info.current_line );
                             // IN:
@@ -3194,13 +3196,13 @@ int parser_loop(int dump_output)
                             }
                             //break;
                         }
-                        if (type_found == TMETA)
+                        if (JSLEX_Info.type_found == TMETA)
                         {
                             // Can't handle meta outside box.
                             printf ("meta: [unexpected] in line %d\n", JSLEX_Info.current_line );
                             exit(1);
                         }
-                        if (type_found == TVAR)
+                        if (JSLEX_Info.type_found == TVAR)
                         {
                             parse_var(TK_TYPE);
                             State = 1;
@@ -3217,14 +3219,14 @@ int parser_loop(int dump_output)
 
                     // processing kw in the state 1
                     case TK_KEYWORD:
-                        if (keyword_found == KWLOG)
+                        if (JSLEX_Info.keyword_found == KWLOG)
                         {
                             //("log found\n");
                             parse_log(TK_KEYWORD);
                             State = 1;
                             break;
                         }
-                        else if (keyword_found == KWEXIT)
+                        else if (JSLEX_Info.keyword_found == KWEXIT)
                         {
                             // printf("exit found:\n"); 
 
@@ -3260,7 +3262,7 @@ int parser_loop(int dump_output)
                 {
                     /*
                     case TK_KEYWORD:
-                        if (keyword_found == KWEXIT)
+                        if (JSLEX_Info.keyword_found == KWEXIT)
                         {
                             printf("exit found:\n"); 
                             // exit(1);

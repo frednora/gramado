@@ -181,7 +181,7 @@ int eofno=0;
 // Lexer information
 //
 
-struct lexer_info_d  LexerInfo;
+struct htmllex_info_d  LexerInfo;
 
 //
 // -- Prototypes --------

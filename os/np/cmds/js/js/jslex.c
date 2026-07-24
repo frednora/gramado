@@ -118,64 +118,6 @@ that require multiple input symbols before reaching an accepting state.
 
 #include "../gramcnf.h"
 
-// ## current ##
-// Usado pelo lexer pra saber qual lugar na lista 
-// colocar o lexeme.
-int current_keyword=0;
-int current_identifier=0; 
-int current_constant=0;
-int current_string=0;
-int current_separator=0; 
-int current_special=0;
-
-
-// Token support
-//int lexer_token_count=0;
-int number_of_tokens=0;  // Total number of tokens.
-int current_token=0;  // The class of the curent token.
-
-// When some element was found.
-int directive_fould=0;
-int type_found=0;
-int modifier_found=0;
-int qualifier_found=0;
-int keyword_found=0;
-int constant_type_found=0;
-int constant_base_found=0;
-int return_found=0;
-int main_found=0;
-
-//
-// Return support
-//
-
-// Tipo de retorno da função.
-int function_return_type=0;
-// Tipo de retorno da função main.
-int main_return_type=0;
-
-// Índices na lista de tokens.
-int return_index=0;   // Índice para a posição na lista onde está o retorno.
-int next_index=0;     //índice do próximo token na lista de tokens.
-int current_index=0;
-
-// Flag para o tratamento da string dentro do asm inline.
-// \" marcando início e fim de string.
-int string_flag=0;
-
-//tipo que foi encontrado.
-int current_type=0;
-
-//()
-int parentheses_start=0;
-int parentheses_end=0;
-int parentheses_count=0;
-//{}
-int brace_start=0;
-int brace_end=0;
-int brace_count=0;
-
-int eofno=0;
 
 //
 // Lexer information
@@ -406,7 +348,7 @@ begin:
 								
                         }else if (c == EOF || c == '\0'){  
 
-                            eofno++;
+                            JSLEX_Info.eofno++;
                             printf ("__jslex_skip_white_space: Unterminated comment in line %d\n", 
                                 JSLEX_Info.current_line );
                             exit(1);
@@ -495,7 +437,7 @@ again:
         case EOF:
         case 0:
             //printf ("js_yylex: 0 or EOF\n");
-            eofno++; 
+            JSLEX_Info.eofno++; 
             JSLEX_Info.lexer_lastline = JSLEX_Info.current_line;  // Last line?
             JSLEX_Info.lexer_number_of_lines = JSLEX_Info.lexer_lastline;
             value = (int) TK_EOF;
@@ -585,8 +527,8 @@ again:
             if ( TokenSize == 6 && 
                  gramado_strncmp( real_token_buffer, "signed", 6 ) == 0 )
             {
-                keyword_found  = KWSIGNED;
-                modifier_found = MSIGNED;
+                JSLEX_Info.keyword_found  = KWSIGNED;
+                JSLEX_Info.modifier_found = MSIGNED;
                 //return (int) TK_MODIFIER;
                 value = (int) TK_MODIFIER;
                 goto done;
@@ -594,8 +536,8 @@ again:
             if ( TokenSize == 8 && 
                  gramado_strncmp( real_token_buffer, "unsigned", 8 ) == 0 )
             {
-                keyword_found  = KWUNSIGNED;
-                modifier_found = MUNSIGNED;
+                JSLEX_Info.keyword_found  = KWUNSIGNED;
+                JSLEX_Info.modifier_found = MUNSIGNED;
                 //return (int) TK_MODIFIER;
                 value = (int) TK_MODIFIER;
                 goto done; 
@@ -603,8 +545,8 @@ again:
             if ( TokenSize == 6 && 
                  gramado_strncmp( real_token_buffer, "inline", 6 ) == 0 )
             {
-                keyword_found  = KWINLINE;
-                modifier_found = MINLINE;
+                JSLEX_Info.keyword_found  = KWINLINE;
+                JSLEX_Info.modifier_found = MINLINE;
                 //return (int) TK_MODIFIER;
                 value = (int) TK_MODIFIER;
                 goto done;
@@ -612,8 +554,8 @@ again:
             if ( TokenSize == 6 && 
                 gramado_strncmp( real_token_buffer, "static", 6 ) == 0 )
             {
-                keyword_found  = KWSTATIC;
-                modifier_found = MSTATIC;
+                JSLEX_Info.keyword_found  = KWSTATIC;
+                JSLEX_Info.modifier_found = MSTATIC;
                 //return (int) TK_MODIFIER;
                 value = (int) TK_MODIFIER;
                 goto done;
@@ -621,8 +563,8 @@ again:
             if ( TokenSize == 8 && 
                  gramado_strncmp( real_token_buffer, "volatile", 8 ) == 0  )
             {
-                keyword_found  = KWVOLATILE;
-                modifier_found = MVOLATILE;
+                JSLEX_Info.keyword_found  = KWVOLATILE;
+                JSLEX_Info.modifier_found = MVOLATILE;
                 //return (int) TK_MODIFIER;
                 value = (int) TK_MODIFIER;
                 goto done;
@@ -633,8 +575,8 @@ again:
             if ( TokenSize == 4 && 
                  gramado_strncmp( real_token_buffer, "void", 4 ) == 0 )
             {
-                keyword_found = KWVOID;
-                type_found    = TVOID;
+                JSLEX_Info.keyword_found = KWVOID;
+                JSLEX_Info.type_found    = TVOID;
                 //return (int) TK_TYPE;
                 value = (int) TK_TYPE;
                 goto done;
@@ -642,8 +584,8 @@ again:
             if ( TokenSize == 4 && 
                  gramado_strncmp( real_token_buffer, "char", 4 ) == 0 )
             {
-                keyword_found = KWCHAR;
-                type_found    = TCHAR;
+                JSLEX_Info.keyword_found = KWCHAR;
+                JSLEX_Info.type_found    = TCHAR;
                 //return (int) TK_TYPE;
                 value = (int) TK_TYPE;
                 goto done;
@@ -651,8 +593,8 @@ again:
             if ( TokenSize == 5 && 
                  gramado_strncmp( real_token_buffer, "short", 5 ) == 0 )
             {
-                keyword_found = KWSHORT;
-                type_found    = TSHORT;
+                JSLEX_Info.keyword_found = KWSHORT;
+                JSLEX_Info.type_found    = TSHORT;
                 //return (int) TK_TYPE;
                 value = (int) TK_TYPE;
                 goto done;
@@ -660,8 +602,8 @@ again:
             if ( TokenSize == 3 && 
                  gramado_strncmp( real_token_buffer, "int", 3 ) == 0 )
             {
-                keyword_found = KWINT;
-                type_found    = TINT;
+                JSLEX_Info.keyword_found = KWINT;
+                JSLEX_Info.type_found    = TINT;
                 //return (int) TK_TYPE;
                 value = (int) TK_TYPE;
                 goto done;
@@ -669,8 +611,8 @@ again:
             if ( TokenSize == 4 && 
                  gramado_strncmp( real_token_buffer, "long", 4 ) == 0 )
             {
-                keyword_found = KWLONG;
-                type_found    = TLONG;
+                JSLEX_Info.keyword_found = KWLONG;
+                JSLEX_Info.type_found    = TLONG;
                 //return (int) TK_TYPE;
                 value = (int) TK_TYPE;
                 goto done;
@@ -678,8 +620,8 @@ again:
             if ( TokenSize == 3 && 
                  gramado_strncmp( real_token_buffer, "box", 3 ) == 0 )
             {
-                keyword_found = KWBOX;
-                type_found    = TBOX;
+                JSLEX_Info.keyword_found = KWBOX;
+                JSLEX_Info.type_found    = TBOX;
                 //return (int) TK_TYPE;
                 value = (int) TK_TYPE;
                 goto done;
@@ -689,8 +631,8 @@ again:
             if ( TokenSize == 4 && 
                  gramado_strncmp( real_token_buffer, "meta", 4 ) == 0 )
             {
-                keyword_found = KWMETA;
-                type_found    = TMETA;
+                JSLEX_Info.keyword_found = KWMETA;
+                JSLEX_Info.type_found    = TMETA;
                 //return (int) TK_TYPE;
                 value = (int) TK_TYPE;
                 goto done;
@@ -698,8 +640,8 @@ again:
             if ( TokenSize == 8 && 
                  gramado_strncmp( real_token_buffer, "function", 8 ) == 0 )
             {
-                keyword_found = KWFUNCTION;
-                type_found    = TFUNCTION;
+                JSLEX_Info.keyword_found = KWFUNCTION;
+                JSLEX_Info.type_found    = TFUNCTION;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
@@ -707,8 +649,8 @@ again:
             if ( TokenSize == 5 && 
                  gramado_strncmp( real_token_buffer, "const", 5 ) == 0  )
             {
-                keyword_found = KWCONST;
-                type_found    = TCONST;
+                JSLEX_Info.keyword_found = KWCONST;
+                JSLEX_Info.type_found    = TCONST;
                 //return (int) TK_TYPE;
                 value = (int) TK_TYPE;
                 goto done;
@@ -716,8 +658,8 @@ again:
             if ( TokenSize == 3 && 
                  gramado_strncmp( real_token_buffer, "let", 3 ) == 0  )
             {
-                keyword_found = KWLET;
-                type_found    = TLET;
+                JSLEX_Info.keyword_found = KWLET;
+                JSLEX_Info.type_found    = TLET;
                 //return (int) TK_TYPE;
                 value = (int) TK_TYPE;
                 goto done;
@@ -725,8 +667,8 @@ again:
             if ( TokenSize == 3 && 
                  gramado_strncmp( real_token_buffer, "var", 3 ) == 0  )
             {
-                keyword_found = KWVAR;
-                type_found    = TVAR;
+                JSLEX_Info.keyword_found = KWVAR;
+                JSLEX_Info.type_found    = TVAR;
                 //return (int) TK_TYPE;
                 value = (int) TK_TYPE;
                 goto done;
@@ -737,7 +679,7 @@ again:
             if ( TokenSize == 4 && 
                  gramado_strncmp( real_token_buffer, "name", 4 ) == 0 )
             {
-                keyword_found = KWNAME;
+                JSLEX_Info.keyword_found = KWNAME;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
@@ -745,21 +687,21 @@ again:
             if ( TokenSize == 7 && 
                  gramado_strncmp( real_token_buffer, "content", 7 ) == 0 )
             {
-                keyword_found = KWCONTENT;
+                JSLEX_Info.keyword_found = KWCONTENT;
                 value = (int) TK_KEYWORD;
                 goto done;
             }
             if ( TokenSize == 3 && 
                  gramado_strncmp( real_token_buffer, "log", 3 ) == 0 )
             {
-                keyword_found = KWLOG;
+                JSLEX_Info.keyword_found = KWLOG;
                 value = (int) TK_KEYWORD;
                 goto done;
             }
             if ( TokenSize == 4 && 
                  gramado_strncmp( real_token_buffer, "goto", 4 ) == 0 )
             {
-                keyword_found = KWGOTO;
+                JSLEX_Info.keyword_found = KWGOTO;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
@@ -767,7 +709,7 @@ again:
             if ( TokenSize == 6 && 
                  gramado_strncmp( real_token_buffer, "return", 6 ) == 0 )
             {
-                keyword_found = KWRETURN;
+                JSLEX_Info.keyword_found = KWRETURN;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
@@ -775,7 +717,7 @@ again:
             if ( TokenSize == 4 && 
                  gramado_strncmp( real_token_buffer, "exit", 4 ) == 0 )
             {
-                keyword_found = KWEXIT;
+                JSLEX_Info.keyword_found = KWEXIT;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
@@ -783,7 +725,7 @@ again:
             if ( TokenSize == 6 && 
                  gramado_strncmp( real_token_buffer, "switch", 6 ) == 0 )
             {
-                keyword_found = KWSWITCH;
+                JSLEX_Info.keyword_found = KWSWITCH;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
@@ -791,7 +733,7 @@ again:
             if ( TokenSize == 4 && 
                  gramado_strncmp( real_token_buffer, "case", 4 ) == 0 )
             {
-                keyword_found = KWCASE;
+                JSLEX_Info.keyword_found = KWCASE;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
@@ -799,7 +741,7 @@ again:
             if ( TokenSize == 5 && 
                  gramado_strncmp( real_token_buffer, "break", 5 ) == 0 )
             {
-                keyword_found = KWBREAK;
+                JSLEX_Info.keyword_found = KWBREAK;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
@@ -807,7 +749,7 @@ again:
             if ( TokenSize == 7 && 
                  gramado_strncmp( real_token_buffer, "default", 7 ) == 0 )
             {
-                keyword_found = KWDEFAULT;
+                JSLEX_Info.keyword_found = KWDEFAULT;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
@@ -815,7 +757,7 @@ again:
             if ( TokenSize == 3 && 
                  gramado_strncmp( real_token_buffer, "for", 3 ) == 0 )
             {
-                keyword_found = KWFOR;
+                JSLEX_Info.keyword_found = KWFOR;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
@@ -823,7 +765,7 @@ again:
             if ( TokenSize == 8 && 
                  gramado_strncmp( real_token_buffer, "continue", 8 ) == 0 )
             {
-                keyword_found = KWCONTINUE;
+                JSLEX_Info.keyword_found = KWCONTINUE;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
@@ -831,7 +773,7 @@ again:
             if ( TokenSize == 2 && 
                  gramado_strncmp( real_token_buffer, "do", 2 ) == 0 )
             {
-                keyword_found = KWDO;
+                JSLEX_Info.keyword_found = KWDO;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
@@ -839,7 +781,7 @@ again:
             if ( TokenSize == 5 && 
                  gramado_strncmp( real_token_buffer, "while", 5 ) == 0 )
             {
-                keyword_found = KWWHILE;
+                JSLEX_Info.keyword_found = KWWHILE;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
@@ -847,7 +789,7 @@ again:
             if ( TokenSize == 2 && 
                  gramado_strncmp( real_token_buffer, "if", 2 ) == 0 )
             {
-                keyword_found = KWIF;
+                JSLEX_Info.keyword_found = KWIF;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
@@ -855,7 +797,7 @@ again:
             if ( TokenSize == 4 && 
                  gramado_strncmp( real_token_buffer, "else", 4 ) == 0 )
             {
-                keyword_found = KWELSE;
+                JSLEX_Info.keyword_found = KWELSE;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
@@ -863,7 +805,7 @@ again:
             if ( TokenSize == 5 && 
                  gramado_strncmp( real_token_buffer, "union", 5 ) == 0 )
             {
-                keyword_found = KWUNION;
+                JSLEX_Info.keyword_found = KWUNION;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
@@ -871,7 +813,7 @@ again:
             if ( TokenSize == 6 && 
                  gramado_strncmp( real_token_buffer, "struct", 6 ) == 0 )
             {
-                keyword_found = KWSTRUCT;
+                JSLEX_Info.keyword_found = KWSTRUCT;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
@@ -879,7 +821,7 @@ again:
             if ( TokenSize == 4 && 
                  gramado_strncmp( real_token_buffer, "enum", 4 ) == 0 )
             {
-                keyword_found = KWENUM;
+                JSLEX_Info.keyword_found = KWENUM;
                 //return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
@@ -887,7 +829,7 @@ again:
             if ( TokenSize == 6 && 
                  gramado_strncmp( real_token_buffer, "sizeof", 6 ) == 0 )
             {
-                keyword_found = KWSIZEOF;
+                JSLEX_Info.keyword_found = KWSIZEOF;
                 // return (int) TK_KEYWORD;
                 value = (int) TK_KEYWORD;
                 goto done;
@@ -945,8 +887,8 @@ again:
 
                             value = TK_CONSTANT;  // We have a constant token
 
-                            //constant_type_found = //#todo tem que contar. 
-                            constant_base_found = CONSTANT_BASE_HEX;
+                            //JSLEX_Info.constant_type_found = //#todo tem que contar. 
+                            JSLEX_Info.constant_base_found = CONSTANT_BASE_HEX;
                             goto constant_done;
                         }
 
@@ -980,8 +922,8 @@ again:
 
 						value = TK_CONSTANT;  // We have a constant token
 
-						//constant_type_found = //#todo tem que contar. 
-						constant_base_found = CONSTANT_BASE_DEC;
+						//JSLEX_Info.constant_type_found = //#todo tem que contar. 
+						JSLEX_Info.constant_base_found = CONSTANT_BASE_DEC;
                         goto constant_done;
                     }
 
@@ -1219,20 +1161,21 @@ static int __lexerInit(void)
 
     // Token support
     JSLEX_Info.lexer_token_count = 0;
-    number_of_tokens=0;  // Total number of tokens.
-    current_token=0;  // The class of the curent token.
+
     maxtoken = TOKEN_BUFFER_MAX;
 
     //()
-    parentheses_start=0;
-    parentheses_end=0;
-    parentheses_count=0;
-    //{}
-    brace_start=0;
-    brace_end=0;
-    brace_count=0;
+    JSLEX_Info.parentheses_start=0;
+    JSLEX_Info.parentheses_end=0;
+    JSLEX_Info.parentheses_count=0;
 
-    eofno = 0;  // eof++
+    //{}
+    JSLEX_Info.brace_start=0;
+    JSLEX_Info.brace_end=0;
+    JSLEX_Info.brace_count=0;
+
+
+    JSLEX_Info.eofno = 0;
 
 //
 // Toke buffer.

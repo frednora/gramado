@@ -23,6 +23,9 @@
 // used by lexer and parser
 #include "object.h"
 
+#include "common/lexer.h"
+#include "common/parser.h"
+
 #include "js/jslex.h"
 #include "js/jspar.h"
 #include "js/jsvm.h"

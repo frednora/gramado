@@ -6,30 +6,6 @@
 #ifndef __JSLEX_H
 #define __JSLEX_H    1
 
-// ## current ##
-// Usado pelo lexer pra saber qual lugar na lista 
-// colocar o lexeme.
-extern int current_keyword; 
-extern int current_identifier; 
-extern int current_constant; 
-extern int current_string; 
-extern int current_separator; 
-extern int current_special;
-
-// #bugbug: 
-// O lexer vai usar esse 
-// porque a rotina no ctype pode estar com problema. #todo 
-
-#define lexer_isalnum(char) \
-    ((char >= 'a' && char <= 'z') || \
-    (char >= 'A' && char <= 'Z')  || \
-    (char >= '0' && char <= '9'))
-
-// #define isdigit(char) (char >= '0' && char <= '9')
-
-/* token that represents end-of-file */
-// 'EOF'
-#define ENDFILE  -1  
 
 // ------------------------------------------
 // Lexer codes
@@ -55,55 +31,7 @@ typedef enum {
 }lexerexpr_t;  //lexercode_t;
 
 
-// Token support
-extern int number_of_tokens;
-extern int current_token;  // The class of the curent token.
-
-extern int eofno;
-
-// When some element was found.
-extern int directive_fould;
-extern int type_found;
-extern int modifier_found;
-extern int qualifier_found;
-extern int keyword_found;
-extern int constant_type_found;
-extern int constant_base_found;
-extern int return_found;
-extern int main_found;
-
-
-//
-// Return support
-//
-
-// Tipo de retorno da função.
-extern int function_return_type;
-// Tipo de retorno da função main.
-extern int main_return_type;
-
-// Índices na lista de tokens.
-extern int return_index;  // Índice para a posição na lista onde está o retorno.
-extern int next_index;    //índice do próximo token na lista de tokens.
-extern int current_index;
-
-// Flag para o tratamento da string dentro do asm inline.
-// \" marcando início e fim de string.
-extern int string_flag;
-
-//tipo que foi encontrado.
-extern int current_type;
-
-//()
-extern int parentheses_start;
-extern int parentheses_end;
-extern int parentheses_count;
-//{}
-extern int brace_start;
-extern int brace_end;
-extern int brace_count;
-
-
+// jslex info
 struct jslex_info_d 
 {
     int lexer_token_count;
@@ -112,15 +40,52 @@ struct jslex_info_d
 // Line support
 //
 
-    int lexer_firstline;  // First line
+    int lexer_firstline;        // First line
     int lexer_lastline;
-    int lexer_number_of_lines;   // Total numbe rof lines
-    int current_line;  // Current line
-
+    int lexer_number_of_lines;  // Total numbe rof lines
+    int current_line;           // Current line
 
     int lexer_expression;
 
     // ...
+
+// --------------------------------------
+// When some element was found
+    int directive_found;
+    int type_found;
+    int modifier_found;
+    int qualifier_found;
+    int keyword_found;
+    int constant_type_found;
+    int constant_base_found;
+    int return_found;
+    int main_found;
+
+/*
+// #test
+// ## current ##
+// Usado pelo lexer pra saber 
+// qual lugar na lista colocar o lexeme.
+    int current_keyword;
+    int current_identifier; 
+    int current_constant;
+    int current_string;
+    int current_separator; 
+    int current_special;
+*/
+
+    int eofno;
+
+//()
+    int parentheses_start;
+    int parentheses_end;
+    int parentheses_count;
+//{}
+    int brace_start;
+    int brace_end;
+    int brace_count;
+
+
 };
 extern struct jslex_info_d  JSLEX_Info;
 

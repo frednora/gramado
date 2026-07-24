@@ -104,7 +104,7 @@ extern int brace_end;
 extern int brace_count;
 
 
-struct lexer_info_d 
+struct htmllex_info_d 
 {
     int lexer_token_count;
 
@@ -122,7 +122,7 @@ struct lexer_info_d
 
     // ...
 };
-extern struct lexer_info_d  LexerInfo;
+extern struct htmllex_info_d  LexerInfo;
 
 
 //
