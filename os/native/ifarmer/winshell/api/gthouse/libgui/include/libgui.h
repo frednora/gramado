@@ -243,6 +243,11 @@ libgui_set_ui_component_dimension(
 	unsigned long width,
 	unsigned long height );
 
+int 
+libgui_set_ui_component_flags(
+    struct ui_component_d *uic,
+	unsigned long flags );
+
 void libgui_set_mouse_pointer(unsigned long x, unsigned long y);
 
 //

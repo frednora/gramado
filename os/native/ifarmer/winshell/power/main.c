@@ -255,6 +255,7 @@ static void update_children(int fd)
         uic_button_restart,
         button_w,
         button_h );
+    libgui_set_ui_component_flags(uic_button_restart, (0x0001 | 0x0002) );
     libgui_redraw_ui_component(uic_button_restart, dc00);
 
 // -------------------------------------------------
@@ -278,6 +279,7 @@ static void update_children(int fd)
         uic_button_shutdown,
         button_w,
         button_h );
+    libgui_set_ui_component_flags(uic_button_shutdown, (0x0001 | 0x0002) );
     libgui_redraw_ui_component(uic_button_shutdown, dc00);
 
 //
@@ -301,6 +303,7 @@ static void update_children(int fd)
         uic_footer,
         wi.cr_width,
         24 );
+    libgui_set_ui_component_flags(uic_footer,0x0001);
     libgui_redraw_ui_component(uic_footer, dc00);
 
 }
@@ -844,6 +847,7 @@ int main(int argc, char *argv[])
             24,
             "-- footer --"
         );
+
 
 // ================================================================================
 

@@ -128,6 +128,11 @@ struct ui_component_d
     int id;
     int type;
 
+// 0x0001 - (centered horizontally) (header, label, footer ...)
+// 0x0002 - (centered vertically)   (header, label, footer ...)
+// 0x0004 ...
+    unsigned long flags;
+
 // Relative with the viewport 
 // (client area or screen of its in fullscreen mode)
     unsigned long left;
