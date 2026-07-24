@@ -49,6 +49,8 @@ typedef enum {
     OP_EOF,           // EOF. The last object
   
     // New high-level ops
+    OP_CONST_TYPE,
+    OP_LET_TYPE,
     OP_VAR_TYPE,
     OP_BOX_TYPE,
     OP_BOX_BEGIN,

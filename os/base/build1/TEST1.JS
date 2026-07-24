@@ -8,9 +8,13 @@ box MyBox
 
 log ("Bye");
 
-var MyVARIABLE = 1 + 2;
+const MyCONST: "hello const";
+let   MyLET:   "hello let";
+var   MyVAR:   "hello var";
 
-var MyVar: "this is a js var";
+const MYCONST_VALUE = 1 + 2;
+const MYLET_VALUE   = 3 + 4;
+const MYVAR_VALUE   = 5 + 6;
 
 exit;
 

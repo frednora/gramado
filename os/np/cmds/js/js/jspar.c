@@ -828,13 +828,292 @@ static int parse_number(int olen)
 // const_stmt → "const" Symbol "=" expression ";"
 static int parse_const(int token)
 {
-    return -1;
+    int c = 0;
+
+    // Must start with keyword 'const'
+    if ( token != TK_TYPE || 
+         JSLEX_Info.keyword_found != KWCONST) 
+    {
+        printf("parse_const: wrong token\n");
+        exit(1);
+    }
+
+    // Next: identifier (variable name)
+    c = js_yylex();
+    if (c != TK_IDENTIFIER) {
+        printf("parse_const: expected identifier\n");
+        exit(1);
+    }
+    char const_name[TOKEN_BUFFER_MAX];
+    strncpy(const_name, real_token_buffer, TOKEN_BUFFER_MAX);
+
+    //printf("breakpoint\n");
+    //while(1){}
+
+//
+// After identifyer
+//
+
+    /*
+    // Next: '='
+    c = js_yylex();
+    if ( c != TK_ASSIGN || 
+         strcmp(real_token_buffer, "=") != 0 ) 
+    {
+        printf("parse_const: expected '='\n");
+        exit(1);
+    }
+    */
+
+    c = js_yylex();
+
+    // Not the assign symbol
+    if ( c != '=' ) 
+    {
+
+        // If next token is ';', it's just a declaration
+        if (c == TK_SEPARATOR && strcmp(real_token_buffer, ";") == 0) 
+        {
+            struct object_d *o = malloc(sizeof(struct object_d));
+            if (!o) { printf("parse_const: malloc failed\n"); exit(1); }
+            memset(o, 0, sizeof(struct object_d));
+            strncpy(o->token_buffer, const_name, TOKEN_BUFFER_MAX);
+            o->line = JSLEX_Info.current_line;
+            o->token_type = TK_TYPE;
+            o->keyword = KWCONST;
+            o->opcode = OP_CONST_TYPE;
+            o->operand = OPERAND_NONE;   // no value assigned
+            o->value = 0;                // default to 0 or mark as uninitialized
+            vm_push(o);
+
+            return TK_SEPARATOR;
+        }
+
+        // Colon means string assignment
+        if (c == TK_SEPARATOR && strcmp(real_token_buffer, ":") == 0) 
+        {
+            c = js_yylex();
+            if (c != TK_STRING) {
+                printf("parse_const: expected string after ':'\n");
+                exit(1);
+            }
+
+            struct object_d *o = malloc(sizeof(struct object_d));
+            if (!o) { printf("parse_const: malloc failed\n"); exit(1); }
+            memset(o, 0, sizeof(struct object_d));
+            //strncpy(o->token_buffer, const_name, TOKEN_BUFFER_MAX);
+            strncpy(o->token_buffer, real_token_buffer, TOKEN_BUFFER_MAX);
+            o->line = JSLEX_Info.current_line;
+            o->token_type = TK_TYPE;
+            o->keyword = KWCONST;
+            o->opcode = OP_CONST_TYPE;
+            o->operand = OPERAND_STRING;   // new operand type
+            //strncpy(o->string_value, real_token_buffer, TOKEN_BUFFER_MAX);
+            vm_push(o);
+
+            // Expect ';' after string
+            c = js_yylex();
+            if (c != TK_SEPARATOR || strcmp(real_token_buffer, ";") != 0) {
+                printf("parse_var: expected ';' after string\n");
+                exit(1);
+            }
+
+            return TK_SEPARATOR;
+        }
+
+        // ...
+
+        // Default
+        printf("parse_const: expected '=' or ';'\n");
+        exit(1);
+    }
+
+    //printf("breakpoint: %c %d\n",c,c);
+    //while(1){}
+
+    unsigned long expr_value=0;
+
+    // After '='
+    //c = js_yylex();
+
+    // If it's a constant, unget it and let tree_eval() handle it
+    //if (c == TK_CONSTANT) 
+    //{
+        //ungetc(c, finput);   // push back into lexer stream
+        expr_value = (unsigned long) tree_eval();
+        printf("parse_const: value={%d}\n", expr_value);
+    //}
+
+    /*
+    // #ps: The function tree_eval() also consumes the ';' token.
+    // Next: ';'
+    c = js_yylex();
+    if (c != TK_SEPARATOR || strcmp(real_token_buffer, ";") != 0) 
+    {
+        printf("parse_const: expected ';'\n");
+        exit(1);
+    }
+    */
+
+    // Semantic action: create object
+    struct object_d *o = malloc(sizeof(struct object_d));
+    if (!o) { printf("parse_const: malloc failed\n"); exit(1); }
+    memset(o, 0, sizeof(struct object_d));
+    strncpy(o->token_buffer, const_name, TOKEN_BUFFER_MAX);
+    o->line = JSLEX_Info.current_line;
+    o->token_type = TK_TYPE;
+    o->keyword = KWCONST;
+    o->opcode = OP_CONST_TYPE;
+    o->operand = OPERAND_IMMEDIATE;
+    o->value = (unsigned long) expr_value;
+    vm_push(o);
+
+    return TK_SEPARATOR;
 }
 
 // let_stmt → "let" Symbol "=" expression ";"
 static int parse_let(int token)
 {
-    return -1;
+    int c = 0;
+
+    // Must start with keyword 'let'
+    if ( token != TK_TYPE || 
+         JSLEX_Info.keyword_found != KWLET) 
+    {
+        printf("parse_let: wrong token\n");
+        exit(1);
+    }
+
+    // Next: identifier (variable name)
+    c = js_yylex();
+    if (c != TK_IDENTIFIER) {
+        printf("parse_let: expected identifier\n");
+        exit(1);
+    }
+    char let_name[TOKEN_BUFFER_MAX];
+    strncpy(let_name, real_token_buffer, TOKEN_BUFFER_MAX);
+
+    //printf("breakpoint\n");
+    //while(1){}
+
+//
+// After identifyer
+//
+
+    /*
+    // Next: '='
+    c = js_yylex();
+    if ( c != TK_ASSIGN || 
+         strcmp(real_token_buffer, "=") != 0 ) 
+    {
+        printf("parse_let: expected '='\n");
+        exit(1);
+    }
+    */
+
+    c = js_yylex();
+
+    // Not the assign symbol
+    if ( c != '=' ) 
+    {
+        // If next token is ';', it's just a declaration
+        if (c == TK_SEPARATOR && strcmp(real_token_buffer, ";") == 0) 
+        {
+            struct object_d *o = malloc(sizeof(struct object_d));
+            if (!o) { printf("parse_let: malloc failed\n"); exit(1); }
+            memset(o, 0, sizeof(struct object_d));
+            strncpy(o->token_buffer, let_name, TOKEN_BUFFER_MAX);
+            o->line = JSLEX_Info.current_line;
+            o->token_type = TK_TYPE;
+            o->keyword = KWLET;
+            o->opcode = OP_LET_TYPE;
+            o->operand = OPERAND_NONE;   // no value assigned
+            o->value = 0;                // default to 0 or mark as uninitialized
+            vm_push(o);
+
+            return TK_SEPARATOR;
+        }
+
+        // Colon means string assignment
+        if (c == TK_SEPARATOR && strcmp(real_token_buffer, ":") == 0) 
+        {
+            c = js_yylex();
+            if (c != TK_STRING) {
+                printf("parse_let: expected string after ':'\n");
+                exit(1);
+            }
+
+            struct object_d *o = malloc(sizeof(struct object_d));
+            if (!o) { printf("parse_let: malloc failed\n"); exit(1); }
+            memset(o, 0, sizeof(struct object_d));
+            //strncpy(o->token_buffer, let_name, TOKEN_BUFFER_MAX);
+            strncpy(o->token_buffer, real_token_buffer, TOKEN_BUFFER_MAX);
+            o->line = JSLEX_Info.current_line;
+            o->token_type = TK_TYPE;
+            o->keyword = KWLET;
+            o->opcode = OP_LET_TYPE;
+            o->operand = OPERAND_STRING;   // new operand type
+            //strncpy(o->string_value, real_token_buffer, TOKEN_BUFFER_MAX);
+            vm_push(o);
+
+            // Expect ';' after string
+            c = js_yylex();
+            if (c != TK_SEPARATOR || strcmp(real_token_buffer, ";") != 0) {
+                printf("parse_let: expected ';' after string\n");
+                exit(1);
+            }
+
+            return TK_SEPARATOR;
+        }
+
+        // ...
+
+        // Default
+        printf("parse_let: expected '=' or ';'\n");
+        exit(1);
+    }
+
+    //printf("breakpoint: %c %d\n",c,c);
+    //while(1){}
+
+    unsigned long expr_value=0;
+
+    // After '='
+    //c = js_yylex();
+
+    // If it's a constant, unget it and let tree_eval() handle it
+    //if (c == TK_CONSTANT) 
+    //{
+        //ungetc(c, finput);   // push back into lexer stream
+        expr_value = (unsigned long) tree_eval();
+        printf("parse_let: value={%d}\n", expr_value);
+    //}
+
+    /*
+    // #ps: The function tree_eval() also consumes the ';' token.
+    // Next: ';'
+    c = js_yylex();
+    if (c != TK_SEPARATOR || strcmp(real_token_buffer, ";") != 0) 
+    {
+        printf("parse_let: expected ';'\n");
+        exit(1);
+    }
+    */
+
+    // Semantic action: create object
+    struct object_d *o = malloc(sizeof(struct object_d));
+    if (!o) { printf("parse_let: malloc failed\n"); exit(1); }
+    memset(o, 0, sizeof(struct object_d));
+    strncpy(o->token_buffer, let_name, TOKEN_BUFFER_MAX);
+    o->line = JSLEX_Info.current_line;
+    o->token_type = TK_TYPE;
+    o->keyword = KWLET;
+    o->opcode = OP_LET_TYPE;
+    o->operand = OPERAND_IMMEDIATE;
+    o->value = (unsigned long) expr_value;
+    vm_push(o);
+
+    return TK_SEPARATOR;
 }
 
 // var_stmt → "var" Symbol "=" expression ";"
@@ -3202,6 +3481,21 @@ int parser_loop(int dump_output)
                             printf ("meta: [unexpected] in line %d\n", JSLEX_Info.current_line );
                             exit(1);
                         }
+                        // const
+                        if (JSLEX_Info.type_found == TCONST)
+                        {
+                            parse_const(TK_TYPE);
+                            State = 1;
+                            break;
+                        }
+                        // let
+                        if (JSLEX_Info.type_found == TLET)
+                        {
+                            parse_let(TK_TYPE);
+                            State = 1;
+                            break;
+                        }
+                        // var
                         if (JSLEX_Info.type_found == TVAR)
                         {
                             parse_var(TK_TYPE);

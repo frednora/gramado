@@ -150,6 +150,47 @@ int vm_loop(void)
             // For now, just continue execution:
             break;
 
+        // const
+        case OP_CONST_TYPE:
+            if (o->operand == OPERAND_IMMEDIATE) {
+                // Numeric assignment
+                printf("VM: const %s = %u\n", o->token_buffer, o->value);
+            }
+            else if (o->operand == OPERAND_STRING) {
+                // String assignment
+                printf("VM: const %s\n", o->token_buffer);
+            }
+            else if (o->operand == OPERAND_NONE) {
+                // Declaration only
+                printf("VM: const %s (uninitialized)\n", o->token_buffer);
+            }
+            // For now, just acknowledge the variable declaration
+            printf("VM: OP_CONST_TYPE => %s = %d\n",
+               o->token_buffer, o->value);
+            // Later: insert into symbol table
+            break;
+
+        // let
+        case OP_LET_TYPE:
+            if (o->operand == OPERAND_IMMEDIATE) {
+                // Numeric assignment
+                printf("VM: let %s = %u\n", o->token_buffer, o->value);
+            }
+            else if (o->operand == OPERAND_STRING) {
+                // String assignment
+                printf("VM: let %s\n", o->token_buffer);
+            }
+            else if (o->operand == OPERAND_NONE) {
+                // Declaration only
+                printf("VM: let %s (uninitialized)\n", o->token_buffer);
+            }
+            // For now, just acknowledge the variable declaration
+            printf("VM: OP_LET_TYPE => %s = %d\n",
+               o->token_buffer, o->value);
+            // Later: insert into symbol table
+            break;
+
+        // var
         case OP_VAR_TYPE:
             if (o->operand == OPERAND_IMMEDIATE) {
                 // Numeric assignment
@@ -165,9 +206,10 @@ int vm_loop(void)
             }
             // For now, just acknowledge the variable declaration
             printf("VM: OP_VAR_TYPE => %s = %d\n",
-               o->token_buffer, o->value);
+               o->token_buffer, o->value );
             // Later: insert into symbol table
             break;
+
 
         case OP_EXIT:
             printf("VM: OP_EXIT\n");
