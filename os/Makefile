@@ -224,7 +224,9 @@ build-extras:
 #	@-cp $(LZ_CMDS)/bin/CMP.BIN       $(BUILD)/GRAMADO/
 #	@-cp $(LZ_CMDS)/bin/SHOWFUN.BIN   $(BUILD)/GRAMADO/
 #	@-cp $(LZ_CMDS)/bin/SUM.BIN       $(BUILD)/GRAMADO/
-	@-cp $(LZ_CMDS)/bin/GRAMCNF.BIN     $(BUILD)/
+	@-cp $(LZ_CMDS)/bin/GRAMCNF.BIN    $(BUILD)/
+	@-cp $(LZ_CMDS)/bin/JS.BIN    $(BUILD)/
+
 #@-cp $(LZ_CMDS)/bin/N9.BIN         $(BUILD)/GRAMADO/
 #@-cp $(LZ_CMDS)/bin/N10.BIN        $(BUILD)/GRAMADO/
 #@-cp $(LZ_CMDS)/bin/N11.BIN        $(BUILD)/GRAMADO/

@@ -38,8 +38,9 @@ all:
 
 #	make -C hexdump/
 
-# Compile SDK commands.
+# Compile SDK commands
 	make -C gramcnf/
+	make -C js/
 #	make -C miniyacc/
 #	make -C n9/
 #	make -C n10/
