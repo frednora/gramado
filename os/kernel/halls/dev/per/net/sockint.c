@@ -224,7 +224,7 @@ struct socket_d *get_socket_from_fd(int fd)
 
     struct te_d *p;
     pid_t current_process = -1;
-    file *_file;
+    file *fp;
 
 // Parameter
     if (fd<0 || fd>=OPEN_MAX){
@@ -239,12 +239,12 @@ struct socket_d *get_socket_from_fd(int fd)
     // IN: core id
 
     current_process = (pid_t) get_current_process(0);
-
-    if (current_process<0 || 
-        current_process>=PROCESS_COUNT_MAX)
+    if (current_process < 0 || 
+        current_process >= PROCESS_COUNT_MAX)
     {
         goto fail;
     }
+
     p = (struct te_d *) teList[current_process];
     if ((void *) p == NULL){
         goto fail;
@@ -252,17 +252,17 @@ struct socket_d *get_socket_from_fd(int fd)
     // magic?
 //----------------
 
-// The file.
-    _file = (file *) p->Objects[fd];
-    if ((void *) _file == NULL){
+// The file pointer
+    fp = (file *) p->Objects[fd];
+    if ((void *) fp == NULL){
         goto fail;
     }
-    if (_file->magic != 1234){
+    if (fp->magic != 1234){
         goto fail;
     }
 
 // Return the pointer for the socket structure given the fd.
-    return (struct socket_d *) _file->socket;
+    return (struct socket_d *) fp->socket;
 fail:
     return NULL;
 }
@@ -525,6 +525,7 @@ int socket_ioctl ( int fd, unsigned long request, unsigned long arg )
     // na coisa dos segmentos de dados ...
     // Por causa do tipo de segmento, estamos escrevendo 
     // ou lendo no lugar errado.
+    // #todo: Test it again!
 
     case 4000:
         debug_print ("socket_ioctl: [4000]\n");
@@ -534,21 +535,10 @@ int socket_ioctl ( int fd, unsigned long request, unsigned long arg )
         return 0;
         break;
 
-    case 4001:
-        return (int) f->sync.sender_pid;
-        break;
-
-    case 4002:
-        return (int) f->sync.can_read;
-        break;
-
-    case 4003:
-        return (int) f->sync.can_write;
-        break;
-
-    case 4004:
-        return (int) f->sync.can_execute;
-        break;
+    case 4001:  return (int) f->sync.sender_pid;   break;
+    case 4002:  return (int) f->sync.can_read;     break;
+    case 4003:  return (int) f->sync.can_write;    break;
+    case 4004:  return (int) f->sync.can_execute;  break;
 
     // ...
 
