@@ -749,10 +749,9 @@ static int __hit_test_icon(unsigned long rel_mx, unsigned long rel_my)
 
 static void update_clients(int fd)
 {
-
-    if (fd<0)
+    if (fd<0){
         return;
-
+    }
     if ((void*)dc00 == NULL)
         return;
 
@@ -762,7 +761,6 @@ static void update_clients(int fd)
         fd,
         main_window,
         (struct gws_window_info_d *) &wi );
-
 
 // bg for the client area
     lingui_draw_rectangle0_dc (
@@ -793,6 +791,7 @@ static void update_clients(int fd)
         uic_button_start, 
         StartButton.width, 
         StartButton.height );
+    libgui_set_ui_component_flags(uic_button_start, (0x0001 | 0x0002));
     libgui_redraw_ui_component(uic_button_start, dc00);
 }
 
@@ -806,6 +805,7 @@ tbProcedure(
 {
     int f12Status = -1;
     int tmpNewWID = -1;
+    int IconId = -1;
 
 // Parameters:
     if (fd < 0){
@@ -814,8 +814,6 @@ tbProcedure(
     if (event_type <= 0){
         goto fail;
     }
-
-    int IconId = -1;
 
 // Process the event.
     switch (event_type){
@@ -1516,7 +1514,8 @@ static void create_start_button(int fd)
         StartButton.top,
         StartButton.width,
         StartButton.height,
-        "Start"
+        "Start", 
+        (0x0001 | 0x0002)
     );
 }
 

@@ -1,5 +1,6 @@
 // main.c - sysinfo.bin application (DC-aware)
 // Gramado OS client-side GUI app showing system information.
+// Created by Fred Nora.
 
 #include <types.h>
 #include <stdio.h>
@@ -250,11 +251,11 @@ int main(int argc, char *argv[])
 
     // Create Refresh button
     uic_button_refresh = libgui_create_ui_component(dc00, 1,  // type = button
-        refresh_x, buttons_y, button_w, button_h, "Refresh");
+        refresh_x, buttons_y, button_w, button_h, "Refresh", (0x0001|0x0002));
 
     // Create Close button
     uic_button_close = libgui_create_ui_component(dc00, 1,    // type = button
-        close_x, buttons_y, button_w, button_h, "Close");
+        close_x, buttons_y, button_w, button_h, "Close", (0x0001|0x0002));
 
     // Default responder
     default_responder = refresh_button;

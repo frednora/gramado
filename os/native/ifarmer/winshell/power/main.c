@@ -296,16 +296,11 @@ static void update_children(int fd)
 //
 
     libgui_set_ui_component_position(
-        uic_footer, 
-        0, 
-        wi.cr_height - 24 );
+        uic_footer, 0, wi.cr_height - 24 );
     libgui_set_ui_component_dimension(
-        uic_footer,
-        wi.cr_width,
-        24 );
-    libgui_set_ui_component_flags(uic_footer,0x0001);
+        uic_footer, wi.cr_width, 24 );
+    libgui_set_ui_component_flags(uic_footer, (0x0001 | 0x0002));
     libgui_redraw_ui_component(uic_footer, dc00);
-
 }
 
 static void set_default_responder(int wid)
@@ -770,7 +765,8 @@ int main(int argc, char *argv[])
         MyButton_Restart.top, 
         MyButton_Restart.width, 
         MyButton_Restart.height,
-        "Restart"
+        "Restart",
+        (0x0001 | 0x0002)
     );
 
 // ============================================================
@@ -800,10 +796,10 @@ int main(int argc, char *argv[])
         MyButton_Shutdown.top, 
         MyButton_Shutdown.width, 
         MyButton_Shutdown.height,
-        "Shutdown"
+        "Shutdown",
+        (0x0001 | 0x0002)
     );
 // ---------------------
-
 
 // -----------------------------------------------------
 // #test: BMP image
@@ -845,9 +841,9 @@ int main(int argc, char *argv[])
             wi.cr_height -24, 
             wi.cr_width, 
             24,
-            "-- footer --"
+            "-- footer --", 
+            (0x0001 | 0x0002)
         );
-
 
 // ================================================================================
 

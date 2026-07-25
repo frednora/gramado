@@ -1746,7 +1746,8 @@ static int __editor_initialize(void)
             MyButton_Save.top, 
             MyButton_Save.width, 
             MyButton_Save.height,
-            "Save"
+            "Save", 
+            (0x0001 | 0x0002)
         );
 
 //

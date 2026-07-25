@@ -223,7 +223,8 @@ struct ui_component_d *libgui_create_ui_component(
     unsigned long top,
     unsigned long width,
     unsigned long height,
-    const char *label );
+    const char *label,
+    unsigned long flags );
 
 // Redraw a ui component
 int 

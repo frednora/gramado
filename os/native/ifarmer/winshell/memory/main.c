@@ -888,9 +888,9 @@ int main(int argc, char *argv[])
         MyButton_Refresh.top, 
         MyButton_Refresh.width, 
         MyButton_Refresh.height,
-        "Refresh"
+        "Refresh", 
+        (0x0001 | 0x0002)
     );
-
 
 // -------------------------------------------------------
 // Close button
@@ -959,9 +959,9 @@ int main(int argc, char *argv[])
         MyButton_Close.top, 
         MyButton_Close.width, 
         MyButton_Close.height,
-        "Close"
+        "Close",
+        (0x0001 | 0x0002)
     );
-
 
 // Default responder
     //set_default_responder(refresh_button);

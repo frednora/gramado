@@ -2819,7 +2819,8 @@ struct ui_component_d *libgui_create_ui_component(
     unsigned long top,
     unsigned long width,
     unsigned long height,
-    const char *label )
+    const char *label,
+    unsigned long flags )
 {
     struct ui_component_d *uic;
     unsigned long text_x=0;
@@ -2847,7 +2848,7 @@ struct ui_component_d *libgui_create_ui_component(
 
     if (label != NULL) {
         strncpy(uic->label, label, sizeof(uic->label)-1);
-        uic->label[sizeof(uic->label)-1] = '\0'; // ensure null-termination
+        uic->label[sizeof(uic->label)-1] = '\0';  // ensure null-termination
         uic->label_size = strlen(uic->label);
     } else {
         uic->label[0] = '\0';
@@ -2856,11 +2857,11 @@ struct ui_component_d *libgui_create_ui_component(
 
 // ================================
 
-
-	if (type < 0)
+	if (type < 0){
 	    return NULL;
-
+    }
     uic->type = type;
+    uic->flags = (unsigned long) flags;
 
     // Button
 	if (type == 1)
@@ -2874,6 +2875,15 @@ struct ui_component_d *libgui_create_ui_component(
             LongSize = (unsigned long) (uic->label_size * 8 * scale); // rough width in pixels (8px per char)
             if (width > LongSize)
                 text_x = left + ((width - LongSize) / 2);
+        }
+        // #test: Because we still do not have the char dimensions.
+        // #test: Using (8x16) for now
+        // Center horizontally based on client area width
+        if (uic->flags & 0x0002) 
+        {
+            LongSize = (unsigned long) (1 * 16 * scale); // rough height in pixels (16px per char)
+            if (height > LongSize)
+                text_y = top + ((height - LongSize) / 2);
         }
 
 		// Draw button's background
@@ -2925,6 +2935,16 @@ struct ui_component_d *libgui_create_ui_component(
             if (width > LongSize)
                 text_x = left + ((width - LongSize) / 2);
         }
+        // #test: Because we still do not have the char dimensions.
+        // #test: Using (8x16) for now
+        // Center horizontally based on client area width
+        if (uic->flags & 0x0002) 
+        {
+            LongSize = (unsigned long) (1 * 16 * scale); // rough height in pixels (16px per char)
+            if (height > LongSize)
+                text_y = top + ((height - LongSize) / 2);
+        }
+
         lingui_draw_rectangle0_dc(dc, left, top, width, height, 0x00E0E0E0, 0);
         libgui_drawstringblock_dc(dc, text_x, text_y, 0x00101010, uic->label, scale);
     }
@@ -2942,6 +2962,16 @@ struct ui_component_d *libgui_create_ui_component(
             if (width > LongSize)
                 text_x = left + ((width - LongSize) / 2);
         }
+        // #test: Because we still do not have the char dimensions.
+        // #test: Using (8x16) for now
+        // Center horizontally based on client area width
+        if (uic->flags & 0x0002) 
+        {
+            LongSize = (unsigned long) (1 * 16 * scale); // rough height in pixels (16px per char)
+            if (height > LongSize)
+                text_y = top + ((height - LongSize) / 2);
+        }
+
         lingui_draw_rectangle0_dc(dc, left, top, width, height, 0x00E0E0E0, 0);
         libgui_drawstringblock_dc(dc, text_x, text_y, 0x00101010, uic->label, scale);
     }
@@ -2959,6 +2989,16 @@ struct ui_component_d *libgui_create_ui_component(
             if (width > LongSize)
                 text_x = left + ((width - LongSize) / 2);
         }
+        // #test: Because we still do not have the char dimensions.
+        // #test: Using (8x16) for now
+        // Center horizontally based on client area width
+        if (uic->flags & 0x0002) 
+        {
+            LongSize = (unsigned long) (1 * 16 * scale); // rough height in pixels (16px per char)
+            if (height > LongSize)
+                text_y = top + ((height - LongSize) / 2);
+        }
+
         lingui_draw_rectangle0_dc(dc, left, top, width, height, 0x00E0E0E0, 0);
         libgui_drawstringblock_dc(dc, text_x, text_y, 0x00101010, uic->label, scale);
     }
@@ -3066,6 +3106,16 @@ libgui_redraw_ui_component(
             if (uic->width > LongSize)
                 text_x = uic->left + ((uic->width - LongSize) / 2);
         }
+        // #test: Because we still do not have the char dimensions.
+        // #test: Using (8x16) for now
+        // Center horizontally based on client area width
+        if (uic->flags & 0x0002) 
+        {
+            LongSize = (unsigned long) (1 * 16 * scale); // rough height in pixels (16px per char)
+            if (uic->height > LongSize)
+                text_y = uic->top + ((uic->height - LongSize) / 2);
+        }
+
         lingui_draw_rectangle0_dc(dc, uic->left, uic->top, uic->width, uic->height, 0x00E0E0E0, 0);
         libgui_drawstringblock_dc(dc, text_x, text_y, 0x00101010, uic->label, scale);
     }
@@ -3083,6 +3133,16 @@ libgui_redraw_ui_component(
             if (uic->width > LongSize)
                 text_x = uic->left + ((uic->width - LongSize) / 2);
         }
+        // #test: Because we still do not have the char dimensions.
+        // #test: Using (8x16) for now
+        // Center horizontally based on client area width
+        if (uic->flags & 0x0002) 
+        {
+            LongSize = (unsigned long) (1 * 16 * scale); // rough height in pixels (16px per char)
+            if (uic->height > LongSize)
+                text_y = uic->top + ((uic->height - LongSize) / 2);
+        }
+
         lingui_draw_rectangle0_dc(dc, uic->left, uic->top, uic->width, uic->height, 0x00E0E0E0, 0);
         libgui_drawstringblock_dc(dc, text_x, text_y, 0x00101010, uic->label, scale);
     }
@@ -3100,6 +3160,16 @@ libgui_redraw_ui_component(
             if (uic->width > LongSize)
                 text_x = uic->left + ((uic->width - LongSize) / 2);
         }
+        // #test: Because we still do not have the char dimensions.
+        // #test: Using (8x16) for now
+        // Center horizontally based on client area width
+        if (uic->flags & 0x0002) 
+        {
+            LongSize = (unsigned long) (1 * 16 * scale); // rough height in pixels (16px per char)
+            if (uic->height > LongSize)
+                text_y = uic->top + ((uic->height - LongSize) / 2);
+        }
+
         lingui_draw_rectangle0_dc(dc, uic->left, uic->top, uic->width, uic->height, 0x00E0E0E0, 0);
         libgui_drawstringblock_dc(dc, text_x, text_y, 0x00101010, uic->label, scale);
     }
