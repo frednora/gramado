@@ -334,7 +334,7 @@ __accept_imp (
     //#todo: see: net.h
     //struct connection_d *our_connection;
 
-// Server process.
+// Server process
     struct te_d *sProcess;
     pid_t current_process = -1;
 
@@ -356,13 +356,12 @@ __accept_imp (
     //int ep1_pending_fd = -1;
     //int ep2_pending_fd = -1;
 
-// Iterator for the pending connections queue.
+// Iterator for the pending connections queue
     register int i=0;
 
     unsigned long Flags = flags;
 
-// #debug
-    int Verbose=FALSE;
+    int Verbose = FALSE;  // #debug
 
     // #debug
     // debug_print ("sys_accept:\n");
@@ -387,26 +386,26 @@ __accept_imp (
         return (int) (-EBADF);
     }
 
-// Check addr structure.
-// #bugbug: 
-// Ainda não sabemos qual é a estrutura de endereços usada.
-// #bugbug: 
-// Ainda não estamos usando isso.
+// Check parameter validation: (addr)
+// #ps: 
+// We still do not know what is the type/size of the structure.
+// Not in use yet!
 
     if ((void *) addr == NULL){
         printk("__accept_imp: addr\n");
         return (int) (-EINVAL);
     }
-// Address validation.
-// It needs to be a ring3 address.
-// #todo: Check agains more limits.
+
+// It can't be less that the base of a ring 3 thread.
+// #todo: Check agains more limits
+
     if (addr < FLOWERTHREAD_BASE){
         panic("__accept_imp: addr is not ring3\n");
         //return (int) (-EINVAL);
     }
 
-
 // #ps:
+// What is this?
 // The 'addrlen' argument is a value-result argument: 
 // The caller must initialize it to contain the size (in bytes) 
 // of the structure pointed to by addr. On return it will contain 
@@ -448,8 +447,8 @@ __accept_imp (
         goto fail;
     }
 
-// file
-// O objeto que se refere ao socket do servidor.
+// file:
+// The object/file related with the server socket.
 // The socket is a file and belongs to the process.
 
     listening_fp = (file *) sProcess->Objects[listening_fd];
@@ -497,10 +496,6 @@ __accept_imp (
     }
  */
 
-
-// O que segue abaixo eh um improviso,
-// ja que listen ainda nao funciona
-
     // #debug
     //printk ("sys_accept: process %d | family %d | len %d \n", 
         //current_process, addr->sa_family, addrlen  );
@@ -515,7 +510,6 @@ __accept_imp (
 // arquivo deve ir para a lista de arquivos abertos pelo processo?
 // Estamos retornando o fd do proprio servidor porque o write() 
 // copia de um socket para o outro. Mas a intençao nao eh essa.
-
 
 // #todo
 // Na verdade precisamos pegar um da fila.
@@ -539,58 +533,52 @@ __accept_imp (
 
     int OldState = listening_socket->state;
 
-// #todo
-// This is the only valid state.
-// The rest cannot call accept()
+    // #todo: This is the only valid state.
+    // The rest cannot call accept()
     //if (listening_socket->state != SS_LISTENING)
         //return -EINVAL;
 
-     if ( listening_socket->state == SS_LISTENING ||
-          listening_socket->state == SS_CONNECTING || 
-          listening_socket->state == SS_CONNECTED )
+    // #ps: For now we are considering these states
+    // as valid states for the Accept operation.
+    if ( listening_socket->state == SS_LISTENING ||
+         listening_socket->state == SS_CONNECTING || 
+         listening_socket->state == SS_CONNECTED )
     {
-
-        //
-        // Indicate that the socket is connected
-        //
-
+        // Let's Indicate that the socket is connected
         // #todo:
         // But remember: The server can't use the listening socket for 
         // the connection. It needs to create a new one.
 
         listening_socket->state = SS_CONNECTED;
 
-        // Se existe outro socket linkado ao socket do servidor.
-        // #todo
-        // Nesse momento pegamos o primeiro da lista de conexões pendentes.
-        // Mas desejamos ter uma lista de conexões pendentes e 
-        // nesse momento pegaremos um da lista seguindo uma ordem.
+        // If there is another socket linked to the server socket.
+        // #todo:
+        // At this moment we get the first one from the 
+        // list of pending connections, respecting the order.
 
-        // Backlog
-        // Circula
+        // Let's round using the backlog head.
         listening_socket->backlog_head++;
         if (listening_socket->backlog_head >= listening_socket->backlog_max){
-            listening_socket->backlog_head=0;
+            listening_socket->backlog_head = 0;
         }
         i = listening_socket->backlog_head;
-        if ( i<0 || i >= listening_socket->backlog_max ){
+        if ( i < 0 || 
+             i >= listening_socket->backlog_max )
+        {
             panic("__accept_imp: Backlog limits\n");
         }
 
-
         // Probe for a valid pointer.
-        // Ok 
-        // Vamos pegar o ponteiro para estrutura de socket do cliente.
-        // Isso foi colocado aqui na estrutura de socket do servidor
-        // pela função connect();
+        // OK. Let's get one client socket from the server's list.
+        // That was include here when the client called connect().
+
         while (i <= listening_socket->backlog_max)
         {
             ep1_pending_socket = (struct socket_d *) listening_socket->pending_client_endpoints[i];
             if ((void*) ep1_pending_socket != NULL){
                 break;
             }
-            // next
-            i++;
+            i++;  // next
         };
 
         // [NO] - Not valid Client socket
@@ -605,46 +593,47 @@ __accept_imp (
         }
 
         // [YES] - Valid Client socket
-        // Vamos nos conectar a ele.
+        // Let's stablish the connection
         if ((void *) ep1_pending_socket != NULL)
         {
             // check validation
-            if ( ep1_pending_socket->used != TRUE || ep1_pending_socket->magic != 1234 )
+            if ( ep1_pending_socket->used != TRUE || 
+                 ep1_pending_socket->magic != 1234 )
             {
                 debug_print ("__accept_imp: [FAIL] ep1_pending_socket validation\n");
                 listening_socket->state = OldState;  // Back to the old state
                 goto fail;
             }
 
-            // Na verdade o magic indica que eh 
-            // uma conexao pendente.
+            // #test: 
+            // What? The Magic C indicates a pending connection.
             if ( ep1_pending_socket->magic_string[0] == 'C' )
             {
                 //debug_print("MAGIC C\n");
                 //printk ("magic: %s\m",ep1_pending_socket->magic_string);
             }
 
-            //ok: usar isso só para debug
-            //debug_print ("sys_accept: done\n");
-
+            // Connection stablished
             ep1_pending_socket->state = SS_CONNECTED;
-            
-            // Pegando o ponteiro da estrutura de arquivo 
-            // associada ao socket do cliente.
+
+            // Get the file structure associated with the client socket
             ep1_pending_fp = (file *) ep1_pending_socket->private_file;
+
+            // #ps: Important
+            // Gramado OS Kernel is using the last slot, 31,
+            // as a place to put the socket file. The server
+            // ONLY read from this file.
+            // This is the list of files opened by the server process.
+
             // Salvando o ponteiro de estrutura de arquivo 
             // no slot prealocado na inicializacao.
             // Essa é a estrutura de processo do servidor.
-            // Essa é a lista de arquivos abertos pelo processo.
+
             //sProcess->Objects[ sProcess->_client_sock_fd ] = ep1_pending_fp;
-            sProcess->Objects[31] = (unsigned long) ep1_pending_fp;  //last
+            sProcess->Objects[31] = (unsigned long) ep1_pending_fp;  // last slot
             ep1_pending_fp->_file = 31;
             
-            //debug_print ("sys_accept: done\n");
-
-            // #importante: Retornando o fd do cliente.
-            // Dessa forma o servido pode escrever nele
-            // e o cliente poderá ler.
+            //debug_print ("__accept_imp: done\n");
 
             if (Verbose == TRUE)
             {
@@ -657,11 +646,17 @@ __accept_imp (
                 };
             }
 
+            // #important:
+            // Returning the fd for the file that represents
+            // the client socket. Server will read/write from/in it.
+            // #ps: It is always 31 in Gramado OS for now.
+
             return (int) ep1_pending_fp->_file;  // 31 
         }
 
-        //fail
+        // fail
         debug_print ("__accept_imp: [FAIL] Pending connection\n");
+
         listening_socket->state = OldState;  // Back to the old state
         goto fail;
     }
@@ -677,6 +672,7 @@ fail:
 }
 
 // #ps: 'addrlen' is a pointer.
+// #todo: Accept operation is not valid for datagrams.
 int 
 sys_accept (
     int sockfd, 
@@ -898,7 +894,6 @@ sys_bind (
 // A família é de um tipo não suportado.
     debug_print ("sys_bind: [FAIL] family not valid\n");
     printk      ("sys_bind: [FAIL] family not valid\n");
-
 
 fail:
     debug_print ("sys_bind: fail\n");
@@ -2198,19 +2193,21 @@ static int __listen_imp(int sockfd, int backlog)
     struct te_d  *p;
     pid_t current_process = -1;
 
+    int i=0;
+
     do_credits_by_tid( lapic_info[0].current_tid );
 
 // #debug
-    //debug_print ("sys_listen: [TODO]\n");
-    //printk      ("sys_listen: [TODO] fd=%d backlog=%d\n",
+    //debug_print ("__listen_imp: [TODO]\n");
+    //printk      ("__listen_imp: [TODO] fd=%d backlog=%d\n",
         //sockfd, backlog);
 
 // Parameter
 // The fd of the server's socket.
     if ( sockfd < 0 || sockfd >= OPEN_MAX )
     {
-        debug_print ("sys_listen: sockfd\n");
-        printk      ("sys_listen: sockfd\n");
+        debug_print ("__listen_imp: sockfd\n");
+        printk      ("__listen_imp: sockfd\n");
         return (int) (-EBADF);
     }
 
@@ -2224,22 +2221,22 @@ static int __listen_imp(int sockfd, int backlog)
     if ( current_process < 0 || 
          current_process >= PROCESS_COUNT_MAX )
     {
-        printk("sys_listen: current_process\n");
+        printk("__listen_imp: current_process\n");
         goto fail;
     }
 // process
     p = (struct te_d *) teList[current_process];
     if ((void *) p == NULL){
-        debug_print("sys_listen: p fail\n");
-        printk     ("sys_listen: p fail\n");
+        debug_print("__listen_imp: p fail\n");
+        printk     ("__listen_imp: p fail\n");
         goto fail;
     }
 
 // The server's socket fd opens the fp associated with a socket structure.
     f = (file *) p->Objects[sockfd];
     if ((void *) f == NULL){
-        debug_print("sys_listen: f fail\n");
-        printk     ("sys_listen: f fail\n");
+        debug_print("__listen_imp: f fail\n");
+        printk     ("__listen_imp: f fail\n");
         goto fail;
     }
 
@@ -2254,39 +2251,37 @@ static int __listen_imp(int sockfd, int backlog)
 // Not ready yet?
     //f->sync.can_accept = TRUE;
 
-// Get the socket structure associated with the file.
+// Get the socket structure associated with the file
     server_socket = (struct socket_d *) f->socket;
     if ((void *) server_socket == NULL){
-        printk("sys_listen: server_socket fail\n");
+        printk("__listen_imp: server_socket fail\n");
         goto fail;
     }
     server_socket->isAcceptingConnections = FALSE;
 
     // #todo: Why?
     if (f->socket != p->priv){
-        panic("sys_listen: [TEST] f->socket != p->priv\n");
+        panic("__listen_imp: [TEST] f->socket != p->priv\n");
     }
 
 //
 // Backlog
 //
 
-// The server tell us the the 'size of the list'.
-// Wrong n. Ajusting to default.
+// The limit of connected clients.
+// #bugbug:
 // It can't be bigger than the size of the array.
 // #todo: Use SOCKET_MAX_PENDING_CONNECTIONS
 // SOMAXCONN
 
     DesiredBacklog = backlog;
-    if (DesiredBacklog <= 0) { DesiredBacklog=1; }
-    if (DesiredBacklog >= 32){ DesiredBacklog=31; }
+    if (DesiredBacklog < 1) { DesiredBacklog=1; }
+    if (DesiredBacklog > 31){ DesiredBacklog=31; }
 
-// The limit of connected clients
     server_socket->backlog_max = (int) DesiredBacklog;
  
-    int i=0;
-    for (i=0; i<32; i++)
-    {
+    // what is this?
+    for (i=0; i<32; i++){
         server_socket->pending_server_endpoints[i] = 0;
         server_socket->pending_client_endpoints[i] = 0;
     };
@@ -2303,8 +2298,8 @@ static int __listen_imp(int sockfd, int backlog)
     return 0;
 
 fail:
-    debug_print("sys_listen: fail\n");
-    printk     ("sys_listen: fail\n");
+    debug_print("__listen_imp: fail\n");
+    printk     ("__listen_imp: fail\n");
     return (int) -1;
 }
 
@@ -2313,6 +2308,7 @@ fail:
 // IN:
 // sockfd  = The fd of the server's socket.
 // backlog = The server indicates the 'size of the list'.
+// #todo: Listen operation is not valid for datagrams.
 int sys_listen (int sockfd, int backlog)
 {
     int rv=0;
