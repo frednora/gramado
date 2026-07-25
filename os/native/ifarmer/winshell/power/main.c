@@ -25,6 +25,8 @@
 #include "power.h"
 
 
+static int isTimeToQuit = FALSE;
+
 // Global display pointer
 struct gws_display_d *Display;
 
@@ -143,6 +145,8 @@ static void on_button_clicked(int id)
         case 2:  // MyButton_Shutdown.icon_id
             printf("Button %d clicked!\n", id);
             rtl_clone_and_execute("shutdown.bin");
+            //printf("power: Send QUIT message\n");
+            //gws_async_command(fd,88,0,0);  // Send quit message
             exit(0);
             break;
 
@@ -380,7 +384,7 @@ powerProcedure(
 
         case 'R':
         case 'r':
-            printf("PowerApp: VK_F1 >> Restart\n");
+            printf("power: VK_F1 >> Restart\n");
             rtl_clone_and_execute("reboot.bin");
             // #todo: Close our windows.
             exit(0);
@@ -388,11 +392,24 @@ powerProcedure(
 
         case 'S':
         case 's':
-            printf("PowerApp: VK_F2 >> Shutdown\n");
-            rtl_clone_and_execute("shutdown.bin");
+            printf("power: VK_F2 >> Shutdown\n");
+            //rtl_clone_and_execute("shutdown.bin");
+            printf("power: Send QUIT message\n");
+            gws_async_command(fd,88,0,0);  // Send quit message
+
             // #todo: Close our windows.
             exit(0);
             break;
+
+        // #test: Shut display server down
+        case 'Q':
+        case 'q':
+            printf("power: Send QUIT message\n");
+            gws_async_command(fd,88,0,0);  // Send quit message
+            // #todo: Close our windows.
+            exit(0);
+            break;
+
         };
         break;
 
@@ -406,7 +423,9 @@ powerProcedure(
                 return 0;
             case VK_F2:
                 printf("PowerApp: VK_F2 >> Shutdown\n");
-                rtl_clone_and_execute("shutdown.bin");
+                //rtl_clone_and_execute("shutdown.bin");
+                printf("power: Send QUIT message\n");
+                gws_async_command(fd,88,0,0);  // Send quit message
                 // #todo: Close our windows.
                 exit(0);
                 return 0;
@@ -494,11 +513,14 @@ powerProcedure(
         break;
 
     case MSG_CLOSE:
+
         //gws_destroy_window(fd, restart_button);
         //gws_destroy_window(fd, shutdown_button);
-        gws_destroy_window(fd, main_window);
-        printf("PowerApp: Window closed\n");
-        exit(0);
+        //gws_destroy_window(fd, main_window);
+        //printf("PowerApp: Window closed\n");
+        //exit(0);
+
+        isTimeToQuit = TRUE;  // #test
         break;
 
 
@@ -543,6 +565,8 @@ int main(int argc, char *argv[])
 {
     const char *display_name = "display:name.0";
     int client_fd = -1;
+
+    isTimeToQuit = FALSE;
 
     // Connect to display server
     Display = gws_open_display(display_name);
@@ -873,8 +897,10 @@ int main(int argc, char *argv[])
 // Event loop
 //
 
-    while (1)
-    {
+    while (1){
+
+        if (isTimeToQuit == TRUE)
+            break;
 
         // #test It's working
         // But its dangeours.
@@ -912,6 +938,17 @@ int main(int argc, char *argv[])
         }
         };
     };
+
+    if (isTimeToQuit == TRUE){
+        printf("PowerApp: Close window\n");
+        gws_destroy_window(client_fd, main_window);
+    }
+
+    if (client_fd > 0)
+        close(client_fd);
+
+    // printf("power: Send QUIT message\n");
+    // gws_async_command(fd,88,0,0);  // Send quit message
 
     return EXIT_SUCCESS;
 }

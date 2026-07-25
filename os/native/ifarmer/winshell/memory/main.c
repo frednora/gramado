@@ -532,6 +532,14 @@ case MSG_KEYDOWN:
         //gws_destroy_window(fd, main_window);
         exit(0);
         break;
+
+    // #test: Shut display server down
+    // case 'Q':
+    // case 'q':
+        // printf("memory: Send QUIT message\n");
+        // gws_async_command(fd,88,0,0);  // Send quit message
+        // break;
+
     }
     break;
 

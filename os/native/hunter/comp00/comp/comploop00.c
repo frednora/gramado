@@ -4329,6 +4329,10 @@ static int ServerLoop(int client_index)
 {
     // #bugbug
     int UseCompositor = TRUE;   // #debug flags
+// Files
+    int server_fd = -1; 
+    int newconn = -1;
+    int curconn = -1;
 // Status
     int bind_status = -1;
     int _status = -1;
@@ -4339,17 +4343,10 @@ static int ServerLoop(int client_index)
 // ==================
 // We are the Display Server. [d,s].
     struct sockaddr server_address;
-    socklen_t addrlen;
-    // Files
-    int server_fd = -1; 
-    int newconn_fd = -1;
-
     server_address.sa_family = AF_GRAMADO;
-
     server_address.sa_data[0] = 'd';
     server_address.sa_data[1] = 's';
-    server_address.sa_data[2] = 0x00;
-
+    socklen_t addrlen;
     addrlen = sizeof(server_address);
 // ==================
 
@@ -4371,7 +4368,7 @@ static int ServerLoop(int client_index)
 // Socket
 // Creating a socket file and saving the fd in different places.
 // IN: family, (Not UDP in AF_GRAMADO), No protocol.
-    server_fd = (int) socket(AF_GRAMADO, SOCK_STREAM, 0);
+    server_fd = (int) socket( AF_GRAMADO, SOCK_STREAM, 0 );
     if (server_fd < 0){
         printf ("on socket()\n");
         goto fail;
@@ -4425,8 +4422,6 @@ static int ServerLoop(int client_index)
     ListenStatus = (int) listen(server_fd, SERVER_BACKLOG);
     if (ListenStatus < 0){
         //#todo
-        // printf ("on listen()\n");
-        // goto fail;
     }
 
 // Checkpoints
@@ -4510,7 +4505,8 @@ static int ServerLoop(int client_index)
     // Not used for now.
     connection_status = 1;
 
-    newconn_fd = -1;
+    //curconn = serverClient->fd;
+    newconn = -1;
 
 // ========================================================
 
@@ -4575,7 +4571,7 @@ static int ServerLoop(int client_index)
     */
 
 // IPC:
-// Telling the Init thread that the display server is initialized and running.
+// Telling the Init thread that the display server is running.
 // IN: 
 // Init process'a TID, message code, signature1, signature2.
 
@@ -4628,9 +4624,9 @@ static int ServerLoop(int client_index)
         // Get application messages via socket connection
         if (IsAcceptingConnections == TRUE)
         {
-            newconn_fd = 
+            newconn = 
                 (int) accept ( 
-                    server_fd,
+                    ____saved_server_fd,
                     (struct sockaddr *) &server_address, 
                     (socklen_t *) addrlen 
                 );
@@ -4638,17 +4634,17 @@ static int ServerLoop(int client_index)
             // Dispatch service.
             // In Gramado OS, sys_accept get one connected socket 
             // in the queue and put it in fd=31.
-            if (newconn_fd == 31){
-                dispacher(newconn_fd);
+            if (newconn == 31){
+                dispacher(newconn);
             }
 
             // #debug
-            if (newconn_fd == server_fd){
-                printf("comp00: Invalid newconn_fd\n");
+            if (newconn == ____saved_server_fd){
+                printf("comp00: Invalid newconn\n");
                 exit(1);
             }
 
-            //close(newconn_fd);
+            //close(newconn);
         }
 
         // Compose the frame or simply update some windows       
@@ -4670,7 +4666,8 @@ static int ServerLoop(int client_index)
             delta_jiffie = (unsigned long) (end_jiffie - start_jiffie);
             if (delta_jiffie < MainLoopIntervalMS)
             {
-                // #test: This function is still in test phase
+                // #test
+                // This function is still in test phase.
                 if (UseSleep == TRUE)
                     rtl_sleep(MainLoopIntervalMS - delta_jiffie);
             }    
@@ -4689,7 +4686,6 @@ static int ServerLoop(int client_index)
         goto fail;
     }
 
-
 // #todo
 // Now we will close the display server.  
 // Free all the structure, one by one in cascade.
@@ -4698,14 +4694,15 @@ static int ServerLoop(int client_index)
 // We will close all the sockets.
 // ...
 
-    // #test: Close the server's fd
+    // #test
+    // Close the server's fd
     if (server_fd > 0){
         printf ("ds00: Close th socket\n");
         close(server_fd);
     }
 
 // IPC:
-// Telling the Init thread that the display server is shutting down.
+// Telling the Init thread that the display server is running
 // IN: tid, msgcode, signature, signature.
     rtl_post_to_tid( 0, 44901, 1234, 5678 );
 

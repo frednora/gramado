@@ -18,7 +18,7 @@ static void __launch_shutdown_cmd(void)
 // to close themselves first.
     long Times=0;
 
-    for (Times=0; Times<32; Times++){
+    for (Times=0; Times<42; Times++){
         rtl_yield();
     };
 
@@ -33,11 +33,16 @@ void ServerShutdown(int server_fd)
     static char shutdown_string[64];
 
 //-------
-// Tell to the apps to close.
+// Tell the apps to close
     gwssrv_broadcast_close();
 
-    //server_debug_print ("GRAMLAND: ServerShutdown\n");
-    //printf             ("GRAMLAND: ServerShutdown\n");
+    long Times=0;
+    for (Times=0; Times<42; Times++){
+        rtl_yield();
+    };
+
+    //server_debug_print ("ServerShutdown\n");
+    //printf             ("ServerShutdown\n");
 
     memset(shutdown_string, 0 , 64);
 
@@ -65,17 +70,19 @@ void ServerShutdown(int server_fd)
         wm_flush_window(__root_window);
     }
 
-    __launch_shutdown_cmd();
-
     DestroyAllWindows();
 
-// Close the server's socket.
-    if (server_fd < 0){
-        goto done;
+// Close the server's socket
+    if (server_fd > 0){
+        close(server_fd);
     }
-    close(server_fd);
+
 done:
+    __launch_shutdown_cmd();
     exit(0);
+
+fail:
+    printf("ServerShutdown: fail\n");
 }
 
 

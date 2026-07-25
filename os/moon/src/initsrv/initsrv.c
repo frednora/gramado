@@ -1,4 +1,4 @@
-// initask.c
+// inisrv.c
 // Created by Fred Nora.
 
 // Library for init 'driver'.
@@ -335,15 +335,19 @@ xxxProcessEvent (
 // Out of range for system messages
 // comp00 display server is telling us that 
 // it was initialized and running.
+// The signature is 1234 5678
     case 44900:
         is_ds_running = TRUE;
+        printf("Init: DS is up!\n");
         break;
 
 // Out of range for system messages
 // comp00 display server is telling us that 
 // it is shutting down.
+// The signature is 1234 5678
     case 44901:
         is_ds_running = FALSE;
+        printf("Init: DS is down!\n");
         break;
 
 // Out of range for system messages
