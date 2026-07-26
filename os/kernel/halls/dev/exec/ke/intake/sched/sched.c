@@ -682,7 +682,7 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
             */
 
             // =============================
-            // Exit in progress
+            // Events in progress: from server, block, exit, waiting.
             if (TmpThread->magic == 1234)
             {
                 // The thread has an event from the server.
@@ -708,6 +708,7 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                     continue;
                 }
 
+                // Block in proress:
                 // We already setted the reason in ipc.c
                 if (TmpThread->msgctl.block_in_progress == TRUE)
                 {
@@ -718,6 +719,7 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                     continue;
                 }
 
+                // Exit in progress:
                 // Vira zombie e não sera selecionada para o proximo round
                 // se não for a idle thread nem a init thread.
                 // Can't be the init thread (Idle) in this case.
@@ -842,6 +844,9 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                 //TmpThread->used = FALSE;
                 //TmpThread->magic = 0;
                 //TmpThread = NULL;
+
+                //if (TmpThread->tid == foreground_thread)
+                    //foreground_thread = INIT_TID;
 
                 // #test: Reusing it
                 // #todo: Create a method for this.

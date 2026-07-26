@@ -237,9 +237,13 @@ ibroker_post_message_to_fg_thread (
         return (int) -1;
     fg_thread = (struct thread_d *) threadList[foreground_thread];
     if ((void*) fg_thread == NULL)
-        return -1;
+        return (int) -1;
+    if (fg_thread->used != TRUE)
+        return (int) -1;
     if (fg_thread->magic != 1234)
-        return -1;
+        return (int) -1;
+    //if (fg_thread->state == ZOMBIE)
+        //return (int) -1;
 
 // ---- Message validation -----------------
     int SendIt = TRUE;

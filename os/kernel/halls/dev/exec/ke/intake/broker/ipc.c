@@ -76,9 +76,16 @@ ipc_post_message_to_tid2 (
     if ((void *) t == NULL){
         panic ("ipc_post_message_to_tid2: t\n");
     }
-    if ( t->used != TRUE || t->magic != 1234 ){
+    if ( t->used != TRUE || t->magic != 1234 )
+    {
+        // Thread is waiting for reuse
+        if (t->magic == 4321)
+            goto fail;
+
         panic ("ipc_post_message_to_tid2: t validation\n");
     }
+    //if (t->state == ZOMBIE)
+        //panic ("ipc_post_message_to_tid2: t ZOMBIE\n");
     if (t->tid != dst_tid){
         panic("ipc_post_message_to_tid2: t->tid != dst_tid\n");
     }
@@ -230,9 +237,16 @@ ipc_post_message_to_tid (
     if ((void *) t == NULL){
         panic ("ipc_post_message_to_tid: t\n");
     }
-    if (t->used != TRUE || t->magic != 1234){
+    if (t->used != TRUE || t->magic != 1234)
+    {
+        // Thread is waiting for reuse
+        if (t->magic == 4321)
+            goto fail;
+
         panic("ipc_post_message_to_tid: t validation\n");
     }
+    //if (t->state == ZOMBIE)
+        //panic ("ipc_post_message_to_tid: t ZOMBIE\n");
     if (t->tid != dst_tid){
         panic("ipc_post_message_to_tid: t->tid != dst_tid\n");
     }
