@@ -24,7 +24,6 @@ void do_credits_by_tid(tid_t tid)
     {
         return;
     }
-
     thread = (struct thread_d *) threadList[tid];
     if ((void*) thread != NULL){
         do_credits(thread);
@@ -162,14 +161,12 @@ void do_thread_running(tid_t tid)
     if (tid < 0 || tid >= THREAD_COUNT_MAX){
         return;
     }
-
     t = (void *) threadList[tid];
     if ((void *) t == NULL){
         return;
     }
-
 // Change state
-    if ( t->used == TRUE && t->magic == 1234 )
+    if (t->used == TRUE && t->magic == 1234)
     {
         t->state = RUNNING;
     }
@@ -289,13 +286,10 @@ void do_thread_zombie(tid_t tid)
 
 int do_waitpid (pid_t pid, int *status, int options)
 {
-    struct te_d *p;
-
+    struct te_d *p;  // process (Thread Environment)
     // Get PID for the current process for a given core.
     // IN: core id
-
     pid_t current_process = (pid_t) get_current_process(0);
-
     tid_t CurrentTID = (tid_t) lapic_info[0].current_tid;
 
     //#debug
@@ -676,7 +670,8 @@ void wakeup_thread(tid_t tid)
     struct thread_d  *t;
     int Status=0;
 
-    if ( tid < 0 || tid >= THREAD_COUNT_MAX ){
+    if (tid < 0 || tid >= THREAD_COUNT_MAX)
+    {
         return;
     }
 
@@ -739,16 +734,16 @@ void wakeup_thread(tid_t tid)
 void yield (tid_t tid)
 {
     struct thread_d  *t;
-// tid
+
     if (tid < 0 || tid >= THREAD_COUNT_MAX){
         return;
     }
-// structure
     t = (void *) threadList[tid];
     if ((void *) t == NULL){
         return;
     }
-    if (t->used != TRUE || t->magic != 1234){
+    if (t->used != TRUE || t->magic != 1234)
+    {
         return;
     }
 
@@ -854,6 +849,7 @@ void schedi_check_for_standby(void)
 
     struct thread_d *t;
     tid_t target_tid = -1;
+
     register int i=0;
     register int Max = THREAD_COUNT_MAX;
 

@@ -96,14 +96,14 @@ static void sched_quick_and_dirty_load_balancer(void)
 }
 
 // Notify parent process that something happened
+
+// #todo
+// This is a work in progress!
+
 static void __sched_notify_parent(struct thread_d *thread, int event_number)
 {
-
-    // #todo
-    // This is a work in progress!
-
-    struct te_d *p_owner;
-    struct te_d *p_parent;
+    struct te_d *p_owner;   // Process
+    struct te_d *p_parent;   // Process
 
     //printk ("__sched_notify_parent: #test\n");
 
@@ -264,12 +264,14 @@ int has_pending_event(struct thread_d *thread)
 void sched_show_info(void)
 {
     int i=0;
+
     for (i=0; i<=6; i++)
     {
         // Stages
         printk("[sched] Stage %d selected %d times\n", 
-            i, 
-            stage_selection_count[i] );
+            i, stage_selection_count[i] );
+
+        // ...
     };
 
     // ...
@@ -346,15 +348,17 @@ static struct thread_d *__build_stage_queue(int stage, unsigned long priority)
     //struct thread_d *Idle = (struct thread_d *) UPProcessorBlock.IdleThread;
     struct thread_d *Idle = (struct thread_d *) InitThread;
     struct thread_d *TmpThread;
-    struct thread_d *head, *tail;
-    int i=0;
+    struct thread_d *head;
+    struct thread_d *tail;
 
     unsigned long Priority = priority; // #todo: In the future
     unsigned long target_quantum = QUANTUM_NORMAL_THRESHOLD;
-
+    int i=0;
 
     if (stage > 0 && stage <= 6)
-        stage_selection_count[stage] = stage_selection_count[stage] + 1;
+    {
+        stage_selection_count[stage] = (stage_selection_count[stage] + 1);
+    }
 
 // ------------------------------------
 // Decide Init quantum once, based on display server flag
@@ -519,10 +523,10 @@ For each thread:
 static tid_t __scheduler_rr(unsigned long sched_flags)
 { 
     struct thread_d *TmpThread;
-
     struct thread_d *Idle;
-    register int i=0;
     tid_t FirstTID = -1;
+
+    register int i=0;
 
 // These are the queues,
 // But RR will build only the p1q, the one with lower priority.
@@ -1126,6 +1130,7 @@ tid_t scheduler(void)
 {
     struct thread_d *Idle;
     tid_t first_tid = (-1);
+
     //#todo: Create a method for this.
     int Policy = (int) SchedulerInfo.policy;
     //#todo: Create a method for this.
@@ -1260,9 +1265,10 @@ fail:
 // Active threads states: READY and RUNNING.
 unsigned long sched_count_active_threads(void)
 {
+    struct thread_d *t;
+
     register int i=0;
     unsigned long Counter=0;
-    struct thread_d *t;
 
     for (i=0; i<THREAD_COUNT_MAX; i++)
     {
@@ -1290,18 +1296,15 @@ void sched_boost_ds_thread(void)
         return;
     
     target_tid = (tid_t) DisplayServerInfo.tid;
-
     // Validate thread ID
     if (target_tid < 0 || target_tid >= THREAD_COUNT_MAX){
         return;
     }
-
     // Get thread object
     t = (void *) threadList[target_tid];
     if ((void *) t == NULL){
         return;
     }
-
     // Validate thread structure
     if (t->used != TRUE || t->magic != 1234){
         return;
@@ -1321,13 +1324,11 @@ void sched_boost_foreground_thread(void)
     if (target_tid < 0 || target_tid >= THREAD_COUNT_MAX){
         return;
     }
-
     // Get thread object
     t = (void *) threadList[target_tid];
     if ((void *) t == NULL){
         return;
     }
-
     // Validate thread structure
     if (t->used != TRUE || t->magic != 1234){
         return;
@@ -1341,11 +1342,9 @@ void sched_boost_foreground_thread(void)
 void sched_lower_current_thread(int lapic_info_id)
 {
     struct thread_d *t;
-
 // Invalud core number
     if (lapic_info_id < 0 || lapic_info_id >= NR_CPUS)
         return;
-
     tid_t target_tid = (tid_t) lapic_info[lapic_info_id].current_tid;
 
     // Validate thread ID
@@ -1371,17 +1370,14 @@ void sched_lower_current_thread(int lapic_info_id)
 // SYSCALL HANDLERS
 //
 
-// #test
+// #test: Be nice. (Decrement priority)
 // 777 - Implementation of rtl_nice() from ring 3 library 
 void sys_nice(unsigned long decrement, int lapic_info_id)
 {
     struct thread_d  *t;
-
-
-// Invalud core number
+// Invalid core number
     if (lapic_info_id < 0 || lapic_info_id >= NR_CPUS)
         return;
-
     tid_t target_tid = (tid_t) lapic_info[lapic_info_id].current_tid;
 
 // #todo: Privilegies

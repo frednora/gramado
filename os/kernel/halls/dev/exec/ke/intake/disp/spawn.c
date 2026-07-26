@@ -46,7 +46,7 @@ void spawn_reset_eoi_state(void)
 // local
 static void __spawn_load_pml4_table(unsigned long phy_addr)
 {
-    asm volatile ("movq %0,%%cr3"::"r"(phy_addr));
+    asm volatile ("movq %0, %%cr3"::"r"(phy_addr));
 }
 
 // local

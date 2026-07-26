@@ -18,12 +18,13 @@ struct thread_d  *currentq;
 
 int set_currentq(struct thread_d *thread)
 {
-    if ((void*) thread == NULL)
-        return -1;
+    if ((void*) thread == NULL){
+        return (int) -1;
+    }
     if (thread->used != TRUE)
-        return -1;
+        return (int) -1;
     if (thread->magic != 1234)
-        return -1;
+        return (int) -1;
 
 // Set
     currentq = thread;  
@@ -70,13 +71,11 @@ fail:
 
 struct thread_d *qlist_get_element(int index)
 {
-
 // Parameter:
     if ( index < 0 || index >= SCHEQ_QUEUE_COUNT_MAX )
     {
         goto fail;
     }
-
 // The default queue
     if (index == SCHED_DEFAULT_QUEUE){
         return (struct thread_d *) qList[SCHED_DEFAULT_QUEUE];

@@ -104,7 +104,6 @@ void IncrementDispatcherCount(int type)
 void dispatcher(int type)
 {
     struct thread_d *TargetThread;
-
     tid_t TargetTID = -1;
 
     //debug_print (" DISPATCHER: ");
@@ -122,7 +121,8 @@ void dispatcher(int type)
 // ...
 
     //#hack
-    if (type != DISPATCHER_CURRENT){
+    if (type != DISPATCHER_CURRENT)
+    {
         type = DISPATCHER_CURRENT;
     }
 
@@ -232,10 +232,9 @@ int init_dispatch(void)
 // List
 // Dispatcher ready list.
 // #ps: Maybe it is not used.
-    for ( i=0; i < PRIORITY_MAX; i++ ){
+    for (i=0; i < PRIORITY_MAX; i++){
         dispatcherReadyList[i] = (unsigned long) 0;
     };
-
 
 // Dispatch Count Block
 // see: dispatch.c
@@ -254,8 +253,8 @@ int init_dispatch(void)
     DispatchCountBlock->SelectIdealCount = 0;
     DispatchCountBlock->SelectDispatcherQueueCount = 0;
     // ...
-    DispatchCountBlock->used=TRUE;
-    DispatchCountBlock->magic=1234;
+    DispatchCountBlock->used = TRUE;
+    DispatchCountBlock->magic = 1234;
     DispatchCountBlock->initialized = TRUE;
 
     return 0;
