@@ -32,6 +32,12 @@ Broadcast dispatcher:
 // This way we can change it in the case of repetitions.
 //struct msg_d *last_msg;
 
+// #todo: ??
+// Nao podemos deixar que toda vez que uma thread receber uma mensagem 
+// ela exija um timeout. Pois uma aplicaçao pode enviar mensagens em loop.
+// Talvez isso deva ser permitido somente para mensagens de input vindas
+// dos device drivers.
+
 int
 ipc_post_message_to_tid2 ( 
     tid_t sender_tid,
@@ -42,20 +48,12 @@ ipc_post_message_to_tid2 (
     unsigned long long3,
     unsigned long long4 )
 {
-// #todo:
-// Nao podemos deixar que toda vez que uma thread receber uma mensagem 
-// ela exija um timeout. Pois uma aplicaçao pode enviar mensagens em loop.
-// Talvez isso deva ser permitido somente para mensagens de input vindas
-// dos device drivers.
+    struct thread_d *t;  // Target thread
+    tid_t src_tid = (tid_t) sender_tid;
+    tid_t dst_tid = (tid_t) receiver_tid;
 
-// Target thread.
-    struct thread_d *t;
     struct msg_d *m;
     int MessageCode=0;
-
-// TIDs
-    tid_t src_tid = (tid_t) (sender_tid & 0xFFFF);
-    tid_t dst_tid = (tid_t) (receiver_tid & 0xFFFF);
 
 // Message code
     MessageCode = (int) (msg & 0xFFFFFFFF);
@@ -196,6 +194,13 @@ fail:
 // Async
 // Starvation risk: If malicious or buggy code keeps sending invalid messages, 
 // threads may repeatedly hit this path and block unnecessarily.
+
+// #todo: ??
+// Nao podemos deixar que toda vez que uma thread receber uma mensagem 
+// ela exija um timeout. Pois uma aplicaçao pode enviar mensagens em loop.
+// Talvez isso deva ser permitido somente para mensagens de input vindas
+// dos device drivers.
+
 int
 ipc_post_message_to_tid ( 
     tid_t sender_tid,
@@ -204,20 +209,12 @@ ipc_post_message_to_tid (
     unsigned long long1, 
     unsigned long long2 )
 {
-// #todo:
-// Nao podemos deixar que toda vez que uma thread receber uma mensagem 
-// ela exija um timeout. Pois uma aplicaçao pode enviar mensagens em loop.
-// Talvez isso deva ser permitido somente para mensagens de input vindas
-// dos device drivers.
+    struct thread_d *t;  // Target thread
+    tid_t src_tid = (tid_t) sender_tid;
+    tid_t dst_tid = (tid_t) receiver_tid;
 
-// Target thread
-    struct thread_d *t;
     struct msg_d *m;
     int MessageCode=0;
-
-// TIDs
-    tid_t src_tid = (tid_t) (sender_tid & 0xFFFF);
-    tid_t dst_tid = (tid_t) (receiver_tid & 0xFFFF);
 
 // Message code
     MessageCode = (int) (msg & 0xFFFFFFFF);
@@ -487,17 +484,14 @@ ipc_post_message_to_foreground_thread (
 // Kernel is the sender and init process is the receiver
     tid_t SenderTID = __HARDWARE_TID;
     tid_t ReceiverTID = foreground_thread;
-
-    int RetValue=0;
+    int RetValue = 0;
 
 // Parameter:
     if (msg < 0){
         goto fail;
     }
-
-// Target thread
-    if ( ReceiverTID < 0 || 
-         ReceiverTID >= THREAD_COUNT_MAX )
+    // Target thread
+    if (ReceiverTID < 0 || ReceiverTID >= THREAD_COUNT_MAX)
     {
         goto fail;
     }
@@ -523,7 +517,6 @@ ipc_post_message_to_init (
     unsigned long long1, 
     unsigned long long2 )
 {
-
 // Kernel is the sender and init thread is the receiver
     tid_t SenderTID = __HARDWARE_TID;
     tid_t ReceiverTID = INIT_TID;
@@ -563,7 +556,6 @@ ipc_post_message_to_ds (
     unsigned long long1, 
     unsigned long long2 )
 {
-
 // Kernel is the sender and display server is the receiver
     const tid_t SenderTID = (tid_t) __HARDWARE_TID;
     tid_t ReceiverTID = -1;  // Not initialized yet
@@ -673,13 +665,13 @@ ipc_broadcast_system_message(
     unsigned long long3,
     unsigned long long4 )
 {
-    register int i=0;
     struct thread_d *t;
-    int rv=0;
-    size_t Counter = 0;
+    tid_t src_tid = (tid_t) sender_tid;  // caller's TID
+    tid_t dst_tid = (tid_t) -1;          // target TID
 
-    tid_t src_tid = (tid_t) sender_tid;  // caller's tid.
-    tid_t dst_tid = (tid_t) -1;          // targt tid.
+    register int i=0;
+    size_t Counter = 0;
+    int rv=0;
 
 // #todo
 
@@ -715,14 +707,15 @@ ipc_broadcast_system_message(
 // Worker
 void *ipc_get_message(unsigned long ubuf)
 {
-    unsigned long *message_address = (unsigned long *) ubuf;
     register struct thread_d *t;
+    // Get from this TID
+    tid_t FromThisTID = (tid_t) lapic_info[0].current_tid;
+
+    unsigned long *message_address = (unsigned long *) ubuf;
     register struct msg_d *m;
     int fBlockOnEmpty = FALSE;
     int fEmpty = FALSE;
 
-    // Get from this TID
-    tid_t FromThisTID = (tid_t) lapic_info[0].current_tid;
 
 // buffer
 // #todo: Check some other invalid address.
@@ -907,15 +900,15 @@ void *sys_get_message2(
     int restart)
 {
 // fetches a message by explicit index (with optional restart).
+    register struct thread_d *t;
+    // Get from this TID
+    tid_t FromThisTID = (tid_t) lapic_info[0].current_tid;
 
     unsigned long *message_address = (unsigned long *) ubuf;
-    register struct thread_d *t;
     register struct msg_d *m;
     int fBlockOnEmpty = FALSE;
     int fEmpty = FALSE;
 
-    // Get from this TID
-    tid_t FromThisTID = (tid_t) lapic_info[0].current_tid;
 
 // buffer
 // #todo: Check some other invalid address.
@@ -1084,14 +1077,13 @@ sys_post_message_to_tid(
     int tid, 
     unsigned long ubuf )
 {
-
-// Sender: caller's tid
+// TID: Sender and receiver
     tid_t src_tid = (tid_t) lapic_info[0].current_tid;
-// Receiver: targt tid
     tid_t dst_tid = (tid_t) tid;
 
 // Invalid target tid
-    if ( dst_tid < 0 || dst_tid >= THREAD_COUNT_MAX ){
+    if (dst_tid < 0 || dst_tid >= THREAD_COUNT_MAX)
+    {
         return 0;
     }
 
@@ -1146,7 +1138,6 @@ sys_post_message_to_tid(
 
 unsigned long sys_broadcast_system_message(unsigned long ubuf)
 {
-
 // Sender: The current thread for this core
     tid_t Sender_TID = (tid_t) lapic_info[0].current_tid;
 
@@ -1178,3 +1169,4 @@ unsigned long sys_broadcast_system_message(unsigned long ubuf)
 
     return (unsigned long) long_rv;
 }
+
