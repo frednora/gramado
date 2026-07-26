@@ -225,7 +225,11 @@ See cmds/.
 
 This is a screenshot of the Desktop Environment running on top of the kernel.
 You can find code in the native/ folder.
-![Screenshot](https://raw.githubusercontent.com/noraside/screenshots/main/gramado-99.png)
+![Screenshot](https://raw.githubusercontent.com/noraside/screenshots/main/gramado-300.png)
+
+This is a screenshot of the Desktop Environment running on top of the kernel.
+You can find code in the native/ folder.
+![Screenshot](https://raw.githubusercontent.com/noraside/screenshots/main/gramado-100.png)
 
 ## Gramado API 
 
@@ -235,7 +239,7 @@ You can find the API to create client-side GUI applications in apps/.
 
 This is a screenshot of 3D demo running on top of the kernel.
 You can find code in the demo00/ folder.
-![Screenshot](https://raw.githubusercontent.com/noraside/screenshots/main/demo00.png)
+![Screenshot](https://raw.githubusercontent.com/noraside/screenshots/main/gramado-200.png)
 
 ## The source code.
 
