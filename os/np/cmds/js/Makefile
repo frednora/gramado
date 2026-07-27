@@ -46,7 +46,7 @@ LIBCOBJ = ../api/libs/rtl/obj
 
 # Objects
 myObjects = crt0.o rtl.o \
-ctype.o stdlib.o stdio.o string.o unistd.o termios.o ioctl.o fcntl.o \
+ctype.o stdlib.o stdio.o string.o strtol.o unistd.o termios.o ioctl.o fcntl.o \
 globals.o jslex.o jspar.o jsvm.o tree.o compiler.o \
 main.o    
 
@@ -68,6 +68,7 @@ all-c:
 	cp $(LIBCOBJ)/stdio.o   .
 	cp $(LIBCOBJ)/stdlib.o  .
 	cp $(LIBCOBJ)/string.o  .
+	cp $(LIBCOBJ)/strtol.o  .
 	cp $(LIBCOBJ)/time.o    .
 	cp $(LIBCOBJ)/unistd.o  .
 	cp $(LIBCOBJ)/termios.o .

@@ -12,9 +12,11 @@ const MyCONST: "hello const";
 let   MyLET:   "hello let";
 var   MyVAR:   "hello var";
 
-const MYCONST_VALUE = 1 + 2;
-const MYLET_VALUE   = 3 + 4;
-const MYVAR_VALUE   = 5 + 6;
+var MYVAR_VALUE = 42;
+var MYVAR_SUM = 1 + 2;
+var MYVAR_EXPRESSION = 1 + 2 * 3;
+
+const MYCONST_VALUE = 42424242;
 
 exit;
 
