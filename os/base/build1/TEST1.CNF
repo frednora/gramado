@@ -8,9 +8,11 @@ box MyBox
 
 print ("Bye");
 
-var MyVARIABLE = 1 + 2;
-
-var MyVar: "Hello world!";
+var MyString1: "String 1";
+var MyVar1 = 12345678444;
+var MySum = 1 + 2;
+var SuperExpression = 1 + 2 * 3;
+var MyString2: "String 2";
 
 exit;
 
