@@ -38,11 +38,16 @@
 #define __MSG_DC4  79  // ^t
 */
 
+#define BUFFER_COLUMNS 80
+#define BUFFER_ROWS    25
+
+struct terminal_line_d *text_buffer_head = NULL;
+
 // Program name
 static const char *program_name = "TERMINAL";
 struct gws_display_d *Display;
 
-struct dccanvas_d *dc00;  // shared dc
+struct dccanvas_d *dc00 = NULL;  // shared dc
 
 FILE *__terminal_input_fp;
 
@@ -54,8 +59,8 @@ static int main_window=0;
 static int terminal_window=0;
 
 // color
-static unsigned int bg_color = COLOR_BLACK;
-static unsigned int fg_color = COLOR_WHITE;
+static unsigned int __bg_color = COLOR_BLACK;
+static unsigned int __fg_color = COLOR_WHITE;
 static unsigned int prompt_color = COLOR_GREEN;
 
 // Embedded shell
@@ -90,11 +95,11 @@ unsigned long __tmp_y=0;
 
 // ---------------------------------------
 // see: term0.h
-struct terminal_line  LINES[32];
+// struct terminal_line  LINES[32];
 // Conterá ponteiros para estruturas de linha.
-unsigned long lineList[LINE_COUNT_MAX];
+// unsigned long lineList[LINE_COUNT_MAX];
 // Conterá ponteiros para estruturas de linha.
-unsigned long screenbufferList[8];
+// unsigned long screenbufferList[8];
 
 // ---------------------------------------
 // see: term0.h
@@ -206,15 +211,36 @@ unsigned long frame_top=0;
 unsigned long frame_width=0;
 unsigned long frame_height=0;
 
-// Current client area values
-unsigned long cr_left=0;
-unsigned long cr_top=0;
-unsigned long cr_width=0;
-unsigned long cr_height=0;
+//
+// Viewport
+//
+// In this terminal application, the term "viewport" refers to the
+// rectangular region of the shared canvas that corresponds to the
+// client area of the application's window. 
+// - The viewport defines the visible portion of the text grid.
+// - Its dimensions are given by cr_left, cr_top, cr_width, cr_height.
+// - Drawing functions (e.g. libgui_drawchar_dc, lingui_draw_rectangle0_dc)
+//   operate only inside this region.
+// - The buffer may contain more lines/columns than fit in the viewport;
+//   scrolling moves the viewport over the buffer.
+// - Since the canvas pitch matches the screen pitch, the viewport maps
+//   directly onto the client area without extra transformations.
+//
+
+static struct viewport_d  AppViewPort;
 
 //
 // == Private functions: Prototypes ==============
 //
+
+// Local worker
+static void __draw_char(
+    int fd,
+    struct dccanvas_d *dc,
+    int c,
+    unsigned int fg_color,
+    unsigned int bg_color,
+    unsigned int style );
 
 static void __initialize_basics(void);
 
@@ -271,7 +297,202 @@ int ptys_fd = -1;
 
 static void terminal_notify_child_close(void);
 
+
+static void __terminal_init_text_buffer(void);
+
+
+// Global worker: draw a character from the text buffer
+void terminal_draw_char_from_buffer(
+    int fd,
+    struct dccanvas_d *dc,
+    struct terminal_line_d *line,
+    int index );
+
+void terminal_draw_line(int fd, struct dccanvas_d *dc, struct terminal_line_d *line);
+
+// Draw the entire text buffer (all lines)
+void terminal_draw_buffer(int fd, struct dccanvas_d *dc);
+
+// Insert a character into the text buffer at the current cursor position
+void terminal_insert_char_into_buffer(
+    struct terminal_line_d *line,
+    char ch,
+    unsigned int fg_color,
+    unsigned int bg_color,
+    unsigned int style );
+
+// Insert a string into the text buffer at the current cursor position
+void terminal_insert_string_into_buffer(
+    struct terminal_line_d *line,
+    const char *str,
+    unsigned int fg_color,
+    unsigned int bg_color,
+    unsigned int style );
+
 //====================================================
+
+
+static void __terminal_init_text_buffer(void)
+{
+    struct terminal_line_d *prev_line = NULL;
+    int row;
+
+    for (row = 0; row < BUFFER_ROWS; row++) 
+    {
+        // Allocate line struct
+        struct terminal_line_d *line = malloc(sizeof(struct terminal_line_d));
+        if (!line) return;
+
+        // Allocate character and attribute arrays
+        line->CHARS = malloc(BUFFER_COLUMNS * sizeof(char));
+        line->ATTRS = malloc(BUFFER_COLUMNS * sizeof(struct char_attr));
+
+        if (!line->CHARS || !line->ATTRS) 
+        {
+            // handle allocation failure
+            //free(line->CHARS);
+            //free(line->ATTRS);
+            //free(line);
+            return;
+        }
+
+        // Clean memory manually
+        memset(line->CHARS, 0, BUFFER_COLUMNS * sizeof(char));
+        memset(line->ATTRS, 0, BUFFER_COLUMNS * sizeof(struct char_attr));
+
+        // Initialize metadata
+        line->length   = 0;
+        line->capacity = BUFFER_COLUMNS;
+        line->pos      = 0;
+
+        // Link into list
+        line->prev = prev_line;
+        line->next = NULL;
+        if (prev_line) {
+            prev_line->next = line;
+        } else {
+            text_buffer_head = line; // first line
+        }
+
+        prev_line = line;
+    }
+}
+
+// Global worker: draw a character from the text buffer
+void terminal_draw_char_from_buffer(
+    int fd,
+    struct dccanvas_d *dc,
+    struct terminal_line_d *line,
+    int index )
+{
+    if (!dc || !line) return;
+    if (index < 0 || index >= line->capacity) return;
+
+    // Fetch character and its attributes
+    char ch = line->CHARS[index];
+    struct char_attr attr = line->ATTRS[index];
+
+    // Call the local worker to render the glyph with attributes
+    __draw_char(fd, dc, ch, attr.fg_color, attr.bg_color, attr.style);
+}
+
+void terminal_draw_line(int fd, struct dccanvas_d *dc, struct terminal_line_d *line)
+{
+    int i;
+    if (!line) return;
+    for (i = 0; i < line->length; i++) {
+        terminal_draw_char_from_buffer(fd, dc, line, i);
+    }
+}
+
+// Draw the entire text buffer (all lines)
+void terminal_draw_buffer(int fd, struct dccanvas_d *dc)
+{
+    int i;
+    if (!dc || !text_buffer_head) return;
+
+    struct terminal_line_d *line = text_buffer_head;
+    int row = 0;
+
+    while (line && row < BUFFER_ROWS) {
+        // Draw this line
+        for (i = 0; i < line->length; i++) {
+            terminal_draw_char_from_buffer(fd, dc, line, i);
+        }
+
+        // Advance to next line
+        line = line->next;
+        row++;
+    }
+}
+
+
+
+// Insert a character into the text buffer at the current cursor position
+void terminal_insert_char_into_buffer(
+    struct terminal_line_d *line,
+    char ch,
+    unsigned int fg_color,
+    unsigned int bg_color,
+    unsigned int style )
+{
+    if (!line) return;
+    if (line->pos < 0 || line->pos >= line->capacity) return;
+
+    // Place character
+    line->CHARS[line->pos] = ch;
+
+    // Place attributes
+    line->ATTRS[line->pos].fg_color = fg_color;
+    line->ATTRS[line->pos].bg_color = bg_color;
+    line->ATTRS[line->pos].style    = style;
+
+    // Update line length if needed
+    if (line->pos >= line->length) {
+        line->length = line->pos + 1;
+    }
+
+    // Advance cursor position
+    line->pos++;
+    if (line->pos >= line->capacity) {
+        line->pos = line->capacity - 1; // clamp at end
+    }
+}
+
+// Insert a string into the text buffer at the current cursor position
+void terminal_insert_string_into_buffer(
+    struct terminal_line_d *line,
+    const char *str,
+    unsigned int fg_color,
+    unsigned int bg_color,
+    unsigned int style )
+{
+    if (!line || !str) return;
+
+    int i = 0;
+    while (str[i] != '\0') {
+        if (line->pos < 0 || line->pos >= line->capacity) {
+            break; // stop if we reach end of line
+        }
+
+        // Place character
+        line->CHARS[line->pos] = str[i];
+
+        // Place attributes
+        line->ATTRS[line->pos].fg_color = fg_color;
+        line->ATTRS[line->pos].bg_color = bg_color;
+        line->ATTRS[line->pos].style    = style;
+
+        // Update line length if needed
+        if (line->pos >= line->length) {
+            line->length = line->pos + 1;
+        }
+
+        // Advance cursor
+        line->pos++;
+        i++;
+    }
+}
 
 // Quick and dirty kill: send ETX and EOT to child
 static void terminal_notify_child_close(void)
@@ -363,11 +584,10 @@ static void update_clients(int fd)
     frame_height = lWi.height;
 
 // Current client area values
-    cr_left = lWi.cr_left;
-    cr_top  = lWi.cr_top;
-    cr_width  = lWi.cr_width;
-    cr_height = lWi.cr_height;
-
+    AppViewPort.left   = lWi.cr_left;
+    AppViewPort.top    = lWi.cr_top;
+    AppViewPort.width  = lWi.cr_width;
+    AppViewPort.height = lWi.cr_height;
 
     //if (wid < 0)
        // return;
@@ -448,6 +668,56 @@ static void update_clients(int fd)
         Terminal.height_in_chars = 
             (unsigned long)((Terminal.height/FontInfo.height) & 0xFFFF);
     }
+
+
+
+//
+// #test: inserting and drawing a char
+//
+
+    /*
+// Insert "Hello" with white fg, black bg, bold style
+    terminal_insert_string_into_buffer(
+        text_buffer_head,   // first line
+        "Hello",
+        COLOR_WHITE,
+        COLOR_BLACK,
+        0
+    );
+    */
+
+    /*
+    terminal_insert_char_into_buffer(
+        text_buffer_head,   // first line
+        'A',
+        COLOR_WHITE,
+        COLOR_BLACK,
+        0
+    );
+    */
+
+    // terminal_draw_char_from_buffer(fd, dc00, text_buffer_head, 0);
+
+// ===============================
+
+/*
+
+// Clear buffer first
+    terminalClearBuffer();
+
+// Insert a string into the first line
+    terminal_insert_string_into_buffer(
+        text_buffer_head,   // start of buffer
+        "Hello, Gramado Terminal!",
+        COLOR_WHITE,
+        COLOR_BLACK,
+        0 // no style
+    );
+
+// Draw the entire buffer
+    terminal_draw_buffer(fd, dc00);
+*/
+
 }
 
 // Redraw and refresh the client window.
@@ -501,9 +771,7 @@ static void clear_terminal_client_window(int fd)
         0  // ROP
     );    
 
-
-
-// Update cursor.
+// Update cursor
     cursor_x = Terminal.left;
     cursor_y = Terminal.top;
 }
@@ -1423,29 +1691,22 @@ static void doPrompt(int fd)
     unsigned long x = (cursor_x*CharWidth);
     unsigned long y = (cursor_y*CharHeight);
 
-
     libgui_drawchar( 
-        frame_left + cr_left + (x & 0xFFFF),
-        frame_top  + cr_top  + (y & 0xFFFF),
-        '>',  //c,
+        frame_left + AppViewPort.left + (x & 0xFFFF),
+        frame_top  + AppViewPort.top  + (y & 0xFFFF),
+        '>',
         prompt_color, 
-        COLOR_BLACK,   // bg
+        __bg_color,
         0
     );
 
-
-
 // Refresh to show it
     libgui_refresh_rectangle_via_kernel(
-        frame_left + cr_left + (x & 0xFFFF), 
-        frame_top  + cr_top  + (y & 0xFFFF), 
+        frame_left + AppViewPort.left + (x & 0xFFFF), 
+        frame_top  + AppViewPort.top  + (y & 0xFFFF), 
         8, 
         8
     );
-
-
-    // it works
-    //gws_refresh_window(fd,wid);
 }
 
 // Testing the standard stream.
@@ -1535,7 +1796,7 @@ void test_standard_stream(int fd)
                 if( buffer[i] == EOF){ printf("FIM1\n"); return; }
                 
                 if( buffer[i] != 0){
-                    //terminal_write_char(fd, buffer[i]);
+                    //__draw_char(fd, dc00, buffer[i], COLOR_WHITE, COLOR_BLACK, 0);
                     tputc ((int) fd, window, (int) buffer[i], (int) 1); //com tratamento de escape sequence.
                 }
             };
@@ -1566,15 +1827,20 @@ test_child_message(void)
 // fd: File descriptor.
 // window: The terminal client window id.
 
-void 
-terminal_write_char (
-    int fd, 
-    int window, 
-    int c )
+// Low-level worker: draw a single character into the viewport
+// Local worker: draw a single character with attribute
+static void __draw_char(
+    int fd,
+    struct dccanvas_d *dc,
+    int c,
+    unsigned int fg_color,
+    unsigned int bg_color,
+    unsigned int style )
 {
     static char prev=0;
     unsigned long CharWidth = __CHAR_WIDTH;
     unsigned long CharHeight = __CHAR_HEIGHT;
+    unsigned long ROP = 0; //#todo: This will receive the value from the parameter.
 
     if (FontInfo.initialized == TRUE)
     {
@@ -1585,8 +1851,11 @@ terminal_write_char (
     unsigned long x = (cursor_x * CharWidth);
     unsigned long y = (cursor_y * CharHeight);
 
-    if (fd<0)    {return;}
-    if (window<0){return;}
+    if (fd<0){
+        return;
+    }
+    if ((void *) dc == NULL)
+        return;
 
     // #test: Suppresing this if statement.
     //if (c<0)     {return;}
@@ -1594,13 +1863,11 @@ terminal_write_char (
     // #todo
     // #todo TAB
     /*
-    if (c == '\t')
-    {
+    if (c == '\t'){
         printf("TAB\n");
         return;
     }
     */
-
 
     if (c == '\r')
     {
@@ -1617,76 +1884,35 @@ terminal_write_char (
         cursor_y++;  //linha de baixo
         // #test
         // #todo: scroll
-        if ( cursor_y >= Terminal.height_in_chars )
+        if (cursor_y >= Terminal.height_in_chars)
         {
-            clear_terminal_client_window(fd);  //#provisório
+            // #provisory: But its working.
+            clear_terminal_client_window(fd);
         }
 
-        //começo da linha
-        prev = c; 
+        prev = c;   // Start of line
         return;
     }
 
-// Draw!
-// Draw the char into the given window.
-// Vamos pintar o char na janela usando o display server.
-// White on black
-// IN: fd, wid, l, t, color, ch.
-
-/*
-// Draw and refresh?
-    gws_draw_char (
-        (int) fd,
-        (int) window,
-        (unsigned long) (x & 0xFFFF),
-        (unsigned long) (y & 0xFFFF),
-        (unsigned long) fg_color,
-        (unsigned long) c );
-*/
-
-
-/*
-// Draw char using lingui
-// #ps: Using current values.
-// We gotta update the, when the server sends paint message.
-    libgui_drawchar( 
-        frame_left + cr_left + (x & 0xFFFF),
-        frame_top  + cr_top  + (y & 0xFFFF),
-        c,
-        fg_color, 
-        COLOR_BLACK,   // bg
-        0
-    );
-// Refresh to show it
-    libgui_refresh_rectangle_via_kernel(
-        frame_left + cr_left + (x & 0xFFFF), 
-        frame_top  + cr_top  + (y & 0xFFFF), 
-        8, 
-        8
-    );
-*/
+// Draw a char directly into the canvas using the dc.
+// #ps: This area sometimes is bigger than the viewport.
+// It's the job for the compositor to clip into the valid viewport area.
 
     libgui_drawchar_dc(
-        dc00, 
+        dc, 
         (x & 0xFFFF), 
         (y & 0xFFFF), 
-        c,
-        fg_color,      // fg color
-        COLOR_BLACK,   // bg color
-        0              // ROP
+        c, 
+        fg_color, 
+        bg_color, 
+        ROP 
     );
 
-
-
-// Coloca no buffer de linhas e colunas.
+// Insert into our text buffer
     terminalInsertNextChar((char) c); 
 
-// Circula
-// próxima linha.
-// começo da linha
-    cursor_x++;
-    
-    //if (cursor_x > __wlMaxColumns)
+// Next line. (round)
+    cursor_x++;   
     if (cursor_x >= Terminal.width_in_chars)
     {
         cursor_y++;
@@ -1707,6 +1933,7 @@ terminal_write_char (
 // Insert char into the line buffer.
 void terminalInsertNextChar(char c)
 {
+/*
 	// #todo
 	// para alguns caracteres temos que efetuar o flush.
 	// \n \r ... ??
@@ -1716,6 +1943,7 @@ void terminalInsertNextChar(char c)
         return;
 
     LINES[cursor_y].CHARS[cursor_x] = (char) c;
+*/
 }
 
 // Insert null terminator
@@ -1777,11 +2005,13 @@ void ri (void)
 // Delete the char at the cursor position.
 void del (void)
 {
+/*
     if (cursor_x < 0 || cursor_y < 0)
         return;
     
     LINES[cursor_y].CHARS[cursor_x]      = (char) '\0';
     LINES[cursor_y].ATTRIBUTES[cursor_x] = 7;
+*/
 }
 
 // Testing escape sequence inside the client window.
@@ -2020,7 +2250,7 @@ tputc (
                  
             // It's not a control code.
             if(is_control==FALSE){
-                terminal_write_char ( fd, window, (int) ascii ); 
+                __draw_char ( fd, dc00, (int) ascii, COLOR_WHITE, COLOR_BLACK, 0 ); 
             }
             return;
         };
@@ -2035,8 +2265,10 @@ tputc (
 
     if (__sequence_status == 0)
     {
-        if (is_control == FALSE){
-            terminal_write_char( fd, window, (int) ascii ); 
+        if (is_control == FALSE)
+        {
+            // #todo: goto insert;
+            __draw_char( fd, dc00, (int) ascii, COLOR_WHITE, COLOR_BLACK, 0 ); 
             return;
         }
     }
@@ -2060,7 +2292,9 @@ tputc (
 
                 //if (ascii == '\t')
                     //exit(0); //debug
-                terminal_write_char (fd, window, (int) ascii);
+
+                // #todo: goto insert;
+                __draw_char (fd, dc00, (int) ascii, COLOR_WHITE, COLOR_BLACK, 0);
                 //printf ("%c",ascii); //debug
                 return;
                 break;
@@ -2076,7 +2310,7 @@ tputc (
                 //printf("FOUND {033}. Start of sequence\n");
                 __sequence_status = 1;
                 Terminal.esc = ESC_START;
-                //terminal_write_char ( fd, window, (int) '$');  //debug
+                //__draw_char ( fd, dc00, (int) '$', COLOR_WHITE, COLOR_BLACK, 0);  //debug
                 //printf (" {ESCAPE} ");  //debug
                 return;
                 break;
@@ -2089,7 +2323,7 @@ tputc (
             case 0x1A:  // SUB - Substitute
             case 0x18:  // CAN - Cancel
                 //csireset ();
-                //terminal_write_char ( fd, window, (int) '$'); //debug
+                //__draw_char ( fd, dc00, (int) '$', COLOR_WHITE, COLOR_BLACK, 0); //debug
                 //printf (" {reset?} "); //debug
                 return;
                 break;
@@ -2139,7 +2373,7 @@ tputc (
                     // #todo: usarloop para de fato esvaziar o buffer.
                     __csi_buffer_tail = 0;
                     Terminal.esc = 0;  //??
-                    //terminal_write_char (fd, window, (int) '$'); //debug
+                    //__draw_char (fd, dc00, (int) '$', COLOR_WHITE, COLOR_BLACK, 0); //debug
                     //printf (" {m} "); //debug
                     return;
                     break;
@@ -2233,7 +2467,8 @@ tputc (
                     {
                         while (ivalue > 0)
                         {
-                            terminal_write_char(fd, window, (int) ' ');
+                            // #todo: goto insert;
+                            __draw_char(fd, dc00, (int) ' ', COLOR_WHITE, COLOR_BLACK, 0 );
                             ivalue--;
                         }
                     }
@@ -2326,7 +2561,7 @@ tputc (
             case '[':
                 //printf ("FOUND {[}\n"); //debug
                 Terminal.esc |= ESC_CSI;
-                //terminal_write_char ( fd, window, (int) '['); //debug
+                //__draw_char ( fd, dc00, (int) '[', COLOR_WHITE, COLOR_BLACK, 0); //debug
                 return;
                 break; 
    
@@ -2371,8 +2606,9 @@ tputc (
             // #todo: A=LINEFEED D=CARRIEGE RETURN.
             case 'D': 
                 Terminal.esc = 0;
-                //terminal_write_char ( fd, window, (int) '$');  //debug
+                //__draw_char ( fd, dc00, (int) '$', COLOR_WHITE, COLOR_BLACK, 0);  //debug
                 //printf (" {IND} ");  //debug
+                // #todo: Insert string into the text buffer
                 //tputstring(fd,"\r");
                 tputstring(fd,"\n");
                 break;
@@ -2382,7 +2618,8 @@ tputc (
             /* NEL -- Next line */ 
             case 'E': 
                 Terminal.esc = 0;
-                terminal_write_char ( fd, window, (int) '$'); //debug
+                // #todo: goto insert;
+                __draw_char ( fd, dc00, (int) '$', COLOR_WHITE, COLOR_BLACK, 0); //debug
                 //printf (" {NEL} "); //debug
                 break;
 
@@ -2390,15 +2627,17 @@ tputc (
             /* HTS -- Horizontal tab stop */
             case 'H':   
                 Terminal.esc = 0;
-                terminal_write_char ( fd, window, (int) '$'); //debug
-                 //printf (" {HTS} "); //debug
+                // #todo: goto insert;
+                __draw_char ( fd, dc00, (int) '$', COLOR_WHITE, COLOR_BLACK, 0); //debug
+                //printf (" {HTS} "); //debug
                 break;
 
             // ESC M - RI Reverse linefeed.
             /* RI -- Reverse index */
             case 'M':     
                 Terminal.esc = 0;
-                terminal_write_char ( fd, window, (int) '$'); //debug
+                // #todo: goto insert;
+                __draw_char ( fd, dc00, (int) '$', COLOR_WHITE, COLOR_BLACK, 0); //debug
                 //printf (" {RI} "); //debug
                 break;
 
@@ -2407,32 +2646,36 @@ tputc (
             // claiming that it is a VT102.
             /* DECID -- Identify Terminal */
             case 'Z':  
-                 Terminal.esc = 0;
-                 terminal_write_char (fd, window, (int) '$'); //debug
-                 //printf (" {DECID} "); //debug
-                 break;
+                Terminal.esc = 0;
+                // #todo: goto insert;
+                __draw_char (fd, dc00, (int) '$', COLOR_WHITE, COLOR_BLACK, 0); //debug
+                //printf (" {DECID} "); //debug
+                break;
 
             // ESC c - RIS  Reset.
             /* RIS -- Reset to inital state */
             case 'c': 
-                 Terminal.esc = 0;
-                 terminal_write_char ( fd, window, (int) '$'); //debug
-                 //printf (" {reset?} "); //debug
-                 break; 
+                Terminal.esc = 0;
+                // #todo: goto insert;
+                __draw_char ( fd, dc00, (int) '$', COLOR_WHITE, COLOR_BLACK, 0); //debug
+                //printf (" {reset?} "); //debug
+                break; 
 
             // ESC = - DECPAM   Set application keypad mode
             /* DECPAM -- Application keypad */
             case '=': 
-                 Terminal.esc = 0;
-                 terminal_write_char ( fd, window, (int) '$'); //debug
-                 //printf (" {=} "); //debug
-                 break;
+                Terminal.esc = 0;
+                // #todo: goto insert;
+                __draw_char ( fd, dc00, (int) '$', COLOR_WHITE, COLOR_BLACK, 0); //debug
+                //printf (" {=} "); //debug
+                break;
 
             // ESC > - DECPNM   Set numeric keypad mode
             /* DECPNM -- Normal keypad */
             case '>': 
                 Terminal.esc = 0;
-                terminal_write_char (fd, window, (int) '$'); //debug
+                // #todo: goto insert;
+                __draw_char (fd, dc00, (int) '$', COLOR_WHITE, COLOR_BLACK, 0); //debug
                 //printf (" {>} "); //debug
                 break;
 
@@ -2468,6 +2711,20 @@ tputc (
     };
  
     // ...
+
+    return;
+
+/*
+// #todo: We are working on that part of inserting a char into the text buffer.
+insert:
+    // Inject into buffer
+    terminal_insert_char_into_buffer(line, ch, fg_color, bg_color, style);
+
+    // Draw the character we just inserted
+    terminal_draw_char_from_buffer(fd, dc, line, line->pos - 1);
+
+    return;
+*/
 }
 
 // # terminal stuff
@@ -2478,6 +2735,7 @@ terminalGetCharXY (
     unsigned long x, 
     unsigned long y )
 {
+/*
     if ( x >= __wlMaxColumns || y >= __wlMaxRows )
     {
         // #bugbug
@@ -2485,6 +2743,8 @@ terminalGetCharXY (
     }
 
     return (char) LINES[y].CHARS[x];
+*/
+    return 0;
 }
 
 
@@ -2497,6 +2757,7 @@ terminalInsertCharXY (
     unsigned long y, 
     char c )
 {
+/*
     if ( x >= __wlMaxColumns || y >= __wlMaxRows )
     {
         return;
@@ -2504,6 +2765,7 @@ terminalInsertCharXY (
 
     LINES[y].CHARS[x]      = (char) c;
     LINES[y].ATTRIBUTES[x] = 7;
+*/
 }
 
 // # terminal stuff
@@ -2524,22 +2786,37 @@ static void restore_cur (void)
 // Limpa o buffer da tela.
 // Inicializamos com espaços.
 
-void terminalClearBuffer (void)
+// Clear the entire text buffer (all lines)
+void terminalClearBuffer(void)
 {
-    register int i=0;
-    int j=0;
-    for ( i=0; i<32; i++ )
-    {
-        for ( j=0; j<80; j++ ){
-            LINES[i].CHARS[j]      = (char) ' ';
-            LINES[i].ATTRIBUTES[j] = (char) 7;
-        };
-        LINES[i].left = 0;
-        LINES[i].right = 0;
-        LINES[i].pos = 0;
-    };
-}
+    int i;
 
+    if (!text_buffer_head) 
+        return;
+
+    struct terminal_line_d *line = text_buffer_head;
+    int row = 0;
+
+    while (line && row < BUFFER_ROWS) {
+        // Reset characters to spaces
+        memset(line->CHARS, ' ', line->capacity * sizeof(char));
+
+        // Reset attributes to defaults
+        for (i = 0; i < line->capacity; i++) {
+            line->ATTRS[i].fg_color = COLOR_WHITE;
+            line->ATTRS[i].bg_color = COLOR_BLACK;
+            line->ATTRS[i].style    = 0;
+        }
+
+        // Reset metadata
+        line->length = 0;
+        line->pos    = 0;
+
+        // Advance to next line
+        line = line->next;
+        row++;
+    }
+}
 
 /*
 //#test
@@ -2665,6 +2942,7 @@ int __terminal_clone_and_execute (char *name)
     return (int) sc80 ( 900, (unsigned long) name, 0, 0 );
 }
 
+// #deprecated
 void _draw(int fd, int c)
 {
 
@@ -2697,12 +2975,13 @@ void _draw(int fd, int c)
                         (unsigned long) x ); 
                         */
                     
+                  // #deprecated: using the server
                   gws_draw_char (
                       (int) fd,             // fd,
                       (int) 0,              // window id,
                       (unsigned long) __tmp_x,    // left,
                       (unsigned long) __tmp_y,    // top,
-                      (unsigned long) fg_color,
+                      (unsigned long) __fg_color,
                       (unsigned long) c );
       
                     
@@ -3522,8 +3801,8 @@ static void __initializeTerminalComponents(void)
     int i=0;
     int j=0;
 
-    bg_color = COLOR_BLACK;
-    fg_color = COLOR_WHITE;
+    __bg_color = COLOR_BLACK;
+    __fg_color = COLOR_WHITE;
     cursor_x=0;
     cursor_y=0;
     prompt_color = COLOR_GREEN;
@@ -3664,6 +3943,9 @@ int terminal_init(unsigned short flags)
 // Initializing basic variables
     __initialize_basics();
 
+
+    __terminal_init_text_buffer();
+
 // Device info
 // #todo: Check for 'zero'.
     w = gws_get_system_metrics(1);
@@ -3781,7 +4063,7 @@ int terminal_init(unsigned short flags)
     unsigned long wWidth  = mwWidth >> 1;
     unsigned long wHeight =  mwHeight >> 1;
 
-    unsigned int wColor = (unsigned int) bg_color;
+    unsigned int wColor = (unsigned int) __bg_color;
 
 // Getting information about the main window.
 // We're gonna need this to fit the terminal window
@@ -3894,12 +4176,13 @@ int terminal_init(unsigned short flags)
     frame_width = lWi.width;
     frame_height = lWi.height;
 
+// Initialize the viewport structure
 // Current client area values
-    cr_left = lWi.cr_left;
-    cr_top  = lWi.cr_top;
-    cr_width  = lWi.cr_width;
-    cr_height = lWi.cr_height;
-
+    AppViewPort.left   = lWi.cr_left;
+    AppViewPort.top    = lWi.cr_top;
+    AppViewPort.width  = lWi.cr_width;
+    AppViewPort.height = lWi.cr_height;
+    AppViewPort.initialized = TRUE;
 
 // #danger
 // Let's get the values for the client area.
@@ -4319,6 +4602,7 @@ int main(int argc, char *argv[])
     };
 */
 
+
 // Initializing the structure.
     Terminal.initialized = FALSE;
     Terminal.client_fd = -1;
@@ -4343,6 +4627,9 @@ int main(int argc, char *argv[])
     Terminal.height_in_chars = 0;
 
     // ...
+
+// The viewport
+    AppViewPort.initialized = FALSE;
 
 // --------------------------------
 // #test

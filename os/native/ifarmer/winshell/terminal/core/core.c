@@ -107,7 +107,7 @@ void test_tty_support(int fd)
             
             for(i=0;i<32;i++){
                 if( buffer[i] != 0)
-                    terminal_write_char(fd, buffer[i]);
+                    __draw_char(fd, buffer[i]);
             }
             return;
         }

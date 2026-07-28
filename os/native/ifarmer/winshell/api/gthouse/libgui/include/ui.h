@@ -148,5 +148,32 @@ struct ui_component_d
     struct ui_component *next;
 };
 
+//
+// Viewport
+//
+// A viewport is the rectangular region of a rendering surface
+// (such as a canvas, buffer, or screen) that defines the visible
+// portion of the content. 
+// - It specifies position and dimensions (left, top, width, height).
+// - Drawing operations are clipped to this region.
+// - The viewport may show only part of a larger buffer; scrolling
+//   or resizing changes which portion is visible.
+// - Commonly used in graphics systems, window managers, and browsers
+//   to describe the area where content is displayed.
+//
+
+struct viewport_d 
+{
+    int initialized;
+
+    unsigned long left;
+    unsigned long top;
+    unsigned long width;
+    unsigned long height;
+
+    // ...
+};
+
+
 #endif  
 

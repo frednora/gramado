@@ -192,36 +192,29 @@ extern unsigned long __tmp_y;
 //unsigned long foregroung_color;  //texto.
 
 //
-// ## Text support #@#
+// ## Text support
 //
 
-struct terminal_line
-{
-    char CHARS[80];
-    char ATTRIBUTES[80];
-// Início e fim da string dentro da linha.
-// O resto é espaço.
-    int left;
-    int right;
-// Posição do cursor dentro da linha.
-    int pos;
+// Attribute struct for each character
+struct char_attr {
+    unsigned int fg_color;   // foreground color
+    unsigned int bg_color;   // background color
+    unsigned int style;      // bitmask for bold, underline, etc.
 };
 
-// #importante
-// É nesse buffer que estamos escrevendo. É como um arquivo.
-// PROVISÓRIO
-// O TEXTO TEM 32 LINHAS NO MÁXIMO.
-// ESSA É A PARTE DO TEXTO QUE PODERÁ SER MANIPULADA,
-// O RESTO DO TEXTO DEVERÁ FICAR ESPERANDO NO BUFFER.
-// #IMPORTANTE: 25 DESSAS 32 LINHAS SERÃO VISÍVEIS.
-// #importante: O início dessas estruturas pode representar o inpicio de 
-// um arquivo.
-// Esse arquivo pode ser um buffer
-// Um arquivo no servidor de recursos gráficos pode ser usado para escrevermos 
-// nele usando as rotinas da libc.
+// Linked-list based line structure
+struct terminal_line_d 
+{
+    char *CHARS;                 // dynamically allocated string buffer
+    struct char_attr *ATTRS;     // parallel attributes buffer
+    int length;                  // number of characters currently in the line
+    int capacity;                // allocated capacity for CHARS/ATTRS
+    int pos;                     // cursor position within the line
 
-//DEFAULT_BUFFER_MAX_ROWS
-extern struct terminal_line  LINES[32];
+    struct terminal_line_d *prev;
+    struct terminal_line_d *next;
+};
+
 
 // ==========
 
@@ -235,6 +228,7 @@ extern struct terminal_line  LINES[32];
 #define LINE_COUNT_MAX  2048
 #define SCREENBUFFER_COUNT_MAX  8
 
+// #deprecated: we have a new one.
 struct line_d
 {
 // Identificação da linha.
@@ -440,7 +434,6 @@ extern unsigned long __barheight;
 // == Prototypes =====================================
 //
 
-void terminal_write_char (int fd, int window, int c);
 
 void terminalInsertNextChar (char c);
 void terminalInsertNullTerminator (void);
