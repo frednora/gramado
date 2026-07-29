@@ -19,6 +19,7 @@ static int __fd_stderr = -1;
 
 
 static void process_run_command(const char *cmdline, int use_pipes);
+void __test_colors_printf(void);
 
 // ====================================================
 
@@ -28,6 +29,39 @@ static void process_run_command(const char *cmdline, int use_pipes);
 
 //static char prompt[256];
 //static int  prompt_pos = 0;
+
+
+// Testing SGR (color) escape sequences via printf,
+// meant to be called from the shell (goes through stdout,
+// not through tputc()'s internal escape sequence parser).
+// #important: Single-parameter SGR codes only (see __test_colors
+// for why compound codes like "\033[1;31m" don't work yet).
+void __test_colors_printf(void)
+{
+    printf("\n");
+    printf("Testing SGR color sequences (printf):\n");
+
+    // Foreground colors (30-37)
+    printf("\033[30mBlack fg\033[0m\n");
+    printf("\033[31mRed fg\033[0m\n");
+    printf("\033[32mGreen fg\033[0m\n");
+    printf("\033[33mYellow fg\033[0m\n");
+    printf("\033[34mBlue fg\033[0m\n");
+    printf("\033[35mMagenta fg\033[0m\n");
+    printf("\033[36mCyan fg\033[0m\n");
+    printf("\033[37mWhite fg\033[0m\n");
+
+    // Background colors (40-47), fg reset to white first
+    printf("\033[37m\033[40mWhite on black\033[0m\n");
+    printf("\033[30m\033[41mBlack on red\033[0m\n");
+    printf("\033[30m\033[42mBlack on green\033[0m\n");
+    printf("\033[30m\033[46mBlack on cyan\033[0m\n");
+
+    // Reset check: after \033[0m color must go back to white/black
+    printf("\033[0mBack to default\n");
+
+    printf("colors done :)\n");
+}
 
 //====================================================
 // Reset prompt buffer
@@ -249,8 +283,15 @@ static void process_command(void)
         write( __fd_stdout, "\n", 1 );  // Go to next line
     }
     else if (strcmp(argv[0], "help") == 0) {
-        write(__fd_stdout, "shell: commands: about, help, run\n", 34);
-        write( __fd_stdout, "\n", 1 );  // Go to next line
+        
+        //write(__fd_stdout, "shell: commands: about, help, run\n", 34);
+        //write( __fd_stdout, "\n", 1 );  // Go to next line
+        //printf("shell.bin: HELP\n"); 
+
+        //printf("Start\x1B[8CEnd\n");// move cursor right 8 columns
+        //printf("Hello World!\n\033[31mRed text\033[0m Normal\n");
+
+        __test_colors_printf();
 
     }
     else if (strcmp(argv[0], "run") == 0 && argc > 1) {

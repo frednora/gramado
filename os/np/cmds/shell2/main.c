@@ -149,8 +149,10 @@ static void process_command(void)
         write(1, "\n", 1);  // Go to the next line
     }
     else if (strcmp(argv[0], "help") == 0) {
+
         write(1, "shell2: commands: about, help, run\n", 34);
         write(1, "\n", 1);  // Go to the next line
+        //printf("HELP\n");
     }
     else if (strcmp(argv[0], "run") == 0 && argc > 1) {
 

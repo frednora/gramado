@@ -446,8 +446,12 @@ void ri(void);
 void del(void);
 
 void __test_escapesequence(int fd);
-void tputstring( int fd, char *s );
-void tputc (int fd, int window, int c, int len);
+
+struct terminal_line_d *terminal_get_line_at_row(int row);
+
+
+void tputstring(int fd, char *s);
+
 
 char 
 terminalGetCharXY ( 
