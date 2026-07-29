@@ -41,6 +41,8 @@ struct terminal_d
     unsigned long height_in_chars;
     // ...
 
+    int tab_size;
+
     int esc;
 };
 

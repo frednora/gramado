@@ -2146,11 +2146,50 @@ static void __process_csi_final_byte(int fd, struct dccanvas_d *dc, unsigned cha
             }
             break;
 
+        // ---------------------------------------
         // Cursor movements (keep as before)
-        case 'A': cursor_y -= (param ? param : 1); if (cursor_y < 0) cursor_y = 0; break;
-        case 'B': cursor_y += (param ? param : 1); break;
-        case 'C': cursor_x += (param ? param : 1); break;
-        case 'D': cursor_x -= (param ? param : 1); if (cursor_x < 0) cursor_x = 0; break;
+        case 'A': 
+            cursor_y -= (param ? param : 1); 
+            if (cursor_y < 0) 
+                cursor_y = 0; 
+                break;
+        case 'B': 
+            cursor_y += (param ? param : 1); 
+            break;
+        case 'C': 
+            cursor_x += (param ? param : 1); 
+            break;
+        case 'D': 
+            cursor_x -= (param ? param : 1); 
+            if (cursor_x < 0) 
+                cursor_x = 0; 
+            break;
+
+        // === CURSOR POSITION (ESC [ y ; x H) or (ESC [ y ; x f) ===
+        case 'H':
+        case 'f':
+        {
+            int row = 1;
+            int col = 1;
+
+            char* semicolon = strchr(CSI_BUFFER, ';');
+            if (semicolon) {
+                row = atoi(CSI_BUFFER);
+                col  = atoi(semicolon + 1);
+            } else if (__csi_buffer_tail > 0) {
+                row = atoi(CSI_BUFFER);   // Only row given
+            }
+
+            cursor_y = (row > 0) ? row - 1 : 0;
+            cursor_x = (col > 0) ? col - 1 : 0;
+
+            // Clamp to screen limits
+            if (cursor_y >= Terminal.height_in_chars)
+                cursor_y = Terminal.height_in_chars - 1;
+            if (cursor_x >= Terminal.width_in_chars)
+                cursor_x = Terminal.width_in_chars - 1;
+        }
+            break;
 
         case 'K': // Erase in Line
             if (param == 0 || param == 2)
@@ -2164,9 +2203,22 @@ static void __process_csi_final_byte(int fd, struct dccanvas_d *dc, unsigned cha
             }
             break;
 
+        // Screen Erase Commands:
+        // ESC[0J: Erase from the cursor to the end of the screen
+        // ESC[1J: Erase from the cursor to the beginning (top) of the screen
+        // ESC[2J: Erase the entire screen
+        // ESC[3J: Erase the entire screen and 
+        //         delete the scrollback history buffer 
+        //         (supported in xterm and modern emulators)
         case 'J': // Erase in Display
+            //if (param == 1)
+                // ...
             if (param == 2)
                 clear_terminal_client_window(fd);
+            //if (param == 3)
+                // ...
+            //if (param == 4)
+                // ...
             break;
     }
 }
@@ -2180,14 +2232,35 @@ static void __handle_csi_sequence(int fd, struct dccanvas_d *dc, unsigned char a
         CSI_BUFFER[__csi_buffer_tail] = '\0';
     }
 
-    // Most sequences end with a letter
-    if (ascii >= 'A' && ascii <= 'Z' || ascii >= 'a' && ascii <= 'z')
+
+// -------------------------------------------
+// Most sequences end with a letter
+
+    int ProcessFinalByte = FALSE;
+
+    if (ascii >= 'A' && ascii <= 'Z') {
+        ProcessFinalByte = TRUE;
+    }
+    else if (ascii >= 'a' && ascii <= 'z') {
+        ProcessFinalByte = TRUE;
+    }
+
+    if (ProcessFinalByte == TRUE)
     {
         __process_csi_final_byte(fd, dc, ascii);
         __sequence_status = 0;
         Terminal.esc = 0;
         __csi_buffer_tail = 0;
     }
+
+    // #ps: This is an option
+    //if (isalpha((unsigned char)ascii)) {
+    //    __process_csi_final_byte(fd, dc, ascii);
+    //    __sequence_status = 0;
+    //    Terminal.esc = 0;
+    //    __csi_buffer_tail = 0;
+    //}
+
 }
 
 /*
@@ -2289,6 +2362,8 @@ void tputc(
     unsigned int bg_color,
     unsigned int style)
 {
+    struct terminal_line_d *line;
+
     if (fd < 0 || !dc)
         return;
 
@@ -2306,16 +2381,53 @@ void tputc(
                 return;
 
             case '\n':  // Line Feed
+                // Get current line and insert
+                line = terminal_get_line_at_row(cursor_y);
+                if (!line) 
+                    return;
+                terminal_insert_char_into_buffer(
+                    line, (char)ascii, fg_color, bg_color, style );
+                // ---------------------
+                // Update cursor
                 cursor_x = 0;
                 cursor_y++;
-                if (cursor_y >= Terminal.height_in_chars)
-                    clear_terminal_client_window(fd);  // TODO: replace with scroll later
+                if (cursor_y >= Terminal.height_in_chars){
+                    // TODO: replace with scroll later
+                    //clear_terminal_client_window(fd);
+                    terminal_scroll_up();
+                    cursor_y = Terminal.height_in_chars - 1;
+                }
                 return;
 
             case '\t':  // Horizontal Tab
-                cursor_x = (cursor_x + 8) & ~7;
-                if (cursor_x >= Terminal.width_in_chars)
-                    cursor_x = Terminal.width_in_chars - 1;
+                int spaces_to_insert = 
+                    Terminal.tab_size - (cursor_x % Terminal.tab_size);
+                line = terminal_get_line_at_row(cursor_y);
+                if (!line) 
+                    return;
+                int i_tab;
+                for (i_tab=0; i_tab < spaces_to_insert; i_tab++) 
+                {
+                    // Insert one space
+                    terminal_insert_char_into_buffer(
+                        line, ' ', fg_color, bg_color, style );
+                    // Update cursor
+                    cursor_x++;
+                    if (cursor_x >= Terminal.width_in_chars) 
+                    {
+                        cursor_x = 0;
+                        cursor_y++;
+                        if (cursor_y >= Terminal.height_in_chars) 
+                        {
+                            terminal_scroll_up();  // or clear for now
+                            cursor_y = Terminal.height_in_chars - 1;
+                        }
+                        // Get next line
+                        line = terminal_get_line_at_row(cursor_y);
+                        if (!line) 
+                            break;
+                    }
+                };
                 return;
 
             case '\b':  // Backspace
@@ -2343,8 +2455,7 @@ void tputc(
     if (Terminal.esc & ESC_START)
     {
         // CSI - Control Sequence Introducer: ESC [
-        if (Terminal.esc & ESC_CSI)
-        {
+        if (Terminal.esc & ESC_CSI){
             __handle_csi_sequence(fd, dc, ascii);
             return;
         }
@@ -2386,9 +2497,11 @@ void tputc(
     // Normal Printable Character
     // ======================
 
-    struct terminal_line_d *line = terminal_get_line_at_row(cursor_y);
+    //struct terminal_line_d *line = terminal_get_line_at_row(cursor_y);
+    line = terminal_get_line_at_row(cursor_y);
     if (!line) 
         return;
+
     // Insert
     terminal_insert_char_into_buffer(line, (char)ascii, fg_color, bg_color, style);
     // Draw it at the correct position
@@ -4352,6 +4465,8 @@ int main(int argc, char *argv[])
 
     Terminal.width_in_chars = 0;
     Terminal.height_in_chars = 0;
+
+    Terminal.tab_size = TAB_SIZE;
 
     // ...
 

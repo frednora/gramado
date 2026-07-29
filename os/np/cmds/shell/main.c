@@ -49,25 +49,64 @@ void __test_colors_printf(void)
     printf("Testing SGR color sequences (printf):\n");
 
     // Foreground colors (30-37)
-    printf("\033[30mBlack fg\033[0m\n");
+    //printf("\033[30mBlack fg\033[0m\n");
     printf("\033[31mRed fg\033[0m\n");
     printf("\033[32mGreen fg\033[0m\n");
-    printf("\033[33mYellow fg\033[0m\n");
+    //printf("\033[33mYellow fg\033[0m\n");
     printf("\033[34mBlue fg\033[0m\n");
-    printf("\033[35mMagenta fg\033[0m\n");
-    printf("\033[36mCyan fg\033[0m\n");
-    printf("\033[37mWhite fg\033[0m\n");
+    //printf("\033[35mMagenta fg\033[0m\n");
+    //printf("\033[36mCyan fg\033[0m\n");
+    //printf("\033[37mWhite fg\033[0m\n");
 
     // Background colors (40-47), fg reset to white first
-    printf("\033[37m\033[40mWhite on black\033[0m\n");
-    printf("\033[30m\033[41mBlack on red\033[0m\n");
-    printf("\033[30m\033[42mBlack on green\033[0m\n");
+    //printf("\033[37m\033[40mWhite on black\033[0m\n");
+    //printf("\033[30m\033[41mBlack on red\033[0m\n");
+    //printf("\033[30m\033[42mBlack on green\033[0m\n");
     printf("\033[30m\033[46mBlack on cyan\033[0m\n");
 
     // Reset check: after \033[0m color must go back to white/black
     printf("\033[0mBack to default\n");
 
+    // #test: TAB
+    printf("\t|TAB\t|TAB\n");
+
+ // Move cursor up one line
+    printf("\033[A");
+    printf("Moved Up\n");
+
+    // Move cursor down one line
+    printf("\033[B");
+    printf("Moved Down\n");
+
+    // Move cursor right 5 columns
+    printf("\033[5C");
+    printf("Moved Right\n");
+
+    // Move cursor left 5 columns
+    printf("\033[5D");
+    printf("Moved Left\n");
+
     printf("colors done :)\n");
+}
+
+//====================================================
+// Built-in: clear screen using escape sequence
+//====================================================
+static void shell_builtin_clear(void)
+{
+    // Clear entire screen + move cursor to top-left (0,0)
+    write(__fd_stdout, "\033[2J\033[H", 8);
+    
+    // Optional: Also reset colors to default
+    write(__fd_stdout, "\033[0m", 4);
+}
+
+void __test_reset(void)
+{
+    printf("\n\033[31mThis is RED text\033[0m <- should be normal now\n");
+    printf("\033[1;32mBold Green\033[0m <- back to normal\n");
+    printf("\033[46mCyan background\033[0m <- reset\n");
+    printf("Normal text again.\n");
 }
 
 //====================================================
@@ -317,15 +356,20 @@ static void process_command(void)
     }
     else if (strcmp(argv[0], "help") == 0) {
         
-        //write(__fd_stdout, "shell: commands: about, help, run\n", 34);
-        //write( __fd_stdout, "\n", 1 );  // Go to next line
-        //printf("shell.bin: HELP\n"); 
+        write(__fd_stdout, "shell: commands: about, help, run\n", 34);
+        write( __fd_stdout, "\n", 1 );  // Go to next line
 
         //printf("Start\x1B[8CEnd\n");// move cursor right 8 columns
         //printf("Hello World!\n\033[31mRed text\033[0m Normal\n");
 
-        __test_colors_printf();
+        //__test_colors_printf();
 
+    }
+    else if (strcmp(argv[0], "clear") == 0) {
+        shell_builtin_clear();
+    }
+    else if (strcmp(argv[0], "reset") == 0) {
+        __test_reset();
     }
     else if (strcmp(argv[0], "run") == 0 && argc > 1) {
         // Build the command line string from argv[1..]

@@ -1,4 +1,3 @@
-
 // term0.h
 
 #ifndef __TERM0_H
