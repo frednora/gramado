@@ -9,7 +9,14 @@
 #include <unistd.h>
 #include <rtl/gramado.h>
 
+//#include <unistd.h>
+//#include <pwd.h>   // #test for pwd
+#include <sys/utsname.h>
+
 //#include "shell.h"
+
+struct utsname  my_un;
+
 
 static int __no_pipes = TRUE;
 
@@ -77,10 +84,36 @@ static void reset_prompt(void)
 // Send prompt to terminal (stdout)
 //====================================================
 
+/*
 static void show_prompt(void)
 {
     write(__fd_stdout, "shell.bin-$ ", 12);
 }
+*/
+
+static void show_prompt(void)
+{
+    // Build prompt string
+    char prompt_str[256];
+    char buf[128];
+    size_t StringSize = 0;
+
+    StringSize = (size_t) sizeof(my_un.nodename);
+
+    if (StringSize < 128) {
+        strncpy(buf, my_un.nodename, sizeof(my_un.nodename) - 1);
+        buf[sizeof(buf) - 1] = '\0';  // ensure null termination
+    } else {
+        strcpy(buf, "shell.bin");
+    }
+
+    sprintf(prompt_str, "\033[31m%s:\033[34mshell.bin\033[0m$ ", buf);
+
+    write(__fd_stdout, prompt_str, strlen(prompt_str));
+
+    // write(__fd_stdout, "shell.bin-$ ", 12);
+}
+
 
 // Worker: read from a given fd and forward to shell's stdout (terminal).
 static void pipe_worker(int fd_read)
@@ -417,6 +450,10 @@ int main(int argc, char *argv[])
     __fd_input  = dup(STDIN_FILENO );
     __fd_stdout = dup(STDOUT_FILENO);
     __fd_stderr = dup(STDERR_FILENO);
+
+    // Get kernel info
+    uname(&my_un);
+
 
     reset_prompt();
     shell_worker();

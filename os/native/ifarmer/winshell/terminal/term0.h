@@ -112,10 +112,10 @@ typedef struct {
 // Obs: 
 // aumentar essas constantes aumenta o tamanho da janela.
 
-// Isso é o máximo que se pode exibir na tela.
-#define DEFAULT_MAX_COLUMNS  80   //80
-#define DEFAULT_MAX_ROWS     25   //50  
-  
+// The size of our text buffer
+#define DEFAULT_MAX_COLUMNS  80
+#define DEFAULT_MAX_ROWS     25
+
 //linux 
 //#define SCREEN_START 0xb8000
 //#define SCREEN_END   0xc0000

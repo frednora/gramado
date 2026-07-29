@@ -245,24 +245,12 @@ static void __draw_char(
     unsigned int bg_color,
     unsigned int style );
 
+static unsigned int __ansi_to_color(int n);
+static void __process_csi_final_byte(int fd, struct dccanvas_d *dc, unsigned char final);
+static void __handle_csi_sequence(int fd, struct dccanvas_d *dc, unsigned char ascii);
 
-static void process_csi_final_byte(int fd, struct dccanvas_d *dc, unsigned char final);
-static void handle_csi_sequence(int fd, struct dccanvas_d *dc, unsigned char ascii);
-unsigned int ansi_to_color(int n);
-
-/*
 void 
 tputc(
-    int fd,
-    struct dccanvas_d *dc,
-    struct terminal_line_d *line,
-    int c,
-    unsigned int fg_color,
-    unsigned int bg_color,
-    unsigned int style );
-*/
-
-void tputc(
     int fd,
     struct dccanvas_d *dc,
     int c,
@@ -621,12 +609,25 @@ static void update_clients(int fd)
     AppViewPort.width  = lWi.cr_width;
     AppViewPort.height = lWi.cr_height;
 
-    //if (wid < 0)
-       // return;
+// -------------------------------------------------
+// #test:
 
-    // Change position, resize and redraw the window. (terminal window)
-    //gws_change_window_position( fd, wid, l, t );
-    //gws_resize_window( fd, wid, w, h );
+// After fetching lWi (client window info)
+    Terminal.width  = AppViewPort.width;   //lWi.cr_width;
+    Terminal.height = AppViewPort.height;  //lWi.cr_height;
+    if (FontInfo.initialized) 
+    {
+        if (FontInfo.width > 0)
+            Terminal.width_in_chars = Terminal.width / FontInfo.width;
+        if (FontInfo.height > 0)
+           Terminal.height_in_chars = Terminal.height / FontInfo.height;
+    }
+    // Clamp cursor
+    if (cursor_x >= Terminal.width_in_chars) 
+        cursor_x = Terminal.width_in_chars - 1;
+    if (cursor_y >= Terminal.height_in_chars) 
+        cursor_y = Terminal.height_in_chars - 1;
+// -------------------------------------------------
 
 // #todo: 
 // We need a list o clients. maybe clients[i]
@@ -676,8 +677,9 @@ static void update_clients(int fd)
 
 // Terminal
 
-    if (Terminal.initialized != TRUE)
-        return;
+    //if (Terminal.initialized != TRUE)
+        //return;
+/*
     Terminal.width = w;
     Terminal.height = h;
 
@@ -700,7 +702,7 @@ static void update_clients(int fd)
         Terminal.height_in_chars = 
             (unsigned long)((Terminal.height/FontInfo.height) & 0xFFFF);
     }
-
+*/
 
 
 //
@@ -750,6 +752,8 @@ static void update_clients(int fd)
     terminal_draw_buffer(fd, dc00);
 */
 
+// Draw the entire buffer
+    terminal_draw_buffer(fd, dc00);
 }
 
 // Redraw and refresh the client window.
@@ -1392,7 +1396,7 @@ static void compareStrings(int fd)
 
     if ( gramado_strncmp(prompt,"tputc",5) == 0 )
     {
-        //tputc(fd, Terminal.client_window_id, 'x', 1);
+        tputc(fd, dc00, 'x', __fg_color, __bg_color, 0);
         goto exit_cmp;
     }
 
@@ -1826,10 +1830,9 @@ void test_standard_stream(int fd)
                 
                 //eof
                 if( buffer[i] == EOF){ printf("FIM1\n"); return; }
-                
+
                 if( buffer[i] != 0){
-                    //__draw_char(fd, dc00, buffer[i], COLOR_WHITE, COLOR_BLACK, 0);
-                    tputc ((int) fd, window, (int) buffer[i], (int) 1); //com tratamento de escape sequence.
+                    // tputc(fd, dc00, buffer[i], __fg_color, __bg_color, 0);
                 }
             };
             printf("FIM2\n");
@@ -2083,52 +2086,6 @@ void __test_escapesequence(int fd)
     tputstring(fd, "done :)\n");
 }
 
-// 
-void tputstring(int fd, char *s)
-{
-// #test
-// Print a string inside the client window?
-
-    size_t StringSize=0;
-    register int i=0;
-    char *b = (char *) s;
-
-// Pointer validation
-    if ( (void*) s == NULL )
-        return;
-    if ( *s == 0 )
-        return;
-
-// String size
-    StringSize = (size_t) strlen(s);
-    if (StringSize <= 0){
-        return;
-    }
-
-// Limits: 
-// #test
-    //if(StringSize>=32)
-        //return;
-
-// Initialize escape sequence steps.
-    __sequence_status=0;
-    //__csi_buffer_tail = 0;
-
-    for (i=0; i<StringSize; i++)
-    {
-        //struct terminal_line_d *line = terminal_get_line_at_row(cursor_y);
-        //if ((void*)line != NULL)
-            //tputc(fd, dc00, line, b[i], COLOR_WHITE, COLOR_BLACK, 0);
-
-        //tputc(fd, dc00, b[i], COLOR_WHITE, COLOR_BLACK, 0);
-        tputc(fd, dc00, b[i], __fg_color, __bg_color, 0);
-    }
-
-// Initialize escape sequence steps.
-    __sequence_status=0;
-    //__csi_buffer_tail = 0;
-}
-
 // Get the line at a given row index (0-based)
 struct terminal_line_d *terminal_get_line_at_row(int row)
 {
@@ -2145,109 +2102,23 @@ struct terminal_line_d *terminal_get_line_at_row(int row)
     return line;
 }
 
-static void handle_csi_sequence(int fd, struct dccanvas_d *dc, unsigned char ascii)
+static unsigned int __ansi_to_color(int n)
 {
-    // Store parameter
-    if (__csi_buffer_tail < CSI_BUFFER_SIZE - 1)
-    {
-        CSI_BUFFER[__csi_buffer_tail++] = ascii;
-        CSI_BUFFER[__csi_buffer_tail] = '\0';
-    }
-
-    // Most sequences end with a letter
-    if (ascii >= 'A' && ascii <= 'Z' || ascii >= 'a' && ascii <= 'z')
-    {
-        process_csi_final_byte(fd, dc, ascii);
-        __sequence_status = 0;
-        Terminal.esc = 0;
-        __csi_buffer_tail = 0;
-    }
+    switch (n){
+        case 0: return COLOR_BLACK;
+        case 1: return COLOR_RED;
+        case 2: return COLOR_GREEN;
+        case 3: return COLOR_YELLOW;
+        case 4: return COLOR_BLUE;
+        case 5: return COLOR_MAGENTA;
+        case 6: return COLOR_CYAN;
+        case 7: return COLOR_WHITE;
+        default: 
+            return COLOR_WHITE;
+    };
 }
 
-/*
-static void process_csi_final_byte(int fd, struct dccanvas_d *dc, unsigned char final)
-{
-    int param = 0;
-    if (__csi_buffer_tail > 0)
-        param = atoi(CSI_BUFFER);   // simple first param for now
-
-    struct terminal_line_d *line = terminal_get_line_at_row(cursor_y);
-    if (!line) return;
-
-    switch (final)
-    {
-        // Cursor Up
-        case 'A':
-            cursor_y -= (param > 0 ? param : 1);
-            if (cursor_y < 0) cursor_y = 0;
-            break;
-
-        // Cursor Down
-        case 'B':
-            cursor_y += (param > 0 ? param : 1);
-            if (cursor_y >= Terminal.height_in_chars)
-                cursor_y = Terminal.height_in_chars - 1;
-            break;
-
-        // Cursor Forward
-        case 'C':
-            cursor_x += (param > 0 ? param : 1);
-            if (cursor_x >= Terminal.width_in_chars)
-                cursor_x = Terminal.width_in_chars - 1;
-            break;
-
-        // Cursor Backward
-        case 'D':
-            cursor_x -= (param > 0 ? param : 1);
-            if (cursor_x < 0) cursor_x = 0;
-            break;
-
-        // Cursor Position (absolute) - ESC [ y ; x H
-        case 'H':
-        case 'f':
-            {
-                int row = param;
-                int col = 0;
-                char* semicolon = strchr(CSI_BUFFER, ';');
-                if (semicolon) col = atoi(semicolon + 1);
-                cursor_y = row > 0 ? row - 1 : 0;
-                cursor_x = col > 0 ? col - 1 : 0;
-            }
-            break;
-
-        // Erase in Line
-        case 'K':
-            if (param == 0 || param == 2) // Clear to end / whole line
-            {
-                memset(line->CHARS + cursor_x, ' ', line->capacity - cursor_x);
-                // TODO: reset attributes too
-                line->length = cursor_x;
-            }
-            break;
-
-        // Set Graphics Rendition (colors, bold, etc.)
-        case 'm':
-            // TODO: Full SGR parser (38;5;XXX, 48;5;XXX, 0-9, etc.)
-            // For now, simple support
-            if (param == 0) // Reset
-            {
-                // fg_color = COLOR_WHITE; bg_color = COLOR_BLACK;
-            }
-            //else if (param == 1) // Bold
-                //style |= 1;
-            // Add more as needed
-            break;
-
-        // Clear Screen
-        case 'J':
-            if (param == 2) // Clear whole screen
-                clear_terminal_client_window(fd);
-            break;
-    }
-}
-*/
-
-static void process_csi_final_byte(int fd, struct dccanvas_d *dc, unsigned char final)
+static void __process_csi_final_byte(int fd, struct dccanvas_d *dc, unsigned char final)
 {
     int param = (__csi_buffer_tail > 0) ? atoi(CSI_BUFFER) : 0;
 
@@ -2267,11 +2138,11 @@ static void process_csi_final_byte(int fd, struct dccanvas_d *dc, unsigned char 
             }
             else if (param >= 30 && param <= 37) // Foreground colors
             {
-                __fg_color = ansi_to_color(param - 30);
+                __fg_color = __ansi_to_color(param - 30);
             }
             else if (param >= 40 && param <= 47) // Background colors
             {
-                __bg_color = ansi_to_color(param - 40);
+                __bg_color = __ansi_to_color(param - 40);
             }
             break;
 
@@ -2300,23 +2171,24 @@ static void process_csi_final_byte(int fd, struct dccanvas_d *dc, unsigned char 
     }
 }
 
-
-unsigned int ansi_to_color(int n)
+static void __handle_csi_sequence(int fd, struct dccanvas_d *dc, unsigned char ascii)
 {
-    switch (n)
+    // Store parameter
+    if (__csi_buffer_tail < CSI_BUFFER_SIZE - 1)
     {
-        case 0: return COLOR_BLACK;
-        case 1: return COLOR_RED;
-        case 2: return COLOR_GREEN;
-        case 3: return COLOR_YELLOW;
-        case 4: return COLOR_BLUE;
-        case 5: return COLOR_MAGENTA;
-        case 6: return COLOR_CYAN;
-        case 7: return COLOR_WHITE;
-        default: return COLOR_WHITE;
+        CSI_BUFFER[__csi_buffer_tail++] = ascii;
+        CSI_BUFFER[__csi_buffer_tail] = '\0';
+    }
+
+    // Most sequences end with a letter
+    if (ascii >= 'A' && ascii <= 'Z' || ascii >= 'a' && ascii <= 'z')
+    {
+        __process_csi_final_byte(fd, dc, ascii);
+        __sequence_status = 0;
+        Terminal.esc = 0;
+        __csi_buffer_tail = 0;
     }
 }
-
 
 /*
  * tputc:
@@ -2409,560 +2281,6 @@ DEC	HEX	CHARACTER
 // See: 
 // https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797
 
-/*
-// #deprecated
-// This is the old implementation.
-// Maybe we can implement something that is here in the newer version.
-
-void 
-tputc(
-    int fd,
-    struct dccanvas_d *dc,
-    struct terminal_line_d *line,
-    int c,
-    unsigned int fg_color,
-    unsigned int bg_color,
-    unsigned int style )
-{
-// Pinta o char na janela, estando ou não
-// no shell embutido.
-
-    int ivalue=0;
-    unsigned char ascii = (unsigned char) c;
-    //unsigned char ascii = *c;
-
-// ------------
-// Control codes?
-// (0x00~0x1F) and 0x7F.
-
-    int is_control=FALSE;
-    if (ascii <= 0x1F || ascii == 0x7F)
-    {
-        is_control = TRUE;
-    }
-
-
-    //#debug
-    //printf("tputc: char=%c esc=%d seq=%d\n", ascii, Terminal.esc, __sequence_status);
-
-
-
-// Invalid socket
-    if (fd<0)
-        return;
-// Invalid target window
-    //if (window < 0)
-        //return;
-// Invalid char len.
-// #bugbug: Isso nem precisa.
-     //if(len!=1)
-         //len=1;
-    //??
-    //if(iofd != -1) {}
-
-// #importante
-// Se não é controle é string ou escape sequence.
-
-
-//==============================
-// Se uma sequencia foi finalizada, ou nunca foi inicializada.
-// Vamos imprimir quando
-// uma sequencia nao esta inicializada e
-// temos um char que nao eh controle.
-
-    // Not a control. (printable char)
-    if (__sequence_status == 0)
-    {
-        if (is_control == FALSE)
-        {
-            c = ascii;
-            goto insert;
-            //__draw_char( fd, dc00, (int) ascii, COLOR_WHITE, COLOR_BLACK, 0 ); 
-            //return;
-        }
-    }
-
-// ===========================
-// Se o char eh um control code.
-// Control codes. 
-// (dentro de um range)
-
-    if (is_control == TRUE){
-
-        switch (ascii)
-        {
-            //case '\v':    //VT
-            //case '\a':    // BEL     
-            case '\t':      // HT 
-            case '\b':      // BS 
-            case '\r':      // CR 
-            case '\f':      // LF 
-            case '\n':      //LF 
-
-                //if (ascii == '\t')
-                    //exit(0); //debug
-
-                c = ascii;
-                goto insert;
-                //__draw_char (fd, dc00, (int) ascii, COLOR_WHITE, COLOR_BLACK, 0);
-                //printf ("%c",ascii); //debug
-                return;
-                break;
-
-            //(Esc)
-            // ESC 27 033  0x1B  \e*  ^[  (Escape character)
-            // ESC - sequence starting with ESC (\x1B).
-            //case TERMINAL_ESCAPE:
-            //case '\e':
-            //case '\033':
-            //case '\x1b':
-            case 0x1B:
-                //printf("FOUND {033}. Start of sequence\n");
-                __sequence_status = 1;
-                Terminal.esc = ESC_START;
-                //__draw_char ( fd, dc00, (int) '$', COLOR_WHITE, COLOR_BLACK, 0);  //debug
-                //printf (" {ESCAPE} ");  //debug
-                return;
-                break;
-
-            case 0x0E:  // SO - Shift Out
-            case 0x0F:  // SI - Shift In 
-                return;
-                break;
-
-            case 0x1A:  // SUB - Substitute
-            case 0x18:  // CAN - Cancel
-                //csireset ();
-                //__draw_char ( fd, dc00, (int) '$', COLOR_WHITE, COLOR_BLACK, 0); //debug
-                //printf (" {reset?} "); //debug
-                return;
-                break;
-
-            case 0x00:  // NUL - (IGNORED)
-            case 0x05:  // ENQ - Enquiry (IGNORED)
-            
-            case 0x11:  // DC1 - device control 1
-            case 0x12:  // DC2 - device control 2
-            case 0x13:  // DC3 - device control 3
-            case 0x14:  // DC4 - device control 4
-                // Nothing
-                return;
-
-            // DEL - Ignored for now.
-            case 0x7F:
-                //Nothing
-                return;
-
-            // ...
-        };
-
-        // ... 
-
-// ===========================
-// Se encontramos um char logo apos encontrarmos um \033.
-// Um 1b já foi encontrado.
-// Um \033 foi encontrado.
-
-    } else if (Terminal.esc & ESC_START){
-
-        // Depois de encontrarmos o '[', entramos no ESC_CSI.
-        // Vamos analisar a sequencia depois de '['
-        // A sequencia vai terminar com um 'm'
-        // #todo parse csi
-        // CSI - Control Sequence Introducer
-        if (Terminal.esc & ESC_CSI){
-
-            switch (ascii)
-            {
-                // Quando acaba a sequência.
-                //'\033[0m'       #Reset text
-                case 'm':
-                    //printf("FOUND {m}. End of sequence\n");
-                    __sequence_status = 0;   // essa sequencia terminou.
-                    // agora o buffer esta vazio.
-                    // #todo: usarloop para de fato esvaziar o buffer.
-                    __csi_buffer_tail = 0;
-                    Terminal.esc = 0;  //??
-                    //__draw_char (fd, dc00, (int) '$', COLOR_WHITE, COLOR_BLACK, 0); //debug
-                    //printf (" {m} "); //debug
-                    return;
-                    break;
-
-                //save cursor position
-                case 's':
-                    //printf("FOUND {Save cursor position}\n");
-                    save_cur();
-                    return;
-                    break;
-
-                // restore cursor position
-                case 'u':
-                    //printf("FOUND {Restore cursor position}\n");
-                    restore_cur();
-                    return;
-                    break;
-
-                // UP
-                // Move cursor N lines up 
-                // (N can be any number)
-                // N is inside the buffer
-                case 'A':
-                    //printf("FOUND {A}\n");
-                    ivalue = (int) CSI_BUFFER[0];
-                    ivalue = (int) (ivalue & 0xFF); //only the first byte.
-                    ivalue = atoi(&ivalue); 
-                    //printf("ivalue {%d}\n",ivalue);
-                    cursor_y = (cursor_y - ivalue);
-                    if (cursor_y<0){ cursor_y=0; }
-                    return;
-                    break;
-                 
-                // DOWN
-                // Move cursor N lines down
-                // N is inside the buffer
-                case 'B':
-                    //printf("FOUND {B}\n");
-                    ivalue = (int) CSI_BUFFER[0];
-                    ivalue = (int) (ivalue & 0xFF); //only the first byte.
-                    ivalue = atoi(&ivalue); 
-                    //printf("ivalue {%d}\n",ivalue);
-                    cursor_y = (cursor_y + ivalue);
-                    if(cursor_y>24){ cursor_y=24; }
-                    return;
-                    break;
-
-                // Cursor right.
-                // Pegamos o valor que vem antes disso,
-                // pra sabermos quando devemos mudar o cursor.
-                case 'C':
-                    //printf("FOUND {C}\n");
-                    ivalue = (int) CSI_BUFFER[0];
-                    ivalue = (int) (ivalue & 0xFF); //only the first byte.
-                    ivalue = atoi(&ivalue); 
-                    //printf("ivalue {%d}\n",ivalue);
-                    cursor_x = (cursor_x + ivalue);
-                    if (cursor_x >= 80){
-                        cursor_x=79; 
-                    }
-                    return;
-                    break;
-
-                // Cursor left.
-                // Pegamos o valor que vem antes disso,
-                // pra sabermos quando devemos mudar o cursor.
-                case 'D':
-                    //printf("FOUND {D}\n");
-                    ivalue = (int) CSI_BUFFER[0];
-                    ivalue = (int) (ivalue & 0xFF); //only the first byte.
-                    ivalue = atoi(&ivalue); 
-                    //printf("ivalue {%d}\n",ivalue);
-                    if (cursor_x >= ivalue)
-                    {
-                        cursor_x = (cursor_x - ivalue);
-                    }
-                    if (cursor_x < 0){
-                        cursor_x=0;
-                    }
-                    return;
-                    break;
-
-                // 2K   erase 2 bytes in the current line 
-                case 'K':
-                    //printf("FOUND {K}\n");
-                    ivalue = (int) CSI_BUFFER[0];
-                    ivalue = (int) (ivalue & 0xFF); //only the first byte.
-                    ivalue = atoi(&ivalue); 
-                    //printf("ivalue {%d}\n",ivalue);
-                    if ( (cursor_x+ivalue) < 80 )
-                    {
-                        while (ivalue > 0)
-                        {
-                            c = (int) ' ';
-                            goto insert;
-                            //__draw_char(fd, dc00, (int) ' ', COLOR_WHITE, COLOR_BLACK, 0 );
-                            ivalue--;
-                        }
-                    }
-                    return;
-                    break;
-
-                // Estilo de texto.
-                // Quando aparece o ';' temos que mudar o estilo.
-                // No buffer tem o valor do novo estilo.
-                //case TERMINAL_PARAMETER_SEPARATOR:
-                case ';':
-                    //printf("FOUND {;}\n");
-                    ivalue = (int) CSI_BUFFER[0];
-                    ivalue = (int) (ivalue & 0xFF); //only the first byte.
-                    ivalue = atoi(&ivalue); 
-                    if(ivalue==0){}; //reset all modes (styles and colors)
-                    if(ivalue==1){}; //set bold mode.
-                    if(ivalue==2){}; //set dim/faint mode.
-                    if(ivalue==3){}; //set italic mode.
-                    if(ivalue==4){}; //set underline mode.
-                    if(ivalue==5){}; //set blinking mode
-                    if(ivalue==6){}; //
-                    if(ivalue==7){}; //
-                    if(ivalue==8){}; //set hidden/invisible mode
-                    if(ivalue==9){}; //set strikethrough mode.
-                    return;
-                    break;
-
-                // Vamos apenas colocar no buffer
-                // para analizarmos depois.
-                // Colocamos no tail e retiramos no head.
-                default:
-                    //printf ("FOUND {value}\n"); //debug
-                    
-                    //#test: 
-                    // Using only the first offset for now.
-                    
-                    // Nesse caso estamos colocando números 
-                    // depois de encontrarmos o '['.
-                    // Estamos em ESC_CSI e continuaremos nele.
-                    CSI_BUFFER[0] = (char) ascii;
-                    
-                    //#bugbug: 'PF'
-                    //CSI_BUFFER[__csi_buffer_tail] = (char) ascii;
-                    //__csi_buffer_tail++;
-                    //if ( __csi_buffer_tail >= CSI_BUFFER_SIZE )
-                    //{
-                    //    __csi_buffer_tail = 0;
-                    //}
-                    //printf("value done\n");
-                    return;
-                    break;
-            };
-
-
-        } else if (Terminal.esc & ESC_STR_END){ 
- 
-            // ...
-
-        } else if (Terminal.esc & ESC_ALTCHARSET){
-
-            switch (ascii)
-            {
-                case 'A':  // UK (IGNORED) 
-                case '<':  // multinational charset (IGNORED) 
-                case '5':  // Finnish (IGNORED) 
-                case 'C':  // Finnish (IGNORED) 
-                case 'K':  // German (IGNORED) 
-                    break;
-            };
-
-
-        } else if (Terminal.esc & ESC_TEST) {
-
-            // ...
- 
-        // Valido para apos ESC_START tambem.
-        }else{
-
-            switch (ascii){
-
-            // CSI - Control Sequence Introducer: 
-            // sequence starting with ESC [ or CSI (\x9B)
-            // ESC [ -  CSI Control sequence introducer
-            // Estavamos no ESC_START e encontramos o '['.
-            // Encontramos o '[' depois de \033.
-            // Entao vamos entrar em ESC_CSI?
-            // see: https://man7.org/linux/man-pages/man4/console_codes.4.html
-            //case TERMINAL_INTRODUCER:
-            case '[':
-                //printf ("FOUND {[}\n"); //debug
-                Terminal.esc |= ESC_CSI;
-                //__draw_char ( fd, dc00, (int) '[', COLOR_WHITE, COLOR_BLACK, 0); //debug
-                return;
-                break; 
-   
-            case '#':
-                //printf ("FOUND {#}\n"); //debug
-                Terminal.esc |= ESC_TEST;
-                break;
-
-            //  ESC P - DCS   Device control string (ended by ESC \)
-            case 'P':  // DCS -- Device Control String 
-            case '_':  // APC -- Application Program Command 
-            // ESC ^ - PM    Privacy message (ended by ESC \)
-            case '^':  // PM -- Privacy Message 
-            case ']':  // OSC -- Operating System Command 
-            case 'k':  // old title set compatibility 
-                Terminal.esc |= ESC_STR;
-                break; 
-
-            //Set primary charset G0 
-            case '(': 
-                Terminal.esc |= ESC_ALTCHARSET;
-                break;    
-
-            // ESC ( - Start sequence defining G0 character set
-            // (followed by one of B, 0, U, K, as below)
-            case ')':  //set secondary charset G1 (IGNORED) 
-            case '*':  //set tertiary charset G2 (IGNORED) 
-            case '+':  //set quaternary charset G3 (IGNORED) 
-                Terminal.esc = 0;
-                __sequence_status = 0;
-                break;  
-
-            // #test
-            // #todo: A=LINEFEED D=CARRIEGE RETURN.
-            case 'A':
-                Terminal.esc = 0;
-                tputstring(fd,"\n");
-                break;
-             
-            // ESC D - IND 
-            // IND -- Linefeed 
-            // #todo: A=LINEFEED D=CARRIEGE RETURN.
-            case 'D': 
-                Terminal.esc = 0;
-                //__draw_char ( fd, dc00, (int) '$', COLOR_WHITE, COLOR_BLACK, 0);  //debug
-                //printf (" {IND} ");  //debug
-                // #todo: Insert string into the text buffer
-                //tputstring(fd,"\r");
-                tputstring(fd,"\n");
-                break;
-
-
-            // ESC E - NEL  Newline.
-            // NEL -- Next line 
-            case 'E': 
-                Terminal.esc = 0;
-                c = (int) '$';
-                goto insert;
-                //__draw_char ( fd, dc00, (int) '$', COLOR_WHITE, COLOR_BLACK, 0); //debug
-                //printf (" {NEL} "); //debug
-                break;
-
-            // ESC H - HTS Set tab stop at current column.
-            // HTS -- Horizontal tab stop 
-            case 'H':   
-                Terminal.esc = 0;
-                c = (int) '$';
-                goto insert;
-                //__draw_char ( fd, dc00, (int) '$', COLOR_WHITE, COLOR_BLACK, 0); //debug
-                //printf (" {HTS} "); //debug
-                break;
-
-            // ESC M - RI Reverse linefeed.
-            // RI -- Reverse index 
-            case 'M':     
-                Terminal.esc = 0;
-                c = (int) '$';
-                goto insert;
-                //__draw_char ( fd, dc00, (int) '$', COLOR_WHITE, COLOR_BLACK, 0); //debug
-                //printf (" {RI} "); //debug
-                break;
-
-            // ESC Z - DECID  DEC private identification.
-            // The kernel returns the string  ESC[?6c, 
-            // claiming that it is a VT102.
-            // DECID -- Identify Terminal 
-            case 'Z':  
-                Terminal.esc = 0;
-                //goto insert;
-                //__draw_char (fd, dc00, (int) '$', COLOR_WHITE, COLOR_BLACK, 0); //debug
-                //printf (" {DECID} "); //debug
-                break;
-
-            // ESC c - RIS  Reset.
-            // RIS -- Reset to inital state 
-            case 'c': 
-                Terminal.esc = 0;
-                c = (int) '$';
-                goto insert;
-                //__draw_char ( fd, dc00, (int) '$', COLOR_WHITE, COLOR_BLACK, 0); //debug
-                //printf (" {reset?} "); //debug
-                break; 
-
-            // ESC = - DECPAM   Set application keypad mode
-            //DECPAM -- Application keypad 
-            case '=': 
-                Terminal.esc = 0;
-                c = (int) '$';
-                goto insert;
-                //__draw_char ( fd, dc00, (int) '$', COLOR_WHITE, COLOR_BLACK, 0); //debug
-                //printf (" {=} "); //debug
-                break;
-
-            // ESC > - DECPNM   Set numeric keypad mode
-            //DECPNM -- Normal keypad 
-            case '>': 
-                Terminal.esc = 0;
-                c = (int) '$';
-                goto insert;
-                //__draw_char (fd, dc00, (int) '$', COLOR_WHITE, COLOR_BLACK, 0); //debug
-                //printf (" {>} "); //debug
-                break;
-
-            // ESC 7 - DECSC    Save current state (cursor coordinates,
-            //         attributes, character sets pointed at by G0, G1).
-            //DECSC -- Save Cursor 
-            //case '7':
-               //  Terminal.esc = 0;
-               //  break;
-
-            // ESC 8 - DECRC    Restore state most recently saved by ESC 7.
-            //DECRC -- Restore Cursor  
-            //case '8': 
-               //  Terminal.esc = 0;
-               //  break;
-
-            //ST -- Stop 
-            // ESC \  ST    String terminator
-            //0x9C ST String Terminator ???
-            //case '\\':   
-                //Terminal.esc = 0;
-                //break;
-  
-            //erro    
-            //default:
-                //break; 
-            };
-        };
-        
-        // ...
-
-        return;
-    };
- 
-    // ...
-
-    return;
-
-// #todo: 
-// We are working on that part of inserting a char into the text buffer.
-insert:
-    // Inject into buffer
-    terminal_insert_char_into_buffer(
-        line, 
-        (char) c, 
-        fg_color, 
-        bg_color, 
-        style 
-    );
-
-    // Draw the character we just inserted
-    terminal_draw_char_from_buffer(
-        fd, 
-        dc, 
-        line, 
-        line->pos - 1 
-    );
-
-    // Reset escape state if needed
-    __sequence_status = 0;
-    Terminal.esc = 0;
-
-    return;
-}
-*/
-
-// =====================================================
-// tputc - Full version with improved escape handling
-// =====================================================
-
 void tputc(
     int fd,
     struct dccanvas_d *dc,
@@ -3027,7 +2345,7 @@ void tputc(
         // CSI - Control Sequence Introducer: ESC [
         if (Terminal.esc & ESC_CSI)
         {
-            handle_csi_sequence(fd, dc, ascii);
+            __handle_csi_sequence(fd, dc, ascii);
             return;
         }
 
@@ -3067,51 +2385,17 @@ void tputc(
     // ======================
     // Normal Printable Character
     // ======================
-    /*
+
     struct terminal_line_d *line = terminal_get_line_at_row(cursor_y);
-    if (!line)
+    if (!line) 
         return;
-
+    // Insert
     terminal_insert_char_into_buffer(line, (char)ascii, fg_color, bg_color, style);
-    terminal_draw_char_from_buffer(fd, dc, line, line->pos - 1);
-
-    // Advance cursor
-    cursor_x++;
-    if (cursor_x >= Terminal.width_in_chars)
-    {
-        cursor_x = 0;
-        cursor_y++;
-        if (cursor_y >= Terminal.height_in_chars)
-            clear_terminal_client_window(fd);   // replace with scroll later
-    }
-    */
-// Inside tputc(), in the printable character section:
-
-    struct terminal_line_d *line = terminal_get_line_at_row(cursor_y);
-    if (!line) return;
-
-    //terminal_insert_char_into_buffer(line, (char)ascii, __fg_color, __bg_color, style);
-    terminal_insert_char_into_buffer(line, (char)ascii, fg_color, bg_color, style);
-
     // Draw it at the correct position
     terminal_draw_char_from_buffer(fd, dc, line, line->pos - 1);
 
-    // Advance cursor (only once!)
-    // #ps: __draw_char is already doing it
-    // #delete this block
-    /*
-    cursor_x++;
-    if (cursor_x >= Terminal.width_in_chars)
-    {
-        cursor_x = 0;
-        cursor_y++;
-        if (cursor_y >= Terminal.height_in_chars)
-            clear_terminal_client_window(fd);
-    }
-    */
     if (cursor_y >= Terminal.height_in_chars)
         clear_terminal_client_window(fd);
-
 
     return;
 
@@ -3120,6 +2404,47 @@ end_escape:
     Terminal.esc = 0;
     return;
 }
+
+// 
+void tputstring(int fd, char *s)
+{
+// #test
+// Print a string inside the client window?
+
+    size_t StringSize=0;
+    register int i=0;
+    char *b = (char *) s;
+
+// Pointer validation
+    if ( (void*) s == NULL )
+        return;
+    if ( *s == 0 )
+        return;
+
+// String size
+    StringSize = (size_t) strlen(s);
+    if (StringSize <= 0){
+        return;
+    }
+
+// Limits: 
+// #test
+    //if(StringSize>=32)
+        //return;
+
+// Initialize escape sequence steps
+    __sequence_status=0;
+    //__csi_buffer_tail = 0;
+
+    for (i=0; i<StringSize; i++){
+        tputc(fd, dc00, b[i], __fg_color, __bg_color, 0);
+    };
+
+// Initialize escape sequence steps
+    __sequence_status=0;
+    //__csi_buffer_tail = 0;
+}
+
 
 void terminal_update_current_line(void)
 {
@@ -3524,18 +2849,6 @@ terminalProcedure (
                 if (isUsingEmbeddedShell == TRUE){
                     input(long1);
                 }
-                
-                /*
-                // #test: Stop printing
-                // Exibe na área de cliente.
-                // Estando ou não no shell embutido.
-                // Tem suporte a escape sequence.
-                tputc(
-                    (int) fd, 
-                    (int) Terminal.client_window_id, 
-                    (int) long1, 
-                    (int) 1 );
-                */
 
                 // Actually we need to convert VK into ascii.
                 if (isUsingEmbeddedShell == FALSE)
@@ -3864,23 +3177,18 @@ RelaunchShell:
         while (1){
             isUsingEmbeddedShell = FALSE;
             C = fgetc(stderr);
+            // -- fail ----
             //if (C <= 0)
                 //break;
-            if (C > 0)
-            {
-                //struct terminal_line_d *myline = terminal_get_line_at_row(cursor_y);
-                //if ((void*)myline != NULL)
-                    //tputc(fd, dc00, text_buffer_head, C, COLOR_WHITE, COLOR_BLACK, 0);
-                //tputc(fd, dc00, C, COLOR_WHITE, COLOR_BLACK, 0);
+            if (C == EOF)
+               break;
+            // -- ok ----
+            if (C > 0){
                 tputc(fd, dc00, C, __fg_color, __bg_color, 0);
-
             }
             if (C == '\n')
                break;
-            if (C == EOF)
-               break;
-        }
-
+        };
     };
 
     goto RelaunchShell;
@@ -4908,31 +4216,14 @@ int terminal_init(unsigned short flags)
 
         coolCharBuffer[0] = 0;
         coolCharBuffer[1] = 0;
-        /*
-        while (1)
-        {
+
+        while (1){
             ch_read = (int) read(ptym_fd, coolCharBuffer, 1);
             if (ch_read <= 0)
                 break;
-            tputstring(client_fd, coolCharBuffer);
-        };
-        */
-
-        while (1)
-        {
-            ch_read = (int) read(ptym_fd, coolCharBuffer, 1);
-            if (ch_read <= 0)
-                break;
-
             unsigned char ch = coolCharBuffer[0];
-            //struct terminal_line_d *line = terminal_get_line_at_row(cursor_y);
-            //if (line) 
-                //tputc(client_fd, dc00, line, ch, COLOR_WHITE, COLOR_BLACK, 0);
-
-            //tputc(client_fd, dc00, ch, COLOR_WHITE, COLOR_BLACK, 0);
             tputc(client_fd, dc00, ch, __fg_color, __bg_color, 0);
-
-        }
+        };
 
         // 3. Pump events from Display Server
         __get_ds_event( client_fd, main_window );
