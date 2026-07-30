@@ -728,13 +728,14 @@ static void console_test_escape_sequences(void)
 // typed into the kernel virtual console.
 static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 {
+// Pointer for the cmdline. 
+// Normally it is prompt[]. But it can be invoked by the 
+// gprot protocol from the network layer.
+    char *cmdline = (char *) cmdline_address;
+
     int status=0;
     int fpu_status = -1;
     unsigned long LongValue = 0;
-
-// Pointer for the cmdline.
-    //char *cmdline = (char *) prompt;  // Old
-    char *cmdline = (char *) cmdline_address;
 
     //debug_print("consoleCompareStrings: \n");
     printk("\n");
@@ -1499,6 +1500,31 @@ done:
     consolePrompt();
     return 0;
 }
+
+/*
+ * ibroker_parse_command()
+ *
+ * Public API wrapper for __shellParseCommandLine().
+ * This allows subsystems (e.g. network interface) to feed
+ * command strings into the kernel console parser.
+ *
+ * IN:
+ *   cmdline_address → pointer to command string
+ *   buffer_size     → length of the buffer
+ *
+ * OUT:
+ *   Returns 0 on success, negative on error.
+ */
+int ibroker_parse_command(char *cmdline_address, size_t buffer_size)
+{
+    if ((void*) cmdline_address == NULL)
+        return -1;
+    if (buffer_size <= 0)
+        return -1;
+
+    return __shellParseCommandLine(cmdline_address, buffer_size);
+}
+
 
 // Main routine for the embedded shell.
 // It compares two strings and process the service.

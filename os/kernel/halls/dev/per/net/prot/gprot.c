@@ -362,6 +362,48 @@ static int __gprot_handle_g(char *data, uint16_t s_port, uint16_t d_port)
         goto done;
     }
 
+// ----------------
+// #test
+// g:c <cmdline>
+// packet type: console command injection
+    if (buf[0] == 'g' && buf[1] == ':' && buf[2] == 'c')
+    {
+        // Find the space after "g:c"
+        char *cmdline = NULL;
+        if (buf[3] == ' ' || buf[3] == '\t'){
+            cmdline = &buf[4];  // command starts here
+        }
+
+        int IsValid = FALSE;
+        if (cmdline != NULL && *cmdline != '\0')
+        {
+            IsValid = TRUE;
+        }
+
+        if (IsValid == TRUE){
+            // Copy command into a safe buffer
+            char cmd_buffer[128];
+            memset(cmd_buffer, 0, sizeof(cmd_buffer));
+            strncpy(cmd_buffer, cmdline, sizeof(cmd_buffer)-1);
+
+            size_t len = strlen(cmd_buffer);
+            // Call our wrapper API
+            ibroker_parse_command(cmd_buffer, len);
+
+            // Prepare reply
+            memset(buf, 0, MessageSize);
+            ksprintf(buf, "g:1 ");  // Reply code
+            ksprintf((buf + 4), "Command executed: %s", cmd_buffer);
+        } else {
+            memset(buf, 0, MessageSize);
+            ksprintf(buf, "g:3 Invalid g:c format");
+        }
+
+        NoReply = FALSE;
+        goto done;
+    }
+
+
 
 // ----------------
 // Invalid request

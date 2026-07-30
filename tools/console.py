@@ -2,7 +2,7 @@
 
 from socket import *
 
-TARGET = "192.168.1.8"
+TARGET = "192.168.1.4"
 PORT = 11888
 
 sock = socket(AF_INET, SOCK_DGRAM)
@@ -18,7 +18,9 @@ while True:
 
     try:
         data, addr = sock.recvfrom(1024)
-        print(addr, data.decode(errors="ignore"))
-        print (data)
+        # print(addr, data.decode(errors="ignore"))
+        # print (data)
+        clean = data.split(b'\0', 1)[0].decode(errors="ignore")
+        print(addr, clean)
     except timeout:
         print("No response")

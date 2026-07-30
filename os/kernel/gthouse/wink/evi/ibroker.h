@@ -36,6 +36,8 @@ extern struct input_broker_info_d  InputBrokerInfo;
 
 // ==========================
 
+int ibroker_parse_command(char *cmdline_address, size_t buffer_size);
+
 // Mouse support
 void ibroker_use_kernelside_mouse_drawing(int flag);
 int ibroker_get_kernelside_mouse_drawing_status(void);
