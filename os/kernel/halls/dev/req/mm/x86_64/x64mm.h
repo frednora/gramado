@@ -308,7 +308,10 @@ struct process_memory_info_d
 	//...
 };
 
+/*
 // Handling information about physical memory
+// #ps: Its not a good place for this.
+//      we can put it into a more global place. Not in x64.
 struct physical_memory_info_d
 {
     struct kobject_d kobj;
@@ -319,7 +322,7 @@ struct physical_memory_info_d
     unsigned long Free;     //Livre.(Existe na RAM mas n�o foi paginada??).
     //...
 };
-
+*/
 
 // Handling information about system memory
 struct memory_info_d

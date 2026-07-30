@@ -777,7 +777,7 @@ static void __mmSetupMemoryUsage(void)
     //debug_print("__mmSetupMemoryUsage: Setup memory usage\n");
 
 // used memory:
-    memorysizeUsed = 
+    MemorySizeInfo.Used = 
         (unsigned long) ( 
         mm_used_ring0_area +  
         mm_used_ring3_area +  
@@ -792,15 +792,13 @@ static void __mmSetupMemoryUsage(void)
         mm_used_module0 
     );
 
-
 // free memory
-    memorysizeFree = 
-        (unsigned long) (memorysizeTotal - memorysizeUsed);
+    MemorySizeInfo.Free = 
+        (unsigned long) (MemorySizeInfo.Total - MemorySizeInfo.Used);
 
-
-// memorysizeFree  is the size in KB.
-// memorysizeTotal is the size in KB.
-// memorysizeUsed  is the size in KB.
+// MemorySizeInfo.Free  is the size in KB.
+// MemorySizeInfo.Total is the size in KB.
+// MemorySizeInfo.Used  is the size in KB.
 // #todo:
 // We need to change these names including KB at the end of them.
 // ex: memorysizeTotal_KB
@@ -1072,10 +1070,9 @@ void __initialize_ram_usage_varables(void)
 {
 // Called by pagesInitializePaging().
 
-// The whole range.
-    memorysizeUsed = 0;
-    memorysizeFree = 0;
-    memorysizeUsed = 0;
+// The whole range
+    MemorySizeInfo.Used = 0;
+    MemorySizeInfo.Free = 0;
 
 // Components.
     mm_used_ring0_area = 0;
@@ -2646,9 +2643,9 @@ int pagesInitializePaging(void)
 
     __initialize_canonical_kernel_pagetables();
 
-    if (memorysizeTotal == 0)
+    if (MemorySizeInfo.Total == 0)
     {
-        debug_print ("pagesInitializePaging: [FIXME] We need the memorysizeTotal\n");
+        debug_print ("pagesInitializePaging: [FIXME] We need the MemorySizeInfo.Total\n");
         
         // #bugbug: Verbose is not available yet.
         // while(1){}

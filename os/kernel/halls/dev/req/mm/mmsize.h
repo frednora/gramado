@@ -1,17 +1,19 @@
-
-// mm/mmsize.h
-// Memory size support.
+// mmsize.h
+// Memory size support for the kernel.
 // Created by Fred Nora.
 
 #ifndef __MM_MMSIZE_H
 #define __MM_MMSIZE_H    1
 
+
 /*
-// #test
-// It's expected to find this structure at the end of the memory
-// in the start of the last MB.
-// This structure was initialized by the boot loader
-// and the kernel will just read, not write in the structure.
+ * Bootloader footer structure
+ * ---------------------------
+ * Expected to be located at the start of the last MB of memory.
+ * Initialized by the boot loader; the kernel only reads this structure.
+ * Used to validate bootloader signature and detect memory layout.
+ */
+/*
 struct last_mb_footer_d
 {
     int used;
@@ -21,14 +23,33 @@ struct last_mb_footer_d
 extern struct last_mb_footer_d  last_mb_footer;
 */
 
-// Size support.
+
+/*
+ * Unit definitions
+ * ----------------
+ * Convenience macros for expressing memory sizes in KB, MB, GB.
+ * #ps: slow, because of the calculation
+ */
 #define KB  (1024)
 #define MB  (1024 * 1024)
 #define GB  (1024 * 1024 * 1024)
 
-//
-// System size
-//
+
+/*
+ * System size thresholds
+ * ----------------------
+ * Defines classification boundaries for system types.
+ * These values are used to categorize the system as:
+ *   - Small   (>= 256 MB)
+ *   - Medium  (>= 512 MB)
+ *   - Large   (>= 1024 MB)
+ *
+ * Thresholds are expressed in multiple units:
+ *   - Bytes
+ *   - KB
+ *   - MB
+ *   - 4KB pages
+ */
 
 // --------------
 // System size in MB.
@@ -61,28 +82,12 @@ extern struct last_mb_footer_d  last_mb_footer;
 //other    = (1MB - base). (Shadow memory = 384 KB)
 //extended = retornada pelo cmos.
 //total    = base + other + extended.
-// alias
-extern unsigned long memorysizeBaseMemoryViaCMOS;
 
-extern unsigned long memorysizeBaseMemory;
-extern unsigned long memorysizeOtherMemory;
-extern unsigned long memorysizeExtendedMemory;
-extern unsigned long memorysizeTotal;
-
-extern unsigned long memorysizeInstalledPhysicalMemory;
-extern unsigned long memorysizeTotalPhysicalMemory;
-extern unsigned long memorysizeAvailablePhysicalMemory;
-// Used
-extern unsigned long memorysizeUsed;
-// Free
-extern unsigned long memorysizeFree;
-
-
-//
-// System memory type.
-//
-
-// Tipo de sistema baseado no tamanho da memoria.
+/*
+ * System memory type classification
+ * ---------------------------------
+ * Enum used to categorize the system based on detected memory size.
+ */
 typedef enum {
     stNull,
     stSmallSystem,
@@ -90,26 +95,74 @@ typedef enum {
     stLargeSystem,
 }mm_system_type_t;
 
-// Salva o tipo de sistema baseado no tamanho da memória.
+// Global system type classification (set during initialization)
 // see: mm.c
 extern int g_mm_system_type;
 
 
-//
-// Memory size
-//
-
+/*
+ * Memory size information structure
+ * ---------------------------------
+ * Central structure holding all memory size data detected by the kernel.
+ * Populated by mmsize_initialize() in mmsize.c.
+ *
+ * Fields:
+ *   - BaseMemoryViaCMOS: Base memory reported by CMOS (KB)
+ *   - BaseMemory:        Base memory (KB)
+ *   - OtherMemory:       Shadow memory (≈384 KB)
+ *   - ExtendedMemory:    Extended memory above 1 MB (KB)
+ *   - Total:             Total physical memory (KB)
+ *   - Used:              Memory currently used (KB)
+ *   - Free:              Memory currently free (KB)
+ *   - InstalledPhysicalMemory: Placeholder for installed RAM (KB)
+ *   - TotalPhysicalMemory:     Placeholder for total RAM (KB)
+ *   - AvailablePhysicalMemory: Placeholder for free RAM (KB)
+ *   - initialized:       Flag indicating if structure is valid
+ */
+// In KB?
 struct memory_size_info_d
 {
-// If this structure was initialized or not.
-// Initialized by mmsize_initialize() in mmsize.c
     int initialized;
-    // ...
+
+    unsigned long BaseMemoryViaCMOS;
+    //unsigned long ExtendedMemoryViaCMOS;  //rtc
+
+    unsigned long BaseMemory;
+    unsigned long OtherMemory;
+    unsigned long ExtendedMemory;
+    unsigned long Total;
+
+    unsigned long Used;
+    unsigned long Free;
+
+    unsigned long InstalledPhysicalMemory;
+    unsigned long TotalPhysicalMemory;
+    unsigned long AvailablePhysicalMemory;
 };
+
+// Global instance of memory size info
 // see: mmsize.c
-extern struct memory_size_info_d MemorySizeInfo;
+extern struct memory_size_info_d  MemorySizeInfo;
 
 // ==========================
+
+/*
+ * Accessor functions
+ * ------------------
+ * Return memory statistics in KB.
+ */
+
+unsigned long mmsize_get_total_memory(void);
+unsigned long mmsize_get_used_memory(void);
+unsigned long mmsize_get_free_memory(void);
+
+/*
+ * Initialization
+ * --------------
+ * Detects and calculates the amount of physical memory installed,
+ * then classifies the system type (small, medium, large).
+ * Must be called before page table initialization.
+ */
 
 int mmsize_initialize(void);
 

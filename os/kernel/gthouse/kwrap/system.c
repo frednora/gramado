@@ -157,38 +157,26 @@ unsigned long doGetSystemMetrics(int index)
         // base memory
         // #todo: We need a method for this.
         case 30:
-            return (unsigned long) memorysizeBaseMemory;
+            return (unsigned long) MemorySizeInfo.BaseMemory;
             break;
             
         // extended - base
         // #todo: We need a method for this.
         case 31:
-            return (unsigned long) memorysizeOtherMemory;
+            return (unsigned long) MemorySizeInfo.OtherMemory;
             break;
 
         // extended memory
         // #todo: We need a method for this.
         case 32:
-            return (unsigned long) memorysizeExtendedMemory;
+            return (unsigned long) MemorySizeInfo.ExtendedMemory;
             break;
 
-        // total = base + other + extended 
-        // #todo: We need a method for this.
-        case 33:
-            return (unsigned long) memorysizeTotal;
-            break;
-
-        // used
-        // #todo: We need a method for this.
-        case 34:
-            return (unsigned long) memorysizeUsed;
-            break;
-
-        // free
-        // #todo: We need a method for this. 
-        case 35:
-            return (unsigned long) memorysizeFree;
-            break;  
+        // total, used and free
+        // total = (base + other + extended) 
+        case 33: return (unsigned long) mmsize_get_total_memory();  break;
+        case 34: return (unsigned long) mmsize_get_used_memory();   break;
+        case 35: return (unsigned long) mmsize_get_free_memory();   break;  
 
          // Kernel Heap support.
 

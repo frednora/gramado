@@ -99,8 +99,4 @@ extern struct mmblock_d  *current_mmblock;
 // see: mm.c
 extern unsigned long mmblockList[MMBLOCK_COUNT_MAX];  
 
-
-
 #endif    
-
-

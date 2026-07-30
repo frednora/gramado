@@ -86,14 +86,14 @@ void mmShowMemoryInfo(void)
     printk ("RAM Memory info:\n");
 
     printk ("\n");
-    printk ("BaseMemory     (%d KB)\n", memorysizeBaseMemory );
-    printk ("OtherMemory    (%d KB)\n", memorysizeOtherMemory );
-    printk ("ExtendedMemory (%d KB)\n", memorysizeExtendedMemory );
-    printk ("TotalMemory    (%d KB)\n", memorysizeTotal );
+    printk ("BaseMemory     (%d KB)\n", MemorySizeInfo.BaseMemory );
+    printk ("OtherMemory    (%d KB)\n", MemorySizeInfo.OtherMemory );
+    printk ("ExtendedMemory (%d KB)\n", MemorySizeInfo.ExtendedMemory );
+    printk ("TotalMemory    (%d KB)\n", MemorySizeInfo.Total );
 
     printk ("\n");
-    printk ("TotalUsed      (%d KB)\n", memorysizeUsed );
-    printk ("TotalFree      (%d KB)\n", memorysizeFree );
+    printk ("TotalUsed      (%d KB)\n", MemorySizeInfo.Used );
+    printk ("TotalFree      (%d KB)\n", MemorySizeInfo.Free );
 
     printk ("\n");    
     printk ("ring0 area     (%d KB)\n", mm_used_ring0_area );
@@ -124,7 +124,7 @@ void mmShowMemoryInfo(void)
         printk ("(Undefined) system ");
     };
 
-    printk ("with %d MB \n", (memorysizeTotal/1024) );
+    printk ("with %d MB \n", (MemorySizeInfo.Total/1024) );
 
 //==================================
 // Other info:

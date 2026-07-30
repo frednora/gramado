@@ -1,123 +1,128 @@
 // mmsize.c
+// Memory size detection and classification.
 // Created by Fred Nora.
 
 #include <kernel.h>
 
 /*
-Global variables tracked
-
-memorysizeBaseMemoryViaCMOS → Base memory reported by CMOS.
-memorysizeBaseMemory → Base memory (KB).
-memorysizeOtherMemory → Shadow memory (≈384 KB).
-memorysizeExtendedMemory → Extended memory above 1 MB.
-memorysizeTotal → Total physical memory (KB).
-memorysizeInstalledPhysicalMemory → Placeholder for installed RAM.
-memorysizeTotalPhysicalMemory → Placeholder for total RAM.
-memorysizeAvailablePhysicalMemory → Placeholder for free RAM.
-memorysizeUsed / memorysizeFree → Used/free RAM counters.
-g_mm_system_type → System type classification (small, medium, large).
-*/
-
-//
-// Memory size support.
-//
-
-// see: mmsize.h
-//struct last_mb_footer_d  last_mb_footer;
-
+ * Memory size support
+ * -------------------
+ * This module is responsible for detecting the amount of physical memory
+ * available in the system and classifying the system type (small, medium, large).
+ * It centralizes all memory size information into the global structure
+ * `MemorySizeInfo`, which is defined in mmsize.h.
+ *
+ * The values are detected during early kernel initialization,
+ * before page tables are set up.
+ */
 
 //base     = base memory retornada pelo cmos
 //other    = (1MB - base). (Shadow memory = 384 KB)
 //extended = retornada pelo cmos.
 //total    = base + other + extended.
-// alias
-unsigned long memorysizeBaseMemoryViaCMOS=0;
 
-unsigned long memorysizeBaseMemory=0;
-unsigned long memorysizeOtherMemory=0;
-unsigned long memorysizeExtendedMemory=0;
-unsigned long memorysizeTotal=0;
+// Global structure holding memory size information
+struct memory_size_info_d  MemorySizeInfo;
 
-unsigned long memorysizeInstalledPhysicalMemory=0;
-unsigned long memorysizeTotalPhysicalMemory=0;
-unsigned long memorysizeAvailablePhysicalMemory=0;
-// Used
-unsigned long memorysizeUsed=0;
-// Free
-unsigned long memorysizeFree=0;
-
-struct memory_size_info_d MemorySizeInfo;
+// see: mmsize.h
+//struct last_mb_footer_d  last_mb_footer;
 
 
-// Salva o tipo de sistema baseado no tamanho da memória.
+// Global system type classification (set during initialization)
 // see: x64mm.h
 int g_mm_system_type = stNull;
 
-
 // ==================================================
 
-// Initialize the size of the physical memory
-// and the size of the system based on the memory size.
-// It needs to be before the pagetables initialization.
-// Purpose: 
-// Detects and calculates the amount of physical memory installed, 
-// then classifies the system type (small, medium, large) based on thresholds.
-// Called by mmInitialize() in mm.c.
+// Return total physical memory (KB)
+// total = (base + other + extended)
+unsigned long mmsize_get_total_memory(void)
+{
+    return (unsigned long) MemorySizeInfo.Total;
+}
+
+unsigned long mmsize_get_used_memory(void)
+{
+    return (unsigned long) MemorySizeInfo.Used;
+}
+
+unsigned long mmsize_get_free_memory(void)
+{
+    return (unsigned long) MemorySizeInfo.Free;
+}
+
+/* 
+ * ==================================================
+ * Initialization
+ * ==================================================
+ * mmsize_initialize()
+ *
+ * Detects and calculates the amount of physical memory installed,
+ * then classifies the system type (small, medium, large) based on thresholds.
+ *
+ * Steps:
+ *   1. Clear the MemorySizeInfo structure.
+ *   2. Read total memory from bootloader (last valid address).
+ *   3. Read base memory from CMOS.
+ *   4. Calculate shadow memory ("other").
+ *   5. Calculate extended memory.
+ *   6. Compute total memory (base + other + extended).
+ *   7. Classify system type based on thresholds.
+ *   8. Mark structure as initialized.
+ *
+ * Called by mmInitialize() in mm.c.
+ */
+
 int mmsize_initialize(void)
 {
+    // Clear the structure
+    memset(&MemorySizeInfo, 0, sizeof(struct memory_size_info_d));
     MemorySizeInfo.initialized = FALSE;
 
-//
-// MEMORY SIZES
-//
-
-// -------------------
-// Total memory in KB.
-// Herdamos esse valor do boot loader.
-// #todo
-// New we have a new value from boot.
-// We're gonna use this new value instead the one from cmos.
-// #warning:
-// Actually this address represents the start of the
-// last MB of the physical memory.
+    // -------------------
+    // Total memory in KB (from bootloader)
+    // Note: blSavedLastValidAddress points to the start of the last MB.
     unsigned long __total_memory_in_kb = 
         (unsigned long) (blSavedLastValidAddress/0x400);
 
-// -------------------
-// CMOS
-// Get memory sizes via RTC. (KB)
-// base, other, extended.
-// RTC só consegue perceber 64MB de memória.
-
-    memorysizeBaseMemoryViaCMOS = (unsigned long) rtcGetBaseMemory();
-    memorysizeBaseMemory = 
-        (unsigned long) memorysizeBaseMemoryViaCMOS;
-    memorysizeOtherMemory = 
-        (unsigned long) (1024 - memorysizeBaseMemory);
+    // -------------------
+    // Base memory from CMOS (KB)
+    // RTC can only detect up to 64 MB.
+    MemorySizeInfo.BaseMemoryViaCMOS = (unsigned long) rtcGetBaseMemory();
+    MemorySizeInfo.BaseMemory = (unsigned long) MemorySizeInfo.BaseMemoryViaCMOS;
+    MemorySizeInfo.OtherMemory = 
+        (unsigned long) (1024 - MemorySizeInfo.BaseMemory);
 
 // -------------------------
 // Extended memory from cmos.
 // memorysizeExtendedMemory = (unsigned long) rtcGetExtendedMemory(); 
-    memorysizeExtendedMemory =  
+
+    // -------------------
+    // Extended memory (KB)
+    MemorySizeInfo.ExtendedMemory =  
             (unsigned long) ( 
             __total_memory_in_kb - 
-            memorysizeBaseMemory - 
-            memorysizeOtherMemory 
+            MemorySizeInfo.BaseMemory - 
+            MemorySizeInfo.OtherMemory 
             );
 
-// -------------------------
-// Size in KB.
-    memorysizeTotal = 
+    // -------------------
+    // Total memory (KB)
+    MemorySizeInfo.Total = 
         (unsigned long) ( 
-        memorysizeBaseMemory + 
-        memorysizeOtherMemory + 
-        memorysizeExtendedMemory 
+        MemorySizeInfo.BaseMemory + 
+        MemorySizeInfo.OtherMemory + 
+        MemorySizeInfo.ExtendedMemory 
         );
 
 // --------------------------------------------
 // __total_memory_in_kb: From boot loader.
-// memorysizeTotal:      Calculate here.
+// MemorySizeInfo.Total:      Calculated here.
 
+
+    // -------------------
+    // System type classification
+    // Thresholds defined in mmsize.h
 
 // -------------------------------------------
 // System type - Based on the memory size.
@@ -131,7 +136,7 @@ int mmsize_initialize(void)
 // 0MB
 // #atenção 
 // Nesse caso devemos prosseguir e testar as outras opções.
-    if (memorysizeTotal >= 0){
+    if (MemorySizeInfo.Total >= 0){
         g_mm_system_type = stNull;
         debug_print("mmsize_initialize: stNull\n");
     }
@@ -139,7 +144,7 @@ int mmsize_initialize(void)
 // -------------------------
 // Small. (32MB).
 // #bugbug: 256 is the minimum.
-    if (memorysizeTotal >= SMALLSYSTEM_SIZE_KB){
+    if (MemorySizeInfo.Total >= SMALLSYSTEM_SIZE_KB){
         g_mm_system_type = stSmallSystem;
         debug_print("mmsize_initialize: stSmallSystem\n");
     }
@@ -147,7 +152,7 @@ int mmsize_initialize(void)
 // -------------------------
 // Medium. (64MB).
 // #bugbug: 256 is the minimum.
-    if (memorysizeTotal >= MEDIUMSYSTEM_SIZE_KB){
+    if (MemorySizeInfo.Total >= MEDIUMSYSTEM_SIZE_KB){
         g_mm_system_type = stMediumSystem;
         debug_print("mmsize_initialize: stMediumSystem\n");
     }
@@ -155,14 +160,14 @@ int mmsize_initialize(void)
 // -------------------------
 // Large. (128MB).
 // #bugbug: 256 is the minimum.
-    if (memorysizeTotal >= LARGESYSTEM_SIZE_KB){
+    if (MemorySizeInfo.Total >= LARGESYSTEM_SIZE_KB){
         g_mm_system_type = stLargeSystem;
         debug_print("mmsize_initialize: stLargeSystem\n");
     }
 
-// -------------------------
-// #test
-    if (memorysizeTotal == 0)
+    // -------------------
+    // Fail-safe: no memory detected
+    if (MemorySizeInfo.Total == 0)
     {
         g_mm_system_type = stNull;
         debug_print("mmsize_initialize: Initialization fail\n");
@@ -170,7 +175,8 @@ int mmsize_initialize(void)
         return FALSE;
     }
 
-// -------------------------
+    // -------------------
+    // Success
     MemorySizeInfo.initialized = TRUE;
     return TRUE;
 }

@@ -15,7 +15,7 @@ struct frame_table_d  FT;
 // See: x64mm.h
 // #important
 // Vamos configurar a frame table de acordo com o total de memória RAM.
-// 'memorysizeTotal' is the RAM size in KB.
+// 'MemorySizeInfo.Total' is the RAM size in KB.
 // Configura apenas o início e o fim.
 // >>> Start:
 // FRAME_TABLE_START_PA
@@ -81,7 +81,7 @@ int I_initialize_frame_table(void)
 // e a frame table será limitada à marca de 1GB.
 
     // 1024 KB?
-    if ( memorysizeTotal >= (1024*1024) ){
+    if ( MemorySizeInfo.Total >= (1024*1024) ){
         FT.end_pa = (unsigned long) FRAMETABLE_END_PA;
         debug_print("I_initialize_frame_table: We have 1GB or more\n");
         goto initialize_frame_table;
@@ -92,7 +92,7 @@ int I_initialize_frame_table(void)
 // Se a RAM for maior ou igual à 512MB.
 
     // 512 KB?
-    if ( memorysizeTotal >= (512*1024) ){
+    if ( MemorySizeInfo.Total >= (512*1024) ){
         FT.end_pa = (unsigned long) FRAMETABLE_END_PA;
         debug_print ("I_initialize_frame_table: We have 512MB or more\n");
         goto initialize_frame_table;
@@ -103,7 +103,7 @@ int I_initialize_frame_table(void)
 // Se a RAM for maior ou igual à 256MB.
 
     // 256 KB?
-    if ( memorysizeTotal >= (256*1024) ){
+    if ( MemorySizeInfo.Total >= (256*1024) ){
         FT.end_pa = (unsigned long) FRAMETABLE_END_PA;
         debug_print ("I_initialize_frame_table: We have 256MB or more\n");
         goto initialize_frame_table;
@@ -119,7 +119,7 @@ int I_initialize_frame_table(void)
 // total disponível.
 // Porque ele não testa o último mega.
 // The available ram is less than 256.
-    if ( memorysizeTotal < (256*1024) )
+    if ( MemorySizeInfo.Total < (256*1024) )
     {
         debug_print("I_initialize_frame_table: [ALERT] Less than 256MB\n");
     }
@@ -135,16 +135,16 @@ int I_initialize_frame_table(void)
 // But the boot loader did not check the last mb.
 // #bugbug: x_panic is not available yet.
 
-    if ( memorysizeTotal < (250*1024) )
+    if ( MemorySizeInfo.Total < (250*1024) )
     {
         debug_print("I_initialize_frame_table: Less than 250MB\n");
         x_panic    ("I_initialize_frame_table: Less than 250MB\n");
     }
 
-// memorysizeTotal is a value in kb, iguess.
+// MemorySizeInfo.Total is a value in kb, iguess.
 // Change this name to memorysizeTotal_in_kb?
 
-    if ( (FRAMETABLE_END_PA/1024) >= memorysizeTotal )
+    if ( (FRAMETABLE_END_PA/1024) >= MemorySizeInfo.Total )
     {
         debug_print("I_initialize_frame_table: Invalid FRAMETABLE_END_PA\n");
         x_panic    ("I_initialize_frame_table:  Invalid FRAMETABLE_END_PA\n");

@@ -93,7 +93,7 @@ void wrappers_set_current_runlevel(int desired_runlevel)
 unsigned long core_get_memory_size_mb(void)
 {
     unsigned long __mm_size_mb = 
-        (unsigned long) (memorysizeTotal/0x400);
+        (unsigned long) (MemorySizeInfo.Total/0x400);
 
     return (unsigned long) __mm_size_mb;
 }
