@@ -18,6 +18,10 @@
 
 #include <kernel.h>
 
+// handshack status for random connection
+static int __handshake_11888 = FALSE;
+
+
 static char __tcp_payload[1024];
 
 static uint16_t 
@@ -695,7 +699,7 @@ network_handle_tcp(
 
             // No payload for handshake
             char dummy_payload[4];
-            dummy_payload[0] = 0;
+            dummy_payload[0] = 0x00;
             dummy_payload[1] = 0;
 
             network_send_tcp(
@@ -708,7 +712,7 @@ network_handle_tcp(
                 ack,
                 flags,
                 dummy_payload,  // No tcp payload
-                1               // No tcp payload lenght
+                1               // No tcp payload lenght char=0x00
             );
 
             // Waiting for the ACK:
@@ -716,21 +720,10 @@ network_handle_tcp(
             return;
         }
 
-        /*
         // (2) SYN/ACK
         // A server accepted the connection.
-        if ( fSYN == 1 && fACK == 1 )
-        {
-            printk("\n");
-            printk("<<<< [TCP] SYN/ACK (2)\n");
-            printk("SEQ={%d} | ACK={%d}\n",
-                _seq_number, _ack_number);
-            // #todo
-            // We received a syn/ack as a response to
-            // our syn sent by a process in this machine.
-            return;
-        }
-        */
+        // We received a syn/ack as a response to
+        // our syn sent by a process in this machine.
 
         if ( fSYN == 1 && fACK == 1 )
         {
@@ -746,8 +739,10 @@ network_handle_tcp(
 
             printk(">> Sending final ACK (3)\n");
 
-            char no_payload[1];
-            no_payload[0] = 0;
+            // No payload for handshake
+            char no_payload[4];
+            no_payload[0] = 0x00;
+            no_payload[1] = 0;
 
             network_send_tcp(
                 dhcp_info.your_ipv4,        // our IP
@@ -759,23 +754,31 @@ network_handle_tcp(
                 final_ack,
                 TH_ACK,                     // ACK only, no SYN
                 no_payload,
-                0                            // no payload — pure ACK doesn't consume a seq number
+                1                           // no payload — pure ACK doesn't consume a seq number
             );
 
             return;
         }
 
-
         // (3) ACK
         // A client is confirming the connection we accepted.
-        if ( fSYN == 0 && fACK == 1 ){
+        if ( fSYN == 0 && fACK == 1 )
+        {
             printk("\n");
             printk("<<<< [TCP] ACK     (3)\n");
             printk("SEQ={%d} | ACK={%d}\n",
                 _seq_number, _ack_number);
+
+            // -----------------------------------------------------
             // #todo
             // We received an ack as a response to
             // our syn/ack sent by a process in this machine.
+            // Our connection is now considered stablished.
+            // #ps: but we are not using the structure that 
+            // handles this connection yet.
+            // No response is sent now.
+
+            __handshake_11888 = TRUE;
             return;
         }
     }
@@ -785,6 +788,27 @@ network_handle_tcp(
         //printk("TCP: MESSAGE: {%s}\n", tcp_payload );
         //memset(tcp_payload,0,sizeof(tcp_payload));
     //}
+
+
+// When the client sends the HTTP GET (after the 3-way handshake is finished):
+// Flag, Value,      Meaning
+// SYN,      0,      Connection is already established
+// ACK,      1,      Always set on data segments after the handshake
+// PSH, 1 (usually), Push the data to the application immediately
+// FIN,      0,      Not closing yet
+// RST,      0,      Not resetting
+
+    // If we received something right after the connection was stablished
+    // #ps: Not using the right structure for connection handling yet.
+    if (__handshake_11888 == TRUE)
+    {
+        if ( fSYN == 0 && fACK == 1 )
+        {
+            // #todo:
+            printk("11888: packet after handshake\n");
+            return;
+        }
+    }
 
     //
     // Drop!

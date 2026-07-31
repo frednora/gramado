@@ -95,8 +95,16 @@ static int __gprot_handle_g(char *data, uint16_t s_port, uint16_t d_port)
     if ( buf[0] != 'g' || 
          buf[1] != ':' ) 
     {
-        // #todo: Response?
-        return -1;
+
+        printk("Invalid gprot header\n");
+
+        memset(buf, 0, sizeof(buf));
+        ksprintf(buf,"g:1 ");  // Reply code
+        ksprintf(
+            (buf + 4),
+            "This is a response from Gramado OS\n");
+        NoReply = FALSE;
+        goto done;
     }
 
 // ----------------
@@ -111,7 +119,7 @@ static int __gprot_handle_g(char *data, uint16_t s_port, uint16_t d_port)
         memset(response_file, 0, sizeof(response_file));
         //ksprintf(response_file,"g:1 ");
         //ksprintf(response_file,"<spam>Hello world<spam/>");
-        ksprintf(response_file,gprot_response_file);
+        ksprintf(response_file, gprot_response_file);
 
         memset(buf, 0, sizeof(buf));
         ksprintf(buf,"g:1 ");  // Reply code
@@ -644,6 +652,7 @@ static int __gprot_handle_http(char *buf, uint16_t sport, uint16_t dport)
 
 done:
 
+// Send buffer
     if (!NoReply)
     {
         __gprot_send_udp(
@@ -668,7 +677,7 @@ int gprot_handle_protocol(char *data, uint16_t s_port, uint16_t d_port)
     //if (*buf == 0)
         //return -1;
 
-// Gramado protocol
+// Gramado gprot protocol
     if (buf[0] == 'g' && buf[1] == ':') 
     {
         return (int) __gprot_handle_g(buf, s_port, d_port);
