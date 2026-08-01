@@ -1,11 +1,16 @@
 # gthouse - Gate House
 
 ---------------------------------------
-kwrap - High level wrappers
+gramnet/ - High level network infrastructure  
+        http. https, etc ...
 
 ---------------------------------------
-libk  - Libc implementation and rtl
+kwrap/  - High level wrappers
+        CS - Client/Server high level infrastructure.
 
 ---------------------------------------
-wink  - user interaction. (keyboard, mouse, display etc)
+libk/   - Libc implementation and rtl
+
+---------------------------------------
+wink/   - user interaction. (keyboard, mouse, display etc)
         ps: gthouse is a good place for wink.

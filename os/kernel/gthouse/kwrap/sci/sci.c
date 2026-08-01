@@ -7,7 +7,6 @@
 // The 'event delivery' and 'return' support.
 // Created by Fred Nora.
 
-
 // #ps
 // Gramado has four (4) syscall interrupts. 0x80, 0x81, 0x82, 0x83.
 // 0x80 - It's doing the hard work

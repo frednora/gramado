@@ -304,7 +304,6 @@
 #include "../halls/dev/per/net/prot/tcp.h"
 #include "../halls/dev/per/net/prot/udp.h"
 #include "../halls/dev/per/net/prot/dhcp.h" 
-#include "../halls/dev/per/net/prot/gprot.h"
 
 // Extra protocols
 #include "../halls/dev/per/net/prot/icmp.h" 
@@ -426,6 +425,15 @@
 
 #include "../gthouse/kwrap/cont/cg.h"
 #include "../gthouse/kwrap/cont/ns.h"
+
+// ==================================
+// gramnet/
+
+#include "../gthouse/gramnet/http.h"
+#include "../gthouse/gramnet/gprot.h"
+// ...
+#include "../gthouse/gramnet/gramnet.h"
+
 
 // Core module.
 // It controls the resorces in halls/.

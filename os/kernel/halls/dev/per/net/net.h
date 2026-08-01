@@ -6,8 +6,8 @@
 
 
 // For side_id
-#define CONN_SIDE_LEFT   0
-#define CONN_SIDE_RIGHT  1
+#define CONN_SIDE_SERVER  0
+#define CONN_SIDE_CLIENT  1
 
 // Sides
 // CONN_LCLS → LC | LS
@@ -25,7 +25,6 @@
 struct remote_endpoint_d 
 {
     struct sockaddr_in addr;
-
     int protocol;
 
 //
@@ -42,10 +41,12 @@ struct endpoint_d
     int magic;
 
 // An endpoint belongs to a side, inside a corner of a square.
-    int side_id;     // LEFT or RIGHT (0 or 1)
+    int side_id;     // which side of the square (server or client)
     int case_id;     // which of the 4 square cases (LCLS, LCRS, LSLC, LSRC)
 
     int is_remote;   // ENDPOINT_LOCAL or ENDPOINT_REMOTE
+
+// it is one or another
     struct socket_d *socket;
     struct remote_endpoint_d *remote;     // valid only if type == REMOTE
 };
@@ -58,15 +59,8 @@ struct endpoint_pair_d
 // An endpoint pair belongs to a case.
 //  One of the 4 corners of a square.
     int case_id;
-    struct endpoint_d *left;
-    struct endpoint_d *right;
-};
-
-
-struct udp_connection_d 
-{
-    int used;
-    int magic;
+    struct endpoint_d *s_ep;  // server endpoint
+    struct endpoint_d *c_ep;  // client endpoint
 };
 
 
@@ -81,6 +75,63 @@ maintain timers
 process ACKs
 implement congestion control (later)
 */
+
+/*
+
+How the Fields Map to TCP Behavior
+snd_una → Oldest unacknowledged sequence number.
+Used to know what data is still “in flight” and awaiting ACK.
+
+snd_nxt → Next sequence number to send.
+Incremented every time you transmit payload (or SYN/FIN, since they consume sequence space).
+
+iss → Initial send sequence number.
+Set during handshake when you send the first SYN.
+
+rcv_nxt → Next expected sequence number from the peer.
+Updated when you receive data or SYN/FIN.
+
+irs → Initial receive sequence number.
+Set when you accept the peer’s SYN.
+
+snd_wnd / rcv_wnd → Flow control windows.
+For now you can keep them fixed, but later they’ll be dynamic.
+*/
+
+/*
+Example: Handshake Progression
+Let’s say you’re the server on port 11888:
+
+Client sends SYN
+You set irs = client_seq
+You set rcv_nxt = client_seq + 1 (expecting next byte)
+
+Server replies SYN/ACK
+You set iss = my_initial_seq
+You set snd_nxt = iss + 1 (since SYN consumes one seq)
+You set snd_una = iss (oldest unacknowledged is the SYN)
+
+Client sends ACK
+You update snd_una = iss + 1 (our SYN acknowledged)
+You set rcv_nxt = client_seq + 1 (their ACK confirms receipt)
+
+At this point, state = TCP_ESTABLISHED.
+*/
+
+// TCP connection states (RFC 793)
+#define TCP_CLOSED        0
+#define TCP_LISTEN        1
+#define TCP_SYN_SENT      2
+#define TCP_SYN_RECEIVED  3
+#define TCP_ESTABLISHED   4
+#define TCP_FIN_WAIT_1    5
+#define TCP_FIN_WAIT_2    6
+#define TCP_CLOSE_WAIT    7
+#define TCP_CLOSING       8
+#define TCP_LAST_ACK      9
+#define TCP_TIME_WAIT     10
+
+
 struct tcp_connection_d 
 {
     int used;
@@ -137,17 +188,36 @@ struct tcp_connection_d
 // Remote connections: server_endpoint + remote_endpoint describe
 // the local socket and the remote endpoint.
 
+// Connection types
+#define CONN_TYPE_NONE    0
+#define CONN_TYPE_TCP     1
+#define CONN_TYPE_UDP     2
+#define CONN_TYPE_LOCAL   3
+#define CONN_TYPE_IPC     4   // optional, for inter-process comm
+
+#define CONN_STATUS_NONE        0
+#define CONN_STATUS_SYN_SENT    1
+#define CONN_STATUS_SYN_RECEIVED 2
+#define CONN_STATUS_ESTABLISHED 3
+#define CONN_STATUS_FIN_WAIT    4
+#define CONN_STATUS_CLOSED      5
+
+
 struct connection_d 
 {
     int used;
     int magic;
 
-    struct endpoint_pair_d *ep_pair;
+    int id;       // unique connection identifier
+    int type;     // LOCAL, TCP, UDP, etc.
 
-    int type;  // LOCAL, UDP, TCP
-    struct udp_connection_d *udp_conn;
+    int status;   // NEW: generic connection status
+
+    struct endpoint_pair_d *ep_pair;
     struct tcp_connection_d *tcp_conn;
+    // future: struct udp_connection_d *udp_conn;
 };
+
 
 #define MAX_CONNECTIONS  256
 // See: net.c
@@ -357,9 +427,14 @@ extern struct network_info_d *NetworkInfo;
 
 // =================================================
 
+struct remote_endpoint_d *create_remote_endpoint(
+    uint8_t ip[4], unsigned short port, int protocol);
 struct endpoint_d *create_endpoint_object(void);
 struct endpoint_pair_d *create_endpoint_pair_object(void);
-struct connection_d *create_connection_object(void);
+struct connection_d *create_connection(int type);
+int connection_register(struct connection_d *conn);
+struct connection_d *get_connection(int id);
+void network_show_connections(void);
 
 //
 // == Prototypes ====================

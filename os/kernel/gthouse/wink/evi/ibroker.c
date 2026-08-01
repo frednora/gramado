@@ -927,7 +927,12 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         networkLock();
         goto exit_cmp;
     }
-
+    // conn: List connections
+    if ( gramado_strncmp(cmdline,"conn",4) == 0 )
+    {
+        network_show_connections();
+        goto exit_cmp;
+    }
 
 // string: Testing string functions.
     if ( gramado_strncmp(cmdline,"string",6) == 0 )

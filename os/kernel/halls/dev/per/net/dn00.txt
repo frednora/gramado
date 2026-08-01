@@ -102,7 +102,7 @@ But in implementation: it collapses into a triangle
 |    socket_d (local client)                                    |
 |    remote_endpoint_d (remote server endpoint)                 |
 |    connection_d (relationship object)                         |
-|    tcp_connection_d or udp_connection_d (protocol state)      |
+|    tcp_connection_d  (protocol state)      |
 |                                                               |
 |  Mechanism: Outbound networking (local → remote)              |
 +---------------------------------------------------------------+
@@ -112,7 +112,7 @@ But in implementation: it collapses into a triangle
 |    remote_endpoint_d (remote client endpoint)                 |
 |    socket_d (local accepted socket)                           |
 |    connection_d (relationship object)                         |
-|    tcp_connection_d or udp_connection_d (protocol state)      |
+|    tcp_connection_d  (protocol state)      |
 |                                                               |
 |  Mechanism: Inbound networking (remote → local)               |
 +---------------------------------------------------------------+

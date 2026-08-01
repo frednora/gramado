@@ -1,8 +1,8 @@
-# net/
-# Compile all the files and create p3_net.o
-# Makefile for the kernel networking.
+# libk/
+# Create p1_gnet.o kernel module.
+# Highest level component.
 
-INCLUDE = ../../../../include
+INCLUDE = ../../include
 
 AS	= as
 LD	= ld
@@ -19,7 +19,6 @@ PYTHON	= python
 PYTHON2	= python2
 PYTHON3	= python3
 RUBY	= ruby
-
 
 # test: gramado 64bit
 # See: https://gcc.gnu.org/onlinedocs/gcc/Code-Gen-Options.html
@@ -61,7 +60,6 @@ CFLAGS := \
 # Used to build the kernel.
 KERNEL_INCLUDE := -I $(INCLUDE)
 
-
 # See: https://linux.die.net/man/1/ld
 # -s --strip-all:   Omit all symbol information from the output file.
 # -x --discard-all: Delete all local symbols.
@@ -69,49 +67,23 @@ KERNEL_INCLUDE := -I $(INCLUDE)
 # LDFLAGS := -m elf_x86_64 -static
 LDFLAGS := -m elf_x86_64 -s -x -static  
 
-OBJS = domain.o inet.o \
-socket.o sockint.o \
-netif.o \
-ethernet.o arp.o ipv4.o tcp.o udp.o dhcp.o \
-net.o    
+# Everything is a file.
+OBJS = http.o gprot.o gramnet.o    
 
 
 all:
-
-	$(CC) -c net.c  $(KERNEL_INCLUDE) $(CFLAGS) -o net.o
-
-# network
-	$(CC) -c domain.c   $(KERNEL_INCLUDE) $(CFLAGS) -o domain.o
-	$(CC) -c inet.c     $(KERNEL_INCLUDE) $(CFLAGS) -o inet.o
-
-# socket
-	$(CC) -c socket.c   $(KERNEL_INCLUDE) $(CFLAGS) -o socket.o
-	$(CC) -c sockint.c  $(KERNEL_INCLUDE) $(CFLAGS) -o sockint.o
-
-
-# Network inteface support
-	$(CC) -c ifconfig/netif.c  $(KERNEL_INCLUDE) $(CFLAGS) -o netif.o
-
-# core protocols
-	$(CC) -c prot/core/ethernet.c  \
-$(KERNEL_INCLUDE) $(CFLAGS) -o ethernet.o
-	$(CC) -c prot/core/arp.c  \
-$(KERNEL_INCLUDE) $(CFLAGS) -o arp.o
-	$(CC) -c prot/core/ipv4.c  \
-$(KERNEL_INCLUDE) $(CFLAGS) -o ipv4.o
-
-# protocols
-	$(CC) -c prot/tcp.c    $(KERNEL_INCLUDE) $(CFLAGS) -o tcp.o
-	$(CC) -c prot/udp.c    $(KERNEL_INCLUDE) $(CFLAGS) -o udp.o
-	$(CC) -c prot/dhcp.c   $(KERNEL_INCLUDE) $(CFLAGS) -o dhcp.o
+	$(CC) -c http.c     $(KERNEL_INCLUDE) $(CFLAGS) -o http.o
+	$(CC) -c gprot.c    $(KERNEL_INCLUDE) $(CFLAGS) -o gprot.o
+#	$(CC) -c gramnet.c  $(KERNEL_INCLUDE) $(CFLAGS) -o gramnet.o
+	$(CC) -c gramnet.c  $(KERNEL_INCLUDE) $(CFLAGS) -o gramnet.o
 
 # link
-	$(LD) -r -o p3_net.o $(OBJS)
-	cp p3_net.o ../../../../
+	$(LD) -r -o p1_gnet.o $(OBJS)
+	cp p1_gnet.o ../../
 	rm *.o
 
 clean:
 	rm *.o    
 	
 	
-
+	

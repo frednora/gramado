@@ -104,10 +104,11 @@ MYTEST_CONFIG=n
 # I want, but i will not.
 
 # ==[Part 01]======================
-# gthouse/core/ (HOT)
+# gthouse/ (HOT)
 objects-y := head_64.o 
 objects-y += p1_ke.o  
 objects-y += p1_kwrap.o  
+objects-y += p1_gnet.o  
 
 # ==[Part 02]======================
 # gthouse/wink/ - Main wrapper for the kernel io system.

@@ -42,11 +42,40 @@ struct network_saved_d  NetworkSaved;
 
 // ====================================================
 
+
 static void __maximize_ds_priority(pid_t pid);
+static struct connection_d *__create_connection_object(void);
+static int __connection_get_free_slot(void);
 
 // ====================================================
 
+// remote ep
+struct remote_endpoint_d *create_remote_endpoint(
+    uint8_t ip[4], unsigned short port, int protocol)
+{
+    struct remote_endpoint_d *re;
 
+    re = (struct remote_endpoint_d *) kmalloc(sizeof(struct remote_endpoint_d));
+    if (!re) {
+        printk("create_remote_endpoint: allocation failed\n");
+        return NULL;
+    }
+
+    memset(re, 0, sizeof(struct remote_endpoint_d));
+
+    // Validation
+    re->protocol = protocol;
+    re->tcp_state = TCP_CLOSED;
+
+    // Fill sockaddr_in
+    re->addr.sin_family = AF_INET;
+    re->addr.sin_port   = ToNetByteOrder16(port);
+    memcpy(&re->addr.sin_addr, ip, 4);
+
+    return re;
+}
+
+// ep
 struct endpoint_d *create_endpoint_object(void)
 {
     struct endpoint_d *new_ep;
@@ -63,8 +92,8 @@ struct endpoint_d *create_endpoint_object(void)
     new_ep->side_id = 0;
     new_ep->case_id = 0;
     new_ep->is_remote = FALSE;
-    new_ep->socket = NULL;
-    new_ep->remote = NULL;
+    new_ep->socket = NULL;  // socket
+    new_ep->remote = NULL;  // remote endpoint
     return (struct endpoint_d *) new_ep;
 
 fail:
@@ -72,6 +101,7 @@ fail:
 };
 
 
+// Pair
 struct endpoint_pair_d *create_endpoint_pair_object(void)
 {
     struct endpoint_pair_d *new_epp;
@@ -86,37 +116,188 @@ struct endpoint_pair_d *create_endpoint_pair_object(void)
     new_epp->used = TRUE;
     new_epp->magic = 1234;
     new_epp->case_id = 0;
-    new_epp->left = NULL;
-    new_epp->right = NULL;
+    new_epp->s_ep = NULL;
+    new_epp->c_ep = NULL;
     return (struct endpoint_pair_d *) new_epp;
 
 fail:
     return NULL;
 };
 
-
-struct connection_d *create_connection_object(void)
+// Create the connection structure,
+// a typeless structure.
+static struct connection_d *__create_connection_object(void)
 {
     struct connection_d *new_conn;
 
-    new_conn = (void *) kmalloc( sizeof(struct connection_d) );
-    if ((void *) new_conn ==  NULL){
-        printk("create_connection_object: new_conn\n");
+    new_conn = (void *) kmalloc(sizeof(struct connection_d));
+    if (!new_conn) {
+        printk("__create_connection_object: new_conn\n");
         goto fail;
     }
-    memset( new_conn, 0, sizeof(struct connection_d) );
+    memset(new_conn, 0, sizeof(struct connection_d));
+
+    // Validation
+    new_conn->used   = TRUE;
+    new_conn->magic  = 1234;
+    new_conn->id     = -1;  // not registered yet
+    new_conn->type   = CONN_TYPE_NONE;  // default to NONE for now
+    new_conn->status = CONN_STATUS_NONE;
+    new_conn->ep_pair = NULL;
+    new_conn->tcp_conn = NULL;  // will be allocated later if needed
+
+    return new_conn;
+
+fail:
+    return NULL;
+}
+
+// Create connection given a type (TCP, UDP, etc). Returns NULL on failure.
+struct connection_d *create_connection(int type)
+{
+    struct connection_d *new_conn;
+
+// #todo: 
+// For now we are only supporting TCP connections. 
+// We can add support for UDP and others later.
+    if (type != CONN_TYPE_TCP) {
+        printk("create_connection: unsupported type %d\n", type);
+        return NULL;
+    }
+
+    // Create a typeless connection object first
+    new_conn = (void *) __create_connection_object();
+    if (!new_conn) {
+        printk("create_connection: new_conn\n");
+        goto fail;
+    }
+
+    new_conn->id = -1;  // not registered yet
+    new_conn->type = type;  //CONN_TYPE_TCP;   // default to TCP for now
+    new_conn->status = CONN_STATUS_NONE;
+
+// ep pair will be set later when endpoints are created and linked
+    new_conn->ep_pair = NULL;
+
+
+    // :: TCP
+    if (type == CONN_TYPE_TCP){
+        // Allocate TCP state machine
+        new_conn->tcp_conn = (struct tcp_connection_d *) kmalloc(sizeof(struct tcp_connection_d));
+        if (!new_conn->tcp_conn) {
+            printk("__create_connection_object: tcp_conn\n");
+            //kfree(new_conn);
+            goto fail;
+        }
+        memset(new_conn->tcp_conn, 0, sizeof(struct tcp_connection_d));
+
+        // Initialize TCP state
+        new_conn->tcp_conn->state = TCP_CLOSED;
+        new_conn->tcp_conn->snd_wnd = 0;
+        new_conn->tcp_conn->rcv_wnd = 0;
+        // other fields will be set during handshake
+
+    // :: LOCAL
+    } else if (type == CONN_TYPE_LOCAL){
+        // For other types, we can add support later
+        new_conn->tcp_conn = NULL;
+        printk("create_connection: type %d not fully supported yet\n", type);
+
+    // :: INVALID
+    } else {
+        // For other types, we can add support later
+        new_conn->tcp_conn = NULL;
+        printk("create_connection: type %d not fully supported yet\n", type);
+    };
+
     // Validation
     new_conn->used = TRUE;
     new_conn->magic = 1234;
-    new_conn->ep_pair = NULL;
-    new_conn->type = 0;
-    new_conn->udp_conn = NULL;
-    new_conn->tcp_conn = NULL;
+
     return (struct connection_d *) new_conn;
 
 fail:
     return NULL;
-};
+}
+
+
+
+// Find a free spot in connectionList[]
+// Returns index or -1 if full
+static int __connection_get_free_slot(void)
+{
+    int i;
+    for (i = 0; i < MAX_CONNECTIONS; i++) {
+        if (connectionList[i] == 0) {
+            return i;  // free slot found
+        }
+    }
+    return -1; // no free slot
+}
+
+// Register a connection into the list
+int connection_register(struct connection_d *conn)
+{
+    if (!conn) 
+        return -1;
+
+    int slot = __connection_get_free_slot();
+    if (slot < 0) {
+        printk("connection_register: no free slot\n");
+        return -1;
+    }
+
+    conn->id = slot;
+    connectionList[slot] = (unsigned long) conn;
+
+    return (int) slot;
+}
+
+struct connection_d *get_connection(int id)
+{
+    if (id < 0 || id >= MAX_CONNECTIONS) {
+        printk("get_connection: invalid id %d\n", id);
+        return NULL;
+    }
+
+    struct connection_d *conn = (struct connection_d *) connectionList[id];
+    if (!conn) {
+        printk("get_connection: no connection at id %d\n", id);
+        return NULL;
+    }
+    if (conn->used != TRUE || conn->magic != 1234) {
+        printk("get_connection: corrupted entry at id %d\n", id);
+        return NULL;
+    }
+
+    return conn;
+}
+
+// Walk the connection list and print valid ones (magic == 1234).
+void network_show_connections(void)
+{
+    printk("\n--- Connection List ---\n");
+
+    int i;
+    int count = 0;
+    for (i=0; i < MAX_CONNECTIONS; i++) 
+    {
+        struct connection_d *conn = (struct connection_d *) connectionList[i];
+        if (!conn) continue;
+
+        if ( conn->used == TRUE && 
+             conn->magic == 1234) 
+        {
+            printk("ID=%d | type=%d | status=%d\n",
+                conn->id, conn->type, conn->status);
+
+            count++;
+        }
+    }
+
+    printk("Total valid connections: %d\n", count);
+    //printk("--- End of List ---\n");
+}
 
 
 

@@ -18,6 +18,11 @@
 
 #include <kernel.h>
 
+
+// For testing only: track the last connection we created.
+// Later this will be replaced with endpoint-based lookup.
+static struct connection_d *test_conn = NULL;
+
 // handshack status for random connection
 static int __handshake_11888 = FALSE;
 
@@ -680,6 +685,93 @@ network_handle_tcp(
             printk("<<<< [TCP] SYN     (1)\n");
             printk("SEQ={%d} | ACK={%d}\n", _seq_number, _ack_number );
 
+            // Example sequence/ack numbers
+            tcp_seq seq = 1000;              // server initial sequence number
+            tcp_ack ack = _seq_number + 1;   // acknowledge client’s ISN
+
+            // -- connection structure ----
+            struct connection_d *conn = create_connection(CONN_TYPE_TCP);
+            if ((void*) conn == NULL){
+                printk("Failed to create connection object\n");
+                return; // do not respond
+            }
+            int id = connection_register(conn);
+            // #todo: Check id validation
+            if (id < 0 || id >= MAX_CONNECTIONS) 
+            {
+                printk("Failed to register connection\n");
+                // free the object if needed
+                //kfree(conn->tcp_conn);
+                //kfree(conn);
+                return; // do not respond
+            }              
+            conn->type   = CONN_TYPE_TCP;
+            conn->status = CONN_STATUS_SYN_RECEIVED;
+
+            // tcp connection structure
+            if ((void*) conn->tcp_conn == NULL){
+                printk("Failed to create TCP connection structure\n");
+                return; // do not respond
+            }
+            conn->tcp_conn->state   = TCP_SYN_RECEIVED;
+            conn->tcp_conn->irs     = _seq_number;
+            conn->tcp_conn->rcv_nxt = ack;  //_seq_number + 1;
+            conn->tcp_conn->iss     = seq;  //1000; // example ISN
+            conn->tcp_conn->snd_nxt = conn->tcp_conn->iss + 1;
+            conn->tcp_conn->snd_una = conn->tcp_conn->iss;
+            printk("Connection %d created, state=SYN_RECEIVED\n", id);                 
+
+            // -- ep pair -----------
+            struct endpoint_pair_d *pair = create_endpoint_pair_object();
+            if (!pair) {
+                printk("Failed to create endpoint pair\n");
+                return; // do not respond
+            }
+            pair->case_id = CONN_LSRC; // Local Server → Remote Client
+
+            // -- remote ep ---------------
+            // Remote client endpoint
+            struct endpoint_d *client_ep = create_endpoint_object();
+            client_ep->side_id   = CONN_SIDE_CLIENT;
+            client_ep->case_id   = CONN_LSRC;
+            client_ep->is_remote = TRUE;  // <<< REMOTE EP
+            client_ep->remote = 
+                create_remote_endpoint(
+                    NetworkSaved.caller_ipv4,
+                    sport,
+                    CONN_TYPE_TCP );
+            if (!client_ep) {
+                printk("Failed to create remote endpoint\n");
+                return; // do not respond
+            }
+            pair->c_ep = client_ep;
+
+            // -- local ep ---------------
+            // Local server endpoint
+            struct endpoint_d *server_ep = create_endpoint_object();
+            server_ep->side_id   = CONN_SIDE_SERVER;
+            server_ep->case_id   = CONN_LSRC;
+            server_ep->is_remote = FALSE;  // NOT REMOTE EP (LOCAL)
+            // #todo:
+            // This is the part where we get the socket 
+            // from the listening server process. 
+            // For now, we set it to NULL.
+            server_ep->socket = NULL;  
+            if (!server_ep) {
+                printk("Failed to create local endpoint\n");
+                return; // do not respond
+            }
+            pair->s_ep = server_ep;
+
+            // Plug them together
+            conn->ep_pair = pair;
+
+            // #important: Connection status.
+            conn->status = CONN_STATUS_SYN_RECEIVED;
+
+            // Our current connection been stablished.
+            test_conn = conn;  // remember this connection for later ACK
+
             // #todo
             // The client is saying: "I want to connect to the 
             // server process that is listening to the port 11888"
@@ -688,8 +780,8 @@ network_handle_tcp(
             // >>> Lets work on this response! <<<
     
             // Example sequence/ack numbers
-            tcp_seq seq = 1000;              // server initial sequence number
-            tcp_ack ack = _seq_number + 1;   // acknowledge client’s ISN
+            //tcp_seq seq = 1000;              // server initial sequence number
+            //tcp_ack ack = _seq_number + 1;   // acknowledge client’s ISN
 
             // Flags: SYN + ACK
             uint16_t flags = TH_SYN | TH_ACK;
@@ -762,6 +854,13 @@ network_handle_tcp(
 
         // (3) ACK
         // A client is confirming the connection we accepted.
+        // At this point we must locate the correct connection structure
+        // based on the endpoint pair (server IP/port + client IP/port).
+        // We cannot assume it is the same client as the last SYN,
+        // because multiple clients may be handshaking at once.
+        // Once the matching connection is found in SYN_RECEIVED state,
+        // we transition it to ESTABLISHED.
+
         if ( fSYN == 0 && fACK == 1 )
         {
             printk("\n");
@@ -778,7 +877,23 @@ network_handle_tcp(
             // handles this connection yet.
             // No response is sent now.
 
-            __handshake_11888 = TRUE;
+            __handshake_11888 = TRUE;  // We are connected
+
+            if ((void*) test_conn == NULL){
+                printk("network_handle_tcp: [step 3] test_conn\n");
+                return;
+            }
+            if (test_conn->magic != 1234){
+                printk("network_handle_tcp: [step 3] test_conn validation\n");
+                return;
+            }
+            if (test_conn->status == CONN_STATUS_SYN_RECEIVED)
+            {
+                test_conn->status = CONN_STATUS_ESTABLISHED;
+                //test_conn->tcp_conn->state = TCP_ESTABLISHED;
+                printk("Connection %d is now ESTABLISHED\n", test_conn->id);
+            }   
+
             return;
         }
     }
