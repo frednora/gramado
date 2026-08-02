@@ -3,36 +3,71 @@
 
 #include <kernel.h>
 
-int gramnet_handle_http(const char *tcp_payload, uint16_t s_port, uint16_t d_port)
+int 
+gramnet_handle_http(
+    struct connection_d *conn,
+    const char *payload,
+    size_t len,
+    uint16_t sport, uint16_t dport)
 {
-    // Only handle traffic directed to our test port
-    if (d_port != 11888) {
+    if (!conn || !conn->tcp_conn || len < 4)
         return -1;
+
+    // Debug (safe)
+    char dbg[80];
+    size_t n = len < 79 ? len : 79;
+    memcpy(dbg, payload, n);
+    dbg[n] = 0;
+    printk("HTTP: {%s}\n", dbg);
+
+    if (payload[0] != 'G' || payload[1] != 'E' || payload[2] != 'T' || payload[3] != ' ')
+    {
+        printk("HTTP: Not a GET request\n");
+        return 0;
     }
 
-    printk("HTTP handler: request on port %d\n", d_port);
+/*
+//#bugbug Function Not working for this case!
+    if (gramado_strncmp(payload, "GET ", 4) != 0)
+    {
+        printk("HTTP: Not a GET request\n");
+        return 0;
+    }
+*/
 
-    // Minimal HTTP/1.0 error response
-    const char *http_response =
-        "HTTP/1.0 400 Bad Request\r\n"
+    printk("HTTP GET from %d.%d.%d.%d:%u\n",
+           NetworkSaved.caller_ipv4[0], NetworkSaved.caller_ipv4[1],
+           NetworkSaved.caller_ipv4[2], NetworkSaved.caller_ipv4[3],
+           sport);
+
+    static const char resp[] =
+        "HTTP/1.0 200 OK\r\n"
         "Content-Type: text/plain\r\n"
-        "Content-Length: 21\r\n"
+        "Content-Length: 13\r\n"
+        "Connection: close\r\n"
         "\r\n"
-        "Invalid HTTP request.\n";
+        "Hello, world!";
 
-    // Send response back using your TCP routine
+    size_t resp_len = sizeof(resp) - 1;   // exclude the compiler's null
+
+    tcp_seq seq = conn->tcp_conn->snd_nxt;
+    tcp_ack ack = conn->tcp_conn->rcv_nxt;   // must already include the GET length
+
     network_send_tcp(
-        dhcp_info.your_ipv4,        // our IP
-        NetworkSaved.caller_ipv4,   // client IP
-        NetworkSaved.caller_mac,    // client MAC
-        d_port,                     // our port (server side)
-        s_port,                     // client port
-        2000,                       // seq (placeholder, adjust later)
-        0,                          // ack (placeholder, adjust later)
-        TH_ACK | TH_PUSH,           // flags: ACK + PSH to deliver data
-        (char *)http_response,
-        strlen(http_response)
-    );
+        dhcp_info.your_ipv4,
+        NetworkSaved.caller_ipv4,
+        NetworkSaved.caller_mac,
+        11888, sport,
+        seq, ack,
+        TH_ACK | TH_PUSH | TH_FIN,
+        (char *)resp,
+        resp_len);
+
+    // Data + FIN
+    conn->tcp_conn->snd_nxt += resp_len + 1;
+    conn->status = CONN_STATUS_FIN_WAIT;
 
     return 0;
 }
+
+

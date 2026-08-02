@@ -23,9 +23,6 @@
 // Later this will be replaced with endpoint-based lookup.
 static struct connection_d *test_conn = NULL;
 
-// handshack status for random connection
-static int __handshake_11888 = FALSE;
-
 
 static char __tcp_payload[1024];
 
@@ -576,6 +573,7 @@ network_handle_tcp(
     memset(__tcp_payload,0,sizeof(__tcp_payload));
 
 // Create a local copy of the TCP payload.
+// The size is 1024
     strncpy( __tcp_payload, (buffer + TCP_HEADER_LENGHT), 1020 );
     __tcp_payload[1021] = 0;
 
@@ -714,11 +712,12 @@ network_handle_tcp(
                 return; // do not respond
             }
             conn->tcp_conn->state   = TCP_SYN_RECEIVED;
-            conn->tcp_conn->irs     = _seq_number;
-            conn->tcp_conn->rcv_nxt = ack;  //_seq_number + 1;
-            conn->tcp_conn->iss     = seq;  //1000; // example ISN
-            conn->tcp_conn->snd_nxt = conn->tcp_conn->iss + 1;
+            conn->tcp_conn->irs     = _seq_number;      // client's ISN
+            conn->tcp_conn->rcv_nxt = _seq_number + 1;  // SYN consumes 1 seq number
+            conn->tcp_conn->iss     = 1000;             // our ISN (or randomize later)
             conn->tcp_conn->snd_una = conn->tcp_conn->iss;
+            conn->tcp_conn->snd_nxt = conn->tcp_conn->iss + 1; // our SYN will consume 1
+
             printk("Connection %d created, state=SYN_RECEIVED\n", id);                 
 
             // -- ep pair -----------
@@ -800,11 +799,11 @@ network_handle_tcp(
                 NetworkSaved.caller_mac,   //client_mac,      // client MAC
                 11888,           // server port (source=we)
                 sport,           // client port (target)
-                seq,
-                ack,
+                conn->tcp_conn->iss,      // seq = our ISN
+                conn->tcp_conn->rcv_nxt,  // ack = client's ISN + 1
                 flags,
                 dummy_payload,  // No tcp payload
-                1               // No tcp payload lenght char=0x00
+                0               // No tcp payload lenght char=0x00
             );
 
             // Waiting for the ACK:
@@ -819,6 +818,8 @@ network_handle_tcp(
 
         if ( fSYN == 1 && fACK == 1 )
         {
+            // #todo: Apply the connection structure that handles this connection.
+
             printk("\n");
             printk("<<<< [TCP] SYN/ACK (2)\n");
             printk("SEQ={%d} | ACK={%d}\n", _seq_number, _ack_number);
@@ -846,7 +847,7 @@ network_handle_tcp(
                 final_ack,
                 TH_ACK,                     // ACK only, no SYN
                 no_payload,
-                1                           // no payload — pure ACK doesn't consume a seq number
+                0                           // no payload — pure ACK doesn't consume a seq number
             );
 
             return;
@@ -861,12 +862,14 @@ network_handle_tcp(
         // Once the matching connection is found in SYN_RECEIVED state,
         // we transition it to ESTABLISHED.
 
+        if ((void*)test_conn !=NULL){
+        if (test_conn->magic == 1234 && test_conn->status == CONN_STATUS_SYN_RECEIVED){
         if ( fSYN == 0 && fACK == 1 )
         {
             printk("\n");
             printk("<<<< [TCP] ACK     (3)\n");
             printk("SEQ={%d} | ACK={%d}\n",
-                _seq_number, _ack_number);
+                _seq_number, _ack_number );
 
             // -----------------------------------------------------
             // #todo
@@ -876,8 +879,6 @@ network_handle_tcp(
             // #ps: but we are not using the structure that 
             // handles this connection yet.
             // No response is sent now.
-
-            __handshake_11888 = TRUE;  // We are connected
 
             if ((void*) test_conn == NULL){
                 printk("network_handle_tcp: [step 3] test_conn\n");
@@ -889,14 +890,24 @@ network_handle_tcp(
             }
             if (test_conn->status == CONN_STATUS_SYN_RECEIVED)
             {
+                if (_ack_number != test_conn->tcp_conn->snd_nxt)
+                {
+                    printk("TCP: step 3 ack mismatch, expected %d got %d\n",
+                        test_conn->tcp_conn->snd_nxt, _ack_number);
+                    return; // don't establish on a bad ack  
+                }
+                test_conn->tcp_conn->snd_una = _ack_number;
+                test_conn->tcp_conn->state   = TCP_ESTABLISHED;
                 test_conn->status = CONN_STATUS_ESTABLISHED;
-                //test_conn->tcp_conn->state = TCP_ESTABLISHED;
                 printk("Connection %d is now ESTABLISHED\n", test_conn->id);
-            }   
+            }
 
             return;
-        }
-    }
+        }  // flags
+        }  // valid magic
+        }  // vaid pointer
+
+    }  // 11888 only
 
     //if (dport == 11888)
     //{
@@ -915,14 +926,29 @@ network_handle_tcp(
 
     // If we received something right after the connection was stablished
     // #ps: Not using the right structure for connection handling yet.
-    if (__handshake_11888 == TRUE)
+    
+    // Drop packets that are not for port 11888.
+    if (dport != 11888) {
+        return;
+    }
+    // drop
+    if ((void*) test_conn == NULL)
+        return;
+    if (test_conn->magic != 1234)
+        return;
+    if (test_conn->status == CONN_STATUS_ESTABLISHED)
     {
-        if ( fSYN == 0 && fACK == 1 )
-        {
+        //if (fSYN == 0 && fACK == 1)
+        //{
             // #todo:
             printk("11888: packet after handshake\n");
+
+            // #test: Checking for HTTP traffic on port 11888.
+            gramnet_handle_http(
+                test_conn, __tcp_payload, sizeof(__tcp_payload ), sport, dport);
+
             return;
-        }
+        //}
     }
 
     //
