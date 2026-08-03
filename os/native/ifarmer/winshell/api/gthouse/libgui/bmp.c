@@ -19,9 +19,6 @@
 #include "include/bmp.h"
 
 
-
-
-
 // Signature. "MB".
 #define BMP_TYPE  0x4D42
 #define GWS_BMP_TYPE  BMP_TYPE
@@ -886,7 +883,11 @@ bmp_decode_bmp_image (
 {
 
 // Validate context
-    if (!dc || dc->initialized != TRUE || !dc->data)
+    if (!dc)
+        return -1;
+    if (dc->initialized != TRUE)
+        return -1;
+    if (!dc->data)
         return -1;
 
 // cache

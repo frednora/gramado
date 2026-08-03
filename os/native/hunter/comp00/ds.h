@@ -26,6 +26,10 @@ extern int server_mode;  // DEMO ...
 #include <sys/socket.h>
 #include <rtl/gramado.h>
 
+// #test
+#include <fcntl.h>
+
+
 // Gramado Window System
 #include "wm/gws.h"
 #include "libos/gramado/callback.h"

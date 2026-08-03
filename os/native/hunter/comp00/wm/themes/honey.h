@@ -24,6 +24,11 @@
 // Inactive window: softer highlight + muted shadow
 #define HONEY_COLOR_BORDER_LIGHT_INACTIVE  0x00D0D0D0   // light gray (top/left)
 #define HONEY_COLOR_BORDER_DARK_INACTIVE   0x00303030   // charcoal gray (bottom/right)
+//#define HONEY_COLOR_BORDER_LIGHT_INACTIVE COLOR_RED  //0x00E0E0E0   // brighter highlight
+//#define HONEY_COLOR_BORDER_DARK_INACTIVE  COLOR_BLUE  //0x00606060   // softer shadow
+//#define HONEY_COLOR_BORDER_LIGHT_INACTIVE 0x00F0F0F0
+//#define HONEY_COLOR_BORDER_DARK_INACTIVE  0x00707070
+
 
 // #test
 //#define HONEY_COLOR_BORDER_LIGHT_WWF     COLOR_YELLOW   // silver highlight (top/left)
@@ -34,8 +39,10 @@
 #define HONEY_COLOR_BORDER_DARK_WWF      0x00101010  //0x00484848   // deep gray shadow (bottom/right)
 
 // Inactive (no focus, not WWF)
-#define HONEY_COLOR_BORDER_LIGHT_NOFOCUS 0x00A4A4A4   // muted light gray (top/left)
-#define HONEY_COLOR_BORDER_DARK_NOFOCUS  0x00707070   // dark charcoal (bottom/right)
+//#define HONEY_COLOR_BORDER_LIGHT_NOFOCUS 0x00A4A4A4   // muted light gray (top/left)
+//#define HONEY_COLOR_BORDER_DARK_NOFOCUS  0x00707070   // dark charcoal (bottom/right)
+#define HONEY_COLOR_BORDER_LIGHT_NOFOCUS 0x00888888   // muted highlight
+#define HONEY_COLOR_BORDER_DARK_NOFOCUS  0x00303030   // softer shadow
 
 // Box
 #define HONEY_COLOR_MESSAGEBOX  0x00404040 

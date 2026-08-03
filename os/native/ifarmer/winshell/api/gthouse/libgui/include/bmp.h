@@ -63,41 +63,7 @@ struct bmp_cache_d
     // ...
 };
 
-
 // -------------------------------------------
-
-/*
- * bmpDisplayBMP0:
- * Mostra na tela uma imagem bmp carregada na mem�ria. 
- * No backbuffer.
- * IN:
- *     address = endere�o base
- *     x       = posicionamento 
- *     y       = posicionamento
- *     zoom factor
- *     show or not?
- */
- 
-/*
-int 
-bmpDisplayBMP0 ( 
-    struct dccanvas_d *dc,
-    char *address, 
-    unsigned long x, 
-    unsigned long y,
-    int zoom_factor,
-    int show );
-*/
-
-/*
-int 
-bmpDisplayBMP ( 
-    char *address, 
-    unsigned long x, 
-    unsigned long y,
-    int show );
-*/
-
 
 int 
 bmp_decode_bmp_image ( 

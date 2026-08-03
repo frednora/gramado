@@ -760,6 +760,9 @@ struct gws_window_d
     //unsigned int titlebar_color_when_secondplane;
     unsigned int titlebar_ornament_color;
 
+    // This structure handle the loaded icon for the titlebar.
+    struct bmp_cache_d *titlebar_icon_cache;
+
     //#todo:
     //The 'left' needs to change when the titlebar has an icon.
     // Text properties.
@@ -767,6 +770,8 @@ struct gws_window_d
     unsigned long titlebar_text_left;
     unsigned long titlebar_text_top;
     unsigned int titlebar_text_color;
+
+
 
     int isMinimizeControl;
     int isMaximizeControl;

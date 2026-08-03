@@ -425,6 +425,9 @@ static struct gws_window_d *__create_window_object(void)
     window->rop_right_border = THEME_ROP_RIGHT_BORDER;
     window->rop_bottom_border= THEME_ROP_BOTTOM_BORDER;
 
+    // We dont have any icon cache for the titlebar yet.
+    window->titlebar_icon_cache = NULL;
+
     return (struct gws_window_d *) window;
 }
 
@@ -677,6 +680,7 @@ struct gws_window_d *do_create_titlebar(
     parent->titlebar_color = (unsigned int) TitleBarColor;
     parent->titlebar_text_color = 
         (unsigned int) get_color(csiTitleBarTextColor);
+
     // ...
 
 //-----------
@@ -739,11 +743,13 @@ struct gws_window_d *do_create_titlebar(
     unsigned long iT=0;
     unsigned long iWidth = 16;
 
-    parent->titlebarHasIcon = FALSE;
-
+    parent->titlebarHasIcon = FALSE; // Now done yet
     if (useIcon == TRUE)
     {
-        // Icon ID
+        //printf("useIcon\n"); while(1){}
+
+        /*
+        // Icon ID #todo: No more icon ID for now
         if (icon_id < 1 || icon_id > 5)
         {
             //icon_id = 1;
@@ -751,10 +757,11 @@ struct gws_window_d *do_create_titlebar(
             return NULL;
         }
         parent->frame.titlebar_icon_id = icon_id;
+        */
 
-        // Draw icon
-        iL = (unsigned long) (tbWindow->absolute_x + METRICS_ICON_LEFTPAD);
-        iT = (unsigned long) (tbWindow->absolute_y + METRICS_ICON_TOPPAD);
+        // Icon position relative to the titlebar window
+        iL = (unsigned long) (METRICS_ICON_LEFTPAD);
+        iT = (unsigned long) (METRICS_ICON_TOPPAD);
 
         if (Compositor.is_composition_disabled == TRUE){
 
@@ -770,7 +777,25 @@ struct gws_window_d *do_create_titlebar(
             */
 
         } else {
+
+            // Icon position relative to the titlebar window
+            iL = (unsigned long) (METRICS_ICON_LEFTPAD_USING_COMPOSITOR);
+            iT = (unsigned long) (METRICS_ICON_TOPPAD_USING_COMPOSITOR);
+
             // #todo: Draw icon when composition is on
+            // #test:  
+            // Loading and decoding it. Only for buttons.
+            struct bmp_cache_d *icon_cache = bmp_load_bmp_image("#app.bmp");
+            if (icon_cache && icon_cache->loaded) 
+            {
+                // Save
+                parent->titlebar_icon_cache = 
+                    (struct bmp_cache_d *) icon_cache;
+                // render
+                bmp_decode_bmp_image( icon_cache, dc00, iL, iT, 1, 0 );
+            
+                //printf("Rendered?\n");while(1){}
+            } 
         }
 
         parent->titlebarHasIcon = TRUE;
@@ -3280,6 +3305,17 @@ void *doCreateAndDrawWindow (
                 // Draw a string inside the button's bg.
                 if ((void*) dc00 != NULL)
                 {
+                    /*
+                    // #test: #bugbug 
+                    // Loading and decoding it. Only for buttons.
+                    struct bmp_cache_d *icon_cache = bmp_load_bmp_image("#folder.bmp");
+                    if (icon_cache && icon_cache->loaded) 
+                    {
+                        window->titlebar_icon_cache = (struct bmp_cache_d *) icon_cache;
+                        bmp_decode_bmp_image(icon_cache, dc00, 2, 2, 1, 0);
+                    }
+                    */
+
                     // #bugbug: Not working
                     dc_drawstring ( 
                         dc00, 
@@ -3295,14 +3331,6 @@ void *doCreateAndDrawWindow (
                     //while(1){}
                 }
             }
-
-            // #test
-            // Testing the possibility of painting an icon inside the button.
-            //bmp_decode_system_icon( 
-                //(int) 2,            //ID
-                //(unsigned long) 4,  //left 
-                //(unsigned long) 4,  //top
-                //FALSE );
         }
 
       //todo

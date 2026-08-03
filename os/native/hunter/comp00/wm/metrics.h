@@ -21,8 +21,10 @@
 // ======================================================
 
 // Icon padding inside the titlebar
-#define METRICS_ICON_LEFTPAD 4
-#define METRICS_ICON_TOPPAD 3
+#define METRICS_ICON_LEFTPAD_USING_COMPOSITOR  6
+#define METRICS_ICON_TOPPAD_USING_COMPOSITOR   6
+#define METRICS_ICON_LEFTPAD  4
+#define METRICS_ICON_TOPPAD   3
 #define METRICS_ICON_LEFT    METRICS_ICON_LEFTPAD
 #define METRICS_ICON_TOP     METRICS_ICON_TOPPAD
 

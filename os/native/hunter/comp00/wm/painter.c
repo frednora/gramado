@@ -1476,7 +1476,7 @@ int redraw_titlebar_window(struct gws_window_d *window)
 // Icon
 
     int useIcon = parent->titlebarHasIcon;
-    int icon_id = (int) parent->frame.titlebar_icon_id;
+    //int icon_id = (int) parent->frame.titlebar_icon_id;
 
 // Decode the bmp that is in a buffer
 // and display it directly into the framebuffer. 
@@ -1489,11 +1489,11 @@ int redraw_titlebar_window(struct gws_window_d *window)
     //#hack #todo
     if (useIcon == TRUE)
     {
-        iL = (unsigned long) (tb_window->absolute_x + METRICS_ICON_LEFTPAD);
-        iT = (unsigned long) (tb_window->absolute_y + METRICS_ICON_TOPPAD);
+        // Icon position inside the titlebar
+        iL = (unsigned long) (METRICS_ICON_LEFTPAD);
+        iT = (unsigned long) (METRICS_ICON_TOPPAD);
 
-        if (Compositor.is_composition_disabled == TRUE)
-        {
+        if (Compositor.is_composition_disabled == TRUE){
             /*
             // #suspended
             // #ps: Drawing directly inside the backbuffer
@@ -1504,6 +1504,17 @@ int redraw_titlebar_window(struct gws_window_d *window)
                 FALSE 
             );
             */
+        } else {
+
+            // Icon position inside the titlebar
+            iL = (unsigned long) (METRICS_ICON_LEFTPAD_USING_COMPOSITOR);
+            iT = (unsigned long) (METRICS_ICON_TOPPAD_USING_COMPOSITOR);
+
+            struct bmp_cache_d *icon_cache = 
+                (struct bmp_cache_d *) parent->titlebar_icon_cache;
+            if (icon_cache && icon_cache->loaded){
+                bmp_decode_bmp_image(icon_cache, dc00, iL, iT, 1, 0);
+            }
         }
     }
 
@@ -1608,6 +1619,27 @@ redraw_window (
     }
     if (window->used!=TRUE || window->magic!=1234){
         goto fail;
+    }
+
+    if (window == __root_window) {
+        // Fill the entire screen with background color
+        painterFillWindowRectangle(
+        window->absolute_x,
+        window->absolute_y,
+        window->width,
+        window->height,
+        WindowManager.default_background_color,
+        ROP_COPY );
+
+        // If wallpaper is enabled, draw it here instead of solid color
+        //if (WindowManager.Config.has_wallpaper) {
+            // call wallpaper drawing routine
+        //    draw_wallpaper(window);
+        //}
+
+        // Mark root as clean
+        validate_window(window);
+        return 0;  //done
     }
 
     /*
@@ -1749,15 +1781,14 @@ redraw_window (
         if (window->type == WT_OVERLAPPED)
         {
             window->dirty = TRUE;  // Flush the offscreen buffer
-            goto done;
+            //goto done;
         }
         if (window->type == WT_POPUP)
         {
             window->dirty = TRUE;  // Flush the offscreen buffer
-            goto done;
+            //goto done;
         } 
     }
-
 
 // =======================
 // shadowUsed
@@ -1795,6 +1826,8 @@ redraw_window (
             // Shadow rectangle
             // Respect the ROP added during the creation phase
             // #ps: Drawing directly into the backbuffer
+            /*
+            // #ps: direct
             rectBackbufferDrawRectangle ( 
                 (window->absolute_x +1), 
                 (window->absolute_y +1), 
@@ -1803,6 +1836,7 @@ redraw_window (
                 __tmp_color, 
                 TRUE,     // fill?
                 (unsigned long) window->rop_shadow );
+            */
         }
     }
 
@@ -1862,6 +1896,8 @@ redraw_window (
         }*/ 
         //else {
 
+            /*
+            // #ps: direct
             rectBackbufferDrawRectangle ( 
                 window->absolute_x, 
                 window->absolute_y, 
@@ -1870,6 +1906,7 @@ redraw_window (
                 window->bg_color, 
                 TRUE,  //fill
                 (unsigned long) window->rop_bg );
+            */
         //}
 
         // All done for WT_SIMPLE type
@@ -2101,6 +2138,7 @@ redraw_window (
                 window->Border.border_color1 = HONEY_COLOR_BORDER_LIGHT_ACTIVE;  //get_color(csiActiveWindowBorder); 
                 window->Border.border_color2 = HONEY_COLOR_BORDER_DARK_ACTIVE;  //get_color(csiActiveWindowBorder);
             } else {
+
                 window->Border.border_color1 = HONEY_COLOR_BORDER_LIGHT_INACTIVE;  //get_color(csiActiveWindowBorder); 
                 window->Border.border_color2 = HONEY_COLOR_BORDER_DARK_INACTIVE;  //get_color(csiActiveWindowBorder);
 
@@ -2109,29 +2147,49 @@ redraw_window (
                     window->Border.border_color1 = (unsigned int) HONEY_COLOR_BORDER_LIGHT_WWF;  //get_color(csiWWFBorder);
                     window->Border.border_color2 = (unsigned int) HONEY_COLOR_BORDER_DARK_WWF;  //get_color(csiWWFBorder);
                 } else {
-                    window->Border.border_color1 = (unsigned int) HONEY_COLOR_BORDER_DARK_WWF; //get_color(csiWindowBorder);
+                    window->Border.border_color1 = (unsigned int) HONEY_COLOR_BORDER_LIGHT_NOFOCUS; //get_color(csiWindowBorder);
                     window->Border.border_color2 = (unsigned int) HONEY_COLOR_BORDER_DARK_NOFOCUS; //get_color(csiWindowBorder);
                 }
             }
 
-            //if (WindowManager.is_fullscreen != TRUE)
-            __draw_window_border(
-                window->parent, window,
-                __rop_top_border, 
-                __rop_left_border, 
-                __rop_right_border, 
-                __rop_bottom_border );
+            // Draw the borders for overlapped windows.
+
+            if (Compositor.is_composition_disabled == TRUE){
+                __draw_window_border(
+                    window->parent, window,
+                    __rop_top_border, 
+                    __rop_left_border, 
+                    __rop_right_border, 
+                    __rop_bottom_border );
+            } else {
+                __dc_draw_window_border(
+                    dc00, 
+                    window->parent, window,
+                    __rop_top_border, 
+                    __rop_left_border, 
+                    __rop_right_border, 
+                    __rop_bottom_border );
+            }
         }
 
         if (window->type == WT_POPUP)
         {
-            //if (WindowManager.is_fullscreen != TRUE)
-            __draw_window_border(
-                window->parent, window,
-                __rop_top_border, 
-                __rop_left_border, 
-                __rop_right_border, 
-                __rop_bottom_border );
+            if (Compositor.is_composition_disabled == TRUE){
+                __draw_window_border(
+                    window->parent, window,
+                    __rop_top_border, 
+                    __rop_left_border, 
+                    __rop_right_border, 
+                    __rop_bottom_border );
+            } else {
+                __dc_draw_window_border(
+                    dc00, 
+                    window->parent, window,
+                    __rop_top_border, 
+                    __rop_left_border, 
+                    __rop_right_border, 
+                    __rop_bottom_border );
+            }
         }
     
         // Border Color 1 = top/left      (Dark)

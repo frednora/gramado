@@ -50,47 +50,29 @@ struct gws_bmp_infoheader_d
 
 // -------------------------------------------
 
-/*
- * bmpDisplayBMP0:
- * Mostra na tela uma imagem bmp carregada na mem�ria. 
- * No backbuffer.
- * IN:
- *     address = endere�o base
- *     x       = posicionamento 
- *     y       = posicionamento
- *     zoom factor
- *     show or not?
- */
- 
+
+// The raw image is cached into the memory.
+// This way we can redecode it easily.
+struct bmp_cache_d 
+{
+    int loaded;          // 0 = not loaded, 1 = loaded
+    char *buffer;        // pointer to raw BMP file already in memory
+    unsigned long size;  // optional: size of the buffer
+
+    // ...
+};
+
+
 int 
-bmpDisplayBMP0 ( 
-    char *address, 
-    unsigned long x, 
+bmp_decode_bmp_image(
+    struct bmp_cache_d *cache,
+    struct dccanvas_d *dc,
+    unsigned long x,
     unsigned long y,
     int zoom_factor,
     int show );
 
-int 
-bmpDisplayBMP ( 
-    char *address, 
-    unsigned long x, 
-    unsigned long y,
-    int show );
-
-int 
-bmp_decode_system_icon0 ( 
-    int index, 
-    unsigned long x, 
-    unsigned long y,
-    int show,
-    int zoom_factor );
-
-int 
-bmp_decode_system_icon ( 
-    int index, 
-    unsigned long x, 
-    unsigned long y,
-    int show );
+struct bmp_cache_d *bmp_load_bmp_image(const char *pathname);
 
 #endif   
 
