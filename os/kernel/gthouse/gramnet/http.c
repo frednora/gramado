@@ -1,5 +1,5 @@
 // http.c
-// Gramnet HTTP implementation
+// Gramnet HTTP – brag-worthy version
 
 #include <kernel.h>
 
@@ -13,45 +13,67 @@ gramnet_handle_http(
     if (!conn || !conn->tcp_conn || len < 4)
         return -1;
 
-    // Debug (safe)
+    // Debug
     char dbg[80];
     size_t n = len < 79 ? len : 79;
     memcpy(dbg, payload, n);
     dbg[n] = 0;
     printk("HTTP: {%s}\n", dbg);
 
-    if (payload[0] != 'G' || payload[1] != 'E' || payload[2] != 'T' || payload[3] != ' ')
+    if (payload[0] != 'G' || payload[1] != 'E' ||
+        payload[2] != 'T' || payload[3] != ' ')
     {
         printk("HTTP: Not a GET request\n");
         return 0;
     }
-
-/*
-//#bugbug Function Not working for this case!
-    if (gramado_strncmp(payload, "GET ", 4) != 0)
-    {
-        printk("HTTP: Not a GET request\n");
-        return 0;
-    }
-*/
 
     printk("HTTP GET from %d.%d.%d.%d:%u\n",
            NetworkSaved.caller_ipv4[0], NetworkSaved.caller_ipv4[1],
            NetworkSaved.caller_ipv4[2], NetworkSaved.caller_ipv4[3],
            sport);
 
+    // ============================================================
+    //  Beautiful response for bragging rights
+    // ============================================================
     static const char resp[] =
         "HTTP/1.0 200 OK\r\n"
-        "Content-Type: text/plain\r\n"
-        "Content-Length: 13\r\n"
+        "Server: Gramado/0.1 (kernel)\r\n"
+        "Content-Type: text/html; charset=utf-8\r\n"
+        "Content-Length: 1464\r\n"
         "Connection: close\r\n"
         "\r\n"
-        "Hello, world!";
+        "<!DOCTYPE html>\n"
+        "<html lang=\"en\">\n"
+        "<head>\n"
+        "<meta charset=\"utf-8\">\n"
+        "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n"
+        "<title>Gramado OS</title>\n"
+        "<style>\n"
+        "*{margin:0;padding:0;box-sizing:border-box}\n"
+        "body{font-family:system-ui,sans-serif;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);color:#e0e0ff;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center}\n"
+        ".card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:48px 36px;max-width:480px;box-shadow:0 25px 50px rgba(0,0,0,.4)}\n"
+        "h1{font-size:2.3rem;background:linear-gradient(90deg,#00d4ff,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px}\n"
+        ".badge{display:inline-block;background:#00d4ff18;color:#00d4ff;padding:5px 16px;border-radius:20px;font-size:.8rem;margin-bottom:22px;border:1px solid #00d4ff33;letter-spacing:.5px}\n"
+        "p{line-height:1.65;opacity:.9;margin-bottom:14px;font-size:1.05rem}\n"
+        ".footer{margin-top:28px;font-size:.78rem;opacity:.45}\n"
+        ".k{color:#a855f7;font-weight:600}\n"
+        "</style>\n"
+        "</head>\n"
+        "<body>\n"
+        "<div class=\"card\">\n"
+        "<div class=\"badge\">KERNEL HTTP SERVER</div>\n"
+        "<h1>Gramado OS</h1>\n"
+        "<p>This page was served directly from the <span class=\"k\">kernel</span> using a pure TCP/IP stack written from scratch.</p>\n"
+        "<p>No userspace server. No nginx. Just pure hobby OS magic.</p>\n"
+        "<div class=\"footer\">Port 11888 &bull; Built with love by Fred Nora</div>\n"
+        "</div>\n"
+        "</body>\n"
+        "</html>";
 
-    size_t resp_len = sizeof(resp) - 1;   // exclude the compiler's null
+    size_t resp_len = sizeof(resp) - 1;   // exclude null terminator
 
     tcp_seq seq = conn->tcp_conn->snd_nxt;
-    tcp_ack ack = conn->tcp_conn->rcv_nxt;   // must already include the GET length
+    tcp_ack ack = conn->tcp_conn->rcv_nxt;
 
     network_send_tcp(
         dhcp_info.your_ipv4,
@@ -69,5 +91,4 @@ gramnet_handle_http(
 
     return 0;
 }
-
 
