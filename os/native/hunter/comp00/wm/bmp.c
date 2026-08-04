@@ -75,6 +75,30 @@ __bmpDisplayBMP0 (
  * show = Show or not.
  */
 // OUT: 0=ok | -1=fail.
+
+/*
+How the Color Scheme Logic Works:
+
+Global flags:
++ bmp_change_color_flag controls how colors are treated.
++ bmp_selected_color is the color to be ignored or substituted.
++ bmp_substitute_color is the replacement color.
+
+Modes:
++ Transparent → skip drawing pixels that match the selected color.
++ Substitute  → replace selected color with substitute.
++ Null        → draw normally.
+*/
+
+// #todo:
+// Current Limitation:
+//The decoding logic is present for 1, 4, 8, 16, 24, 32 bpp, 
+// but the color substitution/transparent logic is effectively 
+// only tested with 24bpp (true color).
+// For palette‑based modes (1, 4, 8 bpp), 
+// the substitution logic isn’t fully integrated — 
+// it just pulls from the palette and paints directly.
+
 static int 
 __bmpDisplayBMP0 ( 
     struct dccanvas_d *dc,
@@ -95,8 +119,11 @@ __bmpDisplayBMP0 (
 
     register int i=0;
     register int j=0;
+
+    // Offsets, NOT addresses!
     int base=0;
     int offset=0;
+
     unsigned int left=0; 
     unsigned int top=0; 
     unsigned int bottom=0;
@@ -342,217 +369,227 @@ __bmpDisplayBMP0 (
 
     switch (BitsPerPixel){
 
-    // 4 bytes pra cada cor, 2 cores. Total 8 bytes.
-    // 8/4 = 2 indices
+    // --- 1 bpp (Monochrome) ---
+    // Each pixel is a single bit (0 or 1).
+    // Palette has 2 entries. (2 colors × 4 bytes = 8 bytes).
+    // Data starts right after the palette.
     case 1:
-        //base = (0x36 + 8);
         base = (OffsetForBase + 8);
         break;
-    // 4 bytes pra cada cor, 16 cores. Total 64 bytes.
-    // 64/4 = 16 indices
+
+    // --- 4 bpp (16 colors) ---
+    // Each pixel is a 4‑bit nibble (two pixels per byte).
+    // Palette has 16 entries (16 × 4 bytes = 64 bytes).
+    // Data starts right after the palette.
     case 4:  
-        //base = (0x36 + 64); 
         base = (OffsetForBase + 64);
         break; 
-    // 4 bytes pra cada cor, 256 cores. Total 1024 bytes.
-    // 1024/4 = 256 indices.
+
+    // --- 8 bpp (256 colors) ---
+    // Each pixel is one byte (index into palette).
+    // Palette has 256 entries (256 × 4 bytes = 1024 bytes).
+    // Data starts right after the palette.
     case 8:
-        //printf("8\n");
-        // 36 00 00 00 - 54 bytes (14+40)
-        // base da area de dados = (base da paleta + tamanho da paleta).
-        //base = (0x36 + 1024); 
         base = (OffsetForBase + 1024);
         break;
-    // 4 bytes pra cada cor, 16384 cores. Total 65536 bytes.
-    // 65536/4 = 16384 cores.
+
+    // --- 16 bpp (High color) ---
+    // Each pixel is 2 bytes.
+    // Two common layouts:
+    //   - RGB 5:5:5 (BI_RGB)
+    //   - RGB 5:6:5 (BI_BITFIELDS)
+    // We assume 5:6:5 (most common).
+    // Pixel layout: RRRRRGGGGGGBBBBB
+    // Data starts immediately after headers (no palette).
     case 16:
-        //printf("16\n");
-        //base = 0x36 + 65536;
-        base = (OffsetForBase + 65536);
+        base = OffsetForBase;
         break;
-    // It is not present for bitmaps with 24 color bits 
-    // because each pixel is represented by 
-    // 24-bit red-green-blue (RGB) values in the actual bitmap data area.
+
+    // --- 24 bpp (True color) ---
+    // Each pixel is 3 bytes (B, G, R).
+    // No palette; data starts immediately after headers.
     case 24:
-        //printf("24\n");
-        //base = 0x36 + 0;
-        //base = 4 + 40;  // Right after the headers.
-        //base = 54;  // Right after the headers.
-        base = (OffsetForBase + 0);
+        base = OffsetForBase;
         break;
 
+    // --- 32 bpp (True color with alpha) ---
+    // Each pixel is 4 bytes (B, G, R, A).
+    // No palette; data starts immediately after headers.
     case 32:
-        //printf("32\n");
-        //base = 0x36 + 0;
-        //base = 0x36 - 64;
-        //base = 54;  // Right after the headers.
-        base = (OffsetForBase + 0);
+        base = OffsetForBase;
         break;
 
-    // #bugbug
-    // We need to abort.
+    // --- Unsupported bpp ---
+    // Abort if we encounter an unknown bit depth.
     default:  
-        //base = 0x36;
-        base = (OffsetForBase + 0);
-        //server_debug_print ("__bmpDisplayBMP0: [FAIL] bmpBitCount fail\n"); 
-        break;
+        base = OffsetForBase;
+        printf("__bmpDisplayBMP0: Unsupported bpp %d\n", BitsPerPixel);
+        goto fail;
     };
 
     //#debug
-    //server_debug_print ("__bmpDisplayBMP0: for\n");
-    //printf             ("__bmpDisplayBMP0: for\n");
+    //printf("__bmpDisplayBMP0: for\n");
 
 //
 // Draw
+//
+
+//
+// Main drawing loop
+// Iterate over each row (height) and column (width)
+// BMPs are bottom‑up, so we adjust Y later.
 //
 
     for (i=0; i < __Local_bi.bmpHeight; i++)
     {
         for (j=0; j < __Local_bi.bmpWidth; j++)
         {
-            // >> 16 cores
-            // Um pixel por nibble.
+            // --- Decode pixel depending on bit depth ---
+
+            // ---------------------------------
+            // 4 bpp (16 colors, palette indexed)
+            // Each byte contains two pixels (high nibble + low nibble).
+            // ps: 2222 is simply a signature.
             if (__Local_bi.bmpBitCount == 4)
             {
                 offset = base;
-                palette_index[0] = bmp[offset];
+                palette_index[0] = bmp[offset];  // Read one byte from the BMP data
 
-                // Segundo nibble.
-                if (nibble_count_16colors == 2222)
-                {
+                // Second nibble:
+                // If we’re on the second nibble → extract the low nibble
+                if (nibble_count_16colors == 2222){
                     palette_index[0] = (palette_index[0] & 0x0F);  
-                    color = (unsigned int) palette[  palette_index[0]  ];
-                    nibble_count_16colors = 0;
                     base = base + 1;
-                // Primeiro nibble.
-                }else{
-                    palette_index[0] =  ( (  palette_index[0] >> 4 ) & 0x0F);
-                    color = (unsigned int) palette[  palette_index[0] ];
-                    nibble_count_16colors = 2222;
-                    //base = base + 0;
+                    nibble_count_16colors = 0;  // signature
+
+                // First nibble:
+                // If we’re on the first nibble → extract the high nibble
+                } else {
+                    palette_index[0] = ( (  palette_index[0] >> 4 ) & 0x0F);
+                    // base not advanced yet, still need low nibble from same byte
+                    // base = base + 0;
+                    nibble_count_16colors = 2222;  // signature
                 };
+
+                // Palette lookup happens once, after nibble extraction
+                color = (unsigned int) palette[  palette_index[0]  ];
             }
 
-            // >> 256 cores
-            // Próximo pixel para 8bpp
+            // ---------------------------------
+            // 8 bpp (256 colors, palette indexed)
+            // Each byte is a direct index into the palette.
+            // Palette size: 256 entries (256 × 4 bytes = 1024 bytes).
+            // Each palette entry is a 32‑bit ARGB color.
             if (__Local_bi.bmpBitCount == 8)
             {
                 offset = (base +0);
                 color = (unsigned int) palette[  bmp[offset] ];
 
-                // Na area de dados comtem os indices para a paleta.
-                base = (base +1);
+                // In the data are we have the indexes for the pallete
+                base = (base +1);  // Advance the base pointer
             }
 
-            // >>
-            // Proximo pixel para 16bpp
+            // ---------------------------------
+            // 16 bpp (High color, 5:6:5 format)
+            // Each pixel is 2 bytes: RRRRRGGGGGGBBBBB
+            // Two common layouts:
+            // RGB 5:5:5 → 5 bits Red, 5 bits Green, 5 bits Blue, 1 unused bit.
+            // RGB 5:6:5 → 5 bits Red, 6 bits Green, 5 bits Blue (most common).
+            // No palette — colors are stored directly in the pixel data.
+            // #todo:
+            // Check which layout to use:
+            // If compression == BI_RGB → assume 5:5:5.
+            // If compression == BI_BITFIELDS → assume 5:6:5 (or read masks if present).
             if (__Local_bi.bmpBitCount == 16)
             {
+                // Getting the short value
+                unsigned char lo = bmp[base];       // low byte
+                unsigned char hi = bmp[base + 1];   // high byte
+                unsigned short pixel = (hi << 8) | lo;
 
-                // #todo: This is wrong!
+                // Extract 5:6:5 channels
+                unsigned char r = (pixel & 0xF800) >> 11; // 5 bits red
+                unsigned char g = (pixel & 0x07E0) >> 5;  // 6 bits green
+                unsigned char b = (pixel & 0x001F);       // 5 bits blue
 
-                //a
-                c[0] = 0;  
+                // Scale to 8‑bit per channel
+                r = (r << 3);
+                g = (g << 2);
+                b = (b << 3);
 
-                //b
-                offset = base;
-                c[1] = bmp[offset];
-                c[1] = (c[1] & 0xF8);      // '1111 1000' 0000 0000  
+                // Compose ARGB color (alpha ignored)
+                color = (r << 16) | (g << 8) | b;
 
-                //g
-                c2[0] = bmp[offset];
-                c2[0] = c2[0] &  0x07;     // '0000 0111' 0000 0000 
-                c2[1] = bmp[offset+1];
-                c2[1] = c2[1] &  0xE0;     //  0000 0000 '1110 0000' 
-                c[2] = ( c2[0] | c2[1] );  
-
-                //r
-                c[3] = bmp[offset+1];
-                c[3] = c[3] & 0x1F;        // 0000 0000 '0001 1111' 
-
-                base = (base +2); 
+                base += 2; // advance two bytes per pixel
             }
 
-            // Próximo pixel para 24bpp.
+            // ---------------------------------
+            // 24 bpp (True color, no palette)
+            // Each pixel is 3 bytes: B, G, R
+            // Stored in BGR order in BMP data.
+            // Alpha channel is not present.
             if (__Local_bi.bmpBitCount == 24)
             {
-                offset = (base +0);  c[0] = bmp[offset];
-                offset = (base +1);  c[1] = bmp[offset];
-                offset = (base +2);  c[2] = bmp[offset];
-                                     c[3] = 0;
-                // Na area de dados contem as cores.
+                unsigned char b = bmp[base + 0]; // Blue
+                unsigned char g = bmp[base + 1]; // Green
+                unsigned char r = bmp[base + 2]; // Red
+
+                // Compose ARGB color (alpha ignored, set to 0)
+                color = (r << 16) | (g << 8) | b;
+
+                // advance three bytes per pixel
                 base = (base +3); 
             }
 
-            // Próximo pixel para 32bpp.
+            // ---------------------------------
+            // 32 bpp (True color with alpha)
+            // Each pixel is 4 bytes: B, G, R, A
+            // Stored in BGRA order in BMP data.
+            // Alpha channel may be ignored or used depending on compositor needs.
             if (__Local_bi.bmpBitCount == 32)
             {
-                offset = (base +0);  c[0] = bmp[offset];
-                offset = (base +1);  c[1] = bmp[offset];
-                offset = (base +2);  c[2] = bmp[offset];
-                offset = (base +3);  c[3] = bmp[offset];
-                                     c[3] = 0;  // Apagando o 3.
+                unsigned char b = bmp[base + 0]; // Blue
+                unsigned char g = bmp[base + 1]; // Green
+                unsigned char r = bmp[base + 2]; // Red
+                unsigned char a = bmp[base + 3]; // Alpha
 
-                // Na area de dados contem as cores.
-                base = (base +4);    
+                // Compose ARGB color
+                // If you want to ignore alpha, set it to 0xFF (opaque).
+                // If you want transparency, keep 'a' as is.
+                color = (a << 24) | (r << 16) | (g << 8) | b;
+
+                base += 4; // advance four bytes per pixel
             }
 
-            // Put pixel
-            // Nesse momento ja temos a cor selecionada 
-            // no formato 0xaarrggbb ... 
-            // Agora se a flag de mascara estiver selecionada,
-            // entao devemos ignora o pixel e nao pinta-lo.
-
+            // ---------------------------------
+            // Apply color change rules before drawing pixel
+            // bmp_change_color_flag controls how we treat the decoded color:
+            //
+            //   BMP_CHANGE_COLOR_TRANSPARENT  → skip selected color
+            //   BMP_CHANGE_COLOR_SUBSTITUTE   → replace selected color
+            //   BMP_CHANGE_COLOR_NULL/default → draw normally
+            //
             switch (bmp_change_color_flag)
             {
-                // 1000
-                // flag para ignorarmos a cor selecionada.
-                // Nao pinte nada.
-                // Devemos pintar caso a cor atual seja  
-                // diferente da cor selecionada.
-
+                // ---------------------------------
+                // Transparent mode
+                // Skip drawing if the current color matches bmp_selected_color.
+                // Otherwise, draw normally.
                 case BMP_CHANGE_COLOR_TRANSPARENT:
                     // Só pintamos se a cor atual for diferente
                     // da cor selecionada.
                     if (color != bmp_selected_color)
                     {
                         // No scale
-                        if (useZoom == FALSE)
-                        {
-                            /*
-                            // IN: color, x, y, rop
-                            libdisp_backbuffer_putpixel ( 
-                                (unsigned int) color, 
-                                (unsigned long) left, 
-                                (unsigned long) bottom,
-                                (unsigned long) 0 );
-                            */
-
+                        if (useZoom == FALSE){
                             putpixel0(dc, color, left, bottom, 0);
                         }
-
-                        // #test
-                        // Testing zoom support.
                         
-                        // With scale.
-                        if (useZoom==TRUE)
+                        // With scale
+                        if (useZoom == TRUE)
                         {
                             for (ihZoom=0; ihZoom < ZoomFactor; ihZoom++){
-                            for (iwZoom=0; iwZoom < ZoomFactor; iwZoom++){ 
-                            
-                            /*
-                            // IN: color, x, y, rop
-                            libdisp_backbuffer_putpixel ( 
-                                (unsigned int) color, 
-                                (unsigned long) 
-                                    left + 
-                                    ((j * ZoomFactor) + iwZoom), 
-                                (unsigned long) 
-                                    bottom - 
-                                    ((i * ZoomFactor) + ihZoom),
-                                (unsigned long) 0 );
-                            */
-                            
+                            for (iwZoom=0; iwZoom < ZoomFactor; iwZoom++){                            
                             putpixel0(
                                 dc, 
                                 color, 
@@ -565,66 +602,64 @@ __bmpDisplayBMP0 (
                     }
                     break;
 
-                // 2000
-                // Substitua pela cor indicada.
-                // Se a cor atual eh igual a cor selecionada,
-                // devemos substituir a cor atual pela substituta.
-                // Mas se a cor atual for diferente da cor selecionada,
-                // pintamos normalmente a cor atual.
+                // ---------------------------------
+                // Substitute mode
+                // If current color == bmp_selected_color → replace with bmp_substitute_color.
+                // Otherwise, draw the original color.
+                // Zoom logic applied here as well.
                 case BMP_CHANGE_COLOR_SUBSTITUTE:
-                    // Substituímos se for igual
-                    if (color == bmp_selected_color)
-                    {
-                        /*
-                        // IN: color, x, y, rop
-                        libdisp_backbuffer_putpixel ( 
-                            (unsigned int) bmp_substitute_color, 
-                            (unsigned long) left, 
-                            (unsigned long) bottom,
-                            (unsigned long) 0 );
-                        */
-
+                if (useZoom == FALSE) 
+                {
+                    // No zoom → draw single pixel
+                    if (color == bmp_selected_color) {
                         putpixel0(dc, bmp_substitute_color, left, bottom, 0);
-
-                    }
-                    // Não substituímos se for diferente.
-                    // #bugbug
-                    // #todo: Usar a cor atual e não a substituta.
-                    if (color != bmp_selected_color)
-                    {
-                        /*
-                        // IN: color, x, y, rop
-                        libdisp_backbuffer_putpixel ( 
-                            (unsigned int) color, //bmp_substitute_color, 
-                            (unsigned long) left, 
-                            (unsigned long) bottom,
-                            (unsigned long) 0 );
-                        */
-
+                    } else {
                         putpixel0(dc, color, left, bottom, 0);
                     }
-                    break;
+                } 
+                if (useZoom == TRUE) 
+                {
+                    // With zoom → draw a block of pixels
+                    for (ihZoom = 0; ihZoom < ZoomFactor; ihZoom++) {
+                    for (iwZoom = 0; iwZoom < ZoomFactor; iwZoom++) {
+                        if (color == bmp_selected_color) {
+                            putpixel0(dc, bmp_substitute_color,
+                               left + ((j * ZoomFactor) + iwZoom),
+                               bottom - ((i * ZoomFactor) + ihZoom),
+                               0);
+                        } else {
+                            putpixel0(dc, color,
+                                left + ((j * ZoomFactor) + iwZoom),
+                                bottom - ((i * ZoomFactor) + ihZoom),
+                                0);
+                        }
+                    }}
+                }
+                break;
 
                 // ...
 
-                // 0 and default.
-                // Pintamos normalmente a cor atual.
-                // #bugbug #todo:
-                // Usar a cor atual e não a substituta.
+                // ---------------------------------
+                // Normal mode (default)
+                // Draw the decoded color without modification.
                 case BMP_CHANGE_COLOR_NULL:
                 default:
-                    
-                    /*
-                    // IN: color, x, y, rop
-                    libdisp_backbuffer_putpixel( 
-                        (unsigned int) color,
-                        (unsigned long) left, 
-                        (unsigned long) bottom,
-                        (unsigned long) 0 );
-                    */
+                    if (useZoom == FALSE){
+                        putpixel0(dc, color, left, bottom, 0);
+                    }
+                    if (useZoom == TRUE)
+                    {
+                        for (ihZoom=0; ihZoom < ZoomFactor; ihZoom++){
+                        for (iwZoom=0; iwZoom < ZoomFactor; iwZoom++){                            
+                        putpixel0(
+                            dc, 
+                            color, 
+                            left + ((j * ZoomFactor) + iwZoom), 
+                            bottom - ((i * ZoomFactor) + ihZoom), 
+                            0);
 
-                    putpixel0(dc, color, left, bottom, 0);
-
+                        };};
+                    }
                     break;
             };
 
@@ -636,9 +671,9 @@ __bmpDisplayBMP0 (
             }
         };
 
+        // --- Advance to next pixel ---
         // Vamos para a linha anterior.
         // Reiniciamos o x.
-
         // Esse é o repetidor se não estivermos usando zoom.
         // Se estivermos usando zoom, o repetidor é o do for.
         if (useZoom != TRUE){
@@ -668,12 +703,17 @@ done:
 // #todo
 // Create a flag in the function's parameter.
 // Final rect to refresh.
-    if (show == TRUE){
-        gws_refresh_rectangle (
-            finalRect.left,
-            finalRect.top,
-            finalRect.width,
-            finalRect.height );
+
+    if (show == TRUE)
+    {
+        if (Compositor.is_composition_disabled == TRUE)
+        {
+            gws_refresh_rectangle (
+                finalRect.left,
+                finalRect.top,
+                finalRect.width,
+                finalRect.height );
+        }
     }
 
     // #debug
@@ -684,113 +724,9 @@ done:
     return 0;
 
 fail:
-    //server_debug_print ("__bmpDisplayBMP0: fail\n");
-    printf             ("__bmpDisplayBMP0: fail\n");
+    printf("__bmpDisplayBMP0: fail\n");
     return (int) -1;
 }
-
-/*
-// gwssrv_display_system_icon:
-// Called by createwDrawFrame on createw.c
-// >> Called by doCreateWindowFrame in wm.c
-int 
-bmp_decode_system_icon0 ( 
-    int index, 
-    unsigned long x, 
-    unsigned long y,
-    int show,
-    int zoom_factor )
-{
-
-    // #deprecated
-
-    printf ("bmp_decode_system_icon0: #deprecated\n");
-    return (int) -1;
-
-
-    //#expensive: Refresh the whole screen.    
-    //int RefreshScreen= FALSE;
-    int RefreshScreen = show;
-
-// Shared memory
-// Um endereço compartilhado onde o ícone
-// foi carregado pelo kernel.
-    char *sm_buffer;
-// #todo: 
-// limits for x and y.
-    unsigned long bmp_x = (x & 0xFFFF);
-    unsigned long bmp_y = (y & 0xFFFF);
-
-// Get buffer address.
-// Check pointer validation
-    sm_buffer = (char *) __get_system_icon(index);
-    if ((void *) sm_buffer == NULL)
-    {
-        printf ("bmp_decode_system_icon0: sm_buffer\n");
-        goto fail;
-    }
-
-
-// Check BM header
-    if ( sm_buffer[0] != 'B' || sm_buffer[1] != 'M' )
-    {
-        // #debug
-        //server_debug_print ("bmp_decode_system_icon0: [FAIL] header\n");
-        printf ("bmp_decode_system_icon0: [FAIL] header\n");
-        printf ("bmp_decode_system_icon0: %c %c\n", 
-            &sm_buffer[0], &sm_buffer[1] );
-        // #debug
-        // Show the whole screen if fail
-        gws_show_backbuffer();
-        //return -1;
-        while (1){
-        };
-    }
-
-//
-// Draw the BMP image
-//
-
-    int draw_status=-1;
-
-// Check BM header. Again.
-    if ( sm_buffer[0] == 'B' && sm_buffer[1] == 'M' )
-    {
-        // #flags
-        bmp_change_color_flag = BMP_CHANGE_COLOR_TRANSPARENT;
-        //bmp_change_color_flag = BMP_CHANGE_COLOR_SUBSTITUTE;
-        //bmp_change_color_flag = BMP_CHANGE_COLOR_NULL;
-        bmp_selected_color = COLOR_WHITE;
-        // Paint into the backbuffer, but refresh after that.
-        draw_status = 
-            (int) __bmpDisplayBMP0( 
-                (char *) sm_buffer, 
-                (unsigned long) bmp_x, 
-                (unsigned long) bmp_y,
-                zoom_factor,
-                show ); 
-        if (draw_status<0){
-            //#todo: error message.
-        } 
-    }
-
-    //#debug
-    //printf("gwssrv_display_system_icon: hang2\n");
-     
-// #bugbug #todo
-// We need to use the routine to refresh the rectangle.
-
-    //if (RefreshScreen == TRUE){
-    //    invalidate_surface_retangle();
-        //gws_show_backbuffer();
-    //}
-
-    return 0;
-
-fail:
-    return -1;
-}
-*/
 
 int 
 bmp_decode_bmp_image(

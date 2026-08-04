@@ -431,7 +431,6 @@ static struct gws_window_d *__create_window_object(void)
     return (struct gws_window_d *) window;
 }
 
-
 // Create the controls given the titlebar.
 // min, max, close.
 // Frame controls (stock)
