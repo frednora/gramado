@@ -2,7 +2,7 @@
 # Compile all the files and create ar_dev.o
 # Makefile for the kernel device drivers.
 
-
+#bugbug: Too long!
 INCLUDE = ../../../../include
 
 AS	= as
@@ -69,10 +69,11 @@ KERNEL_INCLUDE := -I $(INCLUDE)
 # LDFLAGS := -m elf_x86_64 -static
 LDFLAGS := -m elf_x86_64 -s -x -static  
 
-
-# Everything is a file.
+# My objects
 OBJS = \
-e1000hw.o e1000.o    
+e1000hw.o e1000.o \
+nic.o    
+
 
 
 all:
@@ -86,6 +87,9 @@ all:
 
 # rtl81xx
 # ...
+
+# wrappers
+	$(CC) -c nic.c  $(KERNEL_INCLUDE) $(CFLAGS) -o nic.o 
 
 # link
 	$(LD) -r -o netdev.o $(OBJS)

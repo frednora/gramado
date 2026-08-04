@@ -275,9 +275,16 @@
 
 // netdev/
 // Network devices
-// primeiro controladoras depois protocolos
+
+// #ps: Common. Needs to be before the devices
+#include "../halls/dev/per/netdev/common/nic00.h"
+
 // e1000 - nic intel
 #include "../halls/dev/per/netdev/e1000/e1000.h"
+// ...
+
+// #ps: needs to be after the devices
+#include "../halls/dev/per/netdev/nic.h"
 
 // ==================================
 // net/

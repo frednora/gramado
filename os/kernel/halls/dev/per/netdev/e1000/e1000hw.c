@@ -7,6 +7,16 @@
 // Chicago OS, Italo Matias.
 // ...
 
+// #ps:
+// It's running on Virtualbox for these chips:
+// + Intel PRO/1000 MT Desktop (82540EM) PCI ID 8086:100E
+// + Intel PRO/1000 T Server (82543GC) — PCI ID 8086:1004 
+// #bugbug:
+// Does NOT work on ICH9 chipset (interrupt storm during init).
+// See __e1000_enable_interrupt() — IMS mask is too broad (0x1F6DC | 0xFB),
+// likely unmasking LSC/RXO/RXDMT0 before boot's interrupt sequencing is ready.
+
+
 /*
 Key steps involved:
 

@@ -753,6 +753,7 @@ pciHandleDevice (
             ValidIntelVendor = TRUE;
 
         // 82540EM
+        // 0x100E: Intel PRO/1000 MT Desktop (82540EM)
         if (pci_dev->Device == 0x100E)
             ValidIntelDevice = TRUE;
         if (pci_dev->Device == 0x1015)
@@ -765,6 +766,7 @@ pciHandleDevice (
             ValidIntelDevice = TRUE;
 
         // 82545EM
+        // 0x100F: Intel PRO/1000 MT Server (82545EM)
         if (pci_dev->Device == 0x100f)
             ValidIntelDevice = TRUE;
         if (pci_dev->Device == 0x1011)

@@ -254,35 +254,6 @@ extern struct network_saved_d  NetworkSaved;
 // packet format
 // Ethernet IPv4 TCP/UDP DATA FCS
 
-/*
-// Each NIC device needs to be represented here.
-// But each NIC device has its own internal structure
-// with elements specific for their brand.
-struct nic_device_d
-{
-    int used;
-    int magic;
-    int id;
-
-    char *dev_name;
-    size_t name_size;
-
-    int initialized;
-
-// Opaque pointer to the archtecture specific structure.
-    void *priv;
-    int brand;  // Intel, Realteck ...
-
-    unsigned char mac_address[6];
-    unsigned char ipv4_address[4];
-    unsigned char ipv6_address[6];
-
-// Navigation
-    struct nic_device_d *next;
-};
-extern struct nic_device_d *CurrentNICDevice;
-*/
-
 // =================================================
 
 //#define DEFAULT_NUMBER_OF_NETWORK_BUFFERS  32

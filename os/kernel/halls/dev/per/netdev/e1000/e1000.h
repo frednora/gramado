@@ -176,6 +176,15 @@ struct e1000_arp_cache_item_d
     uint8_t ipv4_address[4];
 };
 
+
+enum e1000_chip_family_t {
+    E1000_CHIP_UNKNOWN = 0,
+    E1000_CHIP_82540EM,
+    E1000_CHIP_82543GC,
+    E1000_CHIP_82545EM,
+    // room to grow: 82574L, ICH8/9 integrated, etc.
+};
+
 // ============================================================
 // Device Info
 // #bugbug
@@ -190,8 +199,12 @@ struct intel_nic_info_d
 
     int initialized;
 
-// The base address for the registers.
+// The base address for the registers
     unsigned long registers_base_address;
+
+// Which physical/emulated chip is this?
+// See: e1000ids.h -> enum e1000_chip_family_t
+    enum e1000_chip_family_t chip_family;
 
     uint8_t mac_address[6];
     //uint8_t ipv6_address[6];
